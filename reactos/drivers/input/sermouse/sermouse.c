@@ -167,7 +167,7 @@ SerialMouseInterruptService(IN PKINTERRUPT Interrupt, PVOID ServiceContext)
 		if (DeviceExtension->PacketBufferPosition >= 3)
 		{
 			Queue = DeviceExtension->ActiveQueue % 2;
-	
+
 			/* Prevent buffer overflow */
 			if (DeviceExtension->InputDataCount[Queue] == MOUSE_BUFFER_SIZE)
 				continue;
@@ -179,7 +179,7 @@ SerialMouseInterruptService(IN PKINTERRUPT Interrupt, PVOID ServiceContext)
 				/* Retrieve change in x and y from packet */
 				Input->LastX = (signed char)(PacketBuffer[1] | ((PacketBuffer[0] & 0x03) << 6));
 				Input->LastY = (signed char)(PacketBuffer[2] | ((PacketBuffer[0] & 0x0c) << 4));
-	
+
 				/* Determine the current state of the buttons */
 				Input->RawButtons = (DeviceExtension->PreviousButtons & MOUSE_BUTTON_MIDDLE) |
 					((UCHAR)(PacketBuffer[0] & LEFT_BUTTON_MASK) >> LEFT_BUTTON_SHIFT) |
@@ -309,7 +309,7 @@ SerialMouseInternalDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 				*(PMOUSE_ATTRIBUTES)Irp->AssociatedIrp.SystemBuffer =
 					DeviceExtension->AttributesInformation;
 				Irp->IoStatus.Information = sizeof(MOUSE_ATTRIBUTES);
-				Status = STATUS_SUCCESS;				
+				Status = STATUS_SUCCESS;
 			} else {
 				Status = STATUS_BUFFER_TOO_SMALL;
 			}
@@ -575,7 +575,7 @@ InitializeMouse(ULONG Port, ULONG Irq, PDRIVER_OBJECT DriverObject)
 
 	/* Enable interrupts */
 	WRITE_PORT_UCHAR((PUCHAR)(Port) + 1, 1);
-	
+
 	ClearMouse(Port);
 
 	/* Enable RTS, DTR and OUT2 */

@@ -119,9 +119,9 @@ NTSTATUS NTAPI ReadWrite(PDEVICE_OBJECT DeviceObject,
       return STATUS_INVALID_PARAMETER;
     }
 
-  /* 
-   * Queue the irp to the thread.  
-   * The de-queue thread will look in DriverContext[0] for the Device Object. 
+  /*
+   * Queue the irp to the thread.
+   * The de-queue thread will look in DriverContext[0] for the Device Object.
    */
   Irp->Tail.Overlay.DriverContext[0] = DeviceObject;
   IoCsqInsertIrp(&Csq, Irp, NULL);
@@ -191,12 +191,12 @@ static NTSTATUS NTAPI RWDetermineMediaType(PDRIVE_INFO DriveInfo)
 	  KdPrint(("floppy: RWDetermineMediaType(): unable to set data rate\n"));
 	  return STATUS_UNSUCCESSFUL;
 	}
-      
+
       /* Specify */
       HeadLoadTime = SPECIFY_HLT_500K;
       HeadUnloadTime = SPECIFY_HUT_500K;
       StepRateTime = SPECIFY_SRT_500K;
-      
+
       /* Don't disable DMA --> enable dma (dumb & confusing) */
       if(HwSpecify(DriveInfo->ControllerInfo, HeadLoadTime, HeadUnloadTime, StepRateTime, FALSE) != STATUS_SUCCESS)
 	{
@@ -222,7 +222,7 @@ static NTSTATUS NTAPI RWDetermineMediaType(PDRIVE_INFO DriveInfo)
 	  WaitForControllerInterrupt(DriveInfo->ControllerInfo);
 
 	  RecalStatus = HwRecalibrateResult(DriveInfo->ControllerInfo);
-	  
+
 	  if(RecalStatus == STATUS_SUCCESS)
 	    break;
 
@@ -242,7 +242,7 @@ static NTSTATUS NTAPI RWDetermineMediaType(PDRIVE_INFO DriveInfo)
 	  KdPrint(("floppy: RWDetermineMediaType(): ReadId failed\n"));
 	  return STATUS_UNSUCCESSFUL; /* if we can't even write to the controller, it's hopeless */
 	}
-   
+
       /* Wait for the ReadID to finish */
       WaitForControllerInterrupt(DriveInfo->ControllerInfo);
 
@@ -369,13 +369,13 @@ static NTSTATUS NTAPI RWComputeCHS(PDRIVE_INFO IN  DriveInfo,
   AbsoluteSector = DiskByteOffset / DriveInfo->DiskGeometry.BytesPerSector;  /* Num full sectors */
 
   /* Cylinder number is floor(AbsoluteSector / SectorsPerCylinder) */
-  *Cylinder =  (CHAR)(AbsoluteSector / SectorsPerCylinder); 
+  *Cylinder =  (CHAR)(AbsoluteSector / SectorsPerCylinder);
 
   /* Head number is 0 if the sector within the cylinder < SectorsPerTrack; 1 otherwise */
   *Head =  AbsoluteSector % SectorsPerCylinder < DriveInfo->DiskGeometry.SectorsPerTrack ? 0 : 1;
 
-  /* 
-   * Sector number is the sector within the cylinder if on head 0; that minus SectorsPerTrack if it's on head 1 
+  /*
+   * Sector number is the sector within the cylinder if on head 0; that minus SectorsPerTrack if it's on head 1
    * (lots of casts to placate msvc).  1-based!
    */
   *Sector =  ((UCHAR)(AbsoluteSector % SectorsPerCylinder) + 1) - ((*Head) * (UCHAR)DriveInfo->DiskGeometry.SectorsPerTrack);
@@ -437,18 +437,18 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
   KdPrint(("floppy: ReadWritePassive called to %s 0x%x bytes from offset 0x%x\n",
 	   (Stack->MajorFunction == IRP_MJ_READ ? "read" : "write"),
 	   (Stack->MajorFunction == IRP_MJ_READ ? Stack->Parameters.Read.Length : Stack->Parameters.Write.Length),
-	   (Stack->MajorFunction == IRP_MJ_READ ? Stack->Parameters.Read.ByteOffset.u.LowPart : 
+	   (Stack->MajorFunction == IRP_MJ_READ ? Stack->Parameters.Read.ByteOffset.u.LowPart :
 	    Stack->Parameters.Write.ByteOffset.u.LowPart)));
 
   /* Default return codes */
   Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
   Irp->IoStatus.Information = 0;
 
-  /* 
+  /*
    * Check to see if the volume needs to be verified.  If so,
    * we can get out of here quickly.
    */
-  if(DeviceObject->Flags & DO_VERIFY_VOLUME && !(DeviceObject->Flags & SL_OVERRIDE_VERIFY_VOLUME)) 
+  if(DeviceObject->Flags & DO_VERIFY_VOLUME && !(DeviceObject->Flags & SL_OVERRIDE_VERIFY_VOLUME))
     {
       KdPrint(("floppy: ReadWritePassive(): DO_VERIFY_VOLUME set; Completing with  STATUS_VERIFY_REQUIRED\n"));
       Irp->IoStatus.Status = STATUS_VERIFY_REQUIRED;
@@ -467,7 +467,7 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
       StopMotor(DriveInfo->ControllerInfo);
       return;
     }
-      
+
   if(DiskChanged)
     {
       KdPrint(("floppy: ReadWritePhase1(): signalling media changed; Completing with STATUS_MEDIA_CHANGED\n"));
@@ -486,9 +486,9 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
       return;
     }
 
-  /* 
-   * Figure out the media type, if we don't know it already 
-   */ 
+  /*
+   * Figure out the media type, if we don't know it already
+   */
   if(DriveInfo->DiskGeometry.MediaType == Unknown)
     {
       if(RWDetermineMediaType(DriveInfo) != STATUS_SUCCESS)
@@ -523,26 +523,26 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
       WriteToDevice = TRUE;
     }
 
-  /* 
+  /*
    * FIXME:
-   *   FloppyDeviceData.ReadWriteGapLength specify the value for the physical drive. 
+   *   FloppyDeviceData.ReadWriteGapLength specify the value for the physical drive.
    *   We should set this value depend on the format of the inserted disk and possible
    *   depend on the request (read or write). A value of 0 results in one rotation
    *   between the sectors (7.2sec for reading a track).
    */
   Gap = DriveInfo->FloppyDeviceData.ReadWriteGapLength;
 
-  /* 
-   * Set up DMA transfer 
+  /*
+   * Set up DMA transfer
    *
    * This is as good of a place as any to document something that used to confuse me
    * greatly (and I even wrote some of the kernel's DMA code, so if it confuses me, it
-   * probably confuses at least a couple of other people too).  
+   * probably confuses at least a couple of other people too).
    *
    * MmGetMdlVirtualAddress() returns the virtal address, as mapped in the buffer's original
    * process context, of the MDL.  In other words:  say you start with a buffer at address X, then
    * you build an MDL out of that buffer called Mdl. If you call MmGetMdlVirtualAddress(Mdl), it
-   * will return X.  
+   * will return X.
    *
    * There are two parameters that the function looks at to produce X again, given the MDL:  the
    * first is the StartVa, which is the base virtual address of the page that the buffer starts
@@ -553,7 +553,7 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
    * above 0x80000000 (default; 0xc0000000 on current ReactOS or /3GB Windows)), but it will
    * (possibly) be mapped at a different address.
    *
-   * The second parameter is the ByteOffset.  Given an original buffer address of 0x12345678, 
+   * The second parameter is the ByteOffset.  Given an original buffer address of 0x12345678,
    * the ByteOffset would be 0x678.  Because MDLs can only describe full pages (and therefore
    * StartVa always points to the start address of a page), the ByteOffset must be used to
    * find the real start of the buffer.
@@ -569,7 +569,7 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
    * There is a somewhat weird but very common use of the virtual address associated with a MDL
    * that pops up often in the context of DMA.  DMA APIs (particularly MapTransfer()) need to
    * know where the memory is that they should DMA into and out of.  This memory is described
-   * by a MDL.  The controller eventually needs to know a physical address on the host side, 
+   * by a MDL.  The controller eventually needs to know a physical address on the host side,
    * which is generally a 32-bit linear address (on x86), and not just a page address.  Therefore,
    * the DMA APIs look at the ByteOffset field of the MDL to reconstruct the real address that
    * should be programmed into the DMA controller.
@@ -583,15 +583,15 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
    * the MDL.  The way it computes how far into the page to start the transfer is by masking off all but
    * the bottom 12 bits (on x86) of the number you supply as the CurrentVa and using *that* as the
    * ByteOffset instead of the one in the MDL.  (OK, this varies a bit by OS and version, but this
-   * is the effect).  
+   * is the effect).
    *
-   * In other words, you get a number back from MmGetMdlVirtualAddress that represents the start of your 
+   * In other words, you get a number back from MmGetMdlVirtualAddress that represents the start of your
    * buffer, and you pass it to the first MapTransfer call.  Then, for each successive operation
    * on the same buffer, you increment that address to point to the next spot in the MDL that
    * you want to DMA to/from.  The fact that the virtual address you're manipulating is probably not
    * mapped into the process context that you're running in is irrelevant, since it's only being
    * used to index into the MDL.
-   */ 
+   */
 
   /* Get map registers for DMA */
   KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
@@ -623,10 +623,10 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
       ULONG CurrentTransferBytes;
       UCHAR CurrentTransferSectors;
 
-      KdPrint(("floppy: ReadWritePassive(): iterating in while (TransferByteOffset = 0x%x of 0x%x total) - allocating %d registers\n", 
+      KdPrint(("floppy: ReadWritePassive(): iterating in while (TransferByteOffset = 0x%x of 0x%x total) - allocating %d registers\n",
 	       TransferByteOffset, Length, DriveInfo->ControllerInfo->MapRegisters));
-  
-      KeClearEvent(&DriveInfo->ControllerInfo->SynchEvent); 
+
+      KeClearEvent(&DriveInfo->ControllerInfo->SynchEvent);
 
       /*
        * Compute starting CHS
@@ -664,7 +664,7 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
       KdPrint(("floppy: ReadWritePassive(): computing number of sectors to transfer (StartSector 0x%x): ", StartSector));
 
       /* 1-based sector number */
-      if( (((DriveInfo->DiskGeometry.TracksPerCylinder - Head) * DriveInfo->DiskGeometry.SectorsPerTrack - StartSector) + 1 ) < 
+      if( (((DriveInfo->DiskGeometry.TracksPerCylinder - Head) * DriveInfo->DiskGeometry.SectorsPerTrack - StartSector) + 1 ) <
 	  (Length - TransferByteOffset) / DriveInfo->DiskGeometry.BytesPerSector)
 	{
 	  CurrentTransferSectors = (UCHAR)((DriveInfo->DiskGeometry.TracksPerCylinder - Head) * DriveInfo->DiskGeometry.SectorsPerTrack - StartSector) + 1;
@@ -688,7 +688,7 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
 
       if(BYTES_TO_PAGES(CurrentTransferBytes) > DriveInfo->ControllerInfo->MapRegisters)
         {
-          CurrentTransferSectors = (UCHAR)((DriveInfo->ControllerInfo->MapRegisters * PAGE_SIZE) / 
+          CurrentTransferSectors = (UCHAR)((DriveInfo->ControllerInfo->MapRegisters * PAGE_SIZE) /
 	                                    DriveInfo->DiskGeometry.BytesPerSector);
 
           CurrentTransferBytes = CurrentTransferSectors * DriveInfo->DiskGeometry.BytesPerSector;
@@ -701,18 +701,18 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
       /* param 2 is ReadOperation --> opposite of WriteToDevice that IoMapTransfer takes.  BAD MS. */
       KeFlushIoBuffers(Irp->MdlAddress, !WriteToDevice, TRUE);
 
-      IoMapTransfer(DriveInfo->ControllerInfo->AdapterObject, Irp->MdlAddress, 
-		    DriveInfo->ControllerInfo->MapRegisterBase, 
-		    (PUCHAR)((ULONG_PTR)MmGetMdlVirtualAddress(Irp->MdlAddress) + TransferByteOffset), 
+      IoMapTransfer(DriveInfo->ControllerInfo->AdapterObject, Irp->MdlAddress,
+		    DriveInfo->ControllerInfo->MapRegisterBase,
+		    (PUCHAR)((ULONG_PTR)MmGetMdlVirtualAddress(Irp->MdlAddress) + TransferByteOffset),
 		    &CurrentTransferBytes, WriteToDevice);
 
       /*
        * Read or Write
        */
-      KeClearEvent(&DriveInfo->ControllerInfo->SynchEvent); 
+      KeClearEvent(&DriveInfo->ControllerInfo->SynchEvent);
 
-      /* Issue the read/write command to the controller.  Note that it expects the opposite of WriteToDevice. */ 
-      if(HwReadWriteData(DriveInfo->ControllerInfo, !WriteToDevice, DriveInfo->UnitNumber, Cylinder, Head, StartSector, 
+      /* Issue the read/write command to the controller.  Note that it expects the opposite of WriteToDevice. */
+      if(HwReadWriteData(DriveInfo->ControllerInfo, !WriteToDevice, DriveInfo->UnitNumber, Cylinder, Head, StartSector,
 			 DriveInfo->BytesPerSectorCode, DriveInfo->DiskGeometry.SectorsPerTrack, Gap, 0xff) != STATUS_SUCCESS)
 	{
 	  KdPrint(("floppy: ReadWritePassive(): HwReadWriteData returned failure; unable to read; completing with STATUS_UNSUCCESSFUL\n"));
@@ -724,15 +724,15 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
 
       KdPrint(("floppy: ReadWritePassive(): HwReadWriteData returned -- waiting on event\n"));
 
-      /* 
+      /*
        * At this point, we block and wait for an interrupt
        * FIXME: this seems to take too long
        */
       WaitForControllerInterrupt(DriveInfo->ControllerInfo);
 
       /* Read is complete; flush & free adapter channel */
-      IoFlushAdapterBuffers(DriveInfo->ControllerInfo->AdapterObject, Irp->MdlAddress, 
-			    DriveInfo->ControllerInfo->MapRegisterBase, 
+      IoFlushAdapterBuffers(DriveInfo->ControllerInfo->AdapterObject, Irp->MdlAddress,
+			    DriveInfo->ControllerInfo->MapRegisterBase,
 			    (PVOID)((ULONG_PTR)MmGetMdlVirtualAddress(Irp->MdlAddress) + TransferByteOffset),
 			    CurrentTransferBytes, WriteToDevice);
 

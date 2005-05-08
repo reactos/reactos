@@ -23,7 +23,7 @@
  * FILE:             services/fs/ntfs/close.c
  * PURPOSE:          NTFS filesystem driver
  * PROGRAMMER:       Art Yerkes
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -46,7 +46,7 @@ NtfsCloseFile(PDEVICE_EXTENSION DeviceExt,
  */
 {
   PCCB Ccb;
-  
+
   DPRINT("NtfsCloseFile(DeviceExt %x, FileObject %x)\n",
 	 DeviceExt,
 	 FileObject);

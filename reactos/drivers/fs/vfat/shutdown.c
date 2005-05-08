@@ -95,7 +95,7 @@ VfatShutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp)
             Irp->IoStatus.Status = Status;
       }
       ExReleaseResourceLite(&VfatGlobalData->VolumeListLock);
-      
+
       /* FIXME: Free all global acquired resources */
 
       Status = Irp->IoStatus.Status;

@@ -1,10 +1,10 @@
 /* $Id:
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS VT100 emulator
  * FILE:            drivers/dd/green/misc.c
  * PURPOSE:         Misceallenous operations
- * 
+ *
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
  */
 
@@ -24,9 +24,9 @@ GreenDeviceIoControl(
 	PIRP Irp;
 	IO_STATUS_BLOCK IoStatus;
 	NTSTATUS Status;
-	
+
 	KeInitializeEvent (&Event, NotificationEvent, FALSE);
-	
+
 	Irp = IoBuildDeviceIoControlRequest(CtlCode,
 		DeviceObject,
 		InputBuffer,
@@ -41,20 +41,20 @@ GreenDeviceIoControl(
 		DPRINT("Green: IoBuildDeviceIoControlRequest() failed\n");
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
-	
+
 	Status = IoCallDriver(DeviceObject, Irp);
-	
+
 	if (Status == STATUS_PENDING)
 	{
 		DPRINT("Green: Operation pending\n");
 		KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
 		Status = IoStatus.Status;
 	}
-	
+
 	if (OutputBufferSize)
 	{
 		*OutputBufferSize = IoStatus.Information;
 	}
-	
+
 	return Status;
 }

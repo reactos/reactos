@@ -41,7 +41,7 @@ NTSTATUS STDCALL RamdrvDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
         Status = STATUS_INVALID_DEVICE_REQUEST;
    }
    Irp->IoStatus.Status = Status;
-   IoCompleteRequest(Irp, NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT);	
+   IoCompleteRequest(Irp, NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT);
    return Status;
 }
 
@@ -98,17 +98,17 @@ NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject,
   unsigned int dstlen = 1024 * 1440;
   FILE_STANDARD_INFORMATION finfo;
   DWORD err;
-  
+
   DPRINT("Ramdisk driver\n");
-  
+
   /* Export other driver entry points... */
   DriverObject->MajorFunction[IRP_MJ_CREATE] = RamdrvDispatchOpenClose;
   DriverObject->MajorFunction[IRP_MJ_CLOSE] = RamdrvDispatchOpenClose;
   DriverObject->MajorFunction[IRP_MJ_READ] = RamdrvDispatchReadWrite;
   DriverObject->MajorFunction[IRP_MJ_WRITE] = RamdrvDispatchReadWrite;
   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = RamdrvDispatchDeviceControl;
-  
-  
+
+
   // create device and symbolic link
   Status = IoCreateDevice( DriverObject,
 			   sizeof( RAMDRV_DEVICE_EXTENSION ),

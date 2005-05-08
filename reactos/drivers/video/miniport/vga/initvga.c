@@ -116,7 +116,7 @@ InitVGAMode()
    vgaSetRegisters(&Mode12Regs);
 }
 
-VOID 
+VOID
 VGAResetDevice(OUT PSTATUS_BLOCK StatusBlock)
 {
    vgaSetRegisters(&TextModeRegs);

@@ -99,7 +99,7 @@ GetAvailableModes(
       {
          ModeInfoPtr->Length = 0;
       }
- 
+
       ModeInfoPtr = (PVIDEO_MODE_INFORMATION)
          (((PUCHAR)ModeInfoPtr) + Modes.ModeInformationLength);
    }
@@ -126,7 +126,7 @@ IntInitScreenInfo(
    /*
     * Call miniport to get information about video modes.
     */
-   
+
    ModeCount = GetAvailableModes(ppdev->hDriver, &ModeInfo, &ModeInfoSize);
    if (ModeCount == 0)
    {
@@ -134,7 +134,7 @@ IntInitScreenInfo(
    }
 
    /*
-    * Select the video mode depending on the info passed in pDevMode. 
+    * Select the video mode depending on the info passed in pDevMode.
     */
 
    if (pDevMode->dmPelsWidth == 0 && pDevMode->dmPelsHeight == 0 &&
@@ -179,7 +179,7 @@ IntInitScreenInfo(
       EngFreeMem(ModeInfo);
       return FALSE;
    }
-    
+
    /*
     * Fill in the GDIINFO data structure with the information returned from
     * the kernel driver.
@@ -365,7 +365,7 @@ DrvGetModes(
    {
       return 0;
    }
-   
+
    if (pdm == NULL)
    {
       EngFreeMem(ModeInfo);
@@ -388,7 +388,7 @@ DrvGetModes(
 
       memset(pdm, 0, sizeof(DEVMODEW));
       memcpy(pdm->dmDeviceName, DEVICE_NAME, sizeof(DEVICE_NAME));
-      pdm->dmSpecVersion = 
+      pdm->dmSpecVersion =
       pdm->dmDriverVersion = DM_SPECVERSION;
       pdm->dmSize = sizeof(DEVMODEW);
       pdm->dmDriverExtra = 0;

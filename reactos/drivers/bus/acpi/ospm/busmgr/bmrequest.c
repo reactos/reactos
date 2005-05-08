@@ -62,7 +62,7 @@ bm_generate_request (
 
 	DEBUG_PRINT(ACPI_INFO, ("Sending request [0x%02x] to device [0x%02x].\n", request->command, node->device.handle));
 
-	if (!(node->device.flags & BM_FLAGS_DRIVER_CONTROL) || 
+	if (!(node->device.flags & BM_FLAGS_DRIVER_CONTROL) ||
 		!(node->driver.request)) {
 		DEBUG_PRINT(ACPI_WARN, ("No driver installed for device [0x%02x].\n", node->device.handle));
 		return_ACPI_STATUS(AE_NOT_EXIST);
@@ -137,7 +137,7 @@ bm_request (
 		if (ACPI_FAILURE(status)) {
 			break;
 		}
-		status = bm_copy_to_buffer(&(request->buffer), 
+		status = bm_copy_to_buffer(&(request->buffer),
 			&(device->power.state), sizeof(BM_POWER_STATE));
 		break;
 
@@ -145,7 +145,7 @@ bm_request (
 	{
 		BM_POWER_STATE *power_state = NULL;
 
-		status = bm_cast_buffer(&(request->buffer), 
+		status = bm_cast_buffer(&(request->buffer),
 			(void**)&power_state, sizeof(BM_POWER_STATE));
 		if (ACPI_FAILURE(status)) {
 			break;

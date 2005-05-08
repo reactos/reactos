@@ -28,9 +28,9 @@ VOID IPSendComplete
  */
 {
     PIPFRAGMENT_CONTEXT IFC = (PIPFRAGMENT_CONTEXT)Context;
-    
+
     TI_DbgPrint
-	(MAX_TRACE, 
+	(MAX_TRACE,
 	 ("Called. Context (0x%X)  NdisPacket (0x%X)  NdisStatus (0x%X)\n",
 	  Context, NdisPacket, NdisStatus));
 
@@ -42,7 +42,7 @@ VOID IPSendComplete
 	IPSendFragment(IFC->NdisPacket, IFC->NCE, IFC);
     } else {
 	TI_DbgPrint(MAX_TRACE, ("Calling completion handler.\n"));
-	
+
 	/* There are no more fragments to transmit, so call completion handler */
 	FreeNdisPacket(IFC->NdisPacket);
 	IFC->Complete(IFC->Context, IFC->Datagram, NdisStatus);
@@ -105,7 +105,7 @@ BOOLEAN PrepareNextFragment(
             MoreFragments = FALSE;
         }
 
-	TI_DbgPrint(MID_TRACE,("Copying data from %x to %x (%d)\n", 
+	TI_DbgPrint(MID_TRACE,("Copying data from %x to %x (%d)\n",
 			       IFC->DatagramData, IFC->Data, DataSize));
 
         RtlCopyMemory(IFC->Data, IFC->DatagramData, DataSize); // SAFE
@@ -170,7 +170,7 @@ NTSTATUS SendFragments(
     if( InSize < BufferSize ) BufferSize = InSize;
 
     TI_DbgPrint(MAX_TRACE, ("Fragment buffer is %d bytes\n", BufferSize));
-			    
+
     IFC = exAllocatePool(NonPagedPool, sizeof(IPFRAGMENT_CONTEXT));
     if (IFC == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -198,8 +198,8 @@ NTSTATUS SendFragments(
     IFC->Complete     = Complete;
     IFC->Context      = Context;
 
-    TI_DbgPrint(MID_TRACE,("Copying header from %x to %x (%d)\n", 
-			   IPPacket->Header, IFC->Header, 
+    TI_DbgPrint(MID_TRACE,("Copying header from %x to %x (%d)\n",
+			   IPPacket->Header, IFC->Header,
 			   IPPacket->HeaderSize));
 
     RtlCopyMemory( IFC->Header, IPPacket->Header, IPPacket->HeaderSize );
@@ -234,24 +234,24 @@ NTSTATUS IPSendDatagram(PIP_PACKET IPPacket, PNEIGHBOR_CACHE_ENTRY NCE,
 
     /* Fetch path MTU now, because it may change */
     TI_DbgPrint(MID_TRACE,("PathMTU: %d\n", NCE->Interface->MTU));
-    
+
     if ((IPPacket->Flags & IP_PACKET_FLAG_RAW) == 0) {
 	/* Calculate checksum of IP header */
 	TI_DbgPrint(MID_TRACE,("-> not IP_PACKET_FLAG_RAW\n"));
 	((PIPv4_HEADER)IPPacket->Header)->Checksum = 0;
-	
+
 	((PIPv4_HEADER)IPPacket->Header)->Checksum = (USHORT)
 	    IPv4Checksum(IPPacket->Header, IPPacket->HeaderSize, 0);
 	TI_DbgPrint(MID_TRACE,("IP Check: %x\n", ((PIPv4_HEADER)IPPacket->Header)->Checksum));
-	
+
 	TI_DbgPrint(MAX_TRACE, ("Sending packet (length is %d).\n",
 				WN2H(((PIPv4_HEADER)IPPacket->Header)->TotalLength)));
     } else {
 	TI_DbgPrint(MAX_TRACE, ("Sending raw packet (flags are 0x%X).\n",
 				IPPacket->Flags));
     }
-    
-    return SendFragments(IPPacket, NCE, NCE->Interface->MTU, 
+
+    return SendFragments(IPPacket, NCE, NCE->Interface->MTU,
 			 Complete, Context);
 }
 

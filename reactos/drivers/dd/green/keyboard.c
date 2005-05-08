@@ -1,10 +1,10 @@
 /* $Id:
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS VT100 emulator
  * FILE:            drivers/dd/green/keyboard.c
  * PURPOSE:         Keyboard part of green management
- * 
+ *
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
  */
 
@@ -21,14 +21,14 @@ TranslateCharToScanCodes(
 {
 	BOOLEAN NormalKey = FALSE;
 	USHORT MakeCode;
-	
+
 	if (InputBufferSize == 0)
 		return FALSE;
-	
+
 	switch (*InputBuffer)
 	{
 		case 0x1b: MakeCode = 0x01; NormalKey = TRUE; break; /* ESC */
-		
+
 		case '1': MakeCode = 0x02; NormalKey = TRUE; break;
 		case '2': MakeCode = 0x03; NormalKey = TRUE; break;
 		case '3': MakeCode = 0x04; NormalKey = TRUE; break;
@@ -42,7 +42,7 @@ TranslateCharToScanCodes(
 		case '-': MakeCode = 0x0c; NormalKey = TRUE; break;
 		case '=': MakeCode = 0x0d; NormalKey = TRUE; break;
 		case '\b': MakeCode = 0x0e; NormalKey = TRUE; break;
-		
+
 		case '\t': MakeCode = 0x0f; NormalKey = TRUE; break;
 		case 'q': MakeCode = 0x10; NormalKey = TRUE; break;
 		case 'w': MakeCode = 0x11; NormalKey = TRUE; break;
@@ -56,9 +56,9 @@ TranslateCharToScanCodes(
 		case 'p': MakeCode = 0x19; NormalKey = TRUE; break;
 		case '[': MakeCode = 0x1a; NormalKey = TRUE; break;
 		case ']': MakeCode = 0x1b; NormalKey = TRUE; break;
-		
+
 		case '\r': MakeCode = 0x1c; NormalKey = TRUE; break;
-		
+
 		case 'a': MakeCode = 0x1e; NormalKey = TRUE; break;
 		case 's': MakeCode = 0x1f; NormalKey = TRUE; break;
 		case 'd': MakeCode = 0x20; NormalKey = TRUE; break;
@@ -70,11 +70,11 @@ TranslateCharToScanCodes(
 		case 'l': MakeCode = 0x26; NormalKey = TRUE; break;
 		case ';': MakeCode = 0x27; NormalKey = TRUE; break;
 		case '\'': MakeCode = 0x28; NormalKey = TRUE; break;
-		
+
 		case '`': MakeCode = 0x29; NormalKey = TRUE; break;
-		
+
 		case '\\': MakeCode = 0x2b; NormalKey = TRUE; break;
-		
+
 		case 'z': MakeCode = 0x2c; NormalKey = TRUE; break;
 		case 'x': MakeCode = 0x2d; NormalKey = TRUE; break;
 		case 'c': MakeCode = 0x2e; NormalKey = TRUE; break;
@@ -85,7 +85,7 @@ TranslateCharToScanCodes(
 		case ',': MakeCode = 0x33; NormalKey = TRUE; break;
 		case '.': MakeCode = 0x34; NormalKey = TRUE; break;
 		case '/': MakeCode = 0x35; NormalKey = TRUE; break;
-		
+
 		case ' ': MakeCode = 0x39; NormalKey = TRUE; break;
 	}
 	if (NormalKey && *OutputBufferSize >= 2)
@@ -97,7 +97,7 @@ TranslateCharToScanCodes(
 		*BytesConsumed = 2;
 		return TRUE;
 	}
-	
+
 	/* Consume strange character by ignoring it */
 	DPRINT1("Green: strange byte received 0x%02x ('%c')\n",
 		*InputBuffer, *InputBuffer >= 32 ? *InputBuffer : '.');
@@ -114,9 +114,9 @@ KeyboardInitialize(
 	PKEYBOARD_DEVICE_EXTENSION DeviceExtension;
 	UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass1");
 	NTSTATUS Status;
-	
+
 	DPRINT("Green: KeyboardInitialize() called\n");
-	
+
 	Status = IoCreateDevice(DriverObject,
 		sizeof(KEYBOARD_DEVICE_EXTENSION),
 		&DeviceName, /* FIXME: don't hardcode string */
@@ -126,15 +126,15 @@ KeyboardInitialize(
 		&Fdo);
 	if (!NT_SUCCESS(Status))
 		return Status;
-	
+
 	DeviceExtension = (PKEYBOARD_DEVICE_EXTENSION)Fdo->DeviceExtension;
 	RtlZeroMemory(DeviceExtension, sizeof(KEYBOARD_DEVICE_EXTENSION));
 	DeviceExtension->Common.Type = Keyboard;
 	Fdo->Flags |= DO_POWER_PAGABLE | DO_BUFFERED_IO;
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
-	
+
 	*KeyboardFdo = Fdo;
-	
+
 	return STATUS_SUCCESS;
 }
 
@@ -148,9 +148,9 @@ KeyboardDpcSendData(
 	PKEYBOARD_DEVICE_EXTENSION DeviceExtension;
 	ULONG Queue;
 	ULONG InputDataConsumed;
-	
+
 	DeviceExtension = (PKEYBOARD_DEVICE_EXTENSION)pDeviceExtension;
-	
+
 	Queue = DeviceExtension->ActiveQueue % 2;
 	InterlockedIncrement((PLONG)&DeviceExtension->ActiveQueue);
 	(*(PSERVICE_CALLBACK_ROUTINE)DeviceExtension->ClassInformation.CallBack)(
@@ -158,7 +158,7 @@ KeyboardDpcSendData(
 			DeviceExtension->KeyboardInputData[Queue],
 			&DeviceExtension->KeyboardInputData[Queue][DeviceExtension->InputDataCount[Queue]],
 			&InputDataConsumed);
-	
+
 	DeviceExtension->InputDataCount[Queue] = 0;
 }
 static VOID STDCALL
@@ -180,22 +180,22 @@ KeyboardDeviceWorker(
 	ULONG BytesConsumed;
 	PKEYBOARD_INPUT_DATA Input;
 	NTSTATUS Status;
-	
+
 	DPRINT("Green: KeyboardDeviceWorker() called\n");
-	
+
 	DeviceObject = (PDEVICE_OBJECT)Context;
 	DeviceExtension = (PKEYBOARD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	GreenDeviceExtension = (PGREEN_DEVICE_EXTENSION)DeviceExtension->Green->DeviceExtension;
 	LowerDevice = GreenDeviceExtension->Serial;
 	BufferSize = sizeof(Buffer);
-	
+
 	/* Initialize device extension */
 	DeviceExtension->ActiveQueue = 0;
 	DeviceExtension->InputDataCount[0] = 0;
 	DeviceExtension->InputDataCount[1] = 0;
 	KeInitializeDpc(&DeviceExtension->KeyboardDpc, KeyboardDpcSendData, DeviceExtension);
 	RtlZeroMemory(&DeviceExtension->KeyboardInputData, sizeof(DeviceExtension->KeyboardInputData));
-	
+
 	/* main read loop */
 	while (TRUE)
 	{
@@ -214,7 +214,7 @@ KeyboardDeviceWorker(
 			KeStallExecutionProcessor(10);
 			continue;
 		}
-		
+
 		Status = IoCallDriver(LowerDevice, Irp);
 		if (Status == STATUS_PENDING)
 		{
@@ -223,15 +223,15 @@ KeyboardDeviceWorker(
 		}
 		if (!NT_SUCCESS(Status))
 			continue;
-		
+
 		/* Read all available data and process */
 		i = 0;
 		while (i < ioStatus.Information)
 		{
 			Queue = DeviceExtension->ActiveQueue % 2;
-			
+
 			Input = &DeviceExtension->KeyboardInputData[Queue][DeviceExtension->InputDataCount[Queue]];
-			
+
 			/* Translate current chars to scan codes */
 			SpaceInQueue = KEYBOARD_BUFFER_SIZE - DeviceExtension->InputDataCount[Queue];
 			if (TranslateCharToScanCodes(
@@ -243,7 +243,7 @@ KeyboardDeviceWorker(
 			{
 				DPRINT1("Green: got char 0x%02x (%c)\n", Buffer[i], Buffer[i] >= 32 ? Buffer[i] : ' ');
 				DeviceExtension->InputDataCount[Queue] += BytesConsumed;
-				
+
 				/* Send the data to the keyboard class driver */
 				KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
 				KeInsertQueueDpc(&DeviceExtension->KeyboardDpc, NULL, NULL);
@@ -262,7 +262,7 @@ KeyboardDeviceWorker(
 			}
 		}
 	}
-	
+
 	PsTerminateSystemThread(STATUS_SUCCESS);
 }
 
@@ -277,30 +277,30 @@ KeyboardInternalDeviceControl(
 	OBJECT_ATTRIBUTES objectAttributes;
 	PDEVICE_OBJECT LowerDevice;
 	NTSTATUS Status;
-	
+
 	Stack = IoGetCurrentIrpStackLocation(Irp);
 	Irp->IoStatus.Information = 0;
 	DeviceExtension = (PKEYBOARD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	GreenDeviceExtension = (PGREEN_DEVICE_EXTENSION)DeviceExtension->Green->DeviceExtension;
 	LowerDevice = GreenDeviceExtension->Serial;
 	DPRINT1("Green: LowerDevice %p\n", LowerDevice);
-	
+
 	switch (Stack->Parameters.DeviceIoControl.IoControlCode)
 	{
 		case IOCTL_INTERNAL_KEYBOARD_CONNECT:
 		{
 			ULONG Fcr;
-			
+
 			DPRINT("Green: IRP_MJ_INTERNAL_DEVICE_CONTROL / IOCTL_INTERNAL_KEYBOARD_CONNECT\n");
 			if (Stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(CONNECT_DATA))
 			{
 				Status = STATUS_INVALID_PARAMETER;
 				break;
 			}
-			
+
 			DeviceExtension->ClassInformation =
 				*((PCLASS_INFORMATION)Stack->Parameters.DeviceIoControl.Type3InputBuffer);
-			
+
 			/* Initialize serial port */
 			Fcr = 0;
 			Status = GreenDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_FIFO_CONTROL,
@@ -314,12 +314,12 @@ KeyboardInternalDeviceControl(
 			Status = GreenDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_LINE_CONTROL,
 				&GreenDeviceExtension->LineControl, sizeof(GreenDeviceExtension->LineControl), NULL, NULL);
 			if (!NT_SUCCESS(Status)) break;
-			
+
 			/* Set timeouts */
 			Status = GreenDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_TIMEOUTS,
 				&GreenDeviceExtension->Timeouts, sizeof(GreenDeviceExtension->Timeouts), NULL, NULL);
 			if (!NT_SUCCESS(Status)) break;
-			
+
 			/* Start read loop */
 			InitializeObjectAttributes(&objectAttributes, NULL, OBJ_KERNEL_HANDLE, NULL, NULL);
 			Status = PsCreateSystemThread(
@@ -339,7 +339,7 @@ KeyboardInternalDeviceControl(
 			Status = STATUS_INVALID_DEVICE_REQUEST;
 		}
 	}
-	
+
 	Irp->IoStatus.Status = Status;
 	IoCompleteRequest (Irp, IO_NO_INCREMENT);
 	return Status;

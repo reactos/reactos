@@ -4,7 +4,7 @@
  * FILE:             services/fs/ext2/dir.c
  * PURPOSE:          ext2 filesystem
  * PROGRAMMER:       David Welch (welch@cwcom.net)
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -24,7 +24,7 @@
 static VOID Ext2ConvertName(PWSTR Out, PCH In, ULONG Len)
 {
    ULONG i;
-   
+
    for (i=0; i<Len; i++)
      {
 	*Out = *In;
@@ -44,28 +44,28 @@ PVOID Ext2ProcessDirEntry(PDEVICE_EXTENSION DeviceExt,
    PFILE_NAMES_INFORMATION FNI;
    PFILE_BOTH_DIRECTORY_INFORMATION FBI;
    struct ext2_inode inode;
-   
+
    DPRINT("FileIndex %d\n",FileIndex);
    DPRINT("Buffer %x\n",Buffer);
-   
+
    Ext2ReadInode(DeviceExt,
 		 dir_entry->inode,
 		 &inode);
-     
+
    switch (IoStack->Parameters.QueryDirectory.FileInformationClass)
      {
       case FileNamesInformation:
 	FNI = (PFILE_NAMES_INFORMATION)Buffer;
 	FNI->NextEntryOffset = sizeof(FileDirectoryInformation) +
 	  dir_entry->name_len + 1;
-	FNI->FileNameLength = dir_entry->name_len;	
+	FNI->FileNameLength = dir_entry->name_len;
 	Ext2ConvertName(FNI->FileName, dir_entry->name, dir_entry->name_len);
 	Buffer = Buffer + FNI->NextEntryOffset;
 	break;
-	
+
       case FileDirectoryInformation:
 	FDI = (PFILE_DIRECTORY_INFORMATION)Buffer;
-	FDI->NextEntryOffset = sizeof(FileDirectoryInformation) + 
+	FDI->NextEntryOffset = sizeof(FileDirectoryInformation) +
 	                       dir_entry->name_len + 1;
 	FDI->FileIndex = FileIndex;
 //	FDI->CreationTime = 0;
@@ -78,7 +78,7 @@ PVOID Ext2ProcessDirEntry(PDEVICE_EXTENSION DeviceExt,
 	Ext2ConvertName(FDI->FileName, dir_entry->name, dir_entry->name_len);
 	Buffer = Buffer + FDI->NextEntryOffset;
 	break;
-	
+
       case FileBothDirectoryInformation:
 	FBI = (PFILE_BOTH_DIRECTORY_INFORMATION)Buffer;
 	FBI->NextEntryOffset = sizeof(FileBothDirectoryInformation) +
@@ -91,7 +91,7 @@ PVOID Ext2ProcessDirEntry(PDEVICE_EXTENSION DeviceExt,
 	memset(FBI->ShortName, 0, sizeof(FBI->ShortName));
 	Buffer = Buffer + FBI->NextEntryOffset;
 	break;
-	
+
       default:
 	UNIMPLEMENTED;
      }
@@ -109,11 +109,11 @@ NTSTATUS Ext2QueryDirectory(PDEVICE_EXTENSION DeviceExt,
    ULONG StartIndex;
    PVOID Buffer = NULL;
    struct ext2_dir_entry dir_entry;
-   
+
    Buffer = Irp->UserBuffer;
    DPRINT("Buffer %x\n",Buffer);
    DPRINT("IoStack->Flags %x\n",IoStack->Flags);
-   
+
    if (IoStack->Flags & SL_RETURN_SINGLE_ENTRY)
      {
 	Max = 1;
@@ -122,7 +122,7 @@ NTSTATUS Ext2QueryDirectory(PDEVICE_EXTENSION DeviceExt,
      {
 	UNIMPLEMENTED;
      }
-   
+
    DPRINT("Buffer->FileIndex %d\n",
 	  ((PFILE_DIRECTORY_INFORMATION)Buffer)->FileIndex);
    if (IoStack->Flags & SL_INDEX_SPECIFIED)
@@ -133,14 +133,14 @@ NTSTATUS Ext2QueryDirectory(PDEVICE_EXTENSION DeviceExt,
      {
 	StartIndex = 0;
      }
-   
+
    if (IoStack->Flags & SL_RESTART_SCAN)
      {
 	StartIndex = 0;
      }
-   
+
    DPRINT("StartIndex %d\n",StartIndex);
-   
+
    for (i=0; i<Max ;i++)
      {
 	if (!Ext2ScanDir(DeviceExt,&Fcb->inode,"*",&dir_entry,&StartIndex))
@@ -149,9 +149,9 @@ NTSTATUS Ext2QueryDirectory(PDEVICE_EXTENSION DeviceExt,
 	     return(STATUS_NO_MORE_FILES);
 	  }
 	Buffer = Ext2ProcessDirEntry(DeviceExt,
-				     &dir_entry, 
-				     IoStack, 
-				     Buffer, 
+				     &dir_entry,
+				     IoStack,
+				     Buffer,
 				     StartIndex);
      }
    return(STATUS_SUCCESS);
@@ -165,30 +165,30 @@ Ext2DirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    PEXT2_FCB Fcb = (PVOID)FileObject->FsContext;
    NTSTATUS Status;
    PDEVICE_EXTENSION DeviceExt;
-   
+
    DPRINT("Ext2DirectoryControl(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
-   
+
    DeviceExt = DeviceObject->DeviceExtension;
-   
+
    switch (Stack->MinorFunction)
      {
       case IRP_MN_QUERY_DIRECTORY:
 	Status = Ext2QueryDirectory(DeviceExt, Fcb, Irp, Stack);
 	break;
-	
+
       default:
 	Status = STATUS_UNSUCCESSFUL;
      }
-   
+
    Irp->IoStatus.Status = Status;
    Irp->IoStatus.Information = 0;
-   
+
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-   return(Status);   
+   return(Status);
 }
 
 BOOL Ext2ScanDir(PDEVICE_EXTENSION DeviceExt,
-		 struct ext2_inode* dir, 
+		 struct ext2_inode* dir,
 		 PCH filename,
 		 struct ext2_dir_entry* ret,
 		 PULONG StartIndex)
@@ -200,11 +200,11 @@ BOOL Ext2ScanDir(PDEVICE_EXTENSION DeviceExt,
    struct ext2_dir_entry* current;
    ULONG block;
    BOOL b;
-   
+
    DPRINT("Ext2ScanDir(dir %x, filename %s, ret %x)\n",dir,filename,ret);
-   
+
    buffer = ExAllocatePool(NonPagedPool, BLOCKSIZE);
-   
+
    for (i=0; i<((*StartIndex)/BLOCKSIZE); i++);
    for (; (block = Ext2BlockMap(DeviceExt, dir, i)) != 0; i++)
      {
@@ -218,15 +218,15 @@ BOOL Ext2ScanDir(PDEVICE_EXTENSION DeviceExt,
 	     DbgPrint("ext2fs:%s:%d: Disk io failed\n", __FILE__, __LINE__);
 	     return(FALSE);
 	  }
-	
+
 	offset = (*StartIndex)%BLOCKSIZE;
 	while (offset < BLOCKSIZE)
 	  {
 	     current = &buffer[offset];
-	     
+
 	     strncpy(name,current->name,current->name_len);
              name[current->name_len]=0;
-	     
+
 	     DPRINT("Scanning offset %d inode %d name %s\n",
 		    offset,current->inode,name);
 
@@ -239,7 +239,7 @@ BOOL Ext2ScanDir(PDEVICE_EXTENSION DeviceExt,
 		  ExFreePool(buffer);
 		  return(TRUE);
 	       }
-	     
+
 	     offset = offset + current->rec_len;
 	     ASSERT(current->rec_len != 0);
 	     DPRINT("offset %d\n",offset);
@@ -262,7 +262,7 @@ void unicode_to_ansi(PCH StringA, PWSTR StringW)
    *StringA = 0;
 }
 
-NTSTATUS Ext2OpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject, 
+NTSTATUS Ext2OpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 		     PWSTR FileName)
 /*
  * FUNCTION: Opens a file
@@ -275,12 +275,12 @@ NTSTATUS Ext2OpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    char* current_segment;
    PEXT2_FCB Fcb;
    ULONG StartIndex = 0;
-   
+
    DPRINT("Ext2OpenFile(DeviceExt %x, FileObject %x, FileName %S)\n",
 	  DeviceExt,FileObject,FileName);
-   
+
    Fcb = ExAllocatePool(NonPagedPool, sizeof(EXT2_FCB));
-   
+
    unicode_to_ansi(name,FileName);
    DPRINT("name %s\n",name);
    DPRINT("strtok %x\n",strtok);
@@ -309,11 +309,11 @@ NTSTATUS Ext2OpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 			 &parent_inode);
      }
    DPRINT("Found file\n");
-   
+
    Fcb->inode = current_inode;
    CcRosInitializeFileCache(FileObject, &Fcb->Bcb, PAGE_SIZE*3);
    FileObject->FsContext = Fcb;
-   
+
    return(STATUS_SUCCESS);
 }
 
@@ -324,15 +324,15 @@ Ext2Create(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    PFILE_OBJECT FileObject = Stack->FileObject;
    NTSTATUS Status;
    PDEVICE_EXTENSION DeviceExt;
-   
+
    DPRINT("Ext2Create(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
-   
+
    DeviceExt = DeviceObject->DeviceExtension;
    Status = Ext2OpenFile(DeviceExt,FileObject,FileObject->FileName.Buffer);
-   
+
    Irp->IoStatus.Status = Status;
    Irp->IoStatus.Information = 0;
-   
+
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
    return(Status);
 }

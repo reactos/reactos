@@ -4,11 +4,11 @@
  * FILE:             drivers/dd/sound/mixer.c
  * PURPOSE:          Wave Mixer?
  * PROGRAMMER:       ?
- *     
- * UPDATE HISTORY: 
+ *
+ * UPDATE HISTORY:
  *              ??/??/??: Created
  * 		10/23/02: Steven Edwards (Steven_Ed4153@yahoo.com)
- *			  Minor build fixes             
+ *			  Minor build fixes
  */
 
 #include "dsp.h"
@@ -42,7 +42,7 @@ void get_dma(SB16* sb16)
   if(hi==0x80) sb16->dma16=7;
   if(hi==0x40) sb16->dma16=6;
   if(hi==0x20) sb16->dma16=5;
-  
+
   if(lo==0x08) sb16->dma8=3;
   if(lo==0x02) sb16->dma8=1;
   if(lo==0x01) sb16->dma8=0;

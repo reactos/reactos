@@ -158,7 +158,7 @@ typedef char                         	BM_DEVICE_HID[9];
 #define BM_HID_SLEEP_BUTTON		"PNP0C0E"
 
 /*
- * BM_DEVICE_CID: 
+ * BM_DEVICE_CID:
  *     The compatibility ID can be a string with 44 characters
  *     The extra pad is in case there is a change.  It also
  *     provides 8 byte alignment for the BM_DEVICE_ID structure.
@@ -564,7 +564,7 @@ bm_pr_initialize (void);
 
 ACPI_STATUS
 bm_pr_terminate (void);
-	
+
 /* bmutils.c */
 
 ACPI_STATUS

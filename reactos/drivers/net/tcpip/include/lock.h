@@ -13,7 +13,7 @@ extern VOID TcpipInterlockedInsertTailList( PLIST_ENTRY ListHead,
 extern VOID TcpipAcquireFastMutex( PFAST_MUTEX Mutex );
 extern VOID TcpipReleaseFastMutex( PFAST_MUTEX Mutex );
 extern VOID TcpipRecursiveMutexInit( PRECURSIVE_MUTEX RecMutex );
-extern UINT TcpipRecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex, 
+extern UINT TcpipRecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex,
 				      BOOL ToWrite );
 extern VOID TcpipRecursiveMutexLeave( PRECURSIVE_MUTEX RecMutex );
 

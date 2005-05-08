@@ -4,11 +4,11 @@
  * FILE:             drivers/dd/sound/dsp.c
  * PURPOSE:          Digital Signal Processing ?
  * PROGRAMMER:       Snatched from ?
- * 
- * UPDATE HISTORY: 
+ *
+ * UPDATE HISTORY:
  *              ??/??/??: Created
  * 		10/23/02: Steven Edwards (Steven_Ed4153@yahoo.com)
- *			  Minor build fix            
+ *			  Minor build fix
  */
 
 #include "dsp.h"
@@ -68,10 +68,10 @@ sb_status reset_dsp(unsigned short base_address)
 
 	return SB_TRUE;
 }
-	
+
 void write_dsp(unsigned short base,unsigned char data)
 {
 //  while ((inb(base+DSP_WRITE_PORT) & 0x80) != 0);
 //  outb(base+DSP_WRITE_PORT, data);
 }
-  
+

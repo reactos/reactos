@@ -1,10 +1,10 @@
 /* $Id:
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Serial enumerator driver
  * FILE:            drivers/dd/serenum/misc.c
  * PURPOSE:         Misceallenous operations
- * 
+ *
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
  */
 
@@ -19,23 +19,23 @@ SerenumDuplicateUnicodeString(
 	IN POOL_TYPE PoolType)
 {
 	ASSERT(Destination);
-	
+
 	if (Source == NULL)
 	{
 		RtlInitUnicodeString(Destination, NULL);
 		return STATUS_SUCCESS;
 	}
-	
+
 	Destination->Buffer = ExAllocatePool(PoolType, Source->MaximumLength);
 	if (Destination->Buffer == NULL)
 	{
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
-	
+
 	Destination->MaximumLength = Source->MaximumLength;
 	Destination->Length = Source->Length;
 	RtlCopyMemory(Destination->Buffer, Source->Buffer, Source->MaximumLength);
-	
+
 	return STATUS_SUCCESS;
 }
 
@@ -53,9 +53,9 @@ SerenumInitMultiSzString(
 	UNICODE_STRING UnicodeString;
 	ULONG DestinationSize = 0;
 	NTSTATUS Status = STATUS_SUCCESS;
-	
+
 	ASSERT(Destination);
-	
+
 	/* Calculate length needed for destination unicode string */
 	va_start(args, Destination);
 	Source = va_arg(args, PCSZ);
@@ -72,7 +72,7 @@ SerenumInitMultiSzString(
 		RtlInitUnicodeString(Destination, NULL);
 		return STATUS_SUCCESS;
 	}
-	
+
 	/* Initialize destination string */
 	DestinationSize += sizeof(WCHAR); // final NULL
 	Destination->Buffer = (PWSTR)ExAllocatePoolWithTag(PagedPool, DestinationSize, SERENUM_TAG);
@@ -80,7 +80,7 @@ SerenumInitMultiSzString(
 		return STATUS_INSUFFICIENT_RESOURCES;
 	Destination->Length = 0;
 	Destination->MaximumLength = (USHORT)DestinationSize;
-	
+
 	/* Copy arguments to destination string */
 	/* Use a temporary unicode string, which buffer is shared with
 	 * destination string, to copy arguments */
@@ -133,18 +133,18 @@ ForwardIrpAndWait(
 	PDEVICE_OBJECT LowerDevice;
 	KEVENT Event;
 	NTSTATUS Status;
-	
+
 	ASSERT(((PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO);
 	LowerDevice = ((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
-	
+
 	ASSERT(LowerDevice);
-	
+
 	KeInitializeEvent(&Event, NotificationEvent, FALSE);
 	IoCopyCurrentIrpStackLocationToNext(Irp);
-	
+
 	DPRINT("Serenum: Calling lower device %p [%wZ]\n", LowerDevice, &LowerDevice->DriverObject->DriverName);
 	IoSetCompletionRoutine(Irp, ForwardIrpAndWaitCompletion, &Event, TRUE, TRUE, TRUE);
-	
+
 	Status = IoCallDriver(LowerDevice, Irp);
 	if (Status == STATUS_PENDING)
 	{
@@ -152,7 +152,7 @@ ForwardIrpAndWait(
 		if (NT_SUCCESS(Status))
 			Status = Irp->IoStatus.Status;
 	}
-	
+
 	return Status;
 }
 
@@ -163,10 +163,10 @@ ForwardIrpToLowerDeviceAndForget(
 {
 	PFDO_DEVICE_EXTENSION DeviceExtension;
 	PDEVICE_OBJECT LowerDevice;
-	
+
 	DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	ASSERT(DeviceExtension->Common.IsFDO);
-	
+
 	LowerDevice = DeviceExtension->LowerDevice;
 	ASSERT(LowerDevice);
 	DPRINT("Serenum: calling lower device 0x%p [%wZ]\n",
@@ -182,10 +182,10 @@ ForwardIrpToAttachedFdoAndForget(
 {
 	PPDO_DEVICE_EXTENSION DeviceExtension;
 	PDEVICE_OBJECT Fdo;
-	
+
 	DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	ASSERT(!DeviceExtension->Common.IsFDO);
-	
+
 	Fdo = DeviceExtension->AttachedFdo;
 	ASSERT(Fdo);
 	DPRINT("Serenum: calling attached Fdo 0x%p [%wZ]\n",
@@ -200,11 +200,11 @@ ForwardIrpAndForget(
 	IN PIRP Irp)
 {
 	PDEVICE_OBJECT LowerDevice;
-	
+
 	ASSERT(((PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO);
 	LowerDevice = ((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
 	ASSERT(LowerDevice);
-	
+
 	IoSkipCurrentIrpStackLocation(Irp);
 	return IoCallDriver(LowerDevice, Irp);
 }

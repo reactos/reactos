@@ -71,7 +71,7 @@ typedef struct _NDIS_WRAPPER_CONTEXT {
 #define GET_MINIPORT_DRIVER(Handle)((PMINIPORT_DRIVER)Handle)
 
 /* Information about a logical adapter */
-typedef struct _LOGICAL_ADAPTER 
+typedef struct _LOGICAL_ADAPTER
 {
     NDIS_MINIPORT_BLOCK         NdisMiniportBlock;      /* NDIS defined fields */
     KDPC                        MiniportDpc;            /* DPC routine for adapter */
@@ -161,11 +161,11 @@ MiniDoRequest(
     PLOGICAL_ADAPTER Adapter,
     PNDIS_REQUEST NdisRequest);
 
-BOOLEAN 
+BOOLEAN
 NdisFindDevice(
-    UINT   VendorID, 
-    UINT   DeviceID, 
-    PUINT  BusNumber, 
+    UINT   VendorID,
+    UINT   DeviceID,
+    PUINT  BusNumber,
     PUINT  SlotNumber);
 
 VOID

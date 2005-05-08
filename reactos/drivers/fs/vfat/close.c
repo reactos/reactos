@@ -58,7 +58,7 @@ VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
     }
     vfatReleaseFCB (DeviceExt, pFcb);
   }
-    
+
   FileObject->FsContext2 = NULL;
   FileObject->FsContext = NULL;
   FileObject->SectionObjectPointer = NULL;
@@ -67,7 +67,7 @@ VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
   {
     vfatDestroyCCB(pCcb);
   }
-  
+
   return  Status;
 }
 
@@ -87,7 +87,7 @@ NTSTATUS VfatClose (PVFAT_IRP_CONTEXT IrpContext)
       goto ByeBye;
     }
 #if 0
-  /* There occurs a dead look at the call to CcRosDeleteFileCache/ObDereferenceObject/VfatClose 
+  /* There occurs a dead look at the call to CcRosDeleteFileCache/ObDereferenceObject/VfatClose
      in CmLazyCloseThreadMain if VfatClose is execute asynchronous in a worker thread. */
   if (!ExAcquireResourceExclusiveLite (&IrpContext->DeviceExt->DirResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
 #else

@@ -72,21 +72,21 @@ bm_get_inferred_power_state (
 	/*
 	 * Calculate Power State:
 	 * ----------------------
-	 * Try to infer the devices's power state by checking the state of 
-	 * the devices's power resources.  We start by evaluating _PR0 
-	 * (resource requirements at D0) and work through _PR1 and _PR2.  
-	 * We know the current devices power state when all resources (for 
-	 * a give Dx state) are ON.  If no power resources are on then the 
+	 * Try to infer the devices's power state by checking the state of
+	 * the devices's power resources.  We start by evaluating _PR0
+	 * (resource requirements at D0) and work through _PR1 and _PR2.
+	 * We know the current devices power state when all resources (for
+	 * a give Dx state) are ON.  If no power resources are on then the
 	 * device is assumed to be off (D3).
 	 */
 	for (i=ACPI_STATE_D0; i<ACPI_STATE_D3; i++) {
 
-		status = bm_evaluate_reference_list(device->acpi_handle, 
+		status = bm_evaluate_reference_list(device->acpi_handle,
 			object_name, &pr_list);
 
 		if (ACPI_SUCCESS(status)) {
 
-			status = bm_pr_list_get_state(&pr_list, 
+			status = bm_pr_list_get_state(&pr_list,
 				&list_state);
 
 			if (ACPI_SUCCESS(status)) {
@@ -137,7 +137,7 @@ bm_get_power_state (
 	device->power.state = ACPI_STATE_UNKNOWN;
 
 	if (device->flags & BM_FLAGS_POWER_STATE) {
-		status = bm_evaluate_simple_integer(device->acpi_handle, 
+		status = bm_evaluate_simple_integer(device->acpi_handle,
 			"_PSC", &(device->power.state));
 	}
 	else {
@@ -204,24 +204,24 @@ bm_set_power_state (
 	/*
 	 * Get Resources:
 	 * --------------
-	 * Get the power resources associated with the device's current 
+	 * Get the power resources associated with the device's current
 	 * and target power states.
 	 */
 	if (device->power.state != ACPI_STATE_UNKNOWN) {
 		object_name[3] = '0' + device->power.state;
-		bm_evaluate_reference_list(device->acpi_handle, 
+		bm_evaluate_reference_list(device->acpi_handle,
 			object_name, &current_list);
 	}
 
 	object_name[3] = '0' + state;
-	bm_evaluate_reference_list(device->acpi_handle, object_name, 
+	bm_evaluate_reference_list(device->acpi_handle, object_name,
 		&target_list);
 
 	/*
 	 * Transition Resources:
 	 * ---------------------
-	 * Transition all power resources referenced by this device to 
-	 * the correct power state (taking into consideration sequencing 
+	 * Transition all power resources referenced by this device to
+	 * the correct power state (taking into consideration sequencing
 	 * and dependencies to other devices).
 	 */
 	if (current_list.count || target_list.count) {
@@ -234,7 +234,7 @@ bm_set_power_state (
 	/*
 	 * Execute _PSx:
 	 * -------------
-	 * Execute the _PSx method corresponding to the target Dx state, 
+	 * Execute the _PSx method corresponding to the target Dx state,
 	 * if it exists.
 	 */
 	object_name[2] = 'S';
@@ -287,17 +287,17 @@ bm_get_pm_capabilities (
 	 * Power Management Flags:
 	 * -----------------------
 	 */
-	if (ACPI_SUCCESS(acpi_get_handle(device->acpi_handle, "_PSC", 
+	if (ACPI_SUCCESS(acpi_get_handle(device->acpi_handle, "_PSC",
 		&acpi_handle))) {
 		device->power.flags |= BM_FLAGS_POWER_STATE;
 	}
 
-	if (ACPI_SUCCESS(acpi_get_handle(device->acpi_handle, "_IRC", 
+	if (ACPI_SUCCESS(acpi_get_handle(device->acpi_handle, "_IRC",
 		&acpi_handle))) {
 		device->power.flags |= BM_FLAGS_INRUSH_CURRENT;
 	}
 
-	if (ACPI_SUCCESS(acpi_get_handle(device->acpi_handle, "_PRW", 
+	if (ACPI_SUCCESS(acpi_get_handle(device->acpi_handle, "_PRW",
 		&acpi_handle))) {
 		device->power.flags |= BM_FLAGS_WAKE_CAPABLE;
 	}
@@ -317,22 +317,22 @@ bm_get_pm_capabilities (
 	 * Figure out which Dx states are supported by this device for the
 	 * S0 (working) state.  Note that D0 and D3 are required (assumed).
 	 */
-	device->power.dx_supported[ACPI_STATE_S0] = BM_FLAGS_D0_SUPPORT | 
+	device->power.dx_supported[ACPI_STATE_S0] = BM_FLAGS_D0_SUPPORT |
 		BM_FLAGS_D3_SUPPORT;
 
-	if ((ACPI_SUCCESS(acpi_get_handle(device->acpi_handle, "_PR1", 
-		&acpi_handle))) || 
-		(ACPI_SUCCESS(acpi_get_handle(device->acpi_handle, "_PS1", 
+	if ((ACPI_SUCCESS(acpi_get_handle(device->acpi_handle, "_PR1",
+		&acpi_handle))) ||
+		(ACPI_SUCCESS(acpi_get_handle(device->acpi_handle, "_PS1",
 		&acpi_handle)))) {
-		device->power.dx_supported[ACPI_STATE_S0] |= 
+		device->power.dx_supported[ACPI_STATE_S0] |=
 			BM_FLAGS_D1_SUPPORT;
 	}
 
-	if ((ACPI_SUCCESS(acpi_get_handle(device->acpi_handle, "_PR2", 
-		&acpi_handle))) || 
-		(ACPI_SUCCESS(acpi_get_handle(device->acpi_handle, "_PS2", 
+	if ((ACPI_SUCCESS(acpi_get_handle(device->acpi_handle, "_PR2",
+		&acpi_handle))) ||
+		(ACPI_SUCCESS(acpi_get_handle(device->acpi_handle, "_PS2",
 		&acpi_handle)))) {
-		device->power.dx_supported[ACPI_STATE_S0] |= 
+		device->power.dx_supported[ACPI_STATE_S0] |=
 			BM_FLAGS_D2_SUPPORT;
 	}
 
@@ -352,28 +352,28 @@ bm_get_pm_capabilities (
 		/*
 		 * Evalute _SxD:
 		 * -------------
-		 * Which returns the highest (power) Dx state supported in 
-		 * this system (Sx) state.  We convert this value to a bit 
+		 * Which returns the highest (power) Dx state supported in
+		 * this system (Sx) state.  We convert this value to a bit
 		 * mask of supported states (conceptually simpler).
 		 */
-		status = bm_evaluate_simple_integer(device->acpi_handle, 
+		status = bm_evaluate_simple_integer(device->acpi_handle,
 			object_name, &dx_supported);
 		if (ACPI_SUCCESS(status)) {
 			switch (dx_supported) {
 			case 0:
-				device->power.dx_supported[i] |= 
+				device->power.dx_supported[i] |=
 					BM_FLAGS_D0_SUPPORT;
 				/* fall through */
 			case 1:
-				device->power.dx_supported[i] |= 
+				device->power.dx_supported[i] |=
 					BM_FLAGS_D1_SUPPORT;
 				/* fall through */
 			case 2:
-				device->power.dx_supported[i] |= 
+				device->power.dx_supported[i] |=
 					BM_FLAGS_D2_SUPPORT;
 				/* fall through */
 			case 3:
-				device->power.dx_supported[i] |= 
+				device->power.dx_supported[i] |=
 					BM_FLAGS_D3_SUPPORT;
 				break;
 			}
@@ -381,12 +381,12 @@ bm_get_pm_capabilities (
 			/*
 			 * Validate:
 			 * ---------
-			 * Mask of any states that _Sx_d falsely advertises 
-			 * (e.g.claims D1 support but neither _PR2 or _PS2 
-			 * exist).  In other words, S1-S5 can't offer a Dx 
+			 * Mask of any states that _Sx_d falsely advertises
+			 * (e.g.claims D1 support but neither _PR2 or _PS2
+			 * exist).  In other words, S1-S5 can't offer a Dx
 			 * state that isn't supported by S0.
 			 */
-			device->power.dx_supported[i] &= 
+			device->power.dx_supported[i] &=
 				device->power.dx_supported[ACPI_STATE_S0];
 		}
 

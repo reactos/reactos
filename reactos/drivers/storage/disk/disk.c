@@ -70,7 +70,7 @@ DiskClassCheckReadWrite(IN PDEVICE_OBJECT DeviceObject,
 
 static VOID
 DiskClassCreateMediaChangeEvent(IN PDEVICE_EXTENSION DeviceExtension,
-				 IN ULONG DeviceNumber); 
+				 IN ULONG DeviceNumber);
 
 static NTSTATUS
 DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
@@ -119,7 +119,7 @@ DiskBuildPartitionTable(IN PDEVICE_OBJECT DiskDeviceObject,
  *	DriverEntry
  *
  * DESCRIPTION
- *	This function initializes the driver, locates and claims 
+ *	This function initializes the driver, locates and claims
  *	hardware resources, and creates various NT objects needed
  *	to process I/O requests.
  *
@@ -408,7 +408,7 @@ DiskClassCheckReadWrite(IN PDEVICE_OBJECT DeviceObject,
 
 
 
-  IrpStack = IoGetCurrentIrpStackLocation(Irp);  
+  IrpStack = IoGetCurrentIrpStackLocation(Irp);
   EndingOffset.QuadPart = IrpStack->Parameters.Read.ByteOffset.QuadPart +
                           IrpStack->Parameters.Read.Length;
 
@@ -669,7 +669,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   if ((DiskDeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) &&
       (DiskDeviceExtension->DiskGeometry->MediaType == RemovableMedia))
     {
-      DiskClassCreateMediaChangeEvent(DiskDeviceExtension,DiskNumber); 
+      DiskClassCreateMediaChangeEvent(DiskDeviceExtension,DiskNumber);
       if (DiskDeviceExtension->MediaChangeEvent != NULL)
 	{
 	  DPRINT("Allocated media change event!\n");
@@ -999,7 +999,7 @@ DiskBuildPartitionTable(IN PDEVICE_OBJECT DiskDeviceObject,
 NTSTATUS STDCALL
 DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 		       IN PIRP Irp)
-{ 
+{
   PDEVICE_EXTENSION DeviceExtension;
   PIO_STACK_LOCATION IrpStack;
   ULONG ControlCode, InputLength, OutputLength;
@@ -1067,7 +1067,7 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 		/* Update a partition list for a single entry. */
 		Status = DiskBuildPartitionTable(DeviceObject,Irp);
 	}
-	
+
 	if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength <
 	    sizeof(PARTITION_INFORMATION))
 	  {

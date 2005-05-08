@@ -7,7 +7,7 @@
  * PROGRAMMER:           Steven Edwards
  * UPDATE HISTORY:
  *                       19/01/04 Created
- *                       
+ *
  */
 
 /* INCLUDES ****************************************************************/

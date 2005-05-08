@@ -57,7 +57,7 @@ bm_compare (
 		return AE_BAD_PARAMETER;
 	}
 
-	/* 
+	/*
 	 * Present?
 	 * --------
 	 * We're only going to match on devices that are present.
@@ -67,22 +67,22 @@ bm_compare (
 		return AE_NOT_FOUND;
 	}
 
-	/* 
+	/*
 	 * type?
 	 */
 	if (criteria->type && !(criteria->type & device->id.type)) {
 		return AE_NOT_FOUND;
 	}
 
-	/* 
+	/*
 	 * hid?
 	 */
-	if ((criteria->hid[0]) && (0 != STRNCMP(criteria->hid, 
+	if ((criteria->hid[0]) && (0 != STRNCMP(criteria->hid,
 		device->id.hid, sizeof(BM_DEVICE_HID)))) {
 		return AE_NOT_FOUND;
 	}
 
-	/* 
+	/*
 	 * adr?
 	 */
 	if ((criteria->adr) && (criteria->adr != device->id.adr)) {
@@ -149,7 +149,7 @@ bm_search(
 		if (node->scope.head) {
 			status = bm_compare(&(node->device), criteria);
 			if (ACPI_SUCCESS(status)) {
-				results->handles[results->count++] = 
+				results->handles[results->count++] =
 					node->device.handle;
 			}
 			node = node->scope.head;
@@ -163,16 +163,16 @@ bm_search(
 		else {
 			status = bm_compare(&(node->device), criteria);
 			if (ACPI_SUCCESS(status)) {
-				results->handles[results->count++] = 
+				results->handles[results->count++] =
 					node->device.handle;
 			}
 
 			/*
 			 * Locate Next Device:
 			 * -------------------
-			 * The next node is either a peer at this level 
-			 * (node->next is valid), or we work are way back 
-			 * up the tree until we either find a non-parsed 
+			 * The next node is either a peer at this level
+			 * (node->next is valid), or we work are way back
+			 * up the tree until we either find a non-parsed
 			 * peer or hit the top (node->parent is NULL).
 			 */
 			while (!node->next && node->parent) {

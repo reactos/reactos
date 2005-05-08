@@ -43,8 +43,8 @@ VOID TIME_SYNCHRONIZE(struct time_conv *data)
 
 	if (data->reference!=0)
 		return;
-	
-	// get the absolute value of the system boot time.   
+
+	// get the absolute value of the system boot time.
 	PTime=KeQueryPerformanceCounter(&TimeFreq);
 	KeQuerySystemTime(&SystemTime);
 #ifndef __GNUC__
@@ -105,7 +105,7 @@ VOID TIME_SYNCHRONIZE(struct time_conv *data)
 
    	if (data->reference!=0)
 		return;
-	
+
 	KeInitializeEvent(&event,NotificationEvent,FALSE);
 	i.QuadPart=-3500000;
 	KeRaiseIrql(HIGH_LEVEL,&old);
@@ -177,7 +177,7 @@ VOID TIME_SYNCHRONIZE(struct time_conv *data)
 	}
 	reference=delta*(start_freq.QuadPart)/delta2;
 	data->reference=reference/1000;
-	if (reference%1000>500) 
+	if (reference%1000>500)
 		data->reference++;
 	data->reference*=1000;
 	reference=data->reference;

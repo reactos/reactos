@@ -253,7 +253,7 @@ typedef struct DEVICE_EXTENSION
   ULONG LastAvailableCluster;
   ULONG AvailableClusters;
   BOOLEAN AvailableClustersValid;
-  ULONG Flags;  
+  ULONG Flags;
   struct _VFATFCB * VolumeFcb;
 
   /* Pointers to functions for manipulating FAT. */
@@ -261,10 +261,10 @@ typedef struct DEVICE_EXTENSION
   PFIND_AND_MARK_AVAILABLE_CLUSTER FindAndMarkAvailableCluster;
   PWRITE_CLUSTER WriteCluster;
   ULONG CleanShutBitMask;
-  
+
   /* Pointers to functions for manipulating directory entries. */
   PGET_NEXT_DIR_ENTRY GetNextDirEntry;
-  
+
   ULONG BaseDateYear;
 
   LIST_ENTRY VolumeListEntry;
@@ -305,7 +305,7 @@ typedef struct _VFATFCB
 
   /* directory entry for this file or directory */
   DIR_ENTRY entry;
-  
+
   /* Pointer to attributes in entry */
   PUCHAR Attributes;
 
@@ -550,7 +550,7 @@ NTSTATUS VfatQueryInformation (PVFAT_IRP_CONTEXT IrpContext);
 NTSTATUS VfatSetInformation (PVFAT_IRP_CONTEXT IrpContext);
 
 NTSTATUS
-VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject, 
+VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
 				 PVFATFCB Fcb,
 				 PDEVICE_EXTENSION DeviceExt,
 				 PLARGE_INTEGER AllocationSize);
@@ -582,8 +582,8 @@ vfatFindDirSpace(PDEVICE_EXTENSION DeviceExt,
 /*  --------------------------------------------------------  string.c  */
 
 VOID
-vfatSplitPathName(PUNICODE_STRING PathNameU, 
-		  PUNICODE_STRING DirNameU, 
+vfatSplitPathName(PUNICODE_STRING PathNameU,
+		  PUNICODE_STRING DirNameU,
 		  PUNICODE_STRING FileNameU);
 
 BOOLEAN vfatIsLongIllegal(WCHAR c);
@@ -749,8 +749,8 @@ PVOID VfatGetUserBuffer(IN PIRP);
 NTSTATUS VfatLockUserBuffer(IN PIRP, IN ULONG,
                             IN LOCK_OPERATION);
 
-NTSTATUS 
-VfatSetExtendedAttributes(PFILE_OBJECT FileObject, 
+NTSTATUS
+VfatSetExtendedAttributes(PFILE_OBJECT FileObject,
 			  PVOID Ea,
 			  ULONG EaLength);
 /*  ------------------------------------------------------------- flush.c  */

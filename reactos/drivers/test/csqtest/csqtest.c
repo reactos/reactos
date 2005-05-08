@@ -31,8 +31,8 @@ KSPIN_LOCK IrpQueueLock;
 /* Device object */
 PDEVICE_OBJECT DeviceObject;
 
-/* 
- * CSQ Callbacks 
+/*
+ * CSQ Callbacks
  */
 VOID NTAPI CsqInsertIrp(PIO_CSQ Csq, PIRP Irp)
 {
@@ -133,9 +133,9 @@ NTSTATUS NTAPI DispatchReadWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 }
 
 NTSTATUS NTAPI DispatchIoctl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
-/* 
- * all IOCTL requests flush the irp queue 
- */ 
+/*
+ * all IOCTL requests flush the irp queue
+ */
 {
 	PIRP CurrentIrp;
 
@@ -190,7 +190,7 @@ NTSTATUS NTAPI DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING Registry
 	DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = DispatchIoctl;
 	DriverObject->DriverUnload = Unload;
 
-	Status = IoCsqInitialize(&Csq, CsqInsertIrp, CsqRemoveIrp, CsqPeekNextIrp, 
+	Status = IoCsqInitialize(&Csq, CsqInsertIrp, CsqRemoveIrp, CsqPeekNextIrp,
 													 CsqAcquireLock, CsqReleaseLock, CsqCompleteCancelledIrp);
 
 	if(Status != STATUS_SUCCESS)
@@ -219,7 +219,7 @@ NTSTATUS NTAPI DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING Registry
 			KdPrint(("csqtest: Unable to create link: 0x%x\n", Status));
 			return Status;
 		}
-	
+
 	DeviceObject->Flags |= DO_BUFFERED_IO;
 
 	return STATUS_SUCCESS;

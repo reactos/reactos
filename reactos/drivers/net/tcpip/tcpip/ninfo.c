@@ -13,28 +13,28 @@
 #define IP_ROUTE_TYPE_ADD 3
 #define IP_ROUTE_TYPE_DEL 2
 
-TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer, 
+TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer,
 				     PUINT BufferSize ) {
-    
+
     IF_LIST_ITER(CurrentIF);
     TDI_STATUS Status = TDI_INVALID_REQUEST;
     KIRQL OldIrql;
     UINT Count = 1; /* Start adapter indices at 1 */
     UINT IfCount = CountInterfaces();
-    PIPADDR_ENTRY IpAddress = 
+    PIPADDR_ENTRY IpAddress =
 	ExAllocatePool( NonPagedPool, sizeof( IPADDR_ENTRY ) * IfCount );
     PIPADDR_ENTRY IpCurrent = IpAddress;
 
     TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
-    
+
     TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
-    
+
     ForEachInterface(CurrentIF) {
 	IpCurrent->Index     = CurrentIF->Index;
 	IpCurrent->Addr      = 0;
 	IpCurrent->BcastAddr = 0;
 	IpCurrent->Mask      = 0;
-	
+
 	/* Locate the diffrent addresses and put them the right place */
 	GetInterfaceIPv4Address( CurrentIF,
 				 ADE_UNICAST,
@@ -48,12 +48,12 @@ TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer,
 	IpCurrent++;
 	Count++;
     } EndFor(CurrentIF);
-    
+
     TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
 
     Status = InfoCopyOut( (PCHAR)IpAddress, sizeof(*IpAddress) * Count,
 			  Buffer, BufferSize );
-    
+
     ExFreePool( IpAddress );
 
     TI_DbgPrint(DEBUG_INFO, ("Returning %08x\n", Status));
@@ -67,13 +67,13 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
     KIRQL OldIrql;
     UINT RtCount = CountFIBs(),
 	Size = sizeof( IPROUTE_ENTRY ) * RtCount;
-    PFIB_ENTRY RCache = 
+    PFIB_ENTRY RCache =
 	ExAllocatePool( NonPagedPool, sizeof( FIB_ENTRY ) * RtCount ),
 	RCacheCur = RCache;
     PIPROUTE_ENTRY RouteEntries = ExAllocatePool( NonPagedPool, Size ),
 	RtCurrent = RouteEntries;
 
-    TI_DbgPrint(DEBUG_INFO, ("Called, routes = %d, RCache = %08x\n", 
+    TI_DbgPrint(DEBUG_INFO, ("Called, routes = %d, RCache = %08x\n",
 			    RtCount, RCache));
 
     if( !RCache || !RouteEntries ) {
@@ -85,10 +85,10 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
     RtlZeroMemory( RouteEntries, Size );
 
     RtCount = CopyFIBs( RCache );
-    
+
     while( RtCurrent < RouteEntries + RtCount ) {
 	/* Copy Desitnation */
-	RtlCopyMemory( &RtCurrent->Dest, 
+	RtlCopyMemory( &RtCurrent->Dest,
 		       &RCacheCur->NetworkAddress.Address,
 		       sizeof(RtCurrent->Dest) );
 	RtlCopyMemory( &RtCurrent->Mask,
@@ -101,29 +101,29 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
 			   sizeof(RtCurrent->Gw) );
 	else
 	    RtlZeroMemory( &RtCurrent->Gw, sizeof(RtCurrent->Gw) );
-			   
+
 	RtCurrent->Metric1 = RCacheCur->Metric;
 	RtCurrent->Type = TDI_ADDRESS_TYPE_IP;
-	
+
 	TI_DbgPrint
-	    (DEBUG_INFO, 
+	    (DEBUG_INFO,
 	     ("%d: NA %08x NM %08x GW %08x MT %x\n",
 	      RtCurrent - RouteEntries,
-	      RtCurrent->Dest, 
+	      RtCurrent->Dest,
 	      RtCurrent->Mask,
 	      RtCurrent->Gw,
 	      RtCurrent->Metric1 ));
-	     
+
 	TcpipAcquireSpinLock(&EntityListLock, &OldIrql);
-	for( RtCurrent->Index = EntityCount; 
+	for( RtCurrent->Index = EntityCount;
 	     RtCurrent->Index > 0 &&
-		 RCacheCur->Router->Interface != 
+		 RCacheCur->Router->Interface !=
 		 EntityList[RtCurrent->Index - 1].context;
 	     RtCurrent->Index-- );
-	
+
         RtCurrent->Index = EntityList[RtCurrent->Index - 1].tei_instance;
 	TcpipReleaseSpinLock(&EntityListLock, OldIrql);
-	
+
 	RtCurrent++; RCacheCur++;
     }
 
@@ -136,7 +136,7 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
 
     return Status;
 }
-		
+
 TDI_STATUS InfoTdiQueryGetIPSnmpInfo( PNDIS_BUFFER Buffer,
 				      PUINT BufferSize ) {
     IPSNMP_INFO SnmpInfo;
@@ -152,7 +152,7 @@ TDI_STATUS InfoTdiQueryGetIPSnmpInfo( PNDIS_BUFFER Buffer,
     SnmpInfo.NumAddr = 1;
     SnmpInfo.NumRoutes = RouteCount;
 
-    Status = InfoCopyOut( (PCHAR)&SnmpInfo, sizeof(SnmpInfo), 
+    Status = InfoCopyOut( (PCHAR)&SnmpInfo, sizeof(SnmpInfo),
 			  Buffer, BufferSize );
 
     TI_DbgPrint(DEBUG_INFO, ("Returning %08x\n", Status));
@@ -168,14 +168,14 @@ TDI_STATUS InfoNetworkLayerTdiQueryEx( UINT InfoClass,
 				       PNDIS_BUFFER Buffer,
 				       PUINT BufferSize ) {
     TDI_STATUS Status = TDI_INVALID_REQUEST;
-    
+
     TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
 
     switch( InfoClass ) {
     case INFO_CLASS_GENERIC:
 	if( InfoType == INFO_TYPE_PROVIDER && InfoId == ENTITY_TYPE_ID ) {
 	    ULONG Return = CL_NL_IP;
-	    Status = InfoCopyOut( (PCHAR)&Return, sizeof(Return), 
+	    Status = InfoCopyOut( (PCHAR)&Return, sizeof(Return),
 				  Buffer, BufferSize );
 	}
 	break;
@@ -236,9 +236,9 @@ TDI_STATUS InfoNetworkLayerTdiSetEx( UINT InfoClass,
 	    /* Find the existing route this belongs to */
 	    NCE = RouterGetRoute( &Router );
 	    /* Really add the route */
-	    if( NCE && 
-		RouterCreateRoute( &Address, &Netmask, &Router, 
-				   NCE->Interface, Route->Metric1 ) ) 
+	    if( NCE &&
+		RouterCreateRoute( &Address, &Netmask, &Router,
+				   NCE->Interface, Route->Metric1 ) )
 		Status = STATUS_SUCCESS;
 	    else
 		Status = STATUS_UNSUCCESSFUL;
@@ -248,7 +248,7 @@ TDI_STATUS InfoNetworkLayerTdiSetEx( UINT InfoClass,
 	} else Status = TDI_INVALID_REQUEST;
     }
 
-    TI_DbgPrint(DEBUG_INFO,("Returning %x\n", Status));    
+    TI_DbgPrint(DEBUG_INFO,("Returning %x\n", Status));
 
     return Status;
 }

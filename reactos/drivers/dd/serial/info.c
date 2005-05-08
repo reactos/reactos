@@ -1,10 +1,10 @@
 /* $Id:
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            drivers/dd/serial/info.c
  * PURPOSE:         Serial IRP_MJ_QUERY_INFORMATION operations
- * 
+ *
  * PROGRAMMERS:     Hervé Poussineau (poussine@freesurf.fr)
  */
 
@@ -22,18 +22,18 @@ SerialQueryInformation(
 	ULONG BufferLength;
 	ULONG_PTR Information = 0;
 	NTSTATUS Status;
-	
+
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	Stack = IoGetCurrentIrpStackLocation(Irp);
 	SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
 	BufferLength = Stack->Parameters.QueryFile.Length;
-	
+
 	switch (Stack->Parameters.QueryFile.FileInformationClass)
 	{
 		case FileStandardInformation:
 		{
 			PFILE_STANDARD_INFORMATION StandardInfo = (PFILE_STANDARD_INFORMATION)SystemBuffer;
-			
+
 			DPRINT("Serial: IRP_MJ_QUERY_INFORMATION / FileStandardInformation\n");
 			if (BufferLength < sizeof(FILE_STANDARD_INFORMATION))
 				Status = STATUS_BUFFER_OVERFLOW;
@@ -52,9 +52,9 @@ SerialQueryInformation(
 		case FilePositionInformation:
 		{
 			PFILE_POSITION_INFORMATION PositionInfo = (PFILE_POSITION_INFORMATION)SystemBuffer;
-			
+
 			ASSERT(PositionInfo);
-			
+
 			DPRINT("Serial: IRP_MJ_QUERY_INFORMATION / FilePositionInformation\n");
 			if (BufferLength < sizeof(PFILE_POSITION_INFORMATION))
 				Status = STATUS_BUFFER_OVERFLOW;
@@ -73,7 +73,7 @@ SerialQueryInformation(
 			return ForwardIrpAndForget(DeviceObject, Irp);
 		}
 	}
-	
+
 	Irp->IoStatus.Information = Information;
 	Irp->IoStatus.Status = Status;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);

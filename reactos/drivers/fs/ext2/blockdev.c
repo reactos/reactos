@@ -4,7 +4,7 @@
  * FILE:             services/fs/ext2/blockdev.c
  * PURPOSE:          Temporary sector reading support
  * PROGRAMMER:       David Welch (welch@cwcom.net)
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -31,14 +31,14 @@ Ext2ReadSectors(IN PDEVICE_OBJECT pDeviceObject,
     NTSTATUS        status;
     ULONG           sectorSize;
     int j;
-   
+
     DPRINT("VFATReadSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
            pDeviceObject,DiskSector,Buffer);
 
     sectorNumber.u.HighPart = 0;
     sectorNumber.u.LowPart = DiskSector * BLOCKSIZE;
 
-    DPRINT("DiskSector:%ld BLKSZ:%ld sectorNumber:%ld:%ld\n", 
+    DPRINT("DiskSector:%ld BLKSZ:%ld sectorNumber:%ld:%ld\n",
            (unsigned long) DiskSector,
            (unsigned long) BLOCKSIZE,
            (unsigned long) sectorNumber.u.HighPart,
@@ -58,17 +58,17 @@ Ext2ReadSectors(IN PDEVICE_OBJECT pDeviceObject,
                                        &event,
                                        &ioStatus );
 
-    if (!irp) 
+    if (!irp)
      {
         DbgPrint("READ failed!!!\n");
         return FALSE;
      }
-   
+
     DPRINT("Calling IO Driver...\n");
     status = IoCallDriver(pDeviceObject, irp);
 
     DPRINT("Waiting for IO Operation...\n");
-    if (status == STATUS_PENDING) 
+    if (status == STATUS_PENDING)
      {
         KeWaitForSingleObject(&event,
                               Suspended,
@@ -79,12 +79,12 @@ Ext2ReadSectors(IN PDEVICE_OBJECT pDeviceObject,
         status = ioStatus.Status;
      }
 
-   if (!NT_SUCCESS(status)) 
+   if (!NT_SUCCESS(status))
      {
         DbgPrint("IO failed!!! Error code: %d(%x)\n", status, status);
         return FALSE;
      }
-   
+
    return TRUE;
 }
 
@@ -101,7 +101,7 @@ BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
     ULONG           sectorSize;
     PULONG          mbr;
     int j;
-   
+
     DPRINT("VFATWriteSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
            pDeviceObject,DiskSector,Buffer);
 

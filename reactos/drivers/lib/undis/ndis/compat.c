@@ -163,7 +163,7 @@ ExpDefaultFree(PVOID Buffer)
   ExFreePool(Buffer);
 }
 
-#define INIT_FUNCTION 
+#define INIT_FUNCTION
 
 VOID INIT_FUNCTION
 ExpInitLookasideLists()
@@ -311,34 +311,34 @@ ExInitializeNPagedLookasideList (
 	USHORT			Depth)
 {
     DbgPrint("Initializing nonpaged lookaside list at 0x%X\n", Lookaside);
-    
+
     Lookaside->TotalAllocates = 0;
     Lookaside->AllocateMisses = 0;
     Lookaside->TotalFrees = 0;
     Lookaside->FreeMisses = 0;
     Lookaside->Type = NonPagedPool;
     Lookaside->Tag = Tag;
-    
+
     /* We use a field of type SINGLE_LIST_ENTRY as a link to the next entry in
        the lookaside list so we must allocate at least sizeof(SINGLE_LIST_ENTRY) */
     if (Size < sizeof(SINGLE_LIST_ENTRY))
 	Lookaside->Size = sizeof(SINGLE_LIST_ENTRY);
     else
 	Lookaside->Size = Size;
-    
+
     if (Allocate)
 	Lookaside->Allocate = Allocate;
     else
 	Lookaside->Allocate = ExpDefaultAllocate;
-    
+
     if (Free)
 	Lookaside->Free = Free;
     else
 	Lookaside->Free = ExpDefaultFree;
-    
+
     ExInitializeSListHead(&Lookaside->ListHead);
     KeInitializeSpinLock(LookasideListLock(Lookaside));
-    
+
     /* Determine minimum and maximum number of entries on the lookaside list
        using the configured algorithm */
     (*ExpMinMaxRoutine)(
@@ -346,7 +346,7 @@ ExInitializeNPagedLookasideList (
 	Lookaside->Size,
 	&Lookaside->Depth,
 	&Lookaside->MaximumDepth);
-    
+
     ExInterlockedInsertTailList(
 	&ExpNonPagedLookasideListHead,
 	&Lookaside->ListEntry,
@@ -477,7 +477,7 @@ VOID RecursiveMutexInit( struct _RECURSIVE_MUTEX *RM ) { }
 
 static LIST_ENTRY WorkQueue = { &WorkQueue, &WorkQueue };
 
-VOID STDCALL ExQueueWorkItem( PWORK_QUEUE_ITEM WorkItem, 
+VOID STDCALL ExQueueWorkItem( PWORK_QUEUE_ITEM WorkItem,
 			       WORK_QUEUE_TYPE Type ) {
     InsertTailList( &WorkQueue, &WorkItem->List );
 }
@@ -507,8 +507,8 @@ BOOLEAN STDCALL KeSetTimer
 BOOLEAN STDCALL KeCancelTimer( PKTIMER Timer ) {
     PLIST_ENTRY ListEntry;
 
-    for( ListEntry = Timers.Flink; 
-	 ListEntry != &Timers; 
+    for( ListEntry = Timers.Flink;
+	 ListEntry != &Timers;
 	 ListEntry = ListEntry->Flink ) {
 	if( ListEntry == &Timer->TimerListEntry ) {
 	    RemoveEntryList( &Timer->TimerListEntry );
@@ -526,7 +526,7 @@ VOID TimerTick( LARGE_INTEGER Time ) {
     while( (ListEntry = RemoveHeadList( &Timers )) ) {
 	Timer = CONTAINING_RECORD( ListEntry, KTIMER, TimerListEntry );
 	if( Timer->DueTime.QuadPart < Time.QuadPart )
-	    (Timer->Dpc->DeferredRoutine)( Timer->Dpc, 
+	    (Timer->Dpc->DeferredRoutine)( Timer->Dpc,
 					   Timer->Dpc->DeferredContext,
 					   Timer->Dpc->SystemArgument1,
 					   Timer->Dpc->SystemArgument2 );
@@ -543,7 +543,7 @@ LONG STDCALL KeSetEvent( PKEVENT Event, KPRIORITY Increment, BOOLEAN Wait ) {
 /* Host uses this */
 PWORK_QUEUE_ITEM GetWorkQueueItem() {
     PLIST_ENTRY ListEntry = RemoveHeadList( &WorkQueue );
-    if( ListEntry ) 
+    if( ListEntry )
 	return CONTAINING_RECORD(ListEntry, WORK_QUEUE_ITEM, List);
     else
 	return NULL;
@@ -605,7 +605,7 @@ MiniAdapterHasAddress(
 
   NdisQueryPacket(Packet, NULL, NULL, &NdisBuffer, NULL);
 
-  if (!NdisBuffer) 
+  if (!NdisBuffer)
     {
       NDIS_DbgPrint(MID_TRACE, ("Packet contains no buffers.\n"));
       return FALSE;
@@ -615,7 +615,7 @@ MiniAdapterHasAddress(
 
   /* FIXME: Should handle fragmented packets */
 
-  switch (Adapter->NdisMiniportBlock.MediaType) 
+  switch (Adapter->NdisMiniportBlock.MediaType)
     {
       case NdisMedium802_3:
         Length = ETH_LENGTH_OF_ADDRESS;
@@ -627,7 +627,7 @@ MiniAdapterHasAddress(
         return FALSE;
     }
 
-  if (BufferLength < Length) 
+  if (BufferLength < Length)
     {
         NDIS_DbgPrint(MID_TRACE, ("Buffer is too small.\n"));
         return FALSE;
@@ -687,7 +687,7 @@ MiniDoRequest(
 
   Adapter->NdisMiniportBlock.MediaRequest = NdisRequest;
 
-  switch (NdisRequest->RequestType) 
+  switch (NdisRequest->RequestType)
     {
       case NdisRequestQueryInformation:
         return (*Adapter->Miniport->Chars.QueryInformationHandler)(
@@ -777,7 +777,7 @@ MiniIndicateData(
   /* KIRQL OldIrql; */
   PLIST_ENTRY CurrentEntry;
   PADAPTER_BINDING AdapterBinding;
-  
+
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called. Adapter (0x%X)  HeaderBuffer (0x%X)  "
       "HeaderBufferSize (0x%X)  LookaheadBuffer (0x%X)  LookaheadBufferSize (0x%X).\n",
       Adapter, HeaderBuffer, HeaderBufferSize, LookaheadBuffer, LookaheadBufferSize));
@@ -809,12 +809,12 @@ MiniIndicateData(
       CurrentEntry = Adapter->ProtocolListHead.Flink;
       NDIS_DbgPrint(DEBUG_MINIPORT, ("CurrentEntry = %x\n", CurrentEntry));
 
-      if (CurrentEntry == &Adapter->ProtocolListHead) 
+      if (CurrentEntry == &Adapter->ProtocolListHead)
         {
           NDIS_DbgPrint(DEBUG_MINIPORT, ("WARNING: No upper protocol layer.\n"));
         }
 
-      while (CurrentEntry != &Adapter->ProtocolListHead) 
+      while (CurrentEntry != &Adapter->ProtocolListHead)
         {
           AdapterBinding = CONTAINING_RECORD(CurrentEntry, ADAPTER_BINDING, AdapterListEntry);
 	  NDIS_DbgPrint(DEBUG_MINIPORT, ("AdapterBinding = %x\n", AdapterBinding));
@@ -843,7 +843,7 @@ MiniIndicateData(
 #endif
 
 	  NDIS_DbgPrint
-	      (MID_TRACE, 
+	      (MID_TRACE,
 	       ("XXX (%x) %x %x %x %x %x %x %x XXX\n",
 		*AdapterBinding->ProtocolBinding->Chars.u4.ReceiveHandler,
 		AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
@@ -909,7 +909,7 @@ MiniLocateDevice(
         {
           CurrentEntry = AdapterListHead.Flink;
 
-          while (CurrentEntry != &AdapterListHead) 
+          while (CurrentEntry != &AdapterListHead)
             {
               Adapter = CONTAINING_RECORD(CurrentEntry, LOGICAL_ADAPTER, ListEntry);
 
@@ -918,7 +918,7 @@ MiniLocateDevice(
               NDIS_DbgPrint(DEBUG_MINIPORT, ("AdapterName = %wZ\n", &AdapterName));
               NDIS_DbgPrint(DEBUG_MINIPORT, ("DeviceName = %wZ\n", &Adapter->DeviceName));
 
-              if (RtlCompareUnicodeString(AdapterName, &Adapter->DeviceName, TRUE) == 0) 
+              if (RtlCompareUnicodeString(AdapterName, &Adapter->DeviceName, TRUE) == 0)
                 {
                   ReferenceObject(Adapter);
                   break;
@@ -932,7 +932,7 @@ MiniLocateDevice(
 
   if(Adapter)
     {
-      NDIS_DbgPrint(DEBUG_MINIPORT, ("Leaving. Adapter found at 0x%x\n", Adapter)); 
+      NDIS_DbgPrint(DEBUG_MINIPORT, ("Leaving. Adapter found at 0x%x\n", Adapter));
     }
   else
     {
@@ -956,7 +956,7 @@ NDIS_BUFFER_TO_SPAN_PAGES(
 {
     if (Buffer->ByteCount == 0)
         return 1;
-    
+
     return ADDRESS_AND_SIZE_TO_SPAN_PAGES(
             MmGetMdlVirtualAddress(Buffer),
             MmGetMdlByteCount(Buffer));
@@ -996,7 +996,7 @@ NdisAllocateBuffer(
 	NDIS_DbgPrint(MID_TRACE,("Free buffer -> %x\n", Temp));
 	Temp = Temp->Next;
     }
-    
+
     NDIS_DbgPrint(MID_TRACE,("|:. <- End free buffers"));
 #endif
 
@@ -1020,7 +1020,7 @@ NdisAllocateBuffer(
 	Temp->Mdl.ByteOffset = (ULONG_PTR)(VirtualAddress - PAGE_ROUND_DOWN(VirtualAddress));
 	Temp->Mdl.ByteCount  = Length;
         Temp->Mdl.MappedSystemVa = VirtualAddress;
-        
+
         Temp->BufferPool = Pool;
 
         *Buffer = (PNDIS_BUFFER)Temp;
@@ -1198,7 +1198,7 @@ UINT CopyBufferToBufferChain(
 /*
  * FUNCTION: Copies data from a buffer to an NDIS buffer chain
  * ARGUMENTS:
- *     DstBuffer = Pointer to destination NDIS buffer 
+ *     DstBuffer = Pointer to destination NDIS buffer
  *     DstOffset = Destination start offset
  *     SrcData   = Pointer to source buffer
  *     Length    = Number of bytes to copy
@@ -1272,7 +1272,7 @@ UINT CopyBufferChainToBuffer(
 
     DbgPrint("DstData 0x%X  SrcBuffer 0x%X  SrcOffset 0x%X  Length %d\n",
 	     DstData,SrcBuffer, SrcOffset, Length);
-    
+
     /* Skip SrcOffset bytes in the source buffer chain */
     if (SkipToOffset(SrcBuffer, SrcOffset, &SrcData, &SrcSize) == -1)
         return 0;
@@ -1282,7 +1282,7 @@ UINT CopyBufferChainToBuffer(
     for (;;) {
         BytesToCopy = MIN(SrcSize, Length);
 
-        DbgPrint("Copying (%d) bytes from 0x%X to 0x%X\n", 
+        DbgPrint("Copying (%d) bytes from 0x%X to 0x%X\n",
 		 BytesToCopy, SrcData, DstData);
 
         RtlCopyMemory((PVOID)DstData, (PVOID)SrcData, BytesToCopy);
@@ -1388,7 +1388,7 @@ UINT CopyPacketToBufferChain(
     UINT Count, Total;
 
     DbgPrint("DstBuffer (0x%X)  DstOffset (0x%X)  SrcPacket (0x%X)  "
-	     "SrcOffset (0x%X)  Length (%d)\n", 
+	     "SrcOffset (0x%X)  Length (%d)\n",
 	     DstBuffer, DstOffset, SrcPacket, SrcOffset, Length);
 
     /* Skip DstOffset bytes in the destination buffer chain */
@@ -1400,7 +1400,7 @@ UINT CopyPacketToBufferChain(
     NdisQueryPacket( SrcPacket, &SrcBuffer, 0, &SrcSize, &Total );
     NdisQueryBuffer( SrcBuffer, (PVOID *)&SrcData, &SrcSize );
 #if 0
-    NdisGetFirstBufferFromPacket(SrcPacket, &SrcBuffer, (PVOID *)&SrcData, 
+    NdisGetFirstBufferFromPacket(SrcPacket, &SrcBuffer, (PVOID *)&SrcData,
 				 &SrcSize, &Total);
 #endif
     if (SkipToOffset(SrcBuffer, SrcOffset, &SrcData, &SrcSize) == -1)
@@ -1531,7 +1531,7 @@ NDIS_STATUS PrependPacket( PNDIS_PACKET Packet, PCHAR Data, UINT Length,
 }
 
 void GetDataPtr( PNDIS_PACKET Packet,
-		 UINT Offset, 
+		 UINT Offset,
 		 PCHAR *DataOut,
 		 PUINT Size ) {
     PNDIS_BUFFER Buffer;
@@ -1551,10 +1551,10 @@ NDIS_STATUS AllocatePacketWithBufferX( PNDIS_PACKET *NdisPacket,
     PCHAR NewData;
 
     NewData = ExAllocatePool( NonPagedPool, Len );
-    if( !NewData ) return NDIS_STATUS_NOT_ACCEPTED; // XXX 
+    if( !NewData ) return NDIS_STATUS_NOT_ACCEPTED; // XXX
     TrackWithTag(EXALLOC_TAG, NewData, File, Line);
 
-    if( Data ) 
+    if( Data )
 	RtlCopyMemory(NewData, Data, Len);
 
     NdisAllocatePacket( &Status, &Packet, GlobalPacketPool );

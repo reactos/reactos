@@ -5,7 +5,7 @@
  * FILE:             services/parallel/parallel.c
  * PURPOSE:          Parallel port driver
  * PROGRAMMER:       David Welch (welch@mcmail.com)
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  *              ??/??/??: Created
  *              18/06/98: Made more NT like
  */
@@ -44,7 +44,7 @@ static void Parallel_putchar(unsigned char ch)
  *          ch = character to write
  */
 {
-	
+
 	int count=0;
 	int status;
 	int wait=0;
@@ -55,13 +55,13 @@ static void Parallel_putchar(unsigned char ch)
 	     count++;
 	  }
 	while ( count < 500000 && !(status & LP_PBUSY) );
-	  
+
 	if (count==500000)
 	  {
 	     DPRINT("printer_putchar(): timed out\n");
 	     return;
 	  }
-	
+
 	WRITE_PORT_UCHAR((PUCHAR)LP_B,ch);
 	while (wait != 10000) { wait++; }
 	WRITE_PORT_UCHAR((PUCHAR)LP_C, (LP_PSELECP | LP_PINITP | LP_PSTROBE ));
@@ -82,7 +82,7 @@ Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
    NTSTATUS status;
    int i;
-   
+
    switch (Stack->MajorFunction)
      {
       case IRP_MJ_CREATE:
@@ -90,11 +90,11 @@ Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	Parallel_Reset();
 	status = STATUS_SUCCESS;
 	break;
-	
+
       case IRP_MJ_CLOSE:
 	status = STATUS_SUCCESS;
 	break;
-	
+
       case IRP_MJ_WRITE:
 	DPRINT("(Parallel Port Driver) Writing %d bytes\n",
 	       Stack->Parameters.Write.Length);
@@ -104,15 +104,15 @@ Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	  }
 	status = STATUS_SUCCESS;
 	break;
-	
+
       default:
 	status = STATUS_NOT_IMPLEMENTED;
 	break;
      }
-   
+
    Irp->IoStatus.Status = status;
    Irp->IoStatus.Information = 0;
-   
+
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
    return(status);
 }
@@ -130,9 +130,9 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    PDEVICE_OBJECT DeviceObject;
    UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Device\\Parallel");
    NTSTATUS Status;
-   
+
    DPRINT("Parallel Port Driver 0.0.1\n");
-   
+
    Status = IoCreateDevice(DriverObject,
 			   0,
 			   &DeviceName,
@@ -150,7 +150,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    DriverObject->MajorFunction[IRP_MJ_CREATE] = Dispatch;
    DriverObject->MajorFunction[IRP_MJ_WRITE] = Dispatch;
    DriverObject->DriverUnload = NULL;
-   
+
    return(STATUS_SUCCESS);
 }
 

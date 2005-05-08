@@ -1,10 +1,10 @@
 /* $Id:
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS VT100 emulator
  * FILE:            drivers/dd/green/dispatch.c
  * PURPOSE:         Dispatch routines
- * 
+ *
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
  */
 
@@ -20,16 +20,16 @@ GreenDispatch(
 	GREEN_DEVICE_TYPE DeviceType;
 	ULONG_PTR Information;
 	NTSTATUS Status;
-	
+
 	MajorFunction = IoGetCurrentIrpStackLocation(Irp)->MajorFunction;
 	DeviceType = ((PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->Type;
-	
+
 	Information = Irp->IoStatus.Information;
 	Status = Irp->IoStatus.Status;
-	
+
 	DPRINT("Green: Dispatching major function 0x%lx, DeviceType %d\n",
 		MajorFunction, DeviceType);
-	
+
 	if (MajorFunction == IRP_MJ_CREATE && DeviceType == Green)
 		return GreenCreate(DeviceObject, Irp);
 	else if (MajorFunction == IRP_MJ_CLOSE && DeviceType == Green)
@@ -57,7 +57,7 @@ GreenDispatch(
 		DPRINT1("Green: unknown combination: MajorFunction 0x%lx, DeviceType %d\n",
 			MajorFunction, DeviceType);
 	}
-	
+
 	Irp->IoStatus.Information = Information;
 	Irp->IoStatus.Status = Status;
 	IoCompleteRequest (Irp, IO_NO_INCREMENT);

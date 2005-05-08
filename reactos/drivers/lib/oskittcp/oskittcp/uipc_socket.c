@@ -670,7 +670,7 @@ dontblock:
 				so->so_rcv.sb_mb = m->m_next;
 				m->m_next = 0;
 				m = so->so_rcv.sb_mb;
-			} else 
+			} else
 #endif
 			{
 				MFREE(m, so->so_rcv.sb_mb);

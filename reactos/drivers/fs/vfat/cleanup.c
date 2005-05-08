@@ -23,10 +23,10 @@ VfatCleanupFile(PVFAT_IRP_CONTEXT IrpContext)
 {
   PVFATFCB pFcb;
   PFILE_OBJECT FileObject = IrpContext->FileObject;
-  
+
   DPRINT("VfatCleanupFile(DeviceExt %x, FileObject %x)\n",
 	 IrpContext->DeviceExt, FileObject);
-  
+
   /* FIXME: handle file/directory deletion here */
   pFcb = (PVFATFCB) FileObject->FsContext;
   if (pFcb)

@@ -38,13 +38,13 @@ PCHAR A2S(
     switch (Address->Type) {
     case IP_ADDRESS_V4:
 	ip = DN2H(Address->Address.IPv4Address);
-	sprintf(p, "%d.%d.%d.%d", 
-		(INT)((ip >> 24) & 0xFF), 
-		(INT)((ip >> 16) & 0xFF), 
-		(INT)((ip >> 8) & 0xFF), 
+	sprintf(p, "%d.%d.%d.%d",
+		(INT)((ip >> 24) & 0xFF),
+		(INT)((ip >> 16) & 0xFF),
+		(INT)((ip >> 8) & 0xFF),
 		(INT)(ip & 0xFF));
 	break;
-	
+
     case IP_ADDRESS_V6:
 	/* FIXME: IPv6 is not supported */
 	strcpy(p, "(IPv6 address not supported)");
@@ -54,7 +54,7 @@ PCHAR A2S(
 }
 
 ULONG IPv4NToHl( ULONG Address ) {
-    return 
+    return
 	((Address & 0xff) << 24) |
 	((Address & 0xff00) << 8) |
 	((Address >> 8) & 0xff00) |
@@ -65,35 +65,35 @@ UINT AddrCountPrefixBits( PIP_ADDRESS Netmask ) {
     UINT Prefix = 0;
     if( Netmask->Type == IP_ADDRESS_V4 ) {
 	ULONG BitTest = 0x80000000;
-	
+
 	/* The mask has been read in network order.  Put it in host order
 	 * in order to scan it. */
 
 	ULONG TestMask = IPv4NToHl(Netmask->Address.IPv4Address);
-	
+
 	while( (BitTest & TestMask) == BitTest ) {
 	    Prefix++;
 	    BitTest >>= 1;
 	}
 	return Prefix;
     } else {
-	TI_DbgPrint(DEBUG_DATALINK, ("Don't know address type %d\n", 
+	TI_DbgPrint(DEBUG_DATALINK, ("Don't know address type %d\n",
 				     Netmask->Type));
 	return 0;
     }
 }
 
-VOID AddrWidenAddress( PIP_ADDRESS Network, PIP_ADDRESS Source, 
+VOID AddrWidenAddress( PIP_ADDRESS Network, PIP_ADDRESS Source,
 		       PIP_ADDRESS Netmask ) {
     if( Netmask->Type == IP_ADDRESS_V4 ) {
         Network->Type = Netmask->Type;
-	Network->Address.IPv4Address = 
+	Network->Address.IPv4Address =
 	    Source->Address.IPv4Address & Netmask->Address.IPv4Address;
     } else {
-	TI_DbgPrint(DEBUG_DATALINK, ("Don't know address type %d\n", 
+	TI_DbgPrint(DEBUG_DATALINK, ("Don't know address type %d\n",
 				     Netmask->Type));
 	*Network = *Source;
-    }    
+    }
 }
 
 VOID IPAddressFree(
@@ -195,7 +195,7 @@ NTSTATUS AddrBuildAddress(
   }
   if (TdiAddress->AddressLength < TDI_ADDRESS_LENGTH_IP) {
       TI_DbgPrint
-	  (MID_TRACE,("AddressLength %x, Not valid (expected %x)\n", 
+	  (MID_TRACE,("AddressLength %x, Not valid (expected %x)\n",
 		      TdiAddress->AddressLength, TDI_ADDRESS_LENGTH_IP));
       return STATUS_INVALID_ADDRESS;
   }
@@ -307,7 +307,7 @@ unsigned long PASCAL inet_addr(const char *AddrString)
 /*
  * Convert an ansi string dotted-quad address to a ulong
  * NOTES:
- *     - this isn't quite like the real inet_addr() - * it doesn't 
+ *     - this isn't quite like the real inet_addr() - * it doesn't
  *       handle "10.1" and similar - but it's good enough.
  *     - Returns in *host* byte order, unlike real inet_addr()
  */

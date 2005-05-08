@@ -23,9 +23,9 @@
  * REVISIONS:
  *                  15-Feb-2004 vizzini - Created
  * NOTES:
- *     - Many of these functions are based directly on information from the 
+ *     - Many of these functions are based directly on information from the
  *       Intel datasheet for their enhanced floppy controller.  Send_Byte and
- *       Get_Byte are direct C implementations of their flowcharts, and the 
+ *       Get_Byte are direct C implementations of their flowcharts, and the
  *       read/write routine and others are loose adaptations of their charts.
  *     - These routines are generally designed to be small, atomic operations.  They
  *       do not wait for interrupts, deal with DMA, or do any other Windows-
@@ -38,7 +38,7 @@
  *       it's illegal to block.  The floppy controller is a *dumb* piece of hardware,
  *       too - it is slow and difficult to deal with.  The solution is to do all
  *       of the blocking and servicing of the controller in a dedicated worker
- *       thread.  
+ *       thread.
  *     - Some information taken from Intel 82077AA data sheet (order #290166-007)
  *
  * TODO: ATM the constants defined in hardware.h *might* be shifted to line up
@@ -74,12 +74,12 @@ static BOOLEAN NTAPI ReadyForWrite(PCONTROLLER_INFO ControllerInfo)
  *     TRUE if the controller can accept a byte right now
  *     FALSE otherwise
  * NOTES:
- *     - it is necessary to check both that the FIFO is set to "outbound" 
+ *     - it is necessary to check both that the FIFO is set to "outbound"
  *       and that the "ready for i/o" bit is set.
  */
 {
   UCHAR Status = READ_PORT_UCHAR(ControllerInfo->BaseAddress + MAIN_STATUS_REGISTER);
-	
+
   if((Status & MSR_IO_DIRECTION)) /* 0 for out */
       return FALSE;
 
@@ -99,12 +99,12 @@ static BOOLEAN NTAPI ReadyForRead(PCONTROLLER_INFO ControllerInfo)
  *     TRUE if the controller can read a byte right now
  *     FALSE otherwise
  * NOTES:
- *     - it is necessary to check both that the FIFO is set to "inbound" 
+ *     - it is necessary to check both that the FIFO is set to "inbound"
  *       and that the "ready for i/o" bit is set.
  */
 {
   UCHAR Status = READ_PORT_UCHAR(ControllerInfo->BaseAddress + MAIN_STATUS_REGISTER);
-	
+
   if(!(Status & MSR_IO_DIRECTION)) /* Read = 1 */
       return FALSE;
 
@@ -115,13 +115,13 @@ static BOOLEAN NTAPI ReadyForRead(PCONTROLLER_INFO ControllerInfo)
 }
 
 
-static NTSTATUS NTAPI Send_Byte(PCONTROLLER_INFO ControllerInfo, 
+static NTSTATUS NTAPI Send_Byte(PCONTROLLER_INFO ControllerInfo,
                                 UCHAR Byte)
 /*
  * FUNCTION: Send a byte from the host to the controller's FIFO
  * ARGUMENTS:
  *     ControllerInfo: Info structure for the controller we're writing to
- *     Offset: Offset over the controller's base address that we're writing to 
+ *     Offset: Offset over the controller's base address that we're writing to
  *     Byte: Byte to write to the bus
  * RETURNS:
  *     STATUS_SUCCESS if the byte was written successfully
@@ -176,7 +176,7 @@ static NTSTATUS NTAPI Send_Byte(PCONTROLLER_INFO ControllerInfo,
 
           continue;
 	}
-			
+
       WRITE_PORT_UCHAR(Address, Byte);
       return STATUS_SUCCESS;
     }
@@ -187,7 +187,7 @@ static NTSTATUS NTAPI Send_Byte(PCONTROLLER_INFO ControllerInfo,
 }
 
 
-static NTSTATUS NTAPI Get_Byte(PCONTROLLER_INFO ControllerInfo, 
+static NTSTATUS NTAPI Get_Byte(PCONTROLLER_INFO ControllerInfo,
                                PUCHAR Byte)
 /*
  * FUNCTION: Read a byte from the controller to the host
@@ -244,7 +244,7 @@ static NTSTATUS NTAPI Get_Byte(PCONTROLLER_INFO ControllerInfo,
 
           continue;
 	}
-			
+
       *Byte = READ_PORT_UCHAR(Address);
 
       return STATUS_SUCCESS;
@@ -256,7 +256,7 @@ static NTSTATUS NTAPI Get_Byte(PCONTROLLER_INFO ControllerInfo,
 }
 
 
-NTSTATUS NTAPI HwSetDataRate(PCONTROLLER_INFO ControllerInfo, 
+NTSTATUS NTAPI HwSetDataRate(PCONTROLLER_INFO ControllerInfo,
                              UCHAR DataRate)
 /*
  * FUNCTION: Set the data rte on a controller
@@ -296,7 +296,7 @@ NTSTATUS NTAPI HwTurnOffMotor(PCONTROLLER_INFO ControllerInfo)
 }
 
 
-NTSTATUS NTAPI HwTurnOnMotor(PDRIVE_INFO DriveInfo) 
+NTSTATUS NTAPI HwTurnOnMotor(PDRIVE_INFO DriveInfo)
 /*
  * FUNCTION: Turn on the motor on the selected drive
  * ARGUMENTS:
@@ -320,7 +320,7 @@ NTSTATUS NTAPI HwTurnOnMotor(PDRIVE_INFO DriveInfo)
 
   Buffer |= DOR_FDC_ENABLE;
   Buffer |= DOR_DMA_IO_INTERFACE_ENABLE;
-	
+
   if(Unit == 0)
     Buffer |= DOR_FLOPPY_MOTOR_ON_A;
   else if (Unit == 1)
@@ -371,11 +371,11 @@ NTSTATUS NTAPI HwSenseDriveStatus(PDRIVE_INFO DriveInfo)
 }
 
 
-NTSTATUS NTAPI HwReadWriteData(PCONTROLLER_INFO ControllerInfo, 
+NTSTATUS NTAPI HwReadWriteData(PCONTROLLER_INFO ControllerInfo,
                                BOOLEAN Read,
-                               UCHAR Unit, 
-                               UCHAR Cylinder, 
-                               UCHAR Head, 
+                               UCHAR Unit,
+                               UCHAR Cylinder,
+                               UCHAR Head,
                                UCHAR Sector,
                                UCHAR BytesPerSector,
                                UCHAR EndOfTrack,
@@ -411,9 +411,9 @@ NTSTATUS NTAPI HwReadWriteData(PCONTROLLER_INFO ControllerInfo,
 
   /* Build the command to send */
   if(Read)
-    Buffer[0] = COMMAND_READ_DATA; 
+    Buffer[0] = COMMAND_READ_DATA;
   else
-    Buffer[0] = COMMAND_WRITE_DATA; 
+    Buffer[0] = COMMAND_WRITE_DATA;
 
   Buffer[0] |= READ_DATA_MFM | READ_DATA_MT;
 
@@ -454,7 +454,7 @@ NTSTATUS NTAPI HwRecalibrateResult(PCONTROLLER_INFO ControllerInfo)
  *     - This function tests the error conditions itself, and boils the
  *       whole thing down to a single SUCCESS or FAILURE result
  *     - Called post-interrupt; does not interrupt
- * TODO 
+ * TODO
  *     - perhaps handle more status
  */
 {
@@ -476,7 +476,7 @@ NTSTATUS NTAPI HwRecalibrateResult(PCONTROLLER_INFO ControllerInfo)
         return STATUS_UNSUCCESSFUL;
       }
 
-  /* Validate  that it did what we told it to */ 
+  /* Validate  that it did what we told it to */
   KdPrint(("floppy: HwRecalibrateResult results: ST0: 0x%x PCN: 0x%x\n", Buffer[0], Buffer[1]));
 
   /*
@@ -534,7 +534,7 @@ NTSTATUS NTAPI HwReadWriteResult(PCONTROLLER_INFO ControllerInfo)
         return STATUS_UNSUCCESSFUL;
       }
 
-  /* Validate  that it did what we told it to */ 
+  /* Validate  that it did what we told it to */
   KdPrint(("floppy: HwReadWriteResult results: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\n", Buffer[0], Buffer[1], Buffer[2], Buffer[3],
 	   Buffer[4], Buffer[5], Buffer[6]));
 
@@ -651,9 +651,9 @@ NTSTATUS NTAPI HwReadId(PDRIVE_INFO DriveInfo, UCHAR Head)
 }
 
 
-NTSTATUS NTAPI HwFormatTrack(PCONTROLLER_INFO ControllerInfo, 
+NTSTATUS NTAPI HwFormatTrack(PCONTROLLER_INFO ControllerInfo,
                              UCHAR Unit,
-                             UCHAR Head, 
+                             UCHAR Head,
                              UCHAR BytesPerSector,
                              UCHAR SectorsPerTrack,
                              UCHAR Gap3Length,
@@ -699,7 +699,7 @@ NTSTATUS NTAPI HwFormatTrack(PCONTROLLER_INFO ControllerInfo,
 
 
 NTSTATUS NTAPI HwSeek(PDRIVE_INFO DriveInfo,
-                      UCHAR Cylinder) 
+                      UCHAR Cylinder)
 /*
  * FUNCTION: Seek the heads to a particular cylinder
  * ARGUMENTS:
@@ -742,12 +742,12 @@ NTSTATUS NTAPI HwSeek(PDRIVE_INFO DriveInfo,
 }
 
 
-NTSTATUS NTAPI HwConfigure(PCONTROLLER_INFO ControllerInfo, 
+NTSTATUS NTAPI HwConfigure(PCONTROLLER_INFO ControllerInfo,
                            BOOLEAN EIS,
 			   BOOLEAN EFIFO,
 			   BOOLEAN POLL,
 			   UCHAR FIFOTHR,
-			   UCHAR PRETRK) 
+			   UCHAR PRETRK)
 /*
  * FUNCTION: Sends configuration to the drive
  * ARGUMENTS:
@@ -822,7 +822,7 @@ NTSTATUS NTAPI HwGetVersion(PCONTROLLER_INFO ControllerInfo)
   return Buffer;
 }
 
-NTSTATUS NTAPI HwDiskChanged(PDRIVE_INFO DriveInfo, 
+NTSTATUS NTAPI HwDiskChanged(PDRIVE_INFO DriveInfo,
                              PBOOLEAN DiskChanged)
 /*
  * FUNCTION: Detect whether the hardware has sensed a disk change
@@ -873,7 +873,7 @@ NTSTATUS NTAPI HwDiskChanged(PDRIVE_INFO DriveInfo,
   return STATUS_SUCCESS;
 }
 
-NTSTATUS NTAPI HwSenseDriveStatusResult(PCONTROLLER_INFO ControllerInfo, 
+NTSTATUS NTAPI HwSenseDriveStatusResult(PCONTROLLER_INFO ControllerInfo,
                                         PUCHAR Status)
 /*
  * FUNCTION: Get the result of a sense drive status command
@@ -917,7 +917,7 @@ NTSTATUS NTAPI HwReadIdResult(PCONTROLLER_INFO ControllerInfo,
  *     - This function tests the error conditions itself, and boils the
  *       whole thing down to a single SUCCESS or FAILURE result
  *     - Called post-interrupt; does not interrupt
- * TODO 
+ * TODO
  *     - perhaps handle more status
  */
 {
@@ -933,7 +933,7 @@ NTSTATUS NTAPI HwReadIdResult(PCONTROLLER_INFO ControllerInfo,
         return STATUS_UNSUCCESSFUL;
       }
 
-  /* Validate  that it did what we told it to */ 
+  /* Validate  that it did what we told it to */
   KdPrint(("floppy: ReadId results: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\n", Buffer[0], Buffer[1], Buffer[2], Buffer[3],
 	   Buffer[4], Buffer[5], Buffer[6]));
 

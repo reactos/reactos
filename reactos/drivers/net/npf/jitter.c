@@ -48,7 +48,7 @@ void emit_lenght(binary_stream *stream, ULONG value, UINT len)
 //
 void emit_code(binary_stream *stream, ULONG value, UINT len)
 {
-    
+
     switch (len){
 
     case 1:
@@ -67,7 +67,7 @@ void emit_code(binary_stream *stream, ULONG value, UINT len)
         break;
 
     default:;
-    
+
     }
 
     return;
@@ -91,7 +91,7 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
 #else
     stream.refs=(UINT *)malloc((nins + 1)*sizeof(UINT));
 #endif
-    if(stream.refs==NULL) 
+    if(stream.refs==NULL)
     {
         return NULL;
     }
@@ -103,10 +103,10 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
     stream.cur_ip=0;
     stream.bpf_pc=0;
 
-    // the first pass will emit the lengths of the instructions 
+    // the first pass will emit the lengths of the instructions
     // to create the reference table
     emitm=emit_lenght;
-    
+
     for(pass=0;;){
 
         ins = prog;
@@ -122,17 +122,17 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
         MOVodd(EBX, EBP, 8)
 
         for(i=0;i<nins;i++){
-            
+
             stream.bpf_pc++;
-            
+
             switch (ins->code) {
-                
+
             default:
-                
+
                 return NULL;
-                
+
             case BPF_RET|BPF_K:
-                
+
                 MOVid(EAX,ins->k)
                 POP(EDI)
                 POP(ESI)
@@ -141,12 +141,12 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
                 POP(EBX)
                 POP(EBP)
                 RET()
-                
+
                 break;
-                
+
 
             case BPF_RET|BPF_A:
-                
+
                 POP(EDI)
                 POP(ESI)
                 POP(EDX)
@@ -154,12 +154,12 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
                 POP(EBX)
                 POP(EBP)
                 RET()
-                
+
                 break;
 
-                
+
             case BPF_LD|BPF_W|BPF_ABS:
-                
+
                 MOVid(ECX,ins->k)
                 MOVrd(ESI,ECX)
                 ADDib(ECX,sizeof(INT))
@@ -191,16 +191,16 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
                 POP(ECX)
                 POP(EBX)
                 POP(EBP)
-                MOVid(EAX,0)  
+                MOVid(EAX,0)
                 RET()
-                MOVid(EAX,0)  
+                MOVid(EAX,0)
                 MOVobw(AX, EBX, ESI)
                 SWAP_AX()
 
                 break;
-                
+
             case BPF_LD|BPF_B|BPF_ABS:
-            
+
                 MOVid(ECX,ins->k)
                 CMPodd(ECX, EBP, 0x10)
                 JLEb(12)
@@ -210,9 +210,9 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
                 POP(ECX)
                 POP(EBX)
                 POP(EBP)
-                MOVid(EAX,0)  
+                MOVid(EAX,0)
                 RET()
-                MOVid(EAX,0)  
+                MOVid(EAX,0)
                 MOVobb(AL,EBX,ECX)
 
                 break;
@@ -228,9 +228,9 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
                 MOVodd(EDX, EBP, 0xc)
 
                 break;
-            
+
             case BPF_LD|BPF_W|BPF_IND:
-            
+
                 MOVid(ECX,ins->k)
                 ADDrd(ECX,EDX)
                 MOVrd(ESI,ECX)
@@ -243,7 +243,7 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
                 POP(ECX)
                 POP(EBX)
                 POP(EBP)
-                MOVid(EAX,0)  
+                MOVid(EAX,0)
                 RET()
                 MOVobd(EAX, EBX, ESI)
                 BSWAP(EAX)
@@ -264,9 +264,9 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
                 POP(ECX)
                 POP(EBX)
                 POP(EBP)
-                MOVid(EAX,0)  
+                MOVid(EAX,0)
                 RET()
-                MOVid(EAX,0)  
+                MOVid(EAX,0)
                 MOVobw(AX, EBX, ESI)
                 SWAP_AX()
 
@@ -284,9 +284,9 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
                 POP(ECX)
                 POP(EBX)
                 POP(EBP)
-                MOVid(EAX,0)  
+                MOVid(EAX,0)
                 RET()
-                MOVid(EAX,0)  
+                MOVid(EAX,0)
                 MOVobb(AL,EBX,ECX)
 
                 break;
@@ -302,13 +302,13 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
                 POP(ECX)
                 POP(EBX)
                 POP(EBP)
-                MOVid(EAX,0)  
+                MOVid(EAX,0)
                 RET()
                 MOVid(EDX,0)
                 MOVobb(DL,EBX,ECX)
                 ANDib(DL, 0xf)
                 SHLib(EDX, 2)
-                                
+
                 break;
 
             case BPF_LD|BPF_IMM:
@@ -318,7 +318,7 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
                 break;
 
             case BPF_LDX|BPF_IMM:
-            
+
                 MOVid(EDX,ins->k)
 
                 break;
@@ -366,22 +366,22 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
 
                 CMPid(EAX, ins->k)
                 JG(stream.refs[stream.bpf_pc+ins->jt]-stream.refs[stream.bpf_pc]+5) // 5 is the size of the following JMP
-                JMP(stream.refs[stream.bpf_pc+ins->jf]-stream.refs[stream.bpf_pc])              
+                JMP(stream.refs[stream.bpf_pc+ins->jf]-stream.refs[stream.bpf_pc])
                 break;
 
             case BPF_JMP|BPF_JGE|BPF_K:
 
                 CMPid(EAX, ins->k)
                 JGE(stream.refs[stream.bpf_pc+ins->jt]-stream.refs[stream.bpf_pc]+5)
-                JMP(stream.refs[stream.bpf_pc+ins->jf]-stream.refs[stream.bpf_pc])              
+                JMP(stream.refs[stream.bpf_pc+ins->jf]-stream.refs[stream.bpf_pc])
 
                 break;
 
             case BPF_JMP|BPF_JEQ|BPF_K:
 
                 CMPid(EAX, ins->k)
-                JE(stream.refs[stream.bpf_pc+ins->jt]-stream.refs[stream.bpf_pc]+5) 
-                JMP(stream.refs[stream.bpf_pc+ins->jf]-stream.refs[stream.bpf_pc])              
+                JE(stream.refs[stream.bpf_pc+ins->jt]-stream.refs[stream.bpf_pc]+5)
+                JMP(stream.refs[stream.bpf_pc+ins->jf]-stream.refs[stream.bpf_pc])
 
                 break;
 
@@ -390,7 +390,7 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
                 MOVrd(ECX,EAX)
                 ANDid(ECX,ins->k)
                 JE(stream.refs[stream.bpf_pc+ins->jf]-stream.refs[stream.bpf_pc]+5)
-                JMP(stream.refs[stream.bpf_pc+ins->jt]-stream.refs[stream.bpf_pc])              
+                JMP(stream.refs[stream.bpf_pc+ins->jt]-stream.refs[stream.bpf_pc])
 
                 break;
 
@@ -398,14 +398,14 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
 
                 CMPrd(EAX, EDX)
                 JA(stream.refs[stream.bpf_pc+ins->jt]-stream.refs[stream.bpf_pc]+5)
-                JMP(stream.refs[stream.bpf_pc+ins->jf]-stream.refs[stream.bpf_pc])              
+                JMP(stream.refs[stream.bpf_pc+ins->jf]-stream.refs[stream.bpf_pc])
                 break;
 
             case BPF_JMP|BPF_JGE|BPF_X:
 
                 CMPrd(EAX, EDX)
                 JAE(stream.refs[stream.bpf_pc+ins->jt]-stream.refs[stream.bpf_pc]+5)
-                JMP(stream.refs[stream.bpf_pc+ins->jf]-stream.refs[stream.bpf_pc])              
+                JMP(stream.refs[stream.bpf_pc+ins->jf]-stream.refs[stream.bpf_pc])
 
                 break;
 
@@ -413,7 +413,7 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
 
                 CMPrd(EAX, EDX)
                 JE(stream.refs[stream.bpf_pc+ins->jt]-stream.refs[stream.bpf_pc]+5)
-                JMP(stream.refs[stream.bpf_pc+ins->jf]-stream.refs[stream.bpf_pc])              
+                JMP(stream.refs[stream.bpf_pc+ins->jf]-stream.refs[stream.bpf_pc])
 
                 break;
 
@@ -422,14 +422,14 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
                 MOVrd(ECX,EAX)
                 ANDrd(ECX,EDX)
                 JE(stream.refs[stream.bpf_pc+ins->jf]-stream.refs[stream.bpf_pc]+5)
-                JMP(stream.refs[stream.bpf_pc+ins->jt]-stream.refs[stream.bpf_pc])              
-                
+                JMP(stream.refs[stream.bpf_pc+ins->jt]-stream.refs[stream.bpf_pc])
+
                 break;
 
             case BPF_ALU|BPF_ADD|BPF_X:
 
                 ADDrd(EAX,EDX)
-                
+
                 break;
 
             case BPF_ALU|BPF_SUB|BPF_X:
@@ -455,10 +455,10 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
                 POP(ECX)
                 POP(EBX)
                 POP(EBP)
-                MOVid(EAX,0)  
+                MOVid(EAX,0)
                 RET()
                 MOVrd(ECX,EDX)
-                MOVid(EDX,0)  
+                MOVid(EDX,0)
                 DIVrd(ECX)
                 MOVrd(EDX,ECX)
 
@@ -467,7 +467,7 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
             case BPF_ALU|BPF_AND|BPF_X:
 
                 ANDrd(EAX,EDX)
-                
+
                 break;
 
             case BPF_ALU|BPF_OR|BPF_X:
@@ -499,13 +499,13 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
             case BPF_ALU|BPF_SUB|BPF_K:
 
                 SUB_EAXi(ins->k)
-                
+
                 break;
 
             case BPF_ALU|BPF_MUL|BPF_K:
 
                 MOVrd(ECX,EDX)
-                MOVid(EDX,ins->k)  
+                MOVid(EDX,ins->k)
                 MULrd(EDX)
                 MOVrd(EDX,ECX)
 
@@ -514,7 +514,7 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
             case BPF_ALU|BPF_DIV|BPF_K:
 
                 MOVrd(ECX,EDX)
-                MOVid(EDX,0)  
+                MOVid(EDX,0)
                 MOVid(ESI,ins->k)
                 DIVrd(ESI)
                 MOVrd(EDX,ECX)
@@ -530,7 +530,7 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
             case BPF_ALU|BPF_OR|BPF_K:
 
                 ORid(EAX, ins->k)
-                
+
                 break;
 
             case BPF_ALU|BPF_LSH|BPF_K:
@@ -566,20 +566,20 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
 
 
             }
-        
-            ins++;  
+
+            ins++;
         }
 
         pass++;
         if(pass == 2) break;
-        
+
 #ifdef NTKERNEL
 #define NPF_TAG_STREAMBUF  TAG('1', 'J', 'W', 'A')
         stream.ibuf=(CHAR*)ExAllocatePoolWithTag(NonPagedPool, stream.cur_ip, NPF_TAG_STREAMBUF);
 #else
         stream.ibuf=(CHAR*)malloc(stream.cur_ip);
 #endif
-        if(stream.ibuf==NULL) 
+        if(stream.ibuf==NULL)
         {
 #ifdef NTKERNEL
             ExFreePool(stream.refs);
@@ -588,7 +588,7 @@ BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem)
 #endif
             return NULL;
         }
-        
+
         // modify the reference table to contain the offsets and not the lengths of the instructions
         for(i=1; i< nins + 1; i++)
             stream.refs[i]+=stream.refs[i-1];
@@ -667,7 +667,7 @@ JIT_BPF_Filter* BPF_jitter(struct bpf_insn *fp, INT nins)
 //////////////////////////////////////////////////////////////
 
 void BPF_Destroy_JIT_Filter(JIT_BPF_Filter *Filter){
-    
+
 #ifdef NTKERNEL
     ExFreePool(Filter->mem);
     ExFreePool(Filter->Function);

@@ -19,11 +19,11 @@
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-/** @ingroup NPF 
+/** @ingroup NPF
  *  @{
  */
 
-/** @defgroup NPF_include NPF structures and definitions 
+/** @defgroup NPF_include NPF structures and definitions
  *  @{
  */
 
@@ -62,7 +62,7 @@ typedef struct binary_stream{
 }binary_stream;
 
 
-/*! \brief Prototype of a filtering function created by the jitter. 
+/*! \brief Prototype of a filtering function created by the jitter.
 
   The syntax and the meaning of the parameters is analogous to the one of bpf_filter(). Notice that the filter
   is not among the parameters, because it is hardwired in the function.
@@ -307,7 +307,7 @@ JIT_BPF_Filter;
    emitm(&stream, 0x0f, 1);\
    emitm(&stream, 0x87, 1);\
    emitm(&stream, off32, 4);
-   
+
 /// jae off32
 #define JAE(off32) \
    emitm(&stream, 0x0f, 1);\
@@ -343,11 +343,11 @@ JIT_BPF_Filter;
 /* Prototypes             */
 /**************************/
 
-/** @ingroup NPF 
+/** @ingroup NPF
  *  @{
  */
 
-/** @defgroup NPF_code NPF functions 
+/** @defgroup NPF_code NPF functions
  *  @{
  */
 
@@ -359,7 +359,7 @@ JIT_BPF_Filter;
 
   BPF_jitter allocates the buffers for the new native filter and then translates the program pointed by fp
   calling BPFtoX86().
-*/ 
+*/
 JIT_BPF_Filter* BPF_jitter(struct bpf_insn *fp, INT nins);
 
 /*!
@@ -369,17 +369,17 @@ JIT_BPF_Filter* BPF_jitter(struct bpf_insn *fp, INT nins);
   \param mem Memory used by the x86 function to emulate the RAM of the BPF pseudo processor.
   \return The x86 filtering function.
 
-  This function does the hard work for the JIT compilation. It takes a group of BPF pseudo instructions and 
+  This function does the hard work for the JIT compilation. It takes a group of BPF pseudo instructions and
   through the instruction macros defined in jitter.h it is able to create an function directly executable
   by NPF.
-*/ 
+*/
 BPF_filter_function BPFtoX86(struct bpf_insn *ins, UINT nins, INT *mem);
 /*!
   \brief Deletes a filtering function that was previously created by BPF_jitter().
   \param Filter The filter to destroy.
 
   This function frees the variuos buffers (code, memory, etc.) associated with a filtering function.
-*/ 
+*/
 void BPF_Destroy_JIT_Filter(JIT_BPF_Filter *Filter);
 
 /**

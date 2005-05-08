@@ -241,7 +241,7 @@ ReadExternalAttribute (PDEVICE_EXTENSION Vcb,
 //		readcount = (ULONG)(__min(runcount, left));
 		readcount = (ULONG)min (runcount, left);
 
-		
+
 		ULONG n = readcount * Vcb->NtfsInfo.BytesPerCluster;
 
 		if (lcn == 0)
@@ -252,7 +252,7 @@ ReadExternalAttribute (PDEVICE_EXTENSION Vcb,
 		vcn += readcount;
 		bytes += n;
 
-	
+
     }
 }
 

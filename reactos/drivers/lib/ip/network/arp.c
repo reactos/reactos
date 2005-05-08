@@ -46,7 +46,7 @@ PNDIS_PACKET PrepareARPPacket(
 
     /* Prepare ARP packet */
     Size = MaxLLHeaderSize +
-        sizeof(ARP_HEADER) + 
+        sizeof(ARP_HEADER) +
         2 * LinkAddressLength + /* Hardware address length */
         2 * ProtoAddressLength; /* Protocol address length */
     Size = MAX(Size, MinLLFrameSize);
@@ -155,7 +155,7 @@ BOOLEAN ARPTransmit(PIP_ADDRESS Address, PIP_INTERFACE Interface)
     PC(NdisPacket)->DLComplete = ARPTransmitComplete;
 
     TI_DbgPrint(DEBUG_ARP,("Sending ARP Packet\n"));
-    
+
     (*Interface->Transmit)(Interface->Context, NdisPacket,
         MaxLLHeaderSize, NULL, LAN_PROTO_ARP);
 
@@ -206,7 +206,7 @@ VOID ARPReceive(
     TargetProtoAddress = (PVOID)((ULONG_PTR)SenderProtoAddress +
         Header->ProtoAddrLen + Header->HWAddrLen);
 
-    if( !AddrLocateADEv4( *((PIPv4_RAW_ADDRESS)TargetProtoAddress), 
+    if( !AddrLocateADEv4( *((PIPv4_RAW_ADDRESS)TargetProtoAddress),
 			  &Address) ) {
         TI_DbgPrint(DEBUG_ARP, ("Target address (0x%X) is not mine.\n", *((PULONG)TargetProtoAddress)));
         return;
@@ -217,7 +217,7 @@ VOID ARPReceive(
     AddrInitIPv4(&Address, *((PULONG)SenderProtoAddress));
     NCE = NBLocateNeighbor(&Address);
     if (NCE) {
-        /* We know the sender. Update the hardware address 
+        /* We know the sender. Update the hardware address
            and state in our neighbor address cache */
         NBUpdateNeighbor(NCE, SenderHWAddress, NUD_REACHABLE);
     } else {

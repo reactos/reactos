@@ -7,7 +7,7 @@
  *              Vizzini (vizzini@plasmic.com)
  * REVISIONS:
  *   CSH 01/08-2000 Created
- *   26-Nov-2003 Vizzini Updated to run properly on Win2ksp4 
+ *   26-Nov-2003 Vizzini Updated to run properly on Win2ksp4
  */
 #include <tditest.h>
 
@@ -50,7 +50,7 @@ NTSTATUS TdiCall(
 	PKEVENT Events[2];
 	NTSTATUS Status;
 	Events[0] = &StopEvent;
-	Events[1] = &Event; 
+	Events[1] = &Event;
 
 	KeInitializeEvent(&Event, NotificationEvent, FALSE);
 	Irp->UserEvent = &Event;
@@ -58,25 +58,25 @@ NTSTATUS TdiCall(
 
 	Status = IoCallDriver(DeviceObject, Irp);
 
-	if (Status == STATUS_PENDING) 
+	if (Status == STATUS_PENDING)
 		{
-			if (CanCancel) 
+			if (CanCancel)
 				{
 					Status = KeWaitForMultipleObjects(2, (PVOID)Events, WaitAny, Executive, KernelMode, FALSE, NULL, NULL);
 
-					if (KeReadStateEvent(&StopEvent) != 0) 
+					if (KeReadStateEvent(&StopEvent) != 0)
 						{
-							if (IoCancelIrp(Irp)) 
+							if (IoCancelIrp(Irp))
 								{
 									TDI_DbgPrint(MAX_TRACE, ("Cancelled IRP.\n"));
-								} 
-							else 
+								}
+							else
 								{
 									TDI_DbgPrint(MIN_TRACE, ("Could not cancel IRP.\n"));
 								}
 							return STATUS_CANCELLED;
 						}
-				} 
+				}
 			else
 				Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
 		}
@@ -129,7 +129,7 @@ NTSTATUS TdiOpenDevice(
 		EaInfo,                               /* EA buffer */
 		EaLength);                            /* EA length */
 
-	if (NT_SUCCESS(Status)) 
+	if (NT_SUCCESS(Status))
 		{
 			Status  = ObReferenceObjectByHandle(
 				*Handle,                        /* Handle to open file */
@@ -139,13 +139,13 @@ NTSTATUS TdiOpenDevice(
 				(PVOID*)Object,                 /* Pointer to object */
 				NULL);                          /* Handle information */
 
-			if (!NT_SUCCESS(Status)) 
+			if (!NT_SUCCESS(Status))
 				{
 					TDI_DbgPrint(MIN_TRACE, ("ObReferenceObjectByHandle() failed with status (0x%X).\n", Status));
 					ZwClose(*Handle);
 				}
-		} 
-	else 
+		}
+	else
 		{
 			TDI_DbgPrint(MIN_TRACE, ("ZwCreateFile() failed with status (0x%X)\n", Status));
 		}
@@ -193,7 +193,7 @@ NTSTATUS TdiOpenTransport(
 	EaLength = sizeof(FILE_FULL_EA_INFORMATION) + TDI_TRANSPORT_ADDRESS_LENGTH + sizeof(TA_IP_ADDRESS) + 1;
 	EaInfo = (PFILE_FULL_EA_INFORMATION)ExAllocatePool(NonPagedPool, EaLength);
 
-	if (!EaInfo) 
+	if (!EaInfo)
 		{
 			TDI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
 			return STATUS_INSUFFICIENT_RESOURCES;
@@ -253,7 +253,7 @@ NTSTATUS TdiQueryDeviceControl(
 	Irp = IoBuildDeviceIoControlRequest(IoControlCode, DeviceObject, InputBuffer, InputBufferLength, OutputBuffer,
 		OutputBufferLength, FALSE, NULL, NULL);
 
-	if (!Irp) 
+	if (!Irp)
 		{
 			TDI_DbgPrint(MIN_TRACE, ("IoBuildDeviceIoControlRequest() failed.\n"));
 			return STATUS_INSUFFICIENT_RESOURCES;
@@ -341,7 +341,7 @@ NTSTATUS TdiQueryAddress(
 	BufferSize = sizeof(TDIEntityID) * 20;
 	Entities   = (TDIEntityID*)ExAllocatePool(NonPagedPool, BufferSize);
 
-	if (!Entities) 
+	if (!Entities)
 		{
 			TDI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
 			return STATUS_INSUFFICIENT_RESOURCES;
@@ -358,7 +358,7 @@ NTSTATUS TdiQueryAddress(
 		Entities,            /* Output buffer */
 		&BufferSize);        /* Output buffer size */
 
-	if (!NT_SUCCESS(Status)) 
+	if (!NT_SUCCESS(Status))
 		{
 			TDI_DbgPrint(MIN_TRACE, ("Unable to get list of supported entities (Status = 0x%X).\n", Status));
 			ExFreePool(Entities);
@@ -370,9 +370,9 @@ NTSTATUS TdiQueryAddress(
 
 	TDI_DbgPrint(MAX_TRACE, ("EntityCount = %d\n", EntityCount));
 
-	for (i = 0; i < EntityCount; i++) 
+	for (i = 0; i < EntityCount; i++)
 		{
-			if (Entities[i].tei_entity == CL_NL_ENTITY) 
+			if (Entities[i].tei_entity == CL_NL_ENTITY)
 				{
 					/* Query device for entity type */
 					BufferSize = sizeof(EntityType);
@@ -386,7 +386,7 @@ NTSTATUS TdiQueryAddress(
 						&EntityType,                 /* Output buffer */
 						&BufferSize);                /* Output buffer size */
 
-					if (!NT_SUCCESS(Status) || (EntityType != CL_NL_IP)) 
+					if (!NT_SUCCESS(Status) || (EntityType != CL_NL_IP))
 						{
 							TDI_DbgPrint(MIN_TRACE, ("Unable to get entity of type IP (Status = 0x%X).\n", Status));
 							break;
@@ -404,18 +404,18 @@ NTSTATUS TdiQueryAddress(
 						&SnmpInfo,                   /* Output buffer */
 						&BufferSize);                /* Output buffer size */
 
-					if (!NT_SUCCESS(Status) || (SnmpInfo.NumAddr == 0)) 
+					if (!NT_SUCCESS(Status) || (SnmpInfo.NumAddr == 0))
 						{
 							TDI_DbgPrint(MIN_TRACE, ("Unable to get SNMP information or no IP addresses available (Status = 0x%X).\n", Status));
 							break;
 						}
 
 					/* Query device for all IP addresses */
-					if (SnmpInfo.NumAddr != 0) 
+					if (SnmpInfo.NumAddr != 0)
 						{
 							BufferSize = SnmpInfo.NumAddr * sizeof(IPADDR_ENTRY);
 							IpAddress = (PIPADDR_ENTRY)ExAllocatePool(NonPagedPool, BufferSize);
-							if (!IpAddress) 
+							if (!IpAddress)
 								{
 									TDI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
 									break;
@@ -431,19 +431,19 @@ NTSTATUS TdiQueryAddress(
 							IpAddress,                   /* Output buffer */
 							&BufferSize);                /* Output buffer size */
 
-						if (!NT_SUCCESS(Status)) 
+						if (!NT_SUCCESS(Status))
 							{
 								TDI_DbgPrint(MIN_TRACE, ("Unable to get IP address (Status = 0x%X).\n", Status));
 								ExFreePool(IpAddress);
 								break;
 							}
 
-						if (SnmpInfo.NumAddr != 1) 
+						if (SnmpInfo.NumAddr != 1)
 							{
 								/* Skip loopback address */
 								*Address = DN2H(((PIPADDR_ENTRY)((ULONG)IpAddress + sizeof(IPADDR_ENTRY)))->Addr);
 							}
-						else 
+						else
 							{
 								/* Select the first address returned */
 								*Address = DN2H(IpAddress->Addr);
@@ -451,7 +451,7 @@ NTSTATUS TdiQueryAddress(
 								ExFreePool(IpAddress);
 
 						}
-					else 
+					else
 						{
 							Status = STATUS_UNSUCCESSFUL;
 							break;
@@ -522,7 +522,7 @@ NTSTATUS TdiSendDatagram(
 		NULL,                /* Event */
 		NULL);               /* Return buffer */
 
-	if (!Irp) 
+	if (!Irp)
 		{
 			TDI_DbgPrint(MIN_TRACE, ("TdiBuildInternalDeviceControlIrp() failed.\n"));
 			ExFreePool(ConnectInfo);
@@ -536,7 +536,7 @@ NTSTATUS TdiSendDatagram(
 		FALSE,      /* Don't charge quota */
 		NULL);      /* Don't use IRP */
 
-	if (!Mdl) 
+	if (!Mdl)
 		{
 			TDI_DbgPrint(MIN_TRACE, ("IoAllocateMdl() failed.\n"));
 			IoFreeIrp(Irp);
@@ -545,13 +545,13 @@ NTSTATUS TdiSendDatagram(
 		}
 
 #ifdef _MSC_VER
-	try 
+	try
 		{
 #endif
 			MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
 #ifdef _MSC_VER
-		} 
-	except(EXCEPTION_EXECUTE_HANDLER) 
+		}
+	except(EXCEPTION_EXECUTE_HANDLER)
 		{
 			TDI_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
 			IoFreeMdl(Mdl);
@@ -624,7 +624,7 @@ NTSTATUS TdiReceiveDatagram(
 	if (!MdlBuffer)
 		return STATUS_INSUFFICIENT_RESOURCES;
 
-	RtlZeroMemory(ReceiveInfo, sizeof(TDI_CONNECTION_INFORMATION) + sizeof(TDI_CONNECTION_INFORMATION) + 
+	RtlZeroMemory(ReceiveInfo, sizeof(TDI_CONNECTION_INFORMATION) + sizeof(TDI_CONNECTION_INFORMATION) +
 		sizeof(TA_IP_ADDRESS));
 
 	RtlCopyMemory(MdlBuffer, Buffer, *BufferSize);
@@ -653,7 +653,7 @@ NTSTATUS TdiReceiveDatagram(
 		NULL,                    /* Event */
 		NULL);                   /* Return buffer */
 
-	if (!Irp) 
+	if (!Irp)
 		{
 			ExFreePool(MdlBuffer);
 			ExFreePool(ReceiveInfo);
@@ -667,7 +667,7 @@ NTSTATUS TdiReceiveDatagram(
 		FALSE,          /* Don't charge quota */
 		NULL);          /* Don't use IRP */
 
-	if (!Mdl) 
+	if (!Mdl)
 		{
 			IoFreeIrp(Irp);
 			ExFreePool(MdlBuffer);
@@ -676,13 +676,13 @@ NTSTATUS TdiReceiveDatagram(
 		}
 
 #ifdef _MSC_VER
-	try 
+	try
 		{
 #endif
 			MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
 #ifdef _MSC_VER
-		} 
-	except (EXCEPTION_EXECUTE_HANDLER) 
+		}
+	except (EXCEPTION_EXECUTE_HANDLER)
 		{
 			TDI_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
 			IoFreeMdl(Mdl);
@@ -704,10 +704,10 @@ NTSTATUS TdiReceiveDatagram(
 		ReceiveInfo,            /* Connection information */
 		ReturnInfo,             /* Connection information */
 		TDI_RECEIVE_NORMAL);    /* Flags */
-                            
+
 	Status = TdiCall(Irp, DeviceObject, &Iosb, TRUE);
 
-	if (NT_SUCCESS(Status)) 
+	if (NT_SUCCESS(Status))
 		{
 			RtlCopyMemory(Buffer, MdlBuffer, Iosb.Information);
 			*BufferSize = Iosb.Information;
@@ -737,7 +737,7 @@ VOID TdiSendThread(
 	NTSTATUS Status = STATUS_SUCCESS;
 	UCHAR Data[40]  = "Testing one, two, three, ...";
 
-	if (!OpenError) 
+	if (!OpenError)
 		{
 			Timeout.QuadPart = 10000000L;           /* Second factor */
 			Timeout.QuadPart *= 2;                  /* Number of seconds */
@@ -748,12 +748,12 @@ VOID TdiSendThread(
 			Events[0] = &StopEvent;
 			Events[1] = &Event;
 
-			while (NT_SUCCESS(Status)) 
+			while (NT_SUCCESS(Status))
 				{
 					/* Wait until timeout or stop flag is set */
  					KeWaitForMultipleObjects( 2, (PVOID)Events, WaitAny, Executive, KernelMode, FALSE, &Timeout, NULL);
 
-					if (KeReadStateEvent(&StopEvent) != 0) 
+					if (KeReadStateEvent(&StopEvent) != 0)
 						{
 							TDI_DbgPrint(MAX_TRACE, ("Received terminate signal...\n"));
 							break;
@@ -789,25 +789,25 @@ VOID TdiReceiveThread(
 	ULONG Size;
 	NTSTATUS Status = STATUS_SUCCESS;
 
-	if (!OpenError) 
+	if (!OpenError)
 		{
-			while (NT_SUCCESS(Status)) 
+			while (NT_SUCCESS(Status))
 				{
 					Size = sizeof(Data);
 					RtlZeroMemory(Data, Size);
 
 					Status = TdiReceiveDatagram(TdiTransportObject, TEST_PORT, &Address, Data, &Size);
 
-					if (NT_SUCCESS(Status)) 
+					if (NT_SUCCESS(Status))
 						{
 							DbgPrint("Received data - '%s'\n", Data);
-						} 
+						}
 					else
-						if (Status != STATUS_CANCELLED) 
+						if (Status != STATUS_CANCELLED)
 							{
 								TDI_DbgPrint(MIN_TRACE, ("Receive error (Status = 0x%X).\n", Status));
-							} 
-						else 
+							}
+						else
 							{
 								TDI_DbgPrint(MAX_TRACE, ("IRP was cancelled.\n"));
 							}
@@ -836,20 +836,20 @@ VOID TdiOpenThread(
 
 	Status = TdiOpenTransport(UDP_DEVICE_NAME, TEST_PORT, &TdiTransport, &TdiTransportObject);
 
-	if (NT_SUCCESS(Status)) 
+	if (NT_SUCCESS(Status))
 		{
 			Status = TdiQueryAddress(TdiTransportObject, &LocalAddress);
 
-			if (NT_SUCCESS(Status)) 
+			if (NT_SUCCESS(Status))
 				{
 					OpenError = FALSE;
 					DbgPrint("Using local IP address 0x%X\n", LocalAddress);
-				} 
-			else 
+				}
+			else
 				{
 					TDI_DbgPrint(MIN_TRACE, ("Unable to determine local IP address.\n"));
 				}
-			} 
+			}
 	else
 		TDI_DbgPrint(MIN_TRACE, ("Cannot open transport (Status = 0x%X).\n", Status));
 
@@ -929,7 +929,7 @@ DriverEntry(
 		(PKSTART_ROUTINE)TdiSendThread,   /* Start routine */
 		NULL);                            /* Start context */
 
-	if (!NT_SUCCESS(Status)) 
+	if (!NT_SUCCESS(Status))
 		{
 			TDI_DbgPrint(MIN_TRACE, ("PsCreateSystemThread() failed for send thread (Status = 0x%X).\n", Status));
 			return STATUS_INSUFFICIENT_RESOURCES;
@@ -945,7 +945,7 @@ DriverEntry(
 		(PKSTART_ROUTINE)TdiReceiveThread,    /* Start routine */
 		NULL);                                /* Start context */
 
-	if (!NT_SUCCESS(Status)) 
+	if (!NT_SUCCESS(Status))
 		{
 			TDI_DbgPrint(MIN_TRACE, ("PsCreateSystemThread() failed for receive thread (Status = 0x%X).\n", Status));
 			ZwClose(SendThread);

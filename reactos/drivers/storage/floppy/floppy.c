@@ -28,7 +28,7 @@
  *    interrupts without modification.  I don't think these controllers exist.
  *
  * ---- General to-do items ----
- * TODO: Figure out why CreateClose isn't called any more.  Seems to correspond 
+ * TODO: Figure out why CreateClose isn't called any more.  Seems to correspond
  *       with the driver not being unloadable.
  * TODO: Think about StopDpcQueued -- could be a race; too tired atm to tell
  * TODO: Clean up drive start/stop responsibilities (currently a mess...)
@@ -49,7 +49,7 @@
 #include "readwrite.h"
 
 /*
- * Global controller info structures.  Each controller gets one.  Since the system 
+ * Global controller info structures.  Each controller gets one.  Since the system
  * will probably have only one, with four being a very unlikely maximum, a static
  * global array is easiest to deal with.
  */
@@ -178,7 +178,7 @@ VOID NTAPI WaitForControllerInterrupt(PCONTROLLER_INFO ControllerInfo)
 }
 
 
-static NTSTATUS NTAPI CreateClose(PDEVICE_OBJECT DeviceObject, 
+static NTSTATUS NTAPI CreateClose(PDEVICE_OBJECT DeviceObject,
                                   PIRP Irp)
 /*
  * FUNCTION: Dispatch function called for Create and Close IRPs
@@ -193,7 +193,7 @@ static NTSTATUS NTAPI CreateClose(PDEVICE_OBJECT DeviceObject,
  *     - No state to track, so this routine is easy
  *     - Can be called <= DISPATCH_LEVEL
  *
- * TODO: Figure out why this isn't getting called 
+ * TODO: Figure out why this isn't getting called
  */
 {
   UNREFERENCED_PARAMETER(DeviceObject);
@@ -457,11 +457,11 @@ static NTSTATUS NTAPI ConfigCallback(PVOID Context,
  */
 {
   PKEY_VALUE_FULL_INFORMATION ControllerFullDescriptor = ControllerInformation[IoQueryDeviceConfigurationData];
-  PCM_FULL_RESOURCE_DESCRIPTOR ControllerResourceDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)((PCHAR)ControllerFullDescriptor + 
+  PCM_FULL_RESOURCE_DESCRIPTOR ControllerResourceDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)((PCHAR)ControllerFullDescriptor +
                                                                ControllerFullDescriptor->DataOffset);
 
   PKEY_VALUE_FULL_INFORMATION PeripheralFullDescriptor = PeripheralInformation[IoQueryDeviceConfigurationData];
-  PCM_FULL_RESOURCE_DESCRIPTOR PeripheralResourceDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)((PCHAR)PeripheralFullDescriptor + 
+  PCM_FULL_RESOURCE_DESCRIPTOR PeripheralResourceDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)((PCHAR)PeripheralFullDescriptor +
                                                                PeripheralFullDescriptor->DataOffset);
 
   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
@@ -586,9 +586,9 @@ static BOOLEAN NTAPI Isr(PKINTERRUPT Interrupt,
  *       triggered, this is safe to not do here, as we can just wait for the DPC.
  *     - Either way, we don't want to do this here.  The controller shouldn't interrupt again, so we'll
  *       schedule a DPC to take care of it.
- *     - This driver really cannot shrare interrupts, as I don't know how to conclusively say 
+ *     - This driver really cannot shrare interrupts, as I don't know how to conclusively say
  *       whether it was our controller that interrupted or not.  I just have to assume that any time
- *       my ISR gets called, it was my board that called it.  Dumb design, yes, but it goes back to 
+ *       my ISR gets called, it was my board that called it.  Dumb design, yes, but it goes back to
  *       the semantics of ISA buses.  That, and I don't know much about ISA drivers. :-)
  *       UPDATE: The high bit of Status Register A seems to work on non-AT controllers.
  *     - Called at DIRQL
@@ -625,7 +625,7 @@ VOID NTAPI DpcForIsr(PKDPC UnusedDpc,
  *     UnusedDpc: Pointer to the DPC object that represents our function
  *     DeviceObject: Device that this DPC is running for
  *     Irp: Unused
- *     Context: Pointer to our ControllerInfo struct 
+ *     Context: Pointer to our ControllerInfo struct
  * NOTES:
  *     - This function just kicks off whatever the SynchEvent is and returns.  We depend on
  *       the thing that caused the drive to interrupt to handle the work of clearing the interrupt.
@@ -718,13 +718,13 @@ static NTSTATUS NTAPI InitController(PCONTROLLER_INFO ControllerInfo)
 	  KdPrint(("floppy: InitController: unable to set up implied seek\n"));
           ControllerInfo->ImpliedSeeks = FALSE;
 	}
-      else 
+      else
 	{
 	  KdPrint(("floppy: InitController: implied seeks set!\n"));
           ControllerInfo->ImpliedSeeks = TRUE;
 	}
 
-      /* 
+      /*
        * FIXME: Figure out the answer to the below
        *
        * I must admit that I'm really confused about the Model 30 issue.  At least one
@@ -751,7 +751,7 @@ static NTSTATUS NTAPI InitController(PCONTROLLER_INFO ControllerInfo)
       ControllerInfo->ImpliedSeeks = FALSE;
       ControllerInfo->Model30 = FALSE;
     }
-  
+
   /* Specify */
   KdPrint(("FLOPPY: FIXME: Figure out speed\n"));
   HeadLoadTime = SPECIFY_HLT_500K;
@@ -759,7 +759,7 @@ static NTSTATUS NTAPI InitController(PCONTROLLER_INFO ControllerInfo)
   StepRateTime = SPECIFY_SRT_500K;
 
   KdPrint(("floppy: InitController: issuing specify command to controller\n"));
-      
+
   /* Don't disable DMA --> enable dma (dumb & confusing) */
   if(HwSpecify(ControllerInfo, HeadLoadTime, HeadUnloadTime, StepRateTime, FALSE) != STATUS_SUCCESS)
     {
@@ -773,8 +773,8 @@ static NTSTATUS NTAPI InitController(PCONTROLLER_INFO ControllerInfo)
   KeInitializeEvent(&ControllerInfo->MotorStoppedEvent, NotificationEvent, FALSE);
   ControllerInfo->StopDpcQueued = FALSE;
 
-  /* 
-   * Recalibrate each drive on the controller (depends on StartMotor, which depends on the timer stuff above) 
+  /*
+   * Recalibrate each drive on the controller (depends on StartMotor, which depends on the timer stuff above)
    * We don't even know if there is a disk in the drive, so this may not work, but that's OK.
    */
   for(i = 0; i < ControllerInfo->NumberOfDrives; i++)
@@ -798,7 +798,7 @@ static BOOLEAN NTAPI AddControllers(PDRIVER_OBJECT DriverObject)
  *     FALSE if we can't allocate a device, adapter, or interrupt object, or if we fail to find any controllers
  *     TRUE otherwise (i.e. we have at least one fully-configured controller)
  * NOTES:
- *     - Currently we only support ISA buses.  
+ *     - Currently we only support ISA buses.
  *     - BUG: Windows 2000 seems to clobber the response from the IoQueryDeviceDescription callback, so now we
  *       just test a boolean value in the first object to see if it was completely populated.  The same value
  *       is tested for each controller before we build device objects for it.
@@ -819,10 +819,10 @@ static BOOLEAN NTAPI AddControllers(PDRIVER_OBJECT DriverObject)
   /* Find our controllers on all ISA buses */
   IoQueryDeviceDescription(&InterfaceType, 0, &ControllerType, 0, &PeripheralType, 0, ConfigCallback, 0);
 
-  /* 
+  /*
    * w2k breaks the return val from ConfigCallback, so we have to hack around it, rather than just
    * looking for a return value from ConfigCallback.  We expect at least one controller.
-   */ 
+   */
   if(!gControllerInfo[0].Populated)
     {
       KdPrint(("floppy: AddControllers: failed to get controller info from registry\n"));
@@ -897,7 +897,7 @@ static BOOLEAN NTAPI AddControllers(PDRIVER_OBJECT DriverObject)
 
 	  KdPrint(("floppy: AddControllers(): Configuring drive %d on controller %d\n", i, j));
 
-	  /* 
+	  /*
 	   * 3a: create a device object for the drive
 	   * Controllers and drives are 0-based, so the combos are:
 	   * 0: 0,0
@@ -908,14 +908,14 @@ static BOOLEAN NTAPI AddControllers(PDRIVER_OBJECT DriverObject)
 	   * 5: 1,1
 	   * ...
 	   * 14: 3,2
-	   * 15: 3,3 
-	   */ 
+	   * 15: 3,3
+	   */
 	  DriveNumber = (UCHAR)(i*4 + j); /* loss of precision is OK; there are only 16 of 'em */
 
           swprintf(DeviceNameBuf, L"\\Device\\Floppy%d", DriveNumber);
           RtlInitUnicodeString(&DeviceName, DeviceNameBuf);
 
-          if(IoCreateDevice(DriverObject, sizeof(PVOID), &DeviceName, 
+          if(IoCreateDevice(DriverObject, sizeof(PVOID), &DeviceName,
 			    FILE_DEVICE_DISK, FILE_REMOVABLE_MEDIA | FILE_FLOPPY_DISKETTE, FALSE,
                             &gControllerInfo[i].DriveInfo[j].DeviceObject) != STATUS_SUCCESS)
             {
@@ -1002,7 +1002,7 @@ VOID NTAPI SignalMediaChanged(PDEVICE_OBJECT DeviceObject,
   Irp->IoStatus.Status = STATUS_VERIFY_REQUIRED;
   Irp->IoStatus.Information = 0;
 
-  /* 
+  /*
    * If this is a user-based, threaded request, let the IO manager know to pop up a box asking
    * the user to supply the correct media, but only if the error (which we just picked out above)
    * is deemed by the IO manager to be "user induced".  The reason we don't just unconditionally
@@ -1110,7 +1110,7 @@ NTSTATUS NTAPI DriverEntry(PDRIVER_OBJECT DriverObject,
   DriverObject->DriverUnload = Unload;
 
   /*
-   * We depend on some zeroes in these structures.  I know this is supposed to be 
+   * We depend on some zeroes in these structures.  I know this is supposed to be
    * initialized to 0 by the complier but this makes me feel beter.
    */
   memset(&gControllerInfo, 0, sizeof(gControllerInfo));
@@ -1118,7 +1118,7 @@ NTSTATUS NTAPI DriverEntry(PDRIVER_OBJECT DriverObject,
   /*
    * Set up queue.  This routine cannot fail (trust me, I wrote it).
    */
-  IoCsqInitialize(&Csq, CsqInsertIrp, CsqRemoveIrp, CsqPeekNextIrp, 
+  IoCsqInitialize(&Csq, CsqInsertIrp, CsqRemoveIrp, CsqPeekNextIrp,
                   CsqAcquireLock, CsqReleaseLock, CsqCompleteCanceledIrp);
 
   /*
@@ -1132,9 +1132,9 @@ NTSTATUS NTAPI DriverEntry(PDRIVER_OBJECT DriverObject,
   InitializeListHead(&IrpQueue);
 
   /*
-   * The queue is counted by a semaphore.  The queue management thread 
+   * The queue is counted by a semaphore.  The queue management thread
    * blocks on this semaphore, so if requests come in faster than the queue
-   * thread can handle them, the semaphore count goes up. 
+   * thread can handle them, the semaphore count goes up.
    */
   KeInitializeSemaphore(&QueueSemaphore, 0, 0x7fffffff);
 
@@ -1159,8 +1159,8 @@ NTSTATUS NTAPI DriverEntry(PDRIVER_OBJECT DriverObject,
       return STATUS_UNSUCCESSFUL;
     }
 
-  /* 
-   * Close the handle, now that we have the object pointer and a reference of our own. 
+  /*
+   * Close the handle, now that we have the object pointer and a reference of our own.
    * The handle will certainly not be valid in the context of the caller next time we
    * need it, as handles are process-specific.
    */
@@ -1168,7 +1168,7 @@ NTSTATUS NTAPI DriverEntry(PDRIVER_OBJECT DriverObject,
 
   /*
    * Start the device discovery proces.  Returns STATUS_SUCCESS if
-   * it finds even one drive attached to one controller. 
+   * it finds even one drive attached to one controller.
    */
   if(!AddControllers(DriverObject))
     return STATUS_NO_SUCH_DEVICE;

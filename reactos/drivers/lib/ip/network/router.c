@@ -108,7 +108,7 @@ UINT CopyFIBs( PFIB_ENTRY Target ) {
 	FibCount++;
     }
 
-    return FibCount;    
+    return FibCount;
 }
 
 
@@ -185,8 +185,8 @@ PFIB_ENTRY RouterAddRoute(
         "Router (0x%X)  Metric (%d).\n", NetworkAddress, Netmask, Router, Metric));
 
     TI_DbgPrint(DEBUG_ROUTER, ("NetworkAddress (%s)  Netmask (%s)  Router (%s).\n",
-			       A2S(NetworkAddress), 
-			       A2S(Netmask), 
+			       A2S(NetworkAddress),
+			       A2S(Netmask),
 			       A2S(&Router->Address)));
 
     FIBE = PoolAllocateBuffer(sizeof(FIB_ENTRY));
@@ -197,9 +197,9 @@ PFIB_ENTRY RouterAddRoute(
 
    INIT_TAG(Router, TAG('R','O','U','T'));
 
-    RtlCopyMemory( &FIBE->NetworkAddress, NetworkAddress, 
+    RtlCopyMemory( &FIBE->NetworkAddress, NetworkAddress,
 		   sizeof(FIBE->NetworkAddress) );
-    RtlCopyMemory( &FIBE->Netmask, Netmask, 
+    RtlCopyMemory( &FIBE->Netmask, Netmask,
 		   sizeof(FIBE->Netmask) );
     FIBE->Router         = Router;
     FIBE->Metric         = Metric;
@@ -247,9 +247,9 @@ PNEIGHBOR_CACHE_ENTRY RouterGetRoute(PIP_ADDRESS Destination)
 	Length = CommonPrefixLength(Destination, &Current->NetworkAddress);
 	MaskLength = AddrCountPrefixBits(&Current->Netmask);
 
-	TI_DbgPrint(DEBUG_ROUTER,("This-Route: %s (Sharing %d bits)\n", 
+	TI_DbgPrint(DEBUG_ROUTER,("This-Route: %s (Sharing %d bits)\n",
 				  A2S(&NCE->Address), Length));
-	
+
 	if(Length >= MaskLength && (Length > BestLength || !BestLength)) {
 	    /* This seems to be a better router */
 	    BestNCE    = NCE;
@@ -306,8 +306,8 @@ PNEIGHBOR_CACHE_ENTRY RouteGetRouteToDestination(PIP_ADDRESS Destination)
 	/* Destination is not on any subnets we're on. Find a router to use */
 	NCE = RouterGetRoute(Destination);
     }
-    
-    if( NCE ) 
+
+    if( NCE )
 	TI_DbgPrint(DEBUG_ROUTER,("Interface->MTU: %d\n", NCE->Interface->MTU));
 
     return NCE;
@@ -331,7 +331,7 @@ NTSTATUS RouterRemoveRoute(PIP_ADDRESS Target, PIP_ADDRESS Router)
     PNEIGHBOR_CACHE_ENTRY NCE;
 
     TI_DbgPrint(DEBUG_ROUTER, ("Called\n"));
-    
+
     TcpipAcquireSpinLock(&FIBLock, &OldIrql);
 
     CurrentEntry = FIBListHead.Flink;
@@ -357,7 +357,7 @@ NTSTATUS RouterRemoveRoute(PIP_ADDRESS Target, PIP_ADDRESS Router)
     }
 
     TcpipReleaseSpinLock(&FIBLock, OldIrql);
-    
+
     TI_DbgPrint(DEBUG_ROUTER, ("Leaving\n"));
 
     return Found ? STATUS_NO_SUCH_FILE : STATUS_SUCCESS;

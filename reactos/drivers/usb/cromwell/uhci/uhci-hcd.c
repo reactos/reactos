@@ -121,7 +121,7 @@ static inline void uhci_set_next_interrupt(struct uhci_hcd *uhci)
 	unsigned long flags;
 
 	spin_lock_irqsave(&uhci->frame_list_lock, flags);
-	uhci->term_td->status |= cpu_to_le32(TD_CTRL_IOC); 
+	uhci->term_td->status |= cpu_to_le32(TD_CTRL_IOC);
 	spin_unlock_irqrestore(&uhci->frame_list_lock, flags);
 }
 
@@ -663,7 +663,7 @@ static struct urb_priv *uhci_alloc_urb_priv(struct uhci_hcd *uhci, struct urb *u
 	urbp->fsbrtime = jiffies;
 	urbp->urb = urb;
 	urbp->dev = urb->dev;
-	
+
 	INIT_LIST_HEAD(&urbp->td_list);
 	INIT_LIST_HEAD(&urbp->queue_list);
 	INIT_LIST_HEAD(&urbp->complete_list);
@@ -855,7 +855,7 @@ static int uhci_submit_control(struct uhci_hcd *uhci, struct urb *urb, struct ur
 
 		/* Alternate Data0/1 (start with Data1) */
 		destination ^= TD_TOKEN_TOGGLE;
-	
+
 		uhci_add_td_to_urb(urb, td);
 		uhci_fill_td(td, status, destination | uhci_explen(pktsze - 1),
 			data);
@@ -865,7 +865,7 @@ static int uhci_submit_control(struct uhci_hcd *uhci, struct urb *urb, struct ur
 	}
 
 	/*
-	 * Build the final TD for control status 
+	 * Build the final TD for control status
 	 */
 	td = uhci_alloc_td(uhci, urb->dev);
 	if (!td)
@@ -1214,7 +1214,7 @@ td_error:
 	    			uhci_packetout(td_token(td)));
 
 err:
-	/* 
+	/*
 	 * Enable this chunk of code if you want to see some more debugging.
 	 * But be careful, it has the tendancy to starve out khubd and prevent
 	 * disconnects from happening successfully if you have a slow debug
@@ -2326,9 +2326,9 @@ static int __devinit uhci_start(struct usb_hcd *hcd)
 			irq++;
 			if (i & 2) {
 				irq++;
-				if (i & 4) { 
+				if (i & 4) {
 					irq++;
-					if (i & 8) { 
+					if (i & 8) {
 						irq++;
 						if (i & 16) {
 							irq++;
@@ -2541,7 +2541,7 @@ struct pci_driver uhci_pci_driver = {
 	.resume =	usb_hcd_pci_resume,
 #endif	/* PM */
 };
- 
+
 int __init uhci_hcd_init(void)
 {
 	int retval = -ENOMEM;
@@ -2593,10 +2593,10 @@ errbuf_failed:
 	return retval;
 }
 
-void __exit uhci_hcd_cleanup(void) 
+void __exit uhci_hcd_cleanup(void)
 {
 	pci_unregister_driver(&uhci_pci_driver);
-	
+
 	if (kmem_cache_destroy(uhci_up_cachep))
 		printk(KERN_INFO "uhci: not all urb_priv's were freed\n");
 

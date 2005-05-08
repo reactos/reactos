@@ -1,10 +1,10 @@
 /* $Id:
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Serial enumerator driver
  * FILE:            drivers/bus/serenum/serenum.c
  * PURPOSE:         Serial enumeration driver entry point
- * 
+ *
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
  */
 
@@ -35,7 +35,7 @@ IrpStub(
 	IN PIRP Irp)
 {
 	NTSTATUS Status = STATUS_NOT_SUPPORTED;
-	
+
 	if (((PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO)
 	{
 		/* Forward some IRPs to lower device */
@@ -82,7 +82,7 @@ IrpStub(
 			}
 		}
 	}
-	
+
 	Irp->IoStatus.Status = Status;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 	return Status;
@@ -97,16 +97,16 @@ DriverEntry(
 	IN PUNICODE_STRING RegPath)
 {
 	ULONG i;
-	
+
 	DriverObject->DriverUnload = DriverUnload;
 	DriverObject->DriverExtension->AddDevice = SerenumAddDevice;
-	
+
 	for (i = 0; i < IRP_MJ_MAXIMUM_FUNCTION; i++)
 		DriverObject->MajorFunction[i] = IrpStub;
-	
+
 	//DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = SerialQueryInformation;
 	DriverObject->MajorFunction[IRP_MJ_PNP] = SerenumPnp;
 	//DriverObject->MajorFunction[IRP_MJ_POWER] = SerialPower;
-	
+
 	return STATUS_SUCCESS;
 }

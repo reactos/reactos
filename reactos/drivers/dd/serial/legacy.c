@@ -1,10 +1,10 @@
 /* $Id:
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            drivers/bus/serial/legacy.c
  * PURPOSE:         Legacy serial port enumeration
- * 
+ *
  * PROGRAMMERS:     Hervé Poussineau (poussine@freesurf.fr)
  *                  Mark Junker (mjscod@gmx.de)
  */
@@ -20,16 +20,16 @@ SerialDetectUartType(
 	UCHAR OldScr, Scr5A, ScrA5;
 	BOOLEAN FifoEnabled;
 	UCHAR NewFifoStatus;
-	
+
 	Lcr = READ_PORT_UCHAR(SER_LCR(BaseAddress));
 	WRITE_PORT_UCHAR(SER_LCR(BaseAddress), Lcr ^ 0xFF);
 	TestLcr = READ_PORT_UCHAR(SER_LCR(BaseAddress)) ^ 0xFF;
 	WRITE_PORT_UCHAR(SER_LCR(BaseAddress), Lcr);
-	
+
 	/* Accessing the LCR must work for a usable serial port */
 	if (TestLcr != Lcr)
 		return UartUnknown;
-	
+
 	/* Ensure that all following accesses are done as required */
 	READ_PORT_UCHAR(SER_RBR(BaseAddress));
 	READ_PORT_UCHAR(SER_IER(BaseAddress));
@@ -39,7 +39,7 @@ SerialDetectUartType(
 	READ_PORT_UCHAR(SER_LSR(BaseAddress));
 	READ_PORT_UCHAR(SER_MSR(BaseAddress));
 	READ_PORT_UCHAR(SER_SCR(BaseAddress));
-	
+
 	/* Test scratch pad */
 	OldScr = READ_PORT_UCHAR(SER_SCR(BaseAddress));
 	WRITE_PORT_UCHAR(SER_SCR(BaseAddress), 0x5A);
@@ -47,11 +47,11 @@ SerialDetectUartType(
 	WRITE_PORT_UCHAR(SER_SCR(BaseAddress), 0xA5);
 	ScrA5 = READ_PORT_UCHAR(SER_SCR(BaseAddress));
 	WRITE_PORT_UCHAR(SER_SCR(BaseAddress), OldScr);
-	
+
 	/* When non-functional, we have a 8250 */
 	if (Scr5A != 0x5A || ScrA5 != 0xA5)
 		return Uart8250;
-	
+
 	/* Test FIFO type */
 	FifoEnabled = (READ_PORT_UCHAR(SER_IIR(BaseAddress)) & 0x80) != 0;
 	WRITE_PORT_UCHAR(SER_FCR(BaseAddress), SR_FCR_ENABLE_FIFO);
@@ -69,7 +69,7 @@ SerialDetectUartType(
 			 * with 0x80 */
 			return Uart16550;
 	}
-	
+
 	/* FIFO is only functional for 16550A+ */
 	return Uart16550A;
 }
@@ -90,7 +90,7 @@ DetectLegacyDevice(
 	PDEVICE_OBJECT Fdo;
 	KIRQL Dirql;
 	NTSTATUS Status;
-	
+
 	/* Create resource list */
 	ResourceListSize = sizeof(CM_RESOURCE_LIST) + sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
 	ResourceList = (PCM_RESOURCE_LIST)ExAllocatePoolWithTag(PagedPool, ResourceListSize, SERIAL_TAG);
@@ -109,7 +109,7 @@ DetectLegacyDevice(
 	ResourceDescriptor->u.Port.Start.u.HighPart = 0;
 	ResourceDescriptor->u.Port.Start.u.LowPart = ComPortBase;
 	ResourceDescriptor->u.Port.Length = 8;
-	
+
 	ResourceDescriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[1];
 	ResourceDescriptor->Type = CmResourceTypeInterrupt;
 	ResourceDescriptor->ShareDisposition = CmResourceShareShared;
@@ -119,7 +119,7 @@ DetectLegacyDevice(
 		&Dirql,
 		&ResourceDescriptor->u.Interrupt.Affinity);
 	ResourceDescriptor->u.Interrupt.Level = (ULONG)Dirql;
-	
+
 	/* Report resource list */
 	Status = IoReportResourceForDetection(
 		DriverObject, ResourceList, ResourceListSize,
@@ -136,10 +136,10 @@ DetectLegacyDevice(
 		ExFreePoolWithTag(ResourceList, SERIAL_TAG);
 		return Status;
 	}
-	
+
 	/* Test if port exists */
 	UartType = SerialDetectUartType((PUCHAR)ComPortBase);
-	
+
 	/* Report device if detected... */
 	if (UartType != UartUnknown)
 	{
@@ -181,7 +181,7 @@ DetectLegacyDevices(
 	ULONG i;
 	NTSTATUS Status;
 	NTSTATUS ReturnedStatus = STATUS_SUCCESS;
-	
+
 	for (i = 0; i < sizeof(ComPortBase)/sizeof(ComPortBase[0]); i++)
 	{
 		Status = DetectLegacyDevice(DriverObject, ComPortBase[i], Irq[i], &ComPortNumber[i]);
@@ -189,6 +189,6 @@ DetectLegacyDevices(
 			ReturnedStatus = Status;
 		DPRINT("Serial: Legacy device at 0x%x (IRQ %lu): status = 0x%08lx\n", ComPortBase[i], Irq[i], Status);
 	}
-	
+
 	return ReturnedStatus;
 }

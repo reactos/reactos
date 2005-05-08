@@ -123,7 +123,7 @@ typedef struct _DEVICE_EXTENSION
 	BOOLEAN KeyboardExists;
 	BOOLEAN KeyboardIsAT;
 	BOOLEAN MouseExists;
-	
+
 	BOOLEAN KeyboardClaimed;
 	BOOLEAN MouseClaimed;
 

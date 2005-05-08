@@ -61,7 +61,7 @@ BOOLEAN NICCheck(
  *     TRUE if NIC is believed to be present, FALSE if not
  */
 {
-    int i; 
+    int i;
 
     NDIS_DbgPrint(MAX_TRACE, ("Called\n"));
 
@@ -314,7 +314,7 @@ NDIS_STATUS NICInitialize(
 
     /* Select page 0 and stop NIC */
     NdisRawWritePortUchar(Adapter->IOBase + PG0_CR, CR_STP | CR_RD2 | CR_PAGE0);
-   
+
     /* Initialize DCR - Data Configuration Register (byte mode/8 bytes FIFO) */
     NdisRawWritePortUchar(Adapter->IOBase + PG0_DCR, DCR_LS | DCR_FT10);
 
@@ -565,7 +565,7 @@ VOID NICStartTransmit(
     /* Start transmitting */
     NdisRawWritePortUchar(Adapter->IOBase + PG0_CR, CR_STA | CR_TXP | CR_RD2);
 
-    NDIS_DbgPrint(MID_TRACE, ("Transmitting. FrameStart (%d)  TXCurrent (%d)  TXStart (%d)  Length (%d).\n\n", 
+    NDIS_DbgPrint(MID_TRACE, ("Transmitting. FrameStart (%d)  TXCurrent (%d)  TXStart (%d)  Length (%d).\n\n",
 		FrameStart,
         Adapter->TXCurrent,
 		Adapter->TXStart,
@@ -670,7 +670,7 @@ VOID NICReadDataAlign(
 
     /* Select page 0, read and start the NIC */
     NdisRawWritePortUchar(Adapter->IOBase + PG0_CR, CR_STA | CR_RD0 | CR_PAGE0);
-    
+
     if (Adapter->WordMode)
         NdisRawReadPortBufferUshort(Adapter->IOBase + NIC_DATA, Target, Count >> 1);
     else
@@ -762,7 +762,7 @@ VOID NICWriteDataAlign(
 
     /* Write and start the NIC */
     NdisRawWritePortUchar(Adapter->IOBase + PG0_CR, CR_STA | CR_RD1 | CR_PAGE0);
-    
+
     if (Adapter->WordMode)
         NdisRawWritePortBufferUshort(Adapter->IOBase + NIC_DATA, Source, Count >> 1);
     else
@@ -1169,7 +1169,7 @@ VOID HandleReceive(
 
         /* Select page 0 and stop the NIC */
         NdisRawWritePortUchar(Adapter->IOBase + PG0_CR, CR_STP | CR_RD2 | CR_PAGE0);
-        
+
         /* Clear RBCR0,RBCR1 - Remote Byte Count Registers */
         NdisRawWritePortUchar(Adapter->IOBase + PG0_RBCR0, 0x00);
         NdisRawWritePortUchar(Adapter->IOBase + PG0_RBCR1, 0x00);
@@ -1337,7 +1337,7 @@ VOID STDCALL MiniportHandleInterrupt(
             Mask = (Mask << 1);
 
         switch (Adapter->InterruptStatus & Mask) {
-        case ISR_OVW:   
+        case ISR_OVW:
             NDIS_DbgPrint(MID_TRACE, ("Overflow interrupt.\n"));
             /* Overflow. Handled almost the same way as a receive interrupt */
             Adapter->BufferOverflow = TRUE;
@@ -1357,7 +1357,7 @@ VOID STDCALL MiniportHandleInterrupt(
             NICUpdateCounters(Adapter);
 
             Adapter->ReceiveError = TRUE;
-            
+
         case ISR_PRX:
             NDIS_DbgPrint(MID_TRACE, ("Receive interrupt.\n"));
 
@@ -1367,9 +1367,9 @@ VOID STDCALL MiniportHandleInterrupt(
 		HandleReceive(Adapter);
 	    else
 		NDIS_DbgPrint(MAX_TRACE,("No miniport adapter yet\n"));
-	    
+
             Adapter->InterruptStatus &= ~(ISR_PRX | ISR_RXE);
-            break;  
+            break;
 
         case ISR_TXE:
             NDIS_DbgPrint(MID_TRACE, ("Transmit error interrupt.\n"));

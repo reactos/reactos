@@ -25,7 +25,7 @@
 #define FreeNdisPacket(x) { TI_DbgPrint(MID_TRACE,("Deleting Packet %x\n", x)); FreeNdisPacketX(x); }
 #define NdisFreePacket(x) { Untrack(x); NdisFreePacket(x); }
 #define NdisFreeBuffer(x) { Untrack(x); NdisFreeBuffer(x); }
-#define exAllocatePool(x,y) ExAllocatePoolX(x,y,__FILE__,__LINE__) 
+#define exAllocatePool(x,y) ExAllocatePoolX(x,y,__FILE__,__LINE__)
 #define exAllocatePoolWithTag(x,y,z) ExAllocatePoolX(x,y,__FILE__,__LINE__)
 #define exFreePool(x) ExFreePoolX(x,__FILE__,__LINE__)
 

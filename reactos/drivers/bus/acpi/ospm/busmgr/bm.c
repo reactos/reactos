@@ -214,7 +214,7 @@ bm_get_status (
 	 * Evaluate _STA:
 	 * --------------
 	 */
-	status = bm_evaluate_simple_integer(device->acpi_handle, "_STA", 
+	status = bm_evaluate_simple_integer(device->acpi_handle, "_STA",
 		&(device->status));
 
 	return status;
@@ -263,12 +263,12 @@ bm_get_identification (
 	}
 
 	if (info.valid & ACPI_VALID_UID) {
-		MEMCPY((void*)device->id.uid, (void*)info.unique_id, 
+		MEMCPY((void*)device->id.uid, (void*)info.unique_id,
 			sizeof(BM_DEVICE_UID));
 	}
 
 	if (info.valid & ACPI_VALID_HID) {
-		MEMCPY((void*)device->id.hid, (void*)info.hardware_id, 
+		MEMCPY((void*)device->id.hid, (void*)info.hardware_id,
 			sizeof(BM_DEVICE_HID));
 	}
 
@@ -311,7 +311,7 @@ bm_get_flags (
 		/*
 		 * Presence of _DCK indicates a docking station.
 		 */
-		if (ACPI_SUCCESS(acpi_get_handle(device->acpi_handle, 
+		if (ACPI_SUCCESS(acpi_get_handle(device->acpi_handle,
 			"_DCK", &acpi_handle))) {
 			device->flags |= BM_FLAGS_DOCKING_STATION;
 		}
@@ -320,7 +320,7 @@ bm_get_flags (
 		 * Presence of _EJD and/or _EJx indicates 'ejectable'.
 		 * TODO: _EJx...
 		 */
-		if (ACPI_SUCCESS(acpi_get_handle(device->acpi_handle, 
+		if (ACPI_SUCCESS(acpi_get_handle(device->acpi_handle,
 			"_EJD", &acpi_handle))) {
 			device->flags |= BM_FLAGS_EJECTABLE;
 		}
@@ -328,9 +328,9 @@ bm_get_flags (
 		/*
 		 * Presence of _PR0 or _PS0 indicates 'power manageable'.
 		 */
-		if (ACPI_SUCCESS(acpi_get_handle(device->acpi_handle, 
+		if (ACPI_SUCCESS(acpi_get_handle(device->acpi_handle,
 			"_PR0", &acpi_handle)) ||
-			ACPI_SUCCESS(acpi_get_handle(device->acpi_handle, 
+			ACPI_SUCCESS(acpi_get_handle(device->acpi_handle,
 			"_PS0", &acpi_handle))) {
 			device->flags |= BM_FLAGS_POWER_CONTROL;
 		}
@@ -338,7 +338,7 @@ bm_get_flags (
 		/*
 		 * Presence of _CRS indicates 'configurable'.
 		 */
-		if (ACPI_SUCCESS(acpi_get_handle(device->acpi_handle, 
+		if (ACPI_SUCCESS(acpi_get_handle(device->acpi_handle,
 			"_CRS", &acpi_handle))) {
 			device->flags |= BM_FLAGS_CONFIGURABLE;
 		}
@@ -351,9 +351,9 @@ bm_get_flags (
 		/*
 		 * Presence of _HID or _ADR indicates 'identifiable'.
 		 */
-		if (ACPI_SUCCESS(acpi_get_handle(device->acpi_handle, 
+		if (ACPI_SUCCESS(acpi_get_handle(device->acpi_handle,
 			"_HID", &acpi_handle)) ||
-		   ACPI_SUCCESS(acpi_get_handle(device->acpi_handle, 
+		   ACPI_SUCCESS(acpi_get_handle(device->acpi_handle,
 		   "_ADR", &acpi_handle))) {
 			device->flags |= BM_FLAGS_IDENTIFIABLE;
 		}
@@ -361,7 +361,7 @@ bm_get_flags (
 		/*
 		 * Presence of _STA indicates 'dynamic status'.
 		 */
-		if (ACPI_SUCCESS(acpi_get_handle(device->acpi_handle, 
+		if (ACPI_SUCCESS(acpi_get_handle(device->acpi_handle,
 			"_STA", &acpi_handle))) {
 			device->flags |= BM_FLAGS_DYNAMIC_STATUS;
 		}
@@ -428,7 +428,7 @@ bm_add_namespace_device (
 	/*
 	 * Device Type:
 	 * ------------
-	 */ 
+	 */
 	switch (acpi_type) {
 	case INTERNAL_TYPE_SCOPE:
 		device->id.type = BM_TYPE_SCOPE;
@@ -481,7 +481,7 @@ bm_add_namespace_device (
 		/*
 		 * Power Management:
 		 * -----------------
-		 * If this node doesn't provide direct power control  
+		 * If this node doesn't provide direct power control
 		 * then we inherit PM capabilities from its parent.
 		 *
 		 * TODO: Inherit!
@@ -572,8 +572,8 @@ bm_enumerate_namespace (void)
 		if (ACPI_SUCCESS(status)) {
 
 			/*
-			 * TODO: This is a hack to get around the problem 
-			 *       identifying scope objects.  Scopes 
+			 * TODO: This is a hack to get around the problem
+			 *       identifying scope objects.  Scopes
 			 *       somehow need to be uniquely identified.
 			 */
 			status = acpi_get_type(child_handle, &acpi_type);
@@ -621,7 +621,7 @@ bm_enumerate_namespace (void)
 		else {
 			level--;
 			child_handle = parent_handle;
-			acpi_get_parent(parent_handle, 
+			acpi_get_parent(parent_handle,
 				&parent_handle);
 
 			if (parent) {
@@ -683,7 +683,7 @@ bm_add_fixed_feature_device (
 	node->device.acpi_handle = ACPI_ROOT_OBJECT;
 	node->device.id.type = BM_TYPE_FIXED_BUTTON;
 	if (device_hid) {
-		MEMCPY((void*)node->device.id.hid, device_hid, 
+		MEMCPY((void*)node->device.id.hid, device_hid,
 			sizeof(node->device.id.hid));
 	}
 	node->device.flags = BM_FLAGS_FIXED_FEATURE;
@@ -950,14 +950,14 @@ bm_initialize (void)
 	 */
 	DEBUG_PRINT(ACPI_INFO, ("Registering for all device notifications.\n"));
 
-	status = acpi_install_notify_handler(ACPI_ROOT_OBJECT, 
+	status = acpi_install_notify_handler(ACPI_ROOT_OBJECT,
 		ACPI_SYSTEM_NOTIFY, &bm_notify, NULL);
 	if (ACPI_FAILURE(status)) {
 		DEBUG_PRINT(ACPI_ERROR, ("Unable to register for standard notifications.\n"));
 		return_ACPI_STATUS(status);
 	}
 
-	status = acpi_install_notify_handler(ACPI_ROOT_OBJECT, 
+	status = acpi_install_notify_handler(ACPI_ROOT_OBJECT,
 		ACPI_DEVICE_NOTIFY, &bm_notify, NULL);
 	if (ACPI_FAILURE(status)) {
 		DEBUG_PRINT(ACPI_ERROR, ("Unable to register for device-specific notifications.\n"));
@@ -1019,13 +1019,13 @@ bm_terminate (void)
 
 	DEBUG_PRINT(ACPI_INFO, ("Unregistering for device notifications.\n"));
 
-	status = acpi_remove_notify_handler(ACPI_ROOT_OBJECT, 
+	status = acpi_remove_notify_handler(ACPI_ROOT_OBJECT,
 		ACPI_SYSTEM_NOTIFY, &bm_notify);
 	if (ACPI_FAILURE(status)) {
 		DEBUG_PRINT(ACPI_ERROR, ("Unable to un-register for standard notifications.\n"));
 	}
 
-	status = acpi_remove_notify_handler(ACPI_ROOT_OBJECT, 
+	status = acpi_remove_notify_handler(ACPI_ROOT_OBJECT,
 		ACPI_DEVICE_NOTIFY, &bm_notify);
 	if (ACPI_FAILURE(status)) {
 		DEBUG_PRINT(ACPI_ERROR, ("Unable to un-register for device-specific notifications.\n"));

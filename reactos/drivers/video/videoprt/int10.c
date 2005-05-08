@@ -35,8 +35,8 @@ IntInt10AllocateBuffer(
 {
    PVOID MemoryAddress;
    NTSTATUS Status;
-   PEPROCESS CallingProcess; 
-   PEPROCESS PrevAttachedProcess; 
+   PEPROCESS CallingProcess;
+   PEPROCESS PrevAttachedProcess;
 
    DPRINT("IntInt10AllocateBuffer\n");
 
@@ -82,8 +82,8 @@ IntInt10FreeBuffer(
 {
    PVOID MemoryAddress = (PVOID)((Seg << 4) | Off);
    NTSTATUS Status;
-   PEPROCESS CallingProcess; 
-   PEPROCESS PrevAttachedProcess; 
+   PEPROCESS CallingProcess;
+   PEPROCESS PrevAttachedProcess;
 
    DPRINT("IntInt10FreeBuffer\n");
    DPRINT("- Segment: %x\n", Seg);
@@ -105,8 +105,8 @@ IntInt10ReadMemory(
    OUT PVOID Buffer,
    IN ULONG Length)
 {
-   PEPROCESS CallingProcess; 
-   PEPROCESS PrevAttachedProcess; 
+   PEPROCESS CallingProcess;
+   PEPROCESS PrevAttachedProcess;
 
    DPRINT("IntInt10ReadMemory\n");
    DPRINT("- Segment: %x\n", Seg);
@@ -129,8 +129,8 @@ IntInt10WriteMemory(
    IN PVOID Buffer,
    IN ULONG Length)
 {
-   PEPROCESS CallingProcess; 
-   PEPROCESS PrevAttachedProcess; 
+   PEPROCESS CallingProcess;
+   PEPROCESS PrevAttachedProcess;
 
    DPRINT("IntInt10WriteMemory\n");
    DPRINT("- Segment: %x\n", Seg);
@@ -152,8 +152,8 @@ IntInt10CallBios(
 {
    KV86M_REGISTERS Regs;
    NTSTATUS Status;
-   PEPROCESS CallingProcess; 
-   PEPROCESS PrevAttachedProcess; 
+   PEPROCESS CallingProcess;
+   PEPROCESS PrevAttachedProcess;
 
    DPRINT("IntInt10CallBios\n");
 
@@ -207,8 +207,8 @@ VideoPortInt10(
 {
    KV86M_REGISTERS Regs;
    NTSTATUS Status;
-   PEPROCESS CallingProcess; 
-   PEPROCESS PrevAttachedProcess; 
+   PEPROCESS CallingProcess;
+   PEPROCESS PrevAttachedProcess;
 
    DPRINT("VideoPortInt10\n");
 
@@ -216,7 +216,7 @@ VideoPortInt10(
    {
       return ERROR_INVALID_PARAMETER;
    }
-   
+
    IntAttachToCSRSS(&CallingProcess, &PrevAttachedProcess);
 
    memset(&Regs, 0, sizeof(Regs));

@@ -64,12 +64,12 @@ PIP_PACKET PrepareICMPPacket(
 
     /* Allocate NDIS packet */
     NdisStatus = AllocatePacketWithBuffer( &NdisPacket, NULL, Size );
-    
+
     if( !NT_SUCCESS(NdisStatus) ) return NULL;
 
     IPPacket->NdisPacket = NdisPacket;
 
-    GetDataPtr( IPPacket->NdisPacket, MaxLLHeaderSize, 
+    GetDataPtr( IPPacket->NdisPacket, MaxLLHeaderSize,
 		(PCHAR *)&IPPacket->Header, &IPPacket->ContigSize );
 
     IPPacket->Data = ((PCHAR)IPPacket->Header) + IPPacket->HeaderSize;
@@ -113,7 +113,7 @@ PIP_PACKET PrepareICMPPacket(
 
 
     TI_DbgPrint(MID_TRACE,("Leaving\n"));
-    
+
     return IPPacket;
 }
 
@@ -160,7 +160,7 @@ VOID ICMPReceive(
         break;
 
     default:
-        TI_DbgPrint(DEBUG_ICMP, 
+        TI_DbgPrint(DEBUG_ICMP,
 		    ("Discarded ICMP datagram of unknown type %d.\n",
 		     ICMPHeader->Type));
         /* Discard packet */
@@ -232,8 +232,8 @@ VOID ICMPReply(
 	PayloadSize = 576;
         DataSize = PayloadSize + sizeof(ICMP_HEADER);
     }
-    
-    if( !PrepareICMPPacket(Interface, &NewPacket, &IPPacket->SrcAddr, 
+
+    if( !PrepareICMPPacket(Interface, &NewPacket, &IPPacket->SrcAddr,
 			   IPPacket->Data, DataSize) ) return;
 
     ((PICMP_HEADER)NewPacket.Data)->Type     = Type;

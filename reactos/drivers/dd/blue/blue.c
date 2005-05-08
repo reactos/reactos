@@ -220,23 +220,23 @@ ScrWrite(PDEVICE_OBJECT DeviceObject,
 		   vidmem[(cursorx * 2) + (cursory * columns * 2)] = ' ';
 		   vidmem[(cursorx * 2) + (cursory * columns * 2) + 1] = (char) DeviceExtension->CharAttribute;
 		   break;
-		   
+
 		case '\n':
 		   cursory++;
 		   cursorx = 0;
 		   break;
-		   
+
 		case '\r':
 		   cursorx = 0;
 		   break;
-		   
+
 		case '\t':
 		   offset = TAB_WIDTH - (cursorx % TAB_WIDTH);
 		   for (j = 0; j < offset; j++)
 		      {
 			 vidmem[(cursorx * 2) + (cursory * columns * 2)] = ' ';
 			 cursorx++;
-			 
+
 			 if (cursorx >= columns)
 			    {
 			       cursory++;
@@ -244,7 +244,7 @@ ScrWrite(PDEVICE_OBJECT DeviceObject,
 			    }
 		      }
 		   break;
-		   
+
 		default:
 		   vidmem[(cursorx * 2) + (cursory * columns * 2)] = *pch;
 		   vidmem[(cursorx * 2) + (cursory * columns * 2) + 1] = (char) DeviceExtension->CharAttribute;
@@ -278,7 +278,7 @@ ScrWrite(PDEVICE_OBJECT DeviceObject,
 		      }
 		}
 	  }
-       
+
        /* Set the cursor position */
        offset = (cursory * columns) + cursorx;
     }
@@ -451,7 +451,7 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
             }
 
           Buf->dwTransfered = Buf->nLength;
-                
+
           Irp->IoStatus.Information = 0;
           Status = STATUS_SUCCESS;
         }

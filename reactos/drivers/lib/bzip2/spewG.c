@@ -4,7 +4,7 @@
    support for large files (> 2GB) in a reasonable amount of time.
    I suggest you use the undocumented --exponential option to
    bzip2 when compressing the resulting file; this saves a bit of
-   time.  Note: *don't* bother with --exponential when compressing 
+   time.  Note: *don't* bother with --exponential when compressing
    Real Files; it'll just waste a lot of CPU time :-)
    (but is otherwise harmless).
 */

@@ -28,7 +28,7 @@ NTSTATUS WarmSocketForBind( PAFD_FCB FCB ) {
 	Status = TdiOpenAddressFile
 	    ( &FCB->TdiDeviceName,
 	      FCB->LocalAddress,
-	      &FCB->AddressFile.Handle, 
+	      &FCB->AddressFile.Handle,
 	      &FCB->AddressFile.Object );
     }
 
@@ -50,21 +50,21 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
     PAFD_BIND_DATA BindReq;
-    
+
     AFD_DbgPrint(MID_TRACE,("Called\n"));
-    
+
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
-    if( !(BindReq = LockRequest( Irp, IrpSp )) ) 
-	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, 
+    if( !(BindReq = LockRequest( Irp, IrpSp )) )
+	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
 				       Irp, 0, NULL, FALSE );
-    
+
     FCB->LocalAddress = TaCopyTransportAddress( &BindReq->Address );
 
-    if( FCB->LocalAddress ) 
+    if( FCB->LocalAddress )
 	Status = WarmSocketForBind( FCB );
     else Status = STATUS_NO_MEMORY;
 
-    if( NT_SUCCESS(Status) ) 
+    if( NT_SUCCESS(Status) )
 	FCB->State = SOCKET_STATE_BOUND;
     else return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL, FALSE );
 
@@ -76,7 +76,7 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 				FCB->LocalAddress );
 
 	AFD_DbgPrint(MID_TRACE,("Calling TdiReceiveDatagram\n"));
-	
+
 	Status = TdiReceiveDatagram
 	    ( &FCB->ReceiveIrp.InFlightRequest,
 	      FCB->AddressFile.Object,

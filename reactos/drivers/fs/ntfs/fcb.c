@@ -505,7 +505,7 @@ NtfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
 	  DPRINT("RecordLength == 0  Stopped!\n");
 	  break;
 	}
-	
+
       DPRINT("RecordLength %u  ExtAttrRecordLength %u  NameLength %u\n",
 	     Record->RecordLength, Record->ExtAttrRecordLength, Record->FileIdLength);
 

@@ -15,15 +15,15 @@
 
 /* Lock a method_neither request so it'll be available from DISPATCH_LEVEL */
 PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
-    Irp->MdlAddress = 
-	IoAllocateMdl( IrpSp->Parameters.DeviceIoControl.Type3InputBuffer, 
+    Irp->MdlAddress =
+	IoAllocateMdl( IrpSp->Parameters.DeviceIoControl.Type3InputBuffer,
 		       IrpSp->Parameters.DeviceIoControl.InputBufferLength,
 		       FALSE,
 		       FALSE,
 		       NULL );
     if( Irp->MdlAddress ) {
 	MmProbeAndLockPages( Irp->MdlAddress, KernelMode, IoModifyAccess );
-	IrpSp->Parameters.DeviceIoControl.Type3InputBuffer = 
+	IrpSp->Parameters.DeviceIoControl.Type3InputBuffer =
 	    MmMapLockedPages( Irp->MdlAddress, KernelMode );
 	return IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
     } else return NULL;
@@ -41,7 +41,7 @@ VOID UnlockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
  * treat the address buffer as an ordinary client buffer.  It's only used
  * for datagrams. */
 
-PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count, 
+PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
 			 PVOID AddressBuf, PINT AddressLen,
 			 BOOLEAN Write, BOOLEAN LockAddress ) {
     UINT i;
@@ -68,7 +68,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
             }
         } _SEH_HANDLE {
             AFD_DbgPrint(MIN_TRACE,("Access violation copying buffer info "
-                                    "from userland (%x %x)\n", 
+                                    "from userland (%x %x)\n",
                                     Buf, AddressLen));
             ExFreePool( NewBuf );
             return NULL;
@@ -79,7 +79,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
 				    i, NewBuf[i].buf, NewBuf[i].len));
 
 	    if( NewBuf[i].len ) {
-		NewMdl = IoAllocateMdl( NewBuf[i].buf, 
+		NewMdl = IoAllocateMdl( NewBuf[i].buf,
 					NewBuf[i].len,
 					FALSE,
 					FALSE,
@@ -95,7 +95,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
 
 	    if( MapBuf[i].Mdl ) {
 		AFD_DbgPrint(MID_TRACE,("Probe and lock pages\n"));
-		MmProbeAndLockPages( MapBuf[i].Mdl, KernelMode, 
+		MmProbeAndLockPages( MapBuf[i].Mdl, KernelMode,
 				     Write ? IoModifyAccess : IoReadAccess );
 		AFD_DbgPrint(MID_TRACE,("MmProbeAndLock finished\n"));
 	    }
@@ -151,7 +151,7 @@ VOID UnlockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
     UINT i;
 
     for( i = 0; i < HandleCount; i++ ) {
-	if( HandleArray[i].Handle ) 
+	if( HandleArray[i].Handle )
 	    ObDereferenceObject( (PVOID)HandleArray[i].Handle );
     }
 
@@ -226,7 +226,7 @@ VOID SocketStateUnlock( PAFD_FCB FCB ) {
 	AFD_DbgPrint(MAX_TRACE,("Unlocked.\n"));
 	KePulseEvent( &FCB->StateLockedEvent, IO_NETWORK_INCREMENT, FALSE );
     } else {
-	AFD_DbgPrint(MAX_TRACE,("New lock count: %d (Thr: %x)\n", 
+	AFD_DbgPrint(MAX_TRACE,("New lock count: %d (Thr: %x)\n",
 				FCB->LockCount, CurrentThread));
     }
     ExReleaseFastMutex( &FCB->Mutex );
@@ -234,7 +234,7 @@ VOID SocketStateUnlock( PAFD_FCB FCB ) {
 
 NTSTATUS DDKAPI UnlockAndMaybeComplete
 ( PAFD_FCB FCB, NTSTATUS Status, PIRP Irp,
-  UINT Information, 
+  UINT Information,
   PIO_COMPLETION_ROUTINE Completion,
   BOOL ShouldUnlock ) {
     SocketStateUnlock( FCB );
@@ -243,9 +243,9 @@ NTSTATUS DDKAPI UnlockAndMaybeComplete
     } else {
 	Irp->IoStatus.Status = Status;
 	Irp->IoStatus.Information = Information;
-	if( Completion ) 
+	if( Completion )
 	    Completion( FCB->DeviceExt->DeviceObject, Irp, FCB );
-	if( ShouldUnlock ) 
+	if( ShouldUnlock )
 	    UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
 	IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
     }
@@ -258,14 +258,14 @@ NTSTATUS LostSocket( PIRP Irp, BOOL ShouldUnlockIrp ) {
     AFD_DbgPrint(MIN_TRACE,("Called.\n"));
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = Status;
-    if( ShouldUnlockIrp ) 
+    if( ShouldUnlockIrp )
 	UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
     IoCompleteRequest( Irp, IO_NO_INCREMENT );
-    return Status;	
+    return Status;
 }
 
 NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function ) {
-    InsertTailList( &FCB->PendingIrpList[Function], 
+    InsertTailList( &FCB->PendingIrpList[Function],
 		    &Irp->Tail.Overlay.ListEntry );
     return UnlockAndMaybeComplete( FCB, STATUS_PENDING, Irp, 0, NULL, FALSE );
 }

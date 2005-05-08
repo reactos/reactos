@@ -4,7 +4,7 @@
  * FILE:             services/fs/ext2/super.c
  * PURPOSE:          ext2 filesystem
  * PROGRAMMER:       David Welch (welch@mcmail.com)
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -31,20 +31,20 @@ Ext2Close(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    PDEVICE_EXTENSION DeviceExtension;
    NTSTATUS Status;
    PEXT2_FCB Fcb;
-   
+
    DbgPrint("Ext2Close(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
-   
+
    Stack = IoGetCurrentIrpStackLocation(Irp);
    FileObject = Stack->FileObject;
    DeviceExtension = DeviceObject->DeviceExtension;
-   
+
    if (FileObject == DeviceExtension->FileObject)
      {
 	Status = STATUS_SUCCESS;
-   
+
 	Irp->IoStatus.Status = Status;
 	Irp->IoStatus.Information = 0;
-	
+
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 	return(Status);
      }
@@ -59,12 +59,12 @@ Ext2Close(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	ExFreePool(Fcb);
 	FileObject->FsContext = NULL;
      }
-   
+
    Status = STATUS_SUCCESS;
-   
+
    Irp->IoStatus.Status = Status;
    Irp->IoStatus.Information = 0;
-   
+
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
    return(Status);
 }
@@ -73,18 +73,18 @@ NTSTATUS Ext2Mount(PDEVICE_OBJECT DeviceToMount)
 {
    PDEVICE_OBJECT DeviceObject;
    PDEVICE_EXTENSION DeviceExt;
-   PVOID BlockBuffer;   
+   PVOID BlockBuffer;
    struct ext2_super_block* superblock;
-   
+
    DPRINT("Ext2Mount(DeviceToMount %x)\n",DeviceToMount);
-   
+
    BlockBuffer = ExAllocatePool(NonPagedPool,BLOCKSIZE);
    Ext2ReadSectors(DeviceToMount,
 		   1,
 		   1,
 		   BlockBuffer);
    superblock = BlockBuffer;
-   
+
    if (superblock->s_magic != EXT2_SUPER_MAGIC)
      {
 	ExFreePool(BlockBuffer);
@@ -93,7 +93,7 @@ NTSTATUS Ext2Mount(PDEVICE_OBJECT DeviceToMount)
    DPRINT("Volume recognized\n");
    DPRINT("s_inodes_count %d\n",superblock->s_inodes_count);
    DPRINT("s_blocks_count %d\n",superblock->s_blocks_count);
-   
+
    IoCreateDevice(DriverObject,
 		  sizeof(DEVICE_EXTENSION),
 		  NULL,
@@ -119,9 +119,9 @@ NTSTATUS Ext2Mount(PDEVICE_OBJECT DeviceToMount)
    CcRosInitializeFileCache(DeviceExt->FileObject,
 			    &DeviceExt->Bcb,
 			    PAGE_SIZE * 3);
-   
+
    DPRINT("Ext2Mount() = STATUS_SUCCESS\n");
-   
+
    return(STATUS_SUCCESS);
 }
 
@@ -132,12 +132,12 @@ Ext2FileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    PVPB	vpb = Stack->Parameters.Mount.Vpb;
    PDEVICE_OBJECT DeviceToMount = Stack->Parameters.Mount.DeviceObject;
    NTSTATUS Status;
-   
+
    Status = Ext2Mount(DeviceToMount);
-   
+
    Irp->IoStatus.Status = Status;
    Irp->IoStatus.Information = 0;
-   
+
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
    return(Status);
 }
@@ -156,11 +156,11 @@ DriverEntry(PDRIVER_OBJECT _DriverObject,
    PDEVICE_OBJECT DeviceObject;
    NTSTATUS ret;
    UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Device\\Ext2Fsd");
-   
+
    DbgPrint("Ext2 FSD 0.0.1\n");
-   
+
    DriverObject = _DriverObject;
-   
+
    ret = IoCreateDevice(DriverObject,
 			0,
 			&DeviceName,
@@ -182,7 +182,7 @@ DriverEntry(PDRIVER_OBJECT _DriverObject,
                       Ext2FileSystemControl;
    DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
                       Ext2DirectoryControl;
-   DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = 
+   DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] =
                       Ext2QueryInformation;
    DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] = Ext2SetInformation;
    DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = Ext2FlushBuffers;
@@ -192,11 +192,11 @@ DriverEntry(PDRIVER_OBJECT _DriverObject,
    DriverObject->MajorFunction[IRP_MJ_SET_SECURITY] = Ext2SetSecurity;
    DriverObject->MajorFunction[IRP_MJ_QUERY_QUOTA] = Ext2QueryQuota;
    DriverObject->MajorFunction[IRP_MJ_SET_QUOTA] = Ext2SetQuota;
-   
+
    DriverObject->DriverUnload = NULL;
-   
+
    IoRegisterFileSystem(DeviceObject);
-   
+
    return(STATUS_SUCCESS);
 }
 

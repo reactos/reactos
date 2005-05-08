@@ -237,7 +237,7 @@ rip_ctloutput(op, so, level, optname, m)
 			if (*m) (void)m_free(*m);
 			return(EINVAL);
 		}
-		return (*ip_fw_ctl_ptr)(optname, m); 
+		return (*ip_fw_ctl_ptr)(optname, m);
 	case IP_FW_ADD:
 	case IP_FW_DEL:
 	case IP_FW_FLUSH:
@@ -247,7 +247,7 @@ rip_ctloutput(op, so, level, optname, m)
 			return(EINVAL);
 		}
 
-		return (*ip_fw_ctl_ptr)(optname, m); 
+		return (*ip_fw_ctl_ptr)(optname, m);
 		return(error);
 
 	case IP_RSVP_ON:

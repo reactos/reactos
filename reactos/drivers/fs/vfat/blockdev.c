@@ -5,7 +5,7 @@
  * PURPOSE:          Temporary sector reading support
  * PROGRAMMER:       David Welch (welch@cwcom.net)
  *                   Hartmut Birr
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -131,7 +131,7 @@ VfatReadDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
   DPRINT ("Building asynchronous FSD Request...\n");
 
   Buffer = (PCHAR)MmGetMdlVirtualAddress(IrpContext->Irp->MdlAddress) + BufferOffset;
- 
+
   Irp = IoAllocateIrp(IrpContext->DeviceExt->StorageDevice->StackSize, TRUE);
   if (Irp == NULL)
     {

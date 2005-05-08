@@ -233,7 +233,7 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
 	  DPRINT1("Stopped!\n");
 	  break;
 	}
-	
+
       DPRINT("RecordLength %u  ExtAttrRecordLength %u  NameLength %u\n",
 	     Record->RecordLength, Record->ExtAttrRecordLength, Record->FileIdLength);
 

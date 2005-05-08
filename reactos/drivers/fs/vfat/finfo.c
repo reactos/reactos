@@ -17,7 +17,7 @@
 
 /* GLOBALS ******************************************************************/
 
-const char* FileInformationClassNames[] = 
+const char* FileInformationClassNames[] =
 {
   "??????",
   "FileDirectoryInformation",
@@ -206,7 +206,7 @@ VfatGetBasicInformation(PFILE_OBJECT FileObject,
 {
   PDEVICE_EXTENSION DeviceExt;
   DPRINT("VfatGetBasicInformation()\n");
-  
+
   DeviceExt = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
   if (*BufferLength < sizeof(FILE_BASIC_INFORMATION))
@@ -285,20 +285,20 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
       FileObject->DeletePending = FALSE;
       return STATUS_SUCCESS;
    }
-  
+
    if (FCB->Flags & FCB_DELETE_PENDING)
    {
       /* stream already marked for deletion. just update the file object */
       FileObject->DeletePending = TRUE;
       return STATUS_SUCCESS;
    }
-  
-   if (*FCB->Attributes & FILE_ATTRIBUTE_READONLY) 
+
+   if (*FCB->Attributes & FILE_ATTRIBUTE_READONLY)
    {
       return STATUS_CANNOT_DELETE;
    }
 
-   if (vfatFCBIsRoot(FCB) || 
+   if (vfatFCBIsRoot(FCB) ||
      (FCB->LongNameU.Length == sizeof(WCHAR) && FCB->LongNameU.Buffer[0] == L'.') ||
      (FCB->LongNameU.Length == 2 * sizeof(WCHAR) && FCB->LongNameU.Buffer[0] == L'.' && FCB->LongNameU.Buffer[1] == L'.'))
    {
@@ -310,22 +310,22 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
    if (!MmFlushImageSection (FileObject->SectionObjectPointer, MmFlushForDelete))
    {
       /* can't delete a file if its mapped into a process */
-      
+
       DPRINT("MmFlushImageSection returned FALSE\n");
-      return STATUS_CANNOT_DELETE;      
+      return STATUS_CANNOT_DELETE;
    }
 
    if (vfatFCBIsDirectory(FCB) && !VfatIsDirectoryEmpty(FCB))
    {
       /* can't delete a non-empty directory */
-      
+
       return STATUS_DIRECTORY_NOT_EMPTY;
    }
 
    /* all good */
    FCB->Flags |= FCB_DELETE_PENDING;
    FileObject->DeletePending = TRUE;
-     
+
    return STATUS_SUCCESS;
 }
 
@@ -447,7 +447,7 @@ VfatGetAllInformation(PFILE_OBJECT FileObject,
 {
   NTSTATUS Status;
   ULONG InitialBufferLength = *BufferLength;
-  
+
   ASSERT(Info);
   ASSERT(Fcb);
 
@@ -474,9 +474,9 @@ VfatGetAllInformation(PFILE_OBJECT FileObject,
   /* Name Information */
   Status = VfatGetNameInformation(FileObject, Fcb, DeviceObject, &Info->NameInformation, BufferLength);
   if (!NT_SUCCESS(Status)) return Status;
-  
+
   *BufferLength = InitialBufferLength - (sizeof(FILE_ALL_INFORMATION) + Fcb->PathNameU.Length + sizeof(WCHAR));
-  
+
   return STATUS_SUCCESS;
 }
 
@@ -493,9 +493,9 @@ VOID UpdateFileSize(PFILE_OBJECT FileObject, PVFATFCB Fcb, ULONG Size, ULONG Clu
    if (!vfatFCBIsDirectory(Fcb))
    {
       if (Fcb->Flags & FCB_IS_FATX_ENTRY)
-         Fcb->entry.FatX.FileSize = Size;  
+         Fcb->entry.FatX.FileSize = Size;
       else
-         Fcb->entry.Fat.FileSize = Size;  
+         Fcb->entry.Fat.FileSize = Size;
    }
    Fcb->RFCB.FileSize.QuadPart = Size;
    Fcb->RFCB.ValidDataLength.QuadPart = Size;
@@ -507,7 +507,7 @@ VOID UpdateFileSize(PFILE_OBJECT FileObject, PVFATFCB Fcb, ULONG Size, ULONG Clu
 }
 
 NTSTATUS
-VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject, 
+VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
 				 PVFATFCB Fcb,
 				 PDEVICE_EXTENSION DeviceExt,
 				 PLARGE_INTEGER AllocationSize)
@@ -537,7 +537,7 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
     }
 
   FirstCluster = vfatDirEntryGetFirstCluster (DeviceExt, &Fcb->entry);
-  
+
   if (NewSize > Fcb->RFCB.AllocationSize.u.LowPart)
   {
     AllocSizeChanged = TRUE;
@@ -554,7 +554,7 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
       {
          return STATUS_DISK_FULL;
       }
-      Status = OffsetToCluster(DeviceExt, FirstCluster, 
+      Status = OffsetToCluster(DeviceExt, FirstCluster,
                                ROUND_DOWN(NewSize - 1, ClusterSize),
                                &NCluster, TRUE);
       if (NCluster == 0xffffffff || !NT_SUCCESS(Status))
@@ -585,14 +585,14 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
        if (Fcb->LastCluster > 0 &&
            (Fcb->RFCB.AllocationSize.u.LowPart - ClusterSize) > Fcb->LastOffset)
        {
-          Status = OffsetToCluster(DeviceExt, Fcb->LastCluster, 
+          Status = OffsetToCluster(DeviceExt, Fcb->LastCluster,
                                    Fcb->RFCB.AllocationSize.u.LowPart -
                                    ClusterSize - Fcb->LastOffset,
                                    &Cluster, FALSE);
        }
        else
        {
-          Status = OffsetToCluster(DeviceExt, FirstCluster, 
+          Status = OffsetToCluster(DeviceExt, FirstCluster,
                                    Fcb->RFCB.AllocationSize.u.LowPart - ClusterSize,
                                    &Cluster, FALSE);
        }
@@ -602,13 +602,13 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
 
        /* FIXME: Check status */
        /* Cluster points now to the last cluster within the chain */
-       Status = OffsetToCluster(DeviceExt, FirstCluster, 
+       Status = OffsetToCluster(DeviceExt, FirstCluster,
 	         ROUND_DOWN(NewSize - 1, ClusterSize),
                  &NCluster, TRUE);
        if (NCluster == 0xffffffff || !NT_SUCCESS(Status))
        {
 	  /* disk is full */
-	  NCluster = Cluster; 
+	  NCluster = Cluster;
           Status = NextCluster (DeviceExt, FirstCluster, &NCluster, FALSE);
 	  WriteCluster(DeviceExt, Cluster, 0xffffffff);
 	  Cluster = NCluster;
@@ -631,7 +631,7 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
     UpdateFileSize(FileObject, Fcb, NewSize, ClusterSize);
     if (NewSize > 0)
     {
-      Status = OffsetToCluster(DeviceExt, FirstCluster, 
+      Status = OffsetToCluster(DeviceExt, FirstCluster,
 	          ROUND_DOWN(NewSize - 1, ClusterSize),
 		  &Cluster, FALSE);
 
@@ -694,7 +694,7 @@ NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
   FileInformationClass = IrpContext->Stack->Parameters.QueryFile.FileInformationClass;
   FCB = (PVFATFCB) IrpContext->FileObject->FsContext;
 
-  DPRINT("VfatQueryInformation is called for '%s'\n", 
+  DPRINT("VfatQueryInformation is called for '%s'\n",
          FileInformationClass >= FileMaximumInformation - 1 ? "????" : FileInformationClassNames[FileInformationClass]);
 
 
@@ -791,21 +791,21 @@ NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
   NTSTATUS RC = STATUS_SUCCESS;
   PVOID SystemBuffer;
   BOOLEAN CanWait = (IrpContext->Flags & IRPCONTEXT_CANWAIT) != 0;
-  
+
   /* PRECONDITION */
   ASSERT(IrpContext);
-  
+
   DPRINT("VfatSetInformation(IrpContext %x)\n", IrpContext);
-  
+
   /* INITIALIZATION */
-  FileInformationClass = 
+  FileInformationClass =
     IrpContext->Stack->Parameters.SetFile.FileInformationClass;
   FCB = (PVFATFCB) IrpContext->FileObject->FsContext;
   SystemBuffer = IrpContext->Irp->AssociatedIrp.SystemBuffer;
 
-  DPRINT("VfatSetInformation is called for '%s'\n", 
+  DPRINT("VfatSetInformation is called for '%s'\n",
          FileInformationClass >= FileMaximumInformation - 1 ? "????" : FileInformationClassNames[ FileInformationClass]);
-  
+
   DPRINT("FileInformationClass %d\n", FileInformationClass);
   DPRINT("SystemBuffer %x\n", SystemBuffer);
 
@@ -830,13 +830,13 @@ NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
 					 IrpContext->DeviceObject,
 					 SystemBuffer);
       break;
-    case FileAllocationInformation:    
+    case FileAllocationInformation:
     case FileEndOfFileInformation:
       RC = VfatSetAllocationSizeInformation(IrpContext->FileObject,
 					    FCB,
 					    IrpContext->DeviceExt,
 					    (PLARGE_INTEGER)SystemBuffer);
-      break;    
+      break;
     case FileBasicInformation:
       RC = VfatSetBasicInformation(IrpContext->FileObject,
 				   FCB,

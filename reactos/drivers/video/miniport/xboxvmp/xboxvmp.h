@@ -113,7 +113,7 @@ XboxVmpQueryAvailModes(
    PVIDEO_MODE_INFORMATION ReturnedModes,
    PSTATUS_BLOCK StatusBlock);
 
-BOOL FASTCALL  
+BOOL FASTCALL
 XboxVmpQueryCurrentMode(
    PXBOXVMP_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MODE_INFORMATION VideoModeInfo,

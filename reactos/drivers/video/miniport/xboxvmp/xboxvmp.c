@@ -52,7 +52,7 @@ DriverEntry(IN PVOID Context1, IN PVOID Context2)
   InitData.HwGetPowerState = XboxVmpGetPowerState;
   InitData.HwSetPowerState = XboxVmpSetPowerState;
   InitData.HwDeviceExtensionSize = sizeof(XBOXVMP_DEVICE_EXTENSION);
-  
+
   return VideoPortInitialize(Context1, Context2, &InitData, NULL);
 }
 
@@ -86,7 +86,7 @@ XboxVmpFindAdapter(
       XboxVmpDeviceExtension->ControlLength = AccessRanges[0].RangeLength;
       XboxVmpDeviceExtension->PhysFrameBufferStart = AccessRanges[1].RangeStart;
     }
- 
+
   return Status;
 }
 
@@ -145,7 +145,7 @@ XboxVmpStartIO(
     {
       case IOCTL_VIDEO_SET_CURRENT_MODE:
         DPRINT("XboxVmpStartIO IOCTL_VIDEO_SET_CURRENT_MODE\n");
-        if (RequestPacket->InputBufferLength < sizeof(VIDEO_MODE)) 
+        if (RequestPacket->InputBufferLength < sizeof(VIDEO_MODE))
           {
             RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
             return TRUE;
@@ -166,7 +166,7 @@ XboxVmpStartIO(
       case IOCTL_VIDEO_MAP_VIDEO_MEMORY:
         DPRINT("XboxVmpStartIO IOCTL_VIDEO_MAP_VIDEO_MEMORY\n");
         if (RequestPacket->OutputBufferLength < sizeof(VIDEO_MEMORY_INFORMATION) ||
-            RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY)) 
+            RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY))
           {
             RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
             return TRUE;
@@ -180,7 +180,7 @@ XboxVmpStartIO(
 
       case IOCTL_VIDEO_UNMAP_VIDEO_MEMORY:
         DPRINT("XboxVmpStartIO IOCTL_VIDEO_UNMAP_VIDEO_MEMORY\n");
-        if (RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY)) 
+        if (RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY))
           {
             RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
             return TRUE;
@@ -193,7 +193,7 @@ XboxVmpStartIO(
 
       case IOCTL_VIDEO_QUERY_NUM_AVAIL_MODES:
         DPRINT("XboxVmpStartIO IOCTL_VIDEO_QUERY_NUM_AVAIL_MODES\n");
-        if (RequestPacket->OutputBufferLength < sizeof(VIDEO_NUM_MODES)) 
+        if (RequestPacket->OutputBufferLength < sizeof(VIDEO_NUM_MODES))
           {
             RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
             return TRUE;
@@ -206,7 +206,7 @@ XboxVmpStartIO(
 
       case IOCTL_VIDEO_QUERY_AVAIL_MODES:
         DPRINT("XboxVmpStartIO IOCTL_VIDEO_QUERY_AVAIL_MODES\n");
-        if (RequestPacket->OutputBufferLength < sizeof(VIDEO_MODE_INFORMATION)) 
+        if (RequestPacket->OutputBufferLength < sizeof(VIDEO_MODE_INFORMATION))
           {
             RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
             return TRUE;
@@ -219,7 +219,7 @@ XboxVmpStartIO(
 
       case IOCTL_VIDEO_QUERY_CURRENT_MODE:
         DPRINT("XboxVmpStartIO IOCTL_VIDEO_QUERY_CURRENT_MODE\n");
-        if (RequestPacket->OutputBufferLength < sizeof(VIDEO_MODE_INFORMATION)) 
+        if (RequestPacket->OutputBufferLength < sizeof(VIDEO_MODE_INFORMATION))
           {
             RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
             return TRUE;
@@ -229,13 +229,13 @@ XboxVmpStartIO(
             (PVIDEO_MODE_INFORMATION)RequestPacket->OutputBuffer,
             RequestPacket->StatusBlock);
         break;
-         
+
       default:
         DPRINT("XboxVmpStartIO 0x%x not implemented\n");
         RequestPacket->StatusBlock->Status = STATUS_NOT_IMPLEMENTED;
         return FALSE;
     }
-  
+
   if (Result)
     {
       RequestPacket->StatusBlock->Status = STATUS_SUCCESS;
@@ -262,7 +262,7 @@ XboxVmpResetHw(
     {
       return FALSE;
     }
-   
+
    return TRUE;
 }
 
@@ -280,7 +280,7 @@ XboxVmpGetPowerState(
 {
   DPRINT1("XboxVmpGetPowerState is not supported\n");
 
-  return ERROR_NOT_SUPPORTED;   
+  return ERROR_NOT_SUPPORTED;
 }
 
 /*
@@ -297,7 +297,7 @@ XboxVmpSetPowerState(
 {
   DPRINT1("XboxVmpSetPowerState not supported\n");
 
-  return ERROR_NOT_SUPPORTED;   
+  return ERROR_NOT_SUPPORTED;
 }
 
 /*
@@ -326,7 +326,7 @@ XboxVmpSetCurrentMode(
  * XboxVmpResetDevice
  *
  * Resets the video hardware to the default mode, to which it was initialized
- * at system boot. 
+ * at system boot.
  */
 
 BOOL FASTCALL
@@ -343,7 +343,7 @@ XboxVmpResetDevice(
  * XboxVmpMapVideoMemory
  *
  * Maps the video hardware frame buffer and video RAM into the virtual address
- * space of the requestor. 
+ * space of the requestor.
  */
 
 BOOL FASTCALL
@@ -373,7 +373,7 @@ XboxVmpMapVideoMemory(
       DPRINT1("ZwQueryBasicInformation failed, assuming 64MB total memory\n");
       FrameBuffer.u.LowPart = 60 * 1024 * 1024;
     }
-  
+
   FrameBuffer.QuadPart += DeviceExtension->PhysFrameBufferStart.QuadPart;
   MapInformation->VideoRamBase = RequestedAddress->RequestedVirtualAddress;
   MapInformation->VideoRamLength = 4 * 1024 * 1024;
@@ -537,7 +537,7 @@ XboxVmpQueryAvailModes(
  * Returns information about current video mode.
  */
 
-BOOL FASTCALL  
+BOOL FASTCALL
 XboxVmpQueryCurrentMode(
    PXBOXVMP_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MODE_INFORMATION VideoMode,

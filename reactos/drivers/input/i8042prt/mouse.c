@@ -186,15 +186,15 @@ BOOLEAN STDCALL I8042MouseResetIsr(PDEVICE_EXTENSION DevExt,
 		DevExt->MouseLogiBuffer[2] = *Value;
 		/* Now MouseLogiBuffer is a set of info. If the second
 		 * byte is 0, the mouse didn't understand the magic
-		 * code. Otherwise, it it a Logitech and the second byte 
-		 * is the number of buttons, bit 7 of the first byte tells 
+		 * code. Otherwise, it it a Logitech and the second byte
+		 * is the number of buttons, bit 7 of the first byte tells
 		 * if it understands special E7 commands, the rest is an ID.
 		 */
 		if (DevExt->MouseLogiBuffer[1]) {
 			DevExt->MouseAttributes.NumberOfButtons =
 			                         DevExt->MouseLogiBuffer[1];
 			/* For some reason the ID is the wrong way around */
-			DevExt->MouseLogitechID = 
+			DevExt->MouseLogitechID =
 			          ((DevExt->MouseLogiBuffer[0] >> 4) & 0x07) |
 			          ((DevExt->MouseLogiBuffer[0] << 3) & 0x78);
 			DevExt->MouseType = Ps2pp;
@@ -325,7 +325,7 @@ BOOLEAN STDCALL I8042MouseResetIsr(PDEVICE_EXTENSION DevExt,
 /*
  * Prepare for reading the next packet and queue the dpc for handling
  * this one.
- * 
+ *
  * Context is the device object.
  */
 VOID STDCALL I8042QueueMousePacket(PVOID Context)
@@ -642,7 +642,7 @@ BOOLEAN STDCALL I8042StartIoMouse(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	PDEVICE_EXTENSION DevExt = FdoDevExt->PortDevExt;
 
 	Stk = IoGetCurrentIrpStackLocation(Irp);
-    
+
 	switch (Stk->Parameters.DeviceIoControl.IoControlCode) {
 	case IOCTL_INTERNAL_I8042_MOUSE_WRITE_BUFFER:
 		I8042StartPacket(
@@ -675,12 +675,12 @@ NTSTATUS STDCALL I8042InternalDeviceControlMouse(PDEVICE_OBJECT DeviceObject, PI
 
 	Irp->IoStatus.Information = 0;
 	Stk = IoGetCurrentIrpStackLocation(Irp);
-    
+
 	switch (Stk->Parameters.DeviceIoControl.IoControlCode) {
 
 	case IOCTL_INTERNAL_MOUSE_CONNECT:
 		DPRINT("IOCTL_INTERNAL_MOUSE_CONNECT\n");
-		if (Stk->Parameters.DeviceIoControl.InputBufferLength < 
+		if (Stk->Parameters.DeviceIoControl.InputBufferLength <
 		                                      sizeof(CONNECT_DATA)) {
 			DPRINT1("Mouse IOCTL_INTERNAL_MOUSE_CONNECT "
 			       "invalid buffer size\n");
@@ -704,7 +704,7 @@ NTSTATUS STDCALL I8042InternalDeviceControlMouse(PDEVICE_OBJECT DeviceObject, PI
 		       Stk->Parameters.DeviceIoControl.Type3InputBuffer,
 		       sizeof(CONNECT_DATA));
 		DevExt->MouseHook.IsrWritePort = I8042IsrWritePortMouse;
-		DevExt->MouseHook.QueueMousePacket = 
+		DevExt->MouseHook.QueueMousePacket =
 		                                    I8042QueueMousePacket;
 		DevExt->MouseHook.CallContext = DevExt;
 
@@ -716,7 +716,7 @@ NTSTATUS STDCALL I8042InternalDeviceControlMouse(PDEVICE_OBJECT DeviceObject, PI
 			if (!WorkItem) {
 				DPRINT ("IOCTL_INTERNAL_MOUSE_CONNECT: "
 				        "Can't allocate work item\n");
-				Irp->IoStatus.Status = 
+				Irp->IoStatus.Status =
 				              STATUS_INSUFFICIENT_RESOURCES;
 				goto intcontfailure;
 			}
@@ -728,13 +728,13 @@ NTSTATUS STDCALL I8042InternalDeviceControlMouse(PDEVICE_OBJECT DeviceObject, PI
 			if (!WorkItemData) {
 				DPRINT ("IOCTL_INTERNAL_MOUSE_CONNECT: "
 				        "Can't allocate work item data\n");
-				Irp->IoStatus.Status = 
+				Irp->IoStatus.Status =
 				              STATUS_INSUFFICIENT_RESOURCES;
 				IoFreeWorkItem(WorkItem);
 				goto intcontfailure;
 			}
 			WorkItemData->WorkItem = WorkItem;
-			WorkItemData->Target = 
+			WorkItemData->Target =
 				        DevExt->MouseData.ClassDeviceObject;
 			WorkItemData->Irp = Irp;
 
@@ -768,7 +768,7 @@ NTSTATUS STDCALL I8042InternalDeviceControlMouse(PDEVICE_OBJECT DeviceObject, PI
 		break;
 	case IOCTL_MOUSE_QUERY_ATTRIBUTES:
 		DPRINT("IOCTL_MOUSE_QUERY_ATTRIBUTES\n");
-		if (Stk->Parameters.DeviceIoControl.InputBufferLength < 
+		if (Stk->Parameters.DeviceIoControl.InputBufferLength <
 		                                 sizeof(MOUSE_ATTRIBUTES)) {
 			DPRINT("Mouse IOCTL_MOUSE_QUERY_ATTRIBUTES "
 			       "invalid buffer size\n");
@@ -857,7 +857,7 @@ BOOLEAN STDCALL I8042MouseDisable(PDEVICE_EXTENSION DevExt)
 		return FALSE;
 	}
 
-	I8042Flush(); 
+	I8042Flush();
 	/* Just to be (kind of) sure; if the mouse would
 	 * say something while we are disabling it, these bytes would
 	 * block the keyboard.

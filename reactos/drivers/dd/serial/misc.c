@@ -1,10 +1,10 @@
 /* $Id:
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            drivers/dd/serial/misc.c
  * PURPOSE:         Misceallenous operations
- * 
+ *
  * PROGRAMMERS:     Hervé Poussineau (poussine@freesurf.fr)
  */
 /* FIXME: call IoAcquireRemoveLock/IoReleaseRemoveLock around each I/O operation */
@@ -31,15 +31,15 @@ ForwardIrpAndWait(
 	PDEVICE_OBJECT LowerDevice = ((PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
 	KEVENT Event;
 	NTSTATUS Status;
-	
+
 	ASSERT(LowerDevice);
-	
+
 	KeInitializeEvent(&Event, NotificationEvent, FALSE);
 	IoCopyCurrentIrpStackLocationToNext(Irp);
-	
+
 	DPRINT("Serial: Calling lower device %p [%wZ]\n", LowerDevice, &LowerDevice->DriverObject->DriverName);
 	IoSetCompletionRoutine(Irp, ForwardIrpAndWaitCompletion, &Event, TRUE, TRUE, TRUE);
-	
+
 	Status = IoCallDriver(LowerDevice, Irp);
 	if (Status == STATUS_PENDING)
 	{
@@ -47,7 +47,7 @@ ForwardIrpAndWait(
 		if (NT_SUCCESS(Status))
 			Status = Irp->IoStatus.Status;
 	}
-	
+
 	return Status;
 }
 
@@ -57,9 +57,9 @@ ForwardIrpAndForget(
 	IN PIRP Irp)
 {
 	PDEVICE_OBJECT LowerDevice = ((PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
-	
+
 	ASSERT(LowerDevice);
-	
+
 	IoSkipCurrentIrpStackLocation(Irp);
 	return IoCallDriver(LowerDevice, Irp);
 }
@@ -77,10 +77,10 @@ SerialReceiveByte(
 	KIRQL Irql;
 	UCHAR IER;
 	NTSTATUS Status;
-	
+
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)pDeviceExtension;
 	ComPortBase = (PUCHAR)DeviceExtension->BaseAddress;
-	
+
 	KeAcquireSpinLock(&DeviceExtension->InputBufferLock, &Irql);
 	while (READ_PORT_UCHAR(SER_LSR(ComPortBase)) & SR_LSR_DATA_RECEIVED)
 	{
@@ -95,7 +95,7 @@ SerialReceiveByte(
 	}
 	KeSetEvent(&DeviceExtension->InputBufferNotEmpty, 0, FALSE);
 	KeReleaseSpinLock(&DeviceExtension->InputBufferLock, Irql);
-	
+
 	/* allow new interrupts */
 	IER = READ_PORT_UCHAR(SER_IER(ComPortBase));
 	WRITE_PORT_UCHAR(SER_IER(ComPortBase), IER | SR_IER_DATA_RECEIVED);
@@ -114,10 +114,10 @@ SerialSendByte(
 	KIRQL Irql;
 	UCHAR IER;
 	NTSTATUS Status;
-	
+
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)pDeviceExtension;
 	ComPortBase = (PUCHAR)DeviceExtension->BaseAddress;
-	
+
 	KeAcquireSpinLock(&DeviceExtension->OutputBufferLock, &Irql);
 	while (!IsCircularBufferEmpty(&DeviceExtension->OutputBuffer)
 		&& READ_PORT_UCHAR(SER_LSR(ComPortBase)) & SR_LSR_THR_EMPTY)
@@ -148,24 +148,24 @@ SerialInterruptService(
 	PSERIAL_DEVICE_EXTENSION DeviceExtension;
 	PUCHAR ComPortBase;
 	UCHAR Iir;
-	
+
 	DeviceObject = (PDEVICE_OBJECT)ServiceContext;
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	ComPortBase = (PUCHAR)DeviceExtension->BaseAddress;
-	
+
 	Iir = READ_PORT_UCHAR(SER_IIR(ComPortBase));
 	if (Iir == 0xff)
 		return TRUE;
 	Iir &= SR_IIR_ID_MASK;
 	if ((Iir & SR_IIR_SELF) != 0) { return FALSE; }
-	
+
 	switch (Iir)
 	{
 		case SR_IIR_MSR_CHANGE:
 		{
 			UCHAR MSR, IER;
 			DPRINT("Serial: SR_IIR_MSR_CHANGE\n");
-			
+
 			MSR = READ_PORT_UCHAR(SER_MSR(ComPortBase));
 			if (MSR & SR_MSR_CTS_CHANGED)
 			{
@@ -188,14 +188,14 @@ SerialInterruptService(
 		case SR_IIR_THR_EMPTY:
 		{
 			DPRINT("Serial: SR_IIR_THR_EMPTY\n");
-			
+
 			KeInsertQueueDpc(&DeviceExtension->SendByteDpc, NULL, NULL);
 			return TRUE;
 		}
 		case SR_IIR_DATA_RECEIVED:
 		{
 			DPRINT("Serial: SR_IIR_DATA_RECEIVED\n");
-			
+
 			KeInsertQueueDpc(&DeviceExtension->ReceivedByteDpc, NULL, NULL);
 			return TRUE;
 		}
@@ -203,7 +203,7 @@ SerialInterruptService(
 		{
 			UCHAR LSR;
 			DPRINT("Serial: SR_IIR_ERROR\n");
-			
+
 			LSR = READ_PORT_UCHAR(SER_LSR(ComPortBase));
 			if (LSR & SR_LSR_OVERRUN_ERROR)
 				InterlockedIncrement(&DeviceExtension->SerialPerfStats.SerialOverrunErrorCount);
@@ -213,7 +213,7 @@ SerialInterruptService(
 				InterlockedIncrement(&DeviceExtension->SerialPerfStats.FrameErrorCount);
 			if (LSR & SR_LSR_BREAK_INT)
 				InterlockedIncrement(&DeviceExtension->BreakInterruptErrorCount);
-			
+
 			return TRUE;
 		}
 	}

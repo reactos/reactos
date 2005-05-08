@@ -32,8 +32,8 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS 
-VfatSetExtendedAttributes(PFILE_OBJECT FileObject, 
+NTSTATUS
+VfatSetExtendedAttributes(PFILE_OBJECT FileObject,
 			  PVOID Ea,
 			  ULONG EaLength)
 {

@@ -1,10 +1,10 @@
 /* $Id:
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            drivers/dd/serial/pnp.c
  * PURPOSE:         Serial IRP_MJ_PNP operations
- * 
+ *
  * PROGRAMMERS:     Hervé Poussineau (poussine@freesurf.fr)
  */
 /* FIXME: call IoAcquireRemoveLock/IoReleaseRemoveLock around each I/O operation */
@@ -28,12 +28,12 @@ SerialAddDeviceInternal(
 	UNICODE_STRING DeviceName;
 	static ULONG DeviceNumber = 0;
 	static ULONG ComPortNumber = 1;
-	
+
 	DPRINT("Serial: SerialAddDeviceInternal called\n");
-	
+
 	ASSERT(DeviceObject);
 	ASSERT(Pdo);
-	
+
 	/* Create new device object */
 	swprintf(DeviceNameBuffer, L"\\Device\\Serial%lu", DeviceNumber);
 	RtlInitUnicodeString(&DeviceName, DeviceNameBuffer);
@@ -52,7 +52,7 @@ SerialAddDeviceInternal(
 	}
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)Fdo->DeviceExtension;
 	RtlZeroMemory(DeviceExtension, sizeof(SERIAL_DEVICE_EXTENSION));
-	
+
 	/* Register device interface */
 	Status = IoRegisterDeviceInterface(Pdo, &GUID_DEVINTERFACE_COMPORT, NULL, &DeviceExtension->SerialInterfaceName);
 	if (!NT_SUCCESS(Status))
@@ -60,7 +60,7 @@ SerialAddDeviceInternal(
 		DPRINT("Serial: IoRegisterDeviceInterface() failed with status 0x%08x\n", Status);
 		goto ByeBye;
 	}
-	
+
 	DeviceExtension->SerialPortNumber = DeviceNumber++;
 	if (pComPortNumber == NULL)
 		DeviceExtension->ComPort = ComPortNumber++;
@@ -92,7 +92,7 @@ SerialAddDeviceInternal(
 	{
 		*pFdo = Fdo;
 	}
-	
+
 	return STATUS_SUCCESS;
 
 ByeBye:
@@ -116,7 +116,7 @@ SerialAddDevice(
 	 */
 	if (Pdo == NULL)
 		return STATUS_SUCCESS;
-	
+
 	/* We have here a PDO not null. It represents a real serial
 	 * port. So call the internal AddDevice function.
 	 */
@@ -147,13 +147,13 @@ SerialPnpStartDevice(
 	UNICODE_STRING KeyName;
 	HANDLE hKey;
 	NTSTATUS Status;
-	
+
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-	
+
 	ASSERT(ResourceList);
 	ASSERT(DeviceExtension);
 	ASSERT(DeviceExtension->PnpState == dsStopped);
-	
+
 	DeviceExtension->BaudRate = 19200 | SERIAL_BAUD_USER;
 	DeviceExtension->BaseAddress = 0;
 	Dirql = 0;
@@ -193,15 +193,15 @@ SerialPnpStartDevice(
 	if (!Dirql)
 		return STATUS_INSUFFICIENT_RESOURCES;
 	ComPortBase = (PUCHAR)DeviceExtension->BaseAddress;
-	
+
 	if (DeviceExtension->UartType == UartUnknown)
 		DeviceExtension->UartType = SerialDetectUartType(ComPortBase);
-	
+
 	/* Get current settings */
 	DeviceExtension->MCR = READ_PORT_UCHAR(SER_MCR(ComPortBase));
 	DeviceExtension->MSR = READ_PORT_UCHAR(SER_MSR(ComPortBase));
 	DeviceExtension->WaitMask = 0;
-	
+
 	/* Set baud rate */
 	Status = SerialSetBaudRate(DeviceExtension, DeviceExtension->BaudRate);
 	if (!NT_SUCCESS(Status))
@@ -209,7 +209,7 @@ SerialPnpStartDevice(
 		DPRINT("Serial: SerialSetBaudRate() failed with status 0x%08x\n", Status);
 		return Status;
 	}
-	
+
 	/* Set line control */
 	DeviceExtension->SerialLineControl.StopBits = STOP_BIT_1;
 	DeviceExtension->SerialLineControl.Parity = NO_PARITY;
@@ -220,7 +220,7 @@ SerialPnpStartDevice(
 		DPRINT("Serial: SerialSetLineControl() failed with status 0x%08x\n", Status);
 		return Status;
 	}
-	
+
 	/* Clear receive/transmit buffers */
 	if (DeviceExtension->UartType >= Uart16550A)
 	{
@@ -228,7 +228,7 @@ SerialPnpStartDevice(
 		WRITE_PORT_UCHAR(SER_FCR(ComPortBase),
 			SR_FCR_CLEAR_RCVR | SR_FCR_CLEAR_XMIT);
 	}
-	
+
 	/* Create link \DosDevices\COMX -> \Device\SerialX */
 	swprintf(DeviceNameBuffer, L"\\Device\\Serial%lu", DeviceExtension->SerialPortNumber);
 	swprintf(LinkNameBuffer, L"\\DosDevices\\COM%lu", DeviceExtension->ComPort);
@@ -242,7 +242,7 @@ SerialPnpStartDevice(
 		DPRINT("Serial: IoCreateSymbolicLink() failed with status 0x%08x\n", Status);
 		return Status;
 	}
-	
+
 	/* Activate serial interface */
 	Status = IoSetDeviceInterfaceState(&DeviceExtension->SerialInterfaceName, TRUE);
 	if (!NT_SUCCESS(Status))
@@ -251,7 +251,7 @@ SerialPnpStartDevice(
 		IoDeleteSymbolicLink(&LinkName);
 		return Status;
 	}
-	
+
 	/* Connect interrupt and enable them */
 	Status = IoConnectInterrupt(
 		&DeviceExtension->Interrupt, SerialInterruptService,
@@ -266,7 +266,7 @@ SerialPnpStartDevice(
 		IoDeleteSymbolicLink(&LinkName);
 		return Status;
 	}
-	
+
 	/* Write an entry value under HKLM\HARDWARE\DeviceMap\SERIALCOMM */
 	/* This step is not mandatory, so don't exit in case of error */
 	RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\HARDWARE\\DeviceMap\\SERIALCOMM");
@@ -278,18 +278,18 @@ SerialPnpStartDevice(
 		ZwSetValueKey(hKey, &DeviceName, 0, REG_SZ, &ComPortBuffer, ComPort.Length + sizeof(WCHAR));
 		ZwClose(hKey);
 	}
-	
+
 	DeviceExtension->PnpState = dsStarted;
-	
+
 	/* Activate interrupt modes */
 	IER = READ_PORT_UCHAR(SER_IER(ComPortBase));
 	IER |= SR_IER_DATA_RECEIVED | SR_IER_THR_EMPTY | SR_IER_LSR_CHANGE | SR_IER_MSR_CHANGE;
 	WRITE_PORT_UCHAR(SER_IER(ComPortBase), IER);
-	
+
 	/* Activate DTR, RTS */
 	DeviceExtension->MCR |= SR_MCR_DTR | SR_MCR_RTS;
 	WRITE_PORT_UCHAR(SER_MCR(ComPortBase), DeviceExtension->MCR);
-	
+
 	return STATUS_SUCCESS;
 }
 
@@ -302,17 +302,17 @@ SerialPnp(
 	PIO_STACK_LOCATION Stack;
 	ULONG_PTR Information = 0;
 	NTSTATUS Status;
-	
+
 	Stack = IoGetCurrentIrpStackLocation(Irp);
 	MinorFunction = Stack->MinorFunction;
-	
+
 	switch (MinorFunction)
 	{
 		case IRP_MN_START_DEVICE:
 		{
 			BOOLEAN ConflictDetected;
 			DPRINT("Serial: IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
-			
+
 			/* FIXME: first HACK: PnP manager can send multiple
 			 * IRP_MN_START_DEVICE for one device
 			 */
@@ -346,7 +346,7 @@ SerialPnp(
 				IoCompleteRequest(Irp, IO_NO_INCREMENT);
 				return Status;
 			}
-			
+
 			/* Call lower driver */
 			Status = ForwardIrpAndWait(DeviceObject, Irp);
 			if (NT_SUCCESS(Status))
@@ -384,7 +384,7 @@ SerialPnp(
 			return ForwardIrpAndForget(DeviceObject, Irp);
 		}
 	}
-	
+
 	Irp->IoStatus.Information = Information;
 	Irp->IoStatus.Status = Status;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);

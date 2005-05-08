@@ -7,7 +7,7 @@
  * REVISIONS:
  *     Vizzini 07-28-2003 Created
  * NOTES:
- *     - Resource tracking has to be implemented here because of the design of the NDIS API. 
+ *     - Resource tracking has to be implemented here because of the design of the NDIS API.
  *       Whenever a read operation is performed, the NDIS library allocates space and returns
  *       it.  A linked list is kept associated with every handle of the memory allocated to
  *       it.  When the handle is closed, the resources are systematically released.
@@ -16,8 +16,8 @@
  *       pass this NDIS_HANDLE to things like ZwQueryValueKey().  I don't thknk they do (they
  *       certainly should not), but it should be kept in mind.
  *         UPDATE:  I just found this in the NTDDK:
- *         NdisOpenProtocolConfiguration returns a handle for the 
- *         HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\NICDriverInstance\Parameters\ProtocolName 
+ *         NdisOpenProtocolConfiguration returns a handle for the
+ *         HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\NICDriverInstance\Parameters\ProtocolName
  *         registry key.  XXX This is a problem.  Following that, the DDK instructs programmers
  *         to use NdisReadConfiguration and NdisWriteConfiguration.  No telling what the world's idiots
  *         have done with this.
@@ -26,7 +26,7 @@
  *       places that the DDK doesn't explicitly mention it, though.
  *     - There's a general reliance on the fact that UNICODE_STRING.Length doesn't include a trailing
  *       0, which it shouldn't
- *     - I added support for NdisParameterBinary.  It's at the end of the struct.  I wonder if 
+ *     - I added support for NdisParameterBinary.  It's at the end of the struct.  I wonder if
  *       it'll break things.
  *     - All the routines in this file are PASSIVE_LEVEL only, and all memory is PagedPool
  */
@@ -52,7 +52,7 @@ NdisWriteConfiguration(
  * ARGUMENTS:
  *     Status: Pointer to a caller-supplied NDIS_STATUS where we return status
  *     ConfigurationHandle: The Configuration Handle passed back from the call to one of the Open functions
- *     Keyword: The registry value name to write 
+ *     Keyword: The registry value name to write
  *     ParameterValue: The value data to write
  * RETURNS:
  *     NDIS_STATUS_SUCCESS - the operation completed successfully
@@ -105,7 +105,7 @@ NdisWriteConfiguration(
             break;
     }
 
-    *Status = ZwSetValueKey(((PMINIPORT_CONFIGURATION_CONTEXT)ConfigurationHandle)->Handle, 
+    *Status = ZwSetValueKey(((PMINIPORT_CONFIGURATION_CONTEXT)ConfigurationHandle)->Handle,
             Keyword, 0, ParameterType, Data, DataSize);
 
     if(*Status != STATUS_SUCCESS)
@@ -314,7 +314,7 @@ NdisReadConfiguration(
 
     *ParameterValue = NULL;
     *Status = NDIS_STATUS_FAILURE;
-    
+
     if(ParameterType != NdisParameterInteger &&
         ParameterType != NdisParameterHexInteger &&
         ParameterType != NdisParameterString &&
@@ -354,10 +354,10 @@ NdisReadConfiguration(
         MiniportResource->ResourceType = 0;
         MiniportResource->Resource = *ParameterValue;
 
-        NDIS_DbgPrint(MID_TRACE,("inserting 0x%x into the resource list\n", 
+        NDIS_DbgPrint(MID_TRACE,("inserting 0x%x into the resource list\n",
             MiniportResource->Resource));
 
-        ExInterlockedInsertTailList(&ConfigurationContext->ResourceListHead, 
+        ExInterlockedInsertTailList(&ConfigurationContext->ResourceListHead,
             &MiniportResource->ListEntry, &ConfigurationContext->ResourceLock);
 
         (*ParameterValue)->ParameterType = NdisParameterInteger;
@@ -393,7 +393,7 @@ NdisReadConfiguration(
         MiniportResource->ResourceType = 0;
         MiniportResource->Resource = *ParameterValue;
         NDIS_DbgPrint(MID_TRACE,("inserting 0x%x into the resource list\n", MiniportResource->Resource));
-        ExInterlockedInsertTailList(&ConfigurationContext->ResourceListHead, 
+        ExInterlockedInsertTailList(&ConfigurationContext->ResourceListHead,
             &MiniportResource->ListEntry, &ConfigurationContext->ResourceLock);
 
         (*ParameterValue)->ParameterType = NdisParameterInteger;
@@ -429,7 +429,7 @@ NdisReadConfiguration(
         MiniportResource->ResourceType = 0;
         MiniportResource->Resource = *ParameterValue;
         NDIS_DbgPrint(MID_TRACE,("inserting 0x%x into the resource list\n", MiniportResource->Resource));
-        ExInterlockedInsertTailList(&ConfigurationContext->ResourceListHead, 
+        ExInterlockedInsertTailList(&ConfigurationContext->ResourceListHead,
             &MiniportResource->ListEntry, &ConfigurationContext->ResourceLock);
 
         (*ParameterValue)->ParameterType = NdisParameterInteger;
@@ -460,7 +460,7 @@ NdisReadConfiguration(
     }
 
     /* grab the value */
-    *Status = ZwQueryValueKey(ConfigurationContext->Handle, Keyword, KeyValuePartialInformation, 
+    *Status = ZwQueryValueKey(ConfigurationContext->Handle, Keyword, KeyValuePartialInformation,
         KeyInformation, KeyDataLength + sizeof(KEY_VALUE_PARTIAL_INFORMATION), &KeyDataLength);
     if(*Status != STATUS_SUCCESS)
     {
@@ -627,18 +627,18 @@ UCHAR UnicodeToHexByte(WCHAR chr)
 {
     switch(chr)
     {
-        case L'0': return 0; 
-        case L'1': return 1; 
-        case L'2': return 2; 
-        case L'3': return 3; 
-        case L'4': return 4; 
-        case L'5': return 5; 
+        case L'0': return 0;
+        case L'1': return 1;
+        case L'2': return 2;
+        case L'3': return 3;
+        case L'4': return 4;
+        case L'5': return 5;
         case L'6': return 6;
         case L'7': return 7;
         case L'8': return 8;
         case L'9': return 9;
-        case L'A': 
-        case L'a': 
+        case L'A':
+        case L'a':
             return 10;
         case L'B':
         case L'b':
@@ -789,7 +789,7 @@ NdisOpenConfigurationKeyByIndex(
         return;
     }
 
-    *Status = ZwEnumerateKey(ConfigurationHandle, Index, KeyBasicInformation, KeyInformation, 
+    *Status = ZwEnumerateKey(ConfigurationHandle, Index, KeyBasicInformation, KeyInformation,
         KeyInformationLength + sizeof(KEY_BASIC_INFORMATION), &KeyInformationLength);
 
     if(*Status != STATUS_SUCCESS)

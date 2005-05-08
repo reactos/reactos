@@ -23,7 +23,7 @@
  * FILE:        drivers/storage/atapi/atapi.c
  * PURPOSE:     ATAPI miniport driver
  * PROGRAMMERS: Eric Kohl (ekohl@rz-online.de)
- *              Hartmut Birr 
+ *              Hartmut Birr
  * REVISIONS:
  *              09-09-2001 Created
  */
@@ -133,14 +133,14 @@ typedef struct _PCI_NATIVE_CONTROLLER
 }
 PCI_NATIVE_CONTROLLER, *PPCI_NATIVE_CONTROLLER;
 
-PCI_NATIVE_CONTROLLER const PciNativeController[] = 
+PCI_NATIVE_CONTROLLER const PciNativeController[] =
 {
     {
-	0x105A,		    // Promise 
+	0x105A,		    // Promise
 	0x4D68,		    // PDC20268, Ultra100TX2
     },
     {
-	0x105A,		    // Promise 
+	0x105A,		    // Promise
 	0x4D30,		    // PDC20267, Ultra100
     }
 };
@@ -151,7 +151,7 @@ PCI_NATIVE_CONTROLLER const PciNativeController[] =
 
 #ifdef  ALLOC_PRAGMA
 
-//  make the initialization routines discardable, so that they 
+//  make the initialization routines discardable, so that they
 //  don't waste space
 
 #pragma  alloc_text(init, DriverEntry)
@@ -164,7 +164,7 @@ PCI_NATIVE_CONTROLLER const PciNativeController[] =
 //  ---------------------------------------------------- Forward Declarations
 
 #ifdef ENABLE_DMA
-static BOOLEAN 
+static BOOLEAN
 AtapiInitDma(PATAPI_MINIPORT_EXTENSION DevExt,
 	     PSCSI_REQUEST_BLOCK Srb,
 	     BYTE cmd);
@@ -206,8 +206,8 @@ AtapiStartIo(IN PVOID DeviceExtension,
 	     IN PSCSI_REQUEST_BLOCK Srb);
 
 static VOID
-AtapiExecuteCommand(PATAPI_MINIPORT_EXTENSION DevExt, 
-		    BYTE command, 
+AtapiExecuteCommand(PATAPI_MINIPORT_EXTENSION DevExt,
+		    BYTE command,
 		    BOOLEAN FASTCALL (*Handler)(PATAPI_MINIPORT_EXTENSION));
 
 static BOOLEAN STDCALL
@@ -314,7 +314,7 @@ IDESwapBytePairs(char *Buf,
 //    DriverEntry
 //
 //  DESCRIPTION:
-//    This function initializes the driver, locates and claims 
+//    This function initializes the driver, locates and claims
 //    hardware resources, and creates various NT objects needed
 //    to process I/O requests.
 //
@@ -324,7 +324,7 @@ IDESwapBytePairs(char *Buf,
 //  ARGUMENTS:
 //    IN  PDRIVER_OBJECT   DriverObject  System allocated Driver Object
 //                                       for this driver
-//    IN  PUNICODE_STRING  RegistryPath  Name of registry driver service 
+//    IN  PUNICODE_STRING  RegistryPath  Name of registry driver service
 //                                       key
 //
 //  RETURNS:
@@ -505,7 +505,7 @@ AtapiClaimHwResources(PATAPI_MINIPORT_EXTENSION DevExt,
       ConfigInfo->NeedPhysicalAddresses = TRUE;
       ConfigInfo->MapBuffers = TRUE;
 
-      DevExt->PRDMaxCount = PAGE_SIZE / sizeof(PRD);  
+      DevExt->PRDMaxCount = PAGE_SIZE / sizeof(PRD);
       DevExt->PRDTable = ScsiPortGetUncachedExtension(DevExt, ConfigInfo, sizeof(PRD) * DevExt->PRDMaxCount);
       if (DevExt->PRDTable != NULL)
         {
@@ -599,7 +599,7 @@ AtapiFindCompatiblePciController(PVOID DeviceExtension,
 	      continue;
 	   }
 	}
-	  
+
 	DPRINT("%x %x\n", PciConfig.BaseClass, PciConfig.SubClass);
 	if (PciConfig.BaseClass == 0x01 &&
 	    PciConfig.SubClass == 0x01) // &&
@@ -669,7 +669,7 @@ AtapiFindCompatiblePciController(PVOID DeviceExtension,
 	{
 	   break;
 	}
-     }	
+     }
      StartFunctionNumber = 0;
   }
   DPRINT("AtapiFindCompatiblePciController() returns: SP_RETURN_NOT_FOUND\n");
@@ -799,7 +799,7 @@ AtapiFindNativePciController(PVOID DeviceExtension,
 	      break;
 	   }
 	}
-	if (Count < sizeof(PciNativeController)/sizeof(PCI_NATIVE_CONTROLLER)) 
+	if (Count < sizeof(PciNativeController)/sizeof(PCI_NATIVE_CONTROLLER))
 	{
 	   /* We have found a known native pci ide controller */
 	   if ((PciConfig.ProgIf & 0x80) && (PciConfig.u.type0.BaseAddresses[4] & PCI_ADDRESS_IO_SPACE))
@@ -822,7 +822,7 @@ AtapiFindNativePciController(PVOID DeviceExtension,
 	        We must not store and use the last tested slot number. If there is a recall
 		to the some device and we will claim the primary channel again than the call
 		to ScsiPortGetDeviceBase in AtapiClaimHwResource will fail and we can try to
-		claim the secondary channel. 
+		claim the secondary channel.
 	    */
 	   ChannelFound = FALSE;
 	   if (LastSlotNumber.u.AsULONG != SlotNumber.u.AsULONG)
@@ -981,7 +981,7 @@ AtapiInterrupt(IN PVOID DeviceExtension)
         {
 	  static ULONG Count = 0;
 	  Count++;
-	  DPRINT1("Unexpected Interrupt, CommandPort=%04x, Status=%02x, Count=%ld\n", 
+	  DPRINT1("Unexpected Interrupt, CommandPort=%04x, Status=%02x, Count=%ld\n",
 	          DevExt->CommandPortBase, Status, Count);
 	}
       return FALSE;
@@ -1031,7 +1031,7 @@ AtapiConfigDma(PATAPI_MINIPORT_EXTENSION DeviceExtension, ULONG UnitNumber)
 	        {
 	          if ((DeviceExtension->DeviceParams[UnitNumber].MultiDmaModes & 0x0404) == 0x0404)
 	            {
-                      Result = TRUE;	  
+                      Result = TRUE;
                     }
 #if 0
                   /* FIXME:
@@ -1039,7 +1039,7 @@ AtapiConfigDma(PATAPI_MINIPORT_EXTENSION DeviceExtension, ULONG UnitNumber)
 	           */
 	          else if ((DeviceExtension->DeviceParams[UnitNumber].DmaModes & 0x0404) == 0x0404)
 	            {
-                      Result = TRUE;		  
+                      Result = TRUE;
 	            }
 #endif
                 }
@@ -1170,7 +1170,7 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 #ifdef ENABLE_DMA
               if (AtapiConfigDma(DeviceExtension, UnitNumber))
 	        {
-		  DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_DMA_CMD;		  
+		  DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_DMA_CMD;
 		}
 #endif
 	      DeviceFound = TRUE;
@@ -1191,7 +1191,7 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	      DPRINT("  IDE drive found!\n");
 	      DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_PRESENT;
 	      DeviceExtension->TransferSize[UnitNumber] = DeviceExtension->DeviceParams[UnitNumber].BytesPerSector;
-	      if ((DeviceExtension->DeviceParams[UnitNumber].RWMultImplemented & 0x8000) && 
+	      if ((DeviceExtension->DeviceParams[UnitNumber].RWMultImplemented & 0x8000) &&
 		  (DeviceExtension->DeviceParams[UnitNumber].RWMultImplemented & 0xff) &&
 		  (DeviceExtension->DeviceParams[UnitNumber].RWMultCurrent & 0x100) &&
 		  (DeviceExtension->DeviceParams[UnitNumber].RWMultCurrent & 0xff))
@@ -1211,7 +1211,7 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 #ifdef ENABLE_DMA
 	      if (AtapiConfigDma(DeviceExtension, UnitNumber))
 	        {
-		  DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_DMA_CMD;		  
+		  DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_DMA_CMD;
 		}
 #endif
 	      DeviceFound = TRUE;
@@ -1968,10 +1968,10 @@ AtapiReadCapacity(PATAPI_MINIPORT_EXTENSION DeviceExtension,
     {
       if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_48BIT_ADDRESS)
         {
-	  ((PUSHORT)&LastSector)[0] = DeviceParams->Max48BitAddress[0]; 
-	  ((PUSHORT)&LastSector)[1] = DeviceParams->Max48BitAddress[1]; 
-	  ((PUSHORT)&LastSector)[2] = DeviceParams->Max48BitAddress[2]; 
-	  ((PUSHORT)&LastSector)[3] = DeviceParams->Max48BitAddress[3]; 
+	  ((PUSHORT)&LastSector)[0] = DeviceParams->Max48BitAddress[0];
+	  ((PUSHORT)&LastSector)[1] = DeviceParams->Max48BitAddress[1];
+	  ((PUSHORT)&LastSector)[2] = DeviceParams->Max48BitAddress[2];
+	  ((PUSHORT)&LastSector)[3] = DeviceParams->Max48BitAddress[3];
 	  LastSector.QuadPart -= 1;
 
 	}
@@ -2070,7 +2070,7 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       SectorNumber[0] = StartingSector & 0xff;
       CylinderLow[0] = (StartingSector >> 8) & 0xff;
       CylinderHigh[0] = (StartingSector >> 16) & 0xff;
-      DrvHead = ((StartingSector >> 24) & 0x0f) | 
+      DrvHead = ((StartingSector >> 24) & 0x0f) |
                  (Srb->TargetId ? IDE_DH_DRV1 : 0) |
 		 IDE_DH_LBA;
 
@@ -2087,7 +2087,7 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
     {
       SectorNumber[0] = (StartingSector % DeviceParams->SectorsPerTrack) + 1;
       StartingSector /= DeviceParams->SectorsPerTrack;
-      DrvHead = (StartingSector % DeviceParams->LogicalHeads) | 
+      DrvHead = (StartingSector % DeviceParams->LogicalHeads) |
           (Srb->TargetId ? IDE_DH_DRV1 : 0);
       StartingSector /= DeviceParams->LogicalHeads;
       CylinderLow[0] = StartingSector & 0xff;
@@ -2096,7 +2096,7 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       DPRINT("%s:BUS=%04x:DRV=%d:LBA=0:CH=%02x:CL=%02x:HD=%01x:SN=%02x:SC=%02x:CM=%02x\n",
              (Srb->SrbFlags & SRB_FLAGS_DATA_IN) ? "READ" : "WRITE",
              DeviceExtension->CommandPortBase,
-             DrvHead & IDE_DH_DRV1 ? 1 : 0, 
+             DrvHead & IDE_DH_DRV1 ? 1 : 0,
              CylinderHigh[0],
              CylinderLow[0],
              DrvHead & 0x0f,
@@ -2172,7 +2172,7 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   IDEWriteDriveHead(DeviceExtension->CommandPortBase, IDE_DH_FIXED | DrvHead);
 
 #ifdef ENABLE_DMA
-  if (DeviceExtension->PRDTable && 
+  if (DeviceExtension->PRDTable &&
       DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_DMA_CMD)
     {
       DeviceExtension->UseDma = AtapiInitDma(DeviceExtension, Srb, Srb->SrbFlags & SRB_FLAGS_DATA_IN ? 1 << 3 : 0);
@@ -2227,7 +2227,7 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       DmaCommand = IDEReadDMACommand(DeviceExtension->BusMasterRegisterBase);
       IDEWriteDMACommand(DeviceExtension->BusMasterRegisterBase, DmaCommand|0x01);
     }
-  else 
+  else
 #endif
     {
       if (Srb->SrbFlags & SRB_FLAGS_DATA_OUT)
@@ -2315,7 +2315,7 @@ AtapiFlushCache(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       DPRINT("The drive doesn't support FLUSH_CACHE\n");
       return SRB_STATUS_INVALID_REQUEST;
     }
- 
+
   /* Wait for BUSY to clear */
   for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
     {
@@ -2340,9 +2340,9 @@ AtapiFlushCache(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   ScsiPortStallExecution(10);
 
   /* Issue command to drive */
-  AtapiExecuteCommand(DeviceExtension, 
-	              DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_48BIT_ADDRESS ? IDE_CMD_FLUSH_CACHE_EXT : IDE_CMD_FLUSH_CACHE, 
-		      AtapiNoDataInterrupt); 
+  AtapiExecuteCommand(DeviceExtension,
+	              DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_48BIT_ADDRESS ? IDE_CMD_FLUSH_CACHE_EXT : IDE_CMD_FLUSH_CACHE,
+		      AtapiNoDataInterrupt);
 
   /* Wait for controller ready */
   for (Retries = 0; Retries < IDE_MAX_WRITE_RETRIES; Retries++)
@@ -2619,7 +2619,7 @@ AtapiScsiSrbToAtapi (PSCSI_REQUEST_BLOCK Srb)
 }
 
 static VOID FASTCALL
-AtapiCompleteRequest(PATAPI_MINIPORT_EXTENSION DevExt, 
+AtapiCompleteRequest(PATAPI_MINIPORT_EXTENSION DevExt,
 		     UCHAR SrbStatus)
 {
   PSCSI_REQUEST_BLOCK Srb;
@@ -2636,7 +2636,7 @@ AtapiCompleteRequest(PATAPI_MINIPORT_EXTENSION DevExt,
     {
       Srb->DataTransferLength -= DevExt->DataTransferLength;
     }
-      
+
   DevExt->Handler = NULL;
   ScsiPortNotification(RequestComplete, (PVOID)DevExt, Srb);
   ScsiPortNotification(NextRequest, (PVOID)DevExt, NULL);
@@ -2696,7 +2696,7 @@ AtapiDmaPacketInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
 }
 #endif
 
-static BOOLEAN FASTCALL 
+static BOOLEAN FASTCALL
 AtapiPacketInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
 {
   PSCSI_REQUEST_BLOCK Srb;
@@ -2731,7 +2731,7 @@ AtapiPacketInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
       DPRINT("AtapiPacketInterrupt() done\n");
       return TRUE;
     }
-  
+
   IntReason = IDEReadSectorCount(DevExt->CommandPortBase);
   TransferSize = IDEReadCylinderLow(DevExt->CommandPortBase);
   TransferSize += IDEReadCylinderHigh(DevExt->CommandPortBase) << 8;
@@ -2740,7 +2740,7 @@ AtapiPacketInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
     {
       if (DevExt->DataTransferLength > 0)
         {
-	  DPRINT1("AtapiPacketInterrupt: data underrun (%d bytes), command was %02x\n", 
+	  DPRINT1("AtapiPacketInterrupt: data underrun (%d bytes), command was %02x\n",
 	          DevExt->DataTransferLength, Srb->Cdb[0]);
 	  SrbStatus = SRB_STATUS_DATA_OVERRUN;
 	}
@@ -2837,7 +2837,7 @@ AtapiPacketInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
   return TRUE;
 }
 
-static BOOLEAN FASTCALL 
+static BOOLEAN FASTCALL
 AtapiNoDataInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
 {
   BYTE Status;
@@ -2885,7 +2885,7 @@ AtapiDmaInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
   AtapiCompleteRequest(DevExt, SRB_STATUS_ERROR);
   DPRINT1("AtapiDmaReadInterrupt() done\n");
   return TRUE;
-}  
+}
 #endif
 
 static BOOLEAN FASTCALL
@@ -3031,8 +3031,8 @@ AtapiWriteInterrupt(IN PATAPI_MINIPORT_EXTENSION DevExt)
 }
 
 static VOID
-AtapiExecuteCommand(PATAPI_MINIPORT_EXTENSION DevExt, 
-		    BYTE command, 
+AtapiExecuteCommand(PATAPI_MINIPORT_EXTENSION DevExt,
+		    BYTE command,
 		    BOOLEAN FASTCALL (*Handler)(PATAPI_MINIPORT_EXTENSION))
 {
   if (DevExt->Handler != NULL)
@@ -3074,7 +3074,7 @@ AtapiInitDma(PATAPI_MINIPORT_EXTENSION DevExt,
 
       while (Length)
         {
-	  /* calculate the length up to the next 64k boundary */ 
+	  /* calculate the length up to the next 64k boundary */
 	  tmpLength = 0x10000 - (PhysicalAddress.u.LowPart & 0xffff);
 	  if (tmpLength > Length)
 	    {
@@ -3087,9 +3087,9 @@ AtapiInitDma(PATAPI_MINIPORT_EXTENSION DevExt,
 	    }
 	  if (tmpLength == 0x10000)
 	    {
-	      /* Some dirty controllers cannot handle 64k transfers. We split a 64k transfer in two 32k. */ 
+	      /* Some dirty controllers cannot handle 64k transfers. We split a 64k transfer in two 32k. */
 	      tmpLength = 0x8000;
-	      DPRINT("PRD Nr. %d VirtualAddress %08x PhysicalAddress %08x, Length %04x\n", 
+	      DPRINT("PRD Nr. %d VirtualAddress %08x PhysicalAddress %08x, Length %04x\n",
 		     DevExt->PRDCount - 1, StartAddress, PhysicalAddress.u.LowPart, tmpLength);
 	      PRDEntry->PhysAddress = PhysicalAddress.u.LowPart;
 	      PRDEntry->Length = tmpLength;
@@ -3104,13 +3104,13 @@ AtapiInitDma(PATAPI_MINIPORT_EXTENSION DevExt,
 	      Length -= tmpLength;
 	      PRDEntry->PhysAddress = PhysicalAddress.u.LowPart;
 	    }
-	  DPRINT("PRD Nr. %d VirtualAddress %08x PhysicalAddress %08x, Length %04x\n", 
+	  DPRINT("PRD Nr. %d VirtualAddress %08x PhysicalAddress %08x, Length %04x\n",
 		 DevExt->PRDCount - 1, StartAddress, PhysicalAddress.u.LowPart, tmpLength);
 	  PRDEntry->PhysAddress = PhysicalAddress.u.LowPart;
           PRDEntry->Length = tmpLength;
           PRDEntry++;
           StartAddress += tmpLength;
-          PhysicalAddress.u.LowPart += tmpLength; 
+          PhysicalAddress.u.LowPart += tmpLength;
 	  Length -= tmpLength;
 	}
     }

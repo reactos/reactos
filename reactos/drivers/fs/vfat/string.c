@@ -18,7 +18,7 @@
 
 const WCHAR *long_illegals = L"\"*\\<>/?:|";
 
-BOOLEAN 
+BOOLEAN
 vfatIsLongIllegal(WCHAR c)
 {
   return wcschr(long_illegals, c) ? TRUE : FALSE;

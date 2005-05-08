@@ -60,7 +60,7 @@ NpfsFindListeningServerInstance(PNPFS_PIPE Pipe)
       if (Waiter->Fcb->PipeState == FILE_PIPE_LISTENING_STATE)
 	{
 	  DPRINT("Server found! Fcb %p\n", Waiter->Fcb);
-  
+
 	  IoAcquireCancelSpinLock(&oldIrql);
           if (!Irp->Cancel)
 	    {
@@ -349,7 +349,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
    if (Pipe != NULL)
      {
        /*
-        * Found Pipe with the same name. Check if we are 
+        * Found Pipe with the same name. Check if we are
         * allowed to use it.
         */
        KeUnlockMutex(&DeviceExt->PipeListLock);
@@ -411,7 +411,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
        Pipe->MaximumInstances = Buffer->MaximumInstances;
        Pipe->CurrentInstances = 0;
        Pipe->TimeOut = Buffer->DefaultTimeout;
-       if (!(IoStack->Parameters.Create.Options & FILE_PIPE_OUTBOUND) || 
+       if (!(IoStack->Parameters.Create.Options & FILE_PIPE_OUTBOUND) ||
            IoStack->Parameters.Create.Options & FILE_PIPE_FULL_DUPLEX)
          {
            if (Buffer->InboundQuota == 0)
@@ -608,7 +608,7 @@ NpfsCleanup(PDEVICE_OBJECT DeviceObject,
    {
       PLIST_ENTRY Entry;
       PNPFS_WAITER_ENTRY WaitEntry = NULL;
-      BOOLEAN Complete = FALSE; 
+      BOOLEAN Complete = FALSE;
       KIRQL oldIrql;
       PIRP tmpIrp;
 

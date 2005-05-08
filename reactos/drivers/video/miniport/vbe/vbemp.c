@@ -45,7 +45,7 @@ DriverEntry(IN PVOID Context1, IN PVOID Context2)
    InitData.HwGetPowerState = VBEGetPowerState;
    InitData.HwSetPowerState = VBESetPowerState;
    InitData.HwDeviceExtensionSize = sizeof(VBE_DEVICE_EXTENSION);
-  
+
    return VideoPortInitialize(Context1, Context2, &InitData, NULL);
 }
 
@@ -82,7 +82,7 @@ VBESortModesCallback(PVBE_MODEINFO VbeModeInfoA, PVBE_MODEINFO VbeModeInfoB)
       VbeModeInfoA->BitsPerPixel,
       VbeModeInfoB->XResolution, VbeModeInfoB->YResolution,
       VbeModeInfoB->BitsPerPixel));
-   
+
    /*
     * FIXME: Until some reasonable method for changing video modes will
     * be available we favor more bits per pixel. It should be changed
@@ -164,7 +164,7 @@ VBEInitialize(PVOID HwDeviceExtension)
 {
    INT10_BIOS_ARGUMENTS BiosRegisters;
    VP_STATUS Status;
-   PVBE_DEVICE_EXTENSION VBEDeviceExtension = 
+   PVBE_DEVICE_EXTENSION VBEDeviceExtension =
      (PVBE_DEVICE_EXTENSION)HwDeviceExtension;
    ULONG Length;
    ULONG ModeCount;
@@ -190,7 +190,7 @@ VBEInitialize(PVOID HwDeviceExtension)
       DPRINT(("Failed to get Int 10 service functions (Status %x)\n", Status));
       return FALSE;
    }
-   
+
    /*
     * Allocate a bit of memory that will be later used for VBE transport
     * buffer. This memory must be accessible from V86 mode so it must fit
@@ -213,7 +213,7 @@ VBEInitialize(PVOID HwDeviceExtension)
    /*
     * Get the VBE general information.
     */
-   
+
    VBEDeviceExtension->Int10Interface.Int10WriteMemory(
       VBEDeviceExtension->Int10Interface.Context,
       VBEDeviceExtension->TrampolineMemorySegment,
@@ -228,7 +228,7 @@ VBEInitialize(PVOID HwDeviceExtension)
    VBEDeviceExtension->Int10Interface.Int10CallBios(
       VBEDeviceExtension->Int10Interface.Context,
       &BiosRegisters);
-   
+
    if (BiosRegisters.Eax == VBE_SUCCESS)
    {
       VBEDeviceExtension->Int10Interface.Int10ReadMemory(
@@ -299,7 +299,7 @@ VBEInitialize(PVOID HwDeviceExtension)
    /*
     * Get the actual mode infos.
     */
-   
+
    for (CurrentMode = 0, SuitableModeCount = 0;
         CurrentMode < ModeCount;
         CurrentMode++)
@@ -359,7 +359,7 @@ VBEInitialize(PVOID HwDeviceExtension)
       DPRINT(("VBEMP: No video modes supported\n"));
       return FALSE;
    }
-   
+
    VBEDeviceExtension->ModeCount = SuitableModeCount;
 
    /*
@@ -405,7 +405,7 @@ VBEStartIO(
    switch (RequestPacket->IoControlCode)
    {
       case IOCTL_VIDEO_SET_CURRENT_MODE:
-         if (RequestPacket->InputBufferLength < sizeof(VIDEO_MODE)) 
+         if (RequestPacket->InputBufferLength < sizeof(VIDEO_MODE))
          {
             RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
             return TRUE;
@@ -424,7 +424,7 @@ VBEStartIO(
 
       case IOCTL_VIDEO_MAP_VIDEO_MEMORY:
          if (RequestPacket->OutputBufferLength < sizeof(VIDEO_MEMORY_INFORMATION) ||
-             RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY)) 
+             RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY))
          {
             RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
             return TRUE;
@@ -437,7 +437,7 @@ VBEStartIO(
          break;
 
       case IOCTL_VIDEO_UNMAP_VIDEO_MEMORY:
-         if (RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY)) 
+         if (RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY))
          {
             RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
             return TRUE;
@@ -449,7 +449,7 @@ VBEStartIO(
          break;
 
       case IOCTL_VIDEO_QUERY_NUM_AVAIL_MODES:
-         if (RequestPacket->OutputBufferLength < sizeof(VIDEO_NUM_MODES)) 
+         if (RequestPacket->OutputBufferLength < sizeof(VIDEO_NUM_MODES))
          {
             RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
             return TRUE;
@@ -462,7 +462,7 @@ VBEStartIO(
 
       case IOCTL_VIDEO_QUERY_AVAIL_MODES:
          if (RequestPacket->OutputBufferLength <
-             ((PVBE_DEVICE_EXTENSION)HwDeviceExtension)->ModeCount * sizeof(VIDEO_MODE_INFORMATION)) 
+             ((PVBE_DEVICE_EXTENSION)HwDeviceExtension)->ModeCount * sizeof(VIDEO_MODE_INFORMATION))
          {
             RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
             return TRUE;
@@ -489,7 +489,7 @@ VBEStartIO(
          break;
 
       case IOCTL_VIDEO_QUERY_CURRENT_MODE:
-         if (RequestPacket->OutputBufferLength < sizeof(VIDEO_MODE_INFORMATION)) 
+         if (RequestPacket->OutputBufferLength < sizeof(VIDEO_MODE_INFORMATION))
          {
             RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
             return TRUE;
@@ -499,12 +499,12 @@ VBEStartIO(
             (PVIDEO_MODE_INFORMATION)RequestPacket->OutputBuffer,
             RequestPacket->StatusBlock);
          break;
-         
+
       default:
          RequestPacket->StatusBlock->Status = STATUS_NOT_IMPLEMENTED;
          return FALSE;
    }
-  
+
    if (Result)
       RequestPacket->StatusBlock->Status = STATUS_SUCCESS;
 
@@ -524,15 +524,15 @@ VBEResetHw(
    ULONG Rows)
 {
    INT10_BIOS_ARGUMENTS BiosRegisters;
-   PVBE_DEVICE_EXTENSION VBEDeviceExtension = 
+   PVBE_DEVICE_EXTENSION VBEDeviceExtension =
      (PVBE_DEVICE_EXTENSION)DeviceExtension;
-   
+
    if (!VBEResetDevice(DeviceExtension, NULL))
       return FALSE;
-   
+
    /* Change number of columns/rows */
    VideoPortZeroMemory(&BiosRegisters, sizeof(BiosRegisters));
-   
+
    if (Columns == 80 && Rows == 25)
    {
       /* Default text size, don't change anything. */
@@ -557,7 +557,7 @@ VBEResetHw(
       VBEDeviceExtension->Int10Interface.Int10CallBios(
          VBEDeviceExtension->Int10Interface.Context,
          &BiosRegisters);
-      
+
       BiosRegisters.Eax = 0x1112;
    }
    else if (Columns == 80 && Rows == 50)
@@ -567,11 +567,11 @@ VBEResetHw(
    }
    else
       return FALSE;
-   
+
    VBEDeviceExtension->Int10Interface.Int10CallBios(
       VBEDeviceExtension->Int10Interface.Context,
       &BiosRegisters);
-   
+
    return TRUE;
 }
 
@@ -588,7 +588,7 @@ VBEGetPowerState(
    PVIDEO_POWER_MANAGEMENT VideoPowerControl)
 {
    INT10_BIOS_ARGUMENTS BiosRegisters;
-   PVBE_DEVICE_EXTENSION VBEDeviceExtension = 
+   PVBE_DEVICE_EXTENSION VBEDeviceExtension =
      (PVBE_DEVICE_EXTENSION)HwDeviceExtension;
 
    if (HwId != DISPLAY_ADAPTER_HW_ID ||
@@ -601,7 +601,7 @@ VBEGetPowerState(
 
    VideoPortZeroMemory(&BiosRegisters, sizeof(BiosRegisters));
    BiosRegisters.Eax = VBE_POWER_MANAGEMENT_EXTENSIONS;
-   BiosRegisters.Ebx = 0;  
+   BiosRegisters.Ebx = 0;
    BiosRegisters.Edi = 0;
    BiosRegisters.SegEs = 0;
    VBEDeviceExtension->Int10Interface.Int10CallBios(
@@ -609,10 +609,10 @@ VBEGetPowerState(
       &BiosRegisters);
 
    if (BiosRegisters.Eax == VBE_NOT_SUPPORTED)
-      return ERROR_NOT_SUPPORTED;   
+      return ERROR_NOT_SUPPORTED;
    if (BiosRegisters.Eax != VBE_SUCCESS)
-      return ERROR_INVALID_FUNCTION;   
-   
+      return ERROR_INVALID_FUNCTION;
+
    /*
     * Get current power state.
     */
@@ -658,7 +658,7 @@ VBESetPowerState(
    PVIDEO_POWER_MANAGEMENT VideoPowerControl)
 {
    INT10_BIOS_ARGUMENTS BiosRegisters;
-   PVBE_DEVICE_EXTENSION VBEDeviceExtension = 
+   PVBE_DEVICE_EXTENSION VBEDeviceExtension =
      (PVBE_DEVICE_EXTENSION)HwDeviceExtension;
 
    if (HwId != DISPLAY_ADAPTER_HW_ID ||
@@ -691,9 +691,9 @@ VBESetPowerState(
       &BiosRegisters);
 
    if (BiosRegisters.Eax == VBE_NOT_SUPPORTED)
-      return ERROR_NOT_SUPPORTED;   
+      return ERROR_NOT_SUPPORTED;
    if (BiosRegisters.Eax != VBE_SUCCESS)
-      return ERROR_INVALID_FUNCTION;   
+      return ERROR_INVALID_FUNCTION;
 
    return VBE_SUCCESS;
 }
@@ -741,7 +741,7 @@ VBESetCurrentMode(
  * VBEResetDevice
  *
  * Resets the video hardware to the default mode, to which it was initialized
- * at system boot. 
+ * at system boot.
  */
 
 BOOL FASTCALL
@@ -765,7 +765,7 @@ VBEResetDevice(
  * VBEMapVideoMemory
  *
  * Maps the video hardware frame buffer and video RAM into the virtual address
- * space of the requestor. 
+ * space of the requestor.
  */
 
 BOOL FASTCALL
@@ -782,19 +782,19 @@ VBEMapVideoMemory(
 
    if (DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].ModeAttributes &
        VBE_MODEATTR_LINEAR)
-   {    
+   {
       FrameBuffer.QuadPart =
          DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].PhysBasePtr;
       MapInformation->VideoRamBase = RequestedAddress->RequestedVirtualAddress;
       if (DeviceExtension->VbeInfo.Version < 0x300)
       {
-         MapInformation->VideoRamLength = 
+         MapInformation->VideoRamLength =
             DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].BytesPerScanLine *
             DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].YResolution;
       }
       else
       {
-         MapInformation->VideoRamLength = 
+         MapInformation->VideoRamLength =
             DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].LinBytesPerScanLine *
             DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].YResolution;
       }
@@ -802,7 +802,7 @@ VBEMapVideoMemory(
 #ifdef VBE12_SUPPORT
    else
    {
-      FrameBuffer.QuadPart = 0xA0000;    
+      FrameBuffer.QuadPart = 0xA0000;
       MapInformation->VideoRamBase = RequestedAddress->RequestedVirtualAddress;
       MapInformation->VideoRamLength = 0x10000;
    }
@@ -834,7 +834,7 @@ VBEUnmapVideoMemory(
    VideoPortUnmapMemory(DeviceExtension, VideoMemory->RequestedVirtualAddress,
       NULL);
    return TRUE;
-}   
+}
 
 /*
  * VBEQueryNumAvailModes
@@ -862,7 +862,7 @@ VBEQueryNumAvailModes(
  * Returns information about one particular video mode.
  */
 
-VOID FASTCALL  
+VOID FASTCALL
 VBEQueryMode(
    PVBE_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MODE_INFORMATION VideoMode,
@@ -906,11 +906,11 @@ VBEQueryMode(
    }
    else
    {
-      VideoMode->NumberRedBits = 
-      VideoMode->NumberGreenBits = 
+      VideoMode->NumberRedBits =
+      VideoMode->NumberGreenBits =
       VideoMode->NumberBlueBits = 6;
-      VideoMode->RedMask = 
-      VideoMode->GreenMask = 
+      VideoMode->RedMask =
+      VideoMode->GreenMask =
       VideoMode->BlueMask = 0;
    }
    VideoMode->VideoMemoryBitmapWidth = VBEMode->XResolution;
@@ -958,7 +958,7 @@ VBEQueryAvailModes(
  * Returns information about current video mode.
  */
 
-BOOL FASTCALL  
+BOOL FASTCALL
 VBEQueryCurrentMode(
    PVBE_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MODE_INFORMATION VideoModeInfo,
@@ -1018,7 +1018,7 @@ VBESetColorRegisters(
    else
    {
       /*
-       * We can't just copy the values, because we need to swap the Red 
+       * We can't just copy the values, because we need to swap the Red
        * and Blue values.
        */
 

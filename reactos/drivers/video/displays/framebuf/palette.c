@@ -71,7 +71,7 @@ IntInitDefaultPalette(
             ppdev->RedMask, ppdev->GreenMask, ppdev->BlueMask);
    }
    else
-   {       
+   {
       ppdev->PaletteEntries = EngAllocMem(0, sizeof(PALETTEENTRY) << 8, ALLOC_TAG);
       if (ppdev->PaletteEntries == NULL)
       {
@@ -121,7 +121,7 @@ IntSetPalette(
    pClut->FirstEntry = iStart;
    pClut->NumEntries = cColors;
    memcpy(&pClut->LookupTable[0].RgbLong, ppalent, sizeof(ULONG) * cColors);
-    
+
    if (((PPDEV)dhpdev)->PaletteShift)
    {
       while (cColors--)
@@ -139,7 +139,7 @@ IntSetPalette(
          pClut->LookupTable[cColors].RgbArray.Unused = 0;
       }
    }
-    
+
    /*
     * Set the palette registers.
     */

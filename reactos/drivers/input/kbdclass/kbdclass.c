@@ -163,10 +163,10 @@ static NTSTATUS STDCALL KbdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
 	DPRINT("DeviceObject %x\n",DeviceObject);
 	DPRINT("Irp %x\n",Irp);
-   
+
 	DPRINT("Dispatch: stk->MajorFunction %d\n", stk->MajorFunction);
 	DPRINT("AlreadyOpened %d\n",AlreadyOpened);
-   
+
 	switch (stk->MajorFunction) {
 	case IRP_MJ_CREATE:
 		if (AlreadyOpened == TRUE) {
@@ -244,7 +244,7 @@ static VOID STDCALL KbdClassSendConnect(PDEVICE_EXTENSION DevExt)
 	DPRINT("SendConnect done\n");
 }
 
-NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject, 
+NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
 			     PUNICODE_STRING RegistryPath)
 /*
  * FUNCTION: Module entry point
@@ -257,13 +257,13 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
 	UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Device\\Keyboard");
 	UNICODE_STRING SymlinkName = ROS_STRING_INITIALIZER(L"\\??\\Keyboard");
 	UNICODE_STRING I8042Name = ROS_STRING_INITIALIZER(L"\\Device\\KeyboardClass0");
-   
+
 	DPRINT("Keyboard Class Driver 0.0.1\n");
 
 	DriverObject->MajorFunction[IRP_MJ_CREATE] = KbdDispatch;
 	DriverObject->MajorFunction[IRP_MJ_CLOSE] = KbdDispatch;
 	DriverObject->MajorFunction[IRP_MJ_READ] = KbdDispatch;
-	DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = 
+	DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] =
 	                                             KbdInternalDeviceControl;
 	DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = KbdDeviceControl;
 
@@ -276,7 +276,7 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
 	               0,
 	               TRUE,
 	               &DeviceObject);
-	
+
 	RtlZeroMemory(DeviceObject->DeviceExtension, sizeof(DEVICE_EXTENSION));
 	DevExt = DeviceObject->DeviceExtension;
 	DevExt->DeviceObject = DeviceObject;
@@ -297,10 +297,10 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
 	DeviceObject->Flags = DeviceObject->Flags | DO_BUFFERED_IO;
 
 	DeviceObject->StackSize = 1 + DevExt->I8042Device->StackSize;
-   
+
 	IoCreateSymbolicLink(&SymlinkName, &DeviceName);
 
 	KbdClassSendConnect(DevExt);
-   
+
 	return(STATUS_SUCCESS);
 }

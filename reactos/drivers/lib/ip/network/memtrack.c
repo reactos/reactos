@@ -19,12 +19,12 @@ VOID TrackingInit() {
     InitializeListHead( &AllocatedObjectsList );
 }
 
-VOID ShowTrackedThing( PCHAR What, PALLOCATION_TRACKER Thing, 
+VOID ShowTrackedThing( PCHAR What, PALLOCATION_TRACKER Thing,
 		       PCHAR File, UINT Line ) {
     /* if( ShowTag( Thing->Tag ) ) */
     if( File ) {
-	TI_DbgPrint(MAX_TRACE, 
-		    ("[%s] Thing %08x %c%c%c%c (%s:%d) (Called from %s:%d)\n", 
+	TI_DbgPrint(MAX_TRACE,
+		    ("[%s] Thing %08x %c%c%c%c (%s:%d) (Called from %s:%d)\n",
 		     What,
 		     Thing->Thing,
 		     ((PCHAR)&Thing->Tag)[3],
@@ -36,7 +36,7 @@ VOID ShowTrackedThing( PCHAR What, PALLOCATION_TRACKER Thing,
 		     File, Line));
     } else {
 	TI_DbgPrint(MAX_TRACE,
-		    ( "[%s] Thing %08x %c%c%c%c (%s:%d)\n", 
+		    ( "[%s] Thing %08x %c%c%c%c (%s:%d)\n",
 		      What,
 		      Thing->Thing,
 		      ((PCHAR)&Thing->Tag)[3],
@@ -49,7 +49,7 @@ VOID ShowTrackedThing( PCHAR What, PALLOCATION_TRACKER Thing,
 }
 
 VOID TrackWithTag( DWORD Tag, PVOID Thing, PCHAR FileName, DWORD LineNo ) {
-    PALLOCATION_TRACKER TrackedThing = 
+    PALLOCATION_TRACKER TrackedThing =
 	PoolAllocateBuffer( sizeof(*TrackedThing) );
 
     KIRQL OldIrql;
@@ -62,7 +62,7 @@ VOID TrackWithTag( DWORD Tag, PVOID Thing, PCHAR FileName, DWORD LineNo ) {
 	ThingInList = CONTAINING_RECORD(Entry, ALLOCATION_TRACKER, Entry);
 	if( ThingInList->Thing == Thing ) {
 	    RemoveEntryList(Entry);
-	    
+
 	    TcpipReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
 	    ShowTrackedThing( "Alloc", ThingInList, FileName, LineNo );
 	    PoolFreeBuffer( ThingInList );
@@ -78,8 +78,8 @@ VOID TrackWithTag( DWORD Tag, PVOID Thing, PCHAR FileName, DWORD LineNo ) {
 	TrackedThing->Thing    = Thing;
 	TrackedThing->FileName = FileName;
 	TrackedThing->LineNo   = LineNo;
-	
-	
+
+
 	InsertTailList( &AllocatedObjectsList, &TrackedThing->Entry );
 	ShowTrackedThing( "Alloc", TrackedThing, FileName, LineNo );
     }
@@ -93,7 +93,7 @@ BOOL ShowTag( DWORD Tag ) {
     UINT i;
 
     for( i = 0; TagsToShow[i] && TagsToShow[i] != Tag; i++ );
-    
+
     return TagsToShow[i] ? TRUE : FALSE;
 }
 
@@ -108,9 +108,9 @@ VOID UntrackFL( PCHAR File, DWORD Line, PVOID Thing ) {
 	ThingInList = CONTAINING_RECORD(Entry, ALLOCATION_TRACKER, Entry);
 	if( ThingInList->Thing == Thing ) {
 	    RemoveEntryList(Entry);
-	    
+
 	    ShowTrackedThing( "Free ", ThingInList, File, Line );
-	    
+
 	    PoolFreeBuffer( ThingInList );
 	    TcpipReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
 	    /* TrackDumpFL( File, Line ); */

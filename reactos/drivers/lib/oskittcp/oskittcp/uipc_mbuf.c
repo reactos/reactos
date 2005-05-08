@@ -1,13 +1,13 @@
 /*
  * Copyright (c) 1997-1998 University of Utah and the Flux Group.
  * All rights reserved.
- * 
+ *
  * This file is part of the Flux OSKit.  The OSKit is free software, also known
  * as "open source;" you can redistribute it and/or modify it under the terms
  * of the GNU General Public License (GPL), version 2, as published by the Free
  * Software Foundation (FSF).  To explore alternate licensing terms, contact
  * the University of Utah at csl-dist@cs.utah.edu or +1-801-585-3271.
- * 
+ *
  * The OSKit is distributed in the hope that it will be useful, but WITHOUT ANY
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GPL for more details.  You should have
@@ -117,10 +117,10 @@ m_clalloc(ncl, nowait)
 	npg = ncl * CLSIZE;
 
 	//printf("kmem_malloc(%d)\n", npg);
-	
+
 	p = (caddr_t)kmem_malloc(mb_map, ctob(npg),
 				 nowait ? M_NOWAIT : M_WAITOK);
-	
+
 	//printf("kmem_malloc done\n");
 
 	/*
@@ -661,9 +661,9 @@ extpacket:
 	return (n);
 }
 
-#ifndef OSKIT 	
+#ifndef OSKIT
 /* currently not OS Kit approved, and shouldn't be needed in the first place */
- 
+
 /*
  * Routine to copy from device local memory into mbufs.
  */

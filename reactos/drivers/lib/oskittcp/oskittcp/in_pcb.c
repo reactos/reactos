@@ -93,7 +93,7 @@ in_pcbbind(inp, nam)
 	u_short lport = 0;
 	int wild = 0, reuseport = (so->so_options & SO_REUSEPORT);
 	int error;
-	
+
 	OS_DbgPrint(OSK_MID_TRACE,("Called\n"));
 
 	if( nam ) OskitDumpBuffer( nam->m_data, nam->m_len );
@@ -104,7 +104,7 @@ in_pcbbind(inp, nam)
 	    return (EADDRNOTAVAIL);
 	}
 #endif
-	if (inp->inp_lport || inp->inp_laddr.s_addr != INADDR_ANY) 
+	if (inp->inp_lport || inp->inp_laddr.s_addr != INADDR_ANY)
 		return (EINVAL);
 	if ((so->so_options & (SO_REUSEADDR|SO_REUSEPORT)) == 0 &&
 	    ((so->so_proto->pr_flags & PR_CONNREQUIRED) == 0 ||
@@ -180,11 +180,11 @@ in_pcbbind(inp, nam)
 			*lastport = IPPORT_RESERVED;
 		    lport = htons(*lastport);
 		} while (in_pcblookup(head,
-				      zeroin_addr, 0, inp->inp_laddr, 
+				      zeroin_addr, 0, inp->inp_laddr,
 				      lport, wild));
 	inp->inp_lport = lport;
 	in_pcbrehash(inp);
-	
+
 	OS_DbgPrint(OSK_MID_TRACE,("Returning success\n"));
 	return (0);
 }
@@ -313,7 +313,7 @@ in_pcbladdr(inp, nam, plocal_sin)
 	 * and exit to caller, that will do the lookup.
 	 */
 		*plocal_sin = (struct sockaddr_in *)ia->ia_ifa.ifa_addr;
-		OS_DbgPrint(OSK_MID_TRACE,("plocal sin %x\n", 
+		OS_DbgPrint(OSK_MID_TRACE,("plocal sin %x\n",
 					   (*plocal_sin)->sin_addr.s_addr));
 
 	}

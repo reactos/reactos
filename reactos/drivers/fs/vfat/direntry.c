@@ -16,7 +16,7 @@
 #define NDEBUG
 #include "vfat.h"
 
-ULONG 
+ULONG
 vfatDirEntryGetFirstCluster (PDEVICE_EXTENSION  pDeviceExt,
                              PDIR_ENTRY  pFatDirEntry)
 {
@@ -24,7 +24,7 @@ vfatDirEntryGetFirstCluster (PDEVICE_EXTENSION  pDeviceExt,
 
   if (pDeviceExt->FatInfo.FatType == FAT32)
   {
-    cluster = pFatDirEntry->Fat.FirstCluster + 
+    cluster = pFatDirEntry->Fat.FirstCluster +
       pFatDirEntry->Fat.FirstClusterHigh * 65536;
   }
   else if (pDeviceExt->Flags & VCB_IS_FATX)
@@ -158,7 +158,7 @@ NTSTATUS FATGetNextDirEntry(PVOID * pContext,
     PFAT_DIR_ENTRY fatDirEntry;
     slot * longNameEntry;
     ULONG index;
-    
+
     UCHAR CheckSum, shortCheckSum;
     USHORT i;
     BOOLEAN Valid = TRUE;
@@ -190,13 +190,13 @@ NTSTATUS FATGetNextDirEntry(PVOID * pContext,
 
     if (First)
       {
-        /* This is the first call to vfatGetNextDirEntry. Possible the start index points 
-	 * into a long name or points to a short name with an assigned long name. 
+        /* This is the first call to vfatGetNextDirEntry. Possible the start index points
+	 * into a long name or points to a short name with an assigned long name.
 	 * We must go back to the real start of the entry */
-        while (DirContext->DirIndex > 0 && 
-	       !FAT_ENTRY_END(fatDirEntry) && 
-	       !FAT_ENTRY_DELETED(fatDirEntry) && 
-	       ((!FAT_ENTRY_LONG(fatDirEntry) && !Back) || 
+        while (DirContext->DirIndex > 0 &&
+	       !FAT_ENTRY_END(fatDirEntry) &&
+	       !FAT_ENTRY_DELETED(fatDirEntry) &&
+	       ((!FAT_ENTRY_LONG(fatDirEntry) && !Back) ||
 	        (FAT_ENTRY_LONG(fatDirEntry) && !(longNameEntry->id & 0x40))))
           {
             DirContext->DirIndex--;
@@ -222,7 +222,7 @@ NTSTATUS FATGetNextDirEntry(PVOID * pContext,
 	      }
           }
 
-        if (Back && !FAT_ENTRY_END(fatDirEntry) && 
+        if (Back && !FAT_ENTRY_END(fatDirEntry) &&
 	    (FAT_ENTRY_DELETED(fatDirEntry) || !FAT_ENTRY_LONG(fatDirEntry)))
           {
             DirContext->DirIndex++;
@@ -230,7 +230,7 @@ NTSTATUS FATGetNextDirEntry(PVOID * pContext,
 	      {
 	        CcUnpinData(*pContext);
 	        FileOffset.u.LowPart += PAGE_SIZE;
-	        if (FileOffset.u.LowPart >= pDirFcb->RFCB.FileSize.u.LowPart || 
+	        if (FileOffset.u.LowPart >= pDirFcb->RFCB.FileSize.u.LowPart ||
 	            !CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
 	          {
 		    CHECKPOINT;
@@ -290,7 +290,7 @@ NTSTATUS FATGetNextDirEntry(PVOID * pContext,
 		RtlCopyMemory(pName, longNameEntry->name0_4, 5 * sizeof(WCHAR));
 		RtlCopyMemory(pName + 5, longNameEntry->name5_10, 6 * sizeof(WCHAR));
 		RtlCopyMemory(pName + 11, longNameEntry->name11_12, 2 * sizeof(WCHAR));
-      
+
 		DPRINT ("  longName: [%S]\n", DirContext->LongNameU.Buffer);
 		if (CheckSum != longNameEntry->alias_checksum)
 		  {
@@ -318,7 +318,7 @@ NTSTATUS FATGetNextDirEntry(PVOID * pContext,
 		  {
 		    DirContext->LongNameU.Buffer[0] = 0;
 		  }
-    
+
 	        RtlCopyMemory (&DirContext->DirEntry.Fat, fatDirEntry, sizeof (FAT_DIR_ENTRY));
 		break;
 	      }
@@ -365,7 +365,7 @@ NTSTATUS FATXGetNextDirEntry(PVOID * pContext,
    ULONG DirIndex = DirContext->DirIndex;
 
    FileOffset.u.HighPart = 0;
-   
+
    if (!vfatFCBIsRoot(pDirFcb))
    {
       /* need to add . and .. entries */
@@ -426,7 +426,7 @@ NTSTATUS FATXGetNextDirEntry(PVOID * pContext,
           CcUnpinData(*pContext);
           *pContext = NULL;
           return STATUS_NO_MORE_ENTRIES;
-      }	   
+      }
 
       if (!FATX_ENTRY_DELETED(fatxDirEntry))
       {

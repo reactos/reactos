@@ -40,14 +40,14 @@ uint32 tcp_session(uint8 *block, uint32 pkt_size, TME_DATA *data, MEM_TYPE *mem_
 
 {
 
-	uint32 next_status;  
+	uint32 next_status;
 	uint32 direction=ULONG_AT(mem_data,12);
 	uint8 flags=mem_ex->buffer[25];
 	tcp_data *session=(tcp_data*)(block+data->key_len*4);
-	
+
 	session->last_timestamp=session->timestamp_block;
 	session->timestamp_block.tv_sec=0x7fffffff;
-	
+
 	if (direction==session->direction)
 	{
 		session->pkts_cln_to_srv++;
@@ -60,13 +60,13 @@ uint32 tcp_session(uint8 *block, uint32 pkt_size, TME_DATA *data, MEM_TYPE *mem_
 	}
 	/* we use only thes four flags, we don't need PSH or URG */
 	flags&=(ACK|FIN|SYN|RST);
-	
+
 	switch (session->status)
 	{
 	case ERROR_TCP:
 		next_status=ERROR_TCP;
 		break;
-	
+
 	case UNKNOWN:
 		if (flags==SYN)
 		{
@@ -98,16 +98,16 @@ uint32 tcp_session(uint8 *block, uint32 pkt_size, TME_DATA *data, MEM_TYPE *mem_
 			session->seq_n_0_cln=SW_ULONG_AT(mem_ex->buffer,16);
 			break;
 		}
-						
+
 		if ((flags==(SYN|ACK))&&(direction!=session->direction))
-		{		
+		{
 			if (SW_ULONG_AT(mem_ex->buffer,20)!=session->seq_n_0_cln+1)
 			{
 				next_status=ERROR_TCP;
 				break;
 			}
 			next_status=SYN_ACK_RCV;
-			
+
 			session->syn_ack_timestamp=session->last_timestamp;
 
 			session->seq_n_0_srv=SW_ULONG_AT(mem_ex->buffer,16);
@@ -126,7 +126,7 @@ uint32 tcp_session(uint8 *block, uint32 pkt_size, TME_DATA *data, MEM_TYPE *mem_
 			session->ack_srv=SW_ULONG_AT(mem_ex->buffer,20);
 			break;
 		}
-		
+
 		if ((flags==ACK)&&(!(flags&(SYN|FIN|RST)))&&(direction==session->direction))
 		{
 			if (SW_ULONG_AT(mem_ex->buffer,20)!=session->seq_n_0_srv+1)
@@ -146,7 +146,7 @@ uint32 tcp_session(uint8 *block, uint32 pkt_size, TME_DATA *data, MEM_TYPE *mem_
 
 		next_status=ERROR_TCP;
 		break;
-	
+
 	case ESTABLISHED:
 		if (flags&SYN)
 		{
@@ -158,7 +158,7 @@ uint32 tcp_session(uint8 *block, uint32 pkt_size, TME_DATA *data, MEM_TYPE *mem_
 				next_status=ESTABLISHED;
 				break;
 			}
-			
+
 			if ((!(flags&ACK))&&
 				(direction==session->direction)&&
 				(SW_ULONG_AT(mem_ex->buffer,16)==session->seq_n_0_cln)&&
@@ -168,7 +168,7 @@ uint32 tcp_session(uint8 *block, uint32 pkt_size, TME_DATA *data, MEM_TYPE *mem_
 				next_status=ESTABLISHED;
 				break;
 			}
-						
+
 			next_status=ERROR_TCP;
 			break;
 		}
@@ -205,20 +205,20 @@ uint32 tcp_session(uint8 *block, uint32 pkt_size, TME_DATA *data, MEM_TYPE *mem_
 			}
 		next_status=ESTABLISHED;
 		break;
-	
+
 	case CLOSED_RST:
 		next_status=CLOSED_RST;
 		break;
-	
-	case FIN_SRV_RCV:	
+
+	case FIN_SRV_RCV:
 		if (flags&SYN)
 		{
 			next_status=ERROR_TCP;
 			break;
 		}
-			
+
 		next_status=FIN_SRV_RCV;
-		
+
 		if (flags&ACK)
 		{
 			uint32 new_ack=SW_ULONG_AT(mem_ex->buffer,20);
@@ -226,7 +226,7 @@ uint32 tcp_session(uint8 *block, uint32 pkt_size, TME_DATA *data, MEM_TYPE *mem_
 				if ((new_ack-session->ack_cln)<MAX_WINDOW)
 					session->ack_cln=new_ack;
 		}
-		
+
 		if (flags&RST)
 			next_status=CLOSED_RST;
 		else
@@ -244,9 +244,9 @@ uint32 tcp_session(uint8 *block, uint32 pkt_size, TME_DATA *data, MEM_TYPE *mem_
 			next_status=ERROR_TCP;
 			break;
 		}
-			
+
 		next_status=FIN_CLN_RCV;
-		
+
 		if (flags&ACK)
 		{
 			uint32 new_ack=SW_ULONG_AT(mem_ex->buffer,20);
@@ -254,7 +254,7 @@ uint32 tcp_session(uint8 *block, uint32 pkt_size, TME_DATA *data, MEM_TYPE *mem_
 				if (new_ack-session->ack_srv<MAX_WINDOW)
 					session->ack_srv=new_ack;
 		}
-		
+
 		if (flags&RST)
 			next_status=CLOSED_RST;
 		else
@@ -275,10 +275,10 @@ uint32 tcp_session(uint8 *block, uint32 pkt_size, TME_DATA *data, MEM_TYPE *mem_
 	}
 
 	session->status=next_status;
-	
+
 	if ((next_status==CLOSED_FIN)||(next_status==UNKNOWN)||(next_status==CLOSED_RST)||(next_status==ERROR_TCP))
 		session->timestamp_block=session->last_timestamp;
-	
+
 	return TME_SUCCESS;
 }
 

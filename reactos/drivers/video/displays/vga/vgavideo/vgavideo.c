@@ -82,7 +82,7 @@ BYTE bytesPerPixel(ULONG Format)
 
   case BMF_24BPP:
     return 3;
-  
+
   case BMF_32BPP:
     return 4;
 
@@ -144,7 +144,7 @@ VOID vgaPreCalc()
 
   for (j = 0; j < 256; j++)
     {
-      PreCalcReverseByte[j] = 
+      PreCalcReverseByte[j] =
 	(((j >> 0) & 0x1) << 7) |
 	(((j >> 1) & 0x1) << 6) |
 	(((j >> 2) & 0x1) << 5) |
@@ -389,12 +389,12 @@ void DIB_BltFromVGA(int x, int y, int w, int h, void *b, int Dest_lDelta)
 {
   ULONG plane;
   ULONG left = x >> 3;
-  ULONG shift = x - (x & ~0x7);  
-  UCHAR pixel, nextpixel;    
+  ULONG shift = x - (x & ~0x7);
+  UCHAR pixel, nextpixel;
   ULONG rightcount;
   ULONG i, j;
   ULONG stride = w >> 3;
-  
+
   /* Calculate the number of rightmost bytes not in a dword block. */
   if (w >= 8)
     {
@@ -415,11 +415,11 @@ void DIB_BltFromVGA(int x, int y, int w, int h, void *b, int Dest_lDelta)
   for (plane = 0; plane < 4; plane++)
     {
       PUCHAR dest = b;
-      
+
       /* Select the plane we are reading in this iteration. */
       WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x04);
       WRITE_PORT_UCHAR((PUCHAR)GRA_D, plane);
-      
+
       for (j = 0; j < h; j++)
 	{
 	  PULONG destline = (PULONG)dest;
@@ -431,7 +431,7 @@ void DIB_BltFromVGA(int x, int y, int w, int h, void *b, int Dest_lDelta)
 	      /* Form the data for one plane for an aligned block in the destination. */
 	      pixel = nextpixel;
 	      pixel >>= shift;
-	      
+
 	      nextpixel = PreCalcReverseByte[READ_REGISTER_UCHAR(src + 1)];
 	      pixel |= (nextpixel << (8 - shift));
 
@@ -446,10 +446,10 @@ void DIB_BltFromVGA(int x, int y, int w, int h, void *b, int Dest_lDelta)
 	      /* Form the data for a complete block. */
 	      pixel = nextpixel;
 	      pixel >>= shift;
-	      
+
 	      nextpixel = PreCalcReverseByte[READ_REGISTER_UCHAR(src + 1)];
 	      pixel |= (nextpixel << (8 - shift));
-	      
+
 	      row = UnpackPixel[pixel] << plane;
 
 	      /* Store the data for each pixel in the destination. */

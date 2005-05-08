@@ -49,10 +49,10 @@ typedef struct _ADAPTER_STATS
 } ADAPTER_STATS, *PADAPTER_STATS;
 
 /* adapter struct */
-typedef struct _ADAPTER 
+typedef struct _ADAPTER
 {
   NDIS_SPIN_LOCK Lock;
-  
+
   NDIS_HANDLE MiniportAdapterHandle;
   ULONG Flags;
   ULONG InterruptVector;

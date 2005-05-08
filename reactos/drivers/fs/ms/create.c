@@ -196,7 +196,7 @@ MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject,
      {
 	RtlFreeUnicodeString(&Mailslot->Name);
 	ExFreePool(Mailslot);
-	
+
 	Mailslot = current;
      }
    else
@@ -237,38 +237,38 @@ MsfsClose(PDEVICE_OBJECT DeviceObject,
    PMSFS_FCB Fcb;
    PMSFS_MESSAGE Message;
    KIRQL oldIrql;
-   
+
    DPRINT("MsfsClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
-   
+
    IoStack = IoGetCurrentIrpStackLocation(Irp);
    DeviceExtension = DeviceObject->DeviceExtension;
    FileObject = IoStack->FileObject;
-   
+
    KeLockMutex(&DeviceExtension->MailslotListLock);
-   
+
    if (DeviceExtension->MailslotListHead.Flink == &DeviceExtension->MailslotListHead)
      {
 	KeUnlockMutex(&DeviceExtension->MailslotListLock);
-	
+
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 	Irp->IoStatus.Information = 0;
-	
+
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
-	
+
 	return(STATUS_SUCCESS);
      }
-   
+
    Fcb = FileObject->FsContext;
    Mailslot = Fcb->Mailslot;
-   
+
    DPRINT("Mailslot name: %wZ\n", &Mailslot->Name);
-   
+
    Mailslot->ReferenceCount--;
    if (Mailslot->ServerFcb == Fcb)
      {
 	/* delete all messages from message-list */
 	KeAcquireSpinLock(&Mailslot->MessageListLock, &oldIrql);
-	
+
 	while (Mailslot->MessageListHead.Flink != &Mailslot->MessageListHead)
 	  {
 	     Message = CONTAINING_RECORD(Mailslot->MessageListHead.Flink,
@@ -278,17 +278,17 @@ MsfsClose(PDEVICE_OBJECT DeviceObject,
 	     ExFreePool(Message);
 	  }
 	Mailslot->MessageCount = 0;
-	
+
 	KeReleaseSpinLock(&Mailslot->MessageListLock, oldIrql);
 	Mailslot->ServerFcb = NULL;
      }
-   
+
    KeAcquireSpinLock(&Mailslot->FcbListLock, &oldIrql);
    RemoveEntryList(&Fcb->FcbListEntry);
    KeReleaseSpinLock(&Mailslot->FcbListLock, oldIrql);
    ExFreePool(Fcb);
    FileObject->FsContext = NULL;
-   
+
    if (Mailslot->ReferenceCount == 0)
      {
 	DPRINT1("ReferenceCount == 0: Deleting mailslot data\n");
@@ -296,14 +296,14 @@ MsfsClose(PDEVICE_OBJECT DeviceObject,
 	RemoveEntryList(&Mailslot->MailslotListEntry);
 	ExFreePool(Mailslot);
      }
-   
+
    KeUnlockMutex(&DeviceExtension->MailslotListLock);
-   
+
    Irp->IoStatus.Status = STATUS_SUCCESS;
    Irp->IoStatus.Information = 0;
-   
+
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-   
+
    return(STATUS_SUCCESS);
 }
 

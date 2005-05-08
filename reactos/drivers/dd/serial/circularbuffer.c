@@ -1,10 +1,10 @@
 /* $Id:
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            drivers/dd/serial/circularbuffer.c
  * PURPOSE:         Operations on a circular buffer
- * 
+ *
  * PROGRAMMERS:     Hervé Poussineau (poussine@freesurf.fr)
  */
 
@@ -84,7 +84,7 @@ IncreaseCircularBufferSize(
 	IN ULONG NewBufferSize)
 {
 	PUCHAR NewBuffer;
-	
+
 	DPRINT("Serial: IncreaseCircularBufferSize(pBuffer %p, NewBufferSize %lu)\n", pBuffer, NewBufferSize);
 	ASSERT(pBuffer);
 	ASSERT(pBuffer->Length);
@@ -92,7 +92,7 @@ IncreaseCircularBufferSize(
 		return STATUS_INVALID_PARAMETER;
 	else if (pBuffer->Length == NewBufferSize)
 		return STATUS_SUCCESS;
-	
+
 	NewBuffer = (PUCHAR)ExAllocatePoolWithTag(NonPagedPool, NewBufferSize * sizeof(UCHAR), SERIAL_TAG);
 	if (!NewBuffer)
 		return STATUS_INSUFFICIENT_RESOURCES;

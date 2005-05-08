@@ -4,19 +4,19 @@
   #include <ntos/halfuncs.h>
   #include <ddk/ntddblue.h>
   #include <ddk/ntddkbd.h> /* should be in kbdmou.h */
-  
+
   #include <debug.h>
-  
+
   /* FIXME: should be in kbdmou.h */
   typedef struct _CONNECT_DATA {
     PDEVICE_OBJECT ClassDeviceObject;
     PVOID ClassService;
   } CONNECT_DATA, *PCONNECT_DATA;
-  
+
   /* FIXME: should be in kbdmou.h */
   #define IOCTL_INTERNAL_KEYBOARD_CONNECT \
     CTL_CODE(FILE_DEVICE_KEYBOARD, 0x0080, METHOD_NEITHER, FILE_ANY_ACCESS)
-  
+
   NTSTATUS STDCALL
   ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
     ULONG Attributes,
@@ -26,25 +26,25 @@
     KPROCESSOR_MODE AccessMode,
     PVOID ParseContext,
     PVOID* ObjectPtr);
-  
+
   /* FIXME: should be in kbdmou.h */
   typedef VOID (*PSERVICE_CALLBACK_ROUTINE)(PDEVICE_OBJECT, PKEYBOARD_INPUT_DATA, PKEYBOARD_INPUT_DATA, PULONG);
-  
+
   typedef struct _CLASS_INFORMATION
   {
     PDEVICE_OBJECT DeviceObject;
     PVOID CallBack;
   } CLASS_INFORMATION, *PCLASS_INFORMATION;
-  
+
   #define KEYBOARD_BUFFER_SIZE 100
-  
+
 #elif defined(_MSC_VER)
   #include <ntddk.h>
   #include <ntddser.h>
   #include <kbdmou.h>
 
   #define STDCALL
-  
+
   #define DPRINT1 DbgPrint("(%s:%d) ", __FILE__, __LINE__), DbgPrint
   #define CHECKPOINT1 DbgPrint("(%s:%d)\n", __FILE__, __LINE__)
   #define DPRINT DPRINT1
@@ -69,11 +69,11 @@ typedef struct _KEYBOARD_DEVICE_EXTENSION
 {
 	COMMON_DEVICE_EXTENSION Common;
 	PDEVICE_OBJECT Green;
-	
+
 	CLASS_INFORMATION ClassInformation;
 	HANDLE WorkerThreadHandle;
 	KDPC KeyboardDpc;
-	
+
 	ULONG ActiveQueue;
 	ULONG InputDataCount[2];
 	KEYBOARD_INPUT_DATA KeyboardInputData[2][KEYBOARD_BUFFER_SIZE];
@@ -83,7 +83,7 @@ typedef struct _SCREEN_DEVICE_EXTENSION
 {
 	COMMON_DEVICE_EXTENSION Common;
 	PDEVICE_OBJECT Green;
-	
+
 	PUCHAR VideoMemory;   /* Pointer to video memory */
 	USHORT CharAttribute; /* Current color attribute */
 	ULONG  Mode;
@@ -91,9 +91,9 @@ typedef struct _SCREEN_DEVICE_EXTENSION
 	UCHAR  Rows;          /* Number of rows          */
 	UCHAR  Columns;       /* Number of columns       */
 	UCHAR  TabWidth;
-	
+
 	ULONG LogicalOffset;  /* Position of the cursor  */
-	
+
 	UCHAR SendBuffer[1024];
 	ULONG SendBufferPosition;
 } SCREEN_DEVICE_EXTENSION, *PSCREEN_DEVICE_EXTENSION;
@@ -102,12 +102,12 @@ typedef struct _GREEN_DEVICE_EXTENSION
 {
 	COMMON_DEVICE_EXTENSION Common;
 	PDEVICE_OBJECT Serial;
-	
+
 	PDEVICE_OBJECT LowerDevice;
 	ULONG BaudRate;
 	SERIAL_LINE_CONTROL LineControl;
 	SERIAL_TIMEOUTS Timeouts;
-	
+
 	PDEVICE_OBJECT Keyboard;
 	PDEVICE_OBJECT Screen;
 } GREEN_DEVICE_EXTENSION, *PGREEN_DEVICE_EXTENSION;

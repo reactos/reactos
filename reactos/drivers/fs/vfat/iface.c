@@ -92,9 +92,9 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = VfatBuildRequest;
    DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] = VfatBuildRequest;
    DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] = VfatBuildRequest;
-   DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = 
+   DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
      VfatBuildRequest;
-   DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] = 
+   DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] =
      VfatBuildRequest;
    DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = VfatShutdown;
    DriverObject->MajorFunction[IRP_MJ_LOCK_CONTROL] = VfatBuildRequest;
@@ -102,23 +102,23 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = VfatBuildRequest;
 
    DriverObject->DriverUnload = NULL;
-   
+
    /* Cache manager */
    VfatGlobalData->CacheMgrCallbacks.AcquireForLazyWrite = VfatAcquireForLazyWrite;
    VfatGlobalData->CacheMgrCallbacks.ReleaseFromLazyWrite = VfatReleaseFromLazyWrite;
    VfatGlobalData->CacheMgrCallbacks.AcquireForReadAhead = VfatAcquireForReadAhead;
    VfatGlobalData->CacheMgrCallbacks.ReleaseFromReadAhead = VfatReleaseFromReadAhead;
-   
+
    /* Fast I/O */
    VfatInitFastIoRoutines(&VfatGlobalData->FastIoDispatch);
    DriverObject->FastIoDispatch = &VfatGlobalData->FastIoDispatch;
 
    /* Private lists */
-   ExInitializeNPagedLookasideList(&VfatGlobalData->FcbLookasideList, 
+   ExInitializeNPagedLookasideList(&VfatGlobalData->FcbLookasideList,
                                    NULL, NULL, 0, sizeof(VFATFCB), TAG_FCB, 0);
-   ExInitializeNPagedLookasideList(&VfatGlobalData->CcbLookasideList, 
+   ExInitializeNPagedLookasideList(&VfatGlobalData->CcbLookasideList,
                                    NULL, NULL, 0, sizeof(VFATCCB), TAG_CCB, 0);
-   ExInitializeNPagedLookasideList(&VfatGlobalData->IrpContextLookasideList, 
+   ExInitializeNPagedLookasideList(&VfatGlobalData->IrpContextLookasideList,
                                    NULL, NULL, 0, sizeof(VFAT_IRP_CONTEXT), TAG_IRP, 0);
 
    ExInitializeResourceLite(&VfatGlobalData->VolumeListLock);

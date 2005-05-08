@@ -65,36 +65,36 @@ NPF_OpenDumpFile(POPEN_INSTANCE Open , PUNICODE_STRING fileName, BOOLEAN Append)
         PathPrefix = L"\\??\\";
         PathLen = 8;
     }
-    
+
     // Insert the correct path prefix.
     FullFileNameLength = PathLen + fileName->MaximumLength;
-    
+
 #define NPF_TAG_FILENAME  TAG('0', 'D', 'W', 'A')
-    FullFileName.Buffer = ExAllocatePoolWithTag(NonPagedPool, 
+    FullFileName.Buffer = ExAllocatePoolWithTag(NonPagedPool,
         FullFileNameLength,
         NPF_TAG_FILENAME);
-    
+
     if (FullFileName.Buffer == NULL) {
         ntStatus = STATUS_INSUFFICIENT_RESOURCES;
         return ntStatus;
     }
-    
+
     FullFileName.Length = PathLen;
     FullFileName.MaximumLength = (USHORT)FullFileNameLength;
-    
+
     if(PathLen)
         RtlMoveMemory (FullFileName.Buffer, PathPrefix, PathLen);
-    
+
     RtlAppendUnicodeStringToString (&FullFileName, fileName);
-    
+
     IF_LOUD(DbgPrint( "Packet: Attempting to open %wZ\n", &FullFileName);)
-    
+
     InitializeObjectAttributes ( &ObjectAttributes,
         &FullFileName,
         OBJ_CASE_INSENSITIVE,
         NULL,
         NULL );
-    
+
     // Create the dump file
     ntStatus = ZwCreateFile( &Open->DumpFileHandle,
         SYNCHRONIZE | FILE_WRITE_DATA,
@@ -111,15 +111,15 @@ NPF_OpenDumpFile(POPEN_INSTANCE Open , PUNICODE_STRING fileName, BOOLEAN Append)
     if ( !NT_SUCCESS( ntStatus ) )
     {
         IF_LOUD(DbgPrint("NPF: Error opening file %x\n", ntStatus);)
-        
+
         ExFreePool(FullFileName.Buffer);
         Open->DumpFileHandle=NULL;
         ntStatus = STATUS_NO_SUCH_FILE;
         return ntStatus;
     }
-    
+
     ExFreePool(FullFileName.Buffer);
-    
+
     ntStatus = ObReferenceObjectByHandle(Open->DumpFileHandle,
         FILE_WRITE_ACCESS,
 #ifndef __GNUC__
@@ -130,24 +130,24 @@ NPF_OpenDumpFile(POPEN_INSTANCE Open , PUNICODE_STRING fileName, BOOLEAN Append)
         KernelMode,
         (PVOID)&Open->DumpFileObject,
         0);
-    
+
     if ( !NT_SUCCESS( ntStatus ) )
     {
         IF_LOUD(DbgPrint("NPF: Error creating file, status=%x\n", ntStatus);)
-            
+
         ZwClose( Open->DumpFileHandle );
         Open->DumpFileHandle=NULL;
-        
+
         ntStatus = STATUS_NO_SUCH_FILE;
         return ntStatus;
     }
-    
+
     fsdDevice = IoGetRelatedDeviceObject(Open->DumpFileObject);
 
     IF_LOUD(DbgPrint("NPF: Dump: write file created succesfully, status=%d \n",ntStatus);)
 
     return ntStatus;
-}   
+}
 
 //-------------------------------------------------------------------
 
@@ -170,31 +170,31 @@ NPF_StartDump(POPEN_INSTANCE Open)
 
     // Detect the medium type
     switch (Open->Medium){
-        
+
     case NdisMediumWan:
         hdr.linktype = DLT_EN10MB;
         break;
-        
+
     case NdisMedium802_3:
         hdr.linktype = DLT_EN10MB;
         break;
-        
+
     case NdisMediumFddi:
         hdr.linktype = DLT_FDDI;
         break;
-        
-    case NdisMedium802_5:           
-        hdr.linktype = DLT_IEEE802; 
+
+    case NdisMedium802_5:
+        hdr.linktype = DLT_IEEE802;
         break;
-        
+
     case NdisMediumArcnet878_2:
         hdr.linktype = DLT_ARCNET;
         break;
-        
+
     case NdisMediumAtm:
         hdr.linktype = DLT_ATM_RFC1483;
         break;
-        
+
     default:
         hdr.linktype = DLT_EN10MB;
     }
@@ -211,20 +211,20 @@ NPF_StartDump(POPEN_INSTANCE Open)
         NULL,
         NULL );
 
-    
+
     if ( !NT_SUCCESS( ntStatus ) )
     {
         IF_LOUD(DbgPrint("NPF: Error dumping file %x\n", ntStatus);)
-        
+
         ZwClose( Open->DumpFileHandle );
         Open->DumpFileHandle=NULL;
-        
+
         ntStatus = STATUS_NO_SUCH_FILE;
         return ntStatus;
     }
 
     Open->DumpOffset.QuadPart=24;
-            
+
     ntStatus = PsCreateSystemThread(&Open->DumpThreadHandle,
         THREAD_ALL_ACCESS,
         (ACCESS_MASK)0L,
@@ -232,16 +232,16 @@ NPF_StartDump(POPEN_INSTANCE Open)
         0,
         (PKSTART_ROUTINE)NPF_DumpThread,
         Open);
-    
+
     if ( !NT_SUCCESS( ntStatus ) )
     {
         IF_LOUD(DbgPrint("NPF: Error creating dump thread, status=%x\n", ntStatus);)
-        
+
         ZwClose( Open->DumpFileHandle );
         Open->DumpFileHandle=NULL;
 
         return ntStatus;
-    }  
+    }
     ntStatus = ObReferenceObjectByHandle(Open->DumpThreadHandle,
         THREAD_ALL_ACCESS,
         NULL,
@@ -251,16 +251,16 @@ NPF_StartDump(POPEN_INSTANCE Open)
     if ( !NT_SUCCESS( ntStatus ) )
     {
         IF_LOUD(DbgPrint("NPF: Error creating dump thread, status=%x\n", ntStatus);)
-        
+
         ObDereferenceObject(Open->DumpFileObject);
         ZwClose( Open->DumpFileHandle );
         Open->DumpFileHandle=NULL;
 
         return ntStatus;
-    }  
-  
+    }
+
     return ntStatus;
-    
+
 }
 
 //-------------------------------------------------------------------
@@ -275,10 +275,10 @@ VOID NPF_DumpThread(POPEN_INSTANCE Open)
     while(TRUE){
 
         // Wait until some packets arrive or the timeout expires
-        NdisWaitEvent(&Open->DumpEvent, 5000);  
+        NdisWaitEvent(&Open->DumpEvent, 5000);
 
         IF_LOUD(DbgPrint("NPF: Worker Thread - event signalled\n");)
-            
+
         if(Open->DumpLimitReached ||
             Open->BufSize==0){      // BufSize=0 means that this instance was closed, or that the buffer is too
                                     // small for any capture. In both cases it is better to end the dump
@@ -289,7 +289,7 @@ VOID NPF_DumpThread(POPEN_INSTANCE Open)
             PsTerminateSystemThread(STATUS_SUCCESS);
             return;
         }
-        
+
         NdisResetEvent(&Open->DumpEvent);
 
         // Write the content of the buffer to the file
@@ -297,9 +297,9 @@ VOID NPF_DumpThread(POPEN_INSTANCE Open)
             PsTerminateSystemThread(STATUS_SUCCESS);
             return;
         }
-    
+
     }
-    
+
 }
 
 //-------------------------------------------------------------------
@@ -314,11 +314,11 @@ NTSTATUS NPF_SaveCurrentBuffer(POPEN_INSTANCE Open)
     PMDL        lMdl;
     UINT        SizeToDump;
 
-    
+
     Thead=Open->Bhead;
     Ttail=Open->Btail;
     TLastByte=Open->BLastByte;
-    
+
     IF_LOUD(DbgPrint("NPF: NPF_SaveCurrentBuffer.\n");)
 
     // Get the address of the buffer
@@ -333,23 +333,23 @@ NTSTATUS NPF_SaveCurrentBuffer(POPEN_INSTANCE Open)
         {
             // Size limit reached
             UINT PktLen;
-            
+
             SizeToDump = 0;
-            
+
             // Scan the buffer to detect the exact amount of data to save
             while(TRUE){
                 PktLen = ((struct sf_pkthdr*)(CurrBuff + Thead + SizeToDump))->caplen + sizeof(struct sf_pkthdr);
-                
+
                 if((UINT)Open->DumpOffset.QuadPart + SizeToDump + PktLen > Open->MaxDumpBytes)
                     break;
-                
+
                 SizeToDump += PktLen;
             }
-            
+
         }
         else
             SizeToDump = TLastByte-Thead;
-        
+
         lMdl=IoAllocateMdl(CurrBuff+Thead, SizeToDump, FALSE, FALSE, NULL);
         if (lMdl == NULL)
         {
@@ -357,33 +357,33 @@ NTSTATUS NPF_SaveCurrentBuffer(POPEN_INSTANCE Open)
             IF_LOUD(DbgPrint("NPF: dump thread: Failed to allocate Mdl\n");)
             return STATUS_UNSUCCESSFUL;
         }
-        
+
         MmBuildMdlForNonPagedPool(lMdl);
-        
+
         // Write to disk
         NPF_WriteDumpFile(Open->DumpFileObject,
             &Open->DumpOffset,
             SizeToDump,
             lMdl,
             &IoStatus);
-        
+
         IoFreeMdl(lMdl);
-        
+
         if(!NT_SUCCESS(IoStatus.Status)){
             // Error
             return STATUS_UNSUCCESSFUL;
         }
-        
+
         if(SizeToDump != TLastByte-Thead){
             // Size limit reached.
             Open->DumpLimitReached = TRUE;
-    
+
             // Awake the application
             KeSetEvent(Open->ReadEvent,0,FALSE);
 
             return STATUS_UNSUCCESSFUL;
         }
-        
+
         // Update the packet buffer
         Open->DumpOffset.QuadPart+=(TLastByte-Thead);
         Open->BLastByte=Ttail;
@@ -391,30 +391,30 @@ NTSTATUS NPF_SaveCurrentBuffer(POPEN_INSTANCE Open)
     }
 
     if( Ttail > Thead ){
-        
+
         if(Open->MaxDumpBytes &&
             (UINT)Open->DumpOffset.QuadPart + GetBuffOccupation(Open) > Open->MaxDumpBytes)
         {
             // Size limit reached
             UINT PktLen;
-                        
+
             SizeToDump = 0;
-            
+
             // Scan the buffer to detect the exact amount of data to save
             while(Thead + SizeToDump < Ttail){
 
                 PktLen = ((struct sf_pkthdr*)(CurrBuff + Thead + SizeToDump))->caplen + sizeof(struct sf_pkthdr);
-                
+
                 if((UINT)Open->DumpOffset.QuadPart + SizeToDump + PktLen > Open->MaxDumpBytes)
                     break;
-                
+
                 SizeToDump += PktLen;
             }
-            
+
         }
         else
             SizeToDump = Ttail-Thead;
-                
+
         lMdl=IoAllocateMdl(CurrBuff+Thead, SizeToDump, FALSE, FALSE, NULL);
         if (lMdl == NULL)
         {
@@ -422,37 +422,37 @@ NTSTATUS NPF_SaveCurrentBuffer(POPEN_INSTANCE Open)
             IF_LOUD(DbgPrint("NPF: dump thread: Failed to allocate Mdl\n");)
             return STATUS_UNSUCCESSFUL;
         }
-        
+
         MmBuildMdlForNonPagedPool(lMdl);
-        
+
         // Write to disk
         NPF_WriteDumpFile(Open->DumpFileObject,
             &Open->DumpOffset,
             SizeToDump,
             lMdl,
             &IoStatus);
-        
+
         IoFreeMdl(lMdl);
-        
+
         if(!NT_SUCCESS(IoStatus.Status)){
             // Error
             return STATUS_UNSUCCESSFUL;
         }
-        
+
         if(SizeToDump != Ttail-Thead){
             // Size limit reached.
             Open->DumpLimitReached = TRUE;
 
             // Awake the application
             KeSetEvent(Open->ReadEvent,0,FALSE);
-            
+
             return STATUS_UNSUCCESSFUL;
         }
-        
+
         // Update the packet buffer
-        Open->DumpOffset.QuadPart+=(Ttail-Thead);           
+        Open->DumpOffset.QuadPart+=(Ttail-Thead);
         Open->Bhead=Ttail;
-        
+
     }
 
     return STATUS_SUCCESS;
@@ -483,13 +483,13 @@ DbgPrint("3\n");
 
     NPF_OpenDumpFile(Open,&Open->DumpFileName, TRUE);
 
-    // Flush the buffer to file 
+    // Flush the buffer to file
     NPF_SaveCurrentBuffer(Open);
 
     // Close The file
     ObDereferenceObject(Open->DumpFileObject);
     ZwClose( Open->DumpFileHandle );
-    
+
     Open->DumpFileHandle = NULL;
 
     ObDereferenceObject(Open->DumpFileObject);
@@ -500,7 +500,7 @@ DbgPrint("3\n");
 //-------------------------------------------------------------------
 
 #ifndef __GNUC__
-static NTSTATUS 
+static NTSTATUS
 #else
 NTSTATUS STDCALL
 #endif
@@ -511,10 +511,10 @@ PacketDumpCompletion(PDEVICE_OBJECT DeviceObject,
 
     // Copy the status information back into the "user" IOSB
     *Irp->UserIosb = Irp->IoStatus;
-    
+
     // Wake up the mainline code
     KeSetEvent(Irp->UserEvent, 0, FALSE);
-          
+
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
@@ -530,10 +530,10 @@ VOID NPF_WriteDumpFile(PFILE_OBJECT FileObject,
     KEVENT event;
     PIO_STACK_LOCATION ioStackLocation;
     PDEVICE_OBJECT fsdDevice = IoGetRelatedDeviceObject(FileObject);
- 
+
     // Set up the event we'll use
     KeInitializeEvent(&event, SynchronizationEvent, FALSE);
-    
+
     // Allocate and build the IRP we'll be sending to the FSD
     irp = IoAllocateIrp(fsdDevice->StackSize, FALSE);
 

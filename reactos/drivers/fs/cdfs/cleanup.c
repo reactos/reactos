@@ -23,7 +23,7 @@
  * FILE:             services/fs/cdfs/cleanup.c
  * PURPOSE:          CDROM (ISO 9660) filesystem driver
  * PROGRAMMER:       Hartmut Birr
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -60,7 +60,7 @@ CdfsCleanupFile(PDEVICE_EXTENSION DeviceExt,
       CcUninitializeCacheMap (FileObject, NULL, NULL);
 #endif
     }
- 
+
   return STATUS_SUCCESS;
 }
 

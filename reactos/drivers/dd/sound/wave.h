@@ -2,7 +2,7 @@ KIRQL irql;
 KAFFINITY affinity;
 
 typedef struct
-{	
+{
 	unsigned char		rID[4]	__attribute__((packed));					//4	0
 	unsigned int 		rLen	__attribute__((packed));						//4	4
 	unsigned char 	wID[4] __attribute__((packed));						//4	8

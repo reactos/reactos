@@ -24,7 +24,7 @@ NTSTATUS WarmSocketForConnection( PAFD_FCB FCB ) {
 	( &FCB->TdiDeviceName,
 	  &FCB->Connection.Handle,
 	  &FCB->Connection.Object );
-    
+
     if( NT_SUCCESS(Status) ) {
 	Status = TdiAssociateAddressFile
 	    ( FCB->AddressFile.Handle,
@@ -44,13 +44,13 @@ NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB ) {
     NTSTATUS Status = STATUS_NO_MEMORY;
 
     /* Allocate the receive area and start receiving */
-    FCB->Recv.Window = 
+    FCB->Recv.Window =
 	ExAllocatePool( NonPagedPool, FCB->Recv.Size );
-    FCB->Send.Window = 
+    FCB->Send.Window =
 	ExAllocatePool( NonPagedPool, FCB->Send.Size );
 
     FCB->State = SOCKET_STATE_CONNECTED;
-    
+
     if( FCB->Recv.Window ) {
 	Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
 			     FCB->Connection.Object,
@@ -74,14 +74,14 @@ NTSTATUS DDKAPI StreamSocketConnectComplete
     PLIST_ENTRY NextIrpEntry;
     PIRP NextIrp;
 
-    AFD_DbgPrint(MID_TRACE,("Called: FCB %x, FO %x\n", 
+    AFD_DbgPrint(MID_TRACE,("Called: FCB %x, FO %x\n",
 			    Context, FCB->FileObject));
 
     /* I was wrong about this before as we can have pending writes to a not
      * yet connected socket */
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
 
-    AFD_DbgPrint(MID_TRACE,("Irp->IoStatus.Status = %x\n", 
+    AFD_DbgPrint(MID_TRACE,("Irp->IoStatus.Status = %x\n",
 			    Irp->IoStatus.Status));
 
     if( NT_SUCCESS(Irp->IoStatus.Status) ) {
@@ -95,7 +95,7 @@ NTSTATUS DDKAPI StreamSocketConnectComplete
 	FCB->State = SOCKET_STATE_BOUND;
 	PollReeval( FCB->DeviceExt, FCB->FileObject );
     }
-    
+
     /* Succeed pending irps on the FUNCTION_CONNECT list */
     while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_CONNECT] ) ) {
 	NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_CONNECT]);
@@ -109,10 +109,10 @@ NTSTATUS DDKAPI StreamSocketConnectComplete
     if( NT_SUCCESS(Status) ) {
 	Status = MakeSocketIntoConnection( FCB );
 
-	if( FCB->Send.Window && 
+	if( FCB->Send.Window &&
 	    !IsListEmpty( &FCB->PendingIrpList[FUNCTION_SEND] ) ) {
 	    NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]);
-	    NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP, 
+	    NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP,
 					Tail.Overlay.ListEntry);
 	    AFD_DbgPrint(MID_TRACE,("Launching send request %x\n", NextIrp));
 	    Status = AfdConnectedSocketWriteData
@@ -129,7 +129,7 @@ NTSTATUS DDKAPI StreamSocketConnectComplete
     SocketStateUnlock( FCB );
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
-    
+
     return Status;
 }
 
@@ -146,13 +146,13 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
-    if( !(ConnectReq = LockRequest( Irp, IrpSp )) ) 
-	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 
+    if( !(ConnectReq = LockRequest( Irp, IrpSp )) )
+	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp,
 				       0, NULL, TRUE );
 
     AFD_DbgPrint(MID_TRACE,("Connect request:\n"));
     OskitDumpBuffer
-	( (PCHAR)ConnectReq, 
+	( (PCHAR)ConnectReq,
 	  IrpSp->Parameters.DeviceIoControl.InputBufferLength );
 
     switch( FCB->State ) {
@@ -164,34 +164,34 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	return LeaveIrpUntilLater( FCB, Irp, FUNCTION_CONNECT );
 
     case SOCKET_STATE_CREATED: {
-	FCB->LocalAddress = 
+	FCB->LocalAddress =
 	    TaCopyTransportAddress( &ConnectReq->RemoteAddress );
 
 	if( FCB->LocalAddress ) {
-	    RtlZeroMemory( FCB->LocalAddress, 
+	    RtlZeroMemory( FCB->LocalAddress,
 			   TaLengthOfTransportAddress
 			   ( &ConnectReq->RemoteAddress ) );
-	    
+
 	    FCB->LocalAddress->TAAddressCount = 1;
-	    FCB->LocalAddress->Address[0].AddressType = 
+	    FCB->LocalAddress->Address[0].AddressType =
 		ConnectReq->RemoteAddress.Address[0].AddressType;
-	    FCB->LocalAddress->Address[0].AddressLength = 
+	    FCB->LocalAddress->Address[0].AddressLength =
 		ConnectReq->RemoteAddress.Address[0].AddressLength;
-	    
+
 	    Status = WarmSocketForBind( FCB );
-	    
-	    if( NT_SUCCESS(Status) ) 
+
+	    if( NT_SUCCESS(Status) )
 		FCB->State = SOCKET_STATE_BOUND;
 	    else
-		return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL, 
+		return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL,
 					       TRUE );
 	} else
 	    return UnlockAndMaybeComplete
-		( FCB, STATUS_NO_MEMORY, Irp, 0, NULL, TRUE ); 
+		( FCB, STATUS_NO_MEMORY, Irp, 0, NULL, TRUE );
     } /* Drop through to SOCKET_STATE_BOUND */
-	
+
     case SOCKET_STATE_BOUND:
-	FCB->RemoteAddress = 
+	FCB->RemoteAddress =
 	    TaCopyTransportAddress( &ConnectReq->RemoteAddress );
 
 	if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS )
@@ -210,9 +210,9 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	TdiBuildConnectionInfo
 	    ( &TargetAddress,
 	      &ConnectReq->RemoteAddress );
-	
+
 	if( TargetAddress ) {
-	    Status = TdiConnect( &FCB->ConnectIrp.InFlightRequest, 
+	    Status = TdiConnect( &FCB->ConnectIrp.InFlightRequest,
 				 FCB->Connection.Object,
 				 TargetAddress,
 				 &FCB->ConnectIrp.Iosb,
@@ -222,8 +222,8 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    ExFreePool( TargetAddress );
 
 	    AFD_DbgPrint(MID_TRACE,("Queueing IRP %x\n", Irp));
-	    
-	    if( Status == STATUS_PENDING ) 
+
+	    if( Status == STATUS_PENDING )
 		return LeaveIrpUntilLater( FCB, Irp, FUNCTION_CONNECT );
 	} else Status = STATUS_NO_MEMORY;
 	break;
@@ -233,6 +233,6 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 				FCB->State));
 	break;
     }
-    
+
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL, TRUE );
 }

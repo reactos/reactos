@@ -95,7 +95,7 @@ VideoPortGetDmaAdapter(
    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
 
    DPRINT("VideoPortGetDmaAdapter\n");
-  
+
    DeviceDescription.Version = DEVICE_DESCRIPTION_VERSION;
    DeviceDescription.Master = TRUE /* ?? */;
    DeviceDescription.ScatterGather = VpDeviceExtension->ScatterGather;
@@ -112,7 +112,7 @@ VideoPortGetDmaAdapter(
    DeviceDescription.MaximumLength = VpDeviceExtension->MaximumLength;
    DeviceDescription.DmaPort = 0;
 
-   Adapter = 
+   Adapter =
       (PVP_DMA_ADAPTER)HalGetAdapter(&DeviceDescription, &NumberOfMapRegisters);
    DPRINT("Adapter %X\n", Adapter);
    return(Adapter);

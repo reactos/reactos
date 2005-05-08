@@ -19,7 +19,7 @@
 
 #ifdef _WIN32
 
-#define BZ2_LIBNAME "libbz2-1.0.0.DLL" 
+#define BZ2_LIBNAME "libbz2-1.0.0.DLL"
 
 #include <windows.h>
 static int BZ2DLLLoaded = 0;

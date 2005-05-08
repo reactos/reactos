@@ -39,7 +39,7 @@
 #include "ioctl.h"
 
 
-NTSTATUS NTAPI DeviceIoctl(PDEVICE_OBJECT DeviceObject, 
+NTSTATUS NTAPI DeviceIoctl(PDEVICE_OBJECT DeviceObject,
                            PIRP Irp)
 /*
  * FUNCTION: Queue IOCTL IRPs
@@ -50,7 +50,7 @@ NTSTATUS NTAPI DeviceIoctl(PDEVICE_OBJECT DeviceObject,
  *     STATUS_SUCCESS in all cases, so far
  * NOTES:
  *     - We can't just service these immediately because, even though some
- *       are able to run at DISPATCH, they'll get out of sync with other 
+ *       are able to run at DISPATCH, they'll get out of sync with other
  *       read/write or ioctl irps.
  */
 {
@@ -64,7 +64,7 @@ NTSTATUS NTAPI DeviceIoctl(PDEVICE_OBJECT DeviceObject,
 }
 
 
-VOID NTAPI DeviceIoctlPassive(PDRIVE_INFO DriveInfo, 
+VOID NTAPI DeviceIoctlPassive(PDRIVE_INFO DriveInfo,
 			      PIRP Irp)
 /*
  * FUNCTION: Handlees IOCTL requests at PASSIVE_LEVEL
@@ -83,9 +83,9 @@ VOID NTAPI DeviceIoctlPassive(PDRIVE_INFO DriveInfo,
   Irp->IoStatus.Status = STATUS_SUCCESS;
   Irp->IoStatus.Information = 0;
 
-  /* 
-   * First the non-change-sensitive ioctls 
-   */ 
+  /*
+   * First the non-change-sensitive ioctls
+   */
   if(Code == IOCTL_DISK_GET_MEDIA_TYPES)
     {
       PDISK_GEOMETRY Geometry = OutputBuffer;
@@ -99,8 +99,8 @@ VOID NTAPI DeviceIoctlPassive(PDRIVE_INFO DriveInfo,
 	  return;
         }
 
-      /* 
-       * for now, this driver only supports 3.5" HD media 
+      /*
+       * for now, this driver only supports 3.5" HD media
        */
       Geometry->MediaType = F3_1Pt44_512;
       Geometry->Cylinders.QuadPart = 80;
@@ -116,16 +116,16 @@ VOID NTAPI DeviceIoctlPassive(PDRIVE_INFO DriveInfo,
       return;
     }
 
-  /* 
+  /*
    * Now, check to see if the volume needs to be verified.  If so,
-   * return STATUS_VERIFY_REQUIRED.  
+   * return STATUS_VERIFY_REQUIRED.
    *
-   * NOTE:  This code, which is outside of the switch and if/else blocks, 
-   * will implicity catch and correctly service IOCTL_DISK_CHECK_VERIFY.  
+   * NOTE:  This code, which is outside of the switch and if/else blocks,
+   * will implicity catch and correctly service IOCTL_DISK_CHECK_VERIFY.
    * Therefore if we see one below in the switch, we can return STATUS_SUCCESS
    * immediately.
    */
-  if(DriveInfo->DeviceObject->Flags & DO_VERIFY_VOLUME && !(DriveInfo->DeviceObject->Flags & SL_OVERRIDE_VERIFY_VOLUME)) 
+  if(DriveInfo->DeviceObject->Flags & DO_VERIFY_VOLUME && !(DriveInfo->DeviceObject->Flags & SL_OVERRIDE_VERIFY_VOLUME))
     {
       KdPrint(("floppy: DeviceIoctl(): completing with STATUS_VERIFY_REQUIRED\n"));
       Irp->IoStatus.Status = STATUS_VERIFY_REQUIRED;
@@ -157,7 +157,7 @@ VOID NTAPI DeviceIoctlPassive(PDRIVE_INFO DriveInfo,
       KdPrint(("floppy: DeviceIoctl(): detected disk changed; signalling media change and completing\n"));
       SignalMediaChanged(DriveInfo->DeviceObject, Irp);
 
-      /* 
+      /*
        * Just guessing here - I have a choice of returning NO_MEDIA or VERIFY_REQUIRED.  If there's
        * really no disk in the drive, I'm thinking I can save time by just reporting that fact, rather
        * than forcing windows to ask me twice.  If this doesn't work, we'll need to split this up and

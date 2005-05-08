@@ -185,7 +185,7 @@ DiskDumpBuildRequest(LARGE_INTEGER StartingOffset, PMDL Mdl)
   RtlZeroMemory(Cdb, MAXIMUM_CDB_SIZE);
 
   Cdb->CDB10.LogicalUnitNumber = CoreDumpClass2DeviceExtension->Lun;
-  TransferBlocks = (USHORT)(PAGE_SIZE >> 
+  TransferBlocks = (USHORT)(PAGE_SIZE >>
 			    CoreDumpClass2DeviceExtension->SectorShift);
 
   /* Copy little endian values into CDB in big endian format */
@@ -224,9 +224,9 @@ DiskDumpInit(VOID)
     {
       DbgPrint("DISKDUMP: Error: Crash inside high priority interrupt routine.\n");
       return(STATUS_UNSUCCESSFUL);
-    }  
+    }
   CoreDumpPortDeviceExtension->Interrupt->ServiceRoutine = DiskDumpIsr;
-  
+
   return(STATUS_SUCCESS);
 }
 
@@ -245,7 +245,7 @@ DiskDumpWrite(LARGE_INTEGER Address, PMDL Mdl)
   if (CurrentIrql < (CoreDumpPortDeviceExtension->Interrupt->SynchLevel - 1))
     {
       KeRaiseIrql(CoreDumpPortDeviceExtension->Interrupt->SynchLevel - 1, &OldIrql);
-    }  
+    }
 
   /* Adjust the address for the start of the partition. */
   Address.QuadPart +=
@@ -273,7 +273,7 @@ DiskDumpWrite(LARGE_INTEGER Address, PMDL Mdl)
   while (!IrqComplete || !IrqNextRequest)
     {
       __asm__ ("hlt\n\t");
-    }  
+    }
   if (CurrentIrql < (CoreDumpPortDeviceExtension->Interrupt->SynchLevel - 1))
     {
       KeLowerIrql(OldIrql);
@@ -338,18 +338,18 @@ DiskDumpPrepare(PDEVICE_OBJECT DeviceObject, PDUMP_POINTERS DumpPointers)
 	}
 
       /*  Get the import address list  */
-      ImportAddressList = (PVOID *) ((PUCHAR)DriverBase + 
+      ImportAddressList = (PVOID *) ((PUCHAR)DriverBase +
 				     ImportModuleDirectory->dwRVAFunctionAddressList);
-      
+
       /*  Get the list of functions to import  */
       if (ImportModuleDirectory->dwRVAFunctionNameList != 0)
 	{
-	  FunctionNameList = (PULONG) ((PUCHAR)DriverBase + 
+	  FunctionNameList = (PULONG) ((PUCHAR)DriverBase +
 				       ImportModuleDirectory->dwRVAFunctionNameList);
 	}
       else
 	{
-	  FunctionNameList = (PULONG) ((PUCHAR)DriverBase + 
+	  FunctionNameList = (PULONG) ((PUCHAR)DriverBase +
 				       ImportModuleDirectory->dwRVAFunctionAddressList);
 	}
       /*  Walk through function list and fixup addresses  */
@@ -358,12 +358,12 @@ DiskDumpPrepare(PDEVICE_OBJECT DeviceObject, PDUMP_POINTERS DumpPointers)
 	  if ((*FunctionNameList) & 0x80000000) // hint
 	    {
 	      Name = NULL;
-	      	      
+
 	      Hint = (*FunctionNameList) & 0xffff;
 	    }
 	  else // hint-name
 	    {
-	      Name = (PCHAR)((DWORD)DriverBase + 
+	      Name = (PCHAR)((DWORD)DriverBase +
 			      *FunctionNameList + 2);
 	      Hint = *(PWORD)((DWORD)DriverBase + *FunctionNameList);
 	    }
@@ -388,10 +388,10 @@ DiskDumpPrepare(PDEVICE_OBJECT DeviceObject, PDUMP_POINTERS DumpPointers)
 	    }
 	  DiskDumpExports[i].OldFunction = *ImportAddressList;
 	  if (DiskDumpExports[i].NewFunction != NULL)
-	    {	      
+	    {
 	      *ImportAddressList = DiskDumpExports[i].NewFunction;
 	    }
-	  
+
 	  ImportAddressList++;
 	  FunctionNameList++;
 	}
@@ -405,7 +405,7 @@ DiskDumpPrepare(PDEVICE_OBJECT DeviceObject, PDUMP_POINTERS DumpPointers)
  *	DriverEntry
  *
  * DESCRIPTION
- *	This function initializes the driver, locates and claims 
+ *	This function initializes the driver, locates and claims
  *	hardware resources, and creates various NT objects needed
  *	to process I/O requests.
  *

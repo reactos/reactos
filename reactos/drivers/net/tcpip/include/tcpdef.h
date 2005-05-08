@@ -85,7 +85,7 @@ enum {
   TCPF_CLOSE_WAIT = (1 << 8),
   TCPF_LAST_ACK  = (1 << 9),
   TCPF_LISTEN    = (1 << 10),
-  TCPF_CLOSING   = (1 << 11) 
+  TCPF_CLOSING   = (1 << 11)
 };
 
 /*
@@ -93,25 +93,25 @@ enum {
  *  (union is compatible to any of its members)
  *  This means this part of the code is -fstrict-aliasing safe now.
  */
-union tcp_word_hdr { 
+union tcp_word_hdr {
 	struct tcphdr hdr;
 	__u32 		  words[5];
-}; 
+};
 
-#define tcp_flag_word(tp) ( ((union tcp_word_hdr *)(tp))->words [3]) 
+#define tcp_flag_word(tp) ( ((union tcp_word_hdr *)(tp))->words [3])
 
-enum { 
-	TCP_FLAG_CWR = 0x00800000, // __constant_htonl(0x00800000), 
-	TCP_FLAG_ECE = 0x00400000, //__constant_htonl(0x00400000), 
-	TCP_FLAG_URG = 0x00200000, //__constant_htonl(0x00200000), 
-	TCP_FLAG_ACK = 0x00100000, //__constant_htonl(0x00100000), 
-	TCP_FLAG_PSH = 0x00080000, //__constant_htonl(0x00080000), 
-	TCP_FLAG_RST = 0x00040000, //__constant_htonl(0x00040000), 
-	TCP_FLAG_SYN = 0x00020000, //__constant_htonl(0x00020000), 
+enum {
+	TCP_FLAG_CWR = 0x00800000, // __constant_htonl(0x00800000),
+	TCP_FLAG_ECE = 0x00400000, //__constant_htonl(0x00400000),
+	TCP_FLAG_URG = 0x00200000, //__constant_htonl(0x00200000),
+	TCP_FLAG_ACK = 0x00100000, //__constant_htonl(0x00100000),
+	TCP_FLAG_PSH = 0x00080000, //__constant_htonl(0x00080000),
+	TCP_FLAG_RST = 0x00040000, //__constant_htonl(0x00040000),
+	TCP_FLAG_SYN = 0x00020000, //__constant_htonl(0x00020000),
 	TCP_FLAG_FIN = 0x00010000, //__constant_htonl(0x00010000),
 	TCP_RESERVED_BITS = 0x0F000000, //__constant_htonl(0x0F000000),
 	TCP_DATA_OFFSET = 0xF0000000, //__constant_htonl(0xF0000000)
-}; 
+};
 
 /* TCP socket options */
 #define TCP_NODELAY		1	/* Turn off Nagle's algorithm. */

@@ -21,7 +21,7 @@
  * FILE:             services/fs/minix/minix.c
  * PURPOSE:          Minix FSD
  * PROGRAMMER:       David Welch (welch@mcmail.com)
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -77,13 +77,13 @@ MinixFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    NTSTATUS Status;
    char* superblock_buf;
    struct minix_super_block* sb;
-   
+
    DbgPrint("MinixFileSystemControl(DeviceObject %x, Irp %x)\n",DeviceObject,
 	  Irp);
    DPRINT("DeviceToMount %x\n",DeviceToMount);
 
    superblock_buf = ExAllocatePool(NonPagedPool,BLOCKSIZE);
-   
+
    DPRINT("MinixReadSector %x\n",MinixReadSector);
    MinixReadSector(DeviceToMount,1,superblock_buf);
    sb = (struct minix_super_block *)superblock_buf;
@@ -101,10 +101,10 @@ MinixFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	DPRINT("%s() = STATUS_UNRECOGNIZED_VOLUME\n",__FUNCTION__);
 	Status = STATUS_UNRECOGNIZED_VOLUME;
      }
-   
+
    Irp->IoStatus.Status = Status;
    Irp->IoStatus.Information = 0;
-   
+
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
    return(Status);
 }
@@ -123,11 +123,11 @@ DriverEntry(PDRIVER_OBJECT _DriverObject,
    PDEVICE_OBJECT DeviceObject;
    NTSTATUS ret;
    UNICODE_STRING DeviceName;
-   
+
    DbgPrint("Minix FSD 0.0.1\n");
-   
+
    DriverObject = _DriverObject;
-   
+
    RtlInitUnicodeString(&DeviceName,
 			L"\\Device\\Minix");
    ret = IoCreateDevice(DriverObject,
@@ -147,14 +147,14 @@ DriverEntry(PDRIVER_OBJECT _DriverObject,
    DriverObject->MajorFunction[IRP_MJ_CREATE] = MinixCreate;
    DriverObject->MajorFunction[IRP_MJ_READ] = MinixRead;
    DriverObject->MajorFunction[IRP_MJ_WRITE] = MinixWrite;
-   DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = 
+   DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
                       MinixFileSystemControl;
-   DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] = 
+   DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
                       MinixDirectoryControl;
    DriverObject->DriverUnload = NULL;
 
    IoRegisterFileSystem(DeviceObject);
-   
+
    return(STATUS_SUCCESS);
 }
 

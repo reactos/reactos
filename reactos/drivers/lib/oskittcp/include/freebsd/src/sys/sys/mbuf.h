@@ -1,13 +1,13 @@
 /*
  * Copyright (c) 1997-1998 University of Utah and the Flux Group.
  * All rights reserved.
- * 
+ *
  * This file is part of the Flux OSKit.  The OSKit is free software, also known
  * as "open source;" you can redistribute it and/or modify it under the terms
  * of the GNU General Public License (GPL), version 2, as published by the Free
  * Software Foundation (FSF).  To explore alternate licensing terms, contact
  * the University of Utah at csl-dist@cs.utah.edu or +1-801-585-3271.
- * 
+ *
  * The OSKit is distributed in the hope that it will be useful, but WITHOUT ANY
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GPL for more details.  You should have
@@ -152,9 +152,9 @@ struct mbuf {
 /* mbuf flags */
 #if defined(OSKIT) && !defined(__REACTOS__)
 #include <oskit/io/bufio.h>
-/* 
+/*
  * A small step for mankind, but a huge leap for BSD:
- * We consistently use oskit_bufios for external mbufs 
+ * We consistently use oskit_bufios for external mbufs
  */
 #endif
 #define	M_EXT		0x0001	/* has associated external storage */

@@ -584,7 +584,7 @@ NdisInterlockedIncrement(
 /*
  * @implemented
  */
-PSINGLE_LIST_ENTRY 
+PSINGLE_LIST_ENTRY
 EXPORT
 NdisInterlockedPopEntrySList(
     IN  PSLIST_HEADER   ListHead,
@@ -603,7 +603,7 @@ NdisInterlockedPopEntrySList(
 /*
  * @implemented
  */
-PSINGLE_LIST_ENTRY 
+PSINGLE_LIST_ENTRY
 EXPORT
 NdisInterlockedPushEntrySList(
     IN  PSLIST_HEADER       ListHead,
@@ -921,7 +921,7 @@ NdisIMAssociateMiniport(
 /*
  * @unimplemented
  */
-NDIS_STATUS 
+NDIS_STATUS
 EXPORT
 NdisIMCancelInitializeDeviceInstance(
     IN  NDIS_HANDLE     DriverHandle,

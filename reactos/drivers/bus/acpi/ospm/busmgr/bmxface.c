@@ -79,7 +79,7 @@ bm_get_device_status (
 	if (!BM_NODE_PRESENT(node->parent)) {
 		return_ACPI_STATUS(AE_OK);
 	}
-	
+
 	/*
 	 * Dynamic Status?
 	 * ---------------
@@ -94,7 +94,7 @@ bm_get_device_status (
 	 * Evaluate _STA:
 	 * --------------
 	 */
-	status = bm_evaluate_simple_integer(node->device.acpi_handle, "_STA", 
+	status = bm_evaluate_simple_integer(node->device.acpi_handle, "_STA",
 		&(node->device.status));
 	if (ACPI_SUCCESS(status)) {
 		*device_status = node->device.status;
@@ -232,7 +232,7 @@ bm_register_driver (
 	/*
 	 * Install driver:
 	 * ----------------
-	 * For each match, record the driver information and execute the 
+	 * For each match, record the driver information and execute the
 	 * driver's Notify() funciton (if present) to notify the driver
 	 * of the device's presence.
 	 */
@@ -247,7 +247,7 @@ bm_register_driver (
 		DEBUG_PRINT(ACPI_INFO, ("Registering driver for device [0x%02x].\n", node->device.handle));
 
 		/* Notify driver of new device. */
-		status = driver->notify(BM_NOTIFY_DEVICE_ADDED, 
+		status = driver->notify(BM_NOTIFY_DEVICE_ADDED,
 			node->device.handle, &(node->driver.context));
 		if (ACPI_SUCCESS(status)) {
 			node->driver.notify = driver->notify;
@@ -319,7 +319,7 @@ bm_unregister_driver (
 		DEBUG_PRINT(ACPI_INFO, ("Unregistering driver for device [0x%02x].\n", node->device.handle));
 
 		/* Notify driver of device removal. */
-		status = node->driver.notify(BM_NOTIFY_DEVICE_REMOVED, 
+		status = node->driver.notify(BM_NOTIFY_DEVICE_REMOVED,
 			node->device.handle, &(node->driver.context));
 
 		node->device.flags &= ~BM_FLAGS_DRIVER_CONTROL;

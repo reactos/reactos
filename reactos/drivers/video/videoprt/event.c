@@ -37,10 +37,10 @@ VideoPortCreateEvent(
    OUT PEVENT *Event)
 {
    EVENT_TYPE Type;
- 
+
    (*Event) = ExAllocatePoolWithTag(
       NonPagedPool,
-      sizeof(KEVENT), 
+      sizeof(KEVENT),
       TAG_VIDEO_PORT);
 
    if ((*Event) == NULL)

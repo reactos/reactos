@@ -46,18 +46,18 @@ IntVideoPortImageDirectoryEntryToData(
 {
    PIMAGE_NT_HEADERS NtHeader;
    ULONG Va;
-  
+
    NtHeader = RtlImageNtHeader(BaseAddress);
    if (NtHeader == NULL)
       return NULL;
-  
+
    if (Directory >= NtHeader->OptionalHeader.NumberOfRvaAndSizes)
       return NULL;
-  
+
    Va = NtHeader->OptionalHeader.DataDirectory[Directory].VirtualAddress;
    if (Va == 0)
       return NULL;
-  
+
    return (PVOID)(BaseAddress + Va);
 }
 
@@ -80,7 +80,7 @@ IntVideoPortGetProcAddress(
    RtlInitUnicodeString(&GdiDriverInfo.ModuleName, L"videoprt");
    Status = ZwSetSystemInformation(
       SystemLoadImage,
-      &GdiDriverInfo, 
+      &GdiDriverInfo,
       sizeof(SYSTEM_LOAD_IMAGE));
    if (!NT_SUCCESS(Status))
    {
@@ -107,8 +107,8 @@ IntVideoPortGetProcAddress(
       if (!_strnicmp((PCHAR)FunctionName, (PCHAR)(BaseAddress + *NamePtr),
                      strlen((PCHAR)FunctionName)))
       {
-         return (PVOID)((ULONG_PTR)BaseAddress + 
-                        (ULONG_PTR)AddressPtr[*OrdinalPtr]);	  
+         return (PVOID)((ULONG_PTR)BaseAddress +
+                        (ULONG_PTR)AddressPtr[*OrdinalPtr]);
       }
    }
 
@@ -124,7 +124,7 @@ IntVideoPortDeferredRoutine(
    IN PVOID SystemArgument1,
    IN PVOID SystemArgument2)
 {
-   PVOID HwDeviceExtension = 
+   PVOID HwDeviceExtension =
       &((PVIDEO_PORT_DEVICE_EXTENSION)DeferredContext)->MiniPortDeviceExtension;
    ((PMINIPORT_DPC_ROUTINE)SystemArgument1)(HwDeviceExtension, SystemArgument2);
 }
@@ -178,7 +178,7 @@ IntVideoPortCreateAdapterDeviceObject(
    WCHAR DeviceBuffer[20];
    UNICODE_STRING DeviceName;
    PDEVICE_OBJECT DeviceObject_;
-   
+
    if (DeviceObject == NULL)
       DeviceObject = &DeviceObject_;
 
@@ -358,7 +358,7 @@ IntVideoPortFindAdapter(
    if (NT_SUCCESS(Status))
    {
       ConfigInfo.SystemMemorySize =
-         SystemBasicInfo.NumberOfPhysicalPages * 
+         SystemBasicInfo.NumberOfPhysicalPages *
          SystemBasicInfo.PhysicalPageSize;
    }
 
@@ -373,7 +373,7 @@ IntVideoPortFindAdapter(
    {
       LegacyDetection = TRUE;
    }
-   
+
    if (LegacyDetection)
    {
       ULONG BusNumber, MaxBuses;
@@ -385,9 +385,9 @@ IntVideoPortFindAdapter(
          DeviceExtension->SystemIoBusNumber =
          ConfigInfo.SystemIoBusNumber = BusNumber;
 
-         RtlZeroMemory(&DeviceExtension->MiniPortDeviceExtension, 
+         RtlZeroMemory(&DeviceExtension->MiniPortDeviceExtension,
                        DriverExtension->InitializationData.HwDeviceExtensionSize);
-   
+
          /* FIXME: Need to figure out what string to pass as param 3. */
          Status = DriverExtension->InitializationData.HwFindAdapter(
             &DeviceExtension->MiniPortDeviceExtension,
@@ -493,37 +493,37 @@ IntVideoPortFindAdapter(
    return STATUS_SUCCESS;
 }
 
-VOID FASTCALL 
-IntAttachToCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess) 
-{ 
-   *CallingProcess = PsGetCurrentProcess(); 
-   if (*CallingProcess != Csrss) 
-   { 
+VOID FASTCALL
+IntAttachToCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess)
+{
+   *CallingProcess = PsGetCurrentProcess();
+   if (*CallingProcess != Csrss)
+   {
       if (PsGetCurrentThread()->ThreadsProcess != *CallingProcess)
-      { 
-         *PrevAttachedProcess = *CallingProcess; 
-         KeDetachProcess(); 
-      } 
-      else 
-      { 
-         *PrevAttachedProcess = NULL; 
-      } 
-      KeAttachProcess(Csrss); 
-   } 
-} 
- 
-VOID FASTCALL 
-IntDetachFromCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess) 
-{ 
-   if (*CallingProcess != Csrss) 
-   { 
-      KeDetachProcess(); 
-      if (NULL != *PrevAttachedProcess) 
-      { 
-         KeAttachProcess(*PrevAttachedProcess); 
-      } 
-   } 
-} 
+      {
+         *PrevAttachedProcess = *CallingProcess;
+         KeDetachProcess();
+      }
+      else
+      {
+         *PrevAttachedProcess = NULL;
+      }
+      KeAttachProcess(Csrss);
+   }
+}
+
+VOID FASTCALL
+IntDetachFromCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess)
+{
+   if (*CallingProcess != Csrss)
+   {
+      KeDetachProcess();
+      if (NULL != *PrevAttachedProcess)
+      {
+         KeAttachProcess(*PrevAttachedProcess);
+      }
+   }
+}
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -813,7 +813,7 @@ VideoPortSetRegistryParameters(
 
 /*
  * @implemented
- */ 
+ */
 
 VP_STATUS STDCALL
 VideoPortGetVgaStatus(
@@ -836,7 +836,7 @@ VideoPortGetVgaStatus(
       }
    }
 
-   return ERROR_INVALID_FUNCTION;    
+   return ERROR_INVALID_FUNCTION;
 }
 
 /*
@@ -851,8 +851,8 @@ VideoPortGetRomImage(
    IN ULONG Length)
 {
    static PVOID RomImageBuffer = NULL;
-   PEPROCESS CallingProcess; 
-   PEPROCESS PrevAttachedProcess; 
+   PEPROCESS CallingProcess;
+   PEPROCESS PrevAttachedProcess;
 
    DPRINT("VideoPortGetRomImage(HwDeviceExtension 0x%X Length 0x%X)\n",
           HwDeviceExtension, Length);
@@ -870,10 +870,10 @@ VideoPortGetRomImage(
    else
    {
       /*
-       * The DDK says we shouldn't use the legacy C0000 method but get the  
-       * rom base address from the corresponding pci or acpi register but  
+       * The DDK says we shouldn't use the legacy C0000 method but get the
+       * rom base address from the corresponding pci or acpi register but
        * lets ignore that and use C0000 anyway. We have already mapped the
-       * bios area into memory so we'll copy from there.                   
+       * bios area into memory so we'll copy from there.
        */
 
       /* Copy the bios. */
@@ -903,7 +903,7 @@ VideoPortGetRomImage(
 
 BOOLEAN STDCALL
 VideoPortScanRom(
-   IN PVOID HwDeviceExtension, 
+   IN PVOID HwDeviceExtension,
    IN PUCHAR RomBase,
    IN ULONG RomLength,
    IN PUCHAR String)
@@ -951,7 +951,7 @@ VideoPortSynchronizeExecution(
       case VpLowPriority:
          Ret = (*SynchronizeRoutine)(Context);
          break;
-   
+
       case VpMediumPriority:
          DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
          if (DeviceExtension->InterruptObject == NULL)
@@ -1094,7 +1094,7 @@ VideoPortQueueDpc(
    IN PVOID Context)
 {
    return KeInsertQueueDpc(
-      &VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension)->DpcObject, 
+      &VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension)->DpcObject,
       (PVOID)CallbackRoutine,
       (PVOID)Context);
 }
@@ -1200,7 +1200,7 @@ VideoPortQueryPerformanceCounter(
 /*
  * @implemented
  */
- 
+
 VOID STDCALL
 VideoPortAcquireDeviceLock(
    IN PVOID  HwDeviceExtension)
