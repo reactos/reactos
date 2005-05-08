@@ -638,16 +638,16 @@ static void init_pointers (func_t *func)
         {
             if (var->type->type == RPC_FC_RP)
             {
-                print_server("(");
+                print_server("*(");
                 write_type(server, var->type, NULL, var->tname);
-                fprintf(server, ")%s = 0;\n", var->name);
+                fprintf(server, "*)&%s = NULL;\n", var->name);
             }
         }
         else if (var->ptr_level == 1)
         {
-            print_server("(");
+            print_server("*(");
             write_type(server, var->type, NULL, var->tname);
-            fprintf(server, " __RPC_FAR *)%s = 0;\n", var->name);
+            fprintf(server, " __RPC_FAR *)&%s = 0;\n", var->name);
         }
         else if (var->ptr_level > 1)
         {

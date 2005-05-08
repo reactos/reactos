@@ -2,6 +2,12 @@ ChangeLog
 
 2004-05-08 weiden
 
+   tools/widl/server.c
+
+Don't generate lvalue assignment code.
+
+2004-05-08 weiden
+
    tools/widl/client.c
    tools/widl/proxy.c
    tools/widl/server.c
