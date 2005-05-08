@@ -226,6 +226,7 @@ IopDeleteFile(PVOID ObjectBody)
         {
             KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
         }
+	IoFreeIrp(Irp);
       
     }
 
