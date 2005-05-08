@@ -115,7 +115,7 @@ netfinger(char *name)
 	 * Otherwise, all high bits are stripped; if it isn't printable and
 	 * it isn't a space, we can simply set the 7th bit.  Every ASCII
 	 * character with bit 7 set is printable.
-	 */ 
+	 */
 	lastc = 0;
 	while (recv(s, &c, 1, 0) == 1) {
 		c &= 0x7f;

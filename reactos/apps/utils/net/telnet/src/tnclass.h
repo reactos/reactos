@@ -26,7 +26,7 @@ public:
 	int Open(const char *szHost, const char *strPort = "23");
 	int Close();				// close current connection
 	int Resume();				// resume current session
-	
+
 	// changes to the keymap profile in the file
 	int LoadKeyMap( const char * file, const char * name);
 	void DisplayKeyMap();		// display available keymaps
@@ -35,7 +35,7 @@ private:
 	SOCKET Connect();
 	void telSetConsoleTitle(const char * szHost);
 	void DoInit();
-	
+
 	SOCKET Socket;
 	char strPort[32]; // int iPort;
 	char szHost[127];

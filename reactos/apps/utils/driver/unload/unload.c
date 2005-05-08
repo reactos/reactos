@@ -1,6 +1,6 @@
 /*
  * Unload a device driver
- */ 
+ */
 #include <windows.h>
 #include <ntos/zw.h>
 

@@ -22,13 +22,13 @@
  *
  *                         All Rights Reserved
  *
- * Permission to use, copy, modify, and distribute this software and its 
- * documentation for any purpose and without fee is hereby granted, 
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation for any purpose and without fee is hereby granted,
  * provided that the above copyright notice appear in all copies and that
- * both that copyright notice and this permission notice appear in 
+ * both that copyright notice and this permission notice appear in
  * supporting documentation, and that the name of Digital not be
  * used in advertising or publicity pertaining to distribution of the
- * software without specific, written prior permission.  
+ * software without specific, written prior permission.
  *
  * DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
  * ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -88,7 +88,7 @@ ClearWindow(PPERF_INFO PerfInfo)
   UpdateWindow(PerfInfo->Wnd);
 }
 
-static unsigned 
+static unsigned
 CalibrateTest(PTEST Test, PPERF_INFO PerfInfo)
 {
 #define GOAL    2500   /* Try to get up to 2.5 seconds                 */
@@ -127,7 +127,7 @@ CalibrateTest(PTEST Test, PPERF_INFO PerfInfo)
 
       if (DidReps != Reps)
         {
-          /* The test can't do the number of reps as we asked for.  
+          /* The test can't do the number of reps as we asked for.
              Give up */
           return DidReps;
         }
@@ -165,7 +165,7 @@ CalibrateTest(PTEST Test, PPERF_INFO PerfInfo)
   return Reps;
 }
 
-static void 
+static void
 DisplayStatus(HWND Label, LPCWSTR Message, LPCWSTR Test, int Try)
 {
   WCHAR Status[128];
@@ -176,7 +176,7 @@ DisplayStatus(HWND Label, LPCWSTR Message, LPCWSTR Test, int Try)
   UpdateWindow(Label);
 }
 
-static double 
+static double
 RoundTo3Digits(double d)
 {
   /* It's kind of silly to print out things like ``193658.4/sec'' so just
@@ -222,7 +222,7 @@ RoundTo3Digits(double d)
   return d * sign;
 }
 
-static void 
+static void
 ReportTimes(DWORD Time, int Reps, LPCWSTR Label, BOOL Average)
 {
   double MSecsPerObj, ObjsPerSec;
@@ -236,7 +236,7 @@ ReportTimes(DWORD Time, int Reps, LPCWSTR Label, BOOL Average)
          allow averaging results from several repetitions. */
       ObjsPerSec =  RoundTo3Digits(ObjsPerSec);
 
-      wprintf(L"%7d %s @ %8.4f msec (%8.1f/sec): %s\n", 
+      wprintf(L"%7d %s @ %8.4f msec (%8.1f/sec): %s\n",
               Reps, Average ? L"trep" : L"reps", MSecsPerObj, ObjsPerSec, Label);
     }
   else
@@ -281,7 +281,7 @@ ProcessTest(PTEST Test, PPERF_INFO PerfInfo)
       ReportTimes(Time, Reps, Test->Label, FALSE);
       (*Test->PassCleanup)(Context, PerfInfo);
       ProcessMessages();
-    }      
+    }
   (*Test->Cleanup)(Context, PerfInfo);
   ReportTimes(TotalTime, Repeat * Reps, Test->Label, TRUE);
   ProcessMessages();
@@ -367,9 +367,9 @@ PrintOSVersion(void)
                     wprintf(L"Professional ");
                   }
               }
-            
+
             /* Test for the server type. */
-            else if (VER_NT_SERVER == VersionInfo.wProductType  || 
+            else if (VER_NT_SERVER == VersionInfo.wProductType  ||
                      VER_NT_DOMAIN_CONTROLLER == VersionInfo.wProductType)
               {
                 if (5 == VersionInfo.dwMajorVersion && 2 == VersionInfo.dwMinorVersion)
@@ -460,7 +460,7 @@ PrintOSVersion(void)
 
         /* Display service pack (if any) and build number. */
 
-        if (4 == VersionInfo.dwMajorVersion && 
+        if (4 == VersionInfo.dwMajorVersion &&
             0 == lstrcmpiW(VersionInfo.szCSDVersion, L"Service Pack 6"))
           {
             /* Test for SP6 versus SP6a. */
@@ -500,7 +500,7 @@ PrintOSVersion(void)
               {
                 wprintf(L"OSR2");
               }
-          } 
+          }
 
         else if (4 == VersionInfo.dwMajorVersion && 10 == VersionInfo.dwMinorVersion)
           {
@@ -514,7 +514,7 @@ PrintOSVersion(void)
         else if (4 == VersionInfo.dwMajorVersion && 90 == VersionInfo.dwMinorVersion)
           {
             wprintf(L"Running on Microsoft Windows Millennium Edition");
-          } 
+          }
         wprintf(L"\n");
         break;
 
@@ -575,7 +575,7 @@ MainWndProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         EndPaint (Wnd, &Ps);
 	Result = 0;
 	break;
-  
+
       default:
         Result = DefWindowProcW(Wnd, Msg, wParam, lParam);
         break;
@@ -623,7 +623,7 @@ LabelWndProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         EndPaint (Wnd, &Ps);
 	Result = 0;
 	break;
-  
+
       default:
         Result = DefWindowProcW(Wnd, Msg, wParam, lParam);
         break;
@@ -857,7 +857,7 @@ ProcessCommandLine(PPERF_INFO PerfInfo, unsigned *TestCount, PTEST *Tests)
   return TRUE;
 }
 
-int WINAPI 
+int WINAPI
 WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
 	LPSTR lpszCmdLine,

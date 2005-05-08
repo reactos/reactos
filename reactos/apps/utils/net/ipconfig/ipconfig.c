@@ -132,13 +132,13 @@ static void ShowNetworkInterfaces()
     }
 /*
 typedef struct _IP_ADAPTER_INDEX_MAP {
-  ULONG Index;                     // adapter index 
-  WCHAR Name[MAX_ADAPTER_NAME];    // name of the adapter 
+  ULONG Index;                     // adapter index
+  WCHAR Name[MAX_ADAPTER_NAME];    // name of the adapter
 } IP_ADAPTER_INDEX_MAP, * PIP_ADAPTER_INDEX_MAP;
 
 typedef struct _IP_INTERFACE_INFO {
-  LONG NumAdapters;                 // number of adapters in array 
-  IP_ADAPTER_INDEX_MAP Adapter[1];  // adapter indices and names 
+  LONG NumAdapters;                 // number of adapters in array
+  IP_ADAPTER_INDEX_MAP Adapter[1];  // adapter indices and names
 } IP_INTERFACE_INFO,*PIP_INTERFACE_INFO;
  */
     result = GetInterfaceInfo(pIfTable, &dwOutBufLen);
@@ -194,7 +194,7 @@ typedef struct _IP_ADAPTER_INFO {
   IP_ADDR_STRING PrimaryWinsServer;
   IP_ADDR_STRING SecondaryWinsServer;
 a  time_t LeaseObtained;
-b  time_t LeaseExpires; 
+b  time_t LeaseExpires;
 } IP_ADAPTER_INFO, *PIP_ADAPTER_INFO;
  */
 /*

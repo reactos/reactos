@@ -25,9 +25,9 @@
  *              |              .            |            |      |
  *              |              .            | <-- OR --> |      |
  *              |              .            |            |      |
- *  CON_LEFT    |              .            | CON_RIGHT  |      
+ *  CON_LEFT    |              .            | CON_RIGHT  |
  *    (=0)      |              .            | (=CON_     |  CON_LINES
- *              |..............*            |   WIDTH)   |      
+ *              |..............*            |   WIDTH)   |
  *              |            (CON_CUR_X,    |            |      |
  *              |             CON_CUR_Y)    |            |      |
  *              |                           |            |      |
@@ -77,15 +77,15 @@ public:
 	void SetCursorPosition(int x, int y);
 	void SetCursorSize(int pct);
 	void MoveCursorPosition(int x, int y);
-	
+
 	// Screen mode/size routines
     int GetWidth() {return CON_COLS;}
     int GetHeight() {return CON_LINES;}
 	void SetExtendedMode(int iFunction, BOOL bEnable);
 	void SetWindowSize(int width, int height);	// Set the size of the window,
 												// but not the buffer
-   
-	// Color/attribute routines	
+
+	// Color/attribute routines
 	void SetAttrib(unsigned char wAttr) {wAttributes = wAttr;}
     unsigned char GetAttrib() {return wAttributes;}
     void Normal();								// Reset all attributes
@@ -130,13 +130,13 @@ public:
 	void index();
 	void reverse_index();
 	void setLineWrap(bool bEnabled){
-		if(!ini.get_lock_linewrap()) 
+		if(!ini.get_lock_linewrap())
 			ini.set_value("Wrap_Line", bEnabled ? "true" : "false");
 	}
 	bool getLineWrap() {return ini.get_wrapline();}
 
     // Insert/delete characters/lines
-	void InsertLine(int numlines);			// Added by Titus von Boxberg 30/3/97		
+	void InsertLine(int numlines);			// Added by Titus von Boxberg 30/3/97
     void InsertCharacter(int numchar);		// "
     void DeleteCharacter(int numchar);		// "
 	void InsertMode(int i) {insert_mode = i;}
@@ -148,7 +148,7 @@ protected:
 	HANDLE hConsole;
 
 	CONSOLE_SCREEN_BUFFER_INFO ConsoleInfo;
-	
+
 	unsigned char wAttributes;
 	unsigned char fg, bg;
 	unsigned char defaultfg, defaultbg;
@@ -157,7 +157,7 @@ protected:
 	bool blink;
 	bool underline;
 	bool reverse;
-	
+
 	int iScrollStart;
 	int iScrollEnd;
 	int insert_mode;

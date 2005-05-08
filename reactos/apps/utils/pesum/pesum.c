@@ -60,7 +60,7 @@ int main(int argc, char **argv)
       if (!((PIMAGE_SECTION_HEADER)IMAGE_FIRST_SECTION((PIMAGE_NT_HEADERS)&buffer[offset]))[i].VirtualAddress)
 	 break;
 #if 1
-      printf("%-8.8s %08x %08x %08x ", 
+      printf("%-8.8s %08x %08x %08x ",
 	     ((PIMAGE_SECTION_HEADER)IMAGE_FIRST_SECTION((PIMAGE_NT_HEADERS)&buffer[offset]))[i].Name,
 	     ((PIMAGE_SECTION_HEADER)IMAGE_FIRST_SECTION((PIMAGE_NT_HEADERS)&buffer[offset]))[i].VirtualAddress,
 	     ((PIMAGE_SECTION_HEADER)IMAGE_FIRST_SECTION((PIMAGE_NT_HEADERS)&buffer[offset]))[i].SizeOfRawData,

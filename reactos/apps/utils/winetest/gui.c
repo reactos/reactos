@@ -138,7 +138,7 @@ guiStep (va_list ap)
 {
     const int pgID = IDC_ST0 + progressGroup * 2;
     char *str = vstrmake (NULL, ap);
-    
+
     progressCurr++;
     SetDlgItemText (dialog, pgID, str);
     SendDlgItemMessage (dialog, pgID+1, PBM_SETPOS,
@@ -462,7 +462,7 @@ report (enum report_type t, ...)
             }
         }
     }
-        
+
     va_start (ap, t);
     if (t < sizeof text_funcs / sizeof text_funcs[0] &&
         t < sizeof GUI_funcs / sizeof GUI_funcs[0] &&

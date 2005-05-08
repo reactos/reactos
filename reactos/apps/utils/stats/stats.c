@@ -9,7 +9,7 @@
  */
 #include <windows.h>
 #include <tchar.h>
-#include <stdio.h>     
+#include <stdio.h>
 
 typedef struct _EXTENSION_INFO
 {
@@ -80,14 +80,14 @@ AddExtension(LPTSTR ExtName,
   ExtInfo = (PEXTENSION_INFO) HeapAlloc (GetProcessHeap(), 0, sizeof (EXTENSION_INFO));
   if (!ExtInfo)
     return NULL;
-  
+
   for(t = ExtName; *t != _T('\0'); t += _tcslen(t) + 1);
   ln = (DWORD)t - (DWORD)ExtName;
-  
+
   ZeroMemory (ExtInfo, sizeof (EXTENSION_INFO));
   memcpy (ExtInfo->ExtName, ExtName, ln);
   _tcscpy (ExtInfo->Description, Description);
-  
+
   for(t = ExtInfo->ExtName; *t != _T('\0'); t += _tcslen(t) + 1)
   {
     if(ExtInfo->nExtensions++ != 0)
@@ -95,7 +95,7 @@ AddExtension(LPTSTR ExtName,
     _tcscat (ExtInfo->ExpandedExtName, _T("*."));
     _tcscat (ExtInfo->ExpandedExtName, t);
   }
-  
+
   if (ExtInfoList)
   {
     Info = ExtInfoList;
@@ -201,7 +201,7 @@ ReadLines(PFILE_INFO StatInfo)
   static char FileBuffer[1024];
   char LastChar = '\0';
   char *Current;
-  
+
   LineLen = 0;
   while(ReadFile (FileHandle, FileBuffer, sizeof(FileBuffer), &ReadBytes, NULL) && ReadBytes >= sizeof(char))
   {
@@ -226,7 +226,7 @@ ReadLines(PFILE_INFO StatInfo)
         LineLen++;
     }
   }
-  
+
   StatInfo->LineCount += (LineLen > 0);
   StatInfo->EmptyLines += ((LastChar != '\0') && (LineLen == 0));
 }
@@ -245,16 +245,16 @@ PrintStatistics(VOID)
   TotalLineCount = 0;
   TotalEmptyLines = 0;
   Info = ExtInfoList;
-  
+
   for (Info = ExtInfoList; Info != NULL; Info = Info->Next)
   {
     TotalFileCount += Info->FileCount;
     TotalLineCount += Info->LineCount;
     TotalEmptyLines += Info->EmptyLines;
   }
-  
+
   TotalAvgLF = (TotalFileCount ? TotalLineCount / TotalFileCount : 0);
-  
+
   for (Info = ExtInfoList; Info != NULL; Info = Info->Next)
   {
     DWORD AvgLF;
@@ -325,16 +325,16 @@ ProcessFiles(LPTSTR Path)
 				  if (LoadFile (FileName))
 				  {
 	          PFILE_INFO StatInfo;
-	
+
 	          StatInfo = AddFile (FindFile.cFileName, Info);
 	          if (!StatInfo)
 						{
 	  			    _tprintf (_T("Not enough free memory.\n"));
 	            return FALSE;
 						}
-	
+
 				    ReadLines (StatInfo);
-	
+
             Info->FileCount++;
 	          Info->LineCount += StatInfo->LineCount;
 	          Info->EmptyLines += StatInfo->EmptyLines;
@@ -434,7 +434,7 @@ IsOptionSet(TCHAR *Option)
   {
     if(!Options[i])
       continue;
-    
+
     if(!_tcscmp(Options[i], Option))
       return TRUE;
   }
@@ -465,7 +465,7 @@ main (int argc, char * argv [])
   AddExtension (_T("c\0\0"), _T("Ansi C Source files"));
   AddExtension (_T("cpp\0cxx\0\0"), _T("C++ Source files"));
   AddExtension (_T("h\0\0"), _T("Header files"));
-  
+
   for(a = 1; a < argc - 1; a++)
   {
 #if UNICODE
@@ -479,10 +479,10 @@ main (int argc, char * argv [])
     Options[a - 1] = argv[a];
 #endif
   }
-  
+
   SkipEmptyLines = IsOptionSet(_T("-e"));
   BeSilent = IsOptionSet(_T("-s"));
-  
+
 #if UNICODE
   ZeroMemory(Path, sizeof(Path));
   if(MultiByteToWideChar(CP_ACP, 0, argv[argc - 1], -1, Path, MAX_PATH) > 0)

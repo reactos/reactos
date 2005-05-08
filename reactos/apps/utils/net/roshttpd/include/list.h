@@ -25,7 +25,7 @@ public:
 	CListNode *GetPrev();
 private:
 	PVOID Element;
-	CListNode *Next; 
+	CListNode *Next;
 	CListNode *Prev;
     static HANDLE hHeap;
     static INT nRef;
@@ -37,7 +37,7 @@ public:
 	CList();
 	~CList();
 	CList& operator=(CList&);
-	
+
 	CIterator<Item> *CreateIterator() const;
 	LONG Count() const;
 	Item& Get(const LONG index) const;
@@ -82,7 +82,7 @@ CList<Item>::CList()
 // Default destructor
 template <class Item>
 CList<Item>::~CList()
-{	
+{
 	RemoveAll();
 	delete Trailer;
 	delete Header;
@@ -157,7 +157,7 @@ VOID CList<Item>::RemoveAll()
 		tmp = node->GetNext();
 		delete node;
 		node = tmp;
-	} 
+	}
 	Header->SetNext(Trailer);
 	Trailer->SetPrev(Header);
 	NodeCount = 0;

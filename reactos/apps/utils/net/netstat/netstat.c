@@ -52,7 +52,7 @@ static char TcpState[][32] = {
 VOID PrintError(DWORD ErrorCode)
 {
 	LPVOID lpMsgBuf;
- 
+
 	FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
 				  NULL, ErrorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 				  (LPTSTR)&lpMsgBuf, 0, NULL);
@@ -66,21 +66,21 @@ static void ShowTcpStatistics()
     GetTcpStatistics(&TcpStatsMIB);
 
     _tprintf(_T("TCP/IP Statistics\t\n"));
-    _tprintf(_T("  time-out algorithm:\t\t%d\n"), TcpStatsMIB.dwRtoAlgorithm);    
-    _tprintf(_T("  minimum time-out:\t\t%d\n"), TcpStatsMIB.dwRtoMin);         
-    _tprintf(_T("  maximum time-out:\t\t%d\n"), TcpStatsMIB.dwRtoMax);         
-    _tprintf(_T("  maximum connections:\t\t%d\n"), TcpStatsMIB.dwMaxConn);        
-    _tprintf(_T("  active opens:\t\t\t%d\n"), TcpStatsMIB.dwActiveOpens);    
-    _tprintf(_T("  passive opens:\t\t\t%d\n"), TcpStatsMIB.dwPassiveOpens);   
-    _tprintf(_T("  failed attempts:\t\t%d\n"), TcpStatsMIB.dwAttemptFails);   
-    _tprintf(_T("  established connections reset:\t%d\n"), TcpStatsMIB.dwEstabResets);    
-    _tprintf(_T("  established connections:\t%d\n"), TcpStatsMIB.dwCurrEstab);      
-    _tprintf(_T("  segments received:\t\t%d\n"), TcpStatsMIB.dwInSegs);         
-    _tprintf(_T("  segment sent:\t\t\t%d\n"), TcpStatsMIB.dwOutSegs);        
-    _tprintf(_T("  segments retransmitted:\t\t%d\n"), TcpStatsMIB.dwRetransSegs);    
-    _tprintf(_T("  incoming errors:\t\t%d\n"), TcpStatsMIB.dwInErrs);         
-    _tprintf(_T("  outgoing resets:\t\t%d\n"), TcpStatsMIB.dwOutRsts);        
-    _tprintf(_T("  cumulative connections:\t\t%d\n"), TcpStatsMIB.dwNumConns);       
+    _tprintf(_T("  time-out algorithm:\t\t%d\n"), TcpStatsMIB.dwRtoAlgorithm);
+    _tprintf(_T("  minimum time-out:\t\t%d\n"), TcpStatsMIB.dwRtoMin);
+    _tprintf(_T("  maximum time-out:\t\t%d\n"), TcpStatsMIB.dwRtoMax);
+    _tprintf(_T("  maximum connections:\t\t%d\n"), TcpStatsMIB.dwMaxConn);
+    _tprintf(_T("  active opens:\t\t\t%d\n"), TcpStatsMIB.dwActiveOpens);
+    _tprintf(_T("  passive opens:\t\t\t%d\n"), TcpStatsMIB.dwPassiveOpens);
+    _tprintf(_T("  failed attempts:\t\t%d\n"), TcpStatsMIB.dwAttemptFails);
+    _tprintf(_T("  established connections reset:\t%d\n"), TcpStatsMIB.dwEstabResets);
+    _tprintf(_T("  established connections:\t%d\n"), TcpStatsMIB.dwCurrEstab);
+    _tprintf(_T("  segments received:\t\t%d\n"), TcpStatsMIB.dwInSegs);
+    _tprintf(_T("  segment sent:\t\t\t%d\n"), TcpStatsMIB.dwOutSegs);
+    _tprintf(_T("  segments retransmitted:\t\t%d\n"), TcpStatsMIB.dwRetransSegs);
+    _tprintf(_T("  incoming errors:\t\t%d\n"), TcpStatsMIB.dwInErrs);
+    _tprintf(_T("  outgoing resets:\t\t%d\n"), TcpStatsMIB.dwOutRsts);
+    _tprintf(_T("  cumulative connections:\t\t%d\n"), TcpStatsMIB.dwNumConns);
 }
 
 static void ShowUdpStatistics()
@@ -90,7 +90,7 @@ static void ShowUdpStatistics()
 
     _tprintf(_T("UDP Statistics\t\n"));
     _tprintf(_T("  received datagrams:\t\t\t%d\n"), UDPStatsMIB.dwInDatagrams);
-    _tprintf(_T("  datagrams for which no port exists:\t%d\n"), UDPStatsMIB.dwNoPorts); 
+    _tprintf(_T("  datagrams for which no port exists:\t%d\n"), UDPStatsMIB.dwNoPorts);
     _tprintf(_T("  errors on received datagrams:\t\t%d\n"), UDPStatsMIB.dwInErrors);
     _tprintf(_T("  sent datagrams:\t\t\t\t%d\n"), UDPStatsMIB.dwOutDatagrams);
     _tprintf(_T("  number of entries in listener table:\t%d\n"), UDPStatsMIB.dwNumAddrs);
@@ -102,27 +102,27 @@ static void ShowIpStatistics()
     GetIpStatistics(&IPStatsMIB);
 
     _tprintf(_T("IP Statistics\t\n"));
-    _tprintf(_T("  IP forwarding enabled or disabled:\t%d\n"), IPStatsMIB.dwForwarding);      
-    _tprintf(_T("  default time-to-live:\t\t\t%d\n"), IPStatsMIB.dwDefaultTTL);      
-    _tprintf(_T("  datagrams received:\t\t\t%d\n"), IPStatsMIB.dwInReceives);      
-    _tprintf(_T("  received header errors:\t\t\t%d\n"), IPStatsMIB.dwInHdrErrors);     
-    _tprintf(_T("  received address errors:\t\t%d\n"), IPStatsMIB.dwInAddrErrors);    
-    _tprintf(_T("  datagrams forwarded:\t\t\t%d\n"), IPStatsMIB.dwForwDatagrams);   
-    _tprintf(_T("  datagrams with unknown protocol:\t%d\n"), IPStatsMIB.dwInUnknownProtos); 
-    _tprintf(_T("  received datagrams discarded:\t\t%d\n"), IPStatsMIB.dwInDiscards);      
-    _tprintf(_T("  received datagrams delivered:\t\t%d\n"), IPStatsMIB.dwInDelivers);      
-    _tprintf(_T("  sent datagrams discarded:\t\t%d\n"), IPStatsMIB.dwOutDiscards);     
-    _tprintf(_T("  datagrams for which no route exists:\t%d\n"), IPStatsMIB.dwOutNoRoutes);     
-    _tprintf(_T("  datagrams for which frags didn't arrive:%d\n"), IPStatsMIB.dwReasmTimeout);    
-    _tprintf(_T("  datagrams requiring reassembly:\t\t%d\n"), IPStatsMIB.dwReasmReqds);      
-    _tprintf(_T("  successful reassemblies:\t\t%d\n"), IPStatsMIB.dwReasmOks);        
-    _tprintf(_T("  failed reassemblies:\t\t\t%d\n"), IPStatsMIB.dwReasmFails);      
-    _tprintf(_T("  successful fragmentations:\t\t%d\n"), IPStatsMIB.dwFragOks);         
-    _tprintf(_T("  failed fragmentations:\t\t\t%d\n"), IPStatsMIB.dwFragFails);       
-    _tprintf(_T("  datagrams fragmented:\t\t\t%d\n"), IPStatsMIB.dwFragCreates);     
-    _tprintf(_T("  number of interfaces on computer:\t%d\n"), IPStatsMIB.dwNumIf);           
-    _tprintf(_T("  number of IP address on computer:\t%d\n"), IPStatsMIB.dwNumAddr);         
-    _tprintf(_T("  number of routes in routing table:\t%d\n"), IPStatsMIB.dwNumRoutes);       
+    _tprintf(_T("  IP forwarding enabled or disabled:\t%d\n"), IPStatsMIB.dwForwarding);
+    _tprintf(_T("  default time-to-live:\t\t\t%d\n"), IPStatsMIB.dwDefaultTTL);
+    _tprintf(_T("  datagrams received:\t\t\t%d\n"), IPStatsMIB.dwInReceives);
+    _tprintf(_T("  received header errors:\t\t\t%d\n"), IPStatsMIB.dwInHdrErrors);
+    _tprintf(_T("  received address errors:\t\t%d\n"), IPStatsMIB.dwInAddrErrors);
+    _tprintf(_T("  datagrams forwarded:\t\t\t%d\n"), IPStatsMIB.dwForwDatagrams);
+    _tprintf(_T("  datagrams with unknown protocol:\t%d\n"), IPStatsMIB.dwInUnknownProtos);
+    _tprintf(_T("  received datagrams discarded:\t\t%d\n"), IPStatsMIB.dwInDiscards);
+    _tprintf(_T("  received datagrams delivered:\t\t%d\n"), IPStatsMIB.dwInDelivers);
+    _tprintf(_T("  sent datagrams discarded:\t\t%d\n"), IPStatsMIB.dwOutDiscards);
+    _tprintf(_T("  datagrams for which no route exists:\t%d\n"), IPStatsMIB.dwOutNoRoutes);
+    _tprintf(_T("  datagrams for which frags didn't arrive:%d\n"), IPStatsMIB.dwReasmTimeout);
+    _tprintf(_T("  datagrams requiring reassembly:\t\t%d\n"), IPStatsMIB.dwReasmReqds);
+    _tprintf(_T("  successful reassemblies:\t\t%d\n"), IPStatsMIB.dwReasmOks);
+    _tprintf(_T("  failed reassemblies:\t\t\t%d\n"), IPStatsMIB.dwReasmFails);
+    _tprintf(_T("  successful fragmentations:\t\t%d\n"), IPStatsMIB.dwFragOks);
+    _tprintf(_T("  failed fragmentations:\t\t\t%d\n"), IPStatsMIB.dwFragFails);
+    _tprintf(_T("  datagrams fragmented:\t\t\t%d\n"), IPStatsMIB.dwFragCreates);
+    _tprintf(_T("  number of interfaces on computer:\t%d\n"), IPStatsMIB.dwNumIf);
+    _tprintf(_T("  number of IP address on computer:\t%d\n"), IPStatsMIB.dwNumAddr);
+    _tprintf(_T("  number of routes in routing table:\t%d\n"), IPStatsMIB.dwNumRoutes);
 }
 
 static void ShowNetworkParams()
@@ -262,20 +262,20 @@ typedef struct {
 // Translate port numbers into their text equivalent if there is one
 //
 PCHAR
-GetPortName(DWORD Flags, UINT port, PCHAR proto, PCHAR name, int namelen) 
+GetPortName(DWORD Flags, UINT port, PCHAR proto, PCHAR name, int namelen)
 {
 	struct servent *psrvent;
 
 	if (Flags & FLAG_SHOW_NUMBERS) {
 		sprintf(name, "%d", htons((WORD)port));
 		return name;
-	} 
+	}
 	// Try to translate to a name
 	if (psrvent = getservbyport(port, proto)) {
 		strcpy(name, psrvent->s_name );
 	} else {
 		sprintf(name, "%d", htons((WORD)port));
-	}		
+	}
 	return name;
 }
 
@@ -286,7 +286,7 @@ GetPortName(DWORD Flags, UINT port, PCHAR proto, PCHAR name, int namelen)
 // Translate IP addresses into their name-resolved form if possible.
 //
 PCHAR
-GetIpHostName(DWORD Flags, BOOL local, UINT ipaddr, PCHAR name, int namelen) 
+GetIpHostName(DWORD Flags, BOOL local, UINT ipaddr, PCHAR name, int namelen)
 {
 //	struct hostent *phostent;
 	UINT nipaddr;
@@ -294,7 +294,7 @@ GetIpHostName(DWORD Flags, BOOL local, UINT ipaddr, PCHAR name, int namelen)
 	// Does the user want raw numbers?
 	nipaddr = htonl(ipaddr);
 	if (Flags & FLAG_SHOW_NUMBERS ) {
-		sprintf(name, "%d.%d.%d.%d", 
+		sprintf(name, "%d.%d.%d.%d",
 			(nipaddr >> 24) & 0xFF,
 			(nipaddr >> 16) & 0xFF,
 			(nipaddr >> 8) & 0xFF,
@@ -307,7 +307,7 @@ GetIpHostName(DWORD Flags, BOOL local, UINT ipaddr, PCHAR name, int namelen)
 	// Try to translate to a name
 	if (!ipaddr) {
 		if (!local) {
-			sprintf(name, "%d.%d.%d.%d", 
+			sprintf(name, "%d.%d.%d.%d",
 				(nipaddr >> 24) & 0xFF,
 				(nipaddr >> 16) & 0xFF,
 				(nipaddr >> 8) & 0xFF,
@@ -339,7 +339,7 @@ GetIpHostName(DWORD Flags, BOOL local, UINT ipaddr, PCHAR name, int namelen)
 
 		sprintf(name, "%d.%d.%d.%d", i1,i2,i3,i4);
 #else
-		sprintf(name, "%d.%d.%d.%d", 
+		sprintf(name, "%d.%d.%d.%d",
 			((nipaddr >> 24) & 0x000000FF),
 			((nipaddr >> 16) & 0x000000FF),
 			((nipaddr >> 8) & 0x000000FF),
@@ -360,10 +360,10 @@ BOOLEAN usage(void)
 
 //
 // GetOptions
-// 
+//
 // Parses the command line arguments.
 //
-BOOLEAN 
+BOOLEAN
 GetOptions(int argc, char *argv[], PDWORD pFlags)
 {
 	int		i, j;
@@ -466,12 +466,12 @@ int main(int argc, char *argv[])
 		for (i = 0; i < tcpTable->dwNumEntries; i++) {
 			if (flags & FLAG_SHOW_ALL_ENDPOINTS ||
 				tcpTable->table[i].dwState == MIB_TCP_STATE_ESTAB) {
-				sprintf(localaddr, "%s:%s", 
-					GetIpHostName(flags, TRUE, tcpTable->table[i].dwLocalAddr, localname, HOSTNAMELEN), 
+				sprintf(localaddr, "%s:%s",
+					GetIpHostName(flags, TRUE, tcpTable->table[i].dwLocalAddr, localname, HOSTNAMELEN),
 				    GetPortName(flags, tcpTable->table[i].dwLocalPort, "tcp", localport, PORTNAMELEN));
 				sprintf(remoteaddr, "%s:%s",
-					GetIpHostName(flags, FALSE, tcpTable->table[i].dwRemoteAddr, remotename, HOSTNAMELEN), 
-				    tcpTable->table[i].dwRemoteAddr ? 
+					GetIpHostName(flags, FALSE, tcpTable->table[i].dwRemoteAddr, remotename, HOSTNAMELEN),
+				    tcpTable->table[i].dwRemoteAddr ?
 					GetPortName(flags, tcpTable->table[i].dwRemotePort, "tcp", remoteport, PORTNAMELEN):
 					"0");
 				printf("%4s\tState:   %s\n", "[TCP]", TcpState[tcpTable->table[i].dwState]);
@@ -481,14 +481,14 @@ int main(int argc, char *argv[])
 		// Dump the UDP table
 		if (flags & FLAG_SHOW_ALL_ENDPOINTS) {
 			for (i = 0; i < udpTable->dwNumEntries; i++) {
-				sprintf(localaddr, "%s:%s", 
-					GetIpHostName(flags, TRUE, udpTable->table[i].dwLocalAddr, localname, HOSTNAMELEN), 
+				sprintf(localaddr, "%s:%s",
+					GetIpHostName(flags, TRUE, udpTable->table[i].dwLocalAddr, localname, HOSTNAMELEN),
 					GetPortName(flags, udpTable->table[i].dwLocalPort, "tcp", localport, PORTNAMELEN));
 				printf("%4s", "[UDP]");
 				printf("       Local:   %s\n       Remote:  %s\n", localaddr, "*.*.*.*:*");
 			}
 		}
-	}	
+	}
 	printf("\n");
 	return 0;
 }

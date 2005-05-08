@@ -142,7 +142,7 @@ int fputcSocket(int s, char putChar)
    buffer[1] = '\0';
 
    if(SOCKET_ERROR==send(s, buffer, 1, 0)) {
-	   int iret=WSAGetLastError (); 
+	   int iret=WSAGetLastError ();
 	   fprintf(stdout,"fputcSocket: %d\n",iret);
 	   return 0;
    }
@@ -154,9 +154,9 @@ int fputSocket(int s, char *buffer, int len)
 {
 	int iret;
 	while(len) {
-		if(SOCKET_ERROR==(iret=send(s, buffer, len, 0))) 
+		if(SOCKET_ERROR==(iret=send(s, buffer, len, 0)))
 		{
-			iret=WSAGetLastError (); 
+			iret=WSAGetLastError ();
 			fprintf(stdout,"fputcSocket: %d\n",iret);
 			return 0;
 		}
@@ -187,7 +187,7 @@ char *fgetsSocket(int s, char *string)
       if (count == 1)
       {
 	 string[i] = buffer[0];
-	 
+
 	 if (i == MAX_ASCII - 3)
 	 {
 	    count = 0;

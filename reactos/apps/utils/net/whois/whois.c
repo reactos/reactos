@@ -92,10 +92,10 @@ int main(int argc, char **argv)
 	if (!argc)
 		usage();
 
-	/* Start winsock */ 
+	/* Start winsock */
 	wVersionRequested = MAKEWORD( 1, 1 );
 	err = WSAStartup( wVersionRequested, &wsaData );
-	if ( err != 0 ) 
+	if ( err != 0 )
 	{
 		/* Tell the user that we couldn't find a usable */
 		/* WinSock DLL.                                 */

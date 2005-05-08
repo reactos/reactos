@@ -161,10 +161,10 @@ userlist(int argc, char **argv)
 		fprintf(stderr, "Warning: Can't do local finger\n");
 	}
 
-	/* Start winsock */ 
+	/* Start winsock */
 	wVersionRequested = MAKEWORD( 1, 1 );
 	iErr = WSAStartup( wVersionRequested, &wsaData );
-	if ( iErr != 0 ) 
+	if ( iErr != 0 )
 	{
 		/* Tell the user that we couldn't find a usable */
 		/* WinSock DLL.                                  */

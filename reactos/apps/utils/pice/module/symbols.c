@@ -2035,7 +2035,7 @@ PICE_SYMBOLFILE_HEADER* LoadSymbols(LPSTR filename)
 					if(pSymbols->magic == PICE_MAGIC)
 					{
                         DPRINT((0,"magic = %X\n",pSymbols->magic));
-	                    DPRINT((0,"name = %S\n",pSymbols->name));;
+	                    DPRINT((0,"name = %S\n",pSymbols->name));
                         DPRINT((0,"ulOffsetToHeaders,ulSizeOfHeader = %X,%X\n",pSymbols->ulOffsetToHeaders,pSymbols->ulSizeOfHeader));
                         DPRINT((0,"ulOffsetToGlobals,ulSizeOfGlobals = %X,%X\n",pSymbols->ulOffsetToGlobals,pSymbols->ulSizeOfGlobals));
                         DPRINT((0,"ulOffsetToGlobalsStrings,ulSizeOfGlobalsStrings = %X,%X\n",pSymbols->ulOffsetToGlobalsStrings,pSymbols->ulSizeOfGlobalsStrings));

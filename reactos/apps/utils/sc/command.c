@@ -92,7 +92,7 @@ int sc_command(SC_HANDLE hSCManager, SC_CMDS sc_cmd, char* argv[])
         return sc_control(hSCManager, argv[0], SERVICE_CONTROL_CONTINUE);
     case SC_CMD_STOP:
         return sc_control(hSCManager, argv[0], SERVICE_CONTROL_STOP);
-       
+
 //    case SC_CMD_CONFIG:
 //    case SC_CMD_DESCRIPTION:
 //    case SC_CMD_CONTROL:
