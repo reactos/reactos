@@ -46,8 +46,8 @@ VOID ShortVersion (VOID)
 	                        (RosVersion - VersionInfo.szCSDVersion);
 		if (7 <= RosVersionLen && 0 == _tcsnicmp(RosVersion, _T("ReactOS"), 7))
 		{
-			LoadString( GetModuleHandle(NULL), STRING_VERSION_RUNVER, (LPTSTR) szMsg,sizeof(szMsg));
-            ConOutPrintf ((LPTSTR)szMsg, RosVersion);
+			LoadString( CMD_ModuleHandle, STRING_VERSION_RUNVER, (LPTSTR) szMsg,sizeof(szMsg));
+            ConOutPrintf (szMsg, RosVersion);
 		}
 	}
 	ConOutPuts (_T("\n"));

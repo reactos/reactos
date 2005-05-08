@@ -49,11 +49,11 @@
  */
 
 INT cmd_for (LPTSTR cmd, LPTSTR param)
-{
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
+{	
 	LPBATCH_CONTEXT lpNew;
 	LPTSTR pp;
 	TCHAR  var;
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 #ifdef _DEBUG
 	DebugPrintf (_T("cmd_for (\'%s\', \'%s\'\n"), cmd, param);
@@ -68,7 +68,8 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 	/* Check that first element is % then an alpha char followed by space */
 	if ((*param != _T('%')) || !_istalpha (*(param + 1)) || !_istspace (*(param + 2)))
 	{
-		error_syntax (_T("bad variable specification."));
+		LoadString( CMD_ModuleHandle, STRING_FOR_ERROR, (LPTSTR) szMsg,sizeof(szMsg));
+		error_syntax (szMsg);
 		return 1;
 	}
 

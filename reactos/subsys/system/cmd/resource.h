@@ -208,6 +208,13 @@
 #define STRING_WINDOW_HELP1                710
 #define STRING_WINDOW_HELP2                711
 
+#define STRING_COPY_FILE                   712
+#define STRING_DELETE_WIPE                 713
+#define STRING_FOR_ERROR                   714
+#define STRING_SCREEN_COL                  715
+#define STRING_SCREEN_ROW                  716
+#define STRING_TIMER_TIME                  717
+
 /* These strings are language independent (cmd.rc) */
 #define STRING_FREEDOS_DEV                 800
 #define STRING_REACTOS_DEV                 801

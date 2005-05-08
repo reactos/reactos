@@ -22,8 +22,7 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR *arg;
-	INT    args;
-	UINT uOldCodePage;
+	INT    args;	
 	UINT uNewCodePage;
 
 	/* print help */
@@ -51,10 +50,6 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 		ConErrPrintf(szMsg, param);
 		return 1;
 	}
-
-
-	/* save old code page */
-	uOldCodePage = InputCodePage;
 
 	uNewCodePage = (UINT)_ttoi(arg[0]);
 

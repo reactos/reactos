@@ -630,6 +630,7 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 	TCHAR dir_d[_MAX_DIR];
 	TCHAR file_d[_MAX_FNAME];
 	TCHAR ext_d[_MAX_EXT];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	int argc;
 	int append;
@@ -758,7 +759,9 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 
 	DeleteFileList (sources);
 	freep ((VOID*)p);
-	ConOutPrintf (_T("        %d file(s) copied\n"), copied);
+	
+	LoadString( CMD_ModuleHandle, STRING_COPY_FILE, (LPTSTR) szMsg,sizeof(szMsg));
+    ConOutPrintf (szMsg, copied);
 
 	return 1;
 }

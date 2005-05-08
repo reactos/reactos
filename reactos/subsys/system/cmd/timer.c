@@ -19,9 +19,7 @@
 
 
 
-//print timer status
-#define PS ConOutPrintf(_T("Timer %d is %s: "),clk_n,cS?_T("ON"):_T("OFF")); \
-	PrintTime()
+
 
 //print timer value
 #define PT(format) PrintElapsedTime(GetTickCount()-cT,format)
@@ -109,6 +107,7 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
+    LoadString( CMD_ModuleHandle, STRING_TIMER_TIME, (LPTSTR) szMsg,sizeof(szMsg));
 
 	p = split (param, &argc, FALSE);
 
@@ -161,7 +160,9 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 	{
 		cT=GetTickCount();
 		cS=TRUE;
-		PS;
+		    
+        ConOutPrintf (szMsg,clk_n,cS?_T("ON"):_T("OFF"));
+        PrintTime();
 		freep(p);
 		return 0;
 	}
@@ -169,8 +170,9 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 	if(bS)
 	{
 		if(cS)
-		{
-			PS;
+		{			
+            ConOutPrintf (szMsg,clk_n,cS?_T("ON"):_T("OFF"));
+            PrintTime();
 			PrintElapsedTime(GetTickCount()-cT, iFormat);
 			freep(p);
 			return 0;
@@ -178,7 +180,8 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 
 		cT=GetTickCount();
 		cS=TRUE;
-		PS;
+		ConOutPrintf (szMsg,clk_n,cS?_T("ON"):_T("OFF"));
+        PrintTime();
 		freep(p);
 		return 0;
 	}
@@ -188,7 +191,8 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 		if (cS)
 		{
 			cS=FALSE;
-			PS;
+			ConOutPrintf (szMsg,clk_n,cS?_T("ON"):_T("OFF"));
+            PrintTime();
 			PrintElapsedTime(GetTickCount()-cT, iFormat);
 			freep(p);
 			return 0;
@@ -196,7 +200,8 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 
 		cT=GetTickCount();
 		cS=TRUE;
-		PS;
+		ConOutPrintf (szMsg,clk_n,cS?_T("ON"):_T("OFF"));
+        PrintTime();
 		freep(p);
 		return 0;
 	}
@@ -207,12 +212,14 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 		if (cS)
 		{
 			cS=FALSE;
-			PS;
+			ConOutPrintf (szMsg,clk_n,cS?_T("ON"):_T("OFF"));
+            PrintTime();
 			PrintElapsedTime(GetTickCount()-cT, iFormat);
 			freep(p);
 			return 0;
 		}
-		PS;
+		ConOutPrintf (szMsg,clk_n,cS?_T("ON"):_T("OFF"));
+        PrintTime();
 		freep(p);
 		return 0;
 	}

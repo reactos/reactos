@@ -41,7 +41,7 @@ INT CommandScreen (LPTSTR cmd, LPTSTR param)
 	y = _ttoi(param);
 	if (y<0 || y>(maxy-1))
 	{
-		ConOutPrintf(_T("invalid value for	row"));
+		ConOutResPuts(STRING_SCREEN_ROW);
 		return 1;
 	}
 
@@ -64,7 +64,7 @@ INT CommandScreen (LPTSTR cmd, LPTSTR param)
 	x = _ttoi(param);
 	if (x<0 || x>(maxx-1))
 	{
-		ConErrPuts(_T("invalid value for col"));
+		ConErrResPuts(STRING_SCREEN_COL);
 		return 1;
 	}
 

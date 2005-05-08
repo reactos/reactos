@@ -253,7 +253,7 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
       LoadString( CMD_ModuleHandle, STRING_REN_HELP2, szMsg, RC_STRING_MAX_SIZE);
     else
       LoadString( CMD_ModuleHandle, STRING_REN_HELP3, szMsg, RC_STRING_MAX_SIZE);
-    ConOutPrintf((LPTSTR)szMsg,dwFiles);
+    ConOutPrintf(szMsg,dwFiles);
   }
 
   freep(arg);

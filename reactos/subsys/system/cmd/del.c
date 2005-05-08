@@ -71,6 +71,9 @@ RemoveFile (LPTSTR lpFileName, DWORD dwFlags)
 		HANDLE fh;
 		WIN32_FIND_DATA f;
 		LONGLONG FileSize;
+        TCHAR szMsg[RC_STRING_MAX_SIZE]; 
+
+		LoadString( CMD_ModuleHandle, STRING_DELETE_WIPE, (LPTSTR) szMsg,sizeof(szMsg));
 
 		fh = FindFirstFile(lpFileName, &f);
 		FileSize = ((LONGLONG)f.nFileSizeHigh * ((LONGLONG)MAXDWORD+1)) + (LONGLONG)f.nFileSizeLow;
@@ -83,10 +86,10 @@ RemoveFile (LPTSTR lpFileName, DWORD dwFlags)
 		for(i = 0; i < (FileSize - BufferSize); i += BufferSize)
 		{
 			WriteFile (file, buffer, BufferSize, &temp, NULL);
-			ConOutPrintf (_T("%I64d%% wiped\r"),(i * (LONGLONG)100)/FileSize);
+			ConOutPrintf (_T("%I64d%% %s\r"),(i * (LONGLONG)100)/FileSize,szMsg);
 		}
 		WriteFile (file, buffer, FileSize - i, &temp, NULL);
-		ConOutPrintf (_T("100%% wiped\n"));
+		ConOutPrintf (_T("100%% %s\n"),szMsg);
 		CloseHandle (file);
 	}
 
@@ -246,7 +249,7 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 							ConErrPrintf(szMsg, szFullPath);
 
 							LoadString(CMD_ModuleHandle, STRING_DEL_ERROR6, szMsg, RC_STRING_MAX_SIZE);
-							res = FilePromptYN ((LPTSTR)szMsg);
+							res = FilePromptYN (szMsg);
 
 							if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
 							{
@@ -316,7 +319,7 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 						ConErrPrintf(szMsg, szFullPath);
 
 						LoadString(CMD_ModuleHandle, STRING_DEL_ERROR6, szMsg, RC_STRING_MAX_SIZE);
-						res = FilePromptYN ((LPTSTR)szMsg);
+						res = FilePromptYN (szMsg);
 
 						if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
 						{

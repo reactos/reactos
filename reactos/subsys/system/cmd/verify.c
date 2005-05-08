@@ -41,7 +41,7 @@ INT cmd_verify (LPTSTR cmd, LPTSTR param)
 	if (!*param)
 	{
 		LoadString(CMD_ModuleHandle, STRING_VERIFY_HELP2, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPrintf((LPTSTR)szMsg, bVerify ? D_ON : D_OFF);
+		ConOutPrintf(szMsg, bVerify ? D_ON : D_OFF);
 	}
 	else if (_tcsicmp (param, D_OFF) == 0)
 		bVerify = FALSE;

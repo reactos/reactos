@@ -564,5 +564,11 @@ STRING_PATH_ERROR,                 "CMD: Not in environment '%s'\n"
 
 STRING_CMD_INVALIDDRIVE,           "ERROR: invalid drive"
 STRING_CMD_SHELLINFO,              "\nReactOS Command Line Interpreter"
-STRING_VERSION_RUNVER              " running on %s"
+STRING_VERSION_RUNVER,             " running on %s"
+STRING_COPY_FILE ,                 "        %d file(s) copied\n"
+STRING_DELETE_WIPE,                "wiped"
+STRING_FOR_ERROR,                  "bad variable specification."
+STRING_SCREEN_COL,                 "invalid value for col"
+STRING_SCREEN_ROW,                 "invalid value for row"
+STRING_TIMER_TIME                  "Timer %d is %s: "
 }

@@ -847,7 +847,7 @@ PrintDirectoryHeader(LPTSTR szPath, LPINT pLine, LPDIRSWITCHFLAGS lpFlags)
   if (szVolName[0] != _T('\0'))
     {
       LoadString(CMD_ModuleHandle, STRING_DIR_HELP2, szMsg, RC_STRING_MAX_SIZE);
-      ConOutPrintf((LPTSTR)szMsg, szRootName[0], szVolName);
+      ConOutPrintf(szMsg, szRootName[0], szVolName);
     }
   else
     {
@@ -857,7 +857,7 @@ PrintDirectoryHeader(LPTSTR szPath, LPINT pLine, LPDIRSWITCHFLAGS lpFlags)
 
   /* print the volume serial number if the return was successful */
   LoadString(CMD_ModuleHandle, STRING_DIR_HELP4, (LPTSTR) szMsg, RC_STRING_MAX_SIZE);
-  ConOutPrintf((LPTSTR)szMsg,
+  ConOutPrintf(szMsg,
                HIWORD(dwSerialNr),
                LOWORD(dwSerialNr));
 
@@ -1102,7 +1102,7 @@ PrintSummary(LPTSTR szPath,
 	GetUserDiskFreeSpace(szRoot, &uliFree);
 	ConvertULargeInteger(uliFree, szBuffer, sizeof(szBuffer), lpFlags->bTSeperator);
 	LoadString(CMD_ModuleHandle, STRING_DIR_HELP6, (LPTSTR) szMsg, RC_STRING_MAX_SIZE);
-	ConOutPrintf((LPTSTR)szMsg,ulDirs, szBuffer);
+	ConOutPrintf(szMsg,ulDirs, szBuffer);
 
 	return 0;
 }

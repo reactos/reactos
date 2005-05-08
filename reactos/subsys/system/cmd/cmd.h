@@ -31,17 +31,6 @@
 
 #include "cmdver.h"
 
-#ifdef _MSC_VER
-#define SHELLVER     "Version " CMD_VER " [" __DATE__ ", msc]"
-#else
-#ifdef __LCC__
-#define SHELLVER     "Version " CMD_VER " [" __DATE__ ", lcc-win32]"
-#else
-#define SHELLVER     "Version " CMD_VER " [" __DATE__ "]"
-#endif
-#endif
-
-
 #define BREAK_BATCHFILE 1
 #define BREAK_OUTOFBATCH 2
 #define BREAK_INPUT 3

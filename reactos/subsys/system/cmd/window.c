@@ -159,7 +159,11 @@ static INT ServiceActivate (LPTSTR param, HWND hWnd)
 		wp.showCmd = SW_RESTORE;
 
 	if (iAction & A_CLOSE)
+	{
+#ifdef _DEBUG
 		ConErrPrintf(_T("!!!FIXME:  CLOSE Not implemented!!!\n"));
+#endif
+	}
 
 	wp.length = sizeof(WINDOWPLACEMENT);
 	SetWindowPlacement(hWnd, &wp);

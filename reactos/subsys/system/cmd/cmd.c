@@ -637,14 +637,14 @@ VOID ParseCommandLine (LPTSTR cmd)
 		                    FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile == INVALID_HANDLE_VALUE)
 		{
-			LoadString(GetModuleHandle(NULL), STRING_CMD_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, in);
 			return;
 		}
 
 		if (!SetStdHandle (STD_INPUT_HANDLE, hFile))
 		{
-			LoadString(GetModuleHandle(NULL), STRING_CMD_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, in);
 			return;
 		}
@@ -669,7 +669,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 				       TRUNCATE_EXISTING, FILE_ATTRIBUTE_TEMPORARY, NULL);
 		if (hFile[1] == INVALID_HANDLE_VALUE)
 		{
-			LoadString(GetModuleHandle(NULL), STRING_CMD_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR2, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg);
 			return;
 		}
@@ -722,14 +722,14 @@ VOID ParseCommandLine (LPTSTR cmd)
 		                    FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile == INVALID_HANDLE_VALUE)
 		{
-			LoadString(GetModuleHandle(NULL), STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, out);
 			return;
 		}
 
 		if (!SetStdHandle (STD_OUTPUT_HANDLE, hFile))
 		{
-			LoadString(GetModuleHandle(NULL), STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, out);
 			return;
 		}
@@ -783,7 +783,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 			                    NULL);
 			if (hFile == INVALID_HANDLE_VALUE)
 			{
-				LoadString(GetModuleHandle(NULL), STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
+				LoadString(CMD_ModuleHandle, STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
 				ConErrPrintf(szMsg, err);
 				return;
 			}
@@ -791,7 +791,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 
 		if (!SetStdHandle (STD_ERROR_HANDLE, hFile))
 		{
-			LoadString(GetModuleHandle(NULL), STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, err);
 			return;
 		}
@@ -1248,7 +1248,7 @@ Initialize (int argc, TCHAR* argv[])
 
 		if (IsExistingFile (_T("commandline")))
 		{
-			LoadString(GetModuleHandle(NULL), STRING_CMD_ERROR4, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR4, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, commandline);
 			ParseCommandLine (commandline);
 		}
@@ -1309,7 +1309,7 @@ static VOID Cleanup (int argc, TCHAR *argv[])
 
 		if (IsExistingFile (_T("commandline")))
 		{
-			LoadString(GetModuleHandle(NULL), STRING_CMD_ERROR4, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR4, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, commandline);
 			ParseCommandLine (commandline);
 		}
