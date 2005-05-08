@@ -2050,116 +2050,133 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
                      IN FILE_INFORMATION_CLASS FileInformationClass,
                      IN BOOLEAN ReturnSingleEntry,
                      IN PUNICODE_STRING FileName OPTIONAL,
-                     IN BOOLEAN RestartScan
- )
-
+                     IN BOOLEAN RestartScan)
 {
-   PIRP Irp;
-   PDEVICE_OBJECT DeviceObject;
-   PFILE_OBJECT FileObject;
-   PIO_STACK_LOCATION IoStack;
-   KPROCESSOR_MODE PreviousMode;
-   NTSTATUS Status = STATUS_SUCCESS;
+    PIRP Irp;
+    PDEVICE_OBJECT DeviceObject;
+    PFILE_OBJECT FileObject;
+    PIO_STACK_LOCATION StackPtr;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    NTSTATUS Status = STATUS_SUCCESS;
+    BOOLEAN LocalEvent;
+    PKEVENT Event = NULL;
    
-   DPRINT("NtQueryDirectoryFile()\n");
-   
-   PAGED_CODE();
+    DPRINT("NtQueryDirectoryFile()\n");
+    PAGED_CODE();
+    
+    /* Validate User-Mode Buffers */
+    if(PreviousMode != KernelMode)
+    {
+        _SEH_TRY
+        {
+            ProbeForWrite(IoStatusBlock,
+                          sizeof(IO_STATUS_BLOCK),
+                          sizeof(ULONG));
+            ProbeForWrite(FileInformation,
+                          Length,
+                          sizeof(ULONG));
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
 
-   PreviousMode = ExGetPreviousMode();
-   
-   if(PreviousMode != KernelMode)
-   {
-     _SEH_TRY
-     {
-       ProbeForWrite(IoStatusBlock,
-                     sizeof(IO_STATUS_BLOCK),
-                     sizeof(ULONG));
-       ProbeForWrite(FileInformation,
-                     Length,
-                     sizeof(ULONG));
-     }
-     _SEH_HANDLE
-     {
-       Status = _SEH_GetExceptionCode();
-     }
-     _SEH_END;
+        if(!NT_SUCCESS(Status)) return Status;
+    }
 
-     if(!NT_SUCCESS(Status))
-     {
-       return Status;
-     }
-   }
+    /* Get File Object */
+    Status = ObReferenceObjectByHandle(FileHandle,
+                                       FILE_LIST_DIRECTORY,
+                                       IoFileObjectType,
+                                       PreviousMode,
+                                       (PVOID *)&FileObject,
+                                       NULL);
+    if (Status != STATUS_SUCCESS) return(Status);
+    
+    /* Get Event Object */
+    if (PEvent)
+    {
+        Status = ObReferenceObjectByHandle(PEvent,
+                                           EVENT_MODIFY_STATE,
+                                           ExEventObjectType,
+                                           PreviousMode,
+                                           (PVOID *)&Event,
+                                           NULL);
+        if (Status != STATUS_SUCCESS) return(Status);
+        KeClearEvent(Event);
+    }
 
-   Status = ObReferenceObjectByHandle(FileHandle,
-          FILE_LIST_DIRECTORY,
-          IoFileObjectType,
-          PreviousMode,
-          (PVOID *)&FileObject,
-          NULL);
+    /* Check if this is a direct open or not */
+    if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
+    {
+        DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
+    }
+    else
+    {
+        DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    }
    
-   if (Status != STATUS_SUCCESS)
-     {
- return(Status);
-     }
-   DeviceObject = FileObject->DeviceObject;
+    /* Check if we should use Sync IO or not */
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+    {
+        /* Use File Object event */
+        KeClearEvent(&FileObject->Event);
+    }
+    else
+    {
+        LocalEvent = TRUE;
+    }
    
-   Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
-   if (Irp==NULL)
-     {
- ObDereferenceObject(FileObject);
- return STATUS_UNSUCCESSFUL;
-     }
+    /* Allocate the IRP */
+    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE)))
+    {
+        ObDereferenceObject(FileObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
    
-   /* Trigger FileObject/Event dereferencing */
-   Irp->Tail.Overlay.OriginalFileObject = FileObject;
-   Irp->RequestorMode = PreviousMode;
-   Irp->UserIosb = IoStatusBlock;
-   Irp->UserEvent = &FileObject->Event;
-   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-   KeResetEvent( &FileObject->Event );
-   Irp->UserBuffer=FileInformation;
-   Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
-   Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
+    /* Set up the IRP */
+    Irp->RequestorMode = PreviousMode;
+    Irp->UserIosb = IoStatusBlock;
+    Irp->UserEvent = Event;
+    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    Irp->UserBuffer = FileInformation;
+    Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
+    Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
    
-   IoStack = IoGetNextIrpStackLocation(Irp);
+    /* Set up Stack Data */
+    StackPtr = IoGetNextIrpStackLocation(Irp);
+    StackPtr->FileObject = FileObject;
+    StackPtr->MajorFunction = IRP_MJ_DIRECTORY_CONTROL;
+    StackPtr->MinorFunction = IRP_MN_QUERY_DIRECTORY;
    
-   IoStack->MajorFunction = IRP_MJ_DIRECTORY_CONTROL;
-   IoStack->MinorFunction = IRP_MN_QUERY_DIRECTORY;
-   IoStack->Flags = 0;
-   IoStack->Control = 0;
-   IoStack->DeviceObject = DeviceObject;
-   IoStack->FileObject = FileObject;
+    /* Set Parameters */
+    StackPtr->Parameters.QueryDirectory.FileInformationClass = FileInformationClass;
+    StackPtr->Parameters.QueryDirectory.FileName = FileName;
+    StackPtr->Parameters.QueryDirectory.FileIndex = 0;
+    StackPtr->Parameters.QueryDirectory.Length = Length;
+    StackPtr->Flags = 0;
+    if (RestartScan) StackPtr->Flags = SL_RESTART_SCAN;
+    if (ReturnSingleEntry) StackPtr->Flags |= SL_RETURN_SINGLE_ENTRY;
    
-   if (RestartScan)
-     {
- IoStack->Flags = IoStack->Flags | SL_RESTART_SCAN;
-     }
-   if (ReturnSingleEntry)
-     {
- IoStack->Flags = IoStack->Flags | SL_RETURN_SINGLE_ENTRY;
-     }
-   if (((PFILE_DIRECTORY_INFORMATION)FileInformation)->FileIndex != 0)
-     {
- IoStack->Flags = IoStack->Flags | SL_INDEX_SPECIFIED;
-     }
+    /* Call the Driver */
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        if (!LocalEvent)
+        {
+            KeWaitForSingleObject(&FileObject->Event,
+                                  Executive, 
+                                  PreviousMode, 
+                                  FileObject->Flags & FO_ALERTABLE_IO, 
+                                  NULL);
+            Status = FileObject->FinalStatus;
+        }
+    }
 
-   IoStack->Parameters.QueryDirectory.FileInformationClass = 
-     FileInformationClass;
-   IoStack->Parameters.QueryDirectory.FileName = FileName;
-   IoStack->Parameters.QueryDirectory.Length = Length;
-   
-   Status = IoCallDriver(FileObject->DeviceObject,Irp);
-   if (Status==STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
-     {
- KeWaitForSingleObject(&FileObject->Event,
-         Executive,
-         PreviousMode,
-         FileObject->Flags & FO_ALERTABLE_IO,
-         NULL);
- Status = IoStatusBlock->Status;
-     }
-
-   return(Status);
+    /* Return the Status */
+    return Status;
 }
 
 /*
