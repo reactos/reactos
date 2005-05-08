@@ -73,7 +73,7 @@ struct Pane : public SubclassedWindow
 #define COLUMNS 12
 	int 	_widths[COLUMNS];
 	int 	_positions[COLUMNS+1];
-		
+
 	WindowHandle _hwndHeader;
 
 	Entry*	_root;

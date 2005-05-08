@@ -127,7 +127,7 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 	lpOptions = Options;
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
-	{				
+	{
 		ConOutResPuts(STRING_CHOICE_HELP);
 		return 0;
 	}
@@ -167,7 +167,7 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 					lpOptions = &arg[i][2];
 
 				if (_tcslen (lpOptions) == 0)
-				{					
+				{
 					ConErrResPuts(STRING_CHOICE_ERROR);
 					freep (arg);
 					return 1;
@@ -197,7 +197,7 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 				}
 
 				if (*s != _T(','))
-				{					
+				{
 					ConErrResPuts(STRING_CHOICE_ERROR_TXT);
 					freep (arg);
 					return 1;

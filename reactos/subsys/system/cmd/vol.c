@@ -67,12 +67,12 @@ PrintVolumeHeader (LPTSTR pszRootPath)
 
 
 INT cmd_vol (LPTSTR cmd, LPTSTR param)
-{	
+{
 	TCHAR szRootPath[] = _T("A:\\");
 	TCHAR szPath[MAX_PATH];
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{		
+	{
 		ConOutResPuts(STRING_VOL_HELP4);
 		return 0;
 	}

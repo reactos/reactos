@@ -20,7 +20,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-    
+
 #include "precomp.h"
 
 HICON TrayIcon_GetProcessorUsageIcon(void)
@@ -43,7 +43,7 @@ HICON TrayIcon_GetProcessorUsageIcon(void)
     hScreenDC = GetDC(NULL);
     if (!hScreenDC)
         goto done;
-    
+
     /*
      * Create our own DC from it
      */
@@ -62,7 +62,7 @@ HICON TrayIcon_GetProcessorUsageIcon(void)
     hBitmapBrush = CreateSolidBrush(RGB(0, 255, 0));
     if (!hBitmapBrush)
         goto done;
-    
+
     /*
      * Select the bitmap into our device context
      * so we can draw on it.
@@ -98,7 +98,7 @@ HICON TrayIcon_GetProcessorUsageIcon(void)
      */
     SelectObject(hDC, hOldBitmap);
     hOldBitmap = NULL;
-    
+
     iconInfo.fIcon = TRUE;
     iconInfo.xHotspot = 0;
     iconInfo.yHotspot = 0;
@@ -123,7 +123,7 @@ done:
         DeleteObject(hBitmap);
     if (hBitmapMask)
         DeleteObject(hBitmapMask);
-    
+
     /*
      * Return the newly created tray icon (if successful)
      */
@@ -160,17 +160,17 @@ BOOL TrayIcon_ShellRemoveTrayIcon(void)
 {
     NOTIFYICONDATA    nid;
     BOOL            bRetVal;
-    
+
     memset(&nid, 0, sizeof(NOTIFYICONDATA));
-    
+
     nid.cbSize = sizeof(NOTIFYICONDATA);
     nid.hWnd = hMainWnd;
     nid.uID = 0;
     nid.uFlags = 0;
     nid.uCallbackMessage = WM_ONTRAYICON;
-    
+
     bRetVal = Shell_NotifyIcon(NIM_DELETE, &nid);
-    
+
     return bRetVal;
 }
 
@@ -180,11 +180,11 @@ BOOL TrayIcon_ShellUpdateTrayIcon(void)
     HICON           hIcon = NULL;
     BOOL            bRetVal;
     TCHAR           szTemp[256];
-    
+
     memset(&nid, 0, sizeof(NOTIFYICONDATA));
-    
+
     hIcon = TrayIcon_GetProcessorUsageIcon();
-    
+
     nid.cbSize = sizeof(NOTIFYICONDATA);
     nid.hWnd = hMainWnd;
     nid.uID = 0;
@@ -193,11 +193,11 @@ BOOL TrayIcon_ShellUpdateTrayIcon(void)
     nid.hIcon = hIcon;
     LoadString(hInst, IDS_MSG_TRAYICONCPUUSAGE, szTemp, 256);
     wsprintf(nid.szTip, szTemp, PerfDataGetProcessorUsage());
-    
+
     bRetVal = Shell_NotifyIcon(NIM_MODIFY, &nid);
-    
+
     if (hIcon)
         DestroyIcon(hIcon);
-    
+
     return bRetVal;
 }

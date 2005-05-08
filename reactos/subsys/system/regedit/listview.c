@@ -100,7 +100,7 @@ BOOL IsDefaultValue(HWND hwndLV, int i)
 {
   PLINE_INFO lineinfo;
   LVITEM Item;
-  
+
   Item.mask = LVIF_PARAM;
   Item.iItem = i;
   if(ListView_GetItem(hwndLV, &Item))
@@ -276,10 +276,10 @@ static BOOL InitListViewImageLists(HWND hwndLV)
 
     hico = LoadIcon(hInst, MAKEINTRESOURCE(IDI_BIN));
     Image_Bin = ImageList_AddIcon(himl, hico);
-    
+
     hico = LoadIcon(hInst, MAKEINTRESOURCE(IDI_STRING));
     Image_String = ImageList_AddIcon(himl, hico);
-    
+
 
     /* Fail if not all of the images were added.  */
     if (ImageList_GetImageCount(himl) < NUM_ICONS)
@@ -362,10 +362,10 @@ static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSor
     LINE_INFO*l, *r;
     l = (LINE_INFO*)lParam1;
     r = (LINE_INFO*)lParam2;
-        
-    if (g_columnToSort == ~0UL) 
+
+    if (g_columnToSort == ~0UL)
         g_columnToSort = 0;
-    
+
     if (g_columnToSort == 1 && l->dwValType != r->dwValType)
         return g_invertSort ? (int)r->dwValType - (int)l->dwValType : (int)l->dwValType - (int)r->dwValType;
     if (g_columnToSort == 2) {
@@ -400,7 +400,7 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
                 g_columnToSort = ((LPNMLISTVIEW)lParam)->iSubItem;
                 g_invertSort = FALSE;
             }
-                    
+
             ListView_SortItems(hWnd, CompareFunc, (WPARAM)hWnd);
             return TRUE;
         case NM_DBLCLK:
@@ -449,7 +449,7 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
 		  //if((ret = RenameValue(lineinfo->name, Info->item.pszText)) != ERROR_SUCCESS)
                   {
 		    TCHAR msg[128], caption[128];
-		    
+
 		    LoadString(hInst, IDS_ERR_RENVAL_CAPTION, caption, sizeof(caption)/sizeof(TCHAR));
 		    if(_tcslen(Info->item.pszText) == 0)
 		    {
@@ -483,7 +483,7 @@ HWND CreateListView(HWND hwndParent, int id)
                             0, 0, rcClient.right, rcClient.bottom,
                             hwndParent, (HMENU)id, hInst, NULL);
     if (!hwndLV) return NULL;
-    
+
     /* Initialize the image list, and add items to the control.  */
     if (!CreateListColumns(hwndLV)) goto fail;
     if (!InitListViewImageLists(hwndLV)) goto fail;
@@ -507,9 +507,9 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
     BOOL AddedDefault = FALSE;
 
     if (!hwndLV) return FALSE;
-    
+
     ListView_EditLabel(hwndLV, -1);
-    
+
     SendMessage(hwndLV, WM_SETREDRAW, FALSE, 0);
     count = ListView_GetItemCount(hwndLV);
     for (i = 0; i < count; i++) {
@@ -521,14 +521,14 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
     }
     g_columnToSort = ~0UL;
     ListView_DeleteAllItems(hwndLV);
-    
+
     if(!hKey) return FALSE;
 
     errCode = RegOpenKeyEx(hKey, keyPath, 0, KEY_READ, &hNewKey);
     if (errCode != ERROR_SUCCESS) return FALSE;
 
     /* get size information and resize the buffers if necessary */
-    errCode = RegQueryInfoKey(hNewKey, NULL, NULL, NULL, NULL, &max_sub_key_len, NULL, 
+    errCode = RegQueryInfoKey(hNewKey, NULL, NULL, NULL, NULL, &max_sub_key_len, NULL,
                               &val_count, &max_val_name_len, &max_val_size, NULL, NULL);
 
     #define BUF_HEAD_SPACE 2 /* FIXME: check why this is required with ROS ??? */

@@ -1,9 +1,9 @@
 /* $Id$
  *
  * csrss.c - Client/Server Runtime subsystem
- * 
+ *
  * ReactOS Operating System
- * 
+ *
  * --------------------------------------------------------------------
  *
  * This software is free software; you can redistribute it and/or
@@ -19,10 +19,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this software; see the file COPYING.LIB. If not, write
  * to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge,
- * MA 02139, USA.  
+ * MA 02139, USA.
  *
  * --------------------------------------------------------------------
- * 
+ *
  *	19990417 (Emanuele Aliberti)
  *		Do nothing native application skeleton
  * 	19990528 (Emanuele Aliberti)
@@ -64,7 +64,7 @@ CsrpParseCommandLine (HANDLE                       ProcessHeap,
    INT i = 0;
    INT afterlastspace = 0;
 
-   
+
    DPRINT("CSR: %s called\n", __FUNCTION__);
 
    RtlZeroMemory (Argument, sizeof (COMMAND_LINE_ARGUMENT));
@@ -123,20 +123,20 @@ CsrpParseCommandLine (HANDLE                       ProcessHeap,
 	Argument->Vector [Argument->Count - 1] = & (Argument->Buffer.Buffer [afterlastspace]);
      }
 
-  return STATUS_SUCCESS; 
+  return STATUS_SUCCESS;
 }
 
 /**********************************************************************
  * NAME							PRIVATE
  * 	CsrpFreeCommandLine/2
  */
-		      
+
 static VOID STDCALL
 CsrpFreeCommandLine (HANDLE                 ProcessHeap,
 		     PCOMMAND_LINE_ARGUMENT Argument)
 {
 	DPRINT("CSR: %s called\n", __FUNCTION__);
-	
+
 	RtlFreeHeap (ProcessHeap,
 	             0,
 		     Argument->Vector);
@@ -177,7 +177,7 @@ VOID STDCALL NtProcessStartup(PPEB Peb)
     *================================================================*/
    if (CsrServerInitialization (CmdLineArg.Count, CmdLineArg.Vector) == TRUE)
      {
-	CsrpFreeCommandLine (Peb->ProcessHeap, & CmdLineArg);	
+	CsrpFreeCommandLine (Peb->ProcessHeap, & CmdLineArg);
 	/*
 	 * Terminate the current thread only.
 	 */
@@ -187,7 +187,7 @@ VOID STDCALL NtProcessStartup(PPEB Peb)
      {
 	DisplayString (L"CSR: CsrServerInitialization failed.\n");
 
-	CsrpFreeCommandLine (Peb->ProcessHeap, & CmdLineArg);	
+	CsrpFreeCommandLine (Peb->ProcessHeap, & CmdLineArg);
 	/*
 	 * Tell the SM we failed.
 	 */

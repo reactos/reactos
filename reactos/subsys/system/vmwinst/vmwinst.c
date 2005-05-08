@@ -67,10 +67,10 @@ BOOL
 DetectVMware(int *Version)
 {
   int magic, ver;
-  
+
   magic = 0;
   ver = 0;
-  
+
   /* Try using a VMware I/O port. If not running in VMware this'll throw an
      exception! */
   __asm__ __volatile__("inl  %%dx, %%eax"
@@ -82,7 +82,7 @@ DetectVMware(int *Version)
     *Version = ver;
     return TRUE;
   }
-  
+
   return FALSE;
 }
 
@@ -111,13 +111,13 @@ FileExists(WCHAR *Path, WCHAR *File)
 {
   WCHAR FileName[MAX_PATH + 1];
   HANDLE FileHandle;
-  
+
   FileName[0] = L'\0';
   wcscat(FileName, Path);
   wcscat(FileName, File);
 
   FileHandle = CreateFile(FileName, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-  
+
   if(FileHandle == INVALID_HANDLE_VALUE)
   {
     return FALSE;
@@ -128,7 +128,7 @@ FileExists(WCHAR *Path, WCHAR *File)
     CloseHandle(FileHandle);
     return FALSE;
   }
-  
+
   CloseHandle(FileHandle);
   return TRUE;
 }
@@ -166,14 +166,14 @@ InstallFile(WCHAR *Destination, WCHAR *File)
   WCHAR DestFileName[MAX_PATH + 1];
   HANDLE SourceFileHandle, DestFileHandle;
   DWORD DataRead, DataWritten;
-  
+
   SourceFileName[0] = L'\0';
   DestFileName[0] = L'\0';
   wcscat(SourceFileName, SrcPath);
   wcscat(SourceFileName, File);
   wcscat(DestFileName, Destination);
   wcscat(DestFileName, File);
-  
+
   SourceFileHandle = CreateFile(SourceFileName, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
   if(SourceFileHandle == INVALID_HANDLE_VALUE)
   {
@@ -185,7 +185,7 @@ InstallFile(WCHAR *Destination, WCHAR *File)
     CloseHandle(SourceFileHandle);
     return FALSE;
   }
-  
+
   while(ReadFile(SourceFileHandle, Buffer, sizeof(Buffer), &DataRead, NULL) && DataRead > 0)
   {
     if(!WriteFile(DestFileHandle, Buffer, DataRead, &DataWritten, NULL) ||
@@ -197,7 +197,7 @@ InstallFile(WCHAR *Destination, WCHAR *File)
       return FALSE;
     }
   }
-  
+
   CloseHandle(SourceFileHandle);
   CloseHandle(DestFileHandle);
   return TRUE;
@@ -209,7 +209,7 @@ IsVMwareCDInDrive(WCHAR *Drv)
 {
   static WCHAR Drive[4] = L"X:\\";
   WCHAR Current;
-  
+
   *Drv = L'\0';
   for(Current = 'C'; Current <= 'Z'; Current++)
   {
@@ -229,7 +229,7 @@ IsVMwareCDInDrive(WCHAR *Drv)
         SetCurrentDirectory(DestinationPath);
         continue;
       }
-      
+
       if(FileExists(SrcPath, vmx_fb) &&
          FileExists(SrcPath, vmx_mode) &&
          FileExists(SrcPath, vmx_svga))
@@ -241,7 +241,7 @@ IsVMwareCDInDrive(WCHAR *Drv)
     }
 #endif
   }
-  
+
   return FALSE;
 }
 
@@ -250,9 +250,9 @@ LoadResolutionSettings(DWORD *ResX, DWORD *ResY, DWORD *ColDepth)
 {
   HKEY hReg;
   DWORD Type, Size;
-  
-  if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
-                  L"SYSTEM\\CurrentControlSet\\Hardware Profiles\\Current\\System\\CurrentControlSet\\Services\\vmx_svga\\Device0", 
+
+  if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                  L"SYSTEM\\CurrentControlSet\\Hardware Profiles\\Current\\System\\CurrentControlSet\\Services\\vmx_svga\\Device0",
                   0, KEY_QUERY_VALUE, &hReg) != ERROR_SUCCESS)
   {
     return FALSE;
@@ -263,21 +263,21 @@ LoadResolutionSettings(DWORD *ResX, DWORD *ResY, DWORD *ColDepth)
     RegCloseKey(hReg);
     return FALSE;
   }
-  
+
   if(RegQueryValueEx(hReg, L"DefaultSettings.XResolution", 0, &Type, (BYTE*)ResX, &Size) != ERROR_SUCCESS ||
      Type != REG_DWORD)
   {
     RegCloseKey(hReg);
     return FALSE;
   }
-  
+
   if(RegQueryValueEx(hReg, L"DefaultSettings.YResolution", 0, &Type, (BYTE*)ResY, &Size) != ERROR_SUCCESS ||
      Type != REG_DWORD)
   {
     RegCloseKey(hReg);
     return FALSE;
   }
-  
+
   RegCloseKey(hReg);
   return TRUE;
 }
@@ -287,9 +287,9 @@ IsVmwSVGAEnabled(VOID)
 {
   HKEY hReg;
   DWORD Type, Size, Value;
-  
-  if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
-                  L"SYSTEM\\CurrentControlSet\\Services\\vmx_svga", 
+
+  if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                  L"SYSTEM\\CurrentControlSet\\Services\\vmx_svga",
                   0, KEY_QUERY_VALUE, &hReg) != ERROR_SUCCESS)
   {
     return FALSE;
@@ -300,7 +300,7 @@ IsVmwSVGAEnabled(VOID)
     RegCloseKey(hReg);
     return FALSE;
   }
-  
+
   RegCloseKey(hReg);
   return (Value == 1);
 }
@@ -311,9 +311,9 @@ BOOL
 SaveResolutionSettings(DWORD ResX, DWORD ResY, DWORD ColDepth)
 {
   HKEY hReg;
-  
-  if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
-                  L"SYSTEM\\CurrentControlSet\\Hardware Profiles\\Current\\System\\CurrentControlSet\\Services\\vmx_svga\\Device0", 
+
+  if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                  L"SYSTEM\\CurrentControlSet\\Hardware Profiles\\Current\\System\\CurrentControlSet\\Services\\vmx_svga\\Device0",
                   0, KEY_QUERY_VALUE, &hReg) != ERROR_SUCCESS)
   {
     return FALSE;
@@ -323,19 +323,19 @@ SaveResolutionSettings(DWORD ResX, DWORD ResY, DWORD ColDepth)
     RegCloseKey(hReg);
     return FALSE;
   }
-  
+
   if(RegSetValueEx(hReg, L"DefaultSettings.XResolution", 0, REG_DWORD, (BYTE*)&ResX, sizeof(DWORD)) != ERROR_SUCCESS)
   {
     RegCloseKey(hReg);
     return FALSE;
   }
-  
+
   if(RegSetValueEx(hReg, L"DefaultSettings.YResolution", 0, REG_DWORD, (BYTE*)&ResY, sizeof(DWORD)) != ERROR_SUCCESS)
   {
     RegCloseKey(hReg);
     return FALSE;
   }
-  
+
   RegCloseKey(hReg);
   return TRUE;
 }
@@ -345,9 +345,9 @@ EnableDriver(WCHAR *Key, BOOL Enable)
 {
   DWORD Value;
   HKEY hReg;
-  
+
   Value = (Enable ? 1 : 4);
-  
+
   if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, Key, 0, KEY_SET_VALUE, &hReg) != ERROR_SUCCESS)
   {
     return FALSE;
@@ -357,7 +357,7 @@ EnableDriver(WCHAR *Key, BOOL Enable)
     RegCloseKey(hReg);
     return FALSE;
   }
-  
+
   RegCloseKey(hReg);
   return TRUE;
 }
@@ -378,7 +378,7 @@ EnableVmwareDriver(BOOL VBE, BOOL VGA, BOOL VMX)
   {
     return FALSE;
   }
-  
+
   return TRUE;
 }
 
@@ -411,7 +411,7 @@ PageWelcomeProc(
       HWND hwndControl;
 
       /* Center the wizard window */
-      hwndControl = GetParent(hwndDlg);     
+      hwndControl = GetParent(hwndDlg);
       CenterWindow (hwndControl);
 
       LPNMHDR pnmh = (LPNMHDR)lParam;
@@ -499,10 +499,10 @@ InstInstallationThread(LPVOID lpParameter)
   HANDLE hThread;
   BOOL DriveAvailable;
   int DrivesTested = 0;
-  
+
   if(AbortInstall != 0) goto done;
   PostMessage(hInstallationNotifyWnd, WM_INSTSTATUSUPDATE, IDS_SEARCHINGFORCDROM, 0);
-  
+
   while(AbortInstall == 0)
   {
     Sleep(500);
@@ -518,32 +518,32 @@ InstInstallationThread(LPVOID lpParameter)
 
   if(AbortInstall != 0) goto done;
   PostMessage(hInstallationNotifyWnd, WM_INSTSTATUSUPDATE, IDS_COPYINGFILES, 0);
-  
+
   if(AbortInstall != 0) goto done;
   if(!InstallFile(DestinationPath, vmx_fb))
   {
     PostMessage(hInstallationNotifyWnd, WM_INSTABORT, IDS_FAILEDTOCOPYFILES, 0);
     goto cleanup;
   }
-  
+
   Sleep(250);
-  
+
   if(AbortInstall != 0) goto done;
   if(!InstallFile(DestinationPath, vmx_mode))
   {
     PostMessage(hInstallationNotifyWnd, WM_INSTABORT, IDS_FAILEDTOCOPYFILES, 0);
     goto cleanup;
   }
-  
+
   Sleep(250);
-  
+
   if(AbortInstall != 0) goto done;
   if(!InstallFile(DestinationDriversPath, vmx_svga))
   {
     PostMessage(hInstallationNotifyWnd, WM_INSTABORT, IDS_FAILEDTOCOPYFILES, 0);
     goto cleanup;
   }
-  
+
   Sleep(250);
 
   if(AbortInstall != 0) goto done;
@@ -566,7 +566,7 @@ done:
       SendMessage(hInstallationNotifyWnd, WM_INSTABORT, 0, 0);
       break;
   }
-  
+
 cleanup:
   hThread = (HANDLE)InterlockedExchange((LONG*)&hInstallationThread, 0);
   if(hThread != NULL)
@@ -702,7 +702,7 @@ FillComboBox(HWND Dlg, int idComboBox, int From, int To)
 {
   int i;
   WCHAR Text[256];
-  
+
   for(i = From; i <= To; i++)
   {
     if(LoadString(hAppInstance, i, Text, 255) > 0)
@@ -734,7 +734,7 @@ PageConfigProc(
     {
       DWORD ResX = 0, ResY = 0, ColDepth = 0;
       int cbSel;
-      
+
       FillComboBox(hwndDlg, IDC_COLORQUALITY, 10001, 10003);
       if(LoadResolutionSettings(&ResX, &ResY, &ColDepth))
       {
@@ -763,7 +763,7 @@ PageConfigProc(
       HWND hwndControl;
 
       /* Center the wizard window */
-      hwndControl = GetParent(hwndDlg);     
+      hwndControl = GetParent(hwndDlg);
       CenterWindow (hwndControl);
 
       LPNMHDR pnmh = (LPNMHDR)lParam;
@@ -814,7 +814,7 @@ PageConfigProc(
               break;
             }
           }
-          
+
           switch(SendDlgItemMessage(hwndDlg, IDC_COLORQUALITY, CB_GETCURSEL, 0, 0))
           {
             case 0:
@@ -827,7 +827,7 @@ PageConfigProc(
               cd = 32;
               break;
           }
-          
+
           SaveResolutionSettings(rx, ry, cd);
           break;
         }
@@ -869,7 +869,7 @@ PageChooseActionProc(
         {
           static ULONG SelPage[4] = {IDD_CONFIG, IDD_SELECTDRIVER, IDD_SELECTDRIVER, IDD_CHOOSEACTION};
           int i;
-          
+
           for(i = IDC_CONFIGSETTINGS; i <= IDC_UNINSTALL; i++)
           {
             if(SendDlgItemMessage(hwndDlg, i, BM_GETCHECK, 0, 0) == BST_CHECKED)
@@ -877,9 +877,9 @@ PageChooseActionProc(
               break;
             }
           }
-          
+
           UninstallDriver = (i == IDC_UNINSTALL);
-          
+
           SetWindowLong(hwndDlg, DWL_MSGRESULT, SelPage[i - IDC_CONFIGSETTINGS]);
           return TRUE;
         }
@@ -1011,7 +1011,7 @@ CreateWizard(VOID)
   HPROPSHEETPAGE ahpsp[8];
   PROPSHEETPAGE psp;
   WCHAR Caption[1024];
-  
+
   LoadString(hAppInstance, IDS_WIZARD_NAME, Caption, sizeof(Caption) / sizeof(TCHAR));
 
   /* Create the Welcome page */
@@ -1069,7 +1069,7 @@ CreateWizard(VOID)
   psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDD_SELECTDRIVERSUBTITLE);
   psp.pfnDlgProc = PageSelectDriverProc;
   psp.pszTemplate = MAKEINTRESOURCE(IDD_SELECTDRIVER);
-  ahpsp[6] = CreatePropertySheetPage(&psp); 
+  ahpsp[6] = CreatePropertySheetPage(&psp);
 
   /* Create the DOUNINSTALL page */
   psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
@@ -1077,7 +1077,7 @@ CreateWizard(VOID)
   psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDD_DOUNINSTALLSUBTITLE);
   psp.pfnDlgProc = PageDoUninstallProc;
   psp.pszTemplate = MAKEINTRESOURCE(IDD_DOUNINSTALL);
-  ahpsp[7] = CreatePropertySheetPage(&psp); 
+  ahpsp[7] = CreatePropertySheetPage(&psp);
 
   /* Create the property sheet */
   psh.dwSize = sizeof(PROPSHEETHEADER);
@@ -1094,17 +1094,17 @@ CreateWizard(VOID)
   return (LONG)(PropertySheet(&psh) != -1);
 }
 
-int WINAPI 
+int WINAPI
 WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
 	LPSTR lpszCmdLine,
 	int nCmdShow)
 {
-  
+
   LPTOP_LEVEL_EXCEPTION_FILTER OldHandler;
   int Version;
   WCHAR *lc;
-  
+
   hAppInstance = hInstance;
 
   /* Setup our exception "handler" ;-) */
@@ -1118,7 +1118,7 @@ WinMain(HINSTANCE hInstance,
 
   /* restore the exception handler */
   SetUnhandledExceptionFilter(OldHandler);
-  
+
   lc = DestinationPath;
   lc += GetSystemDirectory(DestinationPath, MAX_PATH) - 1;
   if(lc >= DestinationPath && *lc != L'\\')
@@ -1128,18 +1128,18 @@ WinMain(HINSTANCE hInstance,
   DestinationDriversPath[0] = L'\0';
   wcscat(DestinationDriversPath, DestinationPath);
   wcscat(DestinationDriversPath, L"drivers\\");
-  
+
   SetCurrentDirectory(DestinationPath);
-  
+
   DriverFilesFound = FileExists(DestinationPath, vmx_fb) &&
                      FileExists(DestinationPath, vmx_mode) &&
                      FileExists(DestinationDriversPath, vmx_svga);
-  
+
   StartVMwConfigWizard = DriverFilesFound && IsVmwSVGAEnabled();
-  
+
   /* Show the wizard */
   CreateWizard();
- 
+
   return 2;
 }
 

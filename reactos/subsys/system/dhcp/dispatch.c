@@ -172,7 +172,7 @@ dispatch(void)
             if (ip && (l->handler != got_one || !ip->dead)) {
                 DH_DbgPrint
                     (MID_TRACE,
-                     ("set(%d) -> %s\n", 
+                     ("set(%d) -> %s\n",
                       l->fd, FD_ISSET(l->fd, &fds) ? "true" : "false"));
                 i++;
             }
@@ -192,7 +192,7 @@ dispatch(void)
 
         /* Get the current time... */
         time(&cur_time);
-        
+
         i = 0;
         for (l = protocols; l; l = l->next) {
             struct interface_info *ip;
@@ -453,7 +453,7 @@ remove_protocol(struct protocol *proto)
 }
 
 struct protocol *
-find_protocol_by_adapter(struct interface_info *info) 
+find_protocol_by_adapter(struct interface_info *info)
 {
     struct protocol *p;
 

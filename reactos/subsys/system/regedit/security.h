@@ -24,36 +24,36 @@ typedef struct ifaceCRegKeySecurityVbtl ifaceCRegKeySecurityVbtl;
 struct ifaceCRegKeySecurityVbtl
 {
   /* IUnknown */
-  HRESULT (STDMETHODCALLTYPE *QueryInterface)(LPREGKEYSECURITY this, 
-                                              REFIID iid, 
+  HRESULT (STDMETHODCALLTYPE *QueryInterface)(LPREGKEYSECURITY this,
+                                              REFIID iid,
 					      PVOID *pvObject);
   ULONG (STDMETHODCALLTYPE *AddRef)(LPREGKEYSECURITY this);
   ULONG (STDMETHODCALLTYPE *Release)(LPREGKEYSECURITY this);
-  
+
   /* CRegKeySecurity */
-  HRESULT (STDMETHODCALLTYPE *GetObjectInformation)(LPREGKEYSECURITY this, 
+  HRESULT (STDMETHODCALLTYPE *GetObjectInformation)(LPREGKEYSECURITY this,
                                                     PSI_OBJECT_INFO pObjectInfo);
-  HRESULT (STDMETHODCALLTYPE *GetSecurity)(LPREGKEYSECURITY this, 
+  HRESULT (STDMETHODCALLTYPE *GetSecurity)(LPREGKEYSECURITY this,
                                            SECURITY_INFORMATION RequestedInformation,
                                            PSECURITY_DESCRIPTOR* ppSecurityDescriptor,
                                            BOOL fDefault);
-  HRESULT (STDMETHODCALLTYPE *SetSecurity)(LPREGKEYSECURITY this, 
+  HRESULT (STDMETHODCALLTYPE *SetSecurity)(LPREGKEYSECURITY this,
                                            SECURITY_INFORMATION RequestedInformation,
                                            PSECURITY_DESCRIPTOR pSecurityDescriptor);
-  HRESULT (STDMETHODCALLTYPE *GetAccessRights)(LPREGKEYSECURITY this, 
+  HRESULT (STDMETHODCALLTYPE *GetAccessRights)(LPREGKEYSECURITY this,
                                                const GUID* pguidObjectType,
                                                DWORD dwFlags,
                                                PSI_ACCESS* ppAccess,
                                                ULONG* pcAccesses,
                                                ULONG* piDefaultAccess);
-  HRESULT (STDMETHODCALLTYPE *MapGeneric)(LPREGKEYSECURITY this, 
+  HRESULT (STDMETHODCALLTYPE *MapGeneric)(LPREGKEYSECURITY this,
                                           const GUID* pguidObjectType,
                                           UCHAR* pAceFlags,
                                           ACCESS_MASK* pMask);
-  HRESULT (STDMETHODCALLTYPE *GetInheritTypes)(LPREGKEYSECURITY this, 
+  HRESULT (STDMETHODCALLTYPE *GetInheritTypes)(LPREGKEYSECURITY this,
                                                PSI_INHERIT_TYPE* ppInheritTypes,
                                                ULONG* pcInheritTypes);
-  HRESULT (STDMETHODCALLTYPE *PropertySheetPageCallback)(LPREGKEYSECURITY this, 
+  HRESULT (STDMETHODCALLTYPE *PropertySheetPageCallback)(LPREGKEYSECURITY this,
                                                          HWND hwnd,
                                                          UINT uMsg,
                                                          SI_PAGE_TYPE uPage);
@@ -78,27 +78,27 @@ ULONG STDMETHODCALLTYPE CRegKeySecurity_fnAddRef(LPREGKEYSECURITY this);
 ULONG STDMETHODCALLTYPE CRegKeySecurity_fnRelease(LPREGKEYSECURITY this);
 HRESULT STDMETHODCALLTYPE CRegKeySecurity_fnGetObjectInformation(LPREGKEYSECURITY this,
                                                                  PSI_OBJECT_INFO pObjectInfo);
-HRESULT STDMETHODCALLTYPE CRegKeySecurity_fnGetSecurity(LPREGKEYSECURITY this, 
+HRESULT STDMETHODCALLTYPE CRegKeySecurity_fnGetSecurity(LPREGKEYSECURITY this,
                                                         SECURITY_INFORMATION RequestedInformation,
                                                         PSECURITY_DESCRIPTOR* ppSecurityDescriptor,
                                                         BOOL fDefault);
-HRESULT STDMETHODCALLTYPE CRegKeySecurity_fnSetSecurity(LPREGKEYSECURITY this, 
+HRESULT STDMETHODCALLTYPE CRegKeySecurity_fnSetSecurity(LPREGKEYSECURITY this,
                                                         SECURITY_INFORMATION RequestedInformation,
                                                         PSECURITY_DESCRIPTOR pSecurityDescriptor);
-HRESULT STDMETHODCALLTYPE CRegKeySecurity_fnGetAccessRights(LPREGKEYSECURITY this, 
+HRESULT STDMETHODCALLTYPE CRegKeySecurity_fnGetAccessRights(LPREGKEYSECURITY this,
                                                             const GUID* pguidObjectType,
                                                             DWORD dwFlags,
                                                             PSI_ACCESS* ppAccess,
                                                             ULONG* pcAccesses,
                                                             ULONG* piDefaultAccess);
-HRESULT STDMETHODCALLTYPE CRegKeySecurity_fnMapGeneric(LPREGKEYSECURITY this, 
+HRESULT STDMETHODCALLTYPE CRegKeySecurity_fnMapGeneric(LPREGKEYSECURITY this,
                                                        const GUID* pguidObjectType,
                                                        UCHAR* pAceFlags,
                                                        ACCESS_MASK* pMask);
-HRESULT STDMETHODCALLTYPE CRegKeySecurity_fnGetInheritTypes(LPREGKEYSECURITY this, 
+HRESULT STDMETHODCALLTYPE CRegKeySecurity_fnGetInheritTypes(LPREGKEYSECURITY this,
                                                             PSI_INHERIT_TYPE* ppInheritTypes,
                                                             ULONG* pcInheritTypes);
-HRESULT STDMETHODCALLTYPE CRegKeySecurity_fnPropertySheetPageCallback(LPREGKEYSECURITY this, 
+HRESULT STDMETHODCALLTYPE CRegKeySecurity_fnPropertySheetPageCallback(LPREGKEYSECURITY this,
                                                                       HWND hwnd,
                                                                       UINT uMsg,
                                                                       SI_PAGE_TYPE uPage);
@@ -109,7 +109,7 @@ static ifaceCRegKeySecurityVbtl efvt =
   CRegKeySecurity_fnQueryInterface,
   CRegKeySecurity_fnAddRef,
   CRegKeySecurity_fnRelease,
-  
+
   /* CRegKeySecurity methods */
   CRegKeySecurity_fnGetObjectInformation,
   CRegKeySecurity_fnGetSecurity,

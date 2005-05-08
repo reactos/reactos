@@ -20,7 +20,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-    
+
 #include "precomp.h"
 
 void TaskManager_OnFileNew(void)
@@ -46,12 +46,12 @@ void TaskManager_OnFileNew(void)
         {
             WCHAR wTitle[40];
             WCHAR wText[256];
-            
+
             /* RunFileDlg is always unicode on NT systems, convert the ansi
                strings to unicode */
             MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szTitle, -1, wTitle, sizeof(szTitle) / sizeof(szTitle[0]));
             MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szText, -1, wText, sizeof(szText) / sizeof(szText[0]));
-            
+
             RunFileDlg(hMainWnd, 0, NULL, wTitle, wText, RFF_CALCDIRECTORY);
         }
         else

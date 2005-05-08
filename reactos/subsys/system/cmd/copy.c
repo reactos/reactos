@@ -21,7 +21,7 @@
  *        Disabled prompting when used in batch mode.
  *
  *    03-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -247,7 +247,7 @@ ParseCommand (LPFILES f, int argc, TCHAR **arg, LPDWORD lpdwFlags)
 			{
 
 //				Make sure we have a clean workable path
-			
+
 				GetFullPathName( arg[i], 128, (LPTSTR) &temp, NULL);
 //				printf("A Input %s, Output %s\n", arg[i], temp);
 
@@ -261,7 +261,7 @@ ParseCommand (LPFILES f, int argc, TCHAR **arg, LPDWORD lpdwFlags)
 
 				GetFullPathName( arg[i], 128, (LPTSTR) &temp, NULL);
 //				printf("B Input %s, Output %s\n", arg[i], temp);
-				
+
 				if (!AddFiles(f, (TCHAR *) &temp, &source, &dest, &count, lpdwFlags))
 					return -1;
 				while (f->next != NULL)
@@ -300,9 +300,9 @@ Overwrite (LPTSTR fn)
 	TCHAR szOptions[4];
 
 	LoadString( CMD_ModuleHandle, STRING_COPY_OPTION, szOptions, 4);
-	
+
 	ConOutResPuts(STRING_COPY_HELP1);
-	
+
 	ConInString(inp, 10);
 	ConOutPuts(_T(""));
 
@@ -375,7 +375,7 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 		{
 			LoadString(CMD_ModuleHandle, STRING_COPY_ERROR2, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, source);
-			
+
 			CloseHandle (hFileSrc);
 			return 0;
 		}
@@ -448,7 +448,7 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 
 		WriteFile (hFileDest, buffer, dwRead, &dwWritten, NULL);
 		if (dwWritten != dwRead)
-		{						
+		{
 			ConErrResPuts(STRING_COPY_ERROR3);
 
 			free (buffer);
@@ -564,7 +564,7 @@ SetupCopy (LPFILES sources, TCHAR **p, BOOL bMultiple,
 			{
 
 //			printf("Merge DIR\n");
-			
+
 				bMultiple = FALSE;
 				_tcscat (from_merge, _T("\\"));
 				_tcscat (from_merge, find.cFileName);
@@ -624,7 +624,7 @@ SetupCopy (LPFILES sources, TCHAR **p, BOOL bMultiple,
 
 
 INT cmd_copy (LPTSTR first, LPTSTR rest)
-{	
+{
 	TCHAR **p;
 	TCHAR drive_d[_MAX_DRIVE];
 	TCHAR dir_d[_MAX_DIR];
@@ -645,7 +645,7 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 	DWORD dwFlags = 0;
 
 	if (!_tcsncmp (rest, _T("/?"), 2))
-	{		
+	{
 		ConOutResPuts(STRING_COPY_HELP2);
 		return 1;
 	}
@@ -717,7 +717,7 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 		copied = SetupCopy (sources, p, bMultiple, drive_d, dir_d, file_d, ext_d, &append, &dwFlags);
 	}
 	else if (bDestFound && bWildcards)
-	{		
+	{
 		ConErrResPuts(STRING_COPY_ERROR4);
 
 		DeleteFileList (sources);

@@ -130,7 +130,7 @@
  *       Added ShellExecute call when all else fails to be able to "launch" any file.
  *
  *    02-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -922,7 +922,7 @@ ProcessInput (BOOL bFlag)
 	LPTSTR ip;
 	LPTSTR cp;
 	BOOL bEchoThisLine;
-	
+
 
 	do
 	{
@@ -1035,7 +1035,7 @@ ProcessInput (BOOL bFlag)
  */
 BOOL WINAPI BreakHandler (DWORD dwCtrlType)
 {
-	
+
 	if ((dwCtrlType != CTRL_C_EVENT) &&
 	    (dwCtrlType != CTRL_BREAK_EVENT))
 		return FALSE;
@@ -1075,27 +1075,27 @@ VOID RemoveBreakHandler (VOID)
 #if 0
 static VOID
 ShowCommands (VOID)
-{	
-	/* print command list */	
+{
+	/* print command list */
 	ConOutResPuts(STRING_CMD_HELP1);
 	PrintCommandList();
 
-	/* print feature list */	
+	/* print feature list */
 	ConOutResPuts(STRING_CMD_HELP2);
 
-#ifdef FEATURE_ALIASES		
+#ifdef FEATURE_ALIASES
 	ConOutResPuts(STRING_CMD_HELP3);
 #endif
-#ifdef FEATURE_HISTORY	
+#ifdef FEATURE_HISTORY
 	ConOutResPuts(STRING_CMD_HELP4);
 #endif
-#ifdef FEATURE_UNIX_FILENAME_COMPLETION	
+#ifdef FEATURE_UNIX_FILENAME_COMPLETION
 	ConOutResPuts(STRING_CMD_HELP5);
 #endif
-#ifdef FEATURE_DIRECTORY_STACK	
+#ifdef FEATURE_DIRECTORY_STACK
 	ConOutResPuts(STRING_CMD_HELP6);
 #endif
-#ifdef FEATURE_REDIRECTION	
+#ifdef FEATURE_REDIRECTION
 	ConOutResPuts(STRING_CMD_HELP7);
 #endif
 	ConOutChar(_T('\n'));
@@ -1111,7 +1111,7 @@ ShowCommands (VOID)
  */
 static VOID
 Initialize (int argc, TCHAR* argv[])
-{	
+{
 	TCHAR commandline[CMDLINE_LENGTH];
 	TCHAR ModuleName[_MAX_PATH + 1];
 	INT i;
@@ -1143,7 +1143,7 @@ Initialize (int argc, TCHAR* argv[])
 
 
 	if (argc >= 2 && !_tcsncmp (argv[1], _T("/?"), 2))
-	{		
+	{
 		ConOutResPuts(STRING_CMD_HELP8);
 		ExitProcess(0);
 	}
@@ -1286,13 +1286,13 @@ static VOID Cleanup (int argc, TCHAR *argv[])
 
 	/* run cmdexit.bat */
 	if (IsExistingFile (_T("cmdexit.bat")))
-	{		
+	{
 		ConErrResPuts(STRING_CMD_ERROR5);
 
 		ParseCommandLine (_T("cmdexit.bat"));
 	}
 	else if (IsExistingFile (_T("\\cmdexit.bat")))
-	{		
+	{
 		ConErrResPuts (STRING_CMD_ERROR5);
 		ParseCommandLine (_T("\\cmdexit.bat"));
 	}

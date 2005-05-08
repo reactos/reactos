@@ -62,11 +62,11 @@ VOID ShortVersion (VOID)
  *
  */
 INT cmd_ver (LPTSTR cmd, LPTSTR param)
-{	
+{
 	INT i;
 
 	if (_tcsstr (param, _T("/?")) != NULL)
-	{		
+	{
 		ConOutResPuts(STRING_VERSION_HELP1);
 		return 0;
 	}
@@ -78,7 +78,7 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 	/* Basic copyright notice */
 	if (param[0] == _T('\0'))
 	{
-		ConOutPuts(_T("\n"SHELLINFO));		
+		ConOutPuts(_T("\n"SHELLINFO));
 		ConOutResPuts(STRING_VERSION_HELP2);
 	}
 	else
@@ -102,21 +102,21 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 
 			if (_totupper (param[i]) == _T('W'))
 			{
-				/* Warranty notice */				
+				/* Warranty notice */
 				ConOutResPuts(STRING_VERSION_HELP3);
 			}
 			else if (_totupper (param[i]) == _T('R'))
 			{
-				/* Redistribution notice */				
+				/* Redistribution notice */
 				ConOutResPuts(STRING_VERSION_HELP4);
 			}
 			else if (_totupper (param[i]) == _T('C'))
 			{
-				/* Developer listing */				
-				ConOutResPuts(STRING_VERSION_HELP6);				
-				ConOutResPuts(STRING_FREEDOS_DEV);				
+				/* Developer listing */
+				ConOutResPuts(STRING_VERSION_HELP6);
+				ConOutResPuts(STRING_FREEDOS_DEV);
 				ConOutResPuts(STRING_VERSION_HELP7);
-                ConOutResPuts(STRING_REACTOS_DEV); 				
+                ConOutResPuts(STRING_REACTOS_DEV);
 			}
 			else
 			{
@@ -125,7 +125,7 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 			}
 		}
 	}
-	
+
 	ConOutResPuts(STRING_VERSION_HELP5);
 	return 0;
 }

@@ -302,7 +302,7 @@ ATOM RegisterBlankClass(HINSTANCE hInstance)
 {
 	WNDCLASSEX wcex;
 
-	wcex.cbSize = sizeof(WNDCLASSEX); 
+	wcex.cbSize = sizeof(WNDCLASSEX);
 
 	wcex.style         = 0;
 	wcex.lpfnWndProc   = EmptyWindowProc;

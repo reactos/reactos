@@ -173,7 +173,7 @@ CreateCommonFreeLoaderSections(PINICACHE IniCache)
 		    INSERT_LAST,
 		    L"SelectedColor",
 		    L"Gray");
-		    
+
   /* TimeOut=5 */
   IniCacheInsertKey(IniSection,
 		    NULL,

@@ -109,7 +109,7 @@
  *
  *    01-Mar-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Replaced all runtime io functions by their Win32 counterparts.
- *  
+ *
  *    23-Feb-2001 (Carl Nettelblad <cnettel@hem.passagen.se>)
  *        dir /s now works in deeper trees
  *
@@ -248,7 +248,7 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 	/* No parameters yet  */
 	*param = NULL;
 	ptrLast = NULL;
-	
+
 	/* We suppose that switch parameters
 	   were given to avoid setting them to default
 	   if the switch was not given */
@@ -263,7 +263,7 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 		/* we save current character as it is and its upper case */
 		cCurChar = *Line;
 		cCurUChar = _totupper(*Line);
-		
+
 		/* 1st section (see README_DIR.txt) */
 		/* When a switch is expecting */
 		if (cCurSwitch == _T('/'))
@@ -513,7 +513,7 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 			if ((cCurChar != _T('-')) && bPNegative)
 				bPNegative = FALSE;
 		}
-	
+
 		Line++;
 	}
 	/* Terminate the parameters */
@@ -567,18 +567,18 @@ ExtendFilespec (LPTSTR file)
 
 	if (!file)
 		return;
-	
+
 
 	/* if no file spec, change to "*.*" */
 	if (*file == _T('\0'))
-	{		
-		_tcscpy (file, _T("*.*"));		
+	{
+		_tcscpy (file, _T("*.*"));
 		return;
 	}
 
 	// add support for *.
 	if ((file[0] == _T('*')) && (file[1] == _T('.') ))
-	 {		
+	 {
 		 return;
 	 }
 
@@ -592,17 +592,17 @@ ExtendFilespec (LPTSTR file)
 	/* if no . add .* */
 	if (!_tcschr (file, _T('.')))
 	{
-		_tcscat (file, _T(".*"));	
+		_tcscat (file, _T(".*"));
 		return;
 	}
 
-     
+
 
 	/* if last character is '.' add '*' */
 	len = _tcslen (file);
 	if (file[len - 1] == _T('.'))
 	{
-		_tcscat (file, _T("*"));		
+		_tcscat (file, _T("*"));
 		return;
 	}
 }
@@ -1110,7 +1110,7 @@ PrintSummary(LPTSTR szPath,
 /*
  * getExt
  *
- * Get the extension of a filename 
+ * Get the extension of a filename
  */
 TCHAR* getExt(const TCHAR* file)
 {
@@ -1142,11 +1142,11 @@ static LPTSTR getName(const TCHAR* file, TCHAR * dest)
 		iLen = _tcslen(file);
 	else
 		iLen = (end - file);
-	
+
 
 	_tcsncpy(dest, file, iLen);
 	*(dest + iLen) = _T('\0');
-	
+
 	return dest;
 }
 
@@ -1344,14 +1344,14 @@ ULARGE_INTEGER u64FileSize;		/* The file size */
 			_tcscpy(szExt, getExt( ptrFiles[i]->cFileName));
 		}
 
-		/* Calculate size */		
-		if (ptrFiles[i]->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)		
+		/* Calculate size */
+		if (ptrFiles[i]->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		{
 			/* Directory, no size it's a directory*/
 			iSizeFormat = -17;
 			_tcscpy(szSize, _T("<DIR>"));
 		}
-		else		
+		else
 		{
 			/* File */
 			iSizeFormat = 17;
@@ -1359,7 +1359,7 @@ ULARGE_INTEGER u64FileSize;		/* The file size */
 			u64FileSize.LowPart = ptrFiles[i]->nFileSizeLow;
 			ConvertULargeInteger(u64FileSize, szSize, 20, lpFlags->bTSeperator);
 		}
-		
+
 		/* Format date and time */
 		DirPrintFileDateTime(szDate,szTime,ptrFiles[i],lpFlags);
 
@@ -1414,7 +1414,7 @@ DirPrintBareList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
 
 /*
  * DirPrintFiles
- * 
+ *
  * The functions that prints the files list
  */
 static VOID
@@ -1545,9 +1545,9 @@ CompareFiles(LPWIN32_FIND_DATA lpFile1,	/* [IN] A pointer to WIN32_FIND_DATA of 
 				u64File1.HighPart = lpFile1->ftLastWriteTime.dwHighDateTime ;
 				u64File2.LowPart = lpFile2->ftLastWriteTime.dwLowDateTime;
 				u64File2.HighPart = lpFile2->ftLastWriteTime.dwHighDateTime ;
-				break;			
+				break;
 			}
-			
+
 			/* In case that differnce is too big for a long */
 			if (u64File1.QuadPart < u64File2.QuadPart)
 				iComp = -1;
@@ -1566,7 +1566,7 @@ CompareFiles(LPWIN32_FIND_DATA lpFile1,	/* [IN] A pointer to WIN32_FIND_DATA of 
 		   the files/dirs,there is no need to calculate the others*/
 		if (iComp != 0) break;
 	}
-	
+
 	/* Translate the value of iComp to boolean */
 	if (iComp > 0)
 		return TRUE;
@@ -1719,7 +1719,7 @@ TCHAR szMsg[RC_STRING_MAX_SIZE];
 					/* Continue at next node at linked list */
 					ptrNextNode = ptrNextNode->ptrNext;
 					dwCount ++;
-				
+
 					/* Grab statistics */
 					if (wfdFileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 					{
@@ -1743,7 +1743,7 @@ TCHAR szMsg[RC_STRING_MAX_SIZE];
 	/* Terminate list */
 	ptrNextNode->ptrNext = NULL;
 
-	/* Calculate and allocate space need for making an array of pointers */	
+	/* Calculate and allocate space need for making an array of pointers */
 	ptrFileArray = malloc(sizeof(LPWIN32_FIND_DATA) * dwCount);
 	if (ptrFileArray == NULL)
 	{
@@ -1779,7 +1779,7 @@ TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	/* Print Data */
 	DirPrintFiles(ptrFileArray, dwCount, szFullPath, lpFlags);
-	
+
 	/* Free array */
 	free(ptrFileArray);
 

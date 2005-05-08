@@ -29,7 +29,7 @@
  *        Added handling of multiple filenames.
  *
  *    02-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -188,7 +188,7 @@ ChangeAttribute (LPTSTR pszPath, LPTSTR pszFile, DWORD dwMask,
 
 
 INT CommandAttrib (LPTSTR cmd, LPTSTR param)
-{	
+{
 	LPTSTR *arg;
 	INT    argc, i;
 	TCHAR  szPath[MAX_PATH];
@@ -204,7 +204,7 @@ INT CommandAttrib (LPTSTR cmd, LPTSTR param)
 
 	/* print help */
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{		
+	{
 		ConOutResPuts(STRING_ATTRIB_HELP);
 		return 0;
 	}

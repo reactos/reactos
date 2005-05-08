@@ -26,7 +26,7 @@
  *        IF DEFINED variable command
  *
  *    28-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  *
  */
 
@@ -47,7 +47,7 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{		
+	{
 		ConOutResPuts(STRING_IF_HELP1);
 		return 0;
 	}
@@ -111,7 +111,7 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 			*pp++ = _T('\0');
 			ValueSize = GetEnvironmentVariable(param, Value, sizeof Value);
 			x_flag ^= (0 == ValueSize)
-					? 0 
+					? 0
 					: X_EXEC;
 			x_flag |= X_EMPTY;
 		}

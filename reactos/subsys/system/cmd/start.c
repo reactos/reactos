@@ -8,7 +8,7 @@
  *        Started.
  *
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -24,7 +24,7 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 	TCHAR *param;
 
 	if (_tcsncmp (rest, _T("/?"), 2) == 0)
-	{		
+	{
 		ConOutResPuts(STRING_START_HELP1);
 		return 0;
 	}
@@ -72,7 +72,7 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 #ifdef _DEBUG
 		DebugPrintf (_T("[BATCH: %s %s]\n"), szFullName, rest);
 #endif
-		
+
 		ConErrResPuts(STRING_START_ERROR1);
 	}
 	else
@@ -98,7 +98,7 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 		stui.cb = sizeof (STARTUPINFO);
 		stui.dwFlags = STARTF_USESHOWWINDOW;
 		stui.wShowWindow = SW_SHOWDEFAULT;
-			
+
 		if (CreateProcess (szFullName, szFullCmdLine, NULL, NULL, FALSE,
 		                   CREATE_NEW_CONSOLE, NULL, NULL, &stui, &prci))
 		{

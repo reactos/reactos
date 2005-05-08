@@ -136,13 +136,13 @@ INT GetDirectoryStackDepth (VOID)
  * pushd command
  */
 INT CommandPushd (LPTSTR first, LPTSTR rest)
-{	
+{
 	TCHAR curPath[MAX_PATH];
 	TCHAR newPath[MAX_PATH];
 	BOOL  bChangePath = FALSE;
 
 	if (!_tcsncmp (rest, _T("/?"), 2))
-	{		
+	{
 		ConOutResPuts(STRING_DIRSTACK_HELP1);
 		return 0;
 	}
@@ -172,7 +172,7 @@ INT CommandPopd (LPTSTR first, LPTSTR rest)
 	TCHAR szPath[MAX_PATH];
 
 	if (!_tcsncmp(rest, _T("/?"), 2))
-	{		
+	{
 		ConOutResPuts(STRING_DIRSTACK_HELP2);
 		return 0;
 	}
@@ -193,11 +193,11 @@ INT CommandPopd (LPTSTR first, LPTSTR rest)
  * dirs command
  */
 INT CommandDirs (LPTSTR first, LPTSTR rest)
-{	
+{
 	LPDIRENTRY lpDir;
 
 	if (!_tcsncmp(rest, _T("/?"), 2))
-	{		
+	{
 		ConOutResPuts(STRING_DIRSTACK_HELP3);
 		return 0;
 	}
@@ -206,7 +206,7 @@ INT CommandDirs (LPTSTR first, LPTSTR rest)
 	lpDir = lpStackBottom;
 
 	if (lpDir == NULL)
-	{		
+	{
 		ConOutResPuts(STRING_DIRSTACK_HELP4);
 		return 0;
 	}

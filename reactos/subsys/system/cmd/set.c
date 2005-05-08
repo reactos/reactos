@@ -31,7 +31,7 @@
  *        Fixed little bug.
  *
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -45,12 +45,12 @@
 
 
 INT cmd_set (LPTSTR cmd, LPTSTR param)
-{	
+{
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR p;
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{		
+	{
 		ConOutResPuts(STRING_SET_HELP);
 		return 0;
 	}

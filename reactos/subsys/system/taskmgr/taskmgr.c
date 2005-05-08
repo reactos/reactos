@@ -49,8 +49,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
                      int       nCmdShow)
 {
     HANDLE hProcess;
-    HANDLE hToken; 
-    TOKEN_PRIVILEGES tkp; 
+    HANDLE hToken;
+    TOKEN_PRIVILEGES tkp;
 
     /* Initialize global variables */
     hInst = hInstance;
@@ -61,19 +61,19 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     CloseHandle(hProcess);
 
     /* Now lets get the SE_DEBUG_NAME privilege
-     * so that we can debug processes 
+     * so that we can debug processes
      */
 
     /* Get a token for this process.  */
     if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken)) {
         /* Get the LUID for the debug privilege.  */
-        LookupPrivilegeValue(NULL, SE_DEBUG_NAME, &tkp.Privileges[0].Luid); 
+        LookupPrivilegeValue(NULL, SE_DEBUG_NAME, &tkp.Privileges[0].Luid);
 
         tkp.PrivilegeCount = 1;  /* one privilege to set */
-        tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED; 
+        tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
         /* Get the debug privilege for this process. */
-        AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES)NULL, 0); 
+        AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES)NULL, 0);
     }
 
     /* Load our settings from the registry */
@@ -85,7 +85,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     }
 
     DialogBox(hInst, (LPCTSTR)IDD_TASKMGR_DIALOG, NULL, TaskManagerWndProc);
- 
+
     /* Save our settings to the registry */
     SaveSettings();
     PerfDataUninitialize();
@@ -237,7 +237,7 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         case ID_FILE_EXIT:
             EndDialog(hDlg, IDOK);
             break;
-        }     
+        }
         break;
 
     case WM_ONTRAYICON:
@@ -248,14 +248,14 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             POINT pt;
             BOOL OnTop;
             HMENU hMenu, hPopupMenu;
-            
+
             GetCursorPos(&pt);
-            
+
             OnTop = ((GetWindowLong(hMainWnd, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0);
-            
+
             hMenu = LoadMenu(hInst, MAKEINTRESOURCE(IDR_TRAY_POPUP));
             hPopupMenu = GetSubMenu(hMenu, 0);
-            
+
             if(IsWindowVisible(hMainWnd))
             {
               DeleteMenu(hPopupMenu, ID_RESTORE, MF_BYCOMMAND);
@@ -264,15 +264,15 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             {
               SetMenuDefaultItem(hPopupMenu, ID_RESTORE, FALSE);
             }
-            
+
             if(OnTop)
             {
               CheckMenuItem(hPopupMenu, ID_OPTIONS_ALWAYSONTOP, MF_BYCOMMAND | MF_CHECKED);
             }
-            
+
             SetForegroundWindow(hMainWnd);
             TrackPopupMenuEx(hPopupMenu, 0, pt.x, pt.y, hMainWnd, NULL);
-            
+
             DestroyMenu(hMenu);
             break;
             }
@@ -356,7 +356,7 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         else
             TaskManagerSettings.Maximized = FALSE;
         return DefWindowProc(hDlg, message, wParam, lParam);
-        
+
     case WM_TIMER:
         /* Refresh the performance data */
         PerfDataRefresh();
@@ -651,13 +651,13 @@ void OnSize( UINT nType, int cx, int cy )
     cx = (rc.right - rc.left) + nXDifference;
     cy = (rc.bottom - rc.top) + nYDifference;
     SetWindowPos(hApplicationPage, NULL, 0, 0, cx, cy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOZORDER);
-    
+
     /* Resize the process page */
     GetWindowRect(hProcessPage, &rc);
     cx = (rc.right - rc.left) + nXDifference;
     cy = (rc.bottom - rc.top) + nYDifference;
     SetWindowPos(hProcessPage, NULL, 0, 0, cx, cy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOZORDER);
-    
+
     /* Resize the performance page */
     GetWindowRect(hPerformancePage, &rc);
     cx = (rc.right - rc.left) + nXDifference;
@@ -802,7 +802,7 @@ void TaskManager_OnRestoreMainWindow(void)
   hMenu = GetMenu(hMainWnd);
   hOptionsMenu = GetSubMenu(hMenu, OPTIONS_MENU_INDEX);
   OnTop = ((GetWindowLong(hMainWnd, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0);
-  
+
   OpenIcon(hMainWnd);
   SetForegroundWindow(hMainWnd);
   SetWindowPos(hMainWnd, (OnTop ? HWND_TOPMOST : HWND_TOP), 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW);

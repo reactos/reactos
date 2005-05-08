@@ -29,7 +29,7 @@ TuiInit(VOID)
 {
   CONSOLE_SCREEN_BUFFER_INFO ScrInfo;
   DWORD BytesReturned;
- 
+
   ConsoleDeviceHandle = CreateFileW(L"\\\\.\\BlueScreen", FILE_ALL_ACCESS, 0, NULL,
                                     OPEN_EXISTING, 0, NULL);
   if (INVALID_HANDLE_VALUE == ConsoleDeviceHandle)
@@ -109,9 +109,9 @@ TuiDrawRegion(PCSRSS_CONSOLE Console, RECT *Region)
   ConsoleDraw->SizeY = ConioRectHeight(Region);
   ConsoleDraw->CursorX = CursorX;
   ConsoleDraw->CursorY = CursorY;
-  
+
   TuiCopyRect((char *) (ConsoleDraw + 1), Buff, Region);
-  
+
   if (! DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_DRAW,
                         NULL, 0, ConsoleDraw, ConsoleDrawSize, &BytesReturned, NULL))
     {
@@ -213,7 +213,7 @@ TuiCleanupConsole(PCSRSS_CONSOLE Console)
       Console->Next->Prev = Console->Prev;
     }
   LeaveCriticalSection(&ActiveConsoleLock);
-   
+
   if (NULL != ActiveConsole)
     {
       ConioDrawConsole(ActiveConsole);
@@ -291,7 +291,7 @@ TuiSwapConsole(int Next)
         {
           SwapConsole = ActiveConsole;
         }
-	      
+
       SwapConsole = (0 < Next ? SwapConsole->Next : SwapConsole->Prev);
       Title.MaximumLength = RtlUnicodeStringToAnsiSize(&SwapConsole->Title);
       Title.Length = 0;

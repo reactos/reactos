@@ -217,7 +217,7 @@ void
 BuildFilterStrings(TCHAR *Filter, PFILTERPAIR Pairs, int PairCount)
 {
   int i, c;
-  
+
   c = 0;
   for(i = 0; i < PairCount; i++)
   {
@@ -233,12 +233,12 @@ static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn)
 {
     FILTERPAIR FilterPairs[3];
     static TCHAR Filter[1024];
-    
+
     memset(pofn, 0, sizeof(OPENFILENAME));
     pofn->lStructSize = sizeof(OPENFILENAME);
     pofn->hwndOwner = hWnd;
     pofn->hInstance = hInst;
-    
+
     /* create filter string */
     FilterPairs[0].DisplayID = IDS_FLT_REGFILES;
     FilterPairs[0].FilterID = IDS_FLT_REGFILES_FLT;
@@ -247,7 +247,7 @@ static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn)
     FilterPairs[2].DisplayID = IDS_FLT_ALLFILES;
     FilterPairs[2].FilterID = IDS_FLT_ALLFILES_FLT;
     BuildFilterStrings(Filter, FilterPairs, sizeof(FilterPairs) / sizeof(FILTERPAIR));
-    
+
     pofn->lpstrFilter = Filter;
     pofn->lpstrCustomFilter = CustomFilterBuffer;
     pofn->nMaxCustFilter = MAX_CUSTOM_FILTER_SIZE;
@@ -326,7 +326,7 @@ static BOOL ExportRegistryFile(HWND hWnd)
     ofn.lpfnHook = ImportRegistryFile_OFNHookProc;
     ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG1);
     if (GetSaveFileName(&ofn)) {
-        BOOL result;   
+        BOOL result;
         /* FIXME - convert strings to ascii! */
         result = export_registry_key((CHAR*)ofn.lpstrFile, (CHAR*)ExportKeyPath);
         /*result = export_registry_key(ofn.lpstrFile, NULL);*/
@@ -482,7 +482,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     REGSAM regsam = KEY_READ;
     LONG lRet;
     int item;
-    
+
     switch (LOWORD(wParam)) {
     case ID_REGISTRY_IMPORTREGISTRYFILE:
         ImportRegistryFile(hWnd);
@@ -529,7 +529,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_EDIT_MODIFY:
     case ID_EDIT_MODIFY_BIN:
     case ID_EDIT_DELETE:
-        regsam |= KEY_WRITE; 
+        regsam |= KEY_WRITE;
         break;
     }
 
@@ -570,7 +570,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
           if(MessageBox(g_pChildWnd->hWnd, msg, caption, MB_ICONQUESTION | MB_YESNO) == IDYES)
           {
             int ni, errs;
-            
+
 	    item = -1;
 	    errs = 0;
             while((ni = ListView_GetNextItem(g_pChildWnd->hListWnd, item, LVNI_SELECTED)) > -1)
@@ -582,7 +582,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
               }
 	      item = ni;
             }
-            
+
             RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
             if(errs > 0)
             {
@@ -625,7 +625,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     default:
         result = FALSE;
     }
-    
+
     if(hKey)
       RegCloseKey(hKey);
     return result;

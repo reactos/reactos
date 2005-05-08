@@ -15,7 +15,7 @@
  *        Unicode and redirection ready!
  *
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -33,7 +33,7 @@ INT cmd_verify (LPTSTR cmd, LPTSTR param)
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{		
+	{
 		ConOutResPuts(STRING_VERIFY_HELP1);
 		return 0;
 	}
@@ -48,7 +48,7 @@ INT cmd_verify (LPTSTR cmd, LPTSTR param)
 	else if (_tcsicmp (param, D_ON) == 0)
 		bVerify = TRUE;
 	else
-	{		
+	{
 		ConOutResPuts(STRING_VERIFY_HELP3);
 	}
 

@@ -23,7 +23,7 @@
  *        Fixed Win32 environment handling.
  *
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 #include "precomp.h"
 #include "resource.h"
@@ -35,10 +35,10 @@
 
 
 INT cmd_path (LPTSTR cmd, LPTSTR param)
-{	
+{
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{		
+	{
 		ConOutResPuts(STRING_PATH_HELP1);
 		return 0;
 	}
@@ -55,7 +55,7 @@ INT cmd_path (LPTSTR cmd, LPTSTR param)
 		if (dwBuffer == 0)
 		{
 			LoadString(CMD_ModuleHandle, STRING_VOL_HELP2, szMsg, RC_STRING_MAX_SIZE);
-		    ConOutPrintf(szMsg, _T("PATH"));			
+		    ConOutPrintf(szMsg, _T("PATH"));
 			return 0;
 		}
 		else if (dwBuffer > ENV_BUFFER_SIZE)

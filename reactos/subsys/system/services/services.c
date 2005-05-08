@@ -1,9 +1,9 @@
 /* $Id$
  *
  * service control manager
- * 
+ *
  * ReactOS Operating System
- * 
+ *
  * --------------------------------------------------------------------
  *
  * This software is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this software; see the file COPYING.LIB. If not, write
  * to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge,
- * MA 02139, USA.  
+ * MA 02139, USA.
  *
  */
 
@@ -258,8 +258,8 @@ StartScmNamedPipeThreadListener(VOID)
 VOID FASTCALL
 AcquireLoadDriverPrivilege(VOID)
 {
-  HANDLE hToken; 
-  TOKEN_PRIVILEGES tkp; 
+  HANDLE hToken;
+  TOKEN_PRIVILEGES tkp;
 
   /* Get a token for this process */
   if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
@@ -269,7 +269,7 @@ AcquireLoadDriverPrivilege(VOID)
 
     /* One privilege to set */
     tkp.PrivilegeCount = 1;
-    tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED; 
+    tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
     /* Get the debug privilege for this process */
     AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES)NULL, 0);

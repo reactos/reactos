@@ -1,5 +1,5 @@
 /* $Id$
- * 
+ *
  * reactos/subsys/csrss/api/wapi.c
  *
  * CSRSS port message processing
@@ -113,11 +113,11 @@ ClientConnectionThread(HANDLE ServerPort)
   PCSRSS_API_REQUEST Request;
   PCSRSS_PROCESS_DATA ProcessData;
   PCSRSS_API_REPLY Reply;
-   
+
 	DPRINT("CSR: %s called", __FUNCTION__);
 
   Reply = NULL;
-   
+
   for (;;)
     {
       Status = NtReplyWaitReceivePort(ServerPort,
@@ -129,7 +129,7 @@ ClientConnectionThread(HANDLE ServerPort)
           DPRINT1("CSR: NtReplyWaitReceivePort failed\n");
           break;
         }
-	
+
       if (LpcRequest.Header.MessageType == LPC_PORT_CLOSED)
         {
           CsrFreeProcessData( LpcRequest.Header.ClientId.UniqueProcess );
@@ -138,14 +138,14 @@ ClientConnectionThread(HANDLE ServerPort)
 
       Request = (PCSRSS_API_REQUEST)&LpcRequest;
       Reply = (PCSRSS_API_REPLY)&LpcReply;
-	
+
       ProcessData = CsrGetProcessData(LpcRequest.Header.ClientId.UniqueProcess);
       if (ProcessData == NULL)
         {
           DPRINT1("CSR: Message %d: Unable to find data for process 0x%x\n",
 	          LpcRequest.Header.MessageType, LpcRequest.Header.ClientId.UniqueProcess);
 	  break;
-        }	          
+        }
 
 
       CsrApiCallHandler(ProcessData, Request, Reply);
@@ -171,9 +171,9 @@ ServerApiPortThread (PVOID PortHandle)
    HANDLE ServerPort = (HANDLE) 0;
    HANDLE ServerThread = (HANDLE) 0;
    PCSRSS_PROCESS_DATA ProcessData = NULL;
-   
+
    CsrInitProcessData();
-   
+
 	DPRINT("CSR: %s called", __FUNCTION__);
 
    for (;;)
@@ -207,18 +207,18 @@ ServerApiPortThread (PVOID PortHandle)
 	     Status = STATUS_UNSUCCESSFUL;
 	     break;
 	  }
-	    
+
 
 	ProcessData->CsrSectionViewBase = LpcRead.ViewBase;
 	ProcessData->CsrSectionViewSize = LpcRead.ViewSize;
-	
+
 	Status = NtCompleteConnectPort(ServerPort);
 	if (!NT_SUCCESS(Status))
 	  {
 	     DPRINT1("CSR: NtCompleteConnectPort() failed\n");
 	     break;
 	  }
-	
+
 	Status = RtlCreateUserThread(NtCurrentProcess(),
 				     NULL,
 				     FALSE,
@@ -292,7 +292,7 @@ DPRINT("-- 2\n");
 			} else {
 DPRINT("-- 3\n");
 				PLPC_MESSAGE Reply = NULL;
-				/* 
+				/*
 				 * Tell the init thread the SM gave the
 				 * green light for boostrapping.
 				 */

@@ -23,7 +23,7 @@
  *        Added multiple file support (copied from y.c)
  *
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -59,7 +59,7 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 	}
 
 	argv = split (param, &argc, TRUE);
-	
+
 	for (i = 0; i < argc; i++)
 	{
 		if (_T('/') == argv[i][0])
@@ -97,7 +97,7 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 
 			if (dwRead>0 && bRet)
 				WriteFile(hConsoleOut,buff,dwRead,&dwWritten,NULL);
-			
+
 		} while(dwRead>0 && bRet);
 
 		CloseHandle(hFile);

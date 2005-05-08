@@ -21,13 +21,13 @@
  *
  *    01-Sep-1999 (Eric Kohl)
  *        Added help text.
- *    
+ *
  *    23-Feb-2001 (Carl Nettelblad <cnettel@hem.passagen.se>)
  *        Implemented preservation of echo flag. Some other for related
  *        code in other files fixed, too.
  *
  *    28-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -60,7 +60,7 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{		
+	{
 		ConOutResPuts(STRING_FOR_HELP1);
 		return 0;
 	}

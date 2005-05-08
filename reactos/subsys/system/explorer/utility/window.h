@@ -555,7 +555,7 @@ template<typename BASE> struct ResizeController : public BASE
 			prect->bottom = wp.rcNormalPosition.bottom-wp.rcNormalPosition.top-
 				2*(GetSystemMetrics(SM_CYSIZEFRAME)+GetSystemMetrics(SM_CYEDGE))-
 				GetSystemMetrics(SM_CYCAPTION)-GetSystemMetrics(SM_CYMENUSIZE);
-		}   
+		}
 	}
 
 protected:
@@ -619,7 +619,7 @@ template<typename BASE> struct CtlColorParent : public BASE
 
 #define	PM_DISPATCH_DRAWITEM	(WM_APP+0x09)
 
- /// draw message routing for ColorButton and PictureButton 
+ /// draw message routing for ColorButton and PictureButton
 template<typename BASE> struct OwnerDrawParent : public BASE
 {
 	typedef BASE super;

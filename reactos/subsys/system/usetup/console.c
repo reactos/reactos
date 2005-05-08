@@ -488,7 +488,7 @@ GetConsoleMode(
 {
     CONSOLE_MODE Buffer;
     DWORD   dwBytesReturned;
-	
+
     if (DeviceIoControl (hConsoleHandle,
                          IOCTL_CONSOLE_GET_MODE,
                          NULL,
@@ -520,7 +520,7 @@ GetConsoleCursorInfo(
 	)
 {
     DWORD   dwBytesReturned;
-	
+
     if (DeviceIoControl (hConsoleOutput,
                          IOCTL_CONSOLE_GET_CURSOR_INFO,
                          NULL,

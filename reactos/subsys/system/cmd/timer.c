@@ -25,7 +25,7 @@
 
 //print timer value
 #define PT(format) PrintElapsedTime(GetTickCount()-cT,format)
-	
+
 
 //current timer Time (at wich started to count)
 #define cT clksT[clk_n]
@@ -43,7 +43,7 @@ PrintElapsedTime (DWORD time,INT format)
 #ifdef _DEBUG
 	DebugPrintf(_T("PrintTime(%d,%d)"),time,format);
 #endif
-	
+
 	switch (format)
 	{
 	case 0:
@@ -74,7 +74,7 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 
 	// all timers are kept
 	static DWORD clksT[10];
-	
+
 	// timers status
 	// set all the clocks off by default
 	static BOOL clksS[10]={FALSE,FALSE,FALSE,FALSE,
@@ -82,7 +82,7 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 
 	// TRUE if /S in command line
 	BOOL bS = FALSE;
-	
+
 	// avoid to set clk_n more than once
 	BOOL bCanNSet = TRUE;
 
@@ -94,8 +94,8 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 
 	// output format
 	INT iFormat=1;
-	
-	
+
+
 	// command line parsing variables
 	INT argc;
 	LPTSTR *p;
@@ -139,14 +139,14 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 				bCanNSet = FALSE;
 				continue;
 			}
-			
+
 			// set s(plit) option
 			if (_totupper(p[i][1]) == _T('S'))
 			{
 				bS = TRUE;
 				continue;
 			}
-			
+
 			// specify format
 			if (_totupper(p[i][1]) == _T('F'))
 			{
@@ -169,7 +169,7 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 	if(bS)
 	{
 		if(cS)
-		{	
+		{
 			PS;
 			PrintElapsedTime(GetTickCount()-cT, iFormat);
 			freep(p);

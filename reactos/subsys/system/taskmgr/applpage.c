@@ -65,7 +65,7 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     LV_COLUMN   column;
     TCHAR       szTemp[256];
     int         cx, cy;
-    
+
     switch (message) {
     case WM_INITDIALOG:
 
@@ -149,21 +149,21 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         cy = (rc.bottom - rc.top) + nYDifference;
         SetWindowPos(hApplicationPageListCtrl, NULL, 0, 0, cx, cy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOZORDER);
         InvalidateRect(hApplicationPageListCtrl, NULL, TRUE);
-        
+
         GetClientRect(hApplicationPageEndTaskButton, &rc);
         MapWindowPoints(hApplicationPageEndTaskButton, hDlg, (LPPOINT)(PRECT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
         cx = rc.left + nXDifference;
         cy = rc.top + nYDifference;
         SetWindowPos(hApplicationPageEndTaskButton, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
         InvalidateRect(hApplicationPageEndTaskButton, NULL, TRUE);
-        
+
         GetClientRect(hApplicationPageSwitchToButton, &rc);
         MapWindowPoints(hApplicationPageSwitchToButton, hDlg, (LPPOINT)(PRECT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
         cx = rc.left + nXDifference;
         cy = rc.top + nYDifference;
         SetWindowPos(hApplicationPageSwitchToButton, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
         InvalidateRect(hApplicationPageSwitchToButton, NULL, TRUE);
-        
+
         GetClientRect(hApplicationPageNewTaskButton, &rc);
         MapWindowPoints(hApplicationPageNewTaskButton, hDlg, (LPPOINT)(PRECT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
         cx = rc.left + nXDifference;
@@ -176,7 +176,7 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_NOTIFY:
         ApplicationPageOnNotify(wParam, lParam);
         break;
-        
+
     }
 
   return 0;
@@ -501,7 +501,7 @@ void ApplicationPageOnNotify(WPARAM wParam, LPARAM lParam)
         case LVN_ITEMCHANGED:
             ApplicationPageUpdate();
             break;
-            
+
         case LVN_GETDISPINFO:
             pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)pnmdi->item.lParam;
 

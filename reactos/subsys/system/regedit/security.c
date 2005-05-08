@@ -35,7 +35,7 @@
 /******************************************************************************
    Implementation of the CRegKeySecurity interface
  ******************************************************************************/
- 
+
 SI_ACCESS RegAccess[] = {
   {&GUID_NULL, KEY_ALL_ACCESS,         (LPWSTR)MAKEINTRESOURCE(IDS_ACCESS_FULLCONTROL),      SI_ACCESS_GENERAL | SI_ACCESS_SPECIFIC},
   {&GUID_NULL, KEY_READ,               (LPWSTR)MAKEINTRESOURCE(IDS_ACCESS_READ),             SI_ACCESS_GENERAL},
@@ -70,7 +70,7 @@ SI_INHERIT_TYPE RegInheritTypes[] = {
 LPREGKEYSECURITY CRegKeySecurity_fnConstructor(HANDLE Handle, SE_OBJECT_TYPE ObjectType, SI_OBJECT_INFO *ObjectInfo, BOOL *Btn)
 {
   LPREGKEYSECURITY obj;
-  
+
   obj = (LPREGKEYSECURITY)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(REGKEYSECURITY));
   if(obj != NULL)
   {
@@ -81,13 +81,13 @@ LPREGKEYSECURITY CRegKeySecurity_fnConstructor(HANDLE Handle, SE_OBJECT_TYPE Obj
     obj->ObjectInfo = *ObjectInfo;
     obj->Btn = Btn;
   }
-  
+
   return obj;
 }
 
 HRESULT STDMETHODCALLTYPE
-CRegKeySecurity_fnQueryInterface(LPREGKEYSECURITY this, 
-                                 REFIID iid, 
+CRegKeySecurity_fnQueryInterface(LPREGKEYSECURITY this,
+                                 REFIID iid,
 				 PVOID *pvObject)
 {
   if(IsEqualGUID(iid, &IID_IUnknown) ||
@@ -96,7 +96,7 @@ CRegKeySecurity_fnQueryInterface(LPREGKEYSECURITY this,
     *pvObject = this;
     return S_OK;
   }
-  
+
   *pvObject = NULL;
   return E_NOINTERFACE;
 }
@@ -111,7 +111,7 @@ ULONG STDMETHODCALLTYPE
 CRegKeySecurity_fnRelease(LPREGKEYSECURITY this)
 {
   ULONG rfc;
-  
+
   rfc = (ULONG)InterlockedDecrement(&this->ref);
   if(rfc == 0)
   {
@@ -121,7 +121,7 @@ CRegKeySecurity_fnRelease(LPREGKEYSECURITY this)
 }
 
 HRESULT STDMETHODCALLTYPE
-CRegKeySecurity_fnGetObjectInformation(LPREGKEYSECURITY this, 
+CRegKeySecurity_fnGetObjectInformation(LPREGKEYSECURITY this,
                                        PSI_OBJECT_INFO pObjectInfo)
 {
   *pObjectInfo = this->ObjectInfo;
@@ -129,7 +129,7 @@ CRegKeySecurity_fnGetObjectInformation(LPREGKEYSECURITY this,
 }
 
 HRESULT STDMETHODCALLTYPE
-CRegKeySecurity_fnGetSecurity(LPREGKEYSECURITY this, 
+CRegKeySecurity_fnGetSecurity(LPREGKEYSECURITY this,
                               SECURITY_INFORMATION RequestedInformation,
                               PSECURITY_DESCRIPTOR* ppSecurityDescriptor,
                               BOOL fDefault)
@@ -147,7 +147,7 @@ CRegKeySecurity_fnGetSecurity(LPREGKEYSECURITY this,
 }
 
 HRESULT STDMETHODCALLTYPE
-CRegKeySecurity_fnSetSecurity(LPREGKEYSECURITY this, 
+CRegKeySecurity_fnSetSecurity(LPREGKEYSECURITY this,
                               SECURITY_INFORMATION RequestedInformation,
                               PSECURITY_DESCRIPTOR pSecurityDescriptor)
 {
@@ -157,7 +157,7 @@ CRegKeySecurity_fnSetSecurity(LPREGKEYSECURITY this,
 }
 
 HRESULT STDMETHODCALLTYPE
-CRegKeySecurity_fnGetAccessRights(LPREGKEYSECURITY this, 
+CRegKeySecurity_fnGetAccessRights(LPREGKEYSECURITY this,
                                   const GUID* pguidObjectType,
                                   DWORD dwFlags,
                                   PSI_ACCESS* ppAccess,
@@ -171,7 +171,7 @@ CRegKeySecurity_fnGetAccessRights(LPREGKEYSECURITY this,
 }
 
 HRESULT STDMETHODCALLTYPE
-CRegKeySecurity_fnMapGeneric(LPREGKEYSECURITY this, 
+CRegKeySecurity_fnMapGeneric(LPREGKEYSECURITY this,
                              const GUID* pguidObjectType,
                              UCHAR* pAceFlags,
                              ACCESS_MASK* pMask)
@@ -182,7 +182,7 @@ CRegKeySecurity_fnMapGeneric(LPREGKEYSECURITY this,
 }
 
 HRESULT STDMETHODCALLTYPE
-CRegKeySecurity_fnGetInheritTypes(LPREGKEYSECURITY this, 
+CRegKeySecurity_fnGetInheritTypes(LPREGKEYSECURITY this,
                                   PSI_INHERIT_TYPE* ppInheritTypes,
                                   ULONG* pcInheritTypes)
 {
@@ -197,7 +197,7 @@ CRegKeySecurity_fnGetInheritTypes(LPREGKEYSECURITY this,
 }
 
 HRESULT STDMETHODCALLTYPE
-CRegKeySecurity_fnPropertySheetPageCallback(LPREGKEYSECURITY this, 
+CRegKeySecurity_fnPropertySheetPageCallback(LPREGKEYSECURITY this,
                                             HWND hwnd,
                                             UINT uMsg,
                                             SI_PAGE_TYPE uPage)
@@ -237,7 +237,7 @@ InitializeAclUiDll(VOID)
     hAclUiDll = NULL;
     return FALSE;
   }
-  
+
   return TRUE;
 }
 
@@ -262,12 +262,12 @@ RegKeyEditPermissions(HWND hWndOwner,
   HKEY hInfoKey;
   LPREGKEYSECURITY RegKeySecurity;
   SI_OBJECT_INFO ObjectInfo;
-  
+
   if(pfnEditSecurity == NULL)
   {
     return FALSE;
   }
-  
+
 #ifndef UNICODE
   /* aclui.dll only accepts unicode strings, convert them */
   if(lpMachine != NULL)
@@ -287,7 +287,7 @@ RegKeyEditPermissions(HWND hWndOwner,
   }
   else
     Machine = NULL;
-  
+
   if(lpKeyName != NULL)
   {
     int lnKeyName = lstrlen(lpKeyName);
@@ -313,20 +313,20 @@ RegKeyEditPermissions(HWND hWndOwner,
   Machine = (LPWSTR)lpMachine;
   KeyName = (LPWSTR)lpKeyName;
 #endif
-  
+
     /* try to open the key again with more access rights */
   if(RegOpenKeyEx(hKey, NULL, 0, READ_CONTROL, &hInfoKey) != ERROR_SUCCESS)
   {
     /* FIXME - print error with FormatMessage */
     return FALSE;
   }
-  
+
   ObjectInfo.dwFlags = SI_EDIT_ALL  | SI_ADVANCED | SI_CONTAINER | SI_OWNER_RECURSE | SI_EDIT_PERMS;
   ObjectInfo.hInstance = hInst;
   ObjectInfo.pszServerName = Machine;
   ObjectInfo.pszObjectName = KeyName;
   ObjectInfo.pszPageTitle = KeyName;
-  
+
   if(!(RegKeySecurity = CRegKeySecurity_fnConstructor(hInfoKey, SE_REGISTRY_KEY, &ObjectInfo, &Result)))
   {
     /* FIXME - print error with FormatMessage */
@@ -335,12 +335,12 @@ RegKeyEditPermissions(HWND hWndOwner,
 
   /* display the security editor dialog */
   pfnEditSecurity(hWndOwner, RegKeySecurity);
-  
+
   /* dereference the interface, it should be destroyed here */
   CRegKeySecurity_fnRelease(RegKeySecurity);
 
   RegCloseKey(hInfoKey);
-  
+
 #ifndef UNICODE
   if(Machine != NULL)
   {
@@ -351,7 +351,7 @@ RegKeyEditPermissions(HWND hWndOwner,
     HeapFree(GetProcessHeap(), 0, KeyName);
   }
 #endif
-  
+
   return Result;
 }
 

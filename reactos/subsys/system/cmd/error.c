@@ -17,7 +17,7 @@
  *        Use FormatMessage() for error reports.
  *
  *    28-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -117,13 +117,13 @@ VOID error_too_many_parameters (LPTSTR s)
 
 
 VOID error_path_not_found (VOID)
-{	
+{
 	ConErrResPuts(STRING_ERROR_PATH_NOT_FOUND);
 }
 
 
 VOID error_file_not_found (VOID)
-{	
+{
 	ConErrResPuts(STRING_ERROR_FILE_NOT_FOUND);
 }
 
@@ -138,7 +138,7 @@ VOID error_sfile_not_found (LPTSTR f)
 
 
 VOID error_req_param_missing (VOID)
-{	
+{
 	ConErrResPuts(STRING_ERROR_REQ_PARAM_MISSING);
 }
 
@@ -151,25 +151,25 @@ VOID error_invalid_drive (VOID)
 
 VOID error_bad_command (VOID)
 {
-	ConErrResPuts(STRING_ERROR_BADCOMMAND);	
+	ConErrResPuts(STRING_ERROR_BADCOMMAND);
 }
 
 
 VOID error_no_pipe (VOID)
 {
-	ConErrResPuts(STRING_ERROR_CANNOTPIPE);	
+	ConErrResPuts(STRING_ERROR_CANNOTPIPE);
 }
 
 
 VOID error_out_of_memory (VOID)
 {
-	ConErrResPuts(STRING_ERROR_OUT_OF_MEMORY);	
+	ConErrResPuts(STRING_ERROR_OUT_OF_MEMORY);
 }
 
 
 VOID error_invalid_parameter_format (LPTSTR s)
 {
-	ConErrResPuts(STRING_ERROR_INVALID_PARAM_FORMAT);	
+	ConErrResPuts(STRING_ERROR_INVALID_PARAM_FORMAT);
 }
 
 
@@ -188,7 +188,7 @@ VOID error_syntax (LPTSTR s)
 
 VOID msg_pause (VOID)
 {
-	ConOutResPuts(STRING_ERROR_D_PAUSEMSG);	
+	ConOutResPuts(STRING_ERROR_D_PAUSEMSG);
 }
 
 /* EOF */

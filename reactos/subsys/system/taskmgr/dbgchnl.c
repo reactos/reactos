@@ -19,7 +19,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-    
+
 #include "precomp.h"
 
 /* TODO:
@@ -129,16 +129,16 @@ static int change_channel_CB(HANDLE hProcess, void* addr, TCHAR* buffer, void* p
  * Here it gets ugly :-(
  * This is quick hack to get the address of first_dll in a running process
  * We make the following assumptions:
- *      - libwine (lib) is loaded in all processes at the same address (or 
+ *      - libwine (lib) is loaded in all processes at the same address (or
  *        at least at the same address at this process)
  *      - we load the same libwine.so version in this process and in the
  *        examined process
- * Final address is gotten by: 1/ querying the address of a known exported 
+ * Final address is gotten by: 1/ querying the address of a known exported
  * symbol out of libwine.so with dlsym, 2/ then querying nm on libwine.so to
  * get the offset from the data segment of this known symbol and of first_dll,
  * 3/ computing the actual address of first_dll by adding the result of 1/ and
  * the delta of 2/.
- * Ugly, yes, but it somehow works. We should replace that with debughlp 
+ * Ugly, yes, but it somehow works. We should replace that with debughlp
  * library, that'd be way better. Exporting first_dll from libwine.so would make
  * this code simpler, but still ugly.
  */
@@ -180,7 +180,7 @@ void* get_symbol(HANDLE hProcess, const char* name, const char* lib)
             if (stat(buffer + 3, &s) == 0) break;
         }
         free(env);
-        if (!ptr) 
+        if (!ptr)
         {
 	    printf("Couldn't find %s in LD_LIBRARY_PATH\n", lib);
 	    return NULL;
@@ -259,7 +259,7 @@ static int enum_channel(HANDLE hProcess, EnumChannelCB ce, void* user, unsigned 
             {
                 if (unique)
                 {
-                    /* since some channels are defined in multiple compilation units, 
+                    /* since some channels are defined in multiple compilation units,
                      * they will appear several times...
                      * so cache the channel's names we already reported and don't report
                      * them again

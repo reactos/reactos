@@ -113,7 +113,7 @@ COMMAND cmds[] =
 
 	{_T("goto"), CMD_BATCHONLY, cmd_goto},
 
-#ifdef FEATURE_HISTORY	
+#ifdef FEATURE_HISTORY
 	{_T("history"), 0, CommandHistory},
 #endif
 

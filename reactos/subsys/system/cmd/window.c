@@ -12,7 +12,7 @@
  *     (nice size optimization :)
  *
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 
@@ -178,7 +178,7 @@ INT CommandWindow (LPTSTR cmd, LPTSTR param)
 	HWND hwnd;
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
-	{		
+	{
 		ConOutResPuts(STRING_WINDOW_HELP1);
 		return 0;
 	}
@@ -190,12 +190,12 @@ INT CommandWindow (LPTSTR cmd, LPTSTR param)
 
 
 INT CommandActivate (LPTSTR cmd, LPTSTR param)
-{	
+{
 	LPTSTR str;
 	HWND hwnd;
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
-	{		
+	{
 		ConOutResPuts(STRING_WINDOW_HELP2);
 		return 0;
 	}
@@ -215,7 +215,7 @@ INT CommandActivate (LPTSTR cmd, LPTSTR param)
 
 	hwnd = FindWindow(NULL, param);
 	if (hwnd == NULL)
-	{		
+	{
 		ConErrResPuts(STRING_WINDOW_ERROR1);
 		return 1;
 	}

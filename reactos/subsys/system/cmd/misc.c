@@ -29,7 +29,7 @@
  *        Added PagePrompt() and FilePrompt().
  *
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -436,9 +436,9 @@ HWND GetConsoleWindow (VOID)
 
 
 INT PagePrompt (VOID)
-{	
+{
 	INPUT_RECORD ir;
-	
+
 	ConOutResPuts(STRING_MISC_HELP1);
 
 	RemoveBreakHandler ();

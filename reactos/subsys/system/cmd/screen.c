@@ -7,7 +7,7 @@
  *     started - Paolo Pantaleo <paolopan@freemail.it>
  *
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  *
  */
 
@@ -18,12 +18,12 @@
 
 
 INT CommandScreen (LPTSTR cmd, LPTSTR param)
-{	
+{
 	SHORT x,y;
 	BOOL bSkipText = FALSE;
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
-	{		
+	{
 		ConOutResPuts(STRING_SCREEN_HELP);
 		return 0;
 	}

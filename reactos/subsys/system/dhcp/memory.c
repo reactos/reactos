@@ -99,7 +99,7 @@ void enter_host (hd)
 		if (!tree_evaluate (hd -> group -> options
 				    [DHO_DHCP_CLIENT_IDENTIFIER]))
 			return;
-			
+
 		/* If there's no uid hash, make one; otherwise, see if
 		   there's already an entry in the hash for this host. */
 		if (!host_uid_hash) {
@@ -165,7 +165,7 @@ struct host_decl *find_hosts_by_uid (data, len)
    the addr pointer, update the host pointer to point at the host_decl
    that matched, and return the subnet that matched. */
 
-subnet *find_host_for_network (struct host_decl **host, iaddr *addr, 
+subnet *find_host_for_network (struct host_decl **host, iaddr *addr,
                                shared_network *share)
 {
 	int i;
@@ -391,7 +391,7 @@ void enter_subnet (struct _subnet *subnet)
 		   first. */
 		if (subnet_inner_than (subnet, scan, 1)) {
 			if (prev) {
-				prev -> next_subnet = subnet; 
+				prev -> next_subnet = subnet;
 			} else
 				subnets = subnet;
 			subnet -> next_subnet = scan;
@@ -404,7 +404,7 @@ void enter_subnet (struct _subnet *subnet)
 	subnet -> next_subnet = subnets;
 	subnets = subnet;
 }
-	
+
 /* Enter a new shared network into the shared network list. */
 
 void enter_shared_network (shared_network *share)
@@ -413,7 +413,7 @@ void enter_shared_network (shared_network *share)
 	share -> next = shared_networks;
 	shared_networks = share;
 }
-	
+
 /* Enter a lease into the system.   This is called by the parser each
    time it reads in a new lease.   If the subnet for that lease has
    already been read in (usually the case), just update that lease;
@@ -548,7 +548,7 @@ int supersede_lease (struct _lease *comp, struct _lease *lease, int commit)
 			hw_hash_add (comp);
 		}
 
-		/* Remove the lease from its current place in the 
+		/* Remove the lease from its current place in the
 		   timeout sequence. */
 		if (comp -> prev) {
 			comp -> prev -> next = comp -> next;
@@ -678,7 +678,7 @@ lease *find_lease_by_uid (unsigned char *uid, int len)
 
 lease *find_lease_by_hw_addr (unsigned char *hwaddr, int hwlen)
 {
-        struct _lease *lease = 
+        struct _lease *lease =
             (struct _lease *)hash_lookup (lease_hw_addr_hash,
                                           hwaddr, hwlen);
 	return lease;
@@ -716,7 +716,7 @@ void uid_hash_add (lease *lease)
 
 void uid_hash_delete (lease *lease)
 {
-        struct _lease *head = 
+        struct _lease *head =
             find_lease_by_uid (lease -> uid, lease -> uid_len);
 	struct _lease *scan;
 
@@ -856,7 +856,7 @@ struct class *find_class (type, name, len)
 					     ? user_class_hash
 					     : vendor_class_hash, name, len);
 	return class;
-}	
+}
 
 struct group *clone_group (group, caller)
 	struct group *group;

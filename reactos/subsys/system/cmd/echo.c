@@ -23,7 +23,7 @@
  *        Implemented 'echo.' and 'echoerr.'.
  *
  *    28-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -39,7 +39,7 @@ INT CommandEcho (LPTSTR cmd, LPTSTR param)
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{		
+	{
 		ConOutResPuts(STRING_ECHO_HELP4);
 		return 0;
 	}
@@ -78,7 +78,7 @@ INT CommandEchos (LPTSTR cmd, LPTSTR param)
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{		
+	{
 		ConOutResPuts(STRING_ECHO_HELP1);
 		return 0;
 	}
@@ -98,7 +98,7 @@ INT CommandEchoerr (LPTSTR cmd, LPTSTR param)
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{		
+	{
 		ConOutResPuts(STRING_ECHO_HELP2);
 		return 0;
 	}
@@ -127,7 +127,7 @@ INT CommandEchoserr (LPTSTR cmd, LPTSTR param)
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{		
+	{
 		ConOutResPuts(STRING_ECHO_HELP3);
 		return 0;
 	}

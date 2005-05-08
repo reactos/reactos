@@ -126,20 +126,20 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
   SelectObject(Dc, OldFont);
 
   GuiData->MemoryDC = CreateCompatibleDC(Dc);
-  GuiData->MemoryBitmap = CreateCompatibleBitmap(Dc, 
-                                                 Console->Size.X * GuiData->CharWidth, 
+  GuiData->MemoryBitmap = CreateCompatibleBitmap(Dc,
+                                                 Console->Size.X * GuiData->CharWidth,
 						 Console->Size.Y * GuiData->CharHeight);
   /* NOTE: Don't delete the "first bitmap", it's done in DeleteDC. */
   SelectObject(GuiData->MemoryDC, GuiData->MemoryBitmap);
   /* NOTE: Don't delete stock font. */
-  SelectObject(GuiData->MemoryDC, GuiData->Font); 
+  SelectObject(GuiData->MemoryDC, GuiData->Font);
 
   ReleaseDC(hWnd, Dc);
   GuiData->CursorBlinkOn = TRUE;
   GuiData->ForceCursorOff = FALSE;
 
   GuiData->Selection.left = -1;
-  
+
   Console->PrivateData = GuiData;
   SetWindowLongPtrW(hWnd, GWL_USERDATA, (DWORD_PTR) Console);
 
@@ -192,7 +192,7 @@ static VOID FASTCALL
 GuiConsoleUpdateSelection(HWND hWnd, PRECT rc, PGUI_CONSOLE_DATA GuiData)
 {
   RECT oldRect = GuiData->Selection;
-  
+
   if(rc != NULL)
   {
     RECT changeRect = *rc;
@@ -203,7 +203,7 @@ GuiConsoleUpdateSelection(HWND hWnd, PRECT rc, PGUI_CONSOLE_DATA GuiData)
     changeRect.top *= GuiData->CharHeight;
     changeRect.right *= GuiData->CharWidth;
     changeRect.bottom *= GuiData->CharHeight;
-    
+
     if(rc->left != oldRect.left ||
        rc->top != oldRect.top ||
        rc->right != oldRect.right ||
@@ -212,12 +212,12 @@ GuiConsoleUpdateSelection(HWND hWnd, PRECT rc, PGUI_CONSOLE_DATA GuiData)
       if(oldRect.left != -1)
       {
         HRGN rgn1, rgn2;
-        
+
         oldRect.left *= GuiData->CharWidth;
         oldRect.top *= GuiData->CharHeight;
         oldRect.right *= GuiData->CharWidth;
         oldRect.bottom *= GuiData->CharHeight;
-        
+
         /* calculate the region that needs to be updated */
         if((rgn1 = CreateRectRgnIndirect(&oldRect)))
         {
@@ -316,7 +316,7 @@ GuiConsoleUpdateBitmap(HWND hWnd, RECT rc)
                       GuiConsoleSetTextColors(GuiData->MemoryDC, Attribute);
                       LastAttribute = Attribute;
                     }
-                }  
+                }
               MultiByteToWideChar(Console->OutputCodePage, 0, (PCHAR)From, 1, To, 1);
               To++;
               From += 2;
@@ -372,22 +372,22 @@ GuiConsoleHandlePaint(HWND hWnd)
              Ps.rcPaint.right - Ps.rcPaint.left + 1,
              Ps.rcPaint.bottom - Ps.rcPaint.top + 1, GuiData->MemoryDC,
              Ps.rcPaint.left, Ps.rcPaint.top, SRCCOPY);
-      
+
       if (GuiData->Selection.left != -1)
       {
         RECT rc = GuiData->Selection;
-        
+
         rc.left *= GuiData->CharWidth;
         rc.top *= GuiData->CharHeight;
         rc.right *= GuiData->CharWidth;
         rc.bottom *= GuiData->CharHeight;
 
         if (IntersectRect(&rc, &Ps.rcPaint, &rc))
-        {                 
+        {
           PatBlt(Dc, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, DSTINVERT);
-        } 
-      }                   
-      
+        }
+      }
+
       EndPaint (hWnd, &Ps);
       LeaveCriticalSection(&GuiData->Lock);
     }
@@ -410,7 +410,7 @@ GuiConsoleHandleKey(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
   Message.message = msg;
   Message.wParam = wParam;
   Message.lParam = lParam;
-  
+
   if(msg == WM_CHAR || msg == WM_SYSKEYDOWN)
   {
     /* clear the selection */
@@ -610,7 +610,7 @@ GuiConsoleLeftMouseDown(HWND hWnd, LPARAM lParam)
   PGUI_CONSOLE_DATA GuiData;
   POINTS pt;
   RECT rc;
-  
+
   GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
   if (Console == NULL || GuiData == NULL) return;
 
@@ -620,14 +620,14 @@ GuiConsoleLeftMouseDown(HWND hWnd, LPARAM lParam)
   rc.top = pt.y / GuiData->CharHeight;
   rc.right = rc.left + 1;
   rc.bottom = rc.top + 1;
-  
+
   GuiData->SelectionStart.x = rc.left;
   GuiData->SelectionStart.y = rc.top;
-  
+
   SetCapture(hWnd);
-  
+
   GuiData->MouseDown = TRUE;
-  
+
   GuiConsoleUpdateSelection(hWnd, &rc, GuiData);
 }
 
@@ -638,13 +638,13 @@ GuiConsoleLeftMouseUp(HWND hWnd, LPARAM lParam)
   PGUI_CONSOLE_DATA GuiData;
   RECT rc;
   POINTS pt;
-  
+
   GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
   if (Console == NULL || GuiData == NULL) return;
   if (GuiData->Selection.left == -1 || !GuiData->MouseDown) return;
-  
+
   pt = MAKEPOINTS(lParam);
-  
+
   rc.left = GuiData->SelectionStart.x;
   rc.top = GuiData->SelectionStart.y;
   rc.right = (pt.x >= 0 ? (pt.x / GuiData->CharWidth) + 1 : 0);
@@ -665,11 +665,11 @@ GuiConsoleLeftMouseUp(HWND hWnd, LPARAM lParam)
     rc.top = max(rc.bottom - 1, 0);
     rc.bottom = tmp + 1;
   }
-  
+
   GuiData->MouseDown = FALSE;
 
   GuiConsoleUpdateSelection(hWnd, &rc, GuiData);
-  
+
   ReleaseCapture();
 }
 
@@ -680,9 +680,9 @@ GuiConsoleMouseMove(HWND hWnd, WPARAM wParam, LPARAM lParam)
   PGUI_CONSOLE_DATA GuiData;
   RECT rc;
   POINTS pt;
-  
+
   if (!(wParam & MK_LBUTTON)) return;
-  
+
   GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
   if (Console == NULL || GuiData == NULL || !GuiData->MouseDown) return;
 
@@ -710,14 +710,14 @@ GuiConsoleMouseMove(HWND hWnd, WPARAM wParam, LPARAM lParam)
   }
 
   GuiConsoleUpdateSelection(hWnd, &rc, GuiData);
-}    
+}
 
 static VOID FASTCALL
 GuiConsoleRightMouseDown(HWND hWnd)
 {
   PCSRSS_CONSOLE Console;
   PGUI_CONSOLE_DATA GuiData;
-  
+
   GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
   if (Console == NULL || GuiData == NULL) return;
 
@@ -728,11 +728,11 @@ GuiConsoleRightMouseDown(HWND hWnd)
   else
   {
     /* FIXME - copy selection to clipboard */
-    
+
     GuiConsoleUpdateSelection(hWnd, NULL, GuiData);
   }
 
-}    
+}
 
 static LRESULT CALLBACK
 GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -1043,7 +1043,7 @@ GuiConsoleCopyRegion(HWND hWnd,
   ScrollRect.top = Dest->top * GuiData->CharHeight;
   ScrollRect.bottom = (Dest->bottom + 1) * GuiData->CharHeight;
   EnterCriticalSection(&GuiData->Lock);
-  BitBlt(GuiData->MemoryDC, ScrollRect.left, ScrollRect.top, 
+  BitBlt(GuiData->MemoryDC, ScrollRect.left, ScrollRect.top,
          ScrollRect.right - ScrollRect.left, ScrollRect.bottom - ScrollRect.top,
 	 GuiData->MemoryDC, Source->left * GuiData->CharWidth, Source->top * GuiData->CharHeight, SRCCOPY);
 

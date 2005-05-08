@@ -50,12 +50,12 @@
  *    26-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Replaced CRT io functions by Win32 io functions.
  *        Unicode safe!
- *    
+ *
  *    23-Feb-2001 (Carl Nettelblad <cnettel@hem.passagen.es>)
  *        Fixes made to get "for" working.
  *
  *    02-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -216,7 +216,7 @@ VOID ExitBatch (LPTSTR msg)
  */
 
 BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
-{	
+{
 	HANDLE hFile;
 
 	hFile = CreateFile (fullname, GENERIC_READ, FILE_SHARE_READ, NULL,
@@ -229,7 +229,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 #endif
 
 	if (hFile == INVALID_HANDLE_VALUE)
-	{		
+	{
 		ConErrResPuts(STRING_BATCH_ERROR);
 		return FALSE;
 	}

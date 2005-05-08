@@ -28,7 +28,7 @@
  *        Fixed date input bug.
  *
  *    03-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -183,7 +183,7 @@ ParseDate (LPTSTR s)
 
 
 INT cmd_date (LPTSTR cmd, LPTSTR param)
-{	
+{
 	LPTSTR *arg;
 	INT    argc;
 	INT    i;
@@ -191,7 +191,7 @@ INT cmd_date (LPTSTR cmd, LPTSTR param)
 	INT    nDateString = -1;
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{	
+	{
 		ConOutResPuts(STRING_DATE_HELP4);
 		return 0;
 	}
@@ -236,7 +236,7 @@ INT cmd_date (LPTSTR cmd, LPTSTR param)
 				return 0;
 			}
 			ConErrResPuts(STRING_DATE_ERROR);
-			
+
 		}
 	}
 	else
@@ -246,7 +246,7 @@ INT cmd_date (LPTSTR cmd, LPTSTR param)
 			freep (arg);
 			return 0;
 		}
-		
+
 		ConErrResPuts(STRING_DATE_ERROR);
 	}
 

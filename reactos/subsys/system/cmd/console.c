@@ -8,7 +8,7 @@
  *        started
  *
  *    03-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 
@@ -186,7 +186,7 @@ VOID ConPuts(LPTSTR szText, DWORD nStdHandle)
 
 VOID ConOutResPuts (UINT resID)
 {
-  TCHAR szMsg[RC_STRING_MAX_SIZE];	
+  TCHAR szMsg[RC_STRING_MAX_SIZE];
   LoadString(CMD_ModuleHandle, resID, szMsg, RC_STRING_MAX_SIZE);
 
   ConPuts(szMsg, STD_OUTPUT_HANDLE);
@@ -237,7 +237,7 @@ VOID ConOutFormatMessage (DWORD MessageId, ...)
 	       (LPTSTR) &text,
 	       0,
 	       &arg_ptr);
-	
+
 	va_end (arg_ptr);
 	if(ret > 0)
 	{
@@ -268,7 +268,7 @@ VOID ConErrChar (TCHAR c)
 
 VOID ConErrResPuts (UINT resID)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];	
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
     LoadString(CMD_ModuleHandle, resID, szMsg, RC_STRING_MAX_SIZE);
 	ConPuts(szMsg, STD_ERROR_HANDLE);
 }

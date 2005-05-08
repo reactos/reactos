@@ -16,12 +16,12 @@
 
 
 INT CommandDelay (LPTSTR cmd, LPTSTR param)
-{	
+{
 	DWORD val;
 	DWORD mul=1000;
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
-	{		
+	{
 		ConOutResPuts(STRING_DELAY_HELP);
 		return 0;
 	}

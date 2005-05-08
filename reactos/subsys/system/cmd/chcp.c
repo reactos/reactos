@@ -8,7 +8,7 @@
  *        Started.
  *
  *    02-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -28,7 +28,7 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 
 	/* print help */
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{		
+	{
 		ConOutResPuts(STRING_CHCP_HELP);
 		return 0;
 	}
@@ -67,12 +67,12 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 	}
 
 	if (!SetConsoleCP(uNewCodePage))
-	{		
+	{
 		ConErrResPuts(STRING_CHCP_ERROR4);
 	}
 	else
 	{
-		
+
 		SetConsoleOutputCP (uNewCodePage);
 		InitLocale ();
 		InputCodePage= GetConsoleCP();

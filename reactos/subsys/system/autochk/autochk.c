@@ -73,7 +73,7 @@ NtProcessStartup(PPEB Peb)
   NTSTATUS Status;
 
   PrintString("Autochk 0.0.1\n");
-  
+
   Status = NtQueryInformationProcess(NtCurrentProcess(),
                                      ProcessDeviceMap,
                                      &DeviceMap.Query,

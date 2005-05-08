@@ -34,7 +34,7 @@
  *
  * FREEDOS extension : optional parameter DOWN to allow shifting
  *   parameters backwards.
- * 
+ *
  */
 
 INT cmd_shift (LPTSTR cmd, LPTSTR param)
@@ -45,7 +45,7 @@ INT cmd_shift (LPTSTR cmd, LPTSTR param)
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{		
+	{
 		ConOutResPuts(STRING_SHIFT_HELP);
 		return 0;
 	}

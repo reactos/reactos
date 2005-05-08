@@ -41,11 +41,11 @@ typedef struct
   INT CharWidth;
   HFONT hFont;
   BOOL SbVisible;
-  
+
   INT LeftMargin;
   INT AddressSpacing;
   INT SplitSpacing;
-  
+
   BOOL EditingField;
   INT CaretCol;
   INT CaretLine;
@@ -67,7 +67,7 @@ STDCALL
 RegisterHexEditorClass(HINSTANCE hInstance)
 {
   WNDCLASSEX WndClass;
-  
+
   ZeroMemory(&WndClass, sizeof(WNDCLASSEX));
   WndClass.cbSize = sizeof(WNDCLASSEX);
   WndClass.style = CS_DBLCLKS;
@@ -77,7 +77,7 @@ RegisterHexEditorClass(HINSTANCE hInstance)
   WndClass.hCursor = LoadCursor(0, IDC_IBEAM);
   WndClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
   WndClass.lpszClassName = HEX_EDIT_CLASS_NAME;
-  
+
   return RegisterClassEx(&WndClass);
 }
 
@@ -94,11 +94,11 @@ static VOID
 HEXEDIT_MoveCaret(PHEXEDIT_DATA hed, BOOL Scroll)
 {
   SCROLLINFO si;
-  
+
   si.cbSize = sizeof(SCROLLINFO);
   si.fMask = SIF_POS;
   GetScrollInfo(hed->hWndSelf, SB_VERT, &si);
-  
+
   if(Scroll)
   {
     if(si.nPos > hed->CaretLine)
@@ -110,13 +110,13 @@ HEXEDIT_MoveCaret(PHEXEDIT_DATA hed, BOOL Scroll)
     }
     else if(hed->CaretLine >= (hed->nVisibleLinesComplete + si.nPos))
     {
-      si.nPos = hed->CaretLine - hed->nVisibleLinesComplete + 1; 
+      si.nPos = hed->CaretLine - hed->nVisibleLinesComplete + 1;
       SetScrollInfo(hed->hWndSelf, SB_VERT, &si, TRUE);
       GetScrollInfo(hed->hWndSelf, SB_VERT, &si);
       InvalidateRect(hed->hWndSelf, NULL, TRUE);
     }
   }
-  
+
   if(hed->EditingField)
     SetCaretPos(hed->LeftMargin + ((4 + hed->AddressSpacing + (3 * hed->CaretCol)) * hed->CharWidth) - 1, (hed->CaretLine - si.nPos) * hed->LineHeight);
   else
@@ -130,17 +130,17 @@ HEXEDIT_Update(PHEXEDIT_DATA hed)
   RECT rcClient;
   BOOL SbVisible;
   DWORD bufsize, cvislines;
-  
+
   GetClientRect(hed->hWndSelf, &rcClient);
   hed->style = GetWindowLong(hed->hWndSelf, GWL_STYLE);
-  
+
   bufsize = (hed->hBuffer ? LocalSize(hed->hBuffer) : 0);
   hed->nLines = max(bufsize / hed->ColumnsPerLine, 1);
   if(bufsize > hed->ColumnsPerLine && (bufsize % hed->ColumnsPerLine) > 0)
   {
     hed->nLines++;
   }
-  
+
   if(hed->LineHeight > 0)
   {
     hed->nVisibleLinesComplete = cvislines = rcClient.bottom / hed->LineHeight;
@@ -154,10 +154,10 @@ HEXEDIT_Update(PHEXEDIT_DATA hed)
   {
     hed->nVisibleLines = cvislines = 0;
   }
-  
+
   SbVisible = bufsize > 0 && cvislines < hed->nLines;
   ShowScrollBar(hed->hWndSelf, SB_VERT, SbVisible);
-  
+
   /* update scrollbar */
   si.cbSize = sizeof(SCROLLINFO);
   si.fMask = SIF_RANGE | SIF_PAGE;
@@ -165,12 +165,12 @@ HEXEDIT_Update(PHEXEDIT_DATA hed)
   si.nMax = ((bufsize > 0) ? hed->nLines - 1 : 0);
   si.nPage = ((hed->LineHeight > 0) ? rcClient.bottom / hed->LineHeight : 0);
   SetScrollInfo(hed->hWndSelf, SB_VERT, &si, TRUE);
-  
+
   if(IsWindowVisible(hed->hWndSelf) && SbVisible != hed->SbVisible)
   {
     InvalidateRect(hed->hWndSelf, NULL, TRUE);
   }
-  
+
   hed->SbVisible = SbVisible;
 }
 
@@ -190,9 +190,9 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
   UINT bufsize;
   TCHAR hex[3], addr[17];
   RECT rct;
-  
+
   FillRect(hDC, rc, (HBRUSH)(COLOR_WINDOW + 1));
-  
+
   if(hed->hBuffer)
   {
     bufsize = LocalSize(hed->hBuffer);
@@ -202,7 +202,7 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
   {
     buf = NULL;
     bufsize = 0;
-    
+
     if(ScrollPos + First == 0)
     {
       /* draw address */
@@ -210,7 +210,7 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
       TextOut(hDC, hed->LeftMargin, First * hed->LineHeight, addr, 4);
     }
   }
-  
+
   if(buf)
   {
     end = buf + bufsize;
@@ -218,25 +218,25 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
     linestart = (ScrollPos + First) * hed->ColumnsPerLine;
     current = buf + linestart;
     Last = min(hed->nLines - ScrollPos, Last);
-    
+
     while(First <= Last && current < end)
     {
       DWORD dh;
-      
+
       dx = hed->LeftMargin;
-      
+
       /* draw address */
       _stprintf(addr, _T("%04X"), linestart);
       TextOut(hDC, dx, dy, addr, 4);
-      
+
       dx += ((4 + hed->AddressSpacing) * hed->CharWidth);
       dh = (3 * hed->CharWidth);
-      
+
       rct.left = dx;
       rct.top = dy;
       rct.right = rct.left + dh;
       rct.bottom = dy + hed->LineHeight;
-      
+
       /* draw hex map */
       dx += (hed->CharWidth / 2);
       line = current;
@@ -244,12 +244,12 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
       {
         rct.left += dh;
         rct.right += dh;
-        
+
 	_stprintf(hex, _T("%02X"), *(current++));
 	ExtTextOut(hDC, dx, dy, ETO_OPAQUE, &rct, hex, 2, NULL);
 	dx += dh;
       }
-      
+
       /* draw ascii map */
       dx = ((4 + hed->AddressSpacing + hed->SplitSpacing + (hed->ColumnsPerLine * 3)) * hed->CharWidth);
       current = line;
@@ -260,13 +260,13 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
 	TextOut(hDC, dx, dy, hex, 1);
 	dx += hed->CharWidth;
       }
-      
+
       dy += hed->LineHeight;
       linestart += hed->ColumnsPerLine;
       First++;
     }
   }
-  
+
   LocalUnlock(hed->hBuffer);
 }
 
@@ -275,47 +275,47 @@ HEXEDIT_HitRegionTest(PHEXEDIT_DATA hed, POINTS pt)
 {
   WINDOWINFO wi;
   int d;
-  
+
   if(pt.x <= hed->LeftMargin)
   {
     return HEHT_LEFTMARGIN;
   }
-  
+
   pt.x -= hed->LeftMargin;
   d = (4 * hed->CharWidth);
   if(pt.x <= d)
   {
     return HEHT_ADDRESS;
   }
-  
+
   pt.x -= d;
   d = (hed->AddressSpacing * hed->CharWidth);
   if(pt.x <= d)
   {
     return HEHT_ADDRESSSPACING;
   }
-  
+
   pt.x -= d;
   d = (3 * hed->ColumnsPerLine * hed->CharWidth);
   if(pt.x <= d)
   {
     return HEHT_HEXDUMP;
   }
-  
+
   pt.x -= d;
   d = (hed->SplitSpacing * hed->CharWidth);
   if(pt.x <= d)
   {
     return HEHT_HEXDUMPSPACING;
   }
-  
+
   pt.x -= d;
   d = (hed->ColumnsPerLine * hed->CharWidth);
   if(pt.x <= d)
   {
     return HEHT_ASCIIDUMP;
   }
-  
+
   return HEHT_RIGHTMARGIN;
 }
 
@@ -324,13 +324,13 @@ HEXEDIT_PositionFromPoint(PHEXEDIT_DATA hed, POINTS pt, DWORD Hit, POINT *EditPo
 {
   SCROLLINFO si;
   DWORD Pos, bufsize;
-  
+
   si.cbSize = sizeof(SCROLLINFO);
   si.fMask = SIF_POS;
   GetScrollInfo(hed->hWndSelf, SB_VERT, &si);
-  
+
   EditPos->x = 0;
-  
+
   if(hed->LineHeight > 0)
   {
     EditPos->y = min(si.nPos + (pt.y / hed->LineHeight), hed->nLines - 1);
@@ -339,7 +339,7 @@ HEXEDIT_PositionFromPoint(PHEXEDIT_DATA hed, POINTS pt, DWORD Hit, POINT *EditPo
   {
     EditPos->y = si.nPos;
   }
-  
+
   switch(Hit)
   {
     case HEHT_LEFTMARGIN:
@@ -349,19 +349,19 @@ HEXEDIT_PositionFromPoint(PHEXEDIT_DATA hed, POINTS pt, DWORD Hit, POINT *EditPo
       pt.x -= hed->LeftMargin + ((4 + hed->AddressSpacing) * hed->CharWidth);
       *EditField = TRUE;
       break;
-    
+
     default:
       pt.x -= hed->LeftMargin + ((4 + hed->AddressSpacing + hed->SplitSpacing + (3 * hed->ColumnsPerLine)) * hed->CharWidth);
       *EditField = FALSE;
       break;
   }
-  
+
   if(pt.x > 0)
   {
     INT BlockWidth = (*EditField ? hed->CharWidth * 3 : hed->CharWidth);
     EditPos->x = min(hed->ColumnsPerLine, pt.x / BlockWidth);
   }
-  
+
   bufsize = (hed->hBuffer ? LocalSize(hed->hBuffer) : 0);
   Pos = (EditPos->y * hed->ColumnsPerLine) + EditPos->x;
   if(Pos > bufsize)
@@ -381,12 +381,12 @@ HEXEDIT_HEM_LOADBUFFER(PHEXEDIT_DATA hed, PVOID Buffer, DWORD Size)
   if(Buffer != NULL && Size > 0)
   {
     LPVOID buf;
-    
+
     if(hed->MaxBuffer > 0 && Size > hed->MaxBuffer)
     {
       Size = hed->MaxBuffer;
     }
-    
+
     if(hed->hBuffer)
     {
       if(Size > 0)
@@ -401,7 +401,7 @@ HEXEDIT_HEM_LOADBUFFER(PHEXEDIT_DATA hed, PVOID Buffer, DWORD Size)
         hed->hBuffer = LocalFree(hed->hBuffer);
         hed->Position = 0;
         HEXEDIT_Update(hed);
-        
+
         return 0;
       }
     }
@@ -409,7 +409,7 @@ HEXEDIT_HEM_LOADBUFFER(PHEXEDIT_DATA hed, PVOID Buffer, DWORD Size)
     {
       hed->hBuffer = LocalAlloc(LHND, Size);
     }
-    
+
     if(Size > 0)
     {
       buf = LocalLock(hed->hBuffer);
@@ -417,11 +417,11 @@ HEXEDIT_HEM_LOADBUFFER(PHEXEDIT_DATA hed, PVOID Buffer, DWORD Size)
       {
         memcpy(buf, Buffer, Size);
       }
-      else 
+      else
         Size = 0;
       LocalUnlock(hed->hBuffer);
     }
-    
+
     hed->Position = 0;
     HEXEDIT_Update(hed);
     return Size;
@@ -432,7 +432,7 @@ HEXEDIT_HEM_LOADBUFFER(PHEXEDIT_DATA hed, PVOID Buffer, DWORD Size)
     hed->hBuffer = LocalFree(hed->hBuffer);
     HEXEDIT_Update(hed);
   }
-  
+
   return 0;
 }
 
@@ -440,19 +440,19 @@ static LRESULT
 HEXEDIT_HEM_COPYBUFFER(PHEXEDIT_DATA hed, PVOID Buffer, DWORD Size)
 {
   DWORD nCpy;
-  
+
   if(!hed->hBuffer)
   {
     return 0;
   }
-  
+
   if(Buffer != NULL && Size > 0)
   {
     nCpy = min(Size, LocalSize(hed->hBuffer));
     if(nCpy > 0)
     {
       PVOID buf;
-      
+
       buf = LocalLock(hed->hBuffer);
       if(buf)
       {
@@ -464,7 +464,7 @@ HEXEDIT_HEM_COPYBUFFER(PHEXEDIT_DATA hed, PVOID Buffer, DWORD Size)
     }
     return nCpy;
   }
-  
+
   return (LRESULT)LocalSize(hed->hBuffer);
 }
 
@@ -486,25 +486,25 @@ static LRESULT
 HEXEDIT_WM_NCCREATE(HWND hWnd, CREATESTRUCT *cs)
 {
   PHEXEDIT_DATA hed;
-  
+
   if(!(hed = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(HEXEDIT_DATA))))
   {
     return FALSE;
   }
-  
+
   hed->hWndSelf = hWnd;
   hed->hWndParent = cs->hwndParent;
   hed->style = cs->style;
-  
+
   hed->ColumnsPerLine = 8;
   hed->LeftMargin = 2;
   hed->AddressSpacing = 2;
   hed->SplitSpacing = 2;
   hed->EditingField = TRUE; /* in hexdump field */
-  
+
   SetWindowLongPtr(hWnd, 0, (DWORD_PTR)hed);
   HEXEDIT_Update(hed);
-  
+
   return TRUE;
 }
 
@@ -516,15 +516,15 @@ HEXEDIT_WM_NCDESTROY(PHEXEDIT_DATA hed)
     while(LocalUnlock(hed->hBuffer));
     LocalFree(hed->hBuffer);
   }
-  
+
   if(hed->hFont)
   {
     DeleteObject(hed->hFont);
   }
-  
+
   SetWindowLongPtr(hed->hWndSelf, 0, (DWORD_PTR)0);
   HeapFree(GetProcessHeap(), 0, hed);
-  
+
   return 0;
 }
 
@@ -555,54 +555,54 @@ HEXEDIT_WM_VSCROLL(PHEXEDIT_DATA hed, WORD ThumbPosition, WORD SbCmd)
 {
   int ScrollY;
   SCROLLINFO si;
-  
+
   ZeroMemory(&si, sizeof(SCROLLINFO));
   si.cbSize = sizeof(SCROLLINFO);
   si.fMask = SIF_ALL;
   GetScrollInfo(hed->hWndSelf, SB_VERT, &si);
-  
+
   ScrollY = si.nPos;
   switch(SbCmd)
   {
     case SB_TOP:
       si.nPos = si.nMin;
       break;
-    
+
     case SB_BOTTOM:
       si.nPos = si.nMax;
       break;
-    
+
     case SB_LINEUP:
       si.nPos--;
       break;
-    
+
     case SB_LINEDOWN:
       si.nPos++;
       break;
-    
+
     case SB_PAGEUP:
       si.nPos -= si.nPage;
       break;
-    
+
     case SB_PAGEDOWN:
       si.nPos += si.nPage;
       break;
-    
+
     case SB_THUMBTRACK:
       si.nPos = si.nTrackPos;
       break;
   }
-  
+
   si.fMask = SIF_POS;
   SetScrollInfo(hed->hWndSelf, SB_VERT, &si, TRUE);
   GetScrollInfo(hed->hWndSelf, SB_VERT, &si);
-  
+
   if(si.nPos != ScrollY)
   {
     ScrollWindow(hed->hWndSelf, 0, (ScrollY - si.nPos) * hed->LineHeight, NULL, NULL);
     UpdateWindow(hed->hWndSelf);
   }
-  
+
   return 0;
 }
 
@@ -612,12 +612,12 @@ HEXEDIT_WM_SETFONT(PHEXEDIT_DATA hed, HFONT hFont, BOOL bRedraw)
   HDC hDC;
   TEXTMETRIC tm;
   HFONT hOldFont = 0;
-  
+
   if(hFont == 0)
   {
     hFont = HEXEDIT_GetFixedFont();
   }
-  
+
   hed->hFont = hFont;
   hDC = GetDC(hed->hWndSelf);
   if(hFont)
@@ -632,12 +632,12 @@ HEXEDIT_WM_SETFONT(PHEXEDIT_DATA hed, HFONT hFont, BOOL bRedraw)
     SelectObject(hDC, hOldFont);
   }
   ReleaseDC(hed->hWndSelf, hDC);
-  
+
   if(bRedraw)
   {
     InvalidateRect(hed->hWndSelf, NULL, TRUE);
   }
-  
+
   return 0;
 }
 
@@ -658,14 +658,14 @@ HEXEDIT_WM_PAINT(PHEXEDIT_DATA hed)
   HFONT hOldFont;
   HDC hTempDC;
   DWORD height;
-  
+
   if(GetUpdateRect(hed->hWndSelf, &rc, FALSE) && (hed->LineHeight > 0))
   {
     ZeroMemory(&si, sizeof(SCROLLINFO));
     si.cbSize = sizeof(SCROLLINFO);
     si.fMask = SIF_POS;
     GetScrollInfo(hed->hWndSelf, SB_VERT, &si);
-    
+
     height = (rc.bottom - rc.top);
     nLines = height / hed->LineHeight;
     if((height % hed->LineHeight) > 0)
@@ -677,7 +677,7 @@ HEXEDIT_WM_PAINT(PHEXEDIT_DATA hed)
       nLines = hed->nLines - si.nPos;
     }
     nFirst = rc.top / hed->LineHeight;
-    
+
     BeginPaint(hed->hWndSelf, &ps);
     if(!(hTempDC = CreateCompatibleDC(ps.hdc)))
     {
@@ -696,14 +696,14 @@ HEXEDIT_WM_PAINT(PHEXEDIT_DATA hed)
     BitBlt(ps.hdc, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, hTempDC, rc.left, rc.top, SRCCOPY);
     SelectObject(hTempDC, hOldFont);
     SelectObject(hTempDC, hbmpold);
-    
+
     DeleteObject(hbmp);
     DeleteDC(hTempDC);
-    
+
     epaint:
     EndPaint(hed->hWndSelf, &ps);
   }
-  
+
   return 0;
 }
 
@@ -712,26 +712,26 @@ HEXEDIT_WM_MOUSEWHEEL(PHEXEDIT_DATA hed, int cyMoveLines, WORD ButtonsDown, LPPO
 {
   SCROLLINFO si;
   int ScrollY;
-  
+
   SetFocus(hed->hWndSelf);
-  
+
   si.cbSize = sizeof(SCROLLINFO);
   si.fMask = SIF_ALL;
   GetScrollInfo(hed->hWndSelf, SB_VERT, &si);
-  
+
   ScrollY = si.nPos;
-  
+
   si.fMask = SIF_POS;
   si.nPos += cyMoveLines;
   SetScrollInfo(hed->hWndSelf, SB_VERT, &si, TRUE);
-  
+
   GetScrollInfo(hed->hWndSelf, SB_VERT, &si);
   if(si.nPos != ScrollY)
   {
     ScrollWindow(hed->hWndSelf, 0, (ScrollY - si.nPos) * hed->LineHeight, NULL, NULL);
     UpdateWindow(hed->hWndSelf);
   }
-  
+
   return 0;
 }
 
@@ -747,16 +747,16 @@ HEXEDIT_WM_LBUTTONDOWN(PHEXEDIT_DATA hed, INT Buttons, POINTS Pt)
   BOOL NewField;
   POINT EditPos;
   DWORD Hit = HEXEDIT_HitRegionTest(hed, Pt);
-  
+
   SetFocus(hed->hWndSelf);
-  
-  hed->Position = HEXEDIT_PositionFromPoint(hed, Pt, Hit, &EditPos, &NewField); 
+
+  hed->Position = HEXEDIT_PositionFromPoint(hed, Pt, Hit, &EditPos, &NewField);
   hed->EditingField = NewField;
   hed->CaretCol = EditPos.x;
-  hed->CaretLine = EditPos.y;  
-  
+  hed->CaretLine = EditPos.y;
+
   HEXEDIT_MoveCaret(hed, TRUE);
-  
+
   return 0;
 }
 
@@ -765,17 +765,17 @@ HEXEDIT_WM_KEYDOWN(PHEXEDIT_DATA hed, INT VkCode)
 {
   DWORD bufsize;
   BOOL shift, control;
-  
+
   if(GetKeyState(VK_MENU) & 0x8000)
   {
     return FALSE;
   }
-  
+
   shift = GetKeyState(VK_SHIFT) & 0x8000;
   control = GetKeyState(VK_CONTROL) & 0x8000;
-  
+
   bufsize = (hed->hBuffer ? LocalSize(hed->hBuffer) : 0);
-  
+
   switch(VkCode)
   {
     case VK_LEFT:
@@ -791,7 +791,7 @@ HEXEDIT_WM_KEYDOWN(PHEXEDIT_DATA hed, INT VkCode)
       }
       HEXEDIT_MoveCaret(hed, TRUE);
       break;
-    
+
     case VK_RIGHT:
       if(hed->Position < bufsize)
       {
@@ -805,7 +805,7 @@ HEXEDIT_WM_KEYDOWN(PHEXEDIT_DATA hed, INT VkCode)
       }
       HEXEDIT_MoveCaret(hed, TRUE);
       break;
-    
+
     case VK_UP:
       if(hed->Position > 0)
       {
@@ -822,7 +822,7 @@ HEXEDIT_WM_KEYDOWN(PHEXEDIT_DATA hed, INT VkCode)
       }
       HEXEDIT_MoveCaret(hed, TRUE);
       break;
-    
+
     case VK_DOWN:
       if(hed->Position <= bufsize)
       {
@@ -847,7 +847,7 @@ HEXEDIT_WM_KEYDOWN(PHEXEDIT_DATA hed, INT VkCode)
       HEXEDIT_MoveCaret(hed, TRUE);
       break;
   }
-  
+
   return FALSE;
 }
 
@@ -862,33 +862,33 @@ INT_PTR CALLBACK
 HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   PHEXEDIT_DATA hed;
-  
+
   hed = (PHEXEDIT_DATA)GetWindowLongPtr(hWnd, (DWORD_PTR)0);
   switch(uMsg)
   {
     case WM_ERASEBKGND:
       return TRUE;
-    
+
     case WM_PAINT:
       return HEXEDIT_WM_PAINT(hed);
-    
+
     case WM_KEYDOWN:
       return HEXEDIT_WM_KEYDOWN(hed, (INT)wParam);
-    
+
     case WM_VSCROLL:
       return HEXEDIT_WM_VSCROLL(hed, HIWORD(wParam), LOWORD(wParam));
-    
+
     case WM_SIZE:
       return HEXEDIT_WM_SIZE(hed, (DWORD)wParam, LOWORD(lParam), HIWORD(lParam));
-    
+
     case WM_LBUTTONDOWN:
       return HEXEDIT_WM_LBUTTONDOWN(hed, (INT)wParam, MAKEPOINTS(lParam));
-    
+
     case WM_MOUSEWHEEL:
     {
       UINT nScrollLines = 3;
       int delta = 0;
-      
+
       SystemParametersInfoW(SPI_GETWHEELSCROLLLINES, 0, &nScrollLines, 0);
       delta -= (SHORT)HIWORD(wParam);
       if(abs(delta) >= WHEEL_DELTA && nScrollLines != 0)
@@ -897,41 +897,41 @@ HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       }
       break;
     }
-    
+
     case HEM_LOADBUFFER:
       return HEXEDIT_HEM_LOADBUFFER(hed, (PVOID)wParam, (DWORD)lParam);
-      
+
     case HEM_COPYBUFFER:
       return HEXEDIT_HEM_COPYBUFFER(hed, (PVOID)wParam, (DWORD)lParam);
-    
+
     case HEM_SETMAXBUFFERSIZE:
       return HEXEDIT_HEM_SETMAXBUFFERSIZE(hed, (DWORD)lParam);
-    
+
     case WM_SETFOCUS:
       return HEXEDIT_WM_SETFOCUS(hed);
-    
+
     case WM_KILLFOCUS:
       return HEXEDIT_WM_KILLFOCUS(hed);
-    
+
     case WM_GETDLGCODE:
       return HEXEDIT_WM_GETDLGCODE((LPMSG)lParam);
-    
+
     case WM_SETFONT:
       return HEXEDIT_WM_SETFONT(hed, (HFONT)wParam, (BOOL)LOWORD(lParam));
-    
+
     case WM_GETFONT:
       return HEXEDIT_WM_GETFONT(hed);
-    
+
     case WM_CREATE:
       return HEXEDIT_WM_CREATE(hed);
-    
+
     case WM_NCCREATE:
       if(!hed)
       {
         return HEXEDIT_WM_NCCREATE(hWnd, (CREATESTRUCT*)lParam);
       }
       break;
-    
+
     case WM_NCDESTROY:
       if(hed)
       {
@@ -939,7 +939,7 @@ HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       }
       break;
   }
-  
+
   return CallWindowProc(DefWindowProc, hWnd, uMsg, wParam, lParam);
 }
 

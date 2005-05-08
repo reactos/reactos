@@ -22,7 +22,7 @@
  *        Added "/N" option.
  *
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -91,7 +91,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 		               "  /Y\n"
 		               "  /-Y\n"
 		               "..."));
-#else		
+#else
 		ConOutResPuts(STRING_MOVE_HELP2);
 #endif
 		return 0;

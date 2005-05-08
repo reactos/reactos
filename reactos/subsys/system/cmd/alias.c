@@ -26,7 +26,7 @@
  *        Redirection safe!
  *
  *    02-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 
@@ -236,7 +236,7 @@ VOID DestroyAlias (VOID)
 
 /* specified routines */
 VOID ExpandAlias (LPTSTR cmd, INT maxlen)
-{	
+{
 	unsigned n = 0,
 		m,
 		i,
@@ -279,7 +279,7 @@ VOID ExpandAlias (LPTSTR cmd, INT maxlen)
 			{
 				m = _tcslen (ptr->lpSubst);
 				if ((int)(_tcslen (cmd) - len + m - n) > maxlen)
-				{					
+				{
 					ConErrResPuts(STRING_ALIAS_ERROR);
 
 					/* the parser won't cause any problems with an empty line */
@@ -303,11 +303,11 @@ VOID ExpandAlias (LPTSTR cmd, INT maxlen)
 
 
 INT CommandAlias (LPTSTR cmd, LPTSTR param)
-{	
+{
 	LPTSTR ptr;
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{	
+	{
 		ConOutResPuts(STRING_ALIAS_HELP);
 		return 0;
 	}

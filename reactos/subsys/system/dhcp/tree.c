@@ -158,7 +158,7 @@ struct tree *tree_concat (left, right)
 		free_tree (right, "tree_concat");
 		return left;
 	}
-			
+
 	/* Otherwise, allocate a new node to concatenate the two. */
 	if (!(nt = new_tree ("tree_concat")))
 		error ("No memory for data tree concatenation node.");
@@ -346,7 +346,7 @@ static TIME do_host_lookup (bufix, bufp, bufcount, dns)
 	/* Count the number of addresses we got... */
 	for (i = 0; h -> h_addr_list [i]; i++)
 		;
-	
+
 	/* Do we need to allocate more memory? */
 	new_len = i * h -> h_length;
 	if (dns -> buf_len < i) {

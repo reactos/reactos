@@ -21,7 +21,7 @@
  *        Redirection ready!
  *
  *    02-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -33,7 +33,7 @@
 INT cmd_beep (LPTSTR cmd, LPTSTR param)
 {
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
-	{                
+	{
 		ConOutResPuts(STRING_BEEP_HELP);
 		return 0;
 	}

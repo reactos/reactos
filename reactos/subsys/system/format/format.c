@@ -55,9 +55,9 @@ SIZEDEFINITION LegalSizes[] = {
 void PrintWin32Error( PWCHAR Message, DWORD ErrorCode )
 {
 	LPWSTR lpMsgBuf;
- 
+
 	FormatMessageW( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-					NULL, ErrorCode, 
+					NULL, ErrorCode,
 					MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 					(PWCHAR) &lpMsgBuf, 0, NULL );
 	printf("%S: %S\n", Message, lpMsgBuf );
@@ -66,7 +66,7 @@ void PrintWin32Error( PWCHAR Message, DWORD ErrorCode )
 
 
 //----------------------------------------------------------------------
-// 
+//
 // Usage
 //
 // Tell the user how to use the program
@@ -80,7 +80,7 @@ VOID Usage( PWCHAR ProgramName )
 	printf("  -V:label         Specifies volume label.\n");
 	printf("  -Q               Performs a quick format.\n");
 	printf("  -A:size          Overrides the default allocation unit size. Default settings\n");
-	printf("                   are strongly recommended for general use\n"); 
+	printf("                   are strongly recommended for general use\n");
 	printf("                   NTFS supports 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n");
 	printf("                   FAT supports 8192, 16K, 32K, 64K, 128K, 256K.\n");
 	printf("                   NTFS compression is not supported for allocation unit sizes\n");
@@ -125,7 +125,7 @@ int ParseCommandLine( int argc, WCHAR *argv[] )
 			} else if( !wcsnicmp( &argv[i][1], L"A:", 2 )) {
 
 				if( gotSize ) return -1;
-				j = 0; 
+				j = 0;
 				while( LegalSizes[j].ClusterSize &&
 					 wcsicmp( LegalSizes[j].SizeString, &argv[i][3] )) j++;
 
@@ -184,7 +184,7 @@ FormatExCallback (CALLBACKCOMMAND Command,
 	PTEXTOUTPUT output;
 	PBOOLEAN status;
 
-	// 
+	//
 	// We get other types of commands, but we don't have to pay attention to them
 	//
 	switch( Command ) {
@@ -251,11 +251,11 @@ BOOLEAN LoadFMIFSEntryPoints()
 }
 
 //----------------------------------------------------------------------
-// 
+//
 // WMain
 //
-// Engine. Just get command line switches and fire off a format. This 
-// could also be done in a GUI like Explorer does when you select a 
+// Engine. Just get command line switches and fire off a format. This
+// could also be done in a GUI like Explorer does when you select a
 // drive and run a check on it.
 //
 // We do this in UNICODE because the chkdsk command expects PWCHAR
@@ -294,7 +294,7 @@ int wmain( int argc, WCHAR *argv[] )
 		return -1;
 	}
 
-	// 
+	//
 	// Get the drive's format
 	//
 	if( !Drive ) {
@@ -331,16 +331,16 @@ int wmain( int argc, WCHAR *argv[] )
 	//
 	// Determine the drive's file system format
 	//
-	if( !GetVolumeInformationW( RootDirectory, 
-						volumeName, sizeof(volumeName)/2, 
-						&serialNumber, &maxComponent, &flags, 
+	if( !GetVolumeInformationW( RootDirectory,
+						volumeName, sizeof(volumeName)/2,
+						&serialNumber, &maxComponent, &flags,
 						fileSystem, sizeof(fileSystem)/2)) {
 
 		PrintWin32Error( L"Could not query volume", GetLastError());
 		return -1;
 	}
 
-	if( !GetDiskFreeSpaceExW( RootDirectory, 
+	if( !GetDiskFreeSpaceExW( RootDirectory,
 			&freeBytesAvailableToCaller,
 			&totalNumberOfBytes,
 			&totalNumberOfFreeBytes )) {
@@ -362,7 +362,7 @@ int wmain( int argc, WCHAR *argv[] )
 				printf("Enter current volume label for drive %C: ", RootDirectory[0] );
 				fgetws( input, sizeof(input)/2, stdin );
 				input[ wcslen( input ) - 1] = 0;
-				
+
 				if( !wcsicmp( input, volumeName )) {
 
 					break;
@@ -377,41 +377,41 @@ int wmain( int argc, WCHAR *argv[] )
 			printf("DRIVE %C: WILL BE LOST!\n", RootDirectory[0] );
 			printf("Proceed with Format (Y/N)? " );
 			fgetws( input, sizeof(input)/2, stdin );
-		
+
 			if( input[0] == L'Y' || input[0] == L'y' ) break;
 
 			if(	input[0] == L'N' || input[0] == L'n' ) {
-				
+
 				printf("\n");
 				return 0;
 			}
 		}
 		media = FMIFS_HARDDISK;
-	} 
+	}
 
 	//
 	// Tell the user we're doing a long format if appropriate
 	//
 	if( !QuickFormat ) {
-		
+
 		if( totalNumberOfBytes.QuadPart > 1024*1024*10 ) {
-			
+
 			printf("Verifying %luM\n", (DWORD) (totalNumberOfBytes.QuadPart/(1024*1024)));
-			
+
 		} else {
 
-			printf("Verifying %.1fM\n", 
+			printf("Verifying %.1fM\n",
 				((float)(LONGLONG)totalNumberOfBytes.QuadPart)/(float)(1024.0*1024.0));
 		}
 	} else  {
 
 		if( totalNumberOfBytes.QuadPart > 1024*1024*10 ) {
-			
+
 			printf("QuickFormatting %luM\n", (DWORD) (totalNumberOfBytes.QuadPart/(1024*1024)));
-			
+
 		} else {
 
-			printf("QuickFormatting %.2fM\n", 
+			printf("QuickFormatting %.2fM\n",
 				((float)(LONGLONG)totalNumberOfBytes.QuadPart)/(float)(1024.0*1024.0));
 		}
 		printf("Creating file system structures.\n");
@@ -419,7 +419,7 @@ int wmain( int argc, WCHAR *argv[] )
 
 	//
 	// Format away!
-	//			
+	//
 	FormatEx( RootDirectory, media, Format, Label, QuickFormat,
 			ClusterSize, FormatExCallback );
 	if( Error ) return -1;
@@ -449,22 +449,22 @@ int wmain( int argc, WCHAR *argv[] )
 
 			PrintWin32Error(L"Could not label volume", GetLastError());
 			return -1;
-		}	
+		}
 	}
 
-	if( !GetVolumeInformationW( RootDirectory, 
-						volumeName, sizeof(volumeName)/2, 
-						&serialNumber, &maxComponent, &flags, 
+	if( !GetVolumeInformationW( RootDirectory,
+						volumeName, sizeof(volumeName)/2,
+						&serialNumber, &maxComponent, &flags,
 						fileSystem, sizeof(fileSystem)/2)) {
 
 		PrintWin32Error( L"Could not query volume", GetLastError());
 		return -1;
 	}
 
-	// 
+	//
 	// Print out some stuff including the formatted size
 	//
-	if( !GetDiskFreeSpaceExW( RootDirectory, 
+	if( !GetDiskFreeSpaceExW( RootDirectory,
 			&freeBytesAvailableToCaller,
 			&totalNumberOfBytes,
 			&totalNumberOfFreeBytes )) {
@@ -479,9 +479,9 @@ int wmain( int argc, WCHAR *argv[] )
 	//
 	// Get the drive's serial number
 	//
-	if( !GetVolumeInformationW( RootDirectory, 
-						volumeName, sizeof(volumeName)/2, 
-						&serialNumber, &maxComponent, &flags, 
+	if( !GetVolumeInformationW( RootDirectory,
+						volumeName, sizeof(volumeName)/2,
+						&serialNumber, &maxComponent, &flags,
 						fileSystem, sizeof(fileSystem)/2)) {
 
 		PrintWin32Error( L"Could not query volume", GetLastError());
@@ -489,7 +489,7 @@ int wmain( int argc, WCHAR *argv[] )
 	}
 	printf("\nVolume Serial Number is %04X-%04X\n", (unsigned int)(serialNumber >> 16),
 					(unsigned int)(serialNumber & 0xFFFF) );
-			
+
 	return 0;
 }
 

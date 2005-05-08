@@ -2008,7 +2008,7 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 					if (activate_fs_window(RS(b1,IDS_UNIXFS)))
 						break;
 
-	
+
 #ifdef UNICODE
 					call_getcwd(cpath, MAX_PATH);
 					MultiByteToWideChar(CP_UNIXCP, 0, cpath, -1, path, MAX_PATH);

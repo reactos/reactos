@@ -131,7 +131,7 @@ static BOOL ParseTime (LPTSTR s)
 
 
 INT cmd_time (LPTSTR cmd, LPTSTR param)
-{	
+{
 	LPTSTR *arg;
 	INT    argc;
 	INT    i;
@@ -139,7 +139,7 @@ INT cmd_time (LPTSTR cmd, LPTSTR param)
 	INT    nTimeString = -1;
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{		
+	{
 		ConOutResPuts(STRING_TIME_HELP1);
 		return 0;
 	}
@@ -171,7 +171,7 @@ INT cmd_time (LPTSTR cmd, LPTSTR param)
 		if (nTimeString == -1)
 		{
 			TCHAR  s[40];
-			
+
 			ConOutResPuts(STRING_TIME_HELP2);
 
 			ConInString (s, 40);
@@ -200,7 +200,7 @@ INT cmd_time (LPTSTR cmd, LPTSTR param)
 			/* force input the next time around. */
 			nTimeString = -1;
 		}
-		
+
 		ConErrResPuts(STRING_TIME_ERROR1);
 	}
 

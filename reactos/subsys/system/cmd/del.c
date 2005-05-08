@@ -111,13 +111,13 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 	LONG ch;
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{		
+	{
 		ConOutResPuts(STRING_DEL_HELP1);
 		return 0;
 	}
 
 	arg = split (param, &args, FALSE);
-	
+
 	if (args > 0)
 	{
 		/* check for options anywhere in command line */
@@ -240,11 +240,11 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 #endif
 
 						/* ask for deleting */
-						if (dwFlags & DEL_PROMPT) 
+						if (dwFlags & DEL_PROMPT)
 						{
 							LoadString(CMD_ModuleHandle, STRING_DEL_ERROR5, szMsg, RC_STRING_MAX_SIZE);
 							ConErrPrintf(szMsg, szFullPath);
-							
+
 							LoadString(CMD_ModuleHandle, STRING_DEL_ERROR6, szMsg, RC_STRING_MAX_SIZE);
 							res = FilePromptYN ((LPTSTR)szMsg);
 

@@ -61,8 +61,8 @@ CreateDirectory(PWCHAR DirectoryName)
        PathName.Length -= sizeof(WCHAR);
        PathName.Buffer[PathName.Length / sizeof(WCHAR)] = 0;
     }
-      
-  if (PathName.Length > sizeof(WCHAR) && 
+
+  if (PathName.Length > sizeof(WCHAR) &&
       PathName.Buffer[PathName.Length / sizeof(WCHAR) - 1] == L'\\')
     {
       PathName.Length -= sizeof(WCHAR);

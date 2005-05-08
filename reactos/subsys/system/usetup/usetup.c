@@ -778,7 +778,7 @@ LicensePage(PINPUT_RECORD Ir)
   SetTextXY(8, 22, "If for some reason you did not receive a copy of the");
   SetTextXY(8, 23, "GNU General Public License with ReactOS please visit");
   SetHighlightedTextXY(8, 25, "http://www.gnu.org/licenses/licenses.html");
-  
+
   SetStatusText("ENTER = Continue   F3 = Quit");
 
   while (TRUE)
@@ -2773,7 +2773,7 @@ AddSectionToCopyQueue(HINF InfFile,
   PWCHAR FileKeyValue;
   PWCHAR DirKeyValue;
   PWCHAR TargetFileName;
-  
+
   /* Search for the SectionName section */
   if (!InfFindFirstLine (InfFile, SectionName, NULL, &FilesContext))
     {
@@ -2840,7 +2840,7 @@ AddSectionToCopyQueue(HINF InfFile,
 	}
     }
   while (InfFindNextLine(&FilesContext, &FilesContext));
-  
+
   return TRUE;
 }
 
@@ -2859,7 +2859,7 @@ PrepareCopyPageInfFile(HINF InfFile,
   /* Add common files */
   if (!AddSectionToCopyQueue(InfFile, L"SourceFiles", SourceCabinet, Ir))
     return FALSE;
-  
+
   /* Add specific files depending of computer type */
   if (SourceCabinet == NULL)
   {
@@ -2871,7 +2871,7 @@ PrepareCopyPageInfFile(HINF InfFile,
         return FALSE;
     }
   }
-  
+
   /* Create directories */
 
   /*

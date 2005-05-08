@@ -1,9 +1,9 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            services/winlogon/sas.c
- * PURPOSE:         Secure Attention Sequence 
+ * PURPOSE:         Secure Attention Sequence
  * PROGRAMMER:      Thomas Weidenmueller (w3seek@users.sourceforge.net)
  * UPDATE HISTORY:
  *                  Created 28/03/2004
@@ -36,7 +36,7 @@ void
 DispatchSAS(PWLSESSION Session, DWORD dwSasType)
 {
   Session->SASAction = dwSasType;
-  
+
 }
 
 void
@@ -58,7 +58,7 @@ SetupSAS(PWLSESSION Session, HWND hwndSAS)
     DPRINT1("WL-SAS: Unable to register Ctrl+Alt+Del hotkey!\n");
     return FALSE;
   }
-  
+
   /* Register Ctrl+Shift+Esc */
   Session->TaskManHotkey = RegisterHotKey(hwndSAS, HK_CTRL_SHIFT_ESC, MOD_CONTROL | MOD_SHIFT, VK_ESCAPE);
   if(!Session->TaskManHotkey)
@@ -72,14 +72,14 @@ BOOL
 DestroySAS(PWLSESSION Session, HWND hwndSAS)
 {
   /* Unregister hotkeys */
-  
+
   UnregisterHotKey(hwndSAS, HK_CTRL_ALT_DEL);
-  
+
   if(Session->TaskManHotkey)
   {
     UnregisterHotKey(hwndSAS, HK_CTRL_SHIFT_ESC);
   }
-  
+
   return TRUE;
 }
 
@@ -204,7 +204,7 @@ BOOL
 InitializeSAS(PWLSESSION Session)
 {
   WNDCLASSEX swc;
-  
+
   /* register SAS window class.
      WARNING! MAKE SURE WE ARE IN THE WINLOGON DESKTOP! */
   swc.cbSize = sizeof(WNDCLASSEXW);
@@ -220,7 +220,7 @@ InitializeSAS(PWLSESSION Session)
   swc.lpszClassName = WINLOGON_SAS_CLASS;
   swc.hIconSm = NULL;
   RegisterClassEx(&swc);
-  
+
   /* create invisible SAS window */
   Session->SASWindow = CreateWindowEx(0, WINLOGON_SAS_CLASS, WINLOGON_SAS_TITLE, WS_POPUP,
                                       0, 0, 0, 0, 0, 0, hAppInstance, NULL);
@@ -229,10 +229,10 @@ InitializeSAS(PWLSESSION Session)
     DPRINT1("WL: Failed to create SAS window\n");
     return FALSE;
   }
-  
+
   /* Save the Session pointer so the window proc can access it */
   SetWindowLongPtr(Session->SASWindow, GWL_USERDATA, (DWORD_PTR)Session);
-  
+
   /* Register SAS window to receive SAS notifications */
   if(!SetLogonNotifyWindow(Session->SASWindow, Session->InteractiveWindowStation))
   {
@@ -240,7 +240,7 @@ InitializeSAS(PWLSESSION Session)
     DPRINT1("WL: Failed to register SAS window\n");
     return FALSE;
   }
-  
+
   return TRUE;
 }
 

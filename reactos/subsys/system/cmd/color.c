@@ -37,10 +37,10 @@ VOID SetScreenColor (WORD wColor, BOOL bFill)
 	DWORD dwWritten;
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	COORD coPos;
-	
+
 
 	if ((wColor & 0xF) == (wColor &0xF0) >> 4)
-	{		
+	{
 		ConErrResPuts(STRING_COLOR_ERROR1);
 	}
 	else
@@ -86,7 +86,7 @@ INT CommandColor (LPTSTR first, LPTSTR rest)
 	}
 
 	if (StringToColor(&wColor, &rest) == FALSE)
-	{		
+	{
 		ConErrResPuts(STRING_COLOR_ERROR2);
 		return 1;
 	}

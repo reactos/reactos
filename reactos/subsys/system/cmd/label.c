@@ -14,7 +14,7 @@
  *        Unicode ready!
  *
  *    28-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -38,7 +38,7 @@ INT cmd_label (LPTSTR cmd, LPTSTR param)
 
 	/* print help */
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{		
+	{
 		ConOutResPuts(STRING_LABEL_HELP1);
 		return 0;
 	}
@@ -89,7 +89,7 @@ INT cmd_label (LPTSTR cmd, LPTSTR param)
 	GetVolumeInformation(szRootPath, szOldLabel, 80, &dwSerialNr,
 			      NULL, NULL, NULL, 0);
 
-	/* print drive info */	
+	/* print drive info */
 	if (szOldLabel[0] != _T('\0'))
 	{
 		LoadString(CMD_ModuleHandle, STRING_LABEL_HELP2, szMsg, RC_STRING_MAX_SIZE);

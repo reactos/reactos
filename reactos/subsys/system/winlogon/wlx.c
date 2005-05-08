@@ -1,9 +1,9 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            services/winlogon/winlogon.c
- * PURPOSE:         Logon 
+ * PURPOSE:         Logon
  * PROGRAMMER:      David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
  *                  Created 22/05/98
@@ -294,7 +294,7 @@ WlxSetOption(
 )
 {
   PWLSESSION Session = (PWLSESSION)hWlx;
-  
+
   if(Session || !Value)
   {
     switch(Option)
@@ -306,12 +306,12 @@ WlxSetOption(
         *OldValue = (ULONG_PTR)Session->MsGina.Context;
         Session->MsGina.Context = (PVOID)Value;
         return TRUE;
-      }    
+      }
       case WLX_OPTION_USE_SMART_CARD:
         return FALSE;
     }
   }
-  
+
   return FALSE;
 }
 
@@ -369,7 +369,7 @@ WlxGetOption(
       }
     }
   }
-  
+
   return FALSE;
 }
 
@@ -495,7 +495,7 @@ GetMsGinaPath(WCHAR *path)
 {
   DWORD Status, Type, Size;
   HKEY hKey;
-  
+
   Status = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
                         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
                         0,
@@ -506,7 +506,7 @@ GetMsGinaPath(WCHAR *path)
     wcscpy(path, L"msgina.dll");
     return;
   }
-  
+
   Size = MAX_PATH * sizeof(WCHAR);
   Status = RegQueryValueEx(hKey,
                            L"GinaDLL",
@@ -545,11 +545,11 @@ GinaLoadFailedProc(
     {
       int len;
       WCHAR str[MAX_PATH], str2[MAX_PATH];
-      
+
       if(lParam)
       {
         len = GetDlgItemText(hwndDlg, IDC_GINALOADFAILED, str, MAX_PATH);
-        
+
         if(len)
         {
           wsprintf(str2, str, (LPWSTR)lParam);
@@ -573,26 +573,26 @@ LoadGina(PMSGINAFUNCTIONS Functions, DWORD *DllVersion, HMODULE *GinaInstance)
 {
   HMODULE hGina;
   WCHAR GinaDll[MAX_PATH + 1];
-  
+
   GetMsGinaPath(GinaDll);
-  
+
   if(!(hGina = LoadLibrary(GinaDll)))
   {
     DialogBoxParam(hAppInstance, MAKEINTRESOURCE(IDD_GINALOADFAILED), 0, GinaLoadFailedProc, (LPARAM)&GinaDll);
     return FALSE;
   }
   *GinaInstance = hGina;
-  
+
   Functions->WlxNegotiate = (PFWLXNEGOTIATE)GetProcAddress(hGina, "WlxNegotiate");
   Functions->WlxInitialize = (PFWLXINITIALIZE)GetProcAddress(hGina, "WlxInitialize");
-  
+
   if(Functions->WlxNegotiate)
   {
     if(!Functions->WlxNegotiate(WLX_VERSION_1_3, DllVersion))
     {
       return FALSE;
     }
-    
+
     if(*DllVersion >= WLX_VERSION_1_0)
     {
       Functions->WlxActivateUserShell = (PFWLXACTIVATEUSERSHELL)GetProcAddress(hGina, "WlxActivateUserShell");
@@ -606,13 +606,13 @@ LoadGina(PMSGINAFUNCTIONS Functions, DWORD *DllVersion, HMODULE *GinaInstance)
       Functions->WlxShutdown = (PFWLXSHUTDOWN)GetProcAddress(hGina, "WlxShutdown");
       Functions->WlxWkstaLockedSAS = (PFWLXWKSTALOCKEDSAS)GetProcAddress(hGina, "WlxWkstaLockedSAS");
     }
-    
+
     if(*DllVersion >= WLX_VERSION_1_1)
     {
       Functions->WlxScreenSaverNotify = (PFWLXSCREENSAVERNOTIFY)GetProcAddress(hGina, "WlxScreenSaverNotify");
       Functions->WlxStartApplication = (PFWLXSTARTAPPLICATION)GetProcAddress(hGina, "WlxStartApplication");
     }
-    
+
     if(*DllVersion >= WLX_VERSION_1_3)
     {
       Functions->WlxDisplayStatusMessage = (PFWLXDISPLAYSTATUSMESSAGE)GetProcAddress(hGina, "WlxDisplayStatusMessage");
@@ -620,13 +620,13 @@ LoadGina(PMSGINAFUNCTIONS Functions, DWORD *DllVersion, HMODULE *GinaInstance)
       Functions->WlxNetworkProviderLoad = (PFWLXNETWORKPROVIDERLOAD)GetProcAddress(hGina, "WlxNetworkProviderLoad");
       Functions->WlxRemoveStatusMessage = (PFWLXREMOVESTATUSMESSAGE)GetProcAddress(hGina, "WlxRemoveStatusMessage");
     }
-    
+
     if(*DllVersion >= WLX_VERSION_1_4)
     {
-      
+
     }
   }
-  
+
   return (Functions->WlxNegotiate != NULL) && (Functions->WlxInitialize != NULL);
 }
 
@@ -635,23 +635,23 @@ MsGinaInit(void)
 {
   PWLSESSION WLSession;
   DWORD GinaDllVersion;
-  
+
   WLSession = (PWLSESSION)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WLSESSION));
   if(!WLSession)
   {
     return NULL;
   }
-  
+
   if(!LoadGina(&WLSession->MsGina.Functions, &GinaDllVersion, &WLSession->MsGina.hDllInstance))
   {
     HeapFree(GetProcessHeap(), 0, WLSession);
     return NULL;
   }
-  
+
   WLSession->MsGina.Context = NULL;
   WLSession->MsGina.Version = GinaDllVersion;
   WLSession->SuppressStatus = FALSE;
-  
+
   if(!WLSession->MsGina.Functions.WlxInitialize(WLSession->InteractiveWindowStationName,
                                                (HANDLE)WLSession,
                                                NULL,
@@ -679,7 +679,7 @@ WlxCreateWindowStationAndDesktops(PWLSESSION Session)
     return FALSE;
   }
   SetProcessWindowStation(Session->InteractiveWindowStation);
-  
+
   /*
    * Create the application desktop
    */
@@ -694,7 +694,7 @@ WlxCreateWindowStationAndDesktops(PWLSESSION Session)
     DbgPrint("WL: Failed to create Default desktop (0x%X)\n", GetLastError());
     return FALSE;
   }
-  
+
   /*
    * Create the winlogon desktop
    */
@@ -709,7 +709,7 @@ WlxCreateWindowStationAndDesktops(PWLSESSION Session)
     DbgPrint("WL: Failed to create Winlogon desktop (0x%X)\n", GetLastError());
     return FALSE;
   }
-  
+
   /*
    * Create the screen saver desktop
    */
@@ -724,7 +724,7 @@ WlxCreateWindowStationAndDesktops(PWLSESSION Session)
     DbgPrint("WL: Failed to create Screen-Saver desktop (0x%X)\n", GetLastError());
     return FALSE;
   }
-  
+
   return TRUE;
 }
 

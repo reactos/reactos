@@ -18,22 +18,22 @@ PCHAR *GetSubkeyNames( PCHAR MainKeyName, PCHAR Append ) {
     if( Error ) return NULL;
 
     Error = RegQueryInfoKey
-        ( MainKey, 
-          NULL, NULL, NULL, 
-          &MaxSubKeys, &MaxSubKeyLen, 
+        ( MainKey,
+          NULL, NULL, NULL,
+          &MaxSubKeys, &MaxSubKeyLen,
           NULL, NULL, NULL, NULL, NULL, NULL );
 
     DH_DbgPrint(MID_TRACE,("MaxSubKeys: %d, MaxSubKeyLen %d\n",
                            MaxSubKeys, MaxSubKeyLen));
-    
+
     CharTotal = (sizeof(PCHAR) + MaxSubKeyLen + AppendLen) * (MaxSubKeys + 1);
-    
-    DH_DbgPrint(MID_TRACE,("AppendLen: %d, CharTotal: %d\n", 
+
+    DH_DbgPrint(MID_TRACE,("AppendLen: %d, CharTotal: %d\n",
                            AppendLen, CharTotal));
 
     Out = malloc( CharTotal );
     OutKeyName = ((PCHAR)&Out[MaxSubKeys+1]);
-    
+
     if( !Out ) { RegCloseKey( MainKey ); return NULL; }
 
     i = 0;
@@ -57,23 +57,23 @@ PCHAR RegReadString( HKEY Root, PCHAR Subkey, PCHAR Value ) {
     PCHAR SubOut = NULL;
     DWORD SubOutLen = 0, Error = 0;
     HKEY  ValueKey = NULL;
-    
+
     DH_DbgPrint(MID_TRACE,("Looking in %x:%s:%s\n", Root, Subkey, Value ));
 
     if( Subkey && strlen(Subkey) ) {
-        if( RegOpenKey( Root, Subkey, &ValueKey ) != ERROR_SUCCESS ) 
+        if( RegOpenKey( Root, Subkey, &ValueKey ) != ERROR_SUCCESS )
             goto regerror;
     } else ValueKey = Root;
 
     DH_DbgPrint(MID_TRACE,("Got Key %x\n", ValueKey));
 
-    if( (Error = RegQueryValueEx( ValueKey, Value, NULL, NULL, 
+    if( (Error = RegQueryValueEx( ValueKey, Value, NULL, NULL,
                                   (LPBYTE)SubOut, &SubOutLen )) != ERROR_SUCCESS )
         goto regerror;
 
     DH_DbgPrint(MID_TRACE,("Value %s has size %d\n", Value, SubOutLen));
 
-    if( !(SubOut = malloc(SubOutLen)) ) 
+    if( !(SubOut = malloc(SubOutLen)) )
         goto regerror;
 
     if( (Error = RegQueryValueEx( ValueKey, Value, NULL, NULL,
@@ -99,10 +99,10 @@ cleanup:
 
 HKEY FindAdapterKey( PDHCP_ADAPTER Adapter ) {
     int i = 0;
-    PCHAR EnumKeyName = 
+    PCHAR EnumKeyName =
         "SYSTEM\\CurrentControlSet\\Control\\Class\\"
         "{4D36E972-E325-11CE-BFC1-08002BE10318}";
-    PCHAR TargetKeyNameStart = 
+    PCHAR TargetKeyNameStart =
         "SYSTEM\\CurrentControlSet\\Services\\";
     PCHAR TargetKeyNameEnd = "\\Parameters\\Tcpip";
     PCHAR TargetKeyName = NULL;
@@ -123,17 +123,17 @@ HKEY FindAdapterKey( PDHCP_ADAPTER Adapter ) {
             ( EnumKey, EnumKeysLinkage[i], "RootDevice" );
         DriverDesc = RegReadString
             ( EnumKey, EnumKeysTop[i], "DriverDesc" );
-        
-        if( DriverDesc && 
+
+        if( DriverDesc &&
             !strcmp( DriverDesc, Adapter->DhclientInfo.name ) ) {
-            TargetKeyName = 
-                malloc( strlen( TargetKeyNameStart ) + 
+            TargetKeyName =
+                malloc( strlen( TargetKeyNameStart ) +
                         strlen( RootDevice ) +
                         strlen( TargetKeyNameEnd ) + 1 );
             if( !TargetKeyName ) goto cleanup;
-            sprintf( TargetKeyName, "%s%s%s", 
+            sprintf( TargetKeyName, "%s%s%s",
                      TargetKeyNameStart, RootDevice, TargetKeyNameEnd );
-            Error = RegOpenKey( HKEY_LOCAL_MACHINE, TargetKeyName, &OutKey ); 
+            Error = RegOpenKey( HKEY_LOCAL_MACHINE, TargetKeyName, &OutKey );
             break;
         } else {
             free( RootDevice ); RootDevice = 0;
@@ -169,7 +169,7 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
     if( IPAddress && strcmp( IPAddress, "0.0.0.0" ) ) {
         /* Non-automatic case */
         DH_DbgPrint
-            (MID_TRACE,("Adapter Name: [%s] (Bind Status %x) (static %s)\n", 
+            (MID_TRACE,("Adapter Name: [%s] (Bind Status %x) (static %s)\n",
                         Adapter->DhclientInfo.name,
                         Adapter->BindStatus,
                         IPAddress));
@@ -178,7 +178,7 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
 
         Netmask = RegReadString( AdapterKey, NULL, "Subnetmask" );
         if( !Netmask ) Netmask = "255.255.255.0";
-        
+
         Status = AddIPAddress( inet_addr( IPAddress ),
                                inet_addr( Netmask ),
                                Adapter->IfMib.dwIndex,
@@ -194,7 +194,7 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
             DefGatewayRow.dwForwardNextHop = inet_addr(DefaultGateway);
             Error = CreateIpForwardEntry( &DefGatewayRow );
             if( Error )
-                warning("Failed to set default gateway %s: %d\n", 
+                warning("Failed to set default gateway %s: %d\n",
                         DefaultGateway, Error);
         }
 
@@ -228,7 +228,7 @@ void AdapterInit() {
 
     DH_DbgPrint(MID_TRACE,("Getting Adapter List...\n"));
 
-    while( (Error = GetIfTable(Table, &Size, 0 )) == 
+    while( (Error = GetIfTable(Table, &Size, 0 )) ==
            ERROR_INSUFFICIENT_BUFFER ) {
         DH_DbgPrint(MID_TRACE,("Error %d, New Buffer Size: %d\n", Error, Size));
         free( Table );
@@ -240,50 +240,50 @@ void AdapterInit() {
     DH_DbgPrint(MID_TRACE,("Got Adapter List (%d entries)\n", Table->dwNumEntries));
 
     for( i = 0; i < Table->dwNumEntries; i++ ) {
-        DH_DbgPrint(MID_TRACE,("Getting adapter %d attributes\n", 
+        DH_DbgPrint(MID_TRACE,("Getting adapter %d attributes\n",
                                Table->table[i].dwIndex));
         Adapter = calloc( sizeof( DHCP_ADAPTER ) + Table->table[i].dwMtu, 1 );
-        
+
         if( Adapter && Table->table[i].dwType == MIB_IF_TYPE_ETHERNET ) {
-            memcpy( &Adapter->IfMib, &Table->table[i], 
+            memcpy( &Adapter->IfMib, &Table->table[i],
                     sizeof(Adapter->IfMib) );
             Adapter->DhclientInfo.client = &Adapter->DhclientState;
             Adapter->DhclientInfo.rbuf = Adapter->recv_buf;
             Adapter->DhclientInfo.rbuf_max = Table->table[i].dwMtu;
-            Adapter->DhclientInfo.rbuf_len = 
+            Adapter->DhclientInfo.rbuf_len =
                 Adapter->DhclientInfo.rbuf_offset = 0;
             memcpy(Adapter->DhclientInfo.hw_address.haddr,
                    Adapter->IfMib.bPhysAddr,
                    Adapter->IfMib.dwPhysAddrLen);
-            Adapter->DhclientInfo.hw_address.hlen  = 
+            Adapter->DhclientInfo.hw_address.hlen  =
                 Adapter->IfMib.dwPhysAddrLen;
 
             if( DhcpSocket == INVALID_SOCKET ) {
-                DhcpSocket = 
+                DhcpSocket =
                     Adapter->DhclientInfo.rfdesc =
                     Adapter->DhclientInfo.wfdesc =
                     socket( AF_INET, SOCK_DGRAM, IPPROTO_UDP );
                 Adapter->ListenAddr.sin_family = AF_INET;
                 Adapter->ListenAddr.sin_port = htons(LOCAL_PORT);
-                Adapter->BindStatus = 
+                Adapter->BindStatus =
                     (bind( Adapter->DhclientInfo.rfdesc,
                            (struct sockaddr *)&Adapter->ListenAddr,
                            sizeof(Adapter->ListenAddr) ) == 0) ?
                     0 : WSAGetLastError();
             } else {
-                Adapter->DhclientInfo.rfdesc = 
+                Adapter->DhclientInfo.rfdesc =
                     Adapter->DhclientInfo.wfdesc = DhcpSocket;
             }
-            
+
             Adapter->DhclientConfig.timeout = DHCP_PANIC_TIMEOUT;
             Adapter->DhclientConfig.initial_interval = DHCP_DISCOVER_INTERVAL;
             Adapter->DhclientConfig.retry_interval = DHCP_DISCOVER_INTERVAL;
             Adapter->DhclientConfig.select_interval = 1;
             Adapter->DhclientConfig.reboot_timeout = DHCP_REBOOT_TIMEOUT;
             Adapter->DhclientConfig.backoff_cutoff = DHCP_BACKOFF_MAX;
-            Adapter->DhclientState.interval = 
+            Adapter->DhclientState.interval =
                 Adapter->DhclientConfig.retry_interval;
-            
+
             if( PrepareAdapterForService( Adapter ) ) {
                 Adapter->DhclientInfo.next = ifi;
                 ifi = &Adapter->DhclientInfo;
@@ -362,15 +362,15 @@ PDHCP_ADAPTER AdapterGetFirst() {
     }
 }
 
-PDHCP_ADAPTER AdapterGetNext( PDHCP_ADAPTER This ) 
-{ 
+PDHCP_ADAPTER AdapterGetNext( PDHCP_ADAPTER This )
+{
     if( This->ListEntry.Flink == &AdapterList ) return NULL;
     return CONTAINING_RECORD
         ( This->ListEntry.Flink, DHCP_ADAPTER, ListEntry );
 }
 
 void if_register_send(struct interface_info *ip) {
-    
+
 }
 
 void if_register_receive(struct interface_info *ip) {

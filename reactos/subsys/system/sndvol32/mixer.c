@@ -34,25 +34,25 @@ ClearMixerCache(PSND_MIXER Mixer)
 {
   PSND_MIXER_DESTINATION Line, NextLine;
   PSND_MIXER_CONNECTION Con, NextCon;
-  
+
   for(Line = Mixer->Lines; Line != NULL; Line = NextLine)
   {
     if(Line->Controls != NULL)
     {
       HeapFree(GetProcessHeap(), 0, Line->Controls);
     }
-    
+
     for(Con = Line->Connections; Con != NULL; Con = NextCon)
     {
       if(Con->Controls != NULL)
       {
         HeapFree(GetProcessHeap(), 0, Con->Controls);
       }
-      
+
       NextCon = Con->Next;
       HeapFree(GetProcessHeap(), 0, Con);
     }
-    
+
     NextLine = Line->Next;
     HeapFree(GetProcessHeap(), 0, Line);
   }
@@ -68,7 +68,7 @@ SndMixerCreate(HWND hWndNotification)
     Mixer->hWndNotification = hWndNotification;
     Mixer->MixersCount = mixerGetNumDevs();
     Mixer->MixerId = NO_MIXER_SELECTED;
-    
+
     if(Mixer->MixersCount > 0)
     {
       /* select the first mixer by default */
@@ -125,7 +125,7 @@ SndMixerQueryControls(PSND_MIXER Mixer, LPMIXERLINE LineInfo, LPMIXERCONTROL *Co
         {
           DBG("Line control: %ws", (*Controls)[j].szName);
         }
-        
+
         return TRUE;
       }
       else
@@ -139,7 +139,7 @@ SndMixerQueryControls(PSND_MIXER Mixer, LPMIXERLINE LineInfo, LPMIXERCONTROL *Co
     {
       DBG("Failed to allocate memory for %d line controls!\n", LineInfo->cControls);
     }
-    
+
     return FALSE;
   }
   else
@@ -154,7 +154,7 @@ SndMixerQueryConnections(PSND_MIXER Mixer, PSND_MIXER_DESTINATION Line)
   UINT i;
   MIXERLINE LineInfo;
   BOOL Ret = TRUE;
-  
+
   LineInfo.cbStruct = sizeof(LineInfo);
   LineInfo.dwDestination = Line->Info.dwDestination;
   for(i = Line->Info.cConnections; i > 0; i--)
@@ -164,14 +164,14 @@ SndMixerQueryConnections(PSND_MIXER Mixer, PSND_MIXER_DESTINATION Line)
     {
       LPMIXERCONTROL Controls;
       PSND_MIXER_CONNECTION Con;
-      
+
       if(!SndMixerQueryControls(Mixer, &LineInfo, &Controls))
       {
         DBG("Failed to query connection controls\n");
         Ret = FALSE;
         break;
       }
-      
+
       Con = HeapAlloc(GetProcessHeap(), 0, sizeof(SND_MIXER_CONNECTION));
       if(Con != NULL)
       {
@@ -192,7 +192,7 @@ SndMixerQueryConnections(PSND_MIXER Mixer, PSND_MIXER_DESTINATION Line)
       break;
     }
   }
-  
+
   return Ret;
 }
 
@@ -201,7 +201,7 @@ SndMixerQueryDestinations(PSND_MIXER Mixer)
 {
   UINT i;
   BOOL Ret = TRUE;
-  
+
   for(i = Mixer->Caps.cDestinations; i > 0; i--)
   {
     PSND_MIXER_DESTINATION Line;
@@ -225,7 +225,7 @@ SndMixerQueryDestinations(PSND_MIXER Mixer)
           Ret = FALSE;
           break;
         }
-        
+
         Line->Next = Mixer->Lines;
         Mixer->Lines = Line;
       }
@@ -244,7 +244,7 @@ SndMixerQueryDestinations(PSND_MIXER Mixer)
       break;
     }
   }
-  
+
   return Ret;
 }
 
@@ -255,9 +255,9 @@ SndMixerSelect(PSND_MIXER Mixer, UINT MixerId)
   {
     return FALSE;
   }
-  
+
   SndMixerClose(Mixer);
-  
+
   if(mixerOpen(&Mixer->hmx, MixerId, (DWORD_PTR)Mixer->hWndNotification, 0, CALLBACK_WINDOW | MIXER_OBJECTF_MIXER) == MMSYSERR_NOERROR ||
      mixerOpen(&Mixer->hmx, MixerId, (DWORD_PTR)Mixer->hWndNotification, 0, CALLBACK_WINDOW) == MMSYSERR_NOERROR ||
      mixerOpen(&Mixer->hmx, MixerId, 0, 0, 0) == MMSYSERR_NOERROR)
@@ -271,7 +271,7 @@ SndMixerSelect(PSND_MIXER Mixer, UINT MixerId)
       ClearMixerCache(Mixer);
 
       Ret = SndMixerQueryDestinations(Mixer);
-      
+
       if(!Ret)
       {
         ClearMixerCache(Mixer);
@@ -284,7 +284,7 @@ SndMixerSelect(PSND_MIXER Mixer, UINT MixerId)
       mixerClose(Mixer->hmx);
     }
   }
-  
+
   Mixer->hmx = NULL;
   Mixer->MixerId = NO_MIXER_SELECTED;
   return FALSE;
@@ -313,7 +313,7 @@ SndMixerGetProductName(PSND_MIXER Mixer, LPTSTR lpBuffer, UINT uSize)
       return lnsz;
     }
   }
-  
+
   return -1;
 }
 
@@ -324,7 +324,7 @@ SndMixerEnumProducts(PSND_MIXER Mixer, PFNSNDMIXENUMPRODUCTS EnumProc, PVOID Con
   HMIXER hMixer;
   UINT i;
   BOOL Ret = TRUE;
-  
+
   for(i = 0; i < Mixer->MixersCount; i++)
   {
     if(mixerOpen(&hMixer, i, 0, 0, 0) == MMSYSERR_NOERROR)
@@ -361,7 +361,7 @@ SndMixerEnumLines(PSND_MIXER Mixer, PFNSNDMIXENUMLINES EnumProc, PVOID Context)
   if(Mixer->hmx)
   {
     PSND_MIXER_DESTINATION Line;
-    
+
     for(Line = Mixer->Lines; Line != NULL; Line = Line->Next)
     {
       if(!EnumProc(Mixer, &Line->Info, Context))
@@ -369,10 +369,10 @@ SndMixerEnumLines(PSND_MIXER Mixer, PFNSNDMIXENUMLINES EnumProc, PVOID Context)
         return FALSE;
       }
     }
-    
+
     return TRUE;
   }
-  
+
   return FALSE;
 }
 

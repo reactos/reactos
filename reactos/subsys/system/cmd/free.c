@@ -8,7 +8,7 @@
  *        Started.
  *
  *    28-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -93,7 +93,7 @@ PrintDiskInfo (LPTSTR szDisk)
 
 	if (szVolume[0] == _T('\0'))
 	{
-		
+
 		LoadString(CMD_ModuleHandle, STRING_FREE_ERROR2, szMsg, RC_STRING_MAX_SIZE);
 		_tcscpy (szVolume, szMsg);
 	}
@@ -120,21 +120,21 @@ PrintDiskInfo (LPTSTR szDisk)
 	uliSize.QuadPart = dwSecPerCl * dwBytPerSec * dwFreeCl;
 	ConvertULargeInteger (uliSize, szFree, 40);
 
-	
+
 	LoadString(CMD_ModuleHandle, STRING_FREE_HELP1, szMsg, RC_STRING_MAX_SIZE);
 	ConOutPrintf(szMsg, szDrive, szVolume, szSerial, szTotal, szUsed, szFree);
 }
 
 
 INT CommandFree (LPTSTR cmd, LPTSTR param)
-{	
+{
 	LPTSTR szParam;
 	TCHAR  szDefPath[MAX_PATH];
 	INT argc, i;
 	LPTSTR *arg;
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{		
+	{
 		ConOutResPuts(STRING_FREE_HELP2);
 		return 0;
 	}

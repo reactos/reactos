@@ -42,7 +42,7 @@ PCSRSS_PROCESS_DATA STDCALL CsrGetProcessData(HANDLE ProcessId)
    PCSRSS_PROCESS_DATA pProcessData;
 
    hash = (ULONG_PTR)ProcessId % (sizeof(ProcessData) / sizeof(*ProcessData));
-   
+
    LOCK;
 
    pProcessData = ProcessData[hash];
@@ -64,7 +64,7 @@ PCSRSS_PROCESS_DATA STDCALL CsrCreateProcessData(HANDLE ProcessId)
    NTSTATUS Status;
 
    hash = (ULONG_PTR)ProcessId % (sizeof(ProcessData) / sizeof(*ProcessData));
-   
+
    LOCK;
 
    pProcessData = ProcessData[hash];
@@ -123,9 +123,9 @@ NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
   ULONG hash;
   int c;
   PCSRSS_PROCESS_DATA pProcessData, pPrevProcessData = NULL;
-   
+
   hash = (ULONG_PTR)Pid % (sizeof(ProcessData) / sizeof(*ProcessData));
-   
+
   LOCK;
 
   pProcessData = ProcessData[hash];
@@ -304,7 +304,7 @@ CSR_API(CsrGetShutdownParameters)
   {
      return(Reply->Status = STATUS_INVALID_PARAMETER);
   }
-  
+
   Reply->Data.GetShutdownParametersReply.Level = ProcessData->ShutdownLevel;
   Reply->Data.GetShutdownParametersReply.Flags = ProcessData->ShutdownFlags;
 
@@ -322,7 +322,7 @@ CSR_API(CsrSetShutdownParameters)
   {
      return(Reply->Status = STATUS_INVALID_PARAMETER);
   }
-  
+
   ProcessData->ShutdownLevel = Request->Data.SetShutdownParametersRequest.Level;
   ProcessData->ShutdownFlags = Request->Data.SetShutdownParametersRequest.Flags;
 

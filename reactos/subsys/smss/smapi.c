@@ -38,7 +38,7 @@ SM_PORT_API SmApi [] =
 	SmQryInfo	/* smapyqry.c */
 };
 
-/* TODO: optimize this address computation (it should be done 
+/* TODO: optimize this address computation (it should be done
  * with a macro) */
 PSM_CONNECT_DATA FASTCALL SmpGetConnectData (PSM_PORT_MESSAGE Request)
 {
@@ -69,7 +69,7 @@ SmpCallbackServer (PSM_PORT_MESSAGE Request,
 	ULONG             CallbackPortNameLength = SM_SB_NAME_MAX_LENGTH; /* TODO: compute length */
 	SB_CONNECT_DATA   SbConnectData;
 	ULONG             SbConnectDataLength = sizeof SbConnectData;
-	
+
 	DPRINT("SM: %s called\n", __FUNCTION__);
 
 	if(IMAGE_SUBSYSTEM_NATIVE == ConnectData->SubSystemId)
@@ -183,7 +183,7 @@ SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request)
 	HANDLE           hClientDataApiPortThread = (HANDLE) 0;
 	PHANDLE          ClientDataApiPortThread = & hClientDataApiPortThread;
 	PVOID            Context = NULL;
-	
+
 	DPRINT("SM: %s called:\n  SubSystemID=%d\n  SbName=\"%S\"\n",
 			__FUNCTION__, ConnectData->SubSystemId, ConnectData->SbName);
 
@@ -228,7 +228,7 @@ SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request)
 					ClientDataApiPortThread = & ClientData->ApiPortThread;
 					/*
 					 * Call back the candidate environment subsystem
-					 * server (use the port name sent in in the 
+					 * server (use the port name sent in in the
 					 * connection request message).
 					 */
 					Status = SmpCallbackServer (Request, ClientData);
@@ -313,7 +313,7 @@ SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request)
  * 	we need a thread to listen for connection request that
  * 	creates a new thread for each connected port. This is not
  * 	necessary in NT LPC, because server side connected ports are
- * 	never used to receive requests. 
+ * 	never used to receive requests.
  */
 VOID STDCALL
 SmpApiThread (HANDLE ListeningPort)
@@ -322,7 +322,7 @@ SmpApiThread (HANDLE ListeningPort)
 	LPC_MAX_MESSAGE	Request = {{0}};
 
 	DPRINT("SM: %s called\n", __FUNCTION__);
-    
+
 	while (TRUE)
 	{
 		Status = NtListenPort (ListeningPort, & Request.Header);

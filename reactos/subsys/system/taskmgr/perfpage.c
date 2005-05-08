@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-	
+
 #include "precomp.h"
 
 TGraphCtrl PerformancePageCpuUsageHistoryGraph;
@@ -93,17 +93,17 @@ void AdjustFrameSize(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference,
     }
     InvalidateRect(hCntrl, NULL, TRUE);
 }
-		 
+
 void AdjustControlPostion(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference)
 {
     AdjustFrameSize(hCntrl, hDlg, nXDifference, nYDifference, 0);
 }
-		 
+
 void AdjustCntrlPos(int ctrl_id, HWND hDlg, int nXDifference, int nYDifference)
 {
     AdjustFrameSize(GetDlgItem(hDlg, ctrl_id), hDlg, nXDifference, nYDifference, 0);
 }
-		 
+
 INT_PTR CALLBACK
 PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -116,7 +116,7 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
     switch (message) {
 	case WM_INITDIALOG:
-		
+
 		/*  Save the width and height */
 		GetClientRect(hDlg, &rc);
 		nPerformancePageWidth = rc.right;
@@ -125,9 +125,9 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		/*  Update window position */
 		SetWindowPos(hDlg, NULL, 15, 30, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
 
-		/* 
+		/*
 		 *  Get handles to all the controls
-		 */ 
+		 */
 		hPerformancePageTotalsFrame = GetDlgItem(hDlg, IDC_TOTALS_FRAME);
 		hPerformancePageCommitChargeFrame = GetDlgItem(hDlg, IDC_COMMIT_CHARGE_FRAME);
 		hPerformancePageKernelMemoryFrame = GetDlgItem(hDlg, IDC_KERNEL_MEMORY_FRAME);
@@ -155,7 +155,7 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		hPerformancePageMemUsageGraph = GetDlgItem(hDlg, IDC_MEM_USAGE_GRAPH);
 		hPerformancePageMemUsageHistoryGraph = GetDlgItem(hDlg, IDC_MEM_USAGE_HISTORY_GRAPH);
         hPerformancePageCpuUsageHistoryGraph = GetDlgItem(hDlg, IDC_CPU_USAGE_HISTORY_GRAPH);
-		
+
 		GetClientRect(hPerformancePageCpuUsageHistoryGraph, &rc);
         /*  create the control */
         /* PerformancePageCpuUsageHistoryGraph.Create(0, rc, hDlg, IDC_CPU_USAGE_HISTORY_GRAPH); */
@@ -183,9 +183,9 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         CreateThread(NULL, 0, PerformancePageRefreshThread, NULL, 0, NULL);
 #endif
 
-		/* 
+		/*
 		 *  Subclass graph buttons
-		 */ 
+		 */
         OldGraphWndProc = SetWindowLongPtr(hPerformancePageCpuUsageGraph, GWL_WNDPROC, (DWORD_PTR)Graph_WndProc);
         SetWindowLongPtr(hPerformancePageMemUsageGraph, GWL_WNDPROC, (DWORD_PTR)Graph_WndProc);
 		OldGraphCtrlWndProc = SetWindowLongPtr(hPerformancePageMemUsageHistoryGraph, GWL_WNDPROC, (DWORD_PTR)GraphCtrl_WndProc);
@@ -255,9 +255,9 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         AdjustControlPostion(hPerformancePageTotalsProcessCountEdit, hDlg, 0, nYDifference);
         AdjustControlPostion(hPerformancePageTotalsThreadCountEdit, hDlg, 0, nYDifference);
 
-        nXDifference += lastX; 
-        nYDifference += lastY; 
-        lastX = lastY = 0; 
+        nXDifference += lastX;
+        nYDifference += lastY;
+        lastX = lastY = 0;
         if (nXDifference % 2) {
             if (nXDifference > 0) {
                 nXDifference--;
@@ -349,9 +349,9 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
 			/*  Reset our event */
 			ResetEvent(hPerformancePageEvent);
 
-			/* 
+			/*
 			 *  Update the commit charge info
-			 */ 
+			 */
 			CommitChargeTotal = PerfDataGetCommitChargeTotalK();
 			CommitChargeLimit = PerfDataGetCommitChargeLimitK();
 			CommitChargePeak = PerfDataGetCommitChargePeakK();
@@ -364,9 +364,9 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
 			wsprintf(Text, szMemUsage, CommitChargeTotal, CommitChargeLimit);
 			SendMessage(hStatusWnd, SB_SETTEXT, 2, (LPARAM)Text);
 
-			/* 
+			/*
 			 *  Update the kernel memory info
-			 */ 
+			 */
 			KernelMemoryTotal = PerfDataGetKernelMemoryTotalK();
 			KernelMemoryPaged = PerfDataGetKernelMemoryPagedK();
 			KernelMemoryNonPaged = PerfDataGetKernelMemoryNonPagedK();
@@ -377,9 +377,9 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
 			_ultot(KernelMemoryNonPaged, Text, 10);
 			SetWindowText(hPerformancePageKernelMemoryNonPagedEdit, Text);
 
-			/* 
+			/*
 			 *  Update the physical memory info
-			 */ 
+			 */
 			PhysicalMemoryTotal = PerfDataGetPhysicalMemoryTotalK();
 			PhysicalMemoryAvailable = PerfDataGetPhysicalMemoryAvailableK();
 			PhysicalMemorySystemCache = PerfDataGetPhysicalMemorySystemCacheK();
@@ -390,9 +390,9 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
 			_ultot(PhysicalMemorySystemCache, Text, 10);
 			SetWindowText(hPerformancePagePhysicalMemorySystemCacheEdit, Text);
 
-			/* 
+			/*
 			 *  Update the totals info
-			 */ 
+			 */
 			TotalHandles = PerfDataGetSystemHandleCount();
 			TotalThreads = PerfDataGetTotalThreadCount();
 			TotalProcesses = PerfDataGetProcessCount();
@@ -403,15 +403,15 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
 			_ultot(TotalProcesses, Text, 10);
 			SetWindowText(hPerformancePageTotalsProcessCountEdit, Text);
 
-			/* 
+			/*
 			 *  Redraw the graphs
-			 */ 
+			 */
 			InvalidateRect(hPerformancePageCpuUsageGraph, NULL, FALSE);
 			InvalidateRect(hPerformancePageMemUsageGraph, NULL, FALSE);
 
-        	/* 
+        	/*
         	 *  Get the CPU usage
-        	 */ 
+        	 */
 	        CpuUsage = PerfDataGetProcessorUsage();
         	CpuKernelUsage = PerfDataGetProcessorSystemUsage();
         	if (CpuUsage < 0 )        CpuUsage = 0;
@@ -419,9 +419,9 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
         	if (CpuKernelUsage < 0)   CpuKernelUsage = 0;
         	if (CpuKernelUsage > 100) CpuKernelUsage = 100;
 
-            /* 
+            /*
              *  Get the memory usage
-             */ 
+             */
             CommitChargeTotal = (ULONGLONG)PerfDataGetCommitChargeTotalK();
             CommitChargeLimit = (ULONGLONG)PerfDataGetCommitChargeLimitK();
             nBarsUsed1 = CommitChargeLimit ? ((CommitChargeTotal * 100) / CommitChargeLimit) : 0;
