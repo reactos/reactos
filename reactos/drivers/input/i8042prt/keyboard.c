@@ -726,7 +726,7 @@ static VOID STDCALL I8042DebugWorkItem(PDEVICE_OBJECT DeviceObject,
 	PFDO_DEVICE_EXTENSION FdoDevExt = DeviceObject->DeviceExtension;
 	PDEVICE_EXTENSION DevExt = FdoDevExt->PortDevExt;
 
-	Key = InterlockedExchange(&DevExt->DebugKey, 0);
+	Key = InterlockedExchange((PLONG)&DevExt->DebugKey, 0);
 	DPRINT("Debug key: %x\n", Key);
 
 	if (!Key)

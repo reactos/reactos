@@ -206,13 +206,13 @@ SerialInterruptService(
 
 			LSR = READ_PORT_UCHAR(SER_LSR(ComPortBase));
 			if (LSR & SR_LSR_OVERRUN_ERROR)
-				InterlockedIncrement(&DeviceExtension->SerialPerfStats.SerialOverrunErrorCount);
+				InterlockedIncrement((PLONG)&DeviceExtension->SerialPerfStats.SerialOverrunErrorCount);
 			if (LSR & SR_LSR_PARITY_ERROR)
-				InterlockedIncrement(&DeviceExtension->SerialPerfStats.ParityErrorCount);
+				InterlockedIncrement((PLONG)&DeviceExtension->SerialPerfStats.ParityErrorCount);
 			if (LSR & SR_LSR_FRAMING_ERROR)
-				InterlockedIncrement(&DeviceExtension->SerialPerfStats.FrameErrorCount);
+				InterlockedIncrement((PLONG)&DeviceExtension->SerialPerfStats.FrameErrorCount);
 			if (LSR & SR_LSR_BREAK_INT)
-				InterlockedIncrement(&DeviceExtension->BreakInterruptErrorCount);
+				InterlockedIncrement((PLONG)&DeviceExtension->BreakInterruptErrorCount);
 
 			return TRUE;
 		}

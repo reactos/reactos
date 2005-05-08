@@ -103,6 +103,10 @@ NdisWriteConfiguration(
             Data = ParameterValue->ParameterData.BinaryData.Buffer;
             DataSize = ParameterValue->ParameterData.BinaryData.Length;
             break;
+
+        default:
+            *Status = NDIS_STATUS_FAILURE;
+            return;
     }
 
     *Status = ZwSetValueKey(((PMINIPORT_CONFIGURATION_CONTEXT)ConfigurationHandle)->Handle,

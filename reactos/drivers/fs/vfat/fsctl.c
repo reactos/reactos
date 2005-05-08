@@ -222,6 +222,7 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
             {
                DPRINT("FAT12\n");
                FatInfo.FatType = FAT12;
+               FatInfo.RootCluster = (FatInfo.rootStart - 1) / FatInfo.SectorsPerCluster;
             }
             else if (FatInfo.NumberOfClusters >= 65525)
             {
@@ -235,6 +236,7 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
             {
                DPRINT("FAT16\n");
                FatInfo.FatType = FAT16;
+               FatInfo.RootCluster = FatInfo.rootStart / FatInfo.SectorsPerCluster;
             }
             if (PartitionInfoIsValid &&
 	        FatInfo.Sectors > PartitionInfo.PartitionLength.QuadPart / FatInfo.BytesPerSector)
@@ -316,6 +318,7 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
                   ROUND_UP(FatInfo.Sectors / FatInfo.SectorsPerCluster * (FatInfo.FatType == FATX16 ? 2 : 4), 4096) /
                   FatInfo.BytesPerSector;
             FatInfo.rootStart = FatInfo.FATStart + FatInfo.FATCount * FatInfo.FATSectors;
+            FatInfo.RootCluster = (FatInfo.rootStart - 1) / FatInfo.SectorsPerCluster;
             FatInfo.dataStart = FatInfo.rootStart + FatInfo.rootDirectorySectors;
             FatInfo.NumberOfClusters = (FatInfo.Sectors - FatInfo.dataStart) / FatInfo.SectorsPerCluster;
 

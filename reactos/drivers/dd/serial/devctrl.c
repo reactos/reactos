@@ -28,19 +28,22 @@ SerialGetUserBuffers(
 	{
 		case METHOD_BUFFERED:
 			*BufferIn = *BufferOut = Irp->AssociatedIrp.SystemBuffer;
-			return;
+			break;
 		case METHOD_IN_DIRECT:
 		case METHOD_OUT_DIRECT:
 			*BufferIn = Irp->AssociatedIrp.SystemBuffer;
 			*BufferOut = MmGetSystemAddressForMdl(Irp->MdlAddress);
-			return;
+			break;
 		case METHOD_NEITHER:
 			*BufferIn = IoGetCurrentIrpStackLocation(Irp)->Parameters.DeviceIoControl.Type3InputBuffer;
 			*BufferOut = Irp->UserBuffer;
-			return;
+			break;
+		default:
+			/* Should never happen */
+			*BufferIn = NULL;
+			*BufferOut = NULL;
+			break;
 	}
-
-	/* Should never happen */
 }
 
 NTSTATUS STDCALL
