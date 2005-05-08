@@ -34,12 +34,12 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include <stdarg.h>
 #include <winbase.h>
 #include "ntddk.h"
 #include "ntpoapi.h"
+
+#pragma pack(push,4)
 
 typedef struct _PEB *PPEB;
 
@@ -48,6 +48,12 @@ typedef PVOID POBJECT_TYPE_LIST;
 typedef PVOID PEXECUTION_STATE;
 typedef PVOID PLANGID;
 
+#ifndef NtCurrentProcess
+#define NtCurrentProcess() ( (HANDLE) 0xFFFFFFFF )
+#endif /* NtCurrentProcess */
+#ifndef NtCurrentThread
+#define NtCurrentThread() ( (HANDLE) 0xFFFFFFFE )
+#endif /* NtCurrentThread */
 
 /* System information and control */
 
@@ -258,47 +264,15 @@ typedef struct _VM_COUNTERS {
 } VM_COUNTERS;
 
 typedef enum _THREAD_STATE {
-	StateInitialized,
-	StateReady,
-	StateRunning,
-	StateStandby,
-	StateTerminated,
-	StateWait,
-	StateTransition,
-	StateUnknown
+	Initialized,
+	Ready,
+	Running,
+	Standby,
+	Terminated,
+	Wait,
+	Transition,
+	DeferredReady
 } THREAD_STATE;
-
-typedef struct _SYSTEM_THREADS {
-	LARGE_INTEGER  KernelTime;
-	LARGE_INTEGER  UserTime;
-	LARGE_INTEGER  CreateTime;
-	ULONG  WaitTime;
-	PVOID  StartAddress;
-	CLIENT_ID  ClientId;
-	KPRIORITY  Priority;
-	KPRIORITY  BasePriority;
-	ULONG  ContextSwitchCount;
-	THREAD_STATE  State;
-	KWAIT_REASON  WaitReason;
-} SYSTEM_THREADS, *PSYSTEM_THREADS;
-
-typedef struct _SYSTEM_PROCESSES {
-	ULONG  NextEntryDelta;
-	ULONG  ThreadCount;
-	ULONG  Reserved1[6];
-	LARGE_INTEGER  CreateTime;
-	LARGE_INTEGER  UserTime;
-	LARGE_INTEGER  KernelTime;
-	UNICODE_STRING  ProcessName;
-	KPRIORITY  BasePriority;
-	ULONG  ProcessId;
-	ULONG  InheritedFromProcessId;
-	ULONG  HandleCount;
-	ULONG  Reserved2[2];
-	VM_COUNTERS  VmCounters;
-	IO_COUNTERS  IoCounters;
-	SYSTEM_THREADS  Threads[1];
-} SYSTEM_PROCESSES, *PSYSTEM_PROCESSES;
 
 typedef struct _SYSTEM_CALLS_INFORMATION {
 	ULONG  Size;
@@ -392,13 +366,20 @@ typedef struct _SYSTEM_LOCK_INFORMATION {
 #define PROTECT_FROM_CLOSE                0x01
 #define INHERIT                           0x02
 
-typedef struct _SYSTEM_HANDLE_INFORMATION {
-	ULONG  ProcessId;
-	UCHAR  ObjectTypeNumber;
-	UCHAR  Flags;
-	USHORT  Handle;
+typedef struct _SYSTEM_HANDLE_TABLE_ENTRY_INFO {
+	USHORT  UniqueProcessId;
+	USHORT  CreatorBackTraceIndex;
+	UCHAR  ObjectTypeIndex;
+	UCHAR  HandleAttributes;
+	USHORT  HandleValue;
 	PVOID  Object;
-	ACCESS_MASK  GrantedAccess;
+	ULONG  GrantedAccess;
+} SYSTEM_HANDLE_TABLE_ENTRY_INFO, *PSYSTEM_HANDLE_TABLE_ENTRY_INFO;
+
+typedef struct _SYSTEM_HANDLE_INFORMATION {
+	ULONG  NumberOfHandles;
+	SYSTEM_HANDLE_TABLE_ENTRY_INFO  Handles[1];
+
 } SYSTEM_HANDLE_INFORMATION, *PSYSTEM_HANDLE_INFORMATION;
 
 typedef struct _SYSTEM_OBJECT_TYPE_INFORMATION {
@@ -439,10 +420,10 @@ typedef struct _SYSTEM_OBJECT_INFORMATION {
 
 typedef struct _SYSTEM_PAGEFILE_INFORMATION {
 	ULONG  NextEntryOffset;
-	ULONG  CurrentSize;
-	ULONG  TotalUsed;
-	ULONG  PeakUsed;
-	UNICODE_STRING  FileName;
+	ULONG  TotalSize;
+	ULONG  TotalInUse;
+	ULONG  PeakUsage;
+	UNICODE_STRING  PageFileName;
 } SYSTEM_PAGEFILE_INFORMATION, *PSYSTEM_PAGEFILE_INFORMATION;
 
 typedef struct _SYSTEM_INSTRUCTION_EMULATION_INFORMATION {
@@ -560,9 +541,9 @@ typedef struct _SYSTEM_CONTEXT_SWITCH_INFORMATION {
 } SYSTEM_CONTEXT_SWITCH_INFORMATION, *PSYSTEM_CONTEXT_SWITCH_INFORMATION;
 
 typedef struct _SYSTEM_REGISTRY_QUOTA_INFORMATION {
-	ULONG  RegistryQuota;
-	ULONG  RegistryQuotaInUse;
-	ULONG  PagedPoolSize;
+	ULONG  RegistryQuotaAllowed;
+	ULONG  RegistryQuotaUsed;
+	PVOID  Reserved1;
 } SYSTEM_REGISTRY_QUOTA_INFORMATION, *PSYSTEM_REGISTRY_QUOTA_INFORMATION;
 
 typedef struct _SYSTEM_LOAD_AND_CALL_IMAGE {
@@ -646,6 +627,69 @@ typedef struct _SYSTEM_MEMORY_USAGE_INFORMATION {
 	SYSTEM_MEMORY_USAGE  MemoryUsage[1];
 } SYSTEM_MEMORY_USAGE_INFORMATION, *PSYSTEM_MEMORY_USAGE_INFORMATION;
 
+// SystemProcessThreadInfo (5)
+typedef struct _SYSTEM_THREAD_INFORMATION 
+{
+    LARGE_INTEGER KernelTime;
+    LARGE_INTEGER UserTime;
+    LARGE_INTEGER CreateTime;
+    ULONG WaitTime;
+    PVOID StartAddress;
+    CLIENT_ID ClientId;
+    KPRIORITY Priority;
+    LONG BasePriority;
+    ULONG ContextSwitches;
+    ULONG ThreadState;
+    ULONG WaitReason;
+} SYSTEM_THREAD_INFORMATION, *PSYSTEM_THREAD_INFORMATION;
+
+typedef struct _SYSTEM_PROCESS_INFORMATION
+{
+    ULONG NextEntryOffset;
+    ULONG NumberOfThreads;
+    LARGE_INTEGER SpareLi1;
+    LARGE_INTEGER SpareLi2;
+    LARGE_INTEGER SpareLi3;
+    LARGE_INTEGER CreateTime;
+    LARGE_INTEGER UserTime;
+    LARGE_INTEGER KernelTime;
+    UNICODE_STRING ImageName;
+    KPRIORITY BasePriority;
+    HANDLE UniqueProcessId;
+    HANDLE InheritedFromUniqueProcessId;
+    ULONG HandleCount;
+    ULONG SessionId;
+    ULONG PageDirectoryFrame;
+    
+    /* 
+     * This part corresponds to VM_COUNTERS_EX. 
+     * NOTE: *NOT* THE SAME AS VM_COUNTERS!
+     */
+    ULONG PeakVirtualSize;
+    ULONG VirtualSize;
+    ULONG PageFaultCount;
+    ULONG PeakWorkingSetSize;
+    ULONG WorkingSetSize;
+    ULONG QuotaPeakPagedPoolUsage;
+    ULONG QuotaPagedPoolUsage;
+    ULONG QuotaPeakNonPagedPoolUsage;
+    ULONG QuotaNonPagedPoolUsage;
+    ULONG PagefileUsage;
+    ULONG PeakPagefileUsage;
+    ULONG PrivateUsage;
+    
+    /* This part corresponds to IO_COUNTERS */
+    LARGE_INTEGER ReadOperationCount;
+    LARGE_INTEGER WriteOperationCount;
+    LARGE_INTEGER OtherOperationCount;
+    LARGE_INTEGER ReadTransferCount;
+    LARGE_INTEGER WriteTransferCount;
+    LARGE_INTEGER OtherTransferCount;
+    
+    /* Finally, the array of Threads */
+    SYSTEM_THREAD_INFORMATION TH[1];
+} SYSTEM_PROCESS_INFORMATION, *PSYSTEM_PROCESS_INFORMATION;
+
 NTOSAPI
 NTSTATUS
 NTAPI
@@ -676,16 +720,16 @@ NTOSAPI
 NTSTATUS
 NTAPI
 ZwQuerySystemEnvironmentValue(
-	IN PUNICODE_STRING  Name,
-	OUT PVOID  Value,
-	IN ULONG  ValueLength,
-	OUT PULONG  ReturnLength  OPTIONAL);
+	IN PUNICODE_STRING VariableName,
+	OUT PWSTR ValueBuffer,
+	IN ULONG ValueBufferLength,
+	OUT PULONG ReturnLength  OPTIONAL);
 
 NTOSAPI
 NTSTATUS
 NTAPI
 ZwSetSystemEnvironmentValue(
-	IN PUNICODE_STRING  Name,
+	IN PUNICODE_STRING  VariableName,
 	IN PUNICODE_STRING  Value);
 
 typedef enum _SHUTDOWN_ACTION {
@@ -884,10 +928,10 @@ ZwQueryDirectoryObject(
   IN OUT PULONG  Context,
   OUT PULONG  ReturnLength  OPTIONAL);
 
-typedef struct _DIRECTORY_BASIC_INFORMATION {
+typedef struct _OBJECT_DIRECTORY_INFORMATION {
   UNICODE_STRING  ObjectName;
   UNICODE_STRING  ObjectTypeName;
-} DIRECTORY_BASIC_INFORMATION, *PDIRECTORY_BASIC_INFORMATION;
+} OBJECT_DIRECTORY_INFORMATION, *POBJECT_DIRECTORY_INFORMATION;
 
 NTOSAPI
 NTSTATUS
@@ -1047,32 +1091,32 @@ NTSTATUS
 NTAPI
 ZwAllocateUserPhysicalPages(
 	IN HANDLE  ProcessHandle,
-	IN PULONG  NumberOfPages,
-	OUT PULONG  PageFrameNumbers);
+	IN OUT PULONG_PTR  NumberOfPages,
+	OUT PULONG_PTR  UserPfnArray);
 
 NTOSAPI
 NTSTATUS
 NTAPI
 ZwFreeUserPhysicalPages(
 	IN HANDLE  ProcessHandle,
-	IN OUT PULONG  NumberOfPages,
-	IN PULONG  PageFrameNumbers);
+	IN OUT PULONG_PTR  NumberOfPages,
+	IN PULONG_PTR  UserPfnArray);
 
 NTOSAPI
 NTSTATUS
 NTAPI
 ZwMapUserPhysicalPages(
-	IN PVOID  BaseAddress,
-	IN PULONG  NumberOfPages,
-	IN PULONG  PageFrameNumbers);
+	IN PVOID  VirtualAddress,
+	IN ULONG_PTR  NumberOfPages,
+	IN PULONG_PTR  PageArray  OPTIONAL);
 
 NTOSAPI
 NTSTATUS
 NTAPI
 ZwMapUserPhysicalPagesScatter(
-	IN PVOID  *BaseAddresses,
-	IN PULONG  NumberOfPages,
-	IN PULONG  PageFrameNumbers);
+	IN PVOID  *VirtualAddresses,
+	IN ULONG_PTR  NumberOfPages,
+	IN PULONG_PTR  PageArray  OPTIONAL);
 
 NTOSAPI
 NTSTATUS
@@ -1157,26 +1201,27 @@ ZwAreMappedFilesTheSame(
 
 /* Threads */
 
-typedef struct _USER_STACK {
-	PVOID  FixedStackBase;
-	PVOID  FixedStackLimit;
-	PVOID  ExpandableStackBase;
-	PVOID  ExpandableStackLimit;
-	PVOID  ExpandableStackBottom;
-} USER_STACK, *PUSER_STACK;
+typedef struct _INITIAL_TEB
+{
+	PVOID StackBase;
+	PVOID StackLimit;
+	PVOID StackCommit;
+	PVOID StackCommitMax;
+	PVOID StackReserved;
+} INITIAL_TEB, *PINITIAL_TEB;
 
 NTOSAPI
 NTSTATUS
 NTAPI
 ZwCreateThread(
-	OUT PHANDLE  ThreadHandle,
-	IN ACCESS_MASK  DesiredAccess,
-	IN POBJECT_ATTRIBUTES  ObjectAttributes,
-	IN HANDLE  ProcessHandle,
-	OUT PCLIENT_ID  ClientId,
-	IN PCONTEXT  ThreadContext,
-	IN PUSER_STACK  UserStack,
-	IN BOOLEAN  CreateSuspended);
+  OUT PHANDLE ThreadHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+  IN HANDLE ProcessHandle,
+  OUT PCLIENT_ID ClientId,
+  IN PCONTEXT ThreadContext,
+  IN PINITIAL_TEB InitialTeb,
+  IN BOOLEAN CreateSuspended);
 
 NTOSAPI
 NTSTATUS
@@ -1200,6 +1245,13 @@ NTOSAPI
 NTSTATUS
 NTAPI
 ZwTerminateThread(
+	IN HANDLE  ThreadHandle  OPTIONAL,
+	IN NTSTATUS  ExitStatus);
+
+NTOSAPI
+NTSTATUS
+NTAPI
+NtTerminateThread(
 	IN HANDLE  ThreadHandle  OPTIONAL,
 	IN NTSTATUS  ExitStatus);
 
@@ -1247,6 +1299,11 @@ typedef struct _KERNEL_USER_TIMES {
 	LARGE_INTEGER  KernelTime;
 	LARGE_INTEGER  UserTime;
 } KERNEL_USER_TIMES, *PKERNEL_USER_TIMES;
+
+typedef struct _DESCRIPTOR_TABLE_ENTRY {
+	ULONG Selector;
+	LDT_ENTRY Descriptor;
+} DESCRIPTOR_TABLE_ENTRY, *PDESCRIPTOR_TABLE_ENTRY;
 
 NTOSAPI
 NTSTATUS
@@ -1396,8 +1453,8 @@ typedef struct _PROCESS_BASIC_INFORMATION {
 	PPEB  PebBaseAddress;
 	KAFFINITY  AffinityMask;
 	KPRIORITY  BasePriority;
-	ULONG  UniqueProcessId;
-	ULONG  InheritedFromUniqueProcessId;
+	HANDLE  UniqueProcessId;
+	HANDLE  InheritedFromUniqueProcessId;
 } PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION;
 
 typedef struct _PROCESS_ACCESS_TOKEN {
@@ -1579,7 +1636,7 @@ RtlDestroyQueryDebugBuffer(
 
 typedef struct _DEBUG_MODULE_INFORMATION {
 	ULONG  Reserved[2];
-	ULONG  Base;
+	PVOID  Base;
 	ULONG  Size;
 	ULONG  Flags;
 	USHORT  Index;
@@ -1590,7 +1647,7 @@ typedef struct _DEBUG_MODULE_INFORMATION {
 } DEBUG_MODULE_INFORMATION, *PDEBUG_MODULE_INFORMATION;
 
 typedef struct _DEBUG_HEAP_INFORMATION {
-	ULONG  Base;
+	PVOID  Base;
 	ULONG  Flags;
 	USHORT  Granularity;
 	USHORT  Unknown;
@@ -1924,9 +1981,6 @@ NTAPI
 ZwStopProfile(
   IN HANDLE  ProfileHandle);
 
-
-
-
 /* Local Procedure Call (LPC) */
 
 typedef struct _LPC_MESSAGE {
@@ -1939,6 +1993,8 @@ typedef struct _LPC_MESSAGE {
 	ULONG  SectionSize;
 	UCHAR  Data[ANYSIZE_ARRAY];
 } LPC_MESSAGE, *PLPC_MESSAGE;
+
+#define LPC_MESSAGE_BASE_SIZE	24
 
 typedef enum _LPC_TYPE {
 	LPC_NEW_MESSAGE,
@@ -2397,7 +2453,7 @@ ZwAccessCheck(
 	IN PPRIVILEGE_SET  PrivilegeSet,
 	IN PULONG  PrivilegeSetLength,
 	OUT PACCESS_MASK  GrantedAccess,
-	OUT PBOOLEAN  AccessStatus);
+	OUT PNTSTATUS  AccessStatus);
 
 NTOSAPI
 NTSTATUS

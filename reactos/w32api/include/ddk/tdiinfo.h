@@ -31,10 +31,7 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
-
 
 typedef struct TDIEntityID {
   ULONG  tei_entity;
@@ -105,8 +102,6 @@ typedef struct _TCP_REQUEST_SET_INFORMATION_EX {
   UINT  BufferSize;
   UCHAR  Buffer[1];
 } TCP_REQUEST_SET_INFORMATION_EX, *PTCP_REQUEST_SET_INFORMATION_EX;
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

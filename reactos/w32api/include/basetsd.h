@@ -111,6 +111,10 @@ typedef __int64 INT64,  *PINT64;
 typedef unsigned __int64 ULONG64, *PULONG64;
 typedef unsigned __int64 DWORD64, *PDWORD64;
 typedef unsigned __int64 UINT64,  *PUINT64;
+
+typedef signed short INT16, *PINT16;
+typedef unsigned short UINT16, *PUINT16;
+
 #ifdef __cplusplus
 }
 #endif

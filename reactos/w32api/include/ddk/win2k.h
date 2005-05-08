@@ -61,7 +61,7 @@ ExReleaseResourceForThreadLite(
 
 NTOSAPI
 NTSTATUS
-DDKAPI
+DDKFASTAPI
 IoReadPartitionTable(
   IN PDEVICE_OBJECT  DeviceObject,
   IN ULONG  SectorSize,
@@ -70,7 +70,7 @@ IoReadPartitionTable(
 
 NTOSAPI
 NTSTATUS
-DDKAPI
+DDKFASTAPI
 IoSetPartitionInformation(
   IN PDEVICE_OBJECT  DeviceObject,
   IN ULONG  SectorSize,
@@ -79,7 +79,7 @@ IoSetPartitionInformation(
 
 NTOSAPI
 NTSTATUS
-DDKAPI
+DDKFASTAPI
 IoWritePartitionTable(
   IN PDEVICE_OBJECT  DeviceObject,
   IN ULONG  SectorSize,

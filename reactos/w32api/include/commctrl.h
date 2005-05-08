@@ -74,6 +74,9 @@ extern "C" {
 #define WC_COMBOBOXW	L"ComboBox"
 #define WC_SCROLLBARA	"ScrollBar"
 #define WC_SCROLLBARW	L"ScrollBar"
+#if (_WIN32_WINNT >= 0x0501)
+#define WC_LINK		L"SysLink"
+#endif
 
 #ifdef UNICODE
 #define HOTKEY_CLASS HOTKEY_CLASSW
@@ -244,6 +247,24 @@ extern "C" {
 #define ILD_PRESERVEALPHA 0x1000
 #define ILD_SCALE 0x2000
 #define ILD_DPISCALE 0x4000
+#if (_WIN32_WINNT >= 0x0501)
+#define LWS_TRANSPARENT 1
+#define LWS_IGNORERETURN 2
+#define LIF_ITEMINDEX 1
+#define LIF_STATE 2
+#define LIF_ITEMID 4
+#define LIF_URL 8
+#define LIS_FOCUSED 1
+#define LIS_ENABLED 2
+#define LIS_VISITED 4
+#define LM_HITTEST (WM_USER+768)
+#define LM_GETIDEALHEIGHT (WM_USER+769)
+#define LM_SETITEM (WM_USER+770)
+#define LM_GETITEM (WM_USER+771)
+#define INVALID_LINK_INDEX (-1)
+#define MAX_LINKID_TEXT 48
+#define L_MAX_URL_LENGTH 2083
+#endif
 #define HDS_HORZ	0
 #define HDS_BUTTONS	2
 #define HDS_HIDDEN	8
@@ -513,6 +534,9 @@ extern "C" {
 #define TB_PRESSBUTTON	(WM_USER+3)
 #define TB_HIDEBUTTON	(WM_USER+4)
 #define TB_INDETERMINATE	(WM_USER+5)
+#if (_WIN32_IE >= 0x0400)
+#define TB_MARKBUTTON           (WM_USER+6)
+#endif
 #define TB_ISBUTTONENABLED	(WM_USER+9)
 #define TB_ISBUTTONCHECKED	(WM_USER+10)
 #define TB_ISBUTTONPRESSED	(WM_USER+11)
@@ -605,6 +629,8 @@ extern "C" {
 #define TB_SETINSERTMARKCOLOR	(WM_USER+88)
 #define TB_GETINSERTMARKCOLOR	(WM_USER+89)
 #define TB_MAPACCELERATORW	(WM_USER+90)
+#define TB_GETSTRINGW		(WM_USER+91)
+#define TB_GETSTRINGA		(WM_USER+92)
 #define TB_SETCOLORSCHEME	CCM_SETCOLORSCHEME
 #define TB_GETCOLORSCHEME	CCM_GETCOLORSCHEME
 #define TB_SETUNICODEFORMAT	CCM_SETUNICODEFORMAT
@@ -731,6 +757,10 @@ extern "C" {
 #define TTN_NEEDTEXTW	TTN_GETDISPINFOW
 #define TTN_SHOW	(TTN_FIRST-1)
 #define TTN_POP	(TTN_FIRST-2)
+#define TTI_NONE	0
+#define TTI_INFO	1
+#define TTI_WARNING	2
+#define TTI_ERROR	3
 #define UD_MAXVAL	0x7fff
 #define UD_MINVAL	(-UD_MAXVAL)
 #define UDN_DELTAPOS (UDN_FIRST-1)
@@ -891,6 +921,10 @@ extern "C" {
 #define PBM_SETBKCOLOR	CCM_SETBKCOLOR
 #define PBS_SMOOTH	1
 #define PBS_VERTICAL	4
+#if (_WIN32_WINNT >= 0x0501)
+#define PBS_MARQUEE	8
+#define PBM_SETMARQUEE	(WM_USER+10)
+#endif
 #define LVS_ICON	0
 #define LVS_REPORT	1
 #define LVS_SMALLICON	2
@@ -1441,6 +1475,9 @@ extern "C" {
 #define NM_SETCURSOR (NM_FIRST-17)
 #define NM_CHAR (NM_FIRST-18)
 #define NM_TOOLTIPSCREATED (NM_FIRST-19)
+#define NM_LDOWN (NM_FIRST-20)
+#define NM_RDOWN (NM_FIRST-21)
+#define NM_THEMECHANGED (NM_FIRST-22)
 #define SBARS_SIZEGRIP 256
 #define CCM_FIRST 0x2000
 #define CCM_LAST (CCM_FIRST+0x200)
@@ -1596,6 +1633,10 @@ extern "C" {
 #define RBBS_HIDDEN 8
 #define RBBS_NOVERT 16
 #define RBBS_FIXEDBMP 32
+#if (_WIN32_IE >= 0x0501)
+#define RBBS_HIDETITLE 0x400
+#define RBBS_TOPALIGN 0x800
+#endif /* _WIN32_IE >= 0x0501 */
 #define RBBIM_STYLE 1
 #define RBBIM_COLORS 2
 #define RBBIM_TEXT 4
@@ -1732,6 +1773,10 @@ extern "C" {
 #else
 #define RB_GETBANDINFO (WM_USER+5)
 #endif /* _WIN32_IE >= 0x0400 */
+#if (_WIN32_WINNT >= 0x0501)
+#define RB_GETBANDMARGINS (WM_USER+40)
+#define RB_SETWINDOWTHEME CCM_SETWINDOWTHEME
+#endif
 #define CBEM_INSERTITEMA	(WM_USER + 1)
 #define CBEM_SETIMAGELIST	(WM_USER + 2)
 #define CBEM_GETIMAGELIST	(WM_USER + 3)
@@ -1877,6 +1922,22 @@ typedef struct {
 	LPWSTR pszText;
 	int cchText;
 } NMTBDISPINFOW, *LPNMTBDISPINFOW;
+typedef struct tagNMTBGETINFOTIPA
+{
+	NMHDR hdr;
+	LPSTR pszText;
+	int cchTextMax;
+	int iItem;
+	LPARAM lParam;
+} NMTBGETINFOTIPA, *LPNMTBGETINFOTIPA;
+typedef struct tagNMTBGETINFOTIPW
+{
+	NMHDR hdr;
+	LPWSTR pszText;
+	int cchTextMax;
+	int iItem;
+	LPARAM lParam;
+} NMTBGETINFOTIPW, *LPNMTBGETINFOTIPW;
 typedef struct tagNMMOUSE {
 	NMHDR hdr;
 	DWORD_PTR dwItemSpec;
@@ -1931,6 +1992,17 @@ typedef struct _TBBUTTON {
 	int iString;
 } TBBUTTON,*PTBBUTTON,*LPTBBUTTON;
 typedef const TBBUTTON *LPCTBBUTTON;
+typedef struct tagNMTBRESTORE
+{
+	NMHDR hdr;
+	DWORD* pData;
+	DWORD* pCurrent;
+	UINT cbData;
+	int iItem;
+	int cButtons;
+	int cbBytesPerRecord;
+	TBBUTTON tbButton;
+} NMTBRESTORE, *LPNMTBRESTORE;
 #if _WIN32_IE >= 0x400
 typedef struct {
 	UINT cbSize;
@@ -1984,11 +2056,6 @@ typedef struct {
 	int cchText;
 	LPTSTR pszText;
 } TBNOTIFY,*LPTBNOTIFY;
-typedef struct {
-	HKEY hkr;
-	LPCTSTR pszSubKey;
-	LPCTSTR pszValueName;
-} TBSAVEPARAMS;
 typedef struct _IMAGEINFO {
 	HBITMAP hbmImage;
 	HBITMAP hbmMask;
@@ -2138,6 +2205,17 @@ typedef struct tagNMLVGETINFOTIPW
 	LPARAM lParam;
 } NMLVGETINFOTIPW, *LPNMLVGETINFOTIPW;
 #endif /* _WIN32_IE >= 0x0400 */
+typedef struct tagNMLVODSTATECHANGE
+{
+    NMHDR hdr;
+    int iFrom;
+    int iTo;
+    UINT uNewState;
+    UINT uOldState;
+} NMLVODSTATECHANGE, *LPNMLVODSTATECHANGE;
+#define PNM_ODSTATECHANGE LPNMLVODSTATECHANGE
+#define LPNM_ODSTATECHANGE LPNMLVODSTATECHANGE
+#define NM_ODSTATECHANGE NMLVODSTATECHANGE
 typedef struct tagNMTVCUSTOMDRAW {
     NMCUSTOMDRAW nmcd;
     COLORREF     clrText;
@@ -2185,12 +2263,12 @@ typedef struct tagTBSAVEPARAMSA {
 	HKEY hkr;
 	LPCSTR pszSubKey;
 	LPCSTR pszValueName;
-} TBSAVEPARAMSA;
+} TBSAVEPARAMSA, *LPTBSAVEPARAMSA;
 typedef struct tagTBSAVEPARAMSW {
 	HKEY hkr;
 	LPCWSTR pszSubKey;
 	LPCWSTR pszValueName;
-} TBSAVEPARAMSW;
+} TBSAVEPARAMSW, *LPTBSAVEPARAMSW, *LPTBSAVEPARAMW;
 typedef struct {
 	HINSTANCE hInstOld;
 	UINT nIDOld;
@@ -2301,6 +2379,27 @@ typedef struct _NM_UPDOWN {
 	int iPos;
 	int iDelta;
 } NMUPDOWN,*LPNMUPDOWN;
+#if (_WIN32_WINNT >= 0x0501)
+typedef struct tagLITEM
+{
+    UINT mask;
+    int iLink;
+    UINT state;
+    UINT stateMask;
+    WCHAR szID[MAX_LINKID_TEXT];
+    WCHAR szUrl[L_MAX_URL_LENGTH];
+} LITEM, *PLITEM;
+typedef struct tagLHITTESTINFO
+{
+	POINT pt;
+	LITEM item;
+} LHITTESTINFO, *PLHITTESTINFO ;
+typedef struct tagNMLINK
+{
+	NMHDR hdr;
+	LITEM item;
+} NMLINK, *PNMLINK;
+#endif
 /* for backward compatability */
 #define NM_UPDOWN NMUPDOWN 
 #define LPNM_UPDOWN LPNMUPDOWN 
@@ -3231,6 +3330,7 @@ typedef NMHDDISPINFOW NMHDDISPINFO, *LPNMHDDISPINFO;
 #define TB_INSERTBUTTON TB_INSERTBUTTONW
 #define TB_ADDBUTTONS TB_ADDBUTTONSW
 #define TB_MAPACCELERATOR TB_MAPACCELERATORW
+#define TB_GETSTRING TB_GETSTRINGW
 #define TBBUTTONINFO TBBUTTONINFOW
 #define LPTBBUTTONINFO LPTBBUTTONINFOW
 #define TBN_GETDISPINFO TBN_GETDISPINFOW
@@ -3368,6 +3468,7 @@ typedef NMHDDISPINFOW NMHDDISPINFO, *LPNMHDDISPINFO;
 #define TB_INSERTBUTTON TB_INSERTBUTTONA
 #define TB_ADDBUTTONS TB_ADDBUTTONSA
 #define TB_MAPACCELERATOR TB_MAPACCELERATORA
+#define TB_GETSTRING TB_GETSTRINGA
 #define NMCOMBOBOXEX	NMCOMBOBOXEXA
 #define PNMCOMBOBOXEX	PNMCOMBOBOXEXA
 #define CBEN_DRAGBEGIN	CBEN_DRAGBEGINA

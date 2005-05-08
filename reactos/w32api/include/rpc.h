@@ -17,6 +17,12 @@ extern "C" {
 #define RPC_UNICODE_SUPPORTED
 #endif
 
+#ifdef _RPCRT4_
+#define RPCRTAPI DECLSPEC_EXPORT
+#else
+#define RPCRTAPI DECLSPEC_IMPORT
+#endif
+
 #ifndef __MIDL_USER_DEFINED
 #define midl_user_allocate MIDL_user_allocate
 #define midl_user_free     MIDL_user_free
@@ -47,6 +53,15 @@ typedef long RPC_STATUS;
 #define RpcFinally } __finally {
 #define RpcEndFinally }
 #define RpcExceptionCode() GetExceptionCode()
+#define RpcAbnormalTermination() AbnormalTermination()
+#else
+#define RpcTryExcept if (1) {
+#define RpcExcept(x) } else {
+#define RpcEndExcept }
+#define RpcTryFinally if (1) {
+#define RpcFinally } else {
+#define RpcEndFinally }
+#define RpcExceptionCode() 0
 #define RpcAbnormalTermination() AbnormalTermination()
 #endif /* 0 */
 

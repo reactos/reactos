@@ -36,8 +36,6 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 
 #if defined(_VIDEOPORT_)
@@ -97,7 +95,7 @@ typedef HW_DMA_RETURN
   if (VideoPortGetCurrentIrql() > 1 /* APC_LEVEL */) \
   { \
     VideoPortDebugPrint(Error, "Video: Pageable code called at IRQL %d\n", VideoPortGetCurrentIrql() ); \
-    assert(FALSE); \
+    ASSERT(FALSE); \
   }
 
 #else
@@ -1558,8 +1556,6 @@ VideoPortZeroMemory(
 #else
 #define VideoDebugPrint(x)
 #endif
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

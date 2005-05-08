@@ -24,7 +24,6 @@ typedef enum {
 } BrowserNavConstants;
 
 EXTERN_C const IID IID_IWebBrowser;
-#undef INTERFACE
 #define INTERFACE IWebBrowser
 DECLARE_INTERFACE_(IWebBrowser,IDispatch)
 {
@@ -62,9 +61,9 @@ DECLARE_INTERFACE_(IWebBrowser,IDispatch)
 	STDMETHOD(get_LocationURL)(THIS_ BSTR*) PURE;
 	STDMETHOD(get_Busy)(THIS_ VARIANT_BOOL*) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IWebBrowserApp;
-#undef INTERFACE
 #define INTERFACE IWebBrowserApp
 DECLARE_INTERFACE_(IWebBrowserApp,IWebBrowser)
 {
@@ -123,9 +122,9 @@ DECLARE_INTERFACE_(IWebBrowserApp,IWebBrowser)
 	STDMETHOD(get_FullScreen)(THIS_ VARIANT_BOOL*) PURE;
 	STDMETHOD(put_FullScreen)(THIS_ VARIANT_BOOL) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IWebBrowser2;
-#undef INTERFACE
 #define INTERFACE IWebBrowser2
 DECLARE_INTERFACE_(IWebBrowser2,IWebBrowserApp)
 {
@@ -204,11 +203,11 @@ DECLARE_INTERFACE_(IWebBrowser2,IWebBrowserApp)
 	STDMETHOD(get_Resizable)(THIS_ VARIANT_BOOL*) PURE;
 	STDMETHOD(put_Resizable)(THIS_ VARIANT_BOOL) PURE;
 };
+#undef INTERFACE
 
 #define STDDISP(m) STDMETHOD_(void,m)
 
 EXTERN_C const IID DIID_DWebBrowserEvents2;
-#undef INTERFACE
 #define INTERFACE DWebBrowserEvents2
 DECLARE_INTERFACE_(DWebBrowserEvents2,IDispatch)
 {
@@ -248,6 +247,7 @@ DECLARE_INTERFACE_(DWebBrowserEvents2,IDispatch)
 	STDDISP(SetSecureLockIcon)(THIS_ long) PURE;
 	STDDISP(FileDownload)(THIS_ VARIANT_BOOL*) PURE;
 };
+#undef INTERFACE
 
 #undef STDDISP
 

@@ -38,12 +38,9 @@ extern "C" {
 #include "ntddk.h"
 #include <wingdi.h>
 
-#if 1
+#ifndef __DD_INCLUDED__
 /* FIXME: Some DirectDraw structures not added yet */
 typedef ULONG_PTR FLATPTR;
-typedef PVOID LPVIDMEM;
-typedef PVOID LPVMEMHEAP;
-typedef PVOID PGLYPHOS;
 typedef struct _DD_SURFACECALLBACKS {
 } DD_SURFACECALLBACKS, *PDD_SURFACECALLBACKS;
 typedef struct _DD_PALETTECALLBACKS {
@@ -52,16 +49,24 @@ typedef struct _DD_CALLBACKS {
 } DD_CALLBACKS, *PDD_CALLBACKS;
 typedef struct _DD_HALINFO {
 } DD_HALINFO, *PDD_HALINFO;
-typedef struct _DDSCAPS {
-} DDSCAPS, *PDDSCAPS;
-typedef struct _DDSCAPSEX {
-} DDSCAPSEX, *PDDSCAPSEX;
 typedef struct _VIDEOMEMORY {
 } VIDEOMEMORY, *LPVIDEOMEMORY;
 typedef struct _DD_DIRECTDRAW_GLOBAL {
 } DD_DIRECTDRAW_GLOBAL, *LPDD_DIRECTDRAW_GLOBAL;
 typedef struct _DD_SURFACE_LOCAL {
 } DD_SURFACE_LOCAL, *PDD_SURFACE_LOCAL, *LPDD_SURFACE_LOCAL;
+#endif
+
+#ifndef __DDRAWI_INCLUDED__
+typedef PVOID LPVIDMEM;
+#endif
+
+#if !defined(__DD_INCLUDED__) && !defined(__DDRAWI_INCLUDED__)
+typedef struct _DDSCAPS {
+} DDSCAPS, *PDDSCAPS;
+typedef struct _DDSCAPSEX {
+} DDSCAPSEX, *PDDSCAPSEX;
+typedef PVOID LPVMEMHEAP;
 #endif
 
 #if defined(_WIN32K_)
@@ -464,6 +469,13 @@ typedef struct _DRVENABLEDATA {
 
 DECLARE_HANDLE(HSEMAPHORE);
 
+typedef struct {
+  DWORD  nSize;
+  HDC  hdc;
+  PBYTE  pvEMF;
+  PBYTE  pvCurrentRecord;
+} EMFINFO, *PEMFINFO;
+
 typedef struct _ENGSAFESEMAPHORE {
   HSEMAPHORE  hsem;
   LONG  lCount;
@@ -816,7 +828,7 @@ typedef struct _GDIINFO {
 typedef struct _PATHDATA {
   FLONG  flags;
   ULONG  count;
-  POINTFIX  pptfx;
+  POINTFIX  *glypptfx;
 } PATHDATA, *PPATHDATA;
 
 /* PATHOBJ.fl constants */
@@ -844,7 +856,7 @@ typedef union _GLYPHDEF {
 typedef struct _GLYPHPOS {
   HGLYPH  hg;
   GLYPHDEF  *pgdf;
-  POINTL  *ptl;
+  POINTL  ptl;
 } GLYPHPOS, *PGLYPHPOS;
 
 typedef struct _GLYPHDATA {
@@ -2147,7 +2159,7 @@ EngStretchBlt(
   IN CLIPOBJ  *pco,
   IN XLATEOBJ  *pxlo,
   IN COLORADJUSTMENT  *pca,
-  IN POINTL  pptlHTOrg,
+  IN POINTL  *pptlHTOrg,
   IN RECTL  *prclDest,
   IN RECTL  *prclSrc,
   IN POINTL  *pptlMask,
@@ -2211,7 +2223,7 @@ EngTextOut(
   IN RECTL  *prclOpaque,
   IN BRUSHOBJ  *pboFore,
   IN BRUSHOBJ  *pboOpaque,
-  IN POINTL  pptlOrg,
+  IN POINTL  *pptlOrg,
   IN MIX  mix);
 
 WIN32KAPI
@@ -2490,7 +2502,7 @@ FONTOBJ_cGetGlyphs(
   IN ULONG  iMode,
   IN ULONG  cGlyph,
   IN HGLYPH  *phg,
-  OUT PVOID  **ppvGlyph);
+  OUT PVOID  *ppvGlyph);
 
 WIN32KAPI
 FD_GLYPHSET*
@@ -2684,7 +2696,7 @@ DDKAPI
 STROBJ_bEnumPositionsOnly(
   IN STROBJ  *pstro,
   OUT ULONG  *pc,
-  OUT PGLYPHOS  **ppgpos);
+  OUT PGLYPHPOS  *ppgpos);
 
 WIN32KAPI
 BOOL
@@ -4134,8 +4146,6 @@ DrvGetDirectDrawInfo(
   OUT VIDEOMEMORY  *pvmList,
   OUT DWORD  *pdwNumFourCCCodes,
   OUT DWORD  *pdwFourCC);
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

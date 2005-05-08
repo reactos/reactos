@@ -31,11 +31,8 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 #include "ntddstor.h"
-
 
 #define DD_TAPE_DEVICE_NAME               "\\Device\\Tape"
 #define DD_TAPE_DEVICE_NAME_U             L"\\Device\\Tape"
@@ -49,7 +46,7 @@ extern "C" {
 #define IOCTL_TAPE_GET_DRIVE_PARAMS     CTL_CODE(IOCTL_TAPE_BASE, 0x0005, METHOD_BUFFERED, FILE_READ_ACCESS)
 #define IOCTL_TAPE_GET_MEDIA_PARAMS     CTL_CODE(IOCTL_TAPE_BASE, 0x0007, METHOD_BUFFERED, FILE_READ_ACCESS)
 #define IOCTL_TAPE_GET_POSITION         CTL_CODE(IOCTL_TAPE_BASE, 0x0003, METHOD_BUFFERED, FILE_READ_ACCESS)
-#define IOCTL_TAPE_GET_STATUS           CTL_CODE(IOCTL_TAPE_BASE, 0x0009, METHOD_BUFFERED, FILE_READ_ACCESS )
+#define IOCTL_TAPE_GET_STATUS           CTL_CODE(IOCTL_TAPE_BASE, 0x0009, METHOD_BUFFERED, FILE_READ_ACCESS)
 
 #define IOCTL_TAPE_PREPARE              CTL_CODE(IOCTL_TAPE_BASE, 0x0001, METHOD_BUFFERED, FILE_READ_ACCESS)
 #define IOCTL_TAPE_SET_DRIVE_PARAMS     CTL_CODE(IOCTL_TAPE_BASE, 0x0006, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
@@ -59,23 +56,21 @@ extern "C" {
 
 
 typedef enum _TAPE_DRIVE_PROBLEM_TYPE {
-  TapeDriveProblemNone, 
+  TapeDriveProblemNone,
   TapeDriveReadWriteWarning,
-  TapeDriveReadWriteError, 
+  TapeDriveReadWriteError,
   TapeDriveReadWarning,
   TapeDriveWriteWarning,
   TapeDriveReadError,
-  TapeDriveWriteError, 
+  TapeDriveWriteError,
   TapeDriveHardwareError,
-  TapeDriveUnsupportedMedia, 
+  TapeDriveUnsupportedMedia,
   TapeDriveScsiConnectionError,
-  TapeDriveTimetoClean, 
+  TapeDriveTimetoClean,
   TapeDriveCleanDriveNow,
-  TapeDriveMediaLifeExpired, 
+  TapeDriveMediaLifeExpired,
   TapeDriveSnappedTape
 } TAPE_DRIVE_PROBLEM_TYPE;
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

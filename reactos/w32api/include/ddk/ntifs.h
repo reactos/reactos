@@ -32,10 +32,10 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 #include "ntapi.h"
+
+#pragma pack(push,4)
 
 #define VER_PRODUCTBUILD 10000
 
@@ -315,6 +315,7 @@ extern PACL                         SeSystemDefaultDacl;
 #define TOKEN_ADJUST_PRIVILEGES         (0x0020)
 #define TOKEN_ADJUST_GROUPS             (0x0040)
 #define TOKEN_ADJUST_DEFAULT            (0x0080)
+#define TOKEN_ADJUST_SESSIONID          (0x0100)
 
 #define TOKEN_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED |\
                           TOKEN_ASSIGN_PRIMARY     |\
@@ -324,7 +325,8 @@ extern PACL                         SeSystemDefaultDacl;
                           TOKEN_QUERY_SOURCE       |\
                           TOKEN_ADJUST_PRIVILEGES  |\
                           TOKEN_ADJUST_GROUPS      |\
-                          TOKEN_ADJUST_DEFAULT)
+                          TOKEN_ADJUST_DEFAULT     |\
+                          TOKEN_ADJUST_SESSIONID)
 
 #define TOKEN_READ       (STANDARD_RIGHTS_READ     |\
                           TOKEN_QUERY)
@@ -462,7 +464,6 @@ extern PACL                         SeSystemDefaultDacl;
 
 typedef PVOID PEJOB;
 typedef PVOID OPLOCK, *POPLOCK;
-typedef PVOID PWOW64_PROCESS;
 
 typedef struct _CACHE_MANAGER_CALLBACKS         *PCACHE_MANAGER_CALLBACKS;
 typedef struct _EPROCESS_QUOTA_BLOCK            *PEPROCESS_QUOTA_BLOCK;
@@ -528,61 +529,13 @@ typedef enum _OBJECT_INFO_CLASS {
     ObjectProtectionInfo
 } OBJECT_INFO_CLASS;
 
-typedef struct _HARDWARE_PTE_X86 {
-    ULONG Valid             : 1;
-    ULONG Write             : 1;
-    ULONG Owner             : 1;
-    ULONG WriteThrough      : 1;
-    ULONG CacheDisable      : 1;
-    ULONG Accessed          : 1;
-    ULONG Dirty             : 1;
-    ULONG LargePage         : 1;
-    ULONG Global            : 1;
-    ULONG CopyOnWrite       : 1;
-    ULONG Prototype         : 1;
-    ULONG reserved          : 1;
-    ULONG PageFrameNumber   : 20;
-} HARDWARE_PTE_X86, *PHARDWARE_PTE_X86;
-
 typedef struct _KAPC_STATE {
     LIST_ENTRY  ApcListHead[2];
     PKPROCESS   Process;
     BOOLEAN     KernelApcInProgress;
     BOOLEAN     KernelApcPending;
     BOOLEAN     UserApcPending;
-} KAPC_STATE, *PKAPC_STATE;
-
-typedef struct _KGDTENTRY {
-    USHORT LimitLow;
-    USHORT BaseLow;
-    union {
-        struct {
-            UCHAR BaseMid;
-            UCHAR Flags1;
-            UCHAR Flags2;
-            UCHAR BaseHi;
-        } Bytes;
-        struct {
-            ULONG BaseMid       : 8;
-            ULONG Type          : 5;
-            ULONG Dpl           : 2;
-            ULONG Pres          : 1;
-            ULONG LimitHi       : 4;
-            ULONG Sys           : 1;
-            ULONG Reserved_0    : 1;
-            ULONG Default_Big   : 1;
-            ULONG Granularity   : 1;
-            ULONG BaseHi        : 8;
-        } Bits;
-    } HighWord;
-} KGDTENTRY, *PKGDTENTRY;
-
-typedef struct _KIDTENTRY {
-    USHORT Offset;
-    USHORT Selector;
-    USHORT Access;
-    USHORT ExtendedOffset;
-} KIDTENTRY, *PKIDTENTRY;
+} KAPC_STATE, *PKAPC_STATE, *__restrict PRKAPC_STATE;
 
 #if (VER_PRODUCTBUILD >= 2600)
 
@@ -750,102 +703,6 @@ typedef struct _EPROCESS_QUOTA_BLOCK {
     ULONG                   ProcessCount;
 } EPROCESS_QUOTA_BLOCK, *PEPROCESS_QUOTA_BLOCK;
 
-/*
- * When needing these parameters cast your PIO_STACK_LOCATION to
- * PEXTENDED_IO_STACK_LOCATION
- */
-#if !defined(_ALPHA_)
-#include <pshpack4.h>
-#endif
-typedef struct _EXTENDED_IO_STACK_LOCATION {
-
-    /* Included for padding */
-    UCHAR MajorFunction;
-    UCHAR MinorFunction;
-    UCHAR Flags;
-    UCHAR Control;
-
-    union {
-
-       struct {
-          PIO_SECURITY_CONTEXT              SecurityContext;
-          ULONG                             Options;
-          USHORT                            Reserved;
-          USHORT                            ShareAccess;
-          PMAILSLOT_CREATE_PARAMETERS       Parameters;
-       } CreateMailslot;
-
-        struct {
-            PIO_SECURITY_CONTEXT            SecurityContext;
-            ULONG                           Options;
-            USHORT                          Reserved;
-            USHORT                          ShareAccess;
-            PNAMED_PIPE_CREATE_PARAMETERS   Parameters;
-        } CreatePipe;
-
-        struct {
-            ULONG                           OutputBufferLength;
-            ULONG                           InputBufferLength;
-            ULONG                           FsControlCode;
-            PVOID                           Type3InputBuffer;
-        } FileSystemControl;
-
-        struct {
-            PLARGE_INTEGER                  Length;
-            ULONG                           Key;
-            LARGE_INTEGER                   ByteOffset;
-        } LockControl;
-
-        struct {
-            ULONG                           Length;
-            ULONG                           CompletionFilter;
-        } NotifyDirectory;
-
-        struct {
-            ULONG                           Length;
-            PUNICODE_STRING                 FileName;
-            FILE_INFORMATION_CLASS          FileInformationClass;
-            ULONG                           FileIndex;
-        } QueryDirectory;
-
-        struct {
-            ULONG                           Length;
-            PVOID                           EaList;
-            ULONG                           EaListLength;
-            ULONG                           EaIndex;
-        } QueryEa;
-
-        struct {
-            ULONG                           Length;
-            PSID                            StartSid;
-            PFILE_GET_QUOTA_INFORMATION     SidList;
-            ULONG                           SidListLength;
-        } QueryQuota;
-
-        struct {
-            ULONG                           Length;
-        } SetEa;
-
-        struct {
-            ULONG                           Length;
-        } SetQuota;
-
-        struct {
-            ULONG                           Length;
-            FS_INFORMATION_CLASS            FsInformationClass;
-        } SetVolume;
-
-    } Parameters;
-    PDEVICE_OBJECT  DeviceObject;
-    PFILE_OBJECT  FileObject;
-    PIO_COMPLETION_ROUTINE  CompletionRoutine;
-    PVOID  Context;
-
-} EXTENDED_IO_STACK_LOCATION, *PEXTENDED_IO_STACK_LOCATION;
-#if !defined(_ALPHA_)
-#include <poppack.h>
-#endif
-
 typedef struct _FILE_ACCESS_INFORMATION {
     ACCESS_MASK AccessFlags;
 } FILE_ACCESS_INFORMATION, *PFILE_ACCESS_INFORMATION;
@@ -873,7 +730,7 @@ typedef struct _FILE_BOTH_DIR_INFORMATION {
 
 typedef struct _FILE_COMPLETION_INFORMATION {
     HANDLE  Port;
-    ULONG   Key;
+    PVOID   Key;
 } FILE_COMPLETION_INFORMATION, *PFILE_COMPLETION_INFORMATION;
 
 typedef struct _FILE_COMPRESSION_INFORMATION {
@@ -907,35 +764,35 @@ typedef struct _FILE_DIRECTORY_INFORMATION {
 } FILE_DIRECTORY_INFORMATION, *PFILE_DIRECTORY_INFORMATION;
 
 typedef struct _FILE_FULL_DIRECTORY_INFORMATION {
-		ULONG	          NextEntryOffset;
-		ULONG	          FileIndex;
-		LARGE_INTEGER   CreationTime;
-		LARGE_INTEGER   LastAccessTime;
-		LARGE_INTEGER   LastWriteTime;
-		LARGE_INTEGER   ChangeTime;
-		LARGE_INTEGER   EndOfFile;
-		LARGE_INTEGER   AllocationSize;
-		ULONG           FileAttributes;
-		ULONG           FileNameLength;
-		ULONG           EaSize;
-		WCHAR           FileName[0];
+    ULONG           NextEntryOffset;
+    ULONG           FileIndex;
+    LARGE_INTEGER   CreationTime;
+    LARGE_INTEGER   LastAccessTime;
+    LARGE_INTEGER   LastWriteTime;
+    LARGE_INTEGER   ChangeTime;
+    LARGE_INTEGER   EndOfFile;
+    LARGE_INTEGER   AllocationSize;
+    ULONG           FileAttributes;
+    ULONG           FileNameLength;
+    ULONG           EaSize;
+    WCHAR           FileName[0];
 } FILE_FULL_DIRECTORY_INFORMATION, *PFILE_FULL_DIRECTORY_INFORMATION;
 
 typedef struct _FILE_BOTH_DIRECTORY_INFORMATION {
-		ULONG         NextEntryOffset;
-		ULONG	        FileIndex;
-		LARGE_INTEGER CreationTime;
-		LARGE_INTEGER LastAccessTime;
-		LARGE_INTEGER LastWriteTime;
-		LARGE_INTEGER ChangeTime;
-		LARGE_INTEGER EndOfFile;
-		LARGE_INTEGER AllocationSize;
-		ULONG         FileAttributes;
-		ULONG         FileNameLength;
-		ULONG         EaSize;
-		CHAR          ShortNameLength;
-		WCHAR         ShortName[12];
-		WCHAR         FileName[0];
+    ULONG         NextEntryOffset;
+    ULONG         FileIndex;
+    LARGE_INTEGER CreationTime;
+    LARGE_INTEGER LastAccessTime;
+    LARGE_INTEGER LastWriteTime;
+    LARGE_INTEGER ChangeTime;
+    LARGE_INTEGER EndOfFile;
+    LARGE_INTEGER AllocationSize;
+    ULONG         FileAttributes;
+    ULONG         FileNameLength;
+    ULONG         EaSize;
+    CHAR          ShortNameLength;
+    WCHAR         ShortName[12];
+    WCHAR         FileName[0];
 } FILE_BOTH_DIRECTORY_INFORMATION, *PFILE_BOTH_DIRECTORY_INFORMATION;
 
 typedef struct _FILE_EA_INFORMATION {
@@ -1274,6 +1131,18 @@ typedef struct _FILE_TRACKING_INFORMATION {
     CHAR    ObjectInformation[1];
 } FILE_TRACKING_INFORMATION, *PFILE_TRACKING_INFORMATION;
 
+#if (VER_PRODUCTBUILD >= 2195)
+typedef struct _FILE_ZERO_DATA_INFORMATION {
+    LARGE_INTEGER FileOffset;
+    LARGE_INTEGER BeyondFinalZero;
+} FILE_ZERO_DATA_INFORMATION, *PFILE_ZERO_DATA_INFORMATION;
+
+typedef struct FILE_ALLOCATED_RANGE_BUFFER {
+    LARGE_INTEGER FileOffset;
+    LARGE_INTEGER Length;
+} FILE_ALLOCATED_RANGE_BUFFER, *PFILE_ALLOCATED_RANGE_BUFFER;
+#endif /* (VER_PRODUCTBUILD >= 2195) */
+
 typedef struct _FSRTL_COMMON_FCB_HEADER {
     CSHORT          NodeTypeCode;
     CSHORT          NodeByteSize;
@@ -1300,13 +1169,23 @@ typedef struct _GENERATE_NAME_CONTEXT {
     ULONG   LastIndexValue;
 } GENERATE_NAME_CONTEXT, *PGENERATE_NAME_CONTEXT;
 
+typedef struct _HANDLE_TABLE_ENTRY_INFO {
+    ULONG AuditMask;
+} HANDLE_TABLE_ENTRY_INFO, *PHANDLE_TABLE_ENTRY_INFO;
+
 typedef struct _HANDLE_TABLE_ENTRY {
-    PVOID   Object;
-    ULONG   ObjectAttributes;
-    ULONG   GrantedAccess;
-    USHORT  GrantedAccessIndex;
-    USHORT  CreatorBackTraceIndex;
-    ULONG   NextFreeTableEntry;
+    union {
+        PVOID Object;
+        ULONG ObAttributes;
+        PHANDLE_TABLE_ENTRY_INFO InfoTable;
+        ULONG_PTR Value;
+    } u1;
+    union {
+        ULONG GrantedAccess;
+        USHORT GrantedAccessIndex;
+        LONG NextFreeTableEntry;
+    } u2;
+    USHORT CreatorBackTraceIndex;
 } HANDLE_TABLE_ENTRY, *PHANDLE_TABLE_ENTRY;
 
 typedef struct _MAPPING_PAIR {
@@ -1490,6 +1369,7 @@ typedef struct _QUERY_PATH_RESPONSE {
     ULONG LengthAccepted;
 } QUERY_PATH_RESPONSE, *PQUERY_PATH_RESPONSE;
 
+#pragma pack(push,8)
 typedef struct _RETRIEVAL_POINTERS_BUFFER {
     ULONG               ExtentCount;
     LARGE_INTEGER       StartingVcn;
@@ -1498,6 +1378,7 @@ typedef struct _RETRIEVAL_POINTERS_BUFFER {
         LARGE_INTEGER   Lcn;
     } Extents[1];
 } RETRIEVAL_POINTERS_BUFFER, *PRETRIEVAL_POINTERS_BUFFER;
+#pragma pack(pop)
 
 typedef struct _RTL_SPLAY_LINKS {
     struct _RTL_SPLAY_LINKS *Parent;
@@ -1570,19 +1451,19 @@ typedef struct _SECTION_BASIC_INFORMATION {
 } SECTION_BASIC_INFORMATION, *PSECTION_BASIC_INFORMATION;
 
 typedef struct _SECTION_IMAGE_INFORMATION {
-    PVOID   EntryPoint;
-    ULONG   Unknown1;
-    ULONG   StackReserve;
-    ULONG   StackCommit;
-    ULONG   Subsystem;
-    USHORT  MinorSubsystemVersion;
-    USHORT  MajorSubsystemVersion;
-    ULONG   Unknown2;
-    ULONG   Characteristics;
-    USHORT  ImageNumber;
-    BOOLEAN Executable;
-    UCHAR   Unknown3;
-    ULONG   Unknown4[3];
+    ULONG     EntryPoint;
+    ULONG     Unknown1;
+    ULONG_PTR StackReserve;
+    ULONG_PTR StackCommit;
+    ULONG     Subsystem;
+    USHORT    MinorSubsystemVersion;
+    USHORT    MajorSubsystemVersion;
+    ULONG     Unknown2;
+    ULONG     Characteristics;
+    USHORT    ImageNumber;
+    BOOLEAN   Executable;
+    UCHAR     Unknown3;
+    ULONG     Unknown4[3];
 } SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
 
 #if (VER_PRODUCTBUILD >= 2600)
@@ -2339,6 +2220,31 @@ VOID
 NTAPI
 FsRtlDeregisterUncProvider (
     IN HANDLE Handle
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlDissectDbcs (
+    IN ANSI_STRING Name,
+    OUT PANSI_STRING FirstPart,
+    OUT PANSI_STRING RemainingPart
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlDissectName (
+    IN UNICODE_STRING Name,
+    OUT PUNICODE_STRING FirstPart,
+    OUT PUNICODE_STRING RemainingPart
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlDoesDbcsContainWildCards (
+    IN PANSI_STRING Name
 );
 
 NTKERNELAPI
@@ -3346,7 +3252,7 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 PsLookupProcessByProcessId (
-    IN PVOID        ProcessId,
+    IN HANDLE       ProcessId,
     OUT PEPROCESS   *Process
 );
 
@@ -3363,7 +3269,7 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 PsLookupThreadByThreadId (
-    IN PVOID        UniqueThreadId,
+    IN HANDLE       UniqueThreadId,
     OUT PETHREAD    *Thread
 );
 
@@ -3404,9 +3310,9 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlAbsoluteToSelfRelativeSD (
-    IN PSECURITY_DESCRIPTOR     AbsoluteSecurityDescriptor,
-    IN OUT PSECURITY_DESCRIPTOR SelfRelativeSecurityDescriptor,
-    IN PULONG                   BufferLength
+    IN PSECURITY_DESCRIPTOR              AbsoluteSecurityDescriptor,
+    IN OUT PSECURITY_DESCRIPTOR_RELATIVE SelfRelativeSecurityDescriptor,
+    IN PULONG                            BufferLength
 );
 
 NTSYSAPI
@@ -3650,17 +3556,17 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlSelfRelativeToAbsoluteSD (
-    IN PSECURITY_DESCRIPTOR     SelfRelativeSD,
-    OUT PSECURITY_DESCRIPTOR    AbsoluteSD,
-    IN PULONG                   AbsoluteSDSize,
-    IN PACL                     Dacl,
-    IN PULONG                   DaclSize,
-    IN PACL                     Sacl,
-    IN PULONG                   SaclSize,
-    IN PSID                     Owner,
-    IN PULONG                   OwnerSize,
-    IN PSID                     PrimaryGroup,
-    IN PULONG                   PrimaryGroupSize
+    IN PSECURITY_DESCRIPTOR_RELATIVE SelfRelativeSD,
+    OUT PSECURITY_DESCRIPTOR         AbsoluteSD,
+    IN PULONG                        AbsoluteSDSize,
+    IN PACL                          Dacl,
+    IN PULONG                        DaclSize,
+    IN PACL                          Sacl,
+    IN PULONG                        SaclSize,
+    IN PSID                          Owner,
+    IN PULONG                        OwnerSize,
+    IN PSID                          PrimaryGroup,
+    IN PULONG                        PrimaryGroupSize
 );
 
 #endif /* (VER_PRODUCTBUILD >= 2195) */
@@ -4356,7 +4262,7 @@ NTSTATUS
 NTAPI
 ZwPulseEvent (
     IN HANDLE   EventHandle,
-    OUT PULONG  PreviousState OPTIONAL
+    OUT PLONG   PreviousState OPTIONAL
 );
 
 NTSYSAPI
@@ -4506,7 +4412,7 @@ NTSTATUS
 NTAPI
 ZwResetEvent (
     IN HANDLE   EventHandle,
-    OUT PULONG  PreviousState OPTIONAL
+    OUT PLONG   PreviousState OPTIONAL
 );
 
 #if (VER_PRODUCTBUILD >= 2195)
@@ -4564,7 +4470,7 @@ NTSTATUS
 NTAPI
 ZwSetEvent (
     IN HANDLE   EventHandle,
-    OUT PULONG  PreviousState OPTIONAL
+    OUT PLONG   PreviousState OPTIONAL
 );
 
 NTSYSAPI

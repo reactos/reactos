@@ -45,7 +45,6 @@ typedef struct urlinvokecommandinfo {
 } URLINVOKECOMMANDINFO,*PURLINVOKECOMMANDINFO;
 typedef const URLINVOKECOMMANDINFO CURLINVOKECOMMANDINFO;
 typedef const URLINVOKECOMMANDINFO *PCURLINVOKECOMMANDINFO;
-#undef INTERFACE
 #define INTERFACE IUniformResourceLocator
 DECLARE_INTERFACE_(IUniformResourceLocator,IUnknown)
 {
@@ -56,6 +55,7 @@ DECLARE_INTERFACE_(IUniformResourceLocator,IUnknown)
  STDMETHOD(GetURL)(THIS_ PSTR*) PURE;
  STDMETHOD(InvokeCommand)(THIS_ PURLINVOKECOMMANDINFO) PURE;
 };
+#undef INTERFACE
 typedef IUniformResourceLocator *PIUniformResourceLocator;
 typedef const IUniformResourceLocator CIUniformResourceLocator;
 typedef const IUniformResourceLocator *PCIUniformResourceLocator;

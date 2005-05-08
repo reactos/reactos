@@ -46,9 +46,17 @@ extern "C" {
 #define NIM_ADD	0
 #define NIM_MODIFY	1
 #define NIM_DELETE	2
+#if _WIN32_IE >= 0x0500
+#define NOTIFYICON_VERSION 3
+#define NIM_SETFOCUS	3
+#define NIM_SETVERSION	4
+#endif
 #define NIF_MESSAGE	1
 #define NIF_ICON	2
 #define NIF_TIP	4
+#define NIF_STATE	8
+#define NIS_HIDDEN	1
+#define NIS_SHAREDICON	2
 #define SE_ERR_FNF	2
 #define SE_ERR_PNF	3
 #define SE_ERR_ACCESSDENIED	5
@@ -80,6 +88,8 @@ extern "C" {
 #define PO_RENAME 20
 #define PO_PORTCHANGE 32
 #define PO_REN_PORT 52
+#define SHGFI_ADDOVERLAYS	32
+#define SHGFI_OVERLAYINDEX	64
 #define SHGFI_ICON	256
 #define SHGFI_DISPLAYNAME	512
 #define SHGFI_TYPENAME	1024
@@ -112,6 +122,7 @@ typedef struct _AppBarData {
 	LPARAM lParam;
 } APPBARDATA,*PAPPBARDATA;
 DECLARE_HANDLE(HDROP);
+
 typedef struct _NOTIFYICONDATAA {
 	DWORD cbSize;
 	HWND hWnd;
@@ -119,8 +130,25 @@ typedef struct _NOTIFYICONDATAA {
 	UINT uFlags;
 	UINT uCallbackMessage;
 	HICON hIcon;
+#if _WIN32_IE >= 0x0500
+	CHAR szTip[128];
+	DWORD dwState;
+	DWORD dwStateMask;
+	CHAR szInfo[256];
+	_ANONYMOUS_UNION union {
+		UINT uTimeout;
+		UINT uVersion;
+	} DUMMYUNIONNAME;
+	CHAR szInfoTitle[64];
+	DWORD dwInfoFlags;
+#else
 	CHAR szTip[64];
+#endif
+#if _WIN32_IE >= 0x600
+	GUID guidItem;
+#endif
 } NOTIFYICONDATAA,*PNOTIFYICONDATAA;
+
 typedef struct _NOTIFYICONDATAW {
 	DWORD cbSize;
 	HWND hWnd;
@@ -128,8 +156,25 @@ typedef struct _NOTIFYICONDATAW {
 	UINT uFlags;
 	UINT uCallbackMessage;
 	HICON hIcon;
+#if _WIN32_IE >= 0x0500
+	WCHAR szTip[128];
+	DWORD dwState;
+	DWORD dwStateMask;
+	WCHAR szInfo[256];
+	_ANONYMOUS_UNION union {
+		UINT uTimeout;
+		UINT uVersion;
+	} DUMMYUNIONNAME;
+	WCHAR szInfoTitle[64];
+	DWORD dwInfoFlags;
+#else
 	WCHAR szTip[64];
+#endif
+#if _WIN32_IE >= 0x600
+	GUID guidItem;
+#endif
 } NOTIFYICONDATAW,*PNOTIFYICONDATAW;
+
 typedef struct _SHELLEXECUTEINFOA {
 	DWORD cbSize;
 	ULONG fMask;
@@ -203,6 +248,18 @@ typedef struct _SHQUERYRBINFO {
 	__int64 i64Size;
 	__int64 i64NumItems;
 } SHQUERYRBINFO, *LPSHQUERYRBINFO;
+typedef struct _SHNAMEMAPPINGA {
+	LPSTR	pszOldPath;
+	LPSTR	pszNewPath;
+	int	cchOldPath;
+	int	cchNewPath;
+} SHNAMEMAPPINGA, *LPSHNAMEMAPPINGA;
+typedef struct _SHNAMEMAPPINGW {
+	LPWSTR	pszOldPath;
+	LPWSTR	pszNewPath;
+	int	cchOldPath;
+	int	cchNewPath;
+} SHNAMEMAPPINGW, *LPSHNAMEMAPPINGW;
 #include <poppack.h>
 
 LPWSTR * WINAPI CommandLineToArgvW(LPCWSTR,int*);
@@ -211,8 +268,8 @@ void WINAPI DragFinish(HDROP);
 UINT WINAPI DragQueryFileA(HDROP,UINT,LPSTR,UINT);
 UINT WINAPI DragQueryFileW(HDROP,UINT,LPWSTR,UINT);
 BOOL WINAPI DragQueryPoint(HDROP,LPPOINT);
-HICON WINAPI ExtractAssociatedIconA(HINSTANCE,LPCSTR,PWORD);
-HICON WINAPI ExtractAssociatedIconW(HINSTANCE,LPCWSTR,PWORD);
+HICON WINAPI ExtractAssociatedIconA(HINSTANCE,LPSTR,PWORD);
+HICON WINAPI ExtractAssociatedIconW(HINSTANCE,LPWSTR,PWORD);
 HICON WINAPI ExtractIconA(HINSTANCE,LPCSTR,UINT);
 HICON WINAPI ExtractIconW(HINSTANCE,LPCWSTR,UINT);
 UINT WINAPI ExtractIconExA(LPCSTR,int,HICON*,HICON*,UINT);
@@ -243,6 +300,8 @@ typedef NOTIFYICONDATAW NOTIFYICONDATA,*PNOTIFYICONDATA;
 typedef SHELLEXECUTEINFOW SHELLEXECUTEINFO,*LPSHELLEXECUTEINFO;
 typedef SHFILEOPSTRUCTW SHFILEOPSTRUCT,*LPSHFILEOPSTRUCT;
 typedef SHFILEINFOW SHFILEINFO;
+typedef SHNAMEMAPPINGW SHNAMEMAPPING;
+typedef LPSHNAMEMAPPINGW LPSHNAMEMAPPING;
 #define DragQueryFile DragQueryFileW
 #define ExtractAssociatedIcon ExtractAssociatedIconW
 #define ExtractIcon ExtractIconW
@@ -262,6 +321,8 @@ typedef NOTIFYICONDATAA NOTIFYICONDATA,*PNOTIFYICONDATA;
 typedef SHELLEXECUTEINFOA SHELLEXECUTEINFO,*LPSHELLEXECUTEINFO;
 typedef SHFILEOPSTRUCTA SHFILEOPSTRUCT,*LPSHFILEOPSTRUCT;
 typedef SHFILEINFOA SHFILEINFO;
+typedef SHNAMEMAPPINGA SHNAMEMAPPING;
+typedef LPSHNAMEMAPPINGA LPSHNAMEMAPPING;
 #define DragQueryFile DragQueryFileA
 #define ExtractAssociatedIcon ExtractAssociatedIconA
 #define ExtractIcon ExtractIconA

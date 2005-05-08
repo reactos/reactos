@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 #include "hidusage.h"
 
@@ -85,6 +83,19 @@ typedef struct _USAGE_AND_PAGE {
   USAGE  Usage;
   USAGE  UsagePage;
 } USAGE_AND_PAGE, *PUSAGE_AND_PAGE;
+
+typedef struct _HIDD_ATTRIBUTES {
+  ULONG   Size;
+  USHORT  VendorID;
+  USHORT  ProductID;
+  USHORT  VersionNumber;
+} HIDD_ATTRIBUTES, *PHIDD_ATTRIBUTES;
+
+typedef struct _HIDD_CONFIGURATION {
+  PVOID  cookie;
+  ULONG  size;
+  ULONG  RingBufferSize;
+} HIDD_CONFIGURATION, *PHIDD_CONFIGURATION;
 
 HIDAPI
 NTSTATUS
@@ -258,7 +269,7 @@ typedef enum _HIDP_REPORT_TYPE {
 #define HIDP_STATUS_I8242_TRANS_UNKNOWN     HIDP_STATUS_I8042_TRANS_UNKNOWN
 
 
-
+#if !defined(_HIDPI_NO_FUNCTION_MACROS_)
 /*
  * NTSTATUS
  * HidP_GetButtonCaps(
@@ -302,6 +313,8 @@ typedef enum _HIDP_REPORT_TYPE {
  */
 #define HidP_GetButtonsEx(RT, LC, BL, UL, PD, R, RL)  \
   HidP_GetUsagesEx(RT, LC, BL, UL, PD, R, RL)
+
+#endif /* _HIDPI_NO_FUNCTION_MACROS_ */
 
 HIDAPI
 NTSTATUS
@@ -428,6 +441,8 @@ HidP_GetUsageValueArray(
   IN PCHAR  Report,
   IN ULONG  ReportLength);
 
+#if !defined(_HIDPI_NO_FUNCTION_MACROS_)
+
 /*
  * NTSTATUS
  * HidP_GetValueCaps(
@@ -439,6 +454,8 @@ HidP_GetUsageValueArray(
 #define HidP_GetValueCaps(_Type_, _Caps_, _Len_, _Data_) \
   HidP_GetSpecificValueCaps (_Type_, 0, 0, 0, _Caps_, _Len_, _Data_)
 
+#endif /* _HIDPI_NO_FUNCTION_MACROS_ */
+
 HIDAPI
 NTSTATUS
 DDKAPI
@@ -449,6 +466,8 @@ HidP_InitializeReportForID(
   IN OUT PCHAR  Report,
   IN ULONG  ReportLength);
 
+#if !defined(_HIDPI_NO_FUNCTION_MACROS_)
+
 /*
  * BOOLEAN
  * HidP_IsSameUsageAndPage(
@@ -456,6 +475,8 @@ HidP_InitializeReportForID(
  *   USAGE_AND_PAGE  u2);
  */
 #define HidP_IsSameUsageAndPage(u1, u2) ((* (PULONG) &u1) == (* (PULONG) &u2))
+
+#endif /* _HIDPI_NO_FUNCTION_MACROS_ */
 
 HIDAPI
 ULONG
@@ -472,6 +493,8 @@ HidP_MaxUsageListLength(
   IN USAGE  UsagePage  OPTIONAL,
   IN PHIDP_PREPARSED_DATA  PreparsedData);
 
+#if !defined(_HIDPI_NO_FUNCTION_MACROS_)
+
 /*
  * NTSTATUS
  * HidP_SetButtons(
@@ -486,6 +509,8 @@ HidP_MaxUsageListLength(
  */
 #define HidP_SetButtons(RT, UP, LC, UL1, UL2, PD, R, RL) \
   HidP_SetUsages(RT, UP, LC, UL1, UL2, PD, R, RL)
+
+#endif /* _HIDPI_NO_FUNCTION_MACROS_ */
 
 HIDAPI
 NTSTATUS
@@ -551,6 +576,8 @@ HidP_SetUsageValueArray(
   OUT PCHAR  Report,
   IN ULONG  ReportLength);
 
+#if !defined(_HIDPI_NO_FUNCTION_MACROS_)
+
 /*
  * NTSTATUS
  * HidP_UnsetButtons(
@@ -565,6 +592,8 @@ HidP_SetUsageValueArray(
  */
 #define HidP_UnsetButtons(RT, UP, LC, UL1, UL2, PD, R, RL) \
   HidP_UnsetUsages(RT, UP, LC, UL1, UL2, PD, R, RL)
+
+#endif /* _HIDPI_NO_FUNCTION_MACROS_ */
 
 HIDAPI
 NTSTATUS
@@ -598,8 +627,6 @@ HidP_UsageListDifference(
   OUT PUSAGE  BreakUsageList,
   OUT PUSAGE  MakeUsageList,
   IN ULONG  UsageListLength);
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

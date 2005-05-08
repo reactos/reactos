@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 #include "d4iface.h"
 
@@ -98,8 +96,6 @@ typedef struct _DOT4_DRIVER_CMD {
   ULONG  ulOffset;
   ULONG  ulTimeout;
 } DOT4_DRIVER_CMD, *PDOT4_DRIVER_CMD;
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

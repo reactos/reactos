@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 /*
 ** Definitions specific to this Device Driver Kit
 */
@@ -103,6 +101,8 @@ DECLARE_INTERNAL_OBJECT(SECTION_OBJECT)
 /* FIXME: Unknown definitions */
 struct _SET_PARTITION_INFORMATION_EX;
 typedef ULONG WAIT_TYPE;
+#define WaitAll 0
+#define WaitAny 1
 typedef HANDLE TRACEHANDLE;
 typedef PVOID PWMILIB_CONTEXT;
 typedef PVOID PSYSCTL_IRP_DISPOSITION;
@@ -121,11 +121,23 @@ static __inline struct _KPCR * KeGetCurrentKPCR(
 {
   ULONG Value;
 
-  __asm__ __volatile__ ("movl %%fs:0x18, %0\n\t"
+  __asm__ __volatile__ ("movl %%fs:0x1C, %0\n\t"
 	  : "=r" (Value)
     : /* no inputs */
   );
   return (struct _KPCR *) Value;
+}
+
+static __inline struct _KPRCB * KeGetCurrentPrcb(
+  VOID)
+{
+  ULONG Value;
+
+  __asm__ __volatile__ ("movl %%fs:0x20, %0\n\t"
+	  : "=r" (Value)
+    : /* no inputs */
+  );
+  return (struct _KPRCB *) Value;
 }
 
 /*
@@ -136,7 +148,7 @@ typedef LONG KPRIORITY;
 typedef UCHAR KIRQL, *PKIRQL;
 typedef ULONG_PTR KSPIN_LOCK, *PKSPIN_LOCK;
 typedef ULONG KAFFINITY, *PKAFFINITY;
-typedef CCHAR KPROCESSOR_MODE;
+typedef UCHAR KPROCESSOR_MODE;
 
 typedef enum _MODE {
   KernelMode,
@@ -157,9 +169,12 @@ typedef struct _HAL_DISPATCH_TABLE *PHAL_DISPATCH_TABLE;
 typedef struct _HAL_PRIVATE_DISPATCH_TABLE *PHAL_PRIVATE_DISPATCH_TABLE;
 typedef struct _DRIVE_LAYOUT_INFORMATION *PDRIVE_LAYOUT_INFORMATION;
 typedef struct _DRIVE_LAYOUT_INFORMATION_EX *PDRIVE_LAYOUT_INFORMATION_EX;
+typedef struct _NAMED_PIPE_CREATE_PARAMETERS *PNAMED_PIPE_CREATE_PARAMETERS;
+typedef struct _MAILSLOT_CREATE_PARAMETERS *PMAILSLOT_CREATE_PARAMETERS;
+typedef struct _FILE_GET_QUOTA_INFORMATION *PFILE_GET_QUOTA_INFORMATION;
 
 /* Constants */
-#define	MAXIMUM_PROCESSORS                32
+#define MAXIMUM_PROCESSORS                32
 
 #define MAXIMUM_WAIT_OBJECTS              64
 
@@ -179,6 +194,9 @@ typedef struct _DRIVE_LAYOUT_INFORMATION_EX *PDRIVE_LAYOUT_INFORMATION_EX;
 #define FILE_OVERWRITTEN                  0x00000003
 #define FILE_EXISTS                       0x00000004
 #define FILE_DOES_NOT_EXIST               0x00000005
+
+#define FILE_USE_FILE_POINTER_POSITION    0xfffffffe
+#define FILE_WRITE_TO_END_OF_FILE         0xffffffff
 
 /* also in winnt.h */
 #define FILE_LIST_DIRECTORY               0x00000001
@@ -428,100 +446,100 @@ typedef enum _IO_ALLOCATION_ACTION {
   DeallocateObjectKeepRegisters
 } IO_ALLOCATION_ACTION, *PIO_ALLOCATION_ACTION;
 
-typedef IO_ALLOCATION_ACTION DDKAPI
-(*PDRIVER_CONTROL)(
+typedef IO_ALLOCATION_ACTION
+(DDKAPI *PDRIVER_CONTROL)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN struct _IRP  *Irp,
   IN PVOID  MapRegisterBase,
   IN PVOID  Context);
 
-typedef VOID DDKAPI
-(*PDRIVER_LIST_CONTROL)(
+typedef VOID
+(DDKAPI *PDRIVER_LIST_CONTROL)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN struct _IRP  *Irp,
   IN struct _SCATTER_GATHER_LIST  *ScatterGather,
   IN PVOID  Context);
 
-typedef NTSTATUS DDKAPI
-(*PDRIVER_ADD_DEVICE)(
+typedef NTSTATUS
+(DDKAPI *PDRIVER_ADD_DEVICE)(
   IN struct _DRIVER_OBJECT  *DriverObject,
   IN struct _DEVICE_OBJECT  *PhysicalDeviceObject);
 
-typedef NTSTATUS DDKAPI
-(*PIO_COMPLETION_ROUTINE)(
+typedef NTSTATUS
+(DDKAPI *PIO_COMPLETION_ROUTINE)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN struct _IRP  *Irp,
   IN PVOID  Context);
 
-typedef VOID DDKAPI
-(*PDRIVER_CANCEL)(
+typedef VOID
+(DDKAPI *PDRIVER_CANCEL)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN struct _IRP  *Irp);
 
-typedef VOID DDKAPI
-(*PKDEFERRED_ROUTINE)(
+typedef VOID
+(DDKAPI *PKDEFERRED_ROUTINE)(
   IN struct _KDPC  *Dpc,
   IN PVOID  DeferredContext,
   IN PVOID  SystemArgument1,
   IN PVOID  SystemArgument2);
 
-typedef NTSTATUS DDKAPI
-(*PDRIVER_DISPATCH)(
+typedef NTSTATUS
+(DDKAPI *PDRIVER_DISPATCH)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN struct _IRP  *Irp);
 
-typedef VOID DDKAPI
-(*PIO_DPC_ROUTINE)(
+typedef VOID
+(DDKAPI *PIO_DPC_ROUTINE)(
   IN struct _KDPC  *Dpc,
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN struct _IRP  *Irp,
   IN PVOID  Context);
 
-typedef NTSTATUS DDKAPI
-(*PMM_DLL_INITIALIZE)(
+typedef NTSTATUS
+(DDKAPI *PMM_DLL_INITIALIZE)(
   IN PUNICODE_STRING  RegistryPath);
 
-typedef NTSTATUS DDKAPI
-(*PMM_DLL_UNLOAD)(
+typedef NTSTATUS
+(DDKAPI *PMM_DLL_UNLOAD)(
   VOID);
 
-typedef NTSTATUS DDKAPI
-(*PDRIVER_ENTRY)( 
+typedef NTSTATUS
+(DDKAPI *PDRIVER_ENTRY)( 
   IN struct _DRIVER_OBJECT  *DriverObject, 
   IN PUNICODE_STRING  RegistryPath); 
 
-typedef NTSTATUS DDKAPI
-(*PDRIVER_INITIALIZE)(
+typedef NTSTATUS
+(DDKAPI *PDRIVER_INITIALIZE)(
   IN struct _DRIVER_OBJECT  *DriverObject, 
   IN PUNICODE_STRING  RegistryPath);
 
-typedef BOOLEAN DDKAPI
-(*PKSERVICE_ROUTINE)(
+typedef BOOLEAN
+(DDKAPI *PKSERVICE_ROUTINE)(
   IN struct _KINTERRUPT  *Interrupt,
   IN PVOID  ServiceContext);
 
-typedef VOID DDKAPI
-(*PIO_TIMER_ROUTINE)(
+typedef VOID
+(DDKAPI *PIO_TIMER_ROUTINE)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN PVOID  Context);
 
-typedef VOID DDKAPI
-(*PDRIVER_REINITIALIZE)( 
+typedef VOID
+(DDKAPI *PDRIVER_REINITIALIZE)( 
   IN struct _DRIVER_OBJECT  *DriverObject, 
   IN PVOID  Context, 
   IN ULONG  Count); 
 
-typedef NTSTATUS DDKAPI
-(*PDRIVER_STARTIO)(
+typedef VOID
+(DDKAPI *PDRIVER_STARTIO)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN struct _IRP  *Irp);
 
-typedef BOOLEAN DDKAPI
-(*PKSYNCHRONIZE_ROUTINE)(
+typedef BOOLEAN
+(DDKAPI *PKSYNCHRONIZE_ROUTINE)(
   IN PVOID  SynchronizeContext);
 
-typedef VOID DDKAPI
-(*PDRIVER_UNLOAD)( 
+typedef VOID
+(DDKAPI *PDRIVER_UNLOAD)( 
   IN struct _DRIVER_OBJECT  *DriverObject); 
 
 
@@ -739,7 +757,6 @@ typedef VOID DDKAPI
   IN PVOID Context);
 
 
-
 /*
 ** System structures
 */
@@ -869,6 +886,13 @@ typedef struct _KDPC {
   PULONG_PTR  Lock;
 } KDPC, *PKDPC, *RESTRICTED_POINTER PRKDPC;
 
+typedef struct _KDPC_DATA {
+  LIST_ENTRY  DpcListHead;
+  ULONG  DpcLock;
+  ULONG  DpcQueueDepth;
+  ULONG  DpcCount;
+} KDPC_DATA, *PKDPC_DATA;
+
 typedef struct _WAIT_CONTEXT_BLOCK {
   KDEVICE_QUEUE_ENTRY  WaitQueueEntry;
   struct _DRIVER_CONTROL  *DeviceRoutine;
@@ -904,6 +928,26 @@ typedef struct _FAST_MUTEX {
   KEVENT  Event;
   ULONG  OldIrql;
 } FAST_MUTEX, *PFAST_MUTEX;
+
+typedef struct _KGATE
+{
+    DISPATCHER_HEADER Header;
+} KGATE, *PKGATE, *RESTRICTED_POINTER PRKGATE;
+
+typedef struct _KGUARDED_MUTEX
+{
+    LONG Count;
+    struct _KTHREAD* Owner;
+    ULONG Contention;
+    KGATE Gate;
+    union {
+        struct {
+            SHORT KernelApcDisable;
+            SHORT SpecialApcDisable;
+        };
+        ULONG CombinedApcDisable;
+    };
+} KGUARDED_MUTEX, *PKGUARDED_MUTEX, *RESTRICTED_POINTER PRKGUARDED_MUTEX;
 
 typedef struct _KTIMER {
   DISPATCHER_HEADER  Header;
@@ -1094,6 +1138,7 @@ typedef struct _EISA_MEMORY_TYPE {
   UCHAR  MoreEntries : 1;
 } EISA_MEMORY_TYPE, *PEISA_MEMORY_TYPE;
 
+#include <pshpack1.h>
 typedef struct _EISA_MEMORY_CONFIGURATION {
   EISA_MEMORY_TYPE  ConfigurationByte;
   UCHAR  DataSize;
@@ -1101,6 +1146,7 @@ typedef struct _EISA_MEMORY_CONFIGURATION {
   UCHAR  AddressHighByte;
   USHORT  MemorySize;
 } EISA_MEMORY_CONFIGURATION, *PEISA_MEMORY_CONFIGURATION;
+#include <poppack.h>
 
 typedef struct _EISA_IRQ_DESCRIPTOR {
   UCHAR  Interrupt : 4;
@@ -1134,6 +1180,7 @@ typedef struct _EISA_DMA_CONFIGURATION {
   DMA_CONFIGURATION_BYTE1  ConfigurationByte1;
 } EISA_DMA_CONFIGURATION, *PEISA_DMA_CONFIGURATION;
 
+#include <pshpack1.h>
 typedef struct _EISA_PORT_DESCRIPTOR {
   UCHAR  NumberPorts : 5;
   UCHAR  Reserved : 1;
@@ -1145,6 +1192,7 @@ typedef struct _EISA_PORT_CONFIGURATION {
   EISA_PORT_DESCRIPTOR  Configuration;
   USHORT  PortAddress;
 } EISA_PORT_CONFIGURATION, *PEISA_PORT_CONFIGURATION;
+#include <poppack.h>
 
 typedef struct _CM_EISA_FUNCTION_INFORMATION {
   ULONG  CompressedId;
@@ -1243,6 +1291,7 @@ typedef struct _PNP_BUS_INFORMATION {
   ULONG  BusNumber;
 } PNP_BUS_INFORMATION, *PPNP_BUS_INFORMATION;
 
+#include <pshpack1.h>
 typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
   UCHAR Type;
   UCHAR ShareDisposition;
@@ -1373,6 +1422,7 @@ typedef struct _CM_INT13_DRIVE_PARAMETER {
   USHORT  MaxHeads;
   USHORT  NumberDrives;
 } CM_INT13_DRIVE_PARAMETER, *PCM_INT13_DRIVE_PARAMETER;
+#include <poppack.h>
 
 typedef struct _CM_KEYBOARD_DEVICE_DATA {
   USHORT  Version;
@@ -1382,14 +1432,14 @@ typedef struct _CM_KEYBOARD_DEVICE_DATA {
   USHORT  KeyboardFlags;
 } CM_KEYBOARD_DEVICE_DATA, *PCM_KEYBOARD_DEVICE_DATA;
 
-#define KEYBOARD_INSERT_ON                0x80
-#define KEYBOARD_CAPS_LOCK_ON             0x40
-#define KEYBOARD_NUM_LOCK_ON              0x20
-#define KEYBOARD_SCROLL_LOCK_ON           0x10
-#define KEYBOARD_ALT_KEY_DOWN             0x08
-#define KEYBOARD_CTRL_KEY_DOWN            0x04
-#define KEYBOARD_LEFT_SHIFT_DOWN          0x02
-#define KEYBOARD_RIGHT_SHIFT_DOWN         0x01
+#define KEYBOARD_INSERT_ON                0x08
+#define KEYBOARD_CAPS_LOCK_ON             0x04
+#define KEYBOARD_NUM_LOCK_ON              0x02
+#define KEYBOARD_SCROLL_LOCK_ON           0x01
+#define KEYBOARD_ALT_KEY_DOWN             0x80
+#define KEYBOARD_CTRL_KEY_DOWN            0x40
+#define KEYBOARD_LEFT_SHIFT_DOWN          0x20
+#define KEYBOARD_RIGHT_SHIFT_DOWN         0x10
 
 typedef struct _CM_MCA_POS_DATA {
   USHORT  AdapterId;
@@ -1711,8 +1761,7 @@ typedef struct _DEVICE_OBJECT {
   USHORT  Spare1;
   struct _DEVOBJ_EXTENSION  *DeviceObjectExtension;
   PVOID  Reserved;
-} DEVICE_OBJECT;
-typedef struct _DEVICE_OBJECT *PDEVICE_OBJECT;
+} DEVICE_OBJECT, *PDEVICE_OBJECT;
 
 typedef enum _DEVICE_RELATION_TYPE {
   BusRelations,
@@ -1909,6 +1958,150 @@ typedef struct _DMA_ADAPTER {
   PDMA_OPERATIONS  DmaOperations;
 } DMA_ADAPTER;
 
+
+typedef enum _ARBITER_REQUEST_SOURCE {
+  ArbiterRequestUndefined = -1,
+  ArbiterRequestLegacyReported,
+  ArbiterRequestHalReported,
+  ArbiterRequestLegacyAssigned,
+  ArbiterRequestPnpDetected,
+  ArbiterRequestPnpEnumerated
+} ARBITER_REQUEST_SOURCE;
+
+typedef enum _ARBITER_RESULT {
+  ArbiterResultUndefined = -1,
+  ArbiterResultSuccess,
+  ArbiterResultExternalConflict,
+  ArbiterResultNullRequest
+} ARBITER_RESULT;
+
+typedef enum _ARBITER_ACTION {
+  ArbiterActionTestAllocation,
+  ArbiterActionRetestAllocation,
+  ArbiterActionCommitAllocation,
+  ArbiterActionRollbackAllocation,
+  ArbiterActionQueryAllocatedResources,
+  ArbiterActionWriteReservedResources,
+  ArbiterActionQueryConflict,
+  ArbiterActionQueryArbitrate,
+  ArbiterActionAddReserved,
+  ArbiterActionBootAllocation
+} ARBITER_ACTION, *PARBITER_ACTION;
+
+typedef struct _ARBITER_CONFLICT_INFO {
+  PDEVICE_OBJECT  OwningObject;
+  ULONGLONG  Start;
+  ULONGLONG  End;
+} ARBITER_CONFLICT_INFO, *PARBITER_CONFLICT_INFO;
+
+typedef struct _ARBITER_PARAMETERS {
+  union {
+    struct {
+      IN OUT PLIST_ENTRY  ArbitrationList;
+      IN ULONG  AllocateFromCount;
+      IN PCM_PARTIAL_RESOURCE_DESCRIPTOR  AllocateFrom;
+    } TestAllocation;
+
+    struct {
+      IN OUT PLIST_ENTRY  ArbitrationList;
+      IN ULONG  AllocateFromCount;
+      IN PCM_PARTIAL_RESOURCE_DESCRIPTOR  AllocateFrom;
+    } RetestAllocation;
+
+    struct {
+      IN OUT PLIST_ENTRY  ArbitrationList;
+    } BootAllocation;
+
+    struct {
+      OUT PCM_PARTIAL_RESOURCE_LIST  *AllocatedResources;
+    } QueryAllocatedResources;
+
+    struct {
+      IN PDEVICE_OBJECT  PhysicalDeviceObject;
+      IN PIO_RESOURCE_DESCRIPTOR  ConflictingResource;
+      OUT PULONG  ConflictCount;
+      OUT PARBITER_CONFLICT_INFO  *Conflicts;
+    } QueryConflict;
+
+    struct {
+      IN PLIST_ENTRY  ArbitrationList;
+    } QueryArbitrate;
+
+    struct {
+      IN PDEVICE_OBJECT  ReserveDevice;
+    } AddReserved;
+  } Parameters;
+} ARBITER_PARAMETERS, *PARBITER_PARAMETERS;
+
+#define ARBITER_FLAG_BOOT_CONFIG 0x00000001
+
+typedef struct _ARBITER_LIST_ENTRY {
+  LIST_ENTRY  ListEntry;
+  ULONG  AlternativeCount;
+  PIO_RESOURCE_DESCRIPTOR  Alternatives;
+  PDEVICE_OBJECT  PhysicalDeviceObject;
+  ARBITER_REQUEST_SOURCE  RequestSource;
+  ULONG  Flags;
+  LONG_PTR  WorkSpace;
+  INTERFACE_TYPE  InterfaceType;
+  ULONG  SlotNumber;
+  ULONG  BusNumber;
+  PCM_PARTIAL_RESOURCE_DESCRIPTOR  Assignment;
+  PIO_RESOURCE_DESCRIPTOR  SelectedAlternative;
+  ARBITER_RESULT  Result;
+} ARBITER_LIST_ENTRY, *PARBITER_LIST_ENTRY;
+
+typedef NTSTATUS
+(DDKAPI *PARBITER_HANDLER)(
+  IN PVOID  Context,
+  IN ARBITER_ACTION  Action,
+  IN OUT PARBITER_PARAMETERS  Parameters);
+
+#define ARBITER_PARTIAL 0x00000001
+
+typedef struct _ARBITER_INTERFACE {
+  USHORT  Size;
+  USHORT  Version;
+  PVOID  Context;
+  PINTERFACE_REFERENCE  InterfaceReference;
+  PINTERFACE_DEREFERENCE  InterfaceDereference;
+  PARBITER_HANDLER  ArbiterHandler;
+  ULONG  Flags;
+} ARBITER_INTERFACE, *PARBITER_INTERFACE;
+
+typedef enum _RESOURCE_TRANSLATION_DIRECTION {
+  TranslateChildToParent,
+  TranslateParentToChild
+} RESOURCE_TRANSLATION_DIRECTION;
+
+typedef NTSTATUS
+(DDKAPI *PTRANSLATE_RESOURCE_HANDLER)(
+  IN PVOID  Context,
+  IN PCM_PARTIAL_RESOURCE_DESCRIPTOR  Source,
+  IN RESOURCE_TRANSLATION_DIRECTION  Direction,
+  IN ULONG  AlternativesCount,
+  IN IO_RESOURCE_DESCRIPTOR  Alternatives[],
+  IN PDEVICE_OBJECT  PhysicalDeviceObject,
+  OUT PCM_PARTIAL_RESOURCE_DESCRIPTOR  Target);
+
+typedef NTSTATUS
+(DDKAPI *PTRANSLATE_RESOURCE_REQUIREMENTS_HANDLER)(
+  IN PVOID  Context,
+  IN PIO_RESOURCE_DESCRIPTOR  Source,
+  IN PDEVICE_OBJECT  PhysicalDeviceObject,
+  OUT PULONG  TargetCount,
+  OUT PIO_RESOURCE_DESCRIPTOR  *Target);
+
+typedef struct _TRANSLATOR_INTERFACE {
+  USHORT  Size;
+  USHORT  Version;
+  PVOID  Context;
+  PINTERFACE_REFERENCE  InterfaceReference;
+  PINTERFACE_DEREFERENCE  InterfaceDereference;
+  PTRANSLATE_RESOURCE_HANDLER  TranslateResources;
+  PTRANSLATE_RESOURCE_REQUIREMENTS_HANDLER  TranslateResourceRequirements;
+} TRANSLATOR_INTERFACE, *PTRANSLATOR_INTERFACE;
+
 typedef enum _FILE_INFORMATION_CLASS {
   FileDirectoryInformation = 1,
   FileFullDirectoryInformation,
@@ -1966,13 +2159,15 @@ typedef struct _FILE_NAME_INFORMATION {
   WCHAR  FileName[1];                                      
 } FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;           
 
-typedef struct FILE_BASIC_INFORMATION {
+#include <pshpack8.h>
+typedef struct _FILE_BASIC_INFORMATION {
   LARGE_INTEGER  CreationTime;
   LARGE_INTEGER  LastAccessTime;
   LARGE_INTEGER  LastWriteTime;
   LARGE_INTEGER  ChangeTime;
   ULONG  FileAttributes;
 } FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;
+#include <poppack.h>
 
 typedef struct _FILE_STANDARD_INFORMATION {
   LARGE_INTEGER  AllocationSize;
@@ -1998,7 +2193,7 @@ typedef struct _FILE_ATTRIBUTE_TAG_INFORMATION {
 } FILE_ATTRIBUTE_TAG_INFORMATION, *PFILE_ATTRIBUTE_TAG_INFORMATION;
 
 typedef struct _FILE_DISPOSITION_INFORMATION {                  
-  BOOLEAN  DoDeleteFile;                                         
+  BOOLEAN  DeleteFile;                                         
 } FILE_DISPOSITION_INFORMATION, *PFILE_DISPOSITION_INFORMATION; 
                                                                 
 typedef struct _FILE_END_OF_FILE_INFORMATION {                  
@@ -2161,7 +2356,7 @@ typedef BOOLEAN DDKAPI
 typedef BOOLEAN DDKAPI
 (*PFAST_IO_UNLOCK_ALL_BY_KEY)(
   IN struct _FILE_OBJECT  *FileObject,
-  PVOID  ProcessId,
+  PEPROCESS  ProcessId,
   ULONG  Key,
   OUT PIO_STATUS_BLOCK  IoStatus,
   IN struct _DEVICE_OBJECT  *DeviceObject);
@@ -2331,7 +2526,6 @@ typedef struct _FAST_IO_DISPATCH {
   PFAST_IO_RELEASE_FOR_CCFLUSH  ReleaseForCcFlush;
 } FAST_IO_DISPATCH, *PFAST_IO_DISPATCH;
 
-/* NOTE: PVOID for methods to avoid 'assignment from incompatible pointer type' warning */
 typedef struct _DRIVER_OBJECT {
   CSHORT  Type;
   CSHORT  Size;
@@ -2343,11 +2537,11 @@ typedef struct _DRIVER_OBJECT {
   PDRIVER_EXTENSION  DriverExtension;
   UNICODE_STRING  DriverName;
   PUNICODE_STRING  HardwareDatabase;
-  PVOID  FastIoDispatch;
-  PVOID  DriverInit;
-  PVOID  DriverStartIo;
-  PVOID  DriverUnload;
-  PVOID  MajorFunction[IRP_MJ_MAXIMUM_FUNCTION + 1];
+  PFAST_IO_DISPATCH  FastIoDispatch;
+  PDRIVER_INITIALIZE  DriverInit;
+  PDRIVER_STARTIO  DriverStartIo;
+  PDRIVER_UNLOAD  DriverUnload;
+  PDRIVER_DISPATCH  MajorFunction[IRP_MJ_MAXIMUM_FUNCTION + 1];
 } DRIVER_OBJECT;
 typedef struct _DRIVER_OBJECT *PDRIVER_OBJECT;
 
@@ -2443,6 +2637,7 @@ typedef struct _SECURITY_SUBJECT_CONTEXT {
   PVOID  ProcessAuditId;
 } SECURITY_SUBJECT_CONTEXT, *PSECURITY_SUBJECT_CONTEXT;
 
+#include <pshpack4.h>
 typedef struct _ACCESS_STATE {
   LUID  OperationID;
   BOOLEAN  SecurityEvaluated;
@@ -2465,6 +2660,7 @@ typedef struct _ACCESS_STATE {
   UNICODE_STRING  ObjectName;
   UNICODE_STRING  ObjectTypeName;
 } ACCESS_STATE, *PACCESS_STATE;
+#include <poppack.h>
 
 typedef struct _IO_SECURITY_CONTEXT {
   PSECURITY_QUALITY_OF_SERVICE  SecurityQos;
@@ -2523,6 +2719,9 @@ typedef struct _IO_CSQ {
   PVOID  ReservePointer;
 } IO_CSQ, *PIO_CSQ;
 
+#if !defined(_ALPHA_)
+#include <pshpack4.h>
+#endif
 typedef struct _IO_STACK_LOCATION {
   UCHAR  MajorFunction;
   UCHAR  MinorFunction;
@@ -2537,6 +2736,20 @@ typedef struct _IO_STACK_LOCATION {
       ULONG POINTER_ALIGNMENT  EaLength;
     } Create;
     struct {
+      PIO_SECURITY_CONTEXT  SecurityContext;
+      ULONG  Options;
+      USHORT  Reserved;
+      USHORT  ShareAccess;
+      PNAMED_PIPE_CREATE_PARAMETERS  Parameters;
+    } CreatePipe;
+    struct {
+      PIO_SECURITY_CONTEXT  SecurityContext;
+      ULONG  Options;
+      USHORT  Reserved;
+      USHORT  ShareAccess;
+      PMAILSLOT_CREATE_PARAMETERS  Parameters;
+    } CreateMailslot;
+    struct {
       ULONG  Length;
       ULONG POINTER_ALIGNMENT  Key;
       LARGE_INTEGER  ByteOffset;
@@ -2546,6 +2759,16 @@ typedef struct _IO_STACK_LOCATION {
       ULONG POINTER_ALIGNMENT  Key;
       LARGE_INTEGER  ByteOffset;
     } Write;
+    struct {
+      ULONG  Length;
+      PUNICODE_STRING  FileName;
+      FILE_INFORMATION_CLASS  FileInformationClass;
+      ULONG  FileIndex;
+    } QueryDirectory;
+    struct {
+      ULONG  Length;
+      ULONG  CompletionFilter;
+    } NotifyDirectory;
     struct {
       ULONG  Length;
       FILE_INFORMATION_CLASS POINTER_ALIGNMENT  FileInformationClass;
@@ -2565,8 +2788,32 @@ typedef struct _IO_STACK_LOCATION {
     } SetFile;
     struct {
       ULONG  Length;
+      PVOID  EaList;
+      ULONG  EaListLength;
+      ULONG  EaIndex;
+    } QueryEa;
+    struct {
+      ULONG  Length;
+    } SetEa;
+    struct {
+      ULONG  Length;
       FS_INFORMATION_CLASS POINTER_ALIGNMENT  FsInformationClass;
     } QueryVolume;
+    struct {
+      ULONG  Length;
+      FS_INFORMATION_CLASS  FsInformationClass;
+    } SetVolume;
+    struct {
+      ULONG  OutputBufferLength;
+      ULONG  InputBufferLength;
+      ULONG  FsControlCode;
+      PVOID  Type3InputBuffer;
+    } FileSystemControl;
+    struct {
+      PLARGE_INTEGER  Length;
+      ULONG  Key;
+      LARGE_INTEGER  ByteOffset;
+    } LockControl;
     struct {
       ULONG  OutputBufferLength;
       ULONG POINTER_ALIGNMENT  InputBufferLength;
@@ -2592,6 +2839,15 @@ typedef struct _IO_STACK_LOCATION {
     struct {
       struct _SCSI_REQUEST_BLOCK  *Srb;
     } Scsi;
+    struct {
+      ULONG  Length;
+      PSID  StartSid;
+      PFILE_GET_QUOTA_INFORMATION  SidList;
+      ULONG  SidListLength;
+    } QueryQuota;
+    struct {
+      ULONG  Length;
+    } SetQuota;
     struct {
       DEVICE_RELATION_TYPE  Type;
     } QueryDeviceRelations;
@@ -2663,6 +2919,9 @@ typedef struct _IO_STACK_LOCATION {
   PIO_COMPLETION_ROUTINE  CompletionRoutine;
   PVOID  Context;
 } IO_STACK_LOCATION, *PIO_STACK_LOCATION;
+#if !defined(_ALPHA_)
+#include <poppack.h>
+#endif
 
 /* IO_STACK_LOCATION.Control */
 
@@ -2803,47 +3062,47 @@ typedef struct _PCI_COMMON_CONFIG {
       UCHAR  MinimumGrant;
       UCHAR  MaximumLatency;
     } type0;
-      struct _PCI_HEADER_TYPE_1 {
-        ULONG  BaseAddresses[PCI_TYPE1_ADDRESSES];
-        UCHAR  PrimaryBus;
-        UCHAR  SecondaryBus;
-        UCHAR  SubordinateBus;
-        UCHAR  SecondaryLatency;
-        UCHAR  IOBase;
-        UCHAR  IOLimit;
-        USHORT  SecondaryStatus;
-        USHORT  MemoryBase;
-        USHORT  MemoryLimit;
-        USHORT  PrefetchBase;
-        USHORT  PrefetchLimit;
-        ULONG  PrefetchBaseUpper32;
-        ULONG  PrefetchLimitUpper32;
-        USHORT  IOBaseUpper16;
-        USHORT  IOLimitUpper16;
-        UCHAR  CapabilitiesPtr;
-        UCHAR  Reserved1[3];
-        ULONG  ROMBaseAddress;
-        UCHAR  InterruptLine;
-        UCHAR  InterruptPin;
-        USHORT  BridgeControl;
-      } type1;
-      struct _PCI_HEADER_TYPE_2 {
-        ULONG  SocketRegistersBaseAddress;
-        UCHAR  CapabilitiesPtr;
-        UCHAR  Reserved;
-        USHORT  SecondaryStatus;
-        UCHAR  PrimaryBus;
-        UCHAR  SecondaryBus;
-        UCHAR  SubordinateBus;
-        UCHAR  SecondaryLatency;
-        struct {
-          ULONG  Base;
-          ULONG  Limit;
-        } Range[PCI_TYPE2_ADDRESSES - 1];
-        UCHAR  InterruptLine;
-        UCHAR  InterruptPin;
-        USHORT  BridgeControl;
-      } type2;
+    struct _PCI_HEADER_TYPE_1 {
+      ULONG  BaseAddresses[PCI_TYPE1_ADDRESSES];
+      UCHAR  PrimaryBus;
+      UCHAR  SecondaryBus;
+      UCHAR  SubordinateBus;
+      UCHAR  SecondaryLatency;
+      UCHAR  IOBase;
+      UCHAR  IOLimit;
+      USHORT  SecondaryStatus;
+      USHORT  MemoryBase;
+      USHORT  MemoryLimit;
+      USHORT  PrefetchBase;
+      USHORT  PrefetchLimit;
+      ULONG  PrefetchBaseUpper32;
+      ULONG  PrefetchLimitUpper32;
+      USHORT  IOBaseUpper16;
+      USHORT  IOLimitUpper16;
+      UCHAR  CapabilitiesPtr;
+      UCHAR  Reserved1[3];
+      ULONG  ROMBaseAddress;
+      UCHAR  InterruptLine;
+      UCHAR  InterruptPin;
+      USHORT  BridgeControl;
+    } type1;
+    struct _PCI_HEADER_TYPE_2 {
+      ULONG  SocketRegistersBaseAddress;
+      UCHAR  CapabilitiesPtr;
+      UCHAR  Reserved;
+      USHORT  SecondaryStatus;
+      UCHAR  PrimaryBus;
+      UCHAR  SecondaryBus;
+      UCHAR  SubordinateBus;
+      UCHAR  SecondaryLatency;
+      struct {
+        ULONG  Base;
+        ULONG  Limit;
+      } Range[PCI_TYPE2_ADDRESSES - 1];
+      UCHAR  InterruptLine;
+      UCHAR  InterruptPin;
+      USHORT  BridgeControl;
+    } type2;
   } u;
   UCHAR  DeviceSpecific[192];
 } PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
@@ -2887,6 +3146,90 @@ typedef struct _PCI_COMMON_CONFIG {
 
 #define PCI_MULTIFUNCTION_DEVICE(PciData) \
   ((((PPCI_COMMON_CONFIG) (PciData))->HeaderType & PCI_MULTIFUNCTION) != 0)
+
+/* PCI device classes */
+
+#define PCI_CLASS_PRE_20                    0x00
+#define PCI_CLASS_MASS_STORAGE_CTLR         0x01
+#define PCI_CLASS_NETWORK_CTLR              0x02
+#define PCI_CLASS_DISPLAY_CTLR              0x03
+#define PCI_CLASS_MULTIMEDIA_DEV            0x04
+#define PCI_CLASS_MEMORY_CTLR               0x05
+#define PCI_CLASS_BRIDGE_DEV                0x06
+#define PCI_CLASS_SIMPLE_COMMS_CTLR         0x07
+#define PCI_CLASS_BASE_SYSTEM_DEV           0x08
+#define PCI_CLASS_INPUT_DEV                 0x09
+#define PCI_CLASS_DOCKING_STATION           0x0a
+#define PCI_CLASS_PROCESSOR                 0x0b
+#define PCI_CLASS_SERIAL_BUS_CTLR           0x0c
+
+/* PCI device subclasses for class 0 */
+
+#define PCI_SUBCLASS_PRE_20_NON_VGA         0x00
+#define PCI_SUBCLASS_PRE_20_VGA             0x01
+
+/* PCI device subclasses for class 1 (mass storage controllers)*/
+
+#define PCI_SUBCLASS_MSC_SCSI_BUS_CTLR      0x00
+#define PCI_SUBCLASS_MSC_IDE_CTLR           0x01
+#define PCI_SUBCLASS_MSC_FLOPPY_CTLR        0x02
+#define PCI_SUBCLASS_MSC_IPI_CTLR           0x03
+#define PCI_SUBCLASS_MSC_RAID_CTLR          0x04
+#define PCI_SUBCLASS_MSC_OTHER              0x80
+
+/* PCI device subclasses for class 2 (network controllers)*/
+
+#define PCI_SUBCLASS_NET_ETHERNET_CTLR      0x00
+#define PCI_SUBCLASS_NET_TOKEN_RING_CTLR    0x01
+#define PCI_SUBCLASS_NET_FDDI_CTLR          0x02
+#define PCI_SUBCLASS_NET_ATM_CTLR           0x03
+#define PCI_SUBCLASS_NET_OTHER              0x80
+
+/* PCI device subclasses for class 3 (display controllers)*/
+
+#define PCI_SUBCLASS_VID_VGA_CTLR           0x00
+#define PCI_SUBCLASS_VID_XGA_CTLR           0x01
+#define PCI_SUBLCASS_VID_3D_CTLR            0x02
+#define PCI_SUBCLASS_VID_OTHER              0x80
+
+/* PCI device subclasses for class 4 (multimedia device)*/
+
+#define PCI_SUBCLASS_MM_VIDEO_DEV           0x00
+#define PCI_SUBCLASS_MM_AUDIO_DEV           0x01
+#define PCI_SUBCLASS_MM_TELEPHONY_DEV       0x02
+#define PCI_SUBCLASS_MM_OTHER               0x80
+
+/* PCI device subclasses for class 5 (memory controller)*/
+
+#define PCI_SUBCLASS_MEM_RAM                0x00
+#define PCI_SUBCLASS_MEM_FLASH              0x01
+#define PCI_SUBCLASS_MEM_OTHER              0x80
+
+/* PCI device subclasses for class 6 (bridge device)*/
+
+#define PCI_SUBCLASS_BR_HOST                0x00
+#define PCI_SUBCLASS_BR_ISA                 0x01
+#define PCI_SUBCLASS_BR_EISA                0x02
+#define PCI_SUBCLASS_BR_MCA                 0x03
+#define PCI_SUBCLASS_BR_PCI_TO_PCI          0x04
+#define PCI_SUBCLASS_BR_PCMCIA              0x05
+#define PCI_SUBCLASS_BR_NUBUS               0x06
+#define PCI_SUBCLASS_BR_CARDBUS             0x07
+#define PCI_SUBCLASS_BR_OTHER               0x80
+
+/* PCI device subclasses for class C (serial bus controller)*/
+
+#define PCI_SUBCLASS_SB_IEEE1394            0x00
+#define PCI_SUBCLASS_SB_ACCESS              0x01
+#define PCI_SUBCLASS_SB_SSA                 0x02
+#define PCI_SUBCLASS_SB_USB                 0x03
+#define PCI_SUBCLASS_SB_FIBRE_CHANNEL       0x04
+
+#define PCI_MAX_DEVICES        32
+#define PCI_MAX_FUNCTION       8
+#define PCI_MAX_BRIDGE_NUMBER  0xFF
+#define PCI_INVALID_VENDORID   0xFFFF
+#define PCI_COMMON_HDR_LENGTH (FIELD_OFFSET(PCI_COMMON_CONFIG, DeviceSpecific))
 
 typedef struct _PCI_SLOT_NUMBER {
   union {
@@ -3017,6 +3360,8 @@ typedef NTSTATUS DDKAPI
 #define RTL_REGISTRY_WINDOWS_NT           3
 #define RTL_REGISTRY_DEVICEMAP            4
 #define RTL_REGISTRY_USER                 5
+#define RTL_REGISTRY_HANDLE               0x40000000
+#define RTL_REGISTRY_OPTIONAL             0x80000000
 
 /* RTL_QUERY_REGISTRY_TABLE.Flags */
 #define RTL_QUERY_REGISTRY_SUBKEY         0x00000001
@@ -3098,6 +3443,11 @@ typedef struct _PAGED_LOOKASIDE_LIST {
   GENERAL_LOOKASIDE_S
   FAST_MUTEX  Obsoleted;
 } PAGED_LOOKASIDE_LIST, *PPAGED_LOOKASIDE_LIST;
+
+typedef struct _PP_LOOKASIDE_LIST {
+   struct _GENERAL_LOOKASIDE *P;
+   struct _GENERAL_LOOKASIDE *L;
+} PP_LOOKASIDE_LIST, *PPP_LOOKASIDE_LIST;
 
 typedef struct _CALLBACK_OBJECT *PCALLBACK_OBJECT;
 
@@ -3481,6 +3831,10 @@ typedef enum _PROCESSINFOCLASS {
   ProcessDebugObjectHandle,
   ProcessDebugFlags,
   ProcessHandleTracing,
+  ProcessUnknown33,
+  ProcessUnknown34,
+  ProcessUnknown35,
+  ProcessCookie,
   MaxProcessInfoClass
 } PROCESSINFOCLASS;
 
@@ -3618,9 +3972,6 @@ typedef struct _DRIVER_VERIFIER_THUNK_PAIRS {
 #define RTL_RANGE_LIST_SHARED_OK          0x00000001
 #define RTL_RANGE_LIST_NULL_CONFLICT_OK   0x00000002
 
-#define RTL_RANGE_LIST_SHARED_OK          0x00000001
-#define RTL_RANGE_LIST_NULL_CONFLICT_OK   0x00000002
-
 #define RTL_RANGE_LIST_MERGE_IF_CONFLICT  RTL_RANGE_LIST_ADD_IF_CONFLICT
 
 typedef struct _RTL_RANGE {
@@ -3650,7 +4001,7 @@ typedef struct _RANGE_LIST_ITERATOR {
 } RTL_RANGE_LIST_ITERATOR, *PRTL_RANGE_LIST_ITERATOR;
 
 typedef BOOLEAN
-(*PRTL_CONFLICT_RANGE_CALLBACK)(
+(DDKAPI *PRTL_CONFLICT_RANGE_CALLBACK)(
   IN PVOID  Context,
   IN PRTL_RANGE  Range);
 
@@ -3707,6 +4058,7 @@ typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
 #define CLOCK1_LEVEL                      28
 #define CLOCK2_LEVEL                      28
 #define IPI_LEVEL                         29
+#define SYNCH_LEVEL			 (IPI_LEVEL-1)
 #define POWER_LEVEL                       30
 #define HIGH_LEVEL                        31
 
@@ -3720,31 +4072,31 @@ typedef struct _KPCR_TIB {
     DWORD  Version;             /* 10 */
   } DUMMYUNIONNAME;
   PVOID  ArbitraryUserPointer;  /* 14 */
-} KPCR_TIB, *PKPCR_TIB;         /* 18 */
+  struct _NT_TIB *Self;         /* 18 */
+} KPCR_TIB, *PKPCR_TIB;         /* 1C */
 
 #define PCR_MINOR_VERSION 1
 #define PCR_MAJOR_VERSION 1
 
 typedef struct _KPCR {
   KPCR_TIB  Tib;                /* 00 */
-  struct _KPCR  *Self;          /* 18 */
-  struct _KPRCB  *PCRCB;        /* 1C */
-  KIRQL  Irql;                  /* 20 */
-  ULONG  IRR;                   /* 24 */
-  ULONG  IrrActive;             /* 28 */
-  ULONG  IDR;                   /* 2C */
-  PVOID  KdVersionBlock;        /* 30 */
-  PUSHORT  IDT;                 /* 34 */
-  PUSHORT  GDT;                 /* 38 */
-  struct _KTSS  *TSS;           /* 3C */
-  USHORT  MajorVersion;         /* 40 */
-  USHORT  MinorVersion;         /* 42 */
-  KAFFINITY  SetMember;         /* 44 */
-  ULONG  StallScaleFactor;      /* 48 */
-  UCHAR  DebugActive;           /* 4C */
-  UCHAR  ProcessorNumber;       /* 4D */
-  UCHAR  Reserved[2];           /* 4E */
-} KPCR, *PKPCR;                 /* 50 */
+  struct _KPCR  *Self;          /* 1C */
+  struct _KPRCB  *PCRCB;        /* 20 */
+  KIRQL  Irql;                  /* 24 */
+  ULONG  IRR;                   /* 28 */
+  ULONG  IrrActive;             /* 2C */
+  ULONG  IDR;                   /* 30 */
+  PVOID  KdVersionBlock;        /* 34 */
+  PUSHORT  IDT;                 /* 38 */
+  PUSHORT  GDT;                 /* 3C */
+  struct _KTSS  *TSS;           /* 40 */
+  USHORT  MajorVersion;         /* 44 */
+  USHORT  MinorVersion;         /* 46 */
+  KAFFINITY  SetMember;         /* 48 */
+  ULONG  StallScaleFactor;      /* 4C */
+  UCHAR  SpareUnused;           /* 50 */
+  UCHAR  Number;                /* 51 */
+} KPCR, *PKPCR;                 /* 54 */
 
 typedef struct _KFLOATING_SAVE {
   ULONG  ControlWord;
@@ -3992,8 +4344,6 @@ RtlAssert(
 
 #endif /* DBG */
 
-#define assert ASSERT
-
 
 /*
 ** Driver support routines
@@ -4001,49 +4351,37 @@ RtlAssert(
 
 /** Runtime library routines **/
 
-/*
- * VOID
- * InitializeListHead(
- *   IN PLIST_ENTRY  ListHead)
- */
-#define InitializeListHead(_ListHead) \
-{ \
-  (_ListHead)->Flink = (_ListHead); \
-  (_ListHead)->Blink = (_ListHead); \
+static __inline VOID
+InitializeListHead(
+  IN PLIST_ENTRY  ListHead)
+{
+  ListHead->Flink = ListHead->Blink = ListHead;
 }
 
-/*
- * VOID
- * InsertHeadList(
- *   IN PLIST_ENTRY  ListHead,
- *   IN PLIST_ENTRY  Entry)
- */
-#define InsertHeadList(_ListHead, \
-                       _Entry) \
-{ \
-  PLIST_ENTRY _OldFlink; \
-  _OldFlink = (_ListHead)->Flink; \
-  (_Entry)->Flink = _OldFlink; \
-  (_Entry)->Blink = (_ListHead); \
-  _OldFlink->Blink = (_Entry); \
-  (_ListHead)->Flink = (_Entry); \
+static __inline VOID
+InsertHeadList(
+  IN PLIST_ENTRY  ListHead,
+  IN PLIST_ENTRY  Entry)
+{ 
+  PLIST_ENTRY OldFlink;
+  OldFlink = ListHead->Flink;
+  Entry->Flink = OldFlink;
+  Entry->Blink = ListHead;
+  OldFlink->Blink = Entry;
+  ListHead->Flink = Entry;
 }
 
-/*
- * VOID
- * InsertTailList(
- *   IN PLIST_ENTRY  ListHead,
- *   IN PLIST_ENTRY  Entry)
- */
-#define InsertTailList(_ListHead, \
-                       _Entry) \
-{ \
-	PLIST_ENTRY _OldBlink; \
-	_OldBlink = (_ListHead)->Blink; \
-	(_Entry)->Flink = (_ListHead); \
-	(_Entry)->Blink = _OldBlink; \
-	_OldBlink->Flink = (_Entry); \
-	(_ListHead)->Blink = (_Entry); \
+static __inline VOID
+InsertTailList(
+  IN PLIST_ENTRY  ListHead,
+  IN PLIST_ENTRY  Entry)
+{ 
+  PLIST_ENTRY OldBlink;
+  OldBlink = ListHead->Blink;
+  Entry->Flink = ListHead;
+  Entry->Blink = OldBlink;
+  OldBlink->Flink = Entry;
+  ListHead->Blink = Entry;
 }
 
 /*
@@ -4054,19 +4392,19 @@ RtlAssert(
 #define IsListEmpty(_ListHead) \
   ((_ListHead)->Flink == (_ListHead))
 
-static __inline PSINGLE_LIST_ENTRY 
-PopEntryList(
-  IN PSINGLE_LIST_ENTRY  ListHead)
-{
-	PSINGLE_LIST_ENTRY Entry;
-
-	Entry = ListHead->Next;
-	if (Entry != NULL)
-	{
-		ListHead->Next = Entry->Next;
-	}
-  return Entry;
-}
+/*
+ * PSINGLE_LIST_ENTRY
+ * PopEntryList(
+ *   IN PSINGLE_LIST_ENTRY  ListHead)
+ */
+#define PopEntryList(ListHead) \
+  (ListHead)->Next; \
+  { \
+    PSINGLE_LIST_ENTRY _FirstEntry; \
+    _FirstEntry = (ListHead)->Next; \
+    if (_FirstEntry != NULL) \
+      (ListHead)->Next = _FirstEntry->Next; \
+  }
 
 /*
  * VOID
@@ -4074,75 +4412,53 @@ PopEntryList(
  *   IN PSINGLE_LIST_ENTRY  ListHead,
  *   IN PSINGLE_LIST_ENTRY  Entry)
  */
-#define PushEntryList(_ListHead, \
-                      _Entry) \
-{ \
+#define PushEntryList(_ListHead, _Entry) \
 	(_Entry)->Next = (_ListHead)->Next; \
 	(_ListHead)->Next = (_Entry); \
-}
 
-/*
- * VOID
- * RemoveEntryList(
- *   IN PLIST_ENTRY  Entry)
- */
-#define RemoveEntryList(_Entry) \
-{ \
-	PLIST_ENTRY _OldFlink; \
-	PLIST_ENTRY _OldBlink; \
-	_OldFlink = (_Entry)->Flink; \
-	_OldBlink = (_Entry)->Blink; \
-	_OldFlink->Blink = _OldBlink; \
-	_OldBlink->Flink = _OldFlink; \
-  (_Entry)->Flink = NULL; \
-  (_Entry)->Blink = NULL; \
+static __inline BOOLEAN
+RemoveEntryList(
+  IN PLIST_ENTRY  Entry)
+{
+  PLIST_ENTRY OldFlink;
+  PLIST_ENTRY OldBlink;
+
+  OldFlink = Entry->Flink;
+  OldBlink = Entry->Blink;
+  OldFlink->Blink = OldBlink;
+  OldBlink->Flink = OldFlink;
+  return (OldFlink == OldBlink);
 }
 
 static __inline PLIST_ENTRY 
 RemoveHeadList(
   IN PLIST_ENTRY  ListHead)
 {
-	PLIST_ENTRY OldFlink;
-	PLIST_ENTRY OldBlink;
-	PLIST_ENTRY Entry;
+  PLIST_ENTRY Flink;
+  PLIST_ENTRY Entry;
 
-	Entry = ListHead->Flink;
-	OldFlink = ListHead->Flink->Flink;
-	OldBlink = ListHead->Flink->Blink;
-	OldFlink->Blink = OldBlink;
-	OldBlink->Flink = OldFlink;
-
-  if (Entry != ListHead)
-  {
-    Entry->Flink = NULL;
-    Entry->Blink = NULL;
-  }
-
-	return Entry;
+  Entry = ListHead->Flink;
+  Flink = Entry->Flink;
+  ListHead->Flink = Flink;
+  Flink->Blink = ListHead;
+  return Entry;
 }
 
 static __inline PLIST_ENTRY
 RemoveTailList(
   IN PLIST_ENTRY  ListHead)
 {
-	PLIST_ENTRY OldFlink;
-	PLIST_ENTRY OldBlink;
-	PLIST_ENTRY Entry;
+  PLIST_ENTRY Blink;
+  PLIST_ENTRY Entry;
 
-	Entry = ListHead->Blink;
-	OldFlink = ListHead->Blink->Flink;
-	OldBlink = ListHead->Blink->Blink;
-	OldFlink->Blink = OldBlink;
-	OldBlink->Flink = OldFlink;
-
-  if (Entry != ListHead)
-  {
-    Entry->Flink = NULL;
-    Entry->Blink = NULL;
-  }
-   
+  Entry = ListHead->Blink;
+  Blink = Entry->Blink;
+  ListHead->Blink = Blink;
+  Blink->Flink = ListHead;
   return Entry;
 }
+
+#if !defined(_WINBASE_H) || _WIN32_WINNT < 0x0501
 
 NTOSAPI
 PSLIST_ENTRY
@@ -4156,6 +4472,8 @@ DDKFASTAPI
 InterlockedPushEntrySList(
   IN PSLIST_HEADER  ListHead,
   IN PSLIST_ENTRY  ListEntry);
+
+#endif
 
 /*
  * USHORT
@@ -4323,7 +4641,7 @@ RtlConvertUlongToLuid(
  */
 #ifndef RtlCopyMemory
 #define RtlCopyMemory(Destination, Source, Length) \
-  memcpy(Destination, Source, Length);
+  memcpy(Destination, Source, Length)
 #endif
 
 #ifndef RtlCopyBytes
@@ -4400,12 +4718,12 @@ RtlDeleteRegistryValue(
 /*
  * BOOLEAN
  * RtlEqualLuid( 
- *   IN LUID  Luid1,
- *   IN LUID  Luid2)
+ *   IN PLUID  Luid1,
+ *   IN PLUID  Luid2)
  */
-#define RtlEqualLuid(_Luid1, \
-                     _Luid2) \
-  ((Luid1.LowPart == Luid2.LowPart) && (Luid1.HighPart == Luid2.HighPart))
+#define RtlEqualLuid(Luid1, \
+                     Luid2) \
+  (((Luid1)->LowPart == (Luid2)->LowPart) && ((Luid1)->HighPart == (Luid2)->HighPart))
 
 /*
  * ULONG
@@ -4945,7 +5263,7 @@ NTOSAPI
 BOOLEAN
 DDKAPI
 RtlValidRelativeSecurityDescriptor(
-  IN PSECURITY_DESCRIPTOR  SecurityDescriptorInput,
+  IN PSECURITY_DESCRIPTOR_RELATIVE  SecurityDescriptorInput,
   IN ULONG  SecurityDescriptorLength,
   IN SECURITY_INFORMATION  RequiredInformation);
 
@@ -5318,7 +5636,7 @@ ExInterlockedAddLargeStatistic(
 
 NTOSAPI
 ULONG
-DDKFASTAPI
+DDKAPI
 ExInterlockedAddUlong(
   IN PULONG  Addend,
   IN ULONG  Increment,
@@ -5341,7 +5659,7 @@ ExInterlockedFlushSList(
 
 NTOSAPI
 PLIST_ENTRY
-DDKFASTAPI
+DDKAPI
 ExInterlockedInsertHeadList(
   IN PLIST_ENTRY  ListHead,
   IN PLIST_ENTRY  ListEntry,
@@ -5349,7 +5667,7 @@ ExInterlockedInsertHeadList(
 
 NTOSAPI
 PLIST_ENTRY
-DDKFASTAPI
+DDKAPI
 ExInterlockedInsertTailList(
   IN PLIST_ENTRY  ListHead,
   IN PLIST_ENTRY  ListEntry,
@@ -5357,7 +5675,7 @@ ExInterlockedInsertTailList(
 
 NTOSAPI
 PSINGLE_LIST_ENTRY
-DDKFASTAPI
+DDKAPI
 ExInterlockedPopEntryList(
   IN PSINGLE_LIST_ENTRY  ListHead,
   IN PKSPIN_LOCK  Lock);
@@ -5374,7 +5692,7 @@ ExInterlockedPopEntryList(
 
 NTOSAPI
 PSINGLE_LIST_ENTRY
-DDKFASTAPI
+DDKAPI
 ExInterlockedPushEntryList(
   IN PSINGLE_LIST_ENTRY  ListHead,
   IN PSINGLE_LIST_ENTRY  ListEntry,
@@ -5394,7 +5712,7 @@ ExInterlockedPushEntryList(
 
 NTOSAPI
 PLIST_ENTRY
-DDKFASTAPI
+DDKAPI
 ExInterlockedRemoveHeadList(
   IN PLIST_ENTRY  ListHead,
   IN PKSPIN_LOCK  Lock);
@@ -5551,7 +5869,7 @@ ExVerifySuite(
 #define PAGED_CODE() { \
   if (KeGetCurrentIrql() > APC_LEVEL) { \
     KdPrint( ("NTDDK: Pageable code called at IRQL > APC_LEVEL (%d)\n", KeGetCurrentIrql() )); \
-    assert(FALSE); \
+    ASSERT(FALSE); \
   } \
 }
 
@@ -5791,8 +6109,6 @@ DDKAPI
 WRITE_REGISTER_USHORT(
   IN PUSHORT  Register,
   IN USHORT  Value);
-
-
 
 /** I/O manager routines **/
 
@@ -6505,6 +6821,10 @@ IoOpenDeviceInterfaceRegistryKey(
   IN ACCESS_MASK  DesiredAccess,
   OUT PHANDLE  DeviceInterfaceKey);
 
+#define PLUGPLAY_REGKEY_DEVICE                            1
+#define PLUGPLAY_REGKEY_DRIVER                            2
+#define PLUGPLAY_REGKEY_CURRENT_HWPROFILE                 4
+
 NTOSAPI
 NTSTATUS
 DDKAPI
@@ -6642,13 +6962,23 @@ IoReleaseRemoveLockEx(
 
 /*
  * VOID
+ * IoReleaseRemoveLock(
+ *   IN PIO_REMOVE_LOCK  RemoveLock,
+ *   IN PVOID  Tag)
+ */
+#define IoReleaseRemoveLock(_RemoveLock, \
+                            _Tag) \
+  IoReleaseRemoveLockEx(_RemoveLock, _Tag, sizeof(IO_REMOVE_LOCK))
+
+/*
+ * VOID
  * IoReleaseRemoveLockAndWait(
  *   IN PIO_REMOVE_LOCK  RemoveLock,
  *   IN PVOID  Tag)
  */
 #define IoReleaseRemoveLockAndWait(_RemoveLock, \
                                    _Tag) \
-  IoReleaseRemoveLockEx(_RemoveLock, _Tag, sizeof(IO_REMOVE_LOCK))
+  IoReleaseRemoveLockAndWaitEx(_RemoveLock, _Tag, sizeof(IO_REMOVE_LOCK))
 
 NTOSAPI
 VOID
@@ -6764,7 +7094,7 @@ IoReuseIrp(
                                _InvokeOnCancel) \
 { \
   PIO_STACK_LOCATION _IrpSp; \
-  assert(_InvokeOnSuccess || _InvokeOnError || _InvokeOnCancel ? \
+  ASSERT(_InvokeOnSuccess || _InvokeOnError || _InvokeOnCancel ? \
     _CompletionRoutine != NULL : TRUE); \
   _IrpSp = IoGetNextIrpStackLocation(_Irp); \
   _IrpSp->CompletionRoutine = (PIO_COMPLETION_ROUTINE)(_CompletionRoutine); \
@@ -7118,14 +7448,11 @@ KeAcquireSpinLock(
   OUT PKIRQL  OldIrql);
 
 /* System Service Dispatch Table */
-typedef struct _SSDT {
-  ULONG  SysCallPtr;
-} SSDT, *PSSDT;
+typedef PVOID (NTAPI * SSDT)(VOID);
+typedef SSDT * PSSDT;
 
 /* System Service Parameters Table */
-typedef struct _SSPT {
-  ULONG  ParamBytes;
-} SSPT, *PSSPT;
+typedef UCHAR SSPT, * PSSPT;
 
 typedef struct _SSDT_ENTRY {
 	PSSDT  SSDT;
@@ -7319,14 +7646,17 @@ DDKAPI
 KeLeaveCriticalRegion(
   VOID);
 
-NTOSAPI
+static __inline
 VOID
-DDKAPI
-KeLowerIrql(
-  IN KIRQL  NewIrql);
+KeMemoryBarrier(
+  VOID)
+{
+  volatile LONG Barrier;
+  __asm__ __volatile__ ("xchg %%eax, %0" : : "m" (Barrier) : "%eax");
+}
 
 NTOSAPI
-NTSTATUS
+LONG
 DDKAPI
 KePulseEvent(
   IN PRKEVENT  Event,
@@ -7367,19 +7697,6 @@ NTOSAPI
 ULONG
 DDKAPI
 KeQueryTimeIncrement(
-  VOID);
-
-NTOSAPI
-VOID
-DDKAPI
-KeRaiseIrql(
-  IN KIRQL  NewIrql,
-  OUT PKIRQL  OldIrql);
-
-NTOSAPI
-KIRQL
-DDKAPI
-KeRaiseIrqlToDpcLevel(
   VOID);
 
 NTOSAPI
@@ -7608,7 +7925,44 @@ KeWaitForSingleObject(
   IN BOOLEAN  Alertable,
   IN PLARGE_INTEGER  Timeout  OPTIONAL);
 
+#if defined(_X86_)
 
+NTOSAPI
+VOID
+FASTCALL
+KfLowerIrql(
+  IN KIRQL  NewIrql);
+
+NTOSAPI
+KIRQL
+FASTCALL
+KfRaiseIrql(
+  IN KIRQL  NewIrql);
+
+#define KeLowerIrql(a) KfLowerIrql(a)
+#define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
+
+#else
+
+NTOSAPI
+VOID
+DDKAPI
+KeLowerIrql(
+  IN KIRQL  NewIrql);
+
+NTOSAPI
+KIRQL
+DDKAPI
+KeRaiseIrql(
+  IN KIRQL  NewIrql);
+
+#endif
+
+NTOSAPI
+KIRQL
+DDKAPI
+KeRaiseIrqlToDpcLevel(
+  VOID);
 
 /** Memory manager routines **/
 
@@ -8008,10 +8362,10 @@ MmUnsecureVirtualMemory(
 #define MmPrepareMdlForReuse(_Mdl) \
 { \
   if (((_Mdl)->MdlFlags & MDL_PARTIAL_HAS_BEEN_MAPPED) != 0) { \
-    assert(((_Mdl)->MdlFlags & MDL_PARTIAL) != 0); \
+    ASSERT(((_Mdl)->MdlFlags & MDL_PARTIAL) != 0); \
     MmUnmapLockedPages((_Mdl)->MappedSystemVa, (_Mdl)); \
   } else if (((_Mdl)->MdlFlags & MDL_PARTIAL) == 0) { \
-    assert(((_Mdl)->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA) == 0); \
+    ASSERT(((_Mdl)->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA) == 0); \
   } \
 }
 
@@ -8467,8 +8821,8 @@ DDKAPI
 NtCreateEvent(
   OUT PHANDLE  EventHandle,
   IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes,
-  IN BOOLEAN  ManualReset,
+  IN POBJECT_ATTRIBUTES  ObjectAttributes  OPTIONAL,
+  IN EVENT_TYPE  EventType,
   IN BOOLEAN  InitialState);
 
 NTOSAPI
@@ -8477,8 +8831,8 @@ DDKAPI
 ZwCreateEvent(
   OUT PHANDLE  EventHandle,
   IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes,
-  IN BOOLEAN  ManualReset,
+  IN POBJECT_ATTRIBUTES  ObjectAttributes  OPTIONAL,
+  IN EVENT_TYPE  EventType,
   IN BOOLEAN  InitialState);
 
 NTOSAPI
@@ -8751,14 +9105,14 @@ NTSTATUS
 DDKAPI
 NtSetEvent(
   IN HANDLE  EventHandle,
-  IN PULONG  NumberOfThreadsReleased);
+  OUT PLONG  PreviousState  OPTIONAL);
 
 NTOSAPI
 NTSTATUS
 DDKAPI
 ZwSetEvent(
   IN HANDLE  EventHandle,
-  IN PULONG  NumberOfThreadsReleased);
+  OUT PLONG  PreviousState  OPTIONAL);
 
 NTOSAPI
 NTSTATUS
@@ -8826,17 +9180,17 @@ NTOSAPI
 NTSTATUS
 DDKAPI
 NtWaitForSingleObject(
-  IN HANDLE  Object,
+  IN HANDLE  ObjectHandle,
   IN BOOLEAN  Alertable,
-  IN PLARGE_INTEGER  Time);
+  IN PLARGE_INTEGER  TimeOut  OPTIONAL);
 
 NTOSAPI
 NTSTATUS
 DDKAPI
 ZwWaitForSingleObject(
-  IN HANDLE  Object,
+  IN HANDLE  ObjectHandle,
   IN BOOLEAN  Alertable,
-  IN PLARGE_INTEGER  Time);
+  IN PLARGE_INTEGER  TimeOut  OPTIONAL);
 
 NTOSAPI
 NTSTATUS
@@ -9073,6 +9427,16 @@ DbgSetDebugFilterState(
   IN ULONG  Level,
   IN BOOLEAN  State);
 
+NTOSAPI
+BOOLEAN
+DDKAPI
+KeRosPrintAddress ( PVOID address );
+
+NTOSAPI
+VOID
+DDKAPI
+KeRosDumpStackFrames ( PULONG Frame, ULONG FrameCount );
+
 #ifdef DBG
 
 #define KdPrint(_x_) DbgPrint _x_
@@ -9093,8 +9457,6 @@ extern NTOSAPI PBOOLEAN KdDebuggerNotPresent;
 extern NTOSAPI PBOOLEAN KdDebuggerEnabled;
 #define KD_DEBUGGER_ENABLED     *KdDebuggerEnabled
 #define KD_DEBUGGER_NOT_PRESENT *KdDebuggerNotPresent
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

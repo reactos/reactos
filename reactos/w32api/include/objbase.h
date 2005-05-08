@@ -11,7 +11,6 @@
 
 #include <stdlib.h>
 #pragma pack(push,8)
-#include <basetyps.h>
 
 #define WINOLEAPI STDAPI
 #define WINOLEAPI_(type) STDAPI_(type)
@@ -40,6 +39,7 @@
 #define STGM_CREATE 0x1000
 #define STGM_CONVERT 0x20000
 #define STGM_NOSNAPSHOT 0x200000
+#define STGM_DIRECT_SWMR 0x400000
 #define STGM_FAILIFTHERE 0
 #define CWCSTORAGENAME 32
 #define ASYNC_MODE_COMPATIBILITY	1
@@ -58,6 +58,7 @@ typedef enum tagREGCLS {
 #include <wtypes.h>
 #include <unknwn.h>
 #include <objidl.h>
+#include <propidl.h>
 
 #ifdef __cplusplus
 inline BOOL IsEqualGUID(REFGUID rguid1, REFGUID rguid2)
@@ -79,10 +80,23 @@ typedef enum tagCOINIT {
 	COINIT_DISABLE_OLE1DDE		= 0x4,
 	COINIT_SPEED_OVER_MEMORY	= 0x8
 } COINIT;
+typedef enum tagCOWAIT_FLAGS
+{
+    COWAIT_WAITALL   = 0x01,
+    COWAIT_ALERTABLE = 0x02
+} COWAIT_FLAGS;
 typedef enum tagSTDMSHLFLAGS {
     SMEXF_SERVER  = 0x01,
     SMEXF_HANDLER = 0x02
 } STDMSHLFLAGS;
+
+typedef struct tagSTGOPTIONS
+{
+    USHORT usVersion;
+    USHORT reserved;
+    ULONG ulSectorSize;
+    const WCHAR* pwcsTemplateFile;
+} STGOPTIONS;
 
 WINOLEAPI_(DWORD) CoBuildVersion(void);
 WINOLEAPI CoInitialize(PVOID);
@@ -147,6 +161,7 @@ WINOLEAPI CreateDataAdviseHolder(LPDATAADVISEHOLDER*);
 WINOLEAPI CreateDataCache(LPUNKNOWN,REFCLSID,REFIID,PVOID*);
 WINOLEAPI StgCreateDocfile(const OLECHAR*,DWORD,DWORD,IStorage**);
 WINOLEAPI StgCreateDocfileOnILockBytes(ILockBytes*,DWORD,DWORD,IStorage**);
+WINOLEAPI StgCreateStorageEx(const WCHAR*,DWORD,DWORD,DWORD,STGOPTIONS*,void*,REFIID,void**);
 WINOLEAPI StgOpenStorage(const OLECHAR*,IStorage*,DWORD,SNB,DWORD,IStorage**);
 WINOLEAPI StgOpenStorageOnILockBytes(ILockBytes*,IStorage*,DWORD,SNB,DWORD,IStorage**);
 WINOLEAPI StgIsStorageFile(const OLECHAR*);
@@ -183,6 +198,7 @@ WINOLEAPI CoResumeClassObjects(void);
 WINOLEAPI CoSuspendClassObjects(void);
 WINOLEAPI CoGetPSClsid(REFIID,CLSID*);
 WINOLEAPI CoRegisterPSClsid(REFIID,REFCLSID);
+WINOLEAPI CoWaitForMultipleHandles(DWORD dwFlags,DWORD dwTimeout,ULONG cHandles,const HANDLE* pHandles,LPDWORD lpdwindex);
 
 #pragma pack(pop)
 #endif

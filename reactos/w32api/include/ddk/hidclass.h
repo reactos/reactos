@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 #include "hidpi.h"
 
@@ -112,25 +110,31 @@ typedef struct _HID_DRIVER_CONFIG {
 } HID_DRIVER_CONFIG, *PHID_DRIVER_CONFIG;
 
 typedef struct _HID_INTERFACE_HIDPARSE {
-#if 0
-/* FIXME: COM stuff */
 #ifdef __cplusplus
   INTERFACE  i;
 #else
-  INTERFACE;
-#endif
+  /* GCC doesn't support including unnamed structs, so INTERFACE is
+     expanded here */
+  USHORT  Size;
+  USHORT  Version;
+  PVOID  Context;
+  PINTERFACE_REFERENCE  InterfaceReference;
+  PINTERFACE_DEREFERENCE  InterfaceDereference;
 #endif
   PHIDP_GETCAPS  HidpGetCaps;
 } HID_INTERFACE_HIDPARSE, *PHID_INTERFACE_HIDPARSE;
 
 typedef struct _HID_INTERFACE_NOTIFY_PNP {
-#if 0
-/* FIXME: COM stuff */
 #ifdef __cplusplus
   INTERFACE  i;
 #else
-  INTERFACE;
-#endif
+  /* GCC doesn't support including unnamed structs, so INTERFACE is
+     expanded here */
+  USHORT  Size;
+  USHORT  Version;
+  PVOID  Context;
+  PINTERFACE_REFERENCE  InterfaceReference;
+  PINTERFACE_DEREFERENCE  InterfaceDereference;
 #endif
   PHID_STATUS_CHANGE  StatusChangeFn;
   PVOID  CallbackContext;
@@ -141,8 +145,6 @@ typedef struct _HID_XFER_PACKET {
   ULONG  reportBufferLen;
   UCHAR  reportId;
 } HID_XFER_PACKET, *PHID_XFER_PACKET;
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

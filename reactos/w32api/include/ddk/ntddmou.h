@@ -31,10 +31,7 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
-
 
 #define DD_MOUSE_DEVICE_NAME              "\\Device\\PointerClass"
 #define DD_MOUSE_DEVICE_NAME_U            L"\\Device\\PointerClass"
@@ -110,8 +107,6 @@ typedef struct _MOUSE_ATTRIBUTES {
   USHORT  SampleRate;
   ULONG  InputDataQueueLength;
 } MOUSE_ATTRIBUTES, *PMOUSE_ATTRIBUTES;
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

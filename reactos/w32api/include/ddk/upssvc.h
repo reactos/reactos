@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 
 #if defined(_APCUPS_)
@@ -88,8 +86,6 @@ DDKAPI
 UPSWaitForStateChange(
   IN DWORD  aCurrentState,
   IN DWORD  anInterval);
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

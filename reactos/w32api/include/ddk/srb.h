@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 
 #if defined(_SCSIPORT_)
@@ -240,7 +238,7 @@ typedef struct _PORT_CONFIGURATION_INFORMATION {
   BOOLEAN  DemandMode;
   BOOLEAN  MapBuffers;
   BOOLEAN  NeedPhysicalAddresses;
-  BOOLEAN  TaggedQueueing;
+  BOOLEAN  TaggedQueuing;
   BOOLEAN  AutoRequestSense;
   BOOLEAN  MultipleRequestPerLu;
   BOOLEAN  ReceiveEvent;
@@ -372,7 +370,7 @@ typedef struct _HW_INITIALIZATION_DATA {
   PVOID  Reserved; 
   BOOLEAN  MapBuffers; 
   BOOLEAN  NeedPhysicalAddresses; 
-  BOOLEAN  TaggedQueueing; 
+  BOOLEAN  TaggedQueuing; 
   BOOLEAN  AutoRequestSense; 
   BOOLEAN  MultipleRequestPerLu; 
   BOOLEAN  ReceiveEvent; 
@@ -747,8 +745,6 @@ ScsiDebugPrint(
   IN ULONG DebugPrintLevel,
   IN PCCHAR DebugMessage,
   IN ...);
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

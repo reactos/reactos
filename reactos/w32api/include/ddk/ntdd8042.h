@@ -31,12 +31,9 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 #include "ntddkbd.h"
 #include "ntddmou.h"
-
 
 #define IOCTL_INTERNAL_I8042_CONTROLLER_WRITE_BUFFER \
   CTL_CODE(FILE_DEVICE_KEYBOARD, 0x0FF2, METHOD_NEITHER, FILE_ANY_ACCESS)
@@ -208,8 +205,6 @@ typedef struct _INTERNAL_I8042_HOOK_MOUSE {
   IN PI8042_QUEUE_PACKET  QueueMousePacket;
   IN PVOID  CallContext;
 } INTERNAL_I8042_HOOK_MOUSE, *PINTERNAL_I8042_HOOK_MOUSE;
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

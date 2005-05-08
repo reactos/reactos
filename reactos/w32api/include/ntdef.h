@@ -5,13 +5,16 @@
 #endif
 
 #define NTAPI __stdcall
-#define OBJ_INHERIT 2L
-#define OBJ_PERMANENT 16L
-#define OBJ_EXCLUSIVE 32L
-#define OBJ_CASE_INSENSITIVE 64L
-#define OBJ_OPENIF 128L
-#define OBJ_OPENLINK 256L
-#define OBJ_VALID_ATTRIBUTES 498L
+#define OBJ_INHERIT          0x00000002
+#define OBJ_PERMANENT        0x00000010
+#define OBJ_EXCLUSIVE        0x00000020
+#define OBJ_CASE_INSENSITIVE 0x00000040
+#define OBJ_OPENIF           0x00000080
+#define OBJ_OPENLINK         0x00000100
+#define OBJ_KERNEL_HANDLE    0x00000200
+#define OBJ_VALID_ATTRIBUTES (OBJ_KERNEL_HANDLE | OBJ_OPENLINK | \
+		OBJ_OPENIF | OBJ_CASE_INSENSITIVE | OBJ_EXCLUSIVE | \
+		OBJ_PERMANENT | OBJ_INHERIT)
 #define InitializeObjectAttributes(p,n,a,r,s) { \
   (p)->Length = sizeof(OBJECT_ATTRIBUTES); \
   (p)->RootDirectory = (r); \
@@ -24,6 +27,8 @@
 #define NT_SUCCESS(x) ((x)>=0)
 #define STATUS_SUCCESS ((NTSTATUS)0)
 #endif
+#define NT_WARNING(x) ((ULONG)(x)>>30==2)
+#define NT_ERROR(x) ((ULONG)(x)>>30==3)
 #if !defined(_NTSECAPI_H) && !defined(_SUBAUTH_H)
 typedef LONG NTSTATUS, *PNTSTATUS;
 typedef struct _UNICODE_STRING {
@@ -57,4 +62,6 @@ typedef struct _OBJECT_ATTRIBUTES {
   PVOID SecurityQualityOfService;
 } OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 #endif
+#define NOTHING
+#define RTL_CONSTANT_STRING(s) { sizeof(s)-sizeof((s)[0]), sizeof(s), s }
 #endif /* _NTDEF_H */

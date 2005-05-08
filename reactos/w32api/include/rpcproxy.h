@@ -20,6 +20,10 @@ extern "C" {
 #include <rpcndr.h>
 #include <string.h>
 
+#ifndef __RPCPROXY_H_VERSION__
+#define __RPCPROXY_H_VERSION__ 475
+#endif
+
 #define CStdStubBuffer_METHODS CStdStubBuffer_QueryInterface,CStdStubBuffer_AddRef,\
 CStdStubBuffer_Release,CStdStubBuffer_Connect,CStdStubBuffer_Disconnect,CStdStubBuffer_Invoke,\
 CStdStubBuffer_IsIIDSupported,CStdStubBuffer_CountRefs,CStdStubBuffer_DebugServerQueryInterface,\
@@ -98,6 +102,13 @@ DLLREGISTRY_ROUTINES(pProxyFileList, pClsID)
 
 #define DLLDATA_STANDARD_ROUTINES DLLDATA_ROUTINES( (const ProxyFileInfo**) pProxyFileList, &CLSID_PSFactoryBuffer)
 
+#define CINTERFACE_PROXY_VTABLE(n) \
+	struct \
+	{ \
+		CInterfaceProxyHeader header; \
+		void *Vtbl[n]; \
+	}
+
 struct tagCInterfaceStubVtbl;
 struct tagCInterfaceProxyVtbl;
 typedef struct tagCInterfaceStubVtbl *PCInterfaceStubVtblList;
@@ -152,6 +163,10 @@ typedef struct tagCStdStubBuffer {
     const struct IRpcStubBufferVtbl * lpVtbl;
     long RefCount;
     struct IUnknown *pvServerObject;
+    const struct ICallFactoryVtbl * pCallFactoryVtbl;
+    const IID * pAsyncIID;
+    struct IPSFactoryBuffer * pPSFactory;
+    const struct IReleaseMarshalBuffersVtbl * pRMBVtbl;
 } CStdStubBuffer;
 typedef struct tagCStdPSFactoryBuffer {
     const IPSFactoryBufferVtbl *lpVtbl;

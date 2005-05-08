@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 
 #if defined(_CFGMGR32_)
@@ -42,6 +40,8 @@ extern "C" {
 #endif
 
 #include "cfg.h"
+
+#include <pshpack1.h>
 
 #define CR_SUCCESS                  			0x00000000
 #define CR_DEFAULT                        0x00000001
@@ -1524,7 +1524,7 @@ WINAPI
 CMP_WaitNoPendingInstallEvents(
   IN DWORD dwTimeout);
 
-#pragma pack(pop)
+#include <poppack.h>
 
 #ifdef __cplusplus
 }

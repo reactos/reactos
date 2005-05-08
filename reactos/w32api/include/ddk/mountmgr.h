@@ -31,10 +31,7 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
-
 
 DEFINE_GUID(MOUNTDEV_MOUNTED_DEVICE_GUID,
 	0x53f5630d, 0xb6bf, 0x11d0, 0x94, 0xf2, 0x00, 0xa0, 0xc9, 0x1e, 0xfb, 0x8b);
@@ -134,8 +131,6 @@ typedef struct _MOUNTMGR_VOLUME_MOUNT_POINT {
   USHORT  TargetVolumeNameOffset;
   USHORT  TargetVolumeNameLength;
 } MOUNTMGR_VOLUME_MOUNT_POINT, *PMOUNTMGR_VOLUME_MOUNT_POINT;
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

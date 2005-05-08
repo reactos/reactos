@@ -1,4 +1,4 @@
-/* $Id: gl.h,v 1.3 2003/09/12 13:26:51 earnie Exp $ */
+/* $Id: gl.h 12852 2005-01-06 13:58:04Z mf $ */
 
 /*
  * Mesa 3-D graphics library

@@ -15,7 +15,7 @@ extern "C" {
 #define CLSID_NULL GUID_NULL
 #define CBPCLIPDATA(d) ((d).cbSize-sizeof((d).ulClipFmt))
 #define DECIMAL_NEG ((BYTE)0x80)
-#define DECIMAL_SETZERO(d) {(d).Lo64=(d).Hi32=(d).signscale=0;}
+#define DECIMAL_SETZERO(d) {DEC_LO64(&d)=DEC_HI32(&d)=DEC_SIGNSCALE(&d)=0;}
 #define ROTFLAGS_REGISTRATIONKEEPSALIVE	0x01
 #define ROTFLAGS_ALLOWANYCLIENT		0x02
 
@@ -60,7 +60,7 @@ typedef enum tagCLSCTX {
 	CLSCTX_INPROC_SERVER16=8,CLSCTX_REMOTE_SERVER=16
 } CLSCTX;
 typedef enum tagMSHLFLAGS {
-	MSHLFLAGS_NORMAL,MSHLFLAGS_TABLESTRONG,MSHLFLAGS_TABLEWEAK
+	MSHLFLAGS_NORMAL,MSHLFLAGS_TABLESTRONG,MSHLFLAGS_TABLEWEAK,MSHLFLAGS_NOPING
 } MSHLFLAGS;
 typedef struct _FLAGGED_WORD_BLOB {
 	unsigned long fFlags;
@@ -118,18 +118,11 @@ enum VARENUM {
 	VT_EMPTY,VT_NULL,VT_I2,VT_I4,VT_R4,VT_R8,VT_CY,VT_DATE,VT_BSTR,VT_DISPATCH,
 	VT_ERROR,VT_BOOL,VT_VARIANT,VT_UNKNOWN,VT_DECIMAL,VT_I1=16,VT_UI1,VT_UI2,VT_UI4,VT_I8,
 	VT_UI8,VT_INT,VT_UINT,VT_VOID,VT_HRESULT,VT_PTR,VT_SAFEARRAY,VT_CARRAY,VT_USERDEFINED,
-	VT_LPSTR,VT_LPWSTR,VT_RECORD=36,VT_FILETIME=64,VT_BLOB,VT_STREAM,VT_STORAGE,VT_STREAMED_OBJECT,
+	VT_LPSTR,VT_LPWSTR,VT_RECORD=36,VT_INT_PTR=37,VT_UINT_PTR=38,VT_FILETIME=64,VT_BLOB,VT_STREAM,VT_STORAGE,VT_STREAMED_OBJECT,
 	VT_STORED_OBJECT,VT_BLOB_OBJECT,VT_CF,VT_CLSID,VT_BSTR_BLOB=0xfff,VT_VECTOR=0x1000,
 	VT_ARRAY=0x2000,VT_BYREF=0x4000,VT_RESERVED=0x8000,VT_ILLEGAL= 0xffff,VT_ILLEGALMASKED=0xfff,
 	VT_TYPEMASK=0xfff
 };
-#ifdef _WIN64
-#define VT_INT_PTR  VT_I8
-#define VT_UINT_PTR VT_UI8
-#else
-#define VT_INT_PTR  VT_I4
-#define VT_UINT_PTR VT_UI4
-#endif
 
 typedef struct _BYTE_SIZEDARR {
 	unsigned long clSize;
@@ -150,23 +143,54 @@ typedef struct _HYPER_SIZEDARR {
 typedef double DOUBLE;
 typedef struct tagDEC {
 	USHORT wReserved;
-	_ANONYMOUS_UNION union {
-		_ANONYMOUS_STRUCT struct {
+	union {
+		struct {
 			BYTE scale;
 			BYTE sign;
-		}_STRUCT_NAME(s);
+		};
 		USHORT signscale;
-	} DUMMYUNIONNAME;
+	};
 	ULONG Hi32;
-	_ANONYMOUS_UNION union {
-		_ANONYMOUS_STRUCT struct {
+	union {
+		struct {
 			ULONG Lo32;
 			ULONG Mid32;
-		}_STRUCT_NAME(s2);
+		};
 		ULONGLONG Lo64;
-	} DUMMYUNIONNAME2;
+	};
 } DECIMAL;
 typedef void *HMETAFILEPICT;
+typedef struct tagCSPLATFORM {
+    DWORD dwPlatformId;
+    DWORD dwVersionHi;
+    DWORD dwVersionLo;
+    DWORD dwProcessorArch;
+} CSPLATFORM;
+typedef struct tagQUERYCONTEXT {
+    DWORD dwContext;
+    CSPLATFORM Platform;
+    LCID Locale;
+    DWORD dwVersionHi;
+    DWORD dwVersionLo;
+} QUERYCONTEXT;
+typedef struct {
+    DWORD tyspec;
+    union {
+        CLSID clsid;
+        LPOLESTR pFileExt;
+        LPOLESTR pMimeType;
+        LPOLESTR pProgId;
+        LPOLESTR pFileName;
+        struct {
+            LPOLESTR pPackageName;
+            GUID PolicyId;
+        } ByName;
+        struct {
+            GUID ObjectId;
+            GUID PolicyId;
+        } ByObjectId;
+    } tagged_union;
+} uCLSSPEC;
 #ifdef __cplusplus
 }
 #endif

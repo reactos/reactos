@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #if !defined(SMBCLASS)
   #define SMBCLASSAPI DECLSPEC_IMPORT
 #else
@@ -184,8 +182,6 @@ VOID
 DDKAPI
 SmbClassUnlockDevice(
   IN PSMB_CLASS  SmbClass);
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

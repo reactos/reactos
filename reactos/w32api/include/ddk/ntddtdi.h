@@ -31,10 +31,7 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
-
 
 #define DD_TDI_DEVICE_NAME                "\\Device\\UNKNOWN"
 #define DD_TDI_DEVICE_NAME_U              L"\\Device\\UNKNOWN"
@@ -56,8 +53,6 @@ extern "C" {
 #define IOCTL_TDI_ASSOCIATE_ADDRESS       _TDI_CONTROL_CODE(11, METHOD_BUFFERED)
 #define IOCTL_TDI_DISASSOCIATE_ADDRESS    _TDI_CONTROL_CODE(12, METHOD_BUFFERED)
 #define IOCTL_TDI_ACTION                  _TDI_CONTROL_CODE(13, METHOD_OUT_DIRECT)
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

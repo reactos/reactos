@@ -368,6 +368,7 @@ typedef DWORD FLONG;
 #define PROCESS_SET_QUOTA	256
 #define PROCESS_SET_INFORMATION	512
 #define PROCESS_QUERY_INFORMATION	1024
+#define PROCESS_SUSPEND_RESUME	2048
 #define PROCESS_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0xFFF)
 #define THREAD_TERMINATE	1
 #define THREAD_SUSPEND_RESUME	2
@@ -690,7 +691,10 @@ typedef DWORD FLONG;
 #define PROCESSOR_MIPS_R4000 4000
 #define PROCESSOR_ALPHA_21064 21064
 #define PROCESSOR_INTEL_IA64 2200
-
+#define PROCESSOR_PPC_601 601
+#define PROCESSOR_PPC_603 603
+#define PROCESSOR_PPC_604 604
+#define PROCESSOR_PPC_620 620
 #define PROCESSOR_ARCHITECTURE_INTEL 0
 #define PROCESSOR_ARCHITECTURE_MIPS 1
 #define PROCESSOR_ARCHITECTURE_ALPHA 2
@@ -1137,6 +1141,7 @@ typedef DWORD FLONG;
 #define TOKEN_ADJUST_PRIVILEGES         (0x0020)
 #define TOKEN_ADJUST_GROUPS             (0x0040)
 #define TOKEN_ADJUST_DEFAULT            (0x0080)
+#define TOKEN_ADJUST_SESSIONID          (0x0100)
 #define TOKEN_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED |\
                           TOKEN_ASSIGN_PRIMARY     |\
                           TOKEN_DUPLICATE          |\
@@ -1145,7 +1150,8 @@ typedef DWORD FLONG;
                           TOKEN_QUERY_SOURCE       |\
                           TOKEN_ADJUST_PRIVILEGES  |\
                           TOKEN_ADJUST_GROUPS      |\
-                          TOKEN_ADJUST_DEFAULT)
+                          TOKEN_ADJUST_DEFAULT     |\
+                          TOKEN_ADJUST_SESSIONID)
 #define TOKEN_READ       (STANDARD_RIGHTS_READ     |\
                           TOKEN_QUERY)
 #define TOKEN_WRITE      (STANDARD_RIGHTS_WRITE    |\
@@ -2060,6 +2066,21 @@ typedef struct _TOKEN_GROUPS {
 	DWORD GroupCount;
 	SID_AND_ATTRIBUTES Groups[ANYSIZE_ARRAY];
 } TOKEN_GROUPS,*PTOKEN_GROUPS,*LPTOKEN_GROUPS;
+typedef struct _TOKEN_GROUPS_AND_PRIVILEGES {
+	ULONG SidCount;
+	ULONG SidLength;
+	PSID_AND_ATTRIBUTES Sids;
+	ULONG RestrictedSidCount;
+	ULONG RestrictedSidLength;
+	PSID_AND_ATTRIBUTES RestrictedSids;
+	ULONG PrivilegeCount;
+	ULONG PrivilegeLength;
+	PLUID_AND_ATTRIBUTES Privileges;
+	LUID AuthenticationId;
+} TOKEN_GROUPS_AND_PRIVILEGES, *PTOKEN_GROUPS_AND_PRIVILEGES;
+typedef struct _TOKEN_ORIGIN {
+	LUID OriginatingLogonSession;
+} TOKEN_ORIGIN, *PTOKEN_ORIGIN;
 typedef struct _TOKEN_OWNER {
 	PSID Owner;
 } TOKEN_OWNER,*PTOKEN_OWNER;
@@ -2100,11 +2121,21 @@ typedef struct _SECURITY_DESCRIPTOR {
 	PACL Sacl;
 	PACL Dacl;
 } SECURITY_DESCRIPTOR, *PSECURITY_DESCRIPTOR, *PISECURITY_DESCRIPTOR;
+typedef struct _SECURITY_DESCRIPTOR_RELATIVE {
+	UCHAR  Revision;
+	UCHAR  Sbz1;
+	SECURITY_DESCRIPTOR_CONTROL Control;
+	ULONG Owner;
+	ULONG Group;
+	ULONG Sacl;
+	ULONG Dacl;
+} SECURITY_DESCRIPTOR_RELATIVE, *PSECURITY_DESCRIPTOR_RELATIVE, *PISECURITY_DESCRIPTOR_RELATIVE;
 typedef enum _TOKEN_INFORMATION_CLASS {
 	TokenUser=1,TokenGroups,TokenPrivileges,TokenOwner,
 	TokenPrimaryGroup,TokenDefaultDacl,TokenSource,TokenType,
 	TokenImpersonationLevel,TokenStatistics,TokenRestrictedSids,
-	TokenSessionId
+	TokenSessionId,TokenGroupsAndPrivileges,TokenSessionReference,
+	TokenSandBoxInert,TokenAuditPolicy,TokenOrigin,
 } TOKEN_INFORMATION_CLASS;
 typedef enum _SID_NAME_USE {
 	SidTypeUser=1,SidTypeGroup,SidTypeDomain,SidTypeAlias,
@@ -2160,8 +2191,7 @@ typedef struct _TAPE_GET_MEDIA_PARAMETERS {
 typedef struct _TAPE_GET_POSITION {
 	ULONG Type;
 	ULONG Partition;
-	ULONG OffsetLow;
-	ULONG OffsetHigh;
+	LARGE_INTEGER Offset;
 } TAPE_GET_POSITION,*PTAPE_GET_POSITION;
 typedef struct _TAPE_PREPARE {
 	DWORD Operation;
@@ -2617,9 +2647,9 @@ typedef struct _IMAGE_EXPORT_DIRECTORY {
 	DWORD Base;
 	DWORD NumberOfFunctions;
 	DWORD NumberOfNames;
-	PDWORD *AddressOfFunctions;
-	PDWORD *AddressOfNames;
-	PWORD *AddressOfNameOrdinals;
+	DWORD AddressOfFunctions;
+	DWORD AddressOfNames;
+	DWORD AddressOfNameOrdinals;
 } IMAGE_EXPORT_DIRECTORY,*PIMAGE_EXPORT_DIRECTORY;
 typedef struct _IMAGE_IMPORT_BY_NAME {
 	WORD Hint;
@@ -3280,8 +3310,7 @@ ULONGLONG WINAPI VerSetConditionMask(ULONGLONG,DWORD,BYTE);
 
 #if defined(__GNUC__)
 
-PVOID GetCurrentFiber(void);
-extern __inline__ PVOID GetCurrentFiber(void)
+static __inline__ PVOID GetCurrentFiber(void)
 {
     void* ret;
     __asm__ __volatile__ (
@@ -3291,8 +3320,7 @@ extern __inline__ PVOID GetCurrentFiber(void)
     return ret;
 }
 
-PVOID GetFiberData(void);
-extern __inline__ PVOID GetFiberData(void)
+static __inline__ PVOID GetFiberData(void)
 {
     void* ret;
     __asm__ __volatile__ (
