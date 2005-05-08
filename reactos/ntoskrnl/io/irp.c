@@ -61,7 +61,7 @@ IopCompleteRequest(PKAPC Apc,
 {
     PFILE_OBJECT FileObject;
     PIRP Irp;
-    PMDL Mdl, NextMdl;
+    PMDL Mdl;
     PKEVENT UserEvent;
     BOOLEAN SyncIrp;
 
@@ -101,17 +101,12 @@ IopCompleteRequest(PKAPC Apc,
     Irp->Flags &= ~(IRP_BUFFERED_IO | IRP_DEALLOCATE_BUFFER);
     
     /* Check if there's an MDL */
-    if ((Mdl = Irp->MdlAddress))
+    while ((Mdl = Irp->MdlAddress))
     {
         /* Clear all of them */
-        do
-        {
-            NextMdl = Mdl->Next;
-            IoFreeMdl(Mdl);
-            Mdl = NextMdl;
-        } while (Mdl);
+	Irp->MdlAddress = Mdl->Next;
+        IoFreeMdl(Mdl);
     }
-    Irp->MdlAddress = NULL;
 
     /* Remove the IRP from the list of Thread Pending IRPs */
     RemoveEntryList(&Irp->ThreadListEntry);
@@ -1122,11 +1117,12 @@ IofCompleteRequest(PIRP Irp,
     }
 
     /* Unlock MDL Pages, page 167. */
-    while ((Mdl = Irp->MdlAddress))
+    Mdl = Irp->MdlAddress;
+    while (Mdl)
     {
         DPRINT("Unlocking MDL: %x\n", Mdl);
-        Irp->MdlAddress = Mdl->Next;
         MmUnlockPages(Mdl);
+	Mdl = Mdl->Next;
     }        
 
     /* Check if we should exit because of a Deferred I/O (page 168) */
