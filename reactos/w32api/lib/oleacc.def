@@ -1,0 +1,17 @@
+LIBRARY Oleacc.dll
+EXPORTS
+AccessibleChildren@20
+AccessibleObjectFromEvent@20
+AccessibleObjectFromPoint@16
+AccessibleObjectFromWindow@16
+CreateStdAccessibleObject@16
+CreateStdAccessibleProxyA@20
+CreateStdAccessibleProxyW@20
+GetOleaccVersionInfo@8
+GetRoleTextA@12
+GetRoleTextW@12
+GetStateTextA@12
+GetStateTextW@12
+LresultFromObject@12
+ObjectFromLresult@16
+WindowFromAccessibleObject@8

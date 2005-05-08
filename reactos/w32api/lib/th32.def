@@ -1,0 +1,14 @@
+LIBRARY Kernel32.dll
+EXPORTS
+CreateToolhelp32Snapshot@8
+Heap32First@12
+Heap32ListFirst@8
+Heap32ListNext@8
+Heap32Next@4
+Module32First@8
+Module32Next@8
+Process32First@8
+Process32Next@8
+Thread32First@8
+Thread32Next@8
+Toolhelp32ReadProcessMemory@20

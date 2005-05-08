@@ -1,0 +1,21 @@
+LIBRARY PSAPI.DLL
+EXPORTS
+EmptyWorkingSet@4
+EnumDeviceDrivers@12
+EnumProcesses@12
+EnumProcessModules@16
+GetDeviceDriverBaseNameA@12
+GetDeviceDriverBaseNameW@12
+GetDeviceDriverFileNameA@12
+GetDeviceDriverFileNameW@12
+GetMappedFileNameA@16
+GetMappedFileNameW@16
+GetModuleBaseNameA@16
+GetModuleBaseNameW@16
+GetModuleFileNameExA@16
+GetModuleFileNameExW@16
+GetModuleInformation@16
+GetProcessMemoryInfo@12
+GetWsChanges@12
+InitializeProcessForWsWatch@4
+QueryWorkingSet@12

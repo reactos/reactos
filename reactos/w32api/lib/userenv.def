@@ -1,0 +1,11 @@
+LIBRARY USERENV.dll
+EXPORTS
+LoadUserProfileA@8
+LoadUserProfileW@8
+UnloadUserProfile@8
+GetProfilesDirectoryA@8
+GetProfilesDirectoryW@8
+GetUserProfileDirectoryA@12
+GetUserProfileDirectoryW@12
+CreateEnvironmentBlock@12
+DestroyEnvironmentBlock@4

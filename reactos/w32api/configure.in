@@ -1,0 +1,50 @@
+dnl Process this file with autoconf to produce a configure script.
+
+dnl This file is part of a free win32 library
+dnl
+dnl This program is distributed in the hope that it will be useful,
+dnl but WITHOUT ANY WARRANTY; without even the implied warranty of
+dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+dnl GNU General Public License for more details.
+
+AC_PREREQ(2.12)
+AC_INIT(lib/scrnsave.c)
+
+AC_CANONICAL_SYSTEM
+
+dnl Find install command
+AC_PROG_INSTALL
+
+dnl check for cc and CFLAGS
+CFLAGS=${CFLAGS-"-O2 -g"}
+AC_CHECK_TOOL(CC, gcc, gcc)
+AC_SUBST(CC)
+AC_SUBST(CFLAGS)
+
+dnl check for various tools
+AC_CHECK_TOOL(AR, ar, ar)
+AC_SUBST(AR)
+AC_CHECK_TOOL(AS, as, as)
+AC_SUBST(AS)
+AC_CHECK_TOOL(RANLIB, ranlib, ranlib)
+AC_SUBST(RANLIB)
+AC_CHECK_TOOL(LD, ld, ld)
+AC_SUBST(LD)
+AC_CHECK_TOOL(DLLTOOL, dlltool, dlltool)
+AC_SUBST(DLLTOOL)
+AC_CHECK_TOOL(WINDRES, windres, windres)
+AC_SUBST(WINDRES)
+
+AC_MSG_CHECKING([for build environment])
+case "$build_alias" in
+*-mingw*) BUILDENV=mingw;;
+*-cygwin*) BUILDENV=cygwin;;
+esac
+if test -z "$BUILDENV"; then
+        AC_MSG_RESULT(standard)
+else
+        AC_MSG_RESULT($BUILDENV)
+fi
+AC_SUBST(BUILDENV)
+
+AC_OUTPUT(Makefile lib/Makefile lib/ddk/Makefile)

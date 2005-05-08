@@ -1,0 +1,5 @@
+2000-10-23  Danny R. Smith  <danny_r_smith_2001@yahoo.co.nz>
+   * include/basetsd.h
+   * include/ras.h
+   * include/raserror.h
+   * include/rassapi.h

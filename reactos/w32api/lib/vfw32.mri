@@ -1,0 +1,6 @@
+CREATE libvfw32.a
+ADDLIB libmsvfw32.a
+ADDLIB libavicap32.a
+ADDLIB libavifil32.a
+SAVE
+END

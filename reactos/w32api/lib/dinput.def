@@ -1,0 +1,6 @@
+; from DirectX 6.1
+LIBRARY DINPUT.dll
+EXPORTS
+DirectInputCreateA@16
+DirectInputCreateW@16
+DirectInputCreateEx@20

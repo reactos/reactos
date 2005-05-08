@@ -1,0 +1,10 @@
+; from DirectX 6.1
+LIBRARY DPLAYX.dll
+EXPORTS
+DirectPlayCreate@12
+DirectPlayEnumerate@8
+DirectPlayEnumerateA@8
+DirectPlayEnumerateW@8
+DirectPlayLobbyCreateA@20
+DirectPlayLobbyCreateW@20
+gdwDPlaySPRefCount

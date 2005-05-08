@@ -1,0 +1,18 @@
+; from DirectX 6.1
+LIBRARY DSETUP.dll
+EXPORTS
+DirectXDeviceDriverSetupA@16
+DirectXDeviceDriverSetupW@16
+DirectXLoadString@12
+DirectXRegisterApplicationA@8
+DirectXRegisterApplicationW@8
+DirectXSetupA@12
+DirectXSetupCallback@20
+DirectXSetupGetFileVersion
+DirectXSetupGetVersion@8
+DirectXSetupIsEng@0
+DirectXSetupIsJapan@0
+DirectXSetupIsJapanNec@0
+DirectXSetupSetCallback@4
+DirectXSetupW@12
+DirectXUnRegisterApplication@8
