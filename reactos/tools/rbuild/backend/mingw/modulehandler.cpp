@@ -1969,67 +1969,34 @@ MingwKernelModuleHandler::Process ()
 void
 MingwKernelModuleHandler::GenerateKernelModuleTarget ()
 {
-	string targetName ( module.GetTargetName () ); // i.e. "ntoskrnl.exe"
-	string targetMacro ( GetTargetMacro ( module ) ); // i.e. "$(NTOSKRNL_TARGET)"
-	string workingDirectory = GetWorkingDirectory ();
+	string targetMacro ( GetTargetMacro ( module ) );
+	string workingDirectory = GetWorkingDirectory ( );
 	string objectsMacro = GetObjectsMacro ( module );
 	string linkDepsMacro = GetLinkingDependenciesMacro ();
 	string libsMacro = GetLibsMacro ();
-	string base_tmp = ros_temp + module.name + ".base.tmp";
-	CLEAN_FILE ( base_tmp );
-	string junk_tmp = ros_temp + module.name + ".junk.tmp";
-	CLEAN_FILE ( junk_tmp );
-	string temp_exp = ros_temp + module.name + ".temp.exp";
-	CLEAN_FILE ( temp_exp );
-	string gccOptions = ssprintf ("-Wl,-T,%s" SSEP "ntoskrnl.lnk -Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll -Wl,--dll",
-	                              module.GetBasePath ().c_str (),
-	                              module.entrypoint.c_str (),
-	                              module.baseaddress.c_str () );
-
-	GenerateRules ();
 
 	GenerateImportLibraryTargetIfNeeded ();
 
-	fprintf ( fMakefile, "%s: %s %s $(RSYM_TARGET) | %s\n",
-	          targetMacro.c_str (),
-	          objectsMacro.c_str (),
-	          linkDepsMacro.c_str (),
-	          GetDirectory(GetTargetFilename(module,NULL)).c_str () );
-	fprintf ( fMakefile, "\t$(ECHO_LD)\n" );
-	fprintf ( fMakefile,
-	          "\t${gcc} %s %s -Wl,--base-file,%s -o %s %s %s\n",
-	          GetLinkerMacro ().c_str (),
-	          gccOptions.c_str (),
-	          base_tmp.c_str (),
-	          junk_tmp.c_str (),
-	          objectsMacro.c_str (),
-	          linkDepsMacro.c_str () );
-	fprintf ( fMakefile,
-	          "\t-@${rm} %s 2>$(NUL)\n",
-	          junk_tmp.c_str () );
-	string killAt = module.mangledSymbols ? "" : "--kill-at";
-	fprintf ( fMakefile,
-	          "\t${dlltool} --dllname %s --base-file %s --def ntoskrnl/ntoskrnl.def --output-exp %s %s\n",
-	          targetName.c_str (),
-	          base_tmp.c_str (),
-	          temp_exp.c_str (),
-	          killAt.c_str () );
-	fprintf ( fMakefile,
-	          "\t-@${rm} %s 2>$(NUL)\n",
-	          base_tmp.c_str () );
-	fprintf ( fMakefile,
-	          "\t${gcc} %s %s -Wl,%s -o $@ %s %s\n",
-	          GetLinkerMacro ().c_str (),
-	          gccOptions.c_str (),
-	          temp_exp.c_str (),
-	          objectsMacro.c_str (),
-	          linkDepsMacro.c_str () );
-	fprintf ( fMakefile,
-	          "\t-@${rm} %s 2>$(NUL)\n",
-	          temp_exp.c_str () );
-	fprintf ( fMakefile, "\t$(ECHO_RSYM)\n" );
-	fprintf ( fMakefile,
-	          "\t$(Q)$(RSYM_TARGET) $@ $@\n\n" );
+	if ( module.non_if_data.files.size () > 0 )
+	{
+		GenerateRules ();
+
+		string dependencies = linkDepsMacro + " " + objectsMacro;
+
+		string linkerParameters = ssprintf ( "-Wl,-T,%s" SSEP "ntoskrnl.lnk -Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll --dll",
+		                                     module.GetBasePath ().c_str (),
+		                                     module.entrypoint.c_str (),
+		                                     module.baseaddress.c_str () );
+		GenerateLinkerCommand ( dependencies,
+		                        "${gcc}",
+		                        linkerParameters,
+		                        objectsMacro,
+		                        libsMacro );
+	}
+	else
+	{
+		GeneratePhonyTarget();
+	}
 }
 
 
