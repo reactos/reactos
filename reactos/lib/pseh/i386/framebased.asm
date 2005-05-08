@@ -56,9 +56,9 @@ __SEHGlobalUnwind:
  push esi
  push edi
 
- push 0x0 ; ReturnValue
- push 0x0 ; ExceptionRecord
- push .RestoreRegisters ; TargetIp
+ push dword 0x0 ; ReturnValue
+ push dword 0x0 ; ExceptionRecord
+ push dword .RestoreRegisters ; TargetIp
  push ebx ; TargetFrame
  call [__SEHRtlUnwind]
 
