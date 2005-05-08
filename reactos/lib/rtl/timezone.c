@@ -11,14 +11,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntos/registry.h>
-#include <ntos/time.h>
-#include <ntdll/rtl.h>
+#include "rtl.h"
 
 #define NDEBUG
 #include <debug.h>
-
 
 /* FUNCTIONS *****************************************************************/
 

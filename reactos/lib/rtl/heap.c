@@ -12,11 +12,7 @@
  * require it.
  */
 
-#include <string.h>
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <ntos/heap.h>
-#include <ntos/minmax.h>
+#include "rtl.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -28,7 +24,6 @@
 #else
 #define TRACE_ON(x) (1)
 #endif
-
 
 static RTL_CRITICAL_SECTION RtlpProcessHeapsListLock;
 

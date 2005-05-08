@@ -29,11 +29,8 @@
  */
 
 /* INCLUDES *****************************************************************/
-
 #define __USE_W32API
-
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
+#include "rtl.h"
 
 #define NDEBUG
 #include <debug.h>

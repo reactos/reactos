@@ -19,18 +19,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <winerror.h>
+#include "rtl.h"
 
 #define NDEBUG
 #include <debug.h>
-
-#ifndef HIWORD
-#define HIWORD(l) ((WORD)(((DWORD)(l) >> 16) & 0xFFFF))
-#endif
-#ifndef LOWORD
-#define LOWORD(l) ((WORD)(l))
-#endif
 
 /* TYPES *******************************************************************/
 

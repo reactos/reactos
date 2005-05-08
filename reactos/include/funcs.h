@@ -2087,10 +2087,12 @@ NTSTATUS  STDCALL RtlWalkHeap( HANDLE heap, PVOID entry_ptr );
 NTSTATUS STDCALL LdrLockLoaderLock(ULONG flags, ULONG *result, ULONG *magic);
 NTSTATUS STDCALL LdrUnlockLoaderLock(ULONG flags, ULONG magic);
 
-NTSTATUS  STDCALL RtlDuplicateUnicodeString(
-    int add_nul,
-    const UNICODE_STRING *source,
-    UNICODE_STRING *destination);
+NTSTATUS STDCALL
+RtlDuplicateUnicodeString(
+   INT AddNull,
+   IN PUNICODE_STRING SourceString,
+   PUNICODE_STRING DestinationString);
+
 NTSTATUS  STDCALL RtlFindCharInUnicodeString(
     int flags,
     const UNICODE_STRING *main_str,
