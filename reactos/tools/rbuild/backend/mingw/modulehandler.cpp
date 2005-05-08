@@ -1267,10 +1267,12 @@ MingwModuleHandler::GenerateLinkerCommand (
 {
 	string target ( GetTargetMacro ( module ) );
 	string target_folder ( GetDirectory ( GetTargetFilename ( module, NULL ) ) );
+	string def_file = GetDefinitionFilename ();
 
 	fprintf ( fMakefile,
-		"%s: %s $(RSYM_TARGET) | %s\n",
+		"%s: %s %s $(RSYM_TARGET) | %s\n",
 		target.c_str (),
+		def_file.c_str (),
 		dependencies.c_str (),
 		target_folder.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_LD)\n" );
@@ -1284,7 +1286,6 @@ MingwModuleHandler::GenerateLinkerCommand (
 		CLEAN_FILE ( junk_tmp );
 		string temp_exp = ros_temp + module.name + ".temp.exp";
 		CLEAN_FILE ( temp_exp );
-		string def_file = GetDefinitionFilename ();
 	
 		fprintf ( fMakefile,
 		          "\t%s %s -Wl,--base-file,%s -o %s %s %s %s\n",
