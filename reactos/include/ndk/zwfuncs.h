@@ -5653,6 +5653,18 @@ NtDuplicateObject(
 	IN BOOLEAN InheritHandle,
 	IN ULONG Options
 	);
+    
+NTSTATUS
+STDCALL
+ZwDuplicateObject(
+	IN HANDLE SourceProcessHandle,
+	IN HANDLE SourceHandle,
+	IN HANDLE TargetProcessHandle,
+	OUT PHANDLE TargetHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN BOOLEAN InheritHandle,
+	IN ULONG Options
+	);
 
 /*
  * FUNCTION: Adds an atom to the global atom table

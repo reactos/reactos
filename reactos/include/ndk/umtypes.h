@@ -286,6 +286,9 @@ typedef struct _PEB                             *PPEB;
 typedef CONST char *PCSZ;
 typedef ULONG KPROCESSOR_MODE;
 typedef PVOID PTHREAD_START_ROUTINE;
+typedef short CSHORT;
+typedef CSHORT *PCSHORT;
+#define STATIC static
 
 typedef enum _MODE 
 {
@@ -947,6 +950,132 @@ typedef struct _RTL_AVL_TABLE
     PVOID TableContext;
 } RTL_AVL_TABLE;
 typedef RTL_AVL_TABLE *PRTL_AVL_TABLE;
+
+#define RTL_REGISTRY_ABSOLUTE     0
+#define RTL_REGISTRY_SERVICES     1
+#define RTL_REGISTRY_CONTROL      2
+#define RTL_REGISTRY_WINDOWS_NT   3
+#define RTL_REGISTRY_DEVICEMAP    4
+#define RTL_REGISTRY_USER         5
+#define RTL_REGISTRY_MAXIMUM      6
+#define RTL_REGISTRY_HANDLE       0x40000000
+#define RTL_REGISTRY_OPTIONAL     0x80000000
+
+typedef NTSTATUS STDCALL
+(*PRTL_QUERY_REGISTRY_ROUTINE)(
+    IN PWSTR ValueName,
+    IN ULONG ValueType,
+    IN PVOID ValueData,
+    IN ULONG ValueLength,
+    IN PVOID Context,
+    IN PVOID EntryContext
+);
+
+typedef struct _RTL_QUERY_REGISTRY_TABLE 
+{
+    PRTL_QUERY_REGISTRY_ROUTINE QueryRoutine;
+    ULONG Flags;
+    PWSTR Name;
+    PVOID EntryContext;
+    ULONG DefaultType;
+    PVOID DefaultData;
+    ULONG DefaultLength;
+} RTL_QUERY_REGISTRY_TABLE, *PRTL_QUERY_REGISTRY_TABLE;
+
+typedef struct _KEY_VALUE_BASIC_INFORMATION 
+{
+    ULONG TitleIndex;
+    ULONG Type;
+    ULONG NameLength;
+    WCHAR Name[1];
+} KEY_VALUE_BASIC_INFORMATION, *PKEY_VALUE_BASIC_INFORMATION;
+
+typedef struct _KEY_VALUE_FULL_INFORMATION 
+{
+    ULONG TitleIndex;
+    ULONG Type;
+    ULONG DataOffset;
+    ULONG DataLength;
+    ULONG NameLength;
+    WCHAR Name[1];
+} KEY_VALUE_FULL_INFORMATION, *PKEY_VALUE_FULL_INFORMATION;
+
+typedef struct _KEY_BASIC_INFORMATION 
+{
+    LARGE_INTEGER LastWriteTime;
+    ULONG TitleIndex;
+    ULONG NameLength;
+    WCHAR Name[1];
+} KEY_BASIC_INFORMATION, *PKEY_BASIC_INFORMATION;
+
+#define RTL_QUERY_REGISTRY_SUBKEY   0x00000001
+#define RTL_QUERY_REGISTRY_TOPKEY   0x00000002
+#define RTL_QUERY_REGISTRY_REQUIRED 0x00000004
+#define RTL_QUERY_REGISTRY_NOVALUE  0x00000008
+#define RTL_QUERY_REGISTRY_NOEXPAND 0x00000010
+#define RTL_QUERY_REGISTRY_DIRECT   0x00000020
+#define RTL_QUERY_REGISTRY_DELETE   0x00000040
+
+#define SID_MAX_SUB_AUTHORITIES     15
+
+typedef struct _TIME_FIELDS 
+{
+    CSHORT Year;
+    CSHORT Month;
+    CSHORT Day;
+    CSHORT Hour;
+    CSHORT Minute;
+    CSHORT Second;
+    CSHORT Milliseconds;
+    CSHORT Weekday;
+} TIME_FIELDS;
+typedef TIME_FIELDS *PTIME_FIELDS;
+
+typedef struct _UNICODE_PREFIX_TABLE_ENTRY 
+{
+    CSHORT NodeTypeCode;
+    CSHORT NameLength;
+    struct _UNICODE_PREFIX_TABLE_ENTRY *NextPrefixTree;
+    struct _UNICODE_PREFIX_TABLE_ENTRY *CaseMatch;
+    RTL_SPLAY_LINKS Links;
+    PUNICODE_STRING Prefix;
+} UNICODE_PREFIX_TABLE_ENTRY;
+typedef UNICODE_PREFIX_TABLE_ENTRY *PUNICODE_PREFIX_TABLE_ENTRY;
+
+typedef struct _UNICODE_PREFIX_TABLE 
+{
+    CSHORT NodeTypeCode;
+    CSHORT NameLength;
+    PUNICODE_PREFIX_TABLE_ENTRY NextPrefixTree;
+    PUNICODE_PREFIX_TABLE_ENTRY LastNextEntry;
+} UNICODE_PREFIX_TABLE;
+typedef UNICODE_PREFIX_TABLE *PUNICODE_PREFIX_TABLE;
+
+#define VER_MINORVERSION                0x0000001
+#define VER_MAJORVERSION                0x0000002
+#define VER_BUILDNUMBER                 0x0000004
+#define VER_PLATFORMID                  0x0000008
+#define VER_SERVICEPACKMINOR            0x0000010
+#define VER_SERVICEPACKMAJOR            0x0000020
+#define VER_SUITENAME                   0x0000040
+#define VER_PRODUCT_TYPE                0x0000080
+#define VER_PLATFORM_WIN32s             0
+#define VER_PLATFORM_WIN32_WINDOWS      1
+#define VER_PLATFORM_WIN32_NT           2
+#define VER_EQUAL                       1
+#define VER_GREATER                     2
+#define VER_GREATER_EQUAL               3
+#define VER_LESS                        4
+#define VER_LESS_EQUAL                  5
+#define VER_AND                         6
+#define VER_OR                          7
+#define VER_CONDITION_MASK              7
+#define VER_NUM_BITS_PER_CONDITION_MASK 3
+
+typedef LPOSVERSIONINFOW PRTL_OSVERSIONINFOW;
+typedef OSVERSIONINFOEXW RTL_OSVERSIONINFOEXW;
+typedef LPOSVERSIONINFOEXW PRTL_OSVERSIONINFOEXW;
+
 
 #endif
 

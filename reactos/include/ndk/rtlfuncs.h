@@ -122,9 +122,9 @@ DbgBreakPoint(VOID);
 NTSTATUS
 STDCALL
 RtlAbsoluteToSelfRelativeSD (
-    IN PSECURITY_DESCRIPTOR     AbsoluteSecurityDescriptor,
-    IN OUT PSECURITY_DESCRIPTOR SelfRelativeSecurityDescriptor,
-    IN PULONG                   BufferLength
+    IN PSECURITY_DESCRIPTOR AbsoluteSecurityDescriptor,
+    IN OUT PSECURITY_DESCRIPTOR_RELATIVE SelfRelativeSecurityDescriptor,
+    IN PULONG BufferLength
 );
 
 NTSTATUS
@@ -142,6 +142,20 @@ RtlAllocateHeap (
     IN HANDLE  HeapHandle,
     IN ULONG   Flags,
     IN ULONG   Size
+);
+
+NTSTATUS
+STDCALL
+RtlAppendUnicodeToString (
+    PUNICODE_STRING Destination,
+    PCWSTR Source
+);
+
+NTSTATUS
+STDCALL
+RtlAppendUnicodeStringToString (
+    PUNICODE_STRING	Destination,
+    PUNICODE_STRING	Source
 );
 
 NTSTATUS
@@ -179,6 +193,12 @@ RtlCopySidAndAttributesArray(
     PULONG RemainingSidAreaSize
 );
 
+SIZE_T 
+STDCALL
+RtlCompareMemory(IN const VOID *Source1,
+                 IN const VOID *Source2,
+                 IN SIZE_T Length);
+                 
 LONG
 STDCALL
 RtlCompareUnicodeString (
@@ -284,6 +304,15 @@ RtlDecompressBuffer (
     OUT PULONG  FinalUncompressedSize
 );
 
+NTSTATUS
+STDCALL
+RtlExpandEnvironmentStrings_U (
+    PWSTR Environment,
+    PUNICODE_STRING Source,
+    PUNICODE_STRING Destination,
+    PULONG Length
+);
+
 PRTL_USER_PROCESS_PARAMETERS
 STDCALL
 RtlDeNormalizeProcessParams (
@@ -333,8 +362,114 @@ RtlLeaveCriticalSection (
      PRTL_CRITICAL_SECTION CriticalSection
 );
 
-#ifndef _NTIFS_
 NTSTATUS
+STDCALL
+RtlMultiByteToUnicodeN (
+    PWCHAR UnicodeString,
+    ULONG  UnicodeSize,
+    PULONG ResultSize,
+    const PCHAR  MbString,
+    ULONG  MbSize
+);
+
+NTSTATUS
+STDCALL
+RtlMultiByteToUnicodeSize (
+    PULONG UnicodeSize,
+    PCHAR  MbString,
+    ULONG  MbSize
+);
+
+CHAR STDCALL
+RtlUpperChar (CHAR Source);
+
+WCHAR
+STDCALL
+RtlUpcaseUnicodeChar (
+	WCHAR Source
+	);
+    
+NTSTATUS
+STDCALL
+RtlAnsiStringToUnicodeString (
+	PUNICODE_STRING	DestinationString,
+	PANSI_STRING	SourceString,
+	BOOLEAN		AllocateDestinationString
+	);
+    
+NTSTATUS
+STDCALL
+RtlUnicodeToMultiByteN (
+	PCHAR	MbString,
+	ULONG	MbSize,
+	PULONG	ResultSize,
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize
+	);
+    
+ULONG
+STDCALL
+RtlOemStringToUnicodeSize (
+	POEM_STRING	AnsiString
+	);
+    
+WCHAR STDCALL
+RtlDowncaseUnicodeChar(IN WCHAR Source);
+
+NTSTATUS
+STDCALL
+RtlUpcaseUnicodeToMultiByteN (
+	PCHAR	MbString,
+	ULONG	MbSize,
+	PULONG	ResultSize,
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize
+	);
+    
+NTSTATUS
+STDCALL
+RtlUnicodeToMultiByteSize (
+	PULONG	MbSize,
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize
+	);
+    
+NTSTATUS
+STDCALL
+RtlOemToUnicodeN(
+	PWSTR UnicodeString,
+	ULONG MaxBytesInUnicodeString,
+	PULONG BytesInUnicodeString,
+	IN PCHAR OemString,
+	ULONG BytesInOemString
+	);
+    
+NTSTATUS
+STDCALL
+RtlUnicodeToOemN (
+	PCHAR	OemString,
+	ULONG	OemSize,
+	PULONG	ResultSize,
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize
+	);
+
+NTSTATUS
+STDCALL
+RtlUpcaseUnicodeStringToOemString (
+	IN OUT	POEM_STRING	DestinationString,
+	IN	PUNICODE_STRING	SourceString,
+	IN	BOOLEAN		AllocateDestinationString
+	);
+        
+ULONG
+STDCALL
+RtlUnicodeStringToAnsiSize (
+	IN	PUNICODE_STRING	UnicodeString
+	);
+    
+#ifndef _NTIFS_
+BOOLEAN
 STDCALL
 RtlEqualSid (
     IN PSID Sid1,
@@ -534,7 +669,7 @@ RtlQueryEnvironmentVariable_U (
 NTSTATUS
 STDCALL
 RtlQueryTimeZoneInformation (
-	IN OUT struct _TIME_ZONE_INFORMATION *TimeZoneInformation
+	IN OUT PTIME_ZONE_INFORMATION TimeZoneInformation
 );
 
 VOID STDCALL RtlRaiseStatus(NTSTATUS Status);
@@ -644,6 +779,42 @@ STDCALL
 RtlCreateUnicodeStringFromAsciiz (OUT PUNICODE_STRING Destination,
 				  IN PCSZ Source);
 	
+                  
+BOOLEAN 
+STDCALL
+RtlTimeFieldsToTime (
+    PTIME_FIELDS TimeFields,
+    PLARGE_INTEGER Time
+);
+
+VOID
+STDCALL
+RtlTimeToTimeFields (
+    PLARGE_INTEGER Time,
+    PTIME_FIELDS TimeFields
+);
+
+NTSTATUS
+STDCALL
+RtlQueryRegistryValues (
+    IN ULONG RelativeTo,
+    IN PCWSTR Path,
+    IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
+    IN PVOID Context,
+    IN PVOID Environment
+);
+
+NTSTATUS
+STDCALL
+RtlWriteRegistryValue (
+    ULONG RelativeTo,
+    PCWSTR Path,
+    PCWSTR ValueName,
+    ULONG ValueType,
+    PVOID ValueData,
+    ULONG ValueLength
+);
+             
 VOID
 STDCALL
 RtlUnwind (

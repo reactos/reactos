@@ -9,9 +9,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <windows.h>
-#include <string.h>
+#include "rtl.h"
 
 #define NDEBUG
 #include <debug.h>
