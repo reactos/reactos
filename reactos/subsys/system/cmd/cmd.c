@@ -333,7 +333,7 @@ Execute (LPTSTR full, LPTSTR first, LPTSTR rest)
 			working = SetCurrentDirectory(str);
 		}
 
-		if (!working) ConErrResPuts (STRING_CMD_INVALIDDRIVE);
+		if (!working) ConErrResPuts (STRING_FREE_ERROR1);
 
 		return;
 	}

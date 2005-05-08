@@ -39,7 +39,7 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 		SetCurrentDirectory (szPath);
 		GetCurrentDirectory (MAX_PATH, szPath);
 		if (szPath[0] != (TCHAR)_totupper (*first))
-			ConErrResPuts (STRING_CMD_INVALIDDRIVE);
+			ConErrResPuts (STRING_FREE_ERROR1);
 
 		return 0;
 	}

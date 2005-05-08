@@ -84,7 +84,7 @@
 #define STRING_CMD_HELP6                   613
 #define STRING_CMD_HELP7                   614
 #define STRING_CMD_HELP8                   615 
-#define STRING_CMD_INVALIDDRIVE            617
+
 #define STRING_CMD_SHELLINFO               624
 
 #define STRING_COLOR_HELP1                 625
