@@ -1,5 +1,6 @@
 #include "precomp.h"
-#include <excpt.h>
+#include <ndk/umtypes.h>
+#include <ndk/rtltypes.h>
 
 #ifdef __GNUC__
 #else

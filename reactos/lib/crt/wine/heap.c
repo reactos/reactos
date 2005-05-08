@@ -28,9 +28,11 @@
 #include <stdlib.h>
 #include <internal/mtdll.h>
 
-#include "wine/debug.h"
+#define NDEBUG
+#include <internal/debug.h>
+//#include "wine/debug.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
+//WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
 /* MT */
 #define LOCK_HEAP   _mlock( _HEAP_LOCK )

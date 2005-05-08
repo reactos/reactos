@@ -1,6 +1,5 @@
 #include "precomp.h"
 #include <math.h>
-#include <ntos/except.h>
 
 
 int _matherr(struct _exception* e)

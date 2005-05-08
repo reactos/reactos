@@ -11,8 +11,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "tgetopt.h"
-
 int _topterr = 1;
 int _toptind = 1;
 int _toptopt;

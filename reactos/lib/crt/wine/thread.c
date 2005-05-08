@@ -24,9 +24,11 @@
 #include <malloc.h>
 #include <process.h>
 
-#include "wine/debug.h"
+#define NDEBUG
+#include <internal/debug.h>
+//#include "wine/debug.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
+//WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
 void _amsg_exit (int errnum);
 /* Index to TLS */

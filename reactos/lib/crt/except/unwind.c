@@ -1,6 +1,7 @@
 #include "precomp.h"
-#include <excpt.h>
-#include <wine/winternl.h>
+#include <ndk/umtypes.h>
+#include <ndk/rtltypes.h>
+#include <ndk/rtlfuncs.h>
 
 /*
  * @implemented

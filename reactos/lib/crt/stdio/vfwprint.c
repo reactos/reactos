@@ -7,7 +7,8 @@
 #include <malloc.h>
 #include <internal/file.h>
 
-#include <ntdef.h>
+#include <ndk/umtypes.h>
+
 
 int _isnanl(double x);
 int _isinfl(double x);
