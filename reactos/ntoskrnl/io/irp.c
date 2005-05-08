@@ -117,6 +117,162 @@ IopCompleteRequest(PKAPC Apc,
     RemoveEntryList(&Irp->ThreadListEntry);
     InitializeListHead(&Irp->ThreadListEntry);  
 
+#if 1
+    /* Check for Success but allow failure for Async IRPs */
+    if (NT_SUCCESS(Irp->IoStatus.Status) || 
+        (Irp->PendingReturned &&
+        !SyncIrp &&
+        (FileObject == NULL || FileObject->Flags & FO_SYNCHRONOUS_IO)))
+    {    
+        _SEH_TRY
+        {
+            /*  Save the IOSB Information */
+            *Irp->UserIosb = Irp->IoStatus;
+        }
+        _SEH_HANDLE
+        {
+            /* Ignore any error */
+        }
+        _SEH_END;
+    
+        /* Check if there's an event */
+        if (UserEvent)
+        {
+            /* Check if we should signal the File Object Event as well */
+            if (FileObject)
+            {
+                 /* If the File Object is SYNC, then we need to signal its event too */
+                if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+                {
+                    /* Set the Status */
+                    FileObject->FinalStatus = Irp->IoStatus.Status;
+
+                    /* Signal Event */
+                    KeSetEvent(&FileObject->Event, 0, FALSE);
+                }
+            }
+            /* Signal the Event */
+            KeSetEvent(UserEvent, 0, FALSE);
+
+            /* Dereference the Event if this is an ASYNC IRP */
+	    if (FileObject && !SyncIrp && UserEvent != &FileObject->Event)
+	    {
+                ObDereferenceObject(UserEvent);
+	    }
+        }
+        else if (FileObject)
+        {
+            /* Set the Status */
+            FileObject->FinalStatus = Irp->IoStatus.Status;
+
+            /* Signal the File Object Instead */
+            KeSetEvent(&FileObject->Event, 0, FALSE);
+        
+        }
+    
+        /* Now call the User APC if one was requested */
+        if (Irp->Overlay.AsynchronousParameters.UserApcRoutine != NULL)
+        {
+            KeInitializeApc(&Irp->Tail.Apc,
+                            KeGetCurrentThread(),
+                            CurrentApcEnvironment,
+                            IopFreeIrpKernelApc,
+                            IopAbortIrpKernelApc,
+                            (PKNORMAL_ROUTINE)Irp->Overlay.AsynchronousParameters.UserApcRoutine,
+                            Irp->RequestorMode,
+                            Irp->Overlay.AsynchronousParameters.UserApcContext);
+
+            KeInsertQueueApc(&Irp->Tail.Apc,
+                             Irp->UserIosb,
+                             NULL,
+                             2);
+	    Irp = NULL;
+        }
+        else if (FileObject && FileObject->CompletionContext)
+        {
+            /* Call the IO Completion Port if we have one, instead */
+            IoSetIoCompletion(FileObject->CompletionContext->Port,
+                              FileObject->CompletionContext->Key,
+                              Irp->Overlay.AsynchronousParameters.UserApcContext,
+                              Irp->IoStatus.Status,
+                              Irp->IoStatus.Information,
+                              FALSE);
+	    Irp = NULL;
+        }
+    }
+    else
+    {   
+        /* Signal the Events only if PendingReturned and we have a File Object */
+        if (FileObject && Irp->PendingReturned)
+        {
+            /* Check for SYNC IRP */
+            if (SyncIrp)
+            {
+                /* Set the status in this case only */
+		_SEH_TRY
+		{
+		    *Irp->UserIosb = Irp->IoStatus;
+		}
+		_SEH_HANDLE
+		{
+		    /* Ignore any error */
+		}
+		_SEH_END;
+            
+                /* Signal our event if we have one */
+                if (UserEvent)
+                {
+                    KeSetEvent(UserEvent, 0, FALSE);
+                }
+                else
+                {
+                    /* Signal the File's Event instead */
+                    KeSetEvent(&FileObject->Event, 0, FALSE);
+                }
+            }
+            else
+            {
+#if 1
+		/* FIXME: This is necessary to fix bug #609 */ 
+		_SEH_TRY
+		{
+		    *Irp->UserIosb = Irp->IoStatus;
+		}
+		_SEH_HANDLE
+		{
+		    /* Ignore any error */
+		}
+		_SEH_END;
+#endif
+                /* We'll report the Status to the File Object, not the IRP */
+                FileObject->FinalStatus = Irp->IoStatus.Status;
+                
+                /* Signal the File Object ONLY if this was Async */
+                KeSetEvent(&FileObject->Event, 0, FALSE);
+            }
+        }
+        
+        /* Dereference the Event if it's an ASYNC IRP on a File Object */
+        if (UserEvent && !SyncIrp && FileObject)
+        {
+            if (UserEvent != &FileObject->Event)
+            {
+                ObDereferenceObject(UserEvent);
+            }   
+        }
+    }        
+    
+    /* Dereference the File Object */
+    if (FileObject) ObDereferenceObject(FileObject);
+        
+    if (Irp)
+    {
+	/* Free the IRP */
+        IoFreeIrp(Irp);
+    }
+
+#else
+
     if (NT_SUCCESS(Irp->IoStatus.Status) || Irp->PendingReturned)
     {
         _SEH_TRY
@@ -198,6 +354,7 @@ IopCompleteRequest(PKAPC Apc,
         /* Dereference the File Object */
         ObDereferenceObject(FileObject);
     }
+#endif
 }
 
 /* FUNCTIONS *****************************************************************/
