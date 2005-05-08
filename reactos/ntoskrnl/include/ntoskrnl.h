@@ -6,37 +6,29 @@
 /* include the ntoskrnl config.h file */
 #include "config.h"
 
-#include <roscfg.h>
+#include <reactos/roscfg.h>
 #include <reactos/version.h>
 #include <reactos/resource.h>
 #include <reactos/bugcodes.h>
+#include <reactos/defines.h>
+#include <reactos/string.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#include <malloc.h>
 #include <wchar.h>
-#include <roskrnl.h>
-#include <ntos/minmax.h>
-#include <ntos/synch.h>
-#include <ntos/keyboard.h>
-#include <ntos/ntdef.h>
-#include <ntos/ntpnp.h>
-#include <rosrtl/minmax.h>
-#include <rosrtl/string.h>
-#include <ddk/halfuncs.h>
-#include <ddk/kefuncs.h>
-#include <ddk/pnptypes.h>
-#include <ddk/pnpfuncs.h>
-#include <ddk/wdmguid.h>
-#include <ntdll/ldr.h>
+#include <ddk/ntifs.h>
+#include <ndk/ntndk.h>
+
+/* Leave Intact */
 #include <pseh.h>
 #include <internal/ctype.h>
-#include <internal/ntoskrnl.h>
+#include <internal/id.h>
 #include <internal/ke.h>
 #include <internal/i386/segment.h>
 #include <internal/i386/mm.h>
 #include <internal/i386/fpu.h>
+#include <internal/i386/tss.h>
 #include <internal/module.h>
 #include <internal/handle.h>
 #include <internal/pool.h>
@@ -51,6 +43,7 @@
 #include <internal/kd.h>
 #include <internal/ex.h>
 #include <internal/ob.h>
+#include <internal/nt.h>
 #include "internal/xhal.h"
 #include <internal/v86m.h>
 #include <internal/ifs.h>
@@ -63,10 +56,9 @@
 #include <internal/trap.h>
 #include <internal/safe.h>
 #include <internal/test.h>
-#include <napi/core.h>
-#include <napi/dbg.h>
-#include <napi/teb.h>
-#include <napi/win32.h>
+
+#endif /* INCLUDE_NTOSKRNL_H */
+
 
 #ifndef RTL_CONSTANT_STRING
 #define RTL_CONSTANT_STRING(__SOURCE_STRING__) \
