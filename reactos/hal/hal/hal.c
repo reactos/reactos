@@ -12,6 +12,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ndk/haltypes.h>
+#include <ndk/kdtypes.h>
 #include <roscfg.h>
 
 #define NDEBUG
@@ -758,7 +760,7 @@ KeGetCurrentIrql(VOID)
   return (KIRQL)0;
 }
 
-
+#undef KeLowerIrql
 VOID
 STDCALL
 KeLowerIrql(
@@ -782,7 +784,7 @@ KeQueryPerformanceCounter(
   return Value;
 }
 
-
+#undef KeRaiseIrql
 VOID
 STDCALL
 KeRaiseIrql(
