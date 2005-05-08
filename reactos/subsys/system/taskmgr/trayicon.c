@@ -135,6 +135,7 @@ BOOL TrayIcon_ShellAddTrayIcon(void)
     NOTIFYICONDATA    nid;
     HICON            hIcon = NULL;
     BOOL            bRetVal;
+    TCHAR szMsg[256];
 
     memset(&nid, 0, sizeof(NOTIFYICONDATA));
 
@@ -146,7 +147,10 @@ BOOL TrayIcon_ShellAddTrayIcon(void)
     nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
     nid.uCallbackMessage = WM_ONTRAYICON;
     nid.hIcon = hIcon;
-    wsprintf(nid.szTip, _T("CPU Usage: %d%%"), PerfDataGetProcessorUsage());
+
+	      
+	LoadString( GetModuleHandle(NULL), IDS_MSG_TRAYICONCPUUSAGE, (LPTSTR) szMsg,sizeof(szMsg));
+    wsprintf(nid.szTip, szMsg, PerfDataGetProcessorUsage());
 
     bRetVal = Shell_NotifyIcon(NIM_ADD, &nid);
 
