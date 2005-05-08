@@ -41,7 +41,7 @@ BRUSH_Cleanup(PVOID ObjectBody)
     GDIOBJ_SetOwnership(pBrush->hbmPattern, PsGetCurrentProcess());
     NtGdiDeleteObject(pBrush->hbmPattern);
   }
-  
+
   return TRUE;
 }
 
@@ -135,7 +135,7 @@ CalculateColorTableSize(
 
    /*
     * At first get some basic parameters from the passed BitmapInfoHeader
-    * structure. It can have one of the following formats: 
+    * structure. It can have one of the following formats:
     * - BITMAPCOREHEADER (the oldest one with totally different layout
     *                     from the others)
     * - BITMAPINFOHEADER (the standard and most common header)
@@ -175,7 +175,7 @@ CalculateColorTableSize(
             *ColorTableSize = 0;
          else
             *ColorTableSize = 3;
-         
+
          return TRUE;
 
       case BI_RGB:
@@ -201,7 +201,7 @@ CalculateColorTableSize(
                *ColorTableSize = ClrUsed;
                return TRUE;
          }
-         
+
       case BI_RLE4:
          if (BitCount == 4)
          {
@@ -224,7 +224,7 @@ CalculateColorTableSize(
          return TRUE;
 
       default:
-         return FALSE;      
+         return FALSE;
    }
 }
 
@@ -296,7 +296,7 @@ IntGdiCreateDIBBrush(
    GDIOBJ_SetOwnership(hPattern, NULL);
 
    BRUSHOBJ_UnlockBrush(hBrush);
-   
+
    return hBrush;
 }
 
@@ -308,7 +308,7 @@ IntGdiCreateHatchBrush(
    HBRUSH hBrush;
    PGDIBRUSHOBJ BrushObject;
    HBITMAP hPattern;
-   
+
    if (Style < 0 || Style >= NB_HATCH_STYLES)
    {
       return 0;
@@ -339,7 +339,7 @@ IntGdiCreateHatchBrush(
    GDIOBJ_SetOwnership(hPattern, NULL);
 
    BRUSHOBJ_UnlockBrush(hBrush);
-   
+
    return hBrush;
 }
 
@@ -350,14 +350,14 @@ IntGdiCreatePatternBrush(
    HBRUSH hBrush;
    PGDIBRUSHOBJ BrushObject;
    HBITMAP hPattern;
-   
+
    hPattern = BITMAPOBJ_CopyBitmap(hBitmap);
    if (hPattern == NULL)
    {
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return NULL;
    }
-   
+
    hBrush = BRUSHOBJ_AllocBrush();
    if (hBrush == NULL)
    {
@@ -376,7 +376,7 @@ IntGdiCreatePatternBrush(
    GDIOBJ_SetOwnership(hPattern, NULL);
 
    BRUSHOBJ_UnlockBrush(hBrush);
-   
+
    return hBrush;
 }
 
@@ -386,7 +386,7 @@ IntGdiCreateSolidBrush(
 {
    HBRUSH hBrush;
    PGDIBRUSHOBJ BrushObject;
-   
+
    hBrush = BRUSHOBJ_AllocBrush();
    if (hBrush == NULL)
    {
@@ -402,7 +402,7 @@ IntGdiCreateSolidBrush(
    /* FIXME: Fill in the rest of fields!!! */
 
    BRUSHOBJ_UnlockBrush(hBrush);
-   
+
    return hBrush;
 }
 
@@ -411,7 +411,7 @@ IntGdiCreateNullBrush(VOID)
 {
    HBRUSH hBrush;
    PGDIBRUSHOBJ BrushObject;
-   
+
    hBrush = BRUSHOBJ_AllocBrush();
    if (hBrush == NULL)
    {
@@ -423,7 +423,7 @@ IntGdiCreateNullBrush(VOID)
    ASSERT(BrushObject != NULL);
    BrushObject->flAttrs |= GDIBRUSH_IS_NULL;
    BRUSHOBJ_UnlockBrush(hBrush);
-   
+
    return hBrush;
 }
 
@@ -475,7 +475,7 @@ IntPatBlt(
          DestRect.top = YLeft + Height + dc->w.DCOrgY + 1;
          DestRect.bottom = YLeft + dc->w.DCOrgY + 1;
       }
-      
+
       BrushOrigin.x = BrushObj->ptOrigin.x + dc->w.DCOrgX;
       BrushOrigin.y = BrushObj->ptOrigin.y + dc->w.DCOrgY;
 
@@ -512,7 +512,7 @@ IntGdiPolyPatBlt(
    PPATRECT r;
    PGDIBRUSHOBJ BrushObj;
    DC *dc;
-	
+
    dc = DC_LockDc(hDC);
    if (dc == NULL)
    {
@@ -525,7 +525,7 @@ IntGdiPolyPatBlt(
       /* Yes, Windows really returns TRUE in this case */
       return TRUE;
    }
-	
+
    for (r = pRects, i = 0; i < cRects; i++)
    {
       BrushObj = BRUSHOBJ_LockBrush(r->hBrush);
@@ -545,7 +545,7 @@ IntGdiPolyPatBlt(
    }
 
    DC_UnlockDc( hDC );
-	
+
    return TRUE;
 }
 
@@ -610,7 +610,7 @@ NtGdiCreateSolidBrush(COLORREF Color)
  * NtGdiSetBrushOrgEx
  *
  * The NtGdiSetBrushOrgEx function sets the brush origin that GDI assigns to
- * the next brush an application selects into the specified device context. 
+ * the next brush an application selects into the specified device context.
  *
  * Status
  *    @implemented
@@ -659,7 +659,7 @@ NtGdiPolyPatBlt(
    PPATRECT rb = NULL;
    NTSTATUS Status;
    BOOL Ret;
-    
+
    if (cRects > 0)
    {
       rb = ExAllocatePoolWithTag(PagedPool, sizeof(PATRECT) * cRects, TAG_PATBLT);
@@ -676,9 +676,9 @@ NtGdiPolyPatBlt(
          return FALSE;
       }
    }
-    
+
    Ret = IntGdiPolyPatBlt(hDC, dwRop, pRects, cRects, Reserved);
-	
+
    if (cRects > 0)
       ExFreePool(rb);
 

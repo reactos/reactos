@@ -35,10 +35,10 @@ IntAddAtom(LPWSTR AtomName)
    PWINSTATION_OBJECT WinStaObject;
    NTSTATUS Status = STATUS_SUCCESS;
    RTL_ATOM Atom;
-   
+
    if (PsGetWin32Thread()->Desktop == NULL)
    {
-      SetLastNtError(Status);      
+      SetLastNtError(Status);
       return (RTL_ATOM)0;
    }
    WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
@@ -46,7 +46,7 @@ IntAddAtom(LPWSTR AtomName)
 				  AtomName, &Atom);
    if (!NT_SUCCESS(Status))
    {
-      SetLastNtError(Status);      
+      SetLastNtError(Status);
       return (RTL_ATOM)0;
    }
    return Atom;
@@ -61,7 +61,7 @@ IntGetAtomName(RTL_ATOM nAtom, LPWSTR lpBuffer, ULONG nSize)
 
    if (PsGetWin32Thread()->Desktop == NULL)
    {
-      SetLastNtError(Status);      
+      SetLastNtError(Status);
       return 0;
    }
    WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
@@ -71,7 +71,7 @@ IntGetAtomName(RTL_ATOM nAtom, LPWSTR lpBuffer, ULONG nSize)
       *(lpBuffer + Size) = 0;
    if (!NT_SUCCESS(Status))
    {
-      SetLastNtError(Status);      
+      SetLastNtError(Status);
       return 0;
    }
    return Size;

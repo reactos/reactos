@@ -35,7 +35,7 @@ typedef NTSTATUS (STDCALL *PW32_THREAD_CALLBACK)(
    struct _ETHREAD *Thread,
    BOOLEAN Create);
 
-/* 
+/*
  * Callbacks used for Win32 objects... this define won't be needed after the Object Manager
  * rewrite -- Alex
  */
@@ -51,7 +51,7 @@ typedef NTSTATUS STDCALL_FUNC
                         PUNICODE_STRING FullPath,
                         PWSTR *Path,
                         ULONG Attributes);
-                        
+
 typedef VOID STDCALL_FUNC
 (*OBJECT_DELETE_ROUTINE)(PVOID DeletedObject);
 
@@ -59,14 +59,14 @@ typedef PVOID STDCALL_FUNC
 (*OBJECT_FIND_ROUTINE)(PVOID WinStaObject,
                        PWSTR Name,
                        ULONG Attributes);
-                       
+
 typedef struct _W32_OBJECT_CALLBACK {
     OBJECT_CREATE_ROUTINE WinStaCreate;
     OBJECT_PARSE_ROUTINE WinStaParse;
     OBJECT_DELETE_ROUTINE WinStaDelete;
     OBJECT_FIND_ROUTINE WinStaFind;
     OBJECT_CREATE_ROUTINE DesktopCreate;
-    OBJECT_DELETE_ROUTINE DesktopDelete;    
+    OBJECT_DELETE_ROUTINE DesktopDelete;
 } W32_OBJECT_CALLBACK, *PW32_OBJECT_CALLBACK;
 
 VOID STDCALL
@@ -92,7 +92,7 @@ Win32kProcessCallback (struct _EPROCESS *Process,
 		     BOOLEAN Create)
 {
   PW32PROCESS Win32Process;
-  
+
   Win32Process = (PW32PROCESS)Process->Win32Process;
   if (Create)
     {
@@ -100,24 +100,24 @@ Win32kProcessCallback (struct _EPROCESS *Process,
 
       InitializeListHead(&Win32Process->ClassListHead);
       ExInitializeFastMutex(&Win32Process->ClassListLock);
-      
+
       InitializeListHead(&Win32Process->MenuListHead);
-      ExInitializeFastMutex(&Win32Process->MenuListLock);      
+      ExInitializeFastMutex(&Win32Process->MenuListLock);
 
       InitializeListHead(&Win32Process->PrivateFontListHead);
       ExInitializeFastMutex(&Win32Process->PrivateFontListLock);
-      
+
       InitializeListHead(&Win32Process->DriverObjListHead);
       ExInitializeFastMutex(&Win32Process->DriverObjListLock);
 
       Win32Process->KeyboardLayout = W32kGetDefaultKeyLayout();
-      
+
       if(Process->Peb != NULL)
       {
         /* map the gdi handle table to user land */
         Process->Peb->GdiSharedHandleTable = GDI_MapHandleTable(Process);
       }
-      
+
       /* setup process flags */
       Win32Process->Flags = 0;
     }
@@ -134,7 +134,7 @@ Win32kProcessCallback (struct _EPROCESS *Process,
       GDI_CleanupForProcess(Process);
 
       IntGraphicsCheck(FALSE);
-      
+
       /*
        * Deregister logon application automatically
        */
@@ -166,7 +166,7 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
       PRTL_USER_PROCESS_PARAMETERS ProcessParams = (Process->Peb ? Process->Peb->ProcessParameters : NULL);
 
       DPRINT("Creating W32 thread TID:%d at IRQ level: %lu\n", Thread->Cid.UniqueThread, KeGetCurrentIrql());
-      
+
       /*
        * inherit the thread desktop and process window station (if not yet inherited) from the process startup
        * info structure. See documentation of CreateProcess()
@@ -268,8 +268,8 @@ DllMain (
       DPRINT1("Adding system services failed!\n");
       return STATUS_UNSUCCESSFUL;
     }
-    
-  /* 
+
+  /*
    * Register Object Manager Callbacks
    */
     Win32kObjectCallbacks.WinStaCreate = IntWinStaObjectCreate;
@@ -287,14 +287,14 @@ DllMain (
 			    0,
 			    sizeof(W32THREAD),
 			    sizeof(W32PROCESS));
-  
+
   Status = IntUserCreateSharedSectionPool(48 * 1024 * 1024, /* 48 MB by default */
                                           &SessionSharedSectionPool);
   if (!NT_SUCCESS(Status))
   {
     DPRINT1("Failed to initialize the shared section pool: Status 0x%x\n", Status);
   }
-  
+
   Status = InitWindowStationImpl();
   if (!NT_SUCCESS(Status))
   {
@@ -392,7 +392,7 @@ DllMain (
      used by win32 applications */
   CreateStockObjects();
   CreateSysColorObjects();
-  
+
   PREPARE_TESTS
 
   return STATUS_SUCCESS;

@@ -128,15 +128,15 @@ IntUserCreateSharedSection(IN PSHARED_SECTION_POOL SharedSectionPool,
   LARGE_INTEGER SectionSize;
   ULONG Size;
   NTSTATUS Status;
-  
+
   ASSERT(SharedSectionPool && SharedSectionSize && (*SharedSectionSize) > 0 && SystemMappedBase);
-  
+
   FreeSharedSection = NULL;
-  
+
   Size = ROUND_UP(*SharedSectionSize, PAGE_SIZE);
 
   ExAcquireFastMutex(&SharedSectionPool->Lock);
-  
+
   if(Size > SharedSectionPool->PoolFree)
   {
     ExReleaseFastMutex(&SharedSectionPool->Lock);
@@ -144,14 +144,14 @@ IntUserCreateSharedSection(IN PSHARED_SECTION_POOL SharedSectionPool,
             SharedSectionPool->PoolSize / 1024, (*SharedSectionSize) / 1024);
     return STATUS_INSUFFICIENT_RESOURCES;
   }
-  
+
   /* walk the array to find a free entry */
   for(Array = &SharedSectionPool->SectionsArray, LastArray = Array;
       Array != NULL && FreeSharedSection == NULL;
       Array = Array->Next)
   {
     LastArray = Array;
-    
+
     for(SharedSection = Array->SharedSection, LastSharedSection = SharedSection + Array->nEntries;
         SharedSection != LastSharedSection;
         SharedSection++)
@@ -162,22 +162,22 @@ IntUserCreateSharedSection(IN PSHARED_SECTION_POOL SharedSectionPool,
         break;
       }
     }
-    
+
     if(Array->Next != NULL)
     {
       LastArray = Array;
     }
   }
-  
+
   ASSERT(LastArray);
-  
+
   if(FreeSharedSection == NULL)
   {
     ULONG nNewEntries;
     PSHARED_SECTIONS_ARRAY NewArray;
-    
+
     ASSERT(LastArray->Next == NULL);
-    
+
     /* couldn't find a free entry in the array, extend the array */
 
     nNewEntries = ((PAGE_SIZE - sizeof(SHARED_SECTIONS_ARRAY)) / sizeof(SHARED_SECTION)) + 1;
@@ -191,19 +191,19 @@ IntUserCreateSharedSection(IN PSHARED_SECTION_POOL SharedSectionPool,
       DPRINT1("Failed to allocate new array for shared sections!\n");
       return STATUS_INSUFFICIENT_RESOURCES;
     }
-    
+
     NewArray->nEntries = nNewEntries;
     NewArray->Next = NULL;
     LastArray->Next = NewArray;
-    
+
     Array = NewArray;
     FreeSharedSection = &Array->SharedSection[0];
   }
-  
+
   ASSERT(FreeSharedSection);
-  
+
   /* now allocate a real section */
-  
+
   SectionSize.QuadPart = Size;
   Status = MmCreateSection(&FreeSharedSection->SectionObject,
                            SECTION_ALL_ACCESS,
@@ -222,7 +222,7 @@ IntUserCreateSharedSection(IN PSHARED_SECTION_POOL SharedSectionPool,
     {
       (*SharedSectionSize) -= Size;
       SharedSectionPool->SharedSectionCount++;
-      
+
       *SystemMappedBase = FreeSharedSection->SystemMappedBase;
       *SharedSectionSize = FreeSharedSection->ViewSize;
     }
@@ -233,9 +233,9 @@ IntUserCreateSharedSection(IN PSHARED_SECTION_POOL SharedSectionPool,
       DPRINT1("Failed to map the shared section into system space! Status 0x%x\n", Status);
     }
   }
-  
+
   ExReleaseFastMutex(&SharedSectionPool->Lock);
-  
+
   return Status;
 }
 
@@ -333,7 +333,7 @@ IntUserMapSharedSection(IN PSHARED_SECTION_POOL SharedSectionPool,
   if(SectionObject != NULL)
   {
     ULONG RealViewSize = (ViewSize ? min(*ViewSize, SharedSection->ViewSize) : SharedSection->ViewSize);
-    
+
     ObReferenceObjectByPointer(SectionObject,
                                (ReadOnly ? SECTION_MAP_READ : SECTION_MAP_READ | SECTION_MAP_WRITE),
                                NULL,
@@ -359,7 +359,7 @@ IntUserMapSharedSection(IN PSHARED_SECTION_POOL SharedSectionPool,
     DPRINT1("Couldn't find and map a shared section with SystemMappedBase=0x%x!\n", SystemMappedBase);
     Status = STATUS_UNSUCCESSFUL;
   }
-  
+
   ExReleaseFastMutex(&SharedSectionPool->Lock);
 
   return Status;
@@ -398,7 +398,7 @@ IntUserUnMapSharedSection(IN PSHARED_SECTION_POOL SharedSectionPool,
       }
     }
   }
-  
+
   ExReleaseFastMutex(&SharedSectionPool->Lock);
 
   if(SectionObject != NULL)

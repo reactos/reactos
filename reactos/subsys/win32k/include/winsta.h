@@ -6,7 +6,7 @@
 #include <internal/ex.h>
 #include <internal/ps.h>
 #include "msgqueue.h"
-  
+
 #define WINSTA_ROOT_NAME	L"\\Windows\\WindowStations"
 #define WINSTA_ROOT_NAME_LENGTH	23
 
@@ -23,13 +23,13 @@ InitWindowStationImpl(VOID);
 NTSTATUS FASTCALL
 CleanupWindowStationImpl(VOID);
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 IntWinStaObjectCreate(PVOID ObjectBody,
                       PVOID Parent,
                       PWSTR RemainingPath,
                       struct _OBJECT_ATTRIBUTES* ObjectAttributes);
-                      
+
 VOID STDCALL
 IntWinStaObjectDelete(PVOID DeletedObject);
 
@@ -37,8 +37,8 @@ PVOID STDCALL
 IntWinStaObjectFind(PVOID Object,
                     PWSTR Name,
                     ULONG Attributes);
-            
-NTSTATUS 
+
+NTSTATUS
 STDCALL
 IntWinStaObjectParse(PVOID Object,
                      PVOID *NextObject,

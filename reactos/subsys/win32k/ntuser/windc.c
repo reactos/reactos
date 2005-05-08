@@ -97,7 +97,7 @@ DceGetVisRgn(HWND hWnd, ULONG Flags, HWND hWndChild, ULONG CFlags)
  * entire window, including title bar, menus, and scroll bars. A window device
  * context permits painting anywhere in a window, because the origin of the
  * device context is the upper-left corner of the window instead of the client
- * area. 
+ * area.
  *
  * Status
  *    @implemented
@@ -125,9 +125,9 @@ DceAllocDCE(HWND hWnd, DCE_TYPE Type)
   DceHandle = DCEOBJ_AllocDCE();
   if(!DceHandle)
     return NULL;
-  
+
   RtlInitUnicodeString(&DriverName, L"DISPLAY");
-  
+
   Dce = DCEOBJ_LockDCE(DceHandle);
   /* No real locking, just get the pointer */
   DCEOBJ_UnlockDCE(DceHandle);
@@ -181,7 +181,7 @@ DceSetDrawable(PWINDOW_OBJECT WindowObject, HDC hDC, ULONG Flags,
   DC *dc = DC_LockDc(hDC);
   if(!dc)
     return;
-  
+
   if (WindowObject == NULL)
     {
       dc->w.DCOrgX = 0;
@@ -278,10 +278,10 @@ DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
         hRgnVisible = NULL;
         goto noparent;
       }
-      
+
       if (Parent->Style & WS_CLIPSIBLINGS)
       {
-         DcxFlags = DCX_CLIPSIBLINGS | 
+         DcxFlags = DCX_CLIPSIBLINGS |
             (Flags & ~(DCX_CLIPCHILDREN | DCX_WINDOW));
       }
       else
@@ -430,7 +430,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
     }
 
   Parent = (Window ? IntGetParentObject(Window) : NULL);
-  
+
   if (NULL == Window || !(Window->Style & WS_CHILD) || NULL == Parent)
     {
       Flags &= ~DCX_PARENTCLIP;
@@ -451,14 +451,14 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
 
   if(Parent)
     IntReleaseWindowObject(Parent);
-  
+
   DcxFlags = Flags & DCX_CACHECOMPAREMASK;
 
   if (Flags & DCX_CACHE)
     {
       DCE* DceEmpty = NULL;
       DCE* DceUnused = NULL;
-      
+
       DCE_LockList();
 
       for (Dce = FirstDce; Dce != NULL; Dce = Dce->next)
@@ -483,7 +483,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
 	}
 
       DCE_UnlockList();
-      
+
       if (Dce == NULL)
 	{
 	  Dce = (DceEmpty == NULL) ? DceUnused : DceEmpty;
@@ -561,7 +561,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
           {
             NtGdiOffsetRgn(Dce->hClipRgn, -Window->WindowRect.left, -Window->WindowRect.top);
             NtGdiCombineRgn(Dce->hClipRgn, Dce->hClipRgn, Window->WindowRegion, RGN_AND);
-            NtGdiOffsetRgn(Dce->hClipRgn, -(Window->ClientRect.left - Window->WindowRect.left), 
+            NtGdiOffsetRgn(Dce->hClipRgn, -(Window->ClientRect.left - Window->WindowRect.left),
                                           -(Window->ClientRect.top - Window->WindowRect.top));
           }
         }
@@ -609,9 +609,9 @@ DCE_Cleanup(PVOID ObjectBody)
 {
   PDCE PrevInList;
   PDCE pDce = (PDCE)ObjectBody;
-  
+
   DCE_LockList();
-  
+
   if (pDce == FirstDce)
     {
       FirstDce = pDce->next;
@@ -631,7 +631,7 @@ DCE_Cleanup(PVOID ObjectBody)
     }
 
   DCE_UnlockList();
-  
+
   return NULL != PrevInList;
 }
 
@@ -639,7 +639,7 @@ HWND FASTCALL
 IntWindowFromDC(HDC hDc)
 {
   DCE *Dce;
-  
+
   DCE_LockList();
   for (Dce = FirstDce; Dce != NULL; Dce = Dce->next)
   {
@@ -660,7 +660,7 @@ NtUserReleaseDC(HWND hWnd, HDC hDc)
   INT nRet = 0;
 
   DCE_LockList();
-  
+
   dce = FirstDce;
 
   DPRINT("%p %p\n", hWnd, hDc);
@@ -716,7 +716,7 @@ DceFreeDCE(PDCE dce, BOOLEAN Force)
 
   return ret;
 }
-  
+
 
 /***********************************************************************
  *           DceFreeWindowDCE
@@ -729,7 +729,7 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
   DCE *pDCE;
 
   DCE_LockList();
-  
+
   pDCE = FirstDce;
   while (pDCE)
     {
@@ -785,7 +785,7 @@ DceEmptyCache()
   DCE_UnlockList();
 }
 
-VOID FASTCALL 
+VOID FASTCALL
 DceResetActiveDCEs(PWINDOW_OBJECT Window)
 {
   DCE *pDCE;
@@ -800,7 +800,7 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
     }
 
   DCE_LockList();
-  
+
   pDCE = FirstDce;
   while (pDCE)
     {
@@ -865,10 +865,10 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
               IntReleaseWindowObject(CurrentWindow);
             }
         }
-      
+
       pDCE = pDCE->next;
     }
-  
+
   DCE_UnlockList();
 }
 
@@ -895,7 +895,7 @@ NtUserEnumDisplaySettings(
   PUNICODE_STRING pSafeDeviceName = NULL;
   UNICODE_STRING SafeDeviceName;
   USHORT Size = 0, ExtraSize = 0;
-  
+
   /* Copy the devmode */
   Status = MmCopyFromCaller(&Size, &lpDevMode->dmSize, sizeof (Size));
   if (!NT_SUCCESS(Status))
@@ -998,7 +998,7 @@ NtUserChangeDisplaySettings(
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return DISP_CHANGE_BADPARAM;
   }
-  
+
   /* Copy devmode */
   Status = MmCopyFromCaller(&DevMode.dmSize, &lpDevMode->dmSize, sizeof (DevMode.dmSize));
   if (!NT_SUCCESS(Status))
@@ -1033,10 +1033,10 @@ NtUserChangeDisplaySettings(
 
   /* Call internal function */
   Ret = IntChangeDisplaySettings(pSafeDeviceName, &DevMode, dwflags, lParam);
-  
+
   if (pSafeDeviceName != NULL)
     RtlFreeUnicodeString(pSafeDeviceName);
-    
+
   return Ret;
 }
 

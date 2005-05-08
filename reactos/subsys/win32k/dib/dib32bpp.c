@@ -306,7 +306,7 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
    {
       if (BltInfo->PatternSurface)
       {
-         PatternY = (BltInfo->DestRect.top + BltInfo->BrushOrigin.y) % 
+         PatternY = (BltInfo->DestRect.top + BltInfo->BrushOrigin.y) %
                     BltInfo->PatternSurface->sizlBitmap.cy;
       }
       else
@@ -314,15 +314,15 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
          Pattern = BltInfo->Brush->iSolidColor;
       }
    }
-   
+
    for (DestY = BltInfo->DestRect.top; DestY < BltInfo->DestRect.bottom; DestY++)
    {
       SourceX = BltInfo->SourcePoint.x;
-      
+
       for (DestX = BltInfo->DestRect.left; DestX < BltInfo->DestRect.right; DestX++, DestBits++, SourceX++)
       {
          Dest = *DestBits;
- 
+
          if (UsesSource)
          {
             Source = DIB_GetSource(BltInfo->SourceSurface, SourceX, SourceY, BltInfo->XlateSourceToDest);
@@ -347,7 +347,7 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
          ((BltInfo->DestRect.right - BltInfo->DestRect.left) << 2) +
          BltInfo->DestSurface->lDelta);
    }
-  
+
    return TRUE;
 }
 
@@ -398,13 +398,13 @@ void ScaleLineAvg32(PIXEL *Target, PIXEL *Source, int SrcWidth, int TgtWidth)
   while (skip-- > 0)
     *Target++ = *Source;
 }
- 
+
 static BOOLEAN
 FinalCopy32(PIXEL *Target, PIXEL *Source, PSPAN ClipSpans, UINT ClipSpansCount, UINT *SpanIndex,
             UINT DestY, RECTL *DestRect)
 {
   LONG Left, Right;
-  
+
   while (ClipSpans[*SpanIndex].Y < DestY
          || (ClipSpans[*SpanIndex].Y == DestY
              && ClipSpans[*SpanIndex].X + ClipSpans[*SpanIndex].Width < DestRect->left))
@@ -458,7 +458,7 @@ BOOLEAN ScaleRectAvg32(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   UINT ClipSpansCount;
   UINT SpanIndex;
   LONG DestY;
-  
+
   if (! ClipobjToSpans(&ClipSpans, &ClipSpansCount, ClipRegion, DestRect))
     {
       return FALSE;
@@ -492,7 +492,7 @@ BOOLEAN ScaleRectAvg32(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       } /* if */
       PrevSource = Source;
     } /* if */
-    
+
     if (E >= Mid && PrevSourceAhead != (PIXEL *)((BYTE *)Source + SourceSurf->lDelta)) {
       int x;
       ScaleLineAvg32(ScanLineAhead, (PIXEL *)((BYTE *)Source + SourceSurf->lDelta), SourceRect->right - SourceRect->left, DestRect->right - DestRect->left);
@@ -500,7 +500,7 @@ BOOLEAN ScaleRectAvg32(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         ScanLine[x] = average32(ScanLine[x], ScanLineAhead[x]);
       PrevSourceAhead = (PIXEL *)((BYTE *)Source + SourceSurf->lDelta);
     } /* if */
-    
+
     if (! FinalCopy32(Target, ScanLine, ClipSpans, ClipSpansCount, &SpanIndex, DestY, DestRect))
       {
         /* No more spans, everything else is clipped away, we're done */
@@ -560,38 +560,38 @@ BOOLEAN DIB_32BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       case BMF_16BPP:
       case BMF_24BPP:
          /* Not implemented yet. */
-         return FALSE;      
+         return FALSE;
       break;
-  
+
       case BMF_32BPP:
         return ScaleRectAvg32(DestSurf, SourceSurf, DestRect, SourceRect, MaskOrigin, BrushOrigin,
                               ClipRegion, ColorTranslation, Mode);
       break;
-      
+
       default:
       //DPRINT1("DIB_32BPP_StretchBlt: Unhandled Source BPP: %u\n", BitsPerFormat(SourceSurf->iBitmapFormat));
       return FALSE;
     }
 
-  
-    
+
+
   return TRUE;
 }
 
-BOOLEAN 
+BOOLEAN
 DIB_32BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                          RECTL*  DestRect,  POINTL  *SourcePoint,
                          XLATEOBJ *ColorTranslation, ULONG iTransColor)
 {
   ULONG X, Y, SourceX, SourceY, Source, wd;
   ULONG *DestBits;
-  
+
   SourceY = SourcePoint->y;
   DestBits = (ULONG*)(DestSurf->pvScan0 +
                       (DestRect->left << 2) +
                       DestRect->top * DestSurf->lDelta);
   wd = DestSurf->lDelta - ((DestRect->right - DestRect->left) << 2);
-  
+
   for(Y = DestRect->top; Y < DestRect->bottom; Y++)
   {
     SourceX = SourcePoint->x;
@@ -603,11 +603,11 @@ DIB_32BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         *DestBits = XLATEOBJ_iXlate(ColorTranslation, Source);
       }
     }
-    
+
     SourceY++;
     DestBits = (ULONG*)((ULONG_PTR)DestBits + wd);
   }
-  
+
   return TRUE;
 }
 

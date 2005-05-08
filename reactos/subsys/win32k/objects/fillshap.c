@@ -69,7 +69,7 @@ IntGdiPolygon(PDC    dc,
 	  UnsafePoints[CurrentPoint].y += dc->w.DCOrgY;
 	}
 
-      if (PATH_IsPathOpen(dc->w.path)) 
+      if (PATH_IsPathOpen(dc->w.path))
 	ret = PATH_Polygon(dc, UnsafePoints, Count );
       else
       {
@@ -131,7 +131,7 @@ IntGdiPolygon(PDC    dc,
       }
 
       BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
-  
+
   return ret;
 }
 
@@ -148,7 +148,7 @@ IntGdiPolyPolygon(DC      *dc,
 
   pt = Points;
   pc = PolyCounts;
-  
+
   for (i=0;i<Count;i++)
   {
     ret = IntGdiPolygon ( dc, pt, *pc );
@@ -158,7 +158,7 @@ IntGdiPolyPolygon(DC      *dc,
     }
     pt+=*pc++;
   }
-  
+
   return ret;
 }
 
@@ -182,7 +182,7 @@ NtGdiChord(HDC  hDC,
 
 /*
  * NtGdiEllipse
- * 
+ *
  * Author
  *    Filip Navara
  *
@@ -299,27 +299,27 @@ NtGdiEllipse(
       nx = RadiusY;
       ny = RadiusX;
    }
-   
+
    da = -1;
    db = 0xFFFF;
-   ix = 0; 
+   ix = 0;
    iy = nx * 64;
-   NewA = 0; 
+   NewA = 0;
    NewB = (iy + 32) >> 6;
-   NewC = 0; 
+   NewC = 0;
    NewD = (NewB * ny) / nx;
 
    do {
-      A = NewA; 
-      B = NewB; 
-      C = NewC; 
+      A = NewA;
+      B = NewB;
+      C = NewC;
       D = NewD;
 
       ix += iy / nx;
       iy -= ix / nx;
-      NewA = (ix + 32) >> 6; 
+      NewA = (ix + 32) >> 6;
       NewB = (iy + 32) >> 6;
-      NewC = (NewA * ny) / nx; 
+      NewC = (NewA * ny) / nx;
       NewD = (NewB * ny) / nx;
 
       if (RadiusX > RadiusY)
@@ -338,7 +338,7 @@ NtGdiEllipse(
       /*
        * Draw the lines going from inner to outer (+ mirrored).
        */
-      
+
       if ((A > da) && (A < db))
       {
          PUTLINE(CenterX - D, CenterY + A, CenterX + D, CenterY + A, FillBrushInst);
@@ -352,9 +352,9 @@ NtGdiEllipse(
       /*
        * Draw the lines going from outer to inner (+ mirrored).
        */
-      
+
       if ((B < db) && (B > da))
-      { 
+      {
          PUTLINE(CenterX - C, CenterY + B, CenterX + C, CenterY + B, FillBrushInst);
          PUTLINE(CenterX - C, CenterY - B, CenterX + C, CenterY - B, FillBrushInst);
          db = B;
@@ -815,14 +815,14 @@ return TRUE;
 
 #if 0
 
-//When the fill mode is ALTERNATE, GDI fills the area between odd-numbered and 
-//even-numbered polygon sides on each scan line. That is, GDI fills the area between the 
-//first and second side, between the third and fourth side, and so on. 
+//When the fill mode is ALTERNATE, GDI fills the area between odd-numbered and
+//even-numbered polygon sides on each scan line. That is, GDI fills the area between the
+//first and second side, between the third and fourth side, and so on.
 
-//WINDING Selects winding mode (fills any region with a nonzero winding value). 
+//WINDING Selects winding mode (fills any region with a nonzero winding value).
 //When the fill mode is WINDING, GDI fills any region that has a nonzero winding value.
 //This value is defined as the number of times a pen used to draw the polygon would go around the region.
-//The direction of each edge of the polygon is important. 
+//The direction of each edge of the polygon is important.
 
 extern BOOL FillPolygon(PDC dc,
 				  SURFOBJ *SurfObj,
@@ -844,13 +844,13 @@ NtGdiPolygon(HDC          hDC,
   LPPOINT Safept;
   NTSTATUS Status;
   BOOL Ret = FALSE;
-  
+
   if ( Count < 2 )
   {
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   dc = DC_LockDc(hDC);
   if(!dc)
     SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -872,12 +872,12 @@ NtGdiPolygon(HDC          hDC,
         SetLastNtError(Status);
       else
         Ret = IntGdiPolygon(dc, Safept, Count);
-        
+
       ExFreePool(Safept);
     }
     DC_UnlockDc(hDC);
   }
-  
+
   return Ret;
 }
 
@@ -894,7 +894,7 @@ NtGdiPolyPolygon(HDC           hDC,
   LPINT SafePolyPoints;
   NTSTATUS Status;
   BOOL Ret;
-  
+
   dc = DC_LockDc(hDC);
   if(!dc)
   {
@@ -907,7 +907,7 @@ NtGdiPolyPolygon(HDC           hDC,
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
-  
+
   if(Count > 0)
   {
     Safept = ExAllocatePoolWithTag(PagedPool, (sizeof(POINT) + sizeof(INT)) * Count, TAG_SHAPE);
@@ -917,9 +917,9 @@ NtGdiPolyPolygon(HDC           hDC,
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
-    
+
     SafePolyPoints = (LPINT)&Safept[Count];
-    
+
     Status = MmCopyFromCaller(Safept, Points, sizeof(POINT) * Count);
     if(!NT_SUCCESS(Status))
     {
@@ -943,12 +943,12 @@ NtGdiPolyPolygon(HDC           hDC,
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   Ret = IntGdiPolyPolygon(dc, Safept, SafePolyPoints, Count);
-  
+
   ExFreePool(Safept);
   DC_UnlockDc(hDC);
-  
+
   return Ret;
 }
 
@@ -1078,7 +1078,7 @@ NtGdiRectangle(HDC  hDC,
 {
   DC   *dc;
   BOOL ret; // default to failure
-  
+
   dc = DC_LockDc(hDC);
   if(!dc)
   {
@@ -1091,7 +1091,7 @@ NtGdiRectangle(HDC  hDC,
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
-  
+
   ret = IntRectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
   DC_UnlockDc ( hDC );
 
@@ -1132,7 +1132,7 @@ IntRoundRect(
 
   xradius = xCurveDiameter >> 1;
   yradius = yCurveDiameter >> 1;
-  
+
   left += dc->w.DCOrgX;
   right += dc->w.DCOrgX;
   top += dc->w.DCOrgY;
@@ -1419,18 +1419,18 @@ IntGdiGradientFill(
   POINTL DitherOrg;
   ULONG Mode, i;
   BOOL Ret;
-  
+
   ASSERT(dc);
   ASSERT(pVertex);
   ASSERT(uVertex);
   ASSERT(pMesh);
   ASSERT(uMesh);
-  
+
   /* check parameters */
   if(ulMode & GRADIENT_FILL_TRIANGLE)
   {
     PGRADIENT_TRIANGLE tr = (PGRADIENT_TRIANGLE)pMesh;
-    
+
     for(i = 0; i < uMesh; i++, tr++)
     {
       if(tr->Vertex1 >= uVertex ||
@@ -1454,7 +1454,7 @@ IntGdiGradientFill(
       }
     }
   }
-  
+
   /* calculate extent */
   Extent.left = Extent.right = pVertex->x;
   Extent.top = Extent.bottom = pVertex->y;
@@ -1465,27 +1465,27 @@ IntGdiGradientFill(
     Extent.top = min(Extent.top, (pVertex + i)->y);
     Extent.bottom = max(Extent.bottom, (pVertex + i)->y);
   }
-  
+
   DitherOrg.x = dc->w.DCOrgX;
   DitherOrg.y = dc->w.DCOrgY;
   Extent.left += DitherOrg.x;
   Extent.right += DitherOrg.x;
   Extent.top += DitherOrg.y;
   Extent.bottom += DitherOrg.y;
-  
+
   BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
   /* FIXME - BitmapObj can be NULL!!! Don't assert but handle this case gracefully! */
   ASSERT(BitmapObj);
-  
+
   PalDestGDI = PALETTE_LockPalette(dc->w.hPalette);
   /* FIXME - PalDestGDI can be NULL!!! Don't assert but handle this case gracefully! */
   ASSERT(PalDestGDI);
   Mode = PalDestGDI->Mode;
   PALETTE_UnlockPalette(dc->w.hPalette);
-  
+
   XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
   ASSERT(XlateObj);
-  
+
   Ret = IntEngGradientFill(BitmapObj,
                            dc->CombinedClip,
                            XlateObj,
@@ -1496,10 +1496,10 @@ IntGdiGradientFill(
                            &Extent,
                            &DitherOrg,
                            ulMode);
-  
+
   BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
   EngDeleteXlate(XlateObj);
-  
+
   return Ret;
 }
 
@@ -1519,7 +1519,7 @@ NtGdiGradientFill(
   PVOID SafeMesh;
   ULONG SizeMesh;
   NTSTATUS Status;
-  
+
   dc = DC_LockDc(hdc);
   if(!dc)
   {
@@ -1538,7 +1538,7 @@ NtGdiGradientFill(
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   switch(ulMode)
   {
     case GRADIENT_FILL_RECT_H:
@@ -1577,9 +1577,9 @@ NtGdiGradientFill(
     SetLastNtError(Status);
     return FALSE;
   }
-  
+
   Ret = IntGdiGradientFill(dc, SafeVertex, uVertex, SafeMesh, uMesh, ulMode);
-  
+
   DC_UnlockDc(hdc);
   ExFreePool(SafeVertex);
   return Ret;

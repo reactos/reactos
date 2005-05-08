@@ -114,7 +114,7 @@ CsrCloseHandle(HANDLE Handle)
 {
   NTSTATUS Status;
   PEPROCESS OldProcess;
-  
+
   /* Switch to the process in which the handle is valid */
   OldProcess = PsGetCurrentProcess();
   if (CsrProcess != OldProcess)

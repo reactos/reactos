@@ -151,7 +151,7 @@ MouseThreadMain(PVOID StartContext)
   OBJECT_ATTRIBUTES MouseObjectAttributes;
   IO_STATUS_BLOCK Iosb;
   NTSTATUS Status;
-  
+
   RtlRosInitUnicodeStringFromLiteral(&MouseDeviceName, L"\\??\\Mouse"); /* FIXME - does win use the same? */
   InitializeObjectAttributes(&MouseObjectAttributes,
                              &MouseDeviceName,
@@ -169,7 +169,7 @@ MouseThreadMain(PVOID StartContext)
     DPRINT1("Win32K: Failed to open mouse.\n");
     return; //(Status);
   }
-  
+
   for(;;)
   {
     /*
@@ -182,7 +182,7 @@ MouseThreadMain(PVOID StartContext)
                                    TRUE,
                                    NULL);
     DPRINT("Mouse Input Thread Starting...\n");
-    
+
     /*
      * Receive and process keyboard input.
      */
@@ -213,7 +213,7 @@ MouseThreadMain(PVOID StartContext)
         return; //(Status);
       }
       DPRINT("MouseEvent\n");
-      
+
       ProcessMouseInputData(&MouseInput, Iosb.Information / sizeof(MOUSE_INPUT_DATA));
     }
     DPRINT("Mouse Input Thread Stopped...\n");
@@ -284,7 +284,7 @@ IntKeyboardGetIndicatorTrans(HANDLE KeyboardDeviceHandle,
   Ret = ExAllocatePoolWithTag(PagedPool,
 		  	      Size,
 			      TAG_KEYBOARD);
-  
+
   while (Ret)
     {
       Status = NtDeviceIoControlFile(KeyboardDeviceHandle,
@@ -343,7 +343,7 @@ IntKeyboardUpdateLeds(HANDLE KeyboardDeviceHandle,
     {
       if (KeyInput->MakeCode == IndicatorTrans->IndicatorList[Count].MakeCode)
 	{
-	  Indicators.LedFlags ^= 
+	  Indicators.LedFlags ^=
 			IndicatorTrans->IndicatorList[Count].IndicatorFlags;
 
 	  /* Update the lights on the hardware */
@@ -415,7 +415,7 @@ KeyboardThreadMain(PVOID StartContext)
   USHORT LastMakeCode = 0;
   USHORT LastFlags = 0;
   UINT RepeatCount = 0;
-  
+
   RtlRosInitUnicodeStringFromLiteral(&KeyboardDeviceName, L"\\??\\Keyboard");
   InitializeObjectAttributes(&KeyboardObjectAttributes,
 			     &KeyboardDeviceName,
@@ -503,7 +503,7 @@ KeyboardThreadMain(PVOID StartContext)
 		  if (ModifierState == fsModifiers &&
 		      (fsModifiers == MOD_ALT || fsModifiers == MOD_WIN))
 		    {
-		      /* First send out special notifications 
+		      /* First send out special notifications
 		       * (For alt, the message that turns on accelerator
 		       * display, not sure what for win. Both TODO though.)
 		       */
@@ -669,17 +669,17 @@ KeyboardThreadMain(PVOID StartContext)
 		      MsqPostHotKeyMessage (Thread,
 					    hWnd,
 					    (WPARAM)id,
-					    MAKELPARAM((WORD)ModifierState, 
+					    MAKELPARAM((WORD)ModifierState,
 						       (WORD)msg.wParam));
 		    }
 	          continue;	/* Eat key up motion too */
 	        }
-	  
+
 	      /*
 	       * Post a keyboard message.
 	       */
 	      MsqPostKeyboardMessage(msg.message,msg.wParam,msg.lParam);
-	    } 
+	    }
 	}
 
 KeyboardEscape:
@@ -695,7 +695,7 @@ NtUserAcquireOrReleaseInputOwnership(BOOLEAN Release)
       DPRINT( "Releasing input: PM = %08x\n", pmPrimitiveMessageQueue );
       KeClearEvent(&InputThreadsStart);
       InputThreadsRunning = FALSE;
-      
+
       NtAlertThread(KeyboardThreadHandle);
     }
   else if (!Release && !InputThreadsRunning)
@@ -728,7 +728,7 @@ InitInputImpl(VOID)
 
   /* Initialize the default keyboard layout */
   (VOID)W32kGetDefaultKeyLayout();
-  
+
 
   Status = PsCreateSystemThread(&MouseThreadHandle,
 				THREAD_ALL_ACCESS,
@@ -741,7 +741,7 @@ InitInputImpl(VOID)
   {
     DPRINT1("Win32K: Failed to create mouse thread.\n");
   }
-  
+
   return STATUS_SUCCESS;
 }
 
@@ -767,16 +767,16 @@ IntBlockInput(PW32THREAD W32Thread, BOOL BlockIt)
 {
   PW32THREAD OldBlock;
   ASSERT(W32Thread);
-  
+
   if(!W32Thread->Desktop || (W32Thread->IsExiting && BlockIt))
   {
     /*
      * fail blocking if exiting the thread
      */
-    
+
     return FALSE;
   }
-  
+
   /*
    * FIXME - check access rights of the window station
    *         e.g. services running in the service window station cannot block input
@@ -787,7 +787,7 @@ IntBlockInput(PW32THREAD W32Thread, BOOL BlockIt)
     SetLastWin32Error(ERROR_ACCESS_DENIED);
     return FALSE;
   }
-  
+
   ASSERT(W32Thread->Desktop);
   OldBlock = W32Thread->Desktop->BlockInputThread;
   if(OldBlock)
@@ -800,7 +800,7 @@ IntBlockInput(PW32THREAD W32Thread, BOOL BlockIt)
     W32Thread->Desktop->BlockInputThread = (BlockIt ? W32Thread : NULL);
     return OldBlock == NULL;
   }
-  
+
   W32Thread->Desktop->BlockInputThread = (BlockIt ? W32Thread : NULL);
   return OldBlock == NULL;
 }
@@ -818,7 +818,7 @@ IntSwapMouseButton(PWINSTATION_OBJECT WinStaObject, BOOL Swap)
 {
   PSYSTEM_CURSORINFO CurInfo;
   BOOL res;
-  
+
   CurInfo = IntGetSysCursorInfo(WinStaObject);
   res = CurInfo->SwapButtons;
   CurInfo->SwapButtons = Swap;
@@ -842,17 +842,17 @@ IntMouseInput(MOUSEINPUT *mi)
   PDC dc;
   PWINDOW_OBJECT DesktopWindow;
   NTSTATUS Status;
-  
+
 #if 1
   HDC hDC;
-  
+
   /* FIXME - get the screen dc from the window station or desktop */
   if(!(hDC = IntGetScreenDC()))
   {
     return FALSE;
   }
 #endif
-  
+
   ASSERT(mi);
 #if 0
   WinSta = PsGetWin32Process()->WindowStation;
@@ -863,16 +863,16 @@ IntMouseInput(MOUSEINPUT *mi)
   WinSta = InputWindowStation;
 #endif
   ASSERT(WinSta);
-  
+
   CurInfo = IntGetSysCursorInfo(WinSta);
-  
+
   if(!mi->time)
   {
     LARGE_INTEGER LargeTickCount;
     KeQueryTickCount(&LargeTickCount);
     mi->time = LargeTickCount.u.LowPart;
   }
-  
+
   SwapButtons = CurInfo->SwapButtons;
   DoMove = FALSE;
 
@@ -893,7 +893,7 @@ IntMouseInput(MOUSEINPUT *mi)
       MousePos.x += mi->dx;
       MousePos.y += mi->dy;
     }
-    
+
     Status = ObmReferenceObjectByHandle(WinSta->HandleTable,
       WinSta->ActiveDesktop->DesktopWindow, otWindow, (PVOID*)&DesktopWindow);
     if (NT_SUCCESS(Status))
@@ -909,11 +909,11 @@ IntMouseInput(MOUSEINPUT *mi)
       MousePos.x = 0;
     if(MousePos.y < 0)
       MousePos.y = 0;
-    
+
     if(CurInfo->CursorClipInfo.IsClipped)
     {
       /* The mouse cursor needs to be clipped */
-      
+
       if(MousePos.x >= (LONG)CurInfo->CursorClipInfo.Right)
         MousePos.x = (LONG)CurInfo->CursorClipInfo.Right;
       if(MousePos.x < (LONG)CurInfo->CursorClipInfo.Left)
@@ -923,12 +923,12 @@ IntMouseInput(MOUSEINPUT *mi)
       if(MousePos.y < (LONG)CurInfo->CursorClipInfo.Top)
         MousePos.y = (LONG)CurInfo->CursorClipInfo.Top;
     }
-    
+
     DoMove = (MousePos.x != OrgPos.x || MousePos.y != OrgPos.y);
   }
 
   ExReleaseFastMutex(&CurInfo->CursorMutex);
-  
+
   if (DoMove)
   {
     dc = DC_LockDc(hDC);
@@ -961,7 +961,7 @@ IntMouseInput(MOUSEINPUT *mi)
   /*
    * Insert the messages into the system queue
    */
-  
+
   Msg.wParam = CurInfo->ButtonsDown;
   Msg.lParam = MAKELPARAM(MousePos.x, MousePos.y);
   Msg.pt = MousePos;
@@ -970,7 +970,7 @@ IntMouseInput(MOUSEINPUT *mi)
     Msg.message = WM_MOUSEMOVE;
     MsqInsertSystemMessage(&Msg);
   }
-  
+
   Msg.message = 0;
   if(mi->dwFlags & MOUSEEVENTF_LEFTDOWN)
   {
@@ -1008,14 +1008,14 @@ IntMouseInput(MOUSEINPUT *mi)
     CurInfo->ButtonsDown &= ~SwapBtn[!SwapButtons];
     MsqInsertSystemMessage(&Msg);
   }
-  
+
   if((mi->dwFlags & (MOUSEEVENTF_XDOWN | MOUSEEVENTF_XUP)) &&
      (mi->dwFlags & MOUSEEVENTF_WHEEL))
   {
     /* fail because both types of events use the mouseData field */
     return FALSE;
   }
-  
+
   if(mi->dwFlags & MOUSEEVENTF_XDOWN)
   {
     Msg.message = WM_XBUTTONDOWN;
@@ -1054,7 +1054,7 @@ IntMouseInput(MOUSEINPUT *mi)
     Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, mi->mouseData);
     MsqInsertSystemMessage(&Msg);
   }
-  
+
   return TRUE;
 }
 
@@ -1073,21 +1073,21 @@ NtUserSendInput(
 {
   PW32THREAD W32Thread;
   UINT cnt;
-  
+
   W32Thread = PsGetWin32Thread();
   ASSERT(W32Thread);
-  
+
   if(!W32Thread->Desktop)
   {
     return 0;
   }
-  
+
   if(!nInputs || !pInput || (cbSize != sizeof(INPUT)))
   {
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return 0;
   }
-  
+
   /*
    * FIXME - check access rights of the window station
    *         e.g. services running in the service window station cannot block input
@@ -1098,20 +1098,20 @@ NtUserSendInput(
     SetLastWin32Error(ERROR_ACCESS_DENIED);
     return 0;
   }
-  
+
   cnt = 0;
   while(nInputs--)
   {
     INPUT SafeInput;
     NTSTATUS Status;
-    
+
     Status = MmCopyFromCaller(&SafeInput, pInput++, sizeof(INPUT));
     if(!NT_SUCCESS(Status))
     {
       SetLastNtError(Status);
       return cnt;
     }
-    
+
     switch(SafeInput.type)
     {
       case INPUT_MOUSE:
@@ -1135,7 +1135,7 @@ NtUserSendInput(
 #endif
     }
   }
-  
+
   return cnt;
 }
 

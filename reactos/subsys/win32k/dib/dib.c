@@ -95,7 +95,7 @@ DIB_DoRop(ULONG Rop, ULONG Dest, ULONG Source, ULONG Pattern)
   ULONG ResultNibble;
   ULONG Result;
   ULONG i;
-  static const ULONG ExpandDest[16] = 
+  static const ULONG ExpandDest[16] =
     {
       0x55555555 /* 0000 */,
       0x555555AA /* 0001 */,
@@ -114,7 +114,7 @@ DIB_DoRop(ULONG Rop, ULONG Dest, ULONG Source, ULONG Pattern)
       0xAAAAAA55 /* 1110 */,
       0xAAAAAAAA /* 1111 */,
     };
-  static const ULONG ExpandSource[16] = 
+  static const ULONG ExpandSource[16] =
     {
       0x33333333 /* 0000 */,
       0x333333CC /* 0001 */,
@@ -133,7 +133,7 @@ DIB_DoRop(ULONG Rop, ULONG Dest, ULONG Source, ULONG Pattern)
       0xCCCCCC33 /* 1110 */,
       0xCCCCCCCC /* 1111 */,
     };
-  static const ULONG ExpandPattern[16] = 
+  static const ULONG ExpandPattern[16] =
     {
       0x0F0F0F0F /* 0000 */,
       0x0F0F0FF0 /* 0001 */,
@@ -180,7 +180,7 @@ DIB_DoRop(ULONG Rop, ULONG Dest, ULONG Source, ULONG Pattern)
   for (i = 0; i < 8; i++)
     {
       ResultNibble = Rop & ExpandDest[Dest & 0xF] & ExpandSource[Source & 0xF] & ExpandPattern[Pattern & 0xF];
-      Result |= (((ResultNibble & 0xFF000000) ? 0x8 : 0x0) | ((ResultNibble & 0x00FF0000) ? 0x4 : 0x0) | 
+      Result |= (((ResultNibble & 0xFF000000) ? 0x8 : 0x0) | ((ResultNibble & 0x00FF0000) ? 0x4 : 0x0) |
 	((ResultNibble & 0x0000FF00) ? 0x2 : 0x0) | ((ResultNibble & 0x000000FF) ? 0x1 : 0x0)) << (i * 4);
       Dest >>= 4;
       Source >>= 4;

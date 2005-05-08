@@ -1,4 +1,4 @@
-/* 
+/*
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,7 +29,7 @@ DD_Cleanup(PDD_DIRECTDRAW pDD)
 	return TRUE;
 }
 
-HANDLE STDCALL NtGdiDdCreateDirectDrawObject(      
+HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
     HDC hdc
 )
 {
@@ -127,14 +127,14 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 	return hDirectDraw;
 }
 
-BOOL STDCALL NtGdiDdDeleteDirectDrawObject(      
+BOOL STDCALL NtGdiDdDeleteDirectDrawObject(
     HANDLE hDirectDrawLocal
 )
 {
 	return GDIOBJ_FreeObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 }
 
-BOOL STDCALL NtGdiDdQueryDirectDrawObject(      
+BOOL STDCALL NtGdiDdQueryDirectDrawObject(
     HANDLE hDirectDrawLocal,
     DD_HALINFO *pHalInfo,
     DWORD *pCallBackFlags,
@@ -177,7 +177,7 @@ BOOL STDCALL NtGdiDdQueryDirectDrawObject(
 	{
 		RtlMoveMemory(puD3dDriverData, pHalInfo->lpD3DGlobalDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA));
 	}
-	
+
 	if (pHalInfo->lpD3DBufCallbacks)
 	{
 		RtlMoveMemory(puD3dBufferCallbacks, pHalInfo->lpD3DBufCallbacks, sizeof(DD_D3DBUFCALLBACKS));
@@ -188,7 +188,7 @@ BOOL STDCALL NtGdiDdQueryDirectDrawObject(
 		pDirectDraw->DdUnlockD3DBuffer = puD3dBufferCallbacks->UnlockD3DBuffer;
 	}
 
-	
+
 	GDIOBJ_UnlockObj(hDirectDrawLocal);
 
 	return TRUE;
@@ -205,7 +205,7 @@ DDSURF_Cleanup(PDD_SURFACE pDDSurf)
 	return TRUE;
 }
 
-HANDLE STDCALL NtGdiDdCreateSurfaceObject(      
+HANDLE STDCALL NtGdiDdCreateSurfaceObject(
     HANDLE hDirectDrawLocal,
     HANDLE hSurface,
     PDD_SURFACE_LOCAL puSurfaceLocal,
@@ -223,7 +223,7 @@ HANDLE STDCALL NtGdiDdCreateSurfaceObject(
 
 	PDD_SURFACE pSurface = GDIOBJ_LockObj(hSurface, GDI_OBJECT_TYPE_DD_SURFACE);
         /* FIXME - Handle pSurface == NULL!!!! */
-        
+
 	RtlMoveMemory(&pSurface->Local, puSurfaceLocal, sizeof(DD_SURFACE_LOCAL));
 	RtlMoveMemory(&pSurface->More, puSurfaceMore, sizeof(DD_SURFACE_MORE));
 	RtlMoveMemory(&pSurface->Global, puSurfaceGlobal, sizeof(DD_SURFACE_GLOBAL));
@@ -241,7 +241,7 @@ HANDLE STDCALL NtGdiDdCreateSurfaceObject(
 	return hSurface;
 }
 
-BOOL STDCALL NtGdiDdDeleteSurfaceObject(      
+BOOL STDCALL NtGdiDdDeleteSurfaceObject(
     HANDLE hSurface
 )
 {
@@ -249,7 +249,7 @@ BOOL STDCALL NtGdiDdDeleteSurfaceObject(
 }
 
 /*
-BOOL STDCALL NtGdiDdAttachSurface(      
+BOOL STDCALL NtGdiDdAttachSurface(
     HANDLE hSurfaceFrom,
     HANDLE hSurfaceTo
 )
@@ -277,39 +277,39 @@ BOOL STDCALL NtGdiDdAttachSurface(
 
 
 
-DWORD STDCALL NtGdiDdGetDriverInfo(      
+DWORD STDCALL NtGdiDdGetDriverInfo(
     HANDLE hDirectDrawLocal,
-    PDD_GETDRIVERINFODATA puGetDriverInfoData)	
+    PDD_GETDRIVERINFODATA puGetDriverInfoData)
 
-{		  
-	DWORD  pdwNumHeaps; 
+{
+	DWORD  pdwNumHeaps;
 	VIDEOMEMORY  *pvmList = NULL;
     DWORD  pdwNumFourCC;
     DWORD  *pdwFourCC = NULL;
 	DWORD  ddRVal;
-	    
+
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 
-	
+
 	 ddRVal = pDirectDraw->DrvGetDirectDrawInfo(
                  pDirectDraw->Global.dhpdev,(PDD_HALINFO) puGetDriverInfoData,
                  &pdwNumHeaps, pvmList, &pdwNumFourCC, pdwFourCC);
-	
+
     GDIOBJ_UnlockObj(hDirectDrawLocal);
-	
+
 	return ddRVal;
 }
 
 
 
-DWORD STDCALL NtGdiDdWaitForVerticalBlank(      
+DWORD STDCALL NtGdiDdWaitForVerticalBlank(
     HANDLE hDirectDrawLocal,
     PDD_WAITFORVERTICALBLANKDATA puWaitForVerticalBlankData
 )
 {
 	DWORD  ddRVal;
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
-    	
+
 	puWaitForVerticalBlankData->lpDD = pDirectDraw->Local.lpGbl;
 
 	ddRVal = pDirectDraw->DdWaitForVerticalBlank(puWaitForVerticalBlankData);
@@ -320,7 +320,7 @@ DWORD STDCALL NtGdiDdWaitForVerticalBlank(
 }
 
 
-DWORD STDCALL NtGdiDdCanCreateSurface(      
+DWORD STDCALL NtGdiDdCanCreateSurface(
     HANDLE hDirectDrawLocal,
     PDD_CANCREATESURFACEDATA puCanCreateSurfaceData
 )
@@ -334,13 +334,13 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
 	ddRVal = pDirectDraw->DdCanCreateSurface(puCanCreateSurfaceData);
 
 	GDIOBJ_UnlockObj(hDirectDrawLocal);
-	
+
 	return ddRVal;
 }
 
 
 
-DWORD STDCALL NtGdiDdBlt(      
+DWORD STDCALL NtGdiDdBlt(
     HANDLE hSurfaceDest,
     HANDLE hSurfaceSrc,
     PDD_BLTDATA puBltData
@@ -348,8 +348,8 @@ DWORD STDCALL NtGdiDdBlt(
 {
  DWORD  ddRVal;
 
- PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurfaceDest, GDI_OBJECT_TYPE_DIRECTDRAW);		
- 
+ PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurfaceDest, GDI_OBJECT_TYPE_DIRECTDRAW);
+
  puBltData->lpDDDestSurface =  hSurfaceDest;
  puBltData->lpDDSrcSurface  =  hSurfaceSrc;
  puBltData->lpDD = pDirectDraw->Local.lpGbl;

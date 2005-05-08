@@ -21,8 +21,8 @@
 #include <w32k.h>
 
 /******************************************************************
- * 
- *   *Very* simple bezier drawing code, 
+ *
+ *   *Very* simple bezier drawing code,
  *
  *   It uses a recursive algorithm to divide the curve in a series
  *   of straight line segements. Not ideal but for me sufficient.
@@ -32,7 +32,7 @@
  *   7 July 1998 Rein Klazes
  */
 
- /* 
+ /*
   * some macro definitions for bezier drawing
   *
   * to avoid trucation errors the coordinates are
@@ -41,12 +41,12 @@
   * and avoiding floating point arithmatic
   * 4 bits should allow 27 bits coordinates which I saw
   * somewere in the win32 doc's
-  * 
+  *
   */
 
 #define BEZIERSHIFTBITS 4
 #define BEZIERSHIFTUP(x)    ((x)<<BEZIERSHIFTBITS)
-#define BEZIERPIXEL        BEZIERSHIFTUP(1)    
+#define BEZIERPIXEL        BEZIERSHIFTUP(1)
 #define BEZIERSHIFTDOWN(x)  (((x)+(1<<(BEZIERSHIFTBITS-1)))>>BEZIERSHIFTBITS)
 /* maximum depth of recursion */
 #define BEZIERMAXDEPTH  8
@@ -55,7 +55,7 @@
 /* enough for one curve */
 #define BEZIER_INITBUFSIZE    (150)
 
-/* calculate Bezier average, in this case the middle 
+/* calculate Bezier average, in this case the middle
  * correctly rounded...
  * */
 
@@ -72,7 +72,7 @@
 *       returns true if the recusion can be terminated
 */
 static BOOL FASTCALL BezierCheck( int level, POINT *Points)
-{ 
+{
   INT dx, dy;
 
   dx=Points[3].x-Points[0].x;
@@ -136,7 +136,7 @@ static BOOL FASTCALL BezierCheck( int level, POINT *Points)
         return TRUE;
     }
 }
-    
+
 /* Helper for GDI_Bezier.
  * Just handles one Bezier, so Points should point to four POINTs
  */
@@ -190,7 +190,7 @@ static void STDCALL GDI_InternalBezier( POINT *Points, POINT **PtsOut, INT *dwOu
  *  count   [I] Number of Points.  Must be 3n+1.
  *  nPtsOut [O] Will contain no of points that have been produced (i.e. no. of
  *              lines+1).
- *   
+ *
  *  RETURNS
  *
  *  Ptr to an array of POINTs that contain the lines that approximinate the

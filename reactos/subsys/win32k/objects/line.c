@@ -29,7 +29,7 @@ IntGdiMoveToEx(DC      *dc,
                LPPOINT Point)
 {
   BOOL  PathIsOpen;
-  
+
   if ( Point )
   {
     Point->x = dc->w.CursPosX;
@@ -37,12 +37,12 @@ IntGdiMoveToEx(DC      *dc,
   }
   dc->w.CursPosX = X;
   dc->w.CursPosY = Y;
-  
+
   PathIsOpen = PATH_IsPathOpen(dc->w.path);
-  
+
   if ( PathIsOpen )
     return PATH_MoveTo ( dc );
-  
+
   return TRUE;
 }
 
@@ -151,7 +151,7 @@ IntGdiPolyBezier(DC      *dc,
       ExFreePool(Pts);
     }
   }
-  
+
   return ret;
 }
 
@@ -182,7 +182,7 @@ IntGdiPolyBezierTo(DC      *dc,
     dc->w.CursPosX = pt[Count-1].x;
     dc->w.CursPosY = pt[Count-1].y;
   }
-  
+
   return ret;
 }
 
@@ -272,7 +272,7 @@ IntGdiPolylineTo(DC      *dc,
     dc->w.CursPosX = pt[Count-1].x;
     dc->w.CursPosY = pt[Count-1].y;
   }
-  
+
   return ret;
 }
 
@@ -361,7 +361,7 @@ NtGdiArc(HDC  hDC,
 {
   DC *dc;
   BOOL Ret;
-  
+
   dc = DC_LockDc (hDC);
   if(!dc)
   {
@@ -374,7 +374,7 @@ NtGdiArc(HDC  hDC,
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
-  
+
   Ret = IntGdiArc(dc,
                   LeftRect,
                   TopRect,
@@ -384,7 +384,7 @@ NtGdiArc(HDC  hDC,
                   YStartArc,
                   XEndArc,
                   YEndArc);
-  
+
   DC_UnlockDc( hDC );
   return Ret;
 }
@@ -403,7 +403,7 @@ NtGdiArcTo(HDC  hDC,
 {
   BOOL result;
   DC *dc;
-  
+
   dc = DC_LockDc (hDC);
   if(!dc)
   {
@@ -437,7 +437,7 @@ NtGdiArcTo(HDC  hDC,
   // If no error occured, the current position is moved to the ending point of the arc.
   if(result)
     IntGdiMoveToEx(dc, XRadial2, YRadial2, NULL);
-  
+
   DC_UnlockDc( hDC );
 
   return result;
@@ -471,7 +471,7 @@ NtGdiLineTo(HDC  hDC,
 {
   DC *dc;
   BOOL Ret;
-  
+
   dc = DC_LockDc(hDC);
   if(!dc)
   {
@@ -484,9 +484,9 @@ NtGdiLineTo(HDC  hDC,
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
-  
+
   Ret = IntGdiLineTo(dc, XEnd, YEnd);
-  
+
   DC_UnlockDc(hDC);
   return Ret;
 }
@@ -502,7 +502,7 @@ NtGdiMoveToEx(HDC      hDC,
   POINT SafePoint;
   NTSTATUS Status;
   BOOL Ret;
-  
+
   dc = DC_LockDc(hDC);
   if(!dc)
   {
@@ -515,7 +515,7 @@ NtGdiMoveToEx(HDC      hDC,
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
-  
+
   if(Point)
   {
     Status = MmCopyFromCaller(&SafePoint, Point, sizeof(POINT));
@@ -526,9 +526,9 @@ NtGdiMoveToEx(HDC      hDC,
       return FALSE;
     }
   }
-  
+
   Ret = IntGdiMoveToEx(dc, X, Y, (Point ? &SafePoint : NULL));
-  
+
   DC_UnlockDc(hDC);
   return Ret;
 }
@@ -543,7 +543,7 @@ NtGdiPolyBezier(HDC           hDC,
   LPPOINT Safept;
   NTSTATUS Status;
   BOOL Ret;
-  
+
   dc = DC_LockDc(hDC);
   if(!dc)
   {
@@ -556,7 +556,7 @@ NtGdiPolyBezier(HDC           hDC,
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
-  
+
   if(Count > 0)
   {
     Safept = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * Count, TAG_BEZIER);
@@ -566,7 +566,7 @@ NtGdiPolyBezier(HDC           hDC,
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
-    
+
     Status = MmCopyFromCaller(Safept, pt, sizeof(POINT) * Count);
     if(!NT_SUCCESS(Status))
     {
@@ -581,12 +581,12 @@ NtGdiPolyBezier(HDC           hDC,
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   Ret = IntGdiPolyBezier(dc, Safept, Count);
-  
+
   ExFreePool(Safept);
   DC_UnlockDc(hDC);
-  
+
   return Ret;
 }
 
@@ -600,7 +600,7 @@ NtGdiPolyBezierTo(HDC  hDC,
   LPPOINT Safept;
   NTSTATUS Status;
   BOOL Ret;
-  
+
   dc = DC_LockDc(hDC);
   if(!dc)
   {
@@ -613,7 +613,7 @@ NtGdiPolyBezierTo(HDC  hDC,
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
-  
+
   if(Count > 0)
   {
     Safept = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * Count, TAG_BEZIER);
@@ -623,7 +623,7 @@ NtGdiPolyBezierTo(HDC  hDC,
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
-    
+
     Status = MmCopyFromCaller(Safept, pt, sizeof(POINT) * Count);
     if(!NT_SUCCESS(Status))
     {
@@ -638,12 +638,12 @@ NtGdiPolyBezierTo(HDC  hDC,
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   Ret = IntGdiPolyBezierTo(dc, Safept, Count);
-  
+
   ExFreePool(Safept);
   DC_UnlockDc(hDC);
-  
+
   return Ret;
 }
 
@@ -668,7 +668,7 @@ NtGdiPolyline(HDC            hDC,
   LPPOINT Safept;
   NTSTATUS Status;
   BOOL Ret;
-  
+
   dc = DC_LockDc(hDC);
   if(!dc)
   {
@@ -681,7 +681,7 @@ NtGdiPolyline(HDC            hDC,
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
-  
+
   if(Count >= 2)
   {
     Safept = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * Count, TAG_SHAPE);
@@ -691,7 +691,7 @@ NtGdiPolyline(HDC            hDC,
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
-    
+
     Status = MmCopyFromCaller(Safept, pt, sizeof(POINT) * Count);
     if(!NT_SUCCESS(Status))
     {
@@ -706,12 +706,12 @@ NtGdiPolyline(HDC            hDC,
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   Ret = IntGdiPolyline(dc, Safept, Count);
 
   ExFreePool(Safept);
   DC_UnlockDc(hDC);
-  
+
   return Ret;
 }
 
@@ -725,7 +725,7 @@ NtGdiPolylineTo(HDC            hDC,
   LPPOINT Safept;
   NTSTATUS Status;
   BOOL Ret;
-  
+
   dc = DC_LockDc(hDC);
   if(!dc)
   {
@@ -738,7 +738,7 @@ NtGdiPolylineTo(HDC            hDC,
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
-  
+
   if(Count > 0)
   {
     Safept = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * Count, TAG_SHAPE);
@@ -748,7 +748,7 @@ NtGdiPolylineTo(HDC            hDC,
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
-    
+
     Status = MmCopyFromCaller(Safept, pt, sizeof(POINT) * Count);
     if(!NT_SUCCESS(Status))
     {
@@ -763,12 +763,12 @@ NtGdiPolylineTo(HDC            hDC,
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   Ret = IntGdiPolylineTo(dc, Safept, Count);
-  
+
   ExFreePool(Safept);
   DC_UnlockDc(hDC);
-  
+
   return Ret;
 }
 
@@ -784,7 +784,7 @@ NtGdiPolyPolyline(HDC            hDC,
   LPDWORD SafePolyPoints;
   NTSTATUS Status;
   BOOL Ret;
-  
+
   dc = DC_LockDc(hDC);
   if(!dc)
   {
@@ -797,7 +797,7 @@ NtGdiPolyPolyline(HDC            hDC,
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
-  
+
   if(Count > 0)
   {
     Safept = ExAllocatePoolWithTag(PagedPool, (sizeof(POINT) + sizeof(DWORD)) * Count, TAG_SHAPE);
@@ -807,9 +807,9 @@ NtGdiPolyPolyline(HDC            hDC,
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
-    
+
     SafePolyPoints = (LPDWORD)&Safept[Count];
-    
+
     Status = MmCopyFromCaller(Safept, pt, sizeof(POINT) * Count);
     if(!NT_SUCCESS(Status))
     {
@@ -833,12 +833,12 @@ NtGdiPolyPolyline(HDC            hDC,
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   Ret = IntGdiPolyPolyline(dc, Safept, SafePolyPoints, Count);
-  
+
   ExFreePool(Safept);
   DC_UnlockDc(hDC);
-  
+
   return Ret;
 }
 

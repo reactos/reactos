@@ -17,7 +17,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 /* $Id$
- * 
+ *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          GDI TransparentBlt Function
@@ -45,20 +45,20 @@ EngTransparentBlt(SURFOBJ *Dest,
   SURFOBJ *InputObj, *OutputObj;
   RECTL OutputRect, InputRect;
   POINTL Translate, InputPoint;
-  
+
   InputRect.left = 0;
   InputRect.right = DestRect->right - DestRect->left;
   InputRect.top = 0;
   InputRect.bottom = DestRect->bottom - DestRect->top;
-  
+
   if(!IntEngEnter(&EnterLeaveSource, Source, &InputRect, TRUE, &Translate, &InputObj))
   {
     return FALSE;
   }
-  
+
   InputPoint.x = SourceRect->left + Translate.x;
   InputPoint.y = SourceRect->top + Translate.y;
-  
+
   OutputRect = *DestRect;
   if(Clip)
   {
@@ -85,7 +85,7 @@ EngTransparentBlt(SURFOBJ *Dest,
       OutputRect.bottom = Clip->rclBounds.bottom;
     }
   }
-  
+
   /* Check for degenerate case: if height or width of OutputRect is 0 pixels there's
      nothing to do */
   if(OutputRect.right <= OutputRect.left || OutputRect.bottom <= OutputRect.top)
@@ -93,20 +93,20 @@ EngTransparentBlt(SURFOBJ *Dest,
     IntEngLeave(&EnterLeaveSource);
     return TRUE;
   }
-  
+
   if(!IntEngEnter(&EnterLeaveDest, Dest, &OutputRect, FALSE, &Translate, &OutputObj))
   {
     IntEngLeave(&EnterLeaveSource);
     return FALSE;
   }
-  
+
   OutputRect.left = DestRect->left + Translate.x;
   OutputRect.right = DestRect->right + Translate.x;
   OutputRect.top = DestRect->top + Translate.y;
   OutputRect.bottom = DestRect->bottom + Translate.y;
-  
+
   ClippingType = (Clip ? Clip->iDComplexity : DC_TRIVIAL);
-  
+
   switch(ClippingType)
   {
     case DC_TRIVIAL:
@@ -119,7 +119,7 @@ EngTransparentBlt(SURFOBJ *Dest,
     {
       RECTL ClipRect, CombinedRect;
       POINTL Pt;
-      
+
       ClipRect.left = Clip->rclBounds.left + Translate.x;
       ClipRect.right = Clip->rclBounds.right + Translate.x;
       ClipRect.top = Clip->rclBounds.top + Translate.y;
@@ -137,7 +137,7 @@ EngTransparentBlt(SURFOBJ *Dest,
       RECT_ENUM RectEnum;
       BOOL EnumMore;
       POINTL Pt;
-      
+
       if(OutputObj == InputObj)
       {
         if(OutputRect.top < InputPoint.y)
@@ -153,7 +153,7 @@ EngTransparentBlt(SURFOBJ *Dest,
       {
         Direction = CD_ANY;
       }
-      
+
       CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, Direction, 0);
       do
       {
@@ -161,7 +161,7 @@ EngTransparentBlt(SURFOBJ *Dest,
         for (i = 0; i < RectEnum.c; i++)
         {
           RECTL ClipRect, CombinedRect;
-          
+
           ClipRect.left = RectEnum.arcl[i].left + Translate.x;
           ClipRect.right = RectEnum.arcl[i].right + Translate.x;
           ClipRect.top = RectEnum.arcl[i].top + Translate.y;
@@ -185,10 +185,10 @@ EngTransparentBlt(SURFOBJ *Dest,
       break;
     }
   }
-  
+
   IntEngLeave(&EnterLeaveDest);
   IntEngLeave(&EnterLeaveSource);
-  
+
   return Ret;
 }
 
@@ -206,7 +206,7 @@ IntEngTransparentBlt(BITMAPOBJ *DestObj,
   RECTL OutputRect, InputClippedRect;
   SURFOBJ *DestSurf;
   SURFOBJ *SourceSurf;
-  
+
   ASSERT(DestObj);
   ASSERT(SourceObj);
   ASSERT(DestRect);
@@ -228,7 +228,7 @@ IntEngTransparentBlt(BITMAPOBJ *DestObj,
     InputClippedRect.top = DestRect->bottom;
     InputClippedRect.bottom = DestRect->top;
   }
-  
+
   /* Clip against the bounds of the clipping region so we won't try to write
    * outside the surface */
   if(Clip)
@@ -246,30 +246,30 @@ IntEngTransparentBlt(BITMAPOBJ *DestObj,
   {
     OutputRect = *DestRect;
   }
-  
+
   if(SourceSurf != DestSurf)
   {
-    MouseSafetyOnDrawStart(SourceSurf, SourceRect->left, SourceRect->top, 
+    MouseSafetyOnDrawStart(SourceSurf, SourceRect->left, SourceRect->top,
                            SourceRect->right, SourceRect->bottom);
   }
   MouseSafetyOnDrawStart(DestSurf, OutputRect.left, OutputRect.top,
                          OutputRect.right, OutputRect.bottom);
-  
+
   if(DestObj->flHooks & HOOK_TRANSPARENTBLT)
   {
     Ret = GDIDEVFUNCS(DestSurf).TransparentBlt(
-      DestSurf, SourceSurf, Clip, ColorTranslation, &OutputRect, 
+      DestSurf, SourceSurf, Clip, ColorTranslation, &OutputRect,
       SourceRect, iTransColor, Reserved);
   }
   else
     Ret = FALSE;
-  
+
   if(!Ret)
   {
     Ret = EngTransparentBlt(DestSurf, SourceSurf, Clip, ColorTranslation,
                             &OutputRect, SourceRect, iTransColor, Reserved);
   }
-  
+
   MouseSafetyOnDrawEnd(DestSurf);
   if(SourceSurf != DestSurf)
   {

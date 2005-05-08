@@ -17,7 +17,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 /* $Id$
- * 
+ *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          GDI Color Translation Functions
@@ -73,7 +73,7 @@ ClosestColorMatch(XLATEGDI *XlateGDI, LPPALETTEENTRY SourceColor,
       cxBlue *= cxBlue;
 
       Rating = cxRed + cxGreen + cxBlue;
-      
+
       if (Rating == 0)
       {
          /* Exact match */
@@ -234,7 +234,7 @@ IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
    /* Indexed -> Indexed */
    if (SourcePalType == PAL_INDEXED && DestPalType == PAL_INDEXED)
    {
-      XlateGDI->translationTable = 
+      XlateGDI->translationTable =
          EngAllocMem(0, sizeof(ULONG) * SourcePalGDI->NumColors, 0);
 
       XlateObj->flXlate |= XO_TRIVIAL;
@@ -255,7 +255,7 @@ IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
    /* Indexed -> Bitfields/RGB/BGR */
    if (SourcePalType == PAL_INDEXED)
    {
-      XlateGDI->translationTable = 
+      XlateGDI->translationTable =
          EngAllocMem(0, sizeof(ULONG) * SourcePalGDI->NumColors, 0);
       for (i = 0; i < SourcePalGDI->NumColors; i++)
          XlateGDI->translationTable[i] =
@@ -400,7 +400,7 @@ IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
                            (LPPALETTEENTRY)&XlateGDI->translationTable[0],
                            DestPalGDI->IndexedColors,
                            DestPalGDI->NumColors);
-      XlateGDI->translationTable[1] = 
+      XlateGDI->translationTable[1] =
          ClosestColorMatch(XlateGDI,
                            (LPPALETTEENTRY)&XlateGDI->translationTable[1],
                            DestPalGDI->IndexedColors,
@@ -488,7 +488,7 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj, ULONG Color)
    {
       /* FIXME: should we cache colors used often? */
       /* FIXME: won't work if destination isn't indexed */
-      
+
       /* Convert the source color to the palette RGB format. */
       Color = ShiftAndMask(XlateGDI, Color);
 
@@ -539,10 +539,10 @@ XLATEOBJ_cGetPalette(XLATEOBJ *XlateObj, ULONG PalOutType, ULONG cPal,
      }
 
      PALETTE_UnlockPalette(hPalette);
-     
+
      return cPal;
    }
-   
+
    return 0;
 }
 
