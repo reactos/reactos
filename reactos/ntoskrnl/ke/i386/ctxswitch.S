@@ -152,26 +152,27 @@ SaveTrapFrameForKDB_Return:
     /* Save the stack pointer in this processors TSS */
     mov ebp, [ebx+KPCR_TSS]
     push ss:[ebp+KTSS_ESP0]
+    
+    /* Check if address space switch is needed */
+    mov eax, [esi+KTHREAD_APCSTATE_PROCESS]
+    cmp eax, [edi+KTHREAD_APCSTATE_PROCESS]
+    mov eax, [eax+KPROCESS_DIRECTORY_TABLE_BASE]
 
     /* Switch stacks */
     mov [edi+KTHREAD_KERNEL_STACK], esp
     mov esp, [esi+KTHREAD_KERNEL_STACK]
-   
-    /* 
-     * Sadly, ROS memory management is screwed up, so 
-     * we must change the address space here.
-     */
-    mov eax, [esi+KTHREAD_APCSTATE_PROCESS]
-    mov eax, [eax+KPROCESS_DIRECTORY_TABLE_BASE]
-    mov cr3, eax
     
+    jz	NoAddressSpaceSwitch
+    
+    /* Switch address space */
+    mov cr3, eax
+   
+NoAddressSpaceSwitch:   
+   
     /* Stack is OK, safe to enable interrupts now */
     sti 
 
-    /* Check if address space switch is needed */
-    mov eax, [edi+KTHREAD_APCSTATE_PROCESS]
-    cmp eax, [esi+KTHREAD_APCSTATE_PROCESS]
-    
+    /* Check if address space switch is needed (the result from above is valid) */
     /* If they match, then use the fast-path and skip all this */
     jz SameProcess
     
