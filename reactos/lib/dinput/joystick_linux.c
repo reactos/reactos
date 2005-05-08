@@ -28,8 +28,6 @@
 #include "config.h"
 #include "wine/port.h"
 
-#ifdef HAVE_LINUX_22_JOYSTICK_API
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -55,7 +53,6 @@
 #ifdef HAVE_LINUX_JOYSTICK_H
 # include <linux/joystick.h>
 #endif
-#define JOYDEV	"/dev/js"
 
 #include "wine/debug.h"
 #include "wine/unicode.h"
@@ -69,6 +66,10 @@
 #include "device_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dinput);
+
+#ifdef HAVE_LINUX_22_JOYSTICK_API
+
+#define JOYDEV "/dev/js"
 
 typedef struct {
     LONG lMin;
@@ -646,16 +647,13 @@ static HRESULT joydev_create_deviceW(IDirectInputImpl *dinput, REFGUID rguid, RE
   return DIERR_DEVICENOTREG;
 }
 
-static dinput_device joydev = {
-  10,
+const struct dinput_device joystick_linux_device = {
   "Wine Linux joystick driver",
   joydev_enum_deviceA,
   joydev_enum_deviceW,
   joydev_create_deviceA,
   joydev_create_deviceW
 };
-
-DECL_GLOBAL_CONSTRUCTOR(joydev_register) { dinput_register_device(&joydev); }
 
 
 
@@ -1696,5 +1694,15 @@ static IDirectInputDevice8WVtbl SysJoystickWvt =
         IDirectInputDevice8WImpl_GetImageInfo
 };
 #undef XCAST
+
+#else  /* HAVE_LINUX_22_JOYSTICK_API */
+
+const struct dinput_device joystick_linux_device = {
+  "Wine Linux joystick driver",
+  NULL,
+  NULL,
+  NULL,
+  NULL
+};
 
 #endif  /* HAVE_LINUX_22_JOYSTICK_API */

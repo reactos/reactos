@@ -290,12 +290,12 @@ DataFormat *create_DataFormat(const DIDATAFORMAT *wine_format, LPCDIDATAFORMAT a
     int index = 0;
     DWORD next = 0;
     
-    ret = (DataFormat *) HeapAlloc(GetProcessHeap(), 0, sizeof(DataFormat));
+    ret = HeapAlloc(GetProcessHeap(), 0, sizeof(DataFormat));
     
-    done = (int *) HeapAlloc(GetProcessHeap(), 0, sizeof(int) * asked_format->dwNumObjs);
+    done = HeapAlloc(GetProcessHeap(), 0, sizeof(int) * asked_format->dwNumObjs);
     memset(done, 0, sizeof(int) * asked_format->dwNumObjs);
     
-    dt = (DataTransform *) HeapAlloc(GetProcessHeap(), 0, asked_format->dwNumObjs * sizeof(DataTransform));
+    dt = HeapAlloc(GetProcessHeap(), 0, asked_format->dwNumObjs * sizeof(DataTransform));
     
     TRACE("Creating DataTransform : \n");
     
