@@ -7474,8 +7474,11 @@ YY_RULE_SETUP
 		char *fname;
 		yy_pop_state();
 		lineno = (int)strtol(yytext, &cptr, 10);
+#if 0
+		/* ignore malformed line numbers by gcc: # 0 "<built-in>" */
 		if(!lineno)
 			yyerror("Malformed '#...' line-directive; invalid linenumber");
+#endif
 		fname = strchr(cptr, '"');
 		if(!fname)
 			yyerror("Malformed '#...' line-directive; missing filename");

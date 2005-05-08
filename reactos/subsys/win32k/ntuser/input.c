@@ -455,7 +455,6 @@ KeyboardThreadMain(PVOID StartContext)
        */
       while (InputThreadsRunning)
 	{
-	  KEY_EVENT_RECORD KeyEvent;
 	  BOOLEAN NumKeys = 1;
 	  KEYBOARD_INPUT_DATA KeyInput;
 	  KEYBOARD_INPUT_DATA NextKeyInput;
@@ -663,7 +662,7 @@ KeyboardThreadMain(PVOID StartContext)
 			    &hWnd,
 			    &id))
 	        {
-	          if (KeyEvent.bKeyDown)
+	          if (!(KeyInput.Flags & KEY_BREAK))
 		    {
 		      DPRINT("Hot key pressed (hWnd %lx, id %d)\n", hWnd, id);
 		      MsqPostHotKeyMessage (Thread,

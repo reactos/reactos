@@ -224,7 +224,7 @@ struct _EPROCESS
         ULONGLONG         Filler;                       /* 158 */
     };
     ULONG                 Session;                      /* 160 */
-    UCHAR                 ImageFileName[16];            /* 164 */
+    CHAR                  ImageFileName[16];            /* 164 */
     LIST_ENTRY            JobLinks;                     /* 174 */
     PVOID                 LockedPagesList;              /* 17C */
     LIST_ENTRY            ThreadListHead;               /* 184 */

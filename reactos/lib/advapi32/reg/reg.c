@@ -618,7 +618,7 @@ RegDeleteKeyA (HKEY hKey,
   InitializeObjectAttributes(&ObjectAttributes,
 			     &SubKeyName,
 			     OBJ_CASE_INSENSITIVE,
-			     (HANDLE)ParentKey,
+			     ParentKey,
 			     NULL);
 
   Status = NtOpenKey (&TargetKey,
@@ -668,7 +668,7 @@ RegDeleteKeyW (HKEY hKey,
   InitializeObjectAttributes (&ObjectAttributes,
 			      &SubKeyName,
 			      OBJ_CASE_INSENSITIVE,
-			      (HANDLE)ParentKey,
+			      ParentKey,
 			      NULL);
   Status = NtOpenKey (&TargetKey,
 		      DELETE,
@@ -1178,7 +1178,7 @@ RegEnumValueA( HKEY hKey, DWORD index, LPSTR value, LPDWORD val_count,
                 if (len > *count) status = STATUS_BUFFER_OVERFLOW;
                 else
                 {
-                    RtlUnicodeToMultiByteN( data, len, NULL, (WCHAR *)(buf_ptr + info->DataOffset),
+                    RtlUnicodeToMultiByteN( (PCHAR)data, len, NULL, (WCHAR *)(buf_ptr + info->DataOffset),
                                             total_size - info->DataOffset );
                     /* if the type is REG_SZ and data is not 0-terminated
                      * and there is enough space in the buffer NT appends a \0 */
@@ -3179,7 +3179,7 @@ RegSetValueA (HKEY hKey,
                        NULL,
                        0,
                        REG_SZ,
-                       lpData,
+                       (CONST BYTE*)lpData,
                        strlen(lpData) + 1);
   
   if (hSubKey != hKey)

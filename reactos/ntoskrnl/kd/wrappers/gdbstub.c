@@ -690,7 +690,7 @@ GspFindThread(PCHAR Data,
       HANDLE ThreadId;
       PCHAR ptr = &Data[0];
 
-      GspHex2Long (&ptr, (PULONG) &uThreadId);
+      GspHex2Long (&ptr, (PLONG) &uThreadId);
       ThreadId = (HANDLE)uThreadId;
 
       if (!NT_SUCCESS (PsLookupThreadByThreadId (ThreadId, &ThreadInfo)))
