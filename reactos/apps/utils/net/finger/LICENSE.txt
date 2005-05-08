@@ -1,0 +1,23 @@
+July 22, 1999 
+
+To All Licensees, Distributors of Any Version of BSD: 
+
+As you know, certain of the Berkeley Software Distribution ("BSD") source code files 
+require that further distributions of products containing all or portions of the 
+software, acknowledge within their advertising materials that such products contain 
+software developed by UC Berkeley and its contributors. 
+
+Specifically, the provision reads: 
+
+      * 3. All advertising materials mentioning features or use of this software
+      *    must display the following acknowledgement:
+      *    This product includes software developed by the University of
+      *    California, Berkeley and its contributors.
+
+Effective immediately, licensees and distributors are no longer required to include 
+the acknowledgement within advertising materials. Accordingly, the foregoing paragraph 
+of those BSD Unix files containing it is hereby deleted in its entirety. 
+
+William Hoskins
+Director, Office of Technology Licensing
+University of California, Berkeley " 

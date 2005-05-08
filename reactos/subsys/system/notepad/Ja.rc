@@ -1,0 +1,129 @@
+/*
+ *  Notepad (Japanese resources)
+ *
+ *  Copyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>
+ *  Proofread 1998 by David Lee Lambert <lamber45@egr.msu.edu>
+ *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+MAIN_MENU MENU
+{
+ POPUP "ファイル(&F)" {
+  MENUITEM "新規作成(&N)...",           CMD_NEW
+  MENUITEM "開く(&O)\tCtrl+O",     CMD_OPEN
+  MENUITEM "保存(&S)\tCtrl+S",     CMD_SAVE
+  MENUITEM "名前を付けて保存(&a)...",       CMD_SAVE_AS
+  MENUITEM SEPARATOR
+  MENUITEM "印刷(&P)",            CMD_PRINT
+  MENUITEM "ページ設定(&t)...",    CMD_PAGE_SETUP
+  MENUITEM "プリンタの設定(&r)...", CMD_PRINTER_SETUP
+  MENUITEM SEPARATOR
+  MENUITEM "終了(&x)",             CMD_EXIT
+ }
+POPUP "編集(&E)" {
+  MENUITEM "アンドゥ(&U)\tCtrl+Z",     CMD_UNDO
+  MENUITEM SEPARATOR
+  MENUITEM "切り取り(&t)\tCtrl+X",      CMD_CUT
+  MENUITEM "コピー(&C)\tCtrl+C",     CMD_COPY
+  MENUITEM "ペースト(&P)\tCtrl+V",    CMD_PASTE
+  MENUITEM "削除(&D)\tDel",      CMD_DELETE
+  MENUITEM SEPARATOR
+  MENUITEM "全て選択(&a)\tCtrl+A",       CMD_SELECT_ALL
+  MENUITEM "日付と時刻(&T)\tF5",    CMD_TIME_DATE
+  MENUITEM SEPARATOR
+  MENUITEM "長い行を折り返す(&W)",  CMD_WRAP
+  MENUITEM "フォント(&F)...",          CMD_FONT
+ }
+POPUP "検索(&S)" {
+  MENUITEM "検索(&S)\tCtrl+F",   CMD_SEARCH
+  MENUITEM "次の候補を検索(&S)\tF3",  CMD_SEARCH_NEXT
+ }
+POPUP "ヘルプ(&H)" {
+  MENUITEM "目次(&C)",         CMD_HELP_CONTENTS
+  MENUITEM "検索(&S)...",        CMD_HELP_SEARCH
+  MENUITEM "ヘルプの使い方(&H)",     CMD_HELP_ON_HELP
+  MENUITEM SEPARATOR
+  POPUP "情報(&o)..." {
+   MENUITEM "ライセンス(&L)",         CMD_LICENSE
+   MENUITEM "未保証(&N)",     CMD_NO_WARRANTY
+   MENUITEM "Wineについて(&A)",      CMD_ABOUT_WINE
+  }
+ }
+}
+
+/* Dialog `Page setup' */
+
+DIALOG_PAGESETUP DIALOG 0, 0, 225, 95
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 9, "MS UI Gothic"
+CAPTION "ページ設定"
+{
+LTEXT    "ヘッダ(&H):",  0x140,   10, 07, 40, 15
+EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
+LTEXT    "フッタ(&F):",  0x142,   10, 24, 40, 15
+EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
+
+GROUPBOX "マージン(&M):",      0x144,     10, 43,160, 45
+LTEXT    "左(&L):",        0x145,   20, 55, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,       50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "上(&T):",         0x148,    20, 73, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/    0x14A,        50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "右(&R):",       0x14B, 100, 55, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,     130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "下(&B):",      0x14E,100, 73, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+
+DEFPUSHBUTTON "OK",         0x151,                   180,  3, 40, 15, WS_TABSTOP
+PUSHBUTTON    "キャンセル",     0x152,               180, 21, 40, 15, WS_TABSTOP
+PUSHBUTTON    "ヘルプ(&H)",       0x153,                180, 39, 40, 15, WS_TABSTOP
+}
+
+STRINGTABLE DISCARDABLE
+{
+STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
+STRING_PAGESETUP_FOOTERVALUE,   "&s ページ"   /* FIXME */
+STRING_PAGESETUP_LEFTVALUE,             "20 mm"     /* FIXME */
+STRING_PAGESETUP_RIGHTVALUE,    "20 mm"     /* FIXME */
+STRING_PAGESETUP_TOPVALUE,              "25 mm"     /* FIXME */
+STRING_PAGESETUP_BOTTOMVALUE,   "25 mm"     /* FIXME */
+
+STRING_NOTEPAD,                                 "メモ帳"
+STRING_ERROR,                                   "エラー"
+STRING_WARNING,                                 "警告"
+STRING_INFO,                                    "情報"
+
+STRING_UNTITLED,                                "(無題)"
+
+STRING_ALL_FILES,                               "全てのファイル (*.*)"
+STRING_TEXT_FILES_TXT,                  "テキストファイル (*.txt)"
+
+STRING_TOOLARGE,                                "ファイル '%s' のサイズは大きすぎるため、メモ帳では編集できません。\n \
+別のエディタを使用して下さい。"
+STRING_NOTEXT,                                  "何も入力されていません。\
+\n何か入力してから実行して下さい。"
+STRING_DOESNOTEXIST,                            "ファイル '%s'\nは存在しません\n\n \
+新しいファイルを作成しますか ?"
+STRING_NOTSAVED,                                "ファイル '%s'\nは変更されています\n\n \
+変更を保存しますか ?"
+STRING_NOTFOUND,                                        "'%s' は見つかりませんでした"
+STRING_OUT_OF_MEMORY,                   "この操作を実行するためのメモリが\
+足りません。 \nメモリの空きを増やすためにいくつかのアプリケーションを\n終了して\
+下さい。"
+
+}

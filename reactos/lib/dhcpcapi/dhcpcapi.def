@@ -1,0 +1,16 @@
+; $Id: dhcpcapi.def 14337 2005-03-26 22:10:04Z $
+;
+; dhcpcapi.def
+;
+; ReactOS Operating System
+;
+LIBRARY dhcpcapi.dll
+EXPORTS
+DhcpCApiInitialize@4
+DhcpCApiCleanup@0
+DhcpQueryHWInfo@16
+DhcpLeaseIpAddress@4
+DhcpReleaseIpAddressLease@4
+DhcpRenewIpAddressLease@4
+DhcpStaticRefreshParams@12
+; EOF

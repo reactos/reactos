@@ -1,0 +1,63 @@
+/*
+ * Copyright 2001 Dmitry Timoshkov
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+/* Convert Wine #defines to ReactOS #defines */
+#ifdef WINE_FILEVERSION
+#define REACTOS_FILEVERSION WINE_FILEVERSION
+#endif /* WINE_FILEVERSION */
+
+#ifdef WINE_FILEVERSION_STR
+#define REACTOS_STR_FILE_VERSION WINE_FILEVERSION_STR
+#endif /* WINE_FILEVERSION_STR */
+
+#ifdef WINE_FILEDESCRIPTION_STR
+#define REACTOS_STR_FILE_DESCRIPTION WINE_FILEDESCRIPTION_STR
+#else
+#define REACTOS_STR_FILE_DESCRIPTION "ReactOS/Wine core dll\0"
+#endif /* WINE_FILEDESCRIPTION_STR */
+
+#ifdef WINE_FILENAME_STR
+#define REACTOS_STR_INTERNAL_NAME WINE_FILENAME_STR
+#define REACTOS_STR_ORIGINAL_FILENAME WINE_FILENAME_STR
+#endif /* WINE_FILENAME_STR */
+
+#ifdef WINE_PRODUCTVERSION
+#define REACTOS_PRODUCT_VERSION WINE_PRODUCTVERSION
+#endif /* WINE_PRODUCTVERSION */
+
+#ifdef WINE_PRODUCTVERSION_STR
+#define REACTOS_STR_PRODUCT_VERSION WINE_PRODUCTVERSION_STR
+#endif /* WINE_PRODUCTVERSION_STR */
+
+#ifdef WINE_PRODUCTNAME_STR
+#define REACTOS_STR_PRODUCT_NAME WINE_PRODUCTNAME_STR
+#endif /* WINE_PRODUCTNAME_STR */
+
+#ifdef WINE_OLESELFREGISTER
+#define REACTOS_OLESELFREGISTER
+#endif /* WINE_OLESELFREGISTER */
+
+/* Credit the Wine team */
+#define REACTOS_STR_COMPANY_NAME "ReactOS Development Team/Wine Team\0"
+#define REACTOS_STR_LEGAL_COPYRIGHT "Copyright 1998-2004 ReactOS Team, 1993-2004 the Wine project authors\0"
+#define REACTOS_STR_ORIGINAL_COPYRIGHT "Copyright (c) 1993-2001 the Wine project authors " \
+                                       "(see the file AUTHORS for a complete list)"
+
+#define REACTOS_VERSION_DLL
+
+#include <reactos/version.rc>

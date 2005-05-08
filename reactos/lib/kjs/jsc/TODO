@@ -1,0 +1,24 @@
+
+		 TODO JavaScript JavaScript Compiler
+
+* General
+
+  - clean up the compiler source
+
+* Optimizations
+
+  - Improve constant folding: type conversions, expr_multiplicative,
+    expr_shift, expr_relational, expr_bitwise, etc.
+
+  - create type-specified virtual machine operands for +, -, *,
+    etc. and use them if the types are known.  See JSC$stmt_if_asm()
+    for an example.
+
+  - delete_{property,array}	=>	delete_{property,array}
+    pop
+    const_undefined
+
+* parser.js
+
+  - 7.8 Sharp Variables
+  - and more???

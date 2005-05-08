@@ -1,0 +1,82 @@
+ Following information obtained from Tomi Engdahl (then@delta.hut.fi),
+ http://www.hut.fi/~then/mytexts/mouse.html
+
+ Microsoft serial mouse
+
+   Serial data parameters:
+     1200bps, 7 databits, 1 stop-bit
+
+   Data packet format:
+     Data packet is 3 byte packet. It is send to the computer every time mouse
+     state changes (mouse moves or keys are pressed/released). 
+         D7      D6      D5      D4      D3      D2      D1      D0
+     1.  X       1       LB      RB      Y7      Y6      X7      X6
+     2.  X       0       X5      X4      X3      X2      X1      X0      
+     3.  X       0       Y5      Y4      Y3      Y2      Y1      Y0
+
+     Note: The bit marked with X is 0 if the mouse received with 7 databits
+     and 2 stop bits format. It is also possible to use 8 databits and 1 stop
+     bit format for receiving. In this case X gets value 1. The safest thing
+     to get everything working is to use 7 databits and 1 stopbit when
+     receiving mouse information (and if you are making mouse then send out
+     7 databits and 2 stop bits). 
+     The byte marked with 1. is send first, then the others. The bit D6 in
+     the first byte is used for syncronizing the software to mouse packets
+     if it goes out of sync. 
+
+      LB is the state of the left button (1 means pressed down)
+      RB is the state of the right button (1 means pressed down)
+      X7-X0 movement in X direction since last packet (signed byte)
+      Y7-Y0 movement in Y direction since last packet (signed byte)
+
+    Mouse identification
+      When DTR line is toggled, mouse should send one data byte containing
+      letter 'M' (ascii 77).
+
+
+ Logitech serial mouse
+
+   Logitech uses the Microsoft serial mouse protocol in their mouses (for
+   example Logitech Pilot mouse and others). The origianal protocol supports
+   only two buttons, but logitech as added third button to some of their
+   mouse models. To make this possible logitech has made one extension to
+   the protocol. 
+   I have not seen any documentation about the exact documents, but here is
+   what I have found out: The information of the third button state is sent
+   using one extra byte which is send after the normal packet when needed.
+   Value 32 (dec) is sent every time when the center button is pressed down.
+   It is also sent every time with the data packet when center button is kept
+   down and the mouse data packet is sent for other reasons. When center
+   button is released, the mouse sends the normal data packet followed by
+   data bythe which has value 0 (dec). As you can see the extra data byte
+   is sent only when you mess with the center button.
+
+
+ Mouse systems mouse
+
+   Serial data parameters:
+     1200bps, 8 databits, 1 stop-bit
+
+   Data packet format:
+          D7      D6      D5      D4      D3      D2      D1      D0
+     1.   1       0       0       0       0       LB      CB      RB
+     2.   X7      X6      X5      X4      X3      X2      X1      X0
+     3.   Y7      Y6      Y5      Y4      Y3      Y4      Y1      Y0
+     4.   X7'     X6'     X5'     X4'     X3'     X2'     X1'     X0'
+     5.   Y7'     Y6'     Y5'     Y4'     Y3'     Y4'     Y1'     Y0'
+
+     LB is left button state (0 = pressed, 1 = released)
+     CB is center button state (0 = pressed, 1 = released)
+     RB is right button state (0 = pressed, 1 = released)
+     X7-X0 movement in X direction since last packet in signed byte 
+           format (-128..+127), positive direction right
+     Y7-Y0 movement in Y direction since last packet in signed byte 
+           format (-128..+127), positive direction up
+     X7'-X0' movement in X direction since sending of X7-X0 packet in
+             signed byte format (-128..+127), positive direction right
+     Y7'-Y0' movement in Y direction since sending of Y7-Y0 packet in
+             signed byte format (-128..+127), positive direction up
+
+     The last two bytes in the packet (bytes 4 and 5) contains information
+     about movement data changes which have occured after data bytes 2 and 3
+     have been sent.

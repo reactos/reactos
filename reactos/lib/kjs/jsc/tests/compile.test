@@ -1,0 +1,50 @@
+#!/bin/sh
+#
+# Compile the compiler source a couple of times.
+#
+
+. $srcdir/defs || exit 1
+
+name="compile.test"
+
+# First, create the compiler source file.
+
+rm -f jsc.js
+
+for i in $jscsources; do
+    cat $srcdir/../$i >> jsc.js
+done
+
+# Second, compile the source to the stage one compiler.
+
+echo "$name: creating the stage 1 compiler"
+$js -Wall -O2 -c jsc.js
+mv jsc.jsc stage1.jsc
+
+# Third, compile the stage two compiler with our new compiler.
+
+echo "$name: creating the stage 2 compiler"
+$js --load stage1.jsc --file $srcdir/../bs.js jsc.js
+mv a.jsc stage2.jsc
+
+# Fourth, compile stage three compiler.
+
+echo "$name: creating the stage 3 compiler"
+$js --load stage2.jsc --file $srcdir/../bs.js jsc.js
+mv a.jsc stage3.jsc
+
+# Fifth, cleanup.
+
+rm -f a.jas jsc.js stage1.jsc
+
+# Finally, check that stage2.jsc and stage3.jsc do not differ.  If
+# they do, the there is something seriously broken.
+
+cmp stage2.jsc stage3.jsc || {
+  rm -f stage2.jsc stage3.jsc
+  echo "error: the stage 2 and stage 3 compilers differ"
+  exit 1
+}
+
+# All ok.
+rm -f stage2.jsc stage3.jsc

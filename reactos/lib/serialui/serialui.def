@@ -1,0 +1,10 @@
+LIBRARY serialui.dll
+
+EXPORTS
+drvCommConfigDialogW@12
+drvCommConfigDialogA@12
+drvSetDefaultCommConfigW@12
+drvSetDefaultCommConfigA@12
+drvGetDefaultCommConfigW@12 
+drvGetDefaultCommConfigA@12
+

@@ -1,0 +1,13 @@
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = msacm.drv
+IMPORTS   = msacm32 winmm user32 kernel32
+
+C_SRCS = \
+	wavemap.c
+
+@MAKE_DLL_RULES@
+
+### Dependencies:
