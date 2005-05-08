@@ -31,6 +31,7 @@
 #include <ndk/rtltypes.h>
 
 /*FIXME: REORGANIZE THIS */
+/* FIXME: SOME FUNCTIONS MUST BE PROTECTED AGAINST DDK/IFS. */
 
 #define RtlGetProcessHeap() (NtCurrentPeb()->ProcessHeap)
 
@@ -361,6 +362,27 @@ STDCALL
 RtlLeaveCriticalSection (
      PRTL_CRITICAL_SECTION CriticalSection
 );
+
+VOID
+STDCALL
+RtlInitializeBitMap(
+  IN PRTL_BITMAP  BitMapHeader,
+  IN PULONG  BitMapBuffer,
+  IN ULONG  SizeOfBitMap); 
+  
+BOOLEAN
+STDCALL
+RtlAreBitsClear(
+  IN PRTL_BITMAP  BitMapHeader,
+  IN ULONG  StartingIndex,
+  IN ULONG  Length); 
+
+BOOLEAN
+STDCALL
+RtlAreBitsSet(
+  IN PRTL_BITMAP  BitMapHeader,
+  IN ULONG  StartingIndex,
+  IN ULONG  Length); 
 
 NTSTATUS
 STDCALL
