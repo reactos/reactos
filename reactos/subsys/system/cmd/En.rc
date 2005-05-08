@@ -560,4 +560,9 @@ STRING_ERROR_D_PAUSEMSG,           "Press any key to continue . . ."
 STRING_ERROR_DRIVER_NOT_READY,     "Drive not ready"
 
 STRING_PATH_ERROR,                 "CMD: Not in environment '%s'\n"
+
+
+STRING_CMD_INVALIDDRIVE,           "ERROR: invalid drive"
+STRING_CMD_SHELLINFO,              "\nReactOS Command Line Interpreter"
+STRING_VERSION_RUNVER              " running on %s"
 }

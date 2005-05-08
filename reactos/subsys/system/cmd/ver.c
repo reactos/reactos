@@ -23,6 +23,7 @@
 
 #include "precomp.h"
 #include "resource.h"
+#include <reactos/resource.h>
 
 
 VOID ShortVersion (VOID)
@@ -30,15 +31,13 @@ VOID ShortVersion (VOID)
 	OSVERSIONINFO VersionInfo;
 	unsigned RosVersionLen;
 	LPTSTR RosVersion;
-
-	ConOutPuts (_T("\n"
-	               SHELLINFO));
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	
+	ConOutResPuts (STRING_CMD_SHELLINFO );
 	VersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-#ifdef _UNICODE
-		ConOutPrintf(_T("%S"), SHELLVER);
-#else
-		ConOutPrintf(_T("%s"), SHELLVER);
-#endif /* _UNICODE */
+
+	ConOutPrintf(_T("Version %s %s"), _T(KERNEL_RELEASE_STR), _T(KERNEL_VERSION_BUILD_STR));
+
 	memset(VersionInfo.szCSDVersion, 0, sizeof(VersionInfo.szCSDVersion));
 	if (GetVersionEx(&VersionInfo))
 	{
@@ -47,7 +46,8 @@ VOID ShortVersion (VOID)
 	                        (RosVersion - VersionInfo.szCSDVersion);
 		if (7 <= RosVersionLen && 0 == _tcsnicmp(RosVersion, _T("ReactOS"), 7))
 		{
-			ConOutPrintf(_T(" running on %s"), RosVersion);
+			LoadString( GetModuleHandle(NULL), STRING_VERSION_RUNVER, (LPTSTR) szMsg,sizeof(szMsg));
+            ConOutPrintf ((LPTSTR)szMsg, RosVersion);
 		}
 	}
 	ConOutPuts (_T("\n"));
@@ -73,12 +73,12 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 
 	ShortVersion();
 	ConOutPuts (_T("Copyright (C) 1994-1998 Tim Norman and others."));
-	ConOutPuts (_T("Copyright (C) 1998-2005 Eric Kohl and others."));
+	ConOutPuts (_T(RES_STR_LEGAL_COPYRIGHT));
 
 	/* Basic copyright notice */
 	if (param[0] == _T('\0'))
 	{
-		ConOutPuts(_T("\n"SHELLINFO));
+		ConOutResPuts (STRING_CMD_SHELLINFO );
 		ConOutResPuts(STRING_VERSION_HELP2);
 	}
 	else

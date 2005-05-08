@@ -48,17 +48,6 @@
 #define BREAK_IGNORE 4
 
 /* define some error messages */
-#define NOENVERR        _T("ERROR: no environment")
-#define INVALIDDRIVE    _T("ERROR: invalid drive")
-#define INVALIDFUNCTION _T("ERROR: invalid function")
-#define ACCESSDENIED    _T("ERROR: access denied")
-#define BADENVIROMENT   _T("ERROR: bad enviroment")
-#define BADFORMAT       _T("ERROR: bad format")
-#define ERROR_E2BIG     _T("ERROR: Argument list too long")
-#define ERROR_EINVAL    _T("ERROR: Invalid argument")
-
-#define SHELLINFO       "ReactOS Command Line Interpreter"
-
 
 #define D_ON         _T("on")
 #define D_OFF        _T("off")
