@@ -314,7 +314,7 @@ SaveResolutionSettings(DWORD ResX, DWORD ResY, DWORD ColDepth)
 
   if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,
                   L"SYSTEM\\CurrentControlSet\\Hardware Profiles\\Current\\System\\CurrentControlSet\\Services\\vmx_svga\\Device0",
-                  0, KEY_QUERY_VALUE, &hReg) != ERROR_SUCCESS)
+                  0, KEY_SET_VALUE, &hReg) != ERROR_SUCCESS)
   {
     return FALSE;
   }
