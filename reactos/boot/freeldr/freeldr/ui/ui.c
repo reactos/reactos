@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-	
+
 #include <freeldr.h>
 #include <ui.h>
 #include "tui.h"
@@ -75,7 +75,7 @@ BOOL UiInitialize(BOOLEAN ShowGui)
 		UserInterfaceUp = FALSE;
 		return TRUE;
 	}
-	
+
 	DbgPrint((DPRINT_UI, "Initializing User Interface.\n"));
 
 	DbgPrint((DPRINT_UI, "Reading in UI settings from [Display] section.\n"));
@@ -193,7 +193,7 @@ BOOL UiInitialize(BOOLEAN ShowGui)
 
 	// Draw the backdrop and fade it in if special effects are enabled
 	UiFadeInBackdrop();
-	
+
 	UserInterfaceUp = TRUE;
 
 	DbgPrint((DPRINT_UI, "UiInitialize() returning TRUE.\n"));
@@ -221,7 +221,7 @@ VOID UiUnInitialize(PCHAR BootText)
 VOID UiDrawBackdrop(VOID)
 {
 	if (!UserInterfaceUp) return;
-	
+
 	if (VideoTextMode == UiDisplayMode)
 	{
 		TuiDrawBackdrop();
@@ -301,7 +301,7 @@ VOID UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCHAR 
 VOID UiDrawStatusText(PCHAR StatusText)
 {
 	if (!UserInterfaceUp) return;
-	
+
 	if (VideoTextMode == UiDisplayMode)
 	{
 		TuiDrawStatusText(StatusText);
@@ -468,7 +468,7 @@ UCHAR UiTextToFillStyle(PCHAR FillStyleText)
 VOID UiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText)
 {
 	if (!UserInterfaceUp) return;
-	
+
 	if (VideoTextMode == UiDisplayMode)
 	{
 		TuiDrawProgressBarCenter(Position, Range, ProgressText);
@@ -515,7 +515,7 @@ VOID UiShowMessageBoxesInSection(PCHAR SectionName)
 	for (Idx=0; Idx<IniGetNumSectionItems(SectionId); Idx++)
 	{
 		IniReadSettingByNumber(SectionId, Idx, SettingName, 79, SettingValue, 79);
-		
+
 		if (stricmp(SettingName, "MessageBox") == 0)
 		{
 			// Get the real length of the MessageBox text

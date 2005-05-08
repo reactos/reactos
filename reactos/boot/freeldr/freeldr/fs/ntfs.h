@@ -57,7 +57,7 @@
 #define NTFS_FILE_NAME_POSIX			0
 #define NTFS_FILE_NAME_WIN32			1
 #define NTFS_FILE_NAME_DOS			2
-#define NTFS_FILE_NAME_WIN32_AND_DOS		3 
+#define NTFS_FILE_NAME_WIN32_AND_DOS		3
 
 typedef struct
 {

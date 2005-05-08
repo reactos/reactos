@@ -840,7 +840,7 @@ CmiAllocateHashTableCell (PREGISTRY_HIVE Hive,
   ULONG NewHashSize;
   BOOL Status;
 
-  NewHashSize = sizeof(HASH_TABLE_CELL) + 
+  NewHashSize = sizeof(HASH_TABLE_CELL) +
 		(SubKeyCount * sizeof(HASH_RECORD));
   Status = CmiAllocateCell (Hive,
 			    NewHashSize,

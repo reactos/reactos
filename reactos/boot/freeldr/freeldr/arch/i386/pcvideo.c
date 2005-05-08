@@ -136,7 +136,7 @@ PcVideoDetectVideoCard(VOID)
    * CH = feature connector bits
    * CL = switch settings
    * AH destroyed (at least by Tseng ET4000 BIOS v8.00n)
-   * 
+   *
    * Installation check;EGA
    */
   Regs.b.ah = 0x12;
@@ -161,7 +161,7 @@ PcVideoDetectVideoCard(VOID)
    * This function is commonly used to check for the presence of a VGA.
    *
    * Installation check;VGA
-   * 
+   *
    * Values for display combination code:
    * 00h    no display
    * 01h    monochrome adapter w/ monochrome display
@@ -309,15 +309,15 @@ PcVideoDefineCursor(ULONG StartScanLine, ULONG EndScanLine)
    * CL = bottom scan line containing cursor (bits 0-4)
    * Return:
    * Nothing
-   * 
+   *
    * Specify the starting and ending scan lines to be occupied
    * by the hardware cursor in text modes.
    *
    * AMI 386 BIOS and AST Premier 386 BIOS will lock up the
    * system if AL is not equal to the current video mode.
-   * 
+   *
    * Bitfields for cursor start and options:
-   * 
+   *
    * Bit(s)    Description
    * 7         should be zero
    * 6,5       cursor blink
@@ -460,7 +460,7 @@ PcVideoVesaGetSVGAModeInformation(USHORT Mode, PSVGA_MODE_INFORMATION ModeInform
    *
    * Note: While VBE 1.1 and higher will zero out all unused bytes
    * of the buffer, v1.0 did not, so applications that want to be
-   * backward compatible should clear the buffer before calling 
+   * backward compatible should clear the buffer before calling
    */
   Regs.w.ax = 0x4F01;
   Regs.w.cx = Mode;
@@ -563,7 +563,7 @@ PcVideoSetBiosVesaMode(USHORT Mode)
    * 121h   1600x1200x32K
    * 122h   1600x1200x64K
    * 81FFh   special full-memory access mode
-   * 
+   *
    * Notes: The special mode 81FFh preserves the contents of the video memory and gives
    * access to all of the memory; VESA recommends that the special mode be a packed-pixel
    * mode. For VBE 2.0+, it is required that the VBE implement the mode, but not place it

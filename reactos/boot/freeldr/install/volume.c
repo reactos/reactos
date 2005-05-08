@@ -90,7 +90,7 @@ BOOL ReadVolumeSector(ULONG SectorNumber, PVOID SectorBuffer)
 		_tprintf(_T("SetFilePointer() failed. Error code %ld.\n"), GetLastError());
 		return FALSE;
 	}
-	
+
 	bRetVal = ReadFile(hDiskVolume, SectorBuffer, 512, &dwNumberOfBytesRead, NULL);
 	if (!bRetVal || (dwNumberOfBytesRead != 512))
 	{
@@ -122,7 +122,7 @@ BOOL WriteVolumeSector(ULONG SectorNumber, PVOID SectorBuffer)
 		_tprintf(_T("SetFilePointer() failed. Error code %ld.\n"), GetLastError());
 		return FALSE;
 	}
-	
+
 	bRetVal = WriteFile(hDiskVolume, SectorBuffer, 512, &dwNumberOfBytesWritten, NULL);
 	if (!bRetVal || (dwNumberOfBytesWritten != 512))
 	{

@@ -197,44 +197,44 @@ HalpCalibrateStallExecution(VOID)
   WRITE_PORT_UCHAR((PUCHAR)0x43, 0x34);  /* binary, mode 2, LSB/MSB, ch 0 */
   WRITE_PORT_UCHAR((PUCHAR)0x40, LATCH & 0xff); /* LSB */
   WRITE_PORT_UCHAR((PUCHAR)0x40, LATCH >> 8); /* MSB */
-  
+
   /* Stage 1:  Coarse calibration                                   */
-  
+
   WaitFor8254Wraparound();
-  
+
   delay_count = 1;
-  
+
   do {
     delay_count <<= 1;                  /* Next delay count to try */
 
     WaitFor8254Wraparound();
-  
+
     __StallExecutionProcessor(delay_count);      /* Do the delay */
-  
+
     CurCount = Read8254Timer();
   } while (CurCount > LATCH / 2);
-  
+
   delay_count >>= 1;              /* Get bottom value for delay     */
-  
+
   /* Stage 2:  Fine calibration                                     */
-  
+
   calib_bit = delay_count;        /* Which bit are we going to test */
-  
+
   for(i=0;i<PRECISION;i++) {
     calib_bit >>= 1;             /* Next bit to calibrate          */
     if(!calib_bit) break;        /* If we have done all bits, stop */
-  
+
     delay_count |= calib_bit;        /* Set the bit in delay_count */
-  
+
     WaitFor8254Wraparound();
-  
+
     __StallExecutionProcessor(delay_count);      /* Do the delay */
-  
+
     CurCount = Read8254Timer();
     if (CurCount <= LATCH / 2)   /* If a tick has passed, turn the */
       delay_count &= ~calib_bit; /* calibrated bit back off        */
   }
-  
+
   /* We're finished:  Do the finishing touches                      */
   delay_count /= (MILLISEC / 2);   /* Calculate delay_count for 1ms */
 }

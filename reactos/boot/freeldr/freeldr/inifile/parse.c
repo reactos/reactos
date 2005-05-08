@@ -113,7 +113,7 @@ BOOL IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
 			{
 				RtlListInsertTail((PLIST_ITEM)IniFileSectionListHead, (PLIST_ITEM)CurrentSection);
 			}
-			
+
 			CurrentLineNumber++;
 			continue;
 		}

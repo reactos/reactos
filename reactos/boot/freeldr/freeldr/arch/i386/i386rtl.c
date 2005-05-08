@@ -47,12 +47,12 @@ void delay(unsigned msec)
 	// interrupt from the AT real-time clock chip which is available on INT 70;
 	// because newer BIOSes may have much more precise timers available, it is
 	// not possible to use this function accurately for very short delays unless
-	// the precise behavior of the BIOS is known (or found through testing) 
+	// the precise behavior of the BIOS is known (or found through testing)
 
 	while (msec)
 	{
 		msec_this = msec;
-		
+
 		if (msec_this > 4000)
 		{
 			msec_this = 4000;

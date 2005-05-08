@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-	
+
 #include <freeldr.h>
 #include <drivemap.h>
 #include <rtl.h>
@@ -120,7 +120,7 @@ VOID DriveMapMapDrivesInSection(PCHAR SectionName)
 BOOL DriveMapIsValidDriveString(PCHAR DriveString)
 {
 	ULONG		Index;
-	
+
 	// Now verify that the user has given us appropriate strings
 	if ((strlen(DriveString) < 3) ||
 		((DriveString[0] != 'f') && (DriveString[0] != 'F') && (DriveString[0] != 'h') && (DriveString[0] != 'H')) ||

@@ -21,7 +21,7 @@ char newpatch[] = {0x3b, 0x05, 0x58, 0x5e };
 void patch_image(char *filename)
 {
   int i,size;
-  
+
   view_only = 0;
   f = open(filename, O_RDWR | O_BINARY);
   if (f < 0) {
@@ -30,7 +30,7 @@ void patch_image(char *filename)
       perror(filename);
       return;
     }
-    view_only = 1; 
+    view_only = 1;
   }
 
   lseek(f, search_base, SEEK_SET);
@@ -61,7 +61,7 @@ int main(int argc, char **argv)
   char filename[256];
   char buf1[256];
   char file2[256];
-  
+
   if (argc != 1) {		/* If they specify names, patch them, exit */
     for(i=1; i<argc; i++)
      patch_image(argv[i]);
@@ -74,11 +74,11 @@ int main(int argc, char **argv)
   strcpy(file2,filename);
   strcat(filename,"\\system32\\ntvdm.exe");
   strcat(file2,"\\system32\\dllcache\\ntvdm.exe");
-  
+
   sprintf(buf1,"copy %s %s\\system32\\ntvdm.ori",filename,getenv("SYSTEMROOT"));
   printf("%s\n",buf1);
   system(buf1);
-  
+
   patch_image(file2);
   patch_image(filename);
   return 0;

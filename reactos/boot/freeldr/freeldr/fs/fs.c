@@ -139,7 +139,7 @@ PFILE FsOpenFile(PCHAR FileName)
 	{
 		FileName++;
 	}
-	
+
 	//
 	// Check file system type and pass off to appropriate handler
 	//

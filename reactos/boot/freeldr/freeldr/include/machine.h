@@ -39,7 +39,7 @@ typedef struct tagMACHVTBL
   VOID (*ConsPutChar)(int Ch);
   BOOL (*ConsKbHit)(VOID);
   int (*ConsGetCh)(VOID);
-  
+
   VOID (*VideoClearScreen)(UCHAR Attr);
   VIDEODISPLAYMODE (*VideoSetDisplayMode)(char *DisplayMode, BOOL Init);
   VOID (*VideoGetDisplaySize)(PULONG Width, PULONG Height, PULONG Depth);

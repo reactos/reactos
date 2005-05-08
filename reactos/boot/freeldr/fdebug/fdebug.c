@@ -57,7 +57,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	MyRegisterClass(hInstance);
 
 	// Perform application initialization:
-	if (!InitInstance (hInstance, nCmdShow)) 
+	if (!InitInstance (hInstance, nCmdShow))
 	{
 		return FALSE;
 	}
@@ -65,9 +65,9 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	hAccelTable = LoadAccelerators(hInstance, (LPCTSTR)IDC_FDEBUG);
 
 	// Main message loop:
-	while (GetMessage(&msg, NULL, 0, 0)) 
+	while (GetMessage(&msg, NULL, 0, 0))
 	{
-		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) 
+		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
@@ -96,7 +96,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 {
 	WNDCLASSEX wcex;
 
-	wcex.cbSize = sizeof(WNDCLASSEX); 
+	wcex.cbSize = sizeof(WNDCLASSEX);
 
 	wcex.style			= CS_HREDRAW | CS_VREDRAW;
 	wcex.lpfnWndProc	= (WNDPROC)WndProc;
@@ -156,7 +156,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	NONCLIENTMETRICS	ncm;
 	HFONT				hFont;
 
-	switch (message) 
+	switch (message)
 	{
 	case WM_CREATE:
 
@@ -174,7 +174,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		break;
 	case WM_COMMAND:
-		wmId    = LOWORD(wParam); 
+		wmId    = LOWORD(wParam);
 		wmEvent = HIWORD(wParam);
 
 		if (lParam == (LPARAM)hEditWnd && wmEvent == EN_CHANGE)
@@ -312,7 +312,7 @@ LRESULT CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		return TRUE;
 
 	case WM_COMMAND:
-		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL) 
+		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
 		{
 			EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
@@ -340,7 +340,7 @@ LRESULT CALLBACK ConnectionDialogProc(HWND hDlg, UINT message, WPARAM wParam, LP
 			GetWindowText(GetDlgItem(hDlg, IDC_BAUTRATE), strBaudRate, MAX_PATH);
 		}
 
-		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL) 
+		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
 		{
 			EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
@@ -392,7 +392,7 @@ LRESULT CALLBACK CaptureDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARA
 			GetWindowText(GetDlgItem(hDlg, IDC_CAPTUREFILENAME), strCaptureFileName, MAX_PATH);
 		}
 
-		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL) 
+		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
 		{
 			EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;

@@ -18,7 +18,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <freeldr.h>	
+#include <freeldr.h>
 #include <cmdline.h>
 #include <rtl.h>
 

@@ -1,16 +1,16 @@
 /* multiboot.h - the header for Multiboot */
 /* Copyright (C) 1999  Free Software Foundation, Inc.
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. */
@@ -157,48 +157,48 @@ ULONG_PTR
 STDCALL
 FrLdrCreateModule(LPSTR ModuleName);
 
-ULONG_PTR 
-STDCALL 
-FrLdrLoadModule(FILE *ModuleImage, 
-                LPSTR ModuleName, 
+ULONG_PTR
+STDCALL
+FrLdrLoadModule(FILE *ModuleImage,
+                LPSTR ModuleName,
                 PULONG ModuleSize);
 
 BOOL
 STDCALL
 FrLdrLoadKernel(PCHAR szFileName,
                 INT nPos);
-                
+
 BOOL
-FrLdrLoadNlsFile(PCHAR szSystemRoot,     
+FrLdrLoadNlsFile(PCHAR szSystemRoot,
                  PCHAR szErrorOut);
-                 
+
 BOOL
-FrLdrLoadDriver(PCHAR szFileName, 
+FrLdrLoadDriver(PCHAR szFileName,
                 INT nPos);
 BOOL
 LoadSymbolFile(PCHAR szSystemRoot,
                PCHAR ModuleName,
                INT nPos);
-               
+
 VOID
-FrLdrLoadBootDrivers(PCHAR szSystemRoot, 
+FrLdrLoadBootDrivers(PCHAR szSystemRoot,
                      INT nPos);
-                
+
 BOOL
 STDCALL
-FrLdrCloseModule(ULONG_PTR ModuleBase, 
+FrLdrCloseModule(ULONG_PTR ModuleBase,
                  ULONG dwModuleSize);
 
 VOID
-STDCALL 
+STDCALL
 FrLdrStartup(ULONG Magic);
 
-VOID 
-FASTCALL 
+VOID
+FASTCALL
 FrLdrGetKernelBase(VOID);
 
-VOID 
-FASTCALL 
+VOID
+FASTCALL
 FrLdrSetupPae(ULONG Magic);
 
 VOID
@@ -206,7 +206,7 @@ FASTCALL
 FrLdrGetPaeMode(VOID);
 
 VOID
-FASTCALL 
+FASTCALL
 FrLdrSetupPageDirectory(VOID);
 
 VOID

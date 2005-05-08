@@ -949,7 +949,7 @@ BOOL Ext2ReadInode(ULONG Inode, PEXT2_INODE InodeBuffer)
 	{
 		return FALSE;
 	}
-	
+
 	// Copy the data to their buffer
 	RtlCopyMemory(InodeBuffer, (PVOID)(FILESYSBUFFER + (InodeOffsetInBlock * EXT3_INODE_SIZE(Ext2SuperBlock))), sizeof(EXT2_INODE));
 

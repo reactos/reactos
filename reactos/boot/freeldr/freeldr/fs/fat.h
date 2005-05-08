@@ -46,7 +46,7 @@ typedef struct _FAT_BOOTSECTOR
 	UCHAR		BootCodeAndData[448];		// The remainder of the boot sector
 
 	USHORT		BootSectorMagic;			// 0xAA55
-	
+
 } PACKED FAT_BOOTSECTOR, *PFAT_BOOTSECTOR;
 
 typedef struct _FAT32_BOOTSECTOR
@@ -82,7 +82,7 @@ typedef struct _FAT32_BOOTSECTOR
 	UCHAR		BootCodeAndData[420];		// The remainder of the boot sector
 
 	USHORT		BootSectorMagic;			// 0xAA55
-	
+
 } PACKED FAT32_BOOTSECTOR, *PFAT32_BOOTSECTOR;
 
 typedef struct _FATX_BOOTSECTOR
@@ -93,7 +93,7 @@ typedef struct _FATX_BOOTSECTOR
 	USHORT		NumberOfFats;				/* Number of FAT tables */
 	ULONG		Unknown;				/* Always 0? */
 	UCHAR		Unused[494];				/* Actually size should be 4078 (boot block is 4096 bytes) */
-	
+
 } PACKED FATX_BOOTSECTOR, *PFATX_BOOTSECTOR;
 
 /*
