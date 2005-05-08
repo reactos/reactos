@@ -66,8 +66,10 @@ _KiTrapRet:
 
 	/* Restore the old previous mode */
 	popl	%ebx
+	cmpl	$0, %esi
+	je	.L7
 	movb	%bl, %ss:KTHREAD_PREVIOUS_MODE(%esi)
-
+.L7:
 	/* Restore the old exception handler list */
 	popl	%ebx
 	movl	%ebx, %fs:KPCR_EXCEPTION_LIST
@@ -83,48 +85,16 @@ _KiTrapRet:
 
 .globl _KiTrapProlog
 _KiTrapProlog:	
-
+	movl	$_KiTrapHandler, %ebx
+	
+.global _KiTrapProlog2
+_KiTrapProlog2:
 	pushl	%edi
 	pushl	%fs
 
-	/*
-	 * Check that the PCR exists, very early in the boot process it may 
-	 * not 
-	 */
-	cmpl	$0, %ss:_KiPcrInitDone
-	je	.L5
-	
-	/* Load the PCR selector into fs */
-	movl	$PCR_SELECTOR, %ebx
-	movl	%ebx, %fs
+	/* Make room for the previous mode and the exception list */
+	subl	$8, %esp
 
-	/* Save the old exception list */
-	movl    %fs:KPCR_EXCEPTION_LIST, %ebx
-	pushl	%ebx
-	
-	/* Get a pointer to the current thread */
-	movl    %fs:KPCR_CURRENT_THREAD, %edi
-
-	/* The current thread may be NULL early in the boot process */
-	cmpl	$0, %edi
-	je	.L4
-		
-	/* Save the old previous mode */
-	movl    $0, %ebx
-	movb    %ss:KTHREAD_PREVIOUS_MODE(%edi), %bl
-	pushl   %ebx
-	
-        /* Set the new previous mode based on the saved CS selector */
-	movl	 0x24(%esp), %ebx
-	andl     $0x0000FFFF, %ebx
-	cmpl     $KERNEL_CS, %ebx
-	jne      .L1
-	movb     $KernelMode, %ss:KTHREAD_PREVIOUS_MODE(%edi)
-	jmp      .L3
-.L1:
-	movb     $UserMode, %ss:KTHREAD_PREVIOUS_MODE(%edi)
-.L3:
-	
 	/* Save other registers */	
 	pushl	%eax
 	pushl	%ecx
@@ -147,70 +117,88 @@ _KiTrapProlog:
 	pushl	%eax		/* Dr1 */
 	movl	%dr0, %eax
 	pushl	%eax		/* Dr0 */
-    leal    0x64(%esp), %eax
-	pushl	%eax    /* XXX: TempESP */
-	pushl	%ss     /* XXX: TempSS */
-	pushl	$0     /* XXX: DebugPointer */
-	pushl	$0     /* XXX: DebugArgMark */
-	movl    0x60(%esp), %ebx
-	pushl	%ebx   /* XXX: DebugEIP */
-	pushl	%ebp   /* XXX: DebugEBP */	
-		
-	/* Load the segment registers */
-	movl	$KERNEL_DS, %ebx
-	movl	%ebx, %ds
-	movl	%ebx, %es
-	movl	%ebx, %gs
+	leal    0x64(%esp), %eax
+	pushl	%eax		/* XXX: TempESP */
+	pushl	%ss		/* XXX: TempSS */
+	pushl	$0		/* XXX: DebugPointer */
+	pushl	$0		/* XXX: DebugArgMark */
+	movl    0x60(%esp), %eax
+	pushl	%eax		/* XXX: DebugEIP */
+	pushl	%ebp		/* XXX: DebugEBP */	
 	
-	/*  Set ES to kernel segment  */
-	movw	$KERNEL_DS,%bx
-	movw	%bx,%es
-
-	movl	%esp, %ebx
+	/* Load the segment registers */
+	movl	$KERNEL_DS, %eax
+	movl	%eax, %ds
+	movl	%eax, %es
+	movl	%eax, %gs
+	
+	/* save the trap frame */
 	movl	%esp, %ebp		
+	
+	/* Load the PCR selector into fs */
+	movl	$PCR_SELECTOR, %eax
+	movl	%eax, %fs
+
+	/* Save the old exception list */
+	movl    %fs:KPCR_EXCEPTION_LIST, %eax
+	movl	%eax, KTRAP_FRAME_EXCEPTION_LIST(%ebp)
+	
+	/* Get a pointer to the current thread */
+	movl    %fs:KPCR_CURRENT_THREAD, %edi
+
+	/* The current thread may be NULL early in the boot process */
+	cmpl	$0, %edi
+	je	.L4
+		
+	/* Save the old previous mode */
+	movl    $0, %eax
+	movb    KTHREAD_PREVIOUS_MODE(%edi), %al
+	movl	%eax, KTRAP_FRAME_PREVIOUS_MODE(%ebp)
+	
+        /* Set the new previous mode based on the saved CS selector */
+	movl	 KTRAP_FRAME_CS(%ebp), %eax
+	andl     $0x0000FFFF, %eax
+	cmpl     $KERNEL_CS, %eax
+	jne      .L1
+	movb     $KernelMode, KTHREAD_PREVIOUS_MODE(%edi)
+	jmp      .L3
+.L1:
+	movb     $UserMode, KTHREAD_PREVIOUS_MODE(%edi)
+.L3:
 
 	/* Save the old trap frame. */
-	cmpl	$0, %edi
-	je	.L7
-	movl	%ss:KTHREAD_TRAP_FRAME(%edi), %edx
+	movl	KTHREAD_TRAP_FRAME(%edi), %edx
 	pushl	%edx
-	jmp	.L8
-.L7:
-	pushl	$0
-.L8:	
-
+	
 	/* Save a pointer to the trap frame in the current KTHREAD */
-	cmpl	$0, %edi
-	je	.L6
-	movl	%ebx, %ss:KTHREAD_TRAP_FRAME(%edi)
+	movl	%ebp, KTHREAD_TRAP_FRAME(%edi)
 .L6:	
 	
 	/* Call the C exception handler */
 	pushl	%esi
-	pushl	%ebx
-	call	_KiTrapHandler
-	addl	$4, %esp
-	addl	$4, %esp
+	pushl	%ebp
+	call	*%ebx
+	addl	$8, %esp
 
 	/* Get a pointer to the current thread */
         movl	%fs:KPCR_CURRENT_THREAD, %esi
-	
+        
         /* Restore the old trap frame pointer */
 	popl	%ebx
+	cmpl	$0, %esi
+	je	_KiTrapEpilog
 	movl	%ebx, KTHREAD_TRAP_FRAME(%esi)
-	
+
 	/* Return to the caller */
 	jmp	_KiTrapEpilog
 
-	/* Handle the no-pcr case out of line */
-.L5:	
-	pushl	$0
-		
 	/* Handle the no-thread case out of line */
 .L4:
-	pushl	$0	
-	jmp	.L3	
-					
+	movl	$0, %eax	/* previous mode */
+	movl	%eax, KTRAP_FRAME_PREVIOUS_MODE(%ebp)
+	pushl	%eax		/* old trap frame */
+	jmp	.L6	
+	
 .globl _KiTrap0
 _KiTrap0:
 	/* No error code */
@@ -337,7 +325,8 @@ _KiTrap14:
 	pushl	%ebx
 	pushl	%esi
 	movl	$14, %esi
-	jmp	_KiTrapProlog
+	movl	$_KiTrapHandler, %ebx
+	jmp	_KiTrapProlog2
 
 .globl _KiTrap15
 _KiTrap15:
