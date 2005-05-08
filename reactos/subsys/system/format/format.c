@@ -2,10 +2,13 @@
 // Systems Internals
 // http://www.sysinternals.com
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <windows.h>
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <fmifs.h>
+#include <tchar.h>
 
 // Globals
 BOOL	Error = FALSE;
@@ -15,33 +18,33 @@ BOOL	QuickFormat = FALSE;
 DWORD   ClusterSize = 0;
 BOOL	CompressDrive = FALSE;
 BOOL    GotALabel = FALSE;
-PWCHAR  Label = L"";
-PWCHAR  Drive = NULL;
-PWCHAR  Format = L"FAT";
+LPTSTR  Label = _T("");
+LPTSTR  Drive = NULL;
+LPTSTR  Format = _T("FAT");
 
-WCHAR  RootDirectory[MAX_PATH];
-WCHAR  LabelString[12];
+TCHAR  RootDirectory[MAX_PATH];
+TCHAR  LabelString[12];
 
 //
 // Size array
 //
 typedef struct {
-	WCHAR  SizeString[16];
+	TCHAR  SizeString[16];
 	DWORD  ClusterSize;
 } SIZEDEFINITION, *PSIZEDEFINITION;
 
 SIZEDEFINITION LegalSizes[] = {
-	{ L"512", 512 },
-	{ L"1024", 1024 },
-	{ L"2048", 2048 },
-	{ L"4096", 4096 },
-	{ L"8192", 8192 },
-	{ L"16K", 16384 },
-	{ L"32K", 32768 },
-	{ L"64K", 65536 },
-	{ L"128K", 65536 * 2 },
-	{ L"256K", 65536 * 4 },
-	{ L"", 0 },
+	{ _T("512"), 512 },
+	{ _T("1024"), 1024 },
+	{ _T("2048"), 2048 },
+	{ _T("4096"), 4096 },
+	{ _T("8192"), 8192 },
+	{ _T("16K"), 16384 },
+	{ _T("32K"), 32768 },
+	{ _T("64K"), 65536 },
+	{ _T("128K"), 65536 * 2 },
+	{ _T("256K"), 65536 * 4 },
+	{ _T(""), 0 },
 };
 
 
@@ -52,15 +55,16 @@ SIZEDEFINITION LegalSizes[] = {
 // Takes the win32 error code and prints the text version.
 //
 //----------------------------------------------------------------------
-void PrintWin32Error( PWCHAR Message, DWORD ErrorCode )
+static VOID PrintWin32Error( LPTSTR Message, DWORD ErrorCode )
 {
-	LPWSTR lpMsgBuf;
+	LPTSTR   lpMsgBuf;
 
-	FormatMessageW( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+	FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
 					NULL, ErrorCode,
 					MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-					(PWCHAR) &lpMsgBuf, 0, NULL );
-	printf("%S: %S\n", Message, lpMsgBuf );
+					(LPTSTR)&lpMsgBuf, 0, NULL );
+
+	_tprintf(_T("%S: %S\n"), Message, lpMsgBuf );
 	LocalFree( lpMsgBuf );
 }
 
@@ -72,22 +76,22 @@ void PrintWin32Error( PWCHAR Message, DWORD ErrorCode )
 // Tell the user how to use the program
 //
 //----------------------------------------------------------------------
-VOID Usage( PWCHAR ProgramName )
+static VOID Usage( LPTSTR ProgramName )
 {
-	printf("Usage: %S drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n", ProgramName);
-	printf("  [drive:]         Specifies the drive to format.\n");
-	printf("  -FS:file-system  Specifies the type of file system (e.g. FAT).\n");
-	printf("  -V:label         Specifies volume label.\n");
-	printf("  -Q               Performs a quick format.\n");
-	printf("  -A:size          Overrides the default allocation unit size. Default settings\n");
-	printf("                   are strongly recommended for general use\n");
-	printf("                   NTFS supports 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n");
-	printf("                   FAT supports 8192, 16K, 32K, 64K, 128K, 256K.\n");
-	printf("                   NTFS compression is not supported for allocation unit sizes\n");
-	printf("                   above 4096.\n");
-	printf("  -C               Files created on the new volume will be compressed by\n");
-	printf("                   default.\n");
-	printf("\n");
+	_tprintf(_T("Usage: %S drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n"), ProgramName);
+	_tprintf(_T("  [drive:]         Specifies the drive to format.\n"));
+	_tprintf(_T("  -FS:file-system  Specifies the type of file system (e.g. FAT).\n"));
+	_tprintf(_T("  -V:label         Specifies volume label.\n"));
+	_tprintf(_T("  -Q               Performs a quick format.\n"));
+	_tprintf(_T("  -A:size          Overrides the default allocation unit size. Default settings\n"));
+	_tprintf(_T("                   are strongly recommended for general use\n"));
+	_tprintf(_T("                   NTFS supports 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n"));
+	_tprintf(_T("                   FAT supports 8192, 16K, 32K, 64K, 128K, 256K.\n"));
+	_tprintf(_T("                   NTFS compression is not supported for allocation unit sizes\n"));
+	_tprintf(_T("                   above 4096.\n"));
+	_tprintf(_T("  -C               Files created on the new volume will be compressed by\n"));
+	_tprintf(_T("                   default.\n"));
+	_tprintf(_T("\n"));
 }
 
 
@@ -98,7 +102,7 @@ VOID Usage( PWCHAR ProgramName )
 // Get the switches.
 //
 //----------------------------------------------------------------------
-int ParseCommandLine( int argc, WCHAR *argv[] )
+static int ParseCommandLine( int argc, TCHAR *argv[] )
 {
 	int i, j;
 	BOOLEAN gotFormat = FALSE;
@@ -115,38 +119,38 @@ int ParseCommandLine( int argc, WCHAR *argv[] )
 		case '-':
 		case '/':
 
-			if( !wcsnicmp( &argv[i][1], L"FS:", 3 )) {
+			if( !_tcsnicmp( &argv[i][1], _T("FS:"), 3 )) {
 
 				if( gotFormat) return -1;
 				Format = &argv[i][4];
 				gotFormat = TRUE;
 
 
-			} else if( !wcsnicmp( &argv[i][1], L"A:", 2 )) {
+			} else if( !_tcsnicmp( &argv[i][1], _T("A:"), 2 )) {
 
 				if( gotSize ) return -1;
 				j = 0;
 				while( LegalSizes[j].ClusterSize &&
-					 wcsicmp( LegalSizes[j].SizeString, &argv[i][3] )) j++;
+					 _tcsicmp( LegalSizes[j].SizeString, &argv[i][3] )) j++;
 
 				if( !LegalSizes[j].ClusterSize ) return i;
 				ClusterSize = LegalSizes[j].ClusterSize;
 				gotSize = TRUE;
 
-			} else if( !wcsnicmp( &argv[i][1], L"V:", 2 )) {
+			} else if( ! _tcsnicmp( &argv[i][1], _T("V:"), 2 )) {
 
 				if( gotLabel ) return -1;
 				Label = &argv[i][3];
 				gotLabel = TRUE;
 				GotALabel = TRUE;
 
-			} else if( !wcsicmp( &argv[i][1], L"Q" )) {
+			} else if( !_tcsicmp( &argv[i][1], _T("Q") )) {
 
 				if( gotQuick ) return -1;
 				QuickFormat = TRUE;
 				gotQuick = TRUE;
 
-			} else if( !wcsicmp( &argv[i][1], L"C" )) {
+			} else if( !_tcsicmp( &argv[i][1], _T("C") )) {
 
 				if( gotCompressed ) return -1;
 				CompressDrive = TRUE;
@@ -158,7 +162,7 @@ int ParseCommandLine( int argc, WCHAR *argv[] )
 		default:
 
 			if( Drive ) return i;
-			if( argv[i][1] != L':' ) return i;
+			if( argv[i][1] != _T(':') ) return i;
 
 			Drive = argv[i];
 			break;
@@ -191,7 +195,7 @@ FormatExCallback (CALLBACKCOMMAND Command,
 
 	case PROGRESS:
 		percent = (PDWORD) Argument;
-		printf("%lu percent completed.\r", *percent);
+		_tprintf(_T("%lu percent completed.\r"), *percent);
 		break;
 
 	case OUTPUT:
@@ -203,7 +207,7 @@ FormatExCallback (CALLBACKCOMMAND Command,
 		status = (PBOOLEAN) Argument;
 		if( *status == FALSE ) {
 
-			printf("FormatEx was unable to complete successfully.\n\n");
+			_tprintf(_T("FormatEx was unable to complete successfully.\n\n"));
 			Error = TRUE;
 		}
 		break;
@@ -220,7 +224,7 @@ FormatExCallback (CALLBACKCOMMAND Command,
 	case UNKNOWNC:
 	case UNKNOWND:
 	case STRUCTUREPROGRESS:
-		printf("Operation Not Supported");
+		_tprintf(_T("Operation Not Supported"));
 		return FALSE;
 	}
 	return TRUE;
@@ -236,13 +240,13 @@ FormatExCallback (CALLBACKCOMMAND Command,
 //----------------------------------------------------------------------
 BOOLEAN LoadFMIFSEntryPoints()
 {
-	LoadLibrary( "fmifs.dll" );
-	if( !(void*) GetProcAddress( GetModuleHandle( "fmifs.dll"), "FormatEx" ) ) {
+	HMODULE hFmifs = LoadLibrary( _T("fmifs.dll") );
+	if( !(void*) GetProcAddress( hFmifs, "FormatEx" ) ) {
 
 		return FALSE;
 	}
 
-	if( !((void *) GetProcAddress( GetModuleHandle( "fmifs.dll"),
+	if( !((void *) GetProcAddress( hFmifs,
 			"EnableVolumeCompression" )) ) {
 
 		return FALSE;
@@ -262,24 +266,28 @@ BOOLEAN LoadFMIFSEntryPoints()
 // arguments.
 //
 //----------------------------------------------------------------------
-int wmain( int argc, WCHAR *argv[] )
+int
+_tmain(int argc, TCHAR *argv[])
 {
 	int badArg;
 	DWORD media = FMIFS_HARDDISK;
 	DWORD driveType;
-	WCHAR fileSystem[1024];
-	WCHAR volumeName[1024];
-	WCHAR input[1024];
+	TCHAR fileSystem[1024];
+	TCHAR volumeName[1024];
+	TCHAR input[1024];
 	DWORD serialNumber;
 	DWORD flags, maxComponent;
 	ULARGE_INTEGER freeBytesAvailableToCaller, totalNumberOfBytes, totalNumberOfFreeBytes;
+#ifndef UNICODE
+	WCHAR  RootDirectoryW[MAX_PATH], FormatW[MAX_PATH], LabelW[MAX_PATH];
+#endif
 
 	//
 	// Get function pointers
 	//
 	if( !LoadFMIFSEntryPoints()) {
 
-		printf("Could not located FMIFS entry points.\n\n");
+		_tprintf(_T("Could not located FMIFS entry points.\n\n"));
 		return -1;
 	}
 
@@ -288,7 +296,7 @@ int wmain( int argc, WCHAR *argv[] )
 	//
 	if( (badArg = ParseCommandLine( argc, argv ))) {
 
-		printf("Unknown argument: %S\n", argv[badArg] );
+		_tprintf(_T("Unknown argument: %S\n"), argv[badArg] );
 
 		Usage(argv[0]);
 		return -1;
@@ -299,31 +307,31 @@ int wmain( int argc, WCHAR *argv[] )
 	//
 	if( !Drive ) {
 
-		printf("Required drive parameter is missing.\n\n");
+		_tprintf(_T("Required drive parameter is missing.\n\n"));
 		Usage( argv[0] );
 		return -1;
 
 	} else {
 
-		wcscpy( RootDirectory, Drive );
+		_tcscpy( RootDirectory, Drive );
 	}
-	RootDirectory[2] = L'\\';
-	RootDirectory[3] = (WCHAR) 0;
+	RootDirectory[2] = _T('\\');
+	RootDirectory[3] = _T('\0');
 
 	//
 	// See if the drive is removable or not
 	//
-	driveType = GetDriveTypeW( RootDirectory );
+	driveType = GetDriveType( RootDirectory );
 
 	if( driveType == 0 ) {
-		PrintWin32Error( L"Could not get drive type", GetLastError());
+		PrintWin32Error( _T("Could not get drive type"), GetLastError());
 		return -1;
 	}
 
 	if( driveType != DRIVE_FIXED ) {
-		printf("Insert a new floppy in drive %C:\nand press Enter when ready...",
+		_tprintf(_T("Insert a new floppy in drive %C:\nand press Enter when ready..."),
 			RootDirectory[0] );
-		fgetws( input, sizeof(input)/2, stdin );
+		_fgetts( input, sizeof(input)/2, stdin );
 
 		media = FMIFS_FLOPPY;
 	}
@@ -331,24 +339,24 @@ int wmain( int argc, WCHAR *argv[] )
 	//
 	// Determine the drive's file system format
 	//
-	if( !GetVolumeInformationW( RootDirectory,
+	if( !GetVolumeInformation( RootDirectory,
 						volumeName, sizeof(volumeName)/2,
 						&serialNumber, &maxComponent, &flags,
 						fileSystem, sizeof(fileSystem)/2)) {
 
-		PrintWin32Error( L"Could not query volume", GetLastError());
+		PrintWin32Error( _T("Could not query volume"), GetLastError());
 		return -1;
 	}
 
-	if( !GetDiskFreeSpaceExW( RootDirectory,
+	if( !GetDiskFreeSpaceEx( RootDirectory,
 			&freeBytesAvailableToCaller,
 			&totalNumberOfBytes,
 			&totalNumberOfFreeBytes )) {
 
-		PrintWin32Error( L"Could not query volume size", GetLastError());
+		PrintWin32Error( _T("Could not query volume size"), GetLastError());
 		return -1;
 	}
-	printf("The type of the file system is %S.\n", fileSystem );
+	_tprintf(_T("The type of the file system is %S.\n"), fileSystem );
 
 	//
 	// Make sure they want to do this
@@ -359,30 +367,30 @@ int wmain( int argc, WCHAR *argv[] )
 
 			while(1 ) {
 
-				printf("Enter current volume label for drive %C: ", RootDirectory[0] );
-				fgetws( input, sizeof(input)/2, stdin );
-				input[ wcslen( input ) - 1] = 0;
+				_tprintf(_T("Enter current volume label for drive %C: "), RootDirectory[0] );
+				_fgetts( input, sizeof(input)/2, stdin );
+				input[ _tcslen( input ) - 1] = 0;
 
-				if( !wcsicmp( input, volumeName )) {
+				if( !_tcsicmp( input, volumeName )) {
 
 					break;
 				}
-				printf("An incorrect volume label was entered for this drive.\n");
+				_tprintf(_T("An incorrect volume label was entered for this drive.\n"));
 			}
 		}
 
 		while( 1 ) {
 
-			printf("\nWARNING, ALL DATA ON NON_REMOVABLE DISK\n");
-			printf("DRIVE %C: WILL BE LOST!\n", RootDirectory[0] );
-			printf("Proceed with Format (Y/N)? " );
-			fgetws( input, sizeof(input)/2, stdin );
+			_tprintf(_T("\nWARNING, ALL DATA ON NON_REMOVABLE DISK\n"));
+			_tprintf(_T("DRIVE %C: WILL BE LOST!\n"), RootDirectory[0] );
+			_tprintf(_T("Proceed with Format (Y/N)? " ));
+			_fgetts( input, sizeof(input)/2, stdin );
 
-			if( input[0] == L'Y' || input[0] == L'y' ) break;
+			if( input[0] == _T('Y') || input[0] == _T('y') ) break;
 
-			if(	input[0] == L'N' || input[0] == L'n' ) {
+			if(	input[0] == _T('N') || input[0] == _T('n') ) {
 
-				printf("\n");
+				_tprintf(_T("\n"));
 				return 0;
 			}
 		}
@@ -396,43 +404,56 @@ int wmain( int argc, WCHAR *argv[] )
 
 		if( totalNumberOfBytes.QuadPart > 1024*1024*10 ) {
 
-			printf("Verifying %luM\n", (DWORD) (totalNumberOfBytes.QuadPart/(1024*1024)));
+			_tprintf(_T("Verifying %luM\n"), (DWORD) (totalNumberOfBytes.QuadPart/(1024*1024)));
 
 		} else {
 
-			printf("Verifying %.1fM\n",
+			_tprintf(_T("Verifying %.1fM\n"),
 				((float)(LONGLONG)totalNumberOfBytes.QuadPart)/(float)(1024.0*1024.0));
 		}
 	} else  {
 
 		if( totalNumberOfBytes.QuadPart > 1024*1024*10 ) {
 
-			printf("QuickFormatting %luM\n", (DWORD) (totalNumberOfBytes.QuadPart/(1024*1024)));
+			_tprintf(_T("QuickFormatting %luM\n"), (DWORD) (totalNumberOfBytes.QuadPart/(1024*1024)));
 
 		} else {
 
-			printf("QuickFormatting %.2fM\n",
+			_tprintf(_T("QuickFormatting %.2fM\n"),
 				((float)(LONGLONG)totalNumberOfBytes.QuadPart)/(float)(1024.0*1024.0));
 		}
-		printf("Creating file system structures.\n");
+		_tprintf(_T("Creating file system structures.\n"));
 	}
 
 	//
 	// Format away!
 	//
+#ifndef UNICODE
+	MultiByteToWideChar(CP_ACP, 0, RootDirectory, -1, RootDirectoryW, MAX_PATH);
+	MultiByteToWideChar(CP_ACP, 0, Format, -1, FormatW, MAX_PATH);
+	MultiByteToWideChar(CP_ACP, 0, Label, -1, LabelW, MAX_PATH);
+	FormatEx( RootDirectoryW, media, FormatW, LabelW, QuickFormat,
+			ClusterSize, FormatExCallback );
+#else
 	FormatEx( RootDirectory, media, Format, Label, QuickFormat,
 			ClusterSize, FormatExCallback );
+#endif
 	if( Error ) return -1;
-	printf("Format complete.\n");
+	_tprintf(_T("Format complete.\n"));
 
 	//
 	// Enable compression if desired
 	//
 	if( CompressDrive ) {
 
+#ifndef UNICODE
+		MultiByteToWideChar(CP_ACP, 0, RootDirectory, -1, RootDirectoryW, MAX_PATH);
+		if( !EnableVolumeCompression( RootDirectoryW, TRUE )) {
+#else
 		if( !EnableVolumeCompression( RootDirectory, TRUE )) {
+#endif
 
-			printf("Volume does not support compression.\n");
+			_tprintf(_T("Volume does not support compression.\n"));
 		}
 	}
 
@@ -441,87 +462,55 @@ int wmain( int argc, WCHAR *argv[] )
 	//
 	if( !GotALabel ) {
 
-		printf("Volume Label (11 characters, Enter for none)? " );
-		fgetws( input, sizeof(LabelString)/2, stdin );
+		_tprintf(_T("Volume Label (11 characters, Enter for none)? " ));
+		_fgetts( input, sizeof(LabelString)/2, stdin );
 
-		input[ wcslen(input)-1] = 0;
-		if( !SetVolumeLabelW( RootDirectory, input )) {
+		input[ _tcslen(input)-1] = 0;
+		if( !SetVolumeLabel( RootDirectory, input )) {
 
-			PrintWin32Error(L"Could not label volume", GetLastError());
+			PrintWin32Error(_T("Could not label volume"), GetLastError());
 			return -1;
 		}
 	}
 
-	if( !GetVolumeInformationW( RootDirectory,
+	if( !GetVolumeInformation( RootDirectory,
 						volumeName, sizeof(volumeName)/2,
 						&serialNumber, &maxComponent, &flags,
 						fileSystem, sizeof(fileSystem)/2)) {
 
-		PrintWin32Error( L"Could not query volume", GetLastError());
+		PrintWin32Error( _T("Could not query volume"), GetLastError());
 		return -1;
 	}
 
 	//
 	// Print out some stuff including the formatted size
 	//
-	if( !GetDiskFreeSpaceExW( RootDirectory,
+	if( !GetDiskFreeSpaceEx( RootDirectory,
 			&freeBytesAvailableToCaller,
 			&totalNumberOfBytes,
 			&totalNumberOfFreeBytes )) {
 
-		PrintWin32Error( L"Could not query volume size", GetLastError());
+		PrintWin32Error( _T("Could not query volume size"), GetLastError());
 		return -1;
 	}
 
-	printf("\n%I64d bytes total disk space.\n", totalNumberOfBytes.QuadPart );
-	printf("%I64d bytes available on disk.\n", totalNumberOfFreeBytes.QuadPart );
+	_tprintf(_T("\n%I64d bytes total disk space.\n"), totalNumberOfBytes.QuadPart );
+	_tprintf(_T("%I64d bytes available on disk.\n"), totalNumberOfFreeBytes.QuadPart );
 
 	//
 	// Get the drive's serial number
 	//
-	if( !GetVolumeInformationW( RootDirectory,
+	if( !GetVolumeInformation( RootDirectory,
 						volumeName, sizeof(volumeName)/2,
 						&serialNumber, &maxComponent, &flags,
 						fileSystem, sizeof(fileSystem)/2)) {
 
-		PrintWin32Error( L"Could not query volume", GetLastError());
+		PrintWin32Error( _T("Could not query volume"), GetLastError());
 		return -1;
 	}
-	printf("\nVolume Serial Number is %04X-%04X\n", (unsigned int)(serialNumber >> 16),
+	_tprintf(_T("\nVolume Serial Number is %04X-%04X\n"), (unsigned int)(serialNumber >> 16),
 					(unsigned int)(serialNumber & 0xFFFF) );
 
 	return 0;
 }
 
-int main(int argc, char* argv[])
-{
-	UNICODE_STRING warg;
-	ANSI_STRING arg;
-    NTSTATUS status;
-	PWCHAR *wargv;
-	int i;
-
-	wargv = (PWCHAR *) RtlAllocateHeap(RtlGetProcessHeap(), 0, argc * sizeof(PWCHAR));
-
-	for (i = 0; i < argc; i++)
-	{
-		RtlInitAnsiString(&arg, argv[i]);
-		status = RtlAnsiStringToUnicodeString(&warg, &arg, TRUE);
-		if (!NT_SUCCESS (status))
-		{
-			printf("Not enough free memory.\n");
-			return 1;
-		}
-		wargv[i] = (PWCHAR) warg.Buffer;
-	}
-
-	wmain(argc, wargv);
-
-	for (i = 0; i < argc; i++)
-	{
-		RtlFreeHeap(RtlGetProcessHeap(), 0, wargv[i]);
-	}
-	RtlFreeHeap(RtlGetProcessHeap(), 0, wargv);
-
-	return 0;
-}

@@ -2,13 +2,11 @@
 
 PATH_TO_TOP = ../../..
 
-TARGET_NORC = yes
-
 TARGET_TYPE = program
 
 TARGET_APPTYPE = console
 
-TARGET_SDKLIBS = ntdll.a fmifs.a
+TARGET_SDKLIBS = kernel32.a ntdll.a fmifs.a
 
 TARGET_NAME = format
 
