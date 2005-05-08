@@ -1,5 +1,13 @@
 ChangeLog
 
+2004-05-08 weiden
+
+   tools/widl/client.c
+   tools/widl/proxy.c
+   tools/widl/server.c
+
+Generate code GCC4.x accepts.
+
 2005-04-18 navaraf
 
    tools/widl/parser.y
