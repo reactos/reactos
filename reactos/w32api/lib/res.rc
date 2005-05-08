@@ -1,6 +1,0 @@
-#include <windows.h>
-
-STRINGTABLE
-{
-	100 "Dummy string"
-}

@@ -1,4 +1,0 @@
-; from DirectX 6.1
-LIBRARY d3dxof.dll
-EXPORTS
-DirectXFileCreate@4
