@@ -61,7 +61,7 @@ INT CommandEcho (LPTSTR cmd, LPTSTR param)
 			ConOutPuts (param);
 		else
 		{
-			LoadString(CMD_ModuleHandle, STRING_ECHO_HELP4, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_ECHO_HELP5, szMsg, RC_STRING_MAX_SIZE);
 			ConOutPrintf(szMsg, bEcho ? D_ON : D_OFF);
 		}
 	}
