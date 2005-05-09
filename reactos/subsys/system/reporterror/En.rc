@@ -52,3 +52,11 @@ BEGIN
   IDS_FAILED_TO_LOCATE_SERVER "Failed to contact error reporting server"
 END
 
+STRINGTABLE
+BEGIN
+IDS_DNS_ERROR "Could not resolve DNS for %S (windows error code %d)"
+IDS_SOCKET_ERROR "Could not create socket (windows error code %d)"
+IDS_GET_SRV_ERROR "Could not get service (windows error code %d)"
+IDS_CON_SRV_ERROR "Could not connect to server (windows error code %d)"
+END
+

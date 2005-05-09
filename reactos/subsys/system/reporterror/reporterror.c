@@ -212,6 +212,7 @@ ConnectToServer(LPSTR host,
 	struct hostent *hp;
 	struct servent *sp;
 	INT error;
+	WCHAR szMsg[1024];
   SOCKET s;
 
   *clientSocket = 0;
@@ -220,7 +221,10 @@ ConnectToServer(LPSTR host,
 	if (hp == NULL)
   {
     error = WSAGetLastError();
-    wsprintf(errorMessage, L"Could not resolve DNS for %S (windows error code %d)", host, error);
+	
+	//L"Could not resolve DNS for %S (windows error code %d)
+	LoadString( GetModuleHandle(NULL), IDS_DNS_ERROR, (LPTSTR) szMsg, sizeof(szMsg) / sizeof(WCHAR));
+    wsprintf(errorMessage, L"Could not resolve DNS for %S (windows error code %d)", host, error);    
     return error;
 	}
 
@@ -228,7 +232,10 @@ ConnectToServer(LPSTR host,
 	if (s < 0)
   {
     error = WSAGetLastError();
-    wsprintf(errorMessage, L"Could not create socket (windows error code %d)", error);
+
+	//  L"Could not create socket (windows error code %d)
+	LoadString( GetModuleHandle(NULL), IDS_SOCKET_ERROR, (LPTSTR) szMsg, sizeof(szMsg) / sizeof(WCHAR));
+    wsprintf(errorMessage, szMsg, error);
     return error;
 	}
 
@@ -237,7 +244,10 @@ ConnectToServer(LPSTR host,
 	if (bind(s, (struct sockaddr *)&sin, sizeof(sin)) < 0)
   {
     error = WSAGetLastError();
-    wsprintf(errorMessage, L"Could not resolve DNS for %S (windows error code %d)", host, error);
+
+    //L"Could not resolve DNS for %S (windows error code %d)
+	LoadString( GetModuleHandle(NULL), IDS_DNS_ERROR, (LPTSTR) szMsg, sizeof(szMsg) / sizeof(WCHAR));
+    wsprintf(errorMessage, L"Could not resolve DNS for %S (windows error code %d)", host, error);    
     closesocket(s);
     return error;
 	}
@@ -247,7 +257,11 @@ ConnectToServer(LPSTR host,
 	if (sp == NULL)
   {
     error = WSAGetLastError();
-    wsprintf(errorMessage, L"Could not get service (windows error code %d)", error);
+
+	//L"Could not get service (windows error code %d)"
+
+    LoadString( GetModuleHandle(NULL), IDS_GET_SRV_ERROR, (LPTSTR) szMsg, sizeof(szMsg) / sizeof(WCHAR));
+    wsprintf(errorMessage, szMsg, error);
     closesocket(s);
     return error;
 	}
@@ -257,7 +271,10 @@ ConnectToServer(LPSTR host,
 	if (connect(s, (struct sockaddr *)&sin, sizeof(sin)) < 0)
   {
     error = WSAGetLastError();
-    wsprintf(errorMessage, L"Could not connect to server (windows error code %d)", error);
+	
+	//L"Could not connect to server (windows error code %d)"
+	LoadString( GetModuleHandle(NULL), IDS_CON_SRV_ERROR, (LPTSTR) szMsg, sizeof(szMsg) / sizeof(WCHAR));
+    wsprintf(errorMessage,szMsg , error);
     closesocket(s);
     return error;
 	}
