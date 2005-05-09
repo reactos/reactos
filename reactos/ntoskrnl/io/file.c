@@ -2457,9 +2457,11 @@ NtReadFile(IN HANDLE FileHandle,
             ProbeForWrite(IoStatusBlock,
                           sizeof(IO_STATUS_BLOCK),
                           sizeof(ULONG));
+            #if 0
             ProbeForWrite(Buffer,
                           Length,
                           sizeof(ULONG));
+            #endif                          
         }
         _SEH_HANDLE
         {
@@ -2570,16 +2572,7 @@ NtReadFile(IN HANDLE FileHandle,
     Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
     Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
     Irp->Flags |= IRP_READ_OPERATION;
-    
-    /* FIXME: KDBG is using this flag and not reading from cluster-aligned. Investigate. */
-#if 0
-    if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) 
-    {
-        DbgBreakPoint();
-        Irp->Flags |= IRP_NOCACHE;
-        DPRINT1("It's us: %p\n", FileObject);
-    }
-#endif
+    if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) Irp->Flags |= IRP_NOCACHE;
     
     /* Setup Stack Data */
     StackPtr = IoGetNextIrpStackLocation(Irp);

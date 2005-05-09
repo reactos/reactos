@@ -439,7 +439,7 @@ KdbpSymLoadModuleSymbols(IN PUNICODE_STRING FileName,
                       &ObjectAttributes,
                       &IoStatusBlock,
                       FILE_SHARE_READ|FILE_SHARE_WRITE,
-                      FILE_SYNCHRONOUS_IO_NONALERT|FILE_NO_INTERMEDIATE_BUFFERING);
+                      FILE_SYNCHRONOUS_IO_NONALERT);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("Could not open image file: %wZ\n", &FileName);
