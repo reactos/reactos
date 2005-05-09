@@ -38,7 +38,7 @@ GetHandleInformation (HANDLE hObject,
   ULONG BytesWritten;
   NTSTATUS Status;
   DWORD Flags;
-  
+
   Ppb = NtCurrentPeb()->ProcessParameters;
   switch ((ULONG)hObject)
   {
@@ -123,7 +123,7 @@ SetHandleInformation (HANDLE hObject,
       SetLastErrorByStatus (Status);
       return FALSE;
     }
-    
+
     return TRUE;
   }
   else
@@ -148,7 +148,7 @@ BOOL STDCALL CloseHandle(HANDLE  hObject)
 {
    PRTL_USER_PROCESS_PARAMETERS Ppb;
    NTSTATUS Status;
-   
+
    Ppb = NtCurrentPeb()->ProcessParameters;
    switch ((ULONG)hObject)
    {
@@ -162,19 +162,19 @@ BOOL STDCALL CloseHandle(HANDLE  hObject)
        hObject = Ppb->hStdError;
        break;
    }
-   
+
    if (IsConsoleHandle(hObject))
      {
 	return(CloseConsoleHandle(hObject));
      }
-   
+
    Status = NtClose(hObject);
    if (!NT_SUCCESS(Status))
-     {     
+     {
 	SetLastErrorByStatus (Status);
 	return FALSE;
      }
-   
+
    return TRUE;
 }
 
@@ -193,7 +193,7 @@ BOOL STDCALL DuplicateHandle(HANDLE hSourceProcessHandle,
    PRTL_USER_PROCESS_PARAMETERS Ppb;
    DWORD SourceProcessId, TargetProcessId;
    NTSTATUS Status;
-   
+
    Ppb = NtCurrentPeb()->ProcessParameters;
    switch ((ULONG)hSourceHandle)
    {
@@ -207,7 +207,7 @@ BOOL STDCALL DuplicateHandle(HANDLE hSourceProcessHandle,
        hSourceHandle = Ppb->hStdError;
        break;
    }
-   
+
    if (IsConsoleHandle(hSourceHandle))
    {
       SourceProcessId = GetProcessId(hSourceProcessHandle);
@@ -223,7 +223,7 @@ BOOL STDCALL DuplicateHandle(HANDLE hSourceProcessHandle,
       *lpTargetHandle = DuplicateConsoleHandle(hSourceHandle, dwDesiredAccess, bInheritHandle, dwOptions);
       return *lpTargetHandle != INVALID_HANDLE_VALUE;
    }
-      
+
    Status = NtDuplicateObject(hSourceProcessHandle,
 			      hSourceHandle,
 			      hTargetProcessHandle,
@@ -236,7 +236,7 @@ BOOL STDCALL DuplicateHandle(HANDLE hSourceProcessHandle,
 	SetLastErrorByStatus (Status);
 	return FALSE;
      }
-   
+
    return TRUE;
 }
 

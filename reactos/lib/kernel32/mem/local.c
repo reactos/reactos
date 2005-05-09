@@ -13,7 +13,7 @@
 
 
 /* NOTES
- * 
+ *
  * The local heap is the same as the global heap for win32 and both are only
  * required for legacy apps
  *

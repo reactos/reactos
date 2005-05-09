@@ -31,7 +31,7 @@ DeviceIoControl(IN HANDLE hDevice,
 {
    BOOL FsIoCtl;
    NTSTATUS Status;
-   
+
    FsIoCtl = ((dwIoControlCode >> 16) == FILE_DEVICE_FILE_SYSTEM);
 
    if (lpBytesReturned != NULL)
@@ -42,7 +42,7 @@ DeviceIoControl(IN HANDLE hDevice,
    if (lpOverlapped != NULL)
      {
         PVOID ApcContext;
-        
+
         lpOverlapped->Internal = STATUS_PENDING;
         ApcContext = (((ULONG_PTR)lpOverlapped->hEvent & 0x1) ? NULL : lpOverlapped);
 
@@ -88,7 +88,7 @@ DeviceIoControl(IN HANDLE hDevice,
    else
      {
         IO_STATUS_BLOCK Iosb;
-        
+
         if (FsIoCtl)
           {
              Status = NtFsControlFile(hDevice,
@@ -165,18 +165,18 @@ GetOverlappedResult (
   {
     if (!bWait)
     {
-      /* can't use SetLastErrorByStatus(STATUS_PENDING) here, 
+      /* can't use SetLastErrorByStatus(STATUS_PENDING) here,
       since STATUS_PENDING translates to ERROR_IO_PENDING */
       SetLastError(ERROR_IO_INCOMPLETE);
       return FALSE;
     }
-    
+
     hObject = lpOverlapped->hEvent ? lpOverlapped->hEvent : hFile;
 
     /* Wine delivers pending APC's while waiting, but Windows does
     not, nor do we... */
     WaitStatus = WaitForSingleObject(hObject, INFINITE);
-    
+
     if (WaitStatus == WAIT_FAILED)
     {
       DPRINT("Wait failed!\n");
@@ -186,7 +186,7 @@ GetOverlappedResult (
   }
 
   *lpNumberOfBytesTransferred = lpOverlapped->InternalHigh;
-  
+
   if (!NT_SUCCESS(lpOverlapped->Internal))
   {
     SetLastErrorByStatus(lpOverlapped->Internal);

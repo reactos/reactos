@@ -267,7 +267,7 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
   if(dwFlags & (TH32CS_SNAPPROCESS | TH32CS_SNAPTHREAD))
   {
     ULONG ProcOffset = 0;
-    
+
     ProcessInfo = (PSYSTEM_PROCESS_INFORMATION)ProcThrdInfo;
     do
     {
@@ -373,14 +373,14 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
       ModuleListEntry->modBaseAddr = (BYTE*)mi->ModuleEntry[i].Base;
       ModuleListEntry->modBaseSize = mi->ModuleEntry[i].Size;
       ModuleListEntry->hModule = (HMODULE)mi->ModuleEntry[i].Base;
-      
+
       MultiByteToWideChar(CP_ACP,
                           0,
                           &mi->ModuleEntry[i].ImageName[mi->ModuleEntry[i].ModuleNameOffset],
                           -1,
                           ModuleListEntry->szModule,
                           sizeof(ModuleListEntry->szModule) / sizeof(ModuleListEntry->szModule[0]));
-      
+
       MultiByteToWideChar(CP_ACP,
                           0,
                           mi->ModuleEntry[i].ImageName,
@@ -398,7 +398,7 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
   if(dwFlags & TH32CS_SNAPPROCESS)
   {
     ULONG ProcOffset = 0;
-    
+
     Snapshot->ProcessListCount = nProcesses;
     Snapshot->ProcessListOffset = DataOffset;
     ProcessListEntry = (LPPROCESSENTRY32W)OffsetToPtr(Snapshot, DataOffset);
@@ -406,7 +406,7 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
     do
     {
       ProcessInfo = (PSYSTEM_PROCESS_INFORMATION)((ULONG_PTR)ProcessInfo + ProcOffset);
-      
+
       ProcessListEntry->dwSize = sizeof(PROCESSENTRY32W);
       ProcessListEntry->cntUsage = 0; /* no longer used */
       ProcessListEntry->th32ProcessID = (ULONG)ProcessInfo->UniqueProcessId;
@@ -426,7 +426,7 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
       {
         lstrcpyW(ProcessListEntry->szExeFile, L"[System Process]");
       }
-      
+
       ProcessListEntry++;
 
       ProcOffset = ProcessInfo->NextEntryOffset;
@@ -439,7 +439,7 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
   if(dwFlags & TH32CS_SNAPTHREAD)
   {
     ULONG ProcOffset = 0;
-    
+
     Snapshot->ThreadListCount = nThreads;
     Snapshot->ThreadListOffset = DataOffset;
     ThreadListEntry = (LPTHREADENTRY32)OffsetToPtr(Snapshot, DataOffset);
@@ -448,7 +448,7 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
     {
       PSYSTEM_THREAD_INFORMATION ThreadInfo;
       ULONG n;
-      
+
       ProcessInfo = (PSYSTEM_PROCESS_INFORMATION)((ULONG_PTR)ProcessInfo + ProcOffset);
       ThreadInfo = (PSYSTEM_THREAD_INFORMATION)(ProcessInfo + 1);
 

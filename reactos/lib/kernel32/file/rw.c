@@ -32,12 +32,12 @@ WriteFile(IN HANDLE hFile,
    NTSTATUS Status;
 
    DPRINT("WriteFile(hFile %x)\n", hFile);
-   
+
    if (lpNumberOfBytesWritten != NULL)
      {
         *lpNumberOfBytesWritten = 0;
      }
-   
+
    if (IsConsoleHandle(hFile))
      {
 	return WriteConsoleA(hFile,
@@ -46,17 +46,17 @@ WriteFile(IN HANDLE hFile,
                              lpNumberOfBytesWritten,
                              lpOverlapped);
      }
-      
+
    if (lpOverlapped != NULL)
      {
         LARGE_INTEGER Offset;
         PVOID ApcContext;
-        
+
         Offset.u.LowPart = lpOverlapped->Offset;
         Offset.u.HighPart = lpOverlapped->OffsetHigh;
 	lpOverlapped->Internal = STATUS_PENDING;
 	ApcContext = (((ULONG_PTR)lpOverlapped->hEvent & 0x1) ? NULL : lpOverlapped);
-	
+
 	Status = NtWriteFile(hFile,
                              lpOverlapped->hEvent,
                              NULL,
@@ -79,10 +79,10 @@ WriteFile(IN HANDLE hFile,
              *lpNumberOfBytesWritten = lpOverlapped->InternalHigh;
           }
      }
-   else 
+   else
      {
         IO_STATUS_BLOCK Iosb;
-        
+
         Status = NtWriteFile(hFile,
                              NULL,
                              NULL,
@@ -118,7 +118,7 @@ WriteFile(IN HANDLE hFile,
              return FALSE;
           }
      }
-     
+
    DPRINT("WriteFile() succeeded\n");
    return TRUE;
 }
@@ -244,14 +244,14 @@ ReadFile(IN HANDLE hFile,
 }
 
 VOID STDCALL
-ApcRoutine(PVOID ApcContext, 
-		struct _IO_STATUS_BLOCK* IoStatusBlock, 
+ApcRoutine(PVOID ApcContext,
+		struct _IO_STATUS_BLOCK* IoStatusBlock,
 		ULONG Reserved)
 {
    DWORD dwErrorCode;
    LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine =
      (LPOVERLAPPED_COMPLETION_ROUTINE)ApcContext;
-     
+
    dwErrorCode = RtlNtStatusToDosError(IoStatusBlock->Status);
    lpCompletionRoutine(dwErrorCode,
                        IoStatusBlock->Information,
@@ -262,7 +262,7 @@ ApcRoutine(PVOID ApcContext,
 /*
  * @implemented
  */
-BOOL STDCALL 
+BOOL STDCALL
 WriteFileEx(IN HANDLE hFile,
             IN LPCVOID lpBuffer,
             IN DWORD nNumberOfBytesToWrite  OPTIONAL,
@@ -308,7 +308,7 @@ ReadFileEx(IN HANDLE hFile,
 {
    LARGE_INTEGER Offset;
    NTSTATUS Status;
-   
+
    Offset.u.LowPart = lpOverlapped->Offset;
    Offset.u.HighPart = lpOverlapped->OffsetHigh;
    lpOverlapped->Internal = STATUS_PENDING;
@@ -328,7 +328,7 @@ ReadFileEx(IN HANDLE hFile,
 	SetLastErrorByStatus(Status);
 	return FALSE;
      }
-     
+
    return TRUE;
 }
 

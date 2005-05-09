@@ -44,7 +44,7 @@ InitializeCriticalSectionAndSpinCount(
     )
 {
     NTSTATUS Status;
-    
+
     Status = RtlInitializeCriticalSectionAndSpinCount((PRTL_CRITICAL_SECTION)lpCriticalSection, dwSpinCount);
     if (Status)
       {

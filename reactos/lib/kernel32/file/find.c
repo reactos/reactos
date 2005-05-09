@@ -351,13 +351,13 @@ FindFirstFileA (
 
 	/* copy data into WIN32_FIND_DATA structure */
 	lpFindFileData->dwFileAttributes = IData->pFileInfo->FileAttributes;
-	
+
 	lpFindFileData->ftCreationTime.dwHighDateTime = IData->pFileInfo->CreationTime.u.HighPart;
 	lpFindFileData->ftCreationTime.dwLowDateTime = IData->pFileInfo->CreationTime.u.LowPart;
-	
+
 	lpFindFileData->ftLastAccessTime.dwHighDateTime = IData->pFileInfo->LastAccessTime.u.HighPart;
 	lpFindFileData->ftLastAccessTime.dwLowDateTime = IData->pFileInfo->LastAccessTime.u.LowPart;
-	
+
 	lpFindFileData->ftLastWriteTime.dwHighDateTime = IData->pFileInfo->LastWriteTime.u.HighPart;
 	lpFindFileData->ftLastWriteTime.dwLowDateTime = IData->pFileInfo->LastWriteTime.u.LowPart;
 
@@ -439,7 +439,7 @@ FindNextFileA (
 
 	/* copy data into WIN32_FIND_DATA structure */
 	lpFindFileData->dwFileAttributes = IData->pFileInfo->FileAttributes;
-	
+
 	lpFindFileData->ftCreationTime.dwHighDateTime = IData->pFileInfo->CreationTime.u.HighPart;
 	lpFindFileData->ftCreationTime.dwLowDateTime = IData->pFileInfo->CreationTime.u.LowPart;
 
@@ -544,7 +544,7 @@ FindFirstFileW (
 
 	/* copy data into WIN32_FIND_DATA structure */
 	lpFindFileData->dwFileAttributes = IData->pFileInfo->FileAttributes;
-	
+
 	lpFindFileData->ftCreationTime.dwHighDateTime = IData->pFileInfo->CreationTime.u.HighPart;
 	lpFindFileData->ftCreationTime.dwLowDateTime = IData->pFileInfo->CreationTime.u.LowPart;
 
@@ -553,10 +553,10 @@ FindFirstFileW (
 
 	lpFindFileData->ftLastWriteTime.dwHighDateTime = IData->pFileInfo->LastWriteTime.u.HighPart;
 	lpFindFileData->ftLastWriteTime.dwLowDateTime = IData->pFileInfo->LastWriteTime.u.LowPart;
-	
+
 	lpFindFileData->nFileSizeHigh = IData->pFileInfo->EndOfFile.u.HighPart;
 	lpFindFileData->nFileSizeLow = IData->pFileInfo->EndOfFile.u.LowPart;
-	
+
 	memcpy (lpFindFileData->cFileName,
 	        IData->pFileInfo->FileName,
 	        IData->pFileInfo->FileNameLength);

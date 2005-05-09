@@ -53,7 +53,7 @@ GetDllLoadPath(LPCWSTR lpModule)
 	        while (lpModuleEnd > lpModule && *lpModuleEnd != L'/' &&
 	               *lpModuleEnd != L'\\' && *lpModuleEnd != L':')
 			--lpModuleEnd;
-		Length = (lpModuleEnd - lpModule) + 1;		
+		Length = (lpModuleEnd - lpModule) + 1;
 	}
 
 	Length += GetCurrentDirectoryW(0, NULL);
@@ -131,7 +131,7 @@ LoadLibraryExA (
 	)
 {
    PWCHAR FileNameW;
-   
+
    if (!(FileNameW = FilenameA2W(lpLibFileName, FALSE)))
       return FALSE;
 
@@ -173,7 +173,7 @@ LoadLibraryExW (
 	if ( lpLibFileName == NULL )
 		return NULL;
 
-	dwFlags &= 
+	dwFlags &=
 	  DONT_RESOLVE_DLL_REFERENCES |
 	  LOAD_LIBRARY_AS_DATAFILE |
 	  LOAD_WITH_ALTERED_SEARCH_PATH;
@@ -189,7 +189,7 @@ LoadLibraryExW (
 		SetLastErrorByStatus (Status);
 		return NULL;
 	}
-	
+
 	return hInst;
 }
 
@@ -474,7 +474,7 @@ LoadModule (
   char FileName[MAX_PATH];
   char *CommandLine, *t;
   BYTE Length;
-  
+
   LoadParams = (LOADPARMS32*)lpParameterBlock;
   if(!lpModuleName || !LoadParams || (((WORD*)LoadParams->lpCmdShow)[0] != 2))
   {
@@ -482,13 +482,13 @@ LoadModule (
     SetLastError(ERROR_INVALID_PARAMETER);
     return 0;
   }
-  
+
   if(!SearchPathA(NULL, lpModuleName, ".exe", MAX_PATH, FileName, NULL) &&
      !SearchPathA(NULL, lpModuleName, NULL, MAX_PATH, FileName, NULL))
   {
     return ERROR_FILE_NOT_FOUND;
   }
-  
+
   Length = (BYTE)LoadParams->lpCmdLine[0];
   if(!(CommandLine = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
                                strlen(lpModuleName) + Length + 2)))
@@ -496,24 +496,24 @@ LoadModule (
     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
     return 0;
   }
-  
+
   /* Create command line string */
   strcpy(CommandLine, lpModuleName);
   t = CommandLine + strlen(CommandLine);
   *(t++) = ' ';
   memcpy(t, LoadParams->lpCmdLine + 1, Length);
-  
+
   /* Build StartupInfo */
   RtlZeroMemory(&StartupInfo, sizeof(STARTUPINFOA));
   StartupInfo.cb = sizeof(STARTUPINFOA);
   StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
   StartupInfo.wShowWindow = ((WORD*)LoadParams->lpCmdShow)[1];
-  
+
   if(!CreateProcessA(FileName, CommandLine, NULL, NULL, FALSE, 0, LoadParams->lpEnvAddress,
                      NULL, &StartupInfo, &ProcessInformation))
   {
     DWORD Error;
-    
+
     HeapFree(GetProcessHeap(), 0, CommandLine);
     /* return the right value */
     Error = GetLastError();
@@ -531,15 +531,15 @@ LoadModule (
     }
     return 0;
   }
-  
+
   HeapFree(GetProcessHeap(), 0, CommandLine);
-  
+
   /* Wait up to 15 seconds for the process to become idle */
   WaitForInputIdle(ProcessInformation.hProcess, 15000);
-  
+
   CloseHandle(ProcessInformation.hThread);
   CloseHandle(ProcessInformation.hProcess);
-  
+
   return 33;
 }
 

@@ -27,7 +27,7 @@ _hread(
 	)
 {
 	DWORD	NumberOfBytesRead;
-	
+
 	if ( !ReadFile(
 		(HANDLE) hFile,
 		(LPVOID) lpBuffer,
@@ -53,7 +53,7 @@ _hwrite (
 	)
 {
 	DWORD	NumberOfBytesWritten;
-	
+
 	if (lBytes == 0)
 	{
 		if ( !SetEndOfFile((HANDLE) hFile ) )
@@ -87,7 +87,7 @@ _lopen (
 {
 	DWORD dwAccessMask = 0;
 	DWORD dwShareMode = 0;
-	
+
 	if ( (iReadWrite & OF_READWRITE ) == OF_READWRITE )
 		dwAccessMask = GENERIC_READ | GENERIC_WRITE;
 	else if ( (iReadWrite & OF_READ ) == OF_READ )

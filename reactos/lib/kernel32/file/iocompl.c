@@ -32,17 +32,17 @@ CreateIoCompletionPort(
    FILE_COMPLETION_INFORMATION CompletionInformation;
    IO_STATUS_BLOCK IoStatusBlock;
 
-   if ( ExistingCompletionPort == NULL && FileHandle == INVALID_HANDLE_VALUE ) 
+   if ( ExistingCompletionPort == NULL && FileHandle == INVALID_HANDLE_VALUE )
    {
       SetLastError(ERROR_INVALID_PARAMETER);
       return FALSE;
    }
 
-   if ( ExistingCompletionPort != NULL ) 
+   if ( ExistingCompletionPort != NULL )
    {
       CompletionPort = ExistingCompletionPort;
    }
-   else 
+   else
    {
 
       errCode = NtCreateIoCompletion(&CompletionPort,
@@ -50,15 +50,15 @@ CreateIoCompletionPort(
                                      NULL,//ObjectAttributes
                                      NumberOfConcurrentThreads);
 
-      if (!NT_SUCCESS(errCode) ) 
+      if (!NT_SUCCESS(errCode) )
       {
          SetLastErrorByStatus (errCode);
          return FALSE;
       }
 
    }
-   
-   if ( FileHandle != INVALID_HANDLE_VALUE ) 
+
+   if ( FileHandle != INVALID_HANDLE_VALUE )
    {
 #ifdef __USE_W32API
       CompletionInformation.Port = CompletionPort;
@@ -68,19 +68,19 @@ CreateIoCompletionPort(
       CompletionInformation.CompletionKey  = CompletionKey;
 #endif
 
-      errCode = NtSetInformationFile(FileHandle, 
+      errCode = NtSetInformationFile(FileHandle,
                                      &IoStatusBlock,
                                      &CompletionInformation,
                                      sizeof(FILE_COMPLETION_INFORMATION),
                                      FileCompletionInformation);
 
-      if ( !NT_SUCCESS(errCode) ) 
+      if ( !NT_SUCCESS(errCode) )
       {
          if ( ExistingCompletionPort == NULL )
          {
             NtClose(CompletionPort);
          }
-   
+
          SetLastErrorByStatus (errCode);
          return FALSE;
       }
@@ -116,7 +116,7 @@ GetQueuedCompletionStatus(
    if (dwMilliseconds != INFINITE)
    {
       Interval.QuadPart = RELATIVE_TIME(MILLIS_TO_100NS(dwMilliseconds));
-   }  
+   }
 
    errCode = NtRemoveIoCompletion(CompletionHandle,
                                   (PVOID*)lpCompletionKey,
@@ -157,13 +157,13 @@ PostQueuedCompletionStatus(
 {
    NTSTATUS errCode;
 
-   errCode = NtSetIoCompletion(CompletionHandle,  
-                               (PVOID)dwCompletionKey, 
-                               (PVOID)lpOverlapped,//CompletionValue 
+   errCode = NtSetIoCompletion(CompletionHandle,
+                               (PVOID)dwCompletionKey,
+                               (PVOID)lpOverlapped,//CompletionValue
                                STATUS_SUCCESS,                         //IoStatusBlock->Status
                                dwNumberOfBytesTransferred);     //IoStatusBlock->Information
 
-   if ( !NT_SUCCESS(errCode) ) 
+   if ( !NT_SUCCESS(errCode) )
    {
       SetLastErrorByStatus (errCode);
       return FALSE;

@@ -29,7 +29,7 @@ DeleteFileA (
 	)
 {
 	PWCHAR FileNameW;
-   
+
    if (!(FileNameW = FilenameA2W(lpFileName, FALSE)))
       return FALSE;
 

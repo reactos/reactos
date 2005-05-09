@@ -35,7 +35,7 @@ CreateDirectoryA (
         )
 {
    PWCHAR PathNameW;
-   
+
    if (!(PathNameW = FilenameA2W(lpPathName, FALSE)))
       return FALSE;
 
@@ -60,7 +60,7 @@ CreateDirectoryExA (
 
    if (!(TemplateDirectoryW = FilenameA2W(lpTemplateDirectory, TRUE)))
       return FALSE;
-      
+
    if (!(NewDirectoryW = FilenameA2W(lpNewDirectory, FALSE)))
    {
       RtlFreeHeap (RtlGetProcessHeap (),
@@ -68,7 +68,7 @@ CreateDirectoryExA (
                    TemplateDirectoryW);
       return FALSE;
    }
-      
+
    ret = CreateDirectoryExW (TemplateDirectoryW,
                              NewDirectoryW,
                              lpSecurityAttributes);
@@ -178,7 +178,7 @@ CreateDirectoryExW (
                 SetLastError(ERROR_PATH_NOT_FOUND);
                 return FALSE;
         }
-        
+
         InitializeObjectAttributes(&ObjectAttributes,
                                    &NtTemplatePathU,
                                    OBJ_CASE_INSENSITIVE,
@@ -204,7 +204,7 @@ CreateDirectoryExW (
                 SetLastErrorByStatus (Status);
                 return FALSE;
         }
-        
+
         for (;;)
         {
           Status = NtQueryInformationFile(TemplateHandle,
@@ -222,7 +222,7 @@ CreateDirectoryExW (
                Status = STATUS_INSUFFICIENT_RESOURCES;
                break;
             }
-            
+
             Status = NtQueryEaFile(TemplateHandle,
                                    &IoStatusBlock,
                                    EaBuffer,
@@ -260,13 +260,13 @@ CreateDirectoryExW (
             break;
           }
         }
-        
+
         NtClose(TemplateHandle);
-        
+
         RtlFreeHeap (RtlGetProcessHeap (),
                      0,
                      NtTemplatePathU.Buffer);
-        
+
         if (!NT_SUCCESS(Status))
         {
                 /* free the he extended attributes buffer */
@@ -298,7 +298,7 @@ CreateDirectoryExW (
                                      0,
                                      EaBuffer);
                 }
-                
+
                 SetLastError(ERROR_PATH_NOT_FOUND);
                 return FALSE;
         }
@@ -355,7 +355,7 @@ RemoveDirectoryA (
         )
 {
    PWCHAR PathNameW;
-   
+
    DPRINT("RemoveDirectoryA(%s)\n",lpPathName);
 
    if (!(PathNameW = FilenameA2W(lpPathName, FALSE)))
@@ -428,7 +428,7 @@ RemoveDirectoryW (
                                        sizeof(FILE_DISPOSITION_INFORMATION),
                                        FileDispositionInformation);
         NtClose(DirectoryHandle);
-        
+
         if (!NT_SUCCESS(Status))
         {
                 SetLastErrorByStatus (Status);
@@ -469,27 +469,27 @@ GetFullPathNameA (
       return 0;
 
    ret = GetFullPathNameW(FileNameW, MAX_PATH, BufferW, &FilePartW);
-   
+
    if (!ret)
       return 0;
-      
+
    if (ret > MAX_PATH)
    {
       SetLastError(ERROR_FILENAME_EXCED_RANGE);
       return 0;
    }
-   
+
    ret = FilenameW2A_FitOrFail(lpBuffer, nBufferLength, BufferW, ret+1);
-   
+
    if (ret < nBufferLength && lpFilePart)
    {
       /* if the path closed with '\', FilePart is NULL */
-      if (!FilePartW) 
+      if (!FilePartW)
          *lpFilePart=NULL;
       else
          *lpFilePart = (FilePartW - BufferW) + lpBuffer;
    }
-   
+
    DPRINT("GetFullPathNameA ret: lpBuffer %s lpFilePart %s\n",
         lpBuffer, (lpFilePart == NULL) ? "NULL" : *lpFilePart);
 
@@ -555,13 +555,13 @@ GetShortPathNameA (
 
     if (!ret)
         return 0;
-    
+
     if (ret > MAX_PATH)
     {
         SetLastError(ERROR_FILENAME_EXCED_RANGE);
         return 0;
     }
-    
+
     return FilenameW2A_FitOrFail(shortpath, shortlen, ShortPathW, ret+1);
 }
 
@@ -861,7 +861,7 @@ SearchPathW (
                 }
                 else
                 {
-                        Name = RtlAllocateHeap(GetProcessHeap(), 
+                        Name = RtlAllocateHeap(GetProcessHeap(),
                                                HEAP_GENERATE_EXCEPTIONS,
                                                (wcslen(lpFileName) + wcslen(lpExtension) + 1)
                                                * sizeof(WCHAR));
@@ -965,9 +965,9 @@ SetDllDirectoryW(
     )
 {
   UNICODE_STRING PathName;
-  
+
   RtlInitUnicodeString(&PathName, lpPathName);
-  
+
   RtlEnterCriticalSection(&DllLock);
   if(PathName.Length > 0)
   {
@@ -988,7 +988,7 @@ SetDllDirectoryW(
       }
       DllDirectory.Length = 0;
       DllDirectory.MaximumLength = PathName.Length + sizeof(WCHAR);
-      
+
       RtlCopyUnicodeString(&DllDirectory, &PathName);
     }
   }
@@ -1011,13 +1011,13 @@ SetDllDirectoryA(
     )
 {
   PWCHAR PathNameW=NULL;
-  
+
   if(lpPathName)
   {
      if (!(PathNameW = FilenameA2W(lpPathName, FALSE)))
         return FALSE;
   }
-  
+
   return SetDllDirectoryW(PathNameW);
 }
 
@@ -1032,7 +1032,7 @@ GetDllDirectoryW(
     )
 {
   DWORD Ret;
-  
+
   RtlEnterCriticalSection(&DllLock);
   if(nBufferLength > 0)
   {
@@ -1041,7 +1041,7 @@ GetDllDirectoryW(
     {
       Ret = nBufferLength - 1;
     }
-    
+
     if(Ret > 0)
     {
       RtlCopyMemory(lpBuffer, DllDirectory.Buffer, Ret * sizeof(WCHAR));
@@ -1054,7 +1054,7 @@ GetDllDirectoryW(
     Ret = (DllDirectory.Length / sizeof(WCHAR)) + 1;
   }
   RtlLeaveCriticalSection(&DllLock);
-  
+
   return Ret;
 }
 
@@ -1075,13 +1075,13 @@ GetDllDirectoryA(
 
   if (!ret)
      return 0;
-     
+
   if (ret > MAX_PATH)
   {
      SetLastError(ERROR_FILENAME_EXCED_RANGE);
      return 0;
   }
-  
+
   return FilenameW2A_FitOrFail(lpBuffer, nBufferLength, BufferW, ret+1);
 }
 
@@ -1105,10 +1105,10 @@ BOOL STDCALL
 NeedCurrentDirectoryForExePathA(LPCSTR ExeName)
 {
   PWCHAR ExeNameW;
-  
+
   if (!(ExeNameW = FilenameA2W(ExeName, FALSE)))
-    return FALSE;     
-  
+    return FALSE;
+
   return NeedCurrentDirectoryForExePathW(ExeNameW);
 }
 
@@ -1244,7 +1244,7 @@ DWORD STDCALL GetLongPathNameA( LPCSTR shortpath, LPSTR longpath, DWORD longlen 
         SetLastError(ERROR_FILENAME_EXCED_RANGE);
         return 0;
     }
-    
+
     return FilenameW2A_FitOrFail(longpath, longlen, longpathW,  ret+1 );
 }
 

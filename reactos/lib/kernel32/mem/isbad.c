@@ -46,13 +46,13 @@ strnlen (
 /*
  * @implemented
  */
-BOOL 
+BOOL
 STDCALL
 IsBadReadPtr (
 	CONST VOID	* lp,
 	UINT		ucb
 	)
-{	
+{
 	MEMORY_BASIC_INFORMATION MemoryInformation;
 
 	if ( ucb == 0 )
@@ -65,36 +65,36 @@ IsBadReadPtr (
 		& MemoryInformation,
 		sizeof (MEMORY_BASIC_INFORMATION)
 		);
-	
+
 	if ( MemoryInformation.State != MEM_COMMIT )
 	{
 		return TRUE;
 	}
-		
+
 	if ( MemoryInformation.RegionSize < ucb )
 	{
 		return TRUE;
 	}
-		
+
 	if ( MemoryInformation.Protect == PAGE_EXECUTE )
 	{
 		return TRUE;
 	}
-		
+
 	if ( MemoryInformation.Protect == PAGE_NOACCESS )
 	{
 		return TRUE;
 	}
-		
+
 	return FALSE;
-			
+
 }
 
 
 /*
  * @implemented
  */
-BOOL 
+BOOL
 STDCALL
 IsBadHugeReadPtr (
 	CONST VOID	* lp,
@@ -108,7 +108,7 @@ IsBadHugeReadPtr (
 /*
  * @implemented
  */
-BOOL 
+BOOL
 STDCALL
 IsBadCodePtr (
 	FARPROC	lpfn
@@ -122,19 +122,19 @@ IsBadCodePtr (
 		& MemoryInformation,
 		sizeof (MEMORY_BASIC_INFORMATION)
 		);
-	
+
 	if ( MemoryInformation.State != MEM_COMMIT )
 	{
 		return TRUE;
-	}	
-			
+	}
+
 	if (	(MemoryInformation.Protect == PAGE_EXECUTE)
 		|| (MemoryInformation.Protect == PAGE_EXECUTE_READ)
 		)
 	{
 		return FALSE;
 	}
-		
+
 	return TRUE;
 }
 
@@ -161,35 +161,35 @@ IsBadWritePtr (
 		& MemoryInformation,
 		sizeof (MEMORY_BASIC_INFORMATION)
 		);
-	
+
 	if ( MemoryInformation.State != MEM_COMMIT )
 	{
 		return TRUE;
 	}
-		
+
 	if ( MemoryInformation.RegionSize < ucb )
 	{
 		return TRUE;
 	}
-		
-		
+
+
 	if ( MemoryInformation.Protect == PAGE_READONLY)
 	{
 		return TRUE;
 	}
-		
+
 	if (	(MemoryInformation.Protect == PAGE_EXECUTE)
 		|| (MemoryInformation.Protect == PAGE_EXECUTE_READ)
 		)
 	{
 		return TRUE;
 	}
-		
+
 	if ( MemoryInformation.Protect == PAGE_NOACCESS )
 	{
-		return TRUE;	
+		return TRUE;
 	}
-		
+
 	return FALSE;
 }
 
@@ -232,7 +232,7 @@ IsBadStringPtrW (
 /*
  * @implemented
  */
-BOOL 
+BOOL
 STDCALL
 IsBadStringPtrA (
 	LPCSTR	lpsz,

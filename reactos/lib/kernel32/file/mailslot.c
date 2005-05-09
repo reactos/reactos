@@ -29,17 +29,17 @@ CreateMailslotA(LPCSTR lpName,
    HANDLE MailslotHandle;
    UNICODE_STRING NameU;
    ANSI_STRING NameA;
-   
+
    RtlInitAnsiString(&NameA, (LPSTR)lpName);
    RtlAnsiStringToUnicodeString(&NameU, &NameA, TRUE);
-   
+
    MailslotHandle = CreateMailslotW(NameU.Buffer,
 				    nMaxMessageSize,
 				    lReadTimeout,
 				    lpSecurityAttributes);
-   
+
    RtlFreeUnicodeString(&NameU);
-   
+
    return(MailslotHandle);
 }
 
@@ -62,7 +62,7 @@ CreateMailslotW(LPCWSTR lpName,
    IO_STATUS_BLOCK Iosb;
    ULONG Attributes = OBJ_CASE_INSENSITIVE;
    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
-   
+
    Result = RtlDosPathNameToNtPathName_U((LPWSTR)lpName,
 					 &MailslotName,
 					 NULL,
@@ -72,24 +72,24 @@ CreateMailslotW(LPCWSTR lpName,
 	SetLastError(ERROR_PATH_NOT_FOUND);
 	return(INVALID_HANDLE_VALUE);
      }
-   
+
    DPRINT("Mailslot name: %wZ\n", &MailslotName);
-   
+
    if(lpSecurityAttributes)
      {
        SecurityDescriptor = lpSecurityAttributes->lpSecurityDescriptor;
        if(lpSecurityAttributes->bInheritHandle)
           Attributes |= OBJ_INHERIT;
      }
-   
+
    InitializeObjectAttributes(&ObjectAttributes,
 			      &MailslotName,
 			      Attributes,
 			      NULL,
 			      SecurityDescriptor);
-   
+
    DefaultTimeOut.QuadPart = lReadTimeout * 10000;
-   
+
    Status = NtCreateMailslotFile(&MailslotHandle,
 				 GENERIC_READ | SYNCHRONIZE | WRITE_DAC,
 				 &ObjectAttributes,
@@ -98,16 +98,16 @@ CreateMailslotW(LPCWSTR lpName,
 				 0,
 				 nMaxMessageSize,
 				 &DefaultTimeOut);
-   
+
    RtlFreeUnicodeString(&MailslotName);
-   
+
    if (!NT_SUCCESS(Status))
      {
 	DPRINT("NtCreateMailslot failed (Status %x)!\n", Status);
 	SetLastErrorByStatus (Status);
 	return(INVALID_HANDLE_VALUE);
      }
-   
+
    return(MailslotHandle);
 }
 
@@ -125,7 +125,7 @@ GetMailslotInfo(HANDLE hMailslot,
    FILE_MAILSLOT_QUERY_INFORMATION Buffer;
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
-   
+
    Status = NtQueryInformationFile(hMailslot,
 				   &Iosb,
 				   &Buffer,
@@ -137,7 +137,7 @@ GetMailslotInfo(HANDLE hMailslot,
 	SetLastErrorByStatus (Status);
 	return(FALSE);
      }
-   
+
    if (lpMaxMessageSize != NULL)
      {
 	*lpMaxMessageSize = Buffer.MaximumMessageSize;
@@ -154,7 +154,7 @@ GetMailslotInfo(HANDLE hMailslot,
      {
 	*lpReadTimeout = (DWORD)(Buffer.ReadTimeout.QuadPart / -10000);
      }
-   
+
    return(TRUE);
 }
 
@@ -169,9 +169,9 @@ SetMailslotInfo(HANDLE hMailslot,
    FILE_MAILSLOT_SET_INFORMATION Buffer;
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
-   
+
    Buffer.ReadTimeout.QuadPart = lReadTimeout * -10000;
-   
+
    Status = NtSetInformationFile(hMailslot,
 				 &Iosb,
 				 &Buffer,
@@ -183,7 +183,7 @@ SetMailslotInfo(HANDLE hMailslot,
 	SetLastErrorByStatus (Status);
 	return(FALSE);
      }
-   
+
    return(TRUE);
 }
 

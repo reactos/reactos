@@ -4,7 +4,7 @@
  * PROJECT:              ReactOS kernel
  * FILE:                 lib/kernel32/synch/timer.c
  * PURPOSE:              Implementing timer
- * PROGRAMMER:           
+ * PROGRAMMER:
  */
 
 /* INCLUDES ******************************************************************/
@@ -40,7 +40,7 @@ CreateWaitableTimerW(LPSECURITY_ATTRIBUTES lpTimerAttributes,
 			      0,
 			      hBaseDir,
 			      NULL);
-   
+
    if (lpTimerAttributes != NULL)
      {
        ObjectAttributes.SecurityDescriptor = lpTimerAttributes->lpSecurityDescriptor;
@@ -49,7 +49,7 @@ CreateWaitableTimerW(LPSECURITY_ATTRIBUTES lpTimerAttributes,
            ObjectAttributes.Attributes |= OBJ_INHERIT;
          }
      }
-   
+
    Status = NtCreateTimer(&TimerHandle,
 			  TIMER_ALL_ACCESS,
 			  &ObjectAttributes,
@@ -110,7 +110,7 @@ OpenWaitableTimerW(DWORD dwDesiredAccess,
    HANDLE TimerHandle;
    OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING UnicodeName;
-   
+
    if (lpTimerName == NULL)
      {
 	SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
@@ -149,7 +149,7 @@ OpenWaitableTimerA(DWORD dwDesiredAccess,
    UNICODE_STRING TimerNameU;
    ANSI_STRING TimerName;
    HANDLE TimerHandle;
-	
+
    if (lpTimerName == NULL)
      {
         SetLastErrorByStatus(STATUS_INVALID_PARAMETER);

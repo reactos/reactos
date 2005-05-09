@@ -23,7 +23,7 @@ GetErrorMode(VOID)
 {
   NTSTATUS Status;
   UINT ErrMode;
-  
+
   Status = NtQueryInformationProcess(NtCurrentProcess(),
                                      ProcessDefaultHardErrorMode,
                                      (PVOID)&ErrMode,
@@ -34,22 +34,22 @@ GetErrorMode(VOID)
     SetLastErrorByStatus(Status);
     return 0;
   }
-  
+
   return ErrMode;
 }
 
 /*
  * @implemented
  */
-UINT 
+UINT
 STDCALL
 SetErrorMode(UINT uMode)
 {
    UINT PrevErrMode;
    NTSTATUS Status;
-   
+
    PrevErrMode = GetErrorMode();
-   
+
    Status = NtSetInformationProcess(NtCurrentProcess(),
                                     ProcessDefaultHardErrorMode,
                                     (PVOID)&uMode,
@@ -83,7 +83,7 @@ SetUnhandledExceptionFilter(
  * The address can point to anywhere within the module.
  */
 static const char*
-_module_name_from_addr(const void* addr, void **module_start_addr, 
+_module_name_from_addr(const void* addr, void **module_start_addr,
                        char* psz, size_t nChars)
 {
    MEMORY_BASIC_INFORMATION mbi;
@@ -200,12 +200,12 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
    }
 
    /*
-    * Returning EXCEPTION_EXECUTE_HANDLER means that the code in 
+    * Returning EXCEPTION_EXECUTE_HANDLER means that the code in
     * the __except block will be executed. Normally this will end up in a
     * Terminate process.
     */
 
-   return EXCEPTION_EXECUTE_HANDLER;	
+   return EXCEPTION_EXECUTE_HANDLER;
 }
 
 
@@ -252,7 +252,7 @@ RaiseException (
 	{
 		ExceptionRecord.NumberParameters = nNumberOfArguments;
 		for (	nNumberOfArguments = 0;
-			(nNumberOfArguments < ExceptionRecord.NumberParameters); 
+			(nNumberOfArguments < ExceptionRecord.NumberParameters);
 			nNumberOfArguments ++
 			)
 		{

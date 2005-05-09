@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/misc/console.c
  * PURPOSE:         Win32 server console functions
- * PROGRAMMER:      James Tabor 
+ * PROGRAMMER:      James Tabor
  *			<jimtabor@adsl-64-217-116-74.dsl.hstntx.swbell.net>
  * UPDATE HISTORY:
  *	199901?? ??	Created
@@ -42,7 +42,7 @@ BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event)
 	case CTRL_C_EVENT:
 		DPRINT("Ctrl-C Event\n");
 		break;
-		
+
 	case CTRL_BREAK_EVENT:
 		DPRINT("Ctrl-Break Event\n");
 		break;
@@ -55,7 +55,7 @@ BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event)
 		DPRINT("Ctrl Close Event\n");
 		break;
 
-	case CTRL_LOGOFF_EVENT:		
+	case CTRL_LOGOFF_EVENT:
 		DPRINT("Ctrl Logoff Event\n");
 		break;
 	}
@@ -80,14 +80,14 @@ SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 		if(IsDebuggerPresent())
 		{
 			EXCEPTION_RECORD erException;
-			erException.ExceptionCode = 
+			erException.ExceptionCode =
 			(nCode == CTRL_C_EVENT ? DBG_CONTROL_C : DBG_CONTROL_BREAK);
 			erException.ExceptionFlags = 0;
 			erException.ExceptionRecord = NULL;
 			erException.ExceptionAddress = &DefaultConsoleCtrlHandler;
 			erException.NumberParameters = 0;
 			RtlRaiseException(&erException);
-		}		
+		}
 		RtlEnterCriticalSection(&ConsoleLock);
 
 		if(!(nCode == CTRL_C_EVENT &&
@@ -115,7 +115,7 @@ SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 	i = NrCtrlHandlers;
 	while(i > 0)
 		{
-		if (i == 1 && (CodeAndFlag & MINLONG) && 
+		if (i == 1 && (CodeAndFlag & MINLONG) &&
 			(nCode == CTRL_LOGOFF_EVENT || nCode == CTRL_SHUTDOWN_EVENT))
 				break;
 
@@ -203,7 +203,7 @@ DuplicateConsoleHandle (HANDLE	hConsole,
       SetLastError (ERROR_INVALID_PARAMETER);
       return INVALID_HANDLE_VALUE;
     }
-  
+
   Request.Type = CSRSS_DUPLICATE_HANDLE;
   Request.Data.DuplicateHandleRequest.Handle = hConsole;
   Request.Data.DuplicateHandleRequest.ProcessId = GetTeb()->Cid.UniqueProcess;
@@ -364,7 +364,7 @@ GetConsoleAliasesW (DWORD	Unknown0,
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 }
- 
+
 
 /*
  * @unimplemented
@@ -555,7 +555,7 @@ GetConsoleHardwareState (HANDLE	hConsole,
     return FALSE;
   }
   *State = Reply.Data.ConsoleHardwareStateReply.State;
-  return TRUE;  
+  return TRUE;
 }
 
 
@@ -645,7 +645,7 @@ OpenConsoleW (LPWSTR  wsName,
   CSRSS_API_REPLY   Reply;
   PHANDLE           phConsole = NULL;
   NTSTATUS          Status = STATUS_SUCCESS;
-  
+
   if(0 == _wcsicmp(wsName, L"CONIN$"))
   {
     Request.Type = CSRSS_GET_INPUT_HANDLE;
@@ -781,7 +781,7 @@ SetConsoleHardwareState (HANDLE	hConsole,
     SetLastErrorByStatus(Status);
     return FALSE;
   }
-  return TRUE;  
+  return TRUE;
 }
 
 
@@ -1117,7 +1117,7 @@ IntWriteConsole(HANDLE hConsoleOutput,
   USHORT nChars;
   ULONG MessageSize, BufferSize, SizeBytes, CharSize;
   DWORD Written = 0;
-  
+
   CharSize = (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
 
   BufferSize = sizeof(CSRSS_API_REQUEST) + min(nNumberOfCharsToWrite * CharSize, CSRSS_MAX_WRITE_CONSOLE_REQUEST);
@@ -1160,7 +1160,7 @@ IntWriteConsole(HANDLE hConsoleOutput,
   }
 
   RtlFreeHeap(GetProcessHeap(), 0, Request);
-  
+
   if(lpNumberOfCharsWritten != NULL)
   {
     *lpNumberOfCharsWritten = Written;
@@ -1175,7 +1175,7 @@ IntWriteConsole(HANDLE hConsoleOutput,
  *
  * @implemented
  */
-BOOL STDCALL 
+BOOL STDCALL
 WriteConsoleA(HANDLE hConsoleOutput,
 	      CONST VOID *lpBuffer,
 	      DWORD nNumberOfCharsToWrite,
@@ -1226,9 +1226,9 @@ IntReadConsole(HANDLE hConsoleInput,
   PCSRSS_API_REPLY Reply;
   NTSTATUS Status;
   ULONG BufferSize, CharSize, CharsRead = 0;
-  
+
   CharSize = (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
-  
+
   BufferSize = sizeof(CSRSS_API_REQUEST) + min(nNumberOfCharsToRead * CharSize, CSRSS_MAX_READ_CONSOLE_REQUEST);
   Reply = RtlAllocateHeap(GetProcessHeap(), 0, BufferSize);
   if(Reply == NULL)
@@ -1236,7 +1236,7 @@ IntReadConsole(HANDLE hConsoleInput,
     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
     return FALSE;
   }
-  
+
   Reply->Status = STATUS_SUCCESS;
 
   do
@@ -1250,7 +1250,7 @@ IntReadConsole(HANDLE hConsoleInput,
         break;
       }
     }
-    
+
     Request.Type = CSRSS_READ_CONSOLE;
     Request.Data.ReadConsoleRequest.ConsoleHandle = hConsoleInput;
     Request.Data.ReadConsoleRequest.Unicode = bUnicode;
@@ -1268,13 +1268,13 @@ IntReadConsole(HANDLE hConsoleInput,
       RtlFreeHeap(GetProcessHeap(), 0, Reply);
       return FALSE;
     }
-    
+
     nNumberOfCharsToRead -= Reply->Data.ReadConsoleReply.NrCharactersRead;
     memcpy((PVOID)((ULONG_PTR)lpBuffer + (ULONG_PTR)(CharsRead * CharSize)),
            Reply->Data.ReadConsoleReply.Buffer,
            Reply->Data.ReadConsoleReply.NrCharactersRead * CharSize);
     CharsRead += Reply->Data.ReadConsoleReply.NrCharactersRead;
-    
+
     if(Reply->Status == STATUS_NOTIFY_CLEANUP)
     {
       if(CharsRead > 0)
@@ -1285,12 +1285,12 @@ IntReadConsole(HANDLE hConsoleInput,
       Reply->Status = STATUS_PENDING;
     }
   } while(Reply->Status == STATUS_PENDING && nNumberOfCharsToRead > 0);
-  
+
   if(lpNumberOfCharsRead != NULL)
   {
     *lpNumberOfCharsRead = CharsRead;
   }
-  
+
   return TRUE;
 }
 
@@ -1352,8 +1352,8 @@ BOOL STDCALL AllocConsole(VOID)
    if(NtCurrentPeb()->ProcessParameters->hConsole)
    {
 	DPRINT("AllocConsole: Allocate duplicate console to the same Process\n");
-	SetLastErrorByStatus (STATUS_OBJECT_NAME_EXISTS); 
-	return FALSE;	 
+	SetLastErrorByStatus (STATUS_OBJECT_NAME_EXISTS);
+	return FALSE;
    }
 
    Request.Data.AllocConsoleRequest.CtrlDispatcher = ConsoleControlDispatcher;
@@ -1496,7 +1496,7 @@ IntFillConsoleOutputCharacter(HANDLE hConsoleOutput,
   {
     *lpNumberOfCharsWritten = Reply.Data.FillOutputReply.NrCharactersWritten;
   }
-  
+
   return TRUE;
 }
 
@@ -1560,13 +1560,13 @@ IntPeekConsoleInput(HANDLE hConsoleInput,
   PVOID BufferBase;
   PVOID BufferTargetBase;
   ULONG Size;
-  
+
   if(lpBuffer == NULL)
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   Size = nLength * sizeof(INPUT_RECORD);
 
   Status = CsrCaptureParameterBuffer(NULL, Size, &BufferBase, &BufferTargetBase);
@@ -1575,7 +1575,7 @@ IntPeekConsoleInput(HANDLE hConsoleInput,
     SetLastErrorByStatus(Status);
     return FALSE;
   }
-  
+
   Request = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CSRSS_API_REQUEST));
   if(Request == NULL)
   {
@@ -1583,17 +1583,17 @@ IntPeekConsoleInput(HANDLE hConsoleInput,
     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
     return FALSE;
   }
-  
+
   Request->Type = CSRSS_PEEK_CONSOLE_INPUT;
   Request->Data.PeekConsoleInputRequest.ConsoleHandle = hConsoleInput;
   Request->Data.PeekConsoleInputRequest.Unicode = bUnicode;
   Request->Data.PeekConsoleInputRequest.Length = nLength;
   Request->Data.PeekConsoleInputRequest.InputRecord = (INPUT_RECORD*)BufferTargetBase;
-  
+
   Status = CsrClientCallServer(Request, &Reply,
                                sizeof(CSRSS_API_REQUEST),
                                sizeof(CSRSS_API_REPLY));
-  
+
   if(!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
   {
     RtlFreeHeap(GetProcessHeap(), 0, Request);
@@ -1605,12 +1605,12 @@ IntPeekConsoleInput(HANDLE hConsoleInput,
 
   RtlFreeHeap(GetProcessHeap(), 0, Request);
   CsrReleaseParameterBuffer(BufferBase);
-  
+
   if(lpNumberOfEventsRead != NULL)
   {
     *lpNumberOfEventsRead = Reply.Data.PeekConsoleInputReply.Length;
   }
-  
+
   return TRUE;
 }
 
@@ -1645,7 +1645,7 @@ PeekConsoleInputW(
 	PINPUT_RECORD		lpBuffer,
 	DWORD			nLength,
 	LPDWORD			lpNumberOfEventsRead
-	)    
+	)
 {
   return IntPeekConsoleInput(hConsoleInput, lpBuffer, nLength,
                              lpNumberOfEventsRead, TRUE);
@@ -1663,7 +1663,7 @@ IntReadConsoleInput(HANDLE hConsoleInput,
   CSRSS_API_REPLY Reply;
   ULONG Read;
   NTSTATUS Status;
-  
+
   Request.Type = CSRSS_READ_INPUT;
   Request.Data.ReadInputRequest.ConsoleHandle = hConsoleInput;
   Request.Data.ReadInputRequest.Unicode = bUnicode;
@@ -1717,12 +1717,12 @@ IntReadConsoleInput(HANDLE hConsoleInput,
       }
     }
   }
-  
+
   if(lpNumberOfEventsRead != NULL)
   {
     *lpNumberOfEventsRead = Read;
   }
-  
+
   return (Read > 0);
 }
 
@@ -1801,13 +1801,13 @@ IntWriteConsoleInput(HANDLE hConsoleInput,
                                sizeof(CSRSS_API_REPLY));
 
   CsrReleaseParameterBuffer(BufferBase);
-  
+
   if(!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
   {
     SetLastErrorByStatus(Status);
     return FALSE;
   }
-  
+
   if(lpNumberOfEventsWritten != NULL)
   {
     *lpNumberOfEventsWritten = Reply.Data.WriteConsoleInputReply.Length;
@@ -1875,13 +1875,13 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
   PVOID BufferTargetBase;
   NTSTATUS Status;
   DWORD Size, SizeX, SizeY;
-  
+
   if(lpBuffer == NULL)
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   Size = dwBufferSize.X * dwBufferSize.Y * sizeof(CHAR_INFO);
 
   Status = CsrCaptureParameterBuffer(NULL, Size, &BufferBase, &BufferTargetBase);
@@ -1890,7 +1890,7 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
     SetLastErrorByStatus(Status);
     return FALSE;
   }
-  
+
   Request = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CSRSS_API_REQUEST));
   if(Request == NULL)
   {
@@ -1898,7 +1898,7 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
     CsrReleaseParameterBuffer(BufferBase);
     return FALSE;
   }
-   
+
   Request->Type = CSRSS_READ_CONSOLE_OUTPUT;
   Request->Data.ReadConsoleOutputRequest.ConsoleHandle = hConsoleOutput;
   Request->Data.ReadConsoleOutputRequest.Unicode = bUnicode;
@@ -1906,7 +1906,7 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
   Request->Data.ReadConsoleOutputRequest.BufferCoord = dwBufferCoord;
   Request->Data.ReadConsoleOutputRequest.ReadRegion = *lpReadRegion;
   Request->Data.ReadConsoleOutputRequest.CharInfo = (PCHAR_INFO)BufferTargetBase;
-  
+
   Status = CsrClientCallServer(Request, &Reply,
                                sizeof(CSRSS_API_REQUEST),
                                sizeof(CSRSS_API_REPLY));
@@ -1918,17 +1918,17 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
     CsrReleaseParameterBuffer(BufferBase);
     return FALSE;
   }
-  
+
   SizeX = Reply.Data.ReadConsoleOutputReply.ReadRegion.Right - Reply.Data.ReadConsoleOutputReply.ReadRegion.Left + 1;
   SizeY = Reply.Data.ReadConsoleOutputReply.ReadRegion.Bottom - Reply.Data.ReadConsoleOutputReply.ReadRegion.Top + 1;
-  
+
   memcpy(lpBuffer, BufferBase, sizeof(CHAR_INFO) * SizeX * SizeY);
-  
+
   RtlFreeHeap(GetProcessHeap(), 0, Request);
   CsrReleaseParameterBuffer(BufferBase);
-  
+
   *lpReadRegion = Reply.Data.ReadConsoleOutputReply.ReadRegion;
-  
+
   return TRUE;
 }
 
@@ -1998,8 +1998,8 @@ IntWriteConsoleOutput(HANDLE hConsoleOutput,
       SetLastErrorByStatus(Status);
       return(FALSE);
     }
-  
-  Request = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, 
+
+  Request = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY,
 			    sizeof(CSRSS_API_REQUEST));
   if (Request == NULL)
     {
@@ -2013,11 +2013,11 @@ IntWriteConsoleOutput(HANDLE hConsoleOutput,
   Request->Data.WriteConsoleOutputRequest.BufferSize = dwBufferSize;
   Request->Data.WriteConsoleOutputRequest.BufferCoord = dwBufferCoord;
   Request->Data.WriteConsoleOutputRequest.WriteRegion = *lpWriteRegion;
-  Request->Data.WriteConsoleOutputRequest.CharInfo = 
+  Request->Data.WriteConsoleOutputRequest.CharInfo =
     (CHAR_INFO*)BufferTargetBase;
-  
-  Status = CsrClientCallServer(Request, &Reply, 
-			       sizeof(CSRSS_API_REQUEST), 
+
+  Status = CsrClientCallServer(Request, &Reply,
+			       sizeof(CSRSS_API_REQUEST),
 			       sizeof(CSRSS_API_REPLY));
 
   if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
@@ -2027,12 +2027,12 @@ IntWriteConsoleOutput(HANDLE hConsoleOutput,
       SetLastErrorByStatus(Status);
       return FALSE;
     }
-      
+
   RtlFreeHeap(GetProcessHeap(), 0, Request);
   CsrReleaseParameterBuffer(BufferBase);
-  
+
   *lpWriteRegion = Reply.Data.WriteConsoleOutputReply.WriteRegion;
-  
+
   return(TRUE);
 }
 
@@ -2086,9 +2086,9 @@ IntReadConsoleOutputCharacter(HANDLE hConsoleOutput,
   NTSTATUS Status;
   ULONG nChars, SizeBytes, CharSize;
   DWORD CharsRead = 0;
-  
+
   CharSize = (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
-  
+
   nChars = min(nLength, CSRSS_MAX_READ_CONSOLE_OUTPUT_CHAR / CharSize);
   SizeBytes = nChars * CharSize;
 
@@ -2109,7 +2109,7 @@ IntReadConsoleOutputCharacter(HANDLE hConsoleOutput,
   while(nLength > 0)
   {
     DWORD BytesRead;
-    
+
     Request.Data.ReadConsoleOutputCharRequest.NumCharsToRead = min(nLength, nChars);
 
     Status = CsrClientCallServer(&Request,
@@ -2127,12 +2127,12 @@ IntReadConsoleOutputCharacter(HANDLE hConsoleOutput,
     lpCharacter = (PVOID)((ULONG_PTR)lpCharacter + (ULONG_PTR)BytesRead);
     CharsRead += Reply->Data.ReadConsoleOutputCharReply.CharsRead;
     nLength -= Reply->Data.ReadConsoleOutputCharReply.CharsRead;
-    
+
     Request.Data.ReadConsoleOutputCharRequest.ReadCoord = Reply->Data.ReadConsoleOutputCharReply.EndCoord;
   }
 
   RtlFreeHeap(GetProcessHeap(), 0, Reply);
-  
+
   if(lpNumberOfCharsRead != NULL)
   {
     *lpNumberOfCharsRead = CharsRead;
@@ -2209,7 +2209,7 @@ ReadConsoleOutputAttribute(
   PCSRSS_API_REPLY Reply;
   NTSTATUS Status;
   DWORD Size, i;
-  
+
   Reply = RtlAllocateHeap(GetProcessHeap(), 0,
 			  sizeof(CSRSS_API_REPLY) + min(nLength, CSRSS_MAX_READ_CONSOLE_OUTPUT_ATTRIB));
   if (Reply == NULL)
@@ -2248,7 +2248,7 @@ ReadConsoleOutputAttribute(
       // Convert CHARs to WORDs
       for(i = 0; i < Size; ++i)
         *lpAttribute++ = Reply->Data.ReadConsoleOutputAttribReply.String[i];
-      
+
       nLength -= Size;
       Request.Data.ReadConsoleOutputAttribRequest.ReadCoord = Reply->Data.ReadConsoleOutputAttribReply.EndCoord;
     }
@@ -2272,9 +2272,9 @@ IntWriteConsoleOutputCharacter(HANDLE hConsoleOutput,
   NTSTATUS Status;
   ULONG SizeBytes, CharSize, nChars;
   DWORD Written = 0;
-  
+
   CharSize = (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
-  
+
   nChars = min(nLength, CSRSS_MAX_WRITE_CONSOLE_REQUEST / CharSize);
   SizeBytes = nChars * CharSize;
 
@@ -2294,7 +2294,7 @@ IntWriteConsoleOutputCharacter(HANDLE hConsoleOutput,
   while(nLength > 0)
   {
     DWORD BytesWrite;
-    
+
     Request->Data.WriteConsoleOutputCharRequest.Length = min(nLength, nChars);
     BytesWrite = Request->Data.WriteConsoleOutputCharRequest.Length * CharSize;
 
@@ -2319,7 +2319,7 @@ IntWriteConsoleOutputCharacter(HANDLE hConsoleOutput,
   }
 
   RtlFreeHeap(GetProcessHeap(), 0, Request);
-  
+
   if(lpNumberOfCharsWritten != NULL)
   {
     *lpNumberOfCharsWritten = Written;
@@ -2422,7 +2422,7 @@ WriteConsoleOutputAttribute(
 	 lpAttribute += Size;
 	 Request->Data.WriteConsoleOutputAttribRequest.Coord = Reply.Data.WriteConsoleOutputAttribReply.EndCoord;
       }
-   
+
    RtlFreeHeap( GetProcessHeap(), 0, Request );
    return TRUE;
 }
@@ -2479,7 +2479,7 @@ GetConsoleMode(
   CSRSS_API_REQUEST Request;
   CSRSS_API_REPLY Reply;
   NTSTATUS Status;
-  
+
   Request.Type = CSRSS_GET_CONSOLE_MODE;
   Request.Data.GetConsoleModeRequest.ConsoleHandle = hConsoleHandle;
   Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
@@ -2508,13 +2508,13 @@ GetNumberOfConsoleInputEvents(
    CSRSS_API_REQUEST Request;
    CSRSS_API_REPLY Reply;
    NTSTATUS Status;
- 
+
    if(lpNumberOfEvents == NULL)
    {
       SetLastError(ERROR_INVALID_PARAMETER);
       return FALSE;
    }
-   
+
    Request.Type = CSRSS_GET_NUM_INPUT_EVENTS;
    Request.Data.GetNumInputEventsRequest.ConsoleHandle = hConsoleInput;
    Status = CsrClientCallServer(&Request, &Reply, sizeof(CSRSS_API_REQUEST), sizeof(CSRSS_API_REPLY));
@@ -2523,9 +2523,9 @@ GetNumberOfConsoleInputEvents(
       SetLastErrorByStatus(Status);
       return FALSE;
    }
-   
+
    *lpNumberOfEvents = Reply.Data.GetNumInputEventsReply.NumInputEvents;
-   
+
 	return TRUE;
 }
 
@@ -2610,7 +2610,7 @@ SetConsoleMode(
   CSRSS_API_REQUEST Request;
   CSRSS_API_REPLY Reply;
   NTSTATUS Status;
-  
+
   Request.Type = CSRSS_SET_CONSOLE_MODE;
   Request.Data.SetConsoleModeRequest.ConsoleHandle = hConsoleHandle;
   Request.Data.SetConsoleModeRequest.Mode = dwMode;
@@ -2878,13 +2878,13 @@ AddConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine)
       if (CtrlHandlers == NULL)
         {
           CtrlHandlers = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY,
-                                         NrCtrlHandlers * sizeof(PHANDLER_ROUTINE)); 
+                                         NrCtrlHandlers * sizeof(PHANDLER_ROUTINE));
         }
       else
         {
           CtrlHandlers = RtlReAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY,
                                            (PVOID)CtrlHandlers,
-                                           NrCtrlHandlers * sizeof(PHANDLER_ROUTINE)); 
+                                           NrCtrlHandlers * sizeof(PHANDLER_ROUTINE));
         }
       if (CtrlHandlers == NULL)
 	{
@@ -2915,9 +2915,9 @@ RemoveConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine)
 	  if ( ((void*)(CtrlHandlers[i])) == (void*)HandlerRoutine)
 	    {
 	      NrCtrlHandlers--;
-	      memmove(CtrlHandlers + i, CtrlHandlers + i + 1, 
+	      memmove(CtrlHandlers + i, CtrlHandlers + i + 1,
 		      (NrCtrlHandlers - i) * sizeof(PHANDLER_ROUTINE));
-	      CtrlHandlers = 
+	      CtrlHandlers =
 		RtlReAllocateHeap(RtlGetProcessHeap(),
 				  HEAP_ZERO_MEMORY,
 				  (PVOID)CtrlHandlers,
@@ -2996,14 +2996,14 @@ GetConsoleTitleW(
    Reply = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CSRSS_API_REPLY) + CSRSS_MAX_TITLE_LENGTH * sizeof(WCHAR));
    if(Reply == NULL)
    {
-      CloseHandle(hConsole);   
+      CloseHandle(hConsole);
       SetLastError(ERROR_OUTOFMEMORY);
       return 0;
    }
 
    Request.Type = CSRSS_GET_TITLE;
    Request.Data.GetTitleRequest.ConsoleHandle = hConsole;
-   
+
    Status = CsrClientCallServer(&Request, Reply, sizeof(CSRSS_API_REQUEST), sizeof(CSRSS_API_REPLY) + CSRSS_MAX_TITLE_LENGTH * sizeof(WCHAR));
    CloseHandle(hConsole);
    if(!NT_SUCCESS(Status) || !(NT_SUCCESS(Status = Reply->Status)))
@@ -3012,19 +3012,19 @@ GetConsoleTitleW(
       RtlFreeHeap(GetProcessHeap(), 0, Reply);
       return 0;
    }
-   
+
    if(nSize * sizeof(WCHAR) < Reply->Data.GetTitleReply.Length)
    {
       wcsncpy(lpConsoleTitle, Reply->Data.GetTitleReply.Title, nSize - 1);
       lpConsoleTitle[nSize--] = L'\0';
    }
    else
-   {  
+   {
       nSize = Reply->Data.GetTitleReply.Length / sizeof (WCHAR);
       wcscpy(lpConsoleTitle, Reply->Data.GetTitleReply.Title);
       lpConsoleTitle[nSize] = L'\0';
    }
-   
+
    RtlFreeHeap(GetProcessHeap(), 0, Reply);
    return nSize;
 }
@@ -3047,18 +3047,18 @@ GetConsoleTitleA(
 	wchar_t	WideTitle [CSRSS_MAX_TITLE_LENGTH];
 	DWORD	nWideTitle = sizeof WideTitle;
 	DWORD	nWritten;
-	
+
 	if (!lpConsoleTitle || !nSize) return 0;
 	nWideTitle = GetConsoleTitleW( (LPWSTR) WideTitle, nWideTitle );
 	if (!nWideTitle) return 0;
 
 	if ( (nWritten = WideCharToMultiByte(
-    		CP_ACP,			// ANSI code page 
-		0,			// performance and mapping flags 
-		(LPWSTR) WideTitle,	// address of wide-character string 
-		nWideTitle,		// number of characters in string 
-		lpConsoleTitle,		// address of buffer for new string 
-		nSize,			// size of buffer 
+    		CP_ACP,			// ANSI code page
+		0,			// performance and mapping flags
+		(LPWSTR) WideTitle,	// address of wide-character string
+		nWideTitle,		// number of characters in string
+		lpConsoleTitle,		// address of buffer for new string
+		nSize,			// size of buffer
 		NULL,			// FAST
 		NULL	 		// FAST
 		)))
@@ -3093,7 +3093,7 @@ SetConsoleTitleW(
   {
      return FALSE;
   }
-  
+
   Request = RtlAllocateHeap(GetProcessHeap(),
 			    HEAP_ZERO_MEMORY,
 			    sizeof(CSRSS_API_REQUEST) + CSRSS_MAX_SET_TITLE_REQUEST);
@@ -3103,18 +3103,18 @@ SetConsoleTitleW(
       SetLastError(ERROR_OUTOFMEMORY);
       return(FALSE);
     }
-  
+
   Request->Type = CSRSS_SET_TITLE;
   Request->Data.SetTitleRequest.Console = hConsole;
-  
+
   for( c = 0; lpConsoleTitle[c] && c < CSRSS_MAX_TITLE_LENGTH; c++ )
     Request->Data.SetTitleRequest.Title[c] = lpConsoleTitle[c];
   // add null
   Request->Data.SetTitleRequest.Title[c] = 0;
-  Request->Data.SetTitleRequest.Length = c;  
+  Request->Data.SetTitleRequest.Length = c;
   Status = CsrClientCallServer(Request,
 			       &Reply,
-			       sizeof(CSRSS_API_REQUEST) + 
+			       sizeof(CSRSS_API_REQUEST) +
 			       c * sizeof(WCHAR),
 			       sizeof(CSRSS_API_REPLY));
   CloseHandle(hConsole);
@@ -3131,7 +3131,7 @@ SetConsoleTitleW(
 
 /*--------------------------------------------------------------
  *	SetConsoleTitleA
- *	
+ *
  * 	19990204 EA	Added
  *
  * @implemented
@@ -3153,7 +3153,7 @@ SetConsoleTitleA(
   {
      return FALSE;
   }
-  
+
   Request = RtlAllocateHeap(GetProcessHeap(),
 			    HEAP_ZERO_MEMORY,
 			    sizeof(CSRSS_API_REQUEST) + CSRSS_MAX_SET_TITLE_REQUEST);
@@ -3163,10 +3163,10 @@ SetConsoleTitleA(
       SetLastError(ERROR_OUTOFMEMORY);
       return(FALSE);
     }
-  
+
   Request->Type = CSRSS_SET_TITLE;
   Request->Data.SetTitleRequest.Console = hConsole;
-  
+
   for( c = 0; lpConsoleTitle[c] && c < CSRSS_MAX_TITLE_LENGTH; c++ )
     Request->Data.SetTitleRequest.Title[c] = lpConsoleTitle[c];
   // add null
@@ -3174,7 +3174,7 @@ SetConsoleTitleA(
   Request->Data.SetTitleRequest.Length = c;
   Status = CsrClientCallServer(Request,
 			       &Reply,
-			       sizeof(CSRSS_API_REQUEST) + 
+			       sizeof(CSRSS_API_REQUEST) +
 			       c * sizeof(WCHAR),
 			       sizeof(CSRSS_API_REPLY));
   CloseHandle(hConsole);
@@ -3232,7 +3232,7 @@ GetConsoleCP( VOID )
   CSRSS_API_REQUEST Request;
   CSRSS_API_REPLY   Reply;
   NTSTATUS          Status;
-   
+
   Request.Type = CSRSS_GET_CONSOLE_CP;
   Status = CsrClientCallServer(&Request, &Reply, sizeof(CSRSS_API_REQUEST),
                                sizeof(CSRSS_API_REPLY));
@@ -3259,7 +3259,7 @@ SetConsoleCP(
   CSRSS_API_REQUEST Request;
   CSRSS_API_REPLY   Reply;
   NTSTATUS          Status;
-   
+
   Request.Type = CSRSS_SET_CONSOLE_CP;
   Request.Data.SetConsoleCodePage.CodePage = wCodePageID;
   Status = CsrClientCallServer(&Request, &Reply, sizeof(CSRSS_API_REQUEST),
@@ -3284,7 +3284,7 @@ GetConsoleOutputCP( VOID )
   CSRSS_API_REQUEST Request;
   CSRSS_API_REPLY   Reply;
   NTSTATUS          Status;
-   
+
   Request.Type = CSRSS_GET_CONSOLE_OUTPUT_CP;
   Status = CsrClientCallServer(&Request, &Reply, sizeof(CSRSS_API_REQUEST),
                                sizeof(CSRSS_API_REPLY));
@@ -3311,7 +3311,7 @@ SetConsoleOutputCP(
   CSRSS_API_REQUEST Request;
   CSRSS_API_REPLY   Reply;
   NTSTATUS          Status;
-   
+
   Request.Type = CSRSS_SET_CONSOLE_OUTPUT_CP;
   Request.Data.SetConsoleOutputCodePage.CodePage = wCodePageID;
   Status = CsrClientCallServer(&Request, &Reply, sizeof(CSRSS_API_REQUEST),
@@ -3337,7 +3337,7 @@ GetConsoleProcessList(LPDWORD lpdwProcessList,
   PCSRSS_API_REPLY Reply;
   ULONG BufferSize, nProcesses;
   NTSTATUS Status;
-  
+
   if(lpdwProcessList == NULL || dwProcessCount == 0)
   {
     SetLastError(ERROR_INVALID_PARAMETER);
@@ -3355,10 +3355,10 @@ GetConsoleProcessList(LPDWORD lpdwProcessList,
   }
 
   Reply->Status = STATUS_SUCCESS;
-  
+
   Request.Type = CSRSS_GET_PROCESS_LIST;
   Request.Data.GetProcessListRequest.nMaxIds = dwProcessCount;
-  
+
   Status = CsrClientCallServer(&Request, Reply, sizeof(CSRSS_API_REQUEST),
                                BufferSize);
   if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply->Status))
@@ -3381,7 +3381,7 @@ GetConsoleProcessList(LPDWORD lpdwProcessList,
       nProcesses = Reply->Data.GetProcessListReply.nProcessIdsTotal;
     }
   }
-  
+
   RtlFreeHeap(GetProcessHeap(), 0, Reply);
   return nProcesses;
 }
@@ -3408,7 +3408,7 @@ GetConsoleSelectionInfo(PCONSOLE_SELECTION_INFO lpConsoleSelectionInfo)
  *
  * @unimplemented
  */
-BOOL STDCALL 
+BOOL STDCALL
 AttachConsole(DWORD dwProcessId)
 {
   DPRINT1("AttachConsole(0x%x) UNIMPLEMENTED!\n", dwProcessId);
@@ -3427,7 +3427,7 @@ GetConsoleWindow (VOID)
   CSRSS_API_REQUEST Request;
   CSRSS_API_REPLY   Reply;
   NTSTATUS          Status;
-   
+
   Request.Type = CSRSS_GET_CONSOLE_WINDOW;
   Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
   if (!NT_SUCCESS(Status ) || !NT_SUCCESS(Status = Reply.Status))
@@ -3449,7 +3449,7 @@ BOOL STDCALL SetConsoleIcon(HICON hicon)
   CSRSS_API_REQUEST Request;
   CSRSS_API_REPLY   Reply;
   NTSTATUS          Status;
-  
+
   Request.Type = CSRSS_SET_CONSOLE_ICON;
   Request.Data.SetConsoleIconRequest.WindowIcon = hicon;
   Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
@@ -3480,7 +3480,7 @@ SetConsoleInputExeNameW(LPCWSTR lpInputExeName)
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   RtlEnterCriticalSection(&ConsoleLock);
   /* wrap copying into SEH as we may copy from invalid buffer and in case of an
      exception the console lock would've never been released, which would cause
@@ -3499,7 +3499,7 @@ SetConsoleInputExeNameW(LPCWSTR lpInputExeName)
   }
   _SEH_END;
   RtlLeaveCriticalSection(&ConsoleLock);
-  
+
   return Ret;
 }
 
@@ -3516,9 +3516,9 @@ SetConsoleInputExeNameA(LPCSTR lpInputExeName)
   UNICODE_STRING InputExeNameU;
   NTSTATUS Status;
   BOOL Ret;
-  
+
   RtlInitAnsiString(&InputExeNameA, lpInputExeName);
-  
+
   if(InputExeNameA.Length < sizeof(InputExeNameA.Buffer[0]) ||
      InputExeNameA.Length >= (sizeof(InputExeName) / sizeof(InputExeName[0])) - 1)
   {
@@ -3526,7 +3526,7 @@ SetConsoleInputExeNameA(LPCSTR lpInputExeName)
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   Status = RtlAnsiStringToUnicodeString(&InputExeNameU, &InputExeNameA, TRUE);
   if(NT_SUCCESS(Status))
   {
@@ -3577,7 +3577,7 @@ GetConsoleInputExeNameW(DWORD nBufferLength, LPWSTR lpBuffer)
     SetLastErrorByStatus(_SEH_GetExceptionCode());
   }
   _SEH_END;
-  
+
   RtlLeaveCriticalSection(&ConsoleLock);
 
   return lenName;
@@ -3594,7 +3594,7 @@ GetConsoleInputExeNameA(DWORD nBufferLength, LPSTR lpBuffer)
 {
   WCHAR *Buffer;
   DWORD Ret;
-  
+
   if(nBufferLength > 0)
   {
     Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, nBufferLength * sizeof(WCHAR));
@@ -3608,7 +3608,7 @@ GetConsoleInputExeNameA(DWORD nBufferLength, LPSTR lpBuffer)
   {
     Buffer = NULL;
   }
-  
+
   Ret = GetConsoleInputExeNameW(nBufferLength, Buffer);
   if(nBufferLength > 0)
   {
@@ -3616,19 +3616,19 @@ GetConsoleInputExeNameA(DWORD nBufferLength, LPSTR lpBuffer)
     {
       UNICODE_STRING BufferU;
       ANSI_STRING BufferA;
-      
+
       RtlInitUnicodeString(&BufferU, Buffer);
 
       BufferA.Length = 0;
       BufferA.MaximumLength = nBufferLength;
       BufferA.Buffer = lpBuffer;
-      
+
       RtlUnicodeStringToAnsiString(&BufferA, &BufferU, FALSE);
     }
-    
+
     RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
   }
-  
+
   return Ret;
 }
 

@@ -204,7 +204,7 @@ MapViewOfFileEx(HANDLE hFileMappingObject,
 	Protect = PAGE_WRITECOPY;
    else
 	Protect = PAGE_READWRITE;
-   
+
    if (lpBaseAddress == NULL)
      {
 	BaseAddress = NULL;
@@ -286,7 +286,7 @@ OpenFileMappingA(DWORD dwDesiredAccess,
    OBJECT_ATTRIBUTES ObjectAttributes;
    ANSI_STRING AnsiName;
    UNICODE_STRING UnicodeName;
-   
+
    if (lpName == NULL)
      {
         SetLastError(ERROR_INVALID_PARAMETER);

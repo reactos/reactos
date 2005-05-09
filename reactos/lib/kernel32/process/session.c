@@ -32,7 +32,7 @@ DosPathToSessionPathW (DWORD SessionID, LPWSTR InPath, LPWSTR * OutPath)
  *     ByVal pInPath As String, _
  *     ByVal ppOutPath As String ) _
  * As Long
- * 
+ *
  * @unimplemented
  */
 DWORD STDCALL
@@ -53,18 +53,18 @@ BOOL STDCALL ProcessIdToSessionId (IN  DWORD dwProcessId,
   CLIENT_ID ClientId;
   HANDLE ProcessHandle;
   NTSTATUS Status;
-  
+
   if(IsBadWritePtr(pSessionId, sizeof(DWORD)))
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   ClientId.UniqueProcess = (HANDLE)dwProcessId;
   ClientId.UniqueThread = INVALID_HANDLE_VALUE;
 
   InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
-  
+
   Status = NtOpenProcess(&ProcessHandle,
                          PROCESS_QUERY_INFORMATION,
                          &ObjectAttributes,
@@ -77,7 +77,7 @@ BOOL STDCALL ProcessIdToSessionId (IN  DWORD dwProcessId,
                                        sizeof(SessionInformation),
                                        NULL);
     NtClose(ProcessHandle);
-    
+
     if(NT_SUCCESS(Status))
     {
       *pSessionId = SessionInformation.SessionId;

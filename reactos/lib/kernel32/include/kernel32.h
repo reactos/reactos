@@ -26,7 +26,7 @@
 #define SetLastErrorByStatus(__S__) \
  ((void)SetLastError(RtlNtStatusToDosError(__S__)))
 
-typedef 
+typedef
 DWORD
 (*WaitForInputIdleType)(
     HANDLE hProcess,
@@ -62,7 +62,7 @@ PTEB GetTeb(VOID);
 
 
 PWCHAR FilenameA2W(LPCSTR NameA, BOOL alloc);
-   
+
 DWORD FilenameW2A_FitOrFail(LPSTR  DestA, INT destLen, LPCWSTR SourceW, INT sourceLen);
 DWORD FilenameU2A_FitOrFail(LPSTR  DestA, INT destLen, PUNICODE_STRING SourceU);
 

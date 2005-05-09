@@ -39,8 +39,8 @@ HANDLE DefaultTimerQueue = NULL;
 
 /*
  * Create the default timer queue for the current process. This function is only
- * called if CreateTimerQueueTimer() or SetTimerQueueTimer() is called. 
- * However, ChangeTimerQueueTimer() fails with ERROR_INVALID_PARAMETER if the 
+ * called if CreateTimerQueueTimer() or SetTimerQueueTimer() is called.
+ * However, ChangeTimerQueueTimer() fails with ERROR_INVALID_PARAMETER if the
  * default timer queue has not been created, because it assumes there has to be
  * a timer queue with a timer if it want's to be changed.
  */
@@ -48,9 +48,9 @@ static BOOL
 IntCreateDefaultTimerQueue(VOID)
 {
   NTSTATUS Status;
-  
+
   /* FIXME - make this thread safe */
-  
+
   /* create the timer queue */
   Status = RtlCreateTimerQueue(&DefaultTimerQueue);
   if(!NT_SUCCESS(Status))
@@ -59,7 +59,7 @@ IntCreateDefaultTimerQueue(VOID)
     DPRINT1("Unable to create the default timer queue!\n");
     return FALSE;
   }
-  
+
   return TRUE;
 }
 
@@ -75,7 +75,7 @@ CancelTimerQueueTimer(HANDLE TimerQueue,
      but delete the timer, we just do the same as DeleteTimerQueueTimer(), without
      passing a completion event. */
   NTSTATUS Status;
-  
+
   if(TimerQueue == NULL)
   {
     /* let's use the process' default timer queue. We assume the default timer
@@ -87,22 +87,22 @@ CancelTimerQueueTimer(HANDLE TimerQueue,
       return FALSE;
     }
   }
-  
+
   if(Timer == NULL)
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   /* delete the timer */
   Status = RtlDeleteTimer(TimerQueue, Timer, NULL);
-  
+
   if(!NT_SUCCESS(Status))
   {
     SetLastErrorByStatus(Status);
-    return FALSE; 
+    return FALSE;
   }
-  
+
   return TRUE;
 }
 
@@ -117,7 +117,7 @@ ChangeTimerQueueTimer(HANDLE TimerQueue,
                       ULONG Period)
 {
   NTSTATUS Status;
-  
+
   if(TimerQueue == NULL)
   {
     /* let's use the process' default timer queue. We assume the default timer
@@ -129,13 +129,13 @@ ChangeTimerQueueTimer(HANDLE TimerQueue,
       return FALSE;
     }
   }
-  
+
   if(Timer == NULL)
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   /* update the timer */
   Status = RtlUpdateTimer(TimerQueue, Timer, DueTime, Period);
   if(!NT_SUCCESS(Status))
@@ -143,7 +143,7 @@ ChangeTimerQueueTimer(HANDLE TimerQueue,
     SetLastErrorByStatus(Status);
     return FALSE;
   }
-  
+
   return TRUE;
 }
 
@@ -156,7 +156,7 @@ CreateTimerQueue(VOID)
 {
   HANDLE Handle;
   NTSTATUS Status;
-  
+
   /* create the timer queue */
   Status = RtlCreateTimerQueue(&Handle);
   if(!NT_SUCCESS(Status))
@@ -164,7 +164,7 @@ CreateTimerQueue(VOID)
     SetLastErrorByStatus(Status);
     return NULL;
   }
-  
+
   return Handle;
 }
 
@@ -182,11 +182,11 @@ CreateTimerQueueTimer(PHANDLE phNewTimer,
                       ULONG Flags)
 {
   NTSTATUS Status;
-  
+
   /* windows seems not to test this parameter at all, so we'll try to clear it here
      so we don't crash somewhere inside ntdll */
   *phNewTimer = NULL;
-  
+
   if(TimerQueue == NULL)
   {
     /* the default timer queue is requested, try to create it if it hasn't been already */
@@ -200,10 +200,10 @@ CreateTimerQueueTimer(PHANDLE phNewTimer,
       TimerQueue = DefaultTimerQueue;
     }
   }
-  
+
   /* !!! Win doesn't even check if Callback == NULL, so we don't, too! That'll
          raise a nice exception later... */
-  
+
   /* create the timer */
   Status = RtlCreateTimer(TimerQueue, phNewTimer, Callback, Parameter, DueTime,
                           Period, Flags);
@@ -212,7 +212,7 @@ CreateTimerQueueTimer(PHANDLE phNewTimer,
     SetLastErrorByStatus(Status);
     return FALSE;
   }
-  
+
   return TRUE;
 }
 
@@ -224,14 +224,14 @@ STDCALL
 DeleteTimerQueue(HANDLE TimerQueue)
 {
   NTSTATUS Status;
-  
+
   /* We don't allow the user to delete the default timer queue */
   if(TimerQueue == NULL)
   {
     SetLastError(ERROR_INVALID_HANDLE);
     return FALSE;
   }
-  
+
   /* delete the timer queue */
   Status = RtlDeleteTimerQueue(TimerQueue);
   return NT_SUCCESS(Status);
@@ -246,31 +246,31 @@ DeleteTimerQueueEx(HANDLE TimerQueue,
                    HANDLE CompletionEvent)
 {
   NTSTATUS Status;
-  
+
   /* We don't allow the user to delete the default timer queue */
   if(TimerQueue == NULL)
   {
     SetLastError(ERROR_INVALID_HANDLE);
     return FALSE;
   }
-  
+
   /* delete the queue */
   Status = RtlDeleteTimerQueueEx(TimerQueue, CompletionEvent);
-  
+
   if((CompletionEvent != INVALID_HANDLE_VALUE && Status == STATUS_PENDING) ||
      !NT_SUCCESS(Status))
   {
     /* In case CompletionEvent == NULL, RtlDeleteTimerQueueEx() returns before
        all callback routines returned. We set the last error code to STATUS_PENDING
-       and return FALSE. In case CompletionEvent == INVALID_HANDLE_VALUE we only 
+       and return FALSE. In case CompletionEvent == INVALID_HANDLE_VALUE we only
        can get here if another error occured. In case CompletionEvent is something
        else, we get here and fail, even though it isn't really an error (if Status == STATUS_PENDING).
        We also handle all other failures the same way. */
-    
+
     SetLastErrorByStatus(Status);
-    return FALSE; 
+    return FALSE;
   }
-  
+
   return TRUE;
 }
 
@@ -284,7 +284,7 @@ DeleteTimerQueueTimer(HANDLE TimerQueue,
                       HANDLE CompletionEvent)
 {
   NTSTATUS Status;
-  
+
   if(TimerQueue == NULL)
   {
     /* let's use the process' default timer queue. We assume the default timer
@@ -296,30 +296,30 @@ DeleteTimerQueueTimer(HANDLE TimerQueue,
       return FALSE;
     }
   }
-  
+
   if(Timer == NULL)
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   /* delete the timer */
   Status = RtlDeleteTimer(TimerQueue, Timer, CompletionEvent);
-  
+
   if((CompletionEvent != INVALID_HANDLE_VALUE && Status == STATUS_PENDING) ||
      !NT_SUCCESS(Status))
   {
     /* In case CompletionEvent == NULL, RtlDeleteTimer() returns before
        the callback routine returned. We set the last error code to STATUS_PENDING
-       and return FALSE. In case CompletionEvent == INVALID_HANDLE_VALUE we only 
+       and return FALSE. In case CompletionEvent == INVALID_HANDLE_VALUE we only
        can get here if another error occured. In case CompletionEvent is something
        else, we get here and fail, even though it isn't really an error (if Status == STATUS_PENDING).
        We also handle all other failures the same way. */
-    
+
     SetLastErrorByStatus(Status);
-    return FALSE; 
+    return FALSE;
   }
-  
+
   return TRUE;
 }
 
@@ -342,12 +342,12 @@ SetTimerQueueTimer(HANDLE TimerQueue,
      CreateTimerQueueTimer() there's only one flag (WT_EXECUTEINIOTHREAD) that causes
      the callback function queued to an I/O worker thread. I guess it uses this flag
      if PreferIo == TRUE, otherwise let's just use WT_EXECUTEDEFAULT. We should
-     test this though, this is only guess work and I'm too lazy to do further 
+     test this though, this is only guess work and I'm too lazy to do further
      investigation. */
-  
+
   HANDLE Timer;
   NTSTATUS Status;
-  
+
   if(TimerQueue == NULL)
   {
     /* the default timer queue is requested, try to create it if it hasn't been already */
@@ -361,7 +361,7 @@ SetTimerQueueTimer(HANDLE TimerQueue,
       TimerQueue = DefaultTimerQueue;
     }
   }
-  
+
   /* create the timer */
   Status = RtlCreateTimer(TimerQueue, &Timer, Callback, Parameter, DueTime,
                           Period, (PreferIo ? WT_EXECUTEINIOTHREAD : WT_EXECUTEDEFAULT));
@@ -370,7 +370,7 @@ SetTimerQueueTimer(HANDLE TimerQueue,
     SetLastErrorByStatus(Status);
     return NULL;
   }
-  
+
   return Timer;
 }
 

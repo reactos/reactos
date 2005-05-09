@@ -39,7 +39,7 @@ GetProcessAffinityMask (HANDLE hProcess,
   PROCESS_BASIC_INFORMATION ProcessInfo;
   SYSTEM_BASIC_INFORMATION SystemInfo;
   NTSTATUS Status;
-  
+
   Status = NtQuerySystemInformation(SystemBasicInformation,
                                     &SystemInfo,
                                     sizeof(SystemInfo),
@@ -188,7 +188,7 @@ SetProcessWorkingSetSize(HANDLE hProcess,
 {
   QUOTA_LIMITS QuotaLimits;
   NTSTATUS Status;
-  
+
   QuotaLimits.MinimumWorkingSetSize = dwMinimumWorkingSetSize;
   QuotaLimits.MaximumWorkingSetSize = dwMaximumWorkingSetSize;
 
@@ -340,16 +340,16 @@ OpenProcess(DWORD dwDesiredAccess,
    HANDLE ProcessHandle;
    OBJECT_ATTRIBUTES ObjectAttributes;
    CLIENT_ID ClientId;
-   
+
    ClientId.UniqueProcess = (HANDLE)dwProcessId;
    ClientId.UniqueThread = 0;
-   
+
    InitializeObjectAttributes(&ObjectAttributes,
                               NULL,
                               (bInheritHandle ? OBJ_INHERIT : 0),
                               NULL,
                               NULL);
-   
+
    errCode = NtOpenProcess(&ProcessHandle,
 			   dwDesiredAccess,
 			   &ObjectAttributes,
@@ -552,7 +552,7 @@ FlushInstructionCache (HANDLE	hProcess,
 		       DWORD	dwSize)
 {
   NTSTATUS Status;
-  
+
   Status = NtFlushInstructionCache(hProcess,
 				   (PVOID)lpBaseAddress,
 				   dwSize);
@@ -574,13 +574,13 @@ ExitProcess(UINT uExitCode)
   CSRSS_API_REQUEST CsrRequest;
   CSRSS_API_REPLY CsrReply;
   NTSTATUS Status;
-  
+
   /* unload all dll's */
   LdrShutdownProcess ();
 
   /* notify csrss of process termination */
   CsrRequest.Type = CSRSS_TERMINATE_PROCESS;
-  Status = CsrClientCallServer(&CsrRequest, 
+  Status = CsrClientCallServer(&CsrRequest,
 			       &CsrReply,
 			       sizeof(CSRSS_API_REQUEST),
 			       sizeof(CSRSS_API_REPLY));
@@ -588,8 +588,8 @@ ExitProcess(UINT uExitCode)
     {
       DPRINT("Failed to tell csrss about terminating process\n");
     }
-  
-  
+
+
   NtTerminateProcess (NtCurrentProcess (),
 		      uExitCode);
 
@@ -627,7 +627,7 @@ FatalAppExitA (UINT	uAction,
 {
   UNICODE_STRING MessageTextU;
   ANSI_STRING MessageText;
-  
+
   RtlInitAnsiString (&MessageText, (LPSTR) lpMessageText);
 
   RtlAnsiStringToUnicodeString (&MessageTextU,
@@ -669,7 +669,7 @@ GetPriorityClass (HANDLE hProcess)
 {
   NTSTATUS Status;
   PROCESS_PRIORITY_CLASS PriorityClass;
-  
+
   Status = NtQueryInformationProcess(hProcess,
                                      ProcessPriorityClass,
                                      &PriorityClass,
@@ -701,7 +701,7 @@ GetPriorityClass (HANDLE hProcess)
         return NORMAL_PRIORITY_CLASS;
     }
   }
-  
+
   SetLastErrorByStatus(Status);
   return FALSE;
 }
@@ -716,7 +716,7 @@ SetPriorityClass (HANDLE hProcess,
 {
   NTSTATUS Status;
   PROCESS_PRIORITY_CLASS PriorityClass;
-  
+
   switch(dwPriorityClass)
   {
     case IDLE_PRIORITY_CLASS:
@@ -747,7 +747,7 @@ SetPriorityClass (HANDLE hProcess,
       SetLastError(ERROR_INVALID_PARAMETER);
       return FALSE;
   }
-  
+
   PriorityClass.Foreground = FALSE;
 
   Status = NtSetInformationProcess(hProcess,
@@ -760,7 +760,7 @@ SetPriorityClass (HANDLE hProcess,
     SetLastErrorByStatus(Status);
     return FALSE;
   }
-  
+
   return TRUE;
 }
 
@@ -783,7 +783,7 @@ GetProcessVersion (DWORD ProcessId)
       if (NULL != NtHeader)
 	{
 	  Version =
-	    (NtHeader->OptionalHeader.MajorOperatingSystemVersion << 16) | 
+	    (NtHeader->OptionalHeader.MajorOperatingSystemVersion << 16) |
 	    (NtHeader->OptionalHeader.MinorOperatingSystemVersion);
 	}
     }
@@ -817,7 +817,7 @@ GetProcessIoCounters(
       SetLastErrorByStatus(Status);
       return(FALSE);
     }
-  
+
   return TRUE;
 }
 

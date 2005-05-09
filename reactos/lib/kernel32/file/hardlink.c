@@ -34,15 +34,15 @@ CreateHardLinkW(LPCWSTR lpFileName,
   IO_STATUS_BLOCK IoStatus;
   NTSTATUS Status;
   BOOL Ret = FALSE;
-  
+
   if(!lpFileName || !lpExistingFileName)
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   lpSecurityDescriptor = (lpSecurityAttributes ? lpSecurityAttributes->lpSecurityDescriptor : NULL);
-  
+
   if(RtlDetermineDosPathNameType_U((LPWSTR)lpFileName) == 1 ||
      RtlDetermineDosPathNameType_U((LPWSTR)lpExistingFileName) == 1)
   {
@@ -50,7 +50,7 @@ CreateHardLinkW(LPCWSTR lpFileName,
     SetLastError(ERROR_INVALID_NAME);
     return FALSE;
   }
-  
+
   if(RtlDosPathNameToNtPathName_U((LPWSTR)lpExistingFileName, &LinkTarget, NULL, NULL))
   {
     ULONG NeededSize = RtlGetFullPathName_U((LPWSTR)lpExistingFileName, 0, NULL, NULL);
@@ -60,24 +60,24 @@ CreateHardLinkW(LPCWSTR lpFileName,
       if(lpNtLinkTarget != NULL)
       {
         LPWSTR lpFilePart;
-        
+
         if(RtlGetFullPathName_U((LPWSTR)lpExistingFileName, NeededSize, lpNtLinkTarget, &lpFilePart) &&
            (*lpNtLinkTarget) != L'\0')
         {
           UNICODE_STRING CheckDrive, LinkDrive;
           WCHAR wCheckDrive[10];
-          
+
           swprintf(wCheckDrive, L"\\??\\%c:", (WCHAR)(*lpNtLinkTarget));
           RtlInitUnicodeString(&CheckDrive, wCheckDrive);
-          
+
           RtlZeroMemory(&LinkDrive, sizeof(UNICODE_STRING));
-          
+
           LinkDrive.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, (MAX_PATH + 1) * sizeof(WCHAR));
           if(LinkDrive.Buffer != NULL)
           {
             HANDLE hFile, hTarget;
             OBJECT_ATTRIBUTES ObjectAttributes;
-            
+
             InitializeObjectAttributes(&ObjectAttributes,
                                        &CheckDrive,
                                        OBJ_CASE_INSENSITIVE,
@@ -88,11 +88,11 @@ CreateHardLinkW(LPCWSTR lpFileName,
             if(NT_SUCCESS(Status))
             {
               UNICODE_STRING LanManager;
-              
+
               RtlInitUnicodeString(&LanManager, L"\\Device\\LanmanRedirector\\");
-              
+
               NtQuerySymbolicLinkObject(hFile, &LinkDrive, NULL);
-              
+
               if(!RtlPrefixUnicodeString(&LanManager, &LinkDrive, TRUE))
               {
                 InitializeObjectAttributes(&ObjectAttributes,
@@ -118,7 +118,7 @@ CreateHardLinkW(LPCWSTR lpFileName,
                       LinkInformation->RootDirectory = 0;
                       LinkInformation->FileNameLength = LinkName.Length;
                       RtlCopyMemory(LinkInformation->FileName, LinkName.Buffer, LinkName.Length);
-                      
+
                       Status = NtSetInformationFile(hTarget, &IoStatus, LinkInformation, NeededSize, FileLinkInformation);
                       if(NT_SUCCESS(Status))
                       {
@@ -153,7 +153,7 @@ CreateHardLinkW(LPCWSTR lpFileName,
                 DPRINT1("Path \"%wZ\" must not be a mapped drive!\n", &LinkDrive);
                 SetLastError(ERROR_INVALID_NAME);
               }
-              
+
               NtClose(hFile);
             }
             else
@@ -202,23 +202,23 @@ CreateHardLinkA(LPCSTR lpFileName,
 {
   PWCHAR FileNameW, ExistingFileNameW;
   BOOL Ret;
-  
+
   if(!lpFileName || !lpExistingFileName)
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   if (!(FileNameW = FilenameA2W(lpFileName, FALSE)))
     return FALSE;
 
   if (!(ExistingFileNameW = FilenameA2W(lpExistingFileName, TRUE)))
     return FALSE;
-    
+
   Ret = CreateHardLinkW(FileNameW , ExistingFileNameW , lpSecurityAttributes);
-  
+
   RtlFreeHeap(RtlGetProcessHeap(), 0, ExistingFileNameW);
-  
+
   return Ret;
 }
 

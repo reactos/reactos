@@ -22,7 +22,7 @@ lstrcmpA(
 	 )
 {
    int Result;
-    
+
    if (lpString1 == lpString2)
       return 0;
    if (lpString1 == NULL)
@@ -32,7 +32,7 @@ lstrcmpA(
 
    Result = CompareStringA(GetThreadLocale(), 0, lpString1, -1, lpString2, -1);
    if (Result) Result -= 2;
-    
+
    return Result;
 }
 
@@ -48,7 +48,7 @@ lstrcmpiA(
 	  )
 {
    int Result;
-    
+
    if (lpString1 == lpString2)
       return 0;
    if (lpString1 == NULL)
@@ -59,7 +59,7 @@ lstrcmpiA(
    Result = CompareStringA(GetThreadLocale(), NORM_IGNORECASE, lpString1, -1,
                            lpString2, -1);
    if (Result) Result -= 2;
-    
+
    return Result;
 }
 
@@ -171,7 +171,7 @@ lstrcmpW(
 	 )
 {
    int Result;
-    
+
    if (lpString1 == lpString2)
       return 0;
    if (lpString1 == NULL)
@@ -181,7 +181,7 @@ lstrcmpW(
 
    Result = CompareStringW(GetThreadLocale(), 0, lpString1, -1, lpString2, -1);
    if (Result) Result -= 2;
-    
+
    return Result;
 }
 
@@ -197,7 +197,7 @@ lstrcmpiW(
     )
 {
    int Result;
-    
+
    if (lpString1 == lpString2)
       return 0;
    if (lpString1 == NULL)
@@ -207,7 +207,7 @@ lstrcmpiW(
 
    Result = CompareStringW(GetThreadLocale(), NORM_IGNORECASE, lpString1, -1, lpString2, -1);
    if (Result) Result -= 2;
-    
+
    return Result;
 }
 
@@ -272,7 +272,7 @@ lstrcpyW(
     return NULL;
   }
 
-  return wcscpy(lpString1,lpString2);	
+  return wcscpy(lpString1,lpString2);
 }
 
 

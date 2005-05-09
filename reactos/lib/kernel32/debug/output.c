@@ -25,7 +25,7 @@ HANDLE K32CreateDBMonMutex(void)
  PSID psidSystem = NULL;
  PSID psidAdministrators = NULL;
  PSID psidEveryone = NULL;
- 
+
  /* buffer for the DACL */
  PVOID pDaclBuf = NULL;
 
@@ -42,7 +42,7 @@ HANDLE K32CreateDBMonMutex(void)
 
  /* security descriptor of the mutex */
  SECURITY_DESCRIPTOR sdMutexSecurity;
- 
+
  /* attributes of the mutex object we'll create */
  SECURITY_ATTRIBUTES saMutexAttribs =
  {
@@ -115,7 +115,7 @@ HANDLE K32CreateDBMonMutex(void)
    0,
    &psidAdministrators
   );
-  
+
   /* failure */
   if(!NT_SUCCESS(nErrCode)) __leave;
 
@@ -134,7 +134,7 @@ HANDLE K32CreateDBMonMutex(void)
    0,
    &psidEveryone
   );
-  
+
   /* failure */
   if(!NT_SUCCESS(nErrCode)) __leave;
 
@@ -193,7 +193,7 @@ HANDLE K32CreateDBMonMutex(void)
 
   /* create the security descriptor */
   nErrCode = RtlCreateSecurityDescriptor
-  (     
+  (
    &sdMutexSecurity,
    SECURITY_DESCRIPTOR_REVISION
   );
@@ -230,7 +230,7 @@ l_Cleanup:
 #if 0
  }
 #endif
- 
+
  return hMutex;
 }
 
@@ -311,13 +311,13 @@ VOID WINAPI OutputDebugStringA(LPCSTR _OutputString)
     {
      /* synchronize with other invocations of OutputDebugString */
      WaitForSingleObject(hDBMonMutex, INFINITE);
-  
+
      /* buffer of the system-wide debug message monitor */
      hDBMonBuffer = OpenFileMappingW(SECTION_MAP_WRITE, FALSE, L"DBWIN_BUFFER");
-  
+
      /* couldn't open the buffer: send the string to the kernel debugger */
      if(hDBMonBuffer == NULL) break;
-  
+
      /* map the buffer */
      pDBMonBuffer = MapViewOfFile
      (
@@ -327,16 +327,16 @@ VOID WINAPI OutputDebugStringA(LPCSTR _OutputString)
       0,
       0
      );
-  
+
      /* couldn't map the buffer: send the string to the kernel debugger */
      if(pDBMonBuffer == NULL) break;
-  
+
      /* open the event signaling that the buffer can be accessed */
      hDBMonBufferReady = OpenEventW(SYNCHRONIZE, FALSE, L"DBWIN_BUFFER_READY");
-  
+
      /* couldn't open the event: send the string to the kernel debugger */
      if(hDBMonBufferReady == NULL) break;
-  
+
      /* open the event to be signaled when the buffer has been filled */
      hDBMonDataReady =
       OpenEventW(EVENT_MODIFY_STATE, FALSE, L"DBWIN_DATA_READY");
@@ -395,13 +395,13 @@ VOID WINAPI OutputDebugStringA(LPCSTR _OutputString)
        nRoundLen = PAGE_SIZE - sizeof(DWORD) - 1;
       else
        nRoundLen = nOutputStringLen;
- 
+
       /* copy the current block into the buffer */
       memcpy(pDBMonBuffer->Buffer, _OutputString, nOutputStringLen);
- 
+
       /* null-terminate the current block */
       pDBMonBuffer->Buffer[nOutputStringLen] = 0;
- 
+
       /* signal that the data contains meaningful data and can be read */
       SetEvent(hDBMonDataReady);
      }
@@ -410,19 +410,19 @@ VOID WINAPI OutputDebugStringA(LPCSTR _OutputString)
      {
       /* output in blocks of 512 characters */
       CHAR a_cBuffer[512];
- 
+
       /* write a maximum of 511 bytes */
       if(nOutputStringLen > (sizeof(a_cBuffer) - 1))
        nRoundLen = sizeof(a_cBuffer) - 1;
       else
        nRoundLen = nOutputStringLen;
- 
+
       /* copy the current block */
       memcpy(a_cBuffer, _OutputString, nRoundLen);
- 
+
       /* null-terminate the current block */
       a_cBuffer[nRoundLen] = 0;
- 
+
       /* send the current block to the kernel debugger */
       DbgPrint("%s", a_cBuffer);
      }
@@ -490,7 +490,7 @@ VOID WINAPI OutputDebugStringW(LPCWSTR _OutputString)
  {
   /* output the converted string */
   OutputDebugStringA(strOut.Buffer);
-  
+
   /* free the converted string */
   RtlFreeAnsiString(&strOut);
  }
