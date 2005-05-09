@@ -198,7 +198,7 @@ STRING_DIR_HELP4, " Volume Serial Number is %04X-%04X\n"
 STRING_DIR_HELP5, "\n     Total Files Listed:\n%16i File(s)% 14s bytes\n"
 STRING_DIR_HELP6, "%16i Dir(s)% 15s bytes\n"
 STRING_DIR_HELP7, "\n Directory of %s\n\n"
-STRING_DIR_HELP8, "%16i Dir(s)% 14s bytes\n"
+STRING_DIR_HELP8, "%16i File(s)% 14s bytes\n"
 
 STRING_DIRSTACK_HELP1, "Stores the current directory for use by the POPD command, then\n\
 changes to the specified directory.\n\n\
@@ -237,7 +237,7 @@ FOR %variable IN (set) DO command [parameters]\n\n\
   (set)      Specifies a set of one or more files. Wildcards may be used.\n\
   command    Specifies the command to carry out for each file.\n\
   parameters Specifies parameters or switches for the specified command.\n\n\
-To use the FOR comamnd in a batch program, specify %%variable instead of\n\
+To use the FOR command in a batch program, specify %%variable instead of\n\
 %variable."
 
 STRING_FREE_HELP1, "\nVolume in drive %s is %-11s\n\
