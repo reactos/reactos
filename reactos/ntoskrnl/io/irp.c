@@ -4,7 +4,8 @@
  * FILE:            ntoskrnl/io/irp.c
  * PURPOSE:         Handle IRPs
  * 
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ * PROGRAMMERS:     Hartmut Birr
+ *                  Alex Ionescu (alex@relsoft.net)
  *                  David Welch (welch@mcmail.com)
  */
 
@@ -104,7 +105,7 @@ IopCompleteRequest(PKAPC Apc,
     while ((Mdl = Irp->MdlAddress))
     {
         /* Clear all of them */
-	Irp->MdlAddress = Mdl->Next;
+        Irp->MdlAddress = Mdl->Next;
         IoFreeMdl(Mdl);
     }
 
@@ -150,10 +151,10 @@ IopCompleteRequest(PKAPC Apc,
             KeSetEvent(UserEvent, 0, FALSE);
 
             /* Dereference the Event if this is an ASYNC IRP */
-	    if (FileObject && !SyncIrp && UserEvent != &FileObject->Event)
-	    {
+            if (FileObject && !SyncIrp && UserEvent != &FileObject->Event)
+            {
                 ObDereferenceObject(UserEvent);
-	    }
+            }
         }
         else if (FileObject)
         {
@@ -181,7 +182,7 @@ IopCompleteRequest(PKAPC Apc,
                              Irp->UserIosb,
                              NULL,
                              2);
-	    Irp = NULL;
+            Irp = NULL;
         }
         else if (FileObject && FileObject->CompletionContext)
         {
@@ -192,7 +193,7 @@ IopCompleteRequest(PKAPC Apc,
                               Irp->IoStatus.Status,
                               Irp->IoStatus.Information,
                               FALSE);
-	    Irp = NULL;
+            Irp = NULL;
         }
     }
     else
@@ -204,15 +205,15 @@ IopCompleteRequest(PKAPC Apc,
             if (SyncIrp)
             {
                 /* Set the status in this case only */
-		_SEH_TRY
-		{
-		    *Irp->UserIosb = Irp->IoStatus;
-		}
-		_SEH_HANDLE
-		{
-		    /* Ignore any error */
-		}
-		_SEH_END;
+                _SEH_TRY
+                {
+                    *Irp->UserIosb = Irp->IoStatus;
+                }
+                _SEH_HANDLE
+                {
+                    /* Ignore any error */
+                }
+                _SEH_END;
             
                 /* Signal our event if we have one */
                 if (UserEvent)
@@ -228,16 +229,16 @@ IopCompleteRequest(PKAPC Apc,
             else
             {
 #if 1
-		/* FIXME: This is necessary to fix bug #609 */ 
-		_SEH_TRY
-		{
-		    *Irp->UserIosb = Irp->IoStatus;
-		}
-		_SEH_HANDLE
-		{
-		    /* Ignore any error */
-		}
-		_SEH_END;
+                /* FIXME: This is necessary to fix bug #609 */ 
+                _SEH_TRY
+                {
+                    *Irp->UserIosb = Irp->IoStatus;
+                }
+                _SEH_HANDLE
+                {
+                    /* Ignore any error */
+                }
+                _SEH_END;
 #endif
                 /* We'll report the Status to the File Object, not the IRP */
                 FileObject->FinalStatus = Irp->IoStatus.Status;
@@ -260,11 +261,8 @@ IopCompleteRequest(PKAPC Apc,
     /* Dereference the File Object */
     if (FileObject) ObDereferenceObject(FileObject);
         
-    if (Irp)
-    {
-	/* Free the IRP */
-        IoFreeIrp(Irp);
-    }
+    /* Free the IRP */
+    if (Irp) IoFreeIrp(Irp);    
 
 #else
 
