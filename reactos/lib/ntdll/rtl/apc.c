@@ -32,7 +32,7 @@
 
 /* FUNCTIONS ***************************************************************/
 
-VOID STDCALL 
+VOID STDCALL
 KiUserApcDispatcher(PIO_APC_ROUTINE ApcRoutine,
 		    PVOID ApcContext,
 		    PIO_STATUS_BLOCK Iosb,
@@ -40,7 +40,7 @@ KiUserApcDispatcher(PIO_APC_ROUTINE ApcRoutine,
 		    PCONTEXT Context)
 {
    /*
-    * Call the APC 
+    * Call the APC
     */
    //DPRINT1("ITS ME\n");
    ApcRoutine(ApcContext,

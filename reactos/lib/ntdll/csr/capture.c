@@ -34,7 +34,7 @@ STDCALL CsrAllocateCaptureBuffer (
 		)
 {
 	/* FIXME: implement it! */
-	return NULL;	
+	return NULL;
 }
 
 /*
@@ -99,7 +99,7 @@ CsrCaptureTimeout(LONG Milliseconds,
 {
    if (Milliseconds == -1)
      return NULL;
-   
+
    Timeout->QuadPart = Milliseconds * -100000;
    return Timeout;
 }

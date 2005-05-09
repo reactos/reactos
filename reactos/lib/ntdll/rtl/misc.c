@@ -106,7 +106,7 @@ RtlGetNtVersionNumbers(LPDWORD major, LPDWORD minor, LPDWORD build)
 ULONG
 STDCALL
 RtlGetNtGlobalFlags(VOID)
-{   
+{
 	PPEB pPeb = NtCurrentPeb();
 	return pPeb->NtGlobalFlag;
 }

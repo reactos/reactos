@@ -56,10 +56,10 @@ RtlpExecuteVectoredExceptionHandlers(IN PEXCEPTION_RECORD  ExceptionRecord,
   PRTL_VECTORED_EXCEPTION_HANDLER veh;
   PVECTORED_EXCEPTION_HANDLER VectoredHandler;
   EXCEPTION_POINTERS ExceptionInfo;
-  
+
   ExceptionInfo.ExceptionRecord = ExceptionRecord;
   ExceptionInfo.ContextRecord = Context;
-  
+
   if(RtlpVectoredExceptionHead.Flink != &RtlpVectoredExceptionHead)
   {
     RtlEnterCriticalSection(&RtlpVectoredExceptionLock);
@@ -79,7 +79,7 @@ RtlpExecuteVectoredExceptionHandlers(IN PEXCEPTION_RECORD  ExceptionRecord,
     }
     RtlLeaveCriticalSection(&RtlpVectoredExceptionLock);
   }
-  
+
   return ExceptionContinueExecution;
 }
 
@@ -89,7 +89,7 @@ KiUserExceptionDispatcher(PEXCEPTION_RECORD ExceptionRecord,
 {
   EXCEPTION_RECORD NestedExceptionRecord;
   NTSTATUS Status;
-  
+
   if(RtlpExecuteVectoredExceptionHandlers(ExceptionRecord,
                                           Context) != ExceptionContinueExecution)
     {
@@ -160,7 +160,7 @@ RtlAddVectoredExceptionHandler(IN ULONG FirstHandler,
                                IN PVECTORED_EXCEPTION_HANDLER VectoredHandler)
 {
   PRTL_VECTORED_EXCEPTION_HANDLER veh;
-  
+
   veh = RtlAllocateHeap(RtlGetProcessHeap(),
                         0,
                         sizeof(RTL_VECTORED_EXCEPTION_HANDLER));
@@ -180,7 +180,7 @@ RtlAddVectoredExceptionHandler(IN ULONG FirstHandler,
     }
     RtlLeaveCriticalSection(&RtlpVectoredExceptionLock);
   }
-  
+
   return veh;
 }
 
@@ -194,7 +194,7 @@ RtlRemoveVectoredExceptionHandler(IN PVOID VectoredHandlerHandle)
   PLIST_ENTRY CurrentEntry;
   PRTL_VECTORED_EXCEPTION_HANDLER veh = NULL;
   ULONG Removed = FALSE;
-  
+
   RtlEnterCriticalSection(&RtlpVectoredExceptionLock);
   for(CurrentEntry = RtlpVectoredExceptionHead.Flink;
       CurrentEntry != &RtlpVectoredExceptionHead;
@@ -211,7 +211,7 @@ RtlRemoveVectoredExceptionHandler(IN PVOID VectoredHandlerHandle)
     }
   }
   RtlLeaveCriticalSection(&RtlpVectoredExceptionLock);
-  
+
   if(Removed)
   {
     RtlFreeHeap(RtlGetProcessHeap(),

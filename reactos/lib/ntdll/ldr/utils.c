@@ -1,5 +1,5 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            lib/ntdll/ldr/utils.c
@@ -187,7 +187,7 @@ LdrpInitializeTlsForThread(VOID)
    PVOID TlsData;
    ULONG i;
    PTEB Teb = NtCurrentTeb();
-   
+
    DPRINT("LdrpInitializeTlsForThread() called for %wZ\n", &ExeModule->BaseDllName);
 
    Teb->StaticUnicodeString.Length = 0;

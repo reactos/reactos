@@ -99,14 +99,14 @@ LoadImageFileExecutionOptions(PPEB Peb)
 	  }
         /*
 	 * FIXME:
-	 *   read more options 
+	 *   read more options
          */
       }
 }
 
 
-	    
-	
+
+
 BOOLEAN FASTCALL
 LoadCompatibilitySettings(PPEB Peb)
 {
@@ -133,7 +133,7 @@ LoadCompatibilitySettings(PPEB Peb)
 			return FALSE;
 		}
 
-		RtlRosInitUnicodeStringFromLiteral(&KeyName, 
+		RtlRosInitUnicodeStringFromLiteral(&KeyName,
 			L"Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers");
 
 		InitializeObjectAttributes(&ObjectAttributes,
@@ -307,7 +307,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
            DPRINT1("Failed to create process heap\n");
            ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
          }
-            
+
        /* initialized vectored exception handling */
        RtlpInitializeVectoredExceptionHandling();
 
@@ -325,11 +325,11 @@ __true_LdrInitializeThunk (ULONG Unknown1,
        Peb->TlsExpansionCounter = TLS_MINIMUM_AVAILABLE;
 
        /* Initialize table of callbacks for the kernel. */
-       Peb->KernelCallbackTable = 
+       Peb->KernelCallbackTable =
          RtlAllocateHeap(RtlGetProcessHeap(),
                          0,
                          sizeof(PVOID) * (USER32_CALLBACK_MAXIMUM + 1));
-       
+
        /* initalize loader lock */
        RtlInitializeCriticalSection (&LoaderLock);
        Peb->LoaderLock = &LoaderLock;

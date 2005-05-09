@@ -31,20 +31,20 @@
 
 #include <windows.h>
 
-LONG 
-STDCALL 
+LONG
+STDCALL
 InterlockedIncrement(PLONG Addend)
 {
 	long ret = 0;
 	__asm__
-	(	  	 
+	(
 	   "\tlock\n"	/* for SMP systems */
 	   "\tincl	(%1)\n"
 	   "\tje	2f\n"
 	   "\tjl	1f\n"
 	   "\tincl	%0\n"
 	   "\tjmp	2f\n"
-	   "1:\tdec	%0\n"    	  
+	   "1:\tdec	%0\n"
 	   "2:\n"
 	   :"=r" (ret):"r" (Addend), "0" (0): "memory"
 	);
@@ -62,22 +62,22 @@ InterlockedIncrement(PLONG Addend)
 * The returned number need not be equal to the result!!!!		*
 ************************************************************************/
 
-LONG 
+LONG
 STDCALL
 InterlockedDecrement(LPLONG lpAddend)
 {
 	long ret;
 	__asm__
-	(	  	 
+	(
 	   "\tlock\n"	/* for SMP systems */
 	   "\tdecl	(%1)\n"
 	   "\tje	2f\n"
 	   "\tjl	1f\n"
 	   "\tincl	%0\n"
 	   "\tjmp	2f\n"
-	   "1:\tdec	%0\n"    	  
+	   "1:\tdec	%0\n"
 	   "2:\n"
-	   :"=r" (ret):"r" (lpAddend), "0" (0): "memory"          
+	   :"=r" (ret):"r" (lpAddend), "0" (0): "memory"
 	);
 	return ret;
 
@@ -85,19 +85,19 @@ InterlockedDecrement(LPLONG lpAddend)
 }
 
 /************************************************************************
- *           InterlockedExchange				
+ *           InterlockedExchange
  *
  * Atomically exchanges a pair of values.
  *
  * RETURNS
  *	Prior value of value pointed to by Target
  */
- 
-LONG 
-STDCALL 
+
+LONG
+STDCALL
 InterlockedExchange(LPLONG target, LONG value )
 {
-	
+
 	long ret;
 	__asm__ ( /* lock for SMP systems */
                   "lock\n\txchgl %0,(%1)"
@@ -108,7 +108,7 @@ InterlockedExchange(LPLONG target, LONG value )
 }
 
 /************************************************************************
- *           InterlockedCompareExchange		
+ *           InterlockedCompareExchange
  *
  * Atomically compares Destination and Comperand, and if found equal exchanges
  * the value of Destination with Exchange
@@ -116,13 +116,13 @@ InterlockedExchange(LPLONG target, LONG value )
  * RETURNS
  *	Prior value of value pointed to by Destination
  */
-PVOID 
-STDCALL 
+PVOID
+STDCALL
 InterlockedCompareExchange(
-	    PVOID *Destination, 
-	    PVOID Exchange,     
-            PVOID Comperand     ) 
-{	
+	    PVOID *Destination,
+	    PVOID Exchange,
+            PVOID Comperand     )
+{
 	PVOID ret;
 	__asm__ ( /* lock for SMP systems */
                   "lock\n\t"
@@ -135,7 +135,7 @@ InterlockedCompareExchange(
 }
 
 /************************************************************************
- *           InterlockedExchangeAdd			
+ *           InterlockedExchangeAdd
  *
  * Atomically adds Increment to Addend and returns the previous value of
  * Addend
@@ -143,12 +143,12 @@ InterlockedCompareExchange(
  * RETURNS
  *	Prior value of value pointed to by Addend
  */
-LONG 
-STDCALL 
+LONG
+STDCALL
 InterlockedExchangeAdd(
-	    PLONG Addend, 
-	    LONG Increment 
-) 
+	    PLONG Addend,
+	    LONG Increment
+)
 {
 
 	LONG ret;
