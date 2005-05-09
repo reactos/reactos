@@ -2435,21 +2435,20 @@ NtReadFile(IN HANDLE FileHandle,
            IN PLARGE_INTEGER ByteOffset OPTIONAL, /* NOT optional for asynch. operations! */
            IN PULONG Key OPTIONAL)
 {
-   NTSTATUS Status;
-   PFILE_OBJECT FileObject;
-   PIRP Irp = NULL;
-   PDEVICE_OBJECT DeviceObject;
-   PIO_STACK_LOCATION StackPtr;
-   KPROCESSOR_MODE PreviousMode;
-   BOOLEAN LocalEvent = FALSE;
-   PKEVENT EventObject = NULL;
+    NTSTATUS Status;
+    PFILE_OBJECT FileObject;
+    PIRP Irp = NULL;
+    PDEVICE_OBJECT DeviceObject;
+    PIO_STACK_LOCATION StackPtr;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    BOOLEAN LocalEvent = FALSE;
+    PKEVENT EventObject = NULL;
 
     DPRINT("NtReadFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
            "IoStatusBlock %x)\n", FileHandle, Buffer, Length, ByteOffset,
             IoStatusBlock);
     PAGED_CODE();
     
-    #if 0
     /* Validate User-Mode Buffers */
     if(PreviousMode != KernelMode)
     {
@@ -2470,7 +2469,6 @@ NtReadFile(IN HANDLE FileHandle,
 
         if(!NT_SUCCESS(Status)) return Status;
     }
-    #endif
 
     /* Get File Object */
     Status = ObReferenceObjectByHandle(FileHandle,
@@ -2573,15 +2571,20 @@ NtReadFile(IN HANDLE FileHandle,
     Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
     Irp->Flags |= IRP_READ_OPERATION;
     
-    /* FIXME: Somethign weird is going on when I enable this. */
-    //if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) Irp->Flags |= IRP_NOCACHE;
+#if 0
+    /* FIXME: KDBG is using this flag and not reading from cluster-aligned. Investigate */
+    if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) 
+    {
+        DbgBreakPoint();
+        Irp->Flags |= IRP_NOCACHE;
+        DPRINT1("It's us: %p\n", FileObject);
+    }
+#endif
     
     /* Setup Stack Data */
     StackPtr = IoGetNextIrpStackLocation(Irp);
     StackPtr->FileObject = FileObject;
     StackPtr->Parameters.Read.Key = Key ? *Key : 0;
-    StackPtr->Parameters.Read.Length = Length;
-    StackPtr->Parameters.Read.ByteOffset = *ByteOffset;
 
     /* Call the Driver */
     Status = IoCallDriver(DeviceObject, Irp);
