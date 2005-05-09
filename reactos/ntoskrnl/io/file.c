@@ -2540,6 +2540,10 @@ NtReadFile(IN HANDLE FileHandle,
                                            ByteOffset,
                                            EventObject,
                                            IoStatusBlock);
+        if (Irp == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+        }
     }
     _SEH_HANDLE
     {
@@ -2548,15 +2552,11 @@ NtReadFile(IN HANDLE FileHandle,
     _SEH_END;
 
     /* Cleanup if IRP Allocation Failed */
-    if (!NT_SUCCESS(Status) || !Irp)
+    if (!NT_SUCCESS(Status))
     {
         if (Event) ObDereferenceObject(EventObject);
         ObDereferenceObject(FileObject);
-        if (Irp)
-        {
-            IoFreeIrp(Irp);
-        }
-        return NT_SUCCESS(Status) ? STATUS_INSUFFICIENT_RESOURCES : Status;
+        return Status;
     }
 
     /* Set up IRP Data */
@@ -3117,6 +3117,10 @@ NtWriteFile (IN HANDLE FileHandle,
                                            ByteOffset,
                                            EventObject,
                                            IoStatusBlock);
+        if (Irp == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+        }
     }
     _SEH_HANDLE
     {
@@ -3125,15 +3129,14 @@ NtWriteFile (IN HANDLE FileHandle,
     _SEH_END;
 
     /* Cleanup on failure */
-    if (!NT_SUCCESS(Status) || !Irp)
+    if (!NT_SUCCESS(Status))
     {
         if (Event)
         {
             ObDereferenceObject(&EventObject);
         }
         ObDereferenceObject(FileObject);
-        if (Irp) IoFreeIrp(Irp);
-        return NT_SUCCESS(Status) ? STATUS_INSUFFICIENT_RESOURCES : Status;
+        return Status;
     }
 
    /* Set up IRP Data */
