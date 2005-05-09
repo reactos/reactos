@@ -414,62 +414,57 @@ IopQueryNameFile(PVOID ObjectBody,
                  ULONG Length,
                  PULONG ReturnLength)
 {
-  POBJECT_NAME_INFORMATION LocalInfo;
-  PFILE_NAME_INFORMATION FileNameInfo;
-  PFILE_OBJECT FileObject;
-  ULONG LocalReturnLength;
-  NTSTATUS Status;
+    PVOID LocalInfo;
+    PFILE_OBJECT FileObject;
+    ULONG LocalReturnLength;
+    NTSTATUS Status;
 
-  DPRINT ("IopQueryNameFile() called\n");
+    DPRINT1("IopQueryNameFile() called\n");
 
-  FileObject = (PFILE_OBJECT)ObjectBody;
+    FileObject = (PFILE_OBJECT)ObjectBody;
 
-  LocalInfo = ExAllocatePool (NonPagedPool,
-         sizeof(OBJECT_NAME_INFORMATION) +
-    MAX_PATH * sizeof(WCHAR));
-  if (LocalInfo == NULL)
-    return STATUS_INSUFFICIENT_RESOURCES;
+    /* Allocate Buffer */
+    LocalInfo = ExAllocatePool(PagedPool,
+                               sizeof(OBJECT_NAME_INFORMATION) +
+                               MAX_PATH * sizeof(WCHAR));
+    if (LocalInfo == NULL) return STATUS_INSUFFICIENT_RESOURCES;
 
-  Status = ObQueryNameString (FileObject->DeviceObject->Vpb->RealDevice,
-         LocalInfo,
-         MAX_PATH * sizeof(WCHAR),
-         &LocalReturnLength);
-  if (!NT_SUCCESS (Status))
+    /* Query the name */
+    Status = ObQueryNameString(FileObject->DeviceObject,
+                               LocalInfo,
+                               MAX_PATH * sizeof(WCHAR),
+                               &LocalReturnLength);
+    if (!NT_SUCCESS (Status))
     {
-      ExFreePool (LocalInfo);
-      return Status;
+        ExFreePool (LocalInfo);
+        return Status;
     }
-  DPRINT ("Device path: %wZ\n", &LocalInfo->Name);
+    DPRINT ("Device path: %wZ\n", &LocalInfo->Name);
+    
+    /* Write Device Path */
+    Status = RtlAppendUnicodeStringToString(&ObjectNameInfo->Name,
+                                            &((POBJECT_NAME_INFORMATION)LocalInfo)->Name);
 
-  Status = RtlAppendUnicodeStringToString (&ObjectNameInfo->Name,
-        &LocalInfo->Name);
-
-  ExFreePool (LocalInfo);
-
-  FileNameInfo = ExAllocatePool (NonPagedPool,
-     MAX_PATH * sizeof(WCHAR) + sizeof(ULONG));
-  if (FileNameInfo == NULL)
-    return STATUS_INSUFFICIENT_RESOURCES;
-
-  Status = IoQueryFileInformation (FileObject,
-       FileNameInformation,
-       MAX_PATH * sizeof(WCHAR) + sizeof(ULONG),
-       FileNameInfo,
-       NULL);
-  if (Status != STATUS_SUCCESS)
+    /* Query the File name */
+    Status = IoQueryFileInformation(FileObject,
+                                    FileNameInformation,
+                                    LocalReturnLength,
+                                    LocalInfo,
+                                    NULL);
+    if (Status != STATUS_SUCCESS)
     {
-      ExFreePool (FileNameInfo);
-      return Status;
+        ExFreePool(LocalInfo);
+        return Status;
     }
 
-  Status = RtlAppendUnicodeToString (&ObjectNameInfo->Name,
-         FileNameInfo->FileName);
+    /* Write the Name */
+    Status = RtlAppendUnicodeToString(&ObjectNameInfo->Name,
+                                      ((PFILE_NAME_INFORMATION)LocalInfo)->FileName);
+    DPRINT ("Total path: %wZ\n", &ObjectNameInfo->Name);
 
-  DPRINT ("Total path: %wZ\n", &ObjectNameInfo->Name);
-
-  ExFreePool (FileNameInfo);
-
-  return Status;
+    /* Free buffer and return */
+    ExFreePool(LocalInfo);
+    return Status;
 }
 
 VOID
@@ -3004,10 +2999,11 @@ NtWriteFile (IN HANDLE FileHandle,
     {
         _SEH_TRY
         {
+            #if 0
             ProbeForWrite(IoStatusBlock,
                           sizeof(IO_STATUS_BLOCK),
                           sizeof(ULONG));
-            #if 0
+
             ProbeForRead(Buffer,
                          Length,
                          sizeof(ULONG));
