@@ -34,7 +34,7 @@ __int64 _lseeki64(int _fildes, __int64 _offset, int _whence)
     LARGE_INTEGER offset;
     offset.QuadPart = _offset;
 
-    offset.u.LowPart = SetFilePointer((HANDLE)fdinfo(_fildes)->hFile, 
+    offset.u.LowPart = SetFilePointer((HANDLE)fdinfo(_fildes)->hFile,
                           offset.u.LowPart, &offset.u.HighPart, _whence);
     return ((((__int64)offset.u.HighPart) << 32) + offset.u.LowPart);
 

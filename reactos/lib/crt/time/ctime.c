@@ -50,8 +50,8 @@
 #include "posixrul.h"
 
 
-#ifdef __cplusplus 
-#define CPP_CONST const 
+#ifdef __cplusplus
+#define CPP_CONST const
 #else
 #define CPP_CONST
 #endif
@@ -1025,7 +1025,7 @@ localsub(const time_t * CPP_CONST timep, const long offset, struct tm * CPP_CONS
 #if 0
 /* tm_zone doesnt exist in windows msvcrt -Gunnar */
   tmp->tm_zone = (char *)&sp->chars[ttisp->tt_abbrind];
-#endif  
+#endif
 }
 
 /*
@@ -1078,7 +1078,7 @@ gmtsub(const time_t * CPP_CONST timep, const long offset, struct tm * CPP_CONST 
     tmp->tm_zone = gmtptr->chars;
 #endif /* State Farm */
   }
-#endif /* if 0 */  
+#endif /* if 0 */
 }
 
 /*
@@ -1185,10 +1185,10 @@ timesub(const time_t * CPP_CONST timep, const long offset, const struct state * 
     days = days - (long) ip[tmp->tm_mon];
   tmp->tm_mday = (int) (days + 1);
   tmp->tm_isdst = 0;
-#if 0  
-/* tm_gmtoff doesnt exist in windows msvcrt -Gunnar */  
+#if 0
+/* tm_gmtoff doesnt exist in windows msvcrt -Gunnar */
   tmp->tm_gmtoff = offset;
-#endif  
+#endif
 }
 
 /*

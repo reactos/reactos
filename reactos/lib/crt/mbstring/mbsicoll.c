@@ -2,7 +2,7 @@
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/mbstring/mbsicoll.c
- * PURPOSE:     
+ * PURPOSE:
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:
  *              12/04/99: Created
@@ -25,9 +25,9 @@ int _mbsicoll(const unsigned char *str1, const unsigned char *str2)
 	int l1, l2;
 
 	while ( *s1 != 0 ) {
-		
+
 		if (*s1 == 0)
-			break;	
+			break;
 
 		l1 = _ismbblead(*s1);
 		l2 = _ismbblead(*s2);

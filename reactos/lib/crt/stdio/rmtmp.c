@@ -20,11 +20,11 @@ extern __file_rec *__file_rec_list;
 int _rmtmp( void )
 {
 /*
-loop files and check for _tmpfname  
+loop files and check for _tmpfname
 */
   __file_rec *fr = __file_rec_list;
   __file_rec **last_fr = &__file_rec_list;
-  
+
   int total_closed = 0;
   int i = 0;
   char temp_name[260];
@@ -53,5 +53,5 @@ loop files and check for _tmpfname
       /* it isn't full, we can add to it */
       break;
   }
-  return total_closed; 
+  return total_closed;
 }

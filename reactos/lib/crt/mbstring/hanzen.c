@@ -60,7 +60,7 @@ static unsigned char zen_to_han_symbol_table_2[ZTOH_SYMBOLS] = {
 #define JISKANA(c) ((c) >= 0x8340 && (c) <= 0x8396 && (c) != 0x837f)
 #define JTOKANA(c) ((c) <= 0x82dd ? (c) + 0xa1 : (c) + 0xa2)
 
- 
+
 /*
  * @implemented
  */

@@ -20,7 +20,7 @@ int _filbuf(FILE* f)
 {
   int size;
   char c;
- 
+
   if ( !OPEN4READING(f)) {
 	__set_errno (EINVAL);
 	return EOF;
@@ -43,7 +43,7 @@ int _filbuf(FILE* f)
   if (f->_flag&_IONBF)
     f->_base = &c;
 
-  // flush stdout before reading from stdin 
+  // flush stdout before reading from stdin
   if (f == stdin) {
     if (stdout->_flag&_IO_LBF)
       fflush(stdout);
@@ -74,9 +74,9 @@ int _filbuf(FILE* f)
 
   f->_ptr = f->_base;
 
-  if (f->_flag & _IONBF) 
+  if (f->_flag & _IONBF)
      f->_base = NULL; // statically allocated buffer for sprintf
-  
+
 
 //check for error
   if (f->_cnt <= 0) {
@@ -86,7 +86,7 @@ int _filbuf(FILE* f)
       f->_flag |= _IOERR;
     f->_cnt = 0;
 
-// FIXME should set errno 
+// FIXME should set errno
 
     return EOF;
   }
@@ -113,9 +113,9 @@ int _readcnv(int fn, void *buf, size_t siz  )
  	n = _read(fn, buf, siz  );
 
 	while (_bufsiz > 0) {
-		if (*bufp == '\r') 
+		if (*bufp == '\r')
 			cr++;
-		else if ( cr != 0 ) 
+		else if ( cr != 0 )
 			*bufp = *(bufp + cr);
 		bufp++;
 		_bufsiz--;

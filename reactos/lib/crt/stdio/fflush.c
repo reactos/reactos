@@ -62,7 +62,7 @@ int fflush(FILE *f)
   {
 
     base = f->_base;
-   
+
 
 // if the buffer is read ahead and dirty we will flush it entirely
 // else the buffer is appended to the file to the extend it has valid bytes

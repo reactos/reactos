@@ -58,7 +58,7 @@ int _fstat(int fd, struct _stat* statbuf)
     statbuf->st_dev = fd;
     statbuf->st_size = FileInformation.nFileSizeLow;
     statbuf->st_mode = S_IREAD;
-    if (FileInformation.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) 
+    if (FileInformation.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
       statbuf->st_mode |= S_IFDIR;
     else
       statbuf->st_mode |= S_IFREG;

@@ -54,7 +54,7 @@ int putc(int c, FILE* fp)
     if (fp->_cnt > 0) {
         fp->_cnt--;
         *(fp)->_ptr++ = (unsigned char)c;
-        return (int)(unsigned char)c; 
+        return (int)(unsigned char)c;
     } else {
         return _flsbuf((unsigned char)c, fp);
     }
@@ -140,7 +140,7 @@ wint_t putwc(wint_t c, FILE* fp)
             }
         }
 #endif
-        return c; 
+        return c;
     }
     return WEOF;
 }

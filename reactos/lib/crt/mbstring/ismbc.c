@@ -32,7 +32,7 @@ int _ismbcalpha( unsigned int c )
 
 	return 0;
 }
-  
+
 /*
  * @implemented
  */

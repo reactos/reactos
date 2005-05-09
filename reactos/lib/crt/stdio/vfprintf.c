@@ -213,7 +213,7 @@ static int numberf(FILE * f, double __n, char exp_sign,  int size, int precision
 		double*  __n;
 		double_t*  n;
 	} n;
-	
+
 	n.__n = &__n;
 
 	if ( exp_sign == 'g' || exp_sign == 'G' || exp_sign == 'e' || exp_sign == 'E' ) {

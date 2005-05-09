@@ -12,7 +12,7 @@ wchar_t* _wcsnset (wchar_t* wsToFill, wchar_t wcFill, size_t sizeMaxFill)
 		*wsToFill = wcFill;
 		wsToFill++;
 		i++;
-		
+
 	}
 	return t;
 }
@@ -27,7 +27,7 @@ wchar_t* _wcsset (wchar_t* wsToFill, wchar_t wcFill)
 	{
 		*wsToFill = wcFill;
 		wsToFill++;
-		
+
 	}
 	return t;
 }

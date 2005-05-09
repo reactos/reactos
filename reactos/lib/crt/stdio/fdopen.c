@@ -12,10 +12,10 @@
 /*
  * @implemented
  */
-FILE* _tfdopen(int handle, 
+FILE* _tfdopen(int handle,
 #ifndef _UNICODE
    const
-#endif   
+#endif
    _TCHAR* mode)
 {
   FILE* file;

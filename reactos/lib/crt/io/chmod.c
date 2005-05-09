@@ -30,7 +30,7 @@ int _tchmod(const _TCHAR* filename, mode_t mode)
 
     if ( mode == 0 )
         return -1;
-    
+
     if (mode & _S_IWRITE) {
 	if (FileAttributes & FILE_ATTRIBUTE_READONLY) {
 	    FileAttributes &= ~FILE_ATTRIBUTE_READONLY;

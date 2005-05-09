@@ -3,7 +3,7 @@
  *
  * Copyright 2000 Jon Griffiths
  */
- 
+
 #include "precomp.h"
 #include <stdio.h>
 #include <locale.h>
@@ -65,7 +65,7 @@ locale  "lang[_country[.code_page]]"
             | ".code_page"
             | ""
             | NULL
-            
+
 */
 int parse_locale(char *locale, char *lang, char *country, char *code_page)
 {
@@ -86,8 +86,8 @@ int parse_locale(char *locale, char *lang, char *country, char *code_page)
 		}
 	}
 	*country = 0;
-	
-	
+
+
 	if ( *locale == '.' ) {
 		locale++;
 		while ( *locale != 0 && *locale != '.' )
@@ -97,9 +97,9 @@ int parse_locale(char *locale, char *lang, char *country, char *code_page)
 			locale++;
 		}
 	}
-	
+
 	*code_page = 0;
-	return 0;	
+	return 0;
 }
 
 const struct map_lcid2str {
@@ -110,7 +110,7 @@ const struct map_lcid2str {
         {0x0409,"English", "United States"},
         {0x0809,"English", "United Kingdom"},
         {0x0000,"Unknown", "Unknown"}
-    
+
 };
 
 const struct map_cntr {

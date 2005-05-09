@@ -61,7 +61,7 @@ int system(const char *command)
   else
     s++;
 
-  szCmdLine = malloc(strlen(s) + 4 + strlen(command) + 1); 
+  szCmdLine = malloc(strlen(s) + 4 + strlen(command) + 1);
   if (szCmdLine == NULL)
   {
      free (szComSpec);
@@ -111,7 +111,7 @@ int system(const char *command)
 	_dosmaperr(GetLastError());
      return -1;
   }
-  
+
   CloseHandle(ProcessInformation.hThread);
 
 // system should wait untill the calling process is finished

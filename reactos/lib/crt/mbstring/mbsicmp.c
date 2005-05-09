@@ -24,9 +24,9 @@ int _mbsicmp(const unsigned char *str1, const unsigned char *str2)
 	int l1, l2;
 
 	do {
-		
+
 		if (*s1 == 0)
-			break;	
+			break;
 
 		l1 = _ismbblead(*s1);
 		l2 = _ismbblead(*s2);

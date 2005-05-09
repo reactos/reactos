@@ -4,7 +4,7 @@
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/stdlib/itow.c
  * PURPOSE:     converts a integer to wchar_t
- * PROGRAMER:   
+ * PROGRAMER:
  * UPDATE HISTORY:
  *              1995: Created
  *              1998: Added ltoa Boudewijn Dekker

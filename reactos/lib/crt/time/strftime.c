@@ -191,7 +191,7 @@ static size_t _fmt(const char* format, const struct tm* t)
 #if 0
    /* FIXME: tm_zone doesnt exist in windows */
 	if (!t->tm_zone || !_add(t->tm_zone))
-#endif   
+#endif
 	  return 0;
 	continue;
       case '%':

@@ -43,7 +43,7 @@ FILE* _tfopen(const _TCHAR *file, const _TCHAR *mode)
 {
   FILE *f;
   int fd, rw, oflags = 0;
-   
+
   if (file == 0)
     return 0;
   if (mode == 0)

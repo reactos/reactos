@@ -25,9 +25,9 @@ int _mbsncmp(const unsigned char *str1, const unsigned char *str2, size_t n)
 	if (n == 0)
 		return 0;
 	do {
-		
+
 		if (*s1 == 0)
-			break;	
+			break;
 
 		l1 = _ismbblead(*s1);
 		l2 = _ismbblead(*s2);
@@ -74,9 +74,9 @@ int _mbsnbcmp(const unsigned char *str1, const unsigned char *str2, size_t n)
 	if (n == 0)
 		return 0;
 	do {
-		
+
 		if (*s1 == 0)
-			break;	
+			break;
 
 		l1 = _ismbblead(*s1);
 		l2 = _ismbblead(*s2);

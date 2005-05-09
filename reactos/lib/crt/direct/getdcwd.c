@@ -11,7 +11,7 @@
  *    _getdcwd (MSVCRT.@)
  *
  * Get the current working directory on a given disk.
- * 
+ *
  * PARAMS
  *  drive [I] Drive letter to get the current working directory from.
  *  buf   [O] Destination for the current working directory.

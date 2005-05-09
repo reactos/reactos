@@ -59,7 +59,7 @@ time_t FileTimeToUnixTime(const FILETIME* filetime, DWORD *remainder);
 
 
 #define __FILE_REC_MAX 20
-typedef struct __file_rec 
+typedef struct __file_rec
 {
     struct __file_rec* next;
     int count;
@@ -178,8 +178,8 @@ int _isinf(double x);
 #define _IOLBF    0x0040     /* line buffered */
 #define _IONBF    0x0004     /* not buffered */
 
-#define _IO_LBF   0x80000    /* this value is used insteat of _IOLBF within the 
-                                structure FILE as value for _flags, 
+#define _IO_LBF   0x80000    /* this value is used insteat of _IOLBF within the
+                                structure FILE as value for _flags,
                                 because _IOLBF has the same value as _IOSTRG */
 
 

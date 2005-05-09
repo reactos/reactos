@@ -26,7 +26,7 @@ char *_cgets(char *string)
     return(NULL);
   maxlen_wanted = (unsigned int)((unsigned char)string[0]);
   sp = &(string[2]);
-  /* 
+  /*
    * Should the string be shorter maxlen_wanted including or excluding
    * the trailing '\0' ? We don't take any risk.
    */

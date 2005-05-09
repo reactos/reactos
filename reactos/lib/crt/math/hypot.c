@@ -15,17 +15,17 @@
  * inflicting too much of a performance hit.
  *
  */
- 
+
 #include <float.h>
 #include <math.h>
 #include <errno.h>
- 
+
 /* Approximate square roots of DBL_MAX and DBL_MIN.  Numbers
    between these two shouldn't neither overflow nor underflow
    when squared.  */
 #define __SQRT_DBL_MAX 1.3e+154
 #define __SQRT_DBL_MIN 2.3e-162
- 
+
 /*
  * @implemented
  */
@@ -34,26 +34,26 @@ _hypot(double x, double y)
 {
   double abig = fabs(x), asmall = fabs(y);
   double ratio;
- 
+
   /* Make abig = max(|x|, |y|), asmall = min(|x|, |y|).  */
   if (abig < asmall)
     {
       double temp = abig;
- 
+
       abig = asmall;
       asmall = temp;
     }
- 
+
   /* Trivial case.  */
   if (asmall == 0.)
     return abig;
- 
+
   /* Scale the numbers as much as possible by using its ratio.
      For example, if both ABIG and ASMALL are VERY small, then
      X^2 + Y^2 might be VERY inaccurate due to loss of
      significant digits.  Dividing ASMALL by ABIG scales them
      to a certain degree, so that accuracy is better.  */
- 
+
   if ((ratio = asmall / abig) > __SQRT_DBL_MIN && abig < __SQRT_DBL_MAX)
     return abig * sqrt(1.0 + ratio*ratio);
   else
@@ -62,9 +62,9 @@ _hypot(double x, double y)
          produces any intermediate result greater than roughly the
          larger of X and Y.  Should converge to machine-precision
          accuracy in 3 iterations.  */
- 
+
       double r = ratio*ratio, t, s, p = abig, q = asmall;
- 
+
       do {
         t = 4. + r;
         if (t == 4.)
@@ -74,15 +74,15 @@ _hypot(double x, double y)
         q *= s;
         r = (q / p) * (q / p);
       } while (1);
- 
+
       return p;
     }
 }
- 
+
 #ifdef  TEST
- 
+
 #include <msvcrt/stdio.h>
- 
+
 int
 main(void)
 {
@@ -94,8 +94,8 @@ main(void)
   printf("hypot(DBL_MAX, 1.0) =\t\t %25.17g\n", _hypot(DBL_MAX, 1.0));
   printf("hypot(1.0, DBL_MAX) =\t\t %25.17g\n", _hypot(1.0, DBL_MAX));
   printf("hypot(0.0, DBL_MAX) =\t\t %25.17g\n", _hypot(0.0, DBL_MAX));
- 
+
   return 0;
 }
- 
+
 #endif

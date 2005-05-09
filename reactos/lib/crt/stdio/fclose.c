@@ -32,12 +32,12 @@ fclose(FILE *f)
   if ( !(f->_flag&_IOSTRG) ) {
   	if ( OPEN4WRITING(f) )
     		r = fflush(f);
-  	
+
   	if (_close(_fileno(f)) < 0)
       		r = EOF;
   	if (f->_flag&_IOMYBUF)
       		free(f->_base);
-  
+
 // Kernel might do this later
    if (f->_flag & _IORMONCL && f->_tmpfname)
   	{

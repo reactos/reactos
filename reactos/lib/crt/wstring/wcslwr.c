@@ -1,6 +1,6 @@
 /*
  * The C RunTime DLL
- * 
+ *
  * Implements C run-time functionality as known from UNIX.
  *
  * Copyright 1996,1998 Marcus Meissner

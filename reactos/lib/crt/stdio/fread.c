@@ -15,7 +15,7 @@ size_t fread(void *vptr, size_t size, size_t count, FILE *iop)
   int c, copy;
 
   to_read = size * count;
-  
+
   if (!OPEN4READING(iop))
     {
       __set_errno (EINVAL);

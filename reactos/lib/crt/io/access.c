@@ -32,7 +32,7 @@ int _taccess( const _TCHAR *_path, int _amode )
             return -1;
         }
     }
-    
+
     return 0;
 }
 
@@ -50,8 +50,8 @@ int access_dirT(const _TCHAR *_path)
          _dosmaperr(GetLastError());
         return -1;
     }
-       
-    if ((Attributes & FILE_ATTRIBUTE_DIRECTORY) != FILE_ATTRIBUTE_DIRECTORY) 
+
+    if ((Attributes & FILE_ATTRIBUTE_DIRECTORY) != FILE_ATTRIBUTE_DIRECTORY)
     {
       __set_errno(EACCES);
       return -1;

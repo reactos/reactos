@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/msvcrt/mbstring/mbsset.c 
+ * FILE:        lib/msvcrt/mbstring/mbsset.c
  * PURPOSE:     Fills a string with a multibyte character
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:
@@ -21,7 +21,7 @@ unsigned char * _mbsset(unsigned char *src, unsigned int c)
 	unsigned short *short_src = (unsigned short *)src;
 
 	if ( _mbclen2(c) == 1 ) {
-	
+
 		while(*char_src != 0) {
 			*char_src = c;
 			char_src++;

@@ -19,7 +19,7 @@ int fseek(FILE *f, long offset, int ptrname)
 	__set_errno (EINVAL);
        return -1;
   }
-  
+
   f->_flag &= ~_IOEOF;
   if (!OPEN4WRITING(f))
   {
@@ -47,7 +47,7 @@ int fseek(FILE *f, long offset, int ptrname)
     f->_ptr = f->_base;
     f->_flag &= ~_IOUNGETC;
   }
-  else 
+  else
   {
     p = fflush(f);
     return _lseek(_fileno(f), offset, ptrname) == -1 || p == EOF ?

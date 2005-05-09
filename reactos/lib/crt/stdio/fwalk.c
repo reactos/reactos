@@ -10,7 +10,7 @@ void _fwalk(void (*func)(FILE *))
 {
   __file_rec *fr;
   int i;
- 
+
   for (fr=__file_rec_list; fr; fr=fr->next)
     for (i=0; i<fr->count; i++)
       if (fr->files[i]->_flag)

@@ -11,7 +11,7 @@ double _copysign (double __d, double __s)
       double*	__d;
       double_t*	  d;
   } d;
-  union 
+  union
   {
       double*	__s;
       double_t*   s;

@@ -5,7 +5,7 @@
  *
  * Developed at SunSoft, a Sun Microsystems, Inc. business.
  * Permission to use, copy, modify, and distribute this
- * software is freely granted, provided that this notice 
+ * software is freely granted, provided that this notice
  * is preserved.
  * ====================================================
  */
@@ -38,7 +38,7 @@ double modf(double __x, double *__i)
 	iptr.__i = __i;
 
 
-	j0 = x.x->exponent - 0x3ff;  /* exponent of x */	
+	j0 = x.x->exponent - 0x3ff;  /* exponent of x */
 	if(j0<20) {                     /* integer part in high x */
 		if(j0<0) {                  /* |x|<1 */
 			*__i = 0.0;
@@ -128,7 +128,7 @@ long double modfl(long double __x, long double *__i)
 			iptr.iptr->exponent = x.x->exponent;
 			iptr.iptr->mantissah = x.x->mantissah&((~i));
 			iptr.iptr->mantissal = 0;
-		
+
 			return __x - *__i;
 		}
 	} else if (j0>63) {             /* no fraction part */
@@ -152,7 +152,7 @@ long double modfl(long double __x, long double *__i)
 		iptr.iptr->exponent = x.x->exponent;
 		iptr.iptr->mantissah = x.x->mantissah;
 		iptr.iptr->mantissal = x.x->mantissal&(~i);
-	
+
 		return __x - *__i;
 	}
 }

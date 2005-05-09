@@ -31,7 +31,7 @@ FILE* _tfsopen(const _TCHAR *file, const _TCHAR *mode, int shflag)
   FILE *f;
   int fd, rw, oflags = 0;
   _TCHAR tbchar;
-   
+
   int shf;
 
   if (file == 0)

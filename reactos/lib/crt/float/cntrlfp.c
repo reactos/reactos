@@ -37,11 +37,11 @@ unsigned int _control87(unsigned int unNew, unsigned int unMask)
 {
   unsigned int FpuCw;
   unsigned int DummyCw = 0;
-  
+
   /* get the controlword */
   asm volatile("fstcw %0\n\t" : "=m"(FpuCw));
   FpuCw &= 0x0000ffff;
-  
+
   /* translate it into _control87 format */
   if (FpuCw & X87_CW_IM)
     DummyCw |= _EM_INVALID;
@@ -88,10 +88,10 @@ unsigned int _control87(unsigned int unNew, unsigned int unMask)
   /* unset (un)masked bits */
   DummyCw &= ~unMask;
   unNew &= unMask;
-  
+
   /* set new bits */
   DummyCw |= unNew;
-  
+
   /* translate back into x87 format
    * FIXME: translate infinity control!
    */
@@ -141,7 +141,7 @@ unsigned int _control87(unsigned int unNew, unsigned int unMask)
 
   /* set controlword */
   asm volatile("fldcw %0" : : "m"(FpuCw));
-  
+
   return DummyCw;
 
 #if 0 /* The follwing is the original code, broken I think! -blight */
