@@ -4,7 +4,8 @@
  * FILE:            ntoskrnl/io/file.c
  * PURPOSE:         I/O File Object & NT File Handle Access/Managment of Files.
  * 
- * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES *****************************************************************/
@@ -767,6 +768,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
      ObDereferenceObject (DeviceObject);
      return STATUS_OBJECT_NAME_COLLISION;
   }
+         /* FIXME: wt... */
          FileObject = IoCreateStreamFileObject(NULL, DeviceObject);
   ObDereferenceObject (DeviceObject);
       }
@@ -997,55 +999,50 @@ STDCALL
 IoCreateStreamFileObject(PFILE_OBJECT FileObject,
                          PDEVICE_OBJECT DeviceObject)
 {
-  PFILE_OBJECT CreatedFileObject;
-  NTSTATUS Status;
+    PFILE_OBJECT CreatedFileObject;
+    NTSTATUS Status;
+    
+    /* FIXME: This function should call ObInsertObject. The "Lite" version 
+       doesnt. This function is also called from IoCreateFile for some 
+       reason. These hacks need to be removed.
+    */
 
-  DPRINT("IoCreateStreamFileObject(FileObject %x, DeviceObject %x)\n",
-  FileObject, DeviceObject);
+    DPRINT("IoCreateStreamFileObject(FileObject %x, DeviceObject %x)\n",
+            FileObject, DeviceObject);
+    PAGED_CODE();
 
-  ASSERT_IRQL(PASSIVE_LEVEL);
-
-  Status = ObCreateObject(KernelMode,
-     IoFileObjectType,
-     NULL,
-     KernelMode,
-     NULL,
-     sizeof(FILE_OBJECT),
-     0,
-     0,
-     (PVOID*)&CreatedFileObject);
-  if (!NT_SUCCESS(Status))
+    /* Create the File Object */
+    Status = ObCreateObject(KernelMode,
+                            IoFileObjectType,
+                            NULL,
+                            KernelMode,
+                            NULL,
+                            sizeof(FILE_OBJECT),
+                            0,
+                            0,
+                            (PVOID*)&CreatedFileObject);
+    if (!NT_SUCCESS(Status))
     {
-      DPRINT("Could not create FileObject\n");
-      return (NULL);
+        DPRINT1("Could not create FileObject\n");
+        return (NULL);
     }
 
-  if (FileObject != NULL)
-    {
-      DeviceObject = FileObject->DeviceObject;
-    }
-  DeviceObject = IoGetAttachedDevice(DeviceObject);
+    /* Choose Device Object */
+    if (FileObject) DeviceObject = FileObject->DeviceObject;
+    DPRINT("DeviceObject %x\n", DeviceObject);
+    
+    /* Set File Object Data */
+    CreatedFileObject->DeviceObject = DeviceObject; 
+    CreatedFileObject->Vpb = DeviceObject->Vpb;
+    CreatedFileObject->Type = IO_TYPE_FILE;
+    CreatedFileObject->Flags = FO_STREAM_FILE;
 
-  DPRINT("DeviceObject %x\n", DeviceObject);
+    /* Initialize Lock and Event */
+    KeInitializeEvent(&CreatedFileObject->Event, NotificationEvent, FALSE);
+    KeInitializeEvent(&CreatedFileObject->Lock, SynchronizationEvent, TRUE);
 
-  if (DeviceObject->Vpb && 
-      DeviceObject->Vpb->DeviceObject)
-    {
-      CreatedFileObject->DeviceObject = DeviceObject->Vpb->DeviceObject;
-    }
-  else
-    {
-      CreatedFileObject->DeviceObject = DeviceObject; 
-    }
-  CreatedFileObject->Vpb = DeviceObject->Vpb;
-  CreatedFileObject->Type = IO_TYPE_FILE;
-  CreatedFileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
-
-  // shouldn't we initialize the lock event, and several other things here too?
-  KeInitializeEvent(&CreatedFileObject->Event, NotificationEvent, FALSE);
-  KeInitializeEvent(&CreatedFileObject->Lock, SynchronizationEvent, TRUE);
-
-  return CreatedFileObject;
+    /* Return file */
+    return CreatedFileObject;
 }
 
 /*
@@ -1390,41 +1387,48 @@ NtCreateMailslotFile(OUT PHANDLE FileHandle,
                      IN ULONG MaxMessageSize,
                      IN PLARGE_INTEGER TimeOut)
 {
-   MAILSLOT_CREATE_PARAMETERS Buffer;
+    MAILSLOT_CREATE_PARAMETERS Buffer;
    
-   DPRINT("NtCreateMailslotFile(FileHandle %x, DesiredAccess %x, "
-   "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %S)\n",
-   FileHandle,DesiredAccess,ObjectAttributes,
-   ObjectAttributes->ObjectName->Buffer);
+    DPRINT("NtCreateMailslotFile(FileHandle %x, DesiredAccess %x, "
+           "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %S)\n",
+           FileHandle,DesiredAccess,ObjectAttributes,
+           ObjectAttributes->ObjectName->Buffer);
+    PAGED_CODE();
    
-   ASSERT_IRQL(PASSIVE_LEVEL);
-   
-   if (TimeOut != NULL)
-     {
- Buffer.ReadTimeout.QuadPart = TimeOut->QuadPart;
- Buffer.TimeoutSpecified = TRUE;
-     }
-   else
-     {
- Buffer.TimeoutSpecified = FALSE;
-     }
-   Buffer.MailslotQuota = MailslotQuota;
-   Buffer.MaximumMessageSize = MaxMessageSize;
+    /* Check for Timeout */
+    if (TimeOut)
+    {
+        /* Enable it */
+        Buffer.TimeoutSpecified = TRUE;
+        
+        /* FIXME: Add SEH */
+        Buffer.ReadTimeout = *TimeOut;
+    }
+    else
+    {
+        /* No timeout */
+        Buffer.TimeoutSpecified = FALSE;
+    }
+    
+    /* Set Settings */
+    Buffer.MailslotQuota = MailslotQuota;
+    Buffer.MaximumMessageSize = MaxMessageSize;
 
-   return IoCreateFile(FileHandle,
-         DesiredAccess,
-         ObjectAttributes,
-         IoStatusBlock,
-         NULL,
-         FILE_ATTRIBUTE_NORMAL,
-         FILE_SHARE_READ | FILE_SHARE_WRITE,
-         FILE_CREATE,
-         CreateOptions,
-         NULL,
-         0,
-         CreateFileTypeMailslot,
-         (PVOID)&Buffer,
-         0);
+    /* Call I/O */
+    return IoCreateFile(FileHandle,
+                        DesiredAccess,
+                        ObjectAttributes,
+                        IoStatusBlock,
+                        NULL,
+                        FILE_ATTRIBUTE_NORMAL,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_CREATE,
+                        CreateOptions,
+                        NULL,
+                        0,
+                        CreateFileTypeMailslot,
+                        (PVOID)&Buffer,
+                        0);
 }
 
 NTSTATUS
@@ -1444,45 +1448,52 @@ NtCreateNamedPipeFile(PHANDLE FileHandle,
                       ULONG OutboundQuota,
                       PLARGE_INTEGER DefaultTimeout)
 {
-  NAMED_PIPE_CREATE_PARAMETERS Buffer;
+    NAMED_PIPE_CREATE_PARAMETERS Buffer;
 
-  DPRINT("NtCreateNamedPipeFile(FileHandle %x, DesiredAccess %x, "
-  "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %S)\n",
-  FileHandle,DesiredAccess,ObjectAttributes,
-  ObjectAttributes->ObjectName->Buffer);
+    DPRINT("NtCreateNamedPipeFile(FileHandle %x, DesiredAccess %x, "
+           "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %S)\n",
+            FileHandle,DesiredAccess,ObjectAttributes,
+            ObjectAttributes->ObjectName->Buffer);
+    PAGED_CODE();
 
-  ASSERT_IRQL(PASSIVE_LEVEL);
-
-  if (DefaultTimeout != NULL)
+    /* Check for Timeout */
+    if (DefaultTimeout)
     {
-      Buffer.DefaultTimeout.QuadPart = DefaultTimeout->QuadPart;
-      Buffer.TimeoutSpecified = TRUE;
+        /* Enable it */
+        Buffer.TimeoutSpecified = TRUE;
+        
+        /* FIXME: Add SEH */
+        Buffer.DefaultTimeout = *DefaultTimeout;
     }
-  else
+    else
     {
-      Buffer.TimeoutSpecified = FALSE;
+        /* No timeout */
+        Buffer.TimeoutSpecified = FALSE;
     }
-  Buffer.NamedPipeType = NamedPipeType;
-  Buffer.ReadMode = ReadMode;
-  Buffer.CompletionMode = CompletionMode;
-  Buffer.MaximumInstances = MaximumInstances;
-  Buffer.InboundQuota = InboundQuota;
-  Buffer.OutboundQuota = OutboundQuota;
+    
+    /* Set Settings */
+    Buffer.NamedPipeType = NamedPipeType;
+    Buffer.ReadMode = ReadMode;
+    Buffer.CompletionMode = CompletionMode;
+    Buffer.MaximumInstances = MaximumInstances;
+    Buffer.InboundQuota = InboundQuota;
+    Buffer.OutboundQuota = OutboundQuota;
 
-  return IoCreateFile(FileHandle,
-        DesiredAccess,
-        ObjectAttributes,
-        IoStatusBlock,
-        NULL,
-        FILE_ATTRIBUTE_NORMAL,
-        ShareAccess,
-        CreateDisposition,
-        CreateOptions,
-        NULL,
-        0,
-        CreateFileTypeNamedPipe,
-        (PVOID)&Buffer,
-        0);
+    /* Call I/O */
+    return IoCreateFile(FileHandle,
+                        DesiredAccess,
+                        ObjectAttributes,
+                        IoStatusBlock,
+                        NULL,
+                        FILE_ATTRIBUTE_NORMAL,
+                        ShareAccess,
+                        CreateDisposition,
+                        CreateOptions,
+                        NULL,
+                        0,
+                        CreateFileTypeNamedPipe,
+                        (PVOID)&Buffer,
+                        0);
 }
 
 /*
@@ -1513,8 +1524,8 @@ NTSTATUS
 STDCALL
 NtFlushWriteBuffer(VOID)
 {
-  KeFlushWriteBuffer();
-  return STATUS_SUCCESS;
+    KeFlushWriteBuffer();
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -1960,36 +1971,36 @@ STDCALL
 NtQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
                       OUT PFILE_BASIC_INFORMATION FileInformation)
 {
-  IO_STATUS_BLOCK IoStatusBlock;
-  HANDLE FileHandle;
-  NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE FileHandle;
+    NTSTATUS Status;
 
-  /* Open the file */
-  Status = ZwOpenFile (&FileHandle,
-         SYNCHRONIZE | FILE_READ_ATTRIBUTES,
-         ObjectAttributes,
-         &IoStatusBlock,
-         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-         FILE_SYNCHRONOUS_IO_NONALERT);
-  if (!NT_SUCCESS (Status))
+    /* Open the file */
+    Status = ZwOpenFile(&FileHandle,
+                        SYNCHRONIZE | FILE_READ_ATTRIBUTES,
+                        ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS (Status))
     {
-      DPRINT ("ZwOpenFile() failed (Status %lx)\n", Status);
-      return Status;
+        DPRINT ("ZwOpenFile() failed (Status %lx)\n", Status);
+        return Status;
     }
 
-  /* Get file attributes */
-  Status = ZwQueryInformationFile (FileHandle,
-       &IoStatusBlock,
-       FileInformation,
-       sizeof(FILE_BASIC_INFORMATION),
-       FileBasicInformation);
-  ZwClose (FileHandle);
-  if (!NT_SUCCESS (Status))
+    /* Get file attributes */
+    Status = ZwQueryInformationFile(FileHandle,
+                                    &IoStatusBlock,
+                                    FileInformation,
+                                    sizeof(FILE_BASIC_INFORMATION),
+                                    FileBasicInformation);
+    if (!NT_SUCCESS (Status))
     {
-      DPRINT ("ZwQueryInformationFile() failed (Status %lx)\n", Status);
+        DPRINT ("ZwQueryInformationFile() failed (Status %lx)\n", Status);
     }
 
-  return Status;
+    ZwClose(FileHandle);
+    return Status;
 }
 
 /*
@@ -2184,36 +2195,36 @@ STDCALL
 NtQueryFullAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
                           OUT PFILE_NETWORK_OPEN_INFORMATION FileInformation)
 {
-  IO_STATUS_BLOCK IoStatusBlock;
-  HANDLE FileHandle;
-  NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE FileHandle;
+    NTSTATUS Status;
 
-  /* Open the file */
-  Status = ZwOpenFile (&FileHandle,
-         SYNCHRONIZE | FILE_READ_ATTRIBUTES,
-         ObjectAttributes,
-         &IoStatusBlock,
-         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-         FILE_SYNCHRONOUS_IO_NONALERT);
-  if (!NT_SUCCESS (Status))
+    /* Open the file */
+    Status = ZwOpenFile(&FileHandle,
+                        SYNCHRONIZE | FILE_READ_ATTRIBUTES,
+                        ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS (Status))
     {
-      DPRINT ("ZwOpenFile() failed (Status %lx)\n", Status);
-      return Status;
+        DPRINT ("ZwOpenFile() failed (Status %lx)\n", Status);
+        return Status;
     }
 
-  /* Get file attributes */
-  Status = ZwQueryInformationFile (FileHandle,
-       &IoStatusBlock,
-       FileInformation,
-       sizeof(FILE_NETWORK_OPEN_INFORMATION),
-       FileNetworkOpenInformation);
-  ZwClose (FileHandle);
-  if (!NT_SUCCESS (Status))
+    /* Get file attributes */
+    Status = ZwQueryInformationFile(FileHandle,
+                                    &IoStatusBlock,
+                                    FileInformation,
+                                    sizeof(FILE_NETWORK_OPEN_INFORMATION),
+                                    FileNetworkOpenInformation);
+    if (!NT_SUCCESS (Status))
     {
-      DPRINT ("ZwQueryInformationFile() failed (Status %lx)\n", Status);
+        DPRINT ("ZwQueryInformationFile() failed (Status %lx)\n", Status);
     }
 
-  return Status;
+    ZwClose (FileHandle);
+    return Status;
 }
 
 /*
