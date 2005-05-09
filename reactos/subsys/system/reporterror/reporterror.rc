@@ -14,8 +14,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 IDB_WATERMARK BITMAP "resources/watermark.bmp"
 IDB_HEADER    BITMAP "resources/header.bmp"
 
-#include "En.rc"
-#include "De.rc"
-#include "Dk.rc"
-#include "Sv.rc"
+#include "en.rc"
+#include "de.rc"
+#include "dk.rc"
+#include "sv.rc"
 
