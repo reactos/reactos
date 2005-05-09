@@ -681,6 +681,8 @@ BEGIN
     IDS_STATUS_MEMUSAGE           "Minnesanv: %dK / %dK"
     IDS_STATUS_CPUUSAGE           "Processoranv: %3d%%"
     IDS_STATUS_PROCESSES          "Processer: %d"
+    IDS_Not_Responding            "Svarar inte"
+    IDS_Running                   "Igång"
 END
 
 
