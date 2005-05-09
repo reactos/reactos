@@ -2435,7 +2435,7 @@ NtReadFile(IN HANDLE FileHandle,
            IN PLARGE_INTEGER ByteOffset OPTIONAL, /* NOT optional for asynch. operations! */
            IN PULONG Key OPTIONAL)
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject;
     PIRP Irp = NULL;
     PDEVICE_OBJECT DeviceObject;
@@ -2571,8 +2571,8 @@ NtReadFile(IN HANDLE FileHandle,
     Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
     Irp->Flags |= IRP_READ_OPERATION;
     
+    /* FIXME: KDBG is using this flag and not reading from cluster-aligned. Investigate. */
 #if 0
-    /* FIXME: KDBG is using this flag and not reading from cluster-aligned. Investigate */
     if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) 
     {
         DbgBreakPoint();
