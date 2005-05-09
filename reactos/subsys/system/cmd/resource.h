@@ -23,7 +23,6 @@
 #define STRING_ALIAS_ERROR                 300
 #define STRING_BATCH_ERROR                 301
 #define STRING_CHCP_ERROR1                 302
-#define STRING_CHCP_ERROR2                 303
 #define STRING_CHCP_ERROR4                 305
 #define STRING_CHOICE_ERROR                306
 #define STRING_CHOICE_ERROR_TXT            307

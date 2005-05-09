@@ -46,7 +46,7 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 	if (args >= 2)
 	{
 		/* too many parameters */
-		LoadString(CMD_ModuleHandle, STRING_CHCP_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_ERROR_INVALID_PARAM_FORMAT, szMsg, RC_STRING_MAX_SIZE);
 		ConErrPrintf(szMsg, param);
 		return 1;
 	}
