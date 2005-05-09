@@ -32,7 +32,7 @@ static void test_SystemFunction006()
     static unsigned char lmhash[16 + 1];
 
     unsigned char passwd[] = { 's','e','c','r','e','t', 0, 0, 0, 0, 0, 0, 0, 0 };
-    unsigned char expect[] = 
+    unsigned char expect[] =
         { 0x85, 0xf5, 0x28, 0x9f, 0x09, 0xdc, 0xa7, 0xeb,
           0xaa, 0xd3, 0xb4, 0x35, 0xb5, 0x14, 0x04, 0xee };
 
@@ -55,7 +55,7 @@ START_TEST(crypt_lmhash)
 
     if (!pSystemFunction006) goto out;
 
-    if (pSystemFunction006) 
+    if (pSystemFunction006)
         test_SystemFunction006();
 
 out:

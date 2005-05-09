@@ -1229,7 +1229,7 @@ RegEnumValueA( HKEY hKey, DWORD index, LPSTR value, LPDWORD val_count,
 /******************************************************************************
  * RegEnumValueW   [ADVAPI32.@]
  * @implemented
- * 
+ *
  * PARAMS
  *  hkey       [I] Handle to key to query
  *  index      [I] Index of value to query
@@ -1260,7 +1260,7 @@ RegEnumValueW( HKEY hKey, DWORD index, LPWSTR value, PDWORD val_count,
 
     /* NT only checks count, not val_count */
     if ((data && !count) || reserved) return ERROR_INVALID_PARAMETER;
-	
+
 	status = MapDefaultKey (&KeyHandle, hKey);
 	if (!NT_SUCCESS(status))
 	{
@@ -1690,7 +1690,7 @@ RegOpenKeyExW (HKEY hKey,
 
 	DPRINT("RegOpenKeyExW hKey 0x%x lpSubKey %S ulOptions 0x%x samDesired 0x%x phkResult %p\n",
 		hKey, lpSubKey, ulOptions, samDesired, phkResult);
-	
+
 	Status = MapDefaultKey (&KeyHandle, hKey);
 	if (!NT_SUCCESS(Status))
 	{
@@ -1738,13 +1738,13 @@ RegOpenUserClassesRoot (IN HANDLE hToken,
   OBJECT_ATTRIBUTES ObjectAttributes;
   LONG ErrorCode;
   NTSTATUS Status;
-  
+
   /* check parameters */
   if (hToken == NULL || dwOptions != 0 || phkResult == NULL)
   {
     return ERROR_INVALID_PARAMETER;
   }
-  
+
   /*
    * Get the user sid from the token
    */
@@ -1789,14 +1789,14 @@ ReadTokenSid:
       /* the information appears to have changed?! try again */
       goto ReadTokenSid;
     }
-    
+
     /* NOTE - as opposed to all other registry functions windows does indeed
               change the last error code in case the caller supplied a invalid
               handle for example! */
     ErrorCode = RtlNtStatusToDosError (Status);
     return ErrorCode;
   }
-  
+
   /*
    * Build the absolute path for the user's registry in the form
    * "\Registry\User\<SID>_Classes"
@@ -1814,7 +1814,7 @@ ReadTokenSid:
   {
     return RtlNtStatusToDosError (Status);
   }
-  
+
   /* allocate enough memory for the entire key string */
   UserClassesKeyRoot.Length = 0;
   UserClassesKeyRoot.MaximumLength = UserSidString.Length +
@@ -1828,7 +1828,7 @@ ReadTokenSid:
     RtlFreeUnicodeString(&UserSidString);
     return RtlNtStatusToDosError (Status);
   }
-  
+
   /* build the string */
   RtlAppendUnicodeToString(&UserClassesKeyRoot,
                            UserClassesKeyPrefix);
@@ -1836,7 +1836,7 @@ ReadTokenSid:
                                  &UserSidString);
   RtlAppendUnicodeToString(&UserClassesKeyRoot,
                            UserClassesKeySuffix);
-  
+
   DPRINT("RegOpenUserClassesRoot: Absolute path: %wZ\n", &UserClassesKeyRoot);
 
   /*
@@ -1848,19 +1848,19 @@ ReadTokenSid:
 			      OBJ_CASE_INSENSITIVE,
 			      NULL,
 			      NULL);
-  
+
   Status = NtOpenKey((PHANDLE)phkResult,
                      samDesired,
                      &ObjectAttributes);
-  
+
   RtlFreeUnicodeString(&UserSidString);
   RtlFreeUnicodeString(&UserClassesKeyRoot);
-  
+
   if (!NT_SUCCESS(Status))
   {
     return RtlNtStatusToDosError (Status);
   }
-  
+
   return ERROR_SUCCESS;
 }
 
@@ -3037,7 +3037,7 @@ RegSetValueExA (HKEY hKey,
       {
          cbData++;
       }
-      
+
       RtlInitAnsiString (&AnsiString,
 			 NULL);
       AnsiString.Buffer = (PSTR)lpData;
@@ -3116,7 +3116,7 @@ RegSetValueExW (HKEY hKey,
       RtlInitUnicodeString (&ValueName, L"");
     }
   pValueName = &ValueName;
-  
+
   if (((dwType == REG_SZ) ||
        (dwType == REG_MULTI_SZ) ||
        (dwType == REG_EXPAND_SZ)) &&
@@ -3155,12 +3155,12 @@ RegSetValueA (HKEY hKey,
 {
   LONG ret;
   HKEY hSubKey;
-  
+
   if (dwType != REG_SZ)
   {
      return ERROR_INVALID_PARAMETER;
   }
-  
+
   if (lpSubKey != NULL && lpSubKey[0] != '\0')
   {
      ret = RegCreateKeyA(hKey,
@@ -3174,14 +3174,14 @@ RegSetValueA (HKEY hKey,
   }
   else
      hSubKey = hKey;
-  
+
   ret = RegSetValueExA(hSubKey,
                        NULL,
                        0,
                        REG_SZ,
                        (CONST BYTE*)lpData,
                        strlen(lpData) + 1);
-  
+
   if (hSubKey != hKey)
   {
      RegCloseKey(hSubKey);

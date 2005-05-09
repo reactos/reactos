@@ -55,7 +55,7 @@ void test_md5_ctx()
     HMODULE module;
 
     MD5_CTX ctx;
-    MD5_CTX ctx_initialized = 
+    MD5_CTX ctx_initialized =
     {
         { 0, 0 },
         { 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476 }
