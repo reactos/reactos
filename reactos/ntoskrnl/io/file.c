@@ -2058,7 +2058,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     PIO_STACK_LOCATION StackPtr;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
-    BOOLEAN LocalEvent;
+    BOOLEAN LocalEvent = FALSE;
     PKEVENT Event = NULL;
    
     DPRINT("NtQueryDirectoryFile()\n");
@@ -2435,127 +2435,171 @@ NtReadFile(IN HANDLE FileHandle,
            IN PLARGE_INTEGER ByteOffset OPTIONAL, /* NOT optional for asynch. operations! */
            IN PULONG Key OPTIONAL)
 {
-  NTSTATUS Status;
-  PFILE_OBJECT FileObject;
-  PIRP Irp = NULL;
-  PIO_STACK_LOCATION StackPtr;
-  KPROCESSOR_MODE PreviousMode;
-  PKEVENT EventObject = NULL;
+   NTSTATUS Status;
+   PFILE_OBJECT FileObject;
+   PIRP Irp = NULL;
+   PDEVICE_OBJECT DeviceObject;
+   PIO_STACK_LOCATION StackPtr;
+   KPROCESSOR_MODE PreviousMode;
+   BOOLEAN LocalEvent = FALSE;
+   PKEVENT EventObject = NULL;
 
-  DPRINT("NtReadFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
-  "IoStatusBlock %x)\n", FileHandle, Buffer, Length, ByteOffset,
-  IoStatusBlock);
-
-  if (IoStatusBlock == NULL)
-    return STATUS_ACCESS_VIOLATION;
-
-  PreviousMode = ExGetPreviousMode();
-
-  Status = ObReferenceObjectByHandle(FileHandle,
-         FILE_READ_DATA,
-         IoFileObjectType,
-         PreviousMode,
-         (PVOID*)&FileObject,
-         NULL);
-  if (!NT_SUCCESS(Status))
-  {
-    return Status;
-  }
-
-  if (ByteOffset == NULL ||
-      (ByteOffset->u.LowPart == FILE_USE_FILE_POINTER_POSITION &&
-       ByteOffset->u.HighPart == 0xffffffff))
-  {
-    /* a valid ByteOffset is required if asynch. op. */
-    if (!(FileObject->Flags & FO_SYNCHRONOUS_IO))
-    {
-      DPRINT1("NtReadFile: missing ByteOffset for asynch. op\n");
-      ObDereferenceObject(FileObject);
-      return STATUS_INVALID_PARAMETER;
-    }
-
-    ByteOffset = &FileObject->CurrentByteOffset;
-  }
-
-  if (Event != NULL)
-  {
-    Status = ObReferenceObjectByHandle(Event,
-           SYNCHRONIZE,
-           ExEventObjectType,
-           PreviousMode,
-           (PVOID*)&EventObject,
-           NULL);
-    if (!NT_SUCCESS(Status))
-      {
-        ObDereferenceObject(FileObject);
- return Status;
-      }
-
-    KeClearEvent(EventObject);
-  }
-
-  _SEH_TRY
-  {
-     Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
-            FileObject->DeviceObject,
-            Buffer,
-            Length,
-            ByteOffset,
-     EventObject,
+    DPRINT("NtReadFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
+           "IoStatusBlock %x)\n", FileHandle, Buffer, Length, ByteOffset,
             IoStatusBlock);
-  }
-  _SEH_HANDLE
-  {
-     Status = _SEH_GetExceptionCode();
-  }
-  _SEH_END;
-
-  if (!NT_SUCCESS(Status) || Irp == NULL)
-  {
-     if (Event)
-     {
-        ObDereferenceObject(&EventObject);
-     }
-     ObDereferenceObject(FileObject);
-     if (Irp)
-     {
-        IoFreeIrp(Irp);
-     }
-     return NT_SUCCESS(Status) ? STATUS_INSUFFICIENT_RESOURCES : Status;
-  }
-
-  KeClearEvent(&FileObject->Event);
-
-  /* Trigger FileObject/Event dereferencing */
-  Irp->Tail.Overlay.OriginalFileObject = FileObject;
-
-  Irp->RequestorMode = PreviousMode;
-
-  Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
-  Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
-
-  StackPtr = IoGetNextIrpStackLocation(Irp);
-  StackPtr->FileObject = FileObject;
-  StackPtr->Parameters.Read.Key = Key ? *Key : 0;
-
-  Status = IoCallDriver(FileObject->DeviceObject, Irp);
-  if (Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
-  {
-    Status = KeWaitForSingleObject(&FileObject->Event,
-       Executive,
-       PreviousMode,
-       FileObject->Flags & FO_ALERTABLE_IO,
-       NULL);
-    if (Status != STATUS_WAIT_0)
+    PAGED_CODE();
+    
+    #if 0
+    /* Validate User-Mode Buffers */
+    if(PreviousMode != KernelMode)
     {
-      /* Wait failed. */
-      return Status;
+        _SEH_TRY
+        {
+            ProbeForWrite(IoStatusBlock,
+                          sizeof(IO_STATUS_BLOCK),
+                          sizeof(ULONG));
+            ProbeForWrite(Buffer,
+                          Length,
+                          sizeof(ULONG));
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
+        if(!NT_SUCCESS(Status)) return Status;
+    }
+    #endif
+
+    /* Get File Object */
+    Status = ObReferenceObjectByHandle(FileHandle,
+                                       FILE_READ_DATA,
+                                       IoFileObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&FileObject,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return Status;
+    
+    /* Check the Byte Offset */
+    if (!ByteOffset || 
+        (ByteOffset->u.LowPart == FILE_USE_FILE_POINTER_POSITION &&
+         ByteOffset->u.HighPart == 0xffffffff))
+    {
+        /* a valid ByteOffset is required if asynch. op. */
+        if (!(FileObject->Flags & FO_SYNCHRONOUS_IO))
+        {
+            DPRINT1("NtReadFile: missing ByteOffset for asynch. op\n");
+            ObDereferenceObject(FileObject);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        /* Use the Current Byte OFfset */
+        ByteOffset = &FileObject->CurrentByteOffset;
     }
 
-    Status = IoStatusBlock->Status;
-  }
+    /* Check for event */
+    if (Event)
+    {
+        /* Reference it */
+        Status = ObReferenceObjectByHandle(Event,
+                                           EVENT_MODIFY_STATE,
+                                           ExEventObjectType,
+                                           PreviousMode,
+                                           (PVOID*)&EventObject,
+                                           NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
+        KeClearEvent(EventObject);
+    }
 
-  return Status;
+    /* Check if this is a direct open or not */
+    if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
+    {
+        DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
+    }
+    else
+    {
+        DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    }
+   
+    /* Check if we should use Sync IO or not */
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+    {
+        /* Use File Object event */
+        KeClearEvent(&FileObject->Event);
+    }
+    else
+    {
+        LocalEvent = TRUE;
+    }
+    
+    /* Create the IRP */
+    _SEH_TRY
+    {
+        Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
+                                           DeviceObject,
+                                           Buffer,
+                                           Length,
+                                           ByteOffset,
+                                           EventObject,
+                                           IoStatusBlock);
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    /* Cleanup if IRP Allocation Failed */
+    if (!NT_SUCCESS(Status) || !Irp)
+    {
+        if (Event) ObDereferenceObject(EventObject);
+        ObDereferenceObject(FileObject);
+        if (Irp)
+        {
+            IoFreeIrp(Irp);
+        }
+        return NT_SUCCESS(Status) ? STATUS_INSUFFICIENT_RESOURCES : Status;
+    }
+
+    /* Set up IRP Data */
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    Irp->RequestorMode = PreviousMode;
+    Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
+    Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
+    Irp->Flags |= IRP_READ_OPERATION;
+    
+    /* FIXME: Somethign weird is going on when I enable this. */
+    //if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) Irp->Flags |= IRP_NOCACHE;
+    
+    /* Setup Stack Data */
+    StackPtr = IoGetNextIrpStackLocation(Irp);
+    StackPtr->FileObject = FileObject;
+    StackPtr->Parameters.Read.Key = Key ? *Key : 0;
+    StackPtr->Parameters.Read.Length = Length;
+    StackPtr->Parameters.Read.ByteOffset = *ByteOffset;
+
+    /* Call the Driver */
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        if (!LocalEvent)
+        {
+            KeWaitForSingleObject(&FileObject->Event,
+                                  Executive, 
+                                  PreviousMode, 
+                                  FileObject->Flags & FO_ALERTABLE_IO, 
+                                  NULL);
+            Status = FileObject->FinalStatus;
+        }
+    }
+
+    /* Return the Status */
+    return Status;
 }
 
 /*
