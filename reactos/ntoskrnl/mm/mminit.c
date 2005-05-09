@@ -1,7 +1,7 @@
 /* $Id$
  *
  * COPYRIGHT:       See COPYING in the top directory
- * PROJECT:         ReactOS kernel 
+ * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/mminit.c
  * PURPOSE:         Kernel memory managment initialization functions
  *
@@ -368,9 +368,9 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
     * Initialize the kernel address space
     */
    MmInitializeKernelAddressSpace();
-   
+
    MmInitGlobalKernelPageDirectory();
-   
+
    DbgPrint("Used memory %dKb\n", (MmStats.NrTotalPages * PAGE_SIZE) / 1024);
    DPRINT1("Kernel Stack Limits. InitTop = 0x%x, Init = 0x%x\n", init_stack_top, init_stack);
 
@@ -389,13 +389,13 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
 #ifdef CONFIG_SMP
    /* In SMP mode we unmap the low memory pagetable in MmInit3.
       The APIC needs the mapping of the first pages
-      while the processors are starting up. 
+      while the processors are starting up.
       We unmap all pages except page 2 and 3. */
    for (MappingAddress = 0;
         MappingAddress < 1024 * PAGE_SIZE;
         MappingAddress += PAGE_SIZE)
    {
-      if (MappingAddress != 2 * PAGE_SIZE && 
+      if (MappingAddress != 2 * PAGE_SIZE &&
           MappingAddress != 3 * PAGE_SIZE)
       {
          MmRawDeleteVirtualMapping((PVOID)MappingAddress);

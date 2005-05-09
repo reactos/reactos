@@ -3,7 +3,7 @@
  * PROJECT:            ReactOS kernel
  * FILE:               ntoskrnl/ob/wait.c
  * PURPOSE:            Handles Waiting on Objects
- * 
+ *
  * PROGRAMMERS:        Alex Ionescu (alex@relsoft.net) - Created file
  *                     David Welch (welch@mcmail.com)
  */
@@ -54,7 +54,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
           what objects we referenced in case dereferencing pointers suddenly fails */
        RtlCopyMemory(SafeObjectsArray, ObjectsArray, ObjectCount * sizeof(ObjectsArray[0]));
        ObjectsArray = SafeObjectsArray;
-       
+
        if(TimeOut != NULL)
        {
          ProbeForRead(TimeOut,
@@ -70,7 +70,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
        Status = _SEH_GetExceptionCode();
      }
      _SEH_END;
-     
+
      if(!NT_SUCCESS(Status))
      {
        return Status;
@@ -90,7 +90,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
           {
              if (NT_SUCCESS(Status))
 	       {
-	         DPRINT1("Waiting for object type '%wZ' is not supported\n", 
+	         DPRINT1("Waiting for object type '%wZ' is not supported\n",
 		         &BODY_TO_HEADER(ObjectPtrArray[i])->ObjectType->TypeName);
 	         Status = STATUS_HANDLE_NOT_WAITABLE;
 		 i++;
@@ -141,7 +141,7 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
 	  ObjectHandle,Alertable,TimeOut);
 
    PreviousMode = ExGetPreviousMode();
-   
+
    if(TimeOut != NULL && PreviousMode != KernelMode)
    {
      _SEH_TRY
@@ -158,7 +158,7 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
        Status = _SEH_GetExceptionCode();
      }
      _SEH_END;
-     
+
      if(!NT_SUCCESS(Status))
      {
        return Status;
@@ -177,7 +177,7 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
      }
    if (!KiIsObjectWaitable(ObjectPtr))
      {
-       DPRINT1("Waiting for object type '%wZ' is not supported\n", 
+       DPRINT1("Waiting for object type '%wZ' is not supported\n",
 	       &BODY_TO_HEADER(ObjectPtr)->ObjectType->TypeName);
        Status = STATUS_HANDLE_NOT_WAITABLE;
      }
@@ -210,7 +210,7 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
    NTSTATUS Status = STATUS_SUCCESS;
 
    PreviousMode = ExGetPreviousMode();
-   
+
    if(TimeOut != NULL && PreviousMode != KernelMode)
    {
      _SEH_TRY
@@ -227,13 +227,13 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
        Status = _SEH_GetExceptionCode();
      }
      _SEH_END;
-     
+
      if(!NT_SUCCESS(Status))
      {
        return Status;
      }
    }
-   
+
    Status = ObReferenceObjectByHandle(ObjectHandleToSignal,
 				      0,
 				      NULL,

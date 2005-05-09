@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/dbgprint.c
  * PURPOSE:         Debug output
- * 
+ *
  * PROGRAMMERS:     Eric Kohl (ekohl@abo.rhein-zeitung.de)
  */
 
@@ -23,7 +23,7 @@
 /*
  * @implemented
  */
-ULONG 
+ULONG
 DbgPrint(PCH Format, ...)
 {
    ANSI_STRING DebugString;
@@ -129,7 +129,7 @@ DbgPrintReturnControlC(PCH Format,
 /*
  * @unimplemented
  */
-VOID 
+VOID
 STDCALL
 DbgPrompt(PCH OutputString,
           PCH InputString,
@@ -137,11 +137,11 @@ DbgPrompt(PCH OutputString,
 {
     ANSI_STRING Output;
     ANSI_STRING Input;
-   
+
     Input.Length = 0;
     Input.MaximumLength = InputSize;
     Input.Buffer = InputString;
-   
+
     Output.Length = strlen (OutputString);
     Output.MaximumLength = Output.Length + 1;
     Output.Buffer = OutputString;
@@ -181,7 +181,7 @@ DbgSetDebugFilterState(IN ULONG ComponentId,
 NTSTATUS
 STDCALL
 DbgLoadImageSymbols(IN PUNICODE_STRING Name,
-                    IN ULONG Base, 
+                    IN ULONG Base,
                     IN ULONG Unknown3)
 {
     UNIMPLEMENTED;

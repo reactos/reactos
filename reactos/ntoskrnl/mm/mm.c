@@ -1,7 +1,7 @@
 /* $Id$
  *
  * COPYRIGHT:       See COPYING in the top directory
- * PROJECT:         ReactOS kernel 
+ * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/mm.c
  * PURPOSE:         Kernel memory managment functions
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
@@ -484,19 +484,19 @@ MmGetSystemRoutineAddress (
   PVOID ProcAddress;
   ANSI_STRING AnsiRoutineName;
   NTSTATUS Status;
-  
+
   if(!NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiRoutineName,
                                               SystemRoutineName,
                                               TRUE)))
   {
     return NULL;
   }
-  
+
   Status = LdrGetProcedureAddress(NtoskrnlModuleObject.Base,
                                   &AnsiRoutineName,
                                   0,
                                   &ProcAddress);
-  
+
   if(!NT_SUCCESS(Status))
   {
     Status = LdrGetProcedureAddress(HalModuleObject.Base,
@@ -504,9 +504,9 @@ MmGetSystemRoutineAddress (
                                     0,
                                     &ProcAddress);
   }
-  
+
   RtlFreeAnsiString(&AnsiRoutineName);
-  
+
   return (NT_SUCCESS(Status) ? ProcAddress : NULL);
 }
 

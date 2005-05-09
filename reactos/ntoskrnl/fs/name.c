@@ -168,7 +168,7 @@ PUCHAR EXPORTED FsRtlLegalAnsiCharacterArray = LegalAnsiCharacterArray;
  *
  * @implemented
  */
-BOOLEAN 
+BOOLEAN
 STDCALL
 FsRtlAreNamesEqual(IN PUNICODE_STRING Name1,
                    IN PUNICODE_STRING Name2,
@@ -178,13 +178,13 @@ FsRtlAreNamesEqual(IN PUNICODE_STRING Name1,
     UNICODE_STRING UpcaseName1;
     UNICODE_STRING UpcaseName2;
     BOOLEAN StringsAreEqual;
-    
+
     /* Well, first check their size */
     if (Name1->Length != Name2->Length) {
         /* Not equal! */
         return FALSE;
     }
-    
+
     /* Turn them into Upcase if we don't have a table */
     if (IgnoreCase && !UpcaseTable) {
         RtlUpcaseUnicodeString(&UpcaseName1, Name1, TRUE);
@@ -192,42 +192,42 @@ FsRtlAreNamesEqual(IN PUNICODE_STRING Name1,
         Name1 = &UpcaseName1;
         Name2 = &UpcaseName2;
 
-        goto ManualCase;       
+        goto ManualCase;
     }
-    
+
     /* Do a case-sensitive search */
     if (!IgnoreCase) {
-        
+
 ManualCase:
         /* Use a raw memory compare */
         StringsAreEqual = RtlEqualMemory(Name1->Buffer,
                                          Name2->Buffer,
                                          Name1->Length);
-        
+
         /* Clear the strings if we need to */
         if (IgnoreCase) {
             RtlFreeUnicodeString(&UpcaseName1);
             RtlFreeUnicodeString(&UpcaseName2);
         }
-        
+
         /* Return the equality */
         return StringsAreEqual;
-    
+
     } else {
-        
+
         /* Case in-sensitive search */
-        
+
         LONG i;
-        
+
         for (i = Name1->Length / sizeof(WCHAR) - 1; i >= 0; i--) {
-            
+
             if (UpcaseTable[Name1->Buffer[i]] != UpcaseTable[Name2->Buffer[i]]) {
-                
+
                 /* Non-match found! */
                 return FALSE;
             }
-        }   
-        
+        }
+
         /* We finished the loop so we are equal */
         return TRUE;
     }
@@ -261,7 +261,7 @@ ManualCase:
  *
  * @implemented
  */
-VOID 
+VOID
 STDCALL
 FsRtlDissectDbcs(IN ANSI_STRING Name,
                  OUT PANSI_STRING FirstPart,
@@ -269,39 +269,39 @@ FsRtlDissectDbcs(IN ANSI_STRING Name,
 {
     ULONG i;
     ULONG FirstLoop;
-    
+
     /* Initialize the Outputs */
     RtlZeroMemory(&FirstPart, sizeof(ANSI_STRING));
     RtlZeroMemory(&RemainingPart, sizeof(ANSI_STRING));
-    
+
     /* Bail out if empty */
     if (!Name.Length) return;
-    
+
     /* Ignore backslash */
     if (Name.Buffer[0] == '\\') {
         i = 1;
     } else {
         i = 0;
     }
-    
+
     /* Loop until we find a backslash */
     for (FirstLoop = i;i < Name.Length;i++) {
         if (Name.Buffer[i] != '\\') break;
         if (FsRtlIsLeadDbcsCharacter(Name.Buffer[i])) i++;
     }
-    
+
     /* Now we have the First Part */
     FirstPart->Length = (i-FirstLoop);
     FirstPart->MaximumLength = FirstPart->Length; /* +2?? */
     FirstPart->Buffer = &Name.Buffer[FirstLoop];
-    
+
     /* Make the second part if something is still left */
     if (i<Name.Length) {
         RemainingPart->Length = (Name.Length - (i+1));
         RemainingPart->MaximumLength = RemainingPart->Length; /* +2?? */
         RemainingPart->Buffer = &Name.Buffer[i+1];
     }
-    
+
     return;
 }
 
@@ -334,7 +334,7 @@ FsRtlDissectDbcs(IN ANSI_STRING Name,
  *
  * @implemented
  */
-VOID 
+VOID
 STDCALL
 FsRtlDissectName(IN UNICODE_STRING Name,
                  OUT PUNICODE_STRING FirstPart,
@@ -368,7 +368,7 @@ FsRtlDissectName(IN UNICODE_STRING Name,
     NameLength++;
   }
 
-  FirstPart->Length = 
+  FirstPart->Length =
   FirstPart->MaximumLength = NameLength * sizeof(WCHAR);
   FirstPart->Buffer = &Name.Buffer[NameOffset];
 
@@ -393,15 +393,15 @@ FsRtlDissectName(IN UNICODE_STRING Name,
  *
  * @implemented
  */
-BOOLEAN 
+BOOLEAN
 STDCALL
 FsRtlDoesDbcsContainWildCards(IN PANSI_STRING Name)
 {
     ULONG i;
-    
+
     /* Check every character */
     for (i=0;i < Name->Length;i++) {
-        
+
         /* First make sure it's not the Lead DBCS */
         if (FsRtlIsLeadDbcsCharacter(Name->Buffer[i])) {
             i++;
@@ -410,7 +410,7 @@ FsRtlDoesDbcsContainWildCards(IN PANSI_STRING Name)
             return TRUE;
         }
     }
-    
+
     /* We didn't return above...so none found */
     return FALSE;
 }
@@ -430,7 +430,7 @@ FsRtlDoesDbcsContainWildCards(IN PANSI_STRING Name)
  *
  * @implemented
  */
-BOOLEAN 
+BOOLEAN
 STDCALL
 FsRtlDoesNameContainWildCards(IN PUNICODE_STRING Name)
 {
@@ -457,14 +457,14 @@ FsRtlDoesNameContainWildCards(IN PUNICODE_STRING Name)
  * FsRtlIsDbcsInExpression@8
  *
  * DESCRIPTION
- * 
+ *
  * ARGUMENTS
  *
  * RETURN VALUE
  *
  * @unimplemented
  */
-BOOLEAN 
+BOOLEAN
 STDCALL
 FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
                         IN PANSI_STRING Name)
@@ -486,10 +486,10 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
  */
 BOOLEAN
 STDCALL
-FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName, 
-                    IN BOOLEAN WildCardsPermissible, 
-                    IN BOOLEAN PathNamePermissible, 
-                    IN BOOLEAN LeadingBackslashPermissible) 
+FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName,
+                    IN BOOLEAN WildCardsPermissible,
+                    IN BOOLEAN PathNamePermissible,
+                    IN BOOLEAN LeadingBackslashPermissible)
 {
   return FALSE;
 }
@@ -499,19 +499,19 @@ FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName,
  *  FsRtlIsHpfsDbcsLegal@20
  *
  * DESCRIPTION
- *	
+ *
  * ARGUMENTS
  *
  * RETURN VALUE
  *
  * @unimplemented
  */
-BOOLEAN 
+BOOLEAN
 STDCALL
-FsRtlIsHpfsDbcsLegal(IN ANSI_STRING DbcsName, 
-                     IN BOOLEAN WildCardsPermissible, 
-                     IN BOOLEAN PathNamePermissible, 
-                     IN BOOLEAN LeadingBackslashPermissible) 
+FsRtlIsHpfsDbcsLegal(IN ANSI_STRING DbcsName,
+                     IN BOOLEAN WildCardsPermissible,
+                     IN BOOLEAN PathNamePermissible,
+                     IN BOOLEAN LeadingBackslashPermissible)
 {
   return FALSE;
 }
@@ -533,7 +533,7 @@ FsRtlIsHpfsDbcsLegal(IN ANSI_STRING DbcsName,
  *
  * @implemented
  */
-BOOLEAN 
+BOOLEAN
 STDCALL
 FsRtlIsNameInExpression(IN PUNICODE_STRING Expression,
                         IN PUNICODE_STRING Name,

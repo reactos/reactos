@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -17,7 +17,7 @@
 #ifndef VACB_MAPPING_GRANULARITY
 #define VACB_MAPPING_GRANULARITY (256 * 1024)
 #endif
- 
+
 /* GLOBALS   *****************************************************************/
 
 extern FAST_MUTEX ViewLock;
@@ -41,7 +41,7 @@ CcGetDirtyPages (
 {
 	UNIMPLEMENTED;
 
-	LARGE_INTEGER i; 
+	LARGE_INTEGER i;
 	i.QuadPart = 0;
 	return i;
 }
@@ -71,7 +71,7 @@ CcGetLsnForFileObject (
 {
 	UNIMPLEMENTED;
 
-	LARGE_INTEGER i; 
+	LARGE_INTEGER i;
 	i.QuadPart = 0;
 	return i;
 }
@@ -136,7 +136,7 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
   LIST_ENTRY FreeListHead;
   NTSTATUS Status;
 
-  DPRINT("CcSetFileSizes(FileObject %x, FileSizes %x)\n", 
+  DPRINT("CcSetFileSizes(FileObject %x, FileSizes %x)\n",
 	 FileObject, FileSizes);
   DPRINT("AllocationSize %d, FileSize %d, ValidDataLength %d\n",
          (ULONG)FileSizes->AllocationSize.QuadPart,
@@ -151,7 +151,7 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
    */
   if (Bcb == NULL)
      return;
- 
+
   if (FileSizes->AllocationSize.QuadPart < Bcb->AllocationSize.QuadPart)
   {
      InitializeListHead(&FreeListHead);
@@ -184,7 +184,7 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
 	   }
 	}
      }
-     
+
      Bcb->AllocationSize = FileSizes->AllocationSize;
      Bcb->FileSize = FileSizes->FileSize;
      KeReleaseSpinLock(&Bcb->BcbLock, oldirql);

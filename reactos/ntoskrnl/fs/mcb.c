@@ -15,7 +15,7 @@
  * NAME							EXPORTED
  *
  * DESCRIPTION
- *	
+ *
  * ARGUMENTS
  *
  * RETURN VALUE
@@ -87,12 +87,12 @@ FsRtlGetNextMcbEntry (IN PMCB     Mcb,
                                      &llVbn,
                                      &llLbn,
                                      &llSectorCount);
-  
+
   /* Return everything typecasted */
   *Vbn = (ULONG)llVbn;
   *Lbn = (ULONG)llLbn;
   *SectorCount = (ULONG)llSectorCount;
-  
+
   /* And return the original value */
   return(Return);
 }
@@ -212,11 +212,11 @@ FsRtlLookupLastMcbEntry(IN PMCB Mcb,
   Return = FsRtlLookupLastLargeMcbEntry(&Mcb->LargeMcb,
                                         &llVbn,
                                         &llLbn);
-  
+
   /* Return everything typecasted */
   *Vbn = (ULONG)llVbn;
   *Lbn = (ULONG)llLbn;
-  
+
   /* And return the original value */
   return(Return);
 }
@@ -244,11 +244,11 @@ FsRtlLookupMcbEntry(IN PMCB Mcb,
                                     NULL,
                                     NULL,
                                     Index);
-  
+
   /* Return everything typecasted */
   *Lbn = (ULONG)llLbn;
   if (SectorCount) *SectorCount = (ULONG)llSectorCount;
-  
+
   /* And return the original value */
   return(Return);
 }

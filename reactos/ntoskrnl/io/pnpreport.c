@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/pnpreport.c
  * PURPOSE:         Device Changes Reporting functions
- * 
+ *
  * PROGRAMMERS:     Filip Navara (xnavara@volny.cz)
  */
 
@@ -34,10 +34,10 @@ IoReportDetectedDevice(
   PDEVICE_NODE DeviceNode;
   PDEVICE_OBJECT Pdo;
   NTSTATUS Status = STATUS_SUCCESS;
-  
+
   DPRINT("IoReportDetectedDevice (DeviceObject %p, *DeviceObject %p)\n",
     DeviceObject, DeviceObject ? *DeviceObject : NULL);
-  
+
   /* if *DeviceObject is not NULL, we must use it as a PDO,
    * and don't create a new one.
    */
@@ -56,13 +56,13 @@ IoReportDetectedDevice(
     if (DeviceObject)
       *DeviceObject = Pdo;
   }
-  
+
   /* we don't need to call AddDevice and send IRP_MN_START_DEVICE */
-  
+
   /* FIXME: save this device into the root-enumerated list, so this
    * device would be detected as a PnP device during next startups.
    */
-  
+
   return Status;
 }
 
@@ -82,17 +82,17 @@ IoReportResourceForDetection(
 {
   *ConflictDetected = FALSE;
   DPRINT1("IoReportResourceForDetection partly implemented\n");
-  
+
   /* FIXME: Manually indicate conflicts with KD Ports */
   if (DriverList)
   {
       if (KdpDetectConflicts(DriverList))
       {
         *ConflictDetected = TRUE;
-        return STATUS_CONFLICTING_ADDRESSES; 
+        return STATUS_CONFLICTING_ADDRESSES;
       }
   }
-    
+
   if (PopSystemPowerDeviceNode != NULL && DriverListSize > 0)
   {
     /* We hope legacy devices will be enumerated by ACPI */

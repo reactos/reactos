@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/contrller.c
  * PURPOSE:         Implements the controller object
- * 
+ *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
 
@@ -45,7 +45,7 @@ IoAllocateController(PCONTROLLER_OBJECT ControllerObject,
     /* Initialize the Wait Context Block */
     DeviceObject->Queue.Wcb.DeviceContext = Context;
     DeviceObject->Queue.Wcb.DeviceRoutine = ExecutionRoutine;
-    
+
     /* Insert the Device Queue */
     if (!KeInsertDeviceQueue(&ControllerObject->DeviceWaitQueue,
                              &DeviceObject->Queue.Wcb.WaitQueueEntry));
@@ -53,9 +53,9 @@ IoAllocateController(PCONTROLLER_OBJECT ControllerObject,
         Result = ExecutionRoutine(DeviceObject,
                                   DeviceObject->CurrentIrp,
                                   NULL,
-                                  Context); 
+                                  Context);
     }
-       
+
     if (Result == DeallocateObject)
     {
         IoFreeController(ControllerObject);
@@ -83,7 +83,7 @@ IoCreateController(ULONG Size)
 
    /* Initialize an empty OBA */
    InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
-   
+
    /* Create the Object */
    Status = ObCreateObject(KernelMode,
                            IoControllerObjectType,
@@ -95,7 +95,7 @@ IoCreateController(ULONG Size)
                            0,
                            (PVOID*)&Controller);
     if (!NT_SUCCESS(Status)) return NULL;
-    
+
     /* Insert it */
     Status = ObInsertObject(Controller,
                             NULL,
@@ -104,16 +104,16 @@ IoCreateController(ULONG Size)
                             NULL,
                             &Handle);
    if (!NT_SUCCESS(Status)) return NULL;
-   
+
     /* Close the dummy handle */
     NtClose(Handle);
-        
+
     /* Zero the Object and set its data */
     RtlZeroMemory(Controller, sizeof(CONTROLLER_OBJECT) + Size);
     Controller->Type = IO_TYPE_CONTROLLER;
     Controller->Size = sizeof(CONTROLLER_OBJECT) + Size;
     Controller->ControllerExtension = (Controller + 1);
-    
+
     /* Initialize its Queue */
     KeInitializeDeviceQueue(&Controller->DeviceWaitQueue);
 
@@ -140,7 +140,7 @@ IoDeleteController(PCONTROLLER_OBJECT ControllerObject)
 /*
  * @implemented
  *
- * FUNCTION: Releases a previously allocated controller object when a 
+ * FUNCTION: Releases a previously allocated controller object when a
  * device has finished an I/O request
  * ARGUMENTS:
  *       ControllerObject = Controller object to be released
@@ -157,8 +157,8 @@ IoFreeController(PCONTROLLER_OBJECT ControllerObject)
     if ((QueueEntry = KeRemoveDeviceQueue(&ControllerObject->DeviceWaitQueue)))
     {
         /* Get the Device Object */
-        DeviceObject = CONTAINING_RECORD(QueueEntry, 
-                                         DEVICE_OBJECT, 
+        DeviceObject = CONTAINING_RECORD(QueueEntry,
+                                         DEVICE_OBJECT,
                                          Queue.Wcb.WaitQueueEntry);
         /* Call the routine */
         Result = DeviceObject->Queue.Wcb.DeviceRoutine(DeviceObject,

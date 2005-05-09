@@ -14,7 +14,7 @@
 
 /* GLOBALS *******************************************************************/
 
-#define BufferSize 32*1024 
+#define BufferSize 32*1024
 
 HANDLE KdbLogFileHandle;
 BOOLEAN KdpLogInitialized;
@@ -45,10 +45,10 @@ KdpPrintToLogInternal(PVOID Context)
                 CurrentPosition,
                 NULL,
                 NULL);
-    
+
     /* Clear the Current Position */
     CurrentPosition = 0;
-    
+
     /* A new item can be queued now */
     ItemQueued = FALSE;
 }
@@ -58,19 +58,19 @@ STDCALL
 KdpPrintToLog(PCH String)
 {
     ULONG StringLength = strlen(String);
-    
+
     /* Don't overflow */
     if ((CurrentPosition + StringLength) > BufferSize) return;
-    
+
     /* Add the string to the buffer */
     RtlMoveMemory(&DebugBuffer[CurrentPosition], String, StringLength);
-    
+
     /* Update the Current Position */
     CurrentPosition += StringLength;
- 
+
     /* Make sure we are initialized and can queue */
     if (!KdpLogInitialized || (ItemQueued)) return;
-       
+
     /* Queue the work item */
     ExQueueWorkItem(&KdpDebugLogQueue, HyperCriticalWorkQueue);
     ItemQueued = TRUE;
@@ -85,14 +85,14 @@ KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING FileName;
-    IO_STATUS_BLOCK Iosb;    
-    
+    IO_STATUS_BLOCK Iosb;
+
     if (BootPhase == 0)
     {
         /* Write out the functions that we support for now */
         DispatchTable->KdpInitRoutine = KdpInitDebugLog;
         DispatchTable->KdpPrintRoutine = KdpPrintToLog;
-        
+
         /* Register as a Provider */
         InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
     }
@@ -109,7 +109,7 @@ KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
                                    0,
                                    NULL,
                                    NULL);
-                            
+
         /* Create the Log File */
         Status = NtCreateFile(&KdbLogFileHandle,
                               FILE_ALL_ACCESS,
@@ -122,7 +122,7 @@ KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
                               FILE_WRITE_THROUGH | FILE_SYNCHRONOUS_IO_NONALERT,
                               NULL,
                               0);
-    
+
         /* Allow it to be used */
         ExInitializeWorkItem(&KdpDebugLogQueue, &KdpPrintToLogInternal, NULL);
         KdpLogInitialized = TRUE;
@@ -160,17 +160,17 @@ KdpSerialInit(PKD_DISPATCH_TABLE DispatchTable,
         /* Write out the functions that we support for now */
         DispatchTable->KdpInitRoutine = KdpSerialInit;
         DispatchTable->KdpPrintRoutine = KdpSerialDebugPrint;
-    
+
         /* Initialize the Port */
         KdPortInitializeEx(&SerialPortInfo, 0, 0);
-    
+
         /* Register as a Provider */
         InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
     }
     else if (BootPhase == 2)
     {
         HalDisplayString("\n   Serial debugging enabled\n\n");
-    }   
+    }
 }
 
 /* SCREEN FUNCTIONS **********************************************************/
@@ -187,14 +187,14 @@ KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
         /* Write out the functions that we support for now */
         DispatchTable->KdpInitRoutine = KdpScreenInit;
         DispatchTable->KdpPrintRoutine = HalDisplayString;
-    
+
         /* Register as a Provider */
         InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
     }
     else if (BootPhase == 2)
     {
         HalDisplayString("\n   Screen debugging enabled\n\n");
-    }    
+    }
 }
 
 /* GENERAL FUNCTIONS *********************************************************/
@@ -215,15 +215,15 @@ KdpDetectConflicts(PCM_RESOURCE_LIST DriverList)
         case 3: ComPortBase = 0x3e8; break;
         case 4: ComPortBase = 0x2e8; break;
     }
-    
+
     /* search for this port address in DriverList */
     for (i = 0; i < DriverList->List[0].PartialResourceList.Count; i++)
     {
         ResourceDescriptor = &DriverList->List[0].PartialResourceList.PartialDescriptors[i];
         if (ResourceDescriptor->Type == CmResourceTypePort)
         {
-            if ((ResourceDescriptor->u.Port.Start.u.LowPart <= ComPortBase) &&        
-                (ResourceDescriptor->u.Port.Start.u.LowPart + 
+            if ((ResourceDescriptor->u.Port.Start.u.LowPart <= ComPortBase) &&
+                (ResourceDescriptor->u.Port.Start.u.LowPart +
                  ResourceDescriptor->u.Port.Length > ComPortBase))
             {
                 /* Conflict found */
@@ -231,7 +231,7 @@ KdpDetectConflicts(PCM_RESOURCE_LIST DriverList)
             }
         }
     }
-    
+
     /* No Conflicts */
     return FALSE;
 }
@@ -244,23 +244,23 @@ KdpPrintString(PANSI_STRING String)
     PCH pch = String->Buffer;
     PLIST_ENTRY CurrentEntry;
     PKD_DISPATCH_TABLE CurrentTable;
-    
+
     /* Call the registered handlers */
     CurrentEntry = KdProviders.Flink;
     while (CurrentEntry != &KdProviders)
     {
         /* Get the current table */
-        CurrentTable = CONTAINING_RECORD(CurrentEntry, 
+        CurrentTable = CONTAINING_RECORD(CurrentEntry,
                                          KD_DISPATCH_TABLE,
                                          KdProvidersList);
-                                       
+
         /* Call it */
         CurrentTable->KdpPrintRoutine(pch);
-        
+
         /* Next Table */
         CurrentEntry = CurrentEntry->Flink;
     }
-   
+
     /* Call the Wrapper Routine */
     if (WrapperInitRoutine) WrapperTable.KdpPrintRoutine(pch);
 

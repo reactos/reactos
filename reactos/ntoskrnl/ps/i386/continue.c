@@ -28,7 +28,7 @@ NtContinue (
 {
     PKTHREAD Thread = KeGetCurrentThread();
 	PKTRAP_FRAME TrapFrame = Thread->TrapFrame;
-	PKTRAP_FRAME PrevTrapFrame = (PKTRAP_FRAME)TrapFrame->Edx;   
+	PKTRAP_FRAME PrevTrapFrame = (PKTRAP_FRAME)TrapFrame->Edx;
 	PFX_SAVE_AREA FxSaveArea;
 	KIRQL oldIrql;
 

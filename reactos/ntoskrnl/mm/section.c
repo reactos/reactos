@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
  * PURPOSE:         Implements section objects
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
@@ -371,7 +371,7 @@ MmUnsharePageEntrySectionSegment(PSECTION_OBJECT Section,
                {
                   /*
                    * FIXME:
-                   *   We hold all locks. Nobody can do something with the current 
+                   *   We hold all locks. Nobody can do something with the current
                    *   process and the current segment (also not within an other process).
                    */
                   NTSTATUS Status;
@@ -716,7 +716,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
          if (PAGE_FROM_SSE(Entry) == 0 || HasSwapEntry)
          {
             /*
-             * The page was a private page in another or in our address space 
+             * The page was a private page in another or in our address space
             */
             MmUnlockSectionSegment(Segment);
             MmspCompleteAndReleasePageOp(PageOp);
@@ -2615,7 +2615,7 @@ ExeFmtpReadFile(IN PVOID File,
                           BufferSize,
                           &FileOffset,
                           NULL);
-   
+
       if(NT_SUCCESS(Status))
       {
          UsedSize = Iosb.Information;
@@ -2773,7 +2773,7 @@ MmspCheckSegmentBounds
           * TODO: relax the limitation on gaps. For example, gaps smaller than a
           * page could be OK (Windows seems to be OK with them), and larger gaps
           * could lead to image sections spanning several discontiguous regions
-          * (NtMapViewOfSection could then refuse to map them, and they could 
+          * (NtMapViewOfSection could then refuse to map them, and they could
           * e.g. only be allowed as parameters to NtCreateProcess, like on UNIX)
           */
          if ((ImageSectionObject->Segments[i - 1].VirtualAddress +
@@ -2827,25 +2827,25 @@ MmspPageAlignSegments
          ULONG_PTR VirtualOffset;
 
          VirtualAddress = EffectiveSegment->VirtualAddress;
-   
+
          /* Round down the virtual address to the nearest page */
          EffectiveSegment->VirtualAddress = PAGE_ROUND_DOWN(VirtualAddress);
-   
+
          /* Round up the virtual size to the nearest page */
          EffectiveSegment->Length = PAGE_ROUND_UP(VirtualAddress + EffectiveSegment->Length) -
                                     EffectiveSegment->VirtualAddress;
-   
+
          /* Adjust the raw address and size */
          VirtualOffset = VirtualAddress - EffectiveSegment->VirtualAddress;
-   
+
          if (EffectiveSegment->FileOffset < VirtualOffset)
          {
             return FALSE;
          }
-   
+
          /*
-          * Garbage in, garbage out: unaligned base addresses make the file 
-          * offset point in curious and odd places, but that's what we were 
+          * Garbage in, garbage out: unaligned base addresses make the file
+          * offset point in curious and odd places, but that's what we were
           * asked for
           */
          EffectiveSegment->FileOffset -= VirtualOffset;
@@ -2858,7 +2858,7 @@ MmspPageAlignSegments
 
          EndOfEffectiveSegment = EffectiveSegment->VirtualAddress + EffectiveSegment->Length;
          ASSERT((EndOfEffectiveSegment % PAGE_SIZE) == 0);
-   
+
          /*
           * The current segment begins exactly where the current effective
           * segment ended, therefore beginning a new effective segment
@@ -2915,24 +2915,24 @@ MmspPageAlignSegments
             /*
              * Extend the file size
              */
-   
+
             /* Unaligned segments must be contiguous within the file */
             if (Segment->FileOffset != (EffectiveSegment->FileOffset +
                                         EffectiveSegment->RawLength))
             {
                return FALSE;
             }
-            
+
             EffectiveSegment->RawLength += Segment->RawLength;
-   
+
             /*
              * Extend the virtual size
              */
             ASSERT(PAGE_ROUND_UP(Segment->VirtualAddress + Segment->Length) > EndOfEffectiveSegment);
-   
+
             EffectiveSegment->Length = PAGE_ROUND_UP(Segment->VirtualAddress + Segment->Length) -
                                        EffectiveSegment->VirtualAddress;
-   
+
             /*
              * Merge the protection
              */
@@ -3064,10 +3064,10 @@ ExeFmtpCreateImageSection(HANDLE FileHandle,
    /* FIXME? are these values platform-dependent? */
    if(ImageSectionObject->StackReserve == 0)
       ImageSectionObject->StackReserve = 0x40000;
-  
+
    if(ImageSectionObject->StackCommit == 0)
       ImageSectionObject->StackCommit = 0x1000;
-  
+
    if(ImageSectionObject->ImageBase == 0)
    {
       if(ImageSectionObject->ImageCharacteristics & IMAGE_FILE_DLL)
@@ -3324,7 +3324,7 @@ NtCreateSection (OUT PHANDLE SectionHandle,
    NTSTATUS Status = STATUS_SUCCESS;
 
    PreviousMode = ExGetPreviousMode();
-   
+
    if(MaximumSize != NULL && PreviousMode != KernelMode)
    {
      _SEH_TRY
@@ -3341,13 +3341,13 @@ NtCreateSection (OUT PHANDLE SectionHandle,
        Status = _SEH_GetExceptionCode();
      }
      _SEH_END;
-     
+
      if(!NT_SUCCESS(Status))
      {
        return Status;
      }
    }
-   
+
    /*
     * Check the protection
     */
@@ -3406,9 +3406,9 @@ NtOpenSection(PHANDLE   SectionHandle,
    HANDLE hSection;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
-   
+
    PreviousMode = ExGetPreviousMode();
-   
+
    if(PreviousMode != KernelMode)
    {
      _SEH_TRY
@@ -3422,7 +3422,7 @@ NtOpenSection(PHANDLE   SectionHandle,
        Status = _SEH_GetExceptionCode();
      }
      _SEH_END;
-     
+
      if(!NT_SUCCESS(Status))
      {
        return Status;
@@ -3577,15 +3577,15 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
    KPROCESSOR_MODE PreviousMode;
    PMADDRESS_SPACE AddressSpace;
    NTSTATUS Status = STATUS_SUCCESS;
-   
+
    PreviousMode = ExGetPreviousMode();
-   
+
    if(PreviousMode != KernelMode)
    {
      SafeBaseAddress = NULL;
      SafeSectionOffset.QuadPart = 0;
      SafeViewSize = 0;
-     
+
      _SEH_TRY
      {
        if(BaseAddress != NULL)
@@ -3612,7 +3612,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
        Status = _SEH_GetExceptionCode();
      }
      _SEH_END;
-     
+
      if(!NT_SUCCESS(Status))
      {
        return Status;
@@ -3664,7 +3664,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
 
    ObDereferenceObject(Section);
    ObDereferenceObject(Process);
-   
+
    if(NT_SUCCESS(Status))
    {
      /* copy parameters back to the caller */
@@ -3989,7 +3989,7 @@ NtUnmapViewOfSection (HANDLE ProcessHandle,
 
 /**
  * Queries the information of a section object.
- * 
+ *
  * @param SectionHandle
  *        Handle to the section object. It must be opened with SECTION_QUERY
  *        access.
@@ -4019,9 +4019,9 @@ NtQuerySection(IN HANDLE SectionHandle,
    PSECTION_OBJECT Section;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
-   
+
    PreviousMode = ExGetPreviousMode();
-   
+
    DefaultQueryInfoBufferCheck(SectionInformationClass,
                                ExSectionInfoClass,
                                SectionInformation,
@@ -4075,7 +4075,7 @@ NtQuerySection(IN HANDLE SectionHandle,
                Status = _SEH_GetExceptionCode();
             }
             _SEH_END;
-            
+
             break;
          }
 
@@ -4101,7 +4101,7 @@ NtQuerySection(IN HANDLE SectionHandle,
                   Sii->ImageNumber = ImageSectionObject->Machine;
                   Sii->Executable = ImageSectionObject->Executable;
                }
-               
+
                if (ResultLength != NULL)
                {
                   *ResultLength = sizeof(SECTION_IMAGE_INFORMATION);
@@ -4113,21 +4113,21 @@ NtQuerySection(IN HANDLE SectionHandle,
                Status = _SEH_GetExceptionCode();
             }
             _SEH_END;
-            
+
             break;
          }
       }
 
       ObDereferenceObject(Section);
    }
-   
+
    return(Status);
 }
 
 
 /**
  * Extends size of file backed section.
- * 
+ *
  * @param SectionHandle
  *        Handle to the section object. It must be opened with
  *        SECTION_EXTEND_SIZE access.
@@ -4147,9 +4147,9 @@ NtExtendSection(IN HANDLE SectionHandle,
    PSECTION_OBJECT Section;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
-   
+
    PreviousMode = ExGetPreviousMode();
-   
+
    if(PreviousMode != KernelMode)
    {
      _SEH_TRY
@@ -4166,7 +4166,7 @@ NtExtendSection(IN HANDLE SectionHandle,
        Status = _SEH_GetExceptionCode();
      }
      _SEH_END;
-     
+
      if(!NT_SUCCESS(Status))
      {
        return Status;
@@ -4189,7 +4189,7 @@ NtExtendSection(IN HANDLE SectionHandle,
       ObfDereferenceObject(Section);
       return STATUS_INVALID_PARAMETER;
    }
-   
+
    /*
     * - Acquire file extneding resource.
     * - Check if we're not resizing the section below it's actual size!

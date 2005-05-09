@@ -72,7 +72,7 @@ FsRtlIncrementCcFastReadNoWait( VOID )
  *
  * NOTE
  *  From Bo Branten's ntifs.h v12.
- * 
+ *
  * @unimplemented
  */
 BOOLEAN
@@ -99,7 +99,7 @@ FsRtlCopyRead(IN  PFILE_OBJECT FileObject,
  * ARGUMENTS
  *
  * RETURN VALUE
- * 
+ *
  * NOTE
  *  From Bo Branten's ntifs.h v12.
  *
@@ -129,7 +129,7 @@ FsRtlCopyWrite(IN  PFILE_OBJECT FileObject,
  * ARGUMENTS
  *
  * RETURN VALUE
- * 
+ *
  * @implemented
  */
 NTSTATUS
@@ -143,16 +143,16 @@ FsRtlGetFileSize(IN PFILE_OBJECT  FileObject,
     ULONG Length;
     PDEVICE_OBJECT DeviceObject;
     PFAST_IO_DISPATCH FastDispatch;
-    
+
     /* Get Device Object and Fast Calls */
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
     FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
-    
+
     /* Check if we support Fast Calls, and check this one */
-    if (FastDispatch && FastDispatch->FastIoQueryStandardInfo)    
+    if (FastDispatch && FastDispatch->FastIoQueryStandardInfo)
     {
         /* Fast Path */
-        FastDispatch->FastIoQueryStandardInfo(FileObject,    
+        FastDispatch->FastIoQueryStandardInfo(FileObject,
                                               TRUE,
                                               &Info,
                                               &IoStatusBlock,
@@ -168,7 +168,7 @@ FsRtlGetFileSize(IN PFILE_OBJECT  FileObject,
                                         &Info,
                                         &Length);
     }
-    
+
     /* Check success */
     if (NT_SUCCESS(Status))
     {
@@ -202,11 +202,11 @@ FsRtlMdlRead(IN PFILE_OBJECT FileObject,
 {
     PDEVICE_OBJECT DeviceObject, BaseDeviceObject;
     PFAST_IO_DISPATCH FastDispatch;
-    
+
     /* Get Device Object and Fast Calls */
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
     FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
-    
+
     /* Check if we support Fast Calls, and check this one */
     if (FastDispatch && FastDispatch->MdlRead)
     {
@@ -219,18 +219,18 @@ FsRtlMdlRead(IN PFILE_OBJECT FileObject,
                                      IoStatus,
                                      DeviceObject);
     }
-    
+
     /* Get the Base File System (Volume) and Fast Calls */
     BaseDeviceObject = IoGetBaseFileSystemDeviceObject(FileObject);
     FastDispatch = BaseDeviceObject->DriverObject->FastIoDispatch;
-    
+
     /* If the Base Device Object has its own FastDispatch Routine, fail */
-    if (FastDispatch && FastDispatch->MdlRead && 
+    if (FastDispatch && FastDispatch->MdlRead &&
         BaseDeviceObject != DeviceObject)
     {
         return FALSE;
     }
-    
+
     /* No fast path, use slow path */
     return FsRtlMdlReadDev(FileObject,
                            FileOffset,
@@ -253,18 +253,18 @@ FsRtlMdlRead(IN PFILE_OBJECT FileObject,
  *
  * @implemented
  */
-BOOLEAN 
+BOOLEAN
 STDCALL
 FsRtlMdlReadComplete(IN PFILE_OBJECT FileObject,
                      IN OUT PMDL MdlChain)
 {
     PDEVICE_OBJECT DeviceObject, BaseDeviceObject;
     PFAST_IO_DISPATCH FastDispatch;
-    
+
     /* Get Device Object and Fast Calls */
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
     FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
-    
+
     /* Check if we support Fast Calls, and check this one */
     if (FastDispatch && FastDispatch->MdlReadComplete)
     {
@@ -273,18 +273,18 @@ FsRtlMdlReadComplete(IN PFILE_OBJECT FileObject,
                                              MdlChain,
                                              DeviceObject);
     }
-    
+
     /* Get the Base File System (Volume) and Fast Calls */
     BaseDeviceObject = IoGetBaseFileSystemDeviceObject(FileObject);
     FastDispatch = BaseDeviceObject->DriverObject->FastIoDispatch;
-    
+
     /* If the Base Device Object has its own FastDispatch Routine, fail */
-    if (FastDispatch && FastDispatch->MdlReadComplete && 
+    if (FastDispatch && FastDispatch->MdlReadComplete &&
         BaseDeviceObject != DeviceObject)
     {
         return FALSE;
     }
-    
+
     /* No fast path, use slow path */
     return FsRtlMdlReadCompleteDev(FileObject, MdlChain, DeviceObject);
 }
@@ -364,11 +364,11 @@ FsRtlMdlWriteComplete(IN PFILE_OBJECT FileObject,
 {
     PDEVICE_OBJECT DeviceObject, BaseDeviceObject;
     PFAST_IO_DISPATCH FastDispatch;
-    
+
     /* Get Device Object and Fast Calls */
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
     FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
-    
+
     /* Check if we support Fast Calls, and check this one */
     if (FastDispatch && FastDispatch->MdlWriteComplete)
     {
@@ -378,22 +378,22 @@ FsRtlMdlWriteComplete(IN PFILE_OBJECT FileObject,
                                               MdlChain,
                                               DeviceObject);
     }
-    
+
     /* Get the Base File System (Volume) and Fast Calls */
     BaseDeviceObject = IoGetBaseFileSystemDeviceObject(FileObject);
     FastDispatch = BaseDeviceObject->DriverObject->FastIoDispatch;
-    
+
     /* If the Base Device Object has its own FastDispatch Routine, fail */
-    if (FastDispatch && FastDispatch->MdlWriteComplete && 
+    if (FastDispatch && FastDispatch->MdlWriteComplete &&
         BaseDeviceObject != DeviceObject)
     {
         return FALSE;
     }
-    
+
     /* No fast path, use slow path */
-    return FsRtlMdlWriteCompleteDev(FileObject, 
-                                    FileOffset, 
-                                    MdlChain, 
+    return FsRtlMdlWriteCompleteDev(FileObject,
+                                    FileOffset,
+                                    MdlChain,
                                     DeviceObject);
 }
 
@@ -402,7 +402,7 @@ FsRtlMdlWriteComplete(IN PFILE_OBJECT FileObject,
  * FsRtlMdlWriteCompleteDev@16
  *
  * DESCRIPTION
- * 
+ *
  * ARGUMENTS
  *
  * RETURN VALUE
@@ -445,11 +445,11 @@ FsRtlPrepareMdlWrite(IN  PFILE_OBJECT FileObject,
 {
     PDEVICE_OBJECT DeviceObject, BaseDeviceObject;
     PFAST_IO_DISPATCH FastDispatch;
-    
+
     /* Get Device Object and Fast Calls */
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
     FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
-    
+
     /* Check if we support Fast Calls, and check this one */
     if (FastDispatch && FastDispatch->PrepareMdlWrite)
     {
@@ -462,18 +462,18 @@ FsRtlPrepareMdlWrite(IN  PFILE_OBJECT FileObject,
                                              IoStatus,
                                              DeviceObject);
     }
-    
+
     /* Get the Base File System (Volume) and Fast Calls */
     BaseDeviceObject = IoGetBaseFileSystemDeviceObject(FileObject);
     FastDispatch = BaseDeviceObject->DriverObject->FastIoDispatch;
-    
+
     /* If the Base Device Object has its own FastDispatch Routine, fail */
-    if (FastDispatch && FastDispatch->PrepareMdlWrite && 
+    if (FastDispatch && FastDispatch->PrepareMdlWrite &&
         BaseDeviceObject != DeviceObject)
     {
         return FALSE;
     }
-    
+
     /* No fast path, use slow path */
     return FsRtlPrepareMdlWriteDev(FileObject,
                                    FileOffset,
@@ -489,7 +489,7 @@ FsRtlPrepareMdlWrite(IN  PFILE_OBJECT FileObject,
  * FsRtlPrepareMdlWriteDev@28
  *
  * DESCRIPTION
- *	
+ *
  * ARGUMENTS
  *
  * RETURN VALUE

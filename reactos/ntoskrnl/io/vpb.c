@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/vpb.c
  * PURPOSE:         Volume Parameter Block managment
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
@@ -34,16 +34,16 @@ STDCALL
 IopAttachVpb(PDEVICE_OBJECT DeviceObject)
 {
     PVPB Vpb;
-   
+
     /* Allocate the Vpb */
     Vpb = ExAllocatePoolWithTag(NonPagedPool,
                                 sizeof(VPB),
                                 TAG_VPB);
     if (Vpb == NULL) return(STATUS_UNSUCCESSFUL);
-    
+
     /* Clear it so we don't waste time manually */
     RtlZeroMemory(Vpb, sizeof(VPB));
-   
+
     /* Set the Header and Device Field */
     Vpb->Type = IO_TYPE_VPB;
     Vpb->Size = sizeof(VPB);
@@ -56,10 +56,10 @@ IopAttachVpb(PDEVICE_OBJECT DeviceObject)
 
 /*
  * FUNCTION: Queries the volume information
- * ARGUMENTS: 
+ * ARGUMENTS:
  *	  FileHandle  = Handle to a file object on the target volume
  *	  ReturnLength = DataWritten
- *	  FsInformation = Caller should supply storage for the information 
+ *	  FsInformation = Caller should supply storage for the information
  *	                  structure.
  *	  Length = Size of the information structure
  *	  FsInformationClass = Index to a information structure
@@ -69,10 +69,10 @@ IopAttachVpb(PDEVICE_OBJECT DeviceObject)
  *		FileFsSizeInformation		FILE_FS_SIZE_INFORMATION
  *		FileFsDeviceInformation		FILE_FS_DEVICE_INFORMATION
  *		FileFsAttributeInformation	FILE_FS_ATTRIBUTE_INFORMATION
- *		FileFsControlInformation	
+ *		FileFsControlInformation
  *		FileFsQuotaQueryInformation	--
  *		FileFsQuotaSetInformation	--
- *		FileFsMaximumInformation	
+ *		FileFsMaximumInformation
  *
  * RETURNS: Status
  *
@@ -93,10 +93,10 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
    PIO_STACK_LOCATION StackPtr;
    PVOID SystemBuffer;
    KPROCESSOR_MODE PreviousMode;
-   
+
    ASSERT(IoStatusBlock != NULL);
    ASSERT(FsInformation != NULL);
-   
+
    DPRINT("FsInformation %p\n", FsInformation);
 
    PreviousMode = ExGetPreviousMode();
@@ -111,9 +111,9 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
      {
 	return(Status);
      }
-   
+
    DeviceObject = FileObject->DeviceObject;
-   
+
    Irp = IoAllocateIrp(DeviceObject->StackSize,
 		       TRUE);
    if (Irp == NULL)
@@ -121,7 +121,7 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
 	ObDereferenceObject(FileObject);
 	return(STATUS_INSUFFICIENT_RESOURCES);
      }
-   
+
    SystemBuffer = ExAllocatePoolWithTag(NonPagedPool,
 					Length,
 					TAG_SYSB);
@@ -131,7 +131,7 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
 	ObDereferenceObject(FileObject);
 	return(STATUS_INSUFFICIENT_RESOURCES);
      }
-   
+
    /* Trigger FileObject/Event dereferencing */
    Irp->Tail.Overlay.OriginalFileObject = FileObject;
 
@@ -141,7 +141,7 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
    Irp->UserEvent = &FileObject->Event;
    Irp->UserIosb = IoStatusBlock;
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-   
+
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->MajorFunction = IRP_MJ_QUERY_VOLUME_INFORMATION;
    StackPtr->MinorFunction = 0;
@@ -152,7 +152,7 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
    StackPtr->Parameters.QueryVolume.Length = Length;
    StackPtr->Parameters.QueryVolume.FsInformationClass =
 	FsInformationClass;
-   
+
    Status = IoCallDriver(DeviceObject,
 			 Irp);
    if (Status == STATUS_PENDING)
@@ -165,7 +165,7 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
 	Status = IoStatusBlock->Status;
      }
    DPRINT("Status %x\n", Status);
-   
+
    if (NT_SUCCESS(Status))
      {
 	DPRINT("Information %lu\n", IoStatusBlock->Information);
@@ -175,7 +175,7 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
      }
 
    ExFreePool(SystemBuffer);
-   
+
    return(Status);
 }
 
@@ -195,11 +195,11 @@ IoQueryVolumeInformation(IN PFILE_OBJECT FileObject,
    PDEVICE_OBJECT DeviceObject;
    PIRP Irp;
    NTSTATUS Status;
-   
+
    ASSERT(FsInformation != NULL);
-   
+
    DPRINT("FsInformation %p\n", FsInformation);
-   
+
    Status = ObReferenceObjectByPointer(FileObject,
 				       FILE_READ_ATTRIBUTES,
 				       IoFileObjectType,
@@ -208,9 +208,9 @@ IoQueryVolumeInformation(IN PFILE_OBJECT FileObject,
      {
 	return(Status);
      }
-   
+
    DeviceObject = FileObject->DeviceObject;
-   
+
    Irp = IoAllocateIrp(DeviceObject->StackSize,
 		       TRUE);
    if (Irp == NULL)
@@ -227,7 +227,7 @@ IoQueryVolumeInformation(IN PFILE_OBJECT FileObject,
    Irp->UserEvent = &FileObject->Event;
    Irp->UserIosb = &IoStatusBlock;
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-   
+
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->MajorFunction = IRP_MJ_QUERY_VOLUME_INFORMATION;
    StackPtr->MinorFunction = 0;
@@ -238,7 +238,7 @@ IoQueryVolumeInformation(IN PFILE_OBJECT FileObject,
    StackPtr->Parameters.QueryVolume.Length = Length;
    StackPtr->Parameters.QueryVolume.FsInformationClass =
 	FsInformationClass;
-   
+
    Status = IoCallDriver(DeviceObject,
 			 Irp);
    if (Status == STATUS_PENDING)
@@ -251,12 +251,12 @@ IoQueryVolumeInformation(IN PFILE_OBJECT FileObject,
 	Status = IoStatusBlock.Status;
      }
    DPRINT("Status %x\n", Status);
-   
+
    if (ReturnedLength != NULL)
      {
 	*ReturnedLength = IoStatusBlock.Information;
      }
-   
+
    return(Status);
 }
 
@@ -294,16 +294,16 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
      {
 	return(Status);
      }
-   
+
    DeviceObject = FileObject->DeviceObject;
-   
+
    Irp = IoAllocateIrp(DeviceObject->StackSize,TRUE);
    if (Irp == NULL)
      {
 	ObDereferenceObject(FileObject);
 	return(STATUS_INSUFFICIENT_RESOURCES);
      }
-   
+
    SystemBuffer = ExAllocatePoolWithTag(NonPagedPool,
 					Length,
 					TAG_SYSB);
@@ -313,11 +313,11 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
 	ObDereferenceObject(FileObject);
 	return(STATUS_INSUFFICIENT_RESOURCES);
      }
-   
+
    MmSafeCopyFromUser(SystemBuffer,
 		      FsInformation,
 		      Length);
-   
+
    /* Trigger FileObject/Event dereferencing */
    Irp->Tail.Overlay.OriginalFileObject = FileObject;
    Irp->RequestorMode = PreviousMode;
@@ -326,7 +326,7 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
    Irp->UserEvent = &FileObject->Event;
    Irp->UserIosb = IoStatusBlock;
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-   
+
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->MajorFunction = IRP_MJ_SET_VOLUME_INFORMATION;
    StackPtr->MinorFunction = 0;
@@ -337,7 +337,7 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
    StackPtr->Parameters.SetVolume.Length = Length;
    StackPtr->Parameters.SetVolume.FsInformationClass =
 	FsInformationClass;
-   
+
    Status = IoCallDriver(DeviceObject,Irp);
    if (Status == STATUS_PENDING)
      {
@@ -350,7 +350,7 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
      }
 
    ExFreePool(SystemBuffer);
-   
+
    return(Status);
 }
 

@@ -1,5 +1,5 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/cacheman.c
@@ -31,7 +31,7 @@ CcGetFlushedValidData (
     IN BOOLEAN BcbListHeld
     )
 {
-	LARGE_INTEGER i; 
+	LARGE_INTEGER i;
 
 	UNIMPLEMENTED;
 

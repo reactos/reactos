@@ -23,8 +23,8 @@
 
 KPROCESSOR_MODE
 RtlpGetMode()
-{ 
-   return KernelMode; 
+{
+   return KernelMode;
 }
 
 /*
@@ -53,7 +53,7 @@ RtlpCurrentPeb(VOID)
    return ((PEPROCESS)(KeGetCurrentThread()->ApcState.Process))->Peb;
 }
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 RtlDeleteCriticalSection(
     PRTL_CRITICAL_SECTION CriticalSection)
@@ -98,7 +98,7 @@ RtlLeaveCriticalSection(
     return STATUS_SUCCESS;
 }
 
-BOOLEAN 
+BOOLEAN
 STDCALL
 RtlTryEnterCriticalSection(
     PRTL_CRITICAL_SECTION CriticalSection)

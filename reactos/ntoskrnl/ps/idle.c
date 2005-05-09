@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ps/idle.c
  * PURPOSE:         Using idle time
- * 
+ *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  David Welch (welch@cwcom.net)
  */
@@ -19,7 +19,7 @@
 extern PEPROCESS PsIdleProcess;
 
 /* FUNCTIONS *****************************************************************/
-                                                               
+
 /** System idle thread procedure
  *
  */
@@ -29,7 +29,7 @@ PsIdleThreadMain(PVOID Context)
    KIRQL oldlvl;
 
    PKPRCB Prcb = KeGetCurrentPrcb();
-   
+
    for(;;)
      {
        if (Prcb->DpcData[0].DpcQueueDepth > 0)
@@ -45,7 +45,7 @@ PsIdleThreadMain(PVOID Context)
      }
 }
 
-/* 
+/*
  * HACK-O-RAMA
  * Antique vestigial code left alive for the sole purpose of First/Idle Thread
  * creation until I can merge my fix for properly creating them.
@@ -63,8 +63,8 @@ PsInitializeIdleOrFirstThread(PEPROCESS Process,
 
     Thread = ExAllocatePool(NonPagedPool, sizeof(ETHREAD));
     RtlZeroMemory(Thread, sizeof(ETHREAD));
-    Thread->ThreadsProcess = Process;    
-    if (First) 
+    Thread->ThreadsProcess = Process;
+    if (First)
     {
         KernelStack = (PVOID)init_stack;
     }
@@ -72,8 +72,8 @@ PsInitializeIdleOrFirstThread(PEPROCESS Process,
     {
         KernelStack = MmCreateKernelStack(FALSE);
     }
-    KeInitializeThread(&Process->Pcb, 
-                       &Thread->Tcb, 
+    KeInitializeThread(&Process->Pcb,
+                       &Thread->Tcb,
                        PspSystemThreadStartup,
                        StartRoutine,
                        NULL,
@@ -86,12 +86,12 @@ PsInitializeIdleOrFirstThread(PEPROCESS Process,
     return STATUS_SUCCESS;
 }
 
-/* 
+/*
  * HACK-O-RAMA
  * Antique vestigial code left alive for the sole purpose of First/Idle Thread
  * creation until I can merge my fix for properly creating them.
  */
-VOID 
+VOID
 INIT_FUNCTION
 PsInitIdleThread(VOID)
 {

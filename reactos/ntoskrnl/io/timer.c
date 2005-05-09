@@ -1,10 +1,10 @@
-/* $Id:$
- * 
+/* $Id$
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/timer.c
  * PURPOSE:         IO timers
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  *                  Alex Ionescu (alex@relsoft.net)
  */
@@ -42,15 +42,15 @@ IopTimerDispatch(IN PKDPC Dpc,
 	PLIST_ENTRY TimerEntry;
 	PIO_TIMER Timer;
 	ULONG i;
-	
+
 	DPRINT("Dispatching IO Timers. There are: %x \n", IopTimerCount);
-	
+
 	/* Check if any Timers are actualyl enabled as of now */
 	if (IopTimerCount) {
-	
+
 		/* Lock the Timers */
-		KeAcquireSpinLock(&IopTimerLock, &OldIrql);  
-		
+		KeAcquireSpinLock(&IopTimerLock, &OldIrql);
+
 		/* Call the Timer Routine of each enabled Timer */
 		for(TimerEntry = IopTimerQueueHead.Flink, i = IopTimerCount;
 		    (TimerEntry != &IopTimerQueueHead) && i;
@@ -58,14 +58,14 @@ IopTimerDispatch(IN PKDPC Dpc,
 
 			Timer = CONTAINING_RECORD(TimerEntry, IO_TIMER, IoTimerList);
 			if (Timer->TimerEnabled) {
-				DPRINT("Dispatching a Timer Routine: %x for Device Object: %x \n", 
+				DPRINT("Dispatching a Timer Routine: %x for Device Object: %x \n",
 					Timer->TimerRoutine,
 					Timer->DeviceObject);
 				Timer->TimerRoutine(Timer->DeviceObject, Timer->Context);
 				i--;
 			}
 		}
-		
+
 		/* Unlock the Timers */
 		KeReleaseSpinLock(&IopTimerLock, OldIrql);
 	}
@@ -81,11 +81,11 @@ IopRemoveTimerFromTimerList(
 
 	/* Lock Timers */
 	KeAcquireSpinLock(&IopTimerLock, &OldIrql);
-	
+
 	/* Remove Timer from the List and Drop the Timer Count if Enabled */
 	RemoveEntryList(&Timer->IoTimerList);
 	if (Timer->TimerEnabled) IopTimerCount--;
-	
+
 	/* Unlock the Timers */
 	KeReleaseSpinLock(&IopTimerLock, OldIrql);
 }
@@ -98,13 +98,13 @@ IopInitTimerImplementation(VOID)
  */
 {
 	LARGE_INTEGER ExpireTime;
-	
+
 	/* Initialize Timer List Lock */
 	KeInitializeSpinLock(&IopTimerLock);
-	
+
 	/* Initialize Timer List */
 	InitializeListHead(&IopTimerQueueHead);
-	
+
 	/* Initialize the DPC/Timer which will call the other Timer Routines */
 	ExpireTime.QuadPart = -10000000;
 	KeInitializeDpc(&IopTimerDpc, IopTimerDispatch, NULL);
@@ -117,7 +117,7 @@ IopInitTimerImplementation(VOID)
  */
 NTSTATUS
 STDCALL
-IoInitializeTimer(PDEVICE_OBJECT DeviceObject, 
+IoInitializeTimer(PDEVICE_OBJECT DeviceObject,
 			   PIO_TIMER_ROUTINE TimerRoutine,
 			   PVOID Context)
 /*
@@ -132,7 +132,7 @@ IoInitializeTimer(PDEVICE_OBJECT DeviceObject,
  */
 {
 	DPRINT("IoInitializeTimer() called for Device Object: %x with Routine: %x \n", DeviceObject, TimerRoutine);
-	 
+
 	/* Allocate Timer */
 	if (!DeviceObject->Timer) {
 		DeviceObject->Timer = ExAllocatePoolWithTag(NonPagedPool,
@@ -144,7 +144,7 @@ IoInitializeTimer(PDEVICE_OBJECT DeviceObject,
 		DeviceObject->Timer->Type = IO_TYPE_TIMER;
 		DeviceObject->Timer->DeviceObject = DeviceObject;
 	}
-	
+
 	DeviceObject->Timer->TimerRoutine = TimerRoutine;
 	DeviceObject->Timer->Context = Context;
 	DeviceObject->Timer->TimerEnabled = FALSE;
@@ -153,8 +153,8 @@ IoInitializeTimer(PDEVICE_OBJECT DeviceObject,
 	ExInterlockedInsertTailList(&IopTimerQueueHead,
 				    &DeviceObject->Timer->IoTimerList,
 				    &IopTimerLock);
-   
-	/* Return Success */	
+
+	/* Return Success */
 	DPRINT("IoInitializeTimer() Completed\n");
 	return(STATUS_SUCCESS);
 }
@@ -173,18 +173,18 @@ IoStartTimer(PDEVICE_OBJECT DeviceObject)
  */
 {
 	KIRQL OldIrql;
-	
+
 	DPRINT("IoStartTimer for Device Object: %x\n", DeviceObject);
-		
+
 	/* Lock Timers */
 	KeAcquireSpinLock(&IopTimerLock, &OldIrql);
-	
+
 	/* If the timer isn't already enabled, enable it and increase IO Timer Count*/
 	if (!DeviceObject->Timer->TimerEnabled) {
 		DeviceObject->Timer->TimerEnabled = TRUE;
 		IopTimerCount++;
 	}
-	
+
 	/* Unlock Timers */
 	KeReleaseSpinLock(&IopTimerLock, OldIrql);
 	DPRINT("IoStartTimer Completed for Device Object: %x New Count: %x \n", DeviceObject, IopTimerCount);
@@ -204,18 +204,18 @@ IoStopTimer(PDEVICE_OBJECT DeviceObject)
  */
 {
 	KIRQL OldIrql;
-	
+
 	DPRINT("IoStopTimer for Device Object: %x\n", DeviceObject);
-	
+
 	/* Lock Timers */
 	KeAcquireSpinLock(&IopTimerLock, &OldIrql);
-	
+
 	/* If the timer is enabled, disable it and decrease IO Timer Count*/
 	if (DeviceObject->Timer->TimerEnabled) {
 		DeviceObject->Timer->TimerEnabled = FALSE;
 		IopTimerCount--;
 	}
-	
+
 	/* Unlock Timers */
 	KeReleaseSpinLock(&IopTimerLock, OldIrql);
 	DPRINT("IoStopTimer Completed for Device Object: %x New Count: %x \n", DeviceObject, IopTimerCount);

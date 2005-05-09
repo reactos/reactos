@@ -223,7 +223,7 @@ NtAllocateUuids(OUT PULARGE_INTEGER Time,
   ULARGE_INTEGER IntTime;
   ULONG IntRange;
   NTSTATUS Status;
-  
+
   PAGED_CODE();
 
   ExAcquireFastMutex(&UuidMutex);
@@ -281,7 +281,7 @@ NTSTATUS STDCALL
 NtSetUuidSeed(IN PUCHAR Seed)
 {
   PAGED_CODE();
-  
+
   RtlCopyMemory(UuidSeed,
                 Seed,
                 SEED_BUFFER_SIZE);

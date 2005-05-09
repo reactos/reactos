@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/plugplay.c
  * PURPOSE:         Plug-and-play interface routines
- * 
+ *
  * PROGRAMMERS:     Eric Kohl <eric.kohl@t-online.de>
  */
 

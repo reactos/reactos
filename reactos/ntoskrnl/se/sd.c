@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/se/sd.c
  * PURPOSE:         Security manager
- * 
+ *
  * PROGRAMMERS:     David Welch <welch@cwcom.net>
  */
 
@@ -296,13 +296,13 @@ SeCaptureSecurityDescriptor(
   ULONG SaclSize = 0, DaclSize = 0;
   ULONG DescriptorSize = 0;
   NTSTATUS Status = STATUS_SUCCESS;
-  
+
   if(OriginalSecurityDescriptor != NULL)
   {
     if(CurrentMode != KernelMode)
     {
       RtlZeroMemory(&DescriptorCopy, sizeof(DescriptorCopy));
-      
+
       _SEH_TRY
       {
         /* first only probe and copy until the control field of the descriptor
@@ -319,7 +319,7 @@ SeCaptureSecurityDescriptor(
           Status = STATUS_UNKNOWN_REVISION;
           _SEH_LEAVE;
         }
-        
+
         /* make a copy on the stack */
         DescriptorCopy.Revision = OriginalSecurityDescriptor->Revision;
         DescriptorCopy.Sbz1 = OriginalSecurityDescriptor->Sbz1;
@@ -335,7 +335,7 @@ SeCaptureSecurityDescriptor(
         if(DescriptorCopy.Control & SE_SELF_RELATIVE)
         {
           PSECURITY_DESCRIPTOR_RELATIVE RelSD = (PSECURITY_DESCRIPTOR_RELATIVE)OriginalSecurityDescriptor;
-          
+
           DescriptorCopy.Owner = (PSID)RelSD->Owner;
           DescriptorCopy.Group = (PSID)RelSD->Group;
           DescriptorCopy.Sacl = (PACL)RelSD->Sacl;
@@ -354,7 +354,7 @@ SeCaptureSecurityDescriptor(
         Status = _SEH_GetExceptionCode();
       }
       _SEH_END;
-      
+
       if(!NT_SUCCESS(Status))
       {
         return Status;
@@ -366,7 +366,7 @@ SeCaptureSecurityDescriptor(
       {
         return STATUS_UNKNOWN_REVISION;
       }
-      
+
       *CapturedSecurityDescriptor = OriginalSecurityDescriptor;
       return STATUS_SUCCESS;
     }
@@ -376,7 +376,7 @@ SeCaptureSecurityDescriptor(
       {
         return STATUS_UNKNOWN_REVISION;
       }
-      
+
       /* make a copy on the stack */
       DescriptorCopy.Revision = OriginalSecurityDescriptor->Revision;
       DescriptorCopy.Sbz1 = OriginalSecurityDescriptor->Sbz1;
@@ -400,7 +400,7 @@ SeCaptureSecurityDescriptor(
         DescriptorCopy.Dacl = OriginalSecurityDescriptor->Dacl;
       }
     }
-    
+
     if(DescriptorCopy.Control & SE_SELF_RELATIVE)
     {
       /* in case we're dealing with a self-relative descriptor, do a basic convert
@@ -424,7 +424,7 @@ SeCaptureSecurityDescriptor(
         DescriptorCopy.Sacl = (PACL)((ULONG_PTR)OriginalSecurityDescriptor + (ULONG_PTR)DescriptorCopy.Sacl);
       }
     }
-    
+
     /* determine the size of the SIDs */
 #define DetermineSIDSize(SidType)                                              \
     do {                                                                       \
@@ -470,10 +470,10 @@ SeCaptureSecurityDescriptor(
       }                                                                        \
     }                                                                          \
     } while(0)
-    
+
     DetermineSIDSize(Owner);
     DetermineSIDSize(Group);
-    
+
     /* determine the size of the ACLs */
 #define DetermineACLSize(AclType, AclFlag)                                     \
     do {                                                                       \
@@ -522,10 +522,10 @@ SeCaptureSecurityDescriptor(
       DescriptorCopy.AclType = NULL;                                           \
     }                                                                          \
     } while(0)
-    
+
     DetermineACLSize(Sacl, SACL);
     DetermineACLSize(Dacl, DACL);
-    
+
     /* allocate enough memory to store a complete copy of a self-relative
        security descriptor */
     NewDescriptor = ExAllocatePool(PoolType,
@@ -533,11 +533,11 @@ SeCaptureSecurityDescriptor(
     if(NewDescriptor != NULL)
     {
       ULONG_PTR Offset = sizeof(SECURITY_DESCRIPTOR);
-      
+
       NewDescriptor->Revision = DescriptorCopy.Revision;
       NewDescriptor->Sbz1 = DescriptorCopy.Sbz1;
       NewDescriptor->Control = DescriptorCopy.Control | SE_SELF_RELATIVE;
-      
+
       _SEH_TRY
       {
         /* setup the offsets and copy the SIDs and ACLs to the new
@@ -555,7 +555,7 @@ SeCaptureSecurityDescriptor(
           Offset += ROUND_UP(Type##Size, sizeof(ULONG));                       \
         }                                                                      \
         } while(0)
-        
+
         CopySIDOrACL(Owner);
         CopySIDOrACL(Group);
         CopySIDOrACL(Sacl);
@@ -566,7 +566,7 @@ SeCaptureSecurityDescriptor(
         Status = _SEH_GetExceptionCode();
       }
       _SEH_END;
-      
+
       if(NT_SUCCESS(Status))
       {
         /* we're finally done! copy the pointer to the captured descriptor to
@@ -590,7 +590,7 @@ SeCaptureSecurityDescriptor(
     /* nothing to do... */
     *CapturedSecurityDescriptor = NULL;
   }
-  
+
   return Status;
 }
 
@@ -616,7 +616,7 @@ SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
   ULONG Control = 0;
   ULONG_PTR Current;
   ULONG SdLength;
-  
+
   RelSD = (PSECURITY_DESCRIPTOR_RELATIVE)SecurityDescriptor;
 
   if (*ObjectsSecurityDescriptor == NULL)

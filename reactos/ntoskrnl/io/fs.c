@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/fs.c
  * PURPOSE:         Filesystem functions
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
@@ -152,7 +152,7 @@ NtFsControlFile (
   StackPtr->FileObject = FileObject;
   StackPtr->DeviceObject = DeviceObject;
   StackPtr->Parameters.FileSystemControl.InputBufferLength = InputBufferSize;
-  StackPtr->Parameters.FileSystemControl.OutputBufferLength = 
+  StackPtr->Parameters.FileSystemControl.OutputBufferLength =
     OutputBufferSize;
   StackPtr->MajorFunction = IRP_MJ_FILE_SYSTEM_CONTROL;
 
@@ -672,7 +672,7 @@ IoGetBaseFileSystemDeviceObject(IN PFILE_OBJECT FileObject)
 	 * If the FILE_OBJECT's VPB is defined,
 	 * get the device from it.
 	 */
-	if (NULL != (Vpb = FileObject->Vpb)) 
+	if (NULL != (Vpb = FileObject->Vpb))
 	{
 		if (NULL != (DeviceObject = Vpb->DeviceObject))
 		{
@@ -685,7 +685,7 @@ IoGetBaseFileSystemDeviceObject(IN PFILE_OBJECT FileObject)
 	 * in the FILE_OBJECT's DeviceObject.
 	 */
 	DeviceObject = FileObject->DeviceObject;
-	if (NULL == (Vpb = DeviceObject->Vpb)) 
+	if (NULL == (Vpb = DeviceObject->Vpb))
 	{
 		/* DeviceObject->Vpb UNDEFINED! */
 		return DeviceObject;

@@ -111,8 +111,8 @@ BOOLEAN SepInitSDs(VOID);
 
 VOID SeDeassignPrimaryToken(struct _EPROCESS *Process);
 
-NTSTATUS STDCALL 
-SepCreateImpersonationTokenDacl(PTOKEN Token, 
+NTSTATUS STDCALL
+SepCreateImpersonationTokenDacl(PTOKEN Token,
                                 PTOKEN PrimaryToken,
                                 PACL *Dacl);
 
@@ -156,7 +156,7 @@ SepDuplicateToken(PTOKEN Token,
 		  SECURITY_IMPERSONATION_LEVEL Level,
 		  KPROCESSOR_MODE PreviousMode,
 		  PTOKEN* NewAccessToken);
-          
+
 NTSTATUS
 SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
                                    IN KPROCESSOR_MODE AccessMode,

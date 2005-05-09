@@ -11,19 +11,19 @@ typedef struct _EPORT
 {
   KSPIN_LOCK	Lock;
   KSEMAPHORE    Semaphore;
- 
+
   USHORT	Type;
   USHORT	State;
- 
+
   struct _EPORT * RequestPort;
   struct _EPORT	* OtherPort;
-  
+
   ULONG		QueueLength;
   LIST_ENTRY	QueueListHead;
-  
+
   ULONG		ConnectQueueLength;
   LIST_ENTRY	ConnectQueueListHead;
-  
+
   ULONG		MaxDataLength;
   ULONG		MaxConnectInfoLength;
   ULONG		MaxPoolUsage; /* size of NP zone */
@@ -144,8 +144,8 @@ extern FAST_MUTEX	LpcpLock;
 /* Code in ntoskrnl/lpc/reply.c */
 
 NTSTATUS STDCALL
-EiReplyOrRequestPort (IN	PEPORT		Port, 
-		      IN	PLPC_MESSAGE	LpcReply, 
+EiReplyOrRequestPort (IN	PEPORT		Port,
+		      IN	PLPC_MESSAGE	LpcReply,
 		      IN	ULONG		MessageType,
 		      IN	PEPORT		Sender);
 

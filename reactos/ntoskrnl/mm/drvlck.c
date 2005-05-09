@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/drvlck.c
  * PURPOSE:         Managing driver managing
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
@@ -20,7 +20,7 @@ VOID
 MmUnlockPagableImageSection(IN PVOID ImageSectionHandle)
 /*
  * FUNCTION: Releases a section of driver code or driver data, previously
- * locked into system space with MmLockPagableCodeSection, 
+ * locked into system space with MmLockPagableCodeSection,
  * MmLockPagableDataSection or MmLockPagableSectionByHandle
  * ARGUMENTS:
  *        ImageSectionHandle = Handle returned by MmLockPagableCodeSection or

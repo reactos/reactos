@@ -1,5 +1,5 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/cont.c
@@ -106,14 +106,14 @@ MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
  * DESCRIPTION
  *  Allocates a range of physically contiguous cache aligned
  * memory from the non-paged pool.
- * 
+ *
  * ARGUMENTS
  * NumberOfBytes
  *  Size of the memory block to allocate;
- *  
+ *
  * HighestAcceptableAddress
  *  Highest address valid for the caller.
- *  
+ *
  * RETURN VALUE
  *  The virtual address of the memory block on success;
  * NULL on error.
@@ -152,7 +152,7 @@ MmAllocateContiguousMemory (IN ULONG NumberOfBytes,
  * DESCRIPTION
  * Releases a range of physically contiguous memory allocated
  * with MmAllocateContiguousMemory.
- * 
+ *
  * ARGUMENTS
  * BaseAddress
  *  Virtual address of the memory to be freed.
@@ -186,23 +186,23 @@ MmFreeContiguousMemory(IN PVOID BaseAddress)
  * DESCRIPTION
   *  Allocates a range of physically contiguous memory
  * with a cache parameter.
- * 
+ *
  * ARGUMENTS
  * NumberOfBytes
  *  Size of the memory block to allocate;
- *  
+ *
  * LowestAcceptableAddress
  *  Lowest address valid for the caller.
- *  
+ *
  * HighestAcceptableAddress
  *  Highest address valid for the caller.
- *  
+ *
  * BoundaryAddressMultiple
  *  Address multiple not to be crossed by allocated buffer (optional).
- *  
+ *
  * CacheType
  *  Type of caching to use.
- *  
+ *
  * RETURN VALUE
  *  The virtual address of the memory block on success;
  * NULL on error.
@@ -233,17 +233,17 @@ MmAllocateContiguousMemorySpecifyCache (IN ULONG NumberOfBytes,
  * DESCRIPTION
  * Releases a range of physically contiguous memory allocated
  * with MmAllocateContiguousMemorySpecifyCache.
- * 
+ *
  * ARGUMENTS
  * BaseAddress
  *  Virtual address of the memory to be freed.
  *
  * NumberOfBytes
  *  Size of the memory block to free.
- *  
+ *
  * CacheType
  *  Type of caching used.
- *  
+ *
  * RETURN VALUE
  *  None.
  *

@@ -35,7 +35,7 @@ LdrInitModuleManagement (
 
 NTSTATUS
 STDCALL
-LdrpMapSystemDll(PEPROCESS Process, 
+LdrpMapSystemDll(PEPROCESS Process,
                  PVOID *DllBase);
 
 NTSTATUS
@@ -48,11 +48,11 @@ LdrpGetSystemDllEntryPoints(VOID);
 
 PVOID
 LdrpGetSystemDllEntryPoint (VOID);
-PVOID 
+PVOID
 LdrpGetSystemDllApcDispatcher(VOID);
-PVOID 
+PVOID
 LdrpGetSystemDllExceptionDispatcher(VOID);
-PVOID 
+PVOID
 LdrpGetSystemDllCallbackDispatcher(VOID);
 PVOID
 LdrpGetSystemDllRaiseExceptionDispatcher(VOID);

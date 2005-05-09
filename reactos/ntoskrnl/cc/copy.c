@@ -40,7 +40,7 @@ ULONG CcFastReadResourceMiss;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID 
+VOID
 CcInitCacheZeroPage(VOID)
 {
    NTSTATUS Status;
@@ -100,7 +100,7 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 		Buffer = pTemp;
 	  }
 #endif
-	  Length = Length - TempLength; 
+	  Length = Length - TempLength;
 	  previous = current;
 	  current = current->NextInChain;
 	  CcRosReleaseCacheSegment(Bcb, previous, TRUE, FALSE, FALSE);
@@ -126,7 +126,7 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 	      current2 = current2->NextInChain;
 	      current_size += Bcb->CacheSegmentSize;
 	    }
-	  
+
 	  /*
 	   * Create an MDL which contains all their pages.
 	   */
@@ -191,7 +191,7 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 			Buffer = pTemp;
 		  }
 #endif
-	      Length = Length - TempLength; 
+	      Length = Length - TempLength;
 	      CcRosReleaseCacheSegment(Bcb, previous, TRUE, FALSE, FALSE);
 	      current_size += Bcb->CacheSegmentSize;
 	    }
@@ -200,7 +200,7 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
   return(STATUS_SUCCESS);
 }
 
-NTSTATUS 
+NTSTATUS
 ReadCacheSegment(PCACHE_SEGMENT CacheSeg)
 {
   ULONG Size;
@@ -221,7 +221,7 @@ ReadCacheSegment(PCACHE_SEGMENT CacheSeg)
   MmBuildMdlForNonPagedPool(Mdl);
   Mdl->MdlFlags |= MDL_IO_PAGE_READ;
   KeInitializeEvent(&Event, NotificationEvent, FALSE);
-  Status = IoPageRead(CacheSeg->Bcb->FileObject, Mdl, &SegOffset, & Event, &IoStatus); 
+  Status = IoPageRead(CacheSeg->Bcb->FileObject, Mdl, &SegOffset, & Event, &IoStatus);
   if (Status == STATUS_PENDING)
   {
      KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -235,13 +235,13 @@ ReadCacheSegment(PCACHE_SEGMENT CacheSeg)
     }
   if (CacheSeg->Bcb->CacheSegmentSize > Size)
     {
-      memset ((char*)CacheSeg->BaseAddress + Size, 0, 
+      memset ((char*)CacheSeg->BaseAddress + Size, 0,
 	      CacheSeg->Bcb->CacheSegmentSize - Size);
     }
   return STATUS_SUCCESS;
 }
 
-NTSTATUS 
+NTSTATUS
 WriteCacheSegment(PCACHE_SEGMENT CacheSeg)
 {
   ULONG Size;
@@ -316,7 +316,7 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
   KIRQL oldirql;
   PLIST_ENTRY current_entry;
   PCACHE_SEGMENT current;
-  
+
   DPRINT("CcCopyRead(FileObject %x, FileOffset %x, "
 	 "Length %d, Wait %d, Buffer %x, IoStatus %x)\n",
 	 FileObject, (ULONG)FileOffset->QuadPart, Length, Wait,
@@ -324,7 +324,7 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
 
   Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
   ReadOffset = (ULONG)FileOffset->QuadPart;
-  
+
   DPRINT("AllocationSize %d, FileSize %d\n",
          (ULONG)Bcb->AllocationSize.QuadPart,
          (ULONG)Bcb->FileSize.QuadPart);
@@ -339,7 +339,7 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
       current_entry = Bcb->BcbSegmentListHead.Flink;
       while (current_entry != &Bcb->BcbSegmentListHead)
 	{
-	  current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, 
+	  current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT,
 				      BcbSegmentListEntry);
 	  if (!current->Valid && current->FileOffset < ReadOffset + Length
 	      && current->FileOffset + Bcb->CacheSegmentSize > ReadOffset)
@@ -359,7 +359,7 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
     {
       TempLength = min (Length, Bcb->CacheSegmentSize - TempLength);
       Status = CcRosRequestCacheSegment(Bcb,
-					ROUND_DOWN(ReadOffset, 
+					ROUND_DOWN(ReadOffset,
 						   Bcb->CacheSegmentSize),
 					&BaseAddress, &Valid, &CacheSeg);
       if (!NT_SUCCESS(Status))
@@ -380,14 +380,14 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
 	      return FALSE;
 	    }
 	}
-      memcpy (Buffer, (char*)BaseAddress + ReadOffset % Bcb->CacheSegmentSize, 
+      memcpy (Buffer, (char*)BaseAddress + ReadOffset % Bcb->CacheSegmentSize,
 	      TempLength);
       CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
       ReadLength += TempLength;
       Length -= TempLength;
       ReadOffset += TempLength;
       Buffer = (PVOID)((char*)Buffer + TempLength);
-    }  
+    }
   while (Length > 0)
     {
       TempLength = min(max(Bcb->CacheSegmentSize, MAX_RW_LENGTH), Length);
@@ -445,14 +445,14 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
        current_entry = Bcb->BcbSegmentListHead.Flink;
        while (current_entry != &Bcb->BcbSegmentListHead)
 	 {
-	   CacheSeg = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, 
+	   CacheSeg = CONTAINING_RECORD(current_entry, CACHE_SEGMENT,
 					BcbSegmentListEntry);
 	   if (!CacheSeg->Valid)
 	     {
-	       if ((WriteOffset >= CacheSeg->FileOffset && 
+	       if ((WriteOffset >= CacheSeg->FileOffset &&
 		    WriteOffset < CacheSeg->FileOffset + Bcb->CacheSegmentSize)
-		   || (WriteOffset + Length > CacheSeg->FileOffset && 
-		       WriteOffset + Length <= CacheSeg->FileOffset + 
+		   || (WriteOffset + Length > CacheSeg->FileOffset &&
+		       WriteOffset + Length <= CacheSeg->FileOffset +
 		       Bcb->CacheSegmentSize))
 		 {
 		   KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
@@ -484,10 +484,10 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
 	       return(FALSE);
 	     }
 	 }
-       memcpy ((char*)BaseAddress + WriteOffset % Bcb->CacheSegmentSize, 
+       memcpy ((char*)BaseAddress + WriteOffset % Bcb->CacheSegmentSize,
 	       Buffer, TempLength);
        CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, TRUE, FALSE);
-       
+
        Length -= TempLength;
        WriteOffset += TempLength;
 #if defined(__GNUC__)
@@ -500,7 +500,7 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
 	  }
 #endif
      }
-   
+
    while (Length > 0)
      {
        TempLength = min (Bcb->CacheSegmentSize, Length);
@@ -612,11 +612,11 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
   ULONG i;
   IO_STATUS_BLOCK Iosb;
   KEVENT Event;
-  
+
   DPRINT("CcZeroData(FileObject %x, StartOffset %I64x, EndOffset %I64x, "
-	 "Wait %d)\n", FileObject, StartOffset->QuadPart, EndOffset->QuadPart, 
+	 "Wait %d)\n", FileObject, StartOffset->QuadPart, EndOffset->QuadPart,
 	 Wait);
-  
+
   Length = EndOffset->u.LowPart - StartOffset->u.LowPart;
   WriteOffset.QuadPart = StartOffset->QuadPart;
 
@@ -625,7 +625,7 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
       /* File is not cached */
 
       Mdl = alloca(MmSizeOfMdl(NULL, MAX_ZERO_LENGTH));
- 
+
       while (Length > 0)
 	{
 	  if (Length + WriteOffset.u.LowPart % PAGE_SIZE > MAX_ZERO_LENGTH)
@@ -649,7 +649,7 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
              KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
              Status = Iosb.Status;
 	  }
-          MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);            
+          MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
 	  if (!NT_SUCCESS(Status))
 	    {
 	      return(FALSE);
@@ -675,14 +675,14 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
 	  current_entry = Bcb->BcbSegmentListHead.Flink;
 	  while (current_entry != &Bcb->BcbSegmentListHead)
 	    {
-	      CacheSeg = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, 
+	      CacheSeg = CONTAINING_RECORD(current_entry, CACHE_SEGMENT,
 					   BcbSegmentListEntry);
 	      if (!CacheSeg->Valid)
 		{
-		  if ((WriteOffset.u.LowPart >= CacheSeg->FileOffset && 
+		  if ((WriteOffset.u.LowPart >= CacheSeg->FileOffset &&
 		       WriteOffset.u.LowPart < CacheSeg->FileOffset + Bcb->CacheSegmentSize)
-		      || (WriteOffset.u.LowPart + Length > CacheSeg->FileOffset && 
-			  WriteOffset.u.LowPart + Length <= 
+		      || (WriteOffset.u.LowPart + Length > CacheSeg->FileOffset &&
+			  WriteOffset.u.LowPart + Length <=
 			  CacheSeg->FileOffset + Bcb->CacheSegmentSize))
 		    {
 		      KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
@@ -726,7 +726,7 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
 		      Status = ReadCacheSegment(current);
 		      if (!NT_SUCCESS(Status))
 			{
-			  DPRINT1("ReadCacheSegment failed, status %x\n", 
+			  DPRINT1("ReadCacheSegment failed, status %x\n",
 				  Status);
 			}
 		    }
@@ -743,7 +743,7 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
 	      Length -= TempLength;
 
       	      current = current->NextInChain;
-	    } 
+	    }
 
           current = CacheSeg;
 	  while (current != NULL)

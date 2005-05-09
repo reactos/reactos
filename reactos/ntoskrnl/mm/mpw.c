@@ -5,7 +5,7 @@
  * FILE:            ntoskrnl/mm/mpw.c
  * PURPOSE:         Writes data that has been modified in memory but not on
  *                  the disk
- *               
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 

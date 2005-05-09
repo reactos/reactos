@@ -1,5 +1,5 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/lpc/reply.c
@@ -30,14 +30,14 @@
  * REVISIONS
  */
 NTSTATUS STDCALL
-EiReplyOrRequestPort (IN	PEPORT		Port, 
-		      IN	PLPC_MESSAGE	LpcReply, 
+EiReplyOrRequestPort (IN	PEPORT		Port,
+		      IN	PLPC_MESSAGE	LpcReply,
 		      IN	ULONG		MessageType,
 		      IN	PEPORT		Sender)
 {
    KIRQL oldIrql;
    PQUEUEDMESSAGE MessageReply;
-   
+
    if (Port == NULL)
      {
        KEBUGCHECK(0);
@@ -46,21 +46,21 @@ EiReplyOrRequestPort (IN	PEPORT		Port,
    MessageReply = ExAllocatePoolWithTag(NonPagedPool, sizeof(QUEUEDMESSAGE),
 					TAG_LPC_MESSAGE);
    MessageReply->Sender = Sender;
-   
+
    if (LpcReply != NULL)
      {
 	memcpy(&MessageReply->Message, LpcReply, LpcReply->MessageSize);
      }
-   
+
    MessageReply->Message.ClientId.UniqueProcess = PsGetCurrentProcessId();
    MessageReply->Message.ClientId.UniqueThread = PsGetCurrentThreadId();
    MessageReply->Message.MessageType = MessageType;
    MessageReply->Message.MessageId = InterlockedIncrementUL(&LpcpNextMessageId);
-   
+
    KeAcquireSpinLock(&Port->Lock, &oldIrql);
    EiEnqueueMessagePort(Port, MessageReply);
    KeReleaseSpinLock(&Port->Lock, oldIrql);
-   
+
    return(STATUS_SUCCESS);
 }
 
@@ -82,9 +82,9 @@ NtReplyPort (IN	HANDLE		PortHandle,
 {
    NTSTATUS Status;
    PEPORT Port;
-   
+
    DPRINT("NtReplyPort(PortHandle %x, LpcReply %x)\n", PortHandle, LpcReply);
-   
+
    Status = ObReferenceObjectByHandle(PortHandle,
 				      PORT_ALL_ACCESS,   /* AccessRequired */
 				      LpcPortObjectType,
@@ -102,15 +102,15 @@ NtReplyPort (IN	HANDLE		PortHandle,
 	ObDereferenceObject(Port);
 	return STATUS_PORT_DISCONNECTED;
      }
-   
-   Status = EiReplyOrRequestPort(Port->OtherPort, 
-				 LpcReply, 
+
+   Status = EiReplyOrRequestPort(Port->OtherPort,
+				 LpcReply,
 				 LPC_REPLY,
 				 Port);
    KeReleaseSemaphore(&Port->OtherPort->Semaphore, IO_NO_INCREMENT, 1, FALSE);
-   
+
    ObDereferenceObject(Port);
-   
+
    return(Status);
 }
 
@@ -118,11 +118,11 @@ NtReplyPort (IN	HANDLE		PortHandle,
 /**********************************************************************
  * NAME							EXPORTED
  *	NtReplyWaitReceivePortEx
- *	
+ *
  * DESCRIPTION
  *	Can be used with waitable ports.
  *	Present only in w2k+.
- *	
+ *
  * ARGUMENTS
  * 	PortHandle
  * 	PortId
@@ -137,7 +137,7 @@ NtReplyPort (IN	HANDLE		PortHandle,
 NTSTATUS STDCALL
 NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
 			 OUT PULONG		PortId,
-			 IN  PLPC_MESSAGE	LpcReply,     
+			 IN  PLPC_MESSAGE	LpcReply,
 			 OUT PLPC_MESSAGE	LpcMessage,
 			 IN  PLARGE_INTEGER	Timeout)
 {
@@ -147,10 +147,10 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
    PQUEUEDMESSAGE Request;
    BOOLEAN Disconnected;
    LARGE_INTEGER to;
-   
+
    DPRINT("NtReplyWaitReceivePortEx(PortHandle %x, LpcReply %x, "
 	  "LpcMessage %x)\n", PortHandle, LpcReply, LpcMessage);
-   
+
    Status = ObReferenceObjectByHandle(PortHandle,
 				      PORT_ALL_ACCESS,
 				      LpcPortObjectType,
@@ -173,19 +173,19 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
        Timeout = &to;
      }
    else Disconnected = FALSE;
-   
+
    /*
     * Send the reply, only if port is connected
     */
    if (LpcReply != NULL && !Disconnected)
      {
-	Status = EiReplyOrRequestPort(Port->OtherPort, 
+	Status = EiReplyOrRequestPort(Port->OtherPort,
 				      LpcReply,
 				      LPC_REPLY,
 				      Port);
-	KeReleaseSemaphore(&Port->OtherPort->Semaphore, IO_NO_INCREMENT, 1, 
+	KeReleaseSemaphore(&Port->OtherPort->Semaphore, IO_NO_INCREMENT, 1,
 			   FALSE);
-	
+
 	if (!NT_SUCCESS(Status))
 	  {
 	     ObDereferenceObject(Port);
@@ -193,7 +193,7 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
 	     return(Status);
 	  }
      }
-   
+
    /*
     * Want for a message to be received
     */
@@ -211,7 +211,7 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
        ObDereferenceObject(Port);
        return(Disconnected ? STATUS_PORT_DISCONNECTED : STATUS_TIMEOUT);
      }
-   
+
    if (!NT_SUCCESS(Status))
      {
        if (STATUS_THREAD_IS_TERMINATING != Status)
@@ -254,7 +254,7 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
    if (!NT_SUCCESS(Status))
      {
        /*
-	* Copying the message to the caller's buffer failed so 
+	* Copying the message to the caller's buffer failed so
 	* undo what we did and return.
 	* FIXME: Also increment semaphore.
 	*/
@@ -274,7 +274,7 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
      {
        ExFreePool(Request);
      }
-   
+
    /*
     * Dereference the port
     */
@@ -286,10 +286,10 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
 /**********************************************************************
  * NAME						EXPORTED
  *	NtReplyWaitReceivePort
- *	
+ *
  * DESCRIPTION
  *	Can be used with waitable ports.
- *	
+ *
  * ARGUMENTS
  * 	PortHandle
  * 	PortId
@@ -303,7 +303,7 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
 NTSTATUS STDCALL
 NtReplyWaitReceivePort (IN  HANDLE		PortHandle,
 			OUT PULONG		PortId,
-			IN  PLPC_MESSAGE	LpcReply,     
+			IN  PLPC_MESSAGE	LpcReply,
 			OUT PLPC_MESSAGE	LpcMessage)
 {
   return(NtReplyWaitReceivePortEx (PortHandle,

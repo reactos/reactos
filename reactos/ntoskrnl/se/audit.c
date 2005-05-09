@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/se/audit.c
  * PURPOSE:         Audit functions
- * 
+ *
  * PROGRAMMERS:     Eric Kohl <eric.kohl@t-online.de>
  */
 

@@ -4,7 +4,7 @@
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/inbv/inbv.c
  * PURPOSE:        Boot video support
- * 
+ *
  * PROGRAMMERS:    Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 

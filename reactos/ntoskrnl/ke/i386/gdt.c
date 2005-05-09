@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/gdt.c
  * PURPOSE:         GDT managment
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
@@ -18,7 +18,7 @@
 
 PUSHORT KiGdtArray[MAXIMUM_PROCESSORS];
 
-USHORT KiBootGdt[11 * 4] = 
+USHORT KiBootGdt[11 * 4] =
 {
  0x0, 0x0, 0x0, 0x0,              /* Null */
  0xffff, 0x0, 0x9a00, 0xcf,       /* Kernel CS */
@@ -61,7 +61,7 @@ KiInitializeGdt(PKPCR Pcr)
   PUSHORT Gdt;
   struct LocalGdtDescriptor_t Descriptor;
   ULONG Entry;
-  ULONG Base;  
+  ULONG Base;
 
   if (Pcr == NULL)
     {
@@ -89,15 +89,15 @@ KiInitializeGdt(PKPCR Pcr)
   Pcr->GDT = Gdt;
 
   /*
-   * Set the base address of the PCR 
+   * Set the base address of the PCR
    */
   Base = (ULONG)Pcr;
   Entry = PCR_SELECTOR / 2;
   Gdt[Entry + 1] = (USHORT)(((ULONG)Base) & 0xffff);
-  
+
   Gdt[Entry + 2] = Gdt[Entry + 2] & ~(0xff);
   Gdt[Entry + 2] = (USHORT)(Gdt[Entry + 2] | ((((ULONG)Base) & 0xff0000) >> 16));
-   
+
   Gdt[Entry + 3] = Gdt[Entry + 3] & ~(0xff00);
   Gdt[Entry + 3] = (USHORT)(Gdt[Entry + 3] | ((((ULONG)Base) & 0xff000000) >> 16));
 
@@ -108,7 +108,7 @@ KiInitializeGdt(PKPCR Pcr)
   Descriptor.Base = (ULONG)Gdt;
 #if defined(__GNUC__)
   __asm__ ("lgdt %0\n\t" : /* no output */ : "m" (Descriptor));
-  
+
   /*
    * Reload the selectors
    */
@@ -162,7 +162,7 @@ KeI386FlatToGdtSelector(
 /*
  * @unimplemented
  */
-NTSTATUS 
+NTSTATUS
 KeI386ReleaseGdtSelectors(
 	OUT PULONG SelArray,
 	IN ULONG NumOfSelectors
@@ -185,77 +185,77 @@ KeI386AllocateGdtSelectors(
 	return 0;
 }
 
-VOID 
+VOID
 KeSetBaseGdtSelector(ULONG Entry,
 		     PVOID Base)
 {
    KIRQL oldIrql;
    PUSHORT Gdt;
-   
+
    DPRINT("KeSetBaseGdtSelector(Entry %x, Base %x)\n",
 	   Entry, Base);
-   
+
    KeAcquireSpinLock(&GdtLock, &oldIrql);
-   
+
    Gdt = KeGetCurrentKPCR()->GDT;
    Entry = (Entry & (~0x3)) / 2;
-   
+
    Gdt[Entry + 1] = (USHORT)(((ULONG)Base) & 0xffff);
-   
+
    Gdt[Entry + 2] = Gdt[Entry + 2] & ~(0xff);
    Gdt[Entry + 2] = (USHORT)(Gdt[Entry + 2] |
      ((((ULONG)Base) & 0xff0000) >> 16));
-   
+
    Gdt[Entry + 3] = Gdt[Entry + 3] & ~(0xff00);
    Gdt[Entry + 3] = (USHORT)(Gdt[Entry + 3] |
      ((((ULONG)Base) & 0xff000000) >> 16));
-   
-   DPRINT("%x %x %x %x\n", 
+
+   DPRINT("%x %x %x %x\n",
 	   Gdt[Entry + 0],
 	   Gdt[Entry + 1],
 	   Gdt[Entry + 2],
 	   Gdt[Entry + 3]);
-   
+
    KeReleaseSpinLock(&GdtLock, oldIrql);
 }
 
-VOID 
+VOID
 KeSetGdtSelector(ULONG Entry,
                  ULONG Value1,
                  ULONG Value2)
 {
    KIRQL oldIrql;
-   PULONG Gdt; 
-   
+   PULONG Gdt;
+
    DPRINT("KeSetGdtSelector(Entry %x, Value1 %x, Value2 %x)\n",
 	   Entry, Value1, Value2);
-   
+
    KeAcquireSpinLock(&GdtLock, &oldIrql);
-   
-   Gdt = (PULONG) KeGetCurrentKPCR()->GDT;;
+
+   Gdt = (PULONG) KeGetCurrentKPCR()->GDT;
    Entry = (Entry & (~0x3)) / 4;
 
    Gdt[Entry] = Value1;
    Gdt[Entry + 1] = Value2;
 
-   DPRINT("%x %x\n", 
+   DPRINT("%x %x\n",
 	   Gdt[Entry + 0],
 	   Gdt[Entry + 1]);
-   
+
    KeReleaseSpinLock(&GdtLock, oldIrql);
 }
 
-VOID 
+VOID
 KeDumpGdtSelector(ULONG Entry)
 {
    USHORT a, b, c, d;
    ULONG RawLimit;
-   
+
    a = KiBootGdt[Entry*4];
    b = KiBootGdt[Entry*4 + 1];
    c = KiBootGdt[Entry*4 + 2];
    d = KiBootGdt[Entry*4 + 3];
-   
+
    DbgPrint("Base: %x\n", b + ((c & 0xff) * (1 << 16)) +
 	    ((d & 0xff00) * (1 << 16)));
    RawLimit = a + ((d & 0xf) * (1 << 16));

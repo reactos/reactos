@@ -94,7 +94,7 @@ LONG
 KdbpDisassemble(
    IN ULONG Address,
    IN ULONG IntelSyntax);
-   
+
 LONG
 KdbpGetInstLength(
    IN ULONG Address);
@@ -167,7 +167,7 @@ BOOLEAN
 KdbpSymFindModuleByIndex(IN INT Index,
                          OUT PKDB_MODULE_INFO pInfo);
 
-BOOLEAN 
+BOOLEAN
 KdbSymPrintAddress(IN PVOID Address);
 
 NTSTATUS
@@ -219,7 +219,7 @@ KdbpInsertBreakPoint(
    IN  PCHAR ConditionExpression  OPTIONAL,
    IN  BOOLEAN Global,
    OUT PULONG BreakPointNumber  OPTIONAL);
-   
+
 BOOLEAN
 KdbpDeleteBreakPoint(
    IN LONG BreakPointNr  OPTIONAL,

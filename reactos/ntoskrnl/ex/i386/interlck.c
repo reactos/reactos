@@ -1,5 +1,5 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/i386/interlck.c
@@ -27,7 +27,7 @@
 #ifdef CONFIG_SMP
 #define LOCK lock
 #else
-#define LOCK 
+#define LOCK
 #endif
 
 #endif
@@ -248,7 +248,7 @@ Exi386InterlockedExchangeUlong(IN PULONG Target,
 LONG FASTCALL
 InterlockedIncrement(PLONG Addend);
 /*
- * FUNCTION: Increments a caller supplied variable of type LONG as an 
+ * FUNCTION: Increments a caller supplied variable of type LONG as an
  * atomic operation
  * ARGUMENTS:
  *     Addend = Points to a variable whose value is to be increment

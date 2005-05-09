@@ -1,9 +1,9 @@
-/* 
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/mutant.c
  * PURPOSE:         Executive Management of Mutants
- * 
+ *
  * PROGRAMMERS:     Alex Ionescu - Fix tab/space mismatching, tiny fixes to query function and
  *                                 add more debug output.
  *                  David Welch (welch@cwcom.net)
@@ -24,14 +24,14 @@ static GENERIC_MAPPING ExpMutantMapping = {
     MUTANT_ALL_ACCESS};
 
 static const INFORMATION_CLASS_INFO ExMutantInfoClass[] = {
-    
+
      /* MutantBasicInformation */
     ICI_SQ_SAME( sizeof(MUTANT_BASIC_INFORMATION), sizeof(ULONG), ICIF_QUERY ),
 };
 
 /* FUNCTIONS *****************************************************************/
 
-VOID 
+VOID
 STDCALL
 ExpDeleteMutant(PVOID ObjectBody)
 {
@@ -45,7 +45,7 @@ ExpDeleteMutant(PVOID ObjectBody)
                     FALSE);
 }
 
-VOID 
+VOID
 INIT_FUNCTION
 ExpInitializeMutantImplementation(VOID)
 {
@@ -79,7 +79,7 @@ ExpInitializeMutantImplementation(VOID)
 /*
  * @implemented
  */
-NTSTATUS 
+NTSTATUS
 STDCALL
 NtCreateMutant(OUT PHANDLE MutantHandle,
                IN ACCESS_MASK DesiredAccess,
@@ -90,27 +90,27 @@ NtCreateMutant(OUT PHANDLE MutantHandle,
     HANDLE hMutant;
     PKMUTANT Mutant;
     NTSTATUS Status = STATUS_SUCCESS;
-    
+
     PAGED_CODE();
     DPRINT("NtCreateMutant(0x%x, 0x%x, 0x%x)\n", MutantHandle, DesiredAccess, ObjectAttributes);
-  
+
     /* Check Output Safety */
     if(PreviousMode == UserMode) {
-        
+
         _SEH_TRY {
-            
+
             ProbeForWrite(MutantHandle,
                           sizeof(HANDLE),
                           sizeof(ULONG));
         } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
-            
+
             Status = _SEH_GetExceptionCode();
-        
+
         } _SEH_END;
 
         if(!NT_SUCCESS(Status)) return Status;
     }
-    
+
     /* Create the Mutant Object*/
     Status = ObCreateObject(PreviousMode,
                             ExMutantObjectType,
@@ -121,10 +121,10 @@ NtCreateMutant(OUT PHANDLE MutantHandle,
                             0,
                             0,
                             (PVOID*)&Mutant);
-    
+
     /* Check for success */
     if(NT_SUCCESS(Status)) {
-        
+
         /* Initalize the Kernel Mutant */
         DPRINT("Initializing the Mutant\n");
         KeInitializeMutant(Mutant, InitialOwner);
@@ -137,18 +137,18 @@ NtCreateMutant(OUT PHANDLE MutantHandle,
                                 NULL,
                                 &hMutant);
         ObDereferenceObject(Mutant);
-    
+
         /* Check for success and return handle */
         if(NT_SUCCESS(Status)) {
-            
+
             _SEH_TRY {
-                
+
                 *MutantHandle = hMutant;
-            
+
             } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
-                
+
                 Status = _SEH_GetExceptionCode();
-                
+
             } _SEH_END;
         }
     }
@@ -160,7 +160,7 @@ NtCreateMutant(OUT PHANDLE MutantHandle,
 /*
  * @implemented
  */
-NTSTATUS 
+NTSTATUS
 STDCALL
 NtOpenMutant(OUT PHANDLE MutantHandle,
              IN ACCESS_MASK DesiredAccess,
@@ -169,27 +169,27 @@ NtOpenMutant(OUT PHANDLE MutantHandle,
     HANDLE hMutant;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
-  
+
     PAGED_CODE();
     DPRINT("NtOpenMutant(0x%x, 0x%x, 0x%x)\n", MutantHandle, DesiredAccess, ObjectAttributes);
 
     /* Check Output Safety */
     if(PreviousMode == UserMode) {
-        
+
         _SEH_TRY {
-            
+
             ProbeForWrite(MutantHandle,
                           sizeof(HANDLE),
                           sizeof(ULONG));
         } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
-            
+
             Status = _SEH_GetExceptionCode();
-        
+
         } _SEH_END;
-     
+
         if(!NT_SUCCESS(Status)) return Status;
     }
-    
+
     /* Open the Object */
     Status = ObOpenObjectByName(ObjectAttributes,
                                 ExMutantObjectType,
@@ -201,15 +201,15 @@ NtOpenMutant(OUT PHANDLE MutantHandle,
 
     /* Check for success and return handle */
     if(NT_SUCCESS(Status)) {
-            
+
         _SEH_TRY {
-            
+
             *MutantHandle = hMutant;
-        
+
         } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
-            
+
             Status = _SEH_GetExceptionCode();
-            
+
         } _SEH_END;
     }
 
@@ -220,7 +220,7 @@ NtOpenMutant(OUT PHANDLE MutantHandle,
 /*
  * @implemented
  */
-NTSTATUS 
+NTSTATUS
 STDCALL
 NtQueryMutant(IN HANDLE MutantHandle,
               IN MUTANT_INFORMATION_CLASS MutantInformationClass,
@@ -232,9 +232,9 @@ NtQueryMutant(IN HANDLE MutantHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
     PMUTANT_BASIC_INFORMATION BasicInfo = (PMUTANT_BASIC_INFORMATION)MutantInformation;
-    
+
     PAGED_CODE();
-    
+
     /* Check buffers and parameters */
     DefaultQueryInfoBufferCheck(MutantInformationClass,
                                 ExMutantInfoClass,
@@ -244,7 +244,7 @@ NtQueryMutant(IN HANDLE MutantHandle,
                                 PreviousMode,
                                 &Status);
     if(!NT_SUCCESS(Status)) {
-        
+
         DPRINT("NtQueryMutant() failed, Status: 0x%x\n", Status);
         return Status;
     }
@@ -260,7 +260,7 @@ NtQueryMutant(IN HANDLE MutantHandle,
     if(NT_SUCCESS(Status)) {
 
          _SEH_TRY {
-             
+
             /* Fill out the Basic Information Requested */
             DPRINT("Returning Mutant Information\n");
             BasicInfo->CurrentCount = KeReadStateMutant(Mutant);
@@ -269,17 +269,17 @@ NtQueryMutant(IN HANDLE MutantHandle,
 
             /* Return the Result Length if requested */
            if(ResultLength) *ResultLength = sizeof(MUTANT_BASIC_INFORMATION);
-        
+
         } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
-            
+
             Status = _SEH_GetExceptionCode();
-            
+
         } _SEH_END;
 
         /* Release the Object */
         ObDereferenceObject(Mutant);
     }
-    
+
     /* Return Status */
     return Status;
 }
@@ -288,7 +288,7 @@ NtQueryMutant(IN HANDLE MutantHandle,
 /*
  * @implemented
  */
-NTSTATUS 
+NTSTATUS
 STDCALL
 NtReleaseMutant(IN HANDLE MutantHandle,
                 IN PLONG PreviousCount  OPTIONAL)
@@ -296,31 +296,31 @@ NtReleaseMutant(IN HANDLE MutantHandle,
     PKMUTANT Mutant;
     KPROCESSOR_MODE PreviousMode;
     NTSTATUS Status = STATUS_SUCCESS;
-   
+
     PAGED_CODE();
-    
+
     PreviousMode = ExGetPreviousMode();
-    
-    DPRINT("NtReleaseMutant(MutantHandle 0%x PreviousCount 0%x)\n", 
-            MutantHandle, 
+
+    DPRINT("NtReleaseMutant(MutantHandle 0%x PreviousCount 0%x)\n",
+            MutantHandle,
             PreviousCount);
 
     /* Check Output Safety */
     if(PreviousMode != KernelMode && PreviousCount) {
-        
+
         _SEH_TRY {
-            
+
             ProbeForWrite(PreviousCount,
                           sizeof(LONG),
                           sizeof(ULONG));
         } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
-            
+
             Status = _SEH_GetExceptionCode();
-        
+
         } _SEH_END;
-     
+
         if(!NT_SUCCESS(Status)) return Status;
-    } 
+    }
 
     /* Open the Object */
     Status = ObReferenceObjectByHandle(MutantHandle,
@@ -329,12 +329,12 @@ NtReleaseMutant(IN HANDLE MutantHandle,
                                        PreviousMode,
                                        (PVOID*)&Mutant,
                                        NULL);
-    
+
     /* Check for Success and release if such */
     if(NT_SUCCESS(Status)) {
-        
+
         LONG Prev = 0;
-        
+
         /* release the mutant. doing so might raise an exception which we're
            required to catch! */
         _SEH_TRY {
@@ -346,7 +346,7 @@ NtReleaseMutant(IN HANDLE MutantHandle,
             Status = _SEH_GetExceptionCode();
 
         } _SEH_END;
-        
+
         ObDereferenceObject(Mutant);
 
         if(NT_SUCCESS(Status)) {
@@ -359,7 +359,7 @@ NtReleaseMutant(IN HANDLE MutantHandle,
                     *PreviousCount = Prev;
 
                 } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
-                
+
                     Status = _SEH_GetExceptionCode();
 
                 } _SEH_END;

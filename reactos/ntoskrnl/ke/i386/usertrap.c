@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/usertrap.c
  * PURPOSE:         Handling usermode exceptions.
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
@@ -16,7 +16,7 @@
 
 /* FUNCTIONS ****************************************************************/
 
-BOOLEAN 
+BOOLEAN
 print_user_address(PVOID address)
 {
    PLIST_ENTRY current_entry;
@@ -32,7 +32,7 @@ print_user_address(PVOID address)
      {
        Peb = CurrentProcess->Peb;
      }
-   
+
    if (NULL == Peb)
      {
        DbgPrint("<%x>", address);
@@ -46,17 +46,17 @@ print_user_address(PVOID address)
        return(TRUE);
      }
    current_entry = Ldr->InLoadOrderModuleList.Flink;
-   
+
    while (current_entry != &Ldr->InLoadOrderModuleList &&
 	  current_entry != NULL)
      {
-	current = 
+	current =
 	  CONTAINING_RECORD(current_entry, LDR_MODULE, InLoadOrderModuleList);
-	
+
 	if (address >= (PVOID)current->BaseAddress &&
 	    address < (PVOID)((char*)current->BaseAddress + current->ResidentSize))
 	  {
-            RelativeAddress = 
+            RelativeAddress =
 	      (ULONG_PTR) address - (ULONG_PTR)current->BaseAddress;
 	    DbgPrint("<%wZ: %x>", &current->BaseDllName, RelativeAddress);
 	    return(TRUE);
@@ -113,7 +113,7 @@ KiUserTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
     {
       Er.NumberParameters = 0;
     }
-  
+
   /* FIXME: Which exceptions are noncontinuable? */
   Er.ExceptionFlags = 0;
 

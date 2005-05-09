@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/idt.c
  * PURPOSE:         IDT managment
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 

@@ -132,20 +132,20 @@ typedef struct _CPU_REGISTER
 
 #define EIP_REGNO 8
 
-typedef 
-VOID 
-STDCALL_FUNC 
-(*PKSYSTEM_ROUTINE)(PKSTART_ROUTINE StartRoutine, 
+typedef
+VOID
+STDCALL_FUNC
+(*PKSYSTEM_ROUTINE)(PKSTART_ROUTINE StartRoutine,
                     PVOID StartContext);
 
 VOID
 STDCALL
-KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine, 
-                PKSTART_ROUTINE StartRoutine, 
-                PVOID StartContext, 
+KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
+                PKSTART_ROUTINE StartRoutine,
+                PVOID StartContext,
                 BOOLEAN UserThread,
                 KTRAP_FRAME TrapFrame);
-                
+
 static CPU_REGISTER GspRegisters[NUMREGS] =
 {
   { 4, FIELD_OFFSET (KTRAP_FRAME_X86, Eax), FIELD_OFFSET (CONTEXT, Eax), TRUE },
@@ -165,16 +165,16 @@ static CPU_REGISTER GspRegisters[NUMREGS] =
   { 4, FIELD_OFFSET (KTRAP_FRAME_X86, Fs), FIELD_OFFSET (CONTEXT, SegFs), TRUE },
   { 4, FIELD_OFFSET (KTRAP_FRAME_X86, Gs), FIELD_OFFSET (CONTEXT, SegGs), TRUE }
 };
-                                                                                
+
 static PCHAR GspThreadStates[DeferredReady+1] =
-{ "Initialized", 
-  "Ready", 
+{ "Initialized",
+  "Ready",
   "Running",
-  "Standby", 
-  "Terminated", 
+  "Standby",
+  "Terminated",
   "Waiting",
-  "Transition", 
-  "DeferredReady" 
+  "Transition",
+  "DeferredReady"
 };
 
 char *
@@ -873,9 +873,9 @@ GspQuery(PCHAR Request)
     if (GspFindThread (ptr, &ThreadInfo))
 	  {
              PCHAR String = GspThreadStates[ThreadInfo->Tcb.State];
-           
+
              ObDereferenceObject(ThreadInfo);
-           
+
              GspMem2Hex (String, &GspOutBuffer[0], strlen (String), FALSE);
 	  }
   }
@@ -1166,7 +1166,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
   else
     {
       /* Don't switch threads */
-          
+
       /* Always use the current thread when entering the exception handler */
       if (NULL != GspDbgThread)
         {
@@ -1502,7 +1502,7 @@ KdpGdbDebugPrint(PCH Message)
   if (GspInitialized)
 	  {
 	    ULONG Length;
-	
+
 	    GspOutBuffer[0] = 'O';
 	    GspOutBuffer[1] = '\0';
 	    strcat (&GspOutBuffer[0], Message);
@@ -1544,20 +1544,20 @@ KdGdbListModules()
 }
 
 /* Initialize the GDB stub */
-VOID 
+VOID
 STDCALL
 KdpGdbStubInit(PKD_DISPATCH_TABLE WrapperTable,
                ULONG BootPhase)
 {
     if (!KdDebuggerEnabled || !KdpDebugMode.Gdb) return;
-    
+
     if (BootPhase == 0)
     {
       /* Write out the functions that we support for now */
       WrapperTable->KdpInitRoutine = KdpGdbStubInit;
       WrapperTable->KdpPrintRoutine = KdpGdbDebugPrint;
       WrapperTable->KdpExceptionRoutine = KdpGdbEnterDebuggerException;
-        
+
       /* Initialize the Port */
       KdPortInitializeEx(&GdbPortInfo, 0, 0);
     }
@@ -1572,7 +1572,7 @@ KdpGdbStubInit(PKD_DISPATCH_TABLE WrapperTable,
       HalDisplayString("Waiting for GDB to attach\n");
       DbgPrint("Module 'hal.dll' loaded at 0x%.08x.\n", LdrHalBase);
       DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
-    } 
+    }
     else if (BootPhase == 2)
     {
       HalDisplayString("\n   GDB debugging enabled\n\n");

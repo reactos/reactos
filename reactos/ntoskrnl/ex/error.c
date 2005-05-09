@@ -24,7 +24,7 @@ PEPROCESS ExpDefaultErrorPortProcess = NULL;
 /*
  * @implemented
  */
-VOID 
+VOID
 STDCALL
 ExRaiseAccessViolation(VOID)
 {
@@ -46,7 +46,7 @@ ExRaiseDatatypeMisalignment (VOID)
 /*
  * @implemented
  */
-VOID 
+VOID
 STDCALL
 ExRaiseStatus(IN NTSTATUS Status)
 {
@@ -59,7 +59,7 @@ ExRaiseStatus(IN NTSTATUS Status)
     ExceptionRecord.NumberParameters = 0;
     ExceptionRecord.ExceptionCode = Status;
     ExceptionRecord.ExceptionFlags = 0;
-    
+
     /* Call the Rtl Function */
     RtlRaiseException(&ExceptionRecord);
 }
@@ -91,17 +91,17 @@ ExSystemExceptionFilter(VOID)
 VOID
 STDCALL
 ExRaiseHardError(IN NTSTATUS ErrorStatus,
-                 IN ULONG NumberOfParameters, 
+                 IN ULONG NumberOfParameters,
                  IN PUNICODE_STRING UnicodeStringParameterMask OPTIONAL,
-                 IN PVOID *Parameters, 
-                 IN HARDERROR_RESPONSE_OPTION ResponseOption, 
+                 IN PVOID *Parameters,
+                 IN HARDERROR_RESPONSE_OPTION ResponseOption,
                  OUT PHARDERROR_RESPONSE Response)
 {
     UNIMPLEMENTED;
 }
 
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 NtRaiseHardError(IN NTSTATUS ErrorStatus,
                  IN ULONG NumberOfParameters,
                  IN PUNICODE_STRING UnicodeStringParameterMask  OPTIONAL,
@@ -110,7 +110,7 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
                  OUT PHARDERROR_RESPONSE Response)
 {
     DPRINT1("Hard error %x\n", ErrorStatus);
-  
+
     /* Call the Executive Function (WE SHOULD PUT SEH HERE/CAPTURE!) */
     ExRaiseHardError(ErrorStatus,
                      NumberOfParameters,
@@ -118,45 +118,45 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
                      Parameters,
                      ResponseOption,
                      Response);
-  
+
     /* Return Success */
     return STATUS_SUCCESS;
 }
 
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 NtSetDefaultHardErrorPort(IN HANDLE PortHandle)
 {
-    
+
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
-  
+
     /* Check if we have the Privilege */
     if(!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode)) {
-        
+
         DPRINT1("NtSetDefaultHardErrorPort: Caller requires the SeTcbPrivilege privilege!\n");
         return STATUS_PRIVILEGE_NOT_HELD;
     }
-  
+
     /* Only called once during bootup, make sure we weren't called yet */
     if(!ExReadyForErrors) {
-        
+
         Status = ObReferenceObjectByHandle(PortHandle,
                                            0,
                                            LpcPortObjectType,
                                            PreviousMode,
                                            (PVOID*)&ExpDefaultErrorPort,
                                            NULL);
-        
+
         /* Check for Success */
         if(NT_SUCCESS(Status)) {
-            
+
             /* Save the data */
             ExpDefaultErrorPortProcess = PsGetCurrentProcess();
             ExReadyForErrors = TRUE;
         }
     }
-  
+
     return Status;
 }
 

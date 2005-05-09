@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/lpc/create.c
  * PURPOSE:         Communication mechanism
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
@@ -26,7 +26,7 @@
  *
  * RETURN VALUE
  */
-STATIC NTSTATUS STDCALL 
+STATIC NTSTATUS STDCALL
 LpcpVerifyCreateParameters (IN	PHANDLE			PortHandle,
 			    IN	POBJECT_ATTRIBUTES	ObjectAttributes,
 			    IN	ULONG			MaxConnectInfoLength,
@@ -83,12 +83,12 @@ NiCreatePort (PVOID			ObjectBody,
     {
       return (STATUS_SUCCESS);
     }
-  
+
   if (wcschr(RemainingPath+1, '\\') != NULL)
     {
       return (STATUS_UNSUCCESSFUL);
     }
-  
+
   return (STATUS_SUCCESS);
 }
 
@@ -96,7 +96,7 @@ NiCreatePort (PVOID			ObjectBody,
 /**********************************************************************
  * NAME							EXPORTED
  * 	NtCreatePort/5
- * 	
+ *
  * DESCRIPTION
  *
  * ARGUMENTS
@@ -105,10 +105,10 @@ NiCreatePort (PVOID			ObjectBody,
  *	MaxConnectInfoLength,
  *	MaxDataLength,
  *	MaxPoolUsage: size of NP zone the NP part of msgs is kept in
- * 
+ *
  * RETURN VALUE
  */
-/*EXPORTED*/ NTSTATUS STDCALL 
+/*EXPORTED*/ NTSTATUS STDCALL
 NtCreatePort (PHANDLE		      PortHandle,
 	      POBJECT_ATTRIBUTES    ObjectAttributes,
 	      ULONG	       MaxConnectInfoLength,
@@ -117,9 +117,9 @@ NtCreatePort (PHANDLE		      PortHandle,
 {
   PEPORT		Port;
   NTSTATUS	Status;
-  
+
   DPRINT("NtCreatePort() Name %x\n", ObjectAttributes->ObjectName->Buffer);
-  
+
   /* Verify parameters */
   Status = LpcpVerifyCreateParameters (PortHandle,
 				       ObjectAttributes,
@@ -162,16 +162,16 @@ NtCreatePort (PHANDLE		      PortHandle,
   Port->MaxConnectInfoLength = PORT_MAX_DATA_LENGTH;
   Port->MaxDataLength = PORT_MAX_MESSAGE_LENGTH;
   Port->MaxPoolUsage = MaxPoolUsage;
-  
+
   ObDereferenceObject (Port);
-  
+
   return (Status);
 }
 
 /**********************************************************************
  * NAME							EXPORTED
  * 	NtCreateWaitablePort/5
- * 	
+ *
  * DESCRIPTION
  *	Waitable ports can be connected to with NtSecureConnectPort.
  *	No port interface can be used with waitable ports but
@@ -184,7 +184,7 @@ NtCreatePort (PHANDLE		      PortHandle,
  *	MaxConnectInfoLength,
  *	MaxDataLength,
  *	MaxPoolUsage
- * 
+ *
  * RETURN VALUE
  */
 /*EXPORTED*/ NTSTATUS STDCALL
@@ -195,7 +195,7 @@ NtCreateWaitablePort (OUT	PHANDLE			PortHandle,
 		      IN	ULONG			MaxPoolUsage)
 {
   NTSTATUS Status;
-  
+
   /* Verify parameters */
   Status = LpcpVerifyCreateParameters (PortHandle,
 				       ObjectAttributes,

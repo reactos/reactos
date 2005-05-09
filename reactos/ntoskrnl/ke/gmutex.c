@@ -3,8 +3,8 @@
  * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/ke/gmutex.c
  * PURPOSE:         Implements Guarded Mutex
- * 
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net) and 
+ *
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net) and
  *                  Filip Navara (xnavara@volny.cz)
  */
 
@@ -33,7 +33,7 @@ typedef enum _KGUARDED_MUTEX_BITS
  * Enters a guarded region. This causes all (incl. special kernel) APCs
  * to be disabled.
  */
-VOID 
+VOID
 STDCALL
 KeEnterGuardedRegion(VOID)
 {
@@ -51,7 +51,7 @@ STDCALL
 KeLeaveGuardedRegion(VOID)
 {
     PKTHREAD Thread = KeGetCurrentThread();
-    
+
     /* Boost the enable count and check if Special APCs are enabled */
     if (++Thread->SpecialApcDisable == 0)
     {
@@ -63,8 +63,8 @@ KeLeaveGuardedRegion(VOID)
         }
     }
 }
- 
-VOID 
+
+VOID
 FASTCALL
 KeInitializeGuardedMutex(PKGUARDED_MUTEX GuardedMutex)
 {
@@ -72,7 +72,7 @@ KeInitializeGuardedMutex(PKGUARDED_MUTEX GuardedMutex)
     GuardedMutex->Count = GM_LOCK_BIT;
     GuardedMutex->Owner = NULL;
     GuardedMutex->Contention = 0;
-    
+
     /* Initialize the Wait Gate */
     KeInitializeGate(&GuardedMutex->Gate);
 }
@@ -84,45 +84,45 @@ KiAcquireGuardedMutexContented(PKGUARDED_MUTEX GuardedMutex)
     ULONG BitsToRemove;
     ULONG BitsToAdd;
     LONG OldValue;
-    
+
     /* Increase the contention count */
     InterlockedIncrement((PLONG)&GuardedMutex->Contention);
-    
+
     /* Start by unlocking the Guarded Mutex */
     BitsToRemove = GM_LOCK_BIT;
     BitsToAdd = GM_LOCK_WAITER_INC;
-    
+
     while (1)
     {
         /* Get the Count Bits */
         OldValue = (volatile LONG)GuardedMutex->Count;
-    
+
         /* Check if the Guarded Mutex is locked */
         if (OldValue & GM_LOCK_BIT)
         {
             /* Unlock it by removing the Lock Bit */
-            if (InterlockedCompareExchange(&GuardedMutex->Count, 
-                                           OldValue &~ BitsToRemove, 
-                                           OldValue) == OldValue) 
+            if (InterlockedCompareExchange(&GuardedMutex->Count,
+                                           OldValue &~ BitsToRemove,
+                                           OldValue) == OldValue)
             {
                 /* The Guarded Mutex is now unlocked */
                 break;
             }
-        } 
+        }
         else
         {
             /* The Guarded Mutex isn't locked, so simply set the bits */
-            if (InterlockedCompareExchange(&GuardedMutex->Count, 
-                                           OldValue | BitsToAdd, 
-                                           OldValue) != OldValue) 
+            if (InterlockedCompareExchange(&GuardedMutex->Count,
+                                           OldValue | BitsToAdd,
+                                           OldValue) != OldValue)
             {
                 /* The Guarded Mutex value changed behind our back, start over */
                 continue;
             }
-        
+
             /* Now we have to wait for it */
             KeWaitForGate(&GuardedMutex->Gate, WrGuardedMutex, KernelMode);
-        
+
             /* Ok, the wait is done, so set the new bits */
             BitsToRemove = GM_LOCK_BIT | GM_LOCK_WAITER_WOKEN;
             BitsToAdd = GM_LOCK_WAITER_WOKEN;
@@ -130,14 +130,14 @@ KiAcquireGuardedMutexContented(PKGUARDED_MUTEX GuardedMutex)
     }
 }
 
-VOID 
+VOID
 FASTCALL
 KeAcquireGuardedMutex(PKGUARDED_MUTEX GuardedMutex)
 {
     /* Disable Special APCs */
     KeEnterGuardedRegion();
 
-    /* Do the Unsafe Acquire */    
+    /* Do the Unsafe Acquire */
     KeAcquireGuardedMutexUnsafe(GuardedMutex);
 }
 
@@ -151,31 +151,31 @@ KeAcquireGuardedMutexUnsafe(PKGUARDED_MUTEX GuardedMutex)
         /* The Guarded Mutex was already locked, enter contented case */
         KiAcquireGuardedMutexContented(GuardedMutex);
     }
-    
+
     /* Set the Owner */
     GuardedMutex->Owner = KeGetCurrentThread();
 }
 
-VOID 
+VOID
 FASTCALL
 KeReleaseGuardedMutexUnsafe(PKGUARDED_MUTEX GuardedMutex)
 {
     LONG OldValue;
-    
+
     /* Destroy the Owner */
     GuardedMutex->Owner = NULL;
-    
+
     /* Add the Lock Bit */
     OldValue = InterlockedExchangeAdd(&GuardedMutex->Count, 1);
-    
+
     /* Check if it was already locked, but not woken */
     if (OldValue && !(OldValue & GM_LOCK_WAITER_WOKEN))
     {
         /* Update the Oldvalue to what it should be now */
         OldValue |= GM_LOCK_BIT;
-        
+
         /* Remove the Woken bit */
-        if (InterlockedCompareExchange(&GuardedMutex->Count, 
+        if (InterlockedCompareExchange(&GuardedMutex->Count,
                                        OldValue &~ GM_LOCK_WAITER_WOKEN,
                                        OldValue) == OldValue)
         {
@@ -185,34 +185,34 @@ KeReleaseGuardedMutexUnsafe(PKGUARDED_MUTEX GuardedMutex)
     }
 }
 
-VOID 
+VOID
 FASTCALL
 KeReleaseGuardedMutex(PKGUARDED_MUTEX GuardedMutex)
 {
     /* Do the actual release */
     KeReleaseGuardedMutexUnsafe(GuardedMutex);
-    
+
     /* Re-enable APCs */
     KeLeaveGuardedRegion();
 }
 
-BOOL 
+BOOL
 FASTCALL
 KeTryToAcquireGuardedMutex(PKGUARDED_MUTEX GuardedMutex)
 {
     /* Block APCs */
     KeEnterGuardedRegion();
-    
+
     /* Remove the lock */
     if (InterlockedClearBit(&GuardedMutex->Count, 0))
     {
         /* Re-enable APCs */
         KeLeaveGuardedRegion();
-        
+
         /* Return failure */
         return FALSE;
     }
-    
+
     /* Set the Owner */
     GuardedMutex->Owner = KeGetCurrentThread();
     return TRUE;

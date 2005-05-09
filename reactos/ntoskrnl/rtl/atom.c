@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/atom.c
  * PURPOSE:         Atom managment
- * 
+ *
  * PROGRAMMERS:     No programmer listed.
  */
 
@@ -594,7 +594,7 @@ RtlQueryAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 	     *PinCount = 1;
 	  }
 
-	Length = swprintf(TempAtomName, L"#%lu", (ULONG)Atom);	
+	Length = swprintf(TempAtomName, L"#%lu", (ULONG)Atom);
 
 	if (NameLength != NULL)
 	  {

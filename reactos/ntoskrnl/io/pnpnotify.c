@@ -1,10 +1,10 @@
-/* $Id:$
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/pnpnotify.c
  * PURPOSE:         Plug & Play notification functions
- * 
+ *
  * PROGRAMMERS:     Filip Navara (xnavara@volny.cz)
  *                  Hervé Poussineau (hpoussin@reactos.com)
  */
@@ -67,16 +67,16 @@ IoRegisterPlugPlayNotification(
 	PPNP_NOTIFY_ENTRY Entry;
 	PWSTR SymbolicLinkList;
 	NTSTATUS Status;
-	
+
 	PAGED_CODE();
-	
+
 	DPRINT("IoRegisterPlugPlayNotification(EventCategory 0x%x, EventCategoryFlags 0x%lx, DriverObject %p) called.\n",
 		EventCategory,
 		EventCategoryFlags,
 		DriverObject);
-	
+
 	ObReferenceObject(DriverObject);
-	
+
 	/* Try to allocate entry for notification before sending any notification */
 	Entry = ExAllocatePoolWithTag(
 		NonPagedPool,
@@ -88,7 +88,7 @@ IoRegisterPlugPlayNotification(
 		ObDereferenceObject(DriverObject);
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
-	
+
 	if (EventCategory == EventCategoryTargetDeviceChange
 		&& EventCategoryFlags & PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES)
 	{
@@ -108,7 +108,7 @@ IoRegisterPlugPlayNotification(
 		DPRINT1("IoRegisterPlugPlayNotification(): need to send notifications for existing interfaces!\n");
 		ExFreePool(SymbolicLinkList);
 	}
-	
+
 	Entry->PnpNotificationProc = CallbackRoutine;
 	Entry->EventCategory = EventCategory;
 	Entry->Context = Context;
@@ -141,12 +141,12 @@ IoRegisterPlugPlayNotification(
 			break;
 		}
 	}
-	
+
 	KeAcquireGuardedMutex(&PnpNotifyListLock);
 	InsertHeadList(&PnpNotifyListHead,
 		&Entry->PnpNotifyList);
 	KeReleaseGuardedMutex(&PnpNotifyListLock);
-	
+
 	DPRINT("IoRegisterPlugPlayNotification() returns NotificationEntry %p\n",
 		Entry);
 	*NotificationEntry = Entry;
@@ -162,18 +162,18 @@ IoUnregisterPlugPlayNotification(
 	IN PVOID NotificationEntry)
 {
 	PPNP_NOTIFY_ENTRY Entry;
-	
+
 	PAGED_CODE();
-	
+
 	Entry = (PPNP_NOTIFY_ENTRY)NotificationEntry;
 	DPRINT("IoUnregisterPlugPlayNotification(NotificationEntry %p) called\n",
 		Entry);
-	
+
 	KeAcquireGuardedMutex(&PnpNotifyListLock);
 	RtlFreeUnicodeString(&Entry->Guid);
 	RemoveEntryList(&Entry->PnpNotifyList);
 	KeReleaseGuardedMutex(&PnpNotifyListLock);
-	
+
 	return STATUS_SUCCESS;
 }
 
@@ -189,16 +189,16 @@ IopNotifyPlugPlayNotification(
 	PLIST_ENTRY Entry;
 	PVOID NotificationStructure;
 	BOOLEAN CallCurrentEntry;
-	
+
 	ASSERT(DeviceObject);
-	
+
 	KeAcquireGuardedMutex(&PnpNotifyListLock);
 	if (IsListEmpty(&PnpNotifyListHead))
 	{
 		KeReleaseGuardedMutex(&PnpNotifyListLock);
 		return;
 	}
-	
+
 	switch (EventCategory)
 	{
 		case EventCategoryDeviceInterfaceChange:
@@ -246,17 +246,17 @@ IopNotifyPlugPlayNotification(
 			return;
 		}
 	}
-	
+
 	/* Loop through procedures registred in PnpNotifyListHead
 	 * list to find those that meet some criteria.
 	 */
-	
+
 	Entry = PnpNotifyListHead.Flink;
 	while (Entry != &PnpNotifyListHead)
 	{
 		ChangeEntry = CONTAINING_RECORD(Entry, PNP_NOTIFY_ENTRY, PnpNotifyList);
 		CallCurrentEntry = FALSE;
-		
+
 		switch (EventCategory)
 		{
 			case EventCategoryDeviceInterfaceChange:
@@ -284,18 +284,18 @@ IopNotifyPlugPlayNotification(
 				break;
 			}
 		}
-		
+
 		if (CallCurrentEntry)
 		{
 			/* Call entry into new allocated memory */
 			DPRINT("IopNotifyPlugPlayNotification(): found suitable callback %p\n",
 				ChangeEntry);
-			
+
 			(ChangeEntry->PnpNotificationProc)(
 				NotificationStructure,
 				ChangeEntry->Context);
 		}
-		
+
 		Entry = Entry->Flink;
 	}
 	KeReleaseGuardedMutex(&PnpNotifyListLock);

@@ -14,7 +14,7 @@
 
 #define FSRTL_MAX_RESOURCES 16
 
-#define FTTYPE  ((ULONG)'f') 
+#define FTTYPE  ((ULONG)'f')
 #define FT_BALANCED_READ_MODE \
     CTL_CODE(FTTYPE, 6, METHOD_NEITHER, FILE_ANY_ACCESS)
 
@@ -32,11 +32,11 @@ INIT_FUNCTION
 RtlpInitializeResources(VOID)
 {
     ULONG i;
-    
+
     /* Allocate the Resource Buffer */
-    FsRtlpResources = FsRtlAllocatePool(NonPagedPool, 
+    FsRtlpResources = FsRtlAllocatePool(NonPagedPool,
                                         FSRTL_MAX_RESOURCES*sizeof(ERESOURCE));
-                                        
+
     /* Initialize the Resources */
     for (i = 0; i < FSRTL_MAX_RESOURCES; i++)
     {
@@ -47,7 +47,7 @@ RtlpInitializeResources(VOID)
 /* FUNCTIONS *****************************************************************/
 
 /*++
- * @name FsRtlIsTotalDeviceFailure 
+ * @name FsRtlIsTotalDeviceFailure
  * @implemented NT 4.0
  *
  *     The FsRtlIsTotalDeviceFailure routine checks if an NTSTATUS error code
@@ -65,13 +65,13 @@ BOOLEAN
 STDCALL
 FsRtlIsTotalDeviceFailure(IN NTSTATUS NtStatus)
 {
-    return((NT_SUCCESS(NtStatus)) || 
+    return((NT_SUCCESS(NtStatus)) ||
            (STATUS_CRC_ERROR == NtStatus) ||
            (STATUS_DEVICE_DATA_ERROR == NtStatus) ? FALSE : TRUE);
 }
 
 /*++
- * @name FsRtlIsNtstatusExpected 
+ * @name FsRtlIsNtstatusExpected
  * @implemented NT 4.0
  *
  *     The FsRtlIsNtstatusExpected routine checks if an NTSTATUS error code
@@ -90,13 +90,13 @@ STDCALL
 FsRtlIsNtstatusExpected(IN NTSTATUS NtStatus)
 {
     return((STATUS_DATATYPE_MISALIGNMENT == NtStatus) ||
-           (STATUS_ACCESS_VIOLATION == NtStatus) || 
-           (STATUS_ILLEGAL_INSTRUCTION == NtStatus) || 
+           (STATUS_ACCESS_VIOLATION == NtStatus) ||
+           (STATUS_ILLEGAL_INSTRUCTION == NtStatus) ||
            (STATUS_INSTRUCTION_MISALIGNMENT == NtStatus)) ? FALSE : TRUE;
 }
 
 /*++
- * @name FsRtlIsPagingFile 
+ * @name FsRtlIsPagingFile
  * @implemented NT 4.0
  *
  *     The FsRtlIsPagingFile routine checks if the FileObject is a Paging File.
@@ -117,7 +117,7 @@ FsRtlIsPagingFile(IN PFILE_OBJECT FileObject)
 }
 
 /*++
- * @name FsRtlNormalizeNtstatus 
+ * @name FsRtlNormalizeNtstatus
  * @implemented NT 4.0
  *
  *     The FsRtlNormalizeNtstatus routine normalizes an NTSTATUS error code.
@@ -129,7 +129,7 @@ FsRtlIsPagingFile(IN PFILE_OBJECT FileObject)
  *        The NTSTATUS error code to return if the NtStatusToNormalize is not
  *        a proper expected error code by the File System Library.
  *
- * @return NtStatusToNormalize if it is an expected value, otherwise 
+ * @return NtStatusToNormalize if it is an expected value, otherwise
  *         NormalizedNtStatus.
  *
  * @remarks None.
@@ -140,12 +140,12 @@ STDCALL
 FsRtlNormalizeNtstatus(IN NTSTATUS NtStatusToNormalize,
                        IN NTSTATUS NormalizedNtStatus)
 {
-    return(TRUE == FsRtlIsNtstatusExpected(NtStatusToNormalize)) ? 
+    return(TRUE == FsRtlIsNtstatusExpected(NtStatusToNormalize)) ?
            NtStatusToNormalize : NormalizedNtStatus;
 }
 
 /*++
- * @name FsRtlAllocateResource 
+ * @name FsRtlAllocateResource
  * @implemented NT 4.0
  *
  *     The FsRtlAllocateResource routine returns a pre-initialized ERESOURCE
@@ -165,11 +165,11 @@ FsRtlAllocateResource(VOID)
 }
 
 /*++
- * @name FsRtlBalanceReads 
+ * @name FsRtlBalanceReads
  * @implemented NT 4.0
  *
  *     The FsRtlBalanceReads routine sends an IRP to an FTDISK Driver
- *     requesting the driver to balance read requests across a mirror set. 
+ *     requesting the driver to balance read requests across a mirror set.
  *
  * @param TargetDevice
  *        A pointer to an FTDISK Device Object.
@@ -187,10 +187,10 @@ FsRtlBalanceReads(PDEVICE_OBJECT TargetDevice)
     KEVENT Event;
     IO_STATUS_BLOCK IoStatusBlock;
     NTSTATUS Status;
-    
+
     /* Initialize the Local Event */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    
+
     /* Build the special IOCTL */
     Irp = IoBuildDeviceIoControlRequest(FT_BALANCED_READ_MODE,
                                         TargetDevice,
@@ -201,10 +201,10 @@ FsRtlBalanceReads(PDEVICE_OBJECT TargetDevice)
                                         FALSE,
                                         &Event,
                                         &IoStatusBlock);
-                                        
+
     /* Send it */
     Status = IoCallDriver(TargetDevice, Irp);
-    
+
     /* Wait if needed */
     if (Status == STATUS_PENDING)
     {
@@ -216,38 +216,38 @@ FsRtlBalanceReads(PDEVICE_OBJECT TargetDevice)
         /* Return Status */
         Status = IoStatusBlock.Status;
     }
-    
+
     return Status;
 }
 
 /*++
- * @name FsRtlPostPagingFileStackOverflow 
+ * @name FsRtlPostPagingFileStackOverflow
  * @unimplemented NT 4.0
  *
  *     The FsRtlPostPagingFileStackOverflow routine
  *
- * @param Context     
+ * @param Context
  *
  * @param Event
- *        
- * @param StackOverflowRoutine       
  *
- * @return 
+ * @param StackOverflowRoutine
+ *
+ * @return
  *
  * @remarks None.
  *
  *--*/
 VOID
 STDCALL
-FsRtlPostPagingFileStackOverflow(IN PVOID Context, 
-                                 IN PKEVENT Event, 
-                                 IN PFSRTL_STACK_OVERFLOW_ROUTINE StackOverflowRoutine) 
+FsRtlPostPagingFileStackOverflow(IN PVOID Context,
+                                 IN PKEVENT Event,
+                                 IN PFSRTL_STACK_OVERFLOW_ROUTINE StackOverflowRoutine)
 {
     UNIMPLEMENTED;
 }
 
 /*++
- * @name FsRtlPostStackOverflow 
+ * @name FsRtlPostStackOverflow
  * @unimplemented NT 4.0
  *
  *     The FsRtlPostStackOverflow routine
@@ -255,28 +255,28 @@ FsRtlPostPagingFileStackOverflow(IN PVOID Context,
  * @param Context
  *
  * @param Event
- *        
- * @param StackOverflowRoutine       
  *
- * @return 
+ * @param StackOverflowRoutine
+ *
+ * @return
  *
  * @remarks None.
  *
  *--*/
 VOID
 STDCALL
-FsRtlPostStackOverflow(IN PVOID Context, 
-                       IN PKEVENT Event, 
-                       IN PFSRTL_STACK_OVERFLOW_ROUTINE StackOverflowRoutine) 
+FsRtlPostStackOverflow(IN PVOID Context,
+                       IN PKEVENT Event,
+                       IN PFSRTL_STACK_OVERFLOW_ROUTINE StackOverflowRoutine)
 {
     UNIMPLEMENTED;
 }
 
 /*++
- * @name FsRtlSyncVolumes 
+ * @name FsRtlSyncVolumes
  * @implemented NT 4.0
  *
- *     The FsRtlSyncVolumes routine is deprecated.     
+ *     The FsRtlSyncVolumes routine is deprecated.
  *
  * @return Always returns STATUS_SUCCESS.
  *

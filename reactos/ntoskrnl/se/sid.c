@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/se/sid.c
  * PURPOSE:         Security manager
- * 
+ *
  * PROGRAMMERS:     David Welch <welch@cwcom.net>
  */
 
@@ -476,7 +476,7 @@ SepCaptureSid(IN PSID InputSid,
   ULONG SidSize = 0;
   PISID NewSid, Sid = (PISID)InputSid;
   NTSTATUS Status = STATUS_SUCCESS;
-  
+
   PAGED_CODE();
 
   if(AccessMode != KernelMode)
@@ -496,7 +496,7 @@ SepCaptureSid(IN PSID InputSid,
       Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
-    
+
     if(NT_SUCCESS(Status))
     {
       /* allocate a SID and copy it */
@@ -560,7 +560,7 @@ SepReleaseSid(IN PSID CapturedSid,
               IN BOOLEAN CaptureIfKernel)
 {
   PAGED_CODE();
-  
+
   if(CapturedSid != NULL &&
      (AccessMode == UserMode ||
       (AccessMode == KernelMode && CaptureIfKernel)))

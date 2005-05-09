@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/driver.c
  * PURPOSE:         Loading and unloading of drivers
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  *                  Filip Navara (xnavara@volny.cz)
  */
@@ -121,7 +121,7 @@ IopInitDriverImplementation(VOID)
    InitializeListHead(&DriverReinitListHead);
    KeInitializeSpinLock(&DriverReinitListLock);
    DriverReinitTailEntry = NULL;
-   
+
    InitializeListHead(&DriverBootReinitListHead);
    KeInitializeSpinLock(&DriverBootReinitListLock);
    DriverBootReinitTailEntry = NULL;
@@ -235,7 +235,7 @@ IopCreateDriverObject(
 
       RtlInitUnicodeString(&DriverName, NameBuffer);
       DPRINT("Driver name: '%wZ'\n", &DriverName);
-      
+
       Buffer = (PWSTR)ExAllocatePool(NonPagedPool, DriverName.Length);
       /* If we don't success, it is not a problem. Our driver
        * object will not have associated driver name... */
@@ -548,9 +548,9 @@ IopInitializeDriverModule(
    UNICODE_STRING RegistryKey;
    PDRIVER_INITIALIZE DriverEntry;
    NTSTATUS Status;
-   
+
    DriverEntry = ModuleObject->EntryPoint;
-   
+
    if (ServiceName != NULL && ServiceName->Length != 0)
    {
       RegistryKey.Length = 0;
@@ -588,9 +588,9 @@ IopInitializeDriverModule(
    IopMarkLastReinitializeDriver();
 
    Status = DriverEntry(*DriverObject, &RegistryKey);
-   
+
    RtlFreeUnicodeString(&RegistryKey);
-   
+
    if (!NT_SUCCESS(Status))
    {
       ObMakeTemporaryObject(*DriverObject);
@@ -624,7 +624,7 @@ IopAttachFilterDriversCallback(
    PMODULE_OBJECT ModuleObject;
    PDRIVER_OBJECT DriverObject;
    NTSTATUS Status;
-   
+
    for (Filters = ValueData;
         ((ULONG_PTR)Filters - (ULONG_PTR)ValueData) < ValueLength &&
         *Filters != 0;
@@ -632,7 +632,7 @@ IopAttachFilterDriversCallback(
    {
       DPRINT("Filter Driver: %S (%wZ)\n", Filters, &DeviceNode->InstancePath);
       ServiceName.Buffer = Filters;
-      ServiceName.MaximumLength = 
+      ServiceName.MaximumLength =
       ServiceName.Length = wcslen(Filters) * sizeof(WCHAR);
 
       /* Load and initialize the filter driver */
@@ -694,7 +694,7 @@ IopAttachFilterDrivers(
    /*
     * First load the device filters
     */
-   
+
    QueryTable[0].QueryRoutine = IopAttachFilterDriversCallback;
    if (Lower)
      QueryTable[0].Name = L"LowerFilters";
@@ -706,10 +706,10 @@ IopAttachFilterDrivers(
    QueryTable[1].Name = NULL;
 
    KeyBuffer = ExAllocatePool(
-      PagedPool, 
+      PagedPool,
       (49 * sizeof(WCHAR)) + DeviceNode->InstancePath.Length);
    wcscpy(KeyBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
-   wcscat(KeyBuffer, DeviceNode->InstancePath.Buffer);  
+   wcscat(KeyBuffer, DeviceNode->InstancePath.Buffer);
 
    RtlQueryRegistryValues(
       RTL_REGISTRY_ABSOLUTE,
@@ -766,11 +766,11 @@ IopAttachFilterDrivers(
 
       ExFreePool(KeyBuffer);
    }
-   
+
    return STATUS_SUCCESS;
 }
 
-static NTSTATUS STDCALL 
+static NTSTATUS STDCALL
 IopGetGroupOrderList(PWSTR ValueName,
 		     ULONG ValueType,
 		     PVOID ValueData,
@@ -1223,7 +1223,7 @@ IopInitializeBuiltinDriver(
 
    Status = IopInitializeDriverModule(DeviceNode, ModuleObject,
       &DeviceNode->ServiceName, FALSE, &DriverObject);
-   
+
    if (!NT_SUCCESS(Status))
    {
       if (ModuleDeviceNode == NULL)
@@ -1244,7 +1244,7 @@ IopInitializeBuiltinDriver(
  *
  * Parameters
  *    None
- *		
+ *
  * Return Value
  *    None
  */
@@ -1336,20 +1336,20 @@ IopLoadDriver(PSERVICE Service)
       if (Service->ErrorControl == 1)
       {
          /* Log error */
-      } 
+      }
       else if (Service->ErrorControl == 2)
       {
          if (IsLastKnownGood == FALSE)
          {
             /* Boot last known good configuration */
          }
-      } 
+      }
       else if (Service->ErrorControl == 3)
       {
          if (IsLastKnownGood == FALSE)
          {
             /* Boot last known good configuration */
-         } 
+         }
          else
          {
             /* BSOD! */
@@ -1368,7 +1368,7 @@ IopLoadDriver(PSERVICE Service)
  *
  * Parameters
  *    None
- *		
+ *
  * Return Value
  *    None
  */
@@ -1392,7 +1392,7 @@ IopInitializeSystemDrivers(VOID)
 
       DPRINT("Group: %wZ\n", &CurrentGroup->GroupName);
 
-      /* Load all drivers with a valid tag */ 
+      /* Load all drivers with a valid tag */
       for (i = 0; i < CurrentGroup->TagCount; i++)
       {
          ServiceEntry = ServiceListHead.Flink;
@@ -1456,7 +1456,7 @@ IopInitializeSystemDrivers(VOID)
  *       Whether to unload Plug & Plug or only legacy drivers. If this
  *       parameter is set to FALSE, the routine will unload only legacy
  *       drivers.
- *		
+ *
  * Return Value
  *    Status
  *
@@ -1670,22 +1670,22 @@ IoCreateDriver (
     UNICODE_STRING ServiceKeyName;
     HANDLE hDriver;
     ULONG i;
-    
+
     /* First, create a unique name for the driver if we don't have one */
     if (!DriverName) {
-       
+
         /* Create a random name and set up the string*/
         NameLength = swprintf(NameBuffer, L"\\Driver\\%08u", KeTickCount);
         LocalDriverName.Length = NameLength * sizeof(WCHAR);
         LocalDriverName.MaximumLength = LocalDriverName.Length + sizeof(UNICODE_NULL);
         LocalDriverName.Buffer = NameBuffer;
-    
+
     } else {
-        
+
         /* So we can avoid another code path, use a local var */
         LocalDriverName = *DriverName;
     }
-    
+
     /* Initialize the Attributes */
     ObjectSize = sizeof(DRIVER_OBJECT) + sizeof(DRIVER_EXTENSION);
     InitializeObjectAttributes(&ObjectAttributes,
@@ -1693,7 +1693,7 @@ IoCreateDriver (
                                OBJ_PERMANENT | OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
-    
+
     /* Create the Object */
     Status = ObCreateObject(KernelMode,
                             IoDriverObjectType,
@@ -1704,10 +1704,10 @@ IoCreateDriver (
                             0,
                             0,
                             (PVOID*)&DriverObject);
-    
+
     /* Return on failure */
     if (!NT_SUCCESS(Status)) return Status;
-    
+
     /* Set up the Object */
     RtlZeroMemory(DriverObject, ObjectSize);
     DriverObject->Type = IO_TYPE_DRIVER;
@@ -1716,13 +1716,13 @@ IoCreateDriver (
     DriverObject->DriverExtension = (PDRIVER_EXTENSION)(DriverObject + 1);
     DriverObject->DriverExtension->DriverObject = DriverObject;
     DriverObject->DriverInit = InitializationFunction;
-    
+
     /* Invalidate all Major Functions */
     for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
     {
         DriverObject->MajorFunction[i] = IopInvalidDeviceRequest;
     }
-               
+
     /* Set up the Service Key Name */
     ServiceKeyName.Buffer = ExAllocatePool(PagedPool, LocalDriverName.Length + sizeof(WCHAR));
     ServiceKeyName.Length = LocalDriverName.Length;
@@ -1730,10 +1730,10 @@ IoCreateDriver (
     RtlMoveMemory(ServiceKeyName.Buffer, LocalDriverName.Buffer, LocalDriverName.Length);
     ServiceKeyName.Buffer[ServiceKeyName.Length / sizeof(WCHAR)] = L'\0';
     DriverObject->DriverExtension->ServiceKeyName =  ServiceKeyName;
-    
+
     /* Also store it in the Driver Object. This is a bit of a hack. */
     RtlMoveMemory(&DriverObject->DriverName, &ServiceKeyName, sizeof(UNICODE_STRING));
-    
+
     /* Add the Object and get its handle */
     Status = ObInsertObject(DriverObject,
                             NULL,
@@ -1741,10 +1741,10 @@ IoCreateDriver (
                             0,
                             NULL,
                             &hDriver);
-    
+
     /* Return on Failure */
     if (!NT_SUCCESS(Status)) return Status;
-    
+
     /* Now reference it */
     Status = ObReferenceObjectByHandle(hDriver,
                                        0,
@@ -1753,16 +1753,16 @@ IoCreateDriver (
                                        (PVOID*)&DriverObject,
                                        NULL);
     ZwClose(hDriver);
-    
+
     /* Finally, call its init function */
     Status = (*InitializationFunction)(DriverObject, NULL);
-    
+
     if (!NT_SUCCESS(Status)) {
         /* If it didn't work, then kill the object */
         ObMakeTemporaryObject(DriverObject);
         ObDereferenceObject(DriverObject);
     }
-    
+
     /* Return the Status */
     return Status;
 }
@@ -1789,7 +1789,7 @@ IoDeleteDriver (
  * Parameters
  *    DriverServiceName
  *       Name of the service to load (registry key).
- *		
+ *
  * Return Value
  *    Status
  *
@@ -1811,9 +1811,9 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
    PMODULE_OBJECT ModuleObject;
    PDRIVER_OBJECT DriverObject;
    WCHAR *cur;
-   
+
    PAGED_CODE();
-   
+
    PreviousMode = KeGetPreviousMode();
 
    /*
@@ -1969,7 +1969,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
    }
 
    IopInitializeDevice(DeviceNode, DriverObject);
-   
+
 ReleaseCapturedString:
    RtlReleaseCapturedUnicodeString(&CapturedDriverServiceName,
                                    PreviousMode,
@@ -1986,7 +1986,7 @@ ReleaseCapturedString:
  * Parameters
  *    DriverServiceName
  *       Name of the service to unload (registry key).
- *		
+ *
  * Return Value
  *    Status
  *
@@ -2022,7 +2022,7 @@ IoRegisterDriverReinitialization(
    ReinitItem->DriverObject = DriverObject;
    ReinitItem->ReinitRoutine = ReinitRoutine;
    ReinitItem->Context = Context;
-   
+
    DriverObject->Flags |= DRVO_REINIT_REGISTERED;
 
    ExInterlockedInsertTailList(
@@ -2051,7 +2051,7 @@ IoRegisterBootDriverReinitialization(
    ReinitItem->DriverObject = DriverObject;
    ReinitItem->ReinitRoutine = DriverReinitializationRoutine;
    ReinitItem->Context = Context;
-   
+
    DriverObject->Flags |= DRVO_BOOTREINIT_REGISTERED;
 
    ExInterlockedInsertTailList(
@@ -2086,9 +2086,9 @@ IoAllocateDriverObjectExtension(
 
    if (NewDriverExtension == NULL)
    {
-      return STATUS_INSUFFICIENT_RESOURCES;             
+      return STATUS_INSUFFICIENT_RESOURCES;
    }
-   
+
    OldIrql = KeRaiseIrqlToDpcLevel();
 
    NewDriverExtension->Link = DriverObject->DriverSection;
@@ -2112,7 +2112,7 @@ IoAllocateDriverObjectExtension(
 
    *DriverObjectExtension = &NewDriverExtension->Extension;
 
-   return STATUS_SUCCESS;      
+   return STATUS_SUCCESS;
 }
 
 /*

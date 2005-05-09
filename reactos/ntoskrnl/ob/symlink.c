@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ob/symlink.c
  * PURPOSE:         Implements symbolic links
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
@@ -213,7 +213,7 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
   NTSTATUS Status = STATUS_SUCCESS;
 
   PAGED_CODE();
-  
+
   PreviousMode = ExGetPreviousMode();
 
   if(PreviousMode != KernelMode)
@@ -235,7 +235,7 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
       return Status;
     }
   }
-  
+
   Status = RtlCaptureUnicodeString(&CapturedLinkTarget,
                                    PreviousMode,
                                    PagedPool,
@@ -298,7 +298,7 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
     }
     ObDereferenceObject(SymbolicLink);
   }
-  
+
   RtlReleaseCapturedUnicodeString(&CapturedLinkTarget,
                                   PreviousMode,
                                   FALSE);
@@ -330,9 +330,9 @@ NtOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
   NTSTATUS Status = STATUS_SUCCESS;
 
   PAGED_CODE();
-  
+
   PreviousMode = ExGetPreviousMode();
-  
+
   if(PreviousMode != KernelMode)
   {
     _SEH_TRY
@@ -346,7 +346,7 @@ NtOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
       Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
-    
+
     if(!NT_SUCCESS(Status))
     {
       return Status;
@@ -375,7 +375,7 @@ NtOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
     }
     _SEH_END;
   }
-  
+
   return Status;
 }
 
@@ -402,11 +402,11 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
   PSYMLINK_OBJECT SymlinkObject;
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status = STATUS_SUCCESS;
-  
+
   PAGED_CODE();
-  
+
   PreviousMode = ExGetPreviousMode();
-  
+
   if(PreviousMode != KernelMode)
   {
     _SEH_TRY
@@ -432,7 +432,7 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
       Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
-    
+
     if(!NT_SUCCESS(Status))
     {
       return Status;
@@ -452,7 +452,7 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
   if (NT_SUCCESS(Status))
   {
     ULONG LengthRequired = SymlinkObject->TargetName.Length + sizeof(WCHAR);
-    
+
     _SEH_TRY
     {
       if(SafeLinkTarget.MaximumLength >= LengthRequired)
@@ -470,7 +470,7 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
       {
         Status = STATUS_BUFFER_TOO_SMALL;
       }
-      
+
       if(ResultLength != NULL)
       {
         *ResultLength = LengthRequired;

@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/interlck.c
  * PURPOSE:         Implements interlocked functions
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
@@ -80,16 +80,16 @@ ExInterlockedAddUlong (PULONG		Addend,
 /*
  * ExInterlockedAddUlong adds an unsigned long value to a given unsigned
  * integer as an atomic operation.
- * 
+ *
  * ADDEND = Points to an unsigned long integer whose value is to be adjusted
  * by the Increment value.
- * 
+ *
  * INCREMENT = Is an unsigned long integer to be added.
- * 
+ *
  * LOCK = Points to a spinlock to be used to synchronize access to ADDEND.
- * 
- * Returns: 
- * 
+ *
+ * Returns:
+ *
  * The original value of the unsigned integer pointed to by ADDEND.
  */
 {
@@ -115,15 +115,15 @@ ExInterlockedAddLargeInteger (PLARGE_INTEGER Addend,
 			      PKSPIN_LOCK Lock)
 /*
  * Adds two large integer values as an atomic operation.
- * 
+ *
  * ADDEND = Pointer to a large integer value that will have INCREMENT added.
- * 
+ *
  * INCREMENT = Value to be added.
- * 
+ *
  * LOCK = Spinlock used to synchronize access to ADDEND.
- * 
+ *
  * Returns:
- * 
+ *
  * The original value of the large integer pointed to by ADDEND.
  */
 {
@@ -218,16 +218,16 @@ ExfInterlockedAddUlong(PULONG Addend,
 /*
  * ExInterlockedAddUlong adds an unsigned long value to a given unsigned
  * integer as an atomic operation.
- * 
+ *
  * ADDEND = Points to an unsigned long integer whose value is to be adjusted
  * by the Increment value.
- * 
+ *
  * INCREMENT = Is an unsigned long integer to be added.
- * 
+ *
  * LOCK = Points to a spinlock to be used to synchronize access to ADDEND.
- * 
- * Returns: 
- * 
+ *
+ * Returns:
+ *
  * The original value of the unsigned integer pointed to by ADDEND.
  */
 {

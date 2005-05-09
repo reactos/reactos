@@ -36,65 +36,65 @@ typedef struct _OBJECT_TYPE
    * PURPOSE: Name of the type
    */
   UNICODE_STRING TypeName;
-  
+
   /*
    * PURPOSE: Total number of objects of this type
    */
   ULONG TotalObjects;
-  
+
   /*
    * PURPOSE: Total number of handles of this type
    */
   ULONG TotalHandles;
-  
+
   /*
    * PURPOSE: Peak objects of this type
    */
   ULONG PeakObjects;
-  
+
    /*
     * PURPOSE: Peak handles of this type
     */
   ULONG PeakHandles;
-  
+
   /*
    * PURPOSE: Paged pool charge
    */
    ULONG PagedPoolCharge;
-  
+
   /*
    * PURPOSE: Nonpaged pool charge
    */
   ULONG NonpagedPoolCharge;
-  
+
   /*
    * PURPOSE: Mapping of generic access rights
    */
   PGENERIC_MAPPING Mapping;
-  
+
   /*
    * PURPOSE: Dumps the object
    * NOTE: To be defined
    */
   VOID STDCALL_FUNC (*Dump)(VOID);
-  
+
   /*
    * PURPOSE: Opens the object
    * NOTE: To be defined
    */
   VOID STDCALL_FUNC (*Open)(VOID);
-  
+
    /*
     * PURPOSE: Called to close an object if OkayToClose returns true
     */
   VOID STDCALL_FUNC (*Close)(PVOID ObjectBody,
          ULONG HandleCount);
-  
+
   /*
    * PURPOSE: Called to delete an object when the last reference is removed
    */
   VOID STDCALL_FUNC (*Delete)(PVOID ObjectBody);
-  
+
   /*
    * PURPOSE: Called when an open attempts to open a file apparently
    * residing within the object
@@ -162,20 +162,20 @@ typedef struct _OBJECT_HEADER
    struct _DIRECTORY_OBJECT* Parent;
    POBJECT_TYPE ObjectType;
    PSECURITY_DESCRIPTOR SecurityDescriptor;
-   
+
    /*
     * PURPOSE: Object type
     * NOTE: This overlaps the first member of the object body
     */
    CSHORT Type;
-   
+
    /*
     * PURPOSE: Object size
     * NOTE: This overlaps the second member of the object body
     */
    CSHORT Size;
-   
-   
+
+
 } OBJECT_HEADER, *POBJECT_HEADER;
 
 
@@ -183,7 +183,7 @@ typedef struct _DIRECTORY_OBJECT
 {
    CSHORT Type;
    CSHORT Size;
-   
+
    /*
     * PURPOSE: Head of the list of our subdirectories
     */
@@ -204,7 +204,7 @@ typedef struct _TYPE_OBJECT
 {
   CSHORT Type;
   CSHORT Size;
-  
+
   /* pointer to object type data */
   POBJECT_TYPE ObjectType;
 } TYPE_OBJECT, *PTYPE_OBJECT;
@@ -327,14 +327,14 @@ ObpDereferenceCachedSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescripto
 
 VOID
 FASTCALL
-ObInitializeFastReference(IN PEX_FAST_REF FastRef, 
+ObInitializeFastReference(IN PEX_FAST_REF FastRef,
                           PVOID Object);
 
 PVOID
 FASTCALL
 ObFastReplaceObject(IN PEX_FAST_REF FastRef,
                     PVOID Object);
-                    
+
 PVOID
 FASTCALL
 ObFastReferenceObject(IN PEX_FAST_REF FastRef);
@@ -343,7 +343,7 @@ VOID
 FASTCALL
 ObFastDereferenceObject(IN PEX_FAST_REF FastRef,
                         PVOID Object);
-                        
+
 /* Secure object information functions */
 
 typedef struct _CAPTURED_OBJECT_ATTRIBUTES

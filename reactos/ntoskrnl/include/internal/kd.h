@@ -42,7 +42,7 @@ VOID
 KdbSymInit(IN PMODULE_TEXT_SECTION NtoskrnlTextSection,
            IN PMODULE_TEXT_SECTION LdrHalTextSection);
 
-BOOLEAN 
+BOOLEAN
 KdbSymPrintAddress(IN PVOID Address);
 
 VOID
@@ -135,17 +135,17 @@ VOID
 STDCALL
 KdpScreenInit(struct _KD_DISPATCH_TABLE *DispatchTable,
               ULONG BootPhase);
-              
+
 VOID
 STDCALL
 KdpSerialInit(struct _KD_DISPATCH_TABLE *DispatchTable,
               ULONG BootPhase);
-              
+
 VOID
 STDCALL
 KdpInitDebugLog(struct _KD_DISPATCH_TABLE *DispatchTable,
                 ULONG BootPhase);
-                
+
 /* KD ROUTINES ***************************************************************/
 
 KD_CONTINUE_TYPE
@@ -156,7 +156,7 @@ KdpEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                           PKTRAP_FRAME TrapFrame,
                           BOOLEAN FirstChance,
                           BOOLEAN Gdb);
-                          
+
 ULONG
 STDCALL
 KdpPrintString(PANSI_STRING String);
@@ -164,7 +164,7 @@ KdpPrintString(PANSI_STRING String);
 BOOLEAN
 STDCALL
 KdpDetectConflicts(PCM_RESOURCE_LIST DriverList);
-              
+
 /* KD GLOBALS  ***************************************************************/
 
 /* serial debug connection */
@@ -188,13 +188,13 @@ typedef struct _KDP_DEBUG_MODE
             UCHAR Screen :1;
             UCHAR Serial :1;
             UCHAR File   :1;
-    
+
             /* Currently Supported Wrappers */
             UCHAR Pice   :1;
             UCHAR Gdb    :1;
             UCHAR Bochs  :1;
         };
-        
+
         /* Generic Value */
         ULONG Value;
     };
@@ -222,7 +222,7 @@ typedef struct _KD_DISPATCH_TABLE
     LIST_ENTRY KdProvidersList;
     PKDP_INIT_ROUTINE KdpInitRoutine;
     PKDP_PRINT_ROUTINE KdpPrintRoutine;
-    PKDP_PROMPT_ROUTINE KdpPromptRoutine;  
+    PKDP_PROMPT_ROUTINE KdpPromptRoutine;
     PKDP_EXCEPTION_ROUTINE KdpExceptionRoutine;
 } KD_DISPATCH_TABLE, *PKD_DISPATCH_TABLE;
 
@@ -243,13 +243,13 @@ extern PKDP_INIT_ROUTINE InitRoutines[KdMax];
 
 /* Wrapper Init Function */
 extern PKDP_INIT_ROUTINE WrapperInitRoutine;
-                                                        
+
 /* Dispatch Tables for Native Providers */
 extern KD_DISPATCH_TABLE DispatchTable[KdMax];
 
 /* Dispatch Table for the Wrapper */
 extern KD_DISPATCH_TABLE WrapperTable;
-                                     
+
 /* The KD Native Provider List */
 extern LIST_ENTRY KdProviders;
 

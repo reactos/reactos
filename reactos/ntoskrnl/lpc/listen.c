@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/lpc/listen.c
  * PURPOSE:         Communication mechanism
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
@@ -43,7 +43,7 @@ NtListenPort (IN	HANDLE		PortHandle,
 	      IN	PLPC_MESSAGE	ConnectMsg)
 {
   NTSTATUS	Status;
-  
+
   /*
    * Wait forever for a connection request.
    */
@@ -57,7 +57,7 @@ NtListenPort (IN	HANDLE		PortHandle,
        * Accept only LPC_CONNECTION_REQUEST requests.
        * Drop any other message.
        */
-      if (!NT_SUCCESS(Status) || 
+      if (!NT_SUCCESS(Status) ||
 	  LPC_CONNECTION_REQUEST == ConnectMsg->MessageType)
 	{
 	  DPRINT("Got message (type %x)\n", LPC_CONNECTION_REQUEST);
@@ -65,7 +65,7 @@ NtListenPort (IN	HANDLE		PortHandle,
 	}
       DPRINT("Got message (type %x)\n", ConnectMsg->MessageType);
     }
-  
+
   return (Status);
 }
 

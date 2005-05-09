@@ -23,16 +23,16 @@ typedef struct _CACHE_SEGMENT
 {
   /* Base address of the region where the cache segment data is mapped. */
   PVOID BaseAddress;
-  /* 
-   * Memory area representing the region where the cache segment data is 
-   * mapped. 
+  /*
+   * Memory area representing the region where the cache segment data is
+   * mapped.
    */
   struct _MEMORY_AREA* MemoryArea;
   /* Are the contents of the cache segment data valid. */
   BOOLEAN Valid;
   /* Are the contents of the cache segment data newer than those on disk. */
   BOOLEAN Dirty;
-  /* Page out in progress */ 
+  /* Page out in progress */
   BOOLEAN PageOut;
   ULONG MappedCount;
   /* Entry in the list of segments for this BCB. */
@@ -62,12 +62,12 @@ typedef struct _INTERNAL_BCB
   CSHORT RefCount; /* (At offset 0x34 on WinNT4) */
 } INTERNAL_BCB, *PINTERNAL_BCB;
 
-VOID 
+VOID
 STDCALL
 CcMdlReadCompleteDev(IN PMDL MdlChain,
                      IN PFILE_OBJECT FileObject);
-                     
-VOID 
+
+VOID
 STDCALL
 CcMdlWriteCompleteDev(IN PLARGE_INTEGER FileOffset,
                       IN PMDL MdlChain,
@@ -86,13 +86,13 @@ CcRosGetCacheSegment(PBCB Bcb,
 VOID
 CcInitView(VOID);
 
-NTSTATUS 
+NTSTATUS
 CcRosFreeCacheSegment(PBCB, PCACHE_SEGMENT);
 
-NTSTATUS 
+NTSTATUS
 ReadCacheSegment(PCACHE_SEGMENT CacheSeg);
 
-NTSTATUS 
+NTSTATUS
 WriteCacheSegment(PCACHE_SEGMENT CacheSeg);
 
 VOID CcInit(VOID);
@@ -100,7 +100,7 @@ VOID CcInit(VOID);
 NTSTATUS
 CcRosUnmapCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty);
 
-PCACHE_SEGMENT 
+PCACHE_SEGMENT
 CcRosLookupCacheSegment(PBCB Bcb, ULONG FileOffset);
 
 NTSTATUS
@@ -109,7 +109,7 @@ CcRosGetCacheSegmentChain(PBCB Bcb,
 			  ULONG Length,
 			  PCACHE_SEGMENT* CacheSeg);
 
-VOID 
+VOID
 CcInitCacheZeroPage(VOID);
 
 NTSTATUS
@@ -118,13 +118,13 @@ CcRosMarkDirtyCacheSegment(PBCB Bcb, ULONG FileOffset);
 NTSTATUS
 CcRosFlushDirtyPages(ULONG Target, PULONG Count);
 
-VOID 
+VOID
 CcRosDereferenceCache(PFILE_OBJECT FileObject);
 
-VOID 
+VOID
 CcRosReferenceCache(PFILE_OBJECT FileObject);
 
-VOID 
+VOID
 CcRosSetRemoveOnClose(PSECTION_OBJECT_POINTERS SectionObjectPointer);
 
 NTSTATUS
@@ -141,7 +141,7 @@ CcRosRequestCacheSegment (BCB*		    Bcb,
 		          PBOOLEAN	    UptoDate,
 		          CACHE_SEGMENT**   CacheSeg);
 
-NTSTATUS 
+NTSTATUS
 CcTryToInitializeFileCache(PFILE_OBJECT FileObject);
 
 /*

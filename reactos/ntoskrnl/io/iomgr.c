@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/io/iomgr.c
  * PURPOSE:         I/O Manager Initialization and Misc Utility Functions
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
@@ -36,21 +36,21 @@ GENERIC_MAPPING IopFileMapping = {
     FILE_GENERIC_WRITE,
     FILE_GENERIC_EXECUTE,
     FILE_ALL_ACCESS};
-                
+
 static KSPIN_LOCK CancelSpinLock;
 extern LIST_ENTRY ShutdownListHead;
 extern KSPIN_LOCK ShutdownListLock;
 
 /* INIT FUNCTIONS ************************************************************/
 
-VOID 
+VOID
 INIT_FUNCTION
 IoInitCancelHandling(VOID)
 {
     KeInitializeSpinLock(&CancelSpinLock);
 }
 
-VOID 
+VOID
 INIT_FUNCTION
 IoInitShutdownNotification (VOID)
 {
@@ -68,13 +68,13 @@ IoInit (VOID)
   HANDLE Handle;
 
   IopInitDriverImplementation();
-  
+
   /*
    * Register iomgr types: DeviceObjectType
    */
   IoDeviceObjectType = ExAllocatePool (NonPagedPool,
 				       sizeof (OBJECT_TYPE));
-  
+
   IoDeviceObjectType->Tag = TAG_DEVICE_TYPE;
   IoDeviceObjectType->TotalObjects = 0;
   IoDeviceObjectType->TotalHandles = 0;
@@ -93,7 +93,7 @@ IoInit (VOID)
   IoDeviceObjectType->OkayToClose = NULL;
   IoDeviceObjectType->Create = NULL;
   IoDeviceObjectType->DuplicationNotify = NULL;
-  
+
   RtlInitUnicodeString(&IoDeviceObjectType->TypeName, L"Device");
 
   ObpCreateTypeObject(IoDeviceObjectType);
@@ -103,7 +103,7 @@ IoInit (VOID)
    * (alias DriverObjectType)
    */
   IoFileObjectType = ExAllocatePool (NonPagedPool, sizeof (OBJECT_TYPE));
-  
+
   IoFileObjectType->Tag = TAG_FILE_TYPE;
   IoFileObjectType->TotalObjects = 0;
   IoFileObjectType->TotalHandles = 0;
@@ -122,11 +122,11 @@ IoInit (VOID)
   IoFileObjectType->OkayToClose = NULL;
   IoFileObjectType->Create = IopCreateFile;
   IoFileObjectType->DuplicationNotify = NULL;
-  
+
   RtlInitUnicodeString(&IoFileObjectType->TypeName, L"File");
 
   ObpCreateTypeObject(IoFileObjectType);
-  
+
     /*
    * Register iomgr types: AdapterObjectType
    */
@@ -237,7 +237,7 @@ IoInit (VOID)
   PnpInit();
 }
 
-VOID 
+VOID
 INIT_FUNCTION
 IoInit2(BOOLEAN BootLog)
 {
@@ -247,7 +247,7 @@ IoInit2(BOOLEAN BootLog)
   NTSTATUS Status;
 
   IoCreateDriverList();
-          
+
   KeInitializeSpinLock (&IoStatisticsLock);
 
   /* Initialize raw filesystem driver */
@@ -293,10 +293,10 @@ IoInit2(BOOLEAN BootLog)
   IopInvalidateDeviceRelations(
     IopRootDeviceNode,
     BusRelations);
-  
+
      /* Start boot logging */
     IopInitBootLog(BootLog);
-  
+
     /* Load boot start drivers */
     IopInitializeBootDrivers();
 }
@@ -307,7 +307,7 @@ INIT_FUNCTION
 IoInit3(VOID)
 {
     NTSTATUS Status;
-    
+
     /* Create ARC names for boot devices */
     IoCreateArcNames();
 
@@ -339,7 +339,7 @@ IoInit3(VOID)
     IoAssignDriveLetters((PLOADER_PARAMETER_BLOCK)&KeLoaderBlock,
                          NULL,
                          NULL,
-                         NULL);    
+                         NULL);
 }
 
 /* FUNCTIONS *****************************************************************/
@@ -347,8 +347,8 @@ IoInit3(VOID)
 /*
  * @implemented
  */
-VOID 
-STDCALL 
+VOID
+STDCALL
 IoAcquireCancelSpinLock(PKIRQL Irql)
 {
    KeAcquireSpinLock(&CancelSpinLock,Irql);
@@ -357,7 +357,7 @@ IoAcquireCancelSpinLock(PKIRQL Irql)
 /*
  * @implemented
  */
-PVOID 
+PVOID
 STDCALL
 IoGetInitialStack(VOID)
 {
@@ -367,7 +367,7 @@ IoGetInitialStack(VOID)
 /*
  * @implemented
  */
-VOID 
+VOID
 STDCALL
 IoGetStackLimits(OUT PULONG LowLimit,
                  OUT PULONG HighLimit)
@@ -403,7 +403,7 @@ IoIsWdmVersionAvailable(IN UCHAR MajorVersion,
  * @implemented
  */
 VOID
-STDCALL 
+STDCALL
 IoReleaseCancelSpinLock(KIRQL Irql)
 {
    KeReleaseSpinLock(&CancelSpinLock,Irql);

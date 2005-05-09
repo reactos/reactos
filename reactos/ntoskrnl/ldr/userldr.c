@@ -1,10 +1,10 @@
-/* $Id:$
- * 
+/* $Id$
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ldr/userldr.c
  * PURPOSE:         Loaders for PE executables
- * 
+ *
  * PROGRAMMERS:     Jean Michault
  *                  Rex Jolliff (rex@lvcablemodem.com)
  */
@@ -26,20 +26,20 @@ NTSTATUS LdrpMapImage(HANDLE ProcessHandle,
  * PARAMETERS:
  *   ProcessHandle
  *              Points to the process to map the image into
- * 
+ *
  *   SectionHandle
  *              Points to the section to map
- * 
+ *
  * RETURNS: Status
  */
-{   
+{
   ULONG ViewSize;
   PVOID ImageBase;
   NTSTATUS Status;
 
   ViewSize = 0;
   ImageBase = 0;
-  
+
   Status = ZwMapViewOfSection(SectionHandle,
 			      ProcessHandle,
 			      (PVOID*)&ImageBase,
@@ -55,8 +55,8 @@ NTSTATUS LdrpMapImage(HANDLE ProcessHandle,
       CPRINT("Image map view of section failed (Status %x)", Status);
       return(Status);
     }
-  
+
    *ReturnedImageBase = ImageBase;
-   
+
    return(STATUS_SUCCESS);
 }

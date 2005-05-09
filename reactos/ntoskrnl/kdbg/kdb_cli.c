@@ -25,7 +25,7 @@
  * UPDATE HISTORY:
  *                  Created 16/01/2005
  */
- 
+
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
@@ -187,7 +187,7 @@ KdbpEvaluateExpression(
          ErrMsg += 2;
       KdbpPrint("%*s%s\n", ExpressionErrOffset, "", ErrMsg);
    }
-   
+
    return Ok;
 }
 
@@ -207,7 +207,7 @@ KdbpCmdEvalExpression(ULONG Argc, PCHAR Argv[])
       KdbpPrint("?: Argument required\n");
       return TRUE;
    }
-   
+
    /* Put the arguments back together */
    Argc--;
    for (i = 1; i < Argc; i++)
@@ -215,7 +215,7 @@ KdbpCmdEvalExpression(ULONG Argc, PCHAR Argv[])
       len = strlen(Argv[i]);
       Argv[i][len] = ' ';
    }
-   
+
    /* Evaluate the expression */
    Ok = KdbpEvaluateExpression(Argv[1], sizeof("kdb:> ")-1 + (Argv[1]-Argv[0]), &Result);
    if (Ok)
@@ -242,7 +242,7 @@ KdbpCmdEvalExpression(ULONG Argc, PCHAR Argv[])
             KdbpPrint("0x%08lx  %10lu\n", ul, ul);
       }
    }
-   
+
    return TRUE;
 }
 
@@ -376,7 +376,7 @@ KdbpCmdRegs(ULONG Argc, PCHAR Argv[])
    {
       ULONG Esp;
       USHORT Ss;
-      
+
       if (!(Tf->Cs & 1))
       {
           Esp = (ULONG)Tf->TempEsp;
@@ -435,7 +435,7 @@ KdbpCmdRegs(ULONG Argc, PCHAR Argv[])
                                          " PCE", " OSFXSR", " OSXMMEXCPT", NULL, NULL, NULL, NULL, NULL,
                                          NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                                          NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
-                                         
+
       Cr0 = KdbCurrentTrapFrame->Cr0;
       Cr2 = KdbCurrentTrapFrame->Cr2;
       Cr3 = KdbCurrentTrapFrame->Cr3;
@@ -448,7 +448,7 @@ KdbpCmdRegs(ULONG Argc, PCHAR Argv[])
 
       /* Get the task register */
       asm volatile("str %0" : "=g"(Tr));
-      
+
       /* Display the control registers */
       KdbpPrint("CR0  0x%08x ", Cr0);
       for (i = 0; i < 32; i++)
@@ -469,7 +469,7 @@ KdbpCmdRegs(ULONG Argc, PCHAR Argv[])
          if ((Cr4 & (1 << i)) != 0)
             KdbpPrint(Cr4Bits[i]);
       }
-      
+
       /* Display the descriptor table regs */
       KdbpPrint("\nGDTR  Base 0x%08x  Size 0x%04x\n", Gdtr.Base, Gdtr.Limit);
       KdbpPrint("LDTR  Base 0x%08x  Size 0x%04x\n", Ldtr.Base, Ldtr.Limit);
@@ -597,7 +597,7 @@ KdbpCmdBackTrace(ULONG Argc, PCHAR Argv[])
          break;
       }
    }
-   
+
    return TRUE;
 }
 
@@ -616,7 +616,7 @@ STATIC BOOLEAN
 KdbpCmdStep(ULONG Argc, PCHAR Argv[])
 {
    ULONG Count = 1;
-   
+
    if (Argc > 1)
    {
       Count = strtoul(Argv[1], NULL, 0);
@@ -626,7 +626,7 @@ KdbpCmdStep(ULONG Argc, PCHAR Argv[])
          return TRUE;
       }
    }
-   
+
    if (Argv[0][0] == 'n')
       KdbSingleStepOver = TRUE;
    else
@@ -661,7 +661,7 @@ KdbpCmdBreakPointList(ULONG Argc, PCHAR Argv[])
       KdbpPrint("No breakpoints.\n");
       return TRUE;
    }
-   
+
    KdbpPrint("Breakpoints:\n");
    do
    {
@@ -782,7 +782,7 @@ KdbpCmdBreakPoint(ULONG Argc, PCHAR Argv[])
    KDB_ACCESS_TYPE AccessType = 0;
    INT AddressArgIndex, ConditionArgIndex, i;
    BOOLEAN Global = TRUE;
-   
+
    if (Argv[0][2] == 'x') /* software breakpoint */
    {
       if (Argc < 2)
@@ -797,7 +797,7 @@ KdbpCmdBreakPoint(ULONG Argc, PCHAR Argv[])
    else /* memory breakpoint */
    {
       ASSERT(Argv[0][2] == 'm');
-      
+
       if (Argc < 2)
       {
          KdbpPrint("bpm: Access type argument required (one of r, w, rw, x)\n");
@@ -817,7 +817,7 @@ KdbpCmdBreakPoint(ULONG Argc, PCHAR Argv[])
          KdbpPrint("bpm: Unknown access type '%s'\n", Argv[1]);
          return TRUE;
       }
-      
+
       if (Argc < 3)
       {
          KdbpPrint("bpm: %s argument required.\n", AccessType == KdbAccessExec ? "Address" : "Memory size");
@@ -840,7 +840,7 @@ KdbpCmdBreakPoint(ULONG Argc, PCHAR Argv[])
          KdbpPrint("bpm: Unknown memory size '%s'\n", Argv[2]);
          return TRUE;
       }
-      
+
       if (Argc <= AddressArgIndex)
       {
          KdbpPrint("bpm: Address argument required.\n");
@@ -849,7 +849,7 @@ KdbpCmdBreakPoint(ULONG Argc, PCHAR Argv[])
 
       Type = KdbBreakPointHardware;
    }
-   
+
    /* Put the arguments back together */
    ConditionArgIndex = -1;
    for (i = AddressArgIndex; i < (Argc-1); i++)
@@ -883,7 +883,7 @@ KdbpCmdBreakPoint(ULONG Argc, PCHAR Argv[])
    KdbpInsertBreakPoint(Address, Type, Size, AccessType,
                         (ConditionArgIndex < 0) ? NULL : Argv[ConditionArgIndex],
                         Global, NULL);
-   
+
    return TRUE;
 }
 
@@ -909,7 +909,7 @@ KdbpCmdThread(ULONG Argc, PCHAR Argv[])
    if (Argc >= 2 && _stricmp(Argv[1], "list") == 0)
    {
       Process = KdbCurrentProcess;
-      
+
       if (Argc >= 3)
       {
          ul = strtoul(Argv[2], &pend, 0);
@@ -924,7 +924,7 @@ KdbpCmdThread(ULONG Argc, PCHAR Argv[])
             return TRUE;
          }
       }
-      
+
       Entry = Process->ThreadListHead.Flink;
       if (Entry == &Process->ThreadListHead)
       {
@@ -963,13 +963,13 @@ KdbpCmdThread(ULONG Argc, PCHAR Argv[])
             Ebp = (PULONG)Esp[4];
             Eip = 0;
             if (Ebp != NULL) /* FIXME: Should we attach to the process to read Ebp[1]? */
-               KdbpSafeReadMemory(&Eip, Ebp + 1, sizeof (Eip));;
+               KdbpSafeReadMemory(&Eip, Ebp + 1, sizeof (Eip));
          }
          if (Thread->Tcb.State < (DeferredReady + 1))
             State = ThreadStateToString[Thread->Tcb.State];
          else
             State = "Unknown";
-      
+
          KdbpPrint(" %s0x%08x  %-11s  %3d     0x%08x  0x%08x  0x%08x%s\n",
                    str1,
                    Thread->Cid.UniqueThread,
@@ -979,7 +979,7 @@ KdbpCmdThread(ULONG Argc, PCHAR Argv[])
                    Ebp,
                    Eip,
                    str2);
-      
+
          Entry = Entry->Flink;
       }
       while (Entry != &Process->ThreadListHead);
@@ -1022,7 +1022,7 @@ KdbpCmdThread(ULONG Argc, PCHAR Argv[])
             return TRUE;
          }
       }
-      
+
       if (Thread->Tcb.State < (DeferredReady + 1))
          State = ThreadStateToString[Thread->Tcb.State];
       else
@@ -1074,7 +1074,7 @@ KdbpCmdProc(ULONG Argc, PCHAR Argv[])
          KdbpPrint("No processes in the system!\n");
          return TRUE;
       }
-   
+
       KdbpPrint("  PID         State       Filename\n");
       do
       {
@@ -1093,14 +1093,14 @@ KdbpCmdProc(ULONG Argc, PCHAR Argv[])
 
          State = ((Process->Pcb.State == PROCESS_STATE_TERMINATED) ? "Terminated" :
                  ((Process->Pcb.State == PROCESS_STATE_ACTIVE) ? "Active" : "Unknown"));
-      
+
          KdbpPrint(" %s0x%08x  %-10s  %s%s\n",
                    str1,
                    Process->UniqueProcessId,
                    State,
                    Process->ImageFileName,
                    str2);
-      
+
          Entry = Entry->Flink;
       }
       while(Entry != &PsActiveProcessHead);
@@ -1186,7 +1186,7 @@ KdbpCmdMod(ULONG Argc, PCHAR Argv[])
       if (Result > (ULONGLONG)(~((ULONG_PTR)0)))
          KdbpPrint("%s: Warning: Address %I64x is beeing truncated\n", Argv[0]);
       Address = (ULONG_PTR)Result;
-      
+
       if (!KdbpSymFindModuleByAddress((PVOID)Address, &Info))
       {
          KdbpPrint("No module containing address 0x%x found!\n", Address);
@@ -1308,7 +1308,7 @@ KdbpCmdGdtLdtIdt(ULONG Argc, PCHAR Argv[])
          i = 0;
          ul = 1 << 2;
       }
-      
+
       if (Reg.Limit < 7)
       {
          KdbpPrint("%s descriptor table is empty.\n",
@@ -1419,7 +1419,7 @@ KdbpCmdGdtLdtIdt(ULONG Argc, PCHAR Argv[])
          }
       }
    }
-   
+
    return TRUE;
 }
 
@@ -1465,7 +1465,7 @@ KdbpCmdPcr(ULONG Argc, PCHAR Argv[])
              Pcr->MajorVersion, Pcr->MinorVersion, Pcr->SetMember, Pcr->StallScaleFactor,
              Pcr->DebugActive, Pcr->ProcessorNumber, Pcr->L2CacheAssociativity,
              Pcr->VdmAlert, Pcr->L2CacheSize, Pcr->InterruptMode);
-   
+
    return TRUE;
 }
 
@@ -1718,11 +1718,11 @@ KdbpPrint(
    if (!TerminalInitialized)
    {
       DbgPrint("\x1b[7h");      /* Enable linewrap */
-      
+
       /* Query terminal type */
       /*DbgPrint("\x1b[Z");*/
       DbgPrint("\x05");
-      
+
       TerminalInitialized = TRUE;
       Length = 0;
       for (;;)
@@ -1803,7 +1803,7 @@ KdbpPrint(
    while (p[0] != '\0')
    {
       i = strcspn(p, "\n");
-      
+
       /* Calculate the number of lines which will be printed in the terminal
        * when outputting the current line
        */
@@ -1813,7 +1813,7 @@ KdbpPrint(
          RowsPrintedByTerminal = 0;
       if (p[i] == '\n')
          RowsPrintedByTerminal++;
-         
+
       /*DbgPrint("!%d!%d!%d!%d!", KdbNumberOfRowsPrinted, KdbNumberOfColsPrinted, i, RowsPrintedByTerminal);*/
 
       /* Display a prompt if we printed one screen full of text */
@@ -1856,7 +1856,7 @@ KdbpPrint(
       {
          c = '\0';
       }
-      
+
       /* Remove escape sequences from the line if there's no terminal connected */
       if (!TerminalConnected)
       {
@@ -1906,7 +1906,7 @@ KdbpCommandHistoryAppend(
    LONG Length2 = 0;
    INT i;
    PCHAR Buffer;
-   
+
    ASSERT(Length1 <= RTL_NUMBER_OF(KdbCommandHistoryBuffer));
 
    if (Length1 <= 1 ||
@@ -2169,7 +2169,7 @@ KdbpDoCommand(
          p++;
       if (*p == '\0')
          break;
-         
+
       i = strcspn(p, "\t ");
       Argv[Argc++] = p;
       p += i;
@@ -2241,11 +2241,11 @@ KdbpCliMainLoop(
       /* Read a command and remember it */
       KdbpReadCommand(Command, sizeof (Command));
       KdbpCommandHistoryAppend(Command);
-      
+
       /* Reset the number of rows/cols printed and output aborted state */
       KdbNumberOfRowsPrinted = KdbNumberOfColsPrinted = 0;
       KdbOutputAborted = FALSE;
-      
+
       /* Call the command */
       Continue = KdbpDoCommand(Command);
    } while (Continue);
@@ -2302,7 +2302,7 @@ KdbpCliInterpretInitFile()
          {
             KdbpDoCommand(p1);
          }
-         
+
          p1[i] = c;
       }
       p1 += i;
@@ -2332,7 +2332,7 @@ KdbpCliInit()
    /* Initialize the object attributes */
    RtlInitUnicodeString(&FileName, L"\\SystemRoot\\system32\\drivers\\etc\\KDBinit");
    InitializeObjectAttributes(&ObjectAttributes, &FileName, 0, NULL, NULL);
-   
+
    /* Open the file */
    Status = ZwOpenFile(&hFile, FILE_READ_DATA, &ObjectAttributes, &Iosb, 0,
                        FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT |

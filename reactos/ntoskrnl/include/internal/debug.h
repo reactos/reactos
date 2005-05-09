@@ -4,7 +4,7 @@
  * FILE:            include/internal/debug.h
  * PURPOSE:         Useful debugging macros
  * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  *                28/05/98: Created
  */
 

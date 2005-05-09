@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/arcname.c
  * PURPOSE:         Creates ARC names for boot devices
- * 
+ *
  * PROGRAMMERS:     Eric Kohl (ekohl@rz-online.de)
  */
 

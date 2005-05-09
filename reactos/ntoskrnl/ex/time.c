@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/time.c
  * PURPOSE:         Time
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
@@ -150,11 +150,11 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
   TIME_FIELDS TimeFields;
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status = STATUS_SUCCESS;
-  
+
   PAGED_CODE();
-  
+
   PreviousMode = ExGetPreviousMode();
-  
+
   if(PreviousMode != KernelMode)
   {
     _SEH_TRY
@@ -175,7 +175,7 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
       Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
-    
+
     if(!NT_SUCCESS(Status))
     {
       return Status;
@@ -185,14 +185,14 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
   {
     NewSystemTime = *SystemTime;
   }
-  
+
   if(!SeSinglePrivilegeCheck(SeSystemtimePrivilege,
                              PreviousMode))
   {
     DPRINT1("NtSetSystemTime: Caller requires the SeSystemtimePrivilege privilege!\n");
     return STATUS_PRIVILEGE_NOT_HELD;
   }
-  
+
   if(PreviousTime != NULL)
   {
     KeQuerySystemTime(&OldSystemTime);
@@ -235,7 +235,7 @@ NtQuerySystemTime(OUT PLARGE_INTEGER SystemTime)
 {
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status = STATUS_SUCCESS;
-  
+
   PAGED_CODE();
 
   PreviousMode = ExGetPreviousMode();
@@ -263,7 +263,7 @@ NtQuerySystemTime(OUT PLARGE_INTEGER SystemTime)
   {
     KeQuerySystemTime(SystemTime);
   }
-  
+
   return Status;
 }
 

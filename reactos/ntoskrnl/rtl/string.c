@@ -1,10 +1,10 @@
-/* $Id:$
- * 
+/* $Id$
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/string.c
  * PURPOSE:         Ascii string functions
- * 
+ *
  * PROGRAMMERS:     Eric Kohl (ekohl@abo.rhein-zeitung.de)
  */
 
@@ -74,7 +74,7 @@ char* _strnset(char* szToFill, int szFill, size_t sizeMaxFill)
 		*szToFill = szFill;
 		szToFill++;
 		i++;
-		
+
 	}
 	return t;
 }
@@ -83,7 +83,7 @@ char* _strnset(char* szToFill, int szFill, size_t sizeMaxFill)
 /*
  * @implemented
  */
-char * _strrev(char *s) 
+char * _strrev(char *s)
 {
 	char  *e;
 	char   a;
@@ -114,7 +114,7 @@ char* _strset(char* szToFill, int szFill)
 	{
 		*szToFill = szFill;
 		szToFill++;
-		
+
 	}
 	return t;
 }

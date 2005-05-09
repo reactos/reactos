@@ -62,7 +62,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
   ICI_SQ_SAME( 0,                                     1,             0 ),                              /* ProcessUnknown33 */
   ICI_SQ_SAME( 0,                                     1,             0 ),                              /* ProcessUnknown34 */
   ICI_SQ_SAME( 0,                                     1,             0 ),                              /* ProcessUnknown35 */
-  
+
   ICI_SQ_SAME( sizeof(ULONG),                         sizeof(ULONG), ICIF_QUERY),                      /* ProcessCookie */
 };
 
@@ -75,7 +75,7 @@ static const struct
 {
    BOOLEAN Implemented;
    ULONG Size;
-} QueryInformationData[MaxThreadInfoClass + 1] = 
+} QueryInformationData[MaxThreadInfoClass + 1] =
 {
     {TRUE, sizeof(THREAD_BASIC_INFORMATION)},	// ThreadBasicInformation
     {TRUE, sizeof(KERNEL_USER_TIMES)},		// ThreadTimes
@@ -101,7 +101,7 @@ static const struct
 {
    BOOLEAN Implemented;
    ULONG Size;
-} SetInformationData[MaxThreadInfoClass + 1] = 
+} SetInformationData[MaxThreadInfoClass + 1] =
 {
     {TRUE, 0},			// ThreadBasicInformation
     {TRUE, 0},			// ThreadTimes
@@ -138,11 +138,11 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
    PEPROCESS Process;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
-   
+
    PAGED_CODE();
-   
+
    PreviousMode = ExGetPreviousMode();
-   
+
    DefaultQueryInfoBufferCheck(ProcessInformationClass,
                                PsProcessInfoClass,
                                ProcessInformation,
@@ -155,7 +155,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
      DPRINT1("NtQueryInformationProcess() failed, Status: 0x%x\n", Status);
      return Status;
    }
-   
+
    if(ProcessInformationClass != ProcessCookie)
    {
      Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -176,7 +176,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
         real handle actually represents the current process. */
      return STATUS_INVALID_PARAMETER;
    }
-   
+
    switch (ProcessInformationClass)
      {
       case ProcessBasicInformation:
@@ -254,7 +254,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
         _SEH_END;
         break;
       }
-      
+
       case ProcessLdtInformation:
       case ProcessWorkingSetWatch:
       case ProcessWx86Information:
@@ -264,7 +264,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
       case ProcessHandleCount:
       {
 	ULONG HandleCount = ObpGetHandleCountByHandleTable(Process->ObjectTable);
-	  
+
 	_SEH_TRY
 	{
           *(PULONG)ProcessInformation = HandleCount;
@@ -300,7 +300,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
         _SEH_END;
         break;
       }
-      
+
       case ProcessWow64Information:
         DPRINT1("We currently don't support the ProcessWow64Information information class!\n");
 	Status = STATUS_NOT_IMPLEMENTED;
@@ -309,7 +309,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
       case ProcessVmCounters:
       {
 	PVM_COUNTERS pOut = (PVM_COUNTERS)ProcessInformation;
-	  
+
 	_SEH_TRY
 	{
 	  pOut->PeakVirtualSize            = Process->PeakVirtualSize;
@@ -364,7 +364,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
       case ProcessPriorityBoost:
       {
 	PULONG BoostEnabled = (PULONG)ProcessInformation;
-	  
+
 	_SEH_TRY
 	{
 	  *BoostEnabled = Process->Pcb.DisableBoost ? FALSE : TRUE;
@@ -385,7 +385,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
       case ProcessDeviceMap:
       {
         PROCESS_DEVICEMAP_INFORMATION DeviceMap;
-          
+
         ObQueryDeviceMapInformation(Process, &DeviceMap);
 
         _SEH_TRY
@@ -445,7 +445,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 
           if(Attached)
             KeAttachProcess(&Process->Pcb);
-          
+
           _SEH_TRY
           {
             ProcParams = Process->Peb->ProcessParameters;
@@ -456,7 +456,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
             Status = _SEH_GetExceptionCode();
           }
           _SEH_END;
-          
+
           if(NT_SUCCESS(Status))
           {
             if(ProcessInformationLength < sizeof(UNICODE_STRING) + ImagePathLen + sizeof(WCHAR))
@@ -466,7 +466,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
             else
             {
               PWSTR StrSource = NULL;
-              
+
               RtlZeroMemory(&LocalDest, sizeof(LocalDest));
 
               /* create a DstPath structure on the stack */
@@ -543,7 +543,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
               }
             }
           }
-          
+
           /* don't forget to detach from the process!!! */
           if(Attached)
             KeDetachProcess();
@@ -555,11 +555,11 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
         }
         break;
       }
-      
+
       case ProcessCookie:
       {
         ULONG Cookie;
-        
+
         /* receive the process cookie, this is only allowed for the current
            process! */
 
@@ -571,16 +571,16 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
           LARGE_INTEGER SystemTime;
           ULONG NewCookie;
           PKPRCB Prcb;
-          
+
           /* generate a new cookie */
-          
+
           KeQuerySystemTime(&SystemTime);
-          
+
           Prcb = KeGetCurrentPrcb();
 
           NewCookie = Prcb->KeSystemCalls ^ Prcb->InterruptTime ^
                       SystemTime.u.LowPart ^ SystemTime.u.HighPart;
-          
+
           /* try to set the new cookie, return the current one if another thread
              set it in the meanwhile */
           Cookie = InterlockedCompareExchange((LONG*)&Process->Cookie,
@@ -592,7 +592,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
             Cookie = NewCookie;
           }
         }
-        
+
         _SEH_TRY
         {
           *(PULONG)ProcessInformation = Cookie;
@@ -606,7 +606,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
           Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
-        
+
         break;
       }
 
@@ -632,7 +632,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
    {
      ObDereferenceObject(Process);
    }
-   
+
    return Status;
 }
 
@@ -649,9 +649,9 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
    KPROCESSOR_MODE PreviousMode;
    ACCESS_MASK Access;
    NTSTATUS Status = STATUS_SUCCESS;
-   
+
    PAGED_CODE();
-   
+
    PreviousMode = ExGetPreviousMode();
 
    DefaultSetInfoBufferCheck(ProcessInformationClass,
@@ -666,7 +666,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
      DPRINT1("NtSetInformationProcess() %x failed, Status: 0x%x\n", Status);
      return Status;
    }
-   
+
    switch(ProcessInformationClass)
    {
      case ProcessSessionInformation:
@@ -680,7 +680,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
        Access = PROCESS_SET_INFORMATION;
        break;
    }
-   
+
    Status = ObReferenceObjectByHandle(ProcessHandle,
 				      Access,
 				      PsProcessType,
@@ -715,11 +715,11 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
           Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
-        
+
         if(NT_SUCCESS(Status))
         {
           PEPORT ExceptionPort;
-          
+
           /* in case we had success reading from the buffer, verify the provided
            * LPC port handle
            */
@@ -732,7 +732,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
           if(NT_SUCCESS(Status))
           {
             /* lock the process to be thread-safe! */
-            
+
             Status = PsLockProcess(Process, FALSE);
             if(NT_SUCCESS(Status))
             {
@@ -801,14 +801,14 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
         _SEH_END;
         break;
       }
-      
+
       case ProcessSessionInformation:
       {
         PROCESS_SESSION_INFORMATION SessionInfo;
         Status = STATUS_SUCCESS;
-        
+
         RtlZeroMemory(&SessionInfo, sizeof(SessionInfo));
-        
+
         _SEH_TRY
         {
           /* copy the structure to the stack */
@@ -819,11 +819,11 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
           Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
-        
+
         if(NT_SUCCESS(Status))
         {
           /* we successfully copied the structure to the stack, continue processing */
-          
+
           /*
            * setting the session id requires the SeTcbPrivilege!
            */
@@ -835,7 +835,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             Status = STATUS_PRIVILEGE_NOT_HELD;
             break;
           }
-          
+
           /* FIXME - update the session id for the process token */
 
           Status = PsLockProcess(Process, FALSE);
@@ -870,7 +870,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
         }
         break;
       }
-      
+
       case ProcessPriorityClass:
       {
         PROCESS_PRIORITY_CLASS ppc;
@@ -884,14 +884,14 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
           Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
-        
+
         if(NT_SUCCESS(Status))
         {
         }
-        
+
         break;
       }
-	
+
       case ProcessLdtInformation:
       case ProcessLdtSize:
       case ProcessIoPortHandlers:
@@ -923,7 +923,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
  * 	PiQuerySystemProcessInformation
  *
  * DESCRIPTION
- * 	Compute the size of a process+thread snapshot as 
+ * 	Compute the size of a process+thread snapshot as
  * 	expected by NtQuerySystemInformation.
  *
  * RETURN VALUE
@@ -945,16 +945,16 @@ PiQuerySystemProcessInformation(PVOID Buffer,
 	PEPROCESS	CurrentP;
 	PLIST_ENTRY	CurrentEntryT;
 	PETHREAD	CurrentT;
-	
+
 	ULONG		RequiredSize = 0L;
 	BOOLEAN		SizeOnly = FALSE;
 
 	ULONG		SpiSize = 0L;
-	
+
 	PSYSTEM_PROCESS_INFORMATION	pInfoP = (PSYSTEM_PROCESS_INFORMATION) SnapshotBuffer;
 	PSYSTEM_PROCESS_INFORMATION	pInfoPLast = NULL;
 	PSYSTEM_THREAD_INFO		pInfoT = NULL;
-	
+
 
    /* Lock the process list. */
    ExAcquireFastMutex(&PspActiveProcessMutex);
@@ -991,14 +991,14 @@ PiQuerySystemProcessInformation(PVOID Buffer,
 			SizeOnly = TRUE;
 			continue;
 		}
-		/* 
-		 * Get a reference to the 
+		/*
+		 * Get a reference to the
 		 * process descriptor we are
 		 * handling.
 		 */
 		CurrentP = CONTAINING_RECORD(
 				CurrentEntryP,
-				EPROCESS, 
+				EPROCESS,
 				ProcessListEntry
 				);
 		/*
@@ -1015,9 +1015,9 @@ PiQuerySystemProcessInformation(PVOID Buffer,
 		/* THREAD */
 		for (	pInfoT = & CurrentP->ThreadSysInfo [0],
 			CurrentEntryT = CurrentP->ThreadListHead.Flink;
-			
+
 			(CurrentEntryT != & CurrentP->ThreadListHead);
-			
+
 			pInfoT = & CurrentP->ThreadSysInfo [pInfoP->ThreadCount],
 			CurrentEntryT = CurrentEntryT->Flink
 			)
@@ -1044,14 +1044,14 @@ PiQuerySystemProcessInformation(PVOID Buffer,
 				SizeOnly = TRUE;
 				continue;
 			}
-			/* 
-			 * Get a reference to the 
+			/*
+			 * Get a reference to the
 			 * thread descriptor we are
 			 * handling.
 			 */
 			CurrentT = CONTAINING_RECORD(
 					CurrentEntryT,
-					KTHREAD, 
+					KTHREAD,
 					ThreadListEntry
 					);
 			/*
@@ -1074,7 +1074,7 @@ PiQuerySystemProcessInformation(PVOID Buffer,
 			pInfoT->State		= CurrentT-> ;	/* DWORD */
 			pInfoT->WaitReason	= CurrentT-> ;	/* KWAIT_REASON */
 			/*
-			 * Count the number of threads 
+			 * Count the number of threads
 			 * this process has.
 			 */
 			++ pInfoP->ThreadCount;
@@ -1091,9 +1091,9 @@ PiQuerySystemProcessInformation(PVOID Buffer,
 		 */
 		pInfoPLast = pInfoP;
 		/*
-		 * Compute the offset of the 
+		 * Compute the offset of the
 		 * SYSTEM_PROCESS_INFORMATION
-		 * descriptor in the snapshot 
+		 * descriptor in the snapshot
 		 * buffer for the next process.
 		 */
 		(ULONG) pInfoP += SpiSize;
@@ -1120,7 +1120,7 @@ PiQuerySystemProcessInformation(PVOID Buffer,
 	 * Mark the end of the snapshot.
 	 */
 	pInfoP->RelativeOffset = 0L;
-	/* OK */	
+	/* OK */
 	return STATUS_SUCCESS;
 #endif
 }
@@ -1144,7 +1144,7 @@ NtSetInformationThread (IN HANDLE ThreadHandle,
      HANDLE Handle;
      PVOID Address;
   }u;
-  
+
   PAGED_CODE();
 
   if (ThreadInformationClass <= MaxThreadInfoClass &&
@@ -1188,19 +1188,19 @@ NtSetInformationThread (IN HANDLE ThreadHandle,
 	       }
 	     KeSetPriorityThread(&Thread->Tcb, u.Priority);
 	     break;
-	
+
            case ThreadBasePriority:
 	     KeSetBasePriorityThread (&Thread->Tcb, u.Increment);
 	     break;
-	
+
            case ThreadAffinityMask:
 	     Status = KeSetAffinityThread(&Thread->Tcb, u.Affinity);
 	     break;
-	
+
            case ThreadImpersonationToken:
 	     Status = PsAssignImpersonationToken (Thread, u.Handle);
 	     break;
-		
+
            case ThreadQuerySetWin32StartAddress:
 	     Thread->Win32StartAddress = u.Address;
 	     break;
@@ -1235,7 +1235,7 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
       LARGE_INTEGER Count;
       BOOLEAN Last;
    }u;
-   
+
    PAGED_CODE();
 
    if (ThreadInformationClass <= MaxThreadInfoClass &&
@@ -1268,7 +1268,7 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
      {
        case ThreadBasicInformation:
          /* A test on W2K agains ntdll shows NtQueryInformationThread return STATUS_PENDING
-          * as ExitStatus for current/running thread, while KETHREAD's ExitStatus is 
+          * as ExitStatus for current/running thread, while KETHREAD's ExitStatus is
           * 0. So do the conversion here:
           * -Gunnar     */
          u.TBI.ExitStatus = (Thread->ExitStatus == 0) ? STATUS_PENDING : Thread->ExitStatus;
@@ -1278,7 +1278,7 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
 	 u.TBI.Priority = Thread->Tcb.Priority;
 	 u.TBI.BasePriority = Thread->Tcb.BasePriority;
 	 break;
-       
+
        case ThreadTimes:
 	 u.TTI.KernelTime.QuadPart = Thread->Tcb.KernelTime * 100000LL;
          u.TTI.UserTime.QuadPart = Thread->Tcb.UserTime * 100000LL;

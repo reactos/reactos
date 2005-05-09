@@ -1,10 +1,10 @@
-/* $Id:$
- * 
+/* $Id$
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/deviface.c
  * PURPOSE:         Device interface functions
- * 
+ *
  * PROGRAMMERS:     Filip Navara (xnavara@volny.cz)
  *                  Matthew Brace (ismarc@austin.rr.com)
  *                  Hervé Poussineau (hpoussin@reactos.com)
@@ -53,30 +53,30 @@ IoGetDeviceInterfaceAlias(
  * Returns a list of device interfaces of a particular device interface class.
  *
  * Parameters
- *    InterfaceClassGuid 
+ *    InterfaceClassGuid
  *       Points to a class GUID specifying the device interface class.
  *
- *    PhysicalDeviceObject 
+ *    PhysicalDeviceObject
  *       Points to an optional PDO that narrows the search to only the
- *       device interfaces of the device represented by the PDO. 
+ *       device interfaces of the device represented by the PDO.
  *
- *    Flags 
+ *    Flags
  *       Specifies flags that modify the search for device interfaces. The
  *       DEVICE_INTERFACE_INCLUDE_NONACTIVE flag specifies that the list of
  *       returned symbolic links should contain also disabled device
- *       interfaces in addition to the enabled ones.  
+ *       interfaces in addition to the enabled ones.
  *
- *    SymbolicLinkList 
+ *    SymbolicLinkList
  *       Points to a character pointer that is filled in on successful return
  *       with a list of unicode strings identifying the device interfaces
  *       that match the search criteria. The newly allocated buffer contains
  *       a list of symbolic link names. Each unicode string in the list is
  *       null-terminated; the end of the whole list is marked by an additional
  *       NULL. The caller is responsible for freeing the buffer (ExFreePool)
- *       when it is no longer needed. 
+ *       when it is no longer needed.
  *       If no device interfaces match the search criteria, this routine
  *       returns STATUS_SUCCESS and the string contains a single NULL
- *       character. 
+ *       character.
  *
  * Status
  *    @implemented
@@ -117,7 +117,7 @@ IoGetDeviceInterfaces(
    ULONG i = 0;
    ULONG j = 0;
    OBJECT_ATTRIBUTES ObjectAttributes;
-  
+
    Status = RtlStringFromGUID(InterfaceClassGuid, &GuidString);
    if (!NT_SUCCESS(Status))
    {
@@ -159,17 +159,17 @@ IoGetDeviceInterfaces(
       }
 
       DPRINT("IoGetDeviceInterfaces() called with PDO, not implemented.\n");
-      return STATUS_NOT_IMPLEMENTED;    
+      return STATUS_NOT_IMPLEMENTED;
    }
    else
-   {				     
+   {
       InitializeObjectAttributes(
          &ObjectAttributes,
          &BaseKeyName,
          OBJ_CASE_INSENSITIVE,
          NULL,
          NULL);
-  							  
+
       Status = ZwOpenKey(
          &InterfaceKey,
          KEY_READ,
@@ -206,7 +206,7 @@ IoGetDeviceInterfaces(
          fip,
          Size,
          &Size);
-  
+
       if (!NT_SUCCESS(Status))
       {
          DPRINT("ZwQueryKey() Failed. (0x%X)\n", Status);
@@ -239,7 +239,7 @@ IoGetDeviceInterfaces(
 
          bip = (PKEY_BASIC_INFORMATION)ExAllocatePool(NonPagedPool, Size);
          ASSERT(bip != NULL);
-    
+
          Status = ZwEnumerateKey(
             InterfaceKey,
             i,
@@ -247,7 +247,7 @@ IoGetDeviceInterfaces(
             bip,
             Size,
             &Size);
-      
+
          if (!NT_SUCCESS(Status))
          {
             DPRINT("ZwEnumerateKey() Failed.(0x%X)\n", Status);
@@ -259,7 +259,7 @@ IoGetDeviceInterfaces(
             ZwClose(InterfaceKey);
             return Status;
          }
-         
+
          SubKeyName.Length = 0;
          SubKeyName.MaximumLength = BaseKeyName.Length + bip->NameLength + sizeof(WCHAR);
          SubKeyName.Buffer = ExAllocatePool(NonPagedPool, SubKeyName.MaximumLength);
@@ -323,7 +323,7 @@ IoGetDeviceInterfaces(
             bfip,
             Size,
             &Size);
-  
+
          if (!NT_SUCCESS(Status))
          {
             DPRINT("ZwQueryKey() Failed. (0x%X)\n", Status);
@@ -334,7 +334,7 @@ IoGetDeviceInterfaces(
             ZwClose(InterfaceKey);
             return Status;
          }
-         
+
          for(j = 0; j < bfip->SubKeys; j++)
          {
             Status = ZwEnumerateKey(
@@ -387,12 +387,12 @@ IoGetDeviceInterfaces(
                ZwClose(InterfaceKey);
                return Status;
             }
-         
+
             if (!wcsncmp(bip->Name, L"Control", bip->NameLength))
             {
                continue;
             }
-            
+
             SymbolicLinkKeyName.Length = 0;
             SymbolicLinkKeyName.MaximumLength = SubKeyName.Length + bip->NameLength + sizeof(WCHAR);
             SymbolicLinkKeyName.Buffer = ExAllocatePool(NonPagedPool, SymbolicLinkKeyName.MaximumLength);
@@ -409,7 +409,7 @@ IoGetDeviceInterfaces(
             ASSERT(ControlKeyName.Buffer != NULL);
             RtlCopyUnicodeString(&ControlKeyName, &SymbolicLinkKeyName);
             RtlAppendUnicodeStringToString(&ControlKeyName, &Control);
-   
+
             ExFreePool(bip);
 
             InitializeObjectAttributes(
@@ -440,16 +440,16 @@ IoGetDeviceInterfaces(
             }
 
             Status = ZwQueryValueKey(
-               SymbolicLinkKey, 
-               &SymbolicLink, 
+               SymbolicLinkKey,
+               &SymbolicLink,
                KeyValuePartialInformation,
                NULL,
                0,
                &Size);
-               
+
             if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
                continue;
-      
+
             if (Status != STATUS_BUFFER_TOO_SMALL)
             {
                DPRINT("ZwQueryValueKey() Failed.(0x%X)\n", Status);
@@ -497,7 +497,7 @@ IoGetDeviceInterfaces(
             Status = RtlCheckRegistryKey(RTL_REGISTRY_ABSOLUTE, ControlKeyName.Buffer);
 
             if (NT_SUCCESS(Status))
-            {         
+            {
                /* Put the name in the string here */
                if (SymLinkList == NULL)
                {
@@ -525,7 +525,7 @@ IoGetDeviceInterfaces(
                   RtlCopyMemory(SymLinkListPtr, vpip->Data, vpip->DataLength);
                   SymLinkListPtr[vpip->DataLength / sizeof(WCHAR)] = 0;
                   SymLinkListPtr[1] = '?';
-               }               
+               }
             }
 
             RtlFreeUnicodeString(&SymbolicLinkKeyName);
@@ -549,7 +549,7 @@ IoGetDeviceInterfaces(
       }
 
       *SymbolicLinkList = SymLinkList;
-    
+
       RtlFreeUnicodeString(&BaseKeyName);
       ZwClose(InterfaceKey);
       ExFreePool(bfip);
@@ -584,20 +584,20 @@ IoRegisterDeviceInterface(
    OBJECT_ATTRIBUTES ObjectAttributes;
    ULONG i;
    NTSTATUS Status;
-   
+
    if (!(PhysicalDeviceObject->Flags & DO_BUS_ENUMERATED_DEVICE))
    {
      DPRINT("PhysicalDeviceObject 0x%p is not a valid Pdo\n", PhysicalDeviceObject);
      return STATUS_INVALID_PARAMETER_1;
    }
-   
+
    Status = RtlStringFromGUID(InterfaceClassGuid, &GuidString);
    if (!NT_SUCCESS(Status))
    {
       DPRINT("RtlStringFromGUID() failed with status 0x%08lx\n", Status);
       return Status;
    }
-   
+
    /* Create Pdo name: \Device\xxxxxxxx (unnamed device) */
    Status = ObQueryNameString(
       PhysicalDeviceObject,
@@ -610,7 +610,7 @@ IoRegisterDeviceInterface(
       return Status;
    }
    ASSERT(PdoNameInfo->Name.Length);
-   
+
    /* Create base key name for this interface: HKLM\SYSTEM\CurrentControlSet\DeviceClasses\{GUID}\##?#ACPI#PNP0501#1#{GUID} */
    ASSERT(PhysicalDeviceObject->DeviceObjectExtension->DeviceNode);
    InstancePath = &PhysicalDeviceObject->DeviceObjectExtension->DeviceNode->InstancePath;
@@ -641,7 +641,7 @@ IoRegisterDeviceInterface(
    }
    RtlAppendUnicodeToString(&BaseKeyName, L"#");
    RtlAppendUnicodeStringToString(&BaseKeyName, &GuidString);
-   
+
    /* Create BaseKeyName key in registry */
    InitializeObjectAttributes(
       &ObjectAttributes,
@@ -649,7 +649,7 @@ IoRegisterDeviceInterface(
       OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE | OBJ_OPENIF,
       NULL, /* RootDirectory */
       NULL); /* SecurityDescriptor */
-   
+
    Status = ZwCreateKey(
       &InterfaceKey,
       KEY_WRITE,
@@ -658,14 +658,14 @@ IoRegisterDeviceInterface(
       NULL, /* Class */
       REG_OPTION_VOLATILE,
       NULL); /* Disposition */
-   
+
    if (!NT_SUCCESS(Status))
    {
       DPRINT("ZwCreateKey() failed with status 0x%08lx\n", Status);
       ExFreePool(BaseKeyName.Buffer);
       return Status;
    }
-   
+
    /* Write DeviceInstance entry. Value is InstancePath */
    Status = ZwSetValueKey(
       InterfaceKey,
@@ -681,7 +681,7 @@ IoRegisterDeviceInterface(
       ExFreePool(BaseKeyName.Buffer);
       return Status;
    }
-   
+
    /* Create subkey. Name is #ReferenceString */
    SubKeyName.Length = 0;
    SubKeyName.MaximumLength = sizeof(WCHAR);
@@ -700,7 +700,7 @@ IoRegisterDeviceInterface(
    RtlAppendUnicodeToString(&SubKeyName, L"#");
    if (ReferenceString && ReferenceString->Length)
       RtlAppendUnicodeStringToString(&SubKeyName, ReferenceString);
-   
+
    /* Create SubKeyName key in registry */
    InitializeObjectAttributes(
       &ObjectAttributes,
@@ -708,7 +708,7 @@ IoRegisterDeviceInterface(
       OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
       InterfaceKey, /* RootDirectory */
       NULL); /* SecurityDescriptor */
-   
+
    Status = ZwCreateKey(
       &SubKey,
       KEY_WRITE,
@@ -717,7 +717,7 @@ IoRegisterDeviceInterface(
       NULL, /* Class */
       REG_OPTION_VOLATILE,
       NULL); /* Disposition */
-   
+
    if (!NT_SUCCESS(Status))
    {
       DPRINT("ZwCreateKey() failed with status 0x%08lx\n", Status);
@@ -725,7 +725,7 @@ IoRegisterDeviceInterface(
       ExFreePool(BaseKeyName.Buffer);
       return Status;
    }
-   
+
    /* Create symbolic link name: \??\ACPI#PNP0501#1#{GUID}\ReferenceString */
    SymbolicLinkName->Length = 0;
    SymbolicLinkName->MaximumLength = SymbolicLinkName->Length
@@ -764,7 +764,7 @@ IoRegisterDeviceInterface(
       RtlAppendUnicodeStringToString(SymbolicLinkName, ReferenceString);
    }
    SymbolicLinkName->Buffer[SymbolicLinkName->Length] = '\0';
-   
+
    /* Create symbolic link */
    DPRINT("IoRegisterDeviceInterface(): creating symbolic link %wZ -> %wZ\n", SymbolicLinkName, &PdoNameInfo->Name);
    Status = IoCreateSymbolicLink(SymbolicLinkName, &PdoNameInfo->Name);
@@ -778,7 +778,7 @@ IoRegisterDeviceInterface(
       ExFreePool(SymbolicLinkName->Buffer);
       return Status;
    }
-   
+
    /* Write symbolic link name in registry */
    Status = ZwSetValueKey(
       SubKey,
@@ -792,12 +792,12 @@ IoRegisterDeviceInterface(
       DPRINT("ZwSetValueKey() failed with status 0x%08lx\n", Status);
       ExFreePool(SymbolicLinkName->Buffer);
    }
-   
+
    ZwClose(InterfaceKey);
    ZwClose(SubKey);
    ExFreePool(SubKeyName.Buffer);
    ExFreePool(BaseKeyName.Buffer);
-   
+
    return Status;
 }
 
@@ -816,10 +816,10 @@ IoSetDeviceInterfaceState(
    PWCHAR StartPosition;
    PWCHAR EndPosition;
    NTSTATUS Status;
-   
+
    if (SymbolicLinkName == NULL)
       return STATUS_INVALID_PARAMETER_1;
-   
+
    DPRINT("IoSetDeviceInterfaceState('%wZ', %d)\n", SymbolicLinkName, Enable);
    Status = IoGetDeviceObjectPointer(SymbolicLinkName,
       0, /* DesiredAccess */
@@ -827,7 +827,7 @@ IoSetDeviceInterfaceState(
       &PhysicalDeviceObject);
    if (!NT_SUCCESS(Status))
       return Status;
-   
+
    /* Symbolic link name is \??\ACPI#PNP0501#1#{GUID}\ReferenceString */
    /* Get GUID from SymbolicLinkName */
    StartPosition = wcschr(SymbolicLinkName->Buffer, L'{');
@@ -836,16 +836,16 @@ IoSetDeviceInterfaceState(
       return STATUS_INVALID_PARAMETER_1;
    GuidString.Buffer = StartPosition;
    GuidString.MaximumLength = GuidString.Length = (ULONG_PTR)(EndPosition + 1) - (ULONG_PTR)StartPosition;
-   
+
    IopNotifyPlugPlayNotification(
       PhysicalDeviceObject,
       EventCategoryDeviceInterfaceChange,
       Enable ? (LPGUID)&GUID_DEVICE_INTERFACE_ARRIVAL : (LPGUID)&GUID_DEVICE_INTERFACE_REMOVAL,
       &GuidString,
       (PVOID)SymbolicLinkName);
-   
+
    ObDereferenceObject(FileObject);
-   
+
    return STATUS_SUCCESS;
 }
 

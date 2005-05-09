@@ -125,10 +125,10 @@ MmUnlockPages(PMDL Mdl)
    PPFN_NUMBER MdlPages;
    PFN_NUMBER Page;
 
-   /* 
+   /*
     * MmProbeAndLockPages MUST have been called to lock this mdl!
     *
-    * Windows will bugcheck if you pass MmUnlockPages an mdl that hasn't been 
+    * Windows will bugcheck if you pass MmUnlockPages an mdl that hasn't been
     * locked with MmLockAndProbePages, but (for now) we'll be more forgiving...
     */
    if (!(Mdl->MdlFlags & MDL_PAGES_LOCKED))
@@ -136,14 +136,14 @@ MmUnlockPages(PMDL Mdl)
       DPRINT1("MmUnlockPages called for non-locked mdl!\n");
       return;
    }
-   
+
    /* If mdl buffer is mapped io space -> do nothing */
    if (Mdl->MdlFlags & MDL_IO_SPACE)
    {
       Mdl->MdlFlags &= ~MDL_PAGES_LOCKED;
       return;
    }
-   
+
    /* Automagically undo any calls to MmGetSystemAddressForMdl's for this mdl */
    if (Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
    {
@@ -151,7 +151,7 @@ MmUnlockPages(PMDL Mdl)
    }
 
    /*
-    * FIXME: I don't know whether this right, but it looks sensible 
+    * FIXME: I don't know whether this right, but it looks sensible
     */
    if ((Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) ||
          (Mdl->MdlFlags & MDL_IO_PAGE_READ))
@@ -167,7 +167,7 @@ MmUnlockPages(PMDL Mdl)
       MmUnlockPage(Page);
       MmDereferencePage(Page);
    }
-   
+
    Mdl->MdlFlags &= ~MDL_PAGES_LOCKED;
 }
 
@@ -199,7 +199,7 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
  * ARGUMENTS:
  *         BaseAddress = Base virtual address to which the pages were mapped
  *         MemoryDescriptorList = MDL describing the mapped pages
- *  
+ *
  * User space unmappings _must_ be done from the original process context!
  */
 {
@@ -225,11 +225,11 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
    PageCount = PAGE_ROUND_UP(Mdl->ByteCount + Mdl->ByteOffset) / PAGE_SIZE;
 
    /*
-    * Docs says that BaseAddress should be a _base_ address, but every example 
+    * Docs says that BaseAddress should be a _base_ address, but every example
     * I've seen pass the actual address. -Gunnar
     */
    BaseAddress = PAGE_ALIGN(BaseAddress);
-   
+
    /* Unmap all the pages. */
    for (i = 0; i < PageCount; i++)
    {
@@ -243,7 +243,7 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
    if ((ULONG_PTR)BaseAddress >= KERNEL_BASE)
    {
       ASSERT(Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA);
-      
+
       KeAcquireSpinLock(&MiMdlMappingRegionLock, &oldIrql);
       /* Deallocate all the pages used. */
       Base = (ULONG)((char*)BaseAddress - (char*)MiMdlMappingRegionBase) / PAGE_SIZE;
@@ -253,16 +253,16 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
       MiMdlMappingRegionHint = min (MiMdlMappingRegionHint, Base);
 
       KeReleaseSpinLock(&MiMdlMappingRegionLock, oldIrql);
-      
+
       /* Reset the MDL state. */
       Mdl->MdlFlags &= ~MDL_MAPPED_TO_SYSTEM_VA;
       Mdl->MappedSystemVa = NULL;
-      
+
    }
    else
    {
       MEMORY_AREA *Marea;
-      
+
       ASSERT(Mdl->Process == PsGetCurrentProcess());
 
       Marea = MmLocateMemoryAreaByAddress( &Mdl->Process->AddressSpace, BaseAddress );
@@ -349,7 +349,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
  *          Operation = Operation to probe for
  *
  * This function can be seen as a safe version of MmBuildMdlForNonPagedPool
- * used in cases where you know that the mdl address is paged memory or 
+ * used in cases where you know that the mdl address is paged memory or
  * you don't know where the mdl address comes from. MmProbeAndLockPages will
  * work no matter what kind of mdl address you have.
  */
@@ -370,7 +370,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
 
    MdlPages = (PPFN_TYPE)(Mdl + 1);
    NrPages = PAGE_ROUND_UP(Mdl->ByteOffset + Mdl->ByteCount) / PAGE_SIZE;
-   
+
    /* mdl must have enough page entries */
    ASSERT(NrPages <= (Mdl->Size - sizeof(MDL))/sizeof(PFN_TYPE));
 
@@ -379,12 +379,12 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
        MmGetPfnForProcess(NULL, Mdl->StartVa) >= MmPageArraySize)
    {
        /* phys addr is not phys memory so this must be io memory */
-       
+
       for (i = 0; i < NrPages; i++)
       {
          MdlPages[i] = MmGetPfnForProcess(NULL, (char*)Mdl->StartVa + (i*PAGE_SIZE));
       }
-      
+
       Mdl->MdlFlags |= MDL_PAGES_LOCKED|MDL_IO_SPACE;
       return;
    }
@@ -401,7 +401,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
    {
       /* FIXME: why isn't AccessMode used? */
       Mode = UserMode;
-      Mdl->Process = CurrentProcess;      
+      Mdl->Process = CurrentProcess;
       AddressSpace = &CurrentProcess->AddressSpace;
    }
 
@@ -421,7 +421,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
        * FIXME: skip the probing/access stuff if buffer is nonpaged kernel space?
        * -Gunnar
        */
-       
+
       if (!MmIsPagePresent(NULL, Address))
       {
          Status = MmNotPresentFault(Mode, (ULONG_PTR)Address, TRUE);
@@ -444,7 +444,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
       {
          MmLockPage(MmGetPfnForProcess(NULL, Address));
       }
-      
+
       if ((Operation == IoWriteAccess || Operation == IoModifyAccess) &&
           (!(MmGetPageProtect(NULL, (PVOID)Address) & PAGE_READWRITE)))
       {
@@ -471,7 +471,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
       else
          MmReferencePage(Page);
    }
-   
+
    MmUnlockAddressSpace(AddressSpace);
    Mdl->MdlFlags |= MDL_PAGES_LOCKED;
 }
@@ -496,7 +496,7 @@ MmProbeAndLockProcessPages (
 /*
  * @unimplemented
  */
-VOID 
+VOID
 STDCALL
 MmProbeAndLockSelectedPages(
 	IN OUT PMDL MemoryDescriptorList,
@@ -536,37 +536,37 @@ ULONG STDCALL MmSizeOfMdl (PVOID Base,
 VOID STDCALL
 MmBuildMdlForNonPagedPool (PMDL Mdl)
 /*
- * FUNCTION: Fills in the corresponding physical page array of a given 
+ * FUNCTION: Fills in the corresponding physical page array of a given
  * MDL for a buffer in nonpaged system space
  * ARGUMENTS:
- *        Mdl = Points to an MDL that supplies a virtual address, 
+ *        Mdl = Points to an MDL that supplies a virtual address,
  *              byte offset and length
  *
  * This function can be seen as a fast version of MmProbeAndLockPages in case
- * you _know_ that the mdl address is within nonpaged kernel space.  
+ * you _know_ that the mdl address is within nonpaged kernel space.
  */
 {
    ULONG i;
    ULONG PageCount;
    PPFN_TYPE MdlPages;
-   
-   /* 
-    * mdl buffer must (at least) be in kernel space, thou this doesn't 
+
+   /*
+    * mdl buffer must (at least) be in kernel space, thou this doesn't
     * necesarely mean that the buffer in within _nonpaged_ kernel space...
     */
    ASSERT((ULONG_PTR)Mdl->StartVa >= KERNEL_BASE);
-   
+
    PageCount = PAGE_ROUND_UP(Mdl->ByteOffset + Mdl->ByteCount) / PAGE_SIZE;
    MdlPages = (PPFN_TYPE)(Mdl + 1);
-   
+
    /* mdl must have enough page entries */
    ASSERT(PageCount <= (Mdl->Size - sizeof(MDL))/sizeof(PFN_TYPE));
-   
+
    for (i=0; i < PageCount; i++)
    {
       *MdlPages++ = MmGetPfnForProcess(NULL, (char*)Mdl->StartVa + (i * PAGE_SIZE));
    }
-   
+
    Mdl->MdlFlags |= MDL_SOURCE_IS_NONPAGED_POOL;
    Mdl->Process = NULL;
    Mdl->MappedSystemVa = (char*)Mdl->StartVa + Mdl->ByteOffset;
@@ -634,11 +634,11 @@ MmAllocatePagesForMdl ( IN PHYSICAL_ADDRESS LowAddress,
 {
       /*
       MmAllocatePagesForMdl allocates zero-filled, nonpaged, physical memory pages to an MDL
-      
-      MmAllocatePagesForMdlSearch the PFN database for free, zeroed or standby 
+
+      MmAllocatePagesForMdlSearch the PFN database for free, zeroed or standby
       pagesAllocates pages and puts in MDLDoes not map pages (caller responsibility)
       Designed to be used by an AGP driver
-      
+
       LowAddress is the lowest acceptable physical address it wants to allocate
       and HighAddress is the highest. SkipBytes are the number of bytes that the
       kernel should keep free above LowAddress and below the address at which it
@@ -649,20 +649,20 @@ MmAllocatePagesForMdl ( IN PHYSICAL_ADDRESS LowAddress,
       from the returned MDL that describe appropriate portions of the physical
       memory. When a driver wants to access physical memory described by a
       sub-MDL it must map the sub-MDL using MmGetSystemAddressForMdlSafe.
-   
+
       Konstantin Gusev
       */
-   
+
    PMDL Mdl;
    PPFN_TYPE Pages;
    ULONG NumberOfPagesWanted, NumberOfPagesAllocated;
    ULONG Ret;
-   
+
    DPRINT("MmAllocatePagesForMdl - LowAddress = 0x%I64x, HighAddress = 0x%I64x, "
           "SkipBytes = 0x%I64x, Totalbytes = 0x%x\n",
           LowAddress.QuadPart, HighAddress.QuadPart,
           SkipBytes.QuadPart, Totalbytes);
-   
+
    /* SkipBytes must be a multiple of the page size */
    if ((SkipBytes.QuadPart % PAGE_SIZE) != 0)
    {
@@ -725,20 +725,20 @@ MmFreePagesFromMdl ( IN PMDL Mdl )
       Drivers use the MmFreePagesFromMdl, the kernel-mode equivalent of
       FreeUserPhysicalPages, to free the physical memory it has allocated with
       MmAllocatePagesForMdl. This function is also prototyped in ntddk.h:
-      
+
       Note that a driver is responsible for deallocating the MDL returned by
       MmAllocatePagesForMdl with a call to ExFreePool, since MmFreePagesFromMdl
       does not free the MDL.
-      
+
        Konstantin Gusev
-   
+
    */
    PPFN_TYPE Pages;
    LONG NumberOfPages;
-   
+
    NumberOfPages = PAGE_ROUND_UP(Mdl->ByteCount + Mdl->ByteOffset) / PAGE_SIZE;
    Pages = (PPFN_TYPE)(Mdl + 1);
-   
+
    while (--NumberOfPages >= 0)
    {
       MmDereferencePage(Pages[NumberOfPages]);
@@ -852,7 +852,7 @@ MmMapLockedPagesSpecifyCache ( IN PMDL Mdl,
       }
 
       KeReleaseSpinLock(&MiMdlMappingRegionLock, oldIrql);
-      
+
       Mdl->Process = NULL;
    }
 

@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/iospace.c
  * PURPOSE:         Mapping I/O space
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
@@ -19,17 +19,17 @@
 /**********************************************************************
  * NAME       EXPORTED
  * MmMapIoSpace@16
- * 
+ *
  * DESCRIPTION
  *  Maps a physical memory range into system space.
- *  
+ *
  * ARGUMENTS
  * PhysicalAddress
  *  First physical address to map;
- *  
+ *
  * NumberOfBytes
  *  Number of bytes to map;
- *  
+ *
  * CacheEnable
  *  Type of memory caching.
  *
@@ -116,14 +116,14 @@ MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
 /**********************************************************************
  * NAME       EXPORTED
  * MmUnmapIoSpace@8
- * 
+ *
  * DESCRIPTION
  *  Unmaps a physical memory range from system space.
- *  
+ *
  * ARGUMENTS
  * BaseAddress
- *  The base virtual address which maps the region; 
- *  
+ *  The base virtual address which maps the region;
+ *
  * NumberOfBytes
  *  Number of bytes to unmap.
  *

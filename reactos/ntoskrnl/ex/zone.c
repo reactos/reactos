@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/zone.c
  * PURPOSE:         Implements zone buffers
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
@@ -37,18 +37,18 @@ ExExtendZone (
    PZONE_SEGMENT_HEADER entry;
    PZONE_SEGMENT_HEADER seg;
    unsigned int i;
-   
+
    seg = (PZONE_SEGMENT_HEADER)Segment;
    seg->Reserved = (PVOID) SegmentSize;
-   
+
    PushEntryList(&Zone->SegmentList,&seg->SegmentList);
-   
+
    entry = (PZONE_SEGMENT_HEADER)( ((char*)seg) + sizeof(ZONE_SEGMENT_HEADER) );
-   
+
    for (i=0;i<(SegmentSize / Zone->BlockSize);i++)
      {
 	PushEntryList(&Zone->FreeList,&entry->SegmentList);
-	entry = (PZONE_SEGMENT_HEADER)(((char*)entry) + sizeof(PZONE_SEGMENT_HEADER) + 
+	entry = (PZONE_SEGMENT_HEADER)(((char*)entry) + sizeof(PZONE_SEGMENT_HEADER) +
 			      Zone->BlockSize);
      }
    return(STATUS_SUCCESS);
@@ -69,7 +69,7 @@ ExInterlockedExtendZone (
 {
    NTSTATUS ret;
    KIRQL oldlvl;
-   
+
    KeAcquireSpinLock(Lock,&oldlvl);
    ret = ExExtendZone(Zone,Segment,SegmentSize);
    KeReleaseSpinLock(Lock,oldlvl);
@@ -93,7 +93,7 @@ ExInitializeZone (
  * ARGUMENTS:
  *          Zone = zone header to be initialized
  *          BlockSize = Size (in bytes) of the allocation size of the zone
- *          InitialSegment = Initial segment of storage allocated by the 
+ *          InitialSegment = Initial segment of storage allocated by the
  *                           caller
  *          InitialSegmentSize = Initial size of the segment
  */
@@ -101,19 +101,19 @@ ExInitializeZone (
    unsigned int i;
    PZONE_SEGMENT_HEADER seg;
    PZONE_SEGMENT_HEADER entry;
-   
+
    Zone->FreeList.Next=NULL;
    Zone->SegmentList.Next=NULL;
    Zone->BlockSize=BlockSize;
    Zone->TotalSegmentSize = InitialSegmentSize;
-   
+
    seg = (PZONE_SEGMENT_HEADER)InitialSegment;
    seg->Reserved = (PVOID*) InitialSegmentSize;
-   
+
    PushEntryList(&Zone->SegmentList,&seg->SegmentList);
-   
+
    entry = (PZONE_SEGMENT_HEADER)( ((char*)seg) + sizeof(ZONE_SEGMENT_HEADER) );
-   
+
    for (i=0;i<(InitialSegmentSize / BlockSize);i++)
      {
 	PushEntryList(&Zone->FreeList,&entry->SegmentList);

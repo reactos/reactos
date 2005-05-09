@@ -68,20 +68,20 @@ typedef struct _KTHREAD
 {
    /* For waiting on thread exit */
    DISPATCHER_HEADER DispatcherHeader;    /* 00 */
-   
+
    /* List of mutants owned by the thread */
    LIST_ENTRY        MutantListHead;      /* 10 */
    PVOID             InitialStack;        /* 18 */
    ULONG_PTR         StackLimit;          /* 1C */
-   
+
    /* Pointer to the thread's environment block in user memory */
    struct _TEB       *Teb;                /* 20 */
-   
+
    /* Pointer to the thread's TLS array */
    PVOID             TlsArray;            /* 24 */
    PVOID             KernelStack;         /* 28 */
    UCHAR             DebugActive;         /* 2C */
-   
+
    /* Thread state (one of THREAD_STATE_xxx constants below) */
    UCHAR             State;               /* 2D */
    BOOLEAN           Alerted[2];          /* 2E */
@@ -157,7 +157,7 @@ typedef struct _KTHREAD
 } KTHREAD;
 
 #include <poppack.h>
-  
+
 typedef struct _KEXECUTE_OPTIONS
 {
     UCHAR ExecuteDisable:1;
@@ -176,7 +176,7 @@ typedef struct _KEXECUTE_OPTIONS
  * KERNEL VERSION: 5.2
  * DOCUMENTATION:  http://reactos.com/wiki/index.php/KPROCESS
  */
-typedef struct _KPROCESS 
+typedef struct _KPROCESS
 {
     DISPATCHER_HEADER     Header;                    /* 000 */
     LIST_ENTRY            ProfileListHead;           /* 010 */
@@ -187,7 +187,7 @@ typedef struct _KPROCESS
     UCHAR                 Iopl;                      /* 032 */
     UCHAR                 Unused;                    /* 033 */
     ULONG                 ActiveProcessors;          /* 034 */
-    ULONG                 KernelTime;                /* 038 */  
+    ULONG                 KernelTime;                /* 038 */
     ULONG                 UserTime;                  /* 03C */
     LIST_ENTRY            ReadyListHead;             /* 040 */
     LIST_ENTRY            SwapListEntry;             /* 048 */
@@ -195,7 +195,7 @@ typedef struct _KPROCESS
     LIST_ENTRY            ThreadListHead;            /* 050 */
     KSPIN_LOCK            ProcessLock;               /* 058 */
     KAFFINITY             Affinity;                  /* 05C */
-    union {    
+    union {
         struct {
             ULONG         AutoAlignment:1;           /* 060.0 */
             ULONG         DisableBoost:1;            /* 060.1 */
@@ -239,7 +239,7 @@ typedef enum _KTHREAD_STATE {
     Ready,
     Running,
     Standby,
-    Terminated, 
+    Terminated,
     Waiting,
     Transition,
     DeferredReady,
@@ -253,7 +253,7 @@ typedef enum _KTHREAD_STATE {
     PKTHREAD _Thread = KeGetCurrentThread(); \
     if (_Thread) _Thread->KernelApcDisable--; \
 }
-    
+
 #define KeLeaveCriticalRegion(X) \
 { \
     PKTHREAD _Thread = KeGetCurrentThread(); \
@@ -275,30 +275,30 @@ typedef enum _KTHREAD_STATE {
 /* Thread Scheduler Functions */
 
 /* Readies a Thread for Execution. */
-VOID 
+VOID
 STDCALL
 KiDispatchThreadNoLock(ULONG NewThreadStatus);
 
 /* Readies a Thread for Execution. */
-VOID 
+VOID
 STDCALL
 KiDispatchThread(ULONG NewThreadStatus);
 
 /* Puts a Thread into a block state. */
 VOID
 STDCALL
-KiBlockThread(PNTSTATUS Status, 
-              UCHAR Alertable, 
+KiBlockThread(PNTSTATUS Status,
+              UCHAR Alertable,
               ULONG WaitMode,
               UCHAR WaitReason);
-    
-/* Removes a thread out of a block state. */        
+
+/* Removes a thread out of a block state. */
 VOID
 STDCALL
-KiUnblockThread(PKTHREAD Thread, 
-                PNTSTATUS WaitStatus, 
+KiUnblockThread(PKTHREAD Thread,
+                PNTSTATUS WaitStatus,
                 KPRIORITY Increment);
-                
+
 NTSTATUS
 STDCALL
 KeSuspendThread(PKTHREAD Thread);
@@ -306,7 +306,7 @@ KeSuspendThread(PKTHREAD Thread);
 NTSTATUS
 FASTCALL
 KiSwapContext(PKTHREAD NewThread);
-       
+
 /* gmutex.c ********************************************************************/
 
 VOID
@@ -314,8 +314,8 @@ FASTCALL
 KiAcquireGuardedMutexContented(PKGUARDED_MUTEX GuardedMutex);
 
 /* gate.c **********************************************************************/
-         
-VOID 
+
+VOID
 FASTCALL
 KeInitializeGate(PKGATE Gate);
 
@@ -331,16 +331,16 @@ KeWaitForGate(PKGATE Gate,
 
 /* ipi.c ********************************************************************/
 
-BOOLEAN STDCALL 
-KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame, 
+BOOLEAN STDCALL
+KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
 		    IN struct _KEXCEPTION_FRAME* ExceptionFrame);
 
-VOID  
-KiIpiSendRequest(ULONG TargetSet, 
+VOID
+KiIpiSendRequest(ULONG TargetSet,
 		 ULONG IpiRequest);
 
-VOID  
-KeIpiGenericCall(VOID (STDCALL *WorkerRoutine)(PVOID), 
+VOID
+KeIpiGenericCall(VOID (STDCALL *WorkerRoutine)(PVOID),
 		 PVOID Argument);
 
 /* next file ***************************************************************/
@@ -375,7 +375,7 @@ typedef enum _CACHED_MODULE_TYPE {
 } CACHED_MODULE_TYPE, *PCACHED_MODULE_TYPE;
 extern PLOADER_MODULE CachedModules[MaximumCachedModuleType];
 
-VOID STDCALL 
+VOID STDCALL
 DbgBreakPointNoBugCheck(VOID);
 
 STDCALL
@@ -419,7 +419,7 @@ KeProfileInterruptWithSource(
 	IN KPROFILE_SOURCE		Source
 );
 
-BOOLEAN 
+BOOLEAN
 STDCALL
 KiRosPrintAddress(PVOID Address);
 
@@ -435,8 +435,8 @@ VOID inline FASTCALL KeReleaseDispatcherDatabaseLockFromDpcLevel(VOID);
 
 VOID
 STDCALL
-KeInitializeThread(struct _KPROCESS* Process, 
-                   PKTHREAD Thread, 
+KeInitializeThread(struct _KPROCESS* Process,
+                   PKTHREAD Thread,
                    PKSYSTEM_ROUTINE SystemRoutine,
                    PKSTART_ROUTINE StartRoutine,
                    PVOID StartContext,
@@ -474,22 +474,22 @@ VOID KeDumpStackFrames(PULONG Frame);
 BOOLEAN KiTestAlert(VOID);
 
 VOID
-FASTCALL 
-KiAbortWaitThread(PKTHREAD Thread, 
+FASTCALL
+KiAbortWaitThread(PKTHREAD Thread,
                   NTSTATUS WaitStatus,
                   KPRIORITY Increment);
-     
+
 VOID
 STDCALL
 KeInitializeProcess(struct _KPROCESS *Process,
                     KPRIORITY Priority,
                     KAFFINITY Affinity,
                     LARGE_INTEGER DirectoryTableBase);
-                                 
+
 ULONG
 STDCALL
 KeForceResumeThread(IN PKTHREAD Thread);
- 
+
 BOOLEAN STDCALL KiInsertTimer(PKTIMER Timer, LARGE_INTEGER DueTime);
 
 VOID inline FASTCALL KiSatisfyObjectWait(PDISPATCHER_HEADER Object, PKTHREAD Thread);
@@ -508,18 +508,18 @@ VOID STDCALL KiDeliverApc(KPROCESSOR_MODE PreviousMode,
 VOID
 STDCALL
 KiKernelApcDeliveryCheck(VOID);
-LONG 
-STDCALL 
-KiInsertQueue(IN PKQUEUE Queue, 
-              IN PLIST_ENTRY Entry, 
+LONG
+STDCALL
+KiInsertQueue(IN PKQUEUE Queue,
+              IN PLIST_ENTRY Entry,
               BOOLEAN Head);
-   
+
 ULONG
 STDCALL
-KeSetProcess(struct _KPROCESS* Process, 
+KeSetProcess(struct _KPROCESS* Process,
              KPRIORITY Increment);
-             
-                            
+
+
 VOID STDCALL KeInitializeEventPair(PKEVENT_PAIR EventPair);
 
 VOID STDCALL KiInitializeUserApc(IN PVOID Reserved,
@@ -567,7 +567,7 @@ KiMoveApcState (PKAPC_STATE OldState,
 
 VOID
 KiAddProfileEvent(KPROFILE_SOURCE Source, ULONG Pc);
-VOID 
+VOID
 KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 		    PCONTEXT Context,
 		    PKTRAP_FRAME Tf,

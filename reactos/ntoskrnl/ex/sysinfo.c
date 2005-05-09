@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/sysinfo.c
  * PURPOSE:         System information functions
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  *                  Aleksey Bragin (aleksey@studiocerebral.com)
  */
@@ -84,7 +84,7 @@ ExGetCurrentProcessorCounts (
 /*
  * @implemented
  */
-BOOLEAN 
+BOOLEAN
 STDCALL
 ExIsProcessorFeaturePresent(IN ULONG ProcessorFeature)
 {
@@ -109,11 +109,11 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
   UNICODE_STRING WValue;
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status = STATUS_SUCCESS;
-  
+
   PAGED_CODE();
-  
+
   PreviousMode = ExGetPreviousMode();
-  
+
   if(PreviousMode != KernelMode)
   {
     _SEH_TRY
@@ -136,7 +136,7 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
       Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
-    
+
     if(!NT_SUCCESS(Status))
     {
       return Status;
@@ -165,7 +165,7 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
       DPRINT1("NtQuerySystemEnvironmentValue: Caller requires the SeSystemEnvironmentPrivilege privilege!\n");
       return STATUS_PRIVILEGE_NOT_HELD;
     }
-    
+
     /*
      * convert the value name to ansi
      */
@@ -177,7 +177,7 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
     {
       return Status;
     }
-    
+
   /*
    * Create a temporary buffer for the value
    */
@@ -187,7 +187,7 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
       RtlFreeAnsiString(&AName);
       return STATUS_INSUFFICIENT_RESOURCES;
     }
-    
+
     /*
      * Get the environment variable
      */
@@ -198,7 +198,7 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
       ExFreePool(Value);
       return STATUS_UNSUCCESSFUL;
     }
-    
+
     /*
      * Convert the result to UNICODE, protect with SEH in case the value buffer
      * isn't NULL-terminated!
@@ -236,7 +236,7 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
       }
       _SEH_END;
     }
-    
+
     /*
      * Cleanup allocated resources.
      */
@@ -256,11 +256,11 @@ NtSetSystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
   ANSI_STRING AName, AValue;
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status;
-  
+
   PAGED_CODE();
 
   PreviousMode = ExGetPreviousMode();
-  
+
   /*
    * Copy the strings to kernel space if necessary
    */
@@ -309,7 +309,7 @@ NtSetSystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
         DPRINT1("NtSetSystemEnvironmentValue: Caller requires the SeSystemEnvironmentPrivilege privilege!\n");
         Status = STATUS_PRIVILEGE_NOT_HELD;
       }
-      
+
       RtlReleaseCapturedUnicodeString(&CapturedValue,
                                      PreviousMode,
                                      FALSE);
@@ -319,7 +319,7 @@ NtSetSystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
                                    PreviousMode,
                                    FALSE);
   }
-  
+
   return Status;
 }
 
@@ -342,12 +342,12 @@ static NTSTATUS SSI_USE(n) (PVOID Buffer, ULONG Size)
 /* Class 0 - Basic Information */
 QSI_DEF(SystemBasicInformation)
 {
-	PSYSTEM_BASIC_INFORMATION Sbi 
+	PSYSTEM_BASIC_INFORMATION Sbi
 		= (PSYSTEM_BASIC_INFORMATION) Buffer;
 
 	*ReqSize = sizeof (SYSTEM_BASIC_INFORMATION);
 	/*
-	 * Check user buffer's size 
+	 * Check user buffer's size
 	 */
 	if (Size < sizeof (SYSTEM_BASIC_INFORMATION))
 	{
@@ -357,7 +357,7 @@ QSI_DEF(SystemBasicInformation)
 	Sbi->MaximumIncrement = KeMaximumIncrement;
 	Sbi->PhysicalPageSize = PAGE_SIZE;
 	Sbi->NumberOfPhysicalPages = MmStats.NrTotalPages;
-	Sbi->LowestPhysicalPage = 0; /* FIXME */ 
+	Sbi->LowestPhysicalPage = 0; /* FIXME */
 	Sbi->HighestPhysicalPage = MmStats.NrTotalPages; /* FIXME */
 	Sbi->AllocationGranularity = MM_VIRTMEM_GRANULARITY; /* hard coded on Intel? */
 	Sbi->LowestUserAddress = 0x10000; /* Top of 64k */
@@ -370,12 +370,12 @@ QSI_DEF(SystemBasicInformation)
 /* Class 1 - Processor Information */
 QSI_DEF(SystemProcessorInformation)
 {
-	PSYSTEM_PROCESSOR_INFORMATION Spi 
+	PSYSTEM_PROCESSOR_INFORMATION Spi
 		= (PSYSTEM_PROCESSOR_INFORMATION) Buffer;
 	PKPRCB Prcb;
 	*ReqSize = sizeof (SYSTEM_PROCESSOR_INFORMATION);
 	/*
-	 * Check user buffer's size 
+	 * Check user buffer's size
 	 */
 	if (Size < sizeof (SYSTEM_PROCESSOR_INFORMATION))
 	{
@@ -397,22 +397,22 @@ QSI_DEF(SystemProcessorInformation)
 /* Class 2 - Performance Information */
 QSI_DEF(SystemPerformanceInformation)
 {
-	PSYSTEM_PERFORMANCE_INFORMATION Spi 
+	PSYSTEM_PERFORMANCE_INFORMATION Spi
 		= (PSYSTEM_PERFORMANCE_INFORMATION) Buffer;
 
 	PEPROCESS TheIdleProcess;
-	
+
 	*ReqSize = sizeof (SYSTEM_PERFORMANCE_INFORMATION);
 	/*
-	 * Check user buffer's size 
+	 * Check user buffer's size
 	 */
 	if (Size < sizeof (SYSTEM_PERFORMANCE_INFORMATION))
 	{
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
-	
+
 	TheIdleProcess = PsIdleProcess;
-	
+
 	Spi->IdleTime.QuadPart = TheIdleProcess->Pcb.KernelTime * 100000LL;
 
 	Spi->ReadTransferCount.QuadPart = IoReadTransferCount;
@@ -463,9 +463,9 @@ QSI_DEF(SystemPerformanceInformation)
 	Spi->NonPagedPoolFrees = 0; /* FIXME */
 
 	Spi->TotalFreeSystemPtes = 0; /* FIXME */
-	
+
 	Spi->SystemCodePage = MmStats.NrSystemPages; /* FIXME */
-	
+
 	Spi->TotalSystemDriverPages = 0; /* FIXME */
 	Spi->TotalSystemCodePages = 0; /* FIXME */
 	Spi->SmallNonPagedLookasideListAllocateHits = 0; /* FIXME */
@@ -571,7 +571,7 @@ QSI_DEF(SystemProcessInformation)
 	{
 		return (STATUS_INFO_LENGTH_MISMATCH); // in case buffer size is too small
 	}
-	
+
 	syspr = PsGetNextProcess(NULL);
 	pr = syspr;
 	pCur = (unsigned char *)Spi;
@@ -611,7 +611,7 @@ QSI_DEF(SystemProcessInformation)
 		SpiCur->NextEntryOffset = curSize+inLen; // relative offset to the beginnnig of the next structure
 		SpiCur->NumberOfThreads = nThreads;
 		SpiCur->CreateTime = pr->CreateTime;
-		SpiCur->UserTime.QuadPart = pr->Pcb.UserTime * 100000LL; 
+		SpiCur->UserTime.QuadPart = pr->Pcb.UserTime * 100000LL;
 		SpiCur->KernelTime.QuadPart = pr->Pcb.KernelTime * 100000LL;
 		SpiCur->ImageName.Length = strlen(pr->ImageFileName) * sizeof(WCHAR);
 		SpiCur->ImageName.MaximumLength = inLen;
@@ -665,7 +665,7 @@ QSI_DEF(SystemProcessInformation)
                  i++;
                  current_entry = current_entry->Flink;
                }
-               
+
 		pr = PsGetNextProcess(pr);
         nThreads = 0;
 		if ((pr == syspr) || (pr == NULL))
@@ -676,7 +676,7 @@ QSI_DEF(SystemProcessInformation)
 		else
 			pCur = pCur + curSize + inLen;
 	}  while ((pr != syspr) && (pr != NULL));
-	
+
 	if(pr != NULL)
 	{
           ObDereferenceObject(pr);
@@ -697,13 +697,13 @@ QSI_DEF(SystemCallCountInformation)
 /* Class 7 - Device Information */
 QSI_DEF(SystemDeviceInformation)
 {
-	PSYSTEM_DEVICE_INFORMATION Sdi 
+	PSYSTEM_DEVICE_INFORMATION Sdi
 		= (PSYSTEM_DEVICE_INFORMATION) Buffer;
 	PCONFIGURATION_INFORMATION ConfigInfo;
 
 	*ReqSize = sizeof (SYSTEM_DEVICE_INFORMATION);
 	/*
-	 * Check user buffer's size 
+	 * Check user buffer's size
 	 */
 	if (Size < sizeof (SYSTEM_DEVICE_INFORMATION))
 	{
@@ -734,7 +734,7 @@ QSI_DEF(SystemProcessorPerformanceInformation)
 
 	*ReqSize = KeNumberProcessors * sizeof (SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION);
 	/*
-	 * Check user buffer's size 
+	 * Check user buffer's size
 	 */
 	if (Size < KeNumberProcessors * sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION))
 	{
@@ -754,7 +754,7 @@ QSI_DEF(SystemProcessorPerformanceInformation)
 	   Spi++;
 	   Prcb = (PKPRCB)((ULONG_PTR)Prcb + PAGE_SIZE);
 	}
-     
+
 	return (STATUS_SUCCESS);
 }
 
@@ -835,7 +835,7 @@ ObpGetNextHandleByProcessCount(PSYSTEM_HANDLE_TABLE_ENTRY_INFO pshi,
 /* Class 16 - Handle Information */
 QSI_DEF(SystemHandleInformation)
 {
-        PSYSTEM_HANDLE_INFORMATION Shi = 
+        PSYSTEM_HANDLE_INFORMATION Shi =
         	(PSYSTEM_HANDLE_INFORMATION) Buffer;
 
         DPRINT("NtQuerySystemInformation - SystemHandleInformation\n");
@@ -851,7 +851,7 @@ QSI_DEF(SystemHandleInformation)
 	PEPROCESS pr, syspr;
 	int curSize, i = 0;
 	ULONG hCount = 0;
-		
+
         /* First Calc Size from Count. */
         syspr = PsGetNextProcess(NULL);
 	pr = syspr;
@@ -864,7 +864,7 @@ QSI_DEF(SystemHandleInformation)
 	    if ((pr == syspr) || (pr == NULL))
 		break;
         } while ((pr != syspr) && (pr != NULL));
-        
+
 	if(pr != NULL)
 	{
           ObDereferenceObject(pr);
@@ -873,7 +873,7 @@ QSI_DEF(SystemHandleInformation)
 	DPRINT("SystemHandleInformation 2\n");
 
         curSize = sizeof(SYSTEM_HANDLE_INFORMATION)+
-                  (  (sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO) * hCount) - 
+                  (  (sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO) * hCount) -
                      (sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO) ));
 
         Shi->NumberOfHandles = hCount;
@@ -921,7 +921,7 @@ QSI_DEF(SystemHandleInformation)
 /*
 SSI_DEF(SystemHandleInformation)
 {
-	
+
 	return (STATUS_SUCCESS);
 }
 */
@@ -985,9 +985,9 @@ QSI_DEF(SystemFileCacheInformation)
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 	/* Return the Byte size not the page size. */
-	Sci->CurrentSize = 
+	Sci->CurrentSize =
 		MiMemoryConsumers[MC_CACHE].PagesUsed * PAGE_SIZE;
-	Sci->PeakSize = 
+	Sci->PeakSize =
 	        MiMemoryConsumers[MC_CACHE].PagesUsed * PAGE_SIZE; /* FIXME */
 
 	Sci->PageFaultCount = 0; /* FIXME */
@@ -1025,14 +1025,14 @@ QSI_DEF(SystemInterruptInformation)
   UINT i;
   ULONG ti;
   PSYSTEM_INTERRUPT_INFORMATION sii = (PSYSTEM_INTERRUPT_INFORMATION)Buffer;
-  
+
   if(Size < KeNumberProcessors * sizeof(SYSTEM_INTERRUPT_INFORMATION))
   {
     return (STATUS_INFO_LENGTH_MISMATCH);
   }
-  
+
   ti = KeQueryTimeIncrement();
-  
+
   Prcb = ((PKPCR)KPCR_BASE)->Prcb;
   for (i = 0; i < KeNumberProcessors; i++)
   {
@@ -1045,7 +1045,7 @@ QSI_DEF(SystemInterruptInformation)
     sii++;
     Prcb = (PKPRCB)((ULONG_PTR)Prcb + PAGE_SIZE);
   }
-  
+
   return STATUS_SUCCESS;
 }
 
@@ -1090,7 +1090,7 @@ QSI_DEF(SystemFullMemoryInformation)
 #ifndef NDEBUG
 	MmPrintMemoryStatistic();
 #endif
-	
+
 	*Spi = MiMemoryConsumers[MC_USER].PagesUsed;
 
 	return (STATUS_SUCCESS);
@@ -1506,7 +1506,7 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
   PVOID SystemInformation;
   NTSTATUS Status;
   NTSTATUS FStatus;
-  
+
   PAGED_CODE();
 
 /*	DPRINT("NtQuerySystemInformation Start. Class:%d\n",
@@ -1524,14 +1524,14 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
 	  return(STATUS_NO_MEMORY);
 	}
     }*/
-  
+
   /* Clear user buffer. */
   RtlZeroMemory(SystemInformation, Length);
 
   /*
    * Check the request is valid.
    */
-  if ((SystemInformationClass >= SystemInformationClassMin) && 
+  if ((SystemInformationClass >= SystemInformationClassMin) &&
       (SystemInformationClass < SystemInformationClassMax))
     {
       if (NULL != CallQS [SystemInformationClass].Query)
@@ -1544,7 +1544,7 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
 							  &ResultLength);
 	  /*if (ExGetPreviousMode() != KernelMode)
 	    {
-	      Status = MmCopyToCaller(UnsafeSystemInformation, 
+	      Status = MmCopyToCaller(UnsafeSystemInformation,
 				      SystemInformation,
 				      Length);
 	      ExFreePool(SystemInformation);
@@ -1586,9 +1586,9 @@ NtSetSystemInformation (
 	)
 {
         PAGED_CODE();
-        
+
 	/*
-	 * If called from user mode, check 
+	 * If called from user mode, check
 	 * possible unsafe arguments.
 	 */
 #if 0
@@ -1636,7 +1636,7 @@ NtFlushInstructionCache (
 	)
 {
         PAGED_CODE();
-        
+
 	__asm__("wbinvd\n");
 	return STATUS_SUCCESS;
 }

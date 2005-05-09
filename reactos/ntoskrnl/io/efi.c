@@ -1,9 +1,9 @@
-/* 
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/efi.c
  * PURPOSE:         EFI Unimplemented Function Calls
- * 
+ *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
 
@@ -24,7 +24,7 @@ NtAddBootEntry(
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
-                                 
+
 NTSTATUS
 STDCALL
 NtDeleteBootEntry(
@@ -35,7 +35,7 @@ NtDeleteBootEntry(
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
-                                 
+
 NTSTATUS
 STDCALL
 NtEnumerateBootEntries(
@@ -46,7 +46,7 @@ NtEnumerateBootEntries(
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
-                                   
+
 NTSTATUS
 STDCALL
 NtQueryBootEntryOrder(
@@ -57,7 +57,7 @@ NtQueryBootEntryOrder(
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
-              
+
 NTSTATUS
 STDCALL
 NtQueryBootOptions(
@@ -68,7 +68,7 @@ NtQueryBootOptions(
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
-              
+
 NTSTATUS
 STDCALL
 NtSetBootEntryOrder(
@@ -79,22 +79,22 @@ NtSetBootEntryOrder(
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
-            
-NTSTATUS 
-STDCALL 
+
+NTSTATUS
+STDCALL
 NtSetBootOptions(
-	ULONG Unknown1, 
+	ULONG Unknown1,
 	ULONG Unknown2
 	)
 {
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
-}              
-                  
-NTSTATUS 
-STDCALL 
+}
+
+NTSTATUS
+STDCALL
 NtTranslateFilePath(
-	ULONG Unknown1, 
+	ULONG Unknown1,
 	ULONG Unknown2,
 	ULONG Unknown3
 	)

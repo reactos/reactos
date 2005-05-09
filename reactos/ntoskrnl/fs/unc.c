@@ -16,7 +16,7 @@
  *	FsRtlDeregisterUncProvider@4
  *
  * DESCRIPTION
- *	
+ *
  * ARGUMENTS
  *
  * RETURN VALUE
@@ -34,7 +34,7 @@ FsRtlDeregisterUncProvider(IN HANDLE Handle)
  *	FsRtlRegisterUncProvider@12
  *
  * DESCRIPTION
- *	
+ *
  * ARGUMENTS
  *
  * RETURN VALUE

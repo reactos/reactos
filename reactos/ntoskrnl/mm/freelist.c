@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/freelist.c
  * PURPOSE:         Handle the list of free physical pages
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  *                  Robert Bergkvist
  */
@@ -238,7 +238,7 @@ MmGetContinuousPages(ULONG NumberOfBytes,
       	 MmPageArray[i].Flags.Zero = 0;
       }
    }
-   
+
    return start;
 }
 
@@ -282,7 +282,7 @@ MiIsPfnRam(PADDRESS_RANGE BIOSMemoryMap,
    }
    return TRUE;
 }
-         
+
 
 PVOID INIT_FUNCTION
 MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
@@ -388,7 +388,7 @@ MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
          MmSetPageProtect(NULL, Address, PAGE_READWRITE);
       }
       memset(Address, 0, PAGE_SIZE);
-      
+
       start = ((ULONG_PTR)Address - (ULONG_PTR)MmPageArray) / sizeof(PHYSICAL_PAGE);
       end = ((ULONG_PTR)Address - (ULONG_PTR)MmPageArray + PAGE_SIZE) / sizeof(PHYSICAL_PAGE);
 
@@ -837,7 +837,7 @@ MmLockPage(PFN_TYPE Pfn)
    {
       KEBUGCHECK(0);
    }
-   
+
    MmLockPageUnsafe(Pfn);
 }
 
@@ -969,7 +969,7 @@ MmAllocPagesSpecifyRange(ULONG Consumer,
    HighestPage = HighestAddress.QuadPart / PAGE_SIZE;
    if ((HighestAddress.u.LowPart % PAGE_SIZE) != 0)
       HighestPage++;
-   
+
    if (LowestPage >= MmPageArraySize)
    {
       DPRINT1("MmAllocPagesSpecifyRange(): Out of memory\n");
@@ -1162,7 +1162,7 @@ MmInitZeroPageThread(VOID)
 {
    NTSTATUS Status;
    HANDLE ThreadHandle;
-   
+
    ZeroPageThreadShouldTerminate = FALSE;
    Status = PsCreateSystemThread(&ThreadHandle,
                                  THREAD_ALL_ACCESS,

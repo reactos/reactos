@@ -156,7 +156,7 @@ typedef struct _ETHREAD
            ULONG                   ApcNeeded:1;
         };
         ULONG                      SameThreadPassiveFlags;      /* 248 */
-    };   
+    };
     UCHAR                          ForwardClusterOnly;          /* 24C */
     UCHAR                          DisablePageFaultClustering;  /* 24D */
     UCHAR                          ActiveFaultCount;            /* 24E */
@@ -169,7 +169,7 @@ typedef struct _ETHREAD
 typedef struct _ETHREAD *PETHREAD;
 
 #endif /* __USE_W32API */
-  
+
 #include <pshpack4.h>
 /*
  * NAME:           EPROCESS
@@ -183,15 +183,15 @@ struct _EPROCESS
     KPROCESS              Pcb;                          /* 000 */
     EX_PUSH_LOCK          ProcessLock;                  /* 078 */
     LARGE_INTEGER         CreateTime;                   /* 080 */
-    LARGE_INTEGER         ExitTime;                     /* 088 */    
+    LARGE_INTEGER         ExitTime;                     /* 088 */
     EX_RUNDOWN_REF        RundownProtect;               /* 090 */
-    HANDLE                UniqueProcessId;              /* 094 */  
-    LIST_ENTRY            ActiveProcessLinks;           /* 098 */  
+    HANDLE                UniqueProcessId;              /* 094 */
+    LIST_ENTRY            ActiveProcessLinks;           /* 098 */
     ULONG                 QuotaUsage[3];                /* 0A0 */
     ULONG                 QuotaPeak[3];                 /* 0AC */
-    ULONG                 CommitCharge;                 /* 0B8 */  
-    ULONG                 PeakVirtualSize;              /* 0BC */  
-    ULONG                 VirtualSize;                  /* 0C0 */  
+    ULONG                 CommitCharge;                 /* 0B8 */
+    ULONG                 PeakVirtualSize;              /* 0BC */
+    ULONG                 VirtualSize;                  /* 0C0 */
     LIST_ENTRY            SessionProcessLinks;          /* 0C4 */
     PVOID                 DebugPort;                    /* 0CC */
     PVOID                 ExceptionPort;                /* 0D0 */
@@ -284,7 +284,7 @@ struct _EPROCESS
         };
         ULONG             Flags;                        /* 240 */
     };
-  
+
     NTSTATUS              ExitStatus;                   /* 244 */
     USHORT                NextPageColor;                /* 248 */
     union {
@@ -299,13 +299,13 @@ struct _EPROCESS
     ULONG                 Cookie;                       /* 270 */
 
 /***************************************************************
- *                REACTOS SPECIFIC START 
- ***************************************************************/    
+ *                REACTOS SPECIFIC START
+ ***************************************************************/
     /* FIXME WILL BE DEPRECATED WITH PUSHLOCK SUPPORT IN 0.3.0 */
     KEVENT                LockEvent;                    /* 274 */
     ULONG                 LockCount;                    /* 284 */
     struct _KTHREAD       *LockOwner;                   /* 288 */
-    
+
     /* FIXME MOVE TO AVL TREES                                 */
     MADDRESS_SPACE        AddressSpace;                 /* 28C */
 };
@@ -333,7 +333,7 @@ VOID STDCALL PiDeleteThread(PVOID ObjectBody);
 VOID PsReapThreads(VOID);
 VOID PsInitializeThreadReaper(VOID);
 VOID PsQueueThreadReap(PETHREAD Thread);
-NTSTATUS 
+NTSTATUS
 PsInitializeThread(PEPROCESS Process,
 		   PETHREAD* ThreadPtr,
 		   POBJECT_ATTRIBUTES ObjectAttributes,
@@ -357,12 +357,12 @@ NTSTATUS
 STDCALL
 PspAssignPrimaryToken(PEPROCESS Process,
                       HANDLE TokenHandle);
-VOID STDCALL PsExitSpecialApc(PKAPC Apc, 
+VOID STDCALL PsExitSpecialApc(PKAPC Apc,
 		      PKNORMAL_ROUTINE *NormalRoutine,
 		      PVOID *NormalContext,
 		      PVOID *SystemArgument1,
 		      PVOID *SystemArgument2);
-              
+
 NTSTATUS
 STDCALL
 PspInitializeProcessSecurity(PEPROCESS Process,
@@ -373,7 +373,7 @@ VOID
 STDCALL
 PspSystemThreadStartup(PKSTART_ROUTINE StartRoutine,
                        PVOID StartContext);
-                       
+
 NTSTATUS
 PsInitializeIdleOrFirstThread (
     PEPROCESS Process,
@@ -383,7 +383,7 @@ PsInitializeIdleOrFirstThread (
     BOOLEAN First);
 /*
  * Internal thread priorities, added by Phillip Susi
- * TODO: rebalence these to make use of all priorities... the ones above 16 
+ * TODO: rebalence these to make use of all priorities... the ones above 16
  * can not all be used right now
  */
 #define PROCESS_PRIO_IDLE			3
@@ -394,8 +394,8 @@ PsInitializeIdleOrFirstThread (
 
 VOID STDCALL PiDeleteProcess(PVOID ObjectBody);
 
-VOID 
-STDCALL 
+VOID
+STDCALL
 PspReapRoutine(PVOID Context);
 
 VOID
@@ -443,15 +443,15 @@ PiSuspendThreadNormalRoutine(PVOID NormalContext,
 			     PVOID SystemArgument2);
 VOID
 PsInitialiseSuspendImplementation(VOID);
-NTSTATUS 
+NTSTATUS
 STDCALL
 PspExitProcess(PEPROCESS Process);
 
-VOID 
-STDCALL 
+VOID
+STDCALL
 PspDeleteProcess(PVOID ObjectBody);
 
-VOID 
+VOID
 STDCALL
 PspDeleteThread(PVOID ObjectBody);
 

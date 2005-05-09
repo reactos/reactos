@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ob/security.c
  * PURPOSE:         Security manager
- * 
+ *
  * PROGRAMERS:      No programmer listed.
  */
 
@@ -27,7 +27,7 @@ ObAssignSecurity(IN PACCESS_STATE AccessState,
 {
   PSECURITY_DESCRIPTOR NewDescriptor;
   NTSTATUS Status;
-  
+
   PAGED_CODE();
 
   /* Build the new security descriptor */
@@ -75,7 +75,7 @@ ObGetObjectSecurity(IN PVOID Object,
   POBJECT_HEADER Header;
   ULONG Length;
   NTSTATUS Status;
-  
+
   PAGED_CODE();
 
   Header = BODY_TO_HEADER(Object);
@@ -134,7 +134,7 @@ ObReleaseObjectSecurity(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 			IN BOOLEAN MemoryAllocated)
 {
   PAGED_CODE();
-  
+
   if (SecurityDescriptor == NULL)
     return;
 
@@ -162,7 +162,7 @@ NtQuerySecurityObject(IN HANDLE Handle,
   POBJECT_HEADER Header;
   PVOID Object;
   NTSTATUS Status;
-  
+
   PAGED_CODE();
 
   DPRINT("NtQuerySecurityObject() called\n");
@@ -234,7 +234,7 @@ NtSetSecurityObject(IN HANDLE Handle,
   ULONG Control = 0;
   ULONG_PTR Current;
   NTSTATUS Status;
-  
+
   PAGED_CODE();
 
   DPRINT("NtSetSecurityObject() called\n");
@@ -277,7 +277,7 @@ NtSetSecurityObject(IN HANDLE Handle,
 	  if (SecurityDescriptor->Owner != NULL)
 	    {
 		if( SecurityDescriptor->Control & SE_SELF_RELATIVE )
-		    Owner = (PSID)((ULONG_PTR)SecurityDescriptor->Owner + 
+		    Owner = (PSID)((ULONG_PTR)SecurityDescriptor->Owner +
 				   (ULONG_PTR)SecurityDescriptor);
 		else
 		    Owner = (PSID)SecurityDescriptor->Owner;
@@ -301,7 +301,7 @@ NtSetSecurityObject(IN HANDLE Handle,
 	  if (SecurityDescriptor->Group != NULL)
 	    {
 		if( SecurityDescriptor->Control & SE_SELF_RELATIVE )
-		    Group = (PSID)((ULONG_PTR)SecurityDescriptor->Group + 
+		    Group = (PSID)((ULONG_PTR)SecurityDescriptor->Group +
 				   (ULONG_PTR)SecurityDescriptor);
 		else
 		    Group = (PSID)SecurityDescriptor->Group;
@@ -326,7 +326,7 @@ NtSetSecurityObject(IN HANDLE Handle,
 	      (SecurityDescriptor->Dacl != NULL))
 	    {
 		if( SecurityDescriptor->Control & SE_SELF_RELATIVE )
-		    Dacl = (PACL)((ULONG_PTR)SecurityDescriptor->Dacl + 
+		    Dacl = (PACL)((ULONG_PTR)SecurityDescriptor->Dacl +
 				  (ULONG_PTR)SecurityDescriptor);
 		else
 		    Dacl = (PACL)SecurityDescriptor->Dacl;
@@ -353,7 +353,7 @@ NtSetSecurityObject(IN HANDLE Handle,
 	      (SecurityDescriptor->Sacl != NULL))
 	    {
 		if( SecurityDescriptor->Control & SE_SELF_RELATIVE )
-		    Sacl = (PACL)((ULONG_PTR)SecurityDescriptor->Sacl + 
+		    Sacl = (PACL)((ULONG_PTR)SecurityDescriptor->Sacl +
 				  (ULONG_PTR)SecurityDescriptor);
 		else
 		    Sacl = (PACL)SecurityDescriptor->Sacl;

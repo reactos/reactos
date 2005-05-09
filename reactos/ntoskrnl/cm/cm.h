@@ -356,7 +356,7 @@ typedef struct _KEY_OBJECT
 
   /* List entry into the global key object list */
   LIST_ENTRY ListEntry;
-  
+
   /* Time stamp for the last access by the parse routine */
   ULONG TimeStamp;
 } KEY_OBJECT, *PKEY_OBJECT;

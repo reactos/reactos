@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/lpc/send.c
  * PURPOSE:         Communication mechanism
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
@@ -28,13 +28,13 @@
  *
  * REVISIONS
  */
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 LpcSendTerminationPort (IN PEPORT Port,
 			IN LARGE_INTEGER CreationTime)
 {
   NTSTATUS Status;
   LPC_TERMINATION_MESSAGE Msg;
-  
+
 #ifdef __USE_NT_LPC__
   Msg.Header.MessageType = LPC_NEW_MESSAGE;
 #endif
@@ -56,7 +56,7 @@ LpcSendTerminationPort (IN PEPORT Port,
  *
  * REVISIONS
  */
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 LpcSendDebugMessagePort (IN PEPORT Port,
 			 IN PLPC_DBG_MESSAGE Message,
 			 OUT PLPC_DBG_MESSAGE Reply)
@@ -64,9 +64,9 @@ LpcSendDebugMessagePort (IN PEPORT Port,
    NTSTATUS Status;
    KIRQL oldIrql;
    PQUEUEDMESSAGE ReplyMessage;
-   
-   Status = EiReplyOrRequestPort(Port, 
-				 &Message->Header, 
+
+   Status = EiReplyOrRequestPort(Port,
+				 &Message->Header,
 				 LPC_REQUEST,
 				 Port);
    if (!NT_SUCCESS(Status))
@@ -84,7 +84,7 @@ LpcSendDebugMessagePort (IN PEPORT Port,
 			 UserMode,
 			 FALSE,
 			 NULL);
-   
+
    /*
     * Dequeue the reply
     */
@@ -101,7 +101,7 @@ LpcSendDebugMessagePort (IN PEPORT Port,
 /**********************************************************************
  * NAME
  *	LpcRequestPort/2
- *	
+ *
  * DESCRIPTION
  *
  * ARGUMENTS
@@ -111,7 +111,7 @@ LpcSendDebugMessagePort (IN PEPORT Port,
  * REVISIONS
  *	2002-03-01 EA
  *	I investigated this function a bit more in depth.
- *	It looks like the legal values for the MessageType field in the 
+ *	It looks like the legal values for the MessageType field in the
  *	message to send are in the range LPC_NEW_MESSAGE .. LPC_CLIENT_DIED,
  *	but LPC_DATAGRAM is explicitly forbidden.
  *
@@ -121,7 +121,7 @@ NTSTATUS STDCALL LpcRequestPort (IN	PEPORT		Port,
 				 IN	PLPC_MESSAGE	LpcMessage)
 {
    NTSTATUS Status;
-   
+
    DPRINT("LpcRequestPort(PortHandle %08x, LpcMessage %08x)\n", Port, LpcMessage);
 
 #ifdef __USE_NT_LPC__
@@ -145,8 +145,8 @@ NTSTATUS STDCALL LpcRequestPort (IN	PEPORT		Port,
    }
 #endif
 
-   Status = EiReplyOrRequestPort(Port, 
-				 LpcMessage, 
+   Status = EiReplyOrRequestPort(Port,
+				 LpcMessage,
 				 LPC_DATAGRAM,
 				 Port);
    KeReleaseSemaphore( &Port->Semaphore, IO_NO_INCREMENT, 1, FALSE );
@@ -174,10 +174,10 @@ NTSTATUS STDCALL NtRequestPort (IN	HANDLE		PortHandle,
 {
    NTSTATUS Status;
    PEPORT Port;
-   
-   DPRINT("NtRequestPort(PortHandle %x LpcMessage %x)\n", PortHandle, 
+
+   DPRINT("NtRequestPort(PortHandle %x LpcMessage %x)\n", PortHandle,
 	  LpcMessage);
-   
+
    Status = ObReferenceObjectByHandle(PortHandle,
 				      PORT_ALL_ACCESS,
 				      LpcPortObjectType,
@@ -190,9 +190,9 @@ NTSTATUS STDCALL NtRequestPort (IN	HANDLE		PortHandle,
 	return(Status);
      }
 
-   Status = LpcRequestPort(Port->OtherPort, 
+   Status = LpcRequestPort(Port->OtherPort,
 			   LpcMessage);
-   
+
    ObDereferenceObject(Port);
    return(Status);
 }
@@ -212,9 +212,9 @@ NTSTATUS STDCALL NtRequestPort (IN	HANDLE		PortHandle,
  *
  * @implemented
  */
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 NtRequestWaitReplyPort (IN HANDLE PortHandle,
-			PLPC_MESSAGE UnsafeLpcRequest,    
+			PLPC_MESSAGE UnsafeLpcRequest,
 			PLPC_MESSAGE UnsafeLpcReply)
 {
    PETHREAD CurrentThread;
@@ -230,7 +230,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
 	  "LpcReply %x)\n", PortHandle, UnsafeLpcRequest, UnsafeLpcReply);
 
    Status = ObReferenceObjectByHandle(PortHandle,
-				      PORT_ALL_ACCESS, 
+				      PORT_ALL_ACCESS,
 				      LpcPortObjectType,
 				      UserMode,
 				      (PVOID*)&Port,
@@ -326,8 +326,8 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
        return(STATUS_PORT_MESSAGE_TOO_LONG);
      }
 
-   Status = EiReplyOrRequestPort(Port->OtherPort, 
-				 LpcRequest, 
+   Status = EiReplyOrRequestPort(Port->OtherPort,
+				 LpcRequest,
 				 LPC_REQUEST,
 				 Port);
    if (!NT_SUCCESS(Status))
@@ -342,9 +342,9 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
 	return(Status);
      }
    ExFreePool(LpcRequest);
-   KeReleaseSemaphore (&Port->OtherPort->Semaphore, IO_NO_INCREMENT, 
-		       1, FALSE);   
-   
+   KeReleaseSemaphore (&Port->OtherPort->Semaphore, IO_NO_INCREMENT,
+		       1, FALSE);
+
    /*
     * Wait for a reply
     */
@@ -355,7 +355,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
 			          NULL);
    if (Status == STATUS_SUCCESS)
      {
-   
+
        /*
         * Dequeue the reply
         */
@@ -366,7 +366,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
          {
            DPRINT("Message->Message.MessageSize %d\n",
 	          Message->Message.MessageSize);
-           Status = MmCopyToCaller(UnsafeLpcReply, &Message->Message, 
+           Status = MmCopyToCaller(UnsafeLpcReply, &Message->Message,
 			           Message->Message.MessageSize);
            ExFreePool(Message);
          }
@@ -385,7 +385,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
        KeAttachProcess(AttachedProcess);
      }
    ObDereferenceObject(Port);
-   
+
    return(Status);
 }
 
@@ -393,7 +393,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
 /**********************************************************************
  * NAME
  *	NtWriteRequestData/6
- *	
+ *
  * DESCRIPTION
  *
  * ARGUMENTS

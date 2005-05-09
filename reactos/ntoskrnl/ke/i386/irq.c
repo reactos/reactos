@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
  * PURPOSE:         IRQ handling
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  *                  Hartmut Birr
  */
@@ -156,7 +156,7 @@ static unsigned int irq_handler[NR_IRQS]=
 #endif /* CONFIG_SMP */
 
 /*
- * PURPOSE: Object describing each isr 
+ * PURPOSE: Object describing each isr
  * NOTE: The data in this table is only modified at passsive level but can
  * be accessed at any irq level.
  */
@@ -209,7 +209,7 @@ KeInitInterrupts (VOID)
      }
 }
 
-STATIC VOID 
+STATIC VOID
 KeIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
 			  PKTRAP_FRAME TrapFrame)
 {
@@ -293,7 +293,7 @@ KiInterruptDispatch2 (ULONG vector, KIRQL old_level)
   KiReleaseSpinLock(&CurrentIsr->Lock);
 }
 
-VOID 
+VOID
 KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
 /*
  * FUNCTION: Calls the irq specific handler for an irq
@@ -310,7 +310,7 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
     * At this point we have interrupts disabled, nothing has been done to
     * the PIC.
     */
-    
+
    KeGetCurrentPrcb()->InterruptCount++;
 
    /*
@@ -358,10 +358,10 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
        CurrentThread = KeGetCurrentThread();
        if (CurrentThread!=NULL && CurrentThread->Alerted[1])
          {
-           DPRINT("PID: %d, TID: %d CS %04x/%04x\n", 
+           DPRINT("PID: %d, TID: %d CS %04x/%04x\n",
 	          ((PETHREAD)CurrentThread)->ThreadsProcess->UniqueProcessId,
 		  ((PETHREAD)CurrentThread)->Cid.UniqueThread,
-		  Trapframe->Cs, 
+		  Trapframe->Cs,
 		  CurrentThread->TrapFrame ? CurrentThread->TrapFrame->Cs : 0);
 	   if (CurrentThread->TrapFrame == NULL)
 	     {
@@ -369,11 +369,11 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
 	       KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
 	       CurrentThread->TrapFrame = &KernelTrapFrame;
 	     }
-   
+
 	   Ke386EnableInterrupts();
            KiDeliverApc(KernelMode, NULL, NULL);
            Ke386DisableInterrupts();
-           
+
 	   ASSERT(KeGetCurrentThread() == CurrentThread);
            if (CurrentThread->TrapFrame == &KernelTrapFrame)
 	     {
@@ -384,7 +384,7 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
      }
 }
 
-static VOID 
+static VOID
 KeDumpIrqList(VOID)
 {
    PKINTERRUPT current;
@@ -392,7 +392,7 @@ KeDumpIrqList(VOID)
    ULONG i, j;
    KIRQL oldlvl;
    BOOLEAN printed;
-   
+
    for (i=0;i<NR_IRQS;i++)
      {
 	printed = FALSE;
@@ -484,7 +484,7 @@ KeConnectInterrupt(PKINTERRUPT InterruptObject)
     */
    KiReleaseSpinLock(&CurrentIsr->Lock);
    KeLowerIrql(oldlvl);
-   
+
    KeDumpIrqList();
 
    KeRevertToUserAffinityThread();
@@ -508,7 +508,7 @@ KeDisconnectInterrupt(PKINTERRUPT InterruptObject)
    PISR_TABLE CurrentIsr;
 
    DPRINT("KeDisconnectInterrupt\n");
-   
+
    ASSERT (InterruptObject->ProcessorNumber < KeNumberProcessors);
 
    KeSetSystemAffinityThread(1 << InterruptObject->ProcessorNumber);
@@ -532,7 +532,7 @@ KeDisconnectInterrupt(PKINTERRUPT InterruptObject)
     */
    KiReleaseSpinLock(&CurrentIsr->Lock);
    KeLowerIrql(oldlvl);
-   
+
    KeRevertToUserAffinityThread();
 }
 

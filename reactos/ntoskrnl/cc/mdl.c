@@ -1,5 +1,5 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/fs.c
@@ -49,13 +49,13 @@ CcMdlRead(
  * 	Used by CcMdlReadComplete@8 and FsRtl
  *
  */
-VOID 
+VOID
 STDCALL
 CcMdlReadCompleteDev(IN PMDL MdlChain,
                      IN PFILE_OBJECT FileObject)
 {
     PMDL Mdl;
-    
+
     /* Free MDLs */
     while ((Mdl = MdlChain))
     {
@@ -88,11 +88,11 @@ CcMdlReadComplete(IN PFILE_OBJECT FileObject,
 {
     PDEVICE_OBJECT DeviceObject = NULL;
     PFAST_IO_DISPATCH FastDispatch;
-   
+
     /* Get Fast Dispatch Data */
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
     FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
-    
+
     /* Check if we support Fast Calls, and check this one */
     if (FastDispatch && FastDispatch->MdlReadComplete)
     {
@@ -101,7 +101,7 @@ CcMdlReadComplete(IN PFILE_OBJECT FileObject,
                                       MdlChain,
                                       DeviceObject);
     }
-    
+
     /* Use slow path */
     CcMdlReadCompleteDev(MdlChain, FileObject);
 }
@@ -117,11 +117,11 @@ CcMdlWriteComplete(IN PFILE_OBJECT FileObject,
 {
     PDEVICE_OBJECT DeviceObject = NULL;
     PFAST_IO_DISPATCH FastDispatch;
-   
+
     /* Get Fast Dispatch Data */
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
     FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
-    
+
     /* Check if we support Fast Calls, and check this one */
     if (FastDispatch && FastDispatch->MdlWriteComplete)
     {
@@ -131,7 +131,7 @@ CcMdlWriteComplete(IN PFILE_OBJECT FileObject,
                                        MdlChain,
                                        DeviceObject);
     }
-    
+
     /* Use slow path */
     CcMdlWriteCompleteDev(FileOffset, MdlChain, FileObject);
 }

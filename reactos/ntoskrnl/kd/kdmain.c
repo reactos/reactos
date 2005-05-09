@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/kd/kdinit.c
  * PURPOSE:         Kernel Debugger Initializtion
- * 
+ *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
 
@@ -36,27 +36,27 @@ KdpServiceDispatcher(ULONG Service,
         case 1: /* DbgPrint */
             Result = KdpPrintString ((PANSI_STRING)Context1);
             break;
-            
+
         case TAG('R', 'o', 's', ' '): /* ROS-INTERNAL */
         {
             switch ((ULONG)Context1)
             {
-                case DumpNonPagedPool:       
+                case DumpNonPagedPool:
                     MiDebugDumpNonPagedPool(FALSE);
                     break;
-        
+
                 case ManualBugCheck:
                     KEBUGCHECK(MANUALLY_INITIATED_CRASH);
                     break;
-        
+
                 case DumpNonPagedPoolStats:
                     MiDebugDumpNonPagedPoolStats(FALSE);
                     break;
-    
+
                 case DumpNewNonPagedPool:
                     MiDebugDumpNonPagedPool(TRUE);
                     break;
-        
+
                 case DumpNewNonPagedPoolStats:
                     MiDebugDumpNonPagedPoolStats(TRUE);
                     break;
@@ -64,15 +64,15 @@ KdpServiceDispatcher(ULONG Service,
                 case DumpAllThreads:
                     PspDumpThreads(TRUE);
                     break;
-             
+
                 case DumpUserThreads:
                     PspDumpThreads(FALSE);
                     break;
-        
+
                 case EnterDebugger:
                     DbgBreakPoint();
                     break;
-                
+
                 default:
                     break;
             }
@@ -97,7 +97,7 @@ KdpEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
 {
     /* Get out of here if the Debugger isn't enabled */
     if (!KdDebuggerEnabled) return kdHandleException;
-    
+
     /* FIXME:
      * Right now, the GDB wrapper seems to handle exceptions differntly
      * from KDGB and both are called at different times, while the GDB
@@ -108,11 +108,11 @@ KdpEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
     {
         /* Call the registered wrapper */
         if (WrapperInitRoutine) return WrapperTable.
-                                       KdpExceptionRoutine(ExceptionRecord, 
+                                       KdpExceptionRoutine(ExceptionRecord,
                                                            Context,
                                                            TrapFrame);
     }
-    
+
     /* Call KDBG if available */
     return KdbEnterDebuggerException(ExceptionRecord,
                                      PreviousMode,
@@ -131,15 +131,15 @@ STDCALL
 KdDisableDebugger(VOID)
 {
     KIRQL OldIrql;
-    
+
     /* Raise IRQL */
     KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-    
+
     /* TODO: Disable any breakpoints */
-    
+
     /* Disable the Debugger */
     KdDebuggerEnabled = FALSE;
-    
+
     /* Lower the IRQL */
     KeLowerIrql(OldIrql);
 }
@@ -152,15 +152,15 @@ STDCALL
 KdEnableDebugger(VOID)
 {
     KIRQL OldIrql;
-    
+
     /* Raise IRQL */
     KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-    
+
     /* TODO: Re-enable any breakpoints */
-    
+
     /* Enable the Debugger */
     KdDebuggerEnabled = TRUE;
-    
+
     /* Lower the IRQL */
     KeLowerIrql(OldIrql);
 }
@@ -168,7 +168,7 @@ KdEnableDebugger(VOID)
 /*
  * @implemented
  */
-BOOLEAN 
+BOOLEAN
 STDCALL
 KdPollBreakIn(VOID)
 {
@@ -178,7 +178,7 @@ KdPollBreakIn(VOID)
 /*
  * @implemented
  */
-VOID 
+VOID
 STDCALL
 KeEnterKernelDebugger(VOID)
 {
@@ -186,7 +186,7 @@ KeEnterKernelDebugger(VOID)
 
     /* Set the Variable */
     KdEnteredDebugger = TRUE;
-    
+
     /* Halt the CPU */
     for (;;) Ke386HaltProcessor();
 }

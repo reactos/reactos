@@ -1,5 +1,5 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cm/ntfunc.c
@@ -39,11 +39,11 @@ CmRegisterCallback(IN PEX_CALLBACK_FUNCTION Function,
                    IN OUT PLARGE_INTEGER Cookie)
 {
   PREGISTRY_CALLBACK Callback;
-  
+
   PAGED_CODE();
-  
+
   ASSERT(Function && Cookie);
-  
+
   Callback = ExAllocatePoolWithTag(PagedPool,
                                    sizeof(REGISTRY_CALLBACK),
                                    TAG('C', 'M', 'c', 'b'));
@@ -54,7 +54,7 @@ CmRegisterCallback(IN PEX_CALLBACK_FUNCTION Function,
     Callback->Function = Function;
     Callback->Context = Context;
     Callback->PendingDelete = FALSE;
-    
+
     /* add it to the callback list and receive a cookie for the callback */
     ExAcquireFastMutex(&CmiCallbackLock);
     /* FIXME - to receive a unique cookie we'll just return the pointer to the
@@ -63,7 +63,7 @@ CmRegisterCallback(IN PEX_CALLBACK_FUNCTION Function,
     InsertTailList(&CmiCallbackHead, &Callback->ListEntry);
 
     ExReleaseFastMutex(&CmiCallbackLock);
-    
+
     *Cookie = Callback->Cookie;
     return STATUS_SUCCESS;
   }
@@ -79,7 +79,7 @@ NTSTATUS STDCALL
 CmUnRegisterCallback(IN LARGE_INTEGER Cookie)
 {
   PLIST_ENTRY CurrentEntry;
-  
+
   PAGED_CODE();
 
   ExAcquireFastMutex(&CmiCallbackLock);
@@ -121,7 +121,7 @@ CmUnRegisterCallback(IN LARGE_INTEGER Cookie)
       }
     }
   }
-  
+
   ExReleaseFastMutex(&CmiCallbackLock);
 
   return STATUS_UNSUCCESSFUL;
@@ -133,9 +133,9 @@ CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1,
                            IN PVOID Argument2)
 {
   PLIST_ENTRY CurrentEntry;
-  
+
   PAGED_CODE();
-  
+
   ExAcquireFastMutex(&CmiCallbackLock);
 
   for(CurrentEntry = CmiCallbackHead.Flink;
@@ -149,10 +149,10 @@ CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1,
        ExAcquireRundownProtectionEx(&CurrentCallback->RundownRef, 1))
     {
       NTSTATUS Status;
-      
+
       /* don't hold locks during the callbacks! */
       ExReleaseFastMutex(&CmiCallbackLock);
-      
+
       Status = CurrentCallback->Function(CurrentCallback->Context,
                                          Argument1,
                                          Argument2);
@@ -169,9 +169,9 @@ CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1,
       ExReleaseRundownProtectionEx(&CurrentCallback->RundownRef, 1);
     }
   }
-  
+
   ExReleaseFastMutex(&CmiCallbackLock);
-  
+
   return STATUS_SUCCESS;
 }
 
@@ -191,7 +191,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   PVOID Object;
   PWSTR Start;
   unsigned i;
-  
+
   PAGED_CODE();
 
   DPRINT("NtCreateKey (Name %wZ  KeyHandle %x  Root %x)\n",
@@ -358,7 +358,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   ExReleaseResourceLite(&CmiRegistryLock);
   KeLeaveCriticalRegion();
 
-  
+
   ObDereferenceObject(Object);
 
   if (Disposition)
@@ -376,11 +376,11 @@ NtDeleteKey(IN HANDLE KeyHandle)
   KPROCESSOR_MODE PreviousMode;
   PKEY_OBJECT KeyObject;
   NTSTATUS Status;
-  
+
   PAGED_CODE();
 
   DPRINT1("NtDeleteKey(KeyHandle %x) called\n", KeyHandle);
-  
+
   PreviousMode = ExGetPreviousMode();
 
   /* Verify that the handle is valid and is a registry key */
@@ -462,9 +462,9 @@ NtEnumerateKey(IN HANDLE KeyHandle,
   ULONG NameSize, ClassSize;
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status;
-  
+
   PAGED_CODE();
-  
+
   PreviousMode = ExGetPreviousMode();
 
   DPRINT("KH %x  I %d  KIC %x KI %x  L %d  RL %x\n",
@@ -687,10 +687,10 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	        Status = STATUS_BUFFER_OVERFLOW;
 	        CHECKPOINT;
 	      }
-	    else if (Length - FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]) - 
+	    else if (Length - FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]) -
 	             NameSize < ClassSize)
 	      {
-	        ClassSize = Length - FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]) - 
+	        ClassSize = Length - FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]) -
 	                    NameSize;
 	        Status = STATUS_BUFFER_OVERFLOW;
 	        CHECKPOINT;
@@ -812,7 +812,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
   PKEY_VALUE_BASIC_INFORMATION  ValueBasicInformation;
   PKEY_VALUE_PARTIAL_INFORMATION  ValuePartialInformation;
   PKEY_VALUE_FULL_INFORMATION  ValueFullInformation;
-  
+
   PAGED_CODE();
 
   DPRINT("KH %x  I %d  KVIC %x  KVI %x  L %d  RL %x\n",
@@ -879,7 +879,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
             }
           else
             {
-              ValueBasicInformation = (PKEY_VALUE_BASIC_INFORMATION) 
+              ValueBasicInformation = (PKEY_VALUE_BASIC_INFORMATION)
                 KeyValueInformation;
               ValueBasicInformation->TitleIndex = 0;
               ValueBasicInformation->Type = ValueCell->DataType;
@@ -911,7 +911,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
         case KeyValuePartialInformation:
           DataSize = ValueCell->DataSize & REG_DATA_SIZE_MASK;
 
-          *ResultLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]) + 
+          *ResultLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]) +
             DataSize;
 
           if (Length < FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]))
@@ -933,18 +933,18 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
                   Status = STATUS_BUFFER_OVERFLOW;
                   CHECKPOINT;
                 }
-              
+
               if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET))
               {
                 DataCell = CmiGetCell (RegistryHive, ValueCell->DataOffset, NULL);
-                RtlCopyMemory(ValuePartialInformation->Data, 
+                RtlCopyMemory(ValuePartialInformation->Data,
                   DataCell->Data,
                   DataSize);
               }
               else
               {
-                RtlCopyMemory(ValuePartialInformation->Data, 
-                  &ValueCell->DataOffset, 
+                RtlCopyMemory(ValuePartialInformation->Data,
+                  &ValueCell->DataOffset,
                   DataSize);
               }
             }
@@ -967,19 +967,19 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
             }
           else
             {
-              ValueFullInformation = (PKEY_VALUE_FULL_INFORMATION) 
+              ValueFullInformation = (PKEY_VALUE_FULL_INFORMATION)
                 KeyValueInformation;
               ValueFullInformation->TitleIndex = 0;
               ValueFullInformation->Type = ValueCell->DataType;
               ValueFullInformation->NameLength = NameSize;
-              ValueFullInformation->DataOffset = 
+              ValueFullInformation->DataOffset =
                 (ULONG_PTR)ValueFullInformation->Name -
                 (ULONG_PTR)ValueFullInformation +
                 ValueFullInformation->NameLength;
               ValueFullInformation->DataOffset =
                   ROUND_UP(ValueFullInformation->DataOffset, sizeof(PVOID));
               ValueFullInformation->DataLength = ValueCell->DataSize & REG_DATA_SIZE_MASK;
-              
+
 	      if (Length - FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION, Name[0]) <
 	          NameSize)
 	        {
@@ -1050,11 +1050,11 @@ NtFlushKey(IN HANDLE KeyHandle)
   PKEY_OBJECT  KeyObject;
   PREGISTRY_HIVE  RegistryHive;
   KPROCESSOR_MODE  PreviousMode;
-  
+
   PAGED_CODE();
 
   DPRINT("NtFlushKey (KeyHandle %lx) called\n", KeyHandle);
-  
+
   PreviousMode = ExGetPreviousMode();
 
   /* Verify that the handle is valid and is a registry key */
@@ -1106,7 +1106,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
   PVOID Object;
   HANDLE hKey;
   NTSTATUS Status = STATUS_SUCCESS;
-  
+
   PAGED_CODE();
 
   DPRINT("NtOpenKey(KH %x  DA %x  OA %x  OA->ON '%wZ'\n",
@@ -1134,7 +1134,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
       Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
-    
+
     if(!NT_SUCCESS(Status))
     {
       return Status;
@@ -1223,7 +1223,7 @@ NtQueryKey(IN HANDLE KeyHandle,
   PKEY_CELL KeyCell;
   ULONG NameSize, ClassSize;
   NTSTATUS Status;
-  
+
   PAGED_CODE();
 
   DPRINT("NtQueryKey(KH %x  KIC %x  KI %x  L %d  RL %x)\n",
@@ -1322,10 +1322,10 @@ NtQueryKey(IN HANDLE KeyHandle,
 	        Status = STATUS_BUFFER_OVERFLOW;
 	        CHECKPOINT;
 	      }
-	    else if (Length - FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]) - 
+	    else if (Length - FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]) -
 	             NameSize < ClassSize)
 	      {
-	        ClassSize = Length - FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]) - 
+	        ClassSize = Length - FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]) -
 	                    NameSize;
 	        Status = STATUS_BUFFER_OVERFLOW;
 	        CHECKPOINT;
@@ -1382,7 +1382,7 @@ NtQueryKey(IN HANDLE KeyHandle,
 	        Status = STATUS_BUFFER_OVERFLOW;
 	        CHECKPOINT;
 	      }
-	      
+
 	    if (ClassSize)
 	      {
 		ClassCell = CmiGetCell (KeyObject->RegistryHive,
@@ -1433,7 +1433,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
   PKEY_VALUE_BASIC_INFORMATION  ValueBasicInformation;
   PKEY_VALUE_PARTIAL_INFORMATION  ValuePartialInformation;
   PKEY_VALUE_FULL_INFORMATION  ValueFullInformation;
-  
+
   PAGED_CODE();
 
   DPRINT("NtQueryValueKey(KeyHandle %x  ValueName %S  Length %x)\n",
@@ -1494,7 +1494,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
 	  }
 	else
 	  {
-	    ValueBasicInformation = (PKEY_VALUE_BASIC_INFORMATION) 
+	    ValueBasicInformation = (PKEY_VALUE_BASIC_INFORMATION)
 	      KeyValueInformation;
 	    ValueBasicInformation->TitleIndex = 0;
 	    ValueBasicInformation->Type = ValueCell->DataType;
@@ -1587,7 +1587,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
 	    ValueFullInformation->TitleIndex = 0;
 	    ValueFullInformation->Type = ValueCell->DataType;
 	    ValueFullInformation->NameLength = NameSize;
-	    ValueFullInformation->DataOffset = 
+	    ValueFullInformation->DataOffset =
 	      (ULONG_PTR)ValueFullInformation->Name -
 	      (ULONG_PTR)ValueFullInformation +
 	      ValueFullInformation->NameLength;
@@ -1675,7 +1675,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
   PDATA_CELL NewDataCell;
   PHBIN pBin;
   ULONG DesiredAccess;
-  
+
   PAGED_CODE();
 
   DPRINT("NtSetValueKey(KeyHandle %x  ValueName '%wZ'  Type %d)\n",
@@ -1830,7 +1830,7 @@ NtDeleteValueKey (IN HANDLE KeyHandle,
 {
   PKEY_OBJECT KeyObject;
   NTSTATUS Status;
-  
+
   PAGED_CODE();
 
   /* Verify that the handle is valid and is a registry key */
@@ -1903,7 +1903,7 @@ NtLoadKey2 (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
   ULONG BufferSize;
   ULONG Length;
   NTSTATUS Status;
-  
+
   PAGED_CODE();
 
   DPRINT ("NtLoadKey2() called\n");
@@ -2038,7 +2038,7 @@ NtNotifyChangeKey (IN HANDLE KeyHandle,
 		   IN ULONG Length,
 		   IN BOOLEAN Asynchronous)
 {
-     return NtNotifyChangeMultipleKeys(KeyHandle,          
+     return NtNotifyChangeMultipleKeys(KeyHandle,
                                        0,
                                        NULL,
                                        Event,
@@ -2071,7 +2071,7 @@ NtQueryMultipleValueKey (IN HANDLE KeyHandle,
   NTSTATUS Status;
   PUCHAR DataPtr;
   ULONG i;
-  
+
   PAGED_CODE();
 
   /* Verify that the handle is valid and is a registry key */
@@ -2201,7 +2201,7 @@ NtSaveKey (IN HANDLE KeyHandle,
   PREGISTRY_HIVE TempHive;
   PKEY_OBJECT KeyObject;
   NTSTATUS Status;
-  
+
   PAGED_CODE();
 
   DPRINT ("NtSaveKey() called\n");
@@ -2305,7 +2305,7 @@ NtSetInformationKey (IN HANDLE KeyHandle,
 {
   PKEY_OBJECT KeyObject;
   NTSTATUS Status;
-  
+
   PAGED_CODE();
 
   if (KeyInformationClass != KeyWriteTimeInformation)
@@ -2363,7 +2363,7 @@ NtUnloadKey (IN POBJECT_ATTRIBUTES KeyObjectAttributes)
 {
   PREGISTRY_HIVE RegistryHive;
   NTSTATUS Status;
-  
+
   PAGED_CODE();
 
   DPRINT ("NtUnloadKey() called\n");
@@ -2411,7 +2411,7 @@ NTSTATUS STDCALL
 NtInitializeRegistry (IN BOOLEAN SetUpBoot)
 {
   NTSTATUS Status;
-  
+
   PAGED_CODE();
 
   if (CmiRegistryInitialized == TRUE)

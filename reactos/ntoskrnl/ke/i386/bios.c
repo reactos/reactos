@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/bios.c
  * PURPOSE:         Support for calling the BIOS in v86 mode
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
@@ -37,10 +37,10 @@ Ke386CallBios(UCHAR Int, PKV86M_REGISTERS Regs)
   Ip[0] = 0xCD;              /* int XX */
   Ip[1] = Int;
   Ip[2] = 0x63;              /* arpl ax, ax */
-  Ip[3] = 0xC0;         
+  Ip[3] = 0xC0;
   Ip[4] = 0x90;              /* nop */
   Ip[5] = 0x90;              /* nop */
-  
+
   /*
    * Munge the registers
    */
@@ -51,7 +51,7 @@ Ke386CallBios(UCHAR Int, PKV86M_REGISTERS Regs)
   Regs->Eflags = (1 << 1) | (1 << 17) | (1 << 9);     /* VM, IF */
   Regs->RecoveryAddress = TRAMPOLINE_BASE + 2;
   Regs->RecoveryInstruction[0] = 0x63;       /* arpl ax, ax */
-  Regs->RecoveryInstruction[1] = 0xC0; 
+  Regs->RecoveryInstruction[1] = 0xC0;
   Regs->RecoveryInstruction[2] = 0x90;       /* nop */
   Regs->RecoveryInstruction[3] = 0x90;       /* nop */
   Regs->Flags = KV86M_EMULATE_CLI_STI | KV86M_ALLOW_IO_PORT_ACCESS;
@@ -67,7 +67,7 @@ Ke386CallBios(UCHAR Int, PKV86M_REGISTERS Regs)
    * Copy the return values back to the caller
    */
   memcpy(Regs, &ORegs, sizeof(KV86M_REGISTERS));
-   
+
   return(Status);
 }
 

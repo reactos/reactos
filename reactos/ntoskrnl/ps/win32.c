@@ -91,7 +91,7 @@ PsEstablishWin32Callouts (PW32_PROCESS_CALLBACK W32ProcessCallback,
 
   PspWin32ProcessSize = W32ProcessSize;
   PspWin32ThreadSize = W32ThreadSize;
-  
+
   ExpWindowStationObjectCreate = W32ObjectCallback->WinStaCreate;
   ExpWindowStationObjectParse = W32ObjectCallback->WinStaParse;
   ExpWindowStationObjectDelete = W32ObjectCallback->WinStaDelete;
@@ -194,7 +194,7 @@ STDCALL
    ULONG i, j;
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
    PPFN_TYPE Pages = alloca(sizeof(PFN_TYPE) * (StackSize /PAGE_SIZE));
- 
+
     DPRINT1("PsAllocateCallbackStack\n");
    BoundaryAddressMultiple.QuadPart = 0;
    StackSize = PAGE_ROUND_UP(StackSize);
@@ -244,7 +244,7 @@ STDCALL
    return(KernelStack);
 }
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 NtW32Call(IN ULONG RoutineIndex,
           IN PVOID Argument,
@@ -253,22 +253,22 @@ NtW32Call(IN ULONG RoutineIndex,
           OUT PULONG ResultLength OPTIONAL)
 {
     NTSTATUS CallbackStatus;
-    
+
     DPRINT("NtW32Call(RoutineIndex %d, Argument %X, ArgumentLength %d)\n",
             RoutineIndex, Argument, ArgumentLength);
-    
+
     /* FIXME: SEH!!! */
-  
+
     /* Call kernel function */
     CallbackStatus = KeUserModeCallback(RoutineIndex,
                                         Argument,
                                         ArgumentLength,
                                         Result,
                                         ResultLength);
-    
+
     /* Return the result */
     return(CallbackStatus);
-} 
+}
 
 #ifndef ALEX_CB_REWRITE
 NTSTATUS STDCALL
@@ -289,7 +289,7 @@ NtCallbackReturn (PVOID		Result,
   PKTRAP_FRAME SavedTrapFrame;
   PVOID SavedCallbackStack;
   PVOID SavedExceptionStack;
-  
+
   PAGED_CODE();
 
   Thread = PsGetCurrentThread();
@@ -303,7 +303,7 @@ NtCallbackReturn (PVOID		Result,
   /*
    * Get the values that NtW32Call left on the inactive stack for us.
    */
-  State = (PNTW32CALL_SAVED_STATE)OldStack[0];  
+  State = (PNTW32CALL_SAVED_STATE)OldStack[0];
   CallbackStatus = State->CallbackStatus;
   CallerResultLength = State->CallerResultLength;
   CallerResult = State->CallerResult;

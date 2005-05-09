@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/catch.c
  * PURPOSE:         Exception handling
- * 
+ *
  * PROGRAMMERS:     Anich Gregor
  *                  David Welch (welch@mcmail.com)
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
@@ -57,18 +57,18 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
     /* Increase number of Exception Dispatches */
     KeGetCurrentPrcb()->KeExceptionDispatchCount++;
 
-    if (!Context)    
+    if (!Context)
     {
         /* Assume Full context */
         TContext.ContextFlags = CONTEXT_FULL;
-        
+
         /* Check the mode */
-        if (PreviousMode == UserMode) 
+        if (PreviousMode == UserMode)
         {
             /* Add Debugger Registers if this is User Mode */
             TContext.ContextFlags = TContext.ContextFlags | CONTEXT_DEBUGGER;
         }
-  
+
         /* Convert the Trapframe into a Context */
         KeTrapFrameToContext(Tf, &TContext);
 
@@ -77,24 +77,24 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
     }
 
     /* Break into Debugger */
-    Action = KdpEnterDebuggerException(ExceptionRecord, 
-                                       PreviousMode, 
-                                       Context, 
-                                       Tf, 
+    Action = KdpEnterDebuggerException(ExceptionRecord,
+                                       PreviousMode,
+                                       Context,
+                                       Tf,
                                        TRUE,
                                        TRUE);
 
     /* If the debugger said continue, then continue */
     if (Action == kdContinue) return;
-    
+
     /* If the Debugger couldn't handle it... */
-    if (Action != kdDoNotHandleException) 
-    {   
+    if (Action != kdDoNotHandleException)
+    {
         /* See what kind of Exception this is */
-        if (PreviousMode == UserMode) 
-        {       
+        if (PreviousMode == UserMode)
+        {
             /* User mode exception, search the frames if we have to */
-            if (SearchFrames) 
+            if (SearchFrames)
             {
                 PULONG Stack;
                 ULONG CDest;
@@ -103,10 +103,10 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
                 NTSTATUS StatusOfCopy;
 
                 /* Enter Debugger if available */
-                Action = KdpEnterDebuggerException(ExceptionRecord, 
+                Action = KdpEnterDebuggerException(ExceptionRecord,
                                                    PreviousMode,
-                                                   Context, 
-                                                   Tf, 
+                                                   Context,
+                                                   Tf,
                                                    TRUE,
                                                    FALSE);
 
@@ -116,7 +116,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
                 /* FIXME: Forward exception to user mode debugger */
 
                 /* FIXME: Check user mode stack for enough space */
-        
+
                 /* Let usermode try and handle the exception. Setup Stack */
                 Stack = (PULONG)temp_space;
                 CDest = 3 + (ROUND_UP(sizeof(EXCEPTION_RECORD), 4) / 4);
@@ -128,20 +128,20 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
                 Stack[2] = (ULONG)&pNewUserStack[CDest];
                 memcpy(&Stack[3], ExceptionRecord, sizeof(EXCEPTION_RECORD));
                 memcpy(&Stack[CDest], Context, sizeof(CONTEXT));
-                
+
                 /* Copy Stack */
                 StatusOfCopy = MmCopyToCaller(pNewUserStack,
                                               temp_space,
                                               (12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT)));
-                
+
                 /* Check for success */
-                if (NT_SUCCESS(StatusOfCopy)) 
+                if (NT_SUCCESS(StatusOfCopy))
                 {
                     /* Set new Stack Pointer */
                     Tf->Esp = (ULONG)pNewUserStack;
-                } 
-                else 
-                { 
+                }
+                else
+                {
                     /*
                      * Now it really hit the ventilation device. Sorry,
                      * can do nothing but kill the sucker.
@@ -159,10 +159,10 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
             /* FIXME: Forward the exception to the process exception port */
 
             /* Enter KDB if available */
-            Action = KdpEnterDebuggerException(ExceptionRecord, 
+            Action = KdpEnterDebuggerException(ExceptionRecord,
                                                 PreviousMode,
-                                                Context, 
-                                                Tf, 
+                                                Context,
+                                                Tf,
                                                 FALSE,
                                                 FALSE);
 
@@ -172,16 +172,16 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
             /* Terminate the offending thread */
             DPRINT1("Unhandled UserMode exception, terminating thread\n");
             ZwTerminateThread(NtCurrentThread(), ExceptionRecord->ExceptionCode);
-        } 
-        else 
+        }
+        else
         {
-            /* This is Kernel Mode */            
+            /* This is Kernel Mode */
 
             /* Enter KDB if available */
-            Action = KdpEnterDebuggerException(ExceptionRecord, 
+            Action = KdpEnterDebuggerException(ExceptionRecord,
                                                 PreviousMode,
-                                                Context, 
-                                                Tf, 
+                                                Context,
+                                                Tf,
                                                 TRUE,
                                                 FALSE);
 
@@ -191,26 +191,26 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
             /* Dispatch the Exception */
             Value = RtlpDispatchException (ExceptionRecord, Context);
             DPRINT("RtlpDispatchException() returned with 0x%X\n", Value);
-        
+
             /* If RtlpDispatchException() did not handle the exception then bugcheck */
             if (Value != ExceptionContinueExecution ||
-                0 != (ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE))    
+                0 != (ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE))
             {
                 DPRINT("ExceptionRecord->ExceptionAddress = 0x%x\n", ExceptionRecord->ExceptionAddress);
 
                 /* Enter KDB if available */
-                Action = KdpEnterDebuggerException(ExceptionRecord, 
+                Action = KdpEnterDebuggerException(ExceptionRecord,
                                                    PreviousMode,
-                                                   Context, 
-                                                   Tf, 
+                                                   Context,
+                                                   Tf,
                                                    FALSE,
                                                    FALSE);
 
                 /* Exit if we're continuing */
                 if (Action == kdContinue) return;
 
-                KEBUGCHECKWITHTF(KMODE_EXCEPTION_NOT_HANDLED, 
-                                 ExceptionRecord->ExceptionCode, 
+                KEBUGCHECKWITHTF(KMODE_EXCEPTION_NOT_HANDLED,
+                                 ExceptionRecord->ExceptionCode,
                                  (ULONG)ExceptionRecord->ExceptionAddress,
                                  ExceptionRecord->ExceptionInformation[0],
                                  ExceptionRecord->ExceptionInformation[1],

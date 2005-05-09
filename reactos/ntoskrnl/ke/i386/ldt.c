@@ -23,7 +23,7 @@ static KSPIN_LOCK LdtLock;
 BOOL PspIsDescriptorValid(PLDT_ENTRY ldt_entry)
 {
   ULONG Base, SegLimit;
-  /* 
+  /*
      Allow invalid descriptors.
   */
   if(!ldt_entry->HighWord.Bits.Type &&
@@ -121,12 +121,12 @@ NtSetLdtEntries (ULONG Selector1,
                      ((PULONG) LdtDescriptor)[1]);
 
 #if defined(__GNUC__)
-    __asm__("lldtw %%ax" 
+    __asm__("lldtw %%ax"
             : /* no output */
             : "a" (LDT_SELECTOR));
 #elif defined(_MSC_VER)
     __asm mov ax, LDT_SELECTOR
-    __asm lldt ax 
+    __asm lldt ax
 #else
 #error Unknown compiler for inline assembler
 #endif
@@ -167,7 +167,7 @@ Ki386InitializeLdt(VOID)
    * Set up an a descriptor for the LDT
    */
   base = length = 0;
-  
+
   Gdt[(LDT_SELECTOR / 2) + 0] = (length & 0xFFFF);
   Gdt[(LDT_SELECTOR / 2) + 1] = (base & 0xFFFF);
   Gdt[(LDT_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8200;

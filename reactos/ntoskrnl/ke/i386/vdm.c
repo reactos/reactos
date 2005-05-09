@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/vdm.c
  * PURPOSE:         Virtual DOS machine support
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
@@ -67,7 +67,7 @@ NTSTATUS STDCALL NtVdmControl(ULONG ControlCode,
       /* FIXME: This should use ->VdmObjects */
       KeGetCurrentProcess()->Unused = 1;
       Ki386RetToV86Mode(&V86Registers, &V86Registers);
-      
+
       /* FIXME: This should use ->VdmObjects */
       KeGetCurrentProcess()->Unused = 0;
 

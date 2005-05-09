@@ -4,7 +4,7 @@
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/ob/namespc.c
  * PURPOSE:        Manages the system namespace
- * 
+ *
  * PROGRAMMERS:    David Welch (welch@mcmail.com)
  */
 
@@ -55,7 +55,7 @@ ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
    UNICODE_STRING RemainingPath;
    OBJECT_ATTRIBUTES ObjectAttributes;
    NTSTATUS Status;
-   
+
    PAGED_CODE();
 
    InitializeObjectAttributes(&ObjectAttributes,
@@ -91,10 +91,10 @@ DPRINT("Object %p\n", Object);
 /**********************************************************************
  * NAME							EXPORTED
  *	ObOpenObjectByName
- *	
+ *
  * DESCRIPTION
  *	Obtain a handle to an existing object.
- *	
+ *
  * ARGUMENTS
  *	ObjectAttributes
  *		...
@@ -128,7 +128,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
    UNICODE_STRING RemainingPath;
    PVOID Object = NULL;
    NTSTATUS Status;
-   
+
    PAGED_CODE();
 
    DPRINT("ObOpenObjectByName(...)\n");
@@ -177,23 +177,23 @@ ObQueryDeviceMapInformation(PEPROCESS Process,
 			    PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo)
 {
 	//KIRQL OldIrql ;
-	
+
 	/*
 	 * FIXME: This is an ugly hack for now, to always return the System Device Map
 	 * instead of returning the Process Device Map. Not important yet since we don't use it
 	 */
-	   
+
 	 /* FIXME: Acquire the DeviceMap Spinlock */
 	 // KeAcquireSpinLock(DeviceMap->Lock, &OldIrql);
-	 
+
 	 /* Make a copy */
 	 DeviceMapInfo->Query.DriveMap = ObSystemDeviceMap->DriveMap;
 	 RtlMoveMemory(DeviceMapInfo->Query.DriveType, ObSystemDeviceMap->DriveType, sizeof(ObSystemDeviceMap->DriveType));
-	 
+
 	 /* FIXME: Release the DeviceMap Spinlock */
 	 // KeReleasepinLock(DeviceMap->Lock, OldIrql);
-}	 
-	 
+}
+
 VOID
 ObpAddEntryDirectory(PDIRECTORY_OBJECT Parent,
 		     POBJECT_HEADER Header,
@@ -248,7 +248,7 @@ ObpFindEntryDirectory(PDIRECTORY_OBJECT DirectoryObject,
    POBJECT_HEADER current_obj;
 
    DPRINT("ObFindEntryDirectory(dir %x, name %S)\n",DirectoryObject, Name);
-   
+
    if (Name[0]==0)
      {
 	return(DirectoryObject);
@@ -388,7 +388,7 @@ ObInit(VOID)
 
   /* create 'directory' object type */
   ObDirectoryType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
-  
+
   ObDirectoryType->Tag = TAG('D', 'I', 'R', 'T');
   ObDirectoryType->TotalObjects = 0;
   ObDirectoryType->TotalHandles = 0;
@@ -413,7 +413,7 @@ ObInit(VOID)
 
   /* create 'type' object type*/
   ObTypeObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
-  
+
   ObTypeObjectType->Tag = TAG('T', 'y', 'p', 'T');
   ObTypeObjectType->TotalObjects = 0;
   ObTypeObjectType->TotalHandles = 0;
@@ -492,7 +492,7 @@ ObInit(VOID)
 
   /* Create 'symbolic link' object type */
   ObInitSymbolicLinkImplementation();
-  
+
   /* FIXME: Hack Hack! */
   ObSystemDeviceMap = ExAllocatePoolWithTag(NonPagedPool, sizeof(*ObSystemDeviceMap), TAG('O', 'b', 'D', 'm'));
   RtlZeroMemory(ObSystemDeviceMap, sizeof(*ObSystemDeviceMap));

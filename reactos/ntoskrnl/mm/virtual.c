@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/virtual.c
  * PURPOSE:         Implementing operations on virtual memory.
- * 
+ *
  * PROGRAMMERS:     David Welch
  */
 
@@ -189,7 +189,7 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
 		     Info->AllocationProtect = MemoryArea->Attributes;
 	             Info->BaseAddress = MemoryArea->StartingAddress;
 	             Info->AllocationBase = MemoryArea->StartingAddress;
-	             Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress - 
+	             Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress -
 	                                (ULONG_PTR)MemoryArea->StartingAddress;
                      Status = STATUS_SUCCESS;
                      *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
@@ -201,7 +201,7 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
 		     Info->AllocationProtect = MemoryArea->Attributes;
 	             Info->BaseAddress = MemoryArea->StartingAddress;
 	             Info->AllocationBase = MemoryArea->StartingAddress;
-	             Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress - 
+	             Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress -
 	                                (ULONG_PTR)MemoryArea->StartingAddress;
                      Status = STATUS_SUCCESS;
                      *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
@@ -222,7 +222,7 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
 		     Info->AllocationProtect = MemoryArea->Attributes;
 	             Info->BaseAddress = MemoryArea->StartingAddress;
 	             Info->AllocationBase = MemoryArea->StartingAddress;
-	             Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress - 
+	             Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress -
 	                                (ULONG_PTR)MemoryArea->StartingAddress;
                      Status = STATUS_SUCCESS;
                      *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
@@ -243,7 +243,7 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
 		     Info->AllocationProtect = MemoryArea->Attributes;
 	             Info->BaseAddress = MemoryArea->StartingAddress;
 	             Info->AllocationBase = MemoryArea->StartingAddress;
-	             Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress - 
+	             Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress -
 	                                (ULONG_PTR)MemoryArea->StartingAddress;
                      Status = STATUS_SUCCESS;
                      *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
@@ -468,11 +468,11 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
    KPROCESSOR_MODE PreviousMode;
    PEPROCESS Process, CurrentProcess;
    NTSTATUS Status = STATUS_SUCCESS;
-   
+
    PAGED_CODE();
-   
+
    PreviousMode = ExGetPreviousMode();
-   
+
    if(PreviousMode != KernelMode)
    {
      _SEH_TRY
@@ -492,7 +492,7 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
        Status = _SEH_GetExceptionCode();
      }
      _SEH_END;
-     
+
      if(!NT_SUCCESS(Status))
      {
        return Status;
@@ -549,7 +549,7 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
         Status = _SEH_GetExceptionCode();
       }
       _SEH_END;
-      
+
       if(NT_SUCCESS(Status))
       {
         KeAttachProcess(&Process->Pcb);
@@ -593,7 +593,7 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
      }
      _SEH_END;
    }
-   
+
    return(Status);
 }
 

@@ -1,7 +1,7 @@
 /* Interface between the opcode library and its callers.
 
    Copyright 2001, 2002 Free Software Foundation, Inc.
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2, or (at your option)
@@ -16,7 +16,7 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.
-   
+
    Written by Cygnus Support, 1993.
 
    The opcode library (libopcodes.a) provides instruction decoders for
@@ -49,7 +49,7 @@ enum dis_insn_type {
   dis_dref2			/* Two data references in instruction */
 };
 
-/* This struct is passed into the instruction decoding routine, 
+/* This struct is passed into the instruction decoding routine,
    and is passed back out into each callback.  The various fields are used
    for conveying information from your main routine into your callbacks,
    for passing information into the instruction decoders (such as the
@@ -153,7 +153,7 @@ typedef struct disassemble_info {
   int bytes_per_chunk;
   enum bfd_endian display_endian;
 
-  /* Number of octets per incremented target address 
+  /* Number of octets per incremented target address
      Normally one, but some DSPs have byte sizes of 16 or 32 bits.  */
   unsigned int octets_per_byte;
 
@@ -231,7 +231,7 @@ extern int print_insn_pj		PARAMS ((bfd_vma, disassemble_info*));
 extern int print_insn_big_powerpc	PARAMS ((bfd_vma, disassemble_info*));
 extern int print_insn_little_powerpc	PARAMS ((bfd_vma, disassemble_info*));
 extern int print_insn_rs6000		PARAMS ((bfd_vma, disassemble_info*));
-extern int print_insn_s390              PARAMS ((bfd_vma, disassemble_info*)); 
+extern int print_insn_s390              PARAMS ((bfd_vma, disassemble_info*));
 extern int print_insn_sh		PARAMS ((bfd_vma, disassemble_info*));
 extern int print_insn_tic30		PARAMS ((bfd_vma, disassemble_info*));
 extern int print_insn_tic4x		PARAMS ((bfd_vma, disassemble_info*));

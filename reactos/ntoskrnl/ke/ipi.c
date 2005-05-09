@@ -6,7 +6,7 @@
  * PURPOSE:         IPI Routines (Inter-Processor Interrupts). NT5+
  *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
- *                  Hartmut Birr    
+ *                  Hartmut Birr
  */
 
 /* INCLUDES *****************************************************************/
@@ -21,7 +21,7 @@ KSPIN_LOCK KiIpiLock;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID 
+VOID
 KiIpiSendRequest(ULONG TargetSet, ULONG IpiRequest)
 {
    ULONG i;
@@ -46,10 +46,10 @@ STDCALL
 KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
                     IN PKEXCEPTION_FRAME ExceptionFrame)
 {
-#ifdef DBG	
+#ifdef DBG
    LARGE_INTEGER StartTime, CurrentTime, Frequency;
    ULONG Count = 5;
-#endif   
+#endif
    PKPRCB Prcb;
 
    ASSERT(KeGetCurrentIrql() == IPI_LEVEL);
@@ -74,38 +74,38 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
       InterlockedDecrementUL(&Prcb->SignalDone->CurrentPacket[1]);
       if (InterlockedCompareExchangeUL(&Prcb->SignalDone->CurrentPacket[2], 0, 0))
       {
-#ifdef DBG      	
+#ifdef DBG
          StartTime = KeQueryPerformanceCounter(&Frequency);
-#endif         
+#endif
          while (0 != InterlockedCompareExchangeUL(&Prcb->SignalDone->CurrentPacket[1], 0, 0))
 	 {
-#ifdef DBG	 	
+#ifdef DBG
             CurrentTime = KeQueryPerformanceCounter(NULL);
 	    if (CurrentTime.QuadPart > StartTime.QuadPart + Count * Frequency.QuadPart)
 	    {
 	       DbgPrint("(%s:%d) CPU%d, waiting longer than %d seconds to start the ipi routine\n", __FILE__,__LINE__, KeGetCurrentProcessorNumber(), Count);
 	       KEBUGCHECK(0);
 	    }
-#endif	 
+#endif
          }
       }
       ((VOID STDCALL(*)(PVOID))(Prcb->SignalDone->WorkerRoutine))(Prcb->SignalDone->CurrentPacket[0]);
       Ke386TestAndClearBit(KeGetCurrentProcessorNumber(), &Prcb->SignalDone->TargetSet);
       if (InterlockedCompareExchangeUL(&Prcb->SignalDone->CurrentPacket[2], 0, 0))
       {
-#ifdef DBG      	
+#ifdef DBG
          StartTime = KeQueryPerformanceCounter(&Frequency);
-#endif         
+#endif
          while (0 != InterlockedCompareExchangeUL(&Prcb->SignalDone->TargetSet, 0, 0))
          {
-#ifdef DBG         	
+#ifdef DBG
 	    CurrentTime = KeQueryPerformanceCounter(NULL);
 	    if (CurrentTime.QuadPart > StartTime.QuadPart + Count * Frequency.QuadPart)
 	    {
 	       DbgPrint("(%s:%d) CPU%d, waiting longer than %d seconds after executing the ipi routine\n", __FILE__,__LINE__, KeGetCurrentProcessorNumber(), Count);
 	       KEBUGCHECK(0);
 	    }
-#endif	 
+#endif
          }
       }
       InterlockedExchangePointer(&Prcb->SignalDone, NULL);
@@ -170,11 +170,11 @@ KeIpiGenericCall(VOID (STDCALL *Function)(PVOID), PVOID Argument)
    TargetSet = (1 << KeNumberProcessors) - 1;
 
    KiIpiSendPacket(TargetSet, Function, Argument, KeNumberProcessors, TRUE);
-   
+
    KiReleaseSpinLock(&KiIpiLock);
-   
+
    KeLowerIrql(oldIrql);
-   
+
    DPRINT("KeIpiGenericCall on CPU%d done\n", KeGetCurrentProcessorNumber());
 }
 

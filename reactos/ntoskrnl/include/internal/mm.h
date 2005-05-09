@@ -301,7 +301,7 @@ extern MM_STATS MmStats;
 typedef struct _MM_PAGEOP
 {
   /* Type of operation. */
-  ULONG OpType; 
+  ULONG OpType;
   /* Number of threads interested in this operation. */
   ULONG ReferenceCount;
   /* Event that will be set when the operation is completed. */
@@ -315,7 +315,7 @@ typedef struct _MM_PAGEOP
   ULONG Hash;
   struct _MM_PAGEOP* Next;
   struct _ETHREAD* Thread;
-  /* 
+  /*
    * These fields are used to identify the operation if it is against a
    * virtual memory area.
    */
@@ -361,7 +361,7 @@ typedef struct _MM_REGION
    LIST_ENTRY RegionListEntry;
 } MM_REGION, *PMM_REGION;
 
-typedef VOID (*PMM_FREE_PAGE_FUNC)(PVOID Context, PMEMORY_AREA MemoryArea, 
+typedef VOID (*PMM_FREE_PAGE_FUNC)(PVOID Context, PMEMORY_AREA MemoryArea,
                                    PVOID Address, PFN_TYPE Page,
                                    SWAPENTRY SwapEntry, BOOLEAN Dirty);
 
@@ -404,12 +404,12 @@ MmCreateMemoryArea(
 
 PMEMORY_AREA STDCALL
 MmLocateMemoryAreaByAddress(
-   PMADDRESS_SPACE AddressSpace, 
+   PMADDRESS_SPACE AddressSpace,
    PVOID Address);
 
 ULONG_PTR STDCALL
 MmFindGapAtAddress(
-   PMADDRESS_SPACE AddressSpace, 
+   PMADDRESS_SPACE AddressSpace,
    PVOID Address);
 
 NTSTATUS STDCALL
@@ -431,7 +431,7 @@ MmDumpMemoryAreas(PMADDRESS_SPACE AddressSpace);
 
 PMEMORY_AREA STDCALL
 MmLocateMemoryAreaByRegion(
-   PMADDRESS_SPACE AddressSpace, 
+   PMADDRESS_SPACE AddressSpace,
    PVOID Address,
    ULONG_PTR Length);
 
@@ -476,7 +476,7 @@ VOID MmBuildMdlFromPages(PMDL Mdl, PULONG Pages);
 
 VOID MiShutdownMemoryManager(VOID);
 
-VOID MmInit1(ULONG_PTR FirstKernelPhysAddress, 
+VOID MmInit1(ULONG_PTR FirstKernelPhysAddress,
 	     ULONG_PTR LastKernelPhysAddress,
 	     ULONG_PTR LastKernelAddress,
 	     PADDRESS_RANGE BIOSMemoryMap,
@@ -507,7 +507,7 @@ BOOLEAN MmReserveSwapPages(ULONG Nr);
 
 NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page);
 
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 MmDumpToPagingFile(ULONG BugCode,
 		   ULONG BugCodeParameter1,
 		   ULONG BugCodeParameter2,
@@ -525,7 +525,7 @@ NTSTATUS
 STDCALL
 MmCreateProcessAddressSpace(IN struct _EPROCESS* Process,
                             IN PSECTION_OBJECT Section OPTIONAL);
-                            
+
 NTSTATUS
 STDCALL
 MmCreatePeb(PEPROCESS Process);
@@ -535,7 +535,7 @@ STDCALL
 MmCreateTeb(PEPROCESS Process,
             PCLIENT_ID ClientId,
             PINITIAL_TEB InitialTeb);
-            
+
 VOID
 STDCALL
 MmDeleteTeb(PEPROCESS Process,
@@ -562,7 +562,7 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
 /* anonmem.c *****************************************************************/
 
 NTSTATUS MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
-					MEMORY_AREA* MemoryArea, 
+					MEMORY_AREA* MemoryArea,
 					PVOID Address,
 					BOOLEAN Locked);
 
@@ -632,12 +632,12 @@ MmCreateKernelStack(BOOLEAN GuiStack);
 
 VOID
 STDCALL
-MmDeleteKernelStack(PVOID Stack, 
+MmDeleteKernelStack(PVOID Stack,
                     BOOLEAN GuiStack);
-                    
+
 /* balace.c ******************************************************************/
 
-VOID MmInitializeMemoryConsumer(ULONG Consumer, 
+VOID MmInitializeMemoryConsumer(ULONG Consumer,
 			        NTSTATUS (*Trim)(ULONG Target, ULONG Priority, PULONG NrFreed));
 
 VOID MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages);
@@ -658,7 +658,7 @@ struct _MM_RMAP_ENTRY* MmGetRmapListHeadPage(PFN_TYPE Page);
 
 VOID MmInsertRmap(PFN_TYPE Page, PEPROCESS Process, PVOID Address);
 
-VOID MmDeleteAllRmaps(PFN_TYPE Page, PVOID Context, 
+VOID MmDeleteAllRmaps(PFN_TYPE Page, PVOID Context,
 		      VOID (*DeleteMapping)(PVOID Context, PEPROCESS Process, PVOID Address));
 
 VOID MmDeleteRmap(PFN_TYPE Page, PEPROCESS Process, PVOID Address);
@@ -712,7 +712,7 @@ PFN_TYPE MmChangeHyperspaceMapping(PVOID Address, PFN_TYPE Page);
 
 PFN_TYPE MmDeleteHyperspaceMapping(PVOID Address);
 
-NTSTATUS MmCreateVirtualMappingForKernel(PVOID Address, 
+NTSTATUS MmCreateVirtualMappingForKernel(PVOID Address,
 					 ULONG flProtect,
 					 PPFN_TYPE Pages,
 					 ULONG PageCount);
@@ -720,13 +720,13 @@ NTSTATUS MmCreateVirtualMappingForKernel(PVOID Address,
 NTSTATUS MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked);
 
 NTSTATUS MmCreateVirtualMapping(struct _EPROCESS* Process,
-				PVOID Address, 
+				PVOID Address,
 				ULONG flProtect,
 				PPFN_TYPE Pages,
 				ULONG PageCount);
 
 NTSTATUS MmCreateVirtualMappingUnsafe(struct _EPROCESS* Process,
-				      PVOID Address, 
+				      PVOID Address,
 				      ULONG flProtect,
 				      PPFN_TYPE Pages,
 				      ULONG PageCount);
@@ -737,7 +737,7 @@ VOID MmSetPageProtect(struct _EPROCESS* Process,
 		      PVOID Address,
 		      ULONG flProtect);
 
-BOOLEAN MmIsPagePresent(struct _EPROCESS* Process, 
+BOOLEAN MmIsPagePresent(struct _EPROCESS* Process,
 			PVOID Address);
 
 VOID MmInitGlobalKernelPageDirectory(VOID);
@@ -793,10 +793,10 @@ VOID MmDeletePageTable(struct _EPROCESS* Process, PVOID Address);
 
 PFN_TYPE MmGetPfnForProcess(struct _EPROCESS* Process, PVOID Address);
 
-NTSTATUS 
+NTSTATUS
 STDCALL
-MmCopyMmInfo(struct _EPROCESS* Src, 
-             struct _EPROCESS* Dest, 
+MmCopyMmInfo(struct _EPROCESS* Src,
+             struct _EPROCESS* Dest,
              PPHYSICAL_ADDRESS DirectoryTableBase);
 
 NTSTATUS MmReleaseMmInfo(struct _EPROCESS* Process);
@@ -804,7 +804,7 @@ NTSTATUS MmReleaseMmInfo(struct _EPROCESS* Process);
 NTSTATUS Mmi386ReleaseMmInfo(struct _EPROCESS* Process);
 
 VOID MmDeleteVirtualMapping(struct _EPROCESS* Process,
-			    PVOID Address, 
+			    PVOID Address,
 			    BOOL FreePage,
 			    BOOL* WasDirty,
 			    PPFN_TYPE Page);
@@ -827,9 +827,9 @@ NTSTATUS MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages);
 
 /* region.c ************************************************************/
 
-NTSTATUS MmAlterRegion(PMADDRESS_SPACE AddressSpace, PVOID BaseAddress, 
-	               PLIST_ENTRY RegionListHead, PVOID StartAddress, ULONG Length, 
-	               ULONG NewType, ULONG NewProtect, 
+NTSTATUS MmAlterRegion(PMADDRESS_SPACE AddressSpace, PVOID BaseAddress,
+	               PLIST_ENTRY RegionListHead, PVOID StartAddress, ULONG Length,
+	               ULONG NewType, ULONG NewProtect,
 	               PMM_ALTER_REGION_FUNC AlterFunc);
 
 VOID MmInitialiseRegion(PLIST_ENTRY RegionListHead, ULONG Length, ULONG Type,
@@ -840,7 +840,7 @@ PMM_REGION MmFindRegion(PVOID BaseAddress, PLIST_ENTRY RegionListHead, PVOID Add
 
 /* section.c *****************************************************************/
 
-PVOID STDCALL 
+PVOID STDCALL
 MmAllocateSection (IN ULONG Length, PVOID BaseAddress);
 
 NTSTATUS STDCALL
@@ -849,7 +849,7 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
 		   PMEMORY_BASIC_INFORMATION Info,
 		   PULONG ResultLength);
 
-NTSTATUS 
+NTSTATUS
 MmProtectSectionView(PMADDRESS_SPACE AddressSpace,
 		     PMEMORY_AREA MemoryArea,
 		     PVOID BaseAddress,
@@ -857,7 +857,7 @@ MmProtectSectionView(PMADDRESS_SPACE AddressSpace,
 		     ULONG Protect,
 		     PULONG OldProtect);
 
-NTSTATUS 
+NTSTATUS
 MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
 		       PMEMORY_AREA MArea,
 		       PVOID Address,
@@ -879,24 +879,24 @@ MmCreateSection (OUT	PSECTION_OBJECT		* SectionObject,
 		 IN	HANDLE			FileHandle		OPTIONAL,
 		 IN	PFILE_OBJECT		File			OPTIONAL);
 
-NTSTATUS 
+NTSTATUS
 MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
-			     MEMORY_AREA* MemoryArea, 
+			     MEMORY_AREA* MemoryArea,
 			     PVOID Address,
 			     BOOLEAN Locked);
 
-NTSTATUS 
+NTSTATUS
 MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
 		       PMEMORY_AREA MemoryArea,
 		       PVOID Address,
 		       struct _MM_PAGEOP* PageOp);
 
-NTSTATUS 
+NTSTATUS
 MmCreatePhysicalMemorySection(VOID);
 
-NTSTATUS 
+NTSTATUS
 MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
-			 MEMORY_AREA* MemoryArea, 
+			 MEMORY_AREA* MemoryArea,
 			 PVOID Address,
 			 BOOLEAN Locked);
 

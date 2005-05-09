@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/v86m.c
  * PURPOSE:         Support for v86 mode
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
@@ -29,7 +29,7 @@ ULONG
 KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 {
   PUCHAR ip;
-  PUSHORT sp; 
+  PUSHORT sp;
   PULONG dsp;
   BOOL BigDataPrefix = FALSE;
   BOOL BigAddressPrefix = FALSE;
@@ -43,7 +43,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 
   DPRINT("KeV86GPF handling %x at %x:%x ss:sp %x:%x Flags %x\n",
 	 ip[0], Tf->Cs, Tf->Eip, Tf->Ss, Tf->Esp, VTf->regs->Flags);
- 
+
   while (!Exit)
     {
       switch (ip[i])
@@ -84,7 +84,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	    }
 	  Exit = TRUE;
 	  break;
-	  
+
 	  /* cli */
 	case 0xFA:
 	  if (BigDataPrefix || BigAddressPrefix || RepPrefix)
@@ -100,7 +100,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	    }
 	  Exit = TRUE;
 	  break;
-	  
+
 	  /* pushf */
 	case 0x9C:
 	  if (RepPrefix)
@@ -144,7 +144,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	    }
 	  Exit = TRUE;
 	  break;
-	  
+
 	  /* popf */
 	case 0x9D:
 	  if (RepPrefix)
@@ -166,7 +166,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 		  else
 		    {
 		      VTf->regs->Vif = 0;
-		    }		  
+		    }
 		  Tf->Eflags = Tf->Eflags | INTERRUPT_FLAG;
 		  Tf->Esp = Tf->Esp + 2;
 		}
@@ -227,14 +227,14 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
 	    {
 	      DPRINT("outb %d, %x\n", (ULONG)ip[i + 1], Tf->Eax & 0xFF);
-	      WRITE_PORT_UCHAR((PUCHAR)(ULONG)ip[i + 1], 
+	      WRITE_PORT_UCHAR((PUCHAR)(ULONG)ip[i + 1],
 			       (UCHAR)(Tf->Eax & 0xFF));
 	      Tf->Eip = Tf->Eip + 2;
 	      return(0);
 	    }
 	  Exit = TRUE;
 	  break;
-	  
+
 	  /* out imm8, ax */
 	case 0xE7:
 	  if (RepPrefix)
@@ -276,7 +276,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	    }
 	  Exit = TRUE;
 	  break;
-	  
+
 	  /* out dx, ax */
 	case 0xEF:
 	  if (RepPrefix)
@@ -289,13 +289,13 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	      if (!BigDataPrefix)
 		{
 		  DPRINT("outw %d, %x\n", Tf->Edx & 0xFFFF, Tf->Eax & 0xFFFF);
-		  WRITE_PORT_USHORT((PUSHORT)(Tf->Edx & 0xFFFF), 
+		  WRITE_PORT_USHORT((PUSHORT)(Tf->Edx & 0xFFFF),
 				    (USHORT)(Tf->Eax & 0xFFFF));
 		}
 	      else
 		{
 		  DPRINT("outl %d, %x\n", Tf->Edx & 0xFFFF, Tf->Eax);
-		  WRITE_PORT_ULONG((PULONG)(Tf->Edx & 0xFFFF), 
+		  WRITE_PORT_ULONG((PULONG)(Tf->Edx & 0xFFFF),
 				   Tf->Eax);
 		}
 	      Tf->Eip = Tf->Eip + 1;
@@ -303,7 +303,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	    }
 	  Exit = TRUE;
 	  break;
-	  
+
 	  /* in al, imm8 */
 	case 0xE4:
 	  if (RepPrefix)
@@ -314,7 +314,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
 	    {
 	      UCHAR v;
-	      
+
 	      v = READ_PORT_UCHAR((PUCHAR)(ULONG)ip[1]);
 	      DPRINT("inb %d\t%X\n", (ULONG)ip[1], v);
 	      Tf->Eax = Tf->Eax & (~0xFF);
@@ -324,7 +324,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	    }
 	  Exit = TRUE;
 	  break;
-	  
+
 	  /* in ax, imm8 */
 	case 0xE5:
 	  if (RepPrefix)
@@ -333,7 +333,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	      return(1);
 	    }
 	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
-	    {	     
+	    {
 	      if (!BigDataPrefix)
 		{
 		  USHORT v;
@@ -365,7 +365,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
 	    {
 	      UCHAR v;
-	      
+
 	      v = READ_PORT_UCHAR((PUCHAR)(Tf->Edx & 0xFFFF));
 	      DPRINT("inb %d\t%X\n", Tf->Edx & 0xFFFF, v);
 	      Tf->Eax = Tf->Eax & (~0xFF);
@@ -375,7 +375,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	    }
 	  Exit = TRUE;
 	  break;
-	  
+
 	  /* in ax, dx */
 	case 0xED:
 	  if (RepPrefix)
@@ -416,7 +416,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	      PUCHAR Port;
 	      PUCHAR Buffer;
 	      ULONG Offset;
-	      
+
 	      Count = 1;
 	      if (RepPrefix)
 		{
@@ -445,7 +445,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 		    {
 		      Buffer--;
 		    }
-		}				
+		}
 	      Tf->Eip++;
 	      return(0);
 	    }
@@ -461,7 +461,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	      PUSHORT BufferS = NULL;
 	      PULONG BufferL = NULL;
 	      ULONG Offset;
-	      
+
 	      Count = 1;
 	      if (RepPrefix)
 		{
@@ -518,13 +518,13 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 			  BufferS--;
 			}
 		    }
-		}				
+		}
 	      Tf->Eip++;
 	      return(0);
 	    }
 	  Exit = TRUE;
 	  break;
-      
+
       /* insb */
 	case 0x6C:
 	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
@@ -533,7 +533,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	      PUCHAR Port;
 	      PUCHAR Buffer;
 	      ULONG Offset;
-	      
+
 	      Count = 1;
 	      if (RepPrefix)
 		{
@@ -562,7 +562,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 		    {
 		      Buffer--;
 		    }
-		}				
+		}
 	      Tf->Eip++;
 	      return(0);
 	    }
@@ -578,7 +578,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	      PUSHORT BufferS = NULL;
 	      PULONG BufferL = NULL;
 	      ULONG Offset;
-	      
+
 	      Count = 1;
 	      if (RepPrefix)
 		{
@@ -635,7 +635,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 			  BufferS--;
 			}
 		    }
-		}				
+		}
 	      Tf->Eip++;
 	      return(0);
 	    }
@@ -647,13 +647,13 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	  {
 	    unsigned int inum;
 	    unsigned int entry;
-	    
+
 	    inum = ip[1];
 	    entry = ((unsigned int *)0)[inum];
-	    
+
 	    Tf->Esp = Tf->Esp - 6;
 	    sp = sp - 3;
-	    
+
 	    sp[0] = (USHORT)((Tf->Eip & 0xFFFF) + 2);
 	    sp[1] = (USHORT)(Tf->Cs & 0xFFFF);
 	    sp[2] = (USHORT)(Tf->Eflags & 0xFFFF);
@@ -665,16 +665,16 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	    Tf->Eip = entry & 0xFFFF;
 	    Tf->Cs = entry >> 16;
 	    Tf->Eflags = Tf->Eflags & (~TRAP_FLAG);
-	    
+
 	    return(0);
 	  }
 	}
-	  
+
       /* FIXME: Also emulate ins and outs */
       /* FIXME: Handle opcode prefixes */
       /* FIXME: Don't allow the BIOS to write to sensitive I/O ports */
     }
-   
+
   DPRINT1("V86GPF unhandled (was %x)\n", ip[i]);
   *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
   return(1);
@@ -776,7 +776,7 @@ KeV86Exception(ULONG ExceptionNr, PKTRAP_FRAME Tf, ULONG address)
 
       /* Segment not present */
     case 11:
-      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;;
+      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
       return(1);
 
       /* Stack fault */
@@ -819,7 +819,7 @@ KeV86Exception(ULONG ExceptionNr, PKTRAP_FRAME Tf, ULONG address)
     case 16:
       *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
       return(1);
-      
+
       /* Alignment check */
     case 17:
       *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;

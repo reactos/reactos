@@ -1,9 +1,9 @@
-/* 
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/kd/wrappers/bochs.c
  * PURPOSE:         BOCHS Wrapper for Kd
- * 
+ *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
 
@@ -49,7 +49,7 @@ KdpBochsInit(PKD_DISPATCH_TABLE WrapperTable,
     else if (BootPhase == 2)
     {
         HalDisplayString("\n   Bochs debugging enabled\n\n");
-    }    
+    }
 }
 
 /* EOF */

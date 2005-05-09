@@ -4,7 +4,7 @@
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/ob/dirobj.c
  * PURPOSE:        Interface functions to directory object
- * 
+ *
  * PROGRAMMERS:    David Welch (welch@mcmail.com)
  */
 
@@ -24,20 +24,20 @@
  *
  * DESCRIPTION
  * 	Opens a namespace directory object.
- * 	
+ *
  * ARGUMENTS
  *	DirectoryHandle (OUT)
  *		Variable which receives the directory handle.
- *		
+ *
  *	DesiredAccess
  *		Desired access to the directory.
- *		
+ *
  *	ObjectAttributes
  *		Structure describing the directory.
- *		
+ *
  * RETURN VALUE
  * 	Status.
- * 	
+ *
  * NOTES
  * 	Undocumented.
  */
@@ -49,11 +49,11 @@ NtOpenDirectoryObject (OUT PHANDLE DirectoryHandle,
    HANDLE hDirectory;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
-   
+
    PAGED_CODE();
-   
+
    PreviousMode = ExGetPreviousMode();
-   
+
    if(PreviousMode != KernelMode)
    {
      _SEH_TRY
@@ -67,14 +67,14 @@ NtOpenDirectoryObject (OUT PHANDLE DirectoryHandle,
        Status = _SEH_GetExceptionCode();
      }
      _SEH_END;
-     
+
      if(!NT_SUCCESS(Status))
      {
        DPRINT1("NtOpenDirectoryObject failed, Status: 0x%x\n", Status);
        return Status;
      }
    }
-   
+
    Status = ObOpenObjectByName(ObjectAttributes,
                                ObDirectoryType,
                                NULL,
@@ -94,7 +94,7 @@ NtOpenDirectoryObject (OUT PHANDLE DirectoryHandle,
      }
      _SEH_END;
    }
-   
+
    return Status;
 }
 
@@ -102,35 +102,35 @@ NtOpenDirectoryObject (OUT PHANDLE DirectoryHandle,
 /**********************************************************************
  * NAME							EXPORTED
  *	NtQueryDirectoryObject
- * 
+ *
  * DESCRIPTION
  * 	Reads information from a directory in the system namespace.
- * 	
+ *
  * ARGUMENTS
  * 	DirectoryHandle
  * 		Handle, obtained with NtOpenDirectoryObject(), which
  * 		must grant DIRECTORY_QUERY access to the directory
  * 		object.
- * 		
+ *
  *	Buffer (OUT)
  *		Buffer to hold the data read.
- *		
+ *
  *	BufferLength
  *		Size of the buffer in bytes.
- *		
+ *
  *	ReturnSingleEntry
  *		When TRUE, only 1 entry is written in DirObjInformation;
  *		otherwise as many as will fit in the buffer.
- *		
+ *
  *	RestartScan
  *		If TRUE start reading at index 0.
  *		If FALSE start reading at the index specified
  *		by object index *ObjectIndex.
- *		
+ *
  *	Context
  *		Zero based index into the directory, interpretation
  *		depends on RestartScan.
- *		
+ *
  *	ReturnLength (OUT)
  *		Caller supplied storage for the number of bytes
  *		written (or NULL).
@@ -171,9 +171,9 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
   ULONG NextEntry = 0;
   ULONG CopyBytes = 0;
   NTSTATUS Status = STATUS_SUCCESS;
-  
+
   PAGED_CODE();
-  
+
   PreviousMode = ExGetPreviousMode();
 
   if(PreviousMode != KernelMode)
@@ -216,7 +216,7 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
   {
     SkipEntries = *Context;
   }
-  
+
   Status = ObReferenceObjectByHandle(DirectoryHandle,
                                      DIRECTORY_QUERY,
                                      ObDirectoryType,
@@ -235,7 +235,7 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
       ULONG RequiredSize = 0;
       ULONG nDirectories = 0;
       POBJECT_DIRECTORY_INFORMATION DirInfo = (POBJECT_DIRECTORY_INFORMATION)TemporaryBuffer;
-      
+
       Status = STATUS_NO_MORE_ENTRIES;
 
       KeAcquireSpinLock(&Directory->Lock, &OldLevel);
@@ -275,7 +275,7 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
 
             nDirectories++;
             RequiredSize += EntrySize;
-            
+
             Status = STATUS_SUCCESS;
 
             if(ReturnSingleEntry)
@@ -295,12 +295,12 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
               RequiredSize += EntrySize;
               Status = STATUS_BUFFER_TOO_SMALL;
             }
-            
+
             /* we couldn't query this entry, so leave the index that will be stored
                in Context to this entry so the caller can query it the next time
                he queries (hopefully with a buffer that is large enough then...) */
             NextEntry--;
-            
+
             /* just copy the entries that fit into the buffer */
             break;
           }
@@ -311,7 +311,7 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
           SkipEntries--;
         }
       }
-      
+
       if(!ReturnSingleEntry && ListEntry != &Directory->head)
       {
         /* there are more entries to enumerate but the buffer is already full.
@@ -323,9 +323,9 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
       {
         PWSTR strbuf = (PWSTR)((POBJECT_DIRECTORY_INFORMATION)TemporaryBuffer + nDirectories);
         PWSTR deststrbuf = (PWSTR)((POBJECT_DIRECTORY_INFORMATION)Buffer + nDirectories);
-        
+
         CopyBytes = nDirectories * sizeof(OBJECT_DIRECTORY_INFORMATION);
-        
+
         /* copy the names from the objects and append them to the list of the
            objects. copy to the temporary buffer only because the directory
            lock can't be released and the buffer might be pagable memory! */
@@ -334,7 +334,7 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
             nDirectories--, DirInfo++)
         {
           ULONG NameLength;
-          
+
           if(DirInfo->ObjectName.Length > 0)
           {
             RtlCopyMemory(strbuf,
@@ -350,7 +350,7 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
 
             CopyBytes += (NameLength + 1) * sizeof(WCHAR);
           }
-          
+
           RtlCopyMemory(strbuf,
                         DirInfo->ObjectTypeName.Buffer,
                         DirInfo->ObjectTypeName.Length);
@@ -361,7 +361,7 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
           strbuf[NameLength] = L'\0';
           strbuf += NameLength + 1;
           deststrbuf += NameLength + 1;
-          
+
           CopyBytes += (NameLength + 1) * sizeof(WCHAR);
         }
       }
@@ -391,7 +391,7 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
         }
         _SEH_END;
       }
-      
+
       ExFreePool(TemporaryBuffer);
     }
     else
@@ -399,7 +399,7 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
       Status = STATUS_INSUFFICIENT_RESOURCES;
     }
   }
-  
+
   return Status;
 }
 
@@ -407,23 +407,23 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
 /**********************************************************************
  * NAME						(EXPORTED as Zw)
  * 	NtCreateDirectoryObject
- * 	
+ *
  * DESCRIPTION
  * 	Creates or opens a directory object (a container for other
  *	objects).
- *	
+ *
  * ARGUMENTS
  *	DirectoryHandle (OUT)
- *		Caller supplied storage for the handle of the 
+ *		Caller supplied storage for the handle of the
  *		directory.
- *		
+ *
  *	DesiredAccess
  *		Access desired to the directory.
- *		
+ *
  *	ObjectAttributes
  *		Object attributes initialized with
  *		InitializeObjectAttributes.
- *		
+ *
  * RETURN VALUE
  * 	Status.
  */
@@ -436,9 +436,9 @@ NtCreateDirectoryObject (OUT PHANDLE DirectoryHandle,
   HANDLE hDirectory;
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status = STATUS_SUCCESS;
-  
+
   PAGED_CODE();
-  
+
   DPRINT("NtCreateDirectoryObject(DirectoryHandle %x, "
 	 "DesiredAccess %x, ObjectAttributes %x\n",
 	 DirectoryHandle, DesiredAccess, ObjectAttributes);

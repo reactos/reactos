@@ -15,8 +15,8 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 NtSystemDebugControl(DEBUG_CONTROL_CODE ControlCode,
                      PVOID InputBuffer,
                      ULONG InputBufferLength,
@@ -24,7 +24,7 @@ NtSystemDebugControl(DEBUG_CONTROL_CODE ControlCode,
                      ULONG OutputBufferLength,
                      PULONG ReturnLength)
 {
-    switch (ControlCode) 
+    switch (ControlCode)
     {
         case DebugGetTraceInformation:
         case DebugSetInternalBreakpoint:
@@ -33,14 +33,14 @@ NtSystemDebugControl(DEBUG_CONTROL_CODE ControlCode,
         case DebugQuerySpecialCalls:
         case DebugDbgBreakPoint:
             break;
-              
+
         case DebugDbgLoadSymbols:
             KDB_LOADUSERMODULE_HOOK((PLDR_MODULE) InputBuffer);
             break;
-        
+
         default:
             break;
     }
-    
+
     return STATUS_SUCCESS;
 }

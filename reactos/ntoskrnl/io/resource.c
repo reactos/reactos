@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/resource.c
  * PURPOSE:         Hardware resource managment
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  *                  Alex Ionescu (alex@relsoft.net)
  */
@@ -85,7 +85,7 @@ PWSTR ArcTypes[42] = {
  *
  * FUNCTION:
  *     Reads and returns Hardware information from the appropriate hardware
- *     registry key. Helper sub of IopQueryBusDescription. 
+ *     registry key. Helper sub of IopQueryBusDescription.
  *
  * ARGUMENTS:
  *     Query          - What the parent function wants.
@@ -104,7 +104,7 @@ IopQueryDeviceDescription(
    UNICODE_STRING RootKey,
    HANDLE RootKeyHandle,
    ULONG Bus,
-   PKEY_VALUE_FULL_INFORMATION *BusInformation) 
+   PKEY_VALUE_FULL_INFORMATION *BusInformation)
 {
    NTSTATUS Status = STATUS_SUCCESS;
 
@@ -185,7 +185,7 @@ IopQueryDeviceDescription(
             ExFreePool(ControllerFullInformation);
          return Status;
       }
-		
+
       /* Find out Controller Numbers */
       ControllerNumber = 0;
       MaximumControllerNumber = ControllerFullInformation->SubKeys;
@@ -210,7 +210,7 @@ IopQueryDeviceDescription(
       /* Create String */
       Status |= RtlAppendUnicodeToString(&ControllerRootRegName, L"\\");
       Status |= RtlAppendUnicodeStringToString(&ControllerRootRegName, &TempString);
-		
+
       /* Something messed up */
       if (!NT_SUCCESS(Status)) break;
 
@@ -277,7 +277,7 @@ IopQueryDeviceDescription(
       Status |= RtlAppendUnicodeToString(&ControllerRootRegName, ArcTypes[*Query->PeripheralType]);
 
       /* Something messed up */
-      if (!NT_SUCCESS(Status)) goto EndLoop;	
+      if (!NT_SUCCESS(Status)) goto EndLoop;
 
       /* Set the Peripheral Number if specified */
       if (Query->PeripheralNumber && *Query->PeripheralNumber)
@@ -340,7 +340,7 @@ IopQueryDeviceDescription(
          /* Create String */
          Status |= RtlAppendUnicodeToString(&ControllerRootRegName, L"\\");
 	 Status |= RtlAppendUnicodeStringToString(&ControllerRootRegName, &TempString);
-		
+
          /* Something messed up */
          if (!NT_SUCCESS(Status)) break;
 
@@ -458,7 +458,7 @@ IopQueryBusDescription(
    UNICODE_STRING RootKey,
    HANDLE RootKeyHandle,
    PULONG Bus,
-   BOOLEAN KeyIsRoot) 
+   BOOLEAN KeyIsRoot)
 {
    NTSTATUS Status;
    ULONG BusLoop;
@@ -645,7 +645,7 @@ IopQueryBusDescription(
       ZwClose(SubRootKeyHandle);
       SubRootKeyHandle = NULL;
    }
-	
+
    /* Free the last remaining Allocated Memory */
    if (BasicInformation)
       ExFreePool(BasicInformation);
@@ -678,13 +678,13 @@ IoReportResourceUsage(PUNICODE_STRING DriverClassName,
 		      BOOLEAN OverrideConflict,
 		      PBOOLEAN ConflictDetected)
      /*
-      * FUNCTION: Reports hardware resources in the 
+      * FUNCTION: Reports hardware resources in the
       * \Registry\Machine\Hardware\ResourceMap tree, so that a subsequently
       * loaded driver cannot attempt to use the same resources.
       * ARGUMENTS:
       *       DriverClassName - The class of driver under which the resource
       *       information should be stored.
-      *       DriverObject - The driver object that was input to the 
+      *       DriverObject - The driver object that was input to the
       *       DriverEntry.
       *       DriverList - Resources that claimed for the driver rather than
       *       per-device.
@@ -762,7 +762,7 @@ IoQueryDeviceDescription(PINTERFACE_TYPE BusType,
    RootRegKey.MaximumLength = 2048;
    RootRegKey.Buffer = ExAllocatePoolWithTag(PagedPool, RootRegKey.MaximumLength, TAG_IO_RESOURCE);
    RtlAppendUnicodeToString(&RootRegKey, RootRegString);
-	
+
    /* Open a handle to the Root Registry Key */
    InitializeObjectAttributes(
       &ObjectAttributes,

@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pool.c
  * PURPOSE:         Implements the kernel memory pool
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
@@ -81,14 +81,14 @@ ExAllocatePool (POOL_TYPE PoolType, ULONG NumberOfBytes)
  *        PoolType
  *               Specifies the type of memory to allocate which can be one
  *               of the following:
- *  
+ *
  *               NonPagedPool
  *               NonPagedPoolMustSucceed
  *               NonPagedPoolCacheAligned
  *               NonPagedPoolCacheAlignedMustS
  *               PagedPool
  *               PagedPoolCacheAligned
- *        
+ *
  *        NumberOfBytes
  *               Specifies the number of bytes to allocate
  * RETURNS: The allocated block on success
@@ -264,9 +264,9 @@ ExFreePoolWithTag(IN PVOID Block, IN ULONG Tag)
  */
 SIZE_T
 STDCALL
-ExQueryPoolBlockSize (                          
-    IN PVOID PoolBlock,                         
-    OUT PBOOLEAN QuotaCharged                   
+ExQueryPoolBlockSize (
+    IN PVOID PoolBlock,
+    OUT PBOOLEAN QuotaCharged
     )
 {
 	UNIMPLEMENTED;

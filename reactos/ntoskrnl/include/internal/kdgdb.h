@@ -16,5 +16,5 @@ KdpGdbStubInit(struct _KD_DISPATCH_TABLE *DispatchTable,
                ULONG BootPhase);
 
 extern KD_PORT_INFORMATION GdbPortInfo;
-                            
+
 #endif /* __INCLUDE_INTERNAL_KD_BOCHS_H */

@@ -255,10 +255,10 @@ CmiWorkerThread(PVOID Param)
 
   while (1)
   {
-    Status = KeWaitForSingleObject(&CmiWorkerTimer, 
-	                           Executive, 
-				   KernelMode, 
-				   FALSE, 
+    Status = KeWaitForSingleObject(&CmiWorkerTimer,
+	                           Executive,
+				   KernelMode,
+				   FALSE,
 				   NULL);
     if (Status == STATUS_SUCCESS)
     {
@@ -311,25 +311,25 @@ STDCALL
 CmInitHives(BOOLEAN SetupBoot)
 {
     PCHAR BaseAddress;
-    
+
     /* Load Registry Hives. This one can be missing. */
     if (CachedModules[SystemRegistry]) {
         BaseAddress = (PCHAR)CachedModules[SystemRegistry]->ModStart;
         CmImportSystemHive(BaseAddress,
                            CachedModules[SystemRegistry]->ModEnd - (ULONG_PTR)BaseAddress);
     }
-    
+
     BaseAddress = (PCHAR)CachedModules[HardwareRegistry]->ModStart;
     CmImportHardwareHive(BaseAddress,
                          CachedModules[HardwareRegistry]->ModEnd - (ULONG_PTR)BaseAddress);
-    
+
 
     /* Create dummy keys if no hardware hive was found */
     CmImportHardwareHive (NULL, 0);
 
     /* Initialize volatile registry settings */
     if (SetupBoot == FALSE) CmInit2((PCHAR)KeLoaderBlock.CommandLine);
-}   
+}
 
 VOID INIT_FUNCTION
 CmInitializeRegistry(VOID)
@@ -397,14 +397,14 @@ CmInitializeRegistry(VOID)
     KEBUGCHECK(0);
   }
 
-  /* Start the timer */  
+  /* Start the timer */
   DueTime.QuadPart = -1;
   KeSetTimerEx(&CmiWorkerTimer, DueTime, 5000, NULL); /* 5sec */
 
   /*  Build volatile registry store  */
   Status = CmiCreateVolatileHive (&CmiVolatileHive);
   ASSERT(NT_SUCCESS(Status));
-  
+
   InitializeListHead(&CmiCallbackHead);
   ExInitializeFastMutex(&CmiCallbackLock);
 
@@ -548,7 +548,7 @@ CmInit2(PCHAR CommandLine)
         MiniNT = TRUE;
       else if (!_strnicmp(CommandLine, "DEBUGPORT=PICE", 14))
         PiceStart = 1;
-      
+
       /* Add a space between the options */
       if (Position != 0)
         SystemStartOptions[Position++] = L' ';
@@ -884,7 +884,7 @@ CmiDisconnectHive (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
     {
       DPRINT1 ("Hive is still in use (hc %d, rc %d)\n", ObGetObjectHandleCount (KeyObject), ObGetObjectPointerCount (KeyObject));
       ObDereferenceObject (KeyObject);
-      
+
       /* Release registry lock */
       ExReleaseResourceLite (&CmiRegistryLock);
       KeLeaveCriticalRegion();

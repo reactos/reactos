@@ -185,7 +185,7 @@ static __inline _SEH_FILTER(_SEH_ExSystemExceptionFilter)
 
 /* OTHER FUNCTIONS **********************************************************/
 
-LONGLONG 
+LONGLONG
 FASTCALL
 ExfpInterlockedExchange64(LONGLONG volatile * Destination,
                           PLONGLONG Exchange);

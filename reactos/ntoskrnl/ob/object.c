@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ob/object.c
  * PURPOSE:         Implements generic object managment functions
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  *                  Skywing (skywing@valhallalegends.com)
  */
@@ -48,7 +48,7 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
   if(AccessMode != KernelMode)
   {
     RtlZeroMemory(&AttributesCopy, sizeof(AttributesCopy));
-    
+
     _SEH_TRY
     {
       ProbeForRead(ObjectAttributes,
@@ -142,7 +142,7 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
     if(AttributesCopy.SecurityQualityOfService != NULL)
     {
       SECURITY_QUALITY_OF_SERVICE SafeQoS;
-      
+
       RtlZeroMemory(&SafeQoS, sizeof(SafeQoS));
 
       _SEH_TRY
@@ -198,7 +198,7 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
       if(AccessMode != KernelMode)
       {
         RtlZeroMemory(&OriginalCopy, sizeof(OriginalCopy));
-        
+
         _SEH_TRY
         {
           /* probe the ObjectName structure and make a local stack copy of it */
@@ -397,7 +397,7 @@ ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
   UNICODE_STRING PathString;
   ULONG Attributes;
   PUNICODE_STRING ObjectName;
-  
+
   PAGED_CODE();
 
   DPRINT("ObFindObject(ObjectAttributes %x, ReturnedObject %x, "
@@ -490,7 +490,7 @@ ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 	     /* reparse the object path */
 	     NextObject = NameSpaceRoot;
 	     current = PathString.Buffer;
-	     
+
 	     ObReferenceObjectByPointer(NextObject,
 					DIRECTORY_TRAVERSE,
 					NULL,
@@ -536,7 +536,7 @@ ObQueryNameString (IN PVOID Object,
   POBJECT_HEADER ObjectHeader;
   ULONG LocalReturnLength;
   NTSTATUS Status;
-  
+
   PAGED_CODE();
 
   *ReturnLength = 0;
@@ -667,7 +667,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
   SECURITY_SUBJECT_CONTEXT SubjectContext;
 
   PAGED_CODE();
-  
+
   if(ObjectAttributesAccessMode == UserMode && ObjectAttributes != NULL)
   {
     Status = STATUS_SUCCESS;
@@ -682,7 +682,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
       Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
-    
+
     if(!NT_SUCCESS(Status))
     {
       return Status;
@@ -880,14 +880,14 @@ ObReferenceObjectByPointer(IN PVOID Object,
 			   IN KPROCESSOR_MODE AccessMode)
 {
    POBJECT_HEADER Header;
-   
+
    /* NOTE: should be possible to reference an object above APC_LEVEL! */
 
    DPRINT("ObReferenceObjectByPointer(Object %x, ObjectType %x)\n",
 	  Object,ObjectType);
-   
+
    Header = BODY_TO_HEADER(Object);
-   
+
    if (ObjectType != NULL && Header->ObjectType != ObjectType)
      {
 	DPRINT("Failed %x (type was %x %S) should be %x %S\n",
@@ -910,7 +910,7 @@ ObReferenceObjectByPointer(IN PVOID Object,
 		Object, Header->RefCount, PsThreadType);
 	DPRINT("eip %x\n", ((PULONG)&Object)[-1]);
      }
- 
+
    if (Header->RefCount == 0 && !Header->Permanent)
    {
       if (Header->ObjectType == PsProcessType)
@@ -928,7 +928,7 @@ ObReferenceObjectByPointer(IN PVOID Object,
    {
       KEBUGCHECK(0);
    }
-   
+
    return(STATUS_SUCCESS);
 }
 
@@ -946,11 +946,11 @@ ObOpenObjectByPointer(IN POBJECT Object,
 		      OUT PHANDLE Handle)
 {
    NTSTATUS Status;
-   
+
    PAGED_CODE();
-   
+
    DPRINT("ObOpenObjectByPointer()\n");
-   
+
    Status = ObReferenceObjectByPointer(Object,
 				       0,
 				       ObjectType,
@@ -959,15 +959,15 @@ ObOpenObjectByPointer(IN POBJECT Object,
      {
 	return Status;
      }
-   
+
    Status = ObCreateHandle(PsGetCurrentProcess(),
 			   Object,
 			   DesiredAccess,
 			   (BOOLEAN)(HandleAttributes & OBJ_INHERIT),
 			   Handle);
-   
+
    ObDereferenceObject(Object);
-   
+
    return STATUS_SUCCESS;
 }
 
@@ -1031,7 +1031,7 @@ ObpDeleteObjectDpcLevel(IN POBJECT_HEADER ObjectHeader,
   if (ObjectHeader->RefCount < 0)
     {
       CPRINT("Object %p/%p has invalid reference count (%d)\n",
-	     ObjectHeader, HEADER_TO_BODY(ObjectHeader), 
+	     ObjectHeader, HEADER_TO_BODY(ObjectHeader),
 	     ObjectHeader->RefCount);
       KEBUGCHECK(0);
     }
@@ -1039,23 +1039,23 @@ ObpDeleteObjectDpcLevel(IN POBJECT_HEADER ObjectHeader,
   if (ObjectHeader->HandleCount < 0)
     {
       CPRINT("Object %p/%p has invalid handle count (%d)\n",
-	     ObjectHeader, HEADER_TO_BODY(ObjectHeader), 
+	     ObjectHeader, HEADER_TO_BODY(ObjectHeader),
 	     ObjectHeader->HandleCount);
       KEBUGCHECK(0);
     }
 #endif
 
-  
+
   switch (KeGetCurrentIrql ())
     {
     case PASSIVE_LEVEL:
       return ObpDeleteObject (ObjectHeader);
-      
+
     case APC_LEVEL:
     case DISPATCH_LEVEL:
       {
 	PRETENTION_CHECK_PARAMS Params;
-	
+
 	/*
 	  We use must succeed pool here because if the allocation fails
 	  then we leak memory.
@@ -1072,7 +1072,7 @@ ObpDeleteObjectDpcLevel(IN POBJECT_HEADER ObjectHeader,
 			CriticalWorkQueue);
       }
       return STATUS_PENDING;
-      
+
     default:
       DPRINT("ObpDeleteObjectDpcLevel called at unsupported "
 	     "IRQL %u!\n", KeGetCurrentIrql());
@@ -1146,7 +1146,7 @@ ObfDereferenceObject(IN PVOID Object)
   Header = BODY_TO_HEADER(Object);
   Permanent = Header->Permanent;
 
-  /* 
+  /*
      Drop our reference and get the new count so we can tell if this was the
      last reference.
   */
@@ -1164,7 +1164,7 @@ ObfDereferenceObject(IN PVOID Object)
 
 VOID
 FASTCALL
-ObInitializeFastReference(IN PEX_FAST_REF FastRef, 
+ObInitializeFastReference(IN PEX_FAST_REF FastRef,
                           PVOID Object)
 {
     /* FIXME: Fast Referencing is Unimplemented */
@@ -1177,10 +1177,10 @@ FASTCALL
 ObFastReferenceObject(IN PEX_FAST_REF FastRef)
 {
     /* FIXME: Fast Referencing is Unimplemented */
-    
+
     /* Do a normal Reference */
     ObReferenceObject(FastRef->Object);
-    
+
     /* Return the Object */
     return FastRef->Object;
 }
@@ -1191,7 +1191,7 @@ ObFastDereferenceObject(IN PEX_FAST_REF FastRef,
                         PVOID Object)
 {
     /* FIXME: Fast Referencing is Unimplemented */
-    
+
     /* Do a normal Dereference */
     ObDereferenceObject(FastRef->Object);
 }
@@ -1202,10 +1202,10 @@ ObFastReplaceObject(IN PEX_FAST_REF FastRef,
                     PVOID Object)
 {
     PVOID OldObject = FastRef->Object;
-    
+
     /* FIXME: Fast Referencing is Unimplemented */
     FastRef->Object = Object;
-    
+
     /* Do a normal Dereference */
     ObDereferenceObject(OldObject);
 
@@ -1232,7 +1232,7 @@ ULONG STDCALL
 ObGetObjectPointerCount(PVOID Object)
 {
   POBJECT_HEADER Header;
-  
+
   PAGED_CODE();
 
   ASSERT(Object);
@@ -1259,7 +1259,7 @@ ULONG
 ObGetObjectHandleCount(PVOID Object)
 {
   POBJECT_HEADER Header;
-  
+
   PAGED_CODE();
 
   ASSERT(Object);

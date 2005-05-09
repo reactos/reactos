@@ -232,31 +232,31 @@ VOID
 NtEarlyInitVdm(VOID);
 VOID
 KeApplicationProcessorInitDispatcher(VOID);
-VOID 
+VOID
 KeCreateApplicationProcessorIdleThread(ULONG Id);
 
-typedef 
-VOID 
+typedef
+VOID
 STDCALL
-(*PKSYSTEM_ROUTINE)(PKSTART_ROUTINE StartRoutine, 
+(*PKSYSTEM_ROUTINE)(PKSTART_ROUTINE StartRoutine,
                     PVOID StartContext);
 
 VOID
 STDCALL
-Ke386InitThreadWithContext(PKTHREAD Thread, 
+Ke386InitThreadWithContext(PKTHREAD Thread,
                            PKSYSTEM_ROUTINE SystemRoutine,
                            PKSTART_ROUTINE StartRoutine,
                            PVOID StartContext,
                            PCONTEXT Context);
-                       
+
 VOID
 STDCALL
-KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine, 
-                PKSTART_ROUTINE StartRoutine, 
-                PVOID StartContext, 
+KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
+                PKSTART_ROUTINE StartRoutine,
+                PVOID StartContext,
                 BOOLEAN UserThread,
                 KTRAP_FRAME TrapFrame);
-                
+
 #ifdef CONFIG_SMP
 #define LOCK "lock ; "
 #else
@@ -281,7 +281,7 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
 #define Ke386SetLocalDescriptorTable(X) \
                                  __asm__("lldt %0\n\t" \
                                      : /* no outputs */ \
-                                     : "m" (X));                                      
+                                     : "m" (X));
 #define Ke386SetGlobalDescriptorTable(X) \
                                  __asm__("lgdt %0\n\t" \
                                      : /* no outputs */ \
@@ -307,11 +307,11 @@ static inline LONG Ke386TestAndClearBit(ULONG BitPos, volatile PULONG Addr)
 {
 	LONG OldBit;
 
-	__asm__ __volatile__(LOCK 
+	__asm__ __volatile__(LOCK
 	                     "btrl %2,%1\n\t"
 	                     "sbbl %0,%0\n\t"
 		             :"=r" (OldBit),"=m" (*Addr)
-		             :"Ir" (BitPos) 
+		             :"Ir" (BitPos)
 			     : "memory");
 	return OldBit;
 }
@@ -324,7 +324,7 @@ static inline LONG Ke386TestAndSetBit(ULONG BitPos, volatile PULONG Addr)
 	                     "btsl %2,%1\n\t"
 	                     "sbbl %0,%0\n\t"
 		             :"=r" (OldBit),"=m" (*Addr)
-		             :"Ir" (BitPos) 
+		             :"Ir" (BitPos)
 			     : "memory");
 	return OldBit;
 }

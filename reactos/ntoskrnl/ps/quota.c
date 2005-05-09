@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ps/quota.c
  * PURPOSE:         Process Pool Quotas
- * 
+ *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
 
@@ -30,7 +30,7 @@ PsChargePoolQuota(IN PEPROCESS Process,
     Status = PsChargeProcessPoolQuota(Process, PoolType, Amount);
 
     /* Raise Exception */
-    if (!NT_SUCCESS(Status)) 
+    if (!NT_SUCCESS(Status))
     {
         ExRaiseStatus(Status);
     }
@@ -83,12 +83,12 @@ PsChargeProcessPoolQuota(IN PEPROCESS Process,
     NewUsageSize = QuotaBlock->QuotaEntry[PoolType].Usage + Amount;
 
     /* Does this size respect the quota? */
-    if (NewUsageSize > QuotaBlock->QuotaEntry[PoolType].Limit) 
+    if (NewUsageSize > QuotaBlock->QuotaEntry[PoolType].Limit)
     {
         /* It doesn't, so keep raising the Quota */
-        while (MiRaisePoolQuota(PoolType, 
-               QuotaBlock->QuotaEntry[PoolType].Limit, 
-               &NewMaxQuota)) 
+        while (MiRaisePoolQuota(PoolType,
+               QuotaBlock->QuotaEntry[PoolType].Limit,
+               &NewMaxQuota))
         {
             /* Save new Maximum Quota */
             QuotaBlock->QuotaEntry[PoolType].Limit = NewMaxQuota;
@@ -105,7 +105,7 @@ QuotaChanged:
     QuotaBlock->QuotaEntry[PoolType].Usage = NewUsageSize;
 
     /* Is this a new peak? */
-    if (NewUsageSize > QuotaBlock->QuotaEntry[PoolType].Peak) 
+    if (NewUsageSize > QuotaBlock->QuotaEntry[PoolType].Peak)
     {
         QuotaBlock->QuotaEntry[PoolType].Peak = NewUsageSize;
     }
@@ -116,7 +116,7 @@ QuotaChanged:
 
 /*
  * @unimplemented
- */                       
+ */
 VOID
 STDCALL
 PsReturnPoolQuota(IN PEPROCESS Process,
@@ -124,22 +124,22 @@ PsReturnPoolQuota(IN PEPROCESS Process,
                   IN ULONG_PTR Amount)
 {
     UNIMPLEMENTED;
-} 
+}
 
 /*
  * @unimplemented
- */                       
+ */
 VOID
 STDCALL
 PsReturnProcessNonPagedPoolQuota(IN PEPROCESS Process,
                                  IN ULONG_PTR Amount)
 {
     UNIMPLEMENTED;
-} 
+}
 
 /*
  * @unimplemented
- */                       
+ */
 VOID
 STDCALL
 PsReturnProcessPagedPoolQuota(IN PEPROCESS Process,

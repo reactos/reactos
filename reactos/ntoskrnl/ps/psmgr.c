@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ps/psmgr.c
  * PURPOSE:         Process management
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
@@ -21,7 +21,7 @@ static GENERIC_MAPPING PiProcessMapping = {
     STANDARD_RIGHTS_READ    | PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
     STANDARD_RIGHTS_WRITE   | PROCESS_CREATE_PROCESS    | PROCESS_CREATE_THREAD   |
     PROCESS_VM_OPERATION    | PROCESS_VM_WRITE          | PROCESS_DUP_HANDLE      |
-    PROCESS_TERMINATE       | PROCESS_SET_QUOTA         | PROCESS_SET_INFORMATION | 
+    PROCESS_TERMINATE       | PROCESS_SET_QUOTA         | PROCESS_SET_INFORMATION |
     PROCESS_SUSPEND_RESUME,
     STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
     PROCESS_ALL_ACCESS};
@@ -32,14 +32,14 @@ static GENERIC_MAPPING PiThreadMapping = {
     THREAD_ALERT            | THREAD_SET_INFORMATION  | THREAD_SET_CONTEXT,
     STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
     THREAD_ALL_ACCESS};
-    
+
 BOOLEAN DoneInitYet = FALSE;
 
 extern ULONG NtBuildNumber;
 extern ULONG NtMajorVersion;
 extern ULONG NtMinorVersion;
 
-VOID 
+VOID
 INIT_FUNCTION
 PsInitClientIDManagment(VOID);
 
@@ -50,7 +50,7 @@ VOID STDCALL PspKillMostProcesses();
 VOID PiShutdownProcessManager(VOID)
 {
    DPRINT("PiShutdownProcessManager()\n");
-   
+
    PspKillMostProcesses();
 }
 
@@ -64,7 +64,7 @@ PiInitProcessManager(VOID)
    PsInitialiseW32Call();
 }
 
-VOID 
+VOID
 INIT_FUNCTION
 PsInitThreadManagment(VOID)
 /*
@@ -114,23 +114,23 @@ PsInitThreadManagment(VOID)
    DPRINT("FirstThread %x\n",FirstThread);
 
    DoneInitYet = TRUE;
-   
+
    ExInitializeWorkItem(&PspReaperWorkItem, PspReapRoutine, NULL);
 }
 
-VOID 
+VOID
 INIT_FUNCTION
 PsInitProcessManagment(VOID)
 {
    PKPROCESS KProcess;
    NTSTATUS Status;
-   
+
    ShortPsLockDelay.QuadPart = -100LL;
    PsLockTimeout.QuadPart = -10000000LL; /* one second */
    /*
     * Register the process object type
     */
-   
+
    PsProcessType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
 
    PsProcessType->Tag = TAG('P', 'R', 'O', 'C');
@@ -151,14 +151,14 @@ PsInitProcessManagment(VOID)
    PsProcessType->OkayToClose = NULL;
    PsProcessType->Create = NULL;
    PsProcessType->DuplicationNotify = NULL;
-   
+
    RtlInitUnicodeString(&PsProcessType->TypeName, L"Process");
-   
+
    ObpCreateTypeObject(PsProcessType);
 
    InitializeListHead(&PsActiveProcessHead);
    ExInitializeFastMutex(&PspActiveProcessMutex);
-   
+
    /*
     * Initialize the idle process
     */
@@ -179,7 +179,7 @@ PsInitProcessManagment(VOID)
      }
 
    RtlZeroMemory(PsIdleProcess, sizeof(EPROCESS));
-   
+
    PsIdleProcess->Pcb.Affinity = 0xFFFFFFFF;
    PsIdleProcess->Pcb.IopmOffset = 0xffff;
    PsIdleProcess->Pcb.BasePriority = PROCESS_PRIO_IDLE;
@@ -213,7 +213,7 @@ PsInitProcessManagment(VOID)
         KEBUGCHECK(0);
         return;
      }
-   
+
    /* System threads may run on any processor. */
    RtlZeroMemory(PsInitialSystemProcess, sizeof(EPROCESS));
    PsInitialSystemProcess->Pcb.Affinity = 0xFFFFFFFF;
@@ -226,14 +226,14 @@ PsInitProcessManagment(VOID)
 				sizeof(EPROCESS),
 				FALSE);
    KProcess = &PsInitialSystemProcess->Pcb;
-   
+
    MmInitializeAddressSpace(PsInitialSystemProcess,
 			    &PsInitialSystemProcess->AddressSpace);
-   
+
    KeInitializeEvent(&PsInitialSystemProcess->LockEvent, SynchronizationEvent, FALSE);
 
 #if defined(__GNUC__)
-   KProcess->DirectoryTableBase = 
+   KProcess->DirectoryTableBase =
      (LARGE_INTEGER)(LONGLONG)(ULONG)MmGetPageDirectory();
 #else
    {
@@ -244,16 +244,16 @@ PsInitProcessManagment(VOID)
 #endif
 
    strcpy(PsInitialSystemProcess->ImageFileName, "System");
-   
+
    PsInitialSystemProcess->Win32WindowStation = (HANDLE)0;
-   
+
    InsertHeadList(&PsActiveProcessHead,
 		  &PsInitialSystemProcess->ActiveProcessLinks);
    InitializeListHead(&PsInitialSystemProcess->ThreadListHead);
-   
+
 #ifndef SCHED_REWRITE
     PTOKEN BootToken;
-        
+
     /* No parent, this is the Initial System Process. Assign Boot Token */
     BootToken = SepCreateSystemProcessToken();
     BootToken->TokenInUse = TRUE;
@@ -266,15 +266,15 @@ VOID
 PspPostInitSystemProcess(VOID)
 {
   NTSTATUS Status;
-  
+
   /* this routine is called directly after the exectuive handle tables were
      initialized. We'll set up the Client ID handle table and assign the system
      process a PID */
   PsInitClientIDManagment();
-  
+
   ObCreateHandleTable(NULL, FALSE, PsInitialSystemProcess);
   ObpKernelHandleTable = PsInitialSystemProcess->ObjectTable;
-  
+
   Status = PsCreateCidHandle(PsInitialSystemProcess,
                              PsProcessType,
                              &PsInitialSystemProcess->UniqueProcessId);
