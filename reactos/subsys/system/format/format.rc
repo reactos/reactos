@@ -5,3 +5,5 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"format.exe\0"
 #include <reactos/version.rc>
 
+#include "En.rc"
+

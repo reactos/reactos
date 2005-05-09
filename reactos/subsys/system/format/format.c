@@ -9,6 +9,7 @@
 #include <ntos.h>
 #include <fmifs.h>
 #include <tchar.h>
+#include "resource.h"
 
 // Globals
 BOOL	Error = FALSE;
@@ -78,20 +79,9 @@ static VOID PrintWin32Error( LPTSTR Message, DWORD ErrorCode )
 //----------------------------------------------------------------------
 static VOID Usage( LPTSTR ProgramName )
 {
-	_tprintf(_T("Usage: %S drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n"), ProgramName);
-	_tprintf(_T("  [drive:]         Specifies the drive to format.\n"));
-	_tprintf(_T("  -FS:file-system  Specifies the type of file system (e.g. FAT).\n"));
-	_tprintf(_T("  -V:label         Specifies volume label.\n"));
-	_tprintf(_T("  -Q               Performs a quick format.\n"));
-	_tprintf(_T("  -A:size          Overrides the default allocation unit size. Default settings\n"));
-	_tprintf(_T("                   are strongly recommended for general use\n"));
-	_tprintf(_T("                   NTFS supports 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n"));
-	_tprintf(_T("                   FAT supports 8192, 16K, 32K, 64K, 128K, 256K.\n"));
-	_tprintf(_T("                   NTFS compression is not supported for allocation unit sizes\n"));
-	_tprintf(_T("                   above 4096.\n"));
-	_tprintf(_T("  -C               Files created on the new volume will be compressed by\n"));
-	_tprintf(_T("                   default.\n"));
-	_tprintf(_T("\n"));
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	LoadString( GetModuleHandle(NULL), STRING_HELP, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+   _tprintf(szMsg, ProgramName);
 }
 
 
@@ -187,6 +177,7 @@ FormatExCallback (CALLBACKCOMMAND Command,
 	PDWORD percent;
 	PTEXTOUTPUT output;
 	PBOOLEAN status;
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	//
 	// We get other types of commands, but we don't have to pay attention to them
@@ -195,7 +186,8 @@ FormatExCallback (CALLBACKCOMMAND Command,
 
 	case PROGRESS:
 		percent = (PDWORD) Argument;
-		_tprintf(_T("%lu percent completed.\r"), *percent);
+        LoadString( GetModuleHandle(NULL), STRING_COMPLETE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+        _tprintf(szMsg, *percent);
 		break;
 
 	case OUTPUT:
@@ -207,7 +199,8 @@ FormatExCallback (CALLBACKCOMMAND Command,
 		status = (PBOOLEAN) Argument;
 		if( *status == FALSE ) {
 
-			_tprintf(_T("FormatEx was unable to complete successfully.\n\n"));
+			LoadString( GetModuleHandle(NULL), STRING_FORMAT_FAIL, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+            _tprintf(szMsg);	
 			Error = TRUE;
 		}
 		break;
@@ -224,7 +217,8 @@ FormatExCallback (CALLBACKCOMMAND Command,
 	case UNKNOWNC:
 	case UNKNOWND:
 	case STRUCTUREPROGRESS:
-		_tprintf(_T("Operation Not Supported"));
+		LoadString( GetModuleHandle(NULL), STRING_NO_SUPPORT, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+        _tprintf(szMsg);
 		return FALSE;
 	}
 	return TRUE;
@@ -281,13 +275,15 @@ _tmain(int argc, TCHAR *argv[])
 #ifndef UNICODE
 	WCHAR  RootDirectoryW[MAX_PATH], FormatW[MAX_PATH], LabelW[MAX_PATH];
 #endif
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	//
 	// Get function pointers
 	//
 	if( !LoadFMIFSEntryPoints()) {
-
-		_tprintf(_T("Could not located FMIFS entry points.\n\n"));
+		
+		LoadString( GetModuleHandle(NULL), STRING_FMIFS_FAIL, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+        _tprintf(szMsg);	
 		return -1;
 	}
 
@@ -296,7 +292,8 @@ _tmain(int argc, TCHAR *argv[])
 	//
 	if( (badArg = ParseCommandLine( argc, argv ))) {
 
-		_tprintf(_T("Unknown argument: %S\n"), argv[badArg] );
+		LoadString( GetModuleHandle(NULL), STRING_UNKNOW_ARG, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+        _tprintf(szMsg, argv[badArg] );
 
 		Usage(argv[0]);
 		return -1;
@@ -307,7 +304,8 @@ _tmain(int argc, TCHAR *argv[])
 	//
 	if( !Drive ) {
 
-		_tprintf(_T("Required drive parameter is missing.\n\n"));
+		LoadString( GetModuleHandle(NULL), STRING_DRIVE_PARM, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+        _tprintf(szMsg);
 		Usage( argv[0] );
 		return -1;
 
@@ -324,13 +322,14 @@ _tmain(int argc, TCHAR *argv[])
 	driveType = GetDriveType( RootDirectory );
 
 	if( driveType == 0 ) {
-		PrintWin32Error( _T("Could not get drive type"), GetLastError());
+		LoadString( GetModuleHandle(NULL), STRING_ERROR_DRIVE_TYPE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);       
+		PrintWin32Error( szMsg, GetLastError());
 		return -1;
 	}
 
 	if( driveType != DRIVE_FIXED ) {
-		_tprintf(_T("Insert a new floppy in drive %C:\nand press Enter when ready..."),
-			RootDirectory[0] );
+		LoadString( GetModuleHandle(NULL), STRING_INSERT_DISK, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+        _tprintf(szMsg, RootDirectory[0] );
 		_fgetts( input, sizeof(input)/2, stdin );
 
 		media = FMIFS_FLOPPY;
@@ -344,7 +343,8 @@ _tmain(int argc, TCHAR *argv[])
 						&serialNumber, &maxComponent, &flags,
 						fileSystem, sizeof(fileSystem)/2)) {
 
-		PrintWin32Error( _T("Could not query volume"), GetLastError());
+		LoadString( GetModuleHandle(NULL), STRING_NO_VOLUME, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		PrintWin32Error( szMsg, GetLastError());
 		return -1;
 	}
 
@@ -353,10 +353,12 @@ _tmain(int argc, TCHAR *argv[])
 			&totalNumberOfBytes,
 			&totalNumberOfFreeBytes )) {
 
-		PrintWin32Error( _T("Could not query volume size"), GetLastError());
+		LoadString( GetModuleHandle(NULL), STRING_NO_VOLUME_SIZE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		PrintWin32Error( szMsg, GetLastError());
 		return -1;
 	}
-	_tprintf(_T("The type of the file system is %S.\n"), fileSystem );
+	LoadString( GetModuleHandle(NULL), STRING_FILESYSTEM, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+    _tprintf(szMsg, fileSystem );
 
 	//
 	// Make sure they want to do this
@@ -367,7 +369,8 @@ _tmain(int argc, TCHAR *argv[])
 
 			while(1 ) {
 
-				_tprintf(_T("Enter current volume label for drive %C: "), RootDirectory[0] );
+				LoadString( GetModuleHandle(NULL), STRING_LABEL_NAME_EDIT, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+                _tprintf(szMsg, RootDirectory[0] );
 				_fgetts( input, sizeof(input)/2, stdin );
 				input[ _tcslen( input ) - 1] = 0;
 
@@ -375,20 +378,22 @@ _tmain(int argc, TCHAR *argv[])
 
 					break;
 				}
-				_tprintf(_T("An incorrect volume label was entered for this drive.\n"));
+				LoadString( GetModuleHandle(NULL), STRING_ERROR_LABEL, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+                _tprintf(szMsg);					
 			}
 		}
 
 		while( 1 ) {
 
-			_tprintf(_T("\nWARNING, ALL DATA ON NON_REMOVABLE DISK\n"));
-			_tprintf(_T("DRIVE %C: WILL BE LOST!\n"), RootDirectory[0] );
-			_tprintf(_T("Proceed with Format (Y/N)? " ));
-			_fgetts( input, sizeof(input)/2, stdin );
+			LoadString( GetModuleHandle(NULL), STRING_YN_FORMAT, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+            _tprintf(szMsg, RootDirectory[0] );
 
-			if( input[0] == _T('Y') || input[0] == _T('y') ) break;
+			
+			LoadString( GetModuleHandle(NULL), STRING_YES_NO_FAQ, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+			
+			if(  _strnicmp(&input[0],&szMsg[0],1)) break;
 
-			if(	input[0] == _T('N') || input[0] == _T('n') ) {
+			if(	_strnicmp(&input[0],&szMsg[1],1) ) {
 
 				_tprintf(_T("\n"));
 				return 0;
@@ -402,27 +407,31 @@ _tmain(int argc, TCHAR *argv[])
 	//
 	if( !QuickFormat ) {
 
+		LoadString( GetModuleHandle(NULL), STRING_VERIFYING, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+
 		if( totalNumberOfBytes.QuadPart > 1024*1024*10 ) {
 
-			_tprintf(_T("Verifying %luM\n"), (DWORD) (totalNumberOfBytes.QuadPart/(1024*1024)));
+			_tprintf(_T("%s %luM\n"),szMsg, (DWORD) (totalNumberOfBytes.QuadPart/(1024*1024)));
 
 		} else {
 
-			_tprintf(_T("Verifying %.1fM\n"),
+			_tprintf(_T("%s %.1fM\n"),szMsg,
 				((float)(LONGLONG)totalNumberOfBytes.QuadPart)/(float)(1024.0*1024.0));
 		}
 	} else  {
 
+		LoadString( GetModuleHandle(NULL), STRING_FAST_FMT, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 		if( totalNumberOfBytes.QuadPart > 1024*1024*10 ) {
 
-			_tprintf(_T("QuickFormatting %luM\n"), (DWORD) (totalNumberOfBytes.QuadPart/(1024*1024)));
+			_tprintf(_T("%s %luM\n"),szMsg, (DWORD) (totalNumberOfBytes.QuadPart/(1024*1024)));
 
 		} else {
 
-			_tprintf(_T("QuickFormatting %.2fM\n"),
+			_tprintf(_T("%s %.2fM\n"),szMsg,
 				((float)(LONGLONG)totalNumberOfBytes.QuadPart)/(float)(1024.0*1024.0));
 		}
-		_tprintf(_T("Creating file system structures.\n"));
+		LoadString( GetModuleHandle(NULL), STRING_CREATE_FSYS, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+        _tprintf(szMsg);			
 	}
 
 	//
@@ -439,7 +448,8 @@ _tmain(int argc, TCHAR *argv[])
 			ClusterSize, FormatExCallback );
 #endif
 	if( Error ) return -1;
-	_tprintf(_T("Format complete.\n"));
+	LoadString( GetModuleHandle(NULL), STRING_FMT_COMPLETE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+    _tprintf(szMsg);	
 
 	//
 	// Enable compression if desired
@@ -453,7 +463,8 @@ _tmain(int argc, TCHAR *argv[])
 		if( !EnableVolumeCompression( RootDirectory, TRUE )) {
 #endif
 
-			_tprintf(_T("Volume does not support compression.\n"));
+			LoadString( GetModuleHandle(NULL), STRING_VOL_COMPRESS, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+            _tprintf(szMsg);	
 		}
 	}
 
@@ -462,13 +473,15 @@ _tmain(int argc, TCHAR *argv[])
 	//
 	if( !GotALabel ) {
 
-		_tprintf(_T("Volume Label (11 characters, Enter for none)? " ));
+		LoadString( GetModuleHandle(NULL), STRING_ENTER_LABEL, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+        _tprintf(szMsg);	
 		_fgetts( input, sizeof(LabelString)/2, stdin );
 
 		input[ _tcslen(input)-1] = 0;
 		if( !SetVolumeLabel( RootDirectory, input )) {
 
-			PrintWin32Error(_T("Could not label volume"), GetLastError());
+			LoadString( GetModuleHandle(NULL), STRING_NO_LABEL, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+			PrintWin32Error(szMsg, GetLastError());
 			return -1;
 		}
 	}
@@ -478,7 +491,8 @@ _tmain(int argc, TCHAR *argv[])
 						&serialNumber, &maxComponent, &flags,
 						fileSystem, sizeof(fileSystem)/2)) {
 
-		PrintWin32Error( _T("Could not query volume"), GetLastError());
+		LoadString( GetModuleHandle(NULL), STRING_NO_VOLUME, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		PrintWin32Error( szMsg, GetLastError());
 		return -1;
 	}
 
@@ -489,13 +503,14 @@ _tmain(int argc, TCHAR *argv[])
 			&freeBytesAvailableToCaller,
 			&totalNumberOfBytes,
 			&totalNumberOfFreeBytes )) {
-
-		PrintWin32Error( _T("Could not query volume size"), GetLastError());
+		
+		LoadString( GetModuleHandle(NULL), STRING_NO_VOLUME_SIZE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		PrintWin32Error(szMsg, GetLastError());
 		return -1;
 	}
 
-	_tprintf(_T("\n%I64d bytes total disk space.\n"), totalNumberOfBytes.QuadPart );
-	_tprintf(_T("%I64d bytes available on disk.\n"), totalNumberOfFreeBytes.QuadPart );
+	LoadString( GetModuleHandle(NULL), STRING_FREE_SPACE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+    _tprintf(szMsg, totalNumberOfBytes.QuadPart, totalNumberOfFreeBytes.QuadPart );
 
 	//
 	// Get the drive's serial number
@@ -505,10 +520,12 @@ _tmain(int argc, TCHAR *argv[])
 						&serialNumber, &maxComponent, &flags,
 						fileSystem, sizeof(fileSystem)/2)) {
 
-		PrintWin32Error( _T("Could not query volume"), GetLastError());
+		LoadString( GetModuleHandle(NULL), STRING_NO_VOLUME, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		PrintWin32Error( szMsg, GetLastError());
 		return -1;
 	}
-	_tprintf(_T("\nVolume Serial Number is %04X-%04X\n"), (unsigned int)(serialNumber >> 16),
+	LoadString( GetModuleHandle(NULL), STRING_SERIAL_NUMBER, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+    _tprintf(szMsg, (unsigned int)(serialNumber >> 16),
 					(unsigned int)(serialNumber & 0xFFFF) );
 
 	return 0;
