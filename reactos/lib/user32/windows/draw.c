@@ -1370,21 +1370,21 @@ IntGrayString(
     ForeColor = SetTextColor(hDC, RGB(0, 0, 0));
     BackColor = SetBkColor(hDC, RGB(255, 255, 255));
 
-    
+
     if (! hBrush)
     {
         // The documentation is a little vague on what exactly should happen
         // here. Something about using the same brush for window text???
         hBrush = (HBRUSH) GetCurrentObject(hDC, OBJ_BRUSH);
     }
-    
+
     if ((nCount == -1) && (! lpOutputFunc))
         return FALSE;
-    
+
     if (! nCount)
     {
         // TODO: calculate the length (easy enough)
-        
+
         if (unicode)
             nCount = lstrlenW((WCHAR*)lpData);
         else
@@ -1395,19 +1395,19 @@ IntGrayString(
     {
         SIZE s;
         // TODO: calculate the rect
-        
+
         if (unicode)
             success = GetTextExtentPoint32W(hDC, (WCHAR*) lpData, nCount, &s);
         else
             success = GetTextExtentPoint32A(hDC, (CHAR*) lpData, nCount, &s);
 
         if (! success) goto cleanup;
-        
+
         if (! nWidth)   nWidth = s.cx;
         if (! nHeight)  nHeight = s.cy;
     }
 
-    SetRect(&r, X, Y, X + nWidth, Y + nHeight);    
+    SetRect(&r, X, Y, X + nWidth, Y + nHeight);
 
     MemDC = CreateCompatibleDC(hDC);
     if (! MemDC) goto cleanup;
@@ -1424,11 +1424,11 @@ IntGrayString(
 
     SetTextColor(MemDC, RGB(255, 255, 255));
     SetBkColor(MemDC, RGB(0, 0, 0));
-    
+
     if (lpOutputFunc)
     {
         success = lpOutputFunc(MemDC, lpData, nCount); // Set brush etc first?
-        
+
         if ((nCount == -1) && (! success))
         {
             // Don't gray (documented behaviour)
@@ -1442,7 +1442,7 @@ IntGrayString(
             success = TextOutW(MemDC, 0, 0, (WCHAR*) lpData, nCount);
         else
             success = TextOutA(MemDC, 0, 0, (CHAR*) lpData, nCount);
-            
+
         if (! success) goto cleanup;
 
         PatBlt(MemDC, 0, 0, nWidth, nHeight, PATCOPY);
@@ -1780,12 +1780,12 @@ FrameRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
 
    if ((r.right <= r.left) || (r.bottom <= r.top)) return 0;
    if (!(oldbrush = SelectObject(hDC, hbr))) return 0;
-        
+
    PatBlt(hDC, r.left, r.top, 1, r.bottom - r.top, PATCOPY);
    PatBlt(hDC, r.right - 1, r.top, 1, r.bottom - r.top, PATCOPY);
    PatBlt(hDC, r.left, r.top, r.right - r.left, 1, PATCOPY);
    PatBlt(hDC, r.left, r.bottom - 1, r.right - r.left, 1, PATCOPY);
-                                                                            
+
    SelectObject(hDC, oldbrush);
    return TRUE;
 }
@@ -1817,7 +1817,7 @@ INT STDCALL
 FillRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
 {
    HBRUSH prevhbr;
-   
+
    if (hbr <= (HBRUSH)(COLOR_MENUBAR + 1))
    {
       hbr = GetSysColorBrush((int)hbr - 1);
@@ -1852,21 +1852,21 @@ DrawFocusRect(HDC hdc, CONST RECT *rect)
    static HBRUSH hFocusRectBrush = NULL;
    HGDIOBJ OldObj;
    UINT cx, cy;
-   
+
    if(!hFocusRectBrush)
    {
       static HBITMAP hFocusPattern = NULL;
       const DWORD Pattern[4] = {0x5555AAAA, 0x5555AAAA, 0x5555AAAA, 0x5555AAAA};
-      
+
       hFocusPattern = CreateBitmap(8, 8, 1, 1, Pattern);
       hFocusRectBrush = CreatePatternBrush(hFocusPattern);
    }
-   
+
    NtUserSystemParametersInfo(SPI_GETFOCUSBORDERWIDTH, 0, &cx, 0);
    NtUserSystemParametersInfo(SPI_GETFOCUSBORDERHEIGHT, 0, &cy, 0);
-   
+
    OldObj = SelectObject(hdc, hFocusRectBrush);
-   
+
    /* top */
    PatBlt(hdc, rect->left, rect->top, rect->right - rect->left, cy, PATINVERT);
    /* bottom */
@@ -1875,7 +1875,7 @@ DrawFocusRect(HDC hdc, CONST RECT *rect)
    PatBlt(hdc, rect->left, rect->top + cy, cx, rect->bottom - rect->top - (2 * cy), PATINVERT);
    /* right */
    PatBlt(hdc, rect->right - cx, rect->top + cy, cx, rect->bottom - rect->top - (2 * cy), PATINVERT);
-   
+
    SelectObject(hdc, OldObj);
    return TRUE;
 }

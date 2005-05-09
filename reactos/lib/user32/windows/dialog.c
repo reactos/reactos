@@ -233,7 +233,7 @@ static const WORD *DIALOG_GetControl32( const WORD *p, DLG_CONTROL_INFO *info,
     info->y       = GET_WORD(p); p++;
     info->cx      = GET_WORD(p); p++;
     info->cy      = GET_WORD(p); p++;
-    
+
     if (dialogEx)
     {
         /* id is a DWORD for DIALOGEX */
@@ -245,7 +245,7 @@ static const WORD *DIALOG_GetControl32( const WORD *p, DLG_CONTROL_INFO *info,
         info->id = GET_WORD(p);
         p++;
     }
-    
+
     if (GET_WORD(p) == 0xffff)
     {
         static const WCHAR class_names[6][10] =
@@ -274,7 +274,7 @@ static const WORD *DIALOG_GetControl32( const WORD *p, DLG_CONTROL_INFO *info,
         info->className = (LPCWSTR)p;
         p += wcslen( info->className ) + 1;
     }
-    
+
     if (GET_WORD(p) == 0xffff)  /* Is it an integer id? */
     {
         info->windowName = HeapAlloc( GetProcessHeap(), 0, 10 );
@@ -288,7 +288,7 @@ static const WORD *DIALOG_GetControl32( const WORD *p, DLG_CONTROL_INFO *info,
         info->windowNameFree = FALSE;
         p += wcslen( info->windowName ) + 1;
     }
-    
+
     if (GET_WORD(p))
     {
         info->data = p + 1;
@@ -296,9 +296,9 @@ static const WORD *DIALOG_GetControl32( const WORD *p, DLG_CONTROL_INFO *info,
     }
     else info->data = NULL;
     p++;
-    
+
     /* Next control is on dword boundary */
-    return (const WORD *)((((int)p) + 3) & ~3);    
+    return (const WORD *)((((int)p) + 3) & ~3);
 }
 
  /***********************************************************************
@@ -366,7 +366,7 @@ static BOOL DIALOG_CreateControls32( HWND hwnd, LPCSTR template, const DLG_TEMPL
             if (HIWORD(class)) HeapFree( GetProcessHeap(), 0, class );
             if (HIWORD(caption)) HeapFree( GetProcessHeap(), 0, caption );
         }
-        
+
         if (info.windowNameFree)
         {
             HeapFree( GetProcessHeap(), 0, (LPVOID)info.windowName );
@@ -411,7 +411,7 @@ static HWND DIALOG_FindMsgDestination( HWND hwndDlg )
     {
         HWND hParent = GetParent(hwndDlg);
         if (!hParent) break;
-        
+
         if (!IsWindow(hParent)) break;
 
         if (!GETDLGINFO(hParent)) /* TODO: Correct? */
@@ -589,9 +589,9 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
             p += wcslen( result->menuName ) + 1;
             break;
     }
-        
+
     /* Get the class name */
-        
+
     switch(GET_WORD(p))
     {
         case 0x0000:
@@ -607,7 +607,7 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
             p += wcslen( result->className ) + 1;
             break;
     }
-    
+
     /* Get the window caption */
 
     result->caption = (LPCWSTR)p;
@@ -669,7 +669,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     dlgTemplate = DIALOG_ParseTemplate32( dlgTemplate, &template );
 
     /* Initialise dialog extra data */
-    
+
     if (!(dlgInfo = HeapAlloc( GetProcessHeap(), 0, sizeof(*dlgInfo) ))) return 0;
     dlgInfo->hwndFocus   = 0;
     dlgInfo->hUserFont   = 0;
@@ -679,11 +679,11 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     dlgInfo->idResult    = 0;
     dlgInfo->flags       = 0;
     //dlgInfo->hDialogHeap = 0;
-    
+
     /* Load menu */
 
     if (template.menuName) dlgInfo->hMenu = LoadMenuW( hInst, template.menuName );
-    
+
     /* Create custom font if needed */
 
     if (template.style & DS_SETFONT)
@@ -758,7 +758,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
             if( rect.top < 0 ) rect.top = 0;
         }
     }
-    
+
     if (modal)
     {
         ownerEnabled = DIALOG_DisableOwner( owner );
@@ -795,7 +795,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
                                owner, dlgInfo->hMenu, hInst, NULL );
         if (HIWORD(class)) HeapFree( GetProcessHeap(), 0, class );
         if (HIWORD(caption)) HeapFree( GetProcessHeap(), 0, caption );
-    }    
+    }
 
     if (!hwnd)
     {
@@ -819,12 +819,12 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         SETDLGINFO(hwnd, dlgInfo);
         SetWindowLongA( hwnd, DWL_DLGPROC, (LONG)dlgProc );
     }
-    
+
     if (dlgInfo->hUserFont)
         SendMessageA( hwnd, WM_SETFONT, (WPARAM)dlgInfo->hUserFont, 0 );
-    
+
     /* Create controls */
-    
+
     if (DIALOG_CreateControls32( hwnd, dlgTemplate, &template, hInst, unicode ))
     {
         /* Send initialisation messages and set focus */
@@ -843,7 +843,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         }
         return hwnd;
     }
-    
+
     if( IsWindow(hwnd) ) DestroyWindow( hwnd );
     if (modal && ownerEnabled) DIALOG_EnableOwner(owner);
     return 0;
@@ -874,7 +874,7 @@ static void DEFDLG_SetFocus( HWND hwndDlg, HWND hwndCtrl )
  */
 static void DEFDLG_SaveFocus( HWND hwnd )
 {
-    DIALOGINFO *infoPtr;	
+    DIALOGINFO *infoPtr;
     HWND hwndFocus = GetFocus();
 
     if (!hwndFocus || !IsChild( hwnd, hwndFocus )) return;
@@ -985,7 +985,7 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
                     GlobalFree16(dlgInfo->hDialogHeap);
                 }*/
                 if (dlgInfo->hUserFont) DeleteObject( dlgInfo->hUserFont );
-                if (dlgInfo->hMenu) DestroyMenu( dlgInfo->hMenu );                
+                if (dlgInfo->hMenu) DestroyMenu( dlgInfo->hMenu );
                 HeapFree( GetProcessHeap(), 0, dlgInfo );
             }
              /* Window clean-up */
@@ -1337,8 +1337,8 @@ BOOL CALLBACK GetDlgItemEnumProc (HWND hwnd, LPARAM lParam )
 {
     GETDLGITEMINFO * info = (GETDLGITEMINFO *)lParam;
     if(info->nIDDlgItem == GetWindowLongW( hwnd, GWL_ID ))
-    {        
-        info->control = hwnd;        
+    {
+        info->control = hwnd;
         return FALSE;
     }
     return TRUE;
@@ -1458,7 +1458,7 @@ DefDlgProcA(
     DIALOGINFO * dlgInfo;
 
 	/* if there's no dialog info property then call default windows proc?? */
-    if (!(dlgInfo = GETDLGINFO(hDlg))) 
+    if (!(dlgInfo = GETDLGINFO(hDlg)))
 	    return DefWindowProcA( hDlg, Msg, wParam, lParam );
 
     SetWindowLongW( hDlg, DWL_MSGRESULT, 0 );
@@ -1519,7 +1519,7 @@ DefDlgProcW(
     DIALOGINFO * dlgInfo;
 
 	/* if there's no dialog info property then call default windows proc?? */
-    if (!(dlgInfo = GETDLGINFO(hDlg))) 
+    if (!(dlgInfo = GETDLGINFO(hDlg)))
 	    return DefWindowProcW( hDlg, Msg, wParam, lParam );
 
     SetWindowLongW( hDlg, DWL_MSGRESULT, 0 );
@@ -1636,7 +1636,7 @@ DialogBoxParamA(
     HWND hwnd;
     HRSRC hrsrc;
     LPCDLGTEMPLATE ptr;
-    
+
 	if (!(hrsrc = FindResourceA( hInstance, lpTemplateName, (LPCSTR)RT_DIALOG ))) return 0;
 	if (!(ptr = (LPCDLGTEMPLATE)LoadResource(hInstance, hrsrc))) return 0;
     hwnd = DIALOG_CreateIndirect(hInstance, ptr, hWndParent, lpDialogFunc, dwInitParam, FALSE, TRUE);
@@ -1660,7 +1660,7 @@ DialogBoxParamW(
     HWND hwnd;
     HRSRC hrsrc;
     LPCDLGTEMPLATE ptr;
-    
+
 	if (!(hrsrc = FindResourceW( hInstance, lpTemplateName, (LPCWSTR)RT_DIALOG ))) return 0;
 	if (!(ptr = (LPCDLGTEMPLATE)LoadResource(hInstance, hrsrc))) return 0;
     hwnd = DIALOG_CreateIndirect(hInstance, ptr, hWndParent, lpDialogFunc, dwInitParam, TRUE, TRUE);
@@ -1811,7 +1811,7 @@ EndDialog(
     HWND owner;
 
     if (!(dlgInfo = GETDLGINFO(hDlg))) return FALSE;
-    
+
     dlgInfo->idResult = nResult;
     dlgInfo->flags |= DF_END;
     wasEnabled = (dlgInfo->flags & DF_OWNERENABLED);
@@ -2058,20 +2058,20 @@ IsDialogMessageA(
   LPMSG lpMsg)
 {
      INT dlgCode = 0;
- 
+
      // FIXME: hooks
      //if (CallMsgFilterA( lpMsg, MSGF_DIALOGBOX )) return TRUE;
- 
+
      if ((hDlg != lpMsg->hwnd) && !IsChild( hDlg, lpMsg->hwnd )) return FALSE;
- 
+
      hDlg = DIALOG_FindMsgDestination(hDlg);
- 
+
      switch(lpMsg->message)
      {
      case WM_KEYDOWN:
         dlgCode = SendMessageA( lpMsg->hwnd, WM_GETDLGCODE, lpMsg->wParam, (LPARAM)lpMsg );
          if (dlgCode & DLGC_WANTMESSAGE) break;
- 
+
          switch(lpMsg->wParam)
          {
          case VK_TAB:
@@ -2081,7 +2081,7 @@ IsDialogMessageA(
                  return TRUE;
              }
              break;
- 
+
          case VK_RIGHT:
          case VK_DOWN:
          case VK_LEFT:
@@ -2094,12 +2094,12 @@ IsDialogMessageA(
                  return TRUE;
              }
              break;
- 
+
          case VK_CANCEL:
          case VK_ESCAPE:
              SendMessageA( hDlg, WM_COMMAND, IDCANCEL, (LPARAM)GetDlgItem( hDlg, IDCANCEL ) );
              return TRUE;
- 
+
          case VK_EXECUTE:
          case VK_RETURN:
              {
@@ -2112,19 +2112,19 @@ IsDialogMessageA(
                  else
                  {
                      SendMessageA( hDlg, WM_COMMAND, IDOK, (LPARAM)GetDlgItem( hDlg, IDOK ) );
- 
+
                  }
              }
              return TRUE;
          }
          break;
- 
+
      case WM_CHAR:
          dlgCode = SendMessageA( lpMsg->hwnd, WM_GETDLGCODE, lpMsg->wParam, (LPARAM)lpMsg );
          if (dlgCode & (DLGC_WANTCHARS|DLGC_WANTMESSAGE)) break;
          if (lpMsg->wParam == '\t' && (dlgCode & DLGC_WANTTAB)) break;
          /* drop through */
- 
+
      case WM_SYSCHAR:
          if (DIALOG_IsAccelerator( lpMsg->hwnd, hDlg, lpMsg->wParam ))
          {
@@ -2133,7 +2133,7 @@ IsDialogMessageA(
          }
          break;
      }
- 
+
      TranslateMessage( lpMsg );
      DispatchMessageA( lpMsg );
      return TRUE;
@@ -2150,20 +2150,20 @@ IsDialogMessageW(
   LPMSG lpMsg)
 {
      INT dlgCode = 0;
- 
+
      // FIXME: hooks
      //if (CallMsgFilterW( lpMsg, MSGF_DIALOGBOX )) return TRUE;
- 
+
      if ((hDlg != lpMsg->hwnd) && !IsChild( hDlg, lpMsg->hwnd )) return FALSE;
- 
+
      hDlg = DIALOG_FindMsgDestination(hDlg);
- 
+
      switch(lpMsg->message)
      {
      case WM_KEYDOWN:
         dlgCode = SendMessageW( lpMsg->hwnd, WM_GETDLGCODE, lpMsg->wParam, (LPARAM)lpMsg );
          if (dlgCode & DLGC_WANTMESSAGE) break;
- 
+
          switch(lpMsg->wParam)
          {
          case VK_TAB:
@@ -2173,7 +2173,7 @@ IsDialogMessageW(
                  return TRUE;
              }
              break;
- 
+
          case VK_RIGHT:
          case VK_DOWN:
          case VK_LEFT:
@@ -2186,12 +2186,12 @@ IsDialogMessageW(
                  return TRUE;
              }
              break;
- 
+
          case VK_CANCEL:
          case VK_ESCAPE:
              SendMessageW( hDlg, WM_COMMAND, IDCANCEL, (LPARAM)GetDlgItem( hDlg, IDCANCEL ) );
              return TRUE;
- 
+
          case VK_EXECUTE:
          case VK_RETURN:
              {
@@ -2204,19 +2204,19 @@ IsDialogMessageW(
                  else
                  {
                      SendMessageW( hDlg, WM_COMMAND, IDOK, (LPARAM)GetDlgItem( hDlg, IDOK ) );
- 
+
                  }
              }
              return TRUE;
          }
          break;
- 
+
      case WM_CHAR:
          dlgCode = SendMessageW( lpMsg->hwnd, WM_GETDLGCODE, lpMsg->wParam, (LPARAM)lpMsg );
          if (dlgCode & (DLGC_WANTCHARS|DLGC_WANTMESSAGE)) break;
          if (lpMsg->wParam == '\t' && (dlgCode & DLGC_WANTTAB)) break;
          /* drop through */
- 
+
      case WM_SYSCHAR:
          if (DIALOG_IsAccelerator( lpMsg->hwnd, hDlg, lpMsg->wParam ))
          {
@@ -2225,7 +2225,7 @@ IsDialogMessageW(
          }
          break;
      }
- 
+
      TranslateMessage( lpMsg );
      DispatchMessageW( lpMsg );
      return TRUE;
@@ -2366,7 +2366,7 @@ static BOOL CALLBACK CheckRB(HWND hwnd, LPARAM lParam)
 {
   LONG lChildID = GetWindowLongW(hwnd, GWL_ID);
   RADIOGROUP *lpRadioGroup = (RADIOGROUP *)lParam;
-  
+
   if((lChildID >= lpRadioGroup->firstID) &&
      (lChildID <= lpRadioGroup->lastID))
   {
@@ -2379,7 +2379,7 @@ static BOOL CALLBACK CheckRB(HWND hwnd, LPARAM lParam)
       SendMessageW(hwnd, BM_SETCHECK, BST_UNCHECKED, 0);
     }
   }
-  
+
    return TRUE;
 }
 
@@ -2395,11 +2395,11 @@ CheckRadioButton(
   int nIDCheckButton)
 {
   RADIOGROUP radioGroup;
-  
+
   radioGroup.firstID = nIDFirstButton;
   radioGroup.lastID = nIDLastButton;
   radioGroup.checkID = nIDCheckButton;
-  
+
   return EnumChildWindows(hDlg, CheckRB, (LPARAM)&radioGroup);
 }
 

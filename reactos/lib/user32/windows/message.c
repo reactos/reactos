@@ -15,7 +15,7 @@
 #include <message.h>
 
 /* DDE message exchange
- * 
+ *
  * - Session initialization
  *   Client sends a WM_DDE_INITIATE message, usually a broadcast message. lParam of
  *   this message contains a pair of global atoms, the Application and Topic atoms.
@@ -91,7 +91,7 @@ DdeAddPair(HGLOBAL ClientMem, HGLOBAL ServerMem)
         }
       else
         {
-          New = HeapAlloc(GetProcessHeap(), 0, 
+          New = HeapAlloc(GetProcessHeap(), 0,
                           (DdeNumAlloc + GROWBY) * sizeof(DDEPAIR));
         }
 
@@ -195,7 +195,7 @@ MsgiUMToKMMessage(PMSG UMMsg, PMSG KMMsg, BOOL Posted)
           SIZE_T Size;
           PKMDDEEXECUTEDATA KMDdeExecuteData;
           PVOID Data;
-          
+
           Size = GlobalSize((HGLOBAL) UMMsg->lParam);
           Data = GlobalLock((HGLOBAL) UMMsg->lParam);
           if (NULL == Data)
@@ -235,7 +235,7 @@ MsgiUMToKMMessage(PMSG UMMsg, PMSG KMMsg, BOOL Posted)
           pKMCopyData->cbData = pUMCopyData->cbData;
           pKMCopyData->lpData = pKMCopyData + 1;
 
-          RtlCopyMemory(pKMCopyData + 1, pUMCopyData->lpData, 
+          RtlCopyMemory(pKMCopyData + 1, pUMCopyData->lpData,
                         pUMCopyData->cbData);
 
           KMMsg->lParam = (LPARAM)pKMCopyData;
@@ -759,7 +759,7 @@ MsgConversionAdd(PMSGCONVERSION Conversion)
         }
       else
         {
-          New = HeapAlloc(GetProcessHeap(), 0, 
+          New = HeapAlloc(GetProcessHeap(), 0,
                           (MsgConversionNumAlloc + GROWBY) * sizeof(MSGCONVERSION));
         }
 
@@ -1631,7 +1631,7 @@ SendMessageTimeoutW(
   LRESULT Result;
 
   Info.Ansi = FALSE;
-  Result = NtUserSendMessageTimeout(hWnd, Msg, wParam, lParam, fuFlags, uTimeout, 
+  Result = NtUserSendMessageTimeout(hWnd, Msg, wParam, lParam, fuFlags, uTimeout,
                                     lpdwResult, &Info);
   if (! Info.HandledByKernel)
     {
@@ -1779,7 +1779,7 @@ STDCALL
 RealGetQueueStatus(UINT flags)
 {
    DWORD ret;
-   WORD changed_bits, wake_bits; 
+   WORD changed_bits, wake_bits;
 
 #if 0 /* wine stuff. don't know what it does... */
 
@@ -1805,7 +1805,7 @@ BOOL STDCALL GetInputState(VOID)
    DWORD ret;
    WORD  wake_bits;
 
-#if 0 /* wine stuff. don't know what it does... */ 
+#if 0 /* wine stuff. don't know what it does... */
 
    /* check for pending X events */
    if (USER_Driver.pMsgWaitForMultipleObjectsEx)
@@ -1813,7 +1813,7 @@ BOOL STDCALL GetInputState(VOID)
 #endif
 
    ret = NtUserGetQueueStatus(FALSE /*ClearChanges*/);
-   
+
    wake_bits = HIWORD(ret);
 
    return wake_bits & (QS_KEY | QS_MOUSEBUTTON);
@@ -1922,7 +1922,7 @@ BOOL WINAPI IsInsideMessagePumpHook()
 {
 	if(!gfMessagePumpHook)
 		return FALSE;
-	
+
     /* This code checks if we're inside SendMessage. */
 #if 0
 	/* Since our TEB doesnt match that of real windows, testing this value is useless until we know what it does

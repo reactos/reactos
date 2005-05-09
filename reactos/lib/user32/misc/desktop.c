@@ -110,7 +110,7 @@ SystemParametersInfoA(UINT uiAction,
           return TRUE;
         }
 #endif
-        
+
         /* FIXME - Read the registry key for now, but what happens if the wallpaper was
                    changed without SPIF_UPDATEINIFILE?! */
         if(RegOpenKeyExW(HKEY_CURRENT_USER,
@@ -138,7 +138,7 @@ SystemParametersInfoA(UINT uiAction,
         HBITMAP hNewWallpaper;
         BOOL Ret;
         LPSTR lpWallpaper = (LPSTR)pvParam;
-        
+
         if(lpWallpaper != NULL && *lpWallpaper != '\0')
         {
           hNewWallpaper = LoadImageA(0, lpWallpaper, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
@@ -152,7 +152,7 @@ SystemParametersInfoA(UINT uiAction,
           hNewWallpaper = NULL;
           lpWallpaper = NULL;
         }
-        
+
         /* Set the wallpaper bitmap */
         if(!NtUserSystemParametersInfo(SPI_SETDESKWALLPAPER, 0, &hNewWallpaper, fWinIni & SPIF_SENDCHANGE))
         {
@@ -161,7 +161,7 @@ SystemParametersInfoA(UINT uiAction,
           return FALSE;
         }
         /* Do not use the bitmap handle anymore, it doesn't belong to our process anymore! */
-        
+
         Ret = TRUE;
         if(fWinIni & SPIF_UPDATEINIFILE)
         {
@@ -317,12 +317,12 @@ CreateDesktopA(LPCSTR lpszDesktop,
   HDESK hDesktop;
   DEVMODEW DevmodeW;
 
-  if (lpszDesktop != NULL) 
+  if (lpszDesktop != NULL)
     {
       RtlInitAnsiString(&DesktopNameA, (LPSTR)lpszDesktop);
       RtlAnsiStringToUnicodeString(&DesktopNameU, &DesktopNameA, TRUE);
-    } 
-  else 
+    }
+  else
     {
       RtlInitUnicodeString(&DesktopNameU, NULL);
     }

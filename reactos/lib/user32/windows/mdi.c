@@ -149,8 +149,8 @@ BOOL CALLBACK MDI_GetChildByID_EnumProc (HWND hwnd, LPARAM lParam )
 {
     DWORD *control = (DWORD *)lParam;
     if(*control == GetWindowLongW( hwnd, GWL_ID ))
-    {        
-        *control = (DWORD)hwnd;        
+    {
+        *control = (DWORD)hwnd;
         return FALSE;
     }
     return TRUE;
@@ -1285,7 +1285,7 @@ static LRESULT MDIClientWndProc_common( HWND hwnd, UINT message,
         SetWindowLongPtrW( hwnd, 0, (LONG_PTR)ci );
 	return TRUE;
 #endif
-      
+
       case WM_CREATE:
       {
           RECT rect;

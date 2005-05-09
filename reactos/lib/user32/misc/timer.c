@@ -43,7 +43,7 @@ KillSystemTimer(
   HWND hWnd,
   UINT_PTR IDEvent)
 {
-  return NtUserKillSystemTimer(hWnd, IDEvent); 
+  return NtUserKillSystemTimer(hWnd, IDEvent);
 }
 
 
@@ -56,7 +56,7 @@ KillTimer(
   HWND hWnd,
   UINT_PTR IDEvent)
 {
-  return NtUserKillTimer(hWnd, IDEvent); 
+  return NtUserKillTimer(hWnd, IDEvent);
 }
 
 

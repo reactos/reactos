@@ -87,11 +87,11 @@ BeginDeferWindowPos(int nNumWindows)
 BOOL STDCALL
 BringWindowToTop(HWND hWnd)
 {
-    return NtUserSetWindowPos( hWnd, 
-                               HWND_TOP, 
-                               0, 
-                               0, 
-                               0, 
+    return NtUserSetWindowPos( hWnd,
+                               HWND_TOP,
+                               0,
+                               0,
+                               0,
                                0,
                                SWP_NOSIZE | SWP_NOMOVE );
 }
@@ -217,7 +217,7 @@ CreateWindowExA(DWORD dwExStyle,
       SetLastError(ERROR_OUTOFMEMORY);
       return (HWND)0;
     }
-    
+
   if(!hMenu && (dwStyle & (WS_OVERLAPPEDWINDOW | WS_POPUP)))
   {
     wce.cbSize = sizeof(WNDCLASSEXA);
@@ -248,11 +248,11 @@ CreateWindowExA(DWORD dwExStyle,
 
   RtlFreeUnicodeString(&WindowName);
 
-  if (!IS_ATOM(lpClassName)) 
+  if (!IS_ATOM(lpClassName))
     {
       RtlFreeUnicodeString(&ClassName);
     }
-  
+
   return Handle;
 }
 
@@ -289,12 +289,12 @@ CreateWindowExW(DWORD dwExStyle,
      return CreateMDIWindowW(lpClassName, lpWindowName, dwStyle, x, y,
         nWidth, nHeight, hWndParent, hInstance, (LPARAM)lpParam);
 
-  if (IS_ATOM(lpClassName)) 
+  if (IS_ATOM(lpClassName))
     {
       RtlInitUnicodeString(&ClassName, NULL);
       ClassName.Buffer = (LPWSTR)lpClassName;
-    } 
-  else 
+    }
+  else
     {
       RtlInitUnicodeString(&ClassName, lpClassName);
     }
@@ -542,12 +542,12 @@ FindWindowExA(HWND hwndParent,
       ucClassName.Buffer = NULL;
       ucClassName.Length = 0;
    }
-   else if (IS_ATOM(lpszClass)) 
+   else if (IS_ATOM(lpszClass))
    {
       ucClassName.Buffer = (LPWSTR)lpszClass;
       ucClassName.Length = 0;
-   } 
-   else 
+   }
+   else
    {
       RtlCreateUnicodeStringFromAsciiz(&ucClassName, (LPSTR)lpszClass);
    }
@@ -557,7 +557,7 @@ FindWindowExA(HWND hwndParent,
    Result = NtUserFindWindowEx(hwndParent, hwndChildAfter, &ucClassName,
       &ucWindowName);
 
-   if (!IS_ATOM(lpszClass)) 
+   if (!IS_ATOM(lpszClass))
       RtlFreeUnicodeString(&ucClassName);
    RtlFreeUnicodeString(&ucWindowName);
 
@@ -582,16 +582,16 @@ FindWindowExW(HWND hwndParent,
       ucClassName.Buffer = NULL;
       ucClassName.Length = 0;
    }
-   else if (IS_ATOM(lpszClass)) 
+   else if (IS_ATOM(lpszClass))
    {
       RtlInitUnicodeString(&ucClassName, NULL);
       ucClassName.Buffer = (LPWSTR)lpszClass;
-   } 
-   else 
+   }
+   else
    {
       RtlInitUnicodeString(&ucClassName, lpszClass);
    }
-	
+
    RtlInitUnicodeString(&ucWindowName, lpszWindow);
 
    return NtUserFindWindowEx(hwndParent, hwndChildAfter, &ucClassName, &ucWindowName);
@@ -616,14 +616,14 @@ FindWindowA(LPCSTR lpClassName, LPCSTR lpWindowName)
 HWND STDCALL
 FindWindowW(LPCWSTR lpClassName, LPCWSTR lpWindowName)
 {
-  /* 
-  
+  /*
+
   There was a FIXME here earlier, but I think it is just a documentation unclarity.
 
-  FindWindow only searches top level windows. What they mean is that child 
-  windows of other windows than the desktop can be searched. 
+  FindWindow only searches top level windows. What they mean is that child
+  windows of other windows than the desktop can be searched.
   FindWindowExW never does a recursive search.
-  
+
 	/ Joakim
   */
 
@@ -778,12 +778,12 @@ GetWindowModuleFileNameA(HWND hwnd,
 			 UINT cchFileNameMax)
 {
   HINSTANCE hWndInst;
-  
+
   if(!(hWndInst = NtUserGetWindowInstance(hwnd)))
   {
     return 0;
   }
-  
+
   return GetModuleFileNameA(hWndInst, lpszFileName, cchFileNameMax);
 }
 
@@ -797,12 +797,12 @@ GetWindowModuleFileNameW(HWND hwnd,
 			 UINT cchFileNameMax)
 {
   HINSTANCE hWndInst;
-  
+
   if(!(hWndInst = NtUserGetWindowInstance(hwnd)))
   {
     return 0;
   }
-  
+
   return GetModuleFileNameW(hWndInst, lpszFileName, cchFileNameMax);
 }
 
@@ -840,13 +840,13 @@ GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
   {
     return 0;
   }
-  
+
   if(ProcessId != GetCurrentProcessId())
   {
     /* do not send WM_GETTEXT messages to other processes */
     LPWSTR Buffer;
     INT Length;
-    
+
     if (nMaxCount > 1)
     {
       *((PWSTR)lpString) = '\0';
@@ -861,12 +861,12 @@ GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
     {
       lpString[0] = '\0';
     }
-    
+
     HeapFree(GetProcessHeap(), 0, Buffer);
-    
+
     return (LRESULT)Length;
   }
-  
+
   return(SendMessageA(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString));
 }
 
@@ -882,12 +882,12 @@ GetWindowTextLengthA(HWND hWnd)
   {
     return 0;
   }
-  
+
   if(ProcessId == GetCurrentProcessId())
   {
     return(SendMessageA(hWnd, WM_GETTEXTLENGTH, 0, 0));
   }
-  
+
   /* do not send WM_GETTEXT messages to other processes */
   return (LRESULT)NtUserInternalGetWindowText(hWnd, NULL, 0);
 }
@@ -904,12 +904,12 @@ GetWindowTextLengthW(HWND hWnd)
   {
     return 0;
   }
-  
+
   if(ProcessId == GetCurrentProcessId())
   {
     return(SendMessageW(hWnd, WM_GETTEXTLENGTH, 0, 0));
   }
-  
+
   /* do not send WM_GETTEXT messages to other processes */
   return (LRESULT)NtUserInternalGetWindowText(hWnd, NULL, 0);
 }
@@ -929,18 +929,18 @@ GetWindowTextW(
   {
     return 0;
   }
-  
+
   if(ProcessId == GetCurrentProcessId())
   {
     return(SendMessageW(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString));
   }
-  
+
   /* do not send WM_GETTEXT messages to other processes */
   if (nMaxCount > 1)
   {
     *((PWSTR)lpString) = L'\0';
   }
-  
+
   return (LRESULT)NtUserInternalGetWindowText(hWnd, (PWSTR)lpString, nMaxCount);
 }
 
@@ -964,12 +964,12 @@ IsChild(HWND hWndParent,
        return FALSE;
    }
 
-   do 
+   do
    {
       hWnd = (HWND)NtUserGetWindowLong(hWnd, GWL_HWNDPARENT, FALSE);
    }
    while (hWnd != NULL && hWnd != hWndParent);
-    
+
    return hWnd == hWndParent;
 }
 
@@ -980,7 +980,7 @@ IsChild(HWND hWndParent,
 BOOL STDCALL
 IsIconic(HWND hWnd)
 {
-  return (NtUserGetWindowLong( hWnd, GWL_STYLE, FALSE) & WS_MINIMIZE) != 0;  
+  return (NtUserGetWindowLong( hWnd, GWL_STYLE, FALSE) & WS_MINIMIZE) != 0;
 }
 
 
@@ -1088,7 +1088,7 @@ AnimateWindow(HWND hwnd,
   /* If trying to show/hide and it's already   *
    * shown/hidden or invalid window, fail with *
    * invalid parameter                         */
-   
+
   BOOL visible;
   visible = IsWindowVisible(hwnd);
 //  if(!IsWindow(hwnd) ||
@@ -1217,13 +1217,13 @@ SetWindowTextA(HWND hWnd,
   {
     return FALSE;
   }
-  
+
   if(ProcessId != GetCurrentProcessId())
   {
     /* do not send WM_GETTEXT messages to other processes */
     ANSI_STRING AnsiString;
     UNICODE_STRING UnicodeString;
-    
+
     if(lpString)
     {
       RtlInitAnsiString(&AnsiString, (LPSTR)lpString);
@@ -1233,14 +1233,14 @@ SetWindowTextA(HWND hWnd,
     }
     else
       NtUserDefSetText(hWnd, NULL);
-    
+
     if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
     {
       DefWndNCPaint(hWnd, (HRGN)1, -1);
     }
     return TRUE;
   }
-  
+
   return SendMessageA(hWnd, WM_SETTEXT, 0, (LPARAM)lpString);
 }
 
@@ -1257,24 +1257,24 @@ SetWindowTextW(HWND hWnd,
   {
     return FALSE;
   }
-  
+
   if(ProcessId != GetCurrentProcessId())
   {
     /* do not send WM_GETTEXT messages to other processes */
     UNICODE_STRING UnicodeString;
-    
+
     if(lpString)
       RtlInitUnicodeString(&UnicodeString, (LPWSTR)lpString);
-    
+
     NtUserDefSetText(hWnd, (lpString ? &UnicodeString : NULL));
-    
+
     if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
     {
       DefWndNCPaint(hWnd, (HRGN)1, -1);
     }
     return TRUE;
   }
-  
+
   return SendMessageW(hWnd, WM_SETTEXT, 0, (LPARAM)lpString);
 }
 
@@ -1356,7 +1356,7 @@ UpdateLayeredWindow(HWND hwnd,
 HWND STDCALL
 WindowFromPoint(POINT Point)
 {
-  //TODO: Determine what the actual parameters to 
+  //TODO: Determine what the actual parameters to
   // NtUserWindowFromPoint are.
   return NtUserWindowFromPoint(Point.x, Point.y);
 }
@@ -1404,7 +1404,7 @@ MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
 /*
  * @implemented
  */
-BOOL STDCALL 
+BOOL STDCALL
 ScreenToClient(HWND hWnd, LPPOINT lpPoint)
 {
   return(MapWindowPoints(NULL, hWnd, lpPoint, 1) != 0);
@@ -1534,7 +1534,7 @@ BOOL STDCALL
 ScrollWindow(HWND hWnd, int dx, int dy, CONST RECT *lpRect,
    CONST RECT *prcClip)
 {
-   return NtUserScrollWindowEx(hWnd, dx, dy, lpRect, prcClip, 0, NULL, 
+   return NtUserScrollWindowEx(hWnd, dx, dy, lpRect, prcClip, 0, NULL,
       (lpRect ? 0 : SW_SCROLLCHILDREN) | SW_INVALIDATE) != ERROR;
 }
 
@@ -1574,11 +1574,11 @@ IsWindowInDestroy(HWND hWnd)
  * @implemented
  */
 VOID
-STDCALL 
+STDCALL
 DisableProcessWindowsGhosting(VOID)
 {
   NtUserEnableProcessWindowGhosting(FALSE);
 }
 
 /* EOF */
-	 
+

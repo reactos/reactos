@@ -824,7 +824,7 @@ static LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 
 	case WM_GETDLGCODE:
 		result = DLGC_HASSETSEL | DLGC_WANTCHARS | DLGC_WANTARROWS;
-		
+
 		if (es->style & ES_MULTILINE)
 		{
 		   result |= DLGC_WANTALLKEYS;
@@ -3799,7 +3799,7 @@ static void EDIT_WM_Char(EDITSTATE *es, WCHAR c)
     /*If Edit control style is ES_NUMBER allow users to key in only numeric values*/
     if( (es->style & ES_NUMBER) && !( c >= '0' && c <= '9') )
       break;
-    
+
 		if (!(es->style & ES_READONLY) && (c >= ' ') && (c != 127)) {
 			WCHAR str[2];
  			str[0] = c;
@@ -4593,7 +4593,7 @@ static LRESULT EDIT_WM_NCCreate(HWND hwnd, LPCREATESTRUCTW lpcs, BOOL unicode)
          * If WS_BORDER without WS_EX_CLIENTEDGE is specified we shouldn't have
          * a nonclient area and we should handle painting the border ourselves.
          *
-         * When making modifications please ensure that the code still works 
+         * When making modifications please ensure that the code still works
          * for edit controls created directly with style 0x50800000, exStyle 0
          * (which should have a single pixel border)
 	 */

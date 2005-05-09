@@ -26,7 +26,7 @@
  * PROJECT:          ReactOS User32
  * PURPOSE:          [w]sprintf functions
  * FILE:             lib/user32/wsprintf.c
- * PROGRAMER:        Steven Edwards 
+ * PROGRAMER:        Steven Edwards
  * REVISION HISTORY: 2003/07/13 Merged from wine user/wsprintf.c
  * NOTES:            Adapted from Wine
  */
