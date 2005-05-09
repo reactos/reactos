@@ -21,6 +21,12 @@
 
 extern GENERIC_MAPPING IopFileMapping;
 
+NTSTATUS
+STDCALL
+SeSetWorldSecurityDescriptor(SECURITY_INFORMATION SecurityInformation,
+                             PSECURITY_DESCRIPTOR SecurityDescriptor,
+                             PULONG BufferLength);
+
 /* INTERNAL FUNCTIONS ********************************************************/
 
 static 
@@ -226,7 +232,7 @@ IopDeleteFile(PVOID ObjectBody)
         {
             KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
         }
-	IoFreeIrp(Irp);
+        IoFreeIrp(Irp);
       
     }
 
@@ -245,76 +251,6 @@ IopDeleteFile(PVOID ObjectBody)
     }
 }
 
-static 
-NTSTATUS
-IopSetDefaultSecurityDescriptor(SECURITY_INFORMATION SecurityInformation,
-                                PSECURITY_DESCRIPTOR SecurityDescriptor,
-                                PULONG BufferLength)
-{
-  ULONG_PTR Current;
-  ULONG SidSize;
-  ULONG SdSize;
-  NTSTATUS Status;
-
-  DPRINT("IopSetDefaultSecurityDescriptor() called\n");
-
-  if (SecurityInformation == 0)
-    {
-      return STATUS_ACCESS_DENIED;
-    }
-
-  SidSize = RtlLengthSid(SeWorldSid);
-  SdSize = sizeof(SECURITY_DESCRIPTOR) + (2 * SidSize);
-
-  if (*BufferLength < SdSize)
-    {
-      *BufferLength = SdSize;
-      return STATUS_BUFFER_TOO_SMALL;
-    }
-
-  *BufferLength = SdSize;
-
-  Status = RtlCreateSecurityDescriptor(SecurityDescriptor,
-           SECURITY_DESCRIPTOR_REVISION);
-  if (!NT_SUCCESS(Status))
-    {
-      return Status;
-    }
-
-  SecurityDescriptor->Control |= SE_SELF_RELATIVE;
-  Current = (ULONG_PTR)SecurityDescriptor + sizeof(SECURITY_DESCRIPTOR);
-
-  if (SecurityInformation & OWNER_SECURITY_INFORMATION)
-    {
-      RtlCopyMemory((PVOID)Current,
-      SeWorldSid,
-      SidSize);
-      SecurityDescriptor->Owner = (PSID)((ULONG_PTR)Current - (ULONG_PTR)SecurityDescriptor);
-      Current += SidSize;
-    }
-
-  if (SecurityInformation & GROUP_SECURITY_INFORMATION)
-    {
-      RtlCopyMemory((PVOID)Current,
-      SeWorldSid,
-      SidSize);
-      SecurityDescriptor->Group = (PSID)((ULONG_PTR)Current - (ULONG_PTR)SecurityDescriptor);
-      Current += SidSize;
-    }
-
-  if (SecurityInformation & DACL_SECURITY_INFORMATION)
-    {
-      SecurityDescriptor->Control |= SE_DACL_PRESENT;
-    }
-
-  if (SecurityInformation & SACL_SECURITY_INFORMATION)
-    {
-      SecurityDescriptor->Control |= SE_SACL_PRESENT;
-    }
-
-  return STATUS_SUCCESS;
-}
-
 NTSTATUS
 STDCALL
 IopSecurityFile(PVOID ObjectBody,
@@ -323,105 +259,151 @@ IopSecurityFile(PVOID ObjectBody,
                 PSECURITY_DESCRIPTOR SecurityDescriptor,
                 PULONG BufferLength)
 {
-  IO_STATUS_BLOCK IoStatusBlock;
-  PIO_STACK_LOCATION StackPtr;
-  PFILE_OBJECT FileObject;
-  PIRP Irp;
-  NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PIO_STACK_LOCATION StackPtr;
+    PFILE_OBJECT FileObject;
+    PDEVICE_OBJECT DeviceObject;
+    ULONG MajorFunction;
+    PIRP Irp;
+    BOOLEAN LocalEvent = FALSE;
+    KEVENT Event;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-  DPRINT("IopSecurityFile() called\n");
+    DPRINT("IopSecurityFile() called\n");
 
-  FileObject = (PFILE_OBJECT)ObjectBody;
+    FileObject = (PFILE_OBJECT)ObjectBody;
 
-  switch (OperationCode)
+    if (OperationCode == QuerySecurityDescriptor)
     {
-      case SetSecurityDescriptor:
- DPRINT("Set security descriptor\n");
- KeResetEvent(&FileObject->Event);
- Irp = IoBuildSynchronousFsdRequest(IRP_MJ_SET_SECURITY,
-        FileObject->DeviceObject,
-        NULL,
-        0,
-        NULL,
-        &FileObject->Event,
-        &IoStatusBlock);
+        MajorFunction = IRP_MJ_QUERY_SECURITY;
+        DPRINT("Query security descriptor\n");
+    }
+    else if (OperationCode == DeleteSecurityDescriptor)
+    {
+        DPRINT("Delete\n");
+        return STATUS_SUCCESS;
+    }
+    else if (OperationCode == AssignSecurityDescriptor)
+    {
+        /* If this is a direct open, we can assign it */
+        if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
+        {
+            /* Get the Device Object */
+            DPRINT1("here\n");
+            DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
+            
+            /* Assign the Security Descriptor */
+            DeviceObject->SecurityDescriptor = SecurityDescriptor;
+        }
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        MajorFunction = IRP_MJ_SET_SECURITY;
+        DPRINT("Set security descriptor\n");
+        
+        /* If this is a direct open, we can set it */
+        if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
+        {
+            DPRINT1("Set SD unimplemented for Devices\n");
+            return STATUS_SUCCESS;
+        }
+    }
+    
+    /* Get the Device Object */
+    DPRINT1("FileObject: %p\n", FileObject);
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    
+    /* Check if we should use Sync IO or not */
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+    {
+        /* Use File Object event */
+        KeClearEvent(&FileObject->Event);
+    }
+    else
+    {
+        /* Use local event */
+        KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+        LocalEvent = TRUE;
+    }
+    
+    /* Allocate the IRP */
+    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+     
+    /* Set the IRP */
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    Irp->RequestorMode = ExGetPreviousMode();
+    Irp->UserIosb = &IoStatusBlock;
+    Irp->UserEvent = (LocalEvent) ? &Event : NULL;
+    Irp->Flags = (LocalEvent) ? IRP_SYNCHRONOUS_API : 0;
+    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+    
+    /* Set Stack Parameters */
+    StackPtr = IoGetNextIrpStackLocation(Irp);
+    StackPtr->FileObject = FileObject;
 
- StackPtr = IoGetNextIrpStackLocation(Irp);
- StackPtr->FileObject = FileObject;
-
- StackPtr->Parameters.SetSecurity.SecurityInformation = SecurityInformation;
- StackPtr->Parameters.SetSecurity.SecurityDescriptor = SecurityDescriptor;
-
- Status = IoCallDriver(FileObject->DeviceObject, Irp);
- if (Status == STATUS_PENDING)
-   {
-     KeWaitForSingleObject(&FileObject->Event,
-      Executive,
-      KernelMode,
-      FALSE,
-      NULL);
-     Status = IoStatusBlock.Status;
-   }
-
- if (Status == STATUS_INVALID_DEVICE_REQUEST)
-   {
-     Status = STATUS_SUCCESS;
-   }
- return Status;
-
-      case QuerySecurityDescriptor:
- DPRINT("Query security descriptor\n");
- KeResetEvent(&FileObject->Event);
- Irp = IoBuildSynchronousFsdRequest(IRP_MJ_QUERY_SECURITY,
-        FileObject->DeviceObject,
-        NULL,
-        0,
-        NULL,
-        &FileObject->Event,
-        &IoStatusBlock);
-
- Irp->UserBuffer = SecurityDescriptor;
-
- StackPtr = IoGetNextIrpStackLocation(Irp);
- StackPtr->FileObject = FileObject;
-
- StackPtr->Parameters.QuerySecurity.SecurityInformation = SecurityInformation;
- StackPtr->Parameters.QuerySecurity.Length = *BufferLength;
-
- Status = IoCallDriver(FileObject->DeviceObject, Irp);
- if (Status == STATUS_PENDING)
-   {
-     KeWaitForSingleObject(&FileObject->Event,
-      Executive,
-      KernelMode,
-      FALSE,
-      NULL);
-     Status = IoStatusBlock.Status;
-   }
-
- if (Status == STATUS_INVALID_DEVICE_REQUEST)
-   {
-     Status = IopSetDefaultSecurityDescriptor(SecurityInformation,
-           SecurityDescriptor,
-           BufferLength);
-   }
- else
-   {
-     /* FIXME: Is this correct?? */
-     *BufferLength = IoStatusBlock.Information;
-   }
- return Status;
-
-      case DeleteSecurityDescriptor:
- DPRINT("Delete security descriptor\n");
- return STATUS_SUCCESS;
-
-      case AssignSecurityDescriptor:
- DPRINT("Assign security descriptor\n");
- return STATUS_SUCCESS;
+    /* Set Parameters */
+    if (OperationCode == QuerySecurityDescriptor)
+    {
+        StackPtr->Parameters.QuerySecurity.SecurityInformation = SecurityInformation;
+        StackPtr->Parameters.QuerySecurity.Length = *BufferLength;
+        Irp->UserBuffer = SecurityDescriptor;
+    }
+    else
+    {
+        StackPtr->Parameters.SetSecurity.SecurityInformation = SecurityInformation;
+        StackPtr->Parameters.SetSecurity.SecurityDescriptor = SecurityDescriptor;
+    }
+    
+    /* Call the Driver */
+    Status = IoCallDriver(FileObject->DeviceObject, Irp);
+    
+    if (Status == STATUS_PENDING)
+    {
+        if (LocalEvent)
+        {
+            KeWaitForSingleObject(&Event, 
+                                  Executive, 
+                                  KernelMode, 
+                                  FileObject->Flags & FO_ALERTABLE_IO, 
+                                  NULL);
+            Status = IoStatusBlock.Status;
+        }
+        else
+        {
+            KeWaitForSingleObject(&FileObject->Event,
+                                  Executive, 
+                                  KernelMode, 
+                                  FileObject->Flags & FO_ALERTABLE_IO, 
+                                  NULL);
+            Status = FileObject->FinalStatus;
+        }
+    }
+        
+    /* This Driver doesn't implement Security, so try to give it a default */
+    if (Status == STATUS_INVALID_DEVICE_REQUEST)
+    {
+        if (OperationCode == QuerySecurityDescriptor)
+        {
+            /* Set a World Security Descriptor */
+            Status = SeSetWorldSecurityDescriptor(SecurityInformation,
+                                                  SecurityDescriptor,
+                                                  BufferLength);
+        }
+        else
+        {
+            /* It wasn't a query, so just fake success */
+            Status = STATUS_SUCCESS;
+        }
+    }
+    else if (OperationCode == QuerySecurityDescriptor)
+    {
+        /* Return length */
+        *BufferLength = IoStatusBlock.Information;
     }
 
-  return STATUS_UNSUCCESSFUL;
+    /* Return Status */
+    return Status;
 }
 
 NTSTATUS
@@ -2664,8 +2646,8 @@ NtSetInformationFile(HANDLE FileHandle,
     ASSERT(IoStatusBlock != NULL);
     ASSERT(FileInformation != NULL);
 
-    DPRINT1("NtSetInformationFile(Handle %x StatBlk %x FileInfo %x Length %d "
-            "Class %d)\n", FileHandle, IoStatusBlock, FileInformation,
+    DPRINT("NtSetInformationFile(Handle %x StatBlk %x FileInfo %x Length %d "
+           "Class %d)\n", FileHandle, IoStatusBlock, FileInformation,
             Length, FileInformationClass);
 
     /* Get the file object from the file handle */

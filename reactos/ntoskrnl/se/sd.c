@@ -108,6 +108,76 @@ SepInitSDs(VOID)
   return TRUE;
 }
 
+NTSTATUS
+STDCALL
+SeSetWorldSecurityDescriptor(SECURITY_INFORMATION SecurityInformation,
+                             PSECURITY_DESCRIPTOR SecurityDescriptor,
+                             PULONG BufferLength)
+{
+  ULONG_PTR Current;
+  ULONG SidSize;
+  ULONG SdSize;
+  NTSTATUS Status;
+
+  DPRINT("SeSetWorldSecurityDescriptor() called\n");
+
+  if (SecurityInformation == 0)
+    {
+      return STATUS_ACCESS_DENIED;
+    }
+
+  SidSize = RtlLengthSid(SeWorldSid);
+  SdSize = sizeof(SECURITY_DESCRIPTOR) + (2 * SidSize);
+
+  if (*BufferLength < SdSize)
+    {
+      *BufferLength = SdSize;
+      return STATUS_BUFFER_TOO_SMALL;
+    }
+
+  *BufferLength = SdSize;
+
+  Status = RtlCreateSecurityDescriptor(SecurityDescriptor,
+           SECURITY_DESCRIPTOR_REVISION);
+  if (!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+
+  SecurityDescriptor->Control |= SE_SELF_RELATIVE;
+  Current = (ULONG_PTR)SecurityDescriptor + sizeof(SECURITY_DESCRIPTOR);
+
+  if (SecurityInformation & OWNER_SECURITY_INFORMATION)
+    {
+      RtlCopyMemory((PVOID)Current,
+      SeWorldSid,
+      SidSize);
+      SecurityDescriptor->Owner = (PSID)((ULONG_PTR)Current - (ULONG_PTR)SecurityDescriptor);
+      Current += SidSize;
+    }
+
+  if (SecurityInformation & GROUP_SECURITY_INFORMATION)
+    {
+      RtlCopyMemory((PVOID)Current,
+      SeWorldSid,
+      SidSize);
+      SecurityDescriptor->Group = (PSID)((ULONG_PTR)Current - (ULONG_PTR)SecurityDescriptor);
+      Current += SidSize;
+    }
+
+  if (SecurityInformation & DACL_SECURITY_INFORMATION)
+    {
+      SecurityDescriptor->Control |= SE_DACL_PRESENT;
+    }
+
+  if (SecurityInformation & SACL_SECURITY_INFORMATION)
+    {
+      SecurityDescriptor->Control |= SE_SACL_PRESENT;
+    }
+
+  return STATUS_SUCCESS;
+}
+
 
 NTSTATUS
 SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
