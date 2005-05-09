@@ -668,7 +668,7 @@ DECLARE_INTERFACE_(IAVIStreaming, IUnknown)
 	STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
 	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
-	STDMETHOD(Begin)(THIS_ LONG,LONG,LONG) PURE;	 
+	STDMETHOD(Begin)(THIS_ LONG,LONG,LONG) PURE;
 	STDMETHOD(End)(THIS) PURE;
 };
 #undef INTERFACE
@@ -997,7 +997,7 @@ ICSetStatusProc(HIC hic,DWORD dwFlags,LRESULT lParam,LONG (CALLBACK *fpfnStatus)
 	ic.Status = fpfnStatus;
 	return ICSendMessage(hic,ICM_SET_STATUS_PROC,(DWORD)&ic,sizeof(ic));
 }
-static __inline LRESULT 
+static __inline LRESULT
 ICDecompressEx(HIC hic,DWORD dwFlags,LPBITMAPINFOHEADER lpbiSrc,LPVOID lpSrc,INT xSrc,INT ySrc,INT dxSrc,INT dySrc,LPBITMAPINFOHEADER lpbiDst,LPVOID lpDst,INT xDst,INT yDst,INT dxDst,INT dyDst)
 {
 	ICDECOMPRESSEX ic;

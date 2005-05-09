@@ -173,10 +173,10 @@ ScsiPortWmiDispatchFunction(
 #define ScsiPortWmiGetReturnSize(RequestContext) \
   ((RequestContext)->ReturnSize)
 
-/* UCHAR 
+/* UCHAR
  * ScsiPortWmiGetReturnStatus(
  *   PSCSIWMI_REQUEST_CONTEXT  RequestContext);
- */ 
+ */
 #define ScsiPortWmiGetReturnStatus(RequestContext) \
   ((RequestContext)->ReturnStatus)
 

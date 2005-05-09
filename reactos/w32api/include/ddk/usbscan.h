@@ -84,16 +84,16 @@ typedef struct _CHANNEL_INFO {
 }CHANNEL_INFO, *PCHANNEL_INFO;
 
 typedef struct _DEVICE_DESCRIPTOR {
-  OUT USHORT  usVendorId; 
-  OUT USHORT  usProductId; 
-  OUT USHORT  usBcdDevice; 
-  OUT USHORT  usLanguageId; 
+  OUT USHORT  usVendorId;
+  OUT USHORT  usProductId;
+  OUT USHORT  usBcdDevice;
+  OUT USHORT  usLanguageId;
 } DEVICE_DESCRIPTOR, *PDEVICE_DESCRIPTOR;
 
 typedef struct _DRV_VERSION {
   OUT ULONG  major;
   OUT ULONG  minor;
-  OUT ULONG  internal; 
+  OUT ULONG  internal;
 } DRV_VERSION, *PDRV_VERSION;
 
 typedef struct _IO_BLOCK {

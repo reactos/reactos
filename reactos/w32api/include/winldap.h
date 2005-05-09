@@ -93,7 +93,7 @@ extern "C" {
 #define LDAP_UNWILLING_TO_PERFORM	0x35
 #define LDAP_LOOP_DETECT	0x36
 #define LDAP_NAMING_VIOLATION	0x40
-#define LDAP_OBJECT_CLASS_VIOLATION	0x41 
+#define LDAP_OBJECT_CLASS_VIOLATION	0x41
 #define LDAP_NOT_ALLOWED_ON_NONLEAF	0x42
 #define LDAP_NOT_ALLOWED_ON_RDN	0x43
 #define LDAP_ALREADY_EXISTS	0x44
@@ -702,7 +702,7 @@ WINLDAPAPI INT LdapUTF8ToUnicode(LPCSTR,int,LPWSTR,int);
 #define ldap_rename_s ldap_rename_ext_sA
 #define ldap_rename_ext ldap_rename_extA
 #define ldap_rename_ext_s ldap_rename_ext_sA
-#endif 
+#endif
 
 #ifdef __cplusplus
 }

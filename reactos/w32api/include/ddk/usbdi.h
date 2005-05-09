@@ -140,9 +140,9 @@ typedef PVOID USBD_INTERFACE_HANDLE;
 #define USBD_STATUS_CANCELING             ((USBD_STATUS)0x00020000L)
 
 #define USBD_PIPE_DIRECTION_IN(pipeInformation) \
-  ((pipeInformation)->EndpointAddress & USB_ENDPOINT_DIRECTION_MASK) 
+  ((pipeInformation)->EndpointAddress & USB_ENDPOINT_DIRECTION_MASK)
 
-struct _URB_HEADER { 
+struct _URB_HEADER {
 	USHORT  Length;
 	USHORT  Function;
 	USBD_STATUS  Status;
@@ -210,7 +210,7 @@ struct _URB_CONTROL_GET_CONFIGURATION_REQUEST {
 	PMDL  TransferBufferMDL;
 	struct _URB  *UrbLink;
 	struct _URB_HCD_AREA  hca;
-	UCHAR  Reserved1[8];    
+	UCHAR  Reserved1[8];
 };
 
 struct _URB_CONTROL_GET_INTERFACE_REQUEST {
@@ -302,7 +302,7 @@ struct _URB_ISOCH_TRANSFER {
 	ULONG  StartFrame;
 	ULONG  NumberOfPackets;
 	ULONG  ErrorCount;
-	USBD_ISO_PACKET_DESCRIPTOR  IsoPacket[1]; 
+	USBD_ISO_PACKET_DESCRIPTOR  IsoPacket[1];
 };
 
 struct _URB_PIPE_REQUEST {
@@ -331,8 +331,8 @@ typedef enum _USBD_PIPE_TYPE {
 
 /* USBD_PIPE_INFORMATION.PipeFlags constants */
 #define USBD_PF_CHANGE_MAX_PACKET         0x00000001
-#define USBD_PF_DOUBLE_BUFFER             0x00000002 
-#define USBD_PF_ENABLE_RT_THREAD_ACCESS   0x00000004 
+#define USBD_PF_DOUBLE_BUFFER             0x00000002
+#define USBD_PF_ENABLE_RT_THREAD_ACCESS   0x00000004
 #define USBD_PF_MAP_ADD_TRANSFERS         0x00000008
 
 typedef struct _USBD_PIPE_INFORMATION {
@@ -354,7 +354,7 @@ typedef struct _USBD_INTERFACE_INFORMATION {
   UCHAR  Protocol;
   UCHAR  Reserved;
   USBD_INTERFACE_HANDLE  InterfaceHandle;
-  ULONG  NumberOfPipes; 
+  ULONG  NumberOfPipes;
   USBD_PIPE_INFORMATION  Pipes[1];
 } USBD_INTERFACE_INFORMATION, *PUSBD_INTERFACE_INFORMATION;
 

@@ -1336,7 +1336,7 @@ WINSETUPAPI BOOL WINAPI SetupTerminateFileLog(HSPFILELOG);
 #define SetupDiOpenInterfaceDeviceA	SetupDiOpenDeviceInterfaceA
 #define SetupDiGetInterfaceDeviceDetailA	SetupDiGetDeviceInterfaceDetailA
 
-#ifdef UNICODE		
+#ifdef UNICODE
 #define PSP_FILE_CALLBACK PSP_FILE_CALLBACK_W
 #define SetupAddInstallSectionToDiskSpaceList	SetupAddInstallSectionToDiskSpaceListW
 #define SetupAddSectionToDiskSpaceList	SetupAddSectionToDiskSpaceListW
@@ -1455,7 +1455,7 @@ WINSETUPAPI BOOL WINAPI SetupTerminateFileLog(HSPFILELOG);
 #define SetupSetFileQueueAlternatePlatform	SetupSetFileQueueAlternatePlatformW
 #define SetupSetPlatformPathOverride	SetupSetPlatformPathOverrideW
 #define SetupSetSourceList	SetupSetSourceListW
-#else		
+#else
 #define PSP_FILE_CALLBACK PSP_FILE_CALLBACK_A
 #define SetupAddInstallSectionToDiskSpaceList	SetupAddInstallSectionToDiskSpaceListA
 #define SetupAddSectionToDiskSpaceList	SetupAddSectionToDiskSpaceListA
@@ -1575,7 +1575,7 @@ WINSETUPAPI BOOL WINAPI SetupTerminateFileLog(HSPFILELOG);
 #define SetupSetFileQueueAlternatePlatform	SetupSetFileQueueAlternatePlatformA
 #define SetupSetPlatformPathOverride	SetupSetPlatformPathOverrideA
 #define SetupSetSourceList	SetupSetSourceListA
-#endif	/* UNICODE */	
+#endif	/* UNICODE */
 
 #endif /* RC_INVOKED */
 

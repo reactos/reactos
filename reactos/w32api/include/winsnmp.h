@@ -59,7 +59,7 @@ extern "C" {
 #define SNMP_PDU_GETBULK	(ASN_CONTEXT | ASN_CONSTRUCTOR | 4)
 #define SNMP_PDU_V1TRAP	(ASN_CONTEXT | ASN_CONSTRUCTOR | 4)
 #define SNMP_PDU_INFORM	(ASN_CONTEXT | ASN_CONSTRUCTOR | 6)
-#define SNMP_PDU_TRAP	(ASN_CONTEXT | ASN_CONSTRUCTOR | 7) 
+#define SNMP_PDU_TRAP	(ASN_CONTEXT | ASN_CONSTRUCTOR | 7)
 #define SNMP_PDU_REPORT	(ASN_CONTEXT | ASN_CONSTRUCTOR | 8)
 #endif /* _SNMP_ASN_DEFINED */
 #define SNMP_SYNTAX_SEQUENCE	(ASN_UNIVERSAL | ASN_CONSTRUCTOR | 0x10)
@@ -197,12 +197,12 @@ typedef const smiLPOCTETS smiLPCOCTETS;
 typedef struct {
 	smiUINT32 len;
 	smiLPUINT32 ptr;
-} smiOID, *smiLPOID; 
+} smiOID, *smiLPOID;
 typedef const smiLPOID smiLPCOID;
 typedef struct {
 	smiUINT32 hipart;
 	smiUINT32 lopart;
-} smiCNTR64, *smiLPCNTR64; 
+} smiCNTR64, *smiLPCNTR64;
 typedef struct {
 	smiUINT32 syntax;
 	union {
@@ -213,15 +213,15 @@ typedef struct {
 		smiOID oid;
 		smiBYTE empty;
 	} value;
-} smiVALUE, *smiLPVALUE; 
+} smiVALUE, *smiLPVALUE;
 typedef const smiLPVALUE smiLPCVALUE;
 typedef struct {
 	CHAR vendorName[MAXVENDORINFO*2];
 	CHAR vendorContact[MAXVENDORINFO*2];
 	CHAR vendorVersionId[MAXVENDORINFO];
 	CHAR vendorVersionDate[MAXVENDORINFO];
-	smiUINT32 vendorEnterprise; 
-} smiVENDORINFO, FAR *smiLPVENDORINFO; 
+	smiUINT32 vendorEnterprise;
+} smiVENDORINFO, FAR *smiLPVENDORINFO;
 typedef SNMPAPI_STATUS (CALLBACK *SNMPAPI_CALLBACK)(HSNMP_SESSION,HWND,UINT,WPARAM,LPARAM,LPVOID);
 typedef struct
 {

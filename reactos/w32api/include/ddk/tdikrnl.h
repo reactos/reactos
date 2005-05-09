@@ -493,7 +493,7 @@ TdiDefaultSendPossibleHandler(
  *   IN PVOID  Contxt,
  *   IN PLARGE_INTEGER  Time,
  *   IN PTDI_CONNECTION_INFORMATION  RequestConnectionInfo,
- *   OUT PTDI_CONNECTION_INFORMATION  ReturnConnectionInfo); 
+ *   OUT PTDI_CONNECTION_INFORMATION  ReturnConnectionInfo);
  */
 #define TdiBuildConnect(                                            \
   Irp, DevObj, FileObj, CompRoutine, Contxt,                        \
@@ -544,7 +544,7 @@ TdiDefaultSendPossibleHandler(
  *   IN PLARGE_INTEGER  Time,
  *   IN PULONG  Flags,
  *   IN PTDI_CONNECTION_INFORMATION  RequestConnectionInfo,
- *   OUT PTDI_CONNECTION_INFORMATION  ReturnConnectionInfo); 
+ *   OUT PTDI_CONNECTION_INFORMATION  ReturnConnectionInfo);
  */
 #define TdiBuildDisconnect(                                         \
   Irp, DevObj, FileObj, CompRoutine, Contxt, Time,                  \
@@ -592,7 +592,7 @@ TdiDefaultSendPossibleHandler(
  *   IN PVOID  Contxt,
  *   IN ULONG  Flags,
  *   IN PTDI_CONNECTION_INFORMATION  RequestConnectionInfo,
- *   OUT PTDI_CONNECTION_INFORMATION  ReturnConnectionInfo); 
+ *   OUT PTDI_CONNECTION_INFORMATION  ReturnConnectionInfo);
  */
 #define TdiBuildListen(                                             \
   Irp, DevObj, FileObj, CompRoutine, Contxt,                        \
@@ -665,8 +665,8 @@ TdiBuildNetbiosAddressEa(
  *   IN PVOID  CompRoutine,
  *   IN PVOID  Contxt,
  *   IN PMDL  MdlAddr,
- *   IN ULONG  InFlags, 
- *   IN ULONG  ReceiveLen); 
+ *   IN ULONG  InFlags,
+ *   IN ULONG  ReceiveLen);
  */
 #define TdiBuildReceive(                                       \
   Irp, DevObj, FileObj, CompRoutine, Contxt,                   \
@@ -698,7 +698,7 @@ TdiBuildNetbiosAddressEa(
  *   IN ULONG  ReceiveLen,
  *   IN PTDI_CONNECTION_INFORMATION  ReceiveDatagramInfo,
  *   OUT PTDI_CONNECTION_INFORMATION  ReturnInfo,
- *   ULONG InFlags); 
+ *   ULONG InFlags);
  */
 #define TdiBuildReceiveDatagram(                                 \
   Irp, DevObj, FileObj, CompRoutine, Contxt, MdlAddr,            \
@@ -760,7 +760,7 @@ TdiBuildNetbiosAddressEa(
  *   IN PVOID  Contxt,
  *   IN PMDL  MdlAddr,
  *   IN ULONG  SendLen,
- *   IN PTDI_CONNECTION_INFORMATION  SendDatagramInfo); 
+ *   IN PTDI_CONNECTION_INFORMATION  SendDatagramInfo);
  */
 #define TdiBuildSendDatagram(                                 \
   Irp, DevObj, FileObj, CompRoutine, Contxt,                  \

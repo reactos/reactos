@@ -24,4 +24,4 @@ NET_API_STATUS WINAPI NetMessageNameGetInfo(LPCWSTR,LPCWSTR,DWORD,PBYTE*);
 #ifdef __cplusplus
 }
 #endif
-#endif 
+#endif

@@ -71,4 +71,4 @@ NET_API_STATUS I_BrowserDebugTrace(PWCHAR,PCHAR);
 #ifdef __cplusplus
 }
 #endif
-#endif 
+#endif

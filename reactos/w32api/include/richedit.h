@@ -9,7 +9,7 @@ extern "C" {
 #endif
 #pragma pack(push,4)
 
-#ifdef UNICODE 
+#ifdef UNICODE
 #define RICHEDIT_CLASS L"RichEdit20W"
 #else
 #define RICHEDIT_CLASS "RichEdit20A"

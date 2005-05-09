@@ -57,4 +57,4 @@ NET_API_STATUS WINAPI NetUseGetInfo(LPWSTR,LPWSTR,DWORD,PBYTE*);
 #ifdef __cplusplus
 }
 #endif
-#endif 
+#endif

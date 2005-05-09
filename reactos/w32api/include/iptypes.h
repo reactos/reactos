@@ -114,7 +114,7 @@ typedef enum {
 typedef struct _IP_ADAPTER_UNICAST_ADDRESS {
   union {
     ULONGLONG Alignment;
-    struct { 
+    struct {
       ULONG Length;
       DWORD Flags;
     };
@@ -131,7 +131,7 @@ typedef struct _IP_ADAPTER_UNICAST_ADDRESS {
 typedef struct _IP_ADAPTER_ANYCAST_ADDRESS {
   union {
     ULONGLONG Alignment;
-    struct { 
+    struct {
       ULONG Length;
       DWORD Flags;
     };

@@ -59,18 +59,18 @@ typedef enum _PCMCIA_CONTROLLER_CLASS {
 	PcmciaIntelCompatible,
 	PcmciaCardBusCompatible,
 	PcmciaElcController,
-	PcmciaDatabook,     
+	PcmciaDatabook,
 	PcmciaPciPcmciaBridge,
-	PcmciaCirrusLogic,  
-	PcmciaTI,           
-	PcmciaTopic,        
-	PcmciaRicoh,        
-	PcmciaDatabookCB,   
-	PcmciaOpti,         
-	PcmciaTrid,         
-	PcmciaO2Micro,      
-	PcmciaNEC,          
-	PcmciaNEC_98                
+	PcmciaCirrusLogic,
+	PcmciaTI,
+	PcmciaTopic,
+	PcmciaRicoh,
+	PcmciaDatabookCB,
+	PcmciaOpti,
+	PcmciaTrid,
+	PcmciaO2Micro,
+	PcmciaNEC,
+	PcmciaNEC_98
 } PCMCIA_CONTROLLER_CLASS, *PPCMCIA_CONTROLLER_CLASS;
 
 typedef struct _PCMCIA_SOCKET_INFORMATION {
@@ -116,7 +116,7 @@ typedef struct _PCMCIA_BUS_INTERFACE_STANDARD {
 	PVOID  Context;
 	PINTERFACE_REFERENCE  InterfaceReference;
 	PINTERFACE_DEREFERENCE  InterfaceDereference;
-	PPCMCIA_READ_WRITE_CONFIG ReadConfig; 
+	PPCMCIA_READ_WRITE_CONFIG ReadConfig;
 	PPCMCIA_READ_WRITE_CONFIG  WriteConfig;
 } PCMCIA_BUS_INTERFACE_STANDARD, *PPCMCIA_BUS_INTERFACE_STANDARD;
 

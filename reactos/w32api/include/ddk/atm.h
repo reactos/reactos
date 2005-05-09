@@ -146,7 +146,7 @@ typedef struct _ATM_AAL_OOB_INFO
 			UCHAR  UserToUserIndication;
 			UCHAR  CommonPartIndicator;
 		} ATM_AAL5_INFO;
-		
+
 		struct _ATM_AAL0_INFO {
 			BOOLEAN  CellLossPriority;
 			UCHAR  PayLoadTypeIdentifier;
@@ -158,10 +158,10 @@ typedef struct _ATM_AAL_OOB_INFO
 #endif
 } ATM_AAL_OOB_INFO, *PATM_AAL_OOB_INFO;
 
-typedef struct _ATM_ADDRESS  { 
-  ATM_ADDRESSTYPE  AddressType; 
-  ULONG  NumberOfDigits; 
-  UCHAR  Address[ATM_ADDRESS_LENGTH]; 
+typedef struct _ATM_ADDRESS  {
+  ATM_ADDRESSTYPE  AddressType;
+  ULONG  NumberOfDigits;
+  UCHAR  Address[ATM_ADDRESS_LENGTH];
 } ATM_ADDRESS, *PATM_ADDRESS;
 
 /* ATM_BHLI_IE.HighLayerInfoType constants */

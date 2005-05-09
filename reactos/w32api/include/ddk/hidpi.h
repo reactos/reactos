@@ -528,7 +528,7 @@ NTSTATUS
 DDKAPI
 HidP_SetScaledUsageValue(
   IN HIDP_REPORT_TYPE  ReportType,
-  IN USAGE  UsagePage, 
+  IN USAGE  UsagePage,
   IN USHORT  LinkCollection  OPTIONAL,
   IN USAGE  Usage,
   IN LONG  UsageValue,

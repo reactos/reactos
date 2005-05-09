@@ -111,4 +111,4 @@ NET_API_STATUS WINAPI NetStatisticsGet(LPWSTR,LPWSTR,DWORD,DWORD,PBYTE*);
 #ifdef __cplusplus
 }
 #endif
-#endif 
+#endif

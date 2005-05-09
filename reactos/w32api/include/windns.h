@@ -55,52 +55,52 @@ enum {
 };
 typedef enum _DNS_CHARSET
 {
-	DnsCharSetUnknown, 
-	DnsCharSetUnicode, 
-	DnsCharSetUtf8, 
+	DnsCharSetUnknown,
+	DnsCharSetUnicode,
+	DnsCharSetUtf8,
 	DnsCharSetAnsi
 } DNS_CHARSET;
-typedef enum 
+typedef enum
 {
-	DnsConfigPrimaryDomainName_W, 
-	DnsConfigPrimaryDomainName_A, 
-	DnsConfigPrimaryDomainName_UTF8, 
-	DnsConfigAdapterDomainName_W, 
-	DnsConfigAdapterDomainName_A, 
-	DnsConfigAdapterDomainName_UTF8, 
-	DnsConfigDnsServerList, 
-	DnsConfigSearchList, 
-	DnsConfigAdapterInfo, 
-	DnsConfigPrimaryHostNameRegistrationEnabled, 
-	DnsConfigAdapterHostNameRegistrationEnabled, 
-	DnsConfigAddressRegistrationMaxCount, 
-	DnsConfigHostName_W, 
-	DnsConfigHostName_A, 
-	DnsConfigHostName_UTF8, 
-	DnsConfigFullHostName_W, 
-	DnsConfigFullHostName_A, 
+	DnsConfigPrimaryDomainName_W,
+	DnsConfigPrimaryDomainName_A,
+	DnsConfigPrimaryDomainName_UTF8,
+	DnsConfigAdapterDomainName_W,
+	DnsConfigAdapterDomainName_A,
+	DnsConfigAdapterDomainName_UTF8,
+	DnsConfigDnsServerList,
+	DnsConfigSearchList,
+	DnsConfigAdapterInfo,
+	DnsConfigPrimaryHostNameRegistrationEnabled,
+	DnsConfigAdapterHostNameRegistrationEnabled,
+	DnsConfigAddressRegistrationMaxCount,
+	DnsConfigHostName_W,
+	DnsConfigHostName_A,
+	DnsConfigHostName_UTF8,
+	DnsConfigFullHostName_W,
+	DnsConfigFullHostName_A,
 	DnsConfigFullHostName_UTF8
 } DNS_CONFIG_TYPE;
-typedef enum 
+typedef enum
 {
-	DnsFreeFlat = 0, 
-	DnsFreeRecordList, 
+	DnsFreeFlat = 0,
+	DnsFreeRecordList,
 	DnsFreeParsedMessageFields
 } DNS_FREE_TYPE;
 typedef enum _DNS_NAME_FORMAT
 {
-	DnsNameDomain, 
-	DnsNameDomainLabel, 
-	DnsNameHostnameFull, 
-	DnsNameHostnameLabel, 
-	DnsNameWildcard, 
+	DnsNameDomain,
+	DnsNameDomainLabel,
+	DnsNameHostnameFull,
+	DnsNameHostnameLabel,
+	DnsNameWildcard,
 	DnsNameSrvRecord
 } DNS_NAME_FORMAT;
-typedef enum 
+typedef enum
 {
-	DnsSectionQuestion, 
-	DnsSectionAnswer, 
-	DnsSectionAuthority, 
+	DnsSectionQuestion,
+	DnsSectionAnswer,
+	DnsSectionAuthority,
 	DnsSectionAdditional
 } DNS_SECTION;
 typedef struct _IP4_ARRAY {

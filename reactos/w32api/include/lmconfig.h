@@ -18,4 +18,4 @@ NET_API_STATUS WINAPI NetConfigSet(LPCWSTR,LPCWSTR,LPCWSTR,DWORD,DWORD,PBYTE,DWO
 #ifdef __cplusplus
 }
 #endif
-#endif 
+#endif

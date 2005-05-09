@@ -8,7 +8,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
-         
+
 #ifndef _MSWSOCK_H
 #define _MSWSOCK_H
 #if __GNUC__ >=3
@@ -68,7 +68,7 @@ typedef VOID (PASCAL *LPFN_GETACCEPTEXSOCKADDRS)(PVOID,DWORD,DWORD,DWORD,struct 
 #define TP_ELEMENT_MEMORY	2
 #define TP_ELEMENT_EOP		4
 
-typedef struct _TRANSMIT_PACKETS_ELEMENT { 
+typedef struct _TRANSMIT_PACKETS_ELEMENT {
 	ULONG dwElFlags;
 	ULONG cLength;
 	_ANONYMOUS_UNION
@@ -79,7 +79,7 @@ typedef struct _TRANSMIT_PACKETS_ELEMENT {
 		};
 		PVOID	pBuffer;
 	};
-} TRANSMIT_PACKETS_ELEMENT; 
+} TRANSMIT_PACKETS_ELEMENT;
 
 typedef struct _WSAMSG {
 	LPSOCKADDR	name;

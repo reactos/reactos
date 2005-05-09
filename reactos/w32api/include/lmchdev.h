@@ -58,4 +58,4 @@ NET_API_STATUS WINAPI NetHandleSetInfo(HANDLE,DWORD,PBYTE,DWORD,PDWORD);
 #ifdef __cplusplus
 }
 #endif
-#endif 
+#endif

@@ -1344,45 +1344,45 @@ typedef struct  tagCOLORADJUSTMENT {
 	SHORT	caColorfulness;
 	SHORT	caRedGreenTint;
 } COLORADJUSTMENT,*LPCOLORADJUSTMENT;
-typedef struct _devicemodeA { 
-  BYTE   dmDeviceName[CCHDEVICENAME]; 
-  WORD   dmSpecVersion; 
-  WORD   dmDriverVersion; 
-  WORD   dmSize; 
-  WORD   dmDriverExtra; 
-  DWORD  dmFields; 
+typedef struct _devicemodeA {
+  BYTE   dmDeviceName[CCHDEVICENAME];
+  WORD   dmSpecVersion;
+  WORD   dmDriverVersion;
+  WORD   dmSize;
+  WORD   dmDriverExtra;
+  DWORD  dmFields;
   _ANONYMOUS_UNION union {
     _ANONYMOUS_STRUCT struct {
       short dmOrientation;
       short dmPaperSize;
       short dmPaperLength;
       short dmPaperWidth;
-      short dmScale; 
-      short dmCopies; 
-      short dmDefaultSource; 
-      short dmPrintQuality; 
+      short dmScale;
+      short dmCopies;
+      short dmDefaultSource;
+      short dmPrintQuality;
     } DUMMYSTRUCTNAME;
     POINTL dmPosition;
     DWORD  dmDisplayOrientation;
     DWORD  dmDisplayFixedOutput;
   } DUMMYUNIONNAME;
 
-  short  dmColor; 
-  short  dmDuplex; 
-  short  dmYResolution; 
-  short  dmTTOption; 
-  short  dmCollate; 
-  BYTE   dmFormName[CCHFORMNAME]; 
-  WORD   dmLogPixels; 
-  DWORD  dmBitsPerPel; 
-  DWORD  dmPelsWidth; 
-  DWORD  dmPelsHeight; 
+  short  dmColor;
+  short  dmDuplex;
+  short  dmYResolution;
+  short  dmTTOption;
+  short  dmCollate;
+  BYTE   dmFormName[CCHFORMNAME];
+  WORD   dmLogPixels;
+  DWORD  dmBitsPerPel;
+  DWORD  dmPelsWidth;
+  DWORD  dmPelsHeight;
   _ANONYMOUS_UNION union {
-    DWORD  dmDisplayFlags; 
+    DWORD  dmDisplayFlags;
     DWORD  dmNup;
   } DUMMYUNIONNAME2;
-  DWORD  dmDisplayFrequency; 
-#if(WINVER >= 0x0400) 
+  DWORD  dmDisplayFrequency;
+#if(WINVER >= 0x0400)
   DWORD  dmICMMethod;
   DWORD  dmICMIntent;
   DWORD  dmMediaType;
@@ -1395,45 +1395,45 @@ typedef struct _devicemodeA {
 #endif
 #endif /* WINVER >= 0x0400 */
 } DEVMODEA,*LPDEVMODEA,*PDEVMODEA;
-typedef struct _devicemodeW { 
-  WCHAR   dmDeviceName[CCHDEVICENAME]; 
-  WORD   dmSpecVersion; 
-  WORD   dmDriverVersion; 
-  WORD   dmSize; 
-  WORD   dmDriverExtra; 
-  DWORD  dmFields; 
+typedef struct _devicemodeW {
+  WCHAR   dmDeviceName[CCHDEVICENAME];
+  WORD   dmSpecVersion;
+  WORD   dmDriverVersion;
+  WORD   dmSize;
+  WORD   dmDriverExtra;
+  DWORD  dmFields;
   _ANONYMOUS_UNION union {
     _ANONYMOUS_STRUCT struct {
       short dmOrientation;
       short dmPaperSize;
       short dmPaperLength;
       short dmPaperWidth;
-      short dmScale; 
-      short dmCopies; 
-      short dmDefaultSource; 
-      short dmPrintQuality; 
+      short dmScale;
+      short dmCopies;
+      short dmDefaultSource;
+      short dmPrintQuality;
     } DUMMYSTRUCTNAME;
     POINTL dmPosition;
     DWORD  dmDisplayOrientation;
     DWORD  dmDisplayFixedOutput;
   } DUMMYUNIONNAME;
 
-  short  dmColor; 
-  short  dmDuplex; 
-  short  dmYResolution; 
-  short  dmTTOption; 
-  short  dmCollate; 
-  WCHAR  dmFormName[CCHFORMNAME]; 
-  WORD   dmLogPixels; 
-  DWORD  dmBitsPerPel; 
-  DWORD  dmPelsWidth; 
-  DWORD  dmPelsHeight; 
+  short  dmColor;
+  short  dmDuplex;
+  short  dmYResolution;
+  short  dmTTOption;
+  short  dmCollate;
+  WCHAR  dmFormName[CCHFORMNAME];
+  WORD   dmLogPixels;
+  DWORD  dmBitsPerPel;
+  DWORD  dmPelsWidth;
+  DWORD  dmPelsHeight;
   _ANONYMOUS_UNION union {
-    DWORD  dmDisplayFlags; 
+    DWORD  dmDisplayFlags;
     DWORD  dmNup;
   } DUMMYUNIONNAME2;
-  DWORD  dmDisplayFrequency; 
-#if(WINVER >= 0x0400) 
+  DWORD  dmDisplayFrequency;
+#if(WINVER >= 0x0400)
   DWORD  dmICMMethod;
   DWORD  dmICMIntent;
   DWORD  dmMediaType;
@@ -2457,8 +2457,8 @@ typedef struct _BLENDFUNCTION {
     BYTE BlendOp;
     BYTE BlendFlags;
     BYTE SourceConstantAlpha;
-    BYTE AlphaFormat; 
-} BLENDFUNCTION,*PBLENDFUNCTION,*LPBLENDFUNCTION; 
+    BYTE AlphaFormat;
+} BLENDFUNCTION,*PBLENDFUNCTION,*LPBLENDFUNCTION;
 #define MM_MAX_NUMAXES  16
 typedef struct _DESIGNVECTOR {
 	DWORD dvReserved;

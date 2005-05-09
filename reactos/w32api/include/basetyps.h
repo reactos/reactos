@@ -9,7 +9,7 @@
 #  define EXTERN_C extern "C"
 # else
 #  define EXTERN_C extern
-# endif  /* __cplusplus */ 
+# endif  /* __cplusplus */
 # ifndef __int64
 #  define __int64 long long
 # endif

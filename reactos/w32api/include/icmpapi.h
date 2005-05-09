@@ -45,7 +45,7 @@ DWORD STDCALL  IcmpSendEcho(
     );
 
 DWORD
-STDCALL 
+STDCALL
 IcmpSendEcho2(
     HANDLE                   IcmpHandle,
     HANDLE                   Event,
@@ -61,7 +61,7 @@ IcmpSendEcho2(
     );
 
 DWORD
-STDCALL 
+STDCALL
 Icmp6SendEcho2(
     HANDLE                   IcmpHandle,
     HANDLE                   Event,

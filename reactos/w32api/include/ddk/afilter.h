@@ -169,7 +169,7 @@ VOID
 DDKAPI
 ArcFreeNdisPacket(
   IN PARC_PACKET  Packet);
-    
+
 VOID
 DDKAPI
 ArcFilterDoIndication(

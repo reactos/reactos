@@ -80,7 +80,7 @@ typedef PVOID USBD_INTERFACE_HANDLE;
 #define USBD_STATUS_INAVLID_CONFIGURATION_DESCRIPTOR \
                                           ((USBD_STATUS)0xC0000F00L)
 #define USBD_STATUS_INSUFFICIENT_RESOURCES \
-                                          ((USBD_STATUS)0xC0001000L)                                          
+                                          ((USBD_STATUS)0xC0001000L)
 #define USBD_STATUS_SET_CONFIG_FAILED     ((USBD_STATUS)0xC0002000L)
 #define USBD_STATUS_BUFFER_TOO_SMALL      ((USBD_STATUS)0xC0003000L)
 #define USBD_STATUS_INTERFACE_NOT_FOUND   ((USBD_STATUS)0xC0004000L)
@@ -90,9 +90,9 @@ typedef PVOID USBD_INTERFACE_HANDLE;
 #define USBD_STATUS_STATUS_NOT_MAPPED     ((USBD_STATUS)0xC0008000L)
 #define USBD_STATUS_CANCELED              ((USBD_STATUS)0xC0010000L)
 #define USBD_STATUS_ISO_NOT_ACCESSED_BY_HW \
-                                          ((USBD_STATUS)0xC0020000L)   
-#define USBD_STATUS_ISO_TD_ERROR          ((USBD_STATUS)0xC0030000L)   
-#define USBD_STATUS_ISO_NA_LATE_USBPORT   ((USBD_STATUS)0xC0040000L) 
+                                          ((USBD_STATUS)0xC0020000L)
+#define USBD_STATUS_ISO_TD_ERROR          ((USBD_STATUS)0xC0030000L)
+#define USBD_STATUS_ISO_NA_LATE_USBPORT   ((USBD_STATUS)0xC0040000L)
 #define USBD_STATUS_ISO_NOT_ACCESSED_LATE ((USBD_STATUS)0xC0050000L)
 
 #define USBD_SUCCESS(Status) ((USBD_STATUS)(Status) >= 0)
@@ -101,7 +101,7 @@ typedef PVOID USBD_INTERFACE_HANDLE;
 
 /* URB TransferFlags constants */
 #define USBD_TRANSFER_DIRECTION(x)        ((x) & USBD_TRANSFER_DIRECTION_IN)
-#define USBD_TRANSFER_DIRECTION_OUT       0   
+#define USBD_TRANSFER_DIRECTION_OUT       0
 #define USBD_TRANSFER_DIRECTION_BIT       0
 #define USBD_TRANSFER_DIRECTION_IN        (1 << USBD_TRANSFER_DIRECTION_BIT)
 #define USBD_SHORT_TRANSFER_OK_BIT        1
@@ -142,7 +142,7 @@ typedef enum _USB_CONTROLLER_FLAVOR {
 	EHCI_Lucent = 3000
 } USB_CONTROLLER_FLAVOR;
 
-struct _URB_HEADER { 
+struct _URB_HEADER {
 	USHORT  Length;
 	USHORT  Function;
 	USBD_STATUS  Status;
@@ -170,7 +170,7 @@ struct _URB_BULK_OR_INTERRUPT_TRANSFER {
   struct _URB_HCD_AREA  hca;
 };
 
-struct _URB_CONTROL_DESCRIPTOR_REQUEST { 
+struct _URB_CONTROL_DESCRIPTOR_REQUEST {
   struct _URB_HEADER  Hdr;
   PVOID  Reserved;
   ULONG  Reserved0;
@@ -186,7 +186,7 @@ struct _URB_CONTROL_DESCRIPTOR_REQUEST {
   USHORT  Reserved2;
 };
 
-struct _URB_CONTROL_FEATURE_REQUEST { 
+struct _URB_CONTROL_FEATURE_REQUEST {
   struct _URB_HEADER  Hdr;
 	PVOID  Reserved;
 	ULONG  Reserved2;
@@ -210,10 +210,10 @@ struct _URB_CONTROL_GET_CONFIGURATION_REQUEST {
   PMDL  TransferBufferMDL;
   struct _URB  *UrbLink;
 	struct _URB_HCD_AREA  hca;
-	UCHAR  Reserved1[8];    
+	UCHAR  Reserved1[8];
 };
 
-struct _URB_CONTROL_GET_INTERFACE_REQUEST { 
+struct _URB_CONTROL_GET_INTERFACE_REQUEST {
 	struct _URB_HEADER  Hdr;
 	PVOID  Reserved;
 	ULONG  Reserved0;
@@ -227,7 +227,7 @@ struct _URB_CONTROL_GET_INTERFACE_REQUEST {
 	USHORT  Reserved2;
 };
 
-struct _URB_CONTROL_GET_STATUS_REQUEST { 
+struct _URB_CONTROL_GET_STATUS_REQUEST {
 	struct _URB_HEADER  Hdr;
 	PVOID  Reserved;
 	ULONG  Reserved0;
@@ -241,7 +241,7 @@ struct _URB_CONTROL_GET_STATUS_REQUEST {
 	USHORT  Reserved2;
 };
 
-struct _URB_CONTROL_TRANSFER { 
+struct _URB_CONTROL_TRANSFER {
   struct _URB_HEADER  Hdr;
   USBD_PIPE_HANDLE  PipeHandle;
   ULONG  TransferFlags;
@@ -290,8 +290,8 @@ typedef struct _USBD_ISO_PACKET_DESCRIPTOR {
   USBD_STATUS  Status;
 } USBD_ISO_PACKET_DESCRIPTOR, *PUSBD_ISO_PACKET_DESCRIPTOR;
 
-struct _URB_ISOCH_TRANSFER { 
-  struct _URB_HEADER  Hdr; 
+struct _URB_ISOCH_TRANSFER {
+  struct _URB_HEADER  Hdr;
   USBD_PIPE_HANDLE  PipeHandle;
   ULONG  TransferFlags;
   ULONG  TransferBufferLength;
@@ -323,7 +323,7 @@ typedef struct _USBD_PIPE_INFORMATION {
 } USBD_PIPE_INFORMATION, *PUSBD_PIPE_INFORMATION ;
 
 #define USBD_PIPE_DIRECTION_IN(pipeInformation) \
-  ((pipeInformation)->EndpointAddress & USB_ENDPOINT_DIRECTION_MASK) 
+  ((pipeInformation)->EndpointAddress & USB_ENDPOINT_DIRECTION_MASK)
 
 typedef struct _USBD_INTERFACE_INFORMATION {
   USHORT  Length;
@@ -338,13 +338,13 @@ typedef struct _USBD_INTERFACE_INFORMATION {
   USBD_PIPE_INFORMATION Pipes[1];
 } USBD_INTERFACE_INFORMATION, *PUSBD_INTERFACE_INFORMATION;
 
-struct _URB_SELECT_INTERFACE { 
+struct _URB_SELECT_INTERFACE {
   struct _URB_HEADER  Hdr;
   USBD_CONFIGURATION_HANDLE  ConfigurationHandle;
   USBD_INTERFACE_INFORMATION  Interface;
 };
 
-struct _URB_SELECT_CONFIGURATION { 
+struct _URB_SELECT_CONFIGURATION {
   struct _URB_HEADER  Hdr;
   PUSB_CONFIGURATION_DESCRIPTOR  ConfigurationDescriptor;
   USBD_CONFIGURATION_HANDLE  ConfigurationHandle;
@@ -362,7 +362,7 @@ struct _URB_SET_FRAME_LENGTH {
   LONG  FrameLengthDelta;
 };
 
-typedef struct _URB { 
+typedef struct _URB {
   _ANONYMOUS_UNION union {
 		struct _URB_HEADER  UrbHeader;
 		struct _URB_SELECT_INTERFACE  UrbSelectInterface;
@@ -438,9 +438,9 @@ typedef struct _URB {
 #define URB_FUNCTION_SYNC_CLEAR_STALL                0x0031
 
 #define USBD_PF_CHANGE_MAX_PACKET         0x00000001
-#define USBD_PF_SHORT_PACKET_OPT          0x00000002 
-#define USBD_PF_ENABLE_RT_THREAD_ACCESS   0x00000004 
-#define USBD_PF_MAP_ADD_TRANSFERS         0x00000008 
+#define USBD_PF_SHORT_PACKET_OPT          0x00000002
+#define USBD_PF_ENABLE_RT_THREAD_ACCESS   0x00000004
+#define USBD_PF_MAP_ADD_TRANSFERS         0x00000008
 
 #define USBD_PF_VALID_MASK (USBD_PF_CHANGE_MAX_PACKET | \
                             USBD_PF_SHORT_PACKET_OPT | \
@@ -467,5 +467,5 @@ typedef struct _OS_STRING {
 #endif
 
 #endif /* defined __USBDI_H */
- 
+
 #endif /* __USB_H */

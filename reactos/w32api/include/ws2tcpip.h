@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-/* 
+/*
  * The IP_* macros are also defined in winsock.h, but some values are different there.
  * The values defined in winsock.h for 1.1 and used in wsock32.dll are consistent
  * with the original values Steve Deering defined in his document "IP Multicast Extensions
@@ -70,9 +70,9 @@ extern "C" {
 #define IPV6_LEAVE_GROUP	IPV6_DROP_MEMBERSHIP
 #define IPV6_PKTINFO		19
 
-#define IP_DEFAULT_MULTICAST_TTL 1 
-#define IP_DEFAULT_MULTICAST_LOOP 1 
-#define IP_MAX_MEMBERSHIPS 20 
+#define IP_DEFAULT_MULTICAST_TTL 1
+#define IP_DEFAULT_MULTICAST_LOOP 1
+#define IP_MAX_MEMBERSHIPS 20
 
 #define TCP_EXPEDITED_1122  2
 
@@ -90,7 +90,7 @@ extern "C" {
 #define INET_ADDRSTRLEN  16
 #define INET6_ADDRSTRLEN 46
 
-/* getnameinfo constants */ 
+/* getnameinfo constants */
 #define NI_MAXHOST	1025
 #define NI_MAXSERV	32
 
@@ -119,7 +119,7 @@ extern "C" {
 /*
  *   ip_mreq also in winsock.h for WinSock1.1,
  *   but online msdn docs say it is defined here for WinSock2.
- */ 
+ */
 
 struct ip_mreq {
 	struct in_addr	imr_multiaddr;
@@ -151,7 +151,7 @@ struct in_pktinfo {
 typedef struct in_pktinfo IN_PKTINFO;
 
 
-/* ipv6 */ 
+/* ipv6 */
 /* These require XP or .NET Server or use of add-on IPv6 stacks on NT 4
   or higher */
 
@@ -160,7 +160,7 @@ typedef struct in_pktinfo IN_PKTINFO;
    is some consistency in MS docs. In this file, we only use the
    in6_addr structure start address, with casts to get the right offsets
    when testing addresses */
-  
+
 struct in6_addr {
     union {
         u_char	_S6_u8[16];
@@ -171,7 +171,7 @@ struct in6_addr {
 /* s6_addr is the standard name */
 #define s6_addr		_S6_un._S6_u8
 
-/* These are GLIBC names */ 
+/* These are GLIBC names */
 #define s6_addr16	_S6_un._S6_u16
 #define s6_addr32	_S6_un._S6_u16
 
@@ -193,7 +193,7 @@ typedef struct sockaddr_in6 SOCKADDR_IN6, *PSOCKADDR_IN6, *LPSOCKADDR_IN6;
 
 extern const struct in6_addr in6addr_any;
 extern const struct in6_addr in6addr_loopback;
-/* the above can get initialised using: */ 
+/* the above can get initialised using: */
 #define IN6ADDR_ANY_INIT        { 0 }
 #define IN6ADDR_LOOPBACK_INIT   { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 }
 
@@ -203,11 +203,11 @@ extern const struct in6_addr in6addr_loopback;
     (memcmp ((void*)(a), (void*)(b), sizeof (struct in6_addr)) == 0)
 
 
-/* Address Testing Macros 
+/* Address Testing Macros
 
  These macro functions all take const struct in6_addr* as arg.
  Static inlines would allow type checking, but RFC 2553 says they
- macros.	 
+ macros.
  NB: These are written specifically for little endian host */
 
 #define IN6_IS_ADDR_UNSPECIFIED(_addr) \
@@ -250,7 +250,7 @@ extern const struct in6_addr in6addr_loopback;
 
 #define IN6_IS_ADDR_MC_NODELOCAL(_addr)	\
 	(   IN6_IS_ADDR_MULTICAST(_addr)		\
-	 && ((((const u_char *)(_addr))[1] & 0xf) == 0x1)) 
+	 && ((((const u_char *)(_addr))[1] & 0xf) == 0x1))
 
 #define IN6_IS_ADDR_MC_LINKLOCAL(_addr)	\
 	(   IN6_IS_ADDR_MULTICAST (_addr)		\

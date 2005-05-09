@@ -441,7 +441,7 @@ typedef struct tagPDW {
 	HANDLE hSetupTemplate;
 } PRINTDLGW,*LPPRINTDLGW;
 #if (WINVER >= 0x0500) && !defined (__OBJC__)
-#include <unknwn.h>  /* for LPUNKNOWN  */ 
+#include <unknwn.h>  /* for LPUNKNOWN  */
 #include <prsht.h>   /* for HPROPSHEETPAGE  */
 typedef struct tagPRINTPAGERANGE {
    DWORD  nFromPage;

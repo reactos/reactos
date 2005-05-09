@@ -311,7 +311,7 @@ typedef struct _FILE_GET_QUOTA_INFORMATION *PFILE_GET_QUOTA_INFORMATION;
 #define DIRECTORY_CREATE_OBJECT (0x0004)
 #define DIRECTORY_CREATE_SUBDIRECTORY (0x0008)
 #define DIRECTORY_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0xF)
-  
+
 /* Exported object types */
 extern NTOSAPI POBJECT_TYPE ExDesktopObjectType;
 extern NTOSAPI POBJECT_TYPE ExEventObjectType;
@@ -504,13 +504,13 @@ typedef NTSTATUS
   VOID);
 
 typedef NTSTATUS
-(DDKAPI *PDRIVER_ENTRY)( 
-  IN struct _DRIVER_OBJECT  *DriverObject, 
-  IN PUNICODE_STRING  RegistryPath); 
+(DDKAPI *PDRIVER_ENTRY)(
+  IN struct _DRIVER_OBJECT  *DriverObject,
+  IN PUNICODE_STRING  RegistryPath);
 
 typedef NTSTATUS
 (DDKAPI *PDRIVER_INITIALIZE)(
-  IN struct _DRIVER_OBJECT  *DriverObject, 
+  IN struct _DRIVER_OBJECT  *DriverObject,
   IN PUNICODE_STRING  RegistryPath);
 
 typedef BOOLEAN
@@ -524,10 +524,10 @@ typedef VOID
   IN PVOID  Context);
 
 typedef VOID
-(DDKAPI *PDRIVER_REINITIALIZE)( 
-  IN struct _DRIVER_OBJECT  *DriverObject, 
-  IN PVOID  Context, 
-  IN ULONG  Count); 
+(DDKAPI *PDRIVER_REINITIALIZE)(
+  IN struct _DRIVER_OBJECT  *DriverObject,
+  IN PVOID  Context,
+  IN ULONG  Count);
 
 typedef VOID
 (DDKAPI *PDRIVER_STARTIO)(
@@ -539,8 +539,8 @@ typedef BOOLEAN
   IN PVOID  SynchronizeContext);
 
 typedef VOID
-(DDKAPI *PDRIVER_UNLOAD)( 
-  IN struct _DRIVER_OBJECT  *DriverObject); 
+(DDKAPI *PDRIVER_UNLOAD)(
+  IN struct _DRIVER_OBJECT  *DriverObject);
 
 
 
@@ -654,11 +654,11 @@ typedef struct _INTERFACE {
   PVOID  Context;
   PINTERFACE_REFERENCE  InterfaceReference;
   PINTERFACE_DEREFERENCE  InterfaceDereference;
-} INTERFACE, *PINTERFACE; 
+} INTERFACE, *PINTERFACE;
 
 typedef struct _PLUGPLAY_NOTIFICATION_HEADER {
-  USHORT  Version; 
-  USHORT  Size; 
+  USHORT  Version;
+  USHORT  Size;
   GUID  Event;
 } PLUGPLAY_NOTIFICATION_HEADER, *PPLUGPLAY_NOTIFICATION_HEADER;
 
@@ -770,9 +770,9 @@ typedef VOID DDKAPI
 #define DUPLICATE_SAME_ATTRIBUTES         0x00000004
 /* end winnt.h */
 
-typedef struct _OBJECT_NAME_INFORMATION {               
-  UNICODE_STRING  Name;                                
-} OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;   
+typedef struct _OBJECT_NAME_INFORMATION {
+  UNICODE_STRING  Name;
+} OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;
 
 typedef VOID DDKAPI
 (*PIO_APC_ROUTINE)(
@@ -1596,7 +1596,7 @@ typedef struct _DEVICE_DESCRIPTION {
   BOOLEAN  IgnoreCount;
   BOOLEAN  Reserved1;
   BOOLEAN  Dma64BitAddresses;
-  ULONG  BusNumber; 
+  ULONG  BusNumber;
   ULONG  DmaChannel;
   INTERFACE_TYPE  InterfaceType;
   DMA_WIDTH  DmaWidth;
@@ -1628,21 +1628,21 @@ typedef struct _VPB {
 
 /* DEVICE_OBJECT.Flags */
 
-#define DO_VERIFY_VOLUME                  0x00000002      
-#define DO_BUFFERED_IO                    0x00000004      
-#define DO_EXCLUSIVE                      0x00000008      
-#define DO_DIRECT_IO                      0x00000010      
-#define DO_MAP_IO_BUFFER                  0x00000020      
-#define DO_DEVICE_HAS_NAME                0x00000040      
-#define DO_DEVICE_INITIALIZING            0x00000080      
-#define DO_SYSTEM_BOOT_PARTITION          0x00000100      
-#define DO_LONG_TERM_REQUESTS             0x00000200      
-#define DO_NEVER_LAST_DEVICE              0x00000400      
-#define DO_SHUTDOWN_REGISTERED            0x00000800      
-#define DO_BUS_ENUMERATED_DEVICE          0x00001000      
-#define DO_POWER_PAGABLE                  0x00002000      
-#define DO_POWER_INRUSH                   0x00004000      
-#define DO_LOW_PRIORITY_FILESYSTEM        0x00010000      
+#define DO_VERIFY_VOLUME                  0x00000002
+#define DO_BUFFERED_IO                    0x00000004
+#define DO_EXCLUSIVE                      0x00000008
+#define DO_DIRECT_IO                      0x00000010
+#define DO_MAP_IO_BUFFER                  0x00000020
+#define DO_DEVICE_HAS_NAME                0x00000040
+#define DO_DEVICE_INITIALIZING            0x00000080
+#define DO_SYSTEM_BOOT_PARTITION          0x00000100
+#define DO_LONG_TERM_REQUESTS             0x00000200
+#define DO_NEVER_LAST_DEVICE              0x00000400
+#define DO_SHUTDOWN_REGISTERED            0x00000800
+#define DO_BUS_ENUMERATED_DEVICE          0x00001000
+#define DO_POWER_PAGABLE                  0x00002000
+#define DO_POWER_INRUSH                   0x00004000
+#define DO_LOW_PRIORITY_FILESYSTEM        0x00010000
 
 /* DEVICE_OBJECT.Characteristics */
 
@@ -1778,8 +1778,8 @@ typedef struct _DEVICE_RELATIONS {
 } DEVICE_RELATIONS, *PDEVICE_RELATIONS;
 
 typedef struct _SCATTER_GATHER_ELEMENT {
-  PHYSICAL_ADDRESS  Address;   
-  ULONG  Length;          
+  PHYSICAL_ADDRESS  Address;
+  ULONG  Length;
   ULONG_PTR  Reserved;
 } SCATTER_GATHER_ELEMENT, *PSCATTER_GATHER_ELEMENT;
 
@@ -2146,18 +2146,18 @@ typedef enum _FILE_INFORMATION_CLASS {
   FileMaximumInformation
 } FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
 
-typedef struct _FILE_POSITION_INFORMATION {                 
-  LARGE_INTEGER  CurrentByteOffset;                        
-} FILE_POSITION_INFORMATION, *PFILE_POSITION_INFORMATION;   
+typedef struct _FILE_POSITION_INFORMATION {
+  LARGE_INTEGER  CurrentByteOffset;
+} FILE_POSITION_INFORMATION, *PFILE_POSITION_INFORMATION;
 
 typedef struct _FILE_ALIGNMENT_INFORMATION {
   ULONG  AlignmentRequirement;
 } FILE_ALIGNMENT_INFORMATION;
 
-typedef struct _FILE_NAME_INFORMATION {                     
-  ULONG  FileNameLength;                                   
-  WCHAR  FileName[1];                                      
-} FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;           
+typedef struct _FILE_NAME_INFORMATION {
+  ULONG  FileNameLength;
+  WCHAR  FileName[1];
+} FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;
 
 #include <pshpack8.h>
 typedef struct _FILE_BASIC_INFORMATION {
@@ -2177,32 +2177,32 @@ typedef struct _FILE_STANDARD_INFORMATION {
   BOOLEAN  Directory;
 } FILE_STANDARD_INFORMATION, *PFILE_STANDARD_INFORMATION;
 
-typedef struct _FILE_NETWORK_OPEN_INFORMATION {                 
-  LARGE_INTEGER  CreationTime;                                 
-  LARGE_INTEGER  LastAccessTime;                               
-  LARGE_INTEGER  LastWriteTime;                                
-  LARGE_INTEGER  ChangeTime;                                   
-  LARGE_INTEGER  AllocationSize;                               
-  LARGE_INTEGER  EndOfFile;                                    
-  ULONG  FileAttributes;                                       
-} FILE_NETWORK_OPEN_INFORMATION, *PFILE_NETWORK_OPEN_INFORMATION;   
+typedef struct _FILE_NETWORK_OPEN_INFORMATION {
+  LARGE_INTEGER  CreationTime;
+  LARGE_INTEGER  LastAccessTime;
+  LARGE_INTEGER  LastWriteTime;
+  LARGE_INTEGER  ChangeTime;
+  LARGE_INTEGER  AllocationSize;
+  LARGE_INTEGER  EndOfFile;
+  ULONG  FileAttributes;
+} FILE_NETWORK_OPEN_INFORMATION, *PFILE_NETWORK_OPEN_INFORMATION;
 
-typedef struct _FILE_ATTRIBUTE_TAG_INFORMATION {               
-  ULONG  FileAttributes;                                       
-  ULONG  ReparseTag;                                           
+typedef struct _FILE_ATTRIBUTE_TAG_INFORMATION {
+  ULONG  FileAttributes;
+  ULONG  ReparseTag;
 } FILE_ATTRIBUTE_TAG_INFORMATION, *PFILE_ATTRIBUTE_TAG_INFORMATION;
 
-typedef struct _FILE_DISPOSITION_INFORMATION {                  
-  BOOLEAN  DeleteFile;                                         
-} FILE_DISPOSITION_INFORMATION, *PFILE_DISPOSITION_INFORMATION; 
-                                                                
-typedef struct _FILE_END_OF_FILE_INFORMATION {                  
-  LARGE_INTEGER  EndOfFile;                                    
-} FILE_END_OF_FILE_INFORMATION, *PFILE_END_OF_FILE_INFORMATION; 
-                                                                
-typedef struct _FILE_VALID_DATA_LENGTH_INFORMATION {                                    
-  LARGE_INTEGER  ValidDataLength;                                                      
-} FILE_VALID_DATA_LENGTH_INFORMATION, *PFILE_VALID_DATA_LENGTH_INFORMATION;             
+typedef struct _FILE_DISPOSITION_INFORMATION {
+  BOOLEAN  DeleteFile;
+} FILE_DISPOSITION_INFORMATION, *PFILE_DISPOSITION_INFORMATION;
+
+typedef struct _FILE_END_OF_FILE_INFORMATION {
+  LARGE_INTEGER  EndOfFile;
+} FILE_END_OF_FILE_INFORMATION, *PFILE_END_OF_FILE_INFORMATION;
+
+typedef struct _FILE_VALID_DATA_LENGTH_INFORMATION {
+  LARGE_INTEGER  ValidDataLength;
+} FILE_VALID_DATA_LENGTH_INFORMATION, *PFILE_VALID_DATA_LENGTH_INFORMATION;
 
 typedef enum _FSINFOCLASS {
   FileFsVolumeInformation = 1,
@@ -4362,7 +4362,7 @@ static __inline VOID
 InsertHeadList(
   IN PLIST_ENTRY  ListHead,
   IN PLIST_ENTRY  Entry)
-{ 
+{
   PLIST_ENTRY OldFlink;
   OldFlink = ListHead->Flink;
   Entry->Flink = OldFlink;
@@ -4375,7 +4375,7 @@ static __inline VOID
 InsertTailList(
   IN PLIST_ENTRY  ListHead,
   IN PLIST_ENTRY  Entry)
-{ 
+{
   PLIST_ENTRY OldBlink;
   OldBlink = ListHead->Blink;
   Entry->Flink = ListHead;
@@ -4430,7 +4430,7 @@ RemoveEntryList(
   return (OldFlink == OldBlink);
 }
 
-static __inline PLIST_ENTRY 
+static __inline PLIST_ENTRY
 RemoveHeadList(
   IN PLIST_ENTRY  ListHead)
 {
@@ -4531,7 +4531,7 @@ DDKAPI
 RtlAreBitsClear(
   IN PRTL_BITMAP  BitMapHeader,
   IN ULONG  StartingIndex,
-  IN ULONG  Length); 
+  IN ULONG  Length);
 
 NTOSAPI
 BOOLEAN
@@ -4539,7 +4539,7 @@ DDKAPI
 RtlAreBitsSet(
   IN PRTL_BITMAP  BitMapHeader,
   IN ULONG  StartingIndex,
-  IN ULONG  Length); 
+  IN ULONG  Length);
 
 NTOSAPI
 NTSTATUS
@@ -4554,7 +4554,7 @@ ULONG
 DDKAPI
 RtlCheckBit(
   IN PRTL_BITMAP  BitMapHeader,
-  IN ULONG  BitPosition); 
+  IN ULONG  BitPosition);
 
 NTOSAPI
 NTSTATUS
@@ -4567,7 +4567,7 @@ NTOSAPI
 VOID
 DDKAPI
 RtlClearAllBits(
-  IN PRTL_BITMAP  BitMapHeader); 
+  IN PRTL_BITMAP  BitMapHeader);
 
 NTOSAPI
 VOID
@@ -4582,7 +4582,7 @@ DDKAPI
 RtlClearBits(
   IN PRTL_BITMAP  BitMapHeader,
   IN ULONG  StartingIndex,
-  IN ULONG  NumberToClear); 
+  IN ULONG  NumberToClear);
 
 NTOSAPI
 SIZE_T
@@ -4717,7 +4717,7 @@ RtlDeleteRegistryValue(
 
 /*
  * BOOLEAN
- * RtlEqualLuid( 
+ * RtlEqualLuid(
  *   IN PLUID  Luid1,
  *   IN PLUID  Luid2)
  */
@@ -4772,7 +4772,7 @@ DDKAPI
 RtlFindClearBits(
   IN PRTL_BITMAP  BitMapHeader,
   IN ULONG  NumberToFind,
-  IN ULONG  HintIndex); 
+  IN ULONG  HintIndex);
 
 NTOSAPI
 ULONG
@@ -4780,15 +4780,15 @@ DDKAPI
 RtlFindClearBitsAndSet(
   IN PRTL_BITMAP  BitMapHeader,
   IN ULONG  NumberToFind,
-  IN ULONG  HintIndex); 
+  IN ULONG  HintIndex);
 
 NTOSAPI
 ULONG
 DDKAPI
-RtlFindClearRuns( 
-  IN PRTL_BITMAP  BitMapHeader, 
-  OUT PRTL_BITMAP_RUN  RunArray, 
-  IN ULONG  SizeOfRunArray, 
+RtlFindClearRuns(
+  IN PRTL_BITMAP  BitMapHeader,
+  OUT PRTL_BITMAP_RUN  RunArray,
+  IN ULONG  SizeOfRunArray,
   IN BOOLEAN  LocateLongestRuns);
 
 NTOSAPI
@@ -4802,9 +4802,9 @@ NTOSAPI
 ULONG
 DDKAPI
 RtlFindLastBackwardRunClear(
-  IN PRTL_BITMAP  BitMapHeader, 
-  IN ULONG  FromIndex, 
-  OUT PULONG  StartingRunIndex); 
+  IN PRTL_BITMAP  BitMapHeader,
+  IN ULONG  FromIndex,
+  OUT PULONG  StartingRunIndex);
 
 NTOSAPI
 CCHAR
@@ -4817,7 +4817,7 @@ ULONG
 DDKAPI
 RtlFindLongestRunClear(
   IN PRTL_BITMAP  BitMapHeader,
-  OUT PULONG  StartingIndex); 
+  OUT PULONG  StartingIndex);
 
 NTOSAPI
 CCHAR
@@ -4829,8 +4829,8 @@ NTOSAPI
 ULONG
 DDKAPI
 RtlFindNextForwardRunClear(
-  IN PRTL_BITMAP  BitMapHeader, 
-  IN ULONG  FromIndex, 
+  IN PRTL_BITMAP  BitMapHeader,
+  IN ULONG  FromIndex,
   OUT PULONG  StartingRunIndex);
 
 NTOSAPI
@@ -4854,7 +4854,7 @@ DDKAPI
 RtlFindSetBits(
   IN PRTL_BITMAP  BitMapHeader,
   IN ULONG  NumberToFind,
-  IN ULONG  HintIndex); 
+  IN ULONG  HintIndex);
 
 NTOSAPI
 ULONG
@@ -4862,7 +4862,7 @@ DDKAPI
 RtlFindSetBitsAndClear(
   IN PRTL_BITMAP  BitMapHeader,
   IN ULONG  NumberToFind,
-  IN ULONG  HintIndex); 
+  IN ULONG  HintIndex);
 
 NTOSAPI
 VOID
@@ -4924,8 +4924,8 @@ RtlGetNextRange(
 NTOSAPI
 NTSTATUS
 DDKAPI
-RtlGUIDFromString( 
-  IN PUNICODE_STRING  GuidString, 
+RtlGUIDFromString(
+  IN PUNICODE_STRING  GuidString,
   OUT GUID  *Guid);
 
 NTOSAPI
@@ -4950,7 +4950,7 @@ DDKAPI
 RtlInitializeBitMap(
   IN PRTL_BITMAP  BitMapHeader,
   IN PULONG  BitMapBuffer,
-  IN ULONG  SizeOfBitMap); 
+  IN ULONG  SizeOfBitMap);
 
 NTOSAPI
 VOID
@@ -5065,7 +5065,7 @@ NTOSAPI
 ULONG
 DDKAPI
 RtlNumberOfSetBits(
-  IN PRTL_BITMAP  BitMapHeader); 
+  IN PRTL_BITMAP  BitMapHeader);
 
 NTOSAPI
 VOID
@@ -5077,9 +5077,9 @@ RtlPrefetchMemoryNonTemporal(
 NTOSAPI
 BOOLEAN
 DDKAPI
-RtlPrefixUnicodeString( 
-  IN PUNICODE_STRING  String1, 
-  IN PUNICODE_STRING  String2, 
+RtlPrefixUnicodeString(
+  IN PUNICODE_STRING  String1,
+  IN PUNICODE_STRING  String2,
   IN BOOLEAN  CaseInSensitive);
 
 NTOSAPI
@@ -5110,7 +5110,7 @@ NTOSAPI
 VOID
 DDKAPI
 RtlSetAllBits(
-  IN PRTL_BITMAP  BitMapHeader); 
+  IN PRTL_BITMAP  BitMapHeader);
 
 NTOSAPI
 VOID
@@ -5125,7 +5125,7 @@ DDKAPI
 RtlSetBits(
   IN PRTL_BITMAP  BitMapHeader,
   IN ULONG  StartingIndex,
-  IN ULONG  NumberToSet); 
+  IN ULONG  NumberToSet);
 
 NTOSAPI
 NTSTATUS
@@ -5167,8 +5167,8 @@ RtlStoreUshort(
 NTOSAPI
 NTSTATUS
 DDKAPI
-RtlStringFromGUID( 
-  IN REFGUID  Guid, 
+RtlStringFromGUID(
+  IN REFGUID  Guid,
   OUT PUNICODE_STRING  GuidString);
 
 NTOSAPI
@@ -5229,7 +5229,7 @@ RtlUnicodeStringToInteger(
 NTOSAPI
 WCHAR
 DDKAPI
-RtlUpcaseUnicodeChar( 
+RtlUpcaseUnicodeChar(
   IN WCHAR  SourceCharacter);
 
 NTOSAPI
@@ -5243,7 +5243,7 @@ RtlUpcaseUnicodeString(
 NTOSAPI
 CHAR
 DDKAPI
-RtlUpperChar( 
+RtlUpperChar(
   IN CHAR Character);
 
 NTOSAPI
@@ -5549,7 +5549,7 @@ ExGetExclusiveWaiterCount(
 NTOSAPI
 KPROCESSOR_MODE
 DDKAPI
-ExGetPreviousMode( 
+ExGetPreviousMode(
   VOID);
 
 NTOSAPI
@@ -5649,7 +5649,7 @@ ExInterlockedCompareExchange64(
   IN OUT PLONGLONG  Destination,
   IN PLONGLONG  Exchange,
   IN PLONGLONG  Comparand,
-  IN PKSPIN_LOCK  Lock); 
+  IN PKSPIN_LOCK  Lock);
 
 NTOSAPI
 PSINGLE_LIST_ENTRY
@@ -5816,7 +5816,7 @@ ExReleaseResourceLite(
 NTOSAPI
 VOID
 DDKAPI
-ExSetResourceOwnerPointer( 
+ExSetResourceOwnerPointer(
   IN PERESOURCE  Resource,
   IN PVOID  OwnerPointer);
 
@@ -6175,21 +6175,21 @@ IoAllocateDriverObjectExtension(
   IN ULONG  DriverObjectExtensionSize,
   OUT PVOID  *DriverObjectExtension);
 
-typedef struct _IO_ERROR_LOG_PACKET { 
-	UCHAR  MajorFunctionCode; 
-	UCHAR  RetryCount; 
-	USHORT  DumpDataSize; 
-	USHORT  NumberOfStrings; 
-	USHORT  StringOffset; 
-	USHORT  EventCategory; 
-	NTSTATUS  ErrorCode; 
-	ULONG  UniqueErrorValue; 
-	NTSTATUS  FinalStatus; 
-	ULONG  SequenceNumber; 
-	ULONG  IoControlCode; 
-	LARGE_INTEGER  DeviceOffset; 
-	ULONG  DumpData[1]; 
-} IO_ERROR_LOG_PACKET, *PIO_ERROR_LOG_PACKET; 
+typedef struct _IO_ERROR_LOG_PACKET {
+	UCHAR  MajorFunctionCode;
+	UCHAR  RetryCount;
+	USHORT  DumpDataSize;
+	USHORT  NumberOfStrings;
+	USHORT  StringOffset;
+	USHORT  EventCategory;
+	NTSTATUS  ErrorCode;
+	ULONG  UniqueErrorValue;
+	NTSTATUS  FinalStatus;
+	ULONG  SequenceNumber;
+	ULONG  IoControlCode;
+	LARGE_INTEGER  DeviceOffset;
+	ULONG  DumpData[1];
+} IO_ERROR_LOG_PACKET, *PIO_ERROR_LOG_PACKET;
 
 NTOSAPI
 PVOID
@@ -6595,7 +6595,7 @@ IoGetBootDiskInformation(
 NTOSAPI
 PCONFIGURATION_INFORMATION
 DDKAPI
-IoGetConfigurationInformation( 
+IoGetConfigurationInformation(
   VOID);
 
 NTOSAPI
@@ -7163,9 +7163,9 @@ NTOSAPI
 VOID
 DDKAPI
 IoSetStartIoAttributes(
-  IN PDEVICE_OBJECT  DeviceObject, 
-  IN BOOLEAN  DeferredStartIo, 
-  IN BOOLEAN  NonCancelable); 
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN BOOLEAN  DeferredStartIo,
+  IN BOOLEAN  NonCancelable);
 
 NTOSAPI
 NTSTATUS
@@ -7777,7 +7777,7 @@ KeReleaseSpinLock(
 
 NTOSAPI
 PKDEVICE_QUEUE_ENTRY
-DDKAPI 
+DDKAPI
 KeRemoveByKeyDeviceQueue(
   IN PKDEVICE_QUEUE  DeviceQueue,
   IN ULONG  SortKey);
@@ -8484,7 +8484,7 @@ DDKAPI
 ObGetObjectSecurity(
   IN PVOID  Object,
   OUT PSECURITY_DESCRIPTOR  *SecurityDescriptor,
-  OUT PBOOLEAN  MemoryAllocated); 
+  OUT PBOOLEAN  MemoryAllocated);
 
 NTOSAPI
 NTSTATUS
@@ -8890,12 +8890,12 @@ NTSTATUS
 DDKAPI
 NtDeviceIoControlFile(
   IN HANDLE  DeviceHandle,
-  IN HANDLE  Event  OPTIONAL, 
-  IN PIO_APC_ROUTINE  UserApcRoutine  OPTIONAL, 
-  IN PVOID  UserApcContext  OPTIONAL, 
-  OUT PIO_STATUS_BLOCK  IoStatusBlock, 
+  IN HANDLE  Event  OPTIONAL,
+  IN PIO_APC_ROUTINE  UserApcRoutine  OPTIONAL,
+  IN PVOID  UserApcContext  OPTIONAL,
+  OUT PIO_STATUS_BLOCK  IoStatusBlock,
   IN ULONG  IoControlCode,
-  IN PVOID  InputBuffer, 
+  IN PVOID  InputBuffer,
   IN ULONG  InputBufferSize,
   OUT PVOID  OutputBuffer,
   IN ULONG  OutputBufferSize);
@@ -8905,12 +8905,12 @@ NTSTATUS
 DDKAPI
 ZwDeviceIoControlFile(
   IN HANDLE  DeviceHandle,
-  IN HANDLE  Event  OPTIONAL, 
-  IN PIO_APC_ROUTINE  UserApcRoutine  OPTIONAL, 
-  IN PVOID  UserApcContext  OPTIONAL, 
-  OUT PIO_STATUS_BLOCK  IoStatusBlock, 
+  IN HANDLE  Event  OPTIONAL,
+  IN PIO_APC_ROUTINE  UserApcRoutine  OPTIONAL,
+  IN PVOID  UserApcContext  OPTIONAL,
+  OUT PIO_STATUS_BLOCK  IoStatusBlock,
   IN ULONG  IoControlCode,
-  IN PVOID  InputBuffer, 
+  IN PVOID  InputBuffer,
   IN ULONG  InputBufferSize,
   OUT PVOID  OutputBuffer,
   IN ULONG  OutputBufferSize);
@@ -9252,7 +9252,7 @@ NTSTATUS
 DDKAPI
 PoRequestPowerIrp(
   IN PDEVICE_OBJECT  DeviceObject,
-  IN UCHAR  MinorFunction,  
+  IN UCHAR  MinorFunction,
   IN POWER_STATE  PowerState,
   IN PREQUEST_POWER_COMPLETE  CompletionFunction,
   IN PVOID  Context,
@@ -9268,7 +9268,7 @@ NTOSAPI
 VOID
 DDKAPI
 PoSetDeviceBusy(
-  PULONG  IdlePointer); 
+  PULONG  IdlePointer);
 
 NTOSAPI
 POWER_STATE
@@ -9315,10 +9315,10 @@ NTSTATUS
 DDKAPI
 WmiFireEvent(
   IN PDEVICE_OBJECT  DeviceObject,
-  IN LPGUID  Guid, 
+  IN LPGUID  Guid,
   IN ULONG  InstanceIndex,
   IN ULONG  EventDataSize,
-  IN PVOID  EventData); 
+  IN PVOID  EventData);
 
 NTOSAPI
 NTSTATUS

@@ -99,7 +99,7 @@ typedef struct _USB_COMMON_DESCRIPTOR {
 #define USB_CONFIG_REMOTE_WAKEUP          0x20
 
 #include <pshpack1.h>
-typedef struct _USB_CONFIGURATION_DESCRIPTOR { 
+typedef struct _USB_CONFIGURATION_DESCRIPTOR {
   UCHAR  bLength;
   UCHAR  bDescriptorType;
   USHORT  wTotalLength;
@@ -111,7 +111,7 @@ typedef struct _USB_CONFIGURATION_DESCRIPTOR {
 } USB_CONFIGURATION_DESCRIPTOR, *PUSB_CONFIGURATION_DESCRIPTOR;
 #include <poppack.h>
 
-typedef struct _USB_DEVICE_DESCRIPTOR { 
+typedef struct _USB_DEVICE_DESCRIPTOR {
   UCHAR  bLength;
   UCHAR  bDescriptorType;
   USHORT  bcdUSB;
@@ -141,7 +141,7 @@ typedef struct _USB_DEVICE_DESCRIPTOR {
 #define USB_ENDPOINT_TYPE_INTERRUPT       0x03
 
 #include <pshpack1.h>
-typedef struct _USB_ENDPOINT_DESCRIPTOR { 
+typedef struct _USB_ENDPOINT_DESCRIPTOR {
   UCHAR  bLength;
   UCHAR  bDescriptorType;
   UCHAR  bEndpointAddress;
@@ -154,7 +154,7 @@ typedef struct _USB_ENDPOINT_DESCRIPTOR {
 #define USB_FEATURE_ENDPOINT_STALL        0x0000
 #define USB_FEATURE_REMOTE_WAKEUP         0x0001
 
-typedef struct _USB_INTERFACE_DESCRIPTOR { 
+typedef struct _USB_INTERFACE_DESCRIPTOR {
   UCHAR  bLength;
   UCHAR  bDescriptorType;
   UCHAR  bInterfaceNumber;
@@ -200,9 +200,9 @@ typedef struct _USB_CONFIGURATION_POWER_DESCRIPTOR {
 	UCHAR  bBusPowerSavingD1;
 	UCHAR  bSelfPowerSavingD1;
 	UCHAR  bBusPowerSavingD2;
-	UCHAR  bSelfPowerSavingD2; 
+	UCHAR  bSelfPowerSavingD2;
 	UCHAR  bBusPowerSavingD3;
-	UCHAR  bSelfPowerSavingD3; 
+	UCHAR  bSelfPowerSavingD3;
 	USHORT  TransitionTimeFromD1;
 	USHORT  TransitionTimeFromD2;
 	USHORT  TransitionTimeFromD3;
@@ -221,9 +221,9 @@ typedef struct _USB_INTERFACE_POWER_DESCRIPTOR {
 	UCHAR  bBusPowerSavingD1;
 	UCHAR  bSelfPowerSavingD1;
 	UCHAR  bBusPowerSavingD2;
-	UCHAR  bSelfPowerSavingD2; 
+	UCHAR  bSelfPowerSavingD2;
 	UCHAR  bBusPowerSavingD3;
-	UCHAR  bSelfPowerSavingD3; 
+	UCHAR  bSelfPowerSavingD3;
 	USHORT  TransitionTimeFromD1;
 	USHORT  TransitionTimeFromD2;
 	USHORT  TransitionTimeFromD3;

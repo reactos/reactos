@@ -113,7 +113,7 @@ typedef const TCHAR *LPCTSTR;
  * The corresponding macros  _TEXT() and _T() for mapping _UNICODE strings
  * passed to C runtime functions are defined in mingw/tchar.h
  */
-#define TEXT(q) __TEXT(q)    
+#define TEXT(q) __TEXT(q)
 typedef SHORT *PSHORT;
 typedef LONG *PLONG;
 #ifdef STRICT
@@ -232,7 +232,7 @@ typedef DWORD FLONG;
 #define FILE_SHARE_WRITE		0x00000002
 #define FILE_SHARE_DELETE		0x00000004
 #define FILE_SHARE_VALID_FLAGS		0x00000007
-			
+
 #define FILE_ATTRIBUTE_READONLY			0x00000001
 #define FILE_ATTRIBUTE_HIDDEN			0x00000002
 #define FILE_ATTRIBUTE_SYSTEM			0x00000004
@@ -249,15 +249,15 @@ typedef DWORD FLONG;
 #define FILE_ATTRIBUTE_ENCRYPTED		0x00004000
 #define FILE_ATTRIBUTE_VALID_FLAGS		0x00007fb7
 #define FILE_ATTRIBUTE_VALID_SET_FLAGS		0x000031a7
-				
+
 #define FILE_COPY_STRUCTURED_STORAGE		0x00000041
 #define FILE_STRUCTURED_STORAGE			0x00000441
-			
+
 #define FILE_VALID_OPTION_FLAGS			0x00ffffff
 #define FILE_VALID_PIPE_OPTION_FLAGS		0x00000032
 #define FILE_VALID_MAILSLOT_OPTION_FLAGS	0x00000032
 #define FILE_VALID_SET_FLAGS			0x00000036
-			
+
 #define FILE_SUPERSEDE			0x00000000
 #define FILE_OPEN			0x00000001
 #define FILE_CREATE			0x00000002
@@ -265,7 +265,7 @@ typedef DWORD FLONG;
 #define FILE_OVERWRITE			0x00000004
 #define FILE_OVERWRITE_IF		0x00000005
 #define FILE_MAXIMUM_DISPOSITION	0x00000005
-			
+
 #define FILE_DIRECTORY_FILE		0x00000001
 #define FILE_WRITE_THROUGH		0x00000002
 #define FILE_SEQUENTIAL_ONLY		0x00000004
@@ -1287,14 +1287,14 @@ typedef DWORD FLONG;
 #define VER_SUITE_DATACENTER 128
 #define VER_SUITE_PERSONAL 512
 #define VER_SUITE_BLADE 1024
-#define WT_EXECUTEDEFAULT 0x00000000                           
-#define WT_EXECUTEINIOTHREAD 0x00000001                           
-#define WT_EXECUTEINWAITTHREAD 0x00000004                           
-#define WT_EXECUTEONLYONCE 0x00000008                           
-#define WT_EXECUTELONGFUNCTION 0x00000010                           
-#define WT_EXECUTEINTIMERTHREAD 0x00000020                           
-#define WT_EXECUTEINPERSISTENTTHREAD 0x00000080                      
-#define WT_TRANSFER_IMPERSONATION 0x00000100                         
+#define WT_EXECUTEDEFAULT 0x00000000
+#define WT_EXECUTEINIOTHREAD 0x00000001
+#define WT_EXECUTEINWAITTHREAD 0x00000004
+#define WT_EXECUTEONLYONCE 0x00000008
+#define WT_EXECUTELONGFUNCTION 0x00000010
+#define WT_EXECUTEINTIMERTHREAD 0x00000020
+#define WT_EXECUTEINPERSISTENTTHREAD 0x00000080
+#define WT_TRANSFER_IMPERSONATION 0x00000100
 #if (_WIN32_WINNT >= 0x0501)
 #define ACTIVATION_CONTEXT_SECTION_ASSEMBLY_INFORMATION 1
 #define ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION 2
@@ -1914,18 +1914,18 @@ typedef struct _CONTEXT {
 typedef struct _CONTEXT {
 	/* The flags values within this flag control the contents of
 	   a CONTEXT record.
-	  
+
 	   If the context record is used as an input parameter, then
 	   for each portion of the context record controlled by a flag
 	   whose value is set, it is assumed that that portion of the
 	   context record contains valid context. If the context record
 	   is being used to modify a thread's context, then only that
 	   portion of the threads context will be modified.
-	  
+
 	   If the context record is used as an IN OUT parameter to capture
 	   the context of a thread, then only those portions of the thread's
 	   context corresponding to set flags will be returned.
-	  
+
 	   The context record is never used as an OUT only parameter. */
 
 	ULONG ContextFlags;
@@ -2997,7 +2997,7 @@ typedef struct _JOBOBJECT_JOBSET_INFORMATION {
 	DWORD MemberLevel;
 } JOBOBJECT_JOBSET_INFORMATION,*PJOBOBJECT_JOBSET_INFORMATION;
 
-/* Fixme: Making these defines conditional on WINVER will break ddk includes */ 
+/* Fixme: Making these defines conditional on WINVER will break ddk includes */
 #if 1 /* (WINVER >= 0x0500) */
 #include <pshpack4.h>
 
@@ -3358,7 +3358,7 @@ extern PVOID GetFiberData(void);
 	"mov	eax, [eax]" \
         value [eax] \
         modify [eax];
-        
+
 #endif /* __GNUC__ */
 
 #endif /* RC_INVOKED */

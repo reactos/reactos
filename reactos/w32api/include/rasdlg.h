@@ -13,7 +13,7 @@ extern "C" {
 #define RASPBDEVENT_EditGlobals	5
 #define RASPBDEVENT_NoUser	6
 #define RASPBDEVENT_NoUserEdit	7
- 
+
 #define RASPBDFLAG_PositionDlg	1
 #define RASPBDFLAG_ForceCloseOnDial	2
 #define RASPBDFLAG_NoUser	16

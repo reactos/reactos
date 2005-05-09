@@ -697,7 +697,7 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Disconnect_Machine(
-  IN HMACHINE  hMachine); 
+  IN HMACHINE  hMachine);
 
 /* FIXME: Obsolete CM_Enable_DevNode */
 /* FIXME: Obsolete CM_Enable_DevNodeEx */

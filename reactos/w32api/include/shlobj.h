@@ -759,7 +759,7 @@ typedef enum RESTRICTIONS
 	REST_ALLOWUNHASHEDWEBVIEW,
 	REST_ALLOWLEGACYWEBVIEW,
 	REST_REVERTWEBVIEWSECURITY,
-	
+
 	REST_INHERITCONSOLEHANDLES	= 0x40000086,
 
 	REST_NODISCONNECT		= 0x41000001,
@@ -1715,7 +1715,7 @@ HRESULT WINAPI SHLoadInProc(REFCLSID);
 #if (_WIN32_IE >= 0x0400)
 BOOL WINAPI SHGetSpecialFolderPathA(HWND,LPSTR,int,BOOL);
 BOOL WINAPI SHGetSpecialFolderPathW(HWND,LPWSTR,int,BOOL);
-#endif 
+#endif
 /* SHGetFolderPath in shfolder.dll on W9x, NT4, also in shell32.dll on W2K */
 HRESULT WINAPI SHGetFolderPathA(HWND,int,HANDLE,DWORD,LPSTR);
 HRESULT WINAPI SHGetFolderPathW(HWND,int,HANDLE,DWORD,LPWSTR);
@@ -1772,7 +1772,7 @@ typedef BROWSEINFOW BROWSEINFO,*PBROWSEINFO,*LPBROWSEINFO;
 #if (_WIN32_IE >= 0x0400)
 #define SHGetSpecialFolderPath SHGetSpecialFolderPathW
 #endif
-#define SHGetFolderPath SHGetFolderPathW 
+#define SHGetFolderPath SHGetFolderPathW
 #if (_WIN32_WINNT >= 0x0500)
 #define SHCreateDirectoryEx SHCreateDirectoryExW
 #endif

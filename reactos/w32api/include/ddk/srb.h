@@ -167,42 +167,42 @@ typedef PHYSICAL_ADDRESS SCSI_PHYSICAL_ADDRESS, *PSCSI_PHYSICAL_ADDRESS;
 #define SRB_FLAGS_PORT_DRIVER_RESERVED      0x0F000000
 #define SRB_FLAGS_CLASS_DRIVER_RESERVED     0xF0000000
 
-typedef struct _SCSI_REQUEST_BLOCK { 
-  USHORT  Length; 
-  UCHAR  Function; 
-  UCHAR  SrbStatus; 
-  UCHAR  ScsiStatus; 
-  UCHAR  PathId; 
-  UCHAR  TargetId; 
-  UCHAR  Lun; 
-  UCHAR  QueueTag; 
-  UCHAR  QueueAction; 
-  UCHAR  CdbLength; 
-  UCHAR  SenseInfoBufferLength; 
-  ULONG  SrbFlags; 
-  ULONG  DataTransferLength; 
-  ULONG  TimeOutValue; 
-  PVOID  DataBuffer; 
-  PVOID  SenseInfoBuffer; 
-  struct _SCSI_REQUEST_BLOCK  *NextSrb; 
-  PVOID  OriginalRequest; 
-  PVOID  SrbExtension; 
+typedef struct _SCSI_REQUEST_BLOCK {
+  USHORT  Length;
+  UCHAR  Function;
+  UCHAR  SrbStatus;
+  UCHAR  ScsiStatus;
+  UCHAR  PathId;
+  UCHAR  TargetId;
+  UCHAR  Lun;
+  UCHAR  QueueTag;
+  UCHAR  QueueAction;
+  UCHAR  CdbLength;
+  UCHAR  SenseInfoBufferLength;
+  ULONG  SrbFlags;
+  ULONG  DataTransferLength;
+  ULONG  TimeOutValue;
+  PVOID  DataBuffer;
+  PVOID  SenseInfoBuffer;
+  struct _SCSI_REQUEST_BLOCK  *NextSrb;
+  PVOID  OriginalRequest;
+  PVOID  SrbExtension;
   _ANONYMOUS_UNION union {
     ULONG  InternalStatus;
     ULONG  QueueSortKey;
-  } DUMMYUNIONNAME; 
+  } DUMMYUNIONNAME;
 #if defined(_WIN64)
   ULONG Reserved;
 #endif
-  UCHAR  Cdb[16]; 
-} SCSI_REQUEST_BLOCK, *PSCSI_REQUEST_BLOCK; 
+  UCHAR  Cdb[16];
+} SCSI_REQUEST_BLOCK, *PSCSI_REQUEST_BLOCK;
 
 #define SCSI_REQUEST_BLOCK_SIZE           sizeof(SCSI_REQUEST_BLOCK)
 
-typedef struct _ACCESS_RANGE { 
-  SCSI_PHYSICAL_ADDRESS  RangeStart; 
-  ULONG  RangeLength; 
-  BOOLEAN  RangeInMemory; 
+typedef struct _ACCESS_RANGE {
+  SCSI_PHYSICAL_ADDRESS  RangeStart;
+  ULONG  RangeLength;
+  BOOLEAN  RangeInMemory;
 } ACCESS_RANGE, *PACCESS_RANGE;
 
 /* PORT_CONFIGURATION_INFORMATION.Dma64BitAddresses constants */
@@ -353,37 +353,37 @@ typedef VOID DDKAPI
 (*PHW_TIMER)(
   IN PVOID DeviceExtension);
 
-typedef struct _HW_INITIALIZATION_DATA { 
-  ULONG  HwInitializationDataSize; 
-  INTERFACE_TYPE  AdapterInterfaceType; 
-  PHW_INITIALIZE  HwInitialize; 
-  PHW_STARTIO  HwStartIo; 
-  PHW_INTERRUPT  HwInterrupt; 
-  PHW_FIND_ADAPTER  HwFindAdapter; 
-  PHW_RESET_BUS  HwResetBus; 
-  PHW_DMA_STARTED  HwDmaStarted; 
-  PHW_ADAPTER_STATE  HwAdapterState; 
-  ULONG  DeviceExtensionSize; 
-  ULONG  SpecificLuExtensionSize; 
-  ULONG  SrbExtensionSize; 
-  ULONG  NumberOfAccessRanges; 
-  PVOID  Reserved; 
-  BOOLEAN  MapBuffers; 
-  BOOLEAN  NeedPhysicalAddresses; 
-  BOOLEAN  TaggedQueuing; 
-  BOOLEAN  AutoRequestSense; 
-  BOOLEAN  MultipleRequestPerLu; 
-  BOOLEAN  ReceiveEvent; 
-  USHORT  VendorIdLength; 
-  PVOID  VendorId; 
-  USHORT  ReservedUshort; 
-  USHORT  DeviceIdLength; 
-  PVOID  DeviceId; 
+typedef struct _HW_INITIALIZATION_DATA {
+  ULONG  HwInitializationDataSize;
+  INTERFACE_TYPE  AdapterInterfaceType;
+  PHW_INITIALIZE  HwInitialize;
+  PHW_STARTIO  HwStartIo;
+  PHW_INTERRUPT  HwInterrupt;
+  PHW_FIND_ADAPTER  HwFindAdapter;
+  PHW_RESET_BUS  HwResetBus;
+  PHW_DMA_STARTED  HwDmaStarted;
+  PHW_ADAPTER_STATE  HwAdapterState;
+  ULONG  DeviceExtensionSize;
+  ULONG  SpecificLuExtensionSize;
+  ULONG  SrbExtensionSize;
+  ULONG  NumberOfAccessRanges;
+  PVOID  Reserved;
+  BOOLEAN  MapBuffers;
+  BOOLEAN  NeedPhysicalAddresses;
+  BOOLEAN  TaggedQueuing;
+  BOOLEAN  AutoRequestSense;
+  BOOLEAN  MultipleRequestPerLu;
+  BOOLEAN  ReceiveEvent;
+  USHORT  VendorIdLength;
+  PVOID  VendorId;
+  USHORT  ReservedUshort;
+  USHORT  DeviceIdLength;
+  PVOID  DeviceId;
   PHW_ADAPTER_CONTROL  HwAdapterControl;
-} HW_INITIALIZATION_DATA, *PHW_INITIALIZATION_DATA; 
+} HW_INITIALIZATION_DATA, *PHW_INITIALIZATION_DATA;
 
 SCSIPORTAPI
-VOID 
+VOID
 DDKAPI
 ScsiPortCompleteRequest(
   IN PVOID  HwDeviceExtension,
@@ -400,7 +400,7 @@ ScsiPortCompleteRequest(
 #define ScsiPortConvertPhysicalAddressToUlong(Address) ((Address).LowPart)
 
 SCSIPORTAPI
-SCSI_PHYSICAL_ADDRESS 
+SCSI_PHYSICAL_ADDRESS
 DDKAPI
 ScsiPortConvertUlongToPhysicalAddress(
   IN ULONG  UlongAddress);

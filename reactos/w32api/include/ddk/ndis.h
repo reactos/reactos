@@ -678,15 +678,15 @@ typedef enum _NDIS_PNP_DEVICE_STATE {
 
 /* OID_GEN_NETWORK_LAYER_ADDRESSES */
 typedef struct _NETWORK_ADDRESS {
-  USHORT  AddressLength; 
-  USHORT  AddressType; 
-  UCHAR  Address[1]; 
+  USHORT  AddressLength;
+  USHORT  AddressType;
+  UCHAR  Address[1];
 } NETWORK_ADDRESS, *PNETWORK_ADDRESS;
 
 typedef struct _NETWORK_ADDRESS_LIST {
-	LONG  AddressCount; 
-	USHORT  AddressType; 
-	NETWORK_ADDRESS  Address[1]; 
+	LONG  AddressCount;
+	USHORT  AddressType;
+	NETWORK_ADDRESS  Address[1];
 } NETWORK_ADDRESS_LIST, *PNETWORK_ADDRESS_LIST;
 
 /* Protocol types supported by NDIS */
@@ -700,8 +700,8 @@ typedef struct _NETWORK_ADDRESS_LIST {
 
 /* OID_GEN_TRANSPORT_HEADER_OFFSET */
 typedef struct _TRANSPORT_HEADER_OFFSET {
-	USHORT  ProtocolType; 
-	USHORT  HeaderOffset; 
+	USHORT  ProtocolType;
+	USHORT  HeaderOffset;
 } TRANSPORT_HEADER_OFFSET, *PTRANSPORT_HEADER_OFFSET;
 
 
@@ -926,7 +926,7 @@ typedef struct _NDIS_TASK_IPSEC {
     ULONG  V4_OPTIONS;
     ULONG  RESERVED;
   } Supported;
- 
+
   struct {
     ULONG  MD5 : 1;
     ULONG  SHA_1 : 1;
@@ -935,7 +935,7 @@ typedef struct _NDIS_TASK_IPSEC {
     ULONG  Send : 1;
     ULONG  Receive : 1;
   } V4AH;
- 
+
   struct {
     ULONG  DES : 1;
     ULONG  RESERVED : 1;
@@ -986,7 +986,7 @@ typedef struct _NDIS_TASK_TCP_IP_CHECKSUM {
     ULONG  UdpChecksum:1;
     ULONG  IpChecksum:1;
   } V4Transmit;
- 
+
   struct {
     ULONG  IpOptionsSupported : 1;
     ULONG  TcpOptionsSupported : 1;
@@ -994,14 +994,14 @@ typedef struct _NDIS_TASK_TCP_IP_CHECKSUM {
     ULONG  UdpChecksum : 1;
     ULONG  IpChecksum : 1;
   } V4Receive;
- 
+
   struct {
     ULONG  IpOptionsSupported : 1;
     ULONG  TcpOptionsSupported : 1;
     ULONG  TcpChecksum : 1;
     ULONG  UdpChecksum : 1;
   } V6Transmit;
- 
+
   struct {
     ULONG  IpOptionsSupported : 1;
     ULONG  TcpOptionsSupported : 1;
@@ -1027,7 +1027,7 @@ typedef struct _NDIS_TCP_IP_CHECKSUM_PACKET_INFO {
       ULONG  NdisPacketUdpChecksum : 1;
       ULONG  NdisPacketIpChecksum : 1;
       } Transmit;
- 
+
     struct {
       ULONG  NdisPacketTcpChecksumFailed : 1;
       ULONG  NdisPacketUdpChecksumFailed : 1;
@@ -1051,9 +1051,9 @@ typedef struct _NDIS_WAN_FRAGMENT {
 } NDIS_WAN_FRAGMENT, *PNDIS_WAN_FRAGMENT;
 
 typedef struct _WAN_CO_LINKPARAMS {
-  ULONG  TransmitSpeed; 
-  ULONG  ReceiveSpeed; 
-  ULONG  SendWindow; 
+  ULONG  TransmitSpeed;
+  ULONG  ReceiveSpeed;
+  ULONG  SendWindow;
 } WAN_CO_LINKPARAMS, *PWAN_CO_LINKPARAMS;
 
 
@@ -1450,7 +1450,7 @@ typedef VOID DDKAPI
   BIND_HANDLER  BindAdapterHandler; \
   UNBIND_HANDLER  UnbindAdapterHandler; \
   PNP_EVENT_HANDLER  PnPEventHandler; \
-  UNLOAD_PROTOCOL_HANDLER  UnloadHandler; 
+  UNLOAD_PROTOCOL_HANDLER  UnloadHandler;
 
 #else /* !__cplusplus */
 
@@ -1460,7 +1460,7 @@ typedef VOID DDKAPI
   BIND_HANDLER  BindAdapterHandler; \
   UNBIND_HANDLER  UnbindAdapterHandler; \
   PNP_EVENT_HANDLER  PnPEventHandler; \
-  UNLOAD_PROTOCOL_HANDLER  UnloadHandler; 
+  UNLOAD_PROTOCOL_HANDLER  UnloadHandler;
 
 #endif /* __cplusplus */
 
@@ -1920,7 +1920,7 @@ NdisQueryBufferOffset(
 /*
  * UINT
  * NdisGetPacketFlags(
- *   IN PNDIS_PACKET  Packet); 
+ *   IN PNDIS_PACKET  Packet);
  */
 #define NdisGetPacketFlags(Packet)(Packet)->Private.Flags;
 
@@ -2029,7 +2029,7 @@ NdisQueryBufferOffset(
   (PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) + \
   (_Packet)->Private.NdisPacketOobOffset)
 
- 
+
 /*
  * VOID
  * NdisQueryPacket(
@@ -2162,7 +2162,7 @@ NdisQueryBufferOffset(
  * VOID
  * NdisSetPacketFlags(
  *   IN PNDIS_PACKET  Packet,
- *   IN UINT  Flags); 
+ *   IN UINT  Flags);
  */
 #define NdisSetPacketFlags(Packet, Flags) \
   (Packet)->Private.Flags |= (Flags);
@@ -2481,7 +2481,7 @@ NdisUpdateSharedMemory(
  * VOID
  * NDIS_PHYSICAL_ADDRESS_CONST(
  *   IN ULONG  Low,
- *   IN LONG  High); 
+ *   IN LONG  High);
  */
 #define NDIS_PHYSICAL_ADDRESS_CONST(Low, High)  \
     { {(ULONG)(Low), (LONG)(High)} }
@@ -2531,7 +2531,7 @@ NdisUpdateSharedMemory(
  * VOID
  * NdisStoreUlong(
  *   IN PULONG  DestinationAddress,
- *   IN ULONG  Value); 
+ *   IN ULONG  Value);
  */
 #define NdisStoreUlong(DestinationAddress, Value) \
   RtlStoreUlong(DestinationAddress, Value)
@@ -2597,7 +2597,7 @@ NdisReadPciSlotInformation(
   IN ULONG  Length);
 
 NDISAPI
-ULONG 
+ULONG
 DDKAPI
 NdisWritePciSlotInformation(
   IN NDIS_HANDLE  NdisAdapterHandle,
@@ -3084,7 +3084,7 @@ NdisGetCurrentProcessorCpuUsage(
 
 /*
  * VOID
- * NDIS_PAGABLE_FUNCTION(FunctionName) 
+ * NDIS_PAGABLE_FUNCTION(FunctionName)
  */
 #define NDIS_PAGEABLE_FUNCTION(FunctionName) \
   alloc_text(page, FunctionName)
@@ -3406,7 +3406,7 @@ NdisClMakeCall(
   OUT PNDIS_HANDLE  NdisPartyHandle  OPTIONAL);
 
 NDISAPI
-NDIS_STATUS 
+NDIS_STATUS
 DDKAPI
 NdisClModifyCallQoS(
   IN NDIS_HANDLE  NdisVcHandle,
@@ -3710,7 +3710,7 @@ NdisMCoRequestComplete(
   IN PNDIS_REQUEST  Request);
 
 NDISAPI
-VOID 
+VOID
 DDKAPI
 NdisMCoSendComplete(
   IN NDIS_STATUS  Status,
@@ -3728,7 +3728,7 @@ NdisIMAssociateMiniport(
   IN NDIS_HANDLE  ProtocolHandle);
 
 NDISAPI
-NDIS_STATUS 
+NDIS_STATUS
 DDKAPI
 NdisIMCancelInitializeDeviceInstance(
   IN NDIS_HANDLE  DriverHandle,
@@ -4541,11 +4541,11 @@ struct _NDIS_MINIPORT_BLOCK {
   } DUMMYUNIONNAME2;
   PVOID  SavedSendPacketsHandler;
   PVOID  SavedCancelSendPacketsHandler;
-  W_SEND_PACKETS_HANDLER  WSendPacketsHandler;                
+  W_SEND_PACKETS_HANDLER  WSendPacketsHandler;
   ULONG  MiniportAttributes;
   PDMA_ADAPTER  SavedSystemAdapterObject;
   USHORT  NumOpens;
-  USHORT  CFHangXTicks; 
+  USHORT  CFHangXTicks;
   ULONG  RequestCount;
   ULONG  IndicatedPacketsCount;
   ULONG  PhysicalMediumType;
@@ -5060,14 +5060,14 @@ NdisMCancelTimer(
     AdapterType)
 
 NDISAPI
-VOID 
+VOID
 DDKAPI
 NdisMSetAttributesEx(
   IN NDIS_HANDLE  MiniportAdapterHandle,
   IN NDIS_HANDLE  MiniportAdapterContext,
   IN UINT  CheckForHangTimeInSeconds   OPTIONAL,
   IN ULONG  AttributeFlags,
-  IN NDIS_INTERFACE_TYPE AdapterType); 
+  IN NDIS_INTERFACE_TYPE AdapterType);
 
 /*
  * VOID
@@ -5227,7 +5227,7 @@ NDISAPI
 NTSTATUS
 DDKAPI
 NdisUpcaseUnicodeString(
-  OUT PUNICODE_STRING  DestinationString,  
+  OUT PUNICODE_STRING  DestinationString,
   IN PUNICODE_STRING  SourceString);
 
 

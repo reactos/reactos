@@ -89,7 +89,7 @@ typedef struct _AGP_BUS_INTERFACE_STANDARD {
   PVOID  AgpContext;
   PINTERFACE_REFERENCE  InterfaceReference;
   PINTERFACE_DEREFERENCE  InterfaceDereference;
-  
+
   ULONG  Capabilities;
   PAGP_BUS_RESERVE_MEMORY  ReserveMemory;
   PAGP_BUS_RELEASE_MEMORY  ReleaseMemory;

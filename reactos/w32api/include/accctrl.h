@@ -237,7 +237,7 @@ typedef struct _ACTRL_ALISTW {
 	ULONG                       cEntries;
 	PACTRL_PROPERTY_ENTRYW      pPropertyAccessList;
 } ACTRL_ACCESSW, *PACTRL_ACCESSW, ACTRL_AUDITW, *PACTRL_AUDITW;
-typedef struct _TRUSTEE_ACCESSA { 
+typedef struct _TRUSTEE_ACCESSA {
 	LPSTR           lpProperty;
 	ACCESS_RIGHTS   Access;
 	ULONG           fAccessFlags;
@@ -341,9 +341,9 @@ typedef struct _SI_INHERIT_TYPE
 } SI_INHERIT_TYPE, *PSI_INHERIT_TYPE;
 typedef enum _SI_PAGE_TYPE
 {
-    SI_PAGE_PERM     = 0, 
-    SI_PAGE_ADVPERM, 
-    SI_PAGE_AUDIT, 
+    SI_PAGE_PERM     = 0,
+    SI_PAGE_ADVPERM,
+    SI_PAGE_AUDIT,
     SI_PAGE_OWNER
 } SI_PAGE_TYPE;
 
@@ -391,4 +391,4 @@ typedef INHERITED_FROMA INHERITED_FROM, *PINHERITED_FROM;
 #ifdef __cplusplus
 }
 #endif
-#endif 
+#endif

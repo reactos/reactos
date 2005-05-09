@@ -18,7 +18,7 @@ extern "C" {
 #define ODBC_ADD_SYS_DSN 4
 #define ODBC_CONFIG_SYS_DSN 5
 #define ODBC_REMOVE_SYS_DSN 6
-#define ODBC_INSTALL_INQUIRY 1 
+#define ODBC_INSTALL_INQUIRY 1
 #define ODBC_INSTALL_COMPLETE 2
 #define ODBC_INSTALL_DRIVER 1
 #define ODBC_REMOVE_DRIVER 2
@@ -86,7 +86,7 @@ BOOL INSTAPI SQLWriteDSNToIni(LPCSTR,LPCSTR);
 BOOL INSTAPI SQLWriteDSNToIniW(LPCWSTR,LPCWSTR);
 BOOL INSTAPI SQLWritePrivateProfileString(LPCSTR,LPCSTR,LPCSTR,LPCSTR);
 BOOL INSTAPI SQLWritePrivateProfileStringW(LPCWSTR,LPCWSTR,LPCWSTR,LPCWSTR);
-#if(ODBCVER >= 0x0250) 
+#if(ODBCVER >= 0x0250)
 BOOL INSTAPI ConfigDriver(HWND,WORD,LPCSTR,LPCSTR,LPSTR,WORD,WORD*);
 BOOL INSTAPI ConfigDriverW(HWND,WORD,LPCWSTR,LPCWSTR,LPWSTR,WORD,WORD*);
 BOOL INSTAPI SQLConfigDriver(HWND,WORD,LPCSTR,LPCSTR,LPSTR,WORD,WORD*);
@@ -98,8 +98,8 @@ BOOL INSTAPI SQLRemoveDriverManager(LPDWORD);
 BOOL INSTAPI SQLRemoveDriverW(LPCWSTR,BOOL,LPDWORD);
 BOOL INSTAPI SQLRemoveTranslator(LPCSTR,LPDWORD);
 BOOL INSTAPI SQLRemoveTranslatorW(LPCWSTR,LPDWORD);
-#endif /* ODBCVER >= 0x0250 */  
-#if (ODBCVER >= 0x0300) 
+#endif /* ODBCVER >= 0x0250 */
+#if (ODBCVER >= 0x0300)
 BOOL INSTAPI SQLGetConfigMode(UWORD*);
 BOOL INSTAPI SQLInstallDriverEx(LPCSTR,LPCSTR,LPSTR,WORD,WORD*,WORD,LPDWORD);
 BOOL INSTAPI SQLInstallDriverExW(LPCWSTR,LPCWSTR,LPWSTR,WORD,WORD*,WORD,LPDWORD);
@@ -114,30 +114,30 @@ BOOL INSTAPI SQLReadFileDSNW(LPCWSTR,LPCWSTR,LPCWSTR,LPWSTR,WORD,WORD*);
 BOOL INSTAPI SQLSetConfigMode(UWORD);
 BOOL INSTAPI SQLWriteFileDSN(LPCSTR,LPCSTR,LPCSTR,LPCSTR);
 BOOL INSTAPI SQLWriteFileDSNW(LPCWSTR,LPCWSTR,LPCWSTR,LPCWSTR);
-#endif /* ODBCVER >= 0x0300 */  
+#endif /* ODBCVER >= 0x0300 */
 
 #if defined (UNICODE) && !defined (SQL_NOUNICODEMAP)
 #define SQLConfigDataSource SQLConfigDataSourceW
 #define SQLConfigDriver SQLConfigDriverW
-#define SQLCreateDataSource SQLCreateDataSourceW 
-#define SQLGetAvailableDrivers SQLGetAvailableDriversW 
+#define SQLCreateDataSource SQLCreateDataSourceW
+#define SQLGetAvailableDrivers SQLGetAvailableDriversW
 #define SQLGetInstalledDrivers SQLGetInstalledDriversW
 #define SQLGetPrivateProfileString SQLGetPrivateProfileStringW
-#define SQLGetTranslator SQLGetTranslatorW 
-#define SQLInstallDriver SQLInstallDriverW 
+#define SQLGetTranslator SQLGetTranslatorW
+#define SQLInstallDriver SQLInstallDriverW
 #define SQLInstallDriverEx SQLInstallDriverExW
 #define SQLInstallDriverManager SQLInstallDriverManagerW
 #define SQLInstallerError SQLInstallerErrorW
-#define SQLInstallODBC SQLInstallODBCW 
+#define SQLInstallODBC SQLInstallODBCW
 #define SQLInstallTranslator SQLInstallTranslatorW
 #define SQLInstallTranslatorEx SQLInstallTranslatorExW
 #define SQLPostInstallerError SQLPostInstallerErrorW
 #define SQLReadFileDSN SQLReadFileDSNW
 #define SQLRemoveDriver SQLRemoveDriverW
-#define SQLRemoveDSNFromIni SQLRemoveDSNFromIniW 
+#define SQLRemoveDSNFromIni SQLRemoveDSNFromIniW
 #define SQLRemoveTranslator SQLRemoveTranslatorW
-#define SQLValidDSN SQLValidDSNW 
-#define SQLWriteDSNToIni SQLWriteDSNToIniW 
+#define SQLValidDSN SQLValidDSNW
+#define SQLWriteDSNToIni SQLWriteDSNToIniW
 #define SQLWriteFileDSN SQLWriteFileDSNW
 #define SQLWritePrivateProfileString SQLWritePrivateProfileStringW
 #endif /* UNICODE && !SQL_NOUNICODEMAP */

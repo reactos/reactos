@@ -5,7 +5,7 @@
 #endif
 
 #include <winerror.h>
-#define NERR_Success 0 
+#define NERR_Success 0
 #define NERR_BASE 2100
 #define NERR_NetNotStarted (NERR_BASE+2)
 #define NERR_UnknownServer (NERR_BASE+3)
@@ -303,4 +303,4 @@
 #define NERR_DfsChildOrParentInDfs (NERR_BASE+583)
 #define NERR_DfsInternalError (NERR_BASE+590)
 #define MAX_NERR (NERR_BASE+899)
-#endif 
+#endif

@@ -163,7 +163,7 @@ typedef struct _FAX_COVERAGE_INFOA
 
   LPCSTR CoverPageName;
   BOOL UseServerCoverPage;
-  
+
   LPCSTR RecName;
   LPCSTR RecFaxNumber;
   LPCSTR RecCompany;
@@ -177,7 +177,7 @@ typedef struct _FAX_COVERAGE_INFOA
   LPCSTR RecOfficeLocation;
   LPCSTR RecHomePhone;
   LPCSTR RecOfficePhone;
-  
+
   LPCSTR SdrName;
   LPCSTR SdrFaxNumber;
   LPCSTR SdrCompany;
@@ -187,7 +187,7 @@ typedef struct _FAX_COVERAGE_INFOA
   LPCSTR SdrOfficeLocation;
   LPCSTR SdrHomePhone;
   LPCSTR SdrOfficePhone;
-  
+
   LPCSTR Node;
   LPCSTR Subject;
   SYSTEMTIME TimeSent;

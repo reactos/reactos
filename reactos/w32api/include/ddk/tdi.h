@@ -214,7 +214,7 @@ typedef struct _TDI_ENDPOINT_INFO {
 
 typedef struct _TDI_CONNECTION_INFO {
   ULONG  State;
-  ULONG  Event; 
+  ULONG  Event;
   ULONG  TransmittedTsdus;
   ULONG  ReceivedTsdus;
   ULONG  TransmissionErrors;

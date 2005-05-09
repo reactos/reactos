@@ -217,7 +217,7 @@ typedef struct _DEVICE_MEDIA_INFO {
       ULONG  SectorsPerTrack;
       ULONG  BytesPerSector;
       ULONG  NumberMediaSides;
-      ULONG  MediaCharacteristics; 
+      ULONG  MediaCharacteristics;
     } DiskInfo;
     struct {
       LARGE_INTEGER  Cylinders;
@@ -226,11 +226,11 @@ typedef struct _DEVICE_MEDIA_INFO {
       ULONG  SectorsPerTrack;
       ULONG  BytesPerSector;
       ULONG  NumberMediaSides;
-      ULONG  MediaCharacteristics; 
+      ULONG  MediaCharacteristics;
     } RemovableDiskInfo;
     struct {
       STORAGE_MEDIA_TYPE  MediaType;
-      ULONG  MediaCharacteristics; 
+      ULONG  MediaCharacteristics;
       ULONG  CurrentBlockSize;
       STORAGE_BUS_TYPE  BusType;
       union {
@@ -314,10 +314,10 @@ typedef enum _STORAGE_PROPERTY_ID {
 } STORAGE_PROPERTY_ID, *PSTORAGE_PROPERTY_ID;
 
 typedef enum _STORAGE_QUERY_TYPE {
-  PropertyStandardQuery = 0, 
-  PropertyExistsQuery, 
-  PropertyMaskQuery, 
-  PropertyQueryMaxDefined 
+  PropertyStandardQuery = 0,
+  PropertyExistsQuery,
+  PropertyMaskQuery,
+  PropertyQueryMaxDefined
 } STORAGE_QUERY_TYPE, *PSTORAGE_QUERY_TYPE;
 
 typedef struct _STORAGE_PROPERTY_QUERY {

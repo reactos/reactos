@@ -50,7 +50,7 @@ extern "C" {
 #define SNMP_PDU_GETBULK	(ASN_CONTEXT | ASN_CONSTRUCTOR | 4)
 #define SNMP_PDU_V1TRAP	(ASN_CONTEXT | ASN_CONSTRUCTOR | 4)
 #define SNMP_PDU_INFORM	(ASN_CONTEXT | ASN_CONSTRUCTOR | 6)
-#define SNMP_PDU_TRAP	(ASN_CONTEXT | ASN_CONSTRUCTOR | 7) 
+#define SNMP_PDU_TRAP	(ASN_CONTEXT | ASN_CONSTRUCTOR | 7)
 #define SNMP_PDU_REPORT	(ASN_CONTEXT | ASN_CONSTRUCTOR | 8)
 #endif /* _SNMP_ASN_DEFINED */
 #define ASN_INTEGER	(ASN_UNIVERSAL | ASN_PRIMITIVE | 2)
@@ -119,7 +119,7 @@ extern "C" {
 #define SNMP_LOG_VERBOSE	5
 #define SNMP_OUTPUT_TO_CONSOLE	1
 #define SNMP_OUTPUT_TO_LOGFILE	2
-#define SNMP_OUTPUT_TO_EVENTLOG	4 
+#define SNMP_OUTPUT_TO_EVENTLOG	4
 #define SNMP_OUTPUT_TO_DEBUGGER	8
 #define SNMP_MAX_OID_LEN	128
 #define SNMP_MEM_ALLOC_ERROR	1
@@ -156,18 +156,18 @@ typedef struct {
 typedef struct {
 	BYTE asnType;
 	union {
-		AsnInteger32 number; 
-		AsnUnsigned32 unsigned32; 
-		AsnCounter64 counter64; 
-		AsnOctetString string; 
-		AsnBits bits; 
-		AsnObjectIdentifier object; 
-		AsnSequence sequence; 
-		AsnIPAddress address; 
-		AsnCounter32 counter; 
-		AsnGauge32 gauge; 
-		AsnTimeticks ticks; 
-		AsnOpaque arbitrary; 
+		AsnInteger32 number;
+		AsnUnsigned32 unsigned32;
+		AsnCounter64 counter64;
+		AsnOctetString string;
+		AsnBits bits;
+		AsnObjectIdentifier object;
+		AsnSequence sequence;
+		AsnIPAddress address;
+		AsnCounter32 counter;
+		AsnGauge32 gauge;
+		AsnTimeticks ticks;
+		AsnOpaque arbitrary;
 	} asnValue;
 } AsnAny, AsnObjectSyntax;
 typedef struct {

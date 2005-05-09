@@ -7,7 +7,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include <lmcons.h> 
+#include <lmcons.h>
 #define SHARE_NETNAME_PARMNUM 1
 #define SHARE_TYPE_PARMNUM 3
 #define SHARE_REMARK_PARMNUM 4
@@ -84,7 +84,7 @@ typedef struct _SHARE_INFO_1501 {
 } SHARE_INFO_1501,*PSHARE_INFO_1501,*LPSHARE_INFO_1501;
 typedef struct _SESSION_INFO_0 { LPWSTR sesi0_cname; } SESSION_INFO_0,*PSESSION_INFO_0,*LPSESSION_INFO_0;
 typedef struct _SESSION_INFO_1 {
-	LPTSTR sesi1_cname; 
+	LPTSTR sesi1_cname;
 	LPTSTR sesi1_username;
 	DWORD sesi1_num_opens;
 	DWORD sesi1_time;
@@ -92,7 +92,7 @@ typedef struct _SESSION_INFO_1 {
 	DWORD sesi1_user_flags;
 } SESSION_INFO_1,*PSESSION_INFO_1,*LPSESSION_INFO_1;
 typedef struct _SESSION_INFO_2 {
-	LPTSTR sesi2_cname; 
+	LPTSTR sesi2_cname;
 	LPTSTR sesi2_username;
 	DWORD sesi2_num_opens;
 	DWORD sesi2_time;
@@ -101,13 +101,13 @@ typedef struct _SESSION_INFO_2 {
 	LPWSTR sesi2_cltype_name;
 } SESSION_INFO_2,*PSESSION_INFO_2,*LPSESSION_INFO_2;
 typedef struct _SESSION_INFO_10 {
-	LPWSTR sesi10_cname; 
+	LPWSTR sesi10_cname;
 	LPWSTR sesi10_username;
 	DWORD sesi10_time;
 	DWORD sesi10_idle_time;
 } SESSION_INFO_10,*PSESSION_INFO_10,*LPSESSION_INFO_10;
 typedef struct _SESSION_INFO_502 {
-	LPWSTR sesi502_cname; 
+	LPWSTR sesi502_cname;
 	LPWSTR sesi502_username;
 	DWORD sesi502_num_opens;
 	DWORD sesi502_time;
@@ -144,4 +144,4 @@ NET_API_STATUS WINAPI NetFileGetInfo(LPWSTR,DWORD,DWORD,PBYTE*);
 #ifdef __cplusplus
 }
 #endif
-#endif 
+#endif

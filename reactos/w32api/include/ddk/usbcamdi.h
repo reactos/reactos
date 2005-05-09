@@ -52,9 +52,9 @@ typedef PVOID PHW_STREAM_REQUEST_BLOCK;
 DEFINE_GUID(GUID_USBCAMD_INTERFACE,
   0x2bcb75c0, 0xb27f, 0x11d1, 0xba, 0x41, 0x0, 0xa0, 0xc9, 0xd, 0x2b, 0x5);
 
-#define USBCAMD_PROCESSPACKETEX_DropFrame             0x0002 
-#define USBCAMD_PROCESSPACKETEX_NextFrameIsStill      0x0004 
-#define USBCAMD_PROCESSPACKETEX_CurrentFrameIsStill   0x0008 
+#define USBCAMD_PROCESSPACKETEX_DropFrame             0x0002
+#define USBCAMD_PROCESSPACKETEX_NextFrameIsStill      0x0004
+#define USBCAMD_PROCESSPACKETEX_CurrentFrameIsStill   0x0008
 
 #define USBCAMD_DATA_PIPE                 0x0001
 #define USBCAMD_MULTIPLEX_PIPE            0x0002
@@ -133,7 +133,7 @@ typedef NTSTATUS DDKAPI
 typedef VOID DDKAPI
 (*PCAM_NEW_FRAME_ROUTINE)(
   PVOID  DeviceContext,
-  PVOID  FrameContext); 
+  PVOID  FrameContext);
 
 typedef VOID DDKAPI
 (*PCAM_NEW_FRAME_ROUTINE_EX)(
@@ -178,7 +178,7 @@ typedef ULONG DDKAPI
   PUSBD_ISO_PACKET_DESCRIPTOR  DataPacket,
   PVOID  DataBuffer,
   PBOOLEAN  FrameComplete,
-  PBOOLEAN  NextFrameIsStill); 
+  PBOOLEAN  NextFrameIsStill);
 
 typedef ULONG DDKAPI
 (*PCAM_PROCESS_PACKET_ROUTINE_EX)(
@@ -287,7 +287,7 @@ typedef NTSTATUS DDKAPI
   IN ULONG  PipeIndex);
 
 typedef NTSTATUS DDKAPI
-(*PFNUSBCAMD_SetVideoFormat)( 
+(*PFNUSBCAMD_SetVideoFormat)(
   IN PVOID  DeviceContext,
   IN PHW_STREAM_REQUEST_BLOCK  pSrb);
 

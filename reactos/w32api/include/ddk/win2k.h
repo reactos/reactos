@@ -89,7 +89,7 @@ IoWritePartitionTable(
 
 /*
  * PVOID MmGetSystemAddressForMdl(
- *   IN PMDL  Mdl); 
+ *   IN PMDL  Mdl);
  */
 #define MmGetSystemAddressForMdl(Mdl) \
   (((Mdl)->MdlFlags & (MDL_MAPPED_TO_SYSTEM_VA | \

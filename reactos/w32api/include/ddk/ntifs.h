@@ -67,7 +67,7 @@ extern PACL                         SeSystemDefaultDacl;
 #define ACCESS_DENIED_ACE_TYPE          (0x1)
 #define SYSTEM_AUDIT_ACE_TYPE           (0x2)
 #define SYSTEM_ALARM_ACE_TYPE           (0x3)
- 
+
 #define COMPRESSION_FORMAT_NONE         (0x0000)
 #define COMPRESSION_FORMAT_DEFAULT      (0x0001)
 #define COMPRESSION_FORMAT_LZNT1        (0x0002)
@@ -259,7 +259,7 @@ extern PACL                         SeSystemDefaultDacl;
 #define MEM_DOS_LIM                     0x40000000
 /* also in winnt.h */
 #define MEM_IMAGE                       SEC_IMAGE
-/* end winnt.h */ 
+/* end winnt.h */
 #define OB_TYPE_TYPE                    1
 #define OB_TYPE_DIRECTORY               2
 #define OB_TYPE_SYMBOLIC_LINK           3
@@ -656,7 +656,7 @@ typedef struct _DEVICE_MAP {
     ULONG               ReferenceCount;
     ULONG               DriveMap;
     UCHAR               DriveType[32];
-} DEVICE_MAP, *PDEVICE_MAP; 
+} DEVICE_MAP, *PDEVICE_MAP;
 
 #if (VER_PRODUCTBUILD >= 2600)
 
@@ -1244,12 +1244,12 @@ typedef struct _MBCB {
 } MBCB, *PMBCB;
 
 typedef struct _MOVEFILE_DESCRIPTOR {
-     HANDLE         FileHandle; 
-     ULONG          Reserved;   
-     LARGE_INTEGER  StartVcn; 
+     HANDLE         FileHandle;
+     ULONG          Reserved;
+     LARGE_INTEGER  StartVcn;
      LARGE_INTEGER  TargetLcn;
-     ULONG          NumVcns; 
-     ULONG          Reserved1;  
+     ULONG          NumVcns;
+     ULONG          Reserved1;
 } MOVEFILE_DESCRIPTOR, *PMOVEFILE_DESCRIPTOR;
 
 typedef struct _NAMED_PIPE_CREATE_PARAMETERS {
@@ -2306,7 +2306,7 @@ FsRtlFastUnlockAllByKey (
     IN PEPROCESS            Process,
     IN ULONG                Key,
     IN PVOID                Context OPTIONAL
-);  
+);
 /* ret: STATUS_RANGE_NOT_LOCKED */
 
 NTKERNELAPI
@@ -2321,7 +2321,7 @@ FsRtlFastUnlockSingle (
     IN ULONG                Key,
     IN PVOID                Context OPTIONAL,
     IN BOOLEAN              AlreadySynchronized
-);                      
+);
 /* ret:  STATUS_RANGE_NOT_LOCKED */
 
 NTKERNELAPI
@@ -2583,7 +2583,7 @@ FsRtlOplockIsFastIoPossible (
 
   ret: IoStatus->Status: STATUS_PENDING, STATUS_LOCK_NOT_GRANTED
 
-  Internals: 
+  Internals:
     -Calls IoCompleteRequest if Irp
     -Uses exception handling / ExRaiseStatus with STATUS_INSUFFICIENT_RESOURCES
 */
@@ -2597,9 +2597,9 @@ FsRtlPrivateLock (
     IN PLARGE_INTEGER       Length,
     IN PEPROCESS            Process,
     IN ULONG                Key,
-    IN BOOLEAN              FailImmediately, 
+    IN BOOLEAN              FailImmediately,
     IN BOOLEAN              ExclusiveLock,
-    OUT PIO_STATUS_BLOCK    IoStatus, 
+    OUT PIO_STATUS_BLOCK    IoStatus,
     IN PIRP                 Irp OPTIONAL,
     IN PVOID                Context,
     IN BOOLEAN              AlreadySynchronized
@@ -2614,7 +2614,7 @@ FsRtlPrivateLock (
     -STATUS_PENDING, STATUS_LOCK_NOT_GRANTED from FsRtlPrivateLock
     (redirected IoStatus->Status).
 
-  Internals: 
+  Internals:
     -switch ( Irp->CurrentStackLocation->MinorFunction )
         lock: return FsRtlPrivateLock;
         unlocksingle: return FsRtlFastUnlockSingle;

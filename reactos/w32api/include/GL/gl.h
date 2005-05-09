@@ -1452,7 +1452,7 @@ GLAPI void APIENTRY glSamplePass( GLenum pass );
 /* Include external definitions of OpenGL extensions */
 /* Removed, see this bug report for reference:
  * http://sourceforge.net/tracker/index.php?func=detail&aid=610178&group_id=2435&atid=102435
- * 
+ *
  * #include <GL/glext.h>
  */
 

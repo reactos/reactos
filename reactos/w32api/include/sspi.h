@@ -180,7 +180,7 @@ typedef SECURITY_STATUS (WINAPI *QUERY_SECURITY_PACKAGE_INFO_FN_W)(SEC_WCHAR*,PS
 typedef SECURITY_STATUS (WINAPI *ENCRYPT_MESSAGE_FN)(PCtxtHandle,ULONG,PSecBufferDesc,ULONG);
 typedef SECURITY_STATUS (WINAPI *DECRYPT_MESSAGE_FN)(PCtxtHandle,PSecBufferDesc,ULONG,PULONG);
 
-/* No, it really is FreeCredentialsHandle, see the thread beginning 
+/* No, it really is FreeCredentialsHandle, see the thread beginning
  * http://sourceforge.net/mailarchive/message.php?msg_id=4321080 for a
  * discovery discussion. */
 typedef struct _SECURITY_FUNCTION_TABLEW {

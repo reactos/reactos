@@ -731,8 +731,8 @@ extern "C" {
 #define TTM_GETCURRENTTOOLW	(WM_USER+59)
 #define TTM_WINDOWFROMPOINT	(WM_USER+16)
 #if (_WIN32_IE >= 0x0300)
-#define TTM_TRACKACTIVATE	  (WM_USER+17)  
-#define TTM_TRACKPOSITION	  (WM_USER+18)  
+#define TTM_TRACKACTIVATE	  (WM_USER+17)
+#define TTM_TRACKPOSITION	  (WM_USER+18)
 #define TTM_SETTIPBKCOLOR	  (WM_USER+19)
 #define TTM_SETTIPTEXTCOLOR	(WM_USER+20)
 #define TTM_GETDELAYTIME	   (WM_USER+21)
@@ -740,8 +740,8 @@ extern "C" {
 #define TTM_GETTIPTEXTCOLOR	(WM_USER+23)
 #define TTM_SETMAXTIPWIDTH	 (WM_USER+24)
 #define TTM_GETMAXTIPWIDTH	 (WM_USER+25)
-#define TTM_SETMARGIN		 (WM_USER+26)  
-#define TTM_GETMARGIN		 (WM_USER+27)  
+#define TTM_SETMARGIN		 (WM_USER+26)
+#define TTM_GETMARGIN		 (WM_USER+27)
 #define TTM_POP			  (WM_USER+28)
 #endif /* _WIN32_IE */
 #if (_WIN32_IE >= 0x0400)			/* IE4.0 ??? */
@@ -883,7 +883,7 @@ extern "C" {
 #define TBM_SETTIPSIDE	(WM_USER+31)
 #define TBM_SETBUDDY	(WM_USER+32)
 #define TBM_GETBUDDY	(WM_USER+33)
-#define TBM_GETUNICODEFORMAT	CCM_GETUNICODEFORMAT 
+#define TBM_GETUNICODEFORMAT	CCM_GETUNICODEFORMAT
 #define TBM_SETUNICODEFORMAT	CCM_SETUNICODEFORMAT
 #define TB_LINEUP	0
 #define TB_LINEDOWN	1
@@ -1134,7 +1134,7 @@ extern "C" {
 #if (_WIN32_IE >= 0x0300)
 #define LVCFMT_BITMAP_ON_RIGHT 4096
 #define LVCFMT_COL_HAS_IMAGES  32768
-#define LVCFMT_IMAGE 2048 
+#define LVCFMT_IMAGE 2048
 #endif
 #define LVM_GETCOLUMNA	(LVM_FIRST+25)
 #define LVM_GETCOLUMNW	(LVM_FIRST+95)
@@ -1493,7 +1493,7 @@ extern "C" {
 #if (_WIN32_WINNT >= 0x0501)
 #define CCM_SETWINDOWTHEME 0x200b
 #define CCM_DPISCALE 0x200c
-#endif 
+#endif
 #define ICC_LISTVIEW_CLASSES 1
 #define ICC_TREEVIEW_CLASSES 2
 #define ICC_BAR_CLASSES	4
@@ -1557,13 +1557,13 @@ extern "C" {
 #define DTN_USERSTRINGW  ((UINT)-745)
 #define DTN_WMKEYDOWNA  ((UINT)-757)
 #define DTN_WMKEYDOWNW  ((UINT)-744)
-#define DTN_FORMATA  ((UINT)-756) 
+#define DTN_FORMATA  ((UINT)-756)
 #define DTN_FORMATW  ((UINT)-743)
-#define DTN_FORMATQUERYA  ((UINT)-755) 
+#define DTN_FORMATQUERYA  ((UINT)-755)
 #define DTN_FORMATQUERYW ((UINT)-742)
-#define DTN_DROPDOWN    ((UINT)-754) 
-#define DTN_CLOSEUP	((UINT)-753) 
-#define DTN_DATETIMECHANGE ((UINT)-759) 
+#define DTN_DROPDOWN    ((UINT)-754)
+#define DTN_CLOSEUP	((UINT)-753)
+#define DTN_DATETIMECHANGE ((UINT)-759)
 #define MCM_GETCURSEL	0x1001
 #define MCM_SETCURSEL	0x1002
 #define MCM_GETMAXSELCOUNT 0x1003
@@ -2033,7 +2033,7 @@ typedef struct {
 	DWORD dwFlags;
 } TBINSERTMARK, *LPTBINSERTMARK;
 typedef struct tagLVBKIMAGEA {
-	ULONG ulFlags;              
+	ULONG ulFlags;
 	HBITMAP hbm;
 	LPSTR pszImage;
 	UINT cchImageMax;
@@ -2041,7 +2041,7 @@ typedef struct tagLVBKIMAGEA {
 	int yOffsetPercent;
 } LVBKIMAGEA, *LPLVBKIMAGEA;
 typedef struct tagLVBKIMAGEW {
-	ULONG ulFlags;             
+	ULONG ulFlags;
 	HBITMAP hbm;
 	LPWSTR pszImage;
 	UINT cchImageMax;
@@ -2401,8 +2401,8 @@ typedef struct tagNMLINK
 } NMLINK, *PNMLINK;
 #endif
 /* for backward compatability */
-#define NM_UPDOWN NMUPDOWN 
-#define LPNM_UPDOWN LPNMUPDOWN 
+#define NM_UPDOWN NMUPDOWN
+#define LPNM_UPDOWN LPNMUPDOWN
 typedef struct _LVITEMA {
 	UINT mask;
 	int iItem;
@@ -2851,8 +2851,8 @@ typedef struct tagIMAGELISTDRAWPARAMS {
 	int y;
 	int cx;
 	int cy;
-	int xBitmap;        
-	int yBitmap;        
+	int xBitmap;
+	int yBitmap;
 	COLORREF rgbBk;
 	COLORREF rgbFg;
 	UINT fStyle;

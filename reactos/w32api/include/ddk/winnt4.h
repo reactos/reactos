@@ -245,7 +245,7 @@ HalGetBusDataByOffset(
 NTOSAPI
 ULONG
 DDKAPI
-HalGetDmaAlignmentRequirement( 
+HalGetDmaAlignmentRequirement(
   VOID);
 
 NTOSAPI

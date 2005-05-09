@@ -141,8 +141,8 @@ typedef struct _UNIDRVINFO
   WORD  wYRes;
   SHORT  sYAdjust;
   SHORT  sYMoved;
-  WORD  wPrivateData; 
-  SHORT  sShift; 
+  WORD  wPrivateData;
+  SHORT  sShift;
   INVOC  SelectFont;
   INVOC  UnSelectFont;
   WORD  wReserved[4];

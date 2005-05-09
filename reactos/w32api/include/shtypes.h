@@ -28,7 +28,7 @@ typedef struct _STRRET {
 } STRRET,*LPSTRRET;
 typedef struct _SHELLDETAILS
 {
-	int fmt; 
+	int fmt;
 	int cxChar;
 	STRRET str;
 } SHELLDETAILS, *LPSHELLDETAILS;

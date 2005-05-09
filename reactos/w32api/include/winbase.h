@@ -1005,14 +1005,14 @@ typedef enum {
 #endif /* (_WIN32_WINNT >= 0x0501) */
 #if (_WIN32_WINNT >= 0x0500)
 typedef enum _COMPUTER_NAME_FORMAT {
-	ComputerNameNetBIOS, 
-	ComputerNameDnsHostname, 
-	ComputerNameDnsDomain, 
-	ComputerNameDnsFullyQualified, 
-	ComputerNamePhysicalNetBIOS, 
-	ComputerNamePhysicalDnsHostname, 
-	ComputerNamePhysicalDnsDomain, 
-	ComputerNamePhysicalDnsFullyQualified, 
+	ComputerNameNetBIOS,
+	ComputerNameDnsHostname,
+	ComputerNameDnsDomain,
+	ComputerNameDnsFullyQualified,
+	ComputerNamePhysicalNetBIOS,
+	ComputerNamePhysicalDnsHostname,
+	ComputerNamePhysicalDnsDomain,
+	ComputerNamePhysicalDnsFullyQualified,
 	ComputerNameMax
 } COMPUTER_NAME_FORMAT;
 #endif /* (_WIN32_WINNT >= 0x0500) */
@@ -1036,7 +1036,7 @@ typedef PTOP_LEVEL_EXCEPTION_FILTER LPTOP_LEVEL_EXCEPTION_FILTER;
 typedef void(APIENTRY *PAPCFUNC)(DWORD);
 typedef void(CALLBACK *PTIMERAPCROUTINE)(PVOID,DWORD,DWORD);
 #if (_WIN32_WINNT >= 0x0500)
-typedef void(CALLBACK *WAITORTIMERCALLBACK)(PVOID,BOOLEAN);   
+typedef void(CALLBACK *WAITORTIMERCALLBACK)(PVOID,BOOLEAN);
 #endif
 #define MAKEINTATOM(i) (LPTSTR)((DWORD)((WORD)(i)))
 /* Functions */
@@ -1550,7 +1550,7 @@ BOOL WINAPI GlobalMemoryStatusEx(LPMEMORYSTATUSEX);
 HGLOBAL WINAPI GlobalReAlloc(HGLOBAL,DWORD,UINT);
 DWORD WINAPI GlobalSize(HGLOBAL);
 VOID WINAPI GlobalUnfix(HGLOBAL); /* Obsolete: Has no effect. */
-BOOL WINAPI GlobalUnlock(HGLOBAL); 
+BOOL WINAPI GlobalUnlock(HGLOBAL);
 BOOL WINAPI GlobalUnWire(HGLOBAL); /* Obsolete: Has no effect. */
 PVOID WINAPI GlobalWire(HGLOBAL); /* Obsolete: Has no effect. */
 #define HasOverlappedIoCompleted(lpOverlapped)  ((lpOverlapped)->Internal != STATUS_PENDING)

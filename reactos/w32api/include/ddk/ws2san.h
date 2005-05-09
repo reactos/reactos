@@ -69,9 +69,9 @@ typedef WSPUPCALLTABLEEX *LPWSPUPCALLTABLEEX;
   {0xE5DA4AF8, 0xD824, 0x48CD, {0xA7, 0x99, 0x63, 0x37, 0xA9, 0x8E, 0xD2, 0xAF}}
 
 typedef struct _WSABUFEX {
-	u_long  len; 
-	char FAR  *buf; 
-	HANDLE  handle; 
+	u_long  len;
+	char FAR  *buf;
+	HANDLE  handle;
 } WSABUFEX, FAR * LPWSABUFEX;
 
 #if 0

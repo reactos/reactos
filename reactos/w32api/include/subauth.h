@@ -9,7 +9,7 @@ extern "C" {
 #endif
 #ifndef NT_SUCCESS
 #define NT_SUCCESS(x) ((x)>=0)
-#define STATUS_SUCCESS 0 
+#define STATUS_SUCCESS 0
 #endif
 #define CYPHER_BLOCK_LENGTH 8
 #define USER_SESSION_KEY_LENGTH (CYPHER_BLOCK_LENGTH*2)
@@ -82,7 +82,7 @@ typedef struct _STRING {
   PCHAR Buffer;
 } STRING, *PSTRING;
 #endif
-typedef PVOID SAM_HANDLE, *PSAM_HANDLE;  
+typedef PVOID SAM_HANDLE, *PSAM_HANDLE;
 typedef struct _OLD_LARGE_INTEGER {
   ULONG LowPart;
   LONG HighPart;

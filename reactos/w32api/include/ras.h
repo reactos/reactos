@@ -222,7 +222,7 @@ typedef struct tagRASCONNW {
     DWORD dwSize;
     HRASCONN hrasconn;
     WCHAR szEntryName[RAS_MaxEntryName + 1];
-#if (WINVER >= 0x400) 
+#if (WINVER >= 0x400)
     WCHAR szDeviceType[RAS_MaxDeviceType + 1];
     WCHAR szDeviceName[RAS_MaxDeviceName + 1];
 #endif
@@ -244,7 +244,7 @@ typedef struct tagRASCONNA {
     DWORD dwSize;
     HRASCONN hrasconn;
     CHAR szEntryName[RAS_MaxEntryName + 1];
-#if (WINVER >= 0x400) 
+#if (WINVER >= 0x400)
     CHAR szDeviceType[RAS_MaxDeviceType + 1];
     CHAR szDeviceName[RAS_MaxDeviceName + 1];
 #endif
@@ -705,7 +705,7 @@ typedef RASDIALPARAMSW RASDIALPARAMS, *LPRASDIALPARAMS;
 typedef RASAMBW RASAMB, *LPRASAM;
 typedef RASPPPNBFW RASPPPNBF, *LPRASPPPNBF;
 typedef RASPPPIPXW RASPPPIPX, *LPRASPPPIPX;
-typedef RASPPPIPW RASPPPIP, *LPRASPPPIP; 
+typedef RASPPPIPW RASPPPIP, *LPRASPPPIP;
 typedef RASPPPLCPW RASPPPLCP, *LPRASPPPLCP;
 typedef RASSLIPW RASSLIP, *LPRASSLIP;
 typedef RASDEVINFOW  RASDEVINFO, *LPRASDEVINFO;
@@ -963,4 +963,4 @@ VOID APIENTRY RasFreeEapUserIdentityA (LPRASEAPUSERIDENTITYA);
 }
 #endif
 #include <poppack.h>
-#endif /* _RAS_H */ 
+#endif /* _RAS_H */

@@ -42,7 +42,7 @@ namespace Gdiplus
   };
 
   #include "GdiplusBase.h"
-  
+
   #include "GdiplusEnums.h"
   #include "GdiplusTypes.h"
   #include "GdiplusInit.h"

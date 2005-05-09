@@ -93,7 +93,7 @@ typedef enum _SYSTEM_INFORMATION_CLASS {
 	SystemVdmInstemulInformation = 19,
 	SystemInstructionEmulationCounts = 19,
 	SystemVdmBopInformation = 20,
-	SystemInvalidInfoClass1 = 20,	
+	SystemInvalidInfoClass1 = 20,
 	SystemFileCacheInformation = 21,
 	SystemCacheInformation = 21,
 	SystemPoolTagInformation = 22,
@@ -628,7 +628,7 @@ typedef struct _SYSTEM_MEMORY_USAGE_INFORMATION {
 } SYSTEM_MEMORY_USAGE_INFORMATION, *PSYSTEM_MEMORY_USAGE_INFORMATION;
 
 // SystemProcessThreadInfo (5)
-typedef struct _SYSTEM_THREAD_INFORMATION 
+typedef struct _SYSTEM_THREAD_INFORMATION
 {
     LARGE_INTEGER KernelTime;
     LARGE_INTEGER UserTime;
@@ -660,9 +660,9 @@ typedef struct _SYSTEM_PROCESS_INFORMATION
     ULONG HandleCount;
     ULONG SessionId;
     ULONG PageDirectoryFrame;
-    
-    /* 
-     * This part corresponds to VM_COUNTERS_EX. 
+
+    /*
+     * This part corresponds to VM_COUNTERS_EX.
      * NOTE: *NOT* THE SAME AS VM_COUNTERS!
      */
     ULONG PeakVirtualSize;
@@ -677,7 +677,7 @@ typedef struct _SYSTEM_PROCESS_INFORMATION
     ULONG PagefileUsage;
     ULONG PeakPagefileUsage;
     ULONG PrivateUsage;
-    
+
     /* This part corresponds to IO_COUNTERS */
     LARGE_INTEGER ReadOperationCount;
     LARGE_INTEGER WriteOperationCount;
@@ -685,7 +685,7 @@ typedef struct _SYSTEM_PROCESS_INFORMATION
     LARGE_INTEGER ReadTransferCount;
     LARGE_INTEGER WriteTransferCount;
     LARGE_INTEGER OtherTransferCount;
-    
+
     /* Finally, the array of Threads */
     SYSTEM_THREAD_INFORMATION TH[1];
 } SYSTEM_PROCESS_INFORMATION, *PSYSTEM_PROCESS_INFORMATION;

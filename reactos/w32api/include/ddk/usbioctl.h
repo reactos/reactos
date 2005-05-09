@@ -333,7 +333,7 @@ typedef struct _USB_BUS_NOTIFICATION {
 typedef struct _USB_CONNECTION_NOTIFICATION {
 	USB_NOTIFICATION_TYPE  NotificationType;
 	ULONG  ConnectionNumber;
-	ULONG  RequestedBandwidth;     
+	ULONG  RequestedBandwidth;
 	ULONG  EnumerationFailReason;
 	ULONG  PowerRequested;
 	ULONG  HubNameLength;

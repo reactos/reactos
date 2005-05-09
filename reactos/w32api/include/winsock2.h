@@ -3,7 +3,7 @@
   Definitions for winsock 2
 
   Initially taken from the Wine project.
-  
+
   Portions Copyright (c) 1980, 1983, 1988, 1993
   The Regents of the University of California.  All rights reserved.
 
@@ -45,7 +45,7 @@ typedef u_int	SOCKET;
 
 #ifndef _SYS_TYPES_FD_SET
 /* fd_set may be defined by the newlib <sys/types.h>
- * if __USE_W32_SOCKETS not defined.   
+ * if __USE_W32_SOCKETS not defined.
  */
 #ifdef fd_set
 #undef fd_set
@@ -93,7 +93,7 @@ if (__i == ((fd_set *)(set))->fd_count) {\
 #endif
 #elif !defined (USE_SYS_TYPES_FD_SET)
 #warning "fd_set and associated macros have been defined in sys/types.  \
-    This may cause runtime problems with W32 sockets" 
+    This may cause runtime problems with W32 sockets"
 #endif /* ndef _SYS_TYPES_FD_SET */
 #if !(defined (__INSIDE_CYGWIN__) || (__INSIDE_MSYS__))
 #ifndef _TIMEVAL_DEFINED /* also in sys/time.h */
@@ -321,7 +321,7 @@ typedef WSADATA *LPWSADATA;
 #define AF_CLUSTER  24
 #define AF_12844    25
 #define AF_IRDA     26
-#define AF_NETDES   28                     
+#define AF_NETDES   28
 #if !(defined (__INSIDE_CYGWIN__) || defined (__INSIDE_MSYS__))
 #define AF_MAX	29
 struct sockaddr {
@@ -382,7 +382,7 @@ struct sockproto {
 #define MAXGETHOSTSTRUCT	1024
 
 #define FD_READ_BIT      0
-#define FD_READ          (1 << FD_READ_BIT)  
+#define FD_READ          (1 << FD_READ_BIT)
 #define FD_WRITE_BIT     1
 #define FD_WRITE         (1 << FD_WRITE_BIT)
 #define FD_OOB_BIT       2
@@ -414,7 +414,7 @@ struct sockproto {
 #define WSAEINVAL	(WSABASEERR+22)
 #define WSAEMFILE	(WSABASEERR+24)
 #define WSAEWOULDBLOCK	(WSABASEERR+35)
-#define WSAEINPROGRESS	(WSABASEERR+36) /* deprecated on WinSock2 */ 
+#define WSAEINPROGRESS	(WSABASEERR+36) /* deprecated on WinSock2 */
 #define WSAEALREADY	(WSABASEERR+37)
 #define WSAENOTSOCK	(WSABASEERR+38)
 #define WSAEDESTADDRREQ	(WSABASEERR+39)
@@ -471,7 +471,7 @@ struct sockproto {
 #define WSA_E_NO_MORE	(WSABASEERR+110)
 #define WSA_E_CANCELLED	(WSABASEERR+111)
 #define WSAEREFUSED	(WSABASEERR+112)
- 
+
 /* WS QualityofService errors */
 #define WSA_QOS_RECEIVERS	(WSABASEERR + 1005)
 #define WSA_QOS_SENDERS	(WSABASEERR + 1006)

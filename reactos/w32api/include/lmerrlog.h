@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 #define ERRLOG_BASE 3100
-#define ERRLOG2_BASE 5700 
+#define ERRLOG2_BASE 5700
 #define LOGFLAGS_FORWARD 0
 #define LOGFLAGS_BACKWARD 1
 #define LOGFLAGS_SEEK 2
@@ -196,11 +196,11 @@ typedef struct _ERROR_LOG {
 	DWORD el_reserved;
 	DWORD el_time;
 	DWORD el_error;
-	LPWSTR el_name; 
-	LPWSTR el_text; 
-	LPBYTE el_data; 
-	DWORD el_data_size; 
-	DWORD el_nstrings; 
+	LPWSTR el_name;
+	LPWSTR el_text;
+	LPBYTE el_data;
+	DWORD el_data_size;
+	DWORD el_nstrings;
 } ERROR_LOG,*PERROR_LOG,*LPERROR_LOG;
 NET_API_STATUS WINAPI NetErrorLogClear(LPCWSTR,LPCWSTR,LPBYTE);
 NET_API_STATUS WINAPI NetErrorLogRead(LPCWSTR,LPWSTR,LPHLOG,DWORD,LPDWORD,DWORD,DWORD,LPBYTE*,DWORD,LPDWORD,LPDWORD);
@@ -208,4 +208,4 @@ NET_API_STATUS WINAPI NetErrorLogWrite(LPBYTE,DWORD,LPCWSTR,LPBYTE,DWORD,LPBYTE,
 #ifdef __cplusplus
 }
 #endif
-#endif 
+#endif

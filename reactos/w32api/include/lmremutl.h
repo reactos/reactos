@@ -18,9 +18,9 @@ extern "C" {
 #define USE_SPECIFIC_TRANSPORT 0x80000000
 #ifndef DESC_CHAR_UNICODE
 typedef CHAR DESC_CHAR;
-#else 
+#else
 typedef WCHAR DESC_CHAR;
-#endif 
+#endif
 typedef DESC_CHAR *LPDESC;
 typedef struct _TIME_OF_DAY_INFO {
 	DWORD tod_elapsedt;
@@ -42,4 +42,4 @@ NET_API_STATUS RxRemoteApi(DWORD,LPCWSTR,LPDESC,LPDESC,LPDESC,LPDESC,LPDESC,LPDE
 #ifdef __cplusplus
 }
 #endif
-#endif 
+#endif

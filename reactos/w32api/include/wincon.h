@@ -94,7 +94,7 @@ typedef struct _KEY_EVENT_RECORD {
 		CHAR AsciiChar;
 	} uChar;
 	DWORD dwControlKeyState;
-} 
+}
 #ifdef __GNUC__
 /* gcc's alignment is not what win32 expects */
  PACKED

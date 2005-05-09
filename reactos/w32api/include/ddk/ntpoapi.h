@@ -154,7 +154,7 @@ typedef struct _PROCESSOR_STATE_HANDLER2 {
 	UCHAR  NumPerfStates;
 	PROCESSOR_PERF_LEVEL  PerfLevel[1];
 } PROCESSOR_STATE_HANDLER2, *PPROCESSOR_STATE_HANDLER2;
-  
+
 typedef struct _PROCESSOR_POWER_STATE {
 	PVOID IdleFunction;
 	ULONG Idle0KernelTimeLimit;
