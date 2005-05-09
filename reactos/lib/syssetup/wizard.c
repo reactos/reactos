@@ -108,7 +108,7 @@ GplDlgProc(HWND hwndDlg,
   PVOID GplTextLocked;
   PCHAR GplText;
   DWORD Size;
-  
+
 
   switch (uMsg)
     {
@@ -1128,11 +1128,11 @@ SetSystemLocalTime(HWND hwnd, PSETUPDATA SetupData)
   DWORD PrevSize;
   TOKEN_PRIVILEGES priv, previouspriv;
   BOOL Ret = FALSE;
-  
+
   /*
    * enable the SeSystemtimePrivilege privilege
    */
-  
+
   if(OpenProcessToken(GetCurrentProcess(),
                       TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
                       &hToken))
@@ -1156,7 +1156,7 @@ SetSystemLocalTime(HWND hwnd, PSETUPDATA SetupData)
          * we successfully enabled it, we're permitted to change the system time
          */
         Ret = SetLocalTime(&SetupData->SystemTime);
-        
+
         /*
          * for the sake of security, restore the previous status again
          */
@@ -1173,7 +1173,7 @@ SetSystemLocalTime(HWND hwnd, PSETUPDATA SetupData)
     }
     CloseHandle(hToken);
   }
-  
+
   return Ret;
 }
 
@@ -1302,7 +1302,7 @@ ProcessPageDlgProc(HWND hwndDlg,
                 PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
 
                 SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETRANGE, 0,
-                                   MAKELPARAM(0, 300)); 
+                                   MAKELPARAM(0, 300));
                 SetTimer(hwndDlg, 0, 50, NULL);
                 break;
 
@@ -1448,7 +1448,7 @@ InstallWizard(VOID)
   ahpsp[5] = CreatePropertySheetPage(&psp);
 
 
-  /* Create the Process page 
+  /* Create the Process page
   psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
   psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_PROCESSTITLE);
   psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_PROCESSSUBTITLE);
