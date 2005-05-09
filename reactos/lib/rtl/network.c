@@ -158,8 +158,8 @@ RtlIpv4StringToAddressExA(
 NTSTATUS
 STDCALL
 RtlIpv4StringToAddressW(
-	IN LPWSTR IpString, 
-	IN ULONG Base, 
+	IN LPWSTR IpString,
+	IN ULONG Base,
 	OUT PVOID PtrToIpAddr,
 	OUT ULONG IpAddr
 	)

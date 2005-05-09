@@ -30,13 +30,13 @@ RtlpMapFile(PUNICODE_STRING ImageFileName,
    OBJECT_ATTRIBUTES ObjectAttributes;
    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
    NTSTATUS Status;
-   
+
    hFile = NULL;
 
    RtlDeNormalizeProcessParams (Ppb);
 
 //   DbgPrint("ImagePathName %x\n", Ppb->ImagePathName.Buffer);
-   
+
    InitializeObjectAttributes(&ObjectAttributes,
 			      ImageFileName,
 			      Attributes & (OBJ_CASE_INSENSITIVE | OBJ_INHERIT),
@@ -44,7 +44,7 @@ RtlpMapFile(PUNICODE_STRING ImageFileName,
 			      SecurityDescriptor);
 
    RtlNormalizeProcessParams (Ppb);
-   
+
    /*
     * Try to open the executable
     */
@@ -195,7 +195,7 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
  *  - The first thread is created suspended, so it needs a manual resume!!!
  *  - If ParentProcess is NULL, current process is used
  *  - ProcessParameters must be normalized
- *  - Attributes are object attribute flags used when opening the ImageFileName. 
+ *  - Attributes are object attribute flags used when opening the ImageFileName.
  *    Valid flags are OBJ_INHERIT and OBJ_CASE_INSENSITIVE.
  *
  * -Gunnar
@@ -221,9 +221,9 @@ RtlCreateUserProcess(
    SECTION_IMAGE_INFORMATION Sii;
    ULONG ResultLength;
    PVOID ImageBaseAddress;
-   
+
    DPRINT("RtlCreateUserProcess\n");
-   
+
    Status = RtlpMapFile(ImageFileName,
                         ProcessParameters,
 			Attributes,
@@ -250,7 +250,7 @@ RtlCreateUserProcess(
    ZwClose(hSection);
 	return(Status);
      }
-   
+
    /*
     * Get some information about the process
     */
@@ -298,7 +298,7 @@ RtlCreateUserProcess(
       );
 
    ZwClose(hSection);
-   
+
    if (!NT_SUCCESS(Status))
    {
 	DPRINT("Failed to create thread\n");

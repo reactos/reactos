@@ -55,7 +55,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
         DPRINT("ZwDuplicateObject() failed! Status: 0x%x\n", Status);
       }
 #endif
-      
+
       return(Status);
     }
 
@@ -163,7 +163,7 @@ RtlCheckRegistryKey(IN ULONG RelativeTo,
 {
   HANDLE KeyHandle;
   NTSTATUS Status;
-  
+
   PAGED_CODE_RTL();
 
   Status = RtlpGetRegistryHandle(RelativeTo,
@@ -188,7 +188,7 @@ RtlCreateRegistryKey(IN ULONG RelativeTo,
 {
   HANDLE KeyHandle;
   NTSTATUS Status;
-  
+
   PAGED_CODE_RTL();
 
   Status = RtlpGetRegistryHandle(RelativeTo,
@@ -215,7 +215,7 @@ RtlDeleteRegistryValue(IN ULONG RelativeTo,
   HANDLE KeyHandle;
   NTSTATUS Status;
   UNICODE_STRING Name;
-  
+
   PAGED_CODE_RTL();
 
   Status = RtlpGetRegistryHandle(RelativeTo,
@@ -249,7 +249,7 @@ RtlFormatCurrentUserKeyPath (OUT PUNICODE_STRING KeyPath)
   ULONG Length;
   UNICODE_STRING SidString;
   NTSTATUS Status;
-  
+
   PAGED_CODE_RTL();
 
   DPRINT ("RtlFormatCurrentUserKeyPath() called\n");
@@ -334,7 +334,7 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyPath;
   NTSTATUS Status;
-  
+
   PAGED_CODE_RTL();
 
   Status = RtlFormatCurrentUserKeyPath(&KeyPath);
@@ -398,7 +398,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
   PWSTR ValueName;
   UNICODE_STRING EnvValue;
   UNICODE_STRING EnvExpandedValue;
-  
+
   PAGED_CODE_RTL();
 
   DPRINT("RtlQueryRegistryValues() called\n");
@@ -471,7 +471,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		  Status = STATUS_OBJECT_NAME_NOT_FOUND;
 		  break;
 		}
-	
+
 	      if (QueryEntry->DefaultType == REG_SZ)
 		{
 		  PUNICODE_STRING ValueString;
@@ -888,7 +888,7 @@ RtlWriteRegistryValue(IN ULONG RelativeTo,
   HANDLE KeyHandle;
   NTSTATUS Status;
   UNICODE_STRING Name;
-  
+
   PAGED_CODE_RTL();
 
   Status = RtlpGetRegistryHandle(RelativeTo,

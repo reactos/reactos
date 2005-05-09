@@ -22,9 +22,9 @@ BOOLEAN STDCALL
 RtlValidSid(IN PSID Sid_)
 {
   PISID Sid =  Sid_;
-  
+
   PAGED_CODE_RTL();
-  
+
   if ((Sid->Revision != SID_REVISION) ||
       (Sid->SubAuthorityCount > SID_MAX_SUB_AUTHORITIES))
     {
@@ -42,7 +42,7 @@ ULONG STDCALL
 RtlLengthRequiredSid(IN UCHAR SubAuthorityCount)
 {
   PAGED_CODE_RTL();
-  
+
   return (sizeof(SID) + (SubAuthorityCount - 1) * sizeof(ULONG));
 }
 
@@ -56,9 +56,9 @@ RtlInitializeSid(IN PSID Sid_,
                  IN UCHAR SubAuthorityCount)
 {
   PISID Sid =  Sid_;
-  
+
   PAGED_CODE_RTL();
-  
+
   Sid->Revision = SID_REVISION;
   Sid->SubAuthorityCount = SubAuthorityCount;
   memcpy(&Sid->IdentifierAuthority,
@@ -77,9 +77,9 @@ RtlSubAuthoritySid(IN PSID Sid_,
                    IN ULONG SubAuthority)
 {
   PISID Sid =  Sid_;
-  
+
   PAGED_CODE_RTL();
-  
+
   return &Sid->SubAuthority[SubAuthority];
 }
 
@@ -91,9 +91,9 @@ PUCHAR STDCALL
 RtlSubAuthorityCountSid(IN PSID Sid_)
 {
   PISID Sid =  Sid_;
-  
+
   PAGED_CODE_RTL();
-  
+
   return &Sid->SubAuthorityCount;
 }
 
@@ -107,9 +107,9 @@ RtlEqualSid(IN PSID Sid1_,
 {
   PISID Sid1 =  Sid1_;
   PISID Sid2 =  Sid2_;
-  
+
   PAGED_CODE_RTL();
-    
+
   if (Sid1->Revision != Sid2->Revision)
    {
       return(FALSE);
@@ -133,9 +133,9 @@ ULONG STDCALL
 RtlLengthSid(IN PSID Sid_)
 {
   PISID Sid =  Sid_;
-  
+
   PAGED_CODE_RTL();
-  
+
   return (sizeof(SID) + (Sid->SubAuthorityCount-1) * sizeof(ULONG));
 }
 
@@ -149,7 +149,7 @@ RtlCopySid(ULONG BufferLength,
            PSID Src)
 {
   PAGED_CODE_RTL();
-  
+
   if (BufferLength < RtlLengthSid(Src))
     {
       return STATUS_UNSUCCESSFUL;
@@ -178,7 +178,7 @@ RtlCopySidAndAttributesArray(ULONG Count,
    ULONG SidLength;
    ULONG Length;
    ULONG i;
-   
+
    PAGED_CODE_RTL();
 
    Length = SidAreaSize;
@@ -211,9 +211,9 @@ PSID_IDENTIFIER_AUTHORITY STDCALL
 RtlIdentifierAuthoritySid(IN PSID Sid_)
 {
   PISID Sid =  Sid_;
-  
+
   PAGED_CODE_RTL();
-  
+
   return &Sid->IdentifierAuthority;
 }
 
@@ -235,7 +235,7 @@ RtlAllocateAndInitializeSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
 			    PSID *Sid)
 {
   PISID pSid;
-  
+
   PAGED_CODE_RTL();
 
   if (SubAuthorityCount > 8)
@@ -293,7 +293,7 @@ PVOID STDCALL
 RtlFreeSid(IN PSID Sid)
 {
    PAGED_CODE_RTL();
-   
+
    ExFreePool(Sid);
    return NULL;
 }
@@ -308,9 +308,9 @@ RtlEqualPrefixSid(IN PSID Sid1_,
 {
   PISID Sid1 =  Sid1_;
   PISID Sid2 =  Sid2_;
-  
+
   PAGED_CODE_RTL();
-    
+
    return(Sid1->SubAuthorityCount == Sid2->SubAuthorityCount &&
           !RtlCompareMemory(Sid1, Sid2,
                             (Sid1->SubAuthorityCount - 1) * sizeof(DWORD) + 8));
@@ -330,7 +330,7 @@ RtlConvertSidToUnicodeString(PUNICODE_STRING String,
    ULONG Length;
    ULONG i;
    PISID Sid =  Sid_;
-   
+
    PAGED_CODE_RTL();
 
    if (RtlValidSid (Sid) == FALSE)

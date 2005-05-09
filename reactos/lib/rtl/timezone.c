@@ -30,7 +30,7 @@ RtlQueryTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
    NTSTATUS Status;
 
    DPRINT("RtlQueryTimeZoneInformation()\n");
-   
+
    PAGED_CODE_RTL();
 
    RtlZeroMemory(QueryTable,
@@ -92,7 +92,7 @@ RtlSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
    NTSTATUS Status;
 
    DPRINT("RtlSetTimeZoneInformation()\n");
-   
+
    PAGED_CODE_RTL();
 
    Status = RtlWriteRegistryValue(RTL_REGISTRY_CONTROL,

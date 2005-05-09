@@ -32,8 +32,8 @@ RtlpCaptureContext(PCONTEXT Context);
 NTSTATUS
 STDCALL
 RtlDispatchException(
-	PEXCEPTION_RECORD pExcptRec, 
-	CONTEXT * pContext 
+	PEXCEPTION_RECORD pExcptRec,
+	CONTEXT * pContext
 	)
 {
 	UNIMPLEMENTED;
@@ -69,7 +69,7 @@ RtlRaiseException(PEXCEPTION_RECORD ExceptionRecord)
 
   Status = ZwRaiseException(ExceptionRecord, &Context, TRUE);
   RtlRaiseException(ExceptionRecord);
-  RtlRaiseStatus(Status); 
+  RtlRaiseStatus(Status);
 }
 
 

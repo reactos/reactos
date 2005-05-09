@@ -98,7 +98,7 @@ RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
 #endif /* NDEBUG */
 
   RegistrationFrame = SehpGetExceptionList();
- 
+
   DPRINT("RegistrationFrame is 0x%X\n", RegistrationFrame);
 
   while ((ULONG_PTR)RegistrationFrame != -1)
@@ -125,7 +125,7 @@ RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
       ExceptionRecord->ExceptionFlags |= EXCEPTION_STACK_INVALID;
       return ExceptionContinueExecution;
     }
- 
+
     // Make sure stack is DWORD aligned
     if ((ULONG_PTR)RegistrationFrame & 3)
     {
@@ -223,14 +223,14 @@ RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
 
     RegistrationFrame = RegistrationFrame->prev;  // Go to previous frame
   }
- 
+
   /* No exception handler will handle this exception */
 
   DPRINT("RtlpDispatchException(): Return ExceptionContinueExecution\n");
 
   ExceptionRecord->ExceptionFlags = EXCEPTION_NONCONTINUABLE;
 
-  return ExceptionContinueExecution;  
+  return ExceptionContinueExecution;
 }
 
 
@@ -245,7 +245,7 @@ RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
 {
   PEXCEPTION_REGISTRATION ERHead;
   PEXCEPTION_RECORD pExceptRec;
-  EXCEPTION_RECORD TempER;    
+  EXCEPTION_RECORD TempER;
   CONTEXT Context;
 
   DPRINT("RtlUnwind(). RegistrationFrame 0x%X\n", RegistrationFrame);
@@ -255,7 +255,7 @@ RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
 #endif /* NDEBUG */
 
   ERHead = SehpGetExceptionList();
- 
+
   DPRINT("ERHead is 0x%X\n", ERHead);
 
   if (ExceptionRecord == NULL) // The normal case
@@ -302,12 +302,12 @@ RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
 
   Context.Esp += 0x10;
   Context.Eax = EaxValue;
- 
+
   // Begin traversing the list of EXCEPTION_REGISTRATION
   while ((ULONG_PTR)ERHead != -1 && ERHead != RegistrationFrame)
   {
     EXCEPTION_RECORD er2;
- 
+
     DPRINT("ERHead 0x%X\n", ERHead);
 
     // If there's an exception frame, but it's lower on the stack
@@ -320,11 +320,11 @@ RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
       er2.ExceptionRecord = pExceptRec;
       er2.NumberParameters = 0;
       er2.ExceptionCode = STATUS_INVALID_UNWIND_TARGET;
-      er2.ExceptionFlags = EXCEPTION_NONCONTINUABLE;    
- 
+      er2.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
+
       RtlRaiseException(&er2);
     }
- 
+
 #if 0
     Stack = ERHead + sizeof(EXCEPTION_REGISTRATION);
     if ( (Teb->Tib.StackBase <= (PVOID)ERHead )      // Make sure that ERHead
@@ -337,7 +337,7 @@ RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
       PEXCEPTION_REGISTRATION NewERHead;
       PEXCEPTION_REGISTRATION pCurrExceptReg;
       EXCEPTION_DISPOSITION ReturnValue;
-  
+
       DPRINT("Executing handler at 0x%X for unwind\n", ERHead->handler);
 
       ReturnValue = RtlpExecuteHandlerForUnwind(
@@ -346,7 +346,7 @@ RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
         &Context,
         &NewERHead,
         ERHead->handler);
- 
+
       DPRINT("Handler at 0x%X returned 0x%X\n", ERHead->handler, ReturnValue);
 
       if (ReturnValue != ExceptionContinueSearch)
@@ -358,8 +358,8 @@ RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
           er2.ExceptionRecord = pExceptRec;
           er2.NumberParameters = 0;
           er2.ExceptionCode = STATUS_INVALID_DISPOSITION;
-          er2.ExceptionFlags = EXCEPTION_NONCONTINUABLE;    
- 
+          er2.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
+
           RtlRaiseException(&er2);
         }
         else
@@ -367,7 +367,7 @@ RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
           ERHead = NewERHead;
         }
       }
- 
+
       pCurrExceptReg = ERHead;
       ERHead = ERHead->prev;
 
@@ -386,8 +386,8 @@ RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
       er2.ExceptionRecord = pExceptRec;
       er2.NumberParameters = 0;
       er2.ExceptionCode = STATUS_BAD_STACK;
-      er2.ExceptionFlags = EXCEPTION_NONCONTINUABLE;    
- 
+      er2.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
+
       RtlRaiseException(&er2);
     }
   }

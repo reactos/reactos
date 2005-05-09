@@ -90,17 +90,17 @@ RtlpQuerySecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
    {
       *OwnerLength = ((*Owner != NULL) ? ROUND_UP(RtlLengthSid(*Owner), 4) : 0);
    }
-   
+
    if (Group != NULL)
    {
       *GroupLength = ((*Group != NULL) ? ROUND_UP(RtlLengthSid(*Group), 4) : 0);
    }
-   
+
    if (Dacl != NULL)
    {
       *DaclLength = ((*Dacl != NULL) ? ROUND_UP((*Dacl)->AclSize, 4) : 0);
    }
-   
+
    if (Sacl != NULL)
    {
       *SaclLength = ((*Sacl != NULL) ? ROUND_UP((*Sacl)->AclSize, 4) : 0);
@@ -138,7 +138,7 @@ RtlCreateSecurityDescriptorRelative (PSECURITY_DESCRIPTOR_RELATIVE SecurityDescr
 			             ULONG Revision)
 {
    PAGED_CODE_RTL();
-   
+
    if (Revision != SECURITY_DESCRIPTOR_REVISION1)
    {
       return STATUS_UNKNOWN_REVISION;
@@ -165,9 +165,9 @@ RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
    PSID Owner, Group;
    PACL Sacl, Dacl;
    ULONG Length = sizeof(SECURITY_DESCRIPTOR);
-   
+
    PAGED_CODE_RTL();
-   
+
    RtlpQuerySecurityDescriptorPointers(SecurityDescriptor,
                                        &Owner,
                                        &Group,
@@ -208,7 +208,7 @@ RtlGetDaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
                              PBOOLEAN DaclDefaulted)
 {
    PAGED_CODE_RTL();
-   
+
    if (SecurityDescriptor->Revision != SECURITY_DESCRIPTOR_REVISION1)
    {
       return STATUS_UNKNOWN_REVISION;
@@ -243,7 +243,7 @@ RtlSetDaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
                              BOOLEAN DaclDefaulted)
 {
    PAGED_CODE_RTL();
-   
+
    if (SecurityDescriptor->Revision != SECURITY_DESCRIPTOR_REVISION1)
    {
       return STATUS_UNKNOWN_REVISION;
@@ -281,14 +281,14 @@ RtlValidSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
    PSID Owner, Group;
    PACL Sacl, Dacl;
-   
+
    PAGED_CODE_RTL();
 
    if (SecurityDescriptor->Revision != SECURITY_DESCRIPTOR_REVISION1)
    {
       return FALSE;
    }
-   
+
    RtlpQuerySecurityDescriptorPointers(SecurityDescriptor,
                                        &Owner,
                                        &Group,
@@ -316,7 +316,7 @@ RtlSetOwnerSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
                               BOOLEAN OwnerDefaulted)
 {
    PAGED_CODE_RTL();
-   
+
    if (SecurityDescriptor->Revision != SECURITY_DESCRIPTOR_REVISION1)
    {
       return STATUS_UNKNOWN_REVISION;
@@ -348,7 +348,7 @@ RtlGetOwnerSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
                               PBOOLEAN OwnerDefaulted)
 {
    PAGED_CODE_RTL();
-   
+
    if (SecurityDescriptor->Revision != SECURITY_DESCRIPTOR_REVISION1)
    {
       return STATUS_UNKNOWN_REVISION;
@@ -375,7 +375,7 @@ RtlSetGroupSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
                               BOOLEAN GroupDefaulted)
 {
    PAGED_CODE_RTL();
-   
+
    if (SecurityDescriptor->Revision != SECURITY_DESCRIPTOR_REVISION1)
    {
       return STATUS_UNKNOWN_REVISION;
@@ -406,7 +406,7 @@ RtlGetGroupSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
                               PBOOLEAN GroupDefaulted)
 {
    PAGED_CODE_RTL();
-   
+
    if (SecurityDescriptor->Revision != SECURITY_DESCRIPTOR_REVISION1)
    {
       return STATUS_UNKNOWN_REVISION;
@@ -442,7 +442,7 @@ RtlMakeSelfRelativeSD(PSECURITY_DESCRIPTOR AbsSD,
    ULONG DaclLength;
    ULONG TotalLength;
    ULONG_PTR Current;
-   
+
    PAGED_CODE_RTL();
 
    RtlpQuerySecurityDescriptor(AbsSD,
@@ -467,7 +467,7 @@ RtlMakeSelfRelativeSD(PSECURITY_DESCRIPTOR AbsSD,
    RelSD->Revision = AbsSD->Revision;
    RelSD->Sbz1 = AbsSD->Sbz1;
    RelSD->Control = AbsSD->Control | SE_SELF_RELATIVE;
-   
+
    Current = (ULONG_PTR)(RelSD + 1);
 
    if (SaclLength != 0)
@@ -518,7 +518,7 @@ RtlAbsoluteToSelfRelativeSD(PSECURITY_DESCRIPTOR AbsSD,
                             PULONG BufferLength)
 {
    PAGED_CODE_RTL();
-   
+
    if (AbsSD->Control & SE_SELF_RELATIVE)
    {
       return STATUS_BAD_DESCRIPTOR_FORMAT;
@@ -537,7 +537,7 @@ RtlGetControlSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
                                 PULONG Revision)
 {
    PAGED_CODE_RTL();
-   
+
    *Revision = SecurityDescriptor->Revision;
 
    if (SecurityDescriptor->Revision != SECURITY_DESCRIPTOR_REVISION1)
@@ -560,7 +560,7 @@ RtlSetControlSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                                 IN SECURITY_DESCRIPTOR_CONTROL ControlBitsToSet)
 {
   PAGED_CODE_RTL();
-  
+
   if (SecurityDescriptor->Revision != SECURITY_DESCRIPTOR_REVISION1)
   {
     return STATUS_UNKNOWN_REVISION;
@@ -586,7 +586,7 @@ RtlGetSaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
                              PBOOLEAN SaclDefaulted)
 {
    PAGED_CODE_RTL();
-   
+
    if (SecurityDescriptor->Revision != SECURITY_DESCRIPTOR_REVISION1)
    {
       return STATUS_UNKNOWN_REVISION;
@@ -621,7 +621,7 @@ RtlSetSaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
                              BOOLEAN SaclDefaulted)
 {
    PAGED_CODE_RTL();
-   
+
    if (SecurityDescriptor->Revision != SECURITY_DESCRIPTOR_REVISION1)
    {
       return STATUS_UNKNOWN_REVISION;
@@ -675,7 +675,7 @@ RtlSelfRelativeToAbsoluteSD(PSECURITY_DESCRIPTOR_RELATIVE RelSD,
    PSID pGroup;
    PACL pDacl;
    PACL pSacl;
-   
+
    PAGED_CODE_RTL();
 
    if (RelSD->Revision != SECURITY_DESCRIPTOR_REVISION1)
@@ -749,7 +749,7 @@ RtlValidRelativeSecurityDescriptor(IN PSECURITY_DESCRIPTOR_RELATIVE SecurityDesc
                                    IN SECURITY_INFORMATION RequiredInformation)
 {
    PAGED_CODE_RTL();
-   
+
    if (SecurityDescriptorLength < sizeof(SECURITY_DESCRIPTOR_RELATIVE) ||
        SecurityDescriptorInput->Revision != SECURITY_DESCRIPTOR_REVISION1 ||
        !(SecurityDescriptorInput->Control & SE_SELF_RELATIVE))
@@ -821,7 +821,7 @@ RtlGetSecurityDescriptorRMControl(PSECURITY_DESCRIPTOR SecurityDescriptor,
                                   PUCHAR RMControl)
 {
   PAGED_CODE_RTL();
-  
+
   if (!(SecurityDescriptor->Control & SE_RM_CONTROL_VALID))
   {
     *RMControl = 0;
@@ -842,7 +842,7 @@ RtlSetSecurityDescriptorRMControl(PSECURITY_DESCRIPTOR SecurityDescriptor,
                                   PUCHAR RMControl)
 {
   PAGED_CODE_RTL();
-  
+
   if (RMControl == NULL)
   {
     SecurityDescriptor->Control &= ~SE_RM_CONTROL_VALID;
@@ -865,7 +865,7 @@ RtlSetAttributesSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                                    OUT PULONG Revision)
 {
   PAGED_CODE_RTL();
-  
+
   *Revision = SecurityDescriptor->Revision;
 
   if (SecurityDescriptor->Revision != SECURITY_DESCRIPTOR_REVISION1)

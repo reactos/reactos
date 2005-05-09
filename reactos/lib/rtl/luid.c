@@ -23,7 +23,7 @@ RtlCopyLuid(PLUID LuidDest,
             PLUID LuidSrc)
 {
    PAGED_CODE_RTL();
-   
+
    LuidDest->LowPart = LuidSrc->LowPart;
    LuidDest->HighPart = LuidSrc->HighPart;
 }
@@ -38,7 +38,7 @@ RtlCopyLuidAndAttributesArray(ULONG Count,
                               PLUID_AND_ATTRIBUTES Dest)
 {
    ULONG i;
-   
+
    PAGED_CODE_RTL();
 
    for (i = 0; i < Count; i++)
@@ -58,7 +58,7 @@ RtlEqualLuid(PLUID Luid1,
              PLUID Luid2)
 {
    PAGED_CODE_RTL();
-   
+
    return (Luid1->LowPart == Luid2->LowPart &&
            Luid1->HighPart == Luid2->HighPart);
 }

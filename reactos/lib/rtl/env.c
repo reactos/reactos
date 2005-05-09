@@ -155,8 +155,8 @@ RtlExpandEnvironmentStrings_U(PWSTR Environment,
       }
       else
       {
-         /* Process environment variable. */ 
-         
+         /* Process environment variable. */
+
          VariableEnd = SourceBuffer + 1;
          Tail = SourceLength - 1;
          while (*VariableEnd != L'%' && Tail != 0)
@@ -167,7 +167,7 @@ RtlExpandEnvironmentStrings_U(PWSTR Environment,
 
          if (Tail != 0)
          {
-            Variable.MaximumLength = 
+            Variable.MaximumLength =
             Variable.Length = (VariableEnd - (SourceBuffer + 1)) * sizeof(WCHAR);
             Variable.Buffer = SourceBuffer + 1;
 

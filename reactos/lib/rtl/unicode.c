@@ -726,7 +726,7 @@ RtlInt64ToUnicodeString (
    ANSI_STRING AnsiString;
    CHAR Buffer[33];
    NTSTATUS Status;
-   
+
    LargeInt.QuadPart = Value;
 
    Status = RtlLargeIntegerToChar (&LargeInt,
@@ -975,7 +975,7 @@ RtlUnicodeStringToOemSize(
 /*
  * @implemented
  *
- 
+
  * NOTES
  *  See RtlpUnicodeStringToAnsiString
  */
@@ -1060,7 +1060,7 @@ RtlpUnicodeStringToAnsiString(
  * @implemented
  *
  * NOTES
- *  See RtlpOemStringToUnicodeString 
+ *  See RtlpOemStringToUnicodeString
  */
 NTSTATUS
 STDCALL
@@ -1431,23 +1431,23 @@ RtlEqualDomainName (
    OEM_STRING OemString1;
    OEM_STRING OemString2;
    BOOLEAN Result;
- 
+
    RtlUpcaseUnicodeStringToOemString (&OemString1,
                                       DomainName1,
                                       TRUE);
    RtlUpcaseUnicodeStringToOemString (&OemString2,
                                       DomainName2,
                                       TRUE);
- 
+
    Result = RtlEqualString (&OemString1,
                             &OemString2,
                             FALSE);
- 
+
    RtlFreeOemString (&OemString1);
    RtlFreeOemString (&OemString2);
- 
+
    return Result;
-   
+
 }
 */
 
@@ -2015,7 +2015,7 @@ RtlUpcaseUnicodeStringToOemString (
  * private
  *
  * NOTES
- *  Oem string is allways nullterminated 
+ *  Oem string is allways nullterminated
  *  It performs a partial copy if oem is too small.
  */
 NTSTATUS
@@ -2372,7 +2372,7 @@ RtlDowncaseUnicodeString(
  *
  * NOTES
  *  Dest is never '\0' terminated because it may be equal to src, and src
- *  might not be '\0' terminated. 
+ *  might not be '\0' terminated.
  *  Dest->Length is only set upon success.
  */
 NTSTATUS
@@ -2666,8 +2666,8 @@ RtlDuplicateUnicodeString(
             DestinationString,
             NonPagedPool);
 }
-   
-   
+
+
 /*
  * @implemented
  */
@@ -2720,7 +2720,7 @@ RtlValidateUnicodeString(IN ULONG Flags,
 {
   /* currently no flags are supported! */
   ASSERT(Flags == 0);
-  
+
   if ((Flags == 0) &&
       ((UnicodeString == NULL) ||
        ((UnicodeString->Length != 0) &&

@@ -352,7 +352,7 @@ static inline BOOLEAN HEAP_Decommit( SUBHEAP *subheap, PVOID ptr, ULONG flags )
               subheap->heap );
       return FALSE;
    }
-      
+
    subheap->commitSize -= decommitsize;
    return TRUE;
 }
@@ -1077,12 +1077,12 @@ RtlCreateHeap(ULONG flags,
 
    /* link it into the per-process heap list */
    RtlEnterCriticalSection (&RtlpProcessHeapsListLock);
-   
+
    heapPtr = subheap->heap;
    heapPtr->next = (HEAP*)NtCurrentPeb()->ProcessHeaps;
    NtCurrentPeb()->ProcessHeaps = (HANDLE)heapPtr;
    NtCurrentPeb()->NumberOfHeaps++;
-   
+
    RtlLeaveCriticalSection (&RtlpProcessHeapsListLock);
 
    return (HANDLE)subheap;
@@ -1095,7 +1095,7 @@ RtlCreateHeap(ULONG flags,
  * FALSE: Failure
  *
  * @implemented
- * 
+ *
  * RETURNS
  *  Success: A NULL HANDLE, if heap is NULL or it was destroyed
  *  Failure: The Heap handle, if heap is the process heap.
@@ -1112,17 +1112,17 @@ RtlDestroyHeap(HANDLE heap) /* [in] Handle of heap */
    if (!heapPtr)
       return heap;
 
-   if (heap == NtCurrentPeb()->ProcessHeap) 
+   if (heap == NtCurrentPeb()->ProcessHeap)
       return heap; /* cannot delete the main process heap */
- 
+
    /* remove it from the per-process list */
    RtlEnterCriticalSection (&RtlpProcessHeapsListLock);
-   
+
    pptr = (HEAP**)&NtCurrentPeb()->ProcessHeaps;
    while (*pptr && *pptr != heapPtr) pptr = &(*pptr)->next;
    if (*pptr) *pptr = (*pptr)->next;
    NtCurrentPeb()->NumberOfHeaps--;
-   
+
    RtlLeaveCriticalSection (&RtlpProcessHeapsListLock);
 
    RtlDeleteCriticalSection( &heapPtr->critSection );
@@ -1715,7 +1715,7 @@ RtlEnumProcessHeaps(PHEAP_ENUMERATION_ROUTINE HeapEnumerationRoutine,
 {
    NTSTATUS Status = STATUS_SUCCESS;
    HEAP** pptr;
-   
+
    RtlEnterCriticalSection(&RtlpProcessHeapsListLock);
 
    for (pptr = (HEAP**)&NtCurrentPeb()->ProcessHeaps; *pptr; pptr = &(*pptr)->next)
@@ -1744,7 +1744,7 @@ RtlGetProcessHeaps(ULONG HeapCount,
    RtlEnterCriticalSection(&RtlpProcessHeapsListLock);
 
    Result = NtCurrentPeb()->NumberOfHeaps;
-   
+
    if (NtCurrentPeb()->NumberOfHeaps <= HeapCount)
    {
       int i = 0;

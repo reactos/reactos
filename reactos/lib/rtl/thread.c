@@ -43,7 +43,7 @@ NTSTATUS STDCALL RtlCreateUserThread
 )
 {
  OBJECT_ATTRIBUTES oaThreadAttribs;
- 
+
  InitializeObjectAttributes
  (
   &oaThreadAttribs,
@@ -52,7 +52,7 @@ NTSTATUS STDCALL RtlCreateUserThread
   NULL,
   SecurityDescriptor
  );
- 
+
  return RtlRosCreateUserThread
  (
   ProcessHandle,

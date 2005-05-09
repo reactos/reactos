@@ -88,7 +88,7 @@ RtlRandom (IN OUT PULONG Seed)
    ULONG Rand;
    int Pos;
    ULONG Result;
-   
+
    PAGED_CODE_RTL();
 
    Rand = (*Seed * 0x7fffffed + 0x7fffffc3) % 0x7fffffff;
