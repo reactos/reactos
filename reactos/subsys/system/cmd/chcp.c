@@ -55,7 +55,7 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 
 	if (uNewCodePage == 0)
 	{
-		LoadString(CMD_ModuleHandle, STRING_CHCP_ERROR3, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_ERROR_INVALID_PARAM_FORMAT, szMsg, RC_STRING_MAX_SIZE);
 		ConErrPrintf(szMsg, arg[0]);
 		freep (arg);
 		return 1;
