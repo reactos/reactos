@@ -472,14 +472,14 @@ IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
             /* Use an MDL for Direct I/O */
             Irp->MdlAddress = MmCreateMdl(NULL, Buffer, Length);
 
-            /* Use the right Access Type */
+
             if (MajorFunction == IRP_MJ_READ)
             {
-                 AccessType = IoReadAccess;
+                 AccessType = IoWriteAccess;
             }
             else
             {
-                 AccessType = IoWriteAccess;
+                 AccessType = IoReadAccess;
             }
 
             /* Probe and Lock */
