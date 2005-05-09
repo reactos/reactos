@@ -183,8 +183,8 @@ CdfsOpenFile(PDEVICE_EXTENSION DeviceExt,
 				     Fcb,
 				     FileObject);
 
-  if (FileName == &AbsFileName)
-    RtlFreeUnicodeString(&AbsFileName);
+  if ((FileName == &AbsFileName) && AbsFileName.Buffer)
+    ExFreePool(AbsFileName.Buffer);
 
   return Status;
 }

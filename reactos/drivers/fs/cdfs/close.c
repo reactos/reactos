@@ -69,7 +69,10 @@ CdfsCloseFile(PDEVICE_EXTENSION DeviceExt,
       CdfsReleaseFCB(DeviceExt, FileObject->FsContext);
     }
 
-  RtlFreeUnicodeString(&Ccb->DirectorySearchPattern);
+  if (Ccb->DirectorySearchPattern.Buffer)
+    {
+      ExFreePool(Ccb->DirectorySearchPattern.Buffer);
+    }
   ExFreePool(Ccb);
 
   return(STATUS_SUCCESS);
