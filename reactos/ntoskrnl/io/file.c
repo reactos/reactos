@@ -994,16 +994,16 @@ IoCreateFileSpecifyDeviceObjectHint(OUT PHANDLE FileHandle,
  *
  * @implemented
  */
-PFILE_OBJECT
+PFILE_OBJECT 
 STDCALL
 IoCreateStreamFileObject(PFILE_OBJECT FileObject,
                          PDEVICE_OBJECT DeviceObject)
 {
     PFILE_OBJECT CreatedFileObject;
     NTSTATUS Status;
-
-    /* FIXME: This function should call ObInsertObject. The "Lite" version
-       doesnt. This function is also called from IoCreateFile for some
+    
+    /* FIXME: This function should call ObInsertObject. The "Lite" version 
+       doesnt. This function is also called from IoCreateFile for some 
        reason. These hacks need to be removed.
     */
 
@@ -1030,12 +1030,17 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
     /* Choose Device Object */
     if (FileObject) DeviceObject = FileObject->DeviceObject;
     DPRINT("DeviceObject %x\n", DeviceObject);
-
+    
+    /* HACK */
+    DeviceObject = IoGetAttachedDevice(DeviceObject);
+    
     /* Set File Object Data */
-    CreatedFileObject->DeviceObject = DeviceObject;
+    CreatedFileObject->DeviceObject = DeviceObject; 
     CreatedFileObject->Vpb = DeviceObject->Vpb;
     CreatedFileObject->Type = IO_TYPE_FILE;
-    CreatedFileObject->Flags = FO_STREAM_FILE;
+    /* HACK */
+    CreatedFileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
+    //CreatedFileObject->Flags = FO_STREAM_FILE;
 
     /* Initialize Lock and Event */
     KeInitializeEvent(&CreatedFileObject->Event, NotificationEvent, FALSE);
@@ -1057,6 +1062,7 @@ IoCreateStreamFileObjectEx(IN PFILE_OBJECT FileObject OPTIONAL,
     UNIMPLEMENTED;
     return 0;
 }
+
 /*
  * @unimplemented
  */
