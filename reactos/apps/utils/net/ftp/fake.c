@@ -92,7 +92,7 @@ int fgetcSocket(int s)
 {
    static int index = 0;
    static int total = 0;
-   static unsigned char buffer[4096];
+   static char buffer[4096];
 
    if (index == total)
      {
