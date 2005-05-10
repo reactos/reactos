@@ -54,6 +54,8 @@ VOID TIME_SYNCHRONIZE(struct time_conv *data)
 	tmp.tv_usec-=(LONG)((PTime.QuadPart%TimeFreq.QuadPart)*1000000/TimeFreq.QuadPart);
 #else
     // TODO FIXME:
+        tmp.tv_sec = 0;
+        tmp.tv_usec = 0;
 #endif
 	if (tmp.tv_usec<0) {
 		tmp.tv_sec--;

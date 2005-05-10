@@ -1898,7 +1898,7 @@ ScsiDiskUpdateFixedDiskGeometry(IN PDEVICE_EXTENSION DeviceExtension)
   UNICODE_STRING ValueName;
   HANDLE SystemKey;
   HANDLE BusKey;
-  ULONG DiskNumber;
+  ULONG DiskNumber = 0;
   ULONG Length;
 #if 0
   ULONG i;
