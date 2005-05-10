@@ -104,7 +104,7 @@ CRegKeySecurity_fnQueryInterface(LPREGKEYSECURITY this,
 ULONG STDMETHODCALLTYPE
 CRegKeySecurity_fnAddRef(LPREGKEYSECURITY this)
 {
-  return (ULONG)InterlockedIncrement(&this->ref);
+  return (ULONG)InterlockedIncrement((LONG*)&this->ref);
 }
 
 ULONG STDMETHODCALLTYPE
@@ -112,7 +112,7 @@ CRegKeySecurity_fnRelease(LPREGKEYSECURITY this)
 {
   ULONG rfc;
 
-  rfc = (ULONG)InterlockedDecrement(&this->ref);
+  rfc = (ULONG)InterlockedDecrement((LONG*)&this->ref);
   if(rfc == 0)
   {
     HeapFree(GetProcessHeap(), 0, this);
