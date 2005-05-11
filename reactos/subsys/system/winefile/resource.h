@@ -1,5 +1,5 @@
 /*
- * Copyright 2000, 2003 Martin Fuchs
+ * Copyright 2000, 2003, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -71,7 +71,7 @@
 #define ID_NO_WARRANTY					0x8002
 #define ID_WINDOW_AUTOSORT				0x8003
 #define ID_VIEW_FULLSCREEN				0x8004
-#define ID_PREFERED_SIZES				0x8005
+#define ID_PREFERRED_SIZES				0x8005
 
 
 /* string table */
