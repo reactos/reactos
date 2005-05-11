@@ -637,9 +637,7 @@ string
 Module::GetDependencyPath () const
 {
 	if ( HasImportLibrary () )
-	{
-		return ReplaceExtension ( GetPath(), ".a" );
-	}
+		return ReplaceExtension ( GetPathWithPrefix ( "lib" ), ".a" );
 	else
 		return GetPath();
 }
