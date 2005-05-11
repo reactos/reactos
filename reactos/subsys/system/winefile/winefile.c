@@ -1,7 +1,7 @@
 /*
  * Winefile
  *
- * Copyright 2000, 2003, 2004 Martin Fuchs
+ * Copyright 2000, 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -3768,16 +3768,17 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 
 #ifdef _SHELL_FOLDERS
 		case WM_CONTEXTMENU: {
+			POINT pt, pt_clnt;
 			Pane* pane;
 			int idx;
 
 			 /* first select the current item in the listbox */
 			HWND hpanel = (HWND) wparam;
-			POINTS* ppos = &MAKEPOINTS(lparam);
-			POINT pt; POINTSTOPOINT(pt, *ppos);
-			ScreenToClient(hpanel, &pt);
-			SendMessage(hpanel, WM_LBUTTONDOWN, 0, MAKELONG(pt.x, pt.y));
-			SendMessage(hpanel, WM_LBUTTONUP, 0, MAKELONG(pt.x, pt.y));
+			pt_clnt.x = pt.x = (short)LOWORD(lparam);
+			pt_clnt.y = pt.y = (short)HIWORD(lparam);
+			ScreenToClient(hpanel, &pt_clnt);
+			SendMessage(hpanel, WM_LBUTTONDOWN, 0, MAKELONG(pt_clnt.x, pt_clnt.y));
+			SendMessage(hpanel, WM_LBUTTONUP, 0, MAKELONG(pt_clnt.x, pt_clnt.y));
 
 			 /* now create the popup menu using shell namespace and IContextMenu */
 			pane = GetFocus()==child->left.hwnd? &child->left: &child->right;
@@ -3795,7 +3796,7 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 
 					 /* get and use the parent folder to display correct context menu in all cases */
 					if (SUCCEEDED(SHBindToParent(pidl_abs, &IID_IShellFolder, (LPVOID*)&parentFolder, &pidlLast))) {
-						hr = ShellFolderContextMenu(parentFolder, hwnd, 1, &pidlLast, ppos->x, ppos->y);
+						hr = ShellFolderContextMenu(parentFolder, hwnd, 1, &pidlLast, pt.x, pt.y);
 
 						(*parentFolder->lpVtbl->Release)(parentFolder);
 					}
