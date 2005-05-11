@@ -107,7 +107,7 @@ void SetNewLocale(LCID lcid)
 
 	wsprintf(value, L"%04x", (DWORD)lcid);
 
-	RegSetValueExW(localeKey, L"Locale", 0, REG_SZ, (BYTE *)value, sizeof(value));
+	RegSetValueExW(localeKey, L"Locale", 0, REG_SZ, (BYTE *) _wcsupr(value), sizeof(value));
 	RegCloseKey(localeKey);
 
 	// Set language
@@ -116,8 +116,8 @@ void SetNewLocale(LCID lcid)
 	if (ret != ERROR_SUCCESS)
 		return;
 
-	RegSetValueExW(langKey, L"Default", 0, REG_SZ, (BYTE *)value, sizeof(value));
-	RegSetValueExW(langKey, L"InstallLanguage", 0, REG_SZ, (BYTE *)value, sizeof(value));
+	RegSetValueExW(langKey, L"Default", 0, REG_SZ, (BYTE *)_wcsupr(value), sizeof(value));
+	RegSetValueExW(langKey, L"InstallLanguage", 0, REG_SZ, (BYTE *) _wcsupr(value), sizeof(value));
 	RegCloseKey(langKey);
 }
 
