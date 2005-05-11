@@ -1833,14 +1833,16 @@ MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ()
 	{
 		string library_target (
 			GetImportLibraryFilename ( module, &clean_files ) );
-
+		string defFilename = GetDefinitionFilename ();
+	
 		string_list deps;
 		GetDefinitionDependencies ( deps );
 
 		fprintf ( fMakefile, "# IMPORT LIBRARY RULE:\n" );
 
-		fprintf ( fMakefile, "%s:",
-		          library_target.c_str () );
+		fprintf ( fMakefile, "%s: %s",
+		          library_target.c_str (),
+		          defFilename.c_str () );
 
 		size_t i, iend = deps.size();
 		for ( i = 0; i < iend; i++ )
@@ -1856,7 +1858,7 @@ MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ()
 		fprintf ( fMakefile,
 		          "\t${dlltool} --dllname %s --def %s --output-lib %s %s\n\n",
 		          module.GetTargetName ().c_str (),
-		          GetDefinitionFilename ().c_str (),
+		          defFilename.c_str (),
 		          library_target.c_str (),
 		          killAt.c_str () );
 	}
