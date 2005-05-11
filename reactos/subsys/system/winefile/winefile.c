@@ -2354,12 +2354,12 @@ static void calc_single_width(Pane* pane, int col)
 
 /* insert listbox entries after index idx */
 
-static void insert_entries(Pane* pane, Entry* dir, int idx)
+static int insert_entries(Pane* pane, Entry* dir, int idx)
 {
 	Entry* entry = dir;
 
 	if (!entry)
-		return;
+		return idx;
 
 	ShowWindow(pane->hwnd, SW_HIDE);
 
@@ -2385,10 +2385,12 @@ static void insert_entries(Pane* pane, Entry* dir, int idx)
 		ListBox_InsertItemData(pane->hwnd, idx, entry);
 
 		if (pane->treePane && entry->expanded)
-			insert_entries(pane, entry->down, idx);
+			idx = insert_entries(pane, entry->down, idx);
 	}
 
 	ShowWindow(pane->hwnd, SW_SHOW);
+
+	return idx;
 }
 
 
