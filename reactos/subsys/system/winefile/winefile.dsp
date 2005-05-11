@@ -150,6 +150,11 @@ LINK32=link.exe
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\cz.rc
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
 SOURCE=.\de.rc
 # PROP Exclude_From_Build 1
 # End Source File
@@ -213,6 +218,11 @@ SOURCE=.\ru.rc
 # Begin Source File
 
 SOURCE=.\si.rc
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=.\Sv.rc
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
