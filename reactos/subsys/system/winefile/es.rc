@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-LANGUAGE LANG_SPANISH, SUBLANG_DEFAULT
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 /* Menu */
 
@@ -27,7 +27,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 {
 	POPUP "&Archivo"  {
 		MENUITEM "&Abrir\tEnter" ,			101
-		MENUITEM "Mo&ver...\tF7" , 			106
+		MENUITEM "Mo&ver...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Copiar...\tF8" ,			107
 		MENUITEM "E&n portapapeles...\tF9" ,		118
 		MENUITEM "&Eliminar\tDel" ,			108
@@ -70,7 +70,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Seleccionar unidad..." ,		251
 	}
 
-	POPUP "&Directorios"  {
+	POPUP "Di&rectorios"  {
 		MENUITEM "&Siguiente nivel\t+" ,		301
 		MENUITEM "&Expandir árbol\t*" ,			302
 		MENUITEM "Expandir &todo\tStrg+*" ,		303
@@ -100,7 +100,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 
 	POPUP "&Opciones"  {
 		MENUITEM "&Confirmación..." ,		-1
-		MENUITEM "&Fuente..." ,			-1
+		MENUITEM "&Fuente..." ,			ID_SELECT_FONT
 		MENUITEM "Personalizar barra &herramientas..." , -1
 		MENUITEM SEPARATOR
 		MENUITEM "&Barra de herramientas" ,	ID_VIEW_TOOL_BAR, CHECKED
@@ -127,7 +127,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Mosaico &horizontal" ,		ID_WINDOW_TILE_HORZ
 		MENUITEM "Mosaico &vertical\tCtrl+F4" ,		ID_WINDOW_TILE_VERT
 #ifndef _NO_EXTENSIONS
-		MENUITEM "Alinear &automáticamente" ,		ID_WINDOW_AUTOSORT
+		MENUITEM "A&linear automáticamente" ,		ID_WINDOW_AUTOSORT
 #endif
 		MENUITEM "Alinear &símbolos" ,		ID_WINDOW_ARRANGE
 		MENUITEM "&Actualizar\tF5" ,		ID_REFRESH
@@ -161,4 +161,50 @@ FONT 8, "MS Shell Dlg"
 	DEFPUSHBUTTON	"Aceptar" , 1, 158, 6, 47, 14
 	PUSHBUTTON		"Cancelar" , 2, 158, 23, 47, 14
 	PUSHBUTTON		"&Ayuda" , 254, 158, 43, 47, 14
+}
+
+IDD_SELECT_DESTINATION DIALOG FIXED IMPURE 15, 13, 210, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Seleccione destino"
+FONT 8, "MS Shell Dlg"
+{
+	CONTROL 		"", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+	CONTROL			"&Ruta:" , -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+	EDITTEXT		201, 3, 29, 134, 12, ES_AUTOHSCROLL
+	DEFPUSHBUTTON		"Aceptar" , 1, 158, 6, 47, 14
+	PUSHBUTTON		"Cancelar" , 2, 158, 23, 47, 14
+	PUSHBUTTON		"&Examinar" , 254, 158, 43, 47, 14
+}
+
+STRINGTABLE
+{
+	IDS_FONT_SEL_DLG_NAME	"Aplicando configuración de fuente"
+	IDS_FONT_SEL_ERROR	"Error al seleccionar la nueva fuente."
+}
+
+STRINGTABLE
+{
+ IDS_WINEFILE "Winefile"
+ IDS_ERROR  "Error"
+ IDS_ROOT_FS  "sf raíz"
+ IDS_UNIXFS  "unixfs"
+ IDS_DESKTOP  "Escritorio"
+ IDS_SHELL  "Shell"
+ IDS_TITLEFMT "%s - %s"
+ IDS_NO_IMPL  "Aún no implementado"
+ IDS_WINE  "WINE"
+ IDS_WINE_FILE "Wine File"
+}
+
+STRINGTABLE
+{
+ IDS_COL_NAME "Nombre"
+ IDS_COL_SIZE "Tamaño"
+ IDS_COL_CDATE "FechaC"
+ IDS_COL_ADATE "FechaA"
+ IDS_COL_MDATE "FechaM"
+ IDS_COL_IDX  "Índice/Nodo-i"
+ IDS_COL_LINKS "Enlaces"
+ IDS_COL_ATTR "Atributos"
+ IDS_COL_SEC  "Seguridad"
 }

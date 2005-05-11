@@ -74,7 +74,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Select Drive..." ,			251
 	}
 
-	POPUP "&Directories"  {
+	POPUP "Di&rectories"  {
 		MENUITEM "&Next Level\t+" ,			301
 		MENUITEM "Expand &Tree\t*" ,		302
 		MENUITEM "Expand &all\tStrg+*" ,		303
