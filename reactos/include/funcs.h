@@ -2080,7 +2080,7 @@ MessageBoxTimeoutA(
     DWORD dwTime);
 BOOL STDCALL DisplayExitWindowsWarnings(ULONG flags);
 FARPROC STDCALL DelayLoadFailureHook(unsigned int dliNotify, PDelayLoadInfo pdli);
-VOID STDCALL WEP();
+VOID STDCALL WEP(VOID);
 DWORD STDCALL RtlDeleteSecurityObject(DWORD x1);
 DWORD     STDCALL RtlNewSecurityObject(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5,DWORD x6);
 NTSTATUS  STDCALL RtlWalkHeap( HANDLE heap, PVOID entry_ptr );
