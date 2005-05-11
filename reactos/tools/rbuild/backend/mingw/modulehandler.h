@@ -28,6 +28,9 @@ public:
 		const std::string &f,
 		Directory* directoryTree );
 
+	static Directory* GetTargetDirectoryTree (
+		const Module& module );
+
 	static std::string GetTargetFilename (
 		const Module& module,
 		string_list* pclean_files );

@@ -113,6 +113,15 @@ MingwModuleHandler::PassThruCacheDirectory (
 		return generatedFilesDirectory + SSEP + file;
 }
 
+/*static*/ Directory*
+MingwModuleHandler::GetTargetDirectoryTree (
+	const Module& module )
+{
+	if ( module.type == StaticLibrary )
+		return backend->intermediateDirectory;
+	return backend->outputDirectory;
+}
+
 /*static*/ string
 MingwModuleHandler::GetTargetFilename (
 	const Module& module,
@@ -120,7 +129,7 @@ MingwModuleHandler::GetTargetFilename (
 {
 	string target = PassThruCacheDirectory (
 		NormalizeFilename ( module.GetPath () ),
-		backend->outputDirectory );
+		backend->intermediateDirectory );
 	if ( pclean_files )
 	{
 		string_list& clean_files = *pclean_files;
@@ -136,7 +145,7 @@ MingwModuleHandler::GetImportLibraryFilename (
 {
 	string target = PassThruCacheDirectory (
 		NormalizeFilename ( module.GetDependencyPath () ),
-		backend->outputDirectory );
+		backend->intermediateDirectory );
 	if ( pclean_files )
 	{
 		string_list& clean_files = *pclean_files;
