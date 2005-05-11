@@ -874,7 +874,6 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
         if (ClientId->UniqueThread)
         {
             /* Get the Process */
-            if (ClientId->UniqueThread == (HANDLE)-1) KEBUGCHECK(0);
             DPRINT("Opening by Thread ID: %x\n", ClientId->UniqueThread);
             Status = PsLookupProcessThreadByCid(ClientId,
                                                 &Process,
