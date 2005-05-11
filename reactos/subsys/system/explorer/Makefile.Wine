@@ -126,7 +126,7 @@ MV        = mv
 LINT      = 
 LINTFLAGS = 
 INCLUDES     = -I$(SRCDIR) -I. -I$(TOPSRCDIR)/include -I$(TOPOBJDIR)/include $(EXTRAINCL)
-EXTRACFLAGS  = -mpreferred-stack-boundary=2 -fno-strict-aliasing -gstabs+ -Wpointer-arith
+EXTRACFLAGS  = -mpreferred-stack-boundary=2 -fno-strict-aliasing -gstabs+ -Wpointer-arith -Wno-unused-value
 ALLCFLAGS    = $(INCLUDES) $(DEFS) $(EXTRACFLAGS) $(CPPFLAGS) $(CFLAGS)
 ALLLINTFLAGS = $(INCLUDES) $(DEFS) $(LINTFLAGS)
 MKINSTALLDIRS= $(TOPSRCDIR)/tools/mkinstalldirs -m 755
