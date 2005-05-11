@@ -27,7 +27,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 	POPUP "&Bestand"  {
 		MENUITEM "&Openen\tEnter" ,               101
 		MENUITEM "&Verplaatsen...\tF7" ,          106
-		MENUITEM "&KopiÃ«ren...\tF8" ,             107
+		MENUITEM "&Kopiëren...\tF8" ,             107
 		MENUITEM "Naar &klembord...\tF9" ,        118
 		MENUITEM "Ver&wijderen\tDel" ,            108
 		MENUITEM "&Naam wijzigen..." ,            109
@@ -52,7 +52,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 	}
 
 	POPUP "&Disk"  {
-		MENUITEM "Disk &kopiÃ«ren..." ,          201
+		MENUITEM "Disk &kopiëren..." ,          201
 		MENUITEM "Disklabel maken..." ,			202
 		MENUITEM SEPARATOR
 		MENUITEM "Disk &formatteren..." ,       203
