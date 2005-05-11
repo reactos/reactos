@@ -524,10 +524,10 @@ static char remcomOutBuffer[BUFMAX];
 
 /* scan for the sequence $<data>#<checksum> 	*/
 
-unsigned char *
+char *
 getpacket (void)
 {
-  unsigned char *buffer = &remcomInBuffer[0];
+  char *buffer = &remcomInBuffer[0];
   unsigned char checksum;
   unsigned char xmitcsum;
   int count;
@@ -597,7 +597,7 @@ getpacket (void)
 /* send the packet in buffer.  */
 
 void
-putpacket (unsigned char *buffer)
+putpacket (char *buffer)
 {
   unsigned char checksum;
   int count;
