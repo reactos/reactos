@@ -1103,8 +1103,8 @@ static int compareType(const WIN32_FIND_DATA* fd1, const WIN32_FIND_DATA* fd2)
 
 static int compareName(const void* arg1, const void* arg2)
 {
-	const WIN32_FIND_DATA* fd1 = &(*(Entry**)arg1)->data;
-	const WIN32_FIND_DATA* fd2 = &(*(Entry**)arg2)->data;
+	const WIN32_FIND_DATA* fd1 = &(*(const Entry* const*)arg1)->data;
+	const WIN32_FIND_DATA* fd2 = &(*(const Entry* const*)arg2)->data;
 
 	int cmp = compareType(fd1, fd2);
 	if (cmp)
@@ -1115,8 +1115,8 @@ static int compareName(const void* arg1, const void* arg2)
 
 static int compareExt(const void* arg1, const void* arg2)
 {
-	const WIN32_FIND_DATA* fd1 = &(*(Entry**)arg1)->data;
-	const WIN32_FIND_DATA* fd2 = &(*(Entry**)arg2)->data;
+	const WIN32_FIND_DATA* fd1 = &(*(const Entry* const*)arg1)->data;
+	const WIN32_FIND_DATA* fd2 = &(*(const Entry* const*)arg2)->data;
 	const TCHAR *name1, *name2, *ext1, *ext2;
 
 	int cmp = compareType(fd1, fd2);
@@ -1148,8 +1148,8 @@ static int compareExt(const void* arg1, const void* arg2)
 
 static int compareSize(const void* arg1, const void* arg2)
 {
-	WIN32_FIND_DATA* fd1 = &(*(Entry**)arg1)->data;
-	WIN32_FIND_DATA* fd2 = &(*(Entry**)arg2)->data;
+	const WIN32_FIND_DATA* fd1 = &(*(const Entry* const*)arg1)->data;
+	const WIN32_FIND_DATA* fd2 = &(*(const Entry* const*)arg2)->data;
 
 	int cmp = compareType(fd1, fd2);
 	if (cmp)
@@ -1169,8 +1169,8 @@ static int compareSize(const void* arg1, const void* arg2)
 
 static int compareDate(const void* arg1, const void* arg2)
 {
-	WIN32_FIND_DATA* fd1 = &(*(Entry**)arg1)->data;
-	WIN32_FIND_DATA* fd2 = &(*(Entry**)arg2)->data;
+	const WIN32_FIND_DATA* fd1 = &(*(const Entry* const*)arg1)->data;
+	const WIN32_FIND_DATA* fd2 = &(*(const Entry* const*)arg2)->data;
 
 	int cmp = compareType(fd1, fd2);
 	if (cmp)
