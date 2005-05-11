@@ -196,6 +196,8 @@ LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			  case HSHELL_REDRAW:
 #ifdef HSHELL_FLASH
 			  case HSHELL_FLASH:
+#endif
+#ifdef HSHELL_RUDEAPPACTIVATED
 			  case HSHELL_RUDEAPPACTIVATED:
 #endif
 				Refresh();
