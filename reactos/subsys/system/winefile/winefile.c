@@ -2205,7 +2205,7 @@ static void init_output(HWND hwnd)
 static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol);
 
 
-/* calculate prefered width for all visible columns */
+/* calculate preferred width for all visible columns */
 
 static BOOL calc_widths(Pane* pane, BOOL anyway)
 {
@@ -2292,7 +2292,7 @@ static BOOL calc_widths(Pane* pane, BOOL anyway)
 }
 
 
-/* calculate one prefered column width */
+/* calculate one preferred column width */
 
 static void calc_single_width(Pane* pane, int col)
 {
@@ -3396,7 +3396,7 @@ static BOOL pane_command(Pane* pane, UINT cmd)
 			break;
 
 #ifndef _NO_EXTENSIONS
-		case ID_PREFERED_SIZES: {
+		case ID_PREFERRED_SIZES: {
 			calc_widths(pane, TRUE);
 			set_header(pane);
 			InvalidateRect(pane->hwnd, 0, TRUE);
