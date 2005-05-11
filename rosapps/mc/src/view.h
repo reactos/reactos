@@ -4,7 +4,7 @@
 #ifdef WANT_WIDGETS
 /* The growing buffers data types */
 typedef struct {
-    unsigned char *data;
+    char *data;
     int  present;		/* Unused, for DOS port maybe */
 } block_ptr_t;
 
@@ -22,7 +22,7 @@ typedef struct {
     int view_active;
     int have_frame;
 
-    unsigned char *data;	/* Memory area for the file to be viewed */
+    char *data;			/* Memory area for the file to be viewed */
 
     /* File information */
     int file;			/* File descriptor (for mmap and munmap) */

@@ -1019,7 +1019,7 @@ static void write_attributes (unsigned short *src, int count)
 #ifdef WIN32
    register unsigned char * org_src = (unsigned char*)src;
    COORD coord;
-   long bytes;
+   DWORD bytes;
 #endif
 #if !defined (USE_ASM)
 # if defined (HAS_LINEAR_SCREEN)
@@ -1057,7 +1057,7 @@ static void write_attributes (unsigned short *src, int count)
    p = Line_Buffer;
    coord.X = Cursor_Col;
    coord.Y = Cursor_Row;
-   WriteConsoleOutputCharacter(hStdout, p, count, coord, &bytes);
+   WriteConsoleOutputCharacter(hStdout, (char*)p, count, coord, &bytes);
 
   /* write color attributes */
    p = Line_Buffer;
@@ -1162,7 +1162,7 @@ void narrow_width (void)
 void SLtt_cls (void)
 {
 #ifdef WIN32
-   long bytes;
+   DWORD bytes;
    COORD coord;
    char ch;
 #endif
@@ -1224,7 +1224,7 @@ void SLtt_putchar (char ch)
 #if !defined (GO32_VIDEO) && !defined (EMX_VIDEO)
    unsigned short p, *pp;
 # if defined(WIN32)
-   long bytes;
+   DWORD bytes;
 # endif
 #endif
 

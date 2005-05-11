@@ -12,6 +12,27 @@
 
 #include "main.h"
 
+// This is the struct where the toolbar is defined
+const TBBUTTON Buttons [] =
+{
+	{0, 0, TBSTATE_ENABLED, TBSTYLE_SEP},
+
+	{0, 1, TBSTATE_INDETERMINATE, TBSTYLE_BUTTON}, // No Action
+	{1, 2, TBSTATE_INDETERMINATE, TBSTYLE_BUTTON}, // Install
+	{2, 3, TBSTATE_INDETERMINATE, TBSTYLE_BUTTON}, // Install from source
+	{3, 4, TBSTATE_INDETERMINATE, TBSTYLE_BUTTON}, // Update
+	{4, 5, TBSTATE_INDETERMINATE, TBSTYLE_BUTTON}, // Unistall
+
+	{0, 0, TBSTATE_ENABLED, TBSTYLE_SEP},
+	{5, 6, TBSTATE_ENABLED, TBSTYLE_BUTTON}, // DoIt (tm)
+	{0, 0, TBSTATE_ENABLED, TBSTYLE_SEP},
+
+	{6, 7, TBSTATE_ENABLED, TBSTYLE_BUTTON}, // Help
+	{7, 8, TBSTATE_ENABLED, TBSTYLE_BUTTON}, // Options
+
+	{0, 0, TBSTATE_ENABLED, TBSTYLE_SEP},
+};
+
 
 // Application's Entry Point
 int WINAPI WinMain (HINSTANCE hinst, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow)

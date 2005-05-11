@@ -18,7 +18,7 @@ void PaintMsg(DFWINDOW wnd, DF_CTLWINDOW *ct, DFRECT *rc)
         }
         if (ct->itext != NULL)
 		{
-            unsigned char *txt;
+            char *txt;
             txt = DfCalloc(1, strlen(ct->itext)+10);
             if (ct->setting == DF_OFF)    {
                 txt[0] = DF_CHANGECOLOR;

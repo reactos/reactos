@@ -101,7 +101,7 @@ typedef struct DfWindow
 	/* ----------------- text box fields ------------------ */
 	int wlines;     /* number of lines of text              */
 	int wtop;       /* text line that is on the top display */
-	unsigned char *text; /* window text                     */
+	char *text;     /* window text                     */
 	unsigned int textlen;  /* text length                   */
 	int wleft;      /* left position in window viewport     */
 	int textwidth;  /* width of longest line in textbox     */
@@ -124,7 +124,7 @@ typedef struct DfWindow
 	int CurrLine;     /* Current line                       */
 	int WndRow;       /* Current window row                 */
 	BOOL TextChanged; /* TRUE if text has changed           */
-	unsigned char *DeletedText; /* for undo                 */
+	char *DeletedText;          /* for undo                 */
 	unsigned DeletedLength; /* Length of deleted field      */
 	BOOL InsertMode;   /* TRUE or FALSE for text insert     */
 	BOOL WordWrapMode; /* TRUE or FALSE for word wrap       */
@@ -250,40 +250,40 @@ extern BOOL DfClipString;
 /* --------- space between menubar labels --------- */
 #define DF_MSPACE 2
 /* --------------- border characters ------------- */
-#define DF_FOCUS_NW      (unsigned char) '\xc9'
-#define DF_FOCUS_NE      (unsigned char) '\xbb'
-#define DF_FOCUS_SE      (unsigned char) '\xbc'
-#define DF_FOCUS_SW      (unsigned char) '\xc8'
-#define DF_FOCUS_SIDE    (unsigned char) '\xba'
-#define DF_FOCUS_LINE    (unsigned char) '\xcd'
-#define DF_NW            (unsigned char) '\xda'
-#define DF_NE            (unsigned char) '\xbf'
-#define DF_SE            (unsigned char) '\xd9'
-#define DF_SW            (unsigned char) '\xc0'
-#define DF_SIDE          (unsigned char) '\xb3'
-#define DF_LINE          (unsigned char) '\xc4'
-#define DF_LEDGE         (unsigned char) '\xc3'
-#define DF_REDGE         (unsigned char) '\xb4'
+#define DF_FOCUS_NW      '\xc9'
+#define DF_FOCUS_NE      '\xbb'
+#define DF_FOCUS_SE      '\xbc'
+#define DF_FOCUS_SW      '\xc8'
+#define DF_FOCUS_SIDE    '\xba'
+#define DF_FOCUS_LINE    '\xcd'
+#define DF_NW            '\xda'
+#define DF_NE            '\xbf'
+#define DF_SE            '\xd9'
+#define DF_SW            '\xc0'
+#define DF_SIDE          '\xb3'
+#define DF_LINE          '\xc4'
+#define DF_LEDGE         '\xc3'
+#define DF_REDGE         '\xb4'
 /* ------------- scroll bar characters ------------ */
-#define DF_UPSCROLLBOX    (unsigned char) '\x1e'
-#define DF_DOWNSCROLLBOX  (unsigned char) '\x1f'
-#define DF_LEFTSCROLLBOX  (unsigned char) '\x11'
-#define DF_RIGHTSCROLLBOX (unsigned char) '\x10'
-#define DF_SCROLLBARCHAR  (unsigned char) 176
-#define DF_SCROLLBOXCHAR  (unsigned char) 178
+#define DF_UPSCROLLBOX    '\x1e'
+#define DF_DOWNSCROLLBOX  '\x1f'
+#define DF_LEFTSCROLLBOX  '\x11'
+#define DF_RIGHTSCROLLBOX '\x10'
+#define DF_SCROLLBARCHAR  '\xb0'
+#define DF_SCROLLBOXCHAR  '\xb2'
 /* ------------------ menu characters --------------------- */
-#define DF_CHECKMARK      (unsigned char) '\x04' //(DF_SCREENHEIGHT==25?251:4)
-#define DF_CASCADEPOINTER (unsigned char) '\x10'
+#define DF_CHECKMARK      '\x04' //(DF_SCREENHEIGHT==25?251:4)
+#define DF_CASCADEPOINTER '\x10'
 /* ----------------- title bar characters ----------------- */
-#define DF_CONTROLBOXCHAR (unsigned char) '\xf0'
-#define DF_MAXPOINTER     24      /* maximize token            */
-#define DF_MINPOINTER     25      /* minimize token            */
-#define DF_RESTOREPOINTER 18      /* restore token             */
+#define DF_CONTROLBOXCHAR '\xf0'
+#define DF_MAXPOINTER     '\x18'  /* maximize token            */
+#define DF_MINPOINTER     '\x19'  /* minimize token            */
+#define DF_RESTOREPOINTER '\x12'  /* restore token             */
 /* --------------- text control characters ---------------- */
-#define DF_APPLCHAR     (unsigned char) 176 /* fills application window */
+#define DF_APPLCHAR     '\xb0' /* fills application window */
 #define DF_SHORTCUTCHAR '~'    /* prefix: shortcut key display */
-#define DF_CHANGECOLOR  (unsigned char) 174 /* prefix to change colors  */
-#define DF_RESETCOLOR   (unsigned char) 175 /* reset colors to default  */
+#define DF_CHANGECOLOR  '\xae' /* prefix to change colors  */
+#define DF_RESETCOLOR   '\xaf' /* reset colors to default  */
 #define DF_LISTSELECTOR   4    /* selected list box entry      */
 
 /* --------- message prototypes ----------- */
@@ -376,7 +376,7 @@ void DfCopyToClipboard(DFWINDOW);
 BOOL DfPasteText(DFWINDOW, char *, unsigned);
 void DfClearClipboard(void);
 /* --------- menu prototypes ---------- */
-int DfCopyCommand(unsigned char *, unsigned char *, int, int);
+int DfCopyCommand(char *, char *, int, int);
 void DfPrepFileMenu(void *, struct DfMenu *);
 void DfPrepEditMenu(void *, struct DfMenu *);
 void DfPrepSearchMenu(void *, struct DfMenu *);

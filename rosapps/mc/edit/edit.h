@@ -354,7 +354,7 @@ void edit_init_menu_emacs (void);
 void edit_init_menu_normal (void);
 void edit_done_menu (void);
 int edit_raw_key_query (char *heading, char *query, int cancel);
-char *strcasechr (const unsigned char *s, int c);
+char *strcasechr (const char *s, int c);
 int edit (const char *_file, int line);
 int edit_translate_key (WEdit * edit, unsigned int x_keycode, long x_key, int x_state, int *cmd, int *ch);
 

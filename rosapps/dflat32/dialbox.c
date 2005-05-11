@@ -430,7 +430,7 @@ void DfGetItemText(DFWINDOW wnd, enum DfCommands cmd,
                                 char *text, int len)
 {
     DF_CTLWINDOW *ct = DfFindCommand(wnd->extension, cmd, DF_EDITBOX);
-    unsigned char *cp;
+    char *cp;
 
     if (ct == NULL)
         ct = DfFindCommand(wnd->extension, cmd, DF_COMBOBOX);

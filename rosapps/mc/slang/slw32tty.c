@@ -48,7 +48,7 @@ int SLang_init_tty (int abort_char, int no_flow_control, int opost)
 {
   SMALL_RECT windowRect;
   COORD newPosition;
-  long flags;
+  DWORD flags;
 
 #ifndef SLANG_SAVES_CONSOLE
   /* first off, create a new console so the old one can be restored on exit */
@@ -132,7 +132,7 @@ int SLsys_input_pending (int tsecs)
 {
    INPUT_RECORD record;
    long one = 1;
-   long bytesRead;
+   DWORD bytesRead;
 
    while (1)
      {
@@ -195,7 +195,8 @@ int SLsys_input_pending (int tsecs)
 unsigned int SLsys_getkey (void)
 {
   unsigned int scan, ch, shift;
-  long key, bytesRead;
+  long key;
+  DWORD bytesRead;
   INPUT_RECORD record;
 
   while (1) {

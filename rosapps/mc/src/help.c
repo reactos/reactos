@@ -43,6 +43,7 @@
 #include <sys/stat.h>
 #include <malloc.h>
 #include <errno.h>
+#include <string.h>
 #include "mad.h"
 #include "color.h"
 #include "util.h"

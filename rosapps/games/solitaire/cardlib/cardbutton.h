@@ -13,7 +13,7 @@ class CardButton
 	//	Constructor is PRIVATE - only a
 	//  CardWindow can create buttons!
 	//
-	CardButton(CardWindow &parent, int id, TCHAR *szText, UINT style, bool visible, 
+	CardButton(CardWindow &parent, int id, TCHAR *szText, UINT style, bool visible,
 		int x, int y, int width, int height);
 
 	~CardButton();

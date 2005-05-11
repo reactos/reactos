@@ -22,7 +22,7 @@ void PaintRect(HDC hdc, RECT *rect, COLORREF col);
 void LoadCardBitmapsFromLibrary(HINSTANCE hCardDll, int *pwidth, int *pheight)
 {
     HBITMAP   hBitmap;
-    HDC          hdcCard;
+    HDC          hdcCard = NULL;
     HANDLE      hOld;
     int        i, xpos;
     int        width, height;
@@ -41,16 +41,16 @@ void LoadCardBitmapsFromLibrary(HINSTANCE hCardDll, int *pwidth, int *pheight)
         
         width  = bmp.bmWidth;
         height = bmp.bmHeight;
-        
+
         if(i == 0)    //if first time through, create BIG bitmap..
         {
             HDC hdc = GetDC(0);
             __hdcCardBitmaps = CreateCompatibleDC(hdc);
             __hbmCardBitmaps = CreateCompatibleBitmap(hdc, width * NUMCARDBITMAPS, height);
             SelectObject(__hdcCardBitmaps, __hbmCardBitmaps);
-            
+
             hdcCard = CreateCompatibleDC(0);
-            
+
             ReleaseDC(0, hdc);
         }
         

@@ -326,7 +326,7 @@ static void ReadHelp(DFWINDOW wnd)
     cwnd->wndproc = HelpTextProc;
     /* ----- read the help text ------- */
     while (TRUE)    {
-        unsigned char *cp = hline, *cp1;
+        char *cp = hline, *cp1;
         int colorct = 0;
         if (DfGetHelpLine(hline) == NULL)
             break;

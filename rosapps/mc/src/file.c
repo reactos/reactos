@@ -2381,7 +2381,7 @@ panel_operate (void *source_panel, int operation, char *thedefault)
 	else
 	    dest_dir = panel->cwd;
 
-	rx.buffer = (char *) xmalloc (MC_MAXPATHLEN, "mask copying");
+	rx.buffer = (unsigned char *) xmalloc (MC_MAXPATHLEN, "mask copying");
 	rx.allocated = MC_MAXPATHLEN;
 	rx.translate = 0;
 	dest = file_mask_dialog (operation, cmd_buf, dest_dir, only_one, &do_bg);

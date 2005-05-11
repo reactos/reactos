@@ -72,6 +72,7 @@ void CardLib_SetZoomSpeed(int);
 class CardRegion;
 class CardButton;
 class CardStack;
+class CardWindow;
 
 typedef bool (CARDLIBPROC *pCanDragProc)    (CardRegion &stackobj, int iNumDragging);
 typedef bool (CARDLIBPROC *pCanDropProc)    (CardRegion &stackobj, const CardStack &cards);

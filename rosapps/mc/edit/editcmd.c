@@ -62,12 +62,12 @@ static inline int my_lower_case (int c)
     return tolower(c);
 }
 
-char *strcasechr (const unsigned char *s, int c)
+char *strcasechr (const char *s, int c)
 {
     for (; my_lower_case ((int) *s) != my_lower_case (c); ++s)
 	if (*s == '\0')
 	    return 0;
-    return (char *) s;
+    return (char *)s;
 }
 
 

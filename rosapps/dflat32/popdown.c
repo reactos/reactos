@@ -83,8 +83,8 @@ static BOOL ButtonReleasedMsg(DFWINDOW wnd, DF_PARAM p1, DF_PARAM p2)
 static void PaintMsg(DFWINDOW wnd)
 {
     int wd;
-    unsigned char sep[80], *cp = sep;
-    unsigned char sel[80];
+    char sep[80], *cp = sep;
+    char sel[80];
     struct DfPopDown *ActivePopDown;
     struct DfPopDown *pd1;
 
@@ -371,10 +371,9 @@ static int SelectionWidth(struct DfPopDown *pd)
 }
 
 /* ----- copy a menu command to a display buffer ---- */
-int DfCopyCommand(unsigned char *dest, unsigned char *src,
-                                        int skipcolor, int bg)
+int DfCopyCommand(char *dest, char *src, int skipcolor, int bg)
 {
-    unsigned char *d = dest;
+    char *d = dest;
     while (*src && *src != '\n')    {
         if (*src == DF_SHORTCUTCHAR)    {
             src++;

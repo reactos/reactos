@@ -10,7 +10,7 @@
 /* ----------- popdown menu selection structure
        one for each selection on a popdown menu --------- */
 struct DfPopDown {
-    unsigned char *SelectionTitle; /* title of the selection */
+    char *SelectionTitle;  /* title of the selection */
     int ActionId;          /* the command executed        */
     int Accelerator;       /* the accelerator key         */
     int Attrib;  /* DF_INACTIVE | DF_CHECKED | DF_TOGGLE | DF_CASCADED*/

@@ -186,7 +186,7 @@ view_done (WView *view)
 	set_monitor (view, off);
 #ifndef HAVE_MMAP
 	/* alex: release core, used to replace mmap */
-	if (!view->growing_buffer && view->data != (unsigned char*)0)
+	if (!view->growing_buffer && view->data != NULL)
 	{
 		free(view->data);
 		view->data = NULL;
@@ -547,12 +547,12 @@ static char *load_view_file (WView *view, char *filename)
 	**	For those OS that dont provide mmap call. Try to load all the file
 	**	into memory (alex@bcs.zaporizhzhe.ua)
 	*/
-	view->data = (unsigned char*) xmalloc (view->s.st_size, "load_view_file");
-    if (view->data == (unsigned char*) 0
+	view->data = (char*) xmalloc (view->s.st_size, "load_view_file");
+    if (view->data == NULL
 		|| mc_lseek(view->file,0,0) != 0
 		|| mc_read(view->file, view->data, view->s.st_size) != view->s.st_size
 	) {
-		if (view->data != (unsigned char*)0)
+		if (view->data != NULL)
 			free(view->data);
 		close_view_file (view);
 		return init_growing_view (view, 0, filename);

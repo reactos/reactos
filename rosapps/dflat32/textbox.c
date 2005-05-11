@@ -621,9 +621,9 @@ void DfWriteTextLine(DFWINDOW wnd, DFRECT *rcc, int y, BOOL reverse)
 {
     int len = 0;
     int dif = 0;
-    unsigned char line[200];
+    char line[200];
     DFRECT rc;
-    unsigned char *lp, *svlp;
+    char *lp, *svlp;
     int lnlen;
     int i;
     BOOL trunc = FALSE;
@@ -707,7 +707,7 @@ void DfWriteTextLine(DFWINDOW wnd, DFRECT *rcc, int y, BOOL reverse)
     for (i = 0; i < wnd->wleft+3; i++)    {
         if (*(lp+i) == '\0')
             break;
-        if (*(unsigned char *)(lp + i) == DF_RESETCOLOR)
+        if (*(lp + i) == DF_RESETCOLOR)
             break;
     }
     if (*(lp+i) && i < wnd->wleft+3)    {
@@ -721,7 +721,7 @@ void DfWriteTextLine(DFWINDOW wnd, DFRECT *rcc, int y, BOOL reverse)
         for (i = 0; i < wnd->wleft; i++)    {
             if (*(lp+i) == '\0')
                 break;
-            if (*(unsigned char *)(lp + i) == DF_CHANGECOLOR)    {
+            if (*(lp + i) == DF_CHANGECOLOR)    {
                 *(lp+wnd->wleft+2) = *(lp+i+2);
                 *(lp+wnd->wleft+1) = *(lp+i+1);
                 *(lp+wnd->wleft) = *(lp+i);
@@ -741,9 +741,9 @@ void DfWriteTextLine(DFWINDOW wnd, DFRECT *rcc, int y, BOOL reverse)
             char *initlp = lp;
             /* --- point to end of clipped line --- */
             while (ct)    {
-                if (*(unsigned char *)lp == DF_CHANGECOLOR)
+                if (*lp == DF_CHANGECOLOR)
                     lp += 3;
-                else if (*(unsigned char *)lp == DF_RESETCOLOR)
+                else if (*lp == DF_RESETCOLOR)
                     lp++;
                 else
                     lp++, --ct;
@@ -751,13 +751,12 @@ void DfWriteTextLine(DFWINDOW wnd, DFRECT *rcc, int y, BOOL reverse)
             if (DfRectLeft(rc))    {
                 char *lpp = lp;
                 while (*lpp)    {
-                    if (*(unsigned char*)lpp==DF_CHANGECOLOR)
+                    if (*lpp==DF_CHANGECOLOR)
                         break;
-                    if (*(unsigned char*)lpp==DF_RESETCOLOR) {
+                    if (*lpp==DF_RESETCOLOR) {
                         lpp = lp;
                         while (lpp >= initlp)    {
-                            if (*(unsigned char *)lpp ==
-                                            DF_CHANGECOLOR) {
+                            if (*lpp == DF_CHANGECOLOR) {
                                 lp -= 3;
                                 memmove(lp,lpp,3);
                                 break;
@@ -790,7 +789,7 @@ void DfWriteTextLine(DFWINDOW wnd, DFRECT *rcc, int y, BOOL reverse)
             cp += 2;
             *cp++ = DfBackground | 0x80;
         }
-        if (*(unsigned char *)line == DF_CHANGECOLOR)
+        if (*line == DF_CHANGECOLOR)
             dif = 3;
     }
     else

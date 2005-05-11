@@ -94,7 +94,7 @@ void DfInsertTitle(DFWINDOW wnd, char *ttl)
 	strcpy(wnd->title, ttl);
 }
 
-static unsigned char line[300];
+static char line[300];
 
 /* ------ write a line to video window client area ------ */
 void DfWriteLine(DFWINDOW wnd, char *str, int x, int y, BOOL pad)

@@ -41,22 +41,5 @@ int Ask (const WCHAR* message);
 #define TBSTYLE_FLAT 2048
 
 // This is the struct where the toolbar is defined
-TBBUTTON Buttons [] = 
-{
-	{0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, 0L, 0},
-	
-	{0, 1, TBSTATE_INDETERMINATE, TBSTYLE_BUTTON, 0L, 0}, // No Action
-	{1, 2, TBSTATE_INDETERMINATE, TBSTYLE_BUTTON, 0L, 0}, // Install
-	{2, 3, TBSTATE_INDETERMINATE, TBSTYLE_BUTTON, 0L, 0}, // Install from source
-	{3, 4, TBSTATE_INDETERMINATE, TBSTYLE_BUTTON, 0L, 0}, // Update
-	{4, 5, TBSTATE_INDETERMINATE, TBSTYLE_BUTTON, 0L, 0}, // Unistall
+extern const TBBUTTON Buttons [];
 
-	{0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, 0L, 0},
-	{5, 6, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0L, 0}, // DoIt (tm)
-	{0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, 0L, 0},
-
-	{6, 7, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0L, 0}, // Help
-	{7, 8, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0L, 0}, // Options
-
-	{0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, 0L, 0},
-}; 

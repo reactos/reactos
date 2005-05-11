@@ -186,7 +186,7 @@ void DfWPuts(DFWINDOW wnd, void *s, int x, int y)
 		WORD attr[200];
 		char *cp = ln;
 		WORD *ap = attr;
-		unsigned char *str = s;
+		char *str = s;
 		int fg = DfForeground;
 		int bg = DfBackground;
 		int len;

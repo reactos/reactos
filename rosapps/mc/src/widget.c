@@ -371,7 +371,7 @@ radio_callback (Dlg_head *h, WRadio *r, int Msg, int Par)
     case WIDGET_FOCUS:
     case WIDGET_DRAW:
 	for (i = 0; i < r->count; i++){
-		register unsigned char* cp;
+		register char* cp;
 	    attrset ((i==r->pos && Msg==WIDGET_FOCUS) ? FOCUSC :NORMALC);
 	    widget_move (&r->widget, i, 0);
 

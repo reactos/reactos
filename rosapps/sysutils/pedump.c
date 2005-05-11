@@ -1149,7 +1149,7 @@ GetSectionNames (
 
   /* count the number of chars used in the section names */
   for (i = 0; i < nSections; i++)
-    nCnt += strlen (psh[i].Name) + 1;
+    nCnt += strlen ((char *)psh[i].Name) + 1;
 
   /* allocate space for all section names from heap */
   ps = *pszSections = (char *) calloc (nCnt, 1);
@@ -1157,8 +1157,8 @@ GetSectionNames (
 
   for (i = 0; i < nSections; i++)
     {
-      strcpy (ps, psh[i].Name);
-      ps += strlen (psh[i].Name) + 1;
+      strcpy (ps, (char *)psh[i].Name);
+      ps += strlen ((char *)psh[i].Name) + 1;
     }
 
   return nCnt;
@@ -1184,7 +1184,7 @@ GetSectionHdrByName (
       /* find the section by name */
       for (i = 0; i < nSections; i++)
 	{
-	  if (!strcmp (psh->Name, szSection))
+	  if (!strcmp ((char *)psh->Name, szSection))
 	    {
 	      /* copy data to header */
 	      bcopy ((LPVOID) psh, (LPVOID) sh, sizeof (IMAGE_SECTION_HEADER));
@@ -3847,7 +3847,7 @@ RetrieveModuleName (
       if (pdd->Type == IMAGE_DEBUG_TYPE_MISC)
 	{
 	  pdm = (PIMAGE_DEBUG_MISC) ((DWORD) pdd->PointerToRawData + (DWORD) lpFile);
-	  *pszModule = (char *) calloc ((nCnt = (strlen (pdm->Data))) + 1, 1);
+	  *pszModule = (char *) calloc ((nCnt = (strlen ((char *)pdm->Data))) + 1, 1);
 	  // may need some unicode business here...above
 	  bcopy (pdm->Data, *pszModule, nCnt);
 

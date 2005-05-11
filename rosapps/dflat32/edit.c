@@ -393,7 +393,7 @@ static void PrintPad(DFWINDOW wnd)
 		{
 			long percent;
 			BOOL KeepPrinting = TRUE;
-			unsigned char *text = DfGetText(wnd);
+			char *text = DfGetText(wnd);
 			unsigned oldpct = 100, cct = 0, len = strlen(text);
 			DFWINDOW swnd = DfSliderBox(20, DfGetTitle(wnd), "Printing");
 			/* ------- print the notepad text --------- */
