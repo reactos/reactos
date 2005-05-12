@@ -221,8 +221,8 @@ SerialRead(
 	WorkItem = IoAllocateWorkItem(DeviceObject);
 	if (WorkItem)
 	{
-                WorkItemData->IoWorkItem = WorkItem;
-                IoQueueWorkItem(WorkItem, SerialReadWorkItem, DelayedWorkQueue, WorkItemData);
+		WorkItemData->IoWorkItem = WorkItem;
+		IoQueueWorkItem(WorkItem, SerialReadWorkItem, DelayedWorkQueue, WorkItemData);
 		IoMarkIrpPending(Irp);
 		return STATUS_PENDING;
 	}
