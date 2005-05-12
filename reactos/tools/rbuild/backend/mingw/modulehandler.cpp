@@ -129,7 +129,7 @@ MingwModuleHandler::GetTargetFilename (
 {
 	string target = PassThruCacheDirectory (
 		NormalizeFilename ( module.GetPath () ),
-		backend->intermediateDirectory );
+		GetTargetDirectoryTree ( module ) );
 	if ( pclean_files )
 	{
 		string_list& clean_files = *pclean_files;

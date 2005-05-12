@@ -179,7 +179,7 @@ Directory::GenerateTree ( const string& parent,
 {
 	string path;
 
-	if ( parent.size() )
+	if ( parent.size () > 0 )
 	{
 		char buf[256];
 		
@@ -191,11 +191,62 @@ Directory::GenerateTree ( const string& parent,
 	else
 		path = name;
 
+	for ( directory_map::iterator i = subdirs.begin ();
+		i != subdirs.end ();
+		++i )
+	{
+		i->second->GenerateTree ( path, verbose );
+	}
+}
+
+string
+Directory::EscapeSpaces ( string path )
+{
+	string newpath;
+	char* p = &path[0];
+	while ( *p != 0 )
+	{
+		if ( *p == ' ' )
+			newpath = newpath + "\\ ";
+		else
+			newpath = newpath + *p;
+		*p++;
+	}
+	return newpath;
+}
+
+void
+Directory::CreateRule ( FILE* f,
+	                    const string& parent )
+{
+	string path;
+
+	if ( parent.size() > 0 )
+	{
+		string escapedParent = EscapeSpaces ( parent );
+		fprintf ( f,
+			"%s%c%s: | %s\n",
+			escapedParent.c_str (),
+			CSEP,
+			EscapeSpaces ( name ).c_str (),
+			escapedParent.c_str () );
+
+		fprintf ( f,
+			"\t$(ECHO_MKDIR)\n" );
+
+		fprintf ( f,
+			"\t${mkdir} $@\n" );
+
+		path = parent + SSEP + name;
+	}
+	else
+		path = name;
+
 	for ( directory_map::iterator i = subdirs.begin();
 		i != subdirs.end();
 		++i )
 	{
-		i->second->GenerateTree ( path, verbose );
+		i->second->CreateRule ( f, path );
 	}
 }
 
@@ -302,6 +353,7 @@ MingwBackend::Process ()
 	GenerateXmlBuildFilesMacro ();
 	ProcessModules ();
 	GenerateInstallTarget ();
+	GenerateDirectoryTargets ();
 	GenerateDirectories ();
 	CheckAutomaticDependencies ();
 	CloseMakefile ();
@@ -723,7 +775,7 @@ MingwBackend::OutputInstallTarget ( const string& sourceFilename,
 		NormalizeFilename ( targetDirectory ),
 		installDirectory );
 	fprintf ( fMakefile,
-	          "%s: %s %s\n",
+	          "%s: %s | %s\n",
 	          normalizedTargetFilename.c_str (),
 	          sourceFilename.c_str (),
 	          normalizedTargetDirectory.c_str () );
@@ -831,4 +883,12 @@ MingwBackend::GenerateInstallTarget ()
 	OutputRegistryInstallTarget ();
 	fprintf ( fMakefile,
 	          "\n" );
+}
+
+void
+MingwBackend::GenerateDirectoryTargets ()
+{
+	intermediateDirectory->CreateRule ( fMakefile, "" );
+	outputDirectory->CreateRule ( fMakefile, "" );
+	installDirectory->CreateRule ( fMakefile, "" );
 }
