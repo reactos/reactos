@@ -31,7 +31,7 @@ SerialAddDeviceInternal(
 
 	DPRINT("Serial: SerialAddDeviceInternal called\n");
 
-	ASSERT(DeviceObject);
+	ASSERT(DriverObject);
 	ASSERT(Pdo);
 
 	/* Create new device object */

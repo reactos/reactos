@@ -201,9 +201,11 @@ BOOLEAN
 SerialGetPerfStats(IN PIRP pIrp)
 {
 	PSERIAL_DEVICE_EXTENSION pDeviceExtension;
+	
+	ASSERT(Irp);
 	pDeviceExtension = (PSERIAL_DEVICE_EXTENSION)
 		IoGetCurrentIrpStackLocation(pIrp)->DeviceObject->DeviceExtension;
-	ASSERT(DeviceExtension);
+	
 	/*
 	 * we assume buffer is big enough to hold SerialPerfStats structure
 	 * caller must verify this
