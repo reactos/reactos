@@ -84,9 +84,18 @@ INT CommandColor (LPTSTR first, LPTSTR rest)
 		SetScreenColor (wColor, TRUE);
 		return 0;
 	}
+    
+	
+	if ( _tcslen(&rest[0])==1)
+	{	 
+	  if ( (_tcscmp(&rest[0], _T("0")) >=0 ) && (_tcscmp(&rest[0], _T("9")) <=0 ) )
+	  {
+        SetConsoleTextAttribute (hConsole, (WORD)_ttoi(rest));
+	  }	 
+	}
 
 	if (StringToColor(&wColor, &rest) == FALSE)
-	{
+	{	
 		ConErrResPuts(STRING_COLOR_ERROR2);
 		return 1;
 	}
