@@ -107,9 +107,9 @@ void SetNewLocale(LCID lcid)
 	}
 
 	wsprintf(value, L"%04X", (DWORD)lcid);
-	lenvalue = wcslen(value);
+	lenvalue = wcslen(value) *  sizeof(WCHAR);
 
-	RegSetValueExW(localeKey, L"Locale", 0, REG_SZ, (BYTE *)value, lenvalue * sizeof(WCHAR));
+	RegSetValueExW(localeKey, L"Locale", 0, REG_SZ, (BYTE *)value, lenvalue);
 	RegCloseKey(localeKey);
 
 	// Set language
@@ -118,8 +118,8 @@ void SetNewLocale(LCID lcid)
 	if (ret != ERROR_SUCCESS)
 		return;
 
-	RegSetValueExW(langKey, L"Default", 0, REG_SZ, (BYTE *)value, lenvalue * sizeof(WCHAR));
-	RegSetValueExW(langKey, L"InstallLanguage", 0, REG_SZ, (BYTE *)value, lenvalue * sizeof(WCHAR));
+	RegSetValueExW(langKey, L"Default", 0, REG_SZ, (BYTE *)value, lenvalue );
+	RegSetValueExW(langKey, L"InstallLanguage", 0, REG_SZ, (BYTE *)value, lenvalue );
 	RegCloseKey(langKey);
 }
 
