@@ -2,8 +2,6 @@
 
 PATH_TO_TOP = ../../..
 
-TARGET_NORC = yes
-
 TARGET_TYPE = program
 
 TARGET_APPTYPE = console
@@ -12,7 +10,7 @@ TARGET_NAME = expand
 
 TARGET_INSTALLDIR = system32
 
-TARGET_CFLAGS = -D__USE_W32API
+TARGET_CFLAGS = -D__USE_W32API 
 
 TARGET_SDKLIBS = lz32.a
 
