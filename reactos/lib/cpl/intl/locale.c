@@ -102,7 +102,7 @@ void SetNewLocale(LCID lcid)
 	if (ret != ERROR_SUCCESS)
 	{
 		// some serious error
-		//TODO: Tell user about it
+		MessageBoxW(NULL, L"Problem opening HKCU\\Control Panel\\International key", L"Big Problem", MB_OK);
 		return;
 	}
 
@@ -116,7 +116,10 @@ void SetNewLocale(LCID lcid)
 	ret = RegOpenKeyW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\NLS\\Language", &langKey);
 
 	if (ret != ERROR_SUCCESS)
+	{
+		MessageBoxW(NULL, L"Problem opening HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language key", L"Big Problem", MB_OK);
 		return;
+	}
 
 	RegSetValueExW(langKey, L"Default", 0, REG_SZ, (BYTE *)value, valuesize );
 	RegSetValueExW(langKey, L"InstallLanguage", 0, REG_SZ, (BYTE *)value, valuesize );
