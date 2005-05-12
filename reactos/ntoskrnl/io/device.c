@@ -1123,7 +1123,7 @@ NtDeviceIoControlFile(IN HANDLE DeviceHandle,
     PIRP Irp;
     PIO_STACK_LOCATION StackPtr;
     PKEVENT EventObject = NULL;
-    BOOLEAN LocalEvent;
+    BOOLEAN LocalEvent = FALSE;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
 
     DPRINT("NtDeviceIoControlFile(DeviceHandle %x Event %x UserApcRoutine %x "
