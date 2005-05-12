@@ -52,6 +52,8 @@ LPCWSTR tszDllInstall = L"DllInstall";
 #define tszDllInstall szDllInstall
 #endif
 
+
+
 #include "resource.h"
 
 LPCTSTR ModuleTitle = _T("RegSvr32");

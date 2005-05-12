@@ -7,6 +7,6 @@
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 {
-IDS_DllNotLoaded,   "LoadLibrary failed to load \'%s\'"
+IDS_DllNotLoaded,   "LoadLibrary failed to load '%s'"
 IDS_MissingEntry, "Missing entry point:%s\nIn %s"
 }

@@ -7,11 +7,11 @@
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 {
-IDS_UsageMessage, "%s\n\n\
-"Usage: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] dllname\n\
-/u -	Unregister server\n"\
-/s -	Silent; display no message boxes\n"\
-/c -	Console output\n"\
+
+IDS_UsageMessage, "%s\n\nUsage: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] dllname\n\
+/u -	Unregister server\n\
+/s -	Silent; display no message boxes\n\
+/c -	Console output\n\
 /i -	Call DllInstall passing it an optional [cmdline]; when used with /u calls dll uninstall\n\
 /n -	Do not call DllRegisterServer; this option must be used with /i"
 
@@ -21,12 +21,12 @@ IDS_InvalidFlag,     "Unrecognized flag: %s"
 
 IDS_SwitchN_NoI,     "Unrecognized flag: /n must be used with the /i switch"
 
-IDS_DllNotLoaded,    "LoadLibrary(\"%s\") failed.\nGetLastError returns 0x%08x."
+IDS_DllNotLoaded,    "LoadLibrary('%s') failed.\nGetLastError returns 0x%08x."
 
 IDS_MissingEntry,    "%s was loaded, but the %s entry point was not found.\n\n\
 %s may not be exported, or a corrupt version of %s may be in memory. Consider using PView to detect and remove it."
 
 IDS_FailureMessage,  "%s in %s failed.\nReturn code was: 0x%08x"
 
-IDS_SuccessMessage = "%s in %s succeeded."
+IDS_SuccessMessage   "%s in %s succeeded."
 }
