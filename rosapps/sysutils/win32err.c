@@ -1,4 +1,4 @@
-/* $Id: win32err.c,v 1.1 1999/05/16 07:27:35 ea Exp $
+/* $Id$
  *
  * win32err.c
  *
@@ -47,14 +47,14 @@ PrintWin32Error(
 	DWORD	ErrorCode
 	)
 {
-	LPVOID lpMsgBuf;
+	PVOID lpMsgBuf;
  
 	FormatMessageW(
 		(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM),
 		NULL,
 		ErrorCode, 
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(PWCHAR) & lpMsgBuf,
+		(LPWSTR)& lpMsgBuf,
 		0,
 		NULL
 		);

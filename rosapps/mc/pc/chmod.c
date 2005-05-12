@@ -377,7 +377,7 @@ static void do_chmod (mode_t sf)
 static void apply_mask (mode_t sf)
 {
     char *fname;
-    mode_t sf_stat;
+    int sf_stat;
 
     need_update = end_chmod = 1;
     do_chmod (sf);
@@ -387,7 +387,7 @@ static void apply_mask (mode_t sf)
 	if ((sf_stat = pc_stat_file (fname)) < 0)
 	    break;
 
-	c_stat = sf_stat;
+	c_stat = (mode_t) sf_stat;
 	do_chmod (c_stat);
     } while (cpanel->marked);
 }
@@ -397,7 +397,7 @@ void chmod_cmd (void)
     char buffer [10];
     char *fname;
     int i;
-    mode_t sf_stat;
+    int sf_stat;
 
     do {			/* do while any files remaining */
 	init_chmod ();
@@ -409,7 +409,7 @@ void chmod_cmd (void)
 	if ((sf_stat = pc_stat_file (fname)) < 0) /* get status of file */
 	    break;
 
-	c_stat = sf_stat;
+	c_stat = (mode_t) sf_stat;
 	mode_change = 0;	/* clear changes flag */
 
 	/* set check buttons */

@@ -6,8 +6,11 @@
    
    Most of the code dealing with getting system parameters is taken from
    ReactOS Task Manager written by Brian Palmer (brianp@reactos.org)
+   
+   Localization features added by Hervé Poussineau (hpoussineau@fr.st)
 
    History:
+   24 October 2004 - added localization features
 	09 April 2003 - v0.1, fixed bugs, added features, ported to mingw
    	20 March 2003 - v0.03, works good under ReactOS, and allows process
 			killing
@@ -42,17 +45,30 @@
 #include <ntos/zwtypes.h>
 
 #include "ctm.h"
+#include "resource.h"
 
 #define MAX_PROC 17
 #define TIMES
 
 HANDLE hStdin;
 HANDLE hStdout;
+HINSTANCE hInst;
 
 DWORD inConMode;
 DWORD outConMode;
 
-//PROCNTQSI		NtQuerySystemInformation= NULL;
+DWORD columnRightPositions[5];
+TCHAR lpSeparator[80];
+TCHAR lpHeader[80];
+TCHAR lpMemUnit[3];
+TCHAR lpIdleProcess[80];;
+TCHAR lpTitle[80];
+TCHAR lpHeader[80];
+TCHAR lpMenu[80];
+TCHAR lpEmpty[80];
+
+TCHAR KEY_QUIT, KEY_KILL;
+TCHAR KEY_YES, KEY_NO;
 
 const int		ProcPerScreen = 17; // 17 processess are displayed on one page
 ULONG			ProcessCountOld = 0;
@@ -62,7 +78,7 @@ double			dbIdleTime;
 double			dbKernelTime;
 double			dbSystemTime;
 LARGE_INTEGER		liOldIdleTime = {{0,0}};
-double			OldKernelTime = 0;
+LARGE_INTEGER		liOldKernelTime = {{0,0}};
 LARGE_INTEGER		liOldSystemTime = {{0,0}};
 
 PPERFDATA		pPerfDataOld = NULL;	// Older perf data (saved to establish delta values)
@@ -70,9 +86,12 @@ PPERFDATA		pPerfData = NULL;		// Most recent copy of perf data
 
 int selection=0;
 int scrolled=0;		// offset from which process start showing
+int first = 0;		// first time in DisplayScreen
+SYSTEM_BASIC_INFORMATION    SystemBasicInfo;
 
 #define NEW_CONSOLE
 
+// Functions that are needed by epsapi
 void *PsaiMalloc(SIZE_T size) { return malloc(size); }
 void *PsaiRealloc(void *ptr, SIZE_T size) { return realloc(ptr, size); }
 void PsaiFree(void *ptr) { free(ptr); }
@@ -120,39 +139,33 @@ void DisplayScreen()
 	int posStr;
 	DWORD numChars;
 	int lines;
-	int idx;
-	static int first = 0;
+	int idx, i;
 
 	if (first == 0)
 	{
-	   // Header
-	   pos.X = 2; pos.Y = 2;
-	   _tcscpy(lpStr, _T("Console TaskManager v0.1 by Aleksey Bragin <aleksey@studiocerebral.com>"));
-	   WriteConsoleOutputCharacter(hStdout, lpStr, _tcslen(lpStr), pos, &numChars);
+		// Header
+		pos.X = 2; pos.Y = 2;
+		WriteConsoleOutputCharacter(hStdout, lpTitle, _tcslen(lpTitle), pos, &numChars);
 
-	   pos.X = 2; pos.Y = 3;
-	   _tcscpy(lpStr, _T("+-------------------------------+-------+-----+-----------+-------------+"));
-	   WriteConsoleOutputCharacter(hStdout, lpStr, _tcslen(lpStr), pos, &numChars);
+		pos.X = 2; pos.Y = 3;
+		WriteConsoleOutputCharacter(hStdout, lpSeparator, _tcslen(lpSeparator), pos, &numChars);
 
-	   pos.X = 2; pos.Y = 4;
-	   _tcscpy(lpStr, _T("| Image name                    | PID   | CPU | Mem Usage | Page Faults |"));
-	   WriteConsoleOutputCharacter(hStdout, lpStr, _tcslen(lpStr), pos, &numChars);
+		pos.X = 2; pos.Y = 4;
+		WriteConsoleOutputCharacter(hStdout, lpHeader, _tcslen(lpHeader), pos, &numChars);
 
-	   pos.X = 2; pos.Y = 5;
-	   _tcscpy(lpStr, _T("+-------------------------------+-------+-----+-----------+-------------+"));
-	   WriteConsoleOutputCharacter(hStdout, lpStr, _tcslen(lpStr), pos, &numChars);
+		pos.X = 2; pos.Y = 5;
+		WriteConsoleOutputCharacter(hStdout, lpSeparator, _tcslen(lpSeparator), pos, &numChars);
 
-	   // Footer
-	   pos.X = 2; pos.Y = 23;
-	   _tcscpy(lpStr, _T("+-------------------------------+-------+-----+-----------+-------------+"));
-	   WriteConsoleOutputCharacter(hStdout, lpStr, _tcslen(lpStr), pos, &numChars);
+		// Footer
+		pos.X = 2; pos.Y = ProcPerScreen+6;
+		WriteConsoleOutputCharacter(hStdout, lpSeparator, _tcslen(lpSeparator), pos, &numChars);
+		
+		// Menu
+		pos.X = 2; pos.Y = ProcPerScreen+7;
+		WriteConsoleOutputCharacter(hStdout, lpEmpty, _tcslen(lpEmpty), pos, &numChars);
+		WriteConsoleOutputCharacter(hStdout, lpMenu, _tcslen(lpMenu), pos, &numChars);
 
-	   // Menu
-	   pos.X = 2; pos.Y = 24;
-	   _tcscpy(lpStr, _T("Press: q - quit, k - kill process                                        "));
-	   WriteConsoleOutputCharacter(hStdout, lpStr, _tcslen(lpStr), pos, &numChars);
-
-	   first = 1;
+		first = 1;
 	}
 
     	// Processess
@@ -168,11 +181,14 @@ void DisplayScreen()
 		TCHAR lpMemUsg[12];
 		TCHAR lpPageFaults[15];
 		WORD wColor;
+		
+		for (i = 0; i < 80; i++)
+			lpStr[i] = _T(' ');
 
 		// data
-		// image name
 		if (idx < lines && scrolled + idx < ProcessCount)
 		{
+			// image name
 #ifdef _UNICODE		
 		   len = wcslen(pPerfData[scrolled+idx].ImageName);  
 #else
@@ -180,77 +196,40 @@ void DisplayScreen()
 			               imgName, MAX_PATH, NULL, NULL);
 		   len = strlen(imgName);
 #endif
-		   if (len > 31)
-		   {
-		      len = 31;
-		   }
+			if (len > columnRightPositions[0])
+			{
+				len = columnRightPositions[0];
+			}
 #ifdef _UNICODE
 		   wcsncpy(&lpStr[2], pPerfData[scrolled+idx].ImageName, len);
 #else
 		   strncpy(&lpStr[2], imgName, len);
 #endif
-		}
-		else
-		{
-		   len = 0;
-		}
-		if (len < 31)
-		{
-		   _tcsncpy(&lpStr[2 + len], _T("                               "), 31 - len);
-		}
 
-		// PID
-		if (idx < lines && scrolled + idx < ProcessCount)
-		{
-		   _stprintf(lpPid, _T("%6ld "), pPerfData[scrolled+idx].ProcessId);
-                   _tcsncpy(&lpStr[34], lpPid, 7);
-		}
-		else
-		{
-		   _tcsncpy(&lpStr[34], _T("       "), 7);
-		}
+			// PID
+		   _stprintf(lpPid, _T("%6ld"), pPerfData[scrolled+idx].ProcessId);
+		 	_tcsncpy(&lpStr[columnRightPositions[1] - 6], lpPid, 6);
 
-		// CPU
-		if (idx < lines && scrolled + idx < ProcessCount)
-		{
-		   _stprintf(lpCpu, _T("%3d%% "), pPerfData[scrolled+idx].CPUUsage);
-		   _tcsncpy(&lpStr[42], lpCpu, 5);
-		}
-		else
-		{
-		   _tcsncpy(&lpStr[42], _T("     "), 5);
-		}
+#ifdef TIMES
+			// CPU
+			_stprintf(lpCpu, _T("%3d%%"), pPerfData[scrolled+idx].CPUUsage);
+			_tcsncpy(&lpStr[columnRightPositions[2] - 4], lpCpu, 4);
+#endif
 
-		// Mem usage
-		if (idx < lines && scrolled + idx < ProcessCount)
-		{
-		    _stprintf(lpMemUsg, _T("%6ld     "), pPerfData[scrolled+idx].WorkingSetSizeBytes / 1024);
-		    _tcsncpy(&lpStr[48], lpMemUsg, 11);
-		}
-		else
-		{   
-		    _tcsncpy(&lpStr[48], _T("           "), 11);
-		}
+			// Mem usage
+			 _stprintf(lpMemUsg, _T("%6ld %s"), pPerfData[scrolled+idx].WorkingSetSizeBytes / 1024, lpMemUnit);
+			 _tcsncpy(&lpStr[columnRightPositions[3] - 9], lpMemUsg, 9);
 
-		// Page Fault
-		if (idx < lines && scrolled + idx < ProcessCount)
-		{
-		   _stprintf(lpPageFaults, _T("%12ld "), pPerfData[scrolled+idx].PageFaultCount);
-		   _tcsncpy(&lpStr[60], lpPageFaults, 13);
-		}
-		else
-		{
-		   _tcsncpy(&lpStr[60], _T("             "), 13);
+			// Page Fault
+			_stprintf(lpPageFaults, _T("%12ld"), pPerfData[scrolled+idx].PageFaultCount);
+			_tcsncpy(&lpStr[columnRightPositions[4] - 12], lpPageFaults, 12);
 		}
 
 		// columns
 		lpStr[0] = _T(' ');
 		lpStr[1] = _T('|');
-		lpStr[33] = _T('|');
-		lpStr[41] = _T('|');
-		lpStr[47] = _T('|');
-		lpStr[59] = _T('|');
-		lpStr[73] = _T('|');
+		for (i = 0; i < 5; i++)
+			lpStr[columnRightPositions[i] + 1] = _T('|');
                 pos.X = 1; pos.Y = 6+idx;
 		WriteConsoleOutputCharacter(hStdout, lpStr, 74, pos, &numChars);
 
@@ -274,7 +253,7 @@ void DisplayScreen()
 		FillConsoleOutputAttribute( 
 			hStdout,          // screen buffer handle 
 			wColor,           // color to fill with 
-			31,            // number of cells to fill 
+			columnRightPositions[0] - 1,	// number of cells to fill
 			pos,            // first cell to write to 
 			&numChars);       // actual number written 
 	}
@@ -285,13 +264,14 @@ void DisplayScreen()
 // returns TRUE if exiting
 int ProcessKeys(int numEvents)
 {
+	DWORD numChars;
 	if ((ProcessCount-scrolled < 17) && (ProcessCount > 17))
 		scrolled = ProcessCount-17;
 
 	TCHAR key = GetKeyPressed(numEvents);
-	if (key == VK_Q)
+	if (key == KEY_QUIT)
 		return TRUE;
-	else if (key == VK_K)
+	else if (key == KEY_KILL)
 	{
 		// user wants to kill some process, get his acknowledgement
 		DWORD pId;
@@ -299,15 +279,15 @@ int ProcessKeys(int numEvents)
 		TCHAR lpStr[100];
 
 		pos.X = 2; pos.Y = 24;
-		_tcscpy(lpStr, _T("Are you sure you want to kill this process? (y/n)"));
-		WriteConsoleOutputCharacter(hStdout, lpStr, _tcslen(lpStr), pos, &pId);
+		if (LoadString(hInst, IDS_KILL_PROCESS, lpStr, 100))
+			WriteConsoleOutputCharacter(hStdout, lpStr, _tcslen(lpStr), pos, &numChars);
 
 		do {
 			GetNumberOfConsoleInputEvents(hStdin, &pId);
 			key = GetKeyPressed(pId);
-		} while (key == 0);
-	
-		if (key == VK_Y)
+		} while (key != KEY_YES && key != KEY_NO);
+
+		if (key == KEY_YES)
 		{
 			HANDLE hProcess;
 			pId = pPerfData[selection+scrolled].ProcessId;
@@ -317,8 +297,11 @@ int ProcessKeys(int numEvents)
 			{
 				if (!TerminateProcess(hProcess, 0))
 				{
-					_tcscpy(lpStr, _T("Unable to terminate this process...                                      "));
-					WriteConsoleOutputCharacter(hStdout, lpStr, _tcslen(lpStr), pos, &pId);
+					if (LoadString(hInst, IDS_KILL_PROCESS_ERR1, lpStr, 80))
+					{
+						WriteConsoleOutputCharacter(hStdout, lpEmpty, _tcslen(lpEmpty), pos, &numChars);
+						WriteConsoleOutputCharacter(hStdout, lpStr, _tcslen(lpStr), pos, &numChars);
+					}
 					Sleep(1000);
 				}
 
@@ -326,11 +309,17 @@ int ProcessKeys(int numEvents)
 			}
 			else
 			{
-					_stprintf(lpStr, _T("Unable to terminate process %3d (unable to OpenProcess)               "), pId);
-					WriteConsoleOutputCharacter(hStdout, lpStr, _tcslen(lpStr), pos, &pId);
-					Sleep(1000);
+				if (LoadString(hInst, IDS_KILL_PROCESS_ERR2, lpStr, 80))
+				{
+					WriteConsoleOutputCharacter(hStdout, lpEmpty, _tcslen(lpEmpty), pos, &numChars);
+					_stprintf(lpStr, lpStr, pId);
+					WriteConsoleOutputCharacter(hStdout, lpStr, _tcslen(lpStr), pos, &numChars);
+				}
+				Sleep(1000);
 			}
 		}
+		
+		first = 0;
 	}
 	else if (key == VK_UP)
 	{
@@ -352,7 +341,7 @@ int ProcessKeys(int numEvents)
 
 void PerfInit()
 {
-//	NtQuerySystemInformation = //(PROCNTQSI)GetProcAddress(GetModuleHandle(_T("ntdll.dll")), //"NtQuerySystemInformation");
+    NtQuerySystemInformation(SystemBasicInformation, &SystemBasicInfo, sizeof(SystemBasicInfo), 0);
 }
 
 void PerfDataRefresh()
@@ -364,61 +353,65 @@ void PerfDataRefresh()
 	ULONG							Idx, Idx2;
 	HANDLE							hProcess;
 	HANDLE							hProcessToken;
-	PSYSTEM_PROCESSES		pSPI;
+	PSYSTEM_PROCESS_INFORMATION		pSPI;
 	PPERFDATA						pPDOld;
 	TCHAR							szTemp[MAX_PATH];
 	DWORD							dwSize;
-	double							CurrentKernelTime;
-	PSYSTEM_PROCESSORTIME_INFO		SysProcessorTimeInfo;
-	SYSTEM_PERFORMANCE_INFORMATION	SysPerfInfo;
-	SYSTEM_TIMEOFDAY_INFORMATION            SysTimeInfo;
+#ifdef TIMES
+	LARGE_INTEGER 						liCurrentKernelTime;
+	LARGE_INTEGER						liCurrentIdleTime;
+	LARGE_INTEGER						liCurrentTime;
+#endif
+	PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION		SysProcessorTimeInfo;
+	SYSTEM_TIMEOFDAY_INFORMATION				SysTimeInfo;
 
 #ifdef TIMES
 	// Get new system time
 	status = NtQuerySystemInformation(SystemTimeInformation, &SysTimeInfo, sizeof(SysTimeInfo), 0);
 	if (status != NO_ERROR)
 		return;
-
-	// Get new CPU's idle time
-	status = NtQuerySystemInformation(SystemPerformanceInformation, &SysPerfInfo, sizeof(SysPerfInfo), NULL);
-	if (status != NO_ERROR)
-		return;
 #endif
 	// Get processor information	
-	SysProcessorTimeInfo = (PSYSTEM_PROCESSORTIME_INFO)malloc(sizeof(SYSTEM_PROCESSORTIME_INFO) * 1/*SystemBasicInfo.bKeNumberProcessors*/);
-	status = NtQuerySystemInformation(SystemProcessorTimes, SysProcessorTimeInfo, sizeof(SYSTEM_PROCESSORTIME_INFO) * 1/*SystemBasicInfo.bKeNumberProcessors*/, &ulSize);
+	SysProcessorTimeInfo = (PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)malloc(sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * SystemBasicInfo.NumberProcessors);
+	status = NtQuerySystemInformation(SystemProcessorPerformanceInformation, SysProcessorTimeInfo, sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * SystemBasicInfo.NumberProcessors, &ulSize);
 
 
 	// Get process information
-	PsaCaptureProcessesAndThreads((PSYSTEM_PROCESSES *)&pBuffer);
+	PsaCaptureProcessesAndThreads((PSYSTEM_PROCESS_INFORMATION *)&pBuffer);
 
 #ifdef TIMES
-	for (CurrentKernelTime=0, Idx=0; Idx<1/*SystemBasicInfo.bKeNumberProcessors*/; Idx++) {
-		CurrentKernelTime += Li2Double(SysProcessorTimeInfo[Idx].TotalProcessorTime);
-		CurrentKernelTime += Li2Double(SysProcessorTimeInfo[Idx].TotalDPCTime);
-		CurrentKernelTime += Li2Double(SysProcessorTimeInfo[Idx].TotalInterruptTime);
+	liCurrentKernelTime.QuadPart = 0;
+	liCurrentIdleTime.QuadPart = 0;
+	for (Idx=0; Idx<SystemBasicInfo.NumberProcessors; Idx++) {
+		liCurrentKernelTime.QuadPart += SysProcessorTimeInfo[Idx].KernelTime.QuadPart;
+		liCurrentKernelTime.QuadPart += SysProcessorTimeInfo[Idx].DpcTime.QuadPart;
+		liCurrentKernelTime.QuadPart += SysProcessorTimeInfo[Idx].InterruptTime.QuadPart;
+		liCurrentIdleTime.QuadPart += SysProcessorTimeInfo[Idx].IdleTime.QuadPart;
 	}
 
 	// If it's a first call - skip idle time calcs
 	if (liOldIdleTime.QuadPart != 0) {
 		// CurrentValue = NewValue - OldValue
-		dbIdleTime = Li2Double(SysPerfInfo.IdleTime) - Li2Double(liOldIdleTime);
-		dbKernelTime = CurrentKernelTime - OldKernelTime;
-		dbSystemTime = Li2Double(SysTimeInfo.CurrentTime) - Li2Double(liOldSystemTime);
+		liCurrentTime.QuadPart = liCurrentIdleTime.QuadPart - liOldIdleTime.QuadPart;
+		dbIdleTime = Li2Double(liCurrentTime);
+		liCurrentTime.QuadPart = liCurrentKernelTime.QuadPart - liOldKernelTime.QuadPart;
+		dbKernelTime = Li2Double(liCurrentTime);
+		liCurrentTime.QuadPart = SysTimeInfo.CurrentTime.QuadPart - liOldSystemTime.QuadPart;
+	    	dbSystemTime = Li2Double(liCurrentTime);
 
 		// CurrentCpuIdle = IdleTime / SystemTime
 		dbIdleTime = dbIdleTime / dbSystemTime;
 		dbKernelTime = dbKernelTime / dbSystemTime;
 		
 		// CurrentCpuUsage% = 100 - (CurrentCpuIdle * 100) / NumberOfProcessors
-		dbIdleTime = 100.0 - dbIdleTime * 100.0; /* / (double)SystemBasicInfo.bKeNumberProcessors;// + 0.5; */
-		dbKernelTime = 100.0 - dbKernelTime * 100.0; /* / (double)SystemBasicInfo.bKeNumberProcessors;// + 0.5; */
+		dbIdleTime = 100.0 - dbIdleTime * 100.0 / (double)SystemBasicInfo.NumberProcessors;// + 0.5; 
+		dbKernelTime = 100.0 - dbKernelTime * 100.0 / (double)SystemBasicInfo.NumberProcessors;// + 0.5;
 	}
 
 	// Store new CPU's idle and system time
-	liOldIdleTime = SysPerfInfo.IdleTime;
+	liOldIdleTime = liCurrentIdleTime;
 	liOldSystemTime = SysTimeInfo.CurrentTime;
-	OldKernelTime = CurrentKernelTime;
+	liOldKernelTime = liCurrentKernelTime;
 #endif
 
 	// Determine the process count
@@ -427,7 +420,7 @@ void PerfDataRefresh()
         // returns NULL)
 	ProcessCountOld = ProcessCount;
 	ProcessCount = 0;
-        pSPI = PsaWalkFirstProcess((PSYSTEM_PROCESSES)pBuffer);
+        pSPI = PsaWalkFirstProcess((PSYSTEM_PROCESS_INFORMATION)pBuffer);
 	while (pSPI) {
 		ProcessCount++;
 		pSPI = PsaWalkNextProcess(pSPI);
@@ -435,19 +428,19 @@ void PerfDataRefresh()
 
 	// Now alloc a new PERFDATA array and fill in the data
 	if (pPerfDataOld) {
-		//delete[] pPerfDataOld;
 		free(pPerfDataOld);
 	}
 	pPerfDataOld = pPerfData;
-	//pPerfData = new PERFDATA[ProcessCount];
 	pPerfData = (PPERFDATA)malloc(sizeof(PERFDATA) * ProcessCount);
-        pSPI = PsaWalkFirstProcess((PSYSTEM_PROCESSES)pBuffer);
+        pSPI = PsaWalkFirstProcess((PSYSTEM_PROCESS_INFORMATION)pBuffer);
 	for (Idx=0; Idx<ProcessCount; Idx++) {
 		// Get the old perf data for this process (if any)
 		// so that we can establish delta values
 		pPDOld = NULL;
 		for (Idx2=0; Idx2<ProcessCountOld; Idx2++) {
-			if (pPerfDataOld[Idx2].ProcessId == pSPI->ProcessId) {
+			if (pPerfDataOld[Idx2].ProcessId == (ULONG)(pSPI->UniqueProcessId) &&
+			    /* check also for the creation time, a new process may have an id of an old one */
+			    pPerfDataOld[Idx2].CreateTime.QuadPart == pSPI->CreateTime.QuadPart) {
 				pPDOld = &pPerfDataOld[Idx2];
 				break;
 			}
@@ -456,21 +449,28 @@ void PerfDataRefresh()
 		// Clear out process perf data structure
 		memset(&pPerfData[Idx], 0, sizeof(PERFDATA));
 
-		if (pSPI->ProcessName.Buffer) {
-			wcsncpy(pPerfData[Idx].ImageName, pSPI->ProcessName.Buffer, pSPI->ProcessName.Length / sizeof(WCHAR));
-                        pPerfData[Idx].ImageName[pSPI->ProcessName.Length / sizeof(WCHAR)] = 0;
+		if (pSPI->ImageName.Buffer) {
+			wcsncpy(pPerfData[Idx].ImageName, pSPI->ImageName.Buffer, pSPI->ImageName.Length / sizeof(WCHAR));
+                        pPerfData[Idx].ImageName[pSPI->ImageName.Length / sizeof(WCHAR)] = 0;
 		}
 		else
-			wcscpy(pPerfData[Idx].ImageName, L"System Idle Process");
+		{
+#ifdef _UNICODE
+			wcscpy(pPerfData[Idx].ImageName, lpIdleProcess);
+#else
+			MultiByteToWideChar(CP_ACP, 0, lpIdleProcess, strlen(lpIdleProcess), pPerfData[Idx].ImageName, MAX_PATH);
+#endif
+		}
 
-		pPerfData[Idx].ProcessId = pSPI->ProcessId;
+		pPerfData[Idx].ProcessId = (ULONG)(pSPI->UniqueProcessId);
+		pPerfData[Idx].CreateTime = pSPI->CreateTime;
 
 		if (pPDOld)	{
 #ifdef TIMES
 			double	CurTime = Li2Double(pSPI->KernelTime) + Li2Double(pSPI->UserTime);
 			double	OldTime = Li2Double(pPDOld->KernelTime) + Li2Double(pPDOld->UserTime);
 			double	CpuTime = (CurTime - OldTime) / dbSystemTime;
-			CpuTime = CpuTime * 100.0; /* / (double)SystemBasicInfo.bKeNumberProcessors;// + 0.5;*/
+			CpuTime = CpuTime * 100.0 / (double)SystemBasicInfo.NumberProcessors; // + 0.5;
 
 			pPerfData[Idx].CPUUsage = (ULONG)CpuTime;
 #else
@@ -479,27 +479,27 @@ void PerfDataRefresh()
 		}
 
 		pPerfData[Idx].CPUTime.QuadPart = pSPI->UserTime.QuadPart + pSPI->KernelTime.QuadPart;
-		pPerfData[Idx].WorkingSetSizeBytes = pSPI->VmCounters.WorkingSetSize;
-		pPerfData[Idx].PeakWorkingSetSizeBytes = pSPI->VmCounters.PeakWorkingSetSize;
+		pPerfData[Idx].WorkingSetSizeBytes = pSPI->WorkingSetSize;
+		pPerfData[Idx].PeakWorkingSetSizeBytes = pSPI->PeakWorkingSetSize;
 		if (pPDOld)
-			pPerfData[Idx].WorkingSetSizeDelta = labs((LONG)pSPI->VmCounters.WorkingSetSize - (LONG)pPDOld->WorkingSetSizeBytes);
+			pPerfData[Idx].WorkingSetSizeDelta = labs((LONG)pSPI->WorkingSetSize - (LONG)pPDOld->WorkingSetSizeBytes);
 		else
 			pPerfData[Idx].WorkingSetSizeDelta = 0;
-		pPerfData[Idx].PageFaultCount = pSPI->VmCounters.PageFaultCount;
+		pPerfData[Idx].PageFaultCount = pSPI->PageFaultCount;
 		if (pPDOld)
-			pPerfData[Idx].PageFaultCountDelta = labs((LONG)pSPI->VmCounters.PageFaultCount - (LONG)pPDOld->PageFaultCount);
+			pPerfData[Idx].PageFaultCountDelta = labs((LONG)pSPI->PageFaultCount - (LONG)pPDOld->PageFaultCount);
 		else
 			pPerfData[Idx].PageFaultCountDelta = 0;
-		pPerfData[Idx].VirtualMemorySizeBytes = pSPI->VmCounters.VirtualSize;
-		pPerfData[Idx].PagedPoolUsagePages = pSPI->VmCounters.QuotaPagedPoolUsage;
-		pPerfData[Idx].NonPagedPoolUsagePages = pSPI->VmCounters.QuotaNonPagedPoolUsage;
+		pPerfData[Idx].VirtualMemorySizeBytes = pSPI->VirtualSize;
+		pPerfData[Idx].PagedPoolUsagePages = pSPI->QuotaPagedPoolUsage;
+		pPerfData[Idx].NonPagedPoolUsagePages = pSPI->QuotaNonPagedPoolUsage;
 		pPerfData[Idx].BasePriority = pSPI->BasePriority;
 		pPerfData[Idx].HandleCount = pSPI->HandleCount;
-		pPerfData[Idx].ThreadCount = pSPI->ThreadCount;
+		pPerfData[Idx].ThreadCount = pSPI->NumberOfThreads;
 		//pPerfData[Idx].SessionId = pSPI->SessionId;
 
 #ifdef EXTRA_INFO
-		hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pSPI->ProcessId);
+		hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pSPI->UniqueProcessId);
 		if (hProcess) {
 			if (OpenProcessToken(hProcess, TOKEN_QUERY|TOKEN_DUPLICATE|TOKEN_IMPERSONATE, &hProcessToken)) {
 				ImpersonateLoggedOnUser(hProcessToken);
@@ -531,7 +531,6 @@ int MultiByteToWideChar(
 #endif
 		pSPI = PsaWalkNextProcess(pSPI);
 	}
-	//delete[] pBuffer;
 	PsaFreeCapture(pBuffer);
 
 	free(SysProcessorTimeInfo);
@@ -548,9 +547,6 @@ unsigned int GetKeyPressed(int events)
 
 	for (i=0; i<events; i++)
 	{
-		if (!ReadConsoleInput(hStdin, &record, 0, &bytesRead)) {
-			return 0;
-		}
 		if (!ReadConsoleInput(hStdin, &record, 1, &bytesRead)) {
 			return 0;
 		}
@@ -565,23 +561,92 @@ unsigned int GetKeyPressed(int events)
 
 int main(int *argc, char **argv)
 {
+	int i;
+	TCHAR lpStr[80];
+	
+	for (i = 0; i < 80; i++)
+		lpEmpty[i] = lpHeader[i] = _T(' ');
+	lpEmpty[79] = _T('\0');
+
+	/* Initialize global variables */
+	hInst = 0 /* FIXME: which value? [used with LoadString(hInst, ..., ..., ...)] */;
+	if (LoadString(hInst, IDS_COLUMN_IMAGENAME, lpStr, 80))
+	{
+		columnRightPositions[0] = _tcslen(lpStr);
+		_tcsncpy(&lpHeader[2], lpStr, _tcslen(lpStr));
+	}
+	if (LoadString(hInst, IDS_COLUMN_PID, lpStr, 80))
+	{
+		columnRightPositions[1] = columnRightPositions[0] + _tcslen(lpStr) + 3;
+		_tcsncpy(&lpHeader[columnRightPositions[0] + 2], lpStr, _tcslen(lpStr));
+	}
+	if (LoadString(hInst, IDS_COLUMN_CPU, lpStr, 80))
+	{
+		columnRightPositions[2] = columnRightPositions[1] + _tcslen(lpStr) + 3;
+		_tcsncpy(&lpHeader[columnRightPositions[1] + 2], lpStr, _tcslen(lpStr));
+	}
+	if (LoadString(hInst, IDS_COLUMN_MEM, lpStr, 80))
+	{
+		columnRightPositions[3] = columnRightPositions[2] + _tcslen(lpStr) + 3;
+		_tcsncpy(&lpHeader[columnRightPositions[2] + 2], lpStr, _tcslen(lpStr));
+	}
+	if (LoadString(hInst, IDS_COLUMN_PF, lpStr, 80))
+	{
+		columnRightPositions[4] = columnRightPositions[3] + _tcslen(lpStr) + 3;
+		_tcsncpy(&lpHeader[columnRightPositions[3] + 2], lpStr, _tcslen(lpStr));
+	}
+	
+	for (i = 0; i < columnRightPositions[4]; i++)
+		lpSeparator[i] = _T('-');
+	lpHeader[0] = _T('|');
+	lpSeparator[0] = _T('+');
+	for (i = 0; i < 5; i++)
+	{
+		lpHeader[columnRightPositions[i]] = _T('|');
+		lpSeparator[columnRightPositions[i]] = _T('+');
+	}
+	lpSeparator[columnRightPositions[4] + 1] = _T('\0');
+	lpHeader[columnRightPositions[4] + 1] = _T('\0');
+
+	
+	if (!LoadString(hInst, IDS_APP_TITLE, lpTitle, 80))
+		lpTitle[0] = _T('\0');
+	if (!LoadString(hInst, IDS_COLUMN_MEM_UNIT, lpMemUnit, 3))
+		lpMemUnit[0] = _T('\0');
+	if (!LoadString(hInst, IDS_MENU, lpMenu, 80))
+		lpMenu[0] = _T('\0');
+	if (!LoadString(hInst, IDS_IDLE_PROCESS, lpIdleProcess, 80))
+		lpIdleProcess[0] = _T('\0');
+	
+	if (LoadString(hInst, IDS_MENU_QUIT, lpStr, 2))
+		KEY_QUIT = lpStr[0];
+	if (LoadString(hInst, IDS_MENU_KILL_PROCESS, lpStr, 2))
+		KEY_KILL = lpStr[0];
+	if (LoadString(hInst, IDS_YES, lpStr, 2))
+		KEY_YES = lpStr[0];
+	if (LoadString(hInst, IDS_NO, lpStr, 2))
+		KEY_NO = lpStr[0];
+
 	GetInputOutputHandles();
 
 	if (hStdin == INVALID_HANDLE_VALUE || hStdout == INVALID_HANDLE_VALUE)
 	{
-		printf("ctm: can't use console.");
+		if (LoadString(hInst, IDS_CTM_GENERAL_ERR1, lpStr, 80))
+			_tprintf(lpStr);
 		return -1;
 	}
 
 	if (GetConsoleMode(hStdin, &inConMode) == 0)
 	{
-		printf("ctm: can't GetConsoleMode() for input console.");
+		if (LoadString(hInst, IDS_CTM_GENERAL_ERR2, lpStr, 80))
+			_tprintf(lpStr);
 		return -1;
 	}
 
 	if (GetConsoleMode(hStdout, &outConMode) == 0)
 	{
-		printf("ctm: can't GetConsoleMode() for output console.");
+		if (LoadString(hInst, IDS_CTM_GENERAL_ERR3, lpStr, 80))
+			_tprintf(lpStr);
 		return -1;
 	}
 
@@ -597,12 +662,8 @@ int main(int *argc, char **argv)
 		PerfDataRefresh();
 		DisplayScreen();
 
-		//WriteConsole(hStdin, " ", 1, &numEvents, NULL); // TODO: Make another way (this is ugly, I know)
-#if 1
 		/* WaitForSingleObject for console handles is not implemented in ROS */
 		WaitForSingleObject(hStdin, 1000);
-#endif
-
 		GetNumberOfConsoleInputEvents(hStdin, &numEvents);
 
 		if (numEvents > 0)
@@ -610,13 +671,6 @@ int main(int *argc, char **argv)
 			if (ProcessKeys(numEvents) == TRUE)
 				break;
 		}
-#if 0
-		else
-		{
-		    /* Should be removed, if WaitForSingleObject is implemented for console handles */
-		    Sleep(40); // TODO: Should be done more efficient (might be another thread handling input/etc)*/
-		}
-#endif
 	}
 
 	RestoreConsole();

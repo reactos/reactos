@@ -42,7 +42,7 @@ SliderTextProc (DFWINDOW wnd,DFMESSAGE msg,DF_PARAM p1,DF_PARAM p2)
         case DFM_PAINT:
             Percent = (int)p2;
             InsertPercent(DfGetText(wnd) ?
-                DfGetText(wnd) : SliderBoxDB.ctl[1].itext);
+                (char*)DfGetText(wnd) : SliderBoxDB.ctl[1].itext);
             GenericProc(wnd, DFM_PAINT, 0, 0);
             if (Percent >= 100)
                 DfSendMessage(DfGetParent(wnd),DFM_COMMAND,DF_ID_CANCEL,0);

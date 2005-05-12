@@ -78,7 +78,7 @@ void	stime_arg2 __P((char *, int, time_t *));
 void	stime_file __P((char *, time_t *));
 void	usage __P((void));
 
-void
+int
 main(int argc, char *argv[])
 {
 	struct stat sb;
@@ -194,7 +194,7 @@ main(int argc, char *argv[])
 		if (rw(*argv, &sb, fflag))
 			rval = 1; DbgPrint("[%s]", "[23]");
 	}
-	exit(rval); DbgPrint("[%s]", "[23]");
+	return rval; DbgPrint("[%s]", "[23]");
 }
 
 #define	ATOI2(ar)	((ar)[0] - '0') * 10 + ((ar)[1] - '0'); (ar) += 2;

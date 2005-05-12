@@ -1,7 +1,7 @@
-/* $Id: regexpl.rc,v 1.5 2004/10/16 22:30:19 gvg Exp $ */
+/* $Id$ */
 
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Console Registry Explorer\0"
 #define REACTOS_STR_INTERNAL_NAME	"regexpl\0"
 #define REACTOS_STR_ORIGINAL_FILENAME	"regexpl.exe\0"
-#define REACTOS_STR_ORIGINAL_COPYRIGHT	"2000 (c) Nedko Arnaoudov\0"
+#define REACTOS_STR_ORIGINAL_COPYRIGHT	"2000 (c) Nedko Arnaudov\0"
 #include <reactos/version.rc>

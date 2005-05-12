@@ -1,0 +1,15 @@
+LIBRARY package.dll
+
+EXPORTS
+
+  PML_Abort
+  PML_TransError
+  PML_LoadTree
+  PML_FindItem
+  PML_LoadPackage
+  PML_GetDescription
+  PML_SetAction
+  PML_DoIt
+  PML_CloseTree
+
+; EOF

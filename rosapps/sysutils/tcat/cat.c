@@ -18,7 +18,7 @@ void help(void)
  puts("Usage: cat [file]");
 } 
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
  FILE *srcf;
  char *keys[]={"--help","/help"};

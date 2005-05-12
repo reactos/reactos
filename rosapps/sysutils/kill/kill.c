@@ -40,7 +40,7 @@ ExecuteKill(char * lpPid)
 	DWORD	dwProcessId;
 
 	dwProcessId = (DWORD) atol(lpPid);
-		fprintf( stderr, "Killing PID %d...\n",dwProcessId);
+		fprintf( stderr, "Killing PID %ld...\n",dwProcessId);
 	hProcess = OpenProcess(
 			PROCESS_TERMINATE,
 			FALSE,
@@ -48,7 +48,7 @@ ExecuteKill(char * lpPid)
 			);
 	if (NULL == hProcess)
 	{
-		fprintf( stderr, "Could not open the process with PID = %d\n", dwProcessId);
+		fprintf( stderr, "Could not open the process with PID = %ld\n", dwProcessId);
 		return 0;
 	}
 	if (FALSE == TerminateProcess(
@@ -56,7 +56,7 @@ ExecuteKill(char * lpPid)
 			0
 			)
 	) {
-		fprintf( stderr, "Could not terminate the process with PID = %d\n",	dwProcessId);
+		fprintf( stderr, "Could not terminate the process with PID = %ld\n",	dwProcessId);
 		return 0;
 	}
 	CloseHandle(hProcess);

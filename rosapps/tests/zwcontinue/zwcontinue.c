@@ -35,7 +35,7 @@ static void randbytes(void * p, size_t n)
 {
  unsigned char * b;
  size_t i;
- int r;
+ int r = rand();
 
  b = (unsigned char *)p;
 

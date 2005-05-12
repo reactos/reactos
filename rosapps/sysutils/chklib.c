@@ -1,4 +1,4 @@
-/* $Id: chklib.c,v 1.2 2000/02/29 23:57:46 ea Exp $
+/* $Id$
  * 
  * chklib.c
  * 
@@ -27,10 +27,14 @@
  *
  */
 //#define UNICODE
-#include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+
 #include "win32err.h"
 
 #ifdef DISPLAY_VERSION

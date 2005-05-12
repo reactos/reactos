@@ -1,8 +1,8 @@
-/* $Id: Completion.cpp,v 1.2 2001/01/13 23:54:07 narnaoud Exp $
+/* $Id$
  *
  * regexpl - Console Registry Explorer
  *
- * Copyright (C) 2000,2001 Nedko Arnaoudov <nedkohome@atia.com>
+ * Copyright (C) 2000-2005 Nedko Arnaudov <nedko@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

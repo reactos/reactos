@@ -12,7 +12,7 @@ TARGET_NAME = accelerator
 
 TARGET_OBJECTS = accelerator.o
 
-TARGET_CFLAGS = -Wall -Werror
+TARGET_CFLAGS = -D__USE_W32API -Wall -Werror
 
 include $(PATH_TO_TOP)/rules.mak
 

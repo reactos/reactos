@@ -320,7 +320,7 @@ void AddFileInfoValue(HWND hDlg, void* pVersionData, struct LANGANDCODEPAGE lpTr
     wsprintf(SubBlock, TEXT("\\StringFileInfo\\%04x%04x\\%s"), 
              lpTranslate.wLanguage, lpTranslate.wCodePage, info_str);
     // Retrieve file description for language and code page "i". 
-    if (VerQueryValue(pVersionData, SubBlock, &pVal, &nValLen)) {
+    if (VerQueryValue(pVersionData, SubBlock, (PVOID)&pVal, &nValLen)) {
         ListBox_InsertItemData(GetDlgItem(hDlg, IDC_LIST_PROP_VERSION_TYPES), i, info_str);
 //		ListBox_InsertItemData(pane->hwnd, idx, entry);
         SendMessage(GetDlgItem(hDlg, IDC_LIST_PROP_VERSION_VALUES), WM_SETTEXT, 0, (LPARAM)pVal);
@@ -375,7 +375,7 @@ void CheckForFileInfo(HWND hDlg, TCHAR* strFilename)
             UINT nValLen;
 //            LPTSTR SubBlock = _T("\\");
             _tcscpy(SubBlock, TEXT("\\"));
-            if (VerQueryValue(pVersionData, SubBlock, &pVal, &nValLen)) {
+            if (VerQueryValue(pVersionData, SubBlock, (PVOID)&pVal, &nValLen)) {
                 if (nValLen == sizeof(VS_FIXEDFILEINFO)) {
                     ShowFixedFileInfo(hDlg, (VS_FIXEDFILEINFO*)pVal);
                 }

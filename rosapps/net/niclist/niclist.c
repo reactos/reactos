@@ -1,4 +1,4 @@
-/* $Id: niclist.c,v 1.3 2004/01/12 22:45:53 sedwards Exp $
+/* $Id$
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS packet driver interface list utility
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
     HINSTANCE hPacket = LoadLibrary("PACKET.DLL");
     if (hPacket) {
         PacketGetAdapterNames = (BOOLEAN (*)(PTSTR, PULONG))GetProcAddress(hPacket, "PacketGetAdapterNames");
-        PacketGetVersion = (BOOLEAN (*)(PTSTR, PULONG))GetProcAddress(hPacket, "PacketGetVersion");
+        PacketGetVersion = (PCHAR (*)(VOID))GetProcAddress(hPacket, "PacketGetVersion");
     } else {
         printf("Could not load WinPCap driver! for more information goto:\n");
         printf ("http://netgroup-serv.polito.it/winpcap\n");

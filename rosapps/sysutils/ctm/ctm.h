@@ -51,6 +51,7 @@ typedef struct _PERFDATA
 
 	TIME				UserTime;
 	TIME				KernelTime;
+	LARGE_INTEGER			CreateTime;
 } PERFDATA, *PPERFDATA;
 
 #define SystemTimeInformation			3

@@ -81,7 +81,7 @@ int main(void)
     HANDLE hDevice;
     OVERLAPPED ov;
 
-    PBYTE Buffer;
+    PBYTE Buffer = NULL ;
     DWORD Start;
     DWORD dwReturned;
     DWORD dwReadTotal;
