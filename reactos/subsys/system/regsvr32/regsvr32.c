@@ -52,28 +52,19 @@ LPCWSTR tszDllInstall = L"DllInstall";
 #define tszDllInstall szDllInstall
 #endif
 
+#include "resource.h"
+
 LPCTSTR ModuleTitle = _T("RegSvr32");
-LPCTSTR UsageMessage =
-        _T("%s\n\n")
-        _T("Usage: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] dllname\n")
-        _T("/u -	Unregister server\n")
-        _T("/s -	Silent; display no message boxes\n")
-        _T("/c -	Console output\n")
-        _T("/i -	Call DllInstall passing it an optional [cmdline]; when used with /u calls dll uninstall\n")
-        _T("/n -	Do not call DllRegisterServer; this option must be used with /i");
-LPCTSTR NoDllSpecified = _T("No DLL name specified.");
-LPCTSTR InvalidFlag = _T("Unrecognized flag: %s");
-LPCTSTR SwitchN_NoI = _T("Unrecognized flag: /n must be used with the /i switch");
-LPCTSTR DllNotLoaded =
-        _T("LoadLibrary(\"%s\") failed.\n")
-        _T("GetLastError returns 0x%08x.");
-LPCTSTR MissingEntry =
-        _T("%s was loaded, but the %s entry point was not found.\n\n")
-        _T("%s may not be exported, or a corrupt version of %s may be in memory. Consider using PView to detect and remove it.");
-LPCTSTR FailureMessage =
-        _T("%s in %s failed.\n")
-        _T("Return code was: 0x%08x");
-LPCTSTR SuccessMessage = _T("%s in %s succeeded.");
+
+TCHAR UsageMessage[RC_STRING_MAX_SIZE];
+TCHAR NoDllSpecified[RC_STRING_MAX_SIZE]; 
+TCHAR InvalidFlag[RC_STRING_MAX_SIZE]; 
+TCHAR SwitchN_NoI[RC_STRING_MAX_SIZE]; 
+TCHAR DllNotLoaded[RC_STRING_MAX_SIZE];
+TCHAR MissingEntry[RC_STRING_MAX_SIZE];
+TCHAR FailureMessage[RC_STRING_MAX_SIZE]; 
+TCHAR SuccessMessage[RC_STRING_MAX_SIZE]; 
+
 
 // The macro CommandLineToArgv maps to a function that converts
 // a command-line string to argc and argv similar to the ones
@@ -276,6 +267,17 @@ int WINAPI WinMain(
 	DWORD dwErr;
 	int nRetValue,i;
 
+	// Get Langues msg
+	LoadString( GetModuleHandle(NULL), IDS_UsageMessage, (LPTSTR) UsageMessage,RC_STRING_MAX_SIZE);
+    LoadString( GetModuleHandle(NULL), IDS_NoDllSpecified, (LPTSTR) NoDllSpecified,RC_STRING_MAX_SIZE);    
+	LoadString( GetModuleHandle(NULL), IDS_InvalidFlag, (LPTSTR) InvalidFlag,RC_STRING_MAX_SIZE);
+	LoadString( GetModuleHandle(NULL), IDS_SwitchN_NoI, (LPTSTR) SwitchN_NoI,RC_STRING_MAX_SIZE);
+
+    LoadString( GetModuleHandle(NULL), IDS_DllNotLoaded, (LPTSTR)   DllNotLoaded,RC_STRING_MAX_SIZE);
+    LoadString( GetModuleHandle(NULL), IDS_MissingEntry, (LPTSTR)   MissingEntry,RC_STRING_MAX_SIZE);    
+	LoadString( GetModuleHandle(NULL), IDS_FailureMessage, (LPTSTR) FailureMessage,RC_STRING_MAX_SIZE);
+	LoadString( GetModuleHandle(NULL), IDS_SuccessMessage, (LPTSTR) SuccessMessage,RC_STRING_MAX_SIZE);
+
 	// Get command-line in argc-argv format
 	argv = CommandLineToArgv(GetCommandLine(),&argc);
 
@@ -328,7 +330,8 @@ int WINAPI WinMain(
 		}
 	}
 
-	// An unrecognized flag was used, display a message and show available options
+	// An unrecognized flag was used, display a message and show available options	
+
 	if (lptFuncName) {
 		lptMsgBuffer = (LPTSTR)malloc((_tcslen(UsageMessage) - 2 + _tcslen(InvalidFlag) - 2 + _tcslen(lptFuncName) + 1) * sizeof(TCHAR));
 		_stprintf(lptMsgBuffer + (_tcslen(UsageMessage) - 2),InvalidFlag,lptFuncName);
