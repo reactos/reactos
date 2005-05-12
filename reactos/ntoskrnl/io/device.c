@@ -1201,8 +1201,11 @@ NtDeviceIoControlFile(IN HANDLE DeviceHandle,
     /* Set some extra settings */
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
     Irp->RequestorMode = PreviousMode;
+    Irp->Overlay.AsynchronousParameters.UserApcRoutine = UserApcRoutine;
+    Irp->Overlay.AsynchronousParameters.UserApcContext = UserApcContext;
     StackPtr = IoGetNextIrpStackLocation(Irp);
     StackPtr->FileObject = FileObject;
+    
 
     /* Call the Driver */
     Status = IoCallDriver(DeviceObject, Irp);
