@@ -73,7 +73,7 @@ SectorsPerTrack dw 18
 NumberOfHeads   dw 2
 HiddenSectors   dd 0
 TotalSectorsBig dd 0
-BootDrive       db 0
+BootDrive       db 0xff
 Reserved        db 0
 ExtendSig       db 29h
 SerialNumber    dd 00000000h
@@ -88,6 +88,9 @@ main:
         mov ds,ax								; Make DS correct
         mov es,ax								; Make ES correct
 
+
+		cmp BYTE [BYTE bp+BootDrive],BYTE 0xff	; If they have specified a boot drive then use it
+		jne GetDriveParameters
 
         mov [BYTE bp+BootDrive],dl				; Save the boot drive
 
