@@ -95,7 +95,7 @@ void SetNewLocale(LCID lcid)
 	HKEY langKey;
 	DWORD ret;
 	TCHAR value[9];
-	DWORD lenvalue;
+	DWORD valuesize;
 
 	ret = RegOpenKeyW(HKEY_CURRENT_USER, L"Control Panel\\International", &localeKey);
 
@@ -107,9 +107,9 @@ void SetNewLocale(LCID lcid)
 	}
 
 	wsprintf(value, L"%04X", (DWORD)lcid);
-	lenvalue = wcslen(value) *  sizeof(WCHAR);
+	valuesize = (wcslen(value) + 1) * sizeof(WCHAR);
 
-	RegSetValueExW(localeKey, L"Locale", 0, REG_SZ, (BYTE *)value, lenvalue);
+	RegSetValueExW(localeKey, L"Locale", 0, REG_SZ, (BYTE *)value, valuesize);
 	RegCloseKey(localeKey);
 
 	// Set language
@@ -118,8 +118,8 @@ void SetNewLocale(LCID lcid)
 	if (ret != ERROR_SUCCESS)
 		return;
 
-	RegSetValueExW(langKey, L"Default", 0, REG_SZ, (BYTE *)value, lenvalue );
-	RegSetValueExW(langKey, L"InstallLanguage", 0, REG_SZ, (BYTE *)value, lenvalue );
+	RegSetValueExW(langKey, L"Default", 0, REG_SZ, (BYTE *)value, valuesize );
+	RegSetValueExW(langKey, L"InstallLanguage", 0, REG_SZ, (BYTE *)value, valuesize );
 	RegCloseKey(langKey);
 }
 
