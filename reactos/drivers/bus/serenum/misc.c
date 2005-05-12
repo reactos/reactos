@@ -39,7 +39,7 @@ SerenumDuplicateUnicodeString(
 	return STATUS_SUCCESS;
 }
 
-/* I really want ANSI strings as last arguments because
+/* I really want PCSZ strings as last arguments because
  * PnP ids are ANSI-encoded in PnP device string
  * identification */
 NTSTATUS
@@ -122,7 +122,7 @@ ForwardIrpAndWaitCompletion(
 {
 	if (Irp->PendingReturned)
 		KeSetEvent((PKEVENT)Context, IO_NO_INCREMENT, FALSE);
-  	return STATUS_MORE_PROCESSING_REQUIRED;
+	return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
 NTSTATUS

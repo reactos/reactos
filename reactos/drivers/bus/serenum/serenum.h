@@ -7,7 +7,6 @@
   #include <debug.h>
 
   #define SR_MSR_DSR 0x20
-  #define ExFreePoolWithTag(p, tag) ExFreePool(p)
 
   /* FIXME: these prototypes MUST NOT be here! */
   NTSTATUS STDCALL
@@ -117,9 +116,9 @@ SerenumFdoPnp(
 
 NTSTATUS
 SerenumDuplicateUnicodeString(
-  OUT PUNICODE_STRING Destination,
-  IN PUNICODE_STRING Source,
-  IN POOL_TYPE PoolType);
+	OUT PUNICODE_STRING Destination,
+	IN PUNICODE_STRING Source,
+	IN POOL_TYPE PoolType);
 
 NTSTATUS
 SerenumInitMultiSzString(
