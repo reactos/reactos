@@ -46,7 +46,7 @@
 #include <locale.h>
 #include <time.h>
 
-#ifdef _MSC_VER
+#ifndef __WINE__
 #include <malloc.h>	/* for alloca() */
 #endif
 
