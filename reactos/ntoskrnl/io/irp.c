@@ -366,31 +366,93 @@ STDCALL
 IoAllocateIrp(CCHAR StackSize,
               BOOLEAN ChargeQuota)
 {
-    PIRP Irp;
+    PIRP Irp = NULL;
     USHORT Size = IoSizeOfIrp(StackSize);
-
-    /* Check if we shoudl charge quota */
-    if (ChargeQuota)
+    PKPRCB Prcb;
+    ULONG Flags = 0;
+    PNPAGED_LOOKASIDE_LIST List;
+    PP_NPAGED_LOOKASIDE_NUMBER ListType = LookasideSmallIrpList;
+    
+    /* Figure out which Lookaside List to use */
+    if ((StackSize <= 8) && (ChargeQuota == FALSE))
     {
-        /* Irp = ExAllocatePoolWithQuotaTag(NonPagedPool,IoSizeOfIrp(StackSize), TAG_IRP); */
-        /* FIXME */
-        Irp = ExAllocatePoolWithTag(NonPagedPool,
-                                    Size,
-                                    TAG_IRP);
+        DPRINT("Using lookaside, %d\n", StackSize);
+        /* Set Fixed Size Flag */
+        Flags = IRP_ALLOCATED_FIXED_SIZE;
+        
+        /* See if we should use big list */
+        if (StackSize != 1)
+        {
+            DPRINT("Using large lookaside\n");
+            Size = IoSizeOfIrp(8);
+            ListType = LookasideLargeIrpList;
+        }
+        
+        /* Get the PRCB */
+        Prcb = KeGetCurrentPrcb();
+        
+        /* Get the P List First */
+        List = (PNPAGED_LOOKASIDE_LIST)Prcb->PPLookasideList[ListType].P;
+        
+        /* Attempt allocation */
+        List->L.TotalAllocates++;
+        DPRINT("Total allocates: %d\n", List->L.TotalAllocates);
+        Irp = (PIRP)InterlockedPopEntrySList(&List->L.ListHead);
+        DPRINT("Alloc attempt on CPU list: %p\n", Irp);
+        
+        /* Check if the P List failed */
+        if (!Irp)
+        {
+            /* Let the balancer know */
+            List->L.AllocateMisses++;
+            DPRINT("Total misses: %d\n", List->L.AllocateMisses);
+            
+            /* Try the L List */
+            List = (PNPAGED_LOOKASIDE_LIST)Prcb->PPLookasideList[ListType].L;
+            List->L.TotalAllocates++;
+            Irp = (PIRP)InterlockedPopEntrySList(&List->L.ListHead);
+            DPRINT("Alloc attempt on SYS list: %p\n", Irp);
+        }
+    }
+    
+    /* Check if we have to use the pool */
+    if (!Irp)
+    {
+        DPRINT("Using pool\n");
+        /* Did we try lookaside and fail? */
+        if (Flags & IRP_ALLOCATED_FIXED_SIZE) List->L.AllocateMisses++;
+        
+        /* Check if we shoudl charge quota */
+        if (ChargeQuota)
+        {
+            /* Irp = ExAllocatePoolWithQuotaTag(NonPagedPool, Size, TAG_IRP); */
+            /* FIXME */
+            Irp = ExAllocatePoolWithTag(NonPagedPool, Size, TAG_IRP);
+        }
+        else
+        {
+            /* Allocate the IRP With no Quota charge */
+            Irp = ExAllocatePoolWithTag(NonPagedPool, Size, TAG_IRP);
+        }
+        
+        /* Make sure it was sucessful */
+        if (!Irp) return(NULL);    
     }
     else
     {
-        /* Allocate the IRP With no Quota charge */
-        Irp = ExAllocatePoolWithTag(NonPagedPool,
-                                    Size,
-                                    TAG_IRP);
+        /* We have an IRP from Lookaside */
+        Flags |= IRP_LOOKASIDE_ALLOCATION;
     }
-
-    /* Make sure it was sucessful */
-    if (Irp==NULL) return(NULL);
-
+   
+    /* Set Flag */
+    if (ChargeQuota) Flags |= IRP_QUOTA_CHARGED;
+    
     /* Now Initialize it */
+    DPRINT("irp allocated\n");
     IoInitializeIrp(Irp, Size, StackSize);
+    
+    /* Set the Allocation Flags */
+    Irp->AllocationFlags = Flags;
 
     /* Return it */
     return Irp;
@@ -430,7 +492,7 @@ IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
             StartingOffset,IoStatusBlock);
 
     /* Allocate IRP */
-    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize,TRUE))) return Irp;
+    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE))) return Irp;
 
     /* Get the Stack */
     StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -580,7 +642,7 @@ IoBuildDeviceIoControlRequest (ULONG IoControlCode,
            InternalDeviceIoControl,Event,IoStatusBlock);
 
     /* Allocate IRP */
-    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize,TRUE))) return Irp;
+    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE))) return Irp;
 
     /* Get the Stack */
     StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -1177,8 +1239,59 @@ VOID
 STDCALL
 IoFreeIrp(PIRP Irp)
 {
-    /* Free the pool memory associated with it */
-    ExFreePoolWithTag(Irp, TAG_IRP);
+    PNPAGED_LOOKASIDE_LIST List;
+    PP_NPAGED_LOOKASIDE_NUMBER ListType =  LookasideSmallIrpList;
+    PKPRCB Prcb;
+    
+    /* If this was a pool alloc, free it with the pool */
+    if (!(Irp->AllocationFlags & IRP_ALLOCATED_FIXED_SIZE))
+    {
+        /* Free it */
+        DPRINT("Freeing pool IRP\n");
+        ExFreePool(Irp);
+    }
+    else
+    {
+        DPRINT("Freeing Lookaside IRP\n");
+        
+        /* Check if this was a Big IRP */
+        if (Irp->StackCount != 1)
+        {
+            DPRINT("Large IRP\n");
+            ListType = LookasideLargeIrpList;
+        }
+        
+        /* Get the PRCB */
+        Prcb = KeGetCurrentPrcb();
+        
+        /* Use the P List */
+        List = (PNPAGED_LOOKASIDE_LIST)Prcb->PPLookasideList[ListType].P;
+        List->L.TotalFrees++;
+        
+        /* Check if the Free was within the Depth or not */
+        if (ExQueryDepthSList(&List->L.ListHead) >= List->L.Depth)
+        {
+            /* Let the balancer know */
+            List->L.FreeMisses++;
+            
+            /* Use the L List */
+            List = (PNPAGED_LOOKASIDE_LIST)Prcb->PPLookasideList[ListType].L;
+            List->L.TotalFrees++;
+
+            /* Check if the Free was within the Depth or not */
+            if (ExQueryDepthSList(&List->L.ListHead) >= List->L.Depth)
+            {            
+                /* All lists failed, use the pool */
+                List->L.FreeMisses++;
+                ExFreePool(Irp);
+            }
+        }
+        
+        /* The free was within dhe Depth */
+        InterlockedPushEntrySList(&List->L.ListHead, (PSINGLE_LIST_ENTRY)Irp);
+    }
+    
+    DPRINT("Free done\n");
 }
 
 /*
@@ -1324,7 +1437,7 @@ IoMakeAssociatedIrp(PIRP Irp,
    PIRP AssocIrp;
 
    /* Allocate the IRP */
-   AssocIrp = IoAllocateIrp(StackSize,FALSE);
+   AssocIrp = IoAllocateIrp(StackSize, FALSE);
    if (AssocIrp == NULL) return NULL;
 
    /* Set the Flags */

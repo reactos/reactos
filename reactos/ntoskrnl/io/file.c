@@ -210,7 +210,7 @@ IopDeleteFile(PVOID ObjectBody)
         KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
 
         /* Allocate an IRP */
-        Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+        Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
 
         /* Set it up */
         Irp->UserEvent = &Event;
@@ -329,7 +329,7 @@ IopSecurityFile(PVOID ObjectBody,
     }
 
     /* Allocate the IRP */
-    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
 
     /* Set the IRP */
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
@@ -498,7 +498,7 @@ IopCloseFile(PVOID ObjectBody,
     KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
 
     /* Allocate an IRP */
-    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
 
     /* Set it up */
     Irp->UserEvent = &Event;
@@ -1149,7 +1149,7 @@ IoQueryFileInformation(IN PFILE_OBJECT FileObject,
     }
 
     /* Allocate the IRP */
-    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
 
     /* Set the IRP */
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
@@ -1586,7 +1586,7 @@ NtFlushBuffersFile(IN  HANDLE FileHandle,
     }
 
     /* Allocate the IRP */
-    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE)))
+    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE)))
     {
         ObDereferenceObject(FileObject);
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -1699,7 +1699,7 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
    DeviceObject = FileObject->DeviceObject;
 
 
-   Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+   Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
    if (Irp==NULL)
      {
  ObDereferenceObject(FileObject);
@@ -1795,7 +1795,7 @@ NtLockFile(IN HANDLE   FileHandle,
   DeviceObject = IoGetRelatedDeviceObject(FileObject);
 
   Irp = IoAllocateIrp(DeviceObject->StackSize,
-        TRUE);
+        FALSE);
   if (Irp == NULL)
   {
     Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -2123,7 +2123,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     }
 
     /* Allocate the IRP */
-    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE)))
+    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE)))
     {
         ObDereferenceObject(FileObject);
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -2321,7 +2321,7 @@ NtQueryInformationFile(HANDLE FileHandle,
     }
 
     /* Allocate the IRP */
-    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE)))
+    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE)))
     {
         ObDereferenceObject(FileObject);
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -2775,7 +2775,7 @@ NtSetInformationFile(HANDLE FileHandle,
     }
 
     /* Allocate the IRP */
-    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE)))
+    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE)))
     {
         ObDereferenceObject(FileObject);
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -2900,7 +2900,7 @@ NtUnlockFile(IN  HANDLE FileHandle,
   DeviceObject = IoGetRelatedDeviceObject(FileObject);
 
   Irp = IoAllocateIrp(DeviceObject->StackSize,
-        TRUE);
+        FALSE);
   if (Irp == NULL)
   {
     Status = STATUS_INSUFFICIENT_RESOURCES;
