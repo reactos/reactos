@@ -65,8 +65,8 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Make System Disk...", -1	/*TODO*/
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "Connect &Network Drive" ,			252
-		MENUITEM "&Disconnect Network Drive" ,		253
+		MENUITEM "Connect &Network Drive" ,			ID_CONNECT_NETWORK_DRIVE
+		MENUITEM "&Disconnect Network Drive" ,		ID_DISCONNECT_NETWORK_DRIVE
 		MENUITEM SEPARATOR
 		MENUITEM "Share as..." ,			254
 		MENUITEM "&Remove Share..." ,			255

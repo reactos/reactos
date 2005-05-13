@@ -60,8 +60,8 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Systeemdisk maken...", -1	/*@@ */
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "Verbinding &maken met netwerkchijf"  ,     252
-		MENUITEM "Verbinding &verbreken met netwerkschijf" , 253
+		MENUITEM "Verbinding &maken met netwerkchijf"  ,     ID_CONNECT_NETWORK_DRIVE
+		MENUITEM "Verbinding &verbreken met netwerkschijf" , ID_DISCONNECT_NETWORK_DRIVE
 		MENUITEM SEPARATOR
 		MENUITEM "Schijf &delen..." ,         254
 		MENUITEM "Delen &ongedaan maken..." , 255

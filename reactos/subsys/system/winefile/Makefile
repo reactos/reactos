@@ -28,7 +28,8 @@ TARGET_SDKLIBS = \
 	comdlg32.a \
 	ole32.a \
 	oleaut32.a \
-	shell32.a
+	shell32.a \
+	mpr.a
 
 TARGET_GCCLIBS := uuid
 

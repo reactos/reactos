@@ -2000,6 +2000,14 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 					}
 					break;}
 
+				case ID_CONNECT_NETWORK_DRIVE:
+					WNetConnectionDialog(hwnd, RESOURCETYPE_DISK);
+					break;
+
+				case ID_DISCONNECT_NETWORK_DRIVE:
+					WNetDisconnectDialog(hwnd, RESOURCETYPE_DISK);
+					break;
+
 				case ID_HELP:
 					WinHelp(hwnd, RS(b1,IDS_WINEFILE), HELP_INDEX, 0);
 					break;

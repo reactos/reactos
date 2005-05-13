@@ -63,8 +63,8 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Vytvoшit systemovэ disk...", -1	/*TODO*/
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "Pшipojit &sнќovй zaшнzenн" ,			252
-		MENUITEM "&Odpojit &sнќovй zaшнzenн" ,		253
+		MENUITEM "Pшipojit &sнќovй zaшнzenн" ,			ID_CONNECT_NETWORK_DRIVE
+		MENUITEM "&Odpojit &sнќovй zaшнzenн" ,		ID_DISCONNECT_NETWORK_DRIVE
 		MENUITEM SEPARATOR
 		MENUITEM "Sdнlet jako..." ,			254
 		MENUITEM "&Odstranit sdнlenн..." ,			255

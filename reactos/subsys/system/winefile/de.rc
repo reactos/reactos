@@ -61,8 +61,8 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "...",			-1	/*TODO*/
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "Netzwerklaufwerk &verbinden..." ,			252
-		MENUITEM "Netzwerklaufwerk &trennen..." ,		253
+		MENUITEM "Netzwerklaufwerk &verbinden..." ,			ID_CONNECT_NETWORK_DRIVE
+		MENUITEM "Netzwerklaufwerk &trennen..." ,		ID_DISCONNECT_NETWORK_DRIVE
 		MENUITEM SEPARATOR
 		MENUITEM "F&reigeben als..." ,			254
 		MENUITEM "Freigabe been&den..." ,			255

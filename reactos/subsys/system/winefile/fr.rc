@@ -64,8 +64,8 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Créer un disque *système...", -1	/*@@ */
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "Connecter un lecteur &réseau" ,			252
-		MENUITEM "&Déconnecter un lecteur réseau" ,		253
+		MENUITEM "Connecter un lecteur &réseau" ,			ID_CONNECT_NETWORK_DRIVE
+		MENUITEM "&Déconnecter un lecteur réseau" ,		ID_DISCONNECT_NETWORK_DRIVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Partager..." ,			254
 		MENUITEM "Cesser de parta&ger" ,			255

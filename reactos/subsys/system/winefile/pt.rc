@@ -63,8 +63,8 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Gerar disco de sistema...", -1	/*@@ */
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "Conecta&r unidade de rede" ,			252
-		MENUITEM "&Desconectar unidade de rede" ,		253
+		MENUITEM "Conecta&r unidade de rede" ,			ID_CONNECT_NETWORK_DRIVE
+		MENUITEM "&Desconectar unidade de rede" ,		ID_DISCONNECT_NETWORK_DRIVE
 		MENUITEM SEPARATOR
 		MENUITEM "C&ompartilhar como..." ,			254
 		MENUITEM "&Remover compartilhamento..." ,			255
@@ -191,8 +191,8 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Gerar disco de sistema...", -1	/*@@ */
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "Conecta&r unidade de rede" ,			252
-		MENUITEM "&Desconectar unidade de rede" ,		253
+		MENUITEM "Conecta&r unidade de rede" ,			ID_CONNECT_NETWORK_DRIVE
+		MENUITEM "&Desconectar unidade de rede" ,		ID_DISCONNECT_NETWORK_DRIVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Partilhar como..." ,			254
 		MENUITEM "&Remover partilha..." ,			255

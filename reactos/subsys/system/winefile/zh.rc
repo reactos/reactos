@@ -61,8 +61,8 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "建立系统盘（&M）...", -1	/*@@ */
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "连接网络驱动器（&N）" ,			252
-		MENUITEM "断开网络驱动器连接（&D）" ,		253
+		MENUITEM "连接网络驱动器（&N）" ,			ID_CONNECT_NETWORK_DRIVE
+		MENUITEM "断开网络驱动器连接（&D）" ,		ID_DISCONNECT_NETWORK_DRIVE
 		MENUITEM SEPARATOR
 		MENUITEM "共享为..." ,			254
 		MENUITEM "删除共享（&R）..." ,			255

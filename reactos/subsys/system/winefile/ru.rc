@@ -60,8 +60,8 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Создать системный диск...", -1	/*@@ */
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "Подклю&чить сетевой диск" ,			252
-		MENUITEM "Отк&лючить сетевой диск" ,		253
+		MENUITEM "Подклю&чить сетевой диск" ,			ID_CONNECT_NETWORK_DRIVE
+		MENUITEM "Отк&лючить сетевой диск" ,		ID_DISCONNECT_NETWORK_DRIVE
 		MENUITEM SEPARATOR
 		MENUITEM "Сделать о&бщим как..." ,			254
 		MENUITEM "&Закрыть общий доступ..." ,			255

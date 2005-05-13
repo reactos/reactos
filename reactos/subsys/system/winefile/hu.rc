@@ -64,8 +64,8 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Rendszerlemez készítése...", -1	/*@@ */
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "&Hálózati meghajtó csatlakoztatása" ,			252
-		MENUITEM "Hálózati meghajtó leválasztása" ,		253
+		MENUITEM "&Hálózati meghajtó csatlakoztatása" ,			ID_CONNECT_NETWORK_DRIVE
+		MENUITEM "Hálózati meghajtó leválasztása" ,		ID_DISCONNECT_NETWORK_DRIVE
 		MENUITEM SEPARATOR
 		MENUITEM "Megosztás..." ,			254
 		MENUITEM "Megosztás &megszüntetése..." ,			255

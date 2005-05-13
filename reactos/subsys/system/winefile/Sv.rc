@@ -64,8 +64,8 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Skapa systemdisk...", -1	/*TODO*/
 #endif
 		MENUITEM SEPARATOR
-        MENUITEM "Anslut &Nätverksenhet",      252
-        MENUITEM "&Koppla ifrån Nätverksenhet",   253
+        MENUITEM "Anslut &Nätverksenhet",      ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Koppla ifrån Nätverksenhet",   ID_DISCONNECT_NETWORK_DRIVE
         MENUITEM SEPARATOR
         MENUITEM "Dela ut...",                 254
         MENUITEM "&Ta bort utdelning...",            255
