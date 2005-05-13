@@ -70,7 +70,7 @@ ExAcquireResourceSharedLite@8
 @ExAcquireRundownProtectionEx@8
 ExAcquireSharedStarveExclusive@8
 ExAcquireSharedWaitForExclusive@8
-@ExAllocateFromPagedLookasideList@4=@ExiAllocateFromPagedLookasideList@4
+ExAllocateFromPagedLookasideList@4=ExiAllocateFromPagedLookasideList@4
 ExAllocatePool@8
 ExAllocatePoolWithQuota@8
 ExAllocatePoolWithQuotaTag@12

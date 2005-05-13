@@ -141,15 +141,6 @@ IopInitIoCompletionImplementation(VOID)
     ExIoCompletionType->OkayToClose = NULL;
     ExIoCompletionType->Create = NULL;
     ExIoCompletionType->DuplicationNotify = NULL;
-
-    /* Initialize the Lookaside List we'll use for packets */
-    ExInitializeNPagedLookasideList(&IoCompletionPacketLookaside,
-                                    NULL,
-                                    NULL,
-                                    0,
-                                    sizeof(IO_COMPLETION_PACKET),
-                                    IOC_TAG,
-                                    0);
 }
 
 NTSTATUS

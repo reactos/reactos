@@ -800,15 +800,15 @@ ExAllocateFromNPagedLookasideList (
 {
 	PVOID Entry;
 
-	Lookaside->TotalAllocates++;
-	Entry = ExInterlockedPopEntrySList (&Lookaside->ListHead,
-	                                    &Lookaside->Obsoleted);
+	Lookaside->L.TotalAllocates++;
+	Entry = InterlockedPopEntrySList(&Lookaside->L.ListHead);
+    
 	if (Entry == NULL)
 	{
-		Lookaside->AllocateMisses++;
-		Entry = (Lookaside->Allocate)(Lookaside->Type,
-		                              Lookaside->Size,
-		                              Lookaside->Tag);
+		Lookaside->L.AllocateMisses++;
+		Entry = (Lookaside->L.Allocate)(Lookaside->L.Type,
+		                                Lookaside->L.Size,
+		                                Lookaside->L.Tag);
 	}
 
   return Entry;
@@ -820,12 +820,13 @@ ExAllocateFromPagedLookasideList(
 {
   PVOID Entry;
 
-  Lookaside->TotalAllocates++;
-  Entry = InterlockedPopEntrySList(&Lookaside->ListHead);
+  Lookaside->L.TotalAllocates++;
+  Entry = InterlockedPopEntrySList(&Lookaside->L.ListHead);
   if (Entry == NULL) {
-    Lookaside->AllocateMisses++;
-    Entry = (Lookaside->Allocate)(Lookaside->Type,
-      Lookaside->Size, Lookaside->Tag);
+    Lookaside->L.AllocateMisses++;
+    Entry = (Lookaside->L.Allocate)(Lookaside->L.Type,
+                                    Lookaside->L.Size, 
+                                    Lookaside->L.Tag);
   }
   return Entry;
 }
@@ -866,17 +867,16 @@ ExFreeToNPagedLookasideList (
 	IN	PVOID			Entry
 	)
 {
-	Lookaside->TotalFrees++;
-	if (ExQueryDepthSList (&Lookaside->ListHead) >= Lookaside->Depth)
+	Lookaside->L.TotalFrees++;
+	if (ExQueryDepthSList (&Lookaside->L.ListHead) >= Lookaside->L.Depth)
 	{
-		Lookaside->FreeMisses++;
-		(Lookaside->Free)(Entry);
+		Lookaside->L.FreeMisses++;
+		(Lookaside->L.Free)(Entry);
 	}
 	else
 	{
-		ExInterlockedPushEntrySList (&Lookaside->ListHead,
-		                             (PSINGLE_LIST_ENTRY)Entry,
-		                             &Lookaside->Obsoleted);
+		InterlockedPushEntrySList(&Lookaside->L.ListHead,
+                                  (PSINGLE_LIST_ENTRY)Entry);
 	}
 }
 
@@ -885,12 +885,12 @@ ExFreeToPagedLookasideList(
   IN PPAGED_LOOKASIDE_LIST  Lookaside,
   IN PVOID  Entry)
 {
-  Lookaside->TotalFrees++;
-  if (ExQueryDepthSList(&Lookaside->ListHead) >= Lookaside->Depth) {
-    Lookaside->FreeMisses++;
-    (Lookaside->Free)(Entry);
+  Lookaside->L.TotalFrees++;
+  if (ExQueryDepthSList(&Lookaside->L.ListHead) >= Lookaside->L.Depth) {
+    Lookaside->L.FreeMisses++;
+    (Lookaside->L.Free)(Entry);
   } else {
-    InterlockedPushEntrySList(&Lookaside->ListHead, (PSLIST_ENTRY)Entry);
+    InterlockedPushEntrySList(&Lookaside->L.ListHead, (PSLIST_ENTRY)Entry);
   }
 }
 
