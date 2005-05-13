@@ -29,7 +29,7 @@ LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
 IDM_WINEFILE MENU FIXED IMPURE
 {
 	POPUP "&Arkiv"  {
-        MENUITEM "&Öppna\tEnter",                101
+        MENUITEM "&Öppna\tEnter",                ID_ACTIVATE
         MENUITEM "&Flytta...\tF7",                ID_FILE_MOVE
         MENUITEM "&Kopiera...\tF8",                107
         MENUITEM "&I urklipp...\tF9",        118

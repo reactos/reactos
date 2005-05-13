@@ -29,7 +29,7 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 IDM_WINEFILE MENU FIXED IMPURE
 {
 	POPUP "&Fichier"  {
-		MENUITEM "&Ouvrir\tEntrée" ,			101
+		MENUITEM "&Ouvrir\tEntrée" ,			ID_ACTIVATE
 		MENUITEM "&Déplacer...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Copier...\tF8" ,			107
 		MENUITEM "P&resse-Papiers...\tF9" ,		118

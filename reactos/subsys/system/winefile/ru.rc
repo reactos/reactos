@@ -25,8 +25,8 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 IDM_WINEFILE MENU FIXED IMPURE
 {
 	POPUP "&Файл"  {
-		MENUITEM "&Открыть\tEnter" ,			101
-		MENUITEM "&Переместить...\tF7" , 			106
+		MENUITEM "&Открыть\tEnter" ,			ID_ACTIVATE
+		MENUITEM "&Переместить...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Копировать...\tF8" ,			107
 		MENUITEM "&В буфер обмена...\tF9" ,		118
 		MENUITEM "&Удалить\tDel" ,			108

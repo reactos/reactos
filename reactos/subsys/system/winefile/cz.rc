@@ -28,7 +28,7 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 IDM_WINEFILE MENU FIXED IMPURE
 {
 	POPUP "&Soubor"  {
-		MENUITEM "&Otevøít\tEnter" ,			101
+		MENUITEM "&Otevøít\tEnter" ,			ID_ACTIVATE
 		MENUITEM "&Pøesunout...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Kopírovat...\tF8" ,			107
 		MENUITEM "&Ve schránce...\tF9" ,		118

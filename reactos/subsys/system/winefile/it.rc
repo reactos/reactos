@@ -29,7 +29,7 @@ LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 IDM_WINEFILE MENU FIXED IMPURE
 {
 	POPUP "&File"  {
-		MENUITEM "&Apri\tInvio" ,			101
+		MENUITEM "&Apri\tInvio" ,			ID_ACTIVATE
 		MENUITEM "&Sposta...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Copia...\tF8" ,			107
 		MENUITEM "&Negli Appunti...\tF9" ,		118

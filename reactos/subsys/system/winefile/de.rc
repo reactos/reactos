@@ -30,7 +30,7 @@ LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 IDM_WINEFILE MENU FIXED IMPURE
 {
 	POPUP "&Datei"  {
-		MENUITEM "Ö&ffnen\tEingabetaste" ,			101
+		MENUITEM "Ö&ffnen\tEingabetaste" ,			ID_ACTIVATE
 		MENUITEM "&Verschieben...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Kopieren...\tF8" ,			107
 		MENUITEM "&In Zwischenablage...\tF9" ,		118

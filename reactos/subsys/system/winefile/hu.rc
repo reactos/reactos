@@ -29,8 +29,8 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 IDM_WINEFILE MENU FIXED IMPURE
 {
 	POPUP "&Fájl"  {
-		MENUITEM "&Megynitás\tEnter" ,			101
-		MENUITEM "Át&helyezés...\tF7" , 			106
+		MENUITEM "&Megynitás\tEnter" ,			ID_ACTIVATE
+		MENUITEM "Át&helyezés...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Másolás...\tF8" ,			107
 		MENUITEM "&Vágólapon...\tF9" ,		118
 		MENUITEM "&Törlés\tDel" ,			108

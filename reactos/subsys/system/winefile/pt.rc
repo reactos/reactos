@@ -28,7 +28,7 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 IDM_WINEFILE MENU FIXED IMPURE
 {
 	POPUP "&Arquivo"  {
-		MENUITEM "A&brir\tEnter" ,			101
+		MENUITEM "A&brir\tEnter" ,			ID_ACTIVATE
 		MENUITEM "&Mover...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Copiar...\tF8" ,			107
 		MENUITEM "&In Clipboard...\tF9" ,		118
@@ -156,7 +156,7 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 IDM_WINEFILE MENU FIXED IMPURE
 {
 	POPUP "&Ficheiro"  {
-		MENUITEM "A&brir\tEnter" ,			101
+		MENUITEM "A&brir\tEnter" ,			ID_ACTIVATE
 		MENUITEM "&Mover...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Copiar...\tF8" ,			107
 		MENUITEM "&Na Area de Transferencia...\tF9" ,		118

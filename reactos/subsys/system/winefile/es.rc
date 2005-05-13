@@ -26,7 +26,7 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 IDM_WINEFILE MENU FIXED IMPURE
 {
 	POPUP "&Archivo"  {
-		MENUITEM "&Abrir\tEnter" ,			101
+		MENUITEM "&Abrir\tEnter" ,			ID_ACTIVATE
 		MENUITEM "Mo&ver...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Copiar...\tF8" ,			107
 		MENUITEM "E&n portapapeles...\tF9" ,		118

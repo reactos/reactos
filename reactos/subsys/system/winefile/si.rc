@@ -26,8 +26,8 @@ LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 IDM_WINEFILE MENU FIXED IMPURE
 {
 	POPUP "&File"  {
-		MENUITEM "&Open\tEnter" ,			101
-		MENUITEM "&Move...\tF7" , 			106
+		MENUITEM "&Open\tEnter" ,			ID_ACTIVATE
+		MENUITEM "&Move...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Copy...\tF8" ,			107
 		MENUITEM "&In Clipboard...\tF9" ,		118
 		MENUITEM "&Delete\tDel" ,			108
