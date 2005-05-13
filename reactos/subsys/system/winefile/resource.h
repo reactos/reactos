@@ -102,6 +102,7 @@
 #define IDS_COL_LINKS					1216
 #define IDS_COL_ATTR					1217
 #define IDS_COL_SEC						1218
+#define IDS_FREE_SPACE_FMT				1219
 
 
 /* range for drive bar command ids: 0x9000..0x90FF */

@@ -207,4 +207,6 @@ STRINGTABLE
 	IDS_COL_LINKS	"Links"
 	IDS_COL_ATTR	"Attribute"
 	IDS_COL_SEC		"Sicherheit"
+
+	IDS_FREE_SPACE_FMT	"%s von %s frei"
 }
