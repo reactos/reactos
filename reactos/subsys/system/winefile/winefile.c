@@ -188,13 +188,13 @@ int swprintf(wchar_t* buffer, const wchar_t* fmt, ...)
 }
 
 
-#define LOCAL_ALLOC(s) HeapAlloc(GetProcessHeap(), 0, s)
-#define LOCAL_FREE(p) HeapFree(GetProcessHeap(), 0, p)
+#define TMP_ALLOC(s) HeapAlloc(GetProcessHeap(), 0, s)
+#define TMP_FREE(p) HeapFree(GetProcessHeap(), 0, p)
 
 #else
 
-#define LOCAL_ALLOC(s) alloca(s)
-#define LOCAL_FREE(p)
+#define TMP_ALLOC(s) alloca(s)
+#define TMP_FREE(p)
 
 #endif
 
@@ -837,7 +837,7 @@ HICON extract_icon(IShellFolder* folder, LPCITEMIDLIST pidl)
 }
 
 
-static Entry* find_entry_shell(Entry* dir, LPITEMIDLIST pidl)
+static Entry* find_entry_shell(Entry* dir, LPCITEMIDLIST pidl)
 {
 	Entry* entry;
 
@@ -874,7 +874,7 @@ static Entry* read_tree_shell(Root* root, LPITEMIDLIST pidl, SORT_ORDER sortOrde
 		if (!pidl->mkid.cb)
 			break;
 
-		 /* copy first element of item idlist	-> could be replaced by SHBindToParent() */
+		 /* copy first element of item idlist */
 		next_pidl = (*Globals.iMalloc->lpVtbl->Alloc)(Globals.iMalloc, pidl->mkid.cb+sizeof(USHORT));
 		memcpy(next_pidl, pidl, pidl->mkid.cb);
 		((LPITEMIDLIST)((LPBYTE)next_pidl+pidl->mkid.cb))->mkid.cb = 0;
@@ -1208,7 +1208,7 @@ static void SortDirectory(Entry* dir, SORT_ORDER sortOrder)
 		len++;
 
 	if (len) {
-		array = (Entry**) LOCAL_ALLOC(len*sizeof(Entry*));
+		array = (Entry**) TMP_ALLOC(len*sizeof(Entry*));
 
 		p = array;
 		for(entry=dir->down; entry; entry=entry->next)
@@ -1224,7 +1224,7 @@ static void SortDirectory(Entry* dir, SORT_ORDER sortOrder)
 
 		(*p)->next = 0;
 
-		LOCAL_FREE(array);
+		TMP_FREE(array);
 	}
 }
 
