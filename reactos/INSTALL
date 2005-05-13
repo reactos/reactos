@@ -7,67 +7,72 @@ ReactOS from http://www.reactos.com.
 
 2. Building ReactOS
 
-To build from Windows run 'make' (wihout the quotes) from the top directory.
-To build from unix, edit rules.mak and change the PREFIX variable to the
-correct value for your cross-compiler. Run 'export HOST=mingw32-linux' to
-tell the ReactOS build system that it is building ReactOS on a linux machine.
-Now run 'make'.
+2.1 Building the binaries
+
+To build ReactOS run 'make' (wihout the quotes) if you are building on Linux
+or 'mingw32-make' if you are building on Windows (or ReactOS) from the top
+directory.
+
+
+2.2 Building a bootable CD image
+
+To build a bootable CD image run 'make bootcd' (wihout the quotes) if you are
+building on Linux or 'mingw32-make bootcd' if you are building on Windows (or
+ReactOS) from the top directory. This will create a CD image with a filename,
+ReactOS.iso, in the top directory.
 
 
 3. Installation
 
-The system can only be installed on the first partition on the first harddisk.
-The partition must be formatted as FAT16 or FAT32. The system can only be
-started from DOS and not from a Windows DOS-prompt.
+ReactOS can only be installed on a machine that has a FAT16 or FAT32 partition
+as the active (bootable) partition. The partition on which ReactOS is to be
+installed (which may or may not be the bootable partition) must also be
+formatted as FAT16 or FAT32. ReactOS Setup can format the partitions if
+needed.
 
-ReactOS can be installed from the source distribution or from the binary
+ReactOS can be installed from the source distribution or from the bootable CD
 distribution. The two ways to install ReactOS are explained below.
 
 
 3.1 Installation from sources
 
-To install ReactOS after building it, type 'make install'. This will create
-the directory 'reactos' in the top directory. Copy this directory to the root
-of your first partition on your first harddisk. This is usually c:\ on a
-Windows machine.
+If you don't have an existing ReactOS installation you want to upgrade, then
+build a bootable CD as described above. Burn the CD image, boot from it, and
+follow the instructions to install ReactOS.
 
-If you don't want to copy the files manually every time you run a 'make install',
-you can specify the directory where the files are to be copied to during
-installation.
+If you have an existing ReactOS installation you want to upgrade, then to
+install ReactOS after building it, type 'make install' or
+'mingw32-make install'. This will create the directory 'reactos' in the top
+directory. Copy the contents of this directory over the existing installation.
 
-In rules.mak find the variable INSTALL_DIR and change the assigned value to the
-name of the directory where the files are to be copied to. If you are using
-Windows this could be:
+If you don't want to copy the files manually every time you run a
+'make install' or 'mingw32-make install', then you can specify the directory
+where the files are to be copied to during installation.
 
-    INSTALL_DIR = c:\reactos
+Set the ROS_INSTALL environment variable. If you are on Windows this could be
+done by:
 
-If you are on linux this could be:
+  set ROS_INSTALL=c:\reactos
 
-    INSTALL_DIR = /mnt/windows/reactos
+If you are on Linux this could be done by:
 
-Save the changes to rules.mak and run 'make install' to install the files to
-the new location. If you don't want to change rules.mak, you can specify the
-installtion directory when invoking make. Run
-'make INSTALL_DIR=c:\reactos install' to install to c:\reactos.
+  export ROS_INSTALL=/mnt/windows/reactos
 
-
-3.2 Installation from binany distribution
-
-To install ReactOS from the binary distribution, extract the archive contents
-to c:\reactos. Remember to extract the files with full paths.
+Now run 'make install' or 'mingw32-make install' to install the files to the
+new location.
 
 
-4. Booting ReactOS
+3.2 Installation from bootable CD distribution
 
-Startup in DOS mode. 'cd' to c:\reactos and type 'boot' and press <enter>.
-A simple shell is started where you can use simple commands like 'cd' and 'dir'.
+To install ReactOS from the bootable CD distribution, extract the archive
+contents. Then burn the CD image, boot from it, and follow instructions.
 
 
 5. Help
 
 If you run into problems or have suggestions for making ReactOS better, please
-surf to the address below and subscribe to one or more of the mailing lists.
+visit the address below and subscribe to one or more of the mailing lists.
 
-http://www.reactos.com/index.php?tab=discussion&section=lists
+http://www.reactos.com/en/content/view/full/66
 
 ReactOS Development Team
