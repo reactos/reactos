@@ -43,6 +43,7 @@
 #define ID_EXECUTE						105
 #define ID_FILE_MOVE					106
 #define ID_FILE_EXIT					115
+#define	ID_FORMAT_DISK					203
 #define	ID_CONNECT_NETWORK_DRIVE		252
 #define	ID_DISCONNECT_NETWORK_DRIVE		253
 #define ID_VIEW_NAME					401

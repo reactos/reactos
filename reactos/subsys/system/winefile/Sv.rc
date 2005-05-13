@@ -59,7 +59,7 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "&Kopiera disk...",               201
         MENUITEM "&Namnge disk...",              202
         MENUITEM SEPARATOR
-        MENUITEM "&Formatera disk...",             203
+        MENUITEM "&Formatera disk...",             ID_FORMAT_DISK
 #ifdef _WIN95
 		MENUITEM "&Skapa systemdisk...", -1	/*TODO*/
 #endif

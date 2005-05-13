@@ -59,7 +59,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Lemez &másolása..." ,			201
 		MENUITEM "&Lemezcimke..." ,			202
 		MENUITEM SEPARATOR
-		MENUITEM "&Formatálás..." ,			203
+		MENUITEM "&Formatálás..." ,			ID_FORMAT_DISK
 #ifdef _WIN95
 		MENUITEM "&Rendszerlemez készítése...", -1	/*@@ */
 #endif

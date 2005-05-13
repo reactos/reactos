@@ -58,7 +58,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Copiar disco..." ,			201
 		MENUITEM "&Nomear disco..." ,			202
 		MENUITEM SEPARATOR
-		MENUITEM "&Formatar disco..." ,			203
+		MENUITEM "&Formatar disco..." ,			ID_FORMAT_DISK
 #ifdef _WIN95
 		MENUITEM "&Gerar disco de sistema...", -1	/*@@ */
 #endif
@@ -186,7 +186,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Copiar disco..." ,			201
 		MENUITEM "&Nomear disco..." ,			202
 		MENUITEM SEPARATOR
-		MENUITEM "&Formatar disco..." ,			203
+		MENUITEM "&Formatar disco..." ,			ID_FORMAT_DISK
 #ifdef _WIN95
 		MENUITEM "&Gerar disco de sistema...", -1	/*@@ */
 #endif

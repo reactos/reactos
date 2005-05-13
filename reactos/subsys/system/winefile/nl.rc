@@ -55,7 +55,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Disk &kopiëren..." ,          201
 		MENUITEM "Disklabel maken..." ,			202
 		MENUITEM SEPARATOR
-		MENUITEM "Disk &formatteren..." ,       203
+		MENUITEM "Disk &formatteren..." ,       ID_FORMAT_DISK
 #ifdef _WIN95
 		MENUITEM "Systeemdisk maken...", -1	/*@@ */
 #endif

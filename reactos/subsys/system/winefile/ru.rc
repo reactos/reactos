@@ -55,7 +55,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Копировать диск..." ,			201
 		MENUITEM "&Метка тома..." ,			202
 		MENUITEM SEPARATOR
-		MENUITEM "&Форматировать..." ,			203
+		MENUITEM "&Форматировать..." ,			ID_FORMAT_DISK
 #ifdef _WIN95
 		MENUITEM "&Создать системный диск...", -1	/*@@ */
 #endif

@@ -59,7 +59,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Copia Disco..." ,			201
 		MENUITEM "&Etichetta Disco..." ,			202
 		MENUITEM SEPARATOR
-		MENUITEM "&Formatta Disco..." ,			203
+		MENUITEM "&Formatta Disco..." ,			ID_FORMAT_DISK
 #ifdef _WIN95
 		MENUITEM "&Crea Disco di Sistema...", -1	/*@@ */
 #endif

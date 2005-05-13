@@ -56,7 +56,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "复制（&C）..." ,			201
 		MENUITEM "命名（&L）..." ,			202
 		MENUITEM SEPARATOR
-		MENUITEM "格式化（&）..." ,			203
+		MENUITEM "格式化（&）..." ,			ID_FORMAT_DISK
 #ifdef _WIN95
 		MENUITEM "建立系统盘（&M）...", -1	/*@@ */
 #endif

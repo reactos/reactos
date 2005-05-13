@@ -260,6 +260,17 @@ static void display_error(HWND hwnd, DWORD error)
 }
 
 
+/* display network error message using WNetGetLastError() */
+static void display_network_error(HWND hwnd)
+{
+	TCHAR msg[BUFFER_LEN], provider[BUFFER_LEN], b2[BUFFER_LEN];
+	DWORD error;
+
+	if (WNetGetLastError(&error, msg, BUFFER_LEN, provider, BUFFER_LEN) == NO_ERROR)
+		MessageBox(hwnd, msg, RS(b2,IDS_WINEFILE), MB_OK);
+}
+
+
 /* allocate and initialise a directory entry */
 static Entry* alloc_entry()
 {
@@ -2000,13 +2011,30 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 					}
 					break;}
 
-				case ID_CONNECT_NETWORK_DRIVE:
-					WNetConnectionDialog(hwnd, RESOURCETYPE_DISK);
-					break;
+				case ID_CONNECT_NETWORK_DRIVE: {
+					DWORD ret = WNetConnectionDialog(hwnd, RESOURCETYPE_DISK);
+					if (ret!=NO_ERROR && ret!=(DWORD)-1)
+						if (ret == ERROR_EXTENDED_ERROR)
+							display_network_error(hwnd);
+						else
+							display_error(hwnd, ret);
+					break;}
 
-				case ID_DISCONNECT_NETWORK_DRIVE:
-					WNetDisconnectDialog(hwnd, RESOURCETYPE_DISK);
-					break;
+				case ID_DISCONNECT_NETWORK_DRIVE: {
+					DWORD ret = WNetDisconnectDialog(hwnd, RESOURCETYPE_DISK);
+					if (ret!=NO_ERROR && ret!=(DWORD)-1)
+						if (ret == ERROR_EXTENDED_ERROR)
+							display_network_error(hwnd);
+						else
+							display_error(hwnd, ret);
+					break;}
+
+				case ID_FORMAT_DISK: {
+					UINT sem_org = SetErrorMode(0); /* Get the current Error Mode settings. */
+					SetErrorMode(sem_org & ~SEM_FAILCRITICALERRORS); /* Force O/S to handle */
+					SHFormatDrive(hwnd, 0 /* A: */, SHFMT_ID_DEFAULT, 0);
+					SetErrorMode(sem_org); /* Put it back the way it was. */
+					break;}
 
 				case ID_HELP:
 					WinHelp(hwnd, RS(b1,IDS_WINEFILE), HELP_INDEX, 0);

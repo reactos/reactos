@@ -56,7 +56,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Datenträger &kopieren..." ,			201
 		MENUITEM "Datenträger &benennen..." ,			202
 		MENUITEM SEPARATOR
-		MENUITEM "Datenträger &formatieren..." ,			203
+		MENUITEM "Datenträger &formatieren..." ,			ID_FORMAT_DISK
 #ifdef _WIN95
 		MENUITEM "...",			-1	/*TODO*/
 #endif
