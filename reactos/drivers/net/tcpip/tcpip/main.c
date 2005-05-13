@@ -9,7 +9,7 @@
  */
 #include "precomp.h"
 
-#define NDEBUG
+//#define NDEBUG
 
 #ifndef NDEBUG
 DWORD DebugTraceLevel = DEBUG_ULTRA & ~(DEBUG_LOCK | DEBUG_PBUFFER);

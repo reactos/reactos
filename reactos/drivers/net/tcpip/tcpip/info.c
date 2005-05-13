@@ -16,8 +16,11 @@ TDI_STATUS InfoCopyOut( PCHAR DataOut, UINT SizeOut,
 			PNDIS_BUFFER ClientBuf, PUINT ClientBufSize ) {
     UINT RememberedCBSize = *ClientBufSize;
     *ClientBufSize = SizeOut;
+
+    /* The driver returns success even when it couldn't fit every available
+     * byte. */
     if( RememberedCBSize < SizeOut )
-	return TDI_BUFFER_TOO_SMALL;
+	return TDI_SUCCESS;
     else {
 	CopyBufferToBufferChain( ClientBuf, 0, (PCHAR)DataOut, SizeOut );
 	return TDI_SUCCESS;
@@ -88,11 +91,14 @@ TDI_STATUS InfoTdiQueryListEntities(PNDIS_BUFFER Buffer,
     Size = EntityCount * sizeof(TDIEntityID);
     *BufferSize = Size;
 
+    TI_DbgPrint(DEBUG_INFO,("BufSize: %d, NeededSize: %d\n", BufSize, Size));
+    
     if (BufSize < Size)
     {
 	TcpipReleaseSpinLock( &EntityListLock, OldIrql );
-	/* The buffer is too small to contain requested data */
-	return TDI_BUFFER_TOO_SMALL;
+	/* The buffer is too small to contain requested data, but we return
+         * success anyway, as we did everything we wanted. */
+	return TDI_SUCCESS;
     }
 
     /* Return entity list -- Copy only the TDIEntityID parts. */
