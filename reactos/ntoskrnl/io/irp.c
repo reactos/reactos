@@ -187,12 +187,10 @@ IopCompleteRequest(PKAPC Apc,
         else if (FileObject && FileObject->CompletionContext)
         {
             /* Call the IO Completion Port if we have one, instead */
-            IoSetIoCompletion(FileObject->CompletionContext->Port,
-                              FileObject->CompletionContext->Key,
-                              Irp->Overlay.AsynchronousParameters.UserApcContext,
-                              Irp->IoStatus.Status,
-                              Irp->IoStatus.Information,
-                              FALSE);
+            Irp->Tail.CompletionKey = FileObject->CompletionContext->Key;
+            Irp->Tail.Overlay.PacketType = IrpCompletionPacket;
+            KeInsertQueue(FileObject->CompletionContext->Port,
+                          &Irp->Tail.Overlay.ListEntry);
             Irp = NULL;
         }
     }
@@ -369,7 +367,7 @@ IoAllocateIrp(CCHAR StackSize,
     PIRP Irp = NULL;
     USHORT Size = IoSizeOfIrp(StackSize);
     PKPRCB Prcb;
-    ULONG Flags = 0;
+    UCHAR Flags = 0;
     PNPAGED_LOOKASIDE_LIST List;
     PP_NPAGED_LOOKASIDE_NUMBER ListType = LookasideSmallIrpList;
     

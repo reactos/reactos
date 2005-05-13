@@ -794,12 +794,17 @@ typedef struct _IRP
 	     };
 	     struct _ETHREAD* Thread;
 	     PCHAR AuxiliaryBuffer;
-	     LIST_ENTRY ListEntry;
-	     struct _IO_STACK_LOCATION* CurrentStackLocation;
+         struct {
+	         LIST_ENTRY ListEntry;
+             union {
+	             struct _IO_STACK_LOCATION* CurrentStackLocation;
+                 ULONG PacketType;
+             };
+         };
 	     PFILE_OBJECT OriginalFileObject;
 	  } Overlay;
 	KAPC Apc;
-	ULONG CompletionKey;
+	PVOID CompletionKey;
      } Tail;
 } IRP, *PIRP;
 

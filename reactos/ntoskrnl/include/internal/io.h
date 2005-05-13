@@ -43,12 +43,24 @@
 
 struct _DEVICE_OBJECT_POWER_EXTENSION;
 
-typedef struct _IO_COMPLETION_PACKET{
+/* This is like the IRP Overlay so we can optimize its insertion */
+typedef struct _IO_COMPLETION_PACKET
+{
+   struct {
+       LIST_ENTRY ListEntry;
+       union {
+           struct _IO_STACK_LOCATION *CurrentStackLocation;
+           ULONG PacketType;
+       };
+   };
    PVOID             Key;
    PVOID             Context;
    IO_STATUS_BLOCK   IoStatus;
-   LIST_ENTRY        ListEntry;
 } IO_COMPLETION_PACKET, *PIO_COMPLETION_PACKET;
+
+/* Packet Types */
+#define IrpCompletionPacket     0x1
+#define IrpMiniCompletionPacket 0x2
 
 typedef struct _DEVOBJ_EXTENSION {
    CSHORT Type;
