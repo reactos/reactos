@@ -2013,28 +2013,32 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 
 				case ID_CONNECT_NETWORK_DRIVE: {
 					DWORD ret = WNetConnectionDialog(hwnd, RESOURCETYPE_DISK);
-					if (ret!=NO_ERROR && ret!=(DWORD)-1)
+					if (ret!=NO_ERROR && ret!=(DWORD)-1) {
 						if (ret == ERROR_EXTENDED_ERROR)
 							display_network_error(hwnd);
 						else
 							display_error(hwnd, ret);
+					}
 					break;}
 
 				case ID_DISCONNECT_NETWORK_DRIVE: {
 					DWORD ret = WNetDisconnectDialog(hwnd, RESOURCETYPE_DISK);
-					if (ret!=NO_ERROR && ret!=(DWORD)-1)
+					if (ret!=NO_ERROR && ret!=(DWORD)-1) {
 						if (ret == ERROR_EXTENDED_ERROR)
 							display_network_error(hwnd);
 						else
 							display_error(hwnd, ret);
+					}
 					break;}
 
+#ifndef __MINGW32__	/* SHFormatDrive missing in MinGW (as of 13.5.2005) */
 				case ID_FORMAT_DISK: {
 					UINT sem_org = SetErrorMode(0); /* Get the current Error Mode settings. */
 					SetErrorMode(sem_org & ~SEM_FAILCRITICALERRORS); /* Force O/S to handle */
 					SHFormatDrive(hwnd, 0 /* A: */, SHFMT_ID_DEFAULT, 0);
 					SetErrorMode(sem_org); /* Put it back the way it was. */
 					break;}
+#endif
 
 				case ID_HELP:
 					WinHelp(hwnd, RS(b1,IDS_WINEFILE), HELP_INDEX, 0);
