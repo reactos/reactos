@@ -562,7 +562,6 @@ MingwModuleHandler::GenerateGccIncludeParameters () const
 	return parameters;
 }
 
-
 string
 MingwModuleHandler::GenerateCompilerParametersFromVector ( const vector<CompilerFlag*>& compilerFlags ) const
 {
@@ -618,8 +617,7 @@ void
 MingwModuleHandler::GenerateMacro (
 	const char* assignmentOperation,
 	const string& macro,
-	const IfableData& data,
-	const vector<CompilerFlag*>* compilerFlags )
+	const IfableData& data )
 {
 	size_t i;
 
@@ -629,16 +627,13 @@ MingwModuleHandler::GenerateMacro (
 		macro.c_str(),
 		assignmentOperation );
 	
-	if ( compilerFlags != NULL )
+	string compilerParameters = GenerateCompilerParametersFromVector ( data.compilerFlags );
+	if ( compilerParameters.size () > 0 )
 	{
-		string compilerParameters = GenerateCompilerParametersFromVector ( *compilerFlags );
-		if ( compilerParameters.size () > 0 )
-		{
-			fprintf (
-				fMakefile,
-				" %s",
-				compilerParameters.c_str () );
-		}
+		fprintf (
+			fMakefile,
+			" %s",
+			compilerParameters.c_str () );
 	}
 
 	for ( i = 0; i < data.includes.size(); i++ )
@@ -668,21 +663,18 @@ void
 MingwModuleHandler::GenerateMacros (
 	const char* assignmentOperation,
 	const IfableData& data,
-	const vector<CompilerFlag*>* compilerFlags,
 	const vector<LinkerFlag*>* linkerFlags )
 {
 	size_t i;
 
-	if ( data.includes.size () > 0 || data.defines.size () > 0 )
+	if ( data.includes.size () > 0 || data.defines.size () > 0 || data.compilerFlags.size () > 0 )
 	{
 		GenerateMacro ( assignmentOperation,
 		                cflagsMacro,
-		                data,
-		                compilerFlags );
+		                data );
 		GenerateMacro ( assignmentOperation,
 		                windresflagsMacro,
-		                data,
-		                compilerFlags );
+		                data );
 	}
 	
 	if ( linkerFlags != NULL )
@@ -721,6 +713,7 @@ MingwModuleHandler::GenerateMacros (
 			|| rIf.data.includes.size()
 			|| rIf.data.libraries.size()
 			|| rIf.data.files.size()
+			|| rIf.data.compilerFlags.size()
 			|| rIf.data.ifs.size() )
 		{
 			fprintf (
@@ -731,7 +724,6 @@ MingwModuleHandler::GenerateMacros (
 			GenerateMacros (
 				"+=",
 				rIf.data,
-				NULL,
 				NULL );
 			fprintf ( 
 				fMakefile,
@@ -744,7 +736,6 @@ void
 MingwModuleHandler::GenerateObjectMacros (
 	const char* assignmentOperation,
 	const IfableData& data,
-	const vector<CompilerFlag*>* compilerFlags,
 	const vector<LinkerFlag*>* linkerFlags )
 {
 	size_t i;
@@ -794,6 +785,7 @@ MingwModuleHandler::GenerateObjectMacros (
 			|| rIf.data.includes.size()
 			|| rIf.data.libraries.size()
 			|| rIf.data.files.size()
+			|| rIf.data.compilerFlags.size()
 			|| rIf.data.ifs.size() )
 		{
 			fprintf (
@@ -804,7 +796,6 @@ MingwModuleHandler::GenerateObjectMacros (
 			GenerateObjectMacros (
 				"+=",
 				rIf.data,
-				NULL,
 				NULL );
 			fprintf ( 
 				fMakefile,
@@ -1531,7 +1522,6 @@ MingwModuleHandler::GenerateObjectMacro ()
 	GenerateObjectMacros (
 		"=",
 		module.non_if_data,
-		&module.compilerFlags,
 		&module.linkerFlags );
 
 	// future references to the macro will be to get its values
@@ -1561,7 +1551,6 @@ MingwModuleHandler::GenerateOtherMacros ()
 	GenerateMacros (
 		"=",
 		module.non_if_data,
-		&module.compilerFlags,
 		&module.linkerFlags );
 
 	if ( module.importLibrary )

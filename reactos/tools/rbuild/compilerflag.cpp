@@ -32,11 +32,6 @@ CompilerFlag::~CompilerFlag ()
 void
 CompilerFlag::Initialize ()
 {
-}
-
-void
-CompilerFlag::ProcessXML ()
-{
 	if (node.value.size () == 0)
 	{
 		throw InvalidBuildFileException (
@@ -44,4 +39,9 @@ CompilerFlag::ProcessXML ()
 			"<compilerflag> is empty." );
 	}
 	flag = node.value;
+}
+
+void
+CompilerFlag::ProcessXML ()
+{
 }

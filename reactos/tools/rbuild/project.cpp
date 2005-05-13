@@ -285,6 +285,15 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 			non_if_data.defines.push_back ( define );
 		subs_invalid = true;
 	}
+	else if ( e.name == "compilerflag" )
+	{
+		CompilerFlag* pCompilerFlag = new CompilerFlag ( *this, e );
+		if ( pIf )
+			pIf->data.compilerFlags.push_back ( pCompilerFlag );
+		else
+			non_if_data.compilerFlags.push_back ( pCompilerFlag );
+		subs_invalid = true;
+	}
 	else if ( e.name == "linkerflag" )
 	{
 		linkerFlags.push_back ( new LinkerFlag ( *this, e ) );

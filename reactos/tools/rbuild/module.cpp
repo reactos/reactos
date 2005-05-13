@@ -100,6 +100,8 @@ IfableData::~IfableData()
 		delete libraries[i];
 	for ( i = 0; i < properties.size(); i++ )
 		delete properties[i];
+	for ( i = 0; i < compilerFlags.size(); i++ )
+		delete compilerFlags[i];
 	for ( i = 0; i < ifs.size(); i++ )
 		delete ifs[i];
 }
@@ -117,6 +119,8 @@ void IfableData::ProcessXML ()
 		libraries[i]->ProcessXML ();
 	for ( i = 0; i < properties.size(); i++ )
 		properties[i]->ProcessXML ();
+	for ( i = 0; i < compilerFlags.size(); i++ )
+		compilerFlags[i]->ProcessXML ();
 	for ( i = 0; i < ifs.size (); i++ )
 		ifs[i]->ProcessXML ();
 }
@@ -390,7 +394,11 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	else if ( e.name == "compilerflag" )
 	{
-		compilerFlags.push_back ( new CompilerFlag ( project, this, e ) );
+		CompilerFlag* pCompilerFlag = new CompilerFlag ( project, this, e );
+		if ( pIf )
+			pIf->data.compilerFlags.push_back ( pCompilerFlag );
+		else
+			non_if_data.compilerFlags.push_back ( pCompilerFlag );
 		subs_invalid = true;
 	}
 	else if ( e.name == "linkerflag" )

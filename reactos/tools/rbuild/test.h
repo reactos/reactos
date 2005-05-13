@@ -97,6 +97,9 @@ class IfTest : public BaseTest
 {
 public:
 	void Run ();
+private:
+	void TestProjectIf ( Project& project );
+	void TestModuleIf ( Project& project );
 };
 
 

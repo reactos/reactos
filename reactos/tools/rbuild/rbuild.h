@@ -73,6 +73,7 @@ public:
 	std::vector<Define*> defines;
 	std::vector<Library*> libraries;
 	std::vector<Property*> properties;
+	std::vector<CompilerFlag*> compilerFlags;
 	std::vector<If*> ifs;
 
 	~IfableData();

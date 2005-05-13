@@ -310,7 +310,7 @@ Value:
 	None.
 
 Elements:
-	define, directory, file, if, include, property.
+	compilerflag, define, directory, file, if, include, property.
 
 
 Importlibrary element

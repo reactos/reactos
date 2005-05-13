@@ -109,15 +109,12 @@ private:
 	std::string GenerateLinkerParameters () const;
 	void GenerateMacro ( const char* assignmentOperation,
 	                     const std::string& macro,
-	                     const IfableData& data,
-	                     const std::vector<CompilerFlag*>* compilerFlags );
+	                     const IfableData& data );
 	void GenerateMacros ( const char* op,
 	                      const IfableData& data,
-	                      const std::vector<CompilerFlag*>* compilerFlags,
 	                      const std::vector<LinkerFlag*>* linkerFlags );
 	void GenerateObjectMacros ( const char* assignmentOperation,
 	                            const IfableData& data,
-	                            const std::vector<CompilerFlag*>* compilerFlags,
 	                            const std::vector<LinkerFlag*>* linkerFlags );
 	std::string GenerateGccIncludeParameters () const;
 	std::string GenerateGccParameters () const;

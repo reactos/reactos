@@ -393,6 +393,15 @@ MingwBackend::GenerateProjectCFlagsMacro ( const char* assignmentOperation,
 		fMakefile,
 		"PROJECT_CFLAGS %s",
 		assignmentOperation );
+	
+	for ( i = 0; i < data.compilerFlags.size(); i++ )
+	{
+		fprintf (
+			fMakefile,
+			" %s",
+			data.compilerFlags[i]->flag.c_str() );
+	}
+
 	for ( i = 0; i < data.includes.size(); i++ )
 	{
 		fprintf (
@@ -432,7 +441,7 @@ MingwBackend::GenerateGlobalCFlagsAndProperties (
 			prop.value.c_str() );
 	}
 
-	if ( data.includes.size() || data.defines.size() )
+	if ( data.includes.size() || data.defines.size() || data.compilerFlags.size() )
 	{
 		GenerateProjectCFlagsMacro ( assignmentOperation,
 		                             data );
@@ -443,6 +452,7 @@ MingwBackend::GenerateGlobalCFlagsAndProperties (
 		If& rIf = *data.ifs[i];
 		if ( rIf.data.defines.size()
 			|| rIf.data.includes.size()
+			|| rIf.data.compilerFlags.size()
 			|| rIf.data.ifs.size() )
 		{
 			fprintf (
