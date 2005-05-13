@@ -187,6 +187,15 @@ int swprintf(wchar_t* buffer, const wchar_t* fmt, ...)
 	return 0;
 }
 
+
+#define LOCAL_ALLOC(s) HeapAlloc(GetProcessHeap(), 0, s)
+#define LOCAL_FREE(p) HeapFree(GetProcessHeap(), 0, p)
+
+#else
+
+#define LOCAL_ALLOC(s) alloca(s)
+#define LOCAL_FREE(p)
+
 #endif
 
 
@@ -1199,7 +1208,7 @@ static void SortDirectory(Entry* dir, SORT_ORDER sortOrder)
 		len++;
 
 	if (len) {
-		array = (Entry**) alloca(len*sizeof(Entry*));
+		array = (Entry**) LOCAL_ALLOC(len*sizeof(Entry*));
 
 		p = array;
 		for(entry=dir->down; entry; entry=entry->next)
@@ -1214,6 +1223,8 @@ static void SortDirectory(Entry* dir, SORT_ORDER sortOrder)
 			p[0]->next = p[1];
 
 		(*p)->next = 0;
+
+		LOCAL_FREE(array);
 	}
 }
 
@@ -3415,7 +3426,7 @@ static BOOL pane_command(Pane* pane, UINT cmd)
 
 static IContextMenu2* s_pctxmenu2 = NULL;
 
-#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
+#ifndef __MINGW32__	/* IContextMenu3 missing in MinGW (as of 6.2.2005) */
 static IContextMenu3* s_pctxmenu3 = NULL;
 #endif
 
@@ -3423,7 +3434,7 @@ static void CtxMenu_reset()
 {
 	s_pctxmenu2 = NULL;
 
-#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
+#ifndef __MINGW32__	/* IContextMenu3 missing in MinGW (as of 6.2.2005) */
 	s_pctxmenu3 = NULL;
 #endif
 }
@@ -3434,7 +3445,7 @@ IContextMenu* CtxMenu_query_interfaces(IContextMenu* pcm1)
 
 	CtxMenu_reset();
 
-#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
+#ifndef __MINGW32__	/* IContextMenu3 missing in MinGW (as of 6.2.2005) */
 	if ((*pcm1->lpVtbl->QueryInterface)(pcm1, &IID_IContextMenu3, (void**)&pcm) == NOERROR)
 		s_pctxmenu3 = (LPCONTEXTMENU3)pcm;
 	else
@@ -3451,7 +3462,7 @@ IContextMenu* CtxMenu_query_interfaces(IContextMenu* pcm1)
 
 static BOOL CtxMenu_HandleMenuMsg(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
-#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
+#ifndef __MINGW32__	/* IContextMenu3 missing in MinGW (as of 6.2.2005) */
 	if (s_pctxmenu3) {
 		if (SUCCEEDED((*s_pctxmenu3->lpVtbl->HandleMenuMsg)(s_pctxmenu3, nmsg, wparam, lparam)))
 			return TRUE;
@@ -3811,7 +3822,7 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 
 		  case WM_MEASUREITEM:
 		  draw_menu_item:
-			if (!wparam)	// Is the message menu-related?
+			if (!wparam)	/* Is the message menu-related? */
 				if (CtxMenu_HandleMenuMsg(nmsg, wparam, lparam))
 					return TRUE;
 
@@ -3823,8 +3834,8 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 
 			break;
 
-#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
-		  case WM_MENUCHAR:	// only supported by IContextMenu3
+#ifndef __MINGW32__	/* IContextMenu3 missing in MinGW (as of 6.2.2005) */
+		  case WM_MENUCHAR:	/* only supported by IContextMenu3 */
 		   if (s_pctxmenu3) {
 			   LRESULT lResult = 0;
 
