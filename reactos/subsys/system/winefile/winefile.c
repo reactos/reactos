@@ -1645,6 +1645,7 @@ static INT_PTR CALLBACK DestinationDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam, 
 	switch(nmsg) {
 		case WM_INITDIALOG:
 			SetWindowLong(hwnd, GWL_USERDATA, lparam);
+			SetWindowText(GetDlgItem(hwnd, 201), (LPCTSTR)lparam);
 			return 1;
 
 		case WM_COMMAND: {
@@ -3713,9 +3714,11 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 
 				case ID_FILE_MOVE: {
 					TCHAR new_name[BUFFER_LEN], old_name[BUFFER_LEN];
-					int len;
+					int len, ret;
 
-					int ret = DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_SELECT_DESTINATION), hwnd, DestinationDlgProc, (LPARAM)new_name);
+					get_path(pane->cur, new_name);
+
+					ret = DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_SELECT_DESTINATION), hwnd, DestinationDlgProc, (LPARAM)new_name);
 					if (ret != IDOK)
 						break;
 
@@ -3723,12 +3726,10 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 						get_path(pane->cur->up, old_name);
 						len = lstrlen(old_name);
 
-						if (old_name[len-1]!='\\' && old_name[len-1]!='/') {
+						if (old_name[len-1]!='\\' && old_name[len-1]!='/')
 							old_name[len++] = '/';
-							old_name[len] = '\n';
-						}
 
-						lstrcpy(&old_name[len], new_name);
+						lstrcpy(old_name+len, new_name);
 						lstrcpy(new_name, old_name);
 					}
 
