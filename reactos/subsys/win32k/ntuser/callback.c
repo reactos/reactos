@@ -264,11 +264,11 @@ IntCallHookProc(INT HookId,
   PVOID ResultPointer;
   ULONG ResultLength;
   PHOOKPROC_CALLBACK_ARGUMENTS Common;
-  CBT_CREATEWNDW *CbtCreateWnd;
+  CBT_CREATEWNDW *CbtCreateWnd =NULL;
   PCHAR Extra;
-  PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra;
-  PUNICODE_STRING WindowName;
-  PUNICODE_STRING ClassName;
+  PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra ;
+  PUNICODE_STRING WindowName = NULL;
+  PUNICODE_STRING ClassName = NULL;
 
   ArgumentLength = sizeof(HOOKPROC_CALLBACK_ARGUMENTS) - sizeof(WCHAR)
                    + ModuleName->Length;
