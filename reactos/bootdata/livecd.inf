@@ -19,6 +19,9 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","Start",0x00010001,0x00000004
 ; Shell
 HKLM,"SYSTEM\Setup","CmdLine",0x00020000,"%SystemRoot%\explorer.exe"
 
+; Serial mouse driver
+HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","Start",0x00010001,0x00000001
+
 ; User Profile List
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList","ProfilesDirectory",0x00020000,"%SystemDrive%\Profiles"
