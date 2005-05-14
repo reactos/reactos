@@ -51,10 +51,10 @@
 static ULONG InternalDebugLevel = 0;
 
 static VOID
-SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension, 
+SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 	           PIRP NextIrp);
 
-static VOID 
+static VOID
 SpiStartIo(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 	   PIRP Irp);
 
@@ -247,7 +247,7 @@ ScsiPortCompleteRequest(IN PVOID HwDeviceExtension,
 
 
 
-      if (PathId == (UCHAR)SP_UNTAGGED || 
+      if (PathId == (UCHAR)SP_UNTAGGED ||
 	  (PathId == LunExtension->PathId && TargetId == (UCHAR)SP_UNTAGGED) ||
           (PathId == LunExtension->PathId && TargetId == LunExtension->TargetId && Lun == (UCHAR)SP_UNTAGGED) ||
           (PathId == LunExtension->PathId && TargetId == LunExtension->TargetId && Lun == LunExtension->Lun))
@@ -488,11 +488,11 @@ ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
       else
         {
 	  /*
-	   * The given virtual address is not within the range 
+	   * The given virtual address is not within the range
 	   * of the drivers uncached extension or srb extension.
 	   */
 	  /*
-	   * FIXME: 
+	   * FIXME:
 	   *   Check if the address is a sense info buffer of an active srb.
 	   */
 	  PhysicalAddress = MmGetPhysicalAddress(VirtualAddress);
@@ -799,7 +799,7 @@ ScsiPortInitialize(IN PVOID Argument1,
 
   DeviceExtensionSize = sizeof(SCSI_PORT_DEVICE_EXTENSION) +
     HwInitializationData->DeviceExtensionSize;
-  PortConfigSize = sizeof(PORT_CONFIGURATION_INFORMATION) + 
+  PortConfigSize = sizeof(PORT_CONFIGURATION_INFORMATION) +
     HwInitializationData->NumberOfAccessRanges * sizeof(ACCESS_RANGE);
 
 
@@ -1031,17 +1031,17 @@ ScsiPortInitialize(IN PVOID Argument1,
 		                           PortConfig,
 					   0);
 	    }
-	      
+
 	  /* Register an interrupt handler for this device */
 	  MappedIrq = HalGetInterruptVector(PortConfig->AdapterInterfaceType,
 					    PortConfig->SystemIoBusNumber,
 					    PortConfig->BusInterruptLevel,
 #if 1
-/* 
+/*
  * FIXME:
- *   Something is wrong in our interrupt conecting code. 
+ *   Something is wrong in our interrupt conecting code.
  *   The promise Ultra100TX driver returns 0 for BusInterruptVector
- *   and a nonzero value for BusInterruptLevel. The driver does only 
+ *   and a nonzero value for BusInterruptLevel. The driver does only
  *   work with this fix.
  */
 					    PortConfig->BusInterruptLevel,
@@ -1051,8 +1051,8 @@ ScsiPortInitialize(IN PVOID Argument1,
 					    &Dirql,
 					    &Affinity);
 	  DPRINT("AdapterInterfaceType %x, SystemIoBusNumber %x, BusInterruptLevel %x, BusInterruptVector %x\n",
-	          PortConfig->AdapterInterfaceType, PortConfig->SystemIoBusNumber, 
-		  PortConfig->BusInterruptLevel, PortConfig->BusInterruptVector); 
+	          PortConfig->AdapterInterfaceType, PortConfig->SystemIoBusNumber,
+		  PortConfig->BusInterruptLevel, PortConfig->BusInterruptVector);
 	  Status = IoConnectInterrupt(&DeviceExtension->Interrupt,
 				      ScsiPortIsr,
 				      DeviceExtension,
@@ -1102,7 +1102,7 @@ ScsiPortInitialize(IN PVOID Argument1,
 	      PortCapabilities->MaximumTransferLength =
 	        PortConfig->NumberOfPhysicalBreaks * PAGE_SIZE;
 	    }
-      
+
 	  PortCapabilities->MaximumPhysicalPages =
 	    PortCapabilities->MaximumTransferLength / PAGE_SIZE;
 	  PortCapabilities->SupportedAsynchronousEvents = 0; /* FIXME */
@@ -1728,7 +1728,7 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	  DPRINT("  IOCTL_SCSI_GET_DUMP_POINTERS\n");
 	  DumpPointers = (PDUMP_POINTERS)Irp->AssociatedIrp.SystemBuffer;
 	  DumpPointers->DeviceObject = DeviceObject;
-	  
+
 	  Irp->IoStatus.Information = sizeof(DUMP_POINTERS);
 	}
 	break;
@@ -1767,7 +1767,7 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   return(STATUS_SUCCESS);
 }
 
-static VOID 
+static VOID
 SpiAllocateSrbExtension(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 			PSCSI_REQUEST_BLOCK Srb)
 {
@@ -1775,17 +1775,17 @@ SpiAllocateSrbExtension(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 
   DPRINT("SpiAllocateSrbExtension\n");
 
-  DPRINT("DeviceExtension->VirtualAddress %x, DeviceExtension->SrbExtensionSize %x\n", 
+  DPRINT("DeviceExtension->VirtualAddress %x, DeviceExtension->SrbExtensionSize %x\n",
          DeviceExtension->VirtualAddress, DeviceExtension->SrbExtensionSize);
 
   Srb->SrbExtension = NULL;
   if (DeviceExtension->VirtualAddress != NULL &&
       DeviceExtension->SrbExtensionSize > 0)
     {
-      index = RtlFindClearBitsAndSet(&DeviceExtension->SrbExtensionAllocMap, 1, 0); 
+      index = RtlFindClearBitsAndSet(&DeviceExtension->SrbExtensionAllocMap, 1, 0);
       if (index != 0xffffffff)
         {
-	  DeviceExtension->CurrentSrbExtensions++;  
+	  DeviceExtension->CurrentSrbExtensions++;
           Srb->SrbExtension = DeviceExtension->VirtualAddress + index * DeviceExtension->SrbExtensionSize;
 	}
     }
@@ -1819,7 +1819,7 @@ ScsiPortStartPacket(IN OUT PVOID Context)
   PIO_STACK_LOCATION IrpStack;
 
   DPRINT("ScsiPortStartPacket(Context %x) called\n", Context);
-    
+
   Srb = (PSCSI_REQUEST_BLOCK)Context;
   Irp = (PIRP)Srb->OriginalRequest;
   IrpStack = IoGetCurrentIrpStackLocation(Irp);
@@ -1987,10 +1987,10 @@ SpiScanAdapter (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
   ULONG ActiveCount;
   PVOID* EventArray;
   PKWAIT_BLOCK WaitBlockArray;
-  
+
   DPRINT ("SpiScanAdapter() called\n");
 
-  MaxCount = DeviceExtension->PortConfig->NumberOfBuses * 
+  MaxCount = DeviceExtension->PortConfig->NumberOfBuses *
                DeviceExtension->PortConfig->MaximumNumberOfTargets;
 
   ScanDataArray = ExAllocatePool(NonPagedPool, MaxCount * (sizeof(SCSI_PORT_SCAN_ADAPTER) + sizeof(PVOID) + sizeof(KWAIT_BLOCK)));
@@ -2038,14 +2038,14 @@ SpiScanAdapter (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 	      DPRINT ("DeviceTypeQualifier %x\n", ((PINQUIRYDATA)Srb->DataBuffer)->DeviceTypeQualifier);
 
 	      if (NT_SUCCESS(ScanData->Status) &&
-		  (Srb->SrbStatus == SRB_STATUS_SUCCESS || 
-		   (Srb->SrbStatus == SRB_STATUS_DATA_OVERRUN && 
+		  (Srb->SrbStatus == SRB_STATUS_SUCCESS ||
+		   (Srb->SrbStatus == SRB_STATUS_DATA_OVERRUN &&
 		   /*
-		    * FIXME: 
-		    *   The NT 4.0 driver from an inic950 based scsi controller 
-		    *   returns only 4 byte of inquiry data, but the device name 
-		    *   is visible on NT 4.0. We must implement an other way 
-		    *   to get the complete inquiry data. 
+		    * FIXME:
+		    *   The NT 4.0 driver from an inic950 based scsi controller
+		    *   returns only 4 byte of inquiry data, but the device name
+		    *   is visible on NT 4.0. We must implement an other way
+		    *   to get the complete inquiry data.
 		    */
 		    Srb->DataTransferLength >= /*INQUIRYDATABUFFERSIZE*/4)) &&
 		  ((PINQUIRYDATA)Srb->DataBuffer)->DeviceTypeQualifier == 0)
@@ -2118,11 +2118,11 @@ SpiScanAdapter (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 				   NULL,
 				   WaitBlockArray);
 	}
-    } 
+    }
   while (ActiveCount > 0);
 
   ExFreePool(ScanDataArray);
- 
+
   DPRINT ("SpiScanAdapter() done\n");
 }
 
@@ -2146,7 +2146,7 @@ SpiGetInquiryData(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
   UnitInfo = (PSCSI_INQUIRY_DATA)
 	((PUCHAR)AdapterBusInfo + sizeof(SCSI_ADAPTER_BUS_INFO) +
 	 (sizeof(SCSI_BUS_DATA) * (AdapterBusInfo->NumberOfBuses - 1)));
-     
+
   for (Bus = 0; Bus < AdapterBusInfo->NumberOfBuses; Bus++)
     {
       AdapterBusInfo->BusData[Bus].InitiatorBusId =
@@ -2273,7 +2273,7 @@ ScsiPortInitSenseRequestSrb(PSCSI_REQUEST_BLOCK OriginalSrb)
   PCDB Cdb;
 
   Length = sizeof(SCSI_REQUEST_BLOCK) + sizeof(SENSE_DATA) + 32;
-  Srb = ExAllocatePoolWithTag(NonPagedPool, 
+  Srb = ExAllocatePoolWithTag(NonPagedPool,
                               Length,
 		              TAG('S', 'S', 'r', 'b'));
   if (Srb == NULL)
@@ -2293,10 +2293,10 @@ ScsiPortInitSenseRequestSrb(PSCSI_REQUEST_BLOCK OriginalSrb)
   Srb->TimeOutValue = 4;
 
   Srb->CdbLength = 6;
-  /* The DataBuffer must be located in contiguous physical memory if 
-   * the miniport driver uses dma for the sense info. The size of 
-   * the sense data is 18 byte. If the buffer starts at a 32 byte 
-   * boundary than is the buffer always in one memory page. 
+  /* The DataBuffer must be located in contiguous physical memory if
+   * the miniport driver uses dma for the sense info. The size of
+   * the sense data is 18 byte. If the buffer starts at a 32 byte
+   * boundary than is the buffer always in one memory page.
    */
   Srb->DataBuffer = (PVOID)ROUND_UP((ULONG_PTR)(Srb + 1), 32);
   Srb->DataTransferLength = sizeof(SENSE_DATA);
@@ -2731,8 +2731,8 @@ ByeBye:
   return Status;
 }
 
-static VOID 
-SpiRemoveActiveIrp(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension, 
+static VOID
+SpiRemoveActiveIrp(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 	           PIRP Irp,
 	           PIRP PrevIrp)
 {
@@ -2743,7 +2743,7 @@ SpiRemoveActiveIrp(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
   InterlockedDecrement((PLONG)&DeviceExtension->ActiveIrpCount);
   if (PrevIrp)
     {
-      InterlockedExchangePointer(&PrevIrp->Tail.Overlay.DriverContext[0], 
+      InterlockedExchangePointer(&PrevIrp->Tail.Overlay.DriverContext[0],
 	                         Irp->Tail.Overlay.DriverContext[0]);
     }
   else
@@ -2789,7 +2789,7 @@ SpiAddActiveIrp(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 }
 
 static VOID
-SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension, 
+SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 	           IN PIRP NextIrp)
 {
   /*
@@ -2806,7 +2806,7 @@ SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
    *   Irp->Tail.Overlay.DriverContext[2] -> sort key (from Srb->QueueSortKey)
    *   Irp->Tail.Overlay.DriverContext[3] -> current Srb (original or sense request)
    *   IoStack->Parameters.Scsi.Srb -> original Srb
-   *   
+   *
    * Irp is within the active irp list or while other processing:
    *   Srb->OriginalRequest -> Irp
    *   Irp->Tail.Overlay.DriverContext[0] -> next irp, DeviceExtension->NextIrp is head.
@@ -2836,7 +2836,7 @@ SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
   if (NextIrp)
     {
       Srb = NextIrp->Tail.Overlay.DriverContext[3];
-      /* 
+      /*
        * FIXME:
        *   Is this the right place to set this flag ?
        */
@@ -2859,15 +2859,15 @@ SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     }
 
   while (DeviceExtension->Flags & IRP_FLAG_COMPLETE ||
-         (((DeviceExtension->SrbExtensionSize == 0 || DeviceExtension->CurrentSrbExtensions < DeviceExtension->MaxSrbExtensions) && 
+         (((DeviceExtension->SrbExtensionSize == 0 || DeviceExtension->CurrentSrbExtensions < DeviceExtension->MaxSrbExtensions) &&
 	  DeviceExtension->PendingIrpCount > 0 &&
 	  (DeviceExtension->Flags & (IRP_FLAG_NEXT|IRP_FLAG_NEXT_LU) || DeviceExtension->NextIrp == NULL))))
     {
-      DPRINT ("RequestComplete %d, NextRequest %d, NextLuRequest %d, PendingIrpCount %d, ActiveIrpCount %d\n", 
-	      DeviceExtension->Flags & IRP_FLAG_COMPLETE ? 1 : 0, 
+      DPRINT ("RequestComplete %d, NextRequest %d, NextLuRequest %d, PendingIrpCount %d, ActiveIrpCount %d\n",
+	      DeviceExtension->Flags & IRP_FLAG_COMPLETE ? 1 : 0,
 	      DeviceExtension->Flags & IRP_FLAG_NEXT ? 1 : 0,
-	      DeviceExtension->Flags & IRP_FLAG_NEXT_LU ? 1 : 0, 
-	      DeviceExtension->PendingIrpCount, 
+	      DeviceExtension->Flags & IRP_FLAG_NEXT_LU ? 1 : 0,
+	      DeviceExtension->PendingIrpCount,
 	      DeviceExtension->ActiveIrpCount);
 
 
@@ -2910,7 +2910,7 @@ SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 	              DPRINT("ErrorCode: %x\n", SenseInfoBuffer->ErrorCode);
 	              DPRINT("SenseKey: %x\n", SenseInfoBuffer->SenseKey);
 	              DPRINT("SenseCode: %x\n", SenseInfoBuffer->AdditionalSenseCode);
-	      
+
 	              /* Copy sense data */
                       RtlCopyMemory(OriginalSrb->SenseInfoBuffer,
 		                    SenseInfoBuffer,
@@ -2967,7 +2967,7 @@ SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 		    }
 		  Irp = NextIrp;
 		  continue;
-		}	     
+		}
 	      PrevIrp = Irp;
 	      Irp = NextIrp;
 	    }
@@ -2984,7 +2984,7 @@ SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 	  KeAcquireSpinLockAtDpcLevel(&DeviceExtension->Lock);
         }
       if (DeviceExtension->Flags & (IRP_FLAG_NEXT|IRP_FLAG_NEXT_LU) &&
-          (DeviceExtension->SrbExtensionSize == 0 || DeviceExtension->CurrentSrbExtensions < DeviceExtension->MaxSrbExtensions)) 
+          (DeviceExtension->SrbExtensionSize == 0 || DeviceExtension->CurrentSrbExtensions < DeviceExtension->MaxSrbExtensions))
         {
 	  BOOLEAN StartThisRequest;
 	  ListEntry = DeviceExtension->PendingIrpListHead.Flink;
@@ -3005,7 +3005,7 @@ SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 		  LunExtension->Flags &= ~IRP_FLAG_NEXT_LU;
                   DeviceExtension->Flags &= ~IRP_FLAG_NEXT_LU;
 		}
-	      else if (DeviceExtension->Flags & IRP_FLAG_NEXT && 
+	      else if (DeviceExtension->Flags & IRP_FLAG_NEXT &&
 		       LunExtension->ActiveIrpCount == 0)
 	        {
 		  StartThisRequest = TRUE;
@@ -3028,7 +3028,7 @@ SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 		  Srb->OriginalRequest = Irp;
 		  SpiAllocateSrbExtension(DeviceExtension, Srb);
 
-                  InsertHeadList(&NextIrpListHead, (PLIST_ENTRY)&Irp->Tail.Overlay.DriverContext[0]);		   
+                  InsertHeadList(&NextIrpListHead, (PLIST_ENTRY)&Irp->Tail.Overlay.DriverContext[0]);
 		}
 	    }
 	}
@@ -3103,7 +3103,7 @@ SpiStartIo(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
       DPRINT1("Synchronization failed!\n");
       DPRINT1("Irp %x, Srb->Function %02x, Srb->Cdb[0] %02x, Srb->SrbStatus %02x\n", Irp, Srb->Function, Srb->Cdb[0], Srb->SrbStatus);
       ScsiPortNotification(RequestComplete,
-	                   &DeviceExtension->MiniPortDeviceExtension, 
+	                   &DeviceExtension->MiniPortDeviceExtension,
 			   Srb);
     }
 

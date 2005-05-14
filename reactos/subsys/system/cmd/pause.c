@@ -32,12 +32,11 @@
  *     specified.
  *
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 INT cmd_pause (LPTSTR cmd, LPTSTR param)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 #ifdef _DEBUG
 	DebugPrintf (_T("cmd_pause: \'%s\' : \'%s\')\n"), cmd, param);
@@ -45,8 +44,7 @@ INT cmd_pause (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_PAUSE_HELP1, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+		ConOutResPuts(STRING_PAUSE_HELP1);
 		return 0;
 	}
 

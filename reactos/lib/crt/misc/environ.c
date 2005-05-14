@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <internal/file.h>
-  
+
 #define NDEBUG
 #include <internal/debug.h>
 
@@ -19,7 +19,7 @@ unsigned int _osver = 0;
 unsigned int _winminor = 0;
 unsigned int _winmajor = 0;
 unsigned int _winver = 0;
- 
+
 
 char *_acmdln = NULL;        /* pointer to ascii command line */
 wchar_t *_wcmdln = NULL;     /* pointer to wide character command line */
@@ -29,7 +29,7 @@ char **_environ = NULL;      /* pointer to environment block */
 wchar_t **_wenviron = NULL;  /* pointer to environment block */
 char **__initenv = NULL;     /* pointer to initial environment block */
 wchar_t **__winitenv = NULL; /* pointer to initial environment block */
-#undef _pgmptr 
+#undef _pgmptr
 char *_pgmptr = NULL;        /* pointer to program name */
 int __app_type = 0; //_UNKNOWN_APP; /* application type */
 int __mb_cur_max = 1;
@@ -83,7 +83,7 @@ int BlockEnvToEnvironA(void)
       /* Add terminating NULL entry. */
       *envptr = NULL;
    }
-    
+
    FreeEnvironmentStringsA(environment_strings);
    return _environ ? 0 : -1;
 }
@@ -134,7 +134,7 @@ int BlockEnvToEnvironW(void)
       /* Add terminating NULL entry. */
       *envptr = NULL;
    }
-    
+
    FreeEnvironmentStringsW(environment_strings);
    return _wenviron ? 0 : -1;
 }
@@ -176,8 +176,8 @@ char **DuplicateEnvironment(char **original_environment, int wide)
             free(*newenvptr);
          free(newenv);
          return original_environment;
-      }      
-   }   
+      }
+   }
 
    return newenv;
 }

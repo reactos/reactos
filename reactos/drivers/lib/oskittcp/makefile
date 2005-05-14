@@ -62,13 +62,13 @@ REACTOS_OBJECTS = \
 TARGET_OBJECTS = $(FREEBSD_OBJECTS) $(REACTOS_OBJECTS)
 DEP_OBJECTS = $(TARGET_OBJECTS)
 
+TARGET_CFLAGS += -D__REACTOS__=1 -D__NTDRIVER__ -DKERNEL -I./include/freebsd -I./include/freebsd/sys/include -I./include/freebsd/src/sys -I./include/freebsd/dev/include -I./include/freebsd/net/include -I./include 
+
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
 
 include $(TOOLS_PATH)/depend.mk
-
-TARGET_CFLAGS += -D__REACTOS__=1 -D__NTDRIVER__ -DKERNEL -Iinclude/freebsd -Iinclude/freebsd/sys/include -Iinclude/freebsd/src/sys -Iinclude/freebsd/dev/include -Iinclude/freebsd/net/include -Iinclude 
 
 %/TAGS:
 	etags -o $(@D)/TAGS $(@D)/\*.c

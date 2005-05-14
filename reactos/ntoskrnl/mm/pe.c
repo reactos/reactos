@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pe.c
  * PURPOSE:         Loader for PE executables
- * 
+ *
  * PROGRAMMERS:     KJK::Hyperion <hackbunny@reactos.com>
  */
 
@@ -209,7 +209,7 @@ NTSTATUS NTAPI PeFmtCreateSection
  ASSERT(ImageSectionObject);
  ASSERT(ReadFileCb);
  ASSERT(AllocateSegmentsCb);
- 
+
  ASSERT(Intsafe_CanOffsetPointer(FileHeader, FileHeaderSize));
 
  ASSERT(FileHeaderSize >= sizeof(IMAGE_DOS_HEADER));
@@ -327,7 +327,7 @@ l_ReadHeaderFromFile:
   /* don't trust an invalid NT header */
   if(pinhNtHeader->Signature != IMAGE_NT_SIGNATURE)
    DIE(("The file isn't a PE executable, Signature is %X\n", pinhNtHeader->Signature));
-  
+
   if(!Intsafe_AddULong32(&cbOptHeaderOffsetSize, pidhDosHeader->e_lfanew, FIELD_OFFSET(IMAGE_NT_HEADERS32, OptionalHeader)))
    DIE(("The DOS stub is too large, e_lfanew is %X\n", pidhDosHeader->e_lfanew));
 
@@ -357,7 +357,7 @@ l_ReadHeaderFromFile:
   case IMAGE_NT_OPTIONAL_HDR32_MAGIC:
   case IMAGE_NT_OPTIONAL_HDR64_MAGIC:
    break;
-  
+
   default:
    DIE(("Unrecognized optional header, Magic is %X\n", piohOptHeader->Magic));
  }
@@ -677,10 +677,10 @@ l_ReadHeaderFromFile:
   {
    if(nCharacteristics & IMAGE_SCN_CNT_CODE)
     nCharacteristics |= IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ;
- 
+
    if(nCharacteristics & IMAGE_SCN_CNT_INITIALIZED_DATA)
     nCharacteristics |= IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE;
- 
+
    if(nCharacteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA)
     nCharacteristics |= IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE;
   }

@@ -94,7 +94,7 @@ IntIsScrollBarVisible(HWND hWnd, INT hBar)
   sbi.cbSize = sizeof(SCROLLBARINFO);
   if(!NtUserGetScrollBarInfo(hWnd, hBar, &sbi))
     return FALSE;
-  
+
   return !(sbi.rgstate[0] & STATE_SYSTEM_OFFSCREEN);
 }
 
@@ -111,7 +111,7 @@ UserHasWindowEdge(DWORD Style, DWORD ExStyle)
       return TRUE;
    Style &= WS_CAPTION;
    if (Style == WS_DLGFRAME || Style == WS_CAPTION)
-      return TRUE;      
+      return TRUE;
    return FALSE;
 }
 
@@ -144,7 +144,7 @@ UserHasMenu(HWND hWnd, ULONG Style)
    return (!(Style & WS_CHILD) && GetMenu(hWnd) != 0);
 }
 
-HICON 
+HICON
 UserGetWindowIcon(HWND hwnd)
 {
    HICON hIcon = 0;
@@ -170,7 +170,7 @@ BOOL
 UserDrawSysMenuButton(HWND hWnd, HDC hDC, LPRECT Rect, BOOL Down)
 {
    HICON WindowIcon;
-  
+
    if ((WindowIcon = UserGetWindowIcon(hWnd)))
    {
       return DrawIconEx(hDC, Rect->left + 2, Rect->top + 2, WindowIcon,
@@ -216,7 +216,7 @@ UserDrawCaptionButton(LPRECT Rect, DWORD Style, DWORD ExStyle, HDC hDC, BOOL bDo
          TempRect.right -= 1;
 
          DrawFrameControl(hDC, &TempRect, DFC_CAPTION,
-                          ((Style & WS_MINIMIZE) ? DFCS_CAPTIONRESTORE : DFCS_CAPTIONMIN) | 
+                          ((Style & WS_MINIMIZE) ? DFCS_CAPTIONRESTORE : DFCS_CAPTIONMIN) |
                           (bDown ? DFCS_PUSHED : 0) |
                           ((Style & WS_MINIMIZEBOX) ? 0 : DFCS_INACTIVE));
          break;
@@ -246,7 +246,7 @@ UserDrawCaptionButton(LPRECT Rect, DWORD Style, DWORD ExStyle, HDC hDC, BOOL bDo
          if (ExStyle & WS_EX_TOOLWINDOW)
          {
             TempRect.left = TempRect.right - GetSystemMetrics(SM_CXSMSIZE);
-            TempRect.bottom = TempRect.top + GetSystemMetrics(SM_CYSMSIZE) - 2;                  
+            TempRect.bottom = TempRect.top + GetSystemMetrics(SM_CYSMSIZE) - 2;
          }
          else
          {
@@ -305,7 +305,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
    {
       return 0;
    }
-   
+
    Parent = GetParent(hWnd);
    ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
    if (Active == -1)
@@ -341,7 +341,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
       SelectObject(hDC, GetSysColorBrush(COLOR_BTNSHADOW));
       PatBlt(hDC, CurrentRect.left, CurrentRect.top, CurrentRect.right - CurrentRect.left, 1, PATCOPY);
       PatBlt(hDC, CurrentRect.left, CurrentRect.top, 1, CurrentRect.bottom - CurrentRect.top, PATCOPY);
-      
+
       SelectObject(hDC, GetSysColorBrush(COLOR_BTNHIGHLIGHT));
       PatBlt(hDC, CurrentRect.left, CurrentRect.bottom - 1, CurrentRect.right - CurrentRect.left, 1, PATCOPY);
       PatBlt(hDC, CurrentRect.right - 1, CurrentRect.top, 1, CurrentRect.bottom - CurrentRect.top, PATCOPY);
@@ -349,7 +349,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
       InflateRect(&CurrentRect, -1, -1);
 #endif
    }
-    
+
    /* Firstly the "thick" frame */
    if ((Style & WS_THICKFRAME) && !(Style & WS_MINIMIZE))
    {
@@ -382,7 +382,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
    {
       DWORD Width = GetSystemMetrics(SM_CXBORDER);
       DWORD Height = GetSystemMetrics(SM_CYBORDER);
-  
+
       SelectObject(hDC, GetSysColorBrush(
          (ExStyle & (WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE)) ? COLOR_3DFACE :
          (ExStyle & WS_EX_STATICEDGE) ? COLOR_WINDOWFRAME :
@@ -409,7 +409,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
       DWORD CaptionFlags = DC_ICON | DC_TEXT | DC_BUTTONS;
       HPEN PreviousPen;
       BOOL Gradient = FALSE;
-      
+
       if(SystemParametersInfoW(SPI_GETGRADIENTCAPTIONS, 0, &Gradient, 0) && Gradient)
       {
         CaptionFlags |= DC_GRADIENT;
@@ -433,7 +433,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
          TempRect.bottom = TempRect.top + GetSystemMetrics(SM_CYCAPTION) - 1;
          CurrentRect.top += GetSystemMetrics(SM_CYCAPTION);
       }
-        
+
       DrawCaption(hWnd, hDC, &TempRect, CaptionFlags);
 
       /* Draw buttons */
@@ -458,7 +458,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
         SelectObject(hDC, PreviousPen);
       }
    }
-   
+
    if(!(Style & WS_MINIMIZE))
    {
      HMENU menu = GetMenu(hWnd);
@@ -469,18 +469,18 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
         TempRect.bottom = TempRect.top + (UINT)NtUserSetMenuBarHeight(menu, 0);
         CurrentRect.top += MenuDrawMenuBar(hDC, &TempRect, hWnd, FALSE);
      }
-     
+
      if (ExStyle & WS_EX_CLIENTEDGE)
      {
         DrawEdge(hDC, &CurrentRect, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
      }
-     
+
      /* Draw the scrollbars */
      if ((Style & WS_VSCROLL) && (Style & WS_HSCROLL) &&
          IntIsScrollBarVisible(hWnd, OBJID_VSCROLL) && IntIsScrollBarVisible(hWnd, OBJID_HSCROLL))
      {
         RECT ParentClientRect;
-        
+
         TempRect = CurrentRect;
         if (ExStyle & WS_EX_LEFTSCROLLBAR)
            TempRect.right = TempRect.left + GetSystemMetrics(SM_CXVSCROLL);
@@ -533,14 +533,14 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
       }
       Result |= WVR_VALIDRECTS;
    }
-    
+
    Style = GetWindowLongW(hWnd, GWL_STYLE);
    ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
-    
+
    if (!(Style & WS_MINIMIZE))
    {
       HMENU menu = GetMenu(hWnd);
-      
+
       if (UserHasWindowEdge(Style, ExStyle))
       {
          UserGetWindowBorders(Style, ExStyle, &WindowBorders, FALSE);
@@ -579,18 +579,18 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
          InflateRect(Rect, -2 * GetSystemMetrics(SM_CXBORDER),
             -2 * GetSystemMetrics(SM_CYBORDER));
       }
-      
+
       if(Style & (WS_VSCROLL | WS_HSCROLL))
       {
         SCROLLBARINFO sbi;
         SETSCROLLBARINFO ssbi;
-        
+
         sbi.cbSize = sizeof(SCROLLBARINFO);
         if((Style & WS_VSCROLL) && NtUserGetScrollBarInfo(hWnd, OBJID_VSCROLL, &sbi))
         {
           int i;
           LONG sx = Rect->right;
-          
+
           sx -= GetSystemMetrics(SM_CXVSCROLL);
           for(i = 0; i <= CCHILDREN_SCROLLBAR; i++)
             ssbi.rgstate[i] = sbi.rgstate[i];
@@ -604,12 +604,12 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
         }
         else
           Style &= ~WS_VSCROLL;
-        
+
         if((Style & WS_HSCROLL) && NtUserGetScrollBarInfo(hWnd, OBJID_HSCROLL, &sbi))
         {
           int i;
           LONG sy = Rect->bottom;
-          
+
           sy -= GetSystemMetrics(SM_CYHSCROLL);
           for(i = 0; i <= CCHILDREN_SCROLLBAR; i++)
             ssbi.rgstate[i] = sbi.rgstate[i];
@@ -655,7 +655,7 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
       Rect->right = Rect->left;
       Rect->bottom = Rect->top;
    }
-    
+
    return Result;
 }
 
@@ -681,14 +681,14 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
 
    GetWindowRect(hWnd, &WindowRect);
    if (!PtInRect(&WindowRect, Point))
-   {      
+   {
       return HTNOWHERE;
    }
    OrigWndRect = WindowRect;
-   
+
    if (UserHasWindowEdge(Style, ExStyle))
    {
-      LONG XSize, YSize; 
+      LONG XSize, YSize;
 
       UserGetWindowBorders(Style, ExStyle, &WindowBorders, FALSE);
       InflateRect(&WindowRect, -WindowBorders.cx, -WindowBorders.cy);
@@ -697,7 +697,7 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
       if (!PtInRect(&WindowRect, Point))
       {
          BOOL ThickFrame;
-         
+
          ThickFrame = (Style & WS_THICKFRAME);
          if (Point.y < WindowRect.top)
          {
@@ -794,20 +794,20 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
          return HTCAPTION;
       }
    }
-   
+
    if(!(Style & WS_MINIMIZE))
    {
      HMENU menu;
-     
+
      ClientPoint = Point;
      ScreenToClient(hWnd, &ClientPoint);
      GetClientRect(hWnd, &ClientRect);
-   
+
      if (PtInRect(&ClientRect, ClientPoint))
      {
         return HTCLIENT;
      }
-     
+
      if ((menu = GetMenu(hWnd)) && !(Style & WS_CHILD))
      {
         if (Point.x > 0 && Point.x < WindowRect.right && ClientPoint.y < 0)
@@ -846,7 +846,7 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
         TempRect.bottom = TempRect2.bottom;
         if(Parent)
           GetClientRect(Parent, &ParentRect);
-        if (PtInRect(&TempRect, Point) && HASSIZEGRIP(Style, ExStyle, 
+        if (PtInRect(&TempRect, Point) && HASSIZEGRIP(Style, ExStyle,
             GetWindowLongW(Parent, GWL_STYLE), OrigWndRect, ParentRect))
         {
            if ((ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
@@ -877,7 +877,7 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
         }
      }
    }
-  
+
    return HTNOWHERE;
 }
 
@@ -889,7 +889,7 @@ DefWndDoButton(HWND hWnd, WPARAM wParam)
    BOOL Pressed = TRUE, OldState;
    WPARAM SCMsg;
    ULONG ButtonType, Style;
-  
+
    Style = GetWindowLongW(hWnd, GWL_STYLE);
    switch (wParam)
    {
@@ -916,7 +916,7 @@ DefWndDoButton(HWND hWnd, WPARAM wParam)
          ASSERT(FALSE);
          return;
    }
-  
+
    /*
     * FIXME: Not sure where to do this, but we must flush the pending
     * window updates when someone clicks on the close button and at
@@ -929,12 +929,12 @@ DefWndDoButton(HWND hWnd, WPARAM wParam)
    UserDrawCaptionButtonWnd(hWnd, WindowDC, TRUE, ButtonType);
 
    SetCapture(hWnd);
-  
+
    for (;;)
    {
       if (GetMessageW(&Msg, 0, WM_MOUSEFIRST, WM_MOUSELAST) <= 0)
          break;
-    
+
       if (Msg.message == WM_LBUTTONUP)
          break;
 
@@ -946,7 +946,7 @@ DefWndDoButton(HWND hWnd, WPARAM wParam)
       if (Pressed != OldState)
          UserDrawCaptionButtonWnd(hWnd, WindowDC, Pressed, ButtonType);
    }
-  
+
    if (Pressed)
       UserDrawCaptionButtonWnd(hWnd, WindowDC, FALSE, ButtonType);
    ReleaseCapture();
@@ -1022,7 +1022,7 @@ LRESULT
 DefWndNCLButtonDblClk(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
   ULONG Style;
-  
+
   Style = GetWindowLongW(hWnd, GWL_STYLE);
   switch(wParam)
   {
@@ -1073,13 +1073,13 @@ DefWndTrackScrollBar(HWND hWnd, WPARAM wParam, POINT Point)
  * @implemented
  */
 BOOL STDCALL
-AdjustWindowRectEx(LPRECT lpRect, 
-		   DWORD dwStyle, 
-		   BOOL bMenu, 
+AdjustWindowRectEx(LPRECT lpRect,
+		   DWORD dwStyle,
+		   BOOL bMenu,
 		   DWORD dwExStyle)
 {
    SIZE BorderSize;
-   
+
    if (bMenu)
    {
       lpRect->top -= GetSystemMetrics(SM_CYMENU);
@@ -1150,7 +1150,7 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
 #endif
 
     Style = GetWindowLongW(hWnd, GWL_STYLE);
-    
+
     /* Windows behaves like this */
     Height = GetSystemMetrics(SM_CYCAPTION) - 1;
 
@@ -1177,13 +1177,13 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
           TRIVERTEX vert[2];
           COLORREF Colors[2];
           LONG xx;
-          
+
           r.right = (lprc->right - lprc->left);
           if (uFlags & DC_SMALLCAP)
             ButtonWidth = GetSystemMetrics(SM_CXSMSIZE) - 2;
           else
             ButtonWidth = GetSystemMetrics(SM_CXSIZE) - 2;
-          
+
           if (Style & WS_SYSMENU)
           {
             r.right -= 3 + ButtonWidth;
@@ -1196,10 +1196,10 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
               r.right -= 2;
             }
           }
-          
+
           Colors[0] = GetSysColor((uFlags & DC_ACTIVE) ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION);
           Colors[1] = GetSysColor((uFlags & DC_ACTIVE) ? COLOR_GRADIENTACTIVECAPTION : COLOR_GRADIENTINACTIVECAPTION);
-          
+
           if ((uFlags & DC_ICON) && (Style & WS_SYSMENU) && !(uFlags & DC_SMALLCAP))
           {
             OldBrush = SelectObject(MemDC, GetSysColorBrush(uFlags & DC_ACTIVE ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION));
@@ -1213,23 +1213,23 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
               r.left += xx;
             r.top ++;
           }
-          
+
           vert[0].x = r.left;
           vert[0].y = 0;
           vert[0].Red = GetRValue(Colors[0]) << 8;
           vert[0].Green = GetGValue(Colors[0]) << 8;
           vert[0].Blue = GetBValue(Colors[0]) << 8;
           vert[0].Alpha = 0;
-          
+
           vert[1].x = r.right;
           vert[1].y = lprc->bottom - lprc->top;
           vert[1].Red = GetRValue(Colors[1]) << 8;
           vert[1].Green = GetGValue(Colors[1]) << 8;
           vert[1].Blue = GetBValue(Colors[1]) << 8;
           vert[1].Alpha = 0;
-          
+
           GdiGradientFill(MemDC, vert, 2, &gcap, 1, GRADIENT_FILL_RECT_H);
-          
+
           if(OldBrush)
           {
             SelectObject(MemDC, OldBrush);
@@ -1250,7 +1250,7 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
             if (! PatBlt(MemDC, 0, 0, lprc->right - lprc->left, lprc->bottom - lprc->top, PATCOPY )) goto cleanup;
         }
     }
-    
+
     if ((uFlags & DC_ICON) && !(uFlags & DC_GRADIENT) && (Style & WS_SYSMENU) && !(uFlags & DC_SMALLCAP))
     {
         /* For some reason the icon isn't centered correctly... */
@@ -1301,14 +1301,14 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
 
     hOldFont = SelectObject(MemDC, hFont);
     if (! hOldFont) goto cleanup;
-    
+
     if (uFlags & DC_INBUTTON)
         OldTextColor = SetTextColor(MemDC, GetSysColor(uFlags & DC_ACTIVE ? COLOR_BTNTEXT : COLOR_GRAYTEXT));
     else
         OldTextColor = SetTextColor(MemDC, GetSysColor(uFlags & DC_ACTIVE ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT));
 
     DrawTextW(MemDC, buffer, wcslen(buffer), &r, DT_VCENTER | DT_END_ELLIPSIS);
-    
+
     SetTextColor(MemDC, OldTextColor);
   }
 

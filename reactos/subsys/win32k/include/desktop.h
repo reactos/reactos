@@ -9,7 +9,7 @@
 #include "window.h"
 
 extern PDESKTOP_OBJECT InputDesktop;
-extern HDESK InputDesktopHandle; 
+extern HDESK InputDesktopHandle;
 extern PWNDCLASS_OBJECT DesktopWindowClass;
 extern HDC ScreenDeviceContext;
 extern BOOL g_PaintDesktopVersion;
@@ -26,13 +26,13 @@ InitDesktopImpl(VOID);
 NTSTATUS FASTCALL
 CleanupDesktopImpl(VOID);
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 IntDesktopObjectCreate(PVOID ObjectBody,
                        PVOID Parent,
                        PWSTR RemainingPath,
                        struct _OBJECT_ATTRIBUTES* ObjectAttributes);
-                      
+
 VOID STDCALL
 IntDesktopObjectDelete(PVOID DeletedObject);
 

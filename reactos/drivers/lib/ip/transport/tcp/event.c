@@ -11,7 +11,7 @@
 #include "precomp.h"
 
 int TCPSocketState(void *ClientData,
-		   void *WhichSocket, 
+		   void *WhichSocket,
 		   void *WhichConnection,
 		   OSK_UINT NewState ) {
     PCONNECTION_ENDPOINT Connection = WhichConnection;
@@ -22,9 +22,9 @@ int TCPSocketState(void *ClientData,
 			   NewState & SEL_FIN     ? 'F' : 'f',
 			   NewState & SEL_ACCEPT  ? 'A' : 'a'));
 
-    TI_DbgPrint(DEBUG_TCP,("Called: NewState %x (Conn %x) (Change %x)\n", 
+    TI_DbgPrint(DEBUG_TCP,("Called: NewState %x (Conn %x) (Change %x)\n",
 			   NewState, Connection,
-			   Connection ? Connection->State ^ NewState : 
+			   Connection ? Connection->State ^ NewState :
 			   NewState));
 
     if( !Connection ) {
@@ -32,11 +32,11 @@ int TCPSocketState(void *ClientData,
 	Connection = FileFindConnectionByContext( WhichSocket );
 	if( !Connection )
 	    return 0;
-	else 
+	else
 	    TI_DbgPrint(DEBUG_TCP,("Found socket %x\n", Connection));
     }
 
-    TI_DbgPrint(MID_TRACE,("Connection signalled: %d\n", 
+    TI_DbgPrint(MID_TRACE,("Connection signalled: %d\n",
 			   Connection->Signalled));
 
     Connection->SignalState |= NewState;
@@ -84,15 +84,15 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
 	return OSK_EADDRNOTAVAIL;
     }
 
-    NdisStatus = AllocatePacketWithBuffer( &Packet.NdisPacket, NULL, 
+    NdisStatus = AllocatePacketWithBuffer( &Packet.NdisPacket, NULL,
 					   MaxLLHeaderSize + len );
-    
+
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
 	TI_DbgPrint(DEBUG_TCP, ("Error from NDIS: %08x\n", NdisStatus));
 	return STATUS_NO_MEMORY;
     }
 
-    GetDataPtr( Packet.NdisPacket, MaxLLHeaderSize, 
+    GetDataPtr( Packet.NdisPacket, MaxLLHeaderSize,
 		(PCHAR *)&Packet.Header, &Packet.ContigSize );
 
     RtlCopyMemory( Packet.Header, data, len );
@@ -103,7 +103,7 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
     Packet.DstAddr = RemoteAddress;
 
     IPSendDatagram( &Packet, NCE, TCPPacketSendComplete, NULL );
-    
+
     if( !NT_SUCCESS(NdisStatus) ) return OSK_EINVAL;
     else return 0;
 }
@@ -124,7 +124,7 @@ void TCPFree( void *ClientData,
 int TCPSleep( void *ClientData, void *token, int priority, char *msg,
 	      int tmio ) {
     PSLEEPING_THREAD SleepingThread;
-    
+
     TI_DbgPrint(DEBUG_TCP,
 		("Called TSLEEP: tok = %x, pri = %d, wmesg = %s, tmio = %x\n",
 		 token, priority, msg, tmio));

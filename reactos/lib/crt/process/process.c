@@ -14,7 +14,7 @@
    #define argvtosT argvtosW
    #define do_spawnT do_spawnW
    #define valisttosT valisttosW
-   #define extT extW   
+   #define extT extW
 #else
    #define find_execT find_execA
    #define argvtosT argvtosA
@@ -190,7 +190,7 @@ do_spawnT(int mode, const _TCHAR* cmdname, const _TCHAR* args, const _TCHAR* env
    DWORD dwError;
 
    TRACE(MK_STR(do_spawnT)"(%i,'%"sT"','%"sT"','%"sT"')",mode,cmdname,args,envp);
-   
+
 
    if (mode != _P_NOWAIT && mode != _P_NOWAITO && mode != _P_WAIT && mode != _P_DETACH && mode != _P_OVERLAY)
    {
@@ -208,10 +208,10 @@ do_spawnT(int mode, const _TCHAR* cmdname, const _TCHAR* args, const _TCHAR* env
       __set_errno ( EISDIR );
       return(-1);
    }
-   
+
    //memset (&StartupInfo, 0, sizeof(StartupInfo));
    StartupInfo.cb = sizeof(StartupInfo);
-   
+
 #if 0
 
    for (last = i = 0; i < FDINFO_FD_MAX; i++)
@@ -240,7 +240,7 @@ do_spawnT(int mode, const _TCHAR* cmdname, const _TCHAR* args, const _TCHAR* env
          int _mode = __fileno_getmode(i);
          HANDLE h = _get_osfhandle(i);
          /* FIXME: The test of console handles (((ULONG)Handle) & 0x10000003) == 0x3)
-          *        is possible wrong 
+          *        is possible wrong
           */
          if ((((ULONG)h) & 0x10000003) == 0x3 || _mode & _O_NOINHERIT || (i < 3 && mode == _P_DETACH))
          {
@@ -270,7 +270,7 @@ do_spawnT(int mode, const _TCHAR* cmdname, const _TCHAR* args, const _TCHAR* env
 #endif
 
    create_io_inherit_block((STARTUPINFOA*) &StartupInfo);
-   
+
    bResult = CreateProcess((_TCHAR *)cmdname,
                             (_TCHAR *)args,
                             NULL,
@@ -281,7 +281,7 @@ do_spawnT(int mode, const _TCHAR* cmdname, const _TCHAR* args, const _TCHAR* env
                             NULL,
                             &StartupInfo,
                             &ProcessInformation);
-                            
+
    if (StartupInfo.lpReserved2)
    {
       free(StartupInfo.lpReserved2);

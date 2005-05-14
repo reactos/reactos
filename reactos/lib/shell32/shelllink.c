@@ -78,18 +78,6 @@ DEFINE_GUID( SHELL32_AdvtShortcutComponent,
 
 /* link file formats */
 
-/* flag1: lnk elements: simple link has 0x0B */
-#define SCF_PIDL 1
-#define SCF_LOCATION 2
-#define SCF_DESCRIPTION 4
-#define SCF_RELATIVE 8
-#define SCF_WORKDIR 0x10
-#define SCF_ARGS 0x20
-#define SCF_CUSTOMICON 0x40
-#define SCF_UNICODE 0x80
-#define SCF_PRODUCT 0x800
-#define SCF_COMPONENT 0x1000
-
 #include "pshpack1.h"
 
 typedef struct _LINK_HEADER
@@ -130,14 +118,6 @@ typedef struct _LOCAL_VOLUME_INFO
     DWORD dwVolSerial;
     DWORD dwVolLabelOfs;
 } LOCAL_VOLUME_INFO;
-
-typedef struct tagLINK_ADVERTISEINFO
-{
-    DWORD size;
-    DWORD magic;
-    CHAR  bufA[MAX_PATH];
-    WCHAR bufW[MAX_PATH];
-} LINK_ADVERTISEINFO;
 
 typedef struct volume_info_t
 {
@@ -270,7 +250,7 @@ static HRESULT WINAPI IPersistFile_fnLoad(IPersistFile* iface, LPCOLESTR pszFile
         HRESULT r;
         IStream *stm;
 
-        TRACE("(%p, %s)\n",This, debugstr_w(pszFileName));
+        TRACE("(%p, %s, %lx)\n",This, debugstr_w(pszFileName), dwMode);
 
         r = CreateStreamOnFile(pszFileName, dwMode, &stm);
         if( SUCCEEDED( r ) )
@@ -280,7 +260,7 @@ static HRESULT WINAPI IPersistFile_fnLoad(IPersistFile* iface, LPCOLESTR pszFile
             IStream_Release( stm );
             This->bDirty = FALSE;
         }
-
+        TRACE("-- returning hr %08lx\n", r);
         return r;
 }
 
@@ -638,40 +618,40 @@ static HRESULT Stream_LoadAdvertiseInfo( IStream* stm, LPWSTR *str )
     DWORD size;
     ULONG count;
     HRESULT r;
-    LINK_ADVERTISEINFO buffer;
+    EXP_DARWIN_LINK buffer;
     
     TRACE("%p\n",stm);
 
-    r = IStream_Read( stm, &buffer.size, sizeof (DWORD), &count );
+    r = IStream_Read( stm, &buffer.dbh.cbSize, sizeof (DWORD), &count );
     if( FAILED( r ) )
         return r;
 
     /* make sure that we read the size of the structure even on error */
     size = sizeof buffer - sizeof (DWORD);
-    if( buffer.size != sizeof buffer )
+    if( buffer.dbh.cbSize != sizeof buffer )
     {
         ERR("Ooops.  This structure is not as expected...\n");
         return E_FAIL;
     }
 
-    r = IStream_Read( stm, &buffer.magic, size, &count );
+    r = IStream_Read( stm, &buffer.dbh.dwSignature, size, &count );
     if( FAILED( r ) )
         return r;
 
     if( count != size )
         return E_FAIL;
 
-    TRACE("magic %08lx  string = %s\n", buffer.magic, debugstr_w(buffer.bufW));
+    TRACE("magic %08lx  string = %s\n", buffer.dbh.dwSignature, debugstr_w(buffer.szwDarwinID));
 
-    if( (buffer.magic&0xffff0000) != 0xa0000000 )
+    if( (buffer.dbh.dwSignature&0xffff0000) != 0xa0000000 )
     {
-        ERR("Unknown magic number %08lx in advertised shortcut\n", buffer.magic);
+        ERR("Unknown magic number %08lx in advertised shortcut\n", buffer.dbh.dwSignature);
         return E_FAIL;
     }
 
     *str = HeapAlloc( GetProcessHeap(), 0, 
-                     (strlenW(buffer.bufW)+1) * sizeof(WCHAR) );
-    strcpyW( *str, buffer.bufW );
+                     (strlenW(buffer.szwDarwinID)+1) * sizeof(WCHAR) );
+    strcpyW( *str, buffer.szwDarwinID );
 
     return S_OK;
 }
@@ -680,7 +660,7 @@ static HRESULT Stream_LoadAdvertiseInfo( IStream* stm, LPWSTR *str )
  * IPersistStream_Load (IPersistStream)
  */
 static HRESULT WINAPI IPersistStream_fnLoad(
-	IPersistStream*  iface,
+    IPersistStream*  iface,
     IStream*         stm)
 {
     LINK_HEADER hdr;
@@ -694,7 +674,7 @@ static HRESULT WINAPI IPersistStream_fnLoad(
     TRACE("%p %p\n", This, stm);
 
     if( !stm )
-	  return STG_E_INVALIDPOINTER;
+        return STG_E_INVALIDPOINTER;
 
     dwBytesRead = 0;
     r = IStream_Read(stm, &hdr, sizeof(hdr), &dwBytesRead);
@@ -749,7 +729,7 @@ static HRESULT WINAPI IPersistStream_fnLoad(
     }
 
     /* load all the new stuff */
-    if( hdr.dwFlags & SCF_PIDL )
+    if( hdr.dwFlags & SLDF_HAS_ID_LIST )
     {
         r = ILLoadFromStream( stm, &This->pPidl );
         if( FAILED( r ) )
@@ -758,13 +738,13 @@ static HRESULT WINAPI IPersistStream_fnLoad(
     pdump(This->pPidl);
 
     /* load the location information */
-    if( hdr.dwFlags & SCF_LOCATION )
+    if( hdr.dwFlags & SLDF_HAS_LINK_INFO )
         r = Stream_LoadLocation( stm, &This->volume, &This->sPath );
     if( FAILED( r ) )
         goto end;
 
-    unicode = hdr.dwFlags & SCF_UNICODE;
-    if( hdr.dwFlags & SCF_DESCRIPTION )
+    unicode = hdr.dwFlags & SLDF_UNICODE;
+    if( hdr.dwFlags & SLDF_HAS_NAME )
     {
         r = Stream_LoadString( stm, unicode, &This->sDescription );
         TRACE("Description  -> %s\n",debugstr_w(This->sDescription));
@@ -772,7 +752,7 @@ static HRESULT WINAPI IPersistStream_fnLoad(
     if( FAILED( r ) )
         goto end;
 
-    if( hdr.dwFlags & SCF_RELATIVE )
+    if( hdr.dwFlags & SLDF_HAS_RELPATH )
     {
         r = Stream_LoadString( stm, unicode, &This->sPathRel );
         TRACE("Relative Path-> %s\n",debugstr_w(This->sPathRel));
@@ -780,7 +760,7 @@ static HRESULT WINAPI IPersistStream_fnLoad(
     if( FAILED( r ) )
         goto end;
 
-    if( hdr.dwFlags & SCF_WORKDIR )
+    if( hdr.dwFlags & SLDF_HAS_WORKINGDIR )
     {
         r = Stream_LoadString( stm, unicode, &This->sWorkDir );
         TRACE("Working Dir  -> %s\n",debugstr_w(This->sWorkDir));
@@ -788,7 +768,7 @@ static HRESULT WINAPI IPersistStream_fnLoad(
     if( FAILED( r ) )
         goto end;
 
-    if( hdr.dwFlags & SCF_ARGS )
+    if( hdr.dwFlags & SLDF_HAS_ARGS )
     {
         r = Stream_LoadString( stm, unicode, &This->sArgs );
         TRACE("Working Dir  -> %s\n",debugstr_w(This->sArgs));
@@ -796,7 +776,7 @@ static HRESULT WINAPI IPersistStream_fnLoad(
     if( FAILED( r ) )
         goto end;
 
-    if( hdr.dwFlags & SCF_CUSTOMICON )
+    if( hdr.dwFlags & SLDF_HAS_ICONLOCATION )
     {
         r = Stream_LoadString( stm, unicode, &This->sIcoPath );
         TRACE("Icon file    -> %s\n",debugstr_w(This->sIcoPath));
@@ -804,7 +784,7 @@ static HRESULT WINAPI IPersistStream_fnLoad(
     if( FAILED( r ) )
         goto end;
 
-    if( hdr.dwFlags & SCF_PRODUCT )
+    if( hdr.dwFlags & SLDF_HAS_LOGO3ID )
     {
         r = Stream_LoadAdvertiseInfo( stm, &This->sProduct );
         TRACE("Product      -> %s\n",debugstr_w(This->sProduct));
@@ -812,7 +792,7 @@ static HRESULT WINAPI IPersistStream_fnLoad(
     if( FAILED( r ) )
         goto end;
 
-    if( hdr.dwFlags & SCF_COMPONENT )
+    if( hdr.dwFlags & SLDF_HAS_DARWINID )
     {
         r = Stream_LoadAdvertiseInfo( stm, &This->sComponent );
         TRACE("Component    -> %s\n",debugstr_w(This->sComponent));
@@ -922,17 +902,17 @@ static HRESULT Stream_WriteLocationInfo( IStream* stm, LPCWSTR path,
 static HRESULT Stream_WriteAdvertiseInfo( IStream* stm, LPCWSTR string, DWORD magic )
 {
     ULONG count;
-    LINK_ADVERTISEINFO buffer;
+    EXP_DARWIN_LINK buffer;
     
     TRACE("%p\n",stm);
 
     memset( &buffer, 0, sizeof buffer );
-    buffer.size = sizeof buffer;
-    buffer.magic = magic;
-    strncpyW( buffer.bufW, string, MAX_PATH );
-    WideCharToMultiByte(CP_ACP, 0, string, -1, buffer.bufA, MAX_PATH, NULL, NULL );
+    buffer.dbh.cbSize = sizeof buffer;
+    buffer.dbh.dwSignature = magic;
+    lstrcpynW( buffer.szwDarwinID, string, MAX_PATH );
+    WideCharToMultiByte(CP_ACP, 0, string, -1, buffer.szDarwinID, MAX_PATH, NULL, NULL );
 
-    return IStream_Write( stm, &buffer, buffer.size, &count );
+    return IStream_Write( stm, &buffer, buffer.dbh.cbSize, &count );
 }
 
 /************************************************************************
@@ -978,23 +958,23 @@ static HRESULT WINAPI IPersistStream_fnSave(
 
     header.wHotKey = This->wHotKey;
     header.nIcon = This->iIcoNdx;
-    header.dwFlags = SCF_UNICODE;   /* strings are in unicode */
+    header.dwFlags = SLDF_UNICODE;   /* strings are in unicode */
     if( This->pPidl )
-        header.dwFlags |= SCF_PIDL;
+        header.dwFlags |= SLDF_HAS_ID_LIST;
     if( This->sPath )
-        header.dwFlags |= SCF_LOCATION;
+        header.dwFlags |= SLDF_HAS_LINK_INFO;
     if( This->sDescription )
-        header.dwFlags |= SCF_DESCRIPTION;
+        header.dwFlags |= SLDF_HAS_NAME;
     if( This->sWorkDir )
-        header.dwFlags |= SCF_WORKDIR;
+        header.dwFlags |= SLDF_HAS_WORKINGDIR;
     if( This->sArgs )
-        header.dwFlags |= SCF_ARGS;
+        header.dwFlags |= SLDF_HAS_ARGS;
     if( This->sIcoPath )
-        header.dwFlags |= SCF_CUSTOMICON;
+        header.dwFlags |= SLDF_HAS_ICONLOCATION;
     if( This->sProduct )
-        header.dwFlags |= SCF_PRODUCT;
+        header.dwFlags |= SLDF_HAS_LOGO3ID;
     if( This->sComponent )
-        header.dwFlags |= SCF_COMPONENT;
+        header.dwFlags |= SLDF_HAS_DARWINID;
 
     SystemTimeToFileTime ( &This->time1, &header.Time1 );
     SystemTimeToFileTime ( &This->time2, &header.Time2 );
@@ -1040,10 +1020,10 @@ static HRESULT WINAPI IPersistStream_fnSave(
         r = Stream_WriteString( stm, This->sIcoPath );
 
     if( This->sProduct )
-        r = Stream_WriteAdvertiseInfo( stm, This->sProduct, 0xa0000007 );
+        r = Stream_WriteAdvertiseInfo( stm, This->sProduct, EXP_SZ_ICON_SIG );
 
     if( This->sComponent )
-        r = Stream_WriteAdvertiseInfo( stm, This->sComponent, 0xa0000006 );
+        r = Stream_WriteAdvertiseInfo( stm, This->sComponent, EXP_DARWIN_ID_SIG );
 
     /* the last field is a single zero dword */
     zero = 0;
@@ -1081,10 +1061,8 @@ static IPersistStreamVtbl psvt =
 /**************************************************************************
  *	  IShellLink_Constructor
  */
-HRESULT WINAPI IShellLink_Constructor (
-	IUnknown * pUnkOuter,
-	REFIID riid,
-	LPVOID * ppv)
+HRESULT WINAPI IShellLink_Constructor( IUnknown *pUnkOuter,
+               REFIID riid, LPVOID *ppv )
 {
 	IShellLinkImpl * sl;
 
@@ -1092,9 +1070,11 @@ HRESULT WINAPI IShellLink_Constructor (
 
 	*ppv = NULL;
 
-	if(pUnkOuter) return CLASS_E_NOAGGREGATION;
-	sl = (IShellLinkImpl *) LocalAlloc(GMEM_ZEROINIT,sizeof(IShellLinkImpl));
-	if (!sl) return E_OUTOFMEMORY;
+	if (pUnkOuter)
+            return CLASS_E_NOAGGREGATION;
+	sl = LocalAlloc(LMEM_ZEROINIT,sizeof(IShellLinkImpl));
+	if (!sl)
+            return E_OUTOFMEMORY;
 
 	sl->ref = 1;
 	sl->lpVtbl = &slvt;
@@ -1182,12 +1162,8 @@ static HRESULT ShellLink_UpdatePath(LPWSTR sPathRel, LPCWSTR path, LPCWSTR sWork
 /**************************************************************************
  *	  IShellLink_ConstructFromFile
  */
-HRESULT WINAPI IShellLink_ConstructFromFile (
-	IUnknown* pUnkOuter,
-	REFIID riid,
-	LPCITEMIDLIST pidl,
-	LPVOID* ppv
-)
+HRESULT WINAPI IShellLink_ConstructFromFile( IUnknown* pUnkOuter, REFIID riid,
+               LPCITEMIDLIST pidl, LPVOID* ppv)
 {
     IShellLinkW* psl;
 
@@ -1587,43 +1563,11 @@ static HRESULT WINAPI IShellLinkA_fnSetRelativePath(IShellLinkA * iface, LPCSTR 
 
 static HRESULT WINAPI IShellLinkA_fnResolve(IShellLinkA * iface, HWND hwnd, DWORD fFlags)
 {
-    HRESULT hr = S_OK;
-
     IShellLinkImpl *This = (IShellLinkImpl *)iface;
 
     TRACE("(%p)->(hwnd=%p flags=%lx)\n",This, hwnd, fFlags);
 
-    /*FIXME: use IResolveShellLink interface */
-
-    if (!This->sPath && This->pPidl) {
-	WCHAR buffer[MAX_PATH];
-
-	hr = SHELL_GetPathFromIDListW(This->pPidl, buffer, MAX_PATH);
-
-	if (SUCCEEDED(hr) && *buffer) {
-	    This->sPath = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, (lstrlenW(buffer)+1)*sizeof(WCHAR));
-	    if (!This->sPath)
-		return E_OUTOFMEMORY;
-
-	    lstrcpyW(This->sPath, buffer);
-
-	    This->bDirty = TRUE;
-	} else
-	    hr = S_OK;    /* don't report an error occurred while just caching information */
-    }
-
-    if (!This->sIcoPath && This->sPath) {
-	This->sIcoPath = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, (lstrlenW(This->sPath)+1)*sizeof(WCHAR));
-	if (!This->sIcoPath)
-	    return E_OUTOFMEMORY;
-
-	lstrcpyW(This->sIcoPath, This->sPath);
-	This->iIcoNdx = 0;
-
-	This->bDirty = TRUE;
-    }
-
-    return hr;
+    return IShellLinkW_Resolve( (IShellLinkW*)&(This->lpvtblw), hwnd, fFlags );
 }
 
 static HRESULT WINAPI IShellLinkA_fnSetPath(IShellLinkA * iface, LPCSTR pszFile)
@@ -2021,7 +1965,7 @@ static HRESULT WINAPI IShellLinkW_fnResolve(IShellLinkW * iface, HWND hwnd, DWOR
 	hr = SHELL_GetPathFromIDListW(This->pPidl, buffer, MAX_PATH);
 
 	if (SUCCEEDED(hr) && *buffer) {
-	    This->sPath = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, (lstrlenW(buffer)+1)*sizeof(WCHAR));
+	    This->sPath = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(buffer)+1)*sizeof(WCHAR));
 	    if (!This->sPath)
 		return E_OUTOFMEMORY;
 
@@ -2033,7 +1977,7 @@ static HRESULT WINAPI IShellLinkW_fnResolve(IShellLinkW * iface, HWND hwnd, DWOR
     }
 
     if (!This->sIcoPath && This->sPath) {
-	This->sIcoPath = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, (lstrlenW(This->sPath)+1)*sizeof(WCHAR));
+	This->sIcoPath = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(This->sPath)+1)*sizeof(WCHAR));
 	if (!This->sIcoPath)
 	    return E_OUTOFMEMORY;
 

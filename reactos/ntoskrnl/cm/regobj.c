@@ -1,5 +1,5 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cm/regobj.c
@@ -203,7 +203,7 @@ CmiObjectParse(PVOID ParsedObject,
 	  if (NT_SUCCESS(Status))
 	    {
 	      DPRINT("LinkPath '%wZ'\n", &LinkPath);
-	
+
               ExReleaseResourceLite(&CmiRegistryLock);
               KeLeaveCriticalRegion();
 
@@ -627,7 +627,7 @@ CmiRemoveKeyFromList(PKEY_OBJECT KeyToRemove)
 	  ParentKey->NumberOfSubKeys--;
 
 	  DPRINT("Dereference parent key: 0x%x\n", ParentKey);
-	
+
 	  ObDereferenceObject(ParentKey);
 	  return STATUS_SUCCESS;
 	}
@@ -645,7 +645,7 @@ CmiScanKeyList(PKEY_OBJECT Parent,
 {
   PKEY_OBJECT CurKey;
   ULONG Index;
-  
+
   DPRINT("Scanning key list for: %wZ (Parent: %wZ)\n",
 	 KeyName, &Parent->Name);
 
@@ -670,7 +670,7 @@ CmiScanKeyList(PKEY_OBJECT Parent,
 	    }
 	}
     }
-  
+
   if (Index < Parent->NumberOfSubKeys)
   {
      if (CurKey->Flags & KO_MARKED_FOR_DELETE)

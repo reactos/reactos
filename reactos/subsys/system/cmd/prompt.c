@@ -44,7 +44,7 @@
  *        Fixed Win32 environment handling.
  *
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 #include "precomp.h"
 #include "resource.h"
@@ -181,19 +181,15 @@ VOID PrintPrompt(VOID)
 
 INT cmd_prompt (LPTSTR cmd, LPTSTR param)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_PROMPT_HELP1, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+		ConOutResPuts(STRING_PROMPT_HELP1);
 
 #ifdef FEATURE_DIRECTORY_STACK
-		LoadString(GetModuleHandle(NULL), STRING_PROMPT_HELP2, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+		ConOutResPuts(STRING_PROMPT_HELP2);
 #endif
-		LoadString(GetModuleHandle(NULL), STRING_PROMPT_HELP3, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+		ConOutResPuts(STRING_PROMPT_HELP3);
 		return 0;
 	}
 

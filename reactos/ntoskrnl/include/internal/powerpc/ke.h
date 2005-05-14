@@ -69,9 +69,9 @@ static inline LONG KePPCTestAndClearBit(ULONG BitPos, volatile PULONG Addr)
 {
     ULONG OldValue, NewValue;
 
-    __asm__ __volatile__ ("lwarx %0,0,%1" 
+    __asm__ __volatile__ ("lwarx %0,0,%1"
                           : "=r" (OldValue), "=r" (*Addr)
-                          : 
+                          :
                           : "memory");
 
     NewValue = OldValue & ~(1<<BitPos);
@@ -92,9 +92,9 @@ static inline LONG KePPCTestAndSetBit(ULONG BitPos, volatile PULONG Addr)
 {
     ULONG OldValue, NewValue;
 
-    __asm__ __volatile__ ("lwarx %0,0,%1" 
+    __asm__ __volatile__ ("lwarx %0,0,%1"
                           : "=r" (OldValue), "=r" (*Addr)
-                          : 
+                          :
                           : "memory");
 
     NewValue = OldValue | (1<<BitPos);

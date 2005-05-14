@@ -3,9 +3,9 @@
  * PROJECT:         ReactOS kernel
  * FILE:            include/msvcrt/msvcrtdbg.h
  * PURPOSE:         Useful debugging macros
- * PROGRAMMER:      
- * UPDATE HISTORY: 
- *                
+ * PROGRAMMER:
+ * UPDATE HISTORY:
+ *
  */
 
 /*
@@ -24,12 +24,12 @@
 
 #ifdef _UNICODE
    #define sT "S"
-#else   
+#else
    #define sT "s"
 #endif
-   
- 
- 
+
+
+
 #define TRACE(...)
 
 
@@ -45,7 +45,7 @@
    #define CHECKPOINT1
 #endif
 
-#if !defined(NDEBUG) && defined(DBG) 
+#if !defined(NDEBUG) && defined(DBG)
    #define DPRINT(args...) do { DbgPrint("(MSVCRT:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
    #define CHECKPOINT do { DbgPrint("MSVCRT:%s:%d\n",__FILE__,__LINE__); } while(0);
 #else

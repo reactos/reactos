@@ -83,7 +83,7 @@ static struct IAutoComplete2Vtbl ac2vt;
 #define _ICOM_THIS_From_IAutoComplete2(class, name) class* This = (class*)(((char*)name)-_IAutoComplete2_Offset);
 
 /*
-  converts This to a interface pointer
+  converts This to an interface pointer
 */
 #define _IUnknown_(This) (IUnknown*)&(This->lpVtbl)
 #define _IAutoComplete2_(This)  (IAutoComplete2*)&(This->lpvtblAutoComplete2) 
@@ -101,8 +101,7 @@ HRESULT WINAPI IAutoComplete_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVO
     if (pUnkOuter && !IsEqualIID (riid, &IID_IUnknown))
 	return CLASS_E_NOAGGREGATION;
 
-    lpac = (IAutoCompleteImpl*)HeapAlloc(GetProcessHeap(),
-      HEAP_ZERO_MEMORY, sizeof(IAutoCompleteImpl));
+    lpac = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IAutoCompleteImpl));
     if (!lpac) 
 	return E_OUTOFMEMORY;
 
@@ -280,7 +279,7 @@ static HRESULT WINAPI IAutoComplete_fnInit(
 	LONG len;
 
 	/* pwszRegKeyPath contains the key as well as the value, so we split */
-	key = (WCHAR*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (lstrlenW(pwzsRegKeyPath)+1)*sizeof(WCHAR));
+	key = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (lstrlenW(pwzsRegKeyPath)+1)*sizeof(WCHAR));
 	strcpyW(key, pwzsRegKeyPath);
 	value = strrchrW(key, '\\');
 	*value = 0;
@@ -294,7 +293,7 @@ static HRESULT WINAPI IAutoComplete_fnInit(
 	if (res == ERROR_SUCCESS) {
 	    res = RegQueryValueW(hKey, value, result, &len);
 	    if (res == ERROR_SUCCESS) {
-		This->quickComplete = (WCHAR*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len*sizeof(WCHAR));
+		This->quickComplete = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len*sizeof(WCHAR));
 		strcpyW(This->quickComplete, result);
 	    }
 	    RegCloseKey(hKey);
@@ -303,7 +302,7 @@ static HRESULT WINAPI IAutoComplete_fnInit(
     }
 
     if ((pwszQuickComplete) && (!This->quickComplete)) {
-	This->quickComplete = (WCHAR*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (lstrlenW(pwszQuickComplete)+1)*sizeof(WCHAR));
+	This->quickComplete = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (lstrlenW(pwszQuickComplete)+1)*sizeof(WCHAR));
 	lstrcpyW(This->quickComplete, pwszQuickComplete);
     }
 
@@ -482,7 +481,7 @@ static LRESULT APIENTRY ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
 		    /* If quickComplete is set and control is pressed, replace the string */
 		    control = GetKeyState(VK_CONTROL) & 0x8000;		    
 		    if (control && This->quickComplete) {
-			hwndQCText = (WCHAR*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
+			hwndQCText = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
 						       (lstrlenW(This->quickComplete)+lstrlenW(hwndText))*sizeof(WCHAR));
 			sel = sprintfW(hwndQCText, This->quickComplete, hwndText);
 			SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)hwndQCText);
@@ -525,7 +524,7 @@ static LRESULT APIENTRY ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
 				int len;
 				
 				len = SendMessageW(This->hwndListBox, LB_GETTEXTLEN, sel, (LPARAM)NULL);
-				msg = (WCHAR*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (len+1)*sizeof(WCHAR));
+				msg = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (len+1)*sizeof(WCHAR));
 				SendMessageW(This->hwndListBox, LB_GETTEXT, sel, (LPARAM)msg);
 				SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)msg);
 				SendMessageW(hwnd, EM_SETSEL, lstrlenW(msg), lstrlenW(msg));
@@ -562,7 +561,7 @@ static LRESULT APIENTRY ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
 	    SendMessageW(This->hwndListBox, LB_RESETCONTENT, 0, 0);
 
 	    HeapFree(GetProcessHeap(), 0, This->txtbackup);
-	    This->txtbackup = (WCHAR*) HeapAlloc(GetProcessHeap(),
+	    This->txtbackup = HeapAlloc(GetProcessHeap(),
 						 HEAP_ZERO_MEMORY, (lstrlenW(hwndText)+1)*sizeof(WCHAR));							      
 	    lstrcpyW(This->txtbackup, hwndText);
 
@@ -631,7 +630,7 @@ static LRESULT APIENTRY ACLBoxSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
 	    break;
 	case WM_LBUTTONDOWN:
 	    len = SendMessageW(This->hwndListBox, LB_GETTEXTLEN, sel, (LPARAM)NULL);
-	    msg = (WCHAR*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (len+1)*sizeof(WCHAR));
+	    msg = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (len+1)*sizeof(WCHAR));
 	    sel = (INT)SendMessageW(hwnd, LB_GETCURSEL, 0, 0);
 	    SendMessageW(hwnd, LB_GETTEXT, sel, (LPARAM)msg);
 	    SendMessageW(This->hwndEdit, WM_SETTEXT, 0, (LPARAM)msg);

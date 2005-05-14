@@ -19,7 +19,7 @@ NTSTATUS AddGenericHeaderIPv4(
     UINT DataLength,
     UINT Protocol,
     UINT ExtraLength,
-    PVOID *NextHeader ) 
+    PVOID *NextHeader )
 /*
  * FUNCTION: Adds an IPv4 and RawIp header to an IP packet
  * ARGUMENTS:
@@ -33,23 +33,23 @@ NTSTATUS AddGenericHeaderIPv4(
 {
     PIPv4_HEADER IPHeader;
     ULONG BufferSize;
-    
-    TI_DbgPrint(MID_TRACE, ("Packet: %x NdisPacket %x\n", 
+
+    TI_DbgPrint(MID_TRACE, ("Packet: %x NdisPacket %x\n",
 			    IPPacket, IPPacket->NdisPacket));
-    
+
     BufferSize = MaxLLHeaderSize + sizeof(IPv4_HEADER) + ExtraLength;
-    
-    GetDataPtr( IPPacket->NdisPacket, 
-		MaxLLHeaderSize, 
-		(PCHAR *)&IPPacket->Header, 
+
+    GetDataPtr( IPPacket->NdisPacket,
+		MaxLLHeaderSize,
+		(PCHAR *)&IPPacket->Header,
 		&IPPacket->ContigSize );
-    
+
     IPPacket->HeaderSize = 20;
-    
-    TI_DbgPrint(MAX_TRACE, ("Allocated %d bytes for headers at 0x%X.\n", 
+
+    TI_DbgPrint(MAX_TRACE, ("Allocated %d bytes for headers at 0x%X.\n",
 			    BufferSize, IPPacket->Header));
     TI_DbgPrint(MAX_TRACE, ("Packet total length %d\n", IPPacket->TotalSize));
-    
+
     /* Build IPv4 header */
     IPHeader = (PIPv4_HEADER)IPPacket->Header;
     /* Version = 4, Length = 5 DWORDs */
@@ -72,11 +72,11 @@ NTSTATUS AddGenericHeaderIPv4(
     IPHeader->SrcAddr = LocalAddress->Address.IPv4Address;
     /* Destination address. FIXME: IPv4 only */
     IPHeader->DstAddr = RemoteAddress->Address.IPv4Address;
-    
+
     /* Build RawIp header */
     *NextHeader = (((PCHAR)IPHeader) + sizeof(IPv4_HEADER));
     IPPacket->Data = ((PCHAR)*NextHeader) + ExtraLength;
-    
+
     return STATUS_SUCCESS;
 }
 
@@ -88,7 +88,7 @@ NTSTATUS BuildRawIpPacket(
     PIP_ADDRESS LocalAddress,
     USHORT LocalPort,
     PCHAR DataBuffer,
-    UINT DataLen ) 
+    UINT DataLen )
 /*
  * FUNCTION: Builds an RawIp packet
  * ARGUMENTS:
@@ -102,31 +102,31 @@ NTSTATUS BuildRawIpPacket(
 {
     NTSTATUS Status;
     PCHAR Payload;
-    
+
     TI_DbgPrint(MAX_TRACE, ("Called.\n"));
-    
+
     /* FIXME: Assumes IPv4 */
     IPInitializePacket(Packet, IP_ADDRESS_V4);
     if (!Packet)
 	return STATUS_INSUFFICIENT_RESOURCES;
-    
+
     Packet->TotalSize = sizeof(IPv4_HEADER) + DataLen;
-    
+
     /* Prepare packet */
     Status = AllocatePacketWithBuffer( &Packet->NdisPacket,
 				       NULL,
 				       Packet->TotalSize + MaxLLHeaderSize );
-    
+
     if( !NT_SUCCESS(Status) ) return Status;
 
     TI_DbgPrint(MID_TRACE, ("Allocated packet: %x\n", Packet->NdisPacket));
     TI_DbgPrint(MID_TRACE, ("Local Addr : %s\n", A2S(LocalAddress)));
     TI_DbgPrint(MID_TRACE, ("Remote Addr: %s\n", A2S(RemoteAddress)));
-    
+
     switch (RemoteAddress->Type) {
     case IP_ADDRESS_V4:
 	Status = AddGenericHeaderIPv4
-            (RemoteAddress, RemotePort, 
+            (RemoteAddress, RemotePort,
              LocalAddress, LocalPort, Packet, DataLen,
              IPPROTO_ICMP, /* XXX Figure out a better way to do this */
              0, (PVOID *)&Payload );
@@ -142,19 +142,19 @@ NTSTATUS BuildRawIpPacket(
         TI_DbgPrint(MIN_TRACE, ("Bad Address Type %d\n", RemoteAddress->Type));
 	break;
     }
-    
-    TI_DbgPrint(MID_TRACE, ("Copying data (hdr %x data %x (%d))\n", 
-			    Packet->Header, Packet->Data, 
+
+    TI_DbgPrint(MID_TRACE, ("Copying data (hdr %x data %x (%d))\n",
+			    Packet->Header, Packet->Data,
 			    (PCHAR)Packet->Data - (PCHAR)Packet->Header));
-    
+
     RtlCopyMemory( Packet->Data, DataBuffer, DataLen );
-    
+
     TI_DbgPrint(MID_TRACE, ("Displaying packet\n"));
-    
+
     DISPLAY_IP_PACKET(Packet);
-    
+
     TI_DbgPrint(MID_TRACE, ("Leaving\n"));
-    
+
     return STATUS_SUCCESS;
 }
 
@@ -168,7 +168,7 @@ NTSTATUS RawIPSendDatagram(
     PTDI_CONNECTION_INFORMATION ConnInfo,
     PCHAR BufferData,
     ULONG DataSize,
-    PULONG DataUsed ) 
+    PULONG DataUsed )
 /*
  * FUNCTION: Sends an RawIp datagram to a remote address
  * ARGUMENTS:
@@ -194,7 +194,7 @@ NTSTATUS RawIPSendDatagram(
     switch( RemoteAddressTa->Address[0].AddressType ) {
     case TDI_ADDRESS_TYPE_IP:
 	RemoteAddress.Type = IP_ADDRESS_V4;
-	RemoteAddress.Address.IPv4Address = 
+	RemoteAddress.Address.IPv4Address =
 	    RemoteAddressTa->Address[0].Address[0].in_addr;
 	RemotePort = RemoteAddressTa->Address[0].Address[0].sin_port;
 	break;
@@ -202,7 +202,7 @@ NTSTATUS RawIPSendDatagram(
     default:
 	return STATUS_UNSUCCESSFUL;
     }
-    
+
     Status = BuildRawIpPacket( &Packet,
                                &RemoteAddress,
                                RemotePort,
@@ -210,8 +210,8 @@ NTSTATUS RawIPSendDatagram(
                                AddrFile->Port,
                                BufferData,
                                DataSize );
-    
-    if( !NT_SUCCESS(Status) ) 
+
+    if( !NT_SUCCESS(Status) )
 	return Status;
 
     TI_DbgPrint(MID_TRACE,("About to get route to destination\n"));
@@ -229,7 +229,7 @@ NTSTATUS RawIPSendDatagram(
 }
 
 VOID RawIpReceiveComplete(PVOID Context, NTSTATUS Status, ULONG Count) {
-    PDATAGRAM_RECEIVE_REQUEST ReceiveRequest = 
+    PDATAGRAM_RECEIVE_REQUEST ReceiveRequest =
 	(PDATAGRAM_RECEIVE_REQUEST)Context;
     TI_DbgPrint(MAX_TRACE,("Called\n"));
     ReceiveRequest->UserComplete( ReceiveRequest->UserContext, Status, Count );
@@ -266,20 +266,20 @@ NTSTATUS RawIPReceiveDatagram(
     KIRQL OldIrql;
     NTSTATUS Status;
     PDATAGRAM_RECEIVE_REQUEST ReceiveRequest;
-    
+
     TI_DbgPrint(MAX_TRACE, ("Called.\n"));
-    
+
     TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
-    
+
     if (AF_IS_VALID(AddrFile))
     {
 	ReceiveRequest = exAllocatePool(NonPagedPool, sizeof(DATAGRAM_RECEIVE_REQUEST));
 	if (ReceiveRequest)
         {
 	    /* Initialize a receive request */
-	    
+
 	    /* Extract the remote address filter from the request (if any) */
-	    if ((ConnInfo->RemoteAddressLength != 0) && 
+	    if ((ConnInfo->RemoteAddressLength != 0) &&
 		(ConnInfo->RemoteAddress))
             {
 		Status = AddrGetAddress(ConnInfo->RemoteAddress,
@@ -301,18 +301,18 @@ NTSTATUS RawIPReceiveDatagram(
 	    ReceiveRequest->BufferSize = ReceiveLength;
 	    ReceiveRequest->UserComplete = Complete;
 	    ReceiveRequest->UserContext = Context;
-	    ReceiveRequest->Complete = 
+	    ReceiveRequest->Complete =
 		(PDATAGRAM_COMPLETION_ROUTINE)RawIpReceiveComplete;
 	    ReceiveRequest->Context = ReceiveRequest;
-	    
+
 	    /* Queue receive request */
 	    InsertTailList(&AddrFile->ReceiveQueue, &ReceiveRequest->ListEntry);
 	    AF_SET_PENDING(AddrFile, AFF_RECEIVE);
-	    
+
 	    TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
-	    
+
 	    TI_DbgPrint(MAX_TRACE, ("Leaving (pending).\n"));
-	    
+
 	    return STATUS_PENDING;
         }
 	else
@@ -324,11 +324,11 @@ NTSTATUS RawIPReceiveDatagram(
     {
 	Status = STATUS_INVALID_ADDRESS;
     }
-    
+
     TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
-    
+
     TI_DbgPrint(MAX_TRACE, ("Leaving with errors (0x%X).\n", Status));
-    
+
     return Status;
 }
 

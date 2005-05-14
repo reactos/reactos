@@ -71,7 +71,7 @@ WinHelpA(HWND hWnd, LPCSTR lpszHelp, UINT uCommand, DWORD dwData)
         if (WinExec("winhlp32.exe -x", SW_SHOWNORMAL) < 32) {
             //ERR("can't start winhlp32.exe -x ?\n");
             return FALSE;
-        } 
+        }
 	    if (!(hDest = FindWindowA("MS_WINHELP", NULL))) {
 	        //FIXME("did not find MS_WINHELP (FindWindow() failed, maybe global window handling still unimplemented)\n");
 	        return FALSE;

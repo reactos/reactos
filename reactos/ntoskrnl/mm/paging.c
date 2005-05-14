@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/paging.c
  * PURPOSE:         Paging file functions
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 

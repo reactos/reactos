@@ -150,7 +150,7 @@ static BOOL InitTreeViewItems(HWND hwndTV, LPTSTR pHostName)
     if (!AddEntryToTree(hwndTV, hRoot, _T("HKEY_LOCAL_MACHINE"), HKEY_LOCAL_MACHINE, 1, TVI_LAST)) return FALSE;
     if (!AddEntryToTree(hwndTV, hRoot, _T("HKEY_USERS"), HKEY_USERS, 1, TVI_LAST)) return FALSE;
     if (!AddEntryToTree(hwndTV, hRoot, _T("HKEY_CURRENT_CONFIG"), HKEY_CURRENT_CONFIG, 1, TVI_LAST)) return FALSE;
-    
+
     /* expand and select host name */
     TreeView_Expand(hwndTV, hRoot, TVE_EXPAND);
     TreeView_Select(hwndTV, hRoot, TVGN_CARET);
@@ -245,9 +245,9 @@ BOOL OnTreeExpanding(HWND hwndTV, NMTREEVIEW* pnmtv)
 	printf("dwSubCount=%ld, Name=%s\n", dwSubCount, Name);
         AddEntryToTree(hwndTV, pnmtv->itemNew.hItem, Name, NULL, dwSubCount, TVI_FIRST);
     }
-    
+
     SendMessage(hwndTV, TVM_SORTCHILDREN, 0, (LPARAM)pnmtv->itemNew.hItem);
-   
+
     RegCloseKey(hNewKey);
     HeapFree(GetProcessHeap(), 0, Name);
 

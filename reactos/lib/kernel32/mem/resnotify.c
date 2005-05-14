@@ -79,7 +79,7 @@ QueryMemoryResourceNotification(
 {
     EVENT_BASIC_INFORMATION ebi;
     NTSTATUS Status;
-    
+
     if(ResourceState != NULL)
     {
       Status = NtQueryEvent(ResourceNotificationHandle,
@@ -92,14 +92,14 @@ QueryMemoryResourceNotification(
         *ResourceState = ebi.EventState;
         return TRUE;
       }
-    
+
       SetLastErrorByStatus(Status);
     }
     else /* ResourceState == NULL */
     {
       SetLastError(ERROR_INVALID_PARAMETER);
     }
-    
+
     return FALSE;
 }
 

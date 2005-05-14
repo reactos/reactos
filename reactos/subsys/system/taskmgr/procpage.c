@@ -19,7 +19,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-    
+
 #include "precomp.h"
 
 HWND hProcessPage;                        /* Process List Property Page */
@@ -121,14 +121,14 @@ ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         cy = (rc.bottom - rc.top) + nYDifference;
         SetWindowPos(hProcessPageListCtrl, NULL, 0, 0, cx, cy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOZORDER);
         InvalidateRect(hProcessPageListCtrl, NULL, TRUE);
-        
+
         GetClientRect(hProcessPageEndProcessButton, &rc);
         MapWindowPoints(hProcessPageEndProcessButton, hDlg, (LPPOINT)(PRECT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
            cx = rc.left + nXDifference;
         cy = rc.top + nYDifference;
         SetWindowPos(hProcessPageEndProcessButton, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
         InvalidateRect(hProcessPageEndProcessButton, NULL, TRUE);
-        
+
         GetClientRect(hProcessPageShowAllProcessesButton, &rc);
         MapWindowPoints(hProcessPageShowAllProcessesButton, hDlg, (LPPOINT)(PRECT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
            cx = rc.left;
@@ -175,12 +175,12 @@ void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam)
             ProcessPageUpdate();
             break;
         #endif
-            
+
         case LVN_GETDISPINFO:
 
             if (!(pnmdi->item.mask & LVIF_TEXT))
                 break;
-            
+
             ColumnIndex = pnmdi->item.iSubItem;
             Index = pnmdi->item.iItem;
 
@@ -432,7 +432,7 @@ void ProcessPageShowContextMenu(DWORD dwProcessId)
 
     if (si.dwNumberOfProcessors < 2)
         RemoveMenu(hSubMenu, ID_PROCESS_PAGE_SETAFFINITY, MF_BYCOMMAND);
-    
+
     if (!DebugChannelsAreSupported())
         RemoveMenu(hSubMenu, ID_PROCESS_PAGE_DEBUGCHANNELS, MF_BYCOMMAND);
 

@@ -51,9 +51,9 @@ SetUserEnvironmentVariable (LPVOID *Environment,
 
       DstValue.Length = 0;
       DstValue.MaximumLength = Length;
-      DstValue.Buffer = Buffer = LocalAlloc(LPTR, 
+      DstValue.Buffer = Buffer = LocalAlloc(LPTR,
          Length);
-         
+
       if (DstValue.Buffer == NULL)
       {
          DPRINT1("LocalAlloc() failed\n");
@@ -102,7 +102,7 @@ SetUserEnvironmentVariable (LPVOID *Environment,
 				     &DstValue);
 
   if (Buffer) LocalFree(Buffer);
-   
+
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("RtlSetEnvironmentVariable() failed (Status %lx)\n", Status);

@@ -92,10 +92,10 @@ Fail:;
    return Status;
 }
 
-NTSTATUS 
+NTSTATUS
 VfatDispatchRequest (IN PVFAT_IRP_CONTEXT IrpContext)
 {
-    DPRINT ("VfatDispatchRequest (IrpContext %x), is called for %s\n", IrpContext, 
+    DPRINT ("VfatDispatchRequest (IrpContext %x), is called for %s\n", IrpContext,
 	    IrpContext->MajorFunction >= IRP_MJ_MAXIMUM_FUNCTION ? "????" : MajorFunctionNames[IrpContext->MajorFunction]);
 
    ASSERT(IrpContext);
@@ -166,12 +166,12 @@ NTSTATUS STDCALL VfatBuildRequest (
          DPRINT1("Vfat is entered at irql = %d\n", KeGetCurrentIrql());
       }
       Status = VfatDispatchRequest (IrpContext);
-      
+
       if (KeGetCurrentIrql() <= PASSIVE_LEVEL)
       {
          FsRtlExitFileSystem();
       }
-      
+
    }
    return Status;
 }

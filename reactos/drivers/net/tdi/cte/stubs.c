@@ -54,7 +54,7 @@ CTEInitialize (
 	/* FIXME: what should it initialize? */
 	return TRUE;
 }
-	
+
 
 /*
  * @unimplemented
@@ -105,7 +105,7 @@ CTESignal (
 {
 #if 0
 	PKEVENT	kevent = (PKEVENT) Unknown0;
-	
+
 	return KeSetEvent (
 		kevent,
 		0,

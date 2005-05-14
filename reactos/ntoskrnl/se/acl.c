@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/se/acl.c
  * PURPOSE:         Security manager
- * 
+ *
  * PROGRAMMERS:     David Welch <welch@cwcom.net>
  */
 
@@ -218,14 +218,14 @@ SepInitDACLs(VOID)
   return(TRUE);
 }
 
-NTSTATUS STDCALL 
-SepCreateImpersonationTokenDacl(PTOKEN Token, 
+NTSTATUS STDCALL
+SepCreateImpersonationTokenDacl(PTOKEN Token,
                                 PTOKEN PrimaryToken,
                                 PACL *Dacl)
 {
   ULONG AclLength;
   PVOID TokenDacl;
-  
+
   PAGED_CODE();
 
   AclLength = sizeof(ACL) +

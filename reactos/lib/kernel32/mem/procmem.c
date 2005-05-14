@@ -3,7 +3,7 @@
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
  * FILE:                 lib/kernel32/mem/procmem.c
- * PURPOSE:              
+ * PURPOSE:
  * PROGRAMMER:           Boudewijn Dekker
  */
 

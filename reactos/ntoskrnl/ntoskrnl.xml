@@ -148,10 +148,10 @@
 		<file>zw.S</file>
 	</directory>
 	<directory name="fs">
-		<file>dbcsname.c</file>
+		<file>context.c</file>
+		<file>fastio.c</file>
 		<file>filelock.c</file>
 		<file>mcb.c</file>
-		<file>mdl.c</file>
 		<file>name.c</file>
 		<file>notify.c</file>
 		<file>oplock.c</file>

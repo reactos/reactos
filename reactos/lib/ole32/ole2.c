@@ -1,9 +1,10 @@
 /*
  *	OLE2 library
  *
- *	Copyright 1995	Martin von Loewis
- *      Copyright 1999  Francis Beaudet
- *      Copyright 1999  Noel Borthwick
+ * Copyright 1995 Martin von Loewis
+ * Copyright 1999 Francis Beaudet
+ * Copyright 1999 Noel Borthwick
+ * Copyright 1999, 2000 Marcus Meissner
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -143,8 +144,8 @@ LRESULT CALLBACK OLEMenu_GetMsgProc(INT code, WPARAM wParam, LPARAM lParam);
 /******************************************************************************
  * These are the prototypes of the OLE Clipboard initialization methods (in clipboard.c)
  */
-void OLEClipbrd_UnInitialize(void);
-void OLEClipbrd_Initialize(void);
+extern void OLEClipbrd_UnInitialize(void);
+extern void OLEClipbrd_Initialize(void);
 
 /******************************************************************************
  * These are the prototypes of the utility methods used for OLE Drag n Drop
@@ -2340,6 +2341,98 @@ static void OLE_FreeClipDataArray(ULONG count, CLIPDATA * pClipDataArray)
             CoTaskMemFree(pClipDataArray[i].pClipData);
 }
 
+/***********************************************************************
+ *           PropSysAllocString			    [OLE32.@]
+ * NOTES:
+ *  Basically a copy of SysAllocStringLen.
+ */
+BSTR WINAPI PropSysAllocString(LPCOLESTR str)
+{
+    DWORD  bufferSize;
+    DWORD* newBuffer;
+    WCHAR* stringBuffer;
+    int len;
+
+    if (!str) return 0;
+
+    len = lstrlenW(str);
+    /*
+     * Find the length of the buffer passed-in in bytes.
+     */
+    bufferSize = len * sizeof (WCHAR);
+
+    /*
+     * Allocate a new buffer to hold the string.
+     * don't forget to keep an empty spot at the beginning of the
+     * buffer for the character count and an extra character at the
+     * end for the NULL.
+     */
+    newBuffer = HeapAlloc(GetProcessHeap(), 0,
+                          bufferSize + sizeof(WCHAR) + sizeof(DWORD));
+
+    /*
+     * If the memory allocation failed, return a null pointer.
+     */
+    if (newBuffer==0)
+      return 0;
+
+    /*
+     * Copy the length of the string in the placeholder.
+     */
+    *newBuffer = bufferSize;
+
+    /*
+     * Skip the byte count.
+     */
+    newBuffer++;
+
+    /*
+     * Copy the information in the buffer.
+     * Since it is valid to pass a NULL pointer here, we'll initialize the
+     * buffer to nul if it is the case.
+     */
+    if (str != 0)
+      memcpy(newBuffer, str, bufferSize);
+    else
+      memset(newBuffer, 0, bufferSize);
+
+    /*
+     * Make sure that there is a nul character at the end of the
+     * string.
+     */
+    stringBuffer = (WCHAR*)newBuffer;
+    stringBuffer[len] = L'\0';
+
+    return (LPWSTR)stringBuffer;
+}
+
+/***********************************************************************
+ *           PropSysFreeString			    [OLE32.@]
+ * NOTES
+ *  Copy of SysFreeString.
+ */
+void WINAPI PropSysFreeString(LPOLESTR str)
+{
+    DWORD* bufferPointer;
+
+    /* NULL is a valid parameter */
+    if(!str) return;
+
+    /*
+     * We have to be careful when we free a BSTR pointer, it points to
+     * the beginning of the string but it skips the byte count contained
+     * before the string.
+     */
+    bufferPointer = (DWORD*)str;
+
+    bufferPointer--;
+
+    /*
+     * Free the memory from its "real" origin.
+     */
+    HeapFree(GetProcessHeap(), 0, bufferPointer);
+}
+
 /******************************************************************************
  * Check if a PROPVARIANT's type is valid.
  */
@@ -2438,10 +2531,7 @@ HRESULT WINAPI PropVariantClear(PROPVARIANT * pvar) /* [in/out] */
         break;
     case VT_BSTR:
         if (pvar->u.bstrVal)
-        {
-            FIXME("Need to load OLEAUT32 for SysFreeString\n");
-            /* SysFreeString(pvar->u.bstrVal); */
-        }
+            PropSysFreeString(pvar->u.bstrVal);
         break;
    case VT_CF:
         if (pvar->u.pclipdata)
@@ -2528,7 +2618,7 @@ HRESULT WINAPI PropVariantCopy(PROPVARIANT *pvarDest,      /* [out] */
         }
         break;
     case VT_BSTR:
-        FIXME("Need to copy BSTR\n");
+        pvarDest->u.bstrVal = PropSysAllocString(pvarSrc->u.bstrVal);
         break;
     case VT_CF:
         if (pvarSrc->u.pclipdata)

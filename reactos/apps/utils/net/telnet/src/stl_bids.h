@@ -29,36 +29,36 @@ public:
 		growable(delta),
 		lowerbound(lower)
 	{ vector<T>::reserve(upper-lower + 1);}
-	
+
 	~TArrayAsVector( )
 	{ // This call is unnecessary?  (Paul Brannan 5/7/98)
 		// vector<T>::~vector( );
 	}
-	
+
 	int Add(const T& item)
 	{ if(!growable && vector<T>::size( ) == vector<T>::capacity( ))
 	return 0;
 	else
 		insert(vector<T>::end( ), item);
 	return 1; }
-	
+
 	int AddAt(const T& item, size_type index)
 	{ if(!growable &&
 	((vector<T>::size( ) == vector<T>::capacity( )) ||
 	(ZeroBase(index > vector<T>::capacity( )) )))
 	return 0;
 	if(ZeroBase(index) > vector<T>::capacity( )) // out of bounds
-	{ insert(vector<T>::end( ), 
+	{ insert(vector<T>::end( ),
 	ZeroBase(index) - vector<T>::size( ), T( ));
 	insert(vector<T>::end( ), item); }
 	else
 	{ insert(vector<T>::begin( ) + ZeroBase(index), item); }
 	return 1;
 	}
-	
+
 	size_type ArraySize( )
 	{ return vector<T>::capacity( ); }
-	
+
 	size_type BoundBase(size_type location) const
 	{ if(location == UINT_MAX)
 	return INT_MAX;
@@ -66,44 +66,44 @@ public:
 		return location + lowerbound; }
 	void Detach(size_type index)
 	{ erase(vector<T>::begin( ) + ZeroBase(index)); }
-	
+
 	void Detach(const T& item)
 	{ Destroy(Find(item)); }
-	
+
 	void Destroy(size_type index)
 	{ erase(vector<T>::begin( ) + ZeroBase(index)); }
-	
+
 	void Destroy(const T& item)
 	{ Destroy(Find(item)); }
-	
+
 	size_type Find(const T& item) const
-	{ const_iterator location = find(vector<T>::begin( ), 
+	{ const_iterator location = find(vector<T>::begin( ),
 	vector<T>::end( ), item);
 	if(location != vector<T>::end( ))
-		return BoundBase(size_type(location - 
+		return BoundBase(size_type(location -
 		vector<T>::begin( )));
 	else
 		return INT_MAX; }
-	
+
 	size_type GetItemsInContainer( )
 	{ return vector<T>::size( ); }
-	
+
 	void Grow(size_type index)
 	{ if( index < lowerbound )
-	Reallocate(ArraySize( ) + (index - 
+	Reallocate(ArraySize( ) + (index -
 	lowerbound));
 	else if( index >= BoundBase(vector<T>::size( )))
 		Reallocate(ZeroBase(index) ); }
-	
+
 	int HasMember(const T& item)
 	{ if(Find(item) != INT_MAX)
 	return 1;
 	else
 		return 0; }
-	
+
 	int IsEmpty( )
 	{ return vector<T>::empty( ); }
-	
+
 	int IsFull( )
 	{ if(growable)
 	return 0;
@@ -111,42 +111,42 @@ public:
 		return 1;
 	else
 		return 0; }
-	
+
 	size_type LowerBound( )
 	{ return lowerbound; }
-	
+
 	T& operator[] (size_type index)
 	{ return vector<T>::
 	operator[](ZeroBase(index)); }
-	
+
 	const T& operator[] (size_type index) const
 	{ return vector<T>::
 	operator[](ZeroBase(index)); }
-	
+
 	void Flush( )
 	{
 		vector<T>::clear();
 	}
-	
-	void Reallocate(size_type sz, 
+
+	void Reallocate(size_type sz,
 		size_type offset = 0)
 	{ if(offset)
 	insert(vector<T>::begin( ), offset, T( ));
 	vector<T>::reserve(sz);
 	erase(vector<T>::end( ) - offset, vector<T>::end( )); }
-	
+
 	void RemoveEntry(size_type index)
 	{ Detach(index); }
-	
+
 	void SetData(size_type index, const T& item)
 	{ (*this)[index] = item; }
-	
+
 	size_type UpperBound( )
 	{ return BoundBase(vector<T>::capacity( )) - 1; }
-	
+
 	size_type ZeroBase(size_type index) const
 	{ return index - lowerbound; }
-	
+
 	// The assignment operator is not inherited (Paul Brannan 5/25/98)
 	TArrayAsVector& operator=(const TArrayAsVector& v) {
 		vector<T>::operator=(v);

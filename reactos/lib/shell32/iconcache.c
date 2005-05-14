@@ -257,7 +257,8 @@ BOOL SIC_Initialize(void)
 	    hSm = LoadImageA(shell32_hInstance, MAKEINTRESOURCEA(1), IMAGE_ICON, cx_small, cy_small, LR_SHARED);
 	    hLg = LoadImageA(shell32_hInstance, MAKEINTRESOURCEA(1), IMAGE_ICON, cx_large, cy_large, LR_SHARED);
 	  }
-         SIC_IconAppend (swShell32Name, index, hSm, hLg);
+         SIC_IconAppend (swShell32Name, index - 1, hSm, hLg);
+         SIC_IconAppend (swShell32Name, -index, hSm, hLg);
 	}
 
 	TRACE("hIconSmall=%p hIconBig=%p\n",ShellSmallIconList, ShellBigIconList);

@@ -151,7 +151,7 @@ acpi_os_map_memory(ACPI_PHYSICAL_ADDRESS phys, u32 size, void **virt)
   *virt = MmMapIoSpace(Address, size, MmNonCached);
   if (!*virt)
     return AE_ERROR;
- 
+
   return AE_OK;
 }
 
@@ -510,7 +510,7 @@ acpi_os_delete_semaphore(
 
   DPRINT("acpi_os_delete_semaphore(handle 0x%X)\n", handle);
 
-  if (!Mutex) 
+  if (!Mutex)
     return AE_BAD_PARAMETER;
 
   ExFreePool(Mutex);
@@ -541,7 +541,7 @@ acpi_os_wait_semaphore(
 
 ACPI_STATUS
 acpi_os_signal_semaphore(
-    ACPI_HANDLE             handle, 
+    ACPI_HANDLE             handle,
     u32                     units)
 {
   PFAST_MUTEX Mutex = (PFAST_MUTEX)handle;

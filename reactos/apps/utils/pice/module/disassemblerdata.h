@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2000-2001 Goran Devic                                                   
+Copyright (c) 2000-2001 Goran Devic
 Modified (c) 2001 Klaus P. Gerlicher
 
 Module Name:
@@ -16,13 +16,13 @@ Environment:
     LINUX 2.2.X
     Kernel mode only
 
-Author: 
+Author:
 
-    Goran Devic                                                   
+    Goran Devic
 
 Revision History:
 
-  17-Mar-2000:  Original                                        (Goran Devic)                                             
+  17-Mar-2000:  Original                                        (Goran Devic)
   05-Jan-2001:  Modified for pICE                               (Klaus P. Gerlicher)
 
 Copyright notice:

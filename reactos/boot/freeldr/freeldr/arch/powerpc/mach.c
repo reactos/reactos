@@ -31,11 +31,11 @@ static int chosen_package, stdin_handle;
 BOOLEAN AcpiPresent = FALSE;
 char BootPath[0x100];
 
-void le_swap( const void *start_addr_v, 
-              const void *end_addr_v, 
+void le_swap( const void *start_addr_v,
+              const void *end_addr_v,
               const void *target_addr_v ) {
-    long *start_addr = (long *)ROUND_DOWN((long)start_addr_v,8), 
-        *end_addr = (long *)ROUND_UP((long)end_addr_v,8), 
+    long *start_addr = (long *)ROUND_DOWN((long)start_addr_v,8),
+        *end_addr = (long *)ROUND_UP((long)end_addr_v,8),
         *target_addr = (long *)ROUND_DOWN((long)target_addr_v,8);
     long tmp;
     while( start_addr <= end_addr ) {
@@ -107,7 +107,7 @@ void ofw_print_number( int num ) {
 
 void PpcPutChar( int ch ) {
     char buf[3];
-    if( ch == 0x0a ) { buf[0] = 0x0d; buf[1] = 0x0a; } 
+    if( ch == 0x0a ) { buf[0] = 0x0d; buf[1] = 0x0a; }
     else { buf[0] = ch; buf[1] = 0; }
     buf[2] = 0;
     ofw_print_string( buf );
@@ -167,12 +167,12 @@ BOOL PpcVideoIsPaletteFixed() {
     return FALSE;
 }
 
-VOID PpcVideoSetPaletteColor( UCHAR Color, 
+VOID PpcVideoSetPaletteColor( UCHAR Color,
                               UCHAR Red, UCHAR Green, UCHAR Blue ) {
     printf( "SetPaletteColor(%x,%x,%x,%x)\n", Color, Red, Green, Blue );
 }
 
-VOID PpcVideoGetPaletteColor( UCHAR Color, 
+VOID PpcVideoGetPaletteColor( UCHAR Color,
                               UCHAR *Red, UCHAR *Green, UCHAR *Blue ) {
     printf( "GetPaletteColor(%x)\n", Color);
 }
@@ -198,7 +198,7 @@ ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
     BiosMemoryMap[0].BaseAddress = 0;
     BiosMemoryMap[0].Length = 32 * 1024 * 1024; /* Assume 32 meg for now */
 
-    printf( "Returning memory map (%dk total)\n", 
+    printf( "Returning memory map (%dk total)\n",
             (int)BiosMemoryMap[0].Length / 1024 );
 
     return 1;
@@ -226,7 +226,7 @@ ULONG PpcDiskGetCacheableBlockCount( ULONG DriveNumber ) {
     return 0;
 }
 
-VOID PpcRTCGetCurrentDateTime( PULONG Hear, PULONG Month, PULONG Day, 
+VOID PpcRTCGetCurrentDateTime( PULONG Hear, PULONG Month, PULONG Day,
                                PULONG Hour, PULONG Minute, PULONG Second ) {
     printf("RTCGeturrentDateTime\n");
 }
@@ -256,7 +256,7 @@ void PpcInit( of_proxy the_ofproxy ) {
     MachVtbl.VideoSetTextCursorPosition = PpcVideoSetTextCursorPosition;
     MachVtbl.VideoHideShowTextCursor = PpcVideoHideShowTextCursor;
     MachVtbl.VideoPutChar = PpcVideoPutChar;
-    MachVtbl.VideoCopyOffScreenBufferToVRAM = 
+    MachVtbl.VideoCopyOffScreenBufferToVRAM =
         PpcVideoCopyOffScreenBufferToVRAM;
     MachVtbl.VideoIsPaletteFixed = PpcVideoIsPaletteFixed;
     MachVtbl.VideoSetPaletteColor = PpcVideoSetPaletteColor;
@@ -276,13 +276,13 @@ void PpcInit( of_proxy the_ofproxy ) {
     MachVtbl.HwDetect = PpcHwDetect;
 
     printf( "FreeLDR version [%s]\n", GetFreeLoaderVersionString() );
-    BootMain("freeldr-ppc");    
+    BootMain("freeldr-ppc");
 }
 
 void MachInit(char *CmdLine) {
     int len;
     printf( "Determining boot device:\n" );
-    len = ofw_getprop(chosen_package, "bootpath", 
+    len = ofw_getprop(chosen_package, "bootpath",
                       BootPath, sizeof(BootPath));
     printf( "Got %d bytes of path\n", len );
     BootPath[len] = 0;

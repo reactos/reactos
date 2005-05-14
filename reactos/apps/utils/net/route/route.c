@@ -20,7 +20,7 @@
 #define IN_ADDR_OF(x) *((struct in_addr *)&(x))
 
 int usage() {
-    fprintf( stderr, 
+    fprintf( stderr,
 	     "route usage:\n"
 	     "route print\n"
 	     "  prints the route table\n"
@@ -45,7 +45,7 @@ int print_routes() {
     }
 
     if( Error == ERROR_SUCCESS ) {
-	printf( "%-16s%-16s%-16s%-10s%-10s\n", 
+	printf( "%-16s%-16s%-16s%-10s%-10s\n",
 		"Destination",
 		"Netmask",
 		"Gateway",
@@ -79,7 +79,7 @@ int print_routes() {
     }
 }
 
-int convert_add_cmd_line( PMIB_IPFORWARDROW RowToAdd, 
+int convert_add_cmd_line( PMIB_IPFORWARDROW RowToAdd,
 			  int argc, char **argv ) {
     int i;
 
@@ -105,7 +105,7 @@ int add_route( int argc, char **argv ) {
     DWORD Error;
 
     if( argc < 2 || !convert_add_cmd_line( &RowToAdd, argc, argv ) ) {
-	fprintf( stderr, 
+	fprintf( stderr,
 		 "route add usage:\n"
 		 "route add <target> [mask <mask>] <gw> [metric <m>]\n"
 		 "  Adds a route to the IP route table.\n"
@@ -115,10 +115,10 @@ int add_route( int argc, char **argv ) {
 		 "  <m>      is the metric to use (lower is preferred)\n" );
 	return 1;
     }
-    
-    if( (Error = CreateIpForwardEntry( &RowToAdd )) == ERROR_SUCCESS ) 
+
+    if( (Error = CreateIpForwardEntry( &RowToAdd )) == ERROR_SUCCESS )
 	return 0;
-    
+
     fprintf( stderr, "Route addition failed\n" );
     return Error;
 }
@@ -128,7 +128,7 @@ int del_route( int argc, char **argv ) {
     DWORD Error;
 
     if( argc < 2 || !convert_add_cmd_line( &RowToDel, argc, argv ) ) {
-	fprintf( stderr, 
+	fprintf( stderr,
 		 "route delete usage:\n"
 		 "route delete <target> <gw>\n"
 		 "  Removes a route from the IP route table.\n"
@@ -136,21 +136,21 @@ int del_route( int argc, char **argv ) {
 		 "  <gw>     is the gateway to remove the route from.\n" );
 	return 1;
     }
-    
-    if( (Error = DeleteIpForwardEntry( &RowToDel )) == ERROR_SUCCESS ) 
+
+    if( (Error = DeleteIpForwardEntry( &RowToDel )) == ERROR_SUCCESS )
 	return 0;
-    
+
     fprintf( stderr, "Route addition failed\n" );
     return Error;
 }
 
 int main( int argc, char **argv ) {
     if( argc < 2 ) return usage();
-    else if( !strcasecmp( argv[1], "print" ) ) 
+    else if( !strcasecmp( argv[1], "print" ) )
 	return print_routes();
-    else if( !strcasecmp( argv[1], "add" ) ) 
+    else if( !strcasecmp( argv[1], "add" ) )
 	return add_route( argc-2, argv+2 );
-    else if( !strcasecmp( argv[1], "delete" ) ) 
+    else if( !strcasecmp( argv[1], "delete" ) )
 	return del_route( argc-2, argv+2 );
     else return usage();
 }

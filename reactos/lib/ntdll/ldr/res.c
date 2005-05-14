@@ -1,5 +1,5 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            lib/ntdll/ldr/res.c
@@ -63,7 +63,7 @@ FindEntryById(PIMAGE_RESOURCE_DIRECTORY ResDir,
             high = mid - 1;
         else
             low = mid + 1;
-				
+
         mid = (low + high)/2;
     }
 
@@ -157,7 +157,7 @@ LdrFindResource_U(PVOID BaseAddress,
                   high = mid - 1;
                else
                   low = mid + 1;
-				
+
                mid = (low + high)/2;
             }
         } else {

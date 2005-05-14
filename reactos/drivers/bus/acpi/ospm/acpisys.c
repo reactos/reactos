@@ -16,7 +16,7 @@
 
 #ifdef  ALLOC_PRAGMA
 
-// Make the initialization routines discardable, so that they 
+// Make the initialization routines discardable, so that they
 // don't waste space
 
 #pragma  alloc_text(init, DriverEntry)
@@ -27,8 +27,8 @@
 NTSTATUS
 STDCALL
 ACPIDispatchDeviceControl(
-  IN PDEVICE_OBJECT DeviceObject, 
-  IN PIRP Irp) 
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PIRP Irp)
 {
   PIO_STACK_LOCATION IrpSp;
   NTSTATUS Status;

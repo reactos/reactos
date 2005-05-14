@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pageop.c
  * PURPOSE:         No purpose listed.
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
@@ -134,7 +134,7 @@ MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
 /*
  * FUNCTION: Get a page operation descriptor corresponding to
  * the memory area and either the segment, offset pair or the
- * pid, address pair.      
+ * pid, address pair.
  */
 {
    ULONG_PTR Hash;

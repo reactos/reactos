@@ -1,7 +1,7 @@
 /*
  * Winefile
  *
- * Copyright 2000, 2003, 2004 Martin Fuchs
+ * Copyright 2000, 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -187,6 +187,15 @@ int swprintf(wchar_t* buffer, const wchar_t* fmt, ...)
 	return 0;
 }
 
+
+#define TMP_ALLOC(s) HeapAlloc(GetProcessHeap(), 0, s)
+#define TMP_FREE(p) HeapFree(GetProcessHeap(), 0, p)
+
+#else
+
+#define TMP_ALLOC(s) alloca(s)
+#define TMP_FREE(p)
+
 #endif
 
 
@@ -248,6 +257,17 @@ static void display_error(HWND hwnd, DWORD error)
 		MessageBox(hwnd, RS(b1,IDS_ERROR), RS(b2,IDS_WINEFILE), MB_OK);
 
 	LocalFree(msg);
+}
+
+
+/* display network error message using WNetGetLastError() */
+static void display_network_error(HWND hwnd)
+{
+	TCHAR msg[BUFFER_LEN], provider[BUFFER_LEN], b2[BUFFER_LEN];
+	DWORD error;
+
+	if (WNetGetLastError(&error, msg, BUFFER_LEN, provider, BUFFER_LEN) == NO_ERROR)
+		MessageBox(hwnd, msg, RS(b2,IDS_WINEFILE), MB_OK);
 }
 
 
@@ -828,7 +848,7 @@ HICON extract_icon(IShellFolder* folder, LPCITEMIDLIST pidl)
 }
 
 
-static Entry* find_entry_shell(Entry* dir, LPITEMIDLIST pidl)
+static Entry* find_entry_shell(Entry* dir, LPCITEMIDLIST pidl)
 {
 	Entry* entry;
 
@@ -865,7 +885,7 @@ static Entry* read_tree_shell(Root* root, LPITEMIDLIST pidl, SORT_ORDER sortOrde
 		if (!pidl->mkid.cb)
 			break;
 
-		 /* copy first element of item idlist	-> could be replaced by SHBindToParent() */
+		 /* copy first element of item idlist */
 		next_pidl = (*Globals.iMalloc->lpVtbl->Alloc)(Globals.iMalloc, pidl->mkid.cb+sizeof(USHORT));
 		memcpy(next_pidl, pidl, pidl->mkid.cb);
 		((LPITEMIDLIST)((LPBYTE)next_pidl+pidl->mkid.cb))->mkid.cb = 0;
@@ -1103,8 +1123,8 @@ static int compareType(const WIN32_FIND_DATA* fd1, const WIN32_FIND_DATA* fd2)
 
 static int compareName(const void* arg1, const void* arg2)
 {
-	const WIN32_FIND_DATA* fd1 = &(*(Entry**)arg1)->data;
-	const WIN32_FIND_DATA* fd2 = &(*(Entry**)arg2)->data;
+	const WIN32_FIND_DATA* fd1 = &(*(const Entry* const*)arg1)->data;
+	const WIN32_FIND_DATA* fd2 = &(*(const Entry* const*)arg2)->data;
 
 	int cmp = compareType(fd1, fd2);
 	if (cmp)
@@ -1115,8 +1135,8 @@ static int compareName(const void* arg1, const void* arg2)
 
 static int compareExt(const void* arg1, const void* arg2)
 {
-	const WIN32_FIND_DATA* fd1 = &(*(Entry**)arg1)->data;
-	const WIN32_FIND_DATA* fd2 = &(*(Entry**)arg2)->data;
+	const WIN32_FIND_DATA* fd1 = &(*(const Entry* const*)arg1)->data;
+	const WIN32_FIND_DATA* fd2 = &(*(const Entry* const*)arg2)->data;
 	const TCHAR *name1, *name2, *ext1, *ext2;
 
 	int cmp = compareType(fd1, fd2);
@@ -1148,8 +1168,8 @@ static int compareExt(const void* arg1, const void* arg2)
 
 static int compareSize(const void* arg1, const void* arg2)
 {
-	WIN32_FIND_DATA* fd1 = &(*(Entry**)arg1)->data;
-	WIN32_FIND_DATA* fd2 = &(*(Entry**)arg2)->data;
+	const WIN32_FIND_DATA* fd1 = &(*(const Entry* const*)arg1)->data;
+	const WIN32_FIND_DATA* fd2 = &(*(const Entry* const*)arg2)->data;
 
 	int cmp = compareType(fd1, fd2);
 	if (cmp)
@@ -1169,8 +1189,8 @@ static int compareSize(const void* arg1, const void* arg2)
 
 static int compareDate(const void* arg1, const void* arg2)
 {
-	WIN32_FIND_DATA* fd1 = &(*(Entry**)arg1)->data;
-	WIN32_FIND_DATA* fd2 = &(*(Entry**)arg2)->data;
+	const WIN32_FIND_DATA* fd1 = &(*(const Entry* const*)arg1)->data;
+	const WIN32_FIND_DATA* fd2 = &(*(const Entry* const*)arg2)->data;
 
 	int cmp = compareType(fd1, fd2);
 	if (cmp)
@@ -1199,7 +1219,7 @@ static void SortDirectory(Entry* dir, SORT_ORDER sortOrder)
 		len++;
 
 	if (len) {
-		array = (Entry**) alloca(len*sizeof(Entry*));
+		array = (Entry**) TMP_ALLOC(len*sizeof(Entry*));
 
 		p = array;
 		for(entry=dir->down; entry; entry=entry->next)
@@ -1214,6 +1234,8 @@ static void SortDirectory(Entry* dir, SORT_ORDER sortOrder)
 			p[0]->next = p[1];
 
 		(*p)->next = 0;
+
+		TMP_FREE(array);
 	}
 }
 
@@ -1634,6 +1656,7 @@ static INT_PTR CALLBACK DestinationDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam, 
 	switch(nmsg) {
 		case WM_INITDIALOG:
 			SetWindowLong(hwnd, GWL_USERDATA, lparam);
+			SetWindowText(GetDlgItem(hwnd, 201), (LPCTSTR)lparam);
 			return 1;
 
 		case WM_COMMAND: {
@@ -1988,6 +2011,35 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 					}
 					break;}
 
+				case ID_CONNECT_NETWORK_DRIVE: {
+					DWORD ret = WNetConnectionDialog(hwnd, RESOURCETYPE_DISK);
+					if (ret!=NO_ERROR && ret!=(DWORD)-1) {
+						if (ret == ERROR_EXTENDED_ERROR)
+							display_network_error(hwnd);
+						else
+							display_error(hwnd, ret);
+					}
+					break;}
+
+				case ID_DISCONNECT_NETWORK_DRIVE: {
+					DWORD ret = WNetDisconnectDialog(hwnd, RESOURCETYPE_DISK);
+					if (ret!=NO_ERROR && ret!=(DWORD)-1) {
+						if (ret == ERROR_EXTENDED_ERROR)
+							display_network_error(hwnd);
+						else
+							display_error(hwnd, ret);
+					}
+					break;}
+
+#ifndef __MINGW32__	/* SHFormatDrive missing in MinGW (as of 13.5.2005) */
+				case ID_FORMAT_DISK: {
+					UINT sem_org = SetErrorMode(0); /* Get the current Error Mode settings. */
+					SetErrorMode(sem_org & ~SEM_FAILCRITICALERRORS); /* Force O/S to handle */
+					SHFormatDrive(hwnd, 0 /* A: */, SHFMT_ID_DEFAULT, 0);
+					SetErrorMode(sem_org); /* Put it back the way it was. */
+					break;}
+#endif
+
 				case ID_HELP:
 					WinHelp(hwnd, RS(b1,IDS_WINEFILE), HELP_INDEX, 0);
 					break;
@@ -2008,7 +2060,7 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 					if (activate_fs_window(RS(b1,IDS_UNIXFS)))
 						break;
 
-	
+
 #ifdef UNICODE
 					call_getcwd(cpath, MAX_PATH);
 					MultiByteToWideChar(CP_UNIXCP, 0, cpath, -1, path, MAX_PATH);
@@ -2205,7 +2257,7 @@ static void init_output(HWND hwnd)
 static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol);
 
 
-/* calculate prefered width for all visible columns */
+/* calculate preferred width for all visible columns */
 
 static BOOL calc_widths(Pane* pane, BOOL anyway)
 {
@@ -2292,7 +2344,7 @@ static BOOL calc_widths(Pane* pane, BOOL anyway)
 }
 
 
-/* calculate one prefered column width */
+/* calculate one preferred column width */
 
 static void calc_single_width(Pane* pane, int col)
 {
@@ -2354,12 +2406,12 @@ static void calc_single_width(Pane* pane, int col)
 
 /* insert listbox entries after index idx */
 
-static void insert_entries(Pane* pane, Entry* dir, int idx)
+static int insert_entries(Pane* pane, Entry* dir, int idx)
 {
 	Entry* entry = dir;
 
 	if (!entry)
-		return;
+		return idx;
 
 	ShowWindow(pane->hwnd, SW_HIDE);
 
@@ -2385,10 +2437,46 @@ static void insert_entries(Pane* pane, Entry* dir, int idx)
 		ListBox_InsertItemData(pane->hwnd, idx, entry);
 
 		if (pane->treePane && entry->expanded)
-			insert_entries(pane, entry->down, idx);
+			idx = insert_entries(pane, entry->down, idx);
 	}
 
 	ShowWindow(pane->hwnd, SW_SHOW);
+
+	return idx;
+}
+
+
+static void format_bytes(LPTSTR buffer, LONGLONG bytes)
+{
+	const static TCHAR sFmtGB[] = {'%', '.', '1', 'f', ' ', 'G', 'B', '\0'};
+	const static TCHAR sFmtMB[] = {'%', '.', '1', 'f', ' ', 'M', 'B', '\0'};
+	const static TCHAR sFmtkB[] = {'%', '.', '1', 'f', ' ', 'k', 'B', '\0'};
+
+	float fBytes = (float)bytes;
+
+	if (bytes >= 1073741824)	// 1 GB
+		_stprintf(buffer, sFmtGB, fBytes/1073741824.f+.5f);
+	else if (bytes >= 1048576)	// 1 MB
+		_stprintf(buffer, sFmtMB, fBytes/1048576.f+.5f);
+	else if (bytes >= 1024)		// 1 kB
+		_stprintf(buffer, sFmtMB, fBytes/1024.f+.5f);
+	else
+		_stprintf(buffer, sLongNumFmt, bytes);
+}
+
+static void set_space_status()
+{
+	ULARGE_INTEGER ulFreeBytesToCaller, ulTotalBytes, ulFreeBytes;
+	TCHAR fmt[64], b1[64], b2[64], buffer[BUFFER_LEN];
+
+	if (GetDiskFreeSpaceEx(NULL, &ulFreeBytesToCaller, &ulTotalBytes, &ulFreeBytes)) {
+		format_bytes(b1, ulFreeBytesToCaller.QuadPart);
+		format_bytes(b2, ulTotalBytes.QuadPart);
+		_stprintf(buffer, RS(fmt,IDS_FREE_SPACE_FMT), b1, b2);
+	} else
+		_tcscpy(buffer, sQMarks);
+
+	SendMessage(Globals.hstatusbar, SB_SETTEXT, 0, (LPARAM)buffer);
 }
 
 
@@ -2701,13 +2789,13 @@ static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWi
 #endif
 					)
 					LineTo(dis->hDC, x, dis->rcItem.bottom);
-
+/*@@
 				if (entry->down && entry->expanded) {
 					x += IMAGE_WIDTH+TREE_LINE_DX;
 					MoveToEx(dis->hDC, x, dis->rcItem.top+IMAGE_HEIGHT, 0);
 					LineTo(dis->hDC, x, dis->rcItem.bottom);
 				}
-
+*/
 				SelectClipRgn(dis->hDC, hrgn_org);
 				if (hrgn_org) DeleteObject(hrgn_org);
 				/* SelectObject(dis->hDC, holdPen); */
@@ -3245,7 +3333,8 @@ static void set_curdir(ChildWnd* child, Entry* entry, HWND hwnd)
 		SetWindowText(child->hwnd, path);
 
 	if (path[0])
-		SetCurrentDirectory(path);
+		if (SetCurrentDirectory(path))
+			set_space_status();
 }
 
 
@@ -3394,7 +3483,7 @@ static BOOL pane_command(Pane* pane, UINT cmd)
 			break;
 
 #ifndef _NO_EXTENSIONS
-		case ID_PREFERED_SIZES: {
+		case ID_PREFERRED_SIZES: {
 			calc_widths(pane, TRUE);
 			set_header(pane);
 			InvalidateRect(pane->hwnd, 0, TRUE);
@@ -3413,7 +3502,7 @@ static BOOL pane_command(Pane* pane, UINT cmd)
 
 static IContextMenu2* s_pctxmenu2 = NULL;
 
-#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
+#ifndef __MINGW32__	/* IContextMenu3 missing in MinGW (as of 6.2.2005) */
 static IContextMenu3* s_pctxmenu3 = NULL;
 #endif
 
@@ -3421,7 +3510,7 @@ static void CtxMenu_reset()
 {
 	s_pctxmenu2 = NULL;
 
-#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
+#ifndef __MINGW32__	/* IContextMenu3 missing in MinGW (as of 6.2.2005) */
 	s_pctxmenu3 = NULL;
 #endif
 }
@@ -3432,7 +3521,7 @@ IContextMenu* CtxMenu_query_interfaces(IContextMenu* pcm1)
 
 	CtxMenu_reset();
 
-#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
+#ifndef __MINGW32__	/* IContextMenu3 missing in MinGW (as of 6.2.2005) */
 	if ((*pcm1->lpVtbl->QueryInterface)(pcm1, &IID_IContextMenu3, (void**)&pcm) == NOERROR)
 		s_pctxmenu3 = (LPCONTEXTMENU3)pcm;
 	else
@@ -3449,7 +3538,7 @@ IContextMenu* CtxMenu_query_interfaces(IContextMenu* pcm1)
 
 static BOOL CtxMenu_HandleMenuMsg(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
-#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
+#ifndef __MINGW32__	/* IContextMenu3 missing in MinGW (as of 6.2.2005) */
 	if (s_pctxmenu3) {
 		if (SUCCEEDED((*s_pctxmenu3->lpVtbl->HandleMenuMsg)(s_pctxmenu3, nmsg, wparam, lparam)))
 			return TRUE;
@@ -3674,7 +3763,8 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 #endif /* _NO_EXTENSIONS */
 
 		case WM_SETFOCUS:
-			SetCurrentDirectory(child->path);
+			if (SetCurrentDirectory(child->path))
+				set_space_status();
 			SetFocus(child->focus_pane? child->right.hwnd: child->left.hwnd);
 			break;
 
@@ -3700,9 +3790,11 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 
 				case ID_FILE_MOVE: {
 					TCHAR new_name[BUFFER_LEN], old_name[BUFFER_LEN];
-					int len;
+					int len, ret;
 
-					int ret = DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_SELECT_DESTINATION), hwnd, DestinationDlgProc, (LPARAM)new_name);
+					get_path(pane->cur, new_name);
+
+					ret = DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_SELECT_DESTINATION), hwnd, DestinationDlgProc, (LPARAM)new_name);
 					if (ret != IDOK)
 						break;
 
@@ -3710,12 +3802,10 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 						get_path(pane->cur->up, old_name);
 						len = lstrlen(old_name);
 
-						if (old_name[len-1]!='\\' && old_name[len-1]!='/') {
+						if (old_name[len-1]!='\\' && old_name[len-1]!='/')
 							old_name[len++] = '/';
-							old_name[len] = '\n';
-						}
 
-						lstrcpy(&old_name[len], new_name);
+						lstrcpy(old_name+len, new_name);
 						lstrcpy(new_name, old_name);
 					}
 
@@ -3768,16 +3858,17 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 
 #ifdef _SHELL_FOLDERS
 		case WM_CONTEXTMENU: {
+			POINT pt, pt_clnt;
 			Pane* pane;
 			int idx;
 
 			 /* first select the current item in the listbox */
 			HWND hpanel = (HWND) wparam;
-			POINTS* ppos = &MAKEPOINTS(lparam);
-			POINT pt; POINTSTOPOINT(pt, *ppos);
-			ScreenToClient(hpanel, &pt);
-			SendMessage(hpanel, WM_LBUTTONDOWN, 0, MAKELONG(pt.x, pt.y));
-			SendMessage(hpanel, WM_LBUTTONUP, 0, MAKELONG(pt.x, pt.y));
+			pt_clnt.x = pt.x = (short)LOWORD(lparam);
+			pt_clnt.y = pt.y = (short)HIWORD(lparam);
+			ScreenToClient(hpanel, &pt_clnt);
+			SendMessage(hpanel, WM_LBUTTONDOWN, 0, MAKELONG(pt_clnt.x, pt_clnt.y));
+			SendMessage(hpanel, WM_LBUTTONUP, 0, MAKELONG(pt_clnt.x, pt_clnt.y));
 
 			 /* now create the popup menu using shell namespace and IContextMenu */
 			pane = GetFocus()==child->left.hwnd? &child->left: &child->right;
@@ -3795,7 +3886,7 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 
 					 /* get and use the parent folder to display correct context menu in all cases */
 					if (SUCCEEDED(SHBindToParent(pidl_abs, &IID_IShellFolder, (LPVOID*)&parentFolder, &pidlLast))) {
-						hr = ShellFolderContextMenu(parentFolder, hwnd, 1, &pidlLast, ppos->x, ppos->y);
+						hr = ShellFolderContextMenu(parentFolder, hwnd, 1, &pidlLast, pt.x, pt.y);
 
 						(*parentFolder->lpVtbl->Release)(parentFolder);
 					}
@@ -3808,7 +3899,7 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 
 		  case WM_MEASUREITEM:
 		  draw_menu_item:
-			if (!wparam)	// Is the message menu-related?
+			if (!wparam)	/* Is the message menu-related? */
 				if (CtxMenu_HandleMenuMsg(nmsg, wparam, lparam))
 					return TRUE;
 
@@ -3820,8 +3911,8 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 
 			break;
 
-#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
-		  case WM_MENUCHAR:	// only supported by IContextMenu3
+#ifndef __MINGW32__	/* IContextMenu3 missing in MinGW (as of 6.2.2005) */
+		  case WM_MENUCHAR:	/* only supported by IContextMenu3 */
 		   if (s_pctxmenu3) {
 			   LRESULT lResult = 0;
 

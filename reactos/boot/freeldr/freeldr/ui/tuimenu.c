@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-	
+
 #include <freeldr.h>
 #include <rtl.h>
 #include <ui.h>
@@ -139,7 +139,7 @@ BOOL TuiDisplayMenu(PCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenu
 	{
 		*SelectedMenuItem = MenuInformation.SelectedMenuItem;
 	}
-	
+
 	return TRUE;
 }
 
@@ -385,7 +385,7 @@ ULONG TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo, UiMenuKeyPressFilterC
 		switch (KeyEvent)
 		{
 		case KEY_UP:
-			
+
 			if (MenuInfo->SelectedMenuItem > 0)
 			{
 				MenuInfo->SelectedMenuItem--;

@@ -12,7 +12,7 @@ int _wutime(const wchar_t* filename, struct _utimbuf* buf)
 {
     int fn;
     int ret;
-  
+
     fn = _wopen(filename, _O_RDWR);
     if (fn == -1) {
         __set_errno(EBADF);

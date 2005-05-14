@@ -213,7 +213,7 @@ IntEnumDisplaySettings(
   IN DWORD iModeNum,
   IN OUT LPDEVMODEW pDevMode,
   IN DWORD dwFlags);
-  
+
 LONG
 FASTCALL
 IntChangeDisplaySettings(

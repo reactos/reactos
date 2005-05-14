@@ -127,7 +127,7 @@ extern "C" {
 #define IDEWriteDMAStatus(Address, Data) \
   (ScsiPortWritePortUchar((PUCHAR)((Address) + 2), (Data)))
 #define IDEWritePRDTable(Address, Data) \
-  (ScsiPortWritePortUlong((PULONG)((Address) + 4), (Data)))  
+  (ScsiPortWritePortUlong((PULONG)((Address) + 4), (Data)))
 
 
 //

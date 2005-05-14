@@ -19,7 +19,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-    
+
 #include "precomp.h"
 
 CRITICAL_SECTION                 PerfDataCriticalSection;
@@ -42,16 +42,16 @@ PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION SystemProcessorTimeInfo = NULL;
 BOOL PerfDataInitialize(void)
 {
     NTSTATUS    status;
-    
+
     InitializeCriticalSection(&PerfDataCriticalSection);
-    
+
     /*
      * Get number of processors in the system
      */
     status = NtQuerySystemInformation(SystemBasicInformation, &SystemBasicInfo, sizeof(SystemBasicInfo), NULL);
     if (status != NO_ERROR)
         return FALSE;
-    
+
     return TRUE;
 }
 
@@ -148,7 +148,7 @@ void PerfDataRefresh(void)
      * Save system cache info
      */
     memcpy(&SystemCacheInfo, &SysCacheInfo, sizeof(SYSTEM_CACHE_INFORMATION));
-    
+
     /*
      * Save system processor time info
      */
@@ -156,13 +156,13 @@ void PerfDataRefresh(void)
         HeapFree(GetProcessHeap(), 0, SystemProcessorTimeInfo);
     }
     SystemProcessorTimeInfo = SysProcessorTimeInfo;
-    
+
     /*
      * Save system handle info
      */
     memcpy(&SystemHandleInfo, SysHandleInfoData, sizeof(SYSTEM_HANDLE_INFORMATION));
     HeapFree(GetProcessHeap(), 0, SysHandleInfoData);
-    
+
     for (CurrentKernelTime=0, Idx=0; Idx<SystemBasicInfo.NumberProcessors; Idx++) {
         CurrentKernelTime += Li2Double(SystemProcessorTimeInfo[Idx].KernelTime);
         CurrentKernelTime += Li2Double(SystemProcessorTimeInfo[Idx].DpcTime);
@@ -179,7 +179,7 @@ void PerfDataRefresh(void)
         /*  CurrentCpuIdle = IdleTime / SystemTime */
         dbIdleTime = dbIdleTime / dbSystemTime;
         dbKernelTime = dbKernelTime / dbSystemTime;
-        
+
         /*  CurrentCpuUsage% = 100 - (CurrentCpuIdle * 100) / NumberOfProcessors */
         dbIdleTime = 100.0 - dbIdleTime * 100.0 / (double)SystemBasicInfo.NumberProcessors; /* + 0.5; */
         dbKernelTime = 100.0 - dbKernelTime * 100.0 / (double)SystemBasicInfo.NumberProcessors; /* + 0.5; */
@@ -259,7 +259,7 @@ void PerfDataRefresh(void)
         pPerfData[Idx].HandleCount = pSPI->HandleCount;
         pPerfData[Idx].ThreadCount = pSPI->NumberOfThreads;
         pPerfData[Idx].SessionId = pSPI->SessionId;
-        
+
         if (pSPI->UniqueProcessId != NULL) {
             hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, (DWORD)pSPI->UniqueProcessId);
             if (hProcess) {

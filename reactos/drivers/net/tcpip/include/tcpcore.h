@@ -167,23 +167,23 @@ struct sk_buff {
 		struct ipxhdr	*ipxh;
 		unsigned char	*raw;
 	} nh;
-  
+
 	/* Link layer header */
-	union 
-	{	
+	union
+	{
 	  	struct ethhdr	*ethernet;
 	  	unsigned char 	*raw;
 	} mac;
 
 	struct  dst_entry *dst;
 
-	/* 
+	/*
 	 * This is the control buffer. It is free to use for every
 	 * layer. Please put your private variables there. If you
 	 * want to keep them across layers you have to do a skb_clone()
 	 * first. This is owned by whoever has the skb queued ATM.
-	 */ 
-	char		cb[48];	 
+	 */
+	char		cb[48];
 
 	unsigned int 	len;			/* Length of actual data			*/
  	unsigned int 	data_len;
@@ -244,7 +244,7 @@ extern struct sk_buff *		skb_copy(const struct sk_buff *skb, int priority);
 extern struct sk_buff *		pskb_copy(struct sk_buff *skb, int gfp_mask);
 extern int			pskb_expand_head(struct sk_buff *skb, int nhead, int ntail, int gfp_mask);
 extern struct sk_buff *		skb_realloc_headroom(struct sk_buff *skb, unsigned int headroom);
-extern struct sk_buff *		skb_copy_expand(const struct sk_buff *skb, 
+extern struct sk_buff *		skb_copy_expand(const struct sk_buff *skb,
 						int newheadroom,
 						int newtailroom,
 						int priority);
@@ -261,7 +261,7 @@ extern void	skb_under_panic(struct sk_buff *skb, int len, void *here);
  *
  *	Returns true if the queue is empty, false otherwise.
  */
- 
+
 static inline int skb_queue_empty(struct sk_buff_head *list)
 {
 	return (list->next == (struct sk_buff *) list);
@@ -274,7 +274,7 @@ static inline int skb_queue_empty(struct sk_buff_head *list)
  *	Makes another reference to a socket buffer and returns a pointer
  *	to the buffer.
  */
- 
+
 static inline struct sk_buff *skb_get(struct sk_buff *skb)
 {
 	atomic_inc(&skb->users);
@@ -285,7 +285,7 @@ static inline struct sk_buff *skb_get(struct sk_buff *skb)
  * If users==1, we are the only owner and are can avoid redundant
  * atomic change.
  */
- 
+
 /**
  *	kfree_skb - free an sk_buff
  *	@skb: buffer to free
@@ -293,7 +293,7 @@ static inline struct sk_buff *skb_get(struct sk_buff *skb)
  *	Drop a reference to the buffer and free it if the usage count has
  *	hit zero.
  */
- 
+
 static inline void kfree_skb(struct sk_buff *skb)
 {
 	if (atomic_read(&skb->users) == 1 || atomic_dec_and_test(&skb->users))
@@ -304,7 +304,7 @@ static inline void kfree_skb(struct sk_buff *skb)
 static inline void kfree_skb_fast(struct sk_buff *skb)
 {
 	if (atomic_read(&skb->users) == 1 || atomic_dec_and_test(&skb->users))
-		kfree_skbmem(skb);	
+		kfree_skbmem(skb);
 }
 
 /**
@@ -328,17 +328,17 @@ static inline int skb_cloned(struct sk_buff *skb)
  *	Returns true if more than one person has a reference to this
  *	buffer.
  */
- 
+
 static inline int skb_shared(struct sk_buff *skb)
 {
 	return (atomic_read(&skb->users) != 1);
 }
 
-/** 
+/**
  *	skb_share_check - check if buffer is shared and if so clone it
  *	@skb: buffer to check
  *	@pri: priority for memory allocation
- *	
+ *
  *	If the buffer is shared the buffer is cloned and the old copy
  *	drops a reference. A new clone with a single reference is returned.
  *	If the buffer is not shared the original buffer is returned. When
@@ -347,7 +347,7 @@ static inline int skb_shared(struct sk_buff *skb)
  *
  *	NULL is returned on a memory allocation failure.
  */
- 
+
 static inline struct sk_buff *skb_share_check(struct sk_buff *skb, int pri)
 {
 	if (skb_shared(skb)) {
@@ -366,7 +366,7 @@ static inline struct sk_buff *skb_share_check(struct sk_buff *skb, int pri)
  *	and a couple of other messy ones. The normal one is tcpdumping
  *	a packet thats being forwarded.
  */
- 
+
 /**
  *	skb_unshare - make a copy of a shared buffer
  *	@skb: buffer to check
@@ -380,7 +380,7 @@ static inline struct sk_buff *skb_share_check(struct sk_buff *skb, int pri)
  *
  *	%NULL is returned on a memory allocation failure.
  */
- 
+
 static inline struct sk_buff *skb_unshare(struct sk_buff *skb, int pri)
 {
 	struct sk_buff *nskb;
@@ -404,7 +404,7 @@ static inline struct sk_buff *skb_unshare(struct sk_buff *skb, int pri)
  *	The reference count is not incremented and the reference is therefore
  *	volatile. Use with caution.
  */
- 
+
 static inline struct sk_buff *skb_peek(struct sk_buff_head *list_)
 {
 	struct sk_buff *list = ((struct sk_buff *)list_)->next;
@@ -439,9 +439,9 @@ static inline struct sk_buff *skb_peek_tail(struct sk_buff_head *list_)
  *	skb_queue_len	- get queue length
  *	@list_: list to measure
  *
- *	Return the length of an &sk_buff queue. 
+ *	Return the length of an &sk_buff queue.
  */
- 
+
 static inline __u32 skb_queue_len(struct sk_buff_head *list_)
 {
 	return(list_->qlen);
@@ -471,8 +471,8 @@ static inline void skb_queue_head_init(struct sk_buff_head *list)
  *	and you must therefore hold required locks before calling it.
  *
  *	A buffer cannot be placed on two lists at the same time.
- */	
- 
+ */
+
 static inline void __skb_queue_head(struct sk_buff_head *list, struct sk_buff *newsk)
 {
 	struct sk_buff *prev, *next;
@@ -498,7 +498,7 @@ static inline void __skb_queue_head(struct sk_buff_head *list, struct sk_buff *n
  *	safely.
  *
  *	A buffer cannot be placed on two lists at the same time.
- */	
+ */
 
 static inline void skb_queue_head(struct sk_buff_head *list, struct sk_buff *newsk)
 {
@@ -518,8 +518,8 @@ static inline void skb_queue_head(struct sk_buff_head *list, struct sk_buff *new
  *	and you must therefore hold required locks before calling it.
  *
  *	A buffer cannot be placed on two lists at the same time.
- */	
- 
+ */
+
 
 static inline void __skb_queue_tail(struct sk_buff_head *list, struct sk_buff *newsk)
 {
@@ -545,7 +545,7 @@ static inline void __skb_queue_tail(struct sk_buff_head *list, struct sk_buff *n
  *	safely.
  *
  *	A buffer cannot be placed on two lists at the same time.
- */	
+ */
 
 static inline void skb_queue_tail(struct sk_buff_head *list, struct sk_buff *newsk)
 {
@@ -673,7 +673,7 @@ static inline void skb_append(struct sk_buff *old, struct sk_buff *newsk)
  * remove sk_buff from list. _Must_ be called atomically, and with
  * the list known..
  */
- 
+
 static inline void __skb_unlink(struct sk_buff *skb, struct sk_buff_head *list)
 {
 	struct sk_buff * next, * prev;
@@ -694,9 +694,9 @@ static inline void __skb_unlink(struct sk_buff *skb, struct sk_buff_head *list)
  *
  *	Place a packet after a given packet in a list. The list locks are taken
  *	and this function is atomic with respect to other list locked calls
- *	
- *	Works even without knowing the list it is sitting on, which can be 
- *	handy at times. It also means that THE LIST MUST EXIST when you 
+ *
+ *	Works even without knowing the list it is sitting on, which can be
+ *	handy at times. It also means that THE LIST MUST EXIST when you
  *	unlink. Thus a list must have its contents unlinked before it is
  *	destroyed.
  */
@@ -728,7 +728,7 @@ static inline void skb_unlink(struct sk_buff *skb)
 
 static inline struct sk_buff *__skb_dequeue_tail(struct sk_buff_head *list)
 {
-	struct sk_buff *skb = skb_peek_tail(list); 
+	struct sk_buff *skb = skb_peek_tail(list);
 	if (skb)
 		__skb_unlink(skb, list);
 	return skb;
@@ -771,7 +771,7 @@ static inline int skb_headlen(const struct sk_buff *skb)
 /*
  *	Add data to an sk_buff
  */
- 
+
 static inline unsigned char *__skb_put(struct sk_buff *skb, unsigned int len)
 {
 	unsigned char *tmp=skb->tail;
@@ -783,14 +783,14 @@ static inline unsigned char *__skb_put(struct sk_buff *skb, unsigned int len)
 
 /**
  *	skb_put - add data to a buffer
- *	@skb: buffer to use 
+ *	@skb: buffer to use
  *	@len: amount of data to add
  *
  *	This function extends the used data area of the buffer. If this would
  *	exceed the total buffer size the kernel will panic. A pointer to the
  *	first byte of the extra data is returned.
  */
- 
+
 static inline unsigned char *skb_put(struct sk_buff *skb, unsigned int len)
 {
 #if 0
@@ -816,7 +816,7 @@ static inline unsigned char *__skb_push(struct sk_buff *skb, unsigned int len)
 
 /**
  *	skb_push - add data to the start of a buffer
- *	@skb: buffer to use 
+ *	@skb: buffer to use
  *	@len: amount of data to add
  *
  *	This function extends the used data area of the buffer at the buffer
@@ -848,7 +848,7 @@ static inline char *__skb_pull(struct sk_buff *skb, unsigned int len)
 
 /**
  *	skb_pull - remove data from the start of a buffer
- *	@skb: buffer to use 
+ *	@skb: buffer to use
  *	@len: amount of data to remove
  *
  *	This function removes data from the start of a buffer, returning
@@ -858,7 +858,7 @@ static inline char *__skb_pull(struct sk_buff *skb, unsigned int len)
  */
 
 static inline unsigned char * skb_pull(struct sk_buff *skb, unsigned int len)
-{	
+{
 	if (len > skb->len)
 		return NULL;
 	return __skb_pull(skb,len);
@@ -876,7 +876,7 @@ static inline char *__pskb_pull(struct sk_buff *skb, unsigned int len)
 }
 
 static inline unsigned char * pskb_pull(struct sk_buff *skb, unsigned int len)
-{	
+{
 	if (len > skb->len)
 		return NULL;
 	return __pskb_pull(skb,len);
@@ -897,7 +897,7 @@ static inline int pskb_may_pull(struct sk_buff *skb, unsigned int len)
  *
  *	Return the number of bytes of free space at the head of an &sk_buff.
  */
- 
+
 static inline int skb_headroom(const struct sk_buff *skb)
 {
 	return skb->data-skb->head;
@@ -1041,7 +1041,7 @@ static inline void __skb_queue_purge(struct sk_buff_head *list)
  *
  *	%NULL is returned in there is no free memory.
  */
- 
+
 static inline struct sk_buff *__dev_alloc_skb(unsigned int length,
 					      int gfp_mask)
 {
@@ -1065,7 +1065,7 @@ static inline struct sk_buff *__dev_alloc_skb(unsigned int length,
  *	%NULL is returned in there is no free memory. Although this function
  *	allocates memory it can be called from an interrupt.
  */
- 
+
 static inline struct sk_buff *dev_alloc_skb(unsigned int length)
 {
 #if 0
@@ -1126,7 +1126,7 @@ static inline void *kmap_skb_frag(const skb_frag_t *frag)
 	return kmap_atomic(frag->page, KM_SKB_DATA_SOFTIRQ);
 #else
   return NULL;
-#endif 
+#endif
 }
 
 static inline void kunmap_skb_frag(void *vaddr)
@@ -1207,10 +1207,10 @@ struct msghdr {
  * transport -> network interface is defined by struct inet_proto
  */
 struct proto {
-	void			(*close)(struct sock *sk, 
+	void			(*close)(struct sock *sk,
 					long timeout);
 	int			(*connect)(struct sock *sk,
-				        struct sockaddr *uaddr, 
+				        struct sockaddr *uaddr,
 					int addr_len);
 	int			(*disconnect)(struct sock *sk, int flags);
 
@@ -1221,20 +1221,20 @@ struct proto {
 	int			(*init)(struct sock *sk);
 	int			(*destroy)(struct sock *sk);
 	void			(*shutdown)(struct sock *sk, int how);
-	int			(*setsockopt)(struct sock *sk, int level, 
+	int			(*setsockopt)(struct sock *sk, int level,
 					int optname, char *optval, int optlen);
-	int			(*getsockopt)(struct sock *sk, int level, 
-					int optname, char *optval, 
-					int *option);  	 
+	int			(*getsockopt)(struct sock *sk, int level,
+					int optname, char *optval,
+					int *option);
 	int			(*sendmsg)(struct sock *sk, struct msghdr *msg,
 					   int len);
 	int			(*recvmsg)(struct sock *sk, struct msghdr *msg,
-					int len, int noblock, int flags, 
+					int len, int noblock, int flags,
 					int *addr_len);
-	int			(*bind)(struct sock *sk, 
+	int			(*bind)(struct sock *sk,
 					struct sockaddr *uaddr, int addr_len);
 
-	int			(*backlog_rcv) (struct sock *sk, 
+	int			(*backlog_rcv) (struct sock *sk,
 						struct sk_buff *skb);
 
 	/* Keeping track of sk's, looking them up, and port selection methods. */
@@ -1296,7 +1296,7 @@ struct tcp_opt {
 		unsigned long timeout;	/* Currently scheduled timeout		*/
 		__u32	lrcvtime;	/* timestamp of last received data packet*/
 		__u16	last_seg_size;	/* Size of last incoming segment	*/
-		__u16	rcv_mss;	/* MSS used for delayed ACK decisions	*/ 
+		__u16	rcv_mss;	/* MSS used for delayed ACK decisions	*/
 	} ack;
 
 	/* Data for direct copy to user */
@@ -1436,7 +1436,7 @@ struct tcp_opt {
 	unsigned int		keepalive_intvl;  /* time interval between keep alive probes */
 	int			linger2;
 
-	unsigned long last_synq_overflow; 
+	unsigned long last_synq_overflow;
 };
 
 
@@ -1574,7 +1574,7 @@ struct sock {
 #endif /* CONFIG_FILTER */
 
 	/* This is where all the private (optional) areas that don't
-	 * overlap will eventually live. 
+	 * overlap will eventually live.
 	 */
 	union {
 		void *destruct_hook;
@@ -1622,7 +1622,7 @@ struct sock {
 #if defined(CONFIG_WAN_ROUTER) || defined(CONFIG_WAN_ROUTER_MODULE)
                struct wanpipe_opt      *af_wanpipe;
 #endif
-	} protinfo;  		
+	} protinfo;
 
 
 	/* This part is used for the timeout functions. */
@@ -1634,7 +1634,7 @@ struct sock {
 
 	/* RPC layer private data */
 	void			*user_data;
-  
+
 	/* Callbacks */
 	void			(*state_change)(struct sock *sk);
 	void			(*data_ready)(struct sock *sk,int bytes);
@@ -1642,7 +1642,7 @@ struct sock {
 	void			(*error_report)(struct sock *sk);
 
   	int			(*backlog_rcv) (struct sock *sk,
-						struct sk_buff *skb);  
+						struct sk_buff *skb);
 	void                    (*destruct)(struct sock *sk);
 };
 
@@ -1707,7 +1707,7 @@ struct dst_entry
 #endif
 
 	struct  dst_ops	        *ops;
-		
+
 	char			info[0];
 };
 
@@ -2068,9 +2068,9 @@ static __inline__ int tcp_sk_listen_hashfn(struct sock *sk)
 
 #define MAX_TCP_HEADER	(128 + MAX_HEADER)
 
-/* 
+/*
  * Never offer a window over 32767 without using window scaling. Some
- * poor stacks do signed 16bit maths! 
+ * poor stacks do signed 16bit maths!
  */
 #define MAX_TCP_WINDOW		32767U
 
@@ -2209,7 +2209,7 @@ static __inline__ int tcp_sk_listen_hashfn(struct sock *sk)
 /*
  *	TCP option
  */
- 
+
 #define TCPOPT_NOP		1	/* Padding */
 #define TCPOPT_EOL		0	/* End of options */
 #define TCPOPT_MSS		2	/* Segment size negotiating */
@@ -2313,8 +2313,8 @@ struct open_request {
 	__u16			mss;
 	__u8			retrans;
 	__u8			__pad;
-	__u16	snd_wscale : 4, 
-		rcv_wscale : 4, 
+	__u16	snd_wscale : 4,
+		rcv_wscale : 4,
 		tstamp_ok : 1,
 		sack_ok : 1,
 		wscale_ok : 1,
@@ -2382,21 +2382,21 @@ struct tcp_func {
 							 struct sk_buff *skb,
 							 struct open_request *req,
 							 struct dst_entry *dst);
-    
+
 	int			(*remember_stamp)	(struct sock *sk);
 
 	__u16			net_header_len;
 
-	int			(*setsockopt)		(struct sock *sk, 
-							 int level, 
-							 int optname, 
-							 char *optval, 
+	int			(*setsockopt)		(struct sock *sk,
+							 int level,
+							 int optname,
+							 char *optval,
 							 int optlen);
 
-	int			(*getsockopt)		(struct sock *sk, 
-							 int level, 
-							 int optname, 
-							 char *optval, 
+	int			(*getsockopt)		(struct sock *sk,
+							 int level,
+							 int optname,
+							 char *optval,
 							 int *optlen);
 
 
@@ -2456,18 +2456,18 @@ extern int		    	tcp_v4_tw_remember_stamp(struct tcp_tw_bucket *tw);
 extern int			tcp_sendmsg(struct sock *sk, struct msghdr *msg, int size);
 extern ssize_t			tcp_sendpage(struct socket *sock, struct page *page, int offset, size_t size, int flags);
 
-extern int			tcp_ioctl(struct sock *sk, 
-					  int cmd, 
+extern int			tcp_ioctl(struct sock *sk,
+					  int cmd,
 					  unsigned long arg);
 
-extern int			tcp_rcv_state_process(struct sock *sk, 
+extern int			tcp_rcv_state_process(struct sock *sk,
 						      struct sk_buff *skb,
 						      struct tcphdr *th,
 						      unsigned len);
 
-extern int			tcp_rcv_established(struct sock *sk, 
+extern int			tcp_rcv_established(struct sock *sk,
 						    struct sk_buff *skb,
-						    struct tcphdr *th, 
+						    struct tcphdr *th,
 						    unsigned len);
 
 enum tcp_ack_state_t
@@ -2531,22 +2531,22 @@ extern void			tcp_enter_loss(struct sock *sk, int how);
 extern void			tcp_clear_retrans(struct tcp_opt *tp);
 extern void			tcp_update_metrics(struct sock *sk);
 
-extern void			tcp_close(struct sock *sk, 
+extern void			tcp_close(struct sock *sk,
 					  long timeout);
 extern struct sock *		tcp_accept(struct sock *sk, int flags, int *err);
 extern unsigned int		tcp_poll(struct file * file, struct socket *sock, struct poll_table_struct *wait);
-extern void			tcp_write_space(struct sock *sk); 
+extern void			tcp_write_space(struct sock *sk);
 
-extern int			tcp_getsockopt(struct sock *sk, int level, 
-					       int optname, char *optval, 
+extern int			tcp_getsockopt(struct sock *sk, int level,
+					       int optname, char *optval,
 					       int *optlen);
-extern int			tcp_setsockopt(struct sock *sk, int level, 
-					       int optname, char *optval, 
+extern int			tcp_setsockopt(struct sock *sk, int level,
+					       int optname, char *optval,
 					       int optlen);
 extern void			tcp_set_keepalive(struct sock *sk, int val);
-extern int			tcp_recvmsg(struct sock *sk, 
+extern int			tcp_recvmsg(struct sock *sk,
 					    struct msghdr *msg,
-					    int len, int nonblock, 
+					    int len, int nonblock,
 					    int flags, int *addr_len);
 
 extern int			tcp_listen_start(struct sock *sk);
@@ -2561,11 +2561,11 @@ extern void			tcp_parse_options(struct sk_buff *skb,
 
 extern int		       	tcp_v4_rebuild_header(struct sock *sk);
 
-extern int		       	tcp_v4_build_header(struct sock *sk, 
+extern int		       	tcp_v4_build_header(struct sock *sk,
 						    struct sk_buff *skb);
 
-extern void		       	tcp_v4_send_check(struct sock *sk, 
-						  struct tcphdr *th, int len, 
+extern void		       	tcp_v4_send_check(struct sock *sk,
+						  struct tcphdr *th, int len,
 						  struct sk_buff *skb);
 
 extern int			tcp_v4_conn_request(struct sock *sk,
@@ -2601,9 +2601,9 @@ extern int			tcp_v4_hash_connecting(struct sock *sk);
 
 
 /* From syncookies.c */
-extern struct sock *cookie_v4_check(struct sock *sk, struct sk_buff *skb, 
+extern struct sock *cookie_v4_check(struct sock *sk, struct sk_buff *skb,
 				    struct ip_options *opt);
-extern __u32 cookie_v4_init_sequence(struct sock *sk, struct sk_buff *skb, 
+extern __u32 cookie_v4_init_sequence(struct sock *sk, struct sk_buff *skb,
 				     __u16 *mss);
 
 /* tcp_output.c */
@@ -2645,7 +2645,7 @@ static inline void tcp_clear_xmit_timer(struct sock *sk, int what)
 {
 #if 0
 	struct tcp_opt *tp = &sk->tp_pinfo.af_tcp;
-	
+
 	switch (what) {
 	case TCP_TIME_RETRANS:
 	case TCP_TIME_PROBE0:
@@ -2720,7 +2720,7 @@ static __inline__ unsigned int tcp_current_mss(struct sock *sk)
 #if 0
 	struct tcp_opt *tp = &sk->tp_pinfo.af_tcp;
 	struct dst_entry *dst = __sk_dst_get(sk);
-	int mss_now = tp->mss_cache; 
+	int mss_now = tp->mss_cache;
 
 	if (dst && dst->pmtu != tp->pmtu_cookie)
 		mss_now = tcp_sync_mss(sk, dst->pmtu);
@@ -2877,7 +2877,7 @@ struct tcp_skb_cb {
 
 
 /*
- *	Compute minimal free write space needed to queue new packets. 
+ *	Compute minimal free write space needed to queue new packets.
  */
 static inline int tcp_min_write_space(struct sock *sk)
 {
@@ -2887,7 +2887,7 @@ static inline int tcp_min_write_space(struct sock *sk)
 return 0;
 #endif
 }
- 
+
 static inline int tcp_wspace(struct sock *sk)
 {
 #if 0
@@ -3184,7 +3184,7 @@ extern void			tcp_destroy_sock(struct sock *sk);
  * Calculate(/check) TCP checksum
  */
 static __inline__ u16 tcp_v4_check(struct tcphdr *th, int len,
-				   unsigned long saddr, unsigned long daddr, 
+				   unsigned long saddr, unsigned long daddr,
 				   unsigned long base)
 {
 #if 0
@@ -3305,7 +3305,7 @@ static __inline__ void tcp_set_state(struct sock *sk, int state)
 
 #ifdef STATE_TRACE
 	SOCK_DEBUG(sk, "TCP sk=%p, State %s -> %s\n",sk, statename[oldstate],statename[state]);
-#endif	
+#endif
 #endif
 }
 
@@ -3478,7 +3478,7 @@ static inline int tcp_win_from_space(int space)
 #endif
 }
 
-/* Note: caller must be prepared to deal with negative returns */ 
+/* Note: caller must be prepared to deal with negative returns */
 static inline int tcp_space(struct sock *sk)
 {
 #if 0
@@ -3486,12 +3486,12 @@ static inline int tcp_space(struct sock *sk)
 #else
   return 0;
 #endif
-} 
+}
 
 static inline int tcp_full_space( struct sock *sk)
 {
 #if 0
-	return tcp_win_from_space(sk->rcvbuf); 
+	return tcp_win_from_space(sk->rcvbuf);
 #else
   return 0;
 #endif

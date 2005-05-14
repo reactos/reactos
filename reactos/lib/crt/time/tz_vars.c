@@ -29,7 +29,7 @@ void* __p__daylight(void)
 /*********************************************************************
  *    __p__timezone (MSVCRT.@)
  */
-int* __p__timezone(void) 
-{ 
-   return &_timezone; 
+int* __p__timezone(void)
+{
+   return &_timezone;
 }

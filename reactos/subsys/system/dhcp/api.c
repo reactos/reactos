@@ -38,8 +38,8 @@ DWORD DSLeaseIpAddress( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
     Reply.Reply = Adapter ? 1 : 0;
 
     if( Adapter ) {
-        add_protocol( Adapter->DhclientInfo.name, 
-                      Adapter->DhclientInfo.rfdesc, got_one, 
+        add_protocol( Adapter->DhclientInfo.name,
+                      Adapter->DhclientInfo.rfdesc, got_one,
                       &Adapter->DhclientInfo );
 	Adapter->DhclientInfo.client->state = S_INIT;
 	state_reboot(&Adapter->DhclientInfo);

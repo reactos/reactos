@@ -76,7 +76,7 @@ NdisWriteErrorLogEntry(
     IN  NDIS_HANDLE     NdisAdapterHandle,
     IN  NDIS_ERROR_CODE ErrorCode,
     IN  ULONG           NumberOfErrorValues,
-    ...) 
+    ...)
 /*
  * FUNCTION: Write a syslog error
  * ARGUMENTS:

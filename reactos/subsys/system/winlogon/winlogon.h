@@ -21,7 +21,7 @@
  * PROJECT:         ReactOS winlogon
  * FILE:            subsys/system/winlogon/winlogon.h
  * PURPOSE:         Winlogon
- * PROGRAMMER:      
+ * PROGRAMMER:
  */
 
 #ifndef __WINLOGON_MAIN_H__
@@ -61,7 +61,7 @@ typedef BOOL (WINAPI * PFWLXNEGOTIATE)  (DWORD, DWORD *);
 typedef BOOL (WINAPI * PFWLXINITIALIZE) (LPWSTR, HANDLE, PVOID, PVOID, PVOID *);
 typedef VOID (WINAPI * PFWLXDISPLAYSASNOTICE) (PVOID);
 typedef int  (WINAPI * PFWLXLOGGEDOUTSAS) (PVOID, DWORD, PLUID, PSID, PDWORD,
-                                           PHANDLE, PWLX_MPR_NOTIFY_INFO, 
+                                           PHANDLE, PWLX_MPR_NOTIFY_INFO,
                                            PVOID *);
 typedef BOOL (WINAPI * PFWLXACTIVATEUSERSHELL) (PVOID, PWSTR, PWSTR, PVOID);
 typedef int  (WINAPI * PFWLXLOGGEDONSAS) (PVOID, DWORD, PVOID);
@@ -98,10 +98,10 @@ typedef struct _MSGINAFUNCTIONS
   PFWLXISLOGOFFOK           WlxIsLogoffOk;
   PFWLXLOGOFF               WlxLogoff;
   PFWLXSHUTDOWN             WlxShutdown;
-  
+
   PFWLXSCREENSAVERNOTIFY    WlxScreenSaverNotify;
   PFWLXSTARTAPPLICATION     WlxStartApplication;
-  
+
   PFWLXNETWORKPROVIDERLOAD  WlxNetworkProviderLoad;
   PFWLXDISPLAYSTATUSMESSAGE WlxDisplayStatusMessage;
   PFWLXGETSTATUSMESSAGE     WlxGetStatusMessage;

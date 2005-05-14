@@ -204,7 +204,7 @@ MoveFileWithProgressW (
         RtlFreeHeap (RtlGetProcessHeap (),
 		     0,
 		     DstPathU.Buffer);
-	/* 
+	/*
 	 * FIXME:
 	 *   Is the length the count of characters or the length of the buffer?
 	 */
@@ -279,7 +279,7 @@ MoveFileWithProgressW (
 		if (Result)
 		{
 		    /* Cleanup the source file */
-                    AdjustFileAttributes(lpExistingFileName, lpNewFileName); 
+                    AdjustFileAttributes(lpExistingFileName, lpNewFileName);
 		    Result = DeleteFileW (lpExistingFileName);
 		}
 	}
@@ -309,7 +309,7 @@ MoveFileWithProgressA (
 	PWCHAR ExistingFileNameW;
    PWCHAR NewFileNameW;
 	BOOL ret;
-   
+
    if (!(ExistingFileNameW = FilenameA2W(lpExistingFileName, FALSE)))
       return FALSE;
 

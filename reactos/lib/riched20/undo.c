@@ -26,6 +26,9 @@ void ME_EmptyUndoStack(ME_TextEditor *editor)
 {
   ME_DisplayItem *p, *pNext;
   
+  if (editor->nUndoMode == umIgnore)
+    return;
+  
   TRACE("Emptying undo stack\n");
 
   p = editor->pUndoStack;
@@ -121,6 +124,10 @@ ME_UndoItem *ME_AddUndoItem(ME_TextEditor *editor, ME_DIType type, ME_DisplayIte
 }
 
 void ME_CommitUndo(ME_TextEditor *editor) {
+  
+  if (editor->nUndoMode == umIgnore)
+    return;
+  
   assert(editor->nUndoMode == umAddToUndo);
   
   /* no transactions, no need to commit */
@@ -140,6 +147,8 @@ void ME_PlayUndoItem(ME_TextEditor *editor, ME_DisplayItem *pItem)
 {
   ME_UndoItem *pUItem = (ME_UndoItem *)pItem;
 
+  if (editor->nUndoMode == umIgnore)
+    return;
   TRACE("Playing undo/redo item, id=%s\n", ME_GetDITypeName(pItem->type));
 
   switch(pItem->type)
@@ -202,6 +211,8 @@ void ME_Undo(ME_TextEditor *editor) {
   ME_DisplayItem *p;
   ME_UndoMode nMode = editor->nUndoMode;
   
+  if (editor->nUndoMode == umIgnore)
+    return;
   assert(nMode == umAddToUndo || nMode == umIgnore);
   
   /* no undo items ? */
@@ -235,6 +246,8 @@ void ME_Redo(ME_TextEditor *editor) {
   
   assert(nMode == umAddToUndo || nMode == umIgnore);
   
+  if (editor->nUndoMode == umIgnore)
+    return;
   /* no redo items ? */
   if (!editor->pRedoStack)
     return;

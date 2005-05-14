@@ -249,7 +249,7 @@ PsaFreeCapture
  IN PVOID Capture
 );
 
-/* The user must define these functions. They are called by PSAPI to allocate 
+/* The user must define these functions. They are called by PSAPI to allocate
    memory. This allows PSAPI to be called from any environment */
 void *PsaiMalloc(SIZE_T size);
 void *PsaiRealloc(void *ptr, SIZE_T size);

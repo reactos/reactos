@@ -9,13 +9,13 @@
  * by the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
- * This program/include file is distributed in the hope that it will be 
- * useful, but WITHOUT ANY WARRANTY; without even the implied warranty 
+ * This program/include file is distributed in the hope that it will be
+ * useful, but WITHOUT ANY WARRANTY; without even the implied warranty
  * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program (in the main directory of the Linux-NTFS 
+ * along with this program (in the main directory of the Linux-NTFS
  * distribution in the file COPYING); if not, write to the Free Software
  * Foundation,Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
@@ -769,7 +769,7 @@ run_list_element *decompress_mapping_pairs(const ntfs_volume *vol,
 		 */
 		if (((rlpos + 3) * sizeof(*old_rl)) > rlsize) {
 			run_list_element *rl2;
-			
+
 			rl2 = ntfs_malloc_nofs(rlsize + (int)PAGE_SIZE);
 			if (unlikely(!rl2)) {
 				ntfs_free(rl);
@@ -933,7 +933,7 @@ err_out:
 
 /**
  * map_run_list - map (a part of) a run list of an ntfs inode
- * @ni:		ntfs inode for which to map (part of) a run list 
+ * @ni:		ntfs inode for which to map (part of) a run list
  * @vcn:	map run list part containing this vcn
  *
  * Map the part of a run list containing the @vcn of an the ntfs inode @ni.
@@ -946,7 +946,7 @@ int map_run_list(ntfs_inode *ni, VCN vcn)
 	attr_search_context *ctx;
 	MFT_RECORD *mrec;
 	int err = 0;
-	
+
 	ntfs_debug("Mapping run list part containing vcn 0x%Lx.",
 			(long long)vcn);
 
@@ -983,7 +983,7 @@ int map_run_list(ntfs_inode *ni, VCN vcn)
 			ni->run_list.rl = rl;
 	}
 	up_write(&ni->run_list.lock);
-	
+
 	put_attr_search_ctx(ctx);
 err_out:
 	unmap_mft_record(base_ni);
@@ -1136,7 +1136,7 @@ BOOL find_attr(const ATTR_TYPES type, const uchar_t *name, const u32 name_len,
 			break;
 		if (a->type != type)
 			continue;
-		/* 
+		/*
 		 * If @name is present, compare the two names. If @name is
 		 * missing, assume we want an unnamed attribute.
 		 */
@@ -1148,7 +1148,7 @@ BOOL find_attr(const ATTR_TYPES type, const uchar_t *name, const u32 name_len,
 			    (uchar_t*)((u8*)a + le16_to_cpu(a->name_offset)),
 			    a->name_length, ic, upcase, upcase_len)) {
 			register int rc;
-			
+
 			rc = ntfs_collate_names(name, name_len,
 					(uchar_t*)((u8*)a +
 						le16_to_cpu(a->name_offset)),
@@ -1457,7 +1457,7 @@ static BOOL find_external_attr(const ATTR_TYPES type, const uchar_t *name,
 		if (lowest_vcn && (u8*)next_al_entry >= al_start	    &&
 				(u8*)next_al_entry + 6 < al_end		    &&
 				(u8*)next_al_entry + le16_to_cpu(
-					next_al_entry->length) <= al_end    &&	
+					next_al_entry->length) <= al_end    &&
 				sle64_to_cpu(next_al_entry->lowest_vcn) <=
 					sle64_to_cpu(lowest_vcn)	    &&
 				next_al_entry->type == al_entry->type	    &&

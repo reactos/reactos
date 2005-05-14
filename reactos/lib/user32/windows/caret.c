@@ -36,7 +36,7 @@
 void DrawCaret(HWND hWnd, PTHRDCARETINFO CaretInfo)
 {
   HDC hDC, hComp;
-  
+
   hDC = GetDC(hWnd);
   if(hDC)
   {

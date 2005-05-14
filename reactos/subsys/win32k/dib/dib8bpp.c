@@ -271,7 +271,7 @@ DIB_8BPP_BitBlt(PBLTINFO BltInfo)
    {
       if (BltInfo->PatternSurface)
       {
-         PatternY = (BltInfo->DestRect.top + BltInfo->BrushOrigin.y) % 
+         PatternY = (BltInfo->DestRect.top + BltInfo->BrushOrigin.y) %
                     BltInfo->PatternSurface->sizlBitmap.cy;
       }
       else
@@ -311,7 +311,7 @@ DIB_8BPP_BitBlt(PBLTINFO BltInfo)
             Pattern |= DIB_GetSource(BltInfo->PatternSurface, (DestX + BltInfo->BrushOrigin.x + 3) % BltInfo->PatternSurface->sizlBitmap.cx, PatternY, BltInfo->XlatePatternToDest) << 24;
          }
 
-         *DestBits = DIB_DoRop(BltInfo->Rop4, Dest, Source, Pattern);	    
+         *DestBits = DIB_DoRop(BltInfo->Rop4, Dest, Source, Pattern);
       }
 
       if (DestX < BltInfo->DestRect.right)
@@ -319,7 +319,7 @@ DIB_8BPP_BitBlt(PBLTINFO BltInfo)
          for (; DestX < BltInfo->DestRect.right; DestX++)
          {
             Dest = DIB_8BPP_GetPixel(BltInfo->DestSurface, DestX, DestY);
-            
+
             if (UsesSource)
 	    {
                Source = DIB_GetSource(BltInfo->SourceSurface, SourceX + (DestX - BltInfo->DestRect.left), SourceY, BltInfo->XlateSourceToDest);
@@ -397,7 +397,7 @@ FinalCopy8(PIXEL *Target, PIXEL *Source, PSPAN ClipSpans, UINT ClipSpansCount, U
            UINT DestY, RECTL *DestRect)
 {
   LONG Left, Right;
-  
+
   while (ClipSpans[*SpanIndex].Y < DestY
          || (ClipSpans[*SpanIndex].Y == DestY
              && ClipSpans[*SpanIndex].X + ClipSpans[*SpanIndex].Width < DestRect->left))
@@ -485,7 +485,7 @@ BOOLEAN ScaleRectAvg8(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       } /* if */
       PrevSource = Source;
     } /* if */
-    
+
     if (E >= Mid && PrevSourceAhead != (PIXEL *)((BYTE *)Source + SourceSurf->lDelta)) {
       int x;
       ScaleLineAvg8(ScanLineAhead, (PIXEL *)((BYTE *)Source + SourceSurf->lDelta), SourceRect->right - SourceRect->left, DestRect->right - DestRect->left);
@@ -493,7 +493,7 @@ BOOLEAN ScaleRectAvg8(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         ScanLine[x] = average8(ScanLine[x], ScanLineAhead[x]);
       PrevSourceAhead = (PIXEL *)((BYTE *)Source + SourceSurf->lDelta);
     } /* if */
-    
+
     if (! FinalCopy8(Target, ScanLine, ClipSpans, ClipSpansCount, &SpanIndex, DestY, DestRect))
       {
         /* No more spans, everything else is clipped away, we're done */
@@ -552,36 +552,36 @@ BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       case BMF_24BPP:
       case BMF_32BPP:
          /* Not implemented yet. */
-         return FALSE;      
+         return FALSE;
       break;
-  
+
       case BMF_8BPP:
         return ScaleRectAvg8(DestSurf, SourceSurf, DestRect, SourceRect, MaskOrigin, BrushOrigin,
                              ClipRegion, ColorTranslation, Mode);
       break;
-      
+
       default:
          DPRINT1("DIB_8BPP_StretchBlt: Unhandled Source BPP: %u\n", BitsPerFormat(SourceSurf->iBitmapFormat));
       return FALSE;
     }
-    
+
   return TRUE;
 }
 
-BOOLEAN 
+BOOLEAN
 DIB_8BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                         RECTL*  DestRect,  POINTL  *SourcePoint,
                         XLATEOBJ *ColorTranslation, ULONG iTransColor)
 {
   ULONG RoundedRight, X, Y, SourceX, SourceY, Source, wd, Dest;
   ULONG *DestBits;
-  
+
   RoundedRight = DestRect->right - ((DestRect->right - DestRect->left) & 0x3);
   SourceY = SourcePoint->y;
   DestBits = (ULONG*)(DestSurf->pvScan0 + DestRect->left +
                       (DestRect->top * DestSurf->lDelta));
   wd = DestSurf->lDelta - (DestRect->right - DestRect->left);
-  
+
   for(Y = DestRect->top; Y < DestRect->bottom; Y++)
   {
     DestBits = (ULONG*)(DestSurf->pvScan0 + DestRect->left +
@@ -590,7 +590,7 @@ DIB_8BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
     for (X = DestRect->left; X < RoundedRight; X += 4, DestBits++)
     {
       Dest = *DestBits;
-      
+
       Source = DIB_GetSourceIndex(SourceSurf, SourceX++, SourceY);
       if(Source != iTransColor)
       {
@@ -604,14 +604,14 @@ DIB_8BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         Dest &= 0xFFFF00FF;
         Dest |= ((XLATEOBJ_iXlate(ColorTranslation, Source) << 8) & 0xFF00);
       }
-      
+
       Source = DIB_GetSourceIndex(SourceSurf, SourceX++, SourceY);
       if(Source != iTransColor)
       {
         Dest &= 0xFF00FFFF;
         Dest |= ((XLATEOBJ_iXlate(ColorTranslation, Source) << 16) & 0xFF0000);
       }
-      
+
       Source = DIB_GetSourceIndex(SourceSurf, SourceX++, SourceY);
       if(Source != iTransColor)
       {
@@ -621,7 +621,7 @@ DIB_8BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
       *DestBits = Dest;
     }
-    
+
     if(X < DestRect->right)
     {
       for (; X < DestRect->right; X++)
@@ -636,7 +636,7 @@ DIB_8BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
     }
     SourceY++;
   }
-  
+
   return TRUE;
 }
 

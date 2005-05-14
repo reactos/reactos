@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/lpc/close.c
  * PURPOSE:         Communication mechanism
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
@@ -88,7 +88,7 @@ VOID STDCALL
 NiDeletePort (PVOID	ObjectBody)
 {
    //   PEPORT Port = (PEPORT)ObjectBody;
-   
+
    //   DPRINT1("Deleting port %x\n", Port);
 }
 

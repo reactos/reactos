@@ -27,7 +27,7 @@ WinPosGetMinMaxInfo(HWND hWnd, POINT* MaxSize, POINT* MaxPos,
 		  POINT* MinTrack, POINT* MaxTrack)
 {
   MINMAXINFO MinMax;
-  
+
   if(NtUserGetMinMaxInfo(hWnd, &MinMax, TRUE))
   {
     MinMax.ptMaxTrackSize.x = max(MinMax.ptMaxTrackSize.x,

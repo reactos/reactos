@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/misc.c
  * PURPOSE:         Various functions
- * 
+ *
  * PROGRAMMERS:     Hartmut Birr
  */
 

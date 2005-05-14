@@ -1389,7 +1389,7 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
 		      /* Set ending CHS values */
 		      PartitionSector->Partition[j].EndingCylinder = EndCylinder & 0xff;
 		      PartitionSector->Partition[j].EndingHead = EndHead;
-		      PartitionSector->Partition[j].EndingSector = 
+		      PartitionSector->Partition[j].EndingSector =
 			((EndCylinder & 0x0300) >> 2) + (EndSector & 0x3f);
 
 		      /* Calculate start sector and sector count */
@@ -1433,7 +1433,7 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
 	  if (IsContainerPartition (PartitionBuffer->PartitionEntry[i + j].PartitionType))
 	    {
 	      ContainerEntry = TRUE;
-	      NextPartitionOffset = 
+	      NextPartitionOffset =
 		PartitionBuffer->PartitionEntry[i + j].StartingOffset.QuadPart;
 
 #if defined(__GNUC__)

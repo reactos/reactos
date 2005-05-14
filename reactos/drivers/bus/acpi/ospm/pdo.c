@@ -115,21 +115,21 @@ PdoQueryResources(
 {
   PPDO_DEVICE_EXTENSION DeviceExtension;
   PCM_RESOURCE_LIST ResourceList;
-  
+
   DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-  
+
   if (DeviceExtension->ResourceListSize == 0)
   {
     return Irp->IoStatus.Status;
   }
-  
+
   ResourceList = ExAllocatePool(PagedPool, DeviceExtension->ResourceListSize);
   if (!ResourceList)
   {
     Irp->IoStatus.Information = 0;
     return STATUS_INSUFFICIENT_RESOURCES;
   }
-  
+
   RtlCopyMemory(ResourceList, DeviceExtension->ResourceList, DeviceExtension->ResourceListSize);
   Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
   return STATUS_SUCCESS;

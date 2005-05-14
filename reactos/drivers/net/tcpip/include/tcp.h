@@ -7,7 +7,7 @@
 #ifndef __TCP_H
 #define __TCP_H
 
-typedef VOID 
+typedef VOID
 (*PTCP_COMPLETION_ROUTINE)( PVOID Context, NTSTATUS Status, ULONG Count );
 
 /* TCPv4 header structure */
@@ -105,7 +105,7 @@ NTSTATUS TCPAccept
 PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext );
 VOID TCPFreeConnectionEndpoint( PCONNECTION_ENDPOINT Connection );
 
-NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection, 
+NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
 		    UINT Family, UINT Type, UINT Proto );
 
 PTCP_SEGMENT TCPCreateSegment(
@@ -137,7 +137,7 @@ NTSTATUS TCPDisconnect(
   PVOID Context);
 
 NTSTATUS TCPReceiveData(
-  PCONNECTION_ENDPOINT Connection,    
+  PCONNECTION_ENDPOINT Connection,
   PNDIS_BUFFER Buffer,
   ULONG ReceiveLength,
   PULONG BytesReceived,
@@ -167,7 +167,7 @@ UINT TCPAllocatePort( UINT HintPort );
 VOID TCPFreePort( UINT Port );
 
 NTSTATUS TCPGetPeerAddress
-( PCONNECTION_ENDPOINT Connection, 
+( PCONNECTION_ENDPOINT Connection,
   PTRANSPORT_ADDRESS TransportAddress );
 
 NTSTATUS TCPStartup(

@@ -48,16 +48,16 @@ PVOID WINAPI FlsGetValue(DWORD dwFlsIndex)
 {
  PVOID * ppFlsSlots;
  PVOID pRetVal;
- 
+
  if(dwFlsIndex >= 128) goto l_InvalidParam;
 
  ppFlsSlots = NtCurrentTeb()->FlsSlots;
- 
+
  if(ppFlsSlots == NULL) goto l_InvalidParam;
 
  SetLastError(0);
  pRetVal = ppFlsSlots[dwFlsIndex + 2];
- 
+
  return pRetVal;
 
 l_InvalidParam:
@@ -101,13 +101,13 @@ BOOL WINAPI FlsSetValue(DWORD dwFlsIndex, PVOID lpFlsData)
  }
 
  ppFlsSlots[dwFlsIndex + 2] = lpFlsData;
- 
+
  return TRUE;
 
 l_OutOfMemory:
  SetLastError(ERROR_NOT_ENOUGH_MEMORY);
  goto l_Fail;
- 
+
 l_InvalidParam:
  SetLastError(ERROR_INVALID_PARAMETER);
 

@@ -74,6 +74,6 @@ VOID PrintTime (VOID)
 	GetTimeFormat(LOCALE_USER_DEFAULT, 0, NULL, NULL,
 	              szTime, sizeof(szTime));
 
-	LoadString(GetModuleHandle(NULL), STRING_LOCALE_HELP1, szMsg, RC_STRING_MAX_SIZE);
+	LoadString(CMD_ModuleHandle, STRING_LOCALE_HELP1, szMsg, RC_STRING_MAX_SIZE);
 	ConOutPrintf(_T("%s: %s\n"), szMsg, szTime);
 }

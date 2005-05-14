@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/lpc/receive.c
  * PURPOSE:         Communication mechanism
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 

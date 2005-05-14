@@ -62,7 +62,7 @@ int _wopen(const wchar_t* _path, int _oflag, ...)
     *
     * _O_BINARY   Opens file in binary (untranslated) mode. (See fopen for a description of binary mode.)
     * _O_TEXT   Opens file in text (translated) mode. (For more information, see Text and Binary Mode File I/O and fopen.)
-    * 
+    *
     * _O_APPEND   Moves file pointer to end of file before every write operation.
     */
 #if 0

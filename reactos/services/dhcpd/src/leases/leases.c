@@ -66,10 +66,10 @@ int init_leases_list()
 
       if( !strcmp( line, "router" ))
 	fscanf( config, "%s", textrouter );
-      
+
       if( !strcmp( line, "mask" ))
 	fscanf( config, "%s", textmask );
-      
+
       if( !strcmp( line, "range" ))
 	fscanf( config, "%s %s", textlowrange, texthighrange );
       if( !strcmp( line, "server" ))

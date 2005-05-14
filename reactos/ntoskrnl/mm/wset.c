@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/wset.c
  * PURPOSE:         Manages working sets
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 

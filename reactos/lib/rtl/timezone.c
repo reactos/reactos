@@ -11,14 +11,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntos/registry.h>
-#include <ntos/time.h>
-#include <ntdll/rtl.h>
+#include "rtl.h"
 
 #define NDEBUG
 #include <debug.h>
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -34,7 +30,7 @@ RtlQueryTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
    NTSTATUS Status;
 
    DPRINT("RtlQueryTimeZoneInformation()\n");
-   
+
    PAGED_CODE_RTL();
 
    RtlZeroMemory(QueryTable,
@@ -96,7 +92,7 @@ RtlSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
    NTSTATUS Status;
 
    DPRINT("RtlSetTimeZoneInformation()\n");
-   
+
    PAGED_CODE_RTL();
 
    Status = RtlWriteRegistryValue(RTL_REGISTRY_CONTROL,

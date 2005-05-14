@@ -147,9 +147,13 @@ ScmCreateManagerHandle(LPWSTR lpDatabaseName,
                        SC_HANDLE *Handle)
 {
   PMANAGER_HANDLE Ptr;
+  
+  if (lpDatabaseName == NULL)
+    lpDatabaseName = SERVICES_ACTIVE_DATABASEW;
 
-  Ptr = GlobalAlloc(GPTR,
-                    sizeof(MANAGER_HANDLE) + wcslen(lpDatabaseName) * sizeof(WCHAR));
+  Ptr = HeapAlloc(GetProcessHeap(),
+                  HEAP_ZERO_MEMORY,
+                  sizeof(MANAGER_HANDLE) + wcslen(lpDatabaseName) * sizeof(WCHAR));
   if (Ptr == NULL)
     return ERROR_NOT_ENOUGH_MEMORY;
 
@@ -172,8 +176,9 @@ ScmCreateServiceHandle(PSERVICE lpServiceEntry,
 {
   PSERVICE_HANDLE Ptr;
 
-  Ptr = GlobalAlloc(GPTR,
-                    sizeof(SERVICE_HANDLE));
+  Ptr = HeapAlloc(GetProcessHeap(),
+                  HEAP_ZERO_MEMORY,
+                  sizeof(SERVICE_HANDLE));
   if (Ptr == NULL)
     return ERROR_NOT_ENOUGH_MEMORY;
 
@@ -243,7 +248,7 @@ ScmrCloseServiceHandle(handle_t BindingHandle,
     {
       /* FIXME: add cleanup code */
 
-      GlobalFree(hManager);
+      HeapFree(GetProcessHeap(), 0, hManager);
     }
 
     DPRINT("ScmrCloseServiceHandle() done\n");
@@ -258,7 +263,7 @@ ScmrCloseServiceHandle(handle_t BindingHandle,
     {
       /* FIXME: add cleanup code */
 
-      GlobalFree(hManager);
+      HeapFree(GetProcessHeap(), 0, hManager);
     }
 
     DPRINT("ScmrCloseServiceHandle() done\n");
@@ -530,7 +535,7 @@ ScmrOpenSCManagerW(handle_t BindingHandle,
   if (dwError != ERROR_SUCCESS)
   {
     DPRINT1("ScmCheckAccess() failed (Error %lu)\n", dwError);
-    GlobalFree(hHandle);
+    HeapFree(GetProcessHeap(), 0, hHandle);
     return dwError;
   }
 
@@ -598,7 +603,7 @@ ScmrOpenServiceW(handle_t BindingHandle,
   if (dwError != ERROR_SUCCESS)
   {
     DPRINT1("ScmCheckAccess() failed (Error %lu)\n", dwError);
-    GlobalFree(hHandle);
+    HeapFree(GetProcessHeap(), 0, hHandle);
     return dwError;
   }
 
@@ -681,13 +686,13 @@ ScmrOpenServiceA(handle_t BindingHandle,
 
 void __RPC_FAR * __RPC_USER midl_user_allocate(size_t len)
 {
-  return GlobalAlloc(GPTR, len);
+  return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
 }
 
 
 void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
 {
-  GlobalFree(ptr);
+  HeapFree(GetProcessHeap(), 0, ptr);
 }
 
 /* EOF */

@@ -7,7 +7,7 @@
  *     started - Paolo Pantaleo <paolopan@freemail.it>
  *
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -25,7 +25,6 @@
 
 INT CommandMsgbox (LPTSTR cmd, LPTSTR param)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	//used to parse command line
 	LPTSTR tmp;
@@ -45,8 +44,7 @@ INT CommandMsgbox (LPTSTR cmd, LPTSTR param)
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		LoadString(GetModuleHandle(NULL), STRING_MSGBOX_HELP, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+		ConOutResPuts(STRING_MSGBOX_HELP);
 		return 0;
 	}
 

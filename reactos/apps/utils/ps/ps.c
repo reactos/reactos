@@ -36,7 +36,7 @@ static char* title2 = "w     PID     Hwnd  WndStile        TID   WndName\n";
 struct status {
     DWORD state;
     char  desc[10];
-}   thread_stat[8 + 1] = { 
+}   thread_stat[8 + 1] = {
     {0,	"Init      "},
     {1,	"Ready     "},
     {2,	"Running   "},
@@ -51,7 +51,7 @@ struct status {
 struct waitres {
     DWORD state;
     char  desc[11];
-}   waitreason[28 + 1] = { 
+}   waitreason[28 + 1] = {
     {0,	"Executive  "},
     {1,	"FreePage   "},
     {2,	"PageIn     "},
@@ -90,9 +90,9 @@ EnumThreadProc(HWND hwnd, LPARAM lp)
 	LONG style;
         HANDLE stdout = GetStdHandle(STD_OUTPUT_HANDLE);
 	char buf[256];
-	
+
 	GetWindowText(hwnd, (LPTSTR)lp, 30);
-	
+
 	if(hwnd != 0)
 	{
 	style = GetWindowLong(hwnd, GWL_STYLE);
@@ -116,7 +116,7 @@ int main()
     NTSTATUS Status;
     char buf[256];
     char buf1[256];
-    
+
     WriteFile(stdout, title, lstrlen(title), &r, NULL);
     WriteFile(stdout, title1, lstrlen(title1), &r, NULL);
     WriteFile(stdout, title2, lstrlen(title2), &r, NULL);
@@ -153,7 +153,7 @@ int main()
 	hour    = (ptime.QuadPart / (10000000LL * 3600LL));
 	minute  = (ptime.QuadPart / (10000000LL * 60LL)) % 60LL;
 	seconds = (ptime.QuadPart / 10000000LL) % 60LL;
-	
+
 	ptime.QuadPart = CurrentProcess->UserTime.QuadPart;
 	hour1    = (ptime.QuadPart / (10000000LL * 3600LL));
 	minute1  = (ptime.QuadPart / (10000000LL * 60LL)) % 60LL;
@@ -166,7 +166,7 @@ int main()
                  hour, minute, seconds, hour1, minute1, seconds1,
                  astring.Buffer);
         WriteFile(stdout, buf, lstrlen(buf), &r, NULL);
-        
+
         RtlFreeAnsiString(&astring);
 
 	for (ti = 0; ti < CurrentProcess->NumberOfThreads; ti++)
@@ -193,7 +193,7 @@ int main()
                 while (waitt->state != CurrentProcess->TH[ti].WaitReason  && waitt->state >= 0)
                         waitt++;
 
-		wsprintf (buf1, 
+		wsprintf (buf1,
 		          "t%         %8d %3d:%02d:%02d  %3d:%02d:%02d   %s %s\n",
 		          CurrentProcess->TH[ti].ClientId.UniqueThread,
 		          thour, tmin, tsec, thour1, tmin1, tsec1,
@@ -206,6 +206,6 @@ int main()
 	   }
 	   CurrentProcess = (PSYSTEM_PROCESS_INFORMATION)((ULONG_PTR)CurrentProcess +
 	                     CurrentProcess->NextEntryOffset);
-	} 
+	}
   	return (0);
 }

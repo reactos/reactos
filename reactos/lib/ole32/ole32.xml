@@ -9,6 +9,7 @@
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
 	<define name="WINVER">0x501</define>
+	<define name="_STDDEF_H" />
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ntdll</library>
@@ -23,6 +24,7 @@
 	<file>compobj.c</file>
 	<file>compositemoniker.c</file>
 	<file>datacache.c</file>
+	<file>dictionary.c</file>
 	<file>defaulthandler.c</file>
 	<file>errorinfo.c</file>
 	<file>filemoniker.c</file>

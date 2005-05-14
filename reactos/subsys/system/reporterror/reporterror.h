@@ -41,6 +41,12 @@
 #define IDB_WATERMARK 100
 #define IDB_HEADER 101
 
+
+#define IDS_DNS_ERROR 600
+#define IDS_SOCKET_ERROR 601
+#define IDS_GET_SRV_ERROR 602
+#define IDS_CON_SRV_ERROR 603
+
 typedef struct _ERROR_REPORT
 {
   LPSTR YourEmail;

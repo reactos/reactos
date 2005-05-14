@@ -17,7 +17,7 @@
 BOOLEAN WaitToSend(UINT BasePort)
 {
     int TimeOut;
-    
+
     DbgPrint("WaitToSend ");
 
     // Check if it's OK to send
@@ -31,7 +31,7 @@ BOOLEAN WaitToSend(UINT BasePort)
         DbgPrint("FAILED\n");
         return FALSE;
     }
-    
+
     DbgPrint("SUCCEEDED\n");
 
     return TRUE;
@@ -55,7 +55,7 @@ BOOLEAN WaitToReceive(UINT BasePort)
         DbgPrint("FAILED\n");
         return FALSE;
     }
-    
+
     DbgPrint("SUCCEEDED\n");
 
     return TRUE;

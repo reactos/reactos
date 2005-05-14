@@ -8,7 +8,7 @@
  *        Started.
  *
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -19,15 +19,13 @@
 
 INT cmd_start (LPTSTR first, LPTSTR rest)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR szFullName[MAX_PATH];
 	BOOL bWait = FALSE;
 	TCHAR *param;
 
 	if (_tcsncmp (rest, _T("/?"), 2) == 0)
 	{
-		LoadString(GetModuleHandle(NULL), STRING_START_HELP1, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+		ConOutResPuts(STRING_START_HELP1);
 		return 0;
 	}
 
@@ -41,7 +39,7 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 		SetCurrentDirectory (szPath);
 		GetCurrentDirectory (MAX_PATH, szPath);
 		if (szPath[0] != (TCHAR)_totupper (*first))
-			ConErrPuts (INVALIDDRIVE);
+			ConErrResPuts (STRING_FREE_ERROR1);
 
 		return 0;
 	}
@@ -75,8 +73,7 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 		DebugPrintf (_T("[BATCH: %s %s]\n"), szFullName, rest);
 #endif
 
-		LoadString(GetModuleHandle(NULL), STRING_START_ERROR1, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPuts(szMsg);
+		ConErrResPuts(STRING_START_ERROR1);
 	}
 	else
 	{
@@ -101,7 +98,7 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 		stui.cb = sizeof (STARTUPINFO);
 		stui.dwFlags = STARTF_USESHOWWINDOW;
 		stui.wShowWindow = SW_SHOWDEFAULT;
-			
+
 		if (CreateProcess (szFullName, szFullCmdLine, NULL, NULL, FALSE,
 		                   CREATE_NEW_CONSOLE, NULL, NULL, &stui, &prci))
 		{
@@ -114,6 +111,9 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 			}
 			CloseHandle (prci.hThread);
 			CloseHandle (prci.hProcess);
+		/* Get New code page if it has change */
+		InputCodePage= GetConsoleCP();
+        OutputCodePage = GetConsoleOutputCP();
 		}
 		else
 		{

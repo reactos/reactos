@@ -4,7 +4,7 @@
  * @implemented
  */
 unsigned int	_statusfp (void)
-{	
+{
 
 register unsigned short __res;
 #ifdef __GNUC__

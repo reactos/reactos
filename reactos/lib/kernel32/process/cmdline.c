@@ -40,11 +40,11 @@ InitCommandLines (VOID)
 	CommandLineStringW.Length = Params->CommandLine.Length;
 	CommandLineStringW.MaximumLength = CommandLineStringW.Length + sizeof(WCHAR);
 	CommandLineStringW.Buffer = RtlAllocateHeap(GetProcessHeap(),
-						    HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY, 
+						    HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,
 						    CommandLineStringW.MaximumLength);
 
 	RtlInitAnsiString(&CommandLineStringA, NULL);
-	
+
 	// copy command line
 	RtlCopyUnicodeString (&CommandLineStringW,
 	                      &(Params->CommandLine));
@@ -53,7 +53,7 @@ InitCommandLines (VOID)
 	/* convert unicode string to ansi (or oem) */
 	if (bIsFileApiAnsi)
 	    RtlUnicodeStringToAnsiString (&CommandLineStringA,
-					  &CommandLineStringW, 
+					  &CommandLineStringW,
 					  TRUE);
 	else
 	    RtlUnicodeStringToOemString (&CommandLineStringA,

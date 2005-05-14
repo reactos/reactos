@@ -34,8 +34,8 @@ VOID STDCALL LoopReceiveWorker( PVOID Context ) {
     IP_PACKET IPPacket;
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
-    
-    while( (ListEntry = 
+
+    while( (ListEntry =
 	    ExInterlockedRemoveHeadList( &LoopWorkList, &LoopWorkLock )) ) {
 	WorkItem = CONTAINING_RECORD(ListEntry, LAN_WQ_ITEM, ListEntry);
 
@@ -77,7 +77,7 @@ VOID STDCALL LoopReceiveWorker( PVOID Context ) {
     LoopReceiveWorkerBusy = FALSE;
 }
 
-VOID LoopSubmitReceiveWork( 
+VOID LoopSubmitReceiveWork(
     NDIS_HANDLE BindingContext,
     PNDIS_PACKET Packet,
     NDIS_STATUS Status,
@@ -87,7 +87,7 @@ VOID LoopSubmitReceiveWork(
     KIRQL OldIrql;
 
     TcpipAcquireSpinLock( &LoopWorkLock, &OldIrql );
-    
+
     WQItem = ExAllocatePool( NonPagedPool, sizeof(LAN_WQ_ITEM) );
     if( !WQItem ) {
 	TcpipReleaseSpinLock( &LoopWorkLock, OldIrql );
@@ -137,7 +137,7 @@ VOID LoopTransmit(
     ASSERT_KM_POINTER(NdisPacket);
     ASSERT_KM_POINTER(PC(NdisPacket));
     ASSERT_KM_POINTER(PC(NdisPacket)->DLComplete);
-    
+
     TI_DbgPrint(MAX_TRACE, ("Called (NdisPacket = %x)\n", NdisPacket));
 
     GetDataPtr( NdisPacket, MaxLLHeaderSize, &PacketBuffer, &PacketLength );
@@ -177,7 +177,7 @@ NDIS_STATUS LoopRegisterAdapter(
 
   InitializeListHead( &LoopWorkList );
   ExInitializeWorkItem( &LoopWorkItem, LoopReceiveWorker, NULL );
-  
+
   /* Bind the adapter to network (IP) layer */
   BindInfo.Context = NULL;
   BindInfo.HeaderSize = 0;
@@ -186,16 +186,16 @@ NDIS_STATUS LoopRegisterAdapter(
   BindInfo.Address = NULL;
   BindInfo.AddressLength = 0;
   BindInfo.Transmit = LoopTransmit;
-  
+
   Loopback = IPCreateInterface(&BindInfo);
-  
+
   Loopback->Name.Buffer = L"Loopback";
-  Loopback->Name.MaximumLength = Loopback->Name.Length = 
+  Loopback->Name.MaximumLength = Loopback->Name.Length =
       wcslen(Loopback->Name.Buffer) * sizeof(WCHAR);
 
   AddrInitIPv4(&Loopback->Unicast, LOOPBACK_ADDRESS_IPv4);
   AddrInitIPv4(&Loopback->Netmask, LOOPBACK_ADDRMASK_IPv4);
-  
+
   IPRegisterInterface(Loopback);
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));

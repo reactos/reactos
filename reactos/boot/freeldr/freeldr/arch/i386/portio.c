@@ -58,8 +58,8 @@ READ_PORT_BUFFER_UCHAR (PUCHAR Port,
                         PUCHAR Buffer,
                         ULONG Count)
 {
-   __asm__ __volatile__ ("cld ; rep ; insb\n\t" 
-			 : "=D" (Buffer), "=c" (Count) 
+   __asm__ __volatile__ ("cld ; rep ; insb\n\t"
+			 : "=D" (Buffer), "=c" (Count)
 			 : "d" (Port),"0" (Buffer),"1" (Count));
 }
 
@@ -71,7 +71,7 @@ READ_PORT_BUFFER_USHORT (USHORT* Port,
                          ULONG Count)
 {
    __asm__ __volatile__ ("cld ; rep ; insw"
-			 : "=D" (Buffer), "=c" (Count) 
+			 : "=D" (Buffer), "=c" (Count)
 			 : "d" (Port),"0" (Buffer),"1" (Count));
 }
 
@@ -83,17 +83,17 @@ READ_PORT_BUFFER_ULONG (ULONG* Port,
                         ULONG Count)
 {
    __asm__ __volatile__ ("cld ; rep ; insl"
-			 : "=D" (Buffer), "=c" (Count) 
+			 : "=D" (Buffer), "=c" (Count)
 			 : "d" (Port),"0" (Buffer),"1" (Count));
 }
 
 #undef READ_PORT_UCHAR
-UCHAR 
+UCHAR
 STDCALL
 READ_PORT_UCHAR (PUCHAR Port)
 {
    UCHAR Value;
-   
+
    __asm__("inb %w1, %0\n\t"
 	   : "=a" (Value)
 	   : "d" (Port));
@@ -107,7 +107,7 @@ STDCALL
 READ_PORT_USHORT (USHORT* Port)
 {
    USHORT Value;
-   
+
    __asm__("inw %w1, %0\n\t"
 	   : "=a" (Value)
 	   : "d" (Port));
@@ -121,7 +121,7 @@ STDCALL
 READ_PORT_ULONG (ULONG* Port)
 {
    ULONG Value;
-   
+
    __asm__("inl %w1, %0\n\t"
 	   : "=a" (Value)
 	   : "d" (Port));
@@ -130,14 +130,14 @@ READ_PORT_ULONG (ULONG* Port)
 }
 
 #undef WRITE_PORT_BUFFER_UCHAR
-VOID 
+VOID
 STDCALL
 WRITE_PORT_BUFFER_UCHAR (PUCHAR Port,
                          PUCHAR Buffer,
                          ULONG Count)
 {
-   __asm__ __volatile__ ("cld ; rep ; outsb" 
-			 : "=S" (Buffer), "=c" (Count) 
+   __asm__ __volatile__ ("cld ; rep ; outsb"
+			 : "=S" (Buffer), "=c" (Count)
 			 : "d" (Port),"0" (Buffer),"1" (Count));
 }
 
@@ -149,7 +149,7 @@ WRITE_PORT_BUFFER_USHORT (USHORT* Port,
                           ULONG Count)
 {
    __asm__ __volatile__ ("cld ; rep ; outsw"
-			 : "=S" (Buffer), "=c" (Count) 
+			 : "=S" (Buffer), "=c" (Count)
 			 : "d" (Port),"0" (Buffer),"1" (Count));
 }
 
@@ -160,8 +160,8 @@ WRITE_PORT_BUFFER_ULONG (ULONG* Port,
                          ULONG* Buffer,
                          ULONG Count)
 {
-   __asm__ __volatile__ ("cld ; rep ; outsl" 
-			 : "=S" (Buffer), "=c" (Count) 
+   __asm__ __volatile__ ("cld ; rep ; outsl"
+			 : "=S" (Buffer), "=c" (Count)
 			 : "d" (Port),"0" (Buffer),"1" (Count));
 }
 
@@ -172,7 +172,7 @@ WRITE_PORT_UCHAR (PUCHAR Port,
                   UCHAR Value)
 {
    __asm__("outb %0, %w1\n\t"
-	   : 
+	   :
 	   : "a" (Value),
 	     "d" (Port));
    SLOW_DOWN_IO;
@@ -185,7 +185,7 @@ WRITE_PORT_USHORT (USHORT* Port,
                    USHORT Value)
 {
    __asm__("outw %0, %w1\n\t"
-	   : 
+	   :
 	   : "a" (Value),
 	     "d" (Port));
    SLOW_DOWN_IO;
@@ -198,7 +198,7 @@ WRITE_PORT_ULONG (ULONG* Port,
                   ULONG Value)
 {
    __asm__("outl %0, %w1\n\t"
-	   : 
+	   :
 	   : "a" (Value),
 	     "d" (Port));
    SLOW_DOWN_IO;

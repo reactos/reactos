@@ -56,11 +56,11 @@ lut_fcn lut_fcn_mapper(uint32 index)
 
 	case BUCKET_LOOKUP_INSERT:
 		return (lut_fcn) bucket_lookup_insert;
-	
+
 	default:
 		return NULL;
 	}
-	
+
 	return NULL;
 
 }
@@ -71,13 +71,13 @@ exec_fcn exec_fcn_mapper(uint32 index)
 	{
 	case COUNT_PACKETS:
 		return (exec_fcn) count_packets;
-	
+
 	case TCP_SESSION:
 		return (exec_fcn) tcp_session;
 	default:
 		return NULL;
 	}
-	
+
 	return NULL;
 }
 

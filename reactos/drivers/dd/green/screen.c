@@ -1,10 +1,10 @@
 /* $Id:
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS VT100 emulator
  * FILE:            drivers/dd/green/screen.c
  * PURPOSE:         Screen part of green management
- * 
+ *
  * PROGRAMMERS:     Eric Kohl (ekohl@abo.rhein-zeitung.de)
  *                  Art Yerkes
  *                  Hervé Poussineau (hpoussin@reactos.com)
@@ -38,7 +38,7 @@ AddToSendBuffer(
 	int CurrentInt;
 	UCHAR CurrentChar;
 	NTSTATUS Status;
-	
+
 	SizeLeft = sizeof(DeviceExtension->SendBuffer) - DeviceExtension->SendBufferPosition;
 	if (SizeLeft < NumberOfChars * 2 || NumberOfChars == 0)
 	{
@@ -64,7 +64,7 @@ AddToSendBuffer(
 		DeviceExtension->SendBufferPosition = 0;
 		SizeLeft = sizeof(DeviceExtension->SendBuffer);
 	}
-	
+
 	va_start(args, NumberOfChars);
 	while (NumberOfChars-- > 0)
 	{
@@ -72,10 +72,10 @@ AddToSendBuffer(
 		if (CurrentInt > 0)
 		{
 			CurrentChar = (UCHAR)CurrentInt;
-			
+
 			/* Why 0xff chars are printed on a 'dir' ? */
 			if (CurrentChar == 0xff) CurrentChar = ' ';
-			
+
 			DeviceExtension->SendBuffer[DeviceExtension->SendBufferPosition++] = CurrentChar;
 			SizeLeft--;
 		}
@@ -111,9 +111,9 @@ ScreenInitialize(
 	PSCREEN_DEVICE_EXTENSION DeviceExtension;
 	UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\BlueScreen");
 	NTSTATUS Status;
-	
+
 	DPRINT("Green: ScreenInitialize() called\n");
-	
+
 	Status = IoCreateDevice(DriverObject,
 		sizeof(SCREEN_DEVICE_EXTENSION),
 		&DeviceName, /* FIXME: don't hardcode string */
@@ -123,7 +123,7 @@ ScreenInitialize(
 		&Fdo);
 	if (!NT_SUCCESS(Status))
 		return Status;
-	
+
 	DeviceExtension = (PSCREEN_DEVICE_EXTENSION)Fdo->DeviceExtension;
 	RtlZeroMemory(DeviceExtension, sizeof(SCREEN_DEVICE_EXTENSION));
 	DeviceExtension->Common.Type = Screen;
@@ -140,21 +140,21 @@ ScreenInitialize(
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
 	DeviceExtension->TabWidth = 8;
-	
+
 	/* more initialization */
 	DeviceExtension->Mode = ENABLE_PROCESSED_OUTPUT |
 		ENABLE_WRAP_AT_EOL_OUTPUT;
-	
+
 	/* initialize screen at next write */
 	AddToSendBuffer(DeviceExtension, 2, ESC, 'c'); /* reset device */
 	AddToSendBuffer(DeviceExtension, 4, ESC, '[', '7', 'l'); /* disable line wrap */
 	AddToSendBuffer(DeviceExtension, 4, ESC, '[', '3', 'g'); /* clear all tabs */
-	
+
 	Fdo->Flags |= DO_POWER_PAGABLE | DO_BUFFERED_IO;
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
-	
+
 	*ScreenFdo = Fdo;
-	
+
 	return STATUS_SUCCESS;
 }
 
@@ -168,19 +168,19 @@ ScreenWrite(
 	PSCREEN_DEVICE_EXTENSION DeviceExtension;
 	PUCHAR VideoMemory; /* FIXME: is it useful? */
 	ULONG VideoMemorySize; /* FIXME: is it useful? */
-	
+
 	ULONG Columns, Rows;
 	ULONG CursorX, CursorY;
 	ULONG i, j;
 	NTSTATUS Status;
-	
+
 	DPRINT("Green: IRP_MJ_WRITE\n");
-	
+
 	Stack = IoGetCurrentIrpStackLocation (Irp);
 	Buffer = Irp->UserBuffer;
 	DeviceExtension = (PSCREEN_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	VideoMemory = DeviceExtension->VideoMemory;
-	
+
 	Columns = DeviceExtension->Columns;
 	Rows = DeviceExtension->Rows;
 	CursorX = (DeviceExtension->LogicalOffset / 2) % Columns + 1;
@@ -191,14 +191,14 @@ ScreenWrite(
 	for (i = 0; i < Stack->Parameters.Write.Length; i++)
 		DbgPrint(" 0x%02x", Buffer[i]);
 	DbgPrint("\n");
-	
+
 	if (!(DeviceExtension->Mode & ENABLE_PROCESSED_OUTPUT))
 	{
 		/* raw output mode */
 		CHECKPOINT;
 		Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
 		IoCompleteRequest (Irp, IO_NO_INCREMENT);
-		
+
 		return STATUS_NOT_SUPPORTED;
 	}
 	else
@@ -271,7 +271,7 @@ ScreenWrite(
 						DPRINT1("Y: %lu -> %lu\n", CursorY, CursorY + 1);
 						CursorY++;
 						AddToSendBuffer(DeviceExtension, 6, ESC, '[', -(int)CursorY, ';', '1', 'H');
-						
+
 					}
 				}
 			}
@@ -284,16 +284,16 @@ ScreenWrite(
 			}
 		}
 	}
-	
+
 	DeviceExtension->LogicalOffset = ((CursorX-1) + (CursorY-1) * Columns) * 2;
-	
+
 	/* flush output buffer */
 	AddToSendBuffer(DeviceExtension, 0);
-	
+
 	Status = STATUS_SUCCESS;
 	Irp->IoStatus.Status = Status;
 	IoCompleteRequest (Irp, IO_NO_INCREMENT);
-	
+
 	return Status;
 }
 
@@ -305,35 +305,35 @@ ScreenDeviceControl(
 	PIO_STACK_LOCATION Stack;
 	PSCREEN_DEVICE_EXTENSION DeviceExtension;
 	NTSTATUS Status;
-	
+
 	Stack = IoGetCurrentIrpStackLocation(Irp);
 	DeviceExtension = (PSCREEN_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-	
+
 	switch (Stack->Parameters.DeviceIoControl.IoControlCode)
 	{
 		case IOCTL_CONSOLE_GET_SCREEN_BUFFER_INFO:
 		{
 			PCONSOLE_SCREEN_BUFFER_INFO pcsbi;
 			DPRINT("Green: IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_GET_SCREEN_BUFFER_INFO\n");
-			
+
 			pcsbi = (PCONSOLE_SCREEN_BUFFER_INFO)Irp->AssociatedIrp.SystemBuffer;
-			
+
 			pcsbi->dwSize.X = DeviceExtension->Columns;
 			pcsbi->dwSize.Y = DeviceExtension->Rows;
-			
+
 			pcsbi->dwCursorPosition.X = (SHORT)(DeviceExtension->LogicalOffset % DeviceExtension->Columns);
 			pcsbi->dwCursorPosition.Y = (SHORT)(DeviceExtension->LogicalOffset / DeviceExtension->Columns);
-			
+
 			pcsbi->wAttributes = DeviceExtension->CharAttribute;
-			
+
 			pcsbi->srWindow.Left   = 1;
 			pcsbi->srWindow.Right  = DeviceExtension->Columns;
 			pcsbi->srWindow.Top    = 1;
 			pcsbi->srWindow.Bottom = DeviceExtension->Rows;
-			
+
 			pcsbi->dwMaximumWindowSize.X = DeviceExtension->Columns;
 			pcsbi->dwMaximumWindowSize.Y = DeviceExtension->Rows;
-			
+
 			Irp->IoStatus.Information = sizeof(CONSOLE_SCREEN_BUFFER_INFO);
 			Status = STATUS_SUCCESS;
 			break;
@@ -342,7 +342,7 @@ ScreenDeviceControl(
 		{
 			PCONSOLE_SCREEN_BUFFER_INFO pcsbi;
 			DPRINT("Green: IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_SET_SCREEN_BUFFER_INFO\n");
-			
+
 			pcsbi = (PCONSOLE_SCREEN_BUFFER_INFO)Irp->AssociatedIrp.SystemBuffer;
 			/* FIXME: remove */ { pcsbi->dwCursorPosition.X++; }
 			/* FIXME: remove */ { pcsbi->dwCursorPosition.Y++; }
@@ -350,19 +350,19 @@ ScreenDeviceControl(
 			ASSERT(pcsbi->dwCursorPosition.Y >= 1);
 			ASSERT(pcsbi->dwCursorPosition.X <= DeviceExtension->Columns);
 			ASSERT(pcsbi->dwCursorPosition.Y <= DeviceExtension->Rows);
-			
+
 			DeviceExtension->LogicalOffset = (
 				(pcsbi->dwCursorPosition.Y-1) * DeviceExtension->Columns +
 				(pcsbi->dwCursorPosition.X-1)) * 2;
 			AddToSendBuffer(DeviceExtension, 6, ESC, '[',
 				-(int)pcsbi->dwCursorPosition.Y, ';',
 				-(int)pcsbi->dwCursorPosition.X, 'H');
-			
+
 			/* flush buffer */
 			AddToSendBuffer(DeviceExtension, 0);
-			
+
 			DeviceExtension->CharAttribute = pcsbi->wAttributes;
-			
+
 			Irp->IoStatus.Information = 0;
 			Status = STATUS_SUCCESS;
 			break;
@@ -371,10 +371,10 @@ ScreenDeviceControl(
 		{
 			PCONSOLE_CURSOR_INFO pcci = (PCONSOLE_CURSOR_INFO)Irp->AssociatedIrp.SystemBuffer;
 			DPRINT("Green: IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_GET_CURSOR_INFO\n");
-			
+
 			pcci->dwSize = 1;
 			pcci->bVisible = TRUE;
-			
+
 			Irp->IoStatus.Information = sizeof (CONSOLE_CURSOR_INFO);
 			Status = STATUS_SUCCESS;
 			break;
@@ -383,9 +383,9 @@ ScreenDeviceControl(
 		{
 			PCONSOLE_MODE pcm = (PCONSOLE_MODE)Irp->AssociatedIrp.SystemBuffer;
 			DPRINT("Green: IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_GET_MODE\n");
-			
+
 			pcm->dwMode = DeviceExtension->Mode;
-			
+
 			Irp->IoStatus.Information = sizeof(CONSOLE_MODE);
 			Status = STATUS_SUCCESS;
 			break;
@@ -394,9 +394,9 @@ ScreenDeviceControl(
 		{
 			PCONSOLE_MODE pcm = (PCONSOLE_MODE)Irp->AssociatedIrp.SystemBuffer;
 			DPRINT("Green: IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_SET_MODE\n");
-			
+
 			DeviceExtension->Mode = pcm->dwMode;
-			
+
 			Irp->IoStatus.Information = 0;
 			Status = STATUS_SUCCESS;
 			break;
@@ -422,7 +422,7 @@ ScreenDeviceControl(
 		case IOCTL_CONSOLE_SET_TEXT_ATTRIBUTE:
 		{
 			DPRINT("Green: IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_SET_TEXT_ATTRIBUTE\n");
-			
+
 			DeviceExtension->CharAttribute = (WORD)*(PWORD)Irp->AssociatedIrp.SystemBuffer;
 			Irp->IoStatus.Information = 0;
 			Status = STATUS_SUCCESS;
@@ -453,7 +453,7 @@ ScreenDeviceControl(
 			ULONG x, y;
 			BOOLEAN DoOptimization = FALSE;
 			DPRINT("Green: IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_DRAW\n");
-			
+
 			ConsoleDraw = (PCONSOLE_DRAW)MmGetSystemAddressForMdl(Irp->MdlAddress);
 			/* FIXME: remove */ { ConsoleDraw->X++; ConsoleDraw->CursorX++; }
 			/* FIXME: remove */ { ConsoleDraw->Y++; ConsoleDraw->CursorY++; }
@@ -472,7 +472,7 @@ ScreenDeviceControl(
 			ASSERT(ConsoleDraw->CursorY >= 1);
 			ASSERT(ConsoleDraw->CursorX <= DeviceExtension->Columns);
 			ASSERT(ConsoleDraw->CursorY <= DeviceExtension->Rows);
-			
+
 #if 0
 			if (ConsoleDraw->X == 1
 				&& ConsoleDraw->Y == 1
@@ -501,7 +501,7 @@ ScreenDeviceControl(
 			}
 #endif
 			/* add here more optimizations if needed */
-			
+
 			if (!DoOptimization)
 			{
 				for (y = 0; y < ConsoleDraw->SizeY; y++)
@@ -517,17 +517,17 @@ ScreenDeviceControl(
 					}
 				}
 			}
-			
+
 			DeviceExtension->LogicalOffset = (
 				(ConsoleDraw->CursorY-1) * DeviceExtension->Columns +
 				(ConsoleDraw->CursorX-1)) * 2;
 			AddToSendBuffer(DeviceExtension, 6, ESC, '[',
 				-(int)(ConsoleDraw->CursorY), ';',
 				-(int)(ConsoleDraw->CursorX), 'H');
-			
+
 			/* flush buffer */
 			AddToSendBuffer(DeviceExtension, 0);
-			
+
 			Irp->IoStatus.Information = 0;
 			Status = STATUS_SUCCESS;
 			break;
@@ -537,7 +537,7 @@ ScreenDeviceControl(
 				Stack->Parameters.DeviceIoControl.IoControlCode);
 			Status = STATUS_NOT_IMPLEMENTED;
 	}
-	
+
 	Irp->IoStatus.Status = Status;
 	IoCompleteRequest (Irp, IO_NO_INCREMENT);
 	return Status;

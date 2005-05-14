@@ -127,7 +127,7 @@ int STDCALL LoadStringA
  strBuf.Buffer = lpBuffer;
 
  nErrCode = RtlUnicodeStringToAnsiString(&strBuf, &wstrResStr, FALSE);
- 
+
  if(!NT_SUCCESS(nErrCode))
  {
   /* failure */
@@ -198,10 +198,10 @@ int STDCALL LoadStringW
 
  /* copy the string */
  memcpy(lpBuffer, wstrResStr.Buffer, nStringLen * sizeof(WCHAR));
- 
+
  /* null-terminate it */
  lpBuffer[nStringLen] = 0;
- 
+
  /* success */
  return nStringLen;
 }

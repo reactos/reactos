@@ -54,7 +54,7 @@ typedef struct _USER_MESSAGE_QUEUE
 {
   /* Reference counter, only access this variable with interlocked functions! */
   LONG References;
-  
+
   /* Owner of the message queue */
   struct _ETHREAD *Thread;
   /* Queue of messages sent to the queue. */
@@ -101,7 +101,7 @@ typedef struct _USER_MESSAGE_QUEUE
   BYTE MenuState;
   /* Caret information for this queue */
   PTHRDCARETINFO CaretInfo;
-  
+
   /* Window hooks */
   PHOOKTABLE Hooks;
 
@@ -109,7 +109,7 @@ typedef struct _USER_MESSAGE_QUEUE
   WORD WakeMask;
   WORD QueueBits;
   WORD ChangedBits;
-  
+
   /* extra message information */
   LPARAM ExtraInfo;
 
@@ -117,7 +117,7 @@ typedef struct _USER_MESSAGE_QUEUE
   LIST_ENTRY DispatchingMessagesHead;
   /* messages that are currently dispatched by this message queue, required for cleanup */
   LIST_ENTRY LocalDispatchingMessagesHead;
-  
+
   /* Desktop that the message queue is attached to */
   struct _DESKTOP_OBJECT *Desktop;
 } USER_MESSAGE_QUEUE, *PUSER_MESSAGE_QUEUE;

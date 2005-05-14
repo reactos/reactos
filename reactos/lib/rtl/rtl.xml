@@ -1,4 +1,5 @@
 <module name="rtl" type="staticlibrary">
+	<include base="rtl">.</include>
 	<directory name="i386">
 		<file>allshl.s</file>
 		<file>aulldiv.s</file>

@@ -52,7 +52,7 @@
 #define KPCR_SELF                 0x1C
 #define KPCR_GDT                  0x3C
 #define KPCR_TSS                  0x40
-#define KPCR_CURRENT_THREAD       0x124	
+#define KPCR_CURRENT_THREAD       0x124
 #define KPCR_NPX_THREAD           0x2A4
 
 #ifndef __ASM__
@@ -67,7 +67,7 @@ typedef struct _KPROCESSOR_STATE {
    PVOID SpecialRegisters;
 } KPROCESSOR_STATE;
 
-/* ProcessoR Control Block */ 
+/* ProcessoR Control Block */
 typedef struct _KPRCB {
 	USHORT MinorVersion;
 	USHORT MajorVersion;

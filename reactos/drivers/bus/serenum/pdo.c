@@ -1,10 +1,10 @@
 /* $Id:
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Serial enumerator driver
  * FILE:            drivers/bus/serenum/pdo.c
  * PURPOSE:         IRP_MJ_PNP operations for PDOs
- * 
+ *
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
  */
 
@@ -16,11 +16,11 @@ SerenumPdoStartDevice(
 	IN PDEVICE_OBJECT DeviceObject)
 {
 	PPDO_DEVICE_EXTENSION DeviceExtension;
-	
+
 	DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-	
+
 	ASSERT(DeviceExtension->Common.PnpState == dsStopped);
-	
+
 	DeviceExtension->Common.PnpState = dsStarted;
 	return STATUS_SUCCESS;
 }
@@ -36,11 +36,11 @@ SerenumPdoQueryId(
 	PUNICODE_STRING SourceString;
 	UNICODE_STRING String;
 	NTSTATUS Status;
-	
+
 	IdType = IoGetCurrentIrpStackLocation(Irp)->Parameters.QueryId.IdType;
 	DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	RtlInitUnicodeString(&String, NULL);
-	
+
 	switch (IdType)
 	{
 		case BusQueryDeviceID:
@@ -71,7 +71,7 @@ SerenumPdoQueryId(
 			DPRINT1("Serenum: IRP_MJ_PNP / IRP_MN_QUERY_ID / unknown query id type 0x%lx\n", IdType);
 			return STATUS_NOT_SUPPORTED;
 	}
-	
+
 	Status = SerenumDuplicateUnicodeString(
 		&String,
 		SourceString,
@@ -87,21 +87,21 @@ SerenumPdoQueryDeviceRelations(
 {
 	PFDO_DEVICE_EXTENSION DeviceExtension;
 	PDEVICE_RELATIONS DeviceRelations;
-	
+
 	DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	ASSERT(DeviceExtension->Common.IsFDO);
-	
+
 	DeviceRelations = (PDEVICE_RELATIONS)ExAllocatePoolWithTag(
 		PagedPool,
 		sizeof(DEVICE_RELATIONS),
 		SERENUM_TAG);
 	if (!DeviceRelations)
 		return STATUS_INSUFFICIENT_RESOURCES;
-	
+
 	ObReferenceObject(DeviceObject);
 	DeviceRelations->Count = 1;
 	DeviceRelations->Objects[0] = DeviceObject;
-	
+
 	*pDeviceRelations = DeviceRelations;
 	return STATUS_SUCCESS;
 }
@@ -115,10 +115,10 @@ SerenumPdoPnp(
 	PIO_STACK_LOCATION Stack;
 	ULONG_PTR Information = 0;
 	NTSTATUS Status;
-	
+
 	Stack = IoGetCurrentIrpStackLocation(Irp);
 	MinorFunction = Stack->MinorFunction;
-	
+
 	switch (MinorFunction)
 	{
 		/* FIXME: do all these minor functions
@@ -165,7 +165,7 @@ SerenumPdoPnp(
 				}
 				default:
 				{
-					DPRINT1("Serenum: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n", 
+					DPRINT1("Serenum: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
 						Stack->Parameters.QueryDeviceRelations.Type);
 					Status = STATUS_NOT_IMPLEMENTED;
 					break;
@@ -178,7 +178,7 @@ SerenumPdoPnp(
 			PDEVICE_CAPABILITIES DeviceCapabilities;
 			ULONG i;
 			DPRINT("Serenum: IRP_MJ_PNP / IRP_MN_QUERY_CAPABILITIES\n");
-			
+
 			DeviceCapabilities = (PDEVICE_CAPABILITIES)Stack->Parameters.DeviceCapabilities.Capabilities;
 			/* FIXME: capabilities can change with connected device */
 			DeviceCapabilities->LockSupported = FALSE;
@@ -234,7 +234,7 @@ SerenumPdoPnp(
 					PUNICODE_STRING Source;
 					PWSTR Description;
 					DPRINT("Serenum: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextDescription\n");
-					
+
 					Source = &((PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->DeviceDescription;
 					Description = ExAllocatePool(PagedPool, Source->Length + sizeof(WCHAR));
 					if (!Description)
@@ -279,7 +279,7 @@ SerenumPdoPnp(
 		{
 			PPNP_BUS_INFORMATION BusInfo;
 			DPRINT("Serenum: IRP_MJ_PNP / IRP_MN_QUERY_BUS_INFORMATION\n");
-			
+
 			BusInfo = (PPNP_BUS_INFORMATION)ExAllocatePool(PagedPool, sizeof(PNP_BUS_INFORMATION));
 			if (!BusInfo)
 				Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -306,7 +306,7 @@ SerenumPdoPnp(
 			Status = Irp->IoStatus.Status;
 		}
 	}
-	
+
 	Irp->IoStatus.Information = Information;
 	Irp->IoStatus.Status = Status;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);

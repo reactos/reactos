@@ -10,7 +10,7 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
- 
+
 #include <ddk/ntddkbd.h>
 #include <ddk/ntdd8042.h>
 
@@ -35,16 +35,16 @@ VOID I8042MouseHandlePs2pp(PDEVICE_EXTENSION DevExt, BYTE Input)
  *
  * Otherwise, the packet is different, like this:
  * 1: E  1 b3 b2  x  x  x  x
- * 2: x  x b1 b0 x1 x0  1  0 
+ * 2: x  x b1 b0 x1 x0  1  0
  * 3: x  x  x  x  x  x x1 x0
  *
  * b3-0 form a code that specifies the packet type:
- * 
+ *
  * 0  Device Type
  * 1  Rollers and buttons
  * 2   Reserved
  * 3   Reserved
- * 4  Device ID 
+ * 4  Device ID
  * 5  Channel & Battery
  * 6  Wireless notifications
  * 7   Reserved
@@ -64,7 +64,7 @@ VOID I8042MouseHandlePs2pp(PDEVICE_EXTENSION DevExt, BYTE Input)
 		DevExt->MouseLogiBuffer[DevExt->MouseState] = Input;
 		DevExt->MouseState++;
 		break;
-	
+
 	case YMovement:
 		DevExt->MouseLogiBuffer[2] = Input;
 		DevExt->MouseState = MouseIdle;
@@ -78,7 +78,7 @@ VOID I8042MouseHandlePs2pp(PDEVICE_EXTENSION DevExt, BYTE Input)
 			I8042MouseHandle(DevExt, DevExt->MouseLogiBuffer[2]);
 			/* We could care about wether MouseState really
 			 * advances, but we don't need to because we're
-			 * only doing three bytes anyway, so the packet 
+			 * only doing three bytes anyway, so the packet
 			 * will never complete if it's broken.
 			 */
 			return;
@@ -104,7 +104,7 @@ VOID I8042MouseHandlePs2pp(PDEVICE_EXTENSION DevExt, BYTE Input)
 			 * already read that in the initialization
 			 * sequence. Ignore it.
 			 */
-			return;	
+			return;
 		case 1:
 			RtlZeroMemory(MouseInput, sizeof(MOUSE_INPUT_DATA));
 			if (DevExt->MouseLogiBuffer[2] & 0x10)
@@ -116,11 +116,11 @@ VOID I8042MouseHandlePs2pp(PDEVICE_EXTENSION DevExt, BYTE Input)
 			if (DevExt->MouseLogiBuffer[2] & 0x0F) {
 				MouseInput->ButtonFlags |= MOUSE_WHEEL;
 				if (DevExt->MouseLogiBuffer[2] & 0x08)
-					MouseInput->ButtonData = 
+					MouseInput->ButtonData =
 					   (DevExt->MouseLogiBuffer[2] & 0x07) -
 					       8;
 				else
-					MouseInput->ButtonData = 
+					MouseInput->ButtonData =
 					     DevExt->MouseLogiBuffer[2] & 0x07;
 			}
 			I8042MouseHandleButtons(DevExt, MOUSE_BUTTON_4_DOWN |

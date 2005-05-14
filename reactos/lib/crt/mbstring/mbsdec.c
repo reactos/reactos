@@ -14,5 +14,5 @@ unsigned char * _mbsdec(const unsigned char *str, const unsigned char *cur)
 	if (_ismbblead(*(s-1)) )
 		s--;
 
-	return s; 
+	return s;
 }

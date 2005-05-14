@@ -549,12 +549,12 @@ BOOL WINAPI FileExists(LPCWSTR lpFileName, LPWIN32_FIND_DATAW lpFileFindData)
  */
 DWORD WINAPI CaptureStringArg(LPCWSTR pSrc, LPWSTR *pDst)
 {
-  if (pDst == NULL)
-    return ERROR_INVALID_PARAMETER;
+    if (pDst == NULL)
+        return ERROR_INVALID_PARAMETER;
 
-  *pDst = DuplicateString(pSrc);
+    *pDst = DuplicateString(pSrc);
 
-  return ERROR_SUCCESS;
+    return ERROR_SUCCESS;
 }
 
 
@@ -576,10 +576,361 @@ DWORD WINAPI CaptureStringArg(LPCWSTR pSrc, LPWSTR *pDst)
  */
 DWORD WINAPI CaptureAndConvertAnsiArg(LPCSTR pSrc, LPWSTR *pDst)
 {
-  if (pDst == NULL)
-    return ERROR_INVALID_PARAMETER;
+    if (pDst == NULL)
+        return ERROR_INVALID_PARAMETER;
 
-  *pDst = MultiByteToUnicode(pSrc, CP_ACP);
+    *pDst = MultiByteToUnicode(pSrc, CP_ACP);
 
-  return ERROR_SUCCESS;
+    return ERROR_SUCCESS;
+}
+
+
+/**************************************************************************
+ * OpenAndMapFileForRead [SETUPAPI.@]
+ *
+ * Open and map a file to a buffer.
+ *
+ * PARAMS
+ *     lpFileName [I] Name of the file to be opened
+ *     lpSize     [O] Pointer to the file size
+ *     lpFile     [0] Pointer to the file handle
+ *     lpMapping  [0] Pointer to the mapping handle
+ *     lpBuffer   [0] Pointer to the file buffer
+ *
+ * RETURNS
+ *     Success: ERROR_SUCCESS
+ *     Failure: Other
+ *
+ * NOTE
+ *     Call UnmapAndCloseFile to release the file.
+ */
+DWORD WINAPI OpenAndMapFileForRead(LPCWSTR lpFileName,
+                                   LPDWORD lpSize,
+                                   LPHANDLE lpFile,
+                                   LPHANDLE lpMapping,
+                                   LPVOID *lpBuffer)
+{
+    DWORD dwError;
+
+    TRACE("%s %p %p %p %p\n",
+          debugstr_w(lpFileName), lpSize, lpFile, lpMapping, lpBuffer);
+
+    *lpFile = CreateFileW(lpFileName, GENERIC_READ, FILE_SHARE_READ, NULL,
+                          OPEN_EXISTING, 0, NULL);
+    if (*lpFile == INVALID_HANDLE_VALUE)
+        return GetLastError();
+
+    *lpSize = GetFileSize(*lpFile, NULL);
+    if (*lpSize == INVALID_FILE_SIZE)
+    {
+        dwError = GetLastError();
+        CloseHandle(*lpFile);
+        return dwError;
+    }
+
+    *lpMapping = CreateFileMappingW(*lpFile, NULL, PAGE_READONLY, 0,
+                                    *lpSize, NULL);
+    if (*lpMapping == NULL)
+    {
+        dwError = GetLastError();
+        CloseHandle(*lpFile);
+        return dwError;
+    }
+
+    *lpBuffer = MapViewOfFile(*lpMapping, FILE_MAP_READ, 0, 0, *lpSize);
+    if (*lpBuffer == NULL)
+    {
+        dwError = GetLastError();
+        CloseHandle(*lpMapping);
+        CloseHandle(*lpFile);
+        return dwError;
+    }
+
+    return ERROR_SUCCESS;
+}
+
+
+/**************************************************************************
+ * UnmapAndCloseFile [SETUPAPI.@]
+ *
+ * Unmap and close a mapped file.
+ *
+ * PARAMS
+ *     hFile    [I] Handle to the file
+ *     hMapping [I] Handle to the file mapping
+ *     lpBuffer [I] Pointer to the file buffer
+ *
+ * RETURNS
+ *     Success: TRUE
+ *     Failure: FALSE
+ */
+BOOL WINAPI UnmapAndCloseFile(HANDLE hFile, HANDLE hMapping, LPVOID lpBuffer)
+{
+    TRACE("%x %x %p\n",
+          hFile, hMapping, lpBuffer);
+
+    if (!UnmapViewOfFile(lpBuffer))
+        return FALSE;
+
+    if (!CloseHandle(hMapping))
+        return FALSE;
+
+    if (!CloseHandle(hFile))
+        return FALSE;
+
+    return TRUE;
+}
+
+
+/**************************************************************************
+ * StampFileSecurity [SETUPAPI.@]
+ *
+ * Assign a new security descriptor to the given file.
+ *
+ * PARAMS
+ *     lpFileName          [I] Name of the file
+ *     pSecurityDescriptor [I] New security descriptor
+ *
+ * RETURNS
+ *     Success: ERROR_SUCCESS
+ *     Failure: other
+ */
+DWORD WINAPI StampFileSecurity(LPCWSTR lpFileName, PSECURITY_DESCRIPTOR pSecurityDescriptor)
+{
+    TRACE("%s %p\n", debugstr_w(lpFileName), pSecurityDescriptor);
+
+    if (!SetFileSecurityW(lpFileName, OWNER_SECURITY_INFORMATION |
+                          GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+                          pSecurityDescriptor))
+        return GetLastError();
+
+    return ERROR_SUCCESS;
+}
+
+
+/**************************************************************************
+ * TakeOwnershipOfFile [SETUPAPI.@]
+ *
+ * Takes the ownership of the given file.
+ *
+ * PARAMS
+ *     lpFileName [I] Name of the file
+ *
+ * RETURNS
+ *     Success: ERROR_SUCCESS
+ *     Failure: other
+ */
+DWORD WINAPI TakeOwnershipOfFile(LPCWSTR lpFileName)
+{
+    SECURITY_DESCRIPTOR SecDesc;
+    HANDLE hToken = NULL;
+    PTOKEN_OWNER pOwner = NULL;
+    DWORD dwError;
+    DWORD dwSize;
+
+    TRACE("%s\n", debugstr_w(lpFileName));
+
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
+        return GetLastError();
+
+    if (!GetTokenInformation(hToken, TokenOwner, NULL, 0, &dwSize))
+    {
+        goto fail;
+    }
+
+    pOwner = (PTOKEN_OWNER)MyMalloc(dwSize);
+    if (pOwner == NULL)
+    {
+        CloseHandle(hToken);
+        return ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+    if (!GetTokenInformation(hToken, TokenOwner, pOwner, dwSize, &dwSize))
+    {
+        goto fail;
+    }
+
+    if (!InitializeSecurityDescriptor(&SecDesc, SECURITY_DESCRIPTOR_REVISION))
+    {
+        goto fail;
+    }
+
+    if (!SetSecurityDescriptorOwner(&SecDesc, pOwner->Owner, FALSE))
+    {
+        goto fail;
+    }
+
+    if (!SetFileSecurityW(lpFileName, OWNER_SECURITY_INFORMATION, &SecDesc))
+    {
+        goto fail;
+    }
+
+    MyFree(pOwner);
+    CloseHandle(hToken);
+
+    return ERROR_SUCCESS;
+
+fail:;
+    dwError = GetLastError();
+
+    if (pOwner != NULL)
+        MyFree(pOwner);
+
+    if (hToken != NULL)
+        CloseHandle(hToken);
+
+    return dwError;
+}
+
+
+/**************************************************************************
+ * RetreiveFileSecurity [SETUPAPI.@]
+ *
+ * Retrieve the security descriptor that is associated with the given file.
+ *
+ * PARAMS
+ *     lpFileName [I] Name of the file
+ *
+ * RETURNS
+ *     Success: ERROR_SUCCESS
+ *     Failure: other
+ */
+DWORD WINAPI RetreiveFileSecurity(LPCWSTR lpFileName,
+                                  PSECURITY_DESCRIPTOR *pSecurityDescriptor)
+{
+    PSECURITY_DESCRIPTOR SecDesc;
+    DWORD dwSize = 0x100;
+    DWORD dwError;
+
+    TRACE("%s %p\n", debugstr_w(lpFileName), pSecurityDescriptor);
+
+    SecDesc = (PSECURITY_DESCRIPTOR)MyMalloc(dwSize);
+    if (SecDesc == NULL)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    if (GetFileSecurityW(lpFileName, OWNER_SECURITY_INFORMATION |
+                         GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+                         SecDesc, dwSize, &dwSize))
+    {
+      *pSecurityDescriptor = SecDesc;
+      return ERROR_SUCCESS;
+    }
+
+    dwError = GetLastError();
+    if (dwError != ERROR_INSUFFICIENT_BUFFER)
+    {
+        MyFree(SecDesc);
+        return dwError;
+    }
+
+    SecDesc = (PSECURITY_DESCRIPTOR)MyRealloc(SecDesc, dwSize);
+    if (SecDesc == NULL)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    if (GetFileSecurityW(lpFileName, OWNER_SECURITY_INFORMATION |
+                         GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+                         SecDesc, dwSize, &dwSize))
+    {
+      *pSecurityDescriptor = SecDesc;
+      return ERROR_SUCCESS;
+    }
+
+    dwError = GetLastError();
+    MyFree(SecDesc);
+
+    return dwError;
+}
+
+
+/**************************************************************************
+ * AssertFail [SETUPAPI.@]
+ *
+ * Display an assertion message.
+ *
+ * PARAMS
+ *     lpFile    [I] File name
+ *     uLine     [I] Line number
+ *     lpMessage [I] Assertion message
+ *
+ * RETURNS
+ *     Nothing
+ */
+VOID WINAPI AssertFail(LPSTR lpFile, UINT uLine, LPSTR lpMessage)
+{
+    CHAR szModule[MAX_PATH];
+    CHAR szBuffer[2048];
+    LPSTR lpName;
+    LPSTR lpBuffer;
+
+    TRACE("%s %u %s\n", lpFile, uLine, lpMessage);
+
+    GetModuleFileNameA(hInstance, szModule, MAX_PATH);
+    lpName = strrchr(szModule, '\\');
+    if (lpName != NULL)
+        lpName++;
+    else
+        lpName = szModule;
+
+    wsprintfA(szBuffer,
+              "Assertion failure at line %u in file %s: %s\n\nCall DebugBreak()?",
+              uLine, lpFile, lpMessage);
+
+    if (MessageBoxA(NULL, szBuffer, lpName, MB_SETFOREGROUND |
+                    MB_TASKMODAL | MB_ICONERROR | MB_YESNO) == IDYES)
+        DebugBreak();
+}
+
+
+/**************************************************************************
+ * GetSetFileTimestamp [SETUPAPI.@]
+ *
+ * Gets or sets a files timestamp.
+ *
+ * PARAMS
+ *     lpFileName       [I]   File name
+ *     lpCreationTime   [I/O] Creation time
+ *     lpLastAccessTime [I/O] Last access time
+ *     lpLastWriteTime  [I/O] Last write time
+ *     bSetFileTime     [I]   TRUE: Set file times
+ *                            FALSE: Get file times
+ *
+ * RETURNS
+ *     Success: ERROR_SUCCESS
+ *     Failure: other
+ */
+DWORD WINAPI GetSetFileTimestamp(LPCWSTR lpFileName,
+                                 LPFILETIME lpCreationTime,
+                                 LPFILETIME lpLastAccessTime,
+                                 LPFILETIME lpLastWriteTime,
+                                 BOOLEAN bSetFileTime)
+{
+    HANDLE hFile;
+    BOOLEAN bRet;
+    DWORD dwError = ERROR_SUCCESS;
+
+    TRACE("%s %p %p %p %x\n", debugstr_w(lpFileName), lpCreationTime,
+          lpLastAccessTime, lpLastWriteTime, bSetFileTime);
+
+    hFile = CreateFileW(lpFileName,
+                        bSetFileTime ? GENERIC_WRITE : GENERIC_READ,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        NULL,
+                        OPEN_EXISTING,
+                        0,
+                        NULL);
+
+    if (hFile == INVALID_HANDLE_VALUE)
+        return GetLastError();
+
+    if (bSetFileTime)
+        bRet = SetFileTime(hFile, lpCreationTime, lpLastAccessTime, lpLastWriteTime);
+    else
+        bRet = GetFileTime(hFile, lpCreationTime, lpLastAccessTime, lpLastWriteTime);
+
+    if (bRet == FALSE)
+        dwError = GetLastError();
+
+     CloseHandle(hFile);
+
+     return dwError;
 }

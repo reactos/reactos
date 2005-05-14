@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/lpc/query.c
  * PURPOSE:         Communication mechanism
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
@@ -19,7 +19,7 @@
 /**********************************************************************
  * NAME							EXPORTED
  *	NtQueryInformationPort@20
- *	
+ *
  * DESCRIPTION
  *
  * ARGUMENTS
@@ -39,14 +39,14 @@
  */
 /*EXPORTED*/ NTSTATUS STDCALL
 NtQueryInformationPort (IN	HANDLE	PortHandle,
-			IN	CINT	PortInformationClass,	
-			OUT	PVOID	PortInformation,    
+			IN	CINT	PortInformationClass,
+			OUT	PVOID	PortInformation,
 			IN	ULONG	PortInformationLength,
 			OUT	PULONG	ReturnLength)
 {
   NTSTATUS	Status;
   PEPORT		Port;
-  
+
   Status = ObReferenceObjectByHandle (PortHandle,
 				      PORT_ALL_ACCESS,   /* AccessRequired */
 				      LpcPortObjectType,

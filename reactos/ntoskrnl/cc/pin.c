@@ -40,11 +40,11 @@ CcMapData (IN PFILE_OBJECT FileObject,
   NTSTATUS Status;
   PINTERNAL_BCB iBcb;
   ULONG ROffset;
-  
+
   DPRINT("CcMapData(FileObject %x, FileOffset %d, Length %d, Wait %d,"
 	 " pBcb %x, pBuffer %x)\n", FileObject, (ULONG)FileOffset->QuadPart,
 	 Length, Wait, pBcb, pBuffer);
-  
+
   ReadOffset = (ULONG)FileOffset->QuadPart;
   Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
   ASSERT(Bcb);
@@ -52,7 +52,7 @@ CcMapData (IN PFILE_OBJECT FileObject,
   DPRINT("AllocationSize %d, FileSize %d\n",
          (ULONG)Bcb->AllocationSize.QuadPart,
          (ULONG)Bcb->FileSize.QuadPart);
-  
+
   if (ReadOffset % Bcb->CacheSegmentSize + Length > Bcb->CacheSegmentSize)
     {
       return(FALSE);
@@ -193,7 +193,7 @@ VOID STDCALL
 CcUnpinData (IN PVOID Bcb)
 {
   PINTERNAL_BCB iBcb = Bcb;
-  CcRosReleaseCacheSegment(iBcb->CacheSegment->Bcb, iBcb->CacheSegment, TRUE, 
+  CcRosReleaseCacheSegment(iBcb->CacheSegment->Bcb, iBcb->CacheSegment, TRUE,
                            iBcb->Dirty, FALSE);
   if (--iBcb->RefCount == 0)
   {

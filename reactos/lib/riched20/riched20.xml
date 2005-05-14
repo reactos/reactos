@@ -29,5 +29,6 @@
 	<file>style.c</file>
 	<file>undo.c</file>
 	<file>wrap.c</file>
+	<file>writer.c</file>
 	<file>riched20.spec</file>
 </module>

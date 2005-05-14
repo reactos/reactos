@@ -524,10 +524,10 @@ static char remcomOutBuffer[BUFMAX];
 
 /* scan for the sequence $<data>#<checksum> 	*/
 
-unsigned char *
+char *
 getpacket (void)
 {
-  unsigned char *buffer = &remcomInBuffer[0];
+  char *buffer = &remcomInBuffer[0];
   unsigned char checksum;
   unsigned char xmitcsum;
   int count;
@@ -597,7 +597,7 @@ getpacket (void)
 /* send the packet in buffer.  */
 
 void
-putpacket (unsigned char *buffer)
+putpacket (char *buffer)
 {
   unsigned char checksum;
   int count;
@@ -855,17 +855,17 @@ handle_exception (int exceptionVector)
   *ptr++ = hexchars[sigval >> 4];
   *ptr++ = hexchars[sigval & 0xf];
 
-  *ptr++ = hexchars[ESP]; 
+  *ptr++ = hexchars[ESP];
   *ptr++ = ':';
   ptr = mem2hex((char *)&registers[ESP], ptr, 4, 0);	/* SP */
   *ptr++ = ';';
 
-  *ptr++ = hexchars[EBP]; 
+  *ptr++ = hexchars[EBP];
   *ptr++ = ':';
   ptr = mem2hex((char *)&registers[EBP], ptr, 4, 0);	/* FP */
   *ptr++ = ';';
 
-  *ptr++ = hexchars[PC]; 
+  *ptr++ = hexchars[PC];
   *ptr++ = ':';
   ptr = mem2hex((char *)&registers[PC], ptr, 4, 0); 	/* PC */
   *ptr++ = ';';

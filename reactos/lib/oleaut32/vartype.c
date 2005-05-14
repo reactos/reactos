@@ -3990,6 +3990,8 @@ HRESULT WINAPI VarDecFromI4(LONG lIn, DECIMAL* pDecOut)
   return S_OK;
 }
 
+#define LOCALE_EN_US		(MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT))
+
 /************************************************************************
  * VarDecFromR4 (OLEAUT32.193)
  *
@@ -4007,7 +4009,7 @@ HRESULT WINAPI VarDecFromR4(FLOAT fltIn, DECIMAL* pDecOut)
   WCHAR buff[256];
 
   sprintfW( buff, szFloatFormatW, fltIn );
-  return _VarDecFromStr(buff, LOCALE_SYSTEM_DEFAULT, 0, pDecOut);
+  return _VarDecFromStr(buff, LOCALE_EN_US, 0, pDecOut);
 }
 
 /************************************************************************
@@ -4027,7 +4029,7 @@ HRESULT WINAPI VarDecFromR8(double dblIn, DECIMAL* pDecOut)
   WCHAR buff[256];
 
   sprintfW( buff, szDoubleFormatW, dblIn );
-  return _VarDecFromStr(buff, LOCALE_USER_DEFAULT, 0, pDecOut);
+  return _VarDecFromStr(buff, LOCALE_EN_US, 0, pDecOut);
 }
 
 /************************************************************************

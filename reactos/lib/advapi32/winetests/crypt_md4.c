@@ -55,7 +55,7 @@ void test_md4_ctx()
     HMODULE module;
 
     MD4_CTX ctx;
-    MD4_CTX ctx_initialized = 
+    MD4_CTX ctx_initialized =
     {
         { 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476 },
         { 0, 0 }

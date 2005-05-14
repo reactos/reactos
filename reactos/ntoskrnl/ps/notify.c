@@ -22,7 +22,7 @@ static ULONG PspThreadNotifyRoutineCount = 0;
 static PCREATE_THREAD_NOTIFY_ROUTINE
 PspThreadNotifyRoutine[MAX_THREAD_NOTIFY_ROUTINE_COUNT];
 
-static PCREATE_PROCESS_NOTIFY_ROUTINE 
+static PCREATE_PROCESS_NOTIFY_ROUTINE
 PspProcessNotifyRoutine[MAX_PROCESS_NOTIFY_ROUTINE_COUNT];
 
 static PLOAD_IMAGE_NOTIFY_ROUTINE
@@ -35,7 +35,7 @@ static PVOID PspLegoNotifyRoutine;
 /*
  * @implemented
  */
-NTSTATUS 
+NTSTATUS
 STDCALL
 PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
                                 IN BOOLEAN Remove)
@@ -56,8 +56,8 @@ PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
                 return(STATUS_SUCCESS);
             }
         }
-    } 
-    else 
+    }
+    else
     {
         /* Loop the routines */
         for(i=0;i<MAX_PROCESS_NOTIFY_ROUTINE_COUNT;i++)
@@ -71,34 +71,34 @@ PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
             }
         }
     }
-    
+
     /* Nothing found */
     return STATUS_INVALID_PARAMETER;
 }
 
 /*
  * @implemented
- */                       
+ */
 ULONG
 STDCALL
 PsSetLegoNotifyRoutine(PVOID LegoNotifyRoutine)
 {
     /* Set the System-Wide Lego Routine */
     PspLegoNotifyRoutine = LegoNotifyRoutine;
-    
+
     /* Return the location to the Lego Data */
     return FIELD_OFFSET(KTHREAD, LegoData);
 }
 
 /*
  * @implemented
- */                       
+ */
 NTSTATUS
 STDCALL
 PsRemoveLoadImageNotifyRoutine(IN PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine)
 {
     ULONG i;
-    
+
     /* Loop the routines */
     for(i=0;i<MAX_LOAD_IMAGE_NOTIFY_ROUTINE_COUNT;i++)
     {
@@ -110,7 +110,7 @@ PsRemoveLoadImageNotifyRoutine(IN PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine)
             return(STATUS_SUCCESS);
         }
     }
-    
+
     /* Nothing found */
     return STATUS_INVALID_PARAMETER;
 }
@@ -118,7 +118,7 @@ PsRemoveLoadImageNotifyRoutine(IN PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine)
 /*
  * @implemented
  */
-NTSTATUS 
+NTSTATUS
 STDCALL
 PsSetLoadImageNotifyRoutine(IN PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine)
 {
@@ -148,7 +148,7 @@ STDCALL
 PsRemoveCreateThreadNotifyRoutine(IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine)
 {
     ULONG i;
-    
+
     /* Loop the routines */
     for(i=0;i<MAX_THREAD_NOTIFY_ROUTINE_COUNT;i++)
     {
@@ -160,7 +160,7 @@ PsRemoveCreateThreadNotifyRoutine(IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine
             return(STATUS_SUCCESS);
         }
     }
-    
+
     /* Nothing found */
     return STATUS_INVALID_PARAMETER;
 }
@@ -168,7 +168,7 @@ PsRemoveCreateThreadNotifyRoutine(IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine
 /*
  * @implemented
  */
-NTSTATUS 
+NTSTATUS
 STDCALL
 PsSetCreateThreadNotifyRoutine(IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine)
 {
@@ -183,7 +183,7 @@ PsSetCreateThreadNotifyRoutine(IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine)
     return(STATUS_SUCCESS);
 }
 
-VOID 
+VOID
 STDCALL
 PspRunCreateThreadNotifyRoutines(PETHREAD CurrentThread,
                                  BOOLEAN Create)
@@ -205,24 +205,24 @@ PspRunCreateProcessNotifyRoutines(PEPROCESS CurrentProcess,
     ULONG i;
     HANDLE ProcessId = (HANDLE)CurrentProcess->UniqueProcessId;
     HANDLE ParentId = CurrentProcess->InheritedFromUniqueProcessId;
- 
-    for(i = 0; i < MAX_PROCESS_NOTIFY_ROUTINE_COUNT; ++i) 
+
+    for(i = 0; i < MAX_PROCESS_NOTIFY_ROUTINE_COUNT; ++i)
     {
-        if(PspProcessNotifyRoutine[i]) 
+        if(PspProcessNotifyRoutine[i])
         {
             PspProcessNotifyRoutine[i](ParentId, ProcessId, Create);
         }
     }
 }
 
-VOID 
+VOID
 STDCALL
 PspRunLoadImageNotifyRoutines(PUNICODE_STRING FullImageName,
                               HANDLE ProcessId,
                               PIMAGE_INFO ImageInfo)
 {
     ULONG i;
- 
+
     for (i = 0; i < MAX_PROCESS_NOTIFY_ROUTINE_COUNT; ++ i)
     {
         if (PspLoadImageNotifyRoutine[i])

@@ -18,7 +18,7 @@ DWORD CommThrId;
 
 DWORD PipeSend( COMM_DHCP_REPLY *Reply ) {
     DWORD Written = 0;
-    BOOL Success = 
+    BOOL Success =
         WriteFile( CommPipe,
                    Reply,
                    sizeof(*Reply),
@@ -40,15 +40,15 @@ DWORD WINAPI PipeThreadProc( LPVOID Parameter ) {
             case DhcpReqQueryHWInfo:
                 BytesWritten = DSQueryHWInfo( PipeSend, &Req );
                 break;
-                
+
             case DhcpReqLeaseIpAddress:
                 BytesWritten = DSLeaseIpAddress( PipeSend, &Req );
                 break;
-                
+
             case DhcpReqReleaseIpAddress:
                 BytesWritten = DSReleaseIpAddressLease( PipeSend, &Req );
                 break;
-                
+
             case DhcpReqRenewIpAddress:
                 BytesWritten = DSRenewIpAddressLease( PipeSend, &Req );
                 break;

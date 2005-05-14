@@ -1,8 +1,8 @@
 #ifndef __INTERNAL_POOL_H
 #define __INTERNAL_POOL_H
 
-PVOID STDCALL ExAllocateNonPagedPoolWithTag (POOL_TYPE	type, 
-					     ULONG		size, 
+PVOID STDCALL ExAllocateNonPagedPoolWithTag (POOL_TYPE	type,
+					     ULONG		size,
 					     ULONG		Tag,
 					     PVOID		Caller);
 

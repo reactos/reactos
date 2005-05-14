@@ -12,7 +12,7 @@ int _utime(const char* filename, struct _utimbuf* buf)
 {
     int fn;
     int ret;
-  
+
     fn = _open(filename, _O_RDWR);
     if (fn == -1) {
         __set_errno(EBADF);

@@ -1,5 +1,5 @@
 /* $Id:$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Service
  * FILE:            subsys/system/dhcp
@@ -47,12 +47,12 @@ LRESULT WINAPI ServiceThread( PVOID Data ) {
     while( GetMessage( &msg, 0, 0, 0 ) ) {
         switch( msg.message ) {
         case DHCP_MANAGEADAPTER:
-            
+
             break;
 
         case DHCP_UNMANAGEADAPTER:
             break;
-            
+
         case DHCP_REQUESTPARAM:
             break;
 

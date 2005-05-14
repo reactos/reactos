@@ -15,4 +15,6 @@ IDC_DESK_ICON ICON "resources/applet.ico"
 #include "cz.rc"
 #include "en.rc"
 #include "de.rc"
+#include "sv.rc"
+
 

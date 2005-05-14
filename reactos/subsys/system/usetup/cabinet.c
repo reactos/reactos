@@ -140,7 +140,7 @@ MSZipCodecUncompress(PVOID OutputBuffer,
       DPRINT("Bad MSZIP block header magic (0x%X)\n", Magic);
       return CS_BADSTREAM;
     }
-	
+
 	ZStream.next_in   = (PUCHAR)((ULONG)InputBuffer + 2);
 	ZStream.avail_in  = InputLength - 2;
 	ZStream.next_out  = (PUCHAR)OutputBuffer;
@@ -210,10 +210,10 @@ SeekInFile(HANDLE hFile,
   NTSTATUS errCode;
   IO_STATUS_BLOCK IoStatusBlock;
   LARGE_INTEGER Distance;
-  
+
   DPRINT("SeekInFile(hFile %x, lDistanceToMove %d, dwMoveMethod %d)\n",
     hFile,lDistanceToMove,dwMoveMethod);
-  
+
   Distance.u.LowPart = lDistanceToMove;
   if (lpDistanceToMoveHigh)
     {
@@ -227,7 +227,7 @@ SeekInFile(HANDLE hFile,
     {
       Distance.u.HighPart = -1;
     }
-  
+
   if (dwMoveMethod == SEEK_CURRENT)
     {
       NtQueryInformationFile(hFile,
@@ -251,7 +251,7 @@ SeekInFile(HANDLE hFile,
     {
       FilePosition.CurrentByteOffset.QuadPart = Distance.QuadPart;
     }
-  
+
 //  DPRINT1("GOTO FILE OFFSET: %I64d\n", FilePosition.CurrentByteOffset.QuadPart);
 
   errCode = NtSetInformationFile(hFile,
@@ -267,7 +267,7 @@ SeekInFile(HANDLE hFile,
         }
       return -1;
     }
-  
+
   if (lpDistanceToMoveHigh != NULL)
     {
       *lpDistanceToMoveHigh = FilePosition.CurrentByteOffset.u.HighPart;
@@ -282,12 +282,12 @@ SeekInFile(HANDLE hFile,
 
 static BOOL
 ConvertSystemTimeToFileTime(
-  CONST SYSTEMTIME *  lpSystemTime,	
+  CONST SYSTEMTIME *  lpSystemTime,
   LPFILETIME  lpFileTime)
 {
   TIME_FIELDS TimeFields;
   LARGE_INTEGER liTime;
-  
+
   TimeFields.Year = lpSystemTime->wYear;
   TimeFields.Month = lpSystemTime->wMonth;
   TimeFields.Day = lpSystemTime->wDay;
@@ -295,7 +295,7 @@ ConvertSystemTimeToFileTime(
   TimeFields.Minute = lpSystemTime->wMinute;
   TimeFields.Second = lpSystemTime->wSecond;
   TimeFields.Milliseconds = lpSystemTime->wMilliseconds;
-  
+
   if (RtlTimeFieldsToTime(&TimeFields, &liTime))
     {
       lpFileTime->dwLowDateTime = liTime.u.LowPart;
@@ -315,21 +315,21 @@ ConvertDosDateTimeToFileTime(
   PDOSTIME  pdtime = (PDOSTIME) &wFatTime;
   PDOSDATE  pddate = (PDOSDATE) &wFatDate;
   SYSTEMTIME SystemTime;
-  
+
   if (lpFileTime == NULL)
     return FALSE;
-  
+
   SystemTime.wMilliseconds = 0;
   SystemTime.wSecond = pdtime->Second;
   SystemTime.wMinute = pdtime->Minute;
   SystemTime.wHour = pdtime->Hour;
-  
+
   SystemTime.wDay = pddate->Day;
   SystemTime.wMonth = pddate->Month;
   SystemTime.wYear = 1980 + pddate->Year;
-  
+
   ConvertSystemTimeToFileTime(&SystemTime,lpFileTime);
-  
+
   return TRUE;
 }
 
@@ -345,9 +345,9 @@ GetFileName(PWCHAR Path)
  */
 {
   ULONG i, j;
-  
+
   j = i = 0;
-  
+
   while (Path [i++])
     {
       if (Path[i - 1] == L'\\') j = i;
@@ -366,10 +366,10 @@ RemoveFileName(PWCHAR Path)
 {
   PWCHAR FileName;
   DWORD i;
-  
+
   i = 0;
   FileName = GetFileName(Path + i);
-  
+
   if ((FileName != (Path + i)) && (FileName [-1] == L'\\'))
     FileName--;
   if ((FileName == (Path + i)) && (FileName [0] == L'\\'))
@@ -487,13 +487,13 @@ NewFolderNode()
   Node = (PCFFOLDER_NODE)RtlAllocateHeap (ProcessHeap, 0, sizeof(CFFOLDER_NODE));
   if (!Node)
     return NULL;
-  
+
   RtlZeroMemory(Node, sizeof(CFFOLDER_NODE));
-  
+
   Node->Folder.CompressionType = CAB_COMP_NONE;
-  
+
   Node->Prev = FolderListTail;
-  
+
   if (FolderListTail != NULL)
     {
       FolderListTail->Next = Node;
@@ -503,7 +503,7 @@ NewFolderNode()
       FolderListHead = Node;
     }
   FolderListTail = Node;
-  
+
   return Node;
 }
 
@@ -753,7 +753,7 @@ LocateFolderNode(ULONG Index)
  */
 {
   PCFFOLDER_NODE Node;
-  
+
   switch (Index)
     {
       case CAB_FILE_SPLIT:
@@ -763,7 +763,7 @@ LocateFolderNode(ULONG Index)
       case CAB_FILE_PREV_NEXT:
         return FolderListHead;
     }
-  
+
   Node = FolderListHead;
   while (Node != NULL)
     {
@@ -1135,15 +1135,15 @@ CloseCabinet(VOID)
  */
 {
   DestroyFileNodes();
-  
+
   DestroyFolderNodes();
-  
+
   if (InputBuffer)
     {
       RtlFreeHeap(ProcessHeap, 0, InputBuffer);
       InputBuffer = NULL;
     }
-  
+
   if (OutputBuffer)
     {
       RtlFreeHeap(ProcessHeap, 0, OutputBuffer);
@@ -1167,15 +1167,15 @@ CabinetInitialize(VOID)
 
   FileOpen = FALSE;
   wcscpy(DestPath, L"");
-  
+
   FolderListHead = NULL;
   FolderListTail = NULL;
   FileListHead   = NULL;
   FileListTail   = NULL;
-  
+
   CodecId       = CAB_CODEC_RAW;
   CodecSelected = TRUE;
-  
+
   OutputBuffer = NULL;
   CurrentOBuffer = NULL;
   CurrentOBufferSize = 0;
@@ -1221,7 +1221,7 @@ CabinetNormalizePath(PWCHAR Path,
 {
   ULONG n;
   BOOL OK = TRUE;
-  
+
   if ((n = wcslen(Path)) &&
     (Path[n - 1] != L'\\') &&
     (OK = ((n + 1) < Length)))
@@ -1295,7 +1295,7 @@ CabinetOpen(VOID)
   PCFFOLDER_NODE FolderNode;
   ULONG Status;
   ULONG Index;
-  
+
   if (!FileOpen)
     {
       OBJECT_ATTRIBUTES ObjectAttributes;
@@ -1304,7 +1304,7 @@ CabinetOpen(VOID)
       NTSTATUS NtStatus;
       ULONG BytesRead;
       ULONG Size;
-    
+
       OutputBuffer = RtlAllocateHeap(ProcessHeap, 0, CAB_BLOCKSIZE + 12); // This should be enough
       if (!OutputBuffer)
         return CAB_STATUS_NOMEMORY;
@@ -1329,16 +1329,16 @@ CabinetOpen(VOID)
           DPRINT("Cannot open file (%S) (%x).\n", CabinetName, NtStatus);
           return CAB_STATUS_CANNOT_OPEN;
         }
-    
+
       FileOpen = TRUE;
-    
+
       /* Load CAB header */
       if ((Status = ReadBlock(&CABHeader, sizeof(CFHEADER), &BytesRead)) != CAB_STATUS_SUCCESS)
         {
           DPRINT("Cannot read from file (%d).\n", (UINT)Status);
           return CAB_STATUS_INVALID_CAB;
         }
-    
+
       /* Check header */
       if ((BytesRead               != sizeof(CFHEADER)) ||
         (CABHeader.Signature       != CAB_SIGNATURE   ) ||
@@ -1350,9 +1350,9 @@ CabinetOpen(VOID)
         DPRINT("File has invalid header.\n");
         return CAB_STATUS_INVALID_CAB;
       }
-  
+
       Size = 0;
-  
+
       /* Read/skip any reserved bytes */
       if (CABHeader.Flags & CAB_FLAG_RESERVE)
         {
@@ -1388,7 +1388,7 @@ CabinetOpen(VOID)
             }
 #endif
         }
-  
+
       if ((CABHeader.Flags & CAB_FLAG_HASPREV) > 0)
         {
           /* Read name of previous cabinet */
@@ -1412,7 +1412,7 @@ CabinetOpen(VOID)
           wcscpy(CabinetPrev, L"");
           wcscpy(DiskPrev, L"");
         }
-    
+
       if ((CABHeader.Flags & CAB_FLAG_HASNEXT) > 0)
         {
           /* Read name of next cabinet */
@@ -1436,7 +1436,7 @@ CabinetOpen(VOID)
           wcscpy(CabinetNext, L"");
           wcscpy(DiskNext,    L"");
         }
-  
+
       /* Read all folders */
       for (Index = 0; Index < CABHeader.FolderCount; Index++)
         {
@@ -1446,12 +1446,12 @@ CabinetOpen(VOID)
               DPRINT("Insufficient resources.\n");
               return CAB_STATUS_NOMEMORY;
             }
-  
+
           if (Index == 0)
             FolderNode->UncompOffset = FolderUncompSize;
-    
+
           FolderNode->Index = Index;
-  
+
           if ((Status = ReadBlock(&FolderNode->Folder,
             sizeof(CFFOLDER), &BytesRead)) != CAB_STATUS_SUCCESS)
             {
@@ -1459,7 +1459,7 @@ CabinetOpen(VOID)
               return CAB_STATUS_INVALID_CAB;
             }
         }
-  
+
       /* Read file entries */
       Status = ReadFileTable();
       if (Status != CAB_STATUS_SUCCESS)
@@ -1467,7 +1467,7 @@ CabinetOpen(VOID)
           DPRINT("ReadFileTable() failed (%d).\n", (UINT)Status);
           return Status;
         }
-  
+
       /* Read data blocks for all folders */
       FolderNode = FolderListHead;
       while (FolderNode != NULL)
@@ -1570,7 +1570,7 @@ CabinetFindNext(PCAB_SEARCH Search)
             }
 
           Status = CabinetOpen();
-          if (Status != CAB_STATUS_SUCCESS) 
+          if (Status != CAB_STATUS_SUCCESS)
             return Status;
 
           Search->Next = FileListHead;
@@ -1634,7 +1634,7 @@ CabinetExtractFile(PWCHAR FileName)
     }
 
   LastFileOffset = File->File.FileOffset;
-  
+
   switch (CurrentFolderNode->Folder.CompressionType & CAB_COMP_MASK)
     {
       case CAB_COMP_NONE:
@@ -1646,7 +1646,7 @@ CabinetExtractFile(PWCHAR FileName)
       default:
         return CAB_STATUS_UNSUPPCOMP;
     }
-  
+
   DPRINT("Extracting file at uncompressed offset (0x%X)  Size (%d bytes)  AO (0x%X)  UO (0x%X).\n",
     (UINT)File->File.FileOffset,
     (UINT)File->File.FileSize,
@@ -1714,7 +1714,7 @@ CabinetExtractFile(PWCHAR FileName)
           return CAB_STATUS_FILE_EXISTS;
         }
     }
-  
+
   if (!ConvertDosDateTimeToFileTime(File->File.FileDate, File->File.FileTime, &FileTime))
     {
       NtClose(DestFile);
@@ -1747,21 +1747,21 @@ CabinetExtractFile(PWCHAR FileName)
     }
 
   SetAttributesOnFile(File, DestFile);
-  
+
   Buffer = RtlAllocateHeap(ProcessHeap, 0, CAB_BLOCKSIZE + 12); // This should be enough
   if (!Buffer)
     {
       NtClose(DestFile);
       DPRINT("Insufficient memory.\n");
-      return CAB_STATUS_NOMEMORY; 
+      return CAB_STATUS_NOMEMORY;
     }
-  
+
   /* Call extract event handler */
   if (ExtractHandler != NULL)
     {
       ExtractHandler(&File->File, FileName);
     }
-  
+
   /* Search to start of file */
   Offset = SeekInFile(FileHandle,
     File->DataBlock->AbsoluteOffset,
@@ -1773,13 +1773,13 @@ CabinetExtractFile(PWCHAR FileName)
       DPRINT("SeekInFile() failed (%x).\n", NtStatus);
       return CAB_STATUS_INVALID_CAB;
     }
-  
+
   Size   = File->File.FileSize;
   Offset = File->File.FileOffset;
   CurrentOffset = File->DataBlock->UncompOffset;
-  
+
   Skip = TRUE;
-  
+
   ReuseBlock = (CurrentDataNode == File->DataBlock);
   if (Size > 0)
     {
@@ -1788,18 +1788,18 @@ CabinetExtractFile(PWCHAR FileName)
       	  DPRINT("CO (0x%X)    ReuseBlock (%d)    Offset (0x%X)   Size (%d)  BytesLeftInBlock (%d)\n",
       		  File->DataBlock->UncompOffset, (UINT)ReuseBlock, Offset, Size,
       		  BytesLeftInBlock);
-      
+
       	  if (/*(CurrentDataNode != File->DataBlock) &&*/ (!ReuseBlock) || (BytesLeftInBlock <= 0))
             {
       		    DPRINT("Filling buffer. ReuseBlock (%d)\n", (UINT)ReuseBlock);
-      
+
               CurrentBuffer  = Buffer;
               TotalBytesRead = 0;
               do
                 {
                   DPRINT("Size (%d bytes).\n", Size);
-  
-                  if (((Status = ReadBlock(&CFData, sizeof(CFDATA), &BytesRead)) != 
+
+                  if (((Status = ReadBlock(&CFData, sizeof(CFDATA), &BytesRead)) !=
                     CAB_STATUS_SUCCESS) || (BytesRead != sizeof(CFDATA)))
                     {
                       NtClose(DestFile);
@@ -1807,21 +1807,21 @@ CabinetExtractFile(PWCHAR FileName)
                       DPRINT("Cannot read from file (%d).\n", (UINT)Status);
                       return CAB_STATUS_INVALID_CAB;
                     }
-      
+
                   DPRINT("Data block: Checksum (0x%X)  CompSize (%d bytes)  UncompSize (%d bytes)  Offset (0x%X).\n",
                     (UINT)CFData.Checksum,
                     (UINT)CFData.CompSize,
                     (UINT)CFData.UncompSize,
     				      (UINT)SeekInFile(FileHandle, 0, NULL, SEEK_CURRENT, &NtStatus));
-    
+
                   //ASSERT(CFData.CompSize <= CAB_BLOCKSIZE + 12);
-    
+
                   BytesToRead = CFData.CompSize;
-    
+
             			DPRINT("Read: (0x%X,0x%X).\n",
             				CurrentBuffer, Buffer);
 
-                  if (((Status = ReadBlock(CurrentBuffer, BytesToRead, &BytesRead)) != 
+                  if (((Status = ReadBlock(CurrentBuffer, BytesToRead, &BytesRead)) !=
                       CAB_STATUS_SUCCESS) || (BytesToRead != BytesRead))
                     {
                       NtClose(DestFile);
@@ -1846,9 +1846,9 @@ CabinetExtractFile(PWCHAR FileName)
                     }
 */
                   TotalBytesRead += BytesRead;
-    
+
                   CurrentBuffer += BytesRead;
-    
+
                   if (CFData.UncompSize == 0)
                     {
                       if (wcslen(DiskNext) == 0)
@@ -1858,20 +1858,20 @@ CabinetExtractFile(PWCHAR FileName)
                          FileName refers to the FileName field of a CFFOLDER_NODE
                          structure, we have to save a copy of the filename */
                       wcscpy(TempName, FileName);
-  
+
                       CloseCabinet();
-  
+
                       CabinetSetCabinetName(CabinetNext);
-  
+
                       if (DiskChangeHandler != NULL)
                         {
                           DiskChangeHandler(CabinetNext, DiskNext);
                         }
-  
+
                       Status = CabinetOpen();
-                      if (Status != CAB_STATUS_SUCCESS) 
+                      if (Status != CAB_STATUS_SUCCESS)
                         return Status;
-  
+
                       /* The first data block of the file will not be
                          found as it is located in the previous file */
                       Status = LocateFile(TempName, &File);
@@ -1880,10 +1880,10 @@ CabinetExtractFile(PWCHAR FileName)
                           DPRINT("Cannot locate file (%d).\n", (UINT)Status);
                           return Status;
                         }
-    
+
                       /* The file is continued in the first data block in the folder */
                       File->DataBlock = CurrentFolderNode->DataListHead;
-  
+
                       /* Search to start of file */
                       SeekInFile(FileHandle,
                         File->DataBlock->AbsoluteOffset,
@@ -1895,13 +1895,13 @@ CabinetExtractFile(PWCHAR FileName)
                           DPRINT("SeekInFile() failed (%x).\n", NtStatus);
                           return CAB_STATUS_INVALID_CAB;
                         }
-    
+
                       DPRINT("Continuing extraction of file at uncompressed offset (0x%X)  Size (%d bytes)  AO (0x%X)  UO (0x%X).\n",
                           (UINT)File->File.FileOffset,
                           (UINT)File->File.FileSize,
                           (UINT)File->DataBlock->AbsoluteOffset,
                           (UINT)File->DataBlock->UncompOffset);
-    
+
                       CurrentDataNode = File->DataBlock;
                       ReuseBlock = TRUE;
 
@@ -1910,7 +1910,7 @@ CabinetExtractFile(PWCHAR FileName)
                 } while (CFData.UncompSize == 0);
 
               DPRINT("TotalBytesRead (%d).\n", TotalBytesRead);
-  
+
               Status = CodecUncompress(OutputBuffer, Buffer, TotalBytesRead, &BytesToWrite);
               if (Status != CS_SUCCESS)
                 {
@@ -1934,14 +1934,14 @@ CabinetExtractFile(PWCHAR FileName)
           else
             {
               DPRINT("Using same buffer. ReuseBlock (%d)\n", (UINT)ReuseBlock);
-    
+
               BytesToWrite = BytesLeftInBlock;
-    
+
           		DPRINT("Seeking to absolute offset 0x%X.\n",
           			CurrentDataNode->AbsoluteOffset + sizeof(CFDATA) +
                   CurrentDataNode->Data.CompSize);
-    
-          		if (((Status = ReadBlock(&CFData, sizeof(CFDATA), &BytesRead)) != 
+
+          		if (((Status = ReadBlock(&CFData, sizeof(CFDATA), &BytesRead)) !=
           			CAB_STATUS_SUCCESS) || (BytesRead != sizeof(CFDATA)))
                 {
             			NtClose(DestFile);
@@ -1949,10 +1949,10 @@ CabinetExtractFile(PWCHAR FileName)
             			DPRINT("Cannot read from file (%d).\n", (UINT)Status);
             			return CAB_STATUS_INVALID_CAB;
             		}
-    
+
           		DPRINT("CFData.CompSize 0x%X  CFData.UncompSize 0x%X.\n",
           			CFData.CompSize, CFData.UncompSize);
-    
+
               /* Go to next data block */
               SeekInFile(FileHandle,
                 CurrentDataNode->AbsoluteOffset + sizeof(CFDATA) +
@@ -1973,9 +1973,9 @@ CabinetExtractFile(PWCHAR FileName)
               BytesSkipped = (Offset - CurrentOffset);
           else
               BytesSkipped = 0;
-  
+
   	      BytesToWrite -= BytesSkipped;
-  
+
         	if (Size < BytesToWrite)
             BytesToWrite = Size;
 
@@ -1985,7 +1985,7 @@ CabinetExtractFile(PWCHAR FileName)
             (UINT)BytesToWrite,
             (UINT)BytesSkipped, (UINT)Skip,
             (UINT)Size);
-  
+
 //          if (!WriteFile(DestFile, (PVOID)((ULONG)OutputBuffer + BytesSkipped),
 //            BytesToWrite, &BytesWritten, NULL) ||
 //              (BytesToWrite != BytesWritten))
@@ -1995,7 +1995,7 @@ CabinetExtractFile(PWCHAR FileName)
             NULL,
             NULL,
             &IoStatusBlock,
-            (PVOID)((ULONG)OutputBuffer + BytesSkipped), 
+            (PVOID)((ULONG)OutputBuffer + BytesSkipped),
             BytesToWrite,
             NULL,
             NULL);
@@ -2003,14 +2003,14 @@ CabinetExtractFile(PWCHAR FileName)
           if (!NT_SUCCESS(NtStatus))
             {
       		    DPRINT("Status 0x%X.\n", NtStatus);
-  
+
               NtClose(DestFile);
               RtlFreeHeap(ProcessHeap, 0, Buffer);
               DPRINT("Cannot write to file.\n");
               return CAB_STATUS_CANNOT_WRITE;
             }
           Size -= BytesToWrite;
-  
+
     	    CurrentOffset += BytesToWrite;
 
           /* Don't skip any more bytes */

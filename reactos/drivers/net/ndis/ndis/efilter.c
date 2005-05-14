@@ -35,7 +35,7 @@ EthCreateFilter(
   PETH_FILTER NewFilter;
 
   NewFilter = ExAllocatePool(NonPagedPool, sizeof(ETH_FILTER));
-  if (NewFilter != NULL) 
+  if (NewFilter != NULL)
     {
       RtlZeroMemory(NewFilter, sizeof(ETH_FILTER));
       NewFilter->MaxMulticastAddresses = MaximumMulticastAddresses;
@@ -126,7 +126,7 @@ EthFilterDprIndicateReceiveComplete(
     {
       CurrentEntry = Adapter->ProtocolListHead.Flink;
 
-      while (CurrentEntry != &Adapter->ProtocolListHead) 
+      while (CurrentEntry != &Adapter->ProtocolListHead)
         {
           AdapterBinding = CONTAINING_RECORD(CurrentEntry, ADAPTER_BINDING, AdapterListEntry);
 

@@ -310,8 +310,8 @@ DIB_16BPP_BitBlt(PBLTINFO BltInfo)
    ULONG RoundedRight;
 
    UsesSource = ROP4_USES_SOURCE(BltInfo->Rop4);
-   UsesPattern = ROP4_USES_PATTERN(BltInfo->Rop4);  
-      
+   UsesPattern = ROP4_USES_PATTERN(BltInfo->Rop4);
+
    RoundedRight = BltInfo->DestRect.right -
                   ((BltInfo->DestRect.right - BltInfo->DestRect.left) & 0x1);
    SourceY = BltInfo->SourcePoint.y;
@@ -324,7 +324,7 @@ DIB_16BPP_BitBlt(PBLTINFO BltInfo)
    {
       if (BltInfo->PatternSurface)
       {
-         PatternY = (BltInfo->DestRect.top + BltInfo->BrushOrigin.y) % 
+         PatternY = (BltInfo->DestRect.top + BltInfo->BrushOrigin.y) %
                     BltInfo->PatternSurface->sizlBitmap.cy;
       }
       else
@@ -337,11 +337,11 @@ DIB_16BPP_BitBlt(PBLTINFO BltInfo)
    for (DestY = BltInfo->DestRect.top; DestY < BltInfo->DestRect.bottom; DestY++)
    {
       SourceX = BltInfo->SourcePoint.x;
-      
+
       for (DestX = BltInfo->DestRect.left; DestX < RoundedRight; DestX += 2, DestBits++, SourceX += 2)
       {
          Dest = *DestBits;
- 
+
          if (UsesSource)
          {
             Source = DIB_GetSource(BltInfo->SourceSurface, SourceX, SourceY, BltInfo->XlateSourceToDest);
@@ -369,7 +369,7 @@ DIB_16BPP_BitBlt(PBLTINFO BltInfo)
          if (BltInfo->PatternSurface)
          {
             Pattern = DIB_GetSource(BltInfo->PatternSurface, (DestX + BltInfo->BrushOrigin.x) % BltInfo->PatternSurface->sizlBitmap.cx, PatternY, BltInfo->XlatePatternToDest);
-         }				
+         }
 
          DIB_16BPP_PutPixel(BltInfo->DestSurface, DestX, DestY, DIB_DoRop(BltInfo->Rop4, Dest, Source, Pattern) & 0xFFFF);
          DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
@@ -386,7 +386,7 @@ DIB_16BPP_BitBlt(PBLTINFO BltInfo)
          ((BltInfo->DestRect.right - BltInfo->DestRect.left) << 1) +
          BltInfo->DestSurface->lDelta);
    }
-  
+
    return TRUE;
 }
 
@@ -415,22 +415,22 @@ inline PIXEL average16(PIXEL a, PIXEL b)
   }*/ /* if */
 
 // This one should be correct, but it's too long
-/*  
+/*
   unsigned char r1, g1, b1, r2, g2, b2, rr, gr, br;
   unsigned short res;
-  
+
   r1 = (a & 0xF800) >> 11;
   g1 = (a & 0x7E0) >> 5;
   b1 = (a & 0x1F);
-  
+
   r2 = (b & 0xF800) >> 11;
   g2 = (b & 0x7E0) >> 5;
   b2 = (b & 0x1F);
-  
+
   rr = (r1+r2) / 2;
   gr = (g1+g2) / 2;
   br = (b1+b2) / 2;
-  
+
   res = (rr << 11) + (gr << 5) + br;
 
   return res;
@@ -473,7 +473,7 @@ FinalCopy16(PIXEL *Target, PIXEL *Source, PSPAN ClipSpans, UINT ClipSpansCount, 
             UINT DestY, RECTL *DestRect)
 {
   LONG Left, Right;
-  
+
   while (ClipSpans[*SpanIndex].Y < DestY
          || (ClipSpans[*SpanIndex].Y == DestY
              && ClipSpans[*SpanIndex].X + ClipSpans[*SpanIndex].Width < DestRect->left))
@@ -561,7 +561,7 @@ BOOLEAN ScaleRectAvg16(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       } /* if */
       PrevSource = Source;
     } /* if */
-    
+
     if (E >= Mid && PrevSourceAhead != (PIXEL *)((BYTE *)Source + SourceSurf->lDelta)) {
       int x;
       ScaleLineAvg16(ScanLineAhead, (PIXEL *)((BYTE *)Source + SourceSurf->lDelta), SourceRect->right - SourceRect->left, DestRect->right - DestRect->left);
@@ -629,46 +629,46 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       case BMF_24BPP:
       case BMF_32BPP:
         /* Not implemented yet. */
-        return FALSE;      
+        return FALSE;
       break;
 
       case BMF_16BPP:
         return ScaleRectAvg16(DestSurf, SourceSurf, DestRect, SourceRect, MaskOrigin, BrushOrigin,
                               ClipRegion, ColorTranslation, Mode);
       break;
-      
+
       default:
          DPRINT1("DIB_16BPP_StretchBlt: Unhandled Source BPP: %u\n", BitsPerFormat(SourceSurf->iBitmapFormat));
       return FALSE;
     }
 
-  
-    
+
+
   return TRUE;
 }
 
-BOOLEAN 
+BOOLEAN
 DIB_16BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                          RECTL*  DestRect,  POINTL  *SourcePoint,
                          XLATEOBJ *ColorTranslation, ULONG iTransColor)
 {
   ULONG RoundedRight, X, Y, SourceX, SourceY, Source, wd, Dest;
   ULONG *DestBits;
-  
+
   RoundedRight = DestRect->right - ((DestRect->right - DestRect->left) & 0x1);
   SourceY = SourcePoint->y;
   DestBits = (ULONG*)(DestSurf->pvScan0 +
                       (DestRect->left << 1) +
                       DestRect->top * DestSurf->lDelta);
   wd = DestSurf->lDelta - ((DestRect->right - DestRect->left) << 1);
-  
+
   for(Y = DestRect->top; Y < DestRect->bottom; Y++)
   {
     SourceX = SourcePoint->x;
     for(X = DestRect->left; X < RoundedRight; X += 2, DestBits++, SourceX += 2)
     {
       Dest = *DestBits;
-      
+
       Source = DIB_GetSourceIndex(SourceSurf, SourceX, SourceY);
       if(Source != iTransColor)
       {
@@ -685,7 +685,7 @@ DIB_16BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
       *DestBits = Dest;
     }
-    
+
     if(X < DestRect->right)
     {
       Source = DIB_GetSourceIndex(SourceSurf, SourceX, SourceY);
@@ -693,13 +693,13 @@ DIB_16BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       {
         *((USHORT*)DestBits) = (USHORT)XLATEOBJ_iXlate(ColorTranslation, Source);
       }
-      
+
       DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
     }
     SourceY++;
     DestBits = (ULONG*)((ULONG_PTR)DestBits + wd);
   }
-  
+
   return TRUE;
 }
 

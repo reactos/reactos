@@ -593,10 +593,10 @@ KeContextToTrapFrame(PCONTEXT Context,
         TrapFrame->Ss = Context->SegSs;
         TrapFrame->Cs = Context->SegCs;
         TrapFrame->Eip = Context->Eip;
-        TrapFrame->Eflags = Context->EFlags;	
+        TrapFrame->Eflags = Context->EFlags;
         TrapFrame->Ebp = Context->Ebp;
     }
-    
+
     /* Process the Integer Registers */
     if ((Context->ContextFlags & CONTEXT_INTEGER) == CONTEXT_INTEGER)
     {
@@ -607,7 +607,7 @@ KeContextToTrapFrame(PCONTEXT Context,
         TrapFrame->Esi = Context->Esi;
         TrapFrame->Edi = Context->Edi;
     }
-    
+
     /* Process the Context Segments */
     if ((Context->ContextFlags & CONTEXT_SEGMENTS) == CONTEXT_SEGMENTS)
     {
@@ -616,7 +616,7 @@ KeContextToTrapFrame(PCONTEXT Context,
         TrapFrame->Fs = Context->SegFs;
         TrapFrame->Gs = Context->SegGs;
     }
-     
+
     /* Handle the Debug Registers */
     if ((Context->ContextFlags & CONTEXT_DEBUG_REGISTERS) == CONTEXT_DEBUG_REGISTERS)
     {
@@ -627,7 +627,7 @@ KeContextToTrapFrame(PCONTEXT Context,
         TrapFrame->Dr6 = Context->Dr6;
         TrapFrame->Dr7 = Context->Dr7;
     }
-    
+
     /* Handle FPU and Extended Registers */
     return KiContextToFxSaveArea((PFX_SAVE_AREA)(TrapFrame + 1), Context);
 }
@@ -673,7 +673,7 @@ KeTrapFrameToContext(PKTRAP_FRAME TrapFrame,
      {
 	/*
 	 * FIXME: Implement this case
-	 */	
+	 */
 	Context->ContextFlags &= (~CONTEXT_DEBUG_REGISTERS) | CONTEXT_i386;
      }
    if ((Context->ContextFlags & CONTEXT_FLOATING_POINT) == CONTEXT_FLOATING_POINT)

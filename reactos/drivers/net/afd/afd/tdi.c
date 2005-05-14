@@ -64,7 +64,7 @@ NTSTATUS TdiCall(
     AFD_DbgPrint(MID_TRACE, ("Called\n"));
 
     AFD_DbgPrint(MID_TRACE, ("Irp->UserEvent = %x\n", Irp->UserEvent));
-    
+
     Status = IoCallDriver(DeviceObject, Irp);
     AFD_DbgPrint(MID_TRACE, ("IoCallDriver: %08x\n", Status));
 
@@ -185,10 +185,10 @@ NTSTATUS TdiOpenAddressFile(
   NTSTATUS Status;
   ULONG EaLength;
   PTRANSPORT_ADDRESS Address;
-  
+
   AFD_DbgPrint(MAX_TRACE, ("Called. DeviceName (%wZ)  Name (0x%X)\n",
 			   DeviceName, Name));
-  
+
   /* EaName must be 0-terminated, even though TDI_TRANSPORT_ADDRESS_LENGTH does *not* include the 0 */
   EaLength = sizeof(FILE_FULL_EA_INFORMATION) +
       TDI_TRANSPORT_ADDRESS_LENGTH +
@@ -196,7 +196,7 @@ NTSTATUS TdiOpenAddressFile(
   EaInfo = (PFILE_FULL_EA_INFORMATION)ExAllocatePool(NonPagedPool, EaLength);
   if (!EaInfo)
       return STATUS_INSUFFICIENT_RESOURCES;
-  
+
   RtlZeroMemory(EaInfo, EaLength);
   EaInfo->EaNameLength = TDI_TRANSPORT_ADDRESS_LENGTH;
   /* Don't copy the terminating 0; we have already zeroed it */
@@ -204,7 +204,7 @@ NTSTATUS TdiOpenAddressFile(
                 TdiTransportAddress,
                 TDI_TRANSPORT_ADDRESS_LENGTH);
   EaInfo->EaValueLength = sizeof(TA_IP_ADDRESS);
-  Address = 
+  Address =
       (PTRANSPORT_ADDRESS)(EaInfo->EaName + TDI_TRANSPORT_ADDRESS_LENGTH + 1); /* 0-terminated */
   TaCopyTransportAddressInPlace( Address, Name );
 
@@ -243,7 +243,7 @@ NTSTATUS TdiOpenConnectionEndpointFile(
   EaLength = sizeof(FILE_FULL_EA_INFORMATION) +
              TDI_CONNECTION_CONTEXT_LENGTH +
              sizeof(PVOID) + 1;
- 
+
   EaInfo = (PFILE_FULL_EA_INFORMATION)ExAllocatePool(NonPagedPool, EaLength);
   if (!EaInfo)
     return STATUS_INSUFFICIENT_RESOURCES;
@@ -405,7 +405,7 @@ NTSTATUS TdiListen
 	ExFreePool(*RequestConnectionInfo);
 	return STATUS_INSUFFICIENT_RESOURCES;
     }
-  
+
   TdiBuildListen(*Irp,                   /* IRP */
                  DeviceObject,           /* Device object */
                  ConnectionObject,       /* File object */
@@ -416,7 +416,7 @@ NTSTATUS TdiListen
 		 *ReturnConnectionInfo);  /* Return connection information */
 
   Status = TdiCall(*Irp, DeviceObject, NULL /* Don't wait for completion */, Iosb);
-  
+
   return Status;
 }
 
@@ -520,7 +520,7 @@ NTSTATUS TdiQueryDeviceControl(
                                         &Iosb);
     if (!Irp)
         return STATUS_INSUFFICIENT_RESOURCES;
- 
+
     Status = TdiCall(Irp, DeviceObject, &Event, &Iosb);
 
     if (Return)
@@ -571,7 +571,7 @@ NTSTATUS TdiQueryInformation(
       NULL,
       QueryType,
       MdlBuffer);
-    
+
     Status = TdiCall(Irp, DeviceObject, &Event, &Iosb);
 
     return Status;
@@ -907,7 +907,7 @@ NTSTATUS TdiReceive(
     /* Does not block...  The MDL is deleted in the receive completion
        routine. */
 
-    AFD_DbgPrint(MID_TRACE,("Status %x Information %d\n", 
+    AFD_DbgPrint(MID_TRACE,("Status %x Information %d\n",
 			    Status, Iosb->Information));
 
     return Status;

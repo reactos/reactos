@@ -5,7 +5,7 @@
 /*-----------------------------------------------------------*/
 
 /*--
-  This program is bzip2recover, a program to attempt data 
+  This program is bzip2recover, a program to attempt data
   salvage from damaged files created by the accompanying
   bzip2-1.0 program.
 
@@ -18,16 +18,16 @@
   1. Redistributions of source code must retain the above copyright
      notice, this list of conditions and the following disclaimer.
 
-  2. The origin of this software must not be misrepresented; you must 
-     not claim that you wrote the original software.  If you use this 
-     software in a product, an acknowledgment in the product 
+  2. The origin of this software must not be misrepresented; you must
+     not claim that you wrote the original software.  If you use this
+     software in a product, an acknowledgment in the product
      documentation would be appreciated but is not required.
 
   3. Altered source versions must be plainly marked as such, and must
      not be misrepresented as being the original software.
 
-  4. The name of the author may not be used to endorse or promote 
-     products derived from this software without specific prior written 
+  4. The name of the author may not be used to endorse or promote
+     products derived from this software without specific prior written
      permission.
 
   THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
@@ -324,10 +324,10 @@ Int32 main ( Int32 argc, Char** argv )
       }
       buffHi = (buffHi << 1) | (buffLo >> 31);
       buffLo = (buffLo << 1) | (b & 1);
-      if ( ( (buffHi & 0x0000ffff) == BLOCK_HEADER_HI 
+      if ( ( (buffHi & 0x0000ffff) == BLOCK_HEADER_HI
              && buffLo == BLOCK_HEADER_LO)
-           || 
-           ( (buffHi & 0x0000ffff) == BLOCK_ENDMARK_HI 
+           ||
+           ( (buffHi & 0x0000ffff) == BLOCK_ENDMARK_HI
              && buffLo == BLOCK_ENDMARK_LO)
          ) {
          if (bitsRead > 49)
@@ -378,7 +378,7 @@ Int32 main ( Int32 argc, Char** argv )
       if (b == 2) break;
       buffHi = (buffHi << 1) | (buffLo >> 31);
       buffLo = (buffLo << 1) | (b & 1);
-      if (bitsRead == 47+rbStart[wrBlock]) 
+      if (bitsRead == 47+rbStart[wrBlock])
          blockCRC = (buffHi << 16) | (buffLo >> 16);
 
       if (outFile != NULL && bitsRead >= rbStart[wrBlock]

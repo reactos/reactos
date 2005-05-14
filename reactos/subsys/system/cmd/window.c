@@ -12,7 +12,7 @@
  *     (nice size optimization :)
  *
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 
@@ -159,7 +159,11 @@ static INT ServiceActivate (LPTSTR param, HWND hWnd)
 		wp.showCmd = SW_RESTORE;
 
 	if (iAction & A_CLOSE)
+	{
+#ifdef _DEBUG
 		ConErrPrintf(_T("!!!FIXME:  CLOSE Not implemented!!!\n"));
+#endif
+	}
 
 	wp.length = sizeof(WINDOWPLACEMENT);
 	SetWindowPlacement(hWnd, &wp);
@@ -175,13 +179,11 @@ static INT ServiceActivate (LPTSTR param, HWND hWnd)
 
 INT CommandWindow (LPTSTR cmd, LPTSTR param)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	HWND hwnd;
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		LoadString(GetModuleHandle(NULL), STRING_WINDOW_HELP1, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+		ConOutResPuts(STRING_WINDOW_HELP1);
 		return 0;
 	}
 
@@ -193,14 +195,12 @@ INT CommandWindow (LPTSTR cmd, LPTSTR param)
 
 INT CommandActivate (LPTSTR cmd, LPTSTR param)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR str;
 	HWND hwnd;
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		LoadString(GetModuleHandle(NULL), STRING_WINDOW_HELP2, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+		ConOutResPuts(STRING_WINDOW_HELP2);
 		return 0;
 	}
 
@@ -220,8 +220,7 @@ INT CommandActivate (LPTSTR cmd, LPTSTR param)
 	hwnd = FindWindow(NULL, param);
 	if (hwnd == NULL)
 	{
-		LoadString(GetModuleHandle(NULL), STRING_WINDOW_ERROR1, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPuts(szMsg);
+		ConErrResPuts(STRING_WINDOW_ERROR1);
 		return 1;
 	}
 

@@ -212,11 +212,11 @@ RpnpDumpStack(
       case RpnOpNop:
          DbgPrint("NOP,");
          break;
-         
+
       case RpnOpImmediate:
          DbgPrint("0x%I64x,", Op->Data.Immediate);
          break;
-         
+
       case RpnOpBinaryOperator:
          if (Op->Data.BinaryOperator == RpnBinaryOperatorAdd)
             DbgPrint("+,");
@@ -243,11 +243,11 @@ RpnpDumpStack(
          else
             DbgPrint("UNKNOWN OP,");
          break;
-         
+
       case RpnOpRegister:
          DbgPrint("%s,", RegisterToTrapFrame[Op->Data.Register].Name);
          break;
-         
+
       case RpnOpDereference:
          DbgPrint("[%s],",
                 (Op->Data.DerefMemorySize == 1) ? ("byte") :
@@ -256,7 +256,7 @@ RpnpDumpStack(
                 )
                );
          break;
-         
+
       default:
          DbgPrint("\nUnsupported Type: %d\n", Op->Type);
          ul = Stack->Sp;
@@ -401,7 +401,7 @@ RpnpParseExpression(
          p++;
          CharacterOffset++;
       }
-      
+
       /* Check for end of expression */
       if (p[0] == '\0' || p[0] == ')' || p[0] == ']')
          break;
@@ -410,8 +410,8 @@ RpnpParseExpression(
       {
          /* Remember operator */
          Operator = p++;
-         OperatorOffset = CharacterOffset++;;
-      
+         OperatorOffset = CharacterOffset++;
+
          /* Pop operator (to get the right operator precedence) */
          HavePoppedOperator = FALSE;
          if (*Operator == '*' || *Operator == '/' || *Operator == '%')
@@ -508,7 +508,7 @@ get_operand:
                   *ErrOffset = CharacterOffset;
                return FALSE;
             }
-            
+
             p += i;
             CharacterOffset += i;
             goto get_operand;
@@ -624,7 +624,7 @@ get_operand:
 
             /* Skip closing brace/bracket */
             pend++;
-            
+
             CharacterOffset += pend - p;
             p = pend;
          }
@@ -690,7 +690,7 @@ get_operand:
             IsComparativeOp = TRUE;
             RpnOp.Data.BinaryOperator = RpnBinaryOperatorEquals;
             break;
-            
+
          case '!':
             ASSERT(Operator[1] == '=');
             IsComparativeOp = TRUE;
@@ -749,10 +749,10 @@ get_operand:
             }
          }
       }
-      
+
       First = FALSE;
    }
-   
+
 //end_of_expression:
 
    if (ComparativeOpFilled && !RpnpPushStack(Stack, &ComparativeOp))
@@ -772,7 +772,7 @@ get_operand:
 
    if (End != NULL)
       *End = p;
-   
+
    return TRUE;
 }
 
@@ -825,7 +825,7 @@ RpnpEvaluateStack(
       case RpnOpNop:
          /* No operation */
          break;
-         
+
       case RpnOpImmediate:
          if (ValueStackPointer == RPN_VALUE_STACK_SIZE)
          {
@@ -951,7 +951,7 @@ RpnpEvaluateStack(
          *ErrOffset = -1;
       return FALSE;
    }
-   
+
    *Result = ValueStack[0];
    return TRUE;
 }
@@ -976,7 +976,7 @@ KdbpRpnEvaluateExpression(
    OUT PCHAR ErrMsg  OPTIONAL)
 {
    PRPN_STACK Stack = (PRPN_STACK)&RpnStack;
-   
+
    ASSERT(Expression != NULL);
    ASSERT(TrapFrame != NULL);
    ASSERT(Result != NULL);
@@ -1045,7 +1045,7 @@ KdbpRpnParseExpression(
    }
    memcpy(NewStack, Stack, Size);
    NewStack->Size = NewStack->Sp;
-   
+
    return NewStack;
 }
 

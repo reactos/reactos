@@ -30,7 +30,7 @@ uint64_ ticks_per_slice[] =
 {
  TICKS_YEAR,
  TICKS_MONTH,
- TICKS_WEEK, 
+ TICKS_WEEK,
  TICKS_DAY,
  TICKS_HOUR,
  TICKS_MINUTE,
@@ -103,7 +103,7 @@ void print_uptime
     _T("and"),
     (unsigned)tick_cur,
     (tick_cur == 1 ? slice_names_singular : slice_names_plural)[curslice]
-   );   
+   );
   }
  }
  else if(tick_cur != 0)
@@ -139,9 +139,9 @@ void print_uptime
 int parse_print(const _TCHAR * str)
 {
  int64_ tickcount;
- 
+
  tickcount = _ttoi64(str);
- 
+
  if(tickcount < 0)
   tickcount = - tickcount;
  else if(tickcount == 0)

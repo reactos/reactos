@@ -26,7 +26,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
 int ME_CanJoinRuns(ME_Run *run1, ME_Run *run2)
 {
-  if ((run1->nFlags | run2->nFlags) & (MERF_ENDPARA | MERF_GRAPHICS))
+  if ((run1->nFlags | run2->nFlags) & MERF_NOJOIN)
     return 0;
   if (run1->style != run2->style)
     return 0;
@@ -91,8 +91,8 @@ void ME_CheckCharOffsets(ME_TextEditor *editor)
         ofs = 0;
         break;
       case diRun:
-        TRACE("run, real ofs = %d (+ofsp = %d), counted = %d, len = %d, txt = \"%s\", flags=%08x, fx&mask = %08lx\n", 
-          p->member.run.nCharOfs, p->member.run.nCharOfs+ofsp, ofsp+ofs, 
+        TRACE("run, real ofs = %d (+ofsp = %d), counted = %d, len = %d, txt = \"%s\", flags=%08x, fx&mask = %08lx\n",
+          p->member.run.nCharOfs, p->member.run.nCharOfs+ofsp, ofsp+ofs,
           p->member.run.strText->nLen, debugstr_w(p->member.run.strText->szData),
           p->member.run.nFlags,
           p->member.run.style->fmt.dwMask & p->member.run.style->fmt.dwEffects);
@@ -108,14 +108,14 @@ void ME_CheckCharOffsets(ME_TextEditor *editor)
 int ME_CharOfsFromRunOfs(ME_TextEditor *editor, ME_DisplayItem *pRun, int nOfs)
 {
   ME_DisplayItem *pPara;
-  
+
   assert(pRun->type == diRun);
   assert(pRun->member.run.nCharOfs != -1);
 
   pPara = ME_FindItemBack(pRun, diParagraph);
   assert(pPara);
   assert(pPara->type==diParagraph);
-  return pPara->member.para.nCharOfs + pRun->member.run.nCharOfs 
+  return pPara->member.para.nCharOfs + pRun->member.run.nCharOfs
     + ME_VPosToPos(pRun->member.run.strText, nOfs);
 }
 
@@ -128,7 +128,7 @@ void ME_RunOfsFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_DisplayItem **
 {
   ME_DisplayItem *pPara;
   int nParaOfs;
-  
+
   pPara = editor->pBuffer->pFirst->member.para.next_para;
   assert(pPara);
   assert(ppRun);
@@ -137,18 +137,18 @@ void ME_RunOfsFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_DisplayItem **
   {
     nParaOfs = pPara->member.para.nCharOfs;
     assert(nCharOfs >= nParaOfs);
-    
+
     if (nCharOfs < pPara->member.para.next_para->member.para.nCharOfs)
     {
       *ppRun = ME_FindItemFwd(pPara, diRun);
-      assert(*ppRun);      
+      assert(*ppRun);
       while (!((*ppRun)->member.run.nFlags & MERF_ENDPARA))
       {
         ME_DisplayItem *pNext = ME_FindItemFwd(*ppRun, diRun);
         assert(pNext);
         assert(pNext->type == diRun);
         if (nCharOfs < nParaOfs + pNext->member.run.nCharOfs) {
-          *pOfs = ME_PosToVPos((*ppRun)->member.run.strText, 
+          *pOfs = ME_PosToVPos((*ppRun)->member.run.strText,
             nCharOfs - nParaOfs - (*ppRun)->member.run.nCharOfs);
           return;
         }
@@ -157,12 +157,12 @@ void ME_RunOfsFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_DisplayItem **
       if (nCharOfs == nParaOfs + (*ppRun)->member.run.nCharOfs) {
         *pOfs = 0;
         return;
-      }        
+      }
     }
     pPara = pPara->member.para.next_para;
   }
   *ppRun = ME_FindItemBack(editor->pBuffer->pLast, diRun);
-  *pOfs = 0;  
+  *pOfs = 0;
   assert((*ppRun)->member.run.nFlags & MERF_ENDPARA);
 }
 
@@ -174,13 +174,15 @@ void ME_JoinRuns(ME_TextEditor *editor, ME_DisplayItem *p)
   assert(p->member.run.nCharOfs != -1);
   ME_GetParagraph(p)->member.para.nFlags |= MEPF_REWRAP;
 
+  if (editor->bCaretAtEnd && editor->pCursors[0].pRun == pNext)
+    editor->bCaretAtEnd = FALSE;
   for (i=0; i<editor->nCursors; i++) {
     if (editor->pCursors[i].pRun == pNext) {
       editor->pCursors[i].pRun = p;
       editor->pCursors[i].nOffset += ME_StrVLen(p->member.run.strText);
     }
   }
-  
+
   ME_AppendString(p->member.run.strText, pNext->member.run.strText);
   ME_Remove(pNext);
   ME_DestroyDisplayItem(pNext);
@@ -198,7 +200,8 @@ ME_DisplayItem *ME_SplitRun(ME_Context *c, ME_DisplayItem *item, int nVChar)
   ME_TextEditor *editor = c->editor;
   ME_DisplayItem *item2 = NULL;
   ME_Run *run, *run2;
-  
+  ME_Paragraph *para = &ME_GetParagraph(item)->member.para;
+
   assert(item->member.run.nCharOfs != -1);
   if(TRACE_ON(richedit))
   {
@@ -213,28 +216,28 @@ ME_DisplayItem *ME_SplitRun(ME_Context *c, ME_DisplayItem *item, int nVChar)
         run->pt.x, run->pt.y);
 
   item2 = ME_SplitRunSimple(editor, item, nVChar);
-  
+
   run2 = &item2->member.run;
-  
-  ME_CalcRunExtent(c, run);
-  ME_CalcRunExtent(c, run2);
-    
+
+  ME_CalcRunExtent(c, para, run);
+  ME_CalcRunExtent(c, para, run2);
+
   run2->pt.x = run->pt.x+run->nWidth;
   run2->pt.y = run->pt.y;
-  
+
   if(TRACE_ON(richedit))
   {
     TRACE("Before check after split\n");
     ME_CheckCharOffsets(editor);
     TRACE("After check after split\n");
-    TRACE("After split: %s(%ld, %ld), %s(%ld, %ld)\n", 
+    TRACE("After split: %s(%ld, %ld), %s(%ld, %ld)\n",
       debugstr_w(run->strText->szData), run->pt.x, run->pt.y,
       debugstr_w(run2->strText->szData), run2->pt.x, run2->pt.y);
   }
 
   return item2;
 }
-  
+
 /* split a run starting from voffset */
 ME_DisplayItem *ME_SplitRunSimple(ME_TextEditor *editor, ME_DisplayItem *item, int nVChar)
 {
@@ -244,22 +247,22 @@ ME_DisplayItem *ME_SplitRunSimple(ME_TextEditor *editor, ME_DisplayItem *item, i
   int i;
   assert(nVChar > 0 && nVChar < ME_StrVLen(run->strText));
   assert(item->type == diRun);
-  assert(!(item->member.run.nFlags & MERF_GRAPHICS));
+  assert(!(item->member.run.nFlags & (MERF_GRAPHICS | MERF_TAB)));
   assert(item->member.run.nCharOfs != -1);
 
-  item2 = ME_MakeRun(run->style, 
+  item2 = ME_MakeRun(run->style,
       ME_VSplitString(run->strText, nVChar), run->nFlags&MERF_SPLITMASK);
-  
+
   item2->member.run.nCharOfs = item->member.run.nCharOfs+
     ME_VPosToPos(item->member.run.strText, nVChar);
 
   run2 = &item2->member.run;
   ME_InsertBefore(item->next, item2);
-  
+
   ME_UpdateRunFlags(editor, run);
   ME_UpdateRunFlags(editor, run2);
   for (i=0; i<editor->nCursors; i++) {
-    if (editor->pCursors[i].pRun == item && 
+    if (editor->pCursors[i].pRun == item &&
         editor->pCursors[i].nOffset >= nVChar) {
       assert(item2->type == diRun);
       editor->pCursors[i].pRun = item2;
@@ -269,18 +272,6 @@ ME_DisplayItem *ME_SplitRunSimple(ME_TextEditor *editor, ME_DisplayItem *item, i
   ME_GetParagraph(item)->member.para.nFlags |= MEPF_REWRAP;
   return item2;
 }
-
-/* split the start and final whitespace into separate runs */
-/* returns the last run added */
-/*
-ME_DisplayItem *ME_SplitFurther(ME_TextEditor *editor, ME_DisplayItem *item)
-{
-  int i, nVLen, nChanged;
-  assert(item->type == diRun);
-  assert(!(item->member.run.nFlags & MERF_GRAPHICS));
-  return item;
-}
-*/
 
 ME_DisplayItem *ME_MakeRun(ME_Style *s, ME_String *strData, int nFlags)
 {
@@ -298,12 +289,14 @@ ME_DisplayItem *ME_InsertRun(ME_TextEditor *editor, int nCharOfs, ME_DisplayItem
   ME_Cursor tmp;
   ME_DisplayItem *pDI;
   ME_UndoItem *pUI;
-  
+
   assert(pItem->type == diRun || pItem->type == diUndoInsertRun);
-  
+
   pUI = ME_AddUndoItem(editor, diUndoDeleteRun, NULL);
-  pUI->nStart = nCharOfs;
-  pUI->nLen = pItem->member.run.strText->nLen;
+  if (pUI) {
+    pUI->nStart = nCharOfs;
+    pUI->nLen = pItem->member.run.strText->nLen;
+  }
   ME_CursorFromCharOfs(editor, nCharOfs, &tmp);
   if (tmp.nOffset) {
     tmp.pRun = ME_SplitRunSimple(editor, tmp.pRun, tmp.nOffset);
@@ -315,13 +308,8 @@ ME_DisplayItem *ME_InsertRun(ME_TextEditor *editor, int nCharOfs, ME_DisplayItem
   TRACE("Shift length:%d\n", pDI->member.run.strText->nLen);
   ME_PropagateCharOffset(tmp.pRun, pDI->member.run.strText->nLen);
   ME_GetParagraph(tmp.pRun)->member.para.nFlags |= MEPF_REWRAP;
-  
-  return pDI;
-}
 
-static inline int ME_IsWSpace(WCHAR ch)
-{
-  return ch <= ' ';
+  return pDI;
 }
 
 void ME_UpdateRunFlags(ME_TextEditor *editor, ME_Run *run)
@@ -331,19 +319,19 @@ void ME_UpdateRunFlags(ME_TextEditor *editor, ME_Run *run)
     run->nFlags |= MERF_SPLITTABLE;
   else
     run->nFlags &= ~MERF_SPLITTABLE;
-    
-  if (!(run->nFlags & MERF_GRAPHICS)) {
+
+  if (!(run->nFlags & MERF_NOTEXT)) {
     if (ME_IsWhitespaces(run->strText))
       run->nFlags |= MERF_WHITESPACE | MERF_STARTWHITE | MERF_ENDWHITE;
     else
     {
       run->nFlags &= ~MERF_WHITESPACE;
-    
+
       if (ME_IsWSpace(ME_GetCharFwd(run->strText,0)))
         run->nFlags |= MERF_STARTWHITE;
       else
         run->nFlags &= ~MERF_STARTWHITE;
-    
+
       if (ME_IsWSpace(ME_GetCharBack(run->strText,0)))
         run->nFlags |= MERF_ENDWHITE;
       else
@@ -361,7 +349,7 @@ void ME_GetGraphicsSize(ME_TextEditor *editor, ME_Run *run, SIZE *pSize)
   pSize->cy = 64;
 }
 
-int ME_CharFromPoint(ME_TextEditor *editor, int cx, ME_Run *run)
+int ME_CharFromPoint(ME_TextEditor *editor, int cx, ME_Paragraph *para, ME_Run *run)
 {
   int fit = 0;
   HGDIOBJ hOldFont;
@@ -370,6 +358,12 @@ int ME_CharFromPoint(ME_TextEditor *editor, int cx, ME_Run *run)
   if (!run->strText->nLen)
     return 0;
 
+  if (run->nFlags & MERF_TAB)
+  {
+    if (cx < run->nWidth/2)
+      return 0;
+    return 1;
+  }
   if (run->nFlags & MERF_GRAPHICS)
   {
     SIZE sz;
@@ -380,9 +374,9 @@ int ME_CharFromPoint(ME_TextEditor *editor, int cx, ME_Run *run)
   }
   hDC = GetDC(editor->hWnd);
   hOldFont = ME_SelectStyleFont(editor, hDC, run->style);
-  GetTextExtentExPointW(hDC, run->strText->szData, run->strText->nLen, 
+  GetTextExtentExPointW(hDC, run->strText->szData, run->strText->nLen,
     cx, &fit, NULL, &sz);
-  ME_UnselectStyleFont(editor, hDC, run->style, hOldFont);  
+  ME_UnselectStyleFont(editor, hDC, run->style, hOldFont);
   ReleaseDC(editor->hWnd, hDC);
   return fit;
 }
@@ -396,6 +390,12 @@ int ME_CharFromPointCursor(ME_TextEditor *editor, int cx, ME_Run *run)
   if (!run->strText->nLen)
     return 0;
 
+  if (run->nFlags & MERF_TAB)
+  {
+    if (cx < run->nWidth/2)
+      return 0;
+    return 1;
+  }
   if (run->nFlags & MERF_GRAPHICS)
   {
     SIZE sz;
@@ -407,19 +407,19 @@ int ME_CharFromPointCursor(ME_TextEditor *editor, int cx, ME_Run *run)
 
   hDC = GetDC(editor->hWnd);
   hOldFont = ME_SelectStyleFont(editor, hDC, run->style);
-  GetTextExtentExPointW(hDC, run->strText->szData, run->strText->nLen, 
+  GetTextExtentExPointW(hDC, run->strText->szData, run->strText->nLen,
     cx, &fit, NULL, &sz);
   if (fit != run->strText->nLen)
   {
     int chars = 1;
-    
+
     GetTextExtentPoint32W(hDC, run->strText->szData, fit, &sz2);
     fit1 = ME_StrRelPos(run->strText, fit, &chars);
     GetTextExtentPoint32W(hDC, run->strText->szData, fit1, &sz3);
     if (cx >= (sz2.cx+sz3.cx)/2)
       fit = fit1;
   }
-  ME_UnselectStyleFont(editor, hDC, run->style, hOldFont);  
+  ME_UnselectStyleFont(editor, hDC, run->style, hOldFont);
   ReleaseDC(editor->hWnd, hDC);
   return fit;
 }
@@ -429,7 +429,7 @@ int ME_PointFromChar(ME_TextEditor *editor, ME_Run *pRun, int nOffset)
   SIZE size;
   HDC hDC = GetDC(editor->hWnd);
   HGDIOBJ hOldFont;
-  
+
   if (pRun->nFlags & MERF_GRAPHICS)
   {
     if (!nOffset) return 0;
@@ -438,56 +438,88 @@ int ME_PointFromChar(ME_TextEditor *editor, ME_Run *pRun, int nOffset)
   }
   hOldFont = ME_SelectStyleFont(editor, hDC, pRun->style);
   GetTextExtentPoint32W(hDC, pRun->strText->szData, nOffset, &size);
-  ME_UnselectStyleFont(editor, hDC, pRun->style, hOldFont);  
+  ME_UnselectStyleFont(editor, hDC, pRun->style, hOldFont);
   ReleaseDC(editor->hWnd, hDC);
   return size.cx;
 }
 
-void ME_GetTextExtent(ME_Context *c, LPCWSTR szText, int nChars, ME_Style *s, 
+void ME_GetTextExtent(ME_Context *c, LPCWSTR szText, int nChars, ME_Style *s,
   SIZE *size)
 {
   HDC hDC = c->hDC;
   HGDIOBJ hOldFont;
   hOldFont = ME_SelectStyleFont(c->editor, hDC, s);
   GetTextExtentPoint32W(hDC, szText, nChars, size);
-  ME_UnselectStyleFont(c->editor, hDC, s, hOldFont);  
+  ME_UnselectStyleFont(c->editor, hDC, s, hOldFont);
 }
 
-SIZE ME_GetRunSize(ME_Context *c, ME_Run *run, int nLen)
+SIZE ME_GetRunSizeCommon(ME_Context *c, ME_Paragraph *para, ME_Run *run, int nLen, int *pAscent, int *pDescent)
 {
   SIZE size;
   int nMaxLen = ME_StrVLen(run->strText);
 
   if (nLen>nMaxLen)
     nLen = nMaxLen;
-    
+
+  /* FIXME the following call also ensures that TEXTMETRIC structure is filled
+   * this is wasteful for graphics and TAB runs, but that shouldn't matter
+   * in practice
+   */
+  ME_GetTextExtent(c, run->strText->szData, nLen, run->style, &size);
+  assert(run->style->tm.tmAscent>0);
+  assert(run->style->tm.tmDescent>0);
+  *pAscent = run->style->tm.tmAscent;
+  *pDescent = run->style->tm.tmDescent;
+  size.cy = *pAscent + *pDescent;
+
+  if (run->nFlags & MERF_TAB)
+  {
+    int pos = 0, i = 0, ppos;
+    int lpsx = GetDeviceCaps(c->hDC, LOGPIXELSX);
+    PARAFORMAT2 *pFmt = para->pFmt;
+    do {
+      if (i < pFmt->cTabCount)
+      {
+        pos = pFmt->rgxTabs[i]&0x00FFFFFF;
+        i++;
+      }
+      else
+      {
+        pos += 720-(pos%720);
+      }
+      ppos = pos*lpsx/1440;
+      if (ppos>run->pt.x) {
+        size.cx = ppos - run->pt.x;
+        break;
+      }
+    } while(1);
+    size.cy = *pAscent + *pDescent;
+    return size;
+  }
   if (run->nFlags & MERF_GRAPHICS)
   {
     ME_GetGraphicsSize(c->editor, run, &size);
+    if (size.cy > *pAscent)
+      *pAscent = size.cy;
+    /* descent is unchanged */
     return size;
   }
-
-  ME_GetTextExtent(c, run->strText->szData, nLen, run->style, &size);
 
   return size;
 }
 
-void ME_CalcRunExtent(ME_Context *c, ME_Run *run)
+SIZE ME_GetRunSize(ME_Context *c, ME_Paragraph *para, ME_Run *run, int nLen)
 {
-  SIZE size;
+  int asc, desc;
+  return ME_GetRunSizeCommon(c, para, run, nLen, &asc, &desc);
+}
+
+void ME_CalcRunExtent(ME_Context *c, ME_Paragraph *para, ME_Run *run)
+{
   int nEnd = ME_StrVLen(run->strText);
-  
-  if (run->nFlags & MERF_GRAPHICS) {
-    ME_GetGraphicsSize(c->editor, run, &size);
-    run->nWidth = size.cx;
-    run->nAscent = size.cy;
-    run->nDescent = 0;
-    return;
-  }
-  ME_GetTextExtent(c, run->strText->szData, nEnd, run->style, &size);
+  SIZE size = ME_GetRunSizeCommon(c, para, run, nEnd, &run->nAscent, &run->nDescent);
   run->nWidth = size.cx;
-  run->nAscent = run->style->tm.tmAscent;
-  run->nDescent = run->style->tm.tmDescent;
+  assert(size.cx);
 }
 
 void ME_MustBeWrapped(ME_Context *c, ME_DisplayItem *para)
@@ -517,7 +549,7 @@ void ME_SetCharFormat(ME_TextEditor *editor, int nOfs, int nChars, CHARFORMAT2W 
 {
   ME_Cursor tmp, tmp2;
   ME_DisplayItem *para;
-  
+
   ME_CursorFromCharOfs(editor, nOfs, &tmp);
   if (tmp.nOffset)
     tmp.pRun = ME_SplitRunSimple(editor, tmp.pRun, tmp.nOffset);
@@ -528,7 +560,7 @@ void ME_SetCharFormat(ME_TextEditor *editor, int nOfs, int nChars, CHARFORMAT2W 
 
   para = ME_GetParagraph(tmp.pRun);
   para->member.para.nFlags |= MEPF_REWRAP;
-    
+
   while(tmp.pRun != tmp2.pRun)
   {
     ME_UndoItem *undo = NULL;
@@ -559,9 +591,9 @@ void ME_SetCharFormat(ME_TextEditor *editor, int nOfs, int nChars, CHARFORMAT2W 
 
 void ME_SetDefaultCharFormat(ME_TextEditor *editor, CHARFORMAT2W *mod)
 {
-  ME_Style *style; 
+  ME_Style *style;
   ME_UndoItem *undo;
-  
+
   assert(mod->cbSize == sizeof(CHARFORMAT2W));
   undo = ME_AddUndoItem(editor, diUndoSetDefaultCharFormat, NULL);
   if (undo) {
@@ -607,10 +639,10 @@ void ME_GetCharFormat(ME_TextEditor *editor, int nFrom, int nTo, CHARFORMAT2W *p
   ME_DisplayItem *run, *run_end;
   int nOffset, nOffset2;
   CHARFORMAT2W tmp;
-  
+
   if (nTo>nFrom) /* selection consists of chars from nFrom up to nTo-1 */
     nTo--;
-  
+
   ME_RunOfsFromCharOfs(editor, nFrom, &run, &nOffset);
   if (nFrom == nTo) /* special case - if selection is empty, take previous char's formatting */
   {
@@ -626,22 +658,22 @@ void ME_GetCharFormat(ME_TextEditor *editor, int nFrom, int nTo, CHARFORMAT2W *p
     return;
   }
   ME_RunOfsFromCharOfs(editor, nTo, &run_end, &nOffset2);
-  
+
   ME_GetRunCharFormat(editor, run, pFmt);
-  
+
   if (run == run_end) return;
-  
+
   do {
     /* FIXME add more style feature comparisons */
     int nAttribs = CFM_SIZE | CFM_FACE | CFM_COLOR;
     int nEffects = CFM_BOLD | CFM_ITALIC | CFM_UNDERLINE;
 
     run = ME_FindItemFwd(run, diRun);
-    
+
     ZeroMemory(&tmp, sizeof(tmp));
     tmp.cbSize = sizeof(tmp);
     ME_GetRunCharFormat(editor, run, &tmp);
-    
+
     assert((tmp.dwMask & nAttribs) == nAttribs);
     assert((tmp.dwMask & nEffects) == nEffects);
     /* reset flags that differ */
@@ -665,8 +697,8 @@ void ME_GetCharFormat(ME_TextEditor *editor, int nFrom, int nTo, CHARFORMAT2W *p
           pFmt->dwMask &= ~CFM_COLOR;
       }
     }
-      
+
     pFmt->dwMask &= ~((pFmt->dwEffects ^ tmp.dwEffects) & nEffects);
-    
+
   } while(run != run_end);
 }

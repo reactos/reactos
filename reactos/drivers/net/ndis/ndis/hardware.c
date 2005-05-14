@@ -37,7 +37,7 @@ NdisImmediateReadPciSlotInformation(
 /*
  * @implemented
  */
-ULONG 
+ULONG
 EXPORT
 NdisImmediateWritePciSlotInformation(
     IN  NDIS_HANDLE WrapperConfigurationContext,
@@ -91,7 +91,7 @@ NdisMQueryAdapterResources(
  * FUNCTION: returns a nic's hardware resources
  * ARGUMENTS:
  *     Status: on return, contains the status of the operation
- *     WrapperConfigurationContext: handle input to MiniportInitialize 
+ *     WrapperConfigurationContext: handle input to MiniportInitialize
  *     ResourceList: on return, contains the list of resources for the nic
  *     BufferSize: size of ResourceList
  * NOTES:
@@ -115,7 +115,7 @@ NdisMQueryAdapterResources(
       return;
     }
 
-  ResourceListSize = 
+  ResourceListSize =
     FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors) +
     MiniportBlock->AllocatedResources->List[0].PartialResourceList.Count *
     sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);

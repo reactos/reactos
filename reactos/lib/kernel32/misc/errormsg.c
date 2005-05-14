@@ -237,7 +237,7 @@ DWORD WINAPI FormatMessageA(
             SetLastError (ERROR_RESOURCE_LANG_NOT_FOUND);
             return 0;
         }
- 
+
         from = RtlAllocateHeap(RtlGetProcessHeap(), 0, bufsize + 1 );
         load_messageA(hmodule,dwMessageId,dwLanguageId,from,bufsize+1);
     }
@@ -490,7 +490,7 @@ DWORD WINAPI FormatMessageW(
             SetLastError (ERROR_RESOURCE_LANG_NOT_FOUND);
             return 0;
         }
- 
+
         from = RtlAllocateHeap(RtlGetProcessHeap(), 0, bufsize + 1 );
         load_messageA(hmodule,dwMessageId,dwLanguageId,from,bufsize+1);
     }

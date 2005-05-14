@@ -45,12 +45,12 @@ MouseSafetyOnDrawStart(SURFOBJ *SurfObj, LONG HazardX1,
   ASSERT(SurfObj != NULL);
 
   ppdev = GDIDEV(SurfObj);
-  
+
   if(ppdev == NULL)
     {
       return(FALSE);
     }
-  
+
   pgp = &ppdev->Pointer;
 
   if (SPS_ACCEPT_NOEXCLUDE == pgp->Status ||
@@ -74,7 +74,7 @@ MouseSafetyOnDrawStart(SURFOBJ *SurfObj, LONG HazardX1,
     {
       /* already hidden */
       return FALSE;
-    } 
+    }
 
   if (pgp->Exclude.right >= HazardX1
       && pgp->Exclude.left <= HazardX2
@@ -103,7 +103,7 @@ MouseSafetyOnDrawEnd(SURFOBJ *SurfObj)
   ASSERT(SurfObj != NULL);
 
   ppdev = GDIDEV(SurfObj);
-  
+
   if(ppdev == NULL)
     {
       return(FALSE);
@@ -150,7 +150,7 @@ IntHideMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
    }
 
    pgp->Enabled = FALSE;
-   
+
    pt.x = pgp->Pos.x - pgp->HotSpot.x;
    pt.y = pgp->Pos.y - pgp->HotSpot.y;
 
@@ -204,7 +204,7 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
    }
 
    pgp->Enabled = TRUE;
-   
+
    pt.x = pgp->Pos.x - pgp->HotSpot.x;
    pt.y = pgp->Pos.y - pgp->HotSpot.y;
 
@@ -371,7 +371,7 @@ EngSetPointerShape(
      pgp->Pos.x = x;
      pgp->Pos.y = y;
    }
-   
+
    pgp->Size.cx = abs(psoMask->lDelta) << 3;
    pgp->Size.cy = (psoMask->cjBits / abs(psoMask->lDelta)) >> 1;
 
@@ -467,7 +467,7 @@ EngSetPointerShape(
    if(x != -1)
    {
      IntShowMousePointer(ppdev, pso);
-     
+
      if (prcl != NULL)
      {
        prcl->left = x - pgp->HotSpot.x;
@@ -500,9 +500,9 @@ EngMovePointer(
    ppdev = GDIDEV(pso);
 
    ASSERT(ppdev);
-   
+
    pgp = &ppdev->Pointer;
-   
+
    IntHideMousePointer(ppdev, pso);
    if (x != -1)
    {
@@ -520,7 +520,7 @@ EngMovePointer(
      }
    } else if (prcl != NULL)
      prcl->left = prcl->top = prcl->right = prcl->bottom = -1;
-   
+
 }
 
 /* EOF */

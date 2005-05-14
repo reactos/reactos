@@ -185,19 +185,19 @@
 185 stdcall -noname SHMessageBoxCheckA(ptr str str long long str)
 186 stdcall -noname SHSimulateDrop(ptr ptr long ptr ptr)
 187 stdcall -noname SHLoadFromPropertyBag(ptr ptr)
-188 stub -noname IUnknown_TranslateAcceleratorOCS
+188 stdcall -noname IUnknown_TranslateAcceleratorOCS(ptr ptr long)
 189 stdcall -noname IUnknown_OnFocusOCS(ptr ptr)
-190 stub -noname IUnknown_HandleIRestrict
+190 stdcall -noname IUnknown_HandleIRestrict(ptr ptr ptr ptr ptr)
 191 stdcall -noname SHMessageBoxCheckW(ptr wstr wstr long long wstr)
 192 stdcall -noname SHGetMenuFromID(ptr long)
 193 stdcall -noname SHGetCurColorRes()
 194 stdcall -noname SHWaitForSendMessageThread(ptr long)
-195 stub -noname SHIsExpandableFolder
-196 stub -noname DnsRecordSetCompare
+195 stdcall -noname SHIsExpandableFolder(ptr ptr)
+196 stub -noname DnsRecordSetCompare #stdcall @(ptr ptr ptr ptr) dnsapi.DnsRecordSetCompare
 197 stdcall -noname SHFillRectClr(long ptr long)
 198 stdcall -noname SHSearchMapInt(ptr ptr long long)
 199 stdcall -noname IUnknown_Set(ptr ptr)
-200 stub -noname MayQSForward
+200 stdcall -noname MayQSForward(ptr ptr ptr long ptr ptr)
 201 stdcall -noname MayExecForward(ptr long ptr long long ptr ptr)
 202 stdcall -noname IsQSForward(ptr long ptr)
 203 stdcall -noname SHStripMneumonicA(str)
@@ -253,7 +253,7 @@
 253 stub -noname StopWatchExA
 254 stub -noname StopWatchExW
 255 stub -noname EventTraceHandler
-256 stub -noname IUnknown_GetSite
+256 stdcall -noname IUnknown_GetSite(ptr ptr ptr)
 257 stdcall -noname SHCreateWorkerWindowA(long ptr long long ptr long)
 258 stub -noname SHRegisterWaitForSingleObject
 259 stub -noname SHUnregisterWait
@@ -475,10 +475,10 @@
 475 stub -noname GetShellSecurityDescriptor
 476 stub -noname SHGetObjectCompatFlags
 477 stub -noname SHCreatePropertyBagOnMemory
-478 stub -noname IUnknown_TranslateAcceleratorIO
+478 stdcall -noname IUnknown_TranslateAcceleratorIO(ptr ptr)
 479 stub -noname IUnknown_UIActivateIO
 480 stub -noname UrlCrackW
-481 stub -noname IUnknown_HasFocusIO
+481 stdcall -noname IUnknown_HasFocusIO(ptr)
 482 stub -noname SHMessageBoxHelpA
 483 stub -noname SHMessageBoxHelpW
 484 stub -noname IUnknown_QueryServiceExec
@@ -543,7 +543,7 @@
 
 548 stub -noname SHAreIconsEqual
 549 stdcall -noname SHCoCreateInstanceAC(ptr ptr long ptr ptr)
-550 stub -noname GetTemplateInfoFroHandle
+550 stub -noname GetTemplateInfoFromHandle
 551 stub -noname IShellFolder_CompareIDs
 
 @ stdcall AssocCreate(long long long long ptr ptr)

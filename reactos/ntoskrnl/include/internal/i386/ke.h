@@ -179,6 +179,38 @@ typedef struct _KIRQ_TRAPFRAME
    ULONG Eflags;
 } KIRQ_TRAPFRAME, *PKIRQ_TRAPFRAME;
 
+typedef struct _KGDTENTRY {
+    USHORT LimitLow;
+    USHORT BaseLow;
+    union {
+        struct {
+            UCHAR BaseMid;
+            UCHAR Flags1;
+            UCHAR Flags2;
+            UCHAR BaseHi;
+        } Bytes;
+        struct {
+            ULONG BaseMid       : 8;
+            ULONG Type          : 5;
+            ULONG Dpl           : 2;
+            ULONG Pres          : 1;
+            ULONG LimitHi       : 4;
+            ULONG Sys           : 1;
+            ULONG Reserved_0    : 1;
+            ULONG Default_Big   : 1;
+            ULONG Granularity   : 1;
+            ULONG BaseHi        : 8;
+        } Bits;
+    } HighWord;
+} KGDTENTRY, *PKGDTENTRY;
+
+typedef struct _KIDTENTRY {
+    USHORT Offset;
+    USHORT Selector;
+    USHORT Access;
+    USHORT ExtendedOffset;
+} KIDTENTRY, *PKIDTENTRY;
+
 extern ULONG Ke386CacheAlignment;
 
 struct _KPCR;
@@ -200,31 +232,31 @@ VOID
 NtEarlyInitVdm(VOID);
 VOID
 KeApplicationProcessorInitDispatcher(VOID);
-VOID 
+VOID
 KeCreateApplicationProcessorIdleThread(ULONG Id);
 
-typedef 
-VOID 
+typedef
+VOID
 STDCALL
-(*PKSYSTEM_ROUTINE)(PKSTART_ROUTINE StartRoutine, 
+(*PKSYSTEM_ROUTINE)(PKSTART_ROUTINE StartRoutine,
                     PVOID StartContext);
 
 VOID
 STDCALL
-Ke386InitThreadWithContext(PKTHREAD Thread, 
+Ke386InitThreadWithContext(PKTHREAD Thread,
                            PKSYSTEM_ROUTINE SystemRoutine,
                            PKSTART_ROUTINE StartRoutine,
                            PVOID StartContext,
                            PCONTEXT Context);
-                       
+
 VOID
 STDCALL
-KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine, 
-                PKSTART_ROUTINE StartRoutine, 
-                PVOID StartContext, 
+KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
+                PKSTART_ROUTINE StartRoutine,
+                PVOID StartContext,
                 BOOLEAN UserThread,
                 KTRAP_FRAME TrapFrame);
-                
+
 #ifdef CONFIG_SMP
 #define LOCK "lock ; "
 #else
@@ -249,7 +281,7 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
 #define Ke386SetLocalDescriptorTable(X) \
                                  __asm__("lldt %0\n\t" \
                                      : /* no outputs */ \
-                                     : "m" (X));                                      
+                                     : "m" (X));
 #define Ke386SetGlobalDescriptorTable(X) \
                                  __asm__("lgdt %0\n\t" \
                                      : /* no outputs */ \
@@ -275,11 +307,11 @@ static inline LONG Ke386TestAndClearBit(ULONG BitPos, volatile PULONG Addr)
 {
 	LONG OldBit;
 
-	__asm__ __volatile__(LOCK 
+	__asm__ __volatile__(LOCK
 	                     "btrl %2,%1\n\t"
 	                     "sbbl %0,%0\n\t"
 		             :"=r" (OldBit),"=m" (*Addr)
-		             :"Ir" (BitPos) 
+		             :"Ir" (BitPos)
 			     : "memory");
 	return OldBit;
 }
@@ -292,7 +324,7 @@ static inline LONG Ke386TestAndSetBit(ULONG BitPos, volatile PULONG Addr)
 	                     "btsl %2,%1\n\t"
 	                     "sbbl %0,%0\n\t"
 		             :"=r" (OldBit),"=m" (*Addr)
-		             :"Ir" (BitPos) 
+		             :"Ir" (BitPos)
 			     : "memory");
 	return OldBit;
 }

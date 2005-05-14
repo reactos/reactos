@@ -28,8 +28,8 @@ NdisAllocateMemoryWithTag(
  * ARGUMENTS:
  *   VirtualAddress = a pointer to the returned memory block
  *   Length         = the number of requested bytes
- *   Tag            = 32-bit pool tag 
- * RETURNS:  
+ *   Tag            = 32-bit pool tag
+ * RETURNS:
  *   NDIS_STATUS_SUCCESS on success
  *   NDIS_STATUS_FAILURE on failure
  */
@@ -99,7 +99,7 @@ NdisAllocateMemory(
 {
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-  if (MemoryFlags & NDIS_MEMORY_NONCACHED) 
+  if (MemoryFlags & NDIS_MEMORY_NONCACHED)
     {
       *VirtualAddress = MmAllocateNonCachedMemory(Length);
       if(!*VirtualAddress)
@@ -108,7 +108,7 @@ NdisAllocateMemory(
       return NDIS_STATUS_SUCCESS;
     }
 
-  if (MemoryFlags & NDIS_MEMORY_CONTIGUOUS) 
+  if (MemoryFlags & NDIS_MEMORY_CONTIGUOUS)
     {
       *VirtualAddress = MmAllocateContiguousMemory(Length, HighestAcceptableAddress);
       if(!*VirtualAddress)
@@ -145,13 +145,13 @@ NdisFreeMemory(
 {
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-  if (MemoryFlags & NDIS_MEMORY_NONCACHED) 
+  if (MemoryFlags & NDIS_MEMORY_NONCACHED)
     {
       MmFreeNonCachedMemory(VirtualAddress, Length);
       return;
     }
 
-  if (MemoryFlags & NDIS_MEMORY_CONTIGUOUS) 
+  if (MemoryFlags & NDIS_MEMORY_CONTIGUOUS)
     {
       MmFreeContiguousMemory(VirtualAddress);
       return;
@@ -247,7 +247,7 @@ NdisMAllocateSharedMemoryAsync(
 VOID
 STDCALL
 NdisMFreeSharedMemoryPassive(
-    PVOID Context) 
+    PVOID Context)
 /*
  * FUNCTION:  Free a common buffer
  * ARGUMENTS:
@@ -299,7 +299,7 @@ NdisMFreeSharedMemory(
   PMINIPORT_SHARED_MEMORY Memory;
 
   NDIS_DbgPrint(MAX_TRACE,("Called.\n"));
-	
+
   ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
 
   /* Must be NonpagedPool because by definition we're at DISPATCH_LEVEL */
@@ -316,7 +316,7 @@ NdisMFreeSharedMemory(
   Memory->PhysicalAddress = PhysicalAddress;
   Memory->VirtualAddress = VirtualAddress;
   Memory->Cached = Cached;
-    
+
   PsCreateSystemThread(&ThreadHandle, THREAD_ALL_ACCESS, 0, 0, 0, NdisMFreeSharedMemoryPassive, Memory);
   ZwClose(ThreadHandle);
 }

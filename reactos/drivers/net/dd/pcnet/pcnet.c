@@ -49,7 +49,7 @@ MiniportHandleInterrupt(
     IN NDIS_HANDLE MiniportAdapterContext)
 /*
  * FUNCTION: Handle an interrupt if told to by MiniportISR
- * ARGUMENTS: 
+ * ARGUMENTS:
  *     MiniportAdapterContext: context specified to NdisMSetAttributes
  * NOTES:
  *     - Called by NDIS at DISPATCH_LEVEL
@@ -127,7 +127,7 @@ MiniportHandleInterrupt(
               NdisMEthIndicateReceiveComplete(Adapter->MiniportAdapterHandle);
 
               RtlZeroMemory(Descriptor, sizeof(RECEIVE_DESCRIPTOR));
-              Descriptor->RBADR = 
+              Descriptor->RBADR =
                   (ULONG)(Adapter->ReceiveBufferPtrPhys + Adapter->CurrentReceiveDescriptorIndex * BUFFER_SIZE);
               Descriptor->BCNT = (-BUFFER_SIZE) | 0xf000;
               Descriptor->FLAGS |= RD_OWN;
@@ -210,7 +210,7 @@ MiniportHandleInterrupt(
   NdisDprReleaseSpinLock(&Adapter->Lock);
 }
 
-NDIS_STATUS 
+NDIS_STATUS
 MiQueryCard(
     IN PADAPTER Adapter)
 /*
@@ -247,7 +247,7 @@ MiQueryCard(
 
   /* set busmaster and io space enable bits */
   buf32 = PCI_BMEN | PCI_IOEN;
-  NdisWritePciSlotInformation(Adapter->MiniportAdapterHandle, 0, PCI_COMMAND, &buf32, 4);        
+  NdisWritePciSlotInformation(Adapter->MiniportAdapterHandle, 0, PCI_COMMAND, &buf32, 4);
 
   /* get IO base physical address */
   buf32 = 0;
@@ -306,7 +306,7 @@ MiAllocateSharedMemory(
 
   /* allocate the initialization block */
   Adapter->InitializationBlockLength = sizeof(INITIALIZATION_BLOCK);
-  NdisMAllocateSharedMemory(Adapter->MiniportAdapterHandle, Adapter->InitializationBlockLength, 
+  NdisMAllocateSharedMemory(Adapter->MiniportAdapterHandle, Adapter->InitializationBlockLength,
       FALSE, (PVOID *)&Adapter->InitializationBlockVirt, &PhysicalAddress);
   if(!Adapter->InitializationBlockVirt)
     {
@@ -368,7 +368,7 @@ MiAllocateSharedMemory(
 
   /* allocate transmit buffers */
   Adapter->TransmitBufferLength = BUFFER_SIZE * NUMBER_OF_BUFFERS;
-  NdisMAllocateSharedMemory(Adapter->MiniportAdapterHandle, Adapter->TransmitBufferLength, 
+  NdisMAllocateSharedMemory(Adapter->MiniportAdapterHandle, Adapter->TransmitBufferLength,
       FALSE, (PVOID *)&Adapter->TransmitBufferPtrVirt, &PhysicalAddress);
   if(!Adapter->TransmitBufferPtrVirt)
     {
@@ -389,7 +389,7 @@ MiAllocateSharedMemory(
 
   /* allocate receive buffers */
   Adapter->ReceiveBufferLength = BUFFER_SIZE * NUMBER_OF_BUFFERS;
-  NdisMAllocateSharedMemory(Adapter->MiniportAdapterHandle, Adapter->ReceiveBufferLength, 
+  NdisMAllocateSharedMemory(Adapter->MiniportAdapterHandle, Adapter->ReceiveBufferLength,
       FALSE, (PVOID *)&Adapter->ReceiveBufferPtrVirt, &PhysicalAddress);
   if(!Adapter->ReceiveBufferPtrVirt)
     {
@@ -484,7 +484,7 @@ MiFreeSharedMemory(
   if(Adapter->InitializationBlockVirt)
     {
       PhysicalAddress.u.LowPart = (ULONG)Adapter->InitializationBlockPhys;
-      NdisMFreeSharedMemory(Adapter->MiniportAdapterHandle, Adapter->InitializationBlockLength, 
+      NdisMFreeSharedMemory(Adapter->MiniportAdapterHandle, Adapter->InitializationBlockLength,
           FALSE, Adapter->InitializationBlockVirt, PhysicalAddress);
     }
 
@@ -505,14 +505,14 @@ MiFreeSharedMemory(
   if(Adapter->TransmitBufferPtrVirt)
     {
       PhysicalAddress.u.LowPart = (ULONG)Adapter->TransmitBufferPtrPhys;
-      NdisMFreeSharedMemory(Adapter->MiniportAdapterHandle, Adapter->TransmitBufferLength, 
+      NdisMFreeSharedMemory(Adapter->MiniportAdapterHandle, Adapter->TransmitBufferLength,
           FALSE, Adapter->TransmitBufferPtrVirt, PhysicalAddress);
     }
 
   if(Adapter->ReceiveBufferPtrVirt)
     {
       PhysicalAddress.u.LowPart = (ULONG)Adapter->ReceiveBufferPtrPhys;
-      NdisMFreeSharedMemory(Adapter->MiniportAdapterHandle, Adapter->ReceiveBufferLength, 
+      NdisMFreeSharedMemory(Adapter->MiniportAdapterHandle, Adapter->ReceiveBufferLength,
           FALSE, Adapter->ReceiveBufferPtrVirt, PhysicalAddress);
     }
 }
@@ -532,7 +532,7 @@ MiSyncStop(
   NdisRawWritePortUshort(Adapter->PortOffset + RDP, CSR0_STOP);
   return TRUE;
 }
-    
+
 VOID
 STDCALL
 MiniportHalt(
@@ -571,7 +571,7 @@ MiniportHalt(
 
   /* free the lock */
   NdisFreeSpinLock(&Adapter->Lock);
-  
+
   /* free the adapter */
   NdisFreeMemory(Adapter, 0, 0);
 }
@@ -598,7 +598,7 @@ MiSyncMediaDetection(
     }
   return FALSE;
 }
-    
+
 VOID
 STDCALL
 MiniportMediaDetectionTimer(
@@ -620,14 +620,14 @@ MiniportMediaDetectionTimer(
                                     MiSyncMediaDetection,
                                     FunctionContext))
     {
-      NdisMIndicateStatus(Adapter->MiniportAdapterHandle, 
+      NdisMIndicateStatus(Adapter->MiniportAdapterHandle,
         Adapter->MediaState == NdisMediaStateConnected ?
         NDIS_STATUS_MEDIA_CONNECT : NDIS_STATUS_MEDIA_DISCONNECT,
         (PVOID)0, 0);
       NdisMIndicateStatusComplete(Adapter->MiniportAdapterHandle);
     }
 }
-    
+
 VOID
 MiInitChip(
     PADAPTER Adapter)
@@ -704,7 +704,7 @@ MiInitChip(
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, BCR4);
   NdisRawWritePortUshort(Adapter->PortOffset + BDP, BCR4_LNKSTE|BCR4_FDLSE);
   Adapter->MediaState = MiGetMediaState(Adapter);
-  
+
   PCNET_DbgPrint(("card started\n"));
 
   Adapter->Flags &= ~RESET_IN_PROGRESS;
@@ -849,7 +849,7 @@ MiniportInitialize(
         }
 
       /* register an IO port range */
-      Status = NdisMRegisterIoPortRange(&Adapter->PortOffset, Adapter->MiniportAdapterHandle, 
+      Status = NdisMRegisterIoPortRange(&Adapter->PortOffset, Adapter->MiniportAdapterHandle,
           Adapter->IoBaseAddress, NUMBER_OF_PORTS);
       if(Status != NDIS_STATUS_SUCCESS)
         {
@@ -859,7 +859,7 @@ MiniportInitialize(
         }
 
       /* Allocate map registers */
-      Status = NdisMAllocateMapRegisters(Adapter->MiniportAdapterHandle, 0, 
+      Status = NdisMAllocateMapRegisters(Adapter->MiniportAdapterHandle, 0,
           NDIS_DMA_32BITS, 8, BUFFER_SIZE);
       if(Status != NDIS_STATUS_SUCCESS)
         {
@@ -1034,7 +1034,7 @@ MiSyncStartTransmit(
   NdisRawWritePortUshort(Adapter->PortOffset + RDP, CSR0_IENA | CSR0_TDMD);
   return TRUE;
 }
-    
+
 NDIS_STATUS
 STDCALL
 MiniportSend(
@@ -1093,7 +1093,7 @@ MiniportSend(
                     SourceBuffer, SourceLength);
 
       Position += SourceLength;
-            
+
       NdisGetNextBuffer(NdisBuffer, &NdisBuffer);
     }
 

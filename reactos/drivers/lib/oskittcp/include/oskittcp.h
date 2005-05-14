@@ -114,19 +114,19 @@ extern void RegisterOskitTCPEventHandlers
 ( POSKITTCP_EVENT_HANDLERS EventHandlers );
 extern void OskitTCPReceiveDatagram( OSK_PCHAR Data, OSK_UINT Len,
 				     OSK_UINT IpHeaderLen );
-extern int OskitTCPReceive( void *socket, 
+extern int OskitTCPReceive( void *socket,
 			    void *Addr,
 			    OSK_PCHAR Data,
 			    OSK_UINT Len,
 			    OSK_UINT *OutLen,
 			    OSK_UINT Flags );
-extern int OskitTCPSend( void *socket, 
+extern int OskitTCPSend( void *socket,
 			 OSK_PCHAR Data,
 			 OSK_UINT Len,
 			 OSK_UINT *OutLen,
 			 OSK_UINT Flags );
 
-extern int OskitTCPConnect( void *socket, void *connection, 
+extern int OskitTCPConnect( void *socket, void *connection,
 			    void *nam, OSK_UINT namelen );
 extern int OskitTCPClose( void *socket );
 
@@ -134,7 +134,7 @@ extern int OskitTCPBind( void *socket, void *connection,
 			 void *nam, OSK_UINT namelen );
 
 extern int OskitTCPAccept( void *socket, void **new_socket,
-			   void *addr_out, 
+			   void *addr_out,
 			   OSK_UINT addr_len,
 			   OSK_UINT *out_addr_len,
 			   OSK_UINT finish_accept );
@@ -147,7 +147,7 @@ extern int OskitTCPRecv( void *connection,
 			 OSK_UINT *OutLen,
 			 OSK_UINT Flags );
 
-void OskitTCPGetAddress( void *socket, 
+void OskitTCPGetAddress( void *socket,
 			 OSK_UINT *LocalAddress,
 			 OSK_UI16 *LocalPort,
 			 OSK_UINT *RemoteAddress,

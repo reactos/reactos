@@ -110,7 +110,7 @@ BOOL NtfsFindAttribute(PNTFS_ATTR_CONTEXT Context, PNTFS_MFT_RECORD MftRecord, U
             {
                 AttrName = (PWCHAR)((PCHAR)AttrRecord + AttrRecord->NameOffset);
                 if (!RtlCompareMemory(AttrName, Name, NameLength << 1))
-                {                
+                {
                     /* Found it, fill up the context and return. */
                     Context->Record = AttrRecord;
                     if (AttrRecord->IsNonResident)
@@ -125,7 +125,7 @@ BOOL NtfsFindAttribute(PNTFS_ATTR_CONTEXT Context, PNTFS_MFT_RECORD MftRecord, U
                         if (DataRunOffset != -1)
                         {
                             /* Normal run. */
-                            Context->CacheRunStartLCN = 
+                            Context->CacheRunStartLCN =
                             Context->CacheRunLastLCN = DataRunOffset;
                         }
                         else
@@ -200,7 +200,7 @@ ULONGLONG NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, ULONGLONG Offset, PCHAR 
     ULONGLONG CurrentOffset;
     ULONGLONG ReadLength;
     ULONGLONG AlreadyRead;
-    
+
     if (!Context->Record->IsNonResident)
     {
         if (Offset > Context->Record->Resident.ValueLength)
@@ -286,7 +286,7 @@ ULONGLONG NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, ULONGLONG Offset, PCHAR 
 	/*
 	 * Go to next run in the list.
          */
-	
+
 	if (*DataRun == 0)
 	    break;
         DataRun = NtfsDecodeRun(DataRun, &DataRunOffset, &DataRunLength);
@@ -341,7 +341,7 @@ BOOL NtfsFixupRecord(PNTFS_RECORD Record)
 BOOL NtfsReadMftRecord(ULONG MFTIndex, PNTFS_MFT_RECORD Buffer)
 {
     ULONGLONG BytesRead;
-    
+
     BytesRead = NtfsReadAttribute(&NtfsMFTContext, MFTIndex * NtfsMftRecordSize, (PCHAR)Buffer, NtfsMftRecordSize);
     if (BytesRead != NtfsMftRecordSize)
         return FALSE;
@@ -433,7 +433,7 @@ BOOL NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIndex)
             MmFreeMemory(MftRecord);
             return FALSE;
         }
-        
+
         IndexRecord = MmAllocateMemory(NtfsIndexRecordSize);
         if (IndexRecord == NULL)
         {
@@ -514,7 +514,7 @@ BOOL NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIndex)
                         break;
                     RecordOffset += IndexBlockSize;
                 }
-            
+
                 if (RecordOffset >= IndexAllocationSize)
                 {
                     break;
@@ -533,7 +533,7 @@ BOOL NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIndex)
 
                 while (IndexEntry < IndexEntryEnd &&
                        !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
-                {        
+                {
                     if (NtfsCompareFileName(FileName, IndexEntry))
                     {
                         DbgPrint((DPRINT_FILESYSTEM, "File found\n"));
@@ -551,7 +551,7 @@ BOOL NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIndex)
 
             MmFreeMemory(BitmapData);
         }
-        
+
         MmFreeMemory(IndexRecord);
     }
     else

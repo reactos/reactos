@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/lpc/connect.c
  * PURPOSE:         Communication mechanism
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
@@ -82,8 +82,8 @@ EiConnectPort(IN PEPORT* ConnectedPort,
   /*
    * Allocate a request message.
    */
-  RequestMessage = ExAllocatePool(NonPagedPool, 
-				  sizeof(EPORT_CONNECT_REQUEST_MESSAGE) + 
+  RequestMessage = ExAllocatePool(NonPagedPool,
+				  sizeof(EPORT_CONNECT_REQUEST_MESSAGE) +
 				  RequestConnectDataLength);
   if (RequestMessage == NULL)
     {
@@ -94,10 +94,10 @@ EiConnectPort(IN PEPORT* ConnectedPort,
   /*
    * Initialize the request message.
    */
-  RequestMessage->MessageHeader.DataSize = 
+  RequestMessage->MessageHeader.DataSize =
     sizeof(EPORT_CONNECT_REQUEST_MESSAGE) + RequestConnectDataLength -
     sizeof(LPC_MESSAGE);
-  RequestMessage->MessageHeader.MessageSize = 
+  RequestMessage->MessageHeader.MessageSize =
     sizeof(EPORT_CONNECT_REQUEST_MESSAGE) + RequestConnectDataLength;
   DPRINT("RequestMessageSize %d\n",
 	 RequestMessage->MessageHeader.MessageSize);
@@ -116,7 +116,7 @@ EiConnectPort(IN PEPORT* ConnectedPort,
       memcpy(RequestMessage->ConnectData, ConnectData,
 	     RequestConnectDataLength);
     }
-  
+
   /*
    * Queue the message to the named port
    */
@@ -126,7 +126,7 @@ EiConnectPort(IN PEPORT* ConnectedPort,
 		       OurPort);
   KeReleaseSemaphore(&NamedPort->Semaphore, IO_NO_INCREMENT, 1, FALSE);
   ExFreePool(RequestMessage);
-  
+
   /*
    * Wait for them to accept our connection
    */
@@ -136,7 +136,7 @@ EiConnectPort(IN PEPORT* ConnectedPort,
 			FALSE,
 			NULL);
 
-  /* 
+  /*
    * Dequeue the response
    */
   KeAcquireSpinLock (&OurPort->Lock, &oldIrql);
@@ -221,9 +221,9 @@ EiConnectPort(IN PEPORT* ConnectedPort,
 /**********************************************************************
  * NAME							EXPORTED
  * 	NtConnectPort/8
- * 	
+ *
  * DESCRIPTION
- *	Connect to a named port and wait for the other side to 
+ *	Connect to a named port and wait for the other side to
  *	accept or reject the connection request.
  *
  * ARGUMENTS
@@ -235,9 +235,9 @@ EiConnectPort(IN PEPORT* ConnectedPort,
  *	MaxMessageSize
  *	ConnectInfo
  *	UserConnectInfoLength
- * 
+ *
  * RETURN VALUE
- * 
+ *
  * @unimplemented
  */
 NTSTATUS STDCALL
@@ -261,7 +261,7 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
   PEPORT ConnectedPort;
   NTSTATUS Status;
   PEPORT NamedPort;
-  
+
   /*
    * Copy in write map and partially validate.
    */
@@ -415,7 +415,7 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
     }
   ObDereferenceObject(NamedPort);
   NamedPort = NULL;
-  
+
   /*
    * Copy the data back to the caller.
    */
@@ -543,7 +543,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
     {
       return(STATUS_NO_MEMORY);
     }
-  
+
   Status = ObReferenceObjectByHandle(NamedPortHandle,
 				     PORT_ALL_ACCESS,
 				     LpcPortObjectType,
@@ -601,14 +601,14 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
   ConnectionRequest = EiDequeueConnectMessagePort (NamedPort);
   KeReleaseSpinLock(&NamedPort->Lock, oldIrql);
   CRequest = (PEPORT_CONNECT_REQUEST_MESSAGE)(&ConnectionRequest->Message);
-  
+
   /*
    * Prepare the reply.
    */
   if (LpcMessage != NULL)
     {
       memcpy(&CReply->MessageHeader, LpcMessage, sizeof(LPC_MESSAGE));
-      memcpy(&CReply->ConnectData, (PVOID)(LpcMessage + 1), 
+      memcpy(&CReply->ConnectData, (PVOID)(LpcMessage + 1),
 	     LpcMessage->DataSize);
       CReply->MessageHeader.MessageSize =
 	sizeof(EPORT_CONNECT_REPLY_MESSAGE) + LpcMessage->DataSize;
@@ -624,7 +624,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
       CReply->ConnectDataLength = 0;
     }
   if (!AcceptIt)
-    {	
+    {
       EiReplyOrRequestPort(ConnectionRequest->Sender,
 			   &CReply->MessageHeader,
 			   LPC_CONNECTION_REFUSED,
@@ -634,12 +634,12 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
 			 1,
 			 FALSE);
       ObDereferenceObject(ConnectionRequest->Sender);
-      ExFreePool(ConnectionRequest);	
+      ExFreePool(ConnectionRequest);
       ExFreePool(CReply);
       ObDereferenceObject(NamedPort);
       return (STATUS_SUCCESS);
     }
-  
+
   /*
    * Prepare the connection.
    */
@@ -675,7 +675,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
       if (!NT_SUCCESS(Status))
 	{
 	  return(Status);
-	}      
+	}
 
       WriteMap->ViewBase = 0;
       Status = MmMapViewOfSection(SectionObject,
@@ -691,8 +691,8 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
       if (!NT_SUCCESS(Status))
 	{
 	  return(Status);
-	}      
-      
+	}
+
       ObDereferenceObject(SectionObject);
     }
   if (ReadMap != NULL && CRequest->SendSectionObject != NULL)
@@ -747,19 +747,19 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
 		       OurPort);
   ExFreePool(ConnectionRequest);
   ExFreePool(CReply);
-   
+
   ObDereferenceObject(OurPort);
   ObDereferenceObject(NamedPort);
-  
+
   return (STATUS_SUCCESS);
 }
 
 /**********************************************************************
  * NAME							EXPORTED
  * 	NtSecureConnectPort/9
- * 	
+ *
  * DESCRIPTION
- *	Connect to a named port and wait for the other side to 
+ *	Connect to a named port and wait for the other side to
  *	accept the connection. Possibly verify that the server
  *	matches the ServerSid (trusted server).
  *	Present in w2k+.
@@ -774,7 +774,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
  *	MaxMessageSize
  *	ConnectInfo
  *	UserConnectInfoLength
- * 
+ *
  * RETURN VALUE
  */
 NTSTATUS STDCALL

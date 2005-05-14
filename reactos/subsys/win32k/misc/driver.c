@@ -17,10 +17,10 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 /* $Id$
- * 
+ *
  * GDI Driver support routines
  * (mostly swiped from Wine)
- * 
+ *
  */
 
 #undef WIN32_LEAN_AND_MEAN
@@ -67,13 +67,13 @@ BOOL DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
     DriverList = Driver;
     return  TRUE;
   }
-  
+
   if (GenericDriver != NULL)
   {
     ExFreePool(Driver);
     return  FALSE;
   }
-  
+
   GenericDriver = Driver;
   return  TRUE;
 }
@@ -91,7 +91,7 @@ PGD_ENABLEDRIVER DRIVER_FindDDIDriver(LPCWSTR Name)
   BOOL DotFound;
   UINT Size;
 
-  DotFound = FALSE;  
+  DotFound = FALSE;
   PathSeparatorFound = FALSE;
   p = Name;
   while (L'\0' != *p)
@@ -140,7 +140,7 @@ PGD_ENABLEDRIVER DRIVER_FindDDIDriver(LPCWSTR Name)
   /* First see if the driver hasn't already been loaded */
   while (Driver && FullName)
   {
-    if (!_wcsicmp( Driver->Name, FullName)) 
+    if (!_wcsicmp( Driver->Name, FullName))
     {
       return Driver->EnableDriver;
     }
@@ -176,7 +176,7 @@ PGD_ENABLEDRIVER DRIVER_FindDDIDriver(LPCWSTR Name)
     } \
   }
 
-BOOL DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED, 
+BOOL DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
                                PDRIVER_FUNCTIONS  DF)
 {
   BEGIN_FUNCTION_MAP();
@@ -301,7 +301,7 @@ PFILE_OBJECT DRIVER_FindMPDriver(ULONG DisplayNumber)
 BOOL DRIVER_UnregisterDriver(LPCWSTR  Name)
 {
   PGRAPHICS_DRIVER  Driver = NULL;
-  
+
   if (Name)
   {
     if (DriverList != NULL)
@@ -322,19 +322,19 @@ BOOL DRIVER_UnregisterDriver(LPCWSTR  Name)
     }
   }
   else
-  {    
+  {
     if (GenericDriver != NULL)
     {
       Driver = GenericDriver;
       GenericDriver = NULL;
     }
   }
-  
+
   if (Driver != NULL)
   {
     ExFreePool(Driver->Name);
     ExFreePool(Driver);
-      
+
     return  TRUE;
   }
   else
@@ -346,11 +346,11 @@ BOOL DRIVER_UnregisterDriver(LPCWSTR  Name)
 INT DRIVER_ReferenceDriver (LPCWSTR  Name)
 {
   GRAPHICS_DRIVER *Driver = DriverList;
-  
+
   while (Driver && Name)
   {
     DPRINT( "Comparing %S to %S\n", Driver->Name, Name );
-    if (!_wcsicmp( Driver->Name, Name)) 
+    if (!_wcsicmp( Driver->Name, Name))
     {
       return ++Driver->ReferenceCount;
     }
@@ -364,11 +364,11 @@ INT DRIVER_ReferenceDriver (LPCWSTR  Name)
 INT DRIVER_UnreferenceDriver (LPCWSTR  Name)
 {
   GRAPHICS_DRIVER *Driver = DriverList;
-  
+
   while (Driver && Name)
   {
     DPRINT( "Comparing %S to %S\n", Driver->Name, Name );
-    if (!_wcsicmp( Driver->Name, Name)) 
+    if (!_wcsicmp( Driver->Name, Name))
     {
       return --Driver->ReferenceCount;
     }

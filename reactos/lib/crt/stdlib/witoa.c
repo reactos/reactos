@@ -3,7 +3,7 @@
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/stdlib/itoa.c
  * PURPOSE:     converts a integer to ascii
- * PROGRAMER:   
+ * PROGRAMER:
  * UPDATE HISTORY:
  *              1995: Created
  *              1998: Added ltoa Boudewijn Dekker

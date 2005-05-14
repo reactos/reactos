@@ -30,7 +30,7 @@
 
 /* Tag */
 #define CALLBACK_TAG	TAG('C','L','B','K')
- 
+
 /* ROS Callback Object */
 typedef struct _INT_CALLBACK_OBJECT {
    KSPIN_LOCK Lock;
@@ -55,7 +55,7 @@ typedef struct _CALLBACK_REGISTRATION {
 #define CALLBACK_READ			(STANDARD_RIGHTS_READ|SYNCHRONIZE|0x0001)
 
 /* Mapping for Callback Object */
-GENERIC_MAPPING ExpCallbackMapping = 
+GENERIC_MAPPING ExpCallbackMapping =
 {
    CALLBACK_READ,
    CALLBACK_WRITE,

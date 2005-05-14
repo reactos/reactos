@@ -445,22 +445,22 @@ void set_name_servers( struct client_lease *new_lease ) {
         HKEY RegKey;
         struct iaddr nameserver;
         char *nsbuf;
-        int i, addrs = 
+        int i, addrs =
             new_lease->options[DHO_DOMAIN_NAME_SERVERS].len / sizeof(ULONG);
 
                /* XXX I'm setting addrs to 1 until we are ready up the chain */
                addrs = 1;
         nsbuf = malloc( addrs * sizeof(IP_ADDRESS_STRING) );
         nsbuf[0] = 0;
-        
+
         if( nsbuf && !RegOpenKeyEx
-            ( HKEY_LOCAL_MACHINE, 
-              "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters", 
+            ( HKEY_LOCAL_MACHINE,
+              "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
               0, KEY_WRITE, &RegKey ) ) {
             for( i = 0; i < addrs; i++ ) {
                 nameserver.len = sizeof(ULONG);
-                memcpy( nameserver.iabuf, 
-                        new_lease->options[DHO_DOMAIN_NAME_SERVERS].data + 
+                memcpy( nameserver.iabuf,
+                        new_lease->options[DHO_DOMAIN_NAME_SERVERS].data +
                         (i * sizeof(ULONG)), sizeof(ULONG) );
                 strcat( nsbuf, piaddr(nameserver) );
                 if( i != addrs-1 ) strcat( nsbuf, "," );
@@ -475,7 +475,7 @@ void set_name_servers( struct client_lease *new_lease ) {
              */
             RegSetValueEx( RegKey, "NameServer", 0, REG_SZ,
                            (LPBYTE)nsbuf, strlen(nsbuf) + 1 );
-            
+
             free( nsbuf );
         }
     }
@@ -486,7 +486,7 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
 
     if( Adapter->NteContext )
         DeleteIPAddress( Adapter->NteContext );
-    
+
     /* Set up our default router if we got one from the DHCP server */
     if( new_lease->options[DHO_SUBNET_MASK].len ) {
         NTSTATUS Status;
@@ -494,38 +494,38 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
         memcpy( netmask.iabuf,
                 new_lease->options[DHO_SUBNET_MASK].data,
                 new_lease->options[DHO_SUBNET_MASK].len );
-        
+
         Status = AddIPAddress
             ( *((ULONG*)new_lease->address.iabuf),
               *((ULONG*)netmask.iabuf),
               Adapter->IfMib.dwIndex,
               &Adapter->NteContext,
               &Adapter->NteInstance );
-        
+
         if( !NT_SUCCESS(Status) )
             warning("AddIPAddress: %x\n", Status);
-    } 
-    
+    }
+
     if( new_lease->options[DHO_ROUTERS].len ) {
         MIB_IPFORWARDROW RouterMib;
         NTSTATUS Status;
-        
+
         RouterMib.dwForwardDest = 0; /* Default route */
         RouterMib.dwForwardMask = 0;
         RouterMib.dwForwardMetric1 = 1;
-        
+
         if( old_default_route ) {
             /* If we set a default route before, delete it before continuing */
             RouterMib.dwForwardDest = old_default_route;
             DeleteIpForwardEntry( &RouterMib );
         }
-        
-        RouterMib.dwForwardNextHop = 
+
+        RouterMib.dwForwardNextHop =
             *((ULONG*)new_lease->options[DHO_ROUTERS].data);
-        
+
         Status = CreateIpForwardEntry( &RouterMib );
-        
-        if( !NT_SUCCESS(Status) ) 
+
+        if( !NT_SUCCESS(Status) )
             warning("CreateIpForwardEntry: %x\n", Status);
         else
             old_default_route = RouterMib.dwForwardNextHop;
@@ -548,7 +548,7 @@ bind_lease(struct interface_info *ip)
     /* Timeout of zero means no timeout (some implementations seem to use
      * one day).
      */
-    if( ip->client->active->renewal - cur_time ) 
+    if( ip->client->active->renewal - cur_time )
         add_timeout(ip->client->active->renewal, state_bound, ip);
 
     note("bound to %s -- renewal in %d seconds.",
@@ -556,7 +556,7 @@ bind_lease(struct interface_info *ip)
          ip->client->active->renewal - cur_time);
 
     ip->client->state = S_BOUND;
-        
+
     Adapter = AdapterFindInfo( ip );
 
     if( Adapter )  setup_adapter( Adapter, new_lease );
@@ -1137,9 +1137,9 @@ cancel:
             /* Now do a preinit on the interface so that we can
                discover a new address. */
 
-            if( Adapter ) 
+            if( Adapter )
                 DeleteIPAddress( Adapter->NteContext );
-            
+
             ip->client->state = S_INIT;
             state_init(ip);
             return;
@@ -1622,7 +1622,7 @@ priv_script_init(char *reason, char *medium)
 	struct interface_info *ip = ifi;
 
 	if (ip) {
-            // XXX Do we need to do anything? 
+            // XXX Do we need to do anything?
         }
 }
 
@@ -1996,7 +1996,7 @@ ipv4addrs(char * buf)
     char *tmp;
     struct in_addr jnk;
     int i = 0;
-    
+
     note("Input: %s\n", buf);
 
     do {

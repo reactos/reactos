@@ -198,7 +198,7 @@ static int FM_InitMenuPopup(HMENU hmenu, LPCITEMIDLIST pAlternatePidl)
 		    MENUINFO MenuInfo;
 		    HMENU hMenuPopup = CreatePopupMenu();
 
-		    lpFmMi = (LPFMINFO) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(FMINFO));
+		    lpFmMi = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(FMINFO));
 
 		    lpFmMi->pidl = ILCombine(pidl, pidlTemp);
 		    lpFmMi->uEnumFlags = SHCONTF_FOLDERS | SHCONTF_NONFOLDERS;
@@ -269,7 +269,7 @@ HMENU WINAPI FileMenu_Create (
 	TRACE("0x%08lx 0x%08x %p 0x%08x 0x%08x  hMenu=%p\n",
 	crBorderColor, nBorderWidth, hBorderBmp, nSelHeight, uFlags, hMenu);
 
-	menudata = (LPFMINFO)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(FMINFO));
+	menudata = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(FMINFO));
 	menudata->crBorderColor = crBorderColor;
 	menudata->nBorderWidth = nBorderWidth;
 	menudata->hBorderBmp = hBorderBmp;
@@ -647,7 +647,7 @@ LRESULT WINAPI FileMenu_DrawItem(
  * FileMenu_InitMenuPopup			[SHELL32.109]
  *
  * NOTES
- *  The filemenu is a ownerdrawn menu. Call this function responding to
+ *  The filemenu is an ownerdrawn menu. Call this function responding to
  *  WM_INITPOPUPMENU
  *
  */

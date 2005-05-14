@@ -88,7 +88,7 @@ typedef struct _LIST_ITEM
 {
 	struct _LIST_ITEM*	ListPrev;
 	struct _LIST_ITEM*	ListNext;
-	
+
 } LIST_ITEM, *PLIST_ITEM;
 
 VOID		RtlListInitializeHead(PLIST_ITEM ListHead);							// Initializes a doubly linked list

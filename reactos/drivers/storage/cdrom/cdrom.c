@@ -146,7 +146,7 @@ CdromWorkItem(IN PDEVICE_OBJECT DeviceObject,
  *	DriverEntry
  *
  * DESCRIPTION:
- *	This function initializes the driver, locates and claims 
+ *	This function initializes the driver, locates and claims
  *	hardware resources, and creates various NT objects needed
  *	to process I/O requests.
  *
@@ -610,9 +610,9 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   Cdb->MODE_SENSE.AllocationLength = (UCHAR)Length;
 
   Buffer = ExAllocatePool (NonPagedPool,
-                           max(sizeof(ERROR_RECOVERY_DATA6), 
-			       max(sizeof(ERROR_RECOVERY_DATA10), 
-			           max(sizeof(MODE_CAPABILITIES_DATA6), 
+                           max(sizeof(ERROR_RECOVERY_DATA6),
+			       max(sizeof(ERROR_RECOVERY_DATA10),
+			           max(sizeof(MODE_CAPABILITIES_DATA6),
 				       sizeof(MODE_CAPABILITIES_DATA10)))));
   if (Buffer == NULL)
     {
@@ -633,7 +633,7 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
       /* Try the 10 byte version */
       Length = sizeof(MODE_READ_RECOVERY_PAGE) + MODE_HEADER_LENGTH10;
 
-      RtlZeroMemory (&Srb, 
+      RtlZeroMemory (&Srb,
 		     sizeof(SCSI_REQUEST_BLOCK));
       Srb.CdbLength = 10;
       Srb.TimeOutValue = DiskDeviceExtension->TimeOutValue;
@@ -879,17 +879,17 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 	    {
 	      DbgPrint("  Drive supports software slot selection\n");
 	    }
-	  DbgPrint("  Maximum speed is %d kB/s\n", 
-	          (CapabilitiesData->MaximumSpeedSupported[0] << 8) 
+	  DbgPrint("  Maximum speed is %d kB/s\n",
+	          (CapabilitiesData->MaximumSpeedSupported[0] << 8)
 		  | CapabilitiesData->MaximumSpeedSupported[1]);
-	  DbgPrint("  Current speed is %d kB/s\n", 
-	          (CapabilitiesData->CurrentSpeed[0] << 8) 
+	  DbgPrint("  Current speed is %d kB/s\n",
+	          (CapabilitiesData->CurrentSpeed[0] << 8)
 		  | CapabilitiesData->CurrentSpeed[1]);
 	  DbgPrint("  Number of discrete volume levels is %d\n",
-	          (CapabilitiesData->Reserved3 << 8) 
+	          (CapabilitiesData->Reserved3 << 8)
 		  | CapabilitiesData->NumberVolumeLevels);
 	  DbgPrint("  Buffer size is %d kB\n",
-	          (CapabilitiesData->BufferSize[0] << 8) 
+	          (CapabilitiesData->BufferSize[0] << 8)
 		  | CapabilitiesData->BufferSize[1]);
 #endif
 	}

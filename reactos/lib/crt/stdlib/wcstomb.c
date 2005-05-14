@@ -77,7 +77,7 @@ __wcrtomb (char *s, wchar_t wc)
   char fake[1];
   size_t written = 0;
 
- 
+
 
   if (s == NULL)
     {

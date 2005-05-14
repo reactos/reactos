@@ -263,7 +263,7 @@ tcp_input(m, iphlen)
 	short ostate = 0;
 #endif
 	bzero((char *)&to, sizeof(to));
-	
+
 	tcpstat.tcps_rcvtotal++;
 	/*
 	 * Get IP and TCP header together in first mbuf.
@@ -279,7 +279,7 @@ tcp_input(m, iphlen)
 	    }
 	    ti = mtod(m, struct tcpiphdr *);
 	}
-	
+
 	/*
 	 * Checksum extended TCP header and data.
 	 */

@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/wstring.c
  * PURPOSE:         Wide string functions
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
@@ -123,12 +123,12 @@ size_t wcscspn(const wchar_t *str,const wchar_t *reject)
 	s=(wchar_t *)str;
 	do {
 		t=(wchar_t *)reject;
-		while (*t) { 
-			if (*t==*s) 
+		while (*t) {
+			if (*t==*s)
 				break;
 			t++;
 		}
-		if (*t) 
+		if (*t)
 			break;
 		s++;
 	} while (*s);

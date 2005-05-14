@@ -418,7 +418,7 @@ NtGdiGetDIBits(HDC hDC,
                case BMF_8RLE:
                   Info->bmiHeader.biCompression = BI_RLE8;
                   break;
-               case BMF_JPEG: 
+               case BMF_JPEG:
                   Info->bmiHeader.biCompression = BI_JPEG;
                   break;
                case BMF_PNG:
@@ -427,8 +427,8 @@ NtGdiGetDIBits(HDC hDC,
             }
             Info->bmiHeader.biSizeImage = BitmapObj->SurfObj.cjBits;
             Info->bmiHeader.biXPelsPerMeter = 0; /* FIXME */
-            Info->bmiHeader.biYPelsPerMeter = 0; /* FIXME */ 
-            Info->bmiHeader.biClrUsed = 
+            Info->bmiHeader.biYPelsPerMeter = 0; /* FIXME */
+            Info->bmiHeader.biClrUsed =
             Info->bmiHeader.biClrImportant = 1 << Info->bmiHeader.biBitCount; /* FIXME */
             Result = BitmapObj->SurfObj.sizlBitmap.cy;
          }
@@ -462,7 +462,7 @@ NtGdiGetDIBits(HDC hDC,
          /* FIXME - DestPalette can be NULL!!!! Don't assert here!!! */
          ASSERT(DestPalette);
          DestPaletteType = DestPalette->Mode;
-         
+
          /* Copy palette. */
          /* FIXME: This is largely incomplete. */
          if (Info->bmiHeader.biBitCount <= 8)
@@ -492,7 +492,7 @@ NtGdiGetDIBits(HDC hDC,
 
          XlateObj = IntEngCreateXlate(
             DestPaletteType, SourcePaletteType, hDestPalette, hSourcePalette);
-         
+
          SourcePoint.x = 0;
          SourcePoint.y = StartScan;
 
@@ -507,7 +507,7 @@ NtGdiGetDIBits(HDC hDC,
          {
             Result = ScanLines;
          }
-         
+
          EngDeleteXlate(XlateObj);
          EngUnlockSurface(DestSurfObj);
       }
@@ -539,7 +539,7 @@ INT STDCALL NtGdiStretchDIBits(HDC  hDC,
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return 0;
-   }	
+   }
 
    hdcMem = NtGdiCreateCompatableDC(hDC);
    hBitmap = NtGdiCreateCompatibleBitmap(hDC, BitsInfo->bmiHeader.biWidth,
@@ -900,7 +900,7 @@ DIB_CreateDIBSection(
       {
         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
 	return NULL;
-      } 
+      }
     bmp = BITMAPOBJ_LockBitmap(res);
     if (NULL == bmp)
       {

@@ -3,7 +3,7 @@
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/ntdll/stdlib/itoa.c
  * PURPOSE:     converts an integer to ascii
- * PROGRAMER:   
+ * PROGRAMER:
  * UPDATE HISTORY:
  *              1995: Created
  *              1998: Added ltoa Boudewijn Dekker
@@ -14,7 +14,7 @@
  * Copyright 2000 Jon Griffiths
  * Copyright 2003 Thomas Mertes
  */
- 
+
 #include <stdlib.h>
 #include <string.h>
 

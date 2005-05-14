@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/pnproot.c
  * PURPOSE:         PnP manager root device
- * 
+ *
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
@@ -304,7 +304,7 @@ PnpRootPdoPnpControl(
   NTSTATUS Status;
 
   DPRINT("Called\n");
-       	
+
   Status = Irp->IoStatus.Status;
 
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
@@ -496,7 +496,7 @@ PnpRootFdoEnumerateDevices(
   }
 
   /* FIXME: Disabled due to still using the old method of auto loading drivers e.g.
-            there are more entries in the list than found in the registry as some 
+            there are more entries in the list than found in the registry as some
             drivers are passed on the command line */
 //  DeviceExtension->DeviceListCount = 0;
 
@@ -558,7 +558,7 @@ PnpRootFdoEnumerateDevices(
     if (!NT_SUCCESS(Status))
     {
       DPRINT("PnpRootFdoReadDeviceInfo() failed with status %x\n", Status);
-      /* FIXME: */      
+      /* FIXME: */
     }
 
     ExInterlockedInsertTailList(
@@ -606,12 +606,12 @@ PnpRootQueryBusRelations(
 
   if (Irp->IoStatus.Information)
   {
-    /* FIXME: Another bus driver has already created a DEVICE_RELATIONS 
+    /* FIXME: Another bus driver has already created a DEVICE_RELATIONS
               structure so we must merge this structure with our own */
   }
 
   Size = sizeof(DEVICE_RELATIONS) + sizeof(Relations->Objects) *
-    (DeviceExtension->DeviceListCount - 1);  
+    (DeviceExtension->DeviceListCount - 1);
 
   Relations = (PDEVICE_RELATIONS)ExAllocatePool(PagedPool, Size);
   if (!Relations)

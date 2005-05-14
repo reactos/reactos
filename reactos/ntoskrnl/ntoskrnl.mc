@@ -987,6 +987,14 @@ Language=English
 INVALID_WORK_QUEUE_ITEM
 .
 
+MessageId=0xC2
+Severity=Success
+Facility=System
+SymbolicName=BAD_POOL_CALLER
+Language=English
+BAD_POOL_CALLER
+.
+
 MessageId=0xE1
 Severity=Success
 Facility=System

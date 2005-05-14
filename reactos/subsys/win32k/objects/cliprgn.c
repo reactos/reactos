@@ -125,9 +125,9 @@ int STDCALL NtGdiExtSelectClipRgn(HDC  hDC,
   	SetLastWin32Error(ERROR_INVALID_HANDLE);
   	return ERROR;
   }
-  
+
 //  dc->w.flags &= ~DC_DIRTY;
-  
+
   if (!hrgn)
   {
     if (fnMode == RGN_COPY)
@@ -210,17 +210,17 @@ int STDCALL NtGdiGetClipBox(HDC  hDC,
   int Ret;
   NTSTATUS Status;
   RECT Saferect;
-  
+
   Ret = IntGdiGetClipBox(hDC, &Saferect);
-  
+
   Status = MmCopyToCaller(rc, &Saferect, sizeof(RECT));
   if(!NT_SUCCESS(Status))
   {
-  
+
     SetLastNtError(Status);
     return ERROR;
   }
-  
+
   return Ret;
 }
 
@@ -265,7 +265,7 @@ int STDCALL NtGdiExcludeClipRect(HDC  hDC,
       if (!dc->w.hClipRgn)
       {
          dc->w.hClipRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
-         NtGdiCombineRgn(dc->w.hClipRgn, dc->w.hVisRgn, NewRgn, RGN_DIFF);         
+         NtGdiCombineRgn(dc->w.hClipRgn, dc->w.hVisRgn, NewRgn, RGN_DIFF);
          Result = SIMPLEREGION;
       }
       else
@@ -346,16 +346,16 @@ BOOL STDCALL NtGdiPtVisible(HDC  hDC,
 {
   HRGN rgn;
   DC *dc;
-  
+
   if(!(dc = DC_LockDc(hDC)))
   {
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
   }
-  
+
   rgn = dc->w.hGCClipRgn;
   DC_UnlockDc(hDC);
-  
+
   return (rgn ? NtGdiPtInRegion(rgn, X, Y) : FALSE);
 }
 

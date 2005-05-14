@@ -25,7 +25,6 @@
 
 #include <pseh/framebased/internal.h>
 #include <pseh/excpt.h>
-#include <malloc.h>
 
 #ifndef offsetof
 # include <stddef.h>
@@ -46,34 +45,33 @@
 # define _SEHSetJmp setjmp
 # define _SEHJmpBuf_t jmp_buf
 #endif
-
+unsigned long DbgPrint(char * Format,...);
 typedef struct __SEHFrame
 {
  _SEHPortableFrame_t SEH_Header;
- _SEHJmpBuf_t SEH_JmpBuf;
  void * SEH_Locals;
 }
 _SEHFrame_t;
 
-/*
- Note: just define __inline to an empty symbol if your C compiler doesn't
- support it
-*/
-#ifdef __cplusplus
-# ifndef __inline
-#  define __inline inline
-# endif
-#endif
+typedef struct __SEHTryLevel
+{
+ _SEHPortableTryLevel_t ST_Header;
+ _SEHJmpBuf_t ST_JmpBuf;
+}
+_SEHTryLevel_t;
 
 static __declspec(noreturn) __inline void __stdcall _SEHCompilerSpecificHandler
 (
- _SEHPortableFrame_t * frame
+ _SEHPortableTryLevel_t * trylevel
 )
 {
- _SEHFrame_t * myframe;
- myframe = (_SEHFrame_t *)(((char *)frame) - offsetof(_SEHFrame_t, SEH_Header));
- _SEHLongJmp(myframe->SEH_JmpBuf, 1);
+ _SEHTryLevel_t * mytrylevel;
+ mytrylevel = _SEH_CONTAINING_RECORD(trylevel, _SEHTryLevel_t, ST_Header);
+ _SEHLongJmp(mytrylevel->ST_JmpBuf, 1);
 }
+
+static const int _SEHScopeKind = 1;
+static _SEHPortableFrame_t * const _SEHPortableFrame = 0;
 
 /* SHARED LOCALS */
 /* Access the locals for the current frame */
@@ -111,7 +109,7 @@ static __declspec(noreturn) __inline void __stdcall _SEHCompilerSpecificHandler
 
 /* FINALLY FUNCTIONS */
 /* Declares a finally function's prototype */
-#define _SEH_FINALLY(NAME_) \
+#define _SEH_FINALLYFUNC(NAME_) \
  void __stdcall NAME_ \
  ( \
   struct __SEHPortableFrame * _SEHPortableFrame \
@@ -122,199 +120,269 @@ static __declspec(noreturn) __inline void __stdcall _SEHCompilerSpecificHandler
  _SEH_WRAP_FINALLY_ARGS(WRAPPER_, NAME_, ())
 
 #define _SEH_WRAP_FINALLY_ARGS(WRAPPER_, NAME_, ARGS_) \
- static __inline _SEH_FINALLY(WRAPPER_) \
+ static __inline _SEH_FINALLYFUNC(WRAPPER_) \
  { \
   NAME_ ARGS_; \
  }
 
 #define _SEH_WRAP_FINALLY_LOCALS_ARGS(WRAPPER_, LOCALS_, NAME_, ARGS_) \
- static __inline _SEH_FINALLY(WRAPPER_) \
+ static __inline _SEH_FINALLYFUNC(WRAPPER_) \
  { \
   _SEH_ACCESS_LOCALS(LOCALS_); \
   NAME_ ARGS_; \
  }
 
 /* SAFE BLOCKS */
-#define _SEH_TRY_FINALLY(FINALLY_) \
+#define _SEHX_TRY_FINALLY(FINALLY_) \
  _SEH_TRY_FILTER_FINALLY \
  ( \
   _SEH_STATIC_FILTER(_SEH_CONTINUE_SEARCH), \
   (FINALLY_) \
  )
 
-#define _SEH_END_FINALLY _SEH_HANDLE _SEH_END
+#define _SEHX_END_FINALLY _SEH_HANDLE _SEH_END
 
-#define _SEH_TRY_FILTER(FILTER_) \
- _SEH_TRY_FILTER_FINALLY((FILTER_), NULL)
+#define _SEHX_TRY_FILTER(FILTER_) \
+ _SEH_TRY_FILTER_FINALLY((FILTER_), 0)
 
-#define _SEH_TRY_HANDLE_FINALLY(FINALLY_) \
+#define _SEHX_TRY_HANDLE_FINALLY(FINALLY_) \
  _SEH_TRY_FILTER_FINALLY \
  ( \
   _SEH_STATIC_FILTER(_SEH_EXECUTE_HANDLER), \
   (FINALLY_) \
  )
 
-#define _SEH_TRY \
- _SEH_TRY_HANDLE_FINALLY(NULL)
+#define _SEHX_TRY \
+ _SEH_TRY_HANDLE_FINALLY(0)
 
 #ifdef __cplusplus
 # define _SEH_DECLARE_HANDLERS(FILTER_, FINALLY_) \
-  const _SEHHandlers_t _SEHHandlers =                                          \
-  {                                                                            \
-   (FILTER_),                                                                  \
-   _SEHCompilerSpecificHandler,                                                \
-   (FINALLY_)                                                                  \
-  };
+  static const _SEHHandlers_t _SEHHandlers = { (FILTER_), (FINALLY_) };
 #else
 # define _SEH_DECLARE_HANDLERS(FILTER_, FINALLY_) \
-  _SEHHandlers_t _SEHHandlers =                                                \
-  {                                                                            \
-   (0),                                                                        \
-   _SEHCompilerSpecificHandler,                                                \
-   (0)                                                                         \
-  };                                                                           \
+  _SEHHandlers_t _SEHHandlers = { (0), (0) };                                  \
   _SEHHandlers.SH_Filter = (FILTER_);                                          \
   _SEHHandlers.SH_Finally = (FINALLY_);
 #endif
 
-#define _SEH_TRY_FILTER_FINALLY(FILTER_, FINALLY_) \
+#define _SEHX_TRY_FILTER_FINALLY(FILTER_, FINALLY_) \
  {                                                                             \
-  _SEHFrame_t * _SEHFrame;                                                     \
-  volatile _SEHPortableFrame_t * _SEHPortableFrame;                            \
+  _SEHPortableFrame_t * const _SEHCurPortableFrame = _SEHPortableFrame;        \
                                                                                \
-  _SEH_DECLARE_HANDLERS(FILTER_, FINALLY_);                                    \
-                                                                               \
-  _SEHFrame = _alloca(sizeof(_SEHFrame_t));                                    \
-  _SEHFrame->SEH_Header.SPF_Handlers = &_SEHHandlers;                          \
-  _SEHFrame->SEH_Locals = &_SEHLocals;                                         \
-                                                                               \
-  _SEHPortableFrame = &_SEHFrame->SEH_Header;                                  \
-  (void)_SEHPortableFrame;                                                     \
-                                                                               \
-  if(_SEHSetJmp(_SEHFrame->SEH_JmpBuf) == 0)                                   \
   {                                                                            \
-   _SEHEnter(&_SEHFrame->SEH_Header);                                          \
+   _SEHFrame_t _SEHFrame;                                                      \
+   _SEHTryLevel_t _SEHTryLevel;                                                \
+   _SEHPortableFrame_t * const _SEHPortableFrame =                             \
+    _SEHScopeKind ? &_SEHFrame.SEH_Header : _SEHCurPortableFrame;              \
                                                                                \
-   do                                                                          \
-   {
-
-#define _SEH_HANDLE \
+   (void)_SEHPortableFrame;                                                    \
                                                                                \
+   _SEH_DECLARE_HANDLERS((FILTER_), (FINALLY_));                               \
+                                                                               \
+   _SEHTryLevel.ST_Header.SPT_Handlers = &_SEHHandlers;                        \
+                                                                               \
+   if(_SEHScopeKind)                                                           \
+   {                                                                           \
+    if(&_SEHLocals != _SEHDummyLocals)                                         \
+     _SEHFrame.SEH_Locals = &_SEHLocals;                                       \
+                                                                               \
+    _SEHFrame.SEH_Header.SPF_Handler = _SEHCompilerSpecificHandler;            \
+    _SEHEnterFrame(&_SEHFrame.SEH_Header, &_SEHTryLevel.ST_Header);            \
    }                                                                           \
-   while(0);                                                                   \
+   else                                                                        \
+    _SEHEnterTry(&_SEHTryLevel.ST_Header);                                     \
                                                                                \
-   _SEHLeave(&_SEHFrame->SEH_Header);                                          \
-  }                                                                            \
-  else                                                                         \
-  {                                                                            \
-   _SEHLeave(&_SEHFrame->SEH_Header);                                          \
+   {                                                                           \
+    static const int _SEHScopeKind = 0;                                        \
+    (void)_SEHScopeKind;                                                       \
+                                                                               \
+    if(_SEHSetJmp(_SEHTryLevel.ST_JmpBuf) == 0)                                \
+    {                                                                          \
+     for(;;)                                                                   \
+     {
 
-#define _SEH_END \
-  }                                                                            \
+#define _SEHX_HANDLE \
                                                                                \
-  if(_SEHHandlers.SH_Finally)                                                  \
-   _SEHHandlers.SH_Finally(&_SEHFrame->SEH_Header);                            \
+      break;                                                                   \
+     }                                                                         \
+                                                                               \
+     _SEHLeave();                                                              \
+    }                                                                          \
+    else                                                                       \
+    {                                                                          \
+     _SEHLeave();
+
+#define _SEHX_END \
+    }                                                                          \
+                                                                               \
+    if(_SEHHandlers.SH_Finally)                                                \
+     _SEHHandlers.SH_Finally(_SEHPortableFrame);                               \
+   }                                                                           \
+  }                                                                            \
  }
+
+#define _SEHX_LEAVE break
+
+#define _SEHX_GetExceptionCode() (unsigned long)(_SEHPortableFrame->SPF_Code)
+
+#define _SEHX_GetExceptionPointers() \
+ ((struct _EXCEPTION_POINTERS *)_SEHExceptionPointers)
+
+#define _SEHX_AbnormalTermination() (_SEHPortableFrame->SPF_Code != 0)
+
+/* New syntax */
+
+/*
+ NOTE: do not move, remove or modify any instance of _SEH2_ASSUME and
+ _SEH2_ASSUMING without doing extensive tests for correctness. Compilers can
+ generate the wrong code in presence of __assume in unpredictable ways. BE SURE
+ IT DOESN'T HAPPEN
+*/
+#if defined(_MSC_VER) && (_MSC_VER > 1200)
+# define _SEH2_ASSUME(X_) __assume(X_)
+# if !defined(_SEH_NO_NATIVE_NLG)
+ /*
+  If we use the native setjmp, the compiler stops keeping track of variables, so
+  their actual values don't matter anymore. Optimize out some assignments
+ */
+#  define _SEH2_ASSUMING(X_)
+# else
+ /* No native setjmp, no magic, no assumptions. Actually set the values */
+#  define _SEH2_ASSUMING(X_) X_
+# endif
+#else
+# define _SEH2_ASSUME(X_)
+# define _SEH2_ASSUMING(X_) X_
+#endif
+
+#ifdef __cplusplus
+# define _SEH2_INIT_CONST static const
+#else
+# define _SEH2_INIT_CONST register const
+#endif
 
 #define _SEH_LEAVE break
 
-#define _SEH_GetExceptionCode() (unsigned long)(_SEHPortableFrame->SPF_Code)
-
-#define _SEH_GetExceptionPointers() \
- ((struct _EXCEPTION_POINTERS *)_SEHExceptionPointers)
-
-#define _SEH_AbnormalTermination() (_SEHPortableFrame->SPF_Code != 0)
-
-/* New syntax */
-#define _SEH2_STATE_INIT_EXCEPT  (1)
-#define _SEH2_STATE_INIT_FINALLY (_SEH2_STATE_INIT_EXCEPT + 1)
-#define _SEH2_STATE_BODY         (_SEH2_STATE_INIT_FINALLY + 1)
-#define _SEH2_STATE_HANDLER      (_SEH2_STATE_BODY + 1)
-#define _SEH2_STATE_DONE         (_SEH2_STATE_HANDLER + 1)
-
-#define _SEH2_LEAVE { _SEH2State = _SEH2_STATE_DONE; break; }
-
-#define _SEH2_TRY \
-{                                                                              \
- int _SEH2State;                                                               \
- _SEHFilter_t _SEH2Filter;                                                     \
- _SEHFinally_t _SEH2Finally;                                                   \
-                                                                               \
- _SEHFrame_t * _SEHFrame;                                                      \
- volatile _SEHPortableFrame_t * _SEHPortableFrame;                             \
-                                                                               \
- for(_SEH2State = 0; _SEH2State < _SEH2_STATE_DONE; ++ _SEH2State)             \
+#define _SEH_TRY \
  {                                                                             \
-  switch(_SEH2State)                                                           \
+  _SEH2_INIT_CONST int _SEH2TopTryLevel = (_SEHScopeKind != 0);                \
+  _SEHPortableFrame_t * const _SEH2CurPortableFrame = _SEHPortableFrame;       \
+                                                                               \
   {                                                                            \
-   case _SEH2_STATE_BODY:                                                      \
+   static const int _SEHScopeKind = 0;                                         \
+   register int _SEH2State = 0;                                                \
+   register int _SEH2Handle = 0;                                               \
+   _SEHFrame_t _SEH2Frame;                                                     \
+   _SEHTryLevel_t _SEH2TryLevel;                                               \
+   _SEHPortableFrame_t * const _SEHPortableFrame =                             \
+    _SEH2TopTryLevel ? &_SEH2Frame.SEH_Header : _SEH2CurPortableFrame;         \
+                                                                               \
+   (void)_SEHScopeKind;                                                        \
+   (void)_SEHPortableFrame;                                                    \
+   (void)_SEH2Handle;                                                          \
+                                                                               \
+   for(;;)                                                                     \
    {                                                                           \
-    _SEH_DECLARE_HANDLERS(_SEH2Filter, _SEH2Finally);                          \
-                                                                               \
-    _SEHFrame = _alloca(sizeof(_SEHFrame_t));                                  \
-    _SEHFrame->SEH_Header.SPF_Handlers = &_SEHHandlers;                        \
-    _SEHFrame->SEH_Locals = &_SEHLocals;                                       \
-                                                                               \
-    _SEHPortableFrame = &_SEHFrame->SEH_Header;                                \
-    (void)_SEHPortableFrame;                                                   \
-                                                                               \
-    if(_SEHSetJmp(_SEHFrame->SEH_JmpBuf))                                      \
-     break;                                                                    \
-                                                                               \
-    _SEHEnter(&_SEHFrame->SEH_Header);
-
-#define _SEH2_EXCEPT(FILTER_) \
-    _SEHLeave(&_SEHFrame->SEH_Header);                                         \
-    _SEH2State = _SEH2_STATE_DONE;                                             \
-                                                                               \
-    break;                                                                     \
-   }                                                                           \
-                                                                               \
-   case _SEH2_STATE_INIT_EXCEPT:                                               \
-   {                                                                           \
-    _SEH2Filter = (FILTER_);                                                   \
-    break;                                                                     \
-   }                                                                           \
-                                                                               \
-   case _SEH2_STATE_HANDLER:                                                   \
-   {                                                                           \
-    _SEHLeave(&_SEHFrame->SEH_Header);
-
-#define _SEH2_FINALLY(FINALLY_) \
-    break;                                                                     \
-   }                                                                           \
-                                                                               \
-   case _SEH2_STATE_INIT_FINALLY:                                              \
-   {                                                                           \
-    _SEH2Finally = (FINALLY_);
-
-#define _SEH2_END \
-    break;                                                                     \
-   }                                                                           \
-                                                                               \
-   default:                                                                    \
-   {                                                                           \
-    switch(_SEH2State)                                                              \
+    if(_SEH2State)                                                             \
     {                                                                          \
-     case _SEH2_STATE_INIT_EXCEPT: _SEH2Filter = NULL; break;                  \
-     case _SEH2_STATE_INIT_FINALLY: _SEH2Finally = NULL; break;                \
-     case _SEH2_STATE_HANDLER: _SEHLeave(&_SEHFrame->SEH_Header); break;       \
+     for(;;)                                                                   \
+     {                                                                         \
+      {
+
+#define _SEH_EXCEPT(FILTER_) \
+      }                                                                        \
+                                                                               \
+      break;                                                                   \
+     }                                                                         \
+                                                                               \
+     _SEH2_ASSUME(_SEH2Handle == 0);                                           \
+     break;                                                                    \
+    }                                                                          \
+    else                                                                       \
+    {                                                                          \
+     _SEH_DECLARE_HANDLERS((FILTER_), 0);                                      \
+                                                                               \
+     _SEH2TryLevel.ST_Header.SPT_Handlers = &_SEHHandlers;                     \
+                                                                               \
+     if(_SEH2TopTryLevel)                                                      \
+     {                                                                         \
+      if(&_SEHLocals != _SEHDummyLocals)                                       \
+       _SEH2Frame.SEH_Locals = &_SEHLocals;                                    \
+                                                                               \
+      _SEH2Frame.SEH_Header.SPF_Handler = _SEHCompilerSpecificHandler;         \
+      _SEHEnterFrame(&_SEH2Frame.SEH_Header, &_SEH2TryLevel.ST_Header);        \
+     }                                                                         \
+     else                                                                      \
+      _SEHEnterTry(&_SEH2TryLevel.ST_Header);                                  \
+                                                                               \
+     if((_SEH2Handle = _SEHSetJmp(_SEH2TryLevel.ST_JmpBuf)) == 0)              \
+     {                                                                         \
+      _SEH2_ASSUMING(++ _SEH2State);                                           \
+      _SEH2_ASSUME(_SEH2State != 0);                                           \
+      continue;                                                                \
+     }                                                                         \
+     else                                                                      \
+     {                                                                         \
+      break;                                                                   \
+     }                                                                         \
     }                                                                          \
                                                                                \
     break;                                                                     \
    }                                                                           \
-  }                                                                            \
- }                                                                             \
                                                                                \
- if(_SEHHandlers.SH_Finally)                                                   \
-  _SEHHandlers.SH_Finally(&_SEHFrame->SEH_Header);                             \
-}
+   _SEHLeave();                                                                \
+                                                                               \
+   if(_SEH2Handle) \
+   {
 
-#define _SEH2_HANDLE _SEH2_EXCEPT(_SEH_STATIC_FILTER(_SEH_EXECUTE_HANDLER))
+#define _SEH_FINALLY(FINALLY_) \
+      }                                                                        \
+                                                                               \
+      break;                                                                   \
+     }                                                                         \
+                                                                               \
+     _SEHLeave();                                                              \
+     break;                                                                    \
+    }                                                                          \
+    else                                                                       \
+    {                                                                          \
+     _SEH_DECLARE_HANDLERS(0, (FINALLY_));                                     \
+                                                                               \
+     _SEH2TryLevel.ST_Header.SPT_Handlers = &_SEHHandlers;                     \
+                                                                               \
+     if(_SEH2TopTryLevel)                                                      \
+     {                                                                         \
+      if(&_SEHLocals != _SEHDummyLocals)                                       \
+       _SEH2Frame.SEH_Locals = &_SEHLocals;                                    \
+                                                                               \
+      _SEH2Frame.SEH_Header.SPF_Handler = 0;                                   \
+      _SEHEnterFrame(&_SEH2Frame.SEH_Header, &_SEH2TryLevel.ST_Header);        \
+     }                                                                         \
+     else                                                                      \
+      _SEHEnterTry(&_SEH2TryLevel.ST_Header);                                  \
+                                                                               \
+     ++ _SEH2State;                                                            \
+     _SEH2_ASSUME(_SEH2State != 0);                                            \
+     continue;                                                                 \
+    }                                                                          \
+                                                                               \
+    break;                                                                     \
+   }                                                                           \
+                                                                               \
+   (FINALLY_)(&_SEH2Frame.SEH_Header);                                         \
+   if(0)                                                                       \
+   {
 
-#define _SEH2_GetExceptionCode     _SEH_GetExceptionCode
-#define _SEH2_GetExceptionPointers _SEH_GetExceptionPointers
-#define _SEH2_AbnormalTermination  _SEH_AbnormalTermination
+#define _SEH_END \
+   } \
+  }                                                                            \
+ }
+
+#define _SEH_HANDLE _SEH_EXCEPT(_SEH_STATIC_FILTER(_SEH_EXECUTE_HANDLER))
+
+#define _SEH_GetExceptionCode     _SEHX_GetExceptionCode
+#define _SEH_GetExceptionPointers _SEHX_GetExceptionPointers
+#define _SEH_AbnormalTermination  _SEHX_AbnormalTermination
 
 #endif
 

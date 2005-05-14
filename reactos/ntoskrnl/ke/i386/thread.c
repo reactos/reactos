@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/thread.c
  * PURPOSE:         i386 Thread Context Creation
- * 
+ *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
 
@@ -12,7 +12,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
-                                    
+
 typedef struct _KSHARED_CTXSWITCH_FRAME {
     ULONG Esp0;
     PVOID ExceptionList;
@@ -23,7 +23,7 @@ typedef struct _KSTART_FRAME {
     PKSYSTEM_ROUTINE SystemRoutine;
     PKSTART_ROUTINE StartRoutine;
     PVOID StartContext;
-    BOOLEAN UserThread;    
+    BOOLEAN UserThread;
 } KSTART_FRAME, *PKSTART_FRAME;
 
 /*
@@ -61,7 +61,7 @@ typedef struct _KKINIT_FRAME {
 
 VOID
 STDCALL
-Ke386InitThreadWithContext(PKTHREAD Thread, 
+Ke386InitThreadWithContext(PKTHREAD Thread,
                            PKSYSTEM_ROUTINE SystemRoutine,
                            PKSTART_ROUTINE StartRoutine,
                            PVOID StartContext,
@@ -71,84 +71,84 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
     PKSTART_FRAME StartFrame;
     PKSHARED_CTXSWITCH_FRAME CtxSwitchFrame;
     PKTRAP_FRAME TrapFrame = NULL;
-        
+
     /* Check if this is a With-Context Thread */
     DPRINT("Ke386InitThreadContext\n");
-    if (Context) 
+    if (Context)
     {
         /* Set up the Initial Frame */
         PKUINIT_FRAME InitFrame;
         InitFrame = (PKUINIT_FRAME)((ULONG_PTR)Thread->InitialStack - sizeof(KUINIT_FRAME));
         DPRINT("Setting up a user-mode thread with the Frame at: %x\n", InitFrame);
-        
+
         /* Setup the Trap Frame */
         TrapFrame = &InitFrame->TrapFrame;
-               
+
         /* Set up a trap frame from the context. */
         if (KeContextToTrapFrame(Context, TrapFrame))
         {
             Thread->NpxState = NPX_STATE_VALID;
-        } 
-        else 
-        {    
+        }
+        else
+        {
             Thread->NpxState = NPX_STATE_INVALID;
         }
-        
+
         /* Enable Interrupts and disable some unsupported flags right now */
         TrapFrame->Eflags = Context->EFlags | X86_EFLAGS_IF;
         TrapFrame->Eflags &= ~(X86_EFLAGS_VM | X86_EFLAGS_NT | X86_EFLAGS_IOPL);
-        
+
         /* Set the previous mode as user */
         TrapFrame->PreviousMode = UserMode;
-        
+
         /* Terminate the Exception Handler List */
         TrapFrame->ExceptionList = (PVOID)0xFFFFFFFF;
-        
+
         /* Setup the Stack for KiThreadStartup and Context Switching */
         StartFrame = &InitFrame->StartFrame;
         CtxSwitchFrame = &InitFrame->CtxSwitchFrame;
-       
+
         /* Tell the thread it will run in User Mode */
         Thread->PreviousMode = UserMode;
-        
+
         /* Tell KiThreadStartup of that too */
         StartFrame->UserThread = TRUE;
-    } 
-    else 
+    }
+    else
     {
         /* No context Thread, meaning System Thread */
-       
+
         /* Set up the Initial Frame */
         PKKINIT_FRAME InitFrame;
         InitFrame = (PKKINIT_FRAME)((ULONG_PTR)Thread->InitialStack - sizeof(KKINIT_FRAME));
         DPRINT("Setting up a kernel thread with the Frame at: %x\n", InitFrame);
-                
+
         /* Setup the Fx Area */
         FxSaveArea = &InitFrame->FxSaveArea;
         RtlZeroMemory(FxSaveArea, sizeof(FX_SAVE_AREA));
         Thread->NpxState = NPX_STATE_INVALID;
-        
+
         /* Setup the Stack for KiThreadStartup and Context Switching */
         StartFrame = &InitFrame->StartFrame;
         CtxSwitchFrame = &InitFrame->CtxSwitchFrame;
-        
+
         /* Tell the thread it will run in Kernel Mode */
         Thread->PreviousMode = KernelMode;
-        
+
         /* Tell KiThreadStartup of that too */
         StartFrame->UserThread = FALSE;
     }
-    
+
     /* Now setup the remaining data for KiThreadStartup */
     StartFrame->StartContext = StartContext;
     StartFrame->StartRoutine = StartRoutine;
     StartFrame->SystemRoutine = SystemRoutine;
-    
+
     /* And set up the Context Switch Frame */
     CtxSwitchFrame->RetEip = KiThreadStartup;
     CtxSwitchFrame->Esp0 = (ULONG)Thread->InitialStack - sizeof(FX_SAVE_AREA);
     CtxSwitchFrame->ExceptionList = (PVOID)0xFFFFFFFF;
-        
+
     /* Save back the new value of the kernel stack. */
     DPRINT("Final Kernel Stack: %x \n", CtxSwitchFrame);
     Thread->KernelStack = (PVOID)CtxSwitchFrame;

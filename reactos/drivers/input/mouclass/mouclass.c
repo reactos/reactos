@@ -34,7 +34,7 @@ BOOLEAN MouseClassCallBack(
    /* A filter driver might have consumed all the data already; I'm
     * not sure if they are supposed to move the packets when they
     * consume them though.
-    */ 
+    */
    if (ClassDeviceExtension->ReadIsPending == TRUE &&
        InputCount)
    {
@@ -52,7 +52,7 @@ BOOLEAN MouseClassCallBack(
       Stack->Parameters.Read.Length = sizeof(MOUSE_INPUT_DATA);
 
       IoStartNextPacket(ClassDeviceObject, FALSE);
-      IoCompleteRequest(Irp, IO_MOUSE_INCREMENT);      
+      IoCompleteRequest(Irp, IO_MOUSE_INCREMENT);
       ClassDeviceExtension->ReadIsPending = FALSE;
 
       /* Skip the packet we just sent away */
@@ -162,7 +162,7 @@ NTSTATUS STDCALL MouseClassDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
       case IRP_MJ_CREATE:
          Status = STATUS_SUCCESS;
          break;
-	
+
       case IRP_MJ_CLOSE:
          Status = STATUS_SUCCESS;
          break;

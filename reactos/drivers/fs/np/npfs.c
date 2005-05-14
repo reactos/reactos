@@ -25,12 +25,12 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    PDEVICE_OBJECT DeviceObject;
    UNICODE_STRING DeviceName;
    NTSTATUS Status;
-   
+
    DPRINT("Named Pipe FSD 0.0.2\n");
 
    ASSERT (sizeof(NPFS_CONTEXT) <= sizeof (((PIRP)NULL)->Tail.Overlay.DriverContext));
    ASSERT (sizeof(NPFS_WAITER_ENTRY) <= sizeof(((PIRP)NULL)->Tail.Overlay.DriverContext));
-   
+
    DriverObject->MajorFunction[IRP_MJ_CREATE] = NpfsCreate;
    DriverObject->MajorFunction[IRP_MJ_CREATE_NAMED_PIPE] =
      NpfsCreateNamedPipe;
@@ -41,7 +41,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
      NpfsQueryInformation;
    DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] =
      NpfsSetInformation;
-   DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = 
+   DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
      NpfsQueryVolumeInformation;
    DriverObject->MajorFunction[IRP_MJ_CLEANUP] = NpfsCleanup;
    DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = NpfsFlushBuffers;
@@ -49,13 +49,13 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 //     NpfsDirectoryControl;
    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
      NpfsFileSystemControl;
-//   DriverObject->MajorFunction[IRP_MJ_QUERY_SECURITY] = 
+//   DriverObject->MajorFunction[IRP_MJ_QUERY_SECURITY] =
 //     NpfsQuerySecurity;
 //   DriverObject->MajorFunction[IRP_MJ_SET_SECURITY] =
 //     NpfsSetSecurity;
-   
+
    DriverObject->DriverUnload = NULL;
-   
+
    RtlInitUnicodeString(&DeviceName, L"\\Device\\NamedPipe");
    Status = IoCreateDevice(DriverObject,
 			   sizeof(NPFS_DEVICE_EXTENSION),
@@ -69,10 +69,10 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 	DPRINT("Failed to create named pipe device! (Status %x)\n", Status);
 	return Status;
      }
-   
+
    /* initialize the device object */
    DeviceObject->Flags = DO_DIRECT_IO;
-   
+
    /* initialize the device extension */
    DeviceExtension = DeviceObject->DeviceExtension;
    InitializeListHead(&DeviceExtension->PipeListHead);

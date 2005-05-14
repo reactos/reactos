@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * 		Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details 
+ * 		Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/conio/getche.c
  * PURPOSE:     Reads a character from stdin
@@ -25,7 +25,7 @@ int _getche(void)
      * ungetch could have been called with a character that
      * hasn't been got by a conio function.
      * We don't echo again.
-     */ 
+     */
     return(_getch());
   return (_putch(_getch()));
 }

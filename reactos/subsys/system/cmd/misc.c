@@ -29,7 +29,7 @@
  *        Added PagePrompt() and FilePrompt().
  *
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -437,11 +437,9 @@ HWND GetConsoleWindow (VOID)
 
 INT PagePrompt (VOID)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	INPUT_RECORD ir;
 
-	LoadString(GetModuleHandle(NULL), STRING_MISC_HELP1, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPrintf(szMsg);
+	ConOutResPuts(STRING_MISC_HELP1);
 
 	RemoveBreakHandler ();
 	ConInDisable ();
@@ -491,7 +489,7 @@ INT FilePromptYN (LPTSTR szFormat, ...)
 	for (p = szIn; _istspace (*p); p++)
 		;
 
-	LoadString(GetModuleHandle(NULL), STRING_CHOICE_OPTION, szMsg, RC_STRING_MAX_SIZE);
+	LoadString(CMD_ModuleHandle, STRING_CHOICE_OPTION, szMsg, RC_STRING_MAX_SIZE);
 
 	if (_tcsncmp(p, &szMsg[0], 1) == 0)
 		return PROMPT_YES;
@@ -561,7 +559,7 @@ INT FilePromptYNA (LPTSTR szFormat, ...)
 	for (p = szIn; _istspace (*p); p++)
 		;
 
-	LoadString( GetModuleHandle(NULL), STRING_COPY_OPTION, szMsg, RC_STRING_MAX_SIZE);
+	LoadString( CMD_ModuleHandle, STRING_COPY_OPTION, szMsg, RC_STRING_MAX_SIZE);
 
 	if (_tcsncmp(p, &szMsg[0], 1) == 0)
 		return PROMPT_YES;

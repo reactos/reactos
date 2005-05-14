@@ -352,7 +352,7 @@ static IStream *IStream_Create(LPCWSTR lpszPath, HANDLE hFile, DWORD dwMode)
 {
  ISHFileStream* fileStream;
 
- fileStream = (ISHFileStream*)HeapAlloc(GetProcessHeap(), 0, sizeof(ISHFileStream));
+ fileStream = HeapAlloc(GetProcessHeap(), 0, sizeof(ISHFileStream));
 
  if (fileStream)
  {

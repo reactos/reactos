@@ -171,7 +171,7 @@ PdoQueryCapabilities(
 
   if (DeviceCapabilities->Version != 1)
     return STATUS_UNSUCCESSFUL;
-  
+
   DeviceCapabilities->UniqueID = FALSE;
   DeviceCapabilities->Address = DeviceExtension->SlotNumber.u.AsULONG;
   DeviceCapabilities->UINumber = (ULONG)-1; /* FIXME */

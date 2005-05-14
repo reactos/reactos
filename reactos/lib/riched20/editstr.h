@@ -86,6 +86,8 @@ typedef enum {
 #define MERF_STYLEFLAGS 0x0FFF
 /* run contains non-text content, which has its own rules for wrapping, sizing etc */
 #define MERF_GRAPHICS 1
+/* run is a tab (or, in future, any kind of content whose size is dependent on run position) */
+#define MERF_TAB 2
 
 /* run is splittable (contains white spaces in the middle or end) */
 #define MERF_SPLITTABLE 0x001000
@@ -101,6 +103,11 @@ typedef enum {
 #define MERF_CALCBYWRAP 0x0F0000
 /* the "end of paragraph" run, contains 1 character */
 #define MERF_ENDPARA    0x100000
+
+/* runs with any of these flags set cannot be joined */
+#define MERF_NOJOIN (MERF_GRAPHICS|MERF_TAB|MERF_ENDPARA)
+/* runs that don't contain real text */
+#define MERF_NOTEXT (MERF_GRAPHICS|MERF_TAB|MERF_ENDPARA)
 
 /* those flags are kept when the row is split */
 #define MERF_SPLITMASK (~(0))
@@ -192,6 +199,40 @@ typedef enum {
   umAddBackToUndo
 } ME_UndoMode;
 
+typedef struct tagME_FontTableItem {
+  BYTE bCharSet;
+  WCHAR *szFaceName;
+} ME_FontTableItem;
+
+
+#define STREAMIN_BUFFER_SIZE 4096 /* M$ compatibility */
+
+struct tagME_InStream {
+  EDITSTREAM *editstream;
+  DWORD dwSize;
+  DWORD dwUsed;
+  BYTE buffer[STREAMIN_BUFFER_SIZE];
+};
+typedef struct tagME_InStream ME_InStream;
+
+
+#define STREAMOUT_BUFFER_SIZE 4096
+#define STREAMOUT_FONTTBL_SIZE 8192
+#define STREAMOUT_COLORTBL_SIZE 1024
+
+typedef struct tagME_OutStream {
+  EDITSTREAM *stream;
+  char buffer[STREAMOUT_BUFFER_SIZE];
+  UINT pos, written;
+  UINT nCodePage;
+  UINT nFontTblLen;
+  ME_FontTableItem fonttbl[STREAMOUT_FONTTBL_SIZE];
+  UINT nColorTblLen;
+  COLORREF colortbl[STREAMOUT_COLORTBL_SIZE];
+  UINT nDefaultFont;
+  UINT nDefaultCodePage;
+} ME_OutStream;
+
 typedef struct tagME_FontCacheItem
 {
   LOGFONTW lfSpecs;
@@ -210,7 +251,6 @@ typedef struct tagME_TextEditor
   ME_Cursor *pCursors;
   int nCursors;
   SIZE sizeWindow;
-  int nScrollPos;
   int nTotalLength, nLastTotalLength;
   int nUDArrowX;
   int nSequence;
@@ -224,6 +264,9 @@ typedef struct tagME_TextEditor
   int nParagraphs;
   int nLastSelStart, nLastSelEnd;
   ME_FontCacheItem pFontCache[HFONT_CACHE_SIZE];
+  ME_OutStream *pStream;
+  BOOL bScrollX, bScrollY;
+  int nScrollPosY;
 } ME_TextEditor;
 
 typedef struct tagME_Context

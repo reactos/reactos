@@ -93,5 +93,5 @@ private:
 	int currentKeyMap, mainKeyMap;				// AVS
 
 };
-	
+
 #endif // __KEYTRANS_H

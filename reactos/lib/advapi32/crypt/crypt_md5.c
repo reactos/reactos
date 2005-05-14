@@ -231,7 +231,7 @@ VOID WINAPI MD5Update(MD5_CTX *ctx, const unsigned char *buf, unsigned int len)
 }
 
 /*
- * Final wrapup - pad to 64-byte boundary with the bit pattern 
+ * Final wrapup - pad to 64-byte boundary with the bit pattern
  * 1 0* (64-bit count of bits processed, MSB-first)
  */
 VOID WINAPI MD5Final( MD5_CTX *ctx )

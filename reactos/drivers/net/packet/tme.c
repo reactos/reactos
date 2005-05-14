@@ -27,11 +27,11 @@
 #include <net/tme/tme.h>
 #endif
 
-/* resizes extended memory */ 
+/* resizes extended memory */
 uint32 init_extended_memory(uint32 size, MEM_TYPE *mem_ex)
 {
 	uint8 *tmp;
-	
+
 	if ((mem_ex==NULL)||(mem_ex->buffer==NULL)||(size==0))
 		return TME_ERROR;  /* awfully never reached!!!! */
 
@@ -42,7 +42,7 @@ uint32 init_extended_memory(uint32 size, MEM_TYPE *mem_ex)
 	ALLOCATE_MEMORY(tmp,uint8,size);
 	if (tmp==NULL)
 		return TME_ERROR; /* no memory */
-			
+
 	mem_ex->size=size;
 	mem_ex->buffer=tmp;
 	return TME_SUCCESS;
@@ -50,7 +50,7 @@ uint32 init_extended_memory(uint32 size, MEM_TYPE *mem_ex)
 }
 
 /* activates a block of the TME */
-uint32 set_active_tme_block(TME_CORE *tme, uint32 block)  
+uint32 set_active_tme_block(TME_CORE *tme, uint32 block)
 {
 
 	if ((block>=MAX_TME_DATA_BLOCKS)||(!IS_VALIDATED(tme->validated_blocks,block)))
@@ -67,7 +67,7 @@ uint32 set_active_tme_block(TME_CORE *tme, uint32 block)
 /* it will be useful to store them in the registry   */
 uint32 init_tme_block(TME_CORE *tme, uint32 block)
 {
-	
+
 	TME_DATA *data;
 	if (block>=MAX_TME_DATA_BLOCKS)
 		return TME_ERROR;
@@ -92,7 +92,7 @@ uint32 init_tme_block(TME_CORE *tme, uint32 block)
 	data->default_exec=TME_DEFAULT_EXEC_DEFAULT;
 	/* extra segment size */
 	data->extra_segment_size=TME_EXTRA_SEGMENT_SIZE_DEFAULT;
-	
+
 
 	data->enable_deletion=FALSE;
 	data->last_read.tv_sec=0;
@@ -107,7 +107,7 @@ uint32 validate_tme_block(MEM_TYPE *mem_ex, TME_CORE *tme, uint32 block, uint32 
 	uint32 required_memory;
 	uint8 *base=mem_ex_offset+mem_ex->buffer;
 	TME_DATA *data;
-	
+
 	/* FIXME soluzione un po' posticcia... */
 	if (mem_ex_offset==0)
 		return TME_ERROR;
@@ -115,7 +115,7 @@ uint32 validate_tme_block(MEM_TYPE *mem_ex, TME_CORE *tme, uint32 block, uint32 
 	if (block>=MAX_TME_DATA_BLOCKS)
 		return TME_ERROR;
 	data=&tme->block_data[block];
-	
+
 	if (data->lut_entries==0)
 		return TME_ERROR;
 
@@ -150,9 +150,9 @@ uint32 validate_tme_block(MEM_TYPE *mem_ex, TME_CORE *tme, uint32 block, uint32 
 
 	/* the TME block can be initialized             */
 	ZERO_MEMORY(base,required_memory);
-	
+
 	data->lut_base_address=base;
-	
+
 	data->shared_memory_base_address=
 		data->lut_base_address+
 		data->lut_entries*sizeof(RECORD);
@@ -166,20 +166,20 @@ uint32 validate_tme_block(MEM_TYPE *mem_ex, TME_CORE *tme, uint32 block, uint32 
 	tme->working=block;
 	return TME_SUCCESS;
 }
-														         
+
 /* I/F between the bpf machine and the callbacks, just some checks */
 uint32 lookup_frontend(MEM_TYPE *mem_ex, TME_CORE *tme,uint32 mem_ex_offset, struct time_conv *time_ref)
 {
 	if (tme->active==TME_NONE_ACTIVE)
 		return TME_FALSE;
-	
+
 	return (tme->block_data[tme->active].lookup_code)(mem_ex_offset+mem_ex->buffer,&tme->block_data[tme->active],mem_ex, time_ref);
 }
 
 /* I/F between the bpf machine and the callbacks, just some checks */
 uint32 execute_frontend(MEM_TYPE *mem_ex, TME_CORE *tme, uint32 pkt_size, uint32 offset)
 {
-	
+
 	exec_fcn tmp;
 	TME_DATA *data;
 	uint8 *block;
@@ -189,7 +189,7 @@ uint32 execute_frontend(MEM_TYPE *mem_ex, TME_CORE *tme, uint32 pkt_size, uint32
 		return TME_ERROR;
 
 	data=&tme->block_data[tme->active];
-	
+
 	if (data->last_found==NULL)
 	{	/*out lut exec */
 		tmp=exec_fcn_mapper(data->out_lut_exec);
@@ -209,12 +209,12 @@ uint32 execute_frontend(MEM_TYPE *mem_ex, TME_CORE *tme, uint32 pkt_size, uint32
 				return TME_ERROR;
 		}
 	}
-	
+
 	if (offset>=mem_ex->size)
 		return TME_ERROR;
-	
+
 	mem_data=mem_ex->buffer+offset;
-	
+
 	return tmp(block,pkt_size,data,mem_ex,mem_data);
 }
 
@@ -223,10 +223,10 @@ uint32 reset_tme(TME_CORE *tme)
 {
 	if (tme==NULL)
 		return TME_ERROR;
-	ZERO_MEMORY(tme, sizeof(TME_CORE));	
+	ZERO_MEMORY(tme, sizeof(TME_CORE));
 	return TME_SUCCESS;
 }
-	
+
 /* returns a register value of the active TME block   */
 /* FIXME last found in maniera elegante e veloce ?!?! */
 uint32 get_tme_block_register(TME_DATA *data,MEM_TYPE *mem_ex,uint32 rgstr,uint32 *rval)
@@ -300,10 +300,10 @@ uint32 set_tme_block_register(TME_DATA *data,MEM_TYPE *mem_ex,uint32 rgstr,uint3
 	case TME_REHASHING_VALUE:
 		data->rehashing_value=value;
 		return TME_SUCCESS;
-	case TME_FILLED_ENTRIES: 
+	case TME_FILLED_ENTRIES:
 		data->filled_entries=value;
 		return TME_SUCCESS;
-	case TME_FILLED_BLOCKS:  
+	case TME_FILLED_BLOCKS:
 		if (value<=data->shared_memory_blocks)
 		{
 			data->filled_blocks=value;
@@ -311,7 +311,7 @@ uint32 set_tme_block_register(TME_DATA *data,MEM_TYPE *mem_ex,uint32 rgstr,uint3
 		}
 		else
 			return TME_ERROR;
-	case TME_DEFAULT_EXEC:  
+	case TME_DEFAULT_EXEC:
 		data->default_exec=value;
 		return TME_SUCCESS;
 	case TME_OUT_LUT_EXEC:
@@ -332,19 +332,19 @@ uint32 set_tme_block_register(TME_DATA *data,MEM_TYPE *mem_ex,uint32 rgstr,uint3
 		switch (rgstr)
 		{
 
-		case TME_LUT_ENTRIES: 
+		case TME_LUT_ENTRIES:
 			data->lut_entries=value;
 			return TME_SUCCESS;
-		case TME_KEY_LEN: 
+		case TME_KEY_LEN:
 			data->key_len=value;
 			return TME_SUCCESS;
-		case TME_SHARED_MEMORY_BLOCKS: 
+		case TME_SHARED_MEMORY_BLOCKS:
 			data->shared_memory_blocks=value;
 			return TME_SUCCESS;
-		case TME_BLOCK_SIZE:  
+		case TME_BLOCK_SIZE:
 			data->block_size=value;
 			return TME_SUCCESS;
-		case TME_EXTRA_SEGMENT_SIZE: 
+		case TME_EXTRA_SEGMENT_SIZE:
 			data->extra_segment_size=value;
 			return TME_SUCCESS;
 		default:
@@ -356,7 +356,7 @@ uint32 set_tme_block_register(TME_DATA *data,MEM_TYPE *mem_ex,uint32 rgstr,uint3
 }
 
 /* chooses the TME block for read */
-uint32 set_active_read_tme_block(TME_CORE *tme, uint32 block)  
+uint32 set_active_read_tme_block(TME_CORE *tme, uint32 block)
 {
 
 	if ((block>=MAX_TME_DATA_BLOCKS)||(!IS_VALIDATED(tme->validated_blocks,block)))

@@ -19,16 +19,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-
-
 #define __NTDRIVER__
-#include <ddk/ntddk.h>
-
-#include <ntdll/rtl.h>
-
-#include <ntos/minmax.h>
-#define __NO_CTYPE_INLINES
-#include <ctype.h>
+#include "rtl.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -154,50 +146,95 @@ RtlAppendUnicodeStringToString(
 }
 
 
-/*
+/**************************************************************************
+ *      RtlCharToInteger   (NTDLL.@)
  * @implemented
+ * Converts a character string into its integer equivalent.
+ *
+ * RETURNS
+ *  Success: STATUS_SUCCESS. value contains the converted number
+ *  Failure: STATUS_INVALID_PARAMETER, if base is not 0, 2, 8, 10 or 16.
+ *           STATUS_ACCESS_VIOLATION, if value is NULL.
+ *
+ * NOTES
+ *  For base 0 it uses 10 as base and the string should be in the format
+ *      "{whitespace} [+|-] [0[x|o|b]] {digits}".
+ *  For other bases the string should be in the format
+ *      "{whitespace} [+|-] {digits}".
+ *  No check is made for value overflow, only the lower 32 bits are assigned.
+ *  If str is NULL it crashes, as the native function does.
+ *
+ * DIFFERENCES
+ *  This function does not read garbage behind '\0' as the native version does.
  */
 NTSTATUS
 STDCALL
 RtlCharToInteger(
-   IN PCSZ String,
-   IN ULONG Base,
-   IN OUT PULONG Value)
+    PCSZ str,      /* [I] '\0' terminated single-byte string containing a number */
+    ULONG base,    /* [I] Number base for conversion (allowed 0, 2, 8, 10 or 16) */
+    PULONG value)  /* [O] Destination for the converted value */
 {
-   ULONG Val;
+    CHAR chCurrent;
+    int digit;
+    ULONG RunningTotal = 0;
+    char bMinus = 0;
 
-   *Value = 0;
+    while (*str != '\0' && *str <= ' ') {
+	str++;
+    } /* while */
 
-   if (Base == 0)
-   {
-      Base = 10;
-      if (*String == '0')
-      {
-         Base = 8;
-         String++;
-         if ((*String == 'x') && isxdigit (String[1]))
-         {
-            String++;
-            Base = 16;
-         }
-      }
-   }
+    if (*str == '+') {
+	str++;
+    } else if (*str == '-') {
+	bMinus = 1;
+	str++;
+    } /* if */
 
-   if (!isxdigit (*String))
-      return STATUS_INVALID_PARAMETER;
+    if (base == 0) {
+	base = 10;
+	if (str[0] == '0') {
+	    if (str[1] == 'b') {
+		str += 2;
+		base = 2;
+	    } else if (str[1] == 'o') {
+		str += 2;
+		base = 8;
+	    } else if (str[1] == 'x') {
+		str += 2;
+		base = 16;
+	    } /* if */
+	} /* if */
+    } else if (base != 2 && base != 8 && base != 10 && base != 16) {
+	return STATUS_INVALID_PARAMETER;
+    } /* if */
 
-   while (isxdigit (*String) &&
-          (Val = isdigit (*String) ? * String - '0' : (islower (*String)
-                 ? toupper (*String) : *String) - 'A' + 10) < Base)
-   {
-      *Value = *Value * Base + Val;
-      String++;
-   }
+    if (value == NULL) {
+	return STATUS_ACCESS_VIOLATION;
+    } /* if */
 
-   return STATUS_SUCCESS;
+    while (*str != '\0') {
+	chCurrent = *str;
+	if (chCurrent >= '0' && chCurrent <= '9') {
+	    digit = chCurrent - '0';
+	} else if (chCurrent >= 'A' && chCurrent <= 'Z') {
+	    digit = chCurrent - 'A' + 10;
+	} else if (chCurrent >= 'a' && chCurrent <= 'z') {
+	    digit = chCurrent - 'a' + 10;
+	} else {
+	    digit = -1;
+	} /* if */
+	if (digit < 0 || digit >= base) {
+	    *value = bMinus ? -RunningTotal : RunningTotal;
+	    return STATUS_SUCCESS;
+	} /* if */
+
+	RunningTotal = RunningTotal * base + digit;
+	str++;
+    } /* while */
+
+    *value = bMinus ? -RunningTotal : RunningTotal;
+    return STATUS_SUCCESS;
 }
-
-
 
 /*
  * @implemented
@@ -352,7 +389,7 @@ RtlFreeAnsiString(IN PANSI_STRING AnsiString)
    if (AnsiString->Buffer == NULL)
       return;
 
-   ExFreePool(AnsiString->Buffer);
+   ExFreePoolWithTag(AnsiString->Buffer, TAG_ASTR);
 
    AnsiString->Buffer = NULL;
    AnsiString->Length = 0;
@@ -370,7 +407,7 @@ RtlFreeOemString(IN POEM_STRING OemString)
    if (OemString->Buffer == NULL)
       return;
 
-   ExFreePool(OemString->Buffer);
+   ExFreePoolWithTag(OemString->Buffer, TAG_OSTR);
 
    OemString->Buffer = NULL;
    OemString->Length = 0;
@@ -388,7 +425,7 @@ RtlFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
    if (UnicodeString->Buffer == NULL)
       return;
 
-   ExFreePool(UnicodeString->Buffer);
+   ExFreePoolWithTag(UnicodeString->Buffer, TAG_USTR);
 
    UnicodeString->Buffer = NULL;
    UnicodeString->Length = 0;
@@ -689,7 +726,7 @@ RtlInt64ToUnicodeString (
    ANSI_STRING AnsiString;
    CHAR Buffer[33];
    NTSTATUS Status;
-   
+
    LargeInt.QuadPart = Value;
 
    Status = RtlLargeIntegerToChar (&LargeInt,
@@ -807,111 +844,111 @@ RtlPrefixUnicodeString(
    return FALSE;
 }
 
-
-
-/*
+/**************************************************************************
+ *      RtlUnicodeStringToInteger (NTDLL.@)
  * @implemented
+ * Converts an unicode string into its integer equivalent.
  *
- * Note that regardless of success or failure status, we should leave the
- * partial value in Value.  An error is never returned based on the chars
- * in the string.
+ * RETURNS
+ *  Success: STATUS_SUCCESS. value contains the converted number
+ *  Failure: STATUS_INVALID_PARAMETER, if base is not 0, 2, 8, 10 or 16.
+ *           STATUS_ACCESS_VIOLATION, if value is NULL.
  *
- * This function does check the base.  Only 2, 8, 10, 16 are permitted,
- * else STATUS_INVALID_PARAMETER is returned.
+ * NOTES
+ *  For base 0 it uses 10 as base and the string should be in the format
+ *      "{whitespace} [+|-] [0[x|o|b]] {digits}".
+ *  For other bases the string should be in the format
+ *      "{whitespace} [+|-] {digits}".
+ *  No check is made for value overflow, only the lower 32 bits are assigned.
+ *  If str is NULL it crashes, as the native function does.
+ *
+ *  Note that regardless of success or failure status, we should leave the
+ *  partial value in Value.  An error is never returned based on the chars
+ *  in the string.
+ *
+ * DIFFERENCES
+ *  This function does not read garbage on string length 0 as the native
+ *  version does.
  */
 NTSTATUS
 STDCALL
 RtlUnicodeStringToInteger(
-   IN PUNICODE_STRING String,
-   IN ULONG  Base,
-   OUT PULONG  Value)
+    PUNICODE_STRING str, /* [I] Unicode string to be converted */
+    ULONG base,                /* [I] Number base for conversion (allowed 0, 2, 8, 10 or 16) */
+    PULONG value)              /* [O] Destination for the converted value */
 {
-   PWCHAR Str;
-   ULONG lenmin = 0;
-   ULONG i;
-   ULONG Val;
-   BOOLEAN addneg = FALSE;
-   NTSTATUS Status = STATUS_SUCCESS;
+    LPWSTR lpwstr = str->Buffer;
+    USHORT CharsRemaining = str->Length / sizeof(WCHAR);
+    WCHAR wchCurrent;
+    int digit;
+    ULONG RunningTotal = 0;
+    char bMinus = 0;
 
-   *Value = 0;
-   Str = String->Buffer;
+    while (CharsRemaining >= 1 && *lpwstr <= ' ') {
+	lpwstr++;
+	CharsRemaining--;
+    } /* while */
 
-   if( Base && Base != 2 && Base != 8 && Base != 10 && Base != 16 )
-       return STATUS_INVALID_PARAMETER;
+    if (CharsRemaining >= 1) {
+	if (*lpwstr == '+') {
+	    lpwstr++;
+	    CharsRemaining--;
+	} else if (*lpwstr == '-') {
+	    bMinus = 1;
+	    lpwstr++;
+	    CharsRemaining--;
+	} /* if */
+    } /* if */
 
-   for (i = 0; i < String->Length / sizeof(WCHAR); i++)
-   {
-      if (*Str == L'b')
-      {
-         Base = 2;
-         lenmin++;
-      }
-      else if (*Str == L'o')
-      {
-         Base = 8;
-         lenmin++;
-      }
-      else if (*Str == L'd')
-      {
-         Base = 10;
-         lenmin++;
-      }
-      else if (*Str == L'x')
-      {
-         Base = 16;
-         lenmin++;
-      }
-      else if (*Str == L'+')
-      {
-         lenmin++;
-      }
-      else if (*Str == L'-')
-      {
-         addneg = TRUE;
-         lenmin++;
-      }
-      else if ((*Str > L'1') && (Base == 2))
-      {
-	  break;
-      }
-      else if (((*Str > L'7') || (*Str < L'0')) && (Base == 8))
-      {
-	  break;
-      }
-      else if (((*Str > L'9') || (*Str < L'0')) && (Base == 10))
-      {
-	  break;
-      }
-      else if (  ((*Str > L'9') || (*Str < L'0')) &&
-                 ((towupper (*Str) > L'F') || (towupper (*Str) < L'A')) &&
-                 (Base == 16))
-      {
-	  break;
-      }
-      Str++;
-   }
+    if (base == 0) {
+	base = 10;
+	if (CharsRemaining >= 2 && lpwstr[0] == '0') {
+	    if (lpwstr[1] == 'b') {
+		lpwstr += 2;
+		CharsRemaining -= 2;
+		base = 2;
+	    } else if (lpwstr[1] == 'o') {
+		lpwstr += 2;
+		CharsRemaining -= 2;
+		base = 8;
+	    } else if (lpwstr[1] == 'x') {
+		lpwstr += 2;
+		CharsRemaining -= 2;
+		base = 16;
+	    } /* if */
+	} /* if */
+    } else if (base != 2 && base != 8 && base != 10 && base != 16) {
+	return STATUS_INVALID_PARAMETER;
+    } /* if */
 
-   Str = String->Buffer + lenmin;
+    if (value == NULL) {
+	return STATUS_ACCESS_VIOLATION;
+    } /* if */
 
-   if (Base == 0)
-      Base = 10;
+    while (CharsRemaining >= 1) {
+	wchCurrent = *lpwstr;
+	if (wchCurrent >= '0' && wchCurrent <= '9') {
+	    digit = wchCurrent - '0';
+	} else if (wchCurrent >= 'A' && wchCurrent <= 'Z') {
+	    digit = wchCurrent - 'A' + 10;
+	} else if (wchCurrent >= 'a' && wchCurrent <= 'z') {
+	    digit = wchCurrent - 'a' + 10;
+	} else {
+	    digit = -1;
+	} /* if */
+	if (digit < 0 || digit >= base) {
+	    *value = bMinus ? -RunningTotal : RunningTotal;
+	    return STATUS_SUCCESS;
+	} /* if */
 
-   while (iswxdigit (*Str) &&
-          (Val = 
-	   iswdigit (*Str) ? 
-	   *Str - L'0' : 
-	   (towupper (*Str) - L'A' + 10)) < Base)
-   {
-      *Value = *Value * Base + Val;
-      Str++;
-   }
+	RunningTotal = RunningTotal * base + digit;
+	lpwstr++;
+	CharsRemaining--;
+    } /* while */
 
-   if (addneg == TRUE)
-      *Value *= -1;
-
-   return Status;
+    *value = bMinus ? -RunningTotal : RunningTotal;
+    return STATUS_SUCCESS;
 }
-
 
 
 /*
@@ -938,7 +975,7 @@ RtlUnicodeStringToOemSize(
 /*
  * @implemented
  *
- 
+
  * NOTES
  *  See RtlpUnicodeStringToAnsiString
  */
@@ -1010,7 +1047,7 @@ RtlpUnicodeStringToAnsiString(
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePool (AnsiDest->Buffer);
+      ExFreePoolWithTag(AnsiDest->Buffer, TAG_ASTR);
       return Status;
    }
 
@@ -1023,7 +1060,7 @@ RtlpUnicodeStringToAnsiString(
  * @implemented
  *
  * NOTES
- *  See RtlpOemStringToUnicodeString 
+ *  See RtlpOemStringToUnicodeString
  */
 NTSTATUS
 STDCALL
@@ -1094,7 +1131,7 @@ RtlpOemStringToUnicodeString(
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePool (UniDest->Buffer);
+      ExFreePoolWithTag(UniDest->Buffer, TAG_USTR);
       return Status;
    }
 
@@ -1178,7 +1215,7 @@ RtlpUnicodeStringToOemString(
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePool(OemDest->Buffer);
+      ExFreePoolWithTag(OemDest->Buffer, TAG_OSTR);
       return Status;
    }
 
@@ -1320,7 +1357,7 @@ RtlpOemStringToCountedUnicodeString(
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePool (UniDest->Buffer);
+      ExFreePoolWithTag(UniDest->Buffer, TAG_USTR);
       return Status;
    }
 
@@ -1394,23 +1431,23 @@ RtlEqualDomainName (
    OEM_STRING OemString1;
    OEM_STRING OemString2;
    BOOLEAN Result;
- 
+
    RtlUpcaseUnicodeStringToOemString (&OemString1,
                                       DomainName1,
                                       TRUE);
    RtlUpcaseUnicodeStringToOemString (&OemString2,
                                       DomainName2,
                                       TRUE);
- 
+
    Result = RtlEqualString (&OemString1,
                             &OemString2,
                             FALSE);
- 
+
    RtlFreeOemString (&OemString1);
    RtlFreeOemString (&OemString2);
- 
+
    return Result;
-   
+
 }
 */
 
@@ -1653,7 +1690,7 @@ RtlpUnicodeStringToCountedOemString(
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePool(OemDest->Buffer);
+      ExFreePoolWithTag(OemDest->Buffer, TAG_OSTR);
    }
 
    return Status;
@@ -1857,7 +1894,7 @@ RtlpUpcaseUnicodeStringToAnsiString(
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePool(AnsiDest->Buffer);
+      ExFreePoolWithTag(AnsiDest->Buffer, TAG_ASTR);
       return Status;
    }
 
@@ -1945,7 +1982,7 @@ RtlpUpcaseUnicodeStringToCountedOemString(
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePool(OemDest->Buffer);
+      ExFreePoolWithTag(OemDest->Buffer, TAG_OSTR);
       return Status;
    }
 
@@ -1978,7 +2015,7 @@ RtlUpcaseUnicodeStringToOemString (
  * private
  *
  * NOTES
- *  Oem string is allways nullterminated 
+ *  Oem string is allways nullterminated
  *  It performs a partial copy if oem is too small.
  */
 NTSTATUS
@@ -2032,7 +2069,7 @@ RtlpUpcaseUnicodeStringToOemString (
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePool(OemDest->Buffer);
+      ExFreePoolWithTag(OemDest->Buffer, TAG_OSTR);
       return Status;
    }
 
@@ -2335,7 +2372,7 @@ RtlDowncaseUnicodeString(
  *
  * NOTES
  *  Dest is never '\0' terminated because it may be equal to src, and src
- *  might not be '\0' terminated. 
+ *  might not be '\0' terminated.
  *  Dest->Length is only set upon success.
  */
 NTSTATUS
@@ -2495,7 +2532,7 @@ RtlpAnsiStringToUnicodeString(
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePool(UniDest->Buffer);
+      ExFreePoolWithTag(UniDest->Buffer, TAG_USTR);
       return Status;
    }
 
@@ -2629,8 +2666,8 @@ RtlDuplicateUnicodeString(
             DestinationString,
             NonPagedPool);
 }
-   
-   
+
+
 /*
  * @implemented
  */
@@ -2683,7 +2720,7 @@ RtlValidateUnicodeString(IN ULONG Flags,
 {
   /* currently no flags are supported! */
   ASSERT(Flags == 0);
-  
+
   if ((Flags == 0) &&
       ((UnicodeString == NULL) ||
        ((UnicodeString->Length != 0) &&

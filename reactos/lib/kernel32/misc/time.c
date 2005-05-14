@@ -74,7 +74,7 @@ FileTimeToDosDateTime(
    pddate->Month = SystemTime.wMonth;
    pddate->Year = SystemTime.wYear - 1980;
 
-   return TRUE; 
+   return TRUE;
 }
 
 
@@ -153,7 +153,7 @@ GetSystemTimeAsFileTime (PFILETIME lpFileTime)
 /*
  * @implemented
  */
-BOOL 
+BOOL
 STDCALL
 SystemTimeToFileTime(
     CONST SYSTEMTIME *  lpSystemTime,
@@ -444,7 +444,7 @@ GetSystemTimeAdjustment(PDWORD lpTimeAdjustment,
 {
    SYSTEM_QUERY_TIME_ADJUSTMENT Buffer;
    NTSTATUS Status;
-   
+
    Status = NtQuerySystemInformation(SystemTimeAdjustmentInformation,
 				     &Buffer,
 				     sizeof(SYSTEM_QUERY_TIME_ADJUSTMENT),
@@ -454,11 +454,11 @@ GetSystemTimeAdjustment(PDWORD lpTimeAdjustment,
 	SetLastErrorByStatus(Status);
 	return FALSE;
      }
-   
+
    *lpTimeAdjustment = (DWORD)Buffer.TimeAdjustment;
    *lpTimeIncrement = (DWORD)Buffer.MaximumIncrement;
    *lpTimeAdjustmentDisabled = (BOOL)Buffer.TimeSynchronization;
-   
+
    return TRUE;
 }
 
@@ -472,10 +472,10 @@ SetSystemTimeAdjustment(DWORD dwTimeAdjustment,
 {
    NTSTATUS Status;
    SYSTEM_SET_TIME_ADJUSTMENT Buffer;
-   
+
    Buffer.TimeAdjustment = (ULONG)dwTimeAdjustment;
    Buffer.TimeSynchronization = (BOOLEAN)bTimeAdjustmentDisabled;
-   
+
    Status = NtSetSystemInformation(SystemTimeAdjustmentInformation,
 				   &Buffer,
 				   sizeof(SYSTEM_SET_TIME_ADJUSTMENT));
@@ -484,7 +484,7 @@ SetSystemTimeAdjustment(DWORD dwTimeAdjustment,
 	SetLastErrorByStatus(Status);
 	return FALSE;
      }
-   
+
    return TRUE;
 }
 
@@ -502,17 +502,17 @@ GetSystemTimes(
 {
    SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION SysProcPerfInfo;
    NTSTATUS Status;
-   
+
    Status = ZwQuerySystemInformation(SystemProcessorPerformanceInformation,
                                      &SysProcPerfInfo,
                                      sizeof(SysProcPerfInfo),
                                      NULL);
-                                     
+
    if (!NT_SUCCESS(Status))
      {
         SetLastErrorByStatus(Status);
         return FALSE;
-     }   
+     }
 /*
 	Good only for one processor system.
  */
@@ -525,7 +525,7 @@ GetSystemTimes(
 
    lpUserTime->dwLowDateTime = SysProcPerfInfo.UserTime.LowPart;
    lpUserTime->dwHighDateTime = SysProcPerfInfo.UserTime.HighPart;
-   
+
    return TRUE;
 }
 

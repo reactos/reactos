@@ -58,7 +58,7 @@ FillDeviceComboBox(PSND_MIXER Mixer, UINT Id, LPCTSTR ProductName, PVOID Context
 {
   LRESULT lres;
   PPREFERENCES_FILL_DEVICES FillContext = (PPREFERENCES_FILL_DEVICES)Context;
-  
+
   lres = SendMessage(FillContext->hComboBox, CB_ADDSTRING, 0, (LPARAM)ProductName);
   if(lres != CB_ERR)
   {
@@ -70,7 +70,7 @@ FillDeviceComboBox(PSND_MIXER Mixer, UINT Id, LPCTSTR ProductName, PVOID Context
       SendMessage(FillContext->hComboBox, CB_SETCURSEL, (WPARAM)lres, 0);
     }
   }
-  
+
   return TRUE;
 }
 
@@ -78,7 +78,7 @@ static INT_PTR CALLBACK
 DlgPreferencesProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   PPREFERENCES_CONTEXT Context;
-  
+
   switch(uMsg)
   {
     case WM_COMMAND:
@@ -94,7 +94,7 @@ DlgPreferencesProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
       }
       break;
     }
-    
+
     case MM_MIXM_LINE_CHANGE:
     {
       DBG("MM_MIXM_LINE_CHANGE\n");
@@ -106,16 +106,16 @@ DlgPreferencesProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
       DBG("MM_MIXM_CONTROL_CHANGE\n");
       break;
     }
-    
+
     case WM_INITDIALOG:
     {
       PREFERENCES_FILL_DEVICES FillDevContext;
-      
+
       SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)lParam);
       Context = (PPREFERENCES_CONTEXT)((LONG_PTR)lParam);
       Context->hwndDlg = hwndDlg;
       Context->Mixer = SndMixerCreate(hwndDlg);
-      
+
       FillDevContext.PrefContext = Context;
       FillDevContext.hComboBox = GetDlgItem(hwndDlg, IDC_MIXERDEVICE);
       FillDevContext.Selected = SndMixerGetSelection(Context->Mixer);
@@ -124,7 +124,7 @@ DlgPreferencesProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                            &FillDevContext);
       return TRUE;
     }
-    
+
     case WM_DESTROY:
     {
       Context = GetDialogData(hwndDlg, PREFERENCES_CONTEXT);
@@ -141,7 +141,7 @@ DlgPreferencesProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
       break;
     }
   }
-  
+
   return 0;
 }
 
@@ -156,7 +156,7 @@ BOOL
 RebuildMixerWindowControls(PMIXER_WINDOW MixerWindow)
 {
   DeleteMixerWindowControls(MixerWindow);
-  
+
   return TRUE;
 }
 
@@ -165,13 +165,13 @@ MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   PMIXER_WINDOW MixerWindow;
   LRESULT Result = 0;
-  
+
   switch(uMsg)
   {
     case WM_COMMAND:
     {
       MixerWindow = GetWindowData(hwnd, MIXER_WINDOW);
-      
+
       switch(LOWORD(wParam))
       {
         case IDC_PROPERTIES:
@@ -180,7 +180,7 @@ MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
           Preferences.MixerWindow = MixerWindow;
           Preferences.Mixer = NULL;
-          
+
           if(DialogBoxParam(hAppInstance,
                             MAKEINTRESOURCE(IDD_PREFERENCES),
                             hwnd,
@@ -191,7 +191,7 @@ MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
           }
           break;
         }
-        
+
         case IDC_EXIT:
         {
           PostQuitMessage(0);
@@ -200,19 +200,19 @@ MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       }
       break;
     }
-    
+
     case MM_MIXM_LINE_CHANGE:
     {
       DBG("MM_MIXM_LINE_CHANGE\n");
       break;
     }
-    
+
     case MM_MIXM_CONTROL_CHANGE:
     {
       DBG("MM_MIXM_CONTROL_CHANGE\n");
       break;
     }
-    
+
     case WM_CREATE:
     {
       MixerWindow = ((LPCREATESTRUCT)lParam)->lpCreateParams;
@@ -231,7 +231,7 @@ MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
           {
             SendMessage(MixerWindow->hStatusBar, WM_SETTEXT, 0, (LPARAM)szProduct);
           }
-          
+
           if(!RebuildMixerWindowControls(MixerWindow))
           {
             DBG("Rebuilding mixer window controls failed!\n");
@@ -251,7 +251,7 @@ MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       }
       break;
     }
-    
+
     case WM_DESTROY:
     {
       MixerWindow = GetWindowData(hwnd, MIXER_WINDOW);
@@ -261,13 +261,13 @@ MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       }
       break;
     }
-    
+
     case WM_CLOSE:
     {
       PostQuitMessage(0);
       break;
     }
-    
+
     default:
     {
       Result = DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -281,7 +281,7 @@ static BOOL
 RegisterApplicationClasses(VOID)
 {
   WNDCLASSEX wc;
-  
+
   wc.cbSize = sizeof(WNDCLASSEX);
   wc.style = CS_HREDRAW | CS_VREDRAW;
   wc.lpfnWndProc = MainWindowProc;
@@ -295,7 +295,7 @@ RegisterApplicationClasses(VOID)
   wc.lpszClassName = SZ_APP_CLASS;
   wc.hIconSm = NULL;
   MainWindowClass = RegisterClassEx(&wc);
-  
+
   return MainWindowClass != 0;
 }
 
@@ -310,13 +310,13 @@ CreateApplicationWindow(VOID)
 {
   LPTSTR lpAppTitle;
   HWND hWnd;
-  
+
   PMIXER_WINDOW MixerWindow = HeapAlloc(hAppHeap, 0, sizeof(MIXER_WINDOW));
   if(MixerWindow == NULL)
   {
     return NULL;
   }
-  
+
   /* load the application title */
   if(RosAllocAndLoadString(&lpAppTitle,
                            hAppInstance,
@@ -340,7 +340,7 @@ CreateApplicationWindow(VOID)
   else
   {
     LPTSTR lpErrMessage;
-    
+
     /*
      * no mixer devices are available!
      */
@@ -352,31 +352,31 @@ CreateApplicationWindow(VOID)
     MessageBox(NULL, lpErrMessage, lpAppTitle, MB_ICONINFORMATION);
     LocalFree(lpErrMessage);
   }
-  
+
   if(lpAppTitle != NULL)
   {
     LocalFree(lpAppTitle);
   }
-  
+
   if(hWnd == NULL)
   {
     HeapFree(hAppHeap, 0, MixerWindow);
   }
-  
+
   return hWnd;
 }
 
-int WINAPI 
+int WINAPI
 WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
 	LPSTR lpszCmdLine,
 	int nCmdShow)
 {
   MSG Msg;
-  
+
   hAppInstance = hInstance;
   hAppHeap = GetProcessHeap();
-  
+
   InitCommonControls();
 
   if(!RegisterApplicationClasses())
@@ -384,7 +384,7 @@ WinMain(HINSTANCE hInstance,
     DBG("Failed to register application classes (LastError: %d)!\n", GetLastError());
     return 1;
   }
-  
+
   hMainWnd = CreateApplicationWindow();
   if(hMainWnd == NULL)
   {

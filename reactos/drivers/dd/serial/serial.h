@@ -2,34 +2,34 @@
   #include <ddk/ntddk.h>
   #include <ddk/ntddser.h>
   #include <stdio.h>
-  
+
   #include <debug.h>
-  
+
   /* FIXME: these prototypes MUST NOT be here! */
   NTSTATUS STDCALL
   IoAttachDeviceToDeviceStackSafe(
     IN PDEVICE_OBJECT SourceDevice,
     IN PDEVICE_OBJECT TargetDevice,
     OUT PDEVICE_OBJECT *AttachedToDeviceObject);
-  
+
 #elif defined(_MSC_VER)
   #include <ntddk.h>
   #include <ntddser.h>
   #include <stdio.h>
-  
+
   #define STDCALL
-  
+
   #define DPRINT1 DbgPrint("(%s:%d) ", __FILE__, __LINE__), DbgPrint
   #define CHECKPOINT1 DbgPrint("(%s:%d)\n", __FILE__, __LINE__)
-  
+
   #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-  
+
   NTSTATUS STDCALL
   IoAttachDeviceToDeviceStackSafe(
     IN PDEVICE_OBJECT SourceDevice,
     IN PDEVICE_OBJECT TargetDevice,
     OUT PDEVICE_OBJECT *AttachedToDeviceObject);
-  
+
   #ifdef NDEBUG2
     #define DPRINT
     #define CHECKPOINT
@@ -76,20 +76,20 @@ typedef struct _SERIAL_DEVICE_EXTENSION
 	PDEVICE_OBJECT LowerDevice;
 	SERIAL_DEVICE_STATE PnpState;
 	IO_REMOVE_LOCK RemoveLock;
-	
+
 	ULONG SerialPortNumber;
-	
+
 	ULONG ComPort;
 	ULONG BaudRate;
 	ULONG BaseAddress;
 	PKINTERRUPT Interrupt;
 	KDPC ReceivedByteDpc;
 	KDPC SendByteDpc;
-	
+
 	SERIAL_LINE_CONTROL SerialLineControl;
 	UART_TYPE UartType;
 	ULONG WaitMask;
-	
+
 	ULONG BreakInterruptErrorCount;
 	SERIALPERF_STATS SerialPerfStats;
 	SERIAL_TIMEOUTS SerialTimeOuts;
@@ -99,9 +99,9 @@ typedef struct _SERIAL_DEVICE_EXTENSION
 	KSPIN_LOCK InputBufferLock;
 	CIRCULAR_BUFFER OutputBuffer;
 	KSPIN_LOCK OutputBufferLock;
-	
+
 	UNICODE_STRING SerialInterfaceName;
-	
+
 	/* Current values */
 	UCHAR MCR; /* Base+4, Modem Control Register */
 	UCHAR MSR; /* Base+6, Modem Status Register */
@@ -111,7 +111,7 @@ typedef struct _WORKITEM_DATA
 {
 	PIRP Irp;
 	PIO_WORKITEM IoWorkItem;
-	
+
 	BOOLEAN UseIntervalTimeout;
 	BOOLEAN UseTotalTimeout;
 	LARGE_INTEGER IntervalTimeout;

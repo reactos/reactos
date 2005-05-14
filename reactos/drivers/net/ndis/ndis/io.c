@@ -50,11 +50,11 @@ VOID STDCALL HandleDeferredProcessing(
 
   KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
     {
-      if ((!WasBusy) && (Adapter->WorkQueueHead)) 
+      if ((!WasBusy) && (Adapter->WorkQueueHead))
         {
           KeInsertQueueDpc(&Adapter->MiniportDpc, NULL, NULL);
-        } 
-      else 
+        }
+      else
         {
           Adapter->MiniportBusy = WasBusy;
         }
@@ -93,7 +93,7 @@ BOOLEAN STDCALL ServiceRoutine(
       &QueueMiniportHandleInterrupt,
       Adapter->NdisMiniportBlock.MiniportAdapterContext);
 
-  if (QueueMiniportHandleInterrupt) 
+  if (QueueMiniportHandleInterrupt)
     {
       NDIS_DbgPrint(MAX_TRACE, ("Queueing DPC.\n"));
       KeInsertQueueDpc(&Adapter->NdisMiniportBlock.Interrupt->InterruptDpc, NULL, NULL);
@@ -251,7 +251,7 @@ IO_ALLOCATION_ACTION STDCALL NdisMapRegisterCallback (
  *     Irp: Reserved; must be ignored
  *     MapRegisterBase: Map registers assigned for transfer
  *     Context: LOGICAL_ADAPTER object of the requesting miniport
- * NOTES:       
+ * NOTES:
  *     - Called once per BaseMapRegister (see NdisMAllocateMapRegisters)
  *     - Called at IRQL = DISPATCH_LEVEL
  */
@@ -293,7 +293,7 @@ NdisMAllocateMapRegisters(
  * RETURNS:
  *     NDIS_STATUS_SUCCESS on success
  *     NDIS_STATUS_RESOURCES on failure
- * NOTES: 
+ * NOTES:
  *     - the win2k ddk and the nt4 ddk have conflicting prototypes for this.
  *       I'm implementing the 2k one.
  *     - do not confuse a "base map register" with a "map register" - they
@@ -306,7 +306,7 @@ NdisMAllocateMapRegisters(
  *       map registers that represent the transfer.
  *     - Because of the above sillyness, you can only specify a few base map
  *       registers at most.  a 1514-byte packet is two map registers at 4k
- *       page size.  
+ *       page size.
  *     - NDIS limits the total number of allocated map registers to 64,
  *       which (in the case of the above example) limits the number of base
  *       map registers to 32.
@@ -342,11 +342,11 @@ NdisMAllocateMapRegisters(
 
   /*
   * map registers correlate to physical pages.  ndis documents a
-  * maximum of 64 map registers that it will return.  
+  * maximum of 64 map registers that it will return.
   * at 4k pages, a 1514-byte buffer can span not more than 2 pages.
   *
   * the number of registers required for a given physical mapping
-  * is (first register + last register + one per page size), 
+  * is (first register + last register + one per page size),
   * given that physical mapping is > 2.
   */
 
@@ -400,7 +400,7 @@ NdisMAllocateMapRegisters(
 
   if(AvailableMapRegisters < MapRegistersPerBaseRegister)
     {
-      NDIS_DbgPrint(MIN_TRACE, ("Didn't get enough map registers from hal - requested 0x%x, got 0x%x\n", 
+      NDIS_DbgPrint(MIN_TRACE, ("Didn't get enough map registers from hal - requested 0x%x, got 0x%x\n",
           MapRegistersPerBaseRegister, AvailableMapRegisters));
 
       return NDIS_STATUS_RESOURCES;
@@ -473,7 +473,7 @@ NdisMStartBufferPhysicalMapping(
  * FUNCTION: Sets up map registers for a bus-master DMA transfer
  * ARGUMENTS:
  *     MiniportAdapterHandle: handle originally input to MiniportInitialize
- *     Buffer: data to be transferred 
+ *     Buffer: data to be transferred
  *     PhysicalMapRegister: specifies the map register to set up
  *     WriteToDevice: if true, data is being written to the device; else it is being read
  *     PhysicalAddressArray: list of mapped ranges suitable for DMA with the device
@@ -483,7 +483,7 @@ NdisMStartBufferPhysicalMapping(
  *     - The basic idea:  call IoMapTransfer() in a loop as many times as it takes
  *       in order to map all of the virtual memory to physical memoroy readable
  *       by the device
- *     - The caller supplies storage for the physical address array.  
+ *     - The caller supplies storage for the physical address array.
  */
 {
   PLOGICAL_ADAPTER Adapter = 0;
@@ -504,8 +504,8 @@ NdisMStartBufferPhysicalMapping(
       ULONG Length = TotalLength;
 
       ReturnedAddress = Adapter->NdisMiniportBlock.SystemAdapterObject->DmaOperations->MapTransfer(
-          Adapter->NdisMiniportBlock.SystemAdapterObject, Buffer, 
-          Adapter->NdisMiniportBlock.MapRegisters[PhysicalMapRegister].MapRegister, 
+          Adapter->NdisMiniportBlock.SystemAdapterObject, Buffer,
+          Adapter->NdisMiniportBlock.MapRegisters[PhysicalMapRegister].MapRegister,
           CurrentVa, &Length, WriteToDevice);
 
       Adapter->NdisMiniportBlock.MapRegisters[PhysicalMapRegister].WriteToDevice = WriteToDevice;
@@ -554,9 +554,9 @@ NdisMCompleteBufferPhysicalMapping(
   Length = MmGetMdlByteCount(Buffer);
 
   Adapter->NdisMiniportBlock.SystemAdapterObject->DmaOperations->FlushAdapterBuffers(
-      Adapter->NdisMiniportBlock.SystemAdapterObject, Buffer, 
+      Adapter->NdisMiniportBlock.SystemAdapterObject, Buffer,
       Adapter->NdisMiniportBlock.MapRegisters[PhysicalMapRegister].MapRegister,
-      CurrentVa, Length, 
+      CurrentVa, Length,
       Adapter->NdisMiniportBlock.MapRegisters[PhysicalMapRegister].WriteToDevice);
 }
 
@@ -671,7 +671,7 @@ NdisMFreeMapRegisters(
       for(i = 0; i < Adapter->NdisMiniportBlock.BaseMapRegistersNeeded; i++)
         {
           AdapterObject->DmaOperations->FreeMapRegisters(
-              Adapter->NdisMiniportBlock.SystemAdapterObject, 
+              Adapter->NdisMiniportBlock.SystemAdapterObject,
               Adapter->NdisMiniportBlock.MapRegisters[i].MapRegister,
               MapRegistersPerBaseRegister);
         }
@@ -742,7 +742,7 @@ NdisMReadDmaCounter(
 
   if (AdapterObject == NULL)
     return 0;
-    
+
   return AdapterObject->DmaOperations->ReadDmaCounter(AdapterObject);
 }
 
@@ -762,7 +762,7 @@ NdisMGetDmaAlignment(
 
   if (AdapterObject == NULL)
     return 0;
-    
+
   return AdapterObject->DmaOperations->GetDmaAlignment(AdapterObject);
 }
 
@@ -850,7 +850,7 @@ NdisMRegisterInterrupt(
   if (NT_SUCCESS(Status))
     return NDIS_STATUS_SUCCESS;
 
-  if (Status == STATUS_INSUFFICIENT_RESOURCES) 
+  if (Status == STATUS_INSUFFICIENT_RESOURCES)
     {
         /* FIXME: Log error */
       NDIS_DbgPrint(MIN_TRACE, ("Resource conflict!\n"));

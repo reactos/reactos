@@ -23,7 +23,7 @@
  * FILE:             services/fs/cdfs/misc.c
  * PURPOSE:          CDROM (ISO 9660) filesystem driver
  * PROGRAMMER:       Eric Kohl
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/

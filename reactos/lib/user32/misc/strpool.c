@@ -62,7 +62,7 @@ NTSTATUS
 HEAP_strcpyAtoW ( LPWSTR lpszW, LPCSTR lpszA, DWORD len )
 {
   NTSTATUS Status =
-    RtlMultiByteToUnicodeN ( lpszW, len*sizeof(WCHAR), NULL, (LPSTR)lpszA, len ); 
+    RtlMultiByteToUnicodeN ( lpszW, len*sizeof(WCHAR), NULL, (LPSTR)lpszA, len );
   lpszW[len] = L'\0';
   return Status;
 }

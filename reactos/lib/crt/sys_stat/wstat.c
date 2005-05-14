@@ -43,19 +43,19 @@ int _wstat (const wchar_t *path, struct _stat *buffer)
 //  statbuf->st_dev = fd;
   buffer->st_size = fileAttributeData.nFileSizeLow;
   buffer->st_mode = S_IREAD;
-  if (fileAttributeData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) 
+  if (fileAttributeData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
     buffer->st_mode |= S_IFDIR;
   else
   {
     buffer->st_mode |= S_IFREG;
     ext = wcsrchr(path, L'.');
-    if (ext && (!_wcsicmp(ext, L".exe") || 
-	        !_wcsicmp(ext, L".com") || 
-		!_wcsicmp(ext, L".bat") || 
+    if (ext && (!_wcsicmp(ext, L".exe") ||
+	        !_wcsicmp(ext, L".com") ||
+		!_wcsicmp(ext, L".bat") ||
 		!_wcsicmp(ext, L".cmd")))
       buffer->st_mode |= S_IEXEC;
   }
-  if (!(fileAttributeData.dwFileAttributes & FILE_ATTRIBUTE_READONLY)) 
+  if (!(fileAttributeData.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
     buffer->st_mode |= S_IWRITE;
 
   return 0;
@@ -97,19 +97,19 @@ int _wstati64 (const wchar_t *path, struct _stati64 *buffer)
   buffer->st_size = ((((__int64)fileAttributeData.nFileSizeHigh) << 16) << 16) +
              fileAttributeData.nFileSizeLow;
   buffer->st_mode = S_IREAD;
-  if (fileAttributeData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) 
+  if (fileAttributeData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
     buffer->st_mode |= S_IFDIR;
   else
   {
     buffer->st_mode |= S_IFREG;
     ext = wcsrchr(path, L'.');
-    if (ext && (!_wcsicmp(ext, L".exe") || 
-	        !_wcsicmp(ext, L".com") || 
-		!_wcsicmp(ext, L".bat") || 
+    if (ext && (!_wcsicmp(ext, L".exe") ||
+	        !_wcsicmp(ext, L".com") ||
+		!_wcsicmp(ext, L".bat") ||
 		!_wcsicmp(ext, L".cmd")))
       buffer->st_mode |= S_IEXEC;
   }
-  if (!(fileAttributeData.dwFileAttributes & FILE_ATTRIBUTE_READONLY)) 
+  if (!(fileAttributeData.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
     buffer->st_mode |= S_IWRITE;
 
   return 0;

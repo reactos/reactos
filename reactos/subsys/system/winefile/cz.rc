@@ -28,7 +28,7 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 IDM_WINEFILE MENU FIXED IMPURE
 {
 	POPUP "&Soubor"  {
-		MENUITEM "&Otevшнt\tEnter" ,			101
+		MENUITEM "&Otevшнt\tEnter" ,			ID_ACTIVATE
 		MENUITEM "&Pшesunout...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Kopнrovat...\tF8" ,			107
 		MENUITEM "&Ve schrбnce...\tF9" ,		118
@@ -58,13 +58,13 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Kopнrovat disk..." ,			201
 		MENUITEM "&Jmenovka disk..." ,			202
 		MENUITEM SEPARATOR
-		MENUITEM "&Formбtovat disk..." ,			203
+		MENUITEM "&Formбtovat disk..." ,			ID_FORMAT_DISK
 #ifdef _WIN95
 		MENUITEM "&Vytvoшit systemovэ disk...", -1	/*TODO*/
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "Pшipojit &sнќovй zaшнzenн" ,			252
-		MENUITEM "&Odpojit &sнќovй zaшнzenн" ,		253
+		MENUITEM "Pшipojit &sнќovй zaшнzenн" ,			ID_CONNECT_NETWORK_DRIVE
+		MENUITEM "&Odpojit &sнќovй zaшнzenн" ,		ID_DISCONNECT_NETWORK_DRIVE
 		MENUITEM SEPARATOR
 		MENUITEM "Sdнlet jako..." ,			254
 		MENUITEM "&Odstranit sdнlenн..." ,			255

@@ -318,8 +318,8 @@ ULONG FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector, ULONG PartitionSectorCo
 		SectorsPerFat = FatBootSector->SectorsPerFat ? FatBootSector->SectorsPerFat : Fat32BootSector->SectorsPerFatBig;
 		TotalSectors = FatBootSector->TotalSectors ? FatBootSector->TotalSectors : FatBootSector->TotalSectorsBig;
 		DataSectorCount = TotalSectors - (FatBootSector->ReservedSectors + (FatBootSector->NumberOfFats * SectorsPerFat) + RootDirSectors);
-	
-//mjl 
+
+//mjl
 		if (FatBootSector->SectorsPerCluster == 0)
 			CountOfClusters = 0;
 		else
@@ -861,7 +861,7 @@ BOOL FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer)
 		}
 
 		fat = *((USHORT *) ((PVOID)FILESYSBUFFER + ThisFatEntOffset));
-		if (Cluster & 0x0001) 
+		if (Cluster & 0x0001)
 			fat = fat >> 4;	/* Cluster number is ODD */
 		else
 			fat = fat & 0x0FFF;	/* Cluster number is EVEN */
@@ -870,7 +870,7 @@ BOOL FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer)
 
 	case FAT16:
 	case FATX16:
-		
+
 		FatOffset = (Cluster * 2);
 		ThisFatSecNum = ActiveFatSectorStart + (FatOffset / BytesPerSector);
 		ThisFatEntOffset = (FatOffset % BytesPerSector);
@@ -1111,7 +1111,7 @@ BOOL FatReadClusterChain(ULONG StartClusterNumber, ULONG NumberOfClusters, PVOID
 			break;
 		}
 	}
-	
+
 	return TRUE;
 }
 

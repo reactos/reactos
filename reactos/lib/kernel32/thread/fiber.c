@@ -230,11 +230,11 @@ LPVOID WINAPI CreateFiberEx
 
  if(dwFlags & FIBER_FLAG_FLOAT_SWITCH)
   pfCurFiber->FloatSave = ctxFiberContext.FloatSave;
- 
+
 #else
 #error Unspecified or unsupported architecture.
 #endif
- 
+
  return pfCurFiber;
 
 l_CleanupStack:

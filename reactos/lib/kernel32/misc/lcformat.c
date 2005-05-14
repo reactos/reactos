@@ -22,12 +22,12 @@
  */
 
 /*
- * Whole file ripped from Wine's dlls\kernel\lcformat.c, rev 1.7 and is 
+ * Whole file ripped from Wine's dlls\kernel\lcformat.c, rev 1.7 and is
  * unchanged except that includes are different. I thought about adding
  * @implemeted to each exported function, but this might make merging harder?
  * -Gunnar
  */
- 
+
 #define WINVER 0x0500
 
 #include <k32.h>

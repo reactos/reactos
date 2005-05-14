@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/sprintf.c
  * PURPOSE:         Single byte sprintf functions
- * 
+ *
  * PROGRAMMERS:     David Welch
  *                  Eric Kohl
  */
@@ -163,7 +163,7 @@ number(char *buf, char *end, __int64 num, int base, int size, int precision, int
   return buf;
 }
 
-static char* 
+static char*
 string(char* buf, char* end, const char* s, int len, int field_width, int precision, int flags)
 {
 	int i;
@@ -208,7 +208,7 @@ string(char* buf, char* end, const char* s, int len, int field_width, int precis
 	return buf;
 }
 
-static char* 
+static char*
 stringw(char* buf, char* end, const wchar_t* sw, int len, int field_width, int precision, int flags)
 {
 	int i;
@@ -234,7 +234,7 @@ stringw(char* buf, char* end, const wchar_t* sw, int len, int field_width, int p
 	if (!(flags & LEFT))
 		while (len < field_width--)
 		{
-			if (buf <= end) 
+			if (buf <= end)
 				*buf = ' ';
 			++buf;
 		}
@@ -544,7 +544,7 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
   else if (cnt > 0)
     /* don't write out a null byte if the buf size is zero */
     *end = '\0';
-  
+
   return str-buf;
 }
 

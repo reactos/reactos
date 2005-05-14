@@ -80,9 +80,9 @@ EnableWindow(HWND hWnd,
     LONG Style = NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE);
     Style = bEnable ? Style & ~WS_DISABLED : Style | WS_DISABLED;
     NtUserSetWindowLong(hWnd, GWL_STYLE, Style, FALSE);
-    
+
     SendMessageA(hWnd, WM_ENABLE, (LPARAM) IsWindowEnabled(hWnd), 0);
-    
+
     // Return nonzero if it was disabled, or zero if it wasn't:
     return IsWindowEnabled(hWnd);
 }
@@ -140,7 +140,7 @@ GetKeyNameTextA(LONG lParam,
 		LPSTR lpString,
 		int nSize)
 {
-  LPWSTR intermediateString = 
+  LPWSTR intermediateString =
     HeapAlloc(GetProcessHeap(),0,nSize * sizeof(WCHAR));
   int ret = 0;
   UINT wstrLen = 0;
@@ -149,9 +149,9 @@ GetKeyNameTextA(LONG lParam,
   if( !intermediateString ) return 0;
   ret = GetKeyNameTextW(lParam,intermediateString,nSize);
   if( ret == 0 ) { lpString[0] = 0; return 0; }
-  
+
   wstrLen = wcslen( intermediateString );
-  ret = WideCharToMultiByte(CP_ACP, 0, 
+  ret = WideCharToMultiByte(CP_ACP, 0,
 			    intermediateString, wstrLen,
 			    lpString, nSize, ".", &defChar );
   lpString[ret] = 0;
@@ -222,7 +222,7 @@ GetKeyboardLayoutNameW(LPWSTR pwszKLID)
 BOOL STDCALL
 GetKeyboardState(PBYTE lpKeyState)
 {
-  
+
   return (BOOL) NtUserGetKeyboardState((LPBYTE) lpKeyState);
 }
 
@@ -438,7 +438,7 @@ ToUnicode(UINT wVirtKey,
 	  int cchBuff,
 	  UINT wFlags)
 {
-  return ToUnicodeEx( wVirtKey, wScanCode, lpKeyState, pwszBuff, cchBuff, 
+  return ToUnicodeEx( wVirtKey, wScanCode, lpKeyState, pwszBuff, cchBuff,
 		      wFlags, 0 );
 }
 
@@ -582,14 +582,14 @@ keybd_event(
 
 {
   INPUT Input;
-  
+
   Input.type = INPUT_KEYBOARD;
   Input.ki.wVk = bVk;
   Input.ki.wScan = bScan;
   Input.ki.dwFlags = dwFlags;
   Input.ki.time = 0;
   Input.ki.dwExtraInfo = dwExtraInfo;
-  
+
   NtUserSendInput(1, &Input, sizeof(INPUT));
 }
 
@@ -607,7 +607,7 @@ mouse_event(
 	    ULONG_PTR dwExtraInfo)
 {
   INPUT Input;
-  
+
   Input.type = INPUT_MOUSE;
   Input.mi.dx = dx;
   Input.mi.dy = dy;
@@ -615,7 +615,7 @@ mouse_event(
   Input.mi.dwFlags = dwFlags;
   Input.mi.time = 0;
   Input.mi.dwExtraInfo = dwExtraInfo;
-  
+
   NtUserSendInput(1, &Input, sizeof(INPUT));
 }
 

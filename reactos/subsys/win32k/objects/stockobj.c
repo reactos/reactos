@@ -184,7 +184,7 @@ IntSetSysColors(UINT nColors, INT *Elements, COLORREF *Colors)
     Elements++;
     Colors++;
   }
-  
+
   return nColors > 0;
 }
 
@@ -192,20 +192,20 @@ BOOL FASTCALL
 IntGetSysColorBrushes(HBRUSH *Brushes, UINT nBrushes)
 {
   UINT i;
-  
+
   ASSERT(Brushes);
-  
+
   if(nBrushes > NUM_SYSCOLORS)
   {
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   for(i = 0; i < nBrushes; i++)
   {
     *(Brushes++) = SysColorBrushes[i];
   }
-  
+
   return nBrushes > 0;
 }
 
@@ -213,7 +213,7 @@ BOOL FASTCALL
 IntGetSysColorPens(HPEN *Pens, UINT nPens)
 {
   UINT i;
-  
+
   ASSERT(Pens);
 
   if(nPens > NUM_SYSCOLORS)
@@ -235,21 +235,21 @@ IntGetSysColors(COLORREF *Colors, UINT nColors)
 {
   UINT i;
   COLORREF *col;
-  
+
   ASSERT(Colors);
-  
+
   if(nColors > NUM_SYSCOLORS)
   {
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   col = &SysColors[0];
   for(i = 0; i < nColors; i++)
   {
     *(Colors++) = *(col++);
   }
-  
+
   return nColors > 0;
 }
 
@@ -258,7 +258,7 @@ CreateSysColorObjects(VOID)
 {
   UINT i;
   LOGPEN Pen;
-  
+
   /* Create the syscolor brushes */
   for(i = 0; i < NUM_SYSCOLORS; i++)
   {
@@ -271,7 +271,7 @@ CreateSysColorObjects(VOID)
       }
     }
   }
-  
+
   /* Create the syscolor pens */
   Pen.lopnStyle = PS_SOLID;
   Pen.lopnWidth.x = 0;

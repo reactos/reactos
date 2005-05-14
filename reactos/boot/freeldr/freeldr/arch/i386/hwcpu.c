@@ -464,7 +464,7 @@ GetMpConfigurationTable(PMP_FLOATING_POINT_TABLE FpTable)
   if (ConfigTable->Signature != MP_CT_SIGNATURE)
     return NULL;
 
-  DbgPrint((DPRINT_HWDETECT, 
+  DbgPrint((DPRINT_HWDETECT,
 	    "MP Configuration Table at: %x\n",
 	    (ULONG)ConfigTable));
 
@@ -538,7 +538,7 @@ DetectMps(FRLDRHKEY CpuKey,
 		CpuEntry = (PMP_PROCESSOR_ENTRY)Ptr;
 
 		DbgPrint((DPRINT_HWDETECT, "Processor Entry\n"));
-		DbgPrint((DPRINT_HWDETECT, 
+		DbgPrint((DPRINT_HWDETECT,
 			  "APIC Id %u  APIC Version %u  Flags %x  Signature %x  Feature %x\n",
 			  CpuEntry->LocalApicId,
 			  CpuEntry->LocalApicVersion,

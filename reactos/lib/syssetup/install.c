@@ -82,11 +82,11 @@ RunVMWInstall(VOID)
 {
   PROCESS_INFORMATION ProcInfo;
   STARTUPINFO si;
-  
+
   ZeroMemory(&si, sizeof(STARTUPINFO));
   si.cb = sizeof(STARTUPINFO);
-  
-  if(CreateProcess(NULL, _T("vmwinst.exe"), NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS, 
+
+  if(CreateProcess(NULL, _T("vmwinst.exe"), NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS,
                    NULL, NULL, &si, &ProcInfo))
   {
     WaitForSingleObject(ProcInfo.hProcess, INFINITE);
@@ -237,7 +237,7 @@ RestartDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
    {
       case WM_INITDIALOG:
          SendDlgItemMessage(hWnd, IDC_RESTART_PROGRESS, PBM_SETRANGE, 0,
-            MAKELPARAM(0, 300)); 
+            MAKELPARAM(0, 300));
          SetTimer(hWnd, 0, 50, NULL);
          return TRUE;
 

@@ -20,7 +20,6 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_SE_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_SE_H
 
-
 extern POBJECT_TYPE SepTokenObjectType;
 
 /* SID Authorities */
@@ -110,8 +109,10 @@ BOOLEAN SepInitSecurityIDs(VOID);
 BOOLEAN SepInitDACLs(VOID);
 BOOLEAN SepInitSDs(VOID);
 
-NTSTATUS STDCALL 
-SepCreateImpersonationTokenDacl(PTOKEN Token, 
+VOID SeDeassignPrimaryToken(struct _EPROCESS *Process);
+
+NTSTATUS STDCALL
+SepCreateImpersonationTokenDacl(PTOKEN Token,
                                 PTOKEN PrimaryToken,
                                 PACL *Dacl);
 
@@ -155,7 +156,7 @@ SepDuplicateToken(PTOKEN Token,
 		  SECURITY_IMPERSONATION_LEVEL Level,
 		  KPROCESSOR_MODE PreviousMode,
 		  PTOKEN* NewAccessToken);
-          
+
 NTSTATUS
 SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
                                    IN KPROCESSOR_MODE AccessMode,

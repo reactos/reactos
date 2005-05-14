@@ -50,7 +50,7 @@ int _read(int _fd, void *_buf, unsigned int _nbyte)
       _dosmaperr(error);
       return -1;
    }
-      
+
    /* text mode */
    if (_rbyte && istext)
    {

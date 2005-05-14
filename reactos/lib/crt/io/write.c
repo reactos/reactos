@@ -47,7 +47,7 @@ int _write(int _fd, const void* _buf, unsigned int _nbyte)
 
    DPRINT("_write(fd %d, buf %x, nbyte %d)\n", _fd, _buf, _nbyte);
    if (__fileno_getmode(_fd) & O_TEXT) {
-      result = _nbyte; 
+      result = _nbyte;
       tmp = (char*) malloc(BUFSIZE);
       if (tmp == NULL) {
 			__set_errno(ENOMEM);
@@ -80,7 +80,7 @@ int _write(int _fd, const void* _buf, unsigned int _nbyte)
          if (count == 0 || _nbyte == 0) {
             if (!WriteFile((HANDLE)_get_osfhandle(_fd), tmp, BUFSIZE - count, &wbyte, NULL)) {
 				_dosmaperr(GetLastError());
-				result = -1; 
+				result = -1;
 				break;
             }
             if (wbyte < (BUFSIZE - count)) {

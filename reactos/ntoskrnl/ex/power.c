@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/power.c
  * PURPOSE:         Power managment
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
@@ -39,7 +39,7 @@ KiHaltProcessorDpcRoutine(IN PKDPC Dpc,
 VOID STDCALL
 ShutdownThreadMain(PVOID Context)
 {
-   SHUTDOWN_ACTION Action = (SHUTDOWN_ACTION)Context; 
+   SHUTDOWN_ACTION Action = (SHUTDOWN_ACTION)Context;
    LARGE_INTEGER Waittime;
 
    /* Run the thread on the boot processor */
@@ -51,7 +51,7 @@ ShutdownThreadMain(PVOID Context)
 
    PiShutdownProcessManager();
    MiShutdownMemoryManager();
-   
+
    Waittime.QuadPart = (LONGLONG)-10000000; /* 1sec */
    KeDelayExecutionThread(KernelMode, FALSE, &Waittime);
 
@@ -105,7 +105,7 @@ ShutdownThreadMain(PVOID Context)
 }
 
 
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 NtSetSystemPowerState(IN POWER_ACTION SystemAction,
 		      IN SYSTEM_POWER_STATE MinSystemState,
 		      IN ULONG Flags)
@@ -117,7 +117,7 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
 /*
  * @implemented
  */
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 NtShutdownSystem(IN SHUTDOWN_ACTION Action)
 {
    NTSTATUS Status;

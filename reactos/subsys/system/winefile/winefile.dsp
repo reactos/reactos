@@ -55,7 +55,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib mpr.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 
 !ELSEIF  "$(CFG)" == "winefile - Win32 Unicode Debug"
 
@@ -81,7 +81,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib mpr.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 
 !ELSEIF  "$(CFG)" == "winefile - Win32 UNICODE Release"
 
@@ -108,7 +108,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib /nologo /subsystem:windows /machine:I386
+# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib mpr.lib /nologo /subsystem:windows /machine:I386
 
 !ELSEIF  "$(CFG)" == "winefile - Win32 Release"
 
@@ -135,7 +135,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib /nologo /subsystem:windows /machine:I386
+# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib mpr.lib /nologo /subsystem:windows /machine:I386
 
 !ENDIF 
 
@@ -148,6 +148,11 @@ LINK32=link.exe
 # Begin Group "Resources"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\cz.rc
+# PROP Exclude_From_Build 1
+# End Source File
 # Begin Source File
 
 SOURCE=.\de.rc
@@ -213,6 +218,11 @@ SOURCE=.\ru.rc
 # Begin Source File
 
 SOURCE=.\si.rc
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=.\Sv.rc
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File

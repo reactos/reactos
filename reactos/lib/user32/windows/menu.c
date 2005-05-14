@@ -71,7 +71,7 @@
 	(0 != ((MenuInfo)->Flags & MF_POPUP) && 0 != ((MenuInfo)->Flags & MF_SYSMENU))
 
 #define IS_MAGIC_ITEM(Bmp)   ((int) Bmp <12)
-  
+
 #define MENU_BAR_ITEMS_SPACE (12)
 #define SEPARATOR_HEIGHT (5)
 #define MENU_TAB_SPACE (8)
@@ -126,8 +126,8 @@ const struct builtin_class_descr POPUPMENU_builtin_class =
 
 /* INTERNAL FUNCTIONS ********************************************************/
 
-/* Rip the fun and easy to use and fun WINE unicode string manipulation routines. 
- * Of course I didnt copy the ASM code because we want this to be portable 
+/* Rip the fun and easy to use and fun WINE unicode string manipulation routines.
+ * Of course I didnt copy the ASM code because we want this to be portable
  * and it needs to go away.
  */
 
@@ -164,7 +164,7 @@ MenuGetRosMenuInfo(PROSMENUINFO MenuInfo, HMENU Menu)
 {
   MenuInfo->cbSize = sizeof(ROSMENUINFO);
   MenuInfo->fMask = MIM_BACKGROUND | MIM_HELPID | MIM_MAXHEIGHT | MIM_MENUDATA | MIM_STYLE;
-  
+
   return NtUserMenuInfo(Menu, MenuInfo, FALSE);
 }
 
@@ -178,7 +178,7 @@ MenuSetRosMenuInfo(PROSMENUINFO MenuInfo)
 {
   MenuInfo->cbSize = sizeof(ROSMENUINFO);
   MenuInfo->fMask = MIM_BACKGROUND | MIM_HELPID | MIM_MAXHEIGHT | MIM_MENUDATA | MIM_STYLE;
-  
+
   return NtUserMenuInfo(MenuInfo->Self, MenuInfo, TRUE);
 }
 
@@ -255,7 +255,7 @@ MenuSetRosMenuItemInfo(HMENU Menu, UINT Index, PROSMENUITEMINFO ItemInfo)
   ItemInfo->fMask = MIIM_BITMAP | MIIM_CHECKMARKS | MIIM_DATA | MIIM_FTYPE
                     | MIIM_ID | MIIM_STATE | MIIM_STRING | MIIM_SUBMENU | MIIM_TYPE;
 
-  
+
   Ret = NtUserMenuItemInfo(Menu, Index, TRUE, ItemInfo, TRUE);
 
   return Ret;
@@ -1063,7 +1063,7 @@ BOOL
 MenuInit(VOID)
 {
   NONCLIENTMETRICSW ncm;
-  
+
   /* get the menu font */
   if(!hMenuFont || !hMenuFontBold)
   {
@@ -1073,14 +1073,14 @@ MenuInit(VOID)
       DbgPrint("MenuInit(): SystemParametersInfoW(SPI_GETNONCLIENTMETRICS) failed!\n");
       return FALSE;
     }
-    
+
     hMenuFont = CreateFontIndirectW(&ncm.lfMenuFont);
     if(hMenuFont == NULL)
     {
       DbgPrint("MenuInit(): CreateFontIndirectW(hMenuFont) failed!\n");
       return FALSE;
     }
-    
+
     ncm.lfMenuFont.lfWeight = max(ncm.lfMenuFont.lfWeight + 300, 1000);
     hMenuFontBold = CreateFontIndirectW(&ncm.lfMenuFont);
     if(hMenuFontBold == NULL)
@@ -1905,8 +1905,8 @@ MenuMoveSelection(HWND WndOwner, PROSMENUINFO MenuInfo, INT Offset)
        i = -1;
     }
   else
-    { 
-      i = MenuInfo->FocusedItem; 
+    {
+      i = MenuInfo->FocusedItem;
     }
 
   do
@@ -1968,7 +1968,7 @@ MenuInitSysMenuPopup(HMENU Menu, DWORD Style, DWORD ClsStyle, LONG HitTest )
     {
       EnableMenuItem(Menu, SC_CLOSE, MF_GRAYED);
     }
-  
+
   /* Set default menu item */
   if(Style & WS_MINIMIZE)
   {
@@ -1988,7 +1988,7 @@ MenuInitSysMenuPopup(HMENU Menu, DWORD Style, DWORD ClsStyle, LONG HitTest )
   #if 0
   mii.cbSize = sizeof(MENUITEMINFOW);
   mii.fMask = MIIM_STATE;
-  if((DefItem != SC_CLOSE) && GetMenuItemInfoW(Menu, DefItem, FALSE, &mii) && 
+  if((DefItem != SC_CLOSE) && GetMenuItemInfoW(Menu, DefItem, FALSE, &mii) &&
      (mii.fState & (MFS_GRAYED | MFS_DISABLED)))
   {
     DefItem = SC_CLOSE;
@@ -3353,7 +3353,7 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
           Mt.TrackFlags &= ~TF_SKIPREMOVE;
         }
     }
-  
+
   NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, NULL);
   SetCapture(NULL);  /* release the capture */
 
@@ -3453,7 +3453,7 @@ AppendMenuA(HMENU hMenu,
 	    UINT_PTR uIDNewItem,
 	    LPCSTR lpNewItem)
 {
-  return(InsertMenuA(hMenu, -1, uFlags | MF_BYPOSITION, uIDNewItem, 
+  return(InsertMenuA(hMenu, -1, uFlags | MF_BYPOSITION, uIDNewItem,
 		     lpNewItem));
 }
 
@@ -3467,7 +3467,7 @@ AppendMenuW(HMENU hMenu,
 	    UINT_PTR uIDNewItem,
 	    LPCWSTR lpNewItem)
 {
-  return(InsertMenuW(hMenu, -1, uFlags | MF_BYPOSITION, uIDNewItem, 
+  return(InsertMenuW(hMenu, -1, uFlags | MF_BYPOSITION, uIDNewItem,
 		     lpNewItem));
 }
 
@@ -3611,7 +3611,7 @@ GetMenuBarInfo(HWND hwnd,
 LONG STDCALL
 GetMenuCheckMarkDimensions(VOID)
 {
-  return(MAKELONG(GetSystemMetrics(SM_CXMENUCHECK), 
+  return(MAKELONG(GetSystemMetrics(SM_CXMENUCHECK),
 		  GetSystemMetrics(SM_CYMENUCHECK)));
 }
 
@@ -3637,16 +3637,16 @@ GetMenuInfo(HMENU hmenu,
 {
   ROSMENUINFO mi;
   BOOL res = FALSE;
-  
+
   if(!lpcmi || (lpcmi->cbSize != sizeof(MENUINFO)))
     return FALSE;
-  
+
   RtlZeroMemory(&mi, sizeof(MENUINFO));
   mi.cbSize = sizeof(MENUINFO);
   mi.fMask = lpcmi->fMask;
-  
+
   res = NtUserMenuInfo(hmenu, &mi, FALSE);
-  
+
   memcpy(lpcmi, &mi, sizeof(MENUINFO));
   return res;
 }
@@ -3672,15 +3672,15 @@ GetMenuItemID(HMENU hMenu,
 	      int nPos)
 {
   ROSMENUITEMINFO mii;
-  
+
   mii.cbSize = sizeof(MENUITEMINFOW);
   mii.fMask = MIIM_ID | MIIM_SUBMENU;
-  
+
   if (! NtUserMenuItemInfo(hMenu, nPos, MF_BYPOSITION, &mii, FALSE))
     {
       return -1;
     }
-  
+
   if (NULL != mii.hSubMenu)
     {
       return -1;
@@ -3689,7 +3689,7 @@ GetMenuItemID(HMENU hMenu,
     {
       return -1;
     }
-  
+
   return mii.wID;
 }
 
@@ -3730,7 +3730,7 @@ GetMenuItemInfoA(
       if (miiW.dwTypeData == NULL)
          return FALSE;
    }
-   
+
    if (!NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO)&miiW, FALSE))
    {
       HeapFree(GetProcessHeap(), 0, miiW.dwTypeData);
@@ -3798,7 +3798,7 @@ GetMenuState(
   mii.cbSize = sizeof(MENUITEMINFOW);
   mii.fMask = MIIM_STATE | MIIM_TYPE | MIIM_SUBMENU;
   mii.dwTypeData = NULL;
-  
+
   SetLastError(0);
   if(NtUserMenuItemInfo(hMenu, uId, uFlags, &mii, FALSE))
     {
@@ -3810,18 +3810,18 @@ GetMenuState(
               return (UINT) -1;
             }
           nSubItems = MenuInfo.MenuItemCount;
-      
+
           /* FIXME - ported from wine, does that work (0xff)? */
           if(GetLastError() != ERROR_INVALID_MENU_HANDLE)
             return (nSubItems << 8) | ((mii.fState | mii.fType) & 0xff);
 
           return (UINT)-1; /* Invalid submenu */
         }
-    
+
       /* FIXME - ported from wine, does that work? */
       return (mii.fType | mii.fState);
     }
-  
+
   return (UINT)-1;
 }
 
@@ -3931,7 +3931,7 @@ InsertMenuA(
   mii.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_STATE;
   mii.fType = 0;
   mii.fState = MFS_ENABLED;
-  
+
   if(uFlags & MF_BITMAP)
   {
     mii.fType |= MFT_BITMAP;
@@ -3950,7 +3950,7 @@ InsertMenuA(
     mii.dwTypeData = (LPSTR)lpNewItem;
     mii.cch = (NULL == lpNewItem ? 0 : strlen(lpNewItem));
   }
-  
+
   if(uFlags & MF_RIGHTJUSTIFY)
   {
     mii.fType |= MFT_RIGHTJUSTIFY;
@@ -3971,7 +3971,7 @@ InsertMenuA(
   {
     mii.fState |= MFS_GRAYED;
   }
-  
+
   if(uFlags & MF_POPUP)
   {
     mii.fType |= MF_POPUP;
@@ -4004,13 +4004,13 @@ InsertMenuItemA(
   BOOL CleanHeap = FALSE;
   NTSTATUS Status;
 
-  if((lpmii->cbSize == sizeof(MENUITEMINFOA)) || 
+  if((lpmii->cbSize == sizeof(MENUITEMINFOA)) ||
      (lpmii->cbSize == sizeof(MENUITEMINFOA) - sizeof(HBITMAP)))
   {
     RtlMoveMemory ( &mi, lpmii, lpmii->cbSize );
 
     /* copy the text string */
-    if((mi.fMask & (MIIM_TYPE | MIIM_STRING)) && 
+    if((mi.fMask & (MIIM_TYPE | MIIM_STRING)) &&
       (MENU_ITEM_TYPE(mi.fType) == MF_STRING) && mi.dwTypeData)
     {
       Status = RtlCreateUnicodeStringFromAsciiz(&MenuText, (LPSTR)mi.dwTypeData);
@@ -4052,13 +4052,13 @@ InsertMenuItemW(
      if a bad user passes bad data, we crash his process instead of the
      entire kernel */
 
-  if((lpmii->cbSize == sizeof(MENUITEMINFOW)) || 
+  if((lpmii->cbSize == sizeof(MENUITEMINFOW)) ||
      (lpmii->cbSize == sizeof(MENUITEMINFOW) - sizeof(HBITMAP)))
   {
     memcpy(&mi, lpmii, lpmii->cbSize);
-    
+
     /* copy the text string */
-    if((mi.fMask & (MIIM_TYPE | MIIM_STRING)) && 
+    if((mi.fMask & (MIIM_TYPE | MIIM_STRING)) &&
       (MENU_ITEM_TYPE(mi.fType) == MF_STRING) &&
       mi.dwTypeData != NULL)
     {
@@ -4066,7 +4066,7 @@ InsertMenuItemW(
       mi.dwTypeData = MenuText.Buffer;
       mi.cch = MenuText.Length / sizeof(WCHAR);
     };
-    
+
     res = NtUserInsertMenuItem(hMenu, uItem, fByPosition, &mi);
   }
   return res;
@@ -4109,7 +4109,7 @@ InsertMenuW(
     mii.dwTypeData = (LPWSTR)lpNewItem;
     mii.cch = (NULL == lpNewItem ? 0 : wcslen(lpNewItem));
   }
-  
+
   if(uFlags & MF_RIGHTJUSTIFY)
   {
     mii.fType |= MFT_RIGHTJUSTIFY;
@@ -4130,7 +4130,7 @@ InsertMenuW(
   {
     mii.fState |= MFS_GRAYED;
   }
-  
+
   if(uFlags & MF_POPUP)
   {
     mii.fType |= MF_POPUP;
@@ -4344,7 +4344,7 @@ SetMenuInfo(
   BOOL res = FALSE;
   if(lpcmi->cbSize != sizeof(MENUINFO))
     return res;
-    
+
   memcpy(&mi, lpcmi, sizeof(MENUINFO));
   return NtUserMenuInfo(hmenu, &mi, TRUE);
 }
@@ -4436,7 +4436,7 @@ SetMenuItemInfoW(
 BOOL
 STDCALL
 SetSystemMenu (
-  HWND hwnd, 
+  HWND hwnd,
   HMENU hMenu)
 {
   if(!hwnd)
@@ -4528,7 +4528,7 @@ GetMenuContextHelpId(HMENU hmenu)
   ROSMENUINFO mi;
   mi.cbSize = sizeof(ROSMENUINFO);
   mi.fMask = MIM_HELPID;
-  
+
   if(NtUserMenuInfo(hmenu, &mi, FALSE))
   {
     return mi.dwContextHelpID;
@@ -4590,7 +4590,7 @@ ChangeMenuW(
     {
         case MF_APPEND :
             return AppendMenuW(hMenu, flags &~ MF_APPEND, cmdInsert, lpszNewItem);
-        
+
         case MF_DELETE :
             return DeleteMenu(hMenu, cmd, flags &~ MF_DELETE);
 
@@ -4628,7 +4628,7 @@ ChangeMenuA(
     {
         case MF_APPEND :
             return AppendMenuA(hMenu, flags &~ MF_APPEND, cmdInsert, lpszNewItem);
-        
+
         case MF_DELETE :
             return DeleteMenu(hMenu, cmd, flags &~ MF_DELETE);
 

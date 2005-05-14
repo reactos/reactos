@@ -13,24 +13,16 @@
 
 /*
  * Partially taken from WINE, original copyright:
- * 
+ *
  * Copyright 2000 Alexandre Julliard
  */
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <winerror.h>
+#include "rtl.h"
 
 #define NDEBUG
 #include <debug.h>
-
-#ifndef HIWORD
-#define HIWORD(l) ((WORD)(((DWORD)(l) >> 16) & 0xFFFF))
-#endif
-#ifndef LOWORD
-#define LOWORD(l) ((WORD)(l))
-#endif
 
 /* TYPES *******************************************************************/
 
@@ -870,7 +862,7 @@ RtlMapSecurityErrorToNtStatus(
  *  RtlNtStatusToDosErrorNoTeb
  *
  * DESCRIPTION
- * Convert an Executive status ID into a DOS error number 
+ * Convert an Executive status ID into a DOS error number
  * (winerror.h).
  *
  * ARGUMENTS
@@ -932,7 +924,7 @@ RtlNtStatusToDosErrorNoTeb(IN NTSTATUS Status)
  *  RtlNtStatusToDosError
  *
  * DESCRIPTION
- * Convert an Executive status ID into a DOS error number 
+ * Convert an Executive status ID into a DOS error number
  * (winerror.h).
  *
  * ARGUMENTS
@@ -966,17 +958,17 @@ RtlNtStatusToDosError(IN NTSTATUS Status)
  * DESCRIPTION
  * Convert an Executive status ID into a POSIX error number
  * (errno.h).
- * 
+ *
  * NOTE
  *  Not present in the legacy WNT (a ReactOS extension to support
  *  the POSIX+ subsystem).
- *  
+ *
  * ARGUMENTS
  * Status The Executive status ID to convert.
  *
  * RETURN VALUE
  * errno as in errno.h
- * 
+ *
  * REVISIONS
  *  1999-11-30 ea
  */

@@ -14,29 +14,29 @@
 #include "pseh.h"
 
 NTSTATUS STDCALL
-AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    PIO_STACK_LOCATION IrpSp ) {
     NTSTATUS Status = STATUS_SUCCESS;
     PAFD_INFO InfoReq = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
 
-    AFD_DbgPrint(MID_TRACE,("Called %x %x\n", InfoReq, 
+    AFD_DbgPrint(MID_TRACE,("Called %x %x\n", InfoReq,
 			    InfoReq ? InfoReq->InformationClass : 0));
 
     _SEH_TRY {
 	if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, TRUE );
-	
+
 	switch( InfoReq->InformationClass ) {
 	case AFD_INFO_RECEIVE_WINDOW_SIZE:
 	    InfoReq->Information.Ulong = FCB->Recv.Size;
 	    break;
-	    
+
 	case AFD_INFO_SEND_WINDOW_SIZE:
 	    InfoReq->Information.Ulong = FCB->Send.Size;
 	    AFD_DbgPrint(MID_TRACE,("Send window size %d\n", FCB->Send.Size));
 	    break;
-	    
+
 	case AFD_INFO_GROUP_ID_TYPE:
 	    InfoReq->Information.Ulong = 0; /* What is group id */
 	    break;
@@ -44,9 +44,9 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	case AFD_INFO_BLOCKING_MODE:
 	    InfoReq->Information.Ulong = 0;
 	    break;
-	    
+
 	default:
-	    AFD_DbgPrint(MID_TRACE,("Unknown info id %x\n", 
+	    AFD_DbgPrint(MID_TRACE,("Unknown info id %x\n",
 				    InfoReq->InformationClass));
 	    Status = STATUS_INVALID_PARAMETER;
 	    break;
@@ -62,7 +62,7 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 }
 
 NTSTATUS STDCALL
-AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                       PIO_STACK_LOCATION IrpSp, BOOLEAN Local ) {
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
@@ -81,7 +81,7 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     }
 
     Mdl = IoAllocateMdl
-	( Irp->UserBuffer, 
+	( Irp->UserBuffer,
 	  IrpSp->Parameters.DeviceIoControl.OutputBufferLength,
 	  FALSE,
 	  FALSE,
@@ -104,10 +104,10 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
             } else {
                 if( !NT_SUCCESS
                     ( Status = TdiBuildNullConnectionInfo
-                      ( &ConnInfo, 
+                      ( &ConnInfo,
                         FCB->LocalAddress->Address[0].AddressType ) ) ) {
                     SysMdl = IoAllocateMdl
-                        ( ConnInfo, 
+                        ( ConnInfo,
                           sizeof( TDI_CONNECTION_INFORMATION ) +
                           TaLengthOfTransportAddress
                           ( ConnInfo->RemoteAddress ),
@@ -123,29 +123,29 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                           TDI_QUERY_CONNECTION_INFO,
                           SysMdl );
                 } else Status = STATUS_NO_MEMORY;
-                
+
                 if( NT_SUCCESS(Status) ) {
-                    TransAddr = 
+                    TransAddr =
                         (PTRANSPORT_ADDRESS)MmMapLockedPages
                         ( Mdl, IoModifyAccess );
                 }
-                
-                if( TransAddr ) 
+
+                if( TransAddr )
                     RtlCopyMemory( TransAddr, ConnInfo->RemoteAddress,
                                    TaLengthOfTransportAddress
                                    ( ConnInfo->RemoteAddress ) );
-                
+
                 if( ConnInfo ) ExFreePool( ConnInfo );
                 if( SysMdl ) IoFreeMdl( SysMdl );
             }
 	}
-        
+
 	/* MmUnlockPages( Mdl ); */
 	IoFreeMdl( Mdl );
     } else {
     	Status = STATUS_INSUFFICIENT_RESOURCES;
     }
-    
+
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
 
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL, FALSE );

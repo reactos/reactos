@@ -1,10 +1,10 @@
 /* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel 
+ * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/balance.c
  * PURPOSE:         kernel memory managment functions
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
@@ -191,7 +191,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
    }
 
    /*
-    * Allocate always memory for the non paged pool and for the pager thread. 
+    * Allocate always memory for the non paged pool and for the pager thread.
     */
    if (Consumer == MC_NPPOOL || MiIsBalancerThread())
    {

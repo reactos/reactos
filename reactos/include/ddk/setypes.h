@@ -97,6 +97,7 @@ typedef struct _SEP_AUDIT_POLICY {
     };
 } SEP_AUDIT_POLICY, *PSEP_AUDIT_POLICY;
  
+#define TOKEN_HAS_TRAVERSE_PRIVILEGE    0x01
 typedef struct _TOKEN {
   TOKEN_SOURCE TokenSource;                         /* 0x00 */
   LUID TokenId;                                     /* 0x10 */
@@ -151,6 +152,12 @@ typedef struct _SECURITY_CLIENT_CONTEXT
     TOKEN_CONTROL               ClientTokenControl;
 } SECURITY_CLIENT_CONTEXT, *PSECURITY_CLIENT_CONTEXT;
 
+#ifndef __USE_W32API
+typedef struct _SE_AUDIT_PROCESS_CREATION_INFO
+{
+    struct _OBJECT_NAME_INFORMATION *ImageFileName;
+} SE_AUDIT_PROCESS_CREATION_INFO, *PSE_AUDIT_PROCESS_CREATION_INFO;
+#endif
 
 typedef struct _SE_EXPORTS
 {
@@ -215,6 +222,13 @@ typedef enum _SECURITY_OPERATION_CODE
   DeleteSecurityDescriptor,
   AssignSecurityDescriptor
 } SECURITY_OPERATION_CODE, *PSECURITY_OPERATION_CODE;
+
+typedef struct _AUX_DATA
+{
+    PPRIVILEGE_SET PrivilegeSet;
+    GENERIC_MAPPING GenericMapping;
+    ULONG Reserved;
+} AUX_DATA, *PAUX_DATA;
 
 typedef struct _ACCESS_STATE
 {

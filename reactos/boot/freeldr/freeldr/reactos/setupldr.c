@@ -244,7 +244,7 @@ VOID RunLoader(VOID)
   HINF InfHandle;
   ULONG ErrorLine;
   INFCONTEXT InfContext;
- 
+
   extern ULONG PageDirectoryStart;
   extern ULONG PageDirectoryEnd;
 
@@ -280,8 +280,8 @@ VOID RunLoader(VOID)
               LoaderBlock.MemHigher = (multiboot_memory_map[i].base_addr_low + multiboot_memory_map[i].length_low) / 1024 - 1024;
             }
 #if 0
-	    printf("start: %x\t size: %x\t type %d\n", 
-		   multiboot_memory_map[i].base_addr_low, 
+	    printf("start: %x\t size: %x\t type %d\n",
+		   multiboot_memory_map[i].base_addr_low,
 		   multiboot_memory_map[i].length_low,
 		   multiboot_memory_map[i].type);
 #endif

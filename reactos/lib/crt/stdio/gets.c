@@ -92,7 +92,7 @@ link_warning (gets, "the `gets' function is dangerous and should not be used.")
 
 /* Read a newline-terminated multibyte string from stdin into S,
    removing the trailing newline.  Return S or NULL.  */
-  
+
 char *
 gets (s)
      char *s;
@@ -114,7 +114,7 @@ gets (s)
   while ((c = getc(stdin)) != EOF) {
     if (c == '\n')
 	break;
-    if ( isascii(c) ) 
+    if ( isascii(c) )
     	*cs++ = c;
 #ifdef _MULTIBYTE
     else if ( isleadbyte(c) ) {
@@ -142,5 +142,5 @@ gets (s)
 
   return s;
 }
-  
+
 #endif

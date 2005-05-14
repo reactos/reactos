@@ -99,7 +99,7 @@ BOOL WINAPI SetupCopyOEMInfA(PCSTR sourceinffile, PCSTR sourcemedialoc,
 			    DWORD destnamesize, PDWORD required,
 			    PSTR *destinfnamecomponent)
 {
-  FIXME("stub: source %s location %s ...\n",sourceinffile, sourcemedialoc);
+  FIXME("stub: source %s location %s ...\n",sourceinffile, sourcemedialoc);
   return FALSE;
 }
 

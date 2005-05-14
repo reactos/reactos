@@ -88,7 +88,7 @@ RtlDetermineDosPathNameType_U(PCWSTR Path)
        * if (!Path[1] || Path[1] != L':')    return RELATIVE_PATH
        * Should we do this too?
        * -Gunnar
-       */ 
+       */
       if (Path[1] != L':') return RELATIVE_PATH;                     /* xxx     */
       if (IS_PATH_SEPARATOR(Path[2])) return ABSOLUTE_DRIVE_PATH;    /* x:\xxx  */
 
@@ -163,7 +163,7 @@ RtlIsDosDeviceName_U(PWSTR DeviceName)
    Length -= Offset;
    DeviceNameU.Length = DeviceNameU.MaximumLength = 3 * sizeof(WCHAR);
    DeviceNameU.Buffer = wc;
-   
+
    /* check for LPTx or COMx */
    if (Length == 4 && wc[3] >= L'0' && wc[3] <= L'9')
      {
@@ -171,7 +171,7 @@ RtlIsDosDeviceName_U(PWSTR DeviceName)
 	  {
 	     return 0;
 	  }
-   
+
 	if (RtlEqualUnicodeString(&DeviceNameU, (PUNICODE_STRING)&_lpt, TRUE) ||
 	    RtlEqualUnicodeString(&DeviceNameU, (PUNICODE_STRING)&_com, TRUE))
 	  {
@@ -179,7 +179,7 @@ RtlIsDosDeviceName_U(PWSTR DeviceName)
 	  }
 	return 0;
      }
-   
+
    /* check for PRN,AUX,NUL or CON */
    if (Length == 3 &&
        (RtlEqualUnicodeString(&DeviceNameU, (PUNICODE_STRING)&_prn, TRUE) ||
@@ -189,7 +189,7 @@ RtlIsDosDeviceName_U(PWSTR DeviceName)
      {
 	return ((Offset * 2) << 16) | 6;
      }
-   
+
    return 0;
 }
 
@@ -254,11 +254,11 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
    HANDLE handle = NULL;
    WCHAR var[4];
    PWSTR ptr;
-   
+
    DPRINT("RtlSetCurrentDirectory %wZ\n", dir);
-   
+
    RtlAcquirePebLock ();
-   
+
    cd = (PCURDIR)&NtCurrentPeb ()->ProcessParameters->CurrentDirectoryName;
 
    if (!RtlDosPathNameToNtPathName_U (dir->Buffer, &full, 0, 0))
@@ -266,22 +266,22 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
       RtlReleasePebLock ();
       return STATUS_OBJECT_NAME_INVALID;
    }
-   
+
    DPRINT("RtlSetCurrentDirectory: full %wZ\n",&full);
-   
+
    InitializeObjectAttributes (&Attr,
 			       &full,
 			       OBJ_CASE_INSENSITIVE | OBJ_INHERIT,
 			       NULL,
 			       NULL);
-   
+
    Status = NtOpenFile (&handle,
 			SYNCHRONIZE | FILE_TRAVERSE,
 			&Attr,
 			&iosb,
 			FILE_SHARE_READ | FILE_SHARE_WRITE,
 			FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);
-         
+
    if (!NT_SUCCESS(Status))
    {
       RtlFreeUnicodeString( &full);
@@ -310,7 +310,7 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
    filenameinfo = RtlAllocateHeap(RtlGetProcessHeap(),
               0,
               MAX_PATH*sizeof(WCHAR)+sizeof(ULONG));
-   
+
    Status = NtQueryInformationFile(handle,
                &iosb,
                filenameinfo,
@@ -330,7 +330,7 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
    RtlReleasePebLock();
    return(Status);
      }
-   
+
    /* If it's just "\", we need special handling */
    if (filenameinfo->FileNameLength > sizeof(WCHAR))
      {
@@ -374,7 +374,7 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
    ptr = full.Buffer;
    ptr += 4;  /* skip \??\ prefix */
    size -= 4;
-   
+
    /* This is ok because RtlDosPathNameToNtPathName_U returns a nullterminated string.
     * So the nullterm is replaced with \
     * -Gunnar
@@ -392,15 +392,15 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
       envvar.Length = 2 * swprintf (var, L"=%c:", cd->DosPath.Buffer[0]);
       envvar.MaximumLength = 8;
       envvar.Buffer = var;
-   
+
       RtlSetEnvironmentVariable(NULL,
                  &envvar,
                  &cd->DosPath);
    }
-   
+
    RtlFreeUnicodeString( &full);
    RtlReleasePebLock();
-   
+
    return STATUS_SUCCESS;
 }
 
@@ -502,8 +502,8 @@ static const WCHAR *skip_unc_prefix( const WCHAR *ptr )
  * Note: name and buffer are allowed to point to the same memory spot
  */
 static ULONG get_full_path_helper(
-   LPCWSTR name, 
-   LPWSTR buffer, 
+   LPCWSTR name,
+   LPWSTR buffer,
    ULONG size)
 {
     ULONG                       reqsize = 0, mark = 0, dep = 0, deplen;
@@ -560,9 +560,9 @@ static ULONG get_full_path_helper(
             switch (RtlQueryEnvironmentVariable_U(NULL, &var, &val))
             {
             case STATUS_SUCCESS:
-                /* FIXME: Win2k seems to check that the environment variable actually points 
+                /* FIXME: Win2k seems to check that the environment variable actually points
                  * to an existing directory. If not, root of the drive is used
-                 * (this seems also to be the only spot in RtlGetFullPathName that the 
+                 * (this seems also to be the only spot in RtlGetFullPathName that the
                  * existence of a part of a path is checked)
                  */
                 /* fall thru */
@@ -687,8 +687,8 @@ done:
  * @implemented
  */
 DWORD STDCALL RtlGetFullPathName_U(
-   const WCHAR* name, 
-   ULONG size, 
+   const WCHAR* name,
+   ULONG size,
    WCHAR* buffer,
    WCHAR** file_part)
 {
@@ -973,8 +973,8 @@ RtlDoesFileExists_U(IN PWSTR FileName)
 	Status = NtQueryAttributesFile (&Attr, &Info);
 
    RtlFreeUnicodeString(&NtFileName);
-   
-   
+
+
 	if (NT_SUCCESS(Status) ||
 	    Status == STATUS_SHARING_VIOLATION ||
 	    Status == STATUS_ACCESS_DENIED)

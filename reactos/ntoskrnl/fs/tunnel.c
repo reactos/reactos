@@ -16,7 +16,7 @@
  *	FsRtlAddToTunnelCache@32
  *
  * DESCRIPTION
- *	
+ *
  * ARGUMENTS
  *
  * RETURN VALUE
@@ -43,7 +43,7 @@ FsRtlAddToTunnelCache (
  *	FsRtlDeleteKeyFromTunnelCache@12
  *
  * DESCRIPTION
- *	
+ *
  * ARGUMENTS
  *
  * RETURN VALUE
@@ -65,7 +65,7 @@ FsRtlDeleteKeyFromTunnelCache (
  *	FsRtlDeleteTunnelCache@4
  *
  * DESCRIPTION
- *	
+ *
  * ARGUMENTS
  *
  * RETURN VALUE
@@ -86,7 +86,7 @@ FsRtlDeleteTunnelCache (
  *	FsRtlFindInTunnelCache@32
  *
  * DESCRIPTION
- *	
+ *
  * ARGUMENTS
  *
  * RETURN VALUE
@@ -114,7 +114,7 @@ FsRtlFindInTunnelCache (
  *	FsRtlInitializeTunnelCache@4
  *
  * DESCRIPTION
- *	
+ *
  * ARGUMENTS
  *
  * RETURN VALUE

@@ -85,7 +85,7 @@ NTSTATUS STDCALL I8042SynchWritePortKbd(PVOID Context,
 {
 	return I8042SynchWritePort((PDEVICE_EXTENSION)Context,
 	                           0,
-	                           Value, 
+	                           Value,
 	                           WaitForAck);
 }
 
@@ -175,14 +175,14 @@ BOOLEAN STDCALL I8042InterruptServiceKbd(struct _KINTERRUPT *Interrupt,
 		InputData->Flags |= KEY_BREAK;
 	else
 		InputData->Flags |= KEY_MAKE;
-	
+
 	InputData->MakeCode = Output & 0x7f;
 
 	I8042QueueKeyboardPacket(DevExt->KeyboardObject);
 
 	return TRUE;
 }
-	
+
 VOID STDCALL I8042DpcRoutineKbd(PKDPC Dpc,
                                 PVOID DeferredContext,
                                 PVOID SystemArgument1,
@@ -211,7 +211,7 @@ VOID STDCALL I8042DpcRoutineKbd(PKDPC Dpc,
 
 	/* Test for TAB (debugging) */
 	if (DevExt->Settings.CrashSysRq) {
-		PKEYBOARD_INPUT_DATA InputData = DevExt->KeyboardBuffer + 
+		PKEYBOARD_INPUT_DATA InputData = DevExt->KeyboardBuffer +
 		                                          KeysInBufferCopy - 1;
 		if (InputData->MakeCode == 0x0F) {
 			DPRINT("Tab!\n");
@@ -248,7 +248,7 @@ VOID STDCALL I8042DpcRoutineKbd(PKDPC Dpc,
 static USHORT I8042GetTypematicByte(USHORT Rate, USHORT Delay)
 {
 	USHORT ret;
-	
+
 	if (Rate < 3) {
 		ret = 0x0;
 	} else if (Rate > 26) {
@@ -280,7 +280,7 @@ BOOLEAN STDCALL I8042StartIoKbd(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	PDEVICE_EXTENSION DevExt = FdoDevExt->PortDevExt;
 
 	Stk = IoGetCurrentIrpStackLocation(Irp);
-    
+
 	switch (Stk->Parameters.DeviceIoControl.IoControlCode) {
 	case IOCTL_INTERNAL_I8042_KEYBOARD_WRITE_BUFFER:
 		I8042StartPacket(
@@ -343,12 +343,12 @@ NTSTATUS STDCALL I8042InternalDeviceControlKbd(PDEVICE_OBJECT DeviceObject, PIRP
 
 	Irp->IoStatus.Information = 0;
 	Stk = IoGetCurrentIrpStackLocation(Irp);
-    
+
 	switch (Stk->Parameters.DeviceIoControl.IoControlCode) {
 
 	case IOCTL_INTERNAL_KEYBOARD_CONNECT:
 		DPRINT("IOCTL_INTERNAL_KEYBOARD_CONNECT\n");
-		if (Stk->Parameters.DeviceIoControl.InputBufferLength < 
+		if (Stk->Parameters.DeviceIoControl.InputBufferLength <
 		                                      sizeof(CONNECT_DATA)) {
 			DPRINT1("Keyboard IOCTL_INTERNAL_KEYBOARD_CONNECT "
 			       "invalid buffer size\n");
@@ -372,7 +372,7 @@ NTSTATUS STDCALL I8042InternalDeviceControlKbd(PDEVICE_OBJECT DeviceObject, PIRP
 		       Stk->Parameters.DeviceIoControl.Type3InputBuffer,
 		       sizeof(CONNECT_DATA));
 		DevExt->KeyboardHook.IsrWritePort = I8042IsrWritePortKbd;
-		DevExt->KeyboardHook.QueueKeyboardPacket = 
+		DevExt->KeyboardHook.QueueKeyboardPacket =
 		                                    I8042QueueKeyboardPacket;
 		DevExt->KeyboardHook.CallContext = DevExt;
 
@@ -384,7 +384,7 @@ NTSTATUS STDCALL I8042InternalDeviceControlKbd(PDEVICE_OBJECT DeviceObject, PIRP
 			if (!WorkItem) {
 				DPRINT ("IOCTL_INTERNAL_KEYBOARD_CONNECT: "
 				        "Can't allocate work item\n");
-				Irp->IoStatus.Status = 
+				Irp->IoStatus.Status =
 				              STATUS_INSUFFICIENT_RESOURCES;
 				goto intcontfailure;
 			}
@@ -396,13 +396,13 @@ NTSTATUS STDCALL I8042InternalDeviceControlKbd(PDEVICE_OBJECT DeviceObject, PIRP
 			if (!WorkItemData) {
 				DPRINT ("IOCTL_INTERNAL_KEYBOARD_CONNECT: "
 				        "Can't allocate work item data\n");
-				Irp->IoStatus.Status = 
+				Irp->IoStatus.Status =
 				              STATUS_INSUFFICIENT_RESOURCES;
 				IoFreeWorkItem(WorkItem);
 				goto intcontfailure;
 			}
 			WorkItemData->WorkItem = WorkItem;
-			WorkItemData->Target = 
+			WorkItemData->Target =
 				        DevExt->KeyboardData.ClassDeviceObject;
 			WorkItemData->Irp = Irp;
 
@@ -434,7 +434,7 @@ NTSTATUS STDCALL I8042InternalDeviceControlKbd(PDEVICE_OBJECT DeviceObject, PIRP
 		break;
 	case IOCTL_KEYBOARD_QUERY_ATTRIBUTES:
 		DPRINT("IOCTL_KEYBOARD_QUERY_ATTRIBUTES\n");
-		if (Stk->Parameters.DeviceIoControl.OutputBufferLength < 
+		if (Stk->Parameters.DeviceIoControl.OutputBufferLength <
 		                                 sizeof(KEYBOARD_ATTRIBUTES)) {
 			DPRINT("Keyboard IOCTL_KEYBOARD_QUERY_ATTRIBUTES "
 			       "invalid buffer size\n");
@@ -449,7 +449,7 @@ NTSTATUS STDCALL I8042InternalDeviceControlKbd(PDEVICE_OBJECT DeviceObject, PIRP
 		break;
 	case IOCTL_KEYBOARD_QUERY_INDICATORS:
 		DPRINT("IOCTL_KEYBOARD_QUERY_INDICATORS\n");
-		if (Stk->Parameters.DeviceIoControl.OutputBufferLength < 
+		if (Stk->Parameters.DeviceIoControl.OutputBufferLength <
 		                       sizeof(KEYBOARD_INDICATOR_PARAMETERS)) {
 			DPRINT("Keyboard IOCTL_KEYBOARD_QUERY_INDICATORS "
 			       "invalid buffer size\n");
@@ -464,7 +464,7 @@ NTSTATUS STDCALL I8042InternalDeviceControlKbd(PDEVICE_OBJECT DeviceObject, PIRP
 		break;
 	case IOCTL_KEYBOARD_QUERY_TYPEMATIC:
 		DPRINT("IOCTL_KEYBOARD_QUERY_TYPEMATIC\n");
-		if (Stk->Parameters.DeviceIoControl.OutputBufferLength < 
+		if (Stk->Parameters.DeviceIoControl.OutputBufferLength <
 		                       sizeof(KEYBOARD_TYPEMATIC_PARAMETERS)) {
 			DPRINT("Keyboard IOCTL_KEYBOARD_QUERY_TYPEMATIC "
 			       "invalid buffer size\n");
@@ -479,7 +479,7 @@ NTSTATUS STDCALL I8042InternalDeviceControlKbd(PDEVICE_OBJECT DeviceObject, PIRP
 		break;
 	case IOCTL_KEYBOARD_SET_INDICATORS:
 		DPRINT("IOCTL_KEYBOARD_SET_INDICATORS\n");
-		if (Stk->Parameters.DeviceIoControl.InputBufferLength < 
+		if (Stk->Parameters.DeviceIoControl.InputBufferLength <
 		                       sizeof(KEYBOARD_INDICATOR_PARAMETERS)) {
 			DPRINT("Keyboard IOCTL_KEYBOARD_SET_INDICTATORS "
 			       "invalid buffer size\n");
@@ -500,7 +500,7 @@ NTSTATUS STDCALL I8042InternalDeviceControlKbd(PDEVICE_OBJECT DeviceObject, PIRP
 		break;
 	case IOCTL_KEYBOARD_SET_TYPEMATIC:
 		DPRINT("IOCTL_KEYBOARD_SET_TYPEMATIC\n");
-		if (Stk->Parameters.DeviceIoControl.InputBufferLength < 
+		if (Stk->Parameters.DeviceIoControl.InputBufferLength <
 		                       sizeof(KEYBOARD_TYPEMATIC_PARAMETERS)) {
 			DPRINT("Keyboard IOCTL_KEYBOARD_SET_TYPEMATIC "
 			       "invalid buffer size\n");
@@ -521,7 +521,7 @@ NTSTATUS STDCALL I8042InternalDeviceControlKbd(PDEVICE_OBJECT DeviceObject, PIRP
 		/* We should check the UnitID, but it's kind of pointless as
 		 * all keyboards are supposed to have the same one
 		 */
-		if (Stk->Parameters.DeviceIoControl.OutputBufferLength < 
+		if (Stk->Parameters.DeviceIoControl.OutputBufferLength <
 		                 sizeof(LOCAL_KEYBOARD_INDICATOR_TRANSLATION)) {
 			DPRINT("IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION: "
 			       "invalid buffer size (expected)\n");
@@ -551,6 +551,26 @@ intcontfailure:
 	return Irp->IoStatus.Status;
 }
 
+/* This is all pretty confusing. There's more than one way to
+ * disable/enable the keyboard. You can send KBD_ENABLE to the
+ * keyboard, and it will start scanning keys. Sending KBD_DISABLE
+ * will disable the key scanning but also reset the parameters to
+ * defaults.
+ *
+ * You can also send 0xAE to the controller for enabling the
+ * keyboard clock line and 0xAD for disabling it. Then it'll
+ * automatically get turned on at the next command. The last
+ * way is by modifying the bit that drives the clock line in the
+ * 'command byte' of the controller. This is almost, but not quite,
+ * the same as the AE/AD thing. The difference can be used to detect
+ * some really old broken keyboard controllers which I hope won't be
+ * necessary.
+ *
+ * Anyway, disabling the keyboard helps the detection and it also
+ * clears the keyboard buffer and sets defaults which is what we
+ * want.
+ */
+
 BOOLEAN STDCALL I8042KeyboardEnable(PDEVICE_EXTENSION DevExt)
 {
 	DPRINT("Enabling keyboard\n");
@@ -559,6 +579,19 @@ BOOLEAN STDCALL I8042KeyboardEnable(PDEVICE_EXTENSION DevExt)
 	                                          KBD_ENABLE,
 	                                          TRUE)) {
 		DPRINT("Can't enable keyboard\n");
+		return FALSE;
+	}
+	return TRUE;
+}
+
+BOOLEAN STDCALL I8042KeyboardDefaultsAndDisable(PDEVICE_EXTENSION DevExt)
+{
+	DPRINT("Disabling keyboard\n");
+	if (STATUS_SUCCESS != I8042SynchWritePort(DevExt,
+	                                          0,
+	                                          KBD_DISABLE,
+	                                          TRUE)) {
+		DPRINT("Can't disable keyboard\n");
 		return FALSE;
 	}
 	return TRUE;
@@ -606,12 +639,14 @@ BOOLEAN STDCALL I8042DetectKeyboard(PDEVICE_EXTENSION DevExt)
 
 	DPRINT("Detecting keyboard\n");
 
+	I8042KeyboardDefaultsAndDisable(DevExt);
+
 	do {
 		Status = I8042SynchWritePort(DevExt, 0, KBD_GET_ID, TRUE);
 	} while (STATUS_TIMEOUT == Status && RetryCount--);
 
 	if (Status != STATUS_SUCCESS) {
-		DPRINT("Can't write GET_ID (%x)\n", Status);
+		DPRINT1("Can't write GET_ID (%x)\n", Status);
 		return FALSE;
 	}
 
@@ -682,7 +717,7 @@ detectsetleds:
 
 /* debug stuff */
 VOID STDCALL
-KdpServiceDispatcher(ULONG Code, PVOID Context1, PVOID Context2); 
+KdpServiceDispatcher(ULONG Code, PVOID Context1, PVOID Context2);
 
 static VOID STDCALL I8042DebugWorkItem(PDEVICE_OBJECT DeviceObject,
                                        PVOID Context)
@@ -691,7 +726,7 @@ static VOID STDCALL I8042DebugWorkItem(PDEVICE_OBJECT DeviceObject,
 	PFDO_DEVICE_EXTENSION FdoDevExt = DeviceObject->DeviceExtension;
 	PDEVICE_EXTENSION DevExt = FdoDevExt->PortDevExt;
 
-	Key = InterlockedExchange(&DevExt->DebugKey, 0);
+	Key = InterlockedExchange((PLONG)&DevExt->DebugKey, 0);
 	DPRINT("Debug key: %x\n", Key);
 
 	if (!Key)

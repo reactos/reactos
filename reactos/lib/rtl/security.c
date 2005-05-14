@@ -9,8 +9,7 @@
  *                  21/11/2001 Created
  */
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
+#include "rtl.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -31,7 +30,7 @@ RtlImpersonateSelf(IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
    SECURITY_QUALITY_OF_SERVICE Sqos;
 
    PAGED_CODE_RTL();
-   
+
    Status = NtOpenProcessToken(NtCurrentProcess(),
                                TOKEN_DUPLICATE,
                                &ProcessToken);
@@ -40,12 +39,12 @@ RtlImpersonateSelf(IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
       DPRINT1("NtOpenProcessToken() failed (Status %lx)\n", Status);
       return(Status);
    }
-  
+
    Sqos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
    Sqos.ImpersonationLevel = ImpersonationLevel;
    Sqos.ContextTrackingMode = 0;
    Sqos.EffectiveOnly = FALSE;
-   
+
    InitializeObjectAttributes(
       &ObjAttr,
       NULL,
@@ -53,9 +52,9 @@ RtlImpersonateSelf(IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
       NULL,
       NULL
       );
-   
+
    ObjAttr.SecurityQualityOfService = &Sqos;
-   
+
    Status = NtDuplicateToken(ProcessToken,
                              TOKEN_IMPERSONATE,
                              &ObjAttr,
@@ -99,7 +98,7 @@ RtlAdjustPrivilege(IN ULONG Privilege,
    ULONG ReturnLength;
    HANDLE TokenHandle;
    NTSTATUS Status;
-   
+
    PAGED_CODE_RTL();
 
    DPRINT ("RtlAdjustPrivilege() called\n");

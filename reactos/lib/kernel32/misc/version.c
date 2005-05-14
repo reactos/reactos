@@ -34,7 +34,7 @@ GetVersion(VOID)
   /* build number */
   if(pPeb->OSPlatformId != VER_PLATFORM_WIN32_WINDOWS)
     nVersion |= ((DWORD)(pPeb->OSBuildNumber)) << 16;
- 
+
   /* non-NT platform flag */
   if(pPeb->OSPlatformId != VER_PLATFORM_WIN32_NT)
     nVersion |= 0x80000000;
@@ -53,7 +53,7 @@ GetVersionExW(
     )
 {
   NTSTATUS Status;
-  
+
   if(lpVersionInformation->dwOSVersionInfoSize != sizeof(OSVERSIONINFOW) &&
      lpVersionInformation->dwOSVersionInfoSize != sizeof(OSVERSIONINFOEXW))
   {
@@ -68,7 +68,7 @@ GetVersionExW(
   if(NT_SUCCESS(Status))
   {
     int ln, maxlen;
-    
+
     /* append a reactos specific string to the szCSDVersion string */
 
     /* FIXME - we shouldn't do this when there is a (ros-specific) compatibility
@@ -85,7 +85,7 @@ GetVersionExW(
               L"ReactOS " KERNEL_VERSION_STR L" (Build " KERNEL_VERSION_BUILD_STR L")",
               maxlen - ln);
     }
-    
+
     return TRUE;
   }
 
@@ -103,9 +103,9 @@ GetVersionExA(
     )
 {
   OSVERSIONINFOEXW viw;
-  
+
   RtlZeroMemory(&viw, sizeof(viw));
-  
+
   switch(lpVersionInformation->dwOSVersionInfoSize)
   {
     case sizeof(OSVERSIONINFOA):
@@ -123,25 +123,25 @@ GetVersionExA(
       SetLastError(ERROR_INSUFFICIENT_BUFFER);
       return FALSE;
   }
-  
+
   if(GetVersionExW((LPOSVERSIONINFOW)&viw))
   {
     ANSI_STRING CSDVersionA;
     UNICODE_STRING CSDVersionW;
-    
+
     /* copy back fields that match both supported structures */
     lpVersionInformation->dwMajorVersion = viw.dwMajorVersion;
     lpVersionInformation->dwMinorVersion = viw.dwMinorVersion;
     lpVersionInformation->dwBuildNumber = viw.dwBuildNumber;
     lpVersionInformation->dwPlatformId = viw.dwPlatformId;
-    
+
     /* convert the win version string */
     RtlInitUnicodeString(&CSDVersionW, viw.szCSDVersion);
-    
+
     CSDVersionA.Length = 0;
     CSDVersionA.MaximumLength = sizeof(lpVersionInformation->szCSDVersion);
     CSDVersionA.Buffer = lpVersionInformation->szCSDVersion;
-    
+
     RtlUnicodeStringToAnsiString(&CSDVersionA, &CSDVersionW, FALSE);
 
     /* convert the ReactOS version string */
@@ -153,7 +153,7 @@ GetVersionExA(
     CSDVersionA.Length = 0;
 
     RtlUnicodeStringToAnsiString(&CSDVersionA, &CSDVersionW, FALSE);
-    
+
     /* copy back the extended fields */
     if(viw.dwOSVersionInfoSize == sizeof(OSVERSIONINFOEXW))
     {
@@ -163,10 +163,10 @@ GetVersionExA(
       ((LPOSVERSIONINFOEXA)lpVersionInformation)->wProductType = viw.wProductType;
       ((LPOSVERSIONINFOEXA)lpVersionInformation)->wReserved = viw.wReserved;
     }
-    
+
     return TRUE;
   }
-  
+
   return FALSE;
 }
 
@@ -183,7 +183,7 @@ VerifyVersionInfoW(
     )
 {
   NTSTATUS Status;
-  
+
   Status = RtlVerifyVersionInfo((PRTL_OSVERSIONINFOEXW)lpVersionInformation,
                                 dwTypeMask,
                                 dwlConditionMask);
@@ -217,7 +217,7 @@ VerifyVersionInfoA(
     )
 {
   OSVERSIONINFOEXW viex;
-  
+
   viex.dwOSVersionInfoSize = sizeof(viex);
   viex.dwMajorVersion = lpVersionInformation->dwMajorVersion;
   viex.dwMinorVersion = lpVersionInformation->dwMinorVersion;
@@ -229,7 +229,7 @@ VerifyVersionInfoA(
   viex.wSuiteMask = lpVersionInformation->wSuiteMask;
   viex.wProductType = lpVersionInformation->wProductType;
   viex.wReserved = lpVersionInformation->wReserved;
-  
+
   return VerifyVersionInfoW(&viex, dwTypeMask, dwlConditionMask);
 }
 

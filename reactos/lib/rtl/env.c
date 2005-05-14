@@ -11,14 +11,10 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <napi/teb.h>
-#include <ntos/minmax.h>
-#include <string.h>
+#include "rtl.h"
 
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <debug.h>
 
 PPEB STDCALL RtlpCurrentPeb(VOID);
 /* FUNCTIONS *****************************************************************/
@@ -159,8 +155,8 @@ RtlExpandEnvironmentStrings_U(PWSTR Environment,
       }
       else
       {
-         /* Process environment variable. */ 
-         
+         /* Process environment variable. */
+
          VariableEnd = SourceBuffer + 1;
          Tail = SourceLength - 1;
          while (*VariableEnd != L'%' && Tail != 0)
@@ -171,7 +167,7 @@ RtlExpandEnvironmentStrings_U(PWSTR Environment,
 
          if (Tail != 0)
          {
-            Variable.MaximumLength = 
+            Variable.MaximumLength =
             Variable.Length = (VariableEnd - (SourceBuffer + 1)) * sizeof(WCHAR);
             Variable.Buffer = SourceBuffer + 1;
 

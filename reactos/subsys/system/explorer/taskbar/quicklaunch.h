@@ -41,7 +41,7 @@
 
  /// quick launch bar shortcut
 struct QuickLaunchEntry
-{	
+{
 	QuickLaunchEntry();
 
 	HBITMAP	_hbmp;

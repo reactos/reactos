@@ -1,10 +1,10 @@
 /* $Id:
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS VT100 emulator
  * FILE:            drivers/dd/green/pnp.c
  * PURPOSE:         IRP_MJ_PNP operations
- * 
+ *
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
  */
 
@@ -20,9 +20,9 @@ GreenAddDevice(
 	PGREEN_DEVICE_EXTENSION DeviceExtension;
 	UNICODE_STRING serialPortName;
 	NTSTATUS Status;
-	
+
 	DPRINT("Green: AddDevice(DriverObject %p, Pdo %p)\n", DriverObject, Pdo);
-	
+
 	/* Create green FDO */
 	Status = IoCreateDevice(DriverObject,
 		sizeof(GREEN_DEVICE_EXTENSION),
@@ -33,11 +33,11 @@ GreenAddDevice(
 		&Fdo);
 	if (!NT_SUCCESS(Status))
 		return Status;
-	
+
 	DeviceExtension = (PGREEN_DEVICE_EXTENSION)Fdo->DeviceExtension;
 	RtlZeroMemory(DeviceExtension, sizeof(GREEN_DEVICE_EXTENSION));
 	DeviceExtension->Common.Type = Green;
-	
+
 	Status = KeyboardInitialize(DriverObject, &DeviceExtension->Keyboard);
 	if (!NT_SUCCESS(Status))
 	{
@@ -45,7 +45,7 @@ GreenAddDevice(
 		return Status;
 	}
 	((PKEYBOARD_DEVICE_EXTENSION)DeviceExtension->Keyboard->DeviceExtension)->Green = Fdo;
-	
+
 	Status = ScreenInitialize(DriverObject, &DeviceExtension->Screen);
 	if (!NT_SUCCESS(Status))
 	{
@@ -54,7 +54,7 @@ GreenAddDevice(
 		return Status;
 	}
 	((PSCREEN_DEVICE_EXTENSION)DeviceExtension->Screen->DeviceExtension)->Green = Fdo;
-	
+
 	/* initialize green Fdo */
 	DeviceExtension->LowerDevice = IoAttachDeviceToDeviceStack(Fdo, Pdo);
 	DeviceExtension->LineControl.WordLength = 8;
@@ -66,7 +66,7 @@ GreenAddDevice(
 	DeviceExtension->Timeouts.ReadTotalTimeoutMultiplier = INFINITE;
 	DeviceExtension->Timeouts.WriteTotalTimeoutMultiplier = 0; /* FIXME */
 	DeviceExtension->Timeouts.WriteTotalTimeoutConstant = 0; /* FIXME */
-	
+
 	/* open associated serial port */
 	RtlInitUnicodeString(&serialPortName, L"\\Device\\Serial1"); /* FIXME: don't hardcode string */
 	Status = ObReferenceObjectByName(
@@ -79,9 +79,9 @@ GreenAddDevice(
 		NULL,
 		(PVOID*)&DeviceExtension->Serial);
 	/* FIXME: we never ObDereferenceObject */
-	
+
 	Fdo->Flags |= DO_POWER_PAGABLE | DO_BUFFERED_IO;
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
-	
+
 	return Status;
 }

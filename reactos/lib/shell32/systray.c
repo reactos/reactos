@@ -256,8 +256,7 @@ void SYSTRAY_ItemSetTip(SystrayItem *ptrayItem, CHAR* szTip, int modify)
 {
   TTTOOLINFOA ti;
 
-  strncpy(ptrayItem->notifyIcon.szTip, szTip, sizeof(ptrayItem->notifyIcon.szTip));
-  ptrayItem->notifyIcon.szTip[sizeof(ptrayItem->notifyIcon.szTip)-1]=0;
+  lstrcpynA(ptrayItem->notifyIcon.szTip, szTip, sizeof(ptrayItem->notifyIcon.szTip));
 
   ti.cbSize = sizeof(TTTOOLINFOA);
   ti.uFlags = 0;

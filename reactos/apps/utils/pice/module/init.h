@@ -15,7 +15,7 @@ Environment:
     LINUX 2.2.X
     Kernel mode only
 
-Author: 
+Author:
 
     Klaus P. Gerlicher
 
@@ -29,7 +29,7 @@ Copyright notice:
 
 --*/
 
-BOOLEAN InitPICE(void); 
-void CleanUpPICE(void); 
+BOOLEAN InitPICE(void);
+void CleanUpPICE(void);
 
 extern char szBootParams[1024];

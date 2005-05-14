@@ -169,7 +169,7 @@ typedef struct tagMSFT_ImpInfo {
 /* function description data */
 typedef struct {
 /*  INT   recsize;       record size including some xtra stuff */
-    INT   DataType;     /* data type of the memeber, eg return of function */
+    INT   DataType;     /* data type of the member, eg return of function */
     INT   Flags;        /* something to do with attribute flags (LOWORD) */
 #ifdef WORDS_BIGENDIAN
     INT16 funcdescsize; /* size of reconstituted FUNCDESC and related structs */
@@ -184,7 +184,7 @@ typedef struct {
                         /* bit 3 that parameter has default values */
                         /* calling convention (bits 4-7 ) */
                         /* bit 8 indicates that custom data is present */
-                        /* Invokation kind (bits 9-12 ) */
+                        /* Invocation kind (bits 9-12 ) */
                         /* function kind (eg virtual), bits 13-15  */
 #ifdef WORDS_BIGENDIAN
     INT16 nroargs;      /* nr of optional arguments */

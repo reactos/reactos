@@ -134,7 +134,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
    }
 
    /*
-    * Paging out non-dirty data is easy. 
+    * Paging out non-dirty data is easy.
     */
    if (!WasDirty)
    {
@@ -489,20 +489,20 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
  * FUNCTION: Allocates a block of virtual memory in the process address space
  * ARGUMENTS:
  *      ProcessHandle = The handle of the process which owns the virtual memory
- *      BaseAddress   = A pointer to the virtual memory allocated. If you 
- *                      supply a non zero value the system will try to 
- *                      allocate the memory at the address supplied. It round 
+ *      BaseAddress   = A pointer to the virtual memory allocated. If you
+ *                      supply a non zero value the system will try to
+ *                      allocate the memory at the address supplied. It round
  *                      it down to a multiple  of the page size.
- *      ZeroBits  = (OPTIONAL) You can specify the number of high order bits 
- *                      that must be zero, ensuring that the memory will be 
+ *      ZeroBits  = (OPTIONAL) You can specify the number of high order bits
+ *                      that must be zero, ensuring that the memory will be
  *                      allocated at a address below a certain value.
  *      RegionSize = The number of bytes to allocate
- *      AllocationType = Indicates the type of virtual memory you like to 
- *                       allocated, can be a combination of MEM_COMMIT, 
+ *      AllocationType = Indicates the type of virtual memory you like to
+ *                       allocated, can be a combination of MEM_COMMIT,
  *                       MEM_RESERVE, MEM_RESET, MEM_TOP_DOWN.
  *      Protect = Indicates the protection type of the pages allocated, can be
- *                a combination of PAGE_READONLY, PAGE_READWRITE, 
- *                PAGE_EXECUTE_READ, PAGE_EXECUTE_READWRITE, PAGE_GUARD, 
+ *                a combination of PAGE_READONLY, PAGE_READWRITE,
+ *                PAGE_EXECUTE_READ, PAGE_EXECUTE_READWRITE, PAGE_GUARD,
  *                PAGE_NOACCESS
  * RETURNS: Status
  */
@@ -626,7 +626,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
 
    MemoryAreaLength = (ULONG_PTR)MemoryArea->EndingAddress -
                       (ULONG_PTR)MemoryArea->StartingAddress;
-   
+
    MmInitialiseRegion(&MemoryArea->Data.VirtualMemoryData.RegionListHead,
                       MemoryAreaLength, Type, Protect);
 
@@ -757,14 +757,14 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
 /*
  * FUNCTION: Frees a range of virtual memory
  * ARGUMENTS:
- *        ProcessHandle = Points to the process that allocated the virtual 
+ *        ProcessHandle = Points to the process that allocated the virtual
  *                        memory
- *        BaseAddress = Points to the memory address, rounded down to a 
+ *        BaseAddress = Points to the memory address, rounded down to a
  *                      multiple of the pagesize
- *        RegionSize = Limits the range to free, rounded up to a multiple of 
+ *        RegionSize = Limits the range to free, rounded up to a multiple of
  *                     the paging size
  *        FreeType = Can be one of the values:  MEM_DECOMMIT, or MEM_RELEASE
- * RETURNS: Status 
+ * RETURNS: Status
  */
 {
    MEMORY_AREA* MemoryArea;

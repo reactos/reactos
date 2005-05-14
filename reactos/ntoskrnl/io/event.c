@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/event.c
  * PURPOSE:         Implements named events
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
@@ -68,7 +68,7 @@ IoCreateSynchronizationEvent(PUNICODE_STRING EventName,
    PKEVENT Event;
    HANDLE Handle;
    NTSTATUS Status;
-   
+
    PreviousMode = ExGetPreviousMode();
 
    InitializeObjectAttributes(&ObjectAttributes,

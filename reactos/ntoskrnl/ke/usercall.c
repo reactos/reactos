@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/usercall.c
  * PURPOSE:         User-Mode callbacks. Portable part.
- * 
+ *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
 
@@ -17,8 +17,8 @@
 
 #if ALEX_CB_REWRITE
 
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 KiSwitchToUserMode(IN PVOID *OutputBuffer,
                    IN PULONG OutputLength);
 
@@ -54,8 +54,8 @@ PsInitialiseW32Call(VOID)
 }
 
 VOID STATIC
-PsFreeCallbackStackPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, 
-			PFN_TYPE Page, SWAPENTRY SwapEntry, 
+PsFreeCallbackStackPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
+			PFN_TYPE Page, SWAPENTRY SwapEntry,
 			BOOLEAN Dirty)
 {
   ASSERT(SwapEntry == 0);
@@ -161,7 +161,7 @@ KeUserModeCallback(IN ULONG RoutineIndex,
                    IN ULONG ArgumentLength,
                    OUT PVOID *Result,
                    OUT PULONG ResultLength)
-{ 
+{
   PETHREAD Thread;
   PVOID NewStack;
   ULONG_PTR StackSize;
@@ -171,7 +171,7 @@ KeUserModeCallback(IN ULONG RoutineIndex,
   NTSTATUS CallbackStatus;
   NTW32CALL_SAVED_STATE SavedState;
   PNTW32CALL_CALLBACK_STACK AssignedStack;
-  
+
   PAGED_CODE();
 
   DPRINT("KeUserModeCallback(RoutineIndex %d, Argument %X, ArgumentLength %d)\n",
@@ -239,8 +239,8 @@ KeUserModeCallback(IN ULONG RoutineIndex,
   KeGetCurrentKPCR()->TSS->Esp0 = (ULONG)Thread->Tcb.InitialStack - sizeof(FX_SAVE_AREA);
   KePushAndStackSwitchAndSysRet((ULONG)&SavedState, Thread->Tcb.KernelStack);
 
-  /* 
-   * The callback return will have already restored most of the state we 
+  /*
+   * The callback return will have already restored most of the state we
    * modified.
    */
   KeLowerIrql(DISPATCH_LEVEL);
@@ -249,5 +249,5 @@ KeUserModeCallback(IN ULONG RoutineIndex,
   KeReleaseSpinLock(&CallbackStackListLock, PASSIVE_LEVEL);
   return(CallbackStatus);
 }
-  
+
 /* EOF */

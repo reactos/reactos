@@ -115,25 +115,38 @@ template<typename BASE> struct IComSrvQI : public BASE
 	{
 	}
 
-	STDMETHODIMP QueryInterface(REFIID riid, LPVOID* ppv) {*ppv=0;
-	 if (IsEqualIID(riid, _uuid_base) ||
-		 IsEqualIID(riid, IID_IUnknown)) {*ppv=static_cast<BASE*>(this); this->AddRef(); return S_OK;}
-	 return E_NOINTERFACE;}
+	STDMETHODIMP QueryInterface(REFIID riid, LPVOID* ppv)
+	{
+		*ppv = NULL;
+
+		if (IsEqualIID(riid, _uuid_base) || IsEqualIID(riid, IID_IUnknown))
+			{*ppv=static_cast<BASE*>(this); this->AddRef(); return S_OK;}
+
+		return E_NOINTERFACE;
+	}
 
 protected:
 	IComSrvQI() {}
+	virtual ~IComSrvQI() {}
 
 	REFIID	_uuid_base;
 };
 
 template<> struct IComSrvQI<IUnknown> : public IUnknown
 {
-	STDMETHODIMP QueryInterface(REFIID riid, LPVOID* ppv) {*ppv=0;
-	 if (IsEqualIID(riid, IID_IUnknown)) {*ppv=this; AddRef(); return S_OK;}
-	 return E_NOINTERFACE;}
+	STDMETHODIMP QueryInterface(REFIID riid, LPVOID* ppv)
+	{
+		*ppv = NULL;
+
+		if (IsEqualIID(riid, IID_IUnknown))
+			{*ppv=this; AddRef(); return S_OK;}
+
+		return E_NOINTERFACE;
+	}
 
 protected:
 	IComSrvQI<IUnknown>() {}
+	virtual ~IComSrvQI<IUnknown>() {}
 };
 
 
@@ -455,6 +468,8 @@ protected:
 
 struct DWebBrowserEvents2IF
 {
+	virtual ~DWebBrowserEvents2IF() {}
+
     virtual void StatusTextChange(const BStr& text)
 		{}
 
@@ -594,6 +609,9 @@ protected:
  // MinGW defines a wrong FixedDWebBrowserEvents2 interface with virtual functions for DISPID calls, so we use our own, corrected version:
 interface FixedDWebBrowserEvents2 : public IDispatch
 {
+#ifdef __GNUC__
+	virtual ~FixedDWebBrowserEvents2() {}
+#endif
 };
 
 struct ANSUNC DWebBrowserEvents2Impl : public SimpleComObject,
@@ -827,7 +845,7 @@ struct ANSUNC DWebBrowserEvents2Impl : public SimpleComObject,
 			_callback->WindowSetWidth(Variant(pDispParams->rgvarg[0]));
 			break;
 
-		  case DISPID_WINDOWSETHEIGHT:	// sent when the put_height method is called on the WebOC 
+		  case DISPID_WINDOWSETHEIGHT:	// sent when the put_height method is called on the WebOC
 			if (pDispParams->cArgs != 1)
 				return E_INVALIDARG;
 			_callback->WindowSetHeight(Variant(pDispParams->rgvarg[0]));

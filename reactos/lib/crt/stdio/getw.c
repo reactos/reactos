@@ -30,7 +30,7 @@ int _getw(FILE *stream)
 
   /* Is there a better way?  */
   if (fread( &w, sizeof(w), 1, stream) != 1) {
-    // EOF is a legitimate integer value so users must 
+    // EOF is a legitimate integer value so users must
     // check feof or ferror to verify an EOF return.
     return(EOF);
   }

@@ -46,7 +46,7 @@ VOID HexDump(PUCHAR Buffer, ULONG Length)
 }
 #endif
 
-static VOID STDCALL 
+static VOID STDCALL
 NpfsReadWriteCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
                            IN PIRP Irp)
 {
@@ -67,7 +67,7 @@ NpfsReadWriteCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
 
    KeLockMutex(&DeviceExt->PipeListLock);
    ExAcquireFastMutex(&Fcb->DataListLock);
-   switch(IoStack->MajorFunction)   
+   switch(IoStack->MajorFunction)
    {
       case IRP_MJ_READ:
          if (Fcb->ReadRequestListHead.Flink != &Context->ListEntry)
@@ -183,17 +183,17 @@ NpfsWaiterThread(PVOID InitContext)
 		      NextIrp = CONTAINING_RECORD(NextContext, IRP, Tail.Overlay.DriverContext);
 		      ThreadContext->WaitIrpArray[ThreadContext->Count] = NextIrp;
 		      ThreadContext->Count++;
-                      ThreadContext->DeviceExt->EmptyWaiterCount--;		   
+                      ThreadContext->DeviceExt->EmptyWaiterCount--;
 		   }
 		   break;
 		default:
 		   KEBUGCHECK(0);
 	     }
 	     ExReleaseFastMutex(&Fcb->DataListLock);
-	  }	    
+	  }
        }
        else
-       {  
+       {
 	  /* someone has add a new wait request */
           Irp = NULL;
        }
@@ -220,7 +220,7 @@ NpfsAddWaitingReadWriteRequest(IN PDEVICE_OBJECT DeviceObject,
    KIRQL oldIrql;
 
    PNPFS_CONTEXT Context = (PNPFS_CONTEXT)&Irp->Tail.Overlay.DriverContext;
-   PNPFS_DEVICE_EXTENSION DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;;
+   PNPFS_DEVICE_EXTENSION DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
    DPRINT("NpfsAddWaitingReadWriteRequest(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
 
@@ -249,9 +249,9 @@ NpfsAddWaitingReadWriteRequest(IN PDEVICE_OBJECT DeviceObject,
        ThreadContext->Count = 1;
        ThreadContext->WaitObjectArray[0] = &ThreadContext->Event;
 
-   
+
        DPRINT("Creating a new system thread for waiting read/write requests\n");
-      
+
        Status = PsCreateSystemThread(&hThread,
 		                     THREAD_ALL_ACCESS,
 				     NULL,
@@ -266,7 +266,7 @@ NpfsAddWaitingReadWriteRequest(IN PDEVICE_OBJECT DeviceObject,
            return Status;
 	 }
        InsertHeadList(&DeviceExt->ThreadListHead, &ThreadContext->ListEntry);
-       DeviceExt->EmptyWaiterCount += MAXIMUM_WAIT_OBJECTS - 1;       
+       DeviceExt->EmptyWaiterCount += MAXIMUM_WAIT_OBJECTS - 1;
      }
    IoMarkIrpPending(Irp);
 
@@ -432,10 +432,10 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 	   else
 	   {
               PNPFS_CONTEXT Context = (PNPFS_CONTEXT)&Irp->Tail.Overlay.DriverContext;
-	    
+
               Context->WaitEvent = &Fcb->ReadEvent;
 	      Status = NpfsAddWaitingReadWriteRequest(DeviceObject, Irp);
-	         
+
 	      if (NT_SUCCESS(Status))
 	      {
 	         Status = STATUS_PENDING;
@@ -443,7 +443,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 	      ExAcquireFastMutex(&Fcb->DataListLock);
 	      break;
 	   }
-        } 
+        }
         if (Fcb->Pipe->ReadMode == FILE_PIPE_BYTE_STREAM_MODE)
         {
 	   DPRINT("Byte stream mode\n");
@@ -528,7 +528,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
               break;
 	   }
         }
-     }   
+     }
      Irp->IoStatus.Information = Information;
      Irp->IoStatus.Status = Status;
 
@@ -570,7 +570,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
         Context = CONTAINING_RECORD(Fcb->ReadRequestListHead.Flink, NPFS_CONTEXT, ListEntry);
 	Irp = CONTAINING_RECORD(Context, IRP, Tail.Overlay.DriverContext);
      }
-  }	
+  }
 
 done:
   Irp->IoStatus.Status = Status;
@@ -668,7 +668,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 	  ExReleaseFastMutex(&ReaderFcb->DataListLock);
 
 	  DPRINT("Waiting for buffer space (%S)\n", Pipe->PipeName.Buffer);
-	  Status = KeWaitForSingleObject(&Fcb->WriteEvent, 
+	  Status = KeWaitForSingleObject(&Fcb->WriteEvent,
 	                                 UserRequest,
 				         KernelMode,
 				         FALSE,

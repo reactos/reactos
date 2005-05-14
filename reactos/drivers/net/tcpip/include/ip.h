@@ -97,7 +97,7 @@ typedef struct _IP_PACKET {
 /* Packet context */
 typedef struct _PACKET_CONTEXT {
     PACKET_COMPLETION_ROUTINE DLComplete; /* Data link level completion handler
-					   * Also used to link to next packet 
+					   * Also used to link to next packet
 					   * in a queue */
     PVOID Context;                        /* Context information for handler */
     UINT  PacketType;                     /* Type of packet */

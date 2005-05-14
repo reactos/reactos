@@ -28,7 +28,7 @@
  *        Fixed date input bug.
  *
  *    03-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -53,17 +53,17 @@ PrintDateString (VOID)
 	{
 		case 0: /* mmddyy */
 		default:
-			LoadString(GetModuleHandle(NULL), STRING_DATE_HELP1, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_DATE_HELP1, szMsg, RC_STRING_MAX_SIZE);
 			ConOutPrintf(szMsg, cDateSeparator, cDateSeparator);
 			break;
 
 		case 1: /* ddmmyy */
-			LoadString(GetModuleHandle(NULL), STRING_DATE_HELP2, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_DATE_HELP2, szMsg, RC_STRING_MAX_SIZE);
 			ConOutPrintf(szMsg, cDateSeparator, cDateSeparator);
 			break;
 
 		case 2: /* yymmdd */
-			LoadString(GetModuleHandle(NULL), STRING_DATE_HELP3, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_DATE_HELP3, szMsg, RC_STRING_MAX_SIZE);
 			ConOutPrintf(szMsg, cDateSeparator, cDateSeparator);
 			break;
 	}
@@ -184,7 +184,6 @@ ParseDate (LPTSTR s)
 
 INT cmd_date (LPTSTR cmd, LPTSTR param)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR *arg;
 	INT    argc;
 	INT    i;
@@ -193,8 +192,7 @@ INT cmd_date (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_DATE_HELP4, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+		ConOutResPuts(STRING_DATE_HELP4);
 		return 0;
 	}
 
@@ -237,7 +235,8 @@ INT cmd_date (LPTSTR cmd, LPTSTR param)
 				freep (arg);
 				return 0;
 			}
-			ConErrPuts (_T("Invalid date."));
+			ConErrResPuts(STRING_DATE_ERROR);
+
 		}
 	}
 	else
@@ -248,8 +247,7 @@ INT cmd_date (LPTSTR cmd, LPTSTR param)
 			return 0;
 		}
 
-		LoadString(GetModuleHandle(NULL), STRING_DATE_ERROR, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPuts(szMsg);
+		ConErrResPuts(STRING_DATE_ERROR);
 	}
 
 	freep (arg);

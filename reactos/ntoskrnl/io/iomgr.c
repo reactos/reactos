@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/io/iomgr.c
  * PURPOSE:         I/O Manager Initialization and Misc Utility Functions
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
@@ -18,6 +18,12 @@
 #define TAG_DEVICE_TYPE     TAG('D', 'E', 'V', 'T')
 #define TAG_FILE_TYPE       TAG('F', 'I', 'L', 'E')
 #define TAG_ADAPTER_TYPE    TAG('A', 'D', 'P', 'T')
+#define IO_LARGEIRP         TAG('I', 'r', 'p', 'l')
+#define IO_SMALLIRP         TAG('I', 'r', 'p', 's')
+#define IO_LARGEIRP_CPU     TAG('I', 'r', 'p', 'L')
+#define IO_SMALLIRP_CPU     TAG('I', 'r', 'p', 'S')
+#define IOC_TAG             TAG('I', 'p', 'c', ' ')
+#define IOC_CPU             TAG('I', 'p', 'c', 'P')
 
 /* DATA ********************************************************************/
 
@@ -36,26 +42,146 @@ GENERIC_MAPPING IopFileMapping = {
     FILE_GENERIC_WRITE,
     FILE_GENERIC_EXECUTE,
     FILE_ALL_ACCESS};
-                
+
 static KSPIN_LOCK CancelSpinLock;
 extern LIST_ENTRY ShutdownListHead;
 extern KSPIN_LOCK ShutdownListLock;
+extern NPAGED_LOOKASIDE_LIST IoCompletionPacketLookaside;
+NPAGED_LOOKASIDE_LIST IoLargeIrpLookaside;
+NPAGED_LOOKASIDE_LIST IoSmallIrpLookaside;
 
 /* INIT FUNCTIONS ************************************************************/
 
-VOID 
+VOID
 INIT_FUNCTION
 IoInitCancelHandling(VOID)
 {
     KeInitializeSpinLock(&CancelSpinLock);
 }
 
-VOID 
+VOID
 INIT_FUNCTION
 IoInitShutdownNotification (VOID)
 {
    InitializeListHead(&ShutdownListHead);
    KeInitializeSpinLock(&ShutdownListLock);
+}
+
+VOID
+INIT_FUNCTION
+IopInitLookasideLists(VOID)
+{
+    ULONG LargeIrpSize, SmallIrpSize;
+    ULONG i;
+    PKPRCB Prcb;
+    PNPAGED_LOOKASIDE_LIST CurrentList = NULL;
+    
+    /* Calculate the sizes */
+    LargeIrpSize = sizeof(IRP) + (8 * sizeof(IO_STACK_LOCATION));
+    SmallIrpSize = sizeof(IRP) + sizeof(IO_STACK_LOCATION);
+    
+    /* Initialize the Lookaside List for Large IRPs */
+    ExInitializeNPagedLookasideList(&IoLargeIrpLookaside,
+                                    NULL,
+                                    NULL,
+                                    0,
+                                    LargeIrpSize,
+                                    IO_LARGEIRP,
+                                    0);
+                                    
+    /* Initialize the Lookaside List for Small IRPs */
+    ExInitializeNPagedLookasideList(&IoSmallIrpLookaside,
+                                    NULL,
+                                    NULL,
+                                    0,
+                                    SmallIrpSize,
+                                    IO_SMALLIRP,
+                                    0);
+
+    /* Initialize the Lookaside List for I\O Completion */
+    ExInitializeNPagedLookasideList(&IoCompletionPacketLookaside,
+                                    NULL,
+                                    NULL,
+                                    0,
+                                    sizeof(IO_COMPLETION_PACKET),
+                                    IOC_TAG,
+                                    0);
+                                    
+    /* Now allocate the per-processor lists */
+    for (i = 0; i < KeNumberProcessors; i++)
+    {
+        /* Get the PRCB for this CPU */
+        Prcb = ((PKPCR)(KPCR_BASE + i * PAGE_SIZE))->Prcb;
+        DPRINT1("Setting up lookaside for CPU: %x, PRCB: %p\n", i, Prcb);
+        
+        /* Set the Large IRP List */
+        Prcb->PPLookasideList[LookasideLargeIrpList].L = &IoLargeIrpLookaside.L;
+        CurrentList = ExAllocatePoolWithTag(NonPagedPool,
+                                            sizeof(NPAGED_LOOKASIDE_LIST),
+                                            IO_LARGEIRP_CPU);
+        if (CurrentList)
+        {
+            /* Initialize the Lookaside List for Large IRPs */
+            ExInitializeNPagedLookasideList(CurrentList,
+                                            NULL,
+                                            NULL,
+                                            0,
+                                            LargeIrpSize,
+                                            IO_LARGEIRP_CPU,
+                                            0);
+        }
+        else
+        {
+            CurrentList = &IoLargeIrpLookaside;
+        }
+        Prcb->PPLookasideList[LookasideLargeIrpList].P = &CurrentList->L;
+        
+        /* Set the Small IRP List */
+        Prcb->PPLookasideList[LookasideSmallIrpList].L = &IoSmallIrpLookaside.L;
+        CurrentList = ExAllocatePoolWithTag(NonPagedPool,
+                                            sizeof(NPAGED_LOOKASIDE_LIST),
+                                            IO_SMALLIRP_CPU);
+        if (CurrentList)
+        {
+            /* Initialize the Lookaside List for Large IRPs */
+            ExInitializeNPagedLookasideList(CurrentList,
+                                            NULL,
+                                            NULL,
+                                            0,
+                                            SmallIrpSize,
+                                            IO_SMALLIRP_CPU,
+                                            0);
+        }
+        else
+        {
+            CurrentList = &IoSmallIrpLookaside;
+        }
+        Prcb->PPLookasideList[LookasideSmallIrpList].P = &CurrentList->L;
+        
+        /* Set the I/O Completion List */
+        Prcb->PPLookasideList[LookasideCompletionList].L = &IoCompletionPacketLookaside.L;
+        CurrentList = ExAllocatePoolWithTag(NonPagedPool,
+                                            sizeof(NPAGED_LOOKASIDE_LIST),
+                                            IO_SMALLIRP_CPU);
+        if (CurrentList)
+        {
+            /* Initialize the Lookaside List for Large IRPs */
+            ExInitializeNPagedLookasideList(CurrentList,
+                                            NULL,
+                                            NULL,
+                                            0,
+                                            SmallIrpSize,
+                                            IOC_CPU,
+                                            0);
+        }
+        else
+        {
+            CurrentList = &IoCompletionPacketLookaside;
+        }
+        Prcb->PPLookasideList[LookasideCompletionList].P = &CurrentList->L;
+    }
+    
+    DPRINT1("Done allocation\n");
 }
 
 VOID
@@ -68,13 +194,13 @@ IoInit (VOID)
   HANDLE Handle;
 
   IopInitDriverImplementation();
-  
+
   /*
    * Register iomgr types: DeviceObjectType
    */
   IoDeviceObjectType = ExAllocatePool (NonPagedPool,
 				       sizeof (OBJECT_TYPE));
-  
+
   IoDeviceObjectType->Tag = TAG_DEVICE_TYPE;
   IoDeviceObjectType->TotalObjects = 0;
   IoDeviceObjectType->TotalHandles = 0;
@@ -93,7 +219,7 @@ IoInit (VOID)
   IoDeviceObjectType->OkayToClose = NULL;
   IoDeviceObjectType->Create = NULL;
   IoDeviceObjectType->DuplicationNotify = NULL;
-  
+
   RtlInitUnicodeString(&IoDeviceObjectType->TypeName, L"Device");
 
   ObpCreateTypeObject(IoDeviceObjectType);
@@ -103,7 +229,7 @@ IoInit (VOID)
    * (alias DriverObjectType)
    */
   IoFileObjectType = ExAllocatePool (NonPagedPool, sizeof (OBJECT_TYPE));
-  
+
   IoFileObjectType->Tag = TAG_FILE_TYPE;
   IoFileObjectType->TotalObjects = 0;
   IoFileObjectType->TotalHandles = 0;
@@ -122,11 +248,11 @@ IoInit (VOID)
   IoFileObjectType->OkayToClose = NULL;
   IoFileObjectType->Create = IopCreateFile;
   IoFileObjectType->DuplicationNotify = NULL;
-  
+
   RtlInitUnicodeString(&IoFileObjectType->TypeName, L"File");
 
   ObpCreateTypeObject(IoFileObjectType);
-  
+
     /*
    * Register iomgr types: AdapterObjectType
    */
@@ -220,6 +346,7 @@ IoInit (VOID)
   IopInitErrorLog();
   IopInitTimerImplementation();
   IopInitIoCompletionImplementation();
+  IopInitLookasideLists();
 
   /*
    * Create link from '\DosDevices' to '\??' directory
@@ -236,8 +363,8 @@ IoInit (VOID)
    */
   PnpInit();
 }
-
-VOID 
+                                   
+VOID
 INIT_FUNCTION
 IoInit2(BOOLEAN BootLog)
 {
@@ -247,7 +374,7 @@ IoInit2(BOOLEAN BootLog)
   NTSTATUS Status;
 
   IoCreateDriverList();
-          
+
   KeInitializeSpinLock (&IoStatisticsLock);
 
   /* Initialize raw filesystem driver */
@@ -293,10 +420,10 @@ IoInit2(BOOLEAN BootLog)
   IopInvalidateDeviceRelations(
     IopRootDeviceNode,
     BusRelations);
-  
+
      /* Start boot logging */
     IopInitBootLog(BootLog);
-  
+
     /* Load boot start drivers */
     IopInitializeBootDrivers();
 }
@@ -307,7 +434,7 @@ INIT_FUNCTION
 IoInit3(VOID)
 {
     NTSTATUS Status;
-    
+
     /* Create ARC names for boot devices */
     IoCreateArcNames();
 
@@ -339,7 +466,7 @@ IoInit3(VOID)
     IoAssignDriveLetters((PLOADER_PARAMETER_BLOCK)&KeLoaderBlock,
                          NULL,
                          NULL,
-                         NULL);    
+                         NULL);
 }
 
 /* FUNCTIONS *****************************************************************/
@@ -347,8 +474,8 @@ IoInit3(VOID)
 /*
  * @implemented
  */
-VOID 
-STDCALL 
+VOID
+STDCALL
 IoAcquireCancelSpinLock(PKIRQL Irql)
 {
    KeAcquireSpinLock(&CancelSpinLock,Irql);
@@ -357,7 +484,7 @@ IoAcquireCancelSpinLock(PKIRQL Irql)
 /*
  * @implemented
  */
-PVOID 
+PVOID
 STDCALL
 IoGetInitialStack(VOID)
 {
@@ -367,7 +494,7 @@ IoGetInitialStack(VOID)
 /*
  * @implemented
  */
-VOID 
+VOID
 STDCALL
 IoGetStackLimits(OUT PULONG LowLimit,
                  OUT PULONG HighLimit)
@@ -403,7 +530,7 @@ IoIsWdmVersionAvailable(IN UCHAR MajorVersion,
  * @implemented
  */
 VOID
-STDCALL 
+STDCALL
 IoReleaseCancelSpinLock(KIRQL Irql)
 {
    KeReleaseSpinLock(&CancelSpinLock,Irql);

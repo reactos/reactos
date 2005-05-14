@@ -38,9 +38,9 @@ PsCreateCidHandle(PVOID Object, POBJECT_TYPE ObjectType, PHANDLE Handle)
 {
   HANDLE_TABLE_ENTRY NewEntry;
   LONG ExHandle;
-  
+
   PAGED_CODE();
-  
+
   NewEntry.u1.Object = Object;
   if(ObjectType == PsThreadType)
     NewEntry.u2.GrantedAccess = CID_FLAG_THREAD;
@@ -51,7 +51,7 @@ PsCreateCidHandle(PVOID Object, POBJECT_TYPE ObjectType, PHANDLE Handle)
     DPRINT1("Can't create CID handles for %wZ objects\n", &ObjectType->TypeName);
     KEBUGCHECK(0);
   }
-  
+
   ExHandle = ExCreateHandle(PspCidTable,
                             &NewEntry);
   if(ExHandle != EX_INVALID_HANDLE)
@@ -59,7 +59,7 @@ PsCreateCidHandle(PVOID Object, POBJECT_TYPE ObjectType, PHANDLE Handle)
     *Handle = EX_HANDLE_TO_HANDLE(ExHandle);
     return STATUS_SUCCESS;
   }
-  
+
   return STATUS_UNSUCCESSFUL;
 }
 
@@ -68,7 +68,7 @@ PsDeleteCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType)
 {
   PHANDLE_TABLE_ENTRY Entry;
   LONG ExHandle = HANDLE_TO_EX_HANDLE(CidHandle);
-  
+
   PAGED_CODE();
 
   KeEnterCriticalRegion();
@@ -102,11 +102,11 @@ PHANDLE_TABLE_ENTRY
 PsLookupCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType, PVOID *Object)
 {
   PHANDLE_TABLE_ENTRY Entry;
-  
+
   PAGED_CODE();
 
   KeEnterCriticalRegion();
-  
+
   Entry = ExMapHandleToPointer(PspCidTable,
                                HANDLE_TO_EX_HANDLE(CidHandle));
   if(Entry != NULL)
@@ -125,9 +125,9 @@ PsLookupCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType, PVOID *Object)
                                Entry);
     }
   }
-  
+
   KeLeaveCriticalRegion();
-  
+
   return NULL;
 }
 

@@ -16,8 +16,8 @@
 POBJECT_TYPE DbgkDebugObjectType;
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 NtCreateDebugObject(OUT PHANDLE DebugHandle,
                     IN ACCESS_MASK DesiredAccess,
                     IN POBJECT_ATTRIBUTES ObjectAttributes,
@@ -27,27 +27,27 @@ NtCreateDebugObject(OUT PHANDLE DebugHandle,
     PDBGK_DEBUG_OBJECT DebugObject;
     HANDLE hDebug;
     NTSTATUS Status = STATUS_SUCCESS;
-   
+
     PAGED_CODE();
     DPRINT("NtCreateDebugObject(0x%x, 0x%x, 0x%x)\n", DebugHandle, DesiredAccess, ObjectAttributes);
- 
+
     /* Check Output Safety */
     if(PreviousMode != KernelMode) {
-        
+
         _SEH_TRY {
-            
+
             ProbeForWrite(DebugHandle,
                           sizeof(HANDLE),
                           sizeof(ULONG));
         } _SEH_HANDLE {
-            
+
             Status = _SEH_GetExceptionCode();
-        
+
         } _SEH_END;
-     
+
         if(!NT_SUCCESS(Status)) return Status;
     }
-    
+
     /* Create the Object */
     Status = ObCreateObject(PreviousMode,
                             DbgkDebugObjectType,
@@ -58,22 +58,22 @@ NtCreateDebugObject(OUT PHANDLE DebugHandle,
                             0,
                             0,
                             (PVOID*)&DebugObject);
-    
+
     /* Check for Success */
     if(NT_SUCCESS(Status)) {
-        
+
         /* Initialize the Debug Object's Fast Mutex */
         ExInitializeFastMutex(&DebugObject->Mutex);
-        
+
         /* Initialize the State Event List */
         InitializeListHead(&DebugObject->StateEventListEntry);
-        
+
         /* Initialize the Debug Object's Wait Event */
         KeInitializeEvent(&DebugObject->Event, NotificationEvent, 0);
-        
+
         /* Set the Flags */
         DebugObject->KillProcessOnExit = KillProcessOnExit;
-        
+
         /* Insert it */
         Status = ObInsertObject((PVOID)DebugObject,
                                  NULL,
@@ -82,18 +82,18 @@ NtCreateDebugObject(OUT PHANDLE DebugHandle,
                                  NULL,
                                  &hDebug);
         ObDereferenceObject(DebugObject);
- 
+
         /* Check for success and return handle */
         if(NT_SUCCESS(Status)) {
-            
+
             _SEH_TRY {
-                
+
                 *DebugHandle = hDebug;
-            
+
             } _SEH_HANDLE {
-                
+
                 Status = _SEH_GetExceptionCode();
-                
+
             } _SEH_END;
         }
     }
@@ -111,7 +111,7 @@ NtWaitForDebugEvent(IN HANDLE DebugObject, // Debug object handle must grant DEB
 {
 
     UNIMPLEMENTED;
-  
+
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -123,7 +123,7 @@ NtDebugContinue(IN HANDLE DebugObject,    // Debug object handle must grant DEBU
 {
 
     UNIMPLEMENTED;
-  
+
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -134,7 +134,7 @@ NtDebugActiveProcess(IN HANDLE Process,     // Process handle must grant PROCESS
 {
 
     UNIMPLEMENTED;
-  
+
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -145,7 +145,7 @@ NtRemoveProcessDebug(IN HANDLE Process,     // Process handle must grant PROCESS
 {
 
     UNIMPLEMENTED;
-  
+
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -158,7 +158,7 @@ NtSetInformationDebugObject(IN HANDLE DebugObject, // Debug object handle need n
                             OUT PULONG ReturnLength OPTIONAL)
 {
     UNIMPLEMENTED;
-  
+
     return STATUS_NOT_IMPLEMENTED;
 }
 /* EOF */

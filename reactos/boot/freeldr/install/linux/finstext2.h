@@ -13,7 +13,7 @@ typedef struct
 	//unsigned short	NumberOfHeads;
 	//unsigned long	Reserved1;
 	//unsigned long	Reserved2;
-	
+
 	unsigned long	Ext2VolumeStartSector;	// Start sector of the ext2 volume
 	unsigned long	Ext2BlockSize;			// Block size in sectors
 	unsigned long	Ext2BlockSizeInBytes;	// Block size in bytes

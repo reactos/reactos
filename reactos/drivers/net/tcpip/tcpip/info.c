@@ -16,8 +16,11 @@ TDI_STATUS InfoCopyOut( PCHAR DataOut, UINT SizeOut,
 			PNDIS_BUFFER ClientBuf, PUINT ClientBufSize ) {
     UINT RememberedCBSize = *ClientBufSize;
     *ClientBufSize = SizeOut;
+
+    /* The driver returns success even when it couldn't fit every available
+     * byte. */
     if( RememberedCBSize < SizeOut )
-	return TDI_BUFFER_TOO_SMALL;
+	return TDI_SUCCESS;
     else {
 	CopyBufferToBufferChain( ClientBuf, 0, (PCHAR)DataOut, SizeOut );
 	return TDI_SUCCESS;
@@ -28,8 +31,8 @@ VOID InsertTDIInterfaceEntity( PIP_INTERFACE Interface ) {
     KIRQL OldIrql;
     UINT Count = 0, i;
 
-    TI_DbgPrint(DEBUG_INFO, 
-		("Inserting interface %08x (%d entities already)\n", 
+    TI_DbgPrint(DEBUG_INFO,
+		("Inserting interface %08x (%d entities already)\n",
 		 Interface, EntityCount));
 
     TcpipAcquireSpinLock( &EntityListLock, &OldIrql );
@@ -38,16 +41,16 @@ VOID InsertTDIInterfaceEntity( PIP_INTERFACE Interface ) {
     for( i = 0; i < EntityCount; i++ )
 	if( EntityList[i].tei_entity == IF_ENTITY ) {
 	    Count++;
-	    TI_DbgPrint(DEBUG_INFO, ("Entity %d is an IF.  Found %d\n", 
+	    TI_DbgPrint(DEBUG_INFO, ("Entity %d is an IF.  Found %d\n",
 				    i, Count));
 	}
-    
+
     EntityList[EntityCount].tei_entity = IF_ENTITY;
     EntityList[EntityCount].tei_instance = Count;
     EntityList[EntityCount].context  = Interface;
     EntityList[EntityCount].info_req = InfoInterfaceTdiQueryEx;
     EntityList[EntityCount].info_set = InfoInterfaceTdiSetEx;
-    
+
     EntityCount++;
 
     TcpipReleaseSpinLock( &EntityListLock, OldIrql );
@@ -58,14 +61,14 @@ VOID RemoveTDIInterfaceEntity( PIP_INTERFACE Interface ) {
     UINT i;
 
     TcpipAcquireSpinLock( &EntityListLock, &OldIrql );
-    
+
     /* Remove entities that have this interface as context
      * In the future, this might include AT_ENTITY types, too
      */
     for( i = 0; i < EntityCount; i++ ) {
 	if( EntityList[i].context == Interface ) {
-	    if( i != EntityCount-1 ) 
-		memcpy( &EntityList[i], 
+	    if( i != EntityCount-1 )
+		memcpy( &EntityList[i],
 			&EntityList[--EntityCount],
 			sizeof(EntityList[i]) );
 	}
@@ -82,29 +85,32 @@ TDI_STATUS InfoTdiQueryListEntities(PNDIS_BUFFER Buffer,
 
     TI_DbgPrint(DEBUG_INFO,("About to copy %d TDIEntityIDs to user\n",
 			   EntityCount));
-    
+
     TcpipAcquireSpinLock(&EntityListLock, &OldIrql);
 
     Size = EntityCount * sizeof(TDIEntityID);
     *BufferSize = Size;
+
+    TI_DbgPrint(DEBUG_INFO,("BufSize: %d, NeededSize: %d\n", BufSize, Size));
     
     if (BufSize < Size)
     {
 	TcpipReleaseSpinLock( &EntityListLock, OldIrql );
-	/* The buffer is too small to contain requested data */
-	return TDI_BUFFER_TOO_SMALL;
+	/* The buffer is too small to contain requested data, but we return
+         * success anyway, as we did everything we wanted. */
+	return TDI_SUCCESS;
     }
-        
+
     /* Return entity list -- Copy only the TDIEntityID parts. */
     for( Count = 0; Count < EntityCount; Count++ ) {
-	CopyBufferToBufferChain(Buffer, 
-				Count * sizeof(TDIEntityID), 
-				(PCHAR)&EntityList[Count], 
+	CopyBufferToBufferChain(Buffer,
+				Count * sizeof(TDIEntityID),
+				(PCHAR)&EntityList[Count],
 				sizeof(TDIEntityID));
     }
-    
+
     TcpipReleaseSpinLock(&EntityListLock, OldIrql);
-    
+
     return TDI_SUCCESS;
 }
 
@@ -154,7 +160,7 @@ TDI_STATUS InfoTdiQueryInformationEx(
 	    Status = InfoTdiQueryListEntities(Buffer, BufferSize);
     } else {
 	TcpipAcquireSpinLock( &EntityListLock, &OldIrql );
-	
+
 	for( i = 0; i < EntityCount; i++ ) {
 	    if( EntityList[i].tei_entity == ID->toi_entity.tei_entity &&
 		EntityList[i].tei_instance == ID->toi_entity.tei_instance ) {
@@ -164,9 +170,9 @@ TDI_STATUS InfoTdiQueryInformationEx(
 		break;
 	    }
 	}
-	
+
 	TcpipReleaseSpinLock( &EntityListLock, OldIrql );
-	
+
 	if( FoundEntity ) {
 	    TI_DbgPrint(DEBUG_INFO,
 			("Calling Entity %d (%04x:%d) InfoEx (%x,%x,%x)\n",
@@ -222,6 +228,6 @@ TDI_STATUS InfoTdiSetInformationEx
 	}
 	break;
     }
-    
+
     return TDI_INVALID_PARAMETER;
 }

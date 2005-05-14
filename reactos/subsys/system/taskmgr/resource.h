@@ -240,10 +240,12 @@
 #define IDS_STATUS_MEMUSAGE             363
 #define IDS_STATUS_CPUUSAGE             364
 #define IDS_STATUS_PROCESSES            365
+#define IDS_Not_Responding              366
+#define IDS_Running                     367
 
 
 // Next default values for new objects
-// 
+//
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        157

@@ -17,7 +17,7 @@
  *        Implemented basic rename code.
  *
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc 
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -62,8 +62,7 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
 
   if (!_tcsncmp(param, _T("/?"), 2))
   {
-    LoadString(GetModuleHandle(NULL), STRING_REN_HELP1, szMsg, RC_STRING_MAX_SIZE);
-    ConOutPuts(szMsg);
+    ConOutResPuts(STRING_REN_HELP1);
     return 0;
   }
 
@@ -238,7 +237,7 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
 		{
 		  if (!(dwFlags & REN_ERROR))
 		  {
-		    LoadString(GetModuleHandle(NULL), STRING_REN_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+		    LoadString(CMD_ModuleHandle, STRING_REN_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 		    ConErrPrintf(szMsg, GetLastError());
 		  }
 		}
@@ -251,10 +250,10 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
   if (!(dwFlags & REN_QUIET))
   {
     if (dwFiles == 1)
-      LoadString( GetModuleHandle(NULL), STRING_REN_HELP2, szMsg, RC_STRING_MAX_SIZE);
+      LoadString( CMD_ModuleHandle, STRING_REN_HELP2, szMsg, RC_STRING_MAX_SIZE);
     else
-      LoadString( GetModuleHandle(NULL), STRING_REN_HELP3, szMsg, RC_STRING_MAX_SIZE);
-    ConOutPrintf((LPTSTR)szMsg,dwFiles);
+      LoadString( CMD_ModuleHandle, STRING_REN_HELP3, szMsg, RC_STRING_MAX_SIZE);
+    ConOutPrintf(szMsg,dwFiles);
   }
 
   freep(arg);

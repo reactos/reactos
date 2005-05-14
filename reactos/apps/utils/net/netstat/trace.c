@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////////////
 // Diagnostic Trace
 //
-#include <stdio.h> 
+#include <stdio.h>
 #include <stdarg.h>
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>

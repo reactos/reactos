@@ -505,7 +505,7 @@ static PROFILESECTION *PROFILE_Load(HANDLE hFile, ENCODING * pEncoding)
         szNameEnd++;
 
         len = (int)(szNameEnd - szLineStart);
-        
+
         if (len || !prev_key || *prev_key->name)
         {
             /* no need to allocate +1 for NULL terminating character as

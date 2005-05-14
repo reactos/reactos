@@ -53,7 +53,7 @@ typedef struct _KV86M_REGISTERS
   ULONG Gs;
 
   /*
-   * Control registers 
+   * Control registers
    */
   ULONG Eip;
   ULONG Cs;
@@ -66,7 +66,7 @@ typedef struct _KV86M_REGISTERS
    */
   ULONG RecoveryAddress;
   UCHAR RecoveryInstruction[4];
-  ULONG Vif;                  
+  ULONG Vif;
   ULONG Flags;
   PNTSTATUS PStatus;
 } KV86M_REGISTERS, *PKV86M_REGISTERS;

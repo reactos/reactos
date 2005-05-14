@@ -1,9 +1,9 @@
-/* 
+/*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           crc32 functions
  * FILE:              lib/ntdll/rtl/crc32.c
- * PROGRAMER:         Steven Edwards 
+ * PROGRAMER:         Steven Edwards
  * REVISION HISTORY:
  *                    11/15/2000: Created
  */

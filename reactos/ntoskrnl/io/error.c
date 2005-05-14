@@ -457,7 +457,7 @@ IopFreeApc(PKAPC Apc,
 {
     /* Free the APC */
     ExFreePool(Apc);
-}      
+}
 
 VOID
 STDCALL
@@ -470,25 +470,25 @@ IopRaiseHardError(PKAPC Apc,
     PIRP Irp = (PIRP)NormalContext;
     //PVPB Vpb = (PVPB)SystemArgument1;
     //PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)SystemArgument2;
-    
+
     /* FIXME: UNIMPLEMENTED */
     Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_DISK_INCREMENT);
-}        
+}
 
 /*
  * @implemented
  */
-VOID 
-STDCALL 
+VOID
+STDCALL
 IoRaiseHardError(PIRP Irp,
                  PVPB Vpb,
                  PDEVICE_OBJECT RealDeviceObject)
 {
     PETHREAD Thread = (PETHREAD)&Irp->Tail.Overlay.Thread;
     PKAPC ErrorApc;
-    
+
     /* Don't do anything if hard errors are disabled on the thread */
     if (Thread->HardErrorsAreDisabled)
     {
@@ -497,10 +497,10 @@ IoRaiseHardError(PIRP Irp,
         IoCompleteRequest(Irp, IO_DISK_INCREMENT);
         return;
     }
-    
+
     /* Setup an APC */
-    ErrorApc = ExAllocatePoolWithTag(NonPagedPool, 
-                                     sizeof(KAPC), 
+    ErrorApc = ExAllocatePoolWithTag(NonPagedPool,
+                                     sizeof(KAPC),
                                      TAG('K', 'A', 'P', 'C'));
     KeInitializeApc(ErrorApc,
                     &Thread->Tcb,
@@ -510,7 +510,7 @@ IoRaiseHardError(PIRP Irp,
                     (PKNORMAL_ROUTINE)IopRaiseHardError,
                     KernelMode,
                     Irp);
-    
+
     /* Queue an APC to deal with the error (see osr documentation) */
     KeInsertQueueApc(ErrorApc, Vpb, RealDeviceObject, 0);
 }
@@ -518,8 +518,8 @@ IoRaiseHardError(PIRP Irp,
 /*
  * @unimplemented
  */
-BOOLEAN 
-STDCALL 
+BOOLEAN
+STDCALL
 IoRaiseInformationalHardError(NTSTATUS ErrorStatus,
                               PUNICODE_STRING String,
                               PKTHREAD Thread)
@@ -543,7 +543,7 @@ IoRaiseInformationalHardError(NTSTATUS ErrorStatus,
  *
  * @implemented
  */
-BOOLEAN 
+BOOLEAN
 STDCALL
 IoSetThreadHardErrorMode(IN BOOLEAN HardErrorEnabled)
 {

@@ -17,7 +17,7 @@
 
 #ifdef  ALLOC_PRAGMA
 
-// Make the initialization routines discardable, so that they 
+// Make the initialization routines discardable, so that they
 // don't waste space
 
 #pragma  alloc_text(init, DriverEntry)
@@ -464,7 +464,7 @@ static NTSTATUS ParseAnsiName(PUNICODE_STRING Name, PUSHORT Size)
   *Size -= size1;
 
   /* Clean whitespace from end of string */
-  while ((size1 > 0) && (Buffer[--size1] == ' ')) 
+  while ((size1 > 0) && (Buffer[--size1] == ' '))
     Buffer[size1] = '\0';
 
   DPRINT("ANSI name: %s\n", Buffer);
@@ -986,7 +986,7 @@ static BOOLEAN CreateLogicalDevice(PISAPNP_DEVICE_EXTENSION DeviceExtension,
 		  case ISAPNP_SRIN_CDEVICE_ID:
 			  if ((Size == 4) && (compat < MAX_COMPATIBLE_ID)) {
 				  Peek(tmp, 4);
-				  LogicalDevice->CVendorId[compat] = UCHAR2USHORT(tmp[0], tmp[1]); 
+				  LogicalDevice->CVendorId[compat] = UCHAR2USHORT(tmp[0], tmp[1]);
 				  LogicalDevice->CDeviceId[compat] = UCHAR2USHORT(tmp[2], tmp[3]);
 				  compat++;
 				  Size = 0;
@@ -1146,7 +1146,7 @@ static BOOLEAN ParseResourceMap(PISAPNP_DEVICE_EXTENSION DeviceExtension,
 				  size = 0;
 			  }
 			  break;
-  
+
       case ISAPNP_SRIN_CDEVICE_ID:
         /* FIXME: Parse compatible IDs */
         break;
@@ -1433,7 +1433,7 @@ ISAPNPQueryBusRelations(
   DeviceExtension = (PISAPNP_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
   if (Irp->IoStatus.Information) {
-    /* FIXME: Another bus driver has already created a DEVICE_RELATIONS 
+    /* FIXME: Another bus driver has already created a DEVICE_RELATIONS
               structure so we must merge this structure with our own */
   }
 
@@ -1721,7 +1721,7 @@ ISAPNPAddDevice(
 NTSTATUS
 STDCALL
 DriverEntry(
-  IN PDRIVER_OBJECT DriverObject, 
+  IN PDRIVER_OBJECT DriverObject,
   IN PUNICODE_STRING RegistryPath)
 {
   DbgPrint("ISA Plug and Play Bus Driver\n");

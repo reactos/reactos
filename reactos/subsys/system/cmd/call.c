@@ -25,7 +25,7 @@
  *        Unicode and redirection safe!
  *
  *    02-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -43,7 +43,6 @@
 
 INT cmd_call (LPTSTR cmd, LPTSTR param)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPBATCH_CONTEXT n = NULL;
 
 #ifdef _DEBUG
@@ -51,8 +50,7 @@ INT cmd_call (LPTSTR cmd, LPTSTR param)
 #endif
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_CALL_HELP, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+		ConOutResPuts(STRING_CALL_HELP);
 		return 0;
 	}
 

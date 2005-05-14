@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-	
+
 #include <freeldr.h>
 #include <inifile.h>
 #include <oslist.h>
@@ -92,7 +92,7 @@ ULONG CountOperatingSystems(ULONG SectionId)
 	CHAR	SettingValue[260];
 	ULONG		OperatingSystemCount = 0;
 	ULONG		SectionSettingCount;
-	
+
 	//
 	// Loop through and count the operating systems
 	//
@@ -126,7 +126,7 @@ BOOL AllocateListMemory(PCHAR **SectionNamesPointer, PCHAR **DisplayNamesPointer
 	//
 	OperatingSystemSectionNames = MmAllocateMemory( sizeof(PCHAR) * OperatingSystemCount);
 	OperatingSystemDisplayNames = MmAllocateMemory( sizeof(PCHAR) * OperatingSystemCount);
-	
+
 	//
 	// If either allocation failed then return FALSE
 	//

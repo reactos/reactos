@@ -8,7 +8,7 @@
  *        Started.
  *
  *    28-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -68,8 +68,7 @@ INT CommandMemory (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_MEMMORY_HELP1, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+		ConOutResPuts(STRING_MEMMORY_HELP1);
 		return 0;
 	}
 
@@ -85,7 +84,7 @@ INT CommandMemory (LPTSTR cmd, LPTSTR param)
 	ConvertDWord (ms.dwTotalVirtual, szTotalVirtual, 20, TRUE);
 	ConvertDWord (ms.dwAvailVirtual, szAvailVirtual, 20, TRUE);
 
-	LoadString(GetModuleHandle(NULL), STRING_MEMMORY_HELP2, szMsg, RC_STRING_MAX_SIZE);
+	LoadString(CMD_ModuleHandle, STRING_MEMMORY_HELP2, szMsg, RC_STRING_MAX_SIZE);
 	ConOutPrintf(szMsg,
 	             szMemoryLoad, szTotalPhys, szAvailPhys, szTotalPageFile,
 	             szAvailPageFile, szTotalVirtual, szAvailVirtual);

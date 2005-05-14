@@ -44,7 +44,7 @@ User32SetupDefaultCursors(PVOID Arguments, ULONG ArgumentLength)
 {
   BOOL *DefaultCursor = (BOOL*)Arguments;
   LRESULT Result = TRUE;
-  
+
   if(*DefaultCursor)
   {
     /* set default cursor */
@@ -56,7 +56,7 @@ User32SetupDefaultCursors(PVOID Arguments, ULONG ArgumentLength)
     SetCursor(0);
     SetCursor(LoadCursorW(0, (LPCWSTR)IDC_ARROW));
   }
-  
+
   return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
 }
 
@@ -70,7 +70,7 @@ HCURSOR STDCALL
 CopyCursor(HCURSOR pcur)
 {
   ICONINFO IconInfo;
-  
+
   if(NtUserGetCursorIconInfo((HANDLE)pcur, &IconInfo))
   {
     return (HCURSOR)NtUserCreateCursorIconHandle(&IconInfo, FALSE);
@@ -124,10 +124,10 @@ CreateCursor(HINSTANCE hInst,
    IconInfo.hbmMask = CreateDIBitmap(hScreenDc, &bwBIH->bmiHeader, 0,
                                      NULL, bwBIH, DIB_RGB_COLORS);
    if (IconInfo.hbmMask)
-   {   
-      SetDIBits(hScreenDc, IconInfo.hbmMask, 0, nHeight, 
+   {
+      SetDIBits(hScreenDc, IconInfo.hbmMask, 0, nHeight,
                 pvXORPlane, bwBIH, DIB_RGB_COLORS);
-      SetDIBits(hScreenDc, IconInfo.hbmMask, nHeight, nHeight, 
+      SetDIBits(hScreenDc, IconInfo.hbmMask, nHeight, nHeight,
                 pvANDPlane, bwBIH, DIB_RGB_COLORS);
    }
    else
@@ -141,7 +141,7 @@ CreateCursor(HINSTANCE hInst,
    IconInfo.xHotspot = xHotSpot;
    IconInfo.yHotspot = yHotSpot;
    IconInfo.hbmColor = 0;
-  
+
    return (HCURSOR)NtUserCreateCursorIconHandle(&IconInfo, FALSE);
 }
 
@@ -204,7 +204,7 @@ GetCursorPos(LPPOINT lpPoint)
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   res = NtUserGetCursorPos(lpPoint);
 
   return res;
@@ -232,7 +232,7 @@ LoadCursorFromFileA(LPCSTR lpFileName)
   UNICODE_STRING FileName;
   HCURSOR Result;
   RtlCreateUnicodeStringFromAsciiz(&FileName, (LPSTR)lpFileName);
-  Result = LoadImageW(0, FileName.Buffer, IMAGE_CURSOR, 0, 0, 
+  Result = LoadImageW(0, FileName.Buffer, IMAGE_CURSOR, 0, 0,
 		      LR_LOADFROMFILE | LR_DEFAULTSIZE);
   RtlFreeUnicodeString(&FileName);
   return(Result);
@@ -245,7 +245,7 @@ LoadCursorFromFileA(LPCSTR lpFileName)
 HCURSOR STDCALL
 LoadCursorFromFileW(LPCWSTR lpFileName)
 {
-  return(LoadImageW(0, lpFileName, IMAGE_CURSOR, 0, 0, 
+  return(LoadImageW(0, lpFileName, IMAGE_CURSOR, 0, 0,
 		    LR_LOADFROMFILE | LR_DEFAULTSIZE));
 }
 
@@ -292,7 +292,7 @@ SetCursorPos(int X,
 	     int Y)
 {
   INPUT Input;
-  
+
   Input.type = INPUT_MOUSE;
   Input.mi.dx = (LONG)X;
   Input.mi.dy = (LONG)Y;
@@ -300,7 +300,7 @@ SetCursorPos(int X,
   Input.mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE;
   Input.mi.time = 0;
   Input.mi.dwExtraInfo = 0;
-  
+
   NtUserSendInput(1, &Input, sizeof(INPUT));
   return TRUE;
 }

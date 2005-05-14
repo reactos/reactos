@@ -2,10 +2,14 @@
 // Systems Internals
 // http://www.sysinternals.com
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <windows.h>
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <fmifs.h>
+#include <tchar.h>
+#include "resource.h"
 
 // Globals
 BOOL	Error = FALSE;
@@ -15,33 +19,33 @@ BOOL	QuickFormat = FALSE;
 DWORD   ClusterSize = 0;
 BOOL	CompressDrive = FALSE;
 BOOL    GotALabel = FALSE;
-PWCHAR  Label = L"";
-PWCHAR  Drive = NULL;
-PWCHAR  Format = L"FAT";
+LPTSTR  Label = _T("");
+LPTSTR  Drive = NULL;
+LPTSTR  Format = _T("FAT");
 
-WCHAR  RootDirectory[MAX_PATH];
-WCHAR  LabelString[12];
+TCHAR  RootDirectory[MAX_PATH];
+TCHAR  LabelString[12];
 
 //
 // Size array
 //
 typedef struct {
-	WCHAR  SizeString[16];
+	TCHAR  SizeString[16];
 	DWORD  ClusterSize;
 } SIZEDEFINITION, *PSIZEDEFINITION;
 
 SIZEDEFINITION LegalSizes[] = {
-	{ L"512", 512 },
-	{ L"1024", 1024 },
-	{ L"2048", 2048 },
-	{ L"4096", 4096 },
-	{ L"8192", 8192 },
-	{ L"16K", 16384 },
-	{ L"32K", 32768 },
-	{ L"64K", 65536 },
-	{ L"128K", 65536 * 2 },
-	{ L"256K", 65536 * 4 },
-	{ L"", 0 },
+	{ _T("512"), 512 },
+	{ _T("1024"), 1024 },
+	{ _T("2048"), 2048 },
+	{ _T("4096"), 4096 },
+	{ _T("8192"), 8192 },
+	{ _T("16K"), 16384 },
+	{ _T("32K"), 32768 },
+	{ _T("64K"), 65536 },
+	{ _T("128K"), 65536 * 2 },
+	{ _T("256K"), 65536 * 4 },
+	{ _T(""), 0 },
 };
 
 
@@ -52,42 +56,32 @@ SIZEDEFINITION LegalSizes[] = {
 // Takes the win32 error code and prints the text version.
 //
 //----------------------------------------------------------------------
-void PrintWin32Error( PWCHAR Message, DWORD ErrorCode )
+static VOID PrintWin32Error( LPTSTR Message, DWORD ErrorCode )
 {
-	LPWSTR lpMsgBuf;
- 
-	FormatMessageW( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-					NULL, ErrorCode, 
+	LPTSTR   lpMsgBuf;
+
+	FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+					NULL, ErrorCode,
 					MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-					(PWCHAR) &lpMsgBuf, 0, NULL );
-	printf("%S: %S\n", Message, lpMsgBuf );
+					(LPTSTR)&lpMsgBuf, 0, NULL );
+
+	_tprintf(_T("%S: %S\n"), Message, lpMsgBuf );
 	LocalFree( lpMsgBuf );
 }
 
 
 //----------------------------------------------------------------------
-// 
+//
 // Usage
 //
 // Tell the user how to use the program
 //
 //----------------------------------------------------------------------
-VOID Usage( PWCHAR ProgramName )
+static VOID Usage( LPTSTR ProgramName )
 {
-	printf("Usage: %S drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n", ProgramName);
-	printf("  [drive:]         Specifies the drive to format.\n");
-	printf("  -FS:file-system  Specifies the type of file system (e.g. FAT).\n");
-	printf("  -V:label         Specifies volume label.\n");
-	printf("  -Q               Performs a quick format.\n");
-	printf("  -A:size          Overrides the default allocation unit size. Default settings\n");
-	printf("                   are strongly recommended for general use\n"); 
-	printf("                   NTFS supports 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n");
-	printf("                   FAT supports 8192, 16K, 32K, 64K, 128K, 256K.\n");
-	printf("                   NTFS compression is not supported for allocation unit sizes\n");
-	printf("                   above 4096.\n");
-	printf("  -C               Files created on the new volume will be compressed by\n");
-	printf("                   default.\n");
-	printf("\n");
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	LoadString( GetModuleHandle(NULL), STRING_HELP, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+   _tprintf(szMsg, ProgramName);
 }
 
 
@@ -98,7 +92,7 @@ VOID Usage( PWCHAR ProgramName )
 // Get the switches.
 //
 //----------------------------------------------------------------------
-int ParseCommandLine( int argc, WCHAR *argv[] )
+static int ParseCommandLine( int argc, TCHAR *argv[] )
 {
 	int i, j;
 	BOOLEAN gotFormat = FALSE;
@@ -115,38 +109,38 @@ int ParseCommandLine( int argc, WCHAR *argv[] )
 		case '-':
 		case '/':
 
-			if( !wcsnicmp( &argv[i][1], L"FS:", 3 )) {
+			if( !_tcsnicmp( &argv[i][1], _T("FS:"), 3 )) {
 
 				if( gotFormat) return -1;
 				Format = &argv[i][4];
 				gotFormat = TRUE;
 
 
-			} else if( !wcsnicmp( &argv[i][1], L"A:", 2 )) {
+			} else if( !_tcsnicmp( &argv[i][1], _T("A:"), 2 )) {
 
 				if( gotSize ) return -1;
-				j = 0; 
+				j = 0;
 				while( LegalSizes[j].ClusterSize &&
-					 wcsicmp( LegalSizes[j].SizeString, &argv[i][3] )) j++;
+					 _tcsicmp( LegalSizes[j].SizeString, &argv[i][3] )) j++;
 
 				if( !LegalSizes[j].ClusterSize ) return i;
 				ClusterSize = LegalSizes[j].ClusterSize;
 				gotSize = TRUE;
 
-			} else if( !wcsnicmp( &argv[i][1], L"V:", 2 )) {
+			} else if( ! _tcsnicmp( &argv[i][1], _T("V:"), 2 )) {
 
 				if( gotLabel ) return -1;
 				Label = &argv[i][3];
 				gotLabel = TRUE;
 				GotALabel = TRUE;
 
-			} else if( !wcsicmp( &argv[i][1], L"Q" )) {
+			} else if( !_tcsicmp( &argv[i][1], _T("Q") )) {
 
 				if( gotQuick ) return -1;
 				QuickFormat = TRUE;
 				gotQuick = TRUE;
 
-			} else if( !wcsicmp( &argv[i][1], L"C" )) {
+			} else if( !_tcsicmp( &argv[i][1], _T("C") )) {
 
 				if( gotCompressed ) return -1;
 				CompressDrive = TRUE;
@@ -158,7 +152,7 @@ int ParseCommandLine( int argc, WCHAR *argv[] )
 		default:
 
 			if( Drive ) return i;
-			if( argv[i][1] != L':' ) return i;
+			if( argv[i][1] != _T(':') ) return i;
 
 			Drive = argv[i];
 			break;
@@ -183,15 +177,17 @@ FormatExCallback (CALLBACKCOMMAND Command,
 	PDWORD percent;
 	PTEXTOUTPUT output;
 	PBOOLEAN status;
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
-	// 
+	//
 	// We get other types of commands, but we don't have to pay attention to them
 	//
 	switch( Command ) {
 
 	case PROGRESS:
 		percent = (PDWORD) Argument;
-		printf("%lu percent completed.\r", *percent);
+        LoadString( GetModuleHandle(NULL), STRING_COMPLETE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+        _tprintf(szMsg, *percent);
 		break;
 
 	case OUTPUT:
@@ -203,7 +199,8 @@ FormatExCallback (CALLBACKCOMMAND Command,
 		status = (PBOOLEAN) Argument;
 		if( *status == FALSE ) {
 
-			printf("FormatEx was unable to complete successfully.\n\n");
+			LoadString( GetModuleHandle(NULL), STRING_FORMAT_FAIL, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+            _tprintf(szMsg);	
 			Error = TRUE;
 		}
 		break;
@@ -220,7 +217,8 @@ FormatExCallback (CALLBACKCOMMAND Command,
 	case UNKNOWNC:
 	case UNKNOWND:
 	case STRUCTUREPROGRESS:
-		printf("Operation Not Supported");
+		LoadString( GetModuleHandle(NULL), STRING_NO_SUPPORT, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+        _tprintf(szMsg);
 		return FALSE;
 	}
 	return TRUE;
@@ -236,13 +234,13 @@ FormatExCallback (CALLBACKCOMMAND Command,
 //----------------------------------------------------------------------
 BOOLEAN LoadFMIFSEntryPoints()
 {
-	LoadLibrary( "fmifs.dll" );
-	if( !(void*) GetProcAddress( GetModuleHandle( "fmifs.dll"), "FormatEx" ) ) {
+	HMODULE hFmifs = LoadLibrary( _T("fmifs.dll") );
+	if( !(void*) GetProcAddress( hFmifs, "FormatEx" ) ) {
 
 		return FALSE;
 	}
 
-	if( !((void *) GetProcAddress( GetModuleHandle( "fmifs.dll"),
+	if( !((void *) GetProcAddress( hFmifs,
 			"EnableVolumeCompression" )) ) {
 
 		return FALSE;
@@ -251,35 +249,41 @@ BOOLEAN LoadFMIFSEntryPoints()
 }
 
 //----------------------------------------------------------------------
-// 
+//
 // WMain
 //
-// Engine. Just get command line switches and fire off a format. This 
-// could also be done in a GUI like Explorer does when you select a 
+// Engine. Just get command line switches and fire off a format. This
+// could also be done in a GUI like Explorer does when you select a
 // drive and run a check on it.
 //
 // We do this in UNICODE because the chkdsk command expects PWCHAR
 // arguments.
 //
 //----------------------------------------------------------------------
-int wmain( int argc, WCHAR *argv[] )
+int
+_tmain(int argc, TCHAR *argv[])
 {
 	int badArg;
 	DWORD media = FMIFS_HARDDISK;
 	DWORD driveType;
-	WCHAR fileSystem[1024];
-	WCHAR volumeName[1024];
-	WCHAR input[1024];
+	TCHAR fileSystem[1024];
+	TCHAR volumeName[1024];
+	TCHAR input[1024];
 	DWORD serialNumber;
 	DWORD flags, maxComponent;
 	ULARGE_INTEGER freeBytesAvailableToCaller, totalNumberOfBytes, totalNumberOfFreeBytes;
+#ifndef UNICODE
+	WCHAR  RootDirectoryW[MAX_PATH], FormatW[MAX_PATH], LabelW[MAX_PATH];
+#endif
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	//
 	// Get function pointers
 	//
 	if( !LoadFMIFSEntryPoints()) {
-
-		printf("Could not located FMIFS entry points.\n\n");
+		
+		LoadString( GetModuleHandle(NULL), STRING_FMIFS_FAIL, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+        _tprintf(szMsg);	
 		return -1;
 	}
 
@@ -288,42 +292,45 @@ int wmain( int argc, WCHAR *argv[] )
 	//
 	if( (badArg = ParseCommandLine( argc, argv ))) {
 
-		printf("Unknown argument: %S\n", argv[badArg] );
+		LoadString( GetModuleHandle(NULL), STRING_UNKNOW_ARG, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+        _tprintf(szMsg, argv[badArg] );
 
 		Usage(argv[0]);
 		return -1;
 	}
 
-	// 
+	//
 	// Get the drive's format
 	//
 	if( !Drive ) {
 
-		printf("Required drive parameter is missing.\n\n");
+		LoadString( GetModuleHandle(NULL), STRING_DRIVE_PARM, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+        _tprintf(szMsg);
 		Usage( argv[0] );
 		return -1;
 
 	} else {
 
-		wcscpy( RootDirectory, Drive );
+		_tcscpy( RootDirectory, Drive );
 	}
-	RootDirectory[2] = L'\\';
-	RootDirectory[3] = (WCHAR) 0;
+	RootDirectory[2] = _T('\\');
+	RootDirectory[3] = _T('\0');
 
 	//
 	// See if the drive is removable or not
 	//
-	driveType = GetDriveTypeW( RootDirectory );
+	driveType = GetDriveType( RootDirectory );
 
 	if( driveType == 0 ) {
-		PrintWin32Error( L"Could not get drive type", GetLastError());
+		LoadString( GetModuleHandle(NULL), STRING_ERROR_DRIVE_TYPE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);       
+		PrintWin32Error( szMsg, GetLastError());
 		return -1;
 	}
 
 	if( driveType != DRIVE_FIXED ) {
-		printf("Insert a new floppy in drive %C:\nand press Enter when ready...",
-			RootDirectory[0] );
-		fgetws( input, sizeof(input)/2, stdin );
+		LoadString( GetModuleHandle(NULL), STRING_INSERT_DISK, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+        _tprintf(szMsg, RootDirectory[0] );
+		_fgetts( input, sizeof(input)/2, stdin );
 
 		media = FMIFS_FLOPPY;
 	}
@@ -331,24 +338,27 @@ int wmain( int argc, WCHAR *argv[] )
 	//
 	// Determine the drive's file system format
 	//
-	if( !GetVolumeInformationW( RootDirectory, 
-						volumeName, sizeof(volumeName)/2, 
-						&serialNumber, &maxComponent, &flags, 
+	if( !GetVolumeInformation( RootDirectory,
+						volumeName, sizeof(volumeName)/2,
+						&serialNumber, &maxComponent, &flags,
 						fileSystem, sizeof(fileSystem)/2)) {
 
-		PrintWin32Error( L"Could not query volume", GetLastError());
+		LoadString( GetModuleHandle(NULL), STRING_NO_VOLUME, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		PrintWin32Error( szMsg, GetLastError());
 		return -1;
 	}
 
-	if( !GetDiskFreeSpaceExW( RootDirectory, 
+	if( !GetDiskFreeSpaceEx( RootDirectory,
 			&freeBytesAvailableToCaller,
 			&totalNumberOfBytes,
 			&totalNumberOfFreeBytes )) {
 
-		PrintWin32Error( L"Could not query volume size", GetLastError());
+		LoadString( GetModuleHandle(NULL), STRING_NO_VOLUME_SIZE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		PrintWin32Error( szMsg, GetLastError());
 		return -1;
 	}
-	printf("The type of the file system is %S.\n", fileSystem );
+	LoadString( GetModuleHandle(NULL), STRING_FILESYSTEM, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+    _tprintf(szMsg, fileSystem );
 
 	//
 	// Make sure they want to do this
@@ -359,80 +369,102 @@ int wmain( int argc, WCHAR *argv[] )
 
 			while(1 ) {
 
-				printf("Enter current volume label for drive %C: ", RootDirectory[0] );
-				fgetws( input, sizeof(input)/2, stdin );
-				input[ wcslen( input ) - 1] = 0;
-				
-				if( !wcsicmp( input, volumeName )) {
+				LoadString( GetModuleHandle(NULL), STRING_LABEL_NAME_EDIT, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+                _tprintf(szMsg, RootDirectory[0] );
+				_fgetts( input, sizeof(input)/2, stdin );
+				input[ _tcslen( input ) - 1] = 0;
+
+				if( !_tcsicmp( input, volumeName )) {
 
 					break;
 				}
-				printf("An incorrect volume label was entered for this drive.\n");
+				LoadString( GetModuleHandle(NULL), STRING_ERROR_LABEL, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+                _tprintf(szMsg);					
 			}
 		}
 
 		while( 1 ) {
 
-			printf("\nWARNING, ALL DATA ON NON_REMOVABLE DISK\n");
-			printf("DRIVE %C: WILL BE LOST!\n", RootDirectory[0] );
-			printf("Proceed with Format (Y/N)? " );
-			fgetws( input, sizeof(input)/2, stdin );
-		
-			if( input[0] == L'Y' || input[0] == L'y' ) break;
+			LoadString( GetModuleHandle(NULL), STRING_YN_FORMAT, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+            _tprintf(szMsg, RootDirectory[0] );
 
-			if(	input[0] == L'N' || input[0] == L'n' ) {
-				
-				printf("\n");
+			
+			LoadString( GetModuleHandle(NULL), STRING_YES_NO_FAQ, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+			
+			if(  _strnicmp(&input[0],&szMsg[0],1)) break;
+
+			if(	_strnicmp(&input[0],&szMsg[1],1) ) {
+
+				_tprintf(_T("\n"));
 				return 0;
 			}
 		}
 		media = FMIFS_HARDDISK;
-	} 
+	}
 
 	//
 	// Tell the user we're doing a long format if appropriate
 	//
 	if( !QuickFormat ) {
-		
+
+		LoadString( GetModuleHandle(NULL), STRING_VERIFYING, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+
 		if( totalNumberOfBytes.QuadPart > 1024*1024*10 ) {
-			
-			printf("Verifying %luM\n", (DWORD) (totalNumberOfBytes.QuadPart/(1024*1024)));
-			
+
+			_tprintf(_T("%s %luM\n"),szMsg, (DWORD) (totalNumberOfBytes.QuadPart/(1024*1024)));
+
 		} else {
 
-			printf("Verifying %.1fM\n", 
+			_tprintf(_T("%s %.1fM\n"),szMsg,
 				((float)(LONGLONG)totalNumberOfBytes.QuadPart)/(float)(1024.0*1024.0));
 		}
 	} else  {
 
+		LoadString( GetModuleHandle(NULL), STRING_FAST_FMT, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 		if( totalNumberOfBytes.QuadPart > 1024*1024*10 ) {
-			
-			printf("QuickFormatting %luM\n", (DWORD) (totalNumberOfBytes.QuadPart/(1024*1024)));
-			
+
+			_tprintf(_T("%s %luM\n"),szMsg, (DWORD) (totalNumberOfBytes.QuadPart/(1024*1024)));
+
 		} else {
 
-			printf("QuickFormatting %.2fM\n", 
+			_tprintf(_T("%s %.2fM\n"),szMsg,
 				((float)(LONGLONG)totalNumberOfBytes.QuadPart)/(float)(1024.0*1024.0));
 		}
-		printf("Creating file system structures.\n");
+		LoadString( GetModuleHandle(NULL), STRING_CREATE_FSYS, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+        _tprintf(szMsg);			
 	}
 
 	//
 	// Format away!
-	//			
+	//
+#ifndef UNICODE
+	MultiByteToWideChar(CP_ACP, 0, RootDirectory, -1, RootDirectoryW, MAX_PATH);
+	MultiByteToWideChar(CP_ACP, 0, Format, -1, FormatW, MAX_PATH);
+	MultiByteToWideChar(CP_ACP, 0, Label, -1, LabelW, MAX_PATH);
+	FormatEx( RootDirectoryW, media, FormatW, LabelW, QuickFormat,
+			ClusterSize, FormatExCallback );
+#else
 	FormatEx( RootDirectory, media, Format, Label, QuickFormat,
 			ClusterSize, FormatExCallback );
+#endif
 	if( Error ) return -1;
-	printf("Format complete.\n");
+	LoadString( GetModuleHandle(NULL), STRING_FMT_COMPLETE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+    _tprintf(szMsg);	
 
 	//
 	// Enable compression if desired
 	//
 	if( CompressDrive ) {
 
+#ifndef UNICODE
+		MultiByteToWideChar(CP_ACP, 0, RootDirectory, -1, RootDirectoryW, MAX_PATH);
+		if( !EnableVolumeCompression( RootDirectoryW, TRUE )) {
+#else
 		if( !EnableVolumeCompression( RootDirectory, TRUE )) {
+#endif
 
-			printf("Volume does not support compression.\n");
+			LoadString( GetModuleHandle(NULL), STRING_VOL_COMPRESS, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+            _tprintf(szMsg);	
 		}
 	}
 
@@ -441,87 +473,61 @@ int wmain( int argc, WCHAR *argv[] )
 	//
 	if( !GotALabel ) {
 
-		printf("Volume Label (11 characters, Enter for none)? " );
-		fgetws( input, sizeof(LabelString)/2, stdin );
+		LoadString( GetModuleHandle(NULL), STRING_ENTER_LABEL, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+        _tprintf(szMsg);	
+		_fgetts( input, sizeof(LabelString)/2, stdin );
 
-		input[ wcslen(input)-1] = 0;
-		if( !SetVolumeLabelW( RootDirectory, input )) {
+		input[ _tcslen(input)-1] = 0;
+		if( !SetVolumeLabel( RootDirectory, input )) {
 
-			PrintWin32Error(L"Could not label volume", GetLastError());
+			LoadString( GetModuleHandle(NULL), STRING_NO_LABEL, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+			PrintWin32Error(szMsg, GetLastError());
 			return -1;
-		}	
+		}
 	}
 
-	if( !GetVolumeInformationW( RootDirectory, 
-						volumeName, sizeof(volumeName)/2, 
-						&serialNumber, &maxComponent, &flags, 
+	if( !GetVolumeInformation( RootDirectory,
+						volumeName, sizeof(volumeName)/2,
+						&serialNumber, &maxComponent, &flags,
 						fileSystem, sizeof(fileSystem)/2)) {
 
-		PrintWin32Error( L"Could not query volume", GetLastError());
+		LoadString( GetModuleHandle(NULL), STRING_NO_VOLUME, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		PrintWin32Error( szMsg, GetLastError());
 		return -1;
 	}
 
-	// 
+	//
 	// Print out some stuff including the formatted size
 	//
-	if( !GetDiskFreeSpaceExW( RootDirectory, 
+	if( !GetDiskFreeSpaceEx( RootDirectory,
 			&freeBytesAvailableToCaller,
 			&totalNumberOfBytes,
 			&totalNumberOfFreeBytes )) {
-
-		PrintWin32Error( L"Could not query volume size", GetLastError());
+		
+		LoadString( GetModuleHandle(NULL), STRING_NO_VOLUME_SIZE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		PrintWin32Error(szMsg, GetLastError());
 		return -1;
 	}
 
-	printf("\n%I64d bytes total disk space.\n", totalNumberOfBytes.QuadPart );
-	printf("%I64d bytes available on disk.\n", totalNumberOfFreeBytes.QuadPart );
+	LoadString( GetModuleHandle(NULL), STRING_FREE_SPACE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+    _tprintf(szMsg, totalNumberOfBytes.QuadPart, totalNumberOfFreeBytes.QuadPart );
 
 	//
 	// Get the drive's serial number
 	//
-	if( !GetVolumeInformationW( RootDirectory, 
-						volumeName, sizeof(volumeName)/2, 
-						&serialNumber, &maxComponent, &flags, 
+	if( !GetVolumeInformation( RootDirectory,
+						volumeName, sizeof(volumeName)/2,
+						&serialNumber, &maxComponent, &flags,
 						fileSystem, sizeof(fileSystem)/2)) {
 
-		PrintWin32Error( L"Could not query volume", GetLastError());
+		LoadString( GetModuleHandle(NULL), STRING_NO_VOLUME, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		PrintWin32Error( szMsg, GetLastError());
 		return -1;
 	}
-	printf("\nVolume Serial Number is %04X-%04X\n", (unsigned int)(serialNumber >> 16),
+	LoadString( GetModuleHandle(NULL), STRING_SERIAL_NUMBER, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+    _tprintf(szMsg, (unsigned int)(serialNumber >> 16),
 					(unsigned int)(serialNumber & 0xFFFF) );
-			
-	return 0;
-}
-
-int main(int argc, char* argv[])
-{
-	UNICODE_STRING warg;
-	ANSI_STRING arg;
-    NTSTATUS status;
-	PWCHAR *wargv;
-	int i;
-
-	wargv = (PWCHAR *) RtlAllocateHeap(RtlGetProcessHeap(), 0, argc * sizeof(PWCHAR));
-
-	for (i = 0; i < argc; i++)
-	{
-		RtlInitAnsiString(&arg, argv[i]);
-		status = RtlAnsiStringToUnicodeString(&warg, &arg, TRUE);
-		if (!NT_SUCCESS (status))
-		{
-			printf("Not enough free memory.\n");
-			return 1;
-		}
-		wargv[i] = (PWCHAR) warg.Buffer;
-	}
-
-	wmain(argc, wargv);
-
-	for (i = 0; i < argc; i++)
-	{
-		RtlFreeHeap(RtlGetProcessHeap(), 0, wargv[i]);
-	}
-	RtlFreeHeap(RtlGetProcessHeap(), 0, wargv);
 
 	return 0;
 }
+

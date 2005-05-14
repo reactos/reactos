@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/win32k.c
  * PURPOSE:         Executive Win32 subsystem support
- * 
+ *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net) - Moved callbacks to win32k and cleanup.
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
@@ -19,7 +19,7 @@ POBJECT_TYPE EXPORTED ExWindowStationObjectType = NULL;
 POBJECT_TYPE EXPORTED ExDesktopObjectType = NULL;
 
 static GENERIC_MAPPING ExpWindowStationMapping = {
-    
+
     STANDARD_RIGHTS_READ     | WINSTA_ENUMDESKTOPS      | WINSTA_ENUMERATE         | WINSTA_READATTRIBUTES | WINSTA_READSCREEN,
     STANDARD_RIGHTS_WRITE    | WINSTA_ACCESSCLIPBOARD   | WINSTA_CREATEDESKTOP     | WINSTA_WRITEATTRIBUTES,
     STANDARD_RIGHTS_EXECUTE  | WINSTA_ACCESSGLOBALATOMS | WINSTA_EXITWINDOWS,
@@ -29,7 +29,7 @@ static GENERIC_MAPPING ExpWindowStationMapping = {
 };
 
 static GENERIC_MAPPING ExpDesktopMapping = {
-    
+
     STANDARD_RIGHTS_READ     | DESKTOP_ENUMERATE       | DESKTOP_READOBJECTS,
     STANDARD_RIGHTS_WRITE    | DESKTOP_CREATEMENU      | DESKTOP_CREATEWINDOW    | DESKTOP_HOOKCONTROL   |
                                DESKTOP_JOURNALPLAYBACK | DESKTOP_JOURNALRECORD   | DESKTOP_WRITEOBJECTS,
@@ -48,7 +48,7 @@ OBJECT_DELETE_ROUTINE ExpDesktopObjectDelete = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 ExpWinStaObjectCreate(PVOID ObjectBody,
                       PVOID Parent,
@@ -56,13 +56,13 @@ ExpWinStaObjectCreate(PVOID ObjectBody,
                       struct _OBJECT_ATTRIBUTES* ObjectAttributes)
 {
     /* Call the Registered Callback */
-    return ExpWindowStationObjectCreate(ObjectBody, 
-                                        Parent, 
-                                        RemainingPath, 
+    return ExpWindowStationObjectCreate(ObjectBody,
+                                        Parent,
+                                        RemainingPath,
                                         ObjectAttributes);
 }
 
-VOID 
+VOID
 STDCALL
 ExpWinStaObjectDelete(PVOID DeletedObject)
 {
@@ -77,12 +77,12 @@ ExpWinStaObjectFind(PWINSTATION_OBJECT WinStaObject,
                     ULONG Attributes)
 {
     /* Call the Registered Callback */
-    return ExpWindowStationObjectFind(WinStaObject, 
-                                      Name, 
+    return ExpWindowStationObjectFind(WinStaObject,
+                                      Name,
                                       Attributes);
 }
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 ExpWinStaObjectParse(PVOID Object,
                      PVOID *NextObject,
@@ -91,14 +91,14 @@ ExpWinStaObjectParse(PVOID Object,
                      ULONG Attributes)
 {
     /* Call the Registered Callback */
-    return ExpWindowStationObjectParse(Object, 
-                                       NextObject, 
-                                       FullPath, 
+    return ExpWindowStationObjectParse(Object,
+                                       NextObject,
+                                       FullPath,
                                        Path,
                                        Attributes);
 }
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 ExpDesktopCreate(PVOID ObjectBody,
                        PVOID Parent,
@@ -106,13 +106,13 @@ ExpDesktopCreate(PVOID ObjectBody,
                        struct _OBJECT_ATTRIBUTES* ObjectAttributes)
 {
     /* Call the Registered Callback */
-    return ExpDesktopObjectCreate(ObjectBody, 
-                                  Parent, 
-                                  RemainingPath, 
+    return ExpDesktopObjectCreate(ObjectBody,
+                                  Parent,
+                                  RemainingPath,
                                   ObjectAttributes);
 }
 
-VOID 
+VOID
 STDCALL
 ExpDesktopDelete(PVOID DeletedObject)
 {
@@ -120,7 +120,7 @@ ExpDesktopDelete(PVOID DeletedObject)
     ExpDesktopObjectDelete(DeletedObject);
 }
 
-VOID 
+VOID
 INIT_FUNCTION
 ExpWin32kInit(VOID)
 {

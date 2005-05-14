@@ -30,7 +30,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 IDM_WINEFILE MENU FIXED IMPURE
 {
 	POPUP "&File"  {
-		MENUITEM "&Open\tEnter" ,			101
+		MENUITEM "&Open\tEnter" ,			ID_ACTIVATE
 		MENUITEM "&Move...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Copy...\tF8" ,			107
 		MENUITEM "&In Clipboard...\tF9" ,		118
@@ -60,13 +60,13 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Copy Disk..." ,			201
 		MENUITEM "&Label Disk..." ,			202
 		MENUITEM SEPARATOR
-		MENUITEM "&Format Disk..." ,			203
+		MENUITEM "&Format Disk..." ,			ID_FORMAT_DISK
 #ifdef _WIN95
 		MENUITEM "&Make System Disk...", -1	/*TODO*/
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "Connect &Network Drive" ,			252
-		MENUITEM "&Disconnect Network Drive" ,		253
+		MENUITEM "Connect &Network Drive" ,			ID_CONNECT_NETWORK_DRIVE
+		MENUITEM "&Disconnect Network Drive" ,		ID_DISCONNECT_NETWORK_DRIVE
 		MENUITEM SEPARATOR
 		MENUITEM "Share as..." ,			254
 		MENUITEM "&Remove Share..." ,			255
@@ -74,7 +74,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Select Drive..." ,			251
 	}
 
-	POPUP "&Directories"  {
+	POPUP "Di&rectories"  {
 		MENUITEM "&Next Level\t+" ,			301
 		MENUITEM "Expand &Tree\t*" ,		302
 		MENUITEM "Expand &all\tStrg+*" ,		303
@@ -210,4 +210,6 @@ STRINGTABLE
 	IDS_COL_LINKS	"Links"
 	IDS_COL_ATTR	"Attributes"
 	IDS_COL_SEC		"Security"
+
+	IDS_FREE_SPACE_FMT	"%s of %s free"
 }

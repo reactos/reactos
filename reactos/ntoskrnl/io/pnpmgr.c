@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/pnpmgr.c
  * PURPOSE:         Initializes the PnP manager
- * 
+ *
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
@@ -27,8 +27,15 @@ PDRIVER_OBJECT IopRootDriverObject;
 
 /* FUNCTIONS *****************************************************************/
 
+PDEVICE_NODE FASTCALL
+IopGetDeviceNode(
+  PDEVICE_OBJECT DeviceObject)
+{
+  return DeviceObject->DeviceObjectExtension->DeviceNode;
+}
+
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
@@ -36,14 +43,7 @@ IoInvalidateDeviceRelations(
   IN PDEVICE_OBJECT DeviceObject,
   IN DEVICE_RELATION_TYPE Type)
 {
-  CHECKPOINT1;
-}
-
-PDEVICE_NODE FASTCALL
-IopGetDeviceNode(
-  PDEVICE_OBJECT DeviceObject)
-{
-  return DeviceObject->DeviceObjectExtension->DeviceNode;
+  IopInvalidateDeviceRelations(IopGetDeviceNode(DeviceObject), Type);
 }
 
 /*
@@ -159,8 +159,8 @@ IoGetDeviceProperty(
 
         KeyNameBuffer = ExAllocatePool(PagedPool,
           (49 * sizeof(WCHAR)) + DeviceNode->InstancePath.Length);
-	
-	DPRINT("KeyNameBuffer: %x, value %S\n", 
+
+	DPRINT("KeyNameBuffer: %x, value %S\n",
 		KeyNameBuffer, RegistryPropertyName);
 
         if (KeyNameBuffer == NULL)
@@ -283,7 +283,7 @@ IoInvalidateDeviceState(
  * @param DeviceObject   Device to get the registry key for.
  * @param DevInstKeyType Type of the key to return.
  * @param DesiredAccess  Access mask (eg. KEY_READ | KEY_WRITE).
- * @param DevInstRegKey  Handle to the opened registry key on 
+ * @param DevInstRegKey  Handle to the opened registry key on
  *                       successful return.
  *
  * @return Status.
@@ -362,7 +362,7 @@ IoOpenDeviceRegistryKey(
 
    if (DevInstKeyType & PLUGPLAY_REGKEY_CURRENT_HWPROFILE)
       RtlAppendUnicodeToString(&KeyName, ProfileKeyName);
-  
+
    if (DevInstKeyType & PLUGPLAY_REGKEY_DRIVER)
    {
       RtlAppendUnicodeToString(&KeyName, ClassKeyName);
@@ -1384,11 +1384,11 @@ IopActionConfigureChildServices(
    {
       WCHAR RegKeyBuffer[MAX_PATH];
       UNICODE_STRING RegKey;
-      
+
       RegKey.Length = 0;
       RegKey.MaximumLength = sizeof(RegKeyBuffer);
       RegKey.Buffer = RegKeyBuffer;
-      
+
       /*
        * Retrieve configuration from Enum key
        */

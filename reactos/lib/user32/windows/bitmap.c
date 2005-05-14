@@ -57,7 +57,7 @@ LoadImageA(HINSTANCE hinst,
   UNICODE_STRING NameString;
 
   if (HIWORD(lpszName))
-    {      
+    {
       RtlCreateUnicodeStringFromAsciiz(&NameString, (LPSTR)lpszName);
       lpszWName = NameString.Buffer;
       Handle = LoadImageW(hinst, lpszWName, uType, cxDesired,
@@ -93,7 +93,7 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
    INT id;
    ICONIMAGE *ResIcon;
    UINT ColorBits;
-  
+
    if (!(fuLoad & LR_LOADFROMFILE))
    {
       if (hinst == NULL)
@@ -105,7 +105,7 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
       {
          return NULL;
       }
-	  
+
       if (fuLoad & LR_SHARED)
       {
          /* FIXME - pass size! */
@@ -151,7 +151,7 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
          32, 32, fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
       if (hIcon && 0 != (fuLoad & LR_SHARED))
       {
-         NtUserSetCursorIconData((HICON)hIcon, NULL, NULL, hinst, (HRSRC)hfRes, 
+         NtUserSetCursorIconData((HICON)hIcon, NULL, NULL, hinst, (HRSRC)hfRes,
                                  (HRSRC)NULL);
       }
 
@@ -162,7 +162,7 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
    {
       DbgPrint("FIXME: need LR_SHARED support loading cursor images from files\n");
    }
-      
+
    hFile = CreateFileW(lpszName, GENERIC_READ, FILE_SHARE_READ, NULL,
       OPEN_EXISTING, 0, NULL);
    if (hFile == NULL)
@@ -185,7 +185,7 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
       return NULL;
    }
 
-   /* 
+   /*
     * Get a handle to the screen dc, the icon we create is going to be
     * compatable with it.
     */
@@ -219,7 +219,7 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
       return(NULL);
    }
 
-   SafeIconImage = RtlAllocateHeap(GetProcessHeap(), 0, dirEntry->dwBytesInRes); 
+   SafeIconImage = RtlAllocateHeap(GetProcessHeap(), 0, dirEntry->dwBytesInRes);
    memcpy(SafeIconImage, ((PBYTE)IconDIR) + dirEntry->dwImageOffset, dirEntry->dwBytesInRes);
 
    /* at this point we have a copy of the icon image to play with */
@@ -241,7 +241,7 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
 	}
       HeaderSize = sizeof(BITMAPINFOHEADER) + ColorCount * sizeof(RGBQUAD);
    }
-  
+
    /* make data point to the start of the XOR image data */
    Data = (PBYTE)SafeIconImage + HeaderSize;
 
@@ -271,7 +271,7 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
   GRPCURSORICONDIR* IconResDir;
   INT id;
   ICONIMAGE *ResIcon;
-  
+
   if (!(fuLoad & LR_LOADFROMFILE))
   {
       if (hinst == NULL)
@@ -283,7 +283,7 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
 	  {
 	    return(NULL);
 	  }
-	  
+
       if (fuLoad & LR_SHARED)
           {
             hIcon = NtUserFindExistingCursorIcon(hinst, (HRSRC)hfRes, width, height);
@@ -326,7 +326,7 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
                         width, height, fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
       if (hIcon && 0 != (fuLoad & LR_SHARED))
       {
-        NtUserSetCursorIconData((HICON)hIcon, NULL, NULL, hinst, (HRSRC)hfRes, 
+        NtUserSetCursorIconData((HICON)hIcon, NULL, NULL, hinst, (HRSRC)hfRes,
                                 (HRSRC)NULL);
       }
       return hIcon;
@@ -334,7 +334,7 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
   else
   {
       /*
-       * FIXME: This code is incorrect and is likely to crash in many cases. 
+       * FIXME: This code is incorrect and is likely to crash in many cases.
        * In the file the cursor/icon directory records are stored like
        * CURSORICONFILEDIR, but we treat them like CURSORICONDIR. In Wine
        * this is solved by creating a fake cursor/icon directory in memory
@@ -345,7 +345,7 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
       {
         DbgPrint("FIXME: need LR_SHARED support for loading icon images from files\n");
       }
-      
+
       hFile = CreateFileW(lpszName,
 			 GENERIC_READ,
 			 FILE_SHARE_READ,
@@ -396,7 +396,7 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
 	       return(NULL);
 	  }
 
-      SafeIconImage = RtlAllocateHeap(GetProcessHeap(), 0, dirEntry->dwBytesInRes); 
+      SafeIconImage = RtlAllocateHeap(GetProcessHeap(), 0, dirEntry->dwBytesInRes);
 
       memcpy(SafeIconImage, ((PBYTE)IconDIR) + dirEntry->dwImageOffset, dirEntry->dwBytesInRes);
 
@@ -423,7 +423,7 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
 	}
       HeaderSize = sizeof(BITMAPINFOHEADER) + ColorCount * sizeof(RGBQUAD);
     }
-  
+
   //make data point to the start of the XOR image data
   Data = (PBYTE)SafeIconImage + HeaderSize;
 
@@ -503,7 +503,7 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
 				   NULL);
       CloseHandle(hFile);
       if (hSection == NULL)
-	{		
+	{
 	  return(NULL);
 	}
       BitmapInfo = MapViewOfFile(hSection,
@@ -567,7 +567,7 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
     {
       DIBSECTION Dib;
 
-      hBitmap = CreateDIBSection(hScreenDc, PrivateInfo, DIB_RGB_COLORS, NULL, 
+      hBitmap = CreateDIBSection(hScreenDc, PrivateInfo, DIB_RGB_COLORS, NULL,
 				 0, 0);
       GetObjectA(hBitmap, sizeof(DIBSECTION), &Dib);
       SetDIBits(hScreenDc, hBitmap, 0, Dib.dsBm.bmHeight, Data, BitmapInfo,
@@ -595,7 +595,7 @@ LoadImageW(HINSTANCE hinst,
 	   int cxDesired,
 	   int cyDesired,
 	   UINT fuLoad)
-{  
+{
   if (fuLoad & LR_DEFAULTSIZE)
     {
       if (uType == IMAGE_ICON)
@@ -692,7 +692,7 @@ CopyImage(HANDLE hnd, UINT type, INT desiredx, INT desiredy, UINT flags)
 				}
                 return res;
 			}
-		case IMAGE_ICON: 
+		case IMAGE_ICON:
 			{
 				static BOOL IconMsgDisplayed = FALSE;
 				/* FIXME: support loading the image as shared from an instance */
@@ -702,7 +702,7 @@ CopyImage(HANDLE hnd, UINT type, INT desiredx, INT desiredy, UINT flags)
 				}
 		        return CopyIcon(hnd);
 			}
-		case IMAGE_CURSOR: 
+		case IMAGE_CURSOR:
 			{
 				static BOOL IconMsgDisplayed = FALSE;
 				/* FIXME: support loading the image as shared from an instance */

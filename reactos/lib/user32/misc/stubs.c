@@ -177,7 +177,7 @@ EndTask(
 	BOOL fForce)
 {
     SendMessageW(hWnd, WM_CLOSE, 0, 0);
-    
+
     if (IsWindow(hWnd))
     {
         if (fForce)
@@ -185,7 +185,7 @@ EndTask(
         else
             return FALSE;
     }
-    
+
     return TRUE;
 }
 
@@ -515,7 +515,7 @@ BroadcastSystemMessageExA(
 /*
  * @unimplemented
  */
-BOOL 
+BOOL
 STDCALL
 AlignRects(LPRECT rect, DWORD b, DWORD c, DWORD d)
 {
@@ -752,7 +752,7 @@ IMPGetIMEA( HWND hwnd, LPIMEPROA ime)
 /*
  * @unimplemented
  */
-LRESULT 
+LRESULT
 STDCALL
 SendIMEMessageExW(HWND hwnd,LPARAM lparam)
 {
@@ -763,7 +763,7 @@ SendIMEMessageExW(HWND hwnd,LPARAM lparam)
 /*
  * @unimplemented
  */
-LRESULT 
+LRESULT
 STDCALL
 SendIMEMessageExA(HWND hwnd, LPARAM lparam)
 {

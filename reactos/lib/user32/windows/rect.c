@@ -41,7 +41,7 @@ CopyRect(LPRECT lprcDst, CONST RECT *lprcSrc)
 {
   if(lprcDst == NULL || lprcSrc == NULL)
     return(FALSE);
-  
+
   *lprcDst = *lprcSrc;
   return(TRUE);
 }
@@ -57,7 +57,7 @@ EqualRect(
 {
    if (lprc1 == NULL || lprc2 == NULL)
       return FALSE;
-  
+
    return (lprc1->left == lprc2->left) && (lprc1->top == lprc2->top) &&
           (lprc1->right == lprc2->right) && (lprc1->bottom == lprc2->bottom);
 }
@@ -86,9 +86,9 @@ IntersectRect(LPRECT lprcDst,
 	      CONST RECT *lprcSrc2)
 {
   if (IsRectEmpty(lprcSrc1) || IsRectEmpty(lprcSrc2) ||
-      lprcSrc1->left >= lprcSrc2->right || 
+      lprcSrc1->left >= lprcSrc2->right ||
       lprcSrc2->left >= lprcSrc1->right ||
-      lprcSrc1->top >= lprcSrc2->bottom || 
+      lprcSrc1->top >= lprcSrc2->bottom ||
       lprcSrc2->top >= lprcSrc1->bottom)
     {
       SetRectEmpty(lprcDst);
@@ -120,12 +120,12 @@ OffsetRect(LPRECT rect, int dx, int dy)
 {
   if(rect == NULL)
     return(FALSE);
-  
+
   rect->left += dx;
   rect->top += dy;
   rect->right += dx;
   rect->bottom += dy;
-  return(TRUE);  
+  return(TRUE);
 }
 
 
@@ -168,15 +168,15 @@ BOOL STDCALL
 SubtractRect(LPRECT lprcDst, CONST RECT *lprcSrc1, CONST RECT *lprcSrc2)
 {
   RECT tempRect;
-  
+
   if(lprcDst == NULL || lprcSrc1 == NULL || lprcSrc2 == NULL)
     return(FALSE);
-  
+
   CopyRect(lprcDst, lprcSrc1);
-  
+
   if(!IntersectRect(&tempRect, lprcSrc1, lprcSrc2))
     return(TRUE);
-  
+
   if (EqualRect(&tempRect, lprcDst))
   {
     SetRectEmpty(lprcDst);
@@ -196,7 +196,7 @@ SubtractRect(LPRECT lprcDst, CONST RECT *lprcSrc1, CONST RECT *lprcSrc2)
     else if(lprcDst->right == tempRect.right)
       lprcDst->right = tempRect.left;
   }
-  
+
   return(TRUE);
 }
 

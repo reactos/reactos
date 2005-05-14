@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb_keyboard.c
  * PURPOSE:         Keyboard driver
- * 
+ *
  * PROGRAMMERS:     Victor Kirhenshtein (sauros@iname.com)
  *                  Jason Filby (jasonfilby@yahoo.com)
  */
@@ -17,9 +17,9 @@
 
 #if 1
 
-#define KBD_STATUS_REG		0x64	
-#define KBD_CNTL_REG		0x64	
-#define KBD_DATA_REG		0x60	
+#define KBD_STATUS_REG		0x64
+#define KBD_CNTL_REG		0x64
+#define KBD_DATA_REG		0x60
 
 #define KBD_DISABLE_MOUSE       0xA7
 #define KBD_ENABLE_MOUSE        0xA8
@@ -92,7 +92,7 @@ KdbpTryGetCharKeyboard(PULONG ScanCode, UINT Retry)
 	    }
 	}
     }
-    
+
     return -1;
 }
 
@@ -121,7 +121,7 @@ KdbpTryGetCharKeyboard(PULONG ScanCode, UINT Retry)
 #define K_TIMEOUT	0x40		/* timout error flag */
 #define K_PARITY_ERROR	0x80		/* parity error flag */
 
-/* 
+/*
  * Keyboard controller commands (sent to K_CMD port).
  */
 #define KC_CMD_READ	0x20		/* read controller command byte */
@@ -140,14 +140,14 @@ KdbpTryGetCharKeyboard(PULONG ScanCode, UINT Retry)
 #define KC_CMD_ECHO	0xee		/* used for diagnostic testing */
 #define KC_CMD_PULSE	0xff		/* pulse bits 3-0 based on low nybble */
 
-/* 
+/*
  * Keyboard commands (send to K_RDWR).
  */
 #define K_CMD_LEDS	0xed		/* set status LEDs (caps lock, etc.) */
 #define K_CMD_TYPEMATIC	0xf3		/* set key repeat and delay */
 
-/* 
- * Bit definitions for controller command byte (sent following 
+/*
+ * Bit definitions for controller command byte (sent following
  * KC_CMD_WRITE command).
  *
  * Bits 0x02 and 0x80 unused, always set to 0.
@@ -159,16 +159,16 @@ KdbpTryGetCharKeyboard(PULONG ScanCode, UINT Retry)
 #define K_CB_IGNPARITY	0x20		/* ignore parity from keyboard */
 #define K_CB_SCAN	0x40		/* standard scan conversion */
 
-/* 
- * Bit definitions for "Indicator Status Byte" (sent after a 
- * K_CMD_LEDS command).  If the bit is on, the LED is on.  Undefined 
+/*
+ * Bit definitions for "Indicator Status Byte" (sent after a
+ * K_CMD_LEDS command).  If the bit is on, the LED is on.  Undefined
  * bit positions must be 0.
  */
 #define K_LED_SCRLLK	0x1		/* scroll lock */
 #define K_LED_NUMLK	0x2		/* num lock */
 #define K_LED_CAPSLK	0x4		/* caps lock */
 
-/* 
+/*
  * Bit definitions for "Miscellaneous port B" (K_PORTB).
  */
 /* read/write */

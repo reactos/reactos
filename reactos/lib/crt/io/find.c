@@ -64,7 +64,7 @@ int _tfindnext(
    long handle,
 #else
    int handle,
-#endif   
+#endif
    struct _tfinddata_t* result)
 {
     WIN32_FIND_DATA FindFileData;

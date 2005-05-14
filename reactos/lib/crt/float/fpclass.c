@@ -36,7 +36,7 @@ typedef int fpclass_t;
  * @implemented
  */
 fpclass_t _fpclass(double __d)
-{	
+{
 	union
 	{
 		double*	  __d;
@@ -63,14 +63,14 @@ fpclass_t _fpclass(double __d)
 				return FP_NINF;
 			else
 				return FP_PINF;
-		} 
+		}
 		else if ( d.d->mantissah == 0 &&  d.d->mantissal != 0 ) {
 			return FP_QNAN;
 		}
 		else if ( d.d->mantissah == 0 &&  d.d->mantissal != 0 ) {
 			return FP_SNAN;
 		}
-	
+
 	}
 	return 0;
 }

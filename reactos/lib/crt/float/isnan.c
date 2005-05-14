@@ -25,14 +25,14 @@ Cambridge, MA 02139, USA.  */
  * @implemented
  */
 int _isnan(double __x)
-{   
+{
 	union
 	{
 		double*   __x;
 		double_t*   x;
 	} x;
     	x.__x = &__x;
-	return ( x.x->exponent == 0x7ff  && ( x.x->mantissah != 0 || x.x->mantissal != 0 ));	
+	return ( x.x->exponent == 0x7ff  && ( x.x->mantissah != 0 || x.x->mantissal != 0 ));
 }
 
 int _isnanl(long double __x)
@@ -45,26 +45,26 @@ int _isnanl(long double __x)
 		long_double_t*   x;
 	} x;
 	x.__x = &__x;
-	
-	
+
+
 	 /* IEEE 854 NaN's have the maximum possible
      exponent and a nonzero mantissa.  */
-          
-	return (( x.x->exponent == 0x7fff)  
-	  && ( (x.x->mantissah & 0x80000000) != 0) 
-	  && ( (x.x->mantissah & (unsigned int)0x7fffffff) != 0  || x.x->mantissal != 0 ));	
+
+	return (( x.x->exponent == 0x7fff)
+	  && ( (x.x->mantissah & 0x80000000) != 0)
+	  && ( (x.x->mantissah & (unsigned int)0x7fffffff) != 0  || x.x->mantissal != 0 ));
 }
 
 int _isinf(double __x)
 {
 	union
-	{   
+	{
 		double*   __x;
 		double_t*   x;
 	} x;
-	
+
 	x.__x = &__x;
-	return ( x.x->exponent == 0x7ff  && ( x.x->mantissah == 0 && x.x->mantissal == 0 ));	
+	return ( x.x->exponent == 0x7ff  && ( x.x->mantissah == 0 && x.x->mantissal == 0 ));
 }
 
 /*
@@ -84,14 +84,14 @@ int _isinfl(long double __x)
 		long double*   __x;
                 long_double_t*   x;
 	} x;
-	
+
 	x.__x = &__x;
-	
-	
+
+
 	 /* An IEEE 854 infinity has an exponent with the
      maximum possible value and a zero mantissa.  */
- 
-		
+
+
 	if ( x.x->exponent == 0x7fff  && ( (x.x->mantissah == 0x80000000 )   && x.x->mantissal == 0 ))
 		return x.x->sign ? -1 : 1;
 	return 0;

@@ -2,7 +2,7 @@
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/mbstring/mbsupr.c
- * PURPOSE:     
+ * PURPOSE:
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:
  *              12/04/99: Created
@@ -14,7 +14,7 @@ unsigned int _mbbtoupper(unsigned int c)
 {
 	if (!_ismbblead(c) )
 		return toupper(c);
-	
+
 	return c;
 }
 

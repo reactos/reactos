@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/ctype.c
  * PURPOSE:         Character type and conversion functions
- * 
+ *
  * PROGRAMMERS:     Eric Kohl
  */
 #undef __MSVCRT__

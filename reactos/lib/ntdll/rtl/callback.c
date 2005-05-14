@@ -16,7 +16,7 @@
 
 /* TYPES *********************************************************************/
 
-typedef NTSTATUS STDCALL_FUNC (*CALLBACK_FUNCTION)(PVOID Argument, 
+typedef NTSTATUS STDCALL_FUNC (*CALLBACK_FUNCTION)(PVOID Argument,
 					      ULONG ArgumentLength);
 
 /* FUNCTIONS *****************************************************************/
@@ -29,7 +29,7 @@ KiUserCallbackDispatcher(ULONG RoutineIndex,
    PPEB Peb;
    NTSTATUS Status;
    CALLBACK_FUNCTION Callback;
-   
+
    Peb = NtCurrentPeb();
    Callback = (CALLBACK_FUNCTION)Peb->KernelCallbackTable[RoutineIndex];
    Status = Callback(Argument, ArgumentLength);

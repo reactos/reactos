@@ -235,9 +235,8 @@ BSTR WINAPI SysAllocStringLen(const OLECHAR *str, unsigned int len)
      * buffer for the character count and an extra character at the
      * end for the NULL.
      */
-    newBuffer = (DWORD*)HeapAlloc(GetProcessHeap(),
-                                 0,
-                                 bufferSize + sizeof(WCHAR) + sizeof(DWORD));
+    newBuffer = HeapAlloc(GetProcessHeap(), 0,
+                          bufferSize + sizeof(WCHAR) + sizeof(DWORD));
 
     /*
      * If the memory allocation failed, return a null pointer.
@@ -350,9 +349,8 @@ BSTR WINAPI SysAllocStringByteLen(LPCSTR str, UINT len)
      * buffer for the character count and an extra character at the
      * end for the NULL.
      */
-    newBuffer = (DWORD*)HeapAlloc(GetProcessHeap(),
-                                 0,
-                                 len + sizeof(WCHAR) + sizeof(DWORD));
+    newBuffer = HeapAlloc(GetProcessHeap(), 0,
+                          len + sizeof(WCHAR) + sizeof(DWORD));
 
     /*
      * If the memory allocation failed, return a null pointer.

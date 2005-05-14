@@ -246,7 +246,7 @@ DIB_24BPP_BitBlt(PBLTINFO BltInfo)
 
    UsesSource = ROP4_USES_SOURCE(BltInfo->Rop4);
    UsesPattern = ROP4_USES_PATTERN(BltInfo->Rop4);
-      
+
    SourceY = BltInfo->SourcePoint.y;
    DestBits = (PBYTE)(
       BltInfo->DestSurface->pvScan0 +
@@ -257,7 +257,7 @@ DIB_24BPP_BitBlt(PBLTINFO BltInfo)
    {
       if (BltInfo->PatternSurface)
       {
-         PatternY = (BltInfo->DestRect.top + BltInfo->BrushOrigin.y) % 
+         PatternY = (BltInfo->DestRect.top + BltInfo->BrushOrigin.y) %
                     BltInfo->PatternSurface->sizlBitmap.cy;
       }
       else
@@ -269,11 +269,11 @@ DIB_24BPP_BitBlt(PBLTINFO BltInfo)
    for (DestY = BltInfo->DestRect.top; DestY < BltInfo->DestRect.bottom; DestY++)
    {
       SourceX = BltInfo->SourcePoint.x;
-      
+
       for (DestX = BltInfo->DestRect.left; DestX < BltInfo->DestRect.right; DestX++, DestBits += 3, SourceX++)
       {
          Dest = *((PUSHORT)DestBits) + (*(DestBits + 2) << 16);
- 
+
          if (UsesSource)
          {
             Source = DIB_GetSource(BltInfo->SourceSurface, SourceX, SourceY, BltInfo->XlateSourceToDest);
@@ -298,7 +298,7 @@ DIB_24BPP_BitBlt(PBLTINFO BltInfo)
       DestBits -= (BltInfo->DestRect.right - BltInfo->DestRect.left) * 3;
       DestBits += BltInfo->DestSurface->lDelta;
    }
-  
+
    return TRUE;
 }
 
@@ -312,20 +312,20 @@ BOOLEAN DIB_24BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   return FALSE;
 }
 
-BOOLEAN 
+BOOLEAN
 DIB_24BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                          RECTL*  DestRect,  POINTL  *SourcePoint,
                          XLATEOBJ *ColorTranslation, ULONG iTransColor)
 {
   ULONG X, Y, SourceX, SourceY, Source, wd, Dest;
   BYTE *DestBits;
-  
+
   SourceY = SourcePoint->y;
   DestBits = (BYTE*)(DestSurf->pvScan0 +
                       (DestRect->left << 2) +
                       DestRect->top * DestSurf->lDelta);
   wd = DestSurf->lDelta - ((DestRect->right - DestRect->left) << 2);
-  
+
   for(Y = DestRect->top; Y < DestRect->bottom; Y++)
   {
     SourceX = SourcePoint->x;
@@ -339,11 +339,11 @@ DIB_24BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
          *(DestBits + 2) = Dest >> 16;
       }
     }
-    
+
     SourceY++;
     DestBits = (BYTE*)((ULONG_PTR)DestBits + wd);
   }
-  
+
   return TRUE;
 }
 

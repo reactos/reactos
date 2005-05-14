@@ -1,6 +1,6 @@
 /*
  * VGA.C - a generic VGA miniport driver
- * 
+ *
  */
 
 //  -------------------------------------------------------  Includes
@@ -30,11 +30,11 @@ DriverEntry(IN PVOID Context1,
   VIDEO_HW_INITIALIZATION_DATA  InitData;
 
   VideoPortZeroMemory(&InitData, sizeof InitData);
-  
+
   InitData.HwInitDataSize = sizeof(InitData);
   /* FIXME: Fill in InitData members  */
   InitData.StartingDeviceNumber = 0;
-  
+
   /*  Export driver entry points...  */
   InitData.HwFindAdapter = VGAFindAdapter;
   InitData.HwInitialize = VGAInitialize;
@@ -42,7 +42,7 @@ DriverEntry(IN PVOID Context1,
   /* InitData.HwInterrupt = VGAInterrupt;  */
   InitData.HwResetHw = VGAResetHw;
   /* InitData.HwTimer = VGATimer;  */
-  
+
   return  VideoPortInitialize(Context1, Context2, &InitData, NULL);
 }
 
@@ -83,7 +83,7 @@ VGAFindAdapter(PVOID DeviceExtension,
   *Again = FALSE;
 
   return  STATUS_SUCCESS;
-  
+
   /* FIXME: Claim any necessary memory/IO resources for the adapter  */
   /* FIXME: Map resources into system memory for the adapter  */
   /* FIXME: Fill in relevant information in the VIDEO_PORT_CONFIG_INFO buffer  */
@@ -116,40 +116,40 @@ VGAInitialize(PVOID DeviceExtension)
 //    This function gets called in responce to GDI EngDeviceIoControl
 //    calls.  Device requests are passed in VRPs.
 //      Required VRPs:
-//        IOCTL_VIDEO_QUERY_NUM_AVAIL_MODES 
-//        IOCTL_VIDEO_QUERY_AVAIL_MODES 
-//        IOCTL_VIDEO_QUERY_CURRENT_MODE 
-//        IOCTL_VIDEO_SET_CURRENT_MODE 
-//        IOCTL_VIDEO_RESET_DEVICE 
-//        IOCTL_VIDEO_MAP_VIDEO_MEMORY 
-//        IOCTL_VIDEO_UNMAP_VIDEO_MEMORY 
-//        IOCTL_VIDEO_SHARE_VIDEO_MEMORY 
-//        IOCTL_VIDEO_UNSHARE_VIDEO_MEMORY 
+//        IOCTL_VIDEO_QUERY_NUM_AVAIL_MODES
+//        IOCTL_VIDEO_QUERY_AVAIL_MODES
+//        IOCTL_VIDEO_QUERY_CURRENT_MODE
+//        IOCTL_VIDEO_SET_CURRENT_MODE
+//        IOCTL_VIDEO_RESET_DEVICE
+//        IOCTL_VIDEO_MAP_VIDEO_MEMORY
+//        IOCTL_VIDEO_UNMAP_VIDEO_MEMORY
+//        IOCTL_VIDEO_SHARE_VIDEO_MEMORY
+//        IOCTL_VIDEO_UNSHARE_VIDEO_MEMORY
 //      Optional VRPs:
-//        IOCTL_VIDEO_GET_PUBLIC_ACCESS_RANGES 
-//        IOCTL_VIDEO_FREE_PUBLIC_ACCESS_RANGES 
-//        IOCTL_VIDEO_GET_POWER_MANAGEMENT 
-//        IOCTL_VIDEO_SET_POWER_MANAGEMENT 
-//        IOCTL_QUERY_COLOR_CAPABILITIES 
-//        IOCTL_VIDEO_SET_COLOR_REGISTERS (required if the device has a palette) 
-//        IOCTL_VIDEO_DISABLE_POINTER 
-//        IOCTL_VIDEO_ENABLE_POINTER 
-//        IOCTL_VIDEO_QUERY_POINTER_CAPABILITIES 
-//        IOCTL_VIDEO_QUERY_POINTER_ATTR 
-//        IOCTL_VIDEO_SET_POINTER_ATTR 
-//        IOCTL_VIDEO_QUERY_POINTER_POSITION 
-//        IOCTL_VIDEO_SET_POINTER_POSITION 
-//        IOCTL_VIDEO_SAVE_HARDWARE_STATE 
-//        IOCTL_VIDEO_RESTORE_HARDWARE_STATE 
-//        IOCTL_VIDEO_DISABLE_CURSOR 
-//        IOCTL_VIDEO_ENABLE_CURSOR 
-//        IOCTL_VIDEO_QUERY_CURSOR_ATTR 
-//        IOCTL_VIDEO_SET_CURSOR_ATTR 
-//        IOCTL_VIDEO_QUERY_CURSOR_POSITION 
-//        IOCTL_VIDEO_SET_CURSOR_POSITION 
-//        IOCTL_VIDEO_GET_BANK_SELECT_CODE 
-//        IOCTL_VIDEO_SET_PALETTE_REGISTERS 
-//        IOCTL_VIDEO_LOAD_AND_SET_FONT 
+//        IOCTL_VIDEO_GET_PUBLIC_ACCESS_RANGES
+//        IOCTL_VIDEO_FREE_PUBLIC_ACCESS_RANGES
+//        IOCTL_VIDEO_GET_POWER_MANAGEMENT
+//        IOCTL_VIDEO_SET_POWER_MANAGEMENT
+//        IOCTL_QUERY_COLOR_CAPABILITIES
+//        IOCTL_VIDEO_SET_COLOR_REGISTERS (required if the device has a palette)
+//        IOCTL_VIDEO_DISABLE_POINTER
+//        IOCTL_VIDEO_ENABLE_POINTER
+//        IOCTL_VIDEO_QUERY_POINTER_CAPABILITIES
+//        IOCTL_VIDEO_QUERY_POINTER_ATTR
+//        IOCTL_VIDEO_SET_POINTER_ATTR
+//        IOCTL_VIDEO_QUERY_POINTER_POSITION
+//        IOCTL_VIDEO_SET_POINTER_POSITION
+//        IOCTL_VIDEO_SAVE_HARDWARE_STATE
+//        IOCTL_VIDEO_RESTORE_HARDWARE_STATE
+//        IOCTL_VIDEO_DISABLE_CURSOR
+//        IOCTL_VIDEO_ENABLE_CURSOR
+//        IOCTL_VIDEO_QUERY_CURSOR_ATTR
+//        IOCTL_VIDEO_SET_CURSOR_ATTR
+//        IOCTL_VIDEO_QUERY_CURSOR_POSITION
+//        IOCTL_VIDEO_SET_CURSOR_POSITION
+//        IOCTL_VIDEO_GET_BANK_SELECT_CODE
+//        IOCTL_VIDEO_SET_PALETTE_REGISTERS
+//        IOCTL_VIDEO_LOAD_AND_SET_FONT
 //
 //  RUN LEVEL:
 //    PASSIVE_LEVEL
@@ -166,27 +166,27 @@ VGAStartIO(PVOID DeviceExtension,
            PVIDEO_REQUEST_PACKET RequestPacket)
 {
   BOOL Result;
-  
+
   RequestPacket->StatusBlock->Status = STATUS_UNSUCCESSFUL;
-  
+
   switch (RequestPacket->IoControlCode)
     {
     case  IOCTL_VIDEO_MAP_VIDEO_MEMORY:
       if (RequestPacket->OutputBufferLength < sizeof(VIDEO_MEMORY_INFORMATION) ||
-          RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY)) 
+          RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY))
       {
         RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
         return TRUE;
       }
       Result = VGAMapVideoMemory(DeviceExtension,
 			(PVIDEO_MEMORY) RequestPacket->InputBuffer,
-                         (PVIDEO_MEMORY_INFORMATION) 
+                         (PVIDEO_MEMORY_INFORMATION)
                          RequestPacket->OutputBuffer,
                          RequestPacket->StatusBlock);
       break;
-      
+
     case  IOCTL_VIDEO_QUERY_AVAIL_MODES:
-      if (RequestPacket->OutputBufferLength < sizeof(VIDEO_MODE_INFORMATION)) 
+      if (RequestPacket->OutputBufferLength < sizeof(VIDEO_MODE_INFORMATION))
       {
         RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
         return TRUE;
@@ -194,9 +194,9 @@ VGAStartIO(PVOID DeviceExtension,
       Result = VGAQueryAvailModes((PVIDEO_MODE_INFORMATION) RequestPacket->OutputBuffer,
                          RequestPacket->StatusBlock);
       break;
-      
+
     case  IOCTL_VIDEO_QUERY_CURRENT_MODE:
-      if (RequestPacket->OutputBufferLength < sizeof(VIDEO_MODE_INFORMATION)) 
+      if (RequestPacket->OutputBufferLength < sizeof(VIDEO_MODE_INFORMATION))
       {
         RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
         return TRUE;
@@ -204,9 +204,9 @@ VGAStartIO(PVOID DeviceExtension,
       Result = VGAQueryCurrentMode((PVIDEO_MODE_INFORMATION) RequestPacket->OutputBuffer,
                           RequestPacket->StatusBlock);
       break;
-      
+
     case  IOCTL_VIDEO_QUERY_NUM_AVAIL_MODES:
-      if (RequestPacket->OutputBufferLength < sizeof(VIDEO_NUM_MODES)) 
+      if (RequestPacket->OutputBufferLength < sizeof(VIDEO_NUM_MODES))
       {
         RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
         return TRUE;
@@ -214,7 +214,7 @@ VGAStartIO(PVOID DeviceExtension,
       Result = VGAQueryNumAvailModes((PVIDEO_NUM_MODES) RequestPacket->OutputBuffer,
                             RequestPacket->StatusBlock);
       break;
-      
+
     case  IOCTL_VIDEO_RESET_DEVICE:
       Result = VGAResetDevice(RequestPacket->StatusBlock);
       break;
@@ -231,9 +231,9 @@ VGAStartIO(PVOID DeviceExtension,
       Result = VGASetColorRegisters((PVIDEO_CLUT) RequestPacket->InputBuffer,
                            RequestPacket->StatusBlock);
       break;
-      
+
     case  IOCTL_VIDEO_SET_CURRENT_MODE:
-      if (RequestPacket->InputBufferLength < sizeof(VIDEO_MODE)) 
+      if (RequestPacket->InputBufferLength < sizeof(VIDEO_MODE))
       {
         RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
         return TRUE;
@@ -241,10 +241,10 @@ VGAStartIO(PVOID DeviceExtension,
       Result = VGASetCurrentMode((PVIDEO_MODE) RequestPacket->InputBuffer,
                         RequestPacket->StatusBlock);
       break;
-      
+
     case  IOCTL_VIDEO_SHARE_VIDEO_MEMORY:
       if (RequestPacket->OutputBufferLength < sizeof(VIDEO_MEMORY_INFORMATION) ||
-          RequestPacket->InputBufferLength < sizeof(VIDEO_SHARE_MEMORY)) 
+          RequestPacket->InputBufferLength < sizeof(VIDEO_SHARE_MEMORY))
       {
         RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
         return TRUE;
@@ -253,9 +253,9 @@ VGAStartIO(PVOID DeviceExtension,
                           (PVIDEO_MEMORY_INFORMATION) RequestPacket->OutputBuffer,
                           RequestPacket->StatusBlock);
       break;
-      
+
     case  IOCTL_VIDEO_UNMAP_VIDEO_MEMORY:
-      if (RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY)) 
+      if (RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY))
       {
         RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
         return TRUE;
@@ -264,9 +264,9 @@ VGAStartIO(PVOID DeviceExtension,
 			  (PVIDEO_MEMORY) RequestPacket->InputBuffer,
                           RequestPacket->StatusBlock);
       break;
-      
+
     case  IOCTL_VIDEO_UNSHARE_VIDEO_MEMORY:
-      if (RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY)) 
+      if (RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY))
       {
         RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
         return TRUE;
@@ -315,16 +315,16 @@ VGAStartIO(PVOID DeviceExtension,
     case  IOCTL_VIDEO_SET_POINTER_POSITION:
     case  IOCTL_VIDEO_SET_POWER_MANAGEMENT:
 
-#endif    
-      
+#endif
+
     default:
       RequestPacket->StatusBlock->Status = STATUS_NOT_IMPLEMENTED;
       return FALSE;
     }
-    
+
   if (Result)
     RequestPacket->StatusBlock->Status = STATUS_SUCCESS;
-  
+
   return TRUE;
 }
 
@@ -448,18 +448,18 @@ BOOL  VGAQueryCurrentMode(OUT PVIDEO_MODE_INFORMATION  CurrentMode,
   CurrentMode->Frequency = 60;
   CurrentMode->XMillimeter = 0; /* FIXME */
   CurrentMode->YMillimeter = 0; /* FIXME */
-  CurrentMode->NumberRedBits = 
-  CurrentMode->NumberGreenBits = 
+  CurrentMode->NumberRedBits =
+  CurrentMode->NumberGreenBits =
   CurrentMode->NumberBlueBits = 6;
-  CurrentMode->RedMask = 
-  CurrentMode->GreenMask = 
+  CurrentMode->RedMask =
+  CurrentMode->GreenMask =
   CurrentMode->BlueMask = 0; /* FIXME */
   CurrentMode->VideoMemoryBitmapWidth = 640;
   CurrentMode->VideoMemoryBitmapHeight = 480;
   CurrentMode->AttributeFlags = VIDEO_MODE_GRAPHICS | VIDEO_MODE_COLOR |
       VIDEO_MODE_NO_OFF_SCREEN;
   CurrentMode->DriverSpecificAttributeFlags = 0;
-  
+
   StatusBlock->Information = sizeof(VIDEO_MODE_INFORMATION);
   return TRUE;
 }
@@ -514,7 +514,7 @@ BOOL  VGASetColorRegisters(IN PVIDEO_CLUT  ColorLookUpTable,
     VideoPortWritePortUchar((PUCHAR)0x03c9, ColorLookUpTable->LookupTable[i].RgbArray.Green);
     VideoPortWritePortUchar((PUCHAR)0x03c9, ColorLookUpTable->LookupTable[i].RgbArray.Blue);
   }
-  
+
   return TRUE;
 }
 
@@ -536,7 +536,7 @@ BOOL  VGAShareVideoMemory(IN PVIDEO_SHARE_MEMORY  RequestedMemory,
                           OUT PSTATUS_BLOCK  StatusBlock)
 {
   UNIMPLEMENTED;
-  
+
   StatusBlock->Status = STATUS_NOT_IMPLEMENTED;
   return FALSE;
 }
@@ -557,7 +557,7 @@ BOOL  VGAUnshareVideoMemory(IN PVIDEO_MEMORY  MemoryToUnshare,
                             OUT PSTATUS_BLOCK  StatusBlock)
 {
   UNIMPLEMENTED;
-  
+
   StatusBlock->Status = STATUS_NOT_IMPLEMENTED;
   return FALSE;
 }

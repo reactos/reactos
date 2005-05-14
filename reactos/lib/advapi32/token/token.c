@@ -224,15 +224,13 @@ OpenThreadToken (HANDLE ThreadHandle,
  * @implemented
  */
 BOOL STDCALL
-SetThreadToken (PHANDLE ThreadHandle,
-                HANDLE TokenHandle)
+SetThreadToken (IN PHANDLE ThreadHandle  OPTIONAL,
+                IN HANDLE TokenHandle)
 {
   NTSTATUS Status;
   HANDLE hThread;
 
-  hThread = NtCurrentThread();
-  if (ThreadHandle != NULL)
-    hThread = ThreadHandle;
+  hThread = ((ThreadHandle != NULL) ? *ThreadHandle : NtCurrentThread());
 
   Status = NtSetInformationThread (hThread,
 				   ThreadImpersonationToken,
@@ -252,37 +250,46 @@ SetThreadToken (PHANDLE ThreadHandle,
  * @implemented
  */
 BOOL STDCALL
-DuplicateTokenEx (HANDLE ExistingTokenHandle,
-                  DWORD  dwDesiredAccess,
-                  LPSECURITY_ATTRIBUTES lpTokenAttributes,
-                  SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
-                  TOKEN_TYPE TokenType,
-                  PHANDLE DuplicateTokenHandle)
+DuplicateTokenEx (IN HANDLE ExistingTokenHandle,
+                  IN DWORD dwDesiredAccess,
+                  IN LPSECURITY_ATTRIBUTES lpTokenAttributes  OPTIONAL,
+                  IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
+                  IN TOKEN_TYPE TokenType,
+                  OUT PHANDLE DuplicateTokenHandle)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   HANDLE NewToken;
   NTSTATUS Status;
   SECURITY_QUALITY_OF_SERVICE Sqos;
-  
+
   Sqos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
   Sqos.ImpersonationLevel = ImpersonationLevel;
   Sqos.ContextTrackingMode = 0;
   Sqos.EffectiveOnly = FALSE;
 
-  InitializeObjectAttributes(
-      &ObjectAttributes,
-      NULL,
-      lpTokenAttributes->bInheritHandle ? OBJ_INHERIT : 0,
-      NULL,
-      lpTokenAttributes->lpSecurityDescriptor
-      );
- 
+  if (lpTokenAttributes != NULL)
+    {
+      InitializeObjectAttributes(&ObjectAttributes,
+                                 NULL,
+                                 lpTokenAttributes->bInheritHandle ? OBJ_INHERIT : 0,
+                                 NULL,
+                                 lpTokenAttributes->lpSecurityDescriptor);
+    }
+  else
+    {
+      InitializeObjectAttributes(&ObjectAttributes,
+                                 NULL,
+                                 0,
+                                 NULL,
+                                 NULL);
+    }
+
   ObjectAttributes.SecurityQualityOfService = &Sqos;
 
   Status = NtDuplicateToken (ExistingTokenHandle,
 			     dwDesiredAccess,
 			     &ObjectAttributes,
-              Sqos.EffectiveOnly, /* why both here _and_ in Sqos? */
+			     FALSE,
 			     TokenType,
 			     &NewToken);
   if (!NT_SUCCESS(Status))
@@ -299,12 +306,12 @@ DuplicateTokenEx (HANDLE ExistingTokenHandle,
  * @implemented
  */
 BOOL STDCALL
-DuplicateToken (HANDLE ExistingTokenHandle,
-                SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
-                PHANDLE DuplicateTokenHandle)
+DuplicateToken (IN HANDLE ExistingTokenHandle,
+                IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
+                OUT PHANDLE DuplicateTokenHandle)
 {
   return DuplicateTokenEx (ExistingTokenHandle,
-                           TOKEN_DUPLICATE | TOKEN_IMPERSONATE | TOKEN_QUERY,
+                           TOKEN_IMPERSONATE | TOKEN_QUERY,
                            NULL,
                            ImpersonationLevel,
                            TokenImpersonation,
@@ -327,26 +334,26 @@ CheckTokenMembership (HANDLE ExistingTokenHandle,
   DWORD i;
   PTOKEN_GROUPS lpGroups = NULL;
   TOKEN_TYPE TokenInformation;
- 
+
   if (IsMember == NULL)
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
- 
+
   if (ExistingTokenHandle == NULL)
   {
     /* Get impersonation token of the calling thread */
     if (!OpenThreadToken(GetCurrentThread(), TOKEN_QUERY, FALSE, &ExistingTokenHandle))
       return FALSE;
- 
+
     if (!DuplicateToken(ExistingTokenHandle, SecurityAnonymous, &AccessToken))
     {
       CloseHandle(ExistingTokenHandle);
       goto ByeBye;
     }
     CloseHandle(ExistingTokenHandle);
-    ReleaseToken = TRUE; 
+    ReleaseToken = TRUE;
   }
   else
   {
@@ -362,7 +369,7 @@ CheckTokenMembership (HANDLE ExistingTokenHandle,
     else
       AccessToken = ExistingTokenHandle;
   }
- 
+
   *IsMember = FALSE;
   /* Search in groups of the token */
   if (!GetTokenInformation(AccessToken, TokenGroups, NULL, 0, &dwSize))
@@ -384,13 +391,13 @@ CheckTokenMembership (HANDLE ExistingTokenHandle,
   /* FIXME: Search in users of the token? */
   DPRINT1("CheckTokenMembership() partially implemented!\n");
   Result = TRUE;
- 
+
 ByeBye:
   if (lpGroups != NULL)
     HeapFree(GetProcessHeap(), 0, lpGroups);
   if (ReleaseToken)
     CloseHandle(AccessToken);
- 
+
   return Result;
 }
 

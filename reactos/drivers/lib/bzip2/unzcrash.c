@@ -1,11 +1,11 @@
 
 /* A test program written to test robustness to decompression of
-   corrupted data.  Usage is 
+   corrupted data.  Usage is
        unzcrash filename
    and the program will read the specified file, compress it (in memory),
    and then repeatedly decompress it, each time with a different bit of
    the compressed data inverted, so as to test all possible one-bit errors.
-   This should not cause any invalid memory accesses.  If it does, 
+   This should not cause any invalid memory accesses.  If it does,
    I want to know about it!
 
    p.s.  As you can see from the above description, the process is
@@ -100,9 +100,9 @@ int main ( int argc, char** argv )
            return 1;
          } else {
            for (i = 0; i < nOut; i++)
-             if (inbuf[i] != outbuf[i]) { 
-                fprintf(stderr, "mismatch at %d\n", i ); 
-                return 1; 
+             if (inbuf[i] != outbuf[i]) {
+                fprintf(stderr, "mismatch at %d\n", i );
+                return 1;
            }
            if (i == nOut) fprintf(stderr, "really ok!\n" );
          }

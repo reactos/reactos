@@ -53,7 +53,7 @@ AreAnyAccessesGranted(DWORD GrantedAccess,
  *
  * RETURNS
  *  Success: TRUE. pSecurityDescriptor contains the requested information.
- *  Failure: FALSE. lpnLengthNeeded contains the required space to return the info. 
+ *  Failure: FALSE. lpnLengthNeeded contains the required space to return the info.
  *
  * NOTES
  *  The information returned is constrained by the callers access rights and
@@ -476,7 +476,7 @@ GetUserNameA( LPSTR lpszName, LPDWORD lpSize )
   UNICODE_STRING NameW;
   ANSI_STRING NameA;
   BOOL Ret;
-  
+
   /* apparently Win doesn't check whether lpSize is valid at all! */
 
   NameW.Length = 0;
@@ -487,23 +487,23 @@ GetUserNameA( LPSTR lpszName, LPDWORD lpSize )
     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
     return FALSE;
   }
-  
+
   NameA.Length = 0;
   NameA.MaximumLength = ((*lpSize) < 0xFFFF ? (USHORT)(*lpSize) : 0xFFFF);
   NameA.Buffer = lpszName;
-  
+
   Ret = GetUserNameW(NameW.Buffer,
                      lpSize);
   if(Ret)
   {
     RtlUnicodeStringToAnsiString(&NameA, &NameW, FALSE);
     NameA.Buffer[NameA.Length] = '\0';
-    
+
     *lpSize = NameA.Length + 1;
   }
-  
+
   LocalFree(NameW.Buffer);
-  
+
   return Ret;
 }
 
@@ -634,18 +634,18 @@ LookupAccountSidA (LPCSTR lpSystemName,
   UNICODE_STRING NameW, ReferencedDomainNameW, SystemNameW;
   DWORD szName, szReferencedDomainName;
   BOOL Ret;
-  
+
   /*
    * save the buffer sizes the caller passed to us, as they may get modified and
    * we require the original values when converting back to ansi
    */
   szName = *cchName;
   szReferencedDomainName = *cchReferencedDomainName;
-  
+
   /*
    * allocate buffers for the unicode strings to receive
    */
-  
+
   if(szName > 0)
   {
     NameW.Length = 0;
@@ -659,7 +659,7 @@ LookupAccountSidA (LPCSTR lpSystemName,
   }
   else
     NameW.Buffer = NULL;
-  
+
   if(szReferencedDomainName > 0)
   {
     ReferencedDomainNameW.Length = 0;
@@ -677,11 +677,11 @@ LookupAccountSidA (LPCSTR lpSystemName,
   }
   else
     ReferencedDomainNameW.Buffer = NULL;
-  
+
   /*
    * convert the system name to unicode - if present
    */
-  
+
   if(lpSystemName != NULL)
   {
     ANSI_STRING SystemNameA;
@@ -691,11 +691,11 @@ LookupAccountSidA (LPCSTR lpSystemName,
   }
   else
     SystemNameW.Buffer = NULL;
-  
+
   /*
    * it's time to call the unicode version
    */
-  
+
   Ret = LookupAccountSidW(SystemNameW.Buffer,
                           lpSid,
                           NameW.Buffer,
@@ -713,15 +713,15 @@ LookupAccountSidA (LPCSTR lpSystemName,
     if(lpName != NULL)
     {
       ANSI_STRING NameA;
-      
+
       NameA.Length = 0;
       NameA.MaximumLength = ((szName <= 0xFFFF) ? (USHORT)szName : 0xFFFF);
       NameA.Buffer = lpName;
-      
+
       RtlUnicodeStringToAnsiString(&NameA, &NameW, FALSE);
       NameA.Buffer[NameA.Length] = '\0';
     }
-    
+
     if(lpReferencedDomainName != NULL)
     {
       ANSI_STRING ReferencedDomainNameA;
@@ -735,7 +735,7 @@ LookupAccountSidA (LPCSTR lpSystemName,
       ReferencedDomainNameA.Buffer[ReferencedDomainNameA.Length] = '\0';
     }
   }
-  
+
   /*
    * free previously allocated buffers
    */
@@ -752,7 +752,7 @@ LookupAccountSidA (LPCSTR lpSystemName,
   {
     LocalFree(ReferencedDomainNameW.Buffer);
   }
-  
+
   return Ret;
 }
 
@@ -1196,19 +1196,19 @@ SetSecurityInfo(HANDLE handle,
  * GetSecurityInfoExW         EXPORTED
  */
 DWORD WINAPI GetSecurityInfoExA(
-   HANDLE hObject, 
-   SE_OBJECT_TYPE ObjectType, 
-   SECURITY_INFORMATION SecurityInfo, 
+   HANDLE hObject,
+   SE_OBJECT_TYPE ObjectType,
+   SECURITY_INFORMATION SecurityInfo,
    LPCSTR lpProvider,
-   LPCSTR lpProperty, 
-   PACTRL_ACCESSA *ppAccessList, 
-   PACTRL_AUDITA *ppAuditList, 
-   LPSTR *lppOwner, 
+   LPCSTR lpProperty,
+   PACTRL_ACCESSA *ppAccessList,
+   PACTRL_AUDITA *ppAuditList,
+   LPSTR *lppOwner,
    LPSTR *lppGroup
    )
 {
   DPRINT1("GetSecurityInfoExA stub!\n");
-  return ERROR_BAD_PROVIDER; 
+  return ERROR_BAD_PROVIDER;
 }
 
 
@@ -1216,19 +1216,19 @@ DWORD WINAPI GetSecurityInfoExA(
  * GetSecurityInfoExW         EXPORTED
  */
 DWORD WINAPI GetSecurityInfoExW(
-   HANDLE hObject, 
-   SE_OBJECT_TYPE ObjectType, 
-   SECURITY_INFORMATION SecurityInfo, 
+   HANDLE hObject,
+   SE_OBJECT_TYPE ObjectType,
+   SECURITY_INFORMATION SecurityInfo,
    LPCWSTR lpProvider,
-   LPCWSTR lpProperty, 
-   PACTRL_ACCESSW *ppAccessList, 
-   PACTRL_AUDITW *ppAuditList, 
-   LPWSTR *lppOwner, 
+   LPCWSTR lpProperty,
+   PACTRL_ACCESSW *ppAccessList,
+   PACTRL_AUDITW *ppAuditList,
+   LPWSTR *lppOwner,
    LPWSTR *lppGroup
    )
 {
   DPRINT1("GetSecurityInfoExW stub!\n");
-  return ERROR_BAD_PROVIDER; 
+  return ERROR_BAD_PROVIDER;
 }
 
 

@@ -82,9 +82,9 @@ NTSTATUS VfatFlushVolume(PDEVICE_EXTENSION DeviceExt, PVFATFCB VolumeFcb)
 	 }
        /* FIXME: Stop flushing if this is a removable media and the media was removed */
      }
-  
+
    Fcb = (PVFATFCB) DeviceExt->FATFileObject->FsContext;
-  
+
    ExAcquireResourceExclusiveLite(&DeviceExt->FatResource, TRUE);
    Status = VfatFlushFile(DeviceExt, Fcb);
    ExReleaseResourceLite(&DeviceExt->FatResource);

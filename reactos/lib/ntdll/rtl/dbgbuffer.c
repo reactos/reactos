@@ -23,8 +23,8 @@
  * FILE:              lib/ntdll/rtl/dbgbuffer.c
  * PROGRAMER:         James Tabor
  * Fixme:             Add Process and Thread event pair support.
- *                    Start Locks and Heap support. 
- *                    Test: Create remote thread to help query remote                    
+ *                    Start Locks and Heap support.
+ *                    Test: Create remote thread to help query remote
  *                    processes and use view mapping to read them.
  *
  */
@@ -55,7 +55,7 @@ RtlCreateQueryDebugBuffer(IN ULONG Size,
    NTSTATUS Status;
    PDEBUG_BUFFER Buf = NULL;
    ULONG SectionSize  = 100 * PAGE_SIZE;
-   
+
    Status = NtAllocateVirtualMemory( NtCurrentProcess(),
                                     (PVOID)&Buf,
                                      0,
@@ -69,7 +69,7 @@ RtlCreateQueryDebugBuffer(IN ULONG Size,
 
    Buf->SectionBase = Buf;
    Buf->SectionSize = SectionSize;
-   
+
    DPRINT("RtlCQDB: BA: %x BS: %d\n", Buf->SectionBase, Buf->SectionSize);
 
    return Buf;
@@ -120,14 +120,14 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
   PCHAR p;
 
   DPRINT("RtlpQueryRemoteProcessModules Start\n");
- 
+
   /* query the process basic information (includes the PEB address) */
   Status = NtQueryInformationProcess ( ProcessHandle,
                                        ProcessBasicInformation,
                                        &pbiInfo,
                                        sizeof(PROCESS_BASIC_INFORMATION),
                                        NULL);
- 
+
   if (!NT_SUCCESS(Status))
     {
        /* failure */
@@ -152,7 +152,7 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
                                 &ppldLdrData,
                                 sizeof(ppldLdrData),
                                 NULL );
- 
+
   if (!NT_SUCCESS(Status))
     {
        /* failure */
@@ -160,7 +160,7 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
        return Status;
     }
 
- 
+
   /* head of the module list: the last element in the list will point to this */
   pleListHead = &ppldLdrData->InLoadOrderModuleList;
 
@@ -183,7 +183,7 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
 
    UNICODE_STRING Unicode;
    WCHAR  Buffer[256 * sizeof(WCHAR)];
-   
+
    /* read the current module */
    Status = NtReadVirtualMemory ( ProcessHandle,
             CONTAINING_RECORD(pleCurEntry, LDR_MODULE, InLoadOrderModuleList),
@@ -191,7 +191,7 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
                                  sizeof(LDR_MODULE),
                                  NULL );
 
-   /* Import module name from remote Process user space. */ 
+   /* Import module name from remote Process user space. */
    Unicode.Length = lmModule.FullDllName.Length;
    Unicode.MaximumLength = lmModule.FullDllName.MaximumLength;
    Unicode.Buffer = Buffer;
@@ -201,7 +201,7 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
                                   Unicode.Buffer,
                                   Unicode.Length,
                                   NULL );
-   
+
    if (!NT_SUCCESS(Status))
      {
         /* failure */
@@ -246,7 +246,7 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
       /* address of the next module in the list */
       pleCurEntry = lmModule.InLoadOrderModuleList.Flink;
   }
- 
+
   if (ReturnedSize != 0)
        *ReturnedSize = UsedSize;
 
@@ -259,9 +259,9 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL 
-RtlQueryProcessDebugInformation(IN ULONG ProcessId, 
-                                IN ULONG DebugInfoMask, 
+NTSTATUS STDCALL
+RtlQueryProcessDebugInformation(IN ULONG ProcessId,
+                                IN ULONG DebugInfoMask,
                                 IN OUT PDEBUG_BUFFER Buf)
 {
    NTSTATUS Status = STATUS_SUCCESS;
@@ -281,7 +281,7 @@ if (ProcessId <= 1)
   {
 	Status = STATUS_ACCESS_VIOLATION;
   }
-else   
+else
 if (Pid == ProcessId)
   {
    if (DebugInfoMask & PDI_MODULES)
@@ -303,12 +303,12 @@ if (Pid == ProcessId)
      {
          return Status;
      }
-    
+
     MSize = Mp->ModuleCount * (sizeof(MODULE_INFORMATION) + 8);
-    Buf->ModuleInformation = Mp;        
+    Buf->ModuleInformation = Mp;
     Buf->SizeOfInfo = Buf->SizeOfInfo + MSize;
      }
-     
+
    if (DebugInfoMask & PDI_HEAPS)
      {
    PHEAP_INFORMATION Hp;
@@ -322,19 +322,19 @@ if (Pid == ProcessId)
         if (DebugInfoMask & PDI_HEAP_BLOCKS)
           {
           }
-   Buf->HeapInformation = Hp;        
+   Buf->HeapInformation = Hp;
    Buf->SizeOfInfo = Buf->SizeOfInfo + HSize;
-        
+
      }
-     
+
    if (DebugInfoMask & PDI_LOCKS)
      {
    PLOCK_INFORMATION Lp;
    ULONG LSize;
-   
+
    Lp = (PLOCK_INFORMATION)(Buf + Buf->SizeOfInfo);
    LSize = sizeof(LOCK_INFORMATION);
-   Buf->LockInformation = Lp;        
+   Buf->LockInformation = Lp;
    Buf->SizeOfInfo = Buf->SizeOfInfo + LSize;
     }
 
@@ -360,7 +360,7 @@ else
        Status = NtOpenProcess( &hProcess,
                                 (PROCESS_ALL_ACCESS),
                                &ObjectAttributes,
-                               &ClientId );    
+                               &ClientId );
        if (!NT_SUCCESS(Status))
          {
            return Status;
@@ -387,12 +387,12 @@ else
      {
          return Status;
      }
-    
+
     MSize = Mp->ModuleCount * (sizeof(MODULE_INFORMATION) + 8);
-    Buf->ModuleInformation = Mp;        
+    Buf->ModuleInformation = Mp;
     Buf->SizeOfInfo = Buf->SizeOfInfo + MSize;
      }
-     
+
    if (DebugInfoMask & PDI_HEAPS)
      {
    PHEAP_INFORMATION Hp;
@@ -406,19 +406,19 @@ else
         if (DebugInfoMask & PDI_HEAP_BLOCKS)
           {
           }
-   Buf->HeapInformation = Hp;        
+   Buf->HeapInformation = Hp;
    Buf->SizeOfInfo = Buf->SizeOfInfo + HSize;
-        
+
      }
-     
+
    if (DebugInfoMask & PDI_LOCKS)
      {
    PLOCK_INFORMATION Lp;
    ULONG LSize;
-   
+
    Lp = (PLOCK_INFORMATION)(Buf + Buf->SizeOfInfo);
    LSize = sizeof(LOCK_INFORMATION);
-   Buf->LockInformation = Lp;        
+   Buf->LockInformation = Lp;
    Buf->SizeOfInfo = Buf->SizeOfInfo + LSize;
     }
 

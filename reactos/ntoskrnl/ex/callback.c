@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/callback.c
  * PURPOSE:         Executive callbacks
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  *                  Alex Ionescu (alex@relsoft.net)
  */
@@ -171,7 +171,7 @@ ExCreateCallback(
    PINT_CALLBACK_OBJECT Callback;
    NTSTATUS    Status;
    HANDLE     Handle;
-   
+
    PAGED_CODE();
 
    /* Open a handle to the callback if it exists */
@@ -323,7 +323,7 @@ ExNotifyCallback(
  * ExRegisterCallback
  *
  * FUNCTION:
- * Allows a function to associate a callback pointer (Function) 
+ * Allows a function to associate a callback pointer (Function)
  *  to a created Callback object
  *
  * ARGUMENTS:
@@ -348,7 +348,7 @@ ExRegisterCallback(
    PINT_CALLBACK_OBJECT CallbackObject = (PINT_CALLBACK_OBJECT)OpaqueCallbackObject;
    PCALLBACK_REGISTRATION  CallbackRegistration = NULL;
    KIRQL     OldIrql;
-   
+
    PAGED_CODE();
 
    /* Create reference to Callback Object */
@@ -415,7 +415,7 @@ ExUnregisterCallback(
    PCALLBACK_REGISTRATION  CallbackRegistration;
    PINT_CALLBACK_OBJECT    CallbackObject;
    KIRQL                   OldIrql;
-   
+
    PAGED_CODE();
 
    /* Convert Handle to valid Structure Pointer */

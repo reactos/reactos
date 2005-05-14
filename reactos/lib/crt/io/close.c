@@ -11,7 +11,7 @@
 int _close(int _fd)
 {
    TRACE("_close(%i)", _fd);
-   
+
    if (_fd == -1)
       return(-1);
    if (CloseHandle((HANDLE)_get_osfhandle(_fd)) == FALSE)

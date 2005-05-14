@@ -30,17 +30,17 @@ DbgkCreateThread(PVOID StartAddress)
     }
 
   Message.Header.MessageSize = sizeof(LPC_DBG_MESSAGE);
-  Message.Header.DataSize = sizeof(LPC_DBG_MESSAGE) - 
+  Message.Header.DataSize = sizeof(LPC_DBG_MESSAGE) -
     sizeof(LPC_MESSAGE);
   Message.Type = DBG_EVENT_CREATE_THREAD;
   Message.Status = STATUS_SUCCESS;
   Message.Data.CreateThread.Reserved = 0;
   Message.Data.CreateThread.StartAddress = StartAddress;
-  
+
   /* FIXME: Freeze all threads in process */
 
   /* Send the message to the process's debug port and wait for a reply */
-  Status = 
+  Status =
     LpcSendDebugMessagePort(PsGetCurrentThread()->ThreadsProcess->DebugPort,
 			    &Message,
 			    &Reply);

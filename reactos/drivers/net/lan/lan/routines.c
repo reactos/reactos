@@ -8,7 +8,7 @@ NDIS_STATUS InitNdisPools() {
     /* Last argument is extra space size */
     NdisAllocatePacketPool( &NdisStatus, &GlobalPacketPool, 100, 0 );
     if( !NT_SUCCESS(NdisStatus) ) return NdisStatus;
-    
+
     NdisAllocateBufferPool( &NdisStatus, &GlobalBufferPool, 100 );
     if( !NT_SUCCESS(NdisStatus) )
 	NdisFreePacketPool(GlobalPacketPool);
@@ -63,7 +63,7 @@ __inline INT SkipToOffset(
 }
 
 void GetDataPtr( PNDIS_PACKET Packet,
-		 UINT Offset, 
+		 UINT Offset,
 		 PCHAR *DataOut,
 		 PUINT Size ) {
     PNDIS_BUFFER Buffer;
@@ -88,10 +88,10 @@ NDIS_STATUS AllocatePacketWithBufferX( PNDIS_PACKET *NdisPacket,
     PCHAR NewData;
 
     NewData = ExAllocatePool( NonPagedPool, Len );
-    if( !NewData ) return NDIS_STATUS_NOT_ACCEPTED; // XXX 
+    if( !NewData ) return NDIS_STATUS_NOT_ACCEPTED; // XXX
     TrackWithTag(EXALLOC_TAG, NewData, File, Line);
 
-    if( Data ) 
+    if( Data )
 	RtlCopyMemory(NewData, Data, Len);
 
     NdisAllocatePacket( &Status, &Packet, GlobalPacketPool );

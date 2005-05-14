@@ -4,7 +4,7 @@
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/stdlib/itow.c
  * PURPOSE:     converts a integer to wchar_t
- * PROGRAMER:   
+ * PROGRAMER:
  * UPDATE HISTORY:
  *              1995: Created
  *              1998: Added ltoa Boudewijn Dekker
@@ -147,7 +147,7 @@ wchar_t* _ultow(unsigned long value, wchar_t* string, int radix)
 #endif /*_MSVCRT_LIB_*/
     }
     sp = string;
- 
+
     while (tp > tmp) {
         *sp++ = *--tp;
     }

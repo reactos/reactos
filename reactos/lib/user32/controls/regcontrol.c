@@ -19,7 +19,7 @@ static void RegisterBuiltinClass(const struct builtin_class_descr *Descr)
    WNDCLASSEXW wc;
    UNICODE_STRING ClassName;
    UNICODE_STRING MenuName;
-  
+
    wc.cbSize = sizeof(WNDCLASSEXW);
    wc.lpszClassName = Descr->name;
    wc.lpfnWndProc = Descr->procW;

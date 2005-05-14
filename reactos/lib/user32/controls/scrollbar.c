@@ -52,7 +52,7 @@
 #define SCROLL_FIRST_DELAY   200        /* Delay (in ms) before first repetition when
                                            holding the button down */
 #define SCROLL_REPEAT_DELAY  50         /* Delay (in ms) between scroll repetitions */
-  
+
 #define SCROLL_TIMER   0                /* Scroll timer id */
 
   /* Minimum size of the rectangle between the arrows */
@@ -157,7 +157,7 @@ IntDrawScrollInterior(HWND hWnd, HDC hDC, INT nBar, BOOL Vertical,
       SelectObject(hDC, hSaveBrush);
       return;
    }
-  
+
    ThumbTop -= ScrollBarInfo->dxyLineButton;
 
    if (ScrollBarInfo->dxyLineButton)
@@ -312,7 +312,7 @@ IntScrollGetObjectId(INT SBType)
 
 STATIC BOOL FASTCALL
 IntGetScrollBarInfo(HWND Wnd, INT Bar, PSCROLLBARINFO ScrollBarInfo)
-{  
+{
   ScrollBarInfo->cbSize = sizeof(SCROLLBARINFO);
 
   return NtUserGetScrollBarInfo(Wnd, IntScrollGetObjectId(Bar), ScrollBarInfo);
@@ -349,7 +349,7 @@ IntDrawScrollBar(HWND Wnd, HDC DC, INT Bar)
     {
       return;
     }
-  
+
   if (IsRectEmpty(&Info.rcScrollBar))
     {
       return;
@@ -419,7 +419,7 @@ IntScrollHitTest(PSCROLLBARINFO ScrollBarInfo, BOOL Vertical, POINT Pt, BOOL Dra
   ThumbSize = ScrollBarInfo->xyThumbBottom - ThumbPos;
   ArrowSize = ScrollBarInfo->dxyLineButton;
 
-  if (Vertical) 
+  if (Vertical)
     {
       if (Pt.y < ScrollBarInfo->rcScrollBar.top + ArrowSize)
         {
@@ -1069,7 +1069,7 @@ static void IntScrollCreateScrollBar(
   LPCREATESTRUCTW lpCreate /* [in] The style and place of the scroll bar */)
 {
   SCROLLINFO Info;
-  
+
   Info.cbSize = sizeof(SCROLLINFO);
   Info.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
   Info.nMin = 0;
@@ -1098,7 +1098,7 @@ static void IntScrollCreateScrollBar(
         }
       else if (0 != (lpCreate->style & SBS_SIZEBOXBOTTOMRIGHTALIGN))
         {
-          MoveWindow(Wnd, lpCreate->x + lpCreate->cx - GetSystemMetrics(SM_CXVSCROLL) - 1, 
+          MoveWindow(Wnd, lpCreate->x + lpCreate->cx - GetSystemMetrics(SM_CXVSCROLL) - 1,
                      lpCreate->y + lpCreate->cy - GetSystemMetrics(SM_CYHSCROLL) - 1,
                      GetSystemMetrics(SM_CXVSCROLL) + 1,
                      GetSystemMetrics(SM_CYHSCROLL) + 1, FALSE);
@@ -1140,7 +1140,7 @@ STATIC INT FASTCALL
 IntScrollGetScrollPos(HWND Wnd, INT Bar)
 {
   SCROLLINFO ScrollInfo;
-  
+
   ScrollInfo.cbSize = sizeof(SCROLLINFO);
   ScrollInfo.fMask = SIF_POS;
   if (! NtUserGetScrollInfo(Wnd, Bar, &ScrollInfo))
@@ -1156,13 +1156,13 @@ IntScrollGetScrollRange(HWND Wnd, int Bar, LPINT MinPos, LPINT MaxPos)
 {
   BOOL Result;
   SCROLLINFO ScrollInfo;
-  
+
   if (NULL == MinPos || NULL == MaxPos)
     {
       SetLastError(ERROR_INVALID_PARAMETER);
       return FALSE;
     }
-  
+
   ScrollInfo.cbSize = sizeof(SCROLLINFO);
   ScrollInfo.fMask = SIF_RANGE;
   Result = NtUserGetScrollInfo(Wnd, Bar, &ScrollInfo);
@@ -1171,7 +1171,7 @@ IntScrollGetScrollRange(HWND Wnd, int Bar, LPINT MinPos, LPINT MaxPos)
       *MinPos = ScrollInfo.nMin;
       *MaxPos = ScrollInfo.nMax;
     }
-  
+
   return Result;
 }
 
@@ -1194,7 +1194,7 @@ ScrollTrackScrollBar(HWND Wnd, INT SBType, POINT Pt)
   if (SB_CTL != SBType)
     {
       NtUserGetWindowRect(Wnd, &WindowRect);
-  
+
       Pt.x -= WindowRect.left;
       Pt.y -= WindowRect.top;
 
@@ -1551,10 +1551,10 @@ SetScrollPos(HWND hWnd, INT nBar, INT nPos, BOOL bRedraw)
 {
   INT Result = 0;
   SCROLLINFO ScrollInfo;
-  
+
   ScrollInfo.cbSize = sizeof(SCROLLINFO);
   ScrollInfo.fMask = SIF_POS;
-  
+
   /*
    * Call NtUserGetScrollInfo() to get the previous position that
    * we will later return.
@@ -1569,7 +1569,7 @@ SetScrollPos(HWND hWnd, INT nBar, INT nPos, BOOL bRedraw)
           NtUserSetScrollInfo(hWnd, nBar, &ScrollInfo, bRedraw);
         }
     }
-  
+
   return Result;
 }
 

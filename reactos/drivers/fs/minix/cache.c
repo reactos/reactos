@@ -4,7 +4,7 @@
  * FILE:             services/fs/minix/cache.c
  * PURPOSE:          Minix FSD
  * PROGRAMMER:       David Welch (welch@mcmail.com)
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -26,7 +26,7 @@ NTSTATUS MinixRequestCacheBlock(PDEVICE_OBJECT DeviceObject,
 				PCACHE_SEGMENT* CacheSeg)
 {
    BOOLEAN UptoDate;
-   
+
    CcRosRequestCacheSegment(Bcb,
 		      FileOffset,
 		      BaseAddress,
@@ -37,9 +37,9 @@ NTSTATUS MinixRequestCacheBlock(PDEVICE_OBJECT DeviceObject,
 	MinixReadPage(DeviceObject,
 		      PAGE_ROUND_DOWN(FileOffset),
 		      BaseAddress);
-     }		      
+     }
    BaseAddress = BaseAddress + (FileOffset % PAGE_SIZE);
-   
+
    return(STATUS_SUCCESS);
 }
 

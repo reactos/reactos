@@ -54,7 +54,7 @@ NDIS_STATUS AllocatePacketWithBufferX( PNDIS_PACKET *NdisPacket,
 				       PCHAR File, UINT Line );
 
 void GetDataPtr( PNDIS_PACKET Packet,
-		 UINT Offset, 
+		 UINT Offset,
 		 PCHAR *DataOut,
 		 PUINT Size );
 

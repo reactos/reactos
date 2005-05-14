@@ -24,7 +24,7 @@
  *                  15-Feb-2004 vizzini - Created
  */
 
-NTSTATUS NTAPI DeviceIoctl(PDEVICE_OBJECT DeviceObject, 
+NTSTATUS NTAPI DeviceIoctl(PDEVICE_OBJECT DeviceObject,
                            PIRP Irp);
 
 VOID NTAPI DeviceIoctlPassive(PDRIVE_INFO DriveInfo,

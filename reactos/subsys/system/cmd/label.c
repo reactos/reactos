@@ -14,7 +14,7 @@
  *        Unicode ready!
  *
  *    28-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -39,8 +39,7 @@ INT cmd_label (LPTSTR cmd, LPTSTR param)
 	/* print help */
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_LABEL_HELP1, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPrintf(szMsg);
+		ConOutResPuts(STRING_LABEL_HELP1);
 		return 0;
 	}
 
@@ -90,26 +89,26 @@ INT cmd_label (LPTSTR cmd, LPTSTR param)
 	GetVolumeInformation(szRootPath, szOldLabel, 80, &dwSerialNr,
 			      NULL, NULL, NULL, 0);
 
-	/* print drive info */	
+	/* print drive info */
 	if (szOldLabel[0] != _T('\0'))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_LABEL_HELP2, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_LABEL_HELP2, szMsg, RC_STRING_MAX_SIZE);
 		ConOutPrintf(szMsg, _totupper(szRootPath[0]), szOldLabel);
 	}
 	else
 	{
-		LoadString(GetModuleHandle(NULL), STRING_LABEL_HELP3, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_LABEL_HELP3, szMsg, RC_STRING_MAX_SIZE);
 		ConOutPrintf(szMsg, _totupper(szRootPath[0]));
 	}
 
 	/* print the volume serial number */
-	LoadString(GetModuleHandle(NULL), STRING_LABEL_HELP4, szMsg, RC_STRING_MAX_SIZE);
+	LoadString(CMD_ModuleHandle, STRING_LABEL_HELP4, szMsg, RC_STRING_MAX_SIZE);
 	ConOutPrintf(szMsg, HIWORD(dwSerialNr), LOWORD(dwSerialNr));
 
 	if (szLabel[0] == _T('\0'))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_LABEL_HELP5, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPrintf(szMsg);
+		LoadString(CMD_ModuleHandle, STRING_LABEL_HELP5, szMsg, RC_STRING_MAX_SIZE);
+		ConOutResPuts(STRING_LABEL_HELP5);
 
 		ConInString(szLabel, 80);
 	}

@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/po/power.c
  * PURPOSE:         Power Manager
- * 
+ *
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
@@ -64,7 +64,7 @@ NTSTATUS
 STDCALL
 PoRequestPowerIrp(
   IN PDEVICE_OBJECT DeviceObject,
-  IN UCHAR MinorFunction,  
+  IN UCHAR MinorFunction,
   IN POWER_STATE PowerState,
   IN PREQUEST_POWER_COMPLETE CompletionFunction,
   IN PVOID Context,
@@ -91,7 +91,7 @@ PoSetPowerState(
   IN POWER_STATE State)
 {
   POWER_STATE ps;
-  
+
   ASSERT_IRQL(DISPATCH_LEVEL);
 
   ps.SystemState = PowerSystemWorking;  // Fully on
@@ -133,7 +133,7 @@ PoUnregisterSystemState(
 NTSTATUS
 PopSetSystemPowerState(
   SYSTEM_POWER_STATE PowerState)
-{    
+{
   IO_STATUS_BLOCK IoStatusBlock;
   PDEVICE_OBJECT DeviceObject;
   PIO_STACK_LOCATION IrpSp;
@@ -141,7 +141,7 @@ PopSetSystemPowerState(
   NTSTATUS Status;
   KEVENT Event;
   PIRP Irp;
-  
+
   if (!PopAcpiPresent) return STATUS_NOT_IMPLEMENTED;
 
   Status = IopGetSystemPowerDeviceObject(&DeviceObject);
@@ -191,9 +191,9 @@ PopSetSystemPowerState(
   return Status;
 }
 
-VOID 
+VOID
 INIT_FUNCTION
-PoInit(PLOADER_PARAMETER_BLOCK LoaderBlock, 
+PoInit(PLOADER_PARAMETER_BLOCK LoaderBlock,
        BOOLEAN ForceAcpiDisable)
 {
   if (ForceAcpiDisable)
@@ -226,8 +226,8 @@ NtInitiatePowerAction (
 /*
  * @unimplemented
  */
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 NtPowerInformation(
 	IN POWER_INFORMATION_LEVEL PowerInformationLevel,
 	IN PVOID InputBuffer  OPTIONAL,
@@ -237,7 +237,7 @@ NtPowerInformation(
 	)
 {
    NTSTATUS Status;
-   
+
    PAGED_CODE();
 
    DPRINT("NtPowerInformation(PowerInformationLevel 0x%x, InputBuffer 0x%x, "
@@ -283,7 +283,7 @@ PoQueueShutdownWorkItem(
 	)
 {
   PAGED_CODE();
-  
+
   DPRINT1("PoQueueShutdownWorkItem(%p)\n", WorkItem);
 
   return STATUS_NOT_IMPLEMENTED;

@@ -29,7 +29,7 @@ NullDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
  PIO_STACK_LOCATION piosStack = IoGetCurrentIrpStackLocation(Irp);
  NTSTATUS nErrCode;
- 
+
  nErrCode = STATUS_SUCCESS;
  Irp->IoStatus.Information = 0;
 
@@ -117,7 +117,7 @@ NullUnload(PDRIVER_OBJECT DriverObject)
 }
 
 /* TODO: \Device\Zero should be memory-mappable */
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
  PDEVICE_OBJECT pdoNullDevice;

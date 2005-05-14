@@ -52,13 +52,13 @@ EnumPropsA(HWND hWnd, PROPENUMPROCA lpEnumFunc)
   NTSTATUS Status;
   DWORD Count;
   int ret = -1;
-  
+
   if(!lpEnumFunc)
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return ret;
   }
-  
+
   Status = NtUserBuildPropList(hWnd, NULL, 0, &Count);
   if(!NT_SUCCESS(Status))
   {
@@ -68,11 +68,11 @@ EnumPropsA(HWND hWnd, PROPENUMPROCA lpEnumFunc)
       SetLastError(RtlNtStatusToDosError(Status));
     return ret;
   }
-  
+
   if(Count > 0)
   {
     pli = RtlAllocateHeap(GetProcessHeap(), 0, Count);
-    
+
     Status = NtUserBuildPropList(hWnd, (LPVOID)pli, Count, &Count);
     if(!NT_SUCCESS(Status))
     {
@@ -83,23 +83,23 @@ EnumPropsA(HWND hWnd, PROPENUMPROCA lpEnumFunc)
         SetLastError(RtlNtStatusToDosError(Status));
       return ret;
     }
-    
+
     i = pli;
     for(; Count > 0; Count--, i++)
     {
       char str[ATOM_BUFFER_SIZE];
-      
+
       if(!GlobalGetAtomNameA(i->Atom, str, ATOM_BUFFER_SIZE))
         continue;
-      
+
       ret = lpEnumFunc(hWnd, str, i->Data);
       if(!ret)
         break;
     }
-    
+
     RtlFreeHeap(GetProcessHeap(), 0, pli);
   }
-  
+
   return ret;
 }
 
@@ -114,13 +114,13 @@ EnumPropsExA(HWND hWnd, PROPENUMPROCEXA lpEnumFunc, LPARAM lParam)
   NTSTATUS Status;
   DWORD Count;
   int ret = -1;
-  
+
   if(!lpEnumFunc)
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return ret;
   }
-  
+
   Status = NtUserBuildPropList(hWnd, NULL, 0, &Count);
   if(!NT_SUCCESS(Status))
   {
@@ -130,11 +130,11 @@ EnumPropsExA(HWND hWnd, PROPENUMPROCEXA lpEnumFunc, LPARAM lParam)
       SetLastError(RtlNtStatusToDosError(Status));
     return ret;
   }
-  
+
   if(Count > 0)
   {
     pli = RtlAllocateHeap(GetProcessHeap(), 0, Count);
-    
+
     Status = NtUserBuildPropList(hWnd, (LPVOID)pli, Count, &Count);
     if(!NT_SUCCESS(Status))
     {
@@ -145,23 +145,23 @@ EnumPropsExA(HWND hWnd, PROPENUMPROCEXA lpEnumFunc, LPARAM lParam)
         SetLastError(RtlNtStatusToDosError(Status));
       return ret;
     }
-    
+
     i = pli;
     for(; Count > 0; Count--, i++)
     {
       char str[ATOM_BUFFER_SIZE];
-      
+
       if(!GlobalGetAtomNameA(i->Atom, str, ATOM_BUFFER_SIZE))
         continue;
-      
+
       ret = lpEnumFunc(hWnd, str, i->Data, lParam);
       if(!ret)
         break;
     }
-    
+
     RtlFreeHeap(GetProcessHeap(), 0, pli);
   }
-  
+
   return ret;
 }
 
@@ -176,13 +176,13 @@ EnumPropsExW(HWND hWnd, PROPENUMPROCEXW lpEnumFunc, LPARAM lParam)
   NTSTATUS Status;
   DWORD Count;
   int ret = -1;
-  
+
   if(!lpEnumFunc)
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return ret;
   }
-  
+
   Status = NtUserBuildPropList(hWnd, NULL, 0, &Count);
   if(!NT_SUCCESS(Status))
   {
@@ -192,11 +192,11 @@ EnumPropsExW(HWND hWnd, PROPENUMPROCEXW lpEnumFunc, LPARAM lParam)
       SetLastError(RtlNtStatusToDosError(Status));
     return ret;
   }
-  
+
   if(Count > 0)
   {
     pli = RtlAllocateHeap(GetProcessHeap(), 0, Count);
-    
+
     Status = NtUserBuildPropList(hWnd, (LPVOID)pli, Count, &Count);
     if(!NT_SUCCESS(Status))
     {
@@ -207,23 +207,23 @@ EnumPropsExW(HWND hWnd, PROPENUMPROCEXW lpEnumFunc, LPARAM lParam)
         SetLastError(RtlNtStatusToDosError(Status));
       return ret;
     }
-    
+
     i = pli;
     for(; Count > 0; Count--, i++)
     {
       WCHAR str[ATOM_BUFFER_SIZE];
-      
+
       if(!GlobalGetAtomNameW(i->Atom, str, ATOM_BUFFER_SIZE))
         continue;
-      
+
       ret = lpEnumFunc(hWnd, str, i->Data, lParam);
       if(!ret)
         break;
     }
-    
+
     RtlFreeHeap(GetProcessHeap(), 0, pli);
   }
-  
+
   return ret;
 }
 
@@ -238,13 +238,13 @@ EnumPropsW(HWND hWnd, PROPENUMPROCW lpEnumFunc)
   NTSTATUS Status;
   DWORD Count;
   int ret = -1;
-  
+
   if(!lpEnumFunc)
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return ret;
   }
-  
+
   Status = NtUserBuildPropList(hWnd, NULL, 0, &Count);
   if(!NT_SUCCESS(Status))
   {
@@ -254,11 +254,11 @@ EnumPropsW(HWND hWnd, PROPENUMPROCW lpEnumFunc)
       SetLastError(RtlNtStatusToDosError(Status));
     return ret;
   }
-  
+
   if(Count > 0)
   {
     pli = RtlAllocateHeap(GetProcessHeap(), 0, Count);
-    
+
     Status = NtUserBuildPropList(hWnd, (LPVOID)pli, Count, &Count);
     if(!NT_SUCCESS(Status))
     {
@@ -269,23 +269,23 @@ EnumPropsW(HWND hWnd, PROPENUMPROCW lpEnumFunc)
         SetLastError(RtlNtStatusToDosError(Status));
       return ret;
     }
-    
+
     i = pli;
     for(; Count > 0; Count--, i++)
     {
       WCHAR str[ATOM_BUFFER_SIZE];
-      
+
       if(!GlobalGetAtomNameW(i->Atom, str, ATOM_BUFFER_SIZE))
         continue;
-      
+
       ret = lpEnumFunc(hWnd, str, i->Data);
       if(!ret)
         break;
     }
-    
+
     RtlFreeHeap(GetProcessHeap(), 0, pli);
   }
-  
+
   return ret;
 }
 
@@ -313,7 +313,7 @@ GetPropA(HWND hWnd, LPCSTR lpString)
   else
     {
       Ret = GetPropW(hWnd, (LPWSTR)lpString);
-    }  
+    }
   return(Ret);
 }
 
@@ -395,7 +395,7 @@ SetPropA(HWND hWnd, LPCSTR lpString, HANDLE hData)
   PWSTR lpWString;
   UNICODE_STRING UString;
   BOOL Ret;
-  
+
   if (HIWORD(lpString))
     {
       RtlCreateUnicodeStringFromAsciiz(&UString, (LPSTR)lpString);
@@ -430,6 +430,6 @@ SetPropW(HWND hWnd, LPCWSTR lpString, HANDLE hData)
     {
       Atom = LOWORD((DWORD)lpString);
     }
-  
+
   return(NtUserSetProp(hWnd, Atom, hData));
 }

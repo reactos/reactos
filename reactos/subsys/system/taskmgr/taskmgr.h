@@ -68,7 +68,7 @@ typedef struct
 
 	/* Update speed settings */
 	/* How many half-seconds in between updates (i.e. 0 - Paused, 1 - High, 2 - Normal, 4 - Low) */
-	int	UpdateSpeed; 
+	int	UpdateSpeed;
 
 	/* Applications page settings */
 	BOOL	View_LargeIcons;

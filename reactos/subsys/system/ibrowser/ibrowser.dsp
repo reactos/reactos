@@ -177,10 +177,6 @@ SOURCE=.\utility\comutil.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\utility\expat.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\utility\utility.cpp
 # End Source File
 # Begin Source File

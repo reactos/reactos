@@ -479,7 +479,7 @@ NDIS_STATUS STDCALL MiniportQueryInformation(
         break;
     case OID_GEN_MAC_OPTIONS:
         GenericULONG = NDIS_MAC_OPTION_COPY_LOOKAHEAD_DATA |
-                       NDIS_MAC_OPTION_RECEIVE_SERIALIZED  |           
+                       NDIS_MAC_OPTION_RECEIVE_SERIALIZED  |
                        NDIS_MAC_OPTION_TRANSFERS_NOT_PEND  |
                        NDIS_MAC_OPTION_NO_LOOPBACK;
         break;
@@ -667,7 +667,7 @@ NDIS_STATUS STDCALL MiniportSetInformation(
             Status       = NDIS_STATUS_NOT_SUPPORTED;
             break;
         }
-            
+
         Adapter->PacketFilter = GenericULONG;
 
         /* FIXME: Set filter on hardware */
@@ -765,9 +765,9 @@ NDIS_STATUS STDCALL MiniportTransferData(
     NdisQueryBuffer(DstBuffer, (PVOID)&DstData, &DstSize);
 
     SrcData = Adapter->PacketOffset + sizeof(DISCARD_HEADER) + ByteOffset;
-    if (ByteOffset + sizeof(DISCARD_HEADER) + BytesToTransfer > 
+    if (ByteOffset + sizeof(DISCARD_HEADER) + BytesToTransfer >
 	Adapter->PacketHeader.PacketLength)
-        BytesToTransfer = Adapter->PacketHeader.PacketLength - 
+        BytesToTransfer = Adapter->PacketHeader.PacketLength -
 	    sizeof(DISCARD_HEADER) - ByteOffset;
 
     /* Start copying the data */
@@ -885,9 +885,9 @@ DriverEntry(
                 DbgPrint("ne2000!MiniportInitialize: failed to set DwordTest: 0x%x\n", Status);
                 KeBugCheck(0);
             }
-            
+
             DbgPrint("ne2000!MiniportInitialize: DwordTest successfully set\n");
-            
+
             NdisInitUnicodeString(&Keyword, L"StringTest");
             ParameterValue.ParameterType = NdisParameterString;
             NdisInitUnicodeString(&ParameterValue.ParameterData.StringData, L"Testing123");
@@ -899,7 +899,7 @@ DriverEntry(
                 DbgPrint("ne2000!MiniportInitialize: failed to set StringTest: 0x%x\n", Status);
                 KeBugCheck(0);
             }
-            
+
             DbgPrint("ne2000!MiniportInitialize: StringTest successfully set\n");
         }
 

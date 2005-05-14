@@ -12,15 +12,15 @@
 
 NEIGHBOR_CACHE_TABLE NeighborCache[NB_HASHMASK + 1];
 
-VOID NBCompleteSend( PVOID Context, 
-		     PNDIS_PACKET NdisPacket, 
+VOID NBCompleteSend( PVOID Context,
+		     PNDIS_PACKET NdisPacket,
 		     NDIS_STATUS Status ) {
     PNEIGHBOR_PACKET Packet = (PNEIGHBOR_PACKET)Context;
     TI_DbgPrint(MID_TRACE, ("Called\n"));
     ASSERT_KM_POINTER(Packet);
     ASSERT_KM_POINTER(Packet->Complete);
     Packet->Complete( Packet->Context, Packet->Packet, STATUS_SUCCESS );
-    TI_DbgPrint(MID_TRACE, ("Completed\n")); 
+    TI_DbgPrint(MID_TRACE, ("Completed\n"));
     PoolFreeBuffer( Packet );
     TI_DbgPrint(MID_TRACE, ("Freed\n"));
 }
@@ -37,7 +37,7 @@ VOID NBSendPackets( PNEIGHBOR_CACHE_ENTRY NCE ) {
 
 	TI_DbgPrint
 	    (MID_TRACE,
-	     ("PacketEntry: %x, NdisPacket %x\n", 
+	     ("PacketEntry: %x, NdisPacket %x\n",
 	      PacketEntry, Packet->Packet));
 
 	PC(Packet->Packet)->DLComplete = NBCompleteSend;
@@ -53,22 +53,22 @@ VOID NBSendPackets( PNEIGHBOR_CACHE_ENTRY NCE ) {
 }
 
 /* Must be called with table lock acquired */
-VOID NBFlushPacketQueue( PNEIGHBOR_CACHE_ENTRY NCE, 
+VOID NBFlushPacketQueue( PNEIGHBOR_CACHE_ENTRY NCE,
 			 BOOL CallComplete,
 			 NTSTATUS ErrorCode ) {
     PLIST_ENTRY PacketEntry;
     PNEIGHBOR_PACKET Packet;
-	
+
     while( !IsListEmpty(&NCE->PacketQueue) ) {
         PacketEntry = RemoveHeadList(&NCE->PacketQueue);
 	Packet = CONTAINING_RECORD
 	    ( PacketEntry, NEIGHBOR_PACKET, Next );
 
         ASSERT_KM_POINTER(Packet);
-	
+
 	TI_DbgPrint
 	    (MID_TRACE,
-	     ("PacketEntry: %x, NdisPacket %x\n", 
+	     ("PacketEntry: %x, NdisPacket %x\n",
 	      PacketEntry, Packet->Packet));
 
 	if( CallComplete )
@@ -78,7 +78,7 @@ VOID NBFlushPacketQueue( PNEIGHBOR_CACHE_ENTRY NCE,
 			      Packet->Packet,
 			      NDIS_STATUS_REQUEST_ABORTED );
         }
-	
+
 	PoolFreeBuffer( Packet );
     }
 }
@@ -93,7 +93,7 @@ VOID NCETimeout(
 {
     TI_DbgPrint(DEBUG_NCACHE, ("Called. NCE (0x%X).\n", NCE));
     TI_DbgPrint(DEBUG_NCACHE, ("NCE->State is (0x%X).\n", NCE->State));
-    
+
     switch (NCE->State)
     {
     case NUD_INCOMPLETE:
@@ -101,11 +101,11 @@ VOID NCETimeout(
         if (NCE->EventCount++ > MAX_MULTICAST_SOLICIT)
 	{
             /* We have retransmitted too many times */
-	    
+
             /* Calling IPSendComplete with cache lock held is not
 	       a great thing to do. We don't get here very often
 	       so maybe it's not that big a problem */
-	    
+
             /* Flush packet queue */
 	    NBFlushPacketQueue( NCE, TRUE, NDIS_STATUS_REQUEST_ABORTED );
             NCE->EventCount = 0;
@@ -116,12 +116,12 @@ VOID NCETimeout(
             NBSendSolicit(NCE);
 	}
         break;
-	
+
     case NUD_DELAY:
         /* FIXME: Delayed state */
         TI_DbgPrint(DEBUG_NCACHE, ("NCE delay state.\n"));
         break;
-	
+
     case NUD_PROBE:
         /* FIXME: Probe state */
         TI_DbgPrint(DEBUG_NCACHE, ("NCE probe state.\n"));
@@ -172,9 +172,9 @@ VOID NBStartup(VOID)
  */
 {
     UINT i;
-    
+
     TI_DbgPrint(DEBUG_NCACHE, ("Called.\n"));
-    
+
     for (i = 0; i <= NB_HASHMASK; i++) {
 	NeighborCache[i].Cache = NULL;
 	TcpipInitializeSpinLock(&NeighborCache[i].Lock);
@@ -226,12 +226,12 @@ VOID NBSendSolicit(PNEIGHBOR_CACHE_ENTRY NCE)
  */
 {
     TI_DbgPrint(DEBUG_NCACHE, ("Called. NCE (0x%X).\n", NCE));
-    
+
     if (NCE->State == NUD_INCOMPLETE)
     {
 	/* This is the first solicitation of this neighbor. Broadcast
 	   a request for the neighbor */
-	
+
 	TI_DbgPrint(MID_TRACE,("NCE: %x\n", NCE));
 
 	ARPTransmit(&NCE->Address, NCE->Interface);
@@ -268,7 +268,7 @@ PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
   KIRQL OldIrql;
 
   TI_DbgPrint
-      (DEBUG_NCACHE, 
+      (DEBUG_NCACHE,
        ("Called. Interface (0x%X)  Address (0x%X)  "
 	"LinkAddress (0x%X)  LinkAddressLength (%d)  State (0x%X)\n",
 	Interface, Address, LinkAddress, LinkAddressLength, State));
@@ -306,7 +306,7 @@ PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
   NCE->Table = &NeighborCache[HashValue];
 
   TcpipAcquireSpinLock(&NeighborCache[HashValue].Lock, &OldIrql);
-  
+
   NCE->Next = NeighborCache[HashValue].Cache;
   NeighborCache[HashValue].Cache = NCE;
 
@@ -330,16 +330,16 @@ VOID NBUpdateNeighbor(
  */
 {
     KIRQL OldIrql;
-    
+
     TI_DbgPrint(DEBUG_NCACHE, ("Called. NCE (0x%X)  LinkAddress (0x%X)  State (0x%X).\n", NCE, LinkAddress, State));
-    
+
     TcpipAcquireSpinLock(&NCE->Table->Lock, &OldIrql);
-    
+
     RtlCopyMemory(NCE->LinkAddress, LinkAddress, NCE->LinkAddressLength);
     NCE->State = State;
-    
+
     TcpipReleaseSpinLock(&NCE->Table->Lock, OldIrql);
-    
+
     if( NCE->State & NUD_CONNECTED )
 	NBSendPackets( NCE );
 }
@@ -415,7 +415,7 @@ PNEIGHBOR_CACHE_ENTRY NBFindOrCreateNeighbor(
             NCE->EventTimer = 0;
             NCE->EventCount = 0;
         } else {
-            NCE = NBAddNeighbor(Interface, Address, NULL, 
+            NCE = NBAddNeighbor(Interface, Address, NULL,
                                 Interface->AddressLength, NUD_INCOMPLETE);
             NCE->EventTimer = 1;
             NCE->EventCount = 0;
@@ -442,9 +442,9 @@ BOOLEAN NBQueuePacket(
   PKSPIN_LOCK Lock;
   KIRQL OldIrql;
   PNEIGHBOR_PACKET Packet;
-  
+
   TI_DbgPrint
-      (DEBUG_NCACHE, 
+      (DEBUG_NCACHE,
        ("Called. NCE (0x%X)  NdisPacket (0x%X).\n", NCE, NdisPacket));
 
   Packet = PoolAllocateBuffer( sizeof(NEIGHBOR_PACKET) );

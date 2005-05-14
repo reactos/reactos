@@ -23,7 +23,7 @@
  * FILE:             services/fs/cdfs/rw.c
  * PURPOSE:          CDROM (ISO 9660) filesystem driver
  * PROGRAMMER:       Art Yerkes
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -119,7 +119,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
       *LengthRead = Length;
       if (Length + ReadOffset > Fcb->Entry.DataLengthL)
       {
-	memset(Buffer + Fcb->Entry.DataLengthL - ReadOffset, 
+	memset(Buffer + Fcb->Entry.DataLengthL - ReadOffset,
 	       0, Length + ReadOffset - Fcb->Entry.DataLengthL);
       }
     }
@@ -167,7 +167,7 @@ NtfsRead(PDEVICE_OBJECT DeviceObject,
     {
       if (FileObject->Flags & FO_SYNCHRONOUS_IO)
 	{
-	  FileObject->CurrentByteOffset.QuadPart = 
+	  FileObject->CurrentByteOffset.QuadPart =
 	    ReadOffset.QuadPart + ReturnedReadLength;
 	}
       Irp->IoStatus.Information = ReturnedReadLength;

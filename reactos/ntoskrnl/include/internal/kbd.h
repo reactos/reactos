@@ -19,7 +19,7 @@ extern "C" {
     WORD wMaxModBits;
     BYTE ModNumber[1];
   } MODIFIERS, *PMODIFIERS;
-  
+
 #define TYPEDEF_VK_TO_WCHARS(i) \
   typedef struct _VK_TO_WCHARS ## i { \
     BYTE VirtualKey; \
@@ -49,7 +49,7 @@ extern "C" {
     WCHAR wchComposed;
     USHORT uFlags;
   } DEADKEY, *PDEADKEY;
-  
+
   typedef WCHAR *DEADKEY_LPWSTR;
 
 #define DKF_DEAD 1
@@ -106,7 +106,7 @@ typedef struct _LIGATURE ## i { \
 #define CAPLOKALTGR 4
 #define KANALOK 8
 #define GRPSELTAP 0x80
-  
+
 
 #ifdef __cplusplus
 };

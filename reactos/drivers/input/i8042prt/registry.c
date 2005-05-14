@@ -34,9 +34,9 @@
  */
 VOID STDCALL I8042ReadRegistry(PDRIVER_OBJECT DriverObject,
                                PDEVICE_EXTENSION DevExt)
-                               
+
 {
-	RTL_QUERY_REGISTRY_TABLE Parameters[18];
+	RTL_QUERY_REGISTRY_TABLE Parameters[19];
 	UNICODE_STRING ParametersPath;
 
 	PWSTR RegistryPath = L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\i8042Prt\\Parameters";
@@ -188,26 +188,26 @@ VOID STDCALL I8042ReadRegistry(PDRIVER_OBJECT DriverObject,
 	Parameters[14].DefaultData = &DefaultMouseResolution;
 	Parameters[14].DefaultLength = sizeof(ULONG);
 
-	Parameters[14].Flags = RTL_QUERY_REGISTRY_DIRECT;
-	Parameters[14].Name = L"SampleRate";
-	Parameters[14].EntryContext = &DevExt->MouseAttributes.SampleRate;
-	Parameters[14].DefaultType = REG_DWORD;
-	Parameters[14].DefaultData = &DefaultSampleRate;
-	Parameters[14].DefaultLength = sizeof(ULONG);
-
 	Parameters[15].Flags = RTL_QUERY_REGISTRY_DIRECT;
-	Parameters[15].Name = L"NumberOfButtons";
-	Parameters[15].EntryContext = &DevExt->Settings.NumberOfButtons;
+	Parameters[15].Name = L"SampleRate";
+	Parameters[15].EntryContext = &DevExt->MouseAttributes.SampleRate;
 	Parameters[15].DefaultType = REG_DWORD;
-	Parameters[15].DefaultData = &DefaultNumberOfButtons;
+	Parameters[15].DefaultData = &DefaultSampleRate;
 	Parameters[15].DefaultLength = sizeof(ULONG);
 
 	Parameters[16].Flags = RTL_QUERY_REGISTRY_DIRECT;
-	Parameters[16].Name = L"EnableWheelDetection";
-	Parameters[16].EntryContext = &DevExt->Settings.EnableWheelDetection;
+	Parameters[16].Name = L"NumberOfButtons";
+	Parameters[16].EntryContext = &DevExt->Settings.NumberOfButtons;
 	Parameters[16].DefaultType = REG_DWORD;
-	Parameters[16].DefaultData = &DefaultEnableWheelDetection;
+	Parameters[16].DefaultData = &DefaultNumberOfButtons;
 	Parameters[16].DefaultLength = sizeof(ULONG);
+
+	Parameters[17].Flags = RTL_QUERY_REGISTRY_DIRECT;
+	Parameters[17].Name = L"EnableWheelDetection";
+	Parameters[17].EntryContext = &DevExt->Settings.EnableWheelDetection;
+	Parameters[17].DefaultType = REG_DWORD;
+	Parameters[17].DefaultData = &DefaultEnableWheelDetection;
+	Parameters[17].DefaultLength = sizeof(ULONG);
 
 	Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE |
 			                        RTL_REGISTRY_OPTIONAL,
@@ -232,6 +232,9 @@ VOID STDCALL I8042ReadRegistry(PDRIVER_OBJECT DriverObject,
 
 	}
 	ExFreePoolWithTag(ParametersPath.Buffer, TAG_I8042);
+
+	if (DevExt->Settings.MouseResolution > 3)
+		DevExt->Settings.MouseResolution = 3;
+
 	DPRINT("Done reading registry\n");
 }
-

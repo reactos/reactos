@@ -684,7 +684,7 @@ NtUserGetMonitorInfo(
 		INT len = Monitor->DeviceName.Length;
 		if (len >= CCHDEVICENAME * sizeof (WCHAR))
 			len = (CCHDEVICENAME - 1) * sizeof (WCHAR);
-		
+
 		memcpy(MonitorInfo.szDevice, Monitor->DeviceName.Buffer, len);
 		memcpy(MonitorInfo.szDevice + (len / sizeof (WCHAR)), &nul, sizeof (WCHAR));
 	}
@@ -881,7 +881,7 @@ NtUserMonitorFromWindow(
 	PWINDOW_OBJECT Window;
 	HMONITOR hMonitor = NULL;
 	RECT Rect;
-  
+
         Window = IntGetWindowObject(hWnd);
 	if (Window == NULL)
 	{

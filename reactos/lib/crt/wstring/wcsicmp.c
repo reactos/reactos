@@ -7,7 +7,7 @@
 /*
  * @implemented
  */
-int _wcsicmp(const wchar_t* cs,const wchar_t * ct)  
+int _wcsicmp(const wchar_t* cs,const wchar_t * ct)
 {
 	while (towlower(*cs) == towlower(*ct))
 	{

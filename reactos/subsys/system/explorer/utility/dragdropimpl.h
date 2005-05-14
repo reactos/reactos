@@ -52,10 +52,12 @@ class EnumFormatEtcImpl : public IEnumFORMATETC
 class IDropSourceImpl : public IDropSource
 {
 	long m_cRefCount;
+
 public:
 	bool m_bDropped;
 
 	IDropSourceImpl::IDropSourceImpl() : m_cRefCount(0), m_bDropped(false) {}
+	virtual ~IDropSourceImpl() {}
 
 	//IUnknown
     virtual HRESULT STDMETHODCALLTYPE QueryInterface(
@@ -183,7 +185,7 @@ public:
 	virtual ~IDropTargetImpl();
 
 	void AddSuportedFormat(FORMATETC& ftetc) {m_formatetc.push_back(ftetc);}
-	
+
 	//return values: true - release the medium. false - don't release the medium
 	virtual bool OnDrop(FORMATETC* pFmtEtc, STGMEDIUM& medium, DWORD *pdwEffect) = 0;
 
@@ -260,7 +262,7 @@ public:
 	}
 
     HRESULT InitializeFromWindow(HWND hwnd, POINT& pt,IDataObject* pDataObject)
-	{		
+	{
 		if (pDragSourceHelper == NULL)
 			return E_FAIL;
 		return pDragSourceHelper->InitializeFromWindow(hwnd, &pt, pDataObject);

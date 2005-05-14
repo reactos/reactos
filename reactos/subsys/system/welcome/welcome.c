@@ -110,7 +110,7 @@ WinMain(HINSTANCE hInst,
   RECT rcWindow;
   HICON hMainIcon;
   HMENU hSystemMenu;
-  DWORD dwStyle = WS_OVERLAPPED | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | 
+  DWORD dwStyle = WS_OVERLAPPED | WS_CLIPCHILDREN | WS_CLIPSIBLINGS |
                   WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
   BITMAP BitmapInfo;
 
@@ -190,14 +190,14 @@ WinMain(HINSTANCE hInst,
 			  0,
 			  hInstance,
 			  NULL);
-  
+
   hSystemMenu = GetSystemMenu(hwndMain, FALSE);
   if(hSystemMenu)
   {
     RemoveMenu(hSystemMenu, SC_SIZE, MF_BYCOMMAND);
     RemoveMenu(hSystemMenu, SC_MAXIMIZE, MF_BYCOMMAND);
   }
-  
+
   ShowWindow(hwndMain, nCmdShow);
   UpdateWindow(hwndMain);
 
@@ -354,7 +354,7 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
     {
       hTopicBitmap[i] = LoadBitmap (hInstance, MAKEINTRESOURCE(IDB_TOPICBITMAP0+i));
     }
-  
+
   ScreenDC = GetWindowDC(hWnd);
   hdcMem = CreateCompatibleDC (ScreenDC);
   ReleaseDC(hWnd, ScreenDC);

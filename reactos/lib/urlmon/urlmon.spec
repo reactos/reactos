@@ -33,7 +33,7 @@
 @ stdcall -private DllRegisterServerEx() URLMON_DllRegisterServerEx
 @ stdcall -private DllUnregisterServer() URLMON_DllUnregisterServer
 @ stdcall Extract(long ptr) cabinet.Extract
-@ stub FaultInIEFeature
+@ stdcall FaultInIEFeature(long ptr ptr long)
 @ stub FindMediaType
 @ stub FindMediaTypeClass
 @ stdcall FindMimeFromData(long ptr ptr long ptr long ptr long)

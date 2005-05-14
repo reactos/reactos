@@ -12,10 +12,10 @@
  *                  Created 01/11/98
  *                  RDD (30/09/2002) implemented many function bodies to call serial driver.
  *                  KJK (11/02/2003) implemented BuildCommDCB & BuildCommDCBAndTimeouts
- *                  ST  (21/03/2005) implemented GetCommProperties 
+ *                  ST  (21/03/2005) implemented GetCommProperties
  *                  ST  (24/03/2005) implemented ClearCommError. Corrected many functions.
  *                  ST  (05/04/2005) implemented CommConfigDialog
- *                                      
+ *
  */
 
 #include <k32.h>
@@ -131,7 +131,7 @@ COMMDCB_ParseCharFlag(LPWSTR *StrTail,
     /* premature end of string, or the character is whitespace */
     if(!wcFlag || iswspace(wcFlag))
         return FALSE;
- 
+
     /* uppercase the character for case-insensitive search */
     wcFlag = towupper(wcFlag);
 
@@ -149,7 +149,7 @@ COMMDCB_ParseCharFlag(LPWSTR *StrTail,
         if(nComparison == 0)
         {
             *Value = Flags[nCurFlag].Value;
-    
+
             return TRUE;
         }
         else if(nComparison < 0)
@@ -238,7 +238,7 @@ COMMDCB_ParseInt(LPWSTR *StrTail,
 {
     LPWSTR pwcPrevTail = *StrTail;
     DWORD nValue = wcstoul(*StrTail, StrTail, 10);
- 
+
     /* no character was consumed: failure */
     if(pwcPrevTail == *StrTail)
         return FALSE;
@@ -253,7 +253,7 @@ COMMDCB_ParseInt(LPWSTR *StrTail,
 COMMDCB_PARAM_HANDLER(baud)
 {
     DWORD nValue;
- 
+
     (void)Timeouts;
 
     /* parse the baudrate */
@@ -327,7 +327,7 @@ COMMDCB_PARAM_HANDLER(data)
     /* value out of range: failure */
     if(nValue < 5 || nValue > 8)
         return FALSE;
-  
+
     /* success */
     Dcb->ByteSize = nValue;
     return TRUE;
@@ -366,7 +366,7 @@ COMMDCB_PARAM_HANDLER(dtr)
 COMMDCB_PARAM_HANDLER(idsr)
 {
     BOOL bValue;
- 
+
     (void)Timeouts;
     (void)StopBitsSet;
 
@@ -711,7 +711,7 @@ BuildCommDCBAndTimeoutsA(LPCSTR lpDef,
     UNICODE_STRING wstrDef;
 
     RtlInitAnsiString(&strDef, (LPSTR)lpDef);
- 
+
     Status = RtlAnsiStringToUnicodeString(&wstrDef, &strDef, TRUE);
 
     if(!NT_SUCCESS(Status))
@@ -719,11 +719,11 @@ BuildCommDCBAndTimeoutsA(LPCSTR lpDef,
         SetLastErrorByStatus(Status);
         return FALSE;
     }
- 
+
     bRetVal = BuildCommDCBAndTimeoutsW(wstrDef.Buffer, lpDCB, lpCommTimeouts);
 
     RtlFreeUnicodeString(&wstrDef);
- 
+
     return bRetVal;
 }
 
@@ -757,7 +757,7 @@ STDCALL
 ClearCommBreak(HANDLE hFile)
 {
     DWORD dwBytesReturned;
-    return DeviceIoControl(hFile, IOCTL_SERIAL_SET_BREAK_OFF, 
+    return DeviceIoControl(hFile, IOCTL_SERIAL_SET_BREAK_OFF,
                         NULL, 0, NULL, 0, &dwBytesReturned, NULL);
 }
 
@@ -772,15 +772,15 @@ ClearCommError(HANDLE hFile, LPDWORD lpErrors, LPCOMSTAT lpComStat)
 	BOOL status = FALSE;
 	DWORD dwBytesReturned;
         SERIAL_STATUS SerialStatus;
-        
-        status = DeviceIoControl(hFile, IOCTL_SERIAL_GET_COMMSTATUS, NULL, 0, 
+
+        status = DeviceIoControl(hFile, IOCTL_SERIAL_GET_COMMSTATUS, NULL, 0,
                         &SerialStatus, sizeof(SERIAL_STATUS), &dwBytesReturned, NULL);
-        
+
         if(!NT_SUCCESS(status))
         {
             return status;
         }
-        
+
         if(lpErrors)
         {
             *lpErrors = 0;
@@ -795,11 +795,11 @@ ClearCommError(HANDLE hFile, LPDWORD lpErrors, LPCOMSTAT lpComStat)
             if(SerialStatus.Errors & SERIAL_ERROR_PARITY)
                 *lpErrors |= CE_RXPARITY;
         }
-        
-	if (lpComStat) 
+
+	if (lpComStat)
         {
             ZeroMemory(lpComStat, sizeof(COMSTAT));
-            
+
             if(SerialStatus.HoldReasons & SERIAL_TX_WAITING_FOR_CTS)
                 lpComStat->fCtsHold = TRUE;
             if(SerialStatus.HoldReasons & SERIAL_TX_WAITING_FOR_DSR)
@@ -810,10 +810,10 @@ ClearCommError(HANDLE hFile, LPDWORD lpErrors, LPCOMSTAT lpComStat)
                 lpComStat->fXoffHold = TRUE;
             if(SerialStatus.HoldReasons & SERIAL_TX_WAITING_XOFF_SENT)
                 lpComStat->fXoffSent = TRUE;
-            
+
             if(SerialStatus.EofReceived)
                 lpComStat->fEof = TRUE;
-            
+
             if(SerialStatus.WaitForImmediate)
                 lpComStat->fTxim = TRUE;
 
@@ -833,18 +833,18 @@ CommConfigDialogA(LPCSTR lpszName, HWND hWnd, LPCOMMCONFIG lpCC)
 {
 	PWCHAR NameW;
 	BOOL result;
-	
+
 	/* don't use the static thread buffer so operations in serialui
 	   don't overwrite the string */
 	if(!(NameW = FilenameA2W(lpszName, TRUE)))
 	{
 		return FALSE;
 	}
-	
+
 	result = CommConfigDialogW(NameW, hWnd, lpCC);
 
 	RtlFreeHeap(RtlGetProcessHeap(), 0, NameW);
-	
+
 	return result;
 }
 
@@ -859,23 +859,23 @@ CommConfigDialogW(LPCWSTR lpszName, HWND hWnd, LPCOMMCONFIG lpCC)
 	BOOL (STDCALL *drvCommDlgW)(LPCWSTR, HWND, LPCOMMCONFIG);
 	HMODULE hSerialuiDll;
 	BOOL result;
-	
+
 	//FIXME: Get dll name from registry. (setupapi needed)
 	if(!(hSerialuiDll = LoadLibraryW(L"serialui.dll")))
 	{
 		DPRINT("CommConfigDialogW: serialui.dll not found.\n");
 		return FALSE;
 	}
-	
+
 	drvCommDlgW = GetProcAddress(hSerialuiDll, "drvCommConfigDialogW");
-	
+
 	if(!drvCommDlgW)
 	{
 		DPRINT("CommConfigDialogW: serialui does not export drvCommConfigDialogW\n");
 		FreeLibrary(hSerialuiDll);
 		return FALSE;
 	}
-	
+
 	result = drvCommDlgW(lpszName, hWnd, lpCC);
 	FreeLibrary(hSerialuiDll);
 	return result;
@@ -893,28 +893,28 @@ EscapeCommFunction(HANDLE hFile, DWORD dwFunc)
 	DWORD dwBytesReturned;
 
 	switch (dwFunc) {
-    case CLRDTR: // Clears the DTR (data-terminal-ready) signal. 
+    case CLRDTR: // Clears the DTR (data-terminal-ready) signal.
         result = DeviceIoControl(hFile, IOCTL_SERIAL_CLR_DTR, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
 		break;
-    case CLRRTS: // Clears the RTS (request-to-send) signal. 
+    case CLRRTS: // Clears the RTS (request-to-send) signal.
         result = DeviceIoControl(hFile, IOCTL_SERIAL_CLR_RTS, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
 		break;
-    case SETDTR: // Sends the DTR (data-terminal-ready) signal. 
+    case SETDTR: // Sends the DTR (data-terminal-ready) signal.
         result = DeviceIoControl(hFile, IOCTL_SERIAL_SET_DTR, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
 		break;
-    case SETRTS: // Sends the RTS (request-to-send) signal. 
+    case SETRTS: // Sends the RTS (request-to-send) signal.
         result = DeviceIoControl(hFile, IOCTL_SERIAL_SET_RTS, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
 		break;
-    case SETXOFF: // Causes transmission to act as if an XOFF character has been received. 
+    case SETXOFF: // Causes transmission to act as if an XOFF character has been received.
         result = DeviceIoControl(hFile, IOCTL_SERIAL_SET_XOFF, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
 		break;
-    case SETXON: // Causes transmission to act as if an XON character has been received. 
+    case SETXON: // Causes transmission to act as if an XON character has been received.
         result = DeviceIoControl(hFile, IOCTL_SERIAL_SET_XON, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
 		break;
-    case SETBREAK: // Suspends character transmission and places the transmission line in a break state until the ClearCommBreak function is called (or EscapeCommFunction is called with the CLRBREAK extended function code). The SETBREAK extended function code is identical to the SetCommBreak function. Note that this extended function does not flush data that has not been transmitted. 
+    case SETBREAK: // Suspends character transmission and places the transmission line in a break state until the ClearCommBreak function is called (or EscapeCommFunction is called with the CLRBREAK extended function code). The SETBREAK extended function code is identical to the SetCommBreak function. Note that this extended function does not flush data that has not been transmitted.
         result = DeviceIoControl(hFile, IOCTL_SERIAL_SET_BREAK_ON, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
 		break;
-    case CLRBREAK: // Restores character transmission and places the transmission line in a nonbreak state. The CLRBREAK extended function code is identical to the ClearCommBreak function. 
+    case CLRBREAK: // Restores character transmission and places the transmission line in a nonbreak state. The CLRBREAK extended function code is identical to the ClearCommBreak function.
         result = DeviceIoControl(hFile, IOCTL_SERIAL_SET_BREAK_OFF, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
 		break;
 	default:
@@ -946,7 +946,7 @@ STDCALL
 GetCommMask(HANDLE hFile, LPDWORD lpEvtMask)
 {
 	DWORD dwBytesReturned;
-        return DeviceIoControl(hFile, IOCTL_SERIAL_GET_WAIT_MASK, 
+        return DeviceIoControl(hFile, IOCTL_SERIAL_GET_WAIT_MASK,
 		NULL, 0, lpEvtMask, sizeof(DWORD), &dwBytesReturned, NULL);
 }
 
@@ -973,7 +973,7 @@ STDCALL
 GetCommProperties(HANDLE hFile, LPCOMMPROP lpCommProp)
 {
 	DWORD dwBytesReturned;
-	return DeviceIoControl(hFile, IOCTL_SERIAL_GET_PROPERTIES, 0, 0, 
+	return DeviceIoControl(hFile, IOCTL_SERIAL_GET_PROPERTIES, 0, 0,
 		lpCommProp, sizeof(COMMPROP), &dwBytesReturned, 0);
 }
 
@@ -1001,7 +1001,7 @@ GetCommState(HANDLE hFile, LPDCB lpDCB)
 	}
 
 	lpDCB->DCBlength = sizeof(DCB);
-	
+
 	/* FIXME: need to fill following fields (1 bit):
 	 * fBinary: binary mode, no EOF check
 	 * fParity: enable parity checking
@@ -1100,10 +1100,10 @@ GetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
 	if (lpCommTimeouts == NULL) {
 		return FALSE;
 	}
-        
+
 	return DeviceIoControl(hFile, IOCTL_SERIAL_GET_TIMEOUTS,
-							 NULL, 0, 
-							 lpCommTimeouts, sizeof(COMMTIMEOUTS), 
+							 NULL, 0,
+							 lpCommTimeouts, sizeof(COMMTIMEOUTS),
 							 &dwBytesReturned, NULL);
 }
 
@@ -1141,7 +1141,7 @@ PurgeComm(HANDLE hFile, DWORD dwFlags)
 {
 	DWORD dwBytesReturned;
 
-        return DeviceIoControl(hFile, IOCTL_SERIAL_PURGE, 
+        return DeviceIoControl(hFile, IOCTL_SERIAL_PURGE,
 		&dwFlags, sizeof(DWORD), NULL, 0, &dwBytesReturned, NULL);
 }
 
@@ -1180,7 +1180,7 @@ SetCommMask(HANDLE hFile, DWORD dwEvtMask)
 {
 	DWORD dwBytesReturned;
 
-        return DeviceIoControl(hFile, IOCTL_SERIAL_SET_WAIT_MASK, 
+        return DeviceIoControl(hFile, IOCTL_SERIAL_SET_WAIT_MASK,
 		&dwEvtMask, sizeof(DWORD), NULL, 0, &dwBytesReturned, NULL);
 }
 
@@ -1330,7 +1330,7 @@ SetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
 	Timeouts.ReadTotalTimeoutConstant = lpCommTimeouts->ReadTotalTimeoutConstant;
 	Timeouts.WriteTotalTimeoutMultiplier = lpCommTimeouts->WriteTotalTimeoutMultiplier;
 	Timeouts.WriteTotalTimeoutConstant = lpCommTimeouts->WriteTotalTimeoutConstant;
-	
+
         return DeviceIoControl(hFile, IOCTL_SERIAL_SET_TIMEOUTS,
 		&Timeouts, sizeof(Timeouts), NULL, 0, &dwBytesReturned, NULL);
 }
@@ -1402,7 +1402,7 @@ WaitCommEvent(HANDLE hFile, LPDWORD lpEvtMask, LPOVERLAPPED lpOverlapped)
 	if (lpEvtMask == NULL) {
 		return FALSE;
 	}
-        
+
 	return DeviceIoControl(hFile, IOCTL_SERIAL_WAIT_ON_MASK,
 		NULL, 0, lpEvtMask, sizeof(DWORD), &dwBytesReturned, lpOverlapped);
 }

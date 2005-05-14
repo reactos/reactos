@@ -28,10 +28,7 @@
 
 static VOID ColorHelp (VOID)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-
-	LoadString(GetModuleHandle(NULL), STRING_COLOR_HELP1, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPuts(szMsg);
+	ConOutResPuts(STRING_COLOR_HELP1);
 }
 
 
@@ -40,12 +37,11 @@ VOID SetScreenColor (WORD wColor, BOOL bFill)
 	DWORD dwWritten;
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	COORD coPos;
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
+
 
 	if ((wColor & 0xF) == (wColor &0xF0) >> 4)
 	{
-		LoadString(GetModuleHandle(NULL), STRING_COLOR_ERROR1, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPuts(szMsg);
+		ConErrResPuts(STRING_COLOR_ERROR1);
 	}
 	else
 	{
@@ -88,20 +84,41 @@ INT CommandColor (LPTSTR first, LPTSTR rest)
 		SetScreenColor (wColor, TRUE);
 		return 0;
 	}
+    
+	
+	if ( _tcslen(&rest[0])==1)
+	{	 
+	  if ( (_tcscmp(&rest[0], _T("0")) >=0 ) && (_tcscmp(&rest[0], _T("9")) <=0 ) )
+	  {
+        SetConsoleTextAttribute (hConsole, (WORD)_ttoi(rest));
+		return 0;
+	  }	 
+	  else if ( (_tcscmp(&rest[0], _T("a")) >=0 ) && (_tcscmp(&rest[0], _T("f")) <=0 ) )
+	  {	   
+       SetConsoleTextAttribute (hConsole, (WORD) (rest[0] + 10) -  _T('a') );
+	   return 0;
+	  }
+      else if ( (_tcscmp(&rest[0], _T("A")) >=0 ) && (_tcscmp(&rest[0], _T("F")) <=0 ) )
+	  {	   
+       SetConsoleTextAttribute (hConsole, (WORD) (rest[0] + 10) -  _T('A') );
+	   return 0;
+	  }
+	  ConErrResPuts(STRING_COLOR_ERROR2);
+	  return 1;
+	}
 
 	if (StringToColor(&wColor, &rest) == FALSE)
-	{
-		LoadString(GetModuleHandle(NULL), STRING_COLOR_ERROR2, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPuts(szMsg);
+	{	
+		ConErrResPuts(STRING_COLOR_ERROR2);
 		return 1;
 	}
 
-	LoadString(GetModuleHandle(NULL), STRING_COLOR_ERROR3, szMsg, RC_STRING_MAX_SIZE);
+	LoadString(CMD_ModuleHandle, STRING_COLOR_ERROR3, szMsg, RC_STRING_MAX_SIZE);
 	ConErrPrintf(szMsg, wColor);
 
 	if ((wColor & 0xF) == (wColor &0xF0) >> 4)
 	{
-		LoadString(GetModuleHandle(NULL), STRING_COLOR_ERROR4, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_COLOR_ERROR4, szMsg, RC_STRING_MAX_SIZE);
 		ConErrPrintf(szMsg, wColor);
 		return 1;
 	}

@@ -25,7 +25,7 @@
  *
  * This code is derived from the Stanford/CMU enet packet filter,
  * (net/enet.c) distributed as part of 4.3BSD, and code contributed
- * to Berkeley by Steven McCanne and Van Jacobson both of Lawrence 
+ * to Berkeley by Steven McCanne and Van Jacobson both of Lawrence
  * Berkeley Laboratory.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -106,7 +106,7 @@ uint32 bpf_filter_init(register struct bpf_insn *pc, MEM_TYPE *mem_ex, TME_CORE 
 		case BPF_LD|BPF_MEM:
 			A = mem[pc->k];
 			continue;
-			
+
 		case BPF_LDX|BPF_MEM:
 			X = mem[pc->k];
 			continue;
@@ -232,7 +232,7 @@ uint32 bpf_filter_init(register struct bpf_insn *pc, MEM_TYPE *mem_ex, TME_CORE 
                 :"=a"(X),"=c"(tmp): );
 #endif
 			continue;
-			
+
 		case BPF_LD|BPF_MEM_EX_IND|BPF_B:
 			k = X + pc->k;
 			if ((int32)k>= (int32)mem_ex->size) {
@@ -538,25 +538,25 @@ uint32 bpf_filter_init(register struct bpf_insn *pc, MEM_TYPE *mem_ex, TME_CORE 
 		case BPF_ALU|BPF_ADD|BPF_X:
 			A += X;
 			continue;
-			
+
 		case BPF_ALU|BPF_SUB|BPF_X:
 			A -= X;
 			continue;
-			
+
 		case BPF_ALU|BPF_MUL|BPF_X:
 			A *= X;
 			continue;
-			
+
 		case BPF_ALU|BPF_DIV|BPF_X:
 			if (X == 0)
 				return 0;
 			A /= X;
 			continue;
-			
+
 		case BPF_ALU|BPF_AND|BPF_X:
 			A &= X;
 			continue;
-			
+
 		case BPF_ALU|BPF_OR|BPF_X:
 			A |= X;
 			continue;
@@ -572,23 +572,23 @@ uint32 bpf_filter_init(register struct bpf_insn *pc, MEM_TYPE *mem_ex, TME_CORE 
 		case BPF_ALU|BPF_ADD|BPF_K:
 			A += pc->k;
 			continue;
-			
+
 		case BPF_ALU|BPF_SUB|BPF_K:
 			A -= pc->k;
 			continue;
-			
+
 		case BPF_ALU|BPF_MUL|BPF_K:
 			A *= pc->k;
 			continue;
-			
+
 		case BPF_ALU|BPF_DIV|BPF_K:
 			A /= pc->k;
 			continue;
-			
+
 		case BPF_ALU|BPF_AND|BPF_K:
 			A &= pc->k;
 			continue;
-			
+
 		case BPF_ALU|BPF_OR|BPF_K:
 			A |= pc->k;
 			continue;
@@ -620,7 +620,7 @@ uint32 bpf_filter_init(register struct bpf_insn *pc, MEM_TYPE *mem_ex, TME_CORE 
 		case BPF_MISC|BPF_TME|BPF_LOOKUP:
 			j=lookup_frontend(mem_ex,tme,pc->k,time_ref);
 			if (j==TME_ERROR)
-				return 0;	
+				return 0;
 			pc += (j == TME_TRUE) ? pc->jt : pc->jf;
 			continue;
 
@@ -633,7 +633,7 @@ uint32 bpf_filter_init(register struct bpf_insn *pc, MEM_TYPE *mem_ex, TME_CORE 
 			if (init_tme_block(tme,pc->k)==TME_ERROR)
 				return 0;
 			continue;
-			
+
 		case BPF_MISC|BPF_TME|BPF_VALIDATE:
 			if (validate_tme_block(mem_ex,tme,A,pc->k)==TME_ERROR)
 				return 0;
@@ -680,7 +680,7 @@ uint32 bpf_filter_init(register struct bpf_insn *pc, MEM_TYPE *mem_ex, TME_CORE 
 		case BPF_MISC|BPF_TME|BPF_SET_AUTODELETION:
 			set_autodeletion(&tme->block_data[tme->working],pc->k);
 			continue;
-			
+
 /* END TME INSTRUCTIONS */
 
 		}

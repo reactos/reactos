@@ -97,6 +97,7 @@
 #define PT_FOLDER1	0x30
 #define PT_FOLDER	0x31
 #define PT_VALUE	0x32
+#define PT_VALUEW       0x34
 #define PT_WORKGRP	0x41
 #define PT_COMP		0x42
 #define PT_NETPROVIDER  0x46
@@ -142,6 +143,11 @@ typedef struct tagFileStruct
     The second the dos name when needed or just 0x00 */
 } FileStruct;
 
+typedef struct tagValueW
+{
+    WCHAR name[1];
+} ValueWStruct;
+
 typedef struct tagPIDLDATA
 {	PIDLTYPE type;			/*00*/
 	union
@@ -159,6 +165,7 @@ typedef struct tagPIDLDATA
 	    CHAR szName[1];	/*06*/ /* terminated by 0x00 0x00 */
 	  } htmlhelp;
 	  struct tagPIDLCPanelStruct cpanel;
+          struct tagValueW valueW;
 	}u;
 } PIDLDATA, *LPPIDLDATA;
 #include "poppack.h"

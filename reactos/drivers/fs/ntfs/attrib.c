@@ -23,7 +23,7 @@
  * FILE:             drivers/fs/ntfs/attrib.c
  * PURPOSE:          NTFS filesystem driver
  * PROGRAMMER:       Eric Kohl
- * Updated	by       Valentin Verkhovsky  2003/09/12 
+ * Updated	by       Valentin Verkhovsky  2003/09/12
  */
 
 /* INCLUDES *****************************************************************/
@@ -55,7 +55,7 @@ RunLCN(PUCHAR run)
 	UCHAR n2 = (*run >> 4) & 0x0f;
 	LONGLONG lcn = (n2 == 0) ? 0 : (CHAR)(run[n1 + n2]);
 	LONG i = 0;
-	
+
 	for (i = n1 +n2 - 1; i > n1; i--)
 		lcn = (lcn << 8) + run[i];
 	return lcn;

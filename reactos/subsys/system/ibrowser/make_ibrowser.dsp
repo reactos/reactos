@@ -158,10 +158,6 @@ CFG=make_ibrowser - Win32 bjam
 
 # Begin Source File
 
-SOURCE=.\Jamfile
-# End Source File
-# Begin Source File
-
 SOURCE=.\Makefile
 # End Source File
 # Begin Source File

@@ -76,7 +76,7 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
 
     case CMD_SEARCH:           DIALOG_Search(); break;
     case CMD_SEARCH_NEXT:      DIALOG_SearchNext(); break;
-                               
+
     case CMD_WRAP:             DIALOG_EditWrap(); break;
     case CMD_FONT:             DIALOG_SelectFont(); break;
 
@@ -206,7 +206,7 @@ static void HandleCommandLine(LPWSTR cmdline)
 {
     WCHAR delimiter;
     int opt_print=0;
-    
+
     /* skip white space */
     while (*cmdline == ' ') cmdline++;
 

@@ -18,10 +18,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntos.h>
+#include "rtl.h"
 
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <debug.h>
 
 /* FUNCTIONS ***************************************************************/
 
@@ -43,7 +43,7 @@ NTSTATUS STDCALL RtlCreateUserThread
 )
 {
  OBJECT_ATTRIBUTES oaThreadAttribs;
- 
+
  InitializeObjectAttributes
  (
   &oaThreadAttribs,
@@ -52,7 +52,7 @@ NTSTATUS STDCALL RtlCreateUserThread
   NULL,
   SecurityDescriptor
  );
- 
+
  return RtlRosCreateUserThread
  (
   ProcessHandle,

@@ -1,5 +1,5 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/i386/i386-dis.c
@@ -19,7 +19,7 @@ typedef enum bfd_flavour
 } bfd_flavour;
 typedef enum bfd_architecture
 {
-  bfd_arch_i386,  
+  bfd_arch_i386,
 } bfd_arch;
 typedef unsigned int bfd_vma;
 typedef unsigned char bfd_byte;

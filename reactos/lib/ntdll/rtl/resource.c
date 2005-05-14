@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/ntdll/rtl/resource.c
  * PURPOSE:         Resource (multiple-reader-single-writer lock) functions
- * PROGRAMMER:      
+ * PROGRAMMER:
  * UPDATE HISTORY:
  *                  Created 24/05/2001
  *
@@ -35,13 +35,13 @@ VOID STDCALL
 RtlInitializeResource(PRTL_RESOURCE Resource)
 {
    NTSTATUS Status;
-   
+
    Status = RtlInitializeCriticalSection(&Resource->Lock);
    if (!NT_SUCCESS(Status))
      {
 	RtlRaiseStatus(Status);
      }
-   
+
    Status = NtCreateSemaphore(&Resource->SharedSemaphore,
 			      SEMAPHORE_ALL_ACCESS,
 			      NULL,
@@ -52,7 +52,7 @@ RtlInitializeResource(PRTL_RESOURCE Resource)
 	RtlRaiseStatus(Status);
      }
    Resource->SharedWaiters = 0;
-   
+
    Status = NtCreateSemaphore(&Resource->ExclusiveSemaphore,
 			      SEMAPHORE_ALL_ACCESS,
 			      NULL,
@@ -63,7 +63,7 @@ RtlInitializeResource(PRTL_RESOURCE Resource)
 	RtlRaiseStatus(Status);
      }
    Resource->ExclusiveWaiters = 0;
-   
+
    Resource->NumberActive = 0;
    Resource->OwningThread = NULL;
    Resource->TimeoutBoost = 0; /* no info on this one, default value is 0 */
@@ -158,7 +158,7 @@ start:
 	     retVal = TRUE;
 	     goto done;
 	  }
-	
+
 	if (Wait == TRUE)
 	  {
 	     Resource->SharedWaiters++;
@@ -190,11 +190,11 @@ VOID STDCALL
 RtlConvertExclusiveToShared(PRTL_RESOURCE Resource)
 {
    RtlEnterCriticalSection(&Resource->Lock);
-   
+
    if (Resource->NumberActive == -1)
      {
 	Resource->OwningThread = NULL;
-   
+
 	if (Resource->SharedWaiters > 0)
 	  {
 	     ULONG n;
@@ -212,7 +212,7 @@ RtlConvertExclusiveToShared(PRTL_RESOURCE Resource)
 	     Resource->NumberActive = 1;
 	  }
      }
-   
+
    RtlLeaveCriticalSection(&Resource->Lock);
 }
 
@@ -224,9 +224,9 @@ VOID STDCALL
 RtlConvertSharedToExclusive(PRTL_RESOURCE Resource)
 {
    NTSTATUS Status;
-   
+
    RtlEnterCriticalSection(&Resource->Lock);
-   
+
    if (Resource->NumberActive == 1)
      {
 	Resource->OwningThread = NtCurrentTeb()->Cid.UniqueThread;
@@ -235,14 +235,14 @@ RtlConvertSharedToExclusive(PRTL_RESOURCE Resource)
    else
      {
 	Resource->ExclusiveWaiters++;
-   
+
 	RtlLeaveCriticalSection(&Resource->Lock);
 	Status = NtWaitForSingleObject(Resource->ExclusiveSemaphore,
 				       FALSE,
 				       NULL);
 	if (!NT_SUCCESS(Status))
 	   return;
-   
+
 	RtlEnterCriticalSection(&Resource->Lock);
 	Resource->OwningThread = NtCurrentTeb()->Cid.UniqueThread;
 	Resource->NumberActive = -1;

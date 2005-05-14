@@ -1892,7 +1892,7 @@ GetStringTypeW (
       { 0xFFE8, 0xFFEE, C3_HALFWIDTH },
       { 0xFFE8, 0xFFEE, C3_SYMBOL }
     };
-  
+
   if (-1 == Count)
     {
       Count = wcslen(Src) + 1;

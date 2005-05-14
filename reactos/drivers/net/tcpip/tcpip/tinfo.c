@@ -23,7 +23,7 @@ TDI_STATUS InfoTransportLayerTdiQueryEx( UINT InfoClass,
 	ULONG Temp = CL_TL_UDP;
 	return InfoCopyOut( (PCHAR)&Temp, sizeof(Temp), Buffer, BufferSize );
     }
-    
+
     return TDI_INVALID_REQUEST;
 }
 

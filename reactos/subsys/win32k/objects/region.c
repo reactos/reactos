@@ -409,7 +409,7 @@ static inline int xmemcheck(ROSRGNDATA *reg, PRECT *rect, PRECT *firstrect ) {
 
                 /* copy the rectangles */
                 COPY_RECTS(temp, *firstrect, reg->rdh.nCount);
-                
+
 		reg->rdh.nRgnSize *= 2;
 		if (*firstrect != &reg->rdh.rcBound)
 		    ExFreePool( *firstrect );
@@ -723,7 +723,7 @@ HRGN FASTCALL REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lp
   {
     return NULL;
   }
-  
+
   objSrc = RGNDATA_LockRgn(hSrc);
   if(objSrc == NULL)
   {
@@ -743,7 +743,7 @@ HRGN FASTCALL REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lp
 
   RGNDATA_UnlockRgn(hSrc);
   RGNDATA_UnlockRgn(hDst);
-  
+
   return hRet;
 }
 
@@ -1754,7 +1754,7 @@ BOOL FASTCALL REGION_CreateFrameRgn(HRGN hDest, HRGN hSrc, INT x, INT y)
    PROSRGNDATA srcObj, destObj;
    PRECT rc;
    ULONG i;
-  
+
    if (!(srcObj = (PROSRGNDATA)RGNDATA_LockRgn(hSrc)))
    {
       return FALSE;
@@ -1769,7 +1769,7 @@ BOOL FASTCALL REGION_CreateFrameRgn(HRGN hDest, HRGN hSrc, INT x, INT y)
       RGNDATA_UnlockRgn(hSrc);
       return FALSE;
    }
-  
+
    EMPTY_REGION(destObj);
    if (!REGION_CopyRegion(destObj, srcObj))
    {
@@ -1777,7 +1777,7 @@ BOOL FASTCALL REGION_CreateFrameRgn(HRGN hDest, HRGN hSrc, INT x, INT y)
       RGNDATA_UnlockRgn(hSrc);
       return FALSE;
    }
-  
+
    /* Original region moved to right */
    rc = (PRECT)srcObj->Buffer;
    for (i = 0; i < srcObj->rdh.nCount; i++)
@@ -1787,7 +1787,7 @@ BOOL FASTCALL REGION_CreateFrameRgn(HRGN hDest, HRGN hSrc, INT x, INT y)
       rc++;
    }
    REGION_IntersectRegion(destObj, destObj, srcObj);
-  
+
    /* Original region moved to left */
    rc = (PRECT)srcObj->Buffer;
    for (i = 0; i < srcObj->rdh.nCount; i++)
@@ -1797,7 +1797,7 @@ BOOL FASTCALL REGION_CreateFrameRgn(HRGN hDest, HRGN hSrc, INT x, INT y)
       rc++;
    }
    REGION_IntersectRegion(destObj, destObj, srcObj);
-  
+
    /* Original region moved down */
    rc = (PRECT)srcObj->Buffer;
    for (i = 0; i < srcObj->rdh.nCount; i++)
@@ -1809,7 +1809,7 @@ BOOL FASTCALL REGION_CreateFrameRgn(HRGN hDest, HRGN hSrc, INT x, INT y)
       rc++;
    }
    REGION_IntersectRegion(destObj, destObj, srcObj);
-  
+
    /* Original region moved up */
    rc = (PRECT)srcObj->Buffer;
    for (i = 0; i < srcObj->rdh.nCount; i++)
@@ -1819,7 +1819,7 @@ BOOL FASTCALL REGION_CreateFrameRgn(HRGN hDest, HRGN hSrc, INT x, INT y)
       rc++;
    }
    REGION_IntersectRegion(destObj, destObj, srcObj);
-  
+
    /* Restore the original region */
    rc = (PRECT)srcObj->Buffer;
    for (i = 0; i < srcObj->rdh.nCount; i++)
@@ -1829,7 +1829,7 @@ BOOL FASTCALL REGION_CreateFrameRgn(HRGN hDest, HRGN hSrc, INT x, INT y)
       rc++;
    }
    REGION_SubtractRegion(destObj, srcObj, destObj);
-  
+
    RGNDATA_UnlockRgn(hDest);
    RGNDATA_UnlockRgn(hSrc);
    return TRUE;
@@ -1956,7 +1956,7 @@ NtGdiCombineRgn(HRGN  hDest,
 {
   INT result = ERROR;
   PROSRGNDATA destRgn, src1Rgn, src2Rgn;
-  
+
   destRgn = RGNDATA_LockRgn(hDest);
   if( destRgn )
     {
@@ -2029,14 +2029,14 @@ NtGdiCreateEllipticRgnIndirect(CONST PRECT Rect)
 {
   RECT SafeRect;
   NTSTATUS Status;
-  
+
   Status = MmCopyFromCaller(&SafeRect, Rect, sizeof(RECT));
   if(!NT_SUCCESS(Status))
   {
     SetLastNtError(Status);
     return NULL;
   }
-  
+
   return NtGdiCreateRoundRectRgn(SafeRect.left, SafeRect.top, SafeRect.right, SafeRect.bottom,
                                  SafeRect.right - SafeRect.left, SafeRect.bottom - SafeRect.top);
 }
@@ -2211,7 +2211,7 @@ NtGdiEqualRgn(HRGN  hSrcRgn1,
        	tRect1[i].right  != tRect2[i].right ||
        	tRect1[i].top    != tRect2[i].top ||
        	tRect1[i].bottom != tRect2[i].bottom)
-	   goto exit;;
+	   goto exit;
   }
   bRet = TRUE;
 
@@ -2251,7 +2251,7 @@ NtGdiExtCreateRegion(CONST XFORM *Xform,
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return NULL;
    }
-   
+
    Region = RGNDATA_LockRgn(hRgn);
    if (Region == NULL)
    {
@@ -2270,7 +2270,7 @@ NtGdiExtCreateRegion(CONST XFORM *Xform,
       NtGdiDeleteObject(hRgn);
       return NULL;
    }
-   
+
    RGNDATA_UnlockRgn(hRgn);
 
    return hRgn;
@@ -2312,7 +2312,7 @@ NtGdiFrameRgn(HDC hDC, HRGN  hRgn, HBRUSH  hBrush, INT  Width, INT  Height)
 {
   HRGN FrameRgn;
   BOOL Ret;
-  
+
   if(!(FrameRgn = NtGdiCreateRectRgn(0, 0, 0, 0)))
   {
     return FALSE;
@@ -2322,9 +2322,9 @@ NtGdiFrameRgn(HDC hDC, HRGN  hRgn, HBRUSH  hBrush, INT  Width, INT  Height)
     NtGdiDeleteObject(FrameRgn);
     return FALSE;
   }
-  
+
   Ret = NtGdiFillRgn(hDC, FrameRgn, hBrush);
-  
+
   NtGdiDeleteObject(FrameRgn);
   return Ret;
 }
@@ -2382,17 +2382,17 @@ NtGdiInvertRgn(HDC  hDC,
   PROSRGNDATA RgnData;
   ULONG i;
   PRECT rc;
-  
+
   if(!(RgnData = RGNDATA_LockRgn(hRgn)))
   {
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
   }
-  
+
   rc = (PRECT)RgnData->Buffer;
   for(i = 0; i < RgnData->rdh.nCount; i++)
   {
-    
+
     if(!NtGdiPatBlt(hDC, rc->left, rc->top, rc->right - rc->left, rc->bottom - rc->top, DSTINVERT))
     {
       RGNDATA_UnlockRgn(hRgn);
@@ -2400,7 +2400,7 @@ NtGdiInvertRgn(HDC  hDC,
     }
     rc++;
   }
-  
+
   RGNDATA_UnlockRgn(hRgn);
   return TRUE;
 }
@@ -2497,7 +2497,7 @@ NtGdiPaintRgn(HDC  hDC,
   pBrush = BRUSHOBJ_LockBrush(dc->w.hBrush);
   ASSERT(pBrush);
   IntGdiInitBrushInstance(&BrushInst, pBrush, dc->XlateBrush);
-  
+
   BrushOrigin.x = dc->w.brushOrgX;
   BrushOrigin.y = dc->w.brushOrgY;
   BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
@@ -2529,7 +2529,7 @@ NtGdiPtInRegion(HRGN  hRgn,
 
   if(!(rgn = RGNDATA_LockRgn(hRgn) ) )
 	  return FALSE;
-  
+
   if(rgn->rdh.nCount > 0 && INRECT(rgn->rdh.rcBound, X, Y)){
     r = (PRECT) rgn->Buffer;
     for(i = 0; i < rgn->rdh.nCount; i++) {
@@ -2560,7 +2560,7 @@ UnsafeIntRectInRegion(PROSRGNDATA Rgn,
       if (pCurRect->top >= rc->bottom) break;    // too far down
       if (pCurRect->right <= rc->left) continue; // not far enough over yet
       if (pCurRect->left >= rc->right) continue;
-      
+
       return TRUE;
     }
   }
@@ -2575,7 +2575,7 @@ NtGdiRectInRegion(HRGN  hRgn,
   PROSRGNDATA Rgn;
   RECT rc;
   BOOL Ret;
-  
+
   if(!(Rgn = RGNDATA_LockRgn(hRgn)))
   {
     return ERROR;
@@ -2587,7 +2587,7 @@ NtGdiRectInRegion(HRGN  hRgn,
       DPRINT1("NtGdiRectInRegion: bogus rc\n");
       return ERROR;
     }
-  
+
   Ret = UnsafeIntRectInRegion(Rgn, &rc);
   RGNDATA_UnlockRgn(hRgn);
   return Ret;
@@ -2634,7 +2634,7 @@ NtGdiUnionRectWithRgn(HRGN hDest, CONST PRECT UnsafeRect)
 {
   RECT SafeRect;
   PROSRGNDATA Rgn;
-  
+
   if(!(Rgn = (PROSRGNDATA)RGNDATA_LockRgn(hDest)))
   {
      SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -2647,7 +2647,7 @@ NtGdiUnionRectWithRgn(HRGN hDest, CONST PRECT UnsafeRect)
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return NULL;
     }
-  
+
   UnsafeIntUnionRectWithRgn(Rgn, &SafeRect);
   RGNDATA_UnlockRgn(hDest);
   return hDest;
@@ -2939,7 +2939,7 @@ static int FASTCALL REGION_PtsToRegion(int numFullPtBlocks, int iCurPtBlock,
         ExFreePool(reg->Buffer);
     }
     reg->Buffer = temp;
-    
+
     reg->rdh.nCount = numRects;
     CurPtBlock = FirstPtBlock;
     rects = reg->Buffer - 1;
@@ -3292,27 +3292,27 @@ NtGdiCreatePolygonRgn(CONST PPOINT  pt,
    POINT *SafePoints;
    NTSTATUS Status;
    HRGN hRgn;
-   
-   
+
+
    if (pt == NULL || Count == 0 ||
        (PolyFillMode != WINDING && PolyFillMode != ALTERNATE))
    {
       /* Windows doesn't set a last error here */
       return (HRGN)0;
    }
-   
+
    if (Count == 1)
    {
       /* can't create a region with only one point! */
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return (HRGN)0;
    }
-   
+
    if (Count == 2)
    {
       /* Windows creates an empty region! */
       ROSRGNDATA *rgn;
-      
+
       if(!(hRgn = RGNDATA_AllocRgn(1)))
       {
 	 return (HRGN)0;
@@ -3322,19 +3322,19 @@ NtGdiCreatePolygonRgn(CONST PPOINT  pt,
         NtGdiDeleteObject(hRgn);
 	return (HRGN)0;
       }
-      
+
       EMPTY_REGION(rgn);
-      
+
       RGNDATA_UnlockRgn(hRgn);
       return hRgn;
    }
-   
+
    if (!(SafePoints = ExAllocatePoolWithTag(PagedPool, Count * sizeof(POINT), TAG_REGION)))
    {
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return (HRGN)0;
    }
-   
+
    Status = MmCopyFromCaller(SafePoints, pt, Count * sizeof(POINT));
    if (!NT_SUCCESS(Status))
    {
@@ -3342,9 +3342,9 @@ NtGdiCreatePolygonRgn(CONST PPOINT  pt,
       SetLastNtError(Status);
       return (HRGN)0;
    }
-   
+
    hRgn = IntCreatePolyPolgonRgn(SafePoints, &Count, 1, PolyFillMode);
-   
+
    ExFreePool(SafePoints);
    return hRgn;
 }
@@ -3361,20 +3361,20 @@ NtGdiCreatePolyPolygonRgn(CONST PPOINT  pt,
    INT nPoints, nEmpty, nInvalid, i;
    HRGN hRgn;
    NTSTATUS Status;
-   
+
    if (pt == NULL || PolyCounts == NULL || Count == 0 ||
        (PolyFillMode != WINDING && PolyFillMode != ALTERNATE))
    {
       /* Windows doesn't set a last error here */
       return (HRGN)0;
    }
-   
+
    if (!(SafePolyCounts = ExAllocatePoolWithTag(PagedPool, Count * sizeof(INT), TAG_REGION)))
    {
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return (HRGN)0;
    }
-   
+
    Status = MmCopyFromCaller(SafePolyCounts, PolyCounts, Count * sizeof(INT));
    if (!NT_SUCCESS(Status))
    {
@@ -3382,7 +3382,7 @@ NtGdiCreatePolyPolygonRgn(CONST PPOINT  pt,
       SetLastNtError(Status);
       return (HRGN)0;
    }
-   
+
    /* validate poligons */
    nPoints = 0;
    nEmpty = 0;
@@ -3399,7 +3399,7 @@ NtGdiCreatePolyPolygonRgn(CONST PPOINT  pt,
       }
       nPoints += SafePolyCounts[i];
    }
-   
+
    if (nEmpty == Count)
    {
       /* if all polygon counts are zero, return without setting a last error code. */
@@ -3413,7 +3413,7 @@ NtGdiCreatePolyPolygonRgn(CONST PPOINT  pt,
      SetLastWin32Error(ERROR_INVALID_PARAMETER);
      return (HRGN)0;
    }
-   
+
    /* copy points */
    if (!(Safept = ExAllocatePoolWithTag(PagedPool, nPoints * sizeof(POINT), TAG_REGION)))
    {
@@ -3421,7 +3421,7 @@ NtGdiCreatePolyPolygonRgn(CONST PPOINT  pt,
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return (HRGN)0;
    }
-   
+
    Status = MmCopyFromCaller(Safept, pt, nPoints * sizeof(POINT));
    if (!NT_SUCCESS(Status))
    {
@@ -3430,10 +3430,10 @@ NtGdiCreatePolyPolygonRgn(CONST PPOINT  pt,
       SetLastNtError(Status);
       return (HRGN)0;
    }
-   
+
    /* now we're ready to calculate the region safely */
    hRgn = IntCreatePolyPolgonRgn(Safept, SafePolyCounts, Count, PolyFillMode);
-   
+
    ExFreePool(Safept);
    ExFreePool(SafePolyCounts);
    return hRgn;

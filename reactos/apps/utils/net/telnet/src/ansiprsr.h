@@ -10,7 +10,7 @@
 
 // added this color table to make things go faster (Paul Branann 5/8/98)
 enum Colors {BLACK=0, BLUE, GREEN, CYAN, RED, MAGENTA, YELLOW, WHITE};
-static const int ANSIColors[] = {BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE};
+extern const int ANSIColors[];
 
 // This should be greater than the largest conceivable window size
 // 200 should suffice
@@ -49,7 +49,7 @@ private:
 	void SaveCurY(int iY);
 
 	void resetTabStops();
-	
+
 	int iSavedCurX;
 	int iSavedCurY;
 	unsigned char iSavedAttributes;
@@ -77,7 +77,7 @@ public:
 	TANSIParser(TConsole &Console, KeyTranslator &RefKeyTrans,
 		TScroller &RefScroller, TNetwork &NetHandler, TCharmap &RefCharmap);
 	~TANSIParser();
-	
+
 	char* ParseBuffer(char* pszBuffer, char* pszBufferEnd);
 	static int StripBuffer(char* pszBuffer, char* pszBufferEnd, int width);
 };

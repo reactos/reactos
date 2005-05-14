@@ -54,7 +54,7 @@ InitWindowStationImpl(VOID)
    HANDLE WindowStationsDirectory;
    UNICODE_STRING UnicodeString;
    NTSTATUS Status;
-  
+
    /*
     * Create the '\Windows\WindowStations' directory
     */
@@ -81,14 +81,14 @@ CleanupWindowStationImpl(VOID)
 }
 
 /* OBJECT CALLBACKS  **********************************************************/
-                      
-NTSTATUS 
+
+NTSTATUS
 STDCALL
 IntWinStaObjectCreate(PVOID ObjectBody,
                       PVOID Parent,
                       PWSTR RemainingPath,
                       struct _OBJECT_ATTRIBUTES* ObjectAttributes)
-{    
+{
   PWINSTATION_OBJECT WinSta = (PWINSTATION_OBJECT)ObjectBody;
   UNICODE_STRING UnicodeString;
   NTSTATUS Status;
@@ -190,7 +190,7 @@ IntWinStaObjectFind(PVOID Object,
   return NULL;
 }
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 IntWinStaObjectParse(PVOID Object,
                      PVOID *NextObject,
@@ -288,7 +288,7 @@ IntGetFullWindowStationName(
    }
 
    return TRUE;
-}   
+}
 
 /*
  * IntValidateWindowStationHandle
@@ -308,7 +308,7 @@ IntValidateWindowStationHandle(
    PWINSTATION_OBJECT *Object)
 {
    NTSTATUS Status;
-  
+
    if (WindowStation == NULL)
    {
 //      DPRINT1("Invalid window station handle\n");
@@ -340,7 +340,7 @@ IntGetWindowStationObject(PWINSTATION_OBJECT Object)
       KernelMode,
       ExWindowStationObjectType,
       0);
-  
+
    return NT_SUCCESS(Status);
 }
 
@@ -360,7 +360,7 @@ IntInitializeDesktopGraphics(VOID)
       return FALSE;
     }
   DC_SetOwnership(ScreenDeviceContext, NULL);
-  
+
   NtUserAcquireOrReleaseInputOwnership(FALSE);
 
   /* Setup the cursor */
@@ -457,7 +457,7 @@ NtUserCreateWindowStation(
    /*
     * Try to open already existing window station
     */
-   
+
    DPRINT("Trying to open window station (%wZ)\n", &WindowStationName);
 
    /* Initialize ObjectAttributes for the window station object */
@@ -483,7 +483,7 @@ NtUserCreateWindowStation(
       ExFreePool(WindowStationName.Buffer);
       return (HWINSTA)WindowStation;
    }
-  
+
    /*
     * No existing window station found, try to create new one
     */
@@ -550,9 +550,9 @@ NtUserCreateWindowStation(
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       return 0;
    }
-  
+
    InitHotKeys(WindowStationObject);
-  
+
    ExInitializeFastMutex(&CurInfo->CursorMutex);
    CurInfo->Enabled = FALSE;
    CurInfo->ButtonsDown = 0;
@@ -560,21 +560,21 @@ NtUserCreateWindowStation(
    CurInfo->LastBtnDown = 0;
    CurInfo->CurrentCursorObject = NULL;
    CurInfo->ShowingCursor = 0;
-  
+
    /* FIXME: Obtain the following information from the registry */
    CurInfo->SwapButtons = FALSE;
    CurInfo->DblClickSpeed = 500;
    CurInfo->DblClickWidth = 4;
    CurInfo->DblClickHeight = 4;
-   
+
    WindowStationObject->SystemCursor = CurInfo;
-  
+
    if (!IntSetupCurIconHandles(WindowStationObject))
    {
        DPRINT1("Setting up the Cursor/Icon Handle table failed!\n");
        /* FIXME: Complain more loudly? */
    }
-  
+
    DPRINT("Window station successfully created (%wZ)\n", &WindowStationName);
    ExFreePool(WindowStationName.Buffer);
 
@@ -614,7 +614,7 @@ NtUserOpenWindowStation(
    HWINSTA WindowStation;
    OBJECT_ATTRIBUTES ObjectAttributes;
    NTSTATUS Status;
-  
+
    /*
     * Generate full window station name
     */
@@ -728,30 +728,30 @@ NtUserCloseWindowStation(
  * window station or desktop object.
  *
  * Parameters
- *    hObj 
+ *    hObj
  *       Handle to the window station or desktop object for which to
  *       return information. This can be a handle of type HDESK or HWINSTA
  *       (for example, a handle returned by NtUserCreateWindowStation,
- *       NtUserOpenWindowStation, NtUserCreateDesktop, or NtUserOpenDesktop). 
+ *       NtUserOpenWindowStation, NtUserCreateDesktop, or NtUserOpenDesktop).
  *
- *    nIndex 
+ *    nIndex
  *       Specifies the object information to be retrieved.
  *
- *    pvInfo 
- *       Pointer to a buffer to receive the object information. 
+ *    pvInfo
+ *       Pointer to a buffer to receive the object information.
  *
- *    nLength 
+ *    nLength
  *       Specifies the size, in bytes, of the buffer pointed to by the
- *       pvInfo parameter. 
+ *       pvInfo parameter.
  *
- *    lpnLengthNeeded 
+ *    lpnLengthNeeded
  *       Pointer to a variable receiving the number of bytes required to
  *       store the requested information. If this variable's value is
  *       greater than the value of the nLength parameter when the function
  *       returns, the function returns FALSE, and none of the information
  *       is copied to the pvInfo buffer. If the value of the variable pointed
  *       to by lpnLengthNeeded is less than or equal to the value of nLength,
- *       the entire information block is copied. 
+ *       the entire information block is copied.
  *
  * Return Value
  *    If the function succeeds, the return value is nonzero. If the function
@@ -775,7 +775,7 @@ NtUserGetObjectInformation(
    PVOID pvData = NULL;
    DWORD nDataSize = 0;
 
-   /* try windowstation */   
+   /* try windowstation */
    DPRINT("Trying to open window station 0x%x\n", hObject);
    Status = IntValidateWindowStationHandle(
       hObject,
@@ -793,7 +793,7 @@ NtUserGetObjectInformation(
 
    if (Status == STATUS_OBJECT_TYPE_MISMATCH)
    {
-      /* try desktop */   
+      /* try desktop */
       DPRINT("Trying to open desktop 0x%x\n", hObject);
       Status = IntValidateDesktopHandle(
          hObject,
@@ -860,7 +860,7 @@ NtUserGetObjectInformation(
       Status = STATUS_INVALID_PARAMETER;
       break;
    }
-   
+
    /* try to copy data to caller */
    if (Status == STATUS_SUCCESS)
    {
@@ -889,20 +889,20 @@ NtUserGetObjectInformation(
  * window station or desktop object.
  *
  * Parameters
- *    hObj 
+ *    hObj
  *       Handle to the window station or desktop object for which to set
  *       object information. This value can be a handle of type HDESK or
- *       HWINSTA. 
+ *       HWINSTA.
  *
- *    nIndex 
+ *    nIndex
  *       Specifies the object information to be set.
  *
- *    pvInfo 
- *       Pointer to a buffer containing the object information. 
+ *    pvInfo
+ *       Pointer to a buffer containing the object information.
  *
- *    nLength 
+ *    nLength
  *       Specifies the size, in bytes, of the information contained in the
- *       buffer pointed to by pvInfo. 
+ *       buffer pointed to by pvInfo.
  *
  * Return Value
  *    If the function succeeds, the return value is nonzero. If the function
@@ -961,11 +961,11 @@ PWINSTATION_OBJECT FASTCALL
 IntGetWinStaObj(VOID)
 {
   PWINSTATION_OBJECT WinStaObj;
-  
+
   /*
    * just a temporary hack, this will be gone soon
    */
-  
+
   if(PsGetWin32Thread() != NULL && PsGetWin32Thread()->Desktop != NULL)
   {
     WinStaObj = PsGetWin32Thread()->Desktop->WindowStation;
@@ -987,7 +987,7 @@ IntGetWinStaObj(VOID)
   {
     WinStaObj = NULL;
   }
-  
+
   return WinStaObj;
 }
 
@@ -1030,14 +1030,14 @@ NtUserSetProcessWindowStation(HWINSTA hWindowStation)
       0,
       &NewWinSta);
 
-   if (!NT_SUCCESS(Status)) 
+   if (!NT_SUCCESS(Status))
    {
-      DPRINT("Validation of window station handle (0x%X) failed\n", 
+      DPRINT("Validation of window station handle (0x%X) failed\n",
          hWindowStation);
       SetLastNtError(Status);
       return FALSE;
    }
-   
+
    /*
     * FIXME - don't allow changing the window station if there are threads that are attached to desktops and own gui objects
     */
@@ -1066,31 +1066,31 @@ NtUserLockWindowStation(HWINSTA hWindowStation)
    PWINSTATION_OBJECT Object;
    NTSTATUS Status;
 
-   DPRINT("About to set process window station with handle (0x%X)\n", 
+   DPRINT("About to set process window station with handle (0x%X)\n",
       hWindowStation);
-   
+
    if(PsGetWin32Process() != LogonProcess)
    {
      DPRINT1("Unauthorized process attempted to lock the window station!\n");
      SetLastWin32Error(ERROR_ACCESS_DENIED);
      return FALSE;
    }
-   
+
    Status = IntValidateWindowStationHandle(
       hWindowStation,
       KernelMode,
       0,
       &Object);
-   if (!NT_SUCCESS(Status)) 
+   if (!NT_SUCCESS(Status))
    {
-      DPRINT("Validation of window station handle (0x%X) failed\n", 
+      DPRINT("Validation of window station handle (0x%X) failed\n",
          hWindowStation);
       SetLastNtError(Status);
       return FALSE;
    }
-   
+
    Object->Flags |= WSS_LOCKED;
-   
+
    ObDereferenceObject(Object);
    return TRUE;
 }
@@ -1111,32 +1111,32 @@ NtUserUnlockWindowStation(HWINSTA hWindowStation)
    NTSTATUS Status;
    BOOL Ret;
 
-   DPRINT("About to set process window station with handle (0x%X)\n", 
+   DPRINT("About to set process window station with handle (0x%X)\n",
       hWindowStation);
-   
+
    if(PsGetWin32Process() != LogonProcess)
    {
      DPRINT1("Unauthorized process attempted to unlock the window station!\n");
      SetLastWin32Error(ERROR_ACCESS_DENIED);
      return FALSE;
    }
-   
+
    Status = IntValidateWindowStationHandle(
       hWindowStation,
       KernelMode,
       0,
       &Object);
-   if (!NT_SUCCESS(Status)) 
+   if (!NT_SUCCESS(Status))
    {
-      DPRINT("Validation of window station handle (0x%X) failed\n", 
+      DPRINT("Validation of window station handle (0x%X) failed\n",
          hWindowStation);
       SetLastNtError(Status);
       return FALSE;
    }
-   
+
    Ret = (Object->Flags & WSS_LOCKED) == WSS_LOCKED;
    Object->Flags &= ~WSS_LOCKED;
-   
+
    ObDereferenceObject(Object);
    return Ret;
 }
@@ -1175,7 +1175,7 @@ BuildWindowStationNameList(
    DWORD EntryCount;
    POBJECT_DIRECTORY_INFORMATION DirEntry;
    WCHAR NullWchar;
-	
+
    /*
     * Generate name of window station directory
     */
@@ -1240,7 +1240,7 @@ BuildWindowStationNameList(
          Context = 0;
          Status = ZwQueryDirectoryObject(DirectoryHandle, Buffer, BufferSize,
                                          FALSE, TRUE, &Context, &ReturnLength);
-         if (! NT_SUCCESS(Status) || 
+         if (! NT_SUCCESS(Status) ||
              STATUS_NO_MORE_ENTRIES != ZwQueryDirectoryObject(DirectoryHandle, NULL, 0, FALSE,
                                                               FALSE, &Context, NULL))
          {
@@ -1357,7 +1357,7 @@ BuildDesktopNameList(
    DWORD EntryCount;
    ULONG ReturnLength;
    WCHAR NullWchar;
-	
+
    Status = IntValidateWindowStationHandle(hWindowStation,
                                            KernelMode,
                                            0,
@@ -1388,7 +1388,7 @@ BuildDesktopNameList(
       Status = MmCopyToCaller(pRequiredSize, &ReturnLength, sizeof(ULONG));
       if (! NT_SUCCESS(Status))
       {
-         KeReleaseSpinLock(&WindowStation->Lock, OldLevel);   
+         KeReleaseSpinLock(&WindowStation->Lock, OldLevel);
          ObDereferenceObject(WindowStation);
          return STATUS_BUFFER_TOO_SMALL;
       }
@@ -1399,7 +1399,7 @@ BuildDesktopNameList(
     */
    if (dwSize < ReturnLength)
    {
-      KeReleaseSpinLock(&WindowStation->Lock, OldLevel);   
+      KeReleaseSpinLock(&WindowStation->Lock, OldLevel);
       ObDereferenceObject(WindowStation);
       return STATUS_BUFFER_TOO_SMALL;
    }
@@ -1410,7 +1410,7 @@ BuildDesktopNameList(
    Status = MmCopyToCaller(lpBuffer, &EntryCount, sizeof(DWORD));
    if (! NT_SUCCESS(Status))
    {
-      KeReleaseSpinLock(&WindowStation->Lock, OldLevel);   
+      KeReleaseSpinLock(&WindowStation->Lock, OldLevel);
       ObDereferenceObject(WindowStation);
       return Status;
    }
@@ -1425,7 +1425,7 @@ BuildDesktopNameList(
       Status = MmCopyToCaller(lpBuffer, DesktopObject->Name.Buffer, DesktopObject->Name.Length);
       if (! NT_SUCCESS(Status))
       {
-         KeReleaseSpinLock(&WindowStation->Lock, OldLevel);   
+         KeReleaseSpinLock(&WindowStation->Lock, OldLevel);
          ObDereferenceObject(WindowStation);
          return Status;
       }
@@ -1433,7 +1433,7 @@ BuildDesktopNameList(
       Status = MmCopyToCaller(lpBuffer, &NullWchar, sizeof(WCHAR));
       if (! NT_SUCCESS(Status))
       {
-         KeReleaseSpinLock(&WindowStation->Lock, OldLevel);   
+         KeReleaseSpinLock(&WindowStation->Lock, OldLevel);
          ObDereferenceObject(WindowStation);
          return Status;
       }
@@ -1443,7 +1443,7 @@ BuildDesktopNameList(
    /*
     * Clean up
     */
-   KeReleaseSpinLock(&WindowStation->Lock, OldLevel);   
+   KeReleaseSpinLock(&WindowStation->Lock, OldLevel);
    ObDereferenceObject(WindowStation);
 
    return STATUS_SUCCESS;

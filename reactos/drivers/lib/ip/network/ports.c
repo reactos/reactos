@@ -10,14 +10,14 @@
 
 #include "precomp.h"
 
-VOID PortsStartup( PPORT_SET PortSet, 
+VOID PortsStartup( PPORT_SET PortSet,
 		   UINT StartingPort,
 		   UINT PortsToManage ) {
     PortSet->StartingPort = StartingPort;
     PortSet->PortsToOversee = PortsToManage;
-    PortSet->ProtoBitBuffer = 
+    PortSet->ProtoBitBuffer =
 	PoolAllocateBuffer( (PortSet->PortsToOversee + 7) / 8 );
-    RtlInitializeBitMap( &PortSet->ProtoBitmap, 
+    RtlInitializeBitMap( &PortSet->ProtoBitmap,
 			 PortSet->ProtoBitBuffer,
 			 PortSet->PortsToOversee );
     RtlClearAllBits( &PortSet->ProtoBitmap );

@@ -222,7 +222,7 @@ static char sccsid[] = "@(#)traceroute.c	8.1 (Berkeley) 6/6/93";
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
- 
+
 #include <winsock2.h>
 
 
@@ -508,7 +508,7 @@ main(argc, argv)
 
 	status = WSAStartup(MAKEWORD(2, 2), &wsadata);
 	if (status != 0) {
-		printf("Could not initialize winsock dll.\n");	
+		printf("Could not initialize winsock dll.\n");
 		return FALSE;
 	}
 

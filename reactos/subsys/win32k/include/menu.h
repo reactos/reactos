@@ -7,10 +7,10 @@
 
 #define IS_ATOM(x) \
   (((ULONG_PTR)(x) > 0x0) && ((ULONG_PTR)(x) < 0x10000))
-  
+
 #define MENU_ITEM_TYPE(flags) \
   ((flags) & (MF_STRING | MF_BITMAP | MF_OWNERDRAW | MF_SEPARATOR))
-  
+
 #ifndef MF_END
 #define MF_END             (0x0080)
 #endif
@@ -62,11 +62,11 @@ IntGetMenuObject(HMENU hMenu);
 BOOL FASTCALL
 IntFreeMenuItem(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem,
     BOOL RemoveFromList, BOOL bRecurse);
-    
+
 BOOL FASTCALL
-IntRemoveMenuItem(PMENU_OBJECT MenuObject, UINT uPosition, UINT uFlags, 
+IntRemoveMenuItem(PMENU_OBJECT MenuObject, UINT uPosition, UINT uFlags,
                    BOOL bRecurse);
-    
+
 UINT FASTCALL
 IntDeleteMenuItems(PMENU_OBJECT MenuObject, BOOL bRecurse);
 
@@ -95,9 +95,9 @@ BOOL FASTCALL
 IntSetMenuInfo(PMENU_OBJECT MenuObject, PROSMENUINFO lpmi);
 
 int FASTCALL
-IntGetMenuItemByFlag(PMENU_OBJECT MenuObject, UINT uSearchBy, UINT fFlag, 
+IntGetMenuItemByFlag(PMENU_OBJECT MenuObject, UINT uSearchBy, UINT fFlag,
                       PMENU_ITEM *MenuItem, PMENU_ITEM *PrevMenuItem);
-                   
+
 UINT FASTCALL
 IntEnableMenuItem(PMENU_OBJECT MenuObject, UINT uIDEnableItem, UINT uEnable);
 

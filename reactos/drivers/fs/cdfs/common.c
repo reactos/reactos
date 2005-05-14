@@ -144,9 +144,9 @@ CdfsDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
   NTSTATUS Status;
 
   DPRINT("CdfsDeviceIoControl(DeviceObject %x, CtlCode %x, "
-	 "InputBuffer %x, InputBufferSize %x, OutputBuffer %x, " 
-	 "POutputBufferSize %x (%x)\n", DeviceObject, CtlCode, 
-	 InputBuffer, InputBufferSize, OutputBuffer, OutputBufferSize, 
+	 "InputBuffer %x, InputBufferSize %x, OutputBuffer %x, "
+	 "POutputBufferSize %x (%x)\n", DeviceObject, CtlCode,
+	 InputBuffer, InputBufferSize, OutputBuffer, OutputBufferSize,
 	 OutputBufferSize ? *OutputBufferSize : 0);
 
   KeInitializeEvent (&Event, NotificationEvent, FALSE);

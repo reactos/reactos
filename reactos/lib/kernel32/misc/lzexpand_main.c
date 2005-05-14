@@ -500,7 +500,7 @@ LONG WINAPI LZCopy( HFILE src, HFILE dest )
  	srcfd = (!(lzs = GET_LZ_STATE(src))) ? src : lzs->realfd;
  	GetFileTime((HANDLE)srcfd, NULL, NULL, &filetime);
  	SetFileTime((HANDLE)dest, NULL, NULL, &filetime);
- 
+
  	/* close handle */
 	if (usedlzinit)
 		LZClose(src);

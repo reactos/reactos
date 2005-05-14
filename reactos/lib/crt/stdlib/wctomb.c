@@ -64,10 +64,10 @@ int wctomb(char* dst, wchar_t ch)
 
 static const wchar_t encoding_mask[] =
 {
-    /* This reflects the sources *nix origin where type wchar_t 
+    /* This reflects the sources *nix origin where type wchar_t
        was 32 bits wide. Since our type wchar_t is only 16 bits
        wide all this module will need to be reviewed.
-       Simplest option may well be to forward this modules work 
+       Simplest option may well be to forward this modules work
        on to the kernel which already has support for this.
       */
     ~0x7ff, ~0xffff, ~0x1fffff, ~0x3ffffff

@@ -57,18 +57,18 @@
 #define VBE_SAVE_RESTORE_STATE               0x4F04
 #define VBE_DISPLAY_WINDOW_CONTROL           0x4F05
 #define VBE_SET_GET_LOGICAL_SCAN_LINE_LENGTH 0x4F06
-#define VBE_SET_GET_DISPLAY_START            0x4F07 
+#define VBE_SET_GET_DISPLAY_START            0x4F07
 #define VBE_SET_GET_DAC_PALETTE_FORMAT       0x4F08
 #define VBE_SET_GET_PALETTE_DATA             0x4F09
 
 /* VBE 2.0+ */
-#define VBE_RETURN_PROTECTED_MODE_INTERFACE  0x4F0A 
+#define VBE_RETURN_PROTECTED_MODE_INTERFACE  0x4F0A
 #define VBE_GET_SET_PIXEL_CLOCK              0x4F0B
 
 /* Extensions */
 #define VBE_POWER_MANAGEMENT_EXTENSIONS      0x4F10
 #define VBE_FLAT_PANEL_INTERFACE_EXTENSIONS  0x4F11
-#define VBE_AUDIO_INTERFACE_EXTENSIONS       0x4F12 
+#define VBE_AUDIO_INTERFACE_EXTENSIONS       0x4F12
 #define VBE_OEM_EXTENSIONS                   0x4F13
 #define VBE_DISPLAY_DATA_CHANNEL             0x4F14
 
@@ -85,7 +85,7 @@
  * VBE Return Codes
  */
 
-#define VBE_SUCCESS                            0x4F 
+#define VBE_SUCCESS                            0x4F
 #define VBE_UNSUCCESSFUL                      0x14F
 #define VBE_NOT_SUPPORTED                     0x24F
 #define VBE_FUNCTION_INVALID                  0x34F
@@ -266,7 +266,7 @@ VBEQueryAvailModes(
    PVIDEO_MODE_INFORMATION ReturnedModes,
    PSTATUS_BLOCK StatusBlock);
 
-BOOL FASTCALL  
+BOOL FASTCALL
 VBEQueryCurrentMode(
    PVBE_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MODE_INFORMATION VideoModeInfo,

@@ -10,27 +10,27 @@
 
 #include "precomp.h"
 
-VOID XNdisGetFirstBufferFromPacket(PNDIS_PACKET Packet,                
-				   PNDIS_BUFFER *FirstBuffer,           
-				   PVOID *FirstBufferVA,         
-				   PUINT FirstBufferLength,     
-				   PUINT TotalBufferLength)     
-{                                                           
-    PNDIS_BUFFER _Buffer;                                   
-    
-    _Buffer              = (Packet)->Private.Head;          
-    *(FirstBuffer)       = _Buffer;                         
-    *(FirstBufferVA)     = MmGetMdlVirtualAddress(_Buffer); 
-    if (_Buffer != NULL) {                                  
-        *(FirstBufferLength) = MmGetMdlByteCount(_Buffer);  
-        _Buffer = _Buffer->Next;                            
-    } else                                                  
-        *(FirstBufferLength) = 0;                           
-    *(TotalBufferLength) = *(FirstBufferLength);            
-    while (_Buffer != NULL) {                               
-        *(TotalBufferLength) += MmGetMdlByteCount(_Buffer); 
-        _Buffer = _Buffer->Next;                            
-    }                                                       
+VOID XNdisGetFirstBufferFromPacket(PNDIS_PACKET Packet,
+				   PNDIS_BUFFER *FirstBuffer,
+				   PVOID *FirstBufferVA,
+				   PUINT FirstBufferLength,
+				   PUINT TotalBufferLength)
+{
+    PNDIS_BUFFER _Buffer;
+
+    _Buffer              = (Packet)->Private.Head;
+    *(FirstBuffer)       = _Buffer;
+    *(FirstBufferVA)     = MmGetMdlVirtualAddress(_Buffer);
+    if (_Buffer != NULL) {
+        *(FirstBufferLength) = MmGetMdlByteCount(_Buffer);
+        _Buffer = _Buffer->Next;
+    } else
+        *(FirstBufferLength) = 0;
+    *(TotalBufferLength) = *(FirstBufferLength);
+    while (_Buffer != NULL) {
+        *(TotalBufferLength) += MmGetMdlByteCount(_Buffer);
+        _Buffer = _Buffer->Next;
+    }
 }
 
 /*
@@ -105,7 +105,7 @@ UINT CopyBufferToBufferChain(
 /*
  * FUNCTION: Copies data from a buffer to an NDIS buffer chain
  * ARGUMENTS:
- *     DstBuffer = Pointer to destination NDIS buffer 
+ *     DstBuffer = Pointer to destination NDIS buffer
  *     DstOffset = Destination start offset
  *     SrcData   = Pointer to source buffer
  *     Length    = Number of bytes to copy
@@ -177,7 +177,7 @@ UINT CopyBufferChainToBuffer(
     PCHAR SrcData;
 
     TI_DbgPrint(DEBUG_PBUFFER, ("DstData 0x%X  SrcBuffer 0x%X  SrcOffset 0x%X  Length %d\n",DstData,SrcBuffer, SrcOffset, Length));
-    
+
     /* Skip SrcOffset bytes in the source buffer chain */
     if (SkipToOffset(SrcBuffer, SrcOffset, &SrcData, &SrcSize) == -1)
         return 0;
@@ -412,7 +412,7 @@ NDIS_STATUS PrependPacket( PNDIS_PACKET Packet, PCHAR Data, UINT Length,
 }
 
 void GetDataPtr( PNDIS_PACKET Packet,
-		 UINT Offset, 
+		 UINT Offset,
 		 PCHAR *DataOut,
 		 PUINT Size ) {
     PNDIS_BUFFER Buffer;
@@ -431,10 +431,10 @@ NDIS_STATUS AllocatePacketWithBufferX( PNDIS_PACKET *NdisPacket,
     PCHAR NewData;
 
     NewData = ExAllocatePool( NonPagedPool, Len );
-    if( !NewData ) return NDIS_STATUS_NOT_ACCEPTED; // XXX 
+    if( !NewData ) return NDIS_STATUS_NOT_ACCEPTED; // XXX
     TrackWithTag(EXALLOC_TAG, NewData, File, Line);
 
-    if( Data ) 
+    if( Data )
 	RtlCopyMemory(NewData, Data, Len);
 
     NdisAllocatePacket( &Status, &Packet, GlobalPacketPool );

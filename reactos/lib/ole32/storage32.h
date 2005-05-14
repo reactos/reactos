@@ -240,66 +240,6 @@ struct StorageBaseImpl
 };
 
 
-/*
- * Prototypes for the methods of the Storage32BaseImpl class.
- */
-HRESULT WINAPI StorageBaseImpl_QueryInterface(
-            IStorage*        iface,
-            REFIID             riid,
-            void**             ppvObject);
-
-ULONG WINAPI StorageBaseImpl_AddRef(
-            IStorage*        iface);
-
-ULONG WINAPI StorageBaseImpl_Release(
-            IStorage*        iface);
-
-HRESULT WINAPI StorageBaseImpl_OpenStream(
-            IStorage*        iface,
-            const OLECHAR*   pwcsName,  /* [string][in] */
-            void*              reserved1, /* [unique][in] */
-            DWORD              grfMode,   /* [in] */
-            DWORD              reserved2, /* [in] */
-            IStream**        ppstm);    /* [out] */
-
-HRESULT WINAPI StorageBaseImpl_OpenStorage(
-            IStorage*        iface,
-            const OLECHAR*   pwcsName,      /* [string][unique][in] */
-            IStorage*        pstgPriority,  /* [unique][in] */
-            DWORD              grfMode,       /* [in] */
-            SNB              snbExclude,    /* [unique][in] */
-            DWORD              reserved,      /* [in] */
-            IStorage**       ppstg);        /* [out] */
-
-HRESULT WINAPI StorageBaseImpl_EnumElements(
-            IStorage*        iface,
-            DWORD              reserved1, /* [in] */
-            void*              reserved2, /* [size_is][unique][in] */
-            DWORD              reserved3, /* [in] */
-            IEnumSTATSTG**     ppenum);   /* [out] */
-
-HRESULT WINAPI StorageBaseImpl_Stat(
-            IStorage*        iface,
-            STATSTG*           pstatstg,     /* [out] */
-            DWORD              grfStatFlag); /* [in] */
-
-HRESULT WINAPI StorageBaseImpl_RenameElement(
-            IStorage*        iface,
-            const OLECHAR*   pwcsOldName,  /* [string][in] */
-            const OLECHAR*   pwcsNewName); /* [string][in] */
-
-HRESULT WINAPI StorageBaseImpl_CreateStream(
-            IStorage*        iface,
-            const OLECHAR*   pwcsName,  /* [string][in] */
-            DWORD              grfMode,   /* [in] */
-            DWORD              reserved1, /* [in] */
-            DWORD              reserved2, /* [in] */
-            IStream**        ppstm);    /* [out] */
-
-HRESULT WINAPI StorageBaseImpl_SetClass(
-            IStorage*        iface,
-            REFCLSID           clsid);  /* [in] */
-
 /****************************************************************************
  * Storage32Impl definitions.
  *
@@ -350,59 +290,6 @@ struct StorageImpl
    */
   BigBlockFile* bigBlockFile;
 };
-
-/*
- * Method declaration for the Storage32Impl class
- */
-
-HRESULT WINAPI StorageImpl_CreateStorage(
-            IStorage*      iface,
-            const OLECHAR* pwcsName,  /* [string][in] */
-            DWORD            grfMode,   /* [in] */
-            DWORD            dwStgFmt,  /* [in] */
-            DWORD            reserved2, /* [in] */
-            IStorage**     ppstg);    /* [out] */
-
-HRESULT WINAPI StorageImpl_CopyTo(
-            IStorage*      iface,
-            DWORD          ciidExclude,  /* [in] */
-            const IID*     rgiidExclude, /* [size_is][unique][in] */
-            SNB            snbExclude, /* [unique][in] */
-            IStorage*    pstgDest);    /* [unique][in] */
-
-HRESULT WINAPI StorageImpl_MoveElementTo(
-            IStorage*      iface,
-            const OLECHAR* pwcsName,    /* [string][in] */
-            IStorage*      pstgDest,    /* [unique][in] */
-            const OLECHAR* pwcsNewName, /* [string][in] */
-            DWORD            grfFlags);   /* [in] */
-
-HRESULT WINAPI StorageImpl_Commit(
-            IStorage*      iface,
-            DWORD          grfCommitFlags); /* [in] */
-
-HRESULT WINAPI StorageImpl_Revert(
-            IStorage*      iface);
-
-HRESULT WINAPI StorageImpl_DestroyElement(
-            IStorage*      iface,
-            const OLECHAR* pwcsName); /* [string][in] */
-
-HRESULT WINAPI StorageImpl_SetElementTimes(
-            IStorage*      iface,
-            const OLECHAR* pwcsName, /* [string][in] */
-            const FILETIME*  pctime,   /* [in] */
-            const FILETIME*  patime,   /* [in] */
-            const FILETIME*  pmtime);  /* [in] */
-
-HRESULT WINAPI StorageImpl_SetStateBits(
-            IStorage*      iface,
-            DWORD          grfStateBits, /* [in] */
-            DWORD          grfMask);     /* [in] */
-
-HRESULT WINAPI StorageImpl_Stat(IStorage* iface,
-                                STATSTG*  pstatstg,     /* [out] */
-                                DWORD     grfStatFlag); /* [in] */
 
 void StorageImpl_Destroy(
 	    StorageBaseImpl* This);
@@ -533,7 +420,7 @@ HRESULT WINAPI StorageInternalImpl_Revert(
 struct IEnumSTATSTGImpl
 {
   IEnumSTATSTGVtbl *lpVtbl;    /* Needs to be the first item in the struct
-				* since we want to cast this in a IEnumSTATSTG pointer */
+				* since we want to cast this in an IEnumSTATSTG pointer */
 
   ULONG		 ref;		        /* Reference count */
   StorageImpl* parentStorage;         /* Reference to the parent storage */
@@ -550,37 +437,6 @@ struct IEnumSTATSTGImpl
 
 #define ENUMSTATSGT_SIZE_INCREMENT 10
 };
-
-/*
- * Method definitions for the IEnumSTATSTGImpl class.
- */
-HRESULT WINAPI IEnumSTATSTGImpl_QueryInterface(
-	    IEnumSTATSTG*     iface,
-	    REFIID            riid,
-	    void**            ppvObject);
-
-ULONG WINAPI IEnumSTATSTGImpl_AddRef(
-            IEnumSTATSTG*     iface);
-
-ULONG WINAPI IEnumSTATSTGImpl_Release(
-            IEnumSTATSTG*     iface);
-
-HRESULT WINAPI IEnumSTATSTGImpl_Next(
-            IEnumSTATSTG*     iface,
-	    ULONG             celt,
-	    STATSTG*          rgelt,
-	    ULONG*            pceltFetched);
-
-HRESULT WINAPI IEnumSTATSTGImpl_Skip(
-            IEnumSTATSTG*     iface,
-	    ULONG             celt);
-
-HRESULT WINAPI IEnumSTATSTGImpl_Reset(
-            IEnumSTATSTG* iface);
-
-HRESULT WINAPI IEnumSTATSTGImpl_Clone(
-            IEnumSTATSTG*     iface,
-	    IEnumSTATSTG**    ppenum);
 
 IEnumSTATSTGImpl* IEnumSTATSTGImpl_Construct(
             StorageImpl* This,
@@ -618,7 +474,7 @@ INT IEnumSTATSTGImpl_FindParentProperty(
 struct StgStreamImpl
 {
   IStreamVtbl *lpVtbl;  /* Needs to be the first item in the struct
-			 * since we want to cast this in a IStream pointer */
+			 * since we want to cast this to an IStream pointer */
 
   /*
    * Reference count
@@ -667,92 +523,18 @@ StgStreamImpl* StgStreamImpl_Construct(
     DWORD            grfMode,
     ULONG            ownerProperty);
 
-void StgStreamImpl_Destroy(
-                StgStreamImpl* This);
-
-void StgStreamImpl_OpenBlockChain(
-                StgStreamImpl* This);
-
-HRESULT WINAPI StgStreamImpl_QueryInterface(
-		IStream*      iface,
-		REFIID         riid,		/* [in] */
-		void**         ppvObject);  /* [iid_is][out] */
-
-ULONG WINAPI StgStreamImpl_AddRef(
-		IStream*      iface);
-
-ULONG WINAPI StgStreamImpl_Release(
-		IStream*      iface);
-
-HRESULT WINAPI StgStreamImpl_Read(
-	        IStream*      iface,
-		void*          pv,        /* [length_is][size_is][out] */
-		ULONG          cb,        /* [in] */
-		ULONG*         pcbRead);  /* [out] */
-
-HRESULT WINAPI StgStreamImpl_Write(
-		IStream*      iface,
-		const void*    pv,          /* [size_is][in] */
-		ULONG          cb,          /* [in] */
-		ULONG*         pcbWritten); /* [out] */
-
-HRESULT WINAPI StgStreamImpl_Seek(
-		IStream*      iface,
-		LARGE_INTEGER   dlibMove,         /* [in] */
-		DWORD           dwOrigin,         /* [in] */
-		ULARGE_INTEGER* plibNewPosition); /* [out] */
-
-HRESULT WINAPI StgStreamImpl_SetSize(
-	        IStream*      iface,
-		ULARGE_INTEGER  libNewSize);  /* [in] */
-
-HRESULT WINAPI StgStreamImpl_CopyTo(
-		IStream*      iface,
-		IStream*      pstm,         /* [unique][in] */
-		ULARGE_INTEGER  cb,           /* [in] */
-		ULARGE_INTEGER* pcbRead,      /* [out] */
-		ULARGE_INTEGER* pcbWritten);  /* [out] */
-
-HRESULT WINAPI StgStreamImpl_Commit(
-	    	IStream*      iface,
-		DWORD           grfCommitFlags); /* [in] */
-
-HRESULT WINAPI StgStreamImpl_Revert(
-		IStream*  iface);
-
-HRESULT WINAPI StgStreamImpl_LockRegion(
-		IStream*     iface,
-		ULARGE_INTEGER libOffset,   /* [in] */
-		ULARGE_INTEGER cb,          /* [in] */
-		DWORD          dwLockType); /* [in] */
-
-HRESULT WINAPI StgStreamImpl_UnlockRegion(
-		IStream*     iface,
-		ULARGE_INTEGER libOffset,   /* [in] */
-	        ULARGE_INTEGER cb,          /* [in] */
-		DWORD          dwLockType); /* [in] */
-
-HRESULT WINAPI StgStreamImpl_Stat(
-		IStream*     iface,
-	        STATSTG*       pstatstg,     /* [out] */
-	        DWORD          grfStatFlag); /* [in] */
-
-HRESULT WINAPI StgStreamImpl_Clone(
-		IStream*     iface,
-		IStream**    ppstm);       /* [out] */
-
 
 /********************************************************************************
  * The StorageUtl_ functions are miscelaneous utility functions. Most of which are
  * abstractions used to read values from file buffers without having to worry
  * about bit order
  */
-void StorageUtl_ReadWord(void* buffer, ULONG offset, WORD* value);
-void StorageUtl_WriteWord(void* buffer, ULONG offset, WORD value);
-void StorageUtl_ReadDWord(void* buffer, ULONG offset, DWORD* value);
-void StorageUtl_WriteDWord(void* buffer, ULONG offset, DWORD value);
-void StorageUtl_ReadGUID(void* buffer, ULONG offset, GUID* value);
-void StorageUtl_WriteGUID(void* buffer, ULONG offset, GUID* value);
+void StorageUtl_ReadWord(const BYTE* buffer, ULONG offset, WORD* value);
+void StorageUtl_WriteWord(BYTE* buffer, ULONG offset, WORD value);
+void StorageUtl_ReadDWord(const BYTE* buffer, ULONG offset, DWORD* value);
+void StorageUtl_WriteDWord(BYTE* buffer, ULONG offset, DWORD value);
+void StorageUtl_ReadGUID(const BYTE* buffer, ULONG offset, GUID* value);
+void StorageUtl_WriteGUID(BYTE* buffer, ULONG offset, const GUID* value);
 void StorageUtl_CopyPropertyToSTATSTG(STATSTG*     destination,
 					     StgProperty* source,
 					     int          statFlags);

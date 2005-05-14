@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ob/ntobj.c
  * PURPOSE:         User mode interface to object manager
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
@@ -20,7 +20,7 @@
 /**********************************************************************
  * NAME							EXPORTED
  *	NtSetInformationObject
- *	
+ *
  * DESCRIPTION
  *
  * ARGUMENTS
@@ -37,7 +37,7 @@ NtSetInformationObject (IN HANDLE ObjectHandle,
 {
   PVOID Object;
   NTSTATUS Status;
-  
+
   PAGED_CODE();
 
   if (ObjectInformationClass != ObjectHandleInformation)
@@ -90,7 +90,7 @@ NtQueryObject (IN HANDLE ObjectHandle,
   ULONG InfoLength;
   PVOID Object;
   NTSTATUS Status;
-  
+
   PAGED_CODE();
 
   Status = ObReferenceObjectByHandle (ObjectHandle,
@@ -224,7 +224,7 @@ ObpSetPermanentObject (IN PVOID ObjectBody, IN BOOLEAN Permanent)
 
   ObjectHeader = BODY_TO_HEADER(ObjectBody);
   ObjectHeader->Permanent = Permanent;
-  
+
   if (ObjectHeader->HandleCount == 0 && !Permanent && ObjectHeader->Parent != NULL)
   {
     /* Remove the object from the namespace */
@@ -270,7 +270,7 @@ NtMakeTemporaryObject(IN HANDLE ObjectHandle)
 {
   PVOID ObjectBody;
   NTSTATUS Status;
-  
+
   PAGED_CODE();
 
   Status = ObReferenceObjectByHandle(ObjectHandle,
@@ -311,7 +311,7 @@ NtMakePermanentObject(IN HANDLE ObjectHandle)
 {
   PVOID ObjectBody;
   NTSTATUS Status;
-  
+
   PAGED_CODE();
 
   Status = ObReferenceObjectByHandle(ObjectHandle,

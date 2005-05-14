@@ -41,7 +41,7 @@
 static NTSTATUS
 NtfsHasFileSystem(PDEVICE_OBJECT DeviceToMount)
 /*
- * FUNCTION: Tests if the device contains a filesystem that can be mounted 
+ * FUNCTION: Tests if the device contains a filesystem that can be mounted
  * by this fsd
  */
 {

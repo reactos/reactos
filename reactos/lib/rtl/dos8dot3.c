@@ -27,8 +27,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntos/minmax.h>
+#include "rtl.h"
 
 #define NDEBUG
 #include <debug.h>

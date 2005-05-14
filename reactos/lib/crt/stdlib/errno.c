@@ -57,9 +57,9 @@ int __set_errno(int error)
 void _dosmaperr(unsigned long oserror)
 {
 	int pos, base, lim;
-	
+
 	__set_doserrno(oserror);
-	
+
 	/* Use binary chop to find the corresponding errno code */
 	for (base=0, lim=sizeof(doserrmap)/sizeof(doserrmap[0]); lim; lim >>= 1) {
 		pos = base+(lim >> 1);

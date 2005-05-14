@@ -182,7 +182,7 @@ NdisUnicodeStringToAnsiString(
 NTSTATUS
 EXPORT
 NdisUpcaseUnicodeString(
-    OUT PUNICODE_STRING DestinationString,  
+    OUT PUNICODE_STRING DestinationString,
     IN  PUNICODE_STRING SourceString)
 /*
  * FUNCTION: Uppercase a UNICODE string

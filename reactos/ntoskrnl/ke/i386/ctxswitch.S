@@ -125,13 +125,13 @@ SaveTrapFrameForKDB_Return:
     
     /* Set the Thread to running */
     mov byte ptr [esi+KTHREAD_STATE], Running
-    
+
     /* Save the Exception list */
     push [ebx+KPCR_EXCEPTION_LIST]
     
     /* Switching, disable interrupts now */
     cli
-    
+
 #ifdef CONFIG_SMP
     /* Save FPU state if the thread has used it. */
     mov dword ptr [ebx+KPCR_NPX_THREAD], 0
@@ -152,18 +152,27 @@ SaveTrapFrameForKDB_Return:
     /* Save the stack pointer in this processors TSS */
     mov ebp, [ebx+KPCR_TSS]
     push ss:[ebp+KTSS_ESP0]
+    
+    /* Check if address space switch is needed */
+    mov eax, [esi+KTHREAD_APCSTATE_PROCESS]
+    cmp eax, [edi+KTHREAD_APCSTATE_PROCESS]
+    mov eax, [eax+KPROCESS_DIRECTORY_TABLE_BASE]
 
     /* Switch stacks */
     mov [edi+KTHREAD_KERNEL_STACK], esp
     mov esp, [esi+KTHREAD_KERNEL_STACK]
+    
+    jz	NoAddressSpaceSwitch
+    
+    /* Switch address space */
+    mov cr3, eax
+   
+NoAddressSpaceSwitch:   
    
     /* Stack is OK, safe to enable interrupts now */
     sti 
-    
-    /* Check if address space switch is needed */
-    mov eax, [edi+KTHREAD_APCSTATE_PROCESS]
-    cmp eax, [esi+KTHREAD_APCSTATE_PROCESS]
-    
+
+    /* Check if address space switch is needed (the result from above is valid) */
     /* If they match, then use the fast-path and skip all this */
     jz SameProcess
     
@@ -195,10 +204,6 @@ NoLdt:
 
     /* Set current IOPM offset in the TSS */
     mov [ebp+KTSS_IOMAPBASE], cx
-
-    /* Change the address space */
-    mov eax, [edi+KPROCESS_DIRECTORY_TABLE_BASE]
-    mov cr3, eax
     
 SameProcess:
     

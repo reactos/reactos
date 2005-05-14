@@ -24,7 +24,7 @@
  * PURPOSE:          CDROM (ISO 9660) filesystem driver
  * PROGRAMMER:       Art Yerkes
  *                   Eric Kohl
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -58,7 +58,7 @@ CdfsGetEntryName(PDEVICE_EXTENSION DeviceExt,
 {
   PDIR_RECORD Record = *Ptr;
   ULONG Index;
-  
+
   if (*CurrentOffset >= DirLength)
      return(STATUS_NO_MORE_ENTRIES);
 

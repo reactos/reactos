@@ -17,7 +17,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 /* $Id$
- * 
+ *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Driver Gradient Functions
@@ -42,8 +42,8 @@ const LONG LINC[2] = {-1, 1};
 #define MOVERECT(r,x,y) \
   r.left += x; r.right += x; \
   r.top += y; r.bottom += y
-  
-  
+
+
 /* Horizontal/Vertical gradients */
 #define HVINITCOL(Col, id) \
   c[id] = v1->Col >> 8; \
@@ -81,17 +81,17 @@ IntEngGradientFillRect(
   POINTL Translate;
   INTENG_ENTER_LEAVE EnterLeave;
   LONG y, dy, c[3], dc[3], ec[3], ic[3];
-  
+
   v1 = (pVertex + gRect->UpperLeft);
   v2 = (pVertex + gRect->LowerRight);
-  
+
   rcGradient.left = min(v1->x, v2->x);
   rcGradient.right = max(v1->x, v2->x);
   rcGradient.top = min(v1->y, v2->y);
   rcGradient.bottom = max(v1->y, v2->y);
   rcSG = rcGradient;
   MOVERECT(rcSG, pptlDitherOrg->x, pptlDitherOrg->y);
-  
+
   if(Horizontal)
   {
     dy = abs(rcGradient.right - rcGradient.left);
@@ -100,12 +100,12 @@ IntEngGradientFillRect(
   {
     dy = abs(rcGradient.bottom - rcGradient.top);
   }
-  
+
   if(!IntEngEnter(&EnterLeave, psoDest, &rcSG, FALSE, &Translate, &OutputObj))
   {
     return FALSE;
   }
-  
+
   if((v1->Red != v2->Red || v1->Green != v2->Green || v1->Blue != v2->Blue) && dy > 1)
   {
     CLIPOBJ_cEnumStart(pco, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
@@ -113,7 +113,7 @@ IntEngGradientFillRect(
     {
       RECT FillRect;
       ULONG Color;
-      
+
       if(Horizontal)
       {
         EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
@@ -124,7 +124,7 @@ IntEngGradientFillRect(
             HVINITCOL(Red, 0);
             HVINITCOL(Green, 1);
             HVINITCOL(Blue, 2);
-            
+
             for(y = rcSG.left; y < FillRect.right; y++)
             {
               if(y >= FillRect.left)
@@ -139,10 +139,10 @@ IntEngGradientFillRect(
             }
           }
         }
-        
+
         continue;
       }
-      
+
       /* vertical */
       EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
       for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top <= rcSG.bottom; i++)
@@ -152,7 +152,7 @@ IntEngGradientFillRect(
           HVINITCOL(Red, 0);
           HVINITCOL(Green, 1);
           HVINITCOL(Blue, 2);
-          
+
           for(y = rcSG.top; y < FillRect.bottom; y++)
           {
             if(y >= FillRect.top)
@@ -167,19 +167,19 @@ IntEngGradientFillRect(
           }
         }
       }
-      
+
     } while(EnumMore);
 
     return IntEngLeave(&EnterLeave);
   }
-  
+
   /* rectangle has only one color, no calculation required */
   CLIPOBJ_cEnumStart(pco, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
   do
   {
     RECT FillRect;
     ULONG Color = XLATEOBJ_iXlate(pxlo, RGB(v1->Red, v1->Green, v1->Blue));
-    
+
     EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
     for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top <= rcSG.bottom; i++)
     {
@@ -193,7 +193,7 @@ IntEngGradientFillRect(
       }
     }
   } while(EnumMore);
-  
+
   return IntEngLeave(&EnterLeave);
 }
 
@@ -210,7 +210,7 @@ IntEngGradientFillRect(
     x[line] += incx[line]; \
     sx[line] += incx[line]; \
     ex[line] -= dy[line]; \
-  } 
+  }
 #define S_GOLINE(a,b,line) \
   if(y >= a->y && y <= b->y) \
   {
@@ -277,7 +277,7 @@ IntEngGradientFillRect(
     x[line] += incx[line]; \
     sx[line] += incx[line]; \
     ex[line] -= dy[line]; \
-  } 
+  }
 #define GOLINE(a,b,line) \
   if(y >= a->y && y <= b->y) \
   {
@@ -321,17 +321,17 @@ IntEngGradientFillTriangle(
   INTENG_ENTER_LEAVE EnterLeave;
   RECTL FillRect;
   ULONG Color;
-  
+
   BOOL sx[NLINES];
   LONG x[NLINES], dx[NLINES], dy[NLINES], incx[NLINES], ex[NLINES], destx[NLINES];
   LONG c[NLINES][3], dc[NLINES][3], ec[NLINES][3], ic[NLINES][3]; /* colors on lines */
   LONG g, gx, gxi, gc[3], gd[3], ge[3], gi[3]; /* colors in triangle */
   LONG sy, y, bt;
-  
+
   v1 = (pVertex + gTriangle->Vertex1);
   v2 = (pVertex + gTriangle->Vertex2);
   v3 = (pVertex + gTriangle->Vertex3);
-  
+
   /* bubble sort */
   if(SMALLER(v2,v1))
   {
@@ -347,14 +347,14 @@ IntEngGradientFillTriangle(
       SWAP(v1,v2,t);
     }
   }
-  
+
   DbgPrint("Triangle: (%i,%i) (%i,%i) (%i,%i)\n", v1->x, v1->y, v2->x, v2->y, v3->x, v3->y);
-  
+
   if(!IntEngEnter(&EnterLeave, psoDest, &FillRect, FALSE, &Translate, &OutputObj))
   {
     return FALSE;
   }
-  
+
   if(VCMPCLRS(v1, v2, v3))
   {
     CLIPOBJ_cEnumStart(pco, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
@@ -366,44 +366,44 @@ IntEngGradientFillTriangle(
         if(IntGdiIntersectRect((PRECT)&FillRect, (PRECT)&RectEnum.arcl[i], (PRECT)prclExtents))
         {
           BOOL InY;
-          
+
           DOINIT(v1, v3, 0);
           DOINIT(v1, v2, 1);
           DOINIT(v2, v3, 2);
-          
+
           y = v1->y;
           sy = v1->y + pptlDitherOrg->y;
           bt = min(v3->y + pptlDitherOrg->y, FillRect.bottom);
-          
+
           while(sy < bt)
           {
             InY = !(sy < FillRect.top || sy >= FillRect.bottom);
             GOLINE(v1, v3, 0);
             DOLINE(v1, v3, 0);
             ENDLINE(v1, v3, 0);
-            
+
             GOLINE(v1, v2, 1);
             DOLINE(v1, v2, 1);
             FILLLINE(0, 1);
             ENDLINE(v1, v2, 1);
-            
+
             GOLINE(v2, v3, 2);
             DOLINE(v2, v3, 2);
             FILLLINE(0, 2);
             ENDLINE(23, v3, 2);
-            
+
             y++;
             sy++;
           }
         }
       }
     } while(EnumMore);
-    
+
     return IntEngLeave(&EnterLeave);
   }
-  
+
   /* fill triangle with one solid color */
-  
+
   Color = XLATEOBJ_iXlate(pxlo, RGB(v1->Red >> 8, v1->Green >> 8, v1->Blue >> 8));
   CLIPOBJ_cEnumStart(pco, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
   do
@@ -416,34 +416,34 @@ IntEngGradientFillTriangle(
         S_INITLINE(v1, v3, 0);
         S_INITLINE(v1, v2, 1);
         S_INITLINE(v2, v3, 2);
-        
+
         y = v1->y;
         sy = v1->y + pptlDitherOrg->y;
         bt = min(v3->y + pptlDitherOrg->y, FillRect.bottom);
-        
+
         while(sy < bt)
         {
           S_GOLINE(v1, v3, 0);
           S_DOLINE(v1, v3, 0);
           S_ENDLINE(v1, v3, 0);
-          
+
           S_GOLINE(v1, v2, 1);
           S_DOLINE(v1, v2, 1);
           S_FILLLINE(0, 1);
           S_ENDLINE(v1, v2, 1);
-          
+
           S_GOLINE(v2, v3, 2);
           S_DOLINE(v2, v3, 2);
           S_FILLLINE(0, 2);
           S_ENDLINE(23, v3, 2);
-          
+
           y++;
           sy++;
         }
       }
     }
   } while(EnumMore);
-  
+
   return IntEngLeave(&EnterLeave);
 }
 
@@ -475,7 +475,7 @@ EngGradientFill(
     IN ULONG  ulMode)
 {
   ULONG i;
-  
+
   switch(ulMode)
   {
     case GRADIENT_FILL_RECT_H:
@@ -534,22 +534,22 @@ IntEngGradientFill(
 
   psoDest = &pboDest->SurfObj;
   ASSERT(psoDest);
-  
+
   MouseSafetyOnDrawStart(
 	  psoDest,
 	  pco->rclBounds.left,
-	  pco->rclBounds.top, 
+	  pco->rclBounds.top,
       pco->rclBounds.right,
 	  pco->rclBounds.bottom);
   if(pboDest->flHooks & HOOK_GRADIENTFILL)
   {
     Ret = GDIDEVFUNCS(psoDest).GradientFill(
-      psoDest, pco, pxlo, pVertex, nVertex, pMesh, nMesh, 
+      psoDest, pco, pxlo, pVertex, nVertex, pMesh, nMesh,
       prclExtents, pptlDitherOrg, ulMode);
     MouseSafetyOnDrawEnd(psoDest);
     return Ret;
   }
-  Ret = EngGradientFill(psoDest, pco, pxlo, pVertex, nVertex, pMesh, nMesh, prclExtents, 
+  Ret = EngGradientFill(psoDest, pco, pxlo, pVertex, nVertex, pMesh, nMesh, prclExtents,
                         pptlDitherOrg, ulMode);
   MouseSafetyOnDrawEnd(psoDest);
   return Ret;

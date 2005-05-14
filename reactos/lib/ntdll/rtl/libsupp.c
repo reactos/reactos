@@ -21,12 +21,12 @@
 
 KPROCESSOR_MODE
 RtlpGetMode()
-{ 
-   return UserMode; 
+{
+   return UserMode;
 }
 
 
-PVOID 
+PVOID
 STDCALL
 ExAllocatePool(
    IN POOL_TYPE   PoolType,
@@ -39,7 +39,7 @@ ExAllocatePool(
       Bytes);
 }
 
-PVOID 
+PVOID
 STDCALL
 ExAllocatePoolWithTag(
    IN POOL_TYPE   PoolType,
@@ -56,6 +56,16 @@ ExAllocatePoolWithTag(
 VOID
 STDCALL
 ExFreePool(IN PVOID Mem)
+{
+   RtlFreeHeap (
+      RtlGetProcessHeap (),
+      0,
+      Mem);
+}
+
+VOID
+STDCALL
+ExFreePoolWithTag(IN PVOID Mem, IN ULONG Tag)
 {
    RtlFreeHeap (
       RtlGetProcessHeap (),

@@ -165,13 +165,13 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 			{
 
 #ifdef FEATURE_HISTORY
-	
+
 				case 'K':
 					/*add the current command line to the history*/
 					if (ir.Event.KeyEvent.dwControlKeyState &
 						(LEFT_CTRL_PRESSED|RIGHT_CTRL_PRESSED))
 					{
-				
+
 						if (str[0])
 							History(0,str);
 
@@ -189,7 +189,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 						(LEFT_CTRL_PRESSED|RIGHT_CTRL_PRESSED))
 					{
 						ClearCommandLine (str, maxlen, orgx, orgy);
-						History_del_current_entry(str);					
+						History_del_current_entry(str);
 						current = charcount = _tcslen (str);
 						ConOutPrintf (_T("%s"), str);
 						GetCursorXY (&curx, &cury);
@@ -201,7 +201,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 			}
 
 
-			
+
 
 		}
 
@@ -353,7 +353,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 								     orgy + (orgx + current) / maxx);
 							GetCursorXY (&curx, &cury);
 						}
-						
+
 					}
 				}
 				else

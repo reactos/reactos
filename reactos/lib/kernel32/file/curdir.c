@@ -49,7 +49,7 @@ GetCurrentDirectoryA (
       SetLastError(ERROR_FILENAME_EXCED_RANGE);
       return 0;
    }
-   
+
    return FilenameW2A_FitOrFail(lpBuffer, nBufferLength, BufferW, ret+1);
 }
 
@@ -123,7 +123,7 @@ SetCurrentDirectoryW (
 /*
  * @implemented
  *
- * NOTE: Windows returns a dos/short (8.3) path 
+ * NOTE: Windows returns a dos/short (8.3) path
  */
 DWORD
 STDCALL
@@ -221,7 +221,7 @@ GetSystemDirectoryA (
 	UINT	uSize
 	)
 {
-   return FilenameU2A_FitOrFail(lpBuffer, uSize, &SystemDirectory);   
+   return FilenameU2A_FitOrFail(lpBuffer, uSize, &SystemDirectory);
 }
 
 
@@ -264,7 +264,7 @@ GetWindowsDirectoryA (
 	UINT	uSize
 	)
 {
-   return FilenameU2A_FitOrFail(lpBuffer, uSize, &WindowsDirectory);   
+   return FilenameU2A_FitOrFail(lpBuffer, uSize, &WindowsDirectory);
 }
 
 

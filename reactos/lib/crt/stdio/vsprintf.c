@@ -26,7 +26,7 @@ crt__vsnprintf(_TCHAR *str, size_t maxlen, const _TCHAR *fmt, va_list ap)
 {
   FILE f = {0};
   int len;
-  
+
   f._flag = _IOWRT|_IOSTRG|_IOBINARY;
   f._ptr = (char*)str;
   f._cnt = maxlen;

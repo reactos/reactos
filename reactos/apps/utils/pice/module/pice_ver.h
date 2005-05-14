@@ -15,7 +15,7 @@ Environment:
     LINUX 2.2.X
     Kernel mode only
 
-Author: 
+Author:
 
     Klaus P. Gerlicher
 
@@ -33,4 +33,4 @@ Copyright notice:
 #define PICE_MINOR_VERSION (99)
 // reset this on major or minor version change
 // increment this on every release build
-#define PICE_BUILD         (0007)  
+#define PICE_BUILD         (0007)

@@ -1,5 +1,5 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            subsys/ntvdm/ntvdm->c
@@ -139,7 +139,7 @@ BOOL ReadConfigForVDM(PVDM_CONTROL_BLOCK vdm)
     BOOL result = TRUE;
     DWORD dwError;
     HANDLE hFile;
-    
+
     hFile = CreateFileW(L"\\system32\\config.nt",
                         GENERIC_READ,
                         FILE_SHARE_READ,
@@ -187,7 +187,7 @@ BOOL
 LoadConfigDriversForVDM(PVDM_CONFIG vdmConfig)
 {
     BOOL result = TRUE;
-	
+
 	return result;
 }
 
@@ -195,7 +195,7 @@ BOOL
 SetConfigOptionsForVDM(PVDM_AUTOEXEC vdmAutoexec)
 {
     BOOL result = TRUE;
-	
+
 	return result;
 }
 
@@ -225,9 +225,9 @@ CreateVDM(PVDM_CONTROL_BLOCK vdm)
             //SetLastError();
             return FALSE;
         }
-	 
+
     }
- 
+
     GetSystemInfo(&inf);
     vdm->hHeap = HeapCreate(0, inf.dwAllocationGranularity, 0);
     if (vdm->hHeap == NULL) {
@@ -295,7 +295,7 @@ WinMain(HINSTANCE hInstance,  HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nSho
         //SetLastError();
         return 2;
     }
-	
+
 	ReadConfigForVDM(&VdmCB);
 
     if (!LoadConfigDriversForVDM(&(VdmCB.vdmConfig))) {

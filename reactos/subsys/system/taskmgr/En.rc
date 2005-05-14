@@ -664,6 +664,8 @@ BEGIN
     IDS_STATUS_MEMUSAGE           "Mem Usage: %dK / %dK"
     IDS_STATUS_CPUUSAGE           "CPU Usage: %3d%%"
     IDS_STATUS_PROCESSES          "Processes: %d"
+    IDS_Not_Responding            "Not Responding"
+    IDS_Running                   "Running"  
 END
 
 

@@ -128,7 +128,7 @@ AcpiCreateResourceList(PCM_RESOURCE_LIST* pResourceList,
   RESOURCE* resource;
   ULONG i;
   KIRQL Dirql;
-  
+
   /* Count number of resources */
   Done = FALSE;
   resource = resources;
@@ -161,7 +161,7 @@ AcpiCreateResourceList(PCM_RESOURCE_LIST* pResourceList,
     }
     resource = (RESOURCE *) ((NATIVE_UINT) resource + (NATIVE_UINT) resource->length);
   }
-  
+
   /* Allocate memory */
   *ResourceListSize = sizeof(CM_RESOURCE_LIST) + sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) * (NumberOfResources - 1);
   ResourceList = (PCM_RESOURCE_LIST)ExAllocatePool(PagedPool, *ResourceListSize);
@@ -175,7 +175,7 @@ AcpiCreateResourceList(PCM_RESOURCE_LIST* pResourceList,
   ResourceList->List[0].PartialResourceList.Revision = 1;
   ResourceList->List[0].PartialResourceList.Count = NumberOfResources;
   ResourceDescriptor = ResourceList->List[0].PartialResourceList.PartialDescriptors;
-  
+
   /* Fill resources list structure */
   Done = FALSE;
   resource = resources;
@@ -189,7 +189,7 @@ AcpiCreateResourceList(PCM_RESOURCE_LIST* pResourceList,
         for (i = 0; i < irq_data->number_of_interrupts; i++)
         {
           ResourceDescriptor->Type = CmResourceTypeInterrupt;
-          
+
           ResourceDescriptor->ShareDisposition =
             (irq_data->shared_exclusive == SHARED ? CmResourceShareShared : CmResourceShareDeviceExclusive);
           ResourceDescriptor->Flags =
@@ -253,7 +253,7 @@ AcpiCreateResourceList(PCM_RESOURCE_LIST* pResourceList,
     }
     resource = (RESOURCE *) ((NATIVE_UINT) resource + (NATIVE_UINT) resource->length);
   }
-  
+
   acpi_rs_dump_resource_list(resource);
   return TRUE;
 }

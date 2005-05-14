@@ -48,7 +48,7 @@ FILE *_tpopen (const _TCHAR *cm, const _TCHAR *md) /* program name, pipe mode */
   {
     return NULL;
   }
-  
+
   _tcscpy(szCmdLine, s);
   s = _tcsrchr(szCmdLine, '.');
   if (s)
@@ -73,7 +73,7 @@ FILE *_tpopen (const _TCHAR *cm, const _TCHAR *md) /* program name, pipe mode */
 	StartupInfo.hStdInput = hReadPipe;
 	StartupInfo.dwFlags |= STARTF_USESTDHANDLES;
   }
-	
+
   result = CreateProcess(szComSpec,
 	                  szCmdLine,
 			  NULL,
@@ -119,7 +119,7 @@ FILE *_tpopen (const _TCHAR *cm, const _TCHAR *md) /* program name, pipe mode */
 int _pclose (FILE *pp)
 {
   TRACE("_pclose(%x)",pp);
-   
+
   fclose(pp);
   if (!TerminateProcess(pp->_tmpfname ,0))
     return( -1 );

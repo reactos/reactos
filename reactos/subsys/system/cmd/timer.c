@@ -19,13 +19,11 @@
 
 
 
-//print timer status
-#define PS ConOutPrintf(_T("Timer %d is %s: "),clk_n,cS?_T("ON"):_T("OFF")); \
-	PrintTime()
+
 
 //print timer value
 #define PT(format) PrintElapsedTime(GetTickCount()-cT,format)
-	
+
 
 //current timer Time (at wich started to count)
 #define cT clksT[clk_n]
@@ -43,11 +41,11 @@ PrintElapsedTime (DWORD time,INT format)
 #ifdef _DEBUG
 	DebugPrintf(_T("PrintTime(%d,%d)"),time,format);
 #endif
-	
+
 	switch (format)
 	{
 	case 0:
-		LoadString(GetModuleHandle(NULL), STRING_TIMER_HELP1, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_TIMER_HELP1, szMsg, RC_STRING_MAX_SIZE);
 		ConOutPrintf(szMsg, time);
 		break;
 
@@ -58,7 +56,7 @@ PrintElapsedTime (DWORD time,INT format)
 		time /=60;
 		m = time % 60;
 		h = time / 60;
-		LoadString( GetModuleHandle(NULL), STRING_TIMER_HELP2, szMsg, RC_STRING_MAX_SIZE);
+		LoadString( CMD_ModuleHandle, STRING_TIMER_HELP2, szMsg, RC_STRING_MAX_SIZE);
 		ConOutPrintf(szMsg,
 		             h, cTimeSeparator,
 		             m, cTimeSeparator,
@@ -74,7 +72,7 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 
 	// all timers are kept
 	static DWORD clksT[10];
-	
+
 	// timers status
 	// set all the clocks off by default
 	static BOOL clksS[10]={FALSE,FALSE,FALSE,FALSE,
@@ -82,7 +80,7 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 
 	// TRUE if /S in command line
 	BOOL bS = FALSE;
-	
+
 	// avoid to set clk_n more than once
 	BOOL bCanNSet = TRUE;
 
@@ -94,8 +92,8 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 
 	// output format
 	INT iFormat=1;
-	
-	
+
+
 	// command line parsing variables
 	INT argc;
 	LPTSTR *p;
@@ -104,11 +102,12 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		LoadString(GetModuleHandle(NULL), STRING_TIMER_HELP3, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_TIMER_HELP3, szMsg, RC_STRING_MAX_SIZE);
 		ConOutPrintf(szMsg, cTimeSeparator, cTimeSeparator, cDecimalSeparator);
 		return 0;
 	}
 
+	LoadString( CMD_ModuleHandle, STRING_TIMER_TIME, szMsg, RC_STRING_MAX_SIZE);
 
 	p = split (param, &argc, FALSE);
 
@@ -139,14 +138,14 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 				bCanNSet = FALSE;
 				continue;
 			}
-			
+
 			// set s(plit) option
 			if (_totupper(p[i][1]) == _T('S'))
 			{
 				bS = TRUE;
 				continue;
 			}
-			
+
 			// specify format
 			if (_totupper(p[i][1]) == _T('F'))
 			{
@@ -161,7 +160,9 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 	{
 		cT=GetTickCount();
 		cS=TRUE;
-		PS;
+		    
+        ConOutPrintf (szMsg,clk_n,cS?_T("ON"):_T("OFF"));
+        PrintTime();
 		freep(p);
 		return 0;
 	}
@@ -169,8 +170,9 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 	if(bS)
 	{
 		if(cS)
-		{	
-			PS;
+		{			
+            ConOutPrintf (szMsg,clk_n,cS?_T("ON"):_T("OFF"));
+            PrintTime();
 			PrintElapsedTime(GetTickCount()-cT, iFormat);
 			freep(p);
 			return 0;
@@ -178,7 +180,8 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 
 		cT=GetTickCount();
 		cS=TRUE;
-		PS;
+		ConOutPrintf (szMsg,clk_n,cS?_T("ON"):_T("OFF"));
+        PrintTime();
 		freep(p);
 		return 0;
 	}
@@ -188,7 +191,8 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 		if (cS)
 		{
 			cS=FALSE;
-			PS;
+			ConOutPrintf (szMsg,clk_n,cS?_T("ON"):_T("OFF"));
+            PrintTime();
 			PrintElapsedTime(GetTickCount()-cT, iFormat);
 			freep(p);
 			return 0;
@@ -196,7 +200,8 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 
 		cT=GetTickCount();
 		cS=TRUE;
-		PS;
+		ConOutPrintf (szMsg,clk_n,cS?_T("ON"):_T("OFF"));
+        PrintTime();
 		freep(p);
 		return 0;
 	}
@@ -207,12 +212,14 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 		if (cS)
 		{
 			cS=FALSE;
-			PS;
+			ConOutPrintf (szMsg,clk_n,cS?_T("ON"):_T("OFF"));
+            PrintTime();
 			PrintElapsedTime(GetTickCount()-cT, iFormat);
 			freep(p);
 			return 0;
 		}
-		PS;
+		ConOutPrintf (szMsg,clk_n,cS?_T("ON"):_T("OFF"));
+        PrintTime();
 		freep(p);
 		return 0;
 	}

@@ -64,14 +64,14 @@ static void create_test_entries(void)
     SetEnvironmentVariableA("LONGSYSTEMVAR", "bar");
     SetEnvironmentVariableA("FOO", "ImARatherLongButIndeedNeededString");
 
-    ok(!RegSetValueExA(hkey_main,"Test1",0,REG_EXPAND_SZ, sTestpath1, strlen(sTestpath1)+1), 
+    ok(!RegSetValueExA(hkey_main,"Test1",0,REG_EXPAND_SZ, sTestpath1, strlen(sTestpath1)+1),
         "RegSetValueExA failed\n");
-    ok(!RegSetValueExA(hkey_main,"Test2",0,REG_SZ, sTestpath1, strlen(sTestpath1)+1), 
+    ok(!RegSetValueExA(hkey_main,"Test2",0,REG_SZ, sTestpath1, strlen(sTestpath1)+1),
         "RegSetValueExA failed\n");
-    ok(!RegSetValueExA(hkey_main,"Test3",0,REG_EXPAND_SZ, sTestpath2, strlen(sTestpath2)+1), 
+    ok(!RegSetValueExA(hkey_main,"Test3",0,REG_EXPAND_SZ, sTestpath2, strlen(sTestpath2)+1),
         "RegSetValueExA failed\n");
 }
-        
+
 static void test_enum_value(void)
 {
     DWORD res;
@@ -248,7 +248,7 @@ static void test_query_value_ex()
     DWORD ret;
     DWORD size;
     DWORD type;
-    
+
     ret = RegQueryValueExA(hkey_main, "Test2", NULL, &type, NULL, &size);
     ok(ret == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", ret);
     ok(size == strlen(sTestpath1) + 1, "(%ld,%ld)\n", (DWORD)strlen(sTestpath1) + 1, size);
@@ -341,7 +341,7 @@ static void test_reg_close_key()
     ret = RegCloseKey(hkHandle); /* Windows 95 doesn't mind. */
     ok(ret == ERROR_INVALID_HANDLE || ret == ERROR_SUCCESS,
        "expected ERROR_INVALID_HANDLE or ERROR_SUCCESS, got %ld\n", ret);
-    
+
     /* try to close a NULL handle */
     ret = RegCloseKey(NULL);
     ok(ret == ERROR_INVALID_HANDLE || ret == ERROR_BADKEY, /* Windows 95 returns BADKEY */
@@ -406,7 +406,7 @@ static BOOL set_privileges(LPCSTR privilege, BOOL set)
 
     tp.PrivilegeCount = 1;
     tp.Privileges[0].Luid = luid;
-    
+
     if (set)
         tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
     else

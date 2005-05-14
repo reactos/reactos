@@ -115,7 +115,7 @@ int _writecnv(int fn, void* buf, size_t siz)
     int cr1 = 0;
     int cr2 = 0;
     int n;
-        
+
     cr1 = cntcr(bufp, bufsiz);
     tmp = malloc(cr1);
     memcpy(tmp, bufp + bufsiz - cr1, cr1);
@@ -129,7 +129,7 @@ int _writecnv(int fn, void* buf, size_t siz)
 }
 
 int convert(char* endp, int bufsiz, int n)
-{   
+{
     endp = endp + bufsiz + n;
     while (bufsiz > 0) {
         *endp = *(endp - n);

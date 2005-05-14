@@ -25,29 +25,29 @@ NTSTATUS TCPServiceListeningSocket( PCONNECTION_ENDPOINT Listener,
      * userland after we complete this irp */
     WhoIsConnecting = (PTDI_CONNECTION_INFORMATION)
 	Request->ReturnConnectionInformation;
-    
+
     Status = TCPTranslateError
-	( OskitTCPAccept( Listener->SocketContext, 
+	( OskitTCPAccept( Listener->SocketContext,
 			  &Connection->SocketContext,
 			  &OutAddr,
 			  sizeof(OutAddr),
 			  &OutAddrLen,
 			  Request->RequestFlags & TDI_QUERY_ACCEPT ? 0 : 1 ) );
-    
+
     TI_DbgPrint(DEBUG_TCP,("Status %x\n", Status));
 
     if( NT_SUCCESS(Status) && Status != STATUS_PENDING ) {
 	RequestAddressReturn = WhoIsConnecting->RemoteAddress;
 
-	TI_DbgPrint(DEBUG_TCP,("Copying address to %x (Who %x)\n", 
+	TI_DbgPrint(DEBUG_TCP,("Copying address to %x (Who %x)\n",
 			       RequestAddressReturn, WhoIsConnecting));
-	
+
         RequestAddressReturn->TAAddressCount = 1;
 	RequestAddressReturn->Address[0].AddressLength = OutAddrLen;
 
         /* BSD uses the first byte of the sockaddr struct as a length.
          * Since windows doesn't do that we strip it */
-	RequestAddressReturn->Address[0].AddressType = 
+	RequestAddressReturn->Address[0].AddressType =
 	    (OutAddr.sin_family >> 8) & 0xff;
 
 	RtlCopyMemory( &RequestAddressReturn->Address[0].Address,
@@ -56,7 +56,7 @@ NTSTATUS TCPServiceListeningSocket( PCONNECTION_ENDPOINT Listener,
 
 	TI_DbgPrint(DEBUG_TCP,("Done copying\n"));
     }
-    
+
     TI_DbgPrint(DEBUG_TCP,("Status %x\n", Status));
 
     return Status;
@@ -78,27 +78,27 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog ) {
     ASSERT_KM_POINTER(Connection->AddressFile);
 
     TcpipRecursiveMutexEnter( &TCPLock, TRUE );
-   
+
     AddressToBind.sin_family = AF_INET;
-    memcpy( &AddressToBind.sin_addr, 
+    memcpy( &AddressToBind.sin_addr,
 	    &Connection->AddressFile->Address.Address.IPv4Address,
 	    sizeof(AddressToBind.sin_addr) );
     AddressToBind.sin_port = Connection->AddressFile->Port;
-    
+
     TI_DbgPrint(DEBUG_TCP,("AddressToBind - %x:%x\n", AddressToBind.sin_addr, AddressToBind.sin_port));
-    
+
     OskitTCPBind( Connection->SocketContext,
 		  Connection,
 		  &AddressToBind,
 		  sizeof(AddressToBind) );
- 
+
     Status = TCPTranslateError( OskitTCPListen( Connection->SocketContext,
 						Backlog ) );
-    
+
     TcpipRecursiveMutexLeave( &TCPLock );
 
     TI_DbgPrint(DEBUG_TCP,("TCPListen finished %x\n", Status));
-   
+
     return Status;
 }
 
@@ -106,9 +106,9 @@ VOID TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
 			      PCONNECTION_ENDPOINT Connection ) {
     PLIST_ENTRY ListEntry;
     PTDI_BUCKET Bucket;
-    
+
     TcpipRecursiveMutexEnter( &TCPLock, TRUE );
-    
+
     ListEntry = Listener->ListenRequest.Flink;
     while ( ListEntry != &Listener->ListenRequest ) {
 	Bucket = CONTAINING_RECORD(ListEntry, TDI_BUCKET, Entry);
@@ -122,7 +122,7 @@ VOID TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
 	    ExFreePool( Bucket );
 	}
     }
-	
+
    TcpipRecursiveMutexLeave( &TCPLock );
 }
 
@@ -139,7 +139,7 @@ NTSTATUS TCPAccept
 
    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
-   Status = TCPServiceListeningSocket( Listener, Connection, 
+   Status = TCPServiceListeningSocket( Listener, Connection,
 				       (PTDI_REQUEST_KERNEL)Request );
 
    if( Status == STATUS_PENDING ) {

@@ -670,7 +670,7 @@ GetWriteWatch(
 BOOL
 STDCALL
 HeapQueryInformation (
-    HANDLE HeapHandle, 
+    HANDLE HeapHandle,
     HEAP_INFORMATION_CLASS HeapInformationClass,
     PVOID HeapInformation OPTIONAL,
     SIZE_T HeapInformationLength OPTIONAL,
@@ -687,7 +687,7 @@ HeapQueryInformation (
 BOOL
 STDCALL
 HeapSetInformation (
-    HANDLE HeapHandle, 
+    HANDLE HeapHandle,
     HEAP_INFORMATION_CLASS HeapInformationClass,
     PVOID HeapInformation OPTIONAL,
     SIZE_T HeapInformationLength OPTIONAL

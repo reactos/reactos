@@ -315,11 +315,11 @@ WORD	TIME_SetEventInternal(UINT wDelay, UINT wResol,
 
     TRACE("(%u, %u, %p, %08lX, %04X);\n", wDelay, wResol, lpFunc, dwUser, wFlags);
 
-    lpNewTimer = (LPWINE_TIMERENTRY)HeapAlloc(GetProcessHeap(), 0, sizeof(WINE_TIMERENTRY));
-    if (lpNewTimer == NULL)
+    if (wDelay < MMSYSTIME_MININTERVAL || wDelay > MMSYSTIME_MAXINTERVAL)
 	return 0;
 
-    if (wDelay < MMSYSTIME_MININTERVAL || wDelay > MMSYSTIME_MAXINTERVAL)
+    lpNewTimer = HeapAlloc(GetProcessHeap(), 0, sizeof(WINE_TIMERENTRY));
+    if (lpNewTimer == NULL)
 	return 0;
 
     TIME_MMTimeStart();

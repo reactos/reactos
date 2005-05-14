@@ -97,7 +97,7 @@ NlsInit()
    {
       NtClose(Handle);
    }
-   
+
    /* Setup ANSI code page. */
    AnsiCodePage.CodePage = CP_ACP;
    AnsiCodePage.SectionHandle = NULL;
@@ -195,10 +195,10 @@ IntGetCodePageEntry(UINT CodePage)
    WCHAR FileName[MAX_PATH + 1];
    UINT FileNamePos;
    PCODEPAGE_ENTRY CodePageEntry;
-   
+
    if (CodePage == CP_THREAD_ACP)
    {
-      if (!GetLocaleInfoW(GetThreadLocale(), LOCALE_IDEFAULTANSICODEPAGE | 
+      if (!GetLocaleInfoW(GetThreadLocale(), LOCALE_IDEFAULTANSICODEPAGE |
                           LOCALE_RETURN_NUMBER, (WCHAR *)&CodePage,
                           sizeof(CodePage) / sizeof(WCHAR)))
       {
@@ -208,7 +208,7 @@ IntGetCodePageEntry(UINT CodePage)
    }
    else if (CodePage == CP_MACCP)
    {
-      if (!GetLocaleInfoW(LOCALE_SYSTEM_DEFAULT, LOCALE_IDEFAULTMACCODEPAGE | 
+      if (!GetLocaleInfoW(LOCALE_SYSTEM_DEFAULT, LOCALE_IDEFAULTMACCODEPAGE |
                           LOCALE_RETURN_NUMBER, (WCHAR *)&CodePage,
                           sizeof(CodePage) / sizeof(WCHAR)))
       {
@@ -292,7 +292,7 @@ IntGetCodePageEntry(UINT CodePage)
    CodePageEntry->SectionHandle = SectionHandle;
    CodePageEntry->SectionMapping = SectionMapping;
    RtlInitCodePageTable((PUSHORT)SectionMapping, &CodePageEntry->CodePageTable);
-   
+
    /* Insert the new entry to list and unlock. Uff. */
    InsertTailList(&CodePageListHead, &CodePageEntry->Entry);
    RtlLeaveCriticalSection(&CodePageListLock);
@@ -315,7 +315,7 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
    UCHAR Char, Length;
    WCHAR WideChar;
    ULONG Count;
-   
+
    if (Flags != 0)
    {
       SetLastError(ERROR_INVALID_FLAGS);
@@ -606,7 +606,7 @@ GetNlsSectionName(UINT CodePage, UINT Base, ULONG Unknown,
       return FALSE;
 
    /*
-    * If the name including the terminating NULL character doesn't 
+    * If the name including the terminating NULL character doesn't
     * fit in the output buffer then fail.
     */
    if (strlen(Integer) + strlen(BaseName) >= ResultSize)
@@ -624,7 +624,7 @@ GetNlsSectionName(UINT CodePage, UINT Base, ULONG Unknown,
  * @param CodePage
  *        Code page number to get file name of.
  * @param FileName
- *        Buffer that is filled with file name of successful return. Can 
+ *        Buffer that is filled with file name of successful return. Can
  *        be set to NULL.
  * @param FileNameSize
  *        Size of the buffer to hold file name in WCHARs.
@@ -649,7 +649,7 @@ GetCPFileNameFromRegistry(UINT CodePage, LPWSTR FileName, ULONG FileNameSize)
    ValueName.MaximumLength = sizeof(ValueNameBuffer);
    if (!NT_SUCCESS(RtlIntegerToUnicodeString(CodePage, 10, &ValueName)))
       return FALSE;
-   
+
    /* Open the registry key containing file name mappings. */
    RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\System\\"
                         L"CurrentControlSet\\Control\\Nls\\CodePage");
@@ -781,7 +781,7 @@ MultiByteToWideChar(UINT CodePage, DWORD Flags,
 
 /**
  * Convert a wide-charater string to closest multi-byte equivalent.
- * 
+ *
  * @param CodePage
  *        Code page to be used to perform the conversion. It can be also
  *        one of the special values (CP_ACP for ANSI code page, CP_MACCP
@@ -791,23 +791,23 @@ MultiByteToWideChar(UINT CodePage, DWORD Flags,
  *        Additional conversion flags (WC_NO_BEST_FIT_CHARS, WC_COMPOSITECHECK,
  *        WC_DISCARDNS, WC_SEPCHARS, WC_DEFAULTCHAR).
  * @param WideCharString
- *        Points to the wide-character string to be converted. 
+ *        Points to the wide-character string to be converted.
  * @param WideCharCount
  *        Size in WCHARs of WideCharStr, or 0 if the caller just wants to
  *        know how large WideCharString should be for a successful conversion.
  * @param MultiByteString
- *        Points to the buffer to receive the translated string. 
+ *        Points to the buffer to receive the translated string.
  * @param MultiByteCount
- *        Specifies the size in bytes of the buffer pointed to by the 
- *        MultiByteString parameter. If this value is zero, the function 
- *        returns the number of bytes required for the buffer. 
- * @param DefaultChar 
- *        Points to the character used if a wide character cannot be 
- *        represented in the specified code page. If this parameter is 
- *        NULL, a system default value is used. 
- * @param UsedDefaultChar 
+ *        Specifies the size in bytes of the buffer pointed to by the
+ *        MultiByteString parameter. If this value is zero, the function
+ *        returns the number of bytes required for the buffer.
+ * @param DefaultChar
+ *        Points to the character used if a wide character cannot be
+ *        represented in the specified code page. If this parameter is
+ *        NULL, a system default value is used.
+ * @param UsedDefaultChar
  *        Points to a flag that indicates whether a default character was
- *        used. This parameter can be NULL. 
+ *        used. This parameter can be NULL.
  *
  * @return Zero on error, otherwise the number of bytes written in the
  *         MultiByteString buffer. Or the number of bytes needed for
@@ -920,7 +920,7 @@ IsDBCSLeadByteEx (
     )
 {
     PCODEPAGE_ENTRY CodePageEntry;
-    
+
     CodePageEntry = IntGetCodePageEntry(CodePage);
     if(CodePageEntry != NULL)
     {

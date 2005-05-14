@@ -43,12 +43,24 @@
 
 struct _DEVICE_OBJECT_POWER_EXTENSION;
 
-typedef struct _IO_COMPLETION_PACKET{
+/* This is like the IRP Overlay so we can optimize its insertion */
+typedef struct _IO_COMPLETION_PACKET
+{
+   struct {
+       LIST_ENTRY ListEntry;
+       union {
+           struct _IO_STACK_LOCATION *CurrentStackLocation;
+           ULONG PacketType;
+       };
+   };
    PVOID             Key;
    PVOID             Context;
    IO_STATUS_BLOCK   IoStatus;
-   LIST_ENTRY        ListEntry;
 } IO_COMPLETION_PACKET, *PIO_COMPLETION_PACKET;
+
+/* Packet Types */
+#define IrpCompletionPacket     0x1
+#define IrpMiniCompletionPacket 0x2
 
 typedef struct _DEVOBJ_EXTENSION {
    CSHORT Type;
@@ -64,7 +76,7 @@ typedef struct _DEVOBJ_EXTENSION {
    ULONG StartIoFlags;
    struct _VPB *Vpb;
 } DEVOBJ_EXTENSION, *PDEVOBJ_EXTENSION;
-   
+
 typedef struct _PRIVATE_DRIVER_EXTENSIONS {
    struct _PRIVATE_DRIVER_EXTENSIONS *Link;
    PVOID ClientIdentificationAddress;
@@ -382,7 +394,7 @@ IopCreateDevice(PVOID ObjectBody,
 		PWSTR RemainingPath,
 		POBJECT_ATTRIBUTES ObjectAttributes);
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 IopAttachVpb(PDEVICE_OBJECT DeviceObject);
 
@@ -531,14 +543,14 @@ IopReinitializeDrivers(VOID);
 
 /* file.c */
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 IopCreateFile(PVOID ObjectBody,
               PVOID Parent,
               PWSTR RemainingPath,
               POBJECT_ATTRIBUTES ObjectAttributes);
-              
-VOID 
+
+VOID
 STDCALL
 IopDeleteFile(PVOID ObjectBody);
 
@@ -549,19 +561,19 @@ IopSecurityFile(PVOID ObjectBody,
                 SECURITY_INFORMATION SecurityInformation,
                 PSECURITY_DESCRIPTOR SecurityDescriptor,
                 PULONG BufferLength);
-                
+
 NTSTATUS
 STDCALL
 IopQueryNameFile(PVOID ObjectBody,
                  POBJECT_NAME_INFORMATION ObjectNameInfo,
                  ULONG Length,
                  PULONG ReturnLength);
-                 
-VOID 
+
+VOID
 STDCALL
 IopCloseFile(PVOID ObjectBody,
              ULONG HandleCount);
-             
+
 /* plugplay.c */
 
 NTSTATUS INIT_FUNCTION

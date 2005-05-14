@@ -1,9 +1,9 @@
 /* $Id$
  *
  * smss.c - Session Manager
- * 
+ *
  * ReactOS Operating System
- * 
+ *
  * --------------------------------------------------------------------
  *
  * This software is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this software; see the file COPYING.LIB. If not, write
  * to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge,
- * MA 02139, USA.  
+ * MA 02139, USA.
  *
  * --------------------------------------------------------------------
  */
@@ -39,7 +39,7 @@ NtProcessStartup(PPEB Peb)
 {
   NTSTATUS Status;
   PROCESS_BASIC_INFORMATION PBI = {0};
-  
+
   PrintString("ReactOS Session Manager %s (Build %s)\n",
 	     KERNEL_RELEASE_STR,
 	     KERNEL_VERSION_BUILD_STR);

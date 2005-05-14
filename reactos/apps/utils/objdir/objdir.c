@@ -35,7 +35,7 @@ RawUszAsz (
 	)
 {
 	register PCHAR a = szA;
-	
+
 	while (*szU) {*szA++ = (CHAR) (0x00ff & * szU++);}
 	*szA = '\0';
 	return a;
@@ -51,7 +51,7 @@ RawAszUsz (
 	)
 {
 	register PWCHAR w = szW;
-	
+
 	while (*szA) {*szW++ = (WCHAR) *szA++;}
 	*szW = L'\0';
 	return w;
@@ -64,7 +64,7 @@ STDCALL
 StatusToName (NTSTATUS Status)
 {
 	static char RawValue [16];
-	
+
 	switch (Status)
 	{
 		case STATUS_BUFFER_TOO_SMALL:
@@ -112,7 +112,7 @@ ExpandSymbolicLink (
 	Path.Buffer = PathBuffer;
 	Path.Length = 0;
 	Path.MaximumLength = sizeof PathBuffer;
-	
+
 	RtlCopyUnicodeString (& Path, DirectoryName);
 	if (L'\\' != Path.Buffer [(Path.Length / sizeof Path.Buffer[0]) - 1])
 	{
@@ -183,7 +183,7 @@ ListDirectory (
 	ULONG			Context = 0;
 	ULONG			ReturnLength = 0;
 	ULONG			EntryCount = 0;
-	
+
 	/* For expanding symbolic links */
 	WCHAR			TargetName [2 * MAX_PATH];
 	UNICODE_STRING		TargetObjectName = {
@@ -222,7 +222,7 @@ ListDirectory (
 		return (FALSE);
 	}
 	printf ("\n Directory of %s\n\n", DirectoryNameA);
-	
+
         for(;;)
         {
 	/*
@@ -355,7 +355,7 @@ int main(int argc, char* argv[])
 			return EXIT_FAILURE;
 		}
 		RawAszUsz (argv[2], DirectoryNameW);
-		Recurse = TRUE;	
+		Recurse = TRUE;
 		break;
 	default:
 		fprintf (

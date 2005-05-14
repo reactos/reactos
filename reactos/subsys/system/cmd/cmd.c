@@ -130,7 +130,7 @@
  *       Added ShellExecute call when all else fails to be able to "launch" any file.
  *
  *    02-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -155,6 +155,7 @@ OSVERSIONINFO osvi;
 HANDLE hIn;
 HANDLE hOut;
 HANDLE hConsole;
+HANDLE CMD_ModuleHandle;
 
 static NtQueryInformationProcessProc NtQueryInformationProcessPtr;
 static NtReadVirtualMemoryProc       NtReadVirtualMemoryPtr;
@@ -332,7 +333,7 @@ Execute (LPTSTR full, LPTSTR first, LPTSTR rest)
 			working = SetCurrentDirectory(str);
 		}
 
-		if (!working) ConErrPuts (INVALIDDRIVE);
+		if (!working) ConErrResPuts (STRING_FREE_ERROR1);
 
 		return;
 	}
@@ -426,6 +427,9 @@ Execute (LPTSTR full, LPTSTR first, LPTSTR rest)
 				ENABLE_PROCESSED_INPUT );
 	}
 
+	/* Get code page if it has been change */
+	InputCodePage= GetConsoleCP();
+    OutputCodePage = GetConsoleOutputCP();
 #ifndef __REACTOS__
 	SetConsoleTitle (szWindowTitle);
 #endif
@@ -633,14 +637,14 @@ VOID ParseCommandLine (LPTSTR cmd)
 		                    FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile == INVALID_HANDLE_VALUE)
 		{
-			LoadString(GetModuleHandle(NULL), STRING_CMD_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, in);
 			return;
 		}
 
 		if (!SetStdHandle (STD_INPUT_HANDLE, hFile))
 		{
-			LoadString(GetModuleHandle(NULL), STRING_CMD_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, in);
 			return;
 		}
@@ -665,7 +669,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 				       TRUNCATE_EXISTING, FILE_ATTRIBUTE_TEMPORARY, NULL);
 		if (hFile[1] == INVALID_HANDLE_VALUE)
 		{
-			LoadString(GetModuleHandle(NULL), STRING_CMD_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR2, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg);
 			return;
 		}
@@ -718,14 +722,14 @@ VOID ParseCommandLine (LPTSTR cmd)
 		                    FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile == INVALID_HANDLE_VALUE)
 		{
-			LoadString(GetModuleHandle(NULL), STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, out);
 			return;
 		}
 
 		if (!SetStdHandle (STD_OUTPUT_HANDLE, hFile))
 		{
-			LoadString(GetModuleHandle(NULL), STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, out);
 			return;
 		}
@@ -779,7 +783,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 			                    NULL);
 			if (hFile == INVALID_HANDLE_VALUE)
 			{
-				LoadString(GetModuleHandle(NULL), STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
+				LoadString(CMD_ModuleHandle, STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
 				ConErrPrintf(szMsg, err);
 				return;
 			}
@@ -787,7 +791,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 
 		if (!SetStdHandle (STD_ERROR_HANDLE, hFile))
 		{
-			LoadString(GetModuleHandle(NULL), STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, err);
 			return;
 		}
@@ -918,7 +922,7 @@ ProcessInput (BOOL bFlag)
 	LPTSTR ip;
 	LPTSTR cp;
 	BOOL bEchoThisLine;
-	
+
 
 	do
 	{
@@ -1031,7 +1035,7 @@ ProcessInput (BOOL bFlag)
  */
 BOOL WINAPI BreakHandler (DWORD dwCtrlType)
 {
-	
+
 	if ((dwCtrlType != CTRL_C_EVENT) &&
 	    (dwCtrlType != CTRL_BREAK_EVENT))
 		return FALSE;
@@ -1072,36 +1076,27 @@ VOID RemoveBreakHandler (VOID)
 static VOID
 ShowCommands (VOID)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-
 	/* print command list */
-	LoadString(GetModuleHandle(NULL), STRING_CMD_HELP1, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPrintf(szMsg);
+	ConOutResPuts(STRING_CMD_HELP1);
 	PrintCommandList();
 
 	/* print feature list */
-	LoadString(GetModuleHandle(NULL), STRING_CMD_HELP2, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPuts(szMsg);
+	ConOutResPuts(STRING_CMD_HELP2);
 
-#ifdef FEATURE_ALIASES	
-	LoadString(GetModuleHandle(NULL), STRING_CMD_HELP3, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPuts(szMsg);
+#ifdef FEATURE_ALIASES
+	ConOutResPuts(STRING_CMD_HELP3);
 #endif
 #ifdef FEATURE_HISTORY
-	LoadString(GetModuleHandle(NULL), STRING_CMD_HELP4, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPuts(szMsg);
+	ConOutResPuts(STRING_CMD_HELP4);
 #endif
 #ifdef FEATURE_UNIX_FILENAME_COMPLETION
-	LoadString(GetModuleHandle(NULL), STRING_CMD_HELP5, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPuts(szMsg);
+	ConOutResPuts(STRING_CMD_HELP5);
 #endif
 #ifdef FEATURE_DIRECTORY_STACK
-	LoadString(GetModuleHandle(NULL), STRING_CMD_HELP6, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPuts(szMsg);
+	ConOutResPuts(STRING_CMD_HELP6);
 #endif
 #ifdef FEATURE_REDIRECTION
-	LoadString(GetModuleHandle(NULL), STRING_CMD_HELP7, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPuts(szMsg);
+	ConOutResPuts(STRING_CMD_HELP7);
 #endif
 	ConOutChar(_T('\n'));
 }
@@ -1117,7 +1112,6 @@ ShowCommands (VOID)
 static VOID
 Initialize (int argc, TCHAR* argv[])
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR commandline[CMDLINE_LENGTH];
 	TCHAR ModuleName[_MAX_PATH + 1];
 	INT i;
@@ -1150,8 +1144,7 @@ Initialize (int argc, TCHAR* argv[])
 
 	if (argc >= 2 && !_tcsncmp (argv[1], _T("/?"), 2))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_CMD_HELP8, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+		ConOutResPuts(STRING_CMD_HELP8);
 		ExitProcess(0);
 	}
 	SetConsoleMode (hIn, ENABLE_PROCESSED_INPUT);
@@ -1255,7 +1248,7 @@ Initialize (int argc, TCHAR* argv[])
 
 		if (IsExistingFile (_T("commandline")))
 		{
-			LoadString(GetModuleHandle(NULL), STRING_CMD_ERROR4, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR4, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, commandline);
 			ParseCommandLine (commandline);
 		}
@@ -1287,20 +1280,20 @@ Initialize (int argc, TCHAR* argv[])
 
 static VOID Cleanup (int argc, TCHAR *argv[])
 {
+#ifndef __REACTOS__
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
+#endif
 
 	/* run cmdexit.bat */
 	if (IsExistingFile (_T("cmdexit.bat")))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_CMD_ERROR5, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPrintf(szMsg);
+		ConErrResPuts(STRING_CMD_ERROR5);
 
 		ParseCommandLine (_T("cmdexit.bat"));
 	}
 	else if (IsExistingFile (_T("\\cmdexit.bat")))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_CMD_ERROR5, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPrintf ((LPTSTR)szMsg);
+		ConErrResPuts (STRING_CMD_ERROR5);
 		ParseCommandLine (_T("\\cmdexit.bat"));
 	}
 #ifndef __REACTOS__
@@ -1316,7 +1309,7 @@ static VOID Cleanup (int argc, TCHAR *argv[])
 
 		if (IsExistingFile (_T("commandline")))
 		{
-			LoadString(GetModuleHandle(NULL), STRING_CMD_ERROR4, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR4, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, commandline);
 			ParseCommandLine (commandline);
 		}
@@ -1416,6 +1409,8 @@ int main (int argc, char *argv[])
 #endif
 
   SetFileApisToOEM();
+  InputCodePage= 0;
+  OutputCodePage = 0;
 
   hConsole = CreateFile(_T("CONOUT$"), GENERIC_READ|GENERIC_WRITE,
                         FILE_SHARE_READ|FILE_SHARE_WRITE, NULL,
@@ -1427,6 +1422,10 @@ int main (int argc, char *argv[])
     }
   wColor = Info.wAttributes;
   wDefColor = wColor;
+
+  InputCodePage= GetConsoleCP();
+  OutputCodePage = GetConsoleOutputCP();
+  CMD_ModuleHandle = GetModuleHandle(NULL);
 
   /* check switches on command-line */
   Initialize(argc, argv);

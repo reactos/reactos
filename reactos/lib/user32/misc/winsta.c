@@ -35,14 +35,14 @@ CreateWindowStationA(LPSTR lpwinsta,
   ANSI_STRING WindowStationNameA;
   UNICODE_STRING WindowStationNameU;
   HWINSTA hWinSta;
-  
-  if (lpwinsta != NULL) 
+
+  if (lpwinsta != NULL)
     {
       RtlInitAnsiString(&WindowStationNameA, lpwinsta);
-      RtlAnsiStringToUnicodeString(&WindowStationNameU, &WindowStationNameA, 
+      RtlAnsiStringToUnicodeString(&WindowStationNameU, &WindowStationNameA,
 				   TRUE);
-    } 
-  else 
+    }
+  else
     {
       RtlInitUnicodeString(&WindowStationNameU, NULL);
     }
@@ -53,7 +53,7 @@ CreateWindowStationA(LPSTR lpwinsta,
 				 lpsa);
 
   RtlFreeUnicodeString(&WindowStationNameU);
-  
+
   return hWinSta;
 }
 
@@ -68,9 +68,9 @@ CreateWindowStationW(LPWSTR lpwinsta,
 		     LPSECURITY_ATTRIBUTES lpsa)
 {
   UNICODE_STRING WindowStationName;
-  
+
   RtlInitUnicodeString(&WindowStationName, lpwinsta);
-  
+
   return NtUserCreateWindowStation(&WindowStationName,
 				   dwDesiredAccess,
 				   lpsa, 0, 0, 0);
@@ -294,22 +294,22 @@ OpenWindowStationA(LPSTR lpszWinSta,
   ANSI_STRING WindowStationNameA;
   UNICODE_STRING WindowStationNameU;
   HWINSTA hWinSta;
-  
-  if (lpszWinSta != NULL) 
+
+  if (lpszWinSta != NULL)
     {
       RtlInitAnsiString(&WindowStationNameA, lpszWinSta);
-      RtlAnsiStringToUnicodeString(&WindowStationNameU, &WindowStationNameA, 
+      RtlAnsiStringToUnicodeString(&WindowStationNameU, &WindowStationNameA,
 				   TRUE);
-    } 
-  else 
+    }
+  else
     {
       RtlInitUnicodeString(&WindowStationNameU, NULL);
     }
-  
+
   hWinSta = OpenWindowStationW(WindowStationNameU.Buffer,
 			       fInherit,
 			       dwDesiredAccess);
-  
+
   RtlFreeUnicodeString(&WindowStationNameU);
 
   return hWinSta;

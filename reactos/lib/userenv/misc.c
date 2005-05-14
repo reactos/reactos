@@ -108,7 +108,7 @@ GetUserSidFromToken (HANDLE hToken,
 /* Dynamic DLL loading interface **********************************************/
 
 /* OLE32.DLL import table */
-DYN_MODULE DynOle32 = 
+DYN_MODULE DynOle32 =
 {
   L"ole32.dll",
   {

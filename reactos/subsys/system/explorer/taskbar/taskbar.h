@@ -48,7 +48,7 @@
 
  /// internal task bar button management entry
 struct TaskBarEntry
-{	
+{
 	TaskBarEntry();
 
 	int		_id;	// ID for WM_COMMAND

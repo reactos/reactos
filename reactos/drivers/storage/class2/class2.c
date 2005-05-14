@@ -1382,7 +1382,7 @@ ScsiClassIoComplete(IN PDEVICE_OBJECT DeviceObject,
 
   /*
    * BUGBUG -> Srb = IrpStack->Parameters.Scsi.Srb;
-   * Must pass Srb as Context arg!! See comment about Completion routines in 
+   * Must pass Srb as Context arg!! See comment about Completion routines in
    * IofCallDriver for more info.
    */
 
@@ -1504,7 +1504,7 @@ ScsiClassIoCompleteAssociated(IN PDEVICE_OBJECT DeviceObject,
 
   /*
    * BUGBUG -> Srb = Srb = IrpStack->Parameters.Scsi.Srb;
-   * Must pass Srb as Context arg!! See comment about Completion routines in 
+   * Must pass Srb as Context arg!! See comment about Completion routines in
    * IofCallDriver for more info.
    */
 
@@ -2375,7 +2375,7 @@ ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
     }
 
   /* Adjust partition-relative starting offset to absolute offset */
-  IrpStack->Parameters.Read.ByteOffset.QuadPart += 
+  IrpStack->Parameters.Read.ByteOffset.QuadPart +=
     (DeviceExtension->StartingOffset.QuadPart + DeviceExtension->DMByteSkew);
 
   /* Calculate number of pages in this transfer */
@@ -2498,7 +2498,7 @@ ScsiClassRetryRequest(PDEVICE_OBJECT DeviceObject,
   Srb->ScsiStatus = 0;
 
   /* Don't modify the flags */
-//  Srb->Flags = 
+//  Srb->Flags =
 //  Srb->QueueTag = SP_UNTAGGED;
 
   NextIrpStack->MajorFunction = IRP_MJ_SCSI;
@@ -2512,7 +2512,7 @@ ScsiClassRetryRequest(PDEVICE_OBJECT DeviceObject,
 			     TRUE,
 			     TRUE,
 			     TRUE);
-    }			
+    }
   else
     {
       IoSetCompletionRoutine(Irp,

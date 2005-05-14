@@ -71,7 +71,7 @@ TCHAR szChildClass[MAX_LOADSTRING];
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     BOOL AclUiAvailable;
-    
+
     WNDCLASSEX wcFrame = {
                              sizeof(WNDCLASSEX),
                              CS_HREDRAW | CS_VREDRAW/*style*/,
@@ -107,7 +107,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
                          };
     ATOM hChildWndClass = RegisterClassEx(&wcChild); /* register child windows class */
     hChildWndClass = hChildWndClass; /* warning eater */
-    
+
     RegisterHexEditorClass(hInstance);
 
     hMenuFrame = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_REGEDIT_MENU));
@@ -115,7 +115,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     /* Initialize the Windows Common Controls DLL */
     InitCommonControls();
-    
+
     AclUiAvailable = InitializeAclUiDll();
     if(!AclUiAvailable)
     {
@@ -190,7 +190,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
         hf = _fdopen(hCrt, "w");
         *stdout = *hf;
         setvbuf(stdout, NULL, _IONBF, 0);
-     
+
     	wprintf(L"command line exit, hInstance = %d\n", hInstance);
     	getch();
     	FreeConsole();
@@ -217,7 +217,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
     /* Main message loop */
     while (GetMessage(&msg, (HWND)NULL, 0, 0)) {
-        if (!TranslateAccelerator(msg.hwnd, hAccel, &msg) 
+        if (!TranslateAccelerator(msg.hwnd, hAccel, &msg)
             && !TranslateChildTabMessage(&msg)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);

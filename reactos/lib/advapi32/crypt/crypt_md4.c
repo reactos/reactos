@@ -221,7 +221,7 @@ VOID WINAPI MD4Update(MD4_CTX *ctx, const unsigned char *buf, unsigned int len)
 }
 
 /*
- * Final wrapup - pad to 64-byte boundary with the bit pattern 
+ * Final wrapup - pad to 64-byte boundary with the bit pattern
  * 1 0* (64-bit count of bits processed, MSB-first)
  */
 VOID WINAPI MD4Final(MD4_CTX *ctx)

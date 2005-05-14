@@ -23,7 +23,7 @@
  * FILE:             services/fs/template/template.c
  * PURPOSE:          Bare filesystem template
  * PROGRAMMER:       David Welch (welch@mcmail.com)
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -71,7 +71,7 @@ FsdOpenFile(PDEVICE_EXTENSION DeviceExt,
 BOOLEAN STDCALL
 FsdHasFileSystem(PDEVICE_OBJECT DeviceToMount)
 /*
- * FUNCTION: Tests if the device contains a filesystem that can be mounted 
+ * FUNCTION: Tests if the device contains a filesystem that can be mounted
  * by this fsd
  */
 {

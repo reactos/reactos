@@ -17,7 +17,7 @@ int split_ip( char *text, u8b *dest, int place )
   for( dotcount = 0; (dotcount < place) && ( text ); text++ )
       if( *text == '.' )
 	dotcount++;
-  
+
   if( !text )
     return -2;
 

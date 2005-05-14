@@ -1339,7 +1339,7 @@ DWORD WINAPI IUnknown_AtomicRelease(IUnknown ** lpUnknown)
     *lpUnknown = NULL;
 
     TRACE("doing Release\n");
-    
+
     return IUnknown_Release(temp);
 }
 
@@ -1397,7 +1397,7 @@ BOOL WINAPI SHIsSameObject(IUnknown* lpInt1, IUnknown* lpInt2)
 
   if (lpUnknown1 == lpUnknown2)
     return TRUE;
-  
+
   return FALSE;
 }
 
@@ -1848,12 +1848,46 @@ DWORD WINAPI SHLoadFromPropertyBag(IUnknown *lpUnknown, IPropertyBag* lpPropBag)
 }
 
 /*************************************************************************
+ * @  [SHLWAPI.188]
+ *
+ * Call IOleControlSite_TranslateAccelerator()  on an object.
+ *
+ * PARAMS
+ *  lpUnknown   [I] Object supporting the IOleControlSite interface.
+ *  lpMsg       [I] Key message to be processed.
+ *  dwModifiers [I] Flags containing the state of the modifier keys.
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: An HRESULT error code, or E_INVALIDARG if lpUnknown is NULL.
+ */
+HRESULT WINAPI IUnknown_TranslateAcceleratorOCS(IUnknown *lpUnknown, LPMSG lpMsg, DWORD dwModifiers)
+{
+  IOleControlSite* lpCSite = NULL;
+  HRESULT hRet = E_INVALIDARG;
+
+  TRACE("(%p,%p,0x%08lx)\n", lpUnknown, lpMsg, dwModifiers);
+  if (lpUnknown)
+  {
+    hRet = IUnknown_QueryInterface(lpUnknown, &IID_IOleControlSite,
+                                   (void**)&lpCSite);
+    if (SUCCEEDED(hRet) && lpCSite)
+    {
+      hRet = IOleControlSite_TranslateAccelerator(lpCSite, lpMsg, dwModifiers);
+      IOleControlSite_Release(lpCSite);
+    }
+  }
+  return hRet;
+}
+
+
+/*************************************************************************
  * @  [SHLWAPI.189]
  *
  * Call IOleControlSite_GetExtendedControl() on an object.
  *
  * PARAMS
- *  lpUnknown [I] Object supporting the IOleControlSite interface
+ *  lpUnknown [I] Object supporting the IOleControlSite interface.
  *  lppDisp   [O] Destination for resulting IDispatch.
  *
  * RETURNS
@@ -1862,7 +1896,7 @@ DWORD WINAPI SHLoadFromPropertyBag(IUnknown *lpUnknown, IPropertyBag* lpPropBag)
  */
 DWORD WINAPI IUnknown_OnFocusOCS(IUnknown *lpUnknown, IDispatch** lppDisp)
 {
-  IOleControlSite* lpCSite;
+  IOleControlSite* lpCSite = NULL;
   HRESULT hRet = E_FAIL;
 
   TRACE("(%p,%p)\n", lpUnknown, lppDisp);
@@ -1875,6 +1909,41 @@ DWORD WINAPI IUnknown_OnFocusOCS(IUnknown *lpUnknown, IDispatch** lppDisp)
       hRet = IOleControlSite_GetExtendedControl(lpCSite, lppDisp);
       IOleControlSite_Release(lpCSite);
     }
+  }
+  return hRet;
+}
+
+/*************************************************************************
+ * @    [SHLWAPI.190]
+ */
+HRESULT WINAPI IUnknown_HandleIRestrict(LPUNKNOWN lpUnknown, PVOID lpArg1,
+                                        PVOID lpArg2, PVOID lpArg3, PVOID lpArg4)
+{
+  /* FIXME: {D12F26B2-D90A-11D0-830D-00AA005B4383} - What object does this represent? */
+  static const DWORD service_id[] = { 0xd12f26b2, 0x11d0d90a, 0xaa000d83, 0x83435b00 };
+  /* FIXME: {D12F26B1-D90A-11D0-830D-00AA005B4383} - Also Unknown/undocumented */
+  static const DWORD function_id[] = { 0xd12f26b1, 0x11d0d90a, 0xaa000d83, 0x83435b00 };
+  HRESULT hRet = E_INVALIDARG;
+  LPUNKNOWN lpUnkInner = NULL; /* FIXME: Real type is unknown */
+
+  TRACE("(%p,%p,%p,%p,%p)\n", lpUnknown, lpArg1, lpArg2, lpArg3, lpArg4);
+
+  if (lpUnknown && lpArg4)
+  {
+     hRet = IUnknown_QueryService(lpUnknown, (REFGUID)service_id,
+                                  (REFGUID)function_id, (void**)&lpUnkInner);
+
+     if (SUCCEEDED(hRet) && lpUnkInner)
+     {
+       /* FIXME: The type of service object requested is unknown, however
+	* testing shows that its first method is called with 4 parameters.
+	* Fake this by using IParseDisplayName_ParseDisplayName since the
+	* signature and position in the vtable matches our unknown object type.
+	*/
+       hRet = IParseDisplayName_ParseDisplayName((LPPARSEDISPLAYNAME)lpUnkInner,
+                                                 lpArg1, lpArg2, lpArg3, lpArg4);
+       IUnknown_Release(lpUnkInner);
+     }
   }
   return hRet;
 }
@@ -1966,6 +2035,55 @@ DWORD WINAPI SHWaitForSendMessageThread(HANDLE hand, DWORD dwTimeout)
 }
 
 /*************************************************************************
+ *      @       [SHLWAPI.195]
+ *
+ * Determine if a shell folder can be expanded.
+ *
+ * PARAMS
+ *  lpFolder [I] Parent folder containing the object to test.
+ *  pidl     [I] Id of the object to test.
+ *
+ * RETURNS
+ *  Success: S_OK, if the object is expandable, S_FALSE otherwise.
+ *  Failure: E_INVALIDARG, if any argument is invalid.
+ *
+ * NOTES
+ *  If the object to be tested does not expose the IQueryInfo() interface it
+ *  will not be identified as an expandable folder.
+ */
+HRESULT WINAPI SHIsExpandableFolder(LPSHELLFOLDER lpFolder, LPCITEMIDLIST pidl)
+{
+  HRESULT hRet = E_INVALIDARG;
+  IQueryInfo *lpInfo;
+
+  if (lpFolder && pidl)
+  {
+    hRet = IShellFolder_GetUIObjectOf(lpFolder, NULL, 1, &pidl, &IID_IQueryInfo,
+                                      NULL, (void**)&lpInfo);
+    if (FAILED(hRet))
+      hRet = S_FALSE; /* Doesn't expose IQueryInfo */
+    else
+    {
+      DWORD dwFlags = 0;
+
+      /* MSDN states of IQueryInfo_GetInfoFlags() that "This method is not
+       * currently used". Really? You wouldn't be holding out on me would you?
+       */
+      hRet = IQueryInfo_GetInfoFlags(lpInfo, &dwFlags);
+
+      if (SUCCEEDED(hRet))
+      {
+        /* 0x2 is an undocumented flag apparently indicating expandability */
+        hRet = dwFlags & 0x2 ? S_OK : S_FALSE;
+      }
+
+      IQueryInfo_Release(lpInfo);
+    }
+  }
+  return hRet;
+}
+
+/*************************************************************************
  *      @       [SHLWAPI.197]
  *
  * Blank out a region of text by drawing the background only.
@@ -2048,6 +2166,21 @@ VOID WINAPI IUnknown_Set(IUnknown **lppDest, IUnknown *lpUnknown)
     IUnknown_AddRef(lpUnknown);
     *lppDest = lpUnknown;
   }
+}
+
+/*************************************************************************
+ *      @	[SHLWAPI.200]
+ *
+ */
+HRESULT WINAPI MayQSForward(IUnknown* lpUnknown, PVOID lpReserved,
+                            REFGUID riidCmdGrp, ULONG cCmds,
+                            OLECMD *prgCmds, OLECMDTEXT* pCmdText)
+{
+  FIXME("(%p,%p,%p,%ld,%p,%p) - stub\n",
+        lpUnknown, lpReserved, riidCmdGrp, cCmds, prgCmds, pCmdText);
+
+  /* FIXME: Calls IsQSForward & IUnknown_QueryStatus */
+  return DRAGDROP_E_NOTREGISTERED;
 }
 
 /*************************************************************************
@@ -2351,6 +2484,29 @@ LRESULT CALLBACK SHDefWindowProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM
 }
 
 /*************************************************************************
+ *      @       [SHLWAPI.256]
+ */
+HRESULT WINAPI IUnknown_GetSite(LPUNKNOWN lpUnknown, REFIID iid, PVOID *lppSite)
+{
+  HRESULT hRet = E_INVALIDARG;
+  LPOBJECTWITHSITE lpSite = NULL;
+
+  TRACE("(%p,%s,%p)\n", lpUnknown, debugstr_guid(iid), lppSite);
+
+  if (lpUnknown && iid && lppSite)
+  {
+    hRet = IUnknown_QueryInterface(lpUnknown, &IID_IObjectWithSite,
+                                   (void**)&lpSite);
+    if (SUCCEEDED(hRet) && lpSite)
+    {
+      hRet = IObjectWithSite_GetSite(lpSite, iid, lppSite);
+      IObjectWithSite_Release(lpSite);
+    }
+  }
+  return hRet;
+}
+
+/*************************************************************************
  *      @	[SHLWAPI.257]
  *
  * Create a worker window using CreateWindowExA().
@@ -2510,7 +2666,7 @@ DWORD WINAPI SHRestrictionLookup(
  *  Failure: An HRESULT error code.
  *
  * NOTES
- *   This QueryInterface asks the inner object for a interface. In case
+ *   This QueryInterface asks the inner object for an interface. In case
  *   of aggregation this request would be forwarded by the inner to the
  *   outer object. This function asks the inner object directly for the
  *   interface circumventing the forwarding to the outer object.
@@ -3051,7 +3207,8 @@ WORD WINAPI VerQueryValueWrapW(
  * NOTES
  *  lpUnknown must support the IOleInPlaceFrame interface, the
  *  IInternetSecurityMgrSite interface, the IShellBrowser interface
- *  or the IDocHostUIHandler interface, or this call fails.
+ *  the IDocHostUIHandler interface, or the IOleInPlaceActiveObject interface,
+ *  or this call will fail.
  */
 HRESULT WINAPI IUnknown_EnableModeless(IUnknown *lpUnknown, BOOL bModeless)
 {
@@ -3063,7 +3220,9 @@ HRESULT WINAPI IUnknown_EnableModeless(IUnknown *lpUnknown, BOOL bModeless)
   if (!lpUnknown)
     return E_FAIL;
 
-  if (IsIface(IOleInPlaceFrame))
+  if (IsIface(IOleInPlaceActiveObject))
+    EnableModeless(IOleInPlaceActiveObject);
+  else if (IsIface(IOleInPlaceFrame))
     EnableModeless(IOleInPlaceFrame);
   else if (IsIface(IShellBrowser))
     EnableModeless(IShellBrowser);
@@ -3696,7 +3855,7 @@ BOOL WINAPI IsOS(DWORD feature)
     case OS_HOME:
         ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && majorv >= 5 && minorv >= 1)
     case OS_PROFESSIONAL:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT) 
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT)
     case OS_DATACENTER:
         ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT)
     case OS_ADVSERVER:
@@ -3744,6 +3903,70 @@ BOOL WINAPI IsOS(DWORD feature)
     WARN("(0x%lx) unknown parameter\n",feature);
 
     return FALSE;
+}
+
+/*************************************************************************
+ * @  [SHLWAPI.478]
+ *
+ * Call IInputObject_TranslateAcceleratorIO() on an object.
+ *
+ * PARAMS
+ *  lpUnknown [I] Object supporting the IInputObject interface.
+ *  lpMsg     [I] Key message to be processed.
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: An HRESULT error code, or E_INVALIDARG if lpUnknown is NULL.
+ */
+HRESULT WINAPI IUnknown_TranslateAcceleratorIO(IUnknown *lpUnknown, LPMSG lpMsg)
+{
+  IInputObject* lpInput = NULL;
+  HRESULT hRet = E_INVALIDARG;
+
+  TRACE("(%p,%p)\n", lpUnknown, lpMsg);
+  if (lpUnknown)
+  {
+    hRet = IUnknown_QueryInterface(lpUnknown, &IID_IInputObject,
+                                   (void**)&lpInput);
+    if (SUCCEEDED(hRet) && lpInput)
+    {
+      hRet = IInputObject_TranslateAcceleratorIO(lpInput, lpMsg);
+      IInputObject_Release(lpInput);
+    }
+  }
+  return hRet;
+}
+
+/*************************************************************************
+ * @  [SHLWAPI.481]
+ *
+ * Call IInputObject_HasFocusIO() on an object.
+ *
+ * PARAMS
+ *  lpUnknown [I] Object supporting the IInputObject interface.
+ *
+ * RETURNS
+ *  Success: S_OK, if lpUnknown is an IInputObject object and has the focus,
+ *           or S_FALSE otherwise.
+ *  Failure: An HRESULT error code, or E_INVALIDARG if lpUnknown is NULL.
+ */
+HRESULT WINAPI IUnknown_HasFocusIO(IUnknown *lpUnknown)
+{
+  IInputObject* lpInput = NULL;
+  HRESULT hRet = E_INVALIDARG;
+
+  TRACE("(%p)\n", lpUnknown);
+  if (lpUnknown)
+  {
+    hRet = IUnknown_QueryInterface(lpUnknown, &IID_IInputObject,
+                                   (void**)&lpInput);
+    if (SUCCEEDED(hRet) && lpInput)
+    {
+      hRet = IInputObject_HasFocusIO(lpInput);
+      IInputObject_Release(lpInput);
+    }
+  }
+  return hRet;
 }
 
 /*************************************************************************
@@ -3940,9 +4163,9 @@ VOID WINAPI FixSlashesAndColonW(LPWSTR lpwstr)
 /*************************************************************************
  *      @	[SHLWAPI.461]
  */
-DWORD WINAPI SHGetAppCompatFlags(DWORD Unknown)
+DWORD WINAPI SHGetAppCompatFlags(DWORD dwUnknown)
 {
-  FIXME("stub\n");
+  FIXME("(0x%08lx) stub\n", dwUnknown);
   return 0;
 }
 
@@ -4015,17 +4238,24 @@ HRESULT WINAPI SHQueueUserWorkItem(DWORD a, DWORD b, DWORD c, DWORD d, DWORD e, 
 /***********************************************************************
  *		IUnknown_OnFocusChangeIS (SHLWAPI.@)
  */
-DWORD WINAPI IUnknown_OnFocusChangeIS(IUnknown * pUnk, IUnknown * pFocusObject, BOOL bChange)
+HRESULT WINAPI IUnknown_OnFocusChangeIS(LPUNKNOWN lpUnknown, LPUNKNOWN pFocusObject, BOOL bFocus)
 {
-    FIXME("(%p, %p, %s)\n", pUnk, pFocusObject, bChange ? "TRUE" : "FALSE");
+    IInputObjectSite *pIOS = NULL;
+    HRESULT hRet = E_INVALIDARG;
 
-/*
-    IInputObjectSite * pIOS = NULL;
-    if (SUCCEEDED(IUnknown_QueryInterface(pUnk, &IID_IInputObjectSite, (void **)&pIOS))
-        IInputObjectSite_OnFocusChangeIS(pIOS, pFocusObject, bChange);
-*/
+    TRACE("(%p, %p, %s)\n", lpUnknown, pFocusObject, bFocus ? "TRUE" : "FALSE");
 
-    return 0;
+    if (lpUnknown)
+    {
+        hRet = IUnknown_QueryInterface(lpUnknown, &IID_IInputObjectSite,
+                                       (void **)&pIOS);
+        if (SUCCEEDED(hRet) && pIOS)
+        {
+            hRet = IInputObjectSite_OnFocusChangeIS(pIOS, pFocusObject, bFocus);
+            IInputObjectSite_Release(pIOS);
+        }
+    }
+    return hRet;
 }
 
 /***********************************************************************

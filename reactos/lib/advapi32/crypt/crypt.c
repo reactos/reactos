@@ -270,7 +270,7 @@ BOOL WINAPI CryptAcquireContextA (HCRYPTPROV *phProv, LPCSTR pszContainer,
 		SetLastError(NTE_BAD_PROV_TYPE);
 		return FALSE;
 	}
-	
+
 	if (!phProv)
 	{
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -1001,19 +1001,19 @@ BOOL WINAPI CryptEnumProvidersW (DWORD dwIndex, DWORD *pdwReserved,
 	{
 		DWORD numkeys;
 		WCHAR *provNameW;
-		
+
 		RegQueryInfoKeyW(hKey, NULL, NULL, NULL, &numkeys, pcbProvName,
 				 NULL, NULL, NULL, NULL, NULL, NULL);
-		
+
 		if (!(provNameW = CRYPT_Alloc(*pcbProvName * sizeof(WCHAR))))
 			CRYPT_ReturnLastError(ERROR_NOT_ENOUGH_MEMORY);
-		
+
 		RegEnumKeyExW(hKey, dwIndex, provNameW, pcbProvName, NULL, NULL, NULL, NULL);
 		(*pcbProvName)++;
 		*pcbProvName *= sizeof(WCHAR);
-		
+
 		CRYPT_Free(provNameW);
-		
+
 		if (dwIndex >= numkeys)
 			CRYPT_ReturnLastError(ERROR_NO_MORE_ITEMS);
 	}
@@ -1022,7 +1022,7 @@ BOOL WINAPI CryptEnumProvidersW (DWORD dwIndex, DWORD *pdwReserved,
 		DWORD size = sizeof(DWORD);
 		DWORD result;
 		HKEY subkey;
-		
+
 		result = RegEnumKeyW(hKey, dwIndex, pszProvName, *pcbProvName / sizeof(WCHAR));
 		if (result)
 			CRYPT_ReturnLastError(result);
@@ -1123,7 +1123,7 @@ BOOL WINAPI CryptEnumProviderTypesA (DWORD dwIndex, DWORD *pdwReserved,
 	*pdwProvType += (*(--ch) - '0') * 10;
 	*pdwProvType += (*(--ch) - '0') * 100;
 	CRYPT_Free(keyname);
-	
+
 	result = RegQueryValueExA(hSubkey, "TypeName", NULL, &dwType, (LPBYTE)pszTypeName, pcbTypeName);
 	if (result)
 		CRYPT_ReturnLastError(result);
@@ -1162,7 +1162,7 @@ BOOL WINAPI CryptEnumProviderTypesW (DWORD dwIndex, DWORD *pdwReserved,
 
 /******************************************************************************
  * CryptExportKey (ADVAPI32.@)
- * 
+ *
  * Exports a cryptographic key from a CSP.
  *
  * PARAMS
@@ -1280,18 +1280,18 @@ BOOL WINAPI CryptGetDefaultProviderA (DWORD dwProvType, DWORD *pdwReserved,
 		CRYPT_ReturnLastError(NTE_PROV_TYPE_NOT_DEF);
 	}
 	CRYPT_Free(keyname);
-	
-	result = RegQueryValueExA(hKey, "Name", NULL, NULL, (LPBYTE)pszProvName, pcbProvName); 
+
+	result = RegQueryValueExA(hKey, "Name", NULL, NULL, (LPBYTE)pszProvName, pcbProvName);
 	if (result)
 	{
 		if (result != ERROR_MORE_DATA)
 			SetLastError(NTE_PROV_TYPE_ENTRY_BAD);
 		else
 			SetLastError(result);
-		
+
 		return FALSE;
 	}
-	
+
 	RegCloseKey(hKey);
 	return TRUE;
 }
@@ -1498,7 +1498,7 @@ BOOL WINAPI CryptHashData (HCRYPTHASH hHash, BYTE *pbData, DWORD dwDataLen, DWOR
 /******************************************************************************
  * CryptHashSessionKey (ADVAPI32.@)
  *
- * PARAMS 
+ * PARAMS
  *  hHash   [I] Handle to the hash object.
  *  hKey    [I] Handle to the key to be hashed.
  *  dwFlags [I] Can be CRYPT_LITTLE_ENDIAN.
@@ -1729,7 +1729,7 @@ BOOL WINAPI CryptSetProviderExA (LPCSTR pszProvName, DWORD dwProvType, DWORD *pd
 	if (dwFlags & ~(CRYPT_MACHINE_DEFAULT | CRYPT_USER_DEFAULT | CRYPT_DELETE_DEFAULT)
 			|| dwFlags == CRYPT_DELETE_DEFAULT)
 		CRYPT_ReturnLastError(NTE_BAD_FLAGS);
-	
+
 	if (!(keyname = CRYPT_GetTypeKeyName(dwProvType, dwFlags & CRYPT_USER_DEFAULT)))
 		CRYPT_ReturnLastError(ERROR_NOT_ENOUGH_MEMORY);
 	if (RegOpenKeyA((dwFlags & CRYPT_USER_DEFAULT) ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
@@ -1739,7 +1739,7 @@ BOOL WINAPI CryptSetProviderExA (LPCSTR pszProvName, DWORD dwProvType, DWORD *pd
 		CRYPT_ReturnLastError(NTE_BAD_PROVIDER);
 	}
 	CRYPT_Free(keyname);
-	
+
 	if (dwFlags & CRYPT_DELETE_DEFAULT)
 	{
 		RegDeleteValueA(hTypeKey, "Name");
@@ -1759,14 +1759,14 @@ BOOL WINAPI CryptSetProviderExA (LPCSTR pszProvName, DWORD dwProvType, DWORD *pd
 			CRYPT_ReturnLastError(NTE_BAD_PROVIDER);
 		}
 		CRYPT_Free(keyname);
-		
+
 		if (RegSetValueExA(hTypeKey, "Name", 0, REG_SZ, (LPBYTE)pszProvName, strlen(pszProvName) + 1))
 		{
 			RegCloseKey(hTypeKey);
 			RegCloseKey(hProvKey);
 			return FALSE;
 		}
-		
+
 		RegCloseKey(hProvKey);
 	}
 	RegCloseKey(hTypeKey);

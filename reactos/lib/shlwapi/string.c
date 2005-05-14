@@ -1577,7 +1577,7 @@ LPSTR WINAPI StrFormatKBSizeA(LONGLONG llBytes, LPSTR lpszDest, UINT cchMax)
     ulKB = (ulKB - ulNextDigit) / 10;
   } while (ulKB > 0);
 
-  strncpy(lpszDest, szOut + 1, cchMax);
+  lstrcpynA(lpszDest, szOut + 1, cchMax);
   return lpszDest;
 }
 
@@ -1605,7 +1605,7 @@ LPWSTR WINAPI StrFormatKBSizeW(LONGLONG llBytes, LPWSTR lpszDest, UINT cchMax)
     ulKB = (ulKB - ulNextDigit) / 10;
   } while (ulKB > 0);
 
-  strncpyW(lpszDest, szOut + 1, cchMax);
+  lstrcpynW(lpszDest, szOut + 1, cchMax);
   return lpszDest;
 }
 
@@ -2027,7 +2027,7 @@ INT WINAPI StrFromTimeIntervalW(LPWSTR lpszStr, UINT cchMax, DWORD dwMS,
     if (iDigits) /* Always write seconds if we have significant digits */
       SHLWAPI_WriteTimeClass(szCopy, dwMS, szSec, iDigits);
 
-    strncpyW(lpszStr, szCopy, cchMax);
+    lstrcpynW(lpszStr, szCopy, cchMax);
     iRet = strlenW(lpszStr);
   }
   return iRet;
@@ -2301,7 +2301,7 @@ LPWSTR WINAPI StrFormatByteSizeW(LONGLONG llBytes, LPWSTR lpszDest, UINT cchMax)
   sprintfW(wszBuff, bfFormats[i].lpwszFormat, dBytes);
   wszAdd[1] = bfFormats[i].wPrefix;
   strcatW(wszBuff, wszAdd);
-  strncpyW(lpszDest, wszBuff, cchMax);
+  lstrcpynW(lpszDest, wszBuff, cchMax);
   return lpszDest;
 }
 
@@ -2546,7 +2546,7 @@ INT WINAPI SHUnicodeToAnsiCP(UINT CodePage, LPCWSTR lpSrcStr, LPSTR lpDstStr,
 
       if (nWideCharCount < len - 1)
       {
-        mem = (LPSTR)HeapAlloc(GetProcessHeap(), 0, *lpiLen);
+        mem = HeapAlloc(GetProcessHeap(), 0, *lpiLen);
         if (!mem)
           return 0;
 
@@ -2577,7 +2577,7 @@ INT WINAPI SHUnicodeToAnsiCP(UINT CodePage, LPCWSTR lpSrcStr, LPSTR lpDstStr,
     reqLen = WideCharToMultiByte(CodePage, 0, lpSrcStr, len, NULL, 0, NULL, NULL);
     if (reqLen)
     {
-      mem = (LPSTR)HeapAlloc(GetProcessHeap(), 0, reqLen);
+      mem = HeapAlloc(GetProcessHeap(), 0, reqLen);
       if (mem)
       {
         reqLen = WideCharToMultiByte(CodePage, 0, lpSrcStr, len, mem,
@@ -2638,9 +2638,6 @@ DWORD WINAPI SHAnsiToAnsi(LPCSTR lpszSrc, LPSTR lpszDst, int iLen)
 
     TRACE("(%s,%p,0x%08x)\n", debugstr_a(lpszSrc), lpszDst, iLen);
 
-    /* Our original version used lstrncpy/lstrlen, incorrectly filling up all
-     * of lpszDst with extra NULs. This version is correct, and faster too.
-     */
     lpszRet = StrCpyNXA(lpszDst, lpszSrc, iLen);
     return lpszRet - lpszDst + 1;
 }

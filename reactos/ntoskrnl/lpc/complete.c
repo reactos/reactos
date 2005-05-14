@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/lpc/complete.c
  * PURPOSE:         Communication mechanism
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
@@ -37,9 +37,9 @@ NtCompleteConnectPort (HANDLE hServerSideCommPort)
 {
   NTSTATUS	Status;
   PEPORT	ReplyPort;
-  
+
   DPRINT("NtCompleteConnectPort(hServerSideCommPort %x)\n", hServerSideCommPort);
- 
+
   /*
    * Ask Ob to translate the port handle to EPORT
    */
@@ -58,23 +58,23 @@ NtCompleteConnectPort (HANDLE hServerSideCommPort)
    * otherwise tell the caller the port handle is not
    * valid.
    */
-  if (ReplyPort->Type != EPORT_TYPE_SERVER_COMM_PORT) 
+  if (ReplyPort->Type != EPORT_TYPE_SERVER_COMM_PORT)
     {
        ObDereferenceObject (ReplyPort);
        return STATUS_INVALID_PORT_HANDLE;
     }
-  
+
   ReplyPort->State = EPORT_CONNECTED_SERVER;
   /*
    * Wake up the client thread that issued NtConnectPort.
-   */ 
-  KeReleaseSemaphore(&ReplyPort->OtherPort->Semaphore, IO_NO_INCREMENT, 1, 
+   */
+  KeReleaseSemaphore(&ReplyPort->OtherPort->Semaphore, IO_NO_INCREMENT, 1,
 		     FALSE);
   /*
    * Tell Ob we are no more interested in ReplyPort
-   */   
+   */
   ObDereferenceObject (ReplyPort);
-  
+
   return (STATUS_SUCCESS);
 }
 

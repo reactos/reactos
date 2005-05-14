@@ -12,8 +12,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
+#include "rtl.h"
 
 #define NDEBUG
 #include <debug.h>

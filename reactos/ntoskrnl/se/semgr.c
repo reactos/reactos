@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/se/semgr.c
  * PURPOSE:         Security manager
- * 
+ *
  * PROGRAMMERS:     No programmer listed.
  */
 
@@ -198,7 +198,7 @@ SeCaptureSubjectContext(OUT PSECURITY_SUBJECT_CONTEXT SubjectContext)
   PETHREAD Thread;
   BOOLEAN CopyOnOpen;
   BOOLEAN EffectiveOnly;
-  
+
   PAGED_CODE();
 
   Thread = PsGetCurrentThread();
@@ -212,7 +212,7 @@ SeCaptureSubjectContext(OUT PSECURITY_SUBJECT_CONTEXT SubjectContext)
   else
     {
       SubjectContext->ProcessAuditId = Thread->ThreadsProcess;
-      SubjectContext->ClientToken = 
+      SubjectContext->ClientToken =
 	PsReferenceImpersonationToken(Thread,
 				      &CopyOnOpen,
 				      &EffectiveOnly,
@@ -229,7 +229,7 @@ VOID STDCALL
 SeLockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
   PAGED_CODE();
-  
+
   KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&SepSubjectContextLock, TRUE);
 }
@@ -242,7 +242,7 @@ VOID STDCALL
 SeUnlockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
   PAGED_CODE();
-  
+
   ExReleaseResourceLite(&SepSubjectContextLock);
   KeLeaveCriticalRegion();
 }
@@ -255,7 +255,7 @@ VOID STDCALL
 SeReleaseSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
   PAGED_CODE();
-  
+
   if (SubjectContext->PrimaryToken != NULL)
     {
       ObDereferenceObject(SubjectContext->PrimaryToken);
@@ -275,7 +275,7 @@ NTSTATUS STDCALL
 SeDeassignSecurity(PSECURITY_DESCRIPTOR *SecurityDescriptor)
 {
   PAGED_CODE();
-  
+
   if (*SecurityDescriptor != NULL)
     {
       ExFreePool(*SecurityDescriptor);
@@ -308,13 +308,13 @@ SeAssignSecurityEx(IN PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
 /*
  * FUNCTION: Creates a security descriptor for a new object.
  * ARGUMENTS:
- *         ParentDescriptor = 
- *         ExplicitDescriptor = 
- *         NewDescriptor = 
- *         IsDirectoryObject = 
- *         SubjectContext = 
- *         GeneralMapping = 
- *         PoolType = 
+ *         ParentDescriptor =
+ *         ExplicitDescriptor =
+ *         NewDescriptor =
+ *         IsDirectoryObject =
+ *         SubjectContext =
+ *         GeneralMapping =
+ *         PoolType =
  * RETURNS: Status
  *
  * @implemented
@@ -341,7 +341,7 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
   PSID Group = NULL;
   PACL Dacl = NULL;
   PACL Sacl = NULL;
-  
+
   PAGED_CODE();
 
   /* Lock subject context */
@@ -489,10 +489,10 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
 
 
   /* Allocate and initialize the new security descriptor */
-  Length = sizeof(SECURITY_DESCRIPTOR) + 
+  Length = sizeof(SECURITY_DESCRIPTOR) +
       OwnerLength + GroupLength + DaclLength + SaclLength;
 
-  DPRINT("L: sizeof(SECURITY_DESCRIPTOR) %d OwnerLength %d GroupLength %d DaclLength %d SaclLength %d\n", 
+  DPRINT("L: sizeof(SECURITY_DESCRIPTOR) %d OwnerLength %d GroupLength %d DaclLength %d SaclLength %d\n",
 	 sizeof(SECURITY_DESCRIPTOR),
 	 OwnerLength,
 	 GroupLength,
@@ -573,7 +573,7 @@ SepSidInToken(PACCESS_TOKEN _Token,
 {
   ULONG i;
   PTOKEN Token = (PTOKEN)_Token;
-  
+
   PAGED_CODE();
 
   if (Token->UserAndGroupCount == 0)
@@ -638,7 +638,7 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
   PACE CurrentAce;
   PSID Sid;
   NTSTATUS Status;
-  
+
   PAGED_CODE();
 
   CurrentAccess = PreviouslyGrantedAccess;
@@ -811,7 +811,7 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
   KPROCESSOR_MODE PreviousMode;
   PTOKEN Token;
   NTSTATUS Status;
-  
+
   PAGED_CODE();
 
   DPRINT("NtAccessCheck() called\n");

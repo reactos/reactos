@@ -27,7 +27,7 @@
  * TODO:
  * -----
  *	1. Sequencing of power resource list transitions.
- *	2. Global serialization of power resource transtions (see ACPI 
+ *	2. Global serialization of power resource transtions (see ACPI
  *         spec section 7.1.2/7.1.3).
  *      3. Better error handling.
  */
@@ -51,13 +51,13 @@ bm_pr_notify (
 	BM_NOTIFY               notify_type,
 	BM_HANDLE               device_handle,
 	void                    **context);
-	
+
 ACPI_STATUS
 bm_pr_request (
 	BM_REQUEST		*request,
 	void                    *context);
 
-	
+
 /****************************************************************************
  *                             Internal Functions
  ****************************************************************************/
@@ -133,7 +133,7 @@ bm_pr_get_state (
 
 	pr->state = ACPI_STATE_UNKNOWN;
 
-	/* 
+	/*
 	 * Evaluate _STA:
 	 * --------------
 	 * Evalute _STA to determine whether the power resource is ON or OFF.
@@ -151,7 +151,7 @@ bm_pr_get_state (
 	}
 
 	/*
-	 * Mask off all bits but the first as some systems return non-standard 
+	 * Mask off all bits but the first as some systems return non-standard
 	 * values (e.g. 0x51).
 	 */
 	switch (device_status & 0x01) {
@@ -269,7 +269,7 @@ bm_pr_list_get_state (
 	 * -----------------------------
 	 * The current state of a list of power resources is ON if all
 	 * power resources are currently in the ON state.  In other words,
-	 * if any power resource in the list is OFF then the collection 
+	 * if any power resource in the list is OFF then the collection
 	 * isn't fully ON.
 	 */
 	for (i = 0; i < pr_list->count; i++) {
@@ -328,13 +328,13 @@ bm_pr_list_transition (
 	/*
 	 * Reference Target:
 	 * -----------------
-	 * Reference all resources for the target power state first (so 
-	 * the device doesn't get turned off while transitioning).  Power 
+	 * Reference all resources for the target power state first (so
+	 * the device doesn't get turned off while transitioning).  Power
 	 * resources that aren't on (new reference count of 1) are turned on.
 	 */
 	for (i = 0; i < target_list->count; i++) {
 
-		status = bm_get_device_context(target_list->handles[i], 
+		status = bm_get_device_context(target_list->handles[i],
 			(BM_DRIVER_CONTEXT*)(&pr));
 		if (ACPI_FAILURE(status)) {
 			DEBUG_PRINT(ACPI_WARN, ("Invalid reference to power resource [0x%02X].\n", target_list->handles[i]));
@@ -355,12 +355,12 @@ bm_pr_list_transition (
 	 * Dereference Current:
 	 * --------------------
 	 * Dereference all resources for the current power state.  Power
-	 * resources no longer referenced (new reference count of 0) are 
+	 * resources no longer referenced (new reference count of 0) are
 	 * turned off.
 	 */
 	for (i = 0; i < current_list->count; i++) {
 
-		status = bm_get_device_context(current_list->handles[i], 
+		status = bm_get_device_context(current_list->handles[i],
 			(BM_DRIVER_CONTEXT*)(&pr));
 		if (ACPI_FAILURE(status)) {
 			DEBUG_PRINT(ACPI_WARN, ("Invalid reference to power resource [0x%02X].\n", target_list->handles[i]));
@@ -434,7 +434,7 @@ bm_pr_add_device (
 	pr->device_handle = device->handle;
 	pr->acpi_handle = device->acpi_handle;
 
-	/* 
+	/*
 	 * Get information on this power resource.
 	 */
 	status = acpi_evaluate_object(pr->acpi_handle, NULL, NULL, &buffer);

@@ -78,7 +78,7 @@ ULONG MiFreeSwapPages;
 ULONG MiUsedSwapPages;
 
 /*
- * Number of pages that have been reserved for swapping but not yet allocated 
+ * Number of pages that have been reserved for swapping but not yet allocated
  */
 static ULONG MiReservedSwapPages;
 
@@ -116,6 +116,23 @@ ULONG MmCoreDumpType = MM_CORE_DUMP_TYPE_NONE;
 static BOOLEAN MmSwapSpaceMessage = FALSE;
 
 /* FUNCTIONS *****************************************************************/
+
+BOOLEAN
+STDCALL
+MmIsFileAPagingFile(PFILE_OBJECT FileObject)
+{
+    ULONG i;
+
+    /* Loop through all the paging files */
+    for (i = 0; i < MiPagingFileCount; i++)
+    {
+        /* Check if this is one of them */
+        if (PagingFileList[i]->FileObject == FileObject) return TRUE;
+    }
+
+    /* Nothing found */
+    return FALSE;
+}
 
 VOID
 MmShowOutOfSpaceMessagePagingFile(VOID)
@@ -234,7 +251,7 @@ NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
       KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
       Status = Iosb.Status;
    }
-   MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);            
+   MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
    return(Status);
 }
 
@@ -288,7 +305,7 @@ NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
       KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
       Status = Iosb.Status;
    }
-   MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);            
+   MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
    return(Status);
 }
 
@@ -391,7 +408,7 @@ MmFreeSwapPage(SWAPENTRY Entry)
 
    i = FILE_FROM_ENTRY(Entry);
    off = OFFSET_FROM_ENTRY(Entry);
-   
+
    if (i >= MAX_PAGING_FILES)
    {
 	DPRINT1("Bad swap entry 0x%.8X\n", Entry);
@@ -404,9 +421,9 @@ MmFreeSwapPage(SWAPENTRY Entry)
       KEBUGCHECK(0);
    }
    KeAcquireSpinLockAtDpcLevel(&PagingFileList[i]->AllocMapLock);
-   
+
    PagingFileList[i]->AllocMap[off >> 5] &= (~(1 << (off % 32)));
-   
+
    PagingFileList[i]->FreePages++;
    PagingFileList[i]->UsedPages--;
 
@@ -585,7 +602,7 @@ MmDumpToPagingFile(ULONG BugCode,
       for (i = 0; i < MmStats.NrTotalPages; i++)
       {
          MdlMap[0] = i;
-         MmCreateVirtualMappingForKernel(MmCoreDumpPageFrame, 
+         MmCreateVirtualMappingForKernel(MmCoreDumpPageFrame,
 	                                 PAGE_READWRITE,
                                          MdlMap,
 					 1);
@@ -678,7 +695,7 @@ MmInitializeCrashDump(HANDLE PageFileHandle, ULONG PageFileNum)
                                        FALSE,
                                        &Event,
                                        &Iosb);
-   if(Irp == NULL) 
+   if(Irp == NULL)
    {
       ObDereferenceObject(PageFile);
       return(STATUS_NO_MEMORY);// tMk - is this correct return code ???
@@ -775,7 +792,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
    }
 
    PreviousMode = ExGetPreviousMode();
-   
+
    Status = RtlCaptureUnicodeString(&CapturedFileName,
                                     PreviousMode,
                                     PagedPool,
@@ -803,7 +820,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
          Status = _SEH_GetExceptionCode();
       }
       _SEH_END;
-    
+
       if (!NT_SUCCESS(Status))
       {
          RtlReleaseCapturedUnicodeString(&CapturedFileName,

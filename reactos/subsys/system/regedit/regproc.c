@@ -232,7 +232,7 @@ char* convertHexToDWORDStr(BYTE *buf, ULONG bufLen)
 DWORD convertHexCSVToHex(char *str, BYTE *buf, ULONG bufLen)
 {
     char *s = str;  /* Pointer to current */
-    char *b = buf;  /* Pointer to result  */
+    char *b = (char*)buf;  /* Pointer to result  */
 
     ULONG strLen    = strlen(str);
     ULONG strPos    = 0;
@@ -406,7 +406,7 @@ HRESULT setValue(LPSTR val_name, LPSTR val_data)
         }
         dwLen++;
         REGPROC_unescape_string(val_data);
-        lpbData = val_data;
+        lpbData = (LPBYTE)val_data;
     } else if (dwParseType == REG_DWORD)  /* Convert the dword types */
     {
         dwLen   = convertHexToDWord(val_data, convert);
@@ -1196,7 +1196,7 @@ void export_hkey(FILE *file, HKEY key,
             case REG_SZ:
             case REG_EXPAND_SZ:
                 fputs("\"", file);
-                REGPROC_export_string(file, *val_buf);
+                REGPROC_export_string(file, (CHAR*)*val_buf);
                 fputs("\"\n", file);
                 break;
 

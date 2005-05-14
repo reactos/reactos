@@ -107,24 +107,24 @@ MsfsWrite(PDEVICE_OBJECT DeviceObject,
    KIRQL oldIrql;
    ULONG Length;
    PVOID Buffer;
-   
+
    DPRINT("MsfsWrite(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
-   
+
    IoStack = IoGetCurrentIrpStackLocation (Irp);
    FileObject = IoStack->FileObject;
    Fcb = (PMSFS_FCB)FileObject->FsContext;
    Mailslot = Fcb->Mailslot;
-   
+
    DPRINT("MailslotName: %wZ\n", &Mailslot->Name);
-   
+
    /* writing is not permitted on server side */
    if (Fcb->Mailslot->ServerFcb == Fcb)
      {
 	Irp->IoStatus.Status = STATUS_ACCESS_DENIED;
 	Irp->IoStatus.Information = 0;
-	
+
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
-	
+
 	return(STATUS_ACCESS_DENIED);
      }
 
@@ -133,9 +133,9 @@ MsfsWrite(PDEVICE_OBJECT DeviceObject,
      Buffer = MmGetSystemAddressForMdl (Irp->MdlAddress);
    else
      Buffer = Irp->UserBuffer;
-   
+
    DPRINT("Length: %lu Message: %s\n", Length, (PUCHAR)Buffer);
-   
+
    /* Allocate new message */
    Message = ExAllocatePool(NonPagedPool,
 			    sizeof(MSFS_MESSAGE) + Length);
@@ -143,19 +143,19 @@ MsfsWrite(PDEVICE_OBJECT DeviceObject,
      {
 	Irp->IoStatus.Status = STATUS_NO_MEMORY;
 	Irp->IoStatus.Information = 0;
-	
+
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
-	
+
 	return(STATUS_NO_MEMORY);
      }
-   
+
    Message->Size = Length;
    memcpy(&Message->Buffer, Buffer, Length);
-   
+
    KeAcquireSpinLock(&Mailslot->MessageListLock, &oldIrql);
    InsertTailList(&Mailslot->MessageListHead, &Message->MessageListEntry);
    KeReleaseSpinLock(&Mailslot->MessageListLock, oldIrql);
-   
+
    Mailslot->MessageCount++;
    if (Mailslot->MessageCount == 1)
      {
@@ -163,12 +163,12 @@ MsfsWrite(PDEVICE_OBJECT DeviceObject,
 		   0,
 		   FALSE);
      }
-   
+
    Irp->IoStatus.Status = STATUS_SUCCESS;
    Irp->IoStatus.Information = Length;
-   
+
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-   
+
    return(STATUS_SUCCESS);
 }
 

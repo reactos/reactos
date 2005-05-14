@@ -32,8 +32,8 @@ NpfsQueryPipeInformation(PDEVICE_OBJECT DeviceObject,
   RtlZeroMemory(Info,
 		sizeof(FILE_PIPE_INFORMATION));
 
-//  Info->PipeMode = 
-//  Info->CompletionMode = 
+//  Info->PipeMode =
+//  Info->CompletionMode =
 
   *BufferLength -= sizeof(FILE_PIPE_INFORMATION);
   return STATUS_SUCCESS;

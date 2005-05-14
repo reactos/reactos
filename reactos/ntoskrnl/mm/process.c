@@ -1,4 +1,4 @@
-/* 
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/process.c
@@ -18,7 +18,7 @@ extern ULONG NtMinorVersion;
 extern ULONG NtOSCSDVersion;
 
 /* FUNCTIONS *****************************************************************/
-  
+
 PVOID
 STDCALL
 MiCreatePebOrTeb(PEPROCESS Process,
@@ -30,12 +30,12 @@ MiCreatePebOrTeb(PEPROCESS Process,
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
     BoundaryAddressMultiple.QuadPart = 0;
     PVOID AllocatedBase = BaseAddress;
-    
+
     /* Acquire the Lock */
     MmLockAddressSpace(ProcessAddressSpace);
 
-    /* 
-     * Create a Peb or Teb. 
+    /*
+     * Create a Peb or Teb.
      * Loop until it works, decreasing by PAGE_SIZE each time. The logic here
      * is that a PEB allocation should never fail since the address is free,
      * while TEB allocation can fail, and we should simply try the address
@@ -56,16 +56,16 @@ MiCreatePebOrTeb(PEPROCESS Process,
                                     BoundaryAddressMultiple);
         AllocatedBase = AllocatedBase - PAGE_SIZE;
     } while (Status != STATUS_SUCCESS);
-       
+
     /* Initialize the Region */
     MmInitialiseRegion(&MemoryArea->Data.VirtualMemoryData.RegionListHead,
-                       PAGE_SIZE, 
-                       MEM_COMMIT, 
+                       PAGE_SIZE,
+                       MEM_COMMIT,
                        PAGE_READWRITE);
-    
+
     /* Reserve the pages */
     MmReserveSwapPages(PAGE_SIZE);
-    
+
     /* Unlock Address Space */
     DPRINT("Returning\n");
     MmUnlockAddressSpace(ProcessAddressSpace);
@@ -73,11 +73,11 @@ MiCreatePebOrTeb(PEPROCESS Process,
 }
 
 VOID
-MiFreeStackPage(PVOID Context, 
-                MEMORY_AREA* MemoryArea, 
-                PVOID Address, 
-                PFN_TYPE Page, 
-                SWAPENTRY SwapEntry, 
+MiFreeStackPage(PVOID Context,
+                MEMORY_AREA* MemoryArea,
+                PVOID Address,
+                PFN_TYPE Page,
+                SWAPENTRY SwapEntry,
                 BOOLEAN Dirty)
 {
     ASSERT(SwapEntry == 0);
@@ -88,26 +88,26 @@ VOID
 STDCALL
 MmDeleteKernelStack(PVOID Stack,
                     BOOLEAN GuiStack)
-{       
+{
     /* Lock the Address Space */
     MmLockAddressSpace(MmGetKernelAddressSpace());
-    
+
     /* Delete the Stack */
     MmFreeMemoryAreaByPtr(MmGetKernelAddressSpace(),
                           Stack,
                           MiFreeStackPage,
                           NULL);
-                          
+
     /* Unlock the Address Space */
     MmUnlockAddressSpace(MmGetKernelAddressSpace());
 }
 
 VOID
-MiFreePebPage(PVOID Context, 
-              MEMORY_AREA* MemoryArea, 
-              PVOID Address, 
-              PFN_TYPE Page, 
-              SWAPENTRY SwapEntry, 
+MiFreePebPage(PVOID Context,
+              MEMORY_AREA* MemoryArea,
+              PVOID Address,
+              PFN_TYPE Page,
+              SWAPENTRY SwapEntry,
               BOOLEAN Dirty)
 {
     PEPROCESS Process = (PEPROCESS)Context;
@@ -134,18 +134,18 @@ VOID
 STDCALL
 MmDeleteTeb(PEPROCESS Process,
             PTEB Teb)
-{       
+{
     PMADDRESS_SPACE ProcessAddressSpace = &Process->AddressSpace;
-    
+
     /* Lock the Address Space */
     MmLockAddressSpace(ProcessAddressSpace);
-    
+
     /* Delete the Stack */
     MmFreeMemoryAreaByPtr(ProcessAddressSpace,
                           Teb,
                           MiFreePebPage,
                           Process);
-                          
+
     /* Unlock the Address Space */
     MmUnlockAddressSpace(ProcessAddressSpace);
 }
@@ -160,13 +160,13 @@ MmCreateKernelStack(BOOLEAN GuiStack)
     PFN_TYPE Page[MM_STACK_SIZE / PAGE_SIZE];
     PVOID KernelStack = NULL;
     NTSTATUS Status;
-    
+
     /* Initialize the Boundary Address */
     BoundaryAddressMultiple.QuadPart = 0;
-          
+
     /* Lock the Kernel Address Space */
     MmLockAddressSpace(MmGetKernelAddressSpace());
-    
+
     /* Create a MAREA for the Kernel Stack */
     Status = MmCreateMemoryArea(NULL,
                                 MmGetKernelAddressSpace(),
@@ -178,53 +178,53 @@ MmCreateKernelStack(BOOLEAN GuiStack)
                                 FALSE,
                                 FALSE,
                                 BoundaryAddressMultiple);
-        
+
     /* Unlock the Address Space */
     MmUnlockAddressSpace(MmGetKernelAddressSpace());
-      
+
     /* Check for Success */
-    if (!NT_SUCCESS(Status)) 
-    {    
+    if (!NT_SUCCESS(Status))
+    {
         DPRINT1("Failed to create thread stack\n");
         KEBUGCHECK(0);
     }
-        
+
     /* Mark the Stack in use */
-    for (i = 0; i < (MM_STACK_SIZE / PAGE_SIZE); i++) 
+    for (i = 0; i < (MM_STACK_SIZE / PAGE_SIZE); i++)
     {
         Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &Page[i]);
     }
-        
+
     /* Create a Virtual Mapping for it */
     Status = MmCreateVirtualMapping(NULL,
                                     KernelStack,
                                     PAGE_READWRITE,
                                     Page,
                                     MM_STACK_SIZE / PAGE_SIZE);
-        
+
     /* Check for success */
-    if (!NT_SUCCESS(Status)) 
+    if (!NT_SUCCESS(Status))
     {
         DPRINT1("Could not create Virtual Mapping for Kernel Stack\n");
         KEBUGCHECK(0);
     }
-    
+
     return KernelStack;
 }
 
 NTSTATUS
 STDCALL
 MmCreatePeb(PEPROCESS Process)
-{    
+{
     PPEB Peb = NULL;
     LARGE_INTEGER SectionOffset;
     ULONG ViewSize = 0;
     PVOID TableBase = NULL;
     NTSTATUS Status;
     SectionOffset.QuadPart = (ULONGLONG)0;
-  
+
     DPRINT("MmCreatePeb\n");
-       
+
     /* Map NLS Tables */
     DPRINT("Mapping NLS\n");
     Status = MmMapViewOfSection(NlsSectionObject,
@@ -237,7 +237,7 @@ MmCreatePeb(PEPROCESS Process)
                                 ViewShare,
                                 MEM_TOP_DOWN,
                                 PAGE_READONLY);
-    if (!NT_SUCCESS(Status)) 
+    if (!NT_SUCCESS(Status))
     {
         DPRINT1("MmMapViewOfSection() failed (Status %lx)\n", Status);
         return(Status);
@@ -246,10 +246,10 @@ MmCreatePeb(PEPROCESS Process)
 
     /* Attach to Process */
     KeAttachProcess(&Process->Pcb);
-    
+
     /* Allocate the PEB */
     Peb = MiCreatePebOrTeb(Process, (PVOID)PEB_BASE);
-    
+
     /* Initialize the PEB */
     DPRINT("Allocated: %x\n", Peb);
     RtlZeroMemory(Peb, sizeof(PEB));
@@ -283,7 +283,7 @@ MmCreateTeb(PEPROCESS Process,
 {
     PTEB Teb;
     BOOLEAN Attached = FALSE;
-    
+
     /* Attach to the process */
     DPRINT("MmCreateTeb\n");
     if (Process != PsGetCurrentProcess())
@@ -292,24 +292,24 @@ MmCreateTeb(PEPROCESS Process,
         KeAttachProcess(&Process->Pcb);
         Attached = TRUE;
     }
-    
+
     /* Allocate the TEB */
     Teb = MiCreatePebOrTeb(Process, (PVOID)TEB_BASE);
-    
+
     /* Initialize the PEB */
     RtlZeroMemory(Teb, sizeof(TEB));
-    
+
     /* Set TIB Data */
     Teb->Tib.ExceptionList = (PVOID)0xFFFFFFFF;
     Teb->Tib.Version = 1;
     Teb->Tib.Self = (PNT_TIB)Teb;
-    
+
     /* Set TEB Data */
     Teb->Cid = *ClientId;
     Teb->RealClientId = *ClientId;
     Teb->Peb = Process->Peb;
     Teb->CurrentLocale = PsDefaultThreadLocaleId;
-    
+
     /* Store stack information from InitialTeb */
     if(InitialTeb != NULL)
     {
@@ -328,7 +328,7 @@ MmCreateTeb(PEPROCESS Process,
             Teb->DeallocationStack = InitialTeb->StackReserved;
         }
     }
-    
+
     /* Return TEB Address */
     DPRINT("Allocated: %x\n", Teb);
     if (Attached) KeDetachProcess();
@@ -348,10 +348,10 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
     BoundaryAddressMultiple.QuadPart = 0;
     ULONG ViewSize = 0;
     PVOID ImageBase = 0;
-                    
+
     /* Initialize the Addresss Space */
-    MmInitializeAddressSpace(Process, ProcessAddressSpace);    
-    
+    MmInitializeAddressSpace(Process, ProcessAddressSpace);
+
     /* Acquire the Lock */
     MmLockAddressSpace(ProcessAddressSpace);
 
@@ -367,12 +367,12 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
                                 FALSE,
                                 FALSE,
                                 BoundaryAddressMultiple);
-    if (!NT_SUCCESS(Status)) 
+    if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to protect last 64KB\n");
         goto exit;
      }
-    
+
     /* Protect the 60KB above the shared user page */
     BaseAddress = (char*)USER_SHARED_DATA + PAGE_SIZE;
     Status = MmCreateMemoryArea(Process,
@@ -385,7 +385,7 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
                                 FALSE,
                                 FALSE,
                                 BoundaryAddressMultiple);
-    if (!NT_SUCCESS(Status)) 
+    if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to protect the memory above the shared user page\n");
         goto exit;
@@ -403,24 +403,24 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
                                 FALSE,
                                 FALSE,
                                 BoundaryAddressMultiple);
-    if (!NT_SUCCESS(Status)) 
+    if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create Shared User Data\n");
         goto exit;
      }
-                
+
     /* Check if there's a Section Object */
-    if (Section) 
+    if (Section)
     {
         UNICODE_STRING FileName;
         PWCHAR szSrc;
         PCHAR szDest;
         USHORT lnFName = 0;
-        
+
         /* Unlock the Address Space */
         DPRINT("Unlocking\n");
         MmUnlockAddressSpace(ProcessAddressSpace);
-    
+
         DPRINT("Mapping process image. Section: %p, Process: %p, ImageBase: %p\n",
                  Section, Process, &ImageBase);
         Status = MmMapViewOfSection(Section,
@@ -433,30 +433,30 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
                                     0,
                                     MEM_COMMIT,
                                     PAGE_READWRITE);
-        if (!NT_SUCCESS(Status)) 
+        if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to map process Image\n");
-            ObDereferenceObject(Section); 
+            ObDereferenceObject(Section);
             goto exit;
         }
         ObDereferenceObject(Section);
-        
+
         /* Save the pointer */
         Process->SectionBaseAddress = ImageBase;
-        
+
         /* Determine the image file name and save it to EPROCESS */
         DPRINT("Getting Image name\n");
         FileName = Section->FileObject->FileName;
         szSrc = (PWCHAR)(FileName.Buffer + (FileName.Length / sizeof(WCHAR)) - 1);
 
-        while(szSrc >= FileName.Buffer) 
+        while(szSrc >= FileName.Buffer)
         {
-            if(*szSrc == L'\\') 
+            if(*szSrc == L'\\')
             {
                 szSrc++;
                 break;
-            }  
-            else 
+            }
+            else
             {
                 szSrc--;
                 lnFName++;
@@ -468,16 +468,16 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
         szDest = Process->ImageFileName;
         lnFName = min(lnFName, sizeof(Process->ImageFileName) - 1);
         while(lnFName-- > 0) *(szDest++) = (UCHAR)*(szSrc++);
-        
+
         /* Return status to caller */
         return Status;
     }
-    
+
 exit:
     /* Unlock the Address Space */
     DPRINT("Unlocking\n");
     MmUnlockAddressSpace(ProcessAddressSpace);
-        
+
     /* Return status to caller */
     return Status;
 }

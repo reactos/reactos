@@ -38,7 +38,7 @@ int _fstati64(int fd, struct _stati64* statbuf)
     __set_errno(EBADF);
     return -1;
   }
-  
+
   fflush(NULL);
 
   memset(statbuf, 0, sizeof(struct _stati64));
@@ -60,7 +60,7 @@ int _fstati64(int fd, struct _stati64* statbuf)
     statbuf->st_size = (((__int64)FileInformation.nFileSizeHigh) << 32) +
              FileInformation.nFileSizeLow;
     statbuf->st_mode = S_IREAD;
-    if (FileInformation.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) 
+    if (FileInformation.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
       statbuf->st_mode |= S_IFDIR;
     else
       statbuf->st_mode |= S_IFREG;

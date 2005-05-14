@@ -311,7 +311,7 @@ LdrLoadModule(
         NULL);
     CHECKPOINT;
     Status = ZwOpenFile(&FileHandle,
-        FILE_ALL_ACCESS,
+        GENERIC_READ,
         &ObjectAttributes,
         &IoStatusBlock,
         0,

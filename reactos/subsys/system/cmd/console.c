@@ -8,14 +8,20 @@
  *        started
  *
  *    03-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
+
+
 
 #include "precomp.h"
 #include "resource.h"
 
 
 #define OUTPUT_BUFFER_SIZE  4096
+
+
+UINT InputCodePage;
+UINT OutputCodePage;
 
 
 VOID ConInDisable (VOID)
@@ -105,7 +111,7 @@ VOID ConInString (LPTSTR lpInput, DWORD dwLength)
 	ReadFile (hFile, (PVOID)pBuf, dwLength, &dwRead, NULL);
 
 #ifdef _UNICODE
-	MultiByteToWideChar(CP_ACP, 0, pBuf, dwLength + 1, lpInput, dwLength + 1);
+	MultiByteToWideChar(  InputCodePage, 0, pBuf, dwLength + 1, lpInput, dwLength + 1);
 #endif
 	p = lpInput;
 	for (i = 0; i < dwRead; i++, p++)
@@ -133,7 +139,7 @@ static VOID ConChar(TCHAR c, DWORD nStdHandle)
 	WCHAR ws[2];
 	ws[0] = c;
 	ws[1] = 0;
-	WideCharToMultiByte(CP_ACP, 0, ws, 2, as, 2, NULL, NULL);
+	WideCharToMultiByte( OutputCodePage, 0, ws, 2, as, 2, NULL, NULL);
 	cc = as[0];
 #else
 	cc = c;
@@ -159,7 +165,7 @@ VOID ConPuts(LPTSTR szText, DWORD nStdHandle)
 	len = _tcslen(szText);
 #ifdef _UNICODE
 	pBuf = malloc(len + 1);
-	len = WideCharToMultiByte(CP_ACP, 0, szText, len + 1, pBuf, len + 1, NULL, NULL) - 1;
+	len = WideCharToMultiByte( OutputCodePage, 0, szText, len + 1, pBuf, len + 1, NULL, NULL) - 1;
 #else
 	pBuf = szText;
 #endif
@@ -178,6 +184,14 @@ VOID ConPuts(LPTSTR szText, DWORD nStdHandle)
 #endif
 }
 
+VOID ConOutResPuts (UINT resID)
+{
+  TCHAR szMsg[RC_STRING_MAX_SIZE];
+  LoadString(CMD_ModuleHandle, resID, szMsg, RC_STRING_MAX_SIZE);
+
+  ConPuts(szMsg, STD_OUTPUT_HANDLE);
+}
+
 VOID ConOutPuts (LPTSTR szText)
 {
 	ConPuts(szText, STD_OUTPUT_HANDLE);
@@ -194,7 +208,7 @@ VOID ConPrintf(LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 	len = _vstprintf (szOut, szFormat, arg_ptr);
 #ifdef _UNICODE
 	pBuf = malloc(len + 1);
-	len = WideCharToMultiByte(CP_ACP, 0, szOut, len + 1, pBuf, len + 1, NULL, NULL) - 1;
+	len = WideCharToMultiByte( OutputCodePage, 0, szOut, len + 1, pBuf, len + 1, NULL, NULL) - 1;
 #else
 	pBuf = szOut;
 #endif
@@ -223,7 +237,7 @@ VOID ConOutFormatMessage (DWORD MessageId, ...)
 	       (LPTSTR) &text,
 	       0,
 	       &arg_ptr);
-	
+
 	va_end (arg_ptr);
 	if(ret > 0)
 	{
@@ -232,7 +246,7 @@ VOID ConOutFormatMessage (DWORD MessageId, ...)
 	}
 	else
 	{
-		LoadString(GetModuleHandle(NULL), STRING_CONSOLE_ERROR, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_CONSOLE_ERROR, szMsg, RC_STRING_MAX_SIZE);
 		ConErrPrintf(szMsg);
 	}
 }
@@ -251,6 +265,13 @@ VOID ConErrChar (TCHAR c)
 	ConChar(c, STD_ERROR_HANDLE);
 }
 
+
+VOID ConErrResPuts (UINT resID)
+{
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+    LoadString(CMD_ModuleHandle, resID, szMsg, RC_STRING_MAX_SIZE);
+	ConPuts(szMsg, STD_ERROR_HANDLE);
+}
 
 VOID ConErrPuts (LPTSTR szText)
 {

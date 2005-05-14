@@ -56,7 +56,7 @@
  * Hardware IDs:
  * -------------
  * TODO: Power and Sleep button HIDs also exist in <bm.h>.  Should all
- *       HIDs (ACPI well-known devices) exist in one place (e.g. 
+ *       HIDs (ACPI well-known devices) exist in one place (e.g.
  *       acpi_hid.h)?
  */
 #define BN_HID_POWER_BUTTON		"PNP0C0C"

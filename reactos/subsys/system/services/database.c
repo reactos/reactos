@@ -1,9 +1,9 @@
 /*
  *
  * service control manager
- * 
+ *
  * ReactOS Operating System
- * 
+ *
  * --------------------------------------------------------------------
  *
  * This software is free software; you can redistribute it and/or
@@ -124,8 +124,8 @@ CreateGroupOrderListRoutine(PWSTR ValueName,
 		  Group->TagCount = 0;
 	          return STATUS_INSUFFICIENT_RESOURCES;
 		}
-	      RtlCopyMemory(Group->TagArray, 
-		            (PULONG)ValueData + 1, 
+	      RtlCopyMemory(Group->TagArray,
+		            (PULONG)ValueData + 1,
 			    Group->TagCount * sizeof(DWORD));
 	    }
 	  else
@@ -868,7 +868,7 @@ ScmAutoStartServices(VOID)
 	    }
         }
 
-      /* Start all services which have an invalid tag or which do not have a tag */ 
+      /* Start all services which have an invalid tag or which do not have a tag */
       ServiceEntry = ServiceListHead.Flink;
       while (ServiceEntry != &ServiceListHead)
 	{

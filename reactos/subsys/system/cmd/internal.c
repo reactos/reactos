@@ -124,7 +124,7 @@
  *        Improved chdir/cd command.
  *
  *    02-Apr-2004 (Magnus Olsen <magnus@greatlord.com>)
- *        Remove all hard code string so they can be 
+ *        Remove all hard code string so they can be
  *		  translate to other langues.
  */
 
@@ -154,7 +154,6 @@ VOID FreeLastPath (VOID)
  */
 INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR dir;		/* pointer to the directory to change to */
 	LPTSTR lpOldPath;
 	LPTSTR endofstring; /* pointer to the null character in the directory to change to */
@@ -165,8 +164,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_CD_HELP, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+		ConOutResPuts(STRING_CD_HELP);
 		return 0;
 	}
 
@@ -235,7 +233,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	{
 		//ErrorMessage (GetLastError(), _T("CD"));
 		ConOutFormatMessage(GetLastError());
-		
+
 		/* throw away current directory */
 		free (lpOldPath);
 		lpOldPath = NULL;
@@ -272,7 +270,6 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
  */
 INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR dir;		/* pointer to the directory to change to */
 	LPTSTR place;	/* used to search for the \ when no space is used */
 	LPTSTR *p = NULL;
@@ -280,8 +277,7 @@ INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_MKDIR_HELP, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+		ConOutResPuts(STRING_MKDIR_HELP);
 		return 0;
 	}
 
@@ -316,8 +312,7 @@ INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
 
 	if (!dir)
 	{
-		LoadString( GetModuleHandle(NULL), STRING_PARAM_ERROR, (LPTSTR) szMsg,sizeof(szMsg));
-		ConErrPrintf (szMsg);
+		ConErrResPuts (STRING_ERROR_REQ_PARAM_MISSING);
 		return 1;
 	}
 
@@ -347,7 +342,6 @@ INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
  */
 INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR dir;		/* pointer to the directory to change to */
 	LPTSTR place;	/* used to search for the \ when no space is used */
 
@@ -356,8 +350,7 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_RMDIR_HELP, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+		ConOutResPuts(STRING_RMDIR_HELP);
 		return 0;
 	}
 
@@ -391,8 +384,7 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 
 	if (!dir)
 	{
-		LoadString(GetModuleHandle(NULL), STRING_PARAM_ERROR, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPrintf(szMsg);
+		ConErrResPuts(STRING_ERROR_REQ_PARAM_MISSING);
 		return 1;
 	}
 
@@ -421,12 +413,9 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
  */
 INT CommandExit (LPTSTR cmd, LPTSTR param)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_EXIT_HELP, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+		ConOutResPuts(STRING_EXIT_HELP);
 		return 0;
 	}
 
@@ -442,12 +431,9 @@ INT CommandExit (LPTSTR cmd, LPTSTR param)
  */
 INT CommandRem (LPTSTR cmd, LPTSTR param)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_REM_HELP, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+		ConOutResPuts(STRING_REM_HELP);
 	}
 
 	return 0;

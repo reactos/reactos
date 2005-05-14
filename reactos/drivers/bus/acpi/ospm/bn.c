@@ -176,7 +176,7 @@ bn_add_device(
 	 * -------------
 	 * Either fixed-feature or generic (namespace) types.
 	 */
-	if (strncmp(device->id.hid, BN_HID_POWER_BUTTON, 
+	if (strncmp(device->id.hid, BN_HID_POWER_BUTTON,
 		sizeof(BM_DEVICE_HID)) == 0) {
 
 		if (device->id.type == BM_TYPE_FIXED_BUTTON) {
@@ -185,7 +185,7 @@ bn_add_device(
 
 			/* Register for fixed-feature events. */
 			status = acpi_install_fixed_event_handler(
-				ACPI_EVENT_POWER_BUTTON, bn_notify_fixed, 
+				ACPI_EVENT_POWER_BUTTON, bn_notify_fixed,
 				(void*)button);
 		}
 		else {
@@ -201,7 +201,7 @@ bn_add_device(
 	 * -------------
 	 * Either fixed-feature or generic (namespace) types.
 	 */
-	else if (strncmp( device->id.hid, BN_HID_SLEEP_BUTTON, 
+	else if (strncmp( device->id.hid, BN_HID_SLEEP_BUTTON,
 		sizeof(BM_DEVICE_HID)) == 0) {
 
 		if (device->id.type == BM_TYPE_FIXED_BUTTON) {
@@ -210,7 +210,7 @@ bn_add_device(
 
 			/* Register for fixed-feature events. */
 			status = acpi_install_fixed_event_handler(
-				ACPI_EVENT_SLEEP_BUTTON, bn_notify_fixed, 
+				ACPI_EVENT_SLEEP_BUTTON, bn_notify_fixed,
 				(void*)button);
 		}
 		else {
@@ -224,7 +224,7 @@ bn_add_device(
 	 * LID Switch?
 	 * -----------
 	 */
-	else if (strncmp( device->id.hid, BN_HID_LID_SWITCH, 
+	else if (strncmp( device->id.hid, BN_HID_LID_SWITCH,
 		sizeof(BM_DEVICE_HID)) == 0) {
 
 		button->type = BN_TYPE_LID_SWITCH;
@@ -360,7 +360,7 @@ bn_initialize (void)
 	 */
 	MEMCPY(criteria.hid, BN_HID_LID_SWITCH, sizeof(BN_HID_LID_SWITCH));
 	status = bm_register_driver(&criteria, &driver);
-	
+
 	if (status == AE_NOT_FOUND)
 		status = AE_OK;
 
@@ -457,13 +457,13 @@ bn_notify_fixed (
 
 	case BN_TYPE_POWER_BUTTON_FIXED:
 		DEBUG_PRINT(ACPI_INFO, ("Fixed-feature button status change event detected.\n"));
-		/*bm_generate_event(button->device_handle, BN_PROC_ROOT, 
+		/*bm_generate_event(button->device_handle, BN_PROC_ROOT,
 			BN_PROC_POWER_BUTTON, BN_NOTIFY_STATUS_CHANGE, 0);*/
 		break;
 
 	case BN_TYPE_SLEEP_BUTTON_FIXED:
 		DEBUG_PRINT(ACPI_INFO, ("Fixed-feature button status change event detected.\n"));
-		/*bm_generate_event(button->device_handle, BN_PROC_ROOT, 
+		/*bm_generate_event(button->device_handle, BN_PROC_ROOT,
 			BN_PROC_SLEEP_BUTTON, BN_NOTIFY_STATUS_CHANGE, 0);*/
 		break;
 
@@ -507,11 +507,11 @@ bn_notify (
 	case BM_NOTIFY_DEVICE_ADDED:
 		status = bn_add_device(device_handle, context);
 		break;
-		
+
 	case BM_NOTIFY_DEVICE_REMOVED:
 		status = bn_remove_device(context);
 		break;
-		
+
 	case BN_NOTIFY_STATUS_CHANGE:
 		DEBUG_PRINT(ACPI_INFO, ("Button status change event detected.\n"));
 
@@ -525,7 +525,7 @@ bn_notify (
 
 		case BN_TYPE_POWER_BUTTON:
 		case BN_TYPE_POWER_BUTTON_FIXED:
-			/*bm_generate_event(device_handle, BN_PROC_ROOT, 
+			/*bm_generate_event(device_handle, BN_PROC_ROOT,
 				BN_PROC_POWER_BUTTON, notify_type, 0);*/
 			break;
 

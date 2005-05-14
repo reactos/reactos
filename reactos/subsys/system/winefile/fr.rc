@@ -29,7 +29,7 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 IDM_WINEFILE MENU FIXED IMPURE
 {
 	POPUP "&Fichier"  {
-		MENUITEM "&Ouvrir\tEntrée" ,			101
+		MENUITEM "&Ouvrir\tEntrée" ,			ID_ACTIVATE
 		MENUITEM "&Déplacer...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Copier...\tF8" ,			107
 		MENUITEM "P&resse-Papiers...\tF9" ,		118
@@ -59,13 +59,13 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Copier Disque..." ,			201
 		MENUITEM "&Nommer Disque..." ,			202
 		MENUITEM SEPARATOR
-		MENUITEM "&Formater Disque..." ,			203
+		MENUITEM "&Formater Disque..." ,			ID_FORMAT_DISK
 #ifdef _WIN95
 		MENUITEM "Créer un disque *système...", -1	/*@@ */
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "Connecter un lecteur &réseau" ,			252
-		MENUITEM "&Déconnecter un lecteur réseau" ,		253
+		MENUITEM "Connecter un lecteur &réseau" ,			ID_CONNECT_NETWORK_DRIVE
+		MENUITEM "&Déconnecter un lecteur réseau" ,		ID_DISCONNECT_NETWORK_DRIVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Partager..." ,			254
 		MENUITEM "Cesser de parta&ger" ,			255

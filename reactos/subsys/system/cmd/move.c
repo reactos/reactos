@@ -22,7 +22,7 @@
  *        Added "/N" option.
  *
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -43,7 +43,7 @@ static INT Overwrite (LPTSTR fn)
 	TCHAR inp[10];
 	LPTSTR p;
 
-	LoadString(GetModuleHandle(NULL), STRING_MOVE_HELP1, szMsg, RC_STRING_MAX_SIZE);
+	LoadString(CMD_ModuleHandle, STRING_MOVE_HELP1, szMsg, RC_STRING_MAX_SIZE);
 	ConOutPrintf(szMsg, fn);
 	ConInString(inp, 10);
 
@@ -92,8 +92,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 		               "  /-Y\n"
 		               "..."));
 #else
-		LoadString(GetModuleHandle(NULL), STRING_MOVE_HELP2, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+		ConOutResPuts(STRING_MOVE_HELP2);
 #endif
 		return 0;
 	}
@@ -192,9 +191,9 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 						if (!bNothing)
 						{
 							if (MoveFile (szSrcPath, szFullDestPath))
-								LoadString(GetModuleHandle(NULL), STRING_MOVE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+								LoadString(CMD_ModuleHandle, STRING_MOVE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 							else
-								LoadString(GetModuleHandle(NULL), STRING_MOVE_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+								LoadString(CMD_ModuleHandle, STRING_MOVE_ERROR2, szMsg, RC_STRING_MAX_SIZE);
 							ConOutPrintf(szMsg);
 						}
 					}
@@ -215,9 +214,9 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 							if (!bNothing)
 							{
 								if (MoveFile (szSrcPath, szDestPath))
-									LoadString(GetModuleHandle(NULL), STRING_MOVE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+									LoadString(CMD_ModuleHandle, STRING_MOVE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 								else
-									LoadString(GetModuleHandle(NULL), STRING_MOVE_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+									LoadString(CMD_ModuleHandle, STRING_MOVE_ERROR2, szMsg, RC_STRING_MAX_SIZE);
 								ConOutPrintf(szMsg);
 							}
 						}
@@ -235,9 +234,9 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 					if (!bNothing)
 					{
 						if (MoveFile (szSrcPath, szFullDestPath))
-							LoadString(GetModuleHandle(NULL), STRING_MOVE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+							LoadString(CMD_ModuleHandle, STRING_MOVE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 						else
-							LoadString(GetModuleHandle(NULL), STRING_MOVE_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+							LoadString(CMD_ModuleHandle, STRING_MOVE_ERROR2, szMsg, RC_STRING_MAX_SIZE);
 						ConOutPrintf(szMsg);
 					}
 				}

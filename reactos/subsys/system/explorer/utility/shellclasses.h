@@ -19,7 +19,7 @@
 
  //
  // Explorer clone
- // 
+ //
  // shellclasses.h
  //
  // C++ wrapper classes for COM interfaces and shell objects
@@ -733,7 +733,7 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 			_p = (ITEMIDLIST*) _malloc->Alloc(l);
 			if (_p) memcpy(_p, pidl, l);
 		} else
-			_p = NULL; 
+			_p = NULL;
 
 		_malloc->Free(h);
 	}

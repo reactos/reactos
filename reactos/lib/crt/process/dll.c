@@ -33,7 +33,7 @@ int _unloaddll(void* handle)
  */
 FARPROC _getdllprocaddr(void* hModule, char* lpProcName, int iOrdinal)
 {
-	if (lpProcName != NULL) 
+	if (lpProcName != NULL)
 		return GetProcAddress(hModule, lpProcName);
 	else
 		return GetProcAddress(hModule, (LPSTR)iOrdinal);

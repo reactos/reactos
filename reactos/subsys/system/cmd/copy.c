@@ -21,7 +21,7 @@
  *        Disabled prompting when used in batch mode.
  *
  *    03-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc  
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
@@ -247,7 +247,7 @@ ParseCommand (LPFILES f, int argc, TCHAR **arg, LPDWORD lpdwFlags)
 			{
 
 //				Make sure we have a clean workable path
-			
+
 				GetFullPathName( arg[i], 128, (LPTSTR) &temp, NULL);
 //				printf("A Input %s, Output %s\n", arg[i], temp);
 
@@ -261,7 +261,7 @@ ParseCommand (LPFILES f, int argc, TCHAR **arg, LPDWORD lpdwFlags)
 
 				GetFullPathName( arg[i], 128, (LPTSTR) &temp, NULL);
 //				printf("B Input %s, Output %s\n", arg[i], temp);
-				
+
 				if (!AddFiles(f, (TCHAR *) &temp, &source, &dest, &count, lpdwFlags))
 					return -1;
 				while (f->next != NULL)
@@ -295,16 +295,14 @@ DeleteFileList (LPFILES f)
 static INT
 Overwrite (LPTSTR fn)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR inp[10];
 	LPTSTR p;
 	TCHAR szOptions[4];
 
-	LoadString( GetModuleHandle(NULL), STRING_COPY_OPTION, szOptions, 4);
+	LoadString( CMD_ModuleHandle, STRING_COPY_OPTION, szOptions, sizeof(szOptions) / sizeof(szOptions[0]) );
 
-	LoadString(GetModuleHandle(NULL), STRING_COPY_HELP1, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPrintf(szMsg);
-	
+	ConOutResPuts(STRING_COPY_HELP1);
+
 	ConInString(inp, 10);
 	ConOutPuts(_T(""));
 
@@ -347,7 +345,7 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 						   NULL, OPEN_EXISTING, 0, NULL);
 	if (hFileSrc == INVALID_HANDLE_VALUE)
 	{
-		LoadString(GetModuleHandle(NULL), STRING_COPY_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_COPY_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 		ConErrPrintf(szMsg, source);
 		return 0;
 	}
@@ -375,9 +373,9 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 	{
 		if (!_tcscmp (dest, source))
 		{
-			LoadString(GetModuleHandle(NULL), STRING_COPY_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_COPY_ERROR2, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, source);
-			
+
 			CloseHandle (hFileSrc);
 			return 0;
 		}
@@ -451,9 +449,7 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 		WriteFile (hFileDest, buffer, dwRead, &dwWritten, NULL);
 		if (dwWritten != dwRead)
 		{
-			
-			LoadString(GetModuleHandle(NULL), STRING_COPY_ERROR3, szMsg, RC_STRING_MAX_SIZE);
-			ConErrPrintf(szMsg);
+			ConErrResPuts(STRING_COPY_ERROR3);
 
 			free (buffer);
 			CloseHandle (hFileDest);
@@ -568,7 +564,7 @@ SetupCopy (LPFILES sources, TCHAR **p, BOOL bMultiple,
 			{
 
 //			printf("Merge DIR\n");
-			
+
 				bMultiple = FALSE;
 				_tcscat (from_merge, _T("\\"));
 				_tcscat (from_merge, find.cFileName);
@@ -629,12 +625,12 @@ SetupCopy (LPFILES sources, TCHAR **p, BOOL bMultiple,
 
 INT cmd_copy (LPTSTR first, LPTSTR rest)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR **p;
 	TCHAR drive_d[_MAX_DRIVE];
 	TCHAR dir_d[_MAX_DIR];
 	TCHAR file_d[_MAX_FNAME];
 	TCHAR ext_d[_MAX_EXT];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	int argc;
 	int append;
@@ -651,8 +647,7 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 
 	if (!_tcsncmp (rest, _T("/?"), 2))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_COPY_HELP2, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+		ConOutResPuts(STRING_COPY_HELP2);
 		return 1;
 	}
 
@@ -724,8 +719,7 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 	}
 	else if (bDestFound && bWildcards)
 	{
-		LoadString(GetModuleHandle(NULL), STRING_COPY_ERROR4, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPrintf(szMsg);
+		ConErrResPuts(STRING_COPY_ERROR4);
 
 		DeleteFileList (sources);
 		freep (p);
@@ -765,7 +759,9 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 
 	DeleteFileList (sources);
 	freep ((VOID*)p);
-	ConOutPrintf (_T("        %d file(s) copied\n"), copied);
+	
+	LoadString( CMD_ModuleHandle, STRING_COPY_FILE, szMsg, RC_STRING_MAX_SIZE);
+    ConOutPrintf (szMsg, copied);
 
 	return 1;
 }

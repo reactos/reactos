@@ -363,7 +363,7 @@ AddDesktopItemW (BOOL bCommonDesktop,
   psl->lpVtbl->Release(psl);
 
   Ole32.fn.CoUninitialize();
-  
+
   UnloadDynamicImports(&Ole32);
 
   DPRINT ("AddDesktopItemW() done\n");

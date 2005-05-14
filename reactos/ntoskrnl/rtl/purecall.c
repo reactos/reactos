@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/purecall.c
  * PURPOSE:         No purpose listed.
- * 
+ *
  * PROGRAMMERS:     Eric Kohl <ekohl@zr-online.de>
  */
 

@@ -1,10 +1,10 @@
 /* $Id:
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Serial enumerator driver
  * FILE:            drivers/bus/serenum/detect.c
  * PURPOSE:         Detection of serial devices
- * 
+ *
  * PROGRAMMERS:     Jason Filby (jasonfilby@yahoo.com)
  *                  Filip Navara (xnavara@volny.cz)
  *                  Hervé Poussineau (hpoussin@reactos.com)
@@ -26,9 +26,9 @@ SerenumDeviceIoControl(
 	PIRP Irp;
 	IO_STATUS_BLOCK IoStatus;
 	NTSTATUS Status;
-	
+
 	KeInitializeEvent (&Event, NotificationEvent, FALSE);
-	
+
 	Irp = IoBuildDeviceIoControlRequest(CtlCode,
 		DeviceObject,
 		InputBuffer,
@@ -43,21 +43,21 @@ SerenumDeviceIoControl(
 		DPRINT("Serenum: IoBuildDeviceIoControlRequest() failed\n");
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
-	
+
 	Status = IoCallDriver(DeviceObject, Irp);
-	
+
 	if (Status == STATUS_PENDING)
 	{
 		DPRINT("Serenum: Operation pending\n");
 		KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
 		Status = IoStatus.Status;
 	}
-	
+
 	if (OutputBufferSize)
 	{
 		*OutputBufferSize = IoStatus.Information;
 	}
-	
+
 	return Status;
 }
 
@@ -73,7 +73,7 @@ ReadBytes(
 	KEVENT event;
 	LARGE_INTEGER zero;
 	NTSTATUS Status;
-	
+
 	KeInitializeEvent(&event, NotificationEvent, FALSE);
 	zero.QuadPart = 0;
 	Irp = IoBuildSynchronousFsdRequest(
@@ -85,7 +85,7 @@ ReadBytes(
 		&ioStatus);
 	if (!Irp)
 		return FALSE;
-	
+
 	Status = IoCallDriver(LowerDevice, Irp);
 	if (Status == STATUS_PENDING)
 	{
@@ -110,9 +110,9 @@ ReportDetectedDevice(
 	PPDO_DEVICE_EXTENSION PdoDeviceExtension = NULL;
 	PFDO_DEVICE_EXTENSION FdoDeviceExtension;
 	NTSTATUS Status;
-	
+
 	DPRINT("Serenum: SerenumReportDetectedDevice() called with %wZ (%wZ) detected\n", DeviceId, DeviceDescription);
-	
+
 	Status = IoCreateDevice(
 		DeviceObject->DriverObject,
 		sizeof(PDO_DEVICE_EXTENSION),
@@ -122,7 +122,7 @@ ReportDetectedDevice(
 		FALSE,
 		&Pdo);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
-	
+
 	Pdo->Flags |= DO_BUS_ENUMERATED_DEVICE;
 	Pdo->Flags |= DO_POWER_PAGABLE;
 	PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)Pdo->DeviceExtension;
@@ -137,17 +137,17 @@ ReportDetectedDevice(
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 	Status = SerenumDuplicateUnicodeString(&PdoDeviceExtension->CompatibleIds, CompatibleIds, PagedPool);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
-	
+
 	/* Device attached to serial port (Pdo) may delegate work to
 	 * serial port stack (Fdo = DeviceObject variable) */
 	Pdo->StackSize = DeviceObject->StackSize + 1;
-	
+
 	FdoDeviceExtension->AttachedPdo = Pdo;
 	PdoDeviceExtension->AttachedFdo = DeviceObject;
-	
+
 	Pdo->Flags |= DO_BUFFERED_IO;
 	Pdo->Flags &= ~DO_DEVICE_INITIALIZING;
-	
+
 	return STATUS_SUCCESS;
 
 ByeBye:
@@ -200,7 +200,7 @@ SerenumWait(ULONG milliseconds)
 {
 	KTIMER Timer;
 	LARGE_INTEGER DueTime;
-	
+
 	DueTime.QuadPart = milliseconds * -10;
 	KeInitializeTimer(&Timer);
 	KeSetTimer(&Timer, DueTime, NULL);
@@ -224,7 +224,7 @@ SerenumDetectPnpDevice(
 	SERIAL_TIMEOUTS Timeouts;
 	SERIALPERF_STATS PerfStats;
 	NTSTATUS Status;
-	
+
 	/* 1. COM port initialization, check for device enumerate */
 	CHECKPOINT;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_CLR_DTR,
@@ -239,7 +239,7 @@ SerenumDetectPnpDevice(
 		NULL, 0, &Msr, &Size);
 	if (!NT_SUCCESS(Status)) return Status;
 	if ((Msr & SR_MSR_DSR) == 0) goto SerenumDisconnectIdle;
-	
+
 	/* 2. COM port setup, 1st phase */
 	CHECKPOINT;
 	BaudRate = SERIAL_BAUD_1200;
@@ -263,7 +263,7 @@ SerenumDetectPnpDevice(
 		NULL, 0, NULL, NULL);
 	if (!NT_SUCCESS(Status)) return Status;
 	SerenumWait(200);
-	
+
 	/* 3. Wait for response, 1st phase */
 	CHECKPOINT;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_RTS,
@@ -279,7 +279,7 @@ SerenumDetectPnpDevice(
 	Status = ReadBytes(LowerDevice, Buffer, sizeof(Buffer), &Size);
 	if (!NT_SUCCESS(Status)) return Status;
 	if (Size != 0) goto SerenumCollectPnpComDeviceId;
-	
+
 	/* 4. COM port setup, 2nd phase */
 	CHECKPOINT;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_CLR_DTR,
@@ -293,7 +293,7 @@ SerenumDetectPnpDevice(
 		&Purge, 0, NULL, NULL);
 	if (!NT_SUCCESS(Status)) return Status;
 	SerenumWait(200);
-	
+
 	/* 5. Wait for response, 2nd phase */
 	CHECKPOINT;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_DTR,
@@ -310,7 +310,7 @@ SerenumDetectPnpDevice(
 		NULL, 0, &Msr, &Size);
 	if (!NT_SUCCESS(Status)) return Status;
 	if ((Msr & SR_MSR_DSR) == 0) goto SerenumVerifyDisconnect; else goto SerenumConnectIdle;
-	
+
 	/* 6. Collect PnP COM device ID */
 SerenumCollectPnpComDeviceId:
 	CHECKPOINT;
@@ -346,7 +346,7 @@ SerenumCollectPnpComDeviceId:
 		NULL, 0, &Msr, &Size);
 	if (!NT_SUCCESS(Status)) return Status;
 	if ((Msr & SR_MSR_DSR) == 0) goto SerenumVerifyDisconnect;
-	
+
 	/* 7. Verify disconnect */
 SerenumVerifyDisconnect:
 	CHECKPOINT;
@@ -358,7 +358,7 @@ SerenumVerifyDisconnect:
 	if (!NT_SUCCESS(Status)) return Status;
 	SerenumWait(5000);
 	goto SerenumDisconnectIdle;
-	
+
 	/* 8. Connect idle */
 SerenumConnectIdle:
 	CHECKPOINT;
@@ -382,7 +382,7 @@ SerenumConnectIdle:
 		return STATUS_DEVICE_NOT_CONNECTED;
 	else
 		return STATUS_SUCCESS;
-	
+
 	/* 9. Disconnect idle */
 SerenumDisconnectIdle:
 	CHECKPOINT;
@@ -423,20 +423,20 @@ SerenumDetectLegacyDevice(
 	UNICODE_STRING HardwareIds;
 	UNICODE_STRING CompatibleIds;
 	NTSTATUS Status;
-	
+
 	DPRINT("Serenum: SerenumDetectLegacyDevice(DeviceObject %p, LowerDevice %p)\n",
 		DeviceObject,
 		LowerDevice);
-	
+
 	RtlZeroMemory(Buffer, sizeof(Buffer));
-	
+
 	/* Reset UART */
 	CHECKPOINT;
 	Mcr = 0; /* MCR: DTR/RTS/OUT2 off */
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_MODEM_CONTROL,
-		&Mcr, sizeof(Mcr), NULL, NULL); 
+		&Mcr, sizeof(Mcr), NULL, NULL);
 	if (!NT_SUCCESS(Status)) return Status;
-	
+
 	/* Set communications parameters */
 	CHECKPOINT;
 	/* DLAB off */
@@ -456,7 +456,7 @@ SerenumDetectLegacyDevice(
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_LINE_CONTROL,
 		&LCR, sizeof(LCR), NULL, NULL);
 	if (!NT_SUCCESS(Status)) return Status;
-	
+
 	/* Flush receive buffer */
 	CHECKPOINT;
 	Command = SERIAL_PURGE_RXCLEAR;
@@ -465,7 +465,7 @@ SerenumDetectLegacyDevice(
 	if (!NT_SUCCESS(Status)) return Status;
 	/* Wait 100 ms */
 	SerenumWait(100);
-	
+
 	/* Enable DTR/RTS */
 	CHECKPOINT;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_DTR,
@@ -474,7 +474,7 @@ SerenumDetectLegacyDevice(
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_RTS,
 		NULL, 0, NULL, NULL);
 	if (!NT_SUCCESS(Status)) return Status;
-	
+
 	/* Set timeout to 500 microseconds */
 	CHECKPOINT;
 	Timeouts.ReadIntervalTimeout = 100;
@@ -484,12 +484,12 @@ SerenumDetectLegacyDevice(
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_TIMEOUTS,
 		&Timeouts, sizeof(Timeouts), NULL, NULL);
 	if (!NT_SUCCESS(Status)) return Status;
-	
+
 	/* Fill the read buffer */
 	CHECKPOINT;
 	Status = ReadBytes(LowerDevice, Buffer, sizeof(Buffer)/sizeof(Buffer[0]), &Count);
 	if (!NT_SUCCESS(Status)) return Status;
-	
+
 	for (i = 0; i < Count; i++)
 	{
 		if (Buffer[i] == 'B')

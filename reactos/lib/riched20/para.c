@@ -57,7 +57,7 @@ void ME_MakeFirstParagraph(HDC hDC, ME_TextBuffer *text)
   
   ZeroMemory(&fmt, sizeof(fmt));
   fmt.cbSize = sizeof(fmt);
-  fmt.dwMask = PFM_ALIGNMENT | PFM_OFFSET | PFM_STARTINDENT | PFM_RIGHTINDENT;
+  fmt.dwMask = PFM_ALIGNMENT | PFM_OFFSET | PFM_STARTINDENT | PFM_RIGHTINDENT | PFM_TABSTOPS;
 
   CopyMemory(para->member.para.pFmt, &fmt, sizeof(PARAFORMAT2));
   
@@ -282,6 +282,18 @@ void ME_SetParaFormat(ME_TextEditor *editor, ME_DisplayItem *para, PARAFORMAT2 *
 
   if (pFmt->dwMask & PFM_ALIGNMENT)
     para->member.para.pFmt->wAlignment = pFmt->wAlignment;
+  if (pFmt->dwMask & PFM_STARTINDENT)
+    para->member.para.pFmt->dxStartIndent = pFmt->dxStartIndent;
+  if (pFmt->dwMask & PFM_OFFSET)
+    para->member.para.pFmt->dxOffset = pFmt->dxOffset;
+  if (pFmt->dwMask & PFM_OFFSETINDENT)
+    para->member.para.pFmt->dxStartIndent += pFmt->dxStartIndent;
+    
+  if (pFmt->dwMask & PFM_TABSTOPS)
+  {
+    para->member.para.pFmt->cTabCount = pFmt->cTabCount;
+    memcpy(para->member.para.pFmt->rgxTabs, pFmt->rgxTabs, pFmt->cTabCount*sizeof(int));
+  }
     
   /* FIXME to be continued (indents, bulleting and such) */
 
@@ -310,7 +322,6 @@ void ME_SetSelectionParaFormat(ME_TextEditor *editor, PARAFORMAT2 *pFmt)
       break;
     para = para->member.para.next_para;
   } while(1);
-  ME_Repaint(editor);
 }
 
 void ME_GetParaFormat(ME_TextEditor *editor, ME_DisplayItem *para, PARAFORMAT2 *pFmt)
@@ -346,10 +357,27 @@ void ME_GetSelectionParaFormat(ME_TextEditor *editor, PARAFORMAT2 *pFmt)
     ZeroMemory(&tmp, sizeof(tmp));
     tmp.cbSize = sizeof(tmp);
     ME_GetParaFormat(editor, para, &tmp);
-    assert(tmp.dwMask & PFM_ALIGNMENT);
     
+    assert(tmp.dwMask & PFM_ALIGNMENT);    
     if (pFmt->wAlignment != tmp.wAlignment)
       pFmt->dwMask &= ~PFM_ALIGNMENT;
+    
+    assert(tmp.dwMask & PFM_STARTINDENT);
+    if (pFmt->dxStartIndent != tmp.dxStartIndent)
+      pFmt->dwMask &= ~PFM_STARTINDENT;
+    
+    assert(tmp.dwMask & PFM_OFFSET);
+    if (pFmt->dxOffset != tmp.dxOffset)
+      pFmt->dwMask &= ~PFM_OFFSET;
+    
+    assert(tmp.dwMask & PFM_TABSTOPS);    
+    if (pFmt->dwMask & PFM_TABSTOPS) {
+      if (pFmt->cTabCount != tmp.cTabCount)
+        pFmt->dwMask &= ~PFM_TABSTOPS;
+      else
+      if (memcmp(pFmt->rgxTabs, tmp.rgxTabs, tmp.cTabCount*sizeof(int)))
+        pFmt->dwMask &= ~PFM_TABSTOPS;
+    }
     
     if (para == para_end)
       return;

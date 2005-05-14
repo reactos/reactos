@@ -14,7 +14,7 @@ int note( char *format, ... ) {
     int ret;
 
     ret = vsnprintf( buf, sizeof(buf), format, arg_begin );
-    
+
     DbgPrint("NOTE: %s\n", buf);
 
     return ret;
@@ -27,11 +27,11 @@ int debug( char *format, ... ) {
     int ret;
 
     ret = vsnprintf( buf, sizeof(buf), format, arg_begin );
-    
+
     DbgPrint("DEBUG: %s\n", buf);
 
     return ret;
-}    
+}
 
 int warn( char *format, ... ) {
     va_list arg_begin;
@@ -40,11 +40,11 @@ int warn( char *format, ... ) {
     int ret;
 
     ret = vsnprintf( buf, sizeof(buf), format, arg_begin );
-    
+
     DbgPrint("WARN: %s\n", buf);
 
     return ret;
-}    
+}
 
 int warning( char *format, ... ) {
     va_list arg_begin;
@@ -53,7 +53,7 @@ int warning( char *format, ... ) {
     int ret;
 
     ret = vsnprintf( buf, sizeof(buf), format, arg_begin );
-    
+
     DbgPrint("WARNING: %s\n", buf);
 
     return ret;
@@ -65,9 +65,9 @@ void error( char *format, ... ) {
     char buf[0x100];
 
     vsnprintf( buf, sizeof(buf), format, arg_begin );
-    
+
     DbgPrint("ERROR: %s\n", buf);
-}    
+}
 
 int16_t getShort( unsigned char *data ) {
     return (int16_t) ntohs(*(int16_t*) data);

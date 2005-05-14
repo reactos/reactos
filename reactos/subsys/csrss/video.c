@@ -31,7 +31,7 @@ InitializeVideoAddressSpace(VOID)
 			      0,
 			      NULL,
 			      NULL);
-   Status = ZwOpenSection(&PhysMemHandle, SECTION_ALL_ACCESS, 
+   Status = ZwOpenSection(&PhysMemHandle, SECTION_ALL_ACCESS,
 			  &ObjectAttributes);
    if (!NT_SUCCESS(Status))
      {
@@ -102,13 +102,13 @@ InitializeVideoAddressSpace(VOID)
        DbgPrint("NtVdmControl failed (status %x)\n", Status);
        return(0);
      }
-   
+
    /*
     * Copy the real mode IVT into the right place
     */
    NullAddress = (PVOID)0x0; /* Workaround for GCC 3.4 */
    memcpy(NullAddress, IVT, 1024);
-   
+
    /*
     * Get the BDA from the kernel
     */
@@ -118,7 +118,7 @@ InitializeVideoAddressSpace(VOID)
        DbgPrint("NtVdmControl failed (status %x)\n", Status);
        return(0);
      }
-   
+
    /*
     * Copy the BDA into the right place
     */

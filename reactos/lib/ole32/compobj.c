@@ -162,8 +162,9 @@ static CRITICAL_SECTION_DEBUG dll_cs_debug =
 };
 static CRITICAL_SECTION csOpenDllList = { &dll_cs_debug, -1, 0, 0, 0, 0 };
 
-static const WCHAR wszAptWinClass[] = {'W','I','N','E','_','O','L','E','3','2','_','A','P','T','_','C','L','A','S','S',0};
-static LRESULT CALLBACK COM_AptWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+static const WCHAR wszAptWinClass[] = {'O','l','e','M','a','i','n','T','h','r','e','a','d','W','n','d','C','l','a','s','s',' ',
+                                       '0','x','#','#','#','#','#','#','#','#',' ',0};
+static LRESULT CALLBACK apartment_wndproc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 static void COMPOBJ_DLLList_Add(HANDLE hLibrary);
 static void COMPOBJ_DllList_FreeUnused(int Timeout);
@@ -182,7 +183,7 @@ void COMPOBJ_InitProcess( void )
      * was unmarshalled.
      */
     memset(&wclass, 0, sizeof(wclass));
-    wclass.lpfnWndProc = COM_AptWndProc;
+    wclass.lpfnWndProc = apartment_wndproc;
     wclass.hInstance = OLE32_hInstance;
     wclass.lpszClassName = wszAptWinClass;
     RegisterClassW(&wclass);
@@ -198,7 +199,7 @@ void COM_TlsDestroy()
     struct oletls *info = NtCurrentTeb()->ReservedForOle;
     if (info)
     {
-        if (info->apt) COM_ApartmentRelease(info->apt);
+        if (info->apt) apartment_release(info->apt);
         if (info->errorinfo) IErrorInfo_Release(info->errorinfo);
         if (info->state) IUnknown_Release(info->state);
         HeapFree(GetProcessHeap(), 0, info);
@@ -231,6 +232,7 @@ static APARTMENT *apartment_construct(DWORD model)
     apt->remunk_exported = FALSE;
     apt->oidc = 1;
     InitializeCriticalSection(&apt->cs);
+    DEBUG_SET_CRITSEC_NAME(&apt->cs, "apartment");
 
     apt->model = model;
 
@@ -262,7 +264,7 @@ static APARTMENT *apartment_construct(DWORD model)
 /* gets and existing apartment if one exists or otherwise creates an apartment
  * structure which stores OLE apartment-local information and stores a pointer
  * to it in the thread-local storage */
-static APARTMENT *get_or_create_apartment(DWORD model)
+static APARTMENT *apartment_get_or_create(DWORD model)
 {
     APARTMENT *apt = COM_CurrentApt();
 
@@ -283,7 +285,7 @@ static APARTMENT *get_or_create_apartment(DWORD model)
             if (MTA)
             {
                 TRACE("entering the multithreaded apartment %s\n", wine_dbgstr_longlong(MTA->oxid));
-                COM_ApartmentAddRef(MTA);
+                apartment_addref(MTA);
             }
             else
                 MTA = apartment_construct(model);
@@ -298,14 +300,14 @@ static APARTMENT *get_or_create_apartment(DWORD model)
     return apt;
 }
 
-DWORD COM_ApartmentAddRef(struct apartment *apt)
+DWORD apartment_addref(struct apartment *apt)
 {
     DWORD refs = InterlockedIncrement(&apt->refs);
     TRACE("%s: before = %ld\n", wine_dbgstr_longlong(apt->oxid), refs - 1);
     return refs;
 }
 
-DWORD COM_ApartmentRelease(struct apartment *apt)
+DWORD apartment_release(struct apartment *apt)
 {
     DWORD ret;
 
@@ -328,7 +330,10 @@ DWORD COM_ApartmentRelease(struct apartment *apt)
 
         TRACE("destroying apartment %p, oxid %s\n", apt, wine_dbgstr_longlong(apt->oxid));
 
-        MARSHAL_Disconnect_Proxies(apt);
+        /* no locking is needed for this apartment, because no other thread
+         * can access it at this point */
+
+        apartment_disconnectproxies(apt);
 
         if (apt->win) DestroyWindow(apt->win);
 
@@ -350,22 +355,22 @@ DWORD COM_ApartmentRelease(struct apartment *apt)
 
         if (apt->filter) IUnknown_Release(apt->filter);
 
+        DEBUG_CLEAR_CRITSEC_NAME(&apt->cs);
         DeleteCriticalSection(&apt->cs);
         CloseHandle(apt->thread);
+
         HeapFree(GetProcessHeap(), 0, apt);
     }
 
     return ret;
 }
 
-/* The given OXID must be local to this process: you cannot use
- * apartment windows to send RPCs to other processes. This all needs
- * to move to rpcrt4.
+/* The given OXID must be local to this process: 
  *
  * The ref parameter is here mostly to ensure people remember that
  * they get one, you should normally take a ref for thread safety.
  */
-APARTMENT *COM_ApartmentFromOXID(OXID oxid, BOOL ref)
+APARTMENT *apartment_findfromoxid(OXID oxid, BOOL ref)
 {
     APARTMENT *result = NULL;
     struct list *cursor;
@@ -377,7 +382,7 @@ APARTMENT *COM_ApartmentFromOXID(OXID oxid, BOOL ref)
         if (apt->oxid == oxid)
         {
             result = apt;
-            if (ref) COM_ApartmentAddRef(result);
+            if (ref) apartment_addref(result);
             break;
         }
     }
@@ -389,7 +394,7 @@ APARTMENT *COM_ApartmentFromOXID(OXID oxid, BOOL ref)
 /* gets the apartment which has a given creator thread ID. The caller must
  * release the reference from the apartment as soon as the apartment pointer
  * is no longer required. */
-APARTMENT *COM_ApartmentFromTID(DWORD tid)
+APARTMENT *apartment_findfromtid(DWORD tid)
 {
     APARTMENT *result = NULL;
     struct list *cursor;
@@ -401,7 +406,7 @@ APARTMENT *COM_ApartmentFromTID(DWORD tid)
         if (apt->tid == tid)
         {
             result = apt;
-            COM_ApartmentAddRef(result);
+            apartment_addref(result);
             break;
         }
     }
@@ -410,22 +415,12 @@ APARTMENT *COM_ApartmentFromTID(DWORD tid)
     return result;
 }
 
-HWND COM_GetApartmentWin(OXID oxid, BOOL ref)
-{
-    APARTMENT *apt;
-
-    apt = COM_ApartmentFromOXID(oxid, ref);
-    if (!apt) return NULL;
-
-    return apt->win;
-}
-
-static LRESULT CALLBACK COM_AptWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK apartment_wndproc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
     {
     case DM_EXECUTERPC:
-        return RPC_ExecuteCall((RPCOLEMESSAGE *)wParam, (IRpcStubBuffer *)lParam);
+        return RPC_ExecuteCall((struct dispatch_params *)lParam);
     default:
         return DefWindowProcW(hWnd, msg, wParam, lParam);
     }
@@ -446,7 +441,7 @@ static void COMPOBJ_DLLList_Add(HANDLE hLibrary)
 
     if (openDllList == NULL) {
         /* empty list -- add first node */
-        openDllList = (OpenDll*)HeapAlloc(GetProcessHeap(),0, sizeof(OpenDll));
+        openDllList = HeapAlloc(GetProcessHeap(),0, sizeof(OpenDll));
 	openDllList->hLibrary=hLibrary;
 	openDllList->next = NULL;
     } else {
@@ -461,7 +456,7 @@ static void COMPOBJ_DLLList_Add(HANDLE hLibrary)
 	if (!found) {
 	    /* dll not found, add it */
  	    tmp = openDllList;
-	    openDllList = (OpenDll*)HeapAlloc(GetProcessHeap(),0, sizeof(OpenDll));
+	    openDllList = HeapAlloc(GetProcessHeap(),0, sizeof(OpenDll));
 	    openDllList->hLibrary = hLibrary;
 	    openDllList->next = tmp;
 	}
@@ -608,7 +603,7 @@ HRESULT WINAPI CoInitializeEx(LPVOID lpReserved, DWORD dwCoInit)
 
   if (!(apt = COM_CurrentInfo()->apt))
   {
-    apt = get_or_create_apartment(dwCoInit);
+    apt = apartment_get_or_create(dwCoInit);
     if (!apt) return E_OUTOFMEMORY;
   }
   else if (dwCoInit != apt->model)
@@ -686,7 +681,7 @@ void WINAPI CoUninitialize(void)
 
   if (!--info->inits)
   {
-    COM_ApartmentRelease(info->apt);
+    apartment_release(info->apt);
     info->apt = NULL;
   }
 
@@ -759,7 +754,7 @@ HRESULT WINAPI CoDisconnectObject( LPUNKNOWN lpUnk, DWORD reserved )
     if (!apt)
         return CO_E_NOTINITIALIZED;
 
-    apartment_disconnect_object(apt, lpUnk);
+    apartment_disconnectobject(apt, lpUnk);
 
     /* Note: native is pretty broken here because it just silently
      * fails, without returning an appropriate error code if the object was
@@ -1035,16 +1030,27 @@ HRESULT WINAPI ProgIDFromCLSID(REFCLSID clsid, LPOLESTR *lplpszProgID)
       }
     }
     HeapFree(GetProcessHeap(), 0, buf2);
+    RegCloseKey(xhkey);
   }
 
-  RegCloseKey(xhkey);
   return ret;
 }
 
-HRESULT WINAPI CLSIDFromProgID16(
-	LPCOLESTR16 progid,	/* [in] program id as found in registry */
-	LPCLSID riid		/* [out] associated CLSID */
-) {
+/******************************************************************************
+ *		CLSIDFromProgID [COMPOBJ.61]
+ *
+ * Converts a program ID into the respective GUID.
+ *
+ * PARAMS
+ *  progid       [I] program id as found in registry
+ *  riid         [O] associated CLSID
+ *
+ * RETURNS
+ *	Success: S_OK
+ *  Failure: CO_E_CLASSSTRING - the given ProgID cannot be found.
+ */
+HRESULT WINAPI CLSIDFromProgID16(LPCOLESTR16 progid, LPCLSID riid)
+{
 	char	*buf,buf2[80];
 	DWORD	buf2len;
 	HRESULT	err;
@@ -1068,7 +1074,6 @@ HRESULT WINAPI CLSIDFromProgID16(
 
 /******************************************************************************
  *		CLSIDFromProgID	[OLE32.@]
- *		CLSIDFromProgID	[COMPOBJ.61]
  *
  * Converts a program id into the respective GUID.
  *
@@ -1139,7 +1144,7 @@ HRESULT WINAPI CLSIDFromProgID(LPCOLESTR progid, LPCLSID riid)
  *
  * We only search the registry, not ids registered with
  * CoRegisterPSClsid.
- * Also, native returns S_OK for interfaces with an key in HKCR\Interface, but
+ * Also, native returns S_OK for interfaces with a key in HKCR\Interface, but
  * without a ProxyStubClsid32 key and leaves garbage in pclsid. This should be
  * considered a bug in native unless an application depends on this (unlikely).
  */
@@ -2541,5 +2546,92 @@ HRESULT WINAPI CoCopyProxy(IUnknown *pProxy, IUnknown **ppCopy)
     }
 
     if (FAILED(hr)) ERR("-- failed with 0x%08lx\n", hr);
+    return hr;
+}
+
+
+/***********************************************************************
+ *           CoWaitForMultipleHandles [OLE32.@]
+ *
+ * Waits for one or more handles to become signaled.
+ *
+ * PARAMS
+ *  dwFlags   [I] Flags. See notes.
+ *  dwTimeout [I] Timeout in milliseconds.
+ *  cHandles  [I] Number of handles pointed to by pHandles.
+ *  pHandles  [I] Handles to wait for.
+ *  lpdwindex [O] Index of handle that was signaled.
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: RPC_S_CALLPENDING on timeout.
+ *
+ * NOTES
+ *
+ * The dwFlags parameter can be zero or more of the following:
+ *| COWAIT_WAITALL - Wait for all of the handles to become signaled.
+ *| COWAIT_ALERTABLE - Allows a queued APC to run during the wait.
+ *
+ * SEE ALSO
+ *  MsgWaitForMultipleObjects, WaitForMultipleObjects.
+ */
+HRESULT WINAPI CoWaitForMultipleHandles(DWORD dwFlags, DWORD dwTimeout,
+    ULONG cHandles, const HANDLE* pHandles, LPDWORD lpdwindex)
+{
+    HRESULT hr = S_OK;
+    DWORD wait_flags = (dwFlags & COWAIT_WAITALL) ? MWMO_WAITALL : 0 |
+                       (dwFlags & COWAIT_ALERTABLE ) ? MWMO_ALERTABLE : 0;
+    DWORD start_time = GetTickCount();
+
+    TRACE("(0x%08lx, 0x%08lx, %ld, %p, %p)\n", dwFlags, dwTimeout, cHandles,
+        pHandles, lpdwindex);
+
+    while (TRUE)
+    {
+        DWORD now = GetTickCount();
+        DWORD res;
+        
+        if ((dwTimeout != INFINITE) && (start_time + dwTimeout >= now))
+        {
+            hr = RPC_S_CALLPENDING;
+            break;
+        }
+
+        TRACE("waiting for rpc completion or window message\n");
+
+        res = MsgWaitForMultipleObjectsEx(cHandles, pHandles,
+            (dwTimeout == INFINITE) ? INFINITE : start_time + dwTimeout - now,
+            QS_ALLINPUT, wait_flags);
+
+        if (res == WAIT_OBJECT_0 + cHandles)  /* messages available */
+        {
+            MSG msg;
+            while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
+            {
+                /* FIXME: filter the messages here */
+                TRACE("received message whilst waiting for RPC: 0x%04x\n", msg.message);
+                TranslateMessage(&msg);
+                DispatchMessageW(&msg);
+            }
+        }
+        else if ((res >= WAIT_OBJECT_0) && (res < WAIT_OBJECT_0 + cHandles))
+        {
+            /* handle signaled, store index */
+            *lpdwindex = (res - WAIT_OBJECT_0);
+            break;
+        }
+        else if (res == WAIT_TIMEOUT)
+        {
+            hr = RPC_S_CALLPENDING;
+            break;
+        }
+        else
+        {
+            ERR("Unexpected wait termination: %ld, %ld\n", res, GetLastError());
+            hr = E_UNEXPECTED;
+            break;
+        }
+    }
+    TRACE("-- 0x%08lx\n", hr);
     return hr;
 }

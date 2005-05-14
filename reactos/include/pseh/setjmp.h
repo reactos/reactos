@@ -36,9 +36,18 @@ typedef struct __SEHJmpBuf
 _SEHJmpBuf_t[1];
 #endif
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 extern __declspec(noreturn) void __stdcall _SEHLongJmp(_SEHJmpBuf_t, int);
 extern __declspec(noreturn) void __stdcall _SEHLongJmp_KeepEsp(_SEHJmpBuf_t, int);
 extern int __stdcall _SEHSetJmp(_SEHJmpBuf_t);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

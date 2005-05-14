@@ -43,7 +43,7 @@ NtGdiDescribePixelFormat(HDC  hDC,
 UINT
 STDCALL
 NtGdiGetEnhMetaFilePixelFormat(HENHMETAFILE  hEMF,
-                                    DWORD  BufSize, 
+                                    DWORD  BufSize,
                                     CONST PPIXELFORMATDESCRIPTOR  pfd)
 {
   UNIMPLEMENTED;

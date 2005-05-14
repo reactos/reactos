@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/bootlog.c
  * PURPOSE:         Boot log file support
- * 
+ *
  * PROGRAMMERS:     Eric Kohl
  */
 

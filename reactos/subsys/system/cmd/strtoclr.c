@@ -53,7 +53,7 @@ CLRTABLE clrtable[] =
 	{_T("whi")	,_R|_G|_B	},
 	{_T("gra")	,_I		},
 
-	
+
 	{_T("0")	,0		},
 	{_T("2")	,_G		},
 	{_T("3")	,_B|_G		},
@@ -71,7 +71,7 @@ CLRTABLE clrtable[] =
 	{_T("14")	,_I|_R|_G	},
 	{_T("15")	,_I|_R|_G|_B	},
 
-	
+
 	/* note that 1 is at the end of list
 	to avoid to confuse it with 10-15*/
 	{_T("1")	,_B		},
@@ -81,7 +81,7 @@ CLRTABLE clrtable[] =
 	/*magenta synonimous*/
 	{_T("pur")	,_B|_R		},
 
-	
+
 	{_T("")   ,0},
 };
 
@@ -94,7 +94,7 @@ on erro retunr nonzero value
 static
 INT chop_blank(LPTSTR *arg_str)
 {
-	
+
 	LPTSTR str;
 	str = _tcschr(*arg_str,_T(' '));
 	if(!str)
@@ -105,7 +105,7 @@ INT chop_blank(LPTSTR *arg_str)
 		return CP_BLANK_NOT_FOUND;
 	}
 
-	
+
 
 	while(_istspace(*str))
 		str++;
@@ -118,27 +118,27 @@ INT chop_blank(LPTSTR *arg_str)
 
 	*arg_str = str;
 
-	return CP_OK;	
+	return CP_OK;
 }
 
 
 
 /*
 read a color value in hex (like win nt's cmd syntax)
-if an error occurs return -1	
-*/ 
+if an error occurs return -1
+*/
 static
 WORD hex_clr(LPTSTR str)
 {
 	WORD ret= (WORD)-1;
 	TCHAR ch;
-	
+
 	ch = str[1];
-	
+
 	if(_istdigit(ch))
 		ret = ch-_T('0');
 	else
-	{	
+	{
 		ch=_totupper(ch);
 
 		if(  ch >= _T('A') && ch <= _T('F')  )
@@ -147,13 +147,13 @@ WORD hex_clr(LPTSTR str)
 			return (WORD)-1;
 	}
 
-	
+
 	ch = str[0];
-	
+
 	if(_istdigit(ch))
 		ret |= (ch-_T('0')) << 4;
 	else
-	{	
+	{
 		ch=_totupper(ch);
 
 		if(  ch >= _T('A') && ch <= _T('F')  )
@@ -168,7 +168,7 @@ WORD hex_clr(LPTSTR str)
 
 /*
 read a color value from a string (like 4nt's syntax)
-if an error occurs return -1	
+if an error occurs return -1
 */
 static
 WORD txt_clr(LPTSTR str)
@@ -184,7 +184,7 @@ WORD txt_clr(LPTSTR str)
 
 
 
-/*search for x on y*/ 
+/*search for x on y*/
 static
 WORD str_to_color(LPTSTR* arg_str)
 {
@@ -231,13 +231,13 @@ WORD str_to_color(LPTSTR* arg_str)
 		if(chop_blank(&str))
 			return (WORD)-1;
 	}
-		
-	
+
+
 	if( (tmp_clr = txt_clr(str)) == (WORD)-1 )
 		return (WORD)-1;
 
 	chop_blank(&str);
-	
+
 	*arg_str = str;
 
 	return SC_HEX | ret_clr | tmp_clr << 4 | bBri << 7;

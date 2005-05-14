@@ -67,7 +67,7 @@ GetHotKey (PWINSTATION_OBJECT WinStaObject,
 {
   PLIST_ENTRY Entry;
   PHOT_KEY_ITEM HotKeyItem;
-  
+
   if(!WinStaObject)
   {
     return FALSE;
@@ -113,7 +113,7 @@ UnregisterWindowHotKeys(PWINDOW_OBJECT Window)
   PLIST_ENTRY Entry;
   PHOT_KEY_ITEM HotKeyItem;
   PWINSTATION_OBJECT WinStaObject = NULL;
-  
+
   if(Window->OwnerThread && Window->OwnerThread->ThreadsProcess)
     WinStaObject = Window->OwnerThread->Tcb.Win32Thread->Desktop->WindowStation;
 
@@ -146,13 +146,13 @@ UnregisterThreadHotKeys(struct _ETHREAD *Thread)
   PLIST_ENTRY Entry;
   PHOT_KEY_ITEM HotKeyItem;
   PWINSTATION_OBJECT WinStaObject = NULL;
-  
+
   if(Thread->Tcb.Win32Thread && Thread->Tcb.Win32Thread->Desktop)
     WinStaObject = Thread->Tcb.Win32Thread->Desktop->WindowStation;
-  
+
   if(!WinStaObject)
     return;
-  
+
   IntLockHotKeys(WinStaObject);
 
   Entry = WinStaObject->HotKeyListHead.Flink;
@@ -210,7 +210,7 @@ NtUserRegisterHotKey(HWND hWnd,
   PWINDOW_OBJECT Window;
   PWINSTATION_OBJECT WinStaObject = NULL;
   PETHREAD HotKeyThread;
-  
+
   if (hWnd == NULL)
   {
     HotKeyThread = PsGetCurrentThread();
@@ -227,10 +227,10 @@ NtUserRegisterHotKey(HWND hWnd,
     IntReleaseWindowObject(Window);
   }
 
-  
+
   if(HotKeyThread->ThreadsProcess && HotKeyThread->ThreadsProcess->Win32Process)
     WinStaObject = HotKeyThread->Tcb.Win32Thread->Desktop->WindowStation;
-  
+
   if(!WinStaObject)
   {
     return FALSE;
@@ -262,7 +262,7 @@ NtUserRegisterHotKey(HWND hWnd,
 		  &HotKeyItem->ListEntry);
 
   IntUnLockHotKeys(WinStaObject);
-  
+
   return TRUE;
 }
 
@@ -275,17 +275,17 @@ NtUserUnregisterHotKey(HWND hWnd,
   PHOT_KEY_ITEM HotKeyItem;
   PWINDOW_OBJECT Window;
   PWINSTATION_OBJECT WinStaObject = NULL;
-  
+
   Window = IntGetWindowObject(hWnd);
   if(!Window)
   {
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     return FALSE;
   }
-  
+
   if(Window->OwnerThread->ThreadsProcess && Window->OwnerThread->ThreadsProcess->Win32Process)
     WinStaObject = Window->OwnerThread->Tcb.Win32Thread->Desktop->WindowStation;
-  
+
   if(!WinStaObject)
   {
     IntReleaseWindowObject(Window);
@@ -306,7 +306,7 @@ NtUserUnregisterHotKey(HWND hWnd,
 	  RemoveEntryList (&HotKeyItem->ListEntry);
 	  ExFreePool (HotKeyItem);
 	  IntUnLockHotKeys(WinStaObject);
-	  
+
 	  IntReleaseWindowObject(Window);
 	  return TRUE;
 	}
@@ -315,7 +315,7 @@ NtUserUnregisterHotKey(HWND hWnd,
     }
 
   IntUnLockHotKeys(WinStaObject);
-  
+
   IntReleaseWindowObject(Window);
   return FALSE;
 }

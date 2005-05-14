@@ -29,7 +29,7 @@ LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 IDM_WINEFILE MENU FIXED IMPURE
 {
 	POPUP "&File"  {
-		MENUITEM "&Apri\tInvio" ,			101
+		MENUITEM "&Apri\tInvio" ,			ID_ACTIVATE
 		MENUITEM "&Sposta...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Copia...\tF8" ,			107
 		MENUITEM "&Negli Appunti...\tF9" ,		118
@@ -59,13 +59,13 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Copia Disco..." ,			201
 		MENUITEM "&Etichetta Disco..." ,			202
 		MENUITEM SEPARATOR
-		MENUITEM "&Formatta Disco..." ,			203
+		MENUITEM "&Formatta Disco..." ,			ID_FORMAT_DISK
 #ifdef _WIN95
 		MENUITEM "&Crea Disco di Sistema...", -1	/*@@ */
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "Connetti & Drive di Rete" ,			252
-		MENUITEM "&Disconnetti Drive di Rete" ,		253
+		MENUITEM "Connetti & Drive di Rete" ,			ID_CONNECT_NETWORK_DRIVE
+		MENUITEM "&Disconnetti Drive di Rete" ,		ID_DISCONNECT_NETWORK_DRIVE
 		MENUITEM SEPARATOR
 		MENUITEM "Condividi come..." ,			254
 		MENUITEM "&Rimuovi condivisione..." ,			255

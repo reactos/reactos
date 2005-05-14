@@ -53,7 +53,7 @@ FilenameA2W(LPCSTR NameA, BOOL alloc)
         SetLastError( ERROR_FILENAME_EXCED_RANGE );
     else
         SetLastErrorByStatus(Status);
-        
+
     return NULL;
 }
 
@@ -65,7 +65,7 @@ Returns:
    Success: number of TCHARS copied into dest. buffer NOT including nullterm
    Fail: size of buffer in TCHARS required to hold the converted filename, including nullterm
 */
-DWORD 
+DWORD
 FilenameU2A_FitOrFail(
    LPSTR  DestA,
    INT destLen, /* buffer size in TCHARS incl. nullchar */
@@ -76,23 +76,23 @@ FilenameU2A_FitOrFail(
 
    ret = bIsFileApiAnsi? RtlUnicodeStringToAnsiSize(SourceU) : RtlUnicodeStringToOemSize(SourceU);
    /* ret incl. nullchar */
-    
+
    if (DestA && ret <= destLen)
    {
       ANSI_STRING str;
-       
+
       str.Buffer = DestA;
       str.MaximumLength = destLen;
-       
-       
+
+
       if (bIsFileApiAnsi)
          RtlUnicodeStringToAnsiString(&str, SourceU, FALSE );
       else
          RtlUnicodeStringToOemString(&str, SourceU, FALSE );
-            
+
       ret = str.Length;  /* SUCCESS: length without terminating 0 */
    }
-    
+
    return ret;
 }
 
@@ -104,7 +104,7 @@ Returns:
    Success: number of TCHARS copied into dest. buffer NOT including nullterm
    Fail: size of buffer in TCHARS required to hold the converted filename, including nullterm
 */
-DWORD 
+DWORD
 FilenameW2A_FitOrFail(
    LPSTR  DestA,
    INT destLen, /* buffer size in TCHARS incl. nullchar */
@@ -120,57 +120,57 @@ FilenameW2A_FitOrFail(
    strW.MaximumLength = sourceLen * sizeof(WCHAR);
    strW.Length = strW.MaximumLength - sizeof(WCHAR);
 
-   return FilenameU2A_FitOrFail(DestA, destLen, &strW);     
+   return FilenameU2A_FitOrFail(DestA, destLen, &strW);
 }
 
 
 /*
 Return: num. TCHARS copied into dest including nullterm
 */
-DWORD 
-FilenameA2W_N( 
-   LPWSTR dest, 
+DWORD
+FilenameA2W_N(
+   LPWSTR dest,
    INT destlen, /* buffer size in TCHARS incl. nullchar */
-   LPCSTR src, 
+   LPCSTR src,
    INT srclen /* buffer size in TCHARS incl. nullchar */
    )
 {
     DWORD ret;
 
     if (srclen < 0) srclen = strlen( src ) + 1;
-    
+
     if (bIsFileApiAnsi)
-        RtlMultiByteToUnicodeN( dest, destlen* sizeof(WCHAR), &ret, (LPSTR)src, srclen  );    
+        RtlMultiByteToUnicodeN( dest, destlen* sizeof(WCHAR), &ret, (LPSTR)src, srclen  );
     else
         RtlOemToUnicodeN( dest, destlen* sizeof(WCHAR), &ret, (LPSTR)src, srclen );
-    
+
     if (ret) dest[(ret/sizeof(WCHAR))-1]=0;
-    
+
     return ret/sizeof(WCHAR);
 }
 
 /*
 Return: num. TCHARS copied into dest including nullterm
 */
-DWORD 
-FilenameW2A_N( 
-   LPSTR dest, 
+DWORD
+FilenameW2A_N(
+   LPSTR dest,
    INT destlen, /* buffer size in TCHARS incl. nullchar */
-   LPCWSTR src, 
+   LPCWSTR src,
    INT srclen /* buffer size in TCHARS incl. nullchar */
    )
 {
     DWORD ret;
 
     if (srclen < 0) srclen = wcslen( src ) + 1;
-    
+
     if (bIsFileApiAnsi)
         RtlUnicodeToMultiByteN( dest, destlen, &ret, (LPWSTR) src, srclen * sizeof(WCHAR));
     else
-        RtlUnicodeToOemN( dest, destlen, &ret, (LPWSTR) src, srclen * sizeof(WCHAR) );    
-        
+        RtlUnicodeToOemN( dest, destlen, &ret, (LPWSTR) src, srclen * sizeof(WCHAR) );
+
     if (ret) dest[ret-1]=0;
-    
+
     return ret;
 }
 
@@ -260,7 +260,7 @@ OpenFile(LPCSTR lpFileName,
 		RtlAnsiStringToUnicodeString (&FileNameU, &FileName, TRUE);
 	else
 		RtlOemStringToUnicodeString (&FileNameU, &FileName, TRUE);
-		        
+
 	Len = SearchPathW (NULL,
 	                   FileNameU.Buffer,
         	           NULL,
@@ -371,7 +371,7 @@ SetFilePointer(HANDLE hFile,
    NTSTATUS errCode;
    IO_STATUS_BLOCK IoStatusBlock;
    LARGE_INTEGER Distance;
-   
+
    DPRINT("SetFilePointer(hFile %x, lDistanceToMove %d, dwMoveMethod %d)\n",
 	  hFile,lDistanceToMove,dwMoveMethod);
 
@@ -394,7 +394,7 @@ SetFilePointer(HANDLE hFile,
    {
       Distance.u.HighPart = -1;
    }
-   
+
    switch(dwMoveMethod)
    {
      case FILE_CURRENT:
@@ -421,13 +421,13 @@ SetFilePointer(HANDLE hFile,
         SetLastError(ERROR_INVALID_PARAMETER);
 	return -1;
    }
-   
+
    if(FilePosition.CurrentByteOffset.QuadPart < 0)
    {
      SetLastError(ERROR_NEGATIVE_SEEK);
      return -1;
    }
-   
+
    errCode = NtSetInformationFile(hFile,
 				  &IoStatusBlock,
 				  &FilePosition,
@@ -438,7 +438,7 @@ SetFilePointer(HANDLE hFile,
 	SetLastErrorByStatus(errCode);
 	return -1;
      }
-   
+
    if (lpDistanceToMoveHigh != NULL)
      {
         *lpDistanceToMoveHigh = FilePosition.CurrentByteOffset.u.HighPart;
@@ -494,13 +494,13 @@ SetFilePointerEx(HANDLE hFile,
         SetLastError(ERROR_INVALID_PARAMETER);
 	return FALSE;
    }
-   
+
    if(FilePosition.CurrentByteOffset.QuadPart < 0)
    {
      SetLastError(ERROR_NEGATIVE_SEEK);
      return FALSE;
    }
-   
+
    errCode = NtSetInformationFile(hFile,
 				  &IoStatusBlock,
 				  &FilePosition,
@@ -511,7 +511,7 @@ SetFilePointerEx(HANDLE hFile,
 	SetLastErrorByStatus(errCode);
 	return FALSE;
      }
-   
+
    if (lpNewFilePointer)
      {
        *lpNewFilePointer = FilePosition.CurrentByteOffset;
@@ -688,7 +688,7 @@ GetCompressedFileSizeW(LPCWSTR lpFileName,
    NTSTATUS errCode;
    IO_STATUS_BLOCK IoStatusBlock;
    HANDLE hFile;
-   
+
    hFile = CreateFileW(lpFileName,
 		       GENERIC_READ,
 		       FILE_SHARE_READ,
@@ -696,7 +696,7 @@ GetCompressedFileSizeW(LPCWSTR lpFileName,
 		       OPEN_EXISTING,
 		       FILE_ATTRIBUTE_NORMAL,
 		       NULL);
-             
+
    if (hFile == INVALID_HANDLE_VALUE)
       return INVALID_FILE_SIZE;
 
@@ -760,13 +760,13 @@ GetFileInformationByHandle(HANDLE hFile,
      }
 
    lpFileInformation->dwFileAttributes = (DWORD)FileBasic.FileAttributes;
-   
+
    lpFileInformation->ftCreationTime.dwHighDateTime = FileBasic.CreationTime.u.HighPart;
    lpFileInformation->ftCreationTime.dwLowDateTime = FileBasic.CreationTime.u.LowPart;
 
    lpFileInformation->ftLastAccessTime.dwHighDateTime = FileBasic.LastAccessTime.u.HighPart;
    lpFileInformation->ftLastAccessTime.dwLowDateTime = FileBasic.LastAccessTime.u.LowPart;
-   
+
    lpFileInformation->ftLastWriteTime.dwHighDateTime = FileBasic.LastWriteTime.u.HighPart;
    lpFileInformation->ftLastWriteTime.dwLowDateTime = FileBasic.LastWriteTime.u.LowPart;
 
@@ -820,8 +820,8 @@ GetFileInformationByHandle(HANDLE hFile,
  * @implemented
  */
 BOOL STDCALL
-GetFileAttributesExW(LPCWSTR lpFileName, 
-		     GET_FILEEX_INFO_LEVELS fInfoLevelId, 
+GetFileAttributesExW(LPCWSTR lpFileName,
+		     GET_FILEEX_INFO_LEVELS fInfoLevelId,
 		     LPVOID lpFileInformation)
 {
   FILE_NETWORK_OPEN_INFORMATION FileInformation;
@@ -908,11 +908,11 @@ GetFileAttributesExW(LPCWSTR lpFileName,
  */
 BOOL STDCALL
 GetFileAttributesExA(LPCSTR lpFileName,
-		     GET_FILEEX_INFO_LEVELS fInfoLevelId, 
+		     GET_FILEEX_INFO_LEVELS fInfoLevelId,
 		     LPVOID lpFileInformation)
 {
    PWCHAR FileNameW;
-   
+
    if (!(FileNameW = FilenameA2W(lpFileName, FALSE)))
       return FALSE;
 
@@ -932,7 +932,7 @@ GetFileAttributesA(LPCSTR lpFileName)
 
    if (!(FileNameW = FilenameA2W(lpFileName, FALSE)))
       return INVALID_FILE_ATTRIBUTES;
-   
+
    ret = GetFileAttributesExW(FileNameW, GetFileExInfoStandard, &FileAttributeData);
 
    return ret ? FileAttributeData.dwFileAttributes : INVALID_FILE_ATTRIBUTES;
@@ -1061,18 +1061,18 @@ UINT WINAPI GetTempFileNameA( LPCSTR path, LPCSTR prefix, UINT unique, LPSTR buf
    PWCHAR PathW;
    WCHAR PrefixW[3+1];
    UINT ret;
-   
+
    if (!(PathW = FilenameA2W(path, FALSE)))
       return 0;
-    
+
    if (prefix)
       FilenameA2W_N(PrefixW, 3+1, prefix, -1);
-   
+
    ret = GetTempFileNameW(PathW, prefix ? PrefixW : NULL, unique, BufferW);
-    
+
    if (ret)
       FilenameW2A_N(buffer, MAX_PATH, BufferW, -1);
-   
+
    return ret;
 }
 
@@ -1227,7 +1227,7 @@ SetFileTime(HANDLE hFile,
 	SetLastErrorByStatus(Status);
 	return FALSE;
      }
-   
+
    return TRUE;
 }
 
@@ -1269,10 +1269,10 @@ SetEndOfFile(HANDLE hFile)
 	EndOfFileInfo.EndOfFile.QuadPart = FilePosInfo.CurrentByteOffset.QuadPart;
 
 	/*
-	NOTE: 
+	NOTE:
 	This call is not supposed to free up any space after the eof marker
 	if the file gets truncated. We have to deallocate the space explicitly afterwards.
-	But...most file systems dispatch both FileEndOfFileInformation 
+	But...most file systems dispatch both FileEndOfFileInformation
 	and FileAllocationInformation as they were the same	command.
 
 	*/
@@ -1304,7 +1304,7 @@ SetEndOfFile(HANDLE hFile)
 		SetLastErrorByStatus(Status);
 		return FALSE;
 	}
-	
+
 	return TRUE;
 
 }
@@ -1323,9 +1323,9 @@ SetFileValidData(
 	IO_STATUS_BLOCK IoStatusBlock;
 	FILE_VALID_DATA_LENGTH_INFORMATION ValidDataLengthInformation;
 	NTSTATUS Status;
-	
+
 	ValidDataLengthInformation.ValidDataLength.QuadPart = ValidDataLength;
-	
+
 	Status = NtSetInformationFile(
 						hFile,
 						&IoStatusBlock,	 //out
@@ -1333,12 +1333,12 @@ SetFileValidData(
 						sizeof(FILE_VALID_DATA_LENGTH_INFORMATION),
 						FileValidDataLengthInformation
 						);
-  
+
 	if (!NT_SUCCESS(Status)){
 		SetLastErrorByStatus(Status);
 		return FALSE;
 	}
-	
+
 	return TRUE;
 }
 
@@ -1358,44 +1358,44 @@ SetFileShortNameW(
   UNICODE_STRING ShortName;
   IO_STATUS_BLOCK IoStatusBlock;
   PFILE_NAME_INFORMATION FileNameInformation;
-  
+
   if(IsConsoleHandle(hFile))
   {
     SetLastError(ERROR_INVALID_HANDLE);
     return FALSE;
   }
-  
+
   if(!lpShortName)
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   RtlInitUnicodeString(&ShortName, lpShortName);
-  
+
   NeededSize = sizeof(FILE_NAME_INFORMATION) + ShortName.Length + sizeof(WCHAR);
   if(!(FileNameInformation = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, NeededSize)))
   {
     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
     return FALSE;
   }
-  
+
   FileNameInformation->FileNameLength = ShortName.Length;
   RtlCopyMemory(FileNameInformation->FileName, ShortName.Buffer, ShortName.Length);
-  
+
   Status = NtSetInformationFile(hFile,
                                 &IoStatusBlock,	 //out
                                 FileNameInformation,
                                 NeededSize,
                                 FileShortNameInformation);
-  
+
   RtlFreeHeap(RtlGetProcessHeap(), 0, FileNameInformation);
   if(!NT_SUCCESS(Status))
   {
-    
+
     SetLastErrorByStatus(Status);
   }
-  
+
   return NT_SUCCESS(Status);
 }
 
@@ -1411,19 +1411,19 @@ SetFileShortNameA(
     )
 {
   PWCHAR ShortNameW;
-  
+
   if(IsConsoleHandle(hFile))
   {
     SetLastError(ERROR_INVALID_HANDLE);
     return FALSE;
   }
-  
+
   if(!lpShortName)
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   if (!(ShortNameW = FilenameA2W(lpShortName, FALSE)))
      return FALSE;
 

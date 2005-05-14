@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/verifier.c
  * PURPOSE:         Driver Verifier functions
- * 
+ *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
 

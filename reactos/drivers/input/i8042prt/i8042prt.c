@@ -128,7 +128,7 @@ VOID STDCALL I8042IsrWritePort(PDEVICE_EXTENSION DevExt,
                                UCHAR Value,
                                UCHAR SelectCmd)
 {
-	if (SelectCmd) 
+	if (SelectCmd)
 		if (!I8042Write(DevExt, I8042_CTRL_PORT, SelectCmd))
 			return;
 
@@ -149,7 +149,7 @@ NTSTATUS STDCALL I8042SynchWritePort(PDEVICE_EXTENSION DevExt,
 	UINT ResendIterations = DevExt->Settings.ResendIterations + 1;
 
 	do {
-		if (Port) 
+		if (Port)
 			if (!I8042Write(DevExt, I8042_DATA_PORT, Port))
 				return STATUS_TIMEOUT;
 
@@ -366,7 +366,7 @@ VOID STDCALL I8042SendHookWorkItem(PDEVICE_OBJECT DeviceObject,
 	BOOLEAN IsKbd;
 
 	DPRINT("HookWorkItem\n");
-	
+
 	FdoDevExt = (PFDO_DEVICE_EXTENSION)
 	                          DeviceObject->DeviceExtension;
 
@@ -402,11 +402,11 @@ VOID STDCALL I8042SendHookWorkItem(PDEVICE_OBJECT DeviceObject,
                       TRUE,
                       &Event,
 		      &IoStatus);
-		                   
+
 	if (!NewIrp) {
 		DPRINT("IOCTL_INTERNAL_(device)_CONNECT: "
 		       "Can't allocate IRP\n");
-		WorkItemData->Irp->IoStatus.Status = 
+		WorkItemData->Irp->IoStatus.Status =
 		              STATUS_INSUFFICIENT_RESOURCES;
 		goto hookworkitemdone;
 	}
@@ -449,7 +449,7 @@ VOID STDCALL I8042SendHookWorkItem(PDEVICE_OBJECT DeviceObject,
 				            DevExt->HighestDIRQLInterrupt);
 
 		I8042Write(DevExt, I8042_CTRL_PORT, 0xD4);
-		I8042Write(DevExt, I8042_DATA_PORT, 0xFF); 
+		I8042Write(DevExt, I8042_DATA_PORT, 0xFF);
 
 		KeReleaseInterruptSpinLock(DevExt->HighestDIRQLInterrupt, Irql);
 	}
@@ -529,14 +529,14 @@ static NTSTATUS STDCALL I8042BasicDetect(PDEVICE_EXTENSION DevExt)
 	do {
 		Status = I8042ReadDataWait(DevExt, &Value);
 	} while ((Counter--) && (STATUS_TIMEOUT == Status));
-		
+
 	if (Status != STATUS_SUCCESS)
 		return Status;
 
 	if (Value != 0x55) {
 		DPRINT1("Got %x instead of 55\n", Value);
 		return STATUS_IO_DEVICE_ERROR;
-	} 
+	}
 	if (!I8042Write(DevExt, I8042_CTRL_PORT, KBD_LINE_TEST))
 		return STATUS_TIMEOUT;
 
@@ -549,7 +549,7 @@ static NTSTATUS STDCALL I8042BasicDetect(PDEVICE_EXTENSION DevExt)
 	} else {
 		DevExt->KeyboardExists = FALSE;
 	}
-	
+
 	if (!I8042Write(DevExt, I8042_CTRL_PORT, MOUSE_LINE_TEST))
 		return STATUS_TIMEOUT;
 
@@ -562,7 +562,7 @@ static NTSTATUS STDCALL I8042BasicDetect(PDEVICE_EXTENSION DevExt)
 	} else {
 		DevExt->MouseExists = FALSE;
 	}
-	
+
 	return STATUS_SUCCESS;
 }
 
@@ -732,7 +732,7 @@ static NTSTATUS STDCALL I8042AddDevice(PDRIVER_OBJECT DriverObject,
 
 			Fdo->Flags |= DO_BUFFERED_IO;
 			DevExt->MouseObject = Fdo;
-	
+
 			DevExt->MouseBuffer = ExAllocatePoolWithTag(
 			               NonPagedPool,
 			               DevExt->MouseAttributes.InputDataQueueLength *
@@ -783,7 +783,7 @@ static NTSTATUS STDCALL I8042AddDevice(PDRIVER_OBJECT DriverObject,
 		                            LevelSensitive,
 		                            FALSE,
 		                            Affinity,
-					    FALSE); 
+					    FALSE);
 
 		DPRINT("Mouse Irq Status: %x\n", Status);
 	}
@@ -798,7 +798,7 @@ static NTSTATUS STDCALL I8042AddDevice(PDRIVER_OBJECT DriverObject,
 	return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject, 
+NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
 			     PUNICODE_STRING RegistryPath)
 /*
  * FUNCTION: Module entry point
@@ -807,8 +807,8 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
 	DPRINT("I8042 Driver 0.0.1\n");
 
 	DriverObject->MajorFunction[IRP_MJ_CREATE] = I8042CreateDispatch;
-	DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = 
-	                                       I8042InternalDeviceControl; 
+	DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] =
+	                                       I8042InternalDeviceControl;
 
 	DriverObject->DriverStartIo = I8042StartIo;
 	DriverObject->DriverExtension->AddDevice = I8042AddDevice;

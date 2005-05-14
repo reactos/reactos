@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/regio.c
  * PURPOSE:         Register io functions
- * 
+ *
  * PROGRAMMERS:     Eric Kohl (ekohl@abo.rhein-zeitung.de)
  */
 

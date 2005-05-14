@@ -12,7 +12,7 @@ void init_freebsd_sched() {
 
 int tsleep( void *token, int priority, char *wmesg, int tmio ) {
     if( !OtcpEvent.Sleep ) panic("no sleep");
-    return 
+    return
 	OtcpEvent.Sleep( OtcpEvent.ClientData, token, priority, wmesg, tmio );
 }
 
@@ -20,7 +20,7 @@ void wakeup( struct socket *so, void *token ) {
     OSK_UINT flags = 0;
 
     OS_DbgPrint
-	(OSK_MID_TRACE,("XXX Bytes to receive: %d state %x\n", 
+	(OSK_MID_TRACE,("XXX Bytes to receive: %d state %x\n",
 			so->so_rcv.sb_cc, so->so_state));
 
     if( so->so_state & SS_ISCONNECTED ) {
@@ -44,13 +44,13 @@ void wakeup( struct socket *so, void *token ) {
 			       token, so,
 			       so->so_state));
 
-    if( OtcpEvent.SocketState ) 
+    if( OtcpEvent.SocketState )
 	OtcpEvent.SocketState( OtcpEvent.ClientData,
 			       so,
 			       so ? so->so_connection : 0,
 			       flags );
 
-    if( OtcpEvent.Wakeup ) 
+    if( OtcpEvent.Wakeup )
 	OtcpEvent.Wakeup( OtcpEvent.ClientData, token );
 
     OS_DbgPrint(OSK_MID_TRACE,("Wakeup done %x\n", token));
@@ -59,7 +59,7 @@ void wakeup( struct socket *so, void *token ) {
 /* ---------------------------------------------------------------------- */
 
 
-static void 
+static void
 timeout_init(void)
 {
 	int i;
@@ -128,12 +128,12 @@ void splz(void) {
 /*
  * functions to save and restore the current cpl
  */
-void save_cpl(unsigned *x) 
+void save_cpl(unsigned *x)
 {
     *x = cpl;
 }
 
-void restore_cpl(unsigned x) 
+void restore_cpl(unsigned x)
 {
     cpl = x;
 }

@@ -50,51 +50,8 @@ typedef struct
     LPFORMATETC pFmt;
 } IEnumFORMATETCImpl;
 
-static HRESULT WINAPI IEnumFORMATETC_fnQueryInterface(LPENUMFORMATETC iface, REFIID riid, LPVOID* ppvObj);
-static ULONG WINAPI IEnumFORMATETC_fnAddRef(LPENUMFORMATETC iface);
-static ULONG WINAPI IEnumFORMATETC_fnRelease(LPENUMFORMATETC iface);
-static HRESULT WINAPI IEnumFORMATETC_fnNext(LPENUMFORMATETC iface, ULONG celt, FORMATETC* rgelt, ULONG* pceltFethed);
-static HRESULT WINAPI IEnumFORMATETC_fnSkip(LPENUMFORMATETC iface, ULONG celt);
-static HRESULT WINAPI IEnumFORMATETC_fnReset(LPENUMFORMATETC iface);
-static HRESULT WINAPI IEnumFORMATETC_fnClone(LPENUMFORMATETC iface, LPENUMFORMATETC* ppenum);
-
-static struct IEnumFORMATETCVtbl efvt =
-{
-        IEnumFORMATETC_fnQueryInterface,
-        IEnumFORMATETC_fnAddRef,
-    IEnumFORMATETC_fnRelease,
-    IEnumFORMATETC_fnNext,
-    IEnumFORMATETC_fnSkip,
-    IEnumFORMATETC_fnReset,
-    IEnumFORMATETC_fnClone
-};
-
-LPENUMFORMATETC IEnumFORMATETC_Constructor(UINT cfmt, const FORMATETC afmt[])
-{
-	IEnumFORMATETCImpl* ef;
-	DWORD size=cfmt * sizeof(FORMATETC);
-
-	ef=(IEnumFORMATETCImpl*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IEnumFORMATETCImpl));
-
-	if(ef)
-	{
-	  ef->ref=1;
-	  ef->lpVtbl=&efvt;
-
-	  ef->countFmt = cfmt;
-	  ef->pFmt = SHAlloc (size);
-
-	  if (ef->pFmt)
-	  {
-	    memcpy(ef->pFmt, afmt, size);
-	  }
-	}
-
-	TRACE("(%p)->(%u,%p)\n",ef, cfmt, afmt);
-	return (LPENUMFORMATETC)ef;
-}
-
-static HRESULT WINAPI IEnumFORMATETC_fnQueryInterface(LPENUMFORMATETC iface, REFIID riid, LPVOID* ppvObj)
+static HRESULT WINAPI IEnumFORMATETC_fnQueryInterface(
+               LPENUMFORMATETC iface, REFIID riid, LPVOID* ppvObj)
 {
 	IEnumFORMATETCImpl *This = (IEnumFORMATETCImpl *)iface;
 	TRACE("(%p)->(\n\tIID:\t%s,%p)\n",This,debugstr_guid(riid),ppvObj);
@@ -118,7 +75,6 @@ static HRESULT WINAPI IEnumFORMATETC_fnQueryInterface(LPENUMFORMATETC iface, REF
 	}
 	TRACE("-- Interface: E_NOINTERFACE\n");
 	return E_NOINTERFACE;
-
 }
 
 static ULONG WINAPI IEnumFORMATETC_fnAddRef(LPENUMFORMATETC iface)
@@ -203,6 +159,40 @@ static HRESULT WINAPI IEnumFORMATETC_fnClone(LPENUMFORMATETC iface, LPENUMFORMAT
 	return S_OK;
 }
 
+static struct IEnumFORMATETCVtbl efvt =
+{
+    IEnumFORMATETC_fnQueryInterface,
+    IEnumFORMATETC_fnAddRef,
+    IEnumFORMATETC_fnRelease,
+    IEnumFORMATETC_fnNext,
+    IEnumFORMATETC_fnSkip,
+    IEnumFORMATETC_fnReset,
+    IEnumFORMATETC_fnClone
+};
+
+LPENUMFORMATETC IEnumFORMATETC_Constructor(UINT cfmt, const FORMATETC afmt[])
+{
+    IEnumFORMATETCImpl* ef;
+    DWORD size=cfmt * sizeof(FORMATETC);
+
+    ef = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IEnumFORMATETCImpl));
+
+    if(ef)
+    {
+        ef->ref=1;
+        ef->lpVtbl=&efvt;
+
+        ef->countFmt = cfmt;
+        ef->pFmt = SHAlloc (size);
+
+        if (ef->pFmt)
+            memcpy(ef->pFmt, afmt, size);
+    }
+
+    TRACE("(%p)->(%u,%p)\n",ef, cfmt, afmt);
+    return (LPENUMFORMATETC)ef;
+}
+
 
 /***********************************************************************
 *   IDataObject implementation
@@ -228,38 +218,6 @@ typedef struct
 	UINT		cfFileNameW;
 
 } IDataObjectImpl;
-
-static struct IDataObjectVtbl dtovt;
-
-/**************************************************************************
-*  IDataObject_Constructor
-*/
-LPDATAOBJECT IDataObject_Constructor(HWND hwndOwner, LPCITEMIDLIST pMyPidl, LPCITEMIDLIST * apidl, UINT cidl)
-{
-	IDataObjectImpl* dto;
-
-	dto = (IDataObjectImpl*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDataObjectImpl));
-
-	if (dto)
-	{
-	  dto->ref = 1;
-	  dto->lpVtbl = &dtovt;
-	  dto->pidl = ILClone(pMyPidl);
-	  dto->apidl = _ILCopyaPidl(apidl, cidl);
-	  dto->cidl = cidl;
-
-	  dto->cfShellIDList = RegisterClipboardFormatA(CFSTR_SHELLIDLIST);
-	  dto->cfFileNameA = RegisterClipboardFormatA(CFSTR_FILENAMEA);
-	  dto->cfFileNameW = RegisterClipboardFormatA(CFSTR_FILENAMEW);
-	  InitFormatEtc(dto->pFormatEtc[0], dto->cfShellIDList, TYMED_HGLOBAL);
-	  InitFormatEtc(dto->pFormatEtc[1], CF_HDROP, TYMED_HGLOBAL);
-	  InitFormatEtc(dto->pFormatEtc[2], dto->cfFileNameA, TYMED_HGLOBAL);
-	  InitFormatEtc(dto->pFormatEtc[3], dto->cfFileNameW, TYMED_HGLOBAL);
-	}
-
-	TRACE("(%p)->(apidl=%p cidl=%u)\n",dto, apidl, cidl);
-	return (LPDATAOBJECT)dto;
-}
 
 /***************************************************************************
 *  IDataObject_QueryInterface
@@ -465,3 +423,34 @@ static struct IDataObjectVtbl dtovt =
 	IDataObject_fnDUnadvise,
 	IDataObject_fnEnumDAdvise
 };
+
+/**************************************************************************
+*  IDataObject_Constructor
+*/
+LPDATAOBJECT IDataObject_Constructor(HWND hwndOwner,
+               LPCITEMIDLIST pMyPidl, LPCITEMIDLIST * apidl, UINT cidl)
+{
+    IDataObjectImpl* dto;
+
+    dto = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDataObjectImpl));
+
+    if (dto)
+    {
+        dto->ref = 1;
+        dto->lpVtbl = &dtovt;
+        dto->pidl = ILClone(pMyPidl);
+        dto->apidl = _ILCopyaPidl(apidl, cidl);
+        dto->cidl = cidl;
+
+        dto->cfShellIDList = RegisterClipboardFormatA(CFSTR_SHELLIDLIST);
+        dto->cfFileNameA = RegisterClipboardFormatA(CFSTR_FILENAMEA);
+        dto->cfFileNameW = RegisterClipboardFormatA(CFSTR_FILENAMEW);
+        InitFormatEtc(dto->pFormatEtc[0], dto->cfShellIDList, TYMED_HGLOBAL);
+        InitFormatEtc(dto->pFormatEtc[1], CF_HDROP, TYMED_HGLOBAL);
+        InitFormatEtc(dto->pFormatEtc[2], dto->cfFileNameA, TYMED_HGLOBAL);
+        InitFormatEtc(dto->pFormatEtc[3], dto->cfFileNameW, TYMED_HGLOBAL);
+    }
+
+    TRACE("(%p)->(apidl=%p cidl=%u)\n",dto, apidl, cidl);
+    return (LPDATAOBJECT)dto;
+}

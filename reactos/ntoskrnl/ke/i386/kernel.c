@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/kernel.c
  * PURPOSE:         Initializes the kernel
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
@@ -47,10 +47,10 @@ Ki386GetCpuId(VOID)
    Flags = OrigFlags ^ X86_EFLAGS_ID;
    Ke386RestoreFlags(Flags);
    Ke386SaveFlags(FinalFlags);
-   
+
    Pcr->PrcbData.LogicalProcessorsPerPhysicalProcessor = 1;
    Pcr->PrcbData.InitialApicId = 0xff;
-   
+
    if ((OrigFlags & X86_EFLAGS_ID) == (FinalFlags & X86_EFLAGS_ID))
    {
       /* No cpuid supported. */
@@ -63,7 +63,7 @@ Ki386GetCpuId(VOID)
    /* Get the vendor name and the maximum cpuid level supported. */
    Ki386Cpuid(0, &MaxCpuidLevel, (PULONG)&Pcr->PrcbData.VendorString[0], (PULONG)&Pcr->PrcbData.VendorString[8], (PULONG)&Pcr->PrcbData.VendorString[4]);
    if (MaxCpuidLevel > 0)
-   { 
+   {
       /* Get the feature flags. */
       Ki386Cpuid(1, &Eax, &Ke386CpuidExMisc, &Ke386CpuidFlags2, &Pcr->PrcbData.FeatureBits);
       /* Get the cache alignment, if it is available */
@@ -73,7 +73,7 @@ Ki386GetCpuId(VOID)
       }
       Pcr->PrcbData.CpuType = (Eax >> 8) & 0xf;
       Pcr->PrcbData.CpuStep = (Eax & 0xf) | ((Eax << 4) & 0xf00);
-      
+
       Pcr->PrcbData.InitialApicId = (Ke386CpuidExMisc >> 24) & 0xff;
 
       /* detect Hyper-Threading on Pentium 4 CPUs or later */
@@ -133,8 +133,8 @@ KeApplicationProcessorInitDispatcher(VOID)
    IdleProcessorMask |= (1 << KeGetCurrentProcessorNumber());
    KeReleaseDispatcherDatabaseLock(oldIrql);
 }
-   
-VOID 
+
+VOID
 INIT_FUNCTION
 KeCreateApplicationProcessorIdleThread(ULONG Id)
 {
@@ -144,7 +144,7 @@ KeCreateApplicationProcessorIdleThread(ULONG Id)
   PsInitializeIdleOrFirstThread(PsIdleProcess,
 		     &IdleThread,
 		     NULL,
-		     KernelMode, 
+		     KernelMode,
              FALSE);
   IdleThread->Tcb.State = Running;
   IdleThread->Tcb.FreezeCount = 0;
@@ -188,7 +188,7 @@ KePrepareForApplicationProcessorInit(ULONG Id)
   Pcr->Irql = SYNCH_LEVEL;
 
   Pcr->PrcbData.MHz = BootPcr->PrcbData.MHz;
-  Pcr->StallScaleFactor = BootPcr->StallScaleFactor; 
+  Pcr->StallScaleFactor = BootPcr->StallScaleFactor;
 
   /* Mark the end of the exception handler list */
   Pcr->Tib.ExceptionList = (PVOID)-1;
@@ -209,7 +209,7 @@ KeApplicationProcessorInit(VOID)
      /* Enable global pages */
      Ke386SetCr4(Ke386GetCr4() | X86_CR4_PGE);
   }
-  
+
 
   Offset = InterlockedIncrementUL(&PcrsAllocated) - 1;
   Pcr = (PKPCR)((ULONG_PTR)KPCR_BASE + Offset * PAGE_SIZE);
@@ -271,7 +271,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    /*
     * Initialize the initial PCR region. We can't allocate a page
     * with MmAllocPage() here because MmInit1() has not yet been
-    * called, so we use a predefined page in low memory 
+    * called, so we use a predefined page in low memory
     */
 
    KPCR = (PKPCR)KPCR_BASE;
@@ -340,7 +340,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
       p1 = p2;
    }
 #if 0
-   /* 
+   /*
     * FIXME:
     *   Make the detection of the noexecute feature more portable.
     */
@@ -359,15 +359,15 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
 	 Ke386NoExecute = TRUE;
          Ke386RestoreFlags(Flags);
       }
-   }  
+   }
    else
    {
       NoExecute=FALSE;
    }
 #endif
 
-   Ke386Pae = Ke386GetCr4() & X86_CR4_PAE ? TRUE : FALSE; 
-#if 0      
+   Ke386Pae = Ke386GetCr4() & X86_CR4_PAE ? TRUE : FALSE;
+#if 0
    /* Enable PAE mode */
    if ((Pae && (KPCR->PrcbData.FeatureBits & X86_FEATURE_PAE)) || NoExecute)
    {
@@ -472,7 +472,7 @@ Ki386SetProcessorFeatures(VOID)
       (Pcr->PrcbData.FeatureBits & X86_FEATURE_MMX);
    SharedUserData->ProcessorFeatures[PF_PPC_MOVEMEM_64BIT_OK] = FALSE;
    SharedUserData->ProcessorFeatures[PF_ALPHA_BYTE_INSTRUCTIONS] = FALSE;
-   SharedUserData->ProcessorFeatures[PF_XMMI_INSTRUCTIONS_AVAILABLE] = 
+   SharedUserData->ProcessorFeatures[PF_XMMI_INSTRUCTIONS_AVAILABLE] =
       (Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE);
    SharedUserData->ProcessorFeatures[PF_3DNOW_INSTRUCTIONS_AVAILABLE] =
       (Ke386CpuidExFlags & X86_EXT_FEATURE_3DNOW);
@@ -484,13 +484,13 @@ Ki386SetProcessorFeatures(VOID)
 
    /* Does the CPU Support Fast System Call? */
    if (Pcr->PrcbData.FeatureBits & X86_FEATURE_SYSCALL) {
-   
+
         /* FIXME: Check for Family == 6, Model < 3 and Stepping < 3 and disable */
-       
+
         /* Make sure it's not disabled in registry */
-        RtlRosInitUnicodeStringFromLiteral(&KeyName, 
+        RtlRosInitUnicodeStringFromLiteral(&KeyName,
                                            L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Session Manager\\Kernel");
-        RtlRosInitUnicodeStringFromLiteral(&ValueName, 
+        RtlRosInitUnicodeStringFromLiteral(&ValueName,
                                            L"FastSystemCallDisable");
         InitializeObjectAttributes(&ObjectAttributes,
                                    &KeyName,
@@ -498,9 +498,9 @@ Ki386SetProcessorFeatures(VOID)
                                    NULL,
                                    NULL);
         Status = NtOpenKey(&KeyHandle, KEY_ALL_ACCESS, &ObjectAttributes);
-        
+
         if (NT_SUCCESS(Status)) {
-        
+
             /* Read the Value then Close the Key */
             Status = NtQueryValueKey(KeyHandle,
                                      &ValueName,
@@ -509,20 +509,20 @@ Ki386SetProcessorFeatures(VOID)
                                      sizeof(ValueData),
                                      &ResultLength);
             RtlMoveMemory(&FastSystemCallDisable, ValueData.Data, sizeof(ULONG));
-            
+
             NtClose(KeyHandle);
         }
-        
+
     } else {
-    
+
         /* Disable SYSENTER/SYSEXIT, because the CPU doesn't support it */
         FastSystemCallDisable = 1;
-        
+
     }
-    
+
     if (FastSystemCallDisable) {
-        
-        /* Use INT2E */   
+
+        /* Use INT2E */
         SharedUserData->SystemCall[0] = 0x8D;
         SharedUserData->SystemCall[1] = 0x54;
         SharedUserData->SystemCall[2] = 0x24;
@@ -530,15 +530,15 @@ Ki386SetProcessorFeatures(VOID)
         SharedUserData->SystemCall[4] = 0xCD;
         SharedUserData->SystemCall[5] = 0x2E;
         SharedUserData->SystemCall[6] = 0xC3;
-	                  
+
     } else {
-    
+
         /* Use SYSENTER */
         SharedUserData->SystemCall[0] = 0x8B;
         SharedUserData->SystemCall[1] = 0xD4;
         SharedUserData->SystemCall[2] = 0x0F;
         SharedUserData->SystemCall[3] = 0x34;
-        SharedUserData->SystemCall[4] = 0xC3;    
+        SharedUserData->SystemCall[4] = 0xC3;
 
         /* Enable SYSENTER/SYSEXIT */
         KiFastSystemCallDisable = 0;

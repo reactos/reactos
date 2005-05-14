@@ -38,7 +38,7 @@ int vsprintf(char *buf, const char *fmt, va_list args);
 BOOLEAN STDCALL
 HalDisableSystemInterrupt(ULONG Vector,
   KIRQL Irql);
-  
+
 BOOLEAN STDCALL
 HalEnableSystemInterrupt(ULONG Vector,
   KIRQL Irql,
@@ -199,10 +199,10 @@ VideoPortGetProcAddress(
    IN PVOID HwDeviceExtension,
    IN PUCHAR FunctionName);
 
-VOID FASTCALL 
+VOID FASTCALL
 IntAttachToCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess);
 
-VOID FASTCALL 
+VOID FASTCALL
 IntDetachFromCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess);
 
 NTSTATUS STDCALL

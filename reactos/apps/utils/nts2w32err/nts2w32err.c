@@ -1,16 +1,16 @@
 /* $Id$
- * 
+ *
  * Convert NTSTATUS codes to Win32 error codes: run it
  * on a NT box AND on a ROS box, then diff the results.
  *
  * This utility should help keeping correct how Ros
  * translates executive's errors codes into Win32 error
  * codes.
- * 
+ *
  * Usage: nts2w32err [MaxStatusCode] > log.txt
- * 
+ *
  * 2004-01-10 Emanuele Aliberti
- * 
+ *
  */
 #include <ddk/ntddk.h>
 #include <windows.h>

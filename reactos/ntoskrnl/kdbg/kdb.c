@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/kdbg/kdb.c
  * PURPOSE:         Kernel Debugger
- * 
+ *
  * PROGRAMMERS:     Gregor Anich
  */
 
@@ -130,13 +130,13 @@ KdbpOverwriteInstruction(
 
    /* Get the protection for the address. */
    Protect = MmGetPageProtect(Process, (PVOID)PAGE_ROUND_DOWN(Address));
-   
+
    /* Return if that page isn't present. */
    if (Protect & PAGE_NOACCESS)
    {
       return STATUS_MEMORY_NOT_ALLOCATED;
    }
-   
+
    /* Attach to the process */
    if (CurrentProcess != Process)
    {
@@ -149,7 +149,7 @@ KdbpOverwriteInstruction(
       MmSetPageProtect(Process, (PVOID)PAGE_ROUND_DOWN(Address),
 	               (Protect & ~(PAGE_READONLY|PAGE_EXECUTE|PAGE_EXECUTE_READ)) | PAGE_READWRITE);
    }
-   
+
    /* Copy the old instruction back to the caller. */
    if (OldInst != NULL)
    {
@@ -168,16 +168,16 @@ KdbpOverwriteInstruction(
 	 return Status;
       }
    }
-   
+
    /* Copy the new instruction in its place. */
    Status = KdbpSafeWriteMemory((PUCHAR)Address, &NewInst, 1);
-   
+
    /* Restore the page protection. */
    if (Protect & (PAGE_READONLY|PAGE_EXECUTE|PAGE_EXECUTE_READ))
    {
       MmSetPageProtect(Process, (PVOID)PAGE_ROUND_DOWN(Address), Protect);
    }
-   
+
    /* Detach from process */
    if (CurrentProcess != Process)
    {
@@ -303,7 +303,7 @@ KdbpStepIntoInstruction(ULONG_PTR Eip)
       /*KdbpPrint("Couldn't access memory at 0x%x\n", (UINT)Idtr.Base + (IntVect * 8));*/
       return FALSE;
    }
-   
+
    /* Check descriptor and get target eip (16 bit interrupt/trap gates not supported) */
    if ((IntDesc[1] & (1 << 15)) == 0) /* not present */
    {
@@ -384,7 +384,7 @@ KdbpGetBreakPointInfo(
    {
       return FALSE;
    }
-   
+
    bp = KdbBreakPoints + BreakPointNr;
    if (Address != NULL)
       *Address = bp->Address;
@@ -461,7 +461,7 @@ KdbpInsertBreakPoint(
    {
       return STATUS_UNSUCCESSFUL;
    }
-   
+
    /* Parse conditon expression string and duplicate it */
    if (ConditionExpression != NULL)
    {
@@ -504,7 +504,7 @@ KdbpInsertBreakPoint(
       }
    }
    ASSERT(i < RTL_NUMBER_OF(KdbBreakPoints));
-   
+
    /* Set the breakpoint */
    ASSERT(KdbCurrentProcess != NULL);
    KdbBreakPoints[i].Type = Type;
@@ -521,7 +521,7 @@ KdbpInsertBreakPoint(
       KdbBreakPoints[i].Data.Hw.AccessType = AccessType;
    }
    KdbBreakPointCount++;
-   
+
    if (Type != KdbBreakPointTemporary)
       KdbpPrint("Breakpoint %d inserted.\n", i);
 
@@ -576,7 +576,7 @@ KdbpDeleteBreakPoint(
       KdbpPrint("Breakpoint %d deleted.\n", BreakPointNr);
    BreakPoint->Type = KdbBreakPointNone;
    KdbBreakPointCount--;
-   
+
    return TRUE;
 }
 
@@ -626,7 +626,7 @@ KdbpIsBreakPointOurs(
          }
       }
    }
-   
+
    return -1;
 }
 
@@ -668,7 +668,7 @@ KdbpEnableBreakPoint(
       KdbpPrint("Invalid breakpoint: %d\n", BreakPointNr);
       return FALSE;
    }
-   
+
    if (BreakPoint->Enabled == TRUE)
    {
       KdbpPrint("Breakpoint %d is already enabled.\n", BreakPointNr);
@@ -803,7 +803,7 @@ KdbpDisableBreakPoint(
 {
    INT i;
    NTSTATUS Status;
-   
+
    if (BreakPointNr < 0)
    {
       ASSERT(BreakPoint != NULL);
@@ -841,7 +841,7 @@ KdbpDisableBreakPoint(
          KdbpPrint("Couldn't restore original instruction.\n");
          return FALSE;
       }
-         
+
       for (i = 0; i < KdbSwBreakPointCount; i++)
       {
          if (KdbSwBreakPoints[i] == BreakPoint)
@@ -857,7 +857,7 @@ KdbpDisableBreakPoint(
    else
    {
       ASSERT(BreakPoint->Type == KdbBreakPointHardware);
-      
+
       /* Clear the breakpoint. */
       KdbTrapFrame.Tf.Dr7 &= ~(0x3 << (BreakPoint->Data.Hw.DebugReg * 2));
       if ((KdbTrapFrame.Tf.Dr7 & 0xFF) == 0)
@@ -976,7 +976,7 @@ KdbpAttachToThread(
       KdbpPrint("Cannot attach to thread within another process while executing a DPC.\n");
       return FALSE;
    }
-   
+
    /* Save the current thread's context (if we previously attached to a thread) */
    if (KdbCurrentThread != KdbOriginalThread)
    {
@@ -1076,11 +1076,11 @@ KdbpCallMainLoop()
  */
 STATIC VOID
 KdbpInternalEnter()
-{  
+{
    PETHREAD Thread;
    PVOID SavedInitialStack, SavedStackBase, SavedKernelStack;
    ULONG SavedStackLimit;
-   
+
    KbdDisableMouse();
    if (KdpDebugMode.Screen)
    {
@@ -1188,7 +1188,7 @@ KdbEnterDebuggerException(
       {
          Resume = TRUE; /* Set the resume flag when continuing execution */
       }
-      
+
       /*
        * When a temporary breakpoint is hit we have to make sure that we are
        * in the same context in which it was set, otherwise it could happen
@@ -1198,7 +1198,7 @@ KdbEnterDebuggerException(
                BreakPoint->Process == KdbCurrentProcess)
       {
          ASSERT((TrapFrame->Eflags & X86_EFLAGS_TF) == 0);
-         
+
          /*
           * Delete the temporary breakpoint which was used to step over or into the instruction.
           */
@@ -1228,7 +1228,7 @@ KdbEnterDebuggerException(
          TrapFrame->Eflags |= X86_EFLAGS_TF;
          KdbBreakPointToReenable = BreakPoint;
       }
-      
+
       /*
        * Make sure that the breakpoint should be triggered in this context
        */
@@ -1236,7 +1236,7 @@ KdbEnterDebuggerException(
       {
             goto continue_execution; /* return */
       }
-      
+
       /*
        * Check if the condition for the breakpoint is met.
        */
@@ -1385,10 +1385,10 @@ KdbEnterDebuggerException(
          }
       }
    }
-   
+
    /* Once we enter the debugger we do not expect any more single steps to happen */
    KdbNumSingleSteps = 0;
-   
+
    /* Update the current process pointer */
    KdbCurrentProcess = KdbOriginalProcess = PsGetCurrentProcess();
    KdbCurrentThread = KdbOriginalThread = PsGetCurrentThread();
@@ -1472,7 +1472,7 @@ continue_execution:
       {
          TrapFrame->Eflags |= X86_EFLAGS_RF;
       }
-         
+
       /* Clear dr6 status flags. */
       TrapFrame->Dr6 &= ~0x0000e00f;
 
@@ -1485,7 +1485,7 @@ VOID
 KdbDeleteProcessHook(IN PEPROCESS Process)
 {
    KdbSymFreeProcessSymbols(Process);
-   
+
    /* FIXME: Delete breakpoints for process */
 }
 
@@ -1510,7 +1510,7 @@ KdbpGetCommandLineSettings(PCHAR p1)
             p2 += 8;
             KdbDebugState |= KD_DEBUG_KDNOECHO;
         }
-        
+
         p1 = p2;
     }
 }

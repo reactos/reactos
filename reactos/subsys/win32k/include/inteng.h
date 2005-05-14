@@ -107,7 +107,7 @@ XLATEOBJ* FASTCALL
 IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
                          ULONG ForegroundColor,
                          ULONG BackgroundColor);
-			
+
 BOOL STDCALL
 IntEngPolyline(BITMAPOBJ *DestSurf,
                CLIPOBJ *Clip,

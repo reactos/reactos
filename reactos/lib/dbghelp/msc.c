@@ -2259,7 +2259,7 @@ BOOL pe_load_debug_directory(const struct process* pcs, struct module* module,
     msc_dbg.nomap  = 0;
     msc_dbg.omapp  = NULL;
  
-    _SEH_TRY_FILTER(page_fault)
+    _SEH_TRY
     {
         ret = FALSE;
  
@@ -2324,7 +2324,7 @@ typedef struct _FPO_DATA
 #endif
  
     }
-    _SEH_HANDLE
+    _SEH_EXCEPT(page_fault)
     {
         ERR("Got a page fault while loading symbols\n");
         ret = FALSE;

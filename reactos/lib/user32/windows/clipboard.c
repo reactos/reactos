@@ -114,7 +114,7 @@ GetClipboardFormatNameA(UINT format, LPSTR lpszFormatName, int cchMaxCount)
    HEAP_strcpyWtoA(lpszFormatName, lpBuffer, Length);
    HEAP_free(lpBuffer);
    DPRINT("GetClipboardFormatNameA(%x): returning %s\n", format, lpszFormatName);
-   
+
    return Length;
 }
 
@@ -126,7 +126,7 @@ GetClipboardFormatNameW(UINT format, LPWSTR lpszFormatName, INT cchMaxCount)
 {
    UNICODE_STRING FormatName;
    ULONG Ret;
-   
+
    FormatName.Length = 0;
    FormatName.MaximumLength = cchMaxCount * sizeof(WCHAR);
    FormatName.Buffer = (PWSTR)lpszFormatName;

@@ -99,12 +99,12 @@ PIP_PACKET IPInitializePacket(
 {
     /* FIXME: Is this needed? */
     RtlZeroMemory(IPPacket, sizeof(IP_PACKET));
-    
+
     INIT_TAG(IPPacket, TAG('I','P','K','T'));
-    
+
     IPPacket->Free     = DontFreePacket;
     IPPacket->Type     = Type;
-    
+
     return IPPacket;
 }
 
@@ -114,10 +114,10 @@ void STDCALL IPTimeout( PVOID Context ) {
 
     /* Check if datagram fragments have taken too long to assemble */
     IPDatagramReassemblyTimeout();
-    
+
     /* Clean possible outdated cached neighbor addresses */
     NBTimeout();
-    
+
     /* Call upper layer timeout routines */
     TCPTimeout();
 }
@@ -154,7 +154,7 @@ VOID IPDispatchProtocol(
     (*ProtocolTable[Protocol])(Interface, IPPacket);
     /* Special case for ICMP -- ICMP can be caught by a SOCK_RAW but also
      * must be handled here. */
-    if( Protocol == IPPROTO_ICMP ) 
+    if( Protocol == IPPROTO_ICMP )
         ICMPReceive( Interface, IPPacket );
 }
 
@@ -237,13 +237,13 @@ VOID IPAddInterfaceRoute( PIP_INTERFACE IF ) {
     IP_ADDRESS NetworkAddress;
 
     /* Add a permanent neighbor for this NTE */
-    NCE = NBAddNeighbor(IF, &IF->Unicast, 
-			IF->Address, IF->AddressLength, 
+    NCE = NBAddNeighbor(IF, &IF->Unicast,
+			IF->Address, IF->AddressLength,
 			NUD_PERMANENT);
     if (!NCE) {
 	TI_DbgPrint(MIN_TRACE, ("Could not create NCE.\n"));
     }
-    
+
     AddrWidenAddress( &NetworkAddress, &IF->Unicast, &IF->Netmask );
 
     if (!RouterAddRoute(&NetworkAddress, &IF->Netmask, NCE, 1)) {
@@ -283,14 +283,14 @@ BOOLEAN IPRegisterInterface(
             }
         } EndFor(Interface);
     } while( !IndexHasBeenChosen );
-    
+
     IF->Index = ChosenIndex;
 
     IPAddInterfaceRoute( IF );
-    
+
     /* Add interface to the global interface list */
-    TcpipInterlockedInsertTailList(&InterfaceListHead, 
-				   &IF->ListEntry, 
+    TcpipInterlockedInsertTailList(&InterfaceListHead,
+				   &IF->ListEntry,
 				   &InterfaceListLock);
 
     TcpipReleaseSpinLock(&IF->Lock, OldIrql);
@@ -307,7 +307,7 @@ VOID IPRemoveInterfaceRoute( PIP_INTERFACE IF ) {
 
     AddrWidenAddress(&GeneralRoute,&IF->Unicast,&IF->Netmask);
     RouterRemoveRoute(&GeneralRoute, &IF->Unicast);
-    
+
     /* Remove permanent NCE, but first we have to find it */
     NCE = NBLocateNeighbor(&IF->Unicast);
     if (NCE)

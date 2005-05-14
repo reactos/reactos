@@ -1,0 +1,82 @@
+/* Swedish resources by David Nordenberg */
+
+LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
+
+IDD_BACKGROUND DIALOGEX DISCARDABLE 0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Bakgrund"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_BACKGROUND_PREVIEW,"Static",SS_OWNERDRAW,48,10,
+                    150,105,WS_EX_STATICEDGE
+    CONTROL         "",IDC_BACKGROUND_LIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
+                    WS_BORDER | WS_TABSTOP,7,139,173,71
+    LTEXT           "Välj en bild du vill ha som skrivbordsunderlägg:",
+                    IDC_STATIC,8,127,180,8
+    PUSHBUTTON      "&Bläddra...",IDC_BROWSE_BUTTON,187,175,50,14
+    PUSHBUTTON      "&Färg...",IDC_COLOR_BUTTON,187,195,50,14
+    LTEXT           "Placering:",IDC_STATIC,187,138,36,8
+    COMBOBOX        IDC_PLACEMENT_COMBO,187,148,50,90,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_SCREENSAVER DIALOGEX DISCARDABLE  0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Skärmsläckare"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Det här utrymmet är avsiktligt lämnats tomt",IDC_STATIC,66,
+                    110,112,8
+END
+
+IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Utseende"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Det här utrymmet är avsiktligt lämnats tomt",IDC_STATIC,66,
+                    110,112,8
+END
+
+IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Bildskärmsinställningar"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Bild:",1820,3,140,30,8
+    LTEXT           "<ingen>",IDC_SETTINGS_DEVICE,9,149,224,8
+    GROUPBOX        "&Bildyta",1818,3,160,115,43
+    CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,
+                    30,170,58,17
+    LTEXT           "Mindre",1815,9,170,15,8,NOT WS_GROUP
+    LTEXT           "Mer",1816,93,170,21,8,NOT WS_GROUP
+    LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,190,100,10,NOT WS_GROUP | SS_CENTER
+    GROUPBOX        "&Färger",1817,125,160,115,43
+    COMBOBOX        IDC_SETTINGS_BPP,131,170,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",1813,"Statisk",SS_BITMAP | SS_CENTERIMAGE | SS_SUNKEN,
+                    131,188,103,9
+    PUSHBUTTON      "&Avancerat...",IDC_SETTINGS_ADVANCED,306,205,56,14
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_CPLNAME "Bildskärm"
+    IDS_CPLDESCRIPTION "Ändrar skrivbordsunderlägg och skärmsläckare."
+    
+    IDS_NONE "(Ingen)"
+    IDS_CENTER "Centrera"
+    IDS_STRETCH "Sträck ut"
+    IDS_TILE "Stapla"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_COLOR_4BIT "16 färger"
+    IDS_COLOR_8BIT "256 färger"
+    IDS_COLOR_16BIT "65 536 färger (16 Bit)"
+    IDS_COLOR_32BIT "16,7 miljoner färger (24 Bit)"
+    IDS_COLOR_32BIT "16,7 miljoner färger (32 Bit)"
+    IDS_PIXEL "%lux%lu Pixlar"
+END

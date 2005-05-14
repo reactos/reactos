@@ -23,7 +23,7 @@
  * FILE:             services/fs/cdfs/close.c
  * PURPOSE:          CDROM (ISO 9660) filesystem driver
  * PROGRAMMER:       Art Yerkes
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -46,7 +46,7 @@ CdfsCloseFile(PDEVICE_EXTENSION DeviceExt,
  */
 {
   PCCB Ccb;
-  
+
   DPRINT("CdfsCloseFile(DeviceExt %x, FileObject %x)\n",
 	 DeviceExt,
 	 FileObject);
@@ -69,7 +69,10 @@ CdfsCloseFile(PDEVICE_EXTENSION DeviceExt,
       CdfsReleaseFCB(DeviceExt, FileObject->FsContext);
     }
 
-  RtlFreeUnicodeString(&Ccb->DirectorySearchPattern);
+  if (Ccb->DirectorySearchPattern.Buffer)
+    {
+      ExFreePool(Ccb->DirectorySearchPattern.Buffer);
+    }
   ExFreePool(Ccb);
 
   return(STATUS_SUCCESS);

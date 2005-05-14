@@ -121,7 +121,7 @@ TdiDefaultDisconnectHandler (
  *
  * @unimplemented
  */
-NTSTATUS 
+NTSTATUS
 STDCALL
 TdiDefaultErrorHandler (
 	IN	PVOID		TdiEventContext,
@@ -184,7 +184,7 @@ TdiDefaultRcvExpeditedHandler (
  *
  * @unimplemented
  */
-NTSTATUS 
+NTSTATUS
 STDCALL
 TdiDefaultReceiveHandler (
 	IN	PVOID			TdiEventContext,
@@ -206,7 +206,7 @@ TdiDefaultReceiveHandler (
  *
  * @unimplemented
  */
-TDI_STATUS 
+TDI_STATUS
 STDCALL
 TdiDefaultSendPossibleHandler (
 	IN	PVOID	TdiEventContext,

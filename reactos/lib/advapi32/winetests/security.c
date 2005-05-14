@@ -169,7 +169,7 @@ void test_trustee()
     pBuildTrusteeWithSidA( &trustee, psid );
 
     ok( trustee.pMultipleTrustee == NULL, "pMultipleTrustee wrong\n");
-    ok( trustee.MultipleTrusteeOperation == NO_MULTIPLE_TRUSTEE, 
+    ok( trustee.MultipleTrusteeOperation == NO_MULTIPLE_TRUSTEE,
         "MultipleTrusteeOperation wrong\n");
     ok( trustee.TrusteeForm == TRUSTEE_IS_SID, "TrusteeForm wrong\n");
     ok( trustee.TrusteeType == TRUSTEE_IS_UNKNOWN, "TrusteeType wrong\n");
@@ -181,13 +181,13 @@ void test_trustee()
     pBuildTrusteeWithNameA( &trustee, str );
 
     ok( trustee.pMultipleTrustee == NULL, "pMultipleTrustee wrong\n");
-    ok( trustee.MultipleTrusteeOperation == NO_MULTIPLE_TRUSTEE, 
+    ok( trustee.MultipleTrusteeOperation == NO_MULTIPLE_TRUSTEE,
         "MultipleTrusteeOperation wrong\n");
     ok( trustee.TrusteeForm == TRUSTEE_IS_NAME, "TrusteeForm wrong\n");
     ok( trustee.TrusteeType == TRUSTEE_IS_UNKNOWN, "TrusteeType wrong\n");
     ok( trustee.ptstrName == str, "ptstrName wrong\n" );
 }
- 
+
 /* If the first isn't defined, assume none is */
 #ifndef SE_MIN_WELL_KNOWN_PRIVILEGE
 #define SE_MIN_WELL_KNOWN_PRIVILEGE       2L
@@ -425,9 +425,9 @@ static void test_FileSecurity(void)
 
     SetLastError(NO_ERROR);
     result = pGetFileSecurityA( directory,OWNER_SECURITY_INFORMATION,buffer,0x40,&outSize);
-    ok(!result, "GetFileSecurityA should fail for not existing directories/files\n"); 
+    ok(!result, "GetFileSecurityA should fail for not existing directories/files\n");
     ok( (GetLastError() == ERROR_FILE_NOT_FOUND ) ||
-        (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED) , 
+        (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED) ,
         "last error ERROR_FILE_NOT_FOUND / ERROR_CALL_NOT_IMPLEMENTED (98) "
         "expected, got %ld\n", GetLastError());
 }

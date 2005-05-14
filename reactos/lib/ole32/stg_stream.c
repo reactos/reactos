@@ -45,89 +45,6 @@
 WINE_DEFAULT_DEBUG_CHANNEL(storage);
 
 
-/*
- * Virtual function table for the StgStreamImpl class.
- */
-static IStreamVtbl StgStreamImpl_Vtbl =
-{
-    StgStreamImpl_QueryInterface,
-    StgStreamImpl_AddRef,
-    StgStreamImpl_Release,
-    StgStreamImpl_Read,
-    StgStreamImpl_Write,
-    StgStreamImpl_Seek,
-    StgStreamImpl_SetSize,
-    StgStreamImpl_CopyTo,
-    StgStreamImpl_Commit,
-    StgStreamImpl_Revert,
-    StgStreamImpl_LockRegion,
-    StgStreamImpl_UnlockRegion,
-    StgStreamImpl_Stat,
-    StgStreamImpl_Clone
-};
-
-/******************************************************************************
-** StgStreamImpl implementation
-*/
-
-/***
- * This is the constructor for the StgStreamImpl class.
- *
- * Params:
- *    parentStorage - Pointer to the storage that contains the stream to open
- *    ownerProperty - Index of the property that points to this stream.
- */
-StgStreamImpl* StgStreamImpl_Construct(
-		StorageBaseImpl* parentStorage,
-    DWORD            grfMode,
-    ULONG            ownerProperty)
-{
-  StgStreamImpl* newStream;
-
-  newStream = HeapAlloc(GetProcessHeap(), 0, sizeof(StgStreamImpl));
-
-  if (newStream!=0)
-  {
-    /*
-     * Set-up the virtual function table and reference count.
-     */
-    newStream->lpVtbl    = &StgStreamImpl_Vtbl;
-    newStream->ref       = 0;
-
-    /*
-     * We want to nail-down the reference to the storage in case the
-     * stream out-lives the storage in the client application.
-     */
-    newStream->parentStorage = parentStorage;
-    IStorage_AddRef((IStorage*)newStream->parentStorage);
-
-    newStream->grfMode = grfMode;
-    newStream->ownerProperty = ownerProperty;
-
-    /*
-     * Start the stream at the beginning.
-     */
-    newStream->currentPosition.u.HighPart = 0;
-    newStream->currentPosition.u.LowPart = 0;
-
-    /*
-     * Initialize the rest of the data.
-     */
-    newStream->streamSize.u.HighPart = 0;
-    newStream->streamSize.u.LowPart  = 0;
-    newStream->bigBlockChain       = 0;
-    newStream->smallBlockChain     = 0;
-
-    /*
-     * Read the size from the property and determine if the blocks forming
-     * this stream are large or small.
-     */
-    StgStreamImpl_OpenBlockChain(newStream);
-  }
-
-  return newStream;
-}
-
 /***
  * This is the destructor of the StgStreamImpl class.
  *
@@ -135,7 +52,7 @@ StgStreamImpl* StgStreamImpl_Construct(
  * class. The pointer passed-in to this function will be freed and will not
  * be valid anymore.
  */
-void StgStreamImpl_Destroy(StgStreamImpl* This)
+static void StgStreamImpl_Destroy(StgStreamImpl* This)
 {
   TRACE("(%p)\n", This);
 
@@ -170,7 +87,7 @@ void StgStreamImpl_Destroy(StgStreamImpl* This)
  * This implements the IUnknown method QueryInterface for this
  * class
  */
-HRESULT WINAPI StgStreamImpl_QueryInterface(
+static HRESULT WINAPI StgStreamImpl_QueryInterface(
 		  IStream*     iface,
 		  REFIID         riid,	      /* [in] */
 		  void**         ppvObject)   /* [iid_is][out] */
@@ -191,11 +108,8 @@ HRESULT WINAPI StgStreamImpl_QueryInterface(
   /*
    * Compare the riid with the interface IDs implemented by this object.
    */
-  if (memcmp(&IID_IUnknown, riid, sizeof(IID_IUnknown)) == 0)
-  {
-    *ppvObject = (IStream*)This;
-  }
-  else if (memcmp(&IID_IStream, riid, sizeof(IID_IStream)) == 0)
+  if (IsEqualGUID(&IID_IUnknown, riid)||
+      IsEqualGUID(&IID_IStream, riid))
   {
     *ppvObject = (IStream*)This;
   }
@@ -210,7 +124,7 @@ HRESULT WINAPI StgStreamImpl_QueryInterface(
    * Query Interface always increases the reference count by one when it is
    * successful
    */
-  StgStreamImpl_AddRef(iface);
+  IStream_AddRef(iface);
 
   return S_OK;
 }
@@ -219,7 +133,7 @@ HRESULT WINAPI StgStreamImpl_QueryInterface(
  * This implements the IUnknown method AddRef for this
  * class
  */
-ULONG WINAPI StgStreamImpl_AddRef(
+static ULONG WINAPI StgStreamImpl_AddRef(
 		IStream* iface)
 {
   StgStreamImpl* const This=(StgStreamImpl*)iface;
@@ -230,7 +144,7 @@ ULONG WINAPI StgStreamImpl_AddRef(
  * This implements the IUnknown method Release for this
  * class
  */
-ULONG WINAPI StgStreamImpl_Release(
+static ULONG WINAPI StgStreamImpl_Release(
 		IStream* iface)
 {
   StgStreamImpl* const This=(StgStreamImpl*)iface;
@@ -255,7 +169,7 @@ ULONG WINAPI StgStreamImpl_Release(
  * that describes the stream.
  * If the stream's size is null, no chain is opened.
  */
-void StgStreamImpl_OpenBlockChain(
+static void StgStreamImpl_OpenBlockChain(
         StgStreamImpl* This)
 {
   StgProperty    curProperty;
@@ -325,7 +239,7 @@ void StgStreamImpl_OpenBlockChain(
  *
  * See the documentation of ISequentialStream for more info.
  */
-HRESULT WINAPI StgStreamImpl_Read(
+static HRESULT WINAPI StgStreamImpl_Read(
 		  IStream*     iface,
 		  void*          pv,        /* [length_is][size_is][out] */
 		  ULONG          cb,        /* [in] */
@@ -426,7 +340,7 @@ end:
  *
  * See the documentation of ISequentialStream for more info.
  */
-HRESULT WINAPI StgStreamImpl_Write(
+static HRESULT WINAPI StgStreamImpl_Write(
 	          IStream*     iface,
 		  const void*    pv,          /* [size_is][in] */
 		  ULONG          cb,          /* [in] */
@@ -526,7 +440,7 @@ HRESULT WINAPI StgStreamImpl_Write(
  *
  * See the documentation of IStream for more info.
  */
-HRESULT WINAPI StgStreamImpl_Seek(
+static HRESULT WINAPI StgStreamImpl_Seek(
 		  IStream*      iface,
 		  LARGE_INTEGER   dlibMove,         /* [in] */
 		  DWORD           dwOrigin,         /* [in] */
@@ -588,7 +502,7 @@ HRESULT WINAPI StgStreamImpl_Seek(
  *
  * See the documentation of IStream for more info.
  */
-HRESULT WINAPI StgStreamImpl_SetSize(
+static HRESULT WINAPI StgStreamImpl_SetSize(
 				     IStream*      iface,
 				     ULARGE_INTEGER  libNewSize)   /* [in] */
 {
@@ -695,7 +609,7 @@ HRESULT WINAPI StgStreamImpl_SetSize(
  *
  * See the documentation of IStream for more info.
  */
-HRESULT WINAPI StgStreamImpl_CopyTo(
+static HRESULT WINAPI StgStreamImpl_CopyTo(
 				    IStream*      iface,
 				    IStream*      pstm,         /* [unique][in] */
 				    ULARGE_INTEGER  cb,           /* [in] */
@@ -780,7 +694,7 @@ HRESULT WINAPI StgStreamImpl_CopyTo(
  *
  * See the documentation of IStream for more info.
  */
-HRESULT WINAPI StgStreamImpl_Commit(
+static HRESULT WINAPI StgStreamImpl_Commit(
 		  IStream*      iface,
 		  DWORD           grfCommitFlags)  /* [in] */
 {
@@ -795,13 +709,13 @@ HRESULT WINAPI StgStreamImpl_Commit(
  *
  * See the documentation of IStream for more info.
  */
-HRESULT WINAPI StgStreamImpl_Revert(
+static HRESULT WINAPI StgStreamImpl_Revert(
 		  IStream* iface)
 {
   return S_OK;
 }
 
-HRESULT WINAPI StgStreamImpl_LockRegion(
+static HRESULT WINAPI StgStreamImpl_LockRegion(
 					IStream*     iface,
 					ULARGE_INTEGER libOffset,   /* [in] */
 					ULARGE_INTEGER cb,          /* [in] */
@@ -811,7 +725,7 @@ HRESULT WINAPI StgStreamImpl_LockRegion(
   return E_NOTIMPL;
 }
 
-HRESULT WINAPI StgStreamImpl_UnlockRegion(
+static HRESULT WINAPI StgStreamImpl_UnlockRegion(
 					  IStream*     iface,
 					  ULARGE_INTEGER libOffset,   /* [in] */
 					  ULARGE_INTEGER cb,          /* [in] */
@@ -829,7 +743,7 @@ HRESULT WINAPI StgStreamImpl_UnlockRegion(
  *
  * See the documentation of IStream for more info.
  */
-HRESULT WINAPI StgStreamImpl_Stat(
+static HRESULT WINAPI StgStreamImpl_Stat(
 		  IStream*     iface,
 		  STATSTG*       pstatstg,     /* [out] */
 		  DWORD          grfStatFlag)  /* [in] */
@@ -872,7 +786,7 @@ HRESULT WINAPI StgStreamImpl_Stat(
  * should be basically as simple as creating a new stream with the same
  * parent etc and positioning its seek cursor.
  */
-HRESULT WINAPI StgStreamImpl_Clone(
+static HRESULT WINAPI StgStreamImpl_Clone(
 				   IStream*     iface,
 				   IStream**    ppstm) /* [out] */
 {
@@ -900,4 +814,87 @@ HRESULT WINAPI StgStreamImpl_Clone(
   assert (SUCCEEDED(hres));
 
   return S_OK;
+}
+
+/*
+ * Virtual function table for the StgStreamImpl class.
+ */
+static IStreamVtbl StgStreamImpl_Vtbl =
+{
+    StgStreamImpl_QueryInterface,
+    StgStreamImpl_AddRef,
+    StgStreamImpl_Release,
+    StgStreamImpl_Read,
+    StgStreamImpl_Write,
+    StgStreamImpl_Seek,
+    StgStreamImpl_SetSize,
+    StgStreamImpl_CopyTo,
+    StgStreamImpl_Commit,
+    StgStreamImpl_Revert,
+    StgStreamImpl_LockRegion,
+    StgStreamImpl_UnlockRegion,
+    StgStreamImpl_Stat,
+    StgStreamImpl_Clone
+};
+
+/******************************************************************************
+** StgStreamImpl implementation
+*/
+
+/***
+ * This is the constructor for the StgStreamImpl class.
+ *
+ * Params:
+ *    parentStorage - Pointer to the storage that contains the stream to open
+ *    ownerProperty - Index of the property that points to this stream.
+ */
+StgStreamImpl* StgStreamImpl_Construct(
+		StorageBaseImpl* parentStorage,
+    DWORD            grfMode,
+    ULONG            ownerProperty)
+{
+  StgStreamImpl* newStream;
+
+  newStream = HeapAlloc(GetProcessHeap(), 0, sizeof(StgStreamImpl));
+
+  if (newStream!=0)
+  {
+    /*
+     * Set-up the virtual function table and reference count.
+     */
+    newStream->lpVtbl    = &StgStreamImpl_Vtbl;
+    newStream->ref       = 0;
+
+    /*
+     * We want to nail-down the reference to the storage in case the
+     * stream out-lives the storage in the client application.
+     */
+    newStream->parentStorage = parentStorage;
+    IStorage_AddRef((IStorage*)newStream->parentStorage);
+
+    newStream->grfMode = grfMode;
+    newStream->ownerProperty = ownerProperty;
+
+    /*
+     * Start the stream at the beginning.
+     */
+    newStream->currentPosition.u.HighPart = 0;
+    newStream->currentPosition.u.LowPart = 0;
+
+    /*
+     * Initialize the rest of the data.
+     */
+    newStream->streamSize.u.HighPart = 0;
+    newStream->streamSize.u.LowPart  = 0;
+    newStream->bigBlockChain       = 0;
+    newStream->smallBlockChain     = 0;
+
+    /*
+     * Read the size from the property and determine if the blocks forming
+     * this stream are large or small.
+     */
+    StgStreamImpl_OpenBlockChain(newStream);
+  }
+
+  return newStream;
 }

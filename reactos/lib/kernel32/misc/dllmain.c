@@ -3,7 +3,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/misc/dllmain.c
- * PURPOSE:         Initialization 
+ * PURPOSE:         Initialization
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
  * UPDATE HISTORY:
  *                  Created 01/11/98
@@ -82,7 +82,7 @@ DllMain(HANDLE hDll,
 	LPVOID lpReserved)
 {
   NTSTATUS Status;
-  
+
   (void)lpReserved;
 
   DPRINT("DllMain(hInst %lx, dwReason %lu)\n",
@@ -149,7 +149,7 @@ DllMain(HANDLE hDll,
 
 
    /* Insert more dll attach stuff here! */
-   
+
 	DllInitialized = TRUE;
 	break;
 

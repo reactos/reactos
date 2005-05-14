@@ -133,7 +133,7 @@ LONG WINAPI SHRegOpenUSKeyW(LPCWSTR Path, REGSAM AccessType, HUSKEY hRelativeUSK
         *phNewUSKey = NULL;
 
     /* Create internal HUSKEY */
-    hKey = (LPSHUSKEY)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*hKey));
+    hKey = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*hKey));
     lstrcpynW(hKey->lpszPath, Path, sizeof(hKey->lpszPath));
 
     if (hRelativeUSKey)
@@ -1305,7 +1305,7 @@ LONG WINAPI SHQueryInfoKeyW(HKEY hKey, LPDWORD pwSubKeys, LPDWORD pwSubKeyMax,
  *
  *       subcase-2: buffer is to small to hold the expanded string:
  *          the function return success (!!) and the result is truncated
- *	    *** This is clearly a error in the native implementation. ***
+ *	    *** This is clearly an error in the native implementation. ***
  *
  *     case-2: the unexpanded string is bigger than the expanded one
  *       The buffer must have enough space to hold the unexpanded
@@ -1340,7 +1340,7 @@ DWORD WINAPI SHQueryValueExA( HKEY hKey, LPCSTR lpszValue,
       char cNull = '\0';
       nBytesToAlloc = (!pvData || (dwRet == ERROR_MORE_DATA)) ? dwUnExpDataLen : *pcbData;
 
-      szData = (LPSTR) LocalAlloc(GMEM_ZEROINIT, nBytesToAlloc);
+      szData = (LPSTR) LocalAlloc(LMEM_ZEROINIT, nBytesToAlloc);
       RegQueryValueExA (hKey, lpszValue, lpReserved, NULL, (LPBYTE)szData, &nBytesToAlloc);
       dwExpDataLen = ExpandEnvironmentStringsA(szData, &cNull, 1);
       dwUnExpDataLen = max(nBytesToAlloc, dwExpDataLen);
@@ -1349,7 +1349,7 @@ DWORD WINAPI SHQueryValueExA( HKEY hKey, LPCSTR lpszValue,
     else
     {
       nBytesToAlloc = (lstrlenA(pvData)+1) * sizeof (CHAR);
-      szData = (LPSTR) LocalAlloc(GMEM_ZEROINIT, nBytesToAlloc );
+      szData = (LPSTR) LocalAlloc(LMEM_ZEROINIT, nBytesToAlloc );
       lstrcpyA(szData, pvData);
       dwExpDataLen = ExpandEnvironmentStringsA(szData, pvData, *pcbData / sizeof(CHAR));
       if (dwExpDataLen > *pcbData) dwRet = ERROR_MORE_DATA;
@@ -1401,7 +1401,7 @@ DWORD WINAPI SHQueryValueExW(HKEY hKey, LPCWSTR lpszValue,
       WCHAR cNull = '\0';
       nBytesToAlloc = (!pvData || (dwRet == ERROR_MORE_DATA)) ? dwUnExpDataLen : *pcbData;
 
-      szData = (LPWSTR) LocalAlloc(GMEM_ZEROINIT, nBytesToAlloc);
+      szData = (LPWSTR) LocalAlloc(LMEM_ZEROINIT, nBytesToAlloc);
       RegQueryValueExW (hKey, lpszValue, lpReserved, NULL, (LPBYTE)szData, &nBytesToAlloc);
       dwExpDataLen = ExpandEnvironmentStringsW(szData, &cNull, 1);
       dwUnExpDataLen = max(nBytesToAlloc, dwExpDataLen);
@@ -1410,7 +1410,7 @@ DWORD WINAPI SHQueryValueExW(HKEY hKey, LPCWSTR lpszValue,
     else
     {
       nBytesToAlloc = (lstrlenW(pvData) + 1) * sizeof(WCHAR);
-      szData = (LPWSTR) LocalAlloc(GMEM_ZEROINIT, nBytesToAlloc );
+      szData = (LPWSTR) LocalAlloc(LMEM_ZEROINIT, nBytesToAlloc );
       lstrcpyW(szData, pvData);
       dwExpDataLen = ExpandEnvironmentStringsW(szData, pvData, *pcbData/sizeof(WCHAR) );
       if (dwExpDataLen > *pcbData) dwRet = ERROR_MORE_DATA;
@@ -2183,7 +2183,7 @@ HKEY WINAPI SHRegDuplicateHKey(HKEY hKey)
  *
  * PARAMS
  *  hKeySrc    [I] Source key to copy from
- *  lpszSubKey [I] Sub key under hKeyDst, or NULL to use hKeyDst directly
+ *  lpszSrcSubKey [I] Sub key under hKeySrc, or NULL to use hKeySrc directly
  *  hKeyDst    [I] Destination key
  *  dwReserved [I] Reserved, must be 0
  *
@@ -2196,16 +2196,16 @@ HKEY WINAPI SHRegDuplicateHKey(HKEY hKey)
  *  (It will loop until out of stack, or the registry is full). This
  *  bug is present in Win32 also.
  */
-DWORD WINAPI SHCopyKeyA(HKEY hKeySrc, LPCSTR lpszSubKey, HKEY hKeyDst, DWORD dwReserved)
+DWORD WINAPI SHCopyKeyA(HKEY hKeySrc, LPCSTR lpszSrcSubKey, HKEY hKeyDst, DWORD dwReserved)
 {
   WCHAR szSubKeyW[MAX_PATH];
 
-  TRACE("(hkey=%p,%s,%p08x,%ld)\n", hKeySrc, debugstr_a(lpszSubKey), hKeyDst, dwReserved);
+  TRACE("(hkey=%p,%s,%p08x,%ld)\n", hKeySrc, debugstr_a(lpszSrcSubKey), hKeyDst, dwReserved);
 
-  if (lpszSubKey)
-    MultiByteToWideChar(0, 0, lpszSubKey, -1, szSubKeyW, MAX_PATH);
+  if (lpszSrcSubKey)
+    MultiByteToWideChar(0, 0, lpszSrcSubKey, -1, szSubKeyW, MAX_PATH);
 
-  return SHCopyKeyW(hKeySrc, lpszSubKey ? szSubKeyW : NULL, hKeyDst, dwReserved);
+  return SHCopyKeyW(hKeySrc, lpszSrcSubKey ? szSubKeyW : NULL, hKeyDst, dwReserved);
 }
 
 /*************************************************************************
@@ -2213,7 +2213,7 @@ DWORD WINAPI SHCopyKeyA(HKEY hKeySrc, LPCSTR lpszSubKey, HKEY hKeyDst, DWORD dwR
  *
  * See SHCopyKeyA.
  */
-DWORD WINAPI SHCopyKeyW(HKEY hKeySrc, LPCWSTR lpszSubKey, HKEY hKeyDst, DWORD dwReserved)
+DWORD WINAPI SHCopyKeyW(HKEY hKeySrc, LPCWSTR lpszSrcSubKey, HKEY hKeyDst, DWORD dwReserved)
 {
   DWORD dwKeyCount = 0, dwValueCount = 0, dwMaxKeyLen = 0;
   DWORD  dwMaxValueLen = 0, dwMaxDataLen = 0, i;
@@ -2222,18 +2222,18 @@ DWORD WINAPI SHCopyKeyW(HKEY hKeySrc, LPCWSTR lpszSubKey, HKEY hKeyDst, DWORD dw
   WCHAR szName[MAX_PATH], *lpszName = szName;
   DWORD dwRet = S_OK;
 
-  TRACE("hkey=%p,%s,%p08x,%ld)\n", hKeySrc, debugstr_w(lpszSubKey), hKeyDst, dwReserved);
+  TRACE("hkey=%p,%s,%p08x,%ld)\n", hKeySrc, debugstr_w(lpszSrcSubKey), hKeyDst, dwReserved);
 
   if(!hKeyDst || !hKeySrc)
     dwRet = ERROR_INVALID_PARAMETER;
   else
   {
-    /* Open destination key */
-    if(lpszSubKey)
-      dwRet = RegOpenKeyExW(hKeyDst, lpszSubKey, 0, KEY_ALL_ACCESS, &hKeyDst);
+    /* Open source key */
+    if(lpszSrcSubKey)
+      dwRet = RegOpenKeyExW(hKeySrc, lpszSrcSubKey, 0, KEY_ALL_ACCESS, &hKeySrc);
 
     if(dwRet)
-      hKeyDst = 0; /* Don't close this key since we didn't open it */
+      hKeyDst = NULL; /* Don't close this key since we didn't open it */
     else
     {
       /* Get details about sub keys and values */
@@ -2303,7 +2303,7 @@ DWORD WINAPI SHCopyKeyW(HKEY hKeySrc, LPCWSTR lpszSubKey, HKEY hKeyDst, DWORD dw
   if (lpBuff != buff)
     HeapFree(GetProcessHeap(), 0, lpBuff);
 
-  if (lpszSubKey && hKeyDst)
+  if (lpszSrcSubKey && hKeyDst)
     RegCloseKey(hKeyDst);
   return dwRet;
 }

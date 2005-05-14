@@ -45,7 +45,7 @@ exe explorer :
 	i386-stub-win32.c
  :	<define>WIN32 <define>_WIN32_IE=0x0600 <define>_WIN32_WINNT=0x0501 <define>WINVER=0x0500
 	<include>. <include>$(EXPAT_INC)
-# only for GCC:	<cxxflags>-fexceptions <cxxflags>-Wall
+# only for GCC:	<cxxflags>-fexceptions <cxxflags>-Wall <cxxflags>-Wno-unused-value
 	<find-shared-library>gdi32
 	<find-shared-library>ole32
 	<find-shared-library>comctl32

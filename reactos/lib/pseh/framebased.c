@@ -24,26 +24,62 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+#include <pseh.h>
 #include <pseh/framebased/internal.h>
 #include <pseh/excpt.h>
-#include <excpt.h>
 #include <pseh/framebased.h>
+
+#include <excpt.h>
 
 /* Assembly helpers, see i386/framebased.asm */
 extern void __cdecl _SEHCleanHandlerEnvironment(void);
-extern void __cdecl _SEHRegisterFrame(_SEHRegistration_t *);
-extern void __cdecl _SEHUnregisterFrame(const _SEHRegistration_t *);
-extern void __cdecl _SEHUnwind(_SEHPortableFrame_t *);
+extern struct __SEHRegistration * __cdecl _SEHRegisterFrame(_SEHRegistration_t *);
+extern void __cdecl _SEHUnregisterFrame(void);
+extern void __cdecl _SEHGlobalUnwind(_SEHPortableFrame_t *);
+extern _SEHRegistration_t * __cdecl _SEHCurrentRegistration(void);
 
 /* Borland C++ uses a different decoration (i.e. none) for stdcall functions */
 extern void __stdcall RtlUnwind(void *, void *, void *, void *);
 void const * _SEHRtlUnwind = RtlUnwind;
 
-__declspec(noreturn) void __cdecl _SEHCallHandler(_SEHPortableFrame_t * frame)
+void __stdcall _SEHLocalUnwind
+(
+ _SEHPortableFrame_t * frame,
+ _SEHPortableTryLevel_t * dsttrylevel
+)
 {
- frame->SPF_Handling = 1;
- _SEHUnwind(frame);
- frame->SPF_Handlers->SH_Handler(frame);
+ _SEHPortableTryLevel_t * trylevel;
+
+ for
+ (
+  trylevel = frame->SPF_TopTryLevel;
+  trylevel != dsttrylevel;
+  trylevel = trylevel->SPT_Next
+ )
+ {
+  _SEHFinally_t pfnFinally;
+
+  /* ASSERT(trylevel); */
+
+  pfnFinally = trylevel->SPT_Handlers->SH_Finally;
+
+  if(pfnFinally)
+   pfnFinally(frame);
+ }
+}
+
+__declspec(noreturn) void __cdecl _SEHCallHandler
+(
+ _SEHPortableFrame_t * frame,
+ _SEHPortableTryLevel_t * trylevel
+)
+{
+ DbgPrint("_SEHCallHandler: REG %p\n", _SEHCurrentRegistration());
+ _SEHGlobalUnwind(frame);
+ DbgPrint("_SEHCallHandler: REG %p\n", _SEHCurrentRegistration());
+ _SEHLocalUnwind(frame, trylevel);
+ DbgPrint("_SEHCallHandler: REG %p\n", _SEHCurrentRegistration());
+ frame->SPF_Handler(trylevel);
 }
 
 int __cdecl _SEHFrameHandler
@@ -62,73 +98,143 @@ int __cdecl _SEHFrameHandler
 
  /* Unwinding */
  if(ExceptionRecord->ExceptionFlags & (4 | 2))
- {
-  if(frame->SPF_Handlers->SH_Finally && !frame->SPF_Handling)
-   frame->SPF_Handlers->SH_Finally(frame);
- }
+  _SEHLocalUnwind(frame, NULL);
  /* Handling */
  else
  {
   int ret;
+  _SEHPortableTryLevel_t * trylevel;
 
   if(ExceptionRecord->ExceptionCode)
    frame->SPF_Code = ExceptionRecord->ExceptionCode;
   else
-   frame->SPF_Code = 0xC0000001; 
+   frame->SPF_Code = 0xC0000001;
 
-  switch((UINT_PTR)frame->SPF_Handlers->SH_Filter)
+  for
+  (
+   trylevel = frame->SPF_TopTryLevel;
+   trylevel != NULL;
+   trylevel = trylevel->SPT_Next
+  )
   {
-   case (UINT_PTR)_SEH_STATIC_FILTER(_SEH_EXECUTE_HANDLER):
-   case (UINT_PTR)_SEH_STATIC_FILTER(_SEH_CONTINUE_SEARCH):
-   case (UINT_PTR)_SEH_STATIC_FILTER(_SEH_CONTINUE_EXECUTION):
-   {
-    ret = (int)((UINT_PTR)frame->SPF_Handlers->SH_Filter) - 2;
-    break;
-   }
+   _SEHFilter_t pfnFilter = trylevel->SPT_Handlers->SH_Filter;
 
-   default:
+   switch((UINT_PTR)pfnFilter)
    {
-    if(frame->SPF_Handlers->SH_Filter)
+    case (UINT_PTR)_SEH_STATIC_FILTER(_SEH_EXECUTE_HANDLER):
+    case (UINT_PTR)_SEH_STATIC_FILTER(_SEH_CONTINUE_SEARCH):
+    case (UINT_PTR)_SEH_STATIC_FILTER(_SEH_CONTINUE_EXECUTION):
     {
-     EXCEPTION_POINTERS ep;
- 
-     ep.ExceptionRecord = ExceptionRecord;
-     ep.ContextRecord = ContextRecord;
- 
-     ret = frame->SPF_Handlers->SH_Filter(&ep, frame);
+     ret = (int)((UINT_PTR)pfnFilter) - 2;
+     break;
     }
-    else
-     ret = _SEH_CONTINUE_SEARCH;
 
-    break;
+    default:
+    {
+     if(trylevel->SPT_Handlers->SH_Filter)
+     {
+      EXCEPTION_POINTERS ep;
+
+      ep.ExceptionRecord = ExceptionRecord;
+      ep.ContextRecord = ContextRecord;
+
+      ret = pfnFilter(&ep, frame);
+     }
+     else
+      ret = _SEH_CONTINUE_SEARCH;
+
+     break;
+    }
    }
+
+   /* _SEH_CONTINUE_EXECUTION */
+   if(ret < 0)
+    return ExceptionContinueExecution;
+   /* _SEH_EXECUTE_HANDLER */
+   else if(ret > 0)
+    _SEHCallHandler(frame, trylevel);
+   /* _SEH_CONTINUE_SEARCH */
+   else
+    continue;
   }
 
-  /* _SEH_CONTINUE_EXECUTION */
-  if(ret < 0)
-   return ExceptionContinueExecution;
-  /* _SEH_EXECUTE_HANDLER */
-  else if(ret > 0)
-   _SEHCallHandler(frame);
-  /* _SEH_CONTINUE_SEARCH */
-  else
-   /* fall through */;
+  /* FALLTHROUGH */
  }
 
  return ExceptionContinueSearch;
 }
 
-void __stdcall _SEHEnter(_SEHPortableFrame_t * frame)
+void __stdcall _SEHEnterFrame_s
+(
+ _SEHPortableFrame_t * frame,
+ _SEHPortableTryLevel_t * trylevel
+)
 {
+ _SEHEnterFrame_f(frame, trylevel);
+}
+
+void __stdcall _SEHEnterTry_s(_SEHPortableTryLevel_t * trylevel)
+{
+ _SEHEnterTry_f(trylevel);
+}
+
+void __stdcall _SEHLeave_s(void)
+{
+ _SEHLeave_f();
+}
+
+void _SEH_FASTCALL _SEHEnterFrame_f
+(
+ _SEHPortableFrame_t * frame,
+ _SEHPortableTryLevel_t * trylevel
+)
+{
+ /* ASSERT(frame); */
+ /* ASSERT(trylevel); */
  frame->SPF_Registration.SER_Handler = _SEHFrameHandler;
  frame->SPF_Code = 0;
- frame->SPF_Handling = 0;
+ frame->SPF_TopTryLevel = trylevel;
+ trylevel->SPT_Next = NULL;
  _SEHRegisterFrame(&frame->SPF_Registration);
 }
 
-void __stdcall _SEHLeave(_SEHPortableFrame_t * frame)
+void _SEH_FASTCALL _SEHEnterTry_f(_SEHPortableTryLevel_t * trylevel)
 {
- _SEHUnregisterFrame(&frame->SPF_Registration);
+ _SEHPortableFrame_t * frame;
+
+ frame = _SEH_CONTAINING_RECORD
+ (
+  _SEHCurrentRegistration(),
+  _SEHPortableFrame_t,
+  SPF_Registration
+ );
+
+ trylevel->SPT_Next = frame->SPF_TopTryLevel;
+ frame->SPF_TopTryLevel = trylevel;
+}
+
+void _SEH_FASTCALL _SEHLeave_f(void)
+{
+ _SEHPortableFrame_t * frame;
+ _SEHPortableTryLevel_t * trylevel;
+
+ frame = _SEH_CONTAINING_RECORD
+ (
+  _SEHCurrentRegistration(),
+  _SEHPortableFrame_t,
+  SPF_Registration
+ );
+
+ /* ASSERT(frame); */
+
+ trylevel = frame->SPF_TopTryLevel;
+
+ /* ASSERT(trylevel); */
+
+ if(trylevel->SPT_Next)
+  frame->SPF_TopTryLevel = trylevel->SPT_Next;
+ else
+  _SEHUnregisterFrame();
 }
 
 /* EOF */

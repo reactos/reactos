@@ -24,9 +24,9 @@ unsigned char* _mbsncpy(unsigned char *str1, const unsigned char *str2, size_t n
 	if (n == 0)
 		return 0;
 	do {
-		
+
 		if (*s2 == 0)
-			break;	
+			break;
 
 		if (  !_ismbblead(*s2) ) {
 
@@ -49,8 +49,8 @@ unsigned char* _mbsncpy(unsigned char *str1, const unsigned char *str2, size_t n
 
 
 /*
- * The _mbsnbcpy function copies count bytes from src to dest. If src is shorter 
- * than dest, the string is padded with null characters. If dest is less than or 
+ * The _mbsnbcpy function copies count bytes from src to dest. If src is shorter
+ * than dest, the string is padded with null characters. If dest is less than or
  * equal to count it is not terminated with a null character.
  *
  * @implemented
@@ -65,10 +65,10 @@ unsigned char * _mbsnbcpy(unsigned char *str1, const unsigned char *str2, size_t
 	if (n == 0)
 		return 0;
 	do {
-		
+
         if (*s2 == 0) {
 			*s1 = *s2;
-			break;	
+			break;
         }
 
 		if (  !_ismbblead(*s2) ) {

@@ -223,7 +223,7 @@ CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
       return Status;
     }
 
-  DPRINT("FirstSession %d, LastSession %d, FirstTrack %d\n", 
+  DPRINT("FirstSession %d, LastSession %d, FirstTrack %d\n",
          Toc.FirstSession, Toc.LastSession, Toc.TrackData.TrackNumber);
 
   Offset = 0;

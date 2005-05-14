@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ldr/sysdll.c
  * PURPOSE:         Loaders for PE executables
- * 
+ *
  * PROGRAMMERS:     Jean Michault
  *                  Rex Jolliff (rex@lvcablemodem.com)
  *                  Skywing
@@ -60,7 +60,7 @@ LdrpGetSystemDllEntryPoints(VOID)
 {
     ANSI_STRING ProcedureName;
     NTSTATUS Status;
-    
+
     /* Retrieve ntdll's startup address */
     DPRINT("Getting Entrypoint: %p\n", LdrpSystemDllBase);
     RtlInitAnsiString(&ProcedureName, "LdrInitializeThunk");
@@ -68,9 +68,9 @@ LdrpGetSystemDllEntryPoints(VOID)
                                     &ProcedureName,
                                     0,
                                     &SystemDllEntryPoint);
-    
+
     if (!NT_SUCCESS(Status)) {
-        
+
         DPRINT1 ("LdrGetProcedureAddress failed (Status %x)\n", Status);
         return (Status);
     }
@@ -82,13 +82,13 @@ LdrpGetSystemDllEntryPoints(VOID)
                                     &ProcedureName,
                                     0,
                                     &SystemDllApcDispatcher);
-    
+
     if (!NT_SUCCESS(Status)) {
-        
+
         DPRINT1 ("LdrGetProcedureAddress failed (Status %x)\n", Status);
         return (Status);
     }
-    
+
     /* Get Exception Dispatcher */
     DPRINT("Getting Entrypoint\n");
     RtlInitAnsiString(&ProcedureName, "KiUserExceptionDispatcher");
@@ -96,13 +96,13 @@ LdrpGetSystemDllEntryPoints(VOID)
                                     &ProcedureName,
                                     0,
                                     &SystemDllExceptionDispatcher);
-    
+
     if (!NT_SUCCESS(Status)) {
-        
+
         DPRINT1 ("LdrGetProcedureAddress failed (Status %x)\n", Status);
         return (Status);
     }
-    
+
     /* Get Callback Dispatcher */
     DPRINT("Getting Entrypoint\n");
     RtlInitAnsiString(&ProcedureName, "KiUserCallbackDispatcher");
@@ -110,13 +110,13 @@ LdrpGetSystemDllEntryPoints(VOID)
                                     &ProcedureName,
                                     0,
                                     &SystemDllCallbackDispatcher);
-    
+
     if (!NT_SUCCESS(Status)) {
-        
+
         DPRINT1 ("LdrGetProcedureAddress failed (Status %x)\n", Status);
         return (Status);
     }
-    
+
     /* Get Raise Exception Dispatcher */
     DPRINT("Getting Entrypoint\n");
     RtlInitAnsiString(&ProcedureName, "KiRaiseUserExceptionDispatcher");
@@ -124,9 +124,9 @@ LdrpGetSystemDllEntryPoints(VOID)
                                     &ProcedureName,
                                     0,
                                     &SystemDllRaiseExceptionDispatcher);
-    
+
     if (!NT_SUCCESS(Status)) {
-        
+
         DPRINT1 ("LdrGetProcedureAddress failed (Status %x)\n", Status);
         return (Status);
     }
@@ -137,13 +137,13 @@ LdrpGetSystemDllEntryPoints(VOID)
 
 NTSTATUS
 STDCALL
-LdrpMapSystemDll(PEPROCESS Process, 
+LdrpMapSystemDll(PEPROCESS Process,
                  PVOID *DllBase)
 {
     NTSTATUS Status;
     ULONG ViewSize = 0;
     PVOID ImageBase = 0;
-    
+
     /* Map the System DLL */
     DPRINT("Mapping System DLL\n");
     Status = MmMapViewOfSection(LdrpSystemDllSection,
@@ -156,14 +156,14 @@ LdrpMapSystemDll(PEPROCESS Process,
                                 0,
                                 MEM_COMMIT,
                                 PAGE_READWRITE);
-    
+
     if (!NT_SUCCESS(Status)) {
-    
+
         DPRINT1("Failed to map System DLL Into Process\n");
     }
-    
+
     if (DllBase) *DllBase = ImageBase;
-    
+
     return Status;
 }
 
@@ -180,14 +180,14 @@ LdrpInitializeSystemDll(VOID)
     CHAR BlockBuffer[1024];
     PIMAGE_DOS_HEADER DosHeader;
     PIMAGE_NT_HEADERS NTHeaders;
-    
+
     /* Locate and open NTDLL to determine ImageBase and LdrStartup */
     InitializeObjectAttributes(&FileObjectAttributes,
                                &DllPathname,
                                0,
                                NULL,
                                NULL);
-    
+
     DPRINT("Opening NTDLL\n");
     Status = ZwOpenFile(&FileHandle,
                         FILE_READ_ACCESS,
@@ -195,12 +195,12 @@ LdrpInitializeSystemDll(VOID)
                         &Iosb,
                         FILE_SHARE_READ,
                         FILE_SYNCHRONOUS_IO_NONALERT);
-    
+
     if (!NT_SUCCESS(Status)) {
         DPRINT1("NTDLL open failed (Status %x)\n", Status);
         return Status;
      }
-     
+
      /* Load NTDLL is valid */
      DPRINT("Reading NTDLL\n");
      Status = ZwReadFile(FileHandle,
@@ -213,25 +213,25 @@ LdrpInitializeSystemDll(VOID)
                          0,
                          0);
     if (!NT_SUCCESS(Status) || Iosb.Information != sizeof(BlockBuffer)) {
-        
+
         DPRINT1("NTDLL header read failed (Status %x)\n", Status);
         ZwClose(FileHandle);
         return Status;
     }
-    
+
     /* Check if it's valid */
     DosHeader = (PIMAGE_DOS_HEADER)BlockBuffer;
     NTHeaders = (PIMAGE_NT_HEADERS)(BlockBuffer + DosHeader->e_lfanew);
-    
-    if ((DosHeader->e_magic != IMAGE_DOS_SIGNATURE) || 
-        (DosHeader->e_lfanew == 0L) || 
+
+    if ((DosHeader->e_magic != IMAGE_DOS_SIGNATURE) ||
+        (DosHeader->e_lfanew == 0L) ||
         (*(PULONG) NTHeaders != IMAGE_NT_SIGNATURE)) {
-        
+
         DPRINT1("NTDLL format invalid\n");
-        ZwClose(FileHandle);	
+        ZwClose(FileHandle);
         return(STATUS_UNSUCCESSFUL);
     }
-    
+
     /* Create a section for NTDLL */
     DPRINT("Creating section\n");
     Status = ZwCreateSection(&NTDllSectionHandle,
@@ -242,13 +242,13 @@ LdrpInitializeSystemDll(VOID)
                              SEC_IMAGE | SEC_COMMIT,
                              FileHandle);
     if (!NT_SUCCESS(Status)) {
-        
+
         DPRINT1("NTDLL create section failed (Status %x)\n", Status);
-        ZwClose(FileHandle);	
+        ZwClose(FileHandle);
         return(Status);
     }
-    ZwClose(FileHandle);   
-    
+    ZwClose(FileHandle);
+
     /* Reference the Section */
     DPRINT("ObReferenceObjectByHandle section: %d\n", NTDllSectionHandle);
     Status = ObReferenceObjectByHandle(NTDllSectionHandle,
@@ -258,18 +258,18 @@ LdrpInitializeSystemDll(VOID)
                                        (PVOID*)&LdrpSystemDllSection,
                                        NULL);
     if (!NT_SUCCESS(Status)) {
-        
+
         DPRINT1("NTDLL section reference failed (Status %x)\n", Status);
         return(Status);
     }
-    
+
     /* Map it */
     LdrpMapSystemDll(PsGetCurrentProcess(), &LdrpSystemDllBase);
     DPRINT("LdrpSystemDllBase: %x\n", LdrpSystemDllBase);
-    
+
     /* Now get the Entrypoints */
     LdrpGetSystemDllEntryPoints();
-    
+
     return STATUS_SUCCESS;
 }
 

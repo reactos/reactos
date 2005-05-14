@@ -705,6 +705,11 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY  "Unable to Change Priority"
     IDS_MSG_WARNINGCHANGEPRIORITY "WARNUNG: Das Ändern der Prioritätsklasse dieses Prozesses\nkann zu unerwünschten Ergebnissen, einschl. Systeminstabilität, führen.\nSind Sie sicher, dass Sie ändern möchten?"
     IDS_MSG_TRAYICONCPUUSAGE      "CPU-Auslastung: %d%%"
+    IDS_STATUS_MEMUSAGE           "zugesicherter Speicher: %dK / %dK"
+    IDS_STATUS_CPUUSAGE           "CPU-Auslastung: %3d%%"
+    IDS_STATUS_PROCESSES          "Prozesse: %d"
+    IDS_Not_Responding            "Keine Rückmeldung"
+    IDS_Running                   "Wird ausgeführt"  
 
 END
 

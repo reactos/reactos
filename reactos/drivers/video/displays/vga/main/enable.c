@@ -212,7 +212,7 @@ DrvDisableDriver(VOID)
   return;
 }
 
-//  -----------------------------------------------  Driver Implementation 
+//  -----------------------------------------------  Driver Implementation
 
 
 //    DrvEnablePDEV
@@ -222,7 +222,7 @@ DrvDisableDriver(VOID)
 //    information, and should not yet initialize the mode.
 //  ARGUMENTS:
 //    IN DEVMODEW *  DM            Describes the mode requested
-//    IN LPWSTR      LogAddress    
+//    IN LPWSTR      LogAddress
 //    IN ULONG       PatternCount  number of patterns expected
 //    OUT HSURF *    SurfPatterns  array to contain pattern handles
 //    IN ULONG       GDIInfoSize   the size of the GDIInfo object passed in

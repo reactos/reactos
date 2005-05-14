@@ -23,7 +23,7 @@
  * FILE:             services/fs/cdfs/fcb.c
  * PURPOSE:          CDROM (ISO 9660) filesystem driver
  * PROGRAMMER:       Art Yerkes
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -434,7 +434,7 @@ CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
   FileObject->FsContext2 = newCCB;
   newCCB->PtrFileObject = FileObject;
   Fcb->DevExt = Vcb;
- 
+
   if (CdfsFCBIsDirectory(Fcb))
     {
 #ifdef USE_ROS_CC_AND_FS
@@ -528,7 +528,7 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
 	  DPRINT("RecordLength == 0  Stopped!\n");
 	  break;
 	}
-	
+
       DPRINT("RecordLength %u  ExtAttrRecordLength %u  NameLength %u\n",
 	     Record->RecordLength, Record->ExtAttrRecordLength, Record->FileIdLength);
 

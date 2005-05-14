@@ -13,7 +13,7 @@
 #include "debug.h"
 
 NTSTATUS STDCALL
-AfdGetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+AfdGetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp ) {
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
@@ -23,7 +23,7 @@ AfdGetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, TRUE );
 
     if( FCB->ContextSize < ContextSize ) ContextSize = FCB->ContextSize;
-    
+
     if( FCB->Context ) {
 	RtlCopyMemory( Irp->UserBuffer,
 		       FCB->Context,
@@ -37,27 +37,27 @@ AfdGetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 }
 
 NTSTATUS STDCALL
-AfdSetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+AfdSetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp ) {
     NTSTATUS Status = STATUS_NO_MEMORY;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    
+
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, TRUE );
 
-    if( FCB->ContextSize < 
+    if( FCB->ContextSize <
 	IrpSp->Parameters.DeviceIoControl.InputBufferLength ) {
 	if( FCB->Context )
 	    ExFreePool( FCB->Context );
-	FCB->Context = 
+	FCB->Context =
 	    ExAllocatePool
-	    ( PagedPool, 
+	    ( PagedPool,
 	      IrpSp->Parameters.DeviceIoControl.InputBufferLength );
     }
-    
+
     if( FCB->Context ) {
 	Status = STATUS_SUCCESS;
-	RtlCopyMemory( FCB->Context, 
+	RtlCopyMemory( FCB->Context,
 		       IrpSp->Parameters.DeviceIoControl.Type3InputBuffer,
 		       IrpSp->Parameters.DeviceIoControl.InputBufferLength );
     }

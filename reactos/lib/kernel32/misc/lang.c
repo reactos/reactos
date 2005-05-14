@@ -12,7 +12,7 @@
 #define NDEBUG
 #include "../include/debug.h"
 
-/* FIXME:  these are included in winnls.h, however including this file causes alot of 
+/* FIXME:  these are included in winnls.h, however including this file causes alot of
            conflicting type errors. */
 
 #define LOCALE_SYEARMONTH 0x1006
@@ -215,24 +215,24 @@ EnumSystemGeoID(
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   switch(GeoClass)
   {
     case GEOCLASS_NATION:
       /*RtlEnterCriticalSection(&DllLock);
-      
+
         FIXME - Get GEO IDs calling Csr
-      
+
       RtlLeaveCriticalSection(&DllLock);*/
-      
+
       SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
       break;
-    
+
     default:
       SetLastError(ERROR_INVALID_FLAGS);
       return FALSE;
   }
- 
+
   return FALSE;
 }
 
@@ -366,7 +366,7 @@ EnumSystemLocalesW (
 		// Call Enum func
 		if (!lpLocaleEnumProc((LPWSTR)lpLocale))
             break;
-		
+
 		// Zero previous values
 		RtlZeroMemory(pFullInfo, length);
 
@@ -637,7 +637,7 @@ INT RosGetRegistryLocaleInfo( LPCWSTR lpValue, LPWSTR lpBuffer, INT nLen )
     if (!ntStatus)
     {
         nRet = (dwSize - nInfoSize) / sizeof(WCHAR);
-        
+
         if (!nRet || ((WCHAR *)kvpiInfo->Data)[nRet - 1])
         {
             if (nRet < nLen || !lpBuffer) nRet++;
@@ -741,7 +741,7 @@ GetLocaleInfoW (
         UINT uiNum;
         WCHAR *chEnd, *chTmp = HeapAlloc( GetProcessHeap(), 0, (*ch + 1) * sizeof(WCHAR) );
 
-        if (!chTmp) 
+        if (!chTmp)
 			return 0;
 
         memcpy( chTmp, ch + 1, *ch * sizeof(WCHAR) );
@@ -1333,7 +1333,7 @@ SetLocaleInfoW (
  * RIPPED FROM WINE's dlls\kernel\locale.c rev 1.42
  *
  *           SetThreadLocale    (KERNEL32.@)
- *  
+ *
  * Set the current threads locale.
  *
  * PARAMS
@@ -1363,7 +1363,7 @@ BOOL WINAPI SetThreadLocale( LCID lcid )
          * Wine save the acp for easy/fast access, but ROS has no such Teb member.
          * Maybe add this member to ros as well?
          */
-         
+
         /*
         Lag test app for å se om locale etc, endres i en app. etter at prosessen er
         startet, eller om bare nye prosesser blir berørt.

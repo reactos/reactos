@@ -1,5 +1,5 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/brkpoint.c
@@ -18,7 +18,7 @@
 /*
  * @implemented
  */
-VOID STDCALL 
+VOID STDCALL
 DbgBreakPoint(VOID)
 {
 #if defined(__GNUC__)
@@ -43,7 +43,7 @@ DbgBreakPoint(VOID)
 /*
  * @implemented
  */
-VOID STDCALL 
+VOID STDCALL
 DbgBreakPointWithStatus(ULONG Status)
 {
 #if defined(__GNUC__)

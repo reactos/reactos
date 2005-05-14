@@ -4,7 +4,7 @@
 /*
  * @unimplemented
  */
-double _j1(double x) 
+double _j1(double x)
 {
 	return x;
 }
@@ -12,7 +12,7 @@ double _j1(double x)
 /*
  * @unimplemented
  */
-double _y1(double x) 
+double _y1(double x)
 {
 	return x;
 }

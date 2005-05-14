@@ -13,9 +13,9 @@ _ftprintf(register FILE *iop, const _TCHAR *fmt, ...)
   int len;
   _TCHAR localbuf[BUFSIZ];
   va_list a=0;
-  
 
-  va_start( a, fmt ); 
+
+  va_start( a, fmt );
   if (iop->_flag & _IONBF)
   {
     iop->_flag &= ~_IONBF;

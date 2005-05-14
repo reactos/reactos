@@ -17,7 +17,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 /* $Id$
- * 
+ *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Clipping Functions
@@ -206,13 +206,13 @@ CLIPOBJ* FASTCALL
 IntEngCreateClipRegion(ULONG count, PRECTL pRect, PRECTL rcBounds)
 {
   CLIPGDI *Clip;
-  
+
   if(count > 1)
   {
     RECTL *dest;
-    
+
     Clip = EngAllocMem(0, sizeof(CLIPGDI) + ((count - 1) * sizeof(RECTL)), TAG_CLIPOBJ);
-    
+
     if(Clip != NULL)
     {
       Clip->EnumRects.c = count;
@@ -228,7 +228,7 @@ IntEngCreateClipRegion(ULONG count, PRECTL pRect, PRECTL rcBounds)
       Clip->ClipObj.iFComplexity = ((Clip->EnumRects.c <= 4) ? FC_RECT4 : FC_COMPLEX);
       Clip->ClipObj.iMode = TC_RECTANGLES;
       Clip->ClipObj.rclBounds = *rcBounds;
-      
+
       return GDIToObj(Clip, CLIP);
     }
   }
@@ -241,14 +241,14 @@ IntEngCreateClipRegion(ULONG count, PRECTL pRect, PRECTL rcBounds)
       Clip->EnumRects.c = 1;
       Clip->EnumOrder = CD_ANY;
       Clip->EnumRects.arcl[0] = *rcBounds;
-      
+
       Clip->ClipObj.iDComplexity = (((rcBounds->top == rcBounds->bottom) &&
                                      (rcBounds->left == rcBounds->right))
                                     ? DC_TRIVIAL : DC_RECT);
       Clip->ClipObj.iFComplexity = FC_RECT;
       Clip->ClipObj.iMode = TC_RECTANGLES;
       Clip->ClipObj.rclBounds = *rcBounds;
-      
+
       return GDIToObj(Clip, CLIP);
     }
   }
@@ -358,7 +358,7 @@ CLIPOBJ_bEnum(IN CLIPOBJ* ClipObj,
   {
     return FALSE;
   }
-  
+
   /* copy rectangles */
   src = ClipGDI->EnumRects.arcl + ClipGDI->EnumPos;
   for(i = 0, dest = pERects->arcl;
@@ -367,7 +367,7 @@ CLIPOBJ_bEnum(IN CLIPOBJ* ClipObj,
   {
     *dest = *src;
   }
-  
+
   pERects->c = nCopy;
 
   ClipGDI->EnumPos+=nCopy;

@@ -134,6 +134,11 @@ enum
    IRP_RETRY_IO_COMPLETION = 0x4000
 };
 
+#define IRP_QUOTA_CHARGED           0x01
+#define IRP_ALLOCATED_MUST_SUCCEED  0x02
+#define IRP_ALLOCATED_FIXED_SIZE    0x04
+#define IRP_LOOKASIDE_ALLOCATION    0x08
+
 #define SL_FORCE_ACCESS_CHECK      (0x1)
 #define SL_OPEN_PAGING_FILE        (0x2)
 #define SL_OPEN_TARGET_DIRECTORY   (0x4)
@@ -141,7 +146,7 @@ enum
 
 #define SL_KEY_SPECIFIED           (0x1)
 #define SL_OVERRIDE_VERIFY_VOLUME  (0x2)
-#define SL_WRITE_THROUGHT          (0x4)
+#define SL_WRITE_THROUGH          (0x4)
 #define SL_FT_SEQUENTIAL_WRITE     (0x8)
 
 #define SL_FAIL_IMMEDIATELY        (0x1)

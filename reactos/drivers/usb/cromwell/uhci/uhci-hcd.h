@@ -404,14 +404,14 @@ struct urb_priv {
  *
  * #1 uhci->urb_list_lock
  * #2 urb->lock
- * #3 uhci->urb_remove_list_lock, uhci->frame_list_lock, 
+ * #3 uhci->urb_remove_list_lock, uhci->frame_list_lock,
  *   uhci->qh_remove_list_lock
  * #4 uhci->complete_list_lock
  *
  * If you're going to grab 2 or more locks at once, ALWAYS grab the lock
  * at the lowest level FIRST and NEVER grab locks at the same level at the
  * same time.
- * 
+ *
  * So, if you need uhci->urb_list_lock, grab it before you grab urb->lock
  */
 
