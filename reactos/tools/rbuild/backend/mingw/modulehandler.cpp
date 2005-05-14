@@ -488,9 +488,9 @@ MingwModuleHandler::GetObjectFilenames ()
 	return objectFilenames;
 }
 
-string
+/* static */ string
 MingwModuleHandler::GenerateGccDefineParametersFromVector (
-	const vector<Define*>& defines ) const
+	const vector<Define*>& defines )
 {
 	string parameters;
 	for ( size_t i = 0; i < defines.size (); i++ )
@@ -535,8 +535,8 @@ MingwModuleHandler::ConcatenatePaths (
 		return path1 + CSEP + path2;
 }
 
-string
-MingwModuleHandler::GenerateGccIncludeParametersFromVector ( const vector<Include*>& includes ) const
+/* static */ string
+MingwModuleHandler::GenerateGccIncludeParametersFromVector ( const vector<Include*>& includes )
 {
 	string parameters;
 	for ( size_t i = 0; i < includes.size (); i++ )

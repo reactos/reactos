@@ -40,6 +40,9 @@ public:
 		const Module& module,
 		string_list* pclean_files );
 
+	static std::string GenerateGccDefineParametersFromVector ( const std::vector<Define*>& defines );
+	static std::string GenerateGccIncludeParametersFromVector ( const std::vector<Include*>& includes );
+
 	std::string GetModuleTargets ( const Module& module );
 	void GetObjectsVector ( const IfableData& data,
 	                        std::vector<std::string>& objectFiles ) const;
@@ -100,9 +103,7 @@ protected:
 private:
 	std::string ConcatenatePaths ( const std::string& path1,
 	                               const std::string& path2 ) const;
-	std::string GenerateGccDefineParametersFromVector ( const std::vector<Define*>& defines ) const;
 	std::string GenerateGccDefineParameters () const;
-	std::string GenerateGccIncludeParametersFromVector ( const std::vector<Include*>& includes ) const;
 	std::string GenerateCompilerParametersFromVector ( const std::vector<CompilerFlag*>& compilerFlags ) const;
 	std::string GenerateLinkerParametersFromVector ( const std::vector<LinkerFlag*>& linkerFlags ) const;
 	std::string GenerateImportLibraryDependenciesFromVector ( const std::vector<Library*>& libraries );
