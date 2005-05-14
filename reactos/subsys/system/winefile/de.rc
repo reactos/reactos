@@ -91,10 +91,10 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "A&lle Dateiangaben" ,				ID_VIEW_ALL_ATTRIBUTES, CHECKED
 		MENUITEM "&Bestimmte Dateiangaben..." ,			ID_VIEW_SELECTED_ATTRIBUTES
 		MENUITEM SEPARATOR
-		MENUITEM "Nach N&ame" ,		404
-		MENUITEM "Nach T&yp" ,		405
-		MENUITEM "Nach &Größe" , 		406
-		MENUITEM "Nach &Datum" , 		407
+		MENUITEM "Nach N&ame" ,		ID_VIEW_SORT_NAME
+		MENUITEM "Nach T&yp" ,		ID_VIEW_SORT_TYPE
+		MENUITEM "Nach &Größe" , 	ID_VIEW_SORT_SIZE
+		MENUITEM "Nach &Datum" , 	ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
 		MENUITEM "Angaben ausw&ählen..." ,			409
 	}

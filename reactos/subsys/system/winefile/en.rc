@@ -94,12 +94,12 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&All File Details" ,				ID_VIEW_ALL_ATTRIBUTES, CHECKED
 		MENUITEM "&Partial Details..." ,			ID_VIEW_SELECTED_ATTRIBUTES
 		MENUITEM SEPARATOR
-		MENUITEM "&Sort by Name" ,		404
-		MENUITEM "Sort &by Type" ,		405
-		MENUITEM "Sort by Si&ze" , 		406
-		MENUITEM "Sort by &Date" , 		407
+		MENUITEM "&Sort by Name" ,		ID_VIEW_SORT_NAME
+		MENUITEM "Sort &by Type" ,		ID_VIEW_SORT_TYPE
+		MENUITEM "Sort by Si&ze" , 		ID_VIEW_SORT_SIZE
+		MENUITEM "Sort by &Date" , 		ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
-		MENUITEM "Sort by &..." ,			409
+		MENUITEM "Filter by &..." ,			409
 	}
 
 	POPUP "&Options"  {

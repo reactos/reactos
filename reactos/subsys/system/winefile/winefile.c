@@ -200,7 +200,8 @@ int swprintf(wchar_t* buffer, const wchar_t* fmt, ...)
 
 
 static void read_directory(Entry* dir, LPCTSTR path, SORT_ORDER sortOrder, HWND hwnd);
-static void set_curdir(ChildWnd* child, Entry* entry, HWND hwnd);
+static void set_curdir(ChildWnd* child, Entry* entry, int idx, HWND hwnd);
+static void refresh_child(ChildWnd* child);
 static void get_path(Entry* dir, PTSTR path);
 
 LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
@@ -1319,9 +1320,56 @@ static void read_directory(Entry* dir, LPCTSTR path, SORT_ORDER sortOrder, HWND 
 }
 
 
-static ChildWnd* alloc_child_window(LPCTSTR path, LPITEMIDLIST pidl, HWND hwnd)
+static Entry* read_tree(Root* root, LPCTSTR path, LPITEMIDLIST pidl, LPTSTR drv, SORT_ORDER sortOrder, HWND hwnd)
 {
 	const static TCHAR sBackslash[] = {'\\', '\0'};
+
+#ifdef _SHELL_FOLDERS
+	if (pidl)
+	{
+		 /* read shell namespace tree */
+		root->drive_type = DRIVE_UNKNOWN;
+		drv[0] = '\\';
+		drv[1] = '\0';
+		load_string(root->volname, IDS_DESKTOP);
+		root->fs_flags = 0;
+		load_string(root->fs, IDS_SHELL);
+
+		return read_tree_shell(root, pidl, sortOrder, hwnd);
+	}
+	else
+#endif
+#if !defined(_NO_EXTENSIONS) && defined(__WINE__)
+	if (*path == '/')
+	{
+		 /* read unix file system tree */
+		root->drive_type = GetDriveType(path);
+
+		lstrcat(drv, sSlash);
+		load_string(root->volname, IDS_ROOT_FS);
+		root->fs_flags = 0;
+		load_string(root->fs, IDS_UNIXFS);
+
+		lstrcpy(root->path, sSlash);
+
+		return read_tree_unix(root, path, sortOrder, hwnd);
+	}
+#endif
+
+	 /* read WIN32 file system tree */
+	root->drive_type = GetDriveType(path);
+
+	lstrcat(drv, sBackslash);
+	GetVolumeInformation(drv, root->volname, _MAX_FNAME, 0, 0, &root->fs_flags, root->fs, _MAX_DIR);
+
+	lstrcpy(root->path, drv);
+
+	return read_tree_win(root, path, sortOrder, hwnd);
+}
+
+
+static ChildWnd* alloc_child_window(LPCTSTR path, LPITEMIDLIST pidl, HWND hwnd)
+{
 #if !defined(_NO_EXTENSIONS) && defined(__WINE__)
 	const static TCHAR sSlash[] = {'/', '\0'};
 #endif
@@ -1367,44 +1415,7 @@ static ChildWnd* alloc_child_window(LPCTSTR path, LPITEMIDLIST pidl, HWND hwnd)
 
 	root->entry.level = 0;
 
-#ifdef _SHELL_FOLDERS
-	if (pidl)
-	{
-		root->drive_type = DRIVE_UNKNOWN;
-		drv[0] = '\\';
-		drv[1] = '\0';
-		load_string(root->volname, IDS_DESKTOP);
-		root->fs_flags = 0;
-		load_string(root->fs, IDS_SHELL);
-
-		entry = read_tree_shell(root, pidl, child->sortOrder, hwnd);
-	}
-	else
-#endif
-#if !defined(_NO_EXTENSIONS) && defined(__WINE__)
-	if (*path == '/')
-	{
-		root->drive_type = GetDriveType(path);
-
-		lstrcat(drv, sSlash);
-		load_string(root->volname, IDS_ROOT_FS);
-		root->fs_flags = 0;
-		load_string(root->fs, IDS_UNIXFS);
-
-		lstrcpy(root->path, sSlash);
-		entry = read_tree_unix(root, path, child->sortOrder, hwnd);
-	}
-	else
-#endif
-	{
-		root->drive_type = GetDriveType(path);
-
-		lstrcat(drv, sBackslash);
-		GetVolumeInformation(drv, root->volname, _MAX_FNAME, 0, 0, &root->fs_flags, root->fs, _MAX_DIR);
-
-		lstrcpy(root->path, drv);
-		entry = read_tree_win(root, path, child->sortOrder, hwnd);
-	}
+	entry = read_tree(root, path, pidl, drv, child->sortOrder, hwnd);
 
 #ifdef _SHELL_FOLDERS
 	if (root->entry.etype == ET_SHELL)
@@ -1418,7 +1429,7 @@ static ChildWnd* alloc_child_window(LPCTSTR path, LPITEMIDLIST pidl, HWND hwnd)
 	child->left.root = &root->entry;
 	child->right.root = NULL;
 
-	set_curdir(child, entry, hwnd);
+	set_curdir(child, entry, 0, hwnd);
 
 	return child;
 }
@@ -1610,7 +1621,8 @@ static HWND create_child_window(ChildWnd* child)
 
 	ListBox_SetItemHeight(child->left.hwnd, 1, max(Globals.spaceSize.cy,IMAGE_HEIGHT+3));
 	ListBox_SetItemHeight(child->right.hwnd, 1, max(Globals.spaceSize.cy,IMAGE_HEIGHT+3));
-	idx = ListBox_FindItemData(child->left.hwnd, ListBox_GetCurSel(child->left.hwnd), child->left.cur);
+
+	idx = ListBox_FindItemData(child->left.hwnd, 0, child->left.cur);
 	ListBox_SetCurSel(child->left.hwnd, idx);
 
 	return child->hwnd;
@@ -1872,6 +1884,13 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 			if (!Globals.hwndParent)
 				PostQuitMessage(0);
 			break;
+
+		case WM_INITMENUPOPUP: {
+			HWND hwndClient = (HWND) SendMessage(Globals.hmdiclient, WM_MDIGETACTIVE, 0, 0);
+
+			if (!SendMessage(hwndClient, WM_INITMENUPOPUP, wparam, lparam))
+				return 0;
+			break;}
 
 		case WM_COMMAND: {
 			UINT cmd = LOWORD(wparam);
@@ -3188,10 +3207,9 @@ static LRESULT pane_notify(Pane* pane, NMHDR* pnmh)
 #endif /* _NO_EXTENSIONS */
 
 
-static void scan_entry(ChildWnd* child, Entry* entry, HWND hwnd)
+static void scan_entry(ChildWnd* child, Entry* entry, int idx, HWND hwnd)
 {
 	TCHAR path[MAX_PATH];
-	int idx = ListBox_GetCurSel(child->left.hwnd);
 	HCURSOR old_cursor = SetCursor(LoadCursor(0, IDC_WAIT));
 
 	/* delete sub entries in left pane */
@@ -3305,7 +3323,7 @@ static void collapse_entry(Pane* pane, Entry* dir)
 }
 
 
-static void set_curdir(ChildWnd* child, Entry* entry, HWND hwnd)
+static void set_curdir(ChildWnd* child, Entry* entry, int idx, HWND hwnd)
 {
 	TCHAR path[MAX_PATH];
 
@@ -3316,7 +3334,7 @@ static void set_curdir(ChildWnd* child, Entry* entry, HWND hwnd)
 	child->right.cur = entry;
 
 	if (!entry->scanned)
-		scan_entry(child, entry, hwnd);
+		scan_entry(child, entry, idx, hwnd);
 	else {
 		ListBox_ResetContent(child->right.hwnd);
 		insert_entries(&child->right, entry->down, -1);
@@ -3335,6 +3353,30 @@ static void set_curdir(ChildWnd* child, Entry* entry, HWND hwnd)
 	if (path[0])
 		if (SetCurrentDirectory(path))
 			set_space_status();
+}
+
+
+static void refresh_child(ChildWnd* child)
+{
+	TCHAR path[MAX_PATH], drv[_MAX_DRIVE+1];
+	Entry* entry;
+	int idx;
+
+	get_path(child->left.cur, path);
+	_tsplitpath(path, drv, NULL, NULL, NULL);
+
+	child->right.root = NULL;
+
+	scan_entry(child, &child->root.entry, 0, child->hwnd);
+
+	entry = read_tree(&child->root, path, NULL, drv, child->sortOrder, child->hwnd);
+
+	insert_entries(&child->left, child->root.entry.down, 0);
+
+	set_curdir(child, entry, 0, child->hwnd);
+
+	idx = ListBox_FindItemData(child->left.hwnd, 0, child->left.cur);
+	ListBox_SetCurSel(child->left.hwnd, idx);
 }
 
 
@@ -3415,7 +3457,7 @@ static void activate_entry(ChildWnd* child, Pane* pane, HWND hwnd)
 		int scanned_old = entry->scanned;
 
 		if (!scanned_old)
-			scan_entry(child, entry, hwnd);
+			scan_entry(child, entry, ListBox_GetCurSel(child->left.hwnd), hwnd);
 
 #ifndef _NO_EXTENSIONS
 		if (entry->data.cFileName[0]=='.' && entry->data.cFileName[1]=='\0')
@@ -3434,7 +3476,7 @@ static void activate_entry(ChildWnd* child, Pane* pane, HWND hwnd)
 			if (!pane->treePane) focus_entry: {
 				int idx = ListBox_FindItemData(child->left.hwnd, ListBox_GetCurSel(child->left.hwnd), entry);
 				ListBox_SetCurSel(child->left.hwnd, idx);
-				set_curdir(child, entry, hwnd);
+				set_curdir(child, entry, idx, hwnd);
 			}
 		}
 
@@ -3497,6 +3539,23 @@ static BOOL pane_command(Pane* pane, UINT cmd)
 	}
 
 	return TRUE;
+}
+
+
+static void set_sort_order(ChildWnd* child, SORT_ORDER sortOrder)
+{
+	if (child->sortOrder != sortOrder) {
+		child->sortOrder = sortOrder;
+		refresh_child(child);
+	}
+}
+
+static void update_view_menu(ChildWnd* child)
+{
+	CheckMenuItem(Globals.hMenuView, ID_VIEW_SORT_NAME, child->sortOrder==SORT_NAME? MF_CHECKED: MF_UNCHECKED);
+	CheckMenuItem(Globals.hMenuView, ID_VIEW_SORT_TYPE, child->sortOrder==SORT_EXT? MF_CHECKED: MF_UNCHECKED);
+	CheckMenuItem(Globals.hMenuView, ID_VIEW_SORT_SIZE, child->sortOrder==SORT_SIZE? MF_CHECKED: MF_UNCHECKED);
+	CheckMenuItem(Globals.hMenuView, ID_VIEW_SORT_DATE, child->sortOrder==SORT_DATE? MF_CHECKED: MF_UNCHECKED);
 }
 
 
@@ -3781,7 +3840,7 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 					break;}
 
 				case ID_REFRESH:
-					scan_entry(child, pane->cur, hwnd);
+					refresh_child(child);
 					break;
 
 				case ID_ACTIVATE:
@@ -3818,11 +3877,27 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 							activate_entry(child, pane, hwnd);
 						}
 						else
-							scan_entry(child, pane->root, hwnd);
+							refresh_child(child);
 					}
 					else
 						display_error(hwnd, GetLastError());
 					break;}
+
+				case ID_VIEW_SORT_NAME:
+					set_sort_order(child, SORT_NAME);
+					break;
+
+				case ID_VIEW_SORT_TYPE:
+					set_sort_order(child, SORT_EXT);
+					break;
+
+				case ID_VIEW_SORT_SIZE:
+					set_sort_order(child, SORT_SIZE);
+					break;
+
+				case ID_VIEW_SORT_DATE:
+					set_sort_order(child, SORT_DATE);
+					break;
 
 				default:
 					return pane_command(pane, LOWORD(wparam));
@@ -3839,7 +3914,7 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 					Entry* entry = (Entry*) ListBox_GetItemData(pane->hwnd, idx);
 
 					if (pane == &child->left)
-						set_curdir(child, entry, hwnd);
+						set_curdir(child, entry, idx, hwnd);
 					else
 						pane->cur = entry;
 					break;}
@@ -3909,6 +3984,7 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 			if (CtxMenu_HandleMenuMsg(nmsg, wparam, lparam))
 				return 0;
 
+			update_view_menu(child);
 			break;
 
 #ifndef __MINGW32__	/* IContextMenu3 missing in MinGW (as of 6.2.2005) */

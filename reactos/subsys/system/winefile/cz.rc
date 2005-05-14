@@ -92,10 +92,10 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Detaily všech souborù" ,				ID_VIEW_ALL_ATTRIBUTES, CHECKED
 		MENUITEM "Èá&steèné detaily..." ,			ID_VIEW_SELECTED_ATTRIBUTES
 		MENUITEM SEPARATOR
-		MENUITEM "&Tøídit podle jména" ,		404
-		MENUITEM "Tøídit &podle typu" ,		405
-		MENUITEM "Tøídit podle &velikosti" , 		406
-		MENUITEM "Tøídit podle &data" , 		407
+		MENUITEM "&Tøídit podle jména" ,		ID_VIEW_SORT_NAME
+		MENUITEM "Tøídit &podle typu" ,			ID_VIEW_SORT_TYPE
+		MENUITEM "Tøídit podle &velikosti" , 		ID_VIEW_SORT_SIZE
+		MENUITEM "Tøídit podle &data" , 		ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
 		MENUITEM "Tøídit podle &..." ,			409
 	}

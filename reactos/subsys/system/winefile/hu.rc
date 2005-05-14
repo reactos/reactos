@@ -93,10 +93,10 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Minden részlet" ,				ID_VIEW_ALL_ATTRIBUTES, CHECKED
 		MENUITEM "&Egyedi..." ,			ID_VIEW_SELECTED_ATTRIBUTES
 		MENUITEM SEPARATOR
-		MENUITEM "&Rendezés név szerint" ,		404
-		MENUITEM "Rendezés k&iterjesztés szerint" ,		405
-		MENUITEM "Rendezés &méret szerint" , 		406
-		MENUITEM "Rendezés &dátum szerint" , 		407
+		MENUITEM "&Rendezés név szerint" ,		ID_VIEW_SORT_NAME
+		MENUITEM "Rendezés k&iterjesztés szerint" ,	ID_VIEW_SORT_TYPE
+		MENUITEM "Rendezés &méret szerint" , 		ID_VIEW_SORT_SIZE
+		MENUITEM "Rendezés &dátum szerint" , 		ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
 		MENUITEM "Egyedi rendezés &..." ,			409
 	}

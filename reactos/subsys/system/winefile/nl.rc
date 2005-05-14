@@ -89,10 +89,10 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Alle details" ,             ID_VIEW_ALL_ATTRIBUTES, CHECKED
 		MENUITEM "&Gedeeltelijke details..." , ID_VIEW_SELECTED_ATTRIBUTES
 		MENUITEM SEPARATOR
-		MENUITEM "Sorteer op &naam" ,    404
-		MENUITEM "Sorteer op &type" ,    405
-		MENUITEM "Sorteer op &grootte" , 406
-		MENUITEM "Sorteer op &datum" ,   407
+		MENUITEM "Sorteer op &naam" ,    ID_VIEW_SORT_NAME
+		MENUITEM "Sorteer op &type" ,    ID_VIEW_SORT_TYPE
+		MENUITEM "Sorteer op &grootte" , ID_VIEW_SORT_SIZE
+		MENUITEM "Sorteer op &datum" ,   ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
 		MENUITEM "Sorteer op &..." ,     409
 	}

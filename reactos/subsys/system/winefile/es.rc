@@ -90,10 +90,10 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "T&odos los detalles" ,	ID_VIEW_ALL_ATTRIBUTES, CHECKED
 		MENUITEM "Detalles &parciales..." ,	ID_VIEW_SELECTED_ATTRIBUTES
 		MENUITEM SEPARATOR
-		MENUITEM "Ordenar por &nombre" ,		404
-		MENUITEM "Ordenar por &tipo" ,			405
-		MENUITEM "Ordenar por t&amaño" , 		406
-		MENUITEM "Ordenar por &fecha" , 		407
+		MENUITEM "Ordenar por &nombre" ,		ID_VIEW_SORT_NAME
+		MENUITEM "Ordenar por &tipo" ,			ID_VIEW_SORT_TYPE
+		MENUITEM "Ordenar por t&amaño" , 		ID_VIEW_SORT_SIZE
+		MENUITEM "Ordenar por &fecha" , 		ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
 		MENUITEM "Ordenar por &..." ,			409
 	}

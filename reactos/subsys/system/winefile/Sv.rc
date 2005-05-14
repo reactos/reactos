@@ -93,10 +93,10 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Alla Fildetaljer" ,				ID_VIEW_ALL_ATTRIBUTES, CHECKED
 		MENUITEM "&Vissa detaljer..." ,			ID_VIEW_SELECTED_ATTRIBUTES
 		MENUITEM SEPARATOR
-        MENUITEM "&Sortera efter namn",               404
-        MENUITEM "Sortera efter t&yp",               405
-        MENUITEM "Sortera efter st&orlek",               406
-        MENUITEM "Sortera efter &datum",               407
+	MENUITEM "&Sortera efter namn", 	ID_VIEW_SORT_NAME
+	MENUITEM "Sortera efter t&yp",		ID_VIEW_SORT_TYPE
+	MENUITEM "Sortera efter st&orlek",	ID_VIEW_SORT_SIZE
+	MENUITEM "Sortera efter &datum",	ID_VIEW_SORT_DATE
         MENUITEM SEPARATOR
         MENUITEM "Sortera efter &...",                409
 	}

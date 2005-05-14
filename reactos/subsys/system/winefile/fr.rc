@@ -93,10 +93,10 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Tous &les Détails" ,				ID_VIEW_ALL_ATTRIBUTES, CHECKED
 		MENUITEM "&Détails..." ,			ID_VIEW_SELECTED_ATTRIBUTES
 		MENUITEM SEPARATOR
-		MENUITEM "Trier par N&om" ,		404
-		MENUITEM "Trier par &Type" ,		405
-		MENUITEM "Trier par Ta&ille" , 		406
-		MENUITEM "Trier par Dat&e" , 		407
+		MENUITEM "Trier par N&om" ,		ID_VIEW_SORT_NAME
+		MENUITEM "Trier par &Type" ,		ID_VIEW_SORT_TYPE
+		MENUITEM "Trier par Ta&ille" , 		ID_VIEW_SORT_SIZE
+		MENUITEM "Trier par Dat&e" , 		ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
 		MENUITEM "Trier par &..." ,			409
 	}

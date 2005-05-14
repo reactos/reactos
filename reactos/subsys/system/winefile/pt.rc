@@ -92,10 +92,10 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Todos os delalhes" ,				ID_VIEW_ALL_ATTRIBUTES, CHECKED
 		MENUITEM "D&etalhes parciais..." ,			ID_VIEW_SELECTED_ATTRIBUTES
 		MENUITEM SEPARATOR
-		MENUITEM "&Classificar por nome" ,		404
-		MENUITEM "C&lassificar por tipo" ,		405
-		MENUITEM "Cl&assificar por tamanho" , 		406
-		MENUITEM "Cla&ssificar por &data" , 		407
+		MENUITEM "&Classificar por nome" ,		ID_VIEW_SORT_NAME
+		MENUITEM "C&lassificar por tipo" ,		ID_VIEW_SORT_TYPE
+		MENUITEM "Cl&assificar por tamanho" , 		ID_VIEW_SORT_SIZE
+		MENUITEM "Cla&ssificar por &data" , 		ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
 		MENUITEM "Classificar &por..." ,			409
 	}
@@ -220,10 +220,10 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Todos os delalhes" ,				ID_VIEW_ALL_ATTRIBUTES, CHECKED
 		MENUITEM "D&etalhes parciais..." ,			ID_VIEW_SELECTED_ATTRIBUTES
 		MENUITEM SEPARATOR
-		MENUITEM "&Classificar por nome" ,		404
-		MENUITEM "C&lassificar por tipo" ,		405
-		MENUITEM "Cl&assificar por tamanho" , 		406
-		MENUITEM "Cla&ssificar por &data" , 		407
+		MENUITEM "&Classificar por nome" ,		ID_VIEW_SORT_NAME
+		MENUITEM "C&lassificar por tipo" ,		ID_VIEW_SORT_TYPE
+		MENUITEM "Cl&assificar por tamanho" , 		ID_VIEW_SORT_SIZE
+		MENUITEM "Cla&ssificar por &data" , 		ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
 		MENUITEM "Classificar &por..." ,			409
 	}

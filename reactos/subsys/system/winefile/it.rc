@@ -93,10 +93,10 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Mostra tutti i dettagli sui file" ,				ID_VIEW_ALL_ATTRIBUTES, CHECKED
 		MENUITEM "&Mostra dettagli parziali..." ,			ID_VIEW_SELECTED_ATTRIBUTES
 		MENUITEM SEPARATOR
-		MENUITEM "&Ordina per Nome" ,		404
-		MENUITEM "&Ordina per Tipo" ,		405
-		MENUITEM "&Ordina per Dimensione" , 		406
-		MENUITEM "&Ordina per Data" , 		407
+		MENUITEM "&Ordina per Nome" ,		ID_VIEW_SORT_NAME
+		MENUITEM "&Ordina per Tipo" ,		ID_VIEW_SORT_TYPE
+		MENUITEM "&Ordina per Dimensione" , 	ID_VIEW_SORT_SIZE
+		MENUITEM "&Ordina per Data" , 		ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
 		MENUITEM "Ordina per &..." ,			409
 	}
