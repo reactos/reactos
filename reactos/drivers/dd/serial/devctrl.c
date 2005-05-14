@@ -202,7 +202,7 @@ SerialGetPerfStats(IN PIRP pIrp)
 {
 	PSERIAL_DEVICE_EXTENSION pDeviceExtension;
 	
-	ASSERT(Irp);
+	ASSERT(pIrp);
 	pDeviceExtension = (PSERIAL_DEVICE_EXTENSION)
 		IoGetCurrentIrpStackLocation(pIrp)->DeviceObject->DeviceExtension;
 	
