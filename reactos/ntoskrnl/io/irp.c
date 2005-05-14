@@ -368,7 +368,7 @@ IoAllocateIrp(CCHAR StackSize,
     USHORT Size = IoSizeOfIrp(StackSize);
     PKPRCB Prcb;
     UCHAR Flags = 0;
-    PNPAGED_LOOKASIDE_LIST List;
+    PNPAGED_LOOKASIDE_LIST List = NULL;
     PP_NPAGED_LOOKASIDE_NUMBER ListType = LookasideSmallIrpList;
     
     /* Figure out which Lookaside List to use */
