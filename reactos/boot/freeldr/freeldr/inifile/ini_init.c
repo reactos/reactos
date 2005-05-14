@@ -28,7 +28,7 @@
 BOOL IniFileInitialize(VOID)
 {
 	PFILE	Freeldr_Ini;	// File handle for freeldr.ini
-	PUCHAR	FreeLoaderIniFileData;
+	PCHAR	FreeLoaderIniFileData;
 	ULONG		FreeLoaderIniFileSize;
 	BOOL	Success;
 

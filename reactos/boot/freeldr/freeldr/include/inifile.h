@@ -22,14 +22,14 @@
 
 BOOL	IniFileInitialize(VOID);
 
-BOOL	IniOpenSection(PUCHAR SectionName, ULONG* SectionId);
+BOOL	IniOpenSection(PCHAR SectionName, ULONG* SectionId);
 ULONG		IniGetNumSectionItems(ULONG SectionId);
 ULONG		IniGetSectionSettingNameSize(ULONG SectionId, ULONG SettingIndex);
 ULONG		IniGetSectionSettingValueSize(ULONG SectionId, ULONG SettingIndex);
-BOOL	IniReadSettingByNumber(ULONG SectionId, ULONG SettingNumber, PUCHAR SettingName, ULONG NameSize, PUCHAR SettingValue, ULONG ValueSize);
-BOOL	IniReadSettingByName(ULONG SectionId, PUCHAR SettingName, PUCHAR Buffer, ULONG BufferSize);
-BOOL	IniAddSection(PUCHAR SectionName, ULONG* SectionId);
-BOOL	IniAddSettingValueToSection(ULONG SectionId, PUCHAR SettingName, PUCHAR SettingValue);
+BOOL	IniReadSettingByNumber(ULONG SectionId, ULONG SettingNumber, PCHAR SettingName, ULONG NameSize, PCHAR SettingValue, ULONG ValueSize);
+BOOL	IniReadSettingByName(ULONG SectionId, PCHAR SettingName, PCHAR Buffer, ULONG BufferSize);
+BOOL	IniAddSection(PCHAR SectionName, ULONG* SectionId);
+BOOL	IniAddSettingValueToSection(ULONG SectionId, PCHAR SettingName, PCHAR SettingValue);
 
 
 #endif // defined __PARSEINI_H

@@ -109,7 +109,7 @@ BOOL DiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_
 		// They want an extended partition entry so we will need
 		// to loop through all the extended partitions on the disk
 		// and return the one they want.
-		
+
 		ExtendedPartitionNumber = PartitionNumber - 5;
 
 		// Set the initial relative starting sector to 0

@@ -29,7 +29,7 @@ void *memset(void *src, int val, size_t count)
 		"rep\t\n"		\
 		"stosb\t\n"		\
 		".L1:\n\t"
-		: 
+		:
 		: "D" (src), "c" (count), "a" (val));
 	return src;
 }

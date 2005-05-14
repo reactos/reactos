@@ -65,11 +65,11 @@ typedef struct _VD_HEADER VD_HEADER, *PVD_HEADER;
 struct _PVD
 {
   UCHAR  VdType;			// 1
-  UCHAR  StandardId[5];			// 2-6
+  CHAR  StandardId[5];			// 2-6
   UCHAR  VdVersion;			// 7
   UCHAR  unused0;			// 8
-  UCHAR  SystemId[32];			// 9-40
-  UCHAR  VolumeId[32];			// 41-72
+  CHAR  SystemId[32];			// 9-40
+  CHAR  VolumeId[32];			// 41-72
   UCHAR  unused1[8];			// 73-80
   ULONG  VolumeSpaceSizeL;		// 81-84
   ULONG  VolumeSpaceSizeM;		// 85-88
@@ -84,8 +84,8 @@ struct _PVD
   ULONG  MPathTablePos;			// 149-152
   ULONG  MOptPathTablePos;		// 153-156
   DIR_RECORD RootDirRecord;		// 157-190
-  UCHAR  VolumeSetIdentifier[128];	// 191-318
-  UCHAR  PublisherIdentifier[128];	// 319-446
+  CHAR  VolumeSetIdentifier[128];	// 191-318
+  CHAR  PublisherIdentifier[128];	// 319-446
 
   /* more data ... */
 
@@ -106,7 +106,7 @@ typedef struct
 
 
 BOOL	IsoOpenVolume(ULONG DriveNumber);
-FILE*	IsoOpenFile(PUCHAR FileName);
+FILE*	IsoOpenFile(PCHAR FileName);
 BOOL	IsoReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
 ULONG		IsoGetFileSize(FILE *FileHandle);
 VOID	IsoSetFilePointer(FILE *FileHandle, ULONG NewFilePointer);

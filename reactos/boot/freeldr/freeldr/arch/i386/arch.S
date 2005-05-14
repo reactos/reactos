@@ -487,7 +487,6 @@ EXTERN(i386BootDrive)
 EXTERN(i386BootPartition)
 	.long	0
 
-.bss
 mb_info:
 	.fill	MB_INFO_SIZE, 1, 0
 

@@ -168,7 +168,7 @@ BOOL DiskGetExtendedDriveParameters(ULONG DriveNumber, PVOID Buffer, USHORT Buff
 	return TRUE;
 }
 
-BOOL i386DiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType) 
+BOOL i386DiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType)
 {
 	PARTITION_TABLE_ENTRY	PartitionTableEntry;
 	UCHAR			VolumeType;

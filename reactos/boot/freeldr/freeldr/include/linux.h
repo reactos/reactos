@@ -102,9 +102,9 @@ typedef struct
 
 	ULONG		Code32Start;			// here loaders can put a different
 									// start address for 32-bit code.
-									// 
+									//
 									//   0x1000 = default for zImage
-									// 
+									//
 									// 0x100000 = default for big kernel
 
 	ULONG		RamdiskAddress;			// address of loaded ramdisk image
@@ -127,9 +127,9 @@ typedef struct
 VOID	BootNewLinuxKernel(VOID);				// Implemented in linux.S
 VOID	BootOldLinuxKernel(ULONG KernelSize);		// Implemented in linux.S
 
-VOID	LoadAndBootLinux(PUCHAR OperatingSystemName, PUCHAR Description);
+VOID	LoadAndBootLinux(PCHAR OperatingSystemName, PCHAR Description);
 
-BOOL	LinuxParseIniSection(PUCHAR OperatingSystemName);
+BOOL	LinuxParseIniSection(PCHAR OperatingSystemName);
 BOOL	LinuxReadBootSector(PFILE LinuxKernelFile);
 BOOL	LinuxReadSetupSector(PFILE LinuxKernelFile);
 BOOL	LinuxReadKernel(PFILE LinuxKernelFile);

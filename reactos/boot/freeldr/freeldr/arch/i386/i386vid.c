@@ -88,7 +88,7 @@ typedef struct
 // A search must then be made to find them, FFFFh will also terminate this
 // second list. In some cases, only a "stub" VBE may be present, supporting
 // only AX=4F00h; this case may be assumed if the list of supported video modes
-// is empty (consisting of a single word of FFFFh) 
+// is empty (consisting of a single word of FFFFh)
 
 VOID BiosSetVideoFont8x16(VOID)
 {

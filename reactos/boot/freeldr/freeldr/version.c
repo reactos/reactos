@@ -16,14 +16,14 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-	
+
 #include <freeldr.h>
 #include <version.h>
 #include <rtl.h>
 
-UCHAR	FreeLoaderVersionString[80];
+CHAR	FreeLoaderVersionString[80];
 
-PUCHAR GetFreeLoaderVersionString(VOID)
+PCHAR GetFreeLoaderVersionString(VOID)
 {
 	if (FREELOADER_PATCH_VERSION == 0)
 	{

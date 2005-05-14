@@ -111,8 +111,8 @@ static VOID
 DetectCPU(FRLDRHKEY CpuKey,
 	  FRLDRHKEY FpuKey)
 {
-  char VendorIdentifier[13];
-  char Identifier[64];
+  CHAR VendorIdentifier[13];
+  CHAR Identifier[64];
   ULONG FeatureSet;
   FRLDRHKEY CpuInstKey;
   FRLDRHKEY FpuInstKey;
@@ -195,7 +195,7 @@ DetectCPU(FRLDRHKEY CpuKey,
   Error = RegSetValue(CpuInstKey,
 		      "FeatureSet",
 		      REG_DWORD,
-		      (PUCHAR)&FeatureSet,
+		      (PCHAR)&FeatureSet,
 		      sizeof(ULONG));
   if (Error != ERROR_SUCCESS)
     {
@@ -208,7 +208,7 @@ DetectCPU(FRLDRHKEY CpuKey,
   Error = RegSetValue(CpuInstKey,
 		      "Identifier",
 		      REG_SZ,
-		      (PUCHAR)Identifier,
+		      Identifier,
 		      strlen(Identifier) + 1);
   if (Error != ERROR_SUCCESS)
     {
@@ -218,7 +218,7 @@ DetectCPU(FRLDRHKEY CpuKey,
   Error = RegSetValue(FpuInstKey,
 		      "Identifier",
 		      REG_SZ,
-		      (PUCHAR)Identifier,
+		      Identifier,
 		      strlen(Identifier) + 1);
   if (Error != ERROR_SUCCESS)
     {
@@ -231,7 +231,7 @@ DetectCPU(FRLDRHKEY CpuKey,
   Error = RegSetValue(CpuInstKey,
 		      "VendorIdentifier",
 		      REG_SZ,
-		      (PUCHAR)VendorIdentifier,
+		      VendorIdentifier,
 		      strlen(VendorIdentifier) + 1);
   if (Error != ERROR_SUCCESS)
     {
@@ -250,7 +250,7 @@ DetectCPU(FRLDRHKEY CpuKey,
       Error = RegSetValue(CpuInstKey,
 			  "~MHz",
 			  REG_DWORD,
-			  (PUCHAR)&CpuSpeed,
+			  (PCHAR)&CpuSpeed,
 			  sizeof(ULONG));
       if (Error != ERROR_SUCCESS)
 	{
@@ -339,7 +339,7 @@ SetMpsProcessor(FRLDRHKEY CpuKey,
   Error = RegSetValue(CpuInstKey,
 		      "FeatureSet",
 		      REG_DWORD,
-		      (PUCHAR)&FeatureSet,
+		      (PCHAR)&FeatureSet,
 		      sizeof(ULONG));
   if (Error != ERROR_SUCCESS)
     {
@@ -352,7 +352,7 @@ SetMpsProcessor(FRLDRHKEY CpuKey,
   Error = RegSetValue(CpuInstKey,
 		      "Identifier",
 		      REG_SZ,
-		      (PUCHAR)Identifier,
+		      Identifier,
 		      strlen(Identifier) + 1);
   if (Error != ERROR_SUCCESS)
     {
@@ -362,7 +362,7 @@ SetMpsProcessor(FRLDRHKEY CpuKey,
   Error = RegSetValue(FpuInstKey,
 		      "Identifier",
 		      REG_SZ,
-		      (PUCHAR)Identifier,
+		      Identifier,
 		      strlen(Identifier) + 1);
   if (Error != ERROR_SUCCESS)
     {
@@ -375,7 +375,7 @@ SetMpsProcessor(FRLDRHKEY CpuKey,
   Error = RegSetValue(CpuInstKey,
 		      "VendorIdentifier",
 		      REG_SZ,
-		      (PUCHAR)VendorIdentifier,
+		      VendorIdentifier,
 		      strlen(VendorIdentifier) + 1);
   if (Error != ERROR_SUCCESS)
     {
@@ -394,7 +394,7 @@ SetMpsProcessor(FRLDRHKEY CpuKey,
       Error = RegSetValue(CpuInstKey,
 			  "~MHz",
 			  REG_DWORD,
-			  (PUCHAR)&CpuSpeed,
+			  (PCHAR)&CpuSpeed,
 			  sizeof(ULONG));
       if (Error != ERROR_SUCCESS)
 	{
@@ -464,7 +464,7 @@ GetMpConfigurationTable(PMP_FLOATING_POINT_TABLE FpTable)
   if (ConfigTable->Signature != MP_CT_SIGNATURE)
     return NULL;
 
-  DbgPrint((DPRINT_HWDETECT, 
+  DbgPrint((DPRINT_HWDETECT,
 	    "MP Configuration Table at: %x\n",
 	    (ULONG)ConfigTable));
 
@@ -538,7 +538,7 @@ DetectMps(FRLDRHKEY CpuKey,
 		CpuEntry = (PMP_PROCESSOR_ENTRY)Ptr;
 
 		DbgPrint((DPRINT_HWDETECT, "Processor Entry\n"));
-		DbgPrint((DPRINT_HWDETECT, 
+		DbgPrint((DPRINT_HWDETECT,
 			  "APIC Id %u  APIC Version %u  Flags %x  Signature %x  Feature %x\n",
 			  CpuEntry->LocalApicId,
 			  CpuEntry->LocalApicVersion,

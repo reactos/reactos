@@ -34,8 +34,8 @@
 typedef struct
 {
 	LIST_ITEM	ListEntry;
-	PUCHAR		ItemName;
-	PUCHAR		ItemValue;
+	PCHAR		ItemName;
+	PCHAR		ItemValue;
 
 } INI_SECTION_ITEM, *PINI_SECTION_ITEM;
 
@@ -47,7 +47,7 @@ typedef struct
 typedef struct
 {
 	LIST_ITEM			ListEntry;
-	PUCHAR				SectionName;
+	PCHAR				SectionName;
 	ULONG					SectionItemCount;
 	PINI_SECTION_ITEM	SectionItemList;
 
@@ -59,18 +59,18 @@ extern	ULONG					IniFileSettingCount;
 
 PFILE	IniOpenIniFile();
 
-BOOL	IniParseFile(PUCHAR IniFileData, ULONG IniFileSize);
-ULONG		IniGetNextLineSize(PUCHAR IniFileData, ULONG IniFileSize, ULONG CurrentOffset);
-ULONG		IniGetNextLine(PUCHAR IniFileData, ULONG IniFileSize, PUCHAR Buffer, ULONG BufferSize, ULONG CurrentOffset);
-BOOL	IniIsLineEmpty(PUCHAR LineOfText, ULONG TextLength);
-BOOL	IniIsCommentLine(PUCHAR LineOfText, ULONG TextLength);
-BOOL	IniIsSectionName(PUCHAR LineOfText, ULONG TextLength);
-ULONG		IniGetSectionNameSize(PUCHAR SectionNameLine, ULONG LineLength);
-VOID	IniExtractSectionName(PUCHAR SectionName, PUCHAR SectionNameLine, ULONG LineLength);
-BOOL	IniIsSetting(PUCHAR LineOfText, ULONG TextLength);
-ULONG		IniGetSettingNameSize(PUCHAR SettingNameLine, ULONG LineLength);
-ULONG		IniGetSettingValueSize(PUCHAR SettingValueLine, ULONG LineLength);
-VOID	IniExtractSettingName(PUCHAR SettingName, PUCHAR SettingNameLine, ULONG LineLength);
-VOID	IniExtractSettingValue(PUCHAR SettingValue, PUCHAR SettingValueLine, ULONG LineLength);
+BOOL	IniParseFile(PCHAR IniFileData, ULONG IniFileSize);
+ULONG		IniGetNextLineSize(PCHAR IniFileData, ULONG IniFileSize, ULONG CurrentOffset);
+ULONG		IniGetNextLine(PCHAR IniFileData, ULONG IniFileSize, PCHAR Buffer, ULONG BufferSize, ULONG CurrentOffset);
+BOOL	IniIsLineEmpty(PCHAR LineOfText, ULONG TextLength);
+BOOL	IniIsCommentLine(PCHAR LineOfText, ULONG TextLength);
+BOOL	IniIsSectionName(PCHAR LineOfText, ULONG TextLength);
+ULONG		IniGetSectionNameSize(PCHAR SectionNameLine, ULONG LineLength);
+VOID	IniExtractSectionName(PCHAR SectionName, PCHAR SectionNameLine, ULONG LineLength);
+BOOL	IniIsSetting(PCHAR LineOfText, ULONG TextLength);
+ULONG		IniGetSettingNameSize(PCHAR SettingNameLine, ULONG LineLength);
+ULONG		IniGetSettingValueSize(PCHAR SettingValueLine, ULONG LineLength);
+VOID	IniExtractSettingName(PCHAR SettingName, PCHAR SettingNameLine, ULONG LineLength);
+VOID	IniExtractSettingValue(PCHAR SettingValue, PCHAR SettingValueLine, ULONG LineLength);
 
 #endif // defined __INI_H
