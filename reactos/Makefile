@@ -229,6 +229,7 @@ include tools/tools.mak
 -include makefile.auto
 
 PREAUTO := \
+	$(BIN2RES_TARGET) \
 	$(BUILDNO_H) \
 	$(BUGCODES_H) \
 	$(BUGCODES_RC) \

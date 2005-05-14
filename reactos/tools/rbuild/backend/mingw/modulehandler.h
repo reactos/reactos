@@ -291,7 +291,6 @@ public:
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 private:
-	void GenerateExtractWineDLLResourcesTarget ();
 	void GenerateWin32DLLModuleTarget ();
 };
 

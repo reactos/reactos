@@ -55,6 +55,7 @@ class If;
 class CompilerFlag;
 class LinkerFlag;
 class Property;
+class WineResource;
 class AutomaticDependency;
 class Bootstrap;
 class CDFile;
@@ -418,6 +419,26 @@ public:
 	           const Module* module_ );
 
 	void ProcessXML();
+};
+
+
+class WineResource
+{
+public:
+	const Project& project;
+	std::string bin2res;
+
+	WineResource ( const Project& project,
+	               std::string bin2res );
+	~WineResource ();
+	void UnpackResources ( bool verbose );
+private:
+	bool IsSpecFile ( const File& file );
+	bool IsWineModule ( const Module& module );
+	bool IsResourceFile ( const File& file );
+	std::string GetResourceFilename ( const Module& module );
+	void UnpackResourcesInModule ( Module& module,
+	                               bool verbose );
 };
 
 

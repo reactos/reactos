@@ -42,6 +42,9 @@ $(BIN2RES_INT_)mkstemps.o: $(BIN2RES_BASE_)mkstemps.c | $(BIN2RES_INT)
 	$(ECHO_CC)
 	${host_gcc} $(BIN2RES_HOST_CFLAGS) -c $< -o $@
 
+.PHONY: bin2res
+bin2res: $(BIN2RES_TARGET)
+
 .PHONY: bin2res_clean
 bin2res_clean: $(BIN2RES_TARGET)
 	-@$(rm) $(BIN2RES_TARGET) $(BIN2RES_OBJECTS) 2>$(NUL)

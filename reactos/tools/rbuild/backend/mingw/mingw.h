@@ -37,17 +37,17 @@ public:
 	std::string EscapeSpaces ( std::string path );
 	void CreateRule ( FILE* f,
 	                  const std::string& parent );
+	static std::string GetIntermediatePath ();
+	static std::string GetOutputPath ();
+	static std::string GetInstallPath ();
 private:
 	bool mkdir_p ( const char* path );
 	std::string ReplaceVariable ( std::string name,
 	                              std::string value,
 	                              std::string path );
 	std::string GetEnvironmentVariable ( const std::string& name );
-	std::string GetEnvironmentVariablePathOrDefault ( const std::string& name,
-	                                                  const std::string& defaultValue );
-	std::string GetIntermediatePath ();
-	std::string GetOutputPath ();
-	std::string GetInstallPath ();
+	static std::string GetEnvironmentVariablePathOrDefault ( const std::string& name,
+	                                                         const std::string& defaultValue );
 	void ResolveVariablesInPath ( char* buf,
 	                              std::string path );
 	bool CreateDirectory ( std::string path );
@@ -90,6 +90,8 @@ private:
 	std::string GetBuildToolDependencies () const;
 	void GenerateInitTarget () const;
 	void GenerateXmlBuildFilesMacro() const;
+	std::string GetBin2ResExecutable ();
+	void UnpackWineResources ();
 	void CheckAutomaticDependencies ();
 	bool IncludeDirectoryTarget ( const std::string& directory ) const;
 	bool TryToDetectThisCompiler ( const std::string& compiler );

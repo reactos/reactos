@@ -123,6 +123,7 @@ RBUILD_COMMON_SOURCES = \
 		project.cpp \
 		ssprintf.cpp \
 		stubbedcomponent.cpp \
+		wineresource.cpp \
 		XML.cpp \
 		)
 
@@ -261,6 +262,10 @@ $(RBUILD_INT_)stubbedcomponent.o: $(RBUILD_BASE_)stubbedcomponent.cpp $(RBUILD_H
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
+$(RBUILD_INT_)wineresource.o: $(RBUILD_BASE_)wineresource.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
 $(RBUILD_INT_)XML.o: $(RBUILD_BASE_)XML.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
@@ -335,7 +340,6 @@ $(RBUILD_TESTS_INT_)alltests.o: $(RBUILD_TESTS_BASE_)alltests.cpp $(RBUILD_HEADE
 
 
 .PHONY: rbuild_test
-
 rbuild_test: $(RBUILD_TEST_TARGET)
 	$(ECHO_TEST)
 	$(Q)$(RBUILD_TEST_TARGET)

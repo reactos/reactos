@@ -1848,7 +1848,7 @@ MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ()
 			          deps[i].c_str () );
 
 		fprintf ( fMakefile, " | %s\n",
-		          GetDirectory ( GetTargetFilename ( module, NULL ) ).c_str () );
+		          GetDirectory ( GetImportLibraryFilename ( module, NULL ) ).c_str () );
 
 		fprintf ( fMakefile, "\t$(ECHO_DLLTOOL)\n" );
 
@@ -2236,31 +2236,7 @@ MingwWin32DLLModuleHandler::MingwWin32DLLModuleHandler (
 void
 MingwWin32DLLModuleHandler::Process ()
 {
-	GenerateExtractWineDLLResourcesTarget ();
 	GenerateWin32DLLModuleTarget ();
-}
-
-void
-MingwWin32DLLModuleHandler::GenerateExtractWineDLLResourcesTarget ()
-{
-	fprintf ( fMakefile, ".PHONY: %s_extractresources\n\n",
-	          module.name.c_str () );
-	fprintf ( fMakefile, "%s_extractresources: $(BIN2RES_TARGET)\n",
-	          module.name.c_str () );
-	const vector<File*>& files = module.non_if_data.files;
-	for ( size_t i = 0; i < files.size (); i++ )
-	{
-		File& file = *files[i];
-		string extension = GetExtension ( file.name );
-		if ( extension == ".rc" || extension == ".RC" )
-		{
-			string resource = NormalizeFilename ( file.name );
-			fprintf ( fMakefile, "\t$(ECHO_BIN2RES)\n" );
-			fprintf ( fMakefile, "\t@:echo ${bin2res} -f -x %s\n",
-			          resource.c_str () );
-		}
-	}
-	fprintf ( fMakefile, "\n");
 }
 
 void

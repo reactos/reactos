@@ -121,8 +121,8 @@ Directory::CreateDirectory ( string path )
 
 string
 Directory::ReplaceVariable ( string name,
-	                         string value,
-	                         string path )
+                             string value,
+                             string path )
 {
 	size_t i = path.find ( name );
 	if ( i != string::npos )
@@ -131,9 +131,9 @@ Directory::ReplaceVariable ( string name,
 		return path;
 }
 
-string
+/* static */ string
 Directory::GetEnvironmentVariablePathOrDefault ( const string& name,
-	                                             const string& defaultValue )
+                                                 const string& defaultValue )
 {
 	const string& environmentVariableValue = Environment::GetVariable ( name );
 	if ( environmentVariableValue.length () > 0 )
@@ -142,21 +142,21 @@ Directory::GetEnvironmentVariablePathOrDefault ( const string& name,
 		return defaultValue;
 }
 
-string
+/* static */ string
 Directory::GetIntermediatePath ()
 {
 	return GetEnvironmentVariablePathOrDefault ( "ROS_INTERMEDIATE",
 	                                             "obj-i386" );
 }
 
-string
+/* static */ string
 Directory::GetOutputPath ()
 {
 	return GetEnvironmentVariablePathOrDefault ( "ROS_OUTPUT",
 	                                             "output-i386" );
 }
 
-string
+/* static */ string
 Directory::GetInstallPath ()
 {
 	return GetEnvironmentVariablePathOrDefault ( "ROS_INSTALL",
@@ -165,7 +165,7 @@ Directory::GetInstallPath ()
 
 void
 Directory::ResolveVariablesInPath ( char* buf,
-	                                string path )
+                                    string path )
 {
 	string s = ReplaceVariable ( "$(INTERMEDIATE)", GetIntermediatePath (), path );
 	s = ReplaceVariable ( "$(OUTPUT)", GetOutputPath (), s );
@@ -175,7 +175,7 @@ Directory::ResolveVariablesInPath ( char* buf,
 
 void
 Directory::GenerateTree ( const string& parent,
-	                      bool verbose )
+                          bool verbose )
 {
 	string path;
 
@@ -355,6 +355,7 @@ MingwBackend::Process ()
 	GenerateInstallTarget ();
 	GenerateDirectoryTargets ();
 	GenerateDirectories ();
+	UnpackWineResources ();
 	CheckAutomaticDependencies ();
 	CloseMakefile ();
 }
@@ -635,6 +636,22 @@ MingwBackend::GenerateXmlBuildFilesMacro() const
 		numberOfExistingFiles++;
 	}
 	fprintf ( fMakefile, "\n" );
+}
+
+string
+MingwBackend::GetBin2ResExecutable ()
+{
+	return NormalizeFilename ( Directory::GetOutputPath () + SSEP + "tools/bin2res/bin2res" + EXEPOSTFIX );
+}
+
+void
+MingwBackend::UnpackWineResources ()
+{
+	printf ( "Unpacking WINE resources..." );
+	WineResource wineResource ( ProjectNode,
+	                            GetBin2ResExecutable () );
+	wineResource.UnpackResources ( verbose );
+	printf ( "done\n" );
 }
 
 void
