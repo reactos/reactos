@@ -515,6 +515,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
     {
       PUSER_MESSAGE UserMsg;
       MSG Msg;
+      BOOL ProcessMessage;
 
       ASSERT(SystemMessageQueueHead < SYSTEM_MESSAGE_QUEUE_SIZE);
       Msg = SystemMessageQueue[SystemMessageQueueHead];
@@ -522,12 +523,48 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	(SystemMessageQueueHead + 1) % SYSTEM_MESSAGE_QUEUE_SIZE;
       SystemMessageQueueCount--;
       IntUnLockSystemMessageQueue(OldIrql);
-      UserMsg = ExAllocateFromPagedLookasideList(&MessageLookasideList);
-      /* What to do if out of memory? For now we just panic a bit in debug */
-      ASSERT(UserMsg);
-      UserMsg->FreeLParam = FALSE;
-      UserMsg->Msg = Msg;
-      InsertTailList(&HardwareMessageQueueHead, &UserMsg->ListEntry);
+      if (WM_MOUSEFIRST <= Msg.message && Msg.message <= WM_MOUSELAST)
+        {
+          MSLLHOOKSTRUCT MouseHookData;
+
+          MouseHookData.pt.x = GET_X_LPARAM(Msg.lParam); 
+          MouseHookData.pt.y = GET_Y_LPARAM(Msg.lParam); 
+          switch(Msg.message)
+            {
+              case WM_MOUSEWHEEL:
+                MouseHookData.mouseData = MAKELONG(0, GET_WHEEL_DELTA_WPARAM(Msg.wParam));
+                break;
+              case WM_XBUTTONDOWN:
+              case WM_XBUTTONUP:
+              case WM_XBUTTONDBLCLK:
+              case WM_NCXBUTTONDOWN:
+              case WM_NCXBUTTONUP:
+              case WM_NCXBUTTONDBLCLK:
+                MouseHookData.mouseData = MAKELONG(0, HIWORD(Msg.wParam));
+                break;
+              default:
+                MouseHookData.mouseData = 0;
+                break;
+            }
+          MouseHookData.flags = 0;
+          MouseHookData.time = Msg.time;
+          MouseHookData.dwExtraInfo = 0;
+          ProcessMessage = (0 == HOOK_CallHooks(WH_MOUSE_LL, HC_ACTION,
+                                                Msg.message, (LPARAM) &MouseHookData));
+        }
+      else
+        {
+          ProcessMessage = TRUE;
+        }
+      if (ProcessMessage)
+        {
+          UserMsg = ExAllocateFromPagedLookasideList(&MessageLookasideList);
+          /* What to do if out of memory? For now we just panic a bit in debug */
+          ASSERT(UserMsg);
+          UserMsg->FreeLParam = FALSE;
+          UserMsg->Msg = Msg;
+          InsertTailList(&HardwareMessageQueueHead, &UserMsg->ListEntry);
+        }
       IntLockSystemMessageQueue(OldIrql);
     }
   /*

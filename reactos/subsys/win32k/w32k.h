@@ -27,6 +27,7 @@
 #include <math.h>
 #include <float.h>
 #include <windows.h>
+#include <windowsx.h>
 
 #include <rosrtl/string.h>
 #include <user32/callback.h>

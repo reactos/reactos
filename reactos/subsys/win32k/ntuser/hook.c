@@ -266,7 +266,7 @@ IntCallLowLevelHook(INT HookId, INT Code, WPARAM wParam, LPARAM lParam, PHOOK Ho
   /* FIXME should get timeout from
    * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
   Status = MsqSendMessage(Hook->Thread->Tcb.Win32Thread->MessageQueue, (HWND) Code, HookId,
-                          wParam, lParam, /*500*/0, TRUE, TRUE, &uResult);
+                          wParam, lParam, 5000, TRUE, TRUE, &uResult);
 
   return NT_SUCCESS(Status) ? uResult : 0;
 }

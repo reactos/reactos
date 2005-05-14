@@ -281,7 +281,8 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra;
   WPARAM wParam;
   LPARAM lParam;
-  KBDLLHOOKSTRUCT *KeyboardLlData;
+  PKBDLLHOOKSTRUCT KeyboardLlData;
+  PMSLLHOOKSTRUCT MouseLlData;
 
   Common = (PHOOKPROC_CALLBACK_ARGUMENTS) Arguments;
 
@@ -355,8 +356,12 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
         }
       break;
     case WH_KEYBOARD_LL:
-      KeyboardLlData = (KBDLLHOOKSTRUCT *)((PCHAR) Common + Common->lParam);
+      KeyboardLlData = (PKBDLLHOOKSTRUCT)((PCHAR) Common + Common->lParam);
       Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) KeyboardLlData);
+      break;
+    case WH_MOUSE_LL:
+      MouseLlData = (PMSLLHOOKSTRUCT)((PCHAR) Common + Common->lParam);
+      Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) MouseLlData);
       break;
     default:
       return ZwCallbackReturn(NULL, 0, STATUS_NOT_SUPPORTED);
