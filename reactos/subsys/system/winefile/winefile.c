@@ -1323,6 +1323,9 @@ static void read_directory(Entry* dir, LPCTSTR path, SORT_ORDER sortOrder, HWND 
 static Entry* read_tree(Root* root, LPCTSTR path, LPITEMIDLIST pidl, LPTSTR drv, SORT_ORDER sortOrder, HWND hwnd)
 {
 	const static TCHAR sBackslash[] = {'\\', '\0'};
+#if !defined(_NO_EXTENSIONS) && defined(__WINE__)
+	const static TCHAR sSlash[] = {'/', '\0'};
+#endif
 
 #ifdef _SHELL_FOLDERS
 	if (pidl)
@@ -1370,10 +1373,6 @@ static Entry* read_tree(Root* root, LPCTSTR path, LPITEMIDLIST pidl, LPTSTR drv,
 
 static ChildWnd* alloc_child_window(LPCTSTR path, LPITEMIDLIST pidl, HWND hwnd)
 {
-#if !defined(_NO_EXTENSIONS) && defined(__WINE__)
-	const static TCHAR sSlash[] = {'/', '\0'};
-#endif
-
 	TCHAR drv[_MAX_DRIVE+1], dir[_MAX_DIR], name[_MAX_FNAME], ext[_MAX_EXT];
 	TCHAR b1[BUFFER_LEN];
 
