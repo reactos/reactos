@@ -201,11 +201,11 @@ STRINGTABLE
 {
 	IDS_COL_NAME	"Jméno"
 	IDS_COL_SIZE	"Velikost"
-	IDS_COL_CDATE	"CDatum"
-	IDS_COL_ADATE	"ADatum"
-	IDS_COL_MDATE	"MDatum"
+	IDS_COL_CDATE	"Datum vytvoøení"
+	IDS_COL_ADATE	"Datum posledního pøístupu"
+	IDS_COL_MDATE	"Datum poslední modifikace"
 	IDS_COL_IDX		"Index/Inode"
-	IDS_COL_LINKS	"Links"
+	IDS_COL_LINKS	"Linky"
 	IDS_COL_ATTR	"Atributy"
 	IDS_COL_SEC		"Zabezpeèení"
 }
