@@ -74,5 +74,8 @@
 		<file>window.c</file>
 		<file>winpos.c</file>
 	</directory>
+	<linkerflag>-lgcc</linkerflag>
+	<linkerflag>-nostartfiles</linkerflag>
+	<linkerflag>-nostdlib</linkerflag>
 	<file>user32.rc</file>
 </module>
