@@ -184,7 +184,7 @@ MouseThreadMain(PVOID StartContext)
     DPRINT("Mouse Input Thread Starting...\n");
 
     /*
-     * Receive and process keyboard input.
+     * Receive and process mouse input.
      */
     while(InputThreadsRunning)
     {
@@ -409,6 +409,8 @@ KeyboardThreadMain(PVOID StartContext)
   MSG msg;
   PUSER_MESSAGE_QUEUE FocusQueue;
   struct _ETHREAD *FocusThread;
+  extern NTSTATUS Win32kInitWin32Thread(PETHREAD Thread);
+
 
   PKEYBOARD_INDICATOR_TRANSLATION IndicatorTrans = NULL;
   UINT ModifierState = 0;
@@ -431,6 +433,22 @@ KeyboardThreadMain(PVOID StartContext)
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("Win32K: Failed to open keyboard.\n");
+      return; //(Status);
+    }
+
+  /* Not sure if converting this thread to a win32 thread is such
+     a great idea. Since we're posting keyboard messages to the focus
+     window message queue, we'll be (indirectly) doing sendmessage
+     stuff from this thread (for WH_KEYBOARD_LL processing), which
+     means we need our own message queue. If keyboard messages were
+     instead queued to the system message queue, the thread removing
+     the message from the system message queue would be responsible
+     for WH_KEYBOARD_LL processing and we wouldn't need this thread
+     to be a win32 thread. */
+  Status = Win32kInitWin32Thread(PsGetCurrentThread());
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("Win32K: Failed making keyboard thread a win32 thread.\n");
       return; //(Status);
     }
 

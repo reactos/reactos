@@ -293,6 +293,9 @@ IntCallHookProc(INT HookId,
           return 0;
         }
       break;
+    case WH_KEYBOARD_LL:
+      ArgumentLength += sizeof(KBDLLHOOKSTRUCT);
+      break;
     default:
       DPRINT1("Trying to call unsupported window hook %d\n", HookId);
       return 0;
@@ -342,6 +345,10 @@ IntCallHookProc(INT HookId,
             }
           break;
         }
+      break;
+    case WH_KEYBOARD_LL:
+      RtlCopyMemory(Extra, (PVOID) lParam, sizeof(KBDLLHOOKSTRUCT));
+      Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
       break;
     }
 

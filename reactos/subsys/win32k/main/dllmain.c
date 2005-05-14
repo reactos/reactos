@@ -240,6 +240,43 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
   return STATUS_SUCCESS;
 }
 
+/* Only used in ntuser/input.c KeyboardThreadMain(). If it's
+   not called there anymore, please delete */
+NTSTATUS
+Win32kInitWin32Thread(PETHREAD Thread)
+{
+  PEPROCESS Process;
+
+  Process = Thread->ThreadsProcess;
+
+  if (Process->Win32Process == NULL)
+    {
+      /* FIXME - lock the process */
+      Process->Win32Process = ExAllocatePool(NonPagedPool, sizeof(W32PROCESS));
+
+      if (Process->Win32Process == NULL)
+	return STATUS_NO_MEMORY;
+
+      RtlZeroMemory(Process->Win32Process, sizeof(W32PROCESS));
+      /* FIXME - unlock the process */
+
+      Win32kProcessCallback(Process, TRUE);
+    }
+
+  if (Thread->Tcb.Win32Thread == NULL)
+    {
+      Thread->Tcb.Win32Thread = ExAllocatePool (NonPagedPool, sizeof(W32THREAD));
+      if (Thread->Tcb.Win32Thread == NULL)
+	return STATUS_NO_MEMORY;
+
+      RtlZeroMemory(Thread->Tcb.Win32Thread, sizeof(W32THREAD));
+
+      Win32kThreadCallback(Thread, TRUE);
+    }
+
+  return(STATUS_SUCCESS);
+}
+
 
 /*
  * This definition doesn't work

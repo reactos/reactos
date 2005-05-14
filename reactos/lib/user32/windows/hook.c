@@ -281,6 +281,7 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra;
   WPARAM wParam;
   LPARAM lParam;
+  KBDLLHOOKSTRUCT *KeyboardLlData;
 
   Common = (PHOOKPROC_CALLBACK_ARGUMENTS) Arguments;
 
@@ -352,6 +353,10 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
             }
           break;
         }
+      break;
+    case WH_KEYBOARD_LL:
+      KeyboardLlData = (KBDLLHOOKSTRUCT *)((PCHAR) Common + Common->lParam);
+      Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) KeyboardLlData);
       break;
     default:
       return ZwCallbackReturn(NULL, 0, STATUS_NOT_SUPPORTED);

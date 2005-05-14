@@ -182,8 +182,10 @@ IntFreeHook(PHOOKTABLE Table, PHOOK Hook, PWINSTATION_OBJECT WinStaObj)
   RtlFreeUnicodeString(&Hook->ModuleName);
 
   /* Dereference thread if required */
-  if(Hook->Flags & HOOK_THREAD_REFERENCED)
-    ObDereferenceObject(Hook->Thread);
+  if (Hook->Flags & HOOK_THREAD_REFERENCED)
+    {
+      ObDereferenceObject(Hook->Thread);
+    }
 
   /* Close handle */
   ObmCloseHandle(WinStaObj->HandleTable, Hook->Self);
@@ -191,7 +193,7 @@ IntFreeHook(PHOOKTABLE Table, PHOOK Hook, PWINSTATION_OBJECT WinStaObj)
 
 /* remove a hook, freeing it if the chain is not in use */
 STATIC FASTCALL VOID
-IntRemoveHook(PHOOK Hook, PWINSTATION_OBJECT WinStaObj)
+IntRemoveHook(PHOOK Hook, PWINSTATION_OBJECT WinStaObj, BOOL TableAlreadyLocked)
 {
   PHOOKTABLE Table = IntGetTable(Hook);
 
@@ -201,7 +203,10 @@ IntRemoveHook(PHOOK Hook, PWINSTATION_OBJECT WinStaObj)
       return;
     }
 
-  IntLockHookTable(Table);
+  if (! TableAlreadyLocked)
+    {
+      IntLockHookTable(Table);
+    }
   if (0 != Table->Counts[HOOKID_TO_INDEX(Hook->HookId)])
     {
       Hook->Proc = NULL; /* chain is in use, just mark it and return */
@@ -210,7 +215,10 @@ IntRemoveHook(PHOOK Hook, PWINSTATION_OBJECT WinStaObj)
     {
       IntFreeHook(Table, Hook, WinStaObj);
     }
-  IntUnLockHookTable(Table);
+  if (! TableAlreadyLocked)
+    {
+      IntUnLockHookTable(Table);
+    }
 }
 
 /* release a hook chain, removing deleted hooks if the use count drops to 0 */
@@ -249,16 +257,41 @@ IntReleaseHookChain(PHOOKTABLE Table, int HookId, PWINSTATION_OBJECT WinStaObj)
   IntUnLockHookTable(Table);
 }
 
+static LRESULT FASTCALL
+IntCallLowLevelHook(INT HookId, INT Code, WPARAM wParam, LPARAM lParam, PHOOK Hook)
+{
+  NTSTATUS Status;
+  ULONG_PTR uResult;
+
+  /* FIXME should get timeout from
+   * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
+  Status = MsqSendMessage(Hook->Thread->Tcb.Win32Thread->MessageQueue, (HWND) Code, HookId,
+                          wParam, lParam, /*500*/0, TRUE, TRUE, &uResult);
+
+  return NT_SUCCESS(Status) ? uResult : 0;
+}
+
 LRESULT FASTCALL
 HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
 {
   PHOOK Hook;
-  PHOOKTABLE Table = MsqGetHooks(PsGetWin32Thread()->MessageQueue);
+  PW32THREAD Win32Thread;
+  PHOOKTABLE Table;
   LRESULT Result;
   PWINSTATION_OBJECT WinStaObj;
   NTSTATUS Status;
 
   ASSERT(WH_MINHOOK <= HookId && HookId <= WH_MAXHOOK);
+
+  Win32Thread = PsGetWin32Thread();
+  if (NULL == Win32Thread)
+    {
+      Table = NULL;
+    }
+  else
+    {
+      Table = MsqGetHooks(Win32Thread->MessageQueue);
+    }
 
   if (NULL == Table || ! (Hook = IntGetFirstValidHook(Table, HookId)))
     {
@@ -268,6 +301,13 @@ HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
         {
           return 0;  /* no hook set */
         }
+    }
+
+  if (Hook->Thread != PsGetCurrentThread()
+      && (WH_KEYBOARD_LL == HookId || WH_MOUSE_LL == HookId))
+    {
+      DPRINT("Calling hook in owning thread\n");
+      return IntCallLowLevelHook(HookId, Code, wParam, lParam, Hook);
     }
 
   if (Hook->Thread != PsGetCurrentThread())
@@ -294,7 +334,7 @@ HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
 				          0,
 				          &WinStaObj);
 
-  if(! NT_SUCCESS(Status))
+  if (! NT_SUCCESS(Status))
     {
       DPRINT1("Invalid window station????\n");
     }
@@ -324,7 +364,7 @@ HOOK_DestroyThreadHooks(PETHREAD Thread)
                                               0,
                                               &WinStaObj);
 
-      if(! NT_SUCCESS(Status))
+      if (! NT_SUCCESS(Status))
         {
           DPRINT1("Invalid window station????\n");
           return;
@@ -344,7 +384,7 @@ HOOK_DestroyThreadHooks(PETHREAD Thread)
                   Elem = Elem->Flink;
                   if (HookObj->Thread == Thread)
                     {
-                      IntRemoveHook(HookObj, WinStaObj);
+                      IntRemoveHook(HookObj, WinStaObj, TRUE);
                     }
                 }
               break;
@@ -372,7 +412,7 @@ NtUserCallNextHookEx(
 				          0,
 				          &WinStaObj);
 
-  if(! NT_SUCCESS(Status))
+  if (! NT_SUCCESS(Status))
     {
       SetLastNtError(Status);
       return FALSE;
@@ -433,7 +473,7 @@ NtUserSetWindowsHookEx(
   BOOL Ansi)
 {
   PWINSTATION_OBJECT WinStaObj;
-  BOOLEAN Global, ReleaseThread;
+  BOOLEAN Global;
   PETHREAD Thread;
   PHOOK Hook;
   UNICODE_STRING ModuleName;
@@ -473,15 +513,23 @@ NtUserSetWindowsHookEx(
           SetLastWin32Error(ERROR_INVALID_PARAMETER);
           return NULL;
         }
-      ReleaseThread = TRUE;
     }
   else  /* system-global hook */
     {
-      ReleaseThread = FALSE;
       if (HookId == WH_KEYBOARD_LL || HookId == WH_MOUSE_LL)
         {
           Mod = NULL;
           Thread = PsGetCurrentThread();
+          Status = ObReferenceObjectByPointer(Thread,
+				              THREAD_ALL_ACCESS,
+				              PsThreadType,
+				              KernelMode);
+
+          if (! NT_SUCCESS(Status))
+            {
+              SetLastNtError(Status);
+              return (HANDLE) NULL;
+            }
         }
       else if (NULL ==  Mod)
         {
@@ -495,16 +543,20 @@ NtUserSetWindowsHookEx(
       Global = TRUE;
     }
 
-  /* We only (partially) support local WH_CBT hooks for now */
-  if (WH_CBT != HookId || Global)
+  /* We only (partially) support local WH_CBT hooks and
+   * WH_KEYBOARD_LL/WH_MOUSE_LL hooks for now */
+  if ((WH_CBT != HookId || Global)
+      && WH_KEYBOARD_LL != HookId && WH_MOUSE_LL != HookId)
     {
 #if 0 /* Removed to get winEmbed working again */
       UNIMPLEMENTED
 #else
       DPRINT1("Not implemented: HookId %d Global %s\n", HookId, Global ? "TRUE" : "FALSE");
 #endif
-      if(ReleaseThread)
-        ObDereferenceObject(Thread);
+      if (NULL != Thread)
+        {
+          ObDereferenceObject(Thread);
+        }
       SetLastWin32Error(ERROR_NOT_SUPPORTED);
       return NULL;
     }
@@ -514,10 +566,12 @@ NtUserSetWindowsHookEx(
 				          0,
 				          &WinStaObj);
 
-  if(! NT_SUCCESS(Status))
+  if (! NT_SUCCESS(Status))
     {
-      if(ReleaseThread && Thread)
-        ObDereferenceObject(Thread);
+      if (NULL != Thread)
+        {
+          ObDereferenceObject(Thread);
+        }
       SetLastNtError(Status);
       return (HANDLE) NULL;
     }
@@ -525,14 +579,18 @@ NtUserSetWindowsHookEx(
   Hook = IntAddHook(Thread, HookId, Global, WinStaObj);
   if (NULL == Hook)
     {
-      if(ReleaseThread)
-        ObDereferenceObject(Thread);
+      if (NULL != Thread)
+        {
+          ObDereferenceObject(Thread);
+        }
       ObDereferenceObject(WinStaObj);
       return NULL;
     }
 
-  if(ReleaseThread)
+  if (NULL != Thread)
+    {
     Hook->Flags |= HOOK_THREAD_REFERENCED;
+    }
 
   if (NULL != Mod)
     {
@@ -540,9 +598,11 @@ NtUserSetWindowsHookEx(
       if (! NT_SUCCESS(Status))
         {
           ObmDereferenceObject(Hook);
-          IntRemoveHook(Hook, WinStaObj);
-          if(ReleaseThread)
-            ObDereferenceObject(Thread);
+          IntRemoveHook(Hook, WinStaObj, FALSE);
+          if (NULL != Thread)
+            {
+              ObDereferenceObject(Thread);
+            }
           ObDereferenceObject(WinStaObj);
           SetLastNtError(Status);
           return NULL;
@@ -553,9 +613,11 @@ NtUserSetWindowsHookEx(
       if (NULL == Hook->ModuleName.Buffer)
         {
           ObmDereferenceObject(Hook);
-          IntRemoveHook(Hook, WinStaObj);
-          if(ReleaseThread)
-            ObDereferenceObject(Thread);
+          IntRemoveHook(Hook, WinStaObj, FALSE);
+          if (NULL != Thread)
+            {
+              ObDereferenceObject(Thread);
+            }
           ObDereferenceObject(WinStaObj);
           SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
           return NULL;
@@ -567,9 +629,11 @@ NtUserSetWindowsHookEx(
       if (! NT_SUCCESS(Status))
         {
           ObmDereferenceObject(Hook);
-          IntRemoveHook(Hook, WinStaObj);
-          if(ReleaseThread)
-            ObDereferenceObject(Thread);
+          IntRemoveHook(Hook, WinStaObj, FALSE);
+          if (NULL != Thread)
+            {
+              ObDereferenceObject(Thread);
+            }
           ObDereferenceObject(WinStaObj);
           SetLastNtError(Status);
           return NULL;
@@ -618,7 +682,7 @@ NtUserUnhookWindowsHookEx(
 				          0,
 				          &WinStaObj);
 
-  if(! NT_SUCCESS(Status))
+  if (! NT_SUCCESS(Status))
     {
       SetLastNtError(Status);
       return FALSE;
@@ -635,7 +699,7 @@ NtUserUnhookWindowsHookEx(
     }
   ASSERT(Hook == HookObj->Self);
 
-  IntRemoveHook(HookObj, WinStaObj);
+  IntRemoveHook(HookObj, WinStaObj, FALSE);
 
   ObmDereferenceObject(HookObj);
   ObDereferenceObject(WinStaObj);
