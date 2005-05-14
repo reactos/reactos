@@ -35,6 +35,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "hu.rc"
 #include "it.rc"
 #include "nl.rc"
+#include "pl.rc"
 #include "pt.rc"
 #include "ru.rc"
 #include "si.rc"
