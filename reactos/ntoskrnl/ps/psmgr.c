@@ -97,8 +97,7 @@ PsInitThreadManagment(VOID)
    PsThreadType->Security = NULL;
    PsThreadType->QueryName = NULL;
    PsThreadType->OkayToClose = NULL;
-   PsThreadType->Create = NULL;
-   PsThreadType->DuplicationNotify = NULL;
+   PsThreadType->Open = NULL;
 
    RtlInitUnicodeString(&PsThreadType->TypeName, L"Thread");
 
@@ -149,8 +148,7 @@ PsInitProcessManagment(VOID)
    PsProcessType->Security = NULL;
    PsProcessType->QueryName = NULL;
    PsProcessType->OkayToClose = NULL;
-   PsProcessType->Create = NULL;
-   PsProcessType->DuplicationNotify = NULL;
+   PsProcessType->Open = NULL;
 
    RtlInitUnicodeString(&PsProcessType->TypeName, L"Process");
 

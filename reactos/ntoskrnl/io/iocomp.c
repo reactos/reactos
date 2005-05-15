@@ -222,8 +222,6 @@ IopInitIoCompletionImplementation(VOID)
     ExIoCompletionType->Security = NULL;
     ExIoCompletionType->QueryName = NULL;
     ExIoCompletionType->OkayToClose = NULL;
-    ExIoCompletionType->Create = NULL;
-    ExIoCompletionType->DuplicationNotify = NULL;
 }
 
 NTSTATUS

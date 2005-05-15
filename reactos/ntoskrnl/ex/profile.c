@@ -94,10 +94,10 @@ ExpInitializeProfileImplementation(VOID)
     ExProfileObjectType->Close = NULL;
     ExProfileObjectType->Delete = ExpDeleteProfile;
     ExProfileObjectType->Parse = NULL;
+    ExProfileObjectType->Open = NULL;
     ExProfileObjectType->Security = NULL;
     ExProfileObjectType->QueryName = NULL;
     ExProfileObjectType->OkayToClose = NULL;
-    ExProfileObjectType->Create = NULL;
     ObpCreateTypeObject(ExProfileObjectType);
 }
 

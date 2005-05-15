@@ -80,13 +80,6 @@ POBJECT_TYPE EXPORTED IoDriverObjectType = NULL;
 
 /* DECLARATIONS ***************************************************************/
 
-NTSTATUS STDCALL
-IopCreateDriver(
-   PVOID ObjectBody,
-   PVOID Parent,
-   PWSTR RemainingPath,
-   POBJECT_ATTRIBUTES ObjectAttributes);
-
 VOID STDCALL
 IopDeleteDriver(PVOID ObjectBody);
 
@@ -112,8 +105,6 @@ IopInitDriverImplementation(VOID)
    IoDriverObjectType->Security = NULL;
    IoDriverObjectType->QueryName = NULL;
    IoDriverObjectType->OkayToClose = NULL;
-   IoDriverObjectType->Create = IopCreateDriver;
-   IoDriverObjectType->DuplicationNotify = NULL;
    RtlInitUnicodeString(&IoDriverObjectType->TypeName, L"Driver");
 
    ObpCreateTypeObject(IoDriverObjectType);
@@ -136,46 +127,6 @@ IopInvalidDeviceRequest(
    Irp->IoStatus.Information = 0;
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
    return STATUS_INVALID_DEVICE_REQUEST;
-}
-
-NTSTATUS STDCALL
-IopCreateDriver(
-   PVOID ObjectBody,
-   PVOID Parent,
-   PWSTR RemainingPath,
-   POBJECT_ATTRIBUTES ObjectAttributes)
-{
-   PDRIVER_OBJECT Object = ObjectBody;
-   ULONG i;
-
-   DPRINT("IopCreateDriver(ObjectBody %x, Parent %x, RemainingPath %S)\n",
-      ObjectBody, Parent, RemainingPath);
-
-   if (RemainingPath != NULL && wcschr(RemainingPath + 1, '\\') != NULL)
-      return STATUS_UNSUCCESSFUL;
-
-   /* Create driver extension */
-   Object->DriverExtension = (PDRIVER_EXTENSION)
-      ExAllocatePoolWithTag(
-         NonPagedPool,
-         sizeof(DRIVER_EXTENSION),
-         TAG_DRIVER_EXTENSION);
-
-   if (Object->DriverExtension == NULL)
-   {
-      return STATUS_NO_MEMORY;
-   }
-
-   RtlZeroMemory(Object->DriverExtension, sizeof(DRIVER_EXTENSION));
-
-   Object->Type = IO_TYPE_DRIVER;
-
-   for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
-      Object->MajorFunction[i] = IopInvalidDeviceRequest;
-
-   Object->HardwareDatabase = &IopHardwareDatabaseKey;
-
-   return STATUS_SUCCESS;
 }
 
 VOID STDCALL
@@ -217,6 +168,7 @@ IopCreateDriverObject(
    UNICODE_STRING DriverName;
    OBJECT_ATTRIBUTES ObjectAttributes;
    NTSTATUS Status;
+   ULONG i;
    PWSTR Buffer = NULL;
 
    DPRINT("IopCreateDriverObject(%p '%wZ' %x %p %x)\n",
@@ -269,6 +221,27 @@ IopCreateDriverObject(
    {
       return Status;
    }
+   
+     /* Create driver extension */
+   Object->DriverExtension = (PDRIVER_EXTENSION)
+      ExAllocatePoolWithTag(
+         NonPagedPool,
+         sizeof(DRIVER_EXTENSION),
+         TAG_DRIVER_EXTENSION);
+
+   if (Object->DriverExtension == NULL)
+   {
+      return STATUS_NO_MEMORY;
+   }
+
+   RtlZeroMemory(Object->DriverExtension, sizeof(DRIVER_EXTENSION));
+
+   Object->Type = IO_TYPE_DRIVER;
+
+   for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
+      Object->MajorFunction[i] = IopInvalidDeviceRequest;
+
+   Object->HardwareDatabase = &IopHardwareDatabaseKey;
 
    Object->DriverStart = DriverImageStart;
    Object->DriverSize = DriverImageSize;

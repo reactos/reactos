@@ -159,7 +159,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
       return Status;
    }
 
-   Status = ObCreateHandle(PsGetCurrentProcess(),
+   Status = ObpCreateHandle(PsGetCurrentProcess(),
 			   Object,
 			   DesiredAccess,
 			   FALSE,
@@ -238,6 +238,24 @@ ObpRemoveEntryDirectory(POBJECT_HEADER Header)
   KeReleaseSpinLock(&(Header->Parent->Lock),oldlvl);
 }
 
+NTSTATUS
+STDCALL
+ObpCreateDirectory(OB_OPEN_REASON Reason,
+                   PVOID ObjectBody,
+                   PEPROCESS Process,
+                   ULONG HandleCount,
+                   ACCESS_MASK GrantedAccess)
+{
+    PDIRECTORY_OBJECT Directory = ObjectBody;
+    
+    if (Reason == ObCreateHandle)
+    {
+        InitializeListHead(&Directory->head);
+        KeInitializeSpinLock(&Directory->Lock);
+    }
+    
+    return STATUS_SUCCESS;
+}
 
 PVOID
 ObpFindEntryDirectory(PDIRECTORY_OBJECT DirectoryObject,
@@ -350,29 +368,6 @@ ObpParseDirectory(PVOID Object,
 }
 
 
-NTSTATUS STDCALL
-ObpCreateDirectory(PVOID ObjectBody,
-		   PVOID Parent,
-		   PWSTR RemainingPath,
-		   POBJECT_ATTRIBUTES ObjectAttributes)
-{
-  PDIRECTORY_OBJECT DirectoryObject = (PDIRECTORY_OBJECT)ObjectBody;
-
-  DPRINT("ObpCreateDirectory(ObjectBody %x, Parent %x, RemainingPath %S)\n",
-	 ObjectBody, Parent, RemainingPath);
-
-  if (RemainingPath != NULL && wcschr(RemainingPath+1, '\\') != NULL)
-    {
-      return(STATUS_UNSUCCESSFUL);
-    }
-
-  InitializeListHead(&DirectoryObject->head);
-  KeInitializeSpinLock(&DirectoryObject->Lock);
-
-  return(STATUS_SUCCESS);
-}
-
-
 VOID INIT_FUNCTION
 ObInit(VOID)
 /*
@@ -405,8 +400,7 @@ ObInit(VOID)
   ObDirectoryType->Security = NULL;
   ObDirectoryType->QueryName = NULL;
   ObDirectoryType->OkayToClose = NULL;
-  ObDirectoryType->Create = ObpCreateDirectory;
-  ObDirectoryType->DuplicationNotify = NULL;
+  ObDirectoryType->Open = ObpCreateDirectory;
 
   RtlInitUnicodeString(&ObDirectoryType->TypeName,
 		       L"Directory");
@@ -430,8 +424,6 @@ ObInit(VOID)
   ObTypeObjectType->Security = NULL;
   ObTypeObjectType->QueryName = NULL;
   ObTypeObjectType->OkayToClose = NULL;
-  ObTypeObjectType->Create = NULL;
-  ObTypeObjectType->DuplicationNotify = NULL;
 
   RtlInitUnicodeString(&ObTypeObjectType->TypeName,
 		       L"ObjectType");

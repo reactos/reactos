@@ -244,10 +244,9 @@ ExpInitializeTimerImplementation(VOID)
     ExTimerType->Delete = ExpDeleteTimer;
     ExTimerType->Parse = NULL;
     ExTimerType->Security = NULL;
+    ExTimerType->Open = NULL;
     ExTimerType->QueryName = NULL;
     ExTimerType->OkayToClose = NULL;
-    ExTimerType->Create = NULL;
-    ExTimerType->DuplicationNotify = NULL;
     ObpCreateTypeObject(ExTimerType);
 
     /* Initialize the Wait List and Lock */

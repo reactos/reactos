@@ -84,51 +84,31 @@ CleanupWindowStationImpl(VOID)
 
 NTSTATUS
 STDCALL
-IntWinStaObjectCreate(PVOID ObjectBody,
-                      PVOID Parent,
-                      PWSTR RemainingPath,
-                      struct _OBJECT_ATTRIBUTES* ObjectAttributes)
+IntWinStaObjectOpen(ULONG Reason,
+                    PVOID ObjectBody,
+                    PEPROCESS Process,
+                    ULONG HandleCount,
+                    ACCESS_MASK GrantedAccess)
 {
   PWINSTATION_OBJECT WinSta = (PWINSTATION_OBJECT)ObjectBody;
-  UNICODE_STRING UnicodeString;
   NTSTATUS Status;
 
-  if (RemainingPath == NULL)
-	{
-		return STATUS_SUCCESS;
-	}
-
-  if (wcschr((RemainingPath + 1), '\\') != NULL)
-	{
-		return STATUS_UNSUCCESSFUL;
-	}
-
-  RtlInitUnicodeString(&UnicodeString, (RemainingPath + 1));
-
-  DPRINT("Creating window station (0x%X)  Name (%wZ)\n", WinSta, &UnicodeString);
-
-  Status = RtlCreateUnicodeString(&WinSta->Name, UnicodeString.Buffer);
-  if (!NT_SUCCESS(Status))
+  if (Reason == ObCreateHandle)
   {
-    return Status;
-  }
+      DPRINT("Creating window station (0x%X)\n", WinSta);
 
-  KeInitializeSpinLock(&WinSta->Lock);
+      KeInitializeSpinLock(&WinSta->Lock);
 
-  InitializeListHead(&WinSta->DesktopListHead);
+      InitializeListHead(&WinSta->DesktopListHead);
 
-  WinSta->AtomTable = NULL;
+      WinSta->AtomTable = NULL;
 
-  Status = RtlCreateAtomTable(37, &WinSta->AtomTable);
-  if (!NT_SUCCESS(Status))
-  {
-    RtlFreeUnicodeString(&WinSta->Name);
-    return Status;
-  }
+      Status = RtlCreateAtomTable(37, &WinSta->AtomTable);
 
-  WinSta->SystemMenuTemplate = (HANDLE)0;
+      WinSta->SystemMenuTemplate = (HANDLE)0;
 
-  DPRINT("Window station successfully created. Name (%wZ)\n", &WinSta->Name);
+      DPRINT("Window station successfully created.\n");
+    }
 
   return STATUS_SUCCESS;
 }
@@ -508,6 +488,8 @@ NtUserCreateWindowStation(
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       return 0;
    }
+   
+   WindowStationObject->Name = *lpszWindowStationName;
 
    Status = ObInsertObject(
       (PVOID)WindowStationObject,
@@ -519,7 +501,7 @@ NtUserCreateWindowStation(
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("Failed creating window station (%wZ)\n", &WindowStationName);
+      DPRINT1("Failed creating window station (%wZ)\n", &WindowStationName);
       ExFreePool(WindowStationName.Buffer);
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       ObDereferenceObject(WindowStationObject);
@@ -575,9 +557,8 @@ NtUserCreateWindowStation(
        /* FIXME: Complain more loudly? */
    }
 
-   DPRINT("Window station successfully created (%wZ)\n", &WindowStationName);
+   DPRINT("Window station successfully created (%wZ)\n", lpszWindowStationName);
    ExFreePool(WindowStationName.Buffer);
-
    return WindowStation;
 }
 

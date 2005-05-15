@@ -489,12 +489,6 @@ CmiObjectParse(IN PVOID ParsedObject,
 	       IN OUT PWSTR *Path,
 	       IN ULONG Attribute);
 
-NTSTATUS STDCALL
-CmiObjectCreate(PVOID ObjectBody,
-		PVOID Parent,
-		PWSTR RemainingPath,
-		POBJECT_ATTRIBUTES ObjectAttributes);
-
 VOID STDCALL
 CmiObjectDelete(PVOID  DeletedObject);
 

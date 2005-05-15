@@ -39,7 +39,7 @@ static GENERIC_MAPPING ExpDesktopMapping = {
                                DESKTOP_READOBJECTS     | DESKTOP_SWITCHDESKTOP   | DESKTOP_WRITEOBJECTS
 };
 
-OBJECT_CREATE_ROUTINE ExpWindowStationObjectCreate = NULL;
+OBJECT_OPEN_ROUTINE ExpWindowStationObjectOpen = NULL;
 OBJECT_PARSE_ROUTINE ExpWindowStationObjectParse = NULL;
 OBJECT_DELETE_ROUTINE ExpWindowStationObjectDelete = NULL;
 OBJECT_FIND_ROUTINE ExpWindowStationObjectFind = NULL;
@@ -50,16 +50,18 @@ OBJECT_DELETE_ROUTINE ExpDesktopObjectDelete = NULL;
 
 NTSTATUS
 STDCALL
-ExpWinStaObjectCreate(PVOID ObjectBody,
-                      PVOID Parent,
-                      PWSTR RemainingPath,
-                      struct _OBJECT_ATTRIBUTES* ObjectAttributes)
+ExpWinStaObjectOpen(OB_OPEN_REASON Reason,
+                    PVOID ObjectBody,
+                    PEPROCESS Process,
+                    ULONG HandleCount,
+                    ACCESS_MASK GrantedAccess)
 {
     /* Call the Registered Callback */
-    return ExpWindowStationObjectCreate(ObjectBody,
-                                        Parent,
-                                        RemainingPath,
-                                        ObjectAttributes);
+    return ExpWindowStationObjectOpen(Reason,
+                                      ObjectBody,
+                                      Process,
+                                      HandleCount,
+                                      GrantedAccess);
 }
 
 VOID
@@ -101,9 +103,9 @@ ExpWinStaObjectParse(PVOID Object,
 NTSTATUS
 STDCALL
 ExpDesktopCreate(PVOID ObjectBody,
-                       PVOID Parent,
-                       PWSTR RemainingPath,
-                       struct _OBJECT_ATTRIBUTES* ObjectAttributes)
+                 PVOID Parent,
+                 PWSTR RemainingPath,
+                 struct _OBJECT_ATTRIBUTES* ObjectAttributes) 
 {
     /* Call the Registered Callback */
     return ExpDesktopObjectCreate(ObjectBody,
@@ -135,15 +137,13 @@ ExpWin32kInit(VOID)
     ExWindowStationObjectType->NonpagedPoolCharge = sizeof(WINSTATION_OBJECT);
     ExWindowStationObjectType->Mapping = &ExpWindowStationMapping;
     ExWindowStationObjectType->Dump = NULL;
-    ExWindowStationObjectType->Open = NULL;
+    ExWindowStationObjectType->Open = ExpWinStaObjectOpen;
     ExWindowStationObjectType->Close = NULL;
     ExWindowStationObjectType->Delete = ExpWinStaObjectDelete;
     ExWindowStationObjectType->Parse = ExpWinStaObjectParse;
     ExWindowStationObjectType->Security = NULL;
     ExWindowStationObjectType->QueryName = NULL;
     ExWindowStationObjectType->OkayToClose = NULL;
-    ExWindowStationObjectType->Create = ExpWinStaObjectCreate;
-    ExWindowStationObjectType->DuplicationNotify = NULL;
     RtlInitUnicodeString(&ExWindowStationObjectType->TypeName, L"WindowStation");
     ObpCreateTypeObject(ExWindowStationObjectType);
 
@@ -165,8 +165,7 @@ ExpWin32kInit(VOID)
     ExDesktopObjectType->Security = NULL;
     ExDesktopObjectType->QueryName = NULL;
     ExDesktopObjectType->OkayToClose = NULL;
-    ExDesktopObjectType->Create = ExpDesktopCreate;
-    ExDesktopObjectType->DuplicationNotify = NULL;
+   
     RtlInitUnicodeString(&ExDesktopObjectType->TypeName, L"Desktop");
     ObpCreateTypeObject(ExDesktopObjectType);
 }

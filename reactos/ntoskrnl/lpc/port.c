@@ -54,9 +54,8 @@ LpcpInitSystem (VOID)
    LpcPortObjectType->Parse = NULL;
    LpcPortObjectType->Security = NULL;
    LpcPortObjectType->QueryName = NULL;
+   LpcPortObjectType->Open = NULL;
    LpcPortObjectType->OkayToClose = NULL;
-   LpcPortObjectType->Create = NiCreatePort;
-   LpcPortObjectType->DuplicationNotify = NULL;
 
    ObpCreateTypeObject(LpcPortObjectType);
 

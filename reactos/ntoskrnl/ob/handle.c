@@ -459,11 +459,11 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
                                ObjectType->Mapping);
            }
          }
-         Status = ObCreateHandle(TargetProcess,
-                                 ObjectBody,
-                                 DesiredAccess,
-                                 InheritHandle,
-                                 &hTarget);
+         Status = ObpCreateHandle(TargetProcess,
+                                  ObjectBody,
+                                  DesiredAccess,
+                                  InheritHandle,
+                                  &hTarget);
 
          ObDereferenceObject(ObjectBody);
 
@@ -586,7 +586,7 @@ ObKillProcess(PEPROCESS Process)
 
 
 NTSTATUS
-ObCreateHandle(PEPROCESS Process,
+ObpCreateHandle(PEPROCESS Process,
 	       PVOID ObjectBody,
 	       ACCESS_MASK GrantedAccess,
 	       BOOLEAN Inherit,
@@ -605,7 +605,7 @@ ObCreateHandle(PEPROCESS Process,
 
    PAGED_CODE();
 
-   DPRINT("ObCreateHandle(Process %x, obj %x)\n",Process,ObjectBody);
+   DPRINT("ObpCreateHandle(Process %x, obj %x)\n",Process,ObjectBody);
 
    ASSERT(Process);
    ASSERT(ObjectBody);
@@ -941,7 +941,7 @@ ObInsertObject(IN PVOID Object,
   Access = DesiredAccess;
   ObjectHeader = BODY_TO_HEADER(Object);
 
-  return(ObCreateHandle(PsGetCurrentProcess(),
+  return(ObpCreateHandle(PsGetCurrentProcess(),
 			Object,
 			Access,
 			ObjectHeader->Inherit,

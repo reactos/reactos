@@ -65,9 +65,7 @@ ExpInitializeCallbacks(VOID)
    ExCallbackObjectType->Parse = NULL;
    ExCallbackObjectType->Security = NULL;
    ExCallbackObjectType->QueryName = NULL;
-   ExCallbackObjectType->DuplicationNotify = NULL;
    ExCallbackObjectType->OkayToClose = NULL;
-   ExCallbackObjectType->Create = NULL;
    ExCallbackObjectType->Mapping = &ExpCallbackMapping;
    ExCallbackObjectType->NonpagedPoolCharge = sizeof(_INT_CALLBACK_OBJECT);
    Status = ObpCreateTypeObject(ExCallbackObjectType);

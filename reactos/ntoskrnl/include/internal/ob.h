@@ -16,6 +16,15 @@
 
 struct _EPROCESS;
 
+typedef enum _OB_OPEN_REASON
+{    
+    ObCreateHandle,
+    ObOpenHandle,
+    ObDuplicateHandle,
+    ObInheritHandle,
+    ObMaxOpenReason
+} OB_OPEN_REASON;
+
 typedef struct
 {
    CSHORT Type;
@@ -78,12 +87,6 @@ typedef struct _OBJECT_TYPE
    */
   VOID STDCALL_FUNC (*Dump)(VOID);
 
-  /*
-   * PURPOSE: Opens the object
-   * NOTE: To be defined
-   */
-  VOID STDCALL_FUNC (*Open)(VOID);
-
    /*
     * PURPOSE: Called to close an object if OkayToClose returns true
     */
@@ -136,14 +139,11 @@ typedef struct _OBJECT_TYPE
    */
   VOID STDCALL_FUNC (*OkayToClose)(VOID);
 
-  NTSTATUS STDCALL_FUNC (*Create)(PVOID ObjectBody,
-              PVOID Parent,
-              PWSTR RemainingPath,
-              struct _OBJECT_ATTRIBUTES* ObjectAttributes);
-
-  VOID STDCALL_FUNC (*DuplicationNotify)(PEPROCESS DuplicateTo,
-                PEPROCESS DuplicateFrom,
-                PVOID Object);
+  NTSTATUS STDCALL_FUNC (*Open)(OB_OPEN_REASON Reason,
+                                PVOID ObjectBody,
+                                PEPROCESS Process,
+                                ULONG HandleCount,
+                                ACCESS_MASK GrantedAccess);
 } OBJECT_TYPE;
 
 
@@ -259,7 +259,7 @@ VOID
 ObInitSymbolicLinkImplementation(VOID);
 
 
-NTSTATUS ObCreateHandle(struct _EPROCESS* Process,
+NTSTATUS ObpCreateHandle(struct _EPROCESS* Process,
 			PVOID ObjectBody,
 			ACCESS_MASK GrantedAccess,
 			BOOLEAN Inherit,

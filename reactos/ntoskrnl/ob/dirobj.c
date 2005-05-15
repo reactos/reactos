@@ -475,6 +475,7 @@ NtCreateDirectoryObject (OUT PHANDLE DirectoryHandle,
                           0,
                           0,
                           (PVOID*)&Directory);
+
   if(NT_SUCCESS(Status))
   {
     Status = ObInsertObject((PVOID)Directory,

@@ -22,7 +22,13 @@ typedef struct _RETENTION_CHECK_PARAMS
   POBJECT_HEADER ObjectHeader;
 } RETENTION_CHECK_PARAMS, *PRETENTION_CHECK_PARAMS;
 
-
+/* TEMPORARY HACK. DO NOT REMOVE -- Alex */
+NTSTATUS
+STDCALL
+ExpDesktopCreate(PVOID ObjectBody,
+                 PVOID Parent,
+                 PWSTR RemainingPath,
+                 struct _OBJECT_ATTRIBUTES* ObjectAttributes);
 /* FUNCTIONS ************************************************************/
 
 NTSTATUS
@@ -733,6 +739,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
       RtlInitUnicodeString(&RemainingPath, NULL);
     }
 
+    DPRINT("Allocating memory\n");
   Header = (POBJECT_HEADER)ExAllocatePoolWithTag(NonPagedPool,
 						 OBJECT_ALLOC_SIZE(ObjectSize),
 						 Type->Tag);
@@ -786,14 +793,39 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
       ObjectAttached = TRUE;
     }
 
-  DPRINT("About to call Create Routine\n");
-  if (Header->ObjectType->Create != NULL)
-    {
-      DPRINT("Calling %x\n", Header->ObjectType->Create);
-      Status = Header->ObjectType->Create(HEADER_TO_BODY(Header),
-					  Parent,
-					  RemainingPath.Buffer,
-					  ObjectAttributes);
+    if ((Header->ObjectType == IoFileObjectType) ||
+        (Header->ObjectType == ExDesktopObjectType) ||
+        (Header->ObjectType->Open != NULL))
+    {    
+     DPRINT("About to call Open Routine\n");
+     if (Header->ObjectType == IoFileObjectType)
+     {
+         /* TEMPORARY HACK. DO NOT TOUCH -- Alex */
+         DPRINT("Calling IopCreateFile\n");
+         Status = IopCreateFile(HEADER_TO_BODY(Header),
+                                Parent,
+                                RemainingPath.Buffer,            
+                                ObjectAttributes);
+     }
+     else if (Header->ObjectType == ExDesktopObjectType)
+     {
+         /* TEMPORARY HACK. DO NOT TOUCH -- Alex */
+         DPRINT("Calling ExpDesktopCreate\n");
+         Status = ExpDesktopCreate(HEADER_TO_BODY(Header),
+                                   Parent,
+                                   RemainingPath.Buffer,            
+                                   ObjectAttributes);
+     }
+     else if (Header->ObjectType->Open != NULL)
+     {
+      DPRINT("Calling %x\n", Header->ObjectType->Open);
+      Status = Header->ObjectType->Open(ObCreateHandle,
+                                        HEADER_TO_BODY(Header),
+                                        NULL,
+                                        0,
+                                        0);
+     }
+
       if (!NT_SUCCESS(Status))
 	{
 	  if (ObjectAttached == TRUE)
@@ -810,7 +842,8 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
 	  DPRINT("Create Failed\n");
 	  return Status;
 	}
-    }
+  }
+
   RtlFreeUnicodeString(&RemainingPath);
 
   SeCaptureSubjectContext(&SubjectContext);
@@ -960,7 +993,7 @@ ObOpenObjectByPointer(IN POBJECT Object,
 	return Status;
      }
 
-   Status = ObCreateHandle(PsGetCurrentProcess(),
+   Status = ObpCreateHandle(PsGetCurrentProcess(),
 			   Object,
 			   DesiredAccess,
 			   (BOOLEAN)(HandleAttributes & OBJ_INHERIT),

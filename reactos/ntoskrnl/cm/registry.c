@@ -366,8 +366,6 @@ CmInitializeRegistry(VOID)
   CmiKeyType->Security = CmiObjectSecurity;
   CmiKeyType->QueryName = CmiObjectQueryName;
   CmiKeyType->OkayToClose = NULL;
-  CmiKeyType->Create = CmiObjectCreate;
-  CmiKeyType->DuplicationNotify = NULL;
   RtlInitUnicodeString(&CmiKeyType->TypeName, L"Key");
 
   ObpCreateTypeObject (CmiKeyType);

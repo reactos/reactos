@@ -33,29 +33,6 @@ static GENERIC_MAPPING ObpSymbolicLinkMapping = {
 
 /**********************************************************************
  * NAME							INTERNAL
- *	ObpCreateSymbolicLink
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURNN VALUE
- *	Status.
- *
- * REVISIONS
- */
-NTSTATUS STDCALL
-ObpCreateSymbolicLink(PVOID Object,
-		      PVOID Parent,
-		      PWSTR RemainingPath,
-		      POBJECT_ATTRIBUTES ObjectAttributes)
-{
-  return(STATUS_SUCCESS);
-}
-
-
-/**********************************************************************
- * NAME							INTERNAL
  *	ObpDeleteSymbolicLink
  *
  * DESCRIPTION
@@ -175,10 +152,9 @@ ObInitSymbolicLinkImplementation (VOID)
   ObSymbolicLinkType->Delete = ObpDeleteSymbolicLink;
   ObSymbolicLinkType->Parse = ObpParseSymbolicLink;
   ObSymbolicLinkType->Security = NULL;
+  ObSymbolicLinkType->Open = NULL;
   ObSymbolicLinkType->QueryName = NULL;
   ObSymbolicLinkType->OkayToClose = NULL;
-  ObSymbolicLinkType->Create = ObpCreateSymbolicLink;
-  ObSymbolicLinkType->DuplicationNotify = NULL;
 
   RtlInitUnicodeString(&ObSymbolicLinkType->TypeName,
 		       L"SymbolicLink");

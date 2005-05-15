@@ -78,8 +78,7 @@ PsInitJobManagment ( VOID )
     PsJobType->Security = NULL;
     PsJobType->QueryName = NULL;
     PsJobType->OkayToClose = NULL;
-    PsJobType->Create = NULL;
-    PsJobType->DuplicationNotify = NULL;
+    PsJobType->Open = NULL;
 
     RtlInitUnicodeString(&PsJobType->TypeName, L"Job");
 

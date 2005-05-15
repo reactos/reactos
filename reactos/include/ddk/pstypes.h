@@ -71,11 +71,20 @@ typedef NTSTATUS STDCALL_FUNC
  * Callbacks used for Win32 objects... this define won't be needed after the Object Manager
  * rewrite -- Alex
  */
+ 
+/* TEMPORARY HACK */
 typedef NTSTATUS STDCALL_FUNC
 (*OBJECT_CREATE_ROUTINE)(PVOID ObjectBody,
                          PVOID Parent,
                          PWSTR RemainingPath,
                          struct _OBJECT_ATTRIBUTES* ObjectAttributes);
+                         
+typedef NTSTATUS STDCALL_FUNC
+(*OBJECT_OPEN_ROUTINE)(ULONG Reason,
+                       PVOID ObjectBody,
+                       PEPROCESS Process,
+                       ULONG HandleCount,
+                       ACCESS_MASK GrantedAccess);
 
 typedef NTSTATUS STDCALL_FUNC
 (*OBJECT_PARSE_ROUTINE)(PVOID Object,
@@ -93,7 +102,7 @@ typedef PVOID STDCALL_FUNC
                        ULONG Attributes);
                        
 typedef struct _W32_OBJECT_CALLBACK {
-    OBJECT_CREATE_ROUTINE WinStaCreate;
+    OBJECT_OPEN_ROUTINE WinStaCreate;
     OBJECT_PARSE_ROUTINE WinStaParse;
     OBJECT_DELETE_ROUTINE WinStaDelete;
     OBJECT_FIND_ROUTINE WinStaFind;

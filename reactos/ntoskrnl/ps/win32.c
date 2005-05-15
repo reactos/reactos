@@ -21,7 +21,7 @@ static PW32_THREAD_CALLBACK PspWin32ThreadCallback = NULL;
 static ULONG PspWin32ProcessSize = 0;
 static ULONG PspWin32ThreadSize = 0;
 
-extern OBJECT_CREATE_ROUTINE ExpWindowStationObjectCreate;
+extern OBJECT_OPEN_ROUTINE ExpWindowStationObjectOpen;
 extern OBJECT_PARSE_ROUTINE ExpWindowStationObjectParse;
 extern OBJECT_DELETE_ROUTINE ExpWindowStationObjectDelete;
 extern OBJECT_FIND_ROUTINE ExpWindowStationObjectFind;
@@ -92,7 +92,7 @@ PsEstablishWin32Callouts (PW32_PROCESS_CALLBACK W32ProcessCallback,
   PspWin32ProcessSize = W32ProcessSize;
   PspWin32ThreadSize = W32ThreadSize;
 
-  ExpWindowStationObjectCreate = W32ObjectCallback->WinStaCreate;
+  ExpWindowStationObjectOpen = W32ObjectCallback->WinStaCreate;
   ExpWindowStationObjectParse = W32ObjectCallback->WinStaParse;
   ExpWindowStationObjectDelete = W32ObjectCallback->WinStaDelete;
   ExpWindowStationObjectFind = W32ObjectCallback->WinStaFind;

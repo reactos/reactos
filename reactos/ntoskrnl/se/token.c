@@ -580,8 +580,7 @@ SepInitializeTokenImplementation(VOID)
   SepTokenObjectType->Security = NULL;
   SepTokenObjectType->QueryName = NULL;
   SepTokenObjectType->OkayToClose = NULL;
-  SepTokenObjectType->Create = NULL;
-  SepTokenObjectType->DuplicationNotify = NULL;
+  SepTokenObjectType->Open = NULL;
 
   RtlInitUnicodeString(&SepTokenObjectType->TypeName, L"Token");
   ObpCreateTypeObject (SepTokenObjectType);

@@ -52,8 +52,6 @@ ExpInitializeEventPairImplementation(VOID)
     ExEventPairObjectType->Security = NULL;
     ExEventPairObjectType->QueryName = NULL;
     ExEventPairObjectType->OkayToClose = NULL;
-    ExEventPairObjectType->Create = NULL;
-    ExEventPairObjectType->DuplicationNotify = NULL;
     ObpCreateTypeObject(ExEventPairObjectType);
 }
 

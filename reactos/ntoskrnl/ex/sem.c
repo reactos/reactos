@@ -54,8 +54,6 @@ ExpInitializeSemaphoreImplementation(VOID)
     ExSemaphoreObjectType->Security = NULL;
     ExSemaphoreObjectType->QueryName = NULL;
     ExSemaphoreObjectType->OkayToClose = NULL;
-    ExSemaphoreObjectType->Create = NULL;
-    ExSemaphoreObjectType->DuplicationNotify = NULL;
     ObpCreateTypeObject(ExSemaphoreObjectType);
 }
 

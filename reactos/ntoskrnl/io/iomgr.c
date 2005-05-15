@@ -51,7 +51,7 @@ NPAGED_LOOKASIDE_LIST IoLargeIrpLookaside;
 NPAGED_LOOKASIDE_LIST IoSmallIrpLookaside;
 
 /* INIT FUNCTIONS ************************************************************/
-
+                                
 VOID
 INIT_FUNCTION
 IoInitCancelHandling(VOID)
@@ -217,8 +217,6 @@ IoInit (VOID)
   IoDeviceObjectType->Security = NULL;
   IoDeviceObjectType->QueryName = NULL;
   IoDeviceObjectType->OkayToClose = NULL;
-  IoDeviceObjectType->Create = NULL;
-  IoDeviceObjectType->DuplicationNotify = NULL;
 
   RtlInitUnicodeString(&IoDeviceObjectType->TypeName, L"Device");
 
@@ -246,8 +244,6 @@ IoInit (VOID)
   IoFileObjectType->Security = IopSecurityFile;
   IoFileObjectType->QueryName = IopQueryNameFile;
   IoFileObjectType->OkayToClose = NULL;
-  IoFileObjectType->Create = IopCreateFile;
-  IoFileObjectType->DuplicationNotify = NULL;
 
   RtlInitUnicodeString(&IoFileObjectType->TypeName, L"File");
 

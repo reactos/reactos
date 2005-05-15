@@ -68,11 +68,10 @@ ExpInitializeMutantImplementation(VOID)
     ExMutantObjectType->Close = NULL;
     ExMutantObjectType->Delete = ExpDeleteMutant;
     ExMutantObjectType->Parse = NULL;
+    ExMutantObjectType->Open = NULL;
     ExMutantObjectType->Security = NULL;
     ExMutantObjectType->QueryName = NULL;
     ExMutantObjectType->OkayToClose = NULL;
-    ExMutantObjectType->Create = NULL;
-    ExMutantObjectType->DuplicationNotify = NULL;
     ObpCreateTypeObject(ExMutantObjectType);
 }
 
