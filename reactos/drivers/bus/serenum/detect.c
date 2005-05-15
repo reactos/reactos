@@ -62,6 +62,44 @@ SerenumDeviceIoControl(
 }
 
 static NTSTATUS
+SerenumSendIrp(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN ULONG MajorFunction)
+{
+	KEVENT Event;
+	PIRP Irp;
+	IO_STATUS_BLOCK IoStatus;
+	NTSTATUS Status;
+
+	KeInitializeEvent(&Event, NotificationEvent, FALSE);
+	
+	Irp = IoBuildSynchronousFsdRequest(
+		MajorFunction,
+		DeviceObject,
+		NULL,
+		0,
+		NULL,
+		&Event,
+		&IoStatus);
+	if (Irp == NULL)
+	{
+		DPRINT("Serenum: IoBuildSynchronousFsdRequest() failed\n");
+		return STATUS_INSUFFICIENT_RESOURCES;
+	}
+	
+	Status = IoCallDriver(DeviceObject, Irp);
+
+	if (Status == STATUS_PENDING)
+	{
+		DPRINT("Serenum: Operation pending\n");
+		KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
+		Status = IoStatus.Status;
+	}
+
+	return Status;
+}
+
+static NTSTATUS
 ReadBytes(
 	IN PDEVICE_OBJECT LowerDevice,
 	OUT PUCHAR Buffer,
@@ -224,91 +262,95 @@ SerenumDetectPnpDevice(
 	SERIAL_TIMEOUTS Timeouts;
 	SERIALPERF_STATS PerfStats;
 	NTSTATUS Status;
+	
+	/* Open port */
+	Status = SerenumSendIrp(LowerDevice, IRP_MJ_CREATE);
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 
 	/* 1. COM port initialization, check for device enumerate */
 	CHECKPOINT;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_CLR_DTR,
 		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_CLR_RTS,
 		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	SerenumWait(200);
 	Size = sizeof(Msr);
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_MODEMSTATUS,
 		NULL, 0, &Msr, &Size);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	if ((Msr & SR_MSR_DSR) == 0) goto SerenumDisconnectIdle;
 
 	/* 2. COM port setup, 1st phase */
 	CHECKPOINT;
-	BaudRate = SERIAL_BAUD_1200;
+	BaudRate = 1200;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_BAUD_RATE,
 		&BaudRate, sizeof(BaudRate), NULL, 0);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	Lcr.WordLength = 7;
 	Lcr.Parity = NO_PARITY;
 	Lcr.StopBits = STOP_BIT_1;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_LINE_CONTROL,
 		&Lcr, sizeof(Lcr), NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_CLR_DTR,
 		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_CLR_RTS,
 		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	SerenumWait(200);
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_DTR,
 		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	SerenumWait(200);
 
 	/* 3. Wait for response, 1st phase */
 	CHECKPOINT;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_RTS,
 		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	Timeouts.ReadIntervalTimeout = 0;
 	Timeouts.ReadTotalTimeoutMultiplier = 0;
 	Timeouts.ReadTotalTimeoutConstant = 200;
 	Timeouts.WriteTotalTimeoutMultiplier = Timeouts.WriteTotalTimeoutConstant = 0;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_TIMEOUTS,
 		&Timeouts, sizeof(Timeouts), NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	Status = ReadBytes(LowerDevice, Buffer, sizeof(Buffer), &Size);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	if (Size != 0) goto SerenumCollectPnpComDeviceId;
 
 	/* 4. COM port setup, 2nd phase */
 	CHECKPOINT;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_CLR_DTR,
 		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_CLR_RTS,
 		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	Purge = SERIAL_PURGE_RXABORT | SERIAL_PURGE_RXCLEAR;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_PURGE,
 		&Purge, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	SerenumWait(200);
 
 	/* 5. Wait for response, 2nd phase */
 	CHECKPOINT;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_DTR,
 		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_RTS,
 		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	Status = ReadBytes(LowerDevice, Buffer, 1, &TotalBytesReceived);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	if (TotalBytesReceived != 0) goto SerenumCollectPnpComDeviceId;
 	Size = sizeof(Msr);
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_MODEMSTATUS,
 		NULL, 0, &Msr, &Size);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	if ((Msr & SR_MSR_DSR) == 0) goto SerenumVerifyDisconnect; else goto SerenumConnectIdle;
 
 	/* 6. Collect PnP COM device ID */
@@ -319,14 +361,14 @@ SerenumCollectPnpComDeviceId:
 	Timeouts.ReadTotalTimeoutConstant = 2200;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_TIMEOUTS,
 		&Timeouts, sizeof(Timeouts), NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	Status = ReadBytes(LowerDevice, &Buffer[TotalBytesReceived], sizeof(Buffer) - TotalBytesReceived, &Size);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	TotalBytesReceived += Size;
 	Size = sizeof(PerfStats);
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_STATS,
 		NULL, 0, &PerfStats, &Size);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	if (PerfStats.FrameErrorCount + PerfStats.ParityErrorCount != 0) goto SerenumConnectIdle;
 	for (i = 0; i < TotalBytesReceived; i++)
 	{
@@ -336,7 +378,10 @@ SerenumCollectPnpComDeviceId:
 	if (TotalBytesReceived == 1 || BufferContainsEndId)
 	{
 		if (SerenumIsValidPnpIdString(Buffer, TotalBytesReceived))
-			return ReportDetectedPnpDevice(Buffer, TotalBytesReceived);
+		{
+			Status = ReportDetectedPnpDevice(Buffer, TotalBytesReceived);
+			goto ByeBye;
+		}
 		goto SerenumConnectIdle;
 	}
 	if (!BufferContainsBeginId) goto SerenumConnectIdle;
@@ -344,7 +389,7 @@ SerenumCollectPnpComDeviceId:
 	Size = sizeof(Msr);
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_MODEMSTATUS,
 		NULL, 0, &Msr, &Size);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	if ((Msr & SR_MSR_DSR) == 0) goto SerenumVerifyDisconnect;
 
 	/* 7. Verify disconnect */
@@ -352,10 +397,10 @@ SerenumVerifyDisconnect:
 	CHECKPOINT;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_DTR,
 		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_CLR_RTS,
 		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	SerenumWait(5000);
 	goto SerenumDisconnectIdle;
 
@@ -364,24 +409,25 @@ SerenumConnectIdle:
 	CHECKPOINT;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_DTR,
 		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_CLR_RTS,
 		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
-	BaudRate = SERIAL_BAUD_300;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
+	BaudRate = 300;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_BAUD_RATE,
 		&BaudRate, sizeof(BaudRate), NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	Lcr.WordLength = 7;
 	Lcr.Parity = NO_PARITY;
 	Lcr.StopBits = STOP_BIT_1;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_LINE_CONTROL,
 		&Lcr, sizeof(Lcr), NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	if (TotalBytesReceived == 0)
-		return STATUS_DEVICE_NOT_CONNECTED;
+		Status = STATUS_DEVICE_NOT_CONNECTED;
 	else
-		return STATUS_SUCCESS;
+		Status = STATUS_SUCCESS;
+	goto ByeBye;
 
 	/* 9. Disconnect idle */
 SerenumDisconnectIdle:
@@ -389,21 +435,27 @@ SerenumDisconnectIdle:
 	/* FIXME: report to OS device removal, if it was present */
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_DTR,
 		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_CLR_RTS,
 		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
-	BaudRate = SERIAL_BAUD_300;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
+	BaudRate = 300;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_BAUD_RATE,
 		&BaudRate, sizeof(BaudRate), NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	Lcr.WordLength = 7;
 	Lcr.Parity = NO_PARITY;
 	Lcr.StopBits = STOP_BIT_1;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_LINE_CONTROL,
 		&Lcr, sizeof(Lcr), NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
-	return STATUS_DEVICE_NOT_CONNECTED;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
+	Status = STATUS_DEVICE_NOT_CONNECTED;
+
+ByeBye:
+	/* Close port */
+	SerenumSendIrp(LowerDevice, IRP_MJ_CLOSE);
+	SerenumSendIrp(LowerDevice, IRP_MJ_CLEANUP);
+	return Status;
 }
 
 NTSTATUS
@@ -429,13 +481,17 @@ SerenumDetectLegacyDevice(
 		LowerDevice);
 
 	RtlZeroMemory(Buffer, sizeof(Buffer));
+	
+	/* Open port */
+	Status = SerenumSendIrp(LowerDevice, IRP_MJ_CREATE);
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 
 	/* Reset UART */
 	CHECKPOINT;
 	Mcr = 0; /* MCR: DTR/RTS/OUT2 off */
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_MODEM_CONTROL,
 		&Mcr, sizeof(Mcr), NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 
 	/* Set communications parameters */
 	CHECKPOINT;
@@ -443,26 +499,26 @@ SerenumDetectLegacyDevice(
 	Fcr = 0;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_FIFO_CONTROL,
 		&Fcr, sizeof(Fcr), NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	/* Set serial port speed */
-	BaudRate = SERIAL_BAUD_1200;
+	BaudRate = 1200;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_BAUD_RATE,
 		&BaudRate, sizeof(BaudRate), NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	/* Set LCR */
 	LCR.WordLength = 7;
 	LCR.Parity = NO_PARITY;
 	LCR.StopBits = STOP_BITS_2;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_LINE_CONTROL,
 		&LCR, sizeof(LCR), NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 
 	/* Flush receive buffer */
 	CHECKPOINT;
 	Command = SERIAL_PURGE_RXCLEAR;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_MODEM_CONTROL,
 		&Command, sizeof(Command), NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	/* Wait 100 ms */
 	SerenumWait(100);
 
@@ -470,10 +526,10 @@ SerenumDetectLegacyDevice(
 	CHECKPOINT;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_DTR,
 		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_RTS,
 		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 
 	/* Set timeout to 500 microseconds */
 	CHECKPOINT;
@@ -483,12 +539,12 @@ SerenumDetectLegacyDevice(
 	Timeouts.WriteTotalTimeoutMultiplier = Timeouts.WriteTotalTimeoutConstant = 0;
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_TIMEOUTS,
 		&Timeouts, sizeof(Timeouts), NULL, NULL);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 
 	/* Fill the read buffer */
 	CHECKPOINT;
 	Status = ReadBytes(LowerDevice, Buffer, sizeof(Buffer)/sizeof(Buffer[0]), &Count);
-	if (!NT_SUCCESS(Status)) return Status;
+	if (!NT_SUCCESS(Status)) goto ByeBye;
 
 	for (i = 0; i < Count; i++)
 	{
@@ -506,7 +562,7 @@ SerenumDetectLegacyDevice(
 				&DeviceDescription, &DeviceId, &HardwareIds, &CompatibleIds);
 			RtlFreeUnicodeString(&HardwareIds);
 			RtlFreeUnicodeString(&CompatibleIds);
-			return Status;
+			goto ByeBye;
 		}
 		else if (Buffer[i] == 'M')
 		{
@@ -514,7 +570,8 @@ SerenumDetectLegacyDevice(
 			if (i == sizeof(Buffer) - 1)
 			{
 				/* Overflow Error */
-				return STATUS_DEVICE_NOT_CONNECTED;
+				Status = STATUS_DEVICE_NOT_CONNECTED;
+				goto ByeBye;
 			}
 			switch (Buffer[i + 1])
 			{
@@ -539,9 +596,15 @@ SerenumDetectLegacyDevice(
 				&DeviceDescription, &DeviceId, &HardwareIds, &CompatibleIds);
 			RtlFreeUnicodeString(&HardwareIds);
 			RtlFreeUnicodeString(&CompatibleIds);
-			return Status;
+			goto ByeBye;
 		}
 	}
 
-	return STATUS_DEVICE_NOT_CONNECTED;
+	Status = STATUS_DEVICE_NOT_CONNECTED;
+	
+ByeBye:
+	/* Close port */
+	SerenumSendIrp(LowerDevice, IRP_MJ_CLOSE);
+	SerenumSendIrp(LowerDevice, IRP_MJ_CLEANUP);
+	return Status;
 }
