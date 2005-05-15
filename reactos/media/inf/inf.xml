@@ -1,4 +1,4 @@
-<installfile base="system32/inf">layout.inf</installfile>
-<installfile base="system32/inf">NET_NIC.inf</installfile>
-<installfile base="system32/inf">scsi.inf</installfile>
-<installfile base="system32/inf">syssetup.inf</installfile>
+<installfile base="inf">layout.inf</installfile>
+<installfile base="inf">NET_NIC.inf</installfile>
+<installfile base="inf">scsi.inf</installfile>
+<installfile base="inf">syssetup.inf</installfile>
