@@ -280,6 +280,7 @@ MingwBackend::ProcessModules ()
 
 	GenerateAllTarget ( v );
 	GenerateInitTarget ();
+	GenerateRegTestsRunTarget ();
 
 	for ( i = 0; i < iend; i++ )
 		v[i]->GenerateOtherMacros();
@@ -555,6 +556,18 @@ MingwBackend::GenerateInitTarget () const
 	fprintf ( fMakefile,
 	          "INIT = %s\n",
 	          GetBuildToolDependencies ().c_str () );
+	fprintf ( fMakefile, "\n" );
+}
+
+void
+MingwBackend::GenerateRegTestsRunTarget () const
+{
+	fprintf ( fMakefile,
+	          "REGTESTS_RUN_TARGET = regtests.dll\n" );
+	fprintf ( fMakefile,
+	          "$(REGTESTS_RUN_TARGET):\n" );
+	fprintf ( fMakefile,
+	          "\t$(cp) $(REGTESTS_TARGET) $(REGTESTS_RUN_TARGET)\n" );
 	fprintf ( fMakefile, "\n" );
 }
 

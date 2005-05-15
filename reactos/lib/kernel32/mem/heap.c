@@ -32,17 +32,6 @@
 #define NDEBUG
 #include "../include/debug.h"
 
-PVOID WINAPI HeapAlloc(HANDLE hHeap, DWORD dwFlags, DWORD dwBytes)
-{
-   return RtlAllocateHeap(hHeap, dwFlags, dwBytes);
-}
-
-BOOL WINAPI HeapFree(HANDLE hHeap, DWORD dwFlags, LPVOID lpMem)
-{
-   return RtlFreeHeap(hHeap, dwFlags, lpMem);
-}
-
-
 /*********************************************************************
 *                     HeapCreate -- KERNEL32                         *
 *********************************************************************/

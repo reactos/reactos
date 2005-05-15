@@ -79,6 +79,16 @@ GetDirectory ( const string& filename )
 }
 
 string
+GetFilename ( const string& filename )
+{
+	size_t index = filename.find_last_of ( CSEP );
+	if ( index == string::npos )
+		return filename;
+	else
+		return filename.substr ( index + 1, filename.length () - index );
+}
+
+string
 NormalizeFilename ( const string& filename )
 {
 	if ( filename == "" )
@@ -729,6 +739,13 @@ File::File ( const string& _name, bool _first,
 void
 File::ProcessXML()
 {
+}
+
+bool
+File::IsGeneratedFile () const
+{
+	string extension = GetExtension ( name );
+	return ( extension == ".spec" || extension == ".SPEC" );
 }
 
 

@@ -8,7 +8,6 @@
 	<symbol newname="RtlFreeHeap">HeapFree@12</symbol>
 	<symbol>LdrAccessResource@16</symbol>
 	<symbol>LdrDisableThreadCalloutsForDll@4</symbol>
-	<symbol>LdrDisableThreadCalloutsForDll@4</symbol>
 	<symbol>LdrFindResource_U@16</symbol>
 	<symbol>LdrLoadDll@16</symbol>
 	<symbol>LdrShutdownProcess@0</symbol>

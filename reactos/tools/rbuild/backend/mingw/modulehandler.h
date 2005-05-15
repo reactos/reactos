@@ -63,6 +63,7 @@ public:
 	void GenerateInstallTarget () const;
 	static bool ReferenceObjects ( const Module& module );
 protected:
+	virtual void GetModuleSpecificSourceFiles ( std::vector<File*>& sourceFiles );
 	std::string GetWorkingDirectory () const;
 	std::string GetBasename ( const std::string& filename ) const;
 	std::string GetActualSourceFilename ( const std::string& filename ) const;
@@ -73,7 +74,8 @@ protected:
 	                  string_list& targets );
 	void GetModuleDependencies ( string_list& dependencies );
 	std::string GetAllDependencies () const;
-	void GetSourceFilenames ( string_list& list, bool includeGeneratedFiles = true ) const;
+	void GetSourceFilenames ( string_list& list,
+                                  bool includeGeneratedFiles ) const;
 	void GetSourceFilenamesWithoutGeneratedFiles ( string_list& list ) const;
 	std::string GetObjectFilename ( const std::string& sourceFilename,
 	                                string_list* pclean_files ) const;
@@ -174,6 +176,7 @@ private:
 	static std::string RemoveVariables ( std::string path);
 	void GenerateBuildMapCode ();
 	void GenerateBuildNonSymbolStrippedCode ();
+	void CleanupFileVector ( std::vector<File*>& sourceFiles );
 public:
 	const Module& module;
 	string_list clean_files;
@@ -389,6 +392,8 @@ public:
 	MingwTestModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
+protected:
+	virtual void GetModuleSpecificSourceFiles ( std::vector<File*>& sourceFiles );
 private:
 	void GenerateTestModuleTarget ();
 };

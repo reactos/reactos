@@ -77,6 +77,7 @@ private:
 	void GenerateAllTarget ( const std::vector<MingwModuleHandler*>& handlers ) const;
 	std::string GetBuildToolDependencies () const;
 	void GenerateInitTarget () const;
+	void GenerateRegTestsRunTarget () const;
 	void GenerateXmlBuildFilesMacro() const;
 	std::string GetBin2ResExecutable ();
 	void UnpackWineResources ();

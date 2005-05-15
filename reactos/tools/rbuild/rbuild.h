@@ -218,6 +218,8 @@ public:
 	bool HasFileWithExtension ( const IfableData&, const std::string& extension ) const;
 	void InvokeModule () const;
 	void ProcessXML ();
+	void GetSourceFilenames ( string_list& list,
+                                  bool includeGeneratedFiles ) const;
 private:
 	std::string GetDefaultModuleExtension () const;
 	std::string GetDefaultModuleEntrypoint () const;
@@ -282,6 +284,7 @@ public:
 	       std::string _switches );
 
 	void ProcessXML();
+	bool IsGeneratedFile () const;
 };
 
 
@@ -468,6 +471,16 @@ private:
                                                  const StubbedComponent& component,
 	                                         int* stubIndex );
 	void WriteStubsFile ( Module& module );
+	std::string GetStartupFilename ( Module& module );
+	std::string GetTestDispatcherName ( std::string filename );
+	bool IsTestFile ( std::string& filename ) const;
+	void GetSourceFilenames ( string_list& list,
+                                  Module& module ) const;
+	char* WriteTestDispatcherPrototypesToStartupFile ( char* buffer,
+                                                           Module& module );
+	char* WriteRegisterTestsFunctionToStartupFile ( char* buffer,
+	                                                Module& module );
+	void WriteStartupFile ( Module& module );
 };
 
 
@@ -687,6 +700,9 @@ GetExtension ( const std::string& filename );
 
 extern std::string
 GetDirectory ( const std::string& filename );
+
+extern std::string
+GetFilename ( const std::string& filename );
 
 extern std::string
 NormalizeFilename ( const std::string& filename );

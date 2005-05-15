@@ -349,16 +349,15 @@ MingwModuleHandler::GetModuleDependencies (
 }
 
 void
-MingwModuleHandler::GetSourceFilenames (
-	string_list& list,
-	bool includeGeneratedFiles ) const
+MingwModuleHandler::GetSourceFilenames ( string_list& list,
+                                         bool includeGeneratedFiles ) const
 {
 	size_t i;
 
 	const vector<File*>& files = module.non_if_data.files;
 	for ( i = 0; i < files.size (); i++ )
 	{
-		if ( includeGeneratedFiles || !IsGeneratedFile ( *files[i] ) )
+		if ( includeGeneratedFiles || !files[i]->IsGeneratedFile () )
 		{
 			list.push_back (
 				GetActualSourceFilename ( files[i]->name ) );
@@ -379,7 +378,7 @@ MingwModuleHandler::GetSourceFilenames (
 		for ( j = 0; j < files.size (); j++ )
 		{
 			File& file = *files[j];
-			if ( includeGeneratedFiles || !IsGeneratedFile ( file ) )
+			if ( includeGeneratedFiles || !file.IsGeneratedFile () )
 			{
 				list.push_back (
 					GetActualSourceFilename ( file.name ) );
@@ -737,6 +736,18 @@ MingwModuleHandler::GenerateMacros (
 }
 
 void
+MingwModuleHandler::CleanupFileVector ( vector<File*>& sourceFiles )
+{
+	for (size_t i = 0; i < sourceFiles.size (); i++)
+		delete sourceFiles[i];
+}
+
+void
+MingwModuleHandler::GetModuleSpecificSourceFiles ( vector<File*>& sourceFiles )
+{
+}
+
+void
 MingwModuleHandler::GenerateObjectMacros (
 	const char* assignmentOperation,
 	const IfableData& data,
@@ -806,6 +817,19 @@ MingwModuleHandler::GenerateObjectMacros (
 				"endif\n\n" );
 		}
 	}
+
+	vector<File*> sourceFiles;
+	GetModuleSpecificSourceFiles ( sourceFiles );
+	for ( i = 0; i < sourceFiles.size (); i++ )
+	{
+		fprintf (
+			fMakefile,
+			"%s += %s\n",
+			objectsMacro.c_str(),
+			GetObjectFilename (
+				sourceFiles[i]->name, NULL ).c_str () );
+	}
+	CleanupFileVector ( sourceFiles );
 }
 
 void
@@ -1362,12 +1386,13 @@ MingwModuleHandler::GenerateLinkerCommand (
 void
 MingwModuleHandler::GeneratePhonyTarget() const
 {
-	string targetMacro ( GetTargetMacro(module) );
-	fprintf ( fMakefile, ".PHONY: %s\n\n",
+	string targetMacro ( GetTargetMacro ( module ) );
+	fprintf ( fMakefile,
+	          ".PHONY: %s\n\n",
 	          targetMacro.c_str ());
 	fprintf ( fMakefile, "%s: | %s\n",
 	          targetMacro.c_str (),
-	          GetDirectory(GetTargetFilename(module,NULL)).c_str () );
+	          GetDirectory ( GetTargetFilename ( module, NULL ) ).c_str () );
 }
 
 void
@@ -1407,6 +1432,20 @@ MingwModuleHandler::GenerateObjectFileTargets (
 		                            windresflagsMacro,
 		                            widlflagsMacro );
 	}
+
+	vector<File*> sourceFiles;
+	GetModuleSpecificSourceFiles ( sourceFiles );
+	for ( i = 0; i < sourceFiles.size (); i++ )
+	{
+		GenerateCommands ( *sourceFiles[i],
+		                   cc,
+		                   cppc,
+		                   cflagsMacro,
+		                   nasmflagsMacro,
+		                   windresflagsMacro,
+		                   widlflagsMacro );
+	}
+	CleanupFileVector ( sourceFiles );
 }
 
 void
@@ -1665,25 +1704,32 @@ MingwModuleHandler::GenerateRules ()
 	// generate phony target for module name
 	fprintf ( fMakefile, ".PHONY: %s\n",
 		module.name.c_str () );
+	string dependencies = GetTargetMacro ( module );
+	if ( module.type == Test )
+		dependencies += " $(REGTESTS_RUN_TARGET)";
 	fprintf ( fMakefile, "%s: %s\n\n",
 		module.name.c_str (),
-		GetTargetMacro ( module ).c_str () );
+		dependencies.c_str () );
+	if ( module.type == Test )
+	{
+		fprintf ( fMakefile,
+		          "\t%s\n",
+		          targetMacro.c_str ());
+	}
 
 	if ( !ReferenceObjects ( module ) )
 	{
 		string ar_target ( GenerateArchiveTarget ( ar, objectsMacro ) );
 		if ( targetMacro != ar_target )
-		{
 			CLEAN_FILE ( ar_target );
-		}
 	}
 
 	GenerateObjectFileTargets ( cc,
-								cppc,
-								cflagsMacro,
-								nasmflagsMacro,
-								windresflagsMacro,
-							    widlflagsMacro );
+	                            cppc,
+	                            cflagsMacro,
+	                            nasmflagsMacro,
+	                            windresflagsMacro,
+	                            widlflagsMacro );
 }
 
 void
@@ -2827,6 +2873,15 @@ void
 MingwTestModuleHandler::Process ()
 {
 	GenerateTestModuleTarget ();
+}
+
+void
+MingwTestModuleHandler::GetModuleSpecificSourceFiles ( vector<File*>& sourceFiles )
+{
+	string basePath = "$(INTERMEDIATE)" SSEP + module.GetBasePath ();
+	sourceFiles.push_back ( new File ( basePath + SSEP "_hooks.c", false, "" ) );
+	sourceFiles.push_back ( new File ( basePath + SSEP "_stubs.S", false, "" ) );
+	sourceFiles.push_back ( new File ( basePath + SSEP "_startup.c", false, "" ) );
 }
 
 void

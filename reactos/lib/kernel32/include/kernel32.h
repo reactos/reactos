@@ -66,9 +66,8 @@ PWCHAR FilenameA2W(LPCSTR NameA, BOOL alloc);
 DWORD FilenameW2A_FitOrFail(LPSTR  DestA, INT destLen, LPCWSTR SourceW, INT sourceLen);
 DWORD FilenameU2A_FitOrFail(LPSTR  DestA, INT destLen, PUNICODE_STRING SourceU);
 
-
-
-
+#define HeapAlloc RtlAllocateHeap
+#define HeapFree RtlFreeHeap
 
 #endif /* ndef _KERNEL32_INCLUDE_KERNEL32_H */
 

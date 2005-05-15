@@ -3,11 +3,13 @@
 	<define name="_DISABLE_TIDENTS" />
 	<define name="_SEH_NO_NATIVE_NLG" />
 	<define name="WINVER">0x0500</define>
+	<library>rtshared</library>
+	<library>regtests</library>
 	<library>kernel32_base</library>
 	<library>pseh</library>
 	<library>rosrtl</library>
 	<library>ntdll</library>
-	<library>rtshared</library>
+	<library>msvcrt</library>
 	<linkerflag>-lgcc</linkerflag>
 	<linkerflag>-nostartfiles</linkerflag>
 	<linkerflag>-nostdlib</linkerflag>

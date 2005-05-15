@@ -60,11 +60,11 @@ PerformTest(PVOID _arg)
 
   if (_Result != TS_OK)
     {
-      sprintf(OutputBuffer, "ROSREGTEST: |%s| Status: Failed (%s)\n", TestName, Buffer);
+      sprintf(OutputBuffer, "[%s] Failed (%s)\n", TestName, Buffer);
     }
   else
     {
-      sprintf(OutputBuffer, "ROSREGTEST: |%s| Status: Success\n", TestName);
+      sprintf(OutputBuffer, "[%s] Success\n", TestName);
     }
   if (OutputRoutine != NULL)
     {
@@ -137,7 +137,7 @@ PerformTests(TestOutputRoutine OutputRoutine, LPSTR TestName)
       if (hThread == NULL)
         {
           sprintf(OutputBuffer,
-                  "ROSREGTEST: |%s| Status: Failed (CreateThread failed: 0x%x)\n",
+                  "[%s] Failed (CreateThread failed: 0x%x)\n",
                   Name, (unsigned int)GetLastError());
         }
       else if (_WaitForSingleObject(hThread, TimeOut) == WAIT_TIMEOUT)
@@ -145,12 +145,12 @@ PerformTests(TestOutputRoutine OutputRoutine, LPSTR TestName)
           if (!_TerminateThread(hThread, 0))
             {
               sprintf(OutputBuffer,
-                      "ROSREGTEST: |%s| Status: Failed (Test timed out - %d ms, TerminateThread failed: 0x%x)\n",
+                      "[%s] Failed (Test timed out - %d ms, TerminateThread failed: 0x%x)\n",
                       Name, (int)TimeOut, (unsigned int)GetLastError());
             }
           else
             {
-              sprintf(OutputBuffer, "ROSREGTEST: |%s| Status: Failed (Test timed out - %d ms)\n", Name, (int)TimeOut);
+              sprintf(OutputBuffer, "[%s] Failed (Test timed out - %d ms)\n", Name, (int)TimeOut);
             }
         }
       else
