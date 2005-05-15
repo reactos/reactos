@@ -1003,6 +1003,12 @@ MingwModuleHandler::GetWidlFlags ( const File& file )
 {
 	return file.switches;
 }
+
+string
+MingwModuleHandler::GetRpcServerHeaderFilename ( string basename ) const
+{
+	return basename + "_s.h";
+}
 		
 void
 MingwModuleHandler::GenerateWidlCommandsServer (
@@ -1019,7 +1025,7 @@ MingwModuleHandler::GenerateWidlCommandsServer (
 		backend->intermediateDirectory );
 	CLEAN_FILE(generatedHeaderFilename);
 	*/
-	string generatedHeaderFilename = basename + "_s.h";
+	string generatedHeaderFilename = GetRpcServerHeaderFilename ( basename );
 	CLEAN_FILE(generatedHeaderFilename);
 
   	string generatedServerFilename = PassThruCacheDirectory (
@@ -1044,6 +1050,12 @@ MingwModuleHandler::GenerateWidlCommandsServer (
 	          file.name.c_str () );
 }
 
+string
+MingwModuleHandler::GetRpcClientHeaderFilename ( string basename ) const
+{
+	return basename + "_c.h";
+}
+
 void
 MingwModuleHandler::GenerateWidlCommandsClient (
 	const File& file,
@@ -1059,7 +1071,7 @@ MingwModuleHandler::GenerateWidlCommandsClient (
 		backend->intermediateDirectory );
 	CLEAN_FILE(generatedHeaderFilename);
 	*/
-	string generatedHeaderFilename = basename + "_c.h";
+	string generatedHeaderFilename = GetRpcClientHeaderFilename ( basename );
 	CLEAN_FILE(generatedHeaderFilename);
 
   	string generatedClientFilename = PassThruCacheDirectory (
@@ -1582,6 +1594,34 @@ MingwModuleHandler::GenerateTargetMacro ()
 }
 
 void
+MingwModuleHandler::GetRpcHeaderDependencies (
+	string_list& dependencies ) const
+{
+	for ( size_t i = 0; i < module.non_if_data.libraries.size (); i++ )
+	{
+		Library& library = *module.non_if_data.libraries[i];
+		if ( library.imported_module->type == RpcServer ||
+		     library.imported_module->type == RpcClient )
+		{
+
+			for ( size_t j = 0; j < library.imported_module->non_if_data.files.size (); j++ )
+			{
+				File& file = *library.imported_module->non_if_data.files[j];
+				string extension = GetExtension ( file.name );
+				if ( extension == ".idl" || extension == ".IDL" )
+				{
+					string basename = GetBasename ( file.name );
+					if ( library.imported_module->type == RpcServer )
+						dependencies.push_back ( GetRpcServerHeaderFilename ( basename ) );
+					if ( library.imported_module->type == RpcClient )
+						dependencies.push_back ( GetRpcClientHeaderFilename ( basename ) );
+				}
+			}
+		}
+	}
+}
+
+void
 MingwModuleHandler::GenerateOtherMacros ()
 {
 	cflagsMacro = ssprintf ("%s_CFLAGS", module.name.c_str ());
@@ -1597,9 +1637,9 @@ MingwModuleHandler::GenerateOtherMacros ()
 		module.non_if_data,
 		&module.linkerFlags );
 
+	string_list s;
 	if ( module.importLibrary )
 	{
-		string_list s;
 		const vector<File*>& files = module.non_if_data.files;
 		for ( size_t i = 0; i < files.size (); i++ )
 		{
@@ -1608,18 +1648,19 @@ MingwModuleHandler::GenerateOtherMacros ()
 			if ( extension == ".spec" || extension == ".SPEC" )
 				GetSpecObjectDependencies ( s, file.name );
 		}
-		if ( s.size () > 0 )
-		{
-			fprintf (
-				fMakefile,
-				"%s +=",
-				linkDepsMacro.c_str() );
-			for ( size_t i = 0; i < s.size(); i++ )
-				fprintf ( fMakefile,
-				          " %s",
-				          s[i].c_str () );
-			fprintf ( fMakefile, "\n" );
-		}
+	}
+	GetRpcHeaderDependencies ( s );
+	if ( s.size () > 0 )
+	{
+		fprintf (
+			fMakefile,
+			"%s +=",
+			linkDepsMacro.c_str() );
+		for ( size_t i = 0; i < s.size(); i++ )
+			fprintf ( fMakefile,
+			          " %s",
+			          s[i].c_str () );
+		fprintf ( fMakefile, "\n" );
 	}
 
 	string globalCflags = "-g";
