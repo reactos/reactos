@@ -188,13 +188,11 @@ int swprintf(wchar_t* buffer, const wchar_t* fmt, ...)
 }
 
 
-#define TMP_ALLOC(s) HeapAlloc(GetProcessHeap(), 0, s)
-#define TMP_FREE(p) HeapFree(GetProcessHeap(), 0, p)
-
 #else
 
-#define TMP_ALLOC(s) alloca(s)
-#define TMP_FREE(p)
+ // ugly hack to use alloca() while keeping Wine's developers happy
+#define HeapAlloc(h,f,s) alloca(s)
+#define HeapFree(h,f,p)
 
 #endif
 
@@ -1220,7 +1218,7 @@ static void SortDirectory(Entry* dir, SORT_ORDER sortOrder)
 		len++;
 
 	if (len) {
-		array = (Entry**) TMP_ALLOC(len*sizeof(Entry*));
+		array = (Entry**) HeapAlloc(GetProcessHeap(), 0, len*sizeof(Entry*));
 
 		p = array;
 		for(entry=dir->down; entry; entry=entry->next)
@@ -1236,7 +1234,7 @@ static void SortDirectory(Entry* dir, SORT_ORDER sortOrder)
 
 		(*p)->next = 0;
 
-		TMP_FREE(array);
+		HeapFree(GetProcessHeap(), 0, array);
 	}
 }
 
