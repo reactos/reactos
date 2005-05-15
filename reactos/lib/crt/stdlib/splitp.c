@@ -8,9 +8,9 @@
  */
 void _tsplitpath(const _TCHAR* path, _TCHAR* drive, _TCHAR* dir, _TCHAR* fname, _TCHAR* ext)
 {
-  _TCHAR* tmp_drive;
-  _TCHAR* tmp_dir;
-  _TCHAR* tmp_ext;
+  _TCHAR* tmp_drive = NULL;
+  _TCHAR* tmp_dir = NULL;
+  _TCHAR* tmp_ext = NULL;
 
   tmp_drive = (_TCHAR*)_tcschr(path,':');
   if (drive)
