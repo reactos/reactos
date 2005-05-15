@@ -637,6 +637,57 @@ ObQueryNameString (IN PVOID Object,
   return Status;
 }
 
+NTSTATUS
+STDCALL
+ObpAllocateObject(POBJECT_ATTRIBUTES ObjectAttributes,
+                  POBJECT_TYPE ObjectType,
+                  ULONG ObjectSize,
+                  POBJECT_HEADER *ObjectHeader)
+{
+    POBJECT_HEADER Header;
+    POOL_TYPE PoolType;
+    ULONG Tag;
+        
+    /* If we don't have an Object Type yet, force NonPaged */
+    DPRINT("ObpAllocateObject\n");
+    if (!ObjectType) 
+    {
+        PoolType = NonPagedPool;
+        Tag = TAG('O', 'b', 'j', 'T');
+    }
+    else
+    {
+        PoolType = ObjectType->TypeInfo.PoolType;
+        Tag = ObjectType->Key;
+    }
+    
+    /* Allocate memory for the Object */
+    Header = (POBJECT_HEADER)ExAllocatePoolWithTag(PoolType, ObjectSize, Tag);
+    if (!Header) {
+        DPRINT1("Not enough memory!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    
+    /* Initialize the object header */
+    RtlZeroMemory(Header, ObjectSize);
+    DPRINT("Initalizing header %p\n", Header);
+    Header->HandleCount = 0;
+    Header->RefCount = 1;
+    Header->ObjectType = ObjectType;
+    if (ObjectAttributes && ObjectAttributes->Attributes & OBJ_PERMANENT)
+    {
+        Header->Permanent = TRUE;
+    }
+    if (ObjectAttributes && ObjectAttributes->Attributes & OBJ_INHERIT)
+    {
+        Header->Inherit = TRUE;
+    }
+    RtlInitUnicodeString(&Header->Name, NULL);
+    
+    /* Return Header */
+    *ObjectHeader = Header;
+    return STATUS_SUCCESS;
+}
 
 /**********************************************************************
  * NAME							EXPORTED
@@ -666,7 +717,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
   UNICODE_STRING RemainingPath;
   POBJECT_HEADER Header;
   POBJECT_HEADER ParentHeader = NULL;
-  NTSTATUS Status = 0;
+  NTSTATUS Status;
   BOOLEAN ObjectAttached = FALSE;
   PWCHAR NamePtr;
   PSECURITY_DESCRIPTOR NewSecurityDescriptor = NULL;
@@ -738,44 +789,17 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
     {
       RtlInitUnicodeString(&RemainingPath, NULL);
     }
-
-    DPRINT("Allocating memory\n");
-  Header = (POBJECT_HEADER)ExAllocatePoolWithTag(NonPagedPool,
-						 OBJECT_ALLOC_SIZE(ObjectSize),
-						 Type->Key);
-  if (Header == NULL) {
-	DPRINT1("Not enough memory!\n");
-	return STATUS_INSUFFICIENT_RESOURCES;
-  }
-
-  RtlZeroMemory(Header, OBJECT_ALLOC_SIZE(ObjectSize));
-
-  /* Initialize the object header */
-  DPRINT("Initalizing header 0x%x (%wZ)\n", Header, &Type->TypeName);
-  Header->HandleCount = 0;
-  Header->RefCount = 1;
-  Header->ObjectType = Type;
-  if (ObjectAttributes != NULL &&
-      ObjectAttributes->Attributes & OBJ_PERMANENT)
+    
+    /* Allocate the Object */
+    Status = ObpAllocateObject(ObjectAttributes, 
+                               Type, 
+                               OBJECT_ALLOC_SIZE(ObjectSize), 
+                               &Header);
+    if (!NT_SUCCESS(Status))
     {
-      Header->Permanent = TRUE;
+        DPRINT1("ObpAllocateObject failed!\n");
+        return Status;
     }
-  else
-    {
-      Header->Permanent = FALSE;
-    }
-
-  if (ObjectAttributes != NULL &&
-      ObjectAttributes->Attributes & OBJ_INHERIT)
-    {
-      Header->Inherit = TRUE;
-    }
-  else
-    {
-      Header->Inherit = FALSE;
-    }
-
-  RtlInitUnicodeString(&(Header->Name),NULL);
 
   DPRINT("Getting Parent and adding entry\n");
   if (ParentHeader != NULL &&

@@ -115,16 +115,6 @@ typedef struct _SYMLINK_OBJECT
   LARGE_INTEGER CreateTime;
 } SYMLINK_OBJECT, *PSYMLINK_OBJECT;
 
-
-typedef struct _TYPE_OBJECT
-{
-  CSHORT Type;
-  CSHORT Size;
-
-  /* pointer to object type data */
-  POBJECT_TYPE ObjectType;
-} TYPE_OBJECT, *PTYPE_OBJECT;
-
 /*
  * Enumeration of object types
  */
@@ -197,6 +187,7 @@ ObpSetHandleAttributes(HANDLE Handle,
 		       POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo);
 
 NTSTATUS
+STDCALL
 ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer, 
                     PUNICODE_STRING TypeName, 
                     POBJECT_TYPE *ObjectType);

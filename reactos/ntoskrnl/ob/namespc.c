@@ -21,8 +21,10 @@ POBJECT_TYPE ObDirectoryType = NULL;
 POBJECT_TYPE ObTypeObjectType = NULL;
 
 PDIRECTORY_OBJECT NameSpaceRoot = NULL;
+PDIRECTORY_OBJECT ObpTypeDirectoryObject = NULL;
  /* FIXME: Move this somewhere else once devicemap support is in */
 PDEVICE_MAP ObSystemDeviceMap = NULL;
+
 
 static GENERIC_MAPPING ObpDirectoryMapping = {
 	STANDARD_RIGHTS_READ|DIRECTORY_QUERY|DIRECTORY_TRAVERSE,
@@ -35,6 +37,13 @@ static GENERIC_MAPPING ObpTypeMapping = {
 	STANDARD_RIGHTS_WRITE,
 	STANDARD_RIGHTS_EXECUTE,
 	0x000F0001};
+
+NTSTATUS
+STDCALL
+ObpAllocateObject(POBJECT_ATTRIBUTES ObjectAttributes,
+                  POBJECT_TYPE ObjectType,
+                  ULONG ObjectSize,
+                  POBJECT_HEADER *ObjectHeader);
 
 /* FUNCTIONS **************************************************************/
 
@@ -367,193 +376,152 @@ ObpParseDirectory(PVOID Object,
   return STATUS_SUCCESS;
 }
 
-/* HACKS FOR COMPATIBILITY. TEMPORARY */
-NTSTATUS
-ObpCreateInitTypeObject(POBJECT_TYPE ObjectType)
-{
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  WCHAR NameString[120];
-  PTYPE_OBJECT TypeObject = NULL;
-  UNICODE_STRING Name;
-  NTSTATUS Status;
-
-  DPRINT("ObpCreateTypeObject(ObjectType: %wZ)\n", &ObjectType->Name);
-  wcscpy(NameString, L"\\ObjectTypes\\");
-  wcscat(NameString, ObjectType->Name.Buffer);
-  RtlInitUnicodeString(&Name,
-		       NameString);
-
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &Name,
-			     OBJ_PERMANENT,
-			     NULL,
-			     NULL);
-  Status = ObCreateObject(KernelMode,
-			  ObTypeObjectType,
-			  &ObjectAttributes,
-			  KernelMode,
-			  NULL,
-			  sizeof(TYPE_OBJECT),
-			  0,
-			  0,
-			  (PVOID*)&TypeObject);
-  if (NT_SUCCESS(Status))
-    {
-      TypeObject->ObjectType = ObjectType;
-    }
-
-  return(STATUS_SUCCESS);
-}
-
-VOID INIT_FUNCTION
+VOID 
+INIT_FUNCTION
 ObInit(VOID)
-/*
- * FUNCTION: Initialize the object manager namespace
- */
-{
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING Name;
-  SECURITY_DESCRIPTOR SecurityDescriptor;
-
-  /* Initialize the security descriptor cache */
-  ObpInitSdCache();
-
-  /* HACKS FOR COMPATIBILITY. TEMPORARY */
-  /* create 'directory' object type */
-  ObDirectoryType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
-  RtlZeroMemory(ObDirectoryType, sizeof(OBJECT_TYPE));
-  ObDirectoryType->TypeInfo.DefaultNonPagedPoolCharge = sizeof(DIRECTORY_OBJECT);
-  ObDirectoryType->TypeInfo.GenericMapping  = ObpDirectoryMapping;
-  ObDirectoryType->TypeInfo.ParseProcedure = ObpParseDirectory;
-  ObDirectoryType->TypeInfo.OpenProcedure = ObpCreateDirectory;
-
-  RtlInitUnicodeString(&ObDirectoryType->Name,
-		       L"Directory");
-
-  /* HACKS FOR COMPATIBILITY. TEMPORARY */
-  /* create 'type' object type*/
-  ObTypeObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
-  RtlZeroMemory(ObTypeObjectType, sizeof(OBJECT_TYPE));
-  ObTypeObjectType->TypeInfo.DefaultNonPagedPoolCharge = sizeof(TYPE_OBJECT);
-  ObTypeObjectType->TypeInfo.GenericMapping = ObpTypeMapping;
-
-
-  RtlInitUnicodeString(&ObTypeObjectType->Name,
-		       L"ObjectType");
-
-  /* Create security descriptor */
-  RtlCreateSecurityDescriptor(&SecurityDescriptor,
-			      SECURITY_DESCRIPTOR_REVISION1);
-
-  RtlSetOwnerSecurityDescriptor(&SecurityDescriptor,
-				SeAliasAdminsSid,
-				FALSE);
-
-  RtlSetGroupSecurityDescriptor(&SecurityDescriptor,
-				SeLocalSystemSid,
-				FALSE);
-
-  RtlSetDaclSecurityDescriptor(&SecurityDescriptor,
-			       TRUE,
-			       SePublicDefaultDacl,
-			       FALSE);
-
-  /* Create root directory */
-  InitializeObjectAttributes(&ObjectAttributes,
-			     NULL,
-			     OBJ_PERMANENT,
-			     NULL,
-			     &SecurityDescriptor);
-  ObCreateObject(KernelMode,
-		 ObDirectoryType,
-		 &ObjectAttributes,
-		 KernelMode,
-		 NULL,
-		 sizeof(DIRECTORY_OBJECT),
-		 0,
-		 0,
-		 (PVOID*)&NameSpaceRoot);
-
-  /* Create '\ObjectTypes' directory */
-  RtlRosInitUnicodeStringFromLiteral(&Name,
-		       L"\\ObjectTypes");
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &Name,
-			     OBJ_PERMANENT,
-			     NULL,
-			     &SecurityDescriptor);
-  ObCreateObject(KernelMode,
-		 ObDirectoryType,
-		 &ObjectAttributes,
-		 KernelMode,
-		 NULL,
-		 sizeof(DIRECTORY_OBJECT),
-		 0,
-		 0,
-		 NULL);
-
-  /* HACKS FOR COMPATIBILITY. TEMPORARY */
-  ObpCreateInitTypeObject(ObDirectoryType);
-  ObpCreateInitTypeObject(ObTypeObjectType);
-
-  /* Create 'symbolic link' object type */
-  ObInitSymbolicLinkImplementation();
-
-  /* FIXME: Hack Hack! */
-  ObSystemDeviceMap = ExAllocatePoolWithTag(NonPagedPool, sizeof(*ObSystemDeviceMap), TAG('O', 'b', 'D', 'm'));
-  RtlZeroMemory(ObSystemDeviceMap, sizeof(*ObSystemDeviceMap));
-}
-
-
-NTSTATUS
-ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
-                    PUNICODE_STRING TypeName,
-                    POBJECT_TYPE *ObjectType)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
-    WCHAR NameString[120];
-    PTYPE_OBJECT TypeObject = NULL;
-    POBJECT_TYPE LocalObjectType;
     UNICODE_STRING Name;
-    NTSTATUS Status;
+    SECURITY_DESCRIPTOR SecurityDescriptor;
+    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
 
-    DPRINT("ObpCreateTypeObject(ObjectType: %wZ)\n", TypeName);
-    
-    /* Set up the Name */
-    wcscpy(NameString, L"\\ObjectTypes\\");
-    wcscat(NameString, TypeName->Buffer);
-    RtlInitUnicodeString(&Name, NameString);
-    
-    /* Allocate the Object Type */
-    LocalObjectType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
-    
-    /* Set it up */
-    LocalObjectType->TypeInfo = *ObjectTypeInitializer;
-    LocalObjectType->Name = *TypeName;
-    
-    /* FIXME: Generate Tag */
-    
-    /* Create the Object Type Type (WRONG, it shoudl be OBJECT_TYPE itself!) */
+    /* Initialize the security descriptor cache */
+    ObpInitSdCache();
+
+    /* Create the Type Type */
+    DPRINT1("Creating Type Type\n");
+    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+    RtlInitUnicodeString(&Name, L"Type");
+    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+    ObjectTypeInitializer.ValidAccessMask = OBJECT_TYPE_ALL_ACCESS;
+    ObjectTypeInitializer.UseDefaultObject = TRUE;
+    ObjectTypeInitializer.MaintainTypeList = TRUE;
+    ObjectTypeInitializer.PoolType = NonPagedPool;
+    ObjectTypeInitializer.GenericMapping = ObpTypeMapping;
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(OBJECT_TYPE);
+    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ObTypeObjectType);
+  
+    /* Create the Directory Type */
+    DPRINT1("Creating Directory Type\n");
+    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+    RtlInitUnicodeString(&Name, L"Directory");
+    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+    ObjectTypeInitializer.ValidAccessMask = DIRECTORY_ALL_ACCESS;
+    ObjectTypeInitializer.UseDefaultObject = FALSE;
+    ObjectTypeInitializer.OpenProcedure = ObpCreateDirectory;
+    ObjectTypeInitializer.ParseProcedure = ObpParseDirectory;
+    ObjectTypeInitializer.MaintainTypeList = FALSE;
+    ObjectTypeInitializer.GenericMapping = ObpDirectoryMapping;
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(DIRECTORY_OBJECT);
+    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ObDirectoryType);
+
+    /* Create security descriptor */
+    RtlCreateSecurityDescriptor(&SecurityDescriptor,
+                                SECURITY_DESCRIPTOR_REVISION1);
+    RtlSetOwnerSecurityDescriptor(&SecurityDescriptor,
+                                  SeAliasAdminsSid,
+                                  FALSE);
+    RtlSetGroupSecurityDescriptor(&SecurityDescriptor,
+                                  SeLocalSystemSid,
+                                  FALSE);
+    RtlSetDaclSecurityDescriptor(&SecurityDescriptor,
+                                 TRUE,
+                                 SePublicDefaultDacl,
+                                 FALSE);
+
+    /* Create root directory */
+    DPRINT1("Creating Root Directory\n");    
+    InitializeObjectAttributes(&ObjectAttributes,
+                               NULL,
+                               OBJ_PERMANENT,
+                               NULL,
+                               &SecurityDescriptor);
+    ObCreateObject(KernelMode,
+                   ObDirectoryType,
+                   &ObjectAttributes,
+                   KernelMode,
+                   NULL,
+                   sizeof(DIRECTORY_OBJECT),
+                   0,
+                   0,
+                   (PVOID*)&NameSpaceRoot);
+
+    /* Create '\ObjectTypes' directory */
+    RtlInitUnicodeString(&Name, L"\\ObjectTypes");
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
                                OBJ_PERMANENT,
                                NULL,
-                               NULL);
-    Status = ObCreateObject(KernelMode,
-                            ObTypeObjectType,
-                            &ObjectAttributes,
-                            KernelMode,
-                            NULL,
-                            sizeof(TYPE_OBJECT),
-                            0,
-                            0,
-                            (PVOID*)&TypeObject);
-    if (NT_SUCCESS(Status))
-    {
-        TypeObject->ObjectType = LocalObjectType;
-        *ObjectType = LocalObjectType;
-    }
+                               &SecurityDescriptor);
+    ObCreateObject(KernelMode,
+                   ObDirectoryType,
+                   &ObjectAttributes,
+                   KernelMode,
+                   NULL,
+                   sizeof(DIRECTORY_OBJECT),
+                   0,
+                   0,
+                   (PVOID*)&ObpTypeDirectoryObject);
+    
+    /* Insert the two objects we already created but couldn't add */
+    /* NOTE: Uses TypeList & Creator Info in OB 2.0 */
+    ObpAddEntryDirectory(ObpTypeDirectoryObject, BODY_TO_HEADER(ObTypeObjectType), L"Type");
+    ObpAddEntryDirectory(ObpTypeDirectoryObject, BODY_TO_HEADER(ObDirectoryType), L"Directory");
 
+    /* Create 'symbolic link' object type */
+    ObInitSymbolicLinkImplementation();
+
+    /* FIXME: Hack Hack! */
+    ObSystemDeviceMap = ExAllocatePoolWithTag(NonPagedPool, sizeof(*ObSystemDeviceMap), TAG('O', 'b', 'D', 'm'));
+    RtlZeroMemory(ObSystemDeviceMap, sizeof(*ObSystemDeviceMap));
+}
+
+NTSTATUS
+STDCALL
+ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
+                    PUNICODE_STRING TypeName,
+                    POBJECT_TYPE *ObjectType)
+{
+    POBJECT_HEADER Header;
+    POBJECT_TYPE LocalObjectType;
+    NTSTATUS Status;
+
+    DPRINT("ObpCreateTypeObject(ObjectType: %wZ)\n", TypeName);
+    
+    /* Allocate the Object */
+    Status = ObpAllocateObject(NULL, 
+                               ObTypeObjectType, 
+                               OBJECT_ALLOC_SIZE(sizeof(OBJECT_TYPE)),
+                               &Header);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ObpAllocateObject failed!\n");
+        return Status;
+    }
+    
+    LocalObjectType =  HEADER_TO_BODY(Header);
+    
+    /* Check if this is the first Object Type */
+    if (!ObTypeObjectType)
+    {
+        ObTypeObjectType = LocalObjectType;
+        Header->ObjectType = ObTypeObjectType;
+    }
+    
+    /* FIXME: Generate Tag */
+        
+    /* Set it up */
+    LocalObjectType->TypeInfo = *ObjectTypeInitializer;
+    LocalObjectType->Name = *TypeName;
+    
+    /* Insert it into the Object Directory */
+    if (ObpTypeDirectoryObject)
+    {
+        ObpAddEntryDirectory(ObpTypeDirectoryObject, Header, TypeName->Buffer);
+        ObReferenceObject(ObpTypeDirectoryObject);
+    }
+        
+    *ObjectType = LocalObjectType;
     return Status;
 } 
 
