@@ -36,26 +36,21 @@ VOID
 INIT_FUNCTION
 ExpInitializeEventImplementation(VOID)
 {
-    /* Create the Event Object Type */
-    ExEventObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
-    RtlInitUnicodeString(&ExEventObjectType->TypeName, L"Event");
-    ExEventObjectType->Tag = TAG('E', 'V', 'T', 'T');
-    ExEventObjectType->PeakObjects = 0;
-    ExEventObjectType->PeakHandles = 0;
-    ExEventObjectType->TotalObjects = 0;
-    ExEventObjectType->TotalHandles = 0;
-    ExEventObjectType->PagedPoolCharge = 0;
-    ExEventObjectType->NonpagedPoolCharge = sizeof(KEVENT);
-    ExEventObjectType->Mapping = &ExpEventMapping;
-    ExEventObjectType->Dump = NULL;
-    ExEventObjectType->Open = NULL;
-    ExEventObjectType->Close = NULL;
-    ExEventObjectType->Delete = NULL;
-    ExEventObjectType->Parse = NULL;
-    ExEventObjectType->Security = NULL;
-    ExEventObjectType->QueryName = NULL;
-    ExEventObjectType->OkayToClose = NULL;
-    ObpCreateTypeObject(ExEventObjectType);
+  OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
+  UNICODE_STRING Name;
+
+  DPRINT1("Creating Event Object Type\n");
+  
+  /* Create the Event Object Type */
+  RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+  RtlInitUnicodeString(&Name, L"Event");
+  ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+  ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(KEVENT);
+  ObjectTypeInitializer.GenericMapping = ExpEventMapping;
+  ObjectTypeInitializer.PoolType = NonPagedPool;
+  ObjectTypeInitializer.ValidAccessMask = EVENT_ALL_ACCESS;
+  ObjectTypeInitializer.UseDefaultObject = TRUE;
+  ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ExEventObjectType);
 }
 
 /*

@@ -21,11 +21,13 @@ POBJECT_TYPE	LpcPortObjectType = 0;
 ULONG		LpcpNextMessageId = 0; /* 0 is not a valid ID */
 FAST_MUTEX	LpcpLock; /* global internal sync in LPC facility */
 
-static GENERIC_MAPPING ExpPortMapping = {
-	STANDARD_RIGHTS_READ,
-	STANDARD_RIGHTS_WRITE,
-	0,
-	PORT_ALL_ACCESS};
+static GENERIC_MAPPING LpcpPortMapping = 
+{
+    STANDARD_RIGHTS_READ,
+    STANDARD_RIGHTS_WRITE,
+    0,
+    PORT_ALL_ACCESS
+};
 
 /* FUNCTIONS *****************************************************************/
 
@@ -33,37 +35,27 @@ static GENERIC_MAPPING ExpPortMapping = {
 NTSTATUS INIT_FUNCTION
 LpcpInitSystem (VOID)
 {
-   /* Allocate Memory for the LPC Object */
-   LpcPortObjectType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
-   RtlZeroMemory (LpcPortObjectType, sizeof (OBJECT_TYPE));
+    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
+    UNICODE_STRING Name;
 
-   RtlInitUnicodeString(&LpcPortObjectType->TypeName,L"Port");
+    DPRINT1("Creating Port Object Type\n");
+  
+    /* Create the window station Object Type */
+    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+    RtlInitUnicodeString(&Name, L"Port");
+    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(EPORT);
+    ObjectTypeInitializer.GenericMapping = LpcpPortMapping;
+    ObjectTypeInitializer.PoolType = NonPagedPool;
+    ObjectTypeInitializer.UseDefaultObject = TRUE;
+    ObjectTypeInitializer.CloseProcedure = LpcpClosePort;
+    ObjectTypeInitializer.DeleteProcedure = LpcpDeletePort;
+    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &LpcPortObjectType);
+    
+    LpcpNextMessageId = 0;
+    ExInitializeFastMutex (& LpcpLock);
 
-   LpcPortObjectType->Tag = TAG('L', 'P', 'R', 'T');
-   LpcPortObjectType->PeakObjects = 0;
-   LpcPortObjectType->PeakHandles = 0;
-   LpcPortObjectType->TotalObjects = 0;
-   LpcPortObjectType->TotalHandles = 0;
-   LpcPortObjectType->PagedPoolCharge = 0;
-   LpcPortObjectType->NonpagedPoolCharge = sizeof(EPORT);
-   LpcPortObjectType->Mapping = &ExpPortMapping;
-   LpcPortObjectType->Dump = NULL;
-   LpcPortObjectType->Open = NULL;
-   LpcPortObjectType->Close = NiClosePort;
-   LpcPortObjectType->Delete = NiDeletePort;
-   LpcPortObjectType->Parse = NULL;
-   LpcPortObjectType->Security = NULL;
-   LpcPortObjectType->QueryName = NULL;
-   LpcPortObjectType->Open = NULL;
-   LpcPortObjectType->OkayToClose = NULL;
-
-   ObpCreateTypeObject(LpcPortObjectType);
-
-   LpcpNextMessageId = 0;
-
-   ExInitializeFastMutex (& LpcpLock);
-
-   return(STATUS_SUCCESS);
+    return(STATUS_SUCCESS);
 }
 
 

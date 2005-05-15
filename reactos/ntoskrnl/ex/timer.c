@@ -223,31 +223,21 @@ VOID
 INIT_FUNCTION
 ExpInitializeTimerImplementation(VOID)
 {
-    DPRINT("ExpInitializeTimerImplementation()\n");
+    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
+    UNICODE_STRING Name;
 
-    /* Allocate Memory for the Timer */
-    ExTimerType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
-
-    /* Create the Executive Timer Object */
-    RtlInitUnicodeString(&ExTimerType->TypeName, L"Timer");
-    ExTimerType->Tag = TAG('T', 'I', 'M', 'T');
-    ExTimerType->PeakObjects = 0;
-    ExTimerType->PeakHandles = 0;
-    ExTimerType->TotalObjects = 0;
-    ExTimerType->TotalHandles = 0;
-    ExTimerType->PagedPoolCharge = 0;
-    ExTimerType->NonpagedPoolCharge = sizeof(ETIMER);
-    ExTimerType->Mapping = &ExpTimerMapping;
-    ExTimerType->Dump = NULL;
-    ExTimerType->Open = NULL;
-    ExTimerType->Close = NULL;
-    ExTimerType->Delete = ExpDeleteTimer;
-    ExTimerType->Parse = NULL;
-    ExTimerType->Security = NULL;
-    ExTimerType->Open = NULL;
-    ExTimerType->QueryName = NULL;
-    ExTimerType->OkayToClose = NULL;
-    ObpCreateTypeObject(ExTimerType);
+    DPRINT1("Creating Timer Object Type\n");
+  
+    /* Create the Event Pair Object Type */
+    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+    RtlInitUnicodeString(&Name, L"Timer");
+    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(KTIMER);
+    ObjectTypeInitializer.GenericMapping = ExpTimerMapping;
+    ObjectTypeInitializer.PoolType = NonPagedPool;
+    ObjectTypeInitializer.ValidAccessMask = TIMER_ALL_ACCESS;
+    ObjectTypeInitializer.UseDefaultObject = TRUE;
+    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ExTimerType);
 
     /* Initialize the Wait List and Lock */
     KeInitializeSpinLock(&ExpWakeListLock);

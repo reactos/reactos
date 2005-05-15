@@ -85,29 +85,25 @@ IopDeleteDriver(PVOID ObjectBody);
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-VOID INIT_FUNCTION
+VOID 
+INIT_FUNCTION
 IopInitDriverImplementation(VOID)
 {
-   /* Register the process object type */
-   IoDriverObjectType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
-   IoDriverObjectType->Tag = TAG('D', 'R', 'V', 'R');
-   IoDriverObjectType->TotalObjects = 0;
-   IoDriverObjectType->TotalHandles = 0;
-   IoDriverObjectType->PeakObjects = 0;
-   IoDriverObjectType->PeakHandles = 0;
-   IoDriverObjectType->PagedPoolCharge = 0;
-   IoDriverObjectType->NonpagedPoolCharge = sizeof(DRIVER_OBJECT);
-   IoDriverObjectType->Dump = NULL;
-   IoDriverObjectType->Open = NULL;
-   IoDriverObjectType->Close = NULL;
-   IoDriverObjectType->Delete = IopDeleteDriver;
-   IoDriverObjectType->Parse = NULL;
-   IoDriverObjectType->Security = NULL;
-   IoDriverObjectType->QueryName = NULL;
-   IoDriverObjectType->OkayToClose = NULL;
-   RtlInitUnicodeString(&IoDriverObjectType->TypeName, L"Driver");
+   OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
+   UNICODE_STRING Name;
 
-   ObpCreateTypeObject(IoDriverObjectType);
+   DPRINT1("Creating Registry Object Type\n");
+  
+   /* Initialize the Driver object type  */
+   RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+   RtlInitUnicodeString(&Name, L"Driver");
+   ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+   ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(DRIVER_OBJECT);
+   ObjectTypeInitializer.PoolType = NonPagedPool;
+   ObjectTypeInitializer.UseDefaultObject = TRUE;
+   ObjectTypeInitializer.DeleteProcedure = IopDeleteDriver;
+
+   ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &IoDriverObjectType);
 
    InitializeListHead(&DriverReinitListHead);
    KeInitializeSpinLock(&DriverReinitListLock);

@@ -42,6 +42,7 @@
 #define IO_METHOD_FROM_CTL_CODE(ctlCode) (ctlCode&0x00000003)
 
 struct _DEVICE_OBJECT_POWER_EXTENSION;
+extern POBJECT_TYPE IoCompletionType;
 
 /* This is like the IRP Overlay so we can optimize its insertion */
 typedef struct _IO_COMPLETION_PACKET

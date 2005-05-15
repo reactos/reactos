@@ -66,48 +66,79 @@ typedef NTSTATUS STDCALL_FUNC
 typedef NTSTATUS STDCALL_FUNC
 (*PW32_THREAD_CALLBACK)(struct _ETHREAD *Thread,
 			BOOLEAN Create);
-            
+        
+typedef enum _OB_OPEN_REASON
+{    
+    ObCreateHandle,
+    ObOpenHandle,
+    ObDuplicateHandle,
+    ObInheritHandle,
+    ObMaxOpenReason
+} OB_OPEN_REASON;
+    
 /* 
  * Callbacks used for Win32 objects... this define won't be needed after the Object Manager
  * rewrite -- Alex
  */
- 
+  
 /* TEMPORARY HACK */
 typedef NTSTATUS STDCALL_FUNC
-(*OBJECT_CREATE_ROUTINE)(PVOID ObjectBody,
-                         PVOID Parent,
-                         PWSTR RemainingPath,
-                         struct _OBJECT_ATTRIBUTES* ObjectAttributes);
+(*OB_CREATE_METHOD)(PVOID ObjectBody,
+                     PVOID Parent,
+                     PWSTR RemainingPath,
+                     struct _OBJECT_ATTRIBUTES* ObjectAttributes);
                          
 typedef NTSTATUS STDCALL_FUNC
-(*OBJECT_OPEN_ROUTINE)(ULONG Reason,
-                       PVOID ObjectBody,
-                       PEPROCESS Process,
-                       ULONG HandleCount,
-                       ACCESS_MASK GrantedAccess);
+(*OB_OPEN_METHOD)(OB_OPEN_REASON Reason,
+                  PVOID ObjectBody,
+                  PEPROCESS Process,
+                  ULONG HandleCount,
+                  ACCESS_MASK GrantedAccess);
 
 typedef NTSTATUS STDCALL_FUNC
-(*OBJECT_PARSE_ROUTINE)(PVOID Object,
-                        PVOID *NextObject,
-                        PUNICODE_STRING FullPath,
-                        PWSTR *Path,
-                        ULONG Attributes);
+(*OB_PARSE_METHOD)(PVOID Object,
+                    PVOID *NextObject,
+                    PUNICODE_STRING FullPath,
+                    PWSTR *Path,
+                    ULONG Attributes);
                         
 typedef VOID STDCALL_FUNC
-(*OBJECT_DELETE_ROUTINE)(PVOID DeletedObject);
+(*OB_DELETE_METHOD)(PVOID DeletedObject);
+
+typedef VOID STDCALL_FUNC
+(*OB_CLOSE_METHOD)(PVOID ClosedObject, ULONG HandleCount);
+
+typedef VOID STDCALL_FUNC
+(*OB_DUMP_METHOD)(VOID);
+
+typedef NTSTATUS STDCALL_FUNC
+(*OB_OKAYTOCLOSE_METHOD)(VOID);
+
+typedef NTSTATUS STDCALL_FUNC
+(*OB_QUERYNAME_METHOD)(PVOID ObjectBody,
+                        POBJECT_NAME_INFORMATION ObjectNameInfo,
+                        ULONG Length,
+                        PULONG ReturnLength);
 
 typedef PVOID STDCALL_FUNC
-(*OBJECT_FIND_ROUTINE)(PVOID WinStaObject,
-                       PWSTR Name,
-                       ULONG Attributes);
+(*OB_FIND_METHOD)(PVOID WinStaObject,
+                   PWSTR Name,
+                   ULONG Attributes);
+
+typedef NTSTATUS STDCALL_FUNC
+(*OB_SECURITY_METHOD)(PVOID ObjectBody,
+                        SECURITY_OPERATION_CODE OperationCode,
+                        SECURITY_INFORMATION SecurityInformation,
+                        PSECURITY_DESCRIPTOR SecurityDescriptor,
+                        PULONG BufferLength);
                        
 typedef struct _W32_OBJECT_CALLBACK {
-    OBJECT_OPEN_ROUTINE WinStaCreate;
-    OBJECT_PARSE_ROUTINE WinStaParse;
-    OBJECT_DELETE_ROUTINE WinStaDelete;
-    OBJECT_FIND_ROUTINE WinStaFind;
-    OBJECT_CREATE_ROUTINE DesktopCreate;
-    OBJECT_DELETE_ROUTINE DesktopDelete;    
+    OB_OPEN_METHOD WinStaCreate;
+    OB_PARSE_METHOD WinStaParse;
+    OB_DELETE_METHOD WinStaDelete;
+    OB_FIND_METHOD WinStaFind;
+    OB_CREATE_METHOD DesktopCreate;
+    OB_DELETE_METHOD DesktopDelete;    
 } W32_OBJECT_CALLBACK, *PW32_OBJECT_CALLBACK;
 
 typedef struct _STACK_INFORMATION

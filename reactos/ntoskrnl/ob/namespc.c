@@ -367,6 +367,43 @@ ObpParseDirectory(PVOID Object,
   return STATUS_SUCCESS;
 }
 
+/* HACKS FOR COMPATIBILITY. TEMPORARY */
+NTSTATUS
+ObpCreateInitTypeObject(POBJECT_TYPE ObjectType)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  WCHAR NameString[120];
+  PTYPE_OBJECT TypeObject = NULL;
+  UNICODE_STRING Name;
+  NTSTATUS Status;
+
+  DPRINT("ObpCreateTypeObject(ObjectType: %wZ)\n", &ObjectType->Name);
+  wcscpy(NameString, L"\\ObjectTypes\\");
+  wcscat(NameString, ObjectType->Name.Buffer);
+  RtlInitUnicodeString(&Name,
+		       NameString);
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &Name,
+			     OBJ_PERMANENT,
+			     NULL,
+			     NULL);
+  Status = ObCreateObject(KernelMode,
+			  ObTypeObjectType,
+			  &ObjectAttributes,
+			  KernelMode,
+			  NULL,
+			  sizeof(TYPE_OBJECT),
+			  0,
+			  0,
+			  (PVOID*)&TypeObject);
+  if (NT_SUCCESS(Status))
+    {
+      TypeObject->ObjectType = ObjectType;
+    }
+
+  return(STATUS_SUCCESS);
+}
 
 VOID INIT_FUNCTION
 ObInit(VOID)
@@ -381,51 +418,27 @@ ObInit(VOID)
   /* Initialize the security descriptor cache */
   ObpInitSdCache();
 
+  /* HACKS FOR COMPATIBILITY. TEMPORARY */
   /* create 'directory' object type */
   ObDirectoryType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
+  RtlZeroMemory(ObDirectoryType, sizeof(OBJECT_TYPE));
+  ObDirectoryType->TypeInfo.DefaultNonPagedPoolCharge = sizeof(DIRECTORY_OBJECT);
+  ObDirectoryType->TypeInfo.GenericMapping  = ObpDirectoryMapping;
+  ObDirectoryType->TypeInfo.ParseProcedure = ObpParseDirectory;
+  ObDirectoryType->TypeInfo.OpenProcedure = ObpCreateDirectory;
 
-  ObDirectoryType->Tag = TAG('D', 'I', 'R', 'T');
-  ObDirectoryType->TotalObjects = 0;
-  ObDirectoryType->TotalHandles = 0;
-  ObDirectoryType->PeakObjects = 0;
-  ObDirectoryType->PeakHandles = 0;
-  ObDirectoryType->PagedPoolCharge = 0;
-  ObDirectoryType->NonpagedPoolCharge = sizeof(DIRECTORY_OBJECT);
-  ObDirectoryType->Mapping = &ObpDirectoryMapping;
-  ObDirectoryType->Dump = NULL;
-  ObDirectoryType->Open = NULL;
-  ObDirectoryType->Close = NULL;
-  ObDirectoryType->Delete = NULL;
-  ObDirectoryType->Parse = ObpParseDirectory;
-  ObDirectoryType->Security = NULL;
-  ObDirectoryType->QueryName = NULL;
-  ObDirectoryType->OkayToClose = NULL;
-  ObDirectoryType->Open = ObpCreateDirectory;
-
-  RtlInitUnicodeString(&ObDirectoryType->TypeName,
+  RtlInitUnicodeString(&ObDirectoryType->Name,
 		       L"Directory");
 
+  /* HACKS FOR COMPATIBILITY. TEMPORARY */
   /* create 'type' object type*/
   ObTypeObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
+  RtlZeroMemory(ObTypeObjectType, sizeof(OBJECT_TYPE));
+  ObTypeObjectType->TypeInfo.DefaultNonPagedPoolCharge = sizeof(TYPE_OBJECT);
+  ObTypeObjectType->TypeInfo.GenericMapping = ObpTypeMapping;
 
-  ObTypeObjectType->Tag = TAG('T', 'y', 'p', 'T');
-  ObTypeObjectType->TotalObjects = 0;
-  ObTypeObjectType->TotalHandles = 0;
-  ObTypeObjectType->PeakObjects = 0;
-  ObTypeObjectType->PeakHandles = 0;
-  ObTypeObjectType->PagedPoolCharge = 0;
-  ObTypeObjectType->NonpagedPoolCharge = sizeof(TYPE_OBJECT);
-  ObTypeObjectType->Mapping = &ObpTypeMapping;
-  ObTypeObjectType->Dump = NULL;
-  ObTypeObjectType->Open = NULL;
-  ObTypeObjectType->Close = NULL;
-  ObTypeObjectType->Delete = NULL;
-  ObTypeObjectType->Parse = NULL;
-  ObTypeObjectType->Security = NULL;
-  ObTypeObjectType->QueryName = NULL;
-  ObTypeObjectType->OkayToClose = NULL;
 
-  RtlInitUnicodeString(&ObTypeObjectType->TypeName,
+  RtlInitUnicodeString(&ObTypeObjectType->Name,
 		       L"ObjectType");
 
   /* Create security descriptor */
@@ -479,8 +492,9 @@ ObInit(VOID)
 		 0,
 		 NULL);
 
-  ObpCreateTypeObject(ObDirectoryType);
-  ObpCreateTypeObject(ObTypeObjectType);
+  /* HACKS FOR COMPATIBILITY. TEMPORARY */
+  ObpCreateInitTypeObject(ObDirectoryType);
+  ObpCreateInitTypeObject(ObTypeObjectType);
 
   /* Create 'symbolic link' object type */
   ObInitSymbolicLinkImplementation();
@@ -492,40 +506,55 @@ ObInit(VOID)
 
 
 NTSTATUS
-ObpCreateTypeObject(POBJECT_TYPE ObjectType)
+ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
+                    PUNICODE_STRING TypeName,
+                    POBJECT_TYPE *ObjectType)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  WCHAR NameString[120];
-  PTYPE_OBJECT TypeObject = NULL;
-  UNICODE_STRING Name;
-  NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    WCHAR NameString[120];
+    PTYPE_OBJECT TypeObject = NULL;
+    POBJECT_TYPE LocalObjectType;
+    UNICODE_STRING Name;
+    NTSTATUS Status;
 
-  DPRINT("ObpCreateTypeObject(ObjectType: %wZ)\n", &ObjectType->TypeName);
-  wcscpy(NameString, L"\\ObjectTypes\\");
-  wcscat(NameString, ObjectType->TypeName.Buffer);
-  RtlInitUnicodeString(&Name,
-		       NameString);
-
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &Name,
-			     OBJ_PERMANENT,
-			     NULL,
-			     NULL);
-  Status = ObCreateObject(KernelMode,
-			  ObTypeObjectType,
-			  &ObjectAttributes,
-			  KernelMode,
-			  NULL,
-			  sizeof(TYPE_OBJECT),
-			  0,
-			  0,
-			  (PVOID*)&TypeObject);
-  if (NT_SUCCESS(Status))
+    DPRINT("ObpCreateTypeObject(ObjectType: %wZ)\n", TypeName);
+    
+    /* Set up the Name */
+    wcscpy(NameString, L"\\ObjectTypes\\");
+    wcscat(NameString, TypeName->Buffer);
+    RtlInitUnicodeString(&Name, NameString);
+    
+    /* Allocate the Object Type */
+    LocalObjectType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
+    
+    /* Set it up */
+    LocalObjectType->TypeInfo = *ObjectTypeInitializer;
+    LocalObjectType->Name = *TypeName;
+    
+    /* FIXME: Generate Tag */
+    
+    /* Create the Object Type Type (WRONG, it shoudl be OBJECT_TYPE itself!) */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_PERMANENT,
+                               NULL,
+                               NULL);
+    Status = ObCreateObject(KernelMode,
+                            ObTypeObjectType,
+                            &ObjectAttributes,
+                            KernelMode,
+                            NULL,
+                            sizeof(TYPE_OBJECT),
+                            0,
+                            0,
+                            (PVOID*)&TypeObject);
+    if (NT_SUCCESS(Status))
     {
-      TypeObject->ObjectType = ObjectType;
+        TypeObject->ObjectType = LocalObjectType;
+        *ObjectType = LocalObjectType;
     }
 
-  return(STATUS_SUCCESS);
-}
+    return Status;
+} 
 
 /* EOF */

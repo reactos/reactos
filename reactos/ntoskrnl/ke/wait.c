@@ -800,7 +800,7 @@ KiIsObjectWaitable(PVOID Object)
     Header = BODY_TO_HEADER(Object);
 
     if (Header->ObjectType == ExEventObjectType ||
-        Header->ObjectType == ExIoCompletionType ||
+        Header->ObjectType == IoCompletionType ||
         Header->ObjectType == ExMutantObjectType ||
         Header->ObjectType == ExSemaphoreObjectType ||
         Header->ObjectType == ExTimerType ||

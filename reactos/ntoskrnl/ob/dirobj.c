@@ -254,10 +254,10 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
 
           /* calculate the size of the required buffer space for this entry */
           Name = (EntryHeader->Name.Length != 0 ? &EntryHeader->Name : NULL);
-          Type = &EntryHeader->ObjectType->TypeName;
+          Type = &EntryHeader->ObjectType->Name;
           EntrySize = sizeof(OBJECT_DIRECTORY_INFORMATION) +
                       ((Name != NULL) ? ((ULONG)Name->Length + sizeof(WCHAR)) : 0) +
-                      (ULONG)EntryHeader->ObjectType->TypeName.Length + sizeof(WCHAR);
+                      (ULONG)EntryHeader->ObjectType->Name.Length + sizeof(WCHAR);
 
           if(RequiredSize + EntrySize <= BufferLength)
           {

@@ -56,33 +56,26 @@ PiDeleteJob ( PVOID ObjectBody )
     ExDeleteResource(&Job->JobLock);
 }
 
-VOID INIT_FUNCTION
+VOID 
+INIT_FUNCTION
 PsInitJobManagment ( VOID )
 {
-    PsJobType = ExAllocatePoolWithTag (
-        NonPagedPool, sizeof(OBJECT_TYPE), TAG_EJOB );
-
-    PsJobType->Tag = TAG_EJOB;
-    PsJobType->TotalObjects = 0;
-    PsJobType->TotalHandles = 0;
-    PsJobType->PeakObjects = 0;
-    PsJobType->PeakHandles = 0;
-    PsJobType->PagedPoolCharge = 0;
-    PsJobType->NonpagedPoolCharge = sizeof(EJOB);
-    PsJobType->Mapping = &PiJobMapping;
-    PsJobType->Dump = NULL;
-    PsJobType->Open = NULL;
-    PsJobType->Close = NULL;
-    PsJobType->Delete = PiDeleteJob;
-    PsJobType->Parse = NULL;
-    PsJobType->Security = NULL;
-    PsJobType->QueryName = NULL;
-    PsJobType->OkayToClose = NULL;
-    PsJobType->Open = NULL;
-
-    RtlInitUnicodeString(&PsJobType->TypeName, L"Job");
-
-    ObpCreateTypeObject(PsJobType);
+    UNICODE_STRING Name;
+    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
+    
+    DPRINT1("Creating Job Object Type\n");
+  
+    /*  Initialize the Job type  */
+    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+    RtlInitUnicodeString(&Name, L"Job");
+    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(EJOB);
+    ObjectTypeInitializer.GenericMapping = PiJobMapping;
+    ObjectTypeInitializer.PoolType = NonPagedPool;
+    ObjectTypeInitializer.ValidAccessMask = JOB_OBJECT_ALL_ACCESS;
+    ObjectTypeInitializer.UseDefaultObject = TRUE;
+    ObjectTypeInitializer.DeleteProcedure = PiDeleteJob;
+    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &PsJobType);
 
     InitializeListHead(&PsJobListHead);
     ExInitializeFastMutex(&PsJobListLock);

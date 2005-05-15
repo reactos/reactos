@@ -133,33 +133,27 @@ ObpParseSymbolicLink(PVOID Object,
  *
  * REVISIONS
  */
-VOID INIT_FUNCTION
+VOID 
+INIT_FUNCTION
 ObInitSymbolicLinkImplementation (VOID)
 {
-  ObSymbolicLinkType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
-
-  ObSymbolicLinkType->Tag = TAG('S', 'Y', 'M', 'T');
-  ObSymbolicLinkType->TotalObjects = 0;
-  ObSymbolicLinkType->TotalHandles = 0;
-  ObSymbolicLinkType->PeakObjects = 0;
-  ObSymbolicLinkType->PeakHandles = 0;
-  ObSymbolicLinkType->PagedPoolCharge = 0;
-  ObSymbolicLinkType->NonpagedPoolCharge = sizeof(SYMLINK_OBJECT);
-  ObSymbolicLinkType->Mapping = &ObpSymbolicLinkMapping;
-  ObSymbolicLinkType->Dump = NULL;
-  ObSymbolicLinkType->Open = NULL;
-  ObSymbolicLinkType->Close = NULL;
-  ObSymbolicLinkType->Delete = ObpDeleteSymbolicLink;
-  ObSymbolicLinkType->Parse = ObpParseSymbolicLink;
-  ObSymbolicLinkType->Security = NULL;
-  ObSymbolicLinkType->Open = NULL;
-  ObSymbolicLinkType->QueryName = NULL;
-  ObSymbolicLinkType->OkayToClose = NULL;
-
-  RtlInitUnicodeString(&ObSymbolicLinkType->TypeName,
-		       L"SymbolicLink");
-
-  ObpCreateTypeObject(ObSymbolicLinkType);
+  UNICODE_STRING Name;
+  OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
+    
+  DPRINT1("Creating SymLink Object Type\n");
+  
+  /*  Initialize the Directory type  */
+  RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+  RtlInitUnicodeString(&Name, L"SymbolicLink");
+  ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+  ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(SYMLINK_OBJECT);
+  ObjectTypeInitializer.GenericMapping = ObpSymbolicLinkMapping;
+  ObjectTypeInitializer.PoolType = NonPagedPool;
+  ObjectTypeInitializer.ValidAccessMask = SYMBOLIC_LINK_ALL_ACCESS;
+  ObjectTypeInitializer.UseDefaultObject = TRUE;
+  ObjectTypeInitializer.ParseProcedure = ObpParseSymbolicLink;
+  ObjectTypeInitializer.DeleteProcedure = ObpDeleteSymbolicLink;
+  ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ObSymbolicLinkType);
 }
 
 

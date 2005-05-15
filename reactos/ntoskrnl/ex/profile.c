@@ -75,30 +75,25 @@ VOID
 INIT_FUNCTION
 ExpInitializeProfileImplementation(VOID)
 {
+    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
+    UNICODE_STRING Name;
+  
     /* Initialize the Mutex to lock the States */
     KeInitializeMutex(&ExpProfileMutex, 0x40);
 
-    /* Create the Object Type */
-    ExProfileObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
-    RtlInitUnicodeString(&ExProfileObjectType->TypeName, L"Profile");
-    ExProfileObjectType->Tag = TAG('P', 'R', 'O', 'F');
-    ExProfileObjectType->PeakObjects = 0;
-    ExProfileObjectType->PeakHandles = 0;
-    ExProfileObjectType->TotalObjects = 0;
-    ExProfileObjectType->TotalHandles = 0;
-    ExProfileObjectType->PagedPoolCharge = 0;
-    ExProfileObjectType->NonpagedPoolCharge = sizeof(EPROFILE);
-    ExProfileObjectType->Mapping = &ExpProfileMapping;
-    ExProfileObjectType->Dump = NULL;
-    ExProfileObjectType->Open = NULL;
-    ExProfileObjectType->Close = NULL;
-    ExProfileObjectType->Delete = ExpDeleteProfile;
-    ExProfileObjectType->Parse = NULL;
-    ExProfileObjectType->Open = NULL;
-    ExProfileObjectType->Security = NULL;
-    ExProfileObjectType->QueryName = NULL;
-    ExProfileObjectType->OkayToClose = NULL;
-    ObpCreateTypeObject(ExProfileObjectType);
+    DPRINT1("Creating Profile Object Type\n");
+  
+    /* Create the Event Pair Object Type */
+    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+    RtlInitUnicodeString(&Name, L"Profile");
+    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(KPROFILE);
+    ObjectTypeInitializer.GenericMapping = ExpProfileMapping;
+    ObjectTypeInitializer.PoolType = NonPagedPool;
+    ObjectTypeInitializer.DeleteProcedure = ExpDeleteProfile;
+    ObjectTypeInitializer.ValidAccessMask = STANDARD_RIGHTS_ALL;
+    ObjectTypeInitializer.UseDefaultObject = TRUE;
+    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ExProfileObjectType);
 }
 
 NTSTATUS

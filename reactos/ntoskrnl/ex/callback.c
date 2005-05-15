@@ -42,33 +42,21 @@ ExpInitializeCallbacks(VOID)
    NTSTATUS Status;
    UNICODE_STRING DirName;
    UNICODE_STRING CallbackName;
+   UNICODE_STRING Name;
+   OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
    HANDLE DirectoryHandle;
    ULONG i;
 
-   /* Allocate memory for Object */
-   ExCallbackObjectType = ExAllocatePoolWithTag(NonPagedPool, sizeof(OBJECT_TYPE), CALLBACK_TAG);
+   /*  Initialize the Callback Object type  */
+   RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+   RtlInitUnicodeString(&Name, L"Callback");
+   ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+   ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(_INT_CALLBACK_OBJECT);
+   ObjectTypeInitializer.GenericMapping = ExpCallbackMapping;
+   ObjectTypeInitializer.PoolType = NonPagedPool;
+   ObjectTypeInitializer.UseDefaultObject = TRUE;
 
-   /* Initialize name */
-   RtlInitUnicodeString(&ExCallbackObjectType->TypeName, L"Callback");
-
-   /* Create the Object Type */
-   ExCallbackObjectType->Tag = CALLBACK_TAG;
-   ExCallbackObjectType->TotalObjects = 0;
-   ExCallbackObjectType->TotalHandles = 0;
-   ExCallbackObjectType->PeakObjects = 0;
-   ExCallbackObjectType->PeakHandles = 0;
-   ExCallbackObjectType->PagedPoolCharge = 0;
-   ExCallbackObjectType->Dump = NULL;
-   ExCallbackObjectType->Open = NULL;
-   ExCallbackObjectType->Close = NULL;
-   ExCallbackObjectType->Delete = NULL;
-   ExCallbackObjectType->Parse = NULL;
-   ExCallbackObjectType->Security = NULL;
-   ExCallbackObjectType->QueryName = NULL;
-   ExCallbackObjectType->OkayToClose = NULL;
-   ExCallbackObjectType->Mapping = &ExpCallbackMapping;
-   ExCallbackObjectType->NonpagedPoolCharge = sizeof(_INT_CALLBACK_OBJECT);
-   Status = ObpCreateTypeObject(ExCallbackObjectType);
+   Status = ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ExCallbackObjectType);
 
    /* Fail if it wasn't created successfully */
    if (!NT_SUCCESS(Status))

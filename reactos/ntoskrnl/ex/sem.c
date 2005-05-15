@@ -34,27 +34,21 @@ VOID
 INIT_FUNCTION
 ExpInitializeSemaphoreImplementation(VOID)
 {
+    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
+    UNICODE_STRING Name;
 
-    /* Create the Semaphore Object */
-    ExSemaphoreObjectType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
-    RtlInitUnicodeString(&ExSemaphoreObjectType->TypeName, L"Semaphore");
-    ExSemaphoreObjectType->Tag = TAG('S', 'E', 'M', 'T');
-    ExSemaphoreObjectType->PeakObjects = 0;
-    ExSemaphoreObjectType->PeakHandles = 0;
-    ExSemaphoreObjectType->TotalObjects = 0;
-    ExSemaphoreObjectType->TotalHandles = 0;
-    ExSemaphoreObjectType->PagedPoolCharge = 0;
-    ExSemaphoreObjectType->NonpagedPoolCharge = sizeof(KSEMAPHORE);
-    ExSemaphoreObjectType->Mapping = &ExSemaphoreMapping;
-    ExSemaphoreObjectType->Dump = NULL;
-    ExSemaphoreObjectType->Open = NULL;
-    ExSemaphoreObjectType->Close = NULL;
-    ExSemaphoreObjectType->Delete = NULL;
-    ExSemaphoreObjectType->Parse = NULL;
-    ExSemaphoreObjectType->Security = NULL;
-    ExSemaphoreObjectType->QueryName = NULL;
-    ExSemaphoreObjectType->OkayToClose = NULL;
-    ObpCreateTypeObject(ExSemaphoreObjectType);
+    DPRINT1("Creating Semaphore Object Type\n");
+  
+    /* Create the Event Pair Object Type */
+    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+    RtlInitUnicodeString(&Name, L"Semaphore");
+    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(KSEMAPHORE);
+    ObjectTypeInitializer.GenericMapping = ExSemaphoreMapping;
+    ObjectTypeInitializer.PoolType = NonPagedPool;
+    ObjectTypeInitializer.ValidAccessMask = SEMAPHORE_ALL_ACCESS;
+    ObjectTypeInitializer.UseDefaultObject = TRUE;
+    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ExSemaphoreObjectType);
 }
 
 /*

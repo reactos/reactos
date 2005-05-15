@@ -48,7 +48,7 @@ PsCreateCidHandle(PVOID Object, POBJECT_TYPE ObjectType, PHANDLE Handle)
     NewEntry.u2.GrantedAccess = CID_FLAG_PROCESS;
   else
   {
-    DPRINT1("Can't create CID handles for %wZ objects\n", &ObjectType->TypeName);
+    DPRINT1("Can't create CID handles for %wZ objects\n", &ObjectType->Name);
     KEBUGCHECK(0);
   }
 
@@ -120,7 +120,7 @@ PsLookupCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType, PVOID *Object)
     else
     {
       DPRINT1("CID Obj type mismatch handle 0x%x %wZ vs 0x%x\n", CidHandle,
-              &ObjectType->TypeName, Entry->u2.GrantedAccess);
+              &ObjectType->Name, Entry->u2.GrantedAccess);
       ExUnlockHandleTableEntry(PspCidTable,
                                Entry);
     }

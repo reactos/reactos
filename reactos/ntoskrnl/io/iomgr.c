@@ -29,6 +29,7 @@
 
 POBJECT_TYPE EXPORTED IoDeviceObjectType = NULL;
 POBJECT_TYPE EXPORTED IoFileObjectType = NULL;
+extern POBJECT_TYPE IoControllerObjectType;
 ULONG        EXPORTED IoReadOperationCount = 0;
 ULONGLONG    EXPORTED IoReadTransferCount = 0;
 ULONG        EXPORTED IoWriteOperationCount = 0;
@@ -188,79 +189,46 @@ VOID
 INIT_FUNCTION
 IoInit (VOID)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING DirName;
-  UNICODE_STRING LinkName;
-  HANDLE Handle;
+    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
+    UNICODE_STRING Name;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING DirName;
+    UNICODE_STRING LinkName;
+    HANDLE Handle;
 
-  IopInitDriverImplementation();
+    IopInitDriverImplementation();
 
-  /*
-   * Register iomgr types: DeviceObjectType
-   */
-  IoDeviceObjectType = ExAllocatePool (NonPagedPool,
-				       sizeof (OBJECT_TYPE));
-
-  IoDeviceObjectType->Tag = TAG_DEVICE_TYPE;
-  IoDeviceObjectType->TotalObjects = 0;
-  IoDeviceObjectType->TotalHandles = 0;
-  IoDeviceObjectType->PeakObjects = 0;
-  IoDeviceObjectType->PeakHandles = 0;
-  IoDeviceObjectType->PagedPoolCharge = 0;
-  IoDeviceObjectType->NonpagedPoolCharge = sizeof (DEVICE_OBJECT);
-  IoDeviceObjectType->Mapping = &IopFileMapping;
-  IoDeviceObjectType->Dump = NULL;
-  IoDeviceObjectType->Open = NULL;
-  IoDeviceObjectType->Close = NULL;
-  IoDeviceObjectType->Delete = NULL;
-  IoDeviceObjectType->Parse = NULL;
-  IoDeviceObjectType->Security = NULL;
-  IoDeviceObjectType->QueryName = NULL;
-  IoDeviceObjectType->OkayToClose = NULL;
-
-  RtlInitUnicodeString(&IoDeviceObjectType->TypeName, L"Device");
-
-  ObpCreateTypeObject(IoDeviceObjectType);
-
-  /*
-   * Register iomgr types: FileObjectType
-   * (alias DriverObjectType)
-   */
-  IoFileObjectType = ExAllocatePool (NonPagedPool, sizeof (OBJECT_TYPE));
-
-  IoFileObjectType->Tag = TAG_FILE_TYPE;
-  IoFileObjectType->TotalObjects = 0;
-  IoFileObjectType->TotalHandles = 0;
-  IoFileObjectType->PeakObjects = 0;
-  IoFileObjectType->PeakHandles = 0;
-  IoFileObjectType->PagedPoolCharge = 0;
-  IoFileObjectType->NonpagedPoolCharge = sizeof(FILE_OBJECT);
-  IoFileObjectType->Mapping = &IopFileMapping;
-  IoFileObjectType->Dump = NULL;
-  IoFileObjectType->Open = NULL;
-  IoFileObjectType->Close = IopCloseFile;
-  IoFileObjectType->Delete = IopDeleteFile;
-  IoFileObjectType->Parse = NULL;
-  IoFileObjectType->Security = IopSecurityFile;
-  IoFileObjectType->QueryName = IopQueryNameFile;
-  IoFileObjectType->OkayToClose = NULL;
-
-  RtlInitUnicodeString(&IoFileObjectType->TypeName, L"File");
-
-  ObpCreateTypeObject(IoFileObjectType);
-
-    /*
-   * Register iomgr types: AdapterObjectType
-   */
-  IoAdapterObjectType = ExAllocatePool (NonPagedPool,
-				       sizeof (OBJECT_TYPE));
-  RtlZeroMemory(IoAdapterObjectType, sizeof(OBJECT_TYPE));
-  IoAdapterObjectType->Tag = TAG_ADAPTER_TYPE;
-  IoAdapterObjectType->PeakObjects = 0;
-  IoAdapterObjectType->PeakHandles = 0;
-  IoDeviceObjectType->Mapping = &IopFileMapping;
-  RtlInitUnicodeString(&IoAdapterObjectType->TypeName, L"Adapter");
-  ObpCreateTypeObject(IoAdapterObjectType);
+    DPRINT1("Creating Device Object Type\n");
+  
+    /* Initialize the Driver object type  */
+    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+    RtlInitUnicodeString(&Name, L"Device");
+    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(DEVICE_OBJECT);
+    ObjectTypeInitializer.PoolType = NonPagedPool;
+    ObjectTypeInitializer.ValidAccessMask = FILE_ALL_ACCESS;
+    ObjectTypeInitializer.UseDefaultObject = TRUE;
+    ObjectTypeInitializer.GenericMapping = IopFileMapping;
+    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &IoDeviceObjectType);
+    
+    /* Do the Adapter Type */
+    RtlInitUnicodeString(&Name, L"Adapter");
+    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &IoAdapterObjectType);
+    
+    /* Do the Controller Type */
+    RtlInitUnicodeString(&Name, L"Controller");
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(CONTROLLER_OBJECT);
+    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &IoControllerObjectType);    
+    
+    /* Initialize the File object type  */
+    RtlInitUnicodeString(&Name, L"File");
+    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(FILE_OBJECT);
+    ObjectTypeInitializer.CloseProcedure = IopCloseFile;
+    ObjectTypeInitializer.DeleteProcedure = IopDeleteFile;
+    ObjectTypeInitializer.SecurityProcedure = IopSecurityFile;
+    ObjectTypeInitializer.QueryNameProcedure = IopQueryNameFile;
+    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &IoFileObjectType);
 
   /*
    * Create the '\Driver' object directory

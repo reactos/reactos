@@ -481,12 +481,12 @@ ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 	DPRINT("Current ObjectType %wZ\n",
 	       &CurrentHeader->ObjectType->TypeName);
 
-	if (CurrentHeader->ObjectType->Parse == NULL)
+	if (CurrentHeader->ObjectType->TypeInfo.ParseProcedure == NULL)
 	  {
 	     DPRINT("Current object can't parse\n");
 	     break;
 	  }
-	Status = CurrentHeader->ObjectType->Parse(CurrentObject,
+	Status = CurrentHeader->ObjectType->TypeInfo.ParseProcedure(CurrentObject,
 						  &NextObject,
 						  &PathString,
 						  &current,
@@ -559,10 +559,10 @@ ObQueryNameString (IN PVOID Object,
   ObjectHeader = BODY_TO_HEADER(Object);
 
   if (ObjectHeader->ObjectType != NULL &&
-      ObjectHeader->ObjectType->QueryName != NULL)
+      ObjectHeader->ObjectType->TypeInfo.QueryNameProcedure != NULL)
     {
-      DPRINT ("Calling %x\n", ObjectHeader->ObjectType->QueryName);
-      Status = ObjectHeader->ObjectType->QueryName (Object,
+      DPRINT ("Calling %x\n", ObjectHeader->ObjectType->TypeInfo.QueryNameProcedure);
+      Status = ObjectHeader->ObjectType->TypeInfo.QueryNameProcedure (Object,
 						    ObjectNameInfo,
 						    Length,
 						    ReturnLength);
@@ -742,7 +742,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
     DPRINT("Allocating memory\n");
   Header = (POBJECT_HEADER)ExAllocatePoolWithTag(NonPagedPool,
 						 OBJECT_ALLOC_SIZE(ObjectSize),
-						 Type->Tag);
+						 Type->Key);
   if (Header == NULL) {
 	DPRINT1("Not enough memory!\n");
 	return STATUS_INSUFFICIENT_RESOURCES;
@@ -795,7 +795,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
 
     if ((Header->ObjectType == IoFileObjectType) ||
         (Header->ObjectType == ExDesktopObjectType) ||
-        (Header->ObjectType->Open != NULL))
+        (Header->ObjectType->TypeInfo.OpenProcedure != NULL))
     {    
      DPRINT("About to call Open Routine\n");
      if (Header->ObjectType == IoFileObjectType)
@@ -816,10 +816,10 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
                                    RemainingPath.Buffer,            
                                    ObjectAttributes);
      }
-     else if (Header->ObjectType->Open != NULL)
+     else if (Header->ObjectType->TypeInfo.OpenProcedure != NULL)
      {
-      DPRINT("Calling %x\n", Header->ObjectType->Open);
-      Status = Header->ObjectType->Open(ObCreateHandle,
+      DPRINT("Calling %x\n", Header->ObjectType->TypeInfo.OpenProcedure);
+      Status = Header->ObjectType->TypeInfo.OpenProcedure(ObCreateHandle,
                                         HEADER_TO_BODY(Header),
                                         NULL,
                                         0,
@@ -855,16 +855,16 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
 			    &NewSecurityDescriptor,
 			    (Header->ObjectType == ObDirectoryType),
 			    &SubjectContext,
-			    Header->ObjectType->Mapping,
+			    &Header->ObjectType->TypeInfo.GenericMapping,
 			    PagedPool);
   if (NT_SUCCESS(Status))
     {
       DPRINT("NewSecurityDescriptor %p\n", NewSecurityDescriptor);
 
-      if (Header->ObjectType->Security != NULL)
+      if (Header->ObjectType->TypeInfo.SecurityProcedure != NULL)
 	{
 	  /* Call the security method */
-	  Status = Header->ObjectType->Security(HEADER_TO_BODY(Header),
+	  Status = Header->ObjectType->TypeInfo.SecurityProcedure(HEADER_TO_BODY(Header),
 						AssignSecurityDescriptor,
 						0,
 						NewSecurityDescriptor,
@@ -1021,9 +1021,9 @@ ObpDeleteObject(POBJECT_HEADER Header)
     }
 
   if (Header->ObjectType != NULL &&
-      Header->ObjectType->Delete != NULL)
+      Header->ObjectType->TypeInfo.DeleteProcedure != NULL)
     {
-      Header->ObjectType->Delete(HEADER_TO_BODY(Header));
+      Header->ObjectType->TypeInfo.DeleteProcedure(HEADER_TO_BODY(Header));
     }
 
   if (Header->Name.Buffer != NULL)
@@ -1096,7 +1096,7 @@ ObpDeleteObjectDpcLevel(IN POBJECT_HEADER ObjectHeader,
 	Params = (PRETENTION_CHECK_PARAMS)
 	  ExAllocatePoolWithTag(NonPagedPoolMustSucceed,
 				sizeof(RETENTION_CHECK_PARAMS),
-				ObjectHeader->ObjectType->Tag);
+				ObjectHeader->ObjectType->Key);
 	Params->ObjectHeader = ObjectHeader;
 	ExInitializeWorkItem(&Params->WorkItem,
 			     ObpDeleteObjectWorkRoutine,

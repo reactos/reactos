@@ -71,6 +71,8 @@ PsInitThreadManagment(VOID)
  * FUNCTION: Initialize thread managment
  */
 {
+   UNICODE_STRING Name;
+   OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
    PETHREAD FirstThread;
    ULONG i;
 
@@ -79,29 +81,19 @@ PsInitThreadManagment(VOID)
 	InitializeListHead(&PriorityListHead[i]);
      }
 
-   PsThreadType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
-
-   PsThreadType->Tag = TAG('T', 'H', 'R', 'T');
-   PsThreadType->TotalObjects = 0;
-   PsThreadType->TotalHandles = 0;
-   PsThreadType->PeakObjects = 0;
-   PsThreadType->PeakHandles = 0;
-   PsThreadType->PagedPoolCharge = 0;
-   PsThreadType->NonpagedPoolCharge = sizeof(ETHREAD);
-   PsThreadType->Mapping = &PiThreadMapping;
-   PsThreadType->Dump = NULL;
-   PsThreadType->Open = NULL;
-   PsThreadType->Close = NULL;
-   PsThreadType->Delete = PspDeleteThread;
-   PsThreadType->Parse = NULL;
-   PsThreadType->Security = NULL;
-   PsThreadType->QueryName = NULL;
-   PsThreadType->OkayToClose = NULL;
-   PsThreadType->Open = NULL;
-
-   RtlInitUnicodeString(&PsThreadType->TypeName, L"Thread");
-
-   ObpCreateTypeObject(PsThreadType);
+    DPRINT1("Creating Thread Object Type\n");
+  
+    /*  Initialize the Thread type  */
+    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+    RtlInitUnicodeString(&Name, L"Thread");
+    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(ETHREAD);
+    ObjectTypeInitializer.GenericMapping = PiThreadMapping;
+    ObjectTypeInitializer.PoolType = NonPagedPool;
+    ObjectTypeInitializer.ValidAccessMask = THREAD_ALL_ACCESS;
+    ObjectTypeInitializer.UseDefaultObject = TRUE;
+    ObjectTypeInitializer.DeleteProcedure = PspDeleteThread;
+    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &PsThreadType);
 
    PsInitializeIdleOrFirstThread(PsInitialSystemProcess, &FirstThread, NULL, KernelMode, TRUE);
    FirstThread->Tcb.State = Running;
@@ -123,6 +115,8 @@ PsInitProcessManagment(VOID)
 {
    PKPROCESS KProcess;
    NTSTATUS Status;
+   UNICODE_STRING Name;
+   OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
 
    ShortPsLockDelay.QuadPart = -100LL;
    PsLockTimeout.QuadPart = -10000000LL; /* one second */
@@ -130,29 +124,19 @@ PsInitProcessManagment(VOID)
     * Register the process object type
     */
 
-   PsProcessType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
-
-   PsProcessType->Tag = TAG('P', 'R', 'O', 'C');
-   PsProcessType->TotalObjects = 0;
-   PsProcessType->TotalHandles = 0;
-   PsProcessType->PeakObjects = 0;
-   PsProcessType->PeakHandles = 0;
-   PsProcessType->PagedPoolCharge = 0;
-   PsProcessType->NonpagedPoolCharge = sizeof(EPROCESS);
-   PsProcessType->Mapping = &PiProcessMapping;
-   PsProcessType->Dump = NULL;
-   PsProcessType->Open = NULL;
-   PsProcessType->Close = NULL;
-   PsProcessType->Delete = PspDeleteProcess;
-   PsProcessType->Parse = NULL;
-   PsProcessType->Security = NULL;
-   PsProcessType->QueryName = NULL;
-   PsProcessType->OkayToClose = NULL;
-   PsProcessType->Open = NULL;
-
-   RtlInitUnicodeString(&PsProcessType->TypeName, L"Process");
-
-   ObpCreateTypeObject(PsProcessType);
+    DPRINT1("Creating Process Object Type\n");
+  
+    /*  Initialize the Thread type  */
+    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+    RtlInitUnicodeString(&Name, L"Process");
+    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(EPROCESS);
+    ObjectTypeInitializer.GenericMapping = PiProcessMapping;
+    ObjectTypeInitializer.PoolType = NonPagedPool;
+    ObjectTypeInitializer.ValidAccessMask = PROCESS_ALL_ACCESS;
+    ObjectTypeInitializer.UseDefaultObject = TRUE;
+    ObjectTypeInitializer.DeleteProcedure = PspDeleteProcess;
+    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &PsProcessType);
 
    InitializeListHead(&PsActiveProcessHead);
    ExInitializeFastMutex(&PspActiveProcessMutex);

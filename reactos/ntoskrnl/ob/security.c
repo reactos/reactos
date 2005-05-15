@@ -36,15 +36,15 @@ ObAssignSecurity(IN PACCESS_STATE AccessState,
 			    &NewDescriptor,
 			    (Type == ObDirectoryType),
 			    &AccessState->SubjectSecurityContext,
-			    Type->Mapping,
+			    &Type->TypeInfo.GenericMapping,
 			    PagedPool);
   if (!NT_SUCCESS(Status))
     return Status;
 
-  if (Type->Security != NULL)
+  if (Type->TypeInfo.SecurityProcedure != NULL)
     {
       /* Call the security method */
-      Status = Type->Security(Object,
+      Status = Type->TypeInfo.SecurityProcedure(Object,
 			      AssignSecurityDescriptor,
 			      0,
 			      NewDescriptor,
@@ -82,7 +82,7 @@ ObGetObjectSecurity(IN PVOID Object,
   if (Header->ObjectType == NULL)
     return STATUS_UNSUCCESSFUL;
 
-  if (Header->ObjectType->Security == NULL)
+  if (Header->ObjectType->TypeInfo.SecurityProcedure == NULL)
     {
       ObpReferenceCachedSecurityDescriptor(Header->SecurityDescriptor);
       *SecurityDescriptor = Header->SecurityDescriptor;
@@ -92,7 +92,7 @@ ObGetObjectSecurity(IN PVOID Object,
 
   /* Get the security descriptor size */
   Length = 0;
-  Status = Header->ObjectType->Security(Object,
+  Status = Header->ObjectType->TypeInfo.SecurityProcedure(Object,
 					QuerySecurityDescriptor,
 					OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION |
 					DACL_SECURITY_INFORMATION | SACL_SECURITY_INFORMATION,
@@ -108,7 +108,7 @@ ObGetObjectSecurity(IN PVOID Object,
     return STATUS_INSUFFICIENT_RESOURCES;
 
   /* Query security descriptor */
-  Status = Header->ObjectType->Security(Object,
+  Status = Header->ObjectType->TypeInfo.SecurityProcedure(Object,
 					QuerySecurityDescriptor,
 					OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION |
 					DACL_SECURITY_INFORMATION | SACL_SECURITY_INFORMATION,
@@ -187,10 +187,10 @@ NtQuerySecurityObject(IN HANDLE Handle,
       return STATUS_UNSUCCESSFUL;
     }
 
-  if (Header->ObjectType->Security != NULL)
+  if (Header->ObjectType->TypeInfo.SecurityProcedure != NULL)
     {
       *ResultLength = Length;
-      Status = Header->ObjectType->Security(Object,
+      Status = Header->ObjectType->TypeInfo.SecurityProcedure(Object,
 					    QuerySecurityDescriptor,
 					    SecurityInformation,
 					    SecurityDescriptor,
@@ -259,9 +259,9 @@ NtSetSecurityObject(IN HANDLE Handle,
       return STATUS_UNSUCCESSFUL;
     }
 
-  if (Header->ObjectType->Security != NULL)
+  if (Header->ObjectType->TypeInfo.SecurityProcedure != NULL)
     {
-      Status = Header->ObjectType->Security(Object,
+      Status = Header->ObjectType->TypeInfo.SecurityProcedure(Object,
 					    SetSecurityDescriptor,
 					    SecurityInformation,
 					    SecurityDescriptor,

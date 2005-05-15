@@ -49,30 +49,22 @@ VOID
 INIT_FUNCTION
 ExpInitializeMutantImplementation(VOID)
 {
+    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
+    UNICODE_STRING Name;
 
-    /* Allocate the Object Type */
-    ExMutantObjectType = ExAllocatePoolWithTag(NonPagedPool, sizeof(OBJECT_TYPE), TAG('M', 't', 'n', 't'));
-
-    /* Create the Object Type */
-    RtlInitUnicodeString(&ExMutantObjectType->TypeName, L"Mutant");
-    ExMutantObjectType->Tag = TAG('M', 't', 'n', 't');
-    ExMutantObjectType->PeakObjects = 0;
-    ExMutantObjectType->PeakHandles = 0;
-    ExMutantObjectType->TotalObjects = 0;
-    ExMutantObjectType->TotalHandles = 0;
-    ExMutantObjectType->PagedPoolCharge = 0;
-    ExMutantObjectType->NonpagedPoolCharge = sizeof(KMUTANT);
-    ExMutantObjectType->Mapping = &ExpMutantMapping;
-    ExMutantObjectType->Dump = NULL;
-    ExMutantObjectType->Open = NULL;
-    ExMutantObjectType->Close = NULL;
-    ExMutantObjectType->Delete = ExpDeleteMutant;
-    ExMutantObjectType->Parse = NULL;
-    ExMutantObjectType->Open = NULL;
-    ExMutantObjectType->Security = NULL;
-    ExMutantObjectType->QueryName = NULL;
-    ExMutantObjectType->OkayToClose = NULL;
-    ObpCreateTypeObject(ExMutantObjectType);
+    DPRINT1("Creating Mutant Object Type\n");
+  
+    /* Create the Event Pair Object Type */
+    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+    RtlInitUnicodeString(&Name, L"Mutant");
+    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(KMUTANT);
+    ObjectTypeInitializer.GenericMapping = ExpMutantMapping;
+    ObjectTypeInitializer.PoolType = NonPagedPool;
+    ObjectTypeInitializer.DeleteProcedure = ExpDeleteMutant;
+    ObjectTypeInitializer.ValidAccessMask = MUTANT_ALL_ACCESS;
+    ObjectTypeInitializer.UseDefaultObject = TRUE;
+    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ExMutantObjectType);
 }
 
 /*

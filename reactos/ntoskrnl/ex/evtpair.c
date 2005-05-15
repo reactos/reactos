@@ -33,26 +33,21 @@ VOID
 INIT_FUNCTION
 ExpInitializeEventPairImplementation(VOID)
 {
-    /* Create the Event Pair Object Type */
-    ExEventPairObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
-    RtlInitUnicodeString(&ExEventPairObjectType->TypeName, L"EventPair");
-    ExEventPairObjectType->Tag = TAG('E', 'v', 'P', 'a');
-    ExEventPairObjectType->PeakObjects = 0;
-    ExEventPairObjectType->PeakHandles = 0;
-    ExEventPairObjectType->TotalObjects = 0;
-    ExEventPairObjectType->TotalHandles = 0;
-    ExEventPairObjectType->PagedPoolCharge = 0;
-    ExEventPairObjectType->NonpagedPoolCharge = sizeof(KEVENT_PAIR);
-    ExEventPairObjectType->Mapping = &ExEventPairMapping;
-    ExEventPairObjectType->Dump = NULL;
-    ExEventPairObjectType->Open = NULL;
-    ExEventPairObjectType->Close = NULL;
-    ExEventPairObjectType->Delete = NULL;
-    ExEventPairObjectType->Parse = NULL;
-    ExEventPairObjectType->Security = NULL;
-    ExEventPairObjectType->QueryName = NULL;
-    ExEventPairObjectType->OkayToClose = NULL;
-    ObpCreateTypeObject(ExEventPairObjectType);
+  OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
+  UNICODE_STRING Name;
+
+  DPRINT1("Creating Event Pair Object Type\n");
+  
+  /* Create the Event Pair Object Type */
+  RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+  RtlInitUnicodeString(&Name, L"EventPair");
+  ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+  ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(KEVENT_PAIR);
+  ObjectTypeInitializer.GenericMapping = ExEventPairMapping;
+  ObjectTypeInitializer.PoolType = NonPagedPool;
+  ObjectTypeInitializer.ValidAccessMask = EVENT_PAIR_ALL_ACCESS;
+  ObjectTypeInitializer.UseDefaultObject = TRUE;
+  ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ExEventPairObjectType);
 }
 
 NTSTATUS

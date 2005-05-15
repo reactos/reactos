@@ -776,7 +776,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
       }
    }
    RtlMapGenericMask(&DesiredAccess,
-                      BODY_TO_HEADER(FileObject)->ObjectType->Mapping);
+                      &BODY_TO_HEADER(FileObject)->ObjectType->TypeInfo.GenericMapping);
 
    Status = ObInsertObject ((PVOID)FileObject,
        NULL,
@@ -2695,7 +2695,7 @@ NtSetInformationFile(HANDLE FileHandle,
             /* Reference the Port */
             Status = ObReferenceObjectByHandle(CompletionInfo->IoCompletionHandle,
                                                IO_COMPLETION_MODIFY_STATE,
-                                               ExIoCompletionType,
+                                               IoCompletionType,
                                                PreviousMode,
                                                (PVOID*)&Queue,
                                                NULL);

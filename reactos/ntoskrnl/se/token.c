@@ -560,30 +560,24 @@ SepDeleteToken(PVOID ObjectBody)
 VOID INIT_FUNCTION
 SepInitializeTokenImplementation(VOID)
 {
-  ExInitializeResource(&SepTokenLock);
-
-  SepTokenObjectType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
-
-  SepTokenObjectType->Tag = TAG('T', 'O', 'K', 'T');
-  SepTokenObjectType->PeakObjects = 0;
-  SepTokenObjectType->PeakHandles = 0;
-  SepTokenObjectType->TotalObjects = 0;
-  SepTokenObjectType->TotalHandles = 0;
-  SepTokenObjectType->PagedPoolCharge = 0;
-  SepTokenObjectType->NonpagedPoolCharge = sizeof(TOKEN);
-  SepTokenObjectType->Mapping = &SepTokenMapping;
-  SepTokenObjectType->Dump = NULL;
-  SepTokenObjectType->Open = NULL;
-  SepTokenObjectType->Close = NULL;
-  SepTokenObjectType->Delete = SepDeleteToken;
-  SepTokenObjectType->Parse = NULL;
-  SepTokenObjectType->Security = NULL;
-  SepTokenObjectType->QueryName = NULL;
-  SepTokenObjectType->OkayToClose = NULL;
-  SepTokenObjectType->Open = NULL;
-
-  RtlInitUnicodeString(&SepTokenObjectType->TypeName, L"Token");
-  ObpCreateTypeObject (SepTokenObjectType);
+    UNICODE_STRING Name;
+    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
+    
+    ExInitializeResource(&SepTokenLock);
+    
+    DPRINT1("Creating Token Object Type\n");
+  
+    /*  Initialize the Token type  */
+    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+    RtlInitUnicodeString(&Name, L"Token");
+    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(TOKEN);
+    ObjectTypeInitializer.GenericMapping = SepTokenMapping;
+    ObjectTypeInitializer.PoolType = NonPagedPool;
+    ObjectTypeInitializer.ValidAccessMask = TOKEN_ALL_ACCESS;
+    ObjectTypeInitializer.UseDefaultObject = TRUE;
+    ObjectTypeInitializer.DeleteProcedure = SepDeleteToken;
+    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &SepTokenObjectType);
 }
 
 

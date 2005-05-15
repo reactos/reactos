@@ -331,7 +331,8 @@ CmInitHives(BOOLEAN SetupBoot)
     if (SetupBoot == FALSE) CmInit2((PCHAR)KeLoaderBlock.CommandLine);
 }
 
-VOID INIT_FUNCTION
+VOID 
+INIT_FUNCTION
 CmInitializeRegistry(VOID)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
@@ -346,29 +347,26 @@ CmInitializeRegistry(VOID)
   LARGE_INTEGER DueTime;
   HANDLE ThreadHandle;
   CLIENT_ID ThreadId;
+  OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
+  UNICODE_STRING Name;
 
+  DPRINT1("Creating Registry Object Type\n");
+  
   /*  Initialize the Key object type  */
-  CmiKeyType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
-  ASSERT(CmiKeyType);
-  CmiKeyType->Tag = TAG('R', 'e', 'g', 'K');
-  CmiKeyType->TotalObjects = 0;
-  CmiKeyType->TotalHandles = 0;
-  CmiKeyType->PeakObjects = 0;
-  CmiKeyType->PeakHandles = 0;
-  CmiKeyType->PagedPoolCharge = 0;
-  CmiKeyType->NonpagedPoolCharge = sizeof(KEY_OBJECT);
-  CmiKeyType->Mapping = &CmiKeyMapping;
-  CmiKeyType->Dump = NULL;
-  CmiKeyType->Open = NULL;
-  CmiKeyType->Close = NULL;
-  CmiKeyType->Delete = CmiObjectDelete;
-  CmiKeyType->Parse = CmiObjectParse;
-  CmiKeyType->Security = CmiObjectSecurity;
-  CmiKeyType->QueryName = CmiObjectQueryName;
-  CmiKeyType->OkayToClose = NULL;
-  RtlInitUnicodeString(&CmiKeyType->TypeName, L"Key");
+  RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+  RtlInitUnicodeString(&Name, L"Key");
+  ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+  ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(KEY_OBJECT);
+  ObjectTypeInitializer.GenericMapping = CmiKeyMapping;
+  ObjectTypeInitializer.PoolType = NonPagedPool;
+  ObjectTypeInitializer.ValidAccessMask = KEY_ALL_ACCESS;
+  ObjectTypeInitializer.UseDefaultObject = TRUE;
+  ObjectTypeInitializer.DeleteProcedure = CmiObjectDelete;
+  ObjectTypeInitializer.ParseProcedure = CmiObjectParse;
+  ObjectTypeInitializer.SecurityProcedure = CmiObjectSecurity;
+  ObjectTypeInitializer.QueryNameProcedure = CmiObjectQueryName;
 
-  ObpCreateTypeObject (CmiKeyType);
+  ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &CmiKeyType);
 
   /* Initialize the hive list */
   InitializeListHead(&CmiHiveListHead);

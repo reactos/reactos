@@ -21,12 +21,12 @@ static PW32_THREAD_CALLBACK PspWin32ThreadCallback = NULL;
 static ULONG PspWin32ProcessSize = 0;
 static ULONG PspWin32ThreadSize = 0;
 
-extern OBJECT_OPEN_ROUTINE ExpWindowStationObjectOpen;
-extern OBJECT_PARSE_ROUTINE ExpWindowStationObjectParse;
-extern OBJECT_DELETE_ROUTINE ExpWindowStationObjectDelete;
-extern OBJECT_FIND_ROUTINE ExpWindowStationObjectFind;
-extern OBJECT_CREATE_ROUTINE ExpDesktopObjectCreate;
-extern OBJECT_DELETE_ROUTINE ExpDesktopObjectDelete;
+extern OB_OPEN_METHOD ExpWindowStationObjectOpen;
+extern OB_PARSE_METHOD ExpWindowStationObjectParse;
+extern OB_DELETE_METHOD ExpWindowStationObjectDelete;
+extern OB_FIND_METHOD ExpWindowStationObjectFind;
+extern OB_CREATE_METHOD ExpDesktopObjectCreate;
+extern OB_DELETE_METHOD ExpDesktopObjectDelete;
 
 #ifndef ALEX_CB_REWRITE
 typedef struct _NTW32CALL_SAVED_STATE

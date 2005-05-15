@@ -55,11 +55,11 @@ ObpDecrementHandleCount(PVOID ObjectBody)
   LONG NewHandleCount = InterlockedDecrement(&ObjectHeader->HandleCount);
 
   if ((ObjectHeader->ObjectType != NULL) &&
-      (ObjectHeader->ObjectType->Close != NULL))
+      (ObjectHeader->ObjectType->TypeInfo.CloseProcedure != NULL))
   {
     /* the handle count should be decremented but we pass the previous value
        to the callback */
-    ObjectHeader->ObjectType->Close(ObjectBody, NewHandleCount + 1);
+    ObjectHeader->ObjectType->TypeInfo.CloseProcedure(ObjectBody, NewHandleCount + 1);
   }
 
   if(NewHandleCount == 0)
@@ -287,7 +287,7 @@ ObDuplicateObject(PEPROCESS SourceProcess,
     if (DesiredAccess & GENERIC_ANY)
     {
       RtlMapGenericMask(&DesiredAccess,
-                        ObjectHeader->ObjectType->Mapping);
+                        &ObjectHeader->ObjectType->TypeInfo.GenericMapping);
     }
     NewHandleEntry.u2.GrantedAccess = DesiredAccess;
   }
@@ -456,7 +456,7 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
            if (DesiredAccess & GENERIC_ANY)
            {
              RtlMapGenericMask(&DesiredAccess,
-                               ObjectType->Mapping);
+                               &ObjectType->TypeInfo.GenericMapping);
            }
          }
          Status = ObpCreateHandle(TargetProcess,
@@ -623,7 +623,7 @@ ObpCreateHandle(PEPROCESS Process,
    if (GrantedAccess & GENERIC_ANY)
      {
        RtlMapGenericMask(&GrantedAccess,
-		         ObjectHeader->ObjectType->Mapping);
+		         &ObjectHeader->ObjectType->TypeInfo.GenericMapping);
      }
 
    NewEntry.u1.Object = ObjectHeader;
@@ -830,7 +830,7 @@ ObReferenceObjectByHandle(HANDLE Handle,
    if (DesiredAccess & GENERIC_ANY)
      {
         RtlMapGenericMask(&DesiredAccess,
-                          BODY_TO_HEADER(ObjectBody)->ObjectType->Mapping);
+                          &BODY_TO_HEADER(ObjectBody)->ObjectType->TypeInfo.GenericMapping);
      }
 
    GrantedAccess = HandleEntry->u2.GrantedAccess;

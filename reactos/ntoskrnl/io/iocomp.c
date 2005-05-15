@@ -15,11 +15,11 @@
 
 #define IOC_TAG   TAG('I', 'O', 'C', 'T')
 
-POBJECT_TYPE ExIoCompletionType;
+POBJECT_TYPE IoCompletionType;
 
 NPAGED_LOOKASIDE_LIST IoCompletionPacketLookaside;
 
-static GENERIC_MAPPING ExIoCompletionMapping =
+static GENERIC_MAPPING IopCompletionMapping =
 {
     STANDARD_RIGHTS_READ    | IO_COMPLETION_QUERY_STATE,
     STANDARD_RIGHTS_WRITE   | IO_COMPLETION_MODIFY_STATE,
@@ -27,7 +27,7 @@ static GENERIC_MAPPING ExIoCompletionMapping =
     IO_COMPLETION_ALL_ACCESS
 };
 
-static const INFORMATION_CLASS_INFO ExIoCompletionInfoClass[] = {
+static const INFORMATION_CLASS_INFO IoCompletionInfoClass[] = {
 
      /* IoCompletionBasicInformation */
     ICI_SQ_SAME( sizeof(IO_COMPLETION_BASIC_INFORMATION), sizeof(ULONG), ICIF_QUERY ),
@@ -203,25 +203,22 @@ VOID
 FASTCALL
 IopInitIoCompletionImplementation(VOID)
 {
-    /* Create the IO Completion Type */
-    ExIoCompletionType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
-    RtlInitUnicodeString(&ExIoCompletionType->TypeName, L"IoCompletion");
-    ExIoCompletionType->Tag = IOC_TAG;
-    ExIoCompletionType->PeakObjects = 0;
-    ExIoCompletionType->PeakHandles = 0;
-    ExIoCompletionType->TotalObjects = 0;
-    ExIoCompletionType->TotalHandles = 0;
-    ExIoCompletionType->PagedPoolCharge = 0;
-    ExIoCompletionType->NonpagedPoolCharge = sizeof(KQUEUE);
-    ExIoCompletionType->Mapping = &ExIoCompletionMapping;
-    ExIoCompletionType->Dump = NULL;
-    ExIoCompletionType->Open = NULL;
-    ExIoCompletionType->Close = NULL;
-    ExIoCompletionType->Delete = IopDeleteIoCompletion;
-    ExIoCompletionType->Parse = NULL;
-    ExIoCompletionType->Security = NULL;
-    ExIoCompletionType->QueryName = NULL;
-    ExIoCompletionType->OkayToClose = NULL;
+    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
+    UNICODE_STRING Name;
+
+    DPRINT1("Creating IoCompletion Object Type\n");
+  
+    /* Initialize the Driver object type  */
+    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+    RtlInitUnicodeString(&Name, L"IoCompletion");
+    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(KQUEUE);
+    ObjectTypeInitializer.PoolType = NonPagedPool;
+    ObjectTypeInitializer.ValidAccessMask = IO_COMPLETION_ALL_ACCESS;
+    ObjectTypeInitializer.UseDefaultObject = TRUE;
+    ObjectTypeInitializer.GenericMapping = IopCompletionMapping;
+    ObjectTypeInitializer.DeleteProcedure = IopDeleteIoCompletion;
+    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &IoCompletionType);
 }
 
 NTSTATUS
@@ -258,7 +255,7 @@ NtCreateIoCompletion(OUT PHANDLE IoCompletionHandle,
 
     /* Create the Object */
     Status = ObCreateObject(PreviousMode,
-                            ExIoCompletionType,
+                            IoCompletionType,
                             ObjectAttributes,
                             PreviousMode,
                             NULL,
@@ -330,7 +327,7 @@ NtOpenIoCompletion(OUT PHANDLE IoCompletionHandle,
 
     /* Open the Object */
     Status = ObOpenObjectByName(ObjectAttributes,
-                                ExIoCompletionType,
+                                IoCompletionType,
                                 NULL,
                                 PreviousMode,
                                 DesiredAccess,
@@ -369,7 +366,7 @@ NtQueryIoCompletion(IN  HANDLE IoCompletionHandle,
 
     /* Check buffers and parameters */
     DefaultQueryInfoBufferCheck(IoCompletionInformationClass,
-                                ExIoCompletionInfoClass,
+                                IoCompletionInfoClass,
                                 IoCompletionInformation,
                                 IoCompletionInformationLength,
                                 ResultLength,
@@ -384,7 +381,7 @@ NtQueryIoCompletion(IN  HANDLE IoCompletionHandle,
     /* Get the Object */
     Status = ObReferenceObjectByHandle(IoCompletionHandle,
                                        IO_COMPLETION_QUERY_STATE,
-                                       ExIoCompletionType,
+                                       IoCompletionType,
                                        PreviousMode,
                                        (PVOID*)&Queue,
                                        NULL);
@@ -468,7 +465,7 @@ NtRemoveIoCompletion(IN  HANDLE IoCompletionHandle,
     /* Open the Object */
     Status = ObReferenceObjectByHandle(IoCompletionHandle,
                                        IO_COMPLETION_MODIFY_STATE,
-                                       ExIoCompletionType,
+                                       IoCompletionType,
                                        PreviousMode,
                                        (PVOID*)&Queue,
                                        NULL);
@@ -549,7 +546,7 @@ NtSetIoCompletion(IN HANDLE IoCompletionPortHandle,
     /* Get the Object */
     Status = ObReferenceObjectByHandle(IoCompletionPortHandle,
                                        IO_COMPLETION_MODIFY_STATE,
-                                       ExIoCompletionType,
+                                       IoCompletionType,
                                        ExGetPreviousMode(),
                                        (PVOID*)&Queue,
                                        NULL);
