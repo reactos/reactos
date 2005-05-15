@@ -1,4 +1,4 @@
-<module name="explorer" type="win32gui" installbase="system32" installname="explorer.exe">
+<module name="explorer" type="win32gui" installname="explorer.exe">
 	<linkerflag>-luuid</linkerflag>
 	<linkerflag>-lstdc++</linkerflag>
 	<linkerflag>-fexceptions</linkerflag>
