@@ -40,7 +40,7 @@ LpcpInitSystem (VOID)
 
     DPRINT1("Creating Port Object Type\n");
   
-    /* Create the window station Object Type */
+    /* Create the Port Object Type */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
     RtlInitUnicodeString(&Name, L"Port");
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
