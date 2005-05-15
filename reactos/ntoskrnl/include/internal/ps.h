@@ -55,6 +55,15 @@ extern LCID PsDefaultSystemLocaleId;
 #define	FSRTL_FAST_IO_TOP_LEVEL_IRP		(0x04)
 #define	FSRTL_MAX_TOP_LEVEL_IRP_FLAG		(0x04)
 
+typedef struct _W32_OBJECT_CALLBACK {
+    OB_OPEN_METHOD WinStaCreate;
+    OB_PARSE_METHOD  WinStaParse;
+    OB_DELETE_METHOD  WinStaDelete;
+    OB_FIND_METHOD  WinStaFind;
+    OB_CREATE_METHOD  DesktopCreate;
+    OB_DELETE_METHOD  DesktopDelete;
+} W32_OBJECT_CALLBACK, *PW32_OBJECT_CALLBACK;
+
 #ifndef __USE_W32API
 typedef struct
 {

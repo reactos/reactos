@@ -24,46 +24,6 @@ typedef struct
 
 typedef PVOID POBJECT;
 
-typedef struct _OBJECT_TYPE_INITIALIZER
-{
-    WORD Length;
-    UCHAR UseDefaultObject;
-    UCHAR CaseInsensitive;
-    ULONG InvalidAttributes;
-    GENERIC_MAPPING GenericMapping;
-    ULONG ValidAccessMask;
-    UCHAR SecurityRequired;
-    UCHAR MaintainHandleCount;
-    UCHAR MaintainTypeList;
-    POOL_TYPE PoolType;
-    ULONG DefaultPagedPoolCharge;
-    ULONG DefaultNonPagedPoolCharge;
-    OB_DUMP_METHOD DumpProcedure;
-    OB_OPEN_METHOD OpenProcedure;
-    OB_CLOSE_METHOD CloseProcedure;
-    OB_DELETE_METHOD DeleteProcedure;
-    OB_PARSE_METHOD ParseProcedure;
-    OB_SECURITY_METHOD SecurityProcedure;
-    OB_QUERYNAME_METHOD QueryNameProcedure;
-    OB_OKAYTOCLOSE_METHOD OkayToCloseProcedure;
-} OBJECT_TYPE_INITIALIZER, *POBJECT_TYPE_INITIALIZER;
-
-typedef struct _OBJECT_TYPE
-{
-    ERESOURCE Mutex;                    /* Used to lock the Object Type */
-    LIST_ENTRY TypeList;                /* Links all the Types Together for Debugging */
-    UNICODE_STRING Name;                /* Name of the Type */
-    PVOID DefaultObject;                /* What Object to use during a Wait (ie, FileObjects wait on FileObject->Event) */
-    ULONG Index;                        /* Index of this Type in the Object Directory */
-    ULONG TotalNumberOfObjects;         /* Total number of objects of this type */
-    ULONG TotalNumberOfHandles;         /* Total number of handles of this type */
-    ULONG HighWaterNumberOfObjects;     /* Peak number of objects of this type */
-    ULONG HighWaterNumberOfHandles;     /* Peak number of handles of this type */
-    OBJECT_TYPE_INITIALIZER TypeInfo;   /* Information captured during type creation */
-    ULONG Key;                          /* Key to use when allocating objects of this type */
-    ERESOURCE ObjectLocks[4];           /* Locks for locking the Objects */
-} OBJECT_TYPE;
-
 typedef struct _OBJECT_HEADER
 /*
  * PURPOSE: Header for every object managed by the object manager
