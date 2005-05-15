@@ -19,6 +19,10 @@
  * - No Joliet file name validations
  * - Very bad ISO file name generation
  *
+ * 
+ * convert long filename to iso9660 file name by Magnus Olsen
+ * magnus@greatlord.com
+ *
  * $Id$
  */
 
@@ -546,8 +550,9 @@ void parse_filename_into_dirrecord ( const char* filename, PDIR_RECORD d, BOOL d
   const char *s = filename;
   char *t = d->name_on_cd;
   char *n = d->name;
-  int joliet_length;
-
+  int joliet_length;    
+  int filename_counter;  
+  filename_counter = 1;
   while (*s != 0)
   {
     if (*s == '.')
@@ -555,11 +560,11 @@ void parse_filename_into_dirrecord ( const char* filename, PDIR_RECORD d, BOOL d
       s++;
       break;
     }
-
+     
     if ( (t-d->name_on_cd) < sizeof(d->name_on_cd)-1 )
       *t++ = check_for_punctuation(*s, filename);
     else if (!joliet)
-      error_exit ( "'%s' is not ISO-9660, aborting...", filename );
+    error_exit ("'%s' is not ISO-9660, aborting...", filename );
     if ( (n-d->name) < sizeof(d->name)-1 )
       *n++ = *s;
     else if (!joliet)
@@ -597,8 +602,26 @@ void parse_filename_into_dirrecord ( const char* filename, PDIR_RECORD d, BOOL d
   } else
     d->flags = 0;
 
-  if ( cdname_exists ( d ) )
-    error_exit ( "'%s' is a duplicate file name, aborting...", filename );
+
+  filename_counter = 1;
+  while  ( cdname_exists ( d ) )
+  {
+	   
+   // the file name must be least 8 char long 
+   if (strlen(d->name_on_cd)<8) 
+	   error_exit ( "'%s' is a duplicate file name, aborting...", filename );   	
+
+   if ((d->name_on_cd[8] == '.') && (strlen(d->name_on_cd) < 13)) 
+       error_exit ( "'%s' is a duplicate file name, aborting...", filename );   	
+   
+   // max 255 times for equal short filename 
+   if (filename_counter>255) error_exit ( "'%s' is a duplicate file name, aborting...", filename );   		       
+   d->name_on_cd[8] = '~';
+   memset(&d->name_on_cd[9],0,5);      
+   itoa(filename_counter, &d->name_on_cd[9],10);
+   filename_counter++;     		       
+   
+  }
 
   if ( joliet )
   {
@@ -1640,5 +1663,6 @@ int main(int argc, char **argv)
   release_memory();
   return 0;
 }
+
 
 /* EOF */
