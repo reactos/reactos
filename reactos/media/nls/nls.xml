@@ -4,7 +4,7 @@
 
 <installfile base="system32">c_037.nls</installfile>
 <installfile base="system32">c_424.nls</installfile>
-<installfile base="system32" newname="oem.nls">c_437.nls</installfile>
+<installfile base="system32">c_437.nls</installfile>
 <installfile base="system32">c_500.nls</installfile>
 <installfile base="system32">c_737.nls</installfile>
 <installfile base="system32">c_775.nls</installfile>
@@ -32,7 +32,7 @@
 <installfile base="system32">c_1026.nls</installfile>
 <installfile base="system32">c_1250.nls</installfile>
 <installfile base="system32">c_1251.nls</installfile>
-<installfile base="system32" newname="ansi.nls">c_1252.nls</installfile>
+<installfile base="system32">c_1252.nls</installfile>
 <installfile base="system32">c_1253.nls</installfile>
 <installfile base="system32">c_1254.nls</installfile>
 <installfile base="system32">c_1255.nls</installfile>
@@ -55,4 +55,4 @@
 <installfile base="system32">c_28597.nls</installfile>
 <installfile base="system32">c_28598.nls</installfile>
 <installfile base="system32">c_28599.nls</installfile>
-<installfile base="system32" newname="casemap.nls">l_intl.nls</installfile>
+<installfile base="system32">l_intl.nls</installfile>
