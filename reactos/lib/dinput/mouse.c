@@ -40,13 +40,6 @@
 #define MOUSE_HACK
 
 WINE_DEFAULT_DEBUG_CHANNEL(dinput);
-typedef struct {
-                     POINT pt;
-                     DWORD mouseData;
-                     DWORD flags;
-                     DWORD time;
-                     ULONG_PTR dwExtraInfo;
-} MSLLHOOKSTRUCT, *PMSLLHOOKSTRUCT;
 
 /* Wine mouse driver object instances */
 #define WINE_MOUSE_X_AXIS_INSTANCE   0

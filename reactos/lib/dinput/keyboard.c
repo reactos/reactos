@@ -38,14 +38,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(dinput);
 
-//fast fix misning from mingw headers
-#ifdef __REACTOS__
-#define LLKHF_EXTENDED       (KF_EXTENDED >> 8)
-#define LLKHF_INJECTED       0x00000010
-//#define LLKHF_ALTDOWN        (KF_ALTDOWN >> 8)
-#define LLKHF_UP             (KF_UP >> 8)
-#endif
-
 #define WINE_DINPUT_KEYBOARD_MAX_KEYS 256
 
 static IDirectInputDevice8AVtbl SysKeyboardAvt;
