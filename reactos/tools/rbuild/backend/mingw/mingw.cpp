@@ -314,6 +314,7 @@ MingwBackend::Process ()
 	GenerateDirectories ();
 	UnpackWineResources ();
 	GenerateTestSupportCode ();
+	GenerateProxyMakefiles ();
 	CheckAutomaticDependencies ();
 	CloseMakefile ();
 }
@@ -618,6 +619,15 @@ MingwBackend::GenerateTestSupportCode ()
 	printf ( "Generating test support code..." );
 	TestSupportCode testSupportCode ( ProjectNode );
 	testSupportCode.GenerateTestSupportCode ( verbose );
+	printf ( "done\n" );
+}
+
+void
+MingwBackend::GenerateProxyMakefiles ()
+{
+	printf ( "Generating proxy makefiles..." );
+	ProxyMakefile proxyMakefile ( ProjectNode );
+	proxyMakefile.GenerateProxyMakefiles ( verbose );
 	printf ( "done\n" );
 }
 

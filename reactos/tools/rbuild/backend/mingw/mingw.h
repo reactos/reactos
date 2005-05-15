@@ -81,6 +81,7 @@ private:
 	std::string GetBin2ResExecutable ();
 	void UnpackWineResources ();
 	void GenerateTestSupportCode ();
+	void GenerateProxyMakefiles ();
 	void CheckAutomaticDependencies ();
 	bool IncludeDirectoryTarget ( const std::string& directory ) const;
 	bool TryToDetectThisCompiler ( const std::string& compiler );
@@ -107,6 +108,21 @@ private:
 	void GenerateDirectoryTargets ();
 	FILE* fMakefile;
 	bool use_pch;
+};
+
+
+class ProxyMakefile
+{
+public:
+	ProxyMakefile ( const Project& project );
+	~ProxyMakefile ();
+	void GenerateProxyMakefiles ( bool verbose );
+private:
+	std::string GeneratePathToParentDirectory ( int numberOfParentDirectories );
+	std::string GetPathToTopDirectory ( Module& module );
+	void GenerateProxyMakefileForModule ( Module& module,
+                                              bool verbose );
+	const Project& project;
 };
 
 #endif /* MINGW_H */

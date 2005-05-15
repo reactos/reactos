@@ -86,7 +86,7 @@ WineResource::UnpackResourcesInModule ( Module& module,
 		         module.name.c_str () );
 	}
 
-	string outputDirectory = GetDirectory ( module.GetPath () );
+	string outputDirectory = module.GetBasePath ();
 	string parameters = ssprintf ( "-b %s -f -x %s",
 	                               NormalizeFilename ( outputDirectory ).c_str (),
 	                               NormalizeFilename ( resourceFilename ).c_str () );
