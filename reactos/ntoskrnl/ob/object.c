@@ -666,7 +666,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
   UNICODE_STRING RemainingPath;
   POBJECT_HEADER Header;
   POBJECT_HEADER ParentHeader = NULL;
-  NTSTATUS Status;
+  NTSTATUS Status = 0;
   BOOLEAN ObjectAttached = FALSE;
   PWCHAR NamePtr;
   PSECURITY_DESCRIPTOR NewSecurityDescriptor = NULL;
