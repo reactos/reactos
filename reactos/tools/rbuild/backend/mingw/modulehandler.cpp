@@ -1262,6 +1262,15 @@ MingwModuleHandler::GenerateCleanObjectsAsYouGoCode () const
 }
 
 void
+MingwModuleHandler::GenerateRunRsymCode () const
+{
+	fprintf ( fMakefile,
+	          "\t$(ECHO_RSYM)\n" );
+	fprintf ( fMakefile,
+	          "\t$(Q)$(RSYM_TARGET) $@ $@\n\n" );
+}
+
+void
 MingwModuleHandler::GenerateLinkerCommand (
 	const string& dependencies,
 	const string& linker,
@@ -1331,17 +1340,6 @@ MingwModuleHandler::GenerateLinkerCommand (
 		fprintf ( fMakefile,
 		          "\t-@${rm} %s 2>$(NUL)\n",
 		          temp_exp.c_str () );
-		
-		GenerateCleanObjectsAsYouGoCode ();
-	
-		GenerateBuildMapCode ();
-	
-		GenerateBuildNonSymbolStrippedCode ();
-	
-		fprintf ( fMakefile,
-		          "\t$(ECHO_RSYM)\n" );
-		fprintf ( fMakefile,
-		          "\t$(Q)$(RSYM_TARGET) $@ $@\n\n" );
 	}
 	else
 	{
@@ -1353,9 +1351,12 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          objectsMacro.c_str (),
 		          libsMacro.c_str (),
 		          GetLinkerMacro ().c_str () );
-
-		GenerateCleanObjectsAsYouGoCode ();
 	}
+
+	GenerateBuildMapCode ();
+	GenerateBuildNonSymbolStrippedCode ();
+	GenerateRunRsymCode ();
+	GenerateCleanObjectsAsYouGoCode ();
 }
 
 void
