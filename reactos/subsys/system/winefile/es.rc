@@ -99,9 +99,9 @@ IDM_WINEFILE MENU FIXED IMPURE
 	}
 
 	POPUP "&Opciones"  {
-		MENUITEM "&Confirmación..." ,		-1
+		MENUITEM "&Confirmación..." ,		501
 		MENUITEM "&Fuente..." ,			ID_SELECT_FONT
-		MENUITEM "Personalizar barra &herramientas..." , -1
+		MENUITEM "Personalizar barra &herramientas..." , 512
 		MENUITEM SEPARATOR
 		MENUITEM "&Barra de herramientas" ,	ID_VIEW_TOOL_BAR, CHECKED
 		MENUITEM "Barra de &unidades" ,		ID_VIEW_DRIVE_BAR, CHECKED
@@ -110,7 +110,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Pantalla completa\tCtrl+Shift+S" , 	ID_VIEW_FULLSCREEN
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "&Minimizar al ejecutarse" ,		-1
+		MENUITEM "&Minimizar al ejecutarse" ,		504
 		MENUITEM "&Guardar opciones al salir" ,		511
 	}
 

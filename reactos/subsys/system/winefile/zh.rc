@@ -99,9 +99,9 @@ IDM_WINEFILE MENU FIXED IMPURE
 	}
 
 	POPUP "选项（&O）"  {
-		MENUITEM "确定方式（&C）..." ,		-1
-		MENUITEM "字体（&F）..." ,			-1
-		MENUITEM "定制工具条（&B）..." , -1
+		MENUITEM "确定方式（&C）..." ,		501
+		MENUITEM "字体（&F）..." ,			ID_SELECT_FONT
+		MENUITEM "定制工具条（&B）..." , 512
 		MENUITEM SEPARATOR
 		MENUITEM "工具条（&T）" ,		ID_VIEW_TOOL_BAR, CHECKED
 		MENUITEM "驱动器列表（&D）" ,		ID_VIEW_DRIVE_BAR, CHECKED
@@ -110,7 +110,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "全屏（&U）\tCtrl+Shift+S" , 	ID_VIEW_FULLSCREEN
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "&Symbol nach Programmstart" ,		-1  /*FIXME what's this? */
+		MENUITEM "&Minimize on run" ,		504
 		MENUITEM "&Einstellungen beim Beenden speichern" ,			511
 	}
 

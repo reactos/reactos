@@ -101,9 +101,9 @@ IDM_WINEFILE MENU FIXED IMPURE
 	}
 
 	POPUP "&Nastavení"  {
-		MENUITEM "&Potvrzování..." ,		-1
+		MENUITEM "&Potvrzování..." ,		501
 		MENUITEM "&Písmo..." ,			ID_SELECT_FONT
-		MENUITEM "Upravit panel &nástrojù..." , -1
+		MENUITEM "Upravit panel &nástrojù..." , 512
 		MENUITEM SEPARATOR
 		MENUITEM "&Panel nástrojù" ,		ID_VIEW_TOOL_BAR, CHECKED
 		MENUITEM "&Panel zaøíení" ,		ID_VIEW_DRIVE_BAR, CHECKED
@@ -112,7 +112,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Celaá obrazovka\tCtrl+Shift+S" , 	ID_VIEW_FULLSCREEN
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "&Minimalizovat pøi spuštìní" ,		-1
+		MENUITEM "&Minimalizovat pøi spuštìní" ,		504
 		MENUITEM "&Uložit nastavení pøi vypnutí" ,			511
 	}
 

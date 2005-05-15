@@ -98,9 +98,9 @@ IDM_WINEFILE MENU FIXED IMPURE
 	}
 
 	POPUP "&Настройки"  {
-		MENUITEM "Под&тверждения..." ,		-1
-		MENUITEM "&Шрифт..." ,			-1
-		MENUITEM "&Настроить панель инструментов..." , -1
+		MENUITEM "Под&тверждения..." ,		501
+		MENUITEM "&Шрифт..." ,			ID_SELECT_FONT
+		MENUITEM "&Настроить панель инструментов..." , 512
 		MENUITEM SEPARATOR
 		MENUITEM "&Панель инструментов" ,		ID_VIEW_TOOL_BAR, CHECKED
 		MENUITEM "Панель &дисков" ,		ID_VIEW_DRIVE_BAR, CHECKED
@@ -109,7 +109,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "П&олный экран\tCtrl+Shift+S" , 	ID_VIEW_FULLSCREEN
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "&Значок в список программ" ,		-1
+		MENUITEM "&Значок в список программ" ,		504
 		MENUITEM "Со&хранять настройки при выходе" ,			511
 	}
 

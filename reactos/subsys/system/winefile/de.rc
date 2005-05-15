@@ -100,9 +100,9 @@ IDM_WINEFILE MENU FIXED IMPURE
 	}
 
 	POPUP "&Optionen"  {
-		MENUITEM "&Bestätigen..." ,		-1
+		MENUITEM "&Bestätigen..." ,		501
 		MENUITEM "Schrift&art..." ,			ID_SELECT_FONT
-		MENUITEM "Symbolleiste &definieren..." , -1
+		MENUITEM "Symbolleiste &definieren..." , 512
 		MENUITEM SEPARATOR
 		MENUITEM "Sy&mbolleiste" ,		ID_VIEW_TOOL_BAR, CHECKED
 		MENUITEM "Lauf&werkleiste" ,		ID_VIEW_DRIVE_BAR, CHECKED
@@ -111,7 +111,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Vollb&ild\tStrg+Umschalt+S" , 	ID_VIEW_FULLSCREEN
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "&Symbol nach Programmstart" ,		-1
+		MENUITEM "&Symbol nach Programmstart" ,		504
 		MENUITEM "&Einstellungen beim Beenden speichern" ,			511
 	}
 

@@ -102,9 +102,9 @@ IDM_WINEFILE MENU FIXED IMPURE
 	}
 
 	POPUP "&Opcje"  {
-		MENUITEM "&Potwierdzenie..." ,		-1
+		MENUITEM "&Potwierdzenie..." ,		501
 		MENUITEM "&Czcionka..." ,			ID_SELECT_FONT
-		MENUITEM "&Ustawienia paska narzêdzi..." , -1
+		MENUITEM "&Ustawienia paska narzêdzi..." , 512
 		MENUITEM SEPARATOR
 		MENUITEM "Pasek &narzêdzi" ,		ID_VIEW_TOOL_BAR, CHECKED
 		MENUITEM "Pasek &dysków" ,		ID_VIEW_DRIVE_BAR, CHECKED
@@ -113,7 +113,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Pe³ny &ekran\tCtrl+Shift+S" , 	ID_VIEW_FULLSCREEN
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "&Zminimalizuj przy starcie" ,		-1
+		MENUITEM "&Zminimalizuj przy starcie" ,		504
 		MENUITEM "Z&apisz ustawienia przed zakoñczeniem" ,			511
 	}
 

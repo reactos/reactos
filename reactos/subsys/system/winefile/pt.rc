@@ -101,9 +101,9 @@ IDM_WINEFILE MENU FIXED IMPURE
 	}
 
 	POPUP "&Opções"  {
-		MENUITEM "&Confirmação..." ,		-1
+		MENUITEM "&Confirmação..." ,		501
 		MENUITEM "&Fonte..." ,			ID_SELECT_FONT
-		MENUITEM "&Personalizar barra de ferramentas..." , -1
+		MENUITEM "&Personalizar barra de ferramentas..." , 512
 		MENUITEM SEPARATOR
 		MENUITEM "Barra d&e ferramentas" ,		ID_VIEW_TOOL_BAR, CHECKED
 		MENUITEM "&Barra de unidades" ,		ID_VIEW_DRIVE_BAR, CHECKED
@@ -112,7 +112,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Tela Cheia\tCtrl+Shift+S" , 	ID_VIEW_FULLSCREEN
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "&Minimizar durante o uso" ,		-1  /* FIXME */
+		MENUITEM "&Minimizar durante o uso" ,		504
 		MENUITEM "&Salvar configurações ao sair" ,			511 /* FIXME */
 	}
 
@@ -229,9 +229,9 @@ IDM_WINEFILE MENU FIXED IMPURE
 	}
 
 	POPUP "&Opções"  {
-		MENUITEM "&Confirmação..." ,		-1
+		MENUITEM "&Confirmação..." ,		501
 		MENUITEM "&Fonte..." ,			ID_SELECT_FONT
-		MENUITEM "&Personalizar barra de ferramentas..." , -1
+		MENUITEM "&Personalizar barra de ferramentas..." , 512
 		MENUITEM SEPARATOR
 		MENUITEM "Barra d&e ferramentas" ,		ID_VIEW_TOOL_BAR, CHECKED
 		MENUITEM "&Barra de unidades" ,		ID_VIEW_DRIVE_BAR, CHECKED
@@ -240,7 +240,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Ecrã Complecto\tCtrl+Shift+S" , 	ID_VIEW_FULLSCREEN
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "&Minimizar durante o uso" ,		-1
+		MENUITEM "&Minimizar durante o uso" ,		504
 		MENUITEM "&Gravar configurações ao sair" ,			511
 	}
 

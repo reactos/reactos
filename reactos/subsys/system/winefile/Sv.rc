@@ -102,9 +102,9 @@ IDM_WINEFILE MENU FIXED IMPURE
 	}
 
 	POPUP "&Inställningar"  {
-        MENUITEM "&Bekräftelse...",            -1
+        MENUITEM "&Bekräftelse...",            501
         MENUITEM "&Teckensnitt...",                    ID_SELECT_FONT
-        MENUITEM "&Konfigurera verktygsfält...",       -1
+        MENUITEM "&Konfigurera verktygsfält...",       512
         MENUITEM SEPARATOR
         MENUITEM "&Verktygsfält",                    ID_VIEW_TOOL_BAR, CHECKED
         MENUITEM "&Enhetsfält",                   ID_VIEW_DRIVE_BAR, CHECKED
@@ -113,7 +113,7 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "F&ullskärm\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "&Minimera vid körning" ,		-1
+		MENUITEM "&Minimera vid körning" ,		504
         MENUITEM "&Spara ändringar vid stängning", 511
 	}
 

@@ -102,9 +102,9 @@ IDM_WINEFILE MENU FIXED IMPURE
 	}
 
 	POPUP "&Beállítások"  {
-		MENUITEM "&Megerõsítés..." ,		-1
-		MENUITEM "&Betûkészlet..." ,			-1
-		MENUITEM "E&gyedi eszköztár..." , -1
+		MENUITEM "&Megerõsítés..." ,		501
+		MENUITEM "&Betûkészlet..." ,			ID_SELECT_FONT
+		MENUITEM "E&gyedi eszköztár..." , 512
 		MENUITEM SEPARATOR
 		MENUITEM "&Eszköztár" ,		ID_VIEW_TOOL_BAR, CHECKED
 		MENUITEM "&Lemeztár" ,		ID_VIEW_DRIVE_BAR, CHECKED
@@ -113,7 +113,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Teljes képernyõs\tCtrl+Shift+S" , 	ID_VIEW_FULLSCREEN
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "Programfuttatás utáni &szimbólum" ,		-1
+		MENUITEM "Programfuttatás utáni &szimbólum" ,		504
 		MENUITEM "Megszüntetés a tárolás végén" ,			511
 	}
 

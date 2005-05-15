@@ -98,9 +98,9 @@ IDM_WINEFILE MENU FIXED IMPURE
 	}
 
 	POPUP "&Opties"  {
-		MENUITEM "&Bevestiging..." , -1
-		MENUITEM "&Lettertype..." ,  -1
-		MENUITEM "Gereedschappenbalk &aanpassen..." , -1
+		MENUITEM "&Bevestiging..." , 501
+		MENUITEM "&Lettertype..." ,  ID_SELECT_FONT
+		MENUITEM "Gereedschappenbalk &aanpassen..." , 512
 		MENUITEM SEPARATOR
 		MENUITEM "&Gereedschappenbalk" , ID_VIEW_TOOL_BAR, CHECKED
 		MENUITEM "&Schijvenbalk" ,       ID_VIEW_DRIVE_BAR, CHECKED
@@ -109,7 +109,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Volledig scherm\tCtrl+Shift+S" , ID_VIEW_FULLSCREEN
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "Ge&minimaliseerd starten" , -1
+		MENUITEM "Ge&minimaliseerd starten" , 504
 		MENUITEM "&Instellingen opslaan bij afsluiten" , 511
 	}
 
