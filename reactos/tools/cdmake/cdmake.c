@@ -617,8 +617,8 @@ void parse_filename_into_dirrecord ( const char* filename, PDIR_RECORD d, BOOL d
    // max 255 times for equal short filename 
    if (filename_counter>255) error_exit ( "'%s' is a duplicate file name, aborting...", filename );   		       
    d->name_on_cd[8] = '~';
-   memset(&d->name_on_cd[9],0,5);      
-   itoa(filename_counter, &d->name_on_cd[9],10);
+   memset(&d->name_on_cd[9],0,5);   
+   sprintf(&d->name_on_cd[9],"%d",filename_counter);   
    filename_counter++;     		       
    
   }
