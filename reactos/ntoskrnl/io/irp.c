@@ -1282,11 +1282,15 @@ IoFreeIrp(PIRP Irp)
                 /* All lists failed, use the pool */
                 List->L.FreeMisses++;
                 ExFreePool(Irp);
+                Irp = NULL;
             }
         }
         
         /* The free was within dhe Depth */
-        InterlockedPushEntrySList(&List->L.ListHead, (PSINGLE_LIST_ENTRY)Irp);
+        if (Irp)
+        {
+           InterlockedPushEntrySList(&List->L.ListHead, (PSINGLE_LIST_ENTRY)Irp);
+        }
     }
     
     DPRINT("Free done\n");
