@@ -82,7 +82,7 @@ WineResource::UnpackResourcesInModule ( Module& module,
 
 	if ( verbose )
 	{
-		printf ( "Unpacking resources for %s",
+		printf ( "\nUnpacking resources for %s",
 		         module.name.c_str () );
 	}
 

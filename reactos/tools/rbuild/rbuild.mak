@@ -116,6 +116,7 @@ RBUILD_COMMON_SOURCES = \
 		compilerflag.cpp \
 		define.cpp \
 		exception.cpp \
+		filesupportcode.cpp \
 		include.cpp \
 		installfile.cpp \
 		linkerflag.cpp \
@@ -123,6 +124,7 @@ RBUILD_COMMON_SOURCES = \
 		project.cpp \
 		ssprintf.cpp \
 		stubbedcomponent.cpp \
+		testsupportcode.cpp \
 		wineresource.cpp \
 		XML.cpp \
 		)
@@ -230,6 +232,10 @@ $(RBUILD_INT_)exception.o: $(RBUILD_BASE_)exception.cpp $(RBUILD_HEADERS) | $(RB
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
+$(RBUILD_INT_)filesupportcode.o: $(RBUILD_BASE_)filesupportcode.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
 $(RBUILD_INT_)include.o: $(RBUILD_BASE_)include.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
@@ -263,6 +269,10 @@ $(RBUILD_INT_)stubbedcomponent.o: $(RBUILD_BASE_)stubbedcomponent.cpp $(RBUILD_H
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)wineresource.o: $(RBUILD_BASE_)wineresource.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_INT_)testsupportcode.o: $(RBUILD_BASE_)testsupportcode.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 

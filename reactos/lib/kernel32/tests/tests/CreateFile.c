@@ -12,11 +12,11 @@ typedef struct
 {
   LPCWSTR lpFileName;
   DWORD dwDesiredAccess;
-	DWORD dwShareMode;
-	LPSECURITY_ATTRIBUTES	lpSecurityAttributes;
-	DWORD dwCreationDisposition;
-	DWORD	dwFlagsAndAttributes;
-	HANDLE hTemplateFile;
+  DWORD dwShareMode;
+  LPSECURITY_ATTRIBUTES lpSecurityAttributes;
+  DWORD dwCreationDisposition;
+  DWORD dwFlagsAndAttributes;
+  HANDLE hTemplateFile;
 } CreateFile_PARAMETERS;
 
 typedef struct
@@ -93,7 +93,7 @@ MockNtCreateFile(PHANDLE FileHandle,
 static HOOK NtCreateFileHooks[] =
 {
   {"NtCreateFile", MockNtCreateFile},
-  NULL, NULL
+  {NULL, NULL}
 };
 
 static void TestFile()

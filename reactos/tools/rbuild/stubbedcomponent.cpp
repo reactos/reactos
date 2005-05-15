@@ -77,4 +77,23 @@ StubbedSymbol::ProcessXML ()
 		newname = att->value;
 	else
 		newname = symbol;
+
+	strippedName = StripSymbol ( symbol );
+}
+
+string
+StubbedSymbol::StripSymbol ( string symbol )
+{
+	size_t start = 0;
+	while ( start < symbol.length () && symbol[start] == '@')
+		start++;
+	size_t end = symbol.length () - 1;
+	while ( end > 0 && isdigit ( symbol[end] ) )
+		end--;
+	if ( end > 0 and symbol[end] == '@' )
+		end--;
+	if ( end > 0 )
+		return symbol.substr ( start, end - start + 1 );
+	else
+		return "";
 }

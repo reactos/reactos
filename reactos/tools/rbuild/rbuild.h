@@ -55,6 +55,7 @@ class If;
 class CompilerFlag;
 class LinkerFlag;
 class Property;
+class TestSupportCode;
 class WineResource;
 class AutomaticDependency;
 class Bootstrap;
@@ -65,6 +66,25 @@ class StubbedComponent;
 class StubbedSymbol;
 
 class SourceFileTest;
+
+
+class Environment
+{
+public:
+	static std::string GetVariable ( const std::string& name );
+	static std::string GetIntermediatePath ();
+	static std::string GetOutputPath ();
+	static std::string GetInstallPath ();
+	static std::string GetEnvironmentVariablePathOrDefault ( const std::string& name,
+	                                                         const std::string& defaultValue );
+};
+
+class FileSupportCode
+{
+public:
+	static void WriteIfChanged ( char* outbuf,
+	                             std::string filename );
+};
 
 class IfableData
 {
@@ -110,8 +130,6 @@ private:
 	                              std::string* alternativeName );
 	void SetConfigurationOption ( char* s,
 	                              std::string name );
-	void WriteIfChanged ( char* outbuf,
-	                      std::string filename );
 	void ReadXml ();
 	void ProcessXMLSubElement ( const XMLElement& e,
 	                            const std::string& path,
@@ -422,6 +440,37 @@ public:
 };
 
 
+class TestSupportCode
+{
+public:
+	const Project& project;
+
+	TestSupportCode ( const Project& project );
+	~TestSupportCode ();
+	void GenerateTestSupportCode ( bool verbose );
+private:
+	bool IsTestModule ( const Module& module );
+	void GenerateTestSupportCodeForModule ( Module& module,
+	                                        bool verbose );
+	std::string GetHooksFilename ( Module& module );
+	char* WriteStubbedSymbolToHooksFile ( char* buffer,
+	                                      const StubbedComponent& component,
+	                                      const StubbedSymbol& symbol );
+	char* WriteStubbedComponentToHooksFile ( char* buffer,
+	                                         const StubbedComponent& component );
+	void WriteHooksFile ( Module& module );
+	std::string GetStubsFilename ( Module& module );
+	char* WriteStubbedSymbolToStubsFile ( char* buffer,
+                                              const StubbedComponent& component,
+	                                      const StubbedSymbol& symbol,
+	                                      int stubIndex );
+	char* WriteStubbedComponentToStubsFile ( char* buffer,
+                                                 const StubbedComponent& component,
+	                                         int* stubIndex );
+	void WriteStubsFile ( Module& module );
+};
+
+
 class WineResource
 {
 public:
@@ -610,10 +659,13 @@ public:
 	const XMLElement& node;
 	std::string symbol;
 	std::string newname;
+	std::string strippedName;
 
 	StubbedSymbol ( const XMLElement& stubbedSymbolNode );
 	~StubbedSymbol ();
 	void ProcessXML();
+private:
+	std::string StripSymbol ( std::string symbol );
 };
 
 extern std::string

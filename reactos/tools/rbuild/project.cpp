@@ -7,6 +7,50 @@
 using std::string;
 using std::vector;
 
+/* static */ string
+Environment::GetVariable ( const string& name )
+{
+	char* value = getenv ( name.c_str () );
+	if ( value != NULL && strlen ( value ) > 0 )
+		return ssprintf ( "%s",
+		                  value );
+	else
+		return "";
+}
+
+/* static */ string
+Environment::GetEnvironmentVariablePathOrDefault ( const string& name,
+                                                   const string& defaultValue )
+{
+	const string& environmentVariableValue = Environment::GetVariable ( name );
+	if ( environmentVariableValue.length () > 0 )
+		return NormalizeFilename ( environmentVariableValue );
+	else
+		return defaultValue;
+}
+
+/* static */ string
+Environment::GetIntermediatePath ()
+{
+	return GetEnvironmentVariablePathOrDefault ( "ROS_INTERMEDIATE",
+	                                             "obj-i386" );
+}
+
+/* static */ string
+Environment::GetOutputPath ()
+{
+	return GetEnvironmentVariablePathOrDefault ( "ROS_OUTPUT",
+	                                             "output-i386" );
+}
+
+/* static */ string
+Environment::GetInstallPath ()
+{
+	return GetEnvironmentVariablePathOrDefault ( "ROS_INSTALL",
+	                                             "reactos" );
+}
+
+
 Project::Project ( const string& filename )
 	: xmlfile (filename),
 	  node (NULL),
@@ -39,68 +83,6 @@ Project::LookupProperty ( const string& name ) const
 			return property;
 	}
 	return NULL;
-}
-
-void
-Project::WriteIfChanged ( char* outbuf,
-	                      string filename )
-{
-	FILE* out;
-	unsigned int end;
-	char* cmpbuf;
-	unsigned int stat;
-	
-	out = fopen ( filename.c_str (), "rb" );
-	if ( out == NULL )
-	{
-		out = fopen ( filename.c_str (), "wb" );
-		if ( out == NULL )
-			throw AccessDeniedException ( filename );
-		fputs ( outbuf, out );
-		fclose ( out );
-		return;
-	}
-	
-	fseek ( out, 0, SEEK_END );
-	end = ftell ( out );
-	cmpbuf = (char*) malloc ( end );
-	if ( cmpbuf == NULL )
-	{
-		fclose ( out );
-		throw OutOfMemoryException ();
-	}
-	
-	fseek ( out, 0, SEEK_SET );
-	stat = fread ( cmpbuf, 1, end, out );
-	if ( stat != end )
-	{
-		free ( cmpbuf );
-		fclose ( out );
-		throw AccessDeniedException ( filename );
-	}
-	if ( end == strlen ( outbuf ) && memcmp ( cmpbuf, outbuf, end ) == 0 )
-	{
-		free ( cmpbuf );
-		fclose ( out );
-		return;
-	}
-	
-	free ( cmpbuf );
-	fclose ( out );
-	out = fopen ( filename.c_str (), "wb" );
-	if ( out == NULL )
-	{
-		throw AccessDeniedException ( filename );
-	}
-	
-	stat = fwrite ( outbuf, 1, strlen ( outbuf ), out);
-	if ( strlen ( outbuf ) != stat )
-	{
-		fclose ( out );
-		throw AccessDeniedException ( filename );
-	}
-
-	fclose ( out );
 }
 
 void
@@ -161,7 +143,7 @@ Project::WriteConfigurationFile ()
 
 	s = s + sprintf ( s, "#endif /* __INCLUDE_CONFIG_H */\n" );
 
-	WriteIfChanged ( buf, "include" SSEP "roscfg.h" );
+	FileSupportCode::WriteIfChanged ( buf, "include" SSEP "roscfg.h" );
 
 	free ( buf );
 }

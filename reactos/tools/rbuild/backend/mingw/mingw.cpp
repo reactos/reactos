@@ -41,18 +41,6 @@ v2s ( const string_list& v, int wrap_at )
 }
 
 
-/* static */ string
-Environment::GetVariable ( const string& name )
-{
-	char* value = getenv ( name.c_str () );
-	if ( value != NULL && strlen ( value ) > 0 )
-		return ssprintf ( "%s",
-		                  value );
-	else
-		return "";
-}
-
-
 Directory::Directory ( const string& name_ )
 	: name(name_)
 {
@@ -131,45 +119,13 @@ Directory::ReplaceVariable ( string name,
 		return path;
 }
 
-/* static */ string
-Directory::GetEnvironmentVariablePathOrDefault ( const string& name,
-                                                 const string& defaultValue )
-{
-	const string& environmentVariableValue = Environment::GetVariable ( name );
-	if ( environmentVariableValue.length () > 0 )
-		return NormalizeFilename ( environmentVariableValue );
-	else
-		return defaultValue;
-}
-
-/* static */ string
-Directory::GetIntermediatePath ()
-{
-	return GetEnvironmentVariablePathOrDefault ( "ROS_INTERMEDIATE",
-	                                             "obj-i386" );
-}
-
-/* static */ string
-Directory::GetOutputPath ()
-{
-	return GetEnvironmentVariablePathOrDefault ( "ROS_OUTPUT",
-	                                             "output-i386" );
-}
-
-/* static */ string
-Directory::GetInstallPath ()
-{
-	return GetEnvironmentVariablePathOrDefault ( "ROS_INSTALL",
-	                                             "reactos" );
-}
-
 void
 Directory::ResolveVariablesInPath ( char* buf,
                                     string path )
 {
-	string s = ReplaceVariable ( "$(INTERMEDIATE)", GetIntermediatePath (), path );
-	s = ReplaceVariable ( "$(OUTPUT)", GetOutputPath (), s );
-	s = ReplaceVariable ( "$(INSTALL)", GetInstallPath (), s );
+	string s = ReplaceVariable ( "$(INTERMEDIATE)", Environment::GetIntermediatePath (), path );
+	s = ReplaceVariable ( "$(OUTPUT)", Environment::GetOutputPath (), s );
+	s = ReplaceVariable ( "$(INSTALL)", Environment::GetInstallPath (), s );
 	strcpy ( buf, s.c_str () );
 }
 
@@ -217,7 +173,7 @@ Directory::EscapeSpaces ( string path )
 
 void
 Directory::CreateRule ( FILE* f,
-	                    const string& parent )
+                        const string& parent )
 {
 	string path;
 
@@ -356,6 +312,7 @@ MingwBackend::Process ()
 	GenerateDirectoryTargets ();
 	GenerateDirectories ();
 	UnpackWineResources ();
+	GenerateTestSupportCode ();
 	CheckAutomaticDependencies ();
 	CloseMakefile ();
 }
@@ -641,7 +598,7 @@ MingwBackend::GenerateXmlBuildFilesMacro() const
 string
 MingwBackend::GetBin2ResExecutable ()
 {
-	return NormalizeFilename ( Directory::GetOutputPath () + SSEP + "tools/bin2res/bin2res" + EXEPOSTFIX );
+	return NormalizeFilename ( Environment::GetOutputPath () + SSEP + "tools/bin2res/bin2res" + EXEPOSTFIX );
 }
 
 void
@@ -651,6 +608,15 @@ MingwBackend::UnpackWineResources ()
 	WineResource wineResource ( ProjectNode,
 	                            GetBin2ResExecutable () );
 	wineResource.UnpackResources ( verbose );
+	printf ( "done\n" );
+}
+
+void
+MingwBackend::GenerateTestSupportCode ()
+{
+	printf ( "Generating test support code..." );
+	TestSupportCode testSupportCode ( ProjectNode );
+	testSupportCode.GenerateTestSupportCode ( verbose );
 	printf ( "done\n" );
 }
 
