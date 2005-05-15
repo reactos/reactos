@@ -241,9 +241,10 @@ MingwBackend::~MingwBackend()
 
 string
 MingwBackend::AddDirectoryTarget ( const string& directory,
-	                               Directory* directoryTree )
+                                   Directory* directoryTree )
 {
-	directoryTree->Add ( directory.c_str() );
+	if ( directory.length () > 0)
+		directoryTree->Add ( directory.c_str() );
 	return directoryTree->name;
 }
 
@@ -775,7 +776,11 @@ MingwBackend::GetModuleInstallTargetFiles (
 		const Module& module = *ProjectNode.modules[i];
 		if ( module.installName.length () > 0 )
 		{
-			string targetFilenameNoFixup = module.installBase + SSEP + module.installName;
+			string targetFilenameNoFixup;
+			if ( module.installBase.length () > 0 )
+				targetFilenameNoFixup = module.installBase + SSEP + module.installName;
+			else
+				targetFilenameNoFixup = module.installName;
 			string targetFilename = MingwModuleHandler::PassThruCacheDirectory (
 				NormalizeFilename ( targetFilenameNoFixup ),
 				installDirectory );
@@ -794,11 +799,16 @@ MingwBackend::GetInstallTargetFiles (
 
 void
 MingwBackend::OutputInstallTarget ( const string& sourceFilename,
-	                                const string& targetFilename,
-	                                const string& targetDirectory )
+	                            const string& targetFilename,
+	                            const string& targetDirectory )
 {
+	string fullTargetFilename;
+	if ( targetDirectory.length () > 0)
+		fullTargetFilename = targetDirectory + SSEP + targetFilename;
+	else
+		fullTargetFilename = targetFilename;
 	string normalizedTargetFilename = MingwModuleHandler::PassThruCacheDirectory (
-		NormalizeFilename ( targetDirectory + SSEP + targetFilename ),
+		NormalizeFilename ( fullTargetFilename ),
 		installDirectory );
 	string normalizedTargetDirectory = MingwModuleHandler::PassThruCacheDirectory (
 		NormalizeFilename ( targetDirectory ),
@@ -823,8 +833,8 @@ MingwBackend::OutputNonModuleInstallTargets ()
 	{
 		const InstallFile& installfile = *ProjectNode.installfiles[i];
 		OutputInstallTarget ( installfile.GetPath (),
-	                          installfile.newname,
-	                          installfile.base );
+		                      installfile.newname,
+		                      installfile.base );
 	}
 }
 

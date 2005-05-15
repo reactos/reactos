@@ -110,7 +110,11 @@ MingwModuleHandler::PassThruCacheDirectory (
 		/* This path already includes the generated files directory variable */
 		return file;
 	else
+	{
+		if ( file == "" )
+			return generatedFilesDirectory;
 		return generatedFilesDirectory + SSEP + file;
+	}
 }
 
 /*static*/ Directory*
@@ -2682,8 +2686,8 @@ MingwLiveIsoModuleHandler::CreateDirectory ( const string& directory )
 
 void
 MingwLiveIsoModuleHandler::OutputCopyCommand ( const string& sourceFilename,
-	                                           const string& targetFilename,
-	                                           const string& targetDirectory )
+                                               const string& targetFilename,
+                                               const string& targetDirectory )
 {
 	string normalizedTargetFilename = MingwModuleHandler::PassThruCacheDirectory (
 		NormalizeFilename ( targetDirectory + SSEP + targetFilename ),
@@ -2698,7 +2702,7 @@ MingwLiveIsoModuleHandler::OutputCopyCommand ( const string& sourceFilename,
 
 void
 MingwLiveIsoModuleHandler::OutputModuleCopyCommands ( string& livecdDirectory,
-	                                                  string& reactosDirectory )
+                                                      string& reactosDirectory )
 {
 	for ( size_t i = 0; i < module.project.modules.size (); i++ )
 	{
@@ -2717,7 +2721,7 @@ MingwLiveIsoModuleHandler::OutputModuleCopyCommands ( string& livecdDirectory,
 
 void
 MingwLiveIsoModuleHandler::OutputNonModuleCopyCommands ( string& livecdDirectory,
-	                                                     string& reactosDirectory )
+                                                         string& reactosDirectory )
 {
 	for ( size_t i = 0; i < module.project.installfiles.size (); i++ )
 	{

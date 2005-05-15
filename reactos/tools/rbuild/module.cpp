@@ -73,7 +73,7 @@ GetDirectory ( const string& filename )
 {
 	size_t index = filename.find_last_of ( CSEP );
 	if ( index == string::npos )
-		return filename;
+		return "";
 	else
 		return filename.substr ( 0, index );
 }
@@ -81,6 +81,8 @@ GetDirectory ( const string& filename )
 string
 NormalizeFilename ( const string& filename )
 {
+	if ( filename == "" )
+		return "";
 	Path path;
 	string normalizedPath = path.Fixup ( filename, true );
 	string relativeNormalizedPath = path.RelativeFromWorkingDirectory ( normalizedPath );
