@@ -913,10 +913,12 @@ MingwBackend::GenerateInstallTarget ()
 	vector<string> vInstallTargetFiles;
 	GetInstallTargetFiles ( vInstallTargetFiles );
 	string installTargetFiles = v2s ( vInstallTargetFiles, 5 );
+	string registryTargetFiles = GetRegistryTargetFiles ();
 
 	fprintf ( fMakefile,
-	          "install: %s install_registry\n",
-	          installTargetFiles.c_str () );
+	          "install: %s %s\n",
+	          installTargetFiles.c_str (),
+		  registryTargetFiles.c_str () );
 	OutputNonModuleInstallTargets ();
 	OutputModuleInstallTargets ();
 	OutputRegistryInstallTarget ();
