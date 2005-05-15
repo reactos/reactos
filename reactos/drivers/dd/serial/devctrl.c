@@ -51,60 +51,29 @@ SerialSetBaudRate(
 	IN PSERIAL_DEVICE_EXTENSION DeviceExtension,
 	IN ULONG NewBaudRate)
 {
+	ULONG BaudRate;
 	USHORT divisor;
 	PUCHAR ComPortBase = (PUCHAR)DeviceExtension->BaseAddress;
-	ULONG BaudRate;
 	NTSTATUS Status = STATUS_SUCCESS;
 
-	if (NewBaudRate & SERIAL_BAUD_USER)
-	{
-		BaudRate = NewBaudRate & ~SERIAL_BAUD_USER;
-		divisor = (USHORT)(BAUD_CLOCK / (CLOCKS_PER_BIT * BaudRate));
-	}
-	else
-	{
-		switch (NewBaudRate)
-		{
-			case SERIAL_BAUD_075:    divisor = 0x600; BaudRate = 75; break;
-			case SERIAL_BAUD_110:    divisor = 0x400; BaudRate = 110; break;
-			case SERIAL_BAUD_134_5:  divisor = 0x360; BaudRate = 134; break;
-			case SERIAL_BAUD_150:    divisor = 0x300; BaudRate = 150; break;
-			case SERIAL_BAUD_300:    divisor = 0x180; BaudRate = 300; break;
-			case SERIAL_BAUD_600:    divisor = 0xc0;  BaudRate = 600; break;
-			case SERIAL_BAUD_1200:   divisor = 0x60;  BaudRate = 1200; break;
-			case SERIAL_BAUD_1800:   divisor = 0x40;  BaudRate = 1800; break;
-			case SERIAL_BAUD_2400:   divisor = 0x30;  BaudRate = 2400; break;
-			case SERIAL_BAUD_4800:   divisor = 0x18;  BaudRate = 4800; break;
-			case SERIAL_BAUD_7200:   divisor = 0x10;  BaudRate = 7200; break;
-			case SERIAL_BAUD_9600:   divisor = 0xc;   BaudRate = 9600; break;
-			case SERIAL_BAUD_14400:  divisor = 0x8;   BaudRate = 14400; break;
-			case SERIAL_BAUD_38400:  divisor = 0x3;   BaudRate = 38400; break;
-			case SERIAL_BAUD_57600:  divisor = 0x2;   BaudRate = 57600; break;
-			case SERIAL_BAUD_115200: divisor = 0x1;   BaudRate = 115200; break;
-			case SERIAL_BAUD_56K:    divisor = 0x2;   BaudRate = 57600; break;
-			case SERIAL_BAUD_128K:   divisor = 0x1;   BaudRate = 115200; break;
-			default: Status = STATUS_INVALID_PARAMETER;
-		}
-	}
+	divisor = (USHORT)(BAUD_CLOCK / (CLOCKS_PER_BIT * NewBaudRate));
+	BaudRate = BAUD_CLOCK / (CLOCKS_PER_BIT * divisor);
 
+	Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
 	if (NT_SUCCESS(Status))
 	{
-		Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
-		if (NT_SUCCESS(Status))
-		{
-			UCHAR Lcr;
-			DPRINT("Serial: SerialSetBaudRate(COM%lu, %lu Bauds)\n", DeviceExtension->ComPort, BaudRate);
-			/* Set Bit 7 of LCR to expose baud registers */
-			Lcr = READ_PORT_UCHAR(SER_LCR(ComPortBase));
-			WRITE_PORT_UCHAR(SER_LCR(ComPortBase), Lcr | SR_LCR_DLAB);
-			/* Write the baud rate */
-			WRITE_PORT_UCHAR(SER_DLL(ComPortBase), divisor & 0xff);
-			WRITE_PORT_UCHAR(SER_DLM(ComPortBase), divisor >> 8);
-			/* Switch back to normal registers */
-			WRITE_PORT_UCHAR(SER_LCR(ComPortBase), Lcr);
+		UCHAR Lcr;
+		DPRINT("Serial: SerialSetBaudRate(COM%lu, %lu Bauds)\n", DeviceExtension->ComPort, BaudRate);
+		/* Set Bit 7 of LCR to expose baud registers */
+		Lcr = READ_PORT_UCHAR(SER_LCR(ComPortBase));
+		WRITE_PORT_UCHAR(SER_LCR(ComPortBase), Lcr | SR_LCR_DLAB);
+		/* Write the baud rate */
+		WRITE_PORT_UCHAR(SER_DLL(ComPortBase), divisor & 0xff);
+		WRITE_PORT_UCHAR(SER_DLM(ComPortBase), divisor >> 8);
+		/* Switch back to normal registers */
+		WRITE_PORT_UCHAR(SER_LCR(ComPortBase), Lcr);
 
-			IoReleaseRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
-		}
+		IoReleaseRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
 	}
 
 	if (NT_SUCCESS(Status))
@@ -244,16 +213,14 @@ SerialGetCommProp(
 		| SERIAL_BAUD_150 | SERIAL_BAUD_300 | SERIAL_BAUD_600 | SERIAL_BAUD_1200
 		| SERIAL_BAUD_1800 | SERIAL_BAUD_2400 | SERIAL_BAUD_4800 | SERIAL_BAUD_7200
 		| SERIAL_BAUD_9600 | SERIAL_BAUD_USER;
-	pCommProp->MaxBaud = SERIAL_BAUD_9600;
+	pCommProp->MaxBaud = SERIAL_BAUD_USER;
 	if (DeviceExtension->UartType >= Uart16450)
 	{
 		pCommProp->SettableBaud |= SERIAL_BAUD_14400 | SERIAL_BAUD_19200 | SERIAL_BAUD_38400;
-		pCommProp->MaxBaud = SERIAL_BAUD_38400;
 	}
 	if (DeviceExtension->UartType >= Uart16550)
 	{
 		pCommProp->SettableBaud |= SERIAL_BAUD_56K | SERIAL_BAUD_57600 | SERIAL_BAUD_115200 | SERIAL_BAUD_128K;
-		pCommProp->MaxBaud = SERIAL_BAUD_115200;
 	}
 
 	pCommProp->SettableData = SERIAL_DATABITS_5 | SERIAL_DATABITS_6 | SERIAL_DATABITS_7 | SERIAL_DATABITS_8;
