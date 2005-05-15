@@ -3366,7 +3366,15 @@ static void refresh_child(ChildWnd* child)
 
 	scan_entry(child, &child->root.entry, 0, child->hwnd);
 
-	entry = read_tree(&child->root, path, NULL, drv, child->sortOrder, child->hwnd);
+#ifdef _SHELL_FOLDERS
+	if (child->root.entry.etype == ET_SHELL)
+		entry = read_tree(&child->root, NULL, get_path_pidl(path,child->hwnd), drv, child->sortOrder, child->hwnd);
+	else
+#endif
+		entry = read_tree(&child->root, path, NULL, drv, child->sortOrder, child->hwnd);
+
+	if (!entry)
+		entry = &child->root.entry;
 
 	insert_entries(&child->left, child->root.entry.down, 0);
 
