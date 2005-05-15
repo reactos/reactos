@@ -6,7 +6,7 @@
 #include <tchar.h>
 
 int
-crt_vsprintf(_TCHAR *str, const _TCHAR *fmt, va_list ap)
+_vstprintf(_TCHAR *str, const _TCHAR *fmt, va_list ap)
 {
   FILE f = {0};
   int len;
@@ -22,7 +22,7 @@ crt_vsprintf(_TCHAR *str, const _TCHAR *fmt, va_list ap)
 
 
 int
-crt__vsnprintf(_TCHAR *str, size_t maxlen, const _TCHAR *fmt, va_list ap)
+_vsntprintf(_TCHAR *str, size_t maxlen, const _TCHAR *fmt, va_list ap)
 {
   FILE f = {0};
   int len;

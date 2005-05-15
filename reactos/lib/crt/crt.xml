@@ -24,6 +24,7 @@
 	</directory>
 	<directory name="ctype">
 		<file>ctype.c</file>
+		<file>isalnum.c</file>
 		<file>isascii.c</file>
 		<file>iscntrl.c</file>
 		<file>isgraph.c</file>
@@ -51,7 +52,9 @@
 		<file>abnorter.c</file>
 		<file>exhand2.c</file>
 		<file>matherr.c</file>
+		<file>seh.s</file>
 		<file>unwind.c</file>
+		<file>xcptfil.c</file>
 	</directory>
 	<directory name="float">
 		<file>chgsign.c</file>
@@ -211,6 +214,7 @@
 		<file>thread.c</file>
 		<file>threadid.c</file>
 		<file>threadx.c</file>
+		<file>wprocess.c</file>
 	</directory>
 	<directory name="search">
 		<file>lfind.c</file>
@@ -246,6 +250,7 @@
 		<file>fputc.c</file>
 		<file>fputchar.c</file>
 		<file>fputs.c</file>
+		<file>fputws.c</file>
 		<file>fread.c</file>
 		<file>freopen.c</file>
 		<file>fseek.c</file>
@@ -253,6 +258,7 @@
 		<file>fsopen.c</file>
 		<file>ftell.c</file>
 		<file>fwalk.c</file>
+		<file>fwprintf.c</file>
 		<file>fwrite.c</file>
 		<file>getc.c</file>
 		<file>getchar.c</file>
@@ -265,6 +271,7 @@
 		<file>putchar.c</file>
 		<file>puts.c</file>
 		<file>putw.c</file>
+		<file>putwchar.c</file>
 		<file>remove.c</file>
 		<file>rename.c</file>
 		<file>rewind.c</file>
@@ -278,12 +285,20 @@
 		<file>tmpfile.c</file>
 		<file>tmpnam.c</file>
 		<file>ungetc.c</file>
+		<file>ungetwc.c</file>
 		<file>vfprintf.c</file>
 		<file>vfwprint.c</file>
 		<file>vprintf.c</file>
 		<file>vsprintf.c</file>
 		<file>vswprintf.c</file>
+		<file>vwprintf.c</file>
 		<file>wfdopen.c</file>
+		<file>wfopen.c</file>
+		<file>wfreopen.c</file>
+		<file>wfsopen.c</file>
+		<file>wpopen.c</file>
+		<file>wprintf.c</file>
+		<file>wremove.c</file>
 		<file>wrename.c</file>
 		<file>wtempnam.c</file>
 		<file>wtmpnam.c</file>

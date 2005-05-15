@@ -555,8 +555,8 @@ _utime
 _utime64=stub
 _vscprintf=stub
 _vscwprintf=stub
-_vsnprintf=crt__vsnprintf
-_vsnwprintf=crt__vsnwprintf
+_vsnprintf
+_vsnwprintf
 _waccess
 _wasctime
 _wchdir
@@ -815,7 +815,7 @@ ungetwc
 vfprintf
 vfwprintf
 vprintf
-vsprintf=crt_vsprintf
+vsprintf
 vswprintf
 vwprintf
 wcscat

@@ -359,8 +359,8 @@ _ungetch
 _unlink
 _unloaddll
 _utime
-_vsnprintf=crt__vsnprintf
-_vsnwprintf=crt__vsnwprintf
+_vsnprintf
+_vsnwprintf
 _wcsdup
 _wcsicmp
 _wcsicoll
@@ -541,7 +541,7 @@ ungetwc
 vfprintf
 vfwprintf
 vprintf
-vsprintf=crt_vsprintf
+vsprintf
 vswprintf
 vwprintf
 wcscat
