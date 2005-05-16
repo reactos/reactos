@@ -132,6 +132,7 @@ XenMachInit(char *CmdLine)
   i386TrapSaveDRHook = XenTrapSaveDR;
   HYPERVISOR_set_trap_table(trap_table);
 
+  XenConsInit();
   XenCtrlIfRegisterReceiver(CMSG_SHUTDOWN, XenShutdownHandler);
 
   /* Ready to receive events now */
@@ -195,20 +196,6 @@ void _start()
 #define XEN_UNIMPLEMENTED(routine) \
   printf(routine " unimplemented. Shutting down\n"); \
   XenDie()
-
-BOOL
-XenConsKbHit()
-  {
-    XEN_UNIMPLEMENTED("XenConsKbHit");
-    return FALSE;
-  }
-
-int
-XenConsGetCh()
-  {
-    XEN_UNIMPLEMENTED("XenConsGetCh");
-    return 0;
-  }
 
 VOID
 XenVideoSetTextCursorPosition(ULONG X, ULONG Y)

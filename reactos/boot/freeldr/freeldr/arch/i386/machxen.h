@@ -50,6 +50,7 @@ VOID XenEvtchnRegisterCtrlIf(unsigned CtrlIfEvtchn);
 VOID XenEvtchnDisableEvents();
 VOID XenEvtchnEnableEvents();
 
+VOID XenConsInit();
 VOID XenConsPutChar(int Ch);
 BOOL XenConsKbHit();
 int XenConsGetCh();

@@ -41,6 +41,7 @@
  */
 
 #include "freeldr.h"
+#include "keycodes.h"
 #include "machxen.h"
 
 #include <rosxen.h>
@@ -60,6 +61,15 @@
 #define OUTPUT_BUFFER_SIZE sizeof(((ctrl_msg_t *) NULL)->msg)
 static char OutputBuffer[OUTPUT_BUFFER_SIZE];
 static unsigned OutputPtr = 0;
+
+#define INPUT_BUFFER_SIZE 64
+static int InputBuffer[INPUT_BUFFER_SIZE];
+static unsigned InputCount = 0;
+
+#define ESC_SEQ_TIMEOUT 200000000 /* in nanosec, 0.2 sec */
+static UCHAR InputEscSeq[4];
+static unsigned InputEscSeqCount = 0;
+static ULONGLONG InputEscSeqTime = 0;
 
 VOID
 XenConsFlush()
@@ -136,6 +146,159 @@ XenConsPutChar(int Ch)
     {
       PutCharInBuffer(Ch);
     }
+}
+
+static void
+XenConsGetTime(PULONGLONG Now)
+{
+  ULONG ShadowTimeVersion;
+
+  do
+    {
+      ShadowTimeVersion = XenSharedInfo->time_version2;
+      *Now = XenSharedInfo->system_time;
+    }
+  while (ShadowTimeVersion != XenSharedInfo->time_version1);
+}
+
+static void
+XenConsCheckInputEscSequence()
+{
+  static struct
+    {
+    char *EscSequence;
+    int Key;
+    }
+  KnownSequences[] =
+    {
+      { "\033[A", KEY_UP },
+      { "\033[B", KEY_DOWN },
+    };
+  unsigned i;
+  ULONGLONG Now;
+
+  if (0 != InputEscSeqCount)
+    {
+      XenConsGetTime(&Now);
+      if (InputEscSeqTime + ESC_SEQ_TIMEOUT <= Now
+          || InputEscSeqCount == sizeof(InputEscSeq) / sizeof(InputEscSeq[0]))
+        {
+          for (i = 0; i < sizeof(InputEscSeq) / sizeof(InputEscSeq[0]); i++)
+            {
+              if (InputCount < INPUT_BUFFER_SIZE)
+                {
+                  InputBuffer[InputCount++] = InputEscSeq[i];
+                }
+            }
+          InputEscSeqCount = 0;
+        }
+      else
+        {
+          for (i = 0; i < sizeof(KnownSequences) / sizeof(KnownSequences[0]); i++)
+            {
+              if (InputEscSeqCount == strlen(KnownSequences[i].EscSequence)
+                  && 0 == memcmp(InputEscSeq, KnownSequences[i].EscSequence,
+                                 InputEscSeqCount))
+                {
+                  if (InputCount < INPUT_BUFFER_SIZE)
+                    {
+                      InputBuffer[InputCount++] = KnownSequences[i].Key;
+                    }
+                  InputEscSeqCount = 0;
+                  break;
+                }
+            }
+        }
+    }
+}
+
+int
+XenConsGetCh()
+{
+  int Key;
+  
+  XenEvtchnDisableEvents();
+  XenConsCheckInputEscSequence();
+  while (0 == InputCount)
+    {
+      HYPERVISOR_block();
+      XenEvtchnDisableEvents();
+    }
+  Key = InputBuffer[0];
+  InputCount--;
+  if (0 != InputCount)
+    {
+      memmove(InputBuffer, InputBuffer + 1, InputCount * sizeof(int));
+    }
+  XenEvtchnEnableEvents();
+
+  return Key;
+  }
+
+BOOL
+XenConsKbHit()
+{
+  BOOL Hit;
+
+  XenEvtchnDisableEvents();
+  XenConsCheckInputEscSequence();
+  Hit = (0 != InputCount);
+  XenEvtchnEnableEvents();
+
+  if (! Hit)
+    {
+      HYPERVISOR_yield();
+    }
+
+  return Hit;
+}
+
+static void
+XenConsProcessInput(unsigned Length, PUCHAR Data)
+{
+  unsigned i;
+
+  XenConsCheckInputEscSequence();
+  for (i = 0; i < Length; i++)
+    {
+      if (0 != InputEscSeqCount || '\033' == Data[i])
+        {
+          InputEscSeq[InputEscSeqCount++] = Data[i];
+          XenConsGetTime(&InputEscSeqTime);
+          XenConsCheckInputEscSequence();
+        }
+      else
+        {
+          InputBuffer[InputCount++] = (int) Data[i];
+        }
+    }
+}
+
+static void
+XenConsMsgHandler(ctrl_msg_t *Msg, unsigned long Id)
+{
+  switch (Msg->subtype)
+    {
+    case CMSG_CONSOLE_DATA:
+      XenConsProcessInput(Msg->length, &Msg->msg[0]);
+      Msg->length = 0;
+      break;
+    default:
+      Msg->length = 0;
+      break;
+    }
+
+  XenCtrlIfSendResponse(Msg);
+}
+
+VOID
+XenConsInit()
+{
+  OutputPtr = 0;
+  InputCount = 0;
+  InputEscSeqCount = 0;
+
+  XenCtrlIfRegisterReceiver(CMSG_CONSOLE, XenConsMsgHandler);
 }
 
 /* EOF */
