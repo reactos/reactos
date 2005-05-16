@@ -14,6 +14,8 @@
 #include "log.h"
 #include "expat.h"
 
+#include <fstream>
+
 
 int PML_XmlDownload (pTree tree, const char* url, void* usrdata,
 						 XML_StartElementHandler start, XML_EndElementHandler end, XML_CharacterDataHandler text) ;
@@ -53,13 +55,36 @@ void opt_text (void* usrdata, const char* data, int len)
 }
 
 
+	// !	!	!	F	I	X	M	E	!	!	! //
+/*
 int CreateOptions (TREE* tree)
 {
-//	string source;
+	ofstream file ("options.xml");
 
-//	ifstream file ("help.txt", ios_base::in);
-	Log("* Creating options,xml");
+	Log("* Creating options.xml from Resources");
 
+	HRSRC hres = FindResource(GetModuleHandle(L"package"), MAKEINTRESOURCE(123), RT_RCDATA);
+	if (!hres)
+	{
+		Log("! ERROR: Could not load it !");
+		return ERR_GENERIC;
+	}
+	
+	MessageBox(0,(WCHAR*)LockResource(LoadResource(NULL, hres)), 0, 0);	// is empty
+	//file << (WCHAR*)LockResource(LoadResource(NULL, hres));
+
+	return ERR_OK;
+}
+*/
+
+char* PML_Download (pTree, const char* url, const char* server, const char* filename);
+
+int CreateOptions (TREE* tree)
+{
+	Log("* Load options.xml from the Internet (Temporary Hack)");
+
+	CopyFileA( PML_Download(tree, "http://svn.reactos.com/viewcvs/*checkout*/trunk/rosapps/packmgr/gui/options.xml", NULL, "options.xml"), "options.xml", TRUE);
+	
 	return ERR_OK;
 }
 

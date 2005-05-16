@@ -20,4 +20,6 @@ BEGIN
   ERR_READY	   "You choosen to install %d package(s). To install them you have to read and agree with each of thier licences.\n\n Do you want still want to ?"
 END
 
+123               RCDATA 	"options.xml"
+
 /* EOF */

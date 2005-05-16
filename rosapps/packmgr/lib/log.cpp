@@ -34,7 +34,7 @@ void Log (const char *message)
 		LogCreated = true;
 
 		//HTML Header
-		fputs("<html><head><title>Logfile</title></head><body>", file);
+		fputs("<html><head><title>Logfile</title></head><body>\n", file);
 		
 		// date and time
 		time_t now;
@@ -53,15 +53,19 @@ void Log (const char *message)
 			KERNEL_VERSION_MINOR,
 			KERNEL_VERSION_PATCH_LEVEL);
 
-		fputs("<h2>ReactOS Package Manager - Log File</h2><br>\n", file);
-		fputs("WARNING: This is still pre-alpha software.<br>\n", file);
+		// write the head
+		fputs("<h2>ReactOS Package Manager - Log File</h2>\n", file);
+		//fputs("WARNING: This is still pre-alpha software.<br>\n", file);
 
 		fputs("Date: ", file); 
 		fputs(GTime, file);
 		fputs("<br>\n", file);
 
+		fputs("Version: ", file);
 		fputs(version, file); 
 		fputs("<br>\n", file);
+
+		fputs("OS: ", file);
 		fputs(versionos, file); 
 		fputs("<br>\n", file);
 	}
@@ -84,11 +88,11 @@ void Log (const char *message)
 
 		time_t now;
 		now = time(NULL);
-		strftime(GTime,sizeof GTime,"%I:%M:%S %p  ",localtime(&now));
+		strftime(GTime,sizeof GTime,"%I:%M:%S %p",localtime(&now));
 
 		fputs("<b>", file);
 		fputs(GTime, file);
-		fputs("</b>", file);
+		fputs("</b> ", file);
 
 		fputs(message, file);
 		fclose(file);

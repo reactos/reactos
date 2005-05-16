@@ -20,4 +20,6 @@ BEGIN
   ERR_READY	   "Zvolili jste si instalaci %d balíèkú. Aby jste je nainstalovali je tøeba abyste pøeèetli a souhlasili s jejich licencemi. \n\nChcete nadále pokraèovat ?"
 END
 
+123               RCDATA 	"options.xml"
+
 /* EOF */
