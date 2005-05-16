@@ -177,6 +177,7 @@ ARCH_I386_OBJS = fathelp.o	\
   xenentry.o \
   xenevtchn.o \
   xenmem.o \
+  xenrtc.o \
   xenvideo.o \
   _alloca.o # For Mingw32 builds
 

@@ -256,13 +256,6 @@ XenDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber,
   }
 
 VOID
-XenRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day,
-                         PULONG Hour, PULONG Minute, PULONG Second)
-  {
-    XEN_UNIMPLEMENTED("XenRTCGetCurrentDateTime");
-  }
-
-VOID
 XenHwDetect(VOID)
   {
     XEN_UNIMPLEMENTED("XenHwDetect");
