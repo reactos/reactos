@@ -60,6 +60,7 @@ typedef struct _XENDISKINFO
 {
   ULONGLONG SectorCount;
   ULONG DriveNumber;
+  ULONG BytesPerSector;
   blkif_vdev_t XenDevice;
   u16 XenInfo;
 } XENDISKINFO, *PXENDISKINFO;
@@ -429,6 +430,7 @@ XenDiskProbe()
             XenDiskInfo[Disk].DriveNumber = 0xff;
             break;
         }
+      XenDiskInfo[Disk].BytesPerSector = 512;
       XenDiskInfo[Disk].XenDevice = Probe[Disk].device;
       XenDiskInfo[Disk].XenInfo = Probe[Disk].info;
     }
@@ -453,17 +455,32 @@ XenDiskInit()
   XenDiskProbe();
 }
 
+static PXENDISKINFO
+XenDiskFindDrive(ULONG DriveNumber)
+{
+  PXENDISKINFO DiskInfo;
+  unsigned Disk;
+
+  DiskInfo = NULL;
+  for (Disk = 0; DiskInfo == NULL && Disk < XenDiskCount; Disk++)
+    {
+      if (DriveNumber == XenDiskInfo[Disk].DriveNumber)
+        {
+          DiskInfo = XenDiskInfo + Disk;
+        }
+    }
+
+  return DiskInfo;
+}
+
 BOOL
 XenDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber,
                           ULONG SectorCount, PVOID Buffer)
 {
   blkif_response_t Rsp;
   blkif_request_t Req;
-  ULONG SectorSize;
   ULONG Count;
-  BOOL Found;
-  unsigned Disk;
-  blkif_vdev_t Device;
+  PXENDISKINFO DiskInfo;
 
   if (! XenDiskInitialized)
     {
@@ -471,33 +488,23 @@ XenDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber,
       XenDiskInit();
     }
 
-  Found = FALSE;
-  Device = 0;
-  for (Disk = 0; Disk < XenDiskCount && ! Found; Disk++)
-    {
-      if (DriveNumber == XenDiskInfo[Disk].DriveNumber)
-        {
-          Device = XenDiskInfo[Disk].XenDevice;
-          Found = TRUE;
-        }
-    }
-  if (! Found)
+  DiskInfo = XenDiskFindDrive(DriveNumber);
+  if (NULL == DiskInfo)
     {
       return FALSE;
     }
 
-  SectorSize = 512;
   while (0 < SectorCount)
     {
       Count = SectorCount;
-      if (PAGE_SIZE / SectorSize < Count)
+      if (PAGE_SIZE / DiskInfo->BytesPerSector < Count)
         {
-          Count = PAGE_SIZE / SectorSize;
+          Count = PAGE_SIZE / DiskInfo->BytesPerSector;
         }
       memset(&Req, 0, sizeof(blkif_request_t));
       Req.operation = BLKIF_OP_READ;
       Req.nr_segments = 1;
-      Req.device = Device;
+      Req.device = DiskInfo->XenDevice;
       Req.id = 0;
       Req.sector_number = SectorNumber;
 #ifdef CONFIG_XEN_BLKDEV_GRANT
@@ -515,13 +522,54 @@ XenDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber,
         {
           return FALSE;
         }
-      memcpy(Buffer, XenDiskScratchPage, Count * SectorSize);
+      memcpy(Buffer, XenDiskScratchPage, Count * DiskInfo->BytesPerSector);
       SectorCount -= Count;
       SectorNumber += Count;
-      Buffer = (void *)((char *) Buffer + Count * SectorSize);
+      Buffer = (void *)((char *) Buffer + Count * DiskInfo->BytesPerSector);
     }
 
   return TRUE;
+}
+
+BOOL
+XenDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY DriveGeometry)
+{
+  PXENDISKINFO DiskInfo;
+
+  DiskInfo = XenDiskFindDrive(DriveNumber);
+  if (NULL == DiskInfo)
+    {
+      return FALSE;
+    }
+
+  if (DiskInfo->SectorCount < 255)
+    {
+      DriveGeometry->Sectors = DiskInfo->SectorCount;
+      DriveGeometry->Heads = 1;
+      DriveGeometry->Cylinders = 1;
+    }
+  else if (DiskInfo->SectorCount < 255 * 63)
+    {
+      DriveGeometry->Sectors = 255;
+      DriveGeometry->Heads = DiskInfo->SectorCount / 255;
+      DriveGeometry->Cylinders = 1;
+    }
+  else
+    {
+      DriveGeometry->Sectors = 255;
+      DriveGeometry->Heads = 63;
+      DriveGeometry->Cylinders = DiskInfo->SectorCount / (255 * 63);
+    }
+  DriveGeometry->BytesPerSector = DiskInfo->BytesPerSector;
+
+  return TRUE;
+}
+
+ULONG
+XenDiskGetCacheableBlockCount(ULONG DriveNumber)
+{
+  /* 64 seems a nice number, it is used by the machpc code for LBA devices */
+  return 64;
 }
 
 /* EOF */

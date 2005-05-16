@@ -287,20 +287,6 @@ XenDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber,
     return FALSE;
   }
 
-BOOL
-XenDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY DriveGeometry)
-  {
-    XEN_UNIMPLEMENTED("XenDiskGetDriveGeometry");
-    return FALSE;
-  }
-
-ULONG
-XenDiskGetCacheableBlockCount(ULONG DriveNumber)
-  {
-    XEN_UNIMPLEMENTED("XenDiskGetCacheableBlockCount");
-    return FALSE;
-  }
-
 VOID
 XenRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day,
                          PULONG Hour, PULONG Minute, PULONG Second)
