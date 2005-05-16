@@ -210,42 +210,10 @@ XenConsGetCh()
     return 0;
   }
 
-VIDEODISPLAYMODE
-XenVideoSetDisplayMode(char *DisplayMode, BOOL Init)
-  {
-    XEN_UNIMPLEMENTED("XenVideoSetDisplayMode");
-    return VideoTextMode;
-  }
-
-VOID
-XenVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth)
-  {
-    XEN_UNIMPLEMENTED("XenVideoGetDisplaySize");
-  }
-
-ULONG
-XenVideoGetBufferSize(VOID)
-  {
-    XEN_UNIMPLEMENTED("XenVideoGetBufferSize");
-    return 0;
-  }
-
 VOID
 XenVideoSetTextCursorPosition(ULONG X, ULONG Y)
   {
     XEN_UNIMPLEMENTED("XenVideoSetTextCursorPosition");
-  }
-
-VOID
-XenVideoHideShowTextCursor(BOOL Show)
-  {
-    XEN_UNIMPLEMENTED("XenVideoHideShowTextCursor");
-  }
-
-VOID
-XenVideoCopyOffScreenBufferToVRAM(PVOID Buffer)
-  {
-    XEN_UNIMPLEMENTED("XenVideoCopyOffScreenBufferToVRAM");
   }
 
 BOOL

@@ -90,6 +90,29 @@ XenVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y)
       return;
     }
 
+  /* Translate some line-drawing characters */
+  if (0x80 <= Ch)
+    {
+      switch(Ch)
+        {
+        case 0xc9: /* top-left double corner */
+        case 0xbb: /* top-right double corner */
+        case 0xc8: /* bottom-left double corner */
+        case 0xbc: /* bottom-right double corner */
+          Ch = '+';
+          break;
+        case 0xcd: /* horizontal double */
+          Ch = '-';
+          break;
+        case 0xba: /* vertical double */
+          Ch = '|';
+          break;
+        case 0xb1: /* dotted pattern */
+          Ch = ' ';
+          break;
+        }
+    }
+
   if (X != CurrentX || Y != CurrentY)
     {
       AnsiMoveToPos(X, Y);
@@ -100,6 +123,50 @@ XenVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y)
     }
   XenConsPutChar(Ch);
   CurrentX++;
+}
+
+VIDEODISPLAYMODE
+XenVideoSetDisplayMode(char *DisplayMode, BOOL Init)
+{
+  /* We only have one mode: text */
+  return VideoTextMode;
+}
+
+VOID
+XenVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth)
+{
+  *Width = COLS;
+  *Height = ROWS;
+  *Depth = 0;
+}
+
+VOID
+XenVideoHideShowTextCursor(BOOL Show)
+{
+  /* We can't hide the cursor */
+}
+
+ULONG
+XenVideoGetBufferSize(VOID)
+{
+  return COLS * ROWS * 2;
+}
+
+VOID
+XenVideoCopyOffScreenBufferToVRAM(PVOID Buffer)
+{
+  unsigned X, Y;
+  PUCHAR BufPtr = (PUCHAR) Buffer;
+
+  for (Y = 0; Y < ROWS; Y++)
+    {
+      for (X = 0; X < COLS; X++)
+        {
+          XenVideoPutChar(BufPtr[0], BufPtr[1], X, Y);
+          BufPtr += 2;
+        }
+    }
+  XenConsFlush();
 }
 
 /* EOF */
