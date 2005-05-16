@@ -84,7 +84,7 @@ CleanupWindowStationImpl(VOID)
 
 NTSTATUS
 STDCALL
-IntWinStaObjectOpen(ULONG Reason,
+IntWinStaObjectOpen(OB_OPEN_REASON Reason,
                     PVOID ObjectBody,
                     PEPROCESS Process,
                     ULONG HandleCount,
