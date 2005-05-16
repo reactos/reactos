@@ -508,7 +508,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
   DPRINT("ParentNode %x PhysicalDeviceObject %x\n",
     ParentNode, PhysicalDeviceObject);
 
-  Node = (PDEVICE_NODE)ExAllocatePool(PagedPool, sizeof(DEVICE_NODE));
+  Node = (PDEVICE_NODE)ExAllocatePool(NonPagedPool, sizeof(DEVICE_NODE));
   if (!Node)
     {
       return STATUS_INSUFFICIENT_RESOURCES;

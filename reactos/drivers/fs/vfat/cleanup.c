@@ -80,6 +80,19 @@ VfatCleanupFile(PVFAT_IRP_CONTEXT IrpContext)
               pFcb->OpenHandleCount == 0)
             {
               DPRINT("'%wZ'\n", &pFcb->PathNameU);
+	 PFILE_OBJECT tmpFileObject;
+	 tmpFileObject = pFcb->FileObject;
+	 if (tmpFileObject != NULL)
+	   {
+	     pFcb->FileObject = NULL;
+#ifdef USE_ROS_CC_AND_FS
+             CcRosReleaseFileCache(tmpFileObject);
+#else
+             CcUninitializeCacheMap(tmpFileObject, NULL, NULL);
+#endif
+             ObDereferenceObject(tmpFileObject);
+           }
+
 #if 0
               /* FIXME:
 	       *  CcPurgeCacheSection is unimplemented.

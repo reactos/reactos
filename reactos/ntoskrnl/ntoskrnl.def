@@ -844,6 +844,7 @@ ObDereferenceObject@4
 ;PfxInsertPrefix
 ;PfxRemovePrefix
 PoCallDriver@8
+PoQueueShutdownWorkItem@4
 PoRegisterDeviceForIdleDetection@16
 PoRegisterSystemState@8
 PoRequestPowerIrp@24
@@ -1210,7 +1211,7 @@ RtlUpperString@8
 RtlValidRelativeSecurityDescriptor@12
 RtlValidSecurityDescriptor@4
 RtlValidSid@4
-;RtlVerifyVersionInfo@16
+RtlVerifyVersionInfo@16
 RtlVolumeDeviceToDosName@8
 RtlWalkFrameChain@12
 RtlWriteRegistryValue@24
@@ -1398,6 +1399,7 @@ ZwYieldExecution@0
 _abnormal_termination
 _alldiv
 _allmul
+_alloca_probe
 _allrem
 _allshl
 _allshr

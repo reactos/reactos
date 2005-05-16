@@ -85,6 +85,7 @@ protected:
 	int			_next_id;
 	WindowHandle _last_foreground_wnd;
 	int			_last_btn_width;
+	MINIMIZEDMETRICS _mmMetrics_org;
 
 	const UINT WM_SHELLHOOK;
 

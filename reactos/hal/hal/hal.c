@@ -721,6 +721,27 @@ KeAcquireSpinLockRaiseToSynch(
 
 
 VOID
+FASTCALL
+KeAcquireInStackQueuedSpinLock(
+    IN PKSPIN_LOCK SpinLock,
+    IN PKLOCK_QUEUE_HANDLE LockHandle
+    )
+{
+  UNIMPLEMENTED;
+}
+
+
+VOID
+FASTCALL
+KeReleaseInStackQueuedSpinLock(
+    IN PKLOCK_QUEUE_HANDLE LockHandle
+    )
+{
+  UNIMPLEMENTED;
+}
+
+
+VOID
 STDCALL
 KeFlushWriteBuffer(VOID)
 {

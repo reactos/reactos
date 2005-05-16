@@ -425,7 +425,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		break;
 
 	  case PM_SELECT_ENTRY:
-		SelectButtonIndex(0, wparam?true:false);
+		SelectButtonIndex(0, wparam!=0);
 		break;
 
 #ifdef _LIGHT_STARTMENU
@@ -1861,10 +1861,18 @@ int StartMenuHandler::Command(int id, int code)
 #endif
 		break;
 
-	  case IDC_CONTROL_PANEL:
+	  case IDC_CONTROL_PANEL: {
 		CloseStartMenu(id);
-		//@@SDIMainFrame::Create(TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"), 0);
-		break;
+#ifndef _NO_MDI
+		XMLPos explorer_options = g_Globals.get_cfg("general/explorer");
+		bool mdi = XMLBool(explorer_options, "mdi", true);
+
+		if (mdi)
+			MDIMainFrame::Create(TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"), 0);
+		else
+#endif
+			SDIMainFrame::Create(TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"), 0);
+		break;}
 
 	  case IDC_ADMIN:
 		CreateSubmenu(id, CSIDL_COMMON_ADMINTOOLS, CSIDL_ADMINTOOLS, ResString(IDS_ADMIN));
@@ -1952,7 +1960,6 @@ void StartMenuHandler::ShowLaunchDialog(HWND hwndOwner)
 	 // Show "Run..." dialog
 	if (RunFileDlg) {
 #ifndef _ROS_ /* FIXME: our shell32 always expects Ansi strings */
-#define	W_VER_NT 0
 		if ((HIWORD(GetVersion())>>14) == W_VER_NT) {
 			WCHAR wTitle[40], wText[256];
 

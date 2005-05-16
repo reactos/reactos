@@ -4,6 +4,7 @@
  *  affinity.cpp
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
+ *                2005         Klemens Friedl <frik85@reactos.at>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -34,12 +35,14 @@
 #include "perfdata.h"
 
 HANDLE        hProcessAffinityHandle;
+TCHAR         szTemp[256];
+TCHAR         szTempA[256];
 
 INT_PTR CALLBACK AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 void ProcessPage_OnSetAffinity(void)
 {
-    LV_ITEM            lvitem;
+    LV_ITEM          lvitem;
     ULONG            Index;
     DWORD            dwProcessId;
     TCHAR            strErrorText[260];
@@ -59,7 +62,8 @@ void ProcessPage_OnSetAffinity(void)
     hProcessAffinityHandle = OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_SET_INFORMATION, FALSE, dwProcessId);
     if (!hProcessAffinityHandle) {
         GetLastErrorText(strErrorText, 260);
-        MessageBox(hMainWnd, strErrorText, _T("Unable to Access or Set Process Affinity"), MB_OK|MB_ICONSTOP);
+        LoadString(hInst, IDS_MSG_ACCESSPROCESSAFF, szTemp, 256);
+        MessageBox(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
         return;
     }
     DialogBox(hInst, MAKEINTRESOURCE(IDD_AFFINITY_DIALOG), hMainWnd, AffinityDialogWndProc);
@@ -86,7 +90,8 @@ AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         if (!GetProcessAffinityMask(hProcessAffinityHandle, &dwProcessAffinityMask, &dwSystemAffinityMask))    {
             GetLastErrorText(strErrorText, 260);
             EndDialog(hDlg, 0);
-            MessageBox(hMainWnd, strErrorText, _T("Unable to Access or Set Process Affinity"), MB_OK|MB_ICONSTOP);
+            LoadString(hInst, IDS_MSG_ACCESSPROCESSAFF, szTemp, 256);
+            MessageBox(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
         }
 
         /*
@@ -321,7 +326,9 @@ AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
              * of it's cpu time.
              */
             if (!dwProcessAffinityMask) {
-                MessageBox(hDlg, _T("The process must have affinity with at least one processor."), _T("Invalid Option"), MB_OK|MB_ICONSTOP);
+                LoadString(hInst, IDS_MSG_PROCESSONEPRO, szTemp, 256);
+                LoadString(hInst, IDS_MSG_INVALIDOPTION, szTempA, 256);
+                MessageBox(hDlg, szTemp, szTempA, MB_OK|MB_ICONSTOP);
                 return TRUE;
             }
 
@@ -331,7 +338,8 @@ AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             if (!SetProcessAffinityMask(hProcessAffinityHandle, dwProcessAffinityMask)) {
                 GetLastErrorText(strErrorText, 260);
                 EndDialog(hDlg, LOWORD(wParam));
-                MessageBox(hMainWnd, strErrorText, _T("Unable to Access or Set Process Affinity"), MB_OK|MB_ICONSTOP);
+                LoadString(hInst, IDS_MSG_ACCESSPROCESSAFF, szTemp, 256);
+                MessageBox(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
             }
 
             EndDialog(hDlg, LOWORD(wParam));

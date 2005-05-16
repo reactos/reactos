@@ -57,9 +57,9 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #include <unicode.h>
 #endif /* !UNICODE_ONLY */
 
-#ifndef ANSI_ONLY
-#include <ascii.h>
-#endif /* !ANSI_ONLY */
+//#ifndef ANSI_ONLY
+//#include <ascii.h>
+//#endif /* !ANSI_ONLY */
 
 /* Define the approprate declaration based upon UNICODE or ASCII */
 

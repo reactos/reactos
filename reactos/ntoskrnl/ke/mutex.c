@@ -144,6 +144,8 @@ KeReleaseMutant(IN PKMUTANT Mutant,
         /* Make sure that the Owner Thread is the current Thread */
         if (Mutant->OwnerThread != CurrentThread) {
             
+            KeReleaseDispatcherDatabaseLock(OldIrql);
+            
             DPRINT1("Trying to touch a Mutant that the caller doesn't own!\n");
             ExRaiseStatus(STATUS_MUTANT_NOT_OWNED);
         }

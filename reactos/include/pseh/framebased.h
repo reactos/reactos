@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2004 KJK::Hyperion
+ Copyright (c) 2004/2005 KJK::Hyperion
  
  Permission is hereby granted, free of charge, to any person obtaining a copy of
  this software and associated documentation files (the "Software"), to deal in
@@ -33,7 +33,10 @@
 
 /*
  Fall back to non-optimal, non-native NLG implementation for environments
- without their own (e.g., currently, kernel-mode ReactOS/Windows)
+ without their own (e.g., currently, kernel-mode ReactOS/Windows). THIS IS NOT
+ RECOMMENDED AND IT WILL BE DROPPED IN A FUTURE VERSION BECAUSE IT MAY CAUSE
+ SEVERE STACK CORRUPTION. REIMPLEMENT OR PORT YOUR COMPILER'S NATIVE NLG
+ IMPLEMENTATION INSTEAD.
 */
 #ifdef _SEH_NO_NATIVE_NLG
 # include <pseh/setjmp.h>
@@ -221,6 +224,97 @@ static __declspec(noreturn) __inline void __stdcall _SEHCompilerSpecificHandler
  ((struct _EXCEPTION_POINTERS *)_SEHExceptionPointers)
 
 #define _SEH_AbnormalTermination() (_SEHPortableFrame->SPF_Code != 0)
+
+/* New syntax */
+#define _SEH2_STATE_INIT_EXCEPT  (1)
+#define _SEH2_STATE_INIT_FINALLY (_SEH2_STATE_INIT_EXCEPT + 1)
+#define _SEH2_STATE_BODY         (_SEH2_STATE_INIT_FINALLY + 1)
+#define _SEH2_STATE_HANDLER      (_SEH2_STATE_BODY + 1)
+#define _SEH2_STATE_DONE         (_SEH2_STATE_HANDLER + 1)
+
+#define _SEH2_LEAVE { _SEH2State = _SEH2_STATE_DONE; break; }
+
+#define _SEH2_TRY \
+{                                                                              \
+ int _SEH2State;                                                               \
+ _SEHFilter_t _SEH2Filter;                                                     \
+ _SEHFinally_t _SEH2Finally;                                                   \
+                                                                               \
+ _SEHFrame_t * _SEHFrame;                                                      \
+ volatile _SEHPortableFrame_t * _SEHPortableFrame;                             \
+                                                                               \
+ for(_SEH2State = 0; _SEH2State < _SEH2_STATE_DONE; ++ _SEH2State)             \
+ {                                                                             \
+  switch(_SEH2State)                                                           \
+  {                                                                            \
+   case _SEH2_STATE_BODY:                                                      \
+   {                                                                           \
+    _SEH_DECLARE_HANDLERS(_SEH2Filter, _SEH2Finally);                          \
+                                                                               \
+    _SEHFrame = _alloca(sizeof(_SEHFrame_t));                                  \
+    _SEHFrame->SEH_Header.SPF_Handlers = &_SEHHandlers;                        \
+    _SEHFrame->SEH_Locals = &_SEHLocals;                                       \
+                                                                               \
+    _SEHPortableFrame = &_SEHFrame->SEH_Header;                                \
+    (void)_SEHPortableFrame;                                                   \
+                                                                               \
+    if(_SEHSetJmp(_SEHFrame->SEH_JmpBuf))                                      \
+     break;                                                                    \
+                                                                               \
+    _SEHEnter(&_SEHFrame->SEH_Header);
+
+#define _SEH2_EXCEPT(FILTER_) \
+    _SEHLeave(&_SEHFrame->SEH_Header);                                         \
+    _SEH2State = _SEH2_STATE_DONE;                                             \
+                                                                               \
+    break;                                                                     \
+   }                                                                           \
+                                                                               \
+   case _SEH2_STATE_INIT_EXCEPT:                                               \
+   {                                                                           \
+    _SEH2Filter = (FILTER_);                                                   \
+    break;                                                                     \
+   }                                                                           \
+                                                                               \
+   case _SEH2_STATE_HANDLER:                                                   \
+   {                                                                           \
+    _SEHLeave(&_SEHFrame->SEH_Header);
+
+#define _SEH2_FINALLY(FINALLY_) \
+    break;                                                                     \
+   }                                                                           \
+                                                                               \
+   case _SEH2_STATE_INIT_FINALLY:                                              \
+   {                                                                           \
+    _SEH2Finally = (FINALLY_);
+
+#define _SEH2_END \
+    break;                                                                     \
+   }                                                                           \
+                                                                               \
+   default:                                                                    \
+   {                                                                           \
+    switch(state)                                                              \
+    {                                                                          \
+     case _SEH2_STATE_INIT_EXCEPT: _SEH2Filter = NULL; break;                  \
+     case _SEH2_STATE_INIT_FINALLY: _SEH2Finally = NULL; break;                \
+     case _SEH2_STATE_HANDLER: _SEHLeave(&_SEHFrame->SEH_Header); break;       \
+    }                                                                          \
+                                                                               \
+    break;                                                                     \
+   }                                                                           \
+  }                                                                            \
+ }                                                                             \
+                                                                               \
+ if(_SEHHandlers.SH_Finally)                                                   \
+  _SEHHandlers.SH_Finally(&_SEHFrame->SEH_Header);                             \
+}
+
+#define _SEH2_HANDLE _SEH2_EXCEPT(_SEH_STATIC_FILTER(_SEH_EXECUTE_HANDLER))
+
+#define _SEH2_GetExceptionCode     _SEH_GetExceptionCode
+#define _SEH2_GetExceptionPointers _SEH_GetExceptionPointers
+#define _SEH2_AbnormalTermination  _SEH_AbnormalTermination
 
 #endif
 

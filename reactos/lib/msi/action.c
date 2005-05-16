@@ -48,7 +48,7 @@ http://msdn.microsoft.com/library/default.asp?url=/library/en-us/msi/setup/stand
 #include "winuser.h"
 #include "shlobj.h"
 #include "wine/unicode.h"
-#include "ver.h"
+#include "winver.h"
 #include "action.h"
 
 #define REG_PROGRESS_VALUE 13200

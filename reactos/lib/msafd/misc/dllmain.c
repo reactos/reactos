@@ -62,7 +62,7 @@ WSPSocket(
 	ULONG						SizeOfEA;
 	PAFD_CREATE_PACKET			AfdPacket;
 	HANDLE						Sock;
-	PSOCKET_INFORMATION			Socket = NULL;
+	PSOCKET_INFORMATION			Socket = NULL, PrevSocket = NULL;
     PFILE_FULL_EA_INFORMATION	EABuffer = NULL;
 	PHELPER_DATA				HelperData;
 	PVOID						HelperDLLContext;
@@ -225,6 +225,16 @@ WSPSocket(
 	/* Save Handle */
 	Socket->Handle = (SOCKET)Sock;
 
+        /* XXX See if there's a structure we can reuse -- We need to do this
+         * more properly. */
+        PrevSocket = GetSocketStructure( (SOCKET)Sock );
+
+        if( PrevSocket ) {
+            RtlCopyMemory( PrevSocket, Socket, sizeof(*Socket) );
+            RtlFreeHeap( GlobalHeap, 0, Socket );
+            Socket = PrevSocket;
+        }
+
 	/* Save Group Info */
 	if (g != 0) {
 		GetSocketInformation(Socket, AFD_INFO_GROUP_ID_TYPE, 0, &GroupData);
@@ -235,13 +245,13 @@ WSPSocket(
 
 	/* Get Window Sizes and Save them */
 	GetSocketInformation (Socket,
-							AFD_INFO_SEND_WINDOW_SIZE, 
-							&Socket->SharedData.SizeOfSendBuffer, 
-							NULL);
+                              AFD_INFO_SEND_WINDOW_SIZE, 
+                              &Socket->SharedData.SizeOfSendBuffer, 
+                              NULL);
 	GetSocketInformation (Socket, 
-							AFD_INFO_RECEIVE_WINDOW_SIZE, 
-							&Socket->SharedData.SizeOfRecvBuffer, 
-							NULL);
+                              AFD_INFO_RECEIVE_WINDOW_SIZE, 
+                              &Socket->SharedData.SizeOfRecvBuffer, 
+                              NULL);
 
 	/* Save in Process Sockets List */
 	Sockets[SocketCount] = Socket;
@@ -424,6 +434,7 @@ WSPCloseSocket(
 
     /* Close the handle */
     NtClose((HANDLE)Handle);
+
     return NO_ERROR;
 }
 
@@ -591,6 +602,9 @@ WSPSelect(
 	( readfds ? readfds->fd_count : 0 ) + 
 	( writefds ? writefds->fd_count : 0 ) + 
 	( exceptfds ? exceptfds->fd_count : 0 );
+
+    if( HandleCount < 0 || nfds != 0 ) HandleCount = nfds * 3;
+
     PollBufferSize = sizeof(*PollInfo) + 
 	(HandleCount * sizeof(AFD_HANDLE));
     
@@ -987,7 +1001,7 @@ WSPAccept(
             RtlCopyMemory (SocketAddress, 
                            &ListenReceiveData->Address.Address[0].AddressType, 
                            sizeof(*RemoteAddress));
-            if( *SocketAddressLength )
+            if( SocketAddressLength )
                 *SocketAddressLength = 
                     ListenReceiveData->Address.Address[0].AddressLength;
         }
@@ -1287,6 +1301,12 @@ WSPGetSockName(
 			               SocketAddress->Address[0].Address, 
 			               SocketAddress->Address[0].AddressLength);
 			*NameLength = 2 + SocketAddress->Address[0].AddressLength;
+                        AFD_DbgPrint
+                            (MID_TRACE,
+                             ("NameLength %d Address: %x Port %x\n",
+                              *NameLength, 
+                              ((struct sockaddr_in *)Name)->sin_addr.s_addr,
+                              ((struct sockaddr_in *)Name)->sin_port));
 			HeapFree(GlobalHeap, 0, TdiAddress);
 			return 0;
 		} else {
@@ -1365,6 +1385,13 @@ WSPGetPeerName(
 			RtlCopyMemory (Name->sa_data,
 			               SocketAddress->Address[0].Address, 
 			               SocketAddress->Address[0].AddressLength);
+			*NameLength = 2 + SocketAddress->Address[0].AddressLength;
+                        AFD_DbgPrint
+                            (MID_TRACE,
+                             ("NameLength %d Address: %s Port %x\n",
+                              *NameLength, 
+                              ((struct sockaddr_in *)Name)->sin_addr.s_addr,
+                              ((struct sockaddr_in *)Name)->sin_port));
 			HeapFree(GlobalHeap, 0, TdiAddress);
 			return 0;
 		} else {
@@ -1683,6 +1710,9 @@ SetSocketInformation(
 	if (LargeInteger != NULL) {
 		InfoData.Information.LargeInteger = *LargeInteger;
 	}
+
+        AFD_DbgPrint(MID_TRACE,("XXX Info %x (Data %x)\n",
+                                AfdInformationClass, *Ulong));
 
 	/* Send IOCTL */
 	Status = NtDeviceIoControlFile( (HANDLE)Socket->Handle,

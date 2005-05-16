@@ -1,6 +1,5 @@
-/* Definitions for the VERsion infolibrary (VER.DLL)
- *
- * Copyright 1996 Marcus Meissner
+/*
+ * Copyright 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,13 +14,23 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * Marked as obsolete:  Albert den Haan (Corel Corp) 1999-04-28
- * VER.H obsolete, include winver.h instead
  */
-#ifndef __WINE_VER_H
-#define __WINE_VER_H
 
-#include <winver.h>
 
-#endif	/* __WINE_VER_H */
+ //
+ // Explorer clone
+ //
+ // shellservices.h
+ //
+ // Martin Fuchs, 28.03.2005
+ //
+
+
+ // launch start programs
+extern "C" int startup(int argc, char *argv[]);
+
+ // load Shell Service Objects (volume control, printer/network icons, ...)
+struct SSOThread : public Thread
+{
+	int	Run();
+};

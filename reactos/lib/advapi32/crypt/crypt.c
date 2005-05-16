@@ -1887,6 +1887,17 @@ BOOL WINAPI CryptVerifySignatureA (HCRYPTHASH hHash, BYTE *pbSignature, DWORD dw
 		key->hPrivate, NULL, dwFlags);
 }
 
+BOOL WINAPI
+CryptVerifySignatureW (HCRYPTHASH hHash,
+			BYTE *pbSignature,
+			DWORD dwSigLen,
+			HCRYPTKEY hPubKey,
+			LPCWSTR sDescription,
+			DWORD dwFlags)
+{
+	OutputDebugStringA ("ADVAPI32!CryptVerifySignatureW not implemented!");
+	return FALSE;
+}
 
 /*
    These functions have nearly identical prototypes to CryptProtectMemory and CryptUnprotectMemory,

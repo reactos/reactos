@@ -24,7 +24,8 @@ exe explorer :
 	shell/regfs.cpp
 	shell/fatfs.cpp
 	shell/webchild.cpp
-	shell/startup.c
+	services/startup.c
+	services/shellservices.cpp
 	taskbar/desktopbar.cpp
 	taskbar/quicklaunch.cpp
 	taskbar/startmenu.cpp

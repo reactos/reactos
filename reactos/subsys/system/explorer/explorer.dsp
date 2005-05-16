@@ -702,11 +702,6 @@ SOURCE=.\shell\shellfs.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\shell\startup.c
-# SUBTRACT CPP /YX /Yc /Yu
-# End Source File
-# Begin Source File
-
 SOURCE=.\shell\unixfs.cpp
 # PROP Exclude_From_Build 1
 # End Source File
@@ -783,6 +778,23 @@ SOURCE=.\precomp.cpp
 # Begin Source File
 
 SOURCE=.\precomp.h
+# End Source File
+# End Group
+# Begin Group "services"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\services\shellservices.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\services\shellservices.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\services\startup.c
+# SUBTRACT CPP /YX /Yc /Yu
 # End Source File
 # End Group
 # End Target

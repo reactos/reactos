@@ -556,8 +556,10 @@ NtGdiExtFloodFill(
 	COLORREF  Color,
 	UINT  FillType)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+   DPRINT1("FIXME: NtGdiExtFloodFill is UNIMPLEMENTED\n");
+   
+   /* lie and say we succeded */
+	return TRUE;
 }
 
 BOOL STDCALL

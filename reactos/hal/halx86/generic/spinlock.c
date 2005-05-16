@@ -98,4 +98,31 @@ KfReleaseSpinLock (
    KfLowerIrql(NewIrql);
 }
 
+
+/*
+ * @unimplemented
+ */
+VOID
+FASTCALL
+KeAcquireInStackQueuedSpinLock(
+    IN PKSPIN_LOCK SpinLock,
+    IN PKLOCK_QUEUE_HANDLE LockHandle
+    )
+{
+   UNIMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+VOID
+FASTCALL
+KeReleaseInStackQueuedSpinLock(
+    IN PKLOCK_QUEUE_HANDLE LockHandle
+    )
+{
+   UNIMPLEMENTED;
+}
+
 /* EOF */

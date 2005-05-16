@@ -275,4 +275,19 @@ NtPowerInformation(
    return Status;
 }
 
+
+NTSTATUS
+STDCALL
+PoQueueShutdownWorkItem(
+	IN PWORK_QUEUE_ITEM WorkItem
+	)
+{
+  PAGED_CODE();
+  
+  DPRINT1("PoQueueShutdownWorkItem(%p)\n", WorkItem);
+
+  return STATUS_NOT_IMPLEMENTED;
+}
+
+
 /* EOF */

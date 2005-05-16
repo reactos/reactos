@@ -18,7 +18,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_MODE_USER
 #include <ntos.h>
 
 #define NDEBUG

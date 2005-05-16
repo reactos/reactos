@@ -461,6 +461,7 @@ ObmReferenceObjectByHandle(PUSER_HANDLE_TABLE HandleTable,
   if ((ObjectType != otUnknown) && (ObjectHeader->Type != ObjectType))
     {
       DPRINT1("Object type mismatch 0x%x 0x%x\n", ObjectType, ObjectHeader->Type);
+      ObmDereferenceObject(ObjectBody);
       return STATUS_UNSUCCESSFUL;
     }
   

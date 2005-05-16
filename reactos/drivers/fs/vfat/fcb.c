@@ -191,10 +191,10 @@ vfatReleaseFCB(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
 
   while (pFCB)
   {
-     Index = pFCB->Hash.Hash % FCB_HASH_TABLE_SIZE;
-     ShortIndex = pFCB->ShortHash.Hash % FCB_HASH_TABLE_SIZE;
+     Index = pFCB->Hash.Hash % pVCB->HashTableSize;
+     ShortIndex = pFCB->ShortHash.Hash % pVCB->HashTableSize;
      pFCB->RefCount--;
-     if (pFCB->RefCount <= 0 && (!vfatFCBIsDirectory (pFCB) || pFCB->Flags & FCB_DELETE_PENDING))
+     if (pFCB->RefCount == 0)
      {
         tmpFcb = pFCB->parentFcb;
         RemoveEntryList (&pFCB->FcbListEntry);  
@@ -227,22 +227,6 @@ vfatReleaseFCB(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
 	   }
            entry->next = pFCB->Hash.next;
         }
-        if (vfatFCBIsDirectory(pFCB))
-        {
-           /* Uninitialize file cache if initialized for this file object. */
-           if (pFCB->FileObject->SectionObjectPointer->SharedCacheMap)
-	   {
-#ifdef USE_ROS_CC_AND_FS
-              CcRosReleaseFileCache(pFCB->FileObject);
-#else
-              CcUninitializeCacheMap(pFCB->FileObject, NULL, NULL);
-#endif
-	   }
-           vfatDestroyCCB(pFCB->FileObject->FsContext2);
-           pFCB->FileObject->FsContext2 = NULL;
-	   pFCB->FileObject->FsContext = NULL;
-           ObDereferenceObject(pFCB->FileObject);
-        }
         vfatDestroyFCB (pFCB);
      }
      else
@@ -259,8 +243,8 @@ vfatAddFCBToTable(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
   ULONG Index;
   ULONG ShortIndex;
 
-  Index = pFCB->Hash.Hash % FCB_HASH_TABLE_SIZE;
-  ShortIndex = pFCB->ShortHash.Hash % FCB_HASH_TABLE_SIZE;
+  Index = pFCB->Hash.Hash % pVCB->HashTableSize;
+  ShortIndex = pFCB->ShortHash.Hash % pVCB->HashTableSize;
 
   InsertTailList (&pVCB->FcbListHead, &pFCB->FcbListEntry);
    
@@ -292,7 +276,7 @@ vfatGrabFCBFromTable(PDEVICE_EXTENSION  pVCB, PUNICODE_STRING  PathNameU)
   
   Hash = vfatNameHash(0, PathNameU);
 
-  entry = pVCB->FcbHashTable[Hash % FCB_HASH_TABLE_SIZE];
+  entry = pVCB->FcbHashTable[Hash % pVCB->HashTableSize];
   if (entry)
     {
       vfatSplitPathName(PathNameU, &DirNameU, &FileNameU);
@@ -353,6 +337,7 @@ vfatFCBInitializeCacheFromVolume (PVCB  vcb, PVFATFCB  fcb)
   fileObject->FsContext = fcb;
   fileObject->FsContext2 = newCCB;
   fcb->FileObject = fileObject;
+  fcb->RefCount++;
 
 #ifdef USE_ROS_CC_AND_FS
   fileCacheQuantum = (vcb->FatInfo.BytesPerCluster >= PAGE_SIZE) ?
@@ -375,12 +360,7 @@ vfatFCBInitializeCacheFromVolume (PVCB  vcb, PVFATFCB  fcb)
 #endif
 
   fcb->Flags |= FCB_CACHE_INITIALIZED;
-
-#ifdef USE_ROS_CC_AND_FS
-  return  status;
-#else
   return STATUS_SUCCESS;
-#endif
 }
 
 PVFATFCB

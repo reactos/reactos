@@ -8,7 +8,7 @@
  * PROGRAMMERS:     Hervé Poussineau (poussine@freesurf.fr)
  */
 
-//#define NDEBUG
+#define NDEBUG
 #include "serial.h"
 
 NTSTATUS
@@ -16,7 +16,8 @@ InitializeCircularBuffer(
 	IN PCIRCULAR_BUFFER pBuffer,
 	IN ULONG BufferSize)
 {
-	pBuffer->Buffer = ExAllocatePoolWithTag(NonPagedPool, BufferSize * sizeof(UCHAR), SERIAL_TAG);
+	DPRINT("Serial: InitializeCircularBuffer(pBuffer %p, BufferSize %lu)\n", pBuffer, BufferSize);
+	pBuffer->Buffer = (PUCHAR)ExAllocatePoolWithTag(NonPagedPool, BufferSize * sizeof(UCHAR), SERIAL_TAG);
 	if (!pBuffer->Buffer)
 		return STATUS_INSUFFICIENT_RESOURCES;
 	pBuffer->Length = BufferSize;
@@ -28,6 +29,7 @@ NTSTATUS
 FreeCircularBuffer(
 	IN PCIRCULAR_BUFFER pBuffer)
 {
+	DPRINT("Serial: FreeCircularBuffer(pBuffer %p)\n", pBuffer);
 	ExFreePoolWithTag(pBuffer->Buffer, SERIAL_TAG);
 	return STATUS_SUCCESS;
 }
@@ -36,6 +38,7 @@ BOOLEAN
 IsCircularBufferEmpty(
 	IN PCIRCULAR_BUFFER pBuffer)
 {
+	DPRINT("Serial: IsCircularBufferEmpty(pBuffer %p)\n", pBuffer);
 	return (pBuffer->ReadPosition == pBuffer->WritePosition);
 }
 
@@ -44,6 +47,7 @@ PushCircularBufferEntry(
 	IN PCIRCULAR_BUFFER pBuffer,
 	IN UCHAR Entry)
 {
+	DPRINT("Serial: PushCircularBufferEntry(pBuffer %p, Entry 0x%x)\n", pBuffer, Entry);
 	ASSERT(pBuffer->Length);
 	ULONG NextPosition = (pBuffer->WritePosition + 1) % pBuffer->Length;
 	if (NextPosition == pBuffer->ReadPosition)
@@ -58,10 +62,35 @@ PopCircularBufferEntry(
 	IN PCIRCULAR_BUFFER pBuffer,
 	OUT PUCHAR Entry)
 {
+	DPRINT("Serial: PopCircularBufferEntry(pBuffer %p)\n", pBuffer);
 	ASSERT(pBuffer->Length);
 	if (IsCircularBufferEmpty(pBuffer))
 		return STATUS_ARRAY_BOUNDS_EXCEEDED;
 	*Entry = pBuffer->Buffer[pBuffer->ReadPosition];
 	pBuffer->ReadPosition = (pBuffer->ReadPosition + 1) % pBuffer->Length;
+	return STATUS_SUCCESS;
+}
+
+NTSTATUS
+IncreaseCircularBufferSize(
+	IN PCIRCULAR_BUFFER pBuffer,
+	IN ULONG NewBufferSize)
+{
+	PUCHAR NewBuffer;
+	
+	DPRINT("Serial: IncreaseCircularBufferSize(pBuffer %p, NewBufferSize %lu)\n", pBuffer, NewBufferSize);
+	ASSERT(pBuffer->Length);
+	if (pBuffer->Length > NewBufferSize)
+		return STATUS_INVALID_PARAMETER;
+	else if (pBuffer->Length == NewBufferSize)
+		return STATUS_SUCCESS;
+	
+	NewBuffer = (PUCHAR)ExAllocatePoolWithTag(NonPagedPool, NewBufferSize * sizeof(UCHAR), SERIAL_TAG);
+	if (!NewBuffer)
+		return STATUS_INSUFFICIENT_RESOURCES;
+	RtlCopyMemory(NewBuffer, pBuffer->Buffer, pBuffer->Length * sizeof(UCHAR));
+	ExFreePoolWithTag(pBuffer->Buffer, SERIAL_TAG);
+	pBuffer->Buffer = NewBuffer;
+	pBuffer->Length = NewBufferSize;
 	return STATUS_SUCCESS;
 }

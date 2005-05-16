@@ -45,7 +45,7 @@ http://msdn.microsoft.com/library/default.asp?url=/library/en-us/msi/setup/summa
 #include "winuser.h"
 #include "shlobj.h"
 #include "wine/unicode.h"
-#include "ver.h"
+#include "winver.h"
 #include "action.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);

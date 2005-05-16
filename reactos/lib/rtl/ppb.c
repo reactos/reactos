@@ -28,28 +28,12 @@
 #define ALIGN(x,align)      (((ULONG)(x)+(align)-1UL)&(~((align)-1UL)))
 
 
+KPROCESSOR_MODE
+RtlpGetMode();
+
+
 /* FUNCTIONS ****************************************************************/
 
-/*
- * @implemented
- */
-VOID STDCALL
-RtlAcquirePebLock(VOID)
-{
-   PPEB Peb = NtCurrentPeb ();
-   Peb->FastPebLockRoutine (Peb->FastPebLock);
-}
-
-
-/*
- * @implemented
- */
-VOID STDCALL
-RtlReleasePebLock(VOID)
-{
-   PPEB Peb = NtCurrentPeb ();
-   Peb->FastPebUnlockRoutine (Peb->FastPebLock);
-}
 
 static inline VOID
 RtlpCopyParameterString(PWCHAR *Ptr,
@@ -100,7 +84,7 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
    EmptyString.MaximumLength = sizeof(WCHAR);
    EmptyString.Buffer = L"";
 
-   if (NtCurrentPeb()->ProcessParameters)
+   if (RtlpGetMode() == UserMode)
      {
 	if (DllPath == NULL)
 	  DllPath = &NtCurrentPeb()->ProcessParameters->DllPath;
@@ -152,7 +136,7 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
    /* Calculate the required block size */
    RegionSize = ROUNDUP(Length, PAGE_SIZE);
 
-   Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+   Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
 				    (PVOID*)&Param,
 				    0,
 				    &RegionSize,
@@ -253,7 +237,7 @@ RtlDestroyProcessParameters(PRTL_USER_PROCESS_PARAMETERS ProcessParameters)
 {
    ULONG RegionSize = 0;
 
-   return NtFreeVirtualMemory (NtCurrentProcess (),
+   return ZwFreeVirtualMemory (NtCurrentProcess (),
 			(PVOID)ProcessParameters,
 			&RegionSize,
 			MEM_RELEASE);

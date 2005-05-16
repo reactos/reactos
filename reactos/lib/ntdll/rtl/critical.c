@@ -136,7 +136,7 @@ RtlEnterCriticalSection(
     HANDLE Thread = (HANDLE)NtCurrentTeb()->Cid.UniqueThread;
     
     /* Try to Lock it */
-    if (InterlockedIncrement(&CriticalSection->LockCount)) {
+    if (InterlockedIncrement(&CriticalSection->LockCount) != 0) {
 
         /* 
          * We've failed to lock it! Does this thread
@@ -332,12 +332,10 @@ RtlLeaveCriticalSection(
         CriticalSection->OwningThread = 0;
         
         /* Was someone wanting us? This needs to be done atomically. */
-        if (InterlockedDecrement(&CriticalSection->LockCount) >= 0) {
+        InterlockedDecrement(&CriticalSection->LockCount);
         
-            /* Let him have us */
-            RtlpUnWaitCriticalSection(CriticalSection);
-        
-        }
+        /* Let him have us */
+        RtlpUnWaitCriticalSection(CriticalSection);
     }
     
     /* Sucessful! */

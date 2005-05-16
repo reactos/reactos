@@ -82,6 +82,12 @@ typedef struct _IFInfo {
     IPAddrEntry        ip_addr;
 } IFInfo;
 
+typedef struct _IP_SET_DATA {
+    ULONG NteContext;
+    ULONG NewAddress;
+    ULONG NewNetmask;
+} IP_SET_DATA, *PIP_SET_DATA;
+
 typedef enum _IPHLPAddrType {
     IPAAddr, IPABcast, IPAMask, IFMtu, IFStatus
 } IPHLPAddrType;

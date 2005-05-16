@@ -330,9 +330,9 @@ GetTeb(VOID)
 BOOL STDCALL
 SwitchToThread(VOID)
 {
-  NTSTATUS errCode;
-  errCode = NtYieldExecution();
-  return TRUE;
+  NTSTATUS Status;
+  Status = NtYieldExecution();
+  return Status != STATUS_NO_YIELD_PERFORMED;
 }
 
 

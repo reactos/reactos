@@ -6,7 +6,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = regtests
 
-TARGET_CFLAGS = -Wall -Werror
+TARGET_CFLAGS = -D__USE_W32API -Wall -Werror
 
 TARGET_OBJECTS = \
   regtests.o

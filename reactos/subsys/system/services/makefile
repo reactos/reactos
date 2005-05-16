@@ -14,7 +14,7 @@ TARGET_SDKLIBS = ntdll.a kernel32.a user32.a
 
 TARGET_OBJECTS = $(TARGET_NAME).o database.o
 
-TARGET_CFLAGS = -Wall -Werror
+TARGET_CFLAGS = -D__USE_W32API -Wall -Werror
 
 include $(PATH_TO_TOP)/rules.mak
 

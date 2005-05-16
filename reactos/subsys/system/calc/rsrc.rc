@@ -30,5 +30,5 @@
 #include "Pt.rc"
 #include "Ru.rc"
 #include "Si.rc"
-
+#include "Sv.rc"
 LANGUAGE LANG_NEUTRAL,SUBLANG_NEUTRAL

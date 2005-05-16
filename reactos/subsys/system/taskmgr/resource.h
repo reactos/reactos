@@ -183,6 +183,61 @@
 #define IDS_LICENSE                     32816
 #define IDC_STATIC                      -1
 
+#define IDS_TAB_APPS                    310
+#define IDS_TAB_PROCESSES               311
+#define IDS_TAB_PERFORMANCE             312
+#define IDS_TAB_TASK                    313
+#define IDS_TAB_STATUS                  314
+#define IDS_TAB_IMAGENAME               315
+#define IDS_TAB_PID                     316
+#define IDS_TAB_USERNAME                317
+#define IDS_TAB_SESSIONID               318
+#define IDS_TAB_CPU                     319
+#define IDS_TAB_CPUTIME                 320
+#define IDS_TAB_MEMUSAGE                321
+#define IDS_TAB_PEAKMEMUSAGE            322
+#define IDS_TAB_MEMDELTA                323
+#define IDS_TAB_PAGEFAULT               324
+#define IDS_TAB_PFDELTA                 325
+#define IDS_TAB_VMSIZE                  326
+#define IDS_TAB_PAGEDPOOL               327
+#define IDS_TAB_NPPOOL                  328
+#define IDS_TAB_BASEPRI                 329
+#define IDS_TAB_HANDLES                 330
+#define IDS_TAB_THREADS                 331
+#define IDS_TAB_USERPBJECTS             332
+#define IDS_TAB_GDIOBJECTS              333
+#define IDS_TAB_IOREADS                 334
+#define IDS_TAB_IOWRITES                335
+#define IDS_TAB_IOOTHER                 336
+#define IDS_TAB_IOREADBYTES             337
+#define IDS_TAB_IOWRITESBYTES           338
+#define IDS_TAB_IOOTHERBYTES            339
+#define IDS_MENU_SELECTCOLUMNS          340
+#define IDS_MENU_16BITTASK              341
+#define IDS_MENU_WINDOWS                342
+#define IDS_MENU_LARGEICONS             343
+#define IDS_MENU_SMALLICONS             344
+#define IDS_MENU_DETAILS                345
+#define IDS_MENU_ONEGRAPHALLCPUS        346
+#define IDS_MENU_ONEGRAPHPERCPU         347
+#define IDS_MENU_CPUHISTORY             348
+#define IDS_MENU_SHOWKERNELTIMES        349
+#define IDS_CREATENEWTASK               350
+#define IDS_CREATENEWTASK_DESC          351
+#define IDS_MSG_ACCESSPROCESSAFF        352
+#define IDS_MSG_PROCESSONEPRO           353
+#define IDS_MSG_INVALIDOPTION           354
+#define IDS_MSG_UNABLEDEBUGPROCESS      355
+#define IDS_MSG_WARNINGDEBUG            356
+#define IDS_MSG_TASKMGRWARNING          357
+#define IDS_MSG_WARNINGTERMINATING      358
+#define IDS_MSG_UNABLETERMINATEPRO      359
+#define IDS_MSG_UNABLECHANGEPRIORITY    360
+#define IDS_MSG_WARNINGCHANGEPRIORITY   361
+#define IDS_MSG_TRAYICONCPUUSAGE        362
+
+
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED

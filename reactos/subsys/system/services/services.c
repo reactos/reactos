@@ -40,7 +40,7 @@
 #define NDEBUG
 #include <debug.h>
 
-
+int WINAPI RegisterServicesProcess(DWORD ServicesProcessId);
 
 /* GLOBALS ******************************************************************/
 

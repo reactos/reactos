@@ -119,7 +119,6 @@ PsLookupCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType, PVOID *Object)
               &ObjectType->TypeName, Entry->u2.GrantedAccess);
       ExUnlockHandleTableEntry(PspCidTable,
                                Entry);
-      KEBUGCHECK(0);
     }
   }
   

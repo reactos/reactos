@@ -4,6 +4,7 @@
  *  applicationpage.cpp
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
+ *                2005         Klemens Friedl <frik85@reactos.at>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -95,12 +96,13 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
         /* Initialize the application page's controls */
         column.mask = LVCF_TEXT|LVCF_WIDTH;
-        _tcscpy(szTemp, _T("Task"));
+
+        LoadString(hInst, IDS_TAB_TASK, szTemp, 256);
         column.pszText = szTemp;
         column.cx = 250;
         ListView_InsertColumn(hApplicationPageListCtrl, 0, &column);    /* Add the "Task" column */
         column.mask = LVCF_TEXT|LVCF_WIDTH;
-        _tcscpy(szTemp, _T("Status"));
+        LoadString(hInst, IDS_TAB_STATUS, szTemp, 256);
         column.pszText = szTemp;
         column.cx = 95;
         ListView_InsertColumn(hApplicationPageListCtrl, 1, &column);    /* Add the "Status" column */

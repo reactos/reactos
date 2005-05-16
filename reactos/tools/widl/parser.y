@@ -561,6 +561,8 @@ base_type: tBYTE				{ $$ = make_type(RPC_FC_BYTE, NULL); }
 						  default: break;
 						  }
 						}
+	| tUNSIGNED				{ $$ = make_type(RPC_FC_ULONG, &std_int);
+						  $$->sign = -1; }
 	| tFLOAT				{ $$ = make_type(RPC_FC_FLOAT, NULL); }
 	| tDOUBLE				{ $$ = make_type(RPC_FC_DOUBLE, NULL); }
 	| tBOOLEAN				{ $$ = make_type(RPC_FC_SMALL, &std_bool); }

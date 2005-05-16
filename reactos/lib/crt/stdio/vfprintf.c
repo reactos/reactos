@@ -3,19 +3,10 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <internal/file.h>
-
-#ifdef __USE_W32API
 #include <ntdef.h>
-#endif
-
-
 
 extern int __mb_cur_max;
-
-
-
 int __vfprintf(FILE*, const char*, va_list);
-
 
 /*
  * @implemented

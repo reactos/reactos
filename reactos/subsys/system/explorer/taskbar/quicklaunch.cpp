@@ -286,6 +286,10 @@ int QuickLaunchBar::Notify(int id, NMHDR* pnmh)
 #ifdef TTF_DI_SETITEM
 		ttdi->uFlags |= TTF_DI_SETITEM;
 #endif
+
+		 // enable multiline tooltips (break at CR/LF and for very long one-line strings)
+		SendMessage(pnmh->hwndFrom, TTM_SETMAXTIPWIDTH, 0, 400);
+
 		break;}
 
 		return super::Notify(id, pnmh);

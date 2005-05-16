@@ -1283,21 +1283,6 @@ SetVolumeMountPointW(
  */
 BOOL
 STDCALL
-VerifyVersionInfoW(
-    LPOSVERSIONINFOEXW lpVersionInformation,
-    DWORD dwTypeMask,
-    DWORDLONG dwlConditionMask
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 DeleteVolumeMountPointA(
     LPCSTR lpszVolumeMountPoint
     )
@@ -1547,36 +1532,6 @@ SetVolumeMountPointA(
     LPCSTR lpszVolumeMountPoint,
     LPCSTR lpszVolumeName
     )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-VerifyVersionInfoA(
-    LPOSVERSIONINFOEXA lpVersionInformation,
-    DWORD dwTypeMask,
-    DWORDLONG dwlConditionMask
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-ULONGLONG
-STDCALL
-VerSetConditionMask(
-        ULONGLONG   ConditionMask,
-        DWORD   TypeMask,
-        BYTE    Condition
-        )
 {
     STUB;
     return 0;

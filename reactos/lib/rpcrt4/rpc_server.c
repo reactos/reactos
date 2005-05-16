@@ -483,7 +483,7 @@ static DWORD CALLBACK RPCRT4_server_thread(LPVOID the_arg)
       conn = cps->conn;
       while (conn) {
         RPCRT4_OpenConnection(conn);
-        if (conn->ovl.hEvent) count++;
+        if (conn->ovl[0].hEvent) count++;
         conn = conn->Next;
       }
       cps = cps->Next;
@@ -500,7 +500,7 @@ static DWORD CALLBACK RPCRT4_server_thread(LPVOID the_arg)
     while (cps) {
       conn = cps->conn;
       while (conn) {
-        if (conn->ovl.hEvent) objs[count++] = conn->ovl.hEvent;
+        if (conn->ovl[0].hEvent) objs[count++] = conn->ovl[0].hEvent;
         conn = conn->Next;
       }
       cps = cps->Next;
@@ -536,7 +536,7 @@ static DWORD CALLBACK RPCRT4_server_thread(LPVOID the_arg)
       while (cps) {
         conn = cps->conn;
         while (conn) {
-          if (conn->ovl.hEvent == b_handle) break;
+          if (conn->ovl[0].hEvent == b_handle) break;
           conn = conn->Next;
         }
         if (conn) break;

@@ -153,10 +153,16 @@ typedef struct _IP_INTERFACE {
     UNICODE_STRING Name;          /* Adapter name */
     PUCHAR Address;               /* Pointer to interface address */
     UINT  AddressLength;          /* Length of address in bytes */
+    UINT  Index;                  /* Index of adapter (used to add ip addr) */
     LL_TRANSMIT_ROUTINE Transmit; /* Pointer to transmit function */
     PVOID TCPContext;             /* TCP Content for this interface */
 } IP_INTERFACE, *PIP_INTERFACE;
 
+typedef struct _IP_SET_ADDRESS {
+    ULONG NteIndex;
+    IPv4_RAW_ADDRESS Address;
+    IPv4_RAW_ADDRESS Netmask;
+} IP_SET_ADDRESS, *PIP_SET_ADDRESS;
 
 #define IP_PROTOCOL_TABLE_SIZE 0x100
 

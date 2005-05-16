@@ -355,12 +355,12 @@ KeRundownThread(VOID)
     /* Lock the Dispatcher Database */
     OldIrql = KeAcquireDispatcherDatabaseLock();
 
-    CurrentEntry = Thread->MutantListHead.Flink;
-    while (CurrentEntry != &Thread->MutantListHead) {
+    while (!IsListEmpty(&Thread->MutantListHead)) {
     
         /* Get the Mutant */
+	CurrentEntry = RemoveHeadList(&Thread->MutantListHead);
         Mutant = CONTAINING_RECORD(CurrentEntry, KMUTANT, MutantListEntry);
-        ASSERT(Mutant->ApcDisable);
+        ASSERT(Mutant->ApcDisable == 0);
     
         /* Uncondtionally abandon it */
         DPRINT("Abandonning the Mutant\n");

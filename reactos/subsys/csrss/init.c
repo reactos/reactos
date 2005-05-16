@@ -480,9 +480,10 @@ CsrpRunWinlogon (ULONG argc, PWSTR* argv)
 	RtlDestroyProcessParameters (ProcessParameters);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("SM: %s: loading winlogon.exe failed (Status=%08lx)\n",
+		DPRINT1("SM: %s: loading winlogon.exe failed (Status=%08lx)\n",
 				__FUNCTION__, Status);
 	}
+   ZwResumeThread(ProcessInfo.ThreadHandle, NULL);
 	return Status;
 }
 

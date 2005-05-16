@@ -452,4 +452,16 @@ SystemFunction035(INT a, INT b)
 	return 35;
 }
 
+/**********************************************************************
+ *
+ * @unimplemented
+ */
+INT
+STDCALL
+SystemFunction036(INT a, INT b)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 36;
+}
+
 /* EOF */

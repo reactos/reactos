@@ -3,7 +3,12 @@
 #ifndef __CRT_INTERNAL_TLS_H
 #define __CRT_INTERNAL_TLS_H
 
-#include <windows.h>
+#include <stdarg.h>
+
+#include <windef.h>
+#include <winbase.h>
+#include <winnt.h>
+
 #include <msvcrt/crttypes.h>
 #include <stddef.h>
 

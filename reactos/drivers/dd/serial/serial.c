@@ -7,7 +7,6 @@
  * 
  * PROGRAMMERS:     Hervé Poussineau (poussine@freesurf.fr)
  */
-/* FIXME: call IoAcquireRemoveLock/IoReleaseRemoveLock around each I/O operation */
 
 //#define NDEBUG
 #include "serial.h"

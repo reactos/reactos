@@ -948,22 +948,16 @@ RtlDoesFileExists_U(IN PWSTR FileName)
 {
 	UNICODE_STRING NtFileName;
 	OBJECT_ATTRIBUTES Attr;
+   FILE_BASIC_INFORMATION Info;
 	NTSTATUS Status;
 	CURDIR CurDir;
-	PWSTR Buffer;
 
-	/* only used by replacement code */
-	HANDLE FileHandle;
-	IO_STATUS_BLOCK StatusBlock;
 
 	if (!RtlDosPathNameToNtPathName_U (FileName,
 	                                   &NtFileName,
 	                                   NULL,
 	                                   &CurDir))
 		return FALSE;
-
-	/* don't forget to free it! */
-	Buffer = NtFileName.Buffer;
 
 	if (CurDir.DosPath.Length)
 		NtFileName = CurDir.DosPath;
@@ -976,24 +970,11 @@ RtlDoesFileExists_U(IN PWSTR FileName)
 	                            CurDir.Handle,
 	                            NULL);
 
-	/* FIXME: not implemented yet */
-//	Status = NtQueryAttributesFile (&Attr, NULL);
+	Status = NtQueryAttributesFile (&Attr, &Info);
 
-	/* REPLACEMENT start */
-	Status = NtOpenFile (&FileHandle,
-	                     0x10001,
-	                     &Attr,
-	                     &StatusBlock,
-	                     1,
-	                     FILE_SYNCHRONOUS_IO_NONALERT);
-	if (NT_SUCCESS(Status))
-		NtClose (FileHandle);
-	/* REPLACEMENT end */
-
-	RtlFreeHeap (RtlGetProcessHeap (),
-	             0,
-	             Buffer);
-
+   RtlFreeUnicodeString(&NtFileName);
+   
+   
 	if (NT_SUCCESS(Status) ||
 	    Status == STATUS_SHARING_VIOLATION ||
 	    Status == STATUS_ACCESS_DENIED)

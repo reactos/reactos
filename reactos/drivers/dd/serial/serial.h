@@ -20,7 +20,7 @@
   #define STDCALL
   
   #define DPRINT1 DbgPrint("(%s:%d) ", __FILE__, __LINE__), DbgPrint
-  #define CHECKPOINT1 DbgPrint("(%s:%d)\n")
+  #define CHECKPOINT1 DbgPrint("(%s:%d)\n", __FILE__, __LINE__)
   
   #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
   
@@ -81,6 +81,8 @@ typedef struct _SERIAL_DEVICE_EXTENSION
 	ULONG BaudRate;
 	ULONG BaseAddress;
 	PKINTERRUPT Interrupt;
+	KDPC ReceivedByteDpc;
+	KDPC SendByteDpc;
 	
 	SERIAL_LINE_CONTROL SerialLineControl;
 	UART_TYPE UartType;
@@ -90,13 +92,27 @@ typedef struct _SERIAL_DEVICE_EXTENSION
 	SERIAL_TIMEOUTS SerialTimeOuts;
 	BOOLEAN IsOpened;	
 	CIRCULAR_BUFFER InputBuffer;
+	KSPIN_LOCK InputBufferLock;
 	CIRCULAR_BUFFER OutputBuffer;
+	KSPIN_LOCK OutputBufferLock;
 	
 	/* Current values */
 	UCHAR IER; /* Base+1, Interrupt Enable Register */
 	UCHAR MCR; /* Base+4, Modem Control Register */
 	UCHAR MSR; /* Base+6, Modem Status Register */
 } SERIAL_DEVICE_EXTENSION, *PSERIAL_DEVICE_EXTENSION;
+
+typedef struct _WORKITEM_DATA
+{
+	PIRP Irp;
+	
+	BOOLEAN UseIntervalTimeout;
+	BOOLEAN UseTotalTimeout;
+	ULONG IntervalTimeout;
+	LARGE_INTEGER TotalTimeoutTime;
+	BOOLEAN DontWait;
+	BOOLEAN ReadAtLeastOneByte;
+} WORKITEM_DATA, *PWORKITEM_DATA;
 
 #define SERIAL_TAG TAG('S', 'e', 'r', 'l')
 
@@ -178,6 +194,11 @@ PopCircularBufferEntry(
 	IN PCIRCULAR_BUFFER pBuffer,
 	OUT PUCHAR Entry);
 
+NTSTATUS
+IncreaseCircularBufferSize(
+	IN PCIRCULAR_BUFFER pBuffer,
+	IN ULONG NewBufferSize);
+
 /************************************ cleanup.c */
 
 NTSTATUS STDCALL
@@ -244,6 +265,20 @@ NTSTATUS STDCALL
 ForwardIrpAndForget(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
+
+VOID STDCALL
+SerialReceiveByte(
+	IN PKDPC Dpc,
+	IN PVOID pDeviceExtension, // real type PSERIAL_DEVICE_EXTENSION
+	IN PVOID pByte,            // real type UCHAR
+	IN PVOID Unused);
+
+VOID STDCALL
+SerialSendByte(
+	IN PKDPC Dpc,
+	IN PVOID pDeviceExtension, // real type PSERIAL_DEVICE_EXTENSION
+	IN PVOID Unused1,
+	IN PVOID Unused2);
 
 BOOLEAN STDCALL
 SerialInterruptService(

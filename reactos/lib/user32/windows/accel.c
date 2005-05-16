@@ -285,6 +285,9 @@ HACCEL WINAPI CreateAcceleratorTableW(LPACCEL lpaccl, int cEntries)
 }
 
 
+/*
+ * @implemented
+ */
 int WINAPI CopyAcceleratorTableA
 (
  HACCEL hAccelSrc,

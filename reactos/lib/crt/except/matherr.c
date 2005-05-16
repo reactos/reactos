@@ -1,14 +1,6 @@
 #include "precomp.h"
+#include <math.h>
 #include <ntos/except.h>
-
-
-struct _exception {
-    int type;
-    char* name;
-    double arg1;
-    double arg2;
-    double retval;
-} ;
 
 
 int _matherr(struct _exception* e)

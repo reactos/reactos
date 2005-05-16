@@ -9,7 +9,7 @@
  */
 
 #include <windows.h>
-#include <WinError.h>
+#include <winerror.h>
 #include <windns.h>
 #include <internal/windns.h>
 
