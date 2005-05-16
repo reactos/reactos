@@ -497,6 +497,7 @@ PdoQueryResourceRequirements(
 
     if (PciConfig.u.type0.InterruptPin != 0)
     {
+      Descriptor->Option = 0; /* Required */
       Descriptor->Type = CmResourceTypeInterrupt;
       Descriptor->ShareDisposition = CmResourceShareShared;
       Descriptor->Flags = CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE;
