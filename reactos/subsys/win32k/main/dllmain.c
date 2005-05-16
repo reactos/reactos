@@ -35,49 +35,6 @@ typedef NTSTATUS (STDCALL *PW32_THREAD_CALLBACK)(
    struct _ETHREAD *Thread,
    BOOLEAN Create);
 
-/*
- * Callbacks used for Win32 objects... this define won't be needed after the Object Manager
- * rewrite -- Alex
- */
- 
-/* TEMPORARY HACK */
-typedef NTSTATUS STDCALL_FUNC
-(*OBJECT_CREATE_ROUTINE)(PVOID ObjectBody,
-                         PVOID Parent,
-                         PWSTR RemainingPath,
-                         struct _OBJECT_ATTRIBUTES* ObjectAttributes);
-
-typedef NTSTATUS STDCALL_FUNC
-(*OBJECT_OPEN_ROUTINE)(ULONG Reason,
-                       PVOID ObjectBody,
-                       PEPROCESS Process,
-                       ULONG HandleCount,
-                       ACCESS_MASK GrantedAccess);
-
-typedef NTSTATUS STDCALL_FUNC
-(*OBJECT_PARSE_ROUTINE)(PVOID Object,
-                        PVOID *NextObject,
-                        PUNICODE_STRING FullPath,
-                        PWSTR *Path,
-                        ULONG Attributes);
-
-typedef VOID STDCALL_FUNC
-(*OBJECT_DELETE_ROUTINE)(PVOID DeletedObject);
-
-typedef PVOID STDCALL_FUNC
-(*OBJECT_FIND_ROUTINE)(PVOID WinStaObject,
-                       PWSTR Name,
-                       ULONG Attributes);
-
-typedef struct _W32_OBJECT_CALLBACK {
-    OBJECT_OPEN_ROUTINE WinStaCreate;
-    OBJECT_PARSE_ROUTINE WinStaParse;
-    OBJECT_DELETE_ROUTINE WinStaDelete;
-    OBJECT_FIND_ROUTINE WinStaFind;
-    OBJECT_CREATE_ROUTINE DesktopCreate;
-    OBJECT_DELETE_ROUTINE DesktopDelete;
-} W32_OBJECT_CALLBACK, *PW32_OBJECT_CALLBACK;
-
 VOID STDCALL
 PsEstablishWin32Callouts(
    PW32_PROCESS_CALLBACK W32ProcessCallback,
