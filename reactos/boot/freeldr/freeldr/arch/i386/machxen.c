@@ -185,7 +185,7 @@ void _start()
   /* Start freeldr */
   XenActive = TRUE;
   i386BootDrive = 0x80;
-//  i386BootPartition = 0xff;
+  i386BootPartition = 0xff;
   BootMain(XenStartInfo->cmd_line);
 
   /* Shouldn't get here */
