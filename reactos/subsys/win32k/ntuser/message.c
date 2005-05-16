@@ -1332,7 +1332,7 @@ IntSendMessageTimeoutSingle(HWND hWnd,
   }
 
   Status = MsqSendMessage(Window->MessageQueue, hWnd, Msg, wParam, lParam,
-                          uTimeout, (uFlags & SMTO_BLOCK), uResult);
+                          uTimeout, (uFlags & SMTO_BLOCK), FALSE, uResult);
   IntReleaseWindowObject(Window);
   if (STATUS_TIMEOUT == Status)
     {

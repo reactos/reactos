@@ -368,7 +368,7 @@ IoAllocateIrp(CCHAR StackSize,
     USHORT Size = IoSizeOfIrp(StackSize);
     PKPRCB Prcb;
     UCHAR Flags = 0;
-    PNPAGED_LOOKASIDE_LIST List;
+    PNPAGED_LOOKASIDE_LIST List = NULL;
     PP_NPAGED_LOOKASIDE_NUMBER ListType = LookasideSmallIrpList;
     
     /* Figure out which Lookaside List to use */
@@ -1282,11 +1282,15 @@ IoFreeIrp(PIRP Irp)
                 /* All lists failed, use the pool */
                 List->L.FreeMisses++;
                 ExFreePool(Irp);
+                Irp = NULL;
             }
         }
         
         /* The free was within dhe Depth */
-        InterlockedPushEntrySList(&List->L.ListHead, (PSINGLE_LIST_ENTRY)Irp);
+        if (Irp)
+        {
+           InterlockedPushEntrySList(&List->L.ListHead, (PSINGLE_LIST_ENTRY)Irp);
+        }
     }
     
     DPRINT("Free done\n");

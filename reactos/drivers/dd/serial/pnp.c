@@ -154,7 +154,7 @@ SerialPnpStartDevice(
 	ASSERT(DeviceExtension);
 	ASSERT(DeviceExtension->PnpState == dsStopped);
 
-	DeviceExtension->BaudRate = 19200 | SERIAL_BAUD_USER;
+	DeviceExtension->BaudRate = 19200;
 	DeviceExtension->BaseAddress = 0;
 	Dirql = 0;
 	for (i = 0; i < ResourceList->Count; i++)
@@ -308,7 +308,32 @@ SerialPnp(
 
 	switch (MinorFunction)
 	{
-		case IRP_MN_START_DEVICE:
+		/* FIXME: do all these minor functions
+		IRP_MN_QUERY_REMOVE_DEVICE 0x1
+		IRP_MN_REMOVE_DEVICE 0x2
+		{
+			DPRINT("Serial: IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
+			IoAcquireRemoveLock
+			IoReleaseRemoveLockAndWait
+			pass request to DeviceExtension-LowerDriver
+			disable interface
+			IoDeleteDevice(Fdo) and/or IoDetachDevice
+			break;
+		}
+		IRP_MN_CANCEL_REMOVE_DEVICE 0x3
+		IRP_MN_STOP_DEVICE 0x4
+		IRP_MN_QUERY_STOP_DEVICE 0x5
+		IRP_MN_CANCEL_STOP_DEVICE 0x6
+		IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations (optional) 0x7
+		IRP_MN_QUERY_DEVICE_RELATIONS / RemovalRelations (optional) 0x7
+		IRP_MN_QUERY_INTERFACE (optional) 0x8
+		IRP_MN_QUERY_CAPABILITIES (optional) 0x9
+		IRP_MN_FILTER_RESOURCE_REQUIREMENTS (optional) 0xd
+		IRP_MN_QUERY_PNP_DEVICE_STATE (optional) 0x14
+		IRP_MN_DEVICE_USAGE_NOTIFICATION (required or optional) 0x16
+		IRP_MN_SURPRISE_REMOVAL 0x17
+		*/
+		case IRP_MN_START_DEVICE: /* 0x0 */
 		{
 			BOOLEAN ConflictDetected;
 			DPRINT("Serial: IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
@@ -355,29 +380,27 @@ SerialPnp(
 					Stack->Parameters.StartDevice.AllocatedResources);
 			break;
 		}
-		/* IRP_MN_QUERY_STOP_DEVICE (FIXME: required) */
-		/* IRP_MN_STOP_DEVICE (FIXME: required) */
-		/* IRP_MN_CANCEL_STOP_DEVICE (FIXME: required) */
-		/* IRP_MN_QUERY_REMOVE_DEVICE (FIXME: required) */
-		/* case IRP_MN_REMOVE_DEVICE (FIXME: required) */
-		/*{
-			DPRINT("Serial: IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
-			IoAcquireRemoveLock
-			IoReleaseRemoveLockAndWait
-			pass request to DeviceExtension-LowerDriver
-			disable interface
-			IoDeleteDevice(Fdo) and/or IoDetachDevice
+		case IRP_MN_QUERY_DEVICE_RELATIONS: /* (optional) 0x7 */
+		{
+			switch (Stack->Parameters.QueryDeviceRelations.Type)
+			{
+				case BusRelations:
+				{
+					DPRINT("Serial: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
+					return ForwardIrpAndForget(DeviceObject, Irp);
+				}
+				case RemovalRelations:
+				{
+					DPRINT("Serial: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / RemovalRelations\n");
+					return ForwardIrpAndForget(DeviceObject, Irp);
+				}
+				default:
+					DPRINT1("Serial: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
+						Stack->Parameters.QueryDeviceRelations.Type);
+					return ForwardIrpAndForget(DeviceObject, Irp);
+			}
 			break;
-		}*/
-		/* IRP_MN_CANCEL_REMOVE_DEVICE (FIXME: required) */
-		/* IRP_MN_SURPRISE_REMOVAL (FIXME: required) */
-		/* IRP_MN_QUERY_CAPABILITIES (optional) */
-		/* IRP_MN_QUERY_PNP_DEVICE_STATE (optional) */
-		/* IRP_MN_FILTER_RESOURCE_REQUIREMENTS (optional) */
-		/* IRP_MN_DEVICE_USAGE_NOTIFICATION (FIXME: required or optional ???) */
-		/* IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations (optional) */
-		/* IRP_MN_QUERY_DEVICE_RELATIONS / RemovalRelations (optional) */
-		/* IRP_MN_QUERY_INTERFACE (optional) */
+		}
 		default:
 		{
 			DPRINT1("Serial: unknown minor function 0x%x\n", MinorFunction);

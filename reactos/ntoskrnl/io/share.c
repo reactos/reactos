@@ -198,7 +198,7 @@ IoCheckDesiredAccess(IN OUT PACCESS_MASK DesiredAccess,
   PAGED_CODE();
 
   RtlMapGenericMask(DesiredAccess,
-		    IoFileObjectType->Mapping);
+		    &IoFileObjectType->TypeInfo.GenericMapping);
 
   if ((~(*DesiredAccess) & GrantedAccess) != 0)
     return STATUS_ACCESS_DENIED;

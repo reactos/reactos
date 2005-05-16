@@ -17,29 +17,17 @@ SerialCreate(
 	IN PIRP Irp)
 {
 	PIO_STACK_LOCATION Stack;
-	PFILE_OBJECT FileObject;
 	PSERIAL_DEVICE_EXTENSION DeviceExtension;
 	NTSTATUS Status;
 
 	DPRINT("Serial: IRP_MJ_CREATE\n");
 	Stack = IoGetCurrentIrpStackLocation(Irp);
-	FileObject = Stack->FileObject;
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
-	ASSERT(FileObject);
 
 	if (Stack->Parameters.Create.Options & FILE_DIRECTORY_FILE)
 	{
 		CHECKPOINT;
 		Status = STATUS_NOT_A_DIRECTORY;
-		goto ByeBye;
-	}
-
-	if (FileObject->FileName.Length != 0 ||
-		FileObject->RelatedFileObject != NULL)
-	{
-		CHECKPOINT;
-		Status = STATUS_ACCESS_DENIED;
 		goto ByeBye;
 	}
 

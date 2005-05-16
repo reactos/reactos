@@ -264,11 +264,11 @@ IntCallHookProc(INT HookId,
   PVOID ResultPointer;
   ULONG ResultLength;
   PHOOKPROC_CALLBACK_ARGUMENTS Common;
-  CBT_CREATEWNDW *CbtCreateWnd;
+  CBT_CREATEWNDW *CbtCreateWnd =NULL;
   PCHAR Extra;
-  PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra;
-  PUNICODE_STRING WindowName;
-  PUNICODE_STRING ClassName;
+  PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra ;
+  PUNICODE_STRING WindowName = NULL;
+  PUNICODE_STRING ClassName = NULL;
 
   ArgumentLength = sizeof(HOOKPROC_CALLBACK_ARGUMENTS) - sizeof(WCHAR)
                    + ModuleName->Length;
@@ -292,6 +292,12 @@ IntCallHookProc(INT HookId,
           DPRINT1("Trying to call unsupported CBT hook %d\n", Code);
           return 0;
         }
+      break;
+    case WH_KEYBOARD_LL:
+      ArgumentLength += sizeof(KBDLLHOOKSTRUCT);
+      break;
+    case WH_MOUSE_LL:
+      ArgumentLength += sizeof(MSLLHOOKSTRUCT);
       break;
     default:
       DPRINT1("Trying to call unsupported window hook %d\n", HookId);
@@ -342,6 +348,14 @@ IntCallHookProc(INT HookId,
             }
           break;
         }
+      break;
+    case WH_KEYBOARD_LL:
+      RtlCopyMemory(Extra, (PVOID) lParam, sizeof(KBDLLHOOKSTRUCT));
+      Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
+      break;
+    case WH_MOUSE_LL:
+      RtlCopyMemory(Extra, (PVOID) lParam, sizeof(MSLLHOOKSTRUCT));
+      Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
       break;
     }
 

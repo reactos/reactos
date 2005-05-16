@@ -225,13 +225,13 @@ NtCreateKey(OUT PHANDLE KeyHandle,
       if (Disposition)
 	*Disposition = REG_OPENED_EXISTING_KEY;
 
-      Status = ObCreateHandle(PsGetCurrentProcess(),
+      Status = ObpCreateHandle(PsGetCurrentProcess(),
 			      Object,
 			      DesiredAccess,
 			      TRUE,
 			      KeyHandle);
 
-      DPRINT("ObCreateHandle failed Status 0x%x\n", Status);
+      DPRINT("ObpCreateHandle failed Status 0x%x\n", Status);
       ObDereferenceObject(Object);
       RtlFreeUnicodeString(&RemainingPath);
       return Status;
@@ -1182,7 +1182,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 	  goto openkey_cleanup;
     }
 
-  Status = ObCreateHandle(PsGetCurrentProcess(),
+  Status = ObpCreateHandle(PsGetCurrentProcess(),
 			  Object,
 			  DesiredAccess,
 			  TRUE,

@@ -98,10 +98,10 @@ typedef struct _QUEUEDMESSAGE
 /* Code in ntoskrnl/lpc/close.h */
 
 VOID STDCALL
-NiClosePort (PVOID	ObjectBody,
+LpcpClosePort (PVOID	ObjectBody,
 	     ULONG	HandleCount);
 VOID STDCALL
-NiDeletePort (IN	PVOID	ObjectBody);
+LpcpDeletePort (IN	PVOID	ObjectBody);
 
 /* Code in ntoskrnl/lpc/queue.c */
 

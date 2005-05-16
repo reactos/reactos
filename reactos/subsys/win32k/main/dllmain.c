@@ -35,40 +35,6 @@ typedef NTSTATUS (STDCALL *PW32_THREAD_CALLBACK)(
    struct _ETHREAD *Thread,
    BOOLEAN Create);
 
-/*
- * Callbacks used for Win32 objects... this define won't be needed after the Object Manager
- * rewrite -- Alex
- */
-typedef NTSTATUS STDCALL_FUNC
-(*OBJECT_CREATE_ROUTINE)(PVOID ObjectBody,
-                         PVOID Parent,
-                         PWSTR RemainingPath,
-                         struct _OBJECT_ATTRIBUTES* ObjectAttributes);
-
-typedef NTSTATUS STDCALL_FUNC
-(*OBJECT_PARSE_ROUTINE)(PVOID Object,
-                        PVOID *NextObject,
-                        PUNICODE_STRING FullPath,
-                        PWSTR *Path,
-                        ULONG Attributes);
-
-typedef VOID STDCALL_FUNC
-(*OBJECT_DELETE_ROUTINE)(PVOID DeletedObject);
-
-typedef PVOID STDCALL_FUNC
-(*OBJECT_FIND_ROUTINE)(PVOID WinStaObject,
-                       PWSTR Name,
-                       ULONG Attributes);
-
-typedef struct _W32_OBJECT_CALLBACK {
-    OBJECT_CREATE_ROUTINE WinStaCreate;
-    OBJECT_PARSE_ROUTINE WinStaParse;
-    OBJECT_DELETE_ROUTINE WinStaDelete;
-    OBJECT_FIND_ROUTINE WinStaFind;
-    OBJECT_CREATE_ROUTINE DesktopCreate;
-    OBJECT_DELETE_ROUTINE DesktopDelete;
-} W32_OBJECT_CALLBACK, *PW32_OBJECT_CALLBACK;
-
 VOID STDCALL
 PsEstablishWin32Callouts(
    PW32_PROCESS_CALLBACK W32ProcessCallback,
@@ -240,9 +206,50 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
   return STATUS_SUCCESS;
 }
 
+/* Only used in ntuser/input.c KeyboardThreadMain(). If it's
+   not called there anymore, please delete */
+NTSTATUS
+Win32kInitWin32Thread(PETHREAD Thread)
+{
+  PEPROCESS Process;
 
+  Process = Thread->ThreadsProcess;
+
+  if (Process->Win32Process == NULL)
+    {
+      /* FIXME - lock the process */
+      Process->Win32Process = ExAllocatePool(NonPagedPool, sizeof(W32PROCESS));
+
+      if (Process->Win32Process == NULL)
+	return STATUS_NO_MEMORY;
+
+      RtlZeroMemory(Process->Win32Process, sizeof(W32PROCESS));
+      /* FIXME - unlock the process */
+
+      Win32kProcessCallback(Process, TRUE);
+    }
+
+  if (Thread->Tcb.Win32Thread == NULL)
+    {
+      Thread->Tcb.Win32Thread = ExAllocatePool (NonPagedPool, sizeof(W32THREAD));
+      if (Thread->Tcb.Win32Thread == NULL)
+	return STATUS_NO_MEMORY;
+
+      RtlZeroMemory(Thread->Tcb.Win32Thread, sizeof(W32THREAD));
+
+      Win32kThreadCallback(Thread, TRUE);
+    }
+
+  return(STATUS_SUCCESS);
+}
+
+
+/*
+ * This definition doesn't work
+ */
+// BOOL STDCALL DllMain(VOID)
 NTSTATUS STDCALL
-DriverEntry (
+DllMain (
   IN	PDRIVER_OBJECT	DriverObject,
   IN	PUNICODE_STRING	RegistryPath)
 {
@@ -268,7 +275,7 @@ DriverEntry (
   /*
    * Register Object Manager Callbacks
    */
-    Win32kObjectCallbacks.WinStaCreate = IntWinStaObjectCreate;
+    Win32kObjectCallbacks.WinStaCreate = IntWinStaObjectOpen;
     Win32kObjectCallbacks.WinStaParse = IntWinStaObjectParse;
     Win32kObjectCallbacks.WinStaDelete = IntWinStaObjectDelete;
     Win32kObjectCallbacks.WinStaFind = IntWinStaObjectFind;

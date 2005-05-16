@@ -89,18 +89,18 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Alle details" ,             ID_VIEW_ALL_ATTRIBUTES, CHECKED
 		MENUITEM "&Gedeeltelijke details..." , ID_VIEW_SELECTED_ATTRIBUTES
 		MENUITEM SEPARATOR
-		MENUITEM "Sorteer op &naam" ,    404
-		MENUITEM "Sorteer op &type" ,    405
-		MENUITEM "Sorteer op &grootte" , 406
-		MENUITEM "Sorteer op &datum" ,   407
+		MENUITEM "Sorteer op &naam" ,    ID_VIEW_SORT_NAME
+		MENUITEM "Sorteer op &type" ,    ID_VIEW_SORT_TYPE
+		MENUITEM "Sorteer op &grootte" , ID_VIEW_SORT_SIZE
+		MENUITEM "Sorteer op &datum" ,   ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
 		MENUITEM "Sorteer op &..." ,     409
 	}
 
 	POPUP "&Opties"  {
-		MENUITEM "&Bevestiging..." , -1
-		MENUITEM "&Lettertype..." ,  -1
-		MENUITEM "Gereedschappenbalk &aanpassen..." , -1
+		MENUITEM "&Bevestiging..." , 501
+		MENUITEM "&Lettertype..." ,  ID_SELECT_FONT
+		MENUITEM "Gereedschappenbalk &aanpassen..." , 512
 		MENUITEM SEPARATOR
 		MENUITEM "&Gereedschappenbalk" , ID_VIEW_TOOL_BAR, CHECKED
 		MENUITEM "&Schijvenbalk" ,       ID_VIEW_DRIVE_BAR, CHECKED
@@ -109,7 +109,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Volledig scherm\tCtrl+Shift+S" , ID_VIEW_FULLSCREEN
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "Ge&minimaliseerd starten" , -1
+		MENUITEM "Ge&minimaliseerd starten" , 504
 		MENUITEM "&Instellingen opslaan bij afsluiten" , 511
 	}
 

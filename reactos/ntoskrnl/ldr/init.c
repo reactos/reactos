@@ -89,7 +89,7 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
       L"\\SystemRoot\\system32\\smss.exe");
 
 
-   Status = ObCreateHandle(
+   Status = ObpCreateHandle(
       PsGetCurrentProcess(),
       PsInitialSystemProcess,
       PROCESS_CREATE_PROCESS | PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION,

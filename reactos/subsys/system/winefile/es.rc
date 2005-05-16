@@ -90,18 +90,18 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "T&odos los detalles" ,	ID_VIEW_ALL_ATTRIBUTES, CHECKED
 		MENUITEM "Detalles &parciales..." ,	ID_VIEW_SELECTED_ATTRIBUTES
 		MENUITEM SEPARATOR
-		MENUITEM "Ordenar por &nombre" ,		404
-		MENUITEM "Ordenar por &tipo" ,			405
-		MENUITEM "Ordenar por t&amaño" , 		406
-		MENUITEM "Ordenar por &fecha" , 		407
+		MENUITEM "Ordenar por &nombre" ,		ID_VIEW_SORT_NAME
+		MENUITEM "Ordenar por &tipo" ,			ID_VIEW_SORT_TYPE
+		MENUITEM "Ordenar por t&amaño" , 		ID_VIEW_SORT_SIZE
+		MENUITEM "Ordenar por &fecha" , 		ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
 		MENUITEM "Ordenar por &..." ,			409
 	}
 
 	POPUP "&Opciones"  {
-		MENUITEM "&Confirmación..." ,		-1
+		MENUITEM "&Confirmación..." ,		501
 		MENUITEM "&Fuente..." ,			ID_SELECT_FONT
-		MENUITEM "Personalizar barra &herramientas..." , -1
+		MENUITEM "Personalizar barra &herramientas..." , 512
 		MENUITEM SEPARATOR
 		MENUITEM "&Barra de herramientas" ,	ID_VIEW_TOOL_BAR, CHECKED
 		MENUITEM "Barra de &unidades" ,		ID_VIEW_DRIVE_BAR, CHECKED
@@ -110,7 +110,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Pantalla completa\tCtrl+Shift+S" , 	ID_VIEW_FULLSCREEN
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "&Minimizar al ejecutarse" ,		-1
+		MENUITEM "&Minimizar al ejecutarse" ,		504
 		MENUITEM "&Guardar opciones al salir" ,		511
 	}
 

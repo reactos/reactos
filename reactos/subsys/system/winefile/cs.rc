@@ -92,18 +92,18 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Detaily všech souborù" ,				ID_VIEW_ALL_ATTRIBUTES, CHECKED
 		MENUITEM "Èá&steèné detaily..." ,			ID_VIEW_SELECTED_ATTRIBUTES
 		MENUITEM SEPARATOR
-		MENUITEM "&Tøídit podle jména" ,		404
-		MENUITEM "Tøídit &podle typu" ,		405
-		MENUITEM "Tøídit podle &velikosti" , 		406
-		MENUITEM "Tøídit podle &data" , 		407
+		MENUITEM "&Tøídit podle jména" ,		ID_VIEW_SORT_NAME
+		MENUITEM "Tøídit &podle typu" ,			ID_VIEW_SORT_TYPE
+		MENUITEM "Tøídit podle &velikosti" , 		ID_VIEW_SORT_SIZE
+		MENUITEM "Tøídit podle &data" , 		ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
 		MENUITEM "Tøídit podle &..." ,			409
 	}
 
 	POPUP "&Nastavení"  {
-		MENUITEM "&Potvrzování..." ,		-1
+		MENUITEM "&Potvrzování..." ,		501
 		MENUITEM "&Písmo..." ,			ID_SELECT_FONT
-		MENUITEM "Upravit panel &nástrojù..." , -1
+		MENUITEM "Upravit panel &nástrojù..." , 512
 		MENUITEM SEPARATOR
 		MENUITEM "&Panel nástrojù" ,		ID_VIEW_TOOL_BAR, CHECKED
 		MENUITEM "&Panel zaøíení" ,		ID_VIEW_DRIVE_BAR, CHECKED
@@ -112,7 +112,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Celaá obrazovka\tCtrl+Shift+S" , 	ID_VIEW_FULLSCREEN
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "&Minimalizovat pøi spuštìní" ,		-1
+		MENUITEM "&Minimalizovat pøi spuštìní" ,		504
 		MENUITEM "&Uložit nastavení pøi vypnutí" ,			511
 	}
 
@@ -201,11 +201,11 @@ STRINGTABLE
 {
 	IDS_COL_NAME	"Jméno"
 	IDS_COL_SIZE	"Velikost"
-	IDS_COL_CDATE	"CDatum"
-	IDS_COL_ADATE	"ADatum"
-	IDS_COL_MDATE	"MDatum"
+	IDS_COL_CDATE	"Datum vytvoøení"
+	IDS_COL_ADATE	"Datum posledního pøístupu"
+	IDS_COL_MDATE	"Datum poslední modifikace"
 	IDS_COL_IDX		"Index/Inode"
-	IDS_COL_LINKS	"Links"
+	IDS_COL_LINKS	"Linky"
 	IDS_COL_ATTR	"Atributy"
 	IDS_COL_SEC		"Zabezpeèení"
 }

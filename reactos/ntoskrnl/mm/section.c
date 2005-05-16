@@ -2068,27 +2068,6 @@ MmpCloseSection(PVOID ObjectBody,
           ObjectBody, HandleCount, ObGetObjectPointerCount(ObjectBody));
 }
 
-NTSTATUS STDCALL
-MmpCreateSection(PVOID ObjectBody,
-                 PVOID Parent,
-                 PWSTR RemainingPath,
-                 POBJECT_ATTRIBUTES ObjectAttributes)
-{
-   DPRINT("MmpCreateSection(ObjectBody %x, Parent %x, RemainingPath %S)\n",
-          ObjectBody, Parent, RemainingPath);
-
-   if (RemainingPath == NULL)
-   {
-      return(STATUS_SUCCESS);
-   }
-
-   if (wcschr(RemainingPath+1, L'\\') != NULL)
-   {
-      return(STATUS_UNSUCCESSFUL);
-   }
-   return(STATUS_SUCCESS);
-}
-
 NTSTATUS INIT_FUNCTION
 MmCreatePhysicalMemorySection(VOID)
 {
@@ -2128,35 +2107,22 @@ MmCreatePhysicalMemorySection(VOID)
 NTSTATUS INIT_FUNCTION
 MmInitSectionImplementation(VOID)
 {
-   MmSectionObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
+   OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
+   UNICODE_STRING Name;
 
-   RtlInitUnicodeString(&MmSectionObjectType->TypeName, L"Section");
-
-   MmSectionObjectType->Tag = TAG('S', 'E', 'C', 'T');
-   MmSectionObjectType->TotalObjects = 0;
-   MmSectionObjectType->TotalHandles = 0;
-   MmSectionObjectType->PeakObjects = 0;
-   MmSectionObjectType->PeakHandles = 0;
-   MmSectionObjectType->PagedPoolCharge = 0;
-   MmSectionObjectType->NonpagedPoolCharge = sizeof(SECTION_OBJECT);
-   MmSectionObjectType->Mapping = &MmpSectionMapping;
-   MmSectionObjectType->Dump = NULL;
-   MmSectionObjectType->Open = NULL;
-   MmSectionObjectType->Close = MmpCloseSection;
-   MmSectionObjectType->Delete = MmpDeleteSection;
-   MmSectionObjectType->Parse = NULL;
-   MmSectionObjectType->Security = NULL;
-   MmSectionObjectType->QueryName = NULL;
-   MmSectionObjectType->OkayToClose = NULL;
-   MmSectionObjectType->Create = MmpCreateSection;
-   MmSectionObjectType->DuplicationNotify = NULL;
-
-   /*
-    * NOTE: Do not register the section object type here because
-    * the object manager it not initialized yet!
-    * The section object type will be created in ObInit().
-    */
-   ObpCreateTypeObject(MmSectionObjectType);
+   DPRINT1("Creating Section Object Type\n");
+  
+   /* Initialize the Section object type  */
+   RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+   RtlInitUnicodeString(&Name, L"Section");
+   ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+   ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(SECTION_OBJECT);
+   ObjectTypeInitializer.PoolType = NonPagedPool;
+   ObjectTypeInitializer.UseDefaultObject = TRUE;
+   ObjectTypeInitializer.GenericMapping = MmpSectionMapping;
+   ObjectTypeInitializer.DeleteProcedure = MmpDeleteSection;
+   ObjectTypeInitializer.CloseProcedure = MmpCloseSection;
+   ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &MmSectionObjectType);
 
    return(STATUS_SUCCESS);
 }

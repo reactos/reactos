@@ -77,6 +77,7 @@ IntDesktopObjectCreate(PVOID ObjectBody,
   PDESKTOP_OBJECT Desktop = (PDESKTOP_OBJECT)ObjectBody;
   UNICODE_STRING UnicodeString;
 
+  DPRINT("Creating desktop (0x%X)  Name (%S)\n", Desktop, RemainingPath);
   if (RemainingPath == NULL)
 	{
 		return STATUS_SUCCESS;
@@ -89,7 +90,7 @@ IntDesktopObjectCreate(PVOID ObjectBody,
 
   RtlInitUnicodeString(&UnicodeString, (RemainingPath + 1));
 
-  DPRINT("Creating desktop (0x%X)  Name (%wZ)\n", Desktop, &UnicodeString);
+  
 
   KeInitializeSpinLock(&Desktop->Lock);
   InitializeListHead(&Desktop->ShellHookWindows);

@@ -28,7 +28,7 @@
  * REVISIONS
  */
 VOID STDCALL
-NiClosePort (PVOID	ObjectBody, ULONG	HandleCount)
+LpcpClosePort (PVOID	ObjectBody, ULONG	HandleCount)
 {
   PEPORT Port = (PEPORT)ObjectBody;
   LPC_MESSAGE Message;
@@ -85,7 +85,7 @@ NiClosePort (PVOID	ObjectBody, ULONG	HandleCount)
  * REVISIONS
  */
 VOID STDCALL
-NiDeletePort (PVOID	ObjectBody)
+LpcpDeletePort (PVOID	ObjectBody)
 {
    //   PEPORT Port = (PEPORT)ObjectBody;
 

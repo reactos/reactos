@@ -90,18 +90,18 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "文件详悉列表（&A）" ,				ID_VIEW_ALL_ATTRIBUTES, CHECKED
 		MENUITEM "部分属性（&P）..." ,			ID_VIEW_SELECTED_ATTRIBUTES
 		MENUITEM SEPARATOR
-		MENUITEM "按文件名排序（&S）" ,		404
-		MENUITEM "按类型排序（&B）" ,		405
-		MENUITEM "按大小排序（&Z）" , 		406
-		MENUITEM "按日期排序（&D）" , 		407
+		MENUITEM "按文件名排序（&S）" ,		ID_VIEW_SORT_NAME
+		MENUITEM "按类型排序（&B）" ,		ID_VIEW_SORT_TYPE
+		MENUITEM "按大小排序（&Z）" , 		ID_VIEW_SORT_SIZE
+		MENUITEM "按日期排序（&D）" , 		ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
 		MENUITEM "定制排序..." ,			409
 	}
 
 	POPUP "选项（&O）"  {
-		MENUITEM "确定方式（&C）..." ,		-1
-		MENUITEM "字体（&F）..." ,			-1
-		MENUITEM "定制工具条（&B）..." , -1
+		MENUITEM "确定方式（&C）..." ,		501
+		MENUITEM "字体（&F）..." ,			ID_SELECT_FONT
+		MENUITEM "定制工具条（&B）..." , 512
 		MENUITEM SEPARATOR
 		MENUITEM "工具条（&T）" ,		ID_VIEW_TOOL_BAR, CHECKED
 		MENUITEM "驱动器列表（&D）" ,		ID_VIEW_DRIVE_BAR, CHECKED
@@ -110,7 +110,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "全屏（&U）\tCtrl+Shift+S" , 	ID_VIEW_FULLSCREEN
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "&Symbol nach Programmstart" ,		-1  /*FIXME what's this? */
+		MENUITEM "&Minimize on run" ,		504
 		MENUITEM "&Einstellungen beim Beenden speichern" ,			511
 	}
 
