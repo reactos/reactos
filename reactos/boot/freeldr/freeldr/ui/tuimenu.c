@@ -196,7 +196,7 @@ VOID TuiDrawMenu(PTUI_MENU_INFO MenuInfo)
 	//
 	// Update the status bar
 	//
-	UiDrawStatusText("Use \x18\x19 to select, then press ENTER.");
+	UiDrawStatusText("Use arrow keys to select, then press ENTER.");
 
 	//
 	// Draw the menu box

@@ -32,6 +32,7 @@ static unsigned CurrentX = (unsigned) -1;
 static unsigned CurrentY = (unsigned) -1;
 static UCHAR CurrentAttr = 0x07;
 
+static UCHAR ShadowBuffer[ROWS * COLS * 2];
 
 static VOID
 AnsiMoveToPos(unsigned X, unsigned Y)
@@ -72,11 +73,21 @@ AnsiClearScreen()
 VOID
 XenVideoClearScreen(UCHAR Attr)
 {
+  unsigned X, Y;
+
   if (Attr != CurrentAttr)
     {
       AnsiSetAttr(Attr);
     }
   AnsiClearScreen();
+  for (Y = 0; Y < ROWS; Y++)
+    {
+      for (X = 0; X < COLS; X++)
+        {
+          ShadowBuffer[2 * (Y * COLS + X)] = ' ';
+          ShadowBuffer[2 * (Y * COLS + X) + 1] = Attr;
+        }
+    }
 }
 
 VOID
@@ -113,16 +124,23 @@ XenVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y)
         }
     }
 
-  if (X != CurrentX || Y != CurrentY)
+  if (Ch != ShadowBuffer[2 * (Y * COLS + X)]
+      || Attr != ShadowBuffer[2 * (Y * COLS + X) + 1])
     {
-      AnsiMoveToPos(X, Y);
+      if (X != CurrentX || Y != CurrentY)
+        {
+          AnsiMoveToPos(X, Y);
+        }
+      if (Attr != CurrentAttr)
+        {
+          AnsiSetAttr(Attr);
+        }
+      XenConsPutChar(Ch);
+      CurrentX++;
+
+      ShadowBuffer[2 * (Y * COLS + X)] = Ch;
+      ShadowBuffer[2 * (Y * COLS + X) + 1] = Attr;
     }
-  if (Attr != CurrentAttr)
-    {
-      AnsiSetAttr(Attr);
-    }
-  XenConsPutChar(Ch);
-  CurrentX++;
 }
 
 VIDEODISPLAYMODE
@@ -166,6 +184,7 @@ XenVideoCopyOffScreenBufferToVRAM(PVOID Buffer)
           BufPtr += 2;
         }
     }
+  AnsiMoveToPos(COLS, ROWS);
   XenConsFlush();
 }
 
