@@ -13,5 +13,6 @@
 	<file>pnp.c</file>
 	<file>power.c</file>
 	<file>rw.c</file>
+	<file>serial.c</file>
 	<file>serial.rc</file>
 </module>
