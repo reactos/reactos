@@ -208,6 +208,9 @@ OHCD_PnPStartDevice(IN PDEVICE_OBJECT DeviceObject,
 				FullList->BusNumber	== DeviceExtension->SystemIoBusNumber &&
 				1 == FullList->PartialResourceList.Version &&
 				1 == FullList->PartialResourceList.Revision);*/
+			DPRINT1("AllocRess->Count: %d, PartResList.Count: %d\n",
+					AllocatedResources->Count, FullList->PartialResourceList.Count);
+
 			for	(Descriptor	= FullList->PartialResourceList.PartialDescriptors;
 				Descriptor < FullList->PartialResourceList.PartialDescriptors +	FullList->PartialResourceList.Count;
 				Descriptor++)
@@ -217,11 +220,14 @@ OHCD_PnPStartDevice(IN PDEVICE_OBJECT DeviceObject,
 					DeviceExtension->InterruptLevel	= Descriptor->u.Interrupt.Level;
 					DeviceExtension->InterruptVector = Descriptor->u.Interrupt.Vector;
 				}
-				else if (Descriptor->Type ==	CmResourceTypeMemory)
+				else if (Descriptor->Type == CmResourceTypePort)
 				{
 					DeviceExtension->BaseAddress	= Descriptor->u.Memory.Start;
 					DeviceExtension->BaseAddrLength = Descriptor->u.Memory.Length;
 				}
+
+				DPRINT1("Get resource type: %d, Generic start=0x%x Generic length=0x%x\n",
+					Descriptor->Type, DeviceExtension->BaseAddress.u.LowPart, DeviceExtension->BaseAddrLength);
 			}
 		}
 	}
