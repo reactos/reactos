@@ -433,7 +433,7 @@ PdoQueryResourceRequirements(
       if (Length == 0)
       {
         DPRINT("Unused address register\n");
-        break;
+        continue;
       }
 
       /* Set preferred descriptor */
@@ -522,7 +522,7 @@ PdoQueryResourceRequirements(
       if (Length == 0)
       {
         DPRINT("Unused address register\n");
-        break;
+        continue;
       }
 
       /* Set preferred descriptor */
@@ -722,7 +722,7 @@ PdoQueryResources(
       if (Length == 0)
       {
         DPRINT("Unused address register\n");
-        break;
+        continue;
       }
 
       if (Flags & PCI_ADDRESS_IO_SPACE)
@@ -776,7 +776,7 @@ PdoQueryResources(
       if (Length == 0)
       {
         DPRINT("Unused address register\n");
-        break;
+        continue;
       }
 
       if (Flags & PCI_ADDRESS_IO_SPACE)
