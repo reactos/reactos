@@ -501,6 +501,10 @@ IopInitializeDevice(
    PDEVICE_NODE DeviceNode,
    PDRIVER_OBJECT DriverObject);
 
+NTSTATUS
+IopStartDevice(
+   PDEVICE_NODE DeviceNode);
+
 /* driver.c */
 
 VOID FASTCALL

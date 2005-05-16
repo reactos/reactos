@@ -1523,9 +1523,11 @@ IopActionInitChildServices(
             Status = IopInitializeDevice(DeviceNode, DriverObject);
             if (NT_SUCCESS(Status))
             {
-               IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
                /* Attach upper level filter drivers. */
                IopAttachFilterDrivers(DeviceNode, FALSE);
+               IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
+
+               Status = IopStartDevice(DeviceNode);
             }
          }
       }

@@ -378,6 +378,14 @@ IoInit2(BOOLEAN BootLog)
       return;
     }
 
+  Status = IopStartDevice(DeviceNode);
+  if (!NT_SUCCESS(Status))
+    {
+      IopFreeDeviceNode(DeviceNode);
+      CPRINT("IopInitializeDevice() failed with status (%x)\n", Status);
+      return;
+    }
+
   /*
    * Initialize PnP root releations
    */

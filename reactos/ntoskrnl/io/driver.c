@@ -1202,6 +1202,10 @@ IopInitializeBuiltinDriver(
    }
 
    Status = IopInitializeDevice(DeviceNode, DriverObject);
+   if (NT_SUCCESS(Status))
+   {
+      Status = IopStartDevice(DeviceNode);
+   }
 
    return Status;
 }
@@ -1938,6 +1942,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
    }
 
    IopInitializeDevice(DeviceNode, DriverObject);
+   Status = IopStartDevice(DeviceNode);
 
 ReleaseCapturedString:
    RtlReleaseCapturedUnicodeString(&CapturedDriverServiceName,

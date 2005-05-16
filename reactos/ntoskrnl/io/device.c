@@ -80,8 +80,6 @@ FASTCALL
 IopInitializeDevice(PDEVICE_NODE DeviceNode,
                     PDRIVER_OBJECT DriverObject)
 {
-   IO_STATUS_BLOCK IoStatusBlock;
-   IO_STACK_LOCATION Stack;
    PDEVICE_OBJECT Fdo;
    NTSTATUS Status;
 
@@ -115,26 +113,6 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
 
       IopDeviceNodeSetFlag(DeviceNode, DNF_ADDED);
 
-      DPRINT("Sending IRP_MN_START_DEVICE to driver\n");
-
-      /* FIXME: Should be DeviceNode->ResourceList */
-      Stack.Parameters.StartDevice.AllocatedResources = DeviceNode->BootResources;
-      /* FIXME: Should be DeviceNode->ResourceListTranslated */
-      Stack.Parameters.StartDevice.AllocatedResourcesTranslated = DeviceNode->BootResources;
-
-      Status = IopInitiatePnpIrp(
-         Fdo,
-         &IoStatusBlock,
-         IRP_MN_START_DEVICE,
-         &Stack);
-
-      if (!NT_SUCCESS(Status))
-      {
-          DPRINT("IopInitiatePnpIrp() failed\n");
-          ObDereferenceObject(Fdo);
-          return Status;
-      }
-
       if (Fdo->DeviceType == FILE_DEVICE_ACPI)
       {
          static BOOLEAN SystemPowerDeviceNodeCreated = FALSE;
@@ -147,23 +125,54 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
          }
       }
 
+      ObDereferenceObject(Fdo);
+   }
+
+   return STATUS_SUCCESS;
+}
+
+NTSTATUS
+IopStartDevice(
+   PDEVICE_NODE DeviceNode)
+{
+
+   IO_STATUS_BLOCK IoStatusBlock;
+   IO_STACK_LOCATION Stack;
+   PDEVICE_OBJECT Fdo;
+   NTSTATUS Status;
+
+   DPRINT("Sending IRP_MN_START_DEVICE to driver\n");
+
+   Fdo = IoGetAttachedDeviceReference(DeviceNode->PhysicalDeviceObject);
+   /* FIXME: Should be DeviceNode->ResourceList */
+   Stack.Parameters.StartDevice.AllocatedResources = DeviceNode->BootResources;
+   /* FIXME: Should be DeviceNode->ResourceListTranslated */
+   Stack.Parameters.StartDevice.AllocatedResourcesTranslated = DeviceNode->BootResources;
+
+   Status = IopInitiatePnpIrp(
+      Fdo,
+      &IoStatusBlock,
+      IRP_MN_START_DEVICE,
+      &Stack);
+
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("IopInitiatePnpIrp() failed\n");
+   }
+   else
+   {
       if (Fdo->DeviceType == FILE_DEVICE_BUS_EXTENDER ||
           Fdo->DeviceType == FILE_DEVICE_ACPI)
       {
          DPRINT("Bus extender found\n");
 
          Status = IopInvalidateDeviceRelations(DeviceNode, BusRelations);
-         if (!NT_SUCCESS(Status))
-         {
-            ObDereferenceObject(Fdo);
-            return Status;
-         }
       }
-
-      ObDereferenceObject(Fdo);
    }
 
-   return STATUS_SUCCESS;
+   ObDereferenceObject(Fdo);
+   
+   return Status;
 }
 
 NTSTATUS
