@@ -219,21 +219,26 @@ OHCD_PnPStartDevice(IN PDEVICE_OBJECT DeviceObject,
 				{
 					DeviceExtension->InterruptLevel	= Descriptor->u.Interrupt.Level;
 					DeviceExtension->InterruptVector = Descriptor->u.Interrupt.Vector;
+
+	                DPRINT1("Interrupt level: 0x%x Interrupt	Vector:	0x%x\n",
+                                 DeviceExtension->InterruptLevel,
+                                 DeviceExtension->InterruptVector);
 				}
 				else if (Descriptor->Type == CmResourceTypePort)
 				{
 					DeviceExtension->BaseAddress	= Descriptor->u.Memory.Start;
 					DeviceExtension->BaseAddrLength = Descriptor->u.Memory.Length;
+					
+     				DPRINT1("I/O resource: start=0x%x, length=0x%x\n",
+                                 DeviceExtension->BaseAddress.u.LowPart, DeviceExtension->BaseAddrLength);
 				}
-
-				DPRINT1("Get resource type: %d, Generic start=0x%x Generic length=0x%x\n",
-					Descriptor->Type, DeviceExtension->BaseAddress.u.LowPart, DeviceExtension->BaseAddrLength);
+				else
+     				DPRINT1("Get resource type: %d, Generic start=0x%x Generic length=0x%x\n",
+	     				Descriptor->Type, Descriptor->u.Generic.Start.u.LowPart, Descriptor->u.Generic.Length);
+				
 			}
 		}
 	}
-	DPRINT1("Interrupt level: 0x%x Interrupt	Vector:	0x%x\n",
-		DeviceExtension->InterruptLevel,
-		DeviceExtension->InterruptVector);
 
 	/*
 	* Init wrapper with this object
