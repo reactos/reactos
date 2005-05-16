@@ -1,0 +1,14 @@
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+TESTDLL   = wininet.dll
+IMPORTS   = wininet
+
+CTESTS = \
+	generated.c \
+	http.c
+
+@MAKE_TEST_RULES@
+
+### Dependencies:
