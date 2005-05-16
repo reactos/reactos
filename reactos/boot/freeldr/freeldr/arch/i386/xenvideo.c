@@ -84,7 +84,7 @@ XenVideoClearScreen(UCHAR Attr)
     {
       for (X = 0; X < COLS; X++)
         {
-          ShadowBuffer[2 * (Y * COLS + X)] = ' ';
+          ShadowBuffer[2 * (Y * COLS + X)] = (UCHAR) ' ';
           ShadowBuffer[2 * (Y * COLS + X) + 1] = Attr;
         }
     }
@@ -124,7 +124,7 @@ XenVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y)
         }
     }
 
-  if (Ch != ShadowBuffer[2 * (Y * COLS + X)]
+  if ((UCHAR) Ch != ShadowBuffer[2 * (Y * COLS + X)]
       || Attr != ShadowBuffer[2 * (Y * COLS + X) + 1])
     {
       if (X != CurrentX || Y != CurrentY)
@@ -138,7 +138,7 @@ XenVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y)
       XenConsPutChar(Ch);
       CurrentX++;
 
-      ShadowBuffer[2 * (Y * COLS + X)] = Ch;
+      ShadowBuffer[2 * (Y * COLS + X)] = (UCHAR) Ch;
       ShadowBuffer[2 * (Y * COLS + X) + 1] = Attr;
     }
 }
