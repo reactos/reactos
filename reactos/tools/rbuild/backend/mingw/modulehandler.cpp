@@ -840,7 +840,7 @@ MingwModuleHandler::GenerateGccCommand (
 {
 	string dependencies = sourceFilename;
 	if ( module.pch && use_pch )
-		dependencies += " " + module.pch->header + ".gch";
+		dependencies += " " + module.pch->file.name + ".gch";
 	
 	/* WIDL generated headers may be used */
 	dependencies += " " + GetLinkingDependenciesMacro ();
@@ -1471,7 +1471,7 @@ MingwModuleHandler::GenerateObjectFileTargets (
 {
 	if ( module.pch )
 	{
-		const string& pch_file = module.pch->header;
+		const string& pch_file = module.pch->file.name;
 		string gch_file = pch_file + ".gch";
 		CLEAN_FILE(gch_file);
 		if ( use_pch )
@@ -2920,9 +2920,9 @@ void
 MingwTestModuleHandler::GetModuleSpecificSourceFiles ( vector<File*>& sourceFiles )
 {
 	string basePath = "$(INTERMEDIATE)" SSEP + module.GetBasePath ();
-	sourceFiles.push_back ( new File ( basePath + SSEP "_hooks.c", false, "" ) );
-	sourceFiles.push_back ( new File ( basePath + SSEP "_stubs.S", false, "" ) );
-	sourceFiles.push_back ( new File ( basePath + SSEP "_startup.c", false, "" ) );
+	sourceFiles.push_back ( new File ( basePath + SSEP "_hooks.c", false, "", false ) );
+	sourceFiles.push_back ( new File ( basePath + SSEP "_stubs.S", false, "", false ) );
+	sourceFiles.push_back ( new File ( basePath + SSEP "_startup.c", false, "", false ) );
 }
 
 void

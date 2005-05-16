@@ -278,10 +278,12 @@ public:
 	std::string name;
 	bool first;
 	std::string switches;
+	bool isPreCompiledHeader;
 
 	File ( const std::string& _name,
 	       bool _first,
-	       std::string _switches );
+	       std::string _switches,
+	       bool _isPreCompiledHeader );
 
 	void ProcessXML();
 	bool IsGeneratedFile () const;
@@ -570,6 +572,8 @@ public:
 	void CheckAutomaticDependencies ( bool verbose );
 	void CheckAutomaticDependenciesForFile ( SourceFile* sourceFile );
 private:
+	void GetModuleFiles ( Module& module,
+                              std::vector<File*>& files ) const;
 	void ProcessModule ( Module& module );
 	void ProcessFile ( Module& module,
 	                   const File& file );
@@ -640,12 +644,12 @@ class PchFile
 public:
 	const XMLElement& node;
 	const Module& module;
-	std::string header;
+	File file;
 
 	PchFile (
 		const XMLElement& node,
 		const Module& module,
-		const std::string& header );
+		const File file );
 	void ProcessXML();
 };
 

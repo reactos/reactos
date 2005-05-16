@@ -323,7 +323,8 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		}
 		File* pFile = new File ( FixSeparator ( path + CSEP + e.value ),
 		                         first,
-		                         switches );
+		                         switches,
+		                         false );
 		if ( pIf )
 			pIf->data.files.push_back ( pFile );
 		else
@@ -445,7 +446,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 				e.location,
 				"Only one <pch> is valid per module" );
 		pch = new PchFile (
-			e, *this, FixSeparator ( path + CSEP + e.value ) );
+			e, *this, File ( FixSeparator ( path + CSEP + e.value ), false, "", true ) );
 		subs_invalid = true;
 	}
 	if ( subs_invalid && e.subElements.size() > 0 )
@@ -729,10 +730,12 @@ Module::InvokeModule () const
 
 
 File::File ( const string& _name, bool _first,
-	       std::string _switches )
+             std::string _switches,
+             bool _isPreCompiledHeader )
 	: name(_name),
 	  first(_first),
-	  switches(_switches)
+	  switches(_switches),
+	  isPreCompiledHeader(_isPreCompiledHeader)
 {
 }
 
@@ -1011,8 +1014,8 @@ Property::ProcessXML()
 PchFile::PchFile (
 	const XMLElement& node_,
 	const Module& module_,
-	const string& header_ )
-	: node(node_), module(module_), header(header_)
+	const File file_ )
+	: node(node_), module(module_), file(file_)
 {
 }
 

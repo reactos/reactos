@@ -275,16 +275,30 @@ AutomaticDependency::Process ()
 }
 
 void
+AutomaticDependency::GetModuleFiles ( Module& module,
+                                      vector<File*>& files ) const
+{
+	for ( size_t i = 0; i < module.non_if_data.files.size (); i++ )
+		files.push_back ( module.non_if_data.files[i] );
+
+	/* FIXME: Collect files in IFs here */
+
+	if ( module.pch != NULL )
+		files.push_back ( &module.pch->file );
+}
+
+void
 AutomaticDependency::ProcessModule ( Module& module )
 {
-	const vector<File*>& files = module.non_if_data.files;
+	vector<File*> files;
+	GetModuleFiles ( module, files );
 	for ( size_t i = 0; i < files.size (); i++ )
 		ProcessFile ( module, *files[i] );
 }
 
 void
 AutomaticDependency::ProcessFile ( Module& module,
-	                               const File& file )
+                                   const File& file )
 {
 	string normalizedFilename = NormalizeFilename ( file.name );
 	RetrieveFromCacheOrParse ( module,
@@ -388,7 +402,8 @@ AutomaticDependency::CheckAutomaticDependencies ( bool verbose )
 	struct utimbuf timebuf;
 	for ( size_t mi = 0; mi < project.modules.size (); mi++ )
 	{
-		const vector<File*>& files = project.modules[mi]->non_if_data.files;
+		vector<File*> files;
+		GetModuleFiles ( *project.modules[mi], files );
 		for ( size_t fi = 0; fi < files.size (); fi++ )
 		{
 			File& file = *files[fi];
