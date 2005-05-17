@@ -572,4 +572,12 @@ XenDiskGetCacheableBlockCount(ULONG DriveNumber)
   return 64;
 }
 
+BOOL
+XenDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber,
+                         PPARTITION_TABLE_ENTRY PartitionTableEntry)
+{
+  /* Just use the standard routine */
+  return DiskGetPartitionEntry(DriveNumber, PartitionNumber, PartitionTableEntry);
+}
+
 /* EOF */

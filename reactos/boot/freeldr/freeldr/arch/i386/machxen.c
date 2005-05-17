@@ -234,14 +234,6 @@ XenVideoPrepareForReactOS(VOID)
     XEN_UNIMPLEMENTED("XenVideoPrepareForReactOS");
   }
 
-BOOL
-XenDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber,
-                         PPARTITION_TABLE_ENTRY PartitionTableEntry)
-  {
-    XEN_UNIMPLEMENTED("XenDiskGetPartitionEntry");
-    return FALSE;
-  }
-
 VOID
 XenHwDetect(VOID)
   {
