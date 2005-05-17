@@ -375,7 +375,9 @@ static HRESULT WINAPI IDirectInputAImpl_CreateDevice(
 	/* Loop on all the devices to see if anyone matches the given GUID */
 	for (i = 0; i < NB_DINPUT_DEVICES; i++) {
 	  HRESULT ret;
-	  if (!dinput_devices[i]->create_deviceA) continue;
+#ifndef __REACTOS__        
+	  if (!dinput_devices[i]->create_deviceA) continue; 
+#endif
 	  if ((ret = dinput_devices[i]->create_deviceA(This, rguid, NULL, pdev)) == DI_OK)
 	    return DI_OK;
 
@@ -405,7 +407,9 @@ static HRESULT WINAPI IDirectInputWImpl_CreateDevice(LPDIRECTINPUT7A iface,
 	/* Loop on all the devices to see if anyone matches the given GUID */
 	for (i = 0; i < NB_DINPUT_DEVICES; i++) {
 	  HRESULT ret;
+#ifndef __REACTOS__
 	  if (!dinput_devices[i]->create_deviceW) continue;
+#endif
 	  if ((ret = dinput_devices[i]->create_deviceW(This, rguid, NULL, pdev)) == DI_OK)
 	    return DI_OK;
 
@@ -474,7 +478,9 @@ static HRESULT WINAPI IDirectInput7AImpl_CreateDeviceEx(LPDIRECTINPUT7A iface, R
   /* Loop on all the devices to see if anyone matches the given GUID */
   for (i = 0; i < NB_DINPUT_DEVICES; i++) {
     HRESULT ret;
+#ifndef __REACTOS__
     if (!dinput_devices[i]->create_deviceA) continue;
+#endif
     if ((ret = dinput_devices[i]->create_deviceA(This, rguid, riid, (LPDIRECTINPUTDEVICEA*) pvOut)) == DI_OK)
       return DI_OK;
 
@@ -504,7 +510,9 @@ static HRESULT WINAPI IDirectInput7WImpl_CreateDeviceEx(LPDIRECTINPUT7W iface, R
   /* Loop on all the devices to see if anyone matches the given GUID */
   for (i = 0; i < NB_DINPUT_DEVICES; i++) {
     HRESULT ret;
+#ifndef __REACTOS__
     if (!dinput_devices[i]->create_deviceW) continue;
+#endif
     if ((ret = dinput_devices[i]->create_deviceW(This, rguid, riid, (LPDIRECTINPUTDEVICEW*) pvOut)) == DI_OK)
       return DI_OK;
 
