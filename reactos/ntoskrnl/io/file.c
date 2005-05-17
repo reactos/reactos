@@ -513,6 +513,130 @@ IopCloseFile(PVOID ObjectBody,
     IoFreeIrp(Irp);
 }
 
+NTSTATUS 
+STDCALL
+IopDeviceFsIoControl(IN HANDLE DeviceHandle,
+                     IN HANDLE Event OPTIONAL,
+                     IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL,
+                     IN PVOID UserApcContext OPTIONAL,
+                     OUT PIO_STATUS_BLOCK IoStatusBlock,
+                     IN ULONG IoControlCode,
+                     IN PVOID InputBuffer,
+                     IN ULONG InputBufferLength OPTIONAL,
+                     OUT PVOID OutputBuffer,
+                     IN ULONG OutputBufferLength OPTIONAL,
+                     BOOLEAN IsDevIoCtl)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PFILE_OBJECT FileObject;
+    PDEVICE_OBJECT DeviceObject;
+    PIRP Irp;
+    PIO_STACK_LOCATION StackPtr;
+    PKEVENT EventObject = NULL;
+    BOOLEAN LocalEvent = FALSE;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+
+    DPRINT("IopDeviceFsIoControl(DeviceHandle %x Event %x UserApcRoutine %x "
+           "UserApcContext %x IoStatusBlock %x IoControlCode %x "
+           "InputBuffer %x InputBufferLength %x OutputBuffer %x "
+           "OutputBufferLength %x)\n",
+           DeviceHandle,Event,UserApcRoutine,UserApcContext,IoStatusBlock,
+           IoControlCode,InputBuffer,InputBufferLength,OutputBuffer,
+           OutputBufferLength);
+
+    if (IoStatusBlock == NULL) return STATUS_ACCESS_VIOLATION;
+
+    /* Check granted access against the access rights from IoContolCode */
+    Status = ObReferenceObjectByHandle(DeviceHandle,
+                                       (IoControlCode >> 14) & 0x3,
+                                       IoFileObjectType,
+                                       PreviousMode,
+                                       (PVOID *) &FileObject,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Check for an event */
+    if (Event)
+    {
+        /* Reference it */
+        Status = ObReferenceObjectByHandle(Event,
+                                           EVENT_MODIFY_STATE,
+                                           ExEventObjectType,
+                                           PreviousMode,
+                                           (PVOID*)&EventObject,
+                                           NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            ObDereferenceObject (FileObject);
+            return Status;
+        }
+        
+        /* Clear it */
+        KeClearEvent(EventObject);
+    }
+
+    /* Check if this is a direct open or not */
+    if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
+    {
+        DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
+    }
+    else
+    {
+        DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    }
+
+    /* Check if we should use Sync IO or not */
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+    {
+        /* Use File Object event */
+        KeClearEvent(&FileObject->Event);
+    }
+    else
+    {
+        /* Use local event */
+        LocalEvent = TRUE;
+    }
+
+    /* Build the IRP */
+    Irp = IoBuildDeviceIoControlRequest(IoControlCode,
+                                        DeviceObject,
+                                        InputBuffer,
+                                        InputBufferLength,
+                                        OutputBuffer,
+                                        OutputBufferLength,
+                                        FALSE,
+                                        EventObject,
+                                        IoStatusBlock);
+
+    /* Set some extra settings */
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    Irp->RequestorMode = PreviousMode;
+    Irp->Overlay.AsynchronousParameters.UserApcRoutine = UserApcRoutine;
+    Irp->Overlay.AsynchronousParameters.UserApcContext = UserApcContext;
+    StackPtr = IoGetNextIrpStackLocation(Irp);
+    StackPtr->FileObject = FileObject;
+    StackPtr->MajorFunction = IsDevIoCtl ? 
+                              IRP_MJ_DEVICE_CONTROL : IRP_MJ_FILE_SYSTEM_CONTROL;
+    
+    /* Call the Driver */
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        if (!LocalEvent)
+        {
+            KeWaitForSingleObject(&FileObject->Event,
+                                  Executive,
+                                  PreviousMode,
+                                  FileObject->Flags & FO_ALERTABLE_IO,
+                                  NULL);
+            Status = FileObject->FinalStatus;
+        }
+    }
+
+    /* Return the Status */
+    return Status;
+}
+                      
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -1509,6 +1633,65 @@ NtDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
     UNIMPLEMENTED;
     return(STATUS_NOT_IMPLEMENTED);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS 
+STDCALL
+NtDeviceIoControlFile(IN HANDLE DeviceHandle,
+                      IN HANDLE Event OPTIONAL,
+                      IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL,
+                      IN PVOID UserApcContext OPTIONAL,
+                      OUT PIO_STATUS_BLOCK IoStatusBlock,
+                      IN ULONG IoControlCode,
+                      IN PVOID InputBuffer,
+                      IN ULONG InputBufferLength OPTIONAL,
+                      OUT PVOID OutputBuffer,
+                      IN ULONG OutputBufferLength OPTIONAL)
+{
+    /* Call the Generic Function */
+    return IopDeviceFsIoControl(DeviceHandle,
+                                Event,
+                                UserApcRoutine,
+                                UserApcContext,
+                                IoStatusBlock,
+                                IoControlCode,
+                                InputBuffer,
+                                InputBufferLength,
+                                OutputBuffer,
+                                OutputBufferLength,
+                                TRUE);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS 
+STDCALL
+NtFsControlFile(IN HANDLE DeviceHandle,
+                IN HANDLE Event OPTIONAL,
+                IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL,
+                IN PVOID UserApcContext OPTIONAL,
+                OUT PIO_STATUS_BLOCK IoStatusBlock,
+                IN ULONG IoControlCode,
+                IN PVOID InputBuffer,
+                IN ULONG InputBufferLength OPTIONAL,
+                OUT PVOID OutputBuffer,
+                IN ULONG OutputBufferLength OPTIONAL)
+{
+    return IopDeviceFsIoControl(DeviceHandle,
+                                Event,
+                                UserApcRoutine,
+                                UserApcContext,
+                                IoStatusBlock,
+                                IoControlCode,
+                                InputBuffer,
+                                InputBufferLength,
+                                OutputBuffer,
+                                OutputBufferLength,
+                                FALSE);
 }
 
 NTSTATUS
