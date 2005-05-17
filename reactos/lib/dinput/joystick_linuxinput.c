@@ -22,6 +22,8 @@
 #include "config.h"
 #include "wine/port.h"
 
+#ifdef HAVE_LINUX_INPUT_H
+
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -41,9 +43,15 @@
 #ifdef HAVE_SYS_ERRNO_H
 # include <sys/errno.h>
 #endif
+
+#ifdef HAVE_CORRECT_LINUXINPUT_H
+
 #ifdef HAVE_LINUX_INPUT_H
 # include <linux/input.h>
 #endif
+
+
+#define EVDEVPREFIX	"/dev/input/event"
 
 #include "wine/debug.h"
 #include "wine/unicode.h"
@@ -56,10 +64,6 @@
 #include "device_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dinput);
-
-#ifdef HAVE_CORRECT_LINUXINPUT_H
-
-#define EVDEVPREFIX	"/dev/input/event"
 
 /* Wine joystick driver object instances */
 #define WINE_JOYSTICK_AXIS_BASE   0
@@ -318,13 +322,16 @@ static HRESULT joydev_create_deviceW(IDirectInputImpl *dinput, REFGUID rguid, RE
   return DIERR_DEVICENOTREG;
 }
 
-const struct dinput_device joystick_linuxinput_device = {
+static dinput_device joydev = {
+  20,
   "Wine Linux-input joystick driver",
   joydev_enum_deviceA,
   joydev_enum_deviceW,
   joydev_create_deviceA,
   joydev_create_deviceW
 };
+
+DECL_GLOBAL_CONSTRUCTOR(joydev_register) { dinput_register_device(&joydev); }
 
 /******************************************************************************
  *	Joystick
@@ -971,7 +978,7 @@ static HRESULT WINAPI JoystickAImpl_GetProperty(LPDIRECTINPUTDEVICE8A iface,
 {
   JoystickImpl *This = (JoystickImpl *)iface;
 
-  TRACE("(this=%p,%s,%p)\n",
+  TRACE("(this=%p,%s,%p): stub!\n",
 	iface, debugstr_guid(rguid), pdiph);
 
   if (TRACE_ON(dinput))
@@ -1087,14 +1094,6 @@ static IDirectInputDevice8WVtbl JoystickWvt =
 };
 #undef XCAST
 
-#else  /* HAVE_CORRECT_LINUXINPUT_H */
+#endif  /* HAVE_LINUX_INPUT_H */
 
-const struct dinput_device joystick_linuxinput_device = {
-  "Wine Linux-input joystick driver",
-  NULL,
-  NULL,
-  NULL,
-  NULL
-};
-
-#endif  /* HAVE_CORRECT_LINUXINPUT_H */
+#endif

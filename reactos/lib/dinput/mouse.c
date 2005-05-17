@@ -41,6 +41,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(dinput);
 
+
 /* Wine mouse driver object instances */
 #define WINE_MOUSE_X_AXIS_INSTANCE   0
 #define WINE_MOUSE_Y_AXIS_INSTANCE   1
@@ -256,15 +257,15 @@ static SysMouseImpl *alloc_device_mouse(REFGUID rguid, LPVOID mvt, IDirectInputI
     newDevice = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(SysMouseImpl));
     newDevice->ref = 1;
     newDevice->lpVtbl = mvt;
-
+#ifndef __REACTOS__
     InitializeCriticalSection(&(newDevice->crit));
-
+#endif
     memcpy(&(newDevice->guid),rguid,sizeof(*rguid));
 
     /* Per default, Wine uses its internal data format */
     newDevice->df = (DIDATAFORMAT *) &Wine_InternalMouseFormat;
     memcpy(newDevice->offset_array, offset_array, WINE_INTERNALMOUSE_NUM_OBJS * sizeof(int));
-    newDevice->wine_df = HeapAlloc(GetProcessHeap(), 0, sizeof(DataFormat));
+    newDevice->wine_df = (DataFormat *) HeapAlloc(GetProcessHeap(), 0, sizeof(DataFormat));
     newDevice->wine_df->size = 0;
     newDevice->wine_df->internal_format_size = Wine_InternalMouseFormat.dwDataSize;
     newDevice->wine_df->dt = NULL;
@@ -311,13 +312,23 @@ static HRESULT mousedev_create_deviceW(IDirectInputImpl *dinput, REFGUID rguid, 
     return DIERR_DEVICENOTREG;
 }
 
-const struct dinput_device mouse_device = {
+static dinput_device mousedev = {
+    100,
     "Wine mouse driver",
     mousedev_enum_deviceA,
     mousedev_enum_deviceW,
     mousedev_create_deviceA,
     mousedev_create_deviceW
 };
+
+#ifdef __REACTOS__
+void scan_mouse()
+{
+    dinput_register_device(&mousedev);
+}
+
+DECL_GLOBAL_CONSTRUCTOR(mousedev_register) { dinput_register_device(&mousedev); }
+#endif
 
 /******************************************************************************
  *	SysMouseA (DInput Mouse support)
@@ -344,10 +355,11 @@ static ULONG WINAPI SysMouseAImpl_Release(LPDIRECTINPUTDEVICE8A iface)
 	if (This->dwCoopLevel & DISCL_EXCLUSIVE)
             ShowCursor(TRUE); /* show cursor */
     }
+#ifndef __REACTOS__
     DeleteCriticalSection(&(This->crit));
+#endif
 
-
-    /* Free the DataFormat */
+	/* Free the DataFormat */
     if (This->df != &(Wine_InternalMouseFormat)) {
 	HeapFree(GetProcessHeap(), 0, This->df->rgodf);
 	HeapFree(GetProcessHeap(), 0, This->df);
@@ -431,16 +443,18 @@ static LRESULT CALLBACK dinput_mouse_hook( int code, WPARAM wparam, LPARAM lpara
 
     if (code != HC_ACTION) return CallNextHookEx( This->hook, code, wparam, lparam );
 
+#ifndef __REACTOS__
     EnterCriticalSection(&(This->crit));
+#endif
+
     dwCoop = This->dwCoopLevel;
 
     /* Only allow mouse events every 10 ms.
      * This is to allow the cursor to start acceleration before
      * the warps happen. But if it involves a mouse button event we
      * allow it since we don't want to lose the clicks.
-	 * in reactos 1ms instead for 10ms
      */
-    if (((GetCurrentTime() - last_event) < 1)
+    if (((GetCurrentTime() - last_event) < 10)
         && wparam == WM_MOUSEMOVE)
 	goto end;
     else last_event = GetCurrentTime();
@@ -549,7 +563,9 @@ static LRESULT CALLBACK dinput_mouse_hook( int code, WPARAM wparam, LPARAM lpara
 	  This->m_state.rgbButtons[0], This->m_state.rgbButtons[2], This->m_state.rgbButtons[1]);
     
   end:
+#ifndef __REACTOS__
     LeaveCriticalSection(&(This->crit));
+#endif
     
     if (dwCoop & DISCL_NONEXCLUSIVE) {
 	/* Pass the events down to previous handlers (e.g. win32 input) */
@@ -579,72 +595,73 @@ static void dinput_window_check(SysMouseImpl* This) {
     MapWindowPoints(This->win, HWND_DESKTOP, &This->mapped_center, 1);
 }
 
-#ifdef __REACTOS__  
-int poll_mouse=0;
-#endif
+
 /******************************************************************************
   *     Acquire : gets exclusive control of the mouse
   */
 static HRESULT WINAPI SysMouseAImpl_Acquire(LPDIRECTINPUTDEVICE8A iface)
 {
     SysMouseImpl *This = (SysMouseImpl *)iface;
-    RECT  rect;
-    POINT point;
+    RECT	rect;
     
     TRACE("(this=%p)\n",This);
     
-    if (This->acquired)
-      return S_FALSE;
-    
-    This->acquired = 1;
-
-    /* Store (in a global variable) the current lock */
-    current_lock = (IDirectInputDevice8A*)This;
-    
-    /* Init the mouse state */
-    GetCursorPos( &point );
-    if (This->absolute) {
-      This->m_state.lX = point.x;
-      This->m_state.lY = point.y;
-      This->prevX = point.x;
-      This->prevY = point.y;
-    } else {
-      This->m_state.lX = 0;
-      This->m_state.lY = 0;
-      This->org_coords = point;
-    }
-    This->m_state.lZ = 0;
-    This->m_state.rgbButtons[0] = ((GetKeyState(VK_LBUTTON) & 0x80) ? 0xFF : 0x00);
-    This->m_state.rgbButtons[1] = ((GetKeyState(VK_RBUTTON) & 0x80) ? 0xFF : 0x00);
-    This->m_state.rgbButtons[2] = ((GetKeyState(VK_MBUTTON) & 0x80) ? 0xFF : 0x00);
-    
-    /* Install our mouse hook */
-    if (This->dwCoopLevel & DISCL_EXCLUSIVE)
-      ShowCursor(FALSE); /* hide cursor */
-
-    This->hook = SetWindowsHookExA( WH_MOUSE_LL, dinput_mouse_hook, DINPUT_instance, 0 );
-
-    /* Get the window dimension and find the center */    
-	GetWindowRect(This->win, &rect);
-    This->win_centerX = (rect.right  - rect.left) / 2;
-    This->win_centerY = (rect.bottom - rect.top ) / 2;
-
-
-    /* Warp the mouse to the center of the window */
-    if (This->absolute == 0) {
-      This->mapped_center.x = This->win_centerX;
-      This->mapped_center.y = This->win_centerY;
-      MapWindowPoints(This->win, HWND_DESKTOP, &This->mapped_center, 1);
-      TRACE("Warping mouse to %ld - %ld\n", This->mapped_center.x, This->mapped_center.y);
-      SetCursorPos( This->mapped_center.x, This->mapped_center.y );
-#ifdef MOUSE_HACK
-      This->need_warp = WARP_DONE;
-#else
-      This->need_warp = WARP_STARTED;
-#endif
-    }
 	
-    return DI_OK;
+
+    if (This->acquired == 0) {
+	POINT point;
+	
+	
+
+	/* Store (in a global variable) the current lock */
+	current_lock = (IDirectInputDevice8A*)This;
+	
+	/* Init the mouse state */
+	GetCursorPos( &point );
+	if (This->absolute) {
+	    This->m_state.lX = point.x;
+	    This->m_state.lY = point.y;
+	    This->prevX = point.x;
+	    This->prevY = point.y;
+	} else {
+	    This->m_state.lX = 0;
+	    This->m_state.lY = 0;
+	    This->org_coords = point;
+	}
+	This->m_state.lZ = 0;
+	This->m_state.rgbButtons[0] = ((GetKeyState(VK_LBUTTON) & 0x80) ? 0xFF : 0x00);
+	This->m_state.rgbButtons[1] = ((GetKeyState(VK_RBUTTON) & 0x80) ? 0xFF : 0x00);
+	This->m_state.rgbButtons[2] = ((GetKeyState(VK_MBUTTON) & 0x80) ? 0xFF : 0x00);
+	
+	/* Install our mouse hook */
+	if (This->dwCoopLevel & DISCL_EXCLUSIVE)
+	    ShowCursor(FALSE); /* hide cursor */
+
+	This->hook = SetWindowsHookExA( WH_MOUSE_LL, dinput_mouse_hook, DINPUT_instance, 0 );
+
+	/* Get the window dimension and find the center */
+	GetWindowRect(This->win, &rect);
+	This->win_centerX = (rect.right  - rect.left) / 2;
+	This->win_centerY = (rect.bottom - rect.top ) / 2;
+	
+	/* Warp the mouse to the center of the window */
+	if (This->absolute == 0) {
+	    This->mapped_center.x = This->win_centerX;
+	    This->mapped_center.y = This->win_centerY;
+	    MapWindowPoints(This->win, HWND_DESKTOP, &This->mapped_center, 1);
+	    TRACE("Warping mouse to %ld - %ld\n", This->mapped_center.x, This->mapped_center.y);
+	    SetCursorPos( This->mapped_center.x, This->mapped_center.y );
+#ifdef MOUSE_HACK
+	    This->need_warp = WARP_DONE;
+#else
+	    This->need_warp = WARP_STARTED;
+#endif
+	}
+	
+	This->acquired = 1;
+	return DI_OK;
+    }
+    return S_FALSE;
 }
 
 /******************************************************************************
@@ -656,33 +673,31 @@ static HRESULT WINAPI SysMouseAImpl_Unacquire(LPDIRECTINPUTDEVICE8A iface)
     
     TRACE("(this=%p)\n",This);
     
-    if (0 == This->acquired) {
-	return DI_NOEFFECT;
-    }
+    if (This->acquired) {
+	/* Reinstall previous mouse event handler */
 
-    /* Reinstall previous mouse event handler */
-    if (This->hook) {
 
-      UnhookWindowsHookEx( This->hook );
-      This->hook = 0;
-      
-      if (This->dwCoopLevel & DISCL_EXCLUSIVE)
-	ShowCursor(TRUE); /* show cursor */
-    }
+	if (This->hook) {
+	    UnhookWindowsHookEx( This->hook );
+	    This->hook = 0;
+
+	    if (This->dwCoopLevel & DISCL_EXCLUSIVE)
+		ShowCursor(TRUE); /* show cursor */
+        }
+
+        /* No more locks */
+        current_lock = NULL;
 	
-    /* No more locks */
-    if (current_lock == (IDirectInputDevice8A*) This)
-      current_lock = NULL;
-    else
-      ERR("this(%p) != current_lock(%p)\n", This, current_lock);
+        /* Unacquire device */
+        This->acquired = 0;
 
-    /* Unacquire device */
-    This->acquired = 0;
-    
-    /* And put the mouse cursor back where it was at acquire time */
-    if (This->absolute == 0) {
-      TRACE(" warping mouse back to (%ld , %ld)\n", This->org_coords.x, This->org_coords.y);
-      SetCursorPos(This->org_coords.x, This->org_coords.y);
+	/* And put the mouse cursor back where it was at acquire time */
+	if (This->absolute == 0) {
+	    TRACE(" warping mouse back to (%ld , %ld)\n", This->org_coords.x, This->org_coords.y);
+	    SetCursorPos(This->org_coords.x, This->org_coords.y);
+	}
+    } else {
+	return DI_NOEFFECT;
     }
 	
     return DI_OK;
@@ -690,25 +705,70 @@ static HRESULT WINAPI SysMouseAImpl_Unacquire(LPDIRECTINPUTDEVICE8A iface)
 
 // if you call poll then to getdevicestate
 // it did not send back right value in windows 
+int poll_mouse=0;
 
+#ifdef __REACTOS__
+void getmousesvalue(LPDIRECTINPUTDEVICE8A iface);
+int filp=0;
+void getmousesvalue(LPDIRECTINPUTDEVICE8A iface)
+{
+	static long last_event = 0;
 
+    POINT point;
+	SysMouseImpl *This = (SysMouseImpl *)iface;        
 
-/* wine does not implement poll but we do, this is from GDI patch from the mouse */
+	This->m_state.rgbButtons[0] =  ((GetKeyState(VK_LBUTTON) & 0x80) ? 0xFF : 0x00);	
+	This->m_state.rgbButtons[1] =  ((GetKeyState(VK_RBUTTON) & 0x80) ? 0xFF : 0x00);	
+	This->m_state.rgbButtons[2] =  ((GetKeyState(VK_MBUTTON) & 0x80) ? 0xFF : 0x00);	
+	This->m_state.rgbButtons[3] =  ((GetKeyState(VK_XBUTTON1) & 0x80) ? 0xFF : 0x00);	
+	This->m_state.rgbButtons[4] =  ((GetKeyState(VK_XBUTTON2) & 0x80) ? 0xFF : 0x00);	
+
+    
+	
+ 
+	if (poll_mouse==1) filp=0;
+	if (filp==2) filp=0;
+	if (filp==0) {
+                  GetCursorPos( &point );   	
+		
+	if (This->prevX == point.x) This->m_state.lX = 0;
+	else {
+          This->prevX = point.x;
+          This->m_state.lX = point.x - This->org_coords.x; 
+	      } 
+
+	if (This->prevY == point.y) This->m_state.lY = 0;
+	else {
+         This->prevY = point.y;
+          This->m_state.lY = point.y - This->org_coords.y; 
+	    } 
+
+   	}
+	else 
+	{
+	 This->m_state.lX = 0;
+     This->m_state.lY = 0;	 
+	}
+    filp++;
+    
+// check see if buffer have been set
+
+}
+
+#endif
+
 static HRESULT WINAPI SysMouseAImpl_Poll(LPDIRECTINPUTDEVICE8A iface)
 {
  int retValue = DI_OK;
-
  
 SysMouseImpl *This = (SysMouseImpl *)iface;           
-
-
- if (poll_mouse==0) {	                						 
+ if (poll_mouse==0) {
+	                 retValue=SysMouseAImpl_Acquire(iface);	
                      poll_mouse=1; 
-					 retValue=SysMouseAImpl_Acquire(iface);
 					 if (retValue!=DI_OK) retValue=DIERR_NOTACQUIRED;
                      else retValue = DI_OK;
                      }
- 
+
  return retValue;
 }
 	
@@ -725,15 +785,16 @@ static HRESULT WINAPI SysMouseAImpl_GetDeviceState(
     SysMouseImpl *This = (SysMouseImpl *)iface;        
     POINT point;    	 
 
+#ifndef __REACTOS__
     EnterCriticalSection(&(This->crit));
-
+#endif
 
     TRACE("(this=%p,0x%08lx,%p): \n",This,len,ptr);
     	
     /* Copy the current mouse state */	   
     fill_DataFormat(ptr, &(This->m_state), This->wine_df);
 
-
+#ifdef __REACTOS__
 	// this fix windows bugs when 
 	// some program calling on mouse poll
 	if (poll_mouse==1) poll_mouse=0;		 
@@ -744,7 +805,7 @@ static HRESULT WINAPI SysMouseAImpl_GetDeviceState(
 	                       This->m_state.lZ = 0;
 	                       } 
 	     }
-	
+#endif	
 	
     /* Check if we need to do a mouse warping */
     if (This->need_warp == WARP_NEEDED) {
@@ -762,9 +823,9 @@ static HRESULT WINAPI SysMouseAImpl_GetDeviceState(
 #endif
     }
 
-
+#ifndef __REACTOS__
     LeaveCriticalSection(&(This->crit));
-
+#endif
 
     TRACE("(X: %ld - Y: %ld - Z: %ld  L: %02x M: %02x R: %02x)\n",
 	  This->m_state.lX, This->m_state.lY, This->m_state.lZ,
@@ -790,20 +851,29 @@ static HRESULT WINAPI SysMouseAImpl_GetDeviceData(LPDIRECTINPUTDEVICE8A iface,
 
     
     TRACE("(%p)->(dods=%ld,entries=%ld,fl=0x%08lx)\n",This,dodsize,*entries,flags);
-    	
+        
+
   if (This->acquired == 0) {
 	WARN(" application tries to get data from an unacquired device !\n");
-	return DIERR_NOTACQUIRED;
+	//return DIERR_NOTACQUIRED;
 
 	// windows does not get any data if 
 	// we do not call manual to mouse Acquire
 	// this is only need if some apps calling on getdevice data direcly
 	// in windows GetdeviceData does always update first the data
 	// then return it.
+	 SysMouseAImpl_Acquire(iface);
 	}
 	
-    EnterCriticalSection(&(This->crit));
+    
 
+   
+
+
+
+#ifndef __REACTOS__
+    EnterCriticalSection(&(This->crit));
+#endif
 
 	// FIXME mouse are bit choppy here. 
 
@@ -846,9 +916,9 @@ static HRESULT WINAPI SysMouseAImpl_GetDeviceData(LPDIRECTINPUTDEVICE8A iface,
     }
     if (!(flags & DIGDD_PEEK))
 	This->queue_tail = nqtail;
-
+#ifndef __REACTOS__
     LeaveCriticalSection(&(This->crit));
-
+#endif
     /* Check if we need to do a mouse warping */
    
 
@@ -865,8 +935,7 @@ static HRESULT WINAPI SysMouseAImpl_GetDeviceData(LPDIRECTINPUTDEVICE8A iface,
 #else
 	This->need_warp = WARP_STARTED;
 #endif
-    }
-
+    }    
     return DI_OK;
 }
 
@@ -888,7 +957,8 @@ static HRESULT WINAPI SysMouseAImpl_SetProperty(LPDIRECTINPUTDEVICE8A iface,
 		
 		TRACE("buffersize = %ld\n",pd->dwData);
 		
-		This->data_queue = HeapAlloc(GetProcessHeap(),0, pd->dwData * sizeof(DIDEVICEOBJECTDATA));
+		This->data_queue = (LPDIDEVICEOBJECTDATA)HeapAlloc(GetProcessHeap(),0,
+								   pd->dwData * sizeof(DIDEVICEOBJECTDATA));
 		This->queue_head = 0;
 		This->queue_tail = 0;
 		This->queue_len  = pd->dwData;
@@ -919,7 +989,7 @@ static HRESULT WINAPI SysMouseAImpl_GetProperty(LPDIRECTINPUTDEVICE8A iface,
 {
     SysMouseImpl *This = (SysMouseImpl *)iface;
     
-    TRACE("(this=%p,%s,%p)\n",
+    TRACE("(this=%p,%s,%p): stub!\n",
 	  iface, debugstr_guid(rguid), pdiph);
     
     if (TRACE_ON(dinput))
