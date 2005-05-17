@@ -1668,7 +1668,7 @@ TCHAR szMsg[RC_STRING_MAX_SIZE];
 	if (ptrStartNode == NULL)
 	{
 #ifdef _DEBUG
-		ConErrPrintf("DEBUG: Cannot allocate memory for ptrStartNode!\n");
+		ConErrPrintf(_T("DEBUG: Cannot allocate memory for ptrStartNode!\n"));
 #endif
 		return 1;	/* Error cannot allocate memory for 1st object */
 	}
@@ -1688,7 +1688,7 @@ TCHAR szMsg[RC_STRING_MAX_SIZE];
 				if (ptrNextNode->ptrNext == NULL)
 				{
 #ifdef _DEBUG
-					ConErrPrintf("DEBUG: Cannot allocate memory for ptrNextNode->ptrNext!\n");
+					ConErrPrintf(_T("DEBUG: Cannot allocate memory for ptrNextNode->ptrNext!\n"));
 #endif
 					while (ptrStartNode)
 					{
@@ -1748,7 +1748,7 @@ TCHAR szMsg[RC_STRING_MAX_SIZE];
 	if (ptrFileArray == NULL)
 	{
 #ifdef _DEBUG
-		ConErrPrintf("DEBUG: Cannot allocate memory for ptrFileArray!\n");
+		ConErrPrintf(_T("DEBUG: Cannot allocate memory for ptrFileArray!\n"));
 #endif
 		while (ptrStartNode)
 		{
