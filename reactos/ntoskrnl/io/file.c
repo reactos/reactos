@@ -344,6 +344,8 @@ IopSecurityFile(PVOID ObjectBody,
         StackPtr->Parameters.SetSecurity.SecurityDescriptor = SecurityDescriptor;
     }
 
+    ObReferenceObject(FileObject);
+
     /* Call the Driver */
     Status = IoCallDriver(FileObject->DeviceObject, Irp);
 
@@ -1022,8 +1024,8 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
     CreatedFileObject->Vpb = DeviceObject->Vpb;
     CreatedFileObject->Type = IO_TYPE_FILE;
     /* HACK */
-    CreatedFileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
-    //CreatedFileObject->Flags = FO_STREAM_FILE;
+    //CreatedFileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
+    CreatedFileObject->Flags |= FO_STREAM_FILE;
 
     /* Initialize Lock and Event */
     KeInitializeEvent(&CreatedFileObject->Event, NotificationEvent, FALSE);
@@ -2536,7 +2538,12 @@ NtReadFile(IN HANDLE FileHandle,
     Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
     Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
     Irp->Flags |= IRP_READ_OPERATION;
+#if 0
+    /* FIXME:
+     *    Vfat doesn't handle non cached files correctly.
+     */     
     if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) Irp->Flags |= IRP_NOCACHE;
+#endif      
 
     /* Setup Stack Data */
     StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -3114,7 +3121,7 @@ NtWriteFile (IN HANDLE FileHandle,
     _SEH_TRY
     {
         Irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
-                                           FileObject->DeviceObject,
+                                           DeviceObject,
                                            Buffer,
                                            Length,
                                            ByteOffset,
@@ -3148,7 +3155,12 @@ NtWriteFile (IN HANDLE FileHandle,
     Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
     Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
     Irp->Flags |= IRP_WRITE_OPERATION;
+#if 0    
+    /* FIXME:
+     *    Vfat doesn't handle non cached files correctly.
+     */     
     if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) Irp->Flags |= IRP_NOCACHE;
+#endif    
 
     /* Setup Stack Data */
     StackPtr = IoGetNextIrpStackLocation(Irp);
