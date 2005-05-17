@@ -64,20 +64,35 @@ BOOL DissectArcPath(CHAR *ArcPath, CHAR *BootPath, ULONG* BootDrive, ULONG* Boot
 		/*
 		 * hard disk path:
 		 *  multi(0)disk(0)rdisk(x)partition(y)\path
+                 * or 
+		 *  multi(0)disk(0)rdisk(x)\path
+                 * (for partition-less disks)
 		 */
 		p = p + 6;
 		*BootDrive = atoi(p) + 0x80;
 		p = strchr(p, ')');
-		if ((p == NULL) || (strnicmp(p, ")partition(", 11) != 0))
+		if (p == NULL)
 			return FALSE;
-		p = p + 11;
-		*BootPartition = atoi(p);
-		p = strchr(p, ')');
-		if ((p == NULL) || (*BootPartition == 0))
-			return FALSE;
+		if (strnicmp(p, ")partition(", 11) == 0)
+		{
+			p = p + 11;
+			*BootPartition = atoi(p);
+			p = strchr(p, ')');
+			if ((p == NULL) || (*BootPartition == 0))
+				return FALSE;
+		}
+		else
+		{
+			*BootPartition = 0xff;
+		}
 		p++;
 	}
 	else
+	{
+		return FALSE;
+	}
+
+	if ('\\' != *p)
 	{
 		return FALSE;
 	}
