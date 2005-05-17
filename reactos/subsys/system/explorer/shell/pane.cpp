@@ -85,7 +85,7 @@ Pane::Pane(HWND hparent, int id, int id_header, Entry* root, bool treePane, int 
 	Entry* entry = _root;
 
 	if (entry)
-		insert_entries(entry, -1);
+		insert_entries(entry);
 
 	init();
 
@@ -657,12 +657,12 @@ void Pane::calc_tabbed_width(LPDRAWITEMSTRUCT dis, int col, LPCTSTR str)
 
  // insert listbox entries after index idx
 
-void Pane::insert_entries(Entry* dir, int idx)
+int Pane::insert_entries(Entry* dir, int idx)
 {
 	Entry* entry = dir;
 
 	if (!entry)
-		return;
+		return idx;
 
 	for(; entry; entry=entry->_next) {
 #ifndef _LEFT_FILES
@@ -685,8 +685,10 @@ void Pane::insert_entries(Entry* dir, int idx)
 		ListBox_InsertItemData(_hwnd, idx, entry);
 
 		if (_treePane && entry->_expanded)
-			insert_entries(entry->_down, idx);
+			idx = insert_entries(entry->_down, idx);
 	}
+
+	return idx;
 }
 
 

@@ -25,10 +25,11 @@ CleanupWindowStationImpl(VOID);
 
 NTSTATUS
 STDCALL
-IntWinStaObjectCreate(PVOID ObjectBody,
-                      PVOID Parent,
-                      PWSTR RemainingPath,
-                      struct _OBJECT_ATTRIBUTES* ObjectAttributes);
+IntWinStaObjectOpen(OB_OPEN_REASON Reason,
+                    PVOID ObjectBody,
+                    PEPROCESS Process,
+                    ULONG HandleCount,
+                    ACCESS_MASK GrantedAccess);
 
 VOID STDCALL
 IntWinStaObjectDelete(PVOID DeletedObject);

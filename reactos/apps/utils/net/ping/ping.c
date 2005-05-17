@@ -467,7 +467,7 @@ BOOL Ping(VOID)
 {
     INT                 Status;
     SOCKADDR            From;
-    UINT                Length;
+    INT                 Length;
     PVOID               Buffer;
     UINT                Size;
     PICMP_ECHO_PACKET   Packet;

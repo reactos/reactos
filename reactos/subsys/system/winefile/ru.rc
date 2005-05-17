@@ -25,8 +25,8 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 IDM_WINEFILE MENU FIXED IMPURE
 {
 	POPUP "&Файл"  {
-		MENUITEM "&Открыть\tEnter" ,			101
-		MENUITEM "&Переместить...\tF7" , 			106
+		MENUITEM "&Открыть\tEnter" ,			ID_ACTIVATE
+		MENUITEM "&Переместить...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Копировать...\tF8" ,			107
 		MENUITEM "&В буфер обмена...\tF9" ,		118
 		MENUITEM "&Удалить\tDel" ,			108
@@ -55,13 +55,13 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Копировать диск..." ,			201
 		MENUITEM "&Метка тома..." ,			202
 		MENUITEM SEPARATOR
-		MENUITEM "&Форматировать..." ,			203
+		MENUITEM "&Форматировать..." ,			ID_FORMAT_DISK
 #ifdef _WIN95
 		MENUITEM "&Создать системный диск...", -1	/*@@ */
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "Подклю&чить сетевой диск" ,			252
-		MENUITEM "Отк&лючить сетевой диск" ,		253
+		MENUITEM "Подклю&чить сетевой диск" ,			ID_CONNECT_NETWORK_DRIVE
+		MENUITEM "Отк&лючить сетевой диск" ,		ID_DISCONNECT_NETWORK_DRIVE
 		MENUITEM SEPARATOR
 		MENUITEM "Сделать о&бщим как..." ,			254
 		MENUITEM "&Закрыть общий доступ..." ,			255
@@ -89,18 +89,18 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "В&се подробности о файле" ,				ID_VIEW_ALL_ATTRIBUTES, CHECKED
 		MENUITEM "&Выборочно о файле..." ,			ID_VIEW_SELECTED_ATTRIBUTES
 		MENUITEM SEPARATOR
-		MENUITEM "&Сортировать по имени" ,		404
-		MENUITEM "Сортировать по &типу" ,		405
-		MENUITEM "Сортировать по &размеру" , 		406
-		MENUITEM "Сортировать по д&ате" , 		407
+		MENUITEM "&Сортировать по имени" ,		ID_VIEW_SORT_NAME
+		MENUITEM "Сортировать по &типу" ,		ID_VIEW_SORT_TYPE
+		MENUITEM "Сортировать по &размеру" , 		ID_VIEW_SORT_SIZE
+		MENUITEM "Сортировать по д&ате" , 		ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
 		MENUITEM "Сортировать по &..." ,			409
 	}
 
 	POPUP "&Настройки"  {
-		MENUITEM "Под&тверждения..." ,		-1
-		MENUITEM "&Шрифт..." ,			-1
-		MENUITEM "&Настроить панель инструментов..." , -1
+		MENUITEM "Под&тверждения..." ,		501
+		MENUITEM "&Шрифт..." ,			ID_SELECT_FONT
+		MENUITEM "&Настроить панель инструментов..." , 512
 		MENUITEM SEPARATOR
 		MENUITEM "&Панель инструментов" ,		ID_VIEW_TOOL_BAR, CHECKED
 		MENUITEM "Панель &дисков" ,		ID_VIEW_DRIVE_BAR, CHECKED
@@ -109,7 +109,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "П&олный экран\tCtrl+Shift+S" , 	ID_VIEW_FULLSCREEN
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "&Значок в список программ" ,		-1
+		MENUITEM "&Значок в список программ" ,		504
 		MENUITEM "Со&хранять настройки при выходе" ,			511
 	}
 

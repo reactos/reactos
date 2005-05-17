@@ -8,9 +8,9 @@
  */
 void _tsplitpath(const _TCHAR* path, _TCHAR* drive, _TCHAR* dir, _TCHAR* fname, _TCHAR* ext)
 {
-  _TCHAR* tmp_drive;
-  _TCHAR* tmp_dir;
-  _TCHAR* tmp_ext;
+  _TCHAR* tmp_drive = NULL;
+  _TCHAR* tmp_dir = NULL;
+  _TCHAR* tmp_ext = NULL;
 
   tmp_drive = (_TCHAR*)_tcschr(path,':');
   if (drive)
@@ -44,8 +44,9 @@ void _tsplitpath(const _TCHAR* path, _TCHAR* drive, _TCHAR* dir, _TCHAR* fname, 
         }
     }
 
-  tmp_ext = (_TCHAR*)_tcsrchr(path,'.');
-  if (!tmp_ext)
+  /* If the dot is before the last dir separator, it's part
+   * of a directory name, not the start of the extension */
+  if (!tmp_ext || tmp_ext < tmp_dir)
     {
       tmp_ext = (_TCHAR*)path+_tcslen(path);
     }

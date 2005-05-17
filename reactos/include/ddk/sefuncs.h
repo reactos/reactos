@@ -122,7 +122,7 @@ NTSTATUS
 STDCALL
 SeCreateAccessState(
 	PACCESS_STATE AccessState,
-	PVOID AuxData,
+	PAUX_DATA AuxData,
 	ACCESS_MASK Access,
 	PGENERIC_MAPPING GenericMapping
 	);

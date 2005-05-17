@@ -22,7 +22,13 @@ typedef struct _RETENTION_CHECK_PARAMS
   POBJECT_HEADER ObjectHeader;
 } RETENTION_CHECK_PARAMS, *PRETENTION_CHECK_PARAMS;
 
-
+/* TEMPORARY HACK. DO NOT REMOVE -- Alex */
+NTSTATUS
+STDCALL
+ExpDesktopCreate(PVOID ObjectBody,
+                 PVOID Parent,
+                 PWSTR RemainingPath,
+                 struct _OBJECT_ATTRIBUTES* ObjectAttributes);
 /* FUNCTIONS ************************************************************/
 
 NTSTATUS
@@ -475,12 +481,12 @@ ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 	DPRINT("Current ObjectType %wZ\n",
 	       &CurrentHeader->ObjectType->TypeName);
 
-	if (CurrentHeader->ObjectType->Parse == NULL)
+	if (CurrentHeader->ObjectType->TypeInfo.ParseProcedure == NULL)
 	  {
 	     DPRINT("Current object can't parse\n");
 	     break;
 	  }
-	Status = CurrentHeader->ObjectType->Parse(CurrentObject,
+	Status = CurrentHeader->ObjectType->TypeInfo.ParseProcedure(CurrentObject,
 						  &NextObject,
 						  &PathString,
 						  &current,
@@ -553,10 +559,10 @@ ObQueryNameString (IN PVOID Object,
   ObjectHeader = BODY_TO_HEADER(Object);
 
   if (ObjectHeader->ObjectType != NULL &&
-      ObjectHeader->ObjectType->QueryName != NULL)
+      ObjectHeader->ObjectType->TypeInfo.QueryNameProcedure != NULL)
     {
-      DPRINT ("Calling %x\n", ObjectHeader->ObjectType->QueryName);
-      Status = ObjectHeader->ObjectType->QueryName (Object,
+      DPRINT ("Calling %x\n", ObjectHeader->ObjectType->TypeInfo.QueryNameProcedure);
+      Status = ObjectHeader->ObjectType->TypeInfo.QueryNameProcedure (Object,
 						    ObjectNameInfo,
 						    Length,
 						    ReturnLength);
@@ -631,6 +637,57 @@ ObQueryNameString (IN PVOID Object,
   return Status;
 }
 
+NTSTATUS
+STDCALL
+ObpAllocateObject(POBJECT_ATTRIBUTES ObjectAttributes,
+                  POBJECT_TYPE ObjectType,
+                  ULONG ObjectSize,
+                  POBJECT_HEADER *ObjectHeader)
+{
+    POBJECT_HEADER Header;
+    POOL_TYPE PoolType;
+    ULONG Tag;
+        
+    /* If we don't have an Object Type yet, force NonPaged */
+    DPRINT("ObpAllocateObject\n");
+    if (!ObjectType) 
+    {
+        PoolType = NonPagedPool;
+        Tag = TAG('O', 'b', 'j', 'T');
+    }
+    else
+    {
+        PoolType = ObjectType->TypeInfo.PoolType;
+        Tag = ObjectType->Key;
+    }
+    
+    /* Allocate memory for the Object */
+    Header = (POBJECT_HEADER)ExAllocatePoolWithTag(PoolType, ObjectSize, Tag);
+    if (!Header) {
+        DPRINT1("Not enough memory!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    
+    /* Initialize the object header */
+    RtlZeroMemory(Header, ObjectSize);
+    DPRINT("Initalizing header %p\n", Header);
+    Header->HandleCount = 0;
+    Header->RefCount = 1;
+    Header->ObjectType = ObjectType;
+    if (ObjectAttributes && ObjectAttributes->Attributes & OBJ_PERMANENT)
+    {
+        Header->Permanent = TRUE;
+    }
+    if (ObjectAttributes && ObjectAttributes->Attributes & OBJ_INHERIT)
+    {
+        Header->Inherit = TRUE;
+    }
+    RtlInitUnicodeString(&Header->Name, NULL);
+    
+    /* Return Header */
+    *ObjectHeader = Header;
+    return STATUS_SUCCESS;
+}
 
 /**********************************************************************
  * NAME							EXPORTED
@@ -732,43 +789,17 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
     {
       RtlInitUnicodeString(&RemainingPath, NULL);
     }
-
-  Header = (POBJECT_HEADER)ExAllocatePoolWithTag(NonPagedPool,
-						 OBJECT_ALLOC_SIZE(ObjectSize),
-						 Type->Tag);
-  if (Header == NULL) {
-	DPRINT1("Not enough memory!\n");
-	return STATUS_INSUFFICIENT_RESOURCES;
-  }
-
-  RtlZeroMemory(Header, OBJECT_ALLOC_SIZE(ObjectSize));
-
-  /* Initialize the object header */
-  DPRINT("Initalizing header 0x%x (%wZ)\n", Header, &Type->TypeName);
-  Header->HandleCount = 0;
-  Header->RefCount = 1;
-  Header->ObjectType = Type;
-  if (ObjectAttributes != NULL &&
-      ObjectAttributes->Attributes & OBJ_PERMANENT)
+    
+    /* Allocate the Object */
+    Status = ObpAllocateObject(ObjectAttributes, 
+                               Type, 
+                               OBJECT_ALLOC_SIZE(ObjectSize), 
+                               &Header);
+    if (!NT_SUCCESS(Status))
     {
-      Header->Permanent = TRUE;
+        DPRINT1("ObpAllocateObject failed!\n");
+        return Status;
     }
-  else
-    {
-      Header->Permanent = FALSE;
-    }
-
-  if (ObjectAttributes != NULL &&
-      ObjectAttributes->Attributes & OBJ_INHERIT)
-    {
-      Header->Inherit = TRUE;
-    }
-  else
-    {
-      Header->Inherit = FALSE;
-    }
-
-  RtlInitUnicodeString(&(Header->Name),NULL);
 
   DPRINT("Getting Parent and adding entry\n");
   if (ParentHeader != NULL &&
@@ -786,14 +817,39 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
       ObjectAttached = TRUE;
     }
 
-  DPRINT("About to call Create Routine\n");
-  if (Header->ObjectType->Create != NULL)
-    {
-      DPRINT("Calling %x\n", Header->ObjectType->Create);
-      Status = Header->ObjectType->Create(HEADER_TO_BODY(Header),
-					  Parent,
-					  RemainingPath.Buffer,
-					  ObjectAttributes);
+    if ((Header->ObjectType == IoFileObjectType) ||
+        (Header->ObjectType == ExDesktopObjectType) ||
+        (Header->ObjectType->TypeInfo.OpenProcedure != NULL))
+    {    
+     DPRINT("About to call Open Routine\n");
+     if (Header->ObjectType == IoFileObjectType)
+     {
+         /* TEMPORARY HACK. DO NOT TOUCH -- Alex */
+         DPRINT("Calling IopCreateFile\n");
+         Status = IopCreateFile(HEADER_TO_BODY(Header),
+                                Parent,
+                                RemainingPath.Buffer,            
+                                ObjectAttributes);
+     }
+     else if (Header->ObjectType == ExDesktopObjectType)
+     {
+         /* TEMPORARY HACK. DO NOT TOUCH -- Alex */
+         DPRINT("Calling ExpDesktopCreate\n");
+         Status = ExpDesktopCreate(HEADER_TO_BODY(Header),
+                                   Parent,
+                                   RemainingPath.Buffer,            
+                                   ObjectAttributes);
+     }
+     else if (Header->ObjectType->TypeInfo.OpenProcedure != NULL)
+     {
+      DPRINT("Calling %x\n", Header->ObjectType->TypeInfo.OpenProcedure);
+      Status = Header->ObjectType->TypeInfo.OpenProcedure(ObCreateHandle,
+                                        HEADER_TO_BODY(Header),
+                                        NULL,
+                                        0,
+                                        0);
+     }
+
       if (!NT_SUCCESS(Status))
 	{
 	  if (ObjectAttached == TRUE)
@@ -810,7 +866,8 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
 	  DPRINT("Create Failed\n");
 	  return Status;
 	}
-    }
+  }
+
   RtlFreeUnicodeString(&RemainingPath);
 
   SeCaptureSubjectContext(&SubjectContext);
@@ -822,16 +879,16 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
 			    &NewSecurityDescriptor,
 			    (Header->ObjectType == ObDirectoryType),
 			    &SubjectContext,
-			    Header->ObjectType->Mapping,
+			    &Header->ObjectType->TypeInfo.GenericMapping,
 			    PagedPool);
   if (NT_SUCCESS(Status))
     {
       DPRINT("NewSecurityDescriptor %p\n", NewSecurityDescriptor);
 
-      if (Header->ObjectType->Security != NULL)
+      if (Header->ObjectType->TypeInfo.SecurityProcedure != NULL)
 	{
 	  /* Call the security method */
-	  Status = Header->ObjectType->Security(HEADER_TO_BODY(Header),
+	  Status = Header->ObjectType->TypeInfo.SecurityProcedure(HEADER_TO_BODY(Header),
 						AssignSecurityDescriptor,
 						0,
 						NewSecurityDescriptor,
@@ -960,7 +1017,7 @@ ObOpenObjectByPointer(IN POBJECT Object,
 	return Status;
      }
 
-   Status = ObCreateHandle(PsGetCurrentProcess(),
+   Status = ObpCreateHandle(PsGetCurrentProcess(),
 			   Object,
 			   DesiredAccess,
 			   (BOOLEAN)(HandleAttributes & OBJ_INHERIT),
@@ -988,9 +1045,9 @@ ObpDeleteObject(POBJECT_HEADER Header)
     }
 
   if (Header->ObjectType != NULL &&
-      Header->ObjectType->Delete != NULL)
+      Header->ObjectType->TypeInfo.DeleteProcedure != NULL)
     {
-      Header->ObjectType->Delete(HEADER_TO_BODY(Header));
+      Header->ObjectType->TypeInfo.DeleteProcedure(HEADER_TO_BODY(Header));
     }
 
   if (Header->Name.Buffer != NULL)
@@ -1063,7 +1120,7 @@ ObpDeleteObjectDpcLevel(IN POBJECT_HEADER ObjectHeader,
 	Params = (PRETENTION_CHECK_PARAMS)
 	  ExAllocatePoolWithTag(NonPagedPoolMustSucceed,
 				sizeof(RETENTION_CHECK_PARAMS),
-				ObjectHeader->ObjectType->Tag);
+				ObjectHeader->ObjectType->Key);
 	Params->ObjectHeader = ObjectHeader;
 	ExInitializeWorkItem(&Params->WorkItem,
 			     ObpDeleteObjectWorkRoutine,

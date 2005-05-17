@@ -95,29 +95,34 @@ void SetNewLocale(LCID lcid)
 	HKEY langKey;
 	DWORD ret;
 	TCHAR value[9];
+	DWORD valuesize;
 
 	ret = RegOpenKeyW(HKEY_CURRENT_USER, L"Control Panel\\International", &localeKey);
 
 	if (ret != ERROR_SUCCESS)
 	{
 		// some serious error
-		//TODO: Tell user about it
+		MessageBoxW(NULL, L"Problem opening HKCU\\Control Panel\\International key", L"Big Problem", MB_OK);
 		return;
 	}
 
-	wsprintf(value, L"%04x", (DWORD)lcid);
+	wsprintf(value, L"%04X", (DWORD)lcid);
+	valuesize = (wcslen(value) + 1) * sizeof(WCHAR);
 
-	RegSetValueExW(localeKey, L"Locale", 0, REG_SZ, (BYTE *)value, sizeof(value));
+	RegSetValueExW(localeKey, L"Locale", 0, REG_SZ, (BYTE *)value, valuesize);
 	RegCloseKey(localeKey);
 
 	// Set language
 	ret = RegOpenKeyW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\NLS\\Language", &langKey);
 
 	if (ret != ERROR_SUCCESS)
+	{
+		MessageBoxW(NULL, L"Problem opening HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language key", L"Big Problem", MB_OK);
 		return;
+	}
 
-	RegSetValueExW(langKey, L"Default", 0, REG_SZ, (BYTE *)value, sizeof(value));
-	RegSetValueExW(langKey, L"InstallLanguage", 0, REG_SZ, (BYTE *)value, sizeof(value));
+	RegSetValueExW(langKey, L"Default", 0, REG_SZ, (BYTE *)value, valuesize );
+	RegSetValueExW(langKey, L"InstallLanguage", 0, REG_SZ, (BYTE *)value, valuesize );
 	RegCloseKey(langKey);
 }
 

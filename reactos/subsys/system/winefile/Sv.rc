@@ -29,7 +29,7 @@ LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
 IDM_WINEFILE MENU FIXED IMPURE
 {
 	POPUP "&Arkiv"  {
-        MENUITEM "&Öppna\tEnter",                101
+        MENUITEM "&Öppna\tEnter",                ID_ACTIVATE
         MENUITEM "&Flytta...\tF7",                ID_FILE_MOVE
         MENUITEM "&Kopiera...\tF8",                107
         MENUITEM "&I urklipp...\tF9",        118
@@ -59,13 +59,13 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "&Kopiera disk...",               201
         MENUITEM "&Namnge disk...",              202
         MENUITEM SEPARATOR
-        MENUITEM "&Formatera disk...",             203
+        MENUITEM "&Formatera disk...",             ID_FORMAT_DISK
 #ifdef _WIN95
 		MENUITEM "&Skapa systemdisk...", -1	/*TODO*/
 #endif
 		MENUITEM SEPARATOR
-        MENUITEM "Anslut &Nätverksenhet",      252
-        MENUITEM "&Koppla ifrån Nätverksenhet",   253
+        MENUITEM "Anslut &Nätverksenhet",      ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Koppla ifrån Nätverksenhet",   ID_DISCONNECT_NETWORK_DRIVE
         MENUITEM SEPARATOR
         MENUITEM "Dela ut...",                 254
         MENUITEM "&Ta bort utdelning...",            255
@@ -93,18 +93,18 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Alla Fildetaljer" ,				ID_VIEW_ALL_ATTRIBUTES, CHECKED
 		MENUITEM "&Vissa detaljer..." ,			ID_VIEW_SELECTED_ATTRIBUTES
 		MENUITEM SEPARATOR
-        MENUITEM "&Sortera efter namn",               404
-        MENUITEM "Sortera efter t&yp",               405
-        MENUITEM "Sortera efter st&orlek",               406
-        MENUITEM "Sortera efter &datum",               407
+	MENUITEM "&Sortera efter namn", 	ID_VIEW_SORT_NAME
+	MENUITEM "Sortera efter t&yp",		ID_VIEW_SORT_TYPE
+	MENUITEM "Sortera efter st&orlek",	ID_VIEW_SORT_SIZE
+	MENUITEM "Sortera efter &datum",	ID_VIEW_SORT_DATE
         MENUITEM SEPARATOR
         MENUITEM "Sortera efter &...",                409
 	}
 
 	POPUP "&Inställningar"  {
-        MENUITEM "&Bekräftelse...",            -1
+        MENUITEM "&Bekräftelse...",            501
         MENUITEM "&Teckensnitt...",                    ID_SELECT_FONT
-        MENUITEM "&Konfigurera verktygsfält...",       -1
+        MENUITEM "&Konfigurera verktygsfält...",       512
         MENUITEM SEPARATOR
         MENUITEM "&Verktygsfält",                    ID_VIEW_TOOL_BAR, CHECKED
         MENUITEM "&Enhetsfält",                   ID_VIEW_DRIVE_BAR, CHECKED
@@ -113,7 +113,7 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "F&ullskärm\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "&Minimera vid körning" ,		-1
+		MENUITEM "&Minimera vid körning" ,		504
         MENUITEM "&Spara ändringar vid stängning", 511
 	}
 

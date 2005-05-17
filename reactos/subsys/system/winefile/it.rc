@@ -29,7 +29,7 @@ LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 IDM_WINEFILE MENU FIXED IMPURE
 {
 	POPUP "&File"  {
-		MENUITEM "&Apri\tInvio" ,			101
+		MENUITEM "&Apri\tInvio" ,			ID_ACTIVATE
 		MENUITEM "&Sposta...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Copia...\tF8" ,			107
 		MENUITEM "&Negli Appunti...\tF9" ,		118
@@ -59,13 +59,13 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Copia Disco..." ,			201
 		MENUITEM "&Etichetta Disco..." ,			202
 		MENUITEM SEPARATOR
-		MENUITEM "&Formatta Disco..." ,			203
+		MENUITEM "&Formatta Disco..." ,			ID_FORMAT_DISK
 #ifdef _WIN95
 		MENUITEM "&Crea Disco di Sistema...", -1	/*@@ */
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "Connetti & Drive di Rete" ,			252
-		MENUITEM "&Disconnetti Drive di Rete" ,		253
+		MENUITEM "Connetti & Drive di Rete" ,			ID_CONNECT_NETWORK_DRIVE
+		MENUITEM "&Disconnetti Drive di Rete" ,		ID_DISCONNECT_NETWORK_DRIVE
 		MENUITEM SEPARATOR
 		MENUITEM "Condividi come..." ,			254
 		MENUITEM "&Rimuovi condivisione..." ,			255
@@ -93,18 +93,18 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Mostra tutti i dettagli sui file" ,				ID_VIEW_ALL_ATTRIBUTES, CHECKED
 		MENUITEM "&Mostra dettagli parziali..." ,			ID_VIEW_SELECTED_ATTRIBUTES
 		MENUITEM SEPARATOR
-		MENUITEM "&Ordina per Nome" ,		404
-		MENUITEM "&Ordina per Tipo" ,		405
-		MENUITEM "&Ordina per Dimensione" , 		406
-		MENUITEM "&Ordina per Data" , 		407
+		MENUITEM "&Ordina per Nome" ,		ID_VIEW_SORT_NAME
+		MENUITEM "&Ordina per Tipo" ,		ID_VIEW_SORT_TYPE
+		MENUITEM "&Ordina per Dimensione" , 	ID_VIEW_SORT_SIZE
+		MENUITEM "&Ordina per Data" , 		ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
 		MENUITEM "Ordina per &..." ,			409
 	}
 
 	POPUP "&Opzioni"  {
-		MENUITEM "&Confermazione..." ,		-1
+		MENUITEM "&Confermazione..." ,		501
 		MENUITEM "&Font..." ,			ID_SELECT_FONT
-		MENUITEM "&Personalizza barra degli strumenti..." , -1
+		MENUITEM "&Personalizza barra degli strumenti..." , 512
 		MENUITEM SEPARATOR
 		MENUITEM "&Barra degli strumenti" ,		ID_VIEW_TOOL_BAR, CHECKED
 		MENUITEM "&Barra dei Drive" ,		ID_VIEW_DRIVE_BAR, CHECKED
@@ -113,7 +113,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "A& tutto schermo\tCtrl+Shift+S" , 	ID_VIEW_FULLSCREEN
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "&Esegui minimizzato" ,		-1
+		MENUITEM "&Esegui minimizzato" ,		504
 		MENUITEM "&Salva impostazioni all'uscita" ,			511
 	}
 

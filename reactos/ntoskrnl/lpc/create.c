@@ -62,37 +62,6 @@ LpcpVerifyCreateParameters (IN	PHANDLE			PortHandle,
   return (STATUS_SUCCESS);
 }
 
-
-/**********************************************************************
- * NAME
- * 	NiCreatePort/4
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- */
-NTSTATUS STDCALL
-NiCreatePort (PVOID			ObjectBody,
-	      PVOID			Parent,
-	      PWSTR			RemainingPath,
-	      POBJECT_ATTRIBUTES	ObjectAttributes)
-{
-  if (RemainingPath == NULL)
-    {
-      return (STATUS_SUCCESS);
-    }
-
-  if (wcschr(RemainingPath+1, '\\') != NULL)
-    {
-      return (STATUS_UNSUCCESSFUL);
-    }
-
-  return (STATUS_SUCCESS);
-}
-
-
 /**********************************************************************
  * NAME							EXPORTED
  * 	NtCreatePort/5

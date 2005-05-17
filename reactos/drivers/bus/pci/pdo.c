@@ -433,7 +433,7 @@ PdoQueryResourceRequirements(
       if (Length == 0)
       {
         DPRINT("Unused address register\n");
-        break;
+        continue;
       }
 
       /* Set preferred descriptor */
@@ -497,6 +497,7 @@ PdoQueryResourceRequirements(
 
     if (PciConfig.u.type0.InterruptPin != 0)
     {
+      Descriptor->Option = 0; /* Required */
       Descriptor->Type = CmResourceTypeInterrupt;
       Descriptor->ShareDisposition = CmResourceShareShared;
       Descriptor->Flags = CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE;
@@ -522,7 +523,7 @@ PdoQueryResourceRequirements(
       if (Length == 0)
       {
         DPRINT("Unused address register\n");
-        break;
+        continue;
       }
 
       /* Set preferred descriptor */
@@ -722,7 +723,7 @@ PdoQueryResources(
       if (Length == 0)
       {
         DPRINT("Unused address register\n");
-        break;
+        continue;
       }
 
       if (Flags & PCI_ADDRESS_IO_SPACE)
@@ -776,7 +777,7 @@ PdoQueryResources(
       if (Length == 0)
       {
         DPRINT("Unused address register\n");
-        break;
+        continue;
       }
 
       if (Flags & PCI_ADDRESS_IO_SPACE)

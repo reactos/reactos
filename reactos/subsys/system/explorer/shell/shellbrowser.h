@@ -50,6 +50,7 @@ struct ShellPathInfo
 
 struct BrowserCallback
 {
+	virtual ~BrowserCallback() {}
 	virtual void entry_selected(Entry* entry) = 0;
 };
 

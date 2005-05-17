@@ -22,18 +22,21 @@
 #include <string.h>
 #include <windows.h>
 #include <lzexpand.h>
+#include <tchar.h>
 
-int main(int argc, char *argv[])
+#include "resource.h"
+
+_tmain(int argc, TCHAR *argv[])
 {
   OFSTRUCT SourceOpenStruct1, SourceOpenStruct2;
   LONG ret;
-  HFILE hSourceFile, hDestFile;
+  HFILE hSourceFile, hDestFile;  
+  TCHAR szMsg[RC_STRING_MAX_SIZE];
 
   if (argc < 2)
   {
-      fprintf( stderr, "ReactOS File Expansion Utility Version 1.0\n", argv[0] );
-      fprintf( stderr, "Copyright Victor Schneider 1997\n\n", argv[0] );
-      fprintf( stderr, "Usage: %s infile [outfile]\n", argv[0] );
+      LoadString( GetModuleHandle(NULL), IDS_Copy, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);	  
+      _ftprintf( stderr, szMsg, argv[0] );      
       return 1;
   }
   hSourceFile = LZOpenFile(argv[1], &SourceOpenStruct1, OF_READ);
@@ -41,13 +44,14 @@ int main(int argc, char *argv[])
       hDestFile = LZOpenFile(argv[2], &SourceOpenStruct2, OF_CREATE | OF_WRITE);
   else
   {
-      char OriginalName[MAX_PATH];
+      TCHAR OriginalName[MAX_PATH];
       GetExpandedName(argv[1], OriginalName);
       hDestFile = LZOpenFile(OriginalName, &SourceOpenStruct2, OF_CREATE | OF_WRITE);
   }
   ret = LZCopy(hSourceFile, hDestFile);
   LZClose(hSourceFile);
   LZClose(hDestFile);
-  if (ret <= 0) fprintf(stderr,"LZCopy failed: return is %ld\n",ret);
+  LoadString( GetModuleHandle(NULL), IDS_FAILS, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);	  
+  if (ret <= 0) _ftprintf(stderr,szMsg,ret);
   return (ret <= 0);
 }

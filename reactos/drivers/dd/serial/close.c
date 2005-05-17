@@ -24,6 +24,6 @@ SerialClose(
 
 	Irp->IoStatus.Information = 0;
 	Irp->IoStatus.Status = STATUS_SUCCESS;
- 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 	return STATUS_SUCCESS;
 }

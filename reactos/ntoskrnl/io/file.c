@@ -30,18 +30,6 @@ SeSetWorldSecurityDescriptor(SECURITY_INFORMATION SecurityInformation,
 
 /* INTERNAL FUNCTIONS ********************************************************/
 
-static
-NTSTATUS
-STDCALL
-IopLockFileCompletionRoutine(IN PDEVICE_OBJECT DeviceObject,
-                             IN PIRP Irp,
-                             IN PVOID Context)
-{
-  ExFreePool(Context);
-  return STATUS_SUCCESS;
-  // FIXME: Should I call IoFreeIrp and return STATUS_MORE_PROCESSING_REQUIRED?
-}
-
 /*
  * NAME       INTERNAL
  *  IopCreateFile
@@ -210,7 +198,7 @@ IopDeleteFile(PVOID ObjectBody)
         KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
 
         /* Allocate an IRP */
-        Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+        Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
 
         /* Set it up */
         Irp->UserEvent = &Event;
@@ -329,7 +317,7 @@ IopSecurityFile(PVOID ObjectBody,
     }
 
     /* Allocate the IRP */
-    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
 
     /* Set the IRP */
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
@@ -355,6 +343,8 @@ IopSecurityFile(PVOID ObjectBody,
         StackPtr->Parameters.SetSecurity.SecurityInformation = SecurityInformation;
         StackPtr->Parameters.SetSecurity.SecurityDescriptor = SecurityDescriptor;
     }
+
+    ObReferenceObject(FileObject);
 
     /* Call the Driver */
     Status = IoCallDriver(FileObject->DeviceObject, Irp);
@@ -414,62 +404,57 @@ IopQueryNameFile(PVOID ObjectBody,
                  ULONG Length,
                  PULONG ReturnLength)
 {
-  POBJECT_NAME_INFORMATION LocalInfo;
-  PFILE_NAME_INFORMATION FileNameInfo;
-  PFILE_OBJECT FileObject;
-  ULONG LocalReturnLength;
-  NTSTATUS Status;
+    PVOID LocalInfo;
+    PFILE_OBJECT FileObject;
+    ULONG LocalReturnLength;
+    NTSTATUS Status;
 
-  DPRINT ("IopQueryNameFile() called\n");
+    DPRINT1("IopQueryNameFile() called\n");
 
-  FileObject = (PFILE_OBJECT)ObjectBody;
+    FileObject = (PFILE_OBJECT)ObjectBody;
 
-  LocalInfo = ExAllocatePool (NonPagedPool,
-         sizeof(OBJECT_NAME_INFORMATION) +
-    MAX_PATH * sizeof(WCHAR));
-  if (LocalInfo == NULL)
-    return STATUS_INSUFFICIENT_RESOURCES;
+    /* Allocate Buffer */
+    LocalInfo = ExAllocatePool(PagedPool,
+                               sizeof(OBJECT_NAME_INFORMATION) +
+                               MAX_PATH * sizeof(WCHAR));
+    if (LocalInfo == NULL) return STATUS_INSUFFICIENT_RESOURCES;
 
-  Status = ObQueryNameString (FileObject->DeviceObject->Vpb->RealDevice,
-         LocalInfo,
-         MAX_PATH * sizeof(WCHAR),
-         &LocalReturnLength);
-  if (!NT_SUCCESS (Status))
+    /* Query the name */
+    Status = ObQueryNameString(FileObject->DeviceObject,
+                               LocalInfo,
+                               MAX_PATH * sizeof(WCHAR),
+                               &LocalReturnLength);
+    if (!NT_SUCCESS (Status))
     {
-      ExFreePool (LocalInfo);
-      return Status;
+        ExFreePool (LocalInfo);
+        return Status;
     }
-  DPRINT ("Device path: %wZ\n", &LocalInfo->Name);
+    DPRINT ("Device path: %wZ\n", &LocalInfo->Name);
+    
+    /* Write Device Path */
+    Status = RtlAppendUnicodeStringToString(&ObjectNameInfo->Name,
+                                            &((POBJECT_NAME_INFORMATION)LocalInfo)->Name);
 
-  Status = RtlAppendUnicodeStringToString (&ObjectNameInfo->Name,
-        &LocalInfo->Name);
-
-  ExFreePool (LocalInfo);
-
-  FileNameInfo = ExAllocatePool (NonPagedPool,
-     MAX_PATH * sizeof(WCHAR) + sizeof(ULONG));
-  if (FileNameInfo == NULL)
-    return STATUS_INSUFFICIENT_RESOURCES;
-
-  Status = IoQueryFileInformation (FileObject,
-       FileNameInformation,
-       MAX_PATH * sizeof(WCHAR) + sizeof(ULONG),
-       FileNameInfo,
-       NULL);
-  if (Status != STATUS_SUCCESS)
+    /* Query the File name */
+    Status = IoQueryFileInformation(FileObject,
+                                    FileNameInformation,
+                                    LocalReturnLength,
+                                    LocalInfo,
+                                    NULL);
+    if (Status != STATUS_SUCCESS)
     {
-      ExFreePool (FileNameInfo);
-      return Status;
+        ExFreePool(LocalInfo);
+        return Status;
     }
 
-  Status = RtlAppendUnicodeToString (&ObjectNameInfo->Name,
-         FileNameInfo->FileName);
+    /* Write the Name */
+    Status = RtlAppendUnicodeToString(&ObjectNameInfo->Name,
+                                      ((PFILE_NAME_INFORMATION)LocalInfo)->FileName);
+    DPRINT ("Total path: %wZ\n", &ObjectNameInfo->Name);
 
-  DPRINT ("Total path: %wZ\n", &ObjectNameInfo->Name);
-
-  ExFreePool (FileNameInfo);
-
-  return Status;
+    /* Free buffer and return */
+    ExFreePool(LocalInfo);
+    return Status;
 }
 
 VOID
@@ -503,7 +488,7 @@ IopCloseFile(PVOID ObjectBody,
     KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
 
     /* Allocate an IRP */
-    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
 
     /* Set it up */
     Irp->UserEvent = &Event;
@@ -793,7 +778,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
       }
    }
    RtlMapGenericMask(&DesiredAccess,
-                      BODY_TO_HEADER(FileObject)->ObjectType->Mapping);
+                      &BODY_TO_HEADER(FileObject)->ObjectType->TypeInfo.GenericMapping);
 
    Status = ObInsertObject ((PVOID)FileObject,
        NULL,
@@ -994,16 +979,16 @@ IoCreateFileSpecifyDeviceObjectHint(OUT PHANDLE FileHandle,
  *
  * @implemented
  */
-PFILE_OBJECT
+PFILE_OBJECT 
 STDCALL
 IoCreateStreamFileObject(PFILE_OBJECT FileObject,
                          PDEVICE_OBJECT DeviceObject)
 {
     PFILE_OBJECT CreatedFileObject;
     NTSTATUS Status;
-
-    /* FIXME: This function should call ObInsertObject. The "Lite" version
-       doesnt. This function is also called from IoCreateFile for some
+    
+    /* FIXME: This function should call ObInsertObject. The "Lite" version 
+       doesnt. This function is also called from IoCreateFile for some 
        reason. These hacks need to be removed.
     */
 
@@ -1030,12 +1015,17 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
     /* Choose Device Object */
     if (FileObject) DeviceObject = FileObject->DeviceObject;
     DPRINT("DeviceObject %x\n", DeviceObject);
-
+    
+    /* HACK */
+    DeviceObject = IoGetAttachedDevice(DeviceObject);
+    
     /* Set File Object Data */
-    CreatedFileObject->DeviceObject = DeviceObject;
+    CreatedFileObject->DeviceObject = DeviceObject; 
     CreatedFileObject->Vpb = DeviceObject->Vpb;
     CreatedFileObject->Type = IO_TYPE_FILE;
-    CreatedFileObject->Flags = FO_STREAM_FILE;
+    /* HACK */
+    //CreatedFileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
+    CreatedFileObject->Flags |= FO_STREAM_FILE;
 
     /* Initialize Lock and Event */
     KeInitializeEvent(&CreatedFileObject->Event, NotificationEvent, FALSE);
@@ -1057,6 +1047,7 @@ IoCreateStreamFileObjectEx(IN PFILE_OBJECT FileObject OPTIONAL,
     UNIMPLEMENTED;
     return 0;
 }
+
 /*
  * @unimplemented
  */
@@ -1148,7 +1139,7 @@ IoQueryFileInformation(IN PFILE_OBJECT FileObject,
     }
 
     /* Allocate the IRP */
-    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
 
     /* Set the IRP */
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
@@ -1585,7 +1576,7 @@ NtFlushBuffersFile(IN  HANDLE FileHandle,
     }
 
     /* Allocate the IRP */
-    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE)))
+    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE)))
     {
         ObDereferenceObject(FileObject);
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -1698,7 +1689,7 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
    DeviceObject = FileObject->DeviceObject;
 
 
-   Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+   Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
    if (Irp==NULL)
      {
  ObDereferenceObject(FileObject);
@@ -1750,159 +1741,141 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
  */
 NTSTATUS
 STDCALL
-NtLockFile(IN HANDLE   FileHandle,
-           IN HANDLE   EventHandle OPTIONAL,
-           IN PIO_APC_ROUTINE  ApcRoutine OPTIONAL,
-           IN PVOID   ApcContext OPTIONAL,
+NtLockFile(IN HANDLE FileHandle,
+           IN HANDLE EventHandle OPTIONAL,
+           IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+           IN PVOID ApcContext OPTIONAL,
            OUT PIO_STATUS_BLOCK IoStatusBlock,
-           IN PLARGE_INTEGER  ByteOffset,
-           IN PLARGE_INTEGER  Length,
-           IN PULONG   Key,
-           IN BOOLEAN   FailImmediatedly,
-           IN BOOLEAN   ExclusiveLock
- )
+           IN PLARGE_INTEGER ByteOffset,
+           IN PLARGE_INTEGER Length,
+           IN PULONG  Key,
+           IN BOOLEAN FailImmediately,
+           IN BOOLEAN ExclusiveLock)
 {
-  PFILE_OBJECT FileObject = NULL;
-  PLARGE_INTEGER LocalLength = NULL;
-  PKEVENT Event = NULL;
-  PIRP Irp = NULL;
-  PIO_STACK_LOCATION StackPtr;
-  PDEVICE_OBJECT DeviceObject;
-  KPROCESSOR_MODE PreviousMode;
-  NTSTATUS Status;
+    PFILE_OBJECT FileObject = NULL;
+    PLARGE_INTEGER LocalLength = NULL;
+    PIRP Irp = NULL;
+    PIO_STACK_LOCATION StackPtr;
+    PDEVICE_OBJECT DeviceObject;
+    PKEVENT Event = NULL;
+    BOOLEAN LocalEvent = FALSE;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    NTSTATUS Status = STATUS_SUCCESS;
+    OBJECT_HANDLE_INFORMATION HandleInformation;
+     
+    /* FIXME: instead of this, use SEH */
+    if (!Length || !ByteOffset) return STATUS_INVALID_PARAMETER;
 
-  // FIXME: instead of this, use SEH when available?
-  if (!Length || !ByteOffset)
-  {
-    Status = STATUS_INVALID_PARAMETER;
-    goto fail;
-  }
+    /* Get File Object */
+    Status = ObReferenceObjectByHandle(FileHandle,
+                                       0,
+                                       IoFileObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&FileObject,
+                                       &HandleInformation);
+    if (!NT_SUCCESS(Status)) return Status;
 
-  PreviousMode = ExGetPreviousMode();
-
-  Status = ObReferenceObjectByHandle(FileHandle,
-         0,
-         IoFileObjectType,
-         PreviousMode,
-         (PVOID*)&FileObject,
-         NULL);
-  if (!NT_SUCCESS(Status))
-  {
-    goto fail;
-  }
-
-  DeviceObject = IoGetRelatedDeviceObject(FileObject);
-
-  Irp = IoAllocateIrp(DeviceObject->StackSize,
-        TRUE);
-  if (Irp == NULL)
-  {
-    Status = STATUS_INSUFFICIENT_RESOURCES;
-    goto fail;
-  }
-
-  if (EventHandle != NULL && !FailImmediatedly)
-  {
-    Status = ObReferenceObjectByHandle(EventHandle,
-           SYNCHRONIZE,
-           ExEventObjectType,
-           PreviousMode,
-           (PVOID*)&Event,
-           NULL);
-    if (!NT_SUCCESS(Status))
+    /* Must have FILE_READ_DATA | FILE_WRITE_DATA access */
+    if (!(HandleInformation.GrantedAccess & (FILE_WRITE_DATA | FILE_READ_DATA)))
     {
-      goto fail;
-    }
-  }
-  else
-  {
-    Event = &FileObject->Event;
-    KeResetEvent(Event);
-  }
-
-  /* Trigger FileObject/Event dereferencing */
-  Irp->Tail.Overlay.OriginalFileObject = FileObject;
-
-  Irp->RequestorMode = PreviousMode;
-  Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
-  Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
-
-  Irp->UserEvent = Event;
-  Irp->UserIosb = IoStatusBlock;
-  Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-
-  StackPtr = IoGetNextIrpStackLocation(Irp);
-  StackPtr->MajorFunction = IRP_MJ_LOCK_CONTROL;
-  StackPtr->MinorFunction = IRP_MN_LOCK;
-  StackPtr->FileObject = FileObject;
-
-  if (ExclusiveLock)
-    StackPtr->Flags |= SL_EXCLUSIVE_LOCK;
-
-  if (FailImmediatedly)
-    StackPtr->Flags |= SL_FAIL_IMMEDIATELY;
-
-  LocalLength = ExAllocatePoolWithTag(NonPagedPool,
-          sizeof(LARGE_INTEGER),
-          TAG_LOCK);
-  if (!LocalLength)
-  {
-    Status = STATUS_INSUFFICIENT_RESOURCES;
-    goto fail;
-  }
-
-  *LocalLength = *Length;
-
-  StackPtr->Parameters.LockControl.Length = LocalLength;
-  StackPtr->Parameters.LockControl.ByteOffset = *ByteOffset;
-  StackPtr->Parameters.LockControl.Key = Key ? *Key : 0;
-
-  IoSetCompletionRoutine(Irp,
-    IopLockFileCompletionRoutine,
-    LocalLength,
-    TRUE,
-    TRUE,
-    TRUE);
-
-  /* Can't touch FileObject after IoCallDriver since it might be freed */
-  Status = IofCallDriver(DeviceObject, Irp);
-  if (Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
-  {
-    Status = KeWaitForSingleObject(Event,
-       Executive,
-       PreviousMode,
-       FileObject->Flags & FO_ALERTABLE_IO,
-       NULL);
-
-    if (Status != STATUS_WAIT_0)
-    {
-      DPRINT1("NtLockFile -> KeWaitForSingleObject failed!\n");
-      /*
-       * FIXME: Should do some special processing here if alertable wait
-       * was interupted by user apc or a thread alert (STATUS_ALERTED, STATUS_USER_APC)
-       */
-      return Status; /* Set status to something else? */
+        DPRINT1("Invalid access rights\n");
+        ObDereferenceObject(FileObject);
+        return STATUS_ACCESS_DENIED;
     }
 
-    Status = IoStatusBlock->Status;
-  }
+    /* Get Event Object */
+    if (EventHandle)
+    {
+        Status = ObReferenceObjectByHandle(EventHandle,
+                                           EVENT_MODIFY_STATE,
+                                           ExEventObjectType,
+                                           PreviousMode,
+                                           (PVOID *)&Event,
+                                           NULL);
+        if (Status != STATUS_SUCCESS) return(Status);
+        KeClearEvent(Event);
+    }
 
-  return Status;
+    /* Check if this is a direct open or not */
+    if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
+    {
+        DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
+    }
+    else
+    {
+        DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    }
 
-fail:;
-  if (LocalLength)
-    ExFreePool(LocalLength);
+    /* Check if we should use Sync IO or not */
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+    {
+        /* Use File Object event */
+        KeClearEvent(&FileObject->Event);
+    }
+    else
+    {
+        LocalEvent = TRUE;
+    }
 
-  if (Irp)
-    IoFreeIrp(Irp);
+    /* Allocate the IRP */
+    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE)))
+    {
+        ObDereferenceObject(FileObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
-  if (Event)
-    ObDereferenceObject(Event);
+    /* Allocate local buffer */  
+    LocalLength = ExAllocatePoolWithTag(NonPagedPool,
+                                        sizeof(LARGE_INTEGER),
+                                        TAG_LOCK);
+    if (!LocalLength)
+    {
+        IoFreeIrp(Irp);
+        ObDereferenceObject(FileObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    *LocalLength = *Length;
+    
+    /* Set up the IRP */
+    Irp->RequestorMode = PreviousMode;
+    Irp->UserIosb = IoStatusBlock;
+    Irp->UserEvent = Event;
+    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
 
-  if (FileObject)
-    ObDereferenceObject(FileObject);
+    /* Set up Stack Data */
+    StackPtr = IoGetNextIrpStackLocation(Irp);
+    StackPtr->MajorFunction = IRP_MJ_LOCK_CONTROL;
+    StackPtr->MinorFunction = IRP_MN_LOCK;
+    StackPtr->FileObject = FileObject;
+    
+    /* Set Parameters */
+    StackPtr->Parameters.LockControl.Length = LocalLength;
+    StackPtr->Parameters.LockControl.ByteOffset = *ByteOffset;
+    StackPtr->Parameters.LockControl.Key = Key ? *Key : 0;
 
-  return Status;
+    /* Set Flags */
+    if (FailImmediately) StackPtr->Flags = SL_FAIL_IMMEDIATELY;
+    if (ExclusiveLock) StackPtr->Flags |= SL_EXCLUSIVE_LOCK;
+
+    /* Call the Driver */
+    FileObject->LockOperation = TRUE;
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        if (!LocalEvent)
+        {
+            KeWaitForSingleObject(&FileObject->Event,
+                                  Executive,
+                                  PreviousMode,
+                                  FileObject->Flags & FO_ALERTABLE_IO,
+                                  NULL);
+            Status = FileObject->FinalStatus;
+        }
+    }
+
+    /* Return the Status */
+    return Status;
 }
 
 /*
@@ -2122,7 +2095,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     }
 
     /* Allocate the IRP */
-    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE)))
+    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE)))
     {
         ObDereferenceObject(FileObject);
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -2320,7 +2293,7 @@ NtQueryInformationFile(HANDLE FileHandle,
     }
 
     /* Allocate the IRP */
-    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE)))
+    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE)))
     {
         ObDereferenceObject(FileObject);
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -2540,6 +2513,10 @@ NtReadFile(IN HANDLE FileHandle,
                                            ByteOffset,
                                            EventObject,
                                            IoStatusBlock);
+        if (Irp == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+        }
     }
     _SEH_HANDLE
     {
@@ -2548,15 +2525,11 @@ NtReadFile(IN HANDLE FileHandle,
     _SEH_END;
 
     /* Cleanup if IRP Allocation Failed */
-    if (!NT_SUCCESS(Status) || !Irp)
+    if (!NT_SUCCESS(Status))
     {
         if (Event) ObDereferenceObject(EventObject);
         ObDereferenceObject(FileObject);
-        if (Irp)
-        {
-            IoFreeIrp(Irp);
-        }
-        return NT_SUCCESS(Status) ? STATUS_INSUFFICIENT_RESOURCES : Status;
+        return Status;
     }
 
     /* Set up IRP Data */
@@ -2565,7 +2538,12 @@ NtReadFile(IN HANDLE FileHandle,
     Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
     Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
     Irp->Flags |= IRP_READ_OPERATION;
+#if 0
+    /* FIXME:
+     *    Vfat doesn't handle non cached files correctly.
+     */     
     if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) Irp->Flags |= IRP_NOCACHE;
+#endif      
 
     /* Setup Stack Data */
     StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -2724,7 +2702,7 @@ NtSetInformationFile(HANDLE FileHandle,
             /* Reference the Port */
             Status = ObReferenceObjectByHandle(CompletionInfo->IoCompletionHandle,
                                                IO_COMPLETION_MODIFY_STATE,
-                                               ExIoCompletionType,
+                                               IoCompletionType,
                                                PreviousMode,
                                                (PVOID*)&Queue,
                                                NULL);
@@ -2774,7 +2752,7 @@ NtSetInformationFile(HANDLE FileHandle,
     }
 
     /* Allocate the IRP */
-    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE)))
+    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE)))
     {
         ObDereferenceObject(FileObject);
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -2864,93 +2842,124 @@ NtUnlockFile(IN  HANDLE FileHandle,
              IN  PLARGE_INTEGER Length,
              OUT PULONG Key OPTIONAL)
 {
-  PFILE_OBJECT FileObject = NULL;
-  PLARGE_INTEGER LocalLength = NULL;
-  PIRP Irp = NULL;
-  PIO_STACK_LOCATION StackPtr;
-  PDEVICE_OBJECT DeviceObject;
-  KPROCESSOR_MODE PreviousMode;
-  NTSTATUS Status;
+    PFILE_OBJECT FileObject = NULL;
+    PLARGE_INTEGER LocalLength = NULL;
+    PIRP Irp = NULL;
+    PIO_STACK_LOCATION StackPtr;
+    PDEVICE_OBJECT DeviceObject;
+    KEVENT Event;
+    BOOLEAN LocalEvent = FALSE;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    NTSTATUS Status = STATUS_SUCCESS;
+    OBJECT_HANDLE_INFORMATION HandleInformation;
+     
+    /* FIXME: instead of this, use SEH */
+    if (!Length || !ByteOffset) return STATUS_INVALID_PARAMETER;
 
-  // FIXME: instead of this, use SEH when available
-  if (!Length || !ByteOffset)
-  {
-    Status = STATUS_INVALID_PARAMETER;
-    goto fail;
-  }
+    /* Get File Object */
+    Status = ObReferenceObjectByHandle(FileHandle,
+                                       0,
+                                       IoFileObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&FileObject,
+                                       &HandleInformation);
+    if (!NT_SUCCESS(Status)) return Status;
 
-  PreviousMode = ExGetPreviousMode();
+    /* Must have FILE_READ_DATA | FILE_WRITE_DATA access */
+    if (!(HandleInformation.GrantedAccess & (FILE_WRITE_DATA | FILE_READ_DATA)))
+    {
+        DPRINT1("Invalid access rights\n");
+        ObDereferenceObject(FileObject);
+        return STATUS_ACCESS_DENIED;
+    }
 
-  /*
-   * BUGBUG: ObReferenceObjectByHandle fails if DesiredAccess=0 and mode=UserMode
-   * It should ONLY fail if we desire an access that conflict with granted access!
-   */
-  Status = ObReferenceObjectByHandle(FileHandle,
-         0, //FILE_READ_DATA,//BUGBUG: have to use something...but shouldn't have to!
-         IoFileObjectType,
-         PreviousMode,
-         (PVOID*)&FileObject,
-         NULL);
-  if (!NT_SUCCESS(Status))
-  {
-    goto fail;
-  }
+    /* Check if this is a direct open or not */
+    if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
+    {
+        DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
+    }
+    else
+    {
+        DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    }
 
-  DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    /* Check if we should use Sync IO or not */
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+    {
+        /* Use File Object event */
+        KeClearEvent(&FileObject->Event);
+    }
+    else
+    {
+        /* Use local event */
+        KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+        LocalEvent = TRUE;
+    }
 
-  Irp = IoAllocateIrp(DeviceObject->StackSize,
-        TRUE);
-  if (Irp == NULL)
-  {
-    Status = STATUS_INSUFFICIENT_RESOURCES;
-    goto fail;
-  }
+    /* Allocate the IRP */
+    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE)))
+    {
+        ObDereferenceObject(FileObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
-  /* Trigger FileObject/Event dereferencing */
-  Irp->Tail.Overlay.OriginalFileObject = FileObject;
-  Irp->RequestorMode = PreviousMode;
-  Irp->UserIosb = IoStatusBlock;
-  Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+    /* Allocate local buffer */  
+    LocalLength = ExAllocatePoolWithTag(NonPagedPool,
+                                        sizeof(LARGE_INTEGER),
+                                        TAG_LOCK);
+    if (!LocalLength)
+    {
+        IoFreeIrp(Irp);
+        ObDereferenceObject(FileObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    *LocalLength = *Length;
+    
+    /* Set up the IRP */
+    Irp->Flags = (LocalEvent) ? IRP_SYNCHRONOUS_API : 0;
+    Irp->RequestorMode = PreviousMode;
+    Irp->UserIosb = IoStatusBlock;
+    Irp->UserEvent = (LocalEvent) ? &Event : NULL;
+    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
 
-  StackPtr = IoGetNextIrpStackLocation(Irp);
-  StackPtr->MajorFunction = IRP_MJ_LOCK_CONTROL;
-  StackPtr->MinorFunction = IRP_MN_UNLOCK_SINGLE;
-  StackPtr->DeviceObject = DeviceObject;
-  StackPtr->FileObject = FileObject;
+    /* Set up Stack Data */
+    StackPtr = IoGetNextIrpStackLocation(Irp);
+    StackPtr->MajorFunction = IRP_MJ_LOCK_CONTROL;
+    StackPtr->MinorFunction = IRP_MN_UNLOCK_SINGLE;
+    StackPtr->FileObject = FileObject;
+    
+    /* Set Parameters */
+    StackPtr->Parameters.LockControl.Length = LocalLength;
+    StackPtr->Parameters.LockControl.ByteOffset = *ByteOffset;
+    StackPtr->Parameters.LockControl.Key = Key ? *Key : 0;
 
-  LocalLength = ExAllocatePoolWithTag(NonPagedPool,
-          sizeof(LARGE_INTEGER),
-          TAG_LOCK);
-  if (!LocalLength)
-  {
-    Status = STATUS_INSUFFICIENT_RESOURCES;
-    goto fail;
-  }
+    /* Call the Driver */
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        if (LocalEvent)
+        {
+            KeWaitForSingleObject(&Event,
+                                  Executive,
+                                  PreviousMode,
+                                  FileObject->Flags & FO_ALERTABLE_IO,
+                                  NULL);
+            Status = IoStatusBlock->Status;
+        }
+        else
+        {
+            KeWaitForSingleObject(&FileObject->Event,
+                                  Executive,
+                                  PreviousMode,
+                                  FileObject->Flags & FO_ALERTABLE_IO,
+                                  NULL);
+            Status = FileObject->FinalStatus;
+        }
+    }
 
-  *LocalLength = *Length;
-
-  StackPtr->Parameters.LockControl.Length = LocalLength;
-  StackPtr->Parameters.LockControl.ByteOffset = *ByteOffset;
-  StackPtr->Parameters.LockControl.Key = Key ? *Key : 0;
-
-  /* Allways synchronous */
-  Status = IofCallDriver(DeviceObject, Irp);
-
-  ExFreePool(LocalLength);
-
-  return Status;
-
-fail:;
-  if (LocalLength)
-    ExFreePool(LocalLength);
-
-  if (Irp)
-    IoFreeIrp(Irp);
-
-  if (FileObject)
-    ObDereferenceObject(FileObject);
-
-  return Status;
+    /* Return the Status */
+    return Status;
 }
 
 /*
@@ -2998,10 +3007,11 @@ NtWriteFile (IN HANDLE FileHandle,
     {
         _SEH_TRY
         {
+            #if 0
             ProbeForWrite(IoStatusBlock,
                           sizeof(IO_STATUS_BLOCK),
                           sizeof(ULONG));
-            #if 0
+
             ProbeForRead(Buffer,
                          Length,
                          sizeof(ULONG));
@@ -3111,12 +3121,16 @@ NtWriteFile (IN HANDLE FileHandle,
     _SEH_TRY
     {
         Irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
-                                           FileObject->DeviceObject,
+                                           DeviceObject,
                                            Buffer,
                                            Length,
                                            ByteOffset,
                                            EventObject,
                                            IoStatusBlock);
+        if (Irp == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+        }
     }
     _SEH_HANDLE
     {
@@ -3125,15 +3139,14 @@ NtWriteFile (IN HANDLE FileHandle,
     _SEH_END;
 
     /* Cleanup on failure */
-    if (!NT_SUCCESS(Status) || !Irp)
+    if (!NT_SUCCESS(Status))
     {
         if (Event)
         {
             ObDereferenceObject(&EventObject);
         }
         ObDereferenceObject(FileObject);
-        if (Irp) IoFreeIrp(Irp);
-        return NT_SUCCESS(Status) ? STATUS_INSUFFICIENT_RESOURCES : Status;
+        return Status;
     }
 
    /* Set up IRP Data */
@@ -3142,7 +3155,12 @@ NtWriteFile (IN HANDLE FileHandle,
     Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
     Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
     Irp->Flags |= IRP_WRITE_OPERATION;
+#if 0    
+    /* FIXME:
+     *    Vfat doesn't handle non cached files correctly.
+     */     
     if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) Irp->Flags |= IRP_NOCACHE;
+#endif    
 
     /* Setup Stack Data */
     StackPtr = IoGetNextIrpStackLocation(Irp);

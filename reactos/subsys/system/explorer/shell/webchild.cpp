@@ -1,5 +1,5 @@
 /*
- * Copyright 2004 Martin Fuchs
+ * Copyright 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -302,8 +302,7 @@ LRESULT WebChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 String WebChildWindow::jump_to_int(LPCTSTR url)
 {
+	_navigator.goto_url(url);
 
-//@@
-
-	return String();
+	return url;
 }

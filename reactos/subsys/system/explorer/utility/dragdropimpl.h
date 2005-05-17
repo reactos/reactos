@@ -52,10 +52,12 @@ class EnumFormatEtcImpl : public IEnumFORMATETC
 class IDropSourceImpl : public IDropSource
 {
 	long m_cRefCount;
+
 public:
 	bool m_bDropped;
 
 	IDropSourceImpl::IDropSourceImpl() : m_cRefCount(0), m_bDropped(false) {}
+	virtual ~IDropSourceImpl() {}
 
 	//IUnknown
     virtual HRESULT STDMETHODCALLTYPE QueryInterface(

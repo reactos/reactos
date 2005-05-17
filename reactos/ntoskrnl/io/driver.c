@@ -80,43 +80,30 @@ POBJECT_TYPE EXPORTED IoDriverObjectType = NULL;
 
 /* DECLARATIONS ***************************************************************/
 
-NTSTATUS STDCALL
-IopCreateDriver(
-   PVOID ObjectBody,
-   PVOID Parent,
-   PWSTR RemainingPath,
-   POBJECT_ATTRIBUTES ObjectAttributes);
-
 VOID STDCALL
 IopDeleteDriver(PVOID ObjectBody);
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-VOID INIT_FUNCTION
+VOID 
+INIT_FUNCTION
 IopInitDriverImplementation(VOID)
 {
-   /* Register the process object type */
-   IoDriverObjectType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
-   IoDriverObjectType->Tag = TAG('D', 'R', 'V', 'R');
-   IoDriverObjectType->TotalObjects = 0;
-   IoDriverObjectType->TotalHandles = 0;
-   IoDriverObjectType->PeakObjects = 0;
-   IoDriverObjectType->PeakHandles = 0;
-   IoDriverObjectType->PagedPoolCharge = 0;
-   IoDriverObjectType->NonpagedPoolCharge = sizeof(DRIVER_OBJECT);
-   IoDriverObjectType->Dump = NULL;
-   IoDriverObjectType->Open = NULL;
-   IoDriverObjectType->Close = NULL;
-   IoDriverObjectType->Delete = IopDeleteDriver;
-   IoDriverObjectType->Parse = NULL;
-   IoDriverObjectType->Security = NULL;
-   IoDriverObjectType->QueryName = NULL;
-   IoDriverObjectType->OkayToClose = NULL;
-   IoDriverObjectType->Create = IopCreateDriver;
-   IoDriverObjectType->DuplicationNotify = NULL;
-   RtlInitUnicodeString(&IoDriverObjectType->TypeName, L"Driver");
+   OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
+   UNICODE_STRING Name;
 
-   ObpCreateTypeObject(IoDriverObjectType);
+   DPRINT1("Creating Registry Object Type\n");
+  
+   /* Initialize the Driver object type  */
+   RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+   RtlInitUnicodeString(&Name, L"Driver");
+   ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+   ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(DRIVER_OBJECT);
+   ObjectTypeInitializer.PoolType = NonPagedPool;
+   ObjectTypeInitializer.UseDefaultObject = TRUE;
+   ObjectTypeInitializer.DeleteProcedure = IopDeleteDriver;
+
+   ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &IoDriverObjectType);
 
    InitializeListHead(&DriverReinitListHead);
    KeInitializeSpinLock(&DriverReinitListLock);
@@ -136,46 +123,6 @@ IopInvalidDeviceRequest(
    Irp->IoStatus.Information = 0;
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
    return STATUS_INVALID_DEVICE_REQUEST;
-}
-
-NTSTATUS STDCALL
-IopCreateDriver(
-   PVOID ObjectBody,
-   PVOID Parent,
-   PWSTR RemainingPath,
-   POBJECT_ATTRIBUTES ObjectAttributes)
-{
-   PDRIVER_OBJECT Object = ObjectBody;
-   ULONG i;
-
-   DPRINT("IopCreateDriver(ObjectBody %x, Parent %x, RemainingPath %S)\n",
-      ObjectBody, Parent, RemainingPath);
-
-   if (RemainingPath != NULL && wcschr(RemainingPath + 1, '\\') != NULL)
-      return STATUS_UNSUCCESSFUL;
-
-   /* Create driver extension */
-   Object->DriverExtension = (PDRIVER_EXTENSION)
-      ExAllocatePoolWithTag(
-         NonPagedPool,
-         sizeof(DRIVER_EXTENSION),
-         TAG_DRIVER_EXTENSION);
-
-   if (Object->DriverExtension == NULL)
-   {
-      return STATUS_NO_MEMORY;
-   }
-
-   RtlZeroMemory(Object->DriverExtension, sizeof(DRIVER_EXTENSION));
-
-   Object->Type = IO_TYPE_DRIVER;
-
-   for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
-      Object->MajorFunction[i] = IopInvalidDeviceRequest;
-
-   Object->HardwareDatabase = &IopHardwareDatabaseKey;
-
-   return STATUS_SUCCESS;
 }
 
 VOID STDCALL
@@ -217,6 +164,7 @@ IopCreateDriverObject(
    UNICODE_STRING DriverName;
    OBJECT_ATTRIBUTES ObjectAttributes;
    NTSTATUS Status;
+   ULONG i;
    PWSTR Buffer = NULL;
 
    DPRINT("IopCreateDriverObject(%p '%wZ' %x %p %x)\n",
@@ -269,6 +217,35 @@ IopCreateDriverObject(
    {
       return Status;
    }
+
+   if (Status == STATUS_OBJECT_EXISTS)
+   {
+      /* The driver object already exists, so it is already
+       * initialized. Don't initialize it once more. */
+      *DriverObject = Object;
+      return STATUS_SUCCESS;
+   }
+
+     /* Create driver extension */
+   Object->DriverExtension = (PDRIVER_EXTENSION)
+      ExAllocatePoolWithTag(
+         NonPagedPool,
+         sizeof(DRIVER_EXTENSION),
+         TAG_DRIVER_EXTENSION);
+
+   if (Object->DriverExtension == NULL)
+   {
+      return STATUS_NO_MEMORY;
+   }
+
+   RtlZeroMemory(Object->DriverExtension, sizeof(DRIVER_EXTENSION));
+
+   Object->Type = IO_TYPE_DRIVER;
+
+   for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
+      Object->MajorFunction[i] = IopInvalidDeviceRequest;
+
+   Object->HardwareDatabase = &IopHardwareDatabaseKey;
 
    Object->DriverStart = DriverImageStart;
    Object->DriverSize = DriverImageSize;
@@ -1233,6 +1210,10 @@ IopInitializeBuiltinDriver(
    }
 
    Status = IopInitializeDevice(DeviceNode, DriverObject);
+   if (NT_SUCCESS(Status))
+   {
+      Status = IopStartDevice(DeviceNode);
+   }
 
    return Status;
 }
@@ -1969,6 +1950,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
    }
 
    IopInitializeDevice(DeviceNode, DriverObject);
+   Status = IopStartDevice(DeviceNode);
 
 ReleaseCapturedString:
    RtlReleaseCapturedUnicodeString(&CapturedDriverServiceName,

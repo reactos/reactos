@@ -28,6 +28,7 @@ typedef struct _USER_SENT_MESSAGE
   ULONG_PTR CompletionCallbackContext;
   /* entry in the dispatching list of the sender's message queue */
   LIST_ENTRY DispatchingListEntry;
+  BOOL HookMessage;
 } USER_SENT_MESSAGE, *PUSER_SENT_MESSAGE;
 
 typedef struct _USER_SENT_MESSAGE_NOTIFY
@@ -127,7 +128,8 @@ MsqIsHung(PUSER_MESSAGE_QUEUE MessageQueue);
 NTSTATUS FASTCALL
 MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 	       HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam,
-               UINT uTimeout, BOOL Block, ULONG_PTR *uResult);
+               UINT uTimeout, BOOL Block, BOOL HookMessage,
+               ULONG_PTR *uResult);
 PUSER_MESSAGE FASTCALL
 MsqCreateMessage(LPMSG Msg, BOOLEAN FreeLParam);
 VOID FASTCALL

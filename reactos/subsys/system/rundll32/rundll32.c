@@ -28,6 +28,7 @@
 #include <string.h>
 #include <malloc.h>
 #include <tchar.h>
+#include "resource.h"
 
 typedef int (WINAPI *DllWinMainW)(
   HWND hWnd,
@@ -42,12 +43,16 @@ typedef int (WINAPI *DllWinMainA)(
   int nCmdShow
 );
 
+/*
 LPCTSTR DllNotLoaded = _T("LoadLibrary failed to load \"%s\"");
 LPCTSTR MissingEntry = _T("Missing entry point:%s\nIn %s");
+*/
 LPCTSTR rundll32_wtitle = _T("rundll32");
 LPCTSTR rundll32_wclass = _T("rundll32_window");
+
 TCHAR ModuleFileName[MAX_PATH+1];
 LPTSTR ModuleTitle;
+
 
 // CommandLineToArgv converts a command-line string to argc and
 // argv similar to the ones in the standard main function.
@@ -327,6 +332,8 @@ int WINAPI WinMain(
 )
 {
 	int argc;
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+
 	LPTSTR *argv;
 	LPTSTR lptCmdLine,lptDllName,lptFuncName,lptMsgBuffer;
 	LPSTR lpFuncName,lpaCmdLine;
@@ -440,8 +447,10 @@ int WINAPI WinMain(
 		else {
 			// The specified dll function was not found; display an error message
 			GetModuleTitle();
-			lptMsgBuffer = (LPTSTR)malloc((_tcslen(MissingEntry) - 4 + _tcslen(lptFuncName) + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
-			_stprintf(lptMsgBuffer,MissingEntry,lptFuncName,lptDllName);
+            LoadString( GetModuleHandle(NULL), IDS_MissingEntry, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+
+			lptMsgBuffer = (LPTSTR)malloc((_tcslen(szMsg) - 4 + _tcslen(lptFuncName) + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
+			_stprintf(lptMsgBuffer,szMsg,lptFuncName,lptDllName);
 			MessageBox(0,lptMsgBuffer,ModuleTitle,MB_ICONERROR);
 			free(lptMsgBuffer);
 		}
@@ -455,8 +464,11 @@ int WINAPI WinMain(
 	else {
 		// The dll could not be loaded; display an error message
 		GetModuleTitle();
-		lptMsgBuffer = (LPTSTR)malloc((_tcslen(DllNotLoaded) - 2 + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
-		_stprintf(lptMsgBuffer,DllNotLoaded,lptDllName);
+		LoadString( GetModuleHandle(NULL), IDS_DllNotLoaded, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+
+		lptMsgBuffer = (LPTSTR)malloc((_tcslen(szMsg) - 2 + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
+		_stprintf(lptMsgBuffer,szMsg,lptDllName);
+		
 		MessageBox(0,lptMsgBuffer,ModuleTitle,MB_ICONERROR);
 		free(lptMsgBuffer);
 	}

@@ -29,7 +29,7 @@
 
 #ifdef __MINGW32__
 #include "servprov.h"	// for IServiceProvider
-#include "docobj.h"		// for IOleCommandTarget
+#include "docobj.h" 	// for IOleCommandTarget
 #endif
 
 
@@ -45,45 +45,49 @@ struct IShellBrowserImpl
 	{
 	}
 
+	virtual ~IShellBrowserImpl()
+	{
+	}
+
 	virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID iid, void** ppvObject);
 
 	virtual ULONG STDMETHODCALLTYPE AddRef() {return ++_dwRef;}
 	virtual ULONG STDMETHODCALLTYPE Release() {return --_dwRef;}  //not heap based
 
-    // *** IOleWindow methods ***
-    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode) {return E_NOTIMPL;}
+	// *** IOleWindow methods ***
+	virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode) {return E_NOTIMPL;}
 
 	// *** ICommDlgBrowser methods ***
-    virtual HRESULT STDMETHODCALLTYPE OnDefaultCommand(IShellView* ppshv);
+	virtual HRESULT STDMETHODCALLTYPE OnDefaultCommand(IShellView* ppshv);
 
-    virtual HRESULT STDMETHODCALLTYPE OnStateChange(IShellView* ppshv, ULONG uChange)
+	virtual HRESULT STDMETHODCALLTYPE OnStateChange(IShellView* ppshv, ULONG uChange)
 	{	//handle selection, rename, focus if needed
 		return E_NOTIMPL;
 	}
 
-    virtual HRESULT STDMETHODCALLTYPE IncludeObject(IShellView* ppshv, LPCITEMIDLIST pidl)
+	virtual HRESULT STDMETHODCALLTYPE IncludeObject(IShellView* ppshv, LPCITEMIDLIST pidl)
 	{	//filter files if needed
 		return S_OK;
 	}
 
-    // *** IShellBrowser methods *** (same as IOleInPlaceFrame)
-    virtual HRESULT STDMETHODCALLTYPE InsertMenusSB(HMENU hmenuShared, LPOLEMENUGROUPWIDTHS lpMenuWidths) {return E_NOTIMPL;}
-    virtual HRESULT STDMETHODCALLTYPE SetMenuSB(HMENU hmenuShared, HOLEMENU holemenuReserved, HWND hwndActiveObject) {return E_NOTIMPL;}
-    virtual HRESULT STDMETHODCALLTYPE RemoveMenusSB(HMENU hmenuShared) {return E_NOTIMPL;}
-    virtual HRESULT STDMETHODCALLTYPE SetStatusTextSB(LPCOLESTR lpszStatusText) {return E_NOTIMPL;}
-    virtual HRESULT STDMETHODCALLTYPE EnableModelessSB(BOOL fEnable) {return E_NOTIMPL;}
+	// *** IShellBrowser methods *** (same as IOleInPlaceFrame)
+	virtual HRESULT STDMETHODCALLTYPE InsertMenusSB(HMENU hmenuShared, LPOLEMENUGROUPWIDTHS lpMenuWidths) {return E_NOTIMPL;}
+	virtual HRESULT STDMETHODCALLTYPE SetMenuSB(HMENU hmenuShared, HOLEMENU holemenuReserved, HWND hwndActiveObject) {return E_NOTIMPL;}
+	virtual HRESULT STDMETHODCALLTYPE RemoveMenusSB(HMENU hmenuShared) {return E_NOTIMPL;}
+	virtual HRESULT STDMETHODCALLTYPE SetStatusTextSB(LPCOLESTR lpszStatusText) {return E_NOTIMPL;}
+	virtual HRESULT STDMETHODCALLTYPE EnableModelessSB(BOOL fEnable) {return E_NOTIMPL;}
 	virtual HRESULT STDMETHODCALLTYPE BrowseObject(LPCITEMIDLIST pidl, UINT wFlags) {return E_NOTIMPL;}
 	virtual HRESULT STDMETHODCALLTYPE GetViewStateStream(DWORD grfMode, LPSTREAM* ppStrm) {return E_NOTIMPL;}
 	virtual HRESULT STDMETHODCALLTYPE OnViewWindowActive(IShellView* ppshv) {return E_NOTIMPL;}
 	virtual HRESULT STDMETHODCALLTYPE SetToolbarItems(LPTBBUTTON lpButtons, UINT nButtons, UINT uFlags) {return E_NOTIMPL;}
 	virtual HRESULT STDMETHODCALLTYPE TranslateAcceleratorSB(LPMSG lpmsg, WORD wID) {return S_OK;}
 
-    // IServiceProvider
+	// IServiceProvider
 	virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, void** ppvObject);
 
-    // IOleCommandTarget
-    virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[], OLECMDTEXT* pCmdText);
-    virtual HRESULT STDMETHODCALLTYPE Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+	// IOleCommandTarget
+	virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[], OLECMDTEXT* pCmdText);
+	virtual HRESULT STDMETHODCALLTYPE Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
 
 protected:
 	DWORD	_dwRef;

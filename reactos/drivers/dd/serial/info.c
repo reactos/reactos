@@ -8,7 +8,7 @@
  * PROGRAMMERS:     Hervé Poussineau (poussine@freesurf.fr)
  */
 
-#define NDEBUG2
+#define NDEBUG
 #include "serial.h"
 
 NTSTATUS STDCALL
@@ -44,8 +44,8 @@ SerialQueryInformation(
 				StandardInfo->EndOfFile.QuadPart = 0;
 				StandardInfo->Directory = FALSE;
 				StandardInfo->NumberOfLinks = 0;
-  				StandardInfo->DeletePending = FALSE; /* FIXME: should be TRUE sometimes */
-  				Status = STATUS_SUCCESS;
+				StandardInfo->DeletePending = FALSE; /* FIXME: should be TRUE sometimes */
+				Status = STATUS_SUCCESS;
 			}
 			break;
 		}
@@ -63,7 +63,7 @@ SerialQueryInformation(
 			else
 			{
 				PositionInfo->CurrentByteOffset.QuadPart = 0;
-  				Status = STATUS_SUCCESS;
+				Status = STATUS_SUCCESS;
 			}
 			break;
 		}

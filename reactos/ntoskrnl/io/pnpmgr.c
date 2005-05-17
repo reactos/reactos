@@ -27,8 +27,15 @@ PDRIVER_OBJECT IopRootDriverObject;
 
 /* FUNCTIONS *****************************************************************/
 
+PDEVICE_NODE FASTCALL
+IopGetDeviceNode(
+  PDEVICE_OBJECT DeviceObject)
+{
+  return DeviceObject->DeviceObjectExtension->DeviceNode;
+}
+
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
@@ -36,14 +43,7 @@ IoInvalidateDeviceRelations(
   IN PDEVICE_OBJECT DeviceObject,
   IN DEVICE_RELATION_TYPE Type)
 {
-  CHECKPOINT1;
-}
-
-PDEVICE_NODE FASTCALL
-IopGetDeviceNode(
-  PDEVICE_OBJECT DeviceObject)
-{
-  return DeviceObject->DeviceObjectExtension->DeviceNode;
+  IopInvalidateDeviceRelations(IopGetDeviceNode(DeviceObject), Type);
 }
 
 /*
@@ -1523,9 +1523,11 @@ IopActionInitChildServices(
             Status = IopInitializeDevice(DeviceNode, DriverObject);
             if (NT_SUCCESS(Status))
             {
-               IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
                /* Attach upper level filter drivers. */
                IopAttachFilterDrivers(DeviceNode, FALSE);
+               IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
+
+               Status = IopStartDevice(DeviceNode);
             }
          }
       }

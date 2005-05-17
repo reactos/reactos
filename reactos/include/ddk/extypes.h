@@ -173,51 +173,64 @@ typedef union _SLIST_HEADER
      }; /* now anonymous */
 } SLIST_HEADER, *PSLIST_HEADER;
 
+typedef struct _GENERAL_LOOKASIDE
+{
+    SLIST_HEADER ListHead;
+    USHORT Depth;
+    USHORT MaximumDepth;
+    ULONG TotalAllocates;
+    union {
+        ULONG AllocateMisses;
+        ULONG AllocateHits;
+    };
+    ULONG TotalFrees;
+    union {
+        ULONG FreeMisses;
+        ULONG FreeHits;
+    };
+    POOL_TYPE Type;
+    ULONG Tag;
+    ULONG Size;
+    PALLOCATE_FUNCTION Allocate;
+    PFREE_FUNCTION Free;
+    LIST_ENTRY ListEntry;
+    ULONG LastTotalAllocates;
+    union {
+        ULONG LastAllocateMisses;
+        ULONG LastAllocateHits;
+    };
+    ULONG Future[2];
+} GENERAL_LOOKASIDE, *PGENERAL_LOOKASIDE;
+
 typedef struct _NPAGED_LOOKASIDE_LIST
 {
-   SLIST_HEADER ListHead;
-   USHORT Depth;
-   USHORT MaximumDepth;
-   ULONG TotalAllocates;
-   ULONG AllocateMisses;
-   ULONG TotalFrees;
-   ULONG FreeMisses;
-   POOL_TYPE Type;
-   ULONG Tag;
-   ULONG Size;
-   PALLOCATE_FUNCTION Allocate;
-   PFREE_FUNCTION Free;
-   LIST_ENTRY ListEntry;
-   ULONG LastTotalAllocates;
-   ULONG LastAllocateMisses;
-   ULONG Pad[2];
-   KSPIN_LOCK Obsoleted;
+   GENERAL_LOOKASIDE L;
+   KSPIN_LOCK Lock__ObsoleteButDoNotDelete;
 } NPAGED_LOOKASIDE_LIST, *PNPAGED_LOOKASIDE_LIST;
 
 typedef struct _PAGED_LOOKASIDE_LIST
 {
-   SLIST_HEADER ListHead;
-   USHORT Depth;
-   USHORT MaximumDepth;
-   ULONG TotalAllocates;
-   ULONG AllocateMisses;
-   ULONG TotalFrees;
-   ULONG FreeMisses;
-   POOL_TYPE Type;
-   ULONG Tag;
-   ULONG Size;
-   PALLOCATE_FUNCTION Allocate;
-   PFREE_FUNCTION Free;
-   LIST_ENTRY ListEntry;
-   ULONG LastTotalAllocates;
-   ULONG LastAllocateMisses;
-   FAST_MUTEX Obsoleted;
+   GENERAL_LOOKASIDE L;
+   FAST_MUTEX Lock__ObsoleteButDoNotDelete;
 } PAGED_LOOKASIDE_LIST, *PPAGED_LOOKASIDE_LIST;
 
-typedef struct _PP_LOOKASIDE_LIST {
-   struct _GENERAL_LOOKASIDE *P;
-   struct _GENERAL_LOOKASIDE *L;
+typedef struct _PP_LOOKASIDE_LIST 
+{
+   PGENERAL_LOOKASIDE P;
+   PGENERAL_LOOKASIDE L;
 } PP_LOOKASIDE_LIST, *PPP_LOOKASIDE_LIST;
+
+typedef enum _PP_NPAGED_LOOKASIDE_NUMBER
+{
+   LookasideSmallIrpList = 0,
+   LookasideLargeIrpList = 1,
+   LookasideMdlList = 2,
+   LookasideCreateInfoList = 3,
+   LookasideNameBufferList = 4,
+   LookasideTwilightList = 5,
+   LookasideCompletionList = 6,
+   LookasideMaximumList = 7
+} PP_NPAGED_LOOKASIDE_NUMBER;
 
 typedef enum _EX_POOL_PRIORITY {
     LowPoolPriority,

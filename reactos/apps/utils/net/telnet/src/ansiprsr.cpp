@@ -53,6 +53,8 @@
 #include <string.h>
 #include "ansiprsr.h"
 
+const int ANSIColors[] = {BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE};
+
 // The constructor now takes different arguments and initializes different
 // variables (Paul Brannan 6/15/98)
 TANSIParser::TANSIParser(TConsole &RefConsole, KeyTranslator &RefKeyTrans,

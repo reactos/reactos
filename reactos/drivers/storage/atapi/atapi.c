@@ -2070,6 +2070,9 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       SectorNumber[0] = StartingSector & 0xff;
       CylinderLow[0] = (StartingSector >> 8) & 0xff;
       CylinderHigh[0] = (StartingSector >> 16) & 0xff;
+      SectorNumber[1] = 0;
+      CylinderLow[1] = 0;
+      CylinderHigh[1] = 0;
       DrvHead = ((StartingSector >> 24) & 0x0f) |
                  (Srb->TargetId ? IDE_DH_DRV1 : 0) |
 		 IDE_DH_LBA;
@@ -2092,6 +2095,9 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       StartingSector /= DeviceParams->LogicalHeads;
       CylinderLow[0] = StartingSector & 0xff;
       CylinderHigh[0] = StartingSector >> 8;
+      SectorNumber[1] = 0;
+      CylinderLow[1] = 0;
+      CylinderHigh[1] = 0;
 
       DPRINT("%s:BUS=%04x:DRV=%d:LBA=0:CH=%02x:CL=%02x:HD=%01x:SN=%02x:SC=%02x:CM=%02x\n",
              (Srb->SrbFlags & SRB_FLAGS_DATA_IN) ? "READ" : "WRITE",

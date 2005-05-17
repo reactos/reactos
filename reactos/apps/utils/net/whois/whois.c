@@ -52,6 +52,7 @@ static char sccsid[] = "@(#)whois.c	8.1 (Berkeley) 6/6/93";
 /* #include <netinet/in.h> */
 /* #include <netdb.h> */
 #include <stdio.h>
+#include <stdlib.h>
 
 /* #include <various.h> */
 #include <getopt.h>

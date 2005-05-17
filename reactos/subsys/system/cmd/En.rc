@@ -360,7 +360,7 @@ RMDIR [drive:]path\nRD [drive:]path"
 STRING_REN_HELP1, "Renames a file/directory or files/directories.\n\n\
 RENAME [/E /N /P /Q /S /T] old_name ... new_name\n\
 REN [/E /N /P /Q /S /T] old_name ... new_name\n\n\
-  /E    No eror messages.\n\
+  /E    No error messages.\n\
   /N    Nothing.\n\
   /P    Prompts for confirmation before renaming each file.\n\
         (Not implemented yet!)\n\
@@ -416,7 +416,7 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
   /S          Split time. Return stopwatch split\n\
               time without changing its value\n\
   /n          Specifiy the stopwach number.\n\
-              Stopwaches avaliable are 0 to 10\n\
+              Stopwaches avaliable are 0 to 9\n\
               If it is not specified default is 1\n\
   /Fn         Format for output\n\
               n can be:\n\

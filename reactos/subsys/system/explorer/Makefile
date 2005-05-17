@@ -17,7 +17,7 @@ TARGET_INSTALLDIR := .
 TARGET_CFLAGS := \
 	-D__USE_W32API -DWIN32 -D_ROS_ \
 	-D_WIN32_IE=0x0600 -D_WIN32_WINNT=0x0501 -DWINVER=0x0500 \
-	-DUNICODE -fexceptions -Wall -g \
+	-DUNICODE -fexceptions -Wall -Wno-unused-value -g \
 	-I../../../include/expat
 
 TARGET_CPPFLAGS := $(TARGET_CFLAGS)

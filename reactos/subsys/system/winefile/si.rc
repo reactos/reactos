@@ -26,8 +26,8 @@ LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 IDM_WINEFILE MENU FIXED IMPURE
 {
 	POPUP "&File"  {
-		MENUITEM "&Open\tEnter" ,			101
-		MENUITEM "&Move...\tF7" , 			106
+		MENUITEM "&Open\tEnter" ,			ID_ACTIVATE
+		MENUITEM "&Move...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Copy...\tF8" ,			107
 		MENUITEM "&In Clipboard...\tF9" ,		118
 		MENUITEM "&Delete\tDel" ,			108
@@ -56,13 +56,13 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Copy Disk..." ,			201
 		MENUITEM "&Label Disk..." ,			202
 		MENUITEM SEPARATOR
-		MENUITEM "&Format Disk..." ,			203
+		MENUITEM "&Format Disk..." ,			ID_FORMAT_DISK
 #ifdef _WIN95
 		MENUITEM "&Make System Disk...", -1	/*@@ */
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "Connect &Network Drive" ,			252
-		MENUITEM "&Disconnect Network Drive" ,		253
+		MENUITEM "Connect &Network Drive" ,			ID_CONNECT_NETWORK_DRIVE
+		MENUITEM "&Disconnect Network Drive" ,		ID_DISCONNECT_NETWORK_DRIVE
 		MENUITEM SEPARATOR
 		MENUITEM "Share as..." ,			254
 		MENUITEM "&Remove Share..." ,			255
@@ -90,18 +90,18 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&All File Details" ,				ID_VIEW_ALL_ATTRIBUTES, CHECKED
 		MENUITEM "&Partial Details..." ,			ID_VIEW_SELECTED_ATTRIBUTES
 		MENUITEM SEPARATOR
-		MENUITEM "&Sort by Name" ,		404
-		MENUITEM "Sort &by Type" ,		405
-		MENUITEM "Sort by Si&ze" , 		406
-		MENUITEM "Sort by &Date" , 		407
+		MENUITEM "&Sort by Name" ,		ID_VIEW_SORT_NAME
+		MENUITEM "Sort &by Type" ,		ID_VIEW_SORT_TYPE
+		MENUITEM "Sort by Si&ze" , 		ID_VIEW_SORT_SIZE
+		MENUITEM "Sort by &Date" , 		ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
-		MENUITEM "Sort by &..." ,			409
+		MENUITEM "Filter by &..." ,			409
 	}
 
 	POPUP "&Options"  {
-		MENUITEM "&Confirmation..." ,		-1
-		MENUITEM "&Font..." ,			-1
-		MENUITEM "Customize Tool&bar..." , -1
+		MENUITEM "&Confirmation..." ,		501
+		MENUITEM "&Font..." ,			ID_SELECT_FONT
+		MENUITEM "Customize Tool&bar..." , 512
 		MENUITEM SEPARATOR
 		MENUITEM "&Toolbar" ,		ID_VIEW_TOOL_BAR, CHECKED
 		MENUITEM "&Drivebar" ,		ID_VIEW_DRIVE_BAR, CHECKED
@@ -110,7 +110,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "F&ull Screen\tCtrl+Shift+S" , 	ID_VIEW_FULLSCREEN
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "&Minize on run" ,		-1
+		MENUITEM "&Minize on run" ,		504
 		MENUITEM "&Save settings on exit" ,			511
 	}
 

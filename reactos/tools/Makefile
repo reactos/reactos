@@ -56,10 +56,10 @@ rrmdir$(EXE_POSTFIX): rrmdir.c
 	@$(HOST_CC) $(CFLAGS) $< -o $@
 
 rsym_common.o: rsym_common.c rsym.h
-	@$(HOST_CC) $(CFLAGS) -c $< -o $@
+	@$(HOST_CC) $(CFLAGS) -g -c $< -o $@
 
 rsym.o: rsym.c rsym.h
-	@$(HOST_CC) $(CFLAGS) -c $< -o $@
+	@$(HOST_CC) $(CFLAGS) -g -c $< -o $@
 
 rsym$(EXE_POSTFIX): rsym.o rsym_common.o
 	@$(HOST_CC) $(CFLAGS) $^ -o $@

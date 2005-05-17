@@ -25,13 +25,12 @@ InitDesktopImpl(VOID);
 
 NTSTATUS FASTCALL
 CleanupDesktopImpl(VOID);
-
-NTSTATUS
-STDCALL
+                       
+NTSTATUS STDCALL
 IntDesktopObjectCreate(PVOID ObjectBody,
-                       PVOID Parent,
-                       PWSTR RemainingPath,
-                       struct _OBJECT_ATTRIBUTES* ObjectAttributes);
+		       PVOID Parent,
+		       PWSTR RemainingPath,
+		       struct _OBJECT_ATTRIBUTES* ObjectAttributes);
 
 VOID STDCALL
 IntDesktopObjectDelete(PVOID DeletedObject);

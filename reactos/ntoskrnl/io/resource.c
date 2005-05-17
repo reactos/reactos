@@ -255,7 +255,7 @@ IopQueryDeviceDescription(
          goto EndLoop;
 
       /* We now have Bus *AND* Controller Information.. is it enough? */
-      if (!(*Query->PeripheralType))
+      if (!Query->PeripheralType || !(*Query->PeripheralType))
       {
          Status = Query->CalloutRoutine(
             Query->Context,
@@ -740,12 +740,12 @@ IoAssignResources(PUNICODE_STRING RegistryPath,
  */
 
 NTSTATUS NTAPI
-IoQueryDeviceDescription(PINTERFACE_TYPE BusType,
-			 PULONG BusNumber,
-			 PCONFIGURATION_TYPE ControllerType,
-			 PULONG ControllerNumber,
-			 PCONFIGURATION_TYPE PeripheralType,
-			 PULONG PeripheralNumber,
+IoQueryDeviceDescription(PINTERFACE_TYPE BusType OPTIONAL,
+			 PULONG BusNumber OPTIONAL,
+			 PCONFIGURATION_TYPE ControllerType OPTIONAL,
+			 PULONG ControllerNumber OPTIONAL,
+			 PCONFIGURATION_TYPE PeripheralType OPTIONAL,
+			 PULONG PeripheralNumber OPTIONAL,
 			 PIO_QUERY_DEVICE_ROUTINE CalloutRoutine,
 			 PVOID Context)
 {

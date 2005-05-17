@@ -55,11 +55,11 @@ ObpDecrementHandleCount(PVOID ObjectBody)
   LONG NewHandleCount = InterlockedDecrement(&ObjectHeader->HandleCount);
 
   if ((ObjectHeader->ObjectType != NULL) &&
-      (ObjectHeader->ObjectType->Close != NULL))
+      (ObjectHeader->ObjectType->TypeInfo.CloseProcedure != NULL))
   {
     /* the handle count should be decremented but we pass the previous value
        to the callback */
-    ObjectHeader->ObjectType->Close(ObjectBody, NewHandleCount + 1);
+    ObjectHeader->ObjectType->TypeInfo.CloseProcedure(ObjectBody, NewHandleCount + 1);
   }
 
   if(NewHandleCount == 0)
@@ -287,7 +287,7 @@ ObDuplicateObject(PEPROCESS SourceProcess,
     if (DesiredAccess & GENERIC_ANY)
     {
       RtlMapGenericMask(&DesiredAccess,
-                        ObjectHeader->ObjectType->Mapping);
+                        &ObjectHeader->ObjectType->TypeInfo.GenericMapping);
     }
     NewHandleEntry.u2.GrantedAccess = DesiredAccess;
   }
@@ -456,14 +456,14 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
            if (DesiredAccess & GENERIC_ANY)
            {
              RtlMapGenericMask(&DesiredAccess,
-                               ObjectType->Mapping);
+                               &ObjectType->TypeInfo.GenericMapping);
            }
          }
-         Status = ObCreateHandle(TargetProcess,
-                                 ObjectBody,
-                                 DesiredAccess,
-                                 InheritHandle,
-                                 &hTarget);
+         Status = ObpCreateHandle(TargetProcess,
+                                  ObjectBody,
+                                  DesiredAccess,
+                                  InheritHandle,
+                                  &hTarget);
 
          ObDereferenceObject(ObjectBody);
 
@@ -586,7 +586,7 @@ ObKillProcess(PEPROCESS Process)
 
 
 NTSTATUS
-ObCreateHandle(PEPROCESS Process,
+ObpCreateHandle(PEPROCESS Process,
 	       PVOID ObjectBody,
 	       ACCESS_MASK GrantedAccess,
 	       BOOLEAN Inherit,
@@ -605,7 +605,7 @@ ObCreateHandle(PEPROCESS Process,
 
    PAGED_CODE();
 
-   DPRINT("ObCreateHandle(Process %x, obj %x)\n",Process,ObjectBody);
+   DPRINT("ObpCreateHandle(Process %x, obj %x)\n",Process,ObjectBody);
 
    ASSERT(Process);
    ASSERT(ObjectBody);
@@ -623,7 +623,7 @@ ObCreateHandle(PEPROCESS Process,
    if (GrantedAccess & GENERIC_ANY)
      {
        RtlMapGenericMask(&GrantedAccess,
-		         ObjectHeader->ObjectType->Mapping);
+		         &ObjectHeader->ObjectType->TypeInfo.GenericMapping);
      }
 
    NewEntry.u1.Object = ObjectHeader;
@@ -830,7 +830,7 @@ ObReferenceObjectByHandle(HANDLE Handle,
    if (DesiredAccess & GENERIC_ANY)
      {
         RtlMapGenericMask(&DesiredAccess,
-                          BODY_TO_HEADER(ObjectBody)->ObjectType->Mapping);
+                          &BODY_TO_HEADER(ObjectBody)->ObjectType->TypeInfo.GenericMapping);
      }
 
    GrantedAccess = HandleEntry->u2.GrantedAccess;
@@ -941,7 +941,7 @@ ObInsertObject(IN PVOID Object,
   Access = DesiredAccess;
   ObjectHeader = BODY_TO_HEADER(Object);
 
-  return(ObCreateHandle(PsGetCurrentProcess(),
+  return(ObpCreateHandle(PsGetCurrentProcess(),
 			Object,
 			Access,
 			ObjectHeader->Inherit,

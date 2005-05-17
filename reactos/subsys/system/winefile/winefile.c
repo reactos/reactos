@@ -1,7 +1,7 @@
 /*
  * Winefile
  *
- * Copyright 2000, 2003, 2004 Martin Fuchs
+ * Copyright 2000, 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -187,11 +187,20 @@ int swprintf(wchar_t* buffer, const wchar_t* fmt, ...)
 	return 0;
 }
 
+
+#else
+
+ // ugly hack to use alloca() while keeping Wine's developers happy
+#define HeapAlloc(h,f,s) alloca(s)
+#define HeapFree(h,f,p)
+
 #endif
 
 
 static void read_directory(Entry* dir, LPCTSTR path, SORT_ORDER sortOrder, HWND hwnd);
-static void set_curdir(ChildWnd* child, Entry* entry, HWND hwnd);
+static void set_curdir(ChildWnd* child, Entry* entry, int idx, HWND hwnd);
+static void refresh_child(ChildWnd* child);
+static void refresh_drives();
 static void get_path(Entry* dir, PTSTR path);
 
 LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
@@ -248,6 +257,17 @@ static void display_error(HWND hwnd, DWORD error)
 		MessageBox(hwnd, RS(b1,IDS_ERROR), RS(b2,IDS_WINEFILE), MB_OK);
 
 	LocalFree(msg);
+}
+
+
+/* display network error message using WNetGetLastError() */
+static void display_network_error(HWND hwnd)
+{
+	TCHAR msg[BUFFER_LEN], provider[BUFFER_LEN], b2[BUFFER_LEN];
+	DWORD error;
+
+	if (WNetGetLastError(&error, msg, BUFFER_LEN, provider, BUFFER_LEN) == NO_ERROR)
+		MessageBox(hwnd, msg, RS(b2,IDS_WINEFILE), MB_OK);
 }
 
 
@@ -828,7 +848,7 @@ HICON extract_icon(IShellFolder* folder, LPCITEMIDLIST pidl)
 }
 
 
-static Entry* find_entry_shell(Entry* dir, LPITEMIDLIST pidl)
+static Entry* find_entry_shell(Entry* dir, LPCITEMIDLIST pidl)
 {
 	Entry* entry;
 
@@ -865,7 +885,7 @@ static Entry* read_tree_shell(Root* root, LPITEMIDLIST pidl, SORT_ORDER sortOrde
 		if (!pidl->mkid.cb)
 			break;
 
-		 /* copy first element of item idlist	-> could be replaced by SHBindToParent() */
+		 /* copy first element of item idlist */
 		next_pidl = (*Globals.iMalloc->lpVtbl->Alloc)(Globals.iMalloc, pidl->mkid.cb+sizeof(USHORT));
 		memcpy(next_pidl, pidl, pidl->mkid.cb);
 		((LPITEMIDLIST)((LPBYTE)next_pidl+pidl->mkid.cb))->mkid.cb = 0;
@@ -1103,8 +1123,8 @@ static int compareType(const WIN32_FIND_DATA* fd1, const WIN32_FIND_DATA* fd2)
 
 static int compareName(const void* arg1, const void* arg2)
 {
-	const WIN32_FIND_DATA* fd1 = &(*(Entry**)arg1)->data;
-	const WIN32_FIND_DATA* fd2 = &(*(Entry**)arg2)->data;
+	const WIN32_FIND_DATA* fd1 = &(*(const Entry* const*)arg1)->data;
+	const WIN32_FIND_DATA* fd2 = &(*(const Entry* const*)arg2)->data;
 
 	int cmp = compareType(fd1, fd2);
 	if (cmp)
@@ -1115,8 +1135,8 @@ static int compareName(const void* arg1, const void* arg2)
 
 static int compareExt(const void* arg1, const void* arg2)
 {
-	const WIN32_FIND_DATA* fd1 = &(*(Entry**)arg1)->data;
-	const WIN32_FIND_DATA* fd2 = &(*(Entry**)arg2)->data;
+	const WIN32_FIND_DATA* fd1 = &(*(const Entry* const*)arg1)->data;
+	const WIN32_FIND_DATA* fd2 = &(*(const Entry* const*)arg2)->data;
 	const TCHAR *name1, *name2, *ext1, *ext2;
 
 	int cmp = compareType(fd1, fd2);
@@ -1148,8 +1168,8 @@ static int compareExt(const void* arg1, const void* arg2)
 
 static int compareSize(const void* arg1, const void* arg2)
 {
-	WIN32_FIND_DATA* fd1 = &(*(Entry**)arg1)->data;
-	WIN32_FIND_DATA* fd2 = &(*(Entry**)arg2)->data;
+	const WIN32_FIND_DATA* fd1 = &(*(const Entry* const*)arg1)->data;
+	const WIN32_FIND_DATA* fd2 = &(*(const Entry* const*)arg2)->data;
 
 	int cmp = compareType(fd1, fd2);
 	if (cmp)
@@ -1169,8 +1189,8 @@ static int compareSize(const void* arg1, const void* arg2)
 
 static int compareDate(const void* arg1, const void* arg2)
 {
-	WIN32_FIND_DATA* fd1 = &(*(Entry**)arg1)->data;
-	WIN32_FIND_DATA* fd2 = &(*(Entry**)arg2)->data;
+	const WIN32_FIND_DATA* fd1 = &(*(const Entry* const*)arg1)->data;
+	const WIN32_FIND_DATA* fd2 = &(*(const Entry* const*)arg2)->data;
 
 	int cmp = compareType(fd1, fd2);
 	if (cmp)
@@ -1199,7 +1219,7 @@ static void SortDirectory(Entry* dir, SORT_ORDER sortOrder)
 		len++;
 
 	if (len) {
-		array = (Entry**) alloca(len*sizeof(Entry*));
+		array = (Entry**) HeapAlloc(GetProcessHeap(), 0, len*sizeof(Entry*));
 
 		p = array;
 		for(entry=dir->down; entry; entry=entry->next)
@@ -1214,6 +1234,8 @@ static void SortDirectory(Entry* dir, SORT_ORDER sortOrder)
 			p[0]->next = p[1];
 
 		(*p)->next = 0;
+
+		HeapFree(GetProcessHeap(), 0, array);
 	}
 }
 
@@ -1297,13 +1319,59 @@ static void read_directory(Entry* dir, LPCTSTR path, SORT_ORDER sortOrder, HWND 
 }
 
 
-static ChildWnd* alloc_child_window(LPCTSTR path, LPITEMIDLIST pidl, HWND hwnd)
+static Entry* read_tree(Root* root, LPCTSTR path, LPITEMIDLIST pidl, LPTSTR drv, SORT_ORDER sortOrder, HWND hwnd)
 {
 	const static TCHAR sBackslash[] = {'\\', '\0'};
 #if !defined(_NO_EXTENSIONS) && defined(__WINE__)
 	const static TCHAR sSlash[] = {'/', '\0'};
 #endif
 
+#ifdef _SHELL_FOLDERS
+	if (pidl)
+	{
+		 /* read shell namespace tree */
+		root->drive_type = DRIVE_UNKNOWN;
+		drv[0] = '\\';
+		drv[1] = '\0';
+		load_string(root->volname, IDS_DESKTOP);
+		root->fs_flags = 0;
+		load_string(root->fs, IDS_SHELL);
+
+		return read_tree_shell(root, pidl, sortOrder, hwnd);
+	}
+	else
+#endif
+#if !defined(_NO_EXTENSIONS) && defined(__WINE__)
+	if (*path == '/')
+	{
+		 /* read unix file system tree */
+		root->drive_type = GetDriveType(path);
+
+		lstrcat(drv, sSlash);
+		load_string(root->volname, IDS_ROOT_FS);
+		root->fs_flags = 0;
+		load_string(root->fs, IDS_UNIXFS);
+
+		lstrcpy(root->path, sSlash);
+
+		return read_tree_unix(root, path, sortOrder, hwnd);
+	}
+#endif
+
+	 /* read WIN32 file system tree */
+	root->drive_type = GetDriveType(path);
+
+	lstrcat(drv, sBackslash);
+	GetVolumeInformation(drv, root->volname, _MAX_FNAME, 0, 0, &root->fs_flags, root->fs, _MAX_DIR);
+
+	lstrcpy(root->path, drv);
+
+	return read_tree_win(root, path, sortOrder, hwnd);
+}
+
+
+static ChildWnd* alloc_child_window(LPCTSTR path, LPITEMIDLIST pidl, HWND hwnd)
+{
 	TCHAR drv[_MAX_DRIVE+1], dir[_MAX_DIR], name[_MAX_FNAME], ext[_MAX_EXT];
 	TCHAR b1[BUFFER_LEN];
 
@@ -1345,44 +1413,7 @@ static ChildWnd* alloc_child_window(LPCTSTR path, LPITEMIDLIST pidl, HWND hwnd)
 
 	root->entry.level = 0;
 
-#ifdef _SHELL_FOLDERS
-	if (pidl)
-	{
-		root->drive_type = DRIVE_UNKNOWN;
-		drv[0] = '\\';
-		drv[1] = '\0';
-		load_string(root->volname, IDS_DESKTOP);
-		root->fs_flags = 0;
-		load_string(root->fs, IDS_SHELL);
-
-		entry = read_tree_shell(root, pidl, child->sortOrder, hwnd);
-	}
-	else
-#endif
-#if !defined(_NO_EXTENSIONS) && defined(__WINE__)
-	if (*path == '/')
-	{
-		root->drive_type = GetDriveType(path);
-
-		lstrcat(drv, sSlash);
-		load_string(root->volname, IDS_ROOT_FS);
-		root->fs_flags = 0;
-		load_string(root->fs, IDS_UNIXFS);
-
-		lstrcpy(root->path, sSlash);
-		entry = read_tree_unix(root, path, child->sortOrder, hwnd);
-	}
-	else
-#endif
-	{
-		root->drive_type = GetDriveType(path);
-
-		lstrcat(drv, sBackslash);
-		GetVolumeInformation(drv, root->volname, _MAX_FNAME, 0, 0, &root->fs_flags, root->fs, _MAX_DIR);
-
-		lstrcpy(root->path, drv);
-		entry = read_tree_win(root, path, child->sortOrder, hwnd);
-	}
+	entry = read_tree(root, path, pidl, drv, child->sortOrder, hwnd);
 
 #ifdef _SHELL_FOLDERS
 	if (root->entry.etype == ET_SHELL)
@@ -1396,7 +1427,7 @@ static ChildWnd* alloc_child_window(LPCTSTR path, LPITEMIDLIST pidl, HWND hwnd)
 	child->left.root = &root->entry;
 	child->right.root = NULL;
 
-	set_curdir(child, entry, hwnd);
+	set_curdir(child, entry, 0, hwnd);
 
 	return child;
 }
@@ -1588,7 +1619,8 @@ static HWND create_child_window(ChildWnd* child)
 
 	ListBox_SetItemHeight(child->left.hwnd, 1, max(Globals.spaceSize.cy,IMAGE_HEIGHT+3));
 	ListBox_SetItemHeight(child->right.hwnd, 1, max(Globals.spaceSize.cy,IMAGE_HEIGHT+3));
-	idx = ListBox_FindItemData(child->left.hwnd, ListBox_GetCurSel(child->left.hwnd), child->left.cur);
+
+	idx = ListBox_FindItemData(child->left.hwnd, 0, child->left.cur);
 	ListBox_SetCurSel(child->left.hwnd, idx);
 
 	return child->hwnd;
@@ -1634,6 +1666,7 @@ static INT_PTR CALLBACK DestinationDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam, 
 	switch(nmsg) {
 		case WM_INITDIALOG:
 			SetWindowLong(hwnd, GWL_USERDATA, lparam);
+			SetWindowText(GetDlgItem(hwnd, 201), (LPCTSTR)lparam);
 			return 1;
 
 		case WM_COMMAND: {
@@ -1850,6 +1883,13 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 				PostQuitMessage(0);
 			break;
 
+		case WM_INITMENUPOPUP: {
+			HWND hwndClient = (HWND) SendMessage(Globals.hmdiclient, WM_MDIGETACTIVE, 0, 0);
+
+			if (!SendMessage(hwndClient, WM_INITMENUPOPUP, wparam, lparam))
+				return 0;
+			break;}
+
 		case WM_COMMAND: {
 			UINT cmd = LOWORD(wparam);
 			HWND hwndClient = (HWND) SendMessage(Globals.hmdiclient, WM_MDIGETACTIVE, 0, 0);
@@ -1897,6 +1937,10 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 					if (!create_child_window(child))
 						free(child);
 					break;}
+
+				case ID_REFRESH:
+					refresh_drives();
+					break;
 
 				case ID_WINDOW_CASCADE:
 					SendMessage(Globals.hmdiclient, WM_MDICASCADE, 0, 0);
@@ -1987,6 +2031,39 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 							display_error(hwnd, GetLastError());
 					}
 					break;}
+
+				case ID_CONNECT_NETWORK_DRIVE: {
+					DWORD ret = WNetConnectionDialog(hwnd, RESOURCETYPE_DISK);
+					if (ret == NO_ERROR)
+						refresh_drives();
+					else if (ret != (DWORD)-1) {
+						if (ret == ERROR_EXTENDED_ERROR)
+							display_network_error(hwnd);
+						else
+							display_error(hwnd, ret);
+					}
+					break;}
+
+				case ID_DISCONNECT_NETWORK_DRIVE: {
+					DWORD ret = WNetDisconnectDialog(hwnd, RESOURCETYPE_DISK);
+					if (ret == NO_ERROR)
+						refresh_drives();
+					else if (ret != (DWORD)-1) {
+						if (ret == ERROR_EXTENDED_ERROR)
+							display_network_error(hwnd);
+						else
+							display_error(hwnd, ret);
+					}
+					break;}
+
+#ifndef __MINGW32__	/* SHFormatDrive missing in MinGW (as of 13.5.2005) */
+				case ID_FORMAT_DISK: {
+					UINT sem_org = SetErrorMode(0); /* Get the current Error Mode settings. */
+					SetErrorMode(sem_org & ~SEM_FAILCRITICALERRORS); /* Force O/S to handle */
+					SHFormatDrive(hwnd, 0 /* A: */, SHFMT_ID_DEFAULT, 0);
+					SetErrorMode(sem_org); /* Put it back the way it was. */
+					break;}
+#endif
 
 				case ID_HELP:
 					WinHelp(hwnd, RS(b1,IDS_WINEFILE), HELP_INDEX, 0);
@@ -2205,7 +2282,7 @@ static void init_output(HWND hwnd)
 static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol);
 
 
-/* calculate prefered width for all visible columns */
+/* calculate preferred width for all visible columns */
 
 static BOOL calc_widths(Pane* pane, BOOL anyway)
 {
@@ -2292,7 +2369,7 @@ static BOOL calc_widths(Pane* pane, BOOL anyway)
 }
 
 
-/* calculate one prefered column width */
+/* calculate one preferred column width */
 
 static void calc_single_width(Pane* pane, int col)
 {
@@ -2354,12 +2431,12 @@ static void calc_single_width(Pane* pane, int col)
 
 /* insert listbox entries after index idx */
 
-static void insert_entries(Pane* pane, Entry* dir, int idx)
+static int insert_entries(Pane* pane, Entry* dir, int idx)
 {
 	Entry* entry = dir;
 
 	if (!entry)
-		return;
+		return idx;
 
 	ShowWindow(pane->hwnd, SW_HIDE);
 
@@ -2385,10 +2462,46 @@ static void insert_entries(Pane* pane, Entry* dir, int idx)
 		ListBox_InsertItemData(pane->hwnd, idx, entry);
 
 		if (pane->treePane && entry->expanded)
-			insert_entries(pane, entry->down, idx);
+			idx = insert_entries(pane, entry->down, idx);
 	}
 
 	ShowWindow(pane->hwnd, SW_SHOW);
+
+	return idx;
+}
+
+
+static void format_bytes(LPTSTR buffer, LONGLONG bytes)
+{
+	const static TCHAR sFmtGB[] = {'%', '.', '1', 'f', ' ', 'G', 'B', '\0'};
+	const static TCHAR sFmtMB[] = {'%', '.', '1', 'f', ' ', 'M', 'B', '\0'};
+	const static TCHAR sFmtkB[] = {'%', '.', '1', 'f', ' ', 'k', 'B', '\0'};
+
+	float fBytes = (float)bytes;
+
+	if (bytes >= 1073741824)	/* 1 GB */
+		_stprintf(buffer, sFmtGB, fBytes/1073741824.f+.5f);
+	else if (bytes >= 1048576)	/* 1 MB */
+		_stprintf(buffer, sFmtMB, fBytes/1048576.f+.5f);
+	else if (bytes >= 1024)		/* 1 kB */
+		_stprintf(buffer, sFmtkB, fBytes/1024.f+.5f);
+	else
+		_stprintf(buffer, sLongNumFmt, bytes);
+}
+
+static void set_space_status()
+{
+	ULARGE_INTEGER ulFreeBytesToCaller, ulTotalBytes, ulFreeBytes;
+	TCHAR fmt[64], b1[64], b2[64], buffer[BUFFER_LEN];
+
+	if (GetDiskFreeSpaceEx(NULL, &ulFreeBytesToCaller, &ulTotalBytes, &ulFreeBytes)) {
+		format_bytes(b1, ulFreeBytesToCaller.QuadPart);
+		format_bytes(b2, ulTotalBytes.QuadPart);
+		_stprintf(buffer, RS(fmt,IDS_FREE_SPACE_FMT), b1, b2);
+	} else
+		_tcscpy(buffer, sQMarks);
+
+	SendMessage(Globals.hstatusbar, SB_SETTEXT, 0, (LPARAM)buffer);
 }
 
 
@@ -2701,13 +2814,13 @@ static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWi
 #endif
 					)
 					LineTo(dis->hDC, x, dis->rcItem.bottom);
-
+/*@@
 				if (entry->down && entry->expanded) {
 					x += IMAGE_WIDTH+TREE_LINE_DX;
 					MoveToEx(dis->hDC, x, dis->rcItem.top+IMAGE_HEIGHT, 0);
 					LineTo(dis->hDC, x, dis->rcItem.bottom);
 				}
-
+*/
 				SelectClipRgn(dis->hDC, hrgn_org);
 				if (hrgn_org) DeleteObject(hrgn_org);
 				/* SelectObject(dis->hDC, holdPen); */
@@ -3100,10 +3213,9 @@ static LRESULT pane_notify(Pane* pane, NMHDR* pnmh)
 #endif /* _NO_EXTENSIONS */
 
 
-static void scan_entry(ChildWnd* child, Entry* entry, HWND hwnd)
+static void scan_entry(ChildWnd* child, Entry* entry, int idx, HWND hwnd)
 {
 	TCHAR path[MAX_PATH];
-	int idx = ListBox_GetCurSel(child->left.hwnd);
 	HCURSOR old_cursor = SetCursor(LoadCursor(0, IDC_WAIT));
 
 	/* delete sub entries in left pane */
@@ -3217,7 +3329,7 @@ static void collapse_entry(Pane* pane, Entry* dir)
 }
 
 
-static void set_curdir(ChildWnd* child, Entry* entry, HWND hwnd)
+static void set_curdir(ChildWnd* child, Entry* entry, int idx, HWND hwnd)
 {
 	TCHAR path[MAX_PATH];
 
@@ -3228,7 +3340,7 @@ static void set_curdir(ChildWnd* child, Entry* entry, HWND hwnd)
 	child->right.cur = entry;
 
 	if (!entry->scanned)
-		scan_entry(child, entry, hwnd);
+		scan_entry(child, entry, idx, hwnd);
 	else {
 		ListBox_ResetContent(child->right.hwnd);
 		insert_entries(&child->right, entry->down, -1);
@@ -3245,7 +3357,121 @@ static void set_curdir(ChildWnd* child, Entry* entry, HWND hwnd)
 		SetWindowText(child->hwnd, path);
 
 	if (path[0])
-		SetCurrentDirectory(path);
+		if (SetCurrentDirectory(path))
+			set_space_status();
+}
+
+
+static void refresh_child(ChildWnd* child)
+{
+	TCHAR path[MAX_PATH], drv[_MAX_DRIVE+1];
+	Entry* entry;
+	int idx;
+
+	get_path(child->left.cur, path);
+	_tsplitpath(path, drv, NULL, NULL, NULL);
+
+	child->right.root = NULL;
+
+	scan_entry(child, &child->root.entry, 0, child->hwnd);
+
+#ifdef _SHELL_FOLDERS
+	if (child->root.entry.etype == ET_SHELL)
+		entry = read_tree(&child->root, NULL, get_path_pidl(path,child->hwnd), drv, child->sortOrder, child->hwnd);
+	else
+#endif
+		entry = read_tree(&child->root, path, NULL, drv, child->sortOrder, child->hwnd);
+
+	if (!entry)
+		entry = &child->root.entry;
+
+	insert_entries(&child->left, child->root.entry.down, 0);
+
+	set_curdir(child, entry, 0, child->hwnd);
+
+	idx = ListBox_FindItemData(child->left.hwnd, 0, child->left.cur);
+	ListBox_SetCurSel(child->left.hwnd, idx);
+}
+
+
+static void create_drive_bar()
+{
+	TBBUTTON drivebarBtn = {0, 0, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0};
+	TCHAR b1[BUFFER_LEN];
+	int btn = 1;
+	PTSTR p;
+
+	GetLogicalDriveStrings(BUFFER_LEN, Globals.drives);
+
+	Globals.hdrivebar = CreateToolbarEx(Globals.hMainWnd, WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST,
+				IDW_DRIVEBAR, 2, Globals.hInstance, IDB_DRIVEBAR, &drivebarBtn,
+				1, 16, 13, 16, 13, sizeof(TBBUTTON));
+
+#ifndef _NO_EXTENSIONS
+#ifdef __WINE__
+	/* insert unix file system button */
+	b1[0] = '/';
+	b1[1] = '\0';
+	b1[2] = '\0';
+	SendMessage(Globals.hdrivebar, TB_ADDSTRING, 0, (LPARAM)b1);
+
+	drivebarBtn.idCommand = ID_DRIVE_UNIX_FS;
+	SendMessage(Globals.hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
+	drivebarBtn.iString++;
+#endif
+#ifdef _SHELL_FOLDERS
+	/* insert shell namespace button */
+	load_string(b1, IDS_SHELL);
+	b1[lstrlen(b1)+1] = '\0';
+	SendMessage(Globals.hdrivebar, TB_ADDSTRING, 0, (LPARAM)b1);
+
+	drivebarBtn.idCommand = ID_DRIVE_SHELL_NS;
+	SendMessage(Globals.hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
+	drivebarBtn.iString++;
+#endif
+
+	/* register windows drive root strings */
+	SendMessage(Globals.hdrivebar, TB_ADDSTRING, 0, (LPARAM)Globals.drives);
+#endif
+
+	drivebarBtn.idCommand = ID_DRIVE_FIRST;
+
+	for(p=Globals.drives; *p; ) {
+#ifdef _NO_EXTENSIONS
+		/* insert drive letter */
+		TCHAR b[3] = {tolower(*p)};
+		SendMessage(Globals.hdrivebar, TB_ADDSTRING, 0, (LPARAM)b);
+#endif
+		switch(GetDriveType(p)) {
+			case DRIVE_REMOVABLE:	drivebarBtn.iBitmap = 1;	break;
+			case DRIVE_CDROM:		drivebarBtn.iBitmap = 3;	break;
+			case DRIVE_REMOTE:		drivebarBtn.iBitmap = 4;	break;
+			case DRIVE_RAMDISK:		drivebarBtn.iBitmap = 5;	break;
+			default:/*DRIVE_FIXED*/	drivebarBtn.iBitmap = 2;
+		}
+
+		SendMessage(Globals.hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
+		drivebarBtn.idCommand++;
+		drivebarBtn.iString++;
+
+		while(*p++);
+	}
+}
+
+static void refresh_drives()
+{
+	RECT rect;
+
+	/* destroy drive bar */
+	DestroyWindow(Globals.hdrivebar);
+	Globals.hdrivebar = 0;
+
+	/* re-create drive bar */
+	create_drive_bar();
+
+	/* update window layout */
+	GetClientRect(Globals.hMainWnd, &rect);
+	SendMessage(Globals.hMainWnd, WM_SIZE, 0, MAKELONG(rect.right, rect.bottom));
 }
 
 
@@ -3326,7 +3552,7 @@ static void activate_entry(ChildWnd* child, Pane* pane, HWND hwnd)
 		int scanned_old = entry->scanned;
 
 		if (!scanned_old)
-			scan_entry(child, entry, hwnd);
+			scan_entry(child, entry, ListBox_GetCurSel(child->left.hwnd), hwnd);
 
 #ifndef _NO_EXTENSIONS
 		if (entry->data.cFileName[0]=='.' && entry->data.cFileName[1]=='\0')
@@ -3345,7 +3571,7 @@ static void activate_entry(ChildWnd* child, Pane* pane, HWND hwnd)
 			if (!pane->treePane) focus_entry: {
 				int idx = ListBox_FindItemData(child->left.hwnd, ListBox_GetCurSel(child->left.hwnd), entry);
 				ListBox_SetCurSel(child->left.hwnd, idx);
-				set_curdir(child, entry, hwnd);
+				set_curdir(child, entry, idx, hwnd);
 			}
 		}
 
@@ -3394,7 +3620,7 @@ static BOOL pane_command(Pane* pane, UINT cmd)
 			break;
 
 #ifndef _NO_EXTENSIONS
-		case ID_PREFERED_SIZES: {
+		case ID_PREFERRED_SIZES: {
 			calc_widths(pane, TRUE);
 			set_header(pane);
 			InvalidateRect(pane->hwnd, 0, TRUE);
@@ -3411,9 +3637,26 @@ static BOOL pane_command(Pane* pane, UINT cmd)
 }
 
 
+static void set_sort_order(ChildWnd* child, SORT_ORDER sortOrder)
+{
+	if (child->sortOrder != sortOrder) {
+		child->sortOrder = sortOrder;
+		refresh_child(child);
+	}
+}
+
+static void update_view_menu(ChildWnd* child)
+{
+	CheckMenuItem(Globals.hMenuView, ID_VIEW_SORT_NAME, child->sortOrder==SORT_NAME? MF_CHECKED: MF_UNCHECKED);
+	CheckMenuItem(Globals.hMenuView, ID_VIEW_SORT_TYPE, child->sortOrder==SORT_EXT? MF_CHECKED: MF_UNCHECKED);
+	CheckMenuItem(Globals.hMenuView, ID_VIEW_SORT_SIZE, child->sortOrder==SORT_SIZE? MF_CHECKED: MF_UNCHECKED);
+	CheckMenuItem(Globals.hMenuView, ID_VIEW_SORT_DATE, child->sortOrder==SORT_DATE? MF_CHECKED: MF_UNCHECKED);
+}
+
+
 static IContextMenu2* s_pctxmenu2 = NULL;
 
-#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
+#ifndef __MINGW32__	/* IContextMenu3 missing in MinGW (as of 6.2.2005) */
 static IContextMenu3* s_pctxmenu3 = NULL;
 #endif
 
@@ -3421,7 +3664,7 @@ static void CtxMenu_reset()
 {
 	s_pctxmenu2 = NULL;
 
-#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
+#ifndef __MINGW32__	/* IContextMenu3 missing in MinGW (as of 6.2.2005) */
 	s_pctxmenu3 = NULL;
 #endif
 }
@@ -3432,7 +3675,7 @@ IContextMenu* CtxMenu_query_interfaces(IContextMenu* pcm1)
 
 	CtxMenu_reset();
 
-#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
+#ifndef __MINGW32__	/* IContextMenu3 missing in MinGW (as of 6.2.2005) */
 	if ((*pcm1->lpVtbl->QueryInterface)(pcm1, &IID_IContextMenu3, (void**)&pcm) == NOERROR)
 		s_pctxmenu3 = (LPCONTEXTMENU3)pcm;
 	else
@@ -3449,7 +3692,7 @@ IContextMenu* CtxMenu_query_interfaces(IContextMenu* pcm1)
 
 static BOOL CtxMenu_HandleMenuMsg(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
-#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
+#ifndef __MINGW32__	/* IContextMenu3 missing in MinGW (as of 6.2.2005) */
 	if (s_pctxmenu3) {
 		if (SUCCEEDED((*s_pctxmenu3->lpVtbl->HandleMenuMsg)(s_pctxmenu3, nmsg, wparam, lparam)))
 			return TRUE;
@@ -3674,7 +3917,8 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 #endif /* _NO_EXTENSIONS */
 
 		case WM_SETFOCUS:
-			SetCurrentDirectory(child->path);
+			if (SetCurrentDirectory(child->path))
+				set_space_status();
 			SetFocus(child->focus_pane? child->right.hwnd: child->left.hwnd);
 			break;
 
@@ -3691,7 +3935,8 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 					break;}
 
 				case ID_REFRESH:
-					scan_entry(child, pane->cur, hwnd);
+					refresh_drives();
+					refresh_child(child);
 					break;
 
 				case ID_ACTIVATE:
@@ -3700,9 +3945,11 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 
 				case ID_FILE_MOVE: {
 					TCHAR new_name[BUFFER_LEN], old_name[BUFFER_LEN];
-					int len;
+					int len, ret;
 
-					int ret = DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_SELECT_DESTINATION), hwnd, DestinationDlgProc, (LPARAM)new_name);
+					get_path(pane->cur, new_name);
+
+					ret = DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_SELECT_DESTINATION), hwnd, DestinationDlgProc, (LPARAM)new_name);
 					if (ret != IDOK)
 						break;
 
@@ -3710,12 +3957,10 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 						get_path(pane->cur->up, old_name);
 						len = lstrlen(old_name);
 
-						if (old_name[len-1]!='\\' && old_name[len-1]!='/') {
+						if (old_name[len-1]!='\\' && old_name[len-1]!='/')
 							old_name[len++] = '/';
-							old_name[len] = '\n';
-						}
 
-						lstrcpy(&old_name[len], new_name);
+						lstrcpy(old_name+len, new_name);
 						lstrcpy(new_name, old_name);
 					}
 
@@ -3728,11 +3973,27 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 							activate_entry(child, pane, hwnd);
 						}
 						else
-							scan_entry(child, pane->root, hwnd);
+							refresh_child(child);
 					}
 					else
 						display_error(hwnd, GetLastError());
 					break;}
+
+				case ID_VIEW_SORT_NAME:
+					set_sort_order(child, SORT_NAME);
+					break;
+
+				case ID_VIEW_SORT_TYPE:
+					set_sort_order(child, SORT_EXT);
+					break;
+
+				case ID_VIEW_SORT_SIZE:
+					set_sort_order(child, SORT_SIZE);
+					break;
+
+				case ID_VIEW_SORT_DATE:
+					set_sort_order(child, SORT_DATE);
+					break;
 
 				default:
 					return pane_command(pane, LOWORD(wparam));
@@ -3749,7 +4010,7 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 					Entry* entry = (Entry*) ListBox_GetItemData(pane->hwnd, idx);
 
 					if (pane == &child->left)
-						set_curdir(child, entry, hwnd);
+						set_curdir(child, entry, idx, hwnd);
 					else
 						pane->cur = entry;
 					break;}
@@ -3768,16 +4029,17 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 
 #ifdef _SHELL_FOLDERS
 		case WM_CONTEXTMENU: {
+			POINT pt, pt_clnt;
 			Pane* pane;
 			int idx;
 
 			 /* first select the current item in the listbox */
 			HWND hpanel = (HWND) wparam;
-			POINTS* ppos = &MAKEPOINTS(lparam);
-			POINT pt; POINTSTOPOINT(pt, *ppos);
-			ScreenToClient(hpanel, &pt);
-			SendMessage(hpanel, WM_LBUTTONDOWN, 0, MAKELONG(pt.x, pt.y));
-			SendMessage(hpanel, WM_LBUTTONUP, 0, MAKELONG(pt.x, pt.y));
+			pt_clnt.x = pt.x = (short)LOWORD(lparam);
+			pt_clnt.y = pt.y = (short)HIWORD(lparam);
+			ScreenToClient(hpanel, &pt_clnt);
+			SendMessage(hpanel, WM_LBUTTONDOWN, 0, MAKELONG(pt_clnt.x, pt_clnt.y));
+			SendMessage(hpanel, WM_LBUTTONUP, 0, MAKELONG(pt_clnt.x, pt_clnt.y));
 
 			 /* now create the popup menu using shell namespace and IContextMenu */
 			pane = GetFocus()==child->left.hwnd? &child->left: &child->right;
@@ -3795,7 +4057,7 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 
 					 /* get and use the parent folder to display correct context menu in all cases */
 					if (SUCCEEDED(SHBindToParent(pidl_abs, &IID_IShellFolder, (LPVOID*)&parentFolder, &pidlLast))) {
-						hr = ShellFolderContextMenu(parentFolder, hwnd, 1, &pidlLast, ppos->x, ppos->y);
+						hr = ShellFolderContextMenu(parentFolder, hwnd, 1, &pidlLast, pt.x, pt.y);
 
 						(*parentFolder->lpVtbl->Release)(parentFolder);
 					}
@@ -3808,7 +4070,7 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 
 		  case WM_MEASUREITEM:
 		  draw_menu_item:
-			if (!wparam)	// Is the message menu-related?
+			if (!wparam)	/* Is the message menu-related? */
 				if (CtxMenu_HandleMenuMsg(nmsg, wparam, lparam))
 					return TRUE;
 
@@ -3818,10 +4080,11 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 			if (CtxMenu_HandleMenuMsg(nmsg, wparam, lparam))
 				return 0;
 
+			update_view_menu(child);
 			break;
 
-#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
-		  case WM_MENUCHAR:	// only supported by IContextMenu3
+#ifndef __MINGW32__	/* IContextMenu3 missing in MinGW (as of 6.2.2005) */
+		  case WM_MENUCHAR:	/* only supported by IContextMenu3 */
 		   if (s_pctxmenu3) {
 			   LRESULT lResult = 0;
 
@@ -3981,6 +4244,7 @@ void show_frame(HWND hwndParent, int cmdshow)
 	TCHAR path[MAX_PATH], b1[BUFFER_LEN];
 	ChildWnd* child;
 	HMENU hMenuFrame, hMenuWindow;
+	TBBUTTON drivebarBtn = {0, 0, TBSTATE_ENABLED, BTNS_SEP, {0, 0}, 0, 0};
 
 	CLIENTCREATESTRUCT ccs;
 
@@ -4012,70 +4276,9 @@ void show_frame(HWND hwndParent, int cmdshow)
 					Globals.hMainWnd, 0, Globals.hInstance, &ccs);
 
 
-	{
-		TBBUTTON drivebarBtn = {0, 0, TBSTATE_ENABLED, BTNS_SEP, {0, 0}, 0, 0};
-		int btn = 1;
-		PTSTR p;
+	CheckMenuItem(Globals.hMenuOptions, ID_VIEW_DRIVE_BAR, MF_BYCOMMAND|MF_CHECKED);
 
-		Globals.hdrivebar = CreateToolbarEx(Globals.hMainWnd, WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST,
-					IDW_DRIVEBAR, 2, Globals.hInstance, IDB_DRIVEBAR, &drivebarBtn,
-					1, 16, 13, 16, 13, sizeof(TBBUTTON));
-		CheckMenuItem(Globals.hMenuOptions, ID_VIEW_DRIVE_BAR, MF_BYCOMMAND|MF_CHECKED);
-
-		GetLogicalDriveStrings(BUFFER_LEN, Globals.drives);
-
-		drivebarBtn.fsStyle = BTNS_BUTTON;
-
-#ifndef _NO_EXTENSIONS
-#ifdef __WINE__
-		/* insert unix file system button */
-		b1[0] = '/';
-		b1[1] = '\0';
-		b1[2] = '\0';
-		SendMessage(Globals.hdrivebar, TB_ADDSTRING, 0, (LPARAM)b1);
-
-		drivebarBtn.idCommand = ID_DRIVE_UNIX_FS;
-		SendMessage(Globals.hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
-		drivebarBtn.iString++;
-#endif
-#ifdef _SHELL_FOLDERS
-		/* insert shell namespace button */
-		load_string(b1, IDS_SHELL);
-		b1[lstrlen(b1)+1] = '\0';
-		SendMessage(Globals.hdrivebar, TB_ADDSTRING, 0, (LPARAM)b1);
-
-		drivebarBtn.idCommand = ID_DRIVE_SHELL_NS;
-		SendMessage(Globals.hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
-		drivebarBtn.iString++;
-#endif
-
-		/* register windows drive root strings */
-		SendMessage(Globals.hdrivebar, TB_ADDSTRING, 0, (LPARAM)Globals.drives);
-#endif
-
-		drivebarBtn.idCommand = ID_DRIVE_FIRST;
-
-		for(p=Globals.drives; *p; ) {
-#ifdef _NO_EXTENSIONS
-			/* insert drive letter */
-			TCHAR b[3] = {tolower(*p)};
-			SendMessage(Globals.hdrivebar, TB_ADDSTRING, 0, (LPARAM)b);
-#endif
-			switch(GetDriveType(p)) {
-				case DRIVE_REMOVABLE:	drivebarBtn.iBitmap = 1;	break;
-				case DRIVE_CDROM:		drivebarBtn.iBitmap = 3;	break;
-				case DRIVE_REMOTE:		drivebarBtn.iBitmap = 4;	break;
-				case DRIVE_RAMDISK:		drivebarBtn.iBitmap = 5;	break;
-				default:/*DRIVE_FIXED*/	drivebarBtn.iBitmap = 2;
-			}
-
-			SendMessage(Globals.hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
-			drivebarBtn.idCommand++;
-			drivebarBtn.iString++;
-
-			while(*p++);
-		}
-	}
+	create_drive_bar();
 
 	{
 		TBBUTTON toolbarBtns[] = {

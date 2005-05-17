@@ -1,5 +1,5 @@
 /*
- * Copyright 2000, 2003 Martin Fuchs
+ * Copyright 2000, 2003, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -43,9 +43,16 @@
 #define ID_EXECUTE						105
 #define ID_FILE_MOVE					106
 #define ID_FILE_EXIT					115
+#define	ID_FORMAT_DISK					203
+#define	ID_CONNECT_NETWORK_DRIVE		252
+#define	ID_DISCONNECT_NETWORK_DRIVE		253
 #define ID_VIEW_NAME					401
 #define ID_VIEW_ALL_ATTRIBUTES			402
 #define ID_VIEW_SELECTED_ATTRIBUTES		403
+#define	ID_VIEW_SORT_NAME				404
+#define	ID_VIEW_SORT_TYPE				405
+#define	ID_VIEW_SORT_SIZE				406
+#define	ID_VIEW_SORT_DATE				407
 #define ID_SELECT_FONT					510
 #define ID_VIEW_TOOL_BAR				508
 #define ID_VIEW_DRIVE_BAR				507
@@ -71,7 +78,7 @@
 #define ID_NO_WARRANTY					0x8002
 #define ID_WINDOW_AUTOSORT				0x8003
 #define ID_VIEW_FULLSCREEN				0x8004
-#define ID_PREFERED_SIZES				0x8005
+#define ID_PREFERRED_SIZES				0x8005
 
 
 /* string table */
@@ -99,6 +106,7 @@
 #define IDS_COL_LINKS					1216
 #define IDS_COL_ATTR					1217
 #define IDS_COL_SEC						1218
+#define IDS_FREE_SPACE_FMT				1219
 
 
 /* range for drive bar command ids: 0x9000..0x90FF */

@@ -515,6 +515,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
     {
       PUSER_MESSAGE UserMsg;
       MSG Msg;
+      BOOL ProcessMessage;
 
       ASSERT(SystemMessageQueueHead < SYSTEM_MESSAGE_QUEUE_SIZE);
       Msg = SystemMessageQueue[SystemMessageQueueHead];
@@ -522,12 +523,48 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	(SystemMessageQueueHead + 1) % SYSTEM_MESSAGE_QUEUE_SIZE;
       SystemMessageQueueCount--;
       IntUnLockSystemMessageQueue(OldIrql);
-      UserMsg = ExAllocateFromPagedLookasideList(&MessageLookasideList);
-      /* What to do if out of memory? For now we just panic a bit in debug */
-      ASSERT(UserMsg);
-      UserMsg->FreeLParam = FALSE;
-      UserMsg->Msg = Msg;
-      InsertTailList(&HardwareMessageQueueHead, &UserMsg->ListEntry);
+      if (WM_MOUSEFIRST <= Msg.message && Msg.message <= WM_MOUSELAST)
+        {
+          MSLLHOOKSTRUCT MouseHookData;
+
+          MouseHookData.pt.x = GET_X_LPARAM(Msg.lParam); 
+          MouseHookData.pt.y = GET_Y_LPARAM(Msg.lParam); 
+          switch(Msg.message)
+            {
+              case WM_MOUSEWHEEL:
+                MouseHookData.mouseData = MAKELONG(0, GET_WHEEL_DELTA_WPARAM(Msg.wParam));
+                break;
+              case WM_XBUTTONDOWN:
+              case WM_XBUTTONUP:
+              case WM_XBUTTONDBLCLK:
+              case WM_NCXBUTTONDOWN:
+              case WM_NCXBUTTONUP:
+              case WM_NCXBUTTONDBLCLK:
+                MouseHookData.mouseData = MAKELONG(0, HIWORD(Msg.wParam));
+                break;
+              default:
+                MouseHookData.mouseData = 0;
+                break;
+            }
+          MouseHookData.flags = 0;
+          MouseHookData.time = Msg.time;
+          MouseHookData.dwExtraInfo = 0;
+          ProcessMessage = (0 == HOOK_CallHooks(WH_MOUSE_LL, HC_ACTION,
+                                                Msg.message, (LPARAM) &MouseHookData));
+        }
+      else
+        {
+          ProcessMessage = TRUE;
+        }
+      if (ProcessMessage)
+        {
+          UserMsg = ExAllocateFromPagedLookasideList(&MessageLookasideList);
+          /* What to do if out of memory? For now we just panic a bit in debug */
+          ASSERT(UserMsg);
+          UserMsg->FreeLParam = FALSE;
+          UserMsg->Msg = Msg;
+          InsertTailList(&HardwareMessageQueueHead, &UserMsg->ListEntry);
+        }
       IntLockSystemMessageQueue(OldIrql);
     }
   /*
@@ -618,6 +655,7 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
   PUSER_MESSAGE_QUEUE FocusMessageQueue;
   MSG Msg;
   LARGE_INTEGER LargeTickCount;
+  KBDLLHOOKSTRUCT KbdHookData;
 
   DPRINT("MsqPostKeyboardMessage(uMsg 0x%x, wParam 0x%x, lParam 0x%x)\n",
     uMsg, wParam, lParam);
@@ -631,6 +669,20 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
   Msg.time = LargeTickCount.u.LowPart;
   /* We can't get the Msg.pt point here since we don't know thread
      (and thus the window station) the message will end up in yet. */
+
+  KbdHookData.vkCode = Msg.wParam;
+  KbdHookData.scanCode = (Msg.lParam >> 16) & 0xff;
+  KbdHookData.flags = (0 == (Msg.lParam & 0x01000000) ? 0 : LLKHF_EXTENDED) |
+                      (0 == (Msg.lParam & 0x20000000) ? 0 : LLKHF_ALTDOWN) |
+                      (0 == (Msg.lParam & 0x80000000) ? 0 : LLKHF_UP);
+  KbdHookData.time = Msg.time;
+  KbdHookData.dwExtraInfo = 0;
+  if (HOOK_CallHooks(WH_KEYBOARD_LL, HC_ACTION, Msg.message, (LPARAM) &KbdHookData))
+    {
+      DPRINT("Kbd msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
+             Msg.message, Msg.wParam, Msg.lParam);
+      return;
+    }
 
   FocusMessageQueue = IntGetFocusMessageQueue();
   if( !IntGetScreenDC() ) {
@@ -793,11 +845,21 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
 
   IntUnLockMessageQueue(MessageQueue);
 
-  /* Call the window procedure. */
-  Result = IntSendMessage(Message->Msg.hwnd,
-                          Message->Msg.message,
-                          Message->Msg.wParam,
-                          Message->Msg.lParam);
+  if (Message->HookMessage)
+    {
+      Result = HOOK_CallHooks(Message->Msg.message,
+                              (INT) Message->Msg.hwnd,
+                              Message->Msg.wParam,
+                              Message->Msg.lParam);
+    }
+  else
+    {
+      /* Call the window procedure. */
+      Result = IntSendMessage(Message->Msg.hwnd,
+                              Message->Msg.message,
+                              Message->Msg.wParam,
+                              Message->Msg.lParam);
+    }
 
   /* remove the message from the local dispatching list, because it doesn't need
      to be cleaned up on thread termination anymore */
@@ -957,7 +1019,8 @@ MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 NTSTATUS FASTCALL
 MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 	       HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam,
-               UINT uTimeout, BOOL Block, ULONG_PTR *uResult)
+               UINT uTimeout, BOOL Block, BOOL HookMessage,
+               ULONG_PTR *uResult)
 {
   PUSER_SENT_MESSAGE Message;
   KEVENT CompletionEvent;
@@ -992,6 +1055,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   Message->SenderQueue = ThreadQueue;
   IntReferenceMessageQueue(ThreadQueue);
   Message->CompletionCallback = NULL;
+  Message->HookMessage = HookMessage;
 
   IntReferenceMessageQueue(MessageQueue);
 

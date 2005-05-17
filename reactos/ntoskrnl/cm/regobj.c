@@ -263,35 +263,6 @@ CmiObjectParse(PVOID ParsedObject,
   return(STATUS_SUCCESS);
 }
 
-
-NTSTATUS STDCALL
-CmiObjectCreate(PVOID ObjectBody,
-		PVOID Parent,
-		PWSTR RemainingPath,
-		POBJECT_ATTRIBUTES ObjectAttributes)
-{
-  PKEY_OBJECT KeyObject = ObjectBody;
-  PWSTR Start;
-
-  KeyObject->ParentKey = Parent;
-  if (RemainingPath)
-    {
-      Start = RemainingPath;
-      if(*Start == L'\\')
-	Start++;
-      RtlpCreateUnicodeString(&KeyObject->Name,
-              Start, NonPagedPool);
-    }
-   else
-    {
-      RtlInitUnicodeString(&KeyObject->Name,
-			   NULL);
-    }
-
-  return STATUS_SUCCESS;
-}
-
-
 VOID STDCALL
 CmiObjectDelete(PVOID DeletedObject)
 {

@@ -18,11 +18,18 @@
 #define TAG_DEVICE_TYPE     TAG('D', 'E', 'V', 'T')
 #define TAG_FILE_TYPE       TAG('F', 'I', 'L', 'E')
 #define TAG_ADAPTER_TYPE    TAG('A', 'D', 'P', 'T')
+#define IO_LARGEIRP         TAG('I', 'r', 'p', 'l')
+#define IO_SMALLIRP         TAG('I', 'r', 'p', 's')
+#define IO_LARGEIRP_CPU     TAG('I', 'r', 'p', 'L')
+#define IO_SMALLIRP_CPU     TAG('I', 'r', 'p', 'S')
+#define IOC_TAG             TAG('I', 'p', 'c', ' ')
+#define IOC_CPU             TAG('I', 'p', 'c', 'P')
 
 /* DATA ********************************************************************/
 
 POBJECT_TYPE EXPORTED IoDeviceObjectType = NULL;
 POBJECT_TYPE EXPORTED IoFileObjectType = NULL;
+extern POBJECT_TYPE IoControllerObjectType;
 ULONG        EXPORTED IoReadOperationCount = 0;
 ULONGLONG    EXPORTED IoReadTransferCount = 0;
 ULONG        EXPORTED IoWriteOperationCount = 0;
@@ -40,9 +47,12 @@ GENERIC_MAPPING IopFileMapping = {
 static KSPIN_LOCK CancelSpinLock;
 extern LIST_ENTRY ShutdownListHead;
 extern KSPIN_LOCK ShutdownListLock;
+extern NPAGED_LOOKASIDE_LIST IoCompletionPacketLookaside;
+NPAGED_LOOKASIDE_LIST IoLargeIrpLookaside;
+NPAGED_LOOKASIDE_LIST IoSmallIrpLookaside;
 
 /* INIT FUNCTIONS ************************************************************/
-
+                                
 VOID
 INIT_FUNCTION
 IoInitCancelHandling(VOID)
@@ -60,85 +70,165 @@ IoInitShutdownNotification (VOID)
 
 VOID
 INIT_FUNCTION
+IopInitLookasideLists(VOID)
+{
+    ULONG LargeIrpSize, SmallIrpSize;
+    ULONG i;
+    PKPRCB Prcb;
+    PNPAGED_LOOKASIDE_LIST CurrentList = NULL;
+    
+    /* Calculate the sizes */
+    LargeIrpSize = sizeof(IRP) + (8 * sizeof(IO_STACK_LOCATION));
+    SmallIrpSize = sizeof(IRP) + sizeof(IO_STACK_LOCATION);
+    
+    /* Initialize the Lookaside List for Large IRPs */
+    ExInitializeNPagedLookasideList(&IoLargeIrpLookaside,
+                                    NULL,
+                                    NULL,
+                                    0,
+                                    LargeIrpSize,
+                                    IO_LARGEIRP,
+                                    0);
+                                    
+    /* Initialize the Lookaside List for Small IRPs */
+    ExInitializeNPagedLookasideList(&IoSmallIrpLookaside,
+                                    NULL,
+                                    NULL,
+                                    0,
+                                    SmallIrpSize,
+                                    IO_SMALLIRP,
+                                    0);
+
+    /* Initialize the Lookaside List for I\O Completion */
+    ExInitializeNPagedLookasideList(&IoCompletionPacketLookaside,
+                                    NULL,
+                                    NULL,
+                                    0,
+                                    sizeof(IO_COMPLETION_PACKET),
+                                    IOC_TAG,
+                                    0);
+                                    
+    /* Now allocate the per-processor lists */
+    for (i = 0; i < KeNumberProcessors; i++)
+    {
+        /* Get the PRCB for this CPU */
+        Prcb = ((PKPCR)(KPCR_BASE + i * PAGE_SIZE))->Prcb;
+        DPRINT1("Setting up lookaside for CPU: %x, PRCB: %p\n", i, Prcb);
+        
+        /* Set the Large IRP List */
+        Prcb->PPLookasideList[LookasideLargeIrpList].L = &IoLargeIrpLookaside.L;
+        CurrentList = ExAllocatePoolWithTag(NonPagedPool,
+                                            sizeof(NPAGED_LOOKASIDE_LIST),
+                                            IO_LARGEIRP_CPU);
+        if (CurrentList)
+        {
+            /* Initialize the Lookaside List for Large IRPs */
+            ExInitializeNPagedLookasideList(CurrentList,
+                                            NULL,
+                                            NULL,
+                                            0,
+                                            LargeIrpSize,
+                                            IO_LARGEIRP_CPU,
+                                            0);
+        }
+        else
+        {
+            CurrentList = &IoLargeIrpLookaside;
+        }
+        Prcb->PPLookasideList[LookasideLargeIrpList].P = &CurrentList->L;
+        
+        /* Set the Small IRP List */
+        Prcb->PPLookasideList[LookasideSmallIrpList].L = &IoSmallIrpLookaside.L;
+        CurrentList = ExAllocatePoolWithTag(NonPagedPool,
+                                            sizeof(NPAGED_LOOKASIDE_LIST),
+                                            IO_SMALLIRP_CPU);
+        if (CurrentList)
+        {
+            /* Initialize the Lookaside List for Large IRPs */
+            ExInitializeNPagedLookasideList(CurrentList,
+                                            NULL,
+                                            NULL,
+                                            0,
+                                            SmallIrpSize,
+                                            IO_SMALLIRP_CPU,
+                                            0);
+        }
+        else
+        {
+            CurrentList = &IoSmallIrpLookaside;
+        }
+        Prcb->PPLookasideList[LookasideSmallIrpList].P = &CurrentList->L;
+        
+        /* Set the I/O Completion List */
+        Prcb->PPLookasideList[LookasideCompletionList].L = &IoCompletionPacketLookaside.L;
+        CurrentList = ExAllocatePoolWithTag(NonPagedPool,
+                                            sizeof(NPAGED_LOOKASIDE_LIST),
+                                            IO_SMALLIRP_CPU);
+        if (CurrentList)
+        {
+            /* Initialize the Lookaside List for Large IRPs */
+            ExInitializeNPagedLookasideList(CurrentList,
+                                            NULL,
+                                            NULL,
+                                            0,
+                                            SmallIrpSize,
+                                            IOC_CPU,
+                                            0);
+        }
+        else
+        {
+            CurrentList = &IoCompletionPacketLookaside;
+        }
+        Prcb->PPLookasideList[LookasideCompletionList].P = &CurrentList->L;
+    }
+    
+    DPRINT1("Done allocation\n");
+}
+
+VOID
+INIT_FUNCTION
 IoInit (VOID)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING DirName;
-  UNICODE_STRING LinkName;
-  HANDLE Handle;
+    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
+    UNICODE_STRING Name;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING DirName;
+    UNICODE_STRING LinkName;
+    HANDLE Handle;
 
-  IopInitDriverImplementation();
+    IopInitDriverImplementation();
 
-  /*
-   * Register iomgr types: DeviceObjectType
-   */
-  IoDeviceObjectType = ExAllocatePool (NonPagedPool,
-				       sizeof (OBJECT_TYPE));
-
-  IoDeviceObjectType->Tag = TAG_DEVICE_TYPE;
-  IoDeviceObjectType->TotalObjects = 0;
-  IoDeviceObjectType->TotalHandles = 0;
-  IoDeviceObjectType->PeakObjects = 0;
-  IoDeviceObjectType->PeakHandles = 0;
-  IoDeviceObjectType->PagedPoolCharge = 0;
-  IoDeviceObjectType->NonpagedPoolCharge = sizeof (DEVICE_OBJECT);
-  IoDeviceObjectType->Mapping = &IopFileMapping;
-  IoDeviceObjectType->Dump = NULL;
-  IoDeviceObjectType->Open = NULL;
-  IoDeviceObjectType->Close = NULL;
-  IoDeviceObjectType->Delete = NULL;
-  IoDeviceObjectType->Parse = NULL;
-  IoDeviceObjectType->Security = NULL;
-  IoDeviceObjectType->QueryName = NULL;
-  IoDeviceObjectType->OkayToClose = NULL;
-  IoDeviceObjectType->Create = NULL;
-  IoDeviceObjectType->DuplicationNotify = NULL;
-
-  RtlInitUnicodeString(&IoDeviceObjectType->TypeName, L"Device");
-
-  ObpCreateTypeObject(IoDeviceObjectType);
-
-  /*
-   * Register iomgr types: FileObjectType
-   * (alias DriverObjectType)
-   */
-  IoFileObjectType = ExAllocatePool (NonPagedPool, sizeof (OBJECT_TYPE));
-
-  IoFileObjectType->Tag = TAG_FILE_TYPE;
-  IoFileObjectType->TotalObjects = 0;
-  IoFileObjectType->TotalHandles = 0;
-  IoFileObjectType->PeakObjects = 0;
-  IoFileObjectType->PeakHandles = 0;
-  IoFileObjectType->PagedPoolCharge = 0;
-  IoFileObjectType->NonpagedPoolCharge = sizeof(FILE_OBJECT);
-  IoFileObjectType->Mapping = &IopFileMapping;
-  IoFileObjectType->Dump = NULL;
-  IoFileObjectType->Open = NULL;
-  IoFileObjectType->Close = IopCloseFile;
-  IoFileObjectType->Delete = IopDeleteFile;
-  IoFileObjectType->Parse = NULL;
-  IoFileObjectType->Security = IopSecurityFile;
-  IoFileObjectType->QueryName = IopQueryNameFile;
-  IoFileObjectType->OkayToClose = NULL;
-  IoFileObjectType->Create = IopCreateFile;
-  IoFileObjectType->DuplicationNotify = NULL;
-
-  RtlInitUnicodeString(&IoFileObjectType->TypeName, L"File");
-
-  ObpCreateTypeObject(IoFileObjectType);
-
-    /*
-   * Register iomgr types: AdapterObjectType
-   */
-  IoAdapterObjectType = ExAllocatePool (NonPagedPool,
-				       sizeof (OBJECT_TYPE));
-  RtlZeroMemory(IoAdapterObjectType, sizeof(OBJECT_TYPE));
-  IoAdapterObjectType->Tag = TAG_ADAPTER_TYPE;
-  IoAdapterObjectType->PeakObjects = 0;
-  IoAdapterObjectType->PeakHandles = 0;
-  IoDeviceObjectType->Mapping = &IopFileMapping;
-  RtlInitUnicodeString(&IoAdapterObjectType->TypeName, L"Adapter");
-  ObpCreateTypeObject(IoAdapterObjectType);
+    DPRINT1("Creating Device Object Type\n");
+  
+    /* Initialize the Driver object type  */
+    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+    RtlInitUnicodeString(&Name, L"Device");
+    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(DEVICE_OBJECT);
+    ObjectTypeInitializer.PoolType = NonPagedPool;
+    ObjectTypeInitializer.ValidAccessMask = FILE_ALL_ACCESS;
+    ObjectTypeInitializer.UseDefaultObject = TRUE;
+    ObjectTypeInitializer.GenericMapping = IopFileMapping;
+    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &IoDeviceObjectType);
+    
+    /* Do the Adapter Type */
+    RtlInitUnicodeString(&Name, L"Adapter");
+    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &IoAdapterObjectType);
+    
+    /* Do the Controller Type */
+    RtlInitUnicodeString(&Name, L"Controller");
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(CONTROLLER_OBJECT);
+    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &IoControllerObjectType);    
+    
+    /* Initialize the File object type  */
+    RtlInitUnicodeString(&Name, L"File");
+    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(FILE_OBJECT);
+    ObjectTypeInitializer.CloseProcedure = IopCloseFile;
+    ObjectTypeInitializer.DeleteProcedure = IopDeleteFile;
+    ObjectTypeInitializer.SecurityProcedure = IopSecurityFile;
+    ObjectTypeInitializer.QueryNameProcedure = IopQueryNameFile;
+    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &IoFileObjectType);
 
   /*
    * Create the '\Driver' object directory
@@ -220,6 +310,7 @@ IoInit (VOID)
   IopInitErrorLog();
   IopInitTimerImplementation();
   IopInitIoCompletionImplementation();
+  IopInitLookasideLists();
 
   /*
    * Create link from '\DosDevices' to '\??' directory
@@ -236,7 +327,7 @@ IoInit (VOID)
    */
   PnpInit();
 }
-
+                                   
 VOID
 INIT_FUNCTION
 IoInit2(BOOLEAN BootLog)
@@ -280,6 +371,14 @@ IoInit2(BOOLEAN BootLog)
     }
 
   Status = IopInitializeDevice(DeviceNode, DriverObject);
+  if (!NT_SUCCESS(Status))
+    {
+      IopFreeDeviceNode(DeviceNode);
+      CPRINT("IopInitializeDevice() failed with status (%x)\n", Status);
+      return;
+    }
+
+  Status = IopStartDevice(DeviceNode);
   if (!NT_SUCCESS(Status))
     {
       IopFreeDeviceNode(DeviceNode);
