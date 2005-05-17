@@ -7,7 +7,7 @@
  * PROGRAMMER:      Ariadne (ariadne@xs4all.nl)
  * UPDATE HISTORY:
  *                  01/11/98 Created
- *                  07/02/99 Moved to seperate file 
+ *                  07/02/99 Moved to seperate file
  */
 
 /* INCLUDES ****************************************************************/
@@ -53,7 +53,7 @@ CopyLoop (
      {
 	BytesCopied.QuadPart = 0;
 	EndOfFileFound = FALSE;
-	CallbackReason = CALLBACK_STREAM_SWITCH; 
+	CallbackReason = CALLBACK_STREAM_SWITCH;
 	while (! EndOfFileFound &&
 	       NT_SUCCESS(errCode) &&
 	       (NULL == pbCancel || ! *pbCancel))

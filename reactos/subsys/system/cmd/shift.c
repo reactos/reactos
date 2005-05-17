@@ -18,9 +18,13 @@
  *
  *    20-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Unicode and redirection safe!
+ *
+ *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 
 /*
@@ -30,18 +34,19 @@
  *
  * FREEDOS extension : optional parameter DOWN to allow shifting
  *   parameters backwards.
+ *
  */
 
 INT cmd_shift (LPTSTR cmd, LPTSTR param)
 {
+
 #ifdef _DEBUG
 	DebugPrintf (_T("cmd_shift: (\'%s\', \'%s\')\n"), cmd, param);
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Changes the position of replaceable parameters in a batch file.\n\n"
-					   "SHIFT [DOWN]"));
+		ConOutResPuts(STRING_SHIFT_HELP);
 		return 0;
 	}
 
@@ -61,3 +66,5 @@ INT cmd_shift (LPTSTR cmd, LPTSTR param)
 
 	return 0;
 }
+
+/* EOF */

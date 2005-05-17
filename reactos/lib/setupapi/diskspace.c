@@ -58,7 +58,7 @@ HDSKSPC WINAPI SetupCreateDiskSpaceListW(PVOID Reserved1, DWORD Reserved2, UINT 
     if (rc == 0)
         return NULL;
 
-    list = (LPDISKSPACELIST)HeapAlloc(GetProcessHeap(),0,sizeof(DISKSPACELIST));
+    list = HeapAlloc(GetProcessHeap(),0,sizeof(DISKSPACELIST));
 
     list->dwDriveCount = 0;
     

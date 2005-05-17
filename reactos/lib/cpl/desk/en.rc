@@ -24,8 +24,32 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Screen Saver"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "This space is intentionally left blank",IDC_STATIC,66,
-                    110,112,8
+    GROUPBOX        "&Screen Saver",IDC_SCREENS_DUMMY, 5, 7, 238, 176
+    
+    LTEXT           "List of Screensavers:",IDC_STATIC,13, 24, 71, 9
+    CONTROL         "",IDC_SCREENS_CHOICES,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
+                    WS_BORDER | WS_TABSTOP,13, 34, 171, 109
+    PUSHBUTTON      "&Delete",IDC_SCREENS_DELETE, 189,47,39,10
+    PUSHBUTTON      "&Add",IDC_SCREENS_POWER_BUTTON,    190,34,39,10
+
+    PUSHBUTTON      "Se&ttings...",IDC_SCREENS_SETTINGS,140, 164, 48, 12,WS_GROUP
+    PUSHBUTTON      "Pre&view",IDC_SCREENS_TESTSC,192, 164, 43, 12
+
+    CONTROL         "On Resume, &Password Protect.",IDC_SCREENS_USEPASSCHK,"button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13, 161, 119, 18
+
+    LTEXT           "&Wait:",IDC_STATIC,13, 150, 17, 9
+    EDITTEXT        IDC_SCREENS_TIMEDELAY,33, 149, 31, 12,ES_RIGHT | WS_GROUP
+    CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
+                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
+                    WS_BORDER | WS_GROUP,52, 149, 12, 12
+    LTEXT           "Minutes before showing Screensaver.",IDC_STATIC,70, 151, 147, 9
+
+    GROUPBOX        "&Energy Saving features of monitor",IDC_SCREENS_DUMMY,5, 186, 238, 35
+    LTEXT           "To adjust the power settings for your monitor, click on Power Settings.",
+                    IDC_STATIC,16, 199, 155, 19
+    PUSHBUTTON      "P&ower Settings",IDC_SCREENS_POWER_BUTTON,180, 202, 57, 12
 END
 
 IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 228

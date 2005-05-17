@@ -21,6 +21,7 @@ NTSTATUS NTAPI RtlOemStringToUnicodeString(PUNICODE_STRING, CONST STRING *, BOOL
 NTSTATUS NTAPI RtlDowncaseUnicodeString(PUNICODE_STRING, PCUNICODE_STRING, BOOLEAN);
 NTSTATUS NTAPI RtlUnicodeStringToOemString(POEM_STRING, PCUNICODE_STRING, BOOLEAN);
 #undef DeleteFile /* FIXME */
+#define VOLUME_IS_DIRTY 0x00000001 /* FIXME */
 #endif
 
 #ifdef USE_ROS_CC_AND_FS
@@ -201,6 +202,8 @@ typedef union _DIR_ENTRY DIR_ENTRY, *PDIR_ENTRY;
 #define VCB_VOLUME_LOCKED       0x0001
 #define VCB_DISMOUNT_PENDING    0x0002
 #define VCB_IS_FATX             0x0004
+#define VCB_IS_DIRTY            0x4000 /* Volume is dirty */
+#define VCB_CLEAR_DIRTY         0x8000 /* Clean dirty flag at shutdown */
 
 typedef struct
 {
@@ -258,17 +261,18 @@ typedef struct DEVICE_EXTENSION
   ULONG LastAvailableCluster;
   ULONG AvailableClusters;
   BOOLEAN AvailableClustersValid;
-  ULONG Flags;  
+  ULONG Flags;
   struct _VFATFCB * VolumeFcb;
 
   /* Pointers to functions for manipulating FAT. */
   PGET_NEXT_CLUSTER GetNextCluster;
   PFIND_AND_MARK_AVAILABLE_CLUSTER FindAndMarkAvailableCluster;
   PWRITE_CLUSTER WriteCluster;
-  
+  ULONG CleanShutBitMask;
+
   /* Pointers to functions for manipulating directory entries. */
   PGET_NEXT_DIR_ENTRY GetNextDirEntry;
-  
+
   ULONG BaseDateYear;
 
   LIST_ENTRY VolumeListEntry;
@@ -309,7 +313,7 @@ typedef struct _VFATFCB
 
   /* directory entry for this file or directory */
   DIR_ENTRY entry;
-  
+
   /* Pointer to attributes in entry */
   PUCHAR Attributes;
 
@@ -554,7 +558,7 @@ NTSTATUS VfatQueryInformation (PVFAT_IRP_CONTEXT IrpContext);
 NTSTATUS VfatSetInformation (PVFAT_IRP_CONTEXT IrpContext);
 
 NTSTATUS
-VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject, 
+VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
 				 PVFATFCB Fcb,
 				 PDEVICE_EXTENSION DeviceExt,
 				 PLARGE_INTEGER AllocationSize);
@@ -586,8 +590,8 @@ vfatFindDirSpace(PDEVICE_EXTENSION DeviceExt,
 /*  --------------------------------------------------------  string.c  */
 
 VOID
-vfatSplitPathName(PUNICODE_STRING PathNameU, 
-		  PUNICODE_STRING DirNameU, 
+vfatSplitPathName(PUNICODE_STRING PathNameU,
+		  PUNICODE_STRING DirNameU,
 		  PUNICODE_STRING FileNameU);
 
 BOOLEAN vfatIsLongIllegal(WCHAR c);
@@ -753,8 +757,8 @@ PVOID VfatGetUserBuffer(IN PIRP);
 NTSTATUS VfatLockUserBuffer(IN PIRP, IN ULONG,
                             IN LOCK_OPERATION);
 
-NTSTATUS 
-VfatSetExtendedAttributes(PFILE_OBJECT FileObject, 
+NTSTATUS
+VfatSetExtendedAttributes(PFILE_OBJECT FileObject,
 			  PVOID Ea,
 			  ULONG EaLength);
 /*  ------------------------------------------------------------- flush.c  */

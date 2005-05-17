@@ -1625,25 +1625,25 @@ MSFT_DoFuncs(TLBContext*     pcx,
      * member information is stored in a data structure at offset
      * indicated by the memoffset field of the typeinfo structure
      * There are several distinctive parts.
-     * the first part starts with a field that holds the total length
+     * The first part starts with a field that holds the total length
      * of this (first) part excluding this field. Then follow the records,
      * for each member there is one record.
      *
-     * First entry is always the length of the record (including this
+     * The first entry is always the length of the record (including this
      * length word).
-     * Rest of the record depends on the type of the member. If there is
-     * a field indicating the member type (function variable intereface etc)
+     * The rest of the record depends on the type of the member. If there is
+     * a field indicating the member type (function, variable, interface, etc)
      * I have not found it yet. At this time we depend on the information
      * in the type info and the usual order how things are stored.
      *
-     * Second follows an array sized nrMEM*sizeof(INT) with a memeber id
+     * Second follows an array sized nrMEM*sizeof(INT) with a member id
      * for each member;
      *
-     * Third is a equal sized array with file offsets to the name entry
+     * Third is an equal sized array with file offsets to the name entry
      * of each member.
      *
-     * Forth and last (?) part is an array with offsets to the records in the
-     * first part of this file segment.
+     * The fourth and last (?) part is an array with offsets to the records
+     * in the first part of this file segment.
      */
 
     int infolen, nameoffset, reclength, nrattributes, i;
@@ -4516,7 +4516,6 @@ _copy_arg(	ITypeInfo2 *tinfo, TYPEDESC *tdesc,
 		DWORD *argpos, VARIANT *arg, VARTYPE vt
 ) {
     UINT arglen = _argsize(vt)*sizeof(DWORD);
-    VARTYPE	oldvt;
     VARIANT	va;
 
     if ((vt==VT_PTR) && tdesc && (tdesc->u.lptdesc->vt == VT_VARIANT)) {
@@ -4650,7 +4649,6 @@ _copy_arg(	ITypeInfo2 *tinfo, TYPEDESC *tdesc,
 	return hres;
     }
 
-    oldvt = V_VT(arg);
     VariantInit(&va);
     if (VariantChangeType(&va,arg,0,vt)==S_OK) {
 	memcpy(argpos,&V_I4(&va), arglen);
@@ -4687,7 +4685,7 @@ DispCallFunc(
 	dump_Variant(prgpvarg[i]);
 	argsize += _argsize(prgvt[i]);
     }
-    args = (DWORD*)HeapAlloc(GetProcessHeap(),0,sizeof(DWORD)*argsize);
+    args = HeapAlloc(GetProcessHeap(),0,sizeof(DWORD)*argsize);
     args[0] = (DWORD)pvInstance;      /* this is the fake IDispatch interface pointer */
     argspos = 1;
     for (i=0;i<cActuals;i++) {
@@ -4760,8 +4758,8 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
 		}
 	    }
 
-	    args = (DWORD*)HeapAlloc(GetProcessHeap(),0,sizeof(DWORD)*numargs);
-	    args2 = (DWORD*)HeapAlloc(GetProcessHeap(),0,sizeof(DWORD)*numargs2);
+	    args = HeapAlloc(GetProcessHeap(),0,sizeof(DWORD)*numargs);
+	    args2 = HeapAlloc(GetProcessHeap(),0,sizeof(DWORD)*numargs2);
 
 	    args[0] = (DWORD)pIUnk;
 	    argspos = 1; args2pos = 0;

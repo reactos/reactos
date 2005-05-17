@@ -52,7 +52,7 @@ void UnixTimeToFileTime( time_t unix_time, FILETIME *filetime,
 {
     /* NOTES:
 
-       CONSTANTS: 
+       CONSTANTS:
        The time difference between 1 January 1601, 00:00:00 and
        1 January 1970, 00:00:00 is 369 years, plus the leap years
        from 1604 to 1968, excluding 1700, 1800, 1900.
@@ -79,7 +79,7 @@ void UnixTimeToFileTime( time_t unix_time, FILETIME *filetime,
        will run.
 
        DETAILS:
-       
+
        Take care not to remove the casts. I have tested these functions
        (in both versions) for a lot of numbers. I would be interested in
        results on other compilers than GCC.
@@ -176,7 +176,7 @@ time_t FileTimeToUnixTime( const FILETIME *filetime, DWORD *remainder )
     else                        a1 += (1 << 16) - 54590 - carry, carry = 1;
 
     a2 -= 27111902 + carry;
-    
+
     /* If a is negative, replace a by (-1-a) */
     negative = (a2 >= ((unsigned long)1) << 31);
     if (negative)

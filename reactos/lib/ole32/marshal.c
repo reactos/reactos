@@ -86,7 +86,7 @@ get_facbuf_for_iid(REFIID riid,IPSFactoryBuffer **facbuf) {
 }
 
 /* creates a new stub manager */
-HRESULT register_ifstub(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnknown *obj, MSHLFLAGS mshlflags)
+HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnknown *obj, MSHLFLAGS mshlflags)
 {
     struct stub_manager *manager;
     struct ifstub       *ifstub;
@@ -94,6 +94,10 @@ HRESULT register_ifstub(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnkn
     IRpcStubBuffer      *stub;
     IPSFactoryBuffer    *psfb;
     HRESULT              hr;
+
+    hr = apartment_getoxid(apt, &stdobjref->oxid);
+    if (hr != S_OK)
+        return hr;
 
     hr = get_facbuf_for_iid(riid, &psfb);
     if (hr != S_OK)
@@ -115,8 +119,6 @@ HRESULT register_ifstub(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnkn
     else
         stdobjref->flags = SORF_NULL;
 
-    stdobjref->oxid = apt->oxid;
-
     /* FIXME: what happens if we register an interface twice with different
      * marshaling flags? */
     if ((manager = get_stub_manager_from_object(apt, obj)))
@@ -127,7 +129,10 @@ HRESULT register_ifstub(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnkn
 
         manager = new_stub_manager(apt, obj, mshlflags);
         if (!manager)
+        {
+            IRpcStubBuffer_Release(stub);
             return E_OUTOFMEMORY;
+        }
     }
     stdobjref->oid = manager->oid;
 
@@ -309,10 +314,13 @@ static const IMultiQIVtbl ClientIdentity_Vtbl =
 static HRESULT ifproxy_get_public_ref(struct ifproxy * This)
 {
     HRESULT hr = S_OK;
-    /* FIXME: as this call could possibly be going over the network, we
-     * are going to spend a long time in this CS. We might want to replace
-     * this with a mutex */
-    EnterCriticalSection(&This->parent->cs);
+
+    if (WAIT_OBJECT_0 != WaitForSingleObject(This->parent->remoting_mutex, INFINITE))
+    {
+        ERR("Wait failed for ifproxy %p\n", This);
+        return E_UNEXPECTED;
+    }
+
     if (This->refs == 0)
     {
         IRemUnknown *remunk = NULL;
@@ -334,7 +342,7 @@ static HRESULT ifproxy_get_public_ref(struct ifproxy * This)
                 ERR("IRemUnknown_RemAddRef returned with 0x%08lx, hrref = 0x%08lx\n", hr, hrref);
         }
     }
-    LeaveCriticalSection(&This->parent->cs);
+    ReleaseMutex(This->parent->remoting_mutex);
 
     return hr;
 }
@@ -343,10 +351,12 @@ static HRESULT ifproxy_release_public_refs(struct ifproxy * This)
 {
     HRESULT hr = S_OK;
 
-    /* FIXME: as this call could possibly be going over the network, we
-     * are going to spend a long time in this CS. We might want to replace
-     * this with a mutex */
-    EnterCriticalSection(&This->parent->cs);
+    if (WAIT_OBJECT_0 != WaitForSingleObject(This->parent->remoting_mutex, INFINITE))
+    {
+        ERR("Wait failed for ifproxy %p\n", This);
+        return E_UNEXPECTED;
+    }
+
     if (This->refs > 0)
     {
         IRemUnknown *remunk = NULL;
@@ -372,7 +382,7 @@ static HRESULT ifproxy_release_public_refs(struct ifproxy * This)
                 ERR("IRemUnknown_RemRelease failed with error 0x%08lx\n", hr);
         }
     }
-    LeaveCriticalSection(&This->parent->cs);
+    ReleaseMutex(This->parent->remoting_mutex);
 
     return hr;
 }
@@ -418,12 +428,20 @@ static HRESULT proxy_manager_construct(
     struct proxy_manager * This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
     if (!This) return E_OUTOFMEMORY;
 
+    This->remoting_mutex = CreateMutexW(NULL, FALSE, NULL);
+    if (!This->remoting_mutex)
+    {
+        HeapFree(GetProcessHeap(), 0, This);
+        return HRESULT_FROM_WIN32(GetLastError());
+    }
+
     This->lpVtbl = &ClientIdentity_Vtbl;
 
     list_init(&This->entry);
     list_init(&This->interfaces);
 
     InitializeCriticalSection(&This->cs);
+    DEBUG_SET_CRITSEC_NAME(&This->cs, "proxy_manager");
 
     /* the apartment the object was unmarshaled into */
     This->parent = apt;
@@ -436,7 +454,7 @@ static HRESULT proxy_manager_construct(
 
     /* the DCOM draft specification states that the SORF_NOPING flag is
      * proxy manager specific, not ifproxy specific, so this implies that we
-     * should store the STDOBJREF flags in the proxy manager. */
+     * should store the STDOBJREF flags here in the proxy manager. */
     This->sorflags = sorflags;
 
     /* we create the IRemUnknown proxy on demand */
@@ -683,7 +701,10 @@ static void proxy_manager_destroy(struct proxy_manager * This)
 
     if (This->remunk) IRemUnknown_Release(This->remunk);
 
+    DEBUG_CLEAR_CRITSEC_NAME(&This->cs);
     DeleteCriticalSection(&This->cs);
+
+    CloseHandle(This->remoting_mutex);
 
     HeapFree(GetProcessHeap(), 0, This);
 }
@@ -712,17 +733,15 @@ static BOOL find_proxy_manager(APARTMENT * apt, OXID oxid, OID oid, struct proxy
     return found;
 }
 
-HRESULT MARSHAL_Disconnect_Proxies(APARTMENT *apt)
+HRESULT apartment_disconnectproxies(struct apartment *apt)
 {
     struct list * cursor;
 
-    EnterCriticalSection(&apt->cs);
     LIST_FOR_EACH(cursor, &apt->proxies)
     {
         struct proxy_manager * proxy = LIST_ENTRY(cursor, struct proxy_manager, entry);
         proxy_manager_disconnect(proxy);
     }
-    LeaveCriticalSection(&apt->cs);
 
     return S_OK;
 }
@@ -813,7 +832,7 @@ StdMarshalImpl_MarshalInterface(
       return E_NOINTERFACE;
   }
 
-  hres = register_ifstub(apt, &stdobjref, riid, pUnk, mshlflags);
+  hres = marshal_object(apt, &stdobjref, riid, pUnk, mshlflags);
   
   IUnknown_Release(pUnk);
   
@@ -894,6 +913,7 @@ StdMarshalImpl_UnmarshalInterface(LPMARSHAL iface, IStream *pStm, REFIID riid, v
   HRESULT		hres;
   APARTMENT *apt = COM_CurrentApt();
   APARTMENT *stub_apt;
+  OXID oxid;
 
   TRACE("(...,%s,....)\n",debugstr_guid(riid));
 
@@ -907,9 +927,12 @@ StdMarshalImpl_UnmarshalInterface(LPMARSHAL iface, IStream *pStm, REFIID riid, v
   /* read STDOBJREF from wire */
   hres = IStream_Read(pStm, &stdobjref, sizeof(stdobjref), &res);
   if (hres) return hres;
-  
+
+  hres = apartment_getoxid(apt, &oxid);
+  if (hres) return hres;
+
   /* check if we're marshalling back to ourselves */
-  if ((apt->oxid == stdobjref.oxid) && (stubmgr = get_stub_manager(apt, stdobjref.oid)))
+  if ((oxid == stdobjref.oxid) && (stubmgr = get_stub_manager(apt, stdobjref.oid)))
   {
       TRACE("Unmarshalling object marshalled in same apartment for iid %s, "
             "returning original object %p\n", debugstr_guid(riid), stubmgr->object);
@@ -929,7 +952,7 @@ StdMarshalImpl_UnmarshalInterface(LPMARSHAL iface, IStream *pStm, REFIID riid, v
    * ignore table marshaling and normal marshaling rules regarding number of
    * unmarshals, etc, but if you abuse these rules then your proxy could end
    * up returning RPC_E_DISCONNECTED. */
-  if ((stub_apt = COM_ApartmentFromOXID(stdobjref.oxid, TRUE)))
+  if ((stub_apt = apartment_findfromoxid(stdobjref.oxid, TRUE)))
   {
       if ((stubmgr = get_stub_manager(stub_apt, stdobjref.oid)))
       {
@@ -946,7 +969,7 @@ StdMarshalImpl_UnmarshalInterface(LPMARSHAL iface, IStream *pStm, REFIID riid, v
           hres = CO_E_OBJNOTCONNECTED;
       }
 
-      COM_ApartmentRelease(stub_apt);
+      apartment_release(stub_apt);
   }
   else
       TRACE("Treating unmarshal from OXID %s as inter-process\n",
@@ -974,7 +997,7 @@ StdMarshalImpl_ReleaseMarshalData(LPMARSHAL iface, IStream *pStm) {
     hres = IStream_Read(pStm, &stdobjref, sizeof(stdobjref), &res);
     if (hres) return hres;
 
-    if (!(apt = COM_ApartmentFromOXID(stdobjref.oxid, TRUE)))
+    if (!(apt = apartment_findfromoxid(stdobjref.oxid, TRUE)))
     {
         WARN("Could not map OXID %s to apartment object\n",
             wine_dbgstr_longlong(stdobjref.oxid));
@@ -991,7 +1014,7 @@ StdMarshalImpl_ReleaseMarshalData(LPMARSHAL iface, IStream *pStm) {
     stub_manager_release_marshal_data(stubmgr, stdobjref.cPublicRefs);
 
     stub_manager_int_release(stubmgr);
-    COM_ApartmentRelease(apt);
+    apartment_release(apt);
 
     return S_OK;
 }

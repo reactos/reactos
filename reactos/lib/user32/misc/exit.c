@@ -43,10 +43,10 @@
  *   Execution continues in WinLogon, which calls ExitWindowsEx() again to
  *   terminate COM processes in the interactive user's session.
  * - WinLogon stops impersonating the interactive user (whos processes are
- *   all dead by now). and enters log-out state 
+ *   all dead by now). and enters log-out state
  * - If the ExitWindowsEx() request was for a logoff, WinLogon sends a SAS
  *   event (to display the "press ctrl+alt+del") to the GINA. WinLogon then
- *   waits for the GINA to send a SAS event to login. 
+ *   waits for the GINA to send a SAS event to login.
  * - If the ExitWindowsEx() request was for shutdown/restart, WinLogon calls
  *   ExitWindowsEx() again in the system process context.
  * - CSRSS goes through the motions of sending WM_QUERYENDSESSION/WM_ENDSESSION

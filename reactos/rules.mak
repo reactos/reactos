@@ -35,6 +35,11 @@ export MAKE := @$(MAKE)
 ifeq ($(VERBOSE),no)
 endif
 
+# detect msys on a Windows host as linux
+ifeq ($(OSTYPE),msys)
+export HOST=mingw32-linux
+endif
+
 # detect Windows host environment
 ifeq ($(HOST),)
 ifeq ($(word 1,$(shell gcc -dumpmachine)),mingw32)
@@ -72,10 +77,35 @@ endif
 #
 # Choose various options
 #
-ifeq ($(HOST),mingw32-linux)
+ifeq ($(HOST),mingw32-linux64)
+export HOST_TYPE = unix
 export NASM_FORMAT = win32
 export PREFIX = mingw32-
 export EXE_POSTFIX :=
+export EXE_PREFIX := ./
+export DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
+#
+# Do not change NASM_CMD to NASM because older versions of 
+# nasm doesn't like an environment variable NASM
+#
+export NASM_CMD = nasm
+export DOSCLI =
+export FLOPPY_DIR = /mnt/floppy
+export SEP := /
+export PIPE :=
+export HOST_ARCH := -m32
+endif
+
+ifeq ($(HOST),mingw32-linux)
+export HOST_TYPE = unix
+export NASM_FORMAT = win32
+ifeq ($(OSTYPE),msys)
+export PREFIX := 
+export EXE_POSTFIX := .exe
+else
+export PREFIX = mingw32-
+export EXE_POSTFIX :=
+endif
 export EXE_PREFIX := ./
 export DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
 #
@@ -132,8 +162,8 @@ endif
 
 export CC = $(Q)$(PREFIX)gcc
 export CXX = $(Q)$(PREFIX)g++
-export HOST_CC = $(Q)gcc
-export HOST_CXX = $(Q)g++
+export HOST_CC = $(Q)gcc $(HOST_ARCH)
+export HOST_CXX = $(Q)g++ $(HOST_ARCH)
 export HOST_AR = $(Q)ar
 export HOST_NM = $(Q)nm
 export LD = $(Q)$(PREFIX)ld
@@ -169,7 +199,9 @@ export MS2PS = $(Q)$(TOOLS_PATH)/ms2ps/ms2ps
 export WRC = $(Q)$(TOOLS_PATH)/wrc/wrc
 export WIDL = $(Q)$(TOOLS_PATH)/widl/widl
 
+export HOST_STD_CFLAGS = -I$(PATH_TO_TOP)/include -I$(W32API_PATH)/include -pipe -D_M_IX86 $(HOSTARCH)
 export STD_CFLAGS = -I$(PATH_TO_TOP)/include -I$(W32API_PATH)/include -pipe -march=$(OARCH) -D_M_IX86
+export HOST_STD_CPPFLAGS = $(HOST_STD_CFLAGS)
 export STD_CPPFLAGS = $(STD_CFLAGS)
 # Check for 3GB 
 ifeq ($(3GB), 1)

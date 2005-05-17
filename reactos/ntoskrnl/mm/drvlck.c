@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/drvlck.c
  * PURPOSE:         Managing driver managing
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
@@ -20,7 +20,7 @@ VOID
 MmUnlockPagableImageSection(IN PVOID ImageSectionHandle)
 /*
  * FUNCTION: Releases a section of driver code or driver data, previously
- * locked into system space with MmLockPagableCodeSection, 
+ * locked into system space with MmLockPagableCodeSection,
  * MmLockPagableDataSection or MmLockPagableSectionByHandle
  * ARGUMENTS:
  *        ImageSectionHandle = Handle returned by MmLockPagableCodeSection or
@@ -40,7 +40,7 @@ VOID STDCALL
 MmLockPagableSectionByHandle(IN PVOID ImageSectionHandle)
 {
    //  MmLockMemoryArea((MEMORY_AREA *)ImageSectionHandle);
-   UNIMPLEMENTED;
+   DPRINT1("MmLockPagableSectionByHandle is unimplemented\n");
 }
 
 
@@ -63,7 +63,8 @@ PVOID STDCALL
 MmLockPagableDataSection(IN PVOID AddressWithinSection)
 {
    PVOID Handle;
-   Handle = MmLocateMemoryAreaByAddress(NULL, AddressWithinSection);
+   Handle = MmLocateMemoryAreaByAddress(MmGetKernelAddressSpace(),
+                                        AddressWithinSection);
    MmLockPagableSectionByHandle(Handle);
    return(Handle);
 }

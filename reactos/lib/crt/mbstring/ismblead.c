@@ -2,7 +2,7 @@
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/mbstring/ismblead.c
- * PURPOSE:     Checks for a lead byte 
+ * PURPOSE:     Checks for a lead byte
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:
  *		Modified from Taiji Yamada japanese code system utilities
@@ -47,7 +47,7 @@ int _ismbblead(unsigned int c)
 //int _ismbblead(unsigned int byte)
 //{
 //
-//	return (int)IsDBCSLeadByte(byte) 
+//	return (int)IsDBCSLeadByte(byte)
 //}
 
 /*
@@ -56,11 +56,11 @@ int _ismbblead(unsigned int c)
 int _ismbslead( const unsigned char *str, const unsigned char *t)
 {
 	unsigned char *s = (unsigned char *)str;
-	while(*s != 0 && s != t) 
+	while(*s != 0 && s != t)
 	{
-		
+
 		s+= _mbclen2(*s);
-	}		
+	}
 	return _ismbblead( *s);
 }
 

@@ -8,7 +8,7 @@ int check_leased_list()
 {
   DHCPLIST *temp, *ntemp;
   int count = 1, i;
-  
+
   /*  fprintf( stdout, "checking list! \n" ); */
 
   return 0;

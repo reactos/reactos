@@ -98,7 +98,7 @@ typedef struct
     int              nb_entry_points;    /* number of used entry points */
     int              alloc_entry_points; /* number of allocated entry points */
     int              nb_names;           /* number of entry points with names */
-    int              nb_resources;       /* number of resources */
+    unsigned int     nb_resources;       /* number of resources */
     int              characteristics;    /* characteristics for the PE header */
     int              subsystem;          /* subsystem id */
     int              subsystem_major;    /* subsystem version major number */
@@ -203,6 +203,7 @@ extern int display_warnings;
 extern int kill_at;
 
 extern char *input_file_name;
+extern char *spec_file_name;
 extern const char *output_file_name;
 extern char **debug_channels;
 extern char **lib_path;

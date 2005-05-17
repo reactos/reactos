@@ -233,29 +233,29 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 	DebugPrintf (_T("SearchForExecutable(): Loaded PATHEXT: %s\n"), pszBuffer);
 #endif
 
-    	pExt = _tcsrchr(pFileName, _T('.'));
+	pExt = _tcsrchr(pFileName, _T('.'));
 	if (pExt != NULL)
 	{
-	   	LPTSTR pszBuffer2;
-       		pszBuffer2 = _tcsdup(pszBuffer);
-	   	if (pszBuffer2)
-	   	{
-	      		pCh = _tcstok(pszBuffer2, _T(";"));
-	      		while (pCh)
-		  	{
-             			if (0 == _tcsicmp(pCh, pExt))
-			 	{
+		LPTSTR pszBuffer2;
+		pszBuffer2 = _tcsdup(pszBuffer);
+		if (pszBuffer2)
+		{
+			pCh = _tcstok(pszBuffer2, _T(";"));
+			while (pCh)
+			{
+				if (0 == _tcsicmp(pCh, pExt))
+				{
 					free(pszBuffer);
 					free(pszBuffer2);
-			    		return SearchForExecutableSingle(pFileName, pFullName, NULL);
-			 	}
-		     		pCh = _tcstok(NULL, _T(";"));
-		  	}
-		  	free(pszBuffer2);
-	   	}
+					return SearchForExecutableSingle(pFileName, pFullName, NULL);
+				}
+				pCh = _tcstok(NULL, _T(";"));
+			}
+			free(pszBuffer2);
+		}
 	}
 
-    	pCh = _tcstok(pszBuffer, _T(";"));
+	pCh = _tcstok(pszBuffer, _T(";"));
 	while (pCh)
 	{
 		if (SearchForExecutableSingle(pFileName, pFullName, pCh))
@@ -269,3 +269,5 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 	free(pszBuffer);
 	return FALSE;
 }
+
+/* EOF */

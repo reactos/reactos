@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/marea.c
  * PURPOSE:         Implements memory areas
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
@@ -189,8 +189,7 @@ MmLocateMemoryAreaByAddress(
    DPRINT("MmLocateMemoryAreaByAddress(AddressSpace %p, Address %p)\n",
            AddressSpace, Address);
 
-   if (!(KdDebugState & KD_DEBUG_SCREEN))
-      MmVerifyMemoryAreas(AddressSpace);
+   MmVerifyMemoryAreas(AddressSpace);
 
    while (Node != NULL)
    {
@@ -813,7 +812,7 @@ MmFreeMemoryArea(
       }
    }
 
-   ExFreePool(MemoryArea);
+   ExFreePoolWithTag(MemoryArea, TAG_MAREA);
 
    DPRINT("MmFreeMemoryAreaByNode() succeeded\n");
 

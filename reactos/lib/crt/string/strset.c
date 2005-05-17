@@ -14,7 +14,7 @@ char* _strnset (char* szToFill, int szFill, size_t sizeMaxFill)
 		*szToFill = szFill;
 		szToFill++;
 		i++;
-		
+
 	}
 	return t;
 }
@@ -29,7 +29,7 @@ char* _strset (char* szToFill, int szFill)
 	{
 		*szToFill = szFill;
 		szToFill++;
-		
+
 	}
 	return t;
 }

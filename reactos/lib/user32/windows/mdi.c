@@ -149,8 +149,8 @@ BOOL CALLBACK MDI_GetChildByID_EnumProc (HWND hwnd, LPARAM lParam )
 {
     DWORD *control = (DWORD *)lParam;
     if(*control == GetWindowLongW( hwnd, GWL_ID ))
-    {        
-        *control = (DWORD)hwnd;        
+    {
+        *control = (DWORD)hwnd;
         return FALSE;
     }
     return TRUE;
@@ -1066,31 +1066,24 @@ static void MDITile( HWND client, MDICLIENTINFO *ci, WPARAM wParam )
 static BOOL MDI_AugmentFrameMenu( HWND frame, HWND hChild )
 {
     HMENU menu = GetMenu( frame );
-#ifndef __REACTOS__
-    WND*	child = WIN_FindWndPtr(hChild);
-#endif
     HMENU  	hSysPopup = 0;
     HBITMAP hSysMenuBitmap = 0;
+    INT nItems;
+    UINT iId;
+    HICON hIcon;
 
     TRACE("frame %p,child %p\n",frame,hChild);
 
-#ifndef __REACTOS__
-    if( !menu || !child->hSysMenu )
-    {
-        WIN_ReleaseWndPtr(child);
+    if( !menu ) return 0;
+
+    /* if the system buttons already exist do not add them again */
+    nItems = GetMenuItemCount(menu) - 1;
+    iId = GetMenuItemID(menu,nItems) ;
+    if (iId == SC_RESTORE || iId == SC_CLOSE)
         return 0;
-    }
-    WIN_ReleaseWndPtr(child);
-#else
-    if( !menu || !GetSystemMenu(hChild, FALSE) )
-    {
-        return 0;
-    }
-#endif
 
     /* create a copy of sysmenu popup and insert it into frame menu bar */
-
-    if (!(hSysPopup = LoadMenuA(GetModuleHandleA("USER32"), "SYSMENU")))
+    if (!(hSysPopup = GetSystemMenu(hChild, FALSE)))
 	return 0;
 
     AppendMenuA(menu,MF_HELP | MF_BITMAP,
@@ -1098,14 +1091,15 @@ static BOOL MDI_AugmentFrameMenu( HWND frame, HWND hChild )
     AppendMenuA(menu,MF_HELP | MF_BITMAP,
                    SC_RESTORE, (LPSTR)(DWORD)HBMMENU_MBAR_RESTORE );
 
-  /* In Win 95 look, the system menu is replaced by the child icon */
-#ifndef __REACTOS__
-  if(TWEAK_WineLook > WIN31_LOOK)
-#endif
-  {
-    HICON hIcon = (HICON)GetClassLongA(hChild, GCL_HICONSM);
+    AppendMenuA(menu,MF_HELP | MF_BITMAP,
+                   SC_CLOSE, (LPSTR)(DWORD)HBMMENU_MBAR_CLOSE );
+
+    /* The system menu is replaced by the child icon */
+    hIcon = (HICON)GetClassLongW(hChild, GCL_HICONSM);
     if (!hIcon)
-      hIcon = (HICON)GetClassLongA(hChild, GCL_HICON);
+        hIcon = (HICON)GetClassLongW(hChild, GCL_HICON);
+    if (!hIcon)
+        hIcon = LoadIconW(NULL, IDI_APPLICATION);
     if (hIcon)
     {
       HDC hMemDC;
@@ -1131,28 +1125,13 @@ static BOOL MDI_AugmentFrameMenu( HWND frame, HWND hChild )
         hSysMenuBitmap = hBitmap;
       }
     }
-  }
-#ifndef __REACTOS__
-  else
-    hSysMenuBitmap = hBmpClose;
-#endif
 
-    if(  hSysMenuBitmap != NULL &&
-         !InsertMenuA(menu,0,MF_BYPOSITION | MF_BITMAP | MF_POPUP,
+    if( !InsertMenuA(menu,0,MF_BYPOSITION | MF_BITMAP | MF_POPUP,
                      (UINT_PTR)hSysPopup, (LPSTR)hSysMenuBitmap))
     {
         TRACE("not inserted\n");
 	DestroyMenu(hSysPopup);
 	return 0;
-    }
-
-    /* The close button is only present in Win 95 look */
-#ifndef __REACTOS__
-    if(TWEAK_WineLook > WIN31_LOOK)
-#endif
-    {
-        AppendMenuA(menu,MF_HELP | MF_BITMAP,
-                       SC_CLOSE, (LPSTR)(DWORD)HBMMENU_MBAR_CLOSE );
     }
 
     EnableMenuItem(hSysPopup, SC_SIZE, MF_BYCOMMAND | MF_GRAYED);
@@ -1187,7 +1166,7 @@ static BOOL MDI_RestoreFrameMenu( HWND frame, HWND hChild )
      */
     memset(&menuInfo, 0, sizeof(menuInfo));
     menuInfo.cbSize = sizeof(menuInfo);
-    menuInfo.fMask  = MIIM_DATA | MIIM_TYPE;
+    menuInfo.fMask  = MIIM_DATA | MIIM_TYPE | MIIM_BITMAP;
 
     GetMenuItemInfoW(menu,
 		     0,
@@ -1196,28 +1175,11 @@ static BOOL MDI_RestoreFrameMenu( HWND frame, HWND hChild )
 
     RemoveMenu(menu,0,MF_BYPOSITION);
 
-#ifndef __REACTOS__
-    if ( (menuInfo.fType & MFT_BITMAP)           &&
-	 (LOWORD(menuInfo.dwTypeData)!=0)        &&
-	 (LOWORD(menuInfo.dwTypeData)!=HBITMAP_16(hBmpClose)) )
-    {
-        DeleteObject(HBITMAP_32(LOWORD(menuInfo.dwTypeData)));
-    }
-#else
-    if ( (menuInfo.fType & MFT_BITMAP)           &&
-	 (LOWORD(menuInfo.dwTypeData)!=0))
-    {
-        DeleteObject((HBITMAP)(LOWORD(menuInfo.dwTypeData) & 0x50000));
-    }
-#endif
+    if ( menuInfo.hbmpItem != 0 )
+        DeleteObject(menuInfo.hbmpItem);
 
-#ifndef __REACTOS__
-    if(TWEAK_WineLook > WIN31_LOOK)
-#endif
-    {
-        /* close */
-        DeleteMenu(menu,GetMenuItemCount(menu) - 1,MF_BYPOSITION);
-    }
+    /* close */
+    DeleteMenu(menu,GetMenuItemCount(menu) - 1,MF_BYPOSITION);
     /* restore */
     DeleteMenu(menu,GetMenuItemCount(menu) - 1,MF_BYPOSITION);
     /* minimize */
@@ -1323,7 +1285,7 @@ static LRESULT MDIClientWndProc_common( HWND hwnd, UINT message,
         SetWindowLongPtrW( hwnd, 0, (LONG_PTR)ci );
 	return TRUE;
 #endif
-      
+
       case WM_CREATE:
       {
           RECT rect;
@@ -2072,8 +2034,16 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
 #ifndef __REACTOS__
     HWND *list;
 #else
+    WINDOWINFO WindowInfo;
     HWND hWndCurrent;
 #endif
+    /* The rectangle returned by GetClientRect always has 0,0 as top left
+     * because it is in client coordinates. The rectangles returned by
+     * GetWindowRect are in screen coordinates to make this complicated.
+     *
+     * Apparently (in ReactOS at least) the rcClient returned by GetWindowInfo
+     * is in screen coordinates too.
+     */
 
     GetClientRect( hwnd, &clientRect );
     SetRectEmpty( &childRect );
@@ -2101,6 +2071,13 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
         HeapFree( GetProcessHeap(), 0, list );
     }
 #else
+    WindowInfo.cbSize = sizeof(WindowInfo);
+    if (!GetWindowInfo(hwnd, &WindowInfo))
+    {
+	ERR("Can't get window info\n");
+	return;
+    }
+
     hWndCurrent = GetWindow(hwnd, GW_CHILD);
     while (hWndCurrent != NULL)
     {
@@ -2115,6 +2092,9 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
             RECT WindowRect;
 
             GetWindowRect( hWndCurrent, &WindowRect );
+            OffsetRect(&WindowRect,
+       	               -WindowInfo.rcClient.left,
+       	               -WindowInfo.rcClient.top);
             UnionRect( &childRect, &WindowRect, &childRect );
         }
         hWndCurrent = GetWindow(hWndCurrent, GW_HWNDNEXT);
@@ -2124,23 +2104,30 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
 
     /* set common info values */
     info.cbSize = sizeof(info);
-    info.fMask = SIF_POS | SIF_RANGE;
+    info.fMask = SIF_POS | SIF_RANGE | SIF_PAGE;
 
-    /* set the specific */
+    /* set the specific scrollbars*/
+    /* Note how we set nPos to 0 because we scroll the clients instead of
+     * the window, and we set nPage to 1 bigger than the clientRect because
+     * otherwise the scrollbar never disables. This causes a somewhat ugly
+     * effect though while scrolling.
+     */
     switch( scroll )
     {
 	case SB_BOTH:
 	case SB_HORZ:
 			info.nMin = childRect.left;
-			info.nMax = childRect.right - clientRect.right;
-			info.nPos = clientRect.left - childRect.left;
+			info.nMax = childRect.right;
+			info.nPos = 0;
+			info.nPage = 1 + clientRect.right - clientRect.left;
 			SetScrollInfo(hwnd, SB_HORZ, &info, TRUE);
 			if (scroll == SB_HORZ) break;
 			/* fall through */
 	case SB_VERT:
 			info.nMin = childRect.top;
-			info.nMax = childRect.bottom - clientRect.bottom;
-			info.nPos = clientRect.top - childRect.top;
+			info.nMax = childRect.bottom;
+			info.nPos = 0;
+			info.nPage = 1 + clientRect.bottom - clientRect.top;
 			SetScrollInfo(hwnd, SB_VERT, &info, TRUE);
 			break;
     }

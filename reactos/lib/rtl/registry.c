@@ -1,4 +1,4 @@
-/* $Id: registry.c 12852 2005-01-06 13:58:04Z mf $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -18,12 +18,10 @@
 /* INCLUDES ****************************************************************/
 
 #define __NTDRIVER__
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <ntos/minmax.h>
+#include "rtl.h"
 
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <debug.h>
 
 
 /* FUNCTIONS ***************************************************************/
@@ -57,7 +55,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
         DPRINT("ZwDuplicateObject() failed! Status: 0x%x\n", Status);
       }
 #endif
-      
+
       return(Status);
     }
 
@@ -165,7 +163,7 @@ RtlCheckRegistryKey(IN ULONG RelativeTo,
 {
   HANDLE KeyHandle;
   NTSTATUS Status;
-  
+
   PAGED_CODE_RTL();
 
   Status = RtlpGetRegistryHandle(RelativeTo,
@@ -190,7 +188,7 @@ RtlCreateRegistryKey(IN ULONG RelativeTo,
 {
   HANDLE KeyHandle;
   NTSTATUS Status;
-  
+
   PAGED_CODE_RTL();
 
   Status = RtlpGetRegistryHandle(RelativeTo,
@@ -217,7 +215,7 @@ RtlDeleteRegistryValue(IN ULONG RelativeTo,
   HANDLE KeyHandle;
   NTSTATUS Status;
   UNICODE_STRING Name;
-  
+
   PAGED_CODE_RTL();
 
   Status = RtlpGetRegistryHandle(RelativeTo,
@@ -251,13 +249,13 @@ RtlFormatCurrentUserKeyPath (OUT PUNICODE_STRING KeyPath)
   ULONG Length;
   UNICODE_STRING SidString;
   NTSTATUS Status;
-  
+
   PAGED_CODE_RTL();
 
   DPRINT ("RtlFormatCurrentUserKeyPath() called\n");
 
   Status = ZwOpenThreadToken (NtCurrentThread (),
-			      TOKEN_READ,
+			      TOKEN_QUERY,
 			      TRUE,
 			      &TokenHandle);
   if (!NT_SUCCESS (Status))
@@ -269,7 +267,7 @@ RtlFormatCurrentUserKeyPath (OUT PUNICODE_STRING KeyPath)
 	}
 
       Status = ZwOpenProcessToken (NtCurrentProcess (),
-				   TOKEN_READ,
+				   TOKEN_QUERY,
 				   &TokenHandle);
       if (!NT_SUCCESS (Status))
 	{
@@ -336,7 +334,7 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyPath;
   NTSTATUS Status;
-  
+
   PAGED_CODE_RTL();
 
   Status = RtlFormatCurrentUserKeyPath(&KeyPath);
@@ -400,7 +398,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
   PWSTR ValueName;
   UNICODE_STRING EnvValue;
   UNICODE_STRING EnvExpandedValue;
-  
+
   PAGED_CODE_RTL();
 
   DPRINT("RtlQueryRegistryValues() called\n");
@@ -473,7 +471,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		  Status = STATUS_OBJECT_NAME_NOT_FOUND;
 		  break;
 		}
-	
+
 	      if (QueryEntry->DefaultType == REG_SZ)
 		{
 		  PUNICODE_STRING ValueString;
@@ -890,7 +888,7 @@ RtlWriteRegistryValue(IN ULONG RelativeTo,
   HANDLE KeyHandle;
   NTSTATUS Status;
   UNICODE_STRING Name;
-  
+
   PAGED_CODE_RTL();
 
   Status = RtlpGetRegistryHandle(RelativeTo,

@@ -5,7 +5,7 @@ SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = ole32.dll
 IMPORTS   = advapi32 user32 gdi32 rpcrt4 kernel32 ntdll
-EXTRALIBS = -luuid
+EXTRALIBS = -luuid $(LIBUNICODE)
 
 C_SRCS = \
 	antimoniker.c \
@@ -15,6 +15,7 @@ C_SRCS = \
 	compositemoniker.c \
 	datacache.c \
 	defaulthandler.c \
+	dictionary.c \
 	errorinfo.c \
 	filemoniker.c \
 	ftmarshal.c \

@@ -1,5 +1,6 @@
 /*
  * Copyright 1999 Julio Cesar Gazquez
+ * Copyright 2005 José Manuel Ferrer Ortiz
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,30 +18,30 @@
  */
 
 STRINGTABLE LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
-   BEGIN
+BEGIN
 
-   /* MMSYS errors */
+/* MMSYS errors */
    MMSYSERR_NOERROR, "El comando especificado fue ejecutado."
    MMSYSERR_ERROR, "Error externo indefinido."
    MMSYSERR_BADDEVICEID, "Un identificador de dispositivo que ha sido usado está fuera de rango para su sistema."
-   MMSYSERR_NOTENABLED, "El controlador no fue activado."
+   MMSYSERR_NOTENABLED, "El manejador no fue activado."
    MMSYSERR_ALLOCATED, "El dispositivo especificado aún está en uso. Espere hasta que esté libre e intente nuevamente."
    MMSYSERR_INVALHANDLE, "El handle de dispositivo especificado es inválido."
-   MMSYSERR_NODRIVER, "No hay un controlador instalado en su sistema !\n"
-   MMSYSERR_NOMEM, "No hay suficiente memoria disponible para esta tarea. Cierre una o más aplicaciones para aumentar la memoria disponible e intente nuevamente."
-   MMSYSERR_NOTSUPPORTED, "Esta función no está soportada. Use la función Capacidades para determinar que funciones y mensajes soporta el controlador."
+   MMSYSERR_NODRIVER, "¡No hay un manejador instalado en su sistema!\n"
+   MMSYSERR_NOMEM, "No hay suficiente memoria disponible para esta tarea. Cierre una o más aplicaciones para aumentar la memoria disponible e inténtelo de nuevo."
+   MMSYSERR_NOTSUPPORTED, "Esta función no está soportada. Use la función Capacidades para determinar qué funciones y mensajes soporta el manejador."
    MMSYSERR_BADERRNUM, "Se ha especificado un número de error que no está definido en el sistema."
-   MMSYSERR_INVALFLAG, "Se ha pasado un flag no válido a una función del sistema."
+   MMSYSERR_INVALFLAG, "Se ha pasado una bandera no válida a una función del sistema."
    MMSYSERR_INVALPARAM, "Se ha pasado un parámetro no válido a una función del sistema."
 
-   /* WAVE errors */
+/* WAVE errors */
    WAVERR_BADFORMAT, "El formato especificado no está soportado o no puede ser traducido. Use la función Capacidades para determinar los formatos soportados."
    WAVERR_STILLPLAYING, "Esta operación no puede ejecutarse mientras continúa la reproducción. Reinicie el dispositivo, o espere hasta que la reproducción termine."
-   WAVERR_UNPREPARED, "La cabecera del forma de onda no está preparada. Use la función Preparar para preparar la cabecera, e intente nuevamente."
-   WAVERR_SYNC, "No puede abrirse el dispositivo sin usar el flag WAVE_ALLOWSYNC. Use el flag, e intente nuevamente."
+   WAVERR_UNPREPARED, "La cabecera de onda no está preparada. Use la función Preparar para prepararla, e inténtelo de nuevo."
+   WAVERR_SYNC, "No puede abrirse el dispositivo sin usar la bandera WAVE_ALLOWSYNC. Utilícela, e inténtelo de nuevo."
 
-   /* MIDI errors */
-   MIDIERR_UNPREPARED, "La cabecera MIDI no está preparada. Use la función Preparar para preparar la cabecera, e intente nuevamente."
+/* MIDI errors */
+   MIDIERR_UNPREPARED, "La cabecera MIDI no está preparada. Use la función Preparar para prepararla, e inténtelo de nuevo."
    MIDIERR_STILLPLAYING, "Esta operación no puede ejecutarse mientras se continúa tocando. Reinicie el dispositivo, o espera hasta que termine de tocar."
    MIDIERR_NOMAP, "No se encontró un mapa MIDI. Puede haber un problema con el controlador, el el fichero MIDIMAP.CFG puede faltar o estar corrupto."
    MIDIERR_NOTREADY, "El puerto está transmitiendo datos al dispositivo. Espera hasta que los datos hayan sido transmitidos, e intente nuevamente."
@@ -123,4 +124,4 @@ STRINGTABLE LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
    MCIERR_SEQ_PORTUNSPECIFIED, "El sistema no tiene actualmente un puerto MIDI especificado."
    MCIERR_SEQ_TIMER, "Todos los temporizadores de multimedia están siendo usados por otras aplicaciones. Cierre una de esas aplicaciones e intente nuevamente."
 
-   END
+END

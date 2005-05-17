@@ -26,9 +26,9 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    PDEVICE_OBJECT DeviceObject;
    UNICODE_STRING DeviceName;
    NTSTATUS Status;
-   
+
    DPRINT("Mailslot FSD 0.0.1\n");
-   
+
    DriverObject->Flags = 0;
    DriverObject->MajorFunction[IRP_MJ_CREATE] = MsfsCreate;
    DriverObject->MajorFunction[IRP_MJ_CREATE_MAILSLOT] =
@@ -44,15 +44,15 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 //     MsfsDirectoryControl;
 //   DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = MsfsFlushBuffers;
 //   DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = MsfsShutdown;
-//   DriverObject->MajorFunction[IRP_MJ_QUERY_SECURITY] = 
+//   DriverObject->MajorFunction[IRP_MJ_QUERY_SECURITY] =
 //     MsfsQuerySecurity;
 //   DriverObject->MajorFunction[IRP_MJ_SET_SECURITY] =
 //     MsfsSetSecurity;
    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
      MsfsFileSystemControl;
-   
+
    DriverObject->DriverUnload = NULL;
-   
+
    RtlInitUnicodeString(&DeviceName,
 			L"\\Device\\MailSlot");
    Status = IoCreateDevice(DriverObject,
@@ -72,7 +72,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    InitializeListHead(&DeviceExtension->MailslotListHead);
    KeInitializeMutex(&DeviceExtension->MailslotListLock,
 		     0);
-   
+
    return(STATUS_SUCCESS);
 }
 

@@ -16,7 +16,7 @@
 BOOLEAN WaitToSend(UINT BasePort)
 {
     int TimeOut;
-    
+
     DPRINT("WaitToSend ");
 
     // Check if it's OK to send
@@ -30,7 +30,7 @@ BOOLEAN WaitToSend(UINT BasePort)
         DPRINT("FAILED\n");
         return FALSE;
     }
-    
+
     DPRINT("SUCCEEDED\n");
 
     return TRUE;
@@ -53,7 +53,7 @@ BOOLEAN WaitToReceive(UINT BasePort)
         DPRINT("FAILED\n");
         return FALSE;
     }
-    
+
     DPRINT("SUCCEEDED\n");
 
     return TRUE;
@@ -107,6 +107,6 @@ WORD InitSoundCard(UINT BasePort)
         return FALSE;
 
     DPRINT("Sound card initialized!\n");
-    
+
     return (DSP_Major * 256) + DSP_Minor;
 }

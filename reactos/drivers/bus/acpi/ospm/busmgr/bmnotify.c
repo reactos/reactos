@@ -63,13 +63,13 @@ bm_generate_notify (
 
 	DEBUG_PRINT(ACPI_INFO, ("Sending notify [0x%02x] to device [0x%02x].\n", notify_type, node->device.handle));
 
-	if (!(node->device.flags & BM_FLAGS_DRIVER_CONTROL) || 
+	if (!(node->device.flags & BM_FLAGS_DRIVER_CONTROL) ||
 		!(node->driver.notify)) {
 		DEBUG_PRINT(ACPI_WARN, ("No driver installed for device [0x%02x].\n", node->device.handle));
 		return_ACPI_STATUS(AE_NOT_EXIST);
 	}
 
-	status = node->driver.notify(notify_type, node->device.handle, 
+	status = node->driver.notify(notify_type, node->device.handle,
 		&(node->driver.context));
 
 	return_ACPI_STATUS(status);
@@ -130,7 +130,7 @@ bm_device_check (
 	if (ACPI_FAILURE(status)) {
 		return_ACPI_STATUS(status);
 	}
-	
+
 	if (old_status == node->device.status) {
 		return_ACPI_STATUS(AE_OK);
 	}
@@ -138,12 +138,12 @@ bm_device_check (
 	if (status_change) {
 		*status_change = TRUE;
 	}
-	
+
 	/*
 	 * Device Insertion?
 	 * -----------------
 	 */
-	if ((device->status & BM_STATUS_PRESENT) && 
+	if ((device->status & BM_STATUS_PRESENT) &&
 		!(old_status & BM_STATUS_PRESENT)) {
 		/* TODO: Make sure driver is loaded, and if not, load. */
 		status = bm_generate_notify(node, BM_NOTIFY_DEVICE_ADDED);
@@ -153,7 +153,7 @@ bm_device_check (
 	 * Device Removal?
 	 * ---------------
 	 */
-	else if (!(device->status & BM_STATUS_PRESENT) && 
+	else if (!(device->status & BM_STATUS_PRESENT) &&
 		(old_status & BM_STATUS_PRESENT)) {
 		/* TODO: Unload driver if last device instance. */
 		status = bm_generate_notify(node, BM_NOTIFY_DEVICE_REMOVED);
@@ -247,7 +247,7 @@ bm_notify (
 	/*
 	 * Device-Specific or Standard?
 	 * ----------------------------
-	 * Device-specific notifies are forwarded to the control module's 
+	 * Device-specific notifies are forwarded to the control module's
 	 * notify() function for processing.  Standard notifies are handled
 	 * internally.
 	 */

@@ -37,6 +37,7 @@ typedef struct _CSRSS_PROCESS_DATA
   ULONG HandleTableSize;
   Object_t ** HandleTable;
   HANDLE ProcessId;
+  HANDLE Process;
   ULONG ShutdownLevel;
   ULONG ShutdownFlags;
   HANDLE ConsoleEvent;
@@ -46,7 +47,7 @@ typedef struct _CSRSS_PROCESS_DATA
   LIST_ENTRY ProcessEntry;
   PCONTROLDISPATCHER CtrlDispatcher;
 } CSRSS_PROCESS_DATA, *PCSRSS_PROCESS_DATA;
-  
+
 typedef VOID (STDCALL *CSR_CLEANUP_OBJECT_PROC)(Object_t *Object);
 
 typedef struct tagCSRSS_OBJECT_DEFINITION

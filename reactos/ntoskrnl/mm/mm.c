@@ -1,7 +1,7 @@
 /* $Id$
  *
  * COPYRIGHT:       See COPYING in the top directory
- * PROJECT:         ReactOS kernel 
+ * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/mm.c
  * PURPOSE:         Kernel memory managment functions
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
@@ -90,6 +90,7 @@ NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
          return(STATUS_SUCCESS);
 
       case MEMORY_AREA_VIRTUAL_MEMORY:
+      case MEMORY_AREA_PEB_OR_TEB:
          MmFreeVirtualMemory(Process, Marea);
          break;
 
@@ -385,6 +386,7 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
             break;
 
          case MEMORY_AREA_VIRTUAL_MEMORY:
+         case MEMORY_AREA_PEB_OR_TEB:
             Status = MmNotPresentFaultVirtualMemory(AddressSpace,
                                                     MemoryArea,
                                                     (PVOID)Address,
@@ -483,19 +485,19 @@ MmGetSystemRoutineAddress (
   PVOID ProcAddress;
   ANSI_STRING AnsiRoutineName;
   NTSTATUS Status;
-  
+
   if(!NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiRoutineName,
                                               SystemRoutineName,
                                               TRUE)))
   {
     return NULL;
   }
-  
+
   Status = LdrGetProcedureAddress(NtoskrnlModuleObject.Base,
                                   &AnsiRoutineName,
                                   0,
                                   &ProcAddress);
-  
+
   if(!NT_SUCCESS(Status))
   {
     Status = LdrGetProcedureAddress(HalModuleObject.Base,
@@ -503,9 +505,9 @@ MmGetSystemRoutineAddress (
                                     0,
                                     &ProcAddress);
   }
-  
+
   RtlFreeAnsiString(&AnsiRoutineName);
-  
+
   return (NT_SUCCESS(Status) ? ProcAddress : NULL);
 }
 

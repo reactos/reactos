@@ -27,9 +27,13 @@
  *
  *    06-Nov-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Added PagePrompt() and FilePrompt().
+ *
+ *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 
 /*
@@ -383,7 +387,7 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 			ReadFile (hFile, &ch, 1, &dwRead, NULL);
 			break;
 		}
-                lpString[len++] = ch;
+		lpString[len++] = ch;
 	}
 
 	if (!dwRead && !len)
@@ -435,7 +439,7 @@ INT PagePrompt (VOID)
 {
 	INPUT_RECORD ir;
 
-	ConOutPrintf (_T("Press a key to continue...\n"));
+	ConOutResPuts(STRING_MISC_HELP1);
 
 	RemoveBreakHandler ();
 	ConInDisable ();
@@ -462,31 +466,34 @@ INT PagePrompt (VOID)
 
 INT FilePromptYN (LPTSTR szFormat, ...)
 {
-        TCHAR szOut[512];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szOut[512];
 	va_list arg_ptr;
-//        TCHAR cKey = 0;
-//        LPTSTR szKeys = _T("yna");
+//	TCHAR cKey = 0;
+//	LPTSTR szKeys = _T("yna");
 
-        TCHAR szIn[10];
+	TCHAR szIn[10];
 	LPTSTR p;
 
 	va_start (arg_ptr, szFormat);
 	_vstprintf (szOut, szFormat, arg_ptr);
 	va_end (arg_ptr);
 
-        ConOutPrintf (szFormat);
+	ConOutPrintf (szFormat);
 
-/* preliminary fix */
-        ConInString (szIn, 10);
-        ConOutPrintf (_T("\n"));
+	/* preliminary fix */
+	ConInString (szIn, 10);
+	ConOutPrintf (_T("\n"));
 
-        _tcsupr (szIn);
-        for (p = szIn; _istspace (*p); p++)
+	_tcsupr (szIn);
+	for (p = szIn; _istspace (*p); p++)
 		;
 
-	if (*p == _T('Y'))
+	LoadString(CMD_ModuleHandle, STRING_CHOICE_OPTION, szMsg, RC_STRING_MAX_SIZE);
+
+	if (_tcsncmp(p, &szMsg[0], 1) == 0)
 		return PROMPT_YES;
-	else if (*p == _T('N'))
+	else if (_tcsncmp(p, &szMsg[1], 1) == 0)
 		return PROMPT_NO;
 #if 0
 	else if (*p == _T('\03'))
@@ -496,7 +503,7 @@ INT FilePromptYN (LPTSTR szFormat, ...)
 	return PROMPT_NO;
 
 
-/* unfinished sollution */
+	/* unfinished sollution */
 #if 0
 	RemoveBreakHandler ();
 	ConInDisable ();
@@ -504,9 +511,9 @@ INT FilePromptYN (LPTSTR szFormat, ...)
 	do
 	{
 		ConInKey (&ir);
-                cKey = _totlower (ir.Event.KeyEvent.uChar.AsciiChar);
-                if (_tcschr (szKeys, cKey[0]) == NULL)
-                        cKey = 0;
+		cKey = _totlower (ir.Event.KeyEvent.uChar.AsciiChar);
+		if (_tcschr (szKeys, cKey[0]) == NULL)
+			cKey = 0;
 
 
 	}
@@ -529,34 +536,38 @@ INT FilePromptYN (LPTSTR szFormat, ...)
 
 INT FilePromptYNA (LPTSTR szFormat, ...)
 {
-        TCHAR szOut[512];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szOut[512];
 	va_list arg_ptr;
-//        TCHAR cKey = 0;
-//        LPTSTR szKeys = _T("yna");
+//	TCHAR cKey = 0;
+//	LPTSTR szKeys = _T("yna");
 
-        TCHAR szIn[10];
+	TCHAR szIn[10];
 	LPTSTR p;
 
 	va_start (arg_ptr, szFormat);
 	_vstprintf (szOut, szFormat, arg_ptr);
 	va_end (arg_ptr);
 
-        ConOutPrintf (szFormat);
+	ConOutPrintf (szFormat);
 
-/* preliminary fix */
-        ConInString (szIn, 10);
-        ConOutPrintf (_T("\n"));
+	/* preliminary fix */
+	ConInString (szIn, 10);
+	ConOutPrintf (_T("\n"));
 
-        _tcsupr (szIn);
-        for (p = szIn; _istspace (*p); p++)
+	_tcsupr (szIn);
+	for (p = szIn; _istspace (*p); p++)
 		;
 
-	if (*p == _T('Y'))
+	LoadString( CMD_ModuleHandle, STRING_COPY_OPTION, szMsg, RC_STRING_MAX_SIZE);
+
+	if (_tcsncmp(p, &szMsg[0], 1) == 0)
 		return PROMPT_YES;
-	else if (*p == _T('N'))
+	else if (_tcsncmp(p, &szMsg[1], 1) == 0)
 		return PROMPT_NO;
-	if (*p == _T('A'))
+	else if (_tcsncmp(p, &szMsg[2], 1) == 0)
 		return PROMPT_ALL;
+
 #if 0
 	else if (*p == _T('\03'))
 		return PROMPT_BREAK;
@@ -573,11 +584,9 @@ INT FilePromptYNA (LPTSTR szFormat, ...)
 	do
 	{
 		ConInKey (&ir);
-                cKey = _totlower (ir.Event.KeyEvent.uChar.AsciiChar);
-                if (_tcschr (szKeys, cKey[0]) == NULL)
-                        cKey = 0;
-
-
+		cKey = _totlower (ir.Event.KeyEvent.uChar.AsciiChar);
+		if (_tcschr (szKeys, cKey[0]) == NULL)
+			cKey = 0;
 	}
 	while ((ir.Event.KeyEvent.wVirtualKeyCode == VK_SHIFT) ||
 	       (ir.Event.KeyEvent.wVirtualKeyCode == VK_MENU) ||

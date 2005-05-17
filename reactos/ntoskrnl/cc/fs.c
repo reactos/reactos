@@ -18,7 +18,7 @@
 #ifndef ROUND_DOWN
 #define ROUND_DOWN(X,Y)	((X) & ~((Y) - 1))
 #endif
- 
+
 /* GLOBALS   *****************************************************************/
 
 extern PCACHE_VIEW CcCacheViewArray;
@@ -48,7 +48,7 @@ CcGetDirtyPages (
 {
 	UNIMPLEMENTED;
 
-	LARGE_INTEGER i; 
+	LARGE_INTEGER i;
 	i.QuadPart = 0;
 	return i;
 }
@@ -78,7 +78,7 @@ CcGetLsnForFileObject (
 {
 	UNIMPLEMENTED;
 
-	LARGE_INTEGER i; 
+	LARGE_INTEGER i;
 	i.QuadPart = 0;
 	return i;
 }
@@ -170,7 +170,7 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
 	  Bcb->CacheView[i] = NULL;
       }
    }
- 
+
          
 #if 0
    for (i = 0; i < CcCacheViewArrayCount; i++)

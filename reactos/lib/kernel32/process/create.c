@@ -19,7 +19,7 @@
 
 /* FUNCTIONS ****************************************************************/
 
-extern __declspec(noreturn) 
+extern __declspec(noreturn)
 VOID CALLBACK ConsoleControlDispatcher(DWORD CodeAndFlag);
 
 __declspec(dllimport)
@@ -55,12 +55,12 @@ VOID STDCALL RtlRosR32AttribsToNativeAttribs(OUT OBJECT_ATTRIBUTES * NativeAttri
    NativeAttribs->RootDirectory = NULL;
    NativeAttribs->Attributes = 0;
    NativeAttribs->SecurityQualityOfService = NULL;
- 
+
 
    if(Ros32Attribs != NULL && Ros32Attribs->nLength >= sizeof(*Ros32Attribs))
    {
       NativeAttribs->SecurityDescriptor = Ros32Attribs->lpSecurityDescriptor;
-  
+
       if(Ros32Attribs->bInheritHandle)
       {
          NativeAttribs->Attributes |= OBJ_INHERIT;
@@ -110,7 +110,7 @@ BOOL STDCALL CreateProcessA(LPCSTR lpApplicationName,
  * FUNCTION: The CreateProcess function creates a new process and its
  * primary thread. The new process executes the specified executable file
  * ARGUMENTS:
- * 
+ *
  *     lpApplicationName = Pointer to name of executable module
  *     lpCommandLine = Pointer to command line string
  *     lpProcessAttributes = Process security attributes
@@ -187,7 +187,7 @@ BOOL STDCALL CreateProcessA(LPCSTR lpApplicationName,
       while (*pcScan);
 
       nEnvLen = (ULONG_PTR)pcScan - (ULONG_PTR)lpEnvironment + 1;
-  
+
       /* environment too large */
       if(nEnvLen > ~((USHORT)0))
       {
@@ -207,7 +207,7 @@ BOOL STDCALL CreateProcessA(LPCSTR lpApplicationName,
          return FALSE;
       }
    }
-   
+
 
    /* convert the strings */
    RtlInitAnsiString(&strCommandLine, lpCommandLine);
@@ -283,7 +283,7 @@ _except_handler(EXCEPTION_RECORD *ExceptionRecord,
 		void * DispatcherContext)
 {
    EXCEPTION_POINTERS ExceptionInfo;
-   EXCEPTION_DISPOSITION ExceptionDisposition;
+   EXCEPTION_DISPOSITION ExceptionDisposition = EXCEPTION_EXECUTE_HANDLER;
 
    ExceptionInfo.ExceptionRecord = ExceptionRecord;
    ExceptionInfo.ContextRecord = ContextRecord;
@@ -299,10 +299,6 @@ _except_handler(EXCEPTION_RECORD *ExceptionRecord,
          ExceptionDisposition = UnhandledExceptionFilter(&ExceptionInfo);
       }
       _SEH_END;
-   }
-   else 
-   {
-      ExceptionDisposition = EXCEPTION_EXECUTE_HANDLER;
    }
 
    if (ExceptionDisposition == EXCEPTION_EXECUTE_HANDLER)
@@ -375,7 +371,7 @@ HANDLE STDCALL KlCreateFirstThread(HANDLE ProcessHandle,
 	  " StackReserve     %lu,\n"
 	  " StackCommit      %lu,\n"
 	  " StartAddress     %p,\n"
-	  " ThreadHandle     %p,\n"  
+	  " ThreadHandle     %p,\n"
 	  " ClientId         %p,\n"
 	  " ParameterCount   %u,\n"
 	  " Parameters[0]    %p,\n"
@@ -383,7 +379,7 @@ HANDLE STDCALL KlCreateFirstThread(HANDLE ProcessHandle,
 	  ")\n",
 	  ProcessHandle,
 	  &oaThreadAttribs,
-	  dwCreationFlags & CREATE_SUSPENDED,  
+	  dwCreationFlags & CREATE_SUSPENDED,
 	  0,
 	  Sii->StackReserve,
 	  Sii->StackCommit,
@@ -413,7 +409,7 @@ HANDLE STDCALL KlCreateFirstThread(HANDLE ProcessHandle,
       SetLastErrorByStatus(nErrCode);
       return NULL;
    }
- 
+
    DPRINT("StackReserve          %p\n"
           "StackCommit           %p\n"
 	  "ThreadHandle          %p\n"
@@ -737,7 +733,7 @@ GetFileName(LPCWSTR CurDir, LPCWSTR AppName, LPWSTR CmdLine, LPWSTR Buffer,
 /*
  * @implemented
  */
-BOOL STDCALL 
+BOOL STDCALL
 CreateProcessW(LPCWSTR lpApplicationName,
 	       LPWSTR lpCommandLine,
 	       LPSECURITY_ATTRIBUTES lpProcessAttributes,
@@ -777,7 +773,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
    OBJECT_ATTRIBUTES ProcObjectAttributes;
    ULONG ProcAttributes = 0;
    PVOID ProcSecurity = NULL;
-   
+
    DPRINT("CreateProcessW(lpApplicationName '%S', lpCommandLine '%S')\n",
 	  lpApplicationName, lpCommandLine);
 
@@ -873,7 +869,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
 	 return FALSE;
       }
    }
-   
+
    /*
     * Process the application name and command line
     */
@@ -900,7 +896,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
    /*
     * Create a section for the executable
     */
-   
+
    hSection = KlMapFile (ImagePathName);
    if (hSection == NULL)
    {
@@ -920,7 +916,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
 
       // Find the application name
       if (!RtlDosPathNameToNtPathName_U((LPWSTR)lpApplicationName,
-                                        &ApplicationNameString, NULL, NULL)) 
+                                        &ApplicationNameString, NULL, NULL))
       {
          return FALSE;
       }
@@ -942,7 +938,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
 
       RtlFreeUnicodeString(&ApplicationNameString);
 
-      if (!NT_SUCCESS(Status)) 
+      if (!NT_SUCCESS(Status))
       {
          DPRINT("Failed to open file\n");
                 SetLastErrorByStatus(Status);
@@ -961,13 +957,13 @@ CreateProcessW(LPCWSTR lpApplicationName,
 		          &Offset,
 		          0);
 
-      if (!NT_SUCCESS(Status)) 
+      if (!NT_SUCCESS(Status))
       {
          DPRINT("Failed to read from file\n");
                 SetLastErrorByStatus(Status);
          return FALSE;
       }
-      if (Iosb.Information != sizeof(DosHeader)) 
+      if (Iosb.Information != sizeof(DosHeader))
       {
          DPRINT("Failed to read dos header from file\n");
                 SetLastErrorByStatus(STATUS_INVALID_IMAGE_FORMAT);
@@ -975,7 +971,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
       }
 
       // Check the DOS signature
-      if (DosHeader.e_magic != IMAGE_DOS_SIGNATURE) 
+      if (DosHeader.e_magic != IMAGE_DOS_SIGNATURE)
       {
          DPRINT("Failed dos magic check\n");
          SetLastErrorByStatus(STATUS_INVALID_IMAGE_FORMAT);
@@ -1052,7 +1048,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
     * initialize the process priority class structure
     */
    PriorityClass.Foreground = FALSE;
-   
+
    if(dwCreationFlags & IDLE_PRIORITY_CLASS)
    {
       PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_IDLE;
@@ -1097,13 +1093,13 @@ CreateProcessW(LPCWSTR lpApplicationName,
 			    NULL,
 			    NULL);
    /* FIXME - handle failure!!!!! */
-   
+
    Status = NtSetInformationProcess(hProcess,
                                     ProcessPriorityClass,
                                     &PriorityClass,
                                     sizeof(PROCESS_PRIORITY_CLASS));
    /* FIXME - handle failure!!!!! */
-   
+
    if (lpStartupInfo)
    {
       if (lpStartupInfo->lpReserved2)
@@ -1152,7 +1148,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
 				  DUPLICATE_SAME_ACCESS);
       /* FIXME - handle failure!!!!! */
    }
-   
+
    /*
     * Close the section
     */
@@ -1174,7 +1170,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
     * Tell the csrss server we are creating a new process
     */
    CsrRequest.Type = CSRSS_CREATE_PROCESS;
-   CsrRequest.Data.CreateProcessRequest.NewProcessId = 
+   CsrRequest.Data.CreateProcessRequest.NewProcessId =
       ProcessBasicInfo.UniqueProcessId;
    if (Sii.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI)
    {
@@ -1191,7 +1187,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
    }
    CsrRequest.Data.CreateProcessRequest.Flags = dwCreationFlags;
    CsrRequest.Data.CreateProcessRequest.CtrlDispatcher = ConsoleControlDispatcher;
-   Status = CsrClientCallServer(&CsrRequest, 
+   Status = CsrClientCallServer(&CsrRequest,
 				&CsrReply,
 				sizeof(CSRSS_API_REQUEST),
 				sizeof(CSRSS_API_REPLY));
@@ -1283,7 +1279,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
       else
       {
          DPRINT("Duplicate input handle\n");
-         Status = NtDuplicateObject (NtCurrentProcess(), 
+         Status = NtDuplicateObject (NtCurrentProcess(),
                                      Ppb->hStdInput,
                                      hProcess,
                                      &Ppb->hStdInput,
@@ -1306,7 +1302,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
       else
       {
          DPRINT("Duplicate output handle\n");
-         Status = NtDuplicateObject (NtCurrentProcess(), 
+         Status = NtDuplicateObject (NtCurrentProcess(),
                                      Ppb->hStdOutput,
                                      hProcess,
                                      &Ppb->hStdOutput,
@@ -1327,7 +1323,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
          CsrRequest.Type = CSRSS_DUPLICATE_HANDLE;
          CsrRequest.Data.DuplicateHandleRequest.ProcessId = ProcessBasicInfo.UniqueProcessId;
          CsrRequest.Data.DuplicateHandleRequest.Handle = CsrReply.Data.CreateProcessReply.OutputHandle;
-         Status = CsrClientCallServer(&CsrRequest, 
+         Status = CsrClientCallServer(&CsrRequest,
                                       &CsrReply,
                                       sizeof(CSRSS_API_REQUEST),
                                       sizeof(CSRSS_API_REPLY));
@@ -1343,7 +1339,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
       else
       {
          DPRINT("Duplicate error handle\n");
-         Status = NtDuplicateObject (NtCurrentProcess(), 
+         Status = NtDuplicateObject (NtCurrentProcess(),
                                      Ppb->hStdError,
                                      hProcess,
                                      &Ppb->hStdError,
@@ -1381,7 +1377,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
    {
       Ppb->Flags = 0;
    }
-   
+
    /*
     * Create Process Environment Block
     */
@@ -1390,7 +1386,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
    KlInitPeb(hProcess, Ppb, &ImageBaseAddress, Sii.Subsystem);
 
    RtlDestroyProcessParameters (Ppb);
-   
+
    /*
     * Create the thread for the kernel
     */
@@ -1402,7 +1398,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
 				  (PVOID)((ULONG_PTR)ImageBaseAddress + Sii.EntryPoint),
 				  dwCreationFlags,
 				  &lpProcessInformation->dwThreadId);
-   if (hThread == INVALID_HANDLE_VALUE)
+   if (hThread == NULL)
    {
       return FALSE;
    }

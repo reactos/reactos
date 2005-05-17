@@ -65,13 +65,13 @@ DIBtoVGA(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
   return FALSE;
 }
 
-BOOL 
+BOOL
 VGAtoDIB(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
 	 RECTL *DestRect, POINTL *SourcePoint)
 {
   LONG i, j, dx, dy;
   BYTE  *GDIpos, *initial;
-  
+
   // Used by the temporary DFB
   DEVSURF	DestDevSurf;
 
@@ -105,7 +105,7 @@ VGAtoDIB(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
   return FALSE;
 }
 
-BOOL 
+BOOL
 DFBtoVGA(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
 	 RECTL *DestRect, POINTL *SourcePoint)
 {
@@ -189,7 +189,7 @@ VGADDI_BltBrush(SURFOBJ* Dest, SURFOBJ* Source, SURFOBJ* MaskSurf,
 
   /* Punt pattern fills. */
   if ((GET_OPINDEX_FROM_ROP4(Rop4) == GET_OPINDEX_FROM_ROP3(PATCOPY)
-       || GET_OPINDEX_FROM_ROP4(Rop4) == GET_OPINDEX_FROM_ROP3(PATINVERT)) && 
+       || GET_OPINDEX_FROM_ROP4(Rop4) == GET_OPINDEX_FROM_ROP3(PATINVERT)) &&
       Brush->iSolidColor == 0xFFFFFFFF)
     {
       return(FALSE);
@@ -220,7 +220,7 @@ VGADDI_BltBrush(SURFOBJ* Dest, SURFOBJ* Source, SURFOBJ* MaskSurf,
   /* Set up data rotate. */
   WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x03);
   WRITE_PORT_UCHAR((PUCHAR)GRA_D, RasterOp);
-  
+
   /* Fill any pixels on the left which don't fall into a full row of eight. */
   if ((DestRect->left % 8) != 0)
     {
@@ -252,7 +252,7 @@ VGADDI_BltBrush(SURFOBJ* Dest, SURFOBJ* Source, SURFOBJ* MaskSurf,
 
 	  return TRUE;
 	}
-    }    
+    }
 
   /* Fill any whole rows of eight pixels. */
   Left = (DestRect->left + 7) & ~0x7;
@@ -319,15 +319,15 @@ VGADDI_BltSrc(SURFOBJ* Dest, SURFOBJ* Source, SURFOBJ* Mask,
   else if (SourceType == STYPE_DEVICE && Dest->iType == STYPE_DEVICE)
     {
       BltOperation = VGAtoVGA;
-    } 
+    }
   else if (SourceType == STYPE_DEVBITMAP && Dest->iType == STYPE_DEVICE)
     {
       BltOperation = DFBtoVGA;
-    } 
+    }
   else if (SourceType == STYPE_DEVICE && Dest->iType == STYPE_DEVBITMAP)
     {
       BltOperation = VGAtoDFB;
-    } 
+    }
   else
     {
       /* Punt blts not involving a device or a device-bitmap. */

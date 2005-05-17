@@ -1,5 +1,5 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            subsys/ntvdm/ntvdm->c
@@ -15,6 +15,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <wchar.h>
+#include "resource.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -138,7 +139,7 @@ BOOL ReadConfigForVDM(PVDM_CONTROL_BLOCK vdm)
     BOOL result = TRUE;
     DWORD dwError;
     HANDLE hFile;
-    
+
     hFile = CreateFileW(L"\\system32\\config.nt",
                         GENERIC_READ,
                         FILE_SHARE_READ,
@@ -186,7 +187,7 @@ BOOL
 LoadConfigDriversForVDM(PVDM_CONFIG vdmConfig)
 {
     BOOL result = TRUE;
-	
+
 	return result;
 }
 
@@ -194,7 +195,7 @@ BOOL
 SetConfigOptionsForVDM(PVDM_AUTOEXEC vdmAutoexec)
 {
     BOOL result = TRUE;
-	
+
 	return result;
 }
 
@@ -204,6 +205,7 @@ CreateVDM(PVDM_CONTROL_BLOCK vdm)
 //    BOOL result = TRUE;
     SYSTEM_INFO inf;
     MEMORYSTATUS stat;
+
 
     GlobalMemoryStatus(&stat);
     if (stat.dwLength != sizeof(MEMORYSTATUS)) {
@@ -223,8 +225,9 @@ CreateVDM(PVDM_CONTROL_BLOCK vdm)
             //SetLastError();
             return FALSE;
         }
+
     }
- 
+
     GetSystemInfo(&inf);
     vdm->hHeap = HeapCreate(0, inf.dwAllocationGranularity, 0);
     if (vdm->hHeap == NULL) {
@@ -273,10 +276,13 @@ WinMain(HINSTANCE hInstance,  HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nSho
     ULONG i;
     BOOL vdmStarted = FALSE;
 
-    WCHAR WelcomeMsg[] = L"ReactOS Virtual DOS Machine support.\n";
-    WCHAR PromptMsg[] = L"Type r<cr> to run, s<cr> to shutdown or q<cr> to quit now.";
+    WCHAR WelcomeMsg[RC_STRING_MAX_SIZE];
+    WCHAR PromptMsg[RC_STRING_MAX_SIZE];
     CHAR InputBuffer[255];
-    
+
+    LoadString( GetModuleHandle(NULL), STRING_WelcomeMsg,  (LPTSTR) WelcomeMsg,sizeof(WelcomeMsg) / sizeof(WelcomeMsg[0]));
+    LoadString( GetModuleHandle(NULL), STRING_PromptMsg,  (LPTSTR) PromptMsg ,sizeof(PromptMsg) / sizeof(PromptMsg[0]));
+
     AllocConsole();
     SetConsoleTitleW(L"ntvdm");
 
@@ -289,7 +295,7 @@ WinMain(HINSTANCE hInstance,  HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nSho
         //SetLastError();
         return 2;
     }
-	
+
 	ReadConfigForVDM(&VdmCB);
 
     if (!LoadConfigDriversForVDM(&(VdmCB.vdmConfig))) {

@@ -3,7 +3,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            subsys/csrss/win32csr/dllmain.c
- * PURPOSE:         Initialization 
+ * PURPOSE:         Initialization
  */
 
 /* INCLUDES ******************************************************************/

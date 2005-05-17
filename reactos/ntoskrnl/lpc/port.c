@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/lpc/port.c
  * PURPOSE:         Communication mechanism
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
@@ -36,9 +36,9 @@ LpcpInitSystem (VOID)
    /* Allocate Memory for the LPC Object */
    LpcPortObjectType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
    RtlZeroMemory (LpcPortObjectType, sizeof (OBJECT_TYPE));
-   
+
    RtlInitUnicodeString(&LpcPortObjectType->TypeName,L"Port");
-   
+
    LpcPortObjectType->Tag = TAG('L', 'P', 'R', 'T');
    LpcPortObjectType->PeakObjects = 0;
    LpcPortObjectType->PeakHandles = 0;
@@ -59,11 +59,11 @@ LpcpInitSystem (VOID)
    LpcPortObjectType->DuplicationNotify = NULL;
 
    ObpCreateTypeObject(LpcPortObjectType);
-   
+
    LpcpNextMessageId = 0;
 
    ExInitializeFastMutex (& LpcpLock);
-   
+
    return(STATUS_SUCCESS);
 }
 
@@ -71,7 +71,7 @@ LpcpInitSystem (VOID)
 /**********************************************************************
  * NAME							INTERNAL
  *	NiInitializePort/3
- *	
+ *
  * DESCRIPTION
  *	Initialize the EPORT object attributes. The Port
  *	object enters the inactive state.
@@ -108,7 +108,7 @@ LpcpInitializePort (IN OUT  PEPORT Port,
   Port->State = EPORT_INACTIVE;
   InitializeListHead (& Port->QueueListHead);
   InitializeListHead (& Port->ConnectQueueListHead);
- 
+
   return (STATUS_SUCCESS);
 }
 
@@ -119,7 +119,7 @@ LpcpInitializePort (IN OUT  PEPORT Port,
 /**********************************************************************
  * NAME							SYSTEM
  *	NtImpersonateClientOfPort/2
- *	
+ *
  * DESCRIPTION
  *
  * ARGUMENTS

@@ -41,6 +41,7 @@
 
 #define IO_METHOD_FROM_CTL_CODE(ctlCode) (ctlCode&0x00000003)
 
+struct _DEVICE_OBJECT_POWER_EXTENSION;
 
 typedef struct _IO_COMPLETION_PACKET{
    PVOID             Key;
@@ -53,8 +54,15 @@ typedef struct _DEVOBJ_EXTENSION {
    CSHORT Type;
    USHORT Size;
    PDEVICE_OBJECT DeviceObject;
-   ULONG Unknown[3];
+   ULONG PowerFlags;
+   struct DEVICE_OBJECT_POWER_EXTENSION *Dope;
+   ULONG ExtensionFlags;
    struct _DEVICE_NODE *DeviceNode;
+   PDEVICE_OBJECT AttachedTo;
+   LONG StartIoCount;
+   LONG StartIoKey;
+   ULONG StartIoFlags;
+   struct _VPB *Vpb;
 } DEVOBJ_EXTENSION, *PDEVOBJ_EXTENSION;
 
 typedef struct _PRIVATE_DRIVER_EXTENSIONS {
@@ -322,6 +330,17 @@ PnpInit(VOID);
 VOID
 IopInitDriverImplementation(VOID);
 
+VOID
+IopInitPnpNotificationImplementation(VOID);
+
+VOID
+IopNotifyPlugPlayNotification(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN IO_NOTIFICATION_EVENT_CATEGORY EventCategory,
+	IN GUID* Event,
+	IN PVOID EventCategoryData1,
+	IN PVOID EventCategoryData2);
+
 NTSTATUS
 IopGetSystemPowerDeviceObject(PDEVICE_OBJECT *DeviceObject);
 NTSTATUS
@@ -362,7 +381,10 @@ IopCreateDevice(PVOID ObjectBody,
 		PVOID Parent,
 		PWSTR RemainingPath,
 		POBJECT_ATTRIBUTES ObjectAttributes);
-NTSTATUS IoAttachVpb(PDEVICE_OBJECT DeviceObject);
+
+NTSTATUS
+STDCALL
+IopAttachVpb(PDEVICE_OBJECT DeviceObject);
 
 PIRP IoBuildSynchronousFsdRequestWithMdl(ULONG MajorFunction,
 					 PDEVICE_OBJECT DeviceObject,
@@ -478,6 +500,7 @@ NTSTATUS FASTCALL
 IopCreateDriverObject(
    PDRIVER_OBJECT *DriverObject,
    PUNICODE_STRING ServiceName,
+   ULONG CreateAttributes,
    BOOLEAN FileSystemDriver,
    PVOID DriverImageStart,
    ULONG DriverImageSize);
@@ -491,6 +514,7 @@ NTSTATUS FASTCALL
 IopInitializeDriverModule(
    IN PDEVICE_NODE DeviceNode,
    IN PMODULE_OBJECT ModuleObject,
+   IN PUNICODE_STRING ServiceName,
    IN BOOLEAN FileSystemDriver,
    OUT PDRIVER_OBJECT *DriverObject);
 
@@ -505,6 +529,38 @@ IopMarkLastReinitializeDriver(VOID);
 VOID FASTCALL
 IopReinitializeDrivers(VOID);
 
+/* file.c */
+
+NTSTATUS
+STDCALL
+IopCreateFile(PVOID ObjectBody,
+              PVOID Parent,
+              PWSTR RemainingPath,
+              POBJECT_ATTRIBUTES ObjectAttributes);
+
+VOID
+STDCALL
+IopDeleteFile(PVOID ObjectBody);
+
+NTSTATUS
+STDCALL
+IopSecurityFile(PVOID ObjectBody,
+                SECURITY_OPERATION_CODE OperationCode,
+                SECURITY_INFORMATION SecurityInformation,
+                PSECURITY_DESCRIPTOR SecurityDescriptor,
+                PULONG BufferLength);
+
+NTSTATUS
+STDCALL
+IopQueryNameFile(PVOID ObjectBody,
+                 POBJECT_NAME_INFORMATION ObjectNameInfo,
+                 ULONG Length,
+                 PULONG ReturnLength);
+
+VOID
+STDCALL
+IopCloseFile(PVOID ObjectBody,
+             ULONG HandleCount);
 
 /* plugplay.c */
 

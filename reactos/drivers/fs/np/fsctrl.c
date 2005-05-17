@@ -66,9 +66,9 @@ NpfsAddListeningServerInstance(PIRP Irp,
       return STATUS_PENDING;
     }
   IoReleaseCancelSpinLock(oldIrql);
-  
+
   RemoveEntryList(&Entry->Entry);
-  
+
   Irp->IoStatus.Status = STATUS_CANCELLED;
   Irp->IoStatus.Information = 0;
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -222,7 +222,7 @@ NpfsDisconnectPipe(PNPFS_FCB Fcb)
    {
       PLIST_ENTRY Entry;
       PNPFS_WAITER_ENTRY WaitEntry = NULL;
-      BOOLEAN Complete = FALSE; 
+      BOOLEAN Complete = FALSE;
       PIRP Irp = NULL;
 
       Entry = Fcb->Pipe->WaiterListHead.Flink;
@@ -351,6 +351,8 @@ NpfsGetState(PIRP Irp,
   Reply->OutBufferSize = Pipe->OutboundQuota;
   Reply->Timeout = Pipe->TimeOut;
 
+  Irp->IoStatus.Information = sizeof(NPFS_GET_STATE);
+
   DPRINT("Status (0x%X).\n", STATUS_SUCCESS);
 
   return STATUS_SUCCESS;
@@ -463,6 +465,8 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
   DPRINT("Pipe: %p\n", Pipe);
   DPRINT("PipeName: %wZ\n", &Pipe->PipeName);
 
+  Irp->IoStatus.Information = 0;
+
   switch (IoStack->Parameters.FileSystemControl.FsControlCode)
     {
       case FSCTL_PIPE_ASSIGN_EVENT:
@@ -553,8 +557,7 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
   if (Status != STATUS_PENDING)
     {
       Irp->IoStatus.Status = Status;
-      Irp->IoStatus.Information = 0;
- 
+
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
 

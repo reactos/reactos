@@ -10,12 +10,12 @@
  * NOTES:
  * In your usermode application, do something like this:
  *
- *  DebugHandle = CreateFile("\\\\.\\DebugOut", 
- *                           GENERIC_WRITE, 
- *                           0, 
+ *  DebugHandle = CreateFile("\\\\.\\DebugOut",
+ *                           GENERIC_WRITE,
+ *                           0,
  *                           NULL,
- *                           OPEN_EXISTING, 
- *                           FILE_ATTRIBUTE_NORMAL, 
+ *                           OPEN_EXISTING,
+ *                           FILE_ATTRIBUTE_NORMAL,
  *                           NULL);
  *
  * and write to your hearts content to DebugHandle.
@@ -35,7 +35,7 @@ DebugOutDispatch(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
   char Buf[513];
   unsigned Remaining;
   unsigned Length;
- 
+
   nErrCode = STATUS_SUCCESS;
 
   switch(piosStack->MajorFunction)
@@ -88,7 +88,7 @@ DebugOutUnload(PDRIVER_OBJECT DriverObject)
 {
 }
 
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
   PDEVICE_OBJECT DebugOutDevice;

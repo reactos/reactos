@@ -33,7 +33,7 @@ NtGdiCheckColorsInGamut(HDC  hDC,
 BOOL
 STDCALL
 NtGdiColorMatchToTarget(HDC  hDC,
-                             HDC  hDCTarget, 
+                             HDC  hDCTarget,
                              DWORD  Action)
 {
   UNIMPLEMENTED;
@@ -81,7 +81,7 @@ NtGdiGetColorSpace(HDC  hDC)
 
 BOOL
 STDCALL
-NtGdiGetDeviceGammaRamp(HDC  hDC,  
+NtGdiGetDeviceGammaRamp(HDC  hDC,
                              LPVOID  Ramp)
 {
   UNIMPLEMENTED;
@@ -132,19 +132,19 @@ NtGdiSetICMMode(HDC  hDC,
                     INT  EnableICM)
 {
   /* FIXME: this should be coded someday  */
-  if (EnableICM == ICM_OFF) 
+  if (EnableICM == ICM_OFF)
     {
       return  ICM_OFF;
     }
-  if (EnableICM == ICM_ON) 
+  if (EnableICM == ICM_ON)
     {
       return  0;
     }
-  if (EnableICM == ICM_QUERY) 
+  if (EnableICM == ICM_QUERY)
     {
       return  ICM_OFF;
     }
-  
+
   return  0;
 }
 
@@ -159,8 +159,8 @@ NtGdiSetICMProfile(HDC  hDC,
 
 BOOL
 STDCALL
-NtGdiUpdateICMRegKey(DWORD  Reserved,  
-                          LPWSTR  CMID, 
+NtGdiUpdateICMRegKey(DWORD  Reserved,
+                          LPWSTR  CMID,
                           LPWSTR  Filename,
                           UINT  Command)
 {

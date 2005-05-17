@@ -16,7 +16,7 @@
  *	FsRtlAllocatePool@8
  *
  * DESCRIPTION
- *	
+ *
  * ARGUMENTS
  *
  * RETURN VALUE
@@ -53,7 +53,7 @@ FsRtlAllocatePool (
  *	FsRtlAllocatePoolWithQuota@8
  *
  * DESCRIPTION
- *	
+ *
  * ARGUMENTS
  *
  * RETURN VALUE
@@ -90,7 +90,7 @@ FsRtlAllocatePoolWithQuota (
  *	FsRtlAllocatePoolWithQuotaTag@12
  *
  * DESCRIPTION
- *	
+ *
  * ARGUMENTS
  *
  * RETURN VALUE
@@ -125,7 +125,7 @@ FsRtlAllocatePoolWithQuotaTag (
  *	FsRtlAllocatePoolWithTag@12
  *
  * DESCRIPTION
- *	
+ *
  * ARGUMENTS
  *
  * RETURN VALUE

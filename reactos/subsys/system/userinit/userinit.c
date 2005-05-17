@@ -24,6 +24,7 @@
  * PROGRAMMERS: Thomas Weidenmueller (w3seek@users.sourceforge.net)
  */
 #include <windows.h>
+#include "resource.h"
 
 
 /* GLOBALS ******************************************************************/
@@ -37,9 +38,9 @@ BOOL GetShell(WCHAR *CommandLine)
   DWORD Type, Size;
   WCHAR Shell[MAX_PATH];
   BOOL Ret = FALSE;
-  
-  if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
-                  L"SOFTWARE\\ReactOS\\Windows NT\\CurrentVersion\\Winlogon", 
+
+  if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                  L"SOFTWARE\\ReactOS\\Windows NT\\CurrentVersion\\Winlogon",
                   0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
   {
     Size = MAX_PATH * sizeof(WCHAR);
@@ -58,7 +59,7 @@ BOOL GetShell(WCHAR *CommandLine)
     }
     RegCloseKey(hKey);
   }
-  
+
   if(!Ret)
   {
     if(GetWindowsDirectory(CommandLine, MAX_PATH - 13))
@@ -66,7 +67,7 @@ BOOL GetShell(WCHAR *CommandLine)
     else
       wcscpy(CommandLine, L"explorer.exe");
   }
-  
+
   return Ret;
 }
 
@@ -77,15 +78,16 @@ void StartShell(void)
   PROCESS_INFORMATION pi;
   WCHAR Shell[MAX_PATH];
   WCHAR ExpandedShell[MAX_PATH];
-  
+  TCHAR szMsg[RC_STRING_MAX_SIZE];
+
   GetShell(Shell);
-  
+
   ZeroMemory(&si, sizeof(STARTUPINFO));
   si.cb = sizeof(STARTUPINFO);
   ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
-  
+
   ExpandEnvironmentStrings(Shell, ExpandedShell, MAX_PATH);
-  
+
   if(CreateProcess(NULL,
                    ExpandedShell,
                    NULL,
@@ -102,7 +104,10 @@ void StartShell(void)
     CloseHandle(pi.hThread);
   }
   else
-    MessageBox(0, L"Userinit failed to start the shell!\n", NULL, 0);
+  {
+    LoadString( GetModuleHandle(NULL), STRING_USERINIT_FAIL, szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
+    MessageBox(0, szMsg, NULL, 0);
+  }
 }
 
 static
@@ -111,7 +116,7 @@ void SetUserSettings(void)
   HKEY hKey;
   DWORD Type, Size;
   WCHAR szWallpaper[MAX_PATH + 1];
-  
+
   if(RegOpenKeyEx(HKEY_CURRENT_USER,
                   L"Control Panel\\Desktop",
                   0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)

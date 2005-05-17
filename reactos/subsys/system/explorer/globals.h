@@ -239,11 +239,14 @@ extern struct ExplorerGlobals
 	XMLPos	get_cfg(const char* path);
 
 	HINSTANCE	_hInstance;
-	ATOM		_hframeClass;
 	UINT		_cfStrFName;
+
+#ifndef ROSSHELL
+	ATOM		_hframeClass;
 	HWND		_hMainWnd;
-	bool		_prescan_nodes;
 	bool		_desktop_mode;
+	bool		_prescan_nodes;
+#endif
 
 	FILE*		_log;
 

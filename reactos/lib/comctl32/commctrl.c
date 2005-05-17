@@ -118,7 +118,7 @@ extern void UPDOWN_Unregister(void);
 
 LRESULT WINAPI COMCTL32_SubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-LPSTR    COMCTL32_aSubclass = NULL;
+LPWSTR  COMCTL32_wSubclass = NULL;
 HMODULE COMCTL32_hModule = 0;
 LANGID  COMCTL32_uiLang = MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL);
 HBRUSH  COMCTL32_hPattern55AABrush = NULL;
@@ -132,6 +132,9 @@ static const WORD wPattern55AA[] =
     0x5555, 0xaaaa, 0x5555, 0xaaaa
 };
 
+static const WCHAR strCC32SubclassInfo[] = {
+    'C','C','3','2','S','u','b','c','l','a','s','s','I','n','f','o',0
+};
 
 /***********************************************************************
  * DllMain [Internal]
@@ -159,8 +162,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             COMCTL32_hModule = (HMODULE)hinstDLL;
 
             /* add global subclassing atom (used by 'tooltip' and 'updown') */
-            COMCTL32_aSubclass = (LPSTR)(DWORD)GlobalAddAtomA ("CC32SubclassInfo");
-            TRACE("Subclassing atom added: %p\n", COMCTL32_aSubclass);
+            COMCTL32_wSubclass = (LPWSTR)(DWORD)GlobalAddAtomW (strCC32SubclassInfo);
+            TRACE("Subclassing atom added: %p\n", COMCTL32_wSubclass);
 
             /* create local pattern brush */
             COMCTL32_hPattern55AABitmap = CreateBitmap (8, 8, 1, 1, wPattern55AA);
@@ -217,9 +220,9 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             COMCTL32_hPattern55AABitmap = NULL;
 
             /* delete global subclassing atom */
-            GlobalDeleteAtom (LOWORD(COMCTL32_aSubclass));
-            TRACE("Subclassing atom deleted: %p\n", COMCTL32_aSubclass);
-            COMCTL32_aSubclass = NULL;
+            GlobalDeleteAtom (LOWORD(COMCTL32_wSubclass));
+            TRACE("Subclassing atom deleted: %p\n", COMCTL32_wSubclass);
+            COMCTL32_wSubclass = NULL;
             break;
     }
 
@@ -274,7 +277,7 @@ MenuHelp (UINT uMsg, WPARAM wParam, LPARAM lParam, HMENU hMainMenu,
             if ((HIWORD(wParam) == 0xFFFF) && (lParam == 0)) {
                 /* menu was closed */
 		TRACE("menu was closed!\n");
-                SendMessageA (hwndStatus, SB_SIMPLE, FALSE, 0);
+                SendMessageW (hwndStatus, SB_SIMPLE, FALSE, 0);
             }
 	    else {
 		/* menu item was selected */
@@ -285,14 +288,14 @@ MenuHelp (UINT uMsg, WPARAM wParam, LPARAM lParam, HMENU hMainMenu,
 		TRACE("uMenuID = %u\n", uMenuID);
 
 		if (uMenuID) {
-		    CHAR szText[256];
+		    WCHAR szText[256];
 
-		    if (!LoadStringA (hInst, uMenuID, szText, 256))
+		    if (!LoadStringW (hInst, uMenuID, szText, sizeof(szText)/sizeof(szText[0])))
 			szText[0] = '\0';
 
-		    SendMessageA (hwndStatus, SB_SETTEXTA,
+		    SendMessageW (hwndStatus, SB_SETTEXTW,
 				    255 | SBT_NOBORDERS, (LPARAM)szText);
-		    SendMessageA (hwndStatus, SB_SIMPLE, TRUE, 0);
+		    SendMessageW (hwndStatus, SB_SIMPLE, TRUE, 0);
 		}
 	    }
 	    break;
@@ -425,7 +428,7 @@ GetEffectiveClientRect (HWND hwnd, LPRECT lpRect, LPINT lpInfo)
 	    return;
 	lpRun++;
 	hwndCtrl = GetDlgItem (hwnd, *lpRun);
-	if (GetWindowLongA (hwndCtrl, GWL_STYLE) & WS_VISIBLE) {
+	if (GetWindowLongW (hwndCtrl, GWL_STYLE) & WS_VISIBLE) {
 	    TRACE("control id 0x%x\n", *lpRun);
 	    GetWindowRect (hwndCtrl, &rcCtrl);
 	    MapWindowPoints (NULL, hwnd, (LPPOINT)&rcCtrl, 2);
@@ -511,12 +514,12 @@ void WINAPI DrawStatusTextA (HDC hdc, LPRECT lprc, LPCSTR text, UINT style)
 
     if ( text ) {
 	if ( (len = MultiByteToWideChar( CP_ACP, 0, text, -1, NULL, 0 )) ) {
-	    if ( (textW = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) )) )
+	    if ( (textW = Alloc( len * sizeof(WCHAR) )) )
 		MultiByteToWideChar( CP_ACP, 0, text, -1, textW, len );
 	}
     }
     DrawStatusTextW( hdc, lprc, textW, style );
-    HeapFree( GetProcessHeap(), 0, textW );
+    Free( textW );
 }
 
 
@@ -603,12 +606,12 @@ CreateUpDownControl (DWORD style, INT x, INT y, INT cx, INT cy,
 		     HWND buddy, INT maxVal, INT minVal, INT curVal)
 {
     HWND hUD =
-	CreateWindowA (UPDOWN_CLASSA, 0, style, x, y, cx, cy,
+	CreateWindowW (UPDOWN_CLASSW, 0, style, x, y, cx, cy,
 			 parent, (HMENU)id, inst, 0);
     if (hUD) {
-	SendMessageA (hUD, UDM_SETBUDDY, (WPARAM)buddy, 0);
-	SendMessageA (hUD, UDM_SETRANGE, 0, MAKELONG(maxVal, minVal));
-	SendMessageA (hUD, UDM_SETPOS, 0, MAKELONG(curVal, 0));
+	SendMessageW (hUD, UDM_SETBUDDY, (WPARAM)buddy, 0);
+	SendMessageW (hUD, UDM_SETRANGE, 0, MAKELONG(maxVal, minVal));
+	SendMessageW (hUD, UDM_SETPOS, 0, MAKELONG(curVal, 0));
     }
 
     return hUD;
@@ -764,13 +767,12 @@ CreateToolbarEx (HWND hwnd, DWORD style, UINT wID, INT nBitmaps,
     HWND hwndTB;
 
     hwndTB =
-        CreateWindowExA(0, TOOLBARCLASSNAMEA, NULL, style|WS_CHILD, 0,0,100,30,
+        CreateWindowExW(0, TOOLBARCLASSNAMEW, NULL, style|WS_CHILD, 0,0,100,30,
                         hwnd, (HMENU)wID, COMCTL32_hModule, NULL);
     if(hwndTB) {
 	TBADDBITMAP tbab;
 
-        SendMessageA (hwndTB, TB_BUTTONSTRUCTSIZE,
-			(WPARAM)uStructSize, 0);
+        SendMessageW (hwndTB, TB_BUTTONSTRUCTSIZE, (WPARAM)uStructSize, 0);
 
        /* set bitmap and button size */
        /*If CreateToolbarEx receives 0, windows sets default values*/
@@ -778,29 +780,28 @@ CreateToolbarEx (HWND hwnd, DWORD style, UINT wID, INT nBitmaps,
            dxBitmap = 16;
        if (dyBitmap <= 0)
            dyBitmap = 15;
-       SendMessageA (hwndTB, TB_SETBITMAPSIZE, 0,
-                       MAKELPARAM((WORD)dxBitmap, (WORD)dyBitmap));
+       SendMessageW (hwndTB, TB_SETBITMAPSIZE, 0,
+                     MAKELPARAM((WORD)dxBitmap, (WORD)dyBitmap));
 
        if (dxButton <= 0)
            dxButton = 24;
        if (dyButton <= 0)
            dyButton = 22;
-       SendMessageA (hwndTB, TB_SETBUTTONSIZE, 0,
-                       MAKELPARAM((WORD)dxButton, (WORD)dyButton));
+       SendMessageW (hwndTB, TB_SETBUTTONSIZE, 0,
+                     MAKELPARAM((WORD)dxButton, (WORD)dyButton));
 
 
 	/* add bitmaps */
 	if (nBitmaps > 0)
 	{
-	tbab.hInst = hBMInst;
-	tbab.nID   = wBMID;
+	    tbab.hInst = hBMInst;
+	    tbab.nID   = wBMID;
 
-	SendMessageA (hwndTB, TB_ADDBITMAP,
-			(WPARAM)nBitmaps, (LPARAM)&tbab);
+	    SendMessageW (hwndTB, TB_ADDBITMAP, (WPARAM)nBitmaps, (LPARAM)&tbab);
 	}
 	/* add buttons */
 	if(iNumButtons > 0)
-	SendMessageA (hwndTB, TB_ADDBUTTONSA,
+	SendMessageW (hwndTB, TB_ADDBUTTONSW,
 			(WPARAM)iNumButtons, (LPARAM)lpButtons);
     }
 
@@ -856,7 +857,7 @@ CreateMappedBitmap (HINSTANCE hInstance, INT idBitmap, UINT wFlags,
 	sysColorMap = (LPCOLORMAP)internalColorMap;
     }
 
-    hRsrc = FindResourceA (hInstance, (LPSTR)idBitmap, (LPSTR)RT_BITMAP);
+    hRsrc = FindResourceW (hInstance, (LPWSTR)idBitmap, (LPWSTR)RT_BITMAP);
     if (hRsrc == 0)
 	return 0;
     hglb = LoadResource (hInstance, hRsrc);
@@ -1103,16 +1104,15 @@ BOOL WINAPI SetWindowSubclass (HWND hWnd, SUBCLASSPROC pfnSubclass,
     * from there. */
 
    /* See if we have been called for this window */
-   stack = (LPSUBCLASS_INFO)GetPropA (hWnd, COMCTL32_aSubclass);
+   stack = (LPSUBCLASS_INFO)GetPropW (hWnd, COMCTL32_wSubclass);
    if (!stack) {
       /* allocate stack */
-      stack = (LPSUBCLASS_INFO)HeapAlloc (GetProcessHeap(), HEAP_ZERO_MEMORY,
-                                         sizeof(SUBCLASS_INFO));
+      stack = Alloc (sizeof(SUBCLASS_INFO));
       if (!stack) {
          ERR ("Failed to allocate our Subclassing stack\n");
          return FALSE;
       }
-      SetPropA (hWnd, COMCTL32_aSubclass, (HANDLE)stack);
+      SetPropW (hWnd, COMCTL32_wSubclass, (HANDLE)stack);
 
       /* set window procedure to our own and save the current one */
       if (IsWindowUnicode (hWnd))
@@ -1136,15 +1136,15 @@ BOOL WINAPI SetWindowSubclass (HWND hWnd, SUBCLASSPROC pfnSubclass,
       }
    }
    
-   proc = HeapAlloc(GetProcessHeap(), 0, sizeof(SUBCLASSPROCS));
+   proc = Alloc(sizeof(SUBCLASSPROCS));
    if (!proc) {
       ERR ("Failed to allocate subclass entry in stack\n");
       if (IsWindowUnicode (hWnd))
          SetWindowLongPtrW (hWnd, GWLP_WNDPROC, (DWORD_PTR)stack->origproc);
       else
          SetWindowLongPtrA (hWnd, GWLP_WNDPROC, (DWORD_PTR)stack->origproc);
-      HeapFree (GetProcessHeap (), 0, stack);
-      RemovePropA( hWnd, COMCTL32_aSubclass );
+      Free (stack);
+      RemovePropW( hWnd, COMCTL32_wSubclass );
       return FALSE;
    }
    
@@ -1183,7 +1183,7 @@ BOOL WINAPI GetWindowSubclass (HWND hWnd, SUBCLASSPROC pfnSubclass,
    TRACE ("(%p, %p, %x, %p)\n", hWnd, pfnSubclass, uID, pdwRef);
 
    /* See if we have been called for this window */
-   stack = (LPSUBCLASS_INFO)GetPropA (hWnd, COMCTL32_aSubclass);
+   stack = (LPSUBCLASS_INFO)GetPropW (hWnd, COMCTL32_wSubclass);
    if (!stack)
       return FALSE;
 
@@ -1226,7 +1226,7 @@ BOOL WINAPI RemoveWindowSubclass(HWND hWnd, SUBCLASSPROC pfnSubclass, UINT_PTR u
    TRACE ("(%p, %p, %x)\n", hWnd, pfnSubclass, uID);
 
    /* Find the Subclass to remove */
-   stack = (LPSUBCLASS_INFO)GetPropA (hWnd, COMCTL32_aSubclass);
+   stack = (LPSUBCLASS_INFO)GetPropW (hWnd, COMCTL32_wSubclass);
    if (!stack)
       return FALSE;
 
@@ -1243,7 +1243,7 @@ BOOL WINAPI RemoveWindowSubclass(HWND hWnd, SUBCLASSPROC pfnSubclass, UINT_PTR u
          if (stack->stackpos == proc)
             stack->stackpos = stack->stackpos->next;
             
-         HeapFree (GetProcessHeap (), 0, proc);
+         Free (proc);
          ret = TRUE;
          break;
       }
@@ -1258,8 +1258,8 @@ BOOL WINAPI RemoveWindowSubclass(HWND hWnd, SUBCLASSPROC pfnSubclass, UINT_PTR u
          SetWindowLongPtrW (hWnd, GWLP_WNDPROC, (DWORD_PTR)stack->origproc);
       else
          SetWindowLongPtrA (hWnd, GWLP_WNDPROC, (DWORD_PTR)stack->origproc);
-      HeapFree (GetProcessHeap (), 0, stack);
-      RemovePropA( hWnd, COMCTL32_aSubclass );
+      Free (stack);
+      RemovePropW( hWnd, COMCTL32_wSubclass );
    }
    
    return ret;
@@ -1279,7 +1279,7 @@ LRESULT WINAPI COMCTL32_SubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
     
    TRACE ("(%p, 0x%08x, 0x%08x, 0x%08lx)\n", hWnd, uMsg, wParam, lParam);
 
-   stack = (LPSUBCLASS_INFO)GetPropA (hWnd, COMCTL32_aSubclass);
+   stack = (LPSUBCLASS_INFO)GetPropW (hWnd, COMCTL32_wSubclass);
    if (!stack) {
       ERR ("Our sub classing stack got erased for %p!! Nothing we can do\n", hWnd);
       return 0;
@@ -1300,8 +1300,8 @@ LRESULT WINAPI COMCTL32_SubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
          SetWindowLongPtrW (hWnd, GWLP_WNDPROC, (DWORD_PTR)stack->origproc);
       else
          SetWindowLongPtrA (hWnd, GWLP_WNDPROC, (DWORD_PTR)stack->origproc);
-      HeapFree (GetProcessHeap (), 0, stack);
-      RemovePropA( hWnd, COMCTL32_aSubclass );
+      Free (stack);
+      RemovePropW( hWnd, COMCTL32_wSubclass );
    }
    return ret;
 }
@@ -1330,7 +1330,7 @@ LRESULT WINAPI DefSubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
    TRACE ("(%p, 0x%08x, 0x%08x, 0x%08lx)\n", hWnd, uMsg, wParam, lParam);
 
    /* retrieve our little stack from the Properties */
-   stack = (LPSUBCLASS_INFO)GetPropA (hWnd, COMCTL32_aSubclass);
+   stack = (LPSUBCLASS_INFO)GetPropW (hWnd, COMCTL32_wSubclass);
    if (!stack) {
       ERR ("Our sub classing stack got erased for %p!! Nothing we can do\n", hWnd);
       return 0;
@@ -1374,7 +1374,7 @@ COMCTL32_CreateToolTip(HWND hwndOwner)
 {
     HWND hwndToolTip;
 
-    hwndToolTip = CreateWindowExA(0, TOOLTIPS_CLASSA, NULL, 0,
+    hwndToolTip = CreateWindowExW(0, TOOLTIPS_CLASSW, NULL, 0,
 				  CW_USEDEFAULT, CW_USEDEFAULT,
 				  CW_USEDEFAULT, CW_USEDEFAULT, hwndOwner,
 				  0, 0, 0);
@@ -1390,9 +1390,9 @@ COMCTL32_CreateToolTip(HWND hwndOwner)
 	nmttc.hdr.code = NM_TOOLTIPSCREATED;
 	nmttc.hwndToolTips = hwndToolTip;
 
-       SendMessageA(GetParent(hwndTrueOwner), WM_NOTIFY,
+       SendMessageW(GetParent(hwndTrueOwner), WM_NOTIFY,
                     (WPARAM)GetWindowLongPtrW(hwndTrueOwner, GWLP_ID),
-		     (LPARAM)&nmttc);
+		    (LPARAM)&nmttc);
     }
 
     return hwndToolTip;

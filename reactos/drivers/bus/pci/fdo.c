@@ -208,7 +208,7 @@ FdoQueryBusRelations(
   DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
   if (Irp->IoStatus.Information) {
-    /* FIXME: Another bus driver has already created a DEVICE_RELATIONS 
+    /* FIXME: Another bus driver has already created a DEVICE_RELATIONS
               structure so we must merge this structure with our own */
   }
 

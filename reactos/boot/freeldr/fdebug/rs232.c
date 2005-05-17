@@ -83,16 +83,16 @@ BOOL Rs232ClosePortWin32(VOID)
 //   [in] Pointer to a null-terminated string that specifies device-control information.
 //   The string must have the same form as the mode command's command-line arguments.
 //
-//   For example, the following string specifies a baud rate of 1200, no parity, 8 data bits, and 1 stop bit: 
+//   For example, the following string specifies a baud rate of 1200, no parity, 8 data bits, and 1 stop bit:
 //   "baud=1200 parity=N data=8 stop=1"
 //
 //   The following string specifies a baud rate of 115200, no parity, 8 data bits, and 1 stop bit:
 //   "115200,n,8,1"
 //
-//   The device name is ignored if it is included in the string, but it must specify a valid device, as follows: 
+//   The device name is ignored if it is included in the string, but it must specify a valid device, as follows:
 //   "COM1: baud=1200 parity=N data=8 stop=1"
 //
-//   For further information on mode command syntax, refer to the end-user documentation for your operating system. 
+//   For further information on mode command syntax, refer to the end-user documentation for your operating system.
 BOOL Rs232ConfigurePortWin32(TCHAR* DeviceControlString)
 {
 	DCB		dcb;
@@ -157,28 +157,28 @@ BOOL Rs232ConfigurePortWin32(TCHAR* DeviceControlString)
 }
 
 // Members
-//  ReadIntervalTimeout 
-//   Specifies the maximum time, in milliseconds, allowed to elapse between the arrival of two characters on the communications line. During a ReadFile operation, the time period begins when the first character is received. If the interval between the arrival of any two characters exceeds this amount, the ReadFile operation is completed and any buffered data is returned. A value of zero indicates that interval time-outs are not used. 
-//   A value of MAXDWORD, combined with zero values for both the ReadTotalTimeoutConstant and ReadTotalTimeoutMultiplier members, specifies that the read operation is to return immediately with the characters that have already been received, even if no characters have been received. 
-// 
-//  ReadTotalTimeoutMultiplier 
-//   Specifies the multiplier, in milliseconds, used to calculate the total time-out period for read operations. For each read operation, this value is multiplied by the requested number of bytes to be read. 
-//  ReadTotalTimeoutConstant 
-//   Specifies the constant, in milliseconds, used to calculate the total time-out period for read operations. For each read operation, this value is added to the product of the ReadTotalTimeoutMultiplier member and the requested number of bytes. 
-//   A value of zero for both the ReadTotalTimeoutMultiplier and ReadTotalTimeoutConstant members indicates that total time-outs are not used for read operations. 
-// 
-//  WriteTotalTimeoutMultiplier 
-//   Specifies the multiplier, in milliseconds, used to calculate the total time-out period for write operations. For each write operation, this value is multiplied by the number of bytes to be written. 
-//  WriteTotalTimeoutConstant 
-//   Specifies the constant, in milliseconds, used to calculate the total time-out period for write operations. For each write operation, this value is added to the product of the WriteTotalTimeoutMultiplier member and the number of bytes to be written. 
-//   A value of zero for both the WriteTotalTimeoutMultiplier and WriteTotalTimeoutConstant members indicates that total time-outs are not used for write operations. 
-// 
+//  ReadIntervalTimeout
+//   Specifies the maximum time, in milliseconds, allowed to elapse between the arrival of two characters on the communications line. During a ReadFile operation, the time period begins when the first character is received. If the interval between the arrival of any two characters exceeds this amount, the ReadFile operation is completed and any buffered data is returned. A value of zero indicates that interval time-outs are not used.
+//   A value of MAXDWORD, combined with zero values for both the ReadTotalTimeoutConstant and ReadTotalTimeoutMultiplier members, specifies that the read operation is to return immediately with the characters that have already been received, even if no characters have been received.
+//
+//  ReadTotalTimeoutMultiplier
+//   Specifies the multiplier, in milliseconds, used to calculate the total time-out period for read operations. For each read operation, this value is multiplied by the requested number of bytes to be read.
+//  ReadTotalTimeoutConstant
+//   Specifies the constant, in milliseconds, used to calculate the total time-out period for read operations. For each read operation, this value is added to the product of the ReadTotalTimeoutMultiplier member and the requested number of bytes.
+//   A value of zero for both the ReadTotalTimeoutMultiplier and ReadTotalTimeoutConstant members indicates that total time-outs are not used for read operations.
+//
+//  WriteTotalTimeoutMultiplier
+//   Specifies the multiplier, in milliseconds, used to calculate the total time-out period for write operations. For each write operation, this value is multiplied by the number of bytes to be written.
+//  WriteTotalTimeoutConstant
+//   Specifies the constant, in milliseconds, used to calculate the total time-out period for write operations. For each write operation, this value is added to the product of the WriteTotalTimeoutMultiplier member and the number of bytes to be written.
+//   A value of zero for both the WriteTotalTimeoutMultiplier and WriteTotalTimeoutConstant members indicates that total time-outs are not used for write operations.
+//
 // Remarks
-//  If an application sets ReadIntervalTimeout and ReadTotalTimeoutMultiplier to MAXDWORD and sets ReadTotalTimeoutConstant to a value greater than zero and less than MAXDWORD, one of the following occurs when the ReadFile function is called: 
-// 
-//   If there are any characters in the input buffer, ReadFile returns immediately with the characters in the buffer. 
-//   If there are no characters in the input buffer, ReadFile waits until a character arrives and then returns immediately. 
-//   If no character arrives within the time specified by ReadTotalTimeoutConstant, ReadFile times out. 
+//  If an application sets ReadIntervalTimeout and ReadTotalTimeoutMultiplier to MAXDWORD and sets ReadTotalTimeoutConstant to a value greater than zero and less than MAXDWORD, one of the following occurs when the ReadFile function is called:
+//
+//   If there are any characters in the input buffer, ReadFile returns immediately with the characters in the buffer.
+//   If there are no characters in the input buffer, ReadFile waits until a character arrives and then returns immediately.
+//   If no character arrives within the time specified by ReadTotalTimeoutConstant, ReadFile times out.
 BOOL Rs232SetCommunicationTimeoutsWin32(DWORD ReadIntervalTimeout, DWORD ReadTotalTimeoutMultiplier, DWORD ReadTotalTimeoutConstant, DWORD WriteTotalTimeoutMultiplier, DWORD WriteTotalTimeoutConstant)
 {
 	COMMTIMEOUTS	ct;

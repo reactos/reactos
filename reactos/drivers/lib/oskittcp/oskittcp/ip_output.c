@@ -407,7 +407,7 @@ sendit:
 	}
 #else
 	OS_DbgPrint(OSK_MID_TRACE,("Using default mtu of 1500\n"));
-	len = (1500 - hlen) & ~7; 
+	len = (1500 - hlen) & ~7;
 #endif
 
     {
@@ -500,7 +500,7 @@ sendorfree:
 	    m_free( new_m );
 	    goto done;
 	}
-	
+
 	OS_DbgPrint(OSK_MID_TRACE,("Error from upper layer: %d\n", error));
 #endif
 	}
@@ -1158,7 +1158,7 @@ ip_getmoptions(optname, imo, mp)
 
 	switch (optname) {
 #ifndef __REACTOS__
-	case IP_MULTICAST_VIF: 
+	case IP_MULTICAST_VIF:
 		if (imo != NULL)
 			*(mtod(*mp, int *)) = imo->imo_multicast_vif;
 		else

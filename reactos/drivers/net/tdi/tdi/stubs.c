@@ -8,7 +8,7 @@
 /*
  * @unimplemented
  */
-VOID 
+VOID
 STDCALL
 TdiBuildNetbiosAddress (
 	IN	PUCHAR			NetbiosName,
@@ -37,7 +37,7 @@ TdiBuildNetbiosAddressEa (
 /*
  * @unimplemented
  */
-NTSTATUS 
+NTSTATUS
 STDCALL
 TdiCopyBufferToMdl (
 	IN	PVOID	SourceBuffer,
@@ -55,7 +55,7 @@ TdiCopyBufferToMdl (
 /*
  * @unimplemented
  */
-NTSTATUS 
+NTSTATUS
 STDCALL
 TdiCopyMdlToBuffer (
 	IN	PMDL	SourceMdlChain,

@@ -306,10 +306,10 @@ BOOL Setup(VOID)
     PHOSTENT phe;
 
     wVersionRequested = MAKEWORD(2, 2);
- 
+
     Status = WSAStartup(wVersionRequested, &WsaData);
     if (Status != 0) {
-        printf("Could not initialize winsock dll.\n");	
+        printf("Could not initialize winsock dll.\n");
         return FALSE;
     }
 
@@ -327,9 +327,9 @@ BOOL Setup(VOID)
         if (phe == NULL) {
             printf("Unknown host %s.\n", TargetName);
             return FALSE;
-        } 
+        }
     }
-	
+
     if (phe != NULL) {
         CopyMemory(&Target.sin_addr, phe->h_addr, phe->h_length);
     } else {
@@ -341,7 +341,7 @@ BOOL Setup(VOID)
     } else {
         Target.sin_family = AF_INET;
     }
-	
+
     TargetIP		= inet_ntoa(Target.sin_addr);
     CurrentSeqNum	= 0;
     SentCount		= 0;
@@ -391,7 +391,7 @@ VOID TimeToMsString(LPSTR String, LARGE_INTEGER Time)
     LARGE_INTEGER LargeTime;
 
     LargeTime.QuadPart = Time.QuadPart / TicksPerMs.QuadPart;
- 
+
     _i64toa(LargeTime.QuadPart, Convstr, 10);
 	strcpy(String, Convstr);
     strcat(String, "ms");
@@ -449,7 +449,7 @@ BOOL DecodeResponse(PCHAR buffer, UINT size, PSOCKADDR_IN from)
     }
 
 
-    printf("Reply from %s: bytes=%d time%s%s TTL=%d\n", inet_ntoa(from->sin_addr), 
+    printf("Reply from %s: bytes=%d time%s%s TTL=%d\n", inet_ntoa(from->sin_addr),
       size - IphLength - sizeof(ICMP_ECHO_PACKET), Sign, Time, IpHeader->TTL);
     if (RelativeTime.QuadPart < MinRTT.QuadPart) {
 		  MinRTT.QuadPart = RelativeTime.QuadPart;
@@ -586,7 +586,7 @@ int main(int argc, char* argv[])
 
         printf("\nPinging %s [%s] with %d bytes of data:\n\n",
             TargetName, TargetIP, DataSize);
-		
+
 		Count = 0;
 		while ((NeverStop) || (Count < PingCount)) {
 			Ping();

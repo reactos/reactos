@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/stdlib.c
  * PURPOSE:         Standard library functions
- * 
+ *
  * PROGRAMMERS:     Eric Kohl (ekohl@abo.rhein-zeitung.de)
  */
 
@@ -30,7 +30,7 @@ int atoi(const char *str)
 
 
 /*
- * NOTE: no error 
+ * NOTE: no error
  *
  * @implemented
  */

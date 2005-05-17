@@ -2,7 +2,7 @@
  *
  * Win32 Global/Local heap functions (GlobalXXX, LocalXXX).
  * These functions included in Win32 for compatibility with 16 bit Windows
- * Especially the moveable blocks and handles are oldish. 
+ * Especially the moveable blocks and handles are oldish.
  * But the ability to directly allocate memory with GPTR and LPTR is widely
  * used.
  *
@@ -74,7 +74,7 @@ GlobalAlloc(UINT uFlags,
     }
 
     DPRINT("GlobalAlloc( 0x%X, 0x%lX )\n", uFlags, dwBytes);
-    
+
     //Changed hProcessHeap to GetProcessHeap()
     if ((uFlags & GMEM_MOVEABLE)==0) /* POINTER */
     {
@@ -132,7 +132,7 @@ GlobalAlloc(UINT uFlags,
                 RtlFreeHeap(GetProcessHeap(), 0, phandle);
                 return NULL;
             }
-            return INTERN_TO_HANDLE(phandle);	
+            return INTERN_TO_HANDLE(phandle);
         }
         else
             return (HGLOBAL)0;
@@ -179,7 +179,7 @@ GlobalFlags(HGLOBAL hMem)
     else
     {
         HeapLock(GetProcessHeap());
-        
+
         phandle = HANDLE_TO_INTERN(hMem);
 
         /*DbgPrintStruct(phandle);*/
@@ -213,7 +213,7 @@ HGLOBAL STDCALL
 GlobalFree(HGLOBAL hMem)
 {
     PGLOBAL_HANDLE phandle;
-    
+
     DPRINT("GlobalFree( 0x%lX )\n", (ULONG)hMem);
 
     if (ISPOINTER(hMem)) /* POINTER */
@@ -224,7 +224,7 @@ GlobalFree(HGLOBAL hMem)
     else /* HANDLE */
     {
         HeapLock(GetProcessHeap());
-        
+
         phandle = HANDLE_TO_INTERN(hMem);
 
         if(MAGIC_GLOBAL_USED == phandle->Magic)
@@ -235,14 +235,14 @@ GlobalFree(HGLOBAL hMem)
                 DPRINT1("Warning! GlobalFree(0x%X) Freeing a handle to a locked object.\n", hMem);
                 SetLastError(ERROR_INVALID_HANDLE);
             }
-            
+
             if(phandle->Pointer)
                 RtlFreeHeap(GetProcessHeap(), 0, phandle->Pointer - HANDLE_SIZE);
-            
+
             RtlFreeHeap(GetProcessHeap(), 0, phandle);
         }
         HeapUnlock(GetProcessHeap());
-        
+
         hMem = 0;
     }
     return hMem;
@@ -266,7 +266,7 @@ GlobalHandle(LPCVOID pMem)
         DPRINT1("Error: 0 handle.\n");
         return 0;
     }
-  
+
     HeapLock(GetProcessHeap());
     /* Now test to see if this pointer is associated with a handle.
     * This is done by calling RtlValidateHeap() and seeing if it fails.
@@ -278,10 +278,10 @@ GlobalHandle(LPCVOID pMem)
     }
     else /*MOVABLE*/
     {
-        handle = POINTER_TO_HANDLE(pMem);        
+        handle = POINTER_TO_HANDLE(pMem);
     }
-    
-     
+
+
     /* Test to see if this memory is valid*/
     test  = HANDLE_TO_INTERN(handle);
     if (!IsBadReadPtr(test, sizeof(GLOBAL_HANDLE)))
@@ -318,7 +318,7 @@ GlobalLock(HGLOBAL hMem)
 {
     PGLOBAL_HANDLE phandle;
     LPVOID         palloc;
-    
+
     DPRINT("GlobalLock( 0x%lX )\n", (ULONG)hMem);
 
     if (ISPOINTER(hMem))
@@ -327,7 +327,7 @@ GlobalLock(HGLOBAL hMem)
     HeapLock(GetProcessHeap());
 
     phandle = HANDLE_TO_INTERN(hMem);
-    
+
     if(MAGIC_GLOBAL_USED == phandle->Magic)
     {
         if(GLOBAL_LOCK_MAX > phandle->LockCount)
@@ -343,7 +343,7 @@ GlobalLock(HGLOBAL hMem)
     }
 
     HeapUnlock(GetProcessHeap());
-    
+
     return palloc;
 }
 
@@ -385,7 +385,7 @@ GlobalMemoryStatusEx(LPMEMORYSTATUSEX lpBuffer)
      {
        SetLastErrorByStatus(Status);
        return FALSE;
-     }            
+     }
 
    Status = ZwQuerySystemInformation(SystemFullMemoryInformation,
                                      &UserMemory,
@@ -395,7 +395,7 @@ GlobalMemoryStatusEx(LPMEMORYSTATUSEX lpBuffer)
      {
        SetLastErrorByStatus(Status);
        return FALSE;
-     }            
+     }
 
 /*
  * Load percentage 0 thru 100. 0 is good and 100 is bad.
@@ -410,7 +410,7 @@ GlobalMemoryStatusEx(LPMEMORYSTATUSEX lpBuffer)
     			     SysBasicInfo.NumberOfPhysicalPages;
 
 	DPRINT1("Memory Load: %d\n",lpBuffer->dwMemoryLoad );
-    
+
    lpBuffer->ullTotalPhys = SysBasicInfo.NumberOfPhysicalPages *
    					SysBasicInfo.PhysicalPageSize;
    lpBuffer->ullAvailPhys = SysPerfInfo.AvailablePages *
@@ -429,7 +429,7 @@ GlobalMemoryStatusEx(LPMEMORYSTATUSEX lpBuffer)
     					SysBasicInfo.PhysicalPageSize);
 
 /* VM available to the calling processes, User Mem? */
-   lpBuffer->ullTotalVirtual = SysBasicInfo.HighestUserAddress - 
+   lpBuffer->ullTotalVirtual = SysBasicInfo.HighestUserAddress -
     					SysBasicInfo.LowestUserAddress;
 
    lpBuffer->ullAvailVirtual = (lpBuffer->ullTotalVirtual -
@@ -452,11 +452,11 @@ VOID STDCALL
 GlobalMemoryStatus(LPMEMORYSTATUS lpBuffer)
 {
     MEMORYSTATUSEX lpBufferEx;
-#if 0    
+#if 0
     if (lpBuffer->dwLength != sizeof(MEMORYSTATUS))
       {
         SetLastError(ERROR_INVALID_PARAMETER);
-        return;      
+        return;
       }
 #endif
     lpBufferEx.dwLength = sizeof(MEMORYSTATUSEX);
@@ -496,7 +496,7 @@ GlobalReAlloc(HGLOBAL hMem,
     }
 
     HeapLock(GetProcessHeap());
-    
+
     if(uFlags & GMEM_MODIFY) /* modify flags */
     {
         if( ISPOINTER(hMem) && (uFlags & GMEM_MOVEABLE))
@@ -586,7 +586,7 @@ GlobalReAlloc(HGLOBAL hMem,
         }
     }
     HeapUnlock(GetProcessHeap());
-   
+
     return hnew;
 }
 
@@ -596,9 +596,9 @@ GlobalSize(HGLOBAL hMem)
 {
     SIZE_T         retval  = 0;
     PGLOBAL_HANDLE phandle = 0;
-    
+
     DPRINT("GlobalSize( 0x%lX )\n", (ULONG)hMem);
-    
+
     if(ISPOINTER(hMem)) /*FIXED*/
     {
         retval = RtlSizeHeap(GetProcessHeap(), 0, hMem);
@@ -606,15 +606,15 @@ GlobalSize(HGLOBAL hMem)
     else /*MOVEABLE*/
     {
         HeapLock(GetProcessHeap());
-        
+
         phandle = HANDLE_TO_INTERN(hMem);
-        
+
         if (MAGIC_GLOBAL_USED == phandle->Magic)
         {
             if (0 != phandle->Pointer)/*NOT DISCARDED*/
             {
                 retval = RtlSizeHeap(GetProcessHeap(), 0, phandle->Pointer - HANDLE_SIZE);
-                
+
                 if (retval == (SIZE_T)-1) /*RtlSizeHeap failed*/
                 {
                     /*

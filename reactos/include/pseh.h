@@ -51,6 +51,16 @@
 # define _SEH_CONCAT(X_, Y_) _SEH_CONCAT1(X_, Y_)
 #endif
 
+/*
+ Note: just define __inline to an empty symbol if your C compiler doesn't
+ support it
+*/
+#ifdef __cplusplus
+# ifndef __inline
+#  define __inline inline
+# endif
+#endif
+
 /* Locals sharing support */
 #define _SEH_LOCALS_TYPENAME(BASENAME_) \
  struct _SEH_CONCAT(_SEHLocalsTag, BASENAME_)
@@ -64,8 +74,8 @@
  _SEHPLocals = &_SEHLocals;
 
 /* Dummy locals */
-static _SEH_LOCALS_TYPENAME(_SEHDummyLocals) { int Dummy_; } _SEHLocals;
-static void __inline _SEHDummyLocalsUser(void) { (void)_SEHLocals; }
+static int _SEHLocals;
+static void * const _SEHDummyLocals = &_SEHLocals;
 
 #include <pseh/framebased.h>
 

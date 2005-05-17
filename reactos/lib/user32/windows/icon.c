@@ -52,8 +52,8 @@ ICON_CreateIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDe
                                       DIB_RGB_COLORS);
 
    /* Make ImageData point to the start of the AND image data. */
-   ImageData = ((PBYTE)ImageData) + (((IconImage->icHeader.biWidth * 
-                                      IconImage->icHeader.biBitCount + 31) & ~31) >> 3) * 
+   ImageData = ((PBYTE)ImageData) + (((IconImage->icHeader.biWidth *
+                                      IconImage->icHeader.biBitCount + 31) & ~31) >> 3) *
                                       (IconImage->icHeader.biHeight );
 
    /* Create a BITMAPINFO header for the monocrome part of the icon. */
@@ -82,10 +82,10 @@ ICON_CreateIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDe
    /* Load the AND bitmap. */
    IconInfo.hbmMask = CreateDIBitmap(hDC, &bwBIH->bmiHeader, 0,
                                      ImageData, bwBIH, DIB_RGB_COLORS);
-  
+
    SetDIBits(hDC, IconInfo.hbmMask, 0, IconImage->icHeader.biHeight,
              ImageData, bwBIH, DIB_RGB_COLORS);
-  
+
    /* Create the icon based on everything we have so far */
    return NtUserCreateCursorIconHandle(&IconInfo, FALSE);
 }
@@ -102,7 +102,7 @@ ICON_CreateCursorFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cx
    IconInfo.fIcon = FALSE;
    IconInfo.xHotspot = xHotspot;
    IconInfo.yHotspot = yHotspot;
-  
+
    /* Create a BITMAPINFO header for the monocrome part of the icon */
    bwBIH->bmiHeader.biBitCount = 1;
    bwBIH->bmiHeader.biWidth = IconImage->icHeader.biWidth;
@@ -131,12 +131,12 @@ ICON_CreateCursorFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cx
                                      XORImageData, bwBIH, DIB_RGB_COLORS);
    if (IconInfo.hbmMask)
    {
-      SetDIBits(hDC, IconInfo.hbmMask, 0, IconImage->icHeader.biHeight, 
+      SetDIBits(hDC, IconInfo.hbmMask, 0, IconImage->icHeader.biHeight,
                 XORImageData, bwBIH, DIB_RGB_COLORS);
    }
-  
+
    IconInfo.hbmColor = (HBITMAP)0;
-  
+
    /* Create the icon based on everything we have so far */
    return NtUserCreateCursorIconHandle(&IconInfo, FALSE);
 }
@@ -151,7 +151,7 @@ CopyIcon(
   HICON hIcon)
 {
   ICONINFO IconInfo;
-  
+
   if(NtUserGetCursorIconInfo((HANDLE)hIcon, &IconInfo))
   {
     return NtUserCreateCursorIconHandle(&IconInfo, FALSE);
@@ -190,7 +190,7 @@ CreateIcon(
     DeleteObject(IconInfo.hbmMask);
     return (HICON)0;
   }
-  
+
   return NtUserCreateCursorIconHandle(&IconInfo, FALSE);
 }
 
@@ -232,7 +232,7 @@ CreateIconFromResourceEx(
   HDC hScreenDc;
   WORD wXHotspot;
   WORD wYHotspot;
-  
+
   /*
     FIXME - does win support LR_SHARED? According to msdn it does but we don't
             have useful information to identify the icon
@@ -261,11 +261,11 @@ CreateIconFromResourceEx(
   /* get an safe copy of the icon data */
   SafeIconImage = RtlAllocateHeap(GetProcessHeap(), 0, cbIconBits);
   memcpy(SafeIconImage, pbIconBits, cbIconBits);
-  
+
   /* take into acount the origonal height was for both the AND and XOR images */
   if(fIcon)
     SafeIconImage->icHeader.biHeight /= 2;
-  
+
   if (SafeIconImage->icHeader.biSize == sizeof(BITMAPCOREHEADER))
     {
       BITMAPCOREHEADER* Core = (BITMAPCOREHEADER*)SafeIconImage;
@@ -274,7 +274,7 @@ CreateIconFromResourceEx(
     }
   else
     {
-      ColourCount = (SafeIconImage->icHeader.biBitCount <= 8) ? 
+      ColourCount = (SafeIconImage->icHeader.biBitCount <= 8) ?
                        (1 << SafeIconImage->icHeader.biBitCount) : 0;
       HeaderSize = sizeof(BITMAPINFOHEADER) + ColourCount * sizeof(RGBQUAD);
     }
@@ -326,7 +326,7 @@ CreateIconIndirect(PICONINFO IconInfo)
   {
     return (HICON)0;
   }
-  
+
   /* FIXME - i doubt this is right (monochrome cursors */
   /*if(ColorBitmap.bmWidth != MaskBitmap.bmWidth ||
      ColorBitmap.bmHeight != MaskBitmap.bmWidth)
@@ -334,7 +334,7 @@ CreateIconIndirect(PICONINFO IconInfo)
     SetLastError(ERROR_INVALID_PARAMETER);
     return (HICON)0;
   }*/
-  
+
   return (HICON)NtUserCreateCursorIconHandle(IconInfo, TRUE);
 }
 
@@ -381,8 +381,8 @@ DrawIconEx(
   HBRUSH hbrFlickerFreeDraw,
   UINT diFlags)
 {
-  return (BOOL)NtUserDrawIconEx(hdc, xLeft, yTop, hIcon, cxWidth, cyWidth, 
-                                   istepIfAniCur, hbrFlickerFreeDraw, diFlags, 
+  return (BOOL)NtUserDrawIconEx(hdc, xLeft, yTop, hIcon, cxWidth, cyWidth,
+                                   istepIfAniCur, hbrFlickerFreeDraw, diFlags,
                                    0, 0);
 }
 
@@ -455,7 +455,7 @@ CURSORICON_FindBestCursor( GRPCURSORICONDIR *dir, int width, int height, int col
         DPRINT("Empty directory!\n");
         return NULL;
     }
-    if (dir->idCount == 1) 
+    if (dir->idCount == 1)
       return &dir->idEntries[0];  /* No choice... */
 
     /* Find Best Fit */

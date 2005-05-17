@@ -358,20 +358,20 @@ ProcessComputerFiles(HINF InfFile, PGENERIC_LIST List, PWCHAR* AdditionalSection
 {
 	PGENERIC_LIST_ENTRY Entry;
 	static WCHAR SectionName[128];
-	
+
 	DPRINT("ProcessComputerFiles() called\n");
-	
+
 	Entry = GetGenericListEntry(List);
 	if (Entry == NULL)
 	{
 		DPRINT("GetGenericListEntry() failed\n");
 		return FALSE;
 	}
-	
+
 	wcscpy(SectionName, L"Files.");
 	wcscat(SectionName, Entry->UserData);
 	*AdditionalSectionName = SectionName;
-	
+
 	return TRUE;
 }
 

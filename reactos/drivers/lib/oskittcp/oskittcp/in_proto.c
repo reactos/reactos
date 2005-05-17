@@ -97,7 +97,7 @@ struct protosw inetsw[] = {
 extern int in_inithead(void **, int);
 
 struct domain inetdomain =
-    { AF_INET, "internet", 0, 0, 0, 
+    { AF_INET, "internet", 0, 0, 0,
       inetsw, &inetsw[sizeof(inetsw)/sizeof(inetsw[0])], 0,
       in_inithead, 32, sizeof(struct sockaddr_in)
     };

@@ -6,9 +6,13 @@
  *
  *    24-Jul-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Started.
+ *
+ *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_START
 
@@ -21,11 +25,7 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 
 	if (_tcsncmp (rest, _T("/?"), 2) == 0)
 	{
-		ConOutPuts (_T("Starts a command.\n\n"
-				   "START command \n\n"
-				   "  command     Specifies the command to run.\n\n"
-				   "At the moment all commands are started asynchronously.\n"));
-
+		ConOutResPuts(STRING_START_HELP1);
 		return 0;
 	}
 
@@ -39,15 +39,17 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 		SetCurrentDirectory (szPath);
 		GetCurrentDirectory (MAX_PATH, szPath);
 		if (szPath[0] != (TCHAR)_totupper (*first))
-			ConErrPuts (INVALIDDRIVE);
+			ConErrResPuts (STRING_FREE_ERROR1);
 
 		return 0;
 	}
+
 	if( !*rest )
 	  {
 	    // FIXME: use comspec instead
 	    rest = _T("cmd");
 	  }
+
 	/* get the PATH environment variable and parse it */
 	/* search the PATH environment variable for the binary */
 	param = _tcschr( rest, _T(' ') );  // skip program name to reach parameters
@@ -56,19 +58,22 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 	    *param = 0;
 	    param++;
 	  }
+
 	if (!SearchForExecutable (rest, szFullName))
 	{
 		error_bad_command ();
 		return 1;
 	}
+
 	/* check if this is a .BAT or .CMD file */
 	if (!_tcsicmp (_tcsrchr (szFullName, _T('.')), _T(".bat")) ||
-		!_tcsicmp (_tcsrchr (szFullName, _T('.')), _T(".cmd")))
+	    !_tcsicmp (_tcsrchr (szFullName, _T('.')), _T(".cmd")))
 	{
 #ifdef _DEBUG
 		DebugPrintf (_T("[BATCH: %s %s]\n"), szFullName, rest);
 #endif
-		ConErrPuts (_T("No batch support at the moment!"));
+
+		ConErrResPuts(STRING_START_ERROR1);
 	}
 	else
 	{
@@ -93,9 +98,9 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 		stui.cb = sizeof (STARTUPINFO);
 		stui.dwFlags = STARTF_USESHOWWINDOW;
 		stui.wShowWindow = SW_SHOWDEFAULT;
-			
+
 		if (CreateProcess (szFullName, szFullCmdLine, NULL, NULL, FALSE,
-						   CREATE_NEW_CONSOLE, NULL, NULL, &stui, &prci))
+		                   CREATE_NEW_CONSOLE, NULL, NULL, &stui, &prci))
 		{
 			if (bWait)
 			{
@@ -106,11 +111,14 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 			}
 			CloseHandle (prci.hThread);
 			CloseHandle (prci.hProcess);
+		/* Get New code page if it has change */
+		InputCodePage= GetConsoleCP();
+        OutputCodePage = GetConsoleOutputCP();
 		}
 		else
 		{
-			ErrorMessage (GetLastError (),
-						  _T("Error executing CreateProcess()!!\n"));
+			ErrorMessage(GetLastError (),
+			              _T("Error executing CreateProcess()!!\n"));
 		}
 	}
 

@@ -719,8 +719,8 @@ send:
          * Instead tcp_output calls ip_output which produces a packet
          * and ends up in tcp_input and we're stuck in infinite loop.
          * Normally the flags are masked out at the end of this function
-         * and the incomming packets are processed then, but since 
-         * currently the loopback packet is delivered during the 
+         * and the incomming packets are processed then, but since
+         * currently the loopback packet is delivered during the
          * ip_output call, the function end is never reached...
          */
 #ifdef __REACTOS__

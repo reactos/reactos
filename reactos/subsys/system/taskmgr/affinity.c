@@ -20,19 +20,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-    
+
 #include "precomp.h"
-#include <commctrl.h>
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
-#include <winnt.h>
-#include <stdio.h>
-    
-#include "procpage.h"
-#include "affinity.h"
-#include "perfdata.h"
 
 HANDLE        hProcessAffinityHandle;
 TCHAR         szTemp[256];

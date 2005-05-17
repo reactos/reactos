@@ -37,7 +37,7 @@ EngCreateEvent ( OUT PEVENT *Event )
     {
       return FALSE;
     }
-  KeInitializeEvent((PKEVENT)(*Event), SynchronizationEvent, FALSE); 
+  KeInitializeEvent((PKEVENT)(*Event), SynchronizationEvent, FALSE);
   return TRUE;
 }
 
@@ -69,7 +69,7 @@ EngMapEvent(IN HDEV    Dev,
   if (!NT_SUCCESS(Status))
     {
       return NULL;
-    }				     
+    }
   return (PEVENT)Event;
 }
 

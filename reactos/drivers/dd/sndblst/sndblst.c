@@ -46,7 +46,7 @@ NTSTATUS InitDevice(
         DPRINT("Sorry - only 1 device supported by Sound Blaster driver at present :(\n");
         return STATUS_NOT_IMPLEMENTED;
     }
-    
+
     DPRINT("Creating IO device\n");
 
     s = IoCreateDevice(Context, // driverobject
@@ -78,7 +78,7 @@ NTSTATUS InitDevice(
 //    Parameters = Instance->DriverObject->DriverExtension;
 
     DPRINT("DeviceObject at 0x%x, DeviceExtension at 0x%x\n", DeviceObject, Parameters);
-    
+
     if (! Parameters)
     {
         DPRINT("NULL POINTER!\n");
@@ -102,9 +102,9 @@ NTSTATUS InitDevice(
     Parameters->BufferSize = DEFAULT_BUFSIZE;
 
 // Only to be enabled once we can get support for multiple cards working :)
-/*    
+/*
     DPRINT("Loading settings from: %S\n", RegistryPath);
-    
+
     s = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE, RegistryPath, Table,
                                 &Parameters, NULL);
 
@@ -159,7 +159,7 @@ BlasterCreate(PDEVICE_OBJECT DeviceObject,
  */
 {
     DPRINT("BlasterCreate() called!\n");
-    
+
     // Initialize the MPU-401
     // ... do stuff ...
 
@@ -181,7 +181,7 @@ BlasterCreate(PDEVICE_OBJECT DeviceObject,
 		    IO_NO_INCREMENT);
 
     DPRINT("BlasterCreate() completed\n");
-    
+
     return(STATUS_SUCCESS);
 }
 
@@ -201,7 +201,7 @@ BlasterClose(PDEVICE_OBJECT DeviceObject,
   NTSTATUS Status;
 
   DPRINT("BlasterClose() called!\n");
-  
+
   DeviceExtension = DeviceObject->DeviceExtension;
 
   Status = STATUS_SUCCESS;
@@ -310,7 +310,7 @@ BlasterDeviceControl(PDEVICE_OBJECT DeviceObject,
             Data = (PBYTE) Irp->AssociatedIrp.SystemBuffer;
 
             DPRINT("Sending %d bytes of MIDI data to 0x%d:\n", Stack->Parameters.DeviceIoControl.InputBufferLength, DeviceExtension->Port);
-            
+
             for (ByteCount = 0; ByteCount < Stack->Parameters.DeviceIoControl.InputBufferLength; ByteCount ++)
             {
                 DPRINT("0x%x ", Data[ByteCount]);
@@ -322,12 +322,12 @@ BlasterDeviceControl(PDEVICE_OBJECT DeviceObject,
 
             Irp->IoStatus.Status = STATUS_SUCCESS;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            
+
             return(STATUS_SUCCESS);
         }
 */
     }
-    
+
     return(STATUS_SUCCESS);
 
 /*

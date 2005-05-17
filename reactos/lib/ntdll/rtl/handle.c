@@ -122,14 +122,14 @@ RtlFreeHandle(PRTL_HANDLE_TABLE HandleTable,
    /* check if handle is valid */
    if (RtlIsValidHandle(HandleTable, Handle))
      return FALSE;
-   
+
    /* clear handle */
    memset(Handle, 0, HandleTable->HandleSize);
-   
+
    /* add handle to free list */
    Handle->Next = HandleTable->FirstFree;
    HandleTable->FirstFree = Handle;
-   
+
    return TRUE;
 }
 

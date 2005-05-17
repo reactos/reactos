@@ -59,7 +59,7 @@ U32_ACCEL_CACHE_ENTRY ** WINAPI U32AccelCacheFind(HANDLE Object, HGLOBAL Data)
   return a pointer to the list link that points to the desired entry
  */
  U32_ACCEL_CACHE_ENTRY ** ppEntry = &U32AccelCache;
- 
+
  for(; *ppEntry; ppEntry = &((*ppEntry)->Next))
   if((*ppEntry)->Object == Object || (*ppEntry)->Data == Data) break;
 
@@ -145,7 +145,7 @@ HACCEL WINAPI U32LoadAccelerators(HINSTANCE hInstance, HRSRC hTableRes)
 
  /* free the buffer */
  LocalFree(pAccTableData);
- 
+
  /* failure */
  if(hAccTable == NULL) goto l_Leave;
 
@@ -229,7 +229,7 @@ HACCEL WINAPI LoadAcceleratorsW(HINSTANCE hInstance, LPCWSTR lpTableName)
 {
  return U32LoadAccelerators
  (
-  hInstance, 
+  hInstance,
   FindResourceExW(hInstance, MAKEINTRESOURCEW(RT_ACCELERATOR), lpTableName, 0)
  );
 }
@@ -296,9 +296,9 @@ int WINAPI CopyAcceleratorTableA
 )
 {
    int i;
- 
+
    cAccelEntries = CopyAcceleratorTableW(hAccelSrc, lpAccelDst, cAccelEntries);
- 
+
    if (lpAccelDst == NULL) return cAccelEntries;
 
    for(i = 0; i < cAccelEntries; ++ i)
@@ -310,11 +310,11 @@ int WINAPI CopyAcceleratorTableA
          NULL,
          (PWCHAR)&lpAccelDst[i].key,
          sizeof(lpAccelDst[i].key)
-         ); 
- 
+         );
+
       if(!NT_SUCCESS(nErrCode)) lpAccelDst[i].key = 0;
    }
- 
+
    return cAccelEntries;
 }
 

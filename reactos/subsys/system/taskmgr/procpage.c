@@ -19,23 +19,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-    
+
 #include "precomp.h"
-#include <commctrl.h>
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
-#include <stdio.h>
-#include <winnt.h>
-    
-#include "procpage.h"
-#include "perfdata.h"
-#include "column.h"
-#include "proclist.h"
-#include "dbgchnl.h"
-#include "endproc.h"
-#include <ctype.h>
 
 HWND hProcessPage;                        /* Process List Property Page */
 
@@ -136,14 +121,14 @@ ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         cy = (rc.bottom - rc.top) + nYDifference;
         SetWindowPos(hProcessPageListCtrl, NULL, 0, 0, cx, cy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOZORDER);
         InvalidateRect(hProcessPageListCtrl, NULL, TRUE);
-        
+
         GetClientRect(hProcessPageEndProcessButton, &rc);
         MapWindowPoints(hProcessPageEndProcessButton, hDlg, (LPPOINT)(PRECT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
            cx = rc.left + nXDifference;
         cy = rc.top + nYDifference;
         SetWindowPos(hProcessPageEndProcessButton, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
         InvalidateRect(hProcessPageEndProcessButton, NULL, TRUE);
-        
+
         GetClientRect(hProcessPageShowAllProcessesButton, &rc);
         MapWindowPoints(hProcessPageShowAllProcessesButton, hDlg, (LPPOINT)(PRECT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
            cx = rc.left;
@@ -190,12 +175,12 @@ void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam)
             ProcessPageUpdate();
             break;
         #endif
-            
+
         case LVN_GETDISPINFO:
 
             if (!(pnmdi->item.mask & LVIF_TEXT))
                 break;
-            
+
             ColumnIndex = pnmdi->item.iSubItem;
             Index = pnmdi->item.iItem;
 
@@ -447,7 +432,7 @@ void ProcessPageShowContextMenu(DWORD dwProcessId)
 
     if (si.dwNumberOfProcessors < 2)
         RemoveMenu(hSubMenu, ID_PROCESS_PAGE_SETAFFINITY, MF_BYCOMMAND);
-    
+
     if (!DebugChannelsAreSupported())
         RemoveMenu(hSubMenu, ID_PROCESS_PAGE_DEBUGCHANNELS, MF_BYCOMMAND);
 
@@ -505,13 +490,17 @@ DWORD WINAPI ProcessPageRefreshThread(void *lpParameter)
 {
     ULONG    OldProcessorUsage = 0;
     ULONG    OldProcessCount = 0;
+    TCHAR    szCpuUsage[256], szProcesses[256];
 
     /* Create the event */
-    hProcessPageEvent = CreateEvent(NULL, TRUE, TRUE, _T("Process Page Event"));
+    hProcessPageEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
 
     /* If we couldn't create the event then exit the thread */
     if (!hProcessPageEvent)
         return 0;
+
+    LoadString(hInst, IDS_STATUS_CPUUSAGE, szCpuUsage, 256);
+    LoadString(hInst, IDS_STATUS_PROCESSES, szProcesses, 256);
 
     while (1) {
         DWORD    dwWaitVal;
@@ -538,12 +527,12 @@ DWORD WINAPI ProcessPageRefreshThread(void *lpParameter)
 
             if (OldProcessorUsage != PerfDataGetProcessorUsage()) {
                 OldProcessorUsage = PerfDataGetProcessorUsage();
-                wsprintf(text, _T("CPU Usage: %3d%%"), OldProcessorUsage);
+                wsprintf(text, szCpuUsage, OldProcessorUsage);
                 SendMessage(hStatusWnd, SB_SETTEXT, 1, (LPARAM)text);
             }
             if (OldProcessCount != PerfDataGetProcessCount()) {
                 OldProcessCount = PerfDataGetProcessCount();
-                wsprintf(text, _T("Processes: %d"), OldProcessCount);
+                wsprintf(text, szProcesses, OldProcessCount);
                 SendMessage(hStatusWnd, SB_SETTEXT, 0, (LPARAM)text);
             }
         }

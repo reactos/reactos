@@ -1,10 +1,10 @@
 /* $Id:
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            drivers/dd/serial/serial.c
  * PURPOSE:         Serial driver loading/unloading
- * 
+ *
  * PROGRAMMERS:     Hervé Poussineau (poussine@freesurf.fr)
  */
 
@@ -26,10 +26,10 @@ DriverEntry(
 	IN PUNICODE_STRING RegPath)
 {
 	ULONG i;
-	
+
 	DriverObject->DriverUnload = DriverUnload;
 	DriverObject->DriverExtension->AddDevice = SerialAddDevice;
-	
+
 	for (i = 0; i < IRP_MJ_MAXIMUM_FUNCTION; i++)
 		DriverObject->MajorFunction[i] = ForwardIrpAndForget;
 	DriverObject->MajorFunction[IRP_MJ_CREATE] = SerialCreate;

@@ -1,13 +1,13 @@
 /*
  * Copyright (c) 1996-1998 University of Utah and the Flux Group.
  * All rights reserved.
- * 
+ *
  * This file is part of the Flux OSKit.  The OSKit is free software, also known
  * as "open source;" you can redistribute it and/or modify it under the terms
  * of the GNU General Public License (GPL), version 2, as published by the Free
  * Software Foundation (FSF).  To explore alternate licensing terms, contact
  * the University of Utah at csl-dist@cs.utah.edu or +1-801-585-3271.
- * 
+ *
  * The OSKit is distributed in the hope that it will be useful, but WITHOUT ANY
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GPL for more details.  You should have
@@ -27,7 +27,7 @@
 #include "net/netisr.h"
 
 int oskit_cpl;		/* for machine/spl.h */
-int bootverbose;	/* networking code wants to know whether booting 
+int bootverbose;	/* networking code wants to know whether booting
 			   is to be verbose */
 int securelevel = 3;	/* used in ip_fw.c:ip_fw_ctl -- make it > 2 */
 
@@ -46,15 +46,15 @@ struct domain localdomain;	/* see uipc_domain.c ADDDOMAIN macro */
 struct proc *
 pfind(pid_t pid)
 {
-	printf("%s called, pid=%d, returning x%p\n", 
+	printf("%s called, pid=%d, returning x%p\n",
 	       "pfind", (int)pid, (void*)&proc0);
 	return &proc0;
 }
 
 /*
- * signal a process 
+ * signal a process
  */
-void    
+void
 psignal (struct proc *p, int sig)
 {
     printf("%s called, proc=x%p sig=%d\n", "psignal", p, sig);
@@ -63,7 +63,7 @@ psignal (struct proc *p, int sig)
 /*
  * signal a process group
  */
-void    
+void
 gsignal (int pgid, int sig)
 {
 	printf("%s called, pgid=%d sig=%d\n", "gsignal", pgid, sig);
@@ -74,7 +74,7 @@ gsignal (int pgid, int sig)
 /*
  * copy in from userspace
  */
-int     
+int
 copyin (void *udaddr, void *kaddr, u_int len)
 {
 	memcpy(kaddr, udaddr, len);
@@ -84,7 +84,7 @@ copyin (void *udaddr, void *kaddr, u_int len)
 /*
  * copy out to userspace
  */
-int     
+int
 copyout (void *kaddr, void *udaddr, u_int len)
 {
 	memcpy(udaddr, kaddr, len);
@@ -92,7 +92,7 @@ copyout (void *kaddr, void *udaddr, u_int len)
 }
 
 /*
- * even though these functions have an odd signature, 
+ * even though these functions have an odd signature,
  * they only copy one byte
  */
 int subyte          (void *base, int byte)
@@ -111,7 +111,7 @@ int suibyte         (void *base, int byte)
 /*
  * log some information
  */
-void        
+void
 log (int level, const char *format, ...)
 {
 	extern int vprintf(const char *, va_list);
@@ -125,11 +125,11 @@ log (int level, const char *format, ...)
 
 /* ---------------------------------------------------------------------- */
 
-/* 
- * do we have super user credentials? 
+/*
+ * do we have super user credentials?
  */
 /* ARGSUSED */
-int 
+int
 suser(struct ucred *ucred, u_short *acflag)
 {
 	/* of course. */
@@ -137,23 +137,23 @@ suser(struct ucred *ucred, u_short *acflag)
 }
 
 /* ---------------------------------------------------------------------- */
-/* 
+/*
  * stuff stolen from kern/kern_sysctl.c
  */
-/*              
+/*
  * Validate parameters and get old / set new parameters
  * for an integer-valued sysctl function.
  */
-int     
+int
 sysctl_int(oldp, oldlenp, newp, newlen, valp)
         void *oldp;
         size_t *oldlenp;
         void *newp;
-        size_t newlen; 
+        size_t newlen;
         int *valp;
-{       
-        int error = 0; 
-        
+{
+        int error = 0;
+
         if (oldp && *oldlenp < sizeof(int))
                 return (ENOMEM);
         if (newp && newlen != sizeof(int))
@@ -163,10 +163,10 @@ sysctl_int(oldp, oldlenp, newp, newlen, valp)
                 error = copyout(valp, oldp, sizeof(int));
         if (error == 0 && newp)
                 error = copyin(newp, valp, sizeof(int));
-        return (error);            
-}               
+        return (error);
+}
 
-/* 
+/*
  * Validate parameters and get old parameters
  * for a structure oriented sysctl function.
  */
@@ -176,9 +176,9 @@ sysctl_rdstruct(oldp, oldlenp, newp, sp, len)
         size_t *oldlenp;
         void *newp, *sp;
         int len;
-{ 
+{
         int error = 0;
- 
+
         if (oldp && *oldlenp < len)
                 return (ENOMEM);
         if (newp)
@@ -190,7 +190,7 @@ sysctl_rdstruct(oldp, oldlenp, newp, sp, len)
 }
 
 /* ---------------------------------------------------------------------- */
-/* 
+/*
  * normally, this is a builtin function in gcc
  * net/if.c doesn't seem to get it, though
  */

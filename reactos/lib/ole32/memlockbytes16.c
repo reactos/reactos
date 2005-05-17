@@ -49,7 +49,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 struct HGLOBALLockBytesImpl16
 {
   /*
-   * Needs to be the first item in the stuct
+   * Needs to be the first item in the struct
    * since we want to cast this in an ILockBytes pointer
    */
   ILockBytes16Vtbl *lpVtbl;

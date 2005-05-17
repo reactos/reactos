@@ -17,14 +17,12 @@ OBJECTS_KE_I386 := \
 	ke/i386/thread.o \
 	ke/i386/usercall.o \
 	ke/i386/trap.o \
-	ke/i386/bthread.o \
 	ke/i386/syscall.o \
-	ke/i386/tskswitch.o \
+	ke/i386/ctxswitch.o \
 	ke/i386/v86m.o \
 	ke/i386/v86m_sup.o \
 	ke/i386/vdm.o \
 	ke/i386/bios.o \
-	ke/i386/i386-mcount.o \
 	ke/i386/gdt.o \
 	ke/i386/idt.o \
 	ke/i386/ldt.o \
@@ -42,16 +40,19 @@ OBJECTS_MM_I386 := \
 	mm/i386/pfault.o
 
 OBJECTS_RTL_I386 := \
-	rtl/i386/alldiv.o \
-	rtl/i386/allmul.o \
-	rtl/i386/allrem.o \
-	rtl/i386/allshl.o \
-	rtl/i386/allshr.o \
-	rtl/i386/aulldiv.o \
-	rtl/i386/aullrem.o \
-	rtl/i386/aullshr.o \
 	rtl/i386/exception.o \
 	rtl/i386/seh.o
+
+ifeq ($(KDBG), 1)
+OBJECTS_KDBG_I386 := \
+	kdbg/i386/kdb_help.o \
+	kdbg/i386/i386-dis.o \
+	kdbg/i386/longjmp.o \
+	kdbg/i386/setjmp.o
+preall: all
+else
+OBJECTS_KDBG_I386 :=
+endif
 
 OBJECTS_PS_I386 := \
 	ps/i386/continue.o
@@ -59,4 +60,4 @@ OBJECTS_PS_I386 := \
 RTL_EXCLUDE_FILTER := 
 
 OBJECTS_ARCH = $(OBJECTS_BOOT) $(OBJECTS_EX_I386) $(OBJECTS_KE_I386) $(OBJECTS_MM_I386) \
-  $(OBJECTS_RTL_I386) $(OBJECTS_PS_I386)
+  $(OBJECTS_RTL_I386) $(OBJECTS_KDBG_I386) $(OBJECTS_PS_I386)

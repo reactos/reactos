@@ -149,7 +149,7 @@ static struct
 #define IDEWriteDMAStatus(Address, Data) \
   (WRITE_PORT_UCHAR((PUCHAR)((Address) + 2), (Data)))
 #define IDEWritePRDTable(Address, Data) \
-  (WRITE_PORT_ULONG((PULONG)((Address) + 4), (Data)))  
+  (WRITE_PORT_ULONG((PULONG)((Address) + 4), (Data)))
 
 /*
  *  Data block read and write commands

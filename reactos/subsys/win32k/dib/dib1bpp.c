@@ -352,7 +352,7 @@ DIB_1BPP_BitBlt(PBLTINFO BltInfo)
    UsesSource = ROP4_USES_SOURCE(BltInfo->Rop4);
    UsesPattern = ROP4_USES_PATTERN(BltInfo->Rop4);
 
-   RoundedRight = BltInfo->DestRect.right - 
+   RoundedRight = BltInfo->DestRect.right -
                   ((BltInfo->DestRect.right - BltInfo->DestRect.left) & 31);
    SourceY = BltInfo->SourcePoint.y;
 
@@ -360,7 +360,7 @@ DIB_1BPP_BitBlt(PBLTINFO BltInfo)
    {
       if (BltInfo->PatternSurface)
       {
-         PatternY = (BltInfo->DestRect.top + BltInfo->BrushOrigin.y) % 
+         PatternY = (BltInfo->DestRect.top + BltInfo->BrushOrigin.y) %
                     BltInfo->PatternSurface->sizlBitmap.cy;
       }
       else
@@ -383,7 +383,7 @@ DIB_1BPP_BitBlt(PBLTINFO BltInfo)
       {
 #if 0
          /* FIXME: This case is completely untested!!! */
-         
+
          Dest = *((PBYTE)DestBits);
          NoBits = 31 - (DestX & 31);
 
@@ -402,12 +402,12 @@ DIB_1BPP_BitBlt(PBLTINFO BltInfo)
                Pattern |= (DIB_GetSource(PatternObj, (X + BrushOrigin.x + k) % PatternWidth, PatternY, BltInfo->XlatePatternToDest) << (31 - k));
          }
 
-         Dest = DIB_DoRop(Rop4, Dest, Source, Pattern);	    
+         Dest = DIB_DoRop(Rop4, Dest, Source, Pattern);
          Dest &= ~((1 << (31 - NoBits)) - 1);
          Dest |= *((PBYTE)DestBits) & ((1 << (31 - NoBits)) - 1);
 
          *DestBits = Dest;
-         
+
          DestX += NoBits;
          SourceX += NoBits;
 #endif
@@ -441,7 +441,7 @@ DIB_1BPP_BitBlt(PBLTINFO BltInfo)
             }
          }
 
-         *DestBits = DIB_DoRop(BltInfo->Rop4, Dest, Source, Pattern);	    
+         *DestBits = DIB_DoRop(BltInfo->Rop4, Dest, Source, Pattern);
       }
 
       if (DestX < BltInfo->DestRect.right)
@@ -474,7 +474,7 @@ DIB_1BPP_BitBlt(PBLTINFO BltInfo)
          PatternY %= BltInfo->PatternSurface->sizlBitmap.cy;
       }
    }
-  
+
    return TRUE;
 }
 
@@ -490,7 +490,7 @@ DIB_1BPP_StretchBlt (
 	return FALSE;
 }
 
-BOOLEAN 
+BOOLEAN
 DIB_1BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                         RECTL*  DestRect,  POINTL  *SourcePoint,
                         XLATEOBJ *ColorTranslation, ULONG iTransColor)

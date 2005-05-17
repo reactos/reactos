@@ -647,7 +647,7 @@ SAFEARRAY* WINAPI SafeArrayCreateEx(VARTYPE vt, UINT cDims, SAFEARRAYBOUND *rgsa
 /************************************************************************
  *		SafeArrayCreateVector (OLEAUT32.411)
  *
- * Create a one dimensional, contigous SafeArray.
+ * Create a one dimensional, contiguous SafeArray.
  *
  * PARAMS
  *  vt        [I] Type to store in the safe array
@@ -674,7 +674,7 @@ SAFEARRAY* WINAPI SafeArrayCreateVector(VARTYPE vt, LONG lLbound, ULONG cElement
 /************************************************************************
  *		SafeArrayCreateVectorEx (OLEAUT32.411)
  *
- * Create a one dimensional, contigous SafeArray.
+ * Create a one dimensional, contiguous SafeArray.
  *
  * PARAMS
  *  vt        [I] Type to store in the safe array

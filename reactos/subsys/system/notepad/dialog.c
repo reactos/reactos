@@ -385,15 +385,15 @@ VOID DIALOG_FilePrint(VOID)
     hdrFont.lfQuality = PROOF_QUALITY;
     hdrFont.lfPitchAndFamily = VARIABLE_PITCH | FF_ROMAN;
     lstrcpy(hdrFont.lfFaceName, times_new_romanW);
-    
+
     font = CreateFontIndirect(&hdrFont);
-    
+
     /* Get Current Settings */
     ZeroMemory(&printer, sizeof(printer));
     printer.lStructSize           = sizeof(printer);
     printer.hwndOwner             = Globals.hMainWnd;
     printer.hInstance             = Globals.hInstance;
-    
+
     /* Set some default flags */
     printer.Flags                 = PD_RETURNDC;
     printer.nFromPage             = 0;
@@ -414,10 +414,10 @@ VOID DIALOG_FilePrint(VOID)
     di.lpszDocName = Globals.szFileTitle;
     di.lpszOutput = NULL;
     di.lpszDatatype = NULL;
-    di.fwType = 0; 
+    di.fwType = 0;
 
     if (StartDoc(printer.hDC, &di) <= 0) return;
-    
+
     /* Get the page dimensions in pixels. */
     cWidthPels = GetDeviceCaps(printer.hDC, HORZRES);
     cHeightPels = GetDeviceCaps(printer.hDC, VERTRES);
@@ -431,7 +431,7 @@ VOID DIALOG_FilePrint(VOID)
         return;
     }
     size = GetWindowText(Globals.hEdit, pTemp, size);
-    
+
     border = 150;
     for (copycount=1; copycount <= printer.nCopies; copycount++) {
         i = 0;
@@ -445,10 +445,10 @@ VOID DIALOG_FilePrint(VOID)
                 dopage = 1;
             else
                 dopage = 0;
-            
+
             old_font = SelectObject(printer.hDC, font);
             GetTextExtentPoint32(printer.hDC, letterM, 1, &szMetric);
-                
+
             if (dopage) {
                 if (StartPage(printer.hDC) <= 0) {
                     static const WCHAR failedW[] = { 'S','t','a','r','t','P','a','g','e',' ','f','a','i','l','e','d',0 };
@@ -463,14 +463,14 @@ VOID DIALOG_FilePrint(VOID)
                 */
                 TextOut(printer.hDC, border*2, border+szMetric.cy/2, Globals.szFileTitle, lstrlen(Globals.szFileTitle));
             }
-            
+
             /* The starting point for the main text */
             xLeft = border*2;
             yTop = border+szMetric.cy*4;
-            
+
             SelectObject(printer.hDC, old_font);
-            GetTextExtentPoint32(printer.hDC, letterM, 1, &szMetric); 
-            
+            GetTextExtentPoint32(printer.hDC, letterM, 1, &szMetric);
+
             /* Since outputting strings is giving me problems, output the main
             text one character at a time.
             */
@@ -485,7 +485,7 @@ VOID DIALOG_FilePrint(VOID)
                     xLeft += szMetric.cx;
                 }
             } while (i++<size && yTop<(cHeightPels-border*2));
-            
+
             if (dopage)
                 EndPage(printer.hDC);
             pagecount++;

@@ -3,7 +3,7 @@
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/ntdll/stdlib/itow.c
  * PURPOSE:     converts an integer to Unicode
- * PROGRAMER:   
+ * PROGRAMER:
  * UPDATE HISTORY:
  *              1995: Created
  *              1998: Added ltoa Boudewijn Dekker

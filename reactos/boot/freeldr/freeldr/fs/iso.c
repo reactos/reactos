@@ -65,12 +65,12 @@ BOOL IsoOpenVolume(ULONG DriveNumber)
 }
 
 
-static BOOL IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectoryLength, PUCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
+static BOOL IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectoryLength, PCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 {
 	PDIR_RECORD	Record;
 	ULONG		Offset;
 	ULONG i;
-	UCHAR Name[32];
+	CHAR Name[32];
 
 	DbgPrint((DPRINT_FILESYSTEM, "IsoSearchDirectoryBufferForFile() DirectoryBuffer = 0x%x DirectoryLength = %d FileName = %s\n", DirectoryBuffer, DirectoryLength, FileName));
 
@@ -180,11 +180,11 @@ static PVOID IsoBufferDirectory(ULONG DirectoryStartSector, ULONG DirectoryLengt
  * with info describing the file, etc. returns true
  * if the file exists or false otherwise
  */
-static BOOL IsoLookupFile(PUCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
+static BOOL IsoLookupFile(PCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 {
 	int		i;
 	ULONG			NumberOfPathParts;
-	UCHAR		PathPart[261];
+	CHAR		PathPart[261];
 	PVOID		DirectoryBuffer;
 	ULONG		DirectorySector;
 	ULONG		DirectoryLength;
@@ -263,7 +263,7 @@ static BOOL IsoLookupFile(PUCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
  * Tries to open the file 'name' and returns true or false
  * for success and failure respectively
  */
-FILE* IsoOpenFile(PUCHAR FileName)
+FILE* IsoOpenFile(PCHAR FileName)
 {
 	ISO_FILE_INFO		TempFileInfo;
 	PISO_FILE_INFO		FileHandle;

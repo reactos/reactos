@@ -4,7 +4,7 @@
  * FILE:             services/fs/ext2/super.c
  * PURPOSE:          ext2 filesystem
  * PROGRAMMER:       David Welch (welch@mcmail.com)
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -25,11 +25,11 @@ NTSTATUS Ext2ReadPage(PDEVICE_EXTENSION DeviceExt,
 		      ULONG Offset)
 {
    ULONG block, i;
-   
+
    for (i=0; i<4; i++)
      {
-	block = Ext2BlockMap(DeviceExt, 
-			     Fcb->i.inode, 
+	block = Ext2BlockMap(DeviceExt,
+			     Fcb->i.inode,
 			     Offset + i);
 	Ext2ReadSectors(DeviceExt->StorageDevice,
 			block,
@@ -39,10 +39,10 @@ NTSTATUS Ext2ReadPage(PDEVICE_EXTENSION DeviceExt,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS Ext2ReadFile(PDEVICE_EXTENSION DeviceExt, 
+NTSTATUS Ext2ReadFile(PDEVICE_EXTENSION DeviceExt,
 		      PFILE_OBJECT FileObject,
-		      PVOID Buffer, 
-		      ULONG Length, 
+		      PVOID Buffer,
+		      ULONG Length,
 		      LARGE_INTEGER OffsetL)
 {
    PVOID BaseAddress;
@@ -59,7 +59,7 @@ NTSTATUS Ext2ReadFile(PDEVICE_EXTENSION DeviceExt,
    Ext2LoadInode(DeviceExt,
 		 Fcb->inode,
 		 &Fcb->i);
-   
+
    if (Offset >= Fcb->i.inode->i_size)
      {
 	DPRINT("Returning end of file\n");
@@ -69,10 +69,10 @@ NTSTATUS Ext2ReadFile(PDEVICE_EXTENSION DeviceExt,
      {
 	Length = Fcb->i.inode->i_size - Offset;
      }
-   
+
    Ext2ReleaseInode(DeviceExt,
 		    &Fcb->i);
-   
+
    if ((Offset % PAGE_SIZE) != 0)
      {
 	Delta = min(PAGE_SIZE - (Offset % PAGE_SIZE),Length);
@@ -114,7 +114,7 @@ NTSTATUS Ext2ReadFile(PDEVICE_EXTENSION DeviceExt,
 	memcpy(Buffer, BaseAddress, PAGE_SIZE);
 	CcReleaseCachePage(Fcb->Bcb,
 			   CacheSeg,
-			   TRUE);	
+			   TRUE);
 	Length = Length - PAGE_SIZE;
 	Offset = Offset + PAGE_SIZE;
 	Buffer = Buffer + PAGE_SIZE;
@@ -138,10 +138,10 @@ NTSTATUS Ext2ReadFile(PDEVICE_EXTENSION DeviceExt,
 	memcpy(Buffer,BaseAddress,Length);
 	CcReleaseCachePage(Fcb->Bcb,
 			   CacheSeg,
-			   TRUE);	
+			   TRUE);
      }
    CHECKPOINT;
-   
+
    return(STATUS_SUCCESS);
 }
 
@@ -150,7 +150,7 @@ NTSTATUS STDCALL
 Ext2Write(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    DPRINT("Ext2Write(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
-   
+
    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
    Irp->IoStatus.Information = 0;
    return(STATUS_UNSUCCESSFUL);
@@ -160,7 +160,7 @@ NTSTATUS STDCALL
 Ext2FlushBuffers(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    DPRINT("Ext2FlushBuffers(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
-   
+
    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
    Irp->IoStatus.Information = 0;
    return(STATUS_UNSUCCESSFUL);
@@ -170,7 +170,7 @@ NTSTATUS STDCALL
 Ext2Shutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    DPRINT("Ext2Shutdown(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
-   
+
    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
    Irp->IoStatus.Information = 0;
    return(STATUS_UNSUCCESSFUL);
@@ -180,12 +180,12 @@ NTSTATUS STDCALL
 Ext2Cleanup(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    DbgPrint("Ext2Cleanup(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
-   
+
    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
    Irp->IoStatus.Information = 0;
-   
+
    DbgPrint("Ext2Cleanup() finished\n");
-   
+
    return(STATUS_UNSUCCESSFUL);
 }
 
@@ -198,22 +198,22 @@ Ext2Read(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    PFILE_OBJECT FileObject = Stack->FileObject;
    PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
    NTSTATUS Status;
-   
+
    DPRINT("Ext2Read(DeviceObject %x, FileObject %x, Irp %x)\n",
 	  DeviceObject, FileObject, Irp);
-   
+
    Length = Stack->Parameters.Read.Length;
    CHECKPOINT;
    Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
    CHECKPOINT;
    CHECKPOINT;
-   
+
    Status = Ext2ReadFile(DeviceExt,FileObject,Buffer,Length,
 			 Stack->Parameters.Read.ByteOffset);
-   
+
    Irp->IoStatus.Status = Status;
    Irp->IoStatus.Information = Length;
    IoCompleteRequest(Irp,IO_NO_INCREMENT);
-   
+
    return(Status);
 }

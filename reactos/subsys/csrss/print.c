@@ -1,9 +1,9 @@
 /* $Id$
  *
  * smss.c - Session Manager
- * 
+ *
  * ReactOS Operating System
- * 
+ *
  * --------------------------------------------------------------------
  *
  * This software is free software; you can redistribute it and/or
@@ -19,10 +19,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this software; see the file COPYING.LIB. If not, write
  * to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge,
- * MA 02139, USA.  
+ * MA 02139, USA.
  *
  * --------------------------------------------------------------------
- * 
+ *
  * 	19990529 (Emanuele Aliberti)
  * 		Compiled successfully with egcs 1.1.2
  */
@@ -34,7 +34,7 @@
 VOID STDCALL DisplayString(LPCWSTR lpwString)
 {
    UNICODE_STRING us;
-   
+
    RtlInitUnicodeString (&us, lpwString);
    ZwDisplayString (&us);
 }
@@ -45,11 +45,11 @@ VOID STDCALL PrintString (char* fmt, ...)
    va_list ap;
    UNICODE_STRING UnicodeString;
    ANSI_STRING AnsiString;
-   
+
    va_start(ap, fmt);
    vsprintf(buffer, fmt, ap);
    va_end(ap);
-   
+
    RtlInitAnsiString (&AnsiString, buffer);
    RtlAnsiStringToUnicodeString (&UnicodeString,
 				 &AnsiString,

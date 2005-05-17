@@ -15,7 +15,7 @@ Environment:
     LINUX 2.2.X
     Kernel mode only
 
-Author: 
+Author:
 
     Klaus P. Gerlicher
 
@@ -32,5 +32,5 @@ void SendString(LPSTR s);
 void SetupSerial(ULONG port,ULONG baudrate);
 
 BOOLEAN ConsoleInitSerial(void);
-void ConsoleShutdownSerial(void); 
+void ConsoleShutdownSerial(void);
 

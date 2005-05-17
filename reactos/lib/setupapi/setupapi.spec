@@ -2,7 +2,7 @@
 @ stub AddMiniIconToList
 @ stub AddTagToGroupOrderListEntry
 @ stub AppendStringToMultiSz
-@ stub AssertFail
+@ stdcall AssertFail(str long str)
 @ stub CMP_Init_Detection
 @ stub CMP_RegisterNotification
 @ stub CMP_Report_LogOn
@@ -205,7 +205,7 @@
 @ stub FreeStringArray
 @ stub GetCurrentDriverSigningPolicy
 @ stub GetNewInfName
-@ stub GetSetFileTimestamp
+@ stdcall GetSetFileTimestamp(wstr ptr ptr ptr long)
 @ stub GetVersionInfoFromImage
 @ stub InfIsFromOemLocation
 @ stub InstallCatalog
@@ -223,13 +223,13 @@
 @ stub MyGetFileTitle
 @ stdcall MyMalloc(long)
 @ stdcall MyRealloc(ptr long)
-@ stub OpenAndMapFileForRead
+@ stdcall OpenAndMapFileForRead(wstr ptr ptr ptr ptr)
 @ stub OutOfMemory
 @ stub QueryMultiSzValueToArray
 @ stdcall QueryRegistryValue(long wstr ptr ptr ptr)
 @ stub ReadAsciiOrUnicodeTextFile
 @ stub RegistryDelnode
-@ stub RetreiveFileSecurity
+@ stdcall RetreiveFileSecurity(wstr ptr)
 @ stub RetrieveServiceConfig
 @ stub SearchForInfFile
 @ stub SetArrayToMultiSzValue
@@ -512,7 +512,7 @@
 @ stdcall SetupTermDefaultQueueCallback(ptr)
 @ stdcall SetupTerminateFileLog(long)
 @ stub ShouldDeviceBeExcluded
-@ stub StampFileSecurity
+@ stdcall StampFileSecurity(wstr ptr)
 @ stub StringTableAddString
 @ stub StringTableAddStringEx
 @ stub StringTableDestroy
@@ -525,10 +525,11 @@
 @ stub StringTableLookUpStringEx
 @ stub StringTableSetExtraData
 @ stub StringTableStringFromId
+@ stub StringTableStringFromIdEx
 @ stub StringTableTrim
-@ stub TakeOwnershipOfFile
+@ stdcall TakeOwnershipOfFile(wstr)
 @ stdcall UnicodeToMultiByte(wstr long)
-@ stub UnmapAndCloseFile
+@ stdcall UnmapAndCloseFile(long long ptr)
 @ stub VerifyCatalogFile
 @ stub VerifyFile
 @ stub pSetupAccessRunOnceNodeList

@@ -1,5 +1,5 @@
 /* $Id$
- * 
+ *
  * reactos/subsys/csrss/init.c
  *
  * Initialize the CSRSS subsystem server process.
@@ -131,14 +131,13 @@ CsrpParseCommandLine (
 
 	InitializeObjectAttributes (&Attributes,
 	                            &CsrDirectoryName,
-	                            0,
+	                            OBJ_OPENIF,
 	                            NULL,
 	                            NULL);
 
-	Status = NtCreateDirectoryObject(&CsrObjectDirectory,
-	                                 0xF000F, /* ea:??? */
-	                                 &Attributes);
-
+	Status = NtOpenDirectoryObject(&CsrObjectDirectory,
+	                               0xF000F, /* ea:??? */
+	                               &Attributes);
 	return Status;
 }
 
@@ -398,7 +397,7 @@ CsrpRegisterSubsystem (ULONG argc, PWSTR* argv)
 					FALSE,
 					NULL);
 	NtClose (hBootstrapOk);
-	return Status;	
+	return Status;
 }
 
 /**********************************************************************
@@ -534,7 +533,7 @@ CsrServerInitialization (
 		Status = InitRoutine[i].EntryPoint(ArgumentCount,ArgumentArray);
 		if(!NT_SUCCESS(Status))
 		{
-			DPRINT1("CSR: %s: failed to %s (Status=%08lx)\n", 
+			DPRINT1("CSR: %s: failed to %s (Status=%08lx)\n",
 				__FUNCTION__,
 				InitRoutine[i].ErrorMessage,
 				Status);

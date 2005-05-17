@@ -6,7 +6,7 @@ TARGET_TYPE = host_library
 
 TARGET_NAME = wpp
 
-TARGET_CFLAGS = -D__USE_W32API -I$(PATH_TO_TOP)/include/wine
+TARGET_CFLAGS = $(HOSTARCH) -D__USE_W32API -I$(PATH_TO_TOP)/include/wine
 
 TARGET_OBJECTS = preproc.o wpp.o wpp.tab.o lex.yy.o
 

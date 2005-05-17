@@ -333,9 +333,9 @@ static UINT ICO_ExtractIconExW(
 	  NE_NAMEINFO	*pIconStorage = NULL;
 	  NE_NAMEINFO	*pIconDir = NULL;
 	  LPicoICONDIR	lpiID = NULL;
-	
+
 	  TRACE("-- OS2/icon Signature (0x%08lx)\n", sig);
-	
+
 	  if (pData == (BYTE*)-1)
 	  {
 	    pCIDir = ICO_GetIconDirectory(peimage, &lpiID, &uSize);	/* check for .ICO file */
@@ -361,7 +361,7 @@ static UINT ICO_ExtractIconExW(
 	    }
 	    pTInfo = (NE_TYPEINFO *)((char*)(pTInfo+1)+pTInfo->count*sizeof(NE_NAMEINFO));
 	  }
-	
+
 	  if ((pIconStorage && pIconDir) || lpiID)	  /* load resources and create icons */
 	  {
 	    if (nIcons == 0)
@@ -375,7 +375,7 @@ static UINT ICO_ExtractIconExW(
 	      UINT16   i, icon;
 	      if (nIcons > iconDirCount - nIconIndex)
 	        nIcons = iconDirCount - nIconIndex;
-	
+
 	      for (i = 0; i < nIcons; i++)
 	      {
 	        /* .ICO files have only one icon directory */
@@ -385,7 +385,7 @@ static UINT ICO_ExtractIconExW(
 	      }
 	      if (lpiID && pCIDir)	/* *.ico file, deallocate heap pointer*/
 	        HeapFree(GetProcessHeap(), 0, pCIDir);
-	
+
 	      for (icon = 0; icon < nIcons; icon++)
 	      {
 	        pCIDir = NULL;
@@ -395,7 +395,7 @@ static UINT ICO_ExtractIconExW(
 	          for (i = 0; i < iconCount; i++)
 	            if (pIconStorage[i].id == ((int)pIconId[icon] | 0x8000) )
 	              pCIDir = USER32_LoadResource(peimage, pIconStorage + i, *(WORD*)pData, &uSize);
-	
+
 	        if (pCIDir)
 	          RetPtr[icon] = (HICON)CreateIconFromResourceEx(pCIDir, uSize, TRUE, 0x00030000,
 	                                                         (icon & 1) ? cx2 : cx1, (icon & 1) ? cy2 : cy1, flags);
@@ -410,7 +410,7 @@ static UINT ICO_ExtractIconExW(
 
 /* exe/dll */
 	else if( sig == IMAGE_NT_SIGNATURE )
-#endif 
+#endif
 	if( sig == IMAGE_NT_SIGNATURE )
 	{
 	  LPBYTE		idata,igdata;

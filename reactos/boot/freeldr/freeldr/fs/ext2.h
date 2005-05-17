@@ -558,7 +558,7 @@ struct ext3_dir_entry {
 	ULONG	inode;			/* Inode number */
 	USHORT	rec_len;		/* Directory entry length */
 	USHORT	name_len;		/* Name length */
-	char	name[EXT3_NAME_LEN];	/* File name */
+	CHAR	name[EXT3_NAME_LEN];	/* File name */
 };
 
 /*
@@ -572,7 +572,7 @@ struct ext3_dir_entry_2 {
 	USHORT	rec_len;		/* Directory entry length */
 	UCHAR	name_len;		/* Name length */
 	UCHAR	file_type;
-	char	name[EXT3_NAME_LEN];	/* File name */
+	CHAR	name[EXT3_NAME_LEN];	/* File name */
 };
 
 /*
@@ -667,9 +667,9 @@ typedef struct
 
 
 BOOL	Ext2OpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector);
-FILE*	Ext2OpenFile(PUCHAR FileName);
-BOOL	Ext2LookupFile(PUCHAR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer);
-BOOL	Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PUCHAR FileName, PEXT2_DIR_ENTRY DirectoryEntry);
+FILE*	Ext2OpenFile(PCHAR FileName);
+BOOL	Ext2LookupFile(PCHAR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer);
+BOOL	Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PCHAR FileName, PEXT2_DIR_ENTRY DirectoryEntry);
 BOOL	Ext2ReadFile(FILE *FileHandle, ULONGLONG BytesToRead, ULONGLONG* BytesRead, PVOID Buffer);
 ULONGLONG		Ext2GetFileSize(FILE *FileHandle);
 VOID	Ext2SetFilePointer(FILE *FileHandle, ULONGLONG NewFilePointer);

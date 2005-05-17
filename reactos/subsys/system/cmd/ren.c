@@ -15,9 +15,13 @@
  *
  *    17-Oct-2001 (Eric Kohl <ekohl@rz.online.de>
  *        Implemented basic rename code.
+ *
+ *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_RENAME
 
@@ -39,6 +43,7 @@ enum
  */
 INT cmd_rename (LPTSTR cmd, LPTSTR param)
 {
+  TCHAR szMsg[RC_STRING_MAX_SIZE];
   LPTSTR *arg = NULL;
   INT args = 0;
   INT nEvalArgs = 0; /* nunber of evaluated arguments */
@@ -56,24 +61,10 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
   WIN32_FIND_DATA f;
 
   if (!_tcsncmp(param, _T("/?"), 2))
-    {
-      ConOutPuts(_T("Renames a file/directory or files/directories.\n"
-		    "\n"
-		    "RENAME [/E /N /P /Q /S /T] old_name ... new_name\n"
-		    "REN [/E /N /P /Q /S /T] old_name ... new_name\n"
-		    "\n"
-		    "  /E    No eror messages.\n"
-		    "  /N    Nothing.\n"
-		    "  /P    Prompts for confirmation before renaming each file.\n"
-		    "        (Not implemented yet!)\n"
-		    "  /Q    Quiet.\n"
-		    "  /S    Rename subdirectories.\n"
-		    "  /T    Display total number of renamed files.\n"
-		    "\n"
-		    "Note that you cannot specify a new drive or path for your destination. Use\n"
-		    "the MOVE command for that purpose."));
-      return(0);
-    }
+  {
+    ConOutResPuts(STRING_REN_HELP1);
+    return 0;
+  }
 
   /* split the argument list */
   arg = split(param, &args, FALSE);
@@ -83,7 +74,7 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
       if (!(dwFlags & REN_ERROR))
 	error_req_param_missing();
       freep(arg);
-      return(1);
+      return 1;
     }
 
   /* read options */
@@ -134,7 +125,7 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
       if (!(dwFlags & REN_ERROR))
 	error_req_param_missing();
       freep(arg);
-      return(1);
+      return 1;
     }
 
   /* get destination pattern */
@@ -245,7 +236,10 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
 	      else
 		{
 		  if (!(dwFlags & REN_ERROR))
-		    ConErrPrintf(_T("MoveFile() failed. Error: %lu\n"), GetLastError());
+		  {
+		    LoadString(CMD_ModuleHandle, STRING_REN_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+		    ConErrPrintf(szMsg, GetLastError());
+		  }
 		}
 	    }
 	}
@@ -254,18 +248,17 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
     }
 
   if (!(dwFlags & REN_QUIET))
-    {
-	if (dwFiles == 1)
-	  ConOutPrintf(_T("    %lu file renamed\n"),
-		       dwFiles);
-	else
-	  ConOutPrintf(_T("    %lu files renamed\n"),
-		       dwFiles);
-    }
+  {
+    if (dwFiles == 1)
+      LoadString( CMD_ModuleHandle, STRING_REN_HELP2, szMsg, RC_STRING_MAX_SIZE);
+    else
+      LoadString( CMD_ModuleHandle, STRING_REN_HELP3, szMsg, RC_STRING_MAX_SIZE);
+    ConOutPrintf(szMsg,dwFiles);
+  }
 
   freep(arg);
 
-  return(0);
+  return 0;
 }
 
 #endif

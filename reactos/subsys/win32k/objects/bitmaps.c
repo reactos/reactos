@@ -112,7 +112,7 @@ NtGdiBitBlt(
 
 	SourcePoint.x = XSrc;
 	SourcePoint.y = YSrc;
-	
+
 	BrushOrigin.x = 0;
 	BrushOrigin.y = 0;
 
@@ -219,7 +219,7 @@ NtGdiBitBlt(
 
 	if (UsesSource && XlateObj != NULL)
 		EngDeleteXlate(XlateObj);
-		
+
         if(BitmapDest != NULL)
         {
                 BITMAPOBJ_UnlockBitmap(DCDest->w.hBitmap);
@@ -264,7 +264,7 @@ NtGdiTransparentBlt(
   USHORT PalDestMode, PalSrcMode;
   ULONG TransparentColor = 0;
   BOOL Ret = FALSE;
-  
+
   if(!(DCDest = DC_LockDc(hdcDst)))
   {
     DPRINT1("Invalid destination dc handle (0x%08x) passed to NtGdiTransparentBlt\n", hdcDst);
@@ -277,7 +277,7 @@ NtGdiTransparentBlt(
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
-  
+
   if((hdcDst != hdcSrc) && !(DCSrc = DC_LockDc(hdcSrc)))
   {
     DC_UnlockDc(hdcDst);
@@ -299,19 +299,19 @@ NtGdiTransparentBlt(
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
-  
+
   /* Offset positions */
   xDst += DCDest->w.DCOrgX;
   yDst += DCDest->w.DCOrgY;
   xSrc += DCSrc->w.DCOrgX;
   ySrc += DCSrc->w.DCOrgY;
-  
+
   if(DCDest->w.hPalette)
     DestPalette = DCDest->w.hPalette;
-  
+
   if(DCSrc->w.hPalette)
     SourcePalette = DCSrc->w.hPalette;
-  
+
   if(!(PalSourceGDI = PALETTE_LockPalette(SourcePalette)))
   {
     DC_UnlockDc(hdcSrc);
@@ -338,24 +338,24 @@ NtGdiTransparentBlt(
     PalDestMode = PalSrcMode = PalSourceGDI->Mode;
   }
   PALETTE_UnlockPalette(SourcePalette);
-  
+
   /* Translate Transparent (RGB) Color to the source palette */
   if((XlateObj = (XLATEOBJ*)IntEngCreateXlate(PalSrcMode, PAL_RGB, SourcePalette, NULL)))
   {
     TransparentColor = XLATEOBJ_iXlate(XlateObj, (ULONG)TransColor);
     EngDeleteXlate(XlateObj);
   }
-  
+
   /* Create the XLATE object to convert colors between source and destination */
   XlateObj = (XLATEOBJ*)IntEngCreateXlate(PalDestMode, PalSrcMode, DestPalette, SourcePalette);
-  
+
   BitmapDest = BITMAPOBJ_LockBitmap(DCDest->w.hBitmap);
   /* FIXME - BitmapDest can be NULL!!!! Don't assert here! */
   ASSERT(BitmapDest);
   BitmapSrc = BITMAPOBJ_LockBitmap(DCSrc->w.hBitmap);
   /* FIXME - BitmapSrc can be NULL!!!! Don't assert here! */
   ASSERT(BitmapSrc);
-  
+
   rcDest.left = xDst;
   rcDest.top = yDst;
   rcDest.right = rcDest.left + cxDst;
@@ -364,16 +364,16 @@ NtGdiTransparentBlt(
   rcSrc.top = ySrc;
   rcSrc.right = rcSrc.left + cxSrc;
   rcSrc.bottom = rcSrc.top + cySrc;
-  
+
   if((cxDst != cxSrc) || (cyDst != cySrc))
   {
     DPRINT1("TransparentBlt() does not support stretching at the moment!\n");
     goto done;
   }
-  
-  Ret = IntEngTransparentBlt(BitmapDest, BitmapSrc, DCDest->CombinedClip, XlateObj, &rcDest, &rcSrc, 
+
+  Ret = IntEngTransparentBlt(BitmapDest, BitmapSrc, DCDest->CombinedClip, XlateObj, &rcDest, &rcSrc,
                              TransparentColor, 0);
-  
+
 done:
   BITMAPOBJ_UnlockBitmap(DCDest->w.hBitmap);
   BITMAPOBJ_UnlockBitmap(DCSrc->w.hBitmap);
@@ -557,7 +557,7 @@ NtGdiExtFloodFill(
 	UINT  FillType)
 {
    DPRINT1("FIXME: NtGdiExtFloodFill is UNIMPLEMENTED\n");
-   
+
    /* lie and say we succeded */
 	return TRUE;
 }
@@ -1362,12 +1362,12 @@ BITMAP_GetObject(BITMAPOBJ * bmp, INT count, LPVOID buffer)
 		BITMAP Bitmap;
 		if (count > (INT) sizeof(BITMAP)) count = sizeof(BITMAP);
 		Bitmap.bmType = 0;
-		Bitmap.bmWidth = bmp->SurfObj.sizlBitmap.cx; 
-		Bitmap.bmHeight = bmp->SurfObj.sizlBitmap.cy; 
+		Bitmap.bmWidth = bmp->SurfObj.sizlBitmap.cx;
+		Bitmap.bmHeight = bmp->SurfObj.sizlBitmap.cy;
 		Bitmap.bmWidthBytes = abs(bmp->SurfObj.lDelta);
-		Bitmap.bmPlanes = 1; 
+		Bitmap.bmPlanes = 1;
 		Bitmap.bmBitsPixel = BitsPerFormat(bmp->SurfObj.iBitmapFormat);
-		Bitmap.bmBits = bmp->SurfObj.pvBits; 
+		Bitmap.bmBits = bmp->SurfObj.pvBits;
 		memcpy(buffer, &Bitmap, count);
 		return count;
 	}

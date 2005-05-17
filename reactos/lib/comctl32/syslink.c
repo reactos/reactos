@@ -17,11 +17,19 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * NOTES
+ *
+ * This code was audited for completeness against the documented features
+ * of Comctl32.dll version 6.0 on Apr. 4, 2005, by Dimitrie O. Paun.
+ * 
+ * Unless otherwise noted, we believe this code to be complete, as per
+ * the specification mentioned above.
+ * If you discover missing features, or bugs, please note them below.
+ * 
  * TODO:
  * - Fix SHIFT+TAB and TAB issue (wrong link is selected when control gets the focus)
  * - Better string parsing
  * - Improve word wrapping
- * - Control styles?!
  *
  */
 
@@ -33,16 +41,13 @@
 #include "winuser.h"
 #include "winnls.h"
 #include "commctrl.h"
+#include "comctl32.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(progress);
 
 INT WINAPI StrCmpNIW(LPCWSTR,LPCWSTR,INT);
-
-#define SYSLINK_Alloc(size)        HeapAlloc(GetProcessHeap(), 0, (size))
-#define SYSLINK_Free(ptr)          HeapFree(GetProcessHeap(), 0, (ptr))
-#define SYSLINK_ReAlloc(ptr, size) HeapReAlloc(GetProcessHeap(), 0, ptr, (size))
 
 typedef struct
 {
@@ -85,6 +90,8 @@ typedef struct _DOC_ITEM
 typedef struct
 {
     HWND      Self;         /* The window handle for this control */
+    HWND      Notify;       /* The parent handle to receive notifications */
+    DWORD     Style;        /* Styles for this control */
     PDOC_ITEM Items;        /* Address to the first document item */
     BOOL      HasFocus;     /* Whether the control has the input focus */
     int       MouseDownID;  /* ID of the link that the mouse button first selected */
@@ -115,8 +122,8 @@ static VOID SYSLINK_FreeDocItem (PDOC_ITEM DocItem)
 {
     if(DocItem->Type == slLink)
     {
-        SYSLINK_Free(DocItem->u.Link.szID);
-        SYSLINK_Free(DocItem->u.Link.szUrl);
+        Free(DocItem->u.Link.szID);
+        Free(DocItem->u.Link.szUrl);
     }
 
     if(DocItem->Type == slLink && DocItem->u.Link.hRgn != NULL)
@@ -127,18 +134,18 @@ static VOID SYSLINK_FreeDocItem (PDOC_ITEM DocItem)
     /* we don't free Text because it's just a pointer to a character in the
        entire window text string */
 
-    SYSLINK_Free(DocItem);
+    Free(DocItem);
 }
 
 /***********************************************************************
  * SYSLINK_AppendDocItem
  * Create and append a new document item.
  */
-static PDOC_ITEM SYSLINK_AppendDocItem (SYSLINK_INFO *infoPtr, LPWSTR Text, UINT textlen,
+static PDOC_ITEM SYSLINK_AppendDocItem (SYSLINK_INFO *infoPtr, LPCWSTR Text, UINT textlen,
                                         SL_ITEM_TYPE type, PDOC_ITEM LastItem)
 {
     PDOC_ITEM Item;
-    Item = SYSLINK_Alloc(sizeof(DOC_ITEM) + ((textlen + 1) * sizeof(WCHAR)));
+    Item = Alloc(sizeof(DOC_ITEM) + ((textlen + 1) * sizeof(WCHAR)));
     if(Item == NULL)
     {
         ERR("Failed to alloc DOC_ITEM structure!\n");
@@ -191,25 +198,16 @@ static VOID SYSLINK_ClearDoc (SYSLINK_INFO *infoPtr)
  * Parses the window text string and creates a document. Returns the
  * number of document items created.
  */
-static UINT SYSLINK_ParseText (SYSLINK_INFO *infoPtr, LPWSTR Text)
+static UINT SYSLINK_ParseText (SYSLINK_INFO *infoPtr, LPCWSTR Text)
 {
-    WCHAR *current, *textstart, *linktext, *firsttag;
-    int taglen = 0, textlen, linklen, docitems = 0;
+    LPCWSTR current, textstart = NULL, linktext = NULL, firsttag = NULL;
+    int taglen = 0, textlen = 0, linklen = 0, docitems = 0;
     PDOC_ITEM Last = NULL;
     SL_ITEM_TYPE CurrentType = slText;
-    DWORD Style;
-    LPWSTR lpID, lpUrl;
+    LPCWSTR lpID, lpUrl;
     UINT lenId, lenUrl;
 
-    Style = GetWindowLongW(infoPtr->Self, GWL_STYLE);
-
-    firsttag = NULL;
-    textstart = NULL;
-    linktext = NULL;
-    textlen = 0;
-    linklen = 0;
-    
-    for(current = (WCHAR*)Text; *current != 0;)
+    for(current = Text; *current != 0;)
     {
         if(*current == '<')
         {
@@ -232,9 +230,8 @@ static UINT SYSLINK_ParseText (SYSLINK_INFO *infoPtr, LPWSTR Text)
                 case ' ':
                 {
                     /* we expect parameters, parse them */
-                    LPWSTR *CurrentParameter = NULL;
+                    LPCWSTR *CurrentParameter = NULL, tmp;
                     UINT *CurrentParameterLen = NULL;
-                    WCHAR *tmp;
 
                     taglen = 3;
                     tmp = current + taglen;
@@ -362,7 +359,7 @@ CheckParameter:
                     {
                         int nc;
 
-                        if(!(Style & WS_DISABLED))
+                        if(!(infoPtr->Style & WS_DISABLED))
                         {
                             Last->u.Link.state |= LIS_ENABLED;
                         }
@@ -371,7 +368,7 @@ CheckParameter:
                         {
                             nc = min(lenId, strlenW(lpID));
                             nc = min(nc, MAX_LINKID_TEXT);
-                            Last->u.Link.szID = SYSLINK_Alloc((MAX_LINKID_TEXT + 1) * sizeof(WCHAR));
+                            Last->u.Link.szID = Alloc((MAX_LINKID_TEXT + 1) * sizeof(WCHAR));
                             if(Last->u.Link.szID != NULL)
                             {
                                 lstrcpynW(Last->u.Link.szID, lpID, nc + 1);
@@ -384,7 +381,7 @@ CheckParameter:
                         {
                             nc = min(lenUrl, strlenW(lpUrl));
                             nc = min(nc, L_MAX_URL_LENGTH);
-                            Last->u.Link.szUrl = SYSLINK_Alloc((L_MAX_URL_LENGTH + 1) * sizeof(WCHAR));
+                            Last->u.Link.szUrl = Alloc((L_MAX_URL_LENGTH + 1) * sizeof(WCHAR));
                             if(Last->u.Link.szUrl != NULL)
                             {
                                 lstrcpynW(Last->u.Link.szUrl, lpUrl, nc + 1);
@@ -442,7 +439,7 @@ CheckParameter:
         {
             int nc;
 
-            if(!(Style & WS_DISABLED))
+            if(!(infoPtr->Style & WS_DISABLED))
             {
                 Last->u.Link.state |= LIS_ENABLED;
             }
@@ -451,7 +448,7 @@ CheckParameter:
             {
                 nc = min(lenId, strlenW(lpID));
                 nc = min(nc, MAX_LINKID_TEXT);
-                Last->u.Link.szID = SYSLINK_Alloc((MAX_LINKID_TEXT + 1) * sizeof(WCHAR));
+                Last->u.Link.szID = Alloc((MAX_LINKID_TEXT + 1) * sizeof(WCHAR));
                 if(Last->u.Link.szID != NULL)
                 {
                     lstrcpynW(Last->u.Link.szID, lpID, nc + 1);
@@ -464,7 +461,7 @@ CheckParameter:
             {
                 nc = min(lenUrl, strlenW(lpUrl));
                 nc = min(nc, L_MAX_URL_LENGTH);
-                Last->u.Link.szUrl = SYSLINK_Alloc((L_MAX_URL_LENGTH + 1) * sizeof(WCHAR));
+                Last->u.Link.szUrl = Alloc((L_MAX_URL_LENGTH + 1) * sizeof(WCHAR));
                 if(Last->u.Link.szUrl != NULL)
                 {
                     lstrcpynW(Last->u.Link.szUrl, lpUrl, nc + 1);
@@ -479,7 +476,7 @@ CheckParameter:
 
     if(linktext != NULL && linklen > 0)
     {
-        /* we got a unclosed link, just display the text */
+        /* we got an unclosed link, just display the text */
         Last = SYSLINK_AppendDocItem(infoPtr, linktext, linklen, slText, Last);
         if(Last == NULL)
         {
@@ -737,11 +734,11 @@ static VOID SYSLINK_Render (SYSLINK_INFO *infoPtr, HDC hdc)
                 
                 if(bl != NULL)
                 {
-                    bl = SYSLINK_ReAlloc(bl, ++nBlocks * sizeof(DOC_TEXTBLOCK));
+                    bl = ReAlloc(bl, ++nBlocks * sizeof(DOC_TEXTBLOCK));
                 }
                 else
                 {
-                    bl = SYSLINK_Alloc(++nBlocks * sizeof(DOC_TEXTBLOCK));
+                    bl = Alloc(++nBlocks * sizeof(DOC_TEXTBLOCK));
                 }
                 
                 if(bl != NULL)
@@ -879,13 +876,14 @@ static LRESULT SYSLINK_Draw (SYSLINK_INFO *infoPtr, HDC hdc)
  * SYSLINK_Paint
  * Handles the WM_PAINT message.
  */
-static LRESULT SYSLINK_Paint (SYSLINK_INFO *infoPtr)
+static LRESULT SYSLINK_Paint (SYSLINK_INFO *infoPtr, HDC hdcParam)
 {
     HDC hdc;
     PAINTSTRUCT ps;
-    hdc = BeginPaint (infoPtr->Self, &ps);
+
+    hdc = hdcParam ? hdcParam : BeginPaint (infoPtr->Self, &ps);
     SYSLINK_Draw (infoPtr, hdc);
-    EndPaint (infoPtr->Self, &ps);
+    if (!hdcParam) EndPaint (infoPtr->Self, &ps);
     return 0;
 }
 
@@ -939,7 +937,7 @@ static HFONT SYSLINK_SetFont (SYSLINK_INFO *infoPtr, HFONT hFont, BOOL bRedraw)
  *           SYSLINK_SetText
  * Set new text for the SysLink control.
  */
-static LRESULT SYSLINK_SetText (SYSLINK_INFO *infoPtr, LPWSTR Text)
+static LRESULT SYSLINK_SetText (SYSLINK_INFO *infoPtr, LPCWSTR Text)
 {
     int textlen;
 
@@ -1038,7 +1036,7 @@ static LRESULT SYSLINK_SetItem (SYSLINK_INFO *infoPtr, PLITEM Item)
     {
         if(!di->u.Link.szID)
         {
-            di->u.Link.szID = SYSLINK_Alloc((MAX_LINKID_TEXT + 1) * sizeof(WCHAR));
+            di->u.Link.szID = Alloc((MAX_LINKID_TEXT + 1) * sizeof(WCHAR));
             if(!Item->szID)
             {
                 ERR("Unable to allocate memory for link id\n");
@@ -1055,7 +1053,7 @@ static LRESULT SYSLINK_SetItem (SYSLINK_INFO *infoPtr, PLITEM Item)
     {
         if(!di->u.Link.szUrl)
         {
-            di->u.Link.szUrl = SYSLINK_Alloc((MAX_LINKID_TEXT + 1) * sizeof(WCHAR));
+            di->u.Link.szUrl = Alloc((MAX_LINKID_TEXT + 1) * sizeof(WCHAR));
             if(!Item->szUrl)
             {
                 ERR("Unable to allocate memory for link url\n");
@@ -1241,7 +1239,7 @@ static LRESULT SYSLINK_SendParentNotify (SYSLINK_INFO *infoPtr, UINT code, PDOC_
         nml.item.szUrl[0] = 0;
     }
 
-    return SendMessageW(GetParent(infoPtr->Self), WM_NOTIFY, (WPARAM)nml.hdr.idFrom, (LPARAM)&nml);
+    return SendMessageW(infoPtr->Notify, WM_NOTIFY, (WPARAM)nml.hdr.idFrom, (LPARAM)&nml);
 }
 
 /***********************************************************************
@@ -1466,7 +1464,7 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
 
     switch(message) {
     case WM_PAINT:
-        return SYSLINK_Paint (infoPtr);
+        return SYSLINK_Paint (infoPtr, (HDC)wParam);
 
     case WM_SETCURSOR:
     {
@@ -1606,14 +1604,31 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
     case WM_KILLFOCUS:
         return SYSLINK_KillFocus(infoPtr, (HWND)wParam);
 
+    case WM_ENABLE:
+	infoPtr->Style &= ~WS_DISABLED;
+	infoPtr->Style |= (wParam ? 0 : WS_DISABLED);
+	InvalidateRect (infoPtr->Self, NULL, FALSE);
+	return 0;
+
+    case WM_STYLECHANGED:
+        if (wParam == GWL_STYLE)
+        {
+            infoPtr->Style = ((LPSTYLESTRUCT)lParam)->styleNew;
+
+            InvalidateRect(infoPtr->Self, NULL, TRUE);
+        }
+        return 0;
+
     case WM_CREATE:
         /* allocate memory for info struct */
-        infoPtr = (SYSLINK_INFO *)SYSLINK_Alloc (sizeof(SYSLINK_INFO));
+        infoPtr = Alloc (sizeof(SYSLINK_INFO));
         if (!infoPtr) return -1;
         SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
         /* initialize the info struct */
         infoPtr->Self = hwnd;
+        infoPtr->Notify = ((LPCREATESTRUCTW)lParam)->hwndParent;
+        infoPtr->Style = ((LPCREATESTRUCTW)lParam)->style;
         infoPtr->Font = 0;
         infoPtr->LinkFont = 0;
         infoPtr->Items = NULL;
@@ -1623,8 +1638,7 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
         infoPtr->LinkColor = GetSysColor(COLOR_HIGHLIGHT);
         infoPtr->VisitedColor = GetSysColor(COLOR_HIGHLIGHT);
         TRACE("SysLink Ctrl creation, hwnd=%p\n", hwnd);
-        lParam = (LPARAM)(((LPCREATESTRUCTW)lParam)->lpszName);
-        SYSLINK_SetText(infoPtr, (LPWSTR)lParam);
+        SYSLINK_SetText(infoPtr, ((LPCREATESTRUCTW)lParam)->lpszName);
         return 0;
 
     case WM_DESTROY:
@@ -1632,8 +1646,8 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
         SYSLINK_ClearDoc(infoPtr);
         if(infoPtr->Font != 0) DeleteObject(infoPtr->Font);
         if(infoPtr->LinkFont != 0) DeleteObject(infoPtr->LinkFont);
-        SYSLINK_Free (infoPtr);
         SetWindowLongPtrW(hwnd, 0, 0);
+        Free (infoPtr);
         return 0;
 
     default:

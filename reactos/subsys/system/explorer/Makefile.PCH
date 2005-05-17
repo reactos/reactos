@@ -89,8 +89,8 @@ precomp.h.gch: *.h utility/*.h shell/*.h desktop/*.h
 $(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX) notifyhook.dll libexpat.dll
 	$(LINK) $(LFLAGS) -o $@ $^ $(addprefix -l,$(LIBS)) $(addprefix -l,$(DELAYIMPORTS))
 
-explorer$(RES_SUFFIX): $(PROGRAM)_intres.rc res/*.bmp res/*.ico
-	windres $(RCFLAGS) -o $@ $(PROGRAM)_intres.rc
+$(PROGRAM)$(RES_SUFFIX): explorer_intres.rc res/*.bmp res/*.ico
+	windres $(RCFLAGS) -o $@ explorer_intres.rc
 
 notifyhook.dll: notifyhook/notifyhook.c notifyhook/notifyhook.h
 	$(CC) -D_WIN32_IE=0x0600 -Wall -D_NOTIFYHOOK_IMPL -Os -s notifyhook/notifyhook.c -shared -o $@

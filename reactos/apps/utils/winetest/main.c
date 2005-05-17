@@ -175,7 +175,7 @@ const char* get_test_source_file(const char* test, const char* subtest)
 const char* get_file_rev(const char* file)
 {
     const struct rev_info* rev;
- 
+
     for(rev = rev_infos; rev->file; rev++) {
 	if (strcmp(rev->file, file) == 0) return rev->rev;
     }
@@ -198,7 +198,7 @@ void extract_rev_infos ()
 
         len = LoadStringA (module, REV_INFO+i, revinfo, sizeof(revinfo));
         if (len == 0) break; /* end of revision info */
-	if (len >= sizeof(revinfo) - 1) 
+	if (len >= sizeof(revinfo) - 1)
 	    report (R_FATAL, "Revision info too long.");
 	if(!(p = strrchr(revinfo, ':')))
 	    report (R_FATAL, "Revision info malformed (i=%d)", i);
@@ -213,7 +213,7 @@ void* extract_rcdata (int id, int type, DWORD* size)
     HRSRC rsrc;
     HGLOBAL hdl;
     LPVOID addr;
-    
+
     if (!(rsrc = FindResource (NULL, (LPTSTR)id, MAKEINTRESOURCE(type))) ||
         !(*size = SizeofResource (0, rsrc)) ||
         !(hdl = LoadResource (0, rsrc)) ||
@@ -601,7 +601,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
     }
     if (!submit) {
         if (reset_env && (putenv ("WINETEST_PLATFORM=windows") ||
-                          putenv ("WINETEST_DEBUG=1") || 
+                          putenv ("WINETEST_DEBUG=1") ||
                           putenv ("WINETEST_INTERACTIVE=0") ||
                           putenv ("WINETEST_REPORT_SUCCESS=0")))
             report (R_FATAL, "Could not reset environment: %d", errno);

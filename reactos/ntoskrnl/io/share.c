@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/share.c
  * PURPOSE:         No purpose listed.
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
@@ -23,7 +23,7 @@ IoUpdateShareAccess(PFILE_OBJECT FileObject,
 		    PSHARE_ACCESS ShareAccess)
 {
    PAGED_CODE();
-   
+
    if (FileObject->ReadAccess ||
        FileObject->WriteAccess ||
        FileObject->DeleteAccess)
@@ -56,7 +56,7 @@ IoCheckShareAccess(IN ACCESS_MASK DesiredAccess,
   BOOLEAN SharedRead;
   BOOLEAN SharedWrite;
   BOOLEAN SharedDelete;
-  
+
   PAGED_CODE();
 
   ReadAccess = (DesiredAccess & (FILE_READ_DATA | FILE_EXECUTE)) != 0;
@@ -144,7 +144,7 @@ IoSetShareAccess(IN ACCESS_MASK DesiredAccess,
   BOOLEAN SharedRead;
   BOOLEAN SharedWrite;
   BOOLEAN SharedDelete;
-  
+
   PAGED_CODE();
 
   ReadAccess = (DesiredAccess & (FILE_READ_DATA | FILE_EXECUTE)) != 0;
@@ -196,7 +196,7 @@ IoCheckDesiredAccess(IN OUT PACCESS_MASK DesiredAccess,
 		     IN ACCESS_MASK GrantedAccess)
 {
   PAGED_CODE();
-  
+
   RtlMapGenericMask(DesiredAccess,
 		    IoFileObjectType->Mapping);
 
@@ -270,7 +270,7 @@ IoSetInformation(IN PFILE_OBJECT FileObject,
    }
 
    DPRINT("FileObject %x\n", FileObject);
-   
+
    DeviceObject = FileObject->DeviceObject;
 
    Irp = IoAllocateIrp(DeviceObject->StackSize,
@@ -310,7 +310,7 @@ IoSetInformation(IN PFILE_OBJECT FileObject,
 			    NULL);
       Status = IoStatusBlock.Status;
    }
-   
+
    return Status;
 }
 

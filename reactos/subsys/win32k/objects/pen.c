@@ -29,7 +29,7 @@ IntGdiCreatePenIndirect(PLOGPEN LogPen)
    HPEN hPen;
    PGDIBRUSHOBJ PenObject;
    static const WORD wPatternAlternate[] = {0x5555};
-  
+
    if (LogPen->lopnStyle > PS_INSIDEFRAME)
       return 0;
 
@@ -41,7 +41,7 @@ IntGdiCreatePenIndirect(PLOGPEN LogPen)
       return 0;
    }
 
-   PenObject = PENOBJ_LockPen(hPen);  
+   PenObject = PENOBJ_LockPen(hPen);
    /* FIXME - Handle PenObject == NULL!!! */
    PenObject->ptPenWidth = LogPen->lopnWidth;
    PenObject->ulPenStyle = LogPen->lopnStyle;
@@ -67,7 +67,7 @@ IntGdiCreatePenIndirect(PLOGPEN LogPen)
    }
 
    PENOBJ_UnlockPen(hPen);
-  
+
    return hPen;
 }
 
@@ -94,14 +94,14 @@ NtGdiCreatePenIndirect(CONST PLOGPEN LogPen)
 {
    LOGPEN SafeLogPen;
    NTSTATUS Status;
-  
+
    Status = MmCopyFromCaller(&SafeLogPen, LogPen, sizeof(LOGPEN));
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
       return 0;
    }
-  
+
    return IntGdiCreatePenIndirect(&SafeLogPen);
 }
 

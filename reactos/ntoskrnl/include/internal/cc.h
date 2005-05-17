@@ -39,9 +39,16 @@ typedef struct _INTERNAL_BCB
 //  CSHORT RefCount; /* (At offset 0x34 on WinNT4) */
 } INTERNAL_BCB, *PINTERNAL_BCB;
 
-VOID STDCALL
-CcMdlReadCompleteDev (IN PMDL		MdlChain,
-		      IN PDEVICE_OBJECT	DeviceObject);
+VOID
+STDCALL
+CcMdlReadCompleteDev(IN PMDL MdlChain,
+                     IN PFILE_OBJECT FileObject);
+
+VOID
+STDCALL
+CcMdlWriteCompleteDev(IN PLARGE_INTEGER FileOffset,
+                      IN PMDL MdlChain,
+                      IN PFILE_OBJECT FileObject);
 
 VOID
 CcInitView(VOID);
@@ -50,19 +57,19 @@ CcInitView(VOID);
 VOID CcInit(VOID);
 
 
-VOID 
+VOID
 CcInitCacheZeroPage(VOID);
 
 NTSTATUS
 CcRosFlushDirtyPages(ULONG Target, PULONG Count);
 
-VOID 
+VOID
 CcRosDereferenceCache(PFILE_OBJECT FileObject);
 
-VOID 
+VOID
 CcRosReferenceCache(PFILE_OBJECT FileObject);
 
-VOID 
+VOID
 CcRosSetRemoveOnClose(PSECTION_OBJECT_POINTERS SectionObjectPointer);
 
 

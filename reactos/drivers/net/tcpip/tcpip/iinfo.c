@@ -21,24 +21,24 @@ TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID *ID,
     ULONG Size;
     UINT DescrLenMax = MAX_IFDESCR_LEN - 1;
 
-    TI_DbgPrint(MAX_TRACE, 
+    TI_DbgPrint(DEBUG_INFO,
 		("Getting IFEntry MIB (IF %08x LA %08x) (%04x:%d)\n",
 		 Interface, IF, ID->tei_entity, ID->tei_instance));
 
-    OutData = 
-	(PIFENTRY)ExAllocatePool( NonPagedPool, 
+    OutData =
+	(PIFENTRY)ExAllocatePool( NonPagedPool,
 				  sizeof(IFENTRY) + MAX_IFDESCR_LEN );
-    
+
     if( !OutData ) return TDI_INVALID_REQUEST; /* Out of memory */
 
     RtlZeroMemory( OutData, sizeof(IFENTRY) + MAX_IFDESCR_LEN );
 
     OutData->Index = Interface->Index;
     /* viz: tcpip keeps those indices */
-    OutData->Type = Interface == 
+    OutData->Type = Interface ==
         Loopback ? MIB_IF_TYPE_LOOPBACK : MIB_IF_TYPE_ETHERNET;
     OutData->Mtu = Interface->MTU;
-    TI_DbgPrint(MAX_TRACE, 
+    TI_DbgPrint(DEBUG_INFO,
 		("Getting interface speed\n"));
     OutData->PhysAddrLen = Interface->AddressLength;
     OutData->AdminStatus = MIB_IF_ADMIN_STATUS_UP;
@@ -46,37 +46,38 @@ TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID *ID,
     Status = GetInterfaceConnectionStatus( Interface, &OutData->OperStatus );
 
     /* Not sure what to do here, but not ready seems a safe bet on failure */
-    if( !NT_SUCCESS(Status) ) 
+    if( !NT_SUCCESS(Status) )
         OutData->OperStatus = NdisHardwareStatusNotReady;
 
     IFDescr = (PCHAR)&OutData[1];
 
     if( IF ) {
 	GetInterfaceSpeed( Interface, (PUINT)&OutData->Speed );
-	TI_DbgPrint(MAX_TRACE,
+	TI_DbgPrint(DEBUG_INFO,
 		    ("IF Speed = %d * 100bps\n", OutData->Speed));
 	memcpy(OutData->PhysAddr,Interface->Address,Interface->AddressLength);
-	TI_DbgPrint(MAX_TRACE, ("Got HWAddr\n"));
-	GetInterfaceName( Interface, IFDescr, MAX_IFDESCR_LEN - 1 );
-	DescrLenMax = strlen( IFDescr ) + 1;
+	TI_DbgPrint(DEBUG_INFO, ("Got HWAddr\n"));
     }
 
-    IFDescr[DescrLenMax] = 0; /* Terminate ifdescr string */
+    GetInterfaceName( Interface, IFDescr, MAX_IFDESCR_LEN - 1 );
+    DescrLenMax = strlen( IFDescr ) + 1;
 
-    TI_DbgPrint(MAX_TRACE, ("Copied in name %s\n", IFDescr));
+    TI_DbgPrint(DEBUG_INFO, ("Copied in name %s\n", IFDescr));
     OutData->DescrLen = DescrLenMax;
     IFDescr += DescrLenMax;
     Size = IFDescr - (PCHAR)OutData + 1;
 
-    TI_DbgPrint(MAX_TRACE, ("Finished IFEntry MIB (%04x:%d) size %d\n",
+    TI_DbgPrint(DEBUG_INFO, ("Finished IFEntry MIB (%04x:%d) size %d\n",
 			    ID->tei_entity, ID->tei_instance, Size));
 
     Status = InfoCopyOut( (PCHAR)OutData, Size, Buffer, BufferSize );
     ExFreePool( OutData );
 
+    TI_DbgPrint(DEBUG_INFO,("Returning %x\n", Status));
+
     return Status;
 }
-    
+
 TDI_STATUS InfoInterfaceTdiQueryEx( UINT InfoClass,
 				    UINT InfoType,
 				    UINT InfoId,
@@ -89,11 +90,11 @@ TDI_STATUS InfoInterfaceTdiQueryEx( UINT InfoClass,
 	InfoId == ENTITY_TYPE_ID ) {
 	ULONG Temp = IF_MIB;
 	return InfoCopyOut( (PCHAR)&Temp, sizeof(Temp), Buffer, BufferSize );
-    } else if( InfoClass == INFO_CLASS_PROTOCOL && 
+    } else if( InfoClass == INFO_CLASS_PROTOCOL &&
 	       InfoType == INFO_TYPE_PROVIDER &&
 	       InfoId == IF_MIB_STATS_ID ) {
 	return InfoTdiQueryGetInterfaceMIB( id, Context, Buffer, BufferSize );
-    } else 
+    } else
 	return TDI_INVALID_REQUEST;
 }
 
@@ -104,7 +105,7 @@ TDI_STATUS InfoInterfaceTdiSetEx( UINT InfoClass,
 				  TDIEntityID *id,
 				  PCHAR Buffer,
 				  UINT BufferSize ) {
-    TI_DbgPrint(MAX_TRACE, ("Got Request: Class %x Type %x Id %x, EntityID %x:%x\n",
+    TI_DbgPrint(DEBUG_INFO, ("Got Request: Class %x Type %x Id %x, EntityID %x:%x\n",
                 InfoClass, InfoId, id->tei_entity, id->tei_instance));
     return TDI_INVALID_REQUEST;
 }

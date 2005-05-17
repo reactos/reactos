@@ -827,7 +827,7 @@ struct ANSUNC DWebBrowserEvents2Impl : public SimpleComObject,
 			_callback->WindowSetWidth(Variant(pDispParams->rgvarg[0]));
 			break;
 
-		  case DISPID_WINDOWSETHEIGHT:	// sent when the put_height method is called on the WebOC 
+		  case DISPID_WINDOWSETHEIGHT:	// sent when the put_height method is called on the WebOC
 			if (pDispParams->cArgs != 1)
 				return E_INVALIDARG;
 			_callback->WindowSetHeight(Variant(pDispParams->rgvarg[0]));

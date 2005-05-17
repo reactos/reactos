@@ -51,12 +51,12 @@ LIST_ENTRY IrpQueue;
 KSPIN_LOCK IrpQueueLock;
 KSEMAPHORE QueueSemaphore;
 
-/* 
- * CSQ Callbacks 
+/*
+ * CSQ Callbacks
  */
 
 
-VOID NTAPI CsqRemoveIrp(PIO_CSQ UnusedCsq, 
+VOID NTAPI CsqRemoveIrp(PIO_CSQ UnusedCsq,
                         PIRP Irp)
 /*
  * FUNCTION: Remove an IRP from the queue
@@ -73,8 +73,8 @@ VOID NTAPI CsqRemoveIrp(PIO_CSQ UnusedCsq,
 }
 
 
-PIRP NTAPI CsqPeekNextIrp(PIO_CSQ UnusedCsq, 
-                          PIRP Irp, 
+PIRP NTAPI CsqPeekNextIrp(PIO_CSQ UnusedCsq,
+                          PIRP Irp,
                           PVOID PeekContext)
 /*
  * FUNCTION: Find the next matching IRP in the queue
@@ -103,7 +103,7 @@ PIRP NTAPI CsqPeekNextIrp(PIO_CSQ UnusedCsq,
 }
 
 
-VOID NTAPI CsqAcquireLock(PIO_CSQ UnusedCsq, 
+VOID NTAPI CsqAcquireLock(PIO_CSQ UnusedCsq,
                           PKIRQL Irql)
 /*
  * FUNCTION: Acquire the queue lock
@@ -118,7 +118,7 @@ VOID NTAPI CsqAcquireLock(PIO_CSQ UnusedCsq,
 }
 
 
-VOID NTAPI CsqReleaseLock(PIO_CSQ UnusedCsq, 
+VOID NTAPI CsqReleaseLock(PIO_CSQ UnusedCsq,
                           KIRQL Irql)
 /*
  * FUNCTION: Release the queue lock
@@ -133,7 +133,7 @@ VOID NTAPI CsqReleaseLock(PIO_CSQ UnusedCsq,
 }
 
 
-VOID NTAPI CsqCompleteCanceledIrp(PIO_CSQ UnusedCsq, 
+VOID NTAPI CsqCompleteCanceledIrp(PIO_CSQ UnusedCsq,
                                   PIRP Irp)
 /*
  * FUNCTION: Complete a canceled IRP
@@ -153,7 +153,7 @@ VOID NTAPI CsqCompleteCanceledIrp(PIO_CSQ UnusedCsq,
 }
 
 
-VOID NTAPI CsqInsertIrp(PIO_CSQ UnusedCsq, 
+VOID NTAPI CsqInsertIrp(PIO_CSQ UnusedCsq,
                         PIRP Irp)
 /*
  * FUNCTION: Queue an IRP
@@ -162,7 +162,7 @@ VOID NTAPI CsqInsertIrp(PIO_CSQ UnusedCsq,
  *     Irp: IRP to add to the queue
  * NOTES:
  *     - Called under the protection of the queue lock
- *     - Releases the semaphore for each queued packet, which is how 
+ *     - Releases the semaphore for each queued packet, which is how
  *       the queue management thread knows that there might be
  *       an IRP in the queue
  *     - Note that the semaphore will get released more times than

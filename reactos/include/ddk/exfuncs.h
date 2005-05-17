@@ -215,6 +215,13 @@ ExFreePool (
 	PVOID	block
 	);
 
+void
+STDCALL
+ExFreePoolWithTag (
+	PVOID	block,
+	ULONG	tag
+	);
+
 /*
  * PVOID
  * ExFreeToZone (
@@ -712,9 +719,9 @@ ExVerifySuite(
     SUITE_TYPE SuiteType
     );
 
-BOOLEAN
+LONG
 STDCALL
-ExSystemExceptionFilter();
+ExSystemExceptionFilter(VOID);
 
 VOID
 STDCALL

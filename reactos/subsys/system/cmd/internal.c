@@ -122,10 +122,14 @@
  *
  *    23-Feb-2001 (Carl Nettelblad <cnettel@hem.passagen.se>)
  *        Improved chdir/cd command.
+ *
+ *    02-Apr-2004 (Magnus Olsen <magnus@greatlord.com>)
+ *        Remove all hard code string so they can be
+ *		  translate to other langues.
  */
 
 #include "precomp.h"
-
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_CHDIR
 
@@ -160,15 +164,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Changes the current directory or displays it's name\n\n"
-					   "CHDIR [drive:][path]\n"
-					   "CHDIR[..|-]\n"
-					   "CD [drive:][path]\n"
-					   "CD[..|-]\n\n"
-					   "  ..   parent directory\n"
-					   "  -    previous directory\n\n"
-					   "Type CD drive: to display the current directory on the specified drive.\n"
-					   "Type CD without a parameter to display the current drive and directory."));
+		ConOutResPuts(STRING_CD_HELP);
 		return 0;
 	}
 
@@ -192,10 +188,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 		TCHAR szPath[MAX_PATH];
 
 		GetCurrentDirectory (MAX_PATH, szPath);
-
 		ConOutPuts (szPath);
-
-
 		return 0;
 	}
 
@@ -240,7 +233,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	{
 		//ErrorMessage (GetLastError(), _T("CD"));
 		ConOutFormatMessage(GetLastError());
-		
+
 		/* throw away current directory */
 		free (lpOldPath);
 		lpOldPath = NULL;
@@ -282,11 +275,9 @@ INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
 	LPTSTR *p = NULL;
 	INT argc;
 
-
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Creates a directory.\n\n"
-					   "MKDIR [drive:]path\nMD [drive:]path"));
+		ConOutResPuts(STRING_MKDIR_HELP);
 		return 0;
 	}
 
@@ -321,7 +312,7 @@ INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
 
 	if (!dir)
 	{
-		ConErrPrintf (_T("Required parameter missing\n"));
+		ConErrResPuts (STRING_ERROR_REQ_PARAM_MISSING);
 		return 1;
 	}
 
@@ -359,8 +350,7 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Removes a directory.\n\n"
-					   "RMDIR [drive:]path\nRD [drive:]path"));
+		ConOutResPuts(STRING_RMDIR_HELP);
 		return 0;
 	}
 
@@ -394,7 +384,7 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 
 	if (!dir)
 	{
-		ConErrPrintf (_T("Required parameter missing\n"));
+		ConErrResPuts(STRING_ERROR_REQ_PARAM_MISSING);
 		return 1;
 	}
 
@@ -425,7 +415,7 @@ INT CommandExit (LPTSTR cmd, LPTSTR param)
 {
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Exits the command line interpreter.\n\nEXIT"));
+		ConOutResPuts(STRING_EXIT_HELP);
 		return 0;
 	}
 
@@ -443,8 +433,7 @@ INT CommandRem (LPTSTR cmd, LPTSTR param)
 {
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Starts a comment line in a batch file.\n\n"
-		               "REM [Comment]"));
+		ConOutResPuts(STRING_REM_HELP);
 	}
 
 	return 0;

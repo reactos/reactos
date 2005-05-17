@@ -28,7 +28,7 @@
 
 ULONG vfatNameHash(ULONG hash, PUNICODE_STRING NameU)
 {
-  PWCHAR last; 
+  PWCHAR last;
   PWCHAR curr;
   register WCHAR c;
 
@@ -73,12 +73,12 @@ VOID
 vfatInitFcb(PVFATFCB Fcb, PUNICODE_STRING NameU)
 {
   USHORT PathNameBufferLength;
-  
+
   if (NameU)
     PathNameBufferLength = NameU->Length + sizeof(WCHAR);
   else
     PathNameBufferLength = 0;
-  
+
   Fcb->PathNameBuffer = ExAllocatePool(NonPagedPool, PathNameBufferLength);
   if (!Fcb->PathNameBuffer)
   {
@@ -86,7 +86,7 @@ vfatInitFcb(PVFATFCB Fcb, PUNICODE_STRING NameU)
     DPRINT1("Unable to initialize FCB for filename '%wZ'\n", NameU);
     KEBUGCHECKEX(0, (ULONG_PTR)Fcb, (ULONG_PTR)NameU, 0, 0);
   }
-  
+
   Fcb->PathNameU.Length = 0;
   Fcb->PathNameU.Buffer = Fcb->PathNameBuffer;
   Fcb->PathNameU.MaximumLength = PathNameBufferLength;
@@ -103,11 +103,11 @@ vfatInitFcb(PVFATFCB Fcb, PUNICODE_STRING NameU)
     {
       Fcb->DirNameU.Buffer = Fcb->LongNameU.Buffer = NULL;
       Fcb->DirNameU.MaximumLength = Fcb->DirNameU.Length = 0;
-      Fcb->LongNameU.MaximumLength = Fcb->LongNameU.Length = 0; 
+      Fcb->LongNameU.MaximumLength = Fcb->LongNameU.Length = 0;
     }
   RtlZeroMemory(&Fcb->FCBShareAccess, sizeof(SHARE_ACCESS));
   Fcb->OpenHandleCount = 0;
-}  
+}
 
 PVFATFCB
 vfatNewFCB(PDEVICE_EXTENSION  pVCB, PUNICODE_STRING pFileNameU)
@@ -135,7 +135,7 @@ vfatNewFCB(PDEVICE_EXTENSION  pVCB, PUNICODE_STRING pFileNameU)
   rcFCB->ShortHash.self = rcFCB;
   ExInitializeResourceLite(&rcFCB->PagingIoResource);
   ExInitializeResourceLite(&rcFCB->MainResource);
-  FsRtlInitializeFileLock(&rcFCB->FileLock, NULL, NULL); 
+  FsRtlInitializeFileLock(&rcFCB->FileLock, NULL, NULL);
   ExInitializeFastMutex(&rcFCB->LastMutex);
   rcFCB->RFCB.PagingIoResource = &rcFCB->PagingIoResource;
   rcFCB->RFCB.Resource = &rcFCB->MainResource;
@@ -144,7 +144,7 @@ vfatNewFCB(PDEVICE_EXTENSION  pVCB, PUNICODE_STRING pFileNameU)
   return  rcFCB;
 }
 
-VOID 
+VOID
 vfatDestroyCCB(PVFATCCB pCcb)
 {
   if (pCcb->SearchPattern.Buffer)
@@ -157,7 +157,7 @@ vfatDestroyCCB(PVFATCCB pCcb)
 VOID
 vfatDestroyFCB(PVFATFCB pFCB)
 {
-  FsRtlUninitializeFileLock(&pFCB->FileLock); 
+  FsRtlUninitializeFileLock(&pFCB->FileLock);
   ExFreePool(pFCB->PathNameBuffer);
   ExDeleteResourceLite(&pFCB->PagingIoResource);
   ExDeleteResourceLite(&pFCB->MainResource);
@@ -197,7 +197,7 @@ vfatReleaseFCB(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
      if (pFCB->RefCount == 0)
      {
         tmpFcb = pFCB->parentFcb;
-        RemoveEntryList (&pFCB->FcbListEntry);  
+        RemoveEntryList (&pFCB->FcbListEntry);
         if (pFCB->Hash.Hash != pFCB->ShortHash.Hash)
         {
            entry = pVCB->FcbHashTable[ShortIndex];
@@ -247,7 +247,7 @@ vfatAddFCBToTable(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
   ShortIndex = pFCB->ShortHash.Hash % pVCB->HashTableSize;
 
   InsertTailList (&pVCB->FcbListHead, &pFCB->FcbListEntry);
-   
+
   pFCB->Hash.next = pVCB->FcbHashTable[Index];
   pVCB->FcbHashTable[Index] = &pFCB->Hash;
   if (pFCB->Hash.Hash != pFCB->ShortHash.Hash)
@@ -269,11 +269,11 @@ vfatGrabFCBFromTable(PDEVICE_EXTENSION  pVCB, PUNICODE_STRING  PathNameU)
   UNICODE_STRING DirNameU;
   UNICODE_STRING FileNameU;
   PUNICODE_STRING FcbNameU;
-  
-  HASHENTRY* entry; 
+
+  HASHENTRY* entry;
 
   DPRINT("'%wZ'\n", PathNameU);
-  
+
   Hash = vfatNameHash(0, PathNameU);
 
   entry = pVCB->FcbHashTable[Hash % pVCB->HashTableSize];
@@ -443,7 +443,7 @@ vfatMakeFCBFromDirEntry(PVCB  vcb,
   USHORT PathNameLength;
   ULONG Size;
   ULONG hash;
-  
+
   UNICODE_STRING NameU;
 
   PathNameLength = directoryFCB->PathNameU.Length + max(DirContext->LongNameU.Length, DirContext->ShortNameU.Length);
@@ -451,7 +451,7 @@ vfatMakeFCBFromDirEntry(PVCB  vcb,
   {
      PathNameLength += sizeof(WCHAR);
   }
-  
+
   if (PathNameLength > LONGNAME_MAX_LENGTH * sizeof(WCHAR))
   {
     return  STATUS_OBJECT_NAME_INVALID;
@@ -480,7 +480,7 @@ vfatMakeFCBFromDirEntry(PVCB  vcb,
     RtlAppendUnicodeStringToString(&NameU, &DirContext->ShortNameU);
   }
   NameU.Buffer[NameU.Length / sizeof(WCHAR)] = 0;
-  
+
   rcFCB = vfatNewFCB (vcb, &NameU);
   RtlCopyMemory (&rcFCB->entry, &DirContext->DirEntry, sizeof (DIR_ENTRY));
   RtlCopyUnicodeString(&rcFCB->ShortNameU, &DirContext->ShortNameU);
@@ -579,7 +579,7 @@ vfatDirFindFile (PDEVICE_EXTENSION  pDeviceExt,
   PVOID Page = NULL;
   BOOLEAN First = TRUE;
   VFAT_DIRENTRY_CONTEXT DirContext;
-  /* This buffer must have a size of 260 characters, because 
+  /* This buffer must have a size of 260 characters, because
      vfatMakeFCBFromDirEntry can copy 20 name entries with 13 characters. */
   WCHAR LongNameBuffer[260];
   WCHAR ShortNameBuffer[13];
@@ -607,7 +607,7 @@ vfatDirFindFile (PDEVICE_EXTENSION  pDeviceExt,
   while (TRUE)
     {
       status = pDeviceExt->GetNextDirEntry(&Context,
-	                           &Page, 
+	                           &Page,
 	                           pDirectoryFCB,
 				   &DirContext,
 				   First);
@@ -700,7 +700,7 @@ vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
      {
         curr--;
      }
- 
+
      if (curr > pFileNameU->Buffer)
      {
         NameU.Buffer = pFileNameU->Buffer;
@@ -716,7 +716,7 @@ vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
 		 vfatReleaseFCB (pVCB, FCB);
 		 return STATUS_OBJECT_NAME_INVALID;
               }
-	      RtlMoveMemory(pFileNameU->Buffer + FCB->PathNameU.Length / sizeof(WCHAR), 
+	      RtlMoveMemory(pFileNameU->Buffer + FCB->PathNameU.Length / sizeof(WCHAR),
 		      curr, pFileNameU->Length - Length);
 	      pFileNameU->Length += (USHORT)(FCB->PathNameU.Length - Length);
 	      curr = pFileNameU->Buffer + FCB->PathNameU.Length / sizeof(WCHAR);
@@ -735,7 +735,7 @@ vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
        FCB = vfatOpenRootFCB(pVCB);
        curr = pFileNameU->Buffer;
      }
-  
+
      parentFCB = NULL;
      prev = curr;
   }
@@ -777,7 +777,7 @@ vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
 		  vfatReleaseFCB (pVCB, parentFCB);
 		  return STATUS_OBJECT_NAME_INVALID;
 		}
-	      RtlMoveMemory(prev + parentFCB->LongNameU.Length / sizeof(WCHAR), curr, 
+	      RtlMoveMemory(prev + parentFCB->LongNameU.Length / sizeof(WCHAR), curr,
 		      pFileNameU->Length - (curr - pFileNameU->Buffer) * sizeof(WCHAR));
 	      pFileNameU->Length += (USHORT)(parentFCB->LongNameU.Length - Length);
 	      curr = prev + parentFCB->LongNameU.Length / sizeof(WCHAR);
@@ -785,7 +785,7 @@ vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
 	    }
 	  RtlCopyMemory(prev, parentFCB->LongNameU.Buffer, parentFCB->LongNameU.Length);
 	}
-      curr++;      
+      curr++;
       prev = curr;
       while (*curr != L'\\' && curr <= last)
         {

@@ -49,7 +49,7 @@ static void draw_splitbar(HWND hWnd, int x)
     RECT rt;
     HGDIOBJ OldObj;
     HDC hdc = GetDC(hWnd);
-    
+
     if(!SizingPattern)
     {
       const DWORD Pattern[4] = {0x5555AAAA, 0x5555AAAA, 0x5555AAAA, 0x5555AAAA};
@@ -144,7 +144,7 @@ ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         TCHAR buffer[MAX_PATH];
         /* load "My Computer" string */
         LoadString(hInst, IDS_MY_COMPUTER, buffer, sizeof(buffer)/sizeof(TCHAR));
-        
+
 	g_pChildWnd = pChildWnd = HeapAlloc(GetProcessHeap(), 0, sizeof(ChildWnd));
         if (!pChildWnd) return 0;
         _tcsncpy(pChildWnd->szPath, buffer, MAX_PATH);
@@ -240,7 +240,7 @@ ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
               SizingBrush = CreatePatternBrush(SizingPattern);
             }
-            
+
             pt = MAKEPOINTS(lParam);
             GetClientRect(hWnd, &rt);
             pt.x = min(max(pt.x, SPLIT_MIN), rt.right - SPLIT_MIN);
@@ -317,7 +317,7 @@ ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
         }
         break;
-    
+
     case WM_CONTEXTMENU:
     {
       POINTS pt;
@@ -343,13 +343,13 @@ ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             EnableMenuItem(mnu, ID_EDIT_RENAME, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
           EnableMenuItem(mnu, ID_EDIT_MODIFY, MF_BYCOMMAND | (cnt == 1 ? MF_ENABLED : MF_DISABLED | MF_GRAYED));
           EnableMenuItem(mnu, ID_EDIT_MODIFY_BIN, MF_BYCOMMAND | (cnt == 1 ? MF_ENABLED : MF_DISABLED | MF_GRAYED));
-          
+
           TrackPopupMenu(mnu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hFrameWnd, NULL);
         }
       }
       break;
     }
-    
+
     case WM_SIZE:
         if (wParam != SIZE_MINIMIZED && pChildWnd != NULL) {
             ResizeWnd(pChildWnd, LOWORD(lParam), HIWORD(lParam));

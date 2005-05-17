@@ -64,7 +64,7 @@ RtlGetVersion(RTL_OSVERSIONINFOW *Info)
        Info->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOEXW))
    {
       PPEB Peb = NtCurrentPeb();
-      
+
       Info->dwMajorVersion = Peb->OSMajorVersion;
       Info->dwMinorVersion = Peb->OSMinorVersion;
       Info->dwBuildNumber = Peb->OSBuildNumber;

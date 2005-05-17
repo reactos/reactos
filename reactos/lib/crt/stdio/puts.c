@@ -27,7 +27,7 @@ int puts(const char *s)
 int _putws(const wchar_t *s)
 {
     wint_t c;
-    
+
     while ((c = *s++)) {
         putwchar(c);
     }

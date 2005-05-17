@@ -31,17 +31,6 @@ typedef struct _LDT_ENTRY {
   } HighWord;
 } LDT_ENTRY, *PLDT_ENTRY, *LPLDT_ENTRY;
 
-typedef enum _THREAD_STATE {
-	StateInitialized,
-	StateReady,
-	StateRunning,
-	StateStandby,
-	StateTerminated,
-	StateWait,
-	StateTransition,
-	StateUnknown
-} THREAD_STATE;
-
 typedef enum _DEBUG_CONTROL_CODE
 {
   DebugGetTraceInformation = 1,
@@ -337,52 +326,72 @@ typedef struct _SYSTEM_PERFORMANCE_INFORMATION {
 	ULONG  SystemCalls;
 } SYSTEM_PERFORMANCE_INFORMATION, *PSYSTEM_PERFORMANCE_INFORMATION;
 
+#ifndef __USE_W32API
+
 // SystemProcessThreadInfo (5)
-typedef struct _SYSTEM_THREAD_INFORMATION
+typedef struct _SYSTEM_THREAD_INFORMATION 
 {
-	TIME		KernelTime;
-	TIME		UserTime;
-	TIME		CreateTime;
-	ULONG		WaitTime;
-	PVOID		StartAddress;
-	CLIENT_ID	ClientId;
-	KPRIORITY	Priority;
-	LONG		BasePriority;
-	ULONG		ContextSwitches;
-	ULONG		ThreadState;
-	KWAIT_REASON	WaitReason;
+    LARGE_INTEGER KernelTime;
+    LARGE_INTEGER UserTime;
+    LARGE_INTEGER CreateTime;
+    ULONG WaitTime;
+    PVOID StartAddress;
+    CLIENT_ID ClientId;
+    KPRIORITY Priority;
+    LONG BasePriority;
+    ULONG ContextSwitches;
+    ULONG ThreadState;
+    ULONG WaitReason;
 } SYSTEM_THREAD_INFORMATION, *PSYSTEM_THREAD_INFORMATION;
 
-typedef struct SYSTEM_PROCESS_INFORMATION
+typedef struct _SYSTEM_PROCESS_INFORMATION
 {
-	ULONG				NextEntryOffset;
-	ULONG				NumberOfThreads;
-	LARGE_INTEGER			SpareLi1;
-	LARGE_INTEGER			SpareLi2;
-	LARGE_INTEGER			SpareLi3;
-	TIME				CreateTime;
-	TIME				UserTime;
-	TIME				KernelTime;
-	UNICODE_STRING			ImageName;
-	ULONG				BasePriority;
-	HANDLE				UniqueProcessId;
-	HANDLE				InheritedFromUniqueProcessId;
-	ULONG				HandleCount;
-	ULONG				SessionId;
-	ULONG				SpareUl3;
-	ULONG				PeakVirtualSize;
-	ULONG				VirtualSize;
-	ULONG				PageFaultCount;
-	ULONG				PeakWorkingSetSize;
-	ULONG				WorkingSetSize;
-	ULONG				QuotaPeakPagedPoolUsage;
-	ULONG				QuotaPagedPoolUsage;
-	ULONG				QuotaPeakNonPagedPoolUsage;
-	ULONG				QuotaNonPagedPoolUsage;
-	ULONG				PagefileUsage;
-	ULONG				PeakPagefileUsage;
-	ULONG				PrivatePageCount;
+    ULONG NextEntryOffset;
+    ULONG NumberOfThreads;
+    LARGE_INTEGER SpareLi1;
+    LARGE_INTEGER SpareLi2;
+    LARGE_INTEGER SpareLi3;
+    LARGE_INTEGER CreateTime;
+    LARGE_INTEGER UserTime;
+    LARGE_INTEGER KernelTime;
+    UNICODE_STRING ImageName;
+    KPRIORITY BasePriority;
+    HANDLE UniqueProcessId;
+    HANDLE InheritedFromUniqueProcessId;
+    ULONG HandleCount;
+    ULONG SessionId;
+    ULONG PageDirectoryFrame;
+    
+    /* 
+     * This part corresponds to VM_COUNTERS_EX. 
+     * NOTE: *NOT* THE SAME AS VM_COUNTERS!
+     */
+    ULONG PeakVirtualSize;
+    ULONG VirtualSize;
+    ULONG PageFaultCount;
+    ULONG PeakWorkingSetSize;
+    ULONG WorkingSetSize;
+    ULONG QuotaPeakPagedPoolUsage;
+    ULONG QuotaPagedPoolUsage;
+    ULONG QuotaPeakNonPagedPoolUsage;
+    ULONG QuotaNonPagedPoolUsage;
+    ULONG PagefileUsage;
+    ULONG PeakPagefileUsage;
+    ULONG PrivateUsage;
+    
+    /* This part corresponds to IO_COUNTERS */
+    LARGE_INTEGER ReadOperationCount;
+    LARGE_INTEGER WriteOperationCount;
+    LARGE_INTEGER OtherOperationCount;
+    LARGE_INTEGER ReadTransferCount;
+    LARGE_INTEGER WriteTransferCount;
+    LARGE_INTEGER OtherTransferCount;
+    
+    /* Finally, the array of Threads */
+    SYSTEM_THREAD_INFORMATION TH[1];
 } SYSTEM_PROCESS_INFORMATION, *PSYSTEM_PROCESS_INFORMATION;
+
+#endif 
 
 // SystemModuleInformation (11)
 typedef struct _SYSTEM_MODULE_INFORMATION_ENTRY {
@@ -821,23 +830,7 @@ typedef struct _THREAD_BASIC_INFORMATION
 
 // file information
 
-typedef struct _FILE_BASIC_INFORMATION
-{
-	LARGE_INTEGER CreationTime;
-	LARGE_INTEGER LastAccessTime;
-	LARGE_INTEGER LastWriteTime;
-	LARGE_INTEGER ChangeTime;
-	ULONG FileAttributes;
-} FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;
 
-typedef struct _FILE_STANDARD_INFORMATION
-{
-	LARGE_INTEGER AllocationSize;
-	LARGE_INTEGER EndOfFile;
-	ULONG NumberOfLinks;
-	BOOLEAN DeletePending;
-	BOOLEAN Directory;
-} FILE_STANDARD_INFORMATION, *PFILE_STANDARD_INFORMATION;
 
 typedef struct _FILE_POSITION_INFORMATION
 {
@@ -858,17 +851,6 @@ typedef struct _FILE_END_OF_FILE_INFORMATION
 {
 	LARGE_INTEGER EndOfFile;
 } FILE_END_OF_FILE_INFORMATION, *PFILE_END_OF_FILE_INFORMATION;
-
-typedef struct _FILE_NETWORK_OPEN_INFORMATION
-{
-	LARGE_INTEGER CreationTime;
-	LARGE_INTEGER LastAccessTime;
-	LARGE_INTEGER LastWriteTime;
-	LARGE_INTEGER ChangeTime;
-	LARGE_INTEGER AllocationSize;
-	LARGE_INTEGER EndOfFile;
-	ULONG FileAttributes;
-} FILE_NETWORK_OPEN_INFORMATION, *PFILE_NETWORK_OPEN_INFORMATION;
 
 typedef struct _FILE_FULL_EA_INFORMATION
 {
@@ -1311,69 +1293,6 @@ struct _SYSTEM_PATH_INFORMATION
 
 } SYSTEM_PATH_INFORMATION, * PSYSTEM_PATH_INFORMATION;
 
-// SystemProcessInformation (5)
-
-#ifndef __USE_W32API
-
-typedef struct _SYSTEM_THREADS {
-	LARGE_INTEGER  KernelTime;
-	LARGE_INTEGER  UserTime;
-	LARGE_INTEGER  CreateTime;
-	ULONG  WaitTime;
-	PVOID  StartAddress;
-	CLIENT_ID  ClientId;
-	KPRIORITY  Priority;
-	KPRIORITY  BasePriority;
-	ULONG  ContextSwitchCount;
-	THREAD_STATE  State;
-	KWAIT_REASON  WaitReason;
-} SYSTEM_THREADS, *PSYSTEM_THREADS;
-
-#endif /* __USE_W32API */
-
-typedef struct _SYSTEM_PROCESSES_NT4
-{
- SIZE_T         NextEntryDelta;
- ULONG          ThreadCount;
- ULONG          Reserved1[6];
- LARGE_INTEGER  CreateTime;
- LARGE_INTEGER  UserTime;
- LARGE_INTEGER  KernelTime;
- UNICODE_STRING ProcessName;
- KPRIORITY      BasePriority;
- HANDLE         ProcessId;
- HANDLE         InheritedFromProcessId;
- ULONG          HandleCount;
- ULONG          Reserved2[2];
- VM_COUNTERS    VmCounters;
- SYSTEM_THREADS Threads[ANYSIZE_ARRAY];
-} SYSTEM_PROCESSES_NT4, *PSYSTEM_PROCESSES_NT4;
-
-typedef struct _SYSTEM_PROCESSES_NT5
-{
- SIZE_T         NextEntryDelta;
- ULONG          ThreadCount;
- ULONG          Reserved1[6];
- LARGE_INTEGER  CreateTime;
- LARGE_INTEGER  UserTime;
- LARGE_INTEGER  KernelTime;
- UNICODE_STRING ProcessName;
- KPRIORITY      BasePriority;
- HANDLE         ProcessId;
- HANDLE         InheritedFromProcessId;
- ULONG          HandleCount;
- ULONG          Reserved2[2];
- VM_COUNTERS    VmCounters;
- IO_COUNTERS    IoCounters;
- SYSTEM_THREADS Threads[ANYSIZE_ARRAY];
-} SYSTEM_PROCESSES_NT5, *PSYSTEM_PROCESSES_NT5;
-
-#ifndef __USE_W32API
-
-/* Not sure. What version are we emulating? */
-typedef SYSTEM_PROCESSES_NT5 SYSTEM_PROCESSES, *PSYSTEM_PROCESSES;
-
-#endif /* __USE_W32API */
 
 // SystemCallCountInformation (6)
 typedef
@@ -1401,17 +1320,17 @@ struct _SYSTEM_DEVICE_INFORMATION
 // SystemProcessorPerformanceInformation (8)
 // (one per processor in the system)
 typedef
-struct _SYSTEM_PROCESSORTIME_INFO
+struct _SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION
 {
-	TIME	TotalProcessorRunTime;
-	TIME	TotalProcessorTime;
-	TIME	TotalProcessorUserTime;
-	TIME	TotalDPCTime;
-	TIME	TotalInterruptTime;
-	ULONG	TotalInterrupts;
-	ULONG	Unused;
+	LARGE_INTEGER	IdleTime;
+	LARGE_INTEGER	KernelTime;
+	LARGE_INTEGER	UserTime;
+	LARGE_INTEGER	DpcTime;
+	LARGE_INTEGER	InterruptTime;
+	ULONG	InterruptCount;
+	ULONG	Reserved;
 
-} SYSTEM_PROCESSORTIME_INFO, *PSYSTEM_PROCESSORTIME_INFO;
+} SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION, *PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION;
 
 // SystemFlagsInformation (9)
 typedef

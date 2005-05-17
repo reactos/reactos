@@ -1,10 +1,10 @@
-/* $Id$
- * 
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/advapi32/service/scm.c
  * PURPOSE:         Service control manager functions
  * PROGRAMMER:      Emanuele Aliberti
+ *                  Eric Kohl
  * UPDATE HISTORY:
  *  19990413 EA created
  *  19990515 EA
@@ -13,10 +13,69 @@
 /* INCLUDES ******************************************************************/
 
 #include "advapi32.h"
+#include "svcctl_c.h"
+
 #define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
+
+handle_t BindingHandle = NULL;
+
+static VOID
+HandleBind(VOID)
+{
+  LPWSTR pszStringBinding;
+  RPC_STATUS status;
+
+  if (BindingHandle != NULL)
+    return;
+
+  status = RpcStringBindingComposeW(NULL,
+                                    L"ncacn_np",
+                                    NULL,
+                                    L"\\pipe\\ntsvcs",
+                                    NULL,
+                                    &pszStringBinding);
+  if (status)
+  {
+    DPRINT1("RpcStringBindingCompose returned 0x%x\n", status);
+    return;
+  }
+
+  /* Set the binding handle that will be used to bind to the server. */
+  status = RpcBindingFromStringBindingW(pszStringBinding,
+                                        &BindingHandle);
+  if (status)
+  {
+    DPRINT1("RpcBindingFromStringBinding returned 0x%x\n", status);
+  }
+
+  status = RpcStringFreeW(&pszStringBinding);
+  if (status)
+  {
+    DPRINT1("RpcStringFree returned 0x%x\n", status);
+  }
+}
+
+
+#if 0
+static VOID
+HandleUnbind(VOID)
+{
+  RPC_STATUS status;
+
+  if (BindingHandle == NULL)
+    return;
+
+  status = RpcBindingFree(&BindingHandle);
+  if (status)
+  {
+    DPRINT1("RpcBindingFree returned 0x%x\n", status);
+  }
+}
+#endif
+
 
 /**********************************************************************
  *  ChangeServiceConfigA
@@ -75,17 +134,28 @@ ChangeServiceConfigW(
  *
  * @implemented
  */
-BOOL 
-STDCALL
+BOOL STDCALL
 CloseServiceHandle(SC_HANDLE hSCObject)
 {
-    DPRINT("CloseServiceHandle() - called.\n");
+  DWORD dwError;
 
-    if (!CloseHandle(hSCObject)) {
-        SetLastError(ERROR_INVALID_HANDLE);
-        return FALSE;
-    }
-    return TRUE;
+  DPRINT("CloseServiceHandle() called\n");
+
+  HandleBind();
+
+  /* Call to services.exe using RPC */
+  dwError = ScmrCloseServiceHandle(BindingHandle,
+                                   (unsigned int)hSCObject);
+  if (dwError)
+  {
+    DPRINT1("ScmrCloseServiceHandle() failed (Error %lu)\n", dwError);
+    SetLastError(dwError);
+    return FALSE;
+  }
+
+  DPRINT("CloseServiceHandle() done\n");
+
+  return TRUE;
 }
 
 
@@ -94,15 +164,33 @@ CloseServiceHandle(SC_HANDLE hSCObject)
  *
  * @unimplemented
  */
-BOOL
-STDCALL
+BOOL STDCALL
 ControlService(SC_HANDLE        hService,
                DWORD            dwControl,
                LPSERVICE_STATUS lpServiceStatus)
 {
-    DPRINT1("ControlService is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  DWORD dwError;
+
+  DPRINT("ControlService(%x, %x, %p)\n",
+         hService, dwControl, lpServiceStatus);
+
+  HandleBind();
+
+  /* Call to services.exe using RPC */
+  dwError = ScmrControlService(BindingHandle,
+                               (unsigned int)hService,
+                               dwControl,
+                               lpServiceStatus);
+  if (dwError != ERROR_SUCCESS)
+  {
+    DPRINT1("ScmrControlService() failed (Error %lu)\n", dwError);
+    SetLastError(dwError);
     return FALSE;
+  }
+
+  DPRINT("ControlService() done\n");
+
+  return TRUE;
 }
 
 
@@ -163,15 +251,28 @@ CreateServiceW(
 /**********************************************************************
  *  DeleteService
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
+BOOL STDCALL
 DeleteService(SC_HANDLE hService)
 {
-    DPRINT1("DeleteService is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  DWORD dwError;
+
+  DPRINT("DeleteService(%x)\n", hService);
+
+  HandleBind();
+
+  /* Call to services.exe using RPC */
+  dwError = ScmrDeleteService(BindingHandle,
+                              (unsigned int)hService);
+  if (dwError != ERROR_SUCCESS)
+  {
+    DPRINT1("ScmrDeleteService() failed (Error %lu)\n", dwError);
+    SetLastError(dwError);
     return FALSE;
+  }
+
+  return TRUE;
 }
 
 
@@ -410,268 +511,228 @@ GetServiceKeyNameW(
     return FALSE;
 }
 
+
 /**********************************************************************
  *  LockServiceDatabase
  *
- * @unimplemented
+ * @implemented
  */
-SC_LOCK
-STDCALL
-LockServiceDatabase(SC_HANDLE   hSCManager)
+SC_LOCK STDCALL
+LockServiceDatabase(SC_HANDLE hSCManager)
 {
-    DPRINT1("LockServiceDatabase is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  SC_LOCK hLock;
+  DWORD dwError;
+
+  DPRINT("LockServiceDatabase(%x)\n", hSCManager);
+
+  HandleBind();
+
+  /* Call to services.exe using RPC */
+  dwError = ScmrLockServiceDatabase(BindingHandle,
+                                    (unsigned int)hSCManager,
+                                    (unsigned int *)&hLock);
+  if (dwError != ERROR_SUCCESS)
+  {
+    DPRINT1("ScmrLockServiceDatabase() failed (Error %lu)\n", dwError);
+    SetLastError(dwError);
     return NULL;
+  }
+
+  DPRINT("hLock = %p\n", hLock);
+
+  return hLock;
+}
+
+
+static VOID
+WaitForSCManager(VOID)
+{
+  HANDLE hEvent;
+
+  DPRINT("WaitForSCManager() called\n");
+
+  /* Try to open the existing event */
+  hEvent = OpenEventW(SYNCHRONIZE,
+                      FALSE,
+                      L"SvcctrlStartEvent_A3725DX");
+  if (hEvent == NULL)
+  {
+    if (GetLastError() != ERROR_FILE_NOT_FOUND)
+      return;
+
+    /* Try to create a new event */
+    hEvent = CreateEventW(NULL,
+                          TRUE,
+                          FALSE,
+                          L"SvcctrlStartEvent_A3725DX");
+    if (hEvent == NULL)
+    {
+      /* Try to open the existing event again */
+      hEvent = OpenEventW(SYNCHRONIZE,
+                          FALSE,
+                          L"SvcctrlStartEvent_A3725DX");
+      if (hEvent == NULL)
+        return;
+    }
+  }
+
+  /* Wait for 3 minutes */
+  WaitForSingleObject(hEvent, 180000);
+  CloseHandle(hEvent);
+
+  DPRINT("ScmWaitForSCManager() done\n");
 }
 
 
 /**********************************************************************
  *  OpenSCManagerA
  *
- * @unplemented
+ * @implemented
  */
 SC_HANDLE STDCALL
 OpenSCManagerA(LPCSTR lpMachineName,
-           LPCSTR lpDatabaseName,
-           DWORD dwDesiredAccess)
+               LPCSTR lpDatabaseName,
+               DWORD dwDesiredAccess)
 {
-  SC_HANDLE Handle;
-  UNICODE_STRING MachineNameW;
-  UNICODE_STRING DatabaseNameW;
-  ANSI_STRING MachineNameA;
-  ANSI_STRING DatabaseNameA;
+  SC_HANDLE hScm = NULL;
+  DWORD dwError;
 
-  DPRINT("OpenSCManagerA(%x, %x, %d)\n", lpMachineName, lpDatabaseName, dwDesiredAccess);
+  DPRINT("OpenSCManagerA(%s, %s, %lx)\n",
+         lpMachineName, lpDatabaseName, dwDesiredAccess);
 
-  RtlInitAnsiString(&MachineNameA, (LPSTR)lpMachineName);
-  RtlAnsiStringToUnicodeString(&MachineNameW, &MachineNameA, TRUE);
-  RtlInitAnsiString(&DatabaseNameA, (LPSTR)lpDatabaseName);
-  RtlAnsiStringToUnicodeString(&DatabaseNameW, &DatabaseNameA, TRUE);
+  WaitForSCManager();
 
-  Handle = OpenSCManagerW(lpMachineName ? MachineNameW.Buffer : NULL,
-              lpDatabaseName ? DatabaseNameW.Buffer : NULL,
-              dwDesiredAccess);
+  HandleBind();
 
-  RtlFreeHeap(GetProcessHeap(), 0, MachineNameW.Buffer);
-  RtlFreeHeap(GetProcessHeap(), 0, DatabaseNameW.Buffer);
-  return Handle;
+  /* Call to services.exe using RPC */
+  dwError = ScmrOpenSCManagerA(BindingHandle,
+                               (LPSTR)lpMachineName,
+                               (LPSTR)lpDatabaseName,
+                               dwDesiredAccess,
+                               (unsigned int*)&hScm);
+  if (dwError != ERROR_SUCCESS)
+  {
+    DPRINT1("ScmrOpenSCManagerA() failed (Error %lu)\n", dwError);
+    SetLastError(dwError);
+    return NULL;
+  }
+
+  DPRINT("hScm = %p\n", hScm);
+
+  return hScm;
 }
 
 
 /**********************************************************************
  *  OpenSCManagerW
  *
- * @unimplemented
+ * @implemented
  */
-SC_HANDLE STDCALL OpenSCManagerW(LPCWSTR lpMachineName,
-                                 LPCWSTR lpDatabaseName,
-                                 DWORD dwDesiredAccess)
+SC_HANDLE STDCALL
+OpenSCManagerW(LPCWSTR lpMachineName,
+               LPCWSTR lpDatabaseName,
+               DWORD dwDesiredAccess)
 {
-  HANDLE hPipe;
-  DWORD dwMode;
-  DWORD dwWait;
-  BOOL fSuccess;
-  HANDLE hStartEvent;
-  LPWSTR lpszPipeName = L"\\\\.\\pipe\\Ntsvcs";
+  SC_HANDLE hScm = NULL;
+  DWORD dwError;
 
-  DPRINT("OpenSCManagerW(%x, %x, %d)\n", lpMachineName, lpDatabaseName, dwDesiredAccess);
+  DPRINT("OpenSCManagerW(%S, %S, %lx)\n",
+         lpMachineName, lpDatabaseName, dwDesiredAccess);
 
-  if (lpMachineName == NULL || wcslen(lpMachineName) == 0)
-    {
-      if (lpDatabaseName != NULL && wcscmp(lpDatabaseName, SERVICES_ACTIVE_DATABASEW) != 0)
-	{
-	  DPRINT("OpenSCManagerW() - Invalid parameters.\n");
-	  return NULL; 
-	}
+  WaitForSCManager();
 
-      DPRINT("OpenSCManagerW() - OpenEvent(\"SvcctrlStartEvent_A3725DX\")\n");
+  HandleBind();
 
-      // Only connect to scm when event "SvcctrlStartEvent_A3725DX" is signaled
-      hStartEvent = OpenEventW(SYNCHRONIZE, FALSE, L"SvcctrlStartEvent_A3725DX");
-      if (hStartEvent == NULL)
-	{
-	  SetLastError(ERROR_DATABASE_DOES_NOT_EXIST);
-	  DPRINT("OpenSCManagerW() - Failed to Open Event \"SvcctrlStartEvent_A3725DX\".\n");
-	  return NULL;
-	}
+  /* Call to services.exe using RPC */
+  dwError = ScmrOpenSCManagerW(BindingHandle,
+                               (LPWSTR)lpMachineName,
+                               (LPWSTR)lpDatabaseName,
+                               dwDesiredAccess,
+                               (unsigned int*)&hScm);
+  if (dwError != ERROR_SUCCESS)
+  {
+    DPRINT1("ScmrOpenSCManagerW() failed (Error %lu)\n", dwError);
+    SetLastError(dwError);
+    return NULL;
+  }
 
-      DPRINT("OpenSCManagerW() - Waiting forever on event handle: %x\n", hStartEvent);
+  DPRINT("hScm = %p\n", hScm);
 
-#if 1
-      dwWait = WaitForSingleObject(hStartEvent, INFINITE);
-      if (dwWait == WAIT_FAILED)
-	{
-	  DPRINT("OpenSCManagerW() - Wait For Start Event failed.\n");
-	  SetLastError(ERROR_ACCESS_DENIED);
-	  return NULL;
-	}
-#else
-	{
-          DWORD Count;
-
-	  /* wait for event creation (by SCM) for max. 20 seconds */
-	  for (Count = 0; Count < 20; Count++)
-	    {
-	      dwWait = WaitForSingleObject(hStartEvent, 1000);
-	      if (dwWait == WAIT_FAILED)
-		{
-		  DPRINT("OpenSCManagerW() - Wait For Start Event failed.\n");
-		  Sleep(1000);
-		}
-	      else
-		{
-		  break;
-		}
-	    }
-
-	  if (dwWait == WAIT_FAILED)
-	    {
-	      DbgPrint("WL: Failed to wait on event \"SvcctrlStartEvent_A3725DX\"\n");
-	    }
-
-	}
-#endif
-
-      DPRINT("OpenSCManagerW() - Closing handle to event...\n");
-      
-      CloseHandle(hStartEvent);
-      
-      // Try to open a named pipe; wait for it, if necessary
-      while (1)
-      {
-	DWORD dwLastError;
-	DPRINT("OpenSCManagerW() - attempting to open named pipe to SCM.\n");
-	hPipe = CreateFileW(lpszPipeName,     // pipe name
-	    dwDesiredAccess,
-	    0,                // no sharing
-	    NULL,             // no security attributes
-	    OPEN_EXISTING,    // opens existing pipe
-	    0,                // default attributes
-	    NULL);            // no template file
-	
-	DPRINT("OpenSCManagerW() - handle to named pipe: %x\n", hPipe);
-	// Break if the pipe handle is valid
-	if (hPipe != INVALID_HANDLE_VALUE)
-	  {
-	    break;
-	  }
-	
-	// Exit if an error other than ERROR_PIPE_BUSY occurs
-	dwLastError = GetLastError();
-	if (dwLastError != ERROR_PIPE_BUSY)
-	  {
-	    DPRINT("OpenSCManagerW() - returning at 4, dwLastError %d\n", dwLastError);
-	    return NULL;
-	  }
-	
-	// All pipe instances are busy, so wait for 20 seconds
-	if (!WaitNamedPipeW(lpszPipeName, 20000))
-	  {
-	    DPRINT("OpenSCManagerW() - Failed on WaitNamedPipeW(...).\n");
-	    return NULL;
-	  }
-      }
-    
-      // The pipe connected; change to message-read mode
-      dwMode = PIPE_READMODE_MESSAGE;
-      fSuccess = SetNamedPipeHandleState(
-	  hPipe,    // pipe handle
-	  &dwMode,  // new pipe mode
-	  NULL,     // don't set maximum bytes
-	  NULL);    // don't set maximum time
-      if (!fSuccess)
-	{
-	  CloseHandle(hPipe);
-	  DPRINT("OpenSCManagerW() - Failed on SetNamedPipeHandleState(...).\n");
-	  return NULL;
-	}
-#if 0
-      // Send a message to the pipe server
-      lpvMessage = (argc > 1) ? argv[1] : "default message";
-      
-      fSuccess = WriteFile(
-	  hPipe,                  // pipe handle
-	  lpvMessage,             // message
-	  strlen(lpvMessage) + 1, // message length
-	  &cbWritten,             // bytes written
-	  NULL);                  // not overlapped
-      if (!fSuccess)
-	{
-	  CloseHandle(hPipe);
-	  DPRINT("OpenSCManagerW() - Failed to write to pipe.\n");
-	  return NULL;
-	}
-      
-      do
-	{
-	  DPRINT("OpenSCManagerW() - in I/O loop to SCM...\n");
-	  // Read from the pipe
-	  fSuccess = ReadFile(
-	      hPipe,    // pipe handle
-	      chBuf,    // buffer to receive reply
-	      512,      // size of buffer
-	      &cbRead,  // number of bytes read
-	      NULL);    // not overlapped
-	  
-	  if (!fSuccess && GetLastError() != ERROR_MORE_DATA)
-	    {
-	      break;
-	    }
-	  
-	  // Reply from the pipe is written to STDOUT.
-	  if (!WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), chBuf, cbRead, &cbWritten, NULL))
-	    {
-	      break;
-	    }
-	} while(!fSuccess);  // repeat loop if ERROR_MORE_DATA
-      
-      DPRINT("OpenSCManagerW() - I/O loop completed.\n");
-      //CloseHandle(hPipe);
-#endif
-      DPRINT("OpenSCManagerW() - success, returning handle to pipe %x\n", hPipe);
-      return hPipe;
-    }
-  else
-    {
-      /* FIXME: Connect to remote SCM */
-      DPRINT("OpenSCManagerW() - FIXME: Connect to remote SCM is unimplemented.\n");
-      return NULL;
-    }
+  return hScm;
 }
 
 
 /**********************************************************************
  *  OpenServiceA
  *
- * @unimplemented
+ * @implemented
  */
 SC_HANDLE STDCALL
 OpenServiceA(SC_HANDLE hSCManager,
-         LPCSTR  lpServiceName,
-         DWORD dwDesiredAccess)
+             LPCSTR lpServiceName,
+             DWORD dwDesiredAccess)
 {
-  DPRINT1("OpenServiceA is unimplemented, returning ERROR_SERVICE_DOES_NOT_EXIST for %s\n", lpServiceName);
-  SetLastError(ERROR_SERVICE_DOES_NOT_EXIST);
-  return NULL;
+  SC_HANDLE hService = NULL;
+  DWORD dwError;
+
+  DPRINT("OpenServiceA(%p, %s, %lx)\n",
+         hSCManager, lpServiceName, dwDesiredAccess);
+
+  HandleBind();
+
+  /* Call to services.exe using RPC */
+  dwError = ScmrOpenServiceA(BindingHandle,
+                             (unsigned int)hSCManager,
+                             (LPSTR)lpServiceName,
+                             dwDesiredAccess,
+                             (unsigned int*)&hService);
+  if (dwError != ERROR_SUCCESS)
+  {
+    DPRINT1("ScmrOpenServiceA() failed (Error %lu)\n", dwError);
+    SetLastError(dwError);
+    return NULL;
+  }
+
+  DPRINT("hService = %p\n", hService);
+
+  return hService;
 }
 
 
 /**********************************************************************
  *  OpenServiceW
  *
- * @unimplemented
+ * @implemented
  */
-SC_HANDLE
-STDCALL
-OpenServiceW(
-    SC_HANDLE   hSCManager,
-    LPCWSTR     lpServiceName,
-    DWORD       dwDesiredAccess
-    )
+SC_HANDLE STDCALL
+OpenServiceW(SC_HANDLE hSCManager,
+             LPCWSTR lpServiceName,
+             DWORD dwDesiredAccess)
 {
-  DPRINT1("OpenServiceW is unimplemented, returning ERROR_SERVICE_DOES_NOT_EXIST for %S\n", lpServiceName);
-  SetLastError(ERROR_SERVICE_DOES_NOT_EXIST);
-  return NULL;
+  SC_HANDLE hService = NULL;
+  DWORD dwError;
+
+  DPRINT("OpenServiceW(%p, %S, %lx)\n",
+         hSCManager, lpServiceName, dwDesiredAccess);
+
+  HandleBind();
+
+  /* Call to services.exe using RPC */
+  dwError = ScmrOpenServiceW(BindingHandle,
+                             (unsigned int)hSCManager,
+                             (LPWSTR)lpServiceName,
+                             dwDesiredAccess,
+                             (unsigned int*)&hService);
+  if (dwError != ERROR_SUCCESS)
+  {
+    DPRINT1("ScmrOpenServiceW() failed (Error %lu)\n", dwError);
+    SetLastError(dwError);
+    return NULL;
+  }
+
+  DPRINT("hService = %p\n", hService);
+
+  return hService;
 }
 
 
@@ -774,17 +835,31 @@ QueryServiceObjectSecurity(
 /**********************************************************************
  *  QueryServiceStatus
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
-QueryServiceStatus(
-    SC_HANDLE       hService,
-    LPSERVICE_STATUS    lpServiceStatus)
+BOOL STDCALL
+QueryServiceStatus(SC_HANDLE hService,
+                   LPSERVICE_STATUS lpServiceStatus)
 {
-    DPRINT1("QueryServiceStatus is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  DWORD dwError;
+
+  DPRINT("QueryServiceStatus(%p, %p)\n",
+         hService, lpServiceStatus);
+
+  HandleBind();
+
+  /* Call to services.exe using RPC */
+  dwError = ScmrQueryServiceStatus(BindingHandle,
+                                   (unsigned int)hService,
+                                   lpServiceStatus);
+  if (dwError != ERROR_SUCCESS)
+  {
+    DPRINT1("ScmrQueryServiceStatus() failed (Error %lu)\n", dwError);
+    SetLastError(dwError);
     return FALSE;
+  }
+
+  return TRUE;
 }
 
 
@@ -825,8 +900,6 @@ StartServiceA(
 }
 
 
-
-
 /**********************************************************************
  *  StartServiceW
  *
@@ -848,16 +921,39 @@ StartServiceW(
 /**********************************************************************
  *  UnlockServiceDatabase
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
-UnlockServiceDatabase(SC_LOCK   ScLock)
+BOOL STDCALL
+UnlockServiceDatabase(SC_LOCK ScLock)
 {
-    DPRINT1("UnlockServiceDatabase is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  DWORD dwError;
+
+  DPRINT("UnlockServiceDatabase(%x)\n", hSCManager);
+
+  HandleBind();
+
+  /* Call to services.exe using RPC */
+  dwError = ScmrUnlockServiceDatabase(BindingHandle,
+                                      (unsigned int)ScLock);
+  if (dwError != ERROR_SUCCESS)
+  {
+    DPRINT1("ScmrUnlockServiceDatabase() failed (Error %lu)\n", dwError);
+    SetLastError(dwError);
     return FALSE;
+  }
+
+  return TRUE;
 }
 
+
+void __RPC_FAR * __RPC_USER midl_user_allocate(size_t len)
+{
+  return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
+}
+
+void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
+{
+  HeapFree(GetProcessHeap(), 0, ptr);
+}
 
 /* EOF */

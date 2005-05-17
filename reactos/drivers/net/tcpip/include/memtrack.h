@@ -16,7 +16,7 @@
 
 #ifdef MEMTRACK
 #define MTMARK() TrackDumpFL(__FILE__, __LINE__)
-#define exAllocatePool(x,y) ExAllocatePoolX(x,y,__FILE__,__LINE__) 
+#define exAllocatePool(x,y) ExAllocatePoolX(x,y,__FILE__,__LINE__)
 #define exAllocatePoolWithTag(x,y,z) ExAllocatePoolX(x,y,__FILE__,__LINE__)
 #define exFreePool(x) ExFreePoolX(x,__FILE__,__LINE__)
 

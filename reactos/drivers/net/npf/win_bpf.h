@@ -4,7 +4,7 @@
  *
  * This code is derived from the Stanford/CMU enet packet filter,
  * (net/enet.c) distributed as part of 4.3BSD, and code contributed
- * to Berkeley by Steven McCanne and Van Jacobson both of Lawrence 
+ * to Berkeley by Steven McCanne and Van Jacobson both of Lawrence
  * Berkeley Laboratory.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -75,7 +75,7 @@ struct bpf_program {
     u_int bf_len;
     struct bpf_insn *bf_insns;
 };
- 
+
 /*
  * Struct returned by BIOCGSTATS.
  */
@@ -85,7 +85,7 @@ struct bpf_stat {
 };
 
 /*
- * Struct return by BIOCVERSION.  This represents the version number of 
+ * Struct return by BIOCVERSION.  This represents the version number of
  * the filter language described by the instruction encodings below.
  * bpf understands a program iff kernel_major == filter_major &&
  * kernel_minor >= filter_minor, that is, if the value returned by the
@@ -291,7 +291,7 @@ struct bpf_hdr {
 /* TME instructions */
 #define     BPF_TME                 0x08
 
-#define     BPF_LOOKUP              0x90   
+#define     BPF_LOOKUP              0x90
 #define     BPF_EXECUTE             0xa0
 #define     BPF_INIT                0xb0
 #define     BPF_VALIDATE            0xc0

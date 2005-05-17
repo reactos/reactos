@@ -24,8 +24,7 @@
  * FILE:              lib/rtl/network.c
  */
 
-#include <ddk/ntddk.h>
-#include <stdio.h>
+#include "rtl.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -159,8 +158,8 @@ RtlIpv4StringToAddressExA(
 NTSTATUS
 STDCALL
 RtlIpv4StringToAddressW(
-	IN LPWSTR IpString, 
-	IN ULONG Base, 
+	IN LPWSTR IpString,
+	IN ULONG Base,
 	OUT PVOID PtrToIpAddr,
 	OUT ULONG IpAddr
 	)

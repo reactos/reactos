@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/spinlock.c
  * PURPOSE:         Implements spinlocks
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
@@ -33,7 +33,7 @@ KeSynchronizeExecution (PKINTERRUPT		Interrupt,
  * of a given interrupt object
  * ARGUMENTS:
  *       Interrupt = Interrupt object to synchronize with
- *       SynchronizeRoutine = Routine to call whose execution is 
+ *       SynchronizeRoutine = Routine to call whose execution is
  *                            synchronized with the ISR
  *       SynchronizeContext = Parameter to pass to the synchronized routine
  * RETURNS: TRUE if the operation succeeded
@@ -41,13 +41,13 @@ KeSynchronizeExecution (PKINTERRUPT		Interrupt,
 {
    KIRQL oldlvl;
    BOOLEAN ret;
-   
+
    oldlvl = KeAcquireInterruptSpinLock(Interrupt);
-   
+
    ret = SynchronizeRoutine(SynchronizeContext);
-   
+
    KeReleaseInterruptSpinLock(Interrupt, oldlvl);
-   
+
    return(ret);
 }
 
@@ -61,7 +61,7 @@ KeAcquireInterruptSpinLock(
     )
 {
    KIRQL oldIrql;
-        
+
    KeRaiseIrql(Interrupt->SynchLevel, &oldIrql);
    KiAcquireSpinLock(Interrupt->ActualLock);
    return oldIrql;
@@ -101,7 +101,7 @@ KefAcquireSpinLockAtDpcLevel(PKSPIN_LOCK SpinLock)
 VOID STDCALL
 KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock)
 /*
- * FUNCTION: Acquires a spinlock when the caller is already running at 
+ * FUNCTION: Acquires a spinlock when the caller is already running at
  * dispatch level
  * ARGUMENTS:
  *        SpinLock = Spinlock to acquire
@@ -134,7 +134,7 @@ VOID FASTCALL
 KefReleaseSpinLockFromDpcLevel(PKSPIN_LOCK SpinLock)
 {
   ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
-  KiReleaseSpinLock(SpinLock);  
+  KiReleaseSpinLock(SpinLock);
 }
 
 #undef KeReleaseSpinLockFromDpcLevel
@@ -147,7 +147,7 @@ KeReleaseSpinLockFromDpcLevel (PKSPIN_LOCK	SpinLock)
 /*
  * FUNCTION: Releases a spinlock when the caller was running at dispatch
  * level before acquiring it
- * ARGUMENTS: 
+ * ARGUMENTS:
  *         SpinLock = Spinlock to release
  */
 {
@@ -179,7 +179,7 @@ KiAcquireSpinLock(PKSPIN_LOCK SpinLock)
    * the spinlock's value.
    */
   ASSERT(*SpinLock < 2);
-   
+
   while ((i = InterlockedExchangeUL(SpinLock, 1)) == 1)
   {
 #ifdef CONFIG_SMP
@@ -190,7 +190,7 @@ KiAcquireSpinLock(PKSPIN_LOCK SpinLock)
 			  "jne	1b\n\t"
 			  :
                           : "r" (SpinLock));
-#else	                  
+#else
     while (0 != *(volatile KSPIN_LOCK*)SpinLock);
 #endif
 #else

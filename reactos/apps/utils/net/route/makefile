@@ -12,7 +12,7 @@ TARGET_SDKLIBS = ws2_32.a iphlpapi.a ntdll.a
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 
-TARGET_GCCLIBS = 
+TARGET_CFLAGS = -D__USE_W32API
 
 include $(PATH_TO_TOP)/rules.mak
 

@@ -15,6 +15,6 @@ int _locking(int _fd, int mode, long nbytes)
   		_dosmaperr(GetLastError());
     	return -1;
     }
- 
+
 	return 0;
 }

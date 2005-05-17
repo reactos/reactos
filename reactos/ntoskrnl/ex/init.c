@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/init.c
  * PURPOSE:         Executive initalization
- * 
+ *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net) - Added ExpInitializeExecutive
  *                                                    and optimized/cleaned it.
  *                  Eric Kohl (ekohl@abo.rhein-zeitung.de)
@@ -11,7 +11,6 @@
 
 #include <ntoskrnl.h>
 #include <ntos/bootvid.h>
-#include "../dbg/kdb.h"
 #define NDEBUG
 #include <internal/debug.h>
 
@@ -35,8 +34,8 @@ VOID PspPostInitSystemProcess(VOID);
 
 /* FUNCTIONS ****************************************************************/
 
-static 
-VOID 
+static
+VOID
 INIT_FUNCTION
 InitSystemSharedUserPage (PCSZ ParameterLine)
 {
@@ -62,13 +61,13 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
     *   There is NO need to do this again.
     */
     Ki386SetProcessorFeatures();
-    
+
     /* Set the Version Data */
     SharedUserData->NtProductType = NtProductWinNt;
     SharedUserData->ProductTypeIsValid = TRUE;
     SharedUserData->NtMajorVersion = 5;
     SharedUserData->NtMinorVersion = 0;
-   
+
     /*
      * Retrieve the current dos system path
      * (e.g.: C:\reactos) from the given arc path
@@ -89,18 +88,18 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
     /* Extract path */
     p = strchr (ParamBuffer, '\\');
     if (p) {
-        
+
         DPRINT("Boot path: %s\n", p);
         RtlCreateUnicodeStringFromAsciiz (&BootPath, p);
         *p = 0;
-    
+
     } else {
-        
+
         DPRINT("Boot path: %s\n", "\\");
         RtlCreateUnicodeStringFromAsciiz (&BootPath, "\\");
     }
     DPRINT("Arc name: %s\n", ParamBuffer);
-   
+
     /* Only ARC Name left - Build full ARC Name */
     ArcNameBuffer = ExAllocatePool (PagedPool, 256 * sizeof(WCHAR));
     swprintf (ArcNameBuffer, L"\\ArcName\\%S", ParamBuffer);
@@ -124,32 +123,32 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
     Status = NtOpenSymbolicLinkObject(&Handle,
                                       SYMBOLIC_LINK_ALL_ACCESS,
                                       &ObjectAttributes);
-    
+
     /* Free the String */
-    RtlFreeUnicodeString(&ArcName);
-    
+    ExFreePool(ArcName.Buffer);
+
     /* Check for Success */
     if (!NT_SUCCESS(Status)) {
-        
+
         /* Free the Strings */
         RtlFreeUnicodeString(&BootPath);
-        RtlFreeUnicodeString(&ArcDeviceName);
+        ExFreePool(ArcDeviceName.Buffer);
         CPRINT("NtOpenSymbolicLinkObject() failed (Status %x)\n", Status);
         KEBUGCHECK(0);
     }
-    
+
     /* Query the Link */
     Status = NtQuerySymbolicLinkObject(Handle,
                                        &ArcDeviceName,
                                        &Length);
     NtClose (Handle);
-    
+
     /* Check for Success */
     if (!NT_SUCCESS(Status)) {
-        
+
         /* Free the Strings */
         RtlFreeUnicodeString(&BootPath);
-        RtlFreeUnicodeString(&ArcDeviceName);
+        ExFreePool(ArcDeviceName.Buffer);
         CPRINT("NtQuerySymbolicLinkObject() failed (Status %x)\n", Status);
         KEBUGCHECK(0);
     }
@@ -162,12 +161,12 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
 
     /* Loop Drives */
     for (i = 0; i < 26; i++)  {
-        
+
         /* Setup the String */
         swprintf (DriveNameBuffer, L"\\??\\%C:", 'A' + i);
         RtlInitUnicodeString(&DriveName,
                              DriveNameBuffer);
-        
+
         /* Open the Symbolic Link */
         InitializeObjectAttributes(&ObjectAttributes,
                                    &DriveName,
@@ -177,18 +176,18 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
         Status = NtOpenSymbolicLinkObject(&Handle,
                                           SYMBOLIC_LINK_ALL_ACCESS,
                                           &ObjectAttributes);
-        
+
         /* If it failed, skip to the next drive */
         if (!NT_SUCCESS(Status)) {
             DPRINT("Failed to open link %wZ\n", &DriveName);
             continue;
         }
-        
+
         /* Query it */
         Status = NtQuerySymbolicLinkObject(Handle,
                                            &DriveDeviceName,
                                            &Length);
-        
+
         /* If it failed, skip to the next drive */
         if (!NT_SUCCESS(Status)) {
             DPRINT("Failed to query link %wZ\n", &DriveName);
@@ -198,7 +197,7 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
 
         /* See if we've found the boot drive */
         if (!RtlCompareUnicodeString (&ArcDeviceName, &DriveDeviceName, FALSE)) {
-            
+
             DPRINT("DOS Boot path: %c:%wZ\n", 'A' + i, &BootPath);
             swprintf(SharedUserData->NtSystemRoot, L"%C:%wZ", 'A' + i, &BootPath);
             BootDriveFound = TRUE;
@@ -207,15 +206,15 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
         /* Close this Link */
         NtClose (Handle);
     }
-    
+
     /* Free all the Strings we have in memory */
     RtlFreeUnicodeString (&BootPath);
-    RtlFreeUnicodeString (&DriveDeviceName);
-    RtlFreeUnicodeString (&ArcDeviceName);
+    ExFreePool(DriveDeviceName.Buffer);
+    ExFreePool(ArcDeviceName.Buffer);
 
     /* Make sure we found the Boot Drive */
     if (BootDriveFound == FALSE) {
-        
+
         DbgPrint("No system drive found!\n");
         KEBUGCHECK (NO_BOOT_DEVICE);
     }
@@ -248,7 +247,7 @@ ExecuteRuntimeAsserts(VOID)
     ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, orig_ebp) == TF_ORIG_EBP);
     ASSERT(FIELD_OFFSET(KPCR, Tib.ExceptionList) == KPCR_EXCEPTION_LIST);
     ASSERT(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
-    ASSERT(FIELD_OFFSET(KPCR, PrcbData) + FIELD_OFFSET(KPRCB, CurrentThread) == KPCR_CURRENT_THREAD);  
+    ASSERT(FIELD_OFFSET(KPCR, PrcbData) + FIELD_OFFSET(KPRCB, CurrentThread) == KPCR_CURRENT_THREAD);
     ASSERT(FIELD_OFFSET(KPCR, PrcbData) + FIELD_OFFSET(KPRCB, NpxThread) == KPCR_NPX_THREAD);
     ASSERT(FIELD_OFFSET(KTSS, Esp0) == KTSS_ESP0);
     ASSERT(FIELD_OFFSET(KTSS, Eflags) == KTSS_EFLAGS);
@@ -263,115 +262,115 @@ ParseAndCacheLoadedModules(PBOOLEAN SetupBoot)
 {
     ULONG i;
     PCHAR Name;
-    
+
     /* Loop the Module List and get the modules we want */
     for (i = 1; i < KeLoaderBlock.ModsCount; i++) {
-       
+
         /* Get the Name of this Module */
         if (!(Name = strrchr((PCHAR)KeLoaderModules[i].String, '\\'))) {
-      
+
             /* Save the name */
             Name = (PCHAR)KeLoaderModules[i].String;
-          
+
         } else {
-      
+
             /* No name, skip */
             Name++;
         }
-      
+
         /* Now check for any of the modules we will need later */
         if (!_stricmp(Name, "ansi.nls")) {
-          
+
             CachedModules[AnsiCodepage] = &KeLoaderModules[i];
-      
+
         } else if (!_stricmp(Name, "oem.nls")) {
-          
+
             CachedModules[OemCodepage] = &KeLoaderModules[i];
-      
+
         } else if (!_stricmp(Name, "casemap.nls")) {
-      
+
             CachedModules[UnicodeCasemap] = &KeLoaderModules[i];
-      
+
         } else if (!_stricmp(Name, "system") || !_stricmp(Name, "system.hiv")) {
-      
+
             CachedModules[SystemRegistry] = &KeLoaderModules[i];
             *SetupBoot = FALSE;
-      
+
         } else if (!_stricmp(Name, "hardware") || !_stricmp(Name, "hardware.hiv")) {
-      
+
             CachedModules[HardwareRegistry] = &KeLoaderModules[i];
         }
-    }    
+    }
 }
 
 inline
 VOID
 STDCALL
-ParseCommandLine(PULONG MaxMem, 
-                 PBOOLEAN NoGuiBoot, 
-                 PBOOLEAN BootLog, 
+ParseCommandLine(PULONG MaxMem,
+                 PBOOLEAN NoGuiBoot,
+                 PBOOLEAN BootLog,
                  PBOOLEAN ForceAcpiDisable)
 {
-    PCHAR p1, p2; 
-    
+    PCHAR p1, p2;
+
     p1 = (PCHAR)KeLoaderBlock.CommandLine;
     while(*p1 && (p2 = strchr(p1, '/'))) {
-        
+
         p2++;
         if (!_strnicmp(p2, "MAXMEM", 6)) {
-            
+
             p2 += 6;
             while (isspace(*p2)) p2++;
-            
+
             if (*p2 == '=') {
-                
+
                 p2++;
-                
+
                 while(isspace(*p2)) p2++;
-                
+
                 if (isdigit(*p2)) {
                     while (isdigit(*p2)) {
                         *MaxMem = *MaxMem * 10 + *p2 - '0';
                         p2++;
-                    }                
+                    }
                     break;
                 }
             }
         } else if (!_strnicmp(p2, "NOGUIBOOT", 9)) {
-            
+
             p2 += 9;
             *NoGuiBoot = TRUE;
-            
+
         } else if (!_strnicmp(p2, "CRASHDUMP", 9)) {
-            
+
             p2 += 9;
             if (*p2 == ':') {
-                
+
                 p2++;
                 if (!_strnicmp(p2, "FULL", 4)) {
-                    
+
                     MmCoreDumpType = MM_CORE_DUMP_TYPE_FULL;
-                    
+
                 } else {
-                    
+
                     MmCoreDumpType = MM_CORE_DUMP_TYPE_NONE;
                 }
             }
         } else if (!_strnicmp(p2, "BOOTLOG", 7)) {
-            
+
             p2 += 7;
             *BootLog = TRUE;
         } else if (!_strnicmp(p2, "NOACPI", 6)) {
-            
+
             p2 += 6;
             *ForceAcpiDisable = TRUE;
         }
-        
+
         p1 = p2;
     }
 }
 
-VOID 
+VOID
 INIT_FUNCTION
 STDCALL
 ExpInitializeExecutive(VOID)
@@ -392,19 +391,19 @@ ExpInitializeExecutive(VOID)
 
     /* Check if the structures match the ASM offset constants */
     ExecuteRuntimeAsserts();
-    
+
     /* Sets up the Text Sections of the Kernel and HAL for debugging */
     LdrInit1();
-    
+
     /* Lower the IRQL to Dispatch Level */
     KeLowerIrql(DISPATCH_LEVEL);
-    
+
     /* Sets up the VDM Data */
     NtEarlyInitVdm();
 
     /* Parse Command Line Settings */
     ParseCommandLine(&MaxMem, &NoGuiBoot, &BootLog, &ForceAcpiDisable);
-    
+
     /* Initialize Kernel Memory Address Space */
     MmInit1(FirstKrnlPhysAddr,
             LastKrnlPhysAddr,
@@ -415,30 +414,30 @@ ExpInitializeExecutive(VOID)
 
     /* Parse the Loaded Modules (by FreeLoader) and cache the ones we'll need */
     ParseAndCacheLoadedModules(&SetupBoot);
-    
-    /* Initialize the kernel debugger */
-    KdInitSystem (1, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
-    
+
+    /* Initialize the kernel debugger parameters */
+    KdInitSystem(0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+
     /* Initialize the Dispatcher, Clock and Bug Check Mechanisms. */
     KeInit2();
 
     /* Bring back the IRQL to Passive */
     KeLowerIrql(PASSIVE_LEVEL);
-    
+
     /* Initialize Profiling */
     InitializeListHead(&KiProfileListHead);
     InitializeListHead(&KiProfileSourceListHead);
     KeInitializeSpinLock(&KiProfileLock);
-    
+
     /* Load basic Security for other Managers */
     if (!SeInit1()) KEBUGCHECK(SECURITY_INITIALIZATION_FAILED);
 
     /* Create the Basic Object Manager Types to allow new Object Types */
     ObInit();
-    
+
     /* Initialize Lookaside Lists */
     ExInit2();
-    
+
     /* Set up Region Maps, Sections and the Paging File */
     MmInit2();
 
@@ -447,7 +446,7 @@ ExpInitializeExecutive(VOID)
 
     /* Set 1 CPU for now, we'll increment this later */
     KeNumberProcessors = 1;
-    
+
     /* Initalize the Process Manager */
     PiInitProcessManager();
 
@@ -456,12 +455,12 @@ ExpInitializeExecutive(VOID)
 
     /* Initialize all processors */
     while (!HalAllProcessorsStarted()) {
-        
+
         PVOID ProcessorStack;
 
         /* Set up the Kernel and Process Manager for this CPU */
         KePrepareForApplicationProcessorInit(KeNumberProcessors);
-        PsPrepareForApplicationProcessorInit(KeNumberProcessors);
+        KeCreateApplicationProcessorIdleThread(KeNumberProcessors);
 
         /* Allocate a stack for use when booting the processor */
         ProcessorStack = Ki386InitialStackArray[((int)KeNumberProcessors)] + MM_STACK_SIZE;
@@ -473,10 +472,10 @@ ExpInitializeExecutive(VOID)
 
     /* Do Phase 1 HAL Initalization */
     HalInitSystem(1, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
-    
+
     /* Initialize Basic System Objects and Worker Threads */
     ExInit3();
-    
+
     /* Create the system handle table, assign it to the system process, create
        the client id table and assign a PID for the system process. This needs
        to be done before the worker threads are initialized so the system
@@ -485,36 +484,33 @@ ExpInitializeExecutive(VOID)
 
     /* initialize the worker threads */
     ExpInitializeWorkerThreads();
-    
+
     /* initialize callbacks */
     ExpInitializeCallbacks();
-    
-    /* Initialize the GDB Stub and break */
-    KdInit1();
-  
+
+    /* Call KD Providers at Phase 1 */
+    KdInitSystem(1, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+
     /* Initialize I/O Objects, Filesystems, Error Logging and Shutdown */
     IoInit();
-    
+
     /* TBD */
     PoInit((PLOADER_PARAMETER_BLOCK)&KeLoaderBlock, ForceAcpiDisable);
-  
+
     /* Initialize the Registry (Hives are NOT yet loaded!) */
     CmInitializeRegistry();
-  
+
     /* Unmap Low memory, initialize the Page Zeroing and the Balancer Thread */
     MmInit3();
-  
+
     /* Initialize Cache Views */
     CcInit();
-  
-    /* Hook System Interrupt for the Debugger */
-    KdInit2();
-    
+
     /* Initialize File Locking */
     FsRtlpInitFileLockingImplementation();
 
     /* Report all resources used by hal */
-    HalReportResourceUsage();  
+    HalReportResourceUsage();
 
     /* Clear the screen to blue */
     HalInitSystem(2, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
@@ -526,7 +522,7 @@ ExpInitializeExecutive(VOID)
     HalDisplayString("\n\nReactOS is free software, covered by the GNU General "
                      "Public License, and you\n");
     HalDisplayString("are welcome to change it and/or distribute copies of it "
-                     "under certain\n"); 
+                     "under certain\n");
     HalDisplayString("conditions. There is absolutely no warranty for "
                       "ReactOS.\n\n");
 
@@ -537,35 +533,36 @@ ExpInitializeExecutive(VOID)
             (KeLoaderBlock.MemHigher + 1088)/ 1024);
     HalDisplayString(str);
 
-    /* Print which Debugger is being used */
-    KdInit3();
+    /* Call KD Providers at Phase 2 */
+    KdInitSystem(2, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
     /* Import and create NLS Data and Sections */
     RtlpInitNls();
 
     /* Import and Load Registry Hives */
     CmInitHives(SetupBoot);
-    
+
     /* Initialize the time zone information from the registry */
     ExpInitTimeZoneInfo();
-   
-  /* Enter the kernel debugger before starting up the boot drivers */
-#ifdef KDBG
+
+   /* Enter the kernel debugger before starting up the boot drivers */
     KdbEnter();
-#endif /* KDBG */
 
     /* Setup Drivers and Root Device Node */
     IoInit2(BootLog);
 
     /* Display the boot screen image if not disabled */
     if (!NoGuiBoot) InbvEnableBootDriver(TRUE);
-    
+
     /* Create ARC Names, SystemRoot SymLink, Load Drivers and Assign Letters */
     IoInit3();
-       
+
+    /* Load the System DLL and its Entrypoints */
+    LdrpInitializeSystemDll();
+
     /* Initialize the Default Locale */
     PiInitDefaultLocale();
-    
+
     /* Initialize shared user page. Set dos system path, dos device map, etc. */
     InitSystemSharedUserPage ((PCHAR)KeLoaderBlock.CommandLine);
 
@@ -581,10 +578,10 @@ ExpInitializeExecutive(VOID)
                            &ObjectAttributes,
                            SynchronizationEvent,
                            FALSE);
-    
+
     /* Check for Success */
     if (!NT_SUCCESS(Status)) {
-        
+
         DPRINT1("Failed to create 'ReactOSInitDone' event (Status 0x%x)\n", Status);
         InitDoneEventHandle = INVALID_HANDLE_VALUE;
     }
@@ -592,10 +589,10 @@ ExpInitializeExecutive(VOID)
     /* Launch initial process */
     Status = LdrLoadInitialProcess(&ProcessHandle,
                                    &ThreadHandle);
-    
+
     /* Check for success, Bugcheck if we failed */
     if (!NT_SUCCESS(Status)) {
-        
+
         KEBUGCHECKEX(SESSION4_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
 
@@ -616,15 +613,15 @@ ExpInitializeExecutive(VOID)
                                           FALSE,
                                           &Timeout);
         if (!NT_SUCCESS(Status)) {
-            
+
             DPRINT1("NtWaitForMultipleObjects failed with status 0x%x!\n", Status);
-        
+
         } else if (Status == STATUS_TIMEOUT) {
-            
+
             DPRINT1("WARNING: System not initialized after 120 seconds.\n");
-        
+
         } else if (Status == STATUS_WAIT_0 + 1) {
-            
+
             /* Crash the system if the initial process was terminated. */
             KEBUGCHECKEX(SESSION5_INITIALIZATION_FAILED, Status, 0, 0, 0);
         }
@@ -635,9 +632,9 @@ ExpInitializeExecutive(VOID)
         /* Signal the Event and close the handle */
         ZwSetEvent(InitDoneEventHandle, NULL);
         ZwClose(InitDoneEventHandle);
-    
+
     } else {
-        
+
         /* On failure to create 'ReactOSInitDone' event, go to text mode ASAP */
         if (!NoGuiBoot) InbvEnableBootDriver(FALSE);
 
@@ -646,11 +643,11 @@ ExpInitializeExecutive(VOID)
         Status = ZwWaitForSingleObject(ProcessHandle,
                                        FALSE,
                                        &Timeout);
-        
+
         /* Check for timeout, crash if the initial process didn't initalize */
         if (Status != STATUS_TIMEOUT) KEBUGCHECKEX(SESSION5_INITIALIZATION_FAILED, Status, 1, 0, 0);
     }
-    
+
     /* Enable the Clock, close remaining handles */
     KiTimerSystemAuditing = 1;
     ZwClose(ThreadHandle);

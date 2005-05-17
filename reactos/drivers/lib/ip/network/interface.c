@@ -11,7 +11,7 @@
 
 #include "precomp.h"
 
-NTSTATUS GetInterfaceIPv4Address( PIP_INTERFACE Interface, 
+NTSTATUS GetInterfaceIPv4Address( PIP_INTERFACE Interface,
 				  ULONG TargetType,
 				  PULONG Address ) {
     switch( TargetType ) {
@@ -44,7 +44,7 @@ UINT CountInterfaces() {
     IF_LIST_ITER(CurrentIF);
 
     TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
-    
+
     ForEachInterface(CurrentIF) {
 	Count++;
     } EndFor(CurrentIF);
@@ -58,22 +58,22 @@ NTSTATUS GetInterfaceSpeed( PIP_INTERFACE Interface, PUINT Speed ) {
     PLAN_ADAPTER IF = (PLAN_ADAPTER)Interface->Context;
 
     *Speed = IF->Speed;
-    
+
     return STATUS_SUCCESS;
 }
 
-NTSTATUS GetInterfaceName( PIP_INTERFACE Interface, 
+NTSTATUS GetInterfaceName( PIP_INTERFACE Interface,
 			   PCHAR NameBuffer,
 			   UINT Len ) {
     ULONG ResultSize = 0;
-    NTSTATUS Status = 
-	RtlUnicodeToMultiByteN( NameBuffer, 
-				Len, 
-				&ResultSize, 
+    NTSTATUS Status =
+	RtlUnicodeToMultiByteN( NameBuffer,
+				Len,
+				&ResultSize,
 				Interface->Name.Buffer,
 				Interface->Name.Length );
-    
-    if( NT_SUCCESS(Status) ) 
+
+    if( NT_SUCCESS(Status) )
 	NameBuffer[ResultSize] = 0;
     else
 	NameBuffer[0] = 0;
@@ -99,7 +99,7 @@ BOOLEAN AddrLocateADEv4(
     IF_LIST_ITER(CurrentIF);
 
     TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
-    
+
     ForEachInterface(CurrentIF) {
 	if( AddrIsEqualIPv4( &CurrentIF->Unicast, MatchAddress ) ) {
 	    Address->Address.IPv4Address = MatchAddress;
@@ -171,7 +171,7 @@ BOOLEAN HasPrefix(
         if (*pAddress++ != *pPrefix++)
             return FALSE;
         Length -= 8;
-    } 
+    }
 
     /* Check any remaining bits */
     if ((Length > 0) && ((*pAddress >> (8 - Length)) != (*pPrefix >> (8 - Length))))

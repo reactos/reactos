@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  *  COPY.C -- copy internal command.
  *
  *
@@ -20,9 +19,13 @@
  *
  *    27-Oct-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Disabled prompting when used in batch mode.
+ *
+ *    03-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_COPY
 
@@ -244,7 +247,7 @@ ParseCommand (LPFILES f, int argc, TCHAR **arg, LPDWORD lpdwFlags)
 			{
 
 //				Make sure we have a clean workable path
-			
+
 				GetFullPathName( arg[i], 128, (LPTSTR) &temp, NULL);
 //				printf("A Input %s, Output %s\n", arg[i], temp);
 
@@ -258,7 +261,7 @@ ParseCommand (LPFILES f, int argc, TCHAR **arg, LPDWORD lpdwFlags)
 
 				GetFullPathName( arg[i], 128, (LPTSTR) &temp, NULL);
 //				printf("B Input %s, Output %s\n", arg[i], temp);
-				
+
 				if (!AddFiles(f, (TCHAR *) &temp, &source, &dest, &count, lpdwFlags))
 					return -1;
 				while (f->next != NULL)
@@ -294,18 +297,22 @@ Overwrite (LPTSTR fn)
 {
 	TCHAR inp[10];
 	LPTSTR p;
+	TCHAR szOptions[4];
 
-	ConOutPrintf (_T("Overwrite %s (Yes/No/All)? "), fn);
-	ConInString (inp, 10);
-	ConOutPuts (_T(""));
+	LoadString( CMD_ModuleHandle, STRING_COPY_OPTION, szOptions, sizeof(szOptions) / sizeof(szOptions[0]) );
+
+	ConOutResPuts(STRING_COPY_HELP1);
+
+	ConInString(inp, 10);
+	ConOutPuts(_T(""));
 
 	_tcsupr (inp);
 	for (p = inp; _istspace (*p); p++)
 		;
 
-	if (*p != _T('Y') && *p != _T('A'))
+	if (*p != szOptions[0] && *p != szOptions[2])
 		return 0;
-	if (*p == _T('A'))
+	if (*p == szOptions[2])
 		return 2;
 
 	return 1;
@@ -317,6 +324,7 @@ Overwrite (LPTSTR fn)
 
 int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	FILETIME srctime;
 	HANDLE hFileSrc;
 	HANDLE hFileDest;
@@ -337,7 +345,8 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 						   NULL, OPEN_EXISTING, 0, NULL);
 	if (hFileSrc == INVALID_HANDLE_VALUE)
 	{
-		ConErrPrintf (_T("Error: Cannot open source - %s!\n"), source);
+		LoadString(CMD_ModuleHandle, STRING_COPY_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+		ConErrPrintf(szMsg, source);
 		return 0;
 	}
 
@@ -364,7 +373,9 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 	{
 		if (!_tcscmp (dest, source))
 		{
-			ConErrPrintf (_T("Error: Can't copy onto itself!\n"));
+			LoadString(CMD_ModuleHandle, STRING_COPY_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+			ConErrPrintf(szMsg, source);
+
 			CloseHandle (hFileSrc);
 			return 0;
 		}
@@ -438,7 +449,8 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 		WriteFile (hFileDest, buffer, dwRead, &dwWritten, NULL);
 		if (dwWritten != dwRead)
 		{
-			ConErrPrintf (_T("Error writing destination!\n"));
+			ConErrResPuts(STRING_COPY_ERROR3);
+
 			free (buffer);
 			CloseHandle (hFileDest);
 			CloseHandle (hFileSrc);
@@ -552,7 +564,7 @@ SetupCopy (LPFILES sources, TCHAR **p, BOOL bMultiple,
 			{
 
 //			printf("Merge DIR\n");
-			
+
 				bMultiple = FALSE;
 				_tcscat (from_merge, _T("\\"));
 				_tcscat (from_merge, find.cFileName);
@@ -618,6 +630,7 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 	TCHAR dir_d[_MAX_DIR];
 	TCHAR file_d[_MAX_FNAME];
 	TCHAR ext_d[_MAX_EXT];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	int argc;
 	int append;
@@ -634,23 +647,7 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 
 	if (!_tcsncmp (rest, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Copies one or more files to another location.\n"
-					   "\n"
-					   "COPY [/V][/Y|/-Y][/A|/B] source [/A|/B]\n"
-					   "     [+ source [/A|/B] [+ ...]] [destination [/A|/B]]\n"
-					   "\n"
-					   "  source       Specifies the file or files to be copied.\n"
-					   "  /A           Indicates an ASCII text file.\n"
-					   "  /B           Indicates a binary file.\n"
-					   "  destination  Specifies the directory and/or filename for the new file(s).\n"
-					   "  /V           Verifies that new files are written correctly.\n"
-					   "  /Y           Suppresses prompting to confirm you want to overwrite an\n"
-					   "               existing destination file.\n"
-					   "  /-Y          Causes prompting to confirm you want to overwrite an\n"
-					   "               existing destination file.\n"
-					   "\n"
-					   "The switch /Y may be present in the COPYCMD environment variable.\n"
-					   "..."));
+		ConOutResPuts(STRING_COPY_HELP2);
 		return 1;
 	}
 
@@ -722,7 +719,8 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 	}
 	else if (bDestFound && bWildcards)
 	{
-		ConErrPrintf (_T("Error: Not implemented yet!\n"));
+		ConErrResPuts(STRING_COPY_ERROR4);
+
 		DeleteFileList (sources);
 		freep (p);
 		return 0;
@@ -761,7 +759,9 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 
 	DeleteFileList (sources);
 	freep ((VOID*)p);
-	ConOutPrintf (_T("        %d file(s) copied\n"), copied);
+	
+	LoadString( CMD_ModuleHandle, STRING_COPY_FILE, szMsg, RC_STRING_MAX_SIZE);
+    ConOutPrintf (szMsg, copied);
 
 	return 1;
 }

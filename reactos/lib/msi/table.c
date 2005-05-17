@@ -834,15 +834,6 @@ err:
     return ret;
 }
 
-static LPWSTR strdupW( LPCWSTR str )
-{
-    UINT len = lstrlenW( str ) + 1;
-    LPWSTR ret = HeapAlloc( GetProcessHeap(), 0, len*sizeof (WCHAR) );
-    if( ret )
-        lstrcpyW( ret, str );
-    return ret;
-}
-
 /* information for default tables */
 static const WCHAR szTables[]  = { '_','T','a','b','l','e','s',0 };
 static const WCHAR szTable[]  = { 'T','a','b','l','e',0 };

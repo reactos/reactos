@@ -406,7 +406,7 @@ static void ACTION_ExpandAnyPath(MSIPACKAGE *package, WCHAR *src, WCHAR *dst,
 /* Sets *matches to whether the file (whose path is filePath) matches the
  * versions set in sig.
  * Return ERROR_SUCCESS in case of success (whether or not the file matches),
- * something else if a install-halting error occurs.
+ * something else if an install-halting error occurs.
  */
 static UINT ACTION_FileVersionMatches(MSISIGNATURE *sig, LPCWSTR filePath,
  BOOL *matches)
@@ -481,7 +481,7 @@ static UINT ACTION_FileVersionMatches(MSISIGNATURE *sig, LPCWSTR filePath,
  * fullFilePath is assumed to be the full path of the file specified in
  * findData, which may be necessary to compare the version.
  * Return ERROR_SUCCESS in case of success (whether or not the file matches),
- * something else if a install-halting error occurs.
+ * something else if an install-halting error occurs.
  */
 static UINT ACTION_FileMatchesSig(MSISIGNATURE *sig,
  LPWIN32_FIND_DATAW findData, LPCWSTR fullFilePath, BOOL *matches)
@@ -672,8 +672,8 @@ static UINT ACTION_SearchDirectory(MSIPACKAGE *package, MSISIGNATURE *sig,
                 pathWithDrive[0] = 'A' + i;
                 if (GetDriveTypeW(pathWithDrive) == DRIVE_FIXED)
                 {
-                    strncpyW(pathWithDrive + 3, expanded,
-                     sizeof(pathWithDrive) / sizeof(pathWithDrive[0]) - 3);
+                    lstrcpynW(pathWithDrive + 3, expanded,
+                              sizeof(pathWithDrive) / sizeof(pathWithDrive[0]) - 3);
                     if (sig->File)
                         rc = ACTION_RecurseSearchDirectory(package, &found, sig,
                          pathWithDrive, depth);

@@ -165,7 +165,7 @@ NdisClMakeCall(
 /*
  * @unimplemented
  */
-NDIS_STATUS 
+NDIS_STATUS
 DDKAPI
 NdisClModifyCallQoS(
     IN  NDIS_HANDLE         NdisVcHandle,

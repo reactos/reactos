@@ -41,7 +41,7 @@ BOOL STDCALL PolyPatBlt(HDC,DWORD,PPATRECT,INT,ULONG);
 
 /* FUNCTIONS *****************************************************************/
 
-VOID 
+VOID
 CreateFrameBrushes(VOID)
 {
   FrameBrushes[0] = CreateSolidBrush(RGB(0,0,0));
@@ -60,7 +60,7 @@ CreateFrameBrushes(VOID)
   FrameBrushes[12] = CreatePatternBrush(hHatch);
 }
 
-VOID 
+VOID
 DeleteFrameBrushes(VOID)
 {
   unsigned Brush;

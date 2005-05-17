@@ -120,7 +120,7 @@ IntShowMousePointer(PPDEV ppdev, SURFOBJ *DestSurface)
    /*
     * Copy the pixels under the cursor to temporary surface.
     */
-   
+
    if (ppdev->PointerSaveSurface != NULL)
    {
       RECTL DestRect;
@@ -212,7 +212,7 @@ DrvSetPointerShape(
 {
    PPDEV ppdev = (PPDEV)pso->dhpdev;
    SURFOBJ *TempSurfObj;
-   
+
    IntHideMousePointer(ppdev, pso);
 
    if (ppdev->PointerColorSurface != NULL)
@@ -314,7 +314,7 @@ DrvSetPointerShape(
       {
          case BMF_8BPP: lDelta = Size.cx; break;
          case BMF_16BPP: lDelta = Size.cx << 1; break;
-         case BMF_24BPP: lDelta = Size.cx * 3; break; 
+         case BMF_24BPP: lDelta = Size.cx * 3; break;
          case BMF_32BPP: lDelta = Size.cx << 2; break;
       }
 

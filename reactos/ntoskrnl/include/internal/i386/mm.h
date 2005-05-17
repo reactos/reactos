@@ -10,7 +10,7 @@
  * Page access attributes (or these together)
  */
 #define PA_READ            (1<<0)
-#define PA_WRITE           ((1<<0)+(1<<1)) 
+#define PA_WRITE           ((1<<0)+(1<<1))
 #define PA_EXECUTE         PA_READ
 #define PA_PCD             (1<<4)
 #define PA_PWT             (1<<3)

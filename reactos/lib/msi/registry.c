@@ -134,6 +134,8 @@ static const WCHAR szInstaller_UpgradeCodes_fmt[] = {
 'U','p','g','r','a','d','e','C','o','d','e','s','\\',
 '%','s',0};
 
+#define SQUISH_GUID_SIZE 33
+
 BOOL unsquash_guid(LPCWSTR in, LPWSTR out)
 {
     DWORD i,n=0;
@@ -496,16 +498,16 @@ UINT WINAPI MsiDecomposeDescriptorA( LPCSTR szDescriptor, LPSTR szProduct,
     WCHAR feature[MAX_FEATURE_CHARS+1];
     WCHAR component[MAX_FEATURE_CHARS+1];
     LPWSTR str = NULL;
-    UINT r, len;
+    UINT r;
 
     TRACE("%s %p %p %p %p\n", debugstr_a(szDescriptor), szProduct,
           szFeature, szComponent, pUsed);
 
     if( szDescriptor )
     {
-        len = MultiByteToWideChar( CP_ACP, 0, szDescriptor, -1, NULL, 0 );
-        str = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
-        MultiByteToWideChar( CP_ACP, 0, szDescriptor, -1, str, len );
+        str = strdupAtoW( szDescriptor );
+        if( !str )
+            return ERROR_OUTOFMEMORY;
     }
 
     r = MsiDecomposeDescriptorW( str, product, feature, component, pUsed );
@@ -542,7 +544,7 @@ UINT WINAPI MsiEnumProductsW(DWORD index, LPWSTR lpguid)
 {
     HKEY hkeyFeatures = 0;
     DWORD r;
-    WCHAR szKeyName[33];
+    WCHAR szKeyName[SQUISH_GUID_SIZE];
 
     TRACE("%ld %p\n",index,lpguid);
 
@@ -551,16 +553,12 @@ UINT WINAPI MsiEnumProductsW(DWORD index, LPWSTR lpguid)
 
     r = MSIREG_OpenFeatures(&hkeyFeatures);
     if( r != ERROR_SUCCESS )
-        goto end;
+        return ERROR_NO_MORE_ITEMS;
 
-    r = RegEnumKeyW(hkeyFeatures, index, szKeyName, GUID_SIZE);
-
-    unsquash_guid(szKeyName, lpguid);
-
-end:
-
-    if( hkeyFeatures )
-        RegCloseKey(hkeyFeatures);
+    r = RegEnumKeyW(hkeyFeatures, index, szKeyName, SQUISH_GUID_SIZE);
+    if( r == ERROR_SUCCESS )
+        unsquash_guid(szKeyName, lpguid);
+    RegCloseKey(hkeyFeatures);
 
     return r;
 }
@@ -576,12 +574,9 @@ UINT WINAPI MsiEnumFeaturesA(LPCSTR szProduct, DWORD index,
 
     if( szProduct )
     {
-        UINT len = MultiByteToWideChar( CP_ACP, 0, szProduct, -1, NULL, 0 );
-        szwProduct = HeapAlloc( GetProcessHeap(), 0, len * sizeof (WCHAR) );
-        if( szwProduct )
-            MultiByteToWideChar( CP_ACP, 0, szProduct, -1, szwProduct, len );
-        else
-            return ERROR_FUNCTION_FAILED;
+        szwProduct = strdupAtoW( szProduct );
+        if( !szwProduct )
+            return ERROR_OUTOFMEMORY;
     }
 
     r = MsiEnumFeaturesW(szwProduct, index, szwFeature, szwParent);
@@ -608,14 +603,11 @@ UINT WINAPI MsiEnumFeaturesW(LPCWSTR szProduct, DWORD index,
 
     r = MSIREG_OpenFeaturesKey(szProduct,&hkeyProduct,FALSE);
     if( r != ERROR_SUCCESS )
-        goto end;
+        return ERROR_NO_MORE_ITEMS;
 
     sz = GUID_SIZE;
     r = RegEnumValueW(hkeyProduct, index, szFeature, &sz, NULL, NULL, NULL, NULL);
-
-end:
-    if( hkeyProduct )
-        RegCloseKey(hkeyProduct);
+    RegCloseKey(hkeyProduct);
 
     return r;
 }
@@ -638,22 +630,18 @@ UINT WINAPI MsiEnumComponentsW(DWORD index, LPWSTR lpguid)
 {
     HKEY hkeyComponents = 0;
     DWORD r;
-    WCHAR szKeyName[33];
+    WCHAR szKeyName[SQUISH_GUID_SIZE];
 
     TRACE("%ld %p\n",index,lpguid);
 
     r = MSIREG_OpenComponents(&hkeyComponents);
     if( r != ERROR_SUCCESS )
-        goto end;
+        return ERROR_NO_MORE_ITEMS;
 
-    r = RegEnumKeyW(hkeyComponents, index, szKeyName, GUID_SIZE);
-
-    unsquash_guid(szKeyName, lpguid);
-
-end:
-
-    if( hkeyComponents )
-        RegCloseKey(hkeyComponents);
+    r = RegEnumKeyW(hkeyComponents, index, szKeyName, SQUISH_GUID_SIZE);
+    if( r == ERROR_SUCCESS )
+        unsquash_guid(szKeyName, lpguid);
+    RegCloseKey(hkeyComponents);
 
     return r;
 }
@@ -668,12 +656,9 @@ UINT WINAPI MsiEnumClientsA(LPCSTR szComponent, DWORD index, LPSTR szProduct)
 
     if( szComponent )
     {
-        UINT len = MultiByteToWideChar( CP_ACP, 0, szComponent, -1, NULL, 0 );
-        szwComponent = HeapAlloc( GetProcessHeap(), 0, len * sizeof (WCHAR) );
-        if( szwComponent )
-            MultiByteToWideChar( CP_ACP, 0, szComponent, -1, szwComponent, len );
-        else
-            return ERROR_FUNCTION_FAILED;
+        szwComponent = strdupAtoW( szComponent );
+        if( !szwComponent )
+            return ERROR_OUTOFMEMORY;
     }
 
     r = MsiEnumClientsW(szComponent?szwComponent:NULL, index, szwProduct);
@@ -692,24 +677,20 @@ UINT WINAPI MsiEnumClientsW(LPCWSTR szComponent, DWORD index, LPWSTR szProduct)
 {
     HKEY hkeyComp = 0;
     DWORD r, sz;
-    WCHAR szValName[GUID_SIZE];
+    WCHAR szValName[SQUISH_GUID_SIZE];
 
     TRACE("%s %ld %p\n",debugstr_w(szComponent),index,szProduct);
 
     r = MSIREG_OpenComponentsKey(szComponent,&hkeyComp,FALSE);
     if( r != ERROR_SUCCESS )
-        goto end;
+        return ERROR_NO_MORE_ITEMS;
 
-    sz = GUID_SIZE;
+    sz = SQUISH_GUID_SIZE;
     r = RegEnumValueW(hkeyComp, index, szValName, &sz, NULL, NULL, NULL, NULL);
-    if( r != ERROR_SUCCESS )
-        goto end;
+    if( r == ERROR_SUCCESS )
+        unsquash_guid(szValName, szProduct);
 
-    unsquash_guid(szValName, szProduct);
-
-end:
-    if( hkeyComp )
-        RegCloseKey(hkeyComp);
+    RegCloseKey(hkeyComp);
 
     return r;
 }
@@ -737,9 +718,9 @@ UINT WINAPI MsiEnumComponentQualifiersW( LPWSTR szComponent, DWORD iIndex,
 UINT WINAPI MsiEnumRelatedProductsW(LPCWSTR szUpgradeCode, DWORD dwReserved,
                                     DWORD iProductIndex, LPWSTR lpProductBuf)
 {
-    UINT rc;
+    UINT r;
     HKEY hkey;
-    WCHAR szKeyName[33];
+    WCHAR szKeyName[SQUISH_GUID_SIZE];
 
     TRACE("%s %lu %lu %p\n", debugstr_w(szUpgradeCode), dwReserved,
           iProductIndex, lpProductBuf);
@@ -748,54 +729,43 @@ UINT WINAPI MsiEnumRelatedProductsW(LPCWSTR szUpgradeCode, DWORD dwReserved,
         return ERROR_INVALID_PARAMETER;
     if (NULL == lpProductBuf)
         return ERROR_INVALID_PARAMETER;
-    rc = MSIREG_OpenUpgradeCodesKey(szUpgradeCode, &hkey, FALSE);
-    if (rc != ERROR_SUCCESS)
-    {
-        rc = ERROR_NO_MORE_ITEMS;
-        goto end;
-    }
 
-    rc = RegEnumKeyW(hkey, iProductIndex, szKeyName,
-     sizeof(szKeyName) / sizeof(szKeyName[0]));
+    r = MSIREG_OpenUpgradeCodesKey(szUpgradeCode, &hkey, FALSE);
+    if (r != ERROR_SUCCESS)
+        return ERROR_NO_MORE_ITEMS;
 
-    unsquash_guid(szKeyName, lpProductBuf);
+    r = RegEnumKeyW(hkey, iProductIndex, szKeyName, SQUISH_GUID_SIZE);
+    if( r == ERROR_SUCCESS )
+        unsquash_guid(szKeyName, lpProductBuf);
     RegCloseKey(hkey);
 
-end:
-    return rc;
+    return r;
 }
 
 UINT WINAPI MsiEnumRelatedProductsA(LPCSTR szUpgradeCode, DWORD dwReserved,
                                     DWORD iProductIndex, LPSTR lpProductBuf)
 {
-    UINT rc;
-    int len;
-    LPWSTR szUpgradeCodeW = NULL;
+    LPWSTR szwUpgradeCode = NULL;
+    WCHAR productW[GUID_SIZE];
+    UINT r;
 
     TRACE("%s %lu %lu %p\n", debugstr_a(szUpgradeCode), dwReserved,
           iProductIndex, lpProductBuf);
-    if (!szUpgradeCode)
-        return ERROR_INVALID_PARAMETER;
-    len = MultiByteToWideChar(CP_ACP, 0, szUpgradeCode, -1, NULL, 0);
-    szUpgradeCodeW = (LPWSTR)HeapAlloc(GetProcessHeap(), 0,
-     len * sizeof(WCHAR));
-    if (szUpgradeCodeW)
+
+    if (szUpgradeCode)
     {
-        WCHAR productW[39];
-
-        MultiByteToWideChar(CP_ACP, 0, szUpgradeCode, -1, szUpgradeCodeW, len);
-        rc = MsiEnumRelatedProductsW(szUpgradeCodeW, dwReserved,
-         iProductIndex, productW);
-        if (rc == ERROR_SUCCESS)
-        {
-            LPWSTR ptr;
-
-            for (ptr = productW; *ptr; )
-                *lpProductBuf++ = *ptr++;
-        }
-        HeapFree(GetProcessHeap(), 0, szUpgradeCodeW);
+        szwUpgradeCode = strdupAtoW( szUpgradeCode );
+        if( !szwUpgradeCode )
+            return ERROR_OUTOFMEMORY;
     }
-    else
-        rc = ERROR_OUTOFMEMORY;
-    return rc;
+
+    r = MsiEnumRelatedProductsW( szwUpgradeCode, dwReserved,
+                                 iProductIndex, productW );
+    if (r == ERROR_SUCCESS)
+    {
+        WideCharToMultiByte( CP_ACP, 0, productW, GUID_SIZE,
+                             lpProductBuf, GUID_SIZE, NULL, NULL );
+    }
+    HeapFree(GetProcessHeap(), 0, szwUpgradeCode);
+    return r;
 }

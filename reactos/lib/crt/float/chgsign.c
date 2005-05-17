@@ -16,7 +16,7 @@ double _chgsign( double __x )
 
 	if ( u.x->sign == 1 )
 		u.x->sign = 0;
-	else 
+	else
 		u.x->sign = 1;
 
 	return __x;

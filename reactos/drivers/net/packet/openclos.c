@@ -57,8 +57,8 @@ int i;
 
 /// Global start time. Used as an absolute reference for timestamp conversion.
 struct time_conv G_Start_Time = {
-	0,	
-	{0, 0},	
+	0,
+	{0, 0},
 };
 
 UINT n_Opened_Instances = 0;
@@ -121,25 +121,25 @@ NTSTATUS NPF_Open(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
     //  Save or open here
     IrpSp->FileObject->FsContext=Open;
-	
+
     Open->DeviceExtension=DeviceExtension;
-	
-	
+
+
     //  Save the Irp here for the completeion routine to retrieve
     Open->OpenCloseIrp=Irp;
-	
+
     //  Allocate a packet pool for our xmit and receive packets
     NdisAllocatePacketPool(
         &Status,
         &Open->PacketPool,
         TRANSMIT_PACKETS,
         sizeof(PACKET_RESERVED));
-	
-	
+
+
     if (Status != NDIS_STATUS_SUCCESS) {
-		
+
         IF_LOUD(DbgPrint("NPF: Failed to allocate packet pool\n");)
-			
+
 		ExFreePool(Open);
 		ExFreePool(EvName);
         Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -156,7 +156,7 @@ NTSTATUS NPF_Open(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 	PacketItoa(NamedEventsCounter,(PUCHAR)(Open->ReadEventName.Buffer+21));
 
 	InterlockedIncrement(&NamedEventsCounter);
-	
+
 	IF_LOUD(DbgPrint("\nCreated the named event for the read; name=%ws, counter=%d\n", Open->ReadEventName.Buffer,NamedEventsCounter-1);)
 
 	//allocate the event objects
@@ -168,7 +168,7 @@ NTSTATUS NPF_Open(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_INSUFFICIENT_RESOURCES;
 	}
-	
+
 	KeInitializeEvent(Open->ReadEvent, NotificationEvent, FALSE);
 	KeClearEvent(Open->ReadEvent);
 	NdisInitializeEvent(&Open->WriteEvent);
@@ -180,8 +180,8 @@ NTSTATUS NPF_Open(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
     //  list to hold irp's want to reset the adapter
     InitializeListHead(&Open->ResetIrpList);
-	
-	
+
+
     //  Initialize the request list
     KeInitializeSpinLock(&Open->RequestSpinLock);
     InitializeListHead(&Open->RequestList);
@@ -198,10 +198,10 @@ NTSTATUS NPF_Open(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-	
+
 	Open->mem_ex.size = DEFAULT_MEM_EX_SIZE;
 	RtlZeroMemory(Open->mem_ex.buffer, DEFAULT_MEM_EX_SIZE);
-	
+
 	//
 	// Initialize the open instance
 	//
@@ -233,7 +233,7 @@ NTSTATUS NPF_Open(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
 	//allocate the spinlock for the buffer pointers
     NdisAllocateSpinLock(&Open->BufLock);
-	
+
     //
     //  link up the request stored in our open block
     //
@@ -242,12 +242,12 @@ NTSTATUS NPF_Open(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
             &Open->RequestList,
             &Open->Requests[i].ListElement,
             &Open->RequestSpinLock);
-		
+
     }
-	
+
 
     IoMarkIrpPending(Irp);
-	
+
     //
     //  Try to open the MAC
     //
@@ -272,7 +272,7 @@ NTSTATUS NPF_Open(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     {
 		NPF_OpenAdapterComplete(Open,Status,NDIS_STATUS_SUCCESS);
     }
-	
+
     return(STATUS_PENDING);
 }
 
@@ -321,7 +321,7 @@ VOID NPF_OpenAdapterComplete(
 		NdisAcquireSpinLock(&Opened_Instances_Lock);
 		n_Opened_Instances++;
 		NdisReleaseSpinLock(&Opened_Instances_Lock);
-		
+
 		IF_LOUD(DbgPrint("Opened Instances:%d", n_Opened_Instances);)
 
 		// Get the absolute value of the system boot time.
@@ -347,11 +347,11 @@ VOID NPF_OpenAdapterComplete(
 		MaxSizeReq->Irp = Irp;
 		MaxSizeReq->Internal = TRUE;
 
-		
+
 		MaxSizeReq->Request.RequestType = NdisRequestQueryInformation;
 		MaxSizeReq->Request.DATA.QUERY_INFORMATION.Oid = OID_GEN_MAXIMUM_TOTAL_SIZE;
 
-		
+
 		MaxSizeReq->Request.DATA.QUERY_INFORMATION.InformationBuffer = &Open->MaxFrameSize;
 		MaxSizeReq->Request.DATA.QUERY_INFORMATION.InformationBufferLength = 4;
 
@@ -413,24 +413,24 @@ NPF_Close(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 		//free the buffer
 		Open->BufSize=0;
 		if(Open->Buffer != NULL)ExFreePool(Open->Buffer);
-		
+
 		//free mem_ex
 		Open->mem_ex.size = 0;
 		if(Open->mem_ex.buffer != NULL)ExFreePool(Open->mem_ex.buffer);
-				
+
 		NdisFreePacketPool(Open->PacketPool);
 
 		// Free the string with the name of the dump file
 		if(Open->DumpFileName.Buffer!=NULL)
 			ExFreePool(Open->DumpFileName.Buffer);
-			
+
 		ExFreePool(Open->ReadEventName.Buffer);
 		ExFreePool(Open);
 
 		Irp->IoStatus.Information = 0;
 		Irp->IoStatus.Status = STATUS_SUCCESS;
 		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-		
+
 		return(STATUS_SUCCESS);
 	}
 
@@ -444,7 +444,7 @@ NPF_Close(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
     Open->OpenCloseIrp = Irp;
 
     IoMarkIrpPending(Irp);
- 
+
 	// If this instance is in dump mode, complete the dump and close the file
 	if((Open->mode & MODE_DUMP) && Open->DumpFileHandle != NULL){
 		NTSTATUS wres;
@@ -474,15 +474,15 @@ NPF_Close(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 		);
 
 	if (Status != NDIS_STATUS_PENDING) {
-		
+
 		NPF_CloseAdapterComplete(
 			Open,
 			Status
 			);
 		return STATUS_SUCCESS;
-		
+
 	}
-	
+
 	return(STATUS_PENDING);
 }
 
@@ -500,7 +500,7 @@ NPF_CloseAdapterComplete(IN NDIS_HANDLE  ProtocolBindingContext,IN NDIS_STATUS  
 
 	// free the allocated structures only if the instance is still bound to the adapter
 	if(Open->Bound == TRUE){
-		
+
 		// Free the filter if it's present
 		if(Open->bpfprogram != NULL)
 			ExFreePool(Open->bpfprogram);
@@ -508,26 +508,26 @@ NPF_CloseAdapterComplete(IN NDIS_HANDLE  ProtocolBindingContext,IN NDIS_STATUS  
 		// Free the jitted filter if it's present
 		if(Open->Filter != NULL)
 			BPF_Destroy_JIT_Filter(Open->Filter);
-		
+
 		//free the buffer
 		Open->BufSize = 0;
 		if(Open->Buffer!=NULL)ExFreePool(Open->Buffer);
-		
+
 		//free mem_ex
 		Open->mem_ex.size = 0;
 		if(Open->mem_ex.buffer != NULL)ExFreePool(Open->mem_ex.buffer);
-		
+
 		NdisFreePacketPool(Open->PacketPool);
-		
+
 		Irp=Open->OpenCloseIrp;
-		
+
 		// Free the string with the name of the dump file
 		if(Open->DumpFileName.Buffer!=NULL)
 			ExFreePool(Open->DumpFileName.Buffer);
 
 		ExFreePool(Open->ReadEventName.Buffer);
 		ExFreePool(Open);
-		
+
 		// Complete the request only if the instance is still bound to the adapter
 		Irp->IoStatus.Status = STATUS_SUCCESS;
 		Irp->IoStatus.Information = 0;

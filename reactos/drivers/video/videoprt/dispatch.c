@@ -244,20 +244,20 @@ IntVideoPortDispatchDeviceControl(
 
    DPRINT("- Returned status: %x\n", Irp->IoStatus.Status);
 
-   if (Irp->IoStatus.Status != STATUS_SUCCESS) 
-   { 
-      /* Map from win32 error codes to NT status values. */ 
-      switch (Irp->IoStatus.Status) 
-      { 
+   if (Irp->IoStatus.Status != STATUS_SUCCESS)
+   {
+      /* Map from win32 error codes to NT status values. */
+      switch (Irp->IoStatus.Status)
+      {
          case ERROR_NOT_ENOUGH_MEMORY: Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES; break;
          case ERROR_MORE_DATA: Irp->IoStatus.Status = STATUS_BUFFER_OVERFLOW; break;
          case ERROR_INVALID_FUNCTION: Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED; break;
          case ERROR_INVALID_PARAMETER: Irp->IoStatus.Status = STATUS_INVALID_PARAMETER; break;
-         case ERROR_INSUFFICIENT_BUFFER: Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL; break; 
+         case ERROR_INSUFFICIENT_BUFFER: Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL; break;
          case ERROR_DEV_NOT_EXIST: Irp->IoStatus.Status = STATUS_DEVICE_DOES_NOT_EXIST; break;
          case ERROR_IO_PENDING: Irp->IoStatus.Status = STATUS_PENDING; break;
-      } 
-   } 
+      }
+   }
 
    Status = Irp->IoStatus.Status;
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -434,12 +434,12 @@ IntVideoPortDispatchPnp(
          Irp->IoStatus.Information = 0;
          IoCompleteRequest(Irp, IO_NO_INCREMENT);
          break;
-         
+
       default:
          return STATUS_NOT_IMPLEMENTED;
          break;
    }
-   
+
    return Status;
 }
 

@@ -1,5 +1,5 @@
-/* $Id:$
- * 
+/* $Id$
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/se/lsa.c
@@ -48,7 +48,7 @@ NTSTATUS STDCALL LsaDeregisterLogonProcess (
 NTSTATUS STDCALL LsaFreeReturnBuffer (PVOID Buffer)
 {
     ULONG Size = 0; /* required by MEM_RELEASE */
-    
+
     return ZwFreeVirtualMemory (
                NtCurrentProcess(),
 	       & Buffer,

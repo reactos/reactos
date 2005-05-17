@@ -72,7 +72,7 @@ VIS_ComputeVisibleRegion(
    TopOffset = Window->WindowRect.top;
 
    /*
-    * Walk through all parent windows and for each clip the visble region 
+    * Walk through all parent windows and for each clip the visble region
     * to the parent's client area and exclude all siblings that are over
     * our window.
     */
@@ -143,16 +143,16 @@ VIS_ComputeVisibleRegion(
       }
       IntUnLockRelatives(Window);
    }
-   
+
    if(Window->WindowRegion && !(Window->Style & WS_MINIMIZE))
    {
      NtGdiOffsetRgn(VisRgn, -LeftOffset, -TopOffset);
      NtGdiCombineRgn(VisRgn, VisRgn, Window->WindowRegion, RGN_AND);
      return VisRgn;
    }
-   
+
    NtGdiOffsetRgn(VisRgn, -LeftOffset, -TopOffset);
-   
+
    return VisRgn;
 }
 
@@ -163,10 +163,10 @@ VIS_WindowLayoutChanged(
 {
    HRGN Temp;
    PWINDOW_OBJECT Parent;
-   
+
    Temp = NtGdiCreateRectRgn(0, 0, 0, 0);
    NtGdiCombineRgn(Temp, NewlyExposed, NULL, RGN_COPY);
-   
+
    Parent = IntGetParentObject(Window);
    if(Parent)
    {
@@ -174,7 +174,7 @@ VIS_WindowLayoutChanged(
                      Window->WindowRect.left - Parent->ClientRect.left,
                      Window->WindowRect.top - Parent->ClientRect.top);
      IntRedrawWindow(Parent, NULL, Temp,
-                     RDW_FRAME | RDW_ERASE | RDW_INVALIDATE | 
+                     RDW_FRAME | RDW_ERASE | RDW_INVALIDATE |
                      RDW_ALLCHILDREN);
      IntReleaseWindowObject(Parent);
    }

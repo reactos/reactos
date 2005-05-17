@@ -99,7 +99,7 @@
  * gets inverted, but it is also active low.
  */
 
-/* 
+/*
  * bit defines for 8255 status port
  * base + 1
  * accessed with LP_S(minor), which gets the byte...
@@ -110,9 +110,9 @@
 #define LP_PSELECD	0x10  /* unchanged input, active high */
 #define LP_PERRORP	0x08  /* unchanged input, active low */
 
-/* 
+/*
  * defines for 8255 control port
- * base + 2 
+ * base + 2
  * accessed with LP_C(minor)
  */
 #define LP_PINTEN	0x10
@@ -121,10 +121,10 @@
 #define LP_PAUTOLF	0x02  /* inverted output, active low */
 #define LP_PSTROBE	0x01  /* inverted output, active low */
 
-/* 
- * the value written to ports to test existence. PC-style ports will 
+/*
+ * the value written to ports to test existence. PC-style ports will
  * return the value written. AT-style ports will return 0. so why not
- * make them the same ? 
+ * make them the same ?
  */
 #define LP_DUMMY	0x00
 

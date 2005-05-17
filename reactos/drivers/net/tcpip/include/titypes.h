@@ -295,7 +295,7 @@ typedef struct _CONNECTION_ENDPOINT {
     PVOID ClientContext;        /* Pointer to client context information */
     PADDRESS_FILE AddressFile;  /* Associated address file object (NULL if none) */
     PVOID SocketContext;        /* Context for lower layer */
-    
+
     UINT State;                 /* Socket state W.R.T. oskit */
 
     /* Requests */

@@ -22,17 +22,6 @@
  */
 
 #include "precomp.h"
-#include <commctrl.h>
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
-#include <stdio.h>
-#include <winnt.h>
-    
-#include "debug.h"
-#include "procpage.h"
-#include "perfdata.h"
 
 void ProcessPage_OnDebug(void)
 {

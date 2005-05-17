@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/irq.c
  * PURPOSE:         IRQ handling
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
@@ -38,7 +38,7 @@ IoConnectInterrupt(PKINTERRUPT* InterruptObject,
 /*
  * FUNCTION: Registers a driver's isr to be called when its device interrupts
  * ARGUMENTS:
- *        InterruptObject (OUT) = Points to the interrupt object created on 
+ *        InterruptObject (OUT) = Points to the interrupt object created on
  *                                return
  *        ServiceRoutine = Routine to be called when the device interrupts
  *        ServiceContext = Parameter to be passed to ServiceRoutine
@@ -46,7 +46,7 @@ IoConnectInterrupt(PKINTERRUPT* InterruptObject,
  *                   access between the isr and other driver routines. This is
  *                   required if the isr handles more than one vector or the
  *                   driver has more than one isr
- *        Vector = Interrupt vector to allocate 
+ *        Vector = Interrupt vector to allocate
  *                 (returned from HalGetInterruptVector)
  *        Irql = DIRQL returned from HalGetInterruptVector
  *        SynchronizeIrql = DIRQL at which the isr will execute. This must
@@ -65,18 +65,18 @@ IoConnectInterrupt(PKINTERRUPT* InterruptObject,
 {
    PKINTERRUPT Interrupt;
    ULONG i, count;
-   
+
    ASSERT_IRQL(PASSIVE_LEVEL);
-   
+
    DPRINT("IoConnectInterrupt(Vector %x)\n",Vector);
-   
+
    ProcessorEnableMask &= ((1 << KeNumberProcessors) - 1);
 
    if (ProcessorEnableMask == 0)
      {
        return STATUS_INVALID_PARAMETER;
      }
-  
+
    for (i = 0, count = 0; i < KeNumberProcessors; i++)
      {
        if (ProcessorEnableMask & (1 << i))

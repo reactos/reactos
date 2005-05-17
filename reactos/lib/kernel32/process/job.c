@@ -30,11 +30,11 @@ CreateJobObjectA(LPSECURITY_ATTRIBUTES lpJobAttributes,
   HANDLE hJob;
   ANSI_STRING AnsiName;
   UNICODE_STRING UnicodeName;
-  
+
   if(lpName != NULL)
   {
     NTSTATUS Status;
-    
+
     RtlInitAnsiString(&AnsiName, lpName);
     Status = RtlAnsiStringToUnicodeString(&UnicodeName, &AnsiName, TRUE);
     if(!NT_SUCCESS(Status))
@@ -43,7 +43,7 @@ CreateJobObjectA(LPSECURITY_ATTRIBUTES lpJobAttributes,
       return FALSE;
     }
   }
-  
+
   hJob = CreateJobObjectW(lpJobAttributes,
                           ((lpName != NULL) ? UnicodeName.Buffer : NULL));
 
@@ -69,12 +69,12 @@ CreateJobObjectW(LPSECURITY_ATTRIBUTES lpJobAttributes,
   PVOID SecurityDescriptor;
   HANDLE hJob;
   NTSTATUS Status;
-  
+
   if(lpName != NULL)
   {
     RtlInitUnicodeString(&JobName, lpName);
   }
-  
+
   if(lpJobAttributes != NULL)
   {
     if(lpJobAttributes->bInheritHandle)
@@ -87,7 +87,7 @@ CreateJobObjectW(LPSECURITY_ATTRIBUTES lpJobAttributes,
   {
     SecurityDescriptor = NULL;
   }
-  
+
   InitializeObjectAttributes(&ObjectAttributes,
                              ((lpName != NULL) ? &JobName : NULL),
                              Attributes,
@@ -102,7 +102,7 @@ CreateJobObjectW(LPSECURITY_ATTRIBUTES lpJobAttributes,
     SetLastErrorByStatus(Status);
     return NULL;
   }
-  
+
   return hJob;
 }
 
@@ -120,21 +120,21 @@ OpenJobObjectW(DWORD dwDesiredAccess,
   UNICODE_STRING JobName;
   HANDLE hJob;
   NTSTATUS Status;
-  
+
   if(lpName == NULL)
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return NULL;
   }
-  
+
   RtlInitUnicodeString(&JobName, lpName);
-  
+
   InitializeObjectAttributes(&ObjectAttributes,
                              &JobName,
                              (bInheritHandle ? OBJ_INHERIT : 0),
                              NULL,
                              NULL);
-  
+
   Status = NtOpenJobObject(&hJob,
                            dwDesiredAccess,
                            &ObjectAttributes);
@@ -170,7 +170,7 @@ OpenJobObjectA(DWORD dwDesiredAccess,
     SetLastError(ERROR_INVALID_PARAMETER);
     return NULL;
   }
-  
+
   RtlInitAnsiString(&AnsiName, lpName);
   Status = RtlAnsiStringToUnicodeString(&UnicodeName, &AnsiName, TRUE);
   if(!NT_SUCCESS(Status))
@@ -178,7 +178,7 @@ OpenJobObjectA(DWORD dwDesiredAccess,
     SetLastErrorByStatus(Status);
     return FALSE;
   }
-  
+
   hJob = OpenJobObjectW(dwDesiredAccess,
                         bInheritHandle,
                         UnicodeName.Buffer);
@@ -205,7 +205,7 @@ IsProcessInJob(HANDLE ProcessHandle,
     *Result = (Status == STATUS_PROCESS_IN_JOB);
     return TRUE;
   }
-  
+
   SetLastErrorByStatus(Status);
   return FALSE;
 }
@@ -243,7 +243,7 @@ QueryInformationJobObject(HANDLE hJob,
                           LPDWORD lpReturnLength)
 {
   NTSTATUS Status;
-  
+
   Status = NtQueryInformationJobObject(hJob,
                                        JobObjectInformationClass,
                                        lpJobObjectInformation,
@@ -299,7 +299,7 @@ QueryInformationJobObject(HANDLE hJob,
 
     return TRUE;
   }
-  
+
   SetLastErrorByStatus(Status);
   return FALSE;
 }
@@ -380,7 +380,7 @@ SetInformationJobObject(HANDLE hJob,
         break;
     }
   }
-  
+
   Status = NtSetInformationJobObject(hJob,
                                      JobObjectInformationClass,
                                      ObjectInfo,
@@ -390,7 +390,7 @@ SetInformationJobObject(HANDLE hJob,
     SetLastErrorByStatus(Status);
     return FALSE;
   }
-  
+
   return TRUE;
 }
 
@@ -404,7 +404,7 @@ TerminateJobObject(HANDLE hJob,
                    UINT uExitCode)
 {
   NTSTATUS Status;
-  
+
   Status = NtTerminateJobObject(hJob, uExitCode);
   if(!NT_SUCCESS(Status))
   {

@@ -1,4 +1,3 @@
-
 /*
  *	Shell Folder stuff
  *
@@ -51,19 +50,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
-/***************************************************************************
- * debughelper: print out the return address
- *  helps especially to track down unbalanced AddRef/Release
- */
-#define MEM_DEBUG 0
-
-#if MEM_DEBUG
-#define _CALL_TRACE TRACE("called from: 0x%08x\n", *( ((UINT*)&iface)-1 ));
-#else
-#define _CALL_TRACE
-#endif
-
-static const WCHAR wszDotShellClassInfo[] = {'.','S','h','e','l','l','C','l','a','s','s','I','n','f','o',0};
+static const WCHAR wszDotShellClassInfo[] = {
+    '.','S','h','e','l','l','C','l','a','s','s','I','n','f','o',0};
 
 /***************************************************************************
  *  SHELL32_GetCustomFolderAttribute (internal function)
@@ -86,26 +74,26 @@ BOOL SHELL32_GetCustomFolderAttribute(
     LPCITEMIDLIST pidl, LPCWSTR pwszHeading, LPCWSTR pwszAttribute,
     LPWSTR pwszValue, DWORD cchValue)
 {
-#if 0 /* Hack around not having system attribute on non-Windows file systems */
-    DWORD dwAttrib = _ILGetFileAttributes(pidl, NULL, 0);
-#else
+    static const WCHAR wszDesktopIni[] =
+            {'d','e','s','k','t','o','p','.','i','n','i',0};
+    static const WCHAR wszDefault[] = {0};
     DWORD dwAttrib = FILE_ATTRIBUTE_SYSTEM;
-#endif
+
+    /* Hack around not having system attribute on non-Windows file systems */
+    if (0)
+        dwAttrib = _ILGetFileAttributes(pidl, NULL, 0);
+
     if (dwAttrib & FILE_ATTRIBUTE_SYSTEM)
     {
         DWORD ret;
         WCHAR wszDesktopIniPath[MAX_PATH];
-        static const WCHAR wszDesktopIni[] =
-            {'d','e','s','k','t','o','p','.','i','n','i',0};
-        static const WCHAR wszDefault[] =
-            {0};
+
         if (!SHGetPathFromIDListW(pidl, wszDesktopIniPath))
             return FALSE;
         PathAppendW(wszDesktopIniPath, wszDesktopIni);
         ret = GetPrivateProfileStringW(pwszHeading, pwszAttribute,
             wszDefault, pwszValue, cchValue, wszDesktopIniPath);
-        if (!ret) return FALSE;
-        return TRUE;
+        return ret;
     }
     return FALSE;
 }
@@ -316,7 +304,7 @@ HRESULT SHELL32_BindToChild (LPCITEMIDLIST pidlRoot,
  * - asks it for the displayname of [subpidl2][subpidl3]
  *
  * Is possible the pidl is a simple pidl. In this case it asks the
- * subfolder for the displayname of a empty pidl. The subfolder
+ * subfolder for the displayname of an empty pidl. The subfolder
  * returns the own displayname eg. "::{guid}". This is used for
  * virtual folders with the registry key WantsFORPARSING set.
  */
@@ -408,7 +396,9 @@ HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWO
 	}
     } else if (_ILGetDataPointer (pidl)) {
 	dwAttributes = _ILGetFileAttributes (pidl, NULL, 0);
-	*pdwAttributes &= ~SFGAO_FILESYSANCESTOR;
+
+        if ((SFGAO_FILESYSANCESTOR & *pdwAttributes) && !(dwAttributes & FILE_ATTRIBUTE_DIRECTORY))
+            *pdwAttributes &= ~SFGAO_FILESYSANCESTOR;
 
 	if ((SFGAO_FOLDER & *pdwAttributes) && !(dwAttributes & FILE_ATTRIBUTE_DIRECTORY))
 	    *pdwAttributes &= ~(SFGAO_FOLDER | SFGAO_HASSUBFOLDER);

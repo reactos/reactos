@@ -343,7 +343,7 @@ static IStream *IStream_Create(HKEY hKey, LPBYTE pbBuffer, DWORD dwLength)
 {
  ISHRegStream* regStream;
 
- regStream = (ISHRegStream*)HeapAlloc(GetProcessHeap(), 0, sizeof(ISHRegStream));
+ regStream = HeapAlloc(GetProcessHeap(), 0, sizeof(ISHRegStream));
 
  if (regStream)
  {
@@ -493,7 +493,7 @@ IStream * WINAPI SHCreateMemStream(LPBYTE lpbData, DWORD dwDataLen)
 
   if (lpbData)
   {
-    LPBYTE lpbDup = (LPBYTE)HeapAlloc(GetProcessHeap(), 0, dwDataLen);
+    LPBYTE lpbDup = HeapAlloc(GetProcessHeap(), 0, dwDataLen);
 
     if (lpbDup)
     {

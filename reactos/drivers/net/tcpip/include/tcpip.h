@@ -30,6 +30,7 @@
 
 #include <debug.h>
 
+#define TAG_STRING	TAG('S', 'T', 'R', ' ') /* string */
 
 /* Define _NTTEST_ to make test version. Device names are prefixed with
    'NT' to allow the driver to run side by side with MS TCP/IP driver */
@@ -110,7 +111,7 @@
 
 #endif /* i386 */
 
-typedef TDI_STATUS (*InfoRequest_f)( UINT InfoClass, 
+typedef TDI_STATUS (*InfoRequest_f)( UINT InfoClass,
 				     UINT InfoType,
 				     UINT InfoId,
 				     PVOID Context,
@@ -118,7 +119,7 @@ typedef TDI_STATUS (*InfoRequest_f)( UINT InfoClass,
 				     PNDIS_BUFFER Buffer,
 				     PUINT BufferSize );
 
-typedef TDI_STATUS (*InfoSet_f)( UINT InfoClass, 
+typedef TDI_STATUS (*InfoSet_f)( UINT InfoClass,
 				 UINT InfoType,
 				 UINT InfoId,
 				 PVOID Context,

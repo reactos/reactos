@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- *      Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details 
+ *      Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/io/mktemp.c
  * PURPOSE:     Makes a temp file based on a template

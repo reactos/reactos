@@ -33,21 +33,21 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
 
    /* get the pointer to the export directory */
    ExportDir = (PIMAGE_EXPORT_DIRECTORY)
-	RtlImageDirectoryEntryToData (BaseAddress, TRUE, 
+	RtlImageDirectoryEntryToData (BaseAddress, TRUE,
 				      IMAGE_DIRECTORY_ENTRY_EXPORT, &i);
 
    if (!ExportDir || !i || !ProcedureAddress)
      {
 	return(STATUS_INVALID_PARAMETER);
      }
-   
+
    AddressPtr = (PULONG)RVA((char*)BaseAddress, ExportDir->AddressOfFunctions);
    if (Name && Name->Length)
      {
        LONG minn, maxn;
 
 	/* by name */
-       OrdinalPtr = 
+       OrdinalPtr =
 	 (PUSHORT)RVA((char*)BaseAddress, ExportDir->AddressOfNameOrdinals);
        NamePtr = (PULONG)RVA((char*)BaseAddress, ExportDir->AddressOfNames);
 
@@ -62,7 +62,7 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
 			    Name->Length);
 	    if (res == 0)
 	      {
-		*ProcedureAddress = 
+		*ProcedureAddress =
 		  (PVOID)RVA((char*)BaseAddress, AddressPtr[OrdinalPtr[mid]]);
 		return(STATUS_SUCCESS);
 	      }
@@ -78,11 +78,11 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
 
 	for (i = 0; i < ExportDir->NumberOfNames; i++, NamePtr++, OrdinalPtr++)
 	  {
-	     if (!_strnicmp(Name->Buffer, 
+	     if (!_strnicmp(Name->Buffer,
 			    (char*)((char*)BaseAddress + *NamePtr), Name->Length))
 	       {
-		  *ProcedureAddress = 
-		    (PVOID)((ULONG)BaseAddress + 
+		  *ProcedureAddress =
+		    (PVOID)((ULONG)BaseAddress +
 			    (ULONG)AddressPtr[*OrdinalPtr]);
 		  return STATUS_SUCCESS;
 	       }
@@ -95,8 +95,8 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
 	Ordinal &= 0x0000FFFF;
 	if (Ordinal - ExportDir->Base < ExportDir->NumberOfFunctions)
 	  {
-	     *ProcedureAddress = 
-	       (PVOID)((ULONG)BaseAddress + 
+	     *ProcedureAddress =
+	       (PVOID)((ULONG)BaseAddress +
 		       (ULONG)AddressPtr[Ordinal - ExportDir->Base]);
 	     return STATUS_SUCCESS;
 	  }

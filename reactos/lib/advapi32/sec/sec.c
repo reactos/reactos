@@ -105,19 +105,6 @@ GetSecurityDescriptorGroup (
 /*
  * @implemented
  */
-DWORD
-STDCALL
-GetSecurityDescriptorLength (
-	PSECURITY_DESCRIPTOR	pSecurityDescriptor
-	)
-{
-	return RtlLengthSecurityDescriptor(pSecurityDescriptor);
-}
-
-
-/*
- * @implemented
- */
 BOOL
 STDCALL
 GetSecurityDescriptorOwner (

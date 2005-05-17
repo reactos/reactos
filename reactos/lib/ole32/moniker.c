@@ -70,7 +70,7 @@ typedef struct RunningObjectTableImpl{
 
 } RunningObjectTableImpl;
 
-RunningObjectTableImpl* runningObjectTableInstance=0;
+static RunningObjectTableImpl* runningObjectTableInstance = NULL;
 
 /* IRunningObjectTable prototype functions : */
 /* IUnknown functions*/
@@ -153,7 +153,7 @@ ULONG   WINAPI RunningObjectTableImpl_AddRef(IRunningObjectTable* iface)
 /***********************************************************************
  *        RunningObjectTable_Initialize
  */
-HRESULT WINAPI RunningObjectTableImpl_Destroy()
+HRESULT WINAPI RunningObjectTableImpl_Destroy(void)
 {
     TRACE("()\n");
 
@@ -165,6 +165,7 @@ HRESULT WINAPI RunningObjectTableImpl_Destroy()
 
     /* free the ROT structure memory */
     HeapFree(GetProcessHeap(),0,runningObjectTableInstance);
+    runningObjectTableInstance = NULL;
 
     return S_OK;
 }

@@ -9,11 +9,10 @@
  *                  17/03/2000 Created
  */
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
+#include "rtl.h"
 
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
 

@@ -166,7 +166,7 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
       return MsgMemoryEntry->Size;
     }
     } _SEH_HANDLE {
-    
+
         DPRINT1("Exception caught in MsgMemorySize()! Status: 0x%x\n", _SEH_GetExceptionCode());
     } _SEH_END;
     return 0;
@@ -382,7 +382,7 @@ NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO UnsafeMsgInfo)
       SetLastNtError(Status);
       return 0;
     }
-  
+
   return Result;
 }
 
@@ -412,7 +412,7 @@ IntSendHitTestMessages(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg)
   {
     return;
   }
-  
+
   switch(Msg->message)
   {
     case WM_MOUSEMOVE:
@@ -436,7 +436,7 @@ IntSendHitTestMessages(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg)
     {
       WPARAM wParam;
       PSYSTEM_CURSORINFO CurInfo;
-      
+
       if(!IntGetWindowStationObject(InputWindowStation))
       {
         break;
@@ -444,7 +444,7 @@ IntSendHitTestMessages(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg)
       CurInfo = IntGetSysCursorInfo(InputWindowStation);
       wParam = (WPARAM)(CurInfo->ButtonsDown);
       ObDereferenceObject(InputWindowStation);
-      
+
       IntSendMessage(Msg->hwnd, WM_MOUSEMOVE, wParam, Msg->lParam);
       IntSendMessage(Msg->hwnd, WM_SETCURSOR, (WPARAM)Msg->hwnd, MAKELPARAM(HTCLIENT, Msg->message));
       break;
@@ -466,17 +466,17 @@ IntSendHitTestMessages(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg)
 }
 
 BOOL FASTCALL
-IntActivateWindowMouse(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, PWINDOW_OBJECT MsgWindow, 
+IntActivateWindowMouse(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, PWINDOW_OBJECT MsgWindow,
                        USHORT *HitTest)
 {
   ULONG Result;
-  
+
   if(*HitTest == (USHORT)HTTRANSPARENT)
   {
     /* eat the message, search again! */
     return TRUE;
   }
-  
+
   Result = IntSendMessage(MsgWindow->Self, WM_MOUSEACTIVATE, (WPARAM)NtUserGetParent(MsgWindow->Self), (LPARAM)MAKELONG(*HitTest, Msg->message));
   switch (Result)
   {
@@ -492,7 +492,7 @@ IntActivateWindowMouse(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, PWINDOW_OBJEC
       IntMouseActivateWindow(MsgWindow);
       break;
   }
-  
+
   return FALSE;
 }
 
@@ -500,29 +500,29 @@ BOOL FASTCALL
 IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *HitTest, BOOL Remove)
 {
   PWINDOW_OBJECT Window;
-  
+
   if(!(Window = IntGetWindowObject(Msg->hwnd)))
   {
     /* let's just eat the message?! */
     return TRUE;
   }
-  
+
   if(ThreadQueue == Window->MessageQueue &&
      ThreadQueue->CaptureWindow != Window->Self)
   {
     /* only send WM_NCHITTEST messages if we're not capturing the window! */
-    *HitTest = IntSendMessage(Window->Self, WM_NCHITTEST, 0, 
+    *HitTest = IntSendMessage(Window->Self, WM_NCHITTEST, 0,
                               MAKELONG(Msg->pt.x, Msg->pt.y));
-    
+
     if(*HitTest == (USHORT)HTTRANSPARENT)
     {
       PWINDOW_OBJECT DesktopWindow;
       HWND hDesktop = IntGetDesktopWindow();
-      
+
       if((DesktopWindow = IntGetWindowObject(hDesktop)))
       {
         PWINDOW_OBJECT Wnd;
-        
+
         WinPosWindowFromPoint(DesktopWindow, Window->MessageQueue, &Msg->pt, &Wnd);
         if(Wnd)
         {
@@ -536,16 +536,16 @@ IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *Hit
                              Msg->message == WM_MOUSEMOVE ? QS_MOUSEMOVE :
                              QS_MOUSEBUTTON);
             }
-            
+
             /* eat the message */
             IntReleaseWindowObject(Wnd);
             IntReleaseWindowObject(Window);
             IntReleaseWindowObject(DesktopWindow);
             return TRUE;
           }
-	  IntReleaseWindowObject(Wnd); 
+	  IntReleaseWindowObject(Wnd);
         }
-        
+
         IntReleaseWindowObject(DesktopWindow);
       }
     }
@@ -554,25 +554,25 @@ IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *Hit
   {
     *HitTest = HTCLIENT;
   }
-  
+
   if(IS_BTN_MESSAGE(Msg->message, DOWN))
   {
     /* generate double click messages, if necessary */
-    if ((((*HitTest) != HTCLIENT) || 
+    if ((((*HitTest) != HTCLIENT) ||
         (IntGetClassLong(Window, GCL_STYLE, FALSE) & CS_DBLCLKS)) &&
         MsqIsDblClk(Msg, Remove))
     {
       Msg->message += WM_LBUTTONDBLCLK - WM_LBUTTONDOWN;
     }
   }
-  
+
   if(Msg->message != WM_MOUSEWHEEL)
   {
-    
+
     if ((*HitTest) != HTCLIENT)
     {
       Msg->message += WM_NCMOUSEMOVE - WM_MOUSEMOVE;
-      if((Msg->message == WM_NCRBUTTONUP) && 
+      if((Msg->message == WM_NCRBUTTONUP) &&
          (((*HitTest) == HTCAPTION) || ((*HitTest) == HTSYSMENU)))
       {
         Msg->message = WM_CONTEXTMENU;
@@ -593,7 +593,7 @@ IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *Hit
         Msg->pt.y - (WORD)Window->ClientRect.top);
     }
   }
-  
+
   IntReleaseWindowObject(Window);
   return FALSE;
 }
@@ -622,19 +622,19 @@ IntPeekMessage(PUSER_MESSAGE Msg,
   /* Inspect RemoveMsg flags */
   /* FIXME: The only flag we process is PM_REMOVE - processing of others must still be implemented */
   RemoveMessages = RemoveMsg & PM_REMOVE;
-  
+
   CheckMessages:
-  
+
   Present = FALSE;
-  
+
   KeQueryTickCount(&LargeTickCount);
   ThreadQueue->LastMsgRead = LargeTickCount.u.LowPart;
 
   /* Dispatch sent messages here. */
   while (MsqDispatchOneSentMessage(ThreadQueue));
-      
+
   /* Now look for a quit message. */
-  
+
   if (ThreadQueue->QuitPosted)
   {
     /* According to the PSDK, WM_QUIT messages are always returned, regardless
@@ -668,7 +668,7 @@ IntPeekMessage(PUSER_MESSAGE Msg,
     }
     goto MessageFound;
   }
-  
+
   /* Check for hardware events. */
   Present = MsqFindMessage(ThreadQueue,
                            TRUE,
@@ -686,7 +686,7 @@ IntPeekMessage(PUSER_MESSAGE Msg,
     }
     goto MessageFound;
   }
-  
+
   /* Check for sent messages again. */
   while (MsqDispatchOneSentMessage(ThreadQueue));
 
@@ -696,7 +696,7 @@ IntPeekMessage(PUSER_MESSAGE Msg,
     Msg->FreeLParam = FALSE;
     return TRUE;
   }
-  
+
   /* Check for WM_(SYS)TIMER messages */
   Present = MsqGetTimerMessage(ThreadQueue, Wnd, MsgFilterMin, MsgFilterMax,
                                &Msg->Msg, RemoveMessages);
@@ -705,20 +705,20 @@ IntPeekMessage(PUSER_MESSAGE Msg,
     Msg->FreeLParam = FALSE;
     goto MessageFound;
   }
-  
+
   if(Present)
   {
     MessageFound:
-    
+
     if(RemoveMessages)
     {
-      PWINDOW_OBJECT MsgWindow = NULL;;
-      
+      PWINDOW_OBJECT MsgWindow = NULL;
+
       if(Msg->Msg.hwnd && (MsgWindow = IntGetWindowObject(Msg->Msg.hwnd)) &&
          Msg->Msg.message >= WM_MOUSEFIRST && Msg->Msg.message <= WM_MOUSELAST)
       {
         USHORT HitTest;
-        
+
         if(IntTranslateMouseMessage(ThreadQueue, &Msg->Msg, &HitTest, TRUE))
           /* FIXME - check message filter again, if the message doesn't match anymore,
                      search again */
@@ -744,15 +744,15 @@ IntPeekMessage(PUSER_MESSAGE Msg,
       {
         IntSendHitTestMessages(ThreadQueue, &Msg->Msg);
       }
-      
+
       if(MsgWindow)
       {
         IntReleaseWindowObject(MsgWindow);
       }
-      
+
       return TRUE;
     }
-    
+
     USHORT HitTest;
     if((Msg->Msg.hwnd && Msg->Msg.message >= WM_MOUSEFIRST && Msg->Msg.message <= WM_MOUSELAST) &&
        IntTranslateMouseMessage(ThreadQueue, &Msg->Msg, &HitTest, FALSE))
@@ -762,7 +762,7 @@ IntPeekMessage(PUSER_MESSAGE Msg,
       /* eat the message, search again */
       goto CheckMessages;
     }
-    
+
     return TRUE;
   }
 
@@ -1006,7 +1006,7 @@ static NTSTATUS FASTCALL
 CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEntry)
 {
   NTSTATUS Status;
-  
+
   PVOID KernelMem;
   UINT Size;
 
@@ -1126,7 +1126,7 @@ NtUserPostMessage(HWND Wnd,
           for (i = 0; List[i]; i++)
             NtUserPostMessage(List[i], Msg, wParam, lParam);
           ExFreePool(List);
-        }      
+        }
     }
   else
     {
@@ -1181,7 +1181,7 @@ NtUserPostThreadMessage(DWORD idThread,
   PMSGMEMORY MsgMemoryEntry;
 
   Status = PsLookupThreadByThreadId((HANDLE)idThread,&peThread);
-  
+
   if( Status == STATUS_SUCCESS ) {
     pThread = peThread->Tcb.Win32Thread;
     if( !pThread || !pThread->MessageQueue )
@@ -1299,12 +1299,12 @@ IntSendMessageTimeoutSingle(HWND hWnd,
           Result = (ULONG_PTR)IntCallWindowProc(Window->WndProcA, TRUE, hWnd, Msg, wParam,
                                                 lParamPacked,lParamBufferSize);
         }
-      
+
       if(uResult)
       {
         *uResult = Result;
       }
-      
+
       if (! NT_SUCCESS(UnpackParam(lParamPacked, Msg, wParam, lParam)))
         {
           IntReleaseWindowObject(Window);
@@ -1315,14 +1315,14 @@ IntSendMessageTimeoutSingle(HWND hWnd,
       IntReleaseWindowObject(Window);
       return TRUE;
     }
-  
+
   if(uFlags & SMTO_ABORTIFHUNG && MsqIsHung(Window->MessageQueue))
   {
     IntReleaseWindowObject(Window);
     /* FIXME - Set a LastError? */
     return FALSE;
   }
-  
+
   if(Window->Status & WINDOWSTATUS_DESTROYING)
   {
     IntReleaseWindowObject(Window);
@@ -1330,8 +1330,8 @@ IntSendMessageTimeoutSingle(HWND hWnd,
     DPRINT1("Attempted to send message to window 0x%x that is being destroyed!\n", hWnd);
     return FALSE;
   }
-  
-  Status = MsqSendMessage(Window->MessageQueue, hWnd, Msg, wParam, lParam, 
+
+  Status = MsqSendMessage(Window->MessageQueue, hWnd, Msg, wParam, lParam,
                           uTimeout, (uFlags & SMTO_BLOCK), uResult);
   IntReleaseWindowObject(Window);
   if (STATUS_TIMEOUT == Status)
@@ -1402,19 +1402,19 @@ IntPostOrSendMessage(HWND hWnd,
 {
   ULONG_PTR Result;
   PWINDOW_OBJECT Window;
-  
+
   if(hWnd == HWND_BROADCAST)
   {
     return 0;
   }
-  
+
   Window = IntGetWindowObject(hWnd);
   if(!Window)
   {
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     return 0;
   }
-  
+
   if(Window->MessageQueue != PsGetWin32Thread()->MessageQueue)
   {
     Result = NtUserPostMessage(hWnd, Msg, wParam, lParam);
@@ -1426,9 +1426,9 @@ IntPostOrSendMessage(HWND hWnd,
       Result = 0;
     }
   }
-  
+
   IntReleaseWindowObject(Window);
-  
+
   return (LRESULT)Result;
 }
 
@@ -1568,7 +1568,7 @@ NtUserSendMessageTimeout(HWND hWnd,
   if(uResult != NULL && Result != 0)
   {
     NTSTATUS Status;
-    
+
     Status = MmCopyToCaller(uResult, &dsm.Result, sizeof(ULONG_PTR));
     if(!NT_SUCCESS(Status))
     {

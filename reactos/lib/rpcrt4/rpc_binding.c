@@ -44,7 +44,7 @@
 #include "rpc_binding.h"
 #include "rpc_message.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(ole);
+WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 
 LPSTR RPCRT4_strndupA(LPCSTR src, INT slen)
 {
@@ -462,7 +462,7 @@ RPC_STATUS RPCRT4_OpenBinding(RpcBinding* Binding, RpcConnection** Connection,
     RPCRT4_DestroyConnection(Binding->FromConn);
     Binding->FromConn = NULL;
   } else {
-    /* we already have an connection with acceptable binding, so use it */
+    /* we already have a connection with acceptable binding, so use it */
     if (Binding->FromConn) {
       *Connection = Binding->FromConn;
       return RPC_S_OK;
@@ -1118,9 +1118,38 @@ RPC_STATUS WINAPI RpcNetworkIsProtseqValidW(LPWSTR protseq) {
  * RETURNS
  *  Success: RPS_S_OK.
  *  Failure: RPC_STATUS value.
+ *
+ * NOTES
+ *
+ * If BindingHandle is NULL then the function impersonates the client
+ * connected to the binding handle of the current thread.
  */
 RPC_STATUS WINAPI RpcImpersonateClient(RPC_BINDING_HANDLE BindingHandle)
 {
     FIXME("(%p): stub\n", BindingHandle);
-    return RPC_S_NO_CONTEXT_AVAILABLE;
+    return RPC_S_OK;
+}
+
+/***********************************************************************
+ *             RpcRevertToSelfEx (RPCRT4.@)
+ *
+ * Stops impersonating the client connected to the binding handle so that security
+ * checks are no longer done in the context of the client.
+ *
+ * PARAMS
+ *  BindingHandle [I] Handle to the binding to the client.
+ *
+ * RETURNS
+ *  Success: RPS_S_OK.
+ *  Failure: RPC_STATUS value.
+ *
+ * NOTES
+ *
+ * If BindingHandle is NULL then the function stops impersonating the client
+ * connected to the binding handle of the current thread.
+ */
+RPC_STATUS WINAPI RpcRevertToSelfEx(RPC_BINDING_HANDLE BindingHandle)
+{
+    FIXME("(%p): stub\n", BindingHandle);
+    return RPC_S_OK;
 }

@@ -24,18 +24,6 @@ endif
 LINKER_SCRIPT := ntoskrnl.lnk
 STRIP_FLAGS := -Wl,-s
 
-ifeq ($(KDBG), 1)
-OBJECTS_KDBG := dbg/kdb.o dbg/kdb_cli.o dbg/kdb_expr.o dbg/kdb_keyboard.o \
-                dbg/kdb_serial.o dbg/kdb_string.o dbg/rdebug.o dbg/i386/kdb_help.o \
-                dbg/i386/i386-dis.o dbg/i386/longjmp.o dbg/i386/setjmp.o
-preall: all
-else
-OBJECTS_KDBG :=
-endif
-ifeq ($(DBG_OR_KDBG), 1)
-OBJECTS_KDBG := $(OBJECTS_KDBG) dbg/kdb_symbols.o
-endif
-
 TARGET_ASFLAGS = -I./include
 TARGET_CFLAGS = -I./include $(CFLAGS_KDBG) -Wall -Werror $(CFLAGS_OPT)
 
@@ -74,6 +62,7 @@ OBJECTS_RTL = \
 	rtl/atom.o \
 	rtl/capture.o \
 	rtl/ctype.o \
+	rtl/debug.o \
 	rtl/handle.o \
 	rtl/message.o \
 	rtl/misc.o \
@@ -100,6 +89,8 @@ OBJECTS_KE = \
 	ke/dpc.o \
 	ke/device.o \
 	ke/event.o \
+	ke/gate.o \
+	ke/gmutex.o \
 	ke/kqueue.o \
 	ke/kthread.o \
 	ke/ipi.o \
@@ -142,6 +133,7 @@ OBJECTS_MM = \
 	mm/pool.o \
 	mm/ppool.o \
 	mm/physical.o \
+	mm/process.o \
 	mm/region.o \
 	mm/rmap.o \
 	mm/section.o \
@@ -154,55 +146,36 @@ OBJECTS_IO = \
 	io/adapter.o \
 	io/arcname.o \
 	io/bootlog.o \
-	io/buildirp.o \
-	io/cancel.o \
-	io/cleanup.o \
-	io/cntrller.o \
-	io/create.o \
+	io/controller.o \
 	io/device.o \
 	io/deviface.o \
-	io/dir.o \
+	io/disk.o \
 	io/driver.o \
 	io/efi.o \
-	io/errlog.o \
 	io/error.o \
 	io/event.o \
 	io/file.o \
-	io/flush.o \
 	io/fs.o \
 	io/iocomp.o \
-	io/ioctrl.o \
 	io/iomgr.o \
 	io/iowork.o \
 	io/irp.o \
 	io/irq.o \
-	io/lock.o \
-	io/mailslot.o \
 	io/mdl.o \
-	io/npipe.o \
-	io/page.o \
-	io/parttab.o \
 	io/plugplay.o \
-	io/process.o \
 	io/pnpdma.o \
 	io/pnpmgr.o \
 	io/pnpnotify.o \
 	io/pnpreport.o \
 	io/pnproot.o \
-	io/queue.o \
 	io/rawfs.o \
 	io/remlock.o \
 	io/resource.o \
-	io/rw.o \
 	io/share.o \
-	io/shutdown.o \
 	io/symlink.o \
 	io/timer.o \
 	io/vpb.o \
-	io/wdm.o \
 	io/wmi.o \
-	io/xhaldisp.o \
-	io/xhaldrv.o
 
 # Object Manager (Ob)
 OBJECTS_OB = \
@@ -219,7 +192,6 @@ OBJECTS_OB = \
 # Process Manager (Ps)
 OBJECTS_PS = \
 	ps/cid.o \
-	ps/create.o \
 	ps/debug.o \
 	ps/idle.o \
 	ps/job.o \
@@ -227,6 +199,8 @@ OBJECTS_PS = \
 	ps/locale.o \
 	ps/process.o \
 	ps/psmgr.o \
+	ps/notify.o \
+	ps/quota.o \
 	ps/query.o \
 	ps/security.o \
 	ps/suspend.o \
@@ -236,6 +210,7 @@ OBJECTS_PS = \
 # Executive Subsystem (Ex)
 OBJECTS_EX = \
 	ex/callback.o \
+	ex/dbgctrl.o \
 	ex/error.o \
 	ex/event.o \
 	ex/evtpair.o \
@@ -264,10 +239,10 @@ OBJECTS_EX = \
 
 # Installable File System Run-Time Library (FsRtl)
 OBJECTS_FS = \
-	fs/dbcsname.o \
+	fs/context.o \
+	fs/fastio.o \
 	fs/filelock.o \
 	fs/mcb.o \
-	fs/mdl.o \
 	fs/name.o \
 	fs/notify.o \
 	fs/oplock.o \
@@ -296,14 +271,6 @@ OBJECTS_CM = \
 	cm/regfile.o \
 	cm/registry.o  \
 	cm/regobj.o \
-
-# Debugger Support (Dbg)
-OBJECTS_DBG = \
-	dbg/dbgctrl.o \
-	dbg/errinfo.o \
-	dbg/print.o \
-	dbg/user.o \
-	$(OBJECTS_KDBG)
 
 # Loader
 OBJECTS_LDR = \
@@ -343,11 +310,39 @@ OBJECTS_CC = \
 
 # Kernel Debugger Support (Kd)
 OBJECTS_KD = \
-	kd/dlog.o \
-	kd/gdbstub.o \
-	kd/kdebug.o \
-	kd/mda.o \
-	kd/service.o
+	kd/kdinit.o \
+	kd/kdmain.o \
+	kd/kdio.o \
+    
+ifeq ($(DBG), 1)
+OBJECTS_KD := \
+	$(OBJECTS_KD) \
+	kd/wrappers/gdbstub.o \
+	kd/wrappers/bochs.o
+endif
+
+# User-Mode Debugging (Dbgk)
+OBJECTS_DBGK = \
+	dbgk/dbgkutil.o \
+	dbgk/debug.o
+
+ifeq ($(KDBG), 1)
+OBJECTS_KDBG := \
+	kdbg/kdb.o \
+	kdbg/kdb_cli.o \
+	kdbg/kdb_expr.o \
+	kdbg/kdb_keyboard.o \
+	kdbg/kdb_serial.o \
+	kdbg/kdb_string.o
+preall: all
+else
+OBJECTS_KDBG :=
+endif
+ifeq ($(DBG_OR_KDBG), 1)
+OBJECTS_KDBG := \
+	$(OBJECTS_KDBG) \
+	kdbg/kdb_symbols.o
+endif
 
 # Boot video (Inbv)
 OBJECTS_INBV = \
@@ -356,7 +351,7 @@ OBJECTS_INBV = \
 DEP_OBJECTS := $(OBJECTS_MM) $(OBJECTS_ARCH) \
 	$(OBJECTS_IO) $(OBJECTS_KE) $(OBJECTS_OB) \
 	$(OBJECTS_PS) $(OBJECTS_EX) $(OBJECTS_CC) $(OBJECTS_FS) $(OBJECTS_SE) \
-	$(OBJECTS_DBG) $(OBJECTS_CM) $(OBJECTS_LDR) $(OBJECTS_LPC) \
+	$(OBJECTS_KDBG) $(OBJECTS_DBGK) $(OBJECTS_CM) $(OBJECTS_LDR) $(OBJECTS_LPC) \
 	$(OBJECTS_PO) $(OBJECTS_KD) $(OBJECTS_RTL) $(OBJECTS_INBV)
 
 TAG_OBJECTS := $(join $(dir $(DEP_OBJECTS)),$(patsubst %.o, .%.TAG, $(notdir $(DEP_OBJECTS))))
@@ -379,12 +374,12 @@ OBJECTS := \
 	$(OBJECTS_KE) \
 	$(OBJECTS_CC) \
 	$(OBJECTS_CM) \
-	$(OBJECTS_DBG) \
 	$(OBJECTS_EX) \
 	$(OBJECTS_LPC) \
 	$(OBJECTS_FS) \
 	$(OBJECTS_IO) \
 	$(OBJECTS_KD) \
+	$(OBJECTS_DBGK) \
 	$(OBJECTS_LDR) \
 	$(OBJECTS_MM) \
 	$(OBJECTS_OB) \
@@ -392,6 +387,7 @@ OBJECTS := \
 	$(OBJECTS_PS) \
 	$(OBJECTS_RTL) \
 	$(OBJECTS_SE) \
+	$(OBJECTS_KDBG) \
 	$(OBJECTS_INBV) \
 	$(OBJECTS_RESOURCE)
 

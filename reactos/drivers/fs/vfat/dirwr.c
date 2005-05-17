@@ -12,7 +12,7 @@
 #define NDEBUG
 #include "vfat.h"
 
-NTSTATUS 
+NTSTATUS
 VfatUpdateEntry (PVFATFCB pFcb)
 /*
  * update an existing FAT entry
@@ -26,7 +26,7 @@ VfatUpdateEntry (PVFATFCB pFcb)
 
   ASSERT(pFcb);
   ASSERT(pFcb->parentFcb);
-  
+
   if (pFcb->Flags & FCB_IS_FATX_ENTRY)
   {
     SizeDirEntry = sizeof(FATX_DIR_ENTRY);
@@ -46,7 +46,7 @@ VfatUpdateEntry (PVFATFCB pFcb)
     }
 
   ASSERT (pFcb->parentFcb);
-  
+
   Offset.u.HighPart = 0;
   Offset.u.LowPart = dirIndex * SizeDirEntry;
   if (CcPinRead (pFcb->parentFcb->FileObject, &Offset, SizeDirEntry,
@@ -82,12 +82,12 @@ vfatFindDirSpace(PDEVICE_EXTENSION DeviceExt,
   NTSTATUS Status;
   ULONG SizeDirEntry;
   FileOffset.QuadPart = 0;
-  
+
   if (DeviceExt->Flags & VCB_IS_FATX)
     SizeDirEntry = sizeof(FATX_DIR_ENTRY);
   else
     SizeDirEntry = sizeof(FAT_DIR_ENTRY);
-  
+
   count = pDirFcb->RFCB.FileSize.u.LowPart / SizeDirEntry;
   size = DeviceExt->FatInfo.BytesPerCluster / SizeDirEntry;
   for (i = 0; i < count; i++, pFatEntry = (PDIR_ENTRY)((ULONG_PTR)pFatEntry + SizeDirEntry))
@@ -185,7 +185,7 @@ NTSTATUS
 FATAddEntry (PDEVICE_EXTENSION DeviceExt,
 	     PUNICODE_STRING NameU,
 	     PVFATFCB* Fcb,
-	     PVFATFCB ParentFcb, 
+	     PVFATFCB ParentFcb,
 	     ULONG RequestedOptions,
 	     UCHAR ReqAttr)
 /*
@@ -204,7 +204,7 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
   NTSTATUS Status = STATUS_SUCCESS;
   ULONG size;
   long i;
-  
+
   OEM_STRING NameA;
   CHAR aName[13];
   BOOLEAN IsNameLegal;
@@ -217,14 +217,14 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
   DPRINT ("addEntry: Name='%wZ', Dir='%wZ'\n", NameU, &ParentFcb->PathNameU);
 
   DirContext.LongNameU = *NameU;
-  
+
   nbSlots = (DirContext.LongNameU.Length / sizeof(WCHAR) + 12) / 13 + 1;	//nb of entry needed for long name+normal entry
   DPRINT ("NameLen= %d, nbSlots =%d\n", DirContext.LongNameU.Length / sizeof(WCHAR), nbSlots);
   Buffer = ExAllocatePool (NonPagedPool, (nbSlots - 1) * sizeof (FAT_DIR_ENTRY));
   if (Buffer == NULL)
   {
     return STATUS_INSUFFICIENT_RESOURCES;
-  }		
+  }
   RtlZeroMemory (Buffer, (nbSlots - 1) * sizeof (FAT_DIR_ENTRY));
   pSlots = (slot *) Buffer;
 
@@ -286,12 +286,12 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
       /* check if the name and the extension contains upper case characters */
       RtlDowncaseUnicodeString(&DirContext.ShortNameU, &DirContext.LongNameU, FALSE);
       DirContext.ShortNameU.Buffer[DirContext.ShortNameU.Length / sizeof(WCHAR)] = 0;
-      uCaseBase = wcsncmp(DirContext.LongNameU.Buffer, 
+      uCaseBase = wcsncmp(DirContext.LongNameU.Buffer,
 	                  DirContext.ShortNameU.Buffer, posCar) ? TRUE : FALSE;
       if (posCar < DirContext.LongNameU.Length/sizeof(WCHAR))
         {
 	  i = DirContext.LongNameU.Length / sizeof(WCHAR) - posCar;
-	  uCaseExt = wcsncmp(DirContext.LongNameU.Buffer + posCar, 
+	  uCaseExt = wcsncmp(DirContext.LongNameU.Buffer + posCar,
 	                     DirContext.ShortNameU.Buffer + posCar, i) ? TRUE : FALSE;
         }
       else
@@ -301,12 +301,12 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
       /* check if the name and the extension contains lower case characters */
       RtlUpcaseUnicodeString(&DirContext.ShortNameU, &DirContext.LongNameU, FALSE);
       DirContext.ShortNameU.Buffer[DirContext.ShortNameU.Length / sizeof(WCHAR)] = 0;
-      lCaseBase = wcsncmp(DirContext.LongNameU.Buffer, 
+      lCaseBase = wcsncmp(DirContext.LongNameU.Buffer,
 	                  DirContext.ShortNameU.Buffer, posCar) ? TRUE : FALSE;
       if (posCar < DirContext.LongNameU.Length / sizeof(WCHAR))
         {
 	  i = DirContext.LongNameU.Length / sizeof(WCHAR) - posCar;
-	  lCaseExt = wcsncmp(DirContext.LongNameU.Buffer + posCar, 
+	  lCaseExt = wcsncmp(DirContext.LongNameU.Buffer + posCar,
 	                     DirContext.ShortNameU.Buffer + posCar, i) ? TRUE : FALSE;
         }
       else
@@ -318,7 +318,7 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
           needLong = TRUE;
         }
     }
-  DPRINT ("'%s', '%wZ', needTilde=%d, needLong=%d\n", 
+  DPRINT ("'%s', '%wZ', needTilde=%d, needLong=%d\n",
           aName, &DirContext.LongNameU, needTilde, needLong);
   memset(DirContext.DirEntry.Fat.Filename, ' ', 11);
   for (i = 0; i < 8 && aName[i] && aName[i] != '.'; i++)
@@ -344,7 +344,7 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
       DirContext.LongNameU.Buffer = LongNameBuffer;
       DirContext.LongNameU.MaximumLength = sizeof(LongNameBuffer);
       DirContext.LongNameU.Buffer[DirContext.LongNameU.Length / sizeof(WCHAR)] = 0;
-      memset(DirContext.LongNameU.Buffer + DirContext.LongNameU.Length / sizeof(WCHAR) + 1, 0xff, 
+      memset(DirContext.LongNameU.Buffer + DirContext.LongNameU.Length / sizeof(WCHAR) + 1, 0xff,
 	     DirContext.LongNameU.MaximumLength - DirContext.LongNameU.Length - sizeof(WCHAR));
     }
   else
@@ -374,8 +374,8 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
   {
     TIME_FIELDS tf;
     RtlTimeToTimeFields (&SystemTime, &tf);
-    DPRINT1("%d.%d.%d %02d:%02d:%02d.%03d '%wZ'\n", 
-	    tf.Day, tf.Month, tf.Year, tf.Hour, 
+    DPRINT1("%d.%d.%d %02d:%02d:%02d.%03d '%wZ'\n",
+	    tf.Day, tf.Month, tf.Year, tf.Hour,
 	    tf.Minute, tf.Second, tf.Milliseconds,
 	    NameU);
   }
@@ -530,18 +530,18 @@ FATXAddEntry (PDEVICE_EXTENSION DeviceExt,
    OEM_STRING NameA;
    VFAT_DIRENTRY_CONTEXT DirContext;
    PFATX_DIR_ENTRY pFatXDirEntry;
-   
+
    DPRINT ("addEntry: Name='%wZ', Dir='%wZ'\n", NameU, &ParentFcb->PathNameU);
-   
+
    DirContext.LongNameU = *NameU;
-   
+
    if (DirContext.LongNameU.Length / sizeof(WCHAR) > 42)
    {
       /* name too long */
       CHECKPOINT;
       return STATUS_NAME_TOO_LONG;
    }
-   
+
    /* try to find 1 entry free in directory */
    if (!vfatFindDirSpace(DeviceExt, ParentFcb, 1, &DirContext.StartIndex))
    {
@@ -553,7 +553,7 @@ FATXAddEntry (PDEVICE_EXTENSION DeviceExt,
       DirContext.DirIndex += 2;
       DirContext.StartIndex += 2;
    }
-  
+
    DirContext.ShortNameU.Buffer = 0;
    DirContext.ShortNameU.Length = 0;
    DirContext.ShortNameU.MaximumLength = 0;
@@ -561,21 +561,21 @@ FATXAddEntry (PDEVICE_EXTENSION DeviceExt,
    memset(DirContext.DirEntry.FatX.Filename, 0xff, 42);
    DirContext.DirEntry.FatX.FirstCluster = 0;
    DirContext.DirEntry.FatX.FileSize = 0;
-   
+
    /* set file name */
    NameA.Buffer = (PCHAR)DirContext.DirEntry.FatX.Filename;
    NameA.Length = 0;
    NameA.MaximumLength = 42;
    RtlUnicodeStringToOemString(&NameA, &DirContext.LongNameU, FALSE);
    DirContext.DirEntry.FatX.FilenameLength = (unsigned char)NameA.Length;
-   
+
    /* set attributes */
    DirContext.DirEntry.FatX.Attrib = ReqAttr;
    if (RequestedOptions & FILE_DIRECTORY_FILE)
    {
       DirContext.DirEntry.FatX.Attrib |= FILE_ATTRIBUTE_DIRECTORY;
    }
-   
+
    /* set dates and times */
    KeQuerySystemTime (&SystemTime);
    FsdSystemTimeToDosDateTime(DeviceExt, &SystemTime, &DirContext.DirEntry.FatX.CreationDate,
@@ -584,7 +584,7 @@ FATXAddEntry (PDEVICE_EXTENSION DeviceExt,
    DirContext.DirEntry.FatX.UpdateTime = DirContext.DirEntry.FatX.CreationTime;
    DirContext.DirEntry.FatX.AccessDate = DirContext.DirEntry.FatX.CreationDate;
    DirContext.DirEntry.FatX.AccessTime = DirContext.DirEntry.FatX.CreationTime;
-   
+
    /* add entry into parent directory */
    FileOffset.u.HighPart = 0;
    FileOffset.u.LowPart = DirContext.StartIndex * sizeof(FATX_DIR_ENTRY);
@@ -593,10 +593,10 @@ FATXAddEntry (PDEVICE_EXTENSION DeviceExt,
    RtlCopyMemory(pFatXDirEntry, &DirContext.DirEntry.FatX, sizeof(FATX_DIR_ENTRY));
    CcSetDirtyPinnedData(Context, NULL);
    CcUnpinData(Context);
-   
+
    /* FIXME: check status */
    vfatMakeFCBFromDirEntry(DeviceExt, ParentFcb, &DirContext, Fcb);
-   
+
    DPRINT("addentry ok\n");
    return STATUS_SUCCESS;
 }
@@ -679,12 +679,12 @@ FATXDelEntry (PDEVICE_EXTENSION DeviceExt, PVFATFCB pFcb)
   PVOID Context = NULL;
   LARGE_INTEGER Offset;
   PFATX_DIR_ENTRY pDirEntry;
-  ULONG StartIndex; 
+  ULONG StartIndex;
 
   ASSERT(pFcb);
   ASSERT(pFcb->parentFcb);
   ASSERT(pFcb->Flags & FCB_IS_FATX_ENTRY);
-  
+
   StartIndex = pFcb->startIndex;
 
   DPRINT ("delEntry PathName \'%wZ\'\n", &pFcb->PathNameU);
@@ -703,7 +703,7 @@ FATXDelEntry (PDEVICE_EXTENSION DeviceExt, PVFATFCB pFcb)
             (PDIR_ENTRY)pDirEntry);
   CcSetDirtyPinnedData(Context, NULL);
   CcUnpinData(Context);
-  
+
   while (CurrentCluster && CurrentCluster != 0xffffffff)
     {
       GetNextCluster (DeviceExt, CurrentCluster, &NextCluster);

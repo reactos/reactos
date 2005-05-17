@@ -121,17 +121,6 @@ typedef struct _RTL_QUERY_REGISTRY_TABLE
   ULONG DefaultLength;
 } RTL_QUERY_REGISTRY_TABLE, *PRTL_QUERY_REGISTRY_TABLE;
 
-typedef struct _COMPRESSED_DATA_INFO
-{
-  USHORT CompressionFormatAndEngine;
-  UCHAR CompressionUnitShift;
-  UCHAR ChunkShift;
-  UCHAR ClusterShift;
-  UCHAR Reserved;
-  USHORT NumberOfChunks;
-  ULONG CompressedChunkSizes[1];
-} COMPRESSED_DATA_INFO, *PCOMPRESSED_DATA_INFO;
-
 typedef struct _GENERATE_NAME_CONTEXT
 {
   USHORT Checksum;
@@ -297,7 +286,7 @@ typedef struct _RTL_MESSAGE_RESOURCE_ENTRY
 {
   USHORT Length;
   USHORT Flags;
-  UCHAR Text[1];
+  CHAR Text[1];
 } RTL_MESSAGE_RESOURCE_ENTRY, *PRTL_MESSAGE_RESOURCE_ENTRY;
 
 typedef struct _RTL_MESSAGE_RESOURCE_BLOCK

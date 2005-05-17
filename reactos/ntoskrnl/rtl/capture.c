@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/capture.c
  * PURPOSE:         Helper routines for system calls.
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
@@ -25,15 +25,17 @@ RtlCaptureUnicodeString(OUT PUNICODE_STRING Dest,
 {
   UNICODE_STRING Src;
   NTSTATUS Status = STATUS_SUCCESS;
-  
+
   ASSERT(Dest != NULL);
-  
+
   /*
    * Copy the source string structure to kernel space.
    */
-  
+
   if(CurrentMode == UserMode)
   {
+    RtlZeroMemory(&Src, sizeof(Src));
+
     _SEH_TRY
     {
       ProbeForRead(UnsafeSrc,
@@ -52,7 +54,7 @@ RtlCaptureUnicodeString(OUT PUNICODE_STRING Dest,
       Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
-    
+
     if(!NT_SUCCESS(Status))
     {
       return Status;
@@ -69,7 +71,7 @@ RtlCaptureUnicodeString(OUT PUNICODE_STRING Dest,
     /* capture the string even though it is considered to be valid */
     Src = *UnsafeSrc;
   }
-  
+
   /*
    * Initialize the destination string.
    */
@@ -97,7 +99,7 @@ RtlCaptureUnicodeString(OUT PUNICODE_STRING Dest,
       Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
-    
+
     if(!NT_SUCCESS(Status))
     {
       ExFreePool(Dest->Buffer);
@@ -110,7 +112,7 @@ RtlCaptureUnicodeString(OUT PUNICODE_STRING Dest,
     Dest->MaximumLength = 0;
     Dest->Buffer = NULL;
   }
-  
+
   return Status;
 }
 
@@ -121,7 +123,7 @@ RtlReleaseCapturedUnicodeString(IN PUNICODE_STRING CapturedString,
 {
   if(CurrentMode != KernelMode || CaptureIfKernel )
   {
-    RtlFreeUnicodeString(CapturedString);
+    ExFreePool(CapturedString->Buffer);
   }
 }
 

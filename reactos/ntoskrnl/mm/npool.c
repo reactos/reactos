@@ -1235,7 +1235,7 @@ grow_block(BLOCK_HDR* blk, PVOID end)
    PFN_TYPE Page[32];
    ULONG_PTR StartIndex, EndIndex;
    ULONG i, j, k;
-   
+
    StartIndex = (ULONG_PTR)(PAGE_ROUND_UP((ULONG_PTR)blk + BLOCK_HDR_SIZE - (ULONG_PTR)MiNonPagedPoolStart)) / PAGE_SIZE;
    EndIndex = ((ULONG_PTR)PAGE_ROUND_UP(end) - (ULONG_PTR)MiNonPagedPoolStart) / PAGE_SIZE;
 
@@ -1461,6 +1461,28 @@ static BLOCK_HDR* get_block(unsigned int size, unsigned long alignment)
 }
 
 #endif /* not WHOLE_PAGE_ALLOCATIONS */
+
+ULONG STDCALL
+ExRosQueryNonPagedPoolTag ( PVOID Addr )
+{
+#ifdef WHOLE_PAGE_ALLOCATIONS /* WHOLE_PAGE_ALLOCATIONS */
+
+   UNIMPLEMENTED;
+   return 0;
+
+#else /* not WHOLE_PAGE_ALLOCATIONS */
+
+   BLOCK_HDR* blk=address_to_block(Addr);
+
+   if (blk->Magic != BLOCK_HDR_USED_MAGIC)
+      KEBUGCHECK(0);
+   if (blk->Magic == BLOCK_HDR_FREE_MAGIC)
+      KEBUGCHECK(0);
+
+   return blk->Used.Tag;
+
+#endif /* WHOLE_PAGE_ALLOCATIONS */
+}
 
 VOID STDCALL ExFreeNonPagedPool (PVOID block)
 /*
@@ -1787,7 +1809,7 @@ MiInitializeNonPagedPool(VOID)
       }
       Address += PAGE_SIZE;
    }
-   RtlInitializeBitMap(&NonPagedPoolAllocMap, MiNonPagedPoolStart, 
+   RtlInitializeBitMap(&NonPagedPoolAllocMap, MiNonPagedPoolStart,
 		       MiNonPagedPoolLength / PAGE_SIZE);
    RtlClearAllBits(&NonPagedPoolAllocMap);
    RtlSetBits(&NonPagedPoolAllocMap, 0, NonPagedPoolAllocMapHint);

@@ -164,7 +164,7 @@ BOOL InitPointer(PPDEV ppdev)
   ULONG CursorWidth = 32, CursorHeight = 32;
   ULONG PointerAttributesSize;
   ULONG SavedMemSize;
-  
+
   ppdev->xyHotSpot.x = 0;
   ppdev->xyHotSpot.y = 0;
 
@@ -226,7 +226,7 @@ DrvSetPointerShape(SURFOBJ* pso,
   ULONG NewWidth, NewHeight;
   PUCHAR Src, Dest;
   ULONG i;
-  
+
   if (! psoMask)
     {
       return SPS_DECLINE;
@@ -320,12 +320,12 @@ VGADDI_HideCursor(PPDEV ppdev)
   {
     LONG cx, cy;
     RECTL Rect;
-    
+
     ppdev->pPointerAttributes->Enable = 0;
-    
+
     cx = ppdev->pPointerAttributes->Column - ppdev->xyHotSpot.x;
     cy = ppdev->pPointerAttributes->Row - ppdev->xyHotSpot.y;
-    
+
     VGADDI_ComputePointerRect(ppdev, cx, cy, &Rect);
 
     /* Display what was behind cursor */
@@ -344,7 +344,7 @@ VGADDI_ShowCursor(PPDEV ppdev, PRECTL prcl)
   PUCHAR AndMask, XorMask;
   ULONG SizeX, SizeY;
   RECTL Rect;
-  
+
   if(ppdev->pPointerAttributes->Enable)
   {
     return;

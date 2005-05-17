@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/tss.c
  * PURPOSE:         TSS managment
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
@@ -121,7 +121,7 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
   Tss->Esp0 = (ULONG)Ki386InitialStackArray[Id] + MM_STACK_SIZE; /* FIXME: - sizeof(FX_SAVE_AREA)? */
   Tss->Ss0 = KERNEL_DS;
   Tss->IoMapBase = 0xFFFF; /* No i/o bitmap */
-  Tss->IoBitmap[8192] = 0xFF;   
+  Tss->IoBitmap[8192] = 0xFF;
   Tss->Ldt = 0;
 
   /*
@@ -129,7 +129,7 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
    */
   base = (ULONG)Tss;
   length = sizeof(KTSS) - 1;
-  
+
   Gdt[(TSS_SELECTOR / 2) + 0] = (USHORT)(length & 0xFFFF);
   Gdt[(TSS_SELECTOR / 2) + 1] = (USHORT)(base & 0xFFFF);
   Gdt[(TSS_SELECTOR / 2) + 2] = (USHORT)(((base & 0xFF0000) >> 16) | 0x8900);
@@ -148,9 +148,9 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
   TrapTss->Es = KERNEL_DS;
   TrapTss->Fs = PCR_SELECTOR;
   TrapTss->IoMapBase = 0xFFFF; /* No i/o bitmap */
-  TrapTss->IoBitmap[0] = 0xFF;   
+  TrapTss->IoBitmap[0] = 0xFF;
   TrapTss->Ldt = 0;
-  TrapTss->Cr3 = cr3_;  
+  TrapTss->Cr3 = cr3_;
 
   /*
    * Initialize a descriptor for the trap TSS.
@@ -168,7 +168,7 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
    * Load the task register
    */
 #if defined(__GNUC__)
-  __asm__("ltr %%ax" 
+  __asm__("ltr %%ax"
 	  : /* no output */
 	  : "a" (TSS_SELECTOR));
 #elif defined(_MSC_VER)
@@ -198,7 +198,7 @@ Ki386BootInitializeTSS(VOID)
   KiBootTss.Ss0 = KERNEL_DS;
   //   KiBootTss.IoMapBase = FIELD_OFFSET(KTSS, IoBitmap);
   KiBootTss.IoMapBase = 0xFFFF; /* No i/o bitmap */
-  KiBootTss.IoBitmap[8192] = 0xFF;   
+  KiBootTss.IoBitmap[8192] = 0xFF;
   KiBootTss.Ldt = LDT_SELECTOR;
 
   /*
@@ -206,7 +206,7 @@ Ki386BootInitializeTSS(VOID)
    */
   base = (unsigned int)&KiBootTss;
   length = sizeof(KiBootTss) - 1;
-  
+
   KiBootGdt[(TSS_SELECTOR / 2) + 0] = (length & 0xFFFF);
   KiBootGdt[(TSS_SELECTOR / 2) + 1] = (base & 0xFFFF);
   KiBootGdt[(TSS_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8900;
@@ -225,10 +225,10 @@ Ki386BootInitializeTSS(VOID)
   KiBootTrapTss.Es = KERNEL_DS;
   KiBootTrapTss.Fs = PCR_SELECTOR;
   KiBootTrapTss.IoMapBase = 0xFFFF; /* No i/o bitmap */
-  KiBootTrapTss.IoBitmap[0] = 0xFF;   
+  KiBootTrapTss.IoBitmap[0] = 0xFF;
   KiBootTrapTss.Ldt = 0x0;
   KiBootTrapTss.Cr3 = cr3_;
-  
+
   /*
    * Initialize a descriptor for the trap TSS.
    */
@@ -245,7 +245,7 @@ Ki386BootInitializeTSS(VOID)
    * Load the task register
    */
 #if defined(__GNUC__)
-  __asm__("ltr %%ax" 
+  __asm__("ltr %%ax"
 	  : /* no output */
 	  : "a" (TSS_SELECTOR));
 #elif defined(_MSC_VER)

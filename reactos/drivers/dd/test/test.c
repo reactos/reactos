@@ -4,7 +4,7 @@
  * FILE:             services/test/test.c
  * PURPOSE:          Testing driver
  * PROGRAMMER:       David Welch (welch@mcmail.com)
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  *              ??/??/??: Created
  *              18/06/98: Made more NT like
  */
@@ -20,7 +20,7 @@
 NTSTATUS STDCALL TestWrite(PIRP Irp, PIO_STACK_LOCATION Stk)
 {
    PVOID Address;
-   
+
    Address = MmGetSystemAddressForMdl(Irp->MdlAddress);
    DbgPrint("Asked to write '%s'\n",(PCH)Address);
    return(STATUS_SUCCESS);
@@ -38,31 +38,31 @@ NTSTATUS STDCALL TestDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
    NTSTATUS status;
    int i;
-   
+
    switch (Stack->MajorFunction)
      {
       case IRP_MJ_CREATE:
         DbgPrint("(Test Driver) Creating\n");
 	status = STATUS_SUCCESS;
 	break;
-	
+
       case IRP_MJ_CLOSE:
 	status = STATUS_SUCCESS;
 	break;
-	
+
       case IRP_MJ_WRITE:
         DbgPrint("(Test Driver) Writing\n");
 	status = TestWrite(Irp,Stack);
 	break;
-	
+
       default:
         status = STATUS_NOT_IMPLEMENTED;
 	break;
      }
-   
+
    Irp->IoStatus.Status = status;
    Irp->IoStatus.Information = 0;
-   
+
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
    return(status);
 }
@@ -82,9 +82,9 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    NTSTATUS ret;
    ANSI_STRING astr;
    UNICODE_STRING ustr;
-   
+
    DbgPrint("Test Driver 0.0.1\n");
-   
+
    #if 0
    RtlInitAnsiString(&astr,"\\Device\\Test");
    RtlAnsiStringToUnicodeString(&ustr,&astr,TRUE);

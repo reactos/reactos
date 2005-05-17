@@ -731,7 +731,7 @@ UINT16 WINAPI midiOutGetDevCaps16(UINT16 uDeviceID, LPMIDIOUTCAPS16 lpCaps,
 
 /**************************************************************************
  * 				midiOutGetErrorText 	[MMSYSTEM.203]
- * 				midiInGetErrorText 	[MMSYSTEM.203]
+ * 				midiInGetErrorText 	[MMSYSTEM.303]
  */
 UINT16 WINAPI midiOutGetErrorText16(UINT16 uError, LPSTR lpText, UINT16 uSize)
 {
@@ -1231,7 +1231,7 @@ UINT16 WINAPI waveOutGetDevCaps16(UINT16 uDeviceID,
 
 /**************************************************************************
  * 				waveOutGetErrorText 	[MMSYSTEM.403]
- * 				waveInGetErrorText 	[MMSYSTEM.403]
+ * 				waveInGetErrorText 	[MMSYSTEM.503]
  */
 UINT16 WINAPI waveOutGetErrorText16(UINT16 uError, LPSTR lpText, UINT16 uSize)
 {
@@ -2260,7 +2260,7 @@ static WINMM_MapType DRIVER_MapMsg32To16(WORD wMsg, DWORD* lParam1, DWORD* lPara
             LPDRVCONFIGINFO	dci32 = (LPDRVCONFIGINFO)(*lParam2);
 
 	    if (dci16) {
-		LPSTR str1;
+		LPSTR str1 = NULL,str2;
                 INT len;
 		dci16->dwDCISize = sizeof(DRVCONFIGINFO16);
 
@@ -2271,6 +2271,7 @@ static WINMM_MapType DRIVER_MapMsg32To16(WORD wMsg, DWORD* lParam1, DWORD* lPara
                         WideCharToMultiByte( CP_ACP, 0, dci32->lpszDCISectionName, -1, str1, len, NULL, NULL );
                         dci16->lpszDCISectionName = MapLS( str1 );
                     } else {
+                        HeapFree( GetProcessHeap(), 0, dci16);
                         return WINMM_MAP_NOMEM;
                     }
 		} else {
@@ -2278,11 +2279,13 @@ static WINMM_MapType DRIVER_MapMsg32To16(WORD wMsg, DWORD* lParam1, DWORD* lPara
 		}
                 if (dci32->lpszDCIAliasName) {
                     len = WideCharToMultiByte( CP_ACP, 0, dci32->lpszDCIAliasName, -1, NULL, 0, NULL, NULL );
-                    str1 = HeapAlloc( GetProcessHeap(), 0, len );
-                    if (str1) {
-                        WideCharToMultiByte( CP_ACP, 0, dci32->lpszDCIAliasName, -1, str1, len, NULL, NULL );
-                        dci16->lpszDCIAliasName = MapLS( str1 );
+                    str2 = HeapAlloc( GetProcessHeap(), 0, len );
+                    if (str2) {
+                        WideCharToMultiByte( CP_ACP, 0, dci32->lpszDCIAliasName, -1, str2, len, NULL, NULL );
+                        dci16->lpszDCIAliasName = MapLS( str2 );
                     } else {
+                        HeapFree( GetProcessHeap(), 0, str1);
+                        HeapFree( GetProcessHeap(), 0, dci16);
                         return WINMM_MAP_NOMEM;
                     }
 		} else {

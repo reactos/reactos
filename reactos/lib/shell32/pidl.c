@@ -1226,7 +1226,7 @@ HRESULT SHELL_GetPathFromIDListA(LPCITEMIDLIST pidl, LPSTR pszPath, UINT uOutSiz
         if (SUCCEEDED(hr))
             PathAddBackslashA(pszPath);
     }
-    /* The only other valid case is a item ID list beginning at "My Computer" */
+    /* The only other valid case is an item ID list beginning at "My Computer" */
     else if (_ILIsMyComputer(pidl))
         pidl = ILGetNext(pidl);
 
@@ -1338,7 +1338,7 @@ HRESULT SHELL_GetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath, UINT uOutSi
         if (SUCCEEDED(hr))
             PathAddBackslashW(pszPath);
     }
-    /* The only other valid case is a item ID list beginning at "My Computer" */
+    /* The only other valid case is an item ID list beginning at "My Computer" */
     else if (_ILIsMyComputer(pidl))
         pidl = ILGetNext(pidl);
 
@@ -1825,7 +1825,7 @@ BOOL _ILIsSpecialFolder (LPCITEMIDLIST pidl)
 
     TRACE("(%p)\n",pidl);
 
-    return (pidl && ( (lpPData && (PT_GUID== lpPData->type || PT_SHELLEXT== lpPData->type)) ||
+    return (pidl && ( (lpPData && (PT_GUID== lpPData->type || PT_SHELLEXT== lpPData->type || PT_YAGUID == lpPData->type)) ||
               (pidl && pidl->mkid.cb == 0x00)
             ));
 }
@@ -2081,6 +2081,7 @@ IID* _ILGetGUIDPointer(LPCITEMIDLIST pidl)
     {
     case PT_SHELLEXT:
     case PT_GUID:
+    case PT_YAGUID:
         return &(pdata->u.guid.guid);
 
     default:

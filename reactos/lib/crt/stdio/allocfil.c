@@ -25,7 +25,7 @@ FILE *__alloc_file(void)
   __file_rec **last_fr = &__file_rec_list;
   FILE *rv=0;
   int i;
-   
+
   /* Try to find an empty slot */
   while (fr)
   {
@@ -73,7 +73,7 @@ int _fcloseall( void )
 {
    __file_rec *fr = __file_rec_list;
    __file_rec **last_fr = &__file_rec_list;
-  
+
    int total_closed = 0;
    int i = 0;
 
@@ -81,14 +81,14 @@ int _fcloseall( void )
    while (fr)
      {
 	last_fr = &(fr->next);
-	
+
 	/* If one of the existing slots is available, return it */
 	for (i=0; i<fr->count; i++)
 	  if (fr->files[i]->_flag != 0) {
 	     fclose(fr->files[i]);
 	     total_closed++;
 	  }
-	
+
 	/* If this one is full, go to the next */
 	if (fr->count == __FILE_REC_MAX)
 	  fr = fr->next;

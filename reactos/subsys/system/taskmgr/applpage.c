@@ -22,15 +22,6 @@
  */
 
 #include "precomp.h"
-#include <commctrl.h>
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
-#include <stdio.h>
-
-#include "applpage.h"
-#include "procpage.h"
 
 typedef struct
 {
@@ -74,7 +65,7 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     LV_COLUMN   column;
     TCHAR       szTemp[256];
     int         cx, cy;
-    
+
     switch (message) {
     case WM_INITDIALOG:
 
@@ -158,21 +149,21 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         cy = (rc.bottom - rc.top) + nYDifference;
         SetWindowPos(hApplicationPageListCtrl, NULL, 0, 0, cx, cy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOZORDER);
         InvalidateRect(hApplicationPageListCtrl, NULL, TRUE);
-        
+
         GetClientRect(hApplicationPageEndTaskButton, &rc);
         MapWindowPoints(hApplicationPageEndTaskButton, hDlg, (LPPOINT)(PRECT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
         cx = rc.left + nXDifference;
         cy = rc.top + nYDifference;
         SetWindowPos(hApplicationPageEndTaskButton, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
         InvalidateRect(hApplicationPageEndTaskButton, NULL, TRUE);
-        
+
         GetClientRect(hApplicationPageSwitchToButton, &rc);
         MapWindowPoints(hApplicationPageSwitchToButton, hDlg, (LPPOINT)(PRECT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
         cx = rc.left + nXDifference;
         cy = rc.top + nYDifference;
         SetWindowPos(hApplicationPageSwitchToButton, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
         InvalidateRect(hApplicationPageSwitchToButton, NULL, TRUE);
-        
+
         GetClientRect(hApplicationPageNewTaskButton, &rc);
         MapWindowPoints(hApplicationPageNewTaskButton, hDlg, (LPPOINT)(PRECT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
         cx = rc.left + nXDifference;
@@ -185,7 +176,7 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_NOTIFY:
         ApplicationPageOnNotify(wParam, lParam);
         break;
-        
+
     }
 
   return 0;
@@ -222,7 +213,7 @@ void UpdateApplicationListControlViewSetting(void)
 DWORD WINAPI ApplicationPageRefreshThread(void *lpParameter)
 {
     /* Create the event */
-    hApplicationPageEvent = CreateEvent(NULL, TRUE, TRUE, _T("Application Page Event"));
+    hApplicationPageEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
 
     /* If we couldn't create the event then exit the thread */
     if (!hApplicationPageEvent)
@@ -370,7 +361,7 @@ void AddOrUpdateHwnd(HWND hWnd, TCHAR *szTitle, HICON hIcon, BOOL bHung)
     /* It is not already in the list so add it */
     else
     {
-        pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)malloc(sizeof(APPLICATION_PAGE_LIST_ITEM));
+        pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)HeapAlloc(GetProcessHeap(), 0, sizeof(APPLICATION_PAGE_LIST_ITEM));
 
         pAPLI->hWnd = hWnd;
         pAPLI->hIcon = hIcon;
@@ -409,7 +400,7 @@ void AddOrUpdateHwnd(HWND hWnd, TCHAR *szTitle, HICON hIcon, BOOL bHung)
             ImageList_Remove(hImageListSmall, item.iItem);
 
             ListView_DeleteItem(hApplicationPageListCtrl, item.iItem);
-            free(pAPLI);
+            HeapFree(GetProcessHeap(), 0, pAPLI);
             bItemRemoved = TRUE;
         }
     }
@@ -498,6 +489,7 @@ void ApplicationPageOnNotify(WPARAM wParam, LPARAM lParam)
     LPNM_LISTVIEW   pnmv;
     LV_DISPINFO*    pnmdi;
     LPAPPLICATION_PAGE_LIST_ITEM pAPLI;
+    TCHAR szMsg[256];
 
 
     idctrl = (int) wParam;
@@ -510,7 +502,7 @@ void ApplicationPageOnNotify(WPARAM wParam, LPARAM lParam)
         case LVN_ITEMCHANGED:
             ApplicationPageUpdate();
             break;
-            
+
         case LVN_GETDISPINFO:
             pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)pnmdi->item.lParam;
 
@@ -524,9 +516,15 @@ void ApplicationPageOnNotify(WPARAM wParam, LPARAM lParam)
             else if (pnmdi->item.iSubItem == 1)
             {
                 if (pAPLI->bHung)
-                    _tcsncpy(pnmdi->item.pszText, _T("Not Responding"), pnmdi->item.cchTextMax);
+                {
+                    LoadString( GetModuleHandle(NULL), IDS_Not_Responding , szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
+                    _tcsncpy(pnmdi->item.pszText, szMsg, pnmdi->item.cchTextMax);
+                }
                 else
-                    _tcsncpy(pnmdi->item.pszText, _T("Running"), pnmdi->item.cchTextMax);
+                {
+                    LoadString( GetModuleHandle(NULL), IDS_Running, (LPTSTR) szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
+                    _tcsncpy(pnmdi->item.pszText, szMsg, pnmdi->item.cchTextMax);
+                }
             }
 
             break;
@@ -704,7 +702,7 @@ void ApplicationPage_OnWindowsTileHorizontally(void)
     HWND*                           hWndArray;
     int                             nWndCount;
 
-    hWndArray = (HWND*)malloc(sizeof(HWND) * ListView_GetItemCount(hApplicationPageListCtrl));
+    hWndArray = (HWND*)HeapAlloc(GetProcessHeap(), 0, sizeof(HWND) * ListView_GetItemCount(hApplicationPageListCtrl));
     nWndCount = 0;
 
     for (i=0; i<ListView_GetItemCount(hApplicationPageListCtrl); i++) {
@@ -724,7 +722,7 @@ void ApplicationPage_OnWindowsTileHorizontally(void)
         }
     }
     TileWindows(NULL, MDITILE_HORIZONTAL, NULL, nWndCount, hWndArray);
-    free(hWndArray);
+    HeapFree(GetProcessHeap(), 0, hWndArray);
 }
 
 void ApplicationPage_OnWindowsTileVertically(void)
@@ -735,7 +733,7 @@ void ApplicationPage_OnWindowsTileVertically(void)
     HWND*                           hWndArray;
     int                             nWndCount;
 
-    hWndArray = (HWND*)malloc(sizeof(HWND) * ListView_GetItemCount(hApplicationPageListCtrl));
+    hWndArray = (HWND*)HeapAlloc(GetProcessHeap(), 0, sizeof(HWND) * ListView_GetItemCount(hApplicationPageListCtrl));
     nWndCount = 0;
 
     for (i=0; i<ListView_GetItemCount(hApplicationPageListCtrl); i++) {
@@ -755,7 +753,7 @@ void ApplicationPage_OnWindowsTileVertically(void)
     }
 
     TileWindows(NULL, MDITILE_VERTICAL, NULL, nWndCount, hWndArray);
-    free(hWndArray);
+    HeapFree(GetProcessHeap(), 0, hWndArray);
 }
 
 void ApplicationPage_OnWindowsMinimize(void)
@@ -808,7 +806,7 @@ void ApplicationPage_OnWindowsCascade(void)
     HWND*                           hWndArray;
     int                             nWndCount;
 
-    hWndArray = (HWND*)malloc(sizeof(HWND) * ListView_GetItemCount(hApplicationPageListCtrl));
+    hWndArray = (HWND*)HeapAlloc(GetProcessHeap(), 0, sizeof(HWND) * ListView_GetItemCount(hApplicationPageListCtrl));
     nWndCount = 0;
 
     for (i=0; i<ListView_GetItemCount(hApplicationPageListCtrl); i++) {
@@ -826,7 +824,7 @@ void ApplicationPage_OnWindowsCascade(void)
         }
     }
     CascadeWindows(NULL, 0, NULL, nWndCount, hWndArray);
-    free(hWndArray);
+    HeapFree(GetProcessHeap(), 0, hWndArray);
 }
 
 void ApplicationPage_OnWindowsBringToFront(void)

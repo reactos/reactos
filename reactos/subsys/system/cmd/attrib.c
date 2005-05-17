@@ -27,9 +27,13 @@
  *
  *    23-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Added handling of multiple filenames.
+ *
+ *    02-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_ATTRIB
 
@@ -108,13 +112,14 @@ PrintAttribute (LPTSTR pszPath, LPTSTR pszFile, BOOL bRecurse)
 
 static VOID
 ChangeAttribute (LPTSTR pszPath, LPTSTR pszFile, DWORD dwMask,
-				 DWORD dwAttrib, BOOL bRecurse, BOOL bDirectories)
+		 DWORD dwAttrib, BOOL bRecurse, BOOL bDirectories)
 {
 	WIN32_FIND_DATA findData;
 	HANDLE hFind;
 	DWORD  dwAttribute;
 	TCHAR  szFullName[MAX_PATH];
 	LPTSTR pszFileName;
+
 
 	/* prepare full file name buffer */
 	_tcscpy (szFullName, pszPath);
@@ -138,7 +143,7 @@ ChangeAttribute (LPTSTR pszPath, LPTSTR pszFile, DWORD dwMask,
 			if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 			{
 				if (!_tcscmp (findData.cFileName, _T(".")) ||
-					!_tcscmp (findData.cFileName, _T("..")))
+				    !_tcscmp (findData.cFileName, _T("..")))
 					continue;
 
 				_tcscpy (pszFileName, findData.cFileName);
@@ -200,19 +205,7 @@ INT CommandAttrib (LPTSTR cmd, LPTSTR param)
 	/* print help */
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Displays or changes file attributes.\n\n"
-					   "ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n"
-					   "       [/S [/D]]\n\n"
-					   "  +   Sets an attribute\n"
-					   "  -   Clears an attribute\n"
-					   "  R   Read-only file attribute\n"
-					   "  A   Archive file attribute\n"
-					   "  S   System file attribute\n"
-					   "  H   Hidden file attribute\n"
-					   "  /S  Processes matching files in the current directory\n"
-					   "      and all subdirectories\n"
-					   "  /D  Processes direcories as well\n\n"
-					   "Type ATTRIB without a parameter to display the attributes of all files."));
+		ConOutResPuts(STRING_ATTRIB_HELP);
 		return 0;
 	}
 
@@ -326,7 +319,7 @@ INT CommandAttrib (LPTSTR cmd, LPTSTR param)
 	/* get full file name */
 	for (i = 0; i < argc; i++)
 	{
-		if ((*arg[i] != _T('+')) && (*arg[i] != _T('-')) &&	(*arg[i] != _T('/')))
+		if ((*arg[i] != _T('+')) && (*arg[i] != _T('-')) && (*arg[i] != _T('/')))
 		{
 			LPTSTR p;
 			GetFullPathName (arg[i], MAX_PATH, szPath, NULL);
@@ -338,7 +331,7 @@ INT CommandAttrib (LPTSTR cmd, LPTSTR param)
 				PrintAttribute (szPath, szFileName, bRecurse);
 			else
 				ChangeAttribute (szPath, szFileName, dwMask,
-								 dwAttrib, bRecurse, bDirectories);
+						 dwAttrib, bRecurse, bDirectories);
 		}
 	}
 

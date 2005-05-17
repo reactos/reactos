@@ -150,18 +150,18 @@ NTSTATUS STDCALL CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handl
      }
    NewBlock = RtlAllocateHeap(CsrssApiHeap,
 			      HEAP_ZERO_MEMORY,
-			      (ProcessData->HandleTableSize + 64) * 
+			      (ProcessData->HandleTableSize + 64) *
 			      sizeof(HANDLE));
    if (NewBlock == NULL)
      {
 	return(STATUS_UNSUCCESSFUL);
      }
-   RtlCopyMemory(NewBlock, 
+   RtlCopyMemory(NewBlock,
 		 ProcessData->HandleTable,
 		 ProcessData->HandleTableSize * sizeof(HANDLE));
    RtlFreeHeap( CsrssApiHeap, 0, ProcessData->HandleTable );
    ProcessData->HandleTable = (Object_t **)NewBlock;
-   ProcessData->HandleTable[i] = Object;   
+   ProcessData->HandleTable[i] = Object;
    *Handle = (HANDLE)(((i + 1) << 2) | 0x3);
    InterlockedIncrement( &Object->ReferenceCount );
    ProcessData->HandleTableSize = ProcessData->HandleTableSize + 64;

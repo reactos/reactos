@@ -89,9 +89,6 @@ main:
         mov es,ax								; Make ES correct
 
 
-		cmp BYTE [BYTE bp+BootDrive],BYTE 0xff	; If they have specified a boot drive then use it
-		jne GetDriveParameters
-
         mov [BYTE bp+BootDrive],dl				; Save the boot drive
 
 

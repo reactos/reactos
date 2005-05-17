@@ -6,4 +6,4 @@ typedef struct
 	unsigned char dma16;
 	unsigned char* buffer;
 }SB16;
-	
+

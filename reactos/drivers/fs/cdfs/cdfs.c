@@ -93,7 +93,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     CdfsDirectoryControl;
   DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] =
     CdfsQueryInformation;
-  DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] = 
+  DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] =
     CdfsSetInformation;
   DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
     CdfsQueryVolumeInformation;

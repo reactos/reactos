@@ -32,7 +32,7 @@ VideoPortCreateSpinLock(
    IN PVOID HwDeviceExtension,
    OUT PSPIN_LOCK *SpinLock)
 {
-   DPRINT("VideoPortCreateSpinLock\n");   
+   DPRINT("VideoPortCreateSpinLock\n");
    *SpinLock = ExAllocatePool(NonPagedPool, sizeof(KSPIN_LOCK));
    if (*SpinLock == NULL)
       return ERROR_NOT_ENOUGH_MEMORY;

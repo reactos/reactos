@@ -23,7 +23,7 @@
 /*
  * @implemented
  */
-DWORD STDCALL 
+DWORD STDCALL
 TlsAlloc(VOID)
 {
    ULONG Index;
@@ -39,7 +39,7 @@ TlsAlloc(VOID)
        NtCurrentTeb()->TlsSlots[Index] = 0;
      }
    RtlReleasePebLock();
-   
+
    return(Index);
 }
 
@@ -47,7 +47,7 @@ TlsAlloc(VOID)
 /*
  * @implemented
  */
-BOOL STDCALL 
+BOOL STDCALL
 TlsFree(DWORD dwTlsIndex)
 {
    if (dwTlsIndex >= TLS_MINIMUM_AVAILABLE)
@@ -80,7 +80,7 @@ TlsFree(DWORD dwTlsIndex)
 /*
  * @implemented
  */
-LPVOID STDCALL 
+LPVOID STDCALL
 TlsGetValue(DWORD dwTlsIndex)
 {
    LPVOID Value;
@@ -103,7 +103,7 @@ TlsGetValue(DWORD dwTlsIndex)
 /*
  * @implemented
  */
-BOOL STDCALL 
+BOOL STDCALL
 TlsSetValue(DWORD dwTlsIndex, LPVOID lpTlsValue)
 {
    if (dwTlsIndex >= TLS_MINIMUM_AVAILABLE)

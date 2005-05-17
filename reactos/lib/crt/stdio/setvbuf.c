@@ -21,9 +21,9 @@ int setvbuf(FILE *f, char *buf, int type, size_t len)
   if ( f->_base != NULL )
   	fflush(f);
   /* Cannot use _IOLBF as flag value because _IOLBF is equal to _IOSTRG */
-  if (type == _IOLBF) 
+  if (type == _IOLBF)
       type = _IO_LBF;
-    
+
   switch (type)
   {
   case _IOFBF:

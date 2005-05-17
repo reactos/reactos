@@ -21,35 +21,39 @@
  *
  *    20-Jan-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Redirection ready!
+ *
+ *    02-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_CLS
 
 INT cmd_cls (LPTSTR cmd, LPTSTR param)
 {
-	DWORD dwWritten;
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	COORD coPos;
+	DWORD dwWritten;
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Clears the screen.\n\nCLS"));
+		ConOutResPuts(STRING_CLS_HELP);
 		return 0;
 	}
 
-	GetConsoleScreenBufferInfo (hConsole, &csbi);
+	GetConsoleScreenBufferInfo(hConsole, &csbi);
 
 	coPos.X = 0;
 	coPos.Y = 0;
-	FillConsoleOutputAttribute (hConsole, wColor,
-								(csbi.dwSize.X)*(csbi.dwSize.Y),
-								coPos, &dwWritten);
-	FillConsoleOutputCharacter (hConsole, _T(' '),
-								(csbi.dwSize.X)*(csbi.dwSize.Y),
-								coPos, &dwWritten);
-	SetConsoleCursorPosition (hConsole, coPos);
+	FillConsoleOutputAttribute(hConsole, wColor,
+	                           csbi.dwSize.X * csbi.dwSize.Y,
+	                           coPos, &dwWritten);
+	FillConsoleOutputCharacter(hConsole, _T(' '),
+	                           csbi.dwSize.X * csbi.dwSize.Y,
+	                           coPos, &dwWritten);
+	SetConsoleCursorPosition(hConsole, coPos);
 
 	bIgnoreEcho = TRUE;
 

@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/pnpmgr.c
  * PURPOSE:         Initializes the PnP manager
- * 
+ *
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
@@ -159,8 +159,8 @@ IoGetDeviceProperty(
 
         KeyNameBuffer = ExAllocatePool(PagedPool,
           (49 * sizeof(WCHAR)) + DeviceNode->InstancePath.Length);
-	
-	DPRINT("KeyNameBuffer: %x, value %S\n", 
+
+	DPRINT("KeyNameBuffer: %x, value %S\n",
 		KeyNameBuffer, RegistryPropertyName);
 
         if (KeyNameBuffer == NULL)
@@ -283,7 +283,7 @@ IoInvalidateDeviceState(
  * @param DeviceObject   Device to get the registry key for.
  * @param DevInstKeyType Type of the key to return.
  * @param DesiredAccess  Access mask (eg. KEY_READ | KEY_WRITE).
- * @param DevInstRegKey  Handle to the opened registry key on 
+ * @param DevInstRegKey  Handle to the opened registry key on
  *                       successful return.
  *
  * @return Status.
@@ -362,7 +362,7 @@ IoOpenDeviceRegistryKey(
 
    if (DevInstKeyType & PLUGPLAY_REGKEY_CURRENT_HWPROFILE)
       RtlAppendUnicodeToString(&KeyName, ProfileKeyName);
-  
+
    if (DevInstKeyType & PLUGPLAY_REGKEY_DRIVER)
    {
       RtlAppendUnicodeToString(&KeyName, ClassKeyName);
@@ -1384,11 +1384,11 @@ IopActionConfigureChildServices(
    {
       WCHAR RegKeyBuffer[MAX_PATH];
       UNICODE_STRING RegKey;
-      
+
       RegKey.Length = 0;
       RegKey.MaximumLength = sizeof(RegKeyBuffer);
       RegKey.Buffer = RegKeyBuffer;
-      
+
       /*
        * Retrieve configuration from Enum key
        */
@@ -1499,9 +1499,22 @@ IopActionInitChildServices(
       PDRIVER_OBJECT DriverObject;
 
       Status = IopLoadServiceModule(&DeviceNode->ServiceName, &ModuleObject);
-      if (NT_SUCCESS(Status))
+      if (NT_SUCCESS(Status) || Status == STATUS_IMAGE_ALREADY_LOADED)
       {
-         Status = IopInitializeDriverModule(DeviceNode, ModuleObject, FALSE, &DriverObject);
+         if (Status != STATUS_IMAGE_ALREADY_LOADED)
+            Status = IopInitializeDriverModule(DeviceNode, ModuleObject,
+               &DeviceNode->ServiceName, FALSE, &DriverObject);
+         else
+         {
+            /* get existing DriverObject pointer */
+            Status = IopCreateDriverObject(
+            	&DriverObject,
+            	&DeviceNode->ServiceName,
+            	OBJ_OPENIF,
+            	FALSE,
+            	ModuleObject->Base,
+            	ModuleObject->Length);
+         }
          if (NT_SUCCESS(Status))
          {
             /* Attach lower level filter drivers. */
@@ -1786,7 +1799,7 @@ PnpInit(VOID)
     * Create root device node
     */
 
-   Status = IopCreateDriverObject(&IopRootDriverObject, NULL, FALSE, NULL, 0);
+   Status = IopCreateDriverObject(&IopRootDriverObject, NULL, 0, FALSE, NULL, 0);
    if (!NT_SUCCESS(Status))
    {
       CPRINT("IoCreateDriverObject() failed\n");

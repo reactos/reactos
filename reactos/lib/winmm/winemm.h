@@ -28,6 +28,10 @@
 #include "winbase.h"
 #include "mmddk.h"
 
+#define WINE_DEFAULT_WINMM_DRIVER     "wineoss.drv"
+#define WINE_DEFAULT_WINMM_MAPPER     "msacm.drv"
+#define WINE_DEFAULT_WINMM_MIDI       "midimap.drv"
+
 typedef DWORD (WINAPI *MessageProc16)(UINT16 wDevID, UINT16 wMsg, DWORD dwUser, DWORD dwParam1, DWORD dwParam2);
 typedef DWORD (WINAPI *MessageProc32)(UINT wDevID, UINT wMsg, DWORD dwUser, DWORD dwParam1, DWORD dwParam2);
 

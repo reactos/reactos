@@ -6,10 +6,13 @@
  * 30 Aug 1999
  *     started - Paolo Pantaleo <paolopan@freemail.it>
  *
+ *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc
  *
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_SCREEN
 
@@ -21,13 +24,7 @@ INT CommandScreen (LPTSTR cmd, LPTSTR param)
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		ConOutPuts(_T(
-		              "move cursor and optionally print text\n"
-		              "\n"
-		              "SCREEN row col [text]\n"
-		              "\n"
-		              "  row         row to wich move the cursor\n"
-		              "  col         column to wich move the cursor"));
+		ConOutResPuts(STRING_SCREEN_HELP);
 		return 0;
 	}
 
@@ -44,7 +41,7 @@ INT CommandScreen (LPTSTR cmd, LPTSTR param)
 	y = _ttoi(param);
 	if (y<0 || y>(maxy-1))
 	{
-		ConOutPrintf(_T("invalid value for	row"));
+		ConOutResPuts(STRING_SCREEN_ROW);
 		return 1;
 	}
 
@@ -67,7 +64,7 @@ INT CommandScreen (LPTSTR cmd, LPTSTR param)
 	x = _ttoi(param);
 	if (x<0 || x>(maxx-1))
 	{
-		ConErrPuts(_T("invalid value for col"));
+		ConErrResPuts(STRING_SCREEN_COL);
 		return 1;
 	}
 

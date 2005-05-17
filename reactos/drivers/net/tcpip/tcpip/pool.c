@@ -51,7 +51,7 @@ PVOID TcpipAllocateFromNPagedLookasideList( PNPAGED_LOOKASIDE_LIST List ) {
     return ExAllocateFromNPagedLookasideList( List );
 }
 
-VOID TcpipFreeToNPagedLookasideList( PNPAGED_LOOKASIDE_LIST List, 
+VOID TcpipFreeToNPagedLookasideList( PNPAGED_LOOKASIDE_LIST List,
 				     PVOID Thing ) {
     ExFreeToNPagedLookasideList( List, Thing );
 }

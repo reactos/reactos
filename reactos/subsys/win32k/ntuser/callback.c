@@ -51,20 +51,20 @@ IntCbAllocateMemory(ULONG Size)
 {
   PINT_CALLBACK_HEADER Mem;
   PW32THREAD W32Thread;
-  
+
   if(!(Mem = ExAllocatePoolWithTag(PagedPool, Size + sizeof(INT_CALLBACK_HEADER),
                                    TAG_CALLBACK)))
   {
     return NULL;
   }
-  
+
   W32Thread = PsGetWin32Thread();
   ASSERT(W32Thread);
-  
+
   /* insert the callback memory into the thread's callback list */
-  
+
   InsertTailList(&W32Thread->W32CallbackListHead, &Mem->ListEntry);
-  
+
   return (Mem + 1);
 }
 
@@ -73,17 +73,17 @@ IntCbFreeMemory(PVOID Data)
 {
   PINT_CALLBACK_HEADER Mem;
   PW32THREAD W32Thread;
-  
+
   ASSERT(Data);
-  
+
   Mem = ((PINT_CALLBACK_HEADER)Data - 1);
-  
+
   W32Thread = PsGetWin32Thread();
   ASSERT(W32Thread);
-  
+
   /* remove the memory block from the thread's callback list */
   RemoveEntryList(&Mem->ListEntry);
-  
+
   /* free memory */
   ExFreePool(Mem);
 }
@@ -93,13 +93,13 @@ IntCleanupThreadCallbacks(PW32THREAD W32Thread)
 {
   PLIST_ENTRY CurrentEntry;
   PINT_CALLBACK_HEADER Mem;
-  
+
   while (!IsListEmpty(&W32Thread->W32CallbackListHead))
   {
     CurrentEntry = RemoveHeadList(&W32Thread->W32CallbackListHead);
-    Mem = CONTAINING_RECORD(CurrentEntry, INT_CALLBACK_HEADER, 
+    Mem = CONTAINING_RECORD(CurrentEntry, INT_CALLBACK_HEADER,
                             ListEntry);
-    
+
     /* free memory */
     ExFreePool(Mem);
   }
@@ -131,7 +131,7 @@ IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
     {
       return;
     }
-  return;  
+  return;
 }
 
 LRESULT STDCALL
@@ -198,7 +198,7 @@ IntCallWindowProc(WNDPROC Proc,
                     (PVOID) ((char *) Arguments + sizeof(WINDOWPROC_CALLBACK_ARGUMENTS)),
                     lParamBufferSize);
       IntCbFreeMemory(Arguments);
-    }      
+    }
 
   return Result;
 }
@@ -344,7 +344,7 @@ IntCallHookProc(INT HookId,
         }
       break;
     }
-  
+
   ResultPointer = &Result;
   ResultLength = sizeof(LRESULT);
   Status = NtW32Call(USER32_CALLBACK_HOOKPROC,
@@ -352,9 +352,9 @@ IntCallHookProc(INT HookId,
 		     ArgumentLength,
 		     &ResultPointer,
 		     &ResultLength);
-  
+
   IntCbFreeMemory(Argument);
-  
+
   if (!NT_SUCCESS(Status))
     {
       return 0;

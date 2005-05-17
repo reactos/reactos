@@ -147,6 +147,9 @@ typedef enum _IO_NOTIFICATION_EVENT_CATEGORY {
   EventCategoryTargetDeviceChange
 } IO_NOTIFICATION_EVENT_CATEGORY;
 
+/* EventCategoryFlags for IoRegisterPlugPlayNotification */
+#define PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES 0x00000001
+
 /* CallbackRoutine for IoRegisterPlugPlayNotification */
 typedef NTSTATUS STDCALL_FUNC
 (*PDRIVER_NOTIFICATION_CALLBACK_ROUTINE)(

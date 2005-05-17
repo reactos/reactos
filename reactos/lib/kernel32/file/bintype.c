@@ -34,10 +34,10 @@ InternalIsOS2OrOldWin(HANDLE hFile, IMAGE_DOS_HEADER *mz, IMAGE_OS2_HEADER *ne)
   LPSTR nametab = NULL;
   DWORD Read, Ret;
   int i;
-  
+
   Ret = BINARY_OS216;
   CurPos = SetFilePointer(hFile, 0, NULL, FILE_CURRENT);
-  
+
   /* read modref table */
   if((SetFilePointer(hFile, mz->e_lfanew + ne->ne_modtab, NULL, FILE_BEGIN) == -1) ||
      (!(modtab = HeapAlloc(GetProcessHeap(), 0, ne->ne_cmod * sizeof(WORD)))) ||
@@ -46,7 +46,7 @@ InternalIsOS2OrOldWin(HANDLE hFile, IMAGE_DOS_HEADER *mz, IMAGE_OS2_HEADER *ne)
   {
     goto broken;
   }
-  
+
   /* read imported names table */
   if((SetFilePointer(hFile, mz->e_lfanew + ne->ne_imptab, NULL, FILE_BEGIN) == -1) ||
      (!(nametab = HeapAlloc(GetProcessHeap(), 0, ne->ne_enttab - ne->ne_imptab))) ||
@@ -55,7 +55,7 @@ InternalIsOS2OrOldWin(HANDLE hFile, IMAGE_DOS_HEADER *mz, IMAGE_OS2_HEADER *ne)
   {
     goto broken;
   }
-  
+
   for(i = 0; i < ne->ne_cmod; i++)
   {
     LPSTR module;
@@ -67,10 +67,10 @@ InternalIsOS2OrOldWin(HANDLE hFile, IMAGE_DOS_HEADER *mz, IMAGE_OS2_HEADER *ne)
       goto done;
     }
   }
-  
+
   broken:
   DPRINT("InternalIsOS2OrOldWin(): Binary file seems to be broken\n");
-  
+
   done:
   HeapFree(GetProcessHeap(), 0, modtab);
   HeapFree(GetProcessHeap(), 0, nametab);
@@ -100,14 +100,14 @@ InternalGetBinaryType(HANDLE hFile)
   } Header;
   char magic[4];
   DWORD Read;
-  
+
   if((SetFilePointer(hFile, 0, NULL, FILE_BEGIN) == -1) ||
      (!ReadFile(hFile, &Header, sizeof(Header), &Read, NULL) ||
       (Read != sizeof(Header))))
   {
     return BINARY_UNKNOWN;
   }
-  
+
   if(!memcmp(Header.elf.magic, "\177ELF", sizeof(Header.elf.magic)))
   {
     /* FIXME: we don't bother to check byte order, architecture, etc. */
@@ -120,7 +120,7 @@ InternalGetBinaryType(HANDLE hFile)
     }
     return BINARY_UNKNOWN;
   }
-  
+
   /* Mach-o File with Endian set to Big Endian  or Little Endian*/
   if(Header.macho.magic == 0xFEEDFACE ||
      Header.macho.magic == 0xECAFDEEF)
@@ -133,7 +133,7 @@ InternalGetBinaryType(HANDLE hFile)
     }
     return BINARY_UNKNOWN;
   }
-  
+
   /* Not ELF, try DOS */
   if(Header.mz.e_magic == IMAGE_DOS_SIGNATURE)
   {
@@ -150,7 +150,7 @@ InternalGetBinaryType(HANDLE hFile)
     {
       return BINARY_DOS;
     }
-    
+
     /* Reading the magic field succeeded so
      * we will try to determine what type it is.
      */
@@ -162,14 +162,14 @@ InternalGetBinaryType(HANDLE hFile)
       {
         return BINARY_DOS;
       }
-      
+
       /* FIXME - detect 32/64 bit */
-      
+
       if(FileHeader.Characteristics & IMAGE_FILE_DLL)
         return BINARY_PE_DLL32;
       return BINARY_PE_EXE32;
     }
-    
+
     if(!memcmp(magic, "NE", 1))
     {
       /* This is a Windows executable (NE) header.  This can
@@ -185,7 +185,7 @@ InternalGetBinaryType(HANDLE hFile)
         /* Couldn't read header, so abort. */
         return BINARY_DOS;
       }
-      
+
       switch(ne.ne_exetyp)
       {
         case 2:
@@ -213,29 +213,29 @@ GetBinaryTypeW (
 {
   HANDLE hFile;
   DWORD BinType;
-  
+
   if(!lpApplicationName || !lpBinaryType)
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   hFile = CreateFileW(lpApplicationName, GENERIC_READ, FILE_SHARE_READ, NULL,
                       OPEN_EXISTING, 0, 0);
   if(hFile == INVALID_HANDLE_VALUE)
   {
     return FALSE;
   }
-  
+
   BinType = InternalGetBinaryType(hFile);
   CloseHandle(hFile);
-  
+
   switch(BinType)
   {
     case BINARY_UNKNOWN:
     {
       WCHAR *dot;
-      
+
       /*
        * guess from filename
        */
@@ -288,7 +288,7 @@ GetBinaryTypeW (
       return FALSE;
     }
   }
-  
+
   DPRINT1("Invalid binary type returned!\n", BinType);
   return FALSE;
 }
@@ -305,16 +305,16 @@ GetBinaryTypeA (
     )
 {
   PWCHAR ApplicationNameW;
-  
+
   if(!lpApplicationName || !lpBinaryType)
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   if (!(ApplicationNameW = FilenameA2W(lpApplicationName, FALSE)))
      return FALSE;
-  
+
   return GetBinaryTypeW(ApplicationNameW, lpBinaryType);
 }
 

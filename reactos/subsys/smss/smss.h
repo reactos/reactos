@@ -90,12 +90,14 @@ typedef struct _SM_CLIENT_DATA
 	HANDLE	SbApiPort;
 	WCHAR	SbApiPortName [SM_SB_NAME_MAX_LENGTH];
 	struct _SM_CLIENT_DATA * Next;
-	
+
 } SM_CLIENT_DATA, *PSM_CLIENT_DATA;
 NTSTATUS SmInitializeClientManagement(VOID);
 NTSTATUS STDCALL SmCreateClient(PSM_PORT_MESSAGE,PSM_CLIENT_DATA*);
 NTSTATUS STDCALL SmDestroyClient(ULONG);
 NTSTATUS STDCALL SmCompleteClientInitialization (HANDLE hProcess);
+NTSTATUS FASTCALL SmGetClientBasicInformation (PSM_BASIC_INFORMATION);
+NTSTATUS FASTCALL SmGetSubSystemInformation (PSM_SUBSYSTEM_INFORMATION);
 
 /* debug.c */
 extern HANDLE DbgSsApiPort;

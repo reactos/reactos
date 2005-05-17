@@ -19,9 +19,13 @@
  *
  *    04-Feb-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Fixed time input bug.
+ *
+ *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc.
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_TIME
 
@@ -136,14 +140,7 @@ INT cmd_time (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Displays or sets the system time.\n"
-		               "\n"
-		               "TIME [/T][time]\n"
-		               "\n"
-		               "  /T    display only\n"
-		               "\n"
-		               "Type TIME with no parameters to display the current time setting and a prompt\n"
-		               "for a new one.  Press ENTER to keep the same time."));
+		ConOutResPuts(STRING_TIME_HELP1);
 		return 0;
 	}
 
@@ -175,7 +172,7 @@ INT cmd_time (LPTSTR cmd, LPTSTR param)
 		{
 			TCHAR  s[40];
 
-			ConOutPrintf (_T("Enter new time: "));
+			ConOutResPuts(STRING_TIME_HELP2);
 
 			ConInString (s, 40);
 
@@ -203,7 +200,8 @@ INT cmd_time (LPTSTR cmd, LPTSTR param)
 			/* force input the next time around. */
 			nTimeString = -1;
 		}
-		ConErrPuts (_T("Invalid time."));
+
+		ConErrResPuts(STRING_TIME_ERROR1);
 	}
 
 	freep (arg);

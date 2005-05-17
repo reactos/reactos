@@ -79,7 +79,7 @@ NtfsGetPositionInformation(PFILE_OBJECT FileObject,
   if (*BufferLength < sizeof(FILE_POSITION_INFORMATION))
     return(STATUS_BUFFER_OVERFLOW);
 
-  PositionInfo->CurrentByteOffset.QuadPart = 
+  PositionInfo->CurrentByteOffset.QuadPart =
     0;
 //    FileObject->CurrentByteOffset.QuadPart;
 

@@ -93,15 +93,15 @@ GetUserObjectInformationA(
   LPDWORD lpnLengthNeeded)
 {
   LPWSTR buffer;
-  BOOL ret = TRUE; 
-   
+  BOOL ret = TRUE;
+
   DPRINT("GetUserObjectInformationA(%x %d %x %d %x)\n", hObj, nIndex,
          pvInfo, nLength, lpnLengthNeeded);
-   
+
   if (nIndex != UOI_NAME && nIndex != UOI_TYPE)
     return GetUserObjectInformationW(hObj, nIndex, pvInfo, nLength, lpnLengthNeeded);
 
-  /* allocate unicode buffer */    
+  /* allocate unicode buffer */
   buffer = HeapAlloc(GetProcessHeap(), 0, nLength*2);
   if (buffer == NULL)
   {
@@ -124,7 +124,7 @@ GetUserObjectInformationA(
     }
   }
 
-  /* free resources */  
+  /* free resources */
   HeapFree(GetProcessHeap(), 0, buffer);
   return ret;
 }

@@ -29,7 +29,7 @@ _except_handler(EXCEPTION_RECORD *ExceptionRecord,
 		void * DispatcherContext)
 {
    EXCEPTION_POINTERS ExceptionInfo;
-   EXCEPTION_DISPOSITION ExceptionDisposition;
+   EXCEPTION_DISPOSITION ExceptionDisposition = EXCEPTION_EXECUTE_HANDLER;
 
    ExceptionInfo.ExceptionRecord = ExceptionRecord;
    ExceptionInfo.ContextRecord = ContextRecord;
@@ -45,10 +45,6 @@ _except_handler(EXCEPTION_RECORD *ExceptionRecord,
          ExceptionDisposition = UnhandledExceptionFilter(&ExceptionInfo);
       }
       _SEH_END;
-   }
-   else 
-   {
-      ExceptionDisposition = EXCEPTION_EXECUTE_HANDLER;
    }
 
    if (ExceptionDisposition == EXCEPTION_EXECUTE_HANDLER)
@@ -192,7 +188,7 @@ CreateRemoteThread
   NULL,
   NULL
  );
- 
+
  if(lpThreadAttributes)
  {
   /* make the handle inheritable */
@@ -257,7 +253,7 @@ CreateRemoteThread
   SetLastErrorByStatus(nErrCode);
   return NULL;
  }
- 
+
  DPRINT
  (
   "StackReserve          %p\n"
@@ -291,16 +287,16 @@ OpenThread(
    HANDLE ThreadHandle;
    OBJECT_ATTRIBUTES ObjectAttributes;
    CLIENT_ID ClientId ;
-   
+
    ClientId.UniqueProcess = INVALID_HANDLE_VALUE;
    ClientId.UniqueThread = (HANDLE)dwThreadId;
-   
+
    InitializeObjectAttributes (&ObjectAttributes,
 			      NULL,
 			      (bInheritHandle ? OBJ_INHERIT : 0),
 			      NULL,
 			      NULL);
-   
+
    errCode = NtOpenThread(&ThreadHandle,
 			   dwDesiredAccess,
 			   &ObjectAttributes,
@@ -402,13 +398,13 @@ GetThreadTimes(HANDLE hThread,
 
   lpCreationTime->dwLowDateTime = KernelUserTimes.CreateTime.u.LowPart;
   lpCreationTime->dwHighDateTime = KernelUserTimes.CreateTime.u.HighPart;
-  
+
   lpExitTime->dwLowDateTime = KernelUserTimes.ExitTime.u.LowPart;
   lpExitTime->dwHighDateTime = KernelUserTimes.ExitTime.u.HighPart;
-  
+
   lpKernelTime->dwLowDateTime = KernelUserTimes.KernelTime.u.LowPart;
   lpKernelTime->dwHighDateTime = KernelUserTimes.KernelTime.u.HighPart;
-  
+
   lpUserTime->dwLowDateTime = KernelUserTimes.UserTime.u.LowPart;
   lpUserTime->dwHighDateTime = KernelUserTimes.UserTime.u.HighPart;
 
@@ -701,7 +697,7 @@ GetThreadSelectorEntry(IN HANDLE hThread,
 {
   DESCRIPTOR_TABLE_ENTRY DescriptionTableEntry;
   NTSTATUS Status;
-  
+
   DescriptionTableEntry.Selector = dwSelector;
   Status = NtQueryInformationThread(hThread,
                                     ThreadDescriptorTableEntry,
@@ -830,13 +826,13 @@ GetThreadIOPendingFlag(HANDLE hThread,
 {
   ULONG IoPending;
   NTSTATUS Status;
-  
+
   if(lpIOIsPending == NULL)
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   Status = NtQueryInformationThread(hThread,
                                     ThreadIsIoPending,
                                     (PVOID)&IoPending,
@@ -847,7 +843,7 @@ GetThreadIOPendingFlag(HANDLE hThread,
     *lpIOIsPending = ((IoPending != 0) ? TRUE : FALSE);
     return TRUE;
   }
-  
+
   SetLastErrorByStatus(Status);
   return FALSE;
 }

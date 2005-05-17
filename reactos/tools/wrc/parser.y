@@ -1283,12 +1283,12 @@ item_definitions
  */
 item_options
 	: /* Empty */				{ $$ = 0; }
-	| ',' tCHECKED		item_options	{ $$ = $3 | MF_CHECKED; }
-	| ',' tGRAYED		item_options	{ $$ = $3 | MF_GRAYED; }
-	| ',' tHELP		item_options	{ $$ = $3 | MF_HELP; }
-	| ',' tINACTIVE		item_options	{ $$ = $3 | MF_DISABLED; }
-	| ',' tMENUBARBREAK	item_options	{ $$ = $3 | MF_MENUBARBREAK; }
-	| ',' tMENUBREAK	item_options	{ $$ = $3 | MF_MENUBREAK; }
+	| opt_comma tCHECKED		item_options	{ $$ = $3 | MF_CHECKED; }
+	| opt_comma tGRAYED		item_options	{ $$ = $3 | MF_GRAYED; }
+	| opt_comma tHELP		item_options	{ $$ = $3 | MF_HELP; }
+	| opt_comma tINACTIVE		item_options	{ $$ = $3 | MF_DISABLED; }
+	| opt_comma tMENUBARBREAK	item_options	{ $$ = $3 | MF_MENUBARBREAK; }
+	| opt_comma tMENUBREAK	item_options	{ $$ = $3 | MF_MENUBREAK; }
 	;
 
 /* ------------------------------ MenuEx ------------------------------ */

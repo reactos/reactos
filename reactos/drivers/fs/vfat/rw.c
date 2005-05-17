@@ -66,7 +66,7 @@ OffsetToCluster(PDEVICE_EXTENSION DeviceExt,
   NTSTATUS Status;
 /*
   DPRINT("OffsetToCluster(DeviceExt %x, Fcb %x, FirstCluster %x,"
-         " FileOffset %x, Cluster %x, Extend %d)\n", DeviceExt, 
+         " FileOffset %x, Cluster %x, Extend %d)\n", DeviceExt,
          Fcb, FirstCluster, FileOffset, Cluster, Extend);
 */
   if (FirstCluster == 0)
@@ -106,13 +106,13 @@ OffsetToCluster(PDEVICE_EXTENSION DeviceExt,
           *Cluster = CurrentCluster;
        }
      return(STATUS_SUCCESS);
-   }    
+   }
 }
 
 NTSTATUS
-VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext, 
-                  ULONG Length, 
-		  LARGE_INTEGER ReadOffset, 
+VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext,
+                  ULONG Length,
+		  LARGE_INTEGER ReadOffset,
 		  PULONG LengthRead)
 /*
  * FUNCTION: Reads data from a file
@@ -205,7 +205,7 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext,
     ReadOffset.u.LowPart += DeviceExt->FatInfo.rootStart * BytesPerSector;
 
     // Fire up the read command
-    
+
     Status = VfatReadDiskPartial (IrpContext, &ReadOffset, Length, 0, TRUE);
     if (NT_SUCCESS(Status))
     {
@@ -218,7 +218,7 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext,
   LastCluster = Fcb->LastCluster;
   LastOffset = Fcb->LastOffset;
   ExReleaseFastMutex(&Fcb->LastMutex);
-  
+
   /*
    * Find the cluster to start the read from
    */
@@ -325,7 +325,7 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext,
   return Status;
 }
 
-NTSTATUS 
+NTSTATUS
 VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
 		  ULONG Length,
 		  LARGE_INTEGER WriteOffset)
@@ -621,7 +621,7 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
       Status = STATUS_SUCCESS;
       goto ByeBye;
    }
-   
+
    if (Fcb->Flags & FCB_IS_VOLUME)
    {
       Resource = &IrpContext->DeviceExt->DirResource;
@@ -645,7 +645,7 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
    if (!(IrpContext->Irp->Flags & IRP_PAGING_IO) &&
       FsRtlAreThereCurrentFileLocks(&Fcb->FileLock))
    {
-      if (!FsRtlCheckLockForReadAccess(&Fcb->FileLock, IrpContext->Irp)) 
+      if (!FsRtlCheckLockForReadAccess(&Fcb->FileLock, IrpContext->Irp))
       {
          Status = STATUS_FILE_LOCK_CONFLICT;
          goto ByeBye;
@@ -925,7 +925,7 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
    if (!(IrpContext->Irp->Flags & IRP_PAGING_IO) &&
       FsRtlAreThereCurrentFileLocks(&Fcb->FileLock))
    {
-      if (!FsRtlCheckLockForWriteAccess(&Fcb->FileLock, IrpContext->Irp)) 
+      if (!FsRtlCheckLockForWriteAccess(&Fcb->FileLock, IrpContext->Irp))
       {
          Status = STATUS_FILE_LOCK_CONFLICT;
          goto ByeBye;
@@ -952,7 +952,7 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
      }
 
 
-   if (!(Fcb->Flags & (FCB_IS_FAT|FCB_IS_VOLUME)) && 
+   if (!(Fcb->Flags & (FCB_IS_FAT|FCB_IS_VOLUME)) &&
        !(IrpContext->Irp->Flags & IRP_PAGING_IO) &&
        ByteOffset.u.LowPart + Length > Fcb->RFCB.FileSize.u.LowPart)
    {

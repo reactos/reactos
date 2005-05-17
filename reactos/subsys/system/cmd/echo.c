@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  *  ECHO.C - internal echo commands.
  *
  *
@@ -22,26 +21,26 @@
  *
  *    13-Jul-2000 (Eric Kohl <ekohl@rz-online.de>)
  *        Implemented 'echo.' and 'echoerr.'.
+ *
+ *    28-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 
 INT CommandEcho (LPTSTR cmd, LPTSTR param)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+
 #ifdef _DEBUG
 	DebugPrintf (_T("CommandEcho '%s' : '%s'\n"), cmd, param);
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Displays a message or switches command echoing on or off.\n"
-			       "\n"
-			       "  ECHO [ON | OFF]\n"
-			       "  ECHO [message]\n"
-			       "  ECHO.             prints an empty line\n"
-			       "\n"
-			       "Type ECHO without a parameter to display the current ECHO setting."));
+		ConOutResPuts(STRING_ECHO_HELP4);
 		return 0;
 	}
 
@@ -61,23 +60,26 @@ INT CommandEcho (LPTSTR cmd, LPTSTR param)
 		else if (*param)
 			ConOutPuts (param);
 		else
-			ConOutPrintf (_T("ECHO is %s\n"), bEcho ? D_ON : D_OFF);
+		{
+			LoadString(CMD_ModuleHandle, STRING_ECHO_HELP5, szMsg, RC_STRING_MAX_SIZE);
+			ConOutPrintf(szMsg, bEcho ? D_ON : D_OFF);
+		}
 	}
 
 	return 0;
 }
 
+
 INT CommandEchos (LPTSTR cmd, LPTSTR param)
 {
+
 #ifdef _DEBUG
 	DebugPrintf (_T("CommandEchos '%s' : '%s'\n"), cmd, param);
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Display a messages without trailing carridge return and line feed.\n"
-		               "\n"
-		               "  ECHOS message"));
+		ConOutResPuts(STRING_ECHO_HELP1);
 		return 0;
 	}
 
@@ -90,16 +92,14 @@ INT CommandEchos (LPTSTR cmd, LPTSTR param)
 
 INT CommandEchoerr (LPTSTR cmd, LPTSTR param)
 {
+
 #ifdef _DEBUG
 	DebugPrintf (_T("CommandEchoerr '%s' : '%s'\n"), cmd, param);
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Displays a message to the standard error.\n"
-		               "\n"
-		               "  ECHOERR message\n"
-		               "  ECHOERR.           prints an empty line"));
+		ConOutResPuts(STRING_ECHO_HELP2);
 		return 0;
 	}
 
@@ -118,17 +118,17 @@ INT CommandEchoerr (LPTSTR cmd, LPTSTR param)
 	return 0;
 }
 
+
 INT CommandEchoserr (LPTSTR cmd, LPTSTR param)
 {
+
 #ifdef _DEBUG
 	DebugPrintf (_T("CommandEchoserr '%s' : '%s'\n"), cmd, param);
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Prints a messages to standard error output without trailing carridge return and line feed.\n"
-		               "\n"
-		               "  ECHOSERR message"));
+		ConOutResPuts(STRING_ECHO_HELP3);
 		return 0;
 	}
 

@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  *  COLOR.C - color internal command.
  *
  *
@@ -15,45 +14,21 @@
  *        Redirection ready!
  *
  *    14-Oct-1999 (Paolo Pantaleo <paolopan@freemail.it>)
- *        4nt's syntax implemented
+ *        4nt's syntax implemented.
+ *
+ *    03-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Move all hardcoded strings to En.rc.
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_COLOR
 
 
 static VOID ColorHelp (VOID)
 {
-		ConOutPuts (_T(
-			"Sets the default foreground and background colors.\n"
-			"\n"
-			"COLOR [attr [/F]] \n\n"
-			"  attr        Specifies color attribute of console output\n"
-			"  /F          fill the console with color attribute\n"
-			"\n"			
-			"There are three ways to specify the colors:"
-			));
-
-		ConOutPuts (_T(
-			"\n"
-			"1) [bright] name on [bright] name  (only the first three letters are required)\n"
-			"2) decimal on decimal\n"
-			"3) two hex digits\n"
-			"\n"
-			"Colors are:"
-			));
-
-		ConOutPuts (_T(
-			"dec  hex  name       dec  hex  name\n"
-			"0    0    Black       8   8    Gray(Bright black)\n"
-			"1    1    Blue        9   9    Bright Blue\n"
-			"2    2    Green      10   A    Bright Green\n"
-			"3    3    Cyan       11   B    Bright Cyan\n"
-			"4    4    Red        12   C    Bright Red\n"
-			"5    5    Magenta    13   D    Bright Magenta\n"
-			"6    6    Yellow     14   E    Bright Yellow\n"
-			"7    7    White      15   F    Bright White"));
+	ConOutResPuts(STRING_COLOR_HELP1);
 }
 
 
@@ -63,26 +38,27 @@ VOID SetScreenColor (WORD wColor, BOOL bFill)
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	COORD coPos;
 
+
 	if ((wColor & 0xF) == (wColor &0xF0) >> 4)
 	{
-	  ConErrPuts (_T("Same colors error! (Background and foreground can't be the same color)")); 
-    }
-    else 
-    {
-	    if (bFill == TRUE)
-    	{
-    	     GetConsoleScreenBufferInfo (hConsole, &csbi);
+		ConErrResPuts(STRING_COLOR_ERROR1);
+	}
+	else
+	{
+		if (bFill == TRUE)
+		{
+			GetConsoleScreenBufferInfo (hConsole, &csbi);
 
-    	     coPos.X = 0;
-    	     coPos.Y = 0;
-    	     FillConsoleOutputAttribute (hConsole,
-		                            (WORD)(wColor & 0x00FF),
-		                            (csbi.dwSize.X)*(csbi.dwSize.Y),
-		                            coPos,
-		                            &dwWritten);
-        }
-        SetConsoleTextAttribute (hConsole, (WORD)(wColor & 0x00FF));
-    }
+			coPos.X = 0;
+			coPos.Y = 0;
+			FillConsoleOutputAttribute (hConsole,
+			                            (WORD)(wColor & 0x00FF),
+			                            (csbi.dwSize.X)*(csbi.dwSize.Y),
+			                            coPos,
+			                            &dwWritten);
+		}
+		SetConsoleTextAttribute (hConsole, (WORD)(wColor & 0x00FF));
+	}
 }
 
 
@@ -93,6 +69,8 @@ VOID SetScreenColor (WORD wColor, BOOL bFill)
  */
 INT CommandColor (LPTSTR first, LPTSTR rest)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+
 	if (_tcsncmp (rest, _T("/?"), 2) == 0)
 	{
 		ColorHelp ();
@@ -107,23 +85,25 @@ INT CommandColor (LPTSTR first, LPTSTR rest)
 		return 0;
 	}
 
-	if (StringToColor (&wColor, &rest) == FALSE)
+	if (StringToColor(&wColor, &rest) == FALSE)
 	{
-		ConErrPuts(_T("error in color specification"));
+		ConErrResPuts(STRING_COLOR_ERROR2);
 		return 1;
 	}
 
-	ConErrPrintf (_T("Color %x\n"), wColor);
+	LoadString(CMD_ModuleHandle, STRING_COLOR_ERROR3, szMsg, RC_STRING_MAX_SIZE);
+	ConErrPrintf(szMsg, wColor);
 
 	if ((wColor & 0xF) == (wColor &0xF0) >> 4)
 	{
-		ConErrPuts (_T("same colors error!"));
+		LoadString(CMD_ModuleHandle, STRING_COLOR_ERROR4, szMsg, RC_STRING_MAX_SIZE);
+		ConErrPrintf(szMsg, wColor);
 		return 1;
 	}
 
 	/* set color */
-	SetScreenColor (wColor,
-	                (_tcsstr (rest,_T("/F")) || _tcsstr (rest,_T("/f"))));
+	SetScreenColor(wColor,
+	               (_tcsstr (rest,_T("/F")) || _tcsstr (rest,_T("/f"))));
 
 	return 0;
 }

@@ -63,14 +63,14 @@ IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL S
 
   DPRINT("IntSetTimer wnd %x id %p elapse %u timerproc %p systemtimer %s\n",
          Wnd, IDEvent, Elapse, TimerFunc, SystemTimer ? "TRUE" : "FALSE");
-  
+
   if ((Wnd == NULL) && ! SystemTimer)
     {
       DPRINT("Window-less timer\n");
       /* find a free, window-less timer id */
       IntLockWindowlessTimerBitmap();
       IDEvent = RtlFindClearBitsAndSet(&WindowLessTimersBitMap, 1, HintIndex);
-    
+
       if (IDEvent == (UINT_PTR) -1)
         {
           IntUnlockWindowlessTimerBitmap();
@@ -78,7 +78,7 @@ IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL S
           SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
           return 0;
         }
-    
+
       HintIndex = ++IDEvent;
       IntUnlockWindowlessTimerBitmap();
       Ret = IDEvent;
@@ -103,27 +103,27 @@ IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL S
       IntReleaseWindowObject(WindowObject);
       Ret = 1;
     }
-  
+
   #if 1
-  
+
   /* Win NT/2k/XP */
   if (Elapse > 0x7fffffff)
     {
       DPRINT("Adjusting uElapse\n");
       Elapse = 1;
     }
-  
+
   #else
-  
+
   /* Win Server 2003 */
   if (Elapse > 0x7fffffff)
     {
       DPRINT("Adjusting uElapse\n");
       Elapse = 0x7fffffff;
     }
-  
+
   #endif
-  
+
   /* Win 2k/XP */
   if (Elapse < 10)
     {
@@ -158,7 +158,7 @@ IntKillTimer(HWND Wnd, UINT_PTR IDEvent, BOOL SystemTimer)
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return FALSE;
     }
-  
+
   /* window-less timer? */
   if ((Wnd == NULL) && ! SystemTimer)
     {
@@ -170,7 +170,7 @@ IntKillTimer(HWND Wnd, UINT_PTR IDEvent, BOOL SystemTimer)
 
       IntUnlockWindowlessTimerBitmap();
     }
-  
+
   return TRUE;
 }
 
@@ -178,17 +178,17 @@ NTSTATUS FASTCALL
 InitTimerImpl(VOID)
 {
   ULONG BitmapBytes;
-  
+
   ExInitializeFastMutex(&Mutex);
-  
+
   BitmapBytes = ROUND_UP(NUM_WINDOW_LESS_TIMERS, sizeof(ULONG) * 8) / 8;
   WindowLessTimersBitMapBuffer = ExAllocatePoolWithTag(PagedPool, BitmapBytes, TAG_TIMERBMP);
   RtlInitializeBitMap(&WindowLessTimersBitMap,
                       WindowLessTimersBitMapBuffer,
                       BitmapBytes * 8);
-  
+
   /* yes we need this, since ExAllocatePool isn't supposed to zero out allocated memory */
-  RtlClearAllBits(&WindowLessTimersBitMap); 
+  RtlClearAllBits(&WindowLessTimersBitMap);
 
   return STATUS_SUCCESS;
 }

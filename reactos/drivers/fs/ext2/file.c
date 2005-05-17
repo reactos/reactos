@@ -4,7 +4,7 @@
  * FILE:             services/fs/ext2/super.c
  * PURPOSE:          ext2 filesystem
  * PROGRAMMER:       David Welch (welch@mcmail.com)
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -27,7 +27,7 @@ ULONG Ext2BlockMap(PDEVICE_EXTENSION DeviceExt,
    ULONG block;
    PULONG TempBuffer;
    BOOL b;
-   
+
    DPRINT("Ext2BlockMap(DeviceExt %x, inode %x, offset %d)\n",
 	   DeviceExt,inode,offset);
    if (offset < EXT2_NDIR_BLOCKS)

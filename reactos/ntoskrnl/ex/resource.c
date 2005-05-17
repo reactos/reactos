@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/resource.c
  * PURPOSE:         Resource synchronization construct
- * 
+ *
  * PROGRAMMERS:     No programmer listed.
  */
 
@@ -105,18 +105,18 @@ ExAcquireResourceExclusiveLite (
  */
 {
    KIRQL oldIrql;
-   
+
    DPRINT("ExAcquireResourceExclusiveLite(Resource %x, Wait %d)\n",
 	  Resource, Wait);
-   
+
    ASSERT_IRQL_LESS(DISPATCH_LEVEL);
-   
+
 /* undefed for now, since cdfs must be fixed first */
-#if 0    
-   /* At least regular kmode APC's must be disabled 
+#if 0
+   /* At least regular kmode APC's must be disabled
     * Note that this requirement is missing in old DDK's */
    ASSERT(KeGetCurrentThread() == NULL || /* <-Early in the boot process the current thread is obseved to be NULL */
-          KeGetCurrentThread()->KernelApcDisable || 
+          KeGetCurrentThread()->KernelApcDisable ||
           KeGetCurrentIrql() == APC_LEVEL);
 #endif
 
@@ -139,17 +139,17 @@ ExAcquireResourceExclusiveLite (
 	DPRINT("ExAcquireResourceExclusiveLite() = FALSE\n");
 	return(FALSE);
      }
-   
-   /* 
+
+   /*
     * This is slightly better than it looks because other exclusive
     * threads who are waiting won't be woken up but there is a race
     * with new threads trying to grab the resource so we must have
     * the spinlock, still normally this loop will only be executed
     * once
-    * NOTE: We might want to set a timeout to detect deadlock 
+    * NOTE: We might want to set a timeout to detect deadlock
     * (10 minutes?)
     */
-   while (Resource->ActiveCount) 
+   while (Resource->ActiveCount)
      {
 	Resource->NumberOfExclusiveWaiters++;
 	KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
@@ -181,7 +181,7 @@ static BOOLEAN EiRemoveSharedOwner(PERESOURCE Resource,
  */
 {
    ULONG i;
-   
+
    if (Resource->OwnerThreads[1].OwnerThread == ResourceThreadId)
      {
     Resource->OwnerThreads[1].OwnerCount--;
@@ -192,13 +192,13 @@ static BOOLEAN EiRemoveSharedOwner(PERESOURCE Resource,
 	  }
 	return(TRUE);
      }
-   
-   if (Resource->OwnerThreads[1].OwnerThread) 
+
+   if (Resource->OwnerThreads[1].OwnerThread)
      {
 	/* Oh dear, the caller didn't own the resource after all */
-	return(FALSE);;
+	return(FALSE);
      }
-   
+
    for (i=0; i<Resource->OwnerThreads[1].TableSize; i++)
      {
 	if (Resource->OwnerTable[i].OwnerThread == ResourceThreadId)
@@ -227,10 +227,10 @@ static BOOLEAN EiAddSharedOwner(PERESOURCE Resource)
    ERESOURCE_THREAD CurrentThread = ExGetCurrentResourceThread();
    POWNER_ENTRY freeEntry;
    ULONG i = 0;
-   
+
    DPRINT("EiAddSharedOwner(Resource %x)\n", Resource);
-   
-   if (Resource->ActiveCount == 0) 
+
+   if (Resource->ActiveCount == 0)
      {
 	/* no owner, it's easy */
 	Resource->OwnerThreads[1].OwnerThread = ExGetCurrentResourceThread();
@@ -244,19 +244,19 @@ static BOOLEAN EiAddSharedOwner(PERESOURCE Resource)
 	DPRINT("EiAddSharedOwner() = TRUE\n");
 	return(TRUE);
      }
-   
-   /* 
-    * now, we must search if this thread has already acquired this resource 
-    * then increase ownercount if found, else create new entry or reuse free 
+
+   /*
+    * now, we must search if this thread has already acquired this resource
+    * then increase ownercount if found, else create new entry or reuse free
     * entry
     */
    if (Resource->OwnerTable == NULL)
      {
 	DPRINT("Creating owner table\n");
-	
+
 	/* allocate ownertable,memset to 0, initialize first entry */
-	Resource->OwnerTable = 
-	  ExAllocatePoolWithTag(NonPagedPool, sizeof(OWNER_ENTRY)*3, 
+	Resource->OwnerTable =
+	  ExAllocatePoolWithTag(NonPagedPool, sizeof(OWNER_ENTRY)*3,
 				TAG_OWNER_TABLE);
 	if (Resource->OwnerTable == NULL)
 	  {
@@ -266,22 +266,22 @@ static BOOLEAN EiAddSharedOwner(PERESOURCE Resource)
 	memset(Resource->OwnerTable,0,sizeof(OWNER_ENTRY)*3);
 	memcpy(&Resource->OwnerTable[0], &Resource->OwnerThreads[1],
 	       sizeof(OWNER_ENTRY));
-	
+
 	Resource->OwnerThreads[1].OwnerThread = 0;
     Resource->OwnerThreads[1].TableSize = 3;
-	
+
 	Resource->OwnerTable[1].OwnerThread = CurrentThread;
     Resource->OwnerTable[1].OwnerCount = 1;
         Resource->ActiveCount++;
-	
+
 	return(TRUE);
      }
-   
+
    DPRINT("Search free entries\n");
-   
-   DPRINT("Number of entries %d\n", 
+
+   DPRINT("Number of entries %d\n",
       Resource->OwnerThreads[1].TableSize);
-   
+
    freeEntry = NULL;
    for (i=0; i<Resource->OwnerThreads[1].TableSize; i++)
      {
@@ -297,15 +297,15 @@ static BOOLEAN EiAddSharedOwner(PERESOURCE Resource)
 	     break;
 	  }
      }
-   
+
    DPRINT("Found free entry %x\n", freeEntry);
-   
+
    if (!freeEntry)
      {
 	DPRINT("Allocating new entry\n");
-	
+
 	/* reallocate ownertable with one more entry */
-	freeEntry = 
+	freeEntry =
 	  ExAllocatePoolWithTag(NonPagedPool,
 				sizeof(OWNER_ENTRY)*
                 (Resource->OwnerThreads[1].TableSize+1),
@@ -351,51 +351,51 @@ ExAcquireResourceSharedLite (
  */
 {
    KIRQL oldIrql;
-   
+
    DPRINT("ExAcquireResourceSharedLite(Resource %x, Wait %d)\n",
 	  Resource, Wait);
 
    ASSERT_IRQL_LESS(DISPATCH_LEVEL);
-   
+
 /* undefed for now, since cdfs must be fixed first */
-#if 0    
-   /* At least regular kmode APC's must be disabled 
-    * Note that this requirement is missing in old DDK's 
+#if 0
+   /* At least regular kmode APC's must be disabled
+    * Note that this requirement is missing in old DDK's
     */
    ASSERT(KeGetCurrentThread() == NULL || /* <-Early in the boot process the current thread is obseved to be NULL */
-          KeGetCurrentThread()->KernelApcDisable || 
+          KeGetCurrentThread()->KernelApcDisable ||
           KeGetCurrentIrql() == APC_LEVEL);
 #endif
 
    KeAcquireSpinLock(&Resource->SpinLock, &oldIrql);
-   
+
    /* first, resolve trivial cases */
-   if (Resource->ActiveCount == 0) 
+   if (Resource->ActiveCount == 0)
      {
 	EiAddSharedOwner(Resource);
 	KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
 	DPRINT("ExAcquireResourceSharedLite() = TRUE\n");
 	return(TRUE);
      }
-   
+
    if ((Resource->Flag & ResourceOwnedExclusive)
        && Resource->OwnerThreads[0].OwnerThread==ExGetCurrentResourceThread())
      {
 	/* exclusive, but by same thread : it's ok */
-	/* 
-	 * NOTE: Is this correct? Seems the same as ExConvertExclusiveToShared 
+	/*
+	 * NOTE: Is this correct? Seems the same as ExConvertExclusiveToShared
 	 */
     Resource->OwnerThreads[0].OwnerCount++;
 	KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
 	DPRINT("ExAcquireResourceSharedLite() = TRUE\n");
 	return(TRUE);
      }
-   
+
    if ((Resource->Flag & ResourceOwnedExclusive)
        || Resource->NumberOfExclusiveWaiters)
-     { 
+     {
 	/* exclusive by another thread , or thread waiting for exclusive */
-	if (!Wait) 
+	if (!Wait)
 	  {
 	     KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
 	     DPRINT("ExAcquireResourceSharedLite() = FALSE\n");
@@ -417,7 +417,7 @@ ExAcquireResourceSharedLite (
 	    Resource->NumberOfSharedWaiters--;
 	  }
      }
-   
+
    EiAddSharedOwner(Resource);
    KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
    DPRINT("ExAcquireResourceSharedLite() = TRUE\n");
@@ -443,13 +443,13 @@ ExConvertExclusiveToSharedLite (
 {
    ULONG oldWaiters;
    KIRQL oldIrql;
-   
+
    DPRINT("ExConvertExclusiveToSharedLite(Resource %x)\n", Resource);
-   
+
    KeAcquireSpinLock(&Resource->SpinLock, &oldIrql);
-   
+
    oldWaiters = Resource->NumberOfSharedWaiters;
-   
+
    if (!(Resource->Flag & ResourceOwnedExclusive))
      {
 	/* Might not be what the caller expects, better bug check */
@@ -457,7 +457,7 @@ ExConvertExclusiveToSharedLite (
 	KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
 	return;
      }
-   
+
    //transfer infos from entry 0 to entry 1 and erase entry 0
    Resource->OwnerThreads[1].OwnerThread=Resource->OwnerThreads[0].OwnerThread;
    Resource->OwnerThreads[1].OwnerCount=Resource->OwnerThreads[0].OwnerCount;
@@ -466,7 +466,7 @@ ExConvertExclusiveToSharedLite (
    /* erase exclusive flag */
    Resource->Flag &= (~ResourceOwnedExclusive);
    /* if no shared waiters, that's all */
-   if (!oldWaiters) 
+   if (!oldWaiters)
      {
 	KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
 	return;
@@ -524,14 +524,14 @@ ExAcquireSharedStarveExclusive (
  */
 {
    KIRQL oldIrql;
-   
+
    DPRINT("ExAcquireSharedStarveExclusive(Resource %x, Wait %d)\n",
 	  Resource, Wait);
-   
+
    KeAcquireSpinLock(&Resource->SpinLock, &oldIrql);
-   
+
    /* no owner, it's easy */
-   if (Resource->ActiveCount == 0) 
+   if (Resource->ActiveCount == 0)
      {
 	Resource->OwnerThreads[1].OwnerThread=ExGetCurrentResourceThread();
     Resource->OwnerThreads[1].OwnerCount=1;
@@ -540,21 +540,21 @@ ExAcquireSharedStarveExclusive (
 	DPRINT("ExAcquireSharedStarveExclusive() = TRUE\n");
 	return(TRUE);
      }
-   
+
    if ((Resource->Flag & ResourceOwnedExclusive)
        &&  Resource->OwnerThreads[0].OwnerThread==ExGetCurrentResourceThread())
-     { 
+     {
 	/* exclusive, but by same thread : it's ok */
     Resource->OwnerThreads[0].OwnerCount++;
 	KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
 	DPRINT("ExAcquireSharedStarveExclusive() = TRUE\n");
 	return(TRUE);
      }
-   
+
    if (Resource->Flag & ResourceOwnedExclusive)
-     { 
+     {
 	/* exclusive by another thread */
-	if (!Wait) 
+	if (!Wait)
 	  {
 	     KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
 	     DPRINT("ExAcquireSharedStarveExclusive() = FALSE\n");
@@ -620,7 +620,7 @@ ExDeleteResourceLite (
    if (Resource->OwnerTable) ExFreePool(Resource->OwnerTable);
    if (Resource->SharedWaiters) ExFreePool(Resource->SharedWaiters);
    if (Resource->ExclusiveWaiters) ExFreePool(Resource->ExclusiveWaiters);
-   return(STATUS_SUCCESS);;
+   return(STATUS_SUCCESS);
 }
 
 /*
@@ -664,12 +664,12 @@ ExInitializeResourceLite (PERESOURCE	Resource)
    Resource->NumberOfExclusiveWaiters = 0;
    KeInitializeSpinLock(&Resource->SpinLock);
    Resource->Flag = 0;
-   Resource->ExclusiveWaiters = 
+   Resource->ExclusiveWaiters =
      ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), TAG_EXCLUSIVE_LOCK);
    KeInitializeEvent(Resource->ExclusiveWaiters,
 		     SynchronizationEvent,
 		     FALSE);
-   Resource->SharedWaiters = 
+   Resource->SharedWaiters =
      ExAllocatePoolWithTag(NonPagedPool ,sizeof(KSEMAPHORE), TAG_SHARED_SEM);
    KeInitializeSemaphore(Resource->SharedWaiters,0,0x7fffffff);
    Resource->ActiveCount = 0;
@@ -707,8 +707,8 @@ ExIsResourceAcquiredExclusiveLite (
 /*
  * @implemented
  */
- 
- 
+
+
 //NTOSAPI
 //DDKAPI
 USHORT STDCALL
@@ -721,7 +721,7 @@ ExIsResourceAcquiredSharedLite(
  *      Resource = Points to the resource to be queried
  * RETURNS: The number of times the caller has acquired shared access to the
  *          given resource
- */ 
+ */
 {
    ULONG i;
    if (Resource->OwnerThreads[0].OwnerThread == ExGetCurrentResourceThread())
@@ -732,7 +732,7 @@ ExIsResourceAcquiredSharedLite(
      {
     return (USHORT)(Resource->OwnerThreads[1].OwnerCount);
      }
-   if (!Resource->OwnerThreads[1].TableSize) 
+   if (!Resource->OwnerThreads[1].TableSize)
      {
 	return(0);
      }
@@ -763,7 +763,7 @@ ExReinitializeResourceLite (
 		     FALSE);
    KeInitializeSemaphore(Resource->SharedWaiters,0,0x7fffffff);
    Resource->ActiveCount = 0;
-   if (Resource->OwnerTable) 
+   if (Resource->OwnerTable)
      {
 	ExFreePool(Resource->OwnerTable);
      }
@@ -827,18 +827,18 @@ ExReleaseResourceForThreadLite (
  */
 {
    KIRQL oldIrql;
-   
+
    DPRINT("ExReleaseResourceForThreadLite(Resource %x, ResourceThreadId %x)\n",
 	  Resource, ResourceThreadId);
-   
+
    ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
-   
+
    KeAcquireSpinLock(&Resource->SpinLock, &oldIrql);
-   
+
    if (Resource->Flag & ResourceOwnedExclusive)
      {
 	DPRINT("Releasing from exclusive access\n");
-	
+
     Resource->OwnerThreads[0].OwnerCount--;
     if (Resource->OwnerThreads[0].OwnerCount > 0)
 	  {
@@ -846,7 +846,7 @@ ExReleaseResourceForThreadLite (
 	     DPRINT("ExReleaseResourceForThreadLite() finished\n");
 	     return;
 	  }
-	
+
 	Resource->OwnerThreads[0].OwnerThread = 0;
 	Resource->ActiveCount--;
 	Resource->Flag &=(~ResourceOwnedExclusive);
@@ -856,8 +856,8 @@ ExReleaseResourceForThreadLite (
 	if (Resource->NumberOfExclusiveWaiters)
 	  {
 	     /* get resource to first exclusive waiter */
-	     KeSetEvent(Resource->ExclusiveWaiters, 
-			IO_NO_INCREMENT, 
+	     KeSetEvent(Resource->ExclusiveWaiters,
+			IO_NO_INCREMENT,
 			FALSE);
 	     KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
 	     DPRINT("ExReleaseResourceForThreadLite() finished\n");
@@ -877,20 +877,20 @@ ExReleaseResourceForThreadLite (
 	DPRINT("ExReleaseResourceForThreadLite() finished\n");
 	return;
      }
-  
+
    EiRemoveSharedOwner(Resource, ResourceThreadId);
-   
+
    if (Resource->ActiveCount == 0)
      {
 	if (Resource->NumberOfExclusiveWaiters)
-	  { 
+	  {
 	     /* get resource to first exclusive waiter */
 	     KeSetEvent(Resource->ExclusiveWaiters,
 			IO_NO_INCREMENT,
 			FALSE);
 	  }
      }
-     
+
    KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
    DPRINT("ExReleaseResourceForThreadLite() finished\n");
 }
@@ -909,52 +909,52 @@ ExSetResourceOwnerPointer (
     PKTHREAD CurrentThread;
     KIRQL OldIrql;
     POWNER_ENTRY OwnerEntry;
-    
+
     CurrentThread = KeGetCurrentThread();
-    
+
     /* Lock the resource */
     KeAcquireSpinLock(&Resource->SpinLock, &OldIrql);
-    
+
     /* Check if it's exclusive */
     if (Resource->Flag & ResourceOwnedExclusive) {
-        
+
         /* If it's exclusive, set the first entry no matter what */
         Resource->OwnerThreads[0].OwnerThread = (ULONG_PTR)OwnerPointer;
-        
+
     } else {
-        
+
         /* Check both entries and see which one matches the current thread */
         if (Resource->OwnerThreads[0].OwnerThread == (ULONG_PTR)CurrentThread) {
-            
+
             Resource->OwnerThreads[0].OwnerThread = (ULONG_PTR)OwnerPointer;
-            
+
         } else if (Resource->OwnerThreads[1].OwnerThread == (ULONG_PTR)CurrentThread) {
-            
+
             Resource->OwnerThreads[1].OwnerThread = (ULONG_PTR)OwnerPointer;
-            
+
         } else { /* None of the entries match, so we need to do a lookup */
-            
+
             /* Get the first Entry */
             OwnerEntry = Resource->OwnerTable;
-            
+
             /* Check if the Current Thread is in the Resource Table Entry */
-            if ((CurrentThread->ResourceIndex >= OwnerEntry->TableSize) || 
+            if ((CurrentThread->ResourceIndex >= OwnerEntry->TableSize) ||
                 (OwnerEntry[CurrentThread->ResourceIndex].OwnerThread != (ULONG_PTR)CurrentThread)) {
-                
+
                 /* Loop until we find the current thread in an entry */
                 for (;OwnerEntry->OwnerThread == (ULONG_PTR)CurrentThread;OwnerEntry++);
-                
+
             } else {
-            
+
                 /* It's in the current RTE, so set it */
                 OwnerEntry = &OwnerEntry[CurrentThread->ResourceIndex];
             }
-     
-            /* Now that we went to the right entry, set the Owner Pointer */       
+
+            /* Now that we went to the right entry, set the Owner Pointer */
             OwnerEntry->OwnerThread = (ULONG_PTR)OwnerPointer;
         }
     }
-    
+
     /* Release the resource */
     KeReleaseSpinLock(&Resource->SpinLock, OldIrql);
 }

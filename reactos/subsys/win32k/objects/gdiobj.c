@@ -61,7 +61,7 @@ typedef struct _GDI_HANDLE_TABLE
   /* the table must be located at the beginning of this structure so it can be
      properly mapped! */
   GDI_TABLE_ENTRY Entries[GDI_HANDLE_COUNT];
-  
+
   PPAGED_LOOKASIDE_LIST LookasideLists;
 
   SLIST_HEADER FreeEntriesHead;
@@ -134,7 +134,7 @@ GDIOBJ_iAllocHandleTable(VOID)
 
   handleTable = NULL;
   htSize = sizeof(GDI_HANDLE_TABLE);
-  
+
   IntUserCreateSharedSection(SessionSharedSectionPool,
                              (PVOID*)&handleTable,
                              &htSize);
@@ -395,11 +395,11 @@ LockHandle:
         if(PrevProcId == NULL)
         {
           HGDIOBJ Handle;
-          
+
           ASSERT(Entry->KernelData == NULL);
 
           Entry->KernelData = ObjectBody;
-          
+
           /* copy the reuse-counter */
           TypeInfo |= Entry->Type & GDI_HANDLE_REUSE_MASK;
 
@@ -660,7 +660,7 @@ GDI_CleanupForProcess (struct _EPROCESS *Process)
     {
       KeAttachProcess(Process);
     }
-  W32Process = Process->Win32Process;
+  W32Process = (PW32PROCESS)Process->Win32Process;
   ASSERT(W32Process);
 
   if(W32Process->GDIObjects > 0)
@@ -1077,7 +1077,7 @@ LockHandle:
       NewType = GDI_HANDLE_GET_TYPE(*hObj);
       NewType |= NewType >> 16;
       NewType |= (ULONG_PTR)(*hObj) & GDI_HANDLE_REUSE_MASK;
-      
+
       /* This is the type that the object should have right now, save it */
       OldType = NewType;
       /* As the object should be a stock object, set it's flag, but only in the upper 16 bits */
@@ -1110,7 +1110,7 @@ LockHandle:
             Status = PsLookupProcessByProcessId((HANDLE)((ULONG_PTR)PrevProcId & ~0x1), &OldProcess);
             if(NT_SUCCESS(Status))
             {
-              W32Process = OldProcess->Win32Process;
+              W32Process = (PW32PROCESS)OldProcess->Win32Process;
               if(W32Process != NULL)
               {
                 InterlockedDecrement(&W32Process->GDIObjects);
@@ -1221,7 +1221,7 @@ LockHandle:
             Status = PsLookupProcessByProcessId((HANDLE)((ULONG_PTR)PrevProcId & ~0x1), &OldProcess);
             if(NT_SUCCESS(Status))
             {
-              W32Process = OldProcess->Win32Process;
+              W32Process = (PW32PROCESS)OldProcess->Win32Process;
               if(W32Process != NULL)
               {
                 InterlockedDecrement(&W32Process->GDIObjects);
@@ -1235,7 +1235,7 @@ LockHandle:
             ProcessId = PsGetProcessId(NewOwner);
 
             /* Increase the new process' object counter */
-            W32Process = NewOwner->Win32Process;
+            W32Process = (PW32PROCESS)NewOwner->Win32Process;
             if(W32Process != NULL)
             {
               InterlockedIncrement(&W32Process->GDIObjects);
@@ -1441,7 +1441,7 @@ GDI_MapHandleTable(PEPROCESS Process)
   {
     return MappedGdiTable;
   }
-  
+
   return NULL;
 }
 

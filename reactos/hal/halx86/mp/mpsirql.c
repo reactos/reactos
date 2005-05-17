@@ -29,6 +29,7 @@
 
 /* FUNCTIONS ****************************************************************/
 
+#undef KeGetCurrentIrql
 KIRQL STDCALL KeGetCurrentIrql (VOID)
 /*
  * PURPOSE: Returns the current irq level
@@ -55,6 +56,7 @@ KIRQL STDCALL KeGetCurrentIrql (VOID)
 }
 
 
+#undef KeSetCurrentIrql
 VOID KeSetCurrentIrql (KIRQL NewIrql)
 /*
  * PURPOSE: Sets the current irq level without taking any action

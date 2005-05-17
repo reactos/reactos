@@ -1360,26 +1360,27 @@ MMRESULT WINAPI mmioRenameW(LPCWSTR szFileName, LPCWSTR szNewFileName,
 {
     LPSTR	szFn = NULL;
     LPSTR	sznFn = NULL;
-    UINT	ret;
+    UINT	ret = MMSYSERR_NOMEM;
     INT         len;
 
     if (szFileName)
     {
         len = WideCharToMultiByte( CP_ACP, 0, szFileName, -1, NULL, 0, NULL, NULL );
         szFn = HeapAlloc( GetProcessHeap(), 0, len );
-        if (!szFn) return MMSYSERR_NOMEM;
+        if (!szFn) goto done;
         WideCharToMultiByte( CP_ACP, 0, szFileName, -1, szFn, len, NULL, NULL );
     }
     if (szNewFileName)
     {
         len = WideCharToMultiByte( CP_ACP, 0, szNewFileName, -1, NULL, 0, NULL, NULL );
         sznFn = HeapAlloc( GetProcessHeap(), 0, len );
-        if (!sznFn) return MMSYSERR_NOMEM;
+        if (!sznFn) goto done;
         WideCharToMultiByte( CP_ACP, 0, szNewFileName, -1, sznFn, len, NULL, NULL );
     }
 
     ret = mmioRenameA(szFn, sznFn, lpmmioinfo, dwFlags);
 
+done:
     HeapFree(GetProcessHeap(),0,szFn);
     HeapFree(GetProcessHeap(),0,sznFn);
     return ret;

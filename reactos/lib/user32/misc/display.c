@@ -49,7 +49,7 @@ EnumDisplayDevicesA(
   BOOL rc;
   UNICODE_STRING Device;
   DISPLAY_DEVICEW DisplayDeviceW;
-  
+
   if ( !RtlCreateUnicodeStringFromAsciiz ( &Device, (PCSZ)lpDevice ) )
     {
       SetLastError ( ERROR_OUTOFMEMORY );
@@ -62,7 +62,7 @@ EnumDisplayDevicesA(
     iDevNum,
     &DisplayDeviceW,
     dwFlags );
-  
+
   /* Copy result from DisplayDeviceW to lpDisplayDevice */
   lpDisplayDevice->StateFlags = DisplayDeviceW.StateFlags;
   WideCharToMultiByte(CP_ACP,0,

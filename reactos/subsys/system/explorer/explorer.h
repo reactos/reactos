@@ -31,8 +31,11 @@
 #include "shell/entries.h"
 
 #include "shell/winfs.h"
-#include "shell/unixfs.h"
 #include "shell/shellfs.h"
+
+#ifndef ROSSHELL
+#include "shell/unixfs.h"
+#endif
 
 #include "utility/window.h"
 
@@ -68,4 +71,7 @@
 #include "shell/pane.h"
 #include "shell/filechild.h"
 #include "shell/shellbrowser.h"
+
+#ifndef ROSSHELL
 #include "shell/mainframe.h"
+#endif

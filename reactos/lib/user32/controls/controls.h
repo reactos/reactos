@@ -6,9 +6,9 @@
 #ifndef MAKEINTATOMA
 #define MAKEINTATOMA(atom)  ((LPCSTR)((ULONG_PTR)((WORD)(atom))))
 #endif
-#ifndef WM_ISACTIVEICON 
+#ifndef WM_ISACTIVEICON
 #define WM_ISACTIVEICON         0x0035
-#endif 
+#endif
 
 #ifndef __USE_W32API
 #if defined(STRICT)

@@ -126,7 +126,7 @@ next:
 
 		case LOGIN:
 			if (token())
-				if (*aname == 0) { 
+				if (*aname == 0) {
 					*aname = malloc((unsigned) strlen(tokval) + 1);
 					(void) strcpy(*aname, tokval);
 				} else {
@@ -237,7 +237,7 @@ static int token(void)
    char *cp;
    int c;
    struct toktab *t;
-   
+
    if (feof(cfile))
       return (0);
    while ((c = getc(cfile)) != EOF &&

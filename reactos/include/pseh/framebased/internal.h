@@ -43,6 +43,7 @@ typedef struct __SEHRegistration
 _SEHRegistration_t;
 
 struct __SEHPortableFrame;
+struct __SEHPortableTryLevel;
 
 typedef long (__stdcall * _SEHFilter_t)
 (
@@ -52,7 +53,7 @@ typedef long (__stdcall * _SEHFilter_t)
 
 typedef __declspec(noreturn) void (__stdcall * _SEHHandler_t)
 (
- struct __SEHPortableFrame *
+ struct __SEHPortableTryLevel *
 );
 
 typedef void (__stdcall * _SEHFinally_t)
@@ -63,22 +64,68 @@ typedef void (__stdcall * _SEHFinally_t)
 typedef struct __SEHHandlers
 {
  _SEHFilter_t SH_Filter;
- _SEHHandler_t SH_Handler;
  _SEHFinally_t SH_Finally;
 }
 _SEHHandlers_t;
+
+typedef struct __SEHPortableTryLevel
+{
+ struct __SEHPortableTryLevel * SPT_Next;
+ const _SEHHandlers_t * SPT_Handlers;
+}
+_SEHPortableTryLevel_t;
 
 typedef struct __SEHPortableFrame
 {
  _SEHRegistration_t SPF_Registration;
  unsigned long SPF_Code;
- int SPF_Handling;
- const _SEHHandlers_t * SPF_Handlers;
+ _SEHHandler_t SPF_Handler;
+ _SEHPortableTryLevel_t * SPF_TopTryLevel;
 }
 _SEHPortableFrame_t;
 
-extern void __stdcall _SEHEnter(_SEHPortableFrame_t *);
-extern void __stdcall _SEHLeave(_SEHPortableFrame_t *);
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+extern void __stdcall _SEHEnterFrame_s
+(
+ _SEHPortableFrame_t *,
+ _SEHPortableTryLevel_t *
+);
+
+extern void __stdcall _SEHEnterTry_s(_SEHPortableTryLevel_t *);
+extern void __stdcall _SEHLeave_s(void);
+
+#if !defined(_SEH_NO_FASTCALL)
+# ifdef _M_IX86
+#  define _SEH_FASTCALL __fastcall
+# else
+#  define _SEH_FASTCALL __stdcall
+# endif
+
+extern void _SEH_FASTCALL _SEHEnterFrame_f
+(
+ _SEHPortableFrame_t *,
+ _SEHPortableTryLevel_t *
+);
+
+extern void _SEH_FASTCALL _SEHEnterTry_f(_SEHPortableTryLevel_t *);
+extern void _SEH_FASTCALL _SEHLeave_f(void);
+
+# define _SEHEnterFrame _SEHEnterFrame_f
+# define _SEHEnterTry   _SEHEnterTry_f
+# define _SEHLeave      _SEHLeave_f
+#else
+# define _SEHEnterFrame _SEHEnterFrame_s
+# define _SEHEnterTry   _SEHEnterTry_s
+# define _SEHLeave      _SEHLeave_s
+#endif
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

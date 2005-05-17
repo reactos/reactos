@@ -7,7 +7,7 @@
 /* De-/Register Action IDs for TdiDeRegister */
 
 typedef
-enum 
+enum
 {
 	R_NOTIFICATION_HANDLER = 0,
 	DT_NOTIFICATION_HANDLER,
@@ -46,7 +46,7 @@ TdiRegisterAddressChangeHandler (
 	DWORD	Unknown2
 	)
 {
-#if 0	
+#if 0
 	NTSTATUS	Status = STATUS_SUCCESS;
 	Status = TdiDeRegister (
 			R_ADDRESS_CHANGE_HANDLER,
@@ -85,7 +85,7 @@ TdiRegisterDeviceObject (
 	DWORD	Unknown1
 	)
 {
-#if 0	
+#if 0
 	NTSTATUS	Status = STATUS_SUCCESS;
 	Status = TdiDeRegister (
 			R_DEVICE_OBJECT,
@@ -124,7 +124,7 @@ TdiRegisterNetAddress (
 	DWORD	Unknown1
 	)
 {
-#if 0	
+#if 0
 	NTSTATUS	Status = STATUS_SUCCESS;
 	Status = TdiDeRegister (
 			R_NET_ADDRESS,
@@ -164,7 +164,7 @@ TdiRegisterNotificationHandler (
 	DWORD	Unknown2
 	)
 {
-#if 0	
+#if 0
 	NTSTATUS	Status = STATUS_SUCCESS;
 	Status = TdiDeRegister (
 			R_NOTIFICATION_HANDLER,

@@ -390,7 +390,7 @@ SetupDevMode(PDEVMODEW DevMode, ULONG DisplayNumber)
   if (Valid)
     {
       ProfilePath = ExAllocatePoolWithTag(PagedPool,
-                                          (wcslen(RegistryPath.Buffer) + 
+                                          (wcslen(RegistryPath.Buffer) +
                                            wcslen(Insert) + 1) * sizeof(WCHAR),
                                           TAG_DC);
       if (NULL != ProfilePath)
@@ -732,7 +732,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   SURFOBJ *SurfObj;
   HRGN     hVisRgn;
   UNICODE_STRING StdDriver;
-  
+
   RtlInitUnicodeString(&StdDriver, L"DISPLAY");
 
   if (NULL == Driver || 0 == RtlCompareUnicodeString(Driver, &StdDriver, TRUE))
@@ -806,7 +806,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 
     NewDC->w.hPalette = NewDC->DevInfo->hpalDefault;
     NewDC->w.ROPmode = R2_COPYPEN;
-  
+
     DC_UnlockDc( hNewDC );
 
     hVisRgn = NtGdiCreateRectRgn(0, 0, SurfObj->sizlBitmap.cx,
@@ -827,7 +827,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   {
     DC_UnlockDc( hNewDC );
   }
-  
+
   return hNewDC;
 }
 
@@ -841,7 +841,7 @@ NtGdiCreateDC(PUNICODE_STRING Driver,
   DEVMODEW SafeInitData;
   HDC Ret;
   NTSTATUS Status;
-  
+
   if(InitData)
   {
     Status = MmCopyFromCaller(&SafeInitData, InitData, sizeof(DEVMODEW));
@@ -852,7 +852,7 @@ NtGdiCreateDC(PUNICODE_STRING Driver,
     }
     /* FIXME - InitData can have some more bytes! */
   }
-  
+
   if(Driver)
   {
     Status = IntSafeCopyUnicodeString(&SafeDriver, Driver);
@@ -862,7 +862,7 @@ NtGdiCreateDC(PUNICODE_STRING Driver,
       return NULL;
     }
   }
-  
+
   if(Device)
   {
     Status = IntSafeCopyUnicodeString(&SafeDevice, Device);
@@ -873,9 +873,9 @@ NtGdiCreateDC(PUNICODE_STRING Driver,
       return NULL;
     }
   }
-  
+
   Ret = IntGdiCreateDC(&SafeDriver, &SafeDevice, NULL, &SafeInitData, FALSE);
-  
+
   return Ret;
 }
 
@@ -889,7 +889,7 @@ NtGdiCreateIC(PUNICODE_STRING Driver,
   DEVMODEW SafeInitData;
   HDC Ret;
   NTSTATUS Status;
-  
+
   if(InitData)
   {
     Status = MmCopyFromCaller(&SafeInitData, InitData, sizeof(DEVMODEW));
@@ -900,7 +900,7 @@ NtGdiCreateIC(PUNICODE_STRING Driver,
     }
     /* FIXME - InitData can have some more bytes! */
   }
-  
+
   if(Driver)
   {
     Status = IntSafeCopyUnicodeString(&SafeDriver, Driver);
@@ -910,7 +910,7 @@ NtGdiCreateIC(PUNICODE_STRING Driver,
       return NULL;
     }
   }
-  
+
   if(Device)
   {
     Status = IntSafeCopyUnicodeString(&SafeDevice, Device);
@@ -921,11 +921,11 @@ NtGdiCreateIC(PUNICODE_STRING Driver,
       return NULL;
     }
   }
-  
+
   Ret = IntGdiCreateDC(NULL == Driver ? NULL : &SafeDriver,
                        NULL == Device ? NULL : &SafeDevice, NULL,
                        NULL == InitData ? NULL : &SafeInitData, TRUE);
-  
+
   return Ret;
 }
 
@@ -1030,13 +1030,13 @@ NtGdiGetCurrentObject(HDC  hDC, UINT  ObjectType)
 {
   HGDIOBJ SelObject;
   DC *dc;
-  
+
   if(!(dc = DC_LockDc(hDC)))
   {
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return NULL;
   }
-  
+
   switch(ObjectType)
   {
     case OBJ_PEN:
@@ -1064,7 +1064,7 @@ NtGdiGetCurrentObject(HDC  hDC, UINT  ObjectType)
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       break;
   }
-  
+
   DC_UnlockDc(hDC);
   return SelObject;
 }
@@ -1076,7 +1076,7 @@ IntGdiGetDCOrgEx(DC *dc, LPPOINT  Point)
 {
   Point->x = dc->w.DCOrgX;
   Point->y = dc->w.DCOrgY;
-  
+
   return  TRUE;
 }
 
@@ -1087,22 +1087,22 @@ NtGdiGetDCOrgEx(HDC  hDC, LPPOINT  Point)
   DC *dc;
   POINT SafePoint;
   NTSTATUS Status;
-  
+
   if(!Point)
   {
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   dc = DC_LockDc(hDC);
   if(!dc)
   {
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
   }
-  
+
   Ret = IntGdiGetDCOrgEx(dc, &SafePoint);
-  
+
   Status = MmCopyToCaller(Point, &SafePoint, sizeof(POINT));
   if(!NT_SUCCESS(Status))
   {
@@ -1110,7 +1110,7 @@ NtGdiGetDCOrgEx(HDC  hDC, LPPOINT  Point)
     DC_UnlockDc(hDC);
     return FALSE;
   }
-  
+
   DC_UnlockDc(hDC);
   return Ret;
 }
@@ -1586,7 +1586,7 @@ IntGdiGetObject(HANDLE Handle, INT Count, LPVOID Buffer)
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return 0;
     }
-  
+
   ObjectType = GDIOBJ_GetObjectType(Handle);
   switch (ObjectType)
     {
@@ -1637,16 +1637,16 @@ NtGdiGetObject(HANDLE handle, INT count, LPVOID buffer)
   {
     return 0;
   }
-  
+
   SafeBuf = ExAllocatePoolWithTag(PagedPool, count, TAG_GDIOBJ);
   if(!SafeBuf)
   {
     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
     return 0;
   }
-  
+
   Ret = IntGdiGetObject(handle, count, SafeBuf);
-  
+
   Status = MmCopyToCaller(buffer, SafeBuf, count);
   ExFreePool(SafeBuf);
   if(!NT_SUCCESS(Status))
@@ -1872,7 +1872,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
   BOOLEAN Failed;
 
   if(!hDC || !hGDIObj) return NULL;
-  
+
   dc = DC_LockDc(hDC);
   if (NULL == dc)
     {
@@ -2045,7 +2045,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
   PDC  NewDC;
   HDC  hDC;
   PWSTR Buf = NULL;
-  
+
   if (Driver != NULL)
   {
     Buf = ExAllocatePoolWithTag(PagedPool, Driver->MaximumLength, TAG_DC);
@@ -2068,7 +2068,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
 
   NewDC = DC_LockDc(hDC);
   /* FIXME - Handle NewDC == NULL! */
-  
+
   if (Driver != NULL)
   {
     RtlCopyMemory(&NewDC->DriverName, Driver, sizeof(UNICODE_STRING));
@@ -2297,7 +2297,7 @@ IntEnumDisplaySettings(
   DEVMODEW DevMode;
   INT Size, OldSize;
   ULONG DisplayNumber = 0; /* only default display supported */
-  
+
   DPRINT1("DevMode->dmSize = %d\n", pDevMode->dmSize);
   DPRINT1("DevMode->dmExtraSize = %d\n", pDevMode->dmDriverExtra);
   if (pDevMode->dmSize != SIZEOF_DEVMODEW_300 &&
@@ -2310,7 +2310,7 @@ IntEnumDisplaySettings(
 
   if (iModeNum == ENUM_CURRENT_SETTINGS)
   {
-    CachedMode = &PrimarySurface.DMW;    
+    CachedMode = &PrimarySurface.DMW;
     ASSERT(CachedMode->dmSize > 0);
   }
   else if (iModeNum == ENUM_REGISTRY_SETTINGS)
@@ -2337,7 +2337,7 @@ IntEnumDisplaySettings(
       UNICODE_STRING DriverFileNames;
       LPWSTR CurrentName;
       DRVENABLEDATA DrvEnableData;
-  
+
       /* Retrieve DDI driver names from registry */
       RtlInitUnicodeString(&DriverFileNames, NULL);
       if (!FindDriverFileNames(&DriverFileNames, DisplayNumber))
@@ -2345,13 +2345,13 @@ IntEnumDisplaySettings(
         DPRINT1("FindDriverFileNames failed\n");
         return FALSE;
       }
-      
+
       if (!HalQueryDisplayOwnership())
       {
         IntCreatePrimarySurface();
         PrimarySurfaceCreated = TRUE;
       }
-  
+
       /*
        * DriverFileNames may be a list of drivers in REG_SZ_MULTI format,
        * scan all of them until a good one found.
@@ -2362,7 +2362,7 @@ IntEnumDisplaySettings(
       {
         INT i;
         PGD_ENABLEDRIVER GDEnableDriver;
-  
+
         /* Get the DDI driver's entry point */
         GDEnableDriver = DRIVER_FindDDIDriver(CurrentName);
         if (NULL == GDEnableDriver)
@@ -2370,30 +2370,30 @@ IntEnumDisplaySettings(
           DPRINT("FindDDIDriver failed for %S\n", CurrentName);
           continue;
         }
-  
+
         /*  Call DDI driver's EnableDriver function  */
         RtlZeroMemory(&DrvEnableData, sizeof (DrvEnableData));
-  
+
         if (!GDEnableDriver(DDI_DRIVER_VERSION_NT5_01, sizeof (DrvEnableData), &DrvEnableData))
         {
           DPRINT("DrvEnableDriver failed for %S\n", CurrentName);
           continue;
         }
-        
+
         CachedDevModesEnd = CachedDevModes;
-        
+
         /* find DrvGetModes function */
         for (i = 0; i < DrvEnableData.c; i++)
         {
           PDRVFN DrvFn = DrvEnableData.pdrvfn + i;
           PGD_GETMODES GetModes;
           INT SizeNeeded, SizeUsed;
-  
+
           if (DrvFn->iFunc != INDEX_DrvGetModes)
             continue;
-  
+
           GetModes = (PGD_GETMODES)DrvFn->pfn;
-  
+
           /* make sure we have enough memory to hold the modes */
           SizeNeeded = GetModes((HANDLE)(PrimarySurface.VideoFileObject->DeviceObject), 0, NULL);
           if (SizeNeeded <= 0)
@@ -2401,12 +2401,12 @@ IntEnumDisplaySettings(
             DPRINT("DrvGetModes failed for %S\n", CurrentName);
             break;
           }
-          
+
           SizeUsed = CachedDevModesEnd - CachedDevModes;
           if (SizeOfCachedDevModes - SizeUsed < SizeNeeded)
           {
             PVOID NewBuffer;
-            
+
             SizeOfCachedDevModes += SizeNeeded;
             NewBuffer = ExAllocatePool(PagedPool, SizeOfCachedDevModes);
             if (NewBuffer == NULL)
@@ -2431,7 +2431,7 @@ IntEnumDisplaySettings(
             CachedDevModes = NewBuffer;
             CachedDevModesEnd = (DEVMODEW *)((PCHAR)NewBuffer + SizeUsed);
           }
-  
+
           /* query modes */
           SizeNeeded = GetModes((HANDLE)(PrimarySurface.VideoFileObject->DeviceObject),
                                 SizeOfCachedDevModes - SizeUsed,
@@ -2447,12 +2447,12 @@ IntEnumDisplaySettings(
           break;
         }
       }
-      
+
       if (PrimarySurfaceCreated)
       {
         IntDestroyPrimarySurface();
       }
-  
+
       RtlFreeUnicodeString(&DriverFileNames);
     }
 
@@ -2483,7 +2483,7 @@ IntEnumDisplaySettings(
   RtlCopyMemory(pDevMode, CachedMode, Size);
   RtlZeroMemory((PCHAR)pDevMode + Size, OldSize - Size);
   pDevMode->dmSize = OldSize;
-  
+
   Size = OldSize = pDevMode->dmDriverExtra;
   if (Size > CachedMode->dmDriverExtra)
     Size = CachedMode->dmDriverExtra;
@@ -2532,11 +2532,11 @@ IntChangeDisplaySettings(
   case 0: /* Dynamically change graphics mode */
     Ret = DISP_CHANGE_FAILED;
     break;
-    
+
   case CDS_FULLSCREEN: /* Given mode is temporary */
     Ret = DISP_CHANGE_FAILED;
     break;
-    
+
   case CDS_UPDATEREGISTRY:
     {
 	  	UNICODE_STRING ObjectName;
@@ -2550,7 +2550,7 @@ IntChangeDisplaySettings(
 		OBJECT_ATTRIBUTES ObjectAttributes;
 		HANDLE DevInstRegKey;
 		ULONG NewValue;
-		
+
 		/* Get device name (pDeviceName is "\.\xxx") */
 		for (LastSlash = pDeviceName->Length / sizeof(WCHAR); LastSlash > 0; LastSlash--)
 		{
@@ -2562,11 +2562,11 @@ IntChangeDisplaySettings(
 		ObjectName.Length -= LastSlash * sizeof(WCHAR);
 		ObjectName.MaximumLength -= LastSlash * sizeof(WCHAR);
 		ObjectName.Buffer += LastSlash;
-		
+
 		KernelModeName.Length = 0;
 		KernelModeName.MaximumLength = sizeof(KernelModeNameBuffer);
 		KernelModeName.Buffer = KernelModeNameBuffer;
-		
+
 		/* Open \??\xxx (ex: "\??\DISPLAY1") */
 		Status = RtlAppendUnicodeToString(&KernelModeName, L"\\??\\");
 		if (!NT_SUCCESS(Status)) return DISP_CHANGE_FAILED;
@@ -2593,11 +2593,11 @@ IntChangeDisplaySettings(
 		ObjectName.Length -= LastSlash * sizeof(WCHAR);
 		ObjectName.MaximumLength -= LastSlash * sizeof(WCHAR);
 		ObjectName.Buffer += LastSlash;
-		
+
 		RegistryKey.Length = 0;
 		RegistryKey.MaximumLength = sizeof(RegistryKeyBuffer);
 		RegistryKey.Buffer = RegistryKeyBuffer;
-		
+
 		/* Open registry key */
 		Status = RtlAppendUnicodeToString(&RegistryKey,
 			L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Hardware Profiles\\Current\\System\\CurrentControlSet\\Services\\");
@@ -2607,13 +2607,13 @@ IntChangeDisplaySettings(
 		Status = RtlAppendUnicodeToString(&RegistryKey,
 			L"\\Device0");
 		if (!NT_SUCCESS(Status)) { ObDereferenceObject(DeviceObject); return DISP_CHANGE_FAILED; }
-		
+
 		InitializeObjectAttributes(&ObjectAttributes, &RegistryKey,
 			OBJ_CASE_INSENSITIVE, NULL, NULL);
 		Status = ZwOpenKey(&DevInstRegKey, GENERIC_READ | GENERIC_WRITE, &ObjectAttributes);
 		ObDereferenceObject(DeviceObject);
 		if (!NT_SUCCESS(Status)) return DISP_CHANGE_FAILED;
-		
+
 		/* Update needed fields */
 		if (NT_SUCCESS(Status) && DevMode->dmFields & DM_BITSPERPEL)
 		{
@@ -2621,21 +2621,21 @@ IntChangeDisplaySettings(
 			NewValue = DevMode->dmBitsPerPel;
 			Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));
 		}
-		
+
 		if (NT_SUCCESS(Status) && DevMode->dmFields & DM_PELSWIDTH)
 		{
 			RtlInitUnicodeString(&RegistryKey, L"DefaultSettings.XResolution");
 			NewValue = DevMode->dmPelsWidth;
 			Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));
 		}
-		
+
 		if (NT_SUCCESS(Status) && DevMode->dmFields & DM_PELSHEIGHT)
 		{
 			RtlInitUnicodeString(&RegistryKey, L"DefaultSettings.YResolution");
 			NewValue = DevMode->dmPelsHeight;
 			Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));
 		}
-		
+
 		ZwClose(DevInstRegKey);
 		if (NT_SUCCESS(Status))
 			Ret = DISP_CHANGE_RESTART;
@@ -2643,11 +2643,11 @@ IntChangeDisplaySettings(
 			Ret = DISP_CHANGE_FAILED;
 		break;
     }
-     
+
   case CDS_TEST: /* Test if the mode could be set */
     Ret = DISP_CHANGE_FAILED;
     break;
-    
+
 #ifdef CDS_VIDEOPARAMETERS
   case CDS_VIDEOPARAMETERS:
     if (lParam == NULL)
@@ -2655,12 +2655,12 @@ IntChangeDisplaySettings(
     Ret = DISP_CHANGE_FAILED;
     break;
 #endif
-    
+
   default:
     Ret = DISP_CHANGE_BADFLAGS;
     break;
   }
-  
+
   return Ret;
 }
 

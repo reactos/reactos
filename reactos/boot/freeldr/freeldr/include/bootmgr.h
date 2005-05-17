@@ -21,7 +21,7 @@
 #define __BOOTMGR_H
 
 
-ULONG		GetDefaultOperatingSystem(PUCHAR OperatingSystemList[], ULONG OperatingSystemCount);
+ULONG		GetDefaultOperatingSystem(PCHAR OperatingSystemList[], ULONG OperatingSystemCount);
 LONG		GetTimeOut(VOID);
 BOOL	MainBootMenuKeyPressFilter(ULONG KeyPress);
 

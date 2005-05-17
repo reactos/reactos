@@ -64,7 +64,7 @@ VOID KdInitSystem(ULONG Reserved, PLOADER_PARAMETER_BLOCK LoaderBlock);
 #endif /* __ASM__ */
 
 /*
- * 
+ *
  */
 #define MM_STACK_SIZE             (3*4096)
 

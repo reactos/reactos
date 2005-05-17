@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/i386/pfault.c
  * PURPOSE:         Paging file functions
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
@@ -71,7 +71,7 @@ NTSTATUS MmPageFault(ULONG Cs,
       Cs != KERNEL_CS)
    {
       KIRQL oldIrql;
-      
+
       KeRaiseIrql(APC_LEVEL, &oldIrql);
       KiDeliverApc(KernelMode, NULL, NULL);
       KeLowerIrql(oldIrql);

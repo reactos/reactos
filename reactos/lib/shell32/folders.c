@@ -40,6 +40,7 @@
 #include "pidl.h"
 #include "shell32_main.h"
 #include "shfldr.h"
+#include "shresdef.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -74,7 +75,7 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
 	
 	TRACE("%p\n", pidl);
 
-	ei = (IExtractIconWImpl*)HeapAlloc(GetProcessHeap(),0,sizeof(IExtractIconWImpl));
+	ei = HeapAlloc(GetProcessHeap(),0,sizeof(IExtractIconWImpl));
 	ei->ref=1;
 	ei->lpVtbl = &eivt;
 	ei->lpvtblPersistFile = &pfvt;
@@ -196,9 +197,9 @@ static HRESULT getIconLocationForFolder(IExtractIconW *iface, UINT uFlags,
         if (!HCR_GetDefaultIconW(folder, szIconFile, cchMax, &dwNr))
         {
             lstrcpynW(szIconFile, swShell32Name, cchMax);
-            dwNr = 3;
+            dwNr = IDI_SHELL_FOLDER;
         }
-        *piIndex = (uFlags & GIL_OPENICON) ? dwNr + 1 : dwNr;
+        *piIndex = -((uFlags & GIL_OPENICON) ? dwNr + 1 : dwNr);
     }
     return S_OK;
 }
@@ -233,7 +234,7 @@ static HRESULT WINAPI IExtractIconW_fnGetIconLocation(
 	if (_ILIsDesktop(pSimplePidl))
 	{
 	  lstrcpynW(szIconFile, swShell32Name, cchMax);
-	  *piIndex = 34;
+	  *piIndex = -IDI_SHELL_DESKTOP;
 	}
 
 	/* my computer and other shell extensions */
@@ -257,7 +258,14 @@ static HRESULT WINAPI IExtractIconW_fnGetIconLocation(
 	  else
 	  {
 	    lstrcpynW(szIconFile, swShell32Name, cchMax);
-	    *piIndex = 15;
+            if(IsEqualGUID(riid, &CLSID_MyComputer))
+                *piIndex = -IDI_SHELL_MY_COMPUTER;
+            else if(IsEqualGUID(riid, &CLSID_MyDocuments))
+                *piIndex = -IDI_SHELL_FOLDER;
+            else if(IsEqualGUID(riid, &CLSID_NetworkPlaces))
+                *piIndex = -IDI_SHELL_MY_NETWORK_PLACES;
+            else
+                *piIndex = -IDI_SHELL_FOLDER;
 	  }
 	}
 
@@ -271,17 +279,17 @@ static HRESULT WINAPI IExtractIconW_fnGetIconLocation(
 	  {
 		switch(GetDriveTypeA(sTemp))
 		{
-		  case DRIVE_REMOVABLE:	  icon_idx =  5;	break;
-		  case DRIVE_CDROM:		  icon_idx = 11;	break;
-		  case DRIVE_REMOTE:	  icon_idx =  9;	break;
-		  case DRIVE_RAMDISK: 	  icon_idx = 12;	break;
+                  case DRIVE_REMOVABLE:   icon_idx = IDI_SHELL_FLOPPY;        break;
+                  case DRIVE_CDROM:       icon_idx = IDI_SHELL_CDROM;         break;
+                  case DRIVE_REMOTE:      icon_idx = IDI_SHELL_NETDRIVE;      break;
+                  case DRIVE_RAMDISK:     icon_idx = IDI_SHELL_RAMDISK;       break;
 		}
 	  }
 
 	  if (icon_idx != -1)
 	  {
 		lstrcpynW(szIconFile, swShell32Name, cchMax);
-		*piIndex = icon_idx;
+		*piIndex = -icon_idx;
 	  }
 	  else
 	  {
@@ -292,14 +300,14 @@ static HRESULT WINAPI IExtractIconW_fnGetIconLocation(
 		else
 		{
 		  lstrcpynW(szIconFile, swShell32Name, cchMax);
-		  *piIndex = 8;
+		  *piIndex = -IDI_SHELL_DRIVE;
 		}
 	  }
 	}
 	else if (_ILIsFolder (pSimplePidl))
 	{
-	  getIconLocationForFolder(iface, uFlags, szIconFile, cchMax, piIndex,
-	   pwFlags);
+            getIconLocationForFolder(iface, uFlags, szIconFile, cchMax, piIndex,
+                                     pwFlags);
 	}
 	else
 	{
@@ -370,14 +378,18 @@ static HRESULT WINAPI IExtractIconW_fnGetIconLocation(
 static HRESULT WINAPI IExtractIconW_fnExtract(IExtractIconW * iface, LPCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize)
 {
 	IExtractIconWImpl *This = (IExtractIconWImpl *)iface;
+        int index;
 
-	FIXME("(%p) (file=%p index=%u %p %p size=%u) semi-stub\n", This, debugstr_w(pszFile), nIconIndex, phiconLarge, phiconSmall, nIconSize);
+	FIXME("(%p) (file=%p index=%d %p %p size=%08x) semi-stub\n", This, debugstr_w(pszFile), (signed)nIconIndex,
+              phiconLarge, phiconSmall, nIconSize);
+
+        index = SIC_GetIconIndex(pszFile, nIconIndex);
 
 	if (phiconLarge)
-	  *phiconLarge = ImageList_GetIcon(ShellBigIconList, nIconIndex, ILD_TRANSPARENT);
+	  *phiconLarge = ImageList_GetIcon(ShellBigIconList, index, ILD_TRANSPARENT);
 
 	if (phiconSmall)
-	  *phiconSmall = ImageList_GetIcon(ShellSmallIconList, nIconIndex, ILD_TRANSPARENT);
+	  *phiconSmall = ImageList_GetIcon(ShellSmallIconList, index, ILD_TRANSPARENT);
 
 	return S_OK;
 }

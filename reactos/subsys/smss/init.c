@@ -1,9 +1,9 @@
 /* $Id$
  *
  * init.c - Session Manager initialization
- * 
+ *
  * ReactOS Operating System
- * 
+ *
  * --------------------------------------------------------------------
  *
  * This software is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this software; see the file COPYING.LIB. If not, write
  * to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge,
- * MA 02139, USA.  
+ * MA 02139, USA.
  *
  * --------------------------------------------------------------------
  */
@@ -105,7 +105,7 @@ InitSessionManager(VOID)
     Status = InitRoutine[i].EntryPoint();
     if(!NT_SUCCESS(Status))
     {
-      DPRINT1("SM: %s: failed to %s (Status=%lx)\n", 
+      DPRINT1("SM: %s: failed to %s (Status=%lx)\n",
 	__FUNCTION__,
 	InitRoutine[i].ErrorMessage,
 	Status);

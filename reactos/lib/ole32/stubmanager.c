@@ -59,7 +59,10 @@ struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object, MSHLFLAG
     if (!sm) return NULL;
 
     list_init(&sm->ifstubs);
+
     InitializeCriticalSection(&sm->lock);
+    DEBUG_SET_CRITSEC_NAME(&sm->lock, "stub_manager");
+
     IUnknown_AddRef(object);
     sm->object = object;
     sm->apt    = apt;
@@ -111,6 +114,7 @@ static void stub_manager_delete(struct stub_manager *m)
 
     IUnknown_Release(m->object);
 
+    DEBUG_CLEAR_CRITSEC_NAME(&m->lock);
     DeleteCriticalSection(&m->lock);
 
     HeapFree(GetProcessHeap(), 0, m);
@@ -148,7 +152,7 @@ struct stub_manager *get_stub_manager_from_object(APARTMENT *apt, void *object)
 
 /* removes the apartment reference to an object, destroying it when no other
  * threads have a reference to it */
-void apartment_disconnect_object(APARTMENT *apt, void *object)
+void apartment_disconnectobject(struct apartment *apt, void *object)
 {
     int found = FALSE;
     struct stub_manager *stubmgr;
@@ -327,9 +331,9 @@ HRESULT ipid_to_stub_manager(const IPID *ipid, APARTMENT **stub_apt, struct stub
 {
     /* FIXME: hack for IRemUnknown */
     if (ipid->Data2 == 0xffff)
-        *stub_apt = COM_ApartmentFromOXID(*(OXID *)ipid->Data4, TRUE);
+        *stub_apt = apartment_findfromoxid(*(OXID *)ipid->Data4, TRUE);
     else
-        *stub_apt = COM_ApartmentFromTID(ipid->Data2);
+        *stub_apt = apartment_findfromtid(ipid->Data2);
     if (!*stub_apt)
     {
         ERR("Couldn't find apartment corresponding to TID 0x%04x\n", ipid->Data2);
@@ -338,7 +342,7 @@ HRESULT ipid_to_stub_manager(const IPID *ipid, APARTMENT **stub_apt, struct stub
     *stubmgr_ret = get_stub_manager_from_ipid(*stub_apt, ipid);
     if (!*stubmgr_ret)
     {
-        COM_ApartmentRelease(*stub_apt);
+        apartment_release(*stub_apt);
         *stub_apt = NULL;
         return RPC_E_INVALID_OBJECT;
     }
@@ -616,15 +620,15 @@ static HRESULT WINAPI RemUnknown_RemQueryInterface(IRemUnknown *iface,
 
     for (i = 0; i < cIids; i++)
     {
-        HRESULT hrobj = register_ifstub(apt, &(*ppQIResults)[i].std, &iids[i],
-                                        stubmgr->object, MSHLFLAGS_NORMAL);
+        HRESULT hrobj = marshal_object(apt, &(*ppQIResults)[i].std, &iids[i],
+                                       stubmgr->object, MSHLFLAGS_NORMAL);
         if (hrobj == S_OK)
             successful_qis++;
         (*ppQIResults)[i].hResult = hrobj;
     }
 
     stub_manager_int_release(stubmgr);
-    COM_ApartmentRelease(apt);
+    apartment_release(apt);
 
     if (successful_qis == cIids)
         return S_OK; /* we got all requested interfaces */
@@ -661,7 +665,7 @@ static HRESULT WINAPI RemUnknown_RemAddRef(IRemUnknown *iface,
             FIXME("Adding %ld refs securely not implemented\n", InterfaceRefs[i].cPrivateRefs);
 
         stub_manager_int_release(stubmgr);
-        COM_ApartmentRelease(apt);
+        apartment_release(apt);
     }
 
     return hr;
@@ -694,7 +698,7 @@ static HRESULT WINAPI RemUnknown_RemRelease(IRemUnknown *iface,
             FIXME("Releasing %ld refs securely not implemented\n", InterfaceRefs[i].cPrivateRefs);
 
         stub_manager_int_release(stubmgr);
-        COM_ApartmentRelease(apt);
+        apartment_release(apt);
     }
 
     return hr;
@@ -726,7 +730,7 @@ HRESULT start_apartment_remote_unknown()
         {
             STDOBJREF stdobjref; /* dummy - not used */
             /* register it with the stub manager */
-            hr = register_ifstub(apt, &stdobjref, &IID_IRemUnknown, (IUnknown *)pRemUnknown, MSHLFLAGS_NORMAL);
+            hr = marshal_object(apt, &stdobjref, &IID_IRemUnknown, (IUnknown *)pRemUnknown, MSHLFLAGS_NORMAL);
             /* release our reference to the object as the stub manager will manage the life cycle for us */
             IRemUnknown_Release(pRemUnknown);
             if (hr == S_OK)

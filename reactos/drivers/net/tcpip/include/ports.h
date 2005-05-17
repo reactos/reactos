@@ -19,7 +19,7 @@ typedef struct _PORT_SET {
     FAST_MUTEX Mutex;
 } PORT_SET, *PPORT_SET;
 
-VOID PortsStartup( PPORT_SET PortSet, 
+VOID PortsStartup( PPORT_SET PortSet,
 		   UINT StartingPort,
 		   UINT PortsToManage );
 VOID PortsShutdown( PPORT_SET PortSet );

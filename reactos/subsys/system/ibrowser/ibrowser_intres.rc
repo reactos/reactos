@@ -375,6 +375,64 @@ END
 /////////////////////////////////////////////////////////////////////////////
 
 
+/////////////////////////////////////////////////////////////////////////////
+// Swedish (SE) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_SWE)
+#ifdef _WIN32
+LANGUAGE LANG_SWEDISH, SUBLANG_SWEDISH
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_SDIFRAME MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&Arkiv"
+    BEGIN
+        MENUITEM "&Öppna",                       ID_FILE_OPEN
+        MENUITEM "&Avsluta",                       ID_FILE_EXIT
+    END
+    POPUP "&Visa"
+    BEGIN
+        MENUITEM "&Verktygsfält",                    ID_VIEW_TOOL_BAR
+        MENUITEM "S&idfält",                   ID_VIEW_SIDE_BAR, GRAYED
+        MENUITEM "&Statusfält",                 ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Uppdatera\tF5",                ID_REFRESH
+        MENUITEM "&Fullskärm\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+    END
+    POPUP "&Hjälp"
+    BEGIN
+        MENUITEM "IBrowser &FAQ...",            ID_IBROWSER_FAQ
+        MENUITEM "Om &IBrowser...",          ID_ABOUT_IBROWSER
+        MENUITEM "Om &operativsystemet...",                ID_ABOUT_WINDOWS
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TITLE               "ReactOS webbläsare"
+    IDS_EMPTY               "(Tom)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ABOUT_IBROWSER      "&Om..."
+END
+
+#endif    // Swedish (SE) resources
+/////////////////////////////////////////////////////////////////////////////
+
 
 #ifndef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////

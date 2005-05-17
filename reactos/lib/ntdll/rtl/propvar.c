@@ -70,5 +70,5 @@ RtlConvertVariantToProperty (
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-	
+
 /* EOF */

@@ -199,9 +199,9 @@ using namespace _com_util;
 
 
  // launch a program or document file
-extern BOOL launch_file(HWND hwnd, LPCTSTR cmd, UINT nCmdShow, LPCTSTR parameters=NULL);
+extern BOOL launch_file(HWND hwnd, LPCTSTR cmd, UINT nCmdShow=SW_SHOWNORMAL, LPCTSTR parameters=NULL);
 #ifdef UNICODE
-extern BOOL launch_fileA(HWND hwnd, LPSTR cmd, UINT nCmdShow, LPCSTR parameters=NULL);
+extern BOOL launch_fileA(HWND hwnd, LPSTR cmd, UINT nCmdShow=SW_SHOWNORMAL, LPCSTR parameters=NULL);
 #else
 #define	launch_fileA launch_file
 #endif

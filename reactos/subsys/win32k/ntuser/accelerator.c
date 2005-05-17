@@ -78,7 +78,7 @@ NtUserCopyAcceleratorTable(
   PACCELERATOR_TABLE AcceleratorTable;
   NTSTATUS Status;
   int Ret;
-  
+
   Status = IntValidateWindowStationHandle(NtUserGetProcessWindowStation(),
     UserMode,
 	0,
@@ -88,7 +88,7 @@ NtUserCopyAcceleratorTable(
     SetLastNtError(STATUS_ACCESS_DENIED);
     return 0;
   }
-  
+
   Status = ObmReferenceObjectByHandle(WindowStation->HandleTable,
     Table,
     otAcceleratorTable,
@@ -99,7 +99,7 @@ NtUserCopyAcceleratorTable(
     ObDereferenceObject(WindowStation);
     return 0;
   }
-  
+
   if(Entries)
   {
     Ret = min(EntriesCount, AcceleratorTable->Count);
@@ -116,7 +116,7 @@ NtUserCopyAcceleratorTable(
   {
     Ret = AcceleratorTable->Count;
   }
-  
+
   ObmDereferenceObject(AcceleratorTable);
   ObDereferenceObject(WindowStation);
 

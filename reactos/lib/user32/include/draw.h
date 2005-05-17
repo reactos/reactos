@@ -1,1 +1,1 @@
-HPEN STDCALL GetSysColorPen (int nIndex);;
+HPEN STDCALL GetSysColorPen (int nIndex);

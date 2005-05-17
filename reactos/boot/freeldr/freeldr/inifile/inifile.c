@@ -24,7 +24,7 @@
 #include <debug.h>
 #include <mm.h>
 
-BOOL IniOpenSection(PUCHAR SectionName, ULONG* SectionId)
+BOOL IniOpenSection(PCHAR SectionName, ULONG* SectionId)
 {
 	PINI_SECTION	Section;
 
@@ -81,7 +81,7 @@ ULONG IniGetSectionSettingValueSize(ULONG SectionId, ULONG SettingIndex)
 	return (strlen(Section->SectionItemList[SettingIndex].ItemValue) + 1);
 }
 
-BOOL IniReadSettingByNumber(ULONG SectionId, ULONG SettingNumber, PUCHAR SettingName, ULONG NameSize, PUCHAR SettingValue, ULONG ValueSize)
+BOOL IniReadSettingByNumber(ULONG SectionId, ULONG SettingNumber, PCHAR SettingName, ULONG NameSize, PCHAR SettingValue, ULONG ValueSize)
 {
 	PINI_SECTION		Section = (PINI_SECTION)SectionId;
 	PINI_SECTION_ITEM	SectionItem;
@@ -131,7 +131,7 @@ BOOL IniReadSettingByNumber(ULONG SectionId, ULONG SettingNumber, PUCHAR Setting
 	return FALSE;
 }
 
-BOOL IniReadSettingByName(ULONG SectionId, PUCHAR SettingName, PUCHAR Buffer, ULONG BufferSize)
+BOOL IniReadSettingByName(ULONG SectionId, PCHAR SettingName, PCHAR Buffer, ULONG BufferSize)
 {
 	PINI_SECTION		Section = (PINI_SECTION)SectionId;
 	PINI_SECTION_ITEM	SectionItem;
@@ -163,7 +163,7 @@ BOOL IniReadSettingByName(ULONG SectionId, PUCHAR SettingName, PUCHAR Buffer, UL
 	return FALSE;
 }
 
-BOOL IniAddSection(PUCHAR SectionName, ULONG* SectionId)
+BOOL IniAddSection(PCHAR SectionName, ULONG* SectionId)
 {
 	PINI_SECTION	Section;
 
@@ -203,7 +203,7 @@ BOOL IniAddSection(PUCHAR SectionName, ULONG* SectionId)
 	return TRUE;
 }
 
-BOOL IniAddSettingValueToSection(ULONG SectionId, PUCHAR SettingName, PUCHAR SettingValue)
+BOOL IniAddSettingValueToSection(ULONG SectionId, PCHAR SettingName, PCHAR SettingValue)
 {
 	PINI_SECTION		Section = (PINI_SECTION)SectionId;
 	PINI_SECTION_ITEM	SectionItem;

@@ -54,9 +54,9 @@ typedef struct IPROUTE_ENTRY {
     ULONG Metric3;
     ULONG Metric4;
     ULONG Gw;
-    ULONG Type; 
+    ULONG Type;
     ULONG Proto;
-    ULONG Age; 
+    ULONG Age;
     ULONG Mask;
     ULONG Metric5;
     ULONG Info;
@@ -74,17 +74,19 @@ typedef struct IFENTRY {
     ULONG LastChange;
     ULONG InOctets;
     ULONG InUcastPackets;
+    ULONG InNUcastPackets;
     ULONG InDiscards;
     ULONG InErrors;
     ULONG InUnknownProtos;
     ULONG OutOctets;
     ULONG OutUcastPackets;
+    ULONG OutNUcastPackets;
     ULONG OutDiscards;
     ULONG OutErrors;
     ULONG OutQLen;
     ULONG DescrLen;
 } IFENTRY, *PIFENTRY;
- 
+
 #define	IP_MIB_STATS_ID           1
 #define IF_MIB_STATS_ID           1
 

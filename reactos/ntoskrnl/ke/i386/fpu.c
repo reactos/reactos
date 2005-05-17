@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/fpu.c
  * PURPOSE:         Handles the FPU
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
@@ -69,7 +69,7 @@ KiTagWordFxsaveToFnsave(PFXSAVE_FORMAT FxSave)
   UCHAR Tag;
   INT i;
   struct FPREG { USHORT Significand[4]; USHORT Exponent; } *FpReg;
-  
+
   for (i = 0; i < 8; i++)
     {
       if (FxSave->TagWord & (1 << i)) /* valid */
@@ -88,11 +88,11 @@ KiTagWordFxsaveToFnsave(PFXSAVE_FORMAT FxSave)
                     Tag = 2;  /* Special */
                   }
                 break;
-            
+
               case 0x7fff:
                 Tag = 2;      /* Special */
                 break;
-                
+
               default:
                 if (FpReg->Significand[3] & 0x00008000)
                   {
@@ -303,11 +303,11 @@ KiCheckFPU(VOID)
    if (Prcb->FeatureBits & (X86_FEATURE_SSE | X86_FEATURE_SSE2))
      {
         Ke386SetCr4(Ke386GetCr4() | X86_CR4_OSXMMEXCPT);
-        
+
         /* enable SSE */
         XmmSupport = 1;
      }
-     
+
    Ke386SetCr0(Ke386GetCr0() | X86_CR0_TS);
    Ke386RestoreFlags(Flags);
 }
@@ -388,7 +388,7 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 #ifndef CONFIG_SMP
       PKTHREAD NpxThread;
 #endif
-      
+
       (void) cr0;
       ASSERT((cr0 & X86_CR0_TS) == X86_CR0_TS);
       ASSERT((Tf->Eflags & X86_EFLAGS_VM) == 0);
@@ -570,7 +570,7 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
       /* Dispatch exception */
       DPRINT("Dispatching exception (ExceptionCode = 0x%08x)\n", Er.ExceptionCode);
       KiDispatchException(&Er, Context, Tf, PreviousMode, TRUE);
-      
+
       DPRINT("Math-fault handled!\n");
       return STATUS_SUCCESS;
     }

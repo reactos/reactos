@@ -1,4 +1,4 @@
-/* 
+/*
  * Setupapi cabinet routines
  *
  * Copyright 2003 Gregory M. Turner
@@ -20,7 +20,7 @@
  *
  * Many useful traces are commented in code, uncomment them if you have
  * trouble and run with WINEDEBUG=+setupapi
- * 
+ *
  */
 
 #include <stdarg.h>
@@ -44,6 +44,7 @@
 
 #include "wine/debug.h"
 
+HINSTANCE hInstance = 0;
 OSVERSIONINFOW OsVersionInfo;
 
 static HINSTANCE CABINET_hInstance = 0;
@@ -363,9 +364,7 @@ static INT_PTR sc_FNNOTIFY_A(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
     } else {
       if (mysterio[0]) {
         /* some easy paranoia.  no such carefulness exists on the wide API IIRC */
-        mysterio[SIZEOF_MYSTERIO - 1] = '\0';
-        strncpy(pfdin->psz3, &(mysterio[0]), 255);
-        mysterio[255] = '\0';
+        lstrcpynA(pfdin->psz3, &(mysterio[0]), SIZEOF_MYSTERIO);
       }
       return 0;
     }
@@ -546,7 +545,7 @@ BOOL WINAPI SetupIterateCabinetA(PCSTR CabinetFile, DWORD Reserved,
   TRACE("(CabinetFile == %s, Reserved == %lu, MsgHandler == ^%p, Context == ^%p)\n",
         debugstr_a(CabinetFile), Reserved, MsgHandler, Context);
 
-  if (! LoadCABINETDll()) 
+  if (! LoadCABINETDll())
     return FALSE;
 
   memset(&my_hsc, 0, sizeof(SC_HSC_A));
@@ -679,6 +678,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         OsVersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
         if (!GetVersionExW(&OsVersionInfo))
             return FALSE;
+        hInstance = (HINSTANCE)hinstDLL;
         break;
     case DLL_PROCESS_DETACH:
         UnloadCABINETDll();

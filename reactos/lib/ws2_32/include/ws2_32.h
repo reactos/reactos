@@ -27,7 +27,7 @@ unsigned long strtoul(const char *nptr, char **endptr, int base);
 #define EXPORT STDCALL
 
 extern HANDLE GlobalHeap;
-extern BOOL Initialized;	/* TRUE if WSAStartup() has been successfully called */
+extern BOOL WsaInitialized;	/* TRUE if WSAStartup() has been successfully called */
 extern WSPUPCALLTABLE UpcallTable;
 
 #define WS2_INTERNAL_MAX_ALIAS 16
@@ -59,9 +59,9 @@ typedef struct _WINSOCK_THREAD_BLOCK {
 
 /* Macros */
 
-#define WSAINITIALIZED (Initialized)
+#define WSAINITIALIZED (WsaInitialized)
 
-#define WSASETINITIALIZED (Initialized = TRUE)
+#define WSASETINITIALIZED (WsaInitialized = TRUE)
 
 /* ws2_32 internal Functions */
 void check_hostent(struct hostent **he);

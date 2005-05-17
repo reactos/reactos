@@ -75,7 +75,7 @@ struct ip_fw_chain {
 #define IP_FW_F_COUNT	0x0020	/* This is an accept rule	      */
 #define IP_FW_F_PRN	0x0040	/* Print if this rule matches	      */
 #define IP_FW_F_ICMPRPL	0x0080	/* Send back icmp unreachable packet  */
-				 
+
 #define IP_FW_F_SRNG	0x0100	/* The first two src ports are a min  *
 				 * and max range (stored in host byte *
 				 * order).                            */

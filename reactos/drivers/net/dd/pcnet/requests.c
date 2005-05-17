@@ -20,8 +20,8 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  * PROGRAMMERS:
- *     Vizzini (vizzini@plasmic.com), 
- *     borrowed very heavily from the ReactOS ne2000 driver by 
+ *     Vizzini (vizzini@plasmic.com),
+ *     borrowed very heavily from the ReactOS ne2000 driver by
  *     Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISIONS:
  *     14-Sep-2003 vizzini - Created
@@ -38,7 +38,7 @@
 #include "pcnet.h"
 
 /* List of supported OIDs */
-static ULONG MiniportOIDList[] = 
+static ULONG MiniportOIDList[] =
 {
   OID_GEN_SUPPORTED_LIST,
   OID_GEN_HARDWARE_STATUS,
@@ -123,7 +123,7 @@ MiniportQueryInformation(
   CopyFrom = (PVOID)&GenericULONG;
   CopySize = sizeof(ULONG);
 
-  switch (Oid) 
+  switch (Oid)
     {
     case OID_GEN_SUPPORTED_LIST:
         {
@@ -167,7 +167,7 @@ MiniportQueryInformation(
         }
 
     case OID_GEN_LINK_SPEED:
-        {     
+        {
           GenericULONG = 100000;  /* 10Mbps */
           break;
         }
@@ -257,7 +257,7 @@ MiniportQueryInformation(
     case OID_GEN_MAC_OPTIONS:
         {
           GenericULONG = NDIS_MAC_OPTION_COPY_LOOKAHEAD_DATA |
-                         NDIS_MAC_OPTION_RECEIVE_SERIALIZED  |           
+                         NDIS_MAC_OPTION_RECEIVE_SERIALIZED  |
                          NDIS_MAC_OPTION_TRANSFERS_NOT_PEND;
           break;
         }
@@ -314,7 +314,7 @@ MiniportQueryInformation(
         break;
 
     case OID_GEN_RCV_NO_BUFFER:
-        GenericULONG = Adapter->Statistics.RcvBufferErrors + 
+        GenericULONG = Adapter->Statistics.RcvBufferErrors +
                        Adapter->Statistics.RcvOverflowErrors;
         break;
 
@@ -342,15 +342,15 @@ MiniportQueryInformation(
         }
     }
 
-  if (Status == NDIS_STATUS_SUCCESS) 
+  if (Status == NDIS_STATUS_SUCCESS)
     {
-      if (CopySize > InformationBufferLength) 
+      if (CopySize > InformationBufferLength)
         {
           *BytesNeeded  = (CopySize - InformationBufferLength);
           *BytesWritten = 0;
           Status        = NDIS_STATUS_BUFFER_TOO_SHORT;
-        } 
-      else 
+        }
+      else
         {
           NdisMoveMemory(InformationBuffer, CopyFrom, CopySize);
           *BytesWritten = CopySize;
@@ -401,12 +401,12 @@ MiniportSetInformation(
 
   NdisAcquireSpinLock(&Adapter->Lock);
 
-  switch (Oid) 
+  switch (Oid)
     {
     case OID_GEN_CURRENT_PACKET_FILTER:
       {
         /* Verify length */
-        if (InformationBufferLength < sizeof(ULONG)) 
+        if (InformationBufferLength < sizeof(ULONG))
           {
             *BytesRead   = 0;
             *BytesNeeded = sizeof(ULONG) - InformationBufferLength;
@@ -424,14 +424,14 @@ MiniportSetInformation(
             NDIS_PACKET_TYPE_MAC_FRAME      |
             NDIS_PACKET_TYPE_SMT            |
             NDIS_PACKET_TYPE_SOURCE_ROUTING)
-           ) 
+           )
           {
             *BytesRead   = 4;
             *BytesNeeded = 0;
             Status       = NDIS_STATUS_NOT_SUPPORTED;
             break;
           }
-            
+
         Adapter->CurrentPacketFilter = GenericULONG;
 
         /* FIXME: Set filter on hardware */
@@ -442,7 +442,7 @@ MiniportSetInformation(
     case OID_GEN_CURRENT_LOOKAHEAD:
       {
         /* Verify length */
-        if (InformationBufferLength < sizeof(ULONG)) 
+        if (InformationBufferLength < sizeof(ULONG))
           {
             *BytesRead   = 0;
             *BytesNeeded = sizeof(ULONG) - InformationBufferLength;
@@ -463,7 +463,7 @@ MiniportSetInformation(
     case OID_802_3_MULTICAST_LIST:
       {
         /* Verify length. Must be multiple of hardware address length */
-        if ((InformationBufferLength % 6) != 0) 
+        if ((InformationBufferLength % 6) != 0)
           {
             *BytesRead   = 0;
             *BytesNeeded = 0;
@@ -492,7 +492,7 @@ MiniportSetInformation(
       }
     }
 
-  if (Status == NDIS_STATUS_SUCCESS) 
+  if (Status == NDIS_STATUS_SUCCESS)
     {
       *BytesRead   = InformationBufferLength;
       *BytesNeeded = 0;

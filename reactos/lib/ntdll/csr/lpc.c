@@ -52,7 +52,7 @@ CsrClientCallServer(PVOID Request,
 		    PVOID Unknown OPTIONAL,
 		    CSR_CCS_API CsrApi,
 		    ULONG SizeOfData);
-		    
+
 Request is the family of PCSRSS_XXX_REQUEST objects.
 XXX_REQUEST depend on the CsrApiNumber.Index.
 
@@ -97,20 +97,20 @@ CsrClientCallServer(PCSRSS_API_REQUEST Request,
 		    ULONG ReplyLength)
 {
   NTSTATUS Status;
-  
+
   if (INVALID_HANDLE_VALUE == WindowsApiPort)
     {
       DbgPrint ("NTDLL.%s: client not connected to CSRSS!\n", __FUNCTION__);
       return (STATUS_UNSUCCESSFUL);
     }
-  
+
    Request->Header.DataSize = Length - sizeof(LPC_MESSAGE);
    Request->Header.MessageSize = Length;
-   
+
    Status = NtRequestWaitReplyPort(WindowsApiPort,
 				   &Request->Header,
 				   (Reply?&Reply->Header:&Request->Header));
-   
+
    return(Status);
 }
 
@@ -181,7 +181,7 @@ CsrClientConnectToServer(VOID)
      {
        return(STATUS_NO_MEMORY);
      }
-   
+
    Request.Type = CSRSS_CONNECT_PROCESS;
    Status = CsrClientCallServer(&Request,
 				&Reply,

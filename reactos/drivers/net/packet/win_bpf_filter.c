@@ -25,7 +25,7 @@
  *
  * This code is derived from the Stanford/CMU enet packet filter,
  * (net/enet.c) distributed as part of 4.3BSD, and code contributed
- * to Berkeley by Steven McCanne and Van Jacobson both of Lawrence 
+ * to Berkeley by Steven McCanne and Van Jacobson both of Lawrence
  * Berkeley Laboratory.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,7 +55,7 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- 
+
 	@(#)bpf.c	7.5 (Berkeley) 7/15/91
 */
 
@@ -91,7 +91,7 @@ u_int bpf_filter(pc, p, wirelen, buflen,mem_ex,tme,time_ref)
 	register int k;
 	u_int32 j,tmp;
 	u_short tmp2;
-	
+
 	int32 mem[BPF_MEMWORDS];
 
 	if (pc == 0)
@@ -107,7 +107,7 @@ u_int bpf_filter(pc, p, wirelen, buflen,mem_ex,tme,time_ref)
 		switch (pc->code) {
 
 		default:
-		
+
 			return 0;
 
 		case BPF_RET|BPF_K:
@@ -191,7 +191,7 @@ u_int bpf_filter(pc, p, wirelen, buflen,mem_ex,tme,time_ref)
 		case BPF_LD|BPF_MEM:
 			A = mem[pc->k];
 			continue;
-			
+
 		case BPF_LDX|BPF_MEM:
 			X = mem[pc->k];
 			continue;
@@ -221,7 +221,7 @@ u_int bpf_filter(pc, p, wirelen, buflen,mem_ex,tme,time_ref)
 		case BPF_LDX|BPF_MEM_EX_IMM|BPF_W:
 			X = EXTRACT_LONG(&mem_ex->buffer[pc->k]);
 			continue;
-			
+
 		case BPF_LD|BPF_MEM_EX_IND|BPF_B:
 			k = X + pc->k;
 			if ((int32)k>= (int32)mem_ex->size) {
@@ -337,25 +337,25 @@ u_int bpf_filter(pc, p, wirelen, buflen,mem_ex,tme,time_ref)
 		case BPF_ALU|BPF_ADD|BPF_X:
 			A += X;
 			continue;
-			
+
 		case BPF_ALU|BPF_SUB|BPF_X:
 			A -= X;
 			continue;
-			
+
 		case BPF_ALU|BPF_MUL|BPF_X:
 			A *= X;
 			continue;
-			
+
 		case BPF_ALU|BPF_DIV|BPF_X:
 			if (X == 0)
 				return 0;
 			A /= X;
 			continue;
-			
+
 		case BPF_ALU|BPF_AND|BPF_X:
 			A &= X;
 			continue;
-			
+
 		case BPF_ALU|BPF_OR|BPF_X:
 			A |= X;
 			continue;
@@ -371,23 +371,23 @@ u_int bpf_filter(pc, p, wirelen, buflen,mem_ex,tme,time_ref)
 		case BPF_ALU|BPF_ADD|BPF_K:
 			A += pc->k;
 			continue;
-			
+
 		case BPF_ALU|BPF_SUB|BPF_K:
 			A -= pc->k;
 			continue;
-			
+
 		case BPF_ALU|BPF_MUL|BPF_K:
 			A *= pc->k;
 			continue;
-			
+
 		case BPF_ALU|BPF_DIV|BPF_K:
 			A /= pc->k;
 			continue;
-			
+
 		case BPF_ALU|BPF_AND|BPF_K:
 			A &= pc->k;
 			continue;
-			
+
 		case BPF_ALU|BPF_OR|BPF_K:
 			A |= pc->k;
 			continue;
@@ -416,7 +416,7 @@ u_int bpf_filter(pc, p, wirelen, buflen,mem_ex,tme,time_ref)
 		case BPF_MISC|BPF_TME|BPF_LOOKUP:
 			j=lookup_frontend(mem_ex,tme,pc->k,time_ref);
 			if (j==TME_ERROR)
-				return 0;	
+				return 0;
 			pc += (j == TME_TRUE) ? pc->jt : pc->jf;
 			continue;
 
@@ -452,7 +452,7 @@ u_int bpf_filter_with_2_buffers(pc, p, pd, headersize, wirelen, buflen, mem_ex,t
 	register struct bpf_insn *pc;
 	register u_char *p;
 	register u_char *pd;
-	register int headersize; 
+	register int headersize;
 	u_int wirelen;
 	register u_int buflen;
 	PMEM_TYPE mem_ex;
@@ -478,7 +478,7 @@ u_int bpf_filter_with_2_buffers(pc, p, pd, headersize, wirelen, buflen, mem_ex,t
 		switch (pc->code) {
 
 		default:
-		
+
 			return 0;
 
 		case BPF_RET|BPF_K:
@@ -492,7 +492,7 @@ u_int bpf_filter_with_2_buffers(pc, p, pd, headersize, wirelen, buflen, mem_ex,t
 			if (k + sizeof(int32) > buflen) {
 				return 0;
 			}
-			
+
 			if(k + (int)sizeof(int32) < headersize) A = EXTRACT_LONG(&p[k]);
 			else if(k + 2 == headersize){
 				A=(u_int32)*((u_char *)p+k)<<24|
@@ -513,22 +513,22 @@ u_int bpf_filter_with_2_buffers(pc, p, pd, headersize, wirelen, buflen, mem_ex,t
 					(u_int32)*((u_char *)pd+k-headersize+3);
 			}
 			A = EXTRACT_LONG(&pd[k-headersize]);
-			
+
 			continue;
-			
+
 		case BPF_LD|BPF_H|BPF_ABS:
 			k = pc->k;
 			if (k + sizeof(short) > buflen) {
 				return 0;
 			}
-			
+
 			if(k + (int)sizeof(short) < headersize) A = EXTRACT_SHORT(&p[k]);
 			else if(k == headersize){
 				A=(u_short)*((u_char *)p+k)<<8|
 					(u_short)*((u_char *)pd+k-headersize);
 			}
 			A = EXTRACT_SHORT(&pd[k-headersize]);
-			
+
 			continue;
 
 		case BPF_LD|BPF_B|BPF_ABS:
@@ -576,15 +576,15 @@ u_int bpf_filter_with_2_buffers(pc, p, pd, headersize, wirelen, buflen, mem_ex,t
 					(u_int32)*((u_char *)pd+k-headersize+3);
 			}
 			A = EXTRACT_LONG(&pd[k-headersize]);
-			
+
 			continue;
-			
+
 		case BPF_LD|BPF_H|BPF_IND:
 			k = X + pc->k;
 			if (k + sizeof(short) > buflen) {
 				return 0;
 			}
-			
+
 			if(k + (int)sizeof(short) < headersize) A = EXTRACT_SHORT(&p[k]);
 			else if(k == headersize){
 				A=(u_short)*((u_char *)p+k)<<8|
@@ -610,7 +610,7 @@ u_int bpf_filter_with_2_buffers(pc, p, pd, headersize, wirelen, buflen, mem_ex,t
 			if ((int)k >= (int)buflen) {
 				return 0;
 			}
-			
+
 			if((pc->k)<headersize) X = (p[pc->k] & 0xf) << 2;
 			 else X = (pd[(pc->k)-headersize] & 0xf) << 2;
 
@@ -627,7 +627,7 @@ u_int bpf_filter_with_2_buffers(pc, p, pd, headersize, wirelen, buflen, mem_ex,t
 		case BPF_LD|BPF_MEM:
 			A = mem[pc->k];
 			continue;
-			
+
 		case BPF_LDX|BPF_MEM:
 			X = mem[pc->k];
 			continue;
@@ -657,7 +657,7 @@ u_int bpf_filter_with_2_buffers(pc, p, pd, headersize, wirelen, buflen, mem_ex,t
 		case BPF_LDX|BPF_MEM_EX_IMM|BPF_W:
 			X = EXTRACT_LONG(&mem_ex->buffer[pc->k]);
 			continue;
-			
+
 		case BPF_LD|BPF_MEM_EX_IND|BPF_B:
 			k = X + pc->k;
 			if ((int32)k>= (int32)mem_ex->size) {
@@ -682,7 +682,7 @@ u_int bpf_filter_with_2_buffers(pc, p, pd, headersize, wirelen, buflen, mem_ex,t
 			A=EXTRACT_LONG((uint32*)&mem_ex->buffer[k]);
 			continue;
 /* END LD NO PACKET INSTRUCTIONS */
-		
+
 		case BPF_ST:
 			mem[pc->k] = A;
 			continue;
@@ -734,9 +734,9 @@ u_int bpf_filter_with_2_buffers(pc, p, pd, headersize, wirelen, buflen, mem_ex,t
 			*(uint16*)&mem_ex->buffer[pc->k+X]=EXTRACT_SHORT(&tmp2);
 			continue;
 /* END STORE INSTRUCTIONS */
-		
-		
-		
+
+
+
 		case BPF_JMP|BPF_JA:
 			pc += pc->k;
 			continue;
@@ -776,25 +776,25 @@ u_int bpf_filter_with_2_buffers(pc, p, pd, headersize, wirelen, buflen, mem_ex,t
 		case BPF_ALU|BPF_ADD|BPF_X:
 			A += X;
 			continue;
-			
+
 		case BPF_ALU|BPF_SUB|BPF_X:
 			A -= X;
 			continue;
-			
+
 		case BPF_ALU|BPF_MUL|BPF_X:
 			A *= X;
 			continue;
-			
+
 		case BPF_ALU|BPF_DIV|BPF_X:
 			if (X == 0)
 				return 0;
 			A /= X;
 			continue;
-			
+
 		case BPF_ALU|BPF_AND|BPF_X:
 			A &= X;
 			continue;
-			
+
 		case BPF_ALU|BPF_OR|BPF_X:
 			A |= X;
 			continue;
@@ -810,23 +810,23 @@ u_int bpf_filter_with_2_buffers(pc, p, pd, headersize, wirelen, buflen, mem_ex,t
 		case BPF_ALU|BPF_ADD|BPF_K:
 			A += pc->k;
 			continue;
-			
+
 		case BPF_ALU|BPF_SUB|BPF_K:
 			A -= pc->k;
 			continue;
-			
+
 		case BPF_ALU|BPF_MUL|BPF_K:
 			A *= pc->k;
 			continue;
-			
+
 		case BPF_ALU|BPF_DIV|BPF_K:
 			A /= pc->k;
 			continue;
-			
+
 		case BPF_ALU|BPF_AND|BPF_K:
 			A &= pc->k;
 			continue;
-			
+
 		case BPF_ALU|BPF_OR|BPF_K:
 			A |= pc->k;
 			continue;
@@ -855,7 +855,7 @@ u_int bpf_filter_with_2_buffers(pc, p, pd, headersize, wirelen, buflen, mem_ex,t
 		case BPF_MISC|BPF_TME|BPF_LOOKUP:
 			j=lookup_frontend(mem_ex,tme,pc->k,time_ref);
 			if (j==TME_ERROR)
-				return 0;	
+				return 0;
 			pc += (j == TME_TRUE) ? pc->jt : pc->jf;
 			continue;
 
@@ -889,22 +889,22 @@ int32
 bpf_validate(f, len,mem_ex_size)
 	struct bpf_insn *f;
 	int32 len;
-	uint32 mem_ex_size;	
+	uint32 mem_ex_size;
 {
 	register int32 i,j;
 	register struct bpf_insn *p;
 	int32 flag;
-		
+
 	for (i = 0; i < len; ++i) {
 		/*
-		 * Check that that jumps are forward, and within 
+		 * Check that that jumps are forward, and within
 		 * the code block.
 		 */
-		
+
 		p = &f[i];
 
 		IF_LOUD(DbgPrint("Validating program");)
-		
+
 		flag=0;
 		for(j=0;j<VALID_INSTRUCTIONS_LEN;j++)
 			if (p->code==valid_instructions[j])
@@ -913,7 +913,7 @@ bpf_validate(f, len,mem_ex_size)
 			return 0;
 
 		IF_LOUD(DbgPrint("Validating program: no unknown instructions");)
-		
+
 		if (BPF_CLASS(p->code) == BPF_JMP) {
 			register int32 from = i + 1;
 
@@ -926,21 +926,21 @@ bpf_validate(f, len,mem_ex_size)
 		}
 
 		IF_LOUD(DbgPrint("Validating program: no wrong JUMPS");)
-	
+
 		/*
 		 * Check that memory operations use valid addresses.
 		 */
 		if (((BPF_CLASS(p->code) == BPF_ST && ((p->code &BPF_MEM_EX_IMM)!=BPF_MEM_EX_IMM && (p->code &BPF_MEM_EX_IND)!=BPF_MEM_EX_IND)) ||
-		     (BPF_CLASS(p->code) == BPF_LD && 
+		     (BPF_CLASS(p->code) == BPF_LD &&
 		      (p->code & 0xe0) == BPF_MEM)) &&
 			  (p->k >= BPF_MEMWORDS || p->k < 0))
 			return 0;
-		
+
 		IF_LOUD(DbgPrint("Validating program: no wrong ST/LD memory locations");)
-			
+
 		/*
-		 * Check if key stores use valid addresses 
-		 */ 
+		 * Check if key stores use valid addresses
+		 */
 		if (BPF_CLASS(p->code) == BPF_ST && (p->code &BPF_MEM_EX_IMM)==BPF_MEM_EX_IMM)
 	    switch (BPF_SIZE(p->code))
 		{

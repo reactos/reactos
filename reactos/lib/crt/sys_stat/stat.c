@@ -43,19 +43,19 @@ int _stat(const char* path, struct _stat* buffer)
 //  statbuf->st_dev = fd;
   buffer->st_size = fileAttributeData.nFileSizeLow;
   buffer->st_mode = S_IREAD;
-  if (fileAttributeData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) 
+  if (fileAttributeData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
     buffer->st_mode |= S_IFDIR;
   else
   {
     buffer->st_mode |= S_IFREG;
     ext = strrchr(path, '.');
-    if (ext && (!_stricmp(ext, ".exe") || 
-	        !_stricmp(ext, ".com") || 
-		!_stricmp(ext, ".bat") || 
+    if (ext && (!_stricmp(ext, ".exe") ||
+	        !_stricmp(ext, ".com") ||
+		!_stricmp(ext, ".bat") ||
 		!_stricmp(ext, ".cmd")))
       buffer->st_mode |= S_IEXEC;
   }
-  if (!(fileAttributeData.dwFileAttributes & FILE_ATTRIBUTE_READONLY)) 
+  if (!(fileAttributeData.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
     buffer->st_mode |= S_IWRITE;
 
   return 0;
@@ -97,19 +97,19 @@ int _stati64 (const char *path, struct _stati64 *buffer)
   buffer->st_size = ((((__int64)fileAttributeData.nFileSizeHigh) << 16) << 16) +
              fileAttributeData.nFileSizeLow;
   buffer->st_mode = S_IREAD;
-  if (fileAttributeData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) 
+  if (fileAttributeData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
     buffer->st_mode |= S_IFDIR;
   else
   {
     buffer->st_mode |= S_IFREG;
     ext = strrchr(path, '.');
-    if (ext && (!_stricmp(ext, ".exe") || 
-	        !_stricmp(ext, ".com") || 
-		!_stricmp(ext, ".bat") || 
+    if (ext && (!_stricmp(ext, ".exe") ||
+	        !_stricmp(ext, ".com") ||
+		!_stricmp(ext, ".bat") ||
 		!_stricmp(ext, ".cmd")))
       buffer->st_mode |= S_IEXEC;
   }
-  if (!(fileAttributeData.dwFileAttributes & FILE_ATTRIBUTE_READONLY)) 
+  if (!(fileAttributeData.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
     buffer->st_mode |= S_IWRITE;
 
   return 0;

@@ -23,7 +23,7 @@ GetErrorMode(VOID)
 {
   NTSTATUS Status;
   UINT ErrMode;
-  
+
   Status = NtQueryInformationProcess(NtCurrentProcess(),
                                      ProcessDefaultHardErrorMode,
                                      (PVOID)&ErrMode,
@@ -34,22 +34,22 @@ GetErrorMode(VOID)
     SetLastErrorByStatus(Status);
     return 0;
   }
-  
+
   return ErrMode;
 }
 
 /*
  * @implemented
  */
-UINT 
+UINT
 STDCALL
 SetErrorMode(UINT uMode)
 {
    UINT PrevErrMode;
    NTSTATUS Status;
-   
+
    PrevErrMode = GetErrorMode();
-   
+
    Status = NtSetInformationProcess(NtCurrentProcess(),
                                     ProcessDefaultHardErrorMode,
                                     (PVOID)&uMode,
@@ -83,7 +83,7 @@ SetUnhandledExceptionFilter(
  * The address can point to anywhere within the module.
  */
 static const char*
-_module_name_from_addr(const void* addr, void **module_start_addr, 
+_module_name_from_addr(const void* addr, void **module_start_addr,
                        char* psz, size_t nChars)
 {
    MEMORY_BASIC_INFORMATION mbi;
@@ -171,33 +171,41 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
       _dump_context ( ExceptionInfo->ContextRecord );
 #ifdef _X86_
       DbgPrint("Frames:\n");
-      Frame = (PULONG)ExceptionInfo->ContextRecord->Ebp;
-      while (Frame[1] != 0 && Frame[1] != 0xdeadbeef)
+      _SEH_TRY
       {
-         if (IsBadReadPtr((PVOID)Frame[1], 4)) {
-           DbgPrint("   %8x%9s   %s\n", Frame[1], "<invalid address>"," ");
-         } else {
-           _module_name_from_addr((const void*)Frame[1], &StartAddr, 
-                                  szMod, sizeof(szMod));
-           DbgPrint("   %8x+%-8x   %s\n", 
-                   (PVOID)StartAddr, 
-                   (ULONG_PTR)Frame[1] - (ULONG_PTR)StartAddr, szMod);
+         Frame = (PULONG)ExceptionInfo->ContextRecord->Ebp;
+         while (Frame[1] != 0 && Frame[1] != 0xdeadbeef)
+         {
+            if (IsBadReadPtr((PVOID)Frame[1], 4)) {
+              DbgPrint("   %8x%9s   %s\n", Frame[1], "<invalid address>"," ");
+            } else {
+              _module_name_from_addr((const void*)Frame[1], &StartAddr,
+                                     szMod, sizeof(szMod));
+              DbgPrint("   %8x+%-8x   %s\n",
+                      (PVOID)StartAddr,
+                      (ULONG_PTR)Frame[1] - (ULONG_PTR)StartAddr, szMod);
+            }
+            if (IsBadReadPtr((PVOID)Frame[0], sizeof(*Frame) * 2)) {
+              break;
+            }
+            Frame = (PULONG)Frame[0];
          }
-         if (IsBadReadPtr((PVOID)Frame[0], sizeof(*Frame) * 2)) {
-           break;
-         }
-         Frame = (PULONG)Frame[0];
       }
+      _SEH_HANDLE
+      {
+         DbgPrint("<error dumping stack trace: 0x%x>\n", _SEH_GetExceptionCode());
+      }
+      _SEH_END;
 #endif
    }
 
    /*
-    * Returning EXCEPTION_EXECUTE_HANDLER means that the code in 
+    * Returning EXCEPTION_EXECUTE_HANDLER means that the code in
     * the __except block will be executed. Normally this will end up in a
     * Terminate process.
     */
 
-   return EXCEPTION_EXECUTE_HANDLER;	
+   return EXCEPTION_EXECUTE_HANDLER;
 }
 
 
@@ -244,7 +252,7 @@ RaiseException (
 	{
 		ExceptionRecord.NumberParameters = nNumberOfArguments;
 		for (	nNumberOfArguments = 0;
-			(nNumberOfArguments < ExceptionRecord.NumberParameters); 
+			(nNumberOfArguments < ExceptionRecord.NumberParameters);
 			nNumberOfArguments ++
 			)
 		{

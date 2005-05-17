@@ -35,31 +35,31 @@ ULONG NlsUnicodeTableOffset = 0;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID 
+VOID
 INIT_FUNCTION
 STDCALL
 RtlpInitNls(VOID)
 {
     ULONG_PTR BaseAddress;
-    
-    /* Import NLS Data */ 
+
+    /* Import NLS Data */
     BaseAddress = CachedModules[AnsiCodepage]->ModStart;
     RtlpImportAnsiCodePage((PUSHORT)BaseAddress,
                            CachedModules[AnsiCodepage]->ModEnd - BaseAddress);
-    
+
     BaseAddress = CachedModules[OemCodepage]->ModStart;
     RtlpImportOemCodePage((PUSHORT)BaseAddress,
                           CachedModules[OemCodepage]->ModEnd - BaseAddress);
-    
+
     BaseAddress = CachedModules[UnicodeCasemap]->ModStart;
     RtlpImportUnicodeCasemap((PUSHORT)BaseAddress,
                              CachedModules[UnicodeCasemap]->ModEnd - BaseAddress);
-    
+
     /* Create initial NLS tables */
     RtlpCreateInitialNlsTables();
-    
+
     /* Create the NLS section */
-    RtlpCreateNlsSection();    
+    RtlpCreateNlsSection();
 }
 
 VOID INIT_FUNCTION
@@ -149,7 +149,7 @@ RtlpCreateNlsSection(VOID)
       KEBUGCHECKEX(0x32, Status, 1, 3, 0);
     }
 
-  DPRINT("NlsSection: Base %p  Size %lx\n", 
+  DPRINT("NlsSection: Base %p  Size %lx\n",
     NlsSectionBase,
     NlsSectionViewSize);
 

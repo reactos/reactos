@@ -141,7 +141,7 @@ IntGetFirstValidHook(PHOOKTABLE Table, int HookId)
               ? NULL : CONTAINING_RECORD(Elem, HOOK, Chain));
     }
   IntUnLockHookTable(Table);
-  
+
   return Hook;
 }
 
@@ -180,11 +180,11 @@ IntFreeHook(PHOOKTABLE Table, PHOOK Hook, PWINSTATION_OBJECT WinStaObj)
 {
   RemoveEntryList(&Hook->Chain);
   RtlFreeUnicodeString(&Hook->ModuleName);
-  
+
   /* Dereference thread if required */
   if(Hook->Flags & HOOK_THREAD_REFERENCED)
     ObDereferenceObject(Hook->Thread);
-  
+
   /* Close handle */
   ObmCloseHandle(WinStaObj->HandleTable, Hook->Self);
 }
@@ -293,7 +293,7 @@ HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
 				          KernelMode,
 				          0,
 				          &WinStaObj);
-  
+
   if(! NT_SUCCESS(Status))
     {
       DPRINT1("Invalid window station????\n");
@@ -508,12 +508,12 @@ NtUserSetWindowsHookEx(
       SetLastWin32Error(ERROR_NOT_SUPPORTED);
       return NULL;
     }
-  
+
   Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
 				          KernelMode,
 				          0,
 				          &WinStaObj);
-  
+
   if(! NT_SUCCESS(Status))
     {
       if(ReleaseThread && Thread)
@@ -530,10 +530,10 @@ NtUserSetWindowsHookEx(
       ObDereferenceObject(WinStaObj);
       return NULL;
     }
-  
+
   if(ReleaseThread)
     Hook->Flags |= HOOK_THREAD_REFERENCED;
-  
+
   if (NULL != Mod)
     {
       Status = MmCopyFromCaller(&ModuleName, UnsafeModuleName, sizeof(UNICODE_STRING));
@@ -617,7 +617,7 @@ NtUserUnhookWindowsHookEx(
 				          KernelMode,
 				          0,
 				          &WinStaObj);
-  
+
   if(! NT_SUCCESS(Status))
     {
       SetLastNtError(Status);

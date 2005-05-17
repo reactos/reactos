@@ -49,7 +49,7 @@ private:
 	void SaveCurY(int iY);
 
 	void resetTabStops();
-	
+
 	int iSavedCurX;
 	int iSavedCurY;
 	unsigned char iSavedAttributes;
@@ -77,7 +77,7 @@ public:
 	TANSIParser(TConsole &Console, KeyTranslator &RefKeyTrans,
 		TScroller &RefScroller, TNetwork &NetHandler, TCharmap &RefCharmap);
 	~TANSIParser();
-	
+
 	char* ParseBuffer(char* pszBuffer, char* pszBufferEnd);
 	static int StripBuffer(char* pszBuffer, char* pszBufferEnd, int width);
 };

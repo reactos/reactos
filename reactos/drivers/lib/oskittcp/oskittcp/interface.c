@@ -73,7 +73,7 @@ void TimerOskitTCP() {
 
 void RegisterOskitTCPEventHandlers( POSKITTCP_EVENT_HANDLERS EventHandlers ) {
     memcpy( &OtcpEvent, EventHandlers, sizeof(OtcpEvent) );
-    if( OtcpEvent.PacketSend ) 
+    if( OtcpEvent.PacketSend )
 	OS_DbgPrint(OSK_MID_TRACE,("SendPacket handler registered: %x\n",
 				   OtcpEvent.PacketSend));
 }
@@ -109,10 +109,10 @@ void OskitDumpBuffer( OSK_PCHAR Data, OSK_UINT Len )
 /* From uipc_syscalls.c */
 
 int OskitTCPSocket( void *context,
-		    void **aso, 
-		    int domain, 
-		    int type, 
-		    int proto ) 
+		    void **aso,
+		    int domain,
+		    int type,
+		    int proto )
 {
     struct socket *so;
     int error = socreate(domain, &so, type, proto);
@@ -156,8 +156,8 @@ int OskitTCPRecv( void *connection,
     iov.iov_base = Data;
 
     OS_DbgPrint(OSK_MID_TRACE,("Reading %d bytes from TCP:\n", Len));
-	
-    error = soreceive( connection, NULL, &uio, NULL, NULL /* SCM_RIGHTS */, 
+
+    error = soreceive( connection, NULL, &uio, NULL, NULL /* SCM_RIGHTS */,
 		       &tcp_flags );
 
     if( error == 0 ) {
@@ -166,7 +166,7 @@ int OskitTCPRecv( void *connection,
 
     return error;
 }
-		  
+
 static int
 getsockaddr(namp, uaddr, len)
 /* [<][>][^][v][top][bottom][index][help] */
@@ -203,17 +203,17 @@ int OskitTCPBind( void *socket, void *connection,
 
     sabuf.m_data = (void *)&addr;
     sabuf.m_len = sizeof(addr);
-    
+
     addr.sa_family = addr.sa_len;
     addr.sa_len = sizeof(struct sockaddr);
 
     error = sobind(so, &sabuf);
 
     OS_DbgPrint(OSK_MID_TRACE,("Ending: %08x\n", error));
-    return (error);    
+    return (error);
 }
 
-int OskitTCPConnect( void *socket, void *connection, 
+int OskitTCPConnect( void *socket, void *connection,
 		     void *nam, OSK_UINT namelen ) {
     struct socket *so = socket;
     struct connect_args _uap = {
@@ -238,7 +238,7 @@ int OskitTCPConnect( void *socket, void *connection,
 
     sabuf.m_data = (void *)&addr;
     sabuf.m_len = sizeof(addr);
-    
+
     addr.sa_family = addr.sa_len;
     addr.sa_len = sizeof(struct sockaddr);
 
@@ -260,7 +260,7 @@ bad:
 
 done:
     OS_DbgPrint(OSK_MID_TRACE,("Ending: %08x\n", error));
-    return (error);    
+    return (error);
 }
 
 int OskitTCPShutdown( void *socket, int disconn_type ) {
@@ -275,7 +275,7 @@ int OskitTCPClose( void *socket ) {
     return 0;
 }
 
-int OskitTCPSend( void *socket, OSK_PCHAR Data, OSK_UINT Len, 
+int OskitTCPSend( void *socket, OSK_PCHAR Data, OSK_UINT Len,
 		  OSK_UINT *OutLen, OSK_UINT flags ) {
     struct mbuf* m = m_devget( Data, Len, 0, NULL, NULL );
     int error = 0;
@@ -286,15 +286,15 @@ int OskitTCPSend( void *socket, OSK_PCHAR Data, OSK_UINT Len,
     return error;
 }
 
-int OskitTCPAccept( void *socket, 
+int OskitTCPAccept( void *socket,
 		    void **new_socket,
-		    void *AddrOut, 
+		    void *AddrOut,
 		    OSK_UINT AddrLen,
 		    OSK_UINT *OutAddrLen,
 		    OSK_UINT FinishAccepting ) {
     struct socket *head = (void *)socket;
     struct sockaddr *name = (struct sockaddr *)AddrOut;
-    struct socket **newso = (struct socket **)new_socket;    
+    struct socket **newso = (struct socket **)new_socket;
     struct socket *so = socket;
     struct sockaddr_in sa;
     struct mbuf mnam;
@@ -303,10 +303,10 @@ int OskitTCPAccept( void *socket,
 
     OS_DbgPrint(OSK_MID_TRACE,("OSKITTCP: Doing accept (Finish %d)\n",
 			       FinishAccepting));
-                        
+
     *OutAddrLen = AddrLen;
 
-    if (name) 
+    if (name)
 	/* that's a copyin actually */
 	namelen = *OutAddrLen;
 
@@ -322,7 +322,7 @@ int OskitTCPAccept( void *socket,
     }
 #endif
 
-    OS_DbgPrint(OSK_MID_TRACE,("head->so_q = %x, head->so_state = %x\n", 
+    OS_DbgPrint(OSK_MID_TRACE,("head->so_q = %x, head->so_state = %x\n",
 			       head->so_q, head->so_state));
 
     if ((head->so_state & SS_NBIO) && head->so_q == NULL) {
@@ -330,7 +330,7 @@ int OskitTCPAccept( void *socket,
 	error = EWOULDBLOCK;
 	goto out;
     }
-	
+
     OS_DbgPrint(OSK_MID_TRACE,("error = %d\n", error));
     while (head->so_q == NULL && head->so_error == 0) {
 	if (head->so_state & SS_CANTRCVMORE) {
@@ -367,7 +367,7 @@ int OskitTCPAccept( void *socket,
 
     inp = so ? (struct inpcb *)so->so_pcb : NULL;
     if( inp ) {
-        ((struct sockaddr_in *)AddrOut)->sin_addr.s_addr = 
+        ((struct sockaddr_in *)AddrOut)->sin_addr.s_addr =
             inp->inp_faddr.s_addr;
         ((struct sockaddr_in *)AddrOut)->sin_port = inp->inp_fport;
     }
@@ -376,14 +376,14 @@ int OskitTCPAccept( void *socket,
     if( FinishAccepting ) {
 	head->so_q = so->so_q;
 	head->so_qlen--;
-	    
+
 	*newso = so;
-	    
+
 	/*so->so_state &= ~SS_COMP;*/
 
 	mnam.m_data = (char *)&sa;
 	mnam.m_len = sizeof(sa);
-	
+
 	(void) soaccept(so, &mnam);
 
 	so->so_state = SS_NBIO | SS_ISCONNECTED;
@@ -407,16 +407,16 @@ out:
 }
 
 /* The story so far
- * 
+ *
  * We have a packet.  While we store the fields we want in host byte order
  * outside the original packet, the bsd stack modifies them in place.
  */
 
-void OskitTCPReceiveDatagram( OSK_PCHAR Data, OSK_UINT Len, 
+void OskitTCPReceiveDatagram( OSK_PCHAR Data, OSK_UINT Len,
 			      OSK_UINT IpHeaderLen ) {
     struct mbuf *Ip = m_devget( Data, Len, 0, NULL, NULL );
     struct ip *iph;
-    
+
     if( !Ip ) return; /* drop the segment */
 
     //memcpy( Ip->m_data, Data, Len );
@@ -427,7 +427,7 @@ void OskitTCPReceiveDatagram( OSK_PCHAR Data, OSK_UINT Len,
     NTOHS(iph->ip_len);
     iph->ip_len -= sizeof(struct ip);
 
-    OS_DbgPrint(OSK_MAX_TRACE, 
+    OS_DbgPrint(OSK_MAX_TRACE,
 		("OskitTCPReceiveDatagram: %d (%d header) Bytes\n", Len,
 		 IpHeaderLen));
 
@@ -438,7 +438,7 @@ void OskitTCPReceiveDatagram( OSK_PCHAR Data, OSK_UINT Len,
 
 int OskitTCPListen( void *socket, int backlog ) {
     int error;
-    
+
     OS_DbgPrint(OSK_MID_TRACE,("Called, socket = %08x\n", socket));
     error = solisten( socket, backlog );
     OS_DbgPrint(OSK_MID_TRACE,("Ending: %08x\n", error));
@@ -446,7 +446,7 @@ int OskitTCPListen( void *socket, int backlog ) {
     return error;
 }
 
-void OskitTCPSetAddress( void *socket, 
+void OskitTCPSetAddress( void *socket,
 			 OSK_UINT LocalAddress,
 			 OSK_UI16 LocalPort,
 			 OSK_UINT RemoteAddress,
@@ -459,7 +459,7 @@ void OskitTCPSetAddress( void *socket,
     inp->inp_fport = RemotePort;
 }
 
-void OskitTCPGetAddress( void *socket, 
+void OskitTCPGetAddress( void *socket,
 			 OSK_UINT *LocalAddress,
 			 OSK_UI16 *LocalPort,
 			 OSK_UINT *RemoteAddress,
@@ -476,7 +476,7 @@ void OskitTCPGetAddress( void *socket,
 
 struct ifaddr *ifa_iffind(struct sockaddr *addr, int type)
 {
-    if( OtcpEvent.FindInterface ) 
+    if( OtcpEvent.FindInterface )
 	return OtcpEvent.FindInterface( OtcpEvent.ClientData,
 					PF_INET,
 					type,
@@ -591,7 +591,7 @@ struct ifaddr *ifa_ifwithnet(addr)
     {
        sin = (struct sockaddr_in *)&ifaddr->ifa_addr;
 
-       OS_DbgPrint(OSK_MID_TRACE,("ifaddr->addr = %x\n", 
+       OS_DbgPrint(OSK_MID_TRACE,("ifaddr->addr = %x\n",
                                   sin->sin_addr.s_addr));
     }
 

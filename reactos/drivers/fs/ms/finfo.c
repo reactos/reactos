@@ -46,9 +46,9 @@ MsfsQueryMailslotInformation(PMSFS_FCB Fcb,
 	Buffer->NextSize = 0;
      }
    KeReleaseSpinLock(&Mailslot->MessageListLock, oldIrql);
-   
+
    *BufferLength -= sizeof(FILE_MAILSLOT_QUERY_INFORMATION);
-   
+
    return(STATUS_SUCCESS);
 }
 

@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/sem.c
  * PURPOSE:         Implements kernel semaphores
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
@@ -27,7 +27,7 @@ KeInitializeSemaphore(PKSEMAPHORE Semaphore,
 {
 
     DPRINT("KeInitializeSemaphore Sem: %x\n", Semaphore);
-    
+
     /* Simply Initialize the Header */
     KeInitializeDispatcherHeader(&Semaphore->Header,
                                  SemaphoreObject,
@@ -35,13 +35,13 @@ KeInitializeSemaphore(PKSEMAPHORE Semaphore,
                                  Count);
 
     /* Set the Limit */
-    Semaphore->Limit = Limit;  
+    Semaphore->Limit = Limit;
 }
 
 /*
  * @implemented
  */
-LONG 
+LONG
 STDCALL
 KeReadStateSemaphore(PKSEMAPHORE Semaphore)
 {
@@ -62,7 +62,7 @@ KeReadStateSemaphore(PKSEMAPHORE Semaphore)
  *       Semaphore = Points to an initialized semaphore object for which the
  *                   caller provides the storage.
  *       Increment = Specifies the priority increment to be applied if
- *                   releasing the semaphore causes a wait to be 
+ *                   releasing the semaphore causes a wait to be
  *                   satisfied.
  *       Adjustment = Specifies a value to be added to the current semaphore
  *                    count. This value must be positive
@@ -71,7 +71,7 @@ KeReadStateSemaphore(PKSEMAPHORE Semaphore)
  * RETURNS: If the return value is zero, the previous state of the semaphore
  *          object is Not-Signaled.
  */
-LONG 
+LONG
 STDCALL
 KeReleaseSemaphore(PKSEMAPHORE Semaphore,
                    KPRIORITY Increment,
@@ -83,10 +83,10 @@ KeReleaseSemaphore(PKSEMAPHORE Semaphore,
     KIRQL OldIrql;
     PKTHREAD CurrentThread;
 
-    DPRINT("KeReleaseSemaphore(Semaphore %x, Increment %d, Adjustment %d, Wait %d)\n", 
-            Semaphore, 
-            Increment, 
-            Adjustment, 
+    DPRINT("KeReleaseSemaphore(Semaphore %x, Increment %d, Adjustment %d, Wait %d)\n",
+            Semaphore,
+            Increment,
+            Adjustment,
             Wait);
 
     /* Lock the Dispatcher Database */
@@ -94,11 +94,11 @@ KeReleaseSemaphore(PKSEMAPHORE Semaphore,
 
     /* Save the Old State */
     InitialState = Semaphore->Header.SignalState;
-    
+
     /* Check if the Limit was exceeded */
-    if (Semaphore->Limit < (LONG) InitialState + Adjustment || 
+    if (Semaphore->Limit < (LONG) InitialState + Adjustment ||
         InitialState > InitialState + Adjustment) {
-        
+
         /* Raise an error if it was exceeded */
         KeReleaseDispatcherDatabaseLock(OldIrql);
         ExRaiseStatus(STATUS_SEMAPHORE_LIMIT_EXCEEDED);
@@ -106,22 +106,22 @@ KeReleaseSemaphore(PKSEMAPHORE Semaphore,
 
     /* Now set the new state */
     Semaphore->Header.SignalState += Adjustment;
-    
+
     /* Check if we should wake it */
     if (InitialState == 0 && !IsListEmpty(&Semaphore->Header.WaitListHead)) {
-        
+
         /* Wake the Semaphore */
         KiWaitTest(&Semaphore->Header, Increment);
     }
 
     /* If the Wait is true, then return with a Wait and don't unlock the Dispatcher Database */
     if (Wait == FALSE) {
-        
+
         /* Release the Lock */
         KeReleaseDispatcherDatabaseLock(OldIrql);
-    
+
     } else {
-        
+
         /* Set a wait */
         CurrentThread = KeGetCurrentThread();
         CurrentThread->WaitNext = TRUE;

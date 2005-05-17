@@ -223,7 +223,12 @@ BOOL HCR_GetDefaultIconW(LPCWSTR szClass, LPWSTR szDest, DWORD len, LPDWORD dwNr
 	  ret = HCR_RegGetDefaultIconW(hkey, szDest, len, dwNr);
 	  RegCloseKey(hkey);
 	}
-	TRACE("-- %s %li\n", debugstr_w(szDest), *dwNr );
+
+        if(ret)
+            TRACE("-- %s %li\n", debugstr_w(szDest), *dwNr );
+        else
+            TRACE("-- not found\n");
+
 	return ret;
 }
 

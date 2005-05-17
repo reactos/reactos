@@ -71,7 +71,7 @@ WaitForSingleObjectEx(HANDLE hHandle,
 	  SetLastError (ERROR_INVALID_HANDLE);
 	  return WAIT_FAILED;
         }
-	  
+
       hHandle = (HANDLE)GetConsoleInputWaitHandle();
       if (hHandle == NULL || hHandle == INVALID_HANDLE_VALUE)
         {

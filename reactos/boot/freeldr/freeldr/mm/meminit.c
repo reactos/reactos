@@ -116,7 +116,7 @@ PUCHAR MmGetSystemMemoryMapTypeString(ULONG Type)
 			return MemoryTypeArray[Index].TypeString;
 		}
 	}
-	
+
 	return MemoryTypeArray[0].TypeString;
 }
 #endif

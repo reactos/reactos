@@ -24,7 +24,7 @@
  * PURPOSE:          CDROM (ISO 9660) filesystem driver
  * PROGRAMMER:       Art Yerkes
  *                   Eric Kohl
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -62,7 +62,7 @@ CdfsGetStandardInformation(PFCB Fcb,
 
   if (CdfsFCBIsDirectory(Fcb))
     {
-      StandardInfo->AllocationSize.QuadPart = 0LL;;
+      StandardInfo->AllocationSize.QuadPart = 0LL;
       StandardInfo->EndOfFile.QuadPart = 0LL;
       StandardInfo->Directory = TRUE;
     }
@@ -218,7 +218,7 @@ CdfsGetNetworkOpenInformation(PFCB Fcb,
 			   &NetworkInfo->ChangeTime);
   if (CdfsFCBIsDirectory(Fcb))
     {
-      NetworkInfo->AllocationSize.QuadPart = 0LL;;
+      NetworkInfo->AllocationSize.QuadPart = 0LL;
       NetworkInfo->EndOfFile.QuadPart = 0LL;
     }
   else

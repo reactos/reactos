@@ -75,7 +75,7 @@ FsRecIsFatVolume(IN PDEVICE_OBJECT DeviceObject)
          DPRINT("FsRecDeviceIoControl faild (%x)\n", Status);
          return Status;
       }
-      
+
       if (PartitionInfo.PartitionType)
       {
          if (PartitionInfo.PartitionType == PARTITION_FAT_12       ||
@@ -112,16 +112,16 @@ FsRecIsFatVolume(IN PDEVICE_OBJECT DeviceObject)
       return STATUS_INSUFFICIENT_RESOURCES;
    }
 
-   Status = FsRecReadSectors(DeviceObject, 
-                             0, 
+   Status = FsRecReadSectors(DeviceObject,
+                             0,
                              1,
-                             DiskGeometry.BytesPerSector, 
+                             DiskGeometry.BytesPerSector,
                              (PUCHAR) Boot);
    if (!NT_SUCCESS(Status))
    {
       return Status;
    }
-   
+
    if (Boot->Signatur1 != 0xaa55)
    {
       RecognizedFS=FALSE;
@@ -129,28 +129,28 @@ FsRecIsFatVolume(IN PDEVICE_OBJECT DeviceObject)
    if (RecognizedFS &&
        Boot->BytesPerSector != 512 &&
        Boot->BytesPerSector != 1024 &&
-       Boot->BytesPerSector != 2048 && 
+       Boot->BytesPerSector != 2048 &&
        Boot->BytesPerSector == 4096)
    {
       RecognizedFS=FALSE;
    }
 
    if (RecognizedFS &&
-       Boot->FATCount != 1 && 
+       Boot->FATCount != 1 &&
        Boot->FATCount != 2)
    {
       RecognizedFS=FALSE;
    }
 
    if (RecognizedFS &&
-       Boot->Media != 0xf0 && 
+       Boot->Media != 0xf0 &&
        Boot->Media != 0xf8 &&
        Boot->Media != 0xf9 &&
-       Boot->Media != 0xfa && 
+       Boot->Media != 0xfa &&
        Boot->Media != 0xfb &&
        Boot->Media != 0xfc &&
        Boot->Media != 0xfd &&
-       Boot->Media != 0xfe && 
+       Boot->Media != 0xfe &&
        Boot->Media != 0xff)
    {
       RecognizedFS=FALSE;
@@ -159,10 +159,10 @@ FsRecIsFatVolume(IN PDEVICE_OBJECT DeviceObject)
    if (RecognizedFS &&
        Boot->SectorsPerCluster != 1 &&
        Boot->SectorsPerCluster != 2 &&
-       Boot->SectorsPerCluster != 4 && 
+       Boot->SectorsPerCluster != 4 &&
        Boot->SectorsPerCluster != 8 &&
        Boot->SectorsPerCluster != 16 &&
-       Boot->SectorsPerCluster != 32 && 
+       Boot->SectorsPerCluster != 32 &&
        Boot->SectorsPerCluster != 64 &&
        Boot->SectorsPerCluster != 128)
    {

@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/region.c
  * PURPOSE:         No purpose listed.
- * 
+ *
  * PROGRAMMERS:     David Welch
  */
 

@@ -46,6 +46,7 @@
 #define IDS_NOTIFY_AUTOHIDE             42
 #define IDS_SHOW_HIDDEN_ICONS           43
 #define IDS_HIDE_ICONS                  44
+#define IDS_TERMINATE                   45
 #define IDI_REACTOS                     100
 #define IDI_EXPLORER                    101
 #define IDI_STARTMENU                   102
@@ -212,7 +213,7 @@
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
-// 
+//
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        169

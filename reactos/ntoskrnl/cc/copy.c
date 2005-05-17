@@ -461,9 +461,9 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
 
   
   DPRINT("CcZeroData(FileObject %x, StartOffset %I64x, EndOffset %I64x, "
-	 "Wait %d)\n", FileObject, StartOffset->QuadPart, EndOffset->QuadPart, 
+	 "Wait %d)\n", FileObject, StartOffset->QuadPart, EndOffset->QuadPart,
 	 Wait);
-  
+
   Length = EndOffset->u.LowPart - StartOffset->u.LowPart;
   WriteOffset.QuadPart = StartOffset->QuadPart;
 
@@ -472,7 +472,7 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
       /* File is not cached */
 
       Mdl = alloca(MmSizeOfMdl(NULL, MAX_ZERO_LENGTH));
- 
+
       while (Length > 0)
 	{
 	  if (Length + WriteOffset.u.LowPart % PAGE_SIZE > MAX_ZERO_LENGTH)
@@ -490,13 +490,13 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
 	      ((PPFN_TYPE)(Mdl + 1))[i] = CcZeroPage;
 	    }
           KeInitializeEvent(&Event, NotificationEvent, FALSE);
-	  Status = IoPageWrite(FileObject, Mdl, &WriteOffset, &Event, &Iosb);
+	  Status = IoSynchronousPageWrite(FileObject, Mdl, &WriteOffset, &Event, &Iosb);
           if (Status == STATUS_PENDING)
 	  {
              KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
              Status = Iosb.Status;
 	  }
-          MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);            
+          MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
 	  if (!NT_SUCCESS(Status))
 	    {
 	      return(FALSE);

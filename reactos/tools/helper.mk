@@ -230,6 +230,7 @@ ifeq ($(TARGET_TYPE),host_library)
   MK_DEFEXT := .a
   MK_CFLAGS := 
   MK_CPPFLAGS := 
+  MK_HOST_CFLAGS := yes
   MK_LIBPATH := .
   MK_IMPLIB := no
   MK_IMPLIBONLY := no
@@ -255,6 +256,8 @@ ifeq ($(TARGET_TYPE),driver)
   MK_BOOTCDDIR := .
   MK_DISTDIR := drivers
   MK_RES_BASE := $(TARGET_NAME)
+  MK_LFLAGS := -Wl,--file-alignment,0x1000 \
+	           -Wl,--section-alignment,0x1000
 endif
 
 ifeq ($(TARGET_TYPE),export_driver)
@@ -295,6 +298,8 @@ ifeq ($(TARGET_TYPE),hal)
   MK_RES_BASE := $(TARGET_NAME)
   MK_INSTALL_BASENAME := hal
   MK_INSTALL_FULLNAME := hal.dll
+  MK_LFLAGS := -Wl,--file-alignment,0x1000 \
+	           -Wl,--section-alignment,0x1000
   ifeq ($(TARGET_BOOTSTRAP),yes)
     TARGET_BOOTSTRAP_NAME := hal.dll
   else
@@ -316,6 +321,8 @@ ifeq ($(TARGET_TYPE),bootpgm)
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
   MK_IMPLIB_EXT := .a
+  MK_LFLAGS := -Wl,--file-alignment,0x1000 \
+	           -Wl,--section-alignment,0x1000
   MK_INSTALLDIR := system32
   MK_BOOTCDDIR := system32
   MK_DISTDIR := # FIXME
@@ -336,6 +343,8 @@ ifeq ($(TARGET_TYPE),miniport)
   MK_IMPLIBDEFPATH :=
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32/drivers
+  MK_LFLAGS := -Wl,--file-alignment,0x1000 \
+	           -Wl,--section-alignment,0x1000
   MK_BOOTCDDIR := .
   MK_DISTDIR := drivers
   MK_RES_BASE := $(TARGET_NAME)
@@ -357,6 +366,8 @@ ifeq ($(TARGET_TYPE),gdi_driver)
   MK_INSTALLDIR := system32
   MK_BOOTCDDIR := .
   MK_DISTDIR := dlls
+  MK_LFLAGS := -Wl,--file-alignment,0x1000 \
+	           -Wl,--section-alignment,0x1000
   MK_RES_BASE := $(TARGET_NAME)
 endif
 
@@ -503,6 +514,7 @@ ifeq ($(TARGET_TYPE),winedll)
   MK_SDKLIBS :=
   MK_CFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D_STDDEF_H -I$(PATH_TO_TOP)/include/wine
   MK_CPPFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/include/wine
+  MK_HOST_CFLAGS := yes
   MK_PREPROC_FOR_RC_FLAGS := -xc -E -DRC_INVOKED -D__USE_W32API -I$(PATH_TO_TOP)/include/wine -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/w32api/include
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
@@ -537,6 +549,7 @@ ifeq ($(TARGET_TYPE),winedrv)
   MK_SDKLIBS :=
   MK_CFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -I$(PATH_TO_TOP)/include/wine
   MK_CPPFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/include/wine
+  MK_HOST_CFLAGS := yes
   MK_RCFLAGS := --define __USE_W32API --include-dir $(PATH_TO_TOP)/include/wine
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
@@ -631,6 +644,13 @@ ifeq ($(MK_MODE),user)
   endif
 endif
 
+ifeq ($(MK_HOST_CFLAGS),yes)
+  MK_CFLAGS += $(HOST_STD_CFLAGS)
+  MK_CPPFLAGS += $(HOST_STD_CPPFLAGS)
+else
+  MK_CFLAGS += $(STD_CFLAGS)
+  MK_CPPFLAGS += $(STD_CPPFLAGS)
+endif
 
 ifeq ($(MK_MODE),kernel)
   MK_DEFBASE := 0x10000
@@ -644,16 +664,6 @@ endif
 endif
 
 #
-# Enable Tree-Wide Optimization if Debug is on.
-# Protect uncompatible files here with an ifneq
-# if needed, until their problems can be found
-#
-ifneq ($(DBG),1)
-  MK_CFLAGS += -O2 -Wno-strict-aliasing
-  MK_CPPFLAGS += -O2 -Wno-strict-aliasing
-endif
-
-#
 # Force Optimization for w3seek
 #
 ifeq ($(OPTIMIZE),yes)
@@ -662,6 +672,31 @@ ifeq ($(OPTIMIZE),yes)
       MK_CFLAGS += -O2 -Wno-strict-aliasing
       MK_CPPFLAGS += -O2 -Wno-strict-aliasing
     endif
+endif
+  
+#
+# Enable Tree-Wide Optimization if Debug is on.
+# Protect uncompatible files here with an ifneq
+# if needed, until their problems can be found
+#
+ifneq ($(DBG),1)
+  MK_CFLAGS += -Os -Wno-strict-aliasing -ftracer -momit-leaf-frame-pointer
+  MK_CFLAGS += -mpreferred-stack-boundary=2
+  
+  #CC_VERSION=$(word 1,$(shell gcc -dumpversion))
+  ifeq ($(CC_VERSION),3.4.3)
+  MK_CFLAGS += -funit-at-a-time -fweb
+  endif
+    
+  #
+  # Remove Symbols if no debugging is used at all
+  #
+  ifneq ($(KDBG),1)
+  TARGET_LFLAGS += -Wl,-O1 -Wl,--sort-common -s
+  endif
+  
+  MK_CPPFLAGS += -O2 -Wno-strict-aliasing
+  MK_CPPFLAGS += -mpreferred-stack-boundary=2
 endif
 
 ifneq ($(TARGET_LIBS),)
@@ -684,9 +719,9 @@ endif
 include $(PATH_TO_TOP)/config
 
 
-TARGET_CFLAGS += $(MK_CFLAGS) $(STD_CFLAGS) -g
+TARGET_CFLAGS += $(MK_CFLAGS) -g
 
-TARGET_CPPFLAGS += $(MK_CPPFLAGS) $(STD_CPPFLAGS) -g
+TARGET_CPPFLAGS += $(MK_CPPFLAGS) -g
 
 TARGET_RCFLAGS += $(MK_RCFLAGS) $(STD_RCFLAGS)
 
@@ -742,7 +777,7 @@ endif
 ifeq ($(TARGET_WINETESTS),yes)
 all:
 	- $(MAKE) -C winetests
-  MK_REGTESTS_CLEAN := clean_winetests
+	MK_REGTESTS_CLEAN := clean_winetests
 endif
 
 ifeq ($(TARGET_INSTALL),)

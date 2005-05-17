@@ -17,7 +17,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 /* $Id$
- * 
+ *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Driver Surace Functions
@@ -98,7 +98,7 @@ EngCreateDeviceBitmap(IN DHSURF dhsurf,
   return NewBitmap;
 }
 
-VOID Decompress4bpp(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LONG Delta) 
+VOID Decompress4bpp(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LONG Delta)
 {
 	int x = 0;
 	int y = Size.cy - 1;
@@ -155,7 +155,7 @@ VOID Decompress4bpp(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LO
 	}
 }
 
-VOID Decompress8bpp(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LONG Delta) 
+VOID Decompress8bpp(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LONG Delta)
 {
 	int x = 0;
 	int y = Size.cy - 1;
@@ -331,7 +331,7 @@ EngCreateBitmap(IN SIZEL Size,
 		IN PVOID Bits)
 {
   HBITMAP NewBitmap;
-  
+
   NewBitmap = IntCreateBitmap(Size, Width, Format, Flags, Bits);
   if ( !NewBitmap )
 	  return 0;
@@ -492,7 +492,7 @@ EngLockSurface(IN HSURF Surface)
   {
     return &bmp->SurfObj;
   }
-  
+
   return NULL;
 }
 

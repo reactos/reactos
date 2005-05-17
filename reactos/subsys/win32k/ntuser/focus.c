@@ -128,7 +128,7 @@ IntFindChildWindowToOwner(PWINDOW_OBJECT Root, PWINDOW_OBJECT Owner)
   HWND Ret;
   PWINDOW_OBJECT Child, OwnerWnd;
   IntLockRelatives(Root);
-  
+
   for(Child = Root->FirstChild; Child; Child = Child->NextSibling)
   {
     IntLockRelatives(Child);
@@ -136,7 +136,7 @@ IntFindChildWindowToOwner(PWINDOW_OBJECT Root, PWINDOW_OBJECT Owner)
     IntUnLockRelatives(Child);
     if(!OwnerWnd)
       continue;
-    
+
     if(OwnerWnd == Owner)
     {
       IntUnLockRelatives(Root);
@@ -146,7 +146,7 @@ IntFindChildWindowToOwner(PWINDOW_OBJECT Root, PWINDOW_OBJECT Owner)
     }
     IntReleaseWindowObject(OwnerWnd);
   }
-  
+
   IntUnLockRelatives(Root);
   return NULL;
 }
@@ -216,7 +216,7 @@ IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow
 
    IntSendSetFocusMessages(hWndFocusPrev, hWndFocus);
    IntSendActivateMessages(hWndPrev, hWnd, MouseActivate);
-   
+
    return TRUE;
 }
 
@@ -231,7 +231,7 @@ IntMouseActivateWindow(PWINDOW_OBJECT Window)
 {
   HWND Top;
   PWINDOW_OBJECT TopWindow;
-  
+
   if(Window->Style & WS_DISABLED)
   {
     BOOL Ret;
@@ -251,7 +251,7 @@ IntMouseActivateWindow(PWINDOW_OBJECT Window)
     }
     return FALSE;
   }
-  
+
   Top = NtUserGetAncestor(Window->Self, GA_ROOT);
   if (Top != Window->Self)
     {
@@ -436,14 +436,14 @@ NtUserSetCapture(HWND hWnd)
       }
    }
    hWndPrev = MsqSetStateWindow(ThreadQueue, MSQ_STATE_CAPTURE, hWnd);
-   
+
    /* also remove other windows if not capturing anymore */
    if(hWnd == NULL)
    {
      MsqSetStateWindow(ThreadQueue, MSQ_STATE_MENUOWNER, NULL);
      MsqSetStateWindow(ThreadQueue, MSQ_STATE_MOVESIZE, NULL);
    }
-   
+
    IntPostOrSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
    IntLockMessageQueue(ThreadQueue);
    ThreadQueue->CaptureWindow = hWnd;

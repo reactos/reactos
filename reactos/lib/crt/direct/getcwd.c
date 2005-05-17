@@ -23,13 +23,13 @@ _TCHAR* _tgetcwd(_TCHAR* buf, int size)
   {
     return _tcsdup(dir);
   }
-  
+
   if (dir_len >= size)
   {
     __set_errno(ERANGE);
     return NULL; /* buf too small */
   }
-  
+
   _tcscpy(buf,dir);
   return buf;
 }

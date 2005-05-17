@@ -183,8 +183,8 @@ CdfsOpenFile(PDEVICE_EXTENSION DeviceExt,
 				     Fcb,
 				     FileObject);
 
-  if (FileName == &AbsFileName)
-    RtlFreeUnicodeString(&AbsFileName);
+  if ((FileName == &AbsFileName) && AbsFileName.Buffer)
+    ExFreePool(AbsFileName.Buffer);
 
   return Status;
 }
@@ -214,7 +214,7 @@ CdfsCreateFile(PDEVICE_OBJECT DeviceObject,
 
   RequestedDisposition = ((Stack->Parameters.Create.Options >> 24) & 0xff);
   RequestedOptions = Stack->Parameters.Create.Options & FILE_VALID_OPTION_FLAGS;
-  DPRINT("RequestedDisposition %x, RequestedOptions %x\n", 
+  DPRINT("RequestedDisposition %x, RequestedOptions %x\n",
          RequestedDisposition, RequestedOptions);
 
   FileObject = Stack->FileObject;

@@ -17,7 +17,7 @@ unsigned char * _mbsrev(unsigned char *s)
 			if ( *e == 0 )
 				break;
 			*e = a;
-		} 
+		}
 		e++;
 	}
 	while (s<e) {
@@ -27,7 +27,7 @@ unsigned char * _mbsrev(unsigned char *s)
 		s++;
 		e--;
 	}
-	
+
 
 	return s;
 }

@@ -5,7 +5,7 @@
  * PURPOSE:          C Runtime
  * PROGRAMMER:       Copyright (C) 1995 DJ Delorie
  */
- 
+
 #include <ctype.h>
 
 

@@ -97,7 +97,7 @@ typedef struct _IP_PACKET {
 /* Packet context */
 typedef struct _PACKET_CONTEXT {
     PACKET_COMPLETION_ROUTINE DLComplete; /* Data link level completion handler
-					   * Also used to link to next packet 
+					   * Also used to link to next packet
 					   * in a queue */
     PVOID Context;                        /* Context information for handler */
     UINT  PacketType;                     /* Type of packet */
@@ -206,6 +206,12 @@ PIP_PACKET IPInitializePacket(
 
 PIP_INTERFACE IPCreateInterface(
     PLLIP_BIND_INFO BindInfo);
+
+VOID IPAddInterfaceRoute(
+    PIP_INTERFACE IF);
+
+VOID IPRemoveInterfaceRoute(
+    PIP_INTERFACE IF);
 
 VOID IPDestroyInterface(
     PIP_INTERFACE IF);

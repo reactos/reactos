@@ -63,7 +63,7 @@
 #define DSRB_MOTOR_ENABLE_0             0x1
 #define DSRB_MOTOR_ENABLE_1             0x2
 #define DSRB_WRITE_ENABLE               0x4
-#define DSRB_READ_DATA                  0x8 
+#define DSRB_READ_DATA                  0x8
 #define DSRB_WRTITE_DATA                0x10
 #define DSRB_DRIVE_SELECT               0x20
 
@@ -183,7 +183,7 @@
 #define CCR_DRC_250000                  0x2
 
 /* Commands */
-#define COMMAND_READ_TRACK              0x2 
+#define COMMAND_READ_TRACK              0x2
 #define COMMAND_SPECIFY                 0x3
 #define COMMAND_SENSE_DRIVE_STATUS      0x4
 #define COMMAND_WRITE_DATA              0x5
@@ -264,11 +264,11 @@ NTSTATUS NTAPI HwTurnOnMotor(PDRIVE_INFO DriveInfo);
 
 NTSTATUS NTAPI HwSenseDriveStatus(PDRIVE_INFO DriveInfo);
 
-NTSTATUS NTAPI HwReadWriteData(PCONTROLLER_INFO ControllerInfo, 
+NTSTATUS NTAPI HwReadWriteData(PCONTROLLER_INFO ControllerInfo,
                                BOOLEAN Read,
-                               UCHAR Unit, 
-                               UCHAR Cylinder, 
-                               UCHAR Head, 
+                               UCHAR Unit,
+                               UCHAR Cylinder,
+                               UCHAR Head,
                                UCHAR Sector,
                                UCHAR BytesPerSector,
                                UCHAR EndOfTrack,
@@ -279,12 +279,12 @@ NTSTATUS NTAPI HwRecalibrate(PDRIVE_INFO DriveInfo);
 
 NTSTATUS NTAPI HwSenseInterruptStatus(PCONTROLLER_INFO ControllerInfo);
 
-NTSTATUS NTAPI HwReadId(PDRIVE_INFO DriveInfo, 
+NTSTATUS NTAPI HwReadId(PDRIVE_INFO DriveInfo,
                         UCHAR Head);
 
-NTSTATUS NTAPI HwFormatTrack(PCONTROLLER_INFO ControllerInfo, 
+NTSTATUS NTAPI HwFormatTrack(PCONTROLLER_INFO ControllerInfo,
                              UCHAR Unit,
-                             UCHAR Head, 
+                             UCHAR Head,
                              UCHAR BytesPerSector,
                              UCHAR SectorsPerTrack,
                              UCHAR Gap3Length,
@@ -297,7 +297,7 @@ NTSTATUS NTAPI HwReadWriteResult(PCONTROLLER_INFO ControllerInfo);
 
 NTSTATUS NTAPI HwGetVersion(PCONTROLLER_INFO ControllerInfo);
 
-NTSTATUS NTAPI HwConfigure(PCONTROLLER_INFO ControllerInfo, 
+NTSTATUS NTAPI HwConfigure(PCONTROLLER_INFO ControllerInfo,
                            BOOLEAN EIS,
 			   BOOLEAN EFIFO,
 			   BOOLEAN POLL,
@@ -306,10 +306,10 @@ NTSTATUS NTAPI HwConfigure(PCONTROLLER_INFO ControllerInfo,
 
 NTSTATUS NTAPI HwRecalibrateResult(PCONTROLLER_INFO ControllerInfo);
 
-NTSTATUS NTAPI HwDiskChanged(PDRIVE_INFO DriveInfo, 
+NTSTATUS NTAPI HwDiskChanged(PDRIVE_INFO DriveInfo,
                              PBOOLEAN DiskChanged);
 
-NTSTATUS NTAPI HwSenseDriveStatusResult(PCONTROLLER_INFO ControllerInfo, 
+NTSTATUS NTAPI HwSenseDriveStatusResult(PCONTROLLER_INFO ControllerInfo,
                                         PUCHAR Status);
 
 NTSTATUS NTAPI HwSpecify(PCONTROLLER_INFO ControllerInfo,
@@ -322,7 +322,7 @@ NTSTATUS NTAPI HwReadIdResult(PCONTROLLER_INFO ControllerInfo,
                               PUCHAR CurCylinder,
                               PUCHAR CurHead);
 
-NTSTATUS NTAPI HwSetDataRate(PCONTROLLER_INFO ControllerInfo, 
+NTSTATUS NTAPI HwSetDataRate(PCONTROLLER_INFO ControllerInfo,
                              UCHAR DataRate);
 
 NTSTATUS NTAPI HwReset(PCONTROLLER_INFO Controller);

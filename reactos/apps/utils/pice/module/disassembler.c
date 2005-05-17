@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2000-2001 Goran Devic                                                   
+Copyright (c) 2000-2001 Goran Devic
 Modified (c) 2001 Klaus P. Gerlicher
 
 Module Name:
@@ -16,15 +16,15 @@ Environment:
     LINUX 2.2.X
     Kernel mode only
 
-Author: 
+Author:
 
-    Goran Devic                                                   
+    Goran Devic
 
 Revision History:
 
-  17-Mar-2000:  Original                                        (Goran Devic)                                             
+  17-Mar-2000:  Original                                        (Goran Devic)
   26-Apr-2000:  Major rewrite, added coprocessor instructions   (Goran Devic)
-  04-Nov-2000:  Modified for LinIce                             (Goran Devic)                                    
+  04-Nov-2000:  Modified for LinIce                             (Goran Devic)
   05-Jan-2001:  Modified for pICE                               (Klaus P. Gerlicher)
 
 
@@ -110,7 +110,7 @@ static UCHAR GetNextUCHAR(USHORT sel, UCHAR *offset, UCHAR *pCode)
     pCode[0] = GetUCHAR((ULONG) offset + 0) & 0xFF;
 
     return( pCode[0] );
-}    
+}
 
 static USHORT GetNextUSHORT(USHORT sel, UCHAR *offset, UCHAR *pCode)
 {
@@ -118,7 +118,7 @@ static USHORT GetNextUSHORT(USHORT sel, UCHAR *offset, UCHAR *pCode)
     pCode[1] = GetUCHAR((ULONG) offset + 1) & 0xFF;
 
     return( *(USHORT *) pCode );
-}    
+}
 
 static ULONG GetNextULONG(USHORT sel, UCHAR *offset, UCHAR *pCode)
 {
@@ -128,7 +128,7 @@ static ULONG GetNextULONG(USHORT sel, UCHAR *offset, UCHAR *pCode)
     pCode[3] = GetUCHAR((ULONG) offset + 3) & 0xFF;
 
     return( *(ULONG *) pCode );
-}    
+}
 
 
 #define NEXTUCHAR    GetNextUCHAR( pDis->wSel, bpTarget, bpCode); bpCode += 1; bpTarget += 1; bInstrLen += 1
@@ -705,7 +705,7 @@ DisEnd:
 BOOLEAN Disasm(PULONG pOffset,PUCHAR pchDst)
 {
     TDisassembler dis;
- 
+
     dis.dwFlags  = DIS_DATA32 | DIS_ADDRESS32;
     dis.bpTarget = (UCHAR*)*pOffset;
     dis.szDisasm = pchDst;

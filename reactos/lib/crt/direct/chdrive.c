@@ -7,7 +7,7 @@
 
 
 /*
- * @implemented 
+ * @implemented
  *
  *    _chdrive (MSVCRT.@)
  *

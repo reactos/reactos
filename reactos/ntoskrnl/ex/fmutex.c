@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/fmutex.c
  * PURPOSE:         Implements fast mutexes
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 

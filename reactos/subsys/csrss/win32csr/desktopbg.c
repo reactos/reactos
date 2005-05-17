@@ -53,7 +53,7 @@ typedef struct tagPRIVATE_NOTIFY_DESKTOP
   };
 } PRIVATE_NOTIFY_DESKTOP, *PPRIVATE_NOTIFY_DESKTOP;
 
-static BOOL Initialized = FALSE;
+static BOOL BgInitialized = FALSE;
 static HWND VisibleDesktopWindow = NULL;
 
 static LRESULT CALLBACK
@@ -220,9 +220,9 @@ CSR_API(CsrCreateDesktop)
   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
 
-  if (! Initialized)
+  if (! BgInitialized)
     {
-      Initialized = TRUE;
+      BgInitialized = TRUE;
       if (! DtbgInit())
         {
           return Reply->Status = STATUS_UNSUCCESSFUL;

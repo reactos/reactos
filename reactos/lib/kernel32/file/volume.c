@@ -13,7 +13,7 @@
  */
 //WINE copyright notice:
 /*
- * DOS drives handling functions 
+ * DOS drives handling functions
  *
  * Copyright 1993 Erik Bos
  * Copyright 1996 Alexandre Julliard
@@ -195,7 +195,7 @@ GetDiskFreeSpaceA (
       if (!(RootPathNameW = FilenameA2W(lpRootPathName, FALSE)))
          return FALSE;
    }
-      
+
 	return GetDiskFreeSpaceW (RootPathNameW,
 	                            lpSectorsPerCluster,
 	                            lpBytesPerSector,
@@ -324,7 +324,7 @@ GetDiskFreeSpaceExW(
     {
         return FALSE;
     }
-   
+
     errCode = NtQueryVolumeInformationFile(hFile,
                                            &IoStatusBlock,
                                            &FileFsSize,
@@ -344,7 +344,7 @@ GetDiskFreeSpaceExW(
 	if (lpFreeBytesAvailableToCaller)
         lpFreeBytesAvailableToCaller->QuadPart =
             BytesPerCluster.QuadPart * FileFsSize.AvailableAllocationUnits.QuadPart;
-	
+
 	if (lpTotalNumberOfBytes)
         lpTotalNumberOfBytes->QuadPart =
             BytesPerCluster.QuadPart * FileFsSize.TotalAllocationUnits.QuadPart;
@@ -365,7 +365,7 @@ UINT STDCALL
 GetDriveTypeA(LPCSTR lpRootPathName)
 {
    PWCHAR RootPathNameW;
-   
+
    if (!(RootPathNameW = FilenameA2W(lpRootPathName, FALSE)))
       return DRIVE_UNKNOWN;
 
@@ -400,7 +400,7 @@ GetDriveTypeW(LPCWSTR lpRootPathName)
 	{
 		CloseHandle(hFile);
 		SetLastErrorByStatus (errCode);
-		return 0;	
+		return 0;
 	}
 	CloseHandle(hFile);
 
@@ -452,7 +452,7 @@ GetVolumeInformationA(
 
   if (!(RootPathNameW = FilenameA2W(lpRootPathName, FALSE)))
      return FALSE;
-  
+
   if (lpVolumeNameBuffer)
     {
       VolumeNameU.Length = 0;
@@ -603,7 +603,7 @@ GetVolumeInformationW(
                                          FileFsVolume,
                                          FS_VOLUME_BUFFER_SIZE,
                                          FileFsVolumeInformation);
-  if ( !NT_SUCCESS(errCode) ) 
+  if ( !NT_SUCCESS(errCode) )
     {
       DPRINT("Status: %x\n", errCode);
       CloseHandle(hFile);
@@ -618,8 +618,8 @@ GetVolumeInformationW(
     {
       if (nVolumeNameSize * sizeof(WCHAR) >= FileFsVolume->VolumeLabelLength + sizeof(WCHAR))
         {
-	  memcpy(lpVolumeNameBuffer, 
-		 FileFsVolume->VolumeLabel, 
+	  memcpy(lpVolumeNameBuffer,
+		 FileFsVolume->VolumeLabel,
 		 FileFsVolume->VolumeLabelLength);
 	  lpVolumeNameBuffer[FileFsVolume->VolumeLabelLength / sizeof(WCHAR)] = 0;
 	}
@@ -652,8 +652,8 @@ GetVolumeInformationW(
     {
       if (nFileSystemNameSize * sizeof(WCHAR) >= FileFsAttribute->FileSystemNameLength + sizeof(WCHAR))
         {
-	  memcpy(lpFileSystemNameBuffer, 
-		 FileFsAttribute->FileSystemName, 
+	  memcpy(lpFileSystemNameBuffer,
+		 FileFsAttribute->FileSystemName,
 		 FileFsAttribute->FileSystemNameLength);
 	  lpFileSystemNameBuffer[FileFsAttribute->FileSystemNameLength / sizeof(WCHAR)] = 0;
 	}
@@ -689,7 +689,7 @@ SetVolumeLabelA (
       if (!(VolumeNameW = FilenameA2W(lpVolumeName, TRUE)))
          return FALSE;
    }
-      
+
    Result = SetVolumeLabelW (RootPathNameW,
                              VolumeNameW);
 
@@ -718,7 +718,7 @@ SetVolumeLabelW(
    ULONG LabelLength;
    HANDLE hFile;
    NTSTATUS Status;
-   
+
    LabelLength = wcslen(lpVolumeName) * sizeof(WCHAR);
    LabelInfo = RtlAllocateHeap(RtlGetProcessHeap(),
 			       0,
@@ -737,7 +737,7 @@ SetVolumeLabelW(
 	            LabelInfo);
         return FALSE;
    }
-   
+
    Status = NtSetVolumeInformationFile(hFile,
 				       &IoStatusBlock,
 				       LabelInfo,

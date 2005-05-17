@@ -50,7 +50,7 @@ PVOID TcpipAllocateFromNPagedLookasideList( PNPAGED_LOOKASIDE_LIST List ) {
     return PoolAllocateBuffer( List->Size );
 }
 
-VOID TcpipFreeToNPagedLookasideList( PNPAGED_LOOKASIDE_LIST List, 
+VOID TcpipFreeToNPagedLookasideList( PNPAGED_LOOKASIDE_LIST List,
 				     PVOID Thing ) {
     PoolFreeBuffer( Thing );
 }

@@ -191,6 +191,78 @@ BuildTrusteeWithNameW(PTRUSTEE_W pTrustee, LPWSTR name)
 
 
 /******************************************************************************
+ * BuildTrusteeWithObjectsAndNameA [ADVAPI32.@]
+ */
+VOID WINAPI
+BuildTrusteeWithObjectsAndNameA(PTRUSTEEA pTrustee, POBJECTS_AND_NAME_A pObjName,
+                                SE_OBJECT_TYPE ObjectType, LPSTR ObjectTypeName,
+                                LPSTR InheritedObjectTypeName, LPSTR Name)
+{
+    DPRINT("%p %p 0x%08x %p %p %s\n", pTrustee, pObjName,
+           ObjectType, ObjectTypeName, InheritedObjectTypeName, debugstr_a(Name));
+
+    pTrustee->pMultipleTrustee = NULL;
+    pTrustee->MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;
+    pTrustee->TrusteeForm = TRUSTEE_IS_OBJECTS_AND_NAME;
+    pTrustee->TrusteeType = TRUSTEE_IS_UNKNOWN;
+    pTrustee->ptstrName = Name;
+}
+
+
+/******************************************************************************
+ * BuildTrusteeWithObjectsAndNameW [ADVAPI32.@]
+ */
+VOID WINAPI
+BuildTrusteeWithObjectsAndNameW(PTRUSTEEW pTrustee, POBJECTS_AND_NAME_W pObjName,
+                                SE_OBJECT_TYPE ObjectType, LPWSTR ObjectTypeName,
+                                LPWSTR InheritedObjectTypeName, LPWSTR Name)
+{
+    DPRINT("%p %p 0x%08x %p %p %s\n", pTrustee, pObjName,
+           ObjectType, ObjectTypeName, InheritedObjectTypeName, debugstr_w(Name));
+
+    pTrustee->pMultipleTrustee = NULL;
+    pTrustee->MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;
+    pTrustee->TrusteeForm = TRUSTEE_IS_OBJECTS_AND_NAME;
+    pTrustee->TrusteeType = TRUSTEE_IS_UNKNOWN;
+    pTrustee->ptstrName = Name;
+}
+
+
+/******************************************************************************
+ * BuildTrusteeWithObjectsAndSidA [ADVAPI32.@]
+ */
+VOID WINAPI
+BuildTrusteeWithObjectsAndSidA(PTRUSTEEA pTrustee, POBJECTS_AND_SID pObjSid,
+                               GUID* pObjectGuid, GUID* pInheritedObjectGuid, PSID pSid)
+{
+    DPRINT("%p %p %p %p %p\n", pTrustee, pObjSid, pObjectGuid, pInheritedObjectGuid, pSid);
+
+    pTrustee->pMultipleTrustee = NULL;
+    pTrustee->MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;
+    pTrustee->TrusteeForm = TRUSTEE_IS_OBJECTS_AND_SID;
+    pTrustee->TrusteeType = TRUSTEE_IS_UNKNOWN;
+    pTrustee->ptstrName = (LPSTR) pSid;
+}
+
+
+/******************************************************************************
+ * BuildTrusteeWithObjectsAndSidW [ADVAPI32.@]
+ */
+VOID WINAPI
+BuildTrusteeWithObjectsAndSidW(PTRUSTEEW pTrustee, POBJECTS_AND_SID pObjSid,
+                               GUID* pObjectGuid, GUID* pInheritedObjectGuid, PSID pSid)
+{
+    DPRINT("%p %p %p %p %p\n", pTrustee, pObjSid, pObjectGuid, pInheritedObjectGuid, pSid);
+
+    pTrustee->pMultipleTrustee = NULL;
+    pTrustee->MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;
+    pTrustee->TrusteeForm = TRUSTEE_IS_OBJECTS_AND_SID;
+    pTrustee->TrusteeType = TRUSTEE_IS_UNKNOWN;
+    pTrustee->ptstrName = (LPWSTR) pSid;
+}
+
+
+/******************************************************************************
  * GetMultipleTrusteeA [ADVAPI32.@]
  */
 PTRUSTEEA WINAPI

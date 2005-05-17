@@ -87,7 +87,7 @@ typedef u64 dma64_addr_t;
 
 /*
  * Those macros may have been defined in <gnu/types.h>. But we always
- * use the ones here. 
+ * use the ones here.
  */
 #undef __NFDBITS
 #define __NFDBITS	(8 * sizeof(unsigned long))
@@ -829,7 +829,7 @@ extern unsigned short int	htons(unsigned short int);
 
 #define ____cacheline_aligned
 
-typedef struct 
+typedef struct
 {
   volatile unsigned int lock;
 } rwlock_t;
@@ -869,27 +869,27 @@ typedef struct { volatile int counter; } atomic_t;
 /**
  * atomic_read - read atomic variable
  * @v: pointer of type atomic_t
- * 
+ *
  * Atomically reads the value of @v.  Note that the guaranteed
  * useful range of an atomic_t is only 24 bits.
- */ 
+ */
 #define atomic_read(v)		((v)->counter)
 
 /**
  * atomic_set - set atomic variable
  * @v: pointer of type atomic_t
  * @i: required value
- * 
+ *
  * Atomically sets the value of @v to @i.  Note that the guaranteed
  * useful range of an atomic_t is only 24 bits.
- */ 
+ */
 #define atomic_set(v,i)		(((v)->counter) = (i))
 
 /**
  * atomic_add - add integer to atomic variable
  * @i: integer value to add
  * @v: pointer of type atomic_t
- * 
+ *
  * Atomically adds @i to @v.  Note that the guaranteed useful range
  * of an atomic_t is only 24 bits.
  */
@@ -907,7 +907,7 @@ static __inline__ void atomic_add(int i, atomic_t *v)
  * atomic_sub - subtract the atomic variable
  * @i: integer value to subtract
  * @v: pointer of type atomic_t
- * 
+ *
  * Atomically subtracts @i from @v.  Note that the guaranteed
  * useful range of an atomic_t is only 24 bits.
  */
@@ -925,7 +925,7 @@ static __inline__ void atomic_sub(int i, atomic_t *v)
  * atomic_sub_and_test - subtract value from variable and test result
  * @i: integer value to subtract
  * @v: pointer of type atomic_t
- * 
+ *
  * Atomically subtracts @i from @v and returns
  * true if the result is zero, or false for all
  * other cases.  Note that the guaranteed
@@ -947,10 +947,10 @@ static __inline__ int atomic_sub_and_test(int i, atomic_t *v)
 /**
  * atomic_inc - increment atomic variable
  * @v: pointer of type atomic_t
- * 
+ *
  * Atomically increments @v by 1.  Note that the guaranteed
  * useful range of an atomic_t is only 24 bits.
- */ 
+ */
 static __inline__ void atomic_inc(atomic_t *v)
 {
 #if 0
@@ -964,10 +964,10 @@ static __inline__ void atomic_inc(atomic_t *v)
 /**
  * atomic_dec - decrement atomic variable
  * @v: pointer of type atomic_t
- * 
+ *
  * Atomically decrements @v by 1.  Note that the guaranteed
  * useful range of an atomic_t is only 24 bits.
- */ 
+ */
 static __inline__ void atomic_dec(atomic_t *v)
 {
 #if 0
@@ -981,12 +981,12 @@ static __inline__ void atomic_dec(atomic_t *v)
 /**
  * atomic_dec_and_test - decrement and test
  * @v: pointer of type atomic_t
- * 
+ *
  * Atomically decrements @v by 1 and
  * returns true if the result is 0, or false for all other
  * cases.  Note that the guaranteed
  * useful range of an atomic_t is only 24 bits.
- */ 
+ */
 static __inline__ int atomic_dec_and_test(atomic_t *v)
 {
 #if 0
@@ -1003,14 +1003,14 @@ static __inline__ int atomic_dec_and_test(atomic_t *v)
 }
 
 /**
- * atomic_inc_and_test - increment and test 
+ * atomic_inc_and_test - increment and test
  * @v: pointer of type atomic_t
- * 
+ *
  * Atomically increments @v by 1
  * and returns true if the result is zero, or false for all
  * other cases.  Note that the guaranteed
  * useful range of an atomic_t is only 24 bits.
- */ 
+ */
 static __inline__ int atomic_inc_and_test(atomic_t *v)
 {
 #if 0
@@ -1030,12 +1030,12 @@ static __inline__ int atomic_inc_and_test(atomic_t *v)
  * atomic_add_negative - add and test if negative
  * @v: pointer of type atomic_t
  * @i: integer value to add
- * 
+ *
  * Atomically adds @i to @v and returns true
  * if the result is negative, or false when
  * result is greater than or equal to zero.  Note that the guaranteed
  * useful range of an atomic_t is only 24 bits.
- */ 
+ */
 static __inline__ int atomic_add_negative(int i, atomic_t *v)
 {
 #if 0
@@ -1094,7 +1094,7 @@ struct list_head {
 } while (0)
 
 /*
- * Insert a new entry between two known consecutive entries. 
+ * Insert a new entry between two known consecutive entries.
  *
  * This is only for internal list manipulation where we know
  * the prev/next entries already!
@@ -1176,7 +1176,7 @@ static inline void list_del_init(struct list_head *entry)
 {
 #if 0
 	__list_del(entry->prev, entry->next);
-	INIT_LIST_HEAD(entry); 
+	INIT_LIST_HEAD(entry);
 #endif
 }
 
@@ -1294,7 +1294,7 @@ static inline void list_splice_init(struct list_head *list,
 #if 0
 	for (pos = (head)->prev, prefetch(pos->prev); pos != (head); \
         	pos = pos->prev, prefetch(pos->prev))
-#endif   	
+#endif
 
 /**
  * list_for_each_safe	-	iterate over a list safe against removal of list entry
@@ -1706,11 +1706,11 @@ struct iovec
 /*
  *	UIO_MAXIOV shall be at least 16 1003.1g (5.4.1.1)
  */
- 
+
 #define UIO_FASTIOV	8
 #define UIO_MAXIOV	1024
 #if 0
-#define UIO_MAXIOV	16	/* Maximum iovec's in one operation 
+#define UIO_MAXIOV	16	/* Maximum iovec's in one operation
 				   16 matches BSD */
                                 /* Beg pardon: BSD has 1024 --ANK */
 #endif

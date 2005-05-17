@@ -38,14 +38,14 @@
 typedef struct _KV86M_TRAP_FRAME
 {
   KTRAP_FRAME Tf;
-  
+
   ULONG SavedExceptionStack;
 
   /*
    * These are put on the top of the stack by the routine that entered
    * v86 mode so the exception handlers can find the control information
    */
-  struct _KV86M_REGISTERS* regs;     
+  struct _KV86M_REGISTERS* regs;
   ULONG orig_ebp;
 } KV86M_TRAP_FRAME, *PKV86M_TRAP_FRAME;
 

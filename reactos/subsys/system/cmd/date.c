@@ -26,9 +26,13 @@
  *
  *    04-Feb-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Fixed date input bug.
+ *
+ *    03-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_DATE
 
@@ -43,22 +47,24 @@ static WORD awMonths[2][13] =
 static VOID
 PrintDateString (VOID)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+
 	switch (nDateFormat)
 	{
 		case 0: /* mmddyy */
 		default:
-			ConOutPrintf (_T("\nEnter new date (mm%cdd%cyyyy): "),
-					cDateSeparator, cDateSeparator);
+			LoadString(CMD_ModuleHandle, STRING_DATE_HELP1, szMsg, RC_STRING_MAX_SIZE);
+			ConOutPrintf(szMsg, cDateSeparator, cDateSeparator);
 			break;
 
 		case 1: /* ddmmyy */
-			ConOutPrintf (_T("\nEnter new date (dd%cmm%cyyyy): "),
-					  cDateSeparator, cDateSeparator);
+			LoadString(CMD_ModuleHandle, STRING_DATE_HELP2, szMsg, RC_STRING_MAX_SIZE);
+			ConOutPrintf(szMsg, cDateSeparator, cDateSeparator);
 			break;
 
 		case 2: /* yymmdd */
-			ConOutPrintf (_T("\nEnter new date (yyyy%cmm%cdd): "),
-					  cDateSeparator, cDateSeparator);
+			LoadString(CMD_ModuleHandle, STRING_DATE_HELP3, szMsg, RC_STRING_MAX_SIZE);
+			ConOutPrintf(szMsg, cDateSeparator, cDateSeparator);
 			break;
 	}
 }
@@ -151,7 +157,7 @@ ParseDate (LPTSTR s)
 			break;
 	}
 
-    /* if only entered two digits: */
+	/* if only entered two digits: */
 	/*   assume 2000's if value less than 80 */
 	/*   assume 1900's if value greater or equal 80 */
 	if (d.wYear <= 99)
@@ -186,11 +192,7 @@ INT cmd_date (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Displays or sets the date.\n\n"
-				   "DATE [/T][date]\n\n"
-				   "  /T    display only\n\n"
-				   "Type DATE without parameters to display the current date setting and\n"
-				   "a prompt for a new one.  Press ENTER to keep the same date."));
+		ConOutResPuts(STRING_DATE_HELP4);
 		return 0;
 	}
 
@@ -233,7 +235,8 @@ INT cmd_date (LPTSTR cmd, LPTSTR param)
 				freep (arg);
 				return 0;
 			}
-			ConErrPuts (_T("Invalid date."));
+			ConErrResPuts(STRING_DATE_ERROR);
+
 		}
 	}
 	else
@@ -243,12 +246,14 @@ INT cmd_date (LPTSTR cmd, LPTSTR param)
 			freep (arg);
 			return 0;
 		}
-		ConErrPuts (_T("Invalid date."));
+
+		ConErrResPuts(STRING_DATE_ERROR);
 	}
 
 	freep (arg);
 
 	return 0;
 }
-#endif
+#endif /* INCLUDE_CMD_DATE */
 
+/* EOF */

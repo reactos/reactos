@@ -198,7 +198,7 @@ string(wchar_t* buf, wchar_t* end, const char* s, int len, int field_width, int 
 	return buf;
 }
 
-static wchar_t* 
+static wchar_t*
 stringw(wchar_t* buf, wchar_t* end, const wchar_t* sw, int len, int field_width, int precision, int flags)
 {
 	int i;

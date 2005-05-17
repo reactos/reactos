@@ -178,7 +178,7 @@ NtUserGetClassInfo(
    lpWndClassEx->lpszClassName = lpClassName;
    lpWndClassEx->hIconSm = Class->hIconSm;
    Atom = Class->Atom;
-   
+
    ObmDereferenceObject(Class);
 
    return Atom;
@@ -199,7 +199,7 @@ IntGetClassName(struct _WINDOW_OBJECT *WindowObject, LPWSTR lpClassName,
    }
 
    WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
-   
+
    Length = 0;
    Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,
       WindowObject->Class->Atom, NULL, NULL, NULL, &Length);
@@ -282,17 +282,17 @@ IntCreateClass(
 				ObmDereferenceObject(ClassObject);
 				return(NULL);
 			}
-		}	
+		}
 	}
-	
+
 	objectSize = sizeof(WNDCLASS_OBJECT) + lpwcx->cbClsExtra;
 	ClassObject = ObmCreateObject(NULL, NULL, otClass, objectSize);
 	if (ClassObject == 0)
-	{          
+	{
 		SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
 		return(NULL);
 	}
-	
+
 	ClassObject->cbSize = lpwcx->cbSize;
 	ClassObject->style = lpwcx->style;
 	ClassObject->cbClsExtra = lpwcx->cbClsExtra;
@@ -335,7 +335,7 @@ IntCreateClass(
 		ClassObject->lpszMenuName.Buffer = MenuName->Buffer;
 	}
 	else
-	{		
+	{
 		ClassObject->lpszMenuName.Length =
 		ClassObject->lpszMenuName.MaximumLength = MenuName->MaximumLength;
 		ClassObject->lpszMenuName.Buffer = ExAllocatePoolWithTag(PagedPool, ClassObject->lpszMenuName.MaximumLength, TAG_STRING);
@@ -385,7 +385,7 @@ NtUserRegisterClassExWOW(
    PWNDCLASS_OBJECT ClassObject;
    NTSTATUS Status;
    RTL_ATOM Atom;
-  
+
    if (!lpwcx)
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -404,16 +404,16 @@ NtUserRegisterClassExWOW(
       SetLastNtError(Status);
       return (RTL_ATOM)0;
    }
-  
+
    /* Deny negative sizes */
    if (lpwcx->cbClsExtra < 0 || lpwcx->cbWndExtra < 0)
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return (RTL_ATOM)0;
    }
-  
+
   WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
-  
+
   if (ClassName->Length > 0)
   {
     DPRINT("NtUserRegisterClassExWOW(%S)\n", ClassName->Buffer);
@@ -425,7 +425,7 @@ NtUserRegisterClassExWOW(
     {
       DPRINT1("Failed adding class name (%S) to atom table\n",
 	ClassName->Buffer);
-      SetLastNtError(Status);      
+      SetLastNtError(Status);
       return((RTL_ATOM)0);
     }
   }
@@ -446,7 +446,7 @@ NtUserRegisterClassExWOW(
   IntLockProcessClasses(PsGetWin32Process());
   InsertTailList(&PsGetWin32Process()->ClassListHead, &ClassObject->ListEntry);
   IntUnLockProcessClasses(PsGetWin32Process());
-  
+
   return(Atom);
 }
 
@@ -547,7 +547,7 @@ IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL 
       *((LONG *)(WindowObject->Class->ExtraData + Offset)) = dwNewLong;
       return;
     }
-  
+
   switch (Offset)
     {
     case GCL_CBWNDEXTRA:
@@ -665,15 +665,15 @@ NtUserUnregisterClass(
 {
    PWNDCLASS_OBJECT Class;
    PWINSTATION_OBJECT WinStaObject;
-  
+
    DPRINT("NtUserUnregisterClass(%S)\n", ClassNameOrAtom);
-   
+
    if (!ClassNameOrAtom || !PsGetWin32Thread()->Desktop)
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return FALSE;
    }
-  
+
    WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
 
    if (!ClassReferenceClassByNameOrAtom(&Class, ClassNameOrAtom, hInstance))
@@ -681,14 +681,14 @@ NtUserUnregisterClass(
       SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
       return FALSE;
    }
-  
+
    if (Class->hInstance && Class->hInstance != hInstance)
    {
       ClassDereferenceObject(Class);
       SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
       return FALSE;
    }
-  
+
   IntLockClassWindows(Class);
    if (!IsListEmpty(&Class->ClassWindowsListHead))
    {
@@ -699,17 +699,17 @@ NtUserUnregisterClass(
       return FALSE;
    }
    IntUnLockClassWindows(Class);
-  
+
    /* Dereference the ClassReferenceClassByNameOrAtom() call */
    ClassDereferenceObject(Class);
-  
+
    RemoveEntryList(&Class->ListEntry);
 
    RtlDeleteAtomFromAtomTable(WinStaObject->AtomTable, Class->Atom);
-  
+
    /* Free the object */
    ClassDereferenceObject(Class);
-  
+
    return TRUE;
 }
 

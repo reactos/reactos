@@ -7,7 +7,7 @@ Module Name:
     termínal.h
 
 Abstract:
-	
+
     HEADER for terminal.c
 
 Environment:
@@ -21,7 +21,7 @@ Author:
 Revision History:
 
     23-Jan-2001:	created
-    
+
 Copyright notice:
 
   This file may be distributed under the terms of the GNU Public License.

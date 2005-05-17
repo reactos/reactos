@@ -21,15 +21,20 @@
  *
  *    19-Jan-1999 (Paolo Pantaleo <paolopan@freemail.it>)
  *        Added multiple file support (copied from y.c)
+ *
+ *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_TYPE
 
 
 INT cmd_type (LPTSTR cmd, LPTSTR param)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR  buff[256];
 	HANDLE hFile, hConsoleOut;
 	DWORD  dwRead;
@@ -38,13 +43,12 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 	INT    argc,i;
 	LPTSTR *argv;
 	LPTSTR errmsg;
-	
+
 	hConsoleOut=GetStdHandle (STD_OUTPUT_HANDLE);
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Displays the contents of text files.\n\n"
-					   "TYPE [drive:][path]filename"));
+		ConOutResPuts(STRING_TYPE_HELP1);
 		return 0;
 	}
 
@@ -55,14 +59,16 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 	}
 
 	argv = split (param, &argc, TRUE);
-	
+
 	for (i = 0; i < argc; i++)
 	{
 		if (_T('/') == argv[i][0])
 		{
-			ConErrPrintf(_T("Invalid option \"%S\"\n"), argv[i] + 1);
+			LoadString(CMD_ModuleHandle, STRING_TYPE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+			ConErrPrintf(szMsg, argv[i] + 1);
 			continue;
 		}
+
 		hFile = CreateFile(argv[i],
 			GENERIC_READ,
 			FILE_SHARE_READ,NULL,
@@ -91,12 +97,12 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 
 			if (dwRead>0 && bRet)
 				WriteFile(hConsoleOut,buff,dwRead,&dwWritten,NULL);
-			
+
 		} while(dwRead>0 && bRet);
 
 		CloseHandle(hFile);
-	}	
-	
+	}
+
 	freep (argv);
 
 	return 0;

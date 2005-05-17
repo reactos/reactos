@@ -448,7 +448,7 @@ gluPartialDisk(GLUquadric *qobj, GLdouble innerRadius,
     GLfloat sintemp, costemp;
     GLfloat deltaRadius;
     GLfloat radiusLow, radiusHigh;
-    GLfloat texLow, texHigh;
+    GLfloat texLow = 0, texHigh = 0;
     GLfloat angleOffset;
     GLint slices2;
     GLint finish;
@@ -717,8 +717,8 @@ gluSphere(GLUquadric *qobj, GLdouble radius, GLint slices, GLint stacks)
     GLfloat cosCache3b[CACHE_SIZE];
     GLfloat angle;
     GLfloat zLow, zHigh;
-    GLfloat sintemp1, sintemp2, sintemp3, sintemp4;
-    GLfloat costemp1, costemp2, costemp3, costemp4;
+    GLfloat sintemp1, sintemp2=0, sintemp3=0, sintemp4=0;
+    GLfloat costemp1, costemp2=0, costemp3=0, costemp4=0;
     GLboolean needCache2, needCache3;
     GLint start, finish;
 

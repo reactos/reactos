@@ -5,9 +5,9 @@
  * PURPOSE:          SoundBlaster 16 Driver
  * PROGRAMMER:       Snatched from David Welch (welch@mcmail.com)
  *		     Modified for Soundblaster by Robert Bergkvist (fragdance@hotmail.com)
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  *              ??/??/??: Created
- *              
+ *
  */
 
 /* FUNCTIONS **************************************************************/
@@ -43,7 +43,7 @@ void sb16_play(WAVE_HDR* wave)
 	KAFFINITY Affinity;
 	PKINTERRUPT IrqObject;
 	unsigned int mask,newmask;
-	
+
 	unsigned int i;
 	unsigned int tmp[255];
 	i=0;
@@ -66,7 +66,7 @@ void sb16_play(WAVE_HDR* wave)
    	__asm__("pushf\n\tpop %0\n\tcli\n\t"
 	   : "=m" (eflags)
 	   : );
-	
+
        memcpy(sb16.buffer,(&wave->data),wave->dLen);
 
 
@@ -74,7 +74,7 @@ void sb16_play(WAVE_HDR* wave)
 
 
 
-				IoConnectInterrupt(&IrqObject,DMAOutputISR,0,NULL,MappedIrq,Dirql,Dirql,0,FALSE,Affinity,FALSE);	        	
+				IoConnectInterrupt(&IrqObject,DMAOutputISR,0,NULL,MappedIrq,Dirql,Dirql,0,FALSE,Affinity,FALSE);
 
 	// mask=inb(0x21);
 	newmask=((int)1<<sb16.irq);
@@ -83,10 +83,10 @@ void sb16_play(WAVE_HDR* wave)
        // Restore the interrupt flag
 	__asm__("push %0\n\tpopf\n\t"
 		   :
-		   : "m" (eflags));	
+		   : "m" (eflags));
 
-	    
-	
+
+
 	// disable_dma(sb16.dma8);
 	//outb(0x0a,5);
 	// clear_dma_ff(1);
@@ -102,9 +102,9 @@ void sb16_play(WAVE_HDR* wave)
 	//outb(0x2,(((unsigned int)(sb16.buffer-IDMAP_BASE)>>8))&0xff);
 	//enable_dma(sb16.dma8);
 	//outb(0xa,1);
-	
+
 	write_dsp(sb16.base,0x00D1);
-	
+
 	write_dsp(sb16.base,0x40);
 	write_dsp(sb16.base,((unsigned char)256-(1000000/wave->nSamplesPerSec)));
 
@@ -113,23 +113,23 @@ void sb16_play(WAVE_HDR* wave)
 
 //  outb(sb16.base + 4, (int) 4);
 //  outb(sb16.base + 5, (int) 0xFF);
-	
+
 //  outb(sb16.base + 4, (int) 0x22);
 //  outb(sb16.base + 5, (int) 0xFF);
 
 	write_dsp(sb16.base,0x14);
-	write_dsp(sb16.base,(wave->dLen&0x00ff));	
+	write_dsp(sb16.base,(wave->dLen&0x00ff));
 	write_dsp(sb16.base,((wave->dLen)&0xff00)>>8);
 
 //	write_dsp(sb16.base,0xc0);
 //	write_dsp(sb16.base,0x0);
 //	OldIRQ=HalGetInterruptVector(Internal,0,0,irq+8,&irql,&affinity);
 //	DPRINT1("OldIRQ: 0x%x\n",OldIRQ);
-	
+
 //  status=IoConnectInterrupt(&IrqObject,playRoutine,0,NULL,OldIRQ,irql,irql,0,FALSE,affinity,FALSE);
 //  if(status!=STATUS_SUCCESS) DPRINT1("Couldn't set irq\n");
 //  else DPRINT1("IRQ set\n");
-	
+
 }
 
 void dump_wav(WAVE_HDR* wave)

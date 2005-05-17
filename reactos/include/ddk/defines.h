@@ -28,7 +28,8 @@ enum
    OBJ_CASE_INSENSITIVE = 0x40,
    OBJ_OPENIF = 0x80,
    OBJ_OPENLINK = 0x100,
-   OBJ_VALID_ATTRIBUTES = 0x1F2,
+   OBJ_KERNEL_HANDLE = 0x200,
+   OBJ_VALID_ATTRIBUTES = 0x3F2,
 };
 
 /*
@@ -98,10 +99,12 @@ enum
 #define DESKTOP_SWITCHDESKTOP	(0x100L)
 #define DESKTOP_WRITEOBJECTS	(0x80L)
 
-#endif /* __ASM__ */
+#else
 
 /* Values returned by KeGetPreviousMode() */
 #define KernelMode (0)
 #define UserMode   (1)
+
+#endif /* __ASM__ */
 
 #endif /* ndef _DDK_DEFINES_H */

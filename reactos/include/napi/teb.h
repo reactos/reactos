@@ -86,6 +86,7 @@ typedef struct _PEB_FREE_BLOCK
 /* RTL_USER_PROCESS_PARAMETERS.Flags */
 #define PPF_NORMALIZED	(1)
 
+#define TEB_BASE        (0x7FFDE000)
 #define PEB_BASE        (0x7FFDF000)
 
 typedef struct _PEB_LDR_DATA

@@ -89,7 +89,7 @@ PCACHE_BLOCK CacheInternalFindBlock(PCACHE_DRIVE CacheDrive, ULONG BlockNumber)
 			CacheBlock = (PCACHE_BLOCK)RtlListGetNext((PLIST_ITEM)CacheBlock);
 		}
 	}
-	
+
 	return NULL;
 }
 

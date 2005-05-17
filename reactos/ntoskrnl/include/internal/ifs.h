@@ -18,7 +18,7 @@ FsRtlpInitFileLockingImplementation(VOID);
 
 VOID STDCALL
 FsRtlpFileLockCancelRoutine(
-	IN PDEVICE_OBJECT DeviceObject, 
+	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp
 	);
 
@@ -30,7 +30,7 @@ FsRtlpCheckLockForReadOrWriteAccess(
     IN ULONG                Key,
     IN PFILE_OBJECT         FileObject,
     IN PEPROCESS            Process,
-	IN BOOLEAN				Read	
+	IN BOOLEAN				Read
    );
 
 NTSTATUS FASTCALL

@@ -15,6 +15,7 @@
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef FEATURE_DIRECTORY_STACK
 
@@ -142,10 +143,7 @@ INT CommandPushd (LPTSTR first, LPTSTR rest)
 
 	if (!_tcsncmp (rest, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Stores the current directory for use by the POPD command, then\n"
-		               "changes to the specified directory.\n\n"
-		               "PUSHD [path | ..]\n\n"
-		               "  path        Specifies the directory to make the current directory"));
+		ConOutResPuts(STRING_DIRSTACK_HELP1);
 		return 0;
 	}
 
@@ -175,8 +173,7 @@ INT CommandPopd (LPTSTR first, LPTSTR rest)
 
 	if (!_tcsncmp(rest, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Changes to the directory stored by the PUSHD command.\n\n"
-		               "POPD"));
+		ConOutResPuts(STRING_DIRSTACK_HELP2);
 		return 0;
 	}
 
@@ -201,9 +198,7 @@ INT CommandDirs (LPTSTR first, LPTSTR rest)
 
 	if (!_tcsncmp(rest, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Prints the contents of the directory stack.\n"
-		               "\n"
-		               "DIRS"));
+		ConOutResPuts(STRING_DIRSTACK_HELP3);
 		return 0;
 	}
 
@@ -212,7 +207,7 @@ INT CommandDirs (LPTSTR first, LPTSTR rest)
 
 	if (lpDir == NULL)
 	{
-		ConOutPuts (_T("Directory stack empty"));
+		ConOutResPuts(STRING_DIRSTACK_HELP4);
 		return 0;
 	}
 

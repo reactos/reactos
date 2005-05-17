@@ -7,7 +7,7 @@
  *
  * PROGRAMMERS:     No programmer listed.
  */
- 
+
 #include <ntoskrnl.h>
 
 
@@ -16,7 +16,7 @@
  *	FsRtlCheckOplock@20
  *
  * DESCRIPTION
- *	
+ *
  * ARGUMENTS
  *
  * RETURN VALUE
@@ -39,7 +39,7 @@ FsRtlCheckOplock(IN POPLOCK Oplock,
  *	FsRtlCurrentBatchOplock@4
  *
  * DESCRIPTION
- *	
+ *
  * ARGUMENTS
  *
  * RETURN VALUE
@@ -58,7 +58,7 @@ FsRtlCurrentBatchOplock(IN POPLOCK Oplock)
  *	FsRtlInitializeOplock@4
  *
  * DESCRIPTION
- *	
+ *
  * ARGUMENTS
  *
  * RETURN VALUE
@@ -79,7 +79,7 @@ FsRtlInitializeOplock(IN OUT POPLOCK Oplock)
  *	FsRtlOplockFsctrl@12
  *
  * DESCRIPTION
- *	
+ *
  * ARGUMENTS
  *
  * RETURN VALUE
@@ -100,7 +100,7 @@ FsRtlOplockFsctrl(IN POPLOCK Oplock,
  *	FsRtlOplockIsFastIoPossible@4
  *
  * DESCRIPTION
- *	
+ *
  * ARGUMENTS
  *
  * RETURN VALUE
@@ -119,7 +119,7 @@ FsRtlOplockIsFastIoPossible(IN POPLOCK Oplock)
  *	FsRtlUninitializeOplock@4
  *
  * DESCRIPTION
- *	
+ *
  * ARGUMENTS
  *
  * RETURN VALUE

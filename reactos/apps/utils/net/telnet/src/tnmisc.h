@@ -2,7 +2,7 @@
 #define __TNMISC_H
 
 // Process-related functions
-BOOL CreateHiddenConsoleProcess(LPCTSTR szChildName, PROCESS_INFORMATION* ppi, 
+BOOL CreateHiddenConsoleProcess(LPCTSTR szChildName, PROCESS_INFORMATION* ppi,
                                 LPHANDLE phInWrite, LPHANDLE phOutRead,
                                 LPHANDLE phErrRead);
 BOOL SpawnProcess(char *cmd_line, PROCESS_INFORMATION *pi);

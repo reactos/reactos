@@ -7,7 +7,7 @@
 
 #ifndef _MFC_VER
 #ifdef _WIN32_WCE
-	
+
 #else//_WIN32_WCE
 	#include <assert.h>
 #endif//_WIN32_WCE

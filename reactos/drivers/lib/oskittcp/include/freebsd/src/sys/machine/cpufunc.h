@@ -113,7 +113,7 @@ ffs(int mask)
  * constraint because "i" isn't a valid constraint when the port
  * isn't constant.  This only matters for -O0 because otherwise
  * the non-working version gets optimized away.
- * 
+ *
  * Use an expression-statement instead of a conditional expression
  * because gcc-2.6.0 would promote the operands of the conditional
  * and produce poor code for "if ((inb(var) & const1) == const2)".

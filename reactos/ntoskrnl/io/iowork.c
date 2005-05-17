@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/iowork.c
  * PURPOSE:         Manage IO system work queues
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  *                  Robert Dickenson (odin@pnc.com.au)
  */
@@ -44,9 +44,9 @@ IoWorkItemCallback(PVOID Parameter)
  * @implemented
  */
 VOID STDCALL
-IoQueueWorkItem(IN PIO_WORKITEM IoWorkItem, 
+IoQueueWorkItem(IN PIO_WORKITEM IoWorkItem,
 		IN PIO_WORKITEM_ROUTINE WorkerRoutine,
-		IN WORK_QUEUE_TYPE QueueType, 
+		IN WORK_QUEUE_TYPE QueueType,
 		IN PVOID Context)
 /*
  * FUNCTION: Inserts a work item in a queue for one of the system worker
@@ -56,7 +56,7 @@ IoQueueWorkItem(IN PIO_WORKITEM IoWorkItem,
  *        QueueType = Queue to insert it in
  */
 {
-  ExInitializeWorkItem(&IoWorkItem->Item, IoWorkItemCallback, 
+  ExInitializeWorkItem(&IoWorkItem->Item, IoWorkItemCallback,
 		       (PVOID)IoWorkItem);
   IoWorkItem->WorkerRoutine = WorkerRoutine;
   IoWorkItem->Context = Context;
@@ -83,8 +83,8 @@ PIO_WORKITEM STDCALL
 IoAllocateWorkItem(PDEVICE_OBJECT DeviceObject)
 {
   PIO_WORKITEM IoWorkItem = NULL;
-  
-  IoWorkItem = 
+
+  IoWorkItem =
     ExAllocatePoolWithTag(NonPagedPool, sizeof(IO_WORKITEM), TAG_IOWI);
   if (IoWorkItem == NULL)
     {

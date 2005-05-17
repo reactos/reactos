@@ -15,31 +15,22 @@
  *
  *    02-Feb-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Use FormatMessage() for error reports.
+ *
+ *    28-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
-
-
-#define PARAMETERF_ERROR	_T("Parameter format not correct - %c\n")
-#define INVALID_SWITCH		_T("Invalid switch - /%c\n")
-#define TOO_MANY_PARAMETERS	_T("Too many parameters - %s\n")
-#define PATH_NOT_FOUND		_T("Path not found\n")
-#define FILE_NOT_FOUND		_T("File not found\n")
-#define REQ_PARAM_MISSING	_T("Required parameter missing\n")
-#define INVALID_DRIVE		_T("Invalid drive specification\n")
-#define INVALID_PARAM_FORMAT	_T("Invalid parameter format - %s\n")
-#define BADCOMMAND		_T("Bad command or filename\n")
-#define OUT_OF_MEMORY		_T("Out of memory error.\n")
-#define CANNOTPIPE		_T("Error!  Cannot pipe!  Cannot open temporary file!\n")
-
-#define D_PAUSEMSG		_T("Press any key to continue . . .")
-
+#include "resource.h"
 
 
 VOID ErrorMessage (DWORD dwErrorCode, LPTSTR szFormat, ...)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR  szMessage[1024];
+#ifndef __REACTOS__
 	LPTSTR szError;
+#endif
 	va_list arg_ptr;
 
 	if (dwErrorCode == ERROR_SUCCESS)
@@ -64,7 +55,8 @@ VOID ErrorMessage (DWORD dwErrorCode, LPTSTR szFormat, ...)
 	}
 	else
 	{
-		ConErrPrintf (_T("Unknown error! Error code: 0x%lx\n"), dwErrorCode);
+		LoadString(CMD_ModuleHandle, STRING_ERROR_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+		ConErrPrintf(szMsg, dwErrorCode);
 		return;
 	}
 
@@ -73,111 +65,130 @@ VOID ErrorMessage (DWORD dwErrorCode, LPTSTR szFormat, ...)
 	switch (dwErrorCode)
 	{
 		case ERROR_FILE_NOT_FOUND:
-			szError = _T("File not found");
+			LoadString(CMD_ModuleHandle, STRING_ERROR_FILE_NOT_FOUND, szMsg, RC_STRING_MAX_SIZE);
 			break;
 
 		case ERROR_PATH_NOT_FOUND:
-			szError = _T("Path not found");
+			LoadString(CMD_ModuleHandle, STRING_ERROR_PATH_NOT_FOUND, szMsg, RC_STRING_MAX_SIZE);
 			break;
 
 		case ERROR_NOT_READY:
-			szError = _T("Drive not ready");
+			LoadString(CMD_ModuleHandle, STRING_ERROR_DRIVER_NOT_READY, szMsg, RC_STRING_MAX_SIZE);
 			break;
 
 		default:
-			ConErrPrintf (_T("Unknown error! Error code: 0x%lx\n"), dwErrorCode);
+			LoadString(CMD_ModuleHandle, STRING_ERROR_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+			ConErrPrintf(szMsg);
 			return;
 	}
 
 	if (szFormat)
-		ConErrPrintf (_T("%s -- %s\n"), szError, szMessage);
+		ConErrPrintf (_T("%s -- %s\n"), szMsg, szMessage);
 	else
-		ConErrPrintf (_T("%s\n"), szError);
+		ConErrPrintf (_T("%s\n"), szMsg);
 #endif
 }
 
 VOID error_parameter_format(TCHAR ch)
 {
-	ConErrPrintf (PARAMETERF_ERROR, ch);
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+
+	LoadString(CMD_ModuleHandle, STRING_ERROR_PARAMETERF_ERROR, szMsg, RC_STRING_MAX_SIZE);
+	ConErrPrintf(szMsg, ch);
 }
 
 
 VOID error_invalid_switch (TCHAR ch)
 {
-	ConErrPrintf (INVALID_SWITCH, ch);
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+
+	LoadString(CMD_ModuleHandle, STRING_ERROR_INVALID_SWITCH, szMsg, RC_STRING_MAX_SIZE);
+	ConErrPrintf(szMsg, ch);
 }
 
 
 VOID error_too_many_parameters (LPTSTR s)
 {
-	ConErrPrintf (TOO_MANY_PARAMETERS, s);
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+
+	LoadString(CMD_ModuleHandle, STRING_ERROR_TOO_MANY_PARAMETERS, szMsg, RC_STRING_MAX_SIZE);
+	ConErrPrintf(szMsg, s);
 }
 
 
 VOID error_path_not_found (VOID)
 {
-	ConErrPrintf (PATH_NOT_FOUND);
+	ConErrResPuts(STRING_ERROR_PATH_NOT_FOUND);
 }
 
 
 VOID error_file_not_found (VOID)
 {
-	ConErrPrintf (FILE_NOT_FOUND);
+	ConErrResPuts(STRING_ERROR_FILE_NOT_FOUND);
 }
 
 
 VOID error_sfile_not_found (LPTSTR f)
 {
-	ConErrPrintf (FILE_NOT_FOUND _T(" - %s\n"), f);
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+
+	LoadString(CMD_ModuleHandle, STRING_ERROR_FILE_NOT_FOUND, szMsg, RC_STRING_MAX_SIZE);
+	ConErrPrintf(_T("%s - %s\n"), szMsg, f);
 }
 
 
 VOID error_req_param_missing (VOID)
 {
-	ConErrPrintf (REQ_PARAM_MISSING);
+	ConErrResPuts(STRING_ERROR_REQ_PARAM_MISSING);
 }
 
 
 VOID error_invalid_drive (VOID)
 {
-	ConErrPrintf (INVALID_DRIVE);
+	ConErrResPuts(STRING_ERROR_INVALID_DRIVE);
 }
 
 
 VOID error_bad_command (VOID)
 {
-	ConErrPrintf (BADCOMMAND);
+	ConErrResPuts(STRING_ERROR_BADCOMMAND);
 }
 
 
 VOID error_no_pipe (VOID)
 {
-	ConErrPrintf (CANNOTPIPE);
+	ConErrResPuts(STRING_ERROR_CANNOTPIPE);
 }
 
 
 VOID error_out_of_memory (VOID)
 {
-	ConErrPrintf (OUT_OF_MEMORY);
+	ConErrResPuts(STRING_ERROR_OUT_OF_MEMORY);
 }
 
 
 VOID error_invalid_parameter_format (LPTSTR s)
 {
-	ConErrPrintf (INVALID_PARAM_FORMAT, s);
+	ConErrResPuts(STRING_ERROR_INVALID_PARAM_FORMAT);
 }
 
 
 VOID error_syntax (LPTSTR s)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+
+	LoadString(CMD_ModuleHandle, STRING_ERROR_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+
 	if (s)
-		ConErrPrintf (_T("Syntax error - %s\n"), s);
+		ConErrPrintf(_T("%s - %s\n"), szMsg, s);
 	else
-		ConErrPrintf (_T("Syntax error.\n"));
+		ConErrPrintf(_T("%s.\n"), szMsg);
 }
 
 
 VOID msg_pause (VOID)
 {
-	ConOutPuts (D_PAUSEMSG);
+	ConOutResPuts(STRING_ERROR_D_PAUSEMSG);
 }
+
+/* EOF */

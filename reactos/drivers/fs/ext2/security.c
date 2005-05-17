@@ -4,7 +4,7 @@
  * FILE:             services/fs/ext2/security.c
  * PURPOSE:          Security support
  * PROGRAMMER:       David Welch (welch@mcmail.com)
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -24,7 +24,7 @@ NTSTATUS STDCALL
 Ext2QuerySecurity(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    DPRINT("Ext2QuerySecurity(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
-   
+
    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
    Irp->IoStatus.Information = 0;
    return(STATUS_UNSUCCESSFUL);
@@ -34,7 +34,7 @@ NTSTATUS STDCALL
 Ext2SetSecurity(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    DPRINT("Ext2SetSecurity(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
-   
+
    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
    Irp->IoStatus.Information = 0;
    return(STATUS_UNSUCCESSFUL);

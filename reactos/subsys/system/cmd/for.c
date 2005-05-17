@@ -21,13 +21,17 @@
  *
  *    01-Sep-1999 (Eric Kohl)
  *        Added help text.
- *    
+ *
  *    23-Feb-2001 (Carl Nettelblad <cnettel@hem.passagen.se>)
  *        Implemented preservation of echo flag. Some other for related
  *        code in other files fixed, too.
+ *
+ *    28-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 
 /*
@@ -45,10 +49,11 @@
  */
 
 INT cmd_for (LPTSTR cmd, LPTSTR param)
-{
+{	
 	LPBATCH_CONTEXT lpNew;
 	LPTSTR pp;
 	TCHAR  var;
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 #ifdef _DEBUG
 	DebugPrintf (_T("cmd_for (\'%s\', \'%s\'\n"), cmd, param);
@@ -56,24 +61,15 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Runs a specified command for each file in a set of files\n"
-		               "\n"
-		               "FOR %variable IN (set) DO command [parameters]\n"
-		               "\n"
-		               "  %variable  Specifies a replaceable parameter.\n"
-		               "  (set)      Specifies a set of one or more files. Wildcards may be used.\n"
-		               "  command    Specifies the command to carry out for each file.\n"
-		               "  parameters Specifies parameters or switches for the specified command.\n"
-		               "\n"
-		               "To user the FOR comamnd in a batch program, specify %%variable instead of\n"
-		               "%variable."));
+		ConOutResPuts(STRING_FOR_HELP1);
 		return 0;
 	}
 
 	/* Check that first element is % then an alpha char followed by space */
 	if ((*param != _T('%')) || !_istalpha (*(param + 1)) || !_istspace (*(param + 2)))
 	{
-		error_syntax (_T("bad variable specification."));
+		LoadString( CMD_ModuleHandle, STRING_FOR_ERROR, szMsg, RC_STRING_MAX_SIZE);
+		error_syntax (szMsg);
 		return 1;
 	}
 
@@ -86,7 +82,8 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 	/* Check next element is 'IN' */
 	if ((_tcsnicmp (param, _T("in"), 2) != 0) || !_istspace (*(param + 2)))
 	{
-		error_syntax (_T("'in' missing in for statement."));
+		LoadString(CMD_ModuleHandle, STRING_FOR_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+		error_syntax(szMsg);
 		return 1;
 	}
 
@@ -97,7 +94,8 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 	/* Folowed by a '(', find also matching ')' */
 	if ((*param != _T('(')) || (NULL == (pp = _tcsrchr (param, _T(')')))))
 	{
-		error_syntax (_T("no brackets found."));
+		LoadString(CMD_ModuleHandle, STRING_FOR_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+		error_syntax(szMsg);
 		return 1;
 	}
 
@@ -110,7 +108,8 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 	/* Check DO follows */
 	if ((_tcsnicmp (pp, _T("do"), 2) != 0) || !_istspace (*(pp + 2)))
 	{
-		error_syntax (_T("'do' missing."));
+		LoadString(CMD_ModuleHandle, STRING_FOR_ERROR3, szMsg, RC_STRING_MAX_SIZE);
+		error_syntax(szMsg);
 		return 1;
 	}
 
@@ -121,7 +120,8 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 	/* Check that command tail is not empty */
 	if (*pp == _T('\0'))
 	{
-		error_syntax (_T("no command after 'do'."));
+		LoadString(CMD_ModuleHandle, STRING_FOR_ERROR4, szMsg, RC_STRING_MAX_SIZE);
+		error_syntax(szMsg);
 		return 1;
 	}
 

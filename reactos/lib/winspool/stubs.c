@@ -10,6 +10,7 @@
 
 #undef __USE_W32API
 #include <windows.h>
+#include <winerror.h>
 
 /*
  * @unimplemented

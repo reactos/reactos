@@ -52,11 +52,11 @@ AddGuiApp(PW32PROCESS W32Data)
   if (InterlockedIncrement(&NrGuiAppsRunning) == 1)
     {
       BOOL Initialized;
-      
+
       ExAcquireFastMutex(&GuiSwitchLock);
       Initialized = IntInitializeDesktopGraphics();
       ExReleaseFastMutex(&GuiSwitchLock);
-      
+
       if (!Initialized)
         {
           W32Data->Flags &= ~W32PF_CREATEDWINORDC;

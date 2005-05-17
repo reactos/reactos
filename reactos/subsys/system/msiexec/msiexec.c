@@ -145,7 +145,7 @@ static LPWSTR build_properties(struct string_list *property_list)
 			continue;
 		len = value - list->str;
 		*p++ = ' ';
-		strncpyW(p, list->str, len);
+		memcpy(p, list->str, len * sizeof(WCHAR));
 		p += len;
 		*p++ = '=';
 
@@ -155,7 +155,7 @@ static LPWSTR build_properties(struct string_list *property_list)
 		if(needs_quote)
 			*p++ = '"';
 		len = lstrlenW(value);
-		strncpyW(p, value, len);
+		memcpy(p, value, len * sizeof(WCHAR));
 		p += len;
 		if(needs_quote)
 			*p++ = '"';

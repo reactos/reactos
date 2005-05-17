@@ -23,7 +23,7 @@ TARGET_CFLAGS = -D__NTAPP__ -I$(PATH_TO_TOP)/lib/zlib -Wall -Werror -Wno-format
 TARGET_OBJECTS = bootsup.o cabinet.o console.o drivesup.o filequeue.o \
                  filesup.o format.o fslist.o genlist.o infcache.o \
                  inicache.o partlist.o progress.o registry.o settings.o \
-                 usetup.o
+                 usetup.o keytrans.o
 
 include $(PATH_TO_TOP)/rules.mak
 

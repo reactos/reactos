@@ -3,8 +3,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/mutex.c
  * PURPOSE:         Implements Mutexes and Mutants (that silly davec...)
- * 
- * PROGRAMMERS:     
+ *
+ * PROGRAMMERS:
  *                  Alex Ionescu (alex@relsoft.net) - Reorganized/commented some of the code.
  *                                                    Simplified some functions, fixed some return values and
  *                                                    corrected some minor bugs, added debug output.
@@ -22,7 +22,7 @@
 /*
  * @implemented
  */
-VOID 
+VOID
 STDCALL
 KeInitializeMutant(IN PKMUTANT Mutant,
                    IN BOOLEAN InitialOwner)
@@ -30,34 +30,34 @@ KeInitializeMutant(IN PKMUTANT Mutant,
     ULONG Signaled = TRUE;
     PKTHREAD CurrentThread = NULL;
     KIRQL OldIrql;
-    
+
     DPRINT("KeInitializeMutant: %x\n", Mutant);
-    
+
     /* Check if we have an initial owner */
     if (InitialOwner == TRUE) {
-    
+
         /* In this case, the object is not signaled */
         Signaled = FALSE;
-        
+
         /* We also need to associate a thread */
         CurrentThread = KeGetCurrentThread();
-        
+
         /* We're about to touch the Thread, so lock the Dispatcher */
         OldIrql = KeAcquireDispatcherDatabaseLock();
-        
+
         /* And insert it into its list */
         InsertTailList(&CurrentThread->MutantListHead, &Mutant->MutantListEntry);
-        
+
         /* Release Dispatcher Lock */
         KeReleaseDispatcherDatabaseLock(OldIrql);
         DPRINT("Mutant with Initial Owner\n");
-    
+
     } else {
-        
+
         /* In this case, we don't have an owner yet */
         Mutant->OwnerThread = NULL;
     }
-    
+
     /* Now we set up the Dispatcher Header */
     KeInitializeDispatcherHeader(&Mutant->Header,
                                  MutantObject,
@@ -73,20 +73,20 @@ KeInitializeMutant(IN PKMUTANT Mutant,
 /*
  * @implemented
  */
-VOID 
+VOID
 STDCALL
 KeInitializeMutex(IN PKMUTEX Mutex,
                   IN ULONG Level)
 {
     DPRINT("KeInitializeMutex: %x\n", Mutex);
-        
-        
+
+
     /* Set up the Dispatcher Header */
     KeInitializeDispatcherHeader(&Mutex->Header,
                                  MutantObject,
                                  sizeof(KMUTEX) / sizeof(ULONG),
                                  1);
-  
+
     /* Initialize the default data */
     Mutex->OwnerThread = NULL;
     Mutex->Abandoned = FALSE;
@@ -97,7 +97,7 @@ KeInitializeMutex(IN PKMUTEX Mutex,
 /*
  * @implemented
  */
-LONG 
+LONG
 STDCALL
 KeReadStateMutant(IN PKMUTANT Mutant)
 {
@@ -119,7 +119,7 @@ KeReadStateMutex(IN PKMUTEX Mutex)
 /*
  * @implemented
  */
-LONG 
+LONG
 STDCALL
 KeReleaseMutant(IN PKMUTANT Mutant,
                 IN KPRIORITY Increment,
@@ -129,72 +129,72 @@ KeReleaseMutant(IN PKMUTANT Mutant,
     KIRQL OldIrql;
     LONG PreviousState;
     PKTHREAD CurrentThread = KeGetCurrentThread();
-    
+
     DPRINT("KeReleaseMutant: %x\n", Mutant);
 
     /* Lock the Dispatcher Database */
     OldIrql = KeAcquireDispatcherDatabaseLock();
-    
+
     /* Save the Previous State */
     PreviousState = Mutant->Header.SignalState;
-    
+
     /* Check if it is to be abandonned */
     if (Abandon == FALSE) {
 
         /* Make sure that the Owner Thread is the current Thread */
         if (Mutant->OwnerThread != CurrentThread) {
-            
+
             KeReleaseDispatcherDatabaseLock(OldIrql);
-            
+
             DPRINT1("Trying to touch a Mutant that the caller doesn't own!\n");
             ExRaiseStatus(STATUS_MUTANT_NOT_OWNED);
         }
 
         /* If the thread owns it, then increase the signal state */
         Mutant->Header.SignalState++;
-    
+
     } else  {
-        
+
         /* It's going to be abandonned */
         DPRINT("Abandonning the Mutant\n");
         Mutant->Header.SignalState = 1;
         Mutant->Abandoned = TRUE;
     }
-    
+
     /* Check if the signal state is only single */
     if (Mutant->Header.SignalState == 1) {
-        
+
         /* Check if it's below 0 now */
         if (PreviousState <= 0) {
-        
+
             /* Remove the mutant from the list */
             DPRINT("Removing Mutant\n");
             RemoveEntryList(&Mutant->MutantListEntry);
-            
+
             /* Reenable APCs */
             DPRINT("Re-enabling APCs\n");
             CurrentThread->KernelApcDisable += Mutant->ApcDisable;
-            
+
             /* Force an Interrupt if Apcs are pending */
             if (!IsListEmpty(&CurrentThread->ApcState.ApcListHead[KernelMode])) {
-            
+
                 /* Make sure they aren't disabled though */
                 if (!CurrentThread->KernelApcDisable) {
-                
+
                     /* Request the Interrupt */
                     DPRINT("Requesting APC Interupt\n");
                     HalRequestSoftwareInterrupt(APC_LEVEL);
                 }
             }
         }
-        
+
         /* Remove the Owning Thread and wake it */
         Mutant->OwnerThread = NULL;
-        
+
         /* Check if the Wait List isn't empty */
         DPRINT("Checking whether to wake the Mutant\n");
         if (!IsListEmpty(&Mutant->Header.WaitListHead)) {
-            
+
             /* Wake the Mutant */
             DPRINT("Waking the Mutant\n");
             KiWaitTest(&Mutant->Header, Increment);
@@ -203,12 +203,12 @@ KeReleaseMutant(IN PKMUTANT Mutant,
 
     /* If the Wait is true, then return with a Wait and don't unlock the Dispatcher Database */
     if (Wait == FALSE) {
-        
+
         /* Release the Lock */
         KeReleaseDispatcherDatabaseLock(OldIrql);
-    
+
     } else {
-        
+
         /* Set a wait */
         CurrentThread->WaitNext = TRUE;
         CurrentThread->WaitIrql = OldIrql;
@@ -221,7 +221,7 @@ KeReleaseMutant(IN PKMUTANT Mutant,
 /*
  * @implemented
  */
-LONG 
+LONG
 STDCALL
 KeReleaseMutex(IN PKMUTEX Mutex,
                IN BOOLEAN Wait)
@@ -234,7 +234,7 @@ KeReleaseMutex(IN PKMUTEX Mutex,
 /*
  * @implemented
  */
-NTSTATUS 
+NTSTATUS
 STDCALL
 KeWaitForMutexObject(IN PKMUTEX Mutex,
                      IN KWAIT_REASON WaitReason,

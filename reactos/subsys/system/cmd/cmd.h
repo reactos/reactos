@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  *  CMD.H - header file for the modules in CMD.EXE
  *
  *
@@ -32,34 +31,12 @@
 
 #include "cmdver.h"
 
-#ifdef _MSC_VER
-#define SHELLVER     "Version " CMD_VER " [" __DATE__ ", msc]"
-#else
-#ifdef __LCC__
-#define SHELLVER     "Version " CMD_VER " [" __DATE__ ", lcc-win32]"
-#else
-#define SHELLVER     "Version " CMD_VER " [" __DATE__ "]"
-#endif
-#endif
-
-
 #define BREAK_BATCHFILE 1
 #define BREAK_OUTOFBATCH 2
 #define BREAK_INPUT 3
 #define BREAK_IGNORE 4
 
 /* define some error messages */
-#define NOENVERR        _T("ERROR: no environment")
-#define INVALIDDRIVE    _T("ERROR: invalid drive")
-#define INVALIDFUNCTION _T("ERROR: invalid function")
-#define ACCESSDENIED    _T("ERROR: access denied")
-#define BADENVIROMENT   _T("ERROR: bad enviroment")
-#define BADFORMAT       _T("ERROR: bad format")
-#define ERROR_E2BIG     _T("ERROR: Argument list too long")
-#define ERROR_EINVAL    _T("ERROR: Invalid argument")
-
-#define SHELLINFO       "ReactOS Command Line Interpreter"
-
 
 #define D_ON         _T("on")
 #define D_OFF        _T("off")
@@ -125,6 +102,8 @@ VOID ParseCommandLine (LPTSTR);
 VOID AddBreakHandler (VOID);
 VOID RemoveBreakHandler (VOID);
 
+extern HANDLE CMD_ModuleHandle;
+
 
 /* Prototypes for CMDINPUT.C */
 VOID ReadCommand (LPTSTR, INT);
@@ -170,7 +149,7 @@ VOID ConOutPrintf (LPTSTR, ...);
 VOID ConErrChar (TCHAR);
 VOID ConErrPuts (LPTSTR);
 VOID ConErrPrintf (LPTSTR, ...);
-VOID ConOutFormatMessage (DWORD MessageId, ...);	
+VOID ConOutFormatMessage (DWORD MessageId, ...);
 
 SHORT GetCursorX  (VOID);
 SHORT GetCursorY  (VOID);
@@ -180,6 +159,8 @@ VOID  SetCursorXY (SHORT, SHORT);
 VOID GetScreenSize (PSHORT, PSHORT);
 VOID SetCursorType (BOOL, BOOL);
 
+VOID ConOutResPuts (UINT resID);
+VOID ConErrResPuts (UINT resID);
 
 /* Prototypes for COPY.C */
 INT cmd_copy (LPTSTR, LPTSTR);
@@ -289,15 +270,18 @@ extern TCHAR cDateSeparator;
 extern INT   nDateFormat;
 extern TCHAR cTimeSeparator;
 extern INT   nTimeFormat;
-extern TCHAR aszDayNames[7][8];
 extern TCHAR cThousandSeparator;
 extern TCHAR cDecimalSeparator;
-extern INT   nNumberGroups;
+extern INT nNumberGroups;
+
 
 VOID InitLocale (VOID);
 VOID PrintDate (VOID);
 VOID PrintTime (VOID);
 
+/* cache codepage */
+extern UINT InputCodePage;
+extern UINT OutputCodePage;
 
 /* Prototypes for MEMORY.C */
 INT CommandMemory (LPTSTR, LPTSTR);

@@ -111,7 +111,7 @@ __inline VOID SW_ULONG_ASSIGN(void *dst, uint32 src)
         (dest)=ExAllocatePool(NonPagedPool,sizeof(type)*(amount)); \
         if ((dest)!=NULL) \
             RtlZeroMemory((dest),sizeof(type)*(amount)); \
-    }   
+    }
 
 #define FREE_MEMORY(dest) ExFreePool(dest);
 #define ZERO_MEMORY(dest,amount) RtlZeroMemory(dest,amount);
@@ -120,5 +120,5 @@ __inline VOID SW_ULONG_ASSIGN(void *dst, uint32 src)
 #endif /*WIN_NT_DRIVER*/
 
 
-#endif 
+#endif
 

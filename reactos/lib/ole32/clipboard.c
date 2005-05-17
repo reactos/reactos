@@ -172,11 +172,11 @@ static OLEClipbrd* theOleClipboard = NULL;
 /*
  * Prototypes for the methods of the OLEClipboard class.
  */
-extern void OLEClipbrd_Initialize();
-extern void OLEClipbrd_UnInitialize();
-static OLEClipbrd* OLEClipbrd_Construct();
+void OLEClipbrd_Initialize(void);
+void OLEClipbrd_UnInitialize(void);
+static OLEClipbrd* OLEClipbrd_Construct(void);
 static void OLEClipbrd_Destroy(OLEClipbrd* ptrToDestroy);
-static HWND OLEClipbrd_CreateWindow();
+static HWND OLEClipbrd_CreateWindow(void);
 static void OLEClipbrd_DestroyWindow(HWND hwnd);
 LRESULT CALLBACK OLEClipbrd_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 static HRESULT OLEClipbrd_RenderFormat( IDataObject *pIDataObject, LPFORMATETC pFormatetc );
@@ -610,7 +610,7 @@ HRESULT WINAPI OleIsCurrentClipboard (  IDataObject *pDataObject)
  * OLEClipbrd_Initialize()
  * Initializes the OLE clipboard.
  */
-void OLEClipbrd_Initialize()
+void OLEClipbrd_Initialize(void)
 {
   /*
    * Create the clipboard if necessary
@@ -627,7 +627,7 @@ void OLEClipbrd_Initialize()
  * OLEClipbrd_UnInitialize()
  * Un-Initializes the OLE clipboard
  */
-void OLEClipbrd_UnInitialize()
+void OLEClipbrd_UnInitialize(void)
 {
   TRACE("()\n");
   /*
@@ -938,12 +938,15 @@ static HRESULT OLEClipbrd_RenderFormat(IDataObject *pIDataObject, LPFORMATETC pF
     std.tymed = pFormatetc->tymed = TYMED_ISTORAGE;
 
     hStorage = GlobalAlloc(GMEM_SHARE|GMEM_MOVEABLE, 0);
+    if (hStorage == NULL)
+      HANDLE_ERROR( E_OUTOFMEMORY );
     hr = CreateILockBytesOnHGlobal(hStorage, FALSE, &ptrILockBytes);
     hr = StgCreateDocfileOnILockBytes(ptrILockBytes, STGM_SHARE_EXCLUSIVE|STGM_READWRITE, 0, &std.u.pstg);
 
     if (FAILED(hr = IDataObject_GetDataHere(theOleClipboard->pIDataObjectSrc, pFormatetc, &std)))
     {
       WARN("() : IDataObject_GetDataHere failed to render clipboard data! (%lx)\n", hr);
+      GlobalFree(hStorage);
       return hr;
     }
 
@@ -1023,10 +1026,11 @@ static HRESULT OLEClipbrd_RenderFormat(IDataObject *pIDataObject, LPFORMATETC pF
   else
   {
     if (FAILED(hr = IDataObject_GetData(pIDataObject, pFormatetc, &std)))
-  {
-    WARN("() : IDataObject_GetData failed to render clipboard data! (%lx)\n", hr);
-    return hr;
-  }
+    {
+        WARN("() : IDataObject_GetData failed to render clipboard data! (%lx)\n", hr);
+        GlobalFree(hStorage);
+        return hr;
+    }
 
     /* To put a copy back on the clipboard */
 
@@ -1079,7 +1083,10 @@ static HGLOBAL OLEClipbrd_GlobalDupMem( HGLOBAL hGlobalSrc )
     pGlobalSrc = GlobalLock(hGlobalSrc);
     pGlobalDest = GlobalLock(hGlobalDest);
     if ( !pGlobalSrc || !pGlobalDest )
+    {
+      GlobalFree(hGlobalDest);
       return 0;
+    }
 
     memcpy(pGlobalDest, pGlobalSrc, cBytes);
 
@@ -1441,7 +1448,7 @@ static HRESULT WINAPI OLEClipbrd_IDataObject_EnumFormatEtc(
    * and create an IEnumFORMATETC enumerator from this list.
    */
   cfmt = CountClipboardFormats();
-  afmt = (FORMATETC *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+  afmt = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
                                 sizeof(FORMATETC) * cfmt);
   /*
    * Open the Windows clipboard, associating it with our hidden window
@@ -1569,9 +1576,7 @@ LPENUMFORMATETC OLEClipbrd_IEnumFORMATETC_Construct(UINT cfmt, const FORMATETC a
   DWORD size=cfmt * sizeof(FORMATETC);
   LPMALLOC pIMalloc;
 
-  ef = (IEnumFORMATETCImpl*)HeapAlloc(GetProcessHeap(),
-                                      HEAP_ZERO_MEMORY,
-                                      sizeof(IEnumFORMATETCImpl));
+  ef = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IEnumFORMATETCImpl));
   if (!ef)
     return NULL;
 

@@ -1,5 +1,5 @@
 /*
- * 
+ *
  */
 
 #ifndef __INTERNAL_HAL_HAL_H

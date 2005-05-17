@@ -5,7 +5,7 @@
 #define OP_BPTR		0x400		/* BYTE Pointer */
 #define OP_WPTR		0x500		/* WORD Pointer */
 #define OP_DPTR		0x600		/* DWORD Pointer */
-#define OP_UNK			0x900		
+#define OP_UNK			0x900
 //#define INS_INVALID	0x00	/* Not a valid instruction */
    /* Branch Instruction types */
 #define INS_BRANCH	0x01	/* Unconditional branch */
@@ -94,7 +94,7 @@ enum argtype {
   ARG_REG_IY_IND,ARG_REG_C_IND,ARG_REG_I,ARG_REG_R,ARG_IMM16_A,ARG_MODRM16,ARG_SIMM8,
   ARG_IMM32,ARG_STRING,ARG_MODRM_BCD,ARG_PSTRING,ARG_DOSSTRING,ARG_CUNICODESTRING,
   ARG_PUNICODESTRING,ARG_NONEBYTE,ARG_XREG,ARG_XMMMODRM};
-  
+
 typedef struct x86_inst {
 	int flags;
 	int destType, srcType, auxType;
@@ -122,7 +122,7 @@ typedef struct x86_inst {
 #define DISP8     0x1000
 #define DISP32    0x2000
 #define HAS_SIB   0x4000
-#define HAS_MODRM 0x8000 
+#define HAS_MODRM 0x8000
 
 struct OPERAND {    	//arg1, arg2, arg3
    char * str;			//temporary buffer for building arg text
@@ -138,7 +138,7 @@ struct EA {		//effective address [SIB/disp]
    char sib[32];
 };
 
-struct modRM_byte {	
+struct modRM_byte {
    unsigned int mod : 2;
    unsigned int reg : 3;
    unsigned int rm  : 3;

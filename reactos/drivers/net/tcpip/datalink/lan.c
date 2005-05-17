@@ -18,6 +18,9 @@ UINT TransferDataCompleteCalled = 0;
 UINT LanReceiveWorkerCalled = 0;
 BOOLEAN LanReceiveWorkerBusy = FALSE;
 
+#define CCS_ROOT L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet"
+#define TCPIP_GUID L"{4D36E972-E325-11CE-BFC1-08002BE10318}"
+
 #define NGFP(_Packet)                                             \
     {                                                             \
         PVOID _Header;                                            \
@@ -58,9 +61,9 @@ KSPIN_LOCK LanSendCompleteLock;
 LIST_ENTRY LanSendCompleteList;
 
 VOID LanChainCompletion( PLAN_ADAPTER Adapter, PNDIS_PACKET NdisPacket ) {
-    PLAN_WQ_ITEM PendingCompletion = 
+    PLAN_WQ_ITEM PendingCompletion =
 	ExAllocatePool( NonPagedPool, sizeof(LAN_WQ_ITEM) );
-    
+
     if( !PendingCompletion ) return;
 
     PendingCompletion->Packet  = NdisPacket;
@@ -82,7 +85,7 @@ BOOLEAN LanShouldComplete( PLAN_ADAPTER Adapter, PNDIS_PACKET NdisPacket ) {
 	 ListEntry = ListEntry->Flink ) {
 	CompleteEntry = CONTAINING_RECORD(ListEntry, LAN_WQ_ITEM, ListEntry);
 
-	if( CompleteEntry->Adapter == Adapter && 
+	if( CompleteEntry->Adapter == Adapter &&
 	    CompleteEntry->Packet  == NdisPacket ) {
 	    RemoveEntryList( ListEntry );
 	    KeReleaseSpinLock( &LanSendCompleteLock, OldIrql );
@@ -297,8 +300,8 @@ VOID STDCALL LanReceiveWorker( PVOID Context ) {
     IP_PACKET IPPacket;
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
-    
-    while( (ListEntry = 
+
+    while( (ListEntry =
 	    ExInterlockedRemoveHeadList( &LanWorkList, &LanWorkLock )) ) {
 	WorkItem = CONTAINING_RECORD(ListEntry, LAN_WQ_ITEM, ListEntry);
 
@@ -311,7 +314,7 @@ VOID STDCALL LanReceiveWorker( PVOID Context ) {
 	ExFreePool( WorkItem );
 
         IPPacket.NdisPacket = Packet;
-	
+
         NdisGetFirstBufferFromPacket(Packet,
                                      &NdisBuffer,
                                      &IPPacket.Header,
@@ -331,21 +334,21 @@ VOID STDCALL LanReceiveWorker( PVOID Context ) {
 	IPPacket.Position = 0;
 
 	TI_DbgPrint
-		(DEBUG_DATALINK,
-		 ("Ether Type = %x ContigSize = %d Total = %d\n",
-		  PacketType, IPPacket.ContigSize, IPPacket.TotalSize));
-	
+            (DEBUG_DATALINK,
+             ("Ether Type = %x ContigSize = %d Total = %d\n",
+              PacketType, IPPacket.ContigSize, IPPacket.TotalSize));
+
         switch (PacketType) {
-            case ETYPE_IPv4:
-            case ETYPE_IPv6:
-		TI_DbgPrint(MID_TRACE,("Received IP Packet\n"));
-                IPReceive(Adapter->Context, &IPPacket);
-                break;
-            case ETYPE_ARP:
-		TI_DbgPrint(MID_TRACE,("Received ARP Packet\n"));
-                ARPReceive(Adapter->Context, &IPPacket);
-            default:
-                break;
+        case ETYPE_IPv4:
+        case ETYPE_IPv6:
+            TI_DbgPrint(MID_TRACE,("Received IP Packet\n"));
+            IPReceive(Adapter->Context, &IPPacket);
+            break;
+        case ETYPE_ARP:
+            TI_DbgPrint(MID_TRACE,("Received ARP Packet\n"));
+            ARPReceive(Adapter->Context, &IPPacket);
+        default:
+            break;
         }
 
 	FreeNdisPacket( Packet );
@@ -354,7 +357,7 @@ VOID STDCALL LanReceiveWorker( PVOID Context ) {
     LanReceiveWorkerBusy = FALSE;
 }
 
-VOID LanSubmitReceiveWork( 
+VOID LanSubmitReceiveWork(
     NDIS_HANDLE BindingContext,
     PNDIS_PACKET Packet,
     NDIS_STATUS Status,
@@ -363,8 +366,10 @@ VOID LanSubmitReceiveWork(
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
     KIRQL OldIrql;
 
+    TI_DbgPrint(DEBUG_DATALINK,("called\n"));
+
     TcpipAcquireSpinLock( &LanWorkLock, &OldIrql );
-    
+
     WQItem = ExAllocatePool( NonPagedPool, sizeof(LAN_WQ_ITEM) );
     if( !WQItem ) {
 	TcpipReleaseSpinLock( &LanWorkLock, OldIrql );
@@ -404,6 +409,8 @@ VOID STDCALL ProtocolTransferDataComplete(
  */
 {
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+
+    TI_DbgPrint(DEBUG_DATALINK,("called\n"));
 
     TransferDataCompleteCalled++;
     ASSERT(TransferDataCompleteCalled <= TransferDataCalled);
@@ -479,7 +486,7 @@ NDIS_STATUS STDCALL ProtocolReceive(
 
     /* Get a transfer data packet */
 
-    TI_DbgPrint(DEBUG_DATALINK, ("Adapter: %x (MTU %d)\n", 
+    TI_DbgPrint(DEBUG_DATALINK, ("Adapter: %x (MTU %d)\n",
 				 Adapter, Adapter->MTU));
 
     TcpipAcquireSpinLock( &LanWorkLock, &OldIrql );
@@ -518,7 +525,7 @@ NDIS_STATUS STDCALL ProtocolReceive(
 	    ASSERT(PacketSize <= Adapter->MTU);
 
             NdisTransferData(&NdisStatus, Adapter->NdisHandle,
-                             MacReceiveContext, 0, PacketSize, 
+                             MacReceiveContext, 0, PacketSize,
 			     NdisPacket, &BytesTransferred);
         }
         else
@@ -599,10 +606,10 @@ VOID STDCALL ProtocolBindAdapter(
  *     SystemSpecific2: Unused & must not be touched
  */
 {
-	/* XXX confirm that this is still true, or re-word the following comment */
-	/* we get to ignore BindContext because we will never pend an operation with NDIS */
-	TI_DbgPrint(DEBUG_DATALINK, ("Called with registry path %wZ for %wZ\n", SystemSpecific1, DeviceName));
-	*Status = LANRegisterAdapter(DeviceName, SystemSpecific1);
+    /* XXX confirm that this is still true, or re-word the following comment */
+    /* we get to ignore BindContext because we will never pend an operation with NDIS */
+    TI_DbgPrint(DEBUG_DATALINK, ("Called with registry path %wZ for %wZ\n", SystemSpecific1, DeviceName));
+    *Status = LANRegisterAdapter(DeviceName, SystemSpecific1);
 }
 
 
@@ -629,7 +636,7 @@ VOID LANTransmit(
     KIRQL OldIrql;
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)Context;
 
-    TI_DbgPrint(DEBUG_DATALINK, 
+    TI_DbgPrint(DEBUG_DATALINK,
 		("Called( NdisPacket %x, Offset %d, Adapter %x )\n",
 		 NdisPacket, Offset, Adapter));
 
@@ -642,11 +649,11 @@ VOID LANTransmit(
 		 Adapter->HWAddress[4] & 0xff,
 		 Adapter->HWAddress[5] & 0xff));
 
-    /* XXX arty -- Handled adjustment in a saner way than before ... 
+    /* XXX arty -- Handled adjustment in a saner way than before ...
      * not needed immediately */
     GetDataPtr( NdisPacket, 0, &Data, &Size );
 
-    LanChainCompletion( Adapter, NdisPacket );    
+    LanChainCompletion( Adapter, NdisPacket );
 
     if (Adapter->State == LAN_STATE_STARTED) {
         switch (Adapter->Media) {
@@ -664,25 +671,25 @@ VOID LANTransmit(
             RtlCopyMemory(EHeader->SrcAddr, Adapter->HWAddress, IEEE_802_ADDR_LENGTH);
 
             switch (Type) {
-                case LAN_PROTO_IPv4:
-                    EHeader->EType = ETYPE_IPv4;
-                    break;
-                case LAN_PROTO_ARP:
-                    EHeader->EType = ETYPE_ARP;
-                    break;
-                case LAN_PROTO_IPv6:
-                    EHeader->EType = ETYPE_IPv6;
-                    break;
-                default:
+            case LAN_PROTO_IPv4:
+                EHeader->EType = ETYPE_IPv4;
+                break;
+            case LAN_PROTO_ARP:
+                EHeader->EType = ETYPE_ARP;
+                break;
+            case LAN_PROTO_IPv6:
+                EHeader->EType = ETYPE_IPv6;
+                break;
+            default:
 #ifdef DBG
-                    /* Should not happen */
-                    TI_DbgPrint(MIN_TRACE, ("Unknown LAN protocol.\n"));
+                /* Should not happen */
+                TI_DbgPrint(MIN_TRACE, ("Unknown LAN protocol.\n"));
 
-                    ProtocolSendComplete((NDIS_HANDLE)Context,
-                                         NdisPacket,
-                                         NDIS_STATUS_FAILURE);
+                ProtocolSendComplete((NDIS_HANDLE)Context,
+                                     NdisPacket,
+                                     NDIS_STATUS_FAILURE);
 #endif
-                    return;
+                return;
             }
             break;
 
@@ -694,8 +701,8 @@ VOID LANTransmit(
 	TI_DbgPrint( MID_TRACE, ("LinkAddress: %x\n", LinkAddress));
 	if( LinkAddress ) {
 	    TI_DbgPrint
-		( MID_TRACE, 
-		  ("Link Address [%02x %02x %02x %02x %02x %02x]\n", 
+		( MID_TRACE,
+		  ("Link Address [%02x %02x %02x %02x %02x %02x]\n",
 		   ((PCHAR)LinkAddress)[0] & 0xff,
 		   ((PCHAR)LinkAddress)[1] & 0xff,
 		   ((PCHAR)LinkAddress)[2] & 0xff,
@@ -707,13 +714,13 @@ VOID LANTransmit(
 	TcpipAcquireSpinLock( &Adapter->Lock, &OldIrql );
 	TI_DbgPrint(MID_TRACE, ("NdisSend\n"));
         NdisSend(&NdisStatus, Adapter->NdisHandle, NdisPacket);
-	TI_DbgPrint(MID_TRACE, ("NdisSend %s\n", 
+	TI_DbgPrint(MID_TRACE, ("NdisSend %s\n",
 				NdisStatus == NDIS_STATUS_PENDING ?
 				"Pending" : "Complete"));
 	TcpipReleaseSpinLock( &Adapter->Lock, OldIrql );
 
-	/* I had a talk with vizzini: these really ought to be here. 
-	 * we're supposed to see these completed by ndis *only* when 
+	/* I had a talk with vizzini: these really ought to be here.
+	 * we're supposed to see these completed by ndis *only* when
 	 * status_pending is returned.  Note that this is different from
 	 * the situation with IRPs. */
         if (NdisStatus != NDIS_STATUS_PENDING)
@@ -723,67 +730,14 @@ VOID LANTransmit(
     }
 }
 
-static NTSTATUS 
+static NTSTATUS
 OpenRegistryKey( PNDIS_STRING RegistryPath, PHANDLE RegHandle ) {
     OBJECT_ATTRIBUTES Attributes;
     NTSTATUS Status;
-    
+
     InitializeObjectAttributes(&Attributes, RegistryPath, OBJ_CASE_INSENSITIVE, 0, 0);
-    Status = ZwOpenKey(RegHandle, GENERIC_READ, &Attributes);
+    Status = ZwOpenKey(RegHandle, KEY_ALL_ACCESS, &Attributes);
     return Status;
-}
-
-static NTSTATUS ReadIPAddressFromRegistry( HANDLE RegHandle,
-					   PWCHAR RegistryValue,
-					   PIP_ADDRESS Address ) {
-    UNICODE_STRING ValueName;
-    UNICODE_STRING UnicodeAddress; 
-    NTSTATUS Status;
-    ULONG ResultLength;
-    UCHAR buf[1024];
-    PKEY_VALUE_PARTIAL_INFORMATION Information = (PKEY_VALUE_PARTIAL_INFORMATION)buf;
-    ANSI_STRING AnsiAddress;
-    ULONG AnsiLen;
-
-    RtlInitUnicodeString(&ValueName, RegistryValue);
-    Status = 
-	ZwQueryValueKey(RegHandle, 
-			&ValueName, 
-			KeyValuePartialInformation, 
-			Information, 
-			sizeof(buf), 
-			&ResultLength);
-
-    if (!NT_SUCCESS(Status))
-	return Status;
-    /* IP address is stored as a REG_MULTI_SZ - we only pay attention to the first one though */
-    TI_DbgPrint(MIN_TRACE, ("Information DataLength: 0x%x\n", Information->DataLength));
-    
-    UnicodeAddress.Buffer = (PWCHAR)&Information->Data;
-    UnicodeAddress.Length = Information->DataLength;
-    UnicodeAddress.MaximumLength = Information->DataLength;
-    
-    AnsiLen = RtlUnicodeStringToAnsiSize(&UnicodeAddress);
-    if(!AnsiLen)
-	return STATUS_NO_MEMORY;
-    
-    AnsiAddress.Buffer = exAllocatePoolWithTag(PagedPool, AnsiLen, 0x01020304);
-    if(!AnsiAddress.Buffer)
-	return STATUS_NO_MEMORY;
-
-    AnsiAddress.Length = AnsiLen;
-    AnsiAddress.MaximumLength = AnsiLen;
-    
-    Status = RtlUnicodeStringToAnsiString(&AnsiAddress, &UnicodeAddress, FALSE);
-    if (!NT_SUCCESS(Status)) {
-	exFreePool(AnsiAddress.Buffer);
-	return STATUS_UNSUCCESSFUL;
-    }
-    
-    AnsiAddress.Buffer[AnsiAddress.Length] = 0;
-    AddrInitIPv4(Address, inet_addr(AnsiAddress.Buffer));
-
-    return STATUS_SUCCESS;
 }
 
 static NTSTATUS ReadStringFromRegistry( HANDLE RegHandle,
@@ -797,25 +751,25 @@ static NTSTATUS ReadStringFromRegistry( HANDLE RegHandle,
     PKEY_VALUE_PARTIAL_INFORMATION Information = (PKEY_VALUE_PARTIAL_INFORMATION)buf;
 
     RtlInitUnicodeString(&ValueName, RegistryValue);
-    Status = 
-	ZwQueryValueKey(RegHandle, 
-			&ValueName, 
-			KeyValuePartialInformation, 
-			Information, 
-			sizeof(buf), 
+    Status =
+	ZwQueryValueKey(RegHandle,
+			&ValueName,
+			KeyValuePartialInformation,
+			Information,
+			sizeof(buf),
 			&ResultLength);
 
     if (!NT_SUCCESS(Status))
 	return Status;
     /* IP address is stored as a REG_MULTI_SZ - we only pay attention to the first one though */
     TI_DbgPrint(MIN_TRACE, ("Information DataLength: 0x%x\n", Information->DataLength));
-    
+
     UnicodeString.Buffer = (PWCHAR)&Information->Data;
-    UnicodeString.Length = Information->DataLength;
+    UnicodeString.Length = Information->DataLength - sizeof(WCHAR);
     UnicodeString.MaximumLength = Information->DataLength;
- 
-    String->Buffer = 
-	(PWCHAR)exAllocatePool( NonPagedPool, 
+
+    String->Buffer =
+	(PWCHAR)exAllocatePool( NonPagedPool,
 				UnicodeString.MaximumLength + sizeof(WCHAR) );
 
     if( !String->Buffer ) return STATUS_NO_MEMORY;
@@ -826,32 +780,161 @@ static NTSTATUS ReadStringFromRegistry( HANDLE RegHandle,
     return STATUS_SUCCESS;
 }
 
-static VOID GetSimpleAdapterNameFromRegistryPath
-( PUNICODE_STRING TargetString,
-  PUNICODE_STRING RegistryPath ) {
-    PWCHAR i, LastSlash = NULL;
-    UINT NewStringLength = 0;
+/*
+ * Utility to copy and append two unicode strings.
+ *
+ * IN OUT PUNICODE_STRING ResultFirst -> First string and result
+ * IN     PUNICODE_STRING Second      -> Second string to append
+ * IN     BOOL            Deallocate  -> TRUE: Deallocate First string before
+ *                                       overwriting.
+ *
+ * Returns NTSTATUS.
+ */
 
-    for( i = RegistryPath->Buffer; 
-	 i < RegistryPath->Buffer + 
-	     (RegistryPath->Length / sizeof(WCHAR));
-	 i++ ) if( *i == '\\' ) LastSlash = i;
+NTSTATUS NTAPI AppendUnicodeString(PUNICODE_STRING ResultFirst,
+				   PUNICODE_STRING Second,
+				   BOOL Deallocate) {
+    NTSTATUS Status;
+    UNICODE_STRING Ustr = *ResultFirst;
+    PWSTR new_string = ExAllocatePoolWithTag
+        (PagedPool,
+         (ResultFirst->Length + Second->Length + sizeof(WCHAR)), TAG_STRING);
+    if( !new_string ) {
+	return STATUS_NO_MEMORY;
+    }
+    memcpy( new_string, ResultFirst->Buffer, ResultFirst->Length );
+    memcpy( new_string + ResultFirst->Length / sizeof(WCHAR),
+	    Second->Buffer, Second->Length );
+    if( Deallocate ) RtlFreeUnicodeString(ResultFirst);
+    ResultFirst->Length = Ustr.Length + Second->Length;
+    ResultFirst->MaximumLength = ResultFirst->Length;
+    new_string[ResultFirst->Length / sizeof(WCHAR)] = 0;
+    Status = RtlCreateUnicodeString(ResultFirst,new_string) ?
+	STATUS_SUCCESS : STATUS_NO_MEMORY;
+    ExFreePool(new_string);
+    return Status;
+}
 
-    if( LastSlash ) LastSlash++; else LastSlash = RegistryPath->Buffer;
+static NTSTATUS CheckForDeviceDesc( PUNICODE_STRING EnumKeyName,
+                                    PUNICODE_STRING TargetKeyName,
+                                    PUNICODE_STRING ShortName,
+                                    PUNICODE_STRING OutName ) {
+    UNICODE_STRING RootDevice = { 0 }, LinkageKeyName = { 0 };
+    UNICODE_STRING DescKeyName = { 0 }, Linkage = { 0 };
+    UNICODE_STRING BackSlash = { 0 };
+    HANDLE DescKey = NULL, LinkageKey = NULL;
+    NTSTATUS Status;
 
-    NewStringLength = RegistryPath->MaximumLength - 
-	((LastSlash - RegistryPath->Buffer) * sizeof(WCHAR));
+    TI_DbgPrint(DEBUG_DATALINK,("EnumKeyName %wZ\n", EnumKeyName));
 
-    TargetString->Buffer = 
-	(PWCHAR)exAllocatePool( NonPagedPool, NewStringLength );
+    RtlInitUnicodeString(&BackSlash, L"\\");
+    RtlInitUnicodeString(&Linkage, L"\\Linkage");
 
-    if( !TargetString->Buffer ) {
-	TargetString->Length = TargetString->MaximumLength = 0;
-	return;
+    RtlInitUnicodeString(&DescKeyName, L"");
+    AppendUnicodeString( &DescKeyName, EnumKeyName, FALSE );
+    AppendUnicodeString( &DescKeyName, &BackSlash, TRUE );
+    AppendUnicodeString( &DescKeyName, TargetKeyName, TRUE );
+
+    RtlInitUnicodeString(&LinkageKeyName, L"");
+    AppendUnicodeString( &LinkageKeyName, &DescKeyName, FALSE );
+    AppendUnicodeString( &LinkageKeyName, &Linkage, TRUE );
+
+    Status = OpenRegistryKey( &LinkageKeyName, &LinkageKey );
+    if( !NT_SUCCESS(Status) ) goto cleanup;
+
+    Status = ReadStringFromRegistry( LinkageKey, L"RootDevice", &RootDevice );
+    if( !NT_SUCCESS(Status) ) goto cleanup;
+
+    if( RtlCompareUnicodeString( &RootDevice, ShortName, TRUE ) == 0 ) {
+        Status = OpenRegistryKey( &DescKeyName, &DescKey );
+        if( !NT_SUCCESS(Status) ) goto cleanup;
+
+        Status = ReadStringFromRegistry( DescKey, L"DriverDesc", OutName );
+        if( !NT_SUCCESS(Status) ) goto cleanup;
+
+        TI_DbgPrint(DEBUG_DATALINK,("ADAPTER NAME: %wZ\n", OutName));
+    } else Status = STATUS_UNSUCCESSFUL;
+
+cleanup:
+    RtlFreeUnicodeString( &RootDevice );
+    RtlFreeUnicodeString( &LinkageKeyName );
+    RtlFreeUnicodeString( &DescKeyName );
+    if( LinkageKey ) NtClose( LinkageKey );
+    if( DescKey ) NtClose( DescKey );
+
+    TI_DbgPrint(DEBUG_DATALINK,("Returning %x\n", Status));
+
+    return Status;
+}
+
+static NTSTATUS FindDeviceNameForAdapter( PUNICODE_STRING ShortName,
+                                          PUNICODE_STRING OutName ) {
+    UNICODE_STRING EnumKeyName, TargetKeyName;
+    HANDLE EnumKey;
+    NTSTATUS Status;
+    ULONG i;
+    KEY_BASIC_INFORMATION *Kbio =
+        ExAllocatePool(NonPagedPool, sizeof(KEY_BASIC_INFORMATION));
+    ULONG KbioLength = sizeof(KEY_BASIC_INFORMATION), ResultLength;
+
+    RtlInitUnicodeString
+        (&EnumKeyName, CCS_ROOT L"\\Control\\Class\\" TCPIP_GUID);
+
+    Status = OpenRegistryKey( &EnumKeyName, &EnumKey );
+
+    if( !NT_SUCCESS(Status) )
+        TI_DbgPrint(DEBUG_DATALINK,("Couldn't open Enum key %wZ: %x\n",
+                                    &EnumKeyName, Status));
+
+    for( i = 0; NT_SUCCESS(Status); i++ ) {
+        Status = ZwEnumerateKey( EnumKey, i, KeyBasicInformation,
+                                 Kbio, KbioLength, &ResultLength );
+
+        if( Status == STATUS_BUFFER_TOO_SMALL ) {
+            ExFreePool( Kbio );
+            KbioLength = ResultLength;
+            Kbio = ExAllocatePool( NonPagedPool, KbioLength );
+
+            Status = ZwEnumerateKey( EnumKey, i, KeyBasicInformation,
+                                     Kbio, KbioLength, &ResultLength );
+
+            TI_DbgPrint(DEBUG_DATALINK,("Couldn't enum key child %d\n", i));
+            return Status;
+        }
+
+        if( NT_SUCCESS(Status) ) {
+            TargetKeyName.Length = TargetKeyName.MaximumLength =
+                Kbio->NameLength;
+            TargetKeyName.Buffer = Kbio->Name;
+
+            Status = CheckForDeviceDesc
+                ( &EnumKeyName, &TargetKeyName, ShortName, OutName );
+            if( NT_SUCCESS(Status) ) {
+                NtClose( EnumKey );
+                return Status;
+            } else Status = STATUS_SUCCESS;
+        }
     }
 
-    TargetString->Length = TargetString->MaximumLength = NewStringLength;
-    RtlCopyMemory( TargetString->Buffer, LastSlash, NewStringLength );
+    RtlInitUnicodeString( OutName, L"" );
+    AppendUnicodeString( OutName, &TargetKeyName, FALSE );
+    NtClose( EnumKey );
+    return STATUS_UNSUCCESSFUL;
+}
+
+VOID GetShortName( PUNICODE_STRING RegistryKey,
+                   PUNICODE_STRING ShortNameOut ) {
+    PWCHAR Ptr;
+    ShortNameOut->Buffer =
+        RegistryKey->Buffer + wcslen(CCS_ROOT L"\\Services\\");
+    Ptr = ShortNameOut->Buffer;
+
+    while( *Ptr != L'\\' &&
+           ((PCHAR)Ptr) < ((PCHAR)RegistryKey->Buffer) + RegistryKey->Length )
+        Ptr++;
+
+    ShortNameOut->Length = ShortNameOut->MaximumLength =
+        (Ptr - ShortNameOut->Buffer) * sizeof(WCHAR);
 }
 
 VOID BindAdapter(
@@ -869,14 +952,17 @@ VOID BindAdapter(
     PIP_INTERFACE IF;
     NDIS_STATUS NdisStatus;
     LLIP_BIND_INFO BindInfo;
-    IP_ADDRESS DefaultGateway, DefaultMask = { 0 };
+    IP_ADDRESS DefaultMask = { 0 };
     ULONG Lookahead = LOOKAHEAD_SIZE;
     NTSTATUS Status;
     HANDLE RegHandle = 0;
+    UNICODE_STRING ShortName;
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 
     Adapter->State = LAN_STATE_OPENING;
+
+    GetShortName( RegistryPath, &ShortName );
 
     NdisStatus = NDISCall(Adapter,
                           NdisRequestSetInformation,
@@ -884,7 +970,7 @@ VOID BindAdapter(
                           &Lookahead,
                           sizeof(ULONG));
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        TI_DbgPrint(MID_TRACE, ("Could not set lookahead buffer size (0x%X).\n", NdisStatus));
+        TI_DbgPrint(DEBUG_DATALINK, ("Could not set lookahead buffer size (0x%X).\n", NdisStatus));
         return;
     }
 
@@ -904,88 +990,33 @@ VOID BindAdapter(
         return;
     }
 
-    /* 
-     * Query per-adapter configuration from the registry 
+    /*
+     * Query per-adapter configuration from the registry
      * In case anyone is curious:  there *is* an Ndis configuration api
      * for this sort of thing, but it doesn't really support things like
      * REG_MULTI_SZ very well, and there is a note in the DDK that says that
      * protocol drivers developed for win2k and above just use the native
      * services (ZwOpenKey, etc).
      */
-    
+
     Status = OpenRegistryKey( RegistryPath, &RegHandle );
-	    
-    if(NT_SUCCESS(Status))
-	Status = ReadIPAddressFromRegistry( RegHandle, L"DefaultGateway",
-					    &DefaultGateway );
-    if(!NT_SUCCESS(Status)) {
-	Status = STATUS_SUCCESS;
-	RtlZeroMemory( &DefaultGateway, sizeof(DefaultGateway) );
-    }
-
-    if(NT_SUCCESS(Status))
-	Status = ReadIPAddressFromRegistry( RegHandle, L"IPAddress",
-					    &IF->Unicast );
-    if(NT_SUCCESS(Status)) 
-	Status = ReadIPAddressFromRegistry( RegHandle, L"SubnetMask",
-					    &IF->Netmask );
-
-    IF->Broadcast.Type = IP_ADDRESS_V4;
-    IF->Broadcast.Address.IPv4Address = 
-        IF->Unicast.Address.IPv4Address | 
-        ~IF->Netmask.Address.IPv4Address;
-
-    TI_DbgPrint(MID_TRACE,("BCAST(IF) %s\n", A2S(&IF->Broadcast)));
 
     if(NT_SUCCESS(Status)) {
-        RtlZeroMemory( &IF->Name, sizeof(IF->Name) );
-	Status = ReadStringFromRegistry( RegHandle, L"DeviceDesc",
-					 &IF->Name );
-
-	/* I think that not getting a devicedesc is not a fatal error */
-	if( !NT_SUCCESS(Status) ) {
-	    if( IF->Name.Buffer ) exFreePool( IF->Name.Buffer );
-	    GetSimpleAdapterNameFromRegistryPath( &IF->Name, RegistryPath );
-	}
-	Status = STATUS_SUCCESS;
+	Status = FindDeviceNameForAdapter( &ShortName, &IF->Name );
+        TI_DbgPrint(DEBUG_DATALINK,("Adapter Name: %wZ\n", &IF->Name));
     }
 
-    TI_DbgPrint(MID_TRACE,("Adapter Name: %wZ\n", &IF->Name));
+    DefaultMask.Type = IP_ADDRESS_V4;
 
-    if(!NT_SUCCESS(Status))
-    {
-	TI_DbgPrint(MIN_TRACE, ("Unable to open protocol-specific registry key: 0x%x\n", Status));
-	
-	/* XXX how do we proceed?  No ip address, no parameters... do we guess? */
-	if(RegHandle)  
-	    ZwClose(RegHandle);
-	IPDestroyInterface(IF);
-	return;
-    }
-    
-    TI_DbgPrint
-	(MID_TRACE, 
-	 ("--> Our IP address on this interface: '%s'\n", 
-	  A2S(&IF->Unicast)));
-    
-    TI_DbgPrint
-	(MID_TRACE, 
-	 ("--> Our net mask on this interface: '%s'\n", 
-	  A2S(&IF->Netmask)));
+    IF->Unicast = DefaultMask;
+    IF->Netmask = DefaultMask;
 
-    if( DefaultGateway.Address.IPv4Address ) {
-	TI_DbgPrint
-	    (MID_TRACE, 
-	     ("--> Our gateway is: '%s'\n", 
-	      A2S(&DefaultGateway)));
+    IF->Broadcast.Type = IP_ADDRESS_V4;
+    IF->Broadcast.Address.IPv4Address =
+        IF->Unicast.Address.IPv4Address |
+        ~IF->Netmask.Address.IPv4Address;
 
-	/* Create a default route */
-	RouterCreateRoute( &DefaultMask, /* Zero */
-			   &DefaultMask, /* Zero */
-			   &DefaultGateway,
-			   IF,
-			   1 );
-    }
+    TI_DbgPrint(DEBUG_DATALINK,("BCAST(IF) %s\n", A2S(&IF->Broadcast)));
 
     /* Get maximum link speed */
     NdisStatus = NDISCall(Adapter,
@@ -1008,7 +1039,7 @@ VOID BindAdapter(
                           sizeof(UINT));
 
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        TI_DbgPrint(MID_TRACE, ("Could not set packet filter (0x%X).\n", NdisStatus));
+        TI_DbgPrint(DEBUG_DATALINK, ("Could not set packet filter (0x%X).\n", NdisStatus));
         IPDestroyInterface(IF);
         return;
     }
@@ -1113,7 +1144,7 @@ NDIS_STATUS LANRegisterAdapter(
         IF->HeaderSize      = sizeof(ETH_HEADER);
         IF->MinFrameSize    = 60;
         AddressOID          = OID_802_3_CURRENT_ADDRESS;
-        IF->PacketFilter    = 
+        IF->PacketFilter    =
             NDIS_PACKET_TYPE_BROADCAST |
             NDIS_PACKET_TYPE_DIRECTED  |
             NDIS_PACKET_TYPE_MULTICAST;
@@ -1232,10 +1263,10 @@ NDIS_STATUS LANUnregisterAdapter(
         NdisCloseAdapter(&NdisStatus, NdisHandle);
         if (NdisStatus == NDIS_STATUS_PENDING) {
             TcpipWaitForSingleObject(&Adapter->Event,
-                                  UserRequest,
-                                  KernelMode,
-                                  FALSE,
-                                  NULL);
+                                     UserRequest,
+                                     KernelMode,
+                                     FALSE,
+                                     NULL);
             NdisStatus = Adapter->NdisStatus;
         }
     } else
@@ -1284,16 +1315,16 @@ NTSTATUS LANRegisterProtocol(
     ProtChars.StatusCompleteHandler          = ProtocolStatusComplete;
     ProtChars.BindAdapterHandler             = ProtocolBindAdapter;
 
-	/* Try to register protocol */
+    /* Try to register protocol */
     NdisRegisterProtocol(&NdisStatus,
                          &NdisProtocolHandle,
                          &ProtChars,
                          sizeof(NDIS_PROTOCOL_CHARACTERISTICS));
     if (NdisStatus != NDIS_STATUS_SUCCESS)
-	 {
-		 TI_DbgPrint(MID_TRACE, ("NdisRegisterProtocol failed, status 0x%x\n", NdisStatus));
+    {
+        TI_DbgPrint(DEBUG_DATALINK, ("NdisRegisterProtocol failed, status 0x%x\n", NdisStatus));
         return (NTSTATUS)NdisStatus;
-	 }
+    }
 
     ProtocolRegistered = TRUE;
 
@@ -1323,7 +1354,7 @@ VOID LANUnregisterProtocol(
         CurrentEntry = AdapterListHead.Flink;
         while (CurrentEntry != &AdapterListHead) {
             NextEntry = CurrentEntry->Flink;
-	        Current = CONTAINING_RECORD(CurrentEntry, LAN_ADAPTER, ListEntry);
+            Current = CONTAINING_RECORD(CurrentEntry, LAN_ADAPTER, ListEntry);
             /* Unregister it */
             LANUnregisterAdapter(Current);
             CurrentEntry = NextEntry;

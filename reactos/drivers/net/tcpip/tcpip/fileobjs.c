@@ -43,7 +43,7 @@ PADDRESS_FILE AddrSearchFirst(
     return AddrSearchNext(SearchContext);
 }
 
-BOOLEAN AddrIsBroadcast( 
+BOOLEAN AddrIsBroadcast(
     PIP_ADDRESS PossibleMatch,
     PIP_ADDRESS TargetAddress ) {
     IF_LIST_ITER(IF);
@@ -185,7 +185,7 @@ VOID DeleteAddress(PADDRESS_FILE AddrFile)
   CurrentEntry = AddrFile->TransmitQueue.Flink;
   while (CurrentEntry != &AddrFile->TransmitQueue) {
     NextEntry = CurrentEntry->Flink;
-    SendRequest = CONTAINING_RECORD(CurrentEntry, 
+    SendRequest = CONTAINING_RECORD(CurrentEntry,
 				    DATAGRAM_SEND_REQUEST, ListEntry);
     /* Abort the request and free its resources */
     TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
@@ -283,17 +283,17 @@ NTSTATUS FileOpenAddress(
   /* Protocol specific handling */
   switch (Protocol) {
   case IPPROTO_TCP:
-      AddrFile->Port = 
+      AddrFile->Port =
           TCPAllocatePort(Address->Address[0].Address[0].sin_port);
       AddrFile->Send = NULL; /* TCPSendData */
       break;
 
   case IPPROTO_UDP:
       TI_DbgPrint(MID_TRACE,("Allocating udp port\n"));
-      AddrFile->Port = 
+      AddrFile->Port =
 	  UDPAllocatePort(Address->Address[0].Address[0].sin_port);
-      TI_DbgPrint(MID_TRACE,("Setting port %d (wanted %d)\n", 
-                             AddrFile->Port, 
+      TI_DbgPrint(MID_TRACE,("Setting port %d (wanted %d)\n",
+                             AddrFile->Port,
                              Address->Address[0].Address[0].sin_port));
       AddrFile->Send = UDPSendDatagram;
       break;
@@ -313,7 +313,7 @@ NTSTATUS FileOpenAddress(
 
   /* Set protocol */
   AddrFile->Protocol = Protocol;
-  
+
   /* Initialize receive and transmit queues */
   InitializeListHead(&AddrFile->ReceiveQueue);
   InitializeListHead(&AddrFile->TransmitQueue);
@@ -362,14 +362,14 @@ NTSTATUS FileCloseAddress(
   /* Set address file object exclusive to us */
   AF_SET_BUSY(AddrFile);
   AF_CLR_VALID(AddrFile);
-  
+
   TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
 
   /* Protocol specific handling */
   switch (AddrFile->Protocol) {
   case IPPROTO_TCP:
     TCPFreePort( AddrFile->Port );
-    if( AddrFile->Listener ) 
+    if( AddrFile->Listener )
 	TCPClose( AddrFile->Listener );
     break;
 
@@ -377,9 +377,9 @@ NTSTATUS FileCloseAddress(
     UDPFreePort( AddrFile->Port );
     break;
   }
-  
+
   DeleteAddress(AddrFile);
-  
+
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
   return Status;
@@ -402,9 +402,9 @@ NTSTATUS FileOpenConnection(
   PCONNECTION_ENDPOINT Connection;
 
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
-  
+
   Connection = TCPAllocateConnectionEndpoint( ClientContext );
-  
+
   if( !Connection ) return STATUS_NO_MEMORY;
 
   Status = TCPSocket( Connection, AF_INET, SOCK_STREAM, IPPROTO_TCP );
@@ -426,7 +426,7 @@ NTSTATUS FileOpenConnection(
 
 /*
  * FUNCTION: Find a connection by examining the context field.  This
- * is needed in some situations where a FIN reply is needed after a 
+ * is needed in some situations where a FIN reply is needed after a
  * socket is formally broken.
  * ARGUMENTS:
  *     Request = Pointer to TDI request structure for this request
@@ -440,10 +440,10 @@ PCONNECTION_ENDPOINT FileFindConnectionByContext( PVOID Context ) {
 
     TcpipAcquireSpinLock( &ConnectionEndpointListLock, &OldIrql );
 
-    for( Entry = ConnectionEndpointListHead.Flink; 
+    for( Entry = ConnectionEndpointListHead.Flink;
 	 Entry != &ConnectionEndpointListHead;
-	 Entry = Entry->Flink ) { 
-	Connection = 
+	 Entry = Entry->Flink ) {
+	Connection =
 	    CONTAINING_RECORD( Entry, CONNECTION_ENDPOINT, ListEntry );
 	if( Connection->SocketContext == Context ) break;
 	else Connection = NULL;

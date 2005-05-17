@@ -56,14 +56,14 @@ netfinger(char *name)
 	struct hostent *hp, def;
 	struct servent *sp;
 	struct sockaddr_in sin;
-	int s;
+	SOCKET s;
 	char *alist[1], *host;
 
 	/* If this is a local request */
 	if (!(host = rindex(name, '@')))
 		return;
 
-	*host++ = NULL;
+	*host++ = '\0';
 	if (isdigit(*host) && (defaddr.s_addr = inet_addr(host)) != -1) {
 		def.h_name = host;
 		def.h_addr_list = alist;
@@ -84,7 +84,7 @@ netfinger(char *name)
 	sin.sin_family = hp->h_addrtype;
 	bcopy(hp->h_addr, (char *)&sin.sin_addr, hp->h_length);
 	sin.sin_port = sp->s_port;
-	if ((s = socket(hp->h_addrtype, SOCK_STREAM, 0)) < 0) {
+	if ((s = socket(hp->h_addrtype, SOCK_STREAM, 0)) == INVALID_SOCKET) {
 		perror("finger: socket");
 		return;
 	}
@@ -115,7 +115,7 @@ netfinger(char *name)
 	 * Otherwise, all high bits are stripped; if it isn't printable and
 	 * it isn't a space, we can simply set the 7th bit.  Every ASCII
 	 * character with bit 7 set is printable.
-	 */ 
+	 */
 	lastc = 0;
 	while (recv(s, &c, 1, 0) == 1) {
 		c &= 0x7f;

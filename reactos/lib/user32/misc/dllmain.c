@@ -36,7 +36,7 @@ InitThread(VOID)
 {
   PUSER32_THREAD_DATA ThreadData;
 
-  ThreadData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
+  ThreadData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
 			 sizeof(USER32_THREAD_DATA));
   TlsSetValue(User32TlsIndex, ThreadData);
 }

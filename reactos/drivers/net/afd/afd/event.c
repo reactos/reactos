@@ -51,7 +51,7 @@ NTSTATUS AfdEventReceive(
 
   AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-  AFD_DbgPrint(MID_TRACE, ("Receiving (%d) bytes on socket\n", 
+  AFD_DbgPrint(MID_TRACE, ("Receiving (%d) bytes on socket\n",
 			   BytesAvailable));
 
   ReceiveBuffer = ExAllocatePool(NonPagedPool, BytesAvailable);

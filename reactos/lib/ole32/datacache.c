@@ -148,416 +148,9 @@ typedef struct DataCache DataCache;
  */
 static DataCache* DataCache_Construct(REFCLSID  clsid,
 				      LPUNKNOWN pUnkOuter);
-static void       DataCache_Destroy(DataCache* ptrToDestroy);
-static HRESULT    DataCache_ReadPresentationData(DataCache*              this,
-						 DWORD                   drawAspect,
-						 PresentationDataHeader* header);
 static HRESULT    DataCache_OpenPresStream(DataCache *this,
 					   DWORD      drawAspect,
 					   IStream  **pStm);
-static HMETAFILE  DataCache_ReadPresMetafile(DataCache* this,
-					     DWORD      drawAspect);
-static void       DataCache_FireOnViewChange(DataCache* this,
-					     DWORD      aspect,
-					     LONG       lindex);
-
-/*
- * Prototypes for the methods of the DataCache class
- * that implement non delegating IUnknown methods.
- */
-static HRESULT WINAPI DataCache_NDIUnknown_QueryInterface(
-            IUnknown*      iface,
-            REFIID         riid,
-            void**         ppvObject);
-static ULONG WINAPI DataCache_NDIUnknown_AddRef(
-            IUnknown*      iface);
-static ULONG WINAPI DataCache_NDIUnknown_Release(
-            IUnknown*      iface);
-
-/*
- * Prototypes for the methods of the DataCache class
- * that implement IDataObject methods.
- */
-static HRESULT WINAPI DataCache_IDataObject_QueryInterface(
-            IDataObject*     iface,
-            REFIID           riid,
-            void**           ppvObject);
-static ULONG WINAPI DataCache_IDataObject_AddRef(
-            IDataObject*     iface);
-static ULONG WINAPI DataCache_IDataObject_Release(
-            IDataObject*     iface);
-static HRESULT WINAPI DataCache_GetData(
-	    IDataObject*     iface,
-	    LPFORMATETC      pformatetcIn,
-	    STGMEDIUM*       pmedium);
-static HRESULT WINAPI DataCache_GetDataHere(
-	    IDataObject*     iface,
-	    LPFORMATETC      pformatetc,
-	    STGMEDIUM*       pmedium);
-static HRESULT WINAPI DataCache_QueryGetData(
-	    IDataObject*     iface,
-	    LPFORMATETC      pformatetc);
-static HRESULT WINAPI DataCache_GetCanonicalFormatEtc(
-	    IDataObject*     iface,
-	    LPFORMATETC      pformatectIn,
-	    LPFORMATETC      pformatetcOut);
-static HRESULT WINAPI DataCache_IDataObject_SetData(
-	    IDataObject*     iface,
-	    LPFORMATETC      pformatetc,
-	    STGMEDIUM*       pmedium,
-	    BOOL             fRelease);
-static HRESULT WINAPI DataCache_EnumFormatEtc(
-	    IDataObject*     iface,
-	    DWORD            dwDirection,
-	    IEnumFORMATETC** ppenumFormatEtc);
-static HRESULT WINAPI DataCache_DAdvise(
-	    IDataObject*     iface,
-	    FORMATETC*       pformatetc,
-	    DWORD            advf,
-	    IAdviseSink*     pAdvSink,
-	    DWORD*           pdwConnection);
-static HRESULT WINAPI DataCache_DUnadvise(
-	    IDataObject*     iface,
-	    DWORD            dwConnection);
-static HRESULT WINAPI DataCache_EnumDAdvise(
-	    IDataObject*     iface,
-	    IEnumSTATDATA**  ppenumAdvise);
-
-/*
- * Prototypes for the methods of the DataCache class
- * that implement IPersistStorage methods.
- */
-static HRESULT WINAPI DataCache_IPersistStorage_QueryInterface(
-            IPersistStorage* iface,
-            REFIID           riid,
-            void**           ppvObject);
-static ULONG WINAPI DataCache_IPersistStorage_AddRef(
-            IPersistStorage* iface);
-static ULONG WINAPI DataCache_IPersistStorage_Release(
-            IPersistStorage* iface);
-static HRESULT WINAPI DataCache_GetClassID(
-            IPersistStorage* iface,
-	    CLSID*           pClassID);
-static HRESULT WINAPI DataCache_IsDirty(
-            IPersistStorage* iface);
-static HRESULT WINAPI DataCache_InitNew(
-            IPersistStorage* iface,
-	    IStorage*        pStg);
-static HRESULT WINAPI DataCache_Load(
-            IPersistStorage* iface,
-	    IStorage*        pStg);
-static HRESULT WINAPI DataCache_Save(
-            IPersistStorage* iface,
-	    IStorage*        pStg,
-	    BOOL             fSameAsLoad);
-static HRESULT WINAPI DataCache_SaveCompleted(
-            IPersistStorage* iface,
-	    IStorage*        pStgNew);
-static HRESULT WINAPI DataCache_HandsOffStorage(
-            IPersistStorage* iface);
-
-/*
- * Prototypes for the methods of the DataCache class
- * that implement IViewObject2 methods.
- */
-static HRESULT WINAPI DataCache_IViewObject2_QueryInterface(
-            IViewObject2* iface,
-            REFIID           riid,
-            void**           ppvObject);
-static ULONG WINAPI DataCache_IViewObject2_AddRef(
-            IViewObject2* iface);
-static ULONG WINAPI DataCache_IViewObject2_Release(
-            IViewObject2* iface);
-static HRESULT WINAPI DataCache_Draw(
-            IViewObject2*    iface,
-	    DWORD            dwDrawAspect,
-	    LONG             lindex,
-	    void*            pvAspect,
-	    DVTARGETDEVICE*  ptd,
-	    HDC              hdcTargetDev,
-	    HDC              hdcDraw,
-	    LPCRECTL         lprcBounds,
-	    LPCRECTL         lprcWBounds,
-	    BOOL  (CALLBACK *pfnContinue)(ULONG_PTR dwContinue),
-	    ULONG_PTR        dwContinue);
-static HRESULT WINAPI DataCache_GetColorSet(
-            IViewObject2*   iface,
-	    DWORD           dwDrawAspect,
-	    LONG            lindex,
-	    void*           pvAspect,
-	    DVTARGETDEVICE* ptd,
-	    HDC             hicTargetDevice,
-	    LOGPALETTE**    ppColorSet);
-static HRESULT WINAPI DataCache_Freeze(
-            IViewObject2*   iface,
-	    DWORD           dwDrawAspect,
-	    LONG            lindex,
-	    void*           pvAspect,
-	    DWORD*          pdwFreeze);
-static HRESULT WINAPI DataCache_Unfreeze(
-            IViewObject2*   iface,
-	    DWORD           dwFreeze);
-static HRESULT WINAPI DataCache_SetAdvise(
-            IViewObject2*   iface,
-	    DWORD           aspects,
-	    DWORD           advf,
-	    IAdviseSink*    pAdvSink);
-static HRESULT WINAPI DataCache_GetAdvise(
-            IViewObject2*   iface,
-	    DWORD*          pAspects,
-	    DWORD*          pAdvf,
-	    IAdviseSink**   ppAdvSink);
-static HRESULT WINAPI DataCache_GetExtent(
-            IViewObject2*   iface,
-	    DWORD           dwDrawAspect,
-	    LONG            lindex,
-	    DVTARGETDEVICE* ptd,
-	    LPSIZEL         lpsizel);
-
-/*
- * Prototypes for the methods of the DataCache class
- * that implement IOleCache2 methods.
- */
-static HRESULT WINAPI DataCache_IOleCache2_QueryInterface(
-            IOleCache2*     iface,
-            REFIID          riid,
-            void**          ppvObject);
-static ULONG WINAPI DataCache_IOleCache2_AddRef(
-            IOleCache2*     iface);
-static ULONG WINAPI DataCache_IOleCache2_Release(
-            IOleCache2*     iface);
-static HRESULT WINAPI DataCache_Cache(
-            IOleCache2*     iface,
-	    FORMATETC*      pformatetc,
-	    DWORD           advf,
-	    DWORD*          pdwConnection);
-static HRESULT WINAPI DataCache_Uncache(
-	    IOleCache2*     iface,
-	    DWORD           dwConnection);
-static HRESULT WINAPI DataCache_EnumCache(
-            IOleCache2*     iface,
-	    IEnumSTATDATA** ppenumSTATDATA);
-static HRESULT WINAPI DataCache_InitCache(
-	    IOleCache2*     iface,
-	    IDataObject*    pDataObject);
-static HRESULT WINAPI DataCache_IOleCache2_SetData(
-            IOleCache2*     iface,
-	    FORMATETC*      pformatetc,
-	    STGMEDIUM*      pmedium,
-	    BOOL            fRelease);
-static HRESULT WINAPI DataCache_UpdateCache(
-            IOleCache2*     iface,
-	    LPDATAOBJECT    pDataObject,
-	    DWORD           grfUpdf,
-	    LPVOID          pReserved);
-static HRESULT WINAPI DataCache_DiscardCache(
-            IOleCache2*     iface,
-	    DWORD           dwDiscardOptions);
-
-/*
- * Prototypes for the methods of the DataCache class
- * that implement IOleCacheControl methods.
- */
-static HRESULT WINAPI DataCache_IOleCacheControl_QueryInterface(
-            IOleCacheControl* iface,
-            REFIID            riid,
-            void**            ppvObject);
-static ULONG WINAPI DataCache_IOleCacheControl_AddRef(
-            IOleCacheControl* iface);
-static ULONG WINAPI DataCache_IOleCacheControl_Release(
-            IOleCacheControl* iface);
-static HRESULT WINAPI DataCache_OnRun(
-	    IOleCacheControl* iface,
-	    LPDATAOBJECT      pDataObject);
-static HRESULT WINAPI DataCache_OnStop(
-	    IOleCacheControl* iface);
-
-/*
- * Virtual function tables for the DataCache class.
- */
-static IUnknownVtbl DataCache_NDIUnknown_VTable =
-{
-  DataCache_NDIUnknown_QueryInterface,
-  DataCache_NDIUnknown_AddRef,
-  DataCache_NDIUnknown_Release
-};
-
-static IDataObjectVtbl DataCache_IDataObject_VTable =
-{
-  DataCache_IDataObject_QueryInterface,
-  DataCache_IDataObject_AddRef,
-  DataCache_IDataObject_Release,
-  DataCache_GetData,
-  DataCache_GetDataHere,
-  DataCache_QueryGetData,
-  DataCache_GetCanonicalFormatEtc,
-  DataCache_IDataObject_SetData,
-  DataCache_EnumFormatEtc,
-  DataCache_DAdvise,
-  DataCache_DUnadvise,
-  DataCache_EnumDAdvise
-};
-
-static IPersistStorageVtbl DataCache_IPersistStorage_VTable =
-{
-  DataCache_IPersistStorage_QueryInterface,
-  DataCache_IPersistStorage_AddRef,
-  DataCache_IPersistStorage_Release,
-  DataCache_GetClassID,
-  DataCache_IsDirty,
-  DataCache_InitNew,
-  DataCache_Load,
-  DataCache_Save,
-  DataCache_SaveCompleted,
-  DataCache_HandsOffStorage
-};
-
-static IViewObject2Vtbl DataCache_IViewObject2_VTable =
-{
-  DataCache_IViewObject2_QueryInterface,
-  DataCache_IViewObject2_AddRef,
-  DataCache_IViewObject2_Release,
-  DataCache_Draw,
-  DataCache_GetColorSet,
-  DataCache_Freeze,
-  DataCache_Unfreeze,
-  DataCache_SetAdvise,
-  DataCache_GetAdvise,
-  DataCache_GetExtent
-};
-
-static IOleCache2Vtbl DataCache_IOleCache2_VTable =
-{
-  DataCache_IOleCache2_QueryInterface,
-  DataCache_IOleCache2_AddRef,
-  DataCache_IOleCache2_Release,
-  DataCache_Cache,
-  DataCache_Uncache,
-  DataCache_EnumCache,
-  DataCache_InitCache,
-  DataCache_IOleCache2_SetData,
-  DataCache_UpdateCache,
-  DataCache_DiscardCache
-};
-
-static IOleCacheControlVtbl DataCache_IOleCacheControl_VTable =
-{
-  DataCache_IOleCacheControl_QueryInterface,
-  DataCache_IOleCacheControl_AddRef,
-  DataCache_IOleCacheControl_Release,
-  DataCache_OnRun,
-  DataCache_OnStop
-};
-
-/******************************************************************************
- *              CreateDataCache        [OLE32.@]
- */
-HRESULT WINAPI CreateDataCache(
-  LPUNKNOWN pUnkOuter,
-  REFCLSID  rclsid,
-  REFIID    riid,
-  LPVOID*   ppvObj)
-{
-  DataCache* newCache = NULL;
-  HRESULT    hr       = S_OK;
-
-  TRACE("(%s, %p, %s, %p)\n", debugstr_guid(rclsid), pUnkOuter, debugstr_guid(riid), ppvObj);
-
-  /*
-   * Sanity check
-   */
-  if (ppvObj==0)
-    return E_POINTER;
-
-  *ppvObj = 0;
-
-  /*
-   * If this cache is constructed for aggregation, make sure
-   * the caller is requesting the IUnknown interface.
-   * This is necessary because it's the only time the non-delegating
-   * IUnknown pointer can be returned to the outside.
-   */
-  if ( (pUnkOuter!=NULL) &&
-       (memcmp(&IID_IUnknown, riid, sizeof(IID_IUnknown)) != 0) )
-    return CLASS_E_NOAGGREGATION;
-
-  /*
-   * Try to construct a new instance of the class.
-   */
-  newCache = DataCache_Construct(rclsid,
-				 pUnkOuter);
-
-  if (newCache == 0)
-    return E_OUTOFMEMORY;
-
-  /*
-   * Make sure it supports the interface required by the caller.
-   */
-  hr = IUnknown_QueryInterface((IUnknown*)&(newCache->lpvtbl2), riid, ppvObj);
-
-  /*
-   * Release the reference obtained in the constructor. If
-   * the QueryInterface was unsuccessful, it will free the class.
-   */
-  IUnknown_Release((IUnknown*)&(newCache->lpvtbl2));
-
-  return hr;
-}
-
-/*********************************************************
- * Method implementation for DataCache class.
- */
-static DataCache* DataCache_Construct(
-  REFCLSID  clsid,
-  LPUNKNOWN pUnkOuter)
-{
-  DataCache* newObject = 0;
-
-  /*
-   * Allocate space for the object.
-   */
-  newObject = HeapAlloc(GetProcessHeap(), 0, sizeof(DataCache));
-
-  if (newObject==0)
-    return newObject;
-
-  /*
-   * Initialize the virtual function table.
-   */
-  newObject->lpvtbl1 = &DataCache_IDataObject_VTable;
-  newObject->lpvtbl2 = &DataCache_NDIUnknown_VTable;
-  newObject->lpvtbl3 = &DataCache_IPersistStorage_VTable;
-  newObject->lpvtbl4 = &DataCache_IViewObject2_VTable;
-  newObject->lpvtbl5 = &DataCache_IOleCache2_VTable;
-  newObject->lpvtbl6 = &DataCache_IOleCacheControl_VTable;
-
-  /*
-   * Start with one reference count. The caller of this function
-   * must release the interface pointer when it is done.
-   */
-  newObject->ref = 1;
-
-  /*
-   * Initialize the outer unknown
-   * We don't keep a reference on the outer unknown since, the way
-   * aggregation works, our lifetime is at least as large as it's
-   * lifetime.
-   */
-  if (pUnkOuter==NULL)
-    pUnkOuter = (IUnknown*)&(newObject->lpvtbl2);
-
-  newObject->outerUnknown = pUnkOuter;
-
-  /*
-   * Initialize the other members of the structure.
-   */
-  newObject->presentationStorage = NULL;
-  newObject->sinkAspects = 0;
-  newObject->sinkAdviseFlag = 0;
-  newObject->sinkInterface = 0;
-
-  return newObject;
-}
 
 static void DataCache_Destroy(
   DataCache* ptrToDestroy)
@@ -1369,7 +962,7 @@ static HRESULT WINAPI DataCache_InitNew(
 {
   TRACE("(%p, %p)\n", iface, pStg);
 
-  return DataCache_Load(iface, pStg);
+  return IPersistStorage_Load(iface, pStg);
 }
 
 /************************************************************************
@@ -1456,7 +1049,7 @@ static HRESULT WINAPI DataCache_SaveCompleted(
    * First, make sure we get our hands off any storage we have.
    */
 
-  DataCache_HandsOffStorage(iface);
+  IPersistStorage_HandsOffStorage(iface);
 
   /*
    * Then, attach to the new storage.
@@ -2019,4 +1612,191 @@ static HRESULT WINAPI DataCache_OnStop(
 {
   FIXME("stub\n");
   return E_NOTIMPL;
+}
+
+/*
+ * Virtual function tables for the DataCache class.
+ */
+static IUnknownVtbl DataCache_NDIUnknown_VTable =
+{
+  DataCache_NDIUnknown_QueryInterface,
+  DataCache_NDIUnknown_AddRef,
+  DataCache_NDIUnknown_Release
+};
+
+static IDataObjectVtbl DataCache_IDataObject_VTable =
+{
+  DataCache_IDataObject_QueryInterface,
+  DataCache_IDataObject_AddRef,
+  DataCache_IDataObject_Release,
+  DataCache_GetData,
+  DataCache_GetDataHere,
+  DataCache_QueryGetData,
+  DataCache_GetCanonicalFormatEtc,
+  DataCache_IDataObject_SetData,
+  DataCache_EnumFormatEtc,
+  DataCache_DAdvise,
+  DataCache_DUnadvise,
+  DataCache_EnumDAdvise
+};
+
+static IPersistStorageVtbl DataCache_IPersistStorage_VTable =
+{
+  DataCache_IPersistStorage_QueryInterface,
+  DataCache_IPersistStorage_AddRef,
+  DataCache_IPersistStorage_Release,
+  DataCache_GetClassID,
+  DataCache_IsDirty,
+  DataCache_InitNew,
+  DataCache_Load,
+  DataCache_Save,
+  DataCache_SaveCompleted,
+  DataCache_HandsOffStorage
+};
+
+static IViewObject2Vtbl DataCache_IViewObject2_VTable =
+{
+  DataCache_IViewObject2_QueryInterface,
+  DataCache_IViewObject2_AddRef,
+  DataCache_IViewObject2_Release,
+  DataCache_Draw,
+  DataCache_GetColorSet,
+  DataCache_Freeze,
+  DataCache_Unfreeze,
+  DataCache_SetAdvise,
+  DataCache_GetAdvise,
+  DataCache_GetExtent
+};
+
+static IOleCache2Vtbl DataCache_IOleCache2_VTable =
+{
+  DataCache_IOleCache2_QueryInterface,
+  DataCache_IOleCache2_AddRef,
+  DataCache_IOleCache2_Release,
+  DataCache_Cache,
+  DataCache_Uncache,
+  DataCache_EnumCache,
+  DataCache_InitCache,
+  DataCache_IOleCache2_SetData,
+  DataCache_UpdateCache,
+  DataCache_DiscardCache
+};
+
+static IOleCacheControlVtbl DataCache_IOleCacheControl_VTable =
+{
+  DataCache_IOleCacheControl_QueryInterface,
+  DataCache_IOleCacheControl_AddRef,
+  DataCache_IOleCacheControl_Release,
+  DataCache_OnRun,
+  DataCache_OnStop
+};
+
+/******************************************************************************
+ *              CreateDataCache        [OLE32.@]
+ */
+HRESULT WINAPI CreateDataCache(
+  LPUNKNOWN pUnkOuter,
+  REFCLSID  rclsid,
+  REFIID    riid,
+  LPVOID*   ppvObj)
+{
+  DataCache* newCache = NULL;
+  HRESULT    hr       = S_OK;
+
+  TRACE("(%s, %p, %s, %p)\n", debugstr_guid(rclsid), pUnkOuter, debugstr_guid(riid), ppvObj);
+
+  /*
+   * Sanity check
+   */
+  if (ppvObj==0)
+    return E_POINTER;
+
+  *ppvObj = 0;
+
+  /*
+   * If this cache is constructed for aggregation, make sure
+   * the caller is requesting the IUnknown interface.
+   * This is necessary because it's the only time the non-delegating
+   * IUnknown pointer can be returned to the outside.
+   */
+  if ( (pUnkOuter!=NULL) &&
+       (memcmp(&IID_IUnknown, riid, sizeof(IID_IUnknown)) != 0) )
+    return CLASS_E_NOAGGREGATION;
+
+  /*
+   * Try to construct a new instance of the class.
+   */
+  newCache = DataCache_Construct(rclsid,
+				 pUnkOuter);
+
+  if (newCache == 0)
+    return E_OUTOFMEMORY;
+
+  /*
+   * Make sure it supports the interface required by the caller.
+   */
+  hr = IUnknown_QueryInterface((IUnknown*)&(newCache->lpvtbl2), riid, ppvObj);
+
+  /*
+   * Release the reference obtained in the constructor. If
+   * the QueryInterface was unsuccessful, it will free the class.
+   */
+  IUnknown_Release((IUnknown*)&(newCache->lpvtbl2));
+
+  return hr;
+}
+
+/*********************************************************
+ * Method implementation for DataCache class.
+ */
+static DataCache* DataCache_Construct(
+  REFCLSID  clsid,
+  LPUNKNOWN pUnkOuter)
+{
+  DataCache* newObject = 0;
+
+  /*
+   * Allocate space for the object.
+   */
+  newObject = HeapAlloc(GetProcessHeap(), 0, sizeof(DataCache));
+
+  if (newObject==0)
+    return newObject;
+
+  /*
+   * Initialize the virtual function table.
+   */
+  newObject->lpvtbl1 = &DataCache_IDataObject_VTable;
+  newObject->lpvtbl2 = &DataCache_NDIUnknown_VTable;
+  newObject->lpvtbl3 = &DataCache_IPersistStorage_VTable;
+  newObject->lpvtbl4 = &DataCache_IViewObject2_VTable;
+  newObject->lpvtbl5 = &DataCache_IOleCache2_VTable;
+  newObject->lpvtbl6 = &DataCache_IOleCacheControl_VTable;
+
+  /*
+   * Start with one reference count. The caller of this function
+   * must release the interface pointer when it is done.
+   */
+  newObject->ref = 1;
+
+  /*
+   * Initialize the outer unknown
+   * We don't keep a reference on the outer unknown since, the way
+   * aggregation works, our lifetime is at least as large as it's
+   * lifetime.
+   */
+  if (pUnkOuter==NULL)
+    pUnkOuter = (IUnknown*)&(newObject->lpvtbl2);
+
+  newObject->outerUnknown = pUnkOuter;
+
+  /*
+   * Initialize the other members of the structure.
+   */
+  newObject->presentationStorage = NULL;
+  newObject->sinkAspects = 0;
+  newObject->sinkAdviseFlag = 0;
+  newObject->sinkInterface = 0;
+
+  return newObject;
 }

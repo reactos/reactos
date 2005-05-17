@@ -224,7 +224,7 @@ InbvInitVGAMode(VOID)
 BOOL STDCALL
 VidResetDisplay(VOID)
 {
-   /* 
+   /*
     * We are only using standard VGA facilities so we can rely on the
     * HAL 'int10mode3' reset to cleanup the hardware state.
     */
@@ -368,17 +368,17 @@ InbvDisplayCompressedBitmap()
       while ((j < bminfo->bV5SizeImage) && (k < (ULONG) (bminfo->bV5Width * bminfo->bV5Height)))
       {
          unsigned char b;
-    
+
          clen = BootimageBitmap[bfOffBits + j];
          j++;
-    
+
          if (clen > 0)
          {
             /* Encoded mode */
-    
+
             b = BootimageBitmap[bfOffBits + j];
             j++;
-    
+
             for (i = 0; i < (clen / 2); i++)
             {
                ImageData[k] = (b & 0xf0) >> 4;
@@ -397,7 +397,7 @@ InbvDisplayCompressedBitmap()
             /* Absolute mode */
             b = BootimageBitmap[bfOffBits + j];
             j++;
-    
+
             if (b == 0)
             {
                /* End of line */
@@ -428,13 +428,13 @@ InbvDisplayCompressedBitmap()
                {
                   DPRINT("Unaligned copy!\n");
                }
-    
+
                clen = b;
                for (i = 0; i < (clen / 2); i++)
                {
                   b = BootimageBitmap[bfOffBits + j];
                   j++;
-       
+
                   ImageData[k] = (b & 0xf0) >> 4;
                   k++;
                   ImageData[k] = b & 0xf;
@@ -559,7 +559,7 @@ VidInitialize(VOID)
 
    InbvMapVideoMemory();
    InbvInitVGAMode();
-  
+
    Status = PsCreateSystemThread(
       &BitmapThreadHandle,
       THREAD_ALL_ACCESS,
@@ -568,7 +568,7 @@ VidInitialize(VOID)
       &BitmapThreadId,
       InbvBitmapThreadMain,
       NULL);
- 
+
    if (!NT_SUCCESS(Status))
    {
       return FALSE;
@@ -586,7 +586,7 @@ VidDispatch(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
    PIO_STACK_LOCATION IrpSp;
    NTSTATUS Status;
    NTBOOTVID_FUNCTION_TABLE* FunctionTable;
- 
+
    IrpSp = IoGetCurrentIrpStackLocation(Irp);
    Status = STATUS_SUCCESS;
 
@@ -609,7 +609,7 @@ VidDispatch(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
                break;
 
             case IOCTL_BOOTVID_CLEANUP:
-               VidCleanUp();	  
+               VidCleanUp();
                break;
 
             default:

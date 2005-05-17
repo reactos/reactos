@@ -19,7 +19,7 @@ TARGET_CLEAN = authors.c
 default: all
 
 authors.c:
-ifeq ($(HOST),mingw32-linux)
+ifeq ($(HOST_TYPE),unix)
 	echo 'const char * const SHELL_Authors[] = { "Copyright 1993-2005 WINE team", "Copyright 1998-2005 ReactOS team", 0 };' > authors.c
 else
 	echo const char * const SHELL_Authors[] = { "Copyright 1993-2005 WINE team", "Copyright 1998-2005 ReactOS team", 0 }; > authors.c

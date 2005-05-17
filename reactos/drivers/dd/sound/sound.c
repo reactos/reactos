@@ -5,9 +5,9 @@
  * PURPOSE:          SoundBlaster 16 Driver
  * PROGRAMMER:       Snatched from David Welch (welch@mcmail.com)
  *		     Modified for Soundblaster by Robert Bergkvist (fragdance@hotmail.com)
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  *              ??/??/??: Created
- *              
+ *
  */
 
 /* FUNCTIONS **************************************************************/
@@ -37,7 +37,7 @@ NTSTATUS STDCALL Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
    NTSTATUS status;
-   
+
    switch (Stack->MajorFunction)
      {
       case IRP_MJ_CREATE:
@@ -45,25 +45,25 @@ NTSTATUS STDCALL Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
  	reset_dsp(sb16.base);
        	status = STATUS_SUCCESS;
 	break;
-	
+
      case IRP_MJ_CLOSE:
 	status = STATUS_SUCCESS;
 	break;
-	
+
       case IRP_MJ_WRITE:
         DPRINT1("(SoundBlaster 16 Driver) Writing %d bytes\n",Stack->Parameters.Write.Length);
         sb16_play((WAVE_HDR*)Irp->UserBuffer);
 	status = STATUS_SUCCESS;
 	break;
-	
+
       default:
         status = STATUS_NOT_IMPLEMENTED;
 	break;
      	}
-   
+
    Irp->IoStatus.Status = status;
    Irp->IoStatus.Information = 0;
-   
+
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
    return(status);
 }
@@ -79,7 +79,7 @@ NTSTATUS ModuleEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
 	PDEVICE_OBJECT DeviceObject;
 	NTSTATUS ret;
-   
+
 	DPRINT1("SoundBlaster 16 Driver 0.0.1\n");
   	if(sb16_getenvironment()!=SB_TRUE)
   	{
@@ -89,14 +89,14 @@ NTSTATUS ModuleEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 	ret = IoCreateDevice(DriverObject,0,"\\Device\\WaveOut",FILE_DEVICE_WAVE_OUT,0,FALSE,&DeviceObject);
 	if (ret!=STATUS_SUCCESS)
 		return(ret);
-		
+
 	DeviceObject->Flags=0;
 	DriverObject->MajorFunction[IRP_MJ_CLOSE] = Dispatch;
 	DriverObject->MajorFunction[IRP_MJ_CREATE] =Dispatch;
 	DriverObject->MajorFunction[IRP_MJ_WRITE] = Dispatch;
 	DriverObject->MajorFunction[IRP_MJ_WRITE] = Dispatch;
 	DriverObject->DriverUnload = NULL;
-   
+
 	return(STATUS_SUCCESS);
 }
 

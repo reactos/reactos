@@ -94,6 +94,28 @@ typedef struct _EX_RUNDOWN_REF {
     };
 } EX_RUNDOWN_REF, *PEX_RUNDOWN_REF;
 
+typedef struct _EX_FAST_REF {
+    union {
+        PVOID Object;
+        ULONG RefCnt:3;
+        ULONG Value;
+    };
+} EX_FAST_REF, *PEX_FAST_REF;
+
+typedef struct _EX_PUSH_LOCK {
+    union {
+        struct {
+            ULONG Locked:1;
+            ULONG Waiting:1;
+            ULONG Waking:1;
+            ULONG MultipleShared:1;
+            ULONG Shared:28;
+        };
+        ULONG Value;
+        PVOID Ptr;
+    };
+} EX_PUSH_LOCK, *PEX_PUSH_LOCK;
+
 typedef struct 
 {
    LONG Count;

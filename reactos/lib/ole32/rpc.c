@@ -1,5 +1,5 @@
 /*
- *	(Local) RPC Stuff
+ *	RPC Manager
  *
  * Copyright 2001  Ove Kåven, TransGaming Technologies
  * Copyright 2002  Marcus Meissner
@@ -98,6 +98,15 @@ typedef struct
     RPC_BINDING_HANDLE     bind; /* handle to the remote server */
 } ClientRpcChannelBuffer;
 
+struct dispatch_params
+{
+    RPCOLEMESSAGE     *msg; /* message */
+    IRpcStubBuffer    *stub; /* stub buffer, if applicable */
+    IRpcChannelBuffer *chan; /* server channel buffer, if applicable */
+    HANDLE             handle; /* handle that will become signaled when call finishes */
+    RPC_STATUS         status; /* status (out) */
+};
+
 static HRESULT WINAPI RpcChannelBuffer_QueryInterface(LPRPCCHANNELBUFFER iface, REFIID riid, LPVOID *ppv)
 {
     *ppv = NULL;
@@ -149,7 +158,7 @@ static HRESULT WINAPI ServerRpcChannelBuffer_GetBuffer(LPRPCCHANNELBUFFER iface,
     RPC_MESSAGE *msg = (RPC_MESSAGE *)olemsg;
     RPC_STATUS status;
 
-    TRACE("(%p)->(%p,%p)\n", This, olemsg, riid);
+    TRACE("(%p)->(%p,%s)\n", This, olemsg, debugstr_guid(riid));
 
     status = I_RpcGetBuffer(msg);
 
@@ -165,7 +174,7 @@ static HRESULT WINAPI ClientRpcChannelBuffer_GetBuffer(LPRPCCHANNELBUFFER iface,
     RPC_CLIENT_INTERFACE *cif;
     RPC_STATUS status;
 
-    TRACE("(%p)->(%p,%p)\n", This, olemsg, riid);
+    TRACE("(%p)->(%p,%s)\n", This, olemsg, debugstr_guid(riid));
 
     cif = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(RPC_CLIENT_INTERFACE));
     if (!cif)
@@ -187,21 +196,13 @@ static HRESULT WINAPI ClientRpcChannelBuffer_GetBuffer(LPRPCCHANNELBUFFER iface,
     return HRESULT_FROM_WIN32(status);
 }
 
-struct rpc_sendreceive_params
-{
-    RPC_MESSAGE *msg;
-    RPC_STATUS   status;
-};
-
 /* this thread runs an outgoing RPC */
 static DWORD WINAPI rpc_sendreceive_thread(LPVOID param)
 {
-    struct rpc_sendreceive_params *data = (struct rpc_sendreceive_params *) param;
+    struct dispatch_params *data = (struct dispatch_params *) param;
     
-    TRACE("starting up\n");
-
     /* FIXME: trap and rethrow RPC exceptions in app thread */
-    data->status = I_RpcSendReceive(data->msg);
+    data->status = I_RpcSendReceive((RPC_MESSAGE *)data->msg);
 
     TRACE("completed with status 0x%lx\n", data->status);
     
@@ -210,19 +211,19 @@ static DWORD WINAPI rpc_sendreceive_thread(LPVOID param)
 
 static HRESULT WINAPI RpcChannelBuffer_SendReceive(LPRPCCHANNELBUFFER iface, RPCOLEMESSAGE *olemsg, ULONG *pstatus)
 {
-    RPC_MESSAGE *msg = (RPC_MESSAGE *)olemsg;
     HRESULT hr = S_OK;
-    HANDLE thread;
-    struct rpc_sendreceive_params *params;
-    DWORD tid, res;
     RPC_STATUS status;
+    DWORD index;
+    struct dispatch_params *params;
+    DWORD tid;
     
-    TRACE("(%p)\n", msg);
+    TRACE("(%p) iMethod=%ld\n", olemsg, olemsg->iMethod);
 
-    params = HeapAlloc(GetProcessHeap(), 0, sizeof(*params));
+    params = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*params));
     if (!params) return E_OUTOFMEMORY;
     
-    params->msg = msg;
+    params->msg = olemsg;
+    params->status = RPC_S_OK;
 
     /* we use a separate thread here because we need to be able to
      * pump the message loop in the application thread: if we do not,
@@ -230,50 +231,21 @@ static HRESULT WINAPI RpcChannelBuffer_SendReceive(LPRPCCHANNELBUFFER iface, RPC
      * and re-enter this STA from an incoming server thread will
      * deadlock. InstallShield is an example of that.
      */
-    
-    thread = CreateThread(NULL, 0, rpc_sendreceive_thread, params, 0, &tid);
-    if (!thread)
+    params->handle = CreateThread(NULL, 0, rpc_sendreceive_thread, params, 0, &tid);
+    if (!params->handle)
     {
         ERR("Could not create RpcSendReceive thread, error %lx\n", GetLastError());
-        return E_UNEXPECTED;
+        hr = E_UNEXPECTED;
     }
 
-    while (TRUE)
-    {
-        TRACE("waiting for rpc completion or window message\n");
-        res = MsgWaitForMultipleObjectsEx(1, &thread, INFINITE, QS_ALLINPUT, 0);
-        
-        if (res == WAIT_OBJECT_0 + 1)  /* messages available */
-        {
-            MSG message;
-            while (PeekMessageW(&message, NULL, 0, 0, PM_REMOVE))
-            {
-                /* FIXME: filter the messages here */
-                if (message.message == DM_EXECUTERPC)
-                    TRACE("received DM_EXECUTRPC dispatch request, re-entering ...\n");
-                else
-                    TRACE("received message whilst waiting for RPC: 0x%x\n", message.message);
-                TranslateMessage(&message);
-                DispatchMessageW(&message);
-            }
-        }
-        else if (res == WAIT_OBJECT_0) 
-        {
-            break; /* RPC is completed */
-        }
-        else
-        {
-            ERR("Unexpected wait termination: %ld, %ld\n", res, GetLastError());
-            hr = E_UNEXPECTED;
-            break;
-        }
-    }
-
-    CloseHandle(thread);
+    if (hr == S_OK)
+        hr = CoWaitForMultipleHandles(0, INFINITE, 1, &params->handle, &index);
+    CloseHandle(params->handle);
 
     status = params->status;
     HeapFree(GetProcessHeap(), 0, params);
     params = NULL;
+
     if (hr) return hr;
     
     if (pstatus) *pstatus = status;
@@ -282,7 +254,7 @@ static HRESULT WINAPI RpcChannelBuffer_SendReceive(LPRPCCHANNELBUFFER iface, RPC
     if (status == RPC_S_OK)
         hr = S_OK;
     else if (status == RPC_S_CALL_FAILED)
-        hr = *(HRESULT *)msg->Buffer;
+        hr = *(HRESULT *)olemsg->Buffer;
     else
         hr = HRESULT_FROM_WIN32(status);
 
@@ -433,38 +405,60 @@ HRESULT RPC_CreateServerChannel(IRpcChannelBuffer **chan)
 }
 
 
-HRESULT RPC_ExecuteCall(RPCOLEMESSAGE *msg, IRpcStubBuffer *stub)
+HRESULT RPC_ExecuteCall(struct dispatch_params *params)
 {
-    /* FIXME: pass server channel buffer, but don't create it every time */
-    return IRpcStubBuffer_Invoke(stub, msg, NULL);
+    HRESULT hr = IRpcStubBuffer_Invoke(params->stub, params->msg, params->chan);
+    IRpcStubBuffer_Release(params->stub);
+    if (params->handle) SetEvent(params->handle);
+    return hr;
 }
 
 static void __RPC_STUB dispatch_rpc(RPC_MESSAGE *msg)
 {
+    struct dispatch_params *params;
     IRpcStubBuffer     *stub;
     APARTMENT          *apt;
     IPID                ipid;
 
     RpcBindingInqObject(msg->Handle, &ipid);
 
+    TRACE("ipid = %s, iMethod = %d\n", debugstr_guid(&ipid), msg->ProcNum);
+
+    params = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*params));
+    if (!params) return RpcRaiseException(E_OUTOFMEMORY);
+
     stub = ipid_to_apt_and_stubbuffer(&ipid, &apt);
     if (!apt || !stub)
     {
-        if (apt) COM_ApartmentRelease(apt);
+        if (apt) apartment_release(apt);
         /* ipid_to_apt_and_stubbuffer will already have logged the error */
         return RpcRaiseException(RPC_E_DISCONNECTED);
     }
+
+    params->msg = (RPCOLEMESSAGE *)msg;
+    params->stub = stub;
+    params->chan = NULL; /* FIXME: pass server channel */
+    params->status = RPC_S_OK;
 
     /* Note: this is the important difference between STAs and MTAs - we
      * always execute RPCs to STAs in the thread that originally created the
      * apartment (i.e. the one that pumps messages to the window) */
     if (apt->model & COINIT_APARTMENTTHREADED)
-        SendMessageW(apt->win, DM_EXECUTERPC, (WPARAM)msg, (LPARAM)stub);
-    else
-        RPC_ExecuteCall((RPCOLEMESSAGE *)msg, stub);
+    {
+        params->handle = CreateEventW(NULL, FALSE, FALSE, NULL);
 
-    COM_ApartmentRelease(apt);
-    IRpcStubBuffer_Release(stub);
+        TRACE("Calling apartment thread 0x%08lx...\n", apt->tid);
+
+        PostMessageW(apt->win, DM_EXECUTERPC, 0, (LPARAM)params);
+        WaitForSingleObject(params->handle, INFINITE);
+        CloseHandle(params->handle);
+    }
+    else
+        RPC_ExecuteCall(params);
+
+    HeapFree(GetProcessHeap(), 0, params);
+
+    apartment_release(apt);
 }
 
 /* stub registration */

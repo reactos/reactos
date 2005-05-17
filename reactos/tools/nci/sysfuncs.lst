@@ -166,6 +166,7 @@ NtRequestPort 2
 NtRequestWaitReplyPort 3
 NtResetEvent 2
 NtRestoreKey 3
+NtResumeProcess 1
 NtResumeThread 2
 NtSaveKey 2
 NtSaveKeyEx 3
@@ -206,6 +207,7 @@ NtShutdownSystem 1
 NtSignalAndWaitForSingleObject 4
 NtStartProfile 1
 NtStopProfile 1
+NtSuspendProcess 1
 NtSuspendThread 2
 NtSystemDebugControl 6
 NtTerminateJobObject 2

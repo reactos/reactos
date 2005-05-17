@@ -10,13 +10,13 @@
  * by the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
- * This program/include file is distributed in the hope that it will be 
- * useful, but WITHOUT ANY WARRANTY; without even the implied warranty 
+ * This program/include file is distributed in the hope that it will be
+ * useful, but WITHOUT ANY WARRANTY; without even the implied warranty
  * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program (in the main directory of the Linux-NTFS 
+ * along with this program (in the main directory of the Linux-NTFS
  * distribution in the file COPYING); if not, write to the Free Software
  * Foundation,Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
@@ -52,7 +52,7 @@
  * 	be found on the last sector of the partition (not normally accessible
  * 	from within Windows as the bootsector contained number of sectors
  *	value is one less than the actual value!).
- * 	On versions of NT 3.51 and earlier, the backup copy was located at 
+ * 	On versions of NT 3.51 and earlier, the backup copy was located at
  * 	number of sectors/2 (integer divide), i.e. in the middle of the volume.
  */
 
@@ -218,7 +218,7 @@ typedef enum {
 } NTFS_SYSTEM_FILES;
 
 /*
- * These are the so far known MFT_RECORD_* flags (16-bit) which contain 
+ * These are the so far known MFT_RECORD_* flags (16-bit) which contain
  * information about the mft record in which they are present.
  */
 typedef enum {
@@ -230,7 +230,7 @@ typedef enum {
 /*
  * mft references (aka file references or file record segment references) are
  * used whenever a structure needs to refer to a record in the mft.
- * 
+ *
  * A reference consists of a 48-bit index into the mft and a 16-bit sequence
  * number used to detect stale references.
  *
@@ -256,7 +256,7 @@ typedef enum {
  * Do I hear screams "we want 64-bit inodes!" ?!? (-;
  *
  * FIXME: The mft zone is defined as the first 12% of the volume. This space is
- * reserved so that the mft can grow contiguously and hence doesn't become 
+ * reserved so that the mft can grow contiguously and hence doesn't become
  * fragmented. Volume free space includes the empty part of the mft zone and
  * when the volume's free 88% are used up, the mft zone is shrunk by a factor
  * of 2, thus making more space available for more files/data. This process is
@@ -308,7 +308,7 @@ typedef struct {
 				   above.) NOTE: The increment (skipping zero)
 				   is done when the file is deleted. NOTE: If
 				   this is zero it is left zero. */
-/* 18*/	u16 link_count; 	/* Number of hard links, i.e. the number of 
+/* 18*/	u16 link_count; 	/* Number of hard links, i.e. the number of
 				   directory entries referencing this record.
 				   NOTE: Only used in mft base records.
 				   NOTE: When deleting a directory entry we
@@ -489,7 +489,7 @@ typedef struct {
 } __attribute__ ((__packed__)) ATTR_DEF;
 
 /*
- * Attribute flags (16-bit). 
+ * Attribute flags (16-bit).
  */
 typedef enum {
 	ATTR_IS_COMPRESSED	= const_cpu_to_le16(0x0001),
@@ -600,7 +600,7 @@ typedef struct {
 				   boundary. */
 /* 12*/	ATTR_FLAGS flags;	/* Flags describing the attribute. */
 /* 14*/	u16 instance;		/* The instance of this attribute record. This
-				   number is unique within this mft record (see 
+				   number is unique within this mft record (see
 				   MFT_RECORD/next_attribute_instance notes in
 				   in mft.h for more details). */
 /* 16*/	union {
@@ -610,7 +610,7 @@ typedef struct {
 /* 20 */		u16 value_offset; /* Byte offset of the attribute
 					     value from the start of the
 					     attribute record. When creating,
-					     align to 8-byte boundary if we 
+					     align to 8-byte boundary if we
 					     have a name present as this might
 					     not have a length of a multiple
 					     of 8-bytes. */
@@ -703,7 +703,7 @@ typedef enum {
 	FILE_ATTR_ENCRYPTED		= const_cpu_to_le32(0x00004000),
 
 	FILE_ATTR_VALID_FLAGS		= const_cpu_to_le32(0x00007fb7),
-	/* FILE_ATTR_VALID_FLAGS masks out the old DOS VolId and the 
+	/* FILE_ATTR_VALID_FLAGS masks out the old DOS VolId and the
 	   FILE_ATTR_DEVICE and preserves everything else. This mask
 	   is used to obtain all flags that are valid for reading. */
 	FILE_ATTR_VALID_SET_FLAGS	= const_cpu_to_le32(0x000031a7),
@@ -838,9 +838,9 @@ typedef struct {
  * itself. The list is sorted: first by attribute type, second by attribute
  * name (if present), third by instance number. The extents of one
  * non-resident attribute (if present) immediately follow after the initial
- * extent. They are ordered by lowest_vcn and have their instace set to zero. 
+ * extent. They are ordered by lowest_vcn and have their instace set to zero.
  * It is not allowed to have two attributes with all sorting keys equal.
- * - Further restrictions: 
+ * - Further restrictions:
  * 	- If not resident, the vcn to lcn mapping array has to fit inside the
  * 	  base mft record.
  * 	- The attribute list attribute value has a maximum size of 256kb. This
@@ -898,7 +898,7 @@ typedef struct {
  */
 typedef enum {
 	FILE_NAME_POSIX			= 0x00,
-		/* This is the largest namespace. It is case sensitive and 
+		/* This is the largest namespace. It is case sensitive and
 		   allows all Unicode characters except for: '\0' and '/'.
 		   Beware that in WinNT/2k files which eg have the same name
 		   except for their case will not be distinguished by the
@@ -906,14 +906,14 @@ typedef enum {
 		   both "filename" and "fileName" without warning. */
 	FILE_NAME_WIN32			= 0x01,
 		/* The standard WinNT/2k NTFS long filenames. Case insensitive.
-		   All Unicode chars except: '\0', '"', '*', '/', ':', '<', 
+		   All Unicode chars except: '\0', '"', '*', '/', ':', '<',
 		   '>', '?', '\' and '|'. Further, names cannot end with a '.'
 		   or a space. */
 	FILE_NAME_DOS			= 0x02,
 		/* The standard DOS filenames (8.3 format). Uppercase only.
 		   All 8-bit characters greater space, except: '"', '*', '+',
 		   ',', '/', ':', ';', '<', '=', '>', '?' and '\'. */
-	FILE_NAME_WIN32_AND_DOS		= 0x03, 
+	FILE_NAME_WIN32_AND_DOS		= 0x03,
 		/* 3 means that both the Win32 and the DOS filenames are
 		   identical and hence have been saved in this single filename
 		   record. */
@@ -970,7 +970,7 @@ typedef struct {
 } __attribute__ ((__packed__)) FILE_NAME_ATTR;
 
 /*
- * GUID structures store globally unique identifiers (GUID). A GUID is a 
+ * GUID structures store globally unique identifiers (GUID). A GUID is a
  * 128-bit value consisting of one group of eight hexadecimal digits, followed
  * by three groups of four hexadecimal digits each, followed by one group of
  * twelve hexadecimal digits. GUIDs are Microsoft's implementation of the
@@ -1051,7 +1051,7 @@ typedef struct {
 /*
  * These relative identifiers (RIDs) are used with the above identifier
  * authorities to make up universal well-known SIDs.
- * 	
+ *
  * Note: The relative identifier (RID) refers to the portion of a SID, which
  * identifies a user or group in relation to the authority that issued the SID.
  * For example, the universal well-known SID Creator Owner ID (S-1-3-0) is
@@ -1062,7 +1062,7 @@ typedef enum {					/* Identifier authority. */
 	SECURITY_NULL_RID		  = 0,	/* S-1-0 */
 	SECURITY_WORLD_RID		  = 0,	/* S-1-1 */
 	SECURITY_LOCAL_RID		  = 0,	/* S-1-2 */
-	
+
 	SECURITY_CREATOR_OWNER_RID	  = 0,	/* S-1-3 */
 	SECURITY_CREATOR_GROUP_RID	  = 1,	/* S-1-3 */
 
@@ -1082,10 +1082,10 @@ typedef enum {					/* Identifier authority. */
 	SECURITY_AUTHENTICATED_USER_RID	  = 0xb,
 	SECURITY_RESTRICTED_CODE_RID	  = 0xc,
 	SECURITY_TERMINAL_SERVER_RID	  = 0xd,
-	
+
 	SECURITY_LOGON_IDS_RID		  = 5,
 	SECURITY_LOGON_IDS_RID_COUNT	  = 3,
-	
+
 	SECURITY_LOCAL_SYSTEM_RID	  = 0x12,
 
 	SECURITY_NT_NON_UNIQUE		  = 0x15,
@@ -1095,12 +1095,12 @@ typedef enum {					/* Identifier authority. */
 	/*
 	 * Well-known domain relative sub-authority values (RIDs).
 	 */
-	
+
 	/* Users. */
 	DOMAIN_USER_RID_ADMIN		  = 0x1f4,
 	DOMAIN_USER_RID_GUEST		  = 0x1f5,
 	DOMAIN_USER_RID_KRBTGT		  = 0x1f6,
-	
+
 	/* Groups. */
 	DOMAIN_GROUP_RID_ADMINS		  = 0x200,
 	DOMAIN_GROUP_RID_USERS		  = 0x201,
@@ -1117,12 +1117,12 @@ typedef enum {					/* Identifier authority. */
 	DOMAIN_ALIAS_RID_USERS		  = 0x221,
 	DOMAIN_ALIAS_RID_GUESTS		  = 0x222,
 	DOMAIN_ALIAS_RID_POWER_USERS	  = 0x223,
-	
+
 	DOMAIN_ALIAS_RID_ACCOUNT_OPS	  = 0x224,
 	DOMAIN_ALIAS_RID_SYSTEM_OPS	  = 0x225,
 	DOMAIN_ALIAS_RID_PRINT_OPS	  = 0x226,
 	DOMAIN_ALIAS_RID_BACKUP_OPS	  = 0x227,
-	
+
 	DOMAIN_ALIAS_RID_REPLICATOR	  = 0x228,
 	DOMAIN_ALIAS_RID_RAS_SERVERS	  = 0x229,
 	DOMAIN_ALIAS_RID_PREW2KCOMPACCESS = 0x22a,
@@ -1142,7 +1142,7 @@ typedef enum {					/* Identifier authority. */
  * 	(Non-unique IDs)		S-1-4
  *
  * NT well-known SIDs:
- * 
+ *
  * 	NT_AUTHORITY_SID	S-1-5
  * 	DIALUP_SID		S-1-5-1
  *
@@ -1179,7 +1179,7 @@ typedef union {
 /*
  * The SID structure is a variable-length structure used to uniquely identify
  * users or groups. SID stands for security identifier.
- * 
+ *
  * The standard textual representation of the SID is of the form:
  * 	S-R-I-S-S...
  * Where:
@@ -1189,7 +1189,7 @@ typedef union {
  *	either in decimal or hexadecimal (if the later, prefixed by "0x").
  *    - I is the 48-bit identifier_authority, expressed as digits as R above.
  *    - S... is one or more sub_authority values, expressed as digits as above.
- *    
+ *
  * Example SID; the domain-relative SID of the local Administrators group on
  * Windows NT/2k:
  * 	S-1-5-32-544
@@ -1230,7 +1230,7 @@ typedef enum {
 
 	ACCESS_ALLOWED_COMPOUND_ACE_TYPE= 4,
 	ACCESS_MAX_MS_V3_ACE_TYPE	= 4,
-	
+
 	/* The following are Win2k only. */
 	ACCESS_MIN_MS_OBJECT_ACE_TYPE	= 5,
 	ACCESS_ALLOWED_OBJECT_ACE_TYPE	= 5,
@@ -1297,33 +1297,33 @@ typedef enum {
 	 */
 
 	/* Specific rights for files and directories are as follows: */
-	
+
 	/* Right to read data from the file. (FILE) */
 	FILE_READ_DATA			= const_cpu_to_le32(0x00000001),
 	/* Right to list contents of a directory. (DIRECTORY) */
 	FILE_LIST_DIRECTORY		= const_cpu_to_le32(0x00000001),
-	
+
 	/* Right to write data to the file. (FILE) */
 	FILE_WRITE_DATA			= const_cpu_to_le32(0x00000002),
 	/* Right to create a file in the directory. (DIRECTORY) */
 	FILE_ADD_FILE			= const_cpu_to_le32(0x00000002),
-	
+
 	/* Right to append data to the file. (FILE) */
 	FILE_APPEND_DATA		= const_cpu_to_le32(0x00000004),
 	/* Right to create a subdirectory. (DIRECTORY) */
 	FILE_ADD_SUBDIRECTORY		= const_cpu_to_le32(0x00000004),
-	
+
 	/* Right to read extended attributes. (FILE/DIRECTORY) */
 	FILE_READ_EA			= const_cpu_to_le32(0x00000008),
-	
+
 	/* Right to write extended attributes. (FILE/DIRECTORY) */
 	FILE_WRITE_EA			= const_cpu_to_le32(0x00000010),
-	
+
 	/* Right to execute a file. (FILE) */
 	FILE_EXECUTE			= const_cpu_to_le32(0x00000020),
 	/* Right to traverse the directory. (DIRECTORY) */
 	FILE_TRAVERSE			= const_cpu_to_le32(0x00000020),
-	
+
 	/*
 	 * Right to delete a directory and all the files it contains (its
 	 * children), even if the files are read-only. (DIRECTORY)
@@ -1332,10 +1332,10 @@ typedef enum {
 
 	/* Right to read file attributes. (FILE/DIRECTORY) */
 	FILE_READ_ATTRIBUTES		= const_cpu_to_le32(0x00000080),
-	
+
 	/* Right to change file attributes. (FILE/DIRECTORY) */
 	FILE_WRITE_ATTRIBUTES		= const_cpu_to_le32(0x00000100),
-	
+
 	/*
 	 * The standard rights (bits 16 to 23). Are independent of the type of
 	 * object being secured.
@@ -1368,15 +1368,15 @@ typedef enum {
 	 * The following STANDARD_RIGHTS_* are combinations of the above for
 	 * convenience and are defined by the Win32 API.
 	 */
-	
+
 	/* These are currently defined to READ_CONTROL. */
 	STANDARD_RIGHTS_READ		= const_cpu_to_le32(0x00020000),
 	STANDARD_RIGHTS_WRITE		= const_cpu_to_le32(0x00020000),
 	STANDARD_RIGHTS_EXECUTE		= const_cpu_to_le32(0x00020000),
-	
+
 	/* Combines DELETE, READ_CONTROL, WRITE_DAC, and WRITE_OWNER access. */
 	STANDARD_RIGHTS_REQUIRED	= const_cpu_to_le32(0x000f0000),
-	
+
 	/*
 	 * Combines DELETE, READ_CONTROL, WRITE_DAC, WRITE_OWNER, and
 	 * SYNCHRONIZE access.
@@ -1423,7 +1423,7 @@ typedef enum {
 /*
  * The generic mapping array. Used to denote the mapping of each generic
  * access right to a specific access mask.
- * 
+ *
  * FIXME: What exactly is this and what is it for? (AIA)
  */
 typedef struct {
@@ -1593,7 +1593,7 @@ typedef struct {
 			   SE_SACL_PRESENT is set in the control field. If
 			   SE_SACL_PRESENT is set but sacl is NULL, a NULL ACL
 			   is specified. */
-	u32 dacl;	/* Byte offset to a discretionary ACL. Only valid, if 
+	u32 dacl;	/* Byte offset to a discretionary ACL. Only valid, if
 			   SE_DACL_PRESENT is set in the control field. If
 			   SE_DACL_PRESENT is set but dacl is NULL, a NULL ACL
 			   (unconditionally granting access) is specified. */
@@ -1610,7 +1610,7 @@ typedef struct {
 typedef struct {
 	u8 revision;	/* Revision level of the security descriptor. */
 	u8 alignment;
-	SECURITY_DESCRIPTOR_CONTROL control;	/* Flags qualifying the type of 
+	SECURITY_DESCRIPTOR_CONTROL control;	/* Flags qualifying the type of
 			   the descriptor as well as the following fields. */
 	SID *owner;	/* Points to a SID representing an object's owner. If
 			   this is NULL, no owner SID is present in the
@@ -1622,7 +1622,7 @@ typedef struct {
 			   SE_SACL_PRESENT is set in the control field. If
 			   SE_SACL_PRESENT is set but sacl is NULL, a NULL ACL
 			   is specified. */
-	ACL *dacl;	/* Points to a discretionary ACL. Only valid, if 
+	ACL *dacl;	/* Points to a discretionary ACL. Only valid, if
 			   SE_DACL_PRESENT is set in the control field. If
 			   SE_DACL_PRESENT is set but dacl is NULL, a NULL ACL
 			   (unconditionally granting access) is specified. */
@@ -1655,11 +1655,11 @@ typedef SECURITY_DESCRIPTOR_RELATIVE SECURITY_DESCRIPTOR_ATTR;
 /*
  * On NTFS 3.0+, all security descriptors are stored in FILE_Secure. Only one
  * referenced instance of each unique security descriptor is stored.
- * 
+ *
  * FILE_Secure contains no unnamed data attribute, i.e. it has zero length. It
  * does, however, contain two indexes ($SDH and $SII) as well as a named data
  * stream ($SDS).
- * 
+ *
  * Every unique security descriptor is assigned a unique security identifier
  * (security_id, not to be confused with a SID). The security_id is unique for
  * the NTFS volume and is used as an index into the $SII index, which maps
@@ -1674,12 +1674,12 @@ typedef SECURITY_DESCRIPTOR_RELATIVE SECURITY_DESCRIPTOR_ATTR;
  * new security descriptor is already present in the $SDS data stream), if a
  * matching hash is found, but the security descriptors do not match, the
  * search in the $SDH index is continued, searching for a next matching hash.
- * 
+ *
  * When a precise match is found, the security_id coresponding to the security
  * descriptor in the $SDS attribute is read from the found $SDH index entry and
  * is stored in the $STANDARD_INFORMATION attribute of the file/directory to
  * which the security descriptor is being applied. The $STANDARD_INFORMATION
- * attribute is present in all base mft records (i.e. in all files and 
+ * attribute is present in all base mft records (i.e. in all files and
  * directories).
  *
  * If a match is not found, the security descriptor is assigned a new unique
@@ -1690,7 +1690,7 @@ typedef SECURITY_DESCRIPTOR_RELATIVE SECURITY_DESCRIPTOR_ATTR;
  * Note: Entries are never deleted from FILE_Secure, even if nothing
  * references an entry any more.
  */
- 
+
 /*
  * This header precedes each security descriptor in the $SDS data stream.
  * This is also the index entry data part of both the $SII and $SDH indexes.
@@ -1727,7 +1727,7 @@ typedef struct {
 
 /*
  * The index entry key used in the $SII index. The collation type is
- * COLLATION_NTOFS_ULONG. 
+ * COLLATION_NTOFS_ULONG.
  */
 typedef struct {
 	u32 security_id; /* The security_id assigned to the descriptor. */
@@ -1745,7 +1745,7 @@ typedef struct {
 
 /*
  * Attribute: Volume name (0x60).
- * 
+ *
  * NOTE: Always resident.
  * NOTE: Present only in FILE_Volume.
  */
@@ -1876,7 +1876,7 @@ typedef struct {
 					   the index allocation attribute), when
 					   an index block is >= than a cluster,
 					   otherwise this will be the log of
-					   the size (like how the encoding of 
+					   the size (like how the encoding of
 					   the mft record size and the index
 					   record size found in the boot sector
 					   work). Has to be a power of 2. */
@@ -1889,7 +1889,7 @@ typedef struct {
  * Attribute: Index allocation (0xa0).
  *
  * NOTE: Always non-resident (doesn't make sense to be resident anyway!).
- * 
+ *
  * This is an array of index blocks. Each index block starts with an
  * INDEX_BLOCK structure containing an index header, followed by a sequence of
  * index entries (INDEX_ENTRY structures), as described by the INDEX_HEADER.
@@ -1948,7 +1948,7 @@ typedef enum {
 
 	QUOTA_FLAG_USER_MASK		= const_cpu_to_le32(0x00000007),
 		/* Bit mask for user quota flags. */
-	
+
 	/* These flags are only present in the quota defaults index entry,
 	   i.e. in the entry where owner_id = QUOTA_DEFAULTS_ID. */
 	QUOTA_FLAG_TRACKING_ENABLED	= const_cpu_to_le32(0x00000010),
@@ -1967,7 +1967,7 @@ typedef enum {
  *
  * The $Q index contains one entry for each existing user_id on the volume. The
  * index key is the user_id of the user/group owning this quota control entry,
- * i.e. the key is the owner_id. The user_id of the owner of a file, i.e. the 
+ * i.e. the key is the owner_id. The user_id of the owner of a file, i.e. the
  * owner_id, is found in the standard information attribute. The collation rule
  * for $Q is COLLATION_NTOFS_ULONG.
  *
@@ -2152,7 +2152,7 @@ typedef enum {
 	IO_REPARSE_TAG_IS_ALIAS		= const_cpu_to_le32(0x20000000),
 	IO_REPARSE_TAG_IS_HIGH_LATENCY	= const_cpu_to_le32(0x40000000),
 	IO_REPARSE_TAG_IS_MICROSOFT	= const_cpu_to_le32(0x80000000),
-	
+
 	IO_REPARSE_TAG_RESERVED_ZERO	= const_cpu_to_le32(0x00000000),
 	IO_REPARSE_TAG_RESERVED_ONE	= const_cpu_to_le32(0x00000001),
 	IO_REPARSE_TAG_RESERVED_RANGE	= const_cpu_to_le32(0x00000001),
@@ -2211,8 +2211,8 @@ typedef enum {
  * Attribute: Extended attribute (EA) (0xe0).
  *
  * NOTE: Always non-resident. (Is this true?)
- * 
- * Like the attribute list and the index buffer list, the EA attribute value is 
+ *
+ * Like the attribute list and the index buffer list, the EA attribute value is
  * a sequence of EA_ATTR variable length records.
  *
  * FIXME: It appears weird that the EA name is not unicode. Is it true?

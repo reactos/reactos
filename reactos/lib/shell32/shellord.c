@@ -574,7 +574,7 @@ static INT CALLBACK SHADD_compare_mru(LPCVOID data1, LPCVOID data2, DWORD cbData
  *   mruhandle    [IN] handle for created MRU list
  *   doc_name     [IN] null termed pure doc name
  *   new_lnk_name [IN] null termed path and file name for .lnk file
- *   buffer       [IN/OUT] 2048 byte area to consturct MRU data
+ *   buffer       [IN/OUT] 2048 byte area to construct MRU data
  *   len          [OUT] ptr to int to receive space used in buffer
  *
  * RETURNS
@@ -1506,7 +1506,7 @@ HRESULT WINAPI SHELL32_256(LPDWORD lpdw0, LPDWORD lpdw1)
         ret = E_INVALIDARG;
     else
     {
-        LPVOID lpdata = 0;/*LocalAlloc(GMEM_ZEROINIT, 0x4E4);*/
+        LPVOID lpdata = 0;/*LocalAlloc(LMEM_ZEROINIT, 0x4E4);*/
 
 	if (!lpdata)
             ret = E_OUTOFMEMORY;

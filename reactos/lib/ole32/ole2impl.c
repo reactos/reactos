@@ -259,9 +259,8 @@ HANDLE WINAPI OleDuplicateData(HANDLE hSrc, CLIPFORMAT cfFormat,
             if (!size) return NULL;
             bm.bmBits = HeapAlloc(GetProcessHeap(), 0, size);
             if (!bm.bmBits) return NULL;
-            if (!GetBitmapBits(hSrc, size, bm.bmBits))
-                return NULL;
-            hDst = CreateBitmapIndirect(&bm);
+            if (GetBitmapBits(hSrc, size, bm.bmBits))
+                hDst = CreateBitmapIndirect(&bm);
             HeapFree(GetProcessHeap(), 0, bm.bmBits);
             break;
         }

@@ -84,31 +84,31 @@ NPF_Write(
 
 
 	for(i=0;i<Open->Nwrites;i++){
-		
+
 		//  Try to get a packet from our list of free ones
 		NdisAllocatePacket(
 			&Status,
 			&pPacket,
 			Open->PacketPool
 			);
-		
+
 		if (Status != NDIS_STATUS_SUCCESS) {
-			
+
 			//  No free packets
 			Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
 			IoCompleteRequest (Irp, IO_NO_INCREMENT);
 			return STATUS_INSUFFICIENT_RESOURCES;
 		}
-		
+
 		// The packet has a buffer that needs not to be freed after every single write
 		RESERVED(pPacket)->FreeBufAfterWrite = FALSE;
 
 		// Save the IRP associated with the packet
 		RESERVED(pPacket)->Irp=Irp;
-		
+
 		//  Attach the writes buffer to the packet
 		NdisChainBufferAtFront(pPacket,Irp->MdlAddress);
-		
+
 		//  Call the MAC
 		NdisSend(
 			&Status,
@@ -122,15 +122,15 @@ NPF_Write(
 				pPacket,
 				Status
 				);
-			
+
 		}
-		
+
 		if(i%100==99){
-			NdisWaitEvent(&Open->WriteEvent,1000);  
+			NdisWaitEvent(&Open->WriteEvent,1000);
 			NdisResetEvent(&Open->WriteEvent);
 		}
 	}
-	
+
     return(STATUS_PENDING);
 
 }
@@ -140,9 +140,9 @@ NPF_Write(
 
 INT
 NPF_BufferedWrite(
-	IN PIRP Irp, 
-	IN PCHAR UserBuff, 
-	IN ULONG UserBuffSize, 
+	IN PIRP Irp,
+	IN PCHAR UserBuff,
+	IN ULONG UserBuffSize,
 	BOOLEAN Sync)
 {
     POPEN_INSTANCE		Open;
@@ -155,19 +155,19 @@ NPF_BufferedWrite(
 	struct sf_pkthdr	*winpcap_hdr;
 	PMDL				TmpMdl;
 	PCHAR				EndOfUserBuff = UserBuff + UserBuffSize;
-	
+
     IF_LOUD(DbgPrint("NPF: BufferedWrite, UserBuff=%x, Size=%u\n", UserBuff, UserBuffSize);)
-		
+
 	IrpSp = IoGetCurrentIrpStackLocation(Irp);
-	
+
     Open=IrpSp->FileObject->FsContext;
-	
+
 	// Security check on the length of the user buffer
 	if(UserBuff==0)
 	{
 		return 0;
 	}
-		
+
 	// Check that the MaxFrameSize is correctly initialized
 	if(Open->MaxFrameSize == 0)
 	{
@@ -176,15 +176,15 @@ NPF_BufferedWrite(
 		return 0;
 	}
 
-	
+
 	// Start from the first packet
 	winpcap_hdr = (struct sf_pkthdr*)UserBuff;
-	
+
 	// Retrieve the time references
 	StartTicks = KeQueryPerformanceCounter(&TimeFreq);
 	BufStartTime.tv_sec = winpcap_hdr->ts.tv_sec;
 	BufStartTime.tv_usec = winpcap_hdr->ts.tv_usec;
-	
+
 	// Chech the consistency of the user buffer
 	if( (PCHAR)winpcap_hdr + winpcap_hdr->caplen + sizeof(struct sf_pkthdr) > EndOfUserBuff )
 	{
@@ -192,28 +192,28 @@ NPF_BufferedWrite(
 
 		return -1;
 	}
-	
+
 	// Save the current time stamp counter
 	CurTicks = KeQueryPerformanceCounter(NULL);
-	
+
 	// Main loop: send the buffer to the wire
 	while( TRUE ){
-		
+
 		if(winpcap_hdr->caplen ==0 || winpcap_hdr->caplen > Open->MaxFrameSize)
 		{
 			// Malformed header
 			IF_LOUD(DbgPrint("NPF_BufferedWrite: malformed or bogus user buffer, aborting write.\n");)
-			
+
 			return -1;
 		}
-		
+
 		// Allocate an MDL to map the packet data
 		TmpMdl=IoAllocateMdl((PCHAR)winpcap_hdr + sizeof(struct sf_pkthdr),
 			winpcap_hdr->caplen,
 			FALSE,
 			FALSE,
 			NULL);
-		
+
 		if (TmpMdl == NULL)
 		{
 			// Unable to map the memory: packet lost
@@ -221,40 +221,40 @@ NPF_BufferedWrite(
 
 			return -1;
 		}
-		
+
 		MmBuildMdlForNonPagedPool(TmpMdl);	// XXX can this line be removed?
-		
+
 		// Allocate a packet from our free list
 		NdisAllocatePacket( &Status, &pPacket, Open->PacketPool);
-		
+
 		if (Status != NDIS_STATUS_SUCCESS) {
 			//  No free packets
 			IF_LOUD(DbgPrint("NPF_BufferedWrite: no more free packets, returning.\n");)
 
 			return (PCHAR)winpcap_hdr - UserBuff;
 		}
-		
+
 		// The packet has a buffer that needs to be freed after every single write
 		RESERVED(pPacket)->FreeBufAfterWrite = TRUE;
-		
+
 		// Attach the MDL to the packet
 		NdisChainBufferAtFront(pPacket,TmpMdl);
-		
+
 		// Call the MAC
 		NdisSend( &Status, Open->AdapterHandle,	pPacket);
-		
+
 		if (Status != NDIS_STATUS_PENDING) {
 			// The send didn't pend so call the completion handler now
 			NPF_SendComplete(
 				Open,
 				pPacket,
 				Status
-				);				
+				);
 		}
-		
+
 		// Step to the next packet in the buffer
 		winpcap_hdr = (struct sf_pkthdr *)((PCHAR)winpcap_hdr + winpcap_hdr->caplen + sizeof(struct sf_pkthdr));
-		
+
 		// Check if the end of the user buffer has been reached
 		if( (PCHAR)winpcap_hdr >= EndOfUserBuff )
 		{
@@ -262,17 +262,17 @@ NPF_BufferedWrite(
 
 			return (PCHAR)winpcap_hdr - UserBuff;
 		}
-		
+
 		if( Sync ){
 
 			// Release the application if it has been blocked for approximately more than 1 seconds
 			if( winpcap_hdr->ts.tv_sec - BufStartTime.tv_sec > 1 )
 			{
 				IF_LOUD(DbgPrint("NPF_BufferedWrite: timestamp elapsed, returning.\n");)
-					
+
 				return (PCHAR)winpcap_hdr - UserBuff;
 			}
-			
+
 #ifndef __GNUC__
 			// Calculate the time interval to wait before sending the next packet
             TargetTicks.QuadPart = StartTicks.QuadPart +
@@ -286,11 +286,11 @@ NPF_BufferedWrite(
 #else
 #endif
 		}
-		
+
 	}
-			
+
 	return (PCHAR)winpcap_hdr - UserBuff;
-		
+
 }
 
 
@@ -302,17 +302,17 @@ NPF_SendComplete(
 				   IN PNDIS_PACKET  pPacket,
 				   IN NDIS_STATUS   Status
 				   )
-				   
+
 {
 	PIRP              Irp;
 	PIO_STACK_LOCATION  irpSp;
 	POPEN_INSTANCE      Open;
 	PMDL TmpMdl;
-	
+
 	IF_LOUD(DbgPrint("NPF: SendComplete, BindingContext=%d\n",ProtocolBindingContext);)
-		
+
 	Open= (POPEN_INSTANCE)ProtocolBindingContext;
-	
+
 	if( RESERVED(pPacket)->FreeBufAfterWrite ){
 		// Free the MDL associated with the packet
 		NdisUnchainBufferAtFront(pPacket, &TmpMdl);
@@ -321,28 +321,28 @@ NPF_SendComplete(
 	else{
 		if((Open->Nwrites - Open->Multiple_Write_Counter) %100 == 99)
 			NdisSetEvent(&Open->WriteEvent);
-		
+
 		Open->Multiple_Write_Counter--;
 	}
-	
+
 	//  recyle the packet
 	NdisReinitializePacket(pPacket);
-	
+
 	//  Put the packet back on the free list
 	NdisFreePacket(pPacket);
-	
+
 	if( !(RESERVED(pPacket)->FreeBufAfterWrite) ){
 		if(Open->Multiple_Write_Counter==0){
 			// Release the buffer and awake the application
 			NdisUnchainBufferAtFront(pPacket, &TmpMdl);
-			
+
 			Irp=RESERVED(pPacket)->Irp;
 			irpSp = IoGetCurrentIrpStackLocation(Irp);
 
 			Irp->IoStatus.Status = Status;
 			Irp->IoStatus.Information = irpSp->Parameters.Write.Length;
 			IoCompleteRequest(Irp, IO_NO_INCREMENT);
-			
+
 		}
 	}
 

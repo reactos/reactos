@@ -141,7 +141,7 @@ enum
 
 #define SL_KEY_SPECIFIED           (0x1)
 #define SL_OVERRIDE_VERIFY_VOLUME  (0x2)
-#define SL_WRITE_THROUGHT          (0x4)
+#define SL_WRITE_THROUGH          (0x4)
 #define SL_FT_SEQUENTIAL_WRITE     (0x8)
 
 #define SL_FAIL_IMMEDIATELY        (0x1)

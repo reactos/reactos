@@ -174,17 +174,17 @@ FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
   CHAR cString[43];
   ULONG SizeDirEntry;
   ULONG EntriesPerPage;
-  
+
   DPRINT("FsdSetFsLabelInformation()\n");
-  
+
   DeviceExt = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
-  
+
   if (sizeof(DeviceObject->Vpb->VolumeLabel) < FsLabelInfo->VolumeLabelLength)
   {
     CHECKPOINT;
     return STATUS_NAME_TOO_LONG;
   }
-  
+
   if (DeviceExt->Flags & VCB_IS_FATX)
   {
     if (FsLabelInfo->VolumeLabelLength / sizeof(WCHAR) > 42)
@@ -199,7 +199,7 @@ FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
     SizeDirEntry = sizeof(FAT_DIR_ENTRY);
     EntriesPerPage = FAT_ENTRIES_PER_PAGE;
   }
-  
+
   /* Create Volume label dir entry */
   LabelLen = FsLabelInfo->VolumeLabelLength / sizeof(WCHAR);
   RtlZeroMemory(&VolumeLabelDirEntry, SizeDirEntry);
@@ -223,9 +223,9 @@ FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
     memset(&VolumeLabelDirEntry.Fat.Filename[LabelLen], ' ', 11 - LabelLen);
     VolumeLabelDirEntry.Fat.Attrib = 0x08;
   }
-  
+
   pRootFcb = vfatOpenRootFCB(DeviceExt);
-   
+
   /* Search existing volume entry on disk */
   FileOffset.QuadPart = 0;
   if (CcPinRead(pRootFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, &Context, (PVOID*)&Entry))
@@ -280,17 +280,17 @@ FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
       Status = STATUS_SUCCESS;
     }
   }
-  
+
   vfatReleaseFCB(DeviceExt, pRootFcb);
   if (!NT_SUCCESS(Status))
   {
     return Status;
   }
-  
+
   /* Update volume label in memory */
   DeviceObject->Vpb->VolumeLabelLength = (USHORT)FsLabelInfo->VolumeLabelLength;
   RtlCopyMemory(DeviceObject->Vpb->VolumeLabel, FsLabelInfo->VolumeLabel, DeviceObject->Vpb->VolumeLabelLength);
-  
+
   return Status;
 }
 

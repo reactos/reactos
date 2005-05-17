@@ -2,7 +2,7 @@
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/mbstring/mbsncoll.c
- * PURPOSE:     
+ * PURPOSE:
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:
  *              12/04/99: Created
@@ -26,9 +26,9 @@ int _mbsncoll(const unsigned char *str1, const unsigned char *str2, size_t n)
 	if (n == 0)
 		return 0;
 	do {
-		
+
 		if (*s1 == 0)
-			break;	
+			break;
 
 		l1 = _ismbblead(*s1);
 		l2 = _ismbblead(*s2);
@@ -75,9 +75,9 @@ int _mbsnbcoll(const unsigned char *str1, const unsigned char *str2, size_t n)
 	if (n == 0)
 		return 0;
 	do {
-		
+
 		if (*s1 == 0)
-			break;	
+			break;
 
 		l1 = _ismbblead(*s1);
 		l2 = _ismbblead(*s2);

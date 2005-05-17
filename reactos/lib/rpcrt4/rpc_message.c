@@ -42,7 +42,7 @@
 #include "rpc_misc.h"
 #include "rpc_defs.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(ole);
+WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 
 DWORD RPCRT4_GetHeaderSize(RpcPktHdr *Header)
 {

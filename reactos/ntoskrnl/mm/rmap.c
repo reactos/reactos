@@ -1,10 +1,10 @@
 /* $Id$
  *
  * COPYRIGHT:       See COPYING in the top directory
- * PROJECT:         ReactOS kernel 
+ * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/rmap.c
  * PURPOSE:         Kernel memory managment functions
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
@@ -95,7 +95,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
    /*
     * Lock the address space; then check that the address we are using
     * still corresponds to a valid memory area (the page might have been
-    * freed or paged out after we read the rmap entry.) 
+    * freed or paged out after we read the rmap entry.)
     */
    MmLockAddressSpace(AddressSpace);
    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);

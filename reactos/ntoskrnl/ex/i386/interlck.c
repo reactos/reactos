@@ -1,5 +1,5 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/i386/interlck.c
@@ -27,7 +27,7 @@
 #ifdef CONFIG_SMP
 #define LOCK lock
 #else
-#define LOCK 
+#define LOCK
 #endif
 
 #endif
@@ -248,7 +248,7 @@ Exi386InterlockedExchangeUlong(IN PULONG Target,
 LONG FASTCALL
 InterlockedIncrement(PLONG Addend);
 /*
- * FUNCTION: Increments a caller supplied variable of type LONG as an 
+ * FUNCTION: Increments a caller supplied variable of type LONG as an
  * atomic operation
  * ARGUMENTS:
  *     Addend = Points to a variable whose value is to be increment
@@ -396,6 +396,44 @@ InterlockedExchangeAdd(PLONG Addend,
 #error Unknown compiler for inline assembler
 #endif
 
+/**********************************************************************
+ * FASTCALL: @InterlockedClearBit@8
+ * STDCALL: _InterlockedClearBit@8
+ */
+#if defined(__GNUC__)
+/*
+ * @implemented
+ */
+UCHAR
+FASTCALL
+InterlockedClearBit(PLONG Destination,
+                    LONG Bit);
+
+__asm__("\n\t.global @InterlockedClearBit@8\n\t"
+	"@InterlockedClearBit@8:\n\t"
+	LOCK
+	"btr %edx,(%ecx)\n\t"
+	"setc %al\n\t"
+	"ret\n\t");
+
+#elif defined(_MSC_VER)
+/*
+ * @implemented
+ */
+__declspec(naked)
+UCHAR
+FASTCALL
+InterlockedClearBit(PUCHAR Destination,
+                    UCHAR Bit)
+{
+	__asm LOCK btr [ecx], edx
+	__asm setc al
+	__asm ret
+}
+
+#else
+#error Unknown compiler for inline assembler
+#endif
 
 /**********************************************************************
  * FASTCALL: @InterlockedCompareExchange@12

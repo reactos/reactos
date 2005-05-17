@@ -142,7 +142,7 @@ void sprintf(char *buffer, char *format, ... )
 				{
 					*convert_to_ascii(str, c, va_arg(ap, unsigned long)) = 0;
 				}
-					
+
 				ptr = str;
 
 				while (*ptr)

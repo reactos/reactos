@@ -59,7 +59,7 @@ main(int argc, char *argv[])
   if (NULL == Buffer)
     {
       perror("Can't allocate buffer");
-      fclose(File);  
+      fclose(File);
       exit(1);
     }
   rewind(File);
@@ -67,7 +67,7 @@ main(int argc, char *argv[])
     {
       perror("Error reading from original file");
       free(Buffer);
-      fclose(File);  
+      fclose(File);
       exit(1);
     }
   fclose(File);
@@ -97,7 +97,7 @@ main(int argc, char *argv[])
   if (Size != fwrite(Buffer, 1, Size, File))
     {
       perror("Error writing to output file");
-      fclose(File);  
+      fclose(File);
       remove(TempName);
       free(Buffer);
       exit(1);

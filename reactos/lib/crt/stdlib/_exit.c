@@ -9,7 +9,7 @@ struct __atexit *__atexit_ptr = 0;
 /*
  * @implemented
  */
-void exit(int status) 
+void exit(int status)
 {
   //int i;
   struct __atexit *a = __atexit_ptr;

@@ -20,7 +20,7 @@
 #include <w32k.h>
 
 #ifndef NO_MAPPING
-static int           PALETTE_firstFree = 0; 
+static int           PALETTE_firstFree = 0;
 static unsigned char PALETTE_freeList[256];
 #endif
 
@@ -193,7 +193,7 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
 static void FASTCALL PALETTE_FormatSystemPalette(void)
 {
   // Build free list so we'd have an easy way to find
-  // out if there are any available colorcells. 
+  // out if there are any available colorcells.
 
   int i, j = PALETTE_firstFree = NB_RESERVED_COLORS/2;
 
@@ -219,7 +219,7 @@ VOID FASTCALL PALETTE_ValidateFlags(PALETTEENTRY* lpPalE, INT size)
 }
 
 #ifndef NO_MAPPING
-// Set the color-mapping table for selected palette. 
+// Set the color-mapping table for selected palette.
 // Return number of entries which mapping has changed.
 INT STDCALL PALETTE_SetMapping(PALOBJ *palPtr, UINT uStart, UINT uNum, BOOL mapOnly)
 {
@@ -241,7 +241,7 @@ INT STDCALL PALETTE_SetMapping(PALOBJ *palPtr, UINT uStart, UINT uNum, BOOL mapO
   if( !mapOnly && PALETTE_firstFree != -1) PALETTE_FormatSystemPalette();
 
   // initialize palette mapping table
- 
+
   //mapping = HeapReAlloc( GetProcessHeap(), 0, palPtr->mapping,
   //                       sizeof(int)*palPtr->logpalette->palNumEntries);
   ExFreePool(palPtr->mapping);
@@ -261,7 +261,7 @@ INT STDCALL PALETTE_SetMapping(PALOBJ *palPtr, UINT uStart, UINT uNum, BOOL mapO
         index = *(WORD*)(palGDI->IndexedColors + uStart);
         if(index > 255 || (index >= COLOR_gapStart && index <= COLOR_gapEnd))
         {
-          DbgPrint("Win32k: PC_EXPLICIT: idx %d out of system palette, assuming black.\n", index); 
+          DbgPrint("Win32k: PC_EXPLICIT: idx %d out of system palette, assuming black.\n", index);
           index = 0;
         }
         break;
@@ -272,7 +272,7 @@ INT STDCALL PALETTE_SetMapping(PALOBJ *palPtr, UINT uStart, UINT uNum, BOOL mapO
 
       // fall through
       default: // try to collapse identical colors
-        index = COLOR_PaletteLookupExactIndex(COLOR_sysPal, 256,  
+        index = COLOR_PaletteLookupExactIndex(COLOR_sysPal, 256,
                                               *(COLORREF*)(palGDI->IndexedColors + uStart));
             // fall through
 
@@ -310,7 +310,7 @@ INT STDCALL PALETTE_SetMapping(PALOBJ *palPtr, UINT uStart, UINT uNum, BOOL mapO
           {
             index = PALETTE_ToPhysical(NULL, 0x00ffffff &
                                        *(COLORREF*)(palPtr->logpalette->palPalEntry + uStart));
-             break;     
+             break;
            } FIXME */
 
            // we have to map to existing entry in the system palette

@@ -29,9 +29,13 @@
  *
  *    25-Feb-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Fixed little bug.
+ *
+ *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_SET
 
@@ -42,15 +46,12 @@
 
 INT cmd_set (LPTSTR cmd, LPTSTR param)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR p;
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Displays, sets, or removes environment variables.\n\n"
-					   "SET [variable[=][string]]\n\n"
-					   "  variable  Specifies the environment-variable name.\n"
-					   "  string    Specifies a series of characters to assign to the variable.\n\n"
-					   "Type SET without parameters to display the current environment variables.\n"));
+		ConOutResPuts(STRING_SET_HELP);
 		return 0;
 	}
 
@@ -103,7 +104,8 @@ INT cmd_set (LPTSTR cmd, LPTSTR param)
 		dwBuffer = GetEnvironmentVariable (param, pszBuffer, ENV_BUFFER_SIZE);
 		if (dwBuffer == 0)
 		{
-			ConErrPrintf (_T("CMD: Not in environment \"%s\"\n"), param);
+			LoadString(CMD_ModuleHandle, STRING_PATH_ERROR, szMsg, RC_STRING_MAX_SIZE);
+			ConErrPrintf (szMsg, param);
 			return 0;
 		}
 		else if (dwBuffer > ENV_BUFFER_SIZE)

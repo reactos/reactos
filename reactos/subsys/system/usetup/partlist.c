@@ -726,7 +726,7 @@ PrintEmptyLine (PPARTLIST List)
   coPos.Y = List->Top + 1 + List->Line;
 
   if (List->Line >= 0 && List->Line <= Height)
-    { 
+    {
       FillConsoleOutputAttribute (0x17,
 			          Width,
 			          coPos,
@@ -955,7 +955,7 @@ PrintDiskData (PPARTLIST List,
 			          Width,
 			          coPos,
 			          &Written);
-    
+
       FillConsoleOutputCharacter (' ',
 			          Width,
 			          coPos,
@@ -1027,7 +1027,7 @@ DrawPartitionList (PPARTLIST List)
 	  PartEntry = CONTAINING_RECORD (Entry2, PARTENTRY, ListEntry);
 	  if (PartEntry == List->CurrentPartition)
 	    {
-	      CurrentPartLineFound = TRUE;;
+	      CurrentPartLineFound = TRUE;
 	    }
           Entry2 = Entry2->Flink;
 	  if (CurrentPartLineFound == FALSE)
@@ -1055,8 +1055,8 @@ DrawPartitionList (PPARTLIST List)
 	  LastLine--;
 	}
     }
-  
-  /* If it possible, make the disk name visible */ 
+
+  /* If it possible, make the disk name visible */
   if (CurrentPartLine < List->Offset)
     {
       List->Offset = CurrentPartLine;
@@ -1757,7 +1757,7 @@ DeleteCurrentPartition (PPARTLIST List)
       /* Merge previous, current and next unpartitioned entry */
 
       /* Adjust the previous entries length */
-      PrevPartEntry->UnpartitionedLength += 
+      PrevPartEntry->UnpartitionedLength +=
 	(PartEntry->PartInfo[0].PartitionLength.QuadPart + DiskEntry->TrackSize +
 	 NextPartEntry->UnpartitionedLength);
 
@@ -1781,7 +1781,7 @@ DeleteCurrentPartition (PPARTLIST List)
       /* Merge current and previous unpartitioned entry */
 
       /* Adjust the previous entries length */
-      PrevPartEntry->UnpartitionedLength += 
+      PrevPartEntry->UnpartitionedLength +=
 	(PartEntry->PartInfo[0].PartitionLength.QuadPart + DiskEntry->TrackSize);
 
       /* Remove the current entry */
@@ -1798,9 +1798,9 @@ DeleteCurrentPartition (PPARTLIST List)
       /* Merge current and next unpartitioned entry */
 
       /* Adjust the next entries offset and length */
-      NextPartEntry->UnpartitionedOffset = 
+      NextPartEntry->UnpartitionedOffset =
 	PartEntry->PartInfo[0].StartingOffset.QuadPart - DiskEntry->TrackSize;
-      NextPartEntry->UnpartitionedLength += 
+      NextPartEntry->UnpartitionedLength +=
 	(PartEntry->PartInfo[0].PartitionLength.QuadPart + DiskEntry->TrackSize);
 
       /* Remove the current entry */
@@ -1817,9 +1817,9 @@ DeleteCurrentPartition (PPARTLIST List)
       /* Nothing to merge but change current entry */
       PartEntry->New = FALSE;
       PartEntry->Unpartitioned = TRUE;
-      PartEntry->UnpartitionedOffset = 
+      PartEntry->UnpartitionedOffset =
 	PartEntry->PartInfo[0].StartingOffset.QuadPart - DiskEntry->TrackSize;
-      PartEntry->UnpartitionedLength = 
+      PartEntry->UnpartitionedLength =
 	PartEntry->PartInfo[0].PartitionLength.QuadPart + DiskEntry->TrackSize;
 
       /* Wipe the partition table */

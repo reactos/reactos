@@ -92,7 +92,7 @@ InfGetFieldCount (PINFCONTEXT Context);
 BOOL
 InfGetBinaryField (PINFCONTEXT Context,
 		   ULONG FieldIndex,
-		   PUCHAR ReturnBuffer,
+		   PCHAR ReturnBuffer,
 		   ULONG ReturnBufferSize,
 		   PULONG RequiredSize);
 

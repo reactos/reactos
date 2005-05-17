@@ -220,12 +220,12 @@ VfatGetFileBothInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
 {
   if ((sizeof (FILE_BOTH_DIR_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
     return STATUS_BUFFER_OVERFLOW;
-  
+
   if (DeviceExt->Flags & VCB_IS_FATX)
   {
     pInfo->FileNameLength = DirContext->LongNameU.Length;
     RtlCopyMemory(pInfo->FileName, DirContext->LongNameU.Buffer, DirContext->LongNameU.Length);
-    pInfo->NextEntryOffset = 
+    pInfo->NextEntryOffset =
       ULONG_ROUND_UP (sizeof (FILE_BOTH_DIR_INFORMATION) + DirContext->LongNameU.Length);
     pInfo->ShortName[0] = 0;
     pInfo->ShortNameLength = 0;
@@ -258,7 +258,7 @@ VfatGetFileBothInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
   else
   {
     pInfo->FileNameLength = DirContext->LongNameU.Length;
-    pInfo->NextEntryOffset = 
+    pInfo->NextEntryOffset =
       ULONG_ROUND_UP (sizeof (FILE_BOTH_DIR_INFORMATION) + DirContext->LongNameU.Length);
     RtlCopyMemory(pInfo->ShortName, DirContext->ShortNameU.Buffer, DirContext->ShortNameU.Length);
     pInfo->ShortNameLength = (CCHAR)DirContext->ShortNameU.Length;
@@ -319,7 +319,7 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
 #if 0
   /* Do not probe the user buffer until SEH is available */
   if (IrpContext->Irp->RequestorMode != KernelMode &&
-      IrpContext->Irp->MdlAddress == NULL && 
+      IrpContext->Irp->MdlAddress == NULL &&
       IrpContext->Irp->UserBuffer != NULL)
     {
       ProbeForWrite(IrpContext->Irp->UserBuffer, BufferLength, 1);
@@ -405,7 +405,7 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
 
   while (RC == STATUS_SUCCESS && BufferLength > 0)
     {
-      RC = FindFile (IrpContext->DeviceExt, pFcb, 
+      RC = FindFile (IrpContext->DeviceExt, pFcb,
                      &pCcb->SearchPattern, &DirContext, FirstCall);
       pCcb->Entry = DirContext.DirIndex;
       DPRINT ("Found %wZ, RC=%x, entry %x\n", &DirContext.LongNameU, RC, pCcb->Entry);
@@ -416,25 +416,25 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
             {
               case FileNameInformation:
                 RC = VfatGetFileNameInformation (&DirContext,
-                                                 (PFILE_NAMES_INFORMATION) Buffer, 
+                                                 (PFILE_NAMES_INFORMATION) Buffer,
 					         BufferLength);
                 break;
               case FileDirectoryInformation:
-                RC = VfatGetFileDirectoryInformation (&DirContext, 
+                RC = VfatGetFileDirectoryInformation (&DirContext,
 	                                              IrpContext->DeviceExt,
-						      (PFILE_DIRECTORY_INFORMATION) Buffer, 
+						      (PFILE_DIRECTORY_INFORMATION) Buffer,
 						      BufferLength);
                 break;
              case FileFullDirectoryInformation:
-               RC = VfatGetFileFullDirectoryInformation (&DirContext, 
+               RC = VfatGetFileFullDirectoryInformation (&DirContext,
 	                                                 IrpContext->DeviceExt,
-						         (PFILE_FULL_DIR_INFORMATION) Buffer, 
+						         (PFILE_FULL_DIR_INFORMATION) Buffer,
 						         BufferLength);
                break;
              case FileBothDirectoryInformation:
-               RC = VfatGetFileBothInformation (&DirContext, 
+               RC = VfatGetFileBothInformation (&DirContext,
 	                                        IrpContext->DeviceExt,
-					        (PFILE_BOTH_DIR_INFORMATION) Buffer, 
+					        (PFILE_BOTH_DIR_INFORMATION) Buffer,
 					        BufferLength);
                break;
              default:
@@ -482,6 +482,8 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
   if (FileIndex > 0)
     {
       RC = STATUS_SUCCESS;
+      IrpContext->Irp->IoStatus.Information = Stack->Parameters.QueryDirectory.Length - BufferLength;
+
     }
   ExReleaseResourceLite(&pFcb->MainResource);
   return RC;
@@ -495,6 +497,7 @@ NTSTATUS VfatDirectoryControl (PVFAT_IRP_CONTEXT IrpContext)
 {
   NTSTATUS RC = STATUS_SUCCESS;
   CHECKPOINT;
+  IrpContext->Irp->IoStatus.Information = 0;
   switch (IrpContext->MinorFunction)
     {
     case IRP_MN_QUERY_DIRECTORY:
@@ -518,7 +521,6 @@ NTSTATUS VfatDirectoryControl (PVFAT_IRP_CONTEXT IrpContext)
   else
   {
     IrpContext->Irp->IoStatus.Status = RC;
-    IrpContext->Irp->IoStatus.Information = 0;
     IoCompleteRequest (IrpContext->Irp, IO_NO_INCREMENT);
     VfatFreeIrpContext(IrpContext);
   }

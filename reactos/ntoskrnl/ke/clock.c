@@ -3,11 +3,11 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/clock.c
  * PURPOSE:         Handle System Clock
- * 
+ *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net) - Created
  *                  David Welch & Phillip Susi - Implementation (?)
  */
- 
+
  /* NOTES ******************************************************************/
 /*
  * System time units are 100-nanosecond intervals
@@ -45,9 +45,9 @@ extern LIST_ENTRY KiTimerListHead;
 
 /*
  * The increment in the system clock every timer tick (in system time units)
- * 
- * = (1/18.2)*10^9 
- * 
+ *
+ * = (1/18.2)*10^9
+ *
  * RJJ was 54945055
  */
 #define CLOCK_INCREMENT (100000)
@@ -80,7 +80,7 @@ KiInitializeSystemClock(VOID)
     DPRINT1("KiInitializeSystemClock()\n");
     InitializeListHead(&KiTimerListHead);
     KeInitializeDpc(&KiExpireTimerDpc, (PKDEFERRED_ROUTINE)KiExpireTimers, 0);
-   
+
     /* Calculate the starting time for the system clock */
     HalQueryRealTimeClock(&TimeFields);
     RtlTimeFieldsToTime(&TimeFields, &SystemBootTime);
@@ -145,7 +145,7 @@ ULONG
 STDCALL
 KeQueryTimeIncrement(VOID)
 /*
- * FUNCTION: Gets the increment (in 100-nanosecond units) that is added to 
+ * FUNCTION: Gets the increment (in 100-nanosecond units) that is added to
  * the system clock every time the clock interrupts
  * RETURNS: The increment
  */
@@ -156,7 +156,7 @@ KeQueryTimeIncrement(VOID)
 /*
  * @implemented
  */
-VOID 
+VOID
 STDCALL
 KeQueryTickCount(PLARGE_INTEGER TickCount)
 /*
@@ -187,7 +187,7 @@ KeQuerySystemTime(PLARGE_INTEGER CurrentTime)
     } while (CurrentTime->u.HighPart != SharedUserData->SystemTime.High2Time);
 }
 
-ULONGLONG 
+ULONGLONG
 STDCALL
 KeQueryInterruptTime(VOID)
 {
@@ -260,7 +260,7 @@ KeUpdateRunTime(
    CurrentThread = Prcb->CurrentThread;
    CurrentProcess = CurrentThread->ApcState.Process;
 
-   /* 
+   /*
     * Cs bit 0 is always set for user mode if we are in protected mode.
     * V86 mode is counted as user time.
     */
@@ -325,7 +325,7 @@ KeUpdateRunTime(
  *
  * @implemented
  */
-VOID 
+VOID
 STDCALL
 KeUpdateSystemTime(
     IN PKTRAP_FRAME  TrapFrame,
@@ -340,11 +340,11 @@ KeUpdateSystemTime(
    ASSERT(KeGetCurrentIrql() == PROFILE_LEVEL);
 
    KiRawTicks++;
-   
+
    if (KiClockSetupComplete == FALSE) return;
 
    /*
-    * Increment the number of timers ticks 
+    * Increment the number of timers ticks
     */
    KeTickCount++;
    SharedUserData->TickCountLowDeprecated++;
@@ -382,12 +382,12 @@ STDCALL
 NtGetTickCount(VOID)
 {
     LARGE_INTEGER TickCount;
-    
+
     KeQueryTickCount(&TickCount);
     return TickCount.u.LowPart;
 }
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 NtQueryTimerResolution(OUT PULONG MinimumResolution,
                        OUT PULONG MaximumResolution,
@@ -397,7 +397,7 @@ NtQueryTimerResolution(OUT PULONG MinimumResolution,
     return STATUS_NOT_IMPLEMENTED;
 }
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 NtSetTimerResolution(IN ULONG DesiredResolution,
                      IN BOOLEAN SetResolution,

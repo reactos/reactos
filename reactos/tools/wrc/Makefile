@@ -33,7 +33,7 @@ LIBS = $(LIB_UNICODE_DIR)/libunicode.a $(LIB_WPP_DIR)/libwpp.a
 
 CLEAN_FILES = *.o $(TARGET)
 
-HOST_CFLAGS = -D__USE_W32API -DWINE_UNICODE_API= \
+HOST_CFLAGS = $(HOSTARCH) -D__USE_W32API -DWINE_UNICODE_API= \
               -Dwchar_t="unsigned short" -D_WCHAR_T_DEFINED \
               -I$(LIB_UNICODE_DIR) -I$(LIB_WPP_DIR) -I$(PATH_TO_TOP)/include/wine \
               -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/w32api/include
@@ -42,13 +42,12 @@ HOST_CFLAGS = -D__USE_W32API -DWINE_UNICODE_API= \
 	$(HOST_CC) $(HOST_CFLAGS) -c $< -o $@
 
 $(TARGET): $(OBJECTS) $(LIBS)
-	$(HOST_CC) -o $(TARGET) $(OBJECTS) $(LIBS)
+	$(HOST_CC) $(HOSTARCH) -o $(TARGET) $(OBJECTS) $(LIBS)
 
-ifeq ($(HOST),mingw32-linux)
+ifeq ($(HOST_TYPE),unix)
 clean:
 	-rm -f $(OBJECTS) $(TARGET)
-endif
-ifneq ($(HOST),mingw32-linux)
+else
 clean:
 	-del $(TARGET)
 	-del *.o

@@ -19,11 +19,10 @@ mkstemps.o: mkstemps.c
 bin2res$(EXE_POSTFIX): $(OBJECTS)
 	$(HOST_CC) -g $(OBJECTS) -o $(TARGET)
 
-ifeq ($(HOST),mingw32-linux)
+ifeq ($(HOST_TYPE),unix)
 clean:
 	rm -f *.o $(TARGET)
-endif
-ifneq ($(HOST),mingw32-linux)
+else
 clean:
 	del *.o $(TARGET)
 endif

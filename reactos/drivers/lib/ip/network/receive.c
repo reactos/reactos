@@ -18,9 +18,9 @@ NPAGED_LOOKASIDE_LIST IPDRList;
 NPAGED_LOOKASIDE_LIST IPFragmentList;
 NPAGED_LOOKASIDE_LIST IPHoleList;
 
-VOID ReflectPacketComplete( 
-    PVOID Context, 
-    PNDIS_PACKET Packet, 
+VOID ReflectPacketComplete(
+    PVOID Context,
+    PNDIS_PACKET Packet,
     NDIS_STATUS Status ) {
 }
 
@@ -223,8 +223,8 @@ PIP_PACKET ReassembleDatagram(
   }
 
   /* Copy the header into the buffer */
-  RtlCopyMemory(IPPacket->Header, &IPDR->IPv4Header, IPDR->HeaderSize);  
-  
+  RtlCopyMemory(IPPacket->Header, &IPDR->IPv4Header, IPDR->HeaderSize);
+
   Data = IPPacket->Header + IPDR->HeaderSize;
   IPPacket->Data = Data;
 
@@ -424,14 +424,14 @@ VOID ProcessFragment(
     /* Position here is an offset from the NdisPacket start, not the header */
     TI_DbgPrint(DEBUG_IP, ("Fragment data buffer allocated at (0x%X)  Size (%d) Pos (%d).\n",
 			   Fragment->Data, Fragment->Size, IPPacket->Position));
-    
+
     /* Copy datagram data into fragment buffer */
     CopyPacketToBuffer(Fragment->Data,
 		       IPPacket->NdisPacket,
 		       IPPacket->Position,
 		       Fragment->Size);
     Fragment->Offset = FragFirst;
-    
+
     /* If this is the last fragment, compute and save the datagram data size */
     if (!MoreFragments)
       IPDR->DataSize = FragFirst + Fragment->Size;
@@ -522,44 +522,44 @@ VOID IPv4Receive(PIP_INTERFACE IF, PIP_PACKET IPPacket)
  */
 {
     TI_DbgPrint(DEBUG_IP, ("Received IPv4 datagram.\n"));
-    
+
     IPPacket->HeaderSize = (((PIPv4_HEADER)IPPacket->Header)->VerIHL & 0x0F) << 2;
     TI_DbgPrint(DEBUG_IP, ("IPPacket->HeaderSize = %d\n", IPPacket->HeaderSize));
 
     if (IPPacket->HeaderSize > IPv4_MAX_HEADER_SIZE) {
 	TI_DbgPrint
-	    (MIN_TRACE, 
+	    (MIN_TRACE,
 	     ("Datagram received with incorrect header size (%d).\n",
 	      IPPacket->HeaderSize));
 	/* Discard packet */
 	return;
     }
-    
+
     /* Checksum IPv4 header */
     if (!IPv4CorrectChecksum(IPPacket->Header, IPPacket->HeaderSize)) {
 	TI_DbgPrint
-	    (MIN_TRACE, 
+	    (MIN_TRACE,
 	     ("Datagram received with bad checksum. Checksum field (0x%X)\n",
 	      WN2H(((PIPv4_HEADER)IPPacket->Header)->Checksum)));
 	/* Discard packet */
 	return;
     }
-    
+
     IPPacket->TotalSize = WN2H(((PIPv4_HEADER)IPPacket->Header)->TotalLength);
-    
+
     AddrInitIPv4(&IPPacket->SrcAddr, ((PIPv4_HEADER)IPPacket->Header)->SrcAddr);
     AddrInitIPv4(&IPPacket->DstAddr, ((PIPv4_HEADER)IPPacket->Header)->DstAddr);
-    
+
     IPPacket->Position += IPPacket->HeaderSize;
     IPPacket->Data     = (PVOID)((ULONG_PTR)IPPacket->Header + IPPacket->HeaderSize);
-    
+
     TI_DbgPrint(MID_TRACE,("IPPacket->Position = %d\n",
 			   IPPacket->Position));
 
     //OskitDumpBuffer(IPPacket->Header, IPPacket->TotalSize);
 
     /* FIXME: Possibly forward packets with multicast addresses */
-    
+
     /* FIXME: Should we allow packets to be received on the wrong interface? */
     /* XXX Find out if this packet is destined for us */
     ProcessFragment(IF, IPPacket);
@@ -567,7 +567,7 @@ VOID IPv4Receive(PIP_INTERFACE IF, PIP_PACKET IPPacket)
     } else {
 	/* This packet is not destined for us. If we are a router,
 	   try to find a route and forward the packet */
-	
+
 	/* FIXME: Check if acting as a router */
 	NCE = NULL;
 	if (NCE) {
@@ -580,7 +580,7 @@ VOID IPv4Receive(PIP_INTERFACE IF, PIP_PACKET IPPacket)
 	} else {
 	    TI_DbgPrint(MIN_TRACE, ("No route to destination (0x%X).\n",
 				    IPPacket->DstAddr.Address.IPv4Address));
-	    
+
 	    /* FIXME: Send ICMP error code */
 	}
     }

@@ -12,7 +12,7 @@ double _jn(int n, double x)
 /*
  * @unimplemented
  */
-double _yn(int n, double x) 
+double _yn(int n, double x)
 {
 	return x;
 }

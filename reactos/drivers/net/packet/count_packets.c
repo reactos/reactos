@@ -40,12 +40,12 @@
 
 uint32 count_packets(uint8 *block, uint32 pkt_size, TME_DATA *data, MEM_TYPE *mem_ex, uint8 *mem_data)
 {
-		
+
 	c_p_data *counters=(c_p_data*)(block+data->key_len*4);
 
 	counters->bytes+=pkt_size;
 	counters->packets++;
-	
+
 	return TME_SUCCESS;
 
 }

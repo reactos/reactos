@@ -24,7 +24,7 @@ BOOLEAN
 STDCALL
 CTEInitString (
 	DWORD	Unknown0,
-	DWORD	Unknown1	
+	DWORD	Unknown1
 	)
 {
 	return FALSE;

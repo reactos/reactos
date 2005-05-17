@@ -9,9 +9,9 @@
  *
  * There are a couple of subtle races that this library is designed to avoid.
  * Please read the code (particularly IoCsqInsertIrpEx and IoCsqRemoveIrp) for
- * some details.  
+ * some details.
  *
- * In general, we try here to avoid the race between these queue/dequeue 
+ * In general, we try here to avoid the race between these queue/dequeue
  * interfaces and our own cancel routine.  This library supplies a cancel
  * routine that is used in all IRPs that are queued to it.  The major race
  * conditions surround the proper handling of in-between cases, such as in-progress
@@ -60,7 +60,7 @@ VOID NTAPI IopCsqCancelRoutine(PDEVICE_OBJECT DeviceObject,
 		{
 			PIO_CSQ_IRP_CONTEXT Context = (PIO_CSQ_IRP_CONTEXT)Csq;
 			Csq = Context->Csq;
-			
+
 			/* clean up context while we're here */
 			Context->Irp = NULL;
 		}
@@ -216,7 +216,7 @@ NTSTATUS NTAPI IoCsqInsertIrpEx(PIO_CSQ Csq,
 			 * 2) We get an IRP, and the IO manager cancels it before we're done here
 			 * 3) We get an IRP, queue it, and the IO manager cancels it.
 			 *
-			 * #2 is is a booger.  
+			 * #2 is is a booger.
 			 *
 			 * When the IO manger receives a request to cancel an IRP, it sets the cancel
 			 * bit in the IRP's control byte to TRUE.  Then, it looks to see if a cancel
@@ -229,7 +229,7 @@ NTSTATUS NTAPI IoCsqInsertIrpEx(PIO_CSQ Csq,
 			 *
 			 * If we set a routine first and then test for cancel, we race with our completion
 			 * routine:  We set the routine, the IO Manager sets cancel, we test cancel and find
-			 * it is TRUE.  Meanwhile the IO manager has called our cancel routine already, so 
+			 * it is TRUE.  Meanwhile the IO manager has called our cancel routine already, so
 			 * we can't complete the IRP because it'll rip it out from under the cancel routine.
 			 *
 			 * The IO manager does us a favor though: it nulls out the cancel routine in the IRP
@@ -241,7 +241,7 @@ NTSTATUS NTAPI IoCsqInsertIrpEx(PIO_CSQ Csq,
 			 * We have to go through all of this mess because this API guarantees that we will
 			 * never return having left a canceled IRP in the queue.
 			 */
-			
+
 			/* Step 1: Queue the IRP */
 			if(Csq->Type == IO_TYPE_CSQ)
 				Csq->CsqInsertIrp(Csq, Irp);
@@ -260,9 +260,9 @@ NTSTATUS NTAPI IoCsqInsertIrpEx(PIO_CSQ Csq,
 			if(!Irp->Cancel)
 				break;
 
-			/* 
-			 * Since we're canceled, see if our cancel routine is already running 
-			 * If this is NULL, the IO Manager has already called our cancel routine 
+			/*
+			 * Since we're canceled, see if our cancel routine is already running
+			 * If this is NULL, the IO Manager has already called our cancel routine
 			 */
 			if(!IoSetCancelRoutine(Irp, NULL))
 				break;
@@ -270,7 +270,7 @@ NTSTATUS NTAPI IoCsqInsertIrpEx(PIO_CSQ Csq,
 			/* OK, looks like we have to de-queue and complete this ourselves */
 			Csq->CsqRemoveIrp(Csq, Irp);
 			Csq->CsqCompleteCanceledIrp(Csq, Irp);
-			
+
 			if(Context)
 				Context->Irp = NULL;
 		}
@@ -292,7 +292,7 @@ PIRP NTAPI IoCsqRemoveIrp(PIO_CSQ Csq,
  * RETURNS:
  *     - Pointer to an IRP if we found it
  * NOTES:
- *     - Don't forget that we can be canceled any time up to the point 
+ *     - Don't forget that we can be canceled any time up to the point
  *       where we unset our cancel routine
  */
 {
@@ -312,10 +312,10 @@ PIRP NTAPI IoCsqRemoveIrp(PIO_CSQ Csq,
 			/* Unset the cancel routine and see if it has already been canceled */
 			if(!IoSetCancelRoutine(Irp, NULL))
 				{
-					/* 
+					/*
 					 * already gone, return NULL  --> NOTE  that we cannot touch this IRP *or* the context,
 					 * since the context is being simultaneously twiddled by the cancel routine
-					 */ 
+					 */
 					Irp = NULL;
 					break;
 				}
@@ -361,7 +361,7 @@ PIRP NTAPI IoCsqRemoveNextIrp(PIO_CSQ Csq,
 
 	while((Irp = Csq->CsqPeekNextIrp(Csq, Irp, PeekContext)))
 		{
-			/* 
+			/*
 			 * If the cancel routine is gone, we're already canceled,
 			 * and are spinning on the queue lock in our own cancel
 			 * routine.  Move on to the next candidate.  It'll get
@@ -377,7 +377,7 @@ PIRP NTAPI IoCsqRemoveNextIrp(PIO_CSQ Csq,
 
 			if(Context && Context->Type == IO_TYPE_CSQ_IRP_CONTEXT)
 				Context->Irp = NULL;
-			
+
 			break;
 		}
 

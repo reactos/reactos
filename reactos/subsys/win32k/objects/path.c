@@ -840,7 +840,7 @@ PATH_FlattenPath(GdiPath *pPath)
 // expecting a non-const*. Since this function isn't being called
 // at the moment, I'm commenting it out until the issue needs to
 // be addressed.
-BOOL 
+BOOL
 FASTCALL
 PATH_PathToRegion ( const GdiPath *pPath, INT nPolyFillMode, HRGN *pHrgn )
 {

@@ -103,6 +103,49 @@ enum msidbComponentAttributes
     msidbComponentAttributes64bit = 0x00000100
 };
 
+/*
+ * Windows SDK braindamage alert
+ *
+ * PID_DICTIONARY and PID_CODEPAGE are defined by propidl.h too
+ * PID_SECURITY is defined in propidl.h with a different value!
+ * So these need to be undefined first.
+ */
+#ifdef PID_DICTIONARY
+#undef PID_DICTIONARY
+#endif
+
+#ifdef PID_CODEPAGE
+#undef PID_CODEPAGE
+#endif
+
+#ifdef PID_SECURITY
+#undef PID_SECURITY
+#endif
+
+#define PID_DICTIONARY 0
+#define PID_CODEPAGE 1
+#define PID_TITLE 2
+#define PID_SUBJECT 3
+#define PID_AUTHOR 4
+#define PID_KEYWORDS 5
+#define PID_COMMENTS 6
+#define PID_TEMPLATE 7
+#define PID_LASTAUTHOR 8
+#define PID_REVNUMBER 9
+#define PID_EDITTINE 10
+#define PID_LASTPRINTED 11
+#define PID_CREATE_DTM 12
+#define PID_LASTSAVE_DTM 13
+#define PID_PAGECOUNT 14
+#define PID_WORDCOUNT 15
+#define PID_CHARCOUNT 16
+#define PID_THUMBNAIL 17
+#define PID_APPNAME 18
+#define PID_SECURITY 19
+#define PID_MSIVERSION PID_PAGECOUNT
+#define PID_MSISOURCE PID_WORDCOUNT
+#define PID_MSIRESTRICT PID_CHARCOUNT
+
 #ifdef __cplusplus
 }
 #endif

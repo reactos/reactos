@@ -68,7 +68,7 @@
 
 #define SGID_CONNECTIONLESS             1 /* XXX Find this flag */
 
-/* XXX This is a hack we should clean up later 
+/* XXX This is a hack we should clean up later
  * We do this in order to get some storage for the locked handle table
  * Maybe I'll use some tail item in the irp instead */
 #define AFD_HANDLES(x) ((PAFD_HANDLE)(x)->Exclusive)
@@ -114,7 +114,7 @@ typedef struct _AFD_TDI_OBJECT_QELT {
 
 typedef struct _AFD_IN_FLIGHT_REQUEST {
     PIRP InFlightRequest;
-    IO_STATUS_BLOCK Iosb;    
+    IO_STATUS_BLOCK Iosb;
     PTDI_CONNECTION_INFORMATION ConnectionCallInfo;
     PTDI_CONNECTION_INFORMATION ConnectionReturnInfo;
 } AFD_IN_FLIGHT_REQUEST, *PAFD_IN_FLIGHT_REQUEST;
@@ -179,20 +179,20 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 /* context.c */
 
 NTSTATUS STDCALL
-AfdGetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+AfdGetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp );
 NTSTATUS STDCALL
-AfdSetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+AfdSetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp );
 
 /* info.c */
 
 NTSTATUS STDCALL
-AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    PIO_STACK_LOCATION IrpSp );
 
 NTSTATUS STDCALL
-AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                       PIO_STACK_LOCATION IrpSp, BOOLEAN Local );
 
 /* listen.c */
@@ -207,14 +207,14 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 /* lock.c */
 
-PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count, 
+PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
 			 PVOID AddressBuf, PINT AddressLen,
 			 BOOLEAN Write, BOOLEAN LockAddress );
 VOID UnlockBuffers( PAFD_WSABUF Buf, UINT Count, BOOL Address );
 UINT SocketAcquireStateLock( PAFD_FCB FCB );
 NTSTATUS DDKAPI UnlockAndMaybeComplete
 ( PAFD_FCB FCB, NTSTATUS Status, PIRP Irp,
-  UINT Information, 
+  UINT Information,
   PIO_COMPLETION_ROUTINE Completion,
   BOOL ShouldUnlockIrp );
 VOID SocketStateUnlock( PAFD_FCB FCB );
@@ -245,22 +245,22 @@ NTSTATUS DDKAPI PacketSocketRecvComplete
   PVOID Context );
 
 NTSTATUS STDCALL
-AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			   PIO_STACK_LOCATION IrpSp, BOOLEAN Short);
 NTSTATUS STDCALL
-AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			PIO_STACK_LOCATION IrpSp );
 
 /* select.c */
 
 NTSTATUS STDCALL
-AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	   PIO_STACK_LOCATION IrpSp );
 NTSTATUS STDCALL
-AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		PIO_STACK_LOCATION IrpSp );
 NTSTATUS STDCALL
-AfdEnumEvents( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+AfdEnumEvents( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp );
 VOID PollReeval( PAFD_DEVICE_EXTENSION DeviceObject, PFILE_OBJECT FileObject );
 VOID KillSelectsForFCB( PAFD_DEVICE_EXTENSION DeviceExt,
@@ -331,10 +331,10 @@ NTSTATUS TdiSendDatagram(
 /* write.c */
 
 NTSTATUS STDCALL
-AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			    PIO_STACK_LOCATION IrpSp, BOOLEAN Short);
 NTSTATUS STDCALL
-AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			 PIO_STACK_LOCATION IrpSp);
 
 #endif/*_AFD_H*/

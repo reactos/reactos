@@ -242,7 +242,7 @@ NdisMCoRequestComplete(
 /*
  * @unimplemented
  */
-VOID 
+VOID
 EXPORT
 NdisMCoSendComplete(
     IN  NDIS_STATUS     Status,

@@ -47,8 +47,8 @@ GlobalAddAtomA(LPCSTR lpString)
 
    if (lstrlenA(lpString) > 255)
    {
-      /* This limit does not exist with NtAddAtom so the limit is probably 
-       * added for compability. -Gunnar 
+      /* This limit does not exist with NtAddAtom so the limit is probably
+       * added for compability. -Gunnar
        */
       SetLastError(ERROR_INVALID_PARAMETER);
       return (ATOM)0;
@@ -92,8 +92,8 @@ GlobalAddAtomW(LPCWSTR lpString)
 
    if (lstrlenW(lpString) > 255)
    {
-      /* This limit does not exist with NtAddAtom so the limit is probably 
-       * added for compability. -Gunnar 
+      /* This limit does not exist with NtAddAtom so the limit is probably
+       * added for compability. -Gunnar
        */
       SetLastError(ERROR_INVALID_PARAMETER);
       return (ATOM)0;
@@ -119,19 +119,19 @@ ATOM STDCALL
 GlobalDeleteAtom(ATOM nAtom)
 {
    NTSTATUS Status;
-   
+
    if (nAtom < 0xC000)
      {
 	return 0;
      }
-   
+
    Status = NtDeleteAtom(nAtom);
    if (!NT_SUCCESS(Status))
      {
 	SetLastErrorByStatus(Status);
 	return nAtom;
      }
-   
+
    return 0;
 }
 
@@ -158,8 +158,8 @@ GlobalFindAtomA(LPCSTR lpString)
 
    if (lstrlenA(lpString) > 255)
    {
-      /* This limit does not exist with NtAddAtom so the limit is probably 
-       * added for compability. -Gunnar 
+      /* This limit does not exist with NtAddAtom so the limit is probably
+       * added for compability. -Gunnar
        */
       SetLastError(ERROR_INVALID_PARAMETER);
       return (ATOM)0;
@@ -202,8 +202,8 @@ GlobalFindAtomW(LPCWSTR lpString)
 
    if (lstrlenW(lpString) > 255)
    {
-      /* This limit does not exist with NtAddAtom so the limit is probably 
-       * added for compability. -Gunnar 
+      /* This limit does not exist with NtAddAtom so the limit is probably
+       * added for compability. -Gunnar
        */
       SetLastError(ERROR_INVALID_PARAMETER);
       return (ATOM)0;
@@ -332,14 +332,14 @@ BOOL STDCALL
 InitAtomTable(DWORD nSize)
 {
    NTSTATUS Status;
-   
+
    /* nSize should be a prime number */
-   
+
    if ( nSize < 4 || nSize >= 512 )
      {
 	nSize = 37;
      }
-   
+
    if (LocalAtomTable == NULL)
     {
 	Status = RtlCreateAtomTable(nSize,
@@ -438,7 +438,7 @@ DeleteAtom(ATOM nAtom)
 {
    PRTL_ATOM_TABLE AtomTable;
    NTSTATUS Status;
-   
+
    if (nAtom < 0xC000)
      {
 	return 0;
@@ -453,7 +453,7 @@ DeleteAtom(ATOM nAtom)
 	SetLastErrorByStatus(Status);
 	return nAtom;
      }
-   
+
    return 0;
 }
 

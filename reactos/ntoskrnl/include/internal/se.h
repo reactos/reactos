@@ -20,7 +20,6 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_SE_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_SE_H
 
-
 extern POBJECT_TYPE SepTokenObjectType;
 
 /* SID Authorities */
@@ -110,16 +109,16 @@ BOOLEAN SepInitSecurityIDs(VOID);
 BOOLEAN SepInitDACLs(VOID);
 BOOLEAN SepInitSDs(VOID);
 
-NTSTATUS STDCALL 
-SepCreateImpersonationTokenDacl(PTOKEN Token, 
+VOID SeDeassignPrimaryToken(struct _EPROCESS *Process);
+
+NTSTATUS STDCALL
+SepCreateImpersonationTokenDacl(PTOKEN Token,
                                 PTOKEN PrimaryToken,
                                 PACL *Dacl);
 
 VOID SepInitializeTokenImplementation(VOID);
 
-NTSTATUS SepCreateSystemProcessToken(struct _EPROCESS* Process);
-NTSTATUS SepInitializeNewProcess(struct _EPROCESS* NewProcess,
-				 struct _EPROCESS* ParentProcess);
+PTOKEN STDCALL SepCreateSystemProcessToken(VOID);
 
 NTSTATUS SeExchangePrimaryToken(struct _EPROCESS* Process,
 				PACCESS_TOKEN NewToken,
@@ -147,6 +146,16 @@ SepPrivilegeCheck(PTOKEN Token,
 		  ULONG PrivilegeCount,
 		  ULONG PrivilegeControl,
 		  KPROCESSOR_MODE PreviousMode);
+
+NTSTATUS
+STDCALL
+SepDuplicateToken(PTOKEN Token,
+		  POBJECT_ATTRIBUTES ObjectAttributes,
+		  BOOLEAN EffectiveOnly,
+		  TOKEN_TYPE TokenType,
+		  SECURITY_IMPERSONATION_LEVEL Level,
+		  KPROCESSOR_MODE PreviousMode,
+		  PTOKEN* NewAccessToken);
 
 NTSTATUS
 SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,

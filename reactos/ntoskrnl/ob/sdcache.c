@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ob/sdcache.c
  * PURPOSE:         No purpose listed.
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 

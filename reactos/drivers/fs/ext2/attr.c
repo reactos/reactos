@@ -4,7 +4,7 @@
  * FILE:             services/fs/ext2/attr.c
  * PURPOSE:          Set/Get file attributes support
  * PROGRAMMER:       David Welch (welch@cwcom.net)
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -24,12 +24,12 @@ NTSTATUS STDCALL
 Ext2SetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    DPRINT("Ext2SetInformation(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
-   
+
    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
    Irp->IoStatus.Information = 0;
    IoCompleteRequest(Irp,
 		     IO_NO_INCREMENT);
-   
+
    return(STATUS_UNSUCCESSFUL);
 }
 
@@ -49,15 +49,15 @@ Ext2QueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    PFILE_NAME_INFORMATION PFileNameInformation;
    PFILE_POSITION_INFORMATION PFilePositionInformation;
    PVOID Buffer;
-   
+
    DPRINT("Ext2QueryInformation(DeviceObject %x Irp %x)\n", DeviceObject, Irp);
-   
+
    Param = IoGetCurrentIrpStackLocation(Irp);
    FileObject = Param->FileObject;
    DeviceExt = DeviceObject->DeviceExtension;
    Length = Param->Parameters.QueryFile.Length;
    Buffer = Irp->AssociatedIrp.SystemBuffer;
-   
+
    switch (Param->Parameters.QueryFile.FileInformationClass)
      {
       case FileDirectoryInformation:
@@ -65,64 +65,64 @@ Ext2QueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
       case FileBothDirectoryInformation:
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
-	
+
       case FileBasicInformation:
 	PFileBasicInformation = (PFILE_BASIC_INFORMATION)Buffer;
 	memset(PFileBasicInformation, 0, sizeof(FILE_BASIC_INFORMATION));
 	Status = STATUS_SUCCESS;
 	break;
-	
+
       case FileStandardInformation:
 	PFileStandardInformation = (PFILE_STANDARD_INFORMATION)Buffer;
 	memset(PFileStandardInformation, 0, sizeof(FILE_STANDARD_INFORMATION));
 	Status = STATUS_SUCCESS;
 	break;
-	
+
       case FileInternalInformation:
 	PFileInternalInformation = (PFILE_INTERNAL_INFORMATION)Buffer;
 	memset(PFileInternalInformation, 0, sizeof(FILE_INTERNAL_INFORMATION));
 	Status = STATUS_SUCCESS;
 	break;
-	
+
       case FileEaInformation:
 	PFileEaInformation = (PFILE_EA_INFORMATION)Buffer;
 	memset(PFileEaInformation, 0, sizeof(FILE_EA_INFORMATION));
 	PFileEaInformation->EaSize = 0;
 	Status = STATUS_SUCCESS;
 	break;
-	
+
       case FileAccessInformation:
 	PFileAccessInformation = (PFILE_ACCESS_INFORMATION)Buffer;
 	memset(PFileAccessInformation, 0, sizeof(FILE_ACCESS_INFORMATION));
 	PFileAccessInformation->AccessFlags = 0;
 	Status = STATUS_SUCCESS;
 	break;
-	
+
       case FileNameInformation:
 	PFileNameInformation = (PFILE_NAME_INFORMATION)Buffer;
 	memset(PFileNameInformation, 0, sizeof(FILE_NAME_INFORMATION));
 	Status = STATUS_SUCCESS;
 	break;
-	
+
       case FilePositionInformation:
 	PFilePositionInformation = (PFILE_POSITION_INFORMATION)Buffer;
-	memcpy(PFilePositionInformation, 
+	memcpy(PFilePositionInformation,
 	       &FileObject->CurrentByteOffset,
 	       sizeof(FileObject->CurrentByteOffset));
 	Status = STATUS_SUCCESS;
 	break;
-	
+
       case FileRenameInformation:
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
-	
+
       default:
 	Status = STATUS_NOT_SUPPORTED;
      }
-   
-   
-   
-   
+
+
+
+
    Irp->IoStatus.Status = Status;
    if (NT_SUCCESS(Status))
      Irp->IoStatus.Information =
@@ -131,6 +131,6 @@ Ext2QueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
      Irp->IoStatus.Information = 0;
    IoCompleteRequest(Irp,
 		     IO_NO_INCREMENT);
-   
+
    return(Status);
 }

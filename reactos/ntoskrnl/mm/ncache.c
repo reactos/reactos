@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/ncache.c
  * PURPOSE:         Manages non-cached memory
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
@@ -24,11 +24,11 @@
  * DESCRIPTION
  *  Allocates a virtual address range of noncached and cache
  * aligned memory.
- * 
+ *
  * ARGUMENTS
  * NumberOfBytes
  *  Size of region to allocate.
- *  
+ *
  * RETURN VALUE
  * The base address of the range on success;
  * NULL on failure.
@@ -103,16 +103,16 @@ MmFreeNonCachedPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
  * MmFreeNonCachedMemory@8
  *
  * DESCRIPTION
- * Releases a range of noncached memory allocated with 
+ * Releases a range of noncached memory allocated with
  * MmAllocateNonCachedMemory.
- * 
+ *
  * ARGUMENTS
  * BaseAddress
  *  Virtual address to be freed;
- *  
+ *
  * NumberOfBytes
  *  Size of the region to be freed.
- *  
+ *
  * RETURN VALUE
  *  None.
  *

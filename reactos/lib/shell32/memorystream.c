@@ -1,12 +1,12 @@
 /*
- *	this class implements a pure IStream object
- *	and can be used for many purposes
+ *	This class implements a pure IStream object
+ *	and can be used for many purposes.
  *
- *	the main reason for implementing this was
+ *	The main reason for implementing this was
  *	a cleaner implementation of IShellLink which
- *	needs to be able to load lnk's from a IStream
+ *	needs to be able to load lnks from an IStream
  *	interface so it was obvious to capsule the file
- *	access in a IStream to.
+ *	access in an IStream to.
  *
  * Copyright 1999 Juergen Schmied
  * Copyright 2003 Mike McCormack for CodeWeavers
@@ -42,57 +42,16 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-static const IStreamVtbl stvt;
+#define STGM_ACCESS_MODE(stgm)   ((stgm)&0x0000f)
+#define STGM_SHARE_MODE(stgm)    ((stgm)&0x000f0)
+#define STGM_CREATE_MODE(stgm)   ((stgm)&0x0f000)
 
 typedef struct
 {	
 	const IStreamVtbl	*lpvtst;
-	DWORD		ref;
-	HANDLE		handle;
+	DWORD			ref;
+	HANDLE			handle;
 } ISHFileStream;
-
-/**************************************************************************
- *   CreateStreamOnFile()
- *
- *   similar to CreateStreamOnHGlobal
- */
-HRESULT CreateStreamOnFile (LPCWSTR pszFilename, DWORD grfMode, IStream ** ppstm)
-{
-	ISHFileStream*	fstr;
-	HANDLE		handle;
-	DWORD		access = GENERIC_READ, creat;
-
-	if( grfMode & STGM_TRANSACTED )
-		return E_INVALIDARG;
-
-	if( grfMode & STGM_WRITE )
-		access |= GENERIC_WRITE;
-        if( grfMode & STGM_READWRITE )
-		access = GENERIC_WRITE | GENERIC_READ;
-
-	if( grfMode & STGM_CREATE )
-		creat = CREATE_ALWAYS;
-	else
-		creat = OPEN_EXISTING;
-
-	TRACE("Opening %s\n", debugstr_w(pszFilename) );
-
-       handle = CreateFileW( pszFilename, access, FILE_SHARE_READ, NULL, creat, 0, NULL );
-	if( handle == INVALID_HANDLE_VALUE )
-		return HRESULT_FROM_WIN32(GetLastError());
-
-	fstr = (ISHFileStream*)HeapAlloc(GetProcessHeap(),
-		HEAP_ZERO_MEMORY,sizeof(ISHFileStream));
-	if( !fstr )
-		return E_OUTOFMEMORY;
-	fstr->lpvtst=&stvt;
-	fstr->ref = 1;
-	fstr->handle = handle;
-
-	(*ppstm) = (IStream*)fstr;
-
-	return S_OK;
-}
 
 /**************************************************************************
 *  IStream_fnQueryInterface
@@ -105,17 +64,14 @@ static HRESULT WINAPI IStream_fnQueryInterface(IStream *iface, REFIID riid, LPVO
 
 	*ppvObj = NULL;
 
-	if(IsEqualIID(riid, &IID_IUnknown) ||
-	   IsEqualIID(riid, &IID_IStream))
-	{
-	  *ppvObj = This;
-	}
+	if(IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IStream))
+		*ppvObj = This;
 
 	if(*ppvObj)
 	{
-	  IStream_AddRef((IStream*)*ppvObj);
-	  TRACE("-- Interface: (%p)->(%p)\n",ppvObj,*ppvObj);
-	  return S_OK;
+		IStream_AddRef((IStream*)*ppvObj);
+		TRACE("-- Interface: (%p)->(%p)\n",ppvObj,*ppvObj);
+		return S_OK;
 	}
 	TRACE("-- Interface: E_NOINTERFACE\n");
 	return E_NOINTERFACE;
@@ -294,5 +250,60 @@ static const IStreamVtbl stvt =
 	IStream_fnUnlockRegion,
 	IStream_fnStat,
 	IStream_fnClone
-
 };
+
+/**************************************************************************
+ *   CreateStreamOnFile()
+ *
+ *   similar to CreateStreamOnHGlobal
+ */
+HRESULT CreateStreamOnFile (LPCWSTR pszFilename, DWORD grfMode, IStream ** ppstm)
+{
+	ISHFileStream*	fstr;
+	HANDLE		handle;
+	DWORD		access = GENERIC_READ, creat;
+
+	if( grfMode & STGM_TRANSACTED )
+		return E_INVALIDARG;
+
+	switch( STGM_ACCESS_MODE( grfMode ) )
+	{
+	case STGM_READ:
+		access = GENERIC_READ;
+		break;
+	case STGM_WRITE:
+	case STGM_READWRITE:
+		access = GENERIC_WRITE | GENERIC_READ;
+		break;
+	default:
+		return STG_E_INVALIDFLAG;
+	}
+
+	switch( STGM_CREATE_MODE( grfMode ) )
+	{
+	case STGM_CREATE:
+		creat = CREATE_ALWAYS;
+		break;
+	case STGM_FAILIFTHERE:
+		creat = OPEN_EXISTING;
+		break;
+	default:
+		return STG_E_INVALIDFLAG;
+	}
+
+	handle = CreateFileW( pszFilename, access,
+			FILE_SHARE_READ, NULL, creat, 0, NULL );
+	if( handle == INVALID_HANDLE_VALUE )
+		return HRESULT_FROM_WIN32(GetLastError());
+
+	fstr = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ISHFileStream));
+	if( !fstr )
+		return E_OUTOFMEMORY;
+	fstr->lpvtst = &stvt;
+	fstr->ref = 1;
+	fstr->handle = handle;
+
+	(*ppstm) = (IStream*)fstr;
+
+	return S_OK;
+}

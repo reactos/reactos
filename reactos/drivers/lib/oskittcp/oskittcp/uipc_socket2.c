@@ -140,7 +140,7 @@ soisdisconnected(so)
 	register struct socket *so;
 {
     OS_DbgPrint(OSK_MID_TRACE,("Called %x\n", so));
-    
+
     so->so_state &= ~(SS_ISCONNECTING|SS_ISCONNECTED|SS_ISDISCONNECTING);
     so->so_state |= (SS_CANTRCVMORE|SS_CANTSENDMORE);
     wakeup(so, (caddr_t)&so->so_timeo);

@@ -36,15 +36,12 @@ SMAPI(SmCompSes)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
 
-	DPRINT("SM: %s called from [%lx|%lx]\n",
-		__FUNCTION__,
-		Request->ClientId.UniqueProcessId,
-		Request->ClientId.UniqueThreadId);
+	DPRINT("SM: %s called\n", __FUNCTION__);
 	
 	Status = SmCompleteClientInitialization (Request->Header.ClientId.UniqueProcess);
 	if(!NT_SUCCESS(Status))
 	{
-		Request->Status = STATUS_UNSUCCESSFUL;
+		Request->SmHeader.Status = STATUS_UNSUCCESSFUL;
 	}
 	return Status;
 }

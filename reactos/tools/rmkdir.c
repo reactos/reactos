@@ -58,7 +58,7 @@ int mkdir_p(char* path)
      {
 	return(0);
      }
-#ifdef UNIX_PATHS
+#ifndef WIN32
    if (mkdir(path, 0755) != 0)
      {
 	perror("Failed to create directory");

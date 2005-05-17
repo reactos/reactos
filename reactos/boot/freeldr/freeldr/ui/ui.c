@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-	
+
 #include <freeldr.h>
 #include <ui.h>
 #include "tui.h"
@@ -48,7 +48,7 @@ UCHAR	UiSelectedTextBgColor		= COLOR_GRAY;			// Selected text background color
 UCHAR	UiEditBoxTextColor			= COLOR_WHITE;			// Edit box text color
 UCHAR	UiEditBoxBgColor			= COLOR_BLACK;			// Edit box text background color
 
-UCHAR	UiTitleBoxTitleText[260]	= "Boot Menu";			// Title box's title text
+CHAR	UiTitleBoxTitleText[260]	= "Boot Menu";			// Title box's title text
 
 BOOL	UserInterfaceUp				= FALSE;				// Tells us if the user interface is displayed
 
@@ -56,14 +56,14 @@ VIDEODISPLAYMODE	UiDisplayMode		= VideoTextMode;		// Tells us if we are in text 
 
 BOOL	UiUseSpecialEffects			= FALSE;				// Tells us if we should use fade effects
 
-UCHAR	UiMonthNames[12][15] = { "January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December " };
+CHAR	UiMonthNames[12][15] = { "January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December " };
 
 
 BOOL UiInitialize(BOOLEAN ShowGui)
 {
 	ULONG	SectionId;
-	UCHAR	DisplayModeText[260];
-	UCHAR	SettingText[260];
+	CHAR	DisplayModeText[260];
+	CHAR	SettingText[260];
 	ULONG	Depth;
 
 	if (!ShowGui) {
@@ -75,7 +75,7 @@ BOOL UiInitialize(BOOLEAN ShowGui)
 		UserInterfaceUp = FALSE;
 		return TRUE;
 	}
-	
+
 	DbgPrint((DPRINT_UI, "Initializing User Interface.\n"));
 
 	DbgPrint((DPRINT_UI, "Reading in UI settings from [Display] section.\n"));
@@ -193,7 +193,7 @@ BOOL UiInitialize(BOOLEAN ShowGui)
 
 	// Draw the backdrop and fade it in if special effects are enabled
 	UiFadeInBackdrop();
-	
+
 	UserInterfaceUp = TRUE;
 
 	DbgPrint((DPRINT_UI, "UiInitialize() returning TRUE.\n"));
@@ -201,7 +201,7 @@ BOOL UiInitialize(BOOLEAN ShowGui)
 	return TRUE;
 }
 
-VOID UiUnInitialize(PUCHAR BootText)
+VOID UiUnInitialize(PCHAR BootText)
 {
 	UiDrawBackdrop();
 	UiDrawStatusText("Booting...");
@@ -221,7 +221,7 @@ VOID UiUnInitialize(PUCHAR BootText)
 VOID UiDrawBackdrop(VOID)
 {
 	if (!UserInterfaceUp) return;
-	
+
 	if (VideoTextMode == UiDisplayMode)
 	{
 		TuiDrawBackdrop();
@@ -233,7 +233,7 @@ VOID UiDrawBackdrop(VOID)
 	}
 }
 
-VOID UiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */)
+VOID UiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{
@@ -272,7 +272,7 @@ VOID UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle
 	}
 }
 
-VOID UiDrawText(ULONG X, ULONG Y, PUCHAR Text, UCHAR Attr)
+VOID UiDrawText(ULONG X, ULONG Y, PCHAR Text, UCHAR Attr)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{
@@ -285,7 +285,7 @@ VOID UiDrawText(ULONG X, ULONG Y, PUCHAR Text, UCHAR Attr)
 	}
 }
 
-VOID UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PUCHAR TextString, UCHAR Attr)
+VOID UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCHAR TextString, UCHAR Attr)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{
@@ -298,10 +298,10 @@ VOID UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PUCHAR
 	}
 }
 
-VOID UiDrawStatusText(PUCHAR StatusText)
+VOID UiDrawStatusText(PCHAR StatusText)
 {
 	if (!UserInterfaceUp) return;
-	
+
 	if (VideoTextMode == UiDisplayMode)
 	{
 		TuiDrawStatusText(StatusText);
@@ -326,7 +326,7 @@ VOID UiUpdateDateTime(VOID)
 	}
 }
 
-VOID UiInfoBox(PUCHAR MessageText)
+VOID UiInfoBox(PCHAR MessageText)
 {
 	ULONG		TextLength;
 	ULONG		BoxWidth;
@@ -387,7 +387,7 @@ VOID UiInfoBox(PUCHAR MessageText)
 	UiDrawCenteredText(Left, Top, Right, Bottom, MessageText, ATTR(UiTextColor, UiMenuBgColor));
 }
 
-VOID UiMessageBox(PUCHAR MessageText)
+VOID UiMessageBox(PCHAR MessageText)
 {
 	// We have not yet displayed the user interface
 	// We are probably still reading the .ini file
@@ -412,7 +412,7 @@ VOID UiMessageBox(PUCHAR MessageText)
 	}
 }
 
-VOID UiMessageBoxCritical(PUCHAR MessageText)
+VOID UiMessageBoxCritical(PCHAR MessageText)
 {
 	// We have not yet displayed the user interface
 	// We are probably still reading the .ini file
@@ -437,7 +437,7 @@ VOID UiMessageBoxCritical(PUCHAR MessageText)
 	}
 }
 
-UCHAR UiTextToColor(PUCHAR ColorText)
+UCHAR UiTextToColor(PCHAR ColorText)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{
@@ -451,7 +451,7 @@ UCHAR UiTextToColor(PUCHAR ColorText)
 	}
 }
 
-UCHAR UiTextToFillStyle(PUCHAR FillStyleText)
+UCHAR UiTextToFillStyle(PCHAR FillStyleText)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{
@@ -465,10 +465,10 @@ UCHAR UiTextToFillStyle(PUCHAR FillStyleText)
 	}
 }
 
-VOID UiDrawProgressBarCenter(ULONG Position, ULONG Range, PUCHAR ProgressText)
+VOID UiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText)
 {
 	if (!UserInterfaceUp) return;
-	
+
 	if (VideoTextMode == UiDisplayMode)
 	{
 		TuiDrawProgressBarCenter(Position, Range, ProgressText);
@@ -480,7 +480,7 @@ VOID UiDrawProgressBarCenter(ULONG Position, ULONG Range, PUCHAR ProgressText)
 	}
 }
 
-VOID UiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PUCHAR ProgressText)
+VOID UiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{
@@ -493,12 +493,12 @@ VOID UiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG P
 	}
 }
 
-VOID UiShowMessageBoxesInSection(PUCHAR SectionName)
+VOID UiShowMessageBoxesInSection(PCHAR SectionName)
 {
 	ULONG		Idx;
-	UCHAR	SettingName[80];
-	UCHAR	SettingValue[80];
-	PUCHAR	MessageBoxText;
+	CHAR	SettingName[80];
+	CHAR	SettingValue[80];
+	PCHAR	MessageBoxText;
 	ULONG		MessageBoxTextSize;
 	ULONG		SectionId;
 
@@ -515,7 +515,7 @@ VOID UiShowMessageBoxesInSection(PUCHAR SectionName)
 	for (Idx=0; Idx<IniGetNumSectionItems(SectionId); Idx++)
 	{
 		IniReadSettingByNumber(SectionId, Idx, SettingName, 79, SettingValue, 79);
-		
+
 		if (stricmp(SettingName, "MessageBox") == 0)
 		{
 			// Get the real length of the MessageBox text
@@ -524,7 +524,7 @@ VOID UiShowMessageBoxesInSection(PUCHAR SectionName)
 			//if (MessageBoxTextSize > 0)
 			{
 				// Allocate enough memory to hold the text
-				MessageBoxText = (PUCHAR)MmAllocateMemory(MessageBoxTextSize);
+				MessageBoxText = MmAllocateMemory(MessageBoxTextSize);
 
 				if (MessageBoxText)
 				{
@@ -545,7 +545,7 @@ VOID UiShowMessageBoxesInSection(PUCHAR SectionName)
 	}
 }
 
-VOID UiEscapeString(PUCHAR String)
+VOID UiEscapeString(PCHAR String)
 {
 	ULONG		Idx;
 
@@ -563,7 +563,7 @@ VOID UiEscapeString(PUCHAR String)
 	}
 }
 
-VOID UiTruncateStringEllipsis(PUCHAR StringText, ULONG MaxChars)
+VOID UiTruncateStringEllipsis(PCHAR StringText, ULONG MaxChars)
 {
 	if (strlen(StringText) > MaxChars)
 	{
@@ -571,7 +571,7 @@ VOID UiTruncateStringEllipsis(PUCHAR StringText, ULONG MaxChars)
 	}
 }
 
-BOOL UiDisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
+BOOL UiDisplayMenu(PCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{
@@ -611,7 +611,7 @@ VOID UiFadeOut(VOID)
 	}
 }
 
-BOOL UiEditBox(PUCHAR MessageText, PUCHAR EditTextBuffer, ULONG Length)
+BOOL UiEditBox(PCHAR MessageText, PCHAR EditTextBuffer, ULONG Length)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{

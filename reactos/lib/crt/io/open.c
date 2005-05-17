@@ -31,7 +31,7 @@
  * Copyright 2004 Eric Pouech
  * Copyright 2004 Juan Lang
  */
- 
+
 // rember to interlock the allocation of fileno when making this thread safe
 
 // possibly store extra information at the handle
@@ -97,13 +97,13 @@ static inline FD_INFO* fdinfo(int fd)
 inline BOOL is_valid_fd(int fd)
 {
    BOOL b = (fd >= 0 && fd < g_fdend && (fdinfo(fd)->fdflags & FOPEN));
-   
+
    if (!b){
       DPRINT1("not valid fd %i, g_fdend %i, fdinfo %x, bucket %x, fdflags %x\n",
          fd,g_fdend,fdinfo(fd),fdinfo_bucket(fd),fdinfo(fd)->fdflags);
-      
+
    }
-   
+
    return b;
 }
 
@@ -115,12 +115,12 @@ char split_oflags(int oflags)
     char         fdflags = 0;
 
     if (oflags & _O_APPEND)              fdflags |= FAPPEND;
-    
+
     if (oflags & _O_BINARY)              ;
     else if (oflags & _O_TEXT)           fdflags |= FTEXT;
     else if (_fmode& _O_BINARY)  ;
     else                                        fdflags |= FTEXT; /* default to TEXT*/
-    
+
     if (oflags & _O_NOINHERIT)           fdflags |= FNOINHERIT;
 
     if (oflags & ~(_O_BINARY|_O_TEXT|_O_APPEND|_O_TRUNC|
@@ -235,7 +235,7 @@ int _open(const char* _path, int _oflag,...)
 
    hFile = CreateFileA(_path,
                dwDesiredAccess,
-               dwShareMode, 
+               dwShareMode,
                &sa,
                dwCreationDistribution,
                dwFlagsAndAttributes,
@@ -259,9 +259,9 @@ int _open(const char* _path, int _oflag,...)
 static void init_bucket(FDINFO* entry)
 {
    int i;
-   
-   for(i=0; 
-       i < FDINFO_ENTRIES_PER_BUCKET; 
+
+   for(i=0;
+       i < FDINFO_ENTRIES_PER_BUCKET;
        i++, entry++)
    {
       entry->hFile = INVALID_HANDLE_VALUE;
@@ -278,29 +278,29 @@ static BOOL alloc_init_bucket(int fd)
 {
    fdinfo_bucket(fd) = malloc(FDINFO_ENTRIES_PER_BUCKET * sizeof(FDINFO));
    if (!fdinfo_bucket(fd)) return FALSE;
-   
+
    init_bucket(fdinfo_bucket(fd));
-   
+
    return TRUE;
 }
 
 
 
 
-/* 
+/*
  * INTERNAL
  *  Allocate an fd slot from a Win32 HANDLE, starting from fd
  *  caller must hold the files lock
  */
 static int alloc_fd_from(HANDLE hand, char flag, int fd)
 {
-   
+
    if (fd >= FDINFO_ENTRIES)
    {
       DPRINT1("files exhausted!\n");
       return -1;
    }
-   
+
    if (!fdinfo_bucket(fd))
    {
       if (!alloc_init_bucket(fd)){
@@ -308,10 +308,10 @@ static int alloc_fd_from(HANDLE hand, char flag, int fd)
          return -1;
       }
    }
-   
+
    fdinfo(fd)->hFile = hand;
    fdinfo(fd)->fdflags = FOPEN | (flag & (FNOINHERIT | FAPPEND | FTEXT));
-   fdinfo(fd)->pipechar = LF;   
+   fdinfo(fd)->pipechar = LF;
    fdinfo(fd)->lockinitflag = 0;
    //fdinfo(fd)->lock
 
@@ -342,9 +342,9 @@ static int alloc_fd_from(HANDLE hand, char flag, int fd)
       {
          g_fdstart++;
       }
-#endif      
+#endif
    }
-    
+
   /* update last fd in use */
    if (fd >= g_fdend)
       g_fdend = fd + 1;
@@ -369,18 +369,18 @@ static int alloc_fd_from(HANDLE hand, char flag, int fd)
 }
 
 
-/* 
- * INTERNAL: Allocate an fd slot from a Win32 HANDLE 
+/*
+ * INTERNAL: Allocate an fd slot from a Win32 HANDLE
  */
 int alloc_fd(HANDLE hand, char flag)
 {
   int ret;
 
   LOCK_FILES();
-  
+
 //  TRACE(":handle (%p) allocating fd (%d)\n",hand,MSVCRT_fdstart);
   ret = alloc_fd_from(hand, flag, g_fdstart);
-  
+
   UNLOCK_FILES();
   return ret;
 }
@@ -406,11 +406,11 @@ char __fileno_getmode(int fd)
 void free_fd(int fd)
 {
    LOCK_FILES();
-   
-   
+
+
    fdinfo(fd)->hFile = INVALID_HANDLE_VALUE;
    fdinfo(fd)->fdflags = 0;
-   
+
    if (fd < 3) /* don't use 0,1,2 for user files */
    {
       switch (fd)
@@ -424,12 +424,12 @@ void free_fd(int fd)
    {
       if (fd == g_fdend - 1)
          g_fdend--;
-      
+
       if (fd < g_fdstart)
          g_fdstart = fd;
    }
 
-   
+
    UNLOCK_FILES();
 }
 
@@ -443,10 +443,10 @@ int _open_osfhandle(long osfhandle, int oflags)
    The _open_osfhandle() function in MSVCRT is expected to take the absence
    of either _O_TEXT or _O_BINARY to mean _O_BINARY. Currently it defaults to
    _O_TEXT.
-   
+
    An example of this is MFC's CStdioFile::Open in binary mode - it passes flags
    of 0 when it wants to write a binary file - under WINE we do text mode conversions!
-   
+
    The attached patch ensures that _O_BINARY is set if neither is set in the passed-in
 flags.
 
@@ -485,7 +485,7 @@ flags.
 long _get_osfhandle(int fd)
 {
    TRACE("_get_osfhandle(%i)",fd);
-   
+
     if (!is_valid_fd(fd)) {
         return( -1 );
     }
@@ -501,29 +501,29 @@ int __fileno_dup2(int handle1, int handle2)
 {
    HANDLE hProcess;
    BOOL result;
-   
+
    if (handle1 >= FDINFO_ENTRIES || handle1 < 0 || handle2 >= FDINFO_ENTRIES || handle2 < 0) {
       __set_errno(EBADF);
       return -1;
    }
 //   if (_pioinfo[handle1]->fd == -1) {
-   if (fdinfo(handle1)->hFile == INVALID_HANDLE_VALUE) {   
+   if (fdinfo(handle1)->hFile == INVALID_HANDLE_VALUE) {
       __set_errno(EBADF);
       return -1;
    }
    if (handle1 == handle2)
       return handle1;
 //   if (_pioinfo[handle2]->fd != -1) {
-   if (fdinfo(handle2)->hFile != INVALID_HANDLE_VALUE) {   
+   if (fdinfo(handle2)->hFile != INVALID_HANDLE_VALUE) {
       _close(handle2);
    }
    hProcess = GetCurrentProcess();
-   result = DuplicateHandle(hProcess, 
-                fdinfo(handle1)->hFile, 
-                hProcess, 
-                &fdinfo(handle2)->hFile, 
-                0, 
-                TRUE,  
+   result = DuplicateHandle(hProcess,
+                fdinfo(handle1)->hFile,
+                hProcess,
+                &fdinfo(handle2)->hFile,
+                0,
+                TRUE,
                 DUPLICATE_SAME_ACCESS);
    if (result) {
 //      _pioinfo[handle2]->fd = handle2;
@@ -539,7 +539,7 @@ int __fileno_dup2(int handle1, int handle2)
          SetStdHandle(STD_ERROR_HANDLE, fdinfo(handle2)->hFile);
          break;
       }
-      
+
       return handle1;
    } else {
       __set_errno(EMFILE);  // Is this the correct error no.?
@@ -563,7 +563,7 @@ BOOL __fileno_init(void)
   init_bucket(first_bucket);
 
   GetStartupInfoA(&si);
-  
+
    if (si.cbReserved2 != 0 && si.lpReserved2 != NULL)
    {
     char*       fdflags_ptr;
@@ -584,7 +584,7 @@ BOOL __fileno_init(void)
             return FALSE;
          }
       }
-       
+
       if ((*fdflags_ptr & FOPEN) && *handle_ptr != INVALID_HANDLE_VALUE)
       {
         fdinfo(i)->fdflags  = *fdflags_ptr;
@@ -596,13 +596,13 @@ BOOL __fileno_init(void)
         fdinfo(i)->fdflags  = 0;
         fdinfo(i)->hFile = INVALID_HANDLE_VALUE;
       }
-*/      
+*/
       fdflags_ptr++; handle_ptr++;
     }
     for (g_fdstart = 3; g_fdstart < g_fdend; g_fdstart++)
         if (fdinfo(g_fdstart)->hFile == INVALID_HANDLE_VALUE) break;
    }
-   
+
    InitializeCriticalSection(&g_file_cs);
 
 
@@ -653,7 +653,7 @@ unsigned create_io_inherit_block(STARTUPINFOA* si)
   HANDLE*     handle_ptr;
 
   TRACE("create_io_inherit_block(%x)",si);
-   
+
   si->cbReserved2 = sizeof(unsigned) + (sizeof(char) + sizeof(HANDLE)) * g_fdend;
   si->lpReserved2 = calloc(si->cbReserved2, 1);
   if (!si->lpReserved2)
@@ -679,7 +679,7 @@ unsigned create_io_inherit_block(STARTUPINFOA* si)
       *handle_ptr = INVALID_HANDLE_VALUE;
     }
     fdflags_ptr++; handle_ptr++;
-  } 
+  }
   return( TRUE );
 }
 
@@ -692,16 +692,16 @@ unsigned create_io_inherit_block(STARTUPINFOA* si)
 int _setmode(int fd, int newmode)
 {
    int prevmode;
-   
+
    TRACE("_setmode(%d, %d)", fd, newmode);
-   
+
    if (!is_valid_fd(fd))
    {
       DPRINT1("_setmode: inval fd (%d)\n",fd);
       //errno = EBADF;
       return(-1);
    }
-   
+
    if (newmode & ~(_O_TEXT|_O_BINARY))
    {
       DPRINT1("_setmode: fd (%d) mode (0x%08x) unknown\n",fd,newmode);
@@ -709,7 +709,7 @@ int _setmode(int fd, int newmode)
    }
 
    prevmode = fdinfo(fd)->fdflags & FTEXT ? _O_TEXT : _O_BINARY;
-  
+
    if ((newmode & _O_TEXT) == _O_TEXT)
    {
       fdinfo(fd)->fdflags |= FTEXT;
@@ -721,7 +721,7 @@ int _setmode(int fd, int newmode)
        */
       fdinfo(fd)->fdflags &= ~FTEXT;
    }
-   
+
    return(prevmode);
 }
 

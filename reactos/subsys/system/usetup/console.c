@@ -28,9 +28,11 @@
 
 #include "precomp.h"
 #include <ddk/ntddblue.h>
+#include <ddk/ntddkbd.h>
 
 #include "usetup.h"
 #include "console.h"
+#include "keytrans.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -194,6 +196,7 @@ ReadConsoleInput(PINPUT_RECORD Buffer)
 {
   IO_STATUS_BLOCK Iosb;
   NTSTATUS Status;
+  KEYBOARD_INPUT_DATA InputData;
 
   Buffer->EventType = KEY_EVENT;
   Status = NtReadFile(StdInput,
@@ -201,10 +204,16 @@ ReadConsoleInput(PINPUT_RECORD Buffer)
 		      NULL,
 		      NULL,
 		      &Iosb,
-		      &Buffer->Event.KeyEvent,
+                      &InputData,
+//		      &Buffer->Event.KeyEvent,
 		      sizeof(KEY_EVENT_RECORD),
 		      NULL,
 		      0);
+
+  if (NT_SUCCESS(Status))
+    {
+      Status = IntTranslateKey(&InputData, &Buffer->Event.KeyEvent);
+    }
 
   return(Status);
 }
@@ -479,7 +488,7 @@ GetConsoleMode(
 {
     CONSOLE_MODE Buffer;
     DWORD   dwBytesReturned;
-	
+
     if (DeviceIoControl (hConsoleHandle,
                          IOCTL_CONSOLE_GET_MODE,
                          NULL,
@@ -511,7 +520,7 @@ GetConsoleCursorInfo(
 	)
 {
     DWORD   dwBytesReturned;
-	
+
     if (DeviceIoControl (hConsoleOutput,
                          IOCTL_CONSOLE_GET_CURSOR_INFO,
                          NULL,

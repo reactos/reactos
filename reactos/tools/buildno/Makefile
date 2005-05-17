@@ -26,12 +26,11 @@ buildno$(EXE_POSTFIX): $(OBJECTS)
 	$(HOST_CXX) -g $(OBJECTS) -o $(TARGET)
 	@$(EXE_PREFIX)buildno$(EXE_POSTFIX)
 
-ifeq ($(HOST),mingw32-linux)
+ifeq ($(HOST_TYPE),unix)
 clean:
 	-rm -f *.o $(TARGET)
 	-rm $(PATH_TO_TOP)/include/reactos/buildno.h
-endif
-ifneq ($(HOST),mingw32-linux)
+else
 clean:
 	-del *.o $(TARGET)
 	-del ..\..\include\reactos\buildno.h

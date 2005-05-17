@@ -11,11 +11,8 @@ TARGET_TYPE = library
 TARGET_NAME = oskittcp
 
 #-DMEMTRACK
-TARGET_CFLAGS = -g -D__REACTOS__=1 -D__NTDRIVER__ -DKERNEL -Iinclude/freebsd -Iinclude/freebsd/sys/include -Iinclude/freebsd/src/sys -Iinclude/freebsd/dev/include -Iinclude/freebsd/net/include -Iinclude -I$(PATH_TO_TOP)/w32api/include -I$(PATH_TO_TOP)/include
 
 # require os code to explicitly request A/W version of structs/functions
-TARGET_CFLAGS += -D_DISABLE_TIDENTS
-
 TARGET_ASFLAGS = -I $(PATH_TO_TOP)/include
 
 TARGET_LFLAGS = -Wl,--file-alignment,0x1000 \
@@ -70,6 +67,8 @@ include $(PATH_TO_TOP)/rules.mak
 include $(TOOLS_PATH)/helper.mk
 
 include $(TOOLS_PATH)/depend.mk
+
+TARGET_CFLAGS += -D__REACTOS__=1 -D__NTDRIVER__ -DKERNEL -Iinclude/freebsd -Iinclude/freebsd/sys/include -Iinclude/freebsd/src/sys -Iinclude/freebsd/dev/include -Iinclude/freebsd/net/include -Iinclude 
 
 %/TAGS:
 	etags -o $(@D)/TAGS $(@D)/\*.c

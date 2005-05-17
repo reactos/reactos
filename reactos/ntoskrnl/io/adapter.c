@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/adapter.c
  * PURPOSE:         DMA handling
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 

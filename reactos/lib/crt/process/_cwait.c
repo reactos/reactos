@@ -2,7 +2,7 @@
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/process/cwait.c
- * PURPOSE:     Waits for a process to exit 
+ * PURPOSE:     Waits for a process to exit
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:
  *              04/03/99: Created

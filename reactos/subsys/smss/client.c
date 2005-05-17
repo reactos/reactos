@@ -166,14 +166,14 @@ SmCreateClient(PSM_PORT_MESSAGE Request, PSM_CLIENT_DATA * ClientData)
 	/*
 	 * Check if a client for the ID already exist.
 	 */
-	if (SmpLookupClient(ConnectData->Subsystem))
+	if (SmpLookupClient(ConnectData->SubSystemId))
 	{
 		DPRINT("SM: %s: attempt to register again subsystem %d.\n",
 			__FUNCTION__,
-			ConnectData->Subsystem);
+			ConnectData->SubSystemId);
 		return STATUS_UNSUCCESSFUL;
 	}
-	DPRINT("SM: %s: registering subsystem %d \n", __FUNCTION__, ConnectData->Subsystem);
+	DPRINT("SM: %s: registering subsystem ID=%d \n", __FUNCTION__, ConnectData->SubSystemId);
 	/*
 	 * Allocate the storage for client data
 	 */
@@ -188,7 +188,7 @@ SmCreateClient(PSM_PORT_MESSAGE Request, PSM_CLIENT_DATA * ClientData)
 	/*
 	 * Initialize the client data
 	 */
-	pClient->SubsystemId = ConnectData->Subsystem;
+	pClient->SubsystemId = ConnectData->SubSystemId;
 	/* SM auto-initializes; other subsystems are required to call
 	 * SM_API_COMPLETE_SESSION via SMDLL. */
 	pClient->Initialized = (IMAGE_SUBSYSTEM_NATIVE == pClient->SubsystemId);
@@ -274,6 +274,51 @@ SmDestroyClient (ULONG SubsystemId)
 	}
 	RtlLeaveCriticalSection (& SmpClientDirectory.Lock);
 	return Status;
+}
+
+/* === Utilities for SmQryInfo === */
+
+/**********************************************************************
+ * SmGetClientBasicInformation/1
+ */
+NTSTATUS FASTCALL
+SmGetClientBasicInformation (PSM_BASIC_INFORMATION i)
+{
+	INT              Index = 0;
+	PSM_CLIENT_DATA  Client = NULL;
+
+	DPRINT("SM: %s called\n", __FUNCTION__);
+
+	RtlEnterCriticalSection (& SmpClientDirectory.Lock);
+
+	i->SubSystemCount = SmpClientDirectory.Count;
+	i->Unused = 0;
+	
+	if (SmpClientDirectory.Count > 0)
+	{
+		Client = SmpClientDirectory.Client;
+		while ((NULL != Client) && (Index < SM_QRYINFO_MAX_SS_COUNT))
+		{
+			i->SubSystem[Index].Id        = Client->SubsystemId;
+			i->SubSystem[Index].Flags     = 0; /* TODO */
+			i->SubSystem[Index].ProcessId = 0; /* TODO */
+			Client = Client->Next;
+		}
+	}
+
+	RtlLeaveCriticalSection (& SmpClientDirectory.Lock);
+	return STATUS_SUCCESS;
+}
+
+/**********************************************************************
+ * SmGetSubSystemInformation/1
+ */
+NTSTATUS FASTCALL
+SmGetSubSystemInformation (PSM_SUBSYSTEM_INFORMATION i)
+{
+	DPRINT("SM: %s called\n", __FUNCTION__);
+
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */

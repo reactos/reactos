@@ -84,7 +84,7 @@ typedef struct __attribute__((packed)) _MP_CONFIGURATION_BUS
 {
 	UCHAR Type;         /* 1 */
 	UCHAR BusId;        /* Bus ID */
-	UCHAR BusType[6];   /* Bus type */
+	CHAR BusType[6];   /* Bus type */
 } __attribute__((packed)) MP_CONFIGURATION_BUS, *PMP_CONFIGURATION_BUS;
 
 #define MAX_BUS 32

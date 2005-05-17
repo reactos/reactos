@@ -75,7 +75,7 @@ BOOL STDCALL EngIntersectRect(RECTL* prcDst, RECTL* prcSrc1, RECTL* prcSrc2)
 static BOOLEAN STDCALL
 BltMask(SURFOBJ* Dest,
 	SURFOBJ* Source,
-	SURFOBJ* Mask, 
+	SURFOBJ* Mask,
 	XLATEOBJ* ColorTranslation,
 	RECTL* DestRect,
 	POINTL* SourcePoint,
@@ -93,7 +93,7 @@ BltMask(SURFOBJ* Dest,
    SURFOBJ *PatternObj = NULL;
    PBITMAPOBJ PatternBitmap;
    ULONG PatternWidth = 0, PatternHeight = 0, PatternY = 0;
-  
+
    if (Mask == NULL)
    {
       return FALSE;
@@ -126,10 +126,10 @@ BltMask(SURFOBJ* Dest,
    {
       lMask = tMask;
       c8 = SourcePoint->x & 0x07;
-      
+
       if(PatternBitmap != NULL)
          PatternY = (DestRect->top + j) % PatternHeight;
-      
+
       for (i = 0; i < dx; i++)
       {
          if (0 != (*lMask & maskbit[c8]))
@@ -165,7 +165,7 @@ BltMask(SURFOBJ* Dest,
 static BOOLEAN STDCALL
 BltPatCopy(SURFOBJ* Dest,
 	   SURFOBJ* Source,
-	   SURFOBJ* Mask, 
+	   SURFOBJ* Mask,
 	   XLATEOBJ* ColorTranslation,
 	   RECTL* DestRect,
 	   POINTL* SourcePoint,
@@ -375,7 +375,7 @@ EngBitBlt(SURFOBJ *DestObj,
   OutputRect.right = DestRect->right + Translate.x;
   OutputRect.top = DestRect->top + Translate.y;
   OutputRect.bottom = DestRect->bottom + Translate.y;
-  
+
   if(BrushOrigin)
   {
     AdjustedBrushOrigin.x = BrushOrigin->x + Translate.x;
@@ -644,7 +644,7 @@ EngStretchBlt(
 	)
 {
   // www.osr.com/ddk/graphics/gdifncs_0bs7.htm
-  
+
   POINTL             InputPoint;
   RECTL              InputRect;
   RECTL              OutputRect;
@@ -669,7 +669,7 @@ EngStretchBlt(
 
   InputPoint.x = InputRect.left + Translate.x;
   InputPoint.y = InputRect.top + Translate.y;
- 
+
   OutputRect = *prclDest;
 
   /* Check for degenerate case: if height or width of OutputRect is 0 pixels there's
@@ -690,7 +690,7 @@ EngStretchBlt(
   OutputRect.right = prclDest->right + Translate.x;
   OutputRect.top = prclDest->top + Translate.y;
   OutputRect.bottom = prclDest->bottom + Translate.y;
-  
+
   if (NULL != BrushOrigin)
     {
       AdjustedBrushOrigin.x = BrushOrigin->x + Translate.x;
@@ -707,8 +707,8 @@ EngStretchBlt(
       DPRINT("EngStretchBlt isn't capable of handling mask yet.\n");
       IntEngLeave(&EnterLeaveDest);
       IntEngLeave(&EnterLeaveSource);
-      
-      return FALSE;      
+
+      return FALSE;
     }
   else
     {
@@ -803,7 +803,7 @@ IntEngStretchBlt(BITMAPOBJ *DestObj,
 static BOOLEAN STDCALL
 AlphaBltMask(SURFOBJ* Dest,
 	SURFOBJ* Source,
-	SURFOBJ* Mask, 
+	SURFOBJ* Mask,
 	XLATEOBJ* ColorTranslation,
 	XLATEOBJ* SrcColorTranslation,
 	RECTL* DestRect,
@@ -826,7 +826,7 @@ AlphaBltMask(SURFOBJ* Dest,
       r = (int)GetRValue(BrushColor);
       g = (int)GetGValue(BrushColor);
       b = (int)GetBValue(BrushColor);
-      
+
       tMask = Mask->pvScan0 + (SourcePoint->y * Mask->lDelta) + SourcePoint->x;
       for (j = 0; j < dy; j++)
         {
@@ -845,7 +845,7 @@ AlphaBltMask(SURFOBJ* Dest,
                       Background = DIB_GetSource(Dest, DestRect->left + i, DestRect->top + j,
                                                  SrcColorTranslation);
 
-                      NewColor = 
+                      NewColor =
                           RGB((*lMask * (r - GetRValue(Background)) >> 8) + GetRValue(Background),
                               (*lMask * (g - GetGValue(Background)) >> 8) + GetGValue(Background),
                               (*lMask * (b - GetBValue(Background)) >> 8) + GetBValue(Background));
@@ -976,7 +976,7 @@ EngMaskBitBlt(SURFOBJ *DestObj,
   OutputRect.right = DestRect->right + Translate.x;
   OutputRect.top = DestRect->top + Translate.y;
   OutputRect.bottom = DestRect->bottom + Translate.y;
-  
+
   if(BrushOrigin)
   {
     AdjustedBrushOrigin.x = BrushOrigin->x + Translate.x;

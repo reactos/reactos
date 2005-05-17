@@ -107,67 +107,67 @@ int parse_dhcp_options( DHCPMESSAGE *dhcpm, DHCPOPTIONS *dhcpo )
 	  }
 	pointer = opointer;
 	break;
-      case  TOFFSET:       
+      case  TOFFSET:
       case  TIMESERVER:
-      case  NS:            
-      case  DNS:    
-      case  LOGSERVER: 
+      case  NS:
+      case  DNS:
+      case  LOGSERVER:
       case  COOKIESERVER:
-      case  LPRSERVER:     
-      case  IMPSERVER: 
+      case  LPRSERVER:
+      case  IMPSERVER:
       case  RESLOCSERVER:
       case  BOOTFILESIZE:
       case  MERITDUMPFILE:
-      case  DOMAINNAME:    
-      case  SWAPSERVER:    
+      case  DOMAINNAME:
+      case  SWAPSERVER:
       case  ROOTPATH:
       case  EXTENSIONPATH:
-      case  IPFORWARD:     
-      case  NONLOCAL:      
-      case  POLICYFILTER:  
+      case  IPFORWARD:
+      case  NONLOCAL:
+      case  POLICYFILTER:
       case  MAXIMUMDATAG:
-      case  DEFAULTTTL:    
-      case  PATHMTUATO:    
+      case  DEFAULTTTL:
+      case  PATHMTUATO:
       case  PATHMTUPTO:
-      case  IMTU:          
-      case  ALLSUBLOCAL:   
+      case  IMTU:
+      case  ALLSUBLOCAL:
       case  BROADCAST:
       case  PMASKDISCOVERY:
-      case  MASKSUPPLIER:  
+      case  MASKSUPPLIER:
       case  PROUTERDISCOVE:
       case  RSOLICIADDRESS:
-      case  STATICROUTE:   
+      case  STATICROUTE:
       case  TENCAPSULATION:
-      case  ARPCACHE:      
-      case  ETHENCAPSUL:   
+      case  ARPCACHE:
+      case  ETHENCAPSUL:
       case  TCPDEFTTL:
-      case  TCPKAI:        
-      case  TCPKAG:    
-      case  NISDOMAIN:     
-      case  NISSERVER:     
-      case  NTPSERVER:     
-      case  VENDORSP:      
-      case  NBTCPIPNS:     
-      case  NBTCPIPDDS:    
-      case  NBTCPIPNT:     
+      case  TCPKAI:
+      case  TCPKAG:
+      case  NISDOMAIN:
+      case  NISSERVER:
+      case  NTPSERVER:
+      case  VENDORSP:
+      case  NBTCPIPNS:
+      case  NBTCPIPDDS:
+      case  NBTCPIPNT:
       case  NBTCPIPSC:
       case  XWINFONTSERVER:
       case  XWINDISPLAY:
       case  OVERLOAD:
       case  SERVER:
-      case  MESSAGE:       
-      case  MAXIMUMDHCP:   
+      case  MESSAGE:
+      case  MAXIMUMDHCP:
       case  RENEWALTIME:
-      case  REBINDING:     
+      case  REBINDING:
       case  VENDORCLASS:
-      case  NISPLUSDOMAIN: 
-      case  NISPLUSSERVER: 
-      case  TFTPSERVER:    
-      case  BOOTFILE:      
-      case  MOBILEIP:      
-      case  SMTPSERVER:    
-      case  POP3SERVER:    
-      case  NNTPSERVER:    
+      case  NISPLUSDOMAIN:
+      case  NISPLUSSERVER:
+      case  TFTPSERVER:
+      case  BOOTFILE:
+      case  MOBILEIP:
+      case  SMTPSERVER:
+      case  POP3SERVER:
+      case  NNTPSERVER:
       case  HTTPSERVER:
       case  FINGERSERVER:
       case  IRCSERVER:
@@ -231,7 +231,7 @@ int process_dhcp_packet( DHCPMESSAGE *dhcpm, DHCPOPTIONS *dhcpo )
     dhcpm->options[pointer++] = ((dhcpl.mask >> 16) & 0xFF);
     dhcpm->options[pointer++] = (dhcpl.mask >> 24);
     dhcpm->options[pointer++] = SERVER;
-    dhcpm->options[pointer++] = 4;    
+    dhcpm->options[pointer++] = 4;
     dhcpm->options[pointer++] = (dhcpl.siaddr & 0xFF);
     dhcpm->options[pointer++] = ((dhcpl.siaddr >> 8) & 0xFF);
     dhcpm->options[pointer++] = ((dhcpl.siaddr >> 16) & 0xFF);
@@ -300,7 +300,7 @@ int process_dhcp_packet( DHCPMESSAGE *dhcpm, DHCPOPTIONS *dhcpo )
     dhcpm->options[pointer++] = ((dhcpl.mask >> 8) & 0xFF);
     dhcpm->options[pointer++] = (dhcpl.mask & 0xFF);
     dhcpm->options[pointer++] = SERVER;
-    dhcpm->options[pointer++] = 4;    
+    dhcpm->options[pointer++] = 4;
     dhcpm->options[pointer++] = dhcpl.siaddr >> 24;
     dhcpm->options[pointer++] = ((dhcpl.siaddr >> 16) & 0xFF);
     dhcpm->options[pointer++] = ((dhcpl.siaddr >> 8) & 0xFF);
@@ -322,7 +322,7 @@ int process_dhcp_packet( DHCPMESSAGE *dhcpm, DHCPOPTIONS *dhcpo )
     dhcpm->options[pointer++] = (dhcpl.lease >> 24);
     dhcpm->options[pointer++] = ((dhcpl.lease >> 16) & 0xFF);
     dhcpm->options[pointer++] = ((dhcpl.lease >> 8) & 0xFF);
-    dhcpm->options[pointer++] = (dhcpl.lease & 0xFF);    
+    dhcpm->options[pointer++] = (dhcpl.lease & 0xFF);
     dhcpm->options[pointer++] = PAD;
     dhcpm->options[pointer++] = PAD;
     dhcpm->options[pointer++] = PAD;
@@ -339,7 +339,7 @@ int process_dhcp_packet( DHCPMESSAGE *dhcpm, DHCPOPTIONS *dhcpo )
   display_dhcp_packet( dhcpm, dhcpo );
   write_packet( dhcpm, name );
   fprintf( stdout, "process_dhcp_packet [end]!\n");
-  return 0;    
+  return 0;
 }
 
 int write_packet( DHCPMESSAGE *dhcpm, char *name )
@@ -390,7 +390,7 @@ int write_packet( DHCPMESSAGE *dhcpm, char *name )
     perror("sendto");
     exit(1);
   }
-  
+
   printf("sent %d bytes to %s\n", numbytes,
 	 inet_ntoa(their_addr.sin_addr));
 

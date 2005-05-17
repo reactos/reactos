@@ -56,7 +56,7 @@ static BOOL GetClassInfoExCommon(
     else
     {
         Status = HEAP_strdupAtoW(&str, (LPCSTR)lpszClass, NULL);
-        
+
         if (! NT_SUCCESS(Status))
         {
             SetLastError(RtlNtStatusToDosError(Status));
@@ -278,7 +278,7 @@ GetClassNameA(
   int result;
   LPWSTR ClassNameW;
   NTSTATUS Status;
-  
+
   if(!lpClassName)
     return 0;
 
@@ -436,7 +436,7 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
    /* Yes, this is correct. We should modify the passed structure. */
    if (lpwcx->hInstance == NULL)
       ((WNDCLASSEXA*)lpwcx)->hInstance = GetModuleHandleW(NULL);
-  
+
    RtlCopyMemory(&WndClass, lpwcx, sizeof(WNDCLASSEXW));
 
    if (IS_ATOM(lpwcx->lpszMenuName) || lpwcx->lpszMenuName == 0)
@@ -728,7 +728,7 @@ UnregisterClassA(
   LPWSTR ClassName;
   NTSTATUS Status;
   BOOL Result;
-  
+
   if(!IS_ATOM(lpClassName))
   {
     Status = HEAP_strdupAtoW(&ClassName, lpClassName, NULL);
@@ -740,12 +740,12 @@ UnregisterClassA(
   }
   else
     ClassName = (LPWSTR)lpClassName;
-  
+
   Result = (BOOL)NtUserUnregisterClass((LPCWSTR)ClassName, hInstance, 0);
-  
-  if(ClassName && !IS_ATOM(lpClassName)) 
+
+  if(ClassName && !IS_ATOM(lpClassName))
     HEAP_free(ClassName);
-  
+
   return Result;
 }
 

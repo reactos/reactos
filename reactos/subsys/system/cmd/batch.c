@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  *  BATCH.C - batch file processor for CMD.EXE.
  *
  *
@@ -51,12 +50,16 @@
  *    26-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Replaced CRT io functions by Win32 io functions.
  *        Unicode safe!
- *    
+ *
  *    23-Feb-2001 (Carl Nettelblad <cnettel@hem.passagen.es>)
  *        Fixes made to get "for" working.
+ *
+ *    02-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 
 /* The stack of current batch contexts.
@@ -217,8 +220,8 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 	HANDLE hFile;
 
 	hFile = CreateFile (fullname, GENERIC_READ, FILE_SHARE_READ, NULL,
-						OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL |
-						FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+			    OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL |
+			    FILE_FLAG_SEQUENTIAL_SCAN, NULL);
 
 #ifdef _DEBUG
 	DebugPrintf (_T("Batch: (\'%s\', \'%s\', \'%s\')  hFile = %x\n"),
@@ -227,7 +230,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
-		ConErrPrintf (_T("Error opening batch file\n"));
+		ConErrResPuts(STRING_BATCH_ERROR);
 		return FALSE;
 	}
 

@@ -41,13 +41,13 @@ extern	UCHAR	UiSelectedTextBgColor;							// Selected text background color
 extern	UCHAR	UiEditBoxTextColor;								// Edit box text color
 extern	UCHAR	UiEditBoxBgColor;								// Edit box text background color
 
-extern	UCHAR	UiTitleBoxTitleText[260];						// Title box's title text
+extern	CHAR	UiTitleBoxTitleText[260];						// Title box's title text
 
 extern	BOOL	UserInterfaceUp;								// Tells us if the user interface is displayed
 
 extern	BOOL	UiUseSpecialEffects;							// Tells us if we should use fade effects
 
-extern	UCHAR	UiMonthNames[12][15];
+extern	CHAR	UiMonthNames[12][15];
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
@@ -55,28 +55,28 @@ extern	UCHAR	UiMonthNames[12][15];
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 BOOL	UiInitialize(BOOLEAN ShowGui);								// Initialize User-Interface
-VOID	UiUnInitialize(PUCHAR BootText);						// Un-initialize User-Interface
+VOID	UiUnInitialize(PCHAR BootText);						// Un-initialize User-Interface
 VOID	UiDrawBackdrop(VOID);									// Fills the entire screen with a backdrop
-VOID	UiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */);	// Fills the area specified with FillChar and Attr
+VOID	UiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */);	// Fills the area specified with FillChar and Attr
 VOID	UiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom);	// Draws a shadow on the bottom and right sides of the area specified
 VOID	UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr);	// Draws a box around the area specified
-VOID	UiDrawText(ULONG X, ULONG Y, PUCHAR Text, UCHAR Attr);	// Draws text at coordinates specified
-VOID	UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PUCHAR TextString, UCHAR Attr);	// Draws centered text at the coordinates specified and clips the edges
-VOID	UiDrawStatusText(PUCHAR StatusText);					// Draws text at the very bottom line on the screen
+VOID	UiDrawText(ULONG X, ULONG Y, PCHAR Text, UCHAR Attr);	// Draws text at coordinates specified
+VOID	UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCHAR TextString, UCHAR Attr);	// Draws centered text at the coordinates specified and clips the edges
+VOID	UiDrawStatusText(PCHAR StatusText);					// Draws text at the very bottom line on the screen
 VOID	UiUpdateDateTime(VOID);									// Updates the date and time
-VOID	UiInfoBox(PUCHAR MessageText);							// Displays a info box on the screen
-VOID	UiMessageBox(PUCHAR MessageText);						// Displays a message box on the screen with an ok button
-VOID	UiMessageBoxCritical(PUCHAR MessageText);				// Displays a message box on the screen with an ok button using no system resources
-VOID	UiDrawProgressBarCenter(ULONG Position, ULONG Range, PUCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
-VOID	UiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PUCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
-VOID	UiShowMessageBoxesInSection(PUCHAR SectionName);		// Displays all the message boxes in a given section
-VOID	UiEscapeString(PUCHAR String);							// Processes a string and changes all occurances of "\n" to '\n'
-BOOL	UiEditBox(PUCHAR MessageText, PUCHAR EditTextBuffer, ULONG Length);
+VOID	UiInfoBox(PCHAR MessageText);							// Displays a info box on the screen
+VOID	UiMessageBox(PCHAR MessageText);						// Displays a message box on the screen with an ok button
+VOID	UiMessageBoxCritical(PCHAR MessageText);				// Displays a message box on the screen with an ok button using no system resources
+VOID	UiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
+VOID	UiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
+VOID	UiShowMessageBoxesInSection(PCHAR SectionName);		// Displays all the message boxes in a given section
+VOID	UiEscapeString(PCHAR String);							// Processes a string and changes all occurances of "\n" to '\n'
+BOOL	UiEditBox(PCHAR MessageText, PCHAR EditTextBuffer, ULONG Length);
 
-UCHAR	UiTextToColor(PUCHAR ColorText);						// Converts the text color into it's equivalent color value
-UCHAR	UiTextToFillStyle(PUCHAR FillStyleText);				// Converts the text fill into it's equivalent fill value
+UCHAR	UiTextToColor(PCHAR ColorText);						// Converts the text color into it's equivalent color value
+UCHAR	UiTextToFillStyle(PCHAR FillStyleText);				// Converts the text fill into it's equivalent fill value
 
-VOID	UiTruncateStringEllipsis(PUCHAR StringText, ULONG MaxChars);	// Truncates a string to MaxChars by adding an ellipsis on the end '...'
+VOID	UiTruncateStringEllipsis(PCHAR StringText, ULONG MaxChars);	// Truncates a string to MaxChars by adding an ellipsis on the end '...'
 
 VOID	UiFadeInBackdrop(VOID);									// Draws the backdrop and fades the screen in
 VOID	UiFadeOut(VOID);										// Fades the screen out
@@ -88,7 +88,7 @@ VOID	UiFadeOut(VOID);										// Fades the screen out
 ///////////////////////////////////////////////////////////////////////////////////////
 typedef BOOL	(*UiMenuKeyPressFilterCallback)(ULONG KeyPress);
 
-BOOL	UiDisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
+BOOL	UiDisplayMenu(PCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
 
 
 

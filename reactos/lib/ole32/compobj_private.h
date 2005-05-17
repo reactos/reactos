@@ -43,12 +43,15 @@ typedef struct apartment APARTMENT;
 
 /* Thread-safety Annotation Legend:
  *
- * RO   - The value is read only. It never changes after creation, so no
- *        locking is required.
- * LOCK - The value is written to only using Interlocked* functions.
- * CS   - The value is read or written to with a critical section held.
- *        The identifier following "CS" is the specific critical section that
- *        must be used.
+ * RO    - The value is read only. It never changes after creation, so no
+ *         locking is required.
+ * LOCK  - The value is written to only using Interlocked* functions.
+ * CS    - The value is read or written to inside a critical section.
+ *         The identifier following "CS" is the specific critical setion that
+ *         must be used.
+ * MUTEX - The value is read or written to with a mutex held.
+ *         The identifier following "MUTEX" is the specific mutex that
+ *         must be used.
  */
 
 typedef enum ifstub_state
@@ -96,7 +99,7 @@ struct ifproxy
   IID iid;                 /* interface ID (RO) */
   IPID ipid;               /* imported interface ID (RO) */
   LPRPCPROXYBUFFER proxy;  /* interface proxy (RO) */
-  DWORD refs;              /* imported (public) references (CS parent->cs) */
+  DWORD refs;              /* imported (public) references (MUTEX parent->remoting_mutex) */
   IRpcChannelBuffer *chan; /* channel to object (CS parent->cs) */
 };
 
@@ -113,6 +116,7 @@ struct proxy_manager
   CRITICAL_SECTION cs;      /* thread safety for this object and children */
   ULONG sorflags;           /* STDOBJREF flags (RO) */
   IRemUnknown *remunk;      /* proxy to IRemUnknown used for lifecycle management (CS cs) */
+  HANDLE remoting_mutex;    /* mutex used for synchronizing access to IRemUnknown */
 };
 
 /* this needs to become a COM object that implements IRemUnknown */
@@ -159,7 +163,6 @@ extern void* StdGlobalInterfaceTableInstance;
 extern HRESULT WINE_StringFromCLSID(const CLSID *id,LPSTR idstr);
 HRESULT WINAPI __CLSIDFromStringA(LPCSTR idstr, CLSID *id);
 
-HRESULT MARSHAL_Disconnect_Proxies(APARTMENT *apt);
 HRESULT MARSHAL_GetStandardMarshalCF(LPVOID *ppv);
 
 /* Stub Manager */
@@ -172,20 +175,22 @@ ULONG stub_manager_ext_release(struct stub_manager *m, ULONG refs);
 struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *sb, IUnknown *iptr, REFIID iid);
 struct stub_manager *get_stub_manager(APARTMENT *apt, OID oid);
 struct stub_manager *get_stub_manager_from_object(APARTMENT *apt, void *object);
-void apartment_disconnect_object(APARTMENT *apt, void *object);
 BOOL stub_manager_notify_unmarshal(struct stub_manager *m);
 BOOL stub_manager_is_table_marshaled(struct stub_manager *m);
 void stub_manager_release_marshal_data(struct stub_manager *m, ULONG refs);
-HRESULT register_ifstub(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnknown *obj, MSHLFLAGS mshlflags);
 HRESULT ipid_to_stub_manager(const IPID *ipid, APARTMENT **stub_apt, struct stub_manager **stubmgr_ret);
 IRpcStubBuffer *ipid_to_apt_and_stubbuffer(const IPID *ipid, APARTMENT **stub_apt);
 HRESULT start_apartment_remote_unknown(void);
 
+HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnknown *obj, MSHLFLAGS mshlflags);
+
 /* RPC Backend */
+
+struct dispatch_params;
 
 void    RPC_StartRemoting(struct apartment *apt);
 HRESULT RPC_CreateClientChannel(const OXID *oxid, const IPID *ipid, IRpcChannelBuffer **pipebuf);
-HRESULT RPC_ExecuteCall(RPCOLEMESSAGE *msg, IRpcStubBuffer *stub);
+HRESULT RPC_ExecuteCall(struct dispatch_params *params);
 HRESULT RPC_RegisterInterface(REFIID riid);
 void    RPC_UnregisterInterface(REFIID riid);
 void    RPC_StartLocalServer(REFCLSID clsid, IStream *stream);
@@ -203,13 +208,21 @@ int WINAPI FileMonikerImpl_DecomposePath(LPCOLESTR str, LPOLESTR** stringTable);
 
 /* Apartment Functions */
 
-APARTMENT *COM_ApartmentFromOXID(OXID oxid, BOOL ref);
-APARTMENT *COM_ApartmentFromTID(DWORD tid);
-DWORD COM_ApartmentAddRef(struct apartment *apt);
-DWORD COM_ApartmentRelease(struct apartment *apt);
+APARTMENT *apartment_findfromoxid(OXID oxid, BOOL ref);
+APARTMENT *apartment_findfromtid(DWORD tid);
+DWORD apartment_addref(struct apartment *apt);
+DWORD apartment_release(struct apartment *apt);
+HRESULT apartment_disconnectproxies(struct apartment *apt);
+void apartment_disconnectobject(struct apartment *apt, void *object);
+static inline HRESULT apartment_getoxid(struct apartment *apt, OXID *oxid)
+{
+    *oxid = apt->oxid;
+    return S_OK;
+}
 
-/* messages used by the apartment window (not compatible with native) */
-#define DM_EXECUTERPC   (WM_USER + 0) /* WPARAM = (RPCOLEMESSAGE *), LPARAM = (IRpcStubBuffer *) */
+
+/* DCOM messages used by the apartment window (not compatible with native) */
+#define DM_EXECUTERPC   (WM_USER + 0) /* WPARAM = 0, LPARAM = (struct dispatch_params *) */
 
 /*
  * Per-thread values are stored in the TEB on offset 0xF80,
@@ -231,5 +244,14 @@ static inline APARTMENT* COM_CurrentApt(void)
 }
 
 #define ICOM_THIS_MULTI(impl,field,iface) impl* const This=(impl*)((char*)(iface) - offsetof(impl,field))
+
+/* helpers for debugging */
+#ifdef __i386__
+# define DEBUG_SET_CRITSEC_NAME(cs, name) (cs)->DebugInfo->Spare[1] = (DWORD)(__FILE__ ": " name)
+# define DEBUG_CLEAR_CRITSEC_NAME(cs) (cs)->DebugInfo->Spare[1] = 0
+#else
+# define DEBUG_SET_CRITSEC_NAME(cs, name)
+# define DEBUG_CLEAR_CRITSEC_NAME(cs)
+#endif
 
 #endif /* __WINE_OLE_COMPOBJ_H */

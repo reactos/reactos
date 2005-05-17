@@ -20,7 +20,7 @@ int _fltused;
 /*
  * @unimplemented
  */
-int 
+int
 STDCALL
 _except_handler3(void)
 {
@@ -83,7 +83,7 @@ int STDCALL _DllMainCRTStartup(HANDLE hInst, ULONG ul_reason_for_call, LPVOID lp
     //result = DllMain(hInst, ul_reason_for_call, lpReserved);
 
     result = DllMain(hInst, DLL_PROCESS_ATTACH, lpReserved);
-    
+
 
     return (result ? 1 : 0);
 }

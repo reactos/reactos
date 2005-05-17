@@ -367,7 +367,7 @@ Elf64FmtCreateSection
  PMM_SECTION_SEGMENT pssSegments;
  Elf_Addr nImageBase = 0;
  Elf_Addr nEntryPoint;
- ULONG32 nPrevVirtualEndOfSegment;
+ ULONG32 nPrevVirtualEndOfSegment = 0;
  ULONG i;
  ULONG j;
 

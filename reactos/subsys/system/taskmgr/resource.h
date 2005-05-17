@@ -2,6 +2,7 @@
 // Microsoft Developer Studio generated include file.
 // Used by TaskMgr.rc
 //
+#define IDS_IDLE_PROCESS                102
 #define IDD_TASKMGR_DIALOG              102
 #define IDD_ABOUTBOX                    103
 #define IDS_APP_TITLE                   103
@@ -236,10 +237,15 @@
 #define IDS_MSG_UNABLECHANGEPRIORITY    360
 #define IDS_MSG_WARNINGCHANGEPRIORITY   361
 #define IDS_MSG_TRAYICONCPUUSAGE        362
+#define IDS_STATUS_MEMUSAGE             363
+#define IDS_STATUS_CPUUSAGE             364
+#define IDS_STATUS_PROCESSES            365
+#define IDS_Not_Responding              366
+#define IDS_Running                     367
 
 
 // Next default values for new objects
-// 
+//
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        157

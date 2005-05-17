@@ -15,16 +15,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#define IsRecognizedPartition(P)  \
-    ((P) == PARTITION_FAT_12       || \
-     (P) == PARTITION_FAT_16       || \
-     (P) == PARTITION_HUGE         || \
-     (P) == PARTITION_IFS          || \
-     (P) == PARTITION_EXT2         || \
-     (P) == PARTITION_FAT32        || \
-     (P) == PARTITION_FAT32_XINT13 || \
-     (P) == PARTITION_XINT13)
-
 BOOL
 STDCALL
 FrLdrLoadKernel(PCHAR szFileName,
@@ -37,22 +27,22 @@ FrLdrLoadKernel(PCHAR szFileName,
     /* Extract Kernel filename without path */
     szShortName = strrchr(szFileName, '\\');
     if (szShortName == NULL) {
-        
+
         /* No path, leave it alone */
         szShortName = szFileName;
-        
+
     } else {
-        
+
         /* Skip the path */
         szShortName = szShortName + 1;
     }
 
     /* Open the Kernel */
     FilePointer = FsOpenFile(szFileName);
-    
+
     /* Make sure it worked */
     if (FilePointer == NULL) {
-        
+
         /* Return failure on the short name */
         strcpy(szBuffer, szShortName);
         strcat(szBuffer, " not found.");
@@ -89,7 +79,7 @@ static BOOLEAN
 FreeldrReadFile(PVOID FileContext, PVOID Buffer, ULONG Size)
 {
   ULONG BytesRead;
-  
+
   return FsReadFile((PFILE) FileContext, (ULONG) Size, &BytesRead, Buffer)
          && Size == BytesRead;
 }
@@ -134,9 +124,9 @@ LoadKernelSymbols(PCHAR szKernelName, int nPos)
   RosSymDelete(RosSymInfo);
   return TRUE;
 }
-  
+
 BOOL
-FrLdrLoadNlsFile(PCHAR szFileName, 
+FrLdrLoadNlsFile(PCHAR szFileName,
                  PCHAR szModuleName)
 {
     PFILE FilePointer;
@@ -145,10 +135,10 @@ FrLdrLoadNlsFile(PCHAR szFileName,
 
     /* Open the Driver */
     FilePointer = FsOpenFile(szFileName);
-    
+
     /* Make sure we did */
     if (FilePointer == NULL) {
-        
+
         /* Fail if file wasn't opened */
         strcpy(value, szFileName);
         strcat(value, " not found.");
@@ -160,11 +150,11 @@ FrLdrLoadNlsFile(PCHAR szFileName,
     strcpy(value, "Reading ");
     p = strrchr(szFileName, '\\');
     if (p == NULL) {
-        
+
         strcat(value, szFileName);
-        
+
     } else {
-        
+
         strcat(value, p + 1);
     }
     UiDrawStatusText(value);
@@ -175,7 +165,7 @@ FrLdrLoadNlsFile(PCHAR szFileName,
 }
 
 BOOL
-FrLdrLoadNlsFiles(PCHAR szSystemRoot, 
+FrLdrLoadNlsFiles(PCHAR szSystemRoot,
                   PCHAR szErrorOut)
 {
     LONG rc = ERROR_SUCCESS;
@@ -190,16 +180,16 @@ FrLdrLoadNlsFiles(PCHAR szSystemRoot,
                     "\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage",
                     &hKey);
     if (rc != ERROR_SUCCESS) {
-        
+
         strcpy(szErrorOut, "Couldn't open CodePage registry key");
         return(FALSE);
     }
-    
+
     /* get ANSI codepage */
     BufferSize = 80;
     rc = RegQueryValue(hKey, "ACP", NULL, (PUCHAR)szIdBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS) {
-        
+
         strcpy(szErrorOut, "Couldn't get ACP NLS setting");
         return(FALSE);
     }
@@ -207,7 +197,7 @@ FrLdrLoadNlsFiles(PCHAR szSystemRoot,
     BufferSize = 80;
     rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)szNameBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS) {
-        
+
         strcpy(szErrorOut, "ACP NLS Setting exists, but isn't readable");
         return(FALSE);
     }
@@ -218,7 +208,7 @@ FrLdrLoadNlsFiles(PCHAR szSystemRoot,
     strcat(szFileName, szNameBuffer);
     DbgPrint((DPRINT_REACTOS, "ANSI file: %s\n", szFileName));
     if (!FrLdrLoadNlsFile(szFileName, "ansi.nls")) {
-        
+
         strcpy(szErrorOut, "Couldn't load ansi.nls");
         return(FALSE);
     }
@@ -227,7 +217,7 @@ FrLdrLoadNlsFiles(PCHAR szSystemRoot,
     BufferSize = 80;
     rc = RegQueryValue(hKey, "OEMCP", NULL, (PUCHAR)szIdBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS) {
-        
+
         strcpy(szErrorOut, "Couldn't get OEMCP NLS setting");
         return(FALSE);
     }
@@ -235,7 +225,7 @@ FrLdrLoadNlsFiles(PCHAR szSystemRoot,
     BufferSize = 80;
     rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)szNameBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS) {
-        
+
         strcpy(szErrorOut, "OEMCP NLS setting exists, but isn't readable");
         return(FALSE);
     }
@@ -246,7 +236,7 @@ FrLdrLoadNlsFiles(PCHAR szSystemRoot,
     strcat(szFileName, szNameBuffer);
     DbgPrint((DPRINT_REACTOS, "Oem file: %s\n", szFileName));
     if (!FrLdrLoadNlsFile(szFileName, "oem.nls")) {
-        
+
         strcpy(szErrorOut, "Couldn't load oem.nls");
         return(FALSE);
     }
@@ -256,7 +246,7 @@ FrLdrLoadNlsFiles(PCHAR szSystemRoot,
                     "\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language",
                     &hKey);
     if (rc != ERROR_SUCCESS) {
-        
+
         strcpy(szErrorOut, "Couldn't open Language registry key");
         return(FALSE);
     }
@@ -265,7 +255,7 @@ FrLdrLoadNlsFiles(PCHAR szSystemRoot,
     BufferSize = 80;
     rc = RegQueryValue(hKey, "Default", NULL, (PUCHAR)szIdBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS) {
-        
+
         strcpy(szErrorOut, "Couldn't get Language Default setting");
         return(FALSE);
     }
@@ -273,7 +263,7 @@ FrLdrLoadNlsFiles(PCHAR szSystemRoot,
     BufferSize = 80;
     rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)szNameBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS) {
-        
+
         strcpy(szErrorOut, "Language Default setting exists, but isn't readable");
         return(FALSE);
     }
@@ -284,7 +274,7 @@ FrLdrLoadNlsFiles(PCHAR szSystemRoot,
     strcat(szFileName, szNameBuffer);
     DbgPrint((DPRINT_REACTOS, "Casemap file: %s\n", szFileName));
     if (!FrLdrLoadNlsFile(szFileName, "casemap.nls")) {
-        
+
         strcpy(szErrorOut, "casemap.nls");
         return(FALSE);
     }
@@ -293,7 +283,7 @@ FrLdrLoadNlsFiles(PCHAR szSystemRoot,
 }
 
 BOOL
-FrLdrLoadDriver(PCHAR szFileName, 
+FrLdrLoadDriver(PCHAR szFileName,
                 INT nPos)
 {
     PFILE FilePointer;
@@ -302,10 +292,10 @@ FrLdrLoadDriver(PCHAR szFileName,
 
     /* Open the Driver */
     FilePointer = FsOpenFile(szFileName);
-    
+
     /* Make sure we did */
     if (FilePointer == NULL) {
-        
+
         /* Fail if file wasn't opened */
         strcpy(value, szFileName);
         strcat(value, " not found.");
@@ -317,13 +307,13 @@ FrLdrLoadDriver(PCHAR szFileName,
     strcpy(value, "Reading ");
     p = strrchr(szFileName, '\\');
     if (p == NULL) {
-      
+
         strcat(value, szFileName);
-  
+
     } else {
-        
+
         strcat(value, p + 1);
-        
+
     }
     UiDrawStatusText(value);
 
@@ -336,7 +326,7 @@ FrLdrLoadDriver(PCHAR szFileName,
 }
 
 VOID
-FrLdrLoadBootDrivers(PCHAR szSystemRoot, 
+FrLdrLoadBootDrivers(PCHAR szSystemRoot,
                      INT nPos)
 {
     LONG rc = 0;
@@ -353,28 +343,28 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
     ULONG ValueType;
     ULONG StartValue;
     ULONG TagValue;
-    UCHAR DriverGroup[256];
+    CHAR DriverGroup[256];
     ULONG DriverGroupSize;
 
-    UCHAR ImagePath[256];
-    UCHAR TempImagePath[256];
+    CHAR ImagePath[256];
+    CHAR TempImagePath[256];
 
     /* get 'service group order' key */
     rc = RegOpenKey(NULL,
                     "\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\ServiceGroupOrder",
                     &hGroupKey);
     if (rc != ERROR_SUCCESS) {
-        
+
         DbgPrint((DPRINT_REACTOS, "Failed to open the 'ServiceGroupOrder' key (rc %d)\n", (int)rc));
         return;
     }
-  
+
     /* get 'group order list' key */
     rc = RegOpenKey(NULL,
                     "\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\GroupOrderList",
                     &hOrderKey);
     if (rc != ERROR_SUCCESS) {
-        
+
         DbgPrint((DPRINT_REACTOS, "Failed to open the 'GroupOrderList' key (rc %d)\n", (int)rc));
         return;
     }
@@ -384,7 +374,7 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
                     "\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services",
                     &hServiceKey);
     if (rc != ERROR_SUCCESS)  {
-        
+
         DbgPrint((DPRINT_REACTOS, "Failed to open the 'Services' key (rc %d)\n", (int)rc));
         return;
     }
@@ -406,19 +396,19 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
         BufferSize = sizeof(OrderList);
         rc = RegQueryValue(hOrderKey, GroupName, NULL, (PUCHAR)OrderList, &BufferSize);
         if (rc != ERROR_SUCCESS) OrderList[0] = 0;
-      
+
         /* enumerate all drivers */
         for (TagIndex = 1; TagIndex <= OrderList[0]; TagIndex++) {
-    
+
             Index = 0;
-        
+
             while (TRUE) {
-            
+
                 /* Get the Driver's Name */
                 ValueSize = sizeof(ServiceName);
                 rc = RegEnumKey(hServiceKey, Index, ServiceName, &ValueSize);
                 DbgPrint((DPRINT_REACTOS, "RegEnumKey(): rc %d\n", (int)rc));
-            
+
                 /* Makre sure it's valid, and check if we're done */
                 if (rc == ERROR_NO_MORE_ITEMS) break;
                 if (rc != ERROR_SUCCESS) return;
@@ -444,14 +434,14 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
                 DbgPrint((DPRINT_REACTOS, "  Group: '%s'  \n", DriverGroup));
 
                 /* Make sure it should be started */
-                if ((StartValue == 0) && 
-                    (TagValue == OrderList[TagIndex]) && 
+                if ((StartValue == 0) &&
+                    (TagValue == OrderList[TagIndex]) &&
                     (stricmp(DriverGroup, GroupName) == 0)) {
 
                     /* Get the Driver's Location */
                     ValueSize = 256;
                     rc = RegQueryValue(hDriverKey, "ImagePath", NULL, (PUCHAR)TempImagePath, &ValueSize);
-                    
+
                     /* Write the whole path if it suceeded, else prepare to fail */
                     if (rc != ERROR_SUCCESS) {
                         DbgPrint((DPRINT_REACTOS, "  ImagePath: not found\n"));
@@ -466,31 +456,31 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
                         strcpy(ImagePath, TempImagePath);
                         DbgPrint((DPRINT_REACTOS, "  ImagePath: '%s'\n", ImagePath));
                     }
-                    
+
                     DbgPrint((DPRINT_REACTOS, "  Loading driver: '%s'\n", ImagePath));
-    
+
                     /* Update the position if needed */
                     if (nPos < 100) nPos += 5;
-                    
+
                     FrLdrLoadDriver(ImagePath, nPos);
-                    
+
                 } else {
-                        
+
                     DbgPrint((DPRINT_REACTOS, "  Skipping driver '%s' with Start %d, Tag %d and Group '%s' (Current Tag %d, current group '%s')\n",
                     ServiceName, StartValue, TagValue, DriverGroup, OrderList[TagIndex], GroupName));
                 }
-            
+
                 Index++;
             }
-        }  
+        }
 
         Index = 0;
         while (TRUE) {
-        
+
             /* Get the Driver's Name */
             ValueSize = sizeof(ServiceName);
             rc = RegEnumKey(hServiceKey, Index, ServiceName, &ValueSize);
-        
+
             DbgPrint((DPRINT_REACTOS, "RegEnumKey(): rc %d\n", (int)rc));
             if (rc == ERROR_NO_MORE_ITEMS) break;
             if (rc != ERROR_SUCCESS) return;
@@ -518,11 +508,11 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
             for (TagIndex = 1; TagIndex <= OrderList[0]; TagIndex++) {
                 if (TagValue == OrderList[TagIndex]) break;
             }
-    
-            if ((StartValue == 0) && 
-                (TagIndex > OrderList[0]) && 
+
+            if ((StartValue == 0) &&
+                (TagIndex > OrderList[0]) &&
                 (stricmp(DriverGroup, GroupName) == 0)) {
-                
+
                     ValueSize = 256;
                     rc = RegQueryValue(hDriverKey, "ImagePath", NULL, (PUCHAR)TempImagePath, &ValueSize);
                     if (rc != ERROR_SUCCESS) {
@@ -539,17 +529,17 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
                         DbgPrint((DPRINT_REACTOS, "  ImagePath: '%s'\n", ImagePath));
                     }
                 DbgPrint((DPRINT_REACTOS, "  Loading driver: '%s'\n", ImagePath));
-    
+
                 if (nPos < 100) nPos += 5;
-    
-                FrLdrLoadDriver(ImagePath, nPos);                
-                
+
+                FrLdrLoadDriver(ImagePath, nPos);
+
             } else {
-                
+
                 DbgPrint((DPRINT_REACTOS, "  Skipping driver '%s' with Start %d, Tag %d and Group '%s' (Current group '%s')\n",
                 ServiceName, StartValue, TagValue, DriverGroup, GroupName));
             }
-        
+
             Index++;
         }
 
@@ -559,11 +549,12 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
 }
 
 VOID
-LoadAndBootReactOS(PUCHAR OperatingSystemName)
+LoadAndBootReactOS(PCHAR OperatingSystemName)
 {
 	PFILE FilePointer;
 	CHAR  name[1024];
 	CHAR  value[1024];
+	CHAR  SystemPath[1024];
 	CHAR  szKernelName[1024];
 	CHAR  szHalName[1024];
 	CHAR  szFileName[1024];
@@ -575,9 +566,6 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	ULONG_PTR Base;
 	ULONG Size;
 
-	PARTITION_TABLE_ENTRY PartitionTableEntry;
-	ULONG rosPartition;
- 
 	extern ULONG PageDirectoryStart;
 	extern ULONG PageDirectoryEnd;
 	extern BOOLEAN AcpiPresent;
@@ -628,8 +616,8 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 			{
 				LoaderBlock.MemHigher = (multiboot_memory_map[i].base_addr_low + multiboot_memory_map[i].length_low) / 1024 - 1024;
 			}
-			DbgPrint((DPRINT_REACTOS, "start: %x\t size: %x\t type %d\n", 
-			          multiboot_memory_map[i].base_addr_low, 
+			DbgPrint((DPRINT_REACTOS, "start: %x\t size: %x\t type %d\n",
+			          multiboot_memory_map[i].base_addr_low,
 				  multiboot_memory_map[i].length_low,
 				  multiboot_memory_map[i].type));
 		}
@@ -645,7 +633,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	/*
 	 * Make sure the system path is set in the .ini file
 	 */
-	if (!IniReadSettingByName(SectionId, "SystemPath", value, 1024))
+	if (!IniReadSettingByName(SectionId, "SystemPath", SystemPath, sizeof(SystemPath)))
 	{
 		UiMessageBox("System path not specified for selected operating system.");
 		return;
@@ -654,61 +642,19 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	/*
 	 * Special case for Live CD.
 	 */
-	if (!stricmp(value, "LiveCD"))
+	if (!stricmp(SystemPath, "LiveCD"))
 	{
-		strcpy(szBootPath, "\\reactos");
-
-		/* Set kernel command line */
-		sprintf(multiboot_kernel_cmdline,
-		        "multi(0)disk(0)cdrom(%u)\\reactos /MININT",
-		        (unsigned int)BootDrive);
+		/* Normalize */
+		MachDiskGetBootPath(SystemPath, sizeof(SystemPath));
+		strcat(SystemPath, "\\reactos");
+		strcat(strcpy(multiboot_kernel_cmdline, SystemPath),
+		       " /MININT");
 	}
 	else
 	{
-		/*
-		 * Verify system path
-		 */
-		if (!DissectArcPath(value, szBootPath, &BootDrive, &BootPartition))
-		{
-			sprintf(MsgBuffer,"Invalid system path: '%s'", value);
-			UiMessageBox(MsgBuffer);
-			return;
-		}
-
-		/* recalculate the boot partition for freeldr */
-		i = 0;
-		rosPartition = 0;
-		while (1)
-		{
-		   if (!MachDiskGetPartitionEntry(BootDrive, ++i, &PartitionTableEntry))
-		   {
-		      BootPartition = 0;
-		      break;
-		   }
-		   if (IsRecognizedPartition(PartitionTableEntry.SystemIndicator))
-		   {
-		      if (++rosPartition == BootPartition)
-		      {
-		         BootPartition = i;
-			 break;
-		      }
-		   }
-		}
-
-		if (BootPartition == 0)
-		{
-			sprintf(MsgBuffer,"Invalid system path: '%s'", value);
-			UiMessageBox(MsgBuffer);
-			return;
-		}
-
-		/* copy ARC path into kernel command line */
-		strcpy(multiboot_kernel_cmdline, value);
+		/* copy system path into kernel command line */
+		strcpy(multiboot_kernel_cmdline, SystemPath);
 	}
-
-	/* Set boot drive and partition */
-	((LPSTR )(&LoaderBlock.BootDevice))[0] = (CHAR)BootDrive;
-	((LPSTR )(&LoaderBlock.BootDevice))[1] = (CHAR)BootPartition;
 
 	/*
 	 * Read the optional kernel parameters (if any)
@@ -718,13 +664,6 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 		strcat(multiboot_kernel_cmdline, " ");
 		strcat(multiboot_kernel_cmdline, value);
 	}
-
-	/* append a backslash */
-	if ((strlen(szBootPath)==0) ||
-	    szBootPath[strlen(szBootPath)] != '\\')
-		strcat(szBootPath, "\\");
-
-	DbgPrint((DPRINT_REACTOS,"SystemRoot: '%s'\n", szBootPath));
 
 
 	UiDrawBackdrop();
@@ -741,13 +680,20 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	UiDrawProgressBarCenter(0, 100, "Loading ReactOS...");
 
 	/*
-	 * Try to open boot drive
+	 * Try to open system drive
 	 */
-	if (!FsOpenVolume(BootDrive, BootPartition))
+	if (!FsOpenSystemVolume(SystemPath, szBootPath, &LoaderBlock.BootDevice))
 	{
 		UiMessageBox("Failed to open boot drive.");
 		return;
 	}
+
+	/* append a backslash */
+	if ((strlen(szBootPath)==0) ||
+	    szBootPath[strlen(szBootPath)] != '\\')
+		strcat(szBootPath, "\\");
+
+	DbgPrint((DPRINT_REACTOS,"SystemRoot: '%s'\n", szBootPath));
 
 	/*
 	 * Find the kernel image name
@@ -778,7 +724,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	}
 
     if (!FrLdrLoadKernel(szKernelName, 5)) return;
-    
+
 	/*
 	 * Find the HAL image name
 	 * and try to load the kernel off the disk

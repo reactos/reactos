@@ -192,8 +192,8 @@ RawFsWriteDisk(IN PDEVICE_OBJECT pDeviceObject,
     pDeviceObject,
     Buffer,
     WriteLength,
-    WriteOffset, 
-    &Event, 
+    WriteOffset,
+    &Event,
     &IoStatus);
   if (!Irp)
     {
@@ -227,7 +227,7 @@ RawFsBlockDeviceIoControl(IN PDEVICE_OBJECT DeviceObject,
   IN ULONG CtlCode,
   IN PVOID InputBuffer,
   IN ULONG InputBufferSize,
-  IN OUT PVOID OutputBuffer, 
+  IN OUT PVOID OutputBuffer,
   IN OUT PULONG pOutputBufferSize)
 {
 	ULONG OutputBufferSize = 0;
@@ -237,9 +237,9 @@ RawFsBlockDeviceIoControl(IN PDEVICE_OBJECT DeviceObject,
 	NTSTATUS Status;
 
 	DPRINT("RawFsBlockDeviceIoControl(DeviceObject %x, CtlCode %x, "
-    "InputBuffer %x, InputBufferSize %x, OutputBuffer %x, " 
-    "POutputBufferSize %x (%x)\n", DeviceObject, CtlCode, 
-    InputBuffer, InputBufferSize, OutputBuffer, pOutputBufferSize, 
+    "InputBuffer %x, InputBufferSize %x, OutputBuffer %x, "
+    "POutputBufferSize %x (%x)\n", DeviceObject, CtlCode,
+    InputBuffer, InputBufferSize, OutputBuffer, pOutputBufferSize,
     pOutputBufferSize ? *pOutputBufferSize : 0);
 
 	if (pOutputBufferSize)
@@ -250,14 +250,14 @@ RawFsBlockDeviceIoControl(IN PDEVICE_OBJECT DeviceObject,
 	KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
 	DPRINT("Building device I/O control request ...\n");
-	Irp = IoBuildDeviceIoControlRequest(CtlCode, 
-    DeviceObject, 
-    InputBuffer, 
-    InputBufferSize, 
+	Irp = IoBuildDeviceIoControlRequest(CtlCode,
+    DeviceObject,
+    InputBuffer,
+    InputBufferSize,
     OutputBuffer,
-    OutputBufferSize, 
-    FALSE, 
-    &Event, 
+    OutputBufferSize,
+    FALSE,
+    &Event,
     &IoStatus);
 	if (Irp == NULL)
   	{
@@ -293,14 +293,14 @@ RawFsNewFCB(IN PRAWFS_GLOBAL_DATA pGlobalData)
   memset(Fcb, 0, sizeof(RAWFS_FCB));
   ExInitializeResourceLite(&Fcb->PagingIoResource);
   ExInitializeResourceLite(&Fcb->MainResource);
-//  FsRtlInitializeFileLock(&Fcb->FileLock, NULL, NULL); 
+//  FsRtlInitializeFileLock(&Fcb->FileLock, NULL, NULL);
   return Fcb;
 }
 
 static VOID
 RawFsDestroyFCB(IN PRAWFS_GLOBAL_DATA pGlobalData, IN PRAWFS_FCB pFcb)
 {
-  //FsRtlUninitializeFileLock(&pFcb->FileLock); 
+  //FsRtlUninitializeFileLock(&pFcb->FileLock);
   ExDeleteResourceLite(&pFcb->PagingIoResource);
   ExDeleteResourceLite(&pFcb->MainResource);
   ExFreeToNPagedLookasideList(&pGlobalData->FcbLookasideList, pFcb);
@@ -432,7 +432,7 @@ RawFsCreateFile(IN PRAWFS_IRP_CONTEXT IrpContext)
   FileObject = IoSp->FileObject;
   DeviceExt = IrpContext->DeviceObject->DeviceExtension;
 
-  if (FileObject->FileName.Length == 0 && 
+  if (FileObject->FileName.Length == 0 &&
       FileObject->RelatedFileObject == NULL)
     {
       /* This a open operation for the volume itself */
@@ -474,7 +474,7 @@ RawFsCreate(IN PRAWFS_IRP_CONTEXT IrpContext)
   DPRINT("RawFsCreate(IrpContext %x)\n", IrpContext);
 
   ASSERT(IrpContext);
-  
+
   if (RawFsIsRawFileSystemDeviceObject(IrpContext->DeviceObject))
     {
       /* DeviceObject represents FileSystem instead of logical volume */
@@ -496,7 +496,7 @@ RawFsCreate(IN PRAWFS_IRP_CONTEXT IrpContext)
   Status = RawFsCreateFile(IrpContext);
 
   IrpContext->Irp->IoStatus.Status = Status;
-  IoCompleteRequest(IrpContext->Irp, 
+  IoCompleteRequest(IrpContext->Irp,
     (CCHAR)(NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT));
   RawFsFreeIrpContext(IrpContext);
 
@@ -561,7 +561,7 @@ RawFsMount(IN PRAWFS_IRP_CONTEXT IrpContext)
   DeviceObject->Flags |= DO_DIRECT_IO;
   DeviceExt = (PVOID) DeviceObject->DeviceExtension;
   RtlZeroMemory(DeviceExt, sizeof(RAWFS_DEVICE_EXTENSION));
-  
+
   /* Use same vpb as device disk */
   DeviceObject->Vpb = IrpContext->Stack->Parameters.MountVolume.DeviceObject->Vpb;
   DeviceExt->StorageDevice = IrpContext->Stack->Parameters.MountVolume.DeviceObject;
@@ -570,7 +570,7 @@ RawFsMount(IN PRAWFS_IRP_CONTEXT IrpContext)
   DeviceExt->StorageDevice->Vpb->Flags |= VPB_MOUNTED;
   DeviceObject->StackSize = DeviceExt->StorageDevice->StackSize + 1;
   DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
-  
+
   KeInitializeSpinLock(&DeviceExt->FcbListLock);
   InitializeListHead(&DeviceExt->FcbListHead);
 
@@ -672,7 +672,7 @@ RawFsFileSystemControl(IN PRAWFS_IRP_CONTEXT IrpContext)
   NTSTATUS Status;
 
   DPRINT("RawFsFileSystemControl(IrpContext %x)\n", IrpContext);
-  
+
   ASSERT(IrpContext);
 
   switch (IrpContext->MinorFunction)

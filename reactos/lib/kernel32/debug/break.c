@@ -19,7 +19,7 @@
 BOOL WINAPI DebugBreakProcess(HANDLE Process)
 {
  NTSTATUS nErrCode = DbgUiIssueRemoteBreakin(Process);
- 
+
  if(!NT_SUCCESS(nErrCode))
  {
   SetLastErrorByStatus(nErrCode);

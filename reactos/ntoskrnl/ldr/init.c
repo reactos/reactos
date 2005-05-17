@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ldr/init.c
  * PURPOSE:         Loaders for PE executables
- * 
+ *
  * PROGRAMMERS:     Jean Michault
  *                  Rex Jolliff (rex@lvcablemodem.com)
  */
@@ -18,7 +18,7 @@
 #include <internal/debug.h>
 
 
-/* 
+/*
  * HACK! No matter what i did, i couldnt get it working when i put these into ntos\rtl.h
  * (got redefinition problems, since ntdll\rtl.h somehow include ntos\rtl.h).
  * We need to merge ntos\rtl.h and ntdll\rtl.h to get this working. -Gunnar
@@ -103,7 +103,7 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
       return Status;
    }
 
-   
+
    Status = RtlCreateProcessParameters(
       &Params,
       &ImagePath,
@@ -116,14 +116,14 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
       NULL,
       NULL
       );
-   
+
   if(!NT_SUCCESS(Status))
   {
     DPRINT1("Failed to create ppb!\n");
     ZwClose(SystemProcessHandle);
     return Status;
   }
-   
+
 
    DPRINT("Creating process\n");
 
@@ -142,7 +142,7 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
 
    ZwClose(SystemProcessHandle);
    RtlDestroyProcessParameters(Params);
-  
+
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("NtCreateProcess() failed (Status %lx)\n", Status);

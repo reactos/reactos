@@ -54,7 +54,7 @@ typedef struct
   COLORREF m_crBackColor;                 /* background color */
   COLORREF m_crGridColor;                 /* grid color */
   COLORREF m_crPlotColor[MAX_PLOTS];      /* data color   */
-  
+
   double m_dCurrentPosition[MAX_PLOTS];   /* current position */
   double m_dPreviousPosition[MAX_PLOTS];  /* previous position */
 
@@ -86,22 +86,22 @@ typedef struct
 } TGraphCtrl;
 
 extern LONG OldGraphCtrlWndProc;
-double  GraphCtrl_AppendPoint(TGraphCtrl* this, 
+double  GraphCtrl_AppendPoint(TGraphCtrl* this,
                               double dNewPoint0, double dNewPoint1,
                               double dNewPoint2, double dNewPoint3);
-BOOL    GraphCtrl_Create(TGraphCtrl* this, HWND hWnd, HWND hParentWnd, 
+BOOL    GraphCtrl_Create(TGraphCtrl* this, HWND hWnd, HWND hParentWnd,
 UINT nID);
 void    GraphCtrl_DrawPoint(TGraphCtrl* this);
 void    GraphCtrl_InvalidateCtrl(TGraphCtrl* this);
 void    GraphCtrl_Paint(TGraphCtrl* this, HWND hWnd, HDC dc);
 void    GraphCtrl_Reset(TGraphCtrl* this);
-void    GraphCtrl_Resize(TGraphCtrl* this); 
-void    GraphCtrl_SetBackgroundColor(TGraphCtrl* this, COLORREF 
+void    GraphCtrl_Resize(TGraphCtrl* this);
+void    GraphCtrl_SetBackgroundColor(TGraphCtrl* this, COLORREF
 color);
 void    GraphCtrl_SetGridColor(TGraphCtrl* this, COLORREF color);
-void    GraphCtrl_SetPlotColor(TGraphCtrl* this, int plot, COLORREF 
+void    GraphCtrl_SetPlotColor(TGraphCtrl* this, int plot, COLORREF
 color);
-void    GraphCtrl_SetRange(TGraphCtrl* this, double dLower, double 
+void    GraphCtrl_SetRange(TGraphCtrl* this, double dLower, double
 dUpper, int nDecimalPlaces);
 
 INT_PTR CALLBACK GraphCtrl_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);

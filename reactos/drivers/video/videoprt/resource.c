@@ -306,7 +306,7 @@ VideoPortGetDeviceBase(
 
 VOID STDCALL
 VideoPortFreeDeviceBase(
-   IN PVOID HwDeviceExtension, 
+   IN PVOID HwDeviceExtension,
    IN PVOID MappedAddress)
 {
    DPRINT("VideoPortFreeDeviceBase\n");
@@ -642,7 +642,7 @@ VideoPortAllocateBuffer(
    IN ULONG Size,
    OUT PVOID *Buffer)
 {
-   DPRINT("VideoPortAllocateBuffer\n");  
+   DPRINT("VideoPortAllocateBuffer\n");
    *Buffer = ExAllocatePool(PagedPool, Size);
    return *Buffer == NULL ? ERROR_NOT_ENOUGH_MEMORY : NO_ERROR;
 }
@@ -658,7 +658,7 @@ VideoPortReleaseBuffer(
 {
    DPRINT("VideoPortReleaseBuffer\n");
    ExFreePool(Ptr);
-}         
+}
 
 /*
  * @unimplemented
@@ -729,11 +729,11 @@ VideoPortGetBusData(
    }
 
    return HalGetBusDataByOffset(
-      BusDataType, 
+      BusDataType,
       DeviceExtension->SystemIoBusNumber,
       SlotNumber,
-      Buffer, 
-      Offset, 
+      Buffer,
+      Offset,
       Length);
 }
 
@@ -755,7 +755,7 @@ VideoPortSetBusData(
    DPRINT("VideoPortSetBusData\n");
 
    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
- 
+
    if (BusDataType != Cmos)
    {
       /* Legacy vs. PnP behaviour */

@@ -90,14 +90,14 @@ ProIndicatePacket(
     }
   KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 
-  if (BufferedLength > Adapter->MediumHeaderSize) 
+  if (BufferedLength > Adapter->MediumHeaderSize)
     {
       /* XXX Change this to call SendPackets so we don't have to duplicate this wacky logic */
       MiniIndicateData(Adapter, NULL, Adapter->LookaheadBuffer, Adapter->MediumHeaderSize,
           &Adapter->LookaheadBuffer[Adapter->MediumHeaderSize], BufferedLength - Adapter->MediumHeaderSize,
           PacketLength - Adapter->MediumHeaderSize);
-    } 
-  else 
+    }
+  else
     {
       MiniIndicateData(Adapter, NULL, Adapter->LookaheadBuffer, Adapter->MediumHeaderSize, NULL, 0, 0);
     }
@@ -129,7 +129,7 @@ ProRequest(
   KIRQL OldIrql;
   BOOLEAN QueueWorkItem = FALSE;
   NDIS_STATUS NdisStatus;
-  PADAPTER_BINDING AdapterBinding; 
+  PADAPTER_BINDING AdapterBinding;
   PLOGICAL_ADAPTER Adapter;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
@@ -156,12 +156,12 @@ ProRequest(
     }
 
   /* MiniQueueWorkItem must be called at IRQL >= DISPATCH_LEVEL */
-  if (QueueWorkItem) 
+  if (QueueWorkItem)
     {
       MiniQueueWorkItem(Adapter, NdisWorkItemRequest, (PVOID)NdisRequest);
       KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
       return NDIS_STATUS_PENDING;
-    } 
+    }
 
   KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 
@@ -267,7 +267,7 @@ ProSend(
   /*
    * Test the packet to see if it is a MAC loopback.
    *
-   * We may have to loop this packet if miniport cannot. 
+   * We may have to loop this packet if miniport cannot.
    * If dest MAC address of packet == MAC address of adapter,
    * this is a loopback frame.
    */
@@ -276,7 +276,7 @@ ProSend(
     {
       NDIS_DbgPrint(MIN_TRACE, ("Looping packet.\n"));
 
-      if (QueueWorkItem) 
+      if (QueueWorkItem)
         {
           MiniQueueWorkItem(Adapter, NdisWorkItemSendLoopback, (PVOID)Packet);
           return NDIS_STATUS_PENDING;
@@ -285,7 +285,7 @@ ProSend(
       KeRaiseIrql(DISPATCH_LEVEL, &RaiseOldIrql);
         {
           /*
-           * atm this *only* handles loopback packets - it calls MiniIndicateData to 
+           * atm this *only* handles loopback packets - it calls MiniIndicateData to
            * send back to the protocol.  FIXME: this will need to be adjusted a bit.
            * Also, I'm not sure you really have to be at dispatch level for this.  It
            * might use a ReceivePackets handler, which can run <= DISPATCH_LEVEL.
@@ -313,7 +313,7 @@ ProSend(
     NDIS_DbgPrint(MID_TRACE,("Not a loopback packet\n"));
 
   /* This is a normal send packet, not a loopback packet. */
-  if (QueueWorkItem) 
+  if (QueueWorkItem)
     {
       MiniQueueWorkItem(Adapter, NdisWorkItemSend, (PVOID)Packet);
       NDIS_DbgPrint(MAX_TRACE, ("Queued a work item and returning\n"));
@@ -322,8 +322,8 @@ ProSend(
 
   ASSERT(Adapter->Miniport);
 
-  /* 
-   * Call the appropriate send handler 
+  /*
+   * Call the appropriate send handler
    *
    * If a miniport provides a SendPackets handler, we always call it.  If not, we call the
    * Send handler.
@@ -373,7 +373,7 @@ ProSend(
           KeLowerIrql(RaiseOldIrql);
         }
     }
-  
+
   /* XXX why the hell do we do this? */
   NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
   KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &SpinOldIrql);
@@ -570,7 +570,7 @@ NdisOpenAdapter(
     }
 
   Adapter = MiniLocateDevice(AdapterName);
-  if (!Adapter) 
+  if (!Adapter)
     {
       NDIS_DbgPrint(MIN_TRACE, ("Adapter not found.\n"));
       *Status = NDIS_STATUS_ADAPTER_NOT_FOUND;
@@ -579,9 +579,9 @@ NdisOpenAdapter(
 
   /* Find the media type in the list provided by the protocol driver */
   Found = FALSE;
-  for (i = 0; i < MediumArraySize; i++) 
+  for (i = 0; i < MediumArraySize; i++)
     {
-      if (Adapter->NdisMiniportBlock.MediaType == MediumArray[i]) 
+      if (Adapter->NdisMiniportBlock.MediaType == MediumArray[i])
         {
           *SelectedMediumIndex = i;
           Found = TRUE;
@@ -589,7 +589,7 @@ NdisOpenAdapter(
         }
     }
 
-  if (!Found) 
+  if (!Found)
     {
       NDIS_DbgPrint(MIN_TRACE, ("Medium is not supported.\n"));
       *Status = NDIS_STATUS_UNSUPPORTED_MEDIA;
@@ -599,7 +599,7 @@ NdisOpenAdapter(
   /* Now that we have confirmed that the adapter can be opened, create a binding */
 
   AdapterBinding = ExAllocatePool(NonPagedPool, sizeof(ADAPTER_BINDING));
-  if (!AdapterBinding) 
+  if (!AdapterBinding)
     {
       NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
       *Status = NDIS_STATUS_RESOURCES;
@@ -614,7 +614,7 @@ NdisOpenAdapter(
 
   /* Set fields required by some NDIS macros */
   AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.BindingHandle = (NDIS_HANDLE)AdapterBinding;
-    
+
   /* Set handlers (some NDIS macros require these) */
 
   AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.RequestHandler      = ProRequest;
@@ -659,7 +659,7 @@ NdisRegisterProtocol(
  *     ProtocolCharacteristics = Pointer to NDIS_PROTOCOL_CHARACTERISTICS structure
  *     CharacteristicsLength   = Size of structure which ProtocolCharacteristics targets
  * NOTES:
- *     - you *must* set NdisProtocolHandle before doing anything that could wind up 
+ *     - you *must* set NdisProtocolHandle before doing anything that could wind up
  *       getting BindAdapterHandler, as it will probably call OpenAdapter with this handle
  *     - the above implies that the initialization of the protocol block must be complete
  *       by then
@@ -678,9 +678,9 @@ NdisRegisterProtocol(
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
   /* first validate the PROTOCOL_CHARACTERISTICS */
-  switch (ProtocolCharacteristics->MajorNdisVersion) 
+  switch (ProtocolCharacteristics->MajorNdisVersion)
     {
-    case 0x03:	
+    case 0x03:
       /* we don't really want to support ndis3 drivers - so we complain for now */
       NDIS_DbgPrint(MID_TRACE, ("NDIS 3 protocol attempting to register\n"));
       MinSize = sizeof(NDIS30_PROTOCOL_CHARACTERISTICS);
@@ -700,7 +700,7 @@ NdisRegisterProtocol(
       return;
     }
 
-  if (CharacteristicsLength < MinSize) 
+  if (CharacteristicsLength < MinSize)
     {
       NDIS_DbgPrint(DEBUG_PROTOCOL, ("Bad protocol characteristics.\n"));
       *Status = NDIS_STATUS_BAD_CHARACTERISTICS;
@@ -709,7 +709,7 @@ NdisRegisterProtocol(
 
   /* set up the protocol block */
   Protocol = ExAllocatePool(NonPagedPool, sizeof(PROTOCOL_BINDING));
-  if (!Protocol) 
+  if (!Protocol)
     {
       NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
       *Status = NDIS_STATUS_RESOURCES;
@@ -720,7 +720,7 @@ NdisRegisterProtocol(
   RtlCopyMemory(&Protocol->Chars, ProtocolCharacteristics, MinSize);
 
   NtStatus = RtlUpcaseUnicodeString(&Protocol->Chars.Name, &ProtocolCharacteristics->Name, TRUE);
-  if (!NT_SUCCESS(NtStatus)) 
+  if (!NT_SUCCESS(NtStatus))
     {
       NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
       ExFreePool(Protocol);
@@ -734,8 +734,8 @@ NdisRegisterProtocol(
 
   InitializeListHead(&Protocol->AdapterListHead);
 
-  /* 
-   * bind the protocol to all of its miniports 
+  /*
+   * bind the protocol to all of its miniports
    *
    * open registry path
    * get list of devices from Bind key
@@ -837,7 +837,7 @@ NdisRegisterProtocol(
        *     \Registry\Machine\System\CurrentControlSet\Services\Nic1\Parameters\Tcpip
        *
        *  This is constructed as follows:
-       *      SERVICES_KEY + extracted device name + Protocol name from characteristics 
+       *      SERVICES_KEY + extracted device name + Protocol name from characteristics
        */
 
       PathLength = sizeof(SERVICES_KEY) +                               /* \Registry\Machine\System\CurrentControlSet\Services\ */
@@ -866,7 +866,7 @@ NdisRegisterProtocol(
 
       NDIS_DbgPrint(MAX_TRACE, ("Calling protocol's BindAdapter handler with DeviceName %wZ and RegistryPath %wZ\n",
           &DeviceName, &RegistryPath));
-      
+
       /* XXX SD must do something with bind context */
       *NdisProtocolHandle = Protocol;
 

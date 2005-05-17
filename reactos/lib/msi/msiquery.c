@@ -86,11 +86,9 @@ UINT WINAPI MsiDatabaseOpenViewA(MSIHANDLE hdb,
 
     if( szQuery )
     {
-        UINT len = MultiByteToWideChar( CP_ACP, 0, szQuery, -1, NULL, 0 );
-        szwQuery = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
+        szwQuery = strdupAtoW( szQuery );
         if( !szwQuery )
             return ERROR_FUNCTION_FAILED;
-        MultiByteToWideChar( CP_ACP, 0, szQuery, -1, szwQuery, len );
     }
     else
         szwQuery = NULL;
@@ -672,16 +670,15 @@ UINT WINAPI MsiDatabaseGetPrimaryKeysA(MSIHANDLE hdb,
                     LPCSTR table, MSIHANDLE* phRec)
 {
     LPWSTR szwTable = NULL;
-    DWORD len;
     UINT r;
 
     TRACE("%ld %s %p\n", hdb, debugstr_a(table), phRec);
 
     if( table )
     {
-        len = MultiByteToWideChar( CP_ACP, 0, table, -1, NULL, 0 );
-        szwTable = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
-        MultiByteToWideChar( CP_ACP, 0, table, -1, szwTable, len );
+        szwTable = strdupAtoW( table );
+        if( !szwTable )
+            return ERROR_OUTOFMEMORY;
     }
     r = MsiDatabaseGetPrimaryKeysW( hdb, szwTable, phRec );
     HeapFree( GetProcessHeap(), 0, szwTable );

@@ -50,13 +50,13 @@ ObmpPerformRetentionChecks(PUSER_OBJECT_HEADER ObjectHeader)
       DPRINT1("ObjectHeader 0x%X has invalid reference count (%d)\n",
 	       ObjectHeader, ObjectHeader->RefCount);
     }
-  
+
   if (ObjectHeader->HandleCount < 0)
     {
       DPRINT1("Object 0x%X has invalid handle count (%d)\n",
 	       ObjectHeader, ObjectHeader->HandleCount);
     }
-  
+
   if ((ObjectHeader->RefCount == 0) && (ObjectHeader->HandleCount == 0))
     {
       ExFreePool(ObjectHeader);
@@ -81,14 +81,14 @@ ObmpGetObjectByHandle(PUSER_HANDLE_TABLE HandleTable,
   PUSER_HANDLE_BLOCK Block = NULL;
   PLIST_ENTRY Current;
   ULONG i;
-  
+
   if (NULL == Handle)
     {
       return NULL;
     }
 
   Current = HandleTable->ListHead.Flink;
-  
+
   for (i = 0; i < Count; i++)
     {
       Current = Current->Flink;
@@ -98,7 +98,7 @@ ObmpGetObjectByHandle(PUSER_HANDLE_TABLE HandleTable,
 	  return NULL;
 	}
     }
-  
+
   Block = CONTAINING_RECORD(Current, USER_HANDLE_BLOCK, ListEntry);
   return &(Block->Handles[Index % HANDLE_BLOCK_ENTRIES]);
 }
@@ -112,27 +112,27 @@ ObmpCloseAllHandles(PUSER_HANDLE_TABLE HandleTable)
   ULONG i;
 
   ObmpLockHandleTable(HandleTable);
-  
+
   CurrentEntry = HandleTable->ListHead.Flink;
 
   while (CurrentEntry != &HandleTable->ListHead)
     {
       Current = CONTAINING_RECORD(CurrentEntry, USER_HANDLE_BLOCK, ListEntry);
-      
+
       for (i = 0; i < HANDLE_BLOCK_ENTRIES; i++)
 	{
 	  ObjectBody = Current->Handles[i].ObjectBody;
-	  
+
 	  if (ObjectBody != NULL)
 	    {
 	      PUSER_OBJECT_HEADER ObjectHeader = USER_BODY_TO_HEADER(ObjectBody);
-	      
+
 	      ObmReferenceObjectByPointer(ObjectBody, otUnknown);
 	      ObjectHeader->HandleCount--;
 	      Current->Handles[i].ObjectBody = NULL;
-	      
+
 	      ObmpUnlockHandleTable(HandleTable);
-	      
+
 	      ObmDereferenceObject(ObjectBody);
 
 	      ObmpLockHandleTable(HandleTable);
@@ -140,10 +140,10 @@ ObmpCloseAllHandles(PUSER_HANDLE_TABLE HandleTable)
 	      break;
 	    }
 	}
-      
+
       CurrentEntry = CurrentEntry->Flink;
     }
-  
+
   ObmpUnlockHandleTable(HandleTable);
 }
 
@@ -154,9 +154,9 @@ ObmpDeleteHandleTable(PUSER_HANDLE_TABLE HandleTable)
   PLIST_ENTRY CurrentEntry;
 
   ObmpCloseAllHandles(HandleTable);
-  
+
   CurrentEntry = RemoveHeadList(&HandleTable->ListHead);
-  
+
   while (CurrentEntry != &HandleTable->ListHead)
   {
     Current = CONTAINING_RECORD(CurrentEntry,
@@ -164,7 +164,7 @@ ObmpDeleteHandleTable(PUSER_HANDLE_TABLE HandleTable)
 				ListEntry);
 
     ExFreePool(Current);
-    
+
     CurrentEntry = RemoveHeadList(&HandleTable->ListHead);
   }
 }
@@ -178,7 +178,7 @@ ObmpDeleteHandle(PUSER_HANDLE_TABLE HandleTable,
   PVOID ObjectBody;
 
   ObmpLockHandleTable(HandleTable);
-  
+
   Entry = ObmpGetObjectByHandle(HandleTable, Handle);
   if (Entry == NULL)
     {
@@ -188,7 +188,7 @@ ObmpDeleteHandle(PUSER_HANDLE_TABLE HandleTable,
     }
 
   ObjectBody = Entry->ObjectBody;
-  
+
   if (ObjectBody != NULL)
     {
       ObjectHeader = USER_BODY_TO_HEADER(ObjectBody);
@@ -196,7 +196,7 @@ ObmpDeleteHandle(PUSER_HANDLE_TABLE HandleTable,
       ObmReferenceObjectByPointer(ObjectBody, otUnknown);
       Entry->ObjectBody = NULL;
     }
-  
+
   ObmpUnlockHandleTable(HandleTable);
 
   return ObjectBody;
@@ -210,7 +210,7 @@ ObmpInitializeObject(PUSER_HANDLE_TABLE HandleTable,
 		     ULONG ObjectSize)
 {
   DWORD Status = STATUS_SUCCESS;
-  
+
   ObjectHeader->Type = ObjectType;
   ObjectHeader->HandleCount = 0;
   ObjectHeader->RefCount = 1;
@@ -253,15 +253,15 @@ ObmReferenceObject(PVOID ObjectBody)
  */
 {
   PUSER_OBJECT_HEADER ObjectHeader;
-  
+
   if (!ObjectBody)
     {
       DPRINT1("Cannot Reference NULL!\n");
       return;
     }
-  
+
   ObjectHeader = USER_BODY_TO_HEADER(ObjectBody);
-  
+
   ObjectHeader->RefCount++;
 
   ObmpPerformRetentionChecks(ObjectHeader);
@@ -277,15 +277,15 @@ ObmDereferenceObject(PVOID ObjectBody)
  */
 {
   PUSER_OBJECT_HEADER ObjectHeader;
-  
+
   if (!ObjectBody)
     {
       DPRINT1("Cannot Dereference NULL!\n");
       return;
     }
-  
+
   ObjectHeader = USER_BODY_TO_HEADER(ObjectBody);
-  
+
   ObjectHeader->RefCount--;
   ObmpPerformRetentionChecks(ObjectHeader);
 }
@@ -302,15 +302,15 @@ ObmReferenceObjectByPointer(PVOID ObjectBody,
  */
 {
   PUSER_OBJECT_HEADER ObjectHeader;
-  
+
   ObjectHeader = USER_BODY_TO_HEADER(ObjectBody);
-  
+
   if ((ObjectType != otUnknown) && (ObjectHeader->Type != ObjectType))
     {
       return STATUS_INVALID_PARAMETER;
     }
   ObjectHeader->RefCount++;
-  
+
   return STATUS_SUCCESS;
 }
 
@@ -323,30 +323,30 @@ ObmCreateObject(PUSER_HANDLE_TABLE HandleTable,
   PUSER_OBJECT_HEADER ObjectHeader;
   PVOID ObjectBody;
   DWORD Status;
-  
-  ObjectHeader = (PUSER_OBJECT_HEADER)ExAllocatePool(PagedPool, 
+
+  ObjectHeader = (PUSER_OBJECT_HEADER)ExAllocatePool(PagedPool,
 				     ObjectSize + sizeof(USER_OBJECT_HEADER));
   if (!ObjectHeader)
     {
       return NULL;
     }
-  
+
   ObjectBody = USER_HEADER_TO_BODY(ObjectHeader);
-  
+
   RtlZeroMemory(ObjectBody, ObjectSize);
-  
+
   Status = ObmpInitializeObject(HandleTable,
 				ObjectHeader,
 				Handle,
 				ObjectType,
 				ObjectSize);
-  
+
   if (!NT_SUCCESS(Status))
     {
       ExFreePool(ObjectHeader);
       return NULL;
     }
-  
+
   return ObjectBody;
 }
 
@@ -367,11 +367,11 @@ ObmCreateHandle(PUSER_HANDLE_TABLE HandleTable,
   ULONG Handle;
   ULONG i;
 
-  if (ObjectBody != NULL) 
+  if (ObjectBody != NULL)
     {
       USER_BODY_TO_HEADER(ObjectBody)->HandleCount++;
     }
-  
+
   ObmpLockHandleTable(HandleTable);
 
   Handle = 1;
@@ -382,9 +382,9 @@ ObmCreateHandle(PUSER_HANDLE_TABLE HandleTable,
    */
   while (Current != &(HandleTable->ListHead))
     {
-      PUSER_HANDLE_BLOCK Block = 
+      PUSER_HANDLE_BLOCK Block =
 	CONTAINING_RECORD(Current, USER_HANDLE_BLOCK, ListEntry);
-           
+
       for (i = 0; i < HANDLE_BLOCK_ENTRIES; i++)
 	{
 	  if (!Block->Handles[i].ObjectBody)
@@ -403,7 +403,7 @@ ObmCreateHandle(PUSER_HANDLE_TABLE HandleTable,
   /*
    * Add a new Handle block to the end of the list
    */
-  NewBlock = (PUSER_HANDLE_BLOCK)ExAllocatePool(PagedPool, 
+  NewBlock = (PUSER_HANDLE_BLOCK)ExAllocatePool(PagedPool,
 						sizeof(USER_HANDLE_BLOCK));
   if (!NewBlock)
     {
@@ -411,7 +411,7 @@ ObmCreateHandle(PUSER_HANDLE_TABLE HandleTable,
       *HandleReturn = (PHANDLE)NULL;
       return STATUS_INSUFFICIENT_RESOURCES;
     }
-  
+
   RtlZeroMemory(NewBlock, sizeof(USER_HANDLE_BLOCK));
   NewBlock->Handles[0].ObjectBody = ObjectBody;
   InsertTailList(&HandleTable->ListHead, &NewBlock->ListEntry);
@@ -440,33 +440,33 @@ ObmReferenceObjectByHandle(PUSER_HANDLE_TABLE HandleTable,
   PUSER_OBJECT_HEADER ObjectHeader;
   PUSER_HANDLE UserHandle;
   PVOID ObjectBody;
-  
+
   ObmpLockHandleTable(HandleTable);
-  
+
   UserHandle = ObmpGetObjectByHandle(HandleTable, Handle);
-  
+
   if ((UserHandle == NULL) || (UserHandle->ObjectBody == NULL))
     {
       ObmpUnlockHandleTable(HandleTable);
       return STATUS_UNSUCCESSFUL;
     }
-  
+
   ObjectBody = UserHandle->ObjectBody;
   ObmReferenceObjectByPointer(ObjectBody, ObjectType);
-  
+
   ObmpUnlockHandleTable(HandleTable);
-  
+
   ObjectHeader = USER_BODY_TO_HEADER(ObjectBody);
-  
+
   if ((ObjectType != otUnknown) && (ObjectHeader->Type != ObjectType))
     {
       DPRINT1("Object type mismatch 0x%x 0x%x\n", ObjectType, ObjectHeader->Type);
       ObmDereferenceObject(ObjectBody);
       return STATUS_UNSUCCESSFUL;
     }
-  
+
   *Object = ObjectBody;
-  
+
   return STATUS_SUCCESS;
 }
 
@@ -481,9 +481,9 @@ ObmCloseHandle(PUSER_HANDLE_TABLE HandleTable,
     {
       return STATUS_UNSUCCESSFUL;
     }
-  
+
   ObmDereferenceObject(ObjectBody);
-  
+
   return STATUS_SUCCESS;
 }
 
@@ -505,16 +505,16 @@ ObmCreateHandleTable(VOID)
 {
   PUSER_HANDLE_TABLE HandleTable;
 
-  HandleTable = (PUSER_HANDLE_TABLE)ExAllocatePool(PagedPool, 
+  HandleTable = (PUSER_HANDLE_TABLE)ExAllocatePool(PagedPool,
 						   sizeof(USER_HANDLE_TABLE));
   if (!HandleTable)
     {
       DPRINT1("Unable to create handle table\n");
       return NULL;
     }
-  
+
   ObmInitializeHandleTable(HandleTable);
-  
+
   return HandleTable;
 }
 

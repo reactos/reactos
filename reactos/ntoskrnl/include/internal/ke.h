@@ -29,6 +29,193 @@
 
 #include "arch/ke.h"
 
+/* INTERNAL KERNEL TYPES ****************************************************/
+
+#ifndef __ASM__
+
+#ifndef __USE_W32API
+
+typedef struct _KPROCESS *PKPROCESS;
+
+#endif /* __USE_W32API */
+
+typedef struct _DISPATCHER_HEADER *PDISPATCHER_HEADER;
+
+typedef struct _HARDWARE_PTE_X86 {
+    ULONG Valid             : 1;
+    ULONG Write             : 1;
+    ULONG Owner             : 1;
+    ULONG WriteThrough      : 1;
+    ULONG CacheDisable      : 1;
+    ULONG Accessed          : 1;
+    ULONG Dirty             : 1;
+    ULONG LargePage         : 1;
+    ULONG Global            : 1;
+    ULONG CopyOnWrite       : 1;
+    ULONG Prototype         : 1;
+    ULONG reserved          : 1;
+    ULONG PageFrameNumber   : 20;
+} HARDWARE_PTE_X86, *PHARDWARE_PTE_X86;
+
+typedef struct _WOW64_PROCESS
+{
+  PVOID Wow64;
+} WOW64_PROCESS, *PWOW64_PROCESS;
+
+#include <pshpack1.h>
+
+typedef struct _KTHREAD
+{
+   /* For waiting on thread exit */
+   DISPATCHER_HEADER DispatcherHeader;    /* 00 */
+
+   /* List of mutants owned by the thread */
+   LIST_ENTRY        MutantListHead;      /* 10 */
+   PVOID             InitialStack;        /* 18 */
+   ULONG_PTR         StackLimit;          /* 1C */
+
+   /* Pointer to the thread's environment block in user memory */
+   struct _TEB       *Teb;                /* 20 */
+
+   /* Pointer to the thread's TLS array */
+   PVOID             TlsArray;            /* 24 */
+   PVOID             KernelStack;         /* 28 */
+   UCHAR             DebugActive;         /* 2C */
+
+   /* Thread state (one of THREAD_STATE_xxx constants below) */
+   UCHAR             State;               /* 2D */
+   BOOLEAN           Alerted[2];          /* 2E */
+   UCHAR             Iopl;                /* 30 */
+   UCHAR             NpxState;            /* 31 */
+   CHAR              Saturation;          /* 32 */
+   CHAR              Priority;            /* 33 */
+   KAPC_STATE        ApcState;            /* 34 */
+   ULONG             ContextSwitches;     /* 4C */
+   LONG              WaitStatus;          /* 50 */
+   KIRQL             WaitIrql;            /* 54 */
+   CHAR              WaitMode;            /* 55 */
+   UCHAR             WaitNext;            /* 56 */
+   UCHAR             WaitReason;          /* 57 */
+   union {                                /* 58 */
+      PKWAIT_BLOCK   WaitBlockList;       /* 58 */
+      PKGATE         GateObject;          /* 58 */
+   };                                     /* 58 */
+   LIST_ENTRY        WaitListEntry;       /* 5C */
+   ULONG             WaitTime;            /* 64 */
+   CHAR              BasePriority;        /* 68 */
+   UCHAR             DecrementCount;      /* 69 */
+   UCHAR             PriorityDecrement;   /* 6A */
+   CHAR              Quantum;             /* 6B */
+   KWAIT_BLOCK       WaitBlock[4];        /* 6C */
+   PVOID             LegoData;            /* CC */
+   union {
+          struct {
+              USHORT KernelApcDisable;
+              USHORT SpecialApcDisable;
+          };
+          ULONG      CombinedApcDisable;  /* D0 */
+   };
+   KAFFINITY         UserAffinity;        /* D4 */
+   UCHAR             SystemAffinityActive;/* D8 */
+   UCHAR             PowerState;          /* D9 */
+   UCHAR             NpxIrql;             /* DA */
+   UCHAR             Pad[1];              /* DB */
+   PVOID             ServiceTable;        /* DC */
+   PKQUEUE           Queue;               /* E0 */
+   KSPIN_LOCK        ApcQueueLock;        /* E4 */
+   KTIMER            Timer;               /* E8 */
+   LIST_ENTRY        QueueListEntry;      /* 110 */
+   KAFFINITY         Affinity;            /* 118 */
+   UCHAR             Preempted;           /* 11C */
+   UCHAR             ProcessReadyQueue;   /* 11D */
+   UCHAR             KernelStackResident; /* 11E */
+   UCHAR             NextProcessor;       /* 11F */
+   PVOID             CallbackStack;       /* 120 */
+   struct _W32THREAD *Win32Thread;        /* 124 */
+   struct _KTRAP_FRAME *TrapFrame;        /* 128 */
+   PKAPC_STATE       ApcStatePointer[2];  /* 12C */
+   UCHAR             EnableStackSwap;     /* 134 */
+   UCHAR             LargeStack;          /* 135 */
+   UCHAR             ResourceIndex;       /* 136 */
+   UCHAR             PreviousMode;        /* 137 */
+   ULONG             KernelTime;          /* 138 */
+   ULONG             UserTime;            /* 13C */
+   KAPC_STATE        SavedApcState;       /* 140 */
+   UCHAR             Alertable;           /* 158 */
+   UCHAR             ApcStateIndex;       /* 159 */
+   UCHAR             ApcQueueable;        /* 15A */
+   UCHAR             AutoAlignment;       /* 15B */
+   PVOID             StackBase;           /* 15C */
+   KAPC              SuspendApc;          /* 160 */
+   KSEMAPHORE        SuspendSemaphore;    /* 190 */
+   LIST_ENTRY        ThreadListEntry;     /* 1A4 */
+   CHAR              FreezeCount;         /* 1AC */
+   UCHAR             SuspendCount;        /* 1AD */
+   UCHAR             IdealProcessor;      /* 1AE */
+   UCHAR             DisableBoost;        /* 1AF */
+   UCHAR             QuantumReset;        /* 1B0 */
+} KTHREAD;
+
+#include <poppack.h>
+
+typedef struct _KEXECUTE_OPTIONS
+{
+    UCHAR ExecuteDisable:1;
+    UCHAR ExecuteEnable:1;
+    UCHAR DisableThunkEmulation:1;
+    UCHAR Permanent:1;
+    UCHAR ExecuteDispatchEnable:1;
+    UCHAR ImageDispatchEnable:1;
+    UCHAR Spare:2;
+} KEXECUTE_OPTIONS, *PKEXECUTE_OPTIONS;
+
+/*
+ * NAME:           KPROCESS
+ * DESCRIPTION:    Internal Kernel Process Structure.
+ * PORTABILITY:    Architecture Dependent.
+ * KERNEL VERSION: 5.2
+ * DOCUMENTATION:  http://reactos.com/wiki/index.php/KPROCESS
+ */
+typedef struct _KPROCESS
+{
+    DISPATCHER_HEADER     Header;                    /* 000 */
+    LIST_ENTRY            ProfileListHead;           /* 010 */
+    PHYSICAL_ADDRESS      DirectoryTableBase;        /* 018 */
+    KGDTENTRY             LdtDescriptor;             /* 020 */
+    KIDTENTRY             Int21Descriptor;           /* 028 */
+    USHORT                IopmOffset;                /* 030 */
+    UCHAR                 Iopl;                      /* 032 */
+    UCHAR                 Unused;                    /* 033 */
+    ULONG                 ActiveProcessors;          /* 034 */
+    ULONG                 KernelTime;                /* 038 */
+    ULONG                 UserTime;                  /* 03C */
+    LIST_ENTRY            ReadyListHead;             /* 040 */
+    LIST_ENTRY            SwapListEntry;             /* 048 */
+    PVOID                 VdmTrapcHandler;           /* 04C */
+    LIST_ENTRY            ThreadListHead;            /* 050 */
+    KSPIN_LOCK            ProcessLock;               /* 058 */
+    KAFFINITY             Affinity;                  /* 05C */
+    union {
+        struct {
+            ULONG         AutoAlignment:1;           /* 060.0 */
+            ULONG         DisableBoost:1;            /* 060.1 */
+            ULONG         DisableQuantum:1;          /* 060.2 */
+            ULONG         ReservedFlags:29;          /* 060.3 */
+        };
+        ULONG             ProcessFlags;              /* 060 */
+    };
+    CHAR                  BasePriority;              /* 064 */
+    CHAR                  QuantumReset;              /* 065 */
+    UCHAR                 State;                     /* 066 */
+    UCHAR                 ThreadSeed;                /* 067 */
+    UCHAR                 PowerState;                /* 068 */
+    UCHAR                 IdealNode;                 /* 069 */
+    UCHAR                 Visited;                   /* 06A */
+    KEXECUTE_OPTIONS      Flags;                     /* 06B */
+    ULONG                 StackCount;                /* 06C */
+    LIST_ENTRY            ProcessListEntry;          /* 070 */
+} KPROCESS;
+
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
 #ifdef __USE_W32API
@@ -36,9 +223,6 @@ struct _KPROCESS* KeGetCurrentProcess(VOID);
 VOID KeSetGdtSelector(ULONG Entry, ULONG Value1, ULONG Value2);
 #endif
 
-#ifndef __ASM__
-
-struct _KTHREAD;
 struct _KIRQ_TRAPFRAME;
 struct _KPCR;
 struct _KPRCB;
@@ -49,47 +233,114 @@ struct _KEXCEPTION_FRAME;
 #define IPI_REQUEST_DPC		    2
 #define IPI_REQUEST_FREEZE	    3
 
+#ifndef __USE_W32API
+typedef enum _KTHREAD_STATE {
+    Initialized,
+    Ready,
+    Running,
+    Standby,
+    Terminated,
+    Waiting,
+    Transition,
+    DeferredReady,
+} THREAD_STATE, *PTHREAD_STATE;
+#endif
+
+/* MACROS *************************************************************************/
+
+#define KeEnterCriticalRegion(X) \
+{ \
+    PKTHREAD _Thread = KeGetCurrentThread(); \
+    if (_Thread) _Thread->KernelApcDisable--; \
+}
+
+#define KeLeaveCriticalRegion(X) \
+{ \
+    PKTHREAD _Thread = KeGetCurrentThread(); \
+    if((_Thread) && (++_Thread->KernelApcDisable == 0)) \
+    { \
+        if (!IsListEmpty(&_Thread->ApcState.ApcListHead[KernelMode])) \
+        { \
+            KiKernelApcDeliveryCheck(); \
+        } \
+    } \
+}
+
+#ifndef __USE_W32API
+#define KeGetCurrentProcessorNumber() (KeGetCurrentKPCR()->ProcessorNumber)
+#endif
+
 /* threadsch.c ********************************************************************/
 
 /* Thread Scheduler Functions */
 
 /* Readies a Thread for Execution. */
-VOID 
+VOID
 STDCALL
 KiDispatchThreadNoLock(ULONG NewThreadStatus);
 
 /* Readies a Thread for Execution. */
-VOID 
+VOID
 STDCALL
 KiDispatchThread(ULONG NewThreadStatus);
 
 /* Puts a Thread into a block state. */
 VOID
 STDCALL
-KiBlockThread(PNTSTATUS Status, 
-              UCHAR Alertable, 
+KiBlockThread(PNTSTATUS Status,
+              UCHAR Alertable,
               ULONG WaitMode,
               UCHAR WaitReason);
-    
-/* Removes a thread out of a block state. */        
+
+/* Removes a thread out of a block state. */
 VOID
 STDCALL
-KiUnblockThread(PKTHREAD Thread, 
-                PNTSTATUS WaitStatus, 
+KiUnblockThread(PKTHREAD Thread,
+                PNTSTATUS WaitStatus,
                 KPRIORITY Increment);
+
+NTSTATUS
+STDCALL
+KeSuspendThread(PKTHREAD Thread);
+
+NTSTATUS
+FASTCALL
+KiSwapContext(PKTHREAD NewThread);
+
+/* gmutex.c ********************************************************************/
+
+VOID
+FASTCALL
+KiAcquireGuardedMutexContented(PKGUARDED_MUTEX GuardedMutex);
+
+/* gate.c **********************************************************************/
+
+VOID
+FASTCALL
+KeInitializeGate(PKGATE Gate);
+
+VOID
+FASTCALL
+KeSignalGateBoostPriority(PKGATE Gate);
+
+VOID
+FASTCALL
+KeWaitForGate(PKGATE Gate,
+              KWAIT_REASON WaitReason,
+              KPROCESSOR_MODE WaitMode);
 
 /* ipi.c ********************************************************************/
 
-BOOLEAN STDCALL 
-KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame, 
+BOOLEAN STDCALL
+KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
 		    IN struct _KEXCEPTION_FRAME* ExceptionFrame);
 
-VOID  
-KiIpiSendRequest(ULONG TargetSet, 
+VOID
+KiIpiSendRequest(ULONG TargetSet,
 		 ULONG IpiRequest);
 
-VOID  
-KeIpiGenericCall(VOID (STDCALL *WorkerRoutine)(PVOID), 
+VOID
+KeIpiGenericCall(VOID (STDCALL *WorkerRoutine)(PVOID),
 		 PVOID Argument);
 
 /* next file ***************************************************************/
@@ -124,7 +375,7 @@ typedef enum _CACHED_MODULE_TYPE {
 } CACHED_MODULE_TYPE, *PCACHED_MODULE_TYPE;
 extern PLOADER_MODULE CachedModules[MaximumCachedModuleType];
 
-VOID STDCALL 
+VOID STDCALL
 DbgBreakPointNoBugCheck(VOID);
 
 STDCALL
@@ -168,6 +419,9 @@ KeProfileInterruptWithSource(
 	IN KPROFILE_SOURCE		Source
 );
 
+BOOLEAN
+STDCALL
+KiRosPrintAddress(PVOID Address);
 
 VOID STDCALL KeUpdateSystemTime(PKTRAP_FRAME TrapFrame, KIRQL Irql);
 VOID STDCALL KeUpdateRunTime(PKTRAP_FRAME TrapFrame, KIRQL Irql);
@@ -179,9 +433,16 @@ VOID inline FASTCALL KeAcquireDispatcherDatabaseLockAtDpcLevel(VOID);
 VOID inline FASTCALL KeReleaseDispatcherDatabaseLock(KIRQL Irql);
 VOID inline FASTCALL KeReleaseDispatcherDatabaseLockFromDpcLevel(VOID);
 
-VOID 
+VOID
 STDCALL
-KeInitializeThread(struct _KPROCESS* Process, PKTHREAD Thread, BOOLEAN First);
+KeInitializeThread(struct _KPROCESS* Process,
+                   PKTHREAD Thread,
+                   PKSYSTEM_ROUTINE SystemRoutine,
+                   PKSTART_ROUTINE StartRoutine,
+                   PVOID StartContext,
+                   PCONTEXT Context,
+                   PVOID Teb,
+                   PVOID KernelStack);
 
 VOID
 STDCALL
@@ -213,15 +474,22 @@ VOID KeDumpStackFrames(PULONG Frame);
 BOOLEAN KiTestAlert(VOID);
 
 VOID
-FASTCALL 
-KiAbortWaitThread(PKTHREAD Thread, 
+FASTCALL
+KiAbortWaitThread(PKTHREAD Thread,
                   NTSTATUS WaitStatus,
                   KPRIORITY Increment);
-                  
+
+VOID
+STDCALL
+KeInitializeProcess(struct _KPROCESS *Process,
+                    KPRIORITY Priority,
+                    KAFFINITY Affinity,
+                    LARGE_INTEGER DirectoryTableBase);
+
 ULONG
 STDCALL
 KeForceResumeThread(IN PKTHREAD Thread);
- 
+
 BOOLEAN STDCALL KiInsertTimer(PKTIMER Timer, LARGE_INTEGER DueTime);
 
 VOID inline FASTCALL KiSatisfyObjectWait(PDISPATCHER_HEADER Object, PKTHREAD Thread);
@@ -233,23 +501,25 @@ VOID inline FASTCALL KiSatisifyMultipleObjectWaits(PKWAIT_BLOCK WaitBlock);
 VOID FASTCALL KiWaitTest(PDISPATCHER_HEADER Object, KPRIORITY Increment);
 
 PULONG KeGetStackTopThread(struct _ETHREAD* Thread);
-VOID KeContextToTrapFrame(PCONTEXT Context, PKTRAP_FRAME TrapFrame);
+BOOLEAN STDCALL KeContextToTrapFrame(PCONTEXT Context, PKTRAP_FRAME TrapFrame);
 VOID STDCALL KiDeliverApc(KPROCESSOR_MODE PreviousMode,
                   PVOID Reserved,
                   PKTRAP_FRAME TrapFrame);
-
-LONG 
-STDCALL 
-KiInsertQueue(IN PKQUEUE Queue, 
-              IN PLIST_ENTRY Entry, 
+VOID
+STDCALL
+KiKernelApcDeliveryCheck(VOID);
+LONG
+STDCALL
+KiInsertQueue(IN PKQUEUE Queue,
+              IN PLIST_ENTRY Entry,
               BOOLEAN Head);
-   
+
 ULONG
 STDCALL
-KeSetProcess(struct _KPROCESS* Process, 
+KeSetProcess(struct _KPROCESS* Process,
              KPRIORITY Increment);
-             
-                            
+
+
 VOID STDCALL KeInitializeEventPair(PKEVENT_PAIR EventPair);
 
 VOID STDCALL KiInitializeUserApc(IN PVOID Reserved,
@@ -297,7 +567,7 @@ KiMoveApcState (PKAPC_STATE OldState,
 
 VOID
 KiAddProfileEvent(KPROFILE_SOURCE Source, ULONG Pc);
-VOID 
+VOID
 KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 		    PCONTEXT Context,
 		    PKTRAP_FRAME Tf,

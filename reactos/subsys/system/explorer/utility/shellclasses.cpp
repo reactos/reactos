@@ -509,7 +509,7 @@ IContextMenu* CtxMenuInterfaces::query_interfaces(IContextMenu* pcm1)
 		_pctxmenu3 = (LPCONTEXTMENU3)pcm;
 	else
 #endif
-	if (pcm1->QueryInterface (IID_IContextMenu2, (void**)&pcm) == NOERROR)
+	if (pcm1->QueryInterface(IID_IContextMenu2, (void**)&pcm) == NOERROR)
 		_pctxmenu2 = (LPCONTEXTMENU2)pcm;
 
 	if (pcm) {
@@ -556,7 +556,8 @@ HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParent, int 
 
 				  hr = pcm->InvokeCommand(&cmi);
 				}
-			}
+			} else
+				cm_ifs.reset();
 		}
 
 		pcm->Release();

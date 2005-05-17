@@ -24,10 +24,14 @@
  *
  *    24-Jan-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Redirection safe!
+ *
+ *    02-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc
  */
 
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef FEATURE_ALIASES
 
@@ -276,7 +280,8 @@ VOID ExpandAlias (LPTSTR cmd, INT maxlen)
 				m = _tcslen (ptr->lpSubst);
 				if ((int)(_tcslen (cmd) - len + m - n) > maxlen)
 				{
-					ConErrPrintf (_T("Command line too long after alias expansion!\n"));
+					ConErrResPuts(STRING_ALIAS_ERROR);
+
 					/* the parser won't cause any problems with an empty line */
 					cmd[0] = _T('\0');
 				}
@@ -303,22 +308,7 @@ INT CommandAlias (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Sets, removes or shows aliases.\n"
-		               "\n"
-		               "ALIAS [alias=[command]]\n"
-		               "\n"
-		               "  alias    Name for an alias.\n"
-		               "  command  Text to be substituted for an alias.\n"
-		               "\n"
-//					   "For example:\n"
-					   "To list all aliases:\n"
-					   "  ALIAS\n\n"
-					   "To set a new or replace an existing alias:\n"
-					   "  ALIAS da=dir a:\n\n"
-					   "To remove an alias from the alias list:\n"
-					   "  ALIAS da="
-//					   "Type ALIAS without a parameter to display the alias list.\n"
-					   ));
+		ConOutResPuts(STRING_ALIAS_HELP);
 		return 0;
 	}
 

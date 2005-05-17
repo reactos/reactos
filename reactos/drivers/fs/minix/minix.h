@@ -112,11 +112,11 @@ ULONG MinixNewInode(PDEVICE_OBJECT Volume,
 		    struct minix_inode* new_inode);
 NTSTATUS MinixWriteInode(PDEVICE_OBJECT Volume,
 			 MINIX_DEVICE_EXTENSION* DeviceExt,
-			 ULONG ino, 
+			 ULONG ino,
 			 struct minix_inode* result);
 NTSTATUS MinixReadInode(PDEVICE_OBJECT DeviceObject,
 			MINIX_DEVICE_EXTENSION* DeviceExt,
-			ULONG ino, 
+			ULONG ino,
 			struct minix_inode* result);
 NTSTATUS MinixDeleteInode(PDEVICE_OBJECT Volume,
 			  MINIX_DEVICE_EXTENSION* DeviceExt,
@@ -124,7 +124,7 @@ NTSTATUS MinixDeleteInode(PDEVICE_OBJECT Volume,
 
 NTSTATUS MinixReadBlock(PDEVICE_OBJECT DeviceObject,
 			PMINIX_DEVICE_EXTENSION DeviceExt,
-			struct minix_inode* inode, 
+			struct minix_inode* inode,
 			ULONG FileOffset,
 			PULONG DiskOffset);
 

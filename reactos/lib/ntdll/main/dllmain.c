@@ -3,8 +3,8 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/ntdll/main/dllmain.c
- * PURPOSE:         
- * PROGRAMMER:      
+ * PURPOSE:
+ * PROGRAMMER:
  */
 
 #include <ddk/ntddk.h>

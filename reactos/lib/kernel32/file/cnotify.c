@@ -26,7 +26,7 @@ FindCloseChangeNotification (HANDLE hChangeHandle)
      SetLastErrorByStatus(Status);
      return FALSE;
    }
-   
+
    return TRUE;
 }
 
@@ -101,15 +101,15 @@ FindFirstChangeNotificationW (
 
 
 
-   /* FIXME: We free the string alloced by RtlDosPathNameToNtPathName_U, but what 
+   /* FIXME: We free the string alloced by RtlDosPathNameToNtPathName_U, but what
     * about the special case where the user can pass a \\?\ path? We must not free
     * the users buffer!. But should we even call RtlDosPathNameToNtPathName_U in that
     * case??? -Gunnar
     */
 
    RtlFreeUnicodeString( &NtPathU);
-   
-   
+
+
 
    if (!NT_SUCCESS(Status))
    {
@@ -156,9 +156,9 @@ FindNextChangeNotification (
       NULL,//Buffer,
       0,//BufferLength,
       FILE_NOTIFY_CHANGE_SECURITY,//meaningless/ignored for subsequent calls, but must contain a valid flag
-      0 //meaningless/ignored for subsequent calls 
+      0 //meaningless/ignored for subsequent calls
       );
-      
+
    if (!NT_SUCCESS(Status))
    {
       SetLastErrorByStatus(Status);
@@ -170,8 +170,8 @@ FindNextChangeNotification (
 
 
 extern VOID STDCALL
-(ApcRoutine)(PVOID ApcContext, 
-      struct _IO_STATUS_BLOCK* IoStatusBlock, 
+(ApcRoutine)(PVOID ApcContext,
+      struct _IO_STATUS_BLOCK* IoStatusBlock,
       ULONG Reserved);
 
 
@@ -193,10 +193,10 @@ ReadDirectoryChangesW(
 {
    NTSTATUS Status;
    IO_STATUS_BLOCK IoStatus;
-  
+
    if (lpOverlapped )
       lpOverlapped->Internal = STATUS_PENDING;
-  
+
    Status = NtNotifyChangeDirectoryFile(
       hDirectory,
       lpOverlapped ? lpOverlapped->hEvent : NULL,
@@ -207,18 +207,18 @@ ReadDirectoryChangesW(
       nBufferLength,
       dwNotifyFilter,
       bWatchSubtree
-      );   
-  
+      );
+
    if (!NT_SUCCESS(Status))
    {
       SetLastErrorByStatus(Status);
       return FALSE;
    }
 
-   
+
    /* NOTE: lpBytesReturned is undefined for asynch. operations */
    *lpBytesReturned = IoStatus.Information;
-   
+
    return TRUE;
 }
 

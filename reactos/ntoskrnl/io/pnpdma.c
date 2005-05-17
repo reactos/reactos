@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/pnpdma.c
  * PURPOSE:         PnP manager DMA routines
- * 
+ *
  * PROGRAMMERS:     Filip Navara (xnavara@volny.cz)
  */
 
@@ -223,9 +223,9 @@ IoGetDmaAdapter(
   PDMA_ADAPTER Result = NULL;
   PDMA_ADAPTER_INTERNAL ResultInternal = NULL;
   PADAPTER_OBJECT HalAdapter;
-  
+
   DPRINT("IoGetDmaAdapter called\n");
-  
+
   /*
    * Try to create DMA adapter through bus driver
    */
@@ -233,11 +233,11 @@ IoGetDmaAdapter(
   {
     if (DeviceDescription->InterfaceType == 0x0F /*PNPBus*/ ||
         DeviceDescription->InterfaceType == 0xFFFFFFFF)
-    {      
+    {
       RtlCopyMemory(&PrivateDeviceDescription, DeviceDescription,
         sizeof(DEVICE_DESCRIPTION));
       Status = IoGetDeviceProperty(PhysicalDeviceObject,
-         DevicePropertyLegacyBusType, sizeof(INTERFACE_TYPE), 
+         DevicePropertyLegacyBusType, sizeof(INTERFACE_TYPE),
          &PrivateDeviceDescription.InterfaceType, &ResultLength);
       if (!NT_SUCCESS(Status))
       {
@@ -249,7 +249,7 @@ IoGetDmaAdapter(
     Stack.Parameters.QueryInterface.Size = sizeof(BUS_INTERFACE_STANDARD);
     Stack.Parameters.QueryInterface.Version = 1;
     Stack.Parameters.QueryInterface.Interface = (PINTERFACE)&BusInterface;
-    Stack.Parameters.QueryInterface.InterfaceType = 
+    Stack.Parameters.QueryInterface.InterfaceType =
       &GUID_BUS_INTERFACE_STANDARD;
     Status = IopInitiatePnpIrp(PhysicalDeviceObject, &IoStatusBlock,
       IRP_MN_QUERY_INTERFACE, &Stack);

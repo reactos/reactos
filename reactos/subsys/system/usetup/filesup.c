@@ -61,8 +61,8 @@ CreateDirectory(PWCHAR DirectoryName)
        PathName.Length -= sizeof(WCHAR);
        PathName.Buffer[PathName.Length / sizeof(WCHAR)] = 0;
     }
-      
-  if (PathName.Length > sizeof(WCHAR) && 
+
+  if (PathName.Length > sizeof(WCHAR) &&
       PathName.Buffer[PathName.Length / sizeof(WCHAR) - 1] == L'\\')
     {
       PathName.Length -= sizeof(WCHAR);
@@ -125,7 +125,7 @@ SetupCopyFile(PWCHAR SourceFileName,
 			     NULL);
 
   Status = NtOpenFile(&FileHandleSource,
-		      FILE_READ_ACCESS,
+		      GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      FILE_SHARE_READ,
@@ -166,7 +166,7 @@ SetupCopyFile(PWCHAR SourceFileName,
 			     NULL);
 
   Status = NtCreateFile(&FileHandleDest,
-			FILE_WRITE_ACCESS,
+			GENERIC_WRITE,
 			&ObjectAttributes,
 			&IoStatusBlock,
 			NULL,
@@ -383,7 +383,7 @@ DoesFileExist(PWSTR PathName,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ACCESS,
+		      GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,

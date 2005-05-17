@@ -1,5 +1,5 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cm/regfile.c
@@ -105,7 +105,7 @@ CmiVerifyBinHeader(PHBIN BinHeader)
 
   //BinHeader->DateModified.dwHighDateTime
 
-  
+
   if (BinHeader->BinSize != REG_BLOCK_SIZE)
     {
       DbgPrint("BinSize is %.08x (should be a multiple of %.08x)\n",
@@ -2873,7 +2873,7 @@ CmiAddValueToKey(IN PREGISTRY_HIVE RegistryHive,
       CmiMarkBlockDirty(RegistryHive, KeyCellOffset);
       CmiMarkBlockDirty(RegistryHive, ValueListCellOffset);
     }
-  else if (KeyCell->NumberOfValues >= 
+  else if (KeyCell->NumberOfValues >=
 	   (((ULONG)ABS_VALUE(ValueListCell->CellSize) - sizeof(VALUE_LIST_CELL)) / sizeof(BLOCK_OFFSET)))
     {
 #if 0
@@ -3023,7 +3023,7 @@ CmiAllocateHashTableCell (IN PREGISTRY_HIVE RegistryHive,
 
   Status = STATUS_SUCCESS;
   *HashBlock = NULL;
-  NewHashSize = sizeof(HASH_TABLE_CELL) + 
+  NewHashSize = sizeof(HASH_TABLE_CELL) +
 		(SubKeyCount * sizeof(HASH_RECORD));
   Status = CmiAllocateCell (RegistryHive,
 			    NewHashSize,

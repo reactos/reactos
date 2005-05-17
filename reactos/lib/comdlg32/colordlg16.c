@@ -46,7 +46,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 /* Chose Color PRIVATE Structure:
  *
  * This is a duplicate of the 32bit code with
- * a extra member
+ * an extra member
  */
 typedef struct CCPRIVATE
 {

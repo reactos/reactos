@@ -421,7 +421,7 @@ NtfsOpenMft (PDEVICE_EXTENSION Vcb);
 
 
 VOID
-ReadAttribute(PATTRIBUTE attr, PVOID buffer, PDEVICE_EXTENSION Vcb, 
+ReadAttribute(PATTRIBUTE attr, PVOID buffer, PDEVICE_EXTENSION Vcb,
 				    PDEVICE_OBJECT DeviceObject);
 
 ULONG

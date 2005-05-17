@@ -180,7 +180,7 @@ static BOOL SHELL_ArgifyW(WCHAR* out, int len, const WCHAR* fmt, const WCHAR* lp
 
 	    default:
                 /*
-                 * Check if this is a env-variable here...
+                 * Check if this is an env-variable here...
                  */
 
                 /* Make sure that we have at least one more %.*/
@@ -195,7 +195,7 @@ static BOOL SHELL_ArgifyW(WCHAR* out, int len, const WCHAR* fmt, const WCHAR* lp
                         *tmpB++ = *fmt++;
                     *tmpB++ = 0;
 
-                    TRACE("Checking %s to be a env-var\n", debugstr_w(tmpBuffer));
+                    TRACE("Checking %s to be an env-var\n", debugstr_w(tmpBuffer));
 
                     envRet = GetEnvironmentVariableW(tmpBuffer, tmpEnvBuff, MAX_PATH);
                     if (envRet == 0 || envRet > MAX_PATH)
@@ -1218,7 +1218,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfun
 	    LPWSTR beg = wszApplicationName/*sei_tmp.lpFile*/;
 	    for(s=beg; (space=strchrW(s, ' ')); s=space+1) {
 		int idx = space-sei_tmp.lpFile;
-		strncpyW(buffer, sei_tmp.lpFile, idx);
+		memcpy(buffer, sei_tmp.lpFile, idx * sizeof(WCHAR));
 		buffer[idx] = '\0';
 
 		/*FIXME This finds directory paths if the targeted file name contains spaces. */
@@ -1296,7 +1296,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfun
 
         TRACE("Got URL: %s\n", debugstr_w(lpFile));
         /* Looking for ...protocol\shell\lpOperation\command */
-        strncpyW(lpstrProtocol, lpFile, iSize);
+        memcpy(lpstrProtocol, lpFile, iSize*sizeof(WCHAR));
         lpstrProtocol[iSize] = '\0';
         strcatW(lpstrProtocol, wShell);
         strcatW(lpstrProtocol, sei_tmp.lpVerb? sei_tmp.lpVerb: wszOpen);
@@ -1397,6 +1397,9 @@ BOOL WINAPI ShellExecuteExA (LPSHELLEXECUTEINFOA sei)
     ret = ShellExecuteExW32 (&seiW, SHELL_ExecuteW);
 
     sei->hInstApp = seiW.hInstApp;
+
+    if (sei->fMask & SEE_MASK_NOCLOSEPROCESS)
+        sei->hProcess = seiW.hProcess;
 
     if (wVerb) SHFree(wVerb);
     if (wFile) SHFree(wFile);

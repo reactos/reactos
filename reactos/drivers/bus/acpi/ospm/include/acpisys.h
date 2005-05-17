@@ -47,6 +47,9 @@ typedef struct _PDO_DEVICE_EXTENSION
   UNICODE_STRING InstanceID;
   // Hardware IDs
   UNICODE_STRING HardwareIDs;
+  // Resource list
+  PCM_RESOURCE_LIST ResourceList;
+  ULONG ResourceListSize;
 } PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
 

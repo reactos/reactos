@@ -329,3 +329,15 @@ HRESULT WINAPI IsValidURL(LPBC pBC, LPCWSTR szURL, DWORD dwReserved)
     
     return S_OK;
 }
+
+/**************************************************************************
+ *                 FaultInIEFeature (URLMON.@)
+ *
+ *  Undocumented.  Appears to be used by native shdocvw.dll.
+ */
+HRESULT WINAPI FaultInIEFeature( HWND hwnd, uCLSSPEC * pClassSpec,
+                                 QUERYCONTEXT *pQuery, DWORD flags )
+{
+    FIXME("%p %p %p %08lx\n", hwnd, pClassSpec, pQuery, flags);
+    return E_NOTIMPL;
+}

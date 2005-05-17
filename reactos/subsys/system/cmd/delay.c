@@ -10,6 +10,7 @@
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_DELAY
 
@@ -21,13 +22,7 @@ INT CommandDelay (LPTSTR cmd, LPTSTR param)
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		ConOutPuts(_T(
-		              "pause for n seconds or milliseconds"
-		              "\n"
-		              "DELAY [/m]n\n"
-		              "\n"
-		              "  /m          specifiy than n are milliseconds\n"
-		              "              otherwise n are seconds"));
+		ConOutResPuts(STRING_DELAY_HELP);
 		return 0;
 	}
 
@@ -44,7 +39,7 @@ INT CommandDelay (LPTSTR cmd, LPTSTR param)
 	}
 
 	val = _ttoi(param);
-	Sleep(val*mul);
+	Sleep(val * mul);
 
 	return 0;
 }

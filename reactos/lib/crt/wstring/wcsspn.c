@@ -10,12 +10,12 @@ size_t wcsspn(const wchar_t *str,const wchar_t *accept)
 	s=(wchar_t *)str;
 	do {
 		t=(wchar_t *)accept;
-		while (*t) { 
-			if (*t==*s) 
+		while (*t) {
+			if (*t==*s)
 				break;
 			t++;
 		}
-		if (!*t) 
+		if (!*t)
 			break;
 		s++;
 	} while (*s);

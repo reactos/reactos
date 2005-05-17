@@ -516,7 +516,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
         {
             DWORD llen, listlen, nl_len;
             LPTSTR src, lines = NULL;
-            
+
 	    if (!(stringValueData = HeapAlloc(GetProcessHeap(), 0, valueDataLen)))
             {
                 error(hwnd, IDS_TOO_BIG_VALUE, valueDataLen);
@@ -528,7 +528,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
                 error(hwnd, IDS_BAD_VALUE, valueName);
                 goto done;
             }
-            
+
 	    /* convert \0 to \r\n */
             src = stringValueData;
             nl_len = _tcslen(_T("\r\n")) * sizeof(TCHAR);
@@ -561,7 +561,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
                 BOOL EmptyLines = FALSE;
                 LPTSTR src, lines, nl;
                 DWORD linechars, buflen, c_nl, dest;
-                
+
                 src = stringValueData;
                 buflen = sizeof(TCHAR);
                 lines = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, buflen + sizeof(TCHAR));
@@ -598,12 +598,12 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
                     src += linechars + (nl != NULL ? c_nl : 0);
                 }
                 lines[++dest] = _T('\0');
-                
+
                 if(EmptyLines)
                 {
                     warning(hwnd, IDS_MULTI_SZ_EMPTY_STRING);
                 }
-                
+
 		lRet = RegSetValueEx(hKey, valueName, 0, type, (LPBYTE)lines, buflen);
 		HeapFree(GetProcessHeap(), 0, lines);
             }
@@ -636,7 +636,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
         #ifndef UNICODE
         LPWSTR u_valuename;
         int len_vname = lstrlen(valueName);
-        
+
 	if(len_vname > 0)
         {
           if(!(u_valuename = HeapAlloc(GetProcessHeap(), 0, (len_vname + 1) * sizeof(WCHAR))))
@@ -658,7 +658,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
               error(hwnd, IDS_TOO_BIG_VALUE, valueDataLen);
               goto done;
             }
-	    
+
 	    /* force to use the unicode version, so editing strings in binary mode is correct */
 	    lRet = RegQueryValueExW(hKey,
 	                            #ifndef UNICODE

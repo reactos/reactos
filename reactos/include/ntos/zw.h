@@ -3713,6 +3713,20 @@ ZwResumeThread(
 	IN HANDLE ThreadHandle,
 	OUT PULONG SuspendCount  OPTIONAL
 	);
+
+
+NTSTATUS
+STDCALL
+NtResumeProcess(
+	IN HANDLE ProcessHandle
+	);
+
+NTSTATUS
+STDCALL
+ZwResumeProcess(
+	IN HANDLE ProcessHandle
+	);
+
 /*
  * FUNCTION: Writes the content of a registry key to ascii file
  * ARGUMENTS: 
@@ -4877,6 +4891,18 @@ STDCALL
 ZwSuspendThread(
 	IN HANDLE ThreadHandle,
 	OUT PULONG PreviousSuspendCount  OPTIONAL
+	);
+
+NTSTATUS
+STDCALL
+NtSuspendProcess(
+	IN HANDLE ProcessHandle
+	);
+
+NTSTATUS
+STDCALL
+ZwSuspendProcess(
+	IN HANDLE ProcessHandle
 	);
 
 /*

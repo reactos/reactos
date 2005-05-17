@@ -152,7 +152,7 @@ number(char * buf, char * end, long long num, int base, int size, int precision,
 	return buf;
 }
 
-static char* 
+static char*
 string(char* buf, char* end, const char* s, int len, int field_width, int precision, int flags)
 {
 	int i;
@@ -197,7 +197,7 @@ string(char* buf, char* end, const char* s, int len, int field_width, int precis
 	return buf;
 }
 
-static char* 
+static char*
 stringw(char* buf, char* end, const wchar_t* sw, int len, int field_width, int precision, int flags)
 {
 	int i;
@@ -223,7 +223,7 @@ stringw(char* buf, char* end, const wchar_t* sw, int len, int field_width, int p
 	if (!(flags & LEFT))
 		while (len < field_width--)
 		{
-			if (buf <= end) 
+			if (buf <= end)
 				*buf = ' ';
 			++buf;
 		}

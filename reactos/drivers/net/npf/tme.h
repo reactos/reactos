@@ -47,7 +47,7 @@
 #endif
 
 /* error codes */
-#define     TME_ERROR           0   
+#define     TME_ERROR           0
 #define     TME_SUCCESS         1
 #define     TME_TRUE            2
 #define     TME_FALSE           3
@@ -58,9 +58,9 @@
 #define     TME_NONE_ACTIVE         0xffffffff
 #define     DELTA_READ              2  /* secs */
 
-#define     TME_LUT_ENTRIES                 0x00000000  
+#define     TME_LUT_ENTRIES                 0x00000000
 #define     TME_MAX_FILL_STATE              0x00000001  /*potrebbe servire per un thread a passive level!?!?! */
-#define     TME_REHASHING_VALUE             0x00000002  
+#define     TME_REHASHING_VALUE             0x00000002
 #define     TME_KEY_LEN                     0x00000003
 #define     TME_SHARED_MEMORY_BLOCKS        0x00000004
 #define     TME_FILLED_ENTRIES              0x00000005
@@ -146,7 +146,7 @@ typedef struct __TME_CORE
     uint32      validated_blocks;
     TME_DATA    block_data[MAX_TME_DATA_BLOCKS];
     uint32      active_read;
-    
+
 } TME_CORE, *PTME_CORE;
 
 static __inline int32 IS_DELETABLE(void *timestamp, TME_DATA *data)

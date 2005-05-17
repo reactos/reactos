@@ -47,7 +47,7 @@ RegInitializeRegistry (VOID)
   RootKey->ValueCount = 0;
 
   RootKey->NameSize = 2;
-  RootKey->Name = (PUCHAR)MmAllocateMemory (2);
+  RootKey->Name = MmAllocateMemory (2);
   strcpy (RootKey->Name, "\\");
 
   RootKey->DataType = 0;
@@ -192,7 +192,7 @@ RegInitCurrentControlSet(BOOL LastKnownGood)
   Error = RegSetValue(LinkKey,
 		      NULL,
 		      REG_LINK,
-		      (PUCHAR)&ControlSetKey,
+		      (PCHAR)&ControlSetKey,
 		      sizeof(PVOID));
   if (Error != ERROR_SUCCESS)
     {
@@ -486,7 +486,7 @@ LONG
 RegSetValue(FRLDRHKEY Key,
 	    PCHAR ValueName,
 	    ULONG Type,
-	    PUCHAR Data,
+	    PCHAR Data,
 	    ULONG DataSize)
 {
   PLIST_ENTRY Ptr;
@@ -511,7 +511,7 @@ RegSetValue(FRLDRHKEY Key,
 	}
       else
 	{
-	  Key->Data = (PUCHAR)MmAllocateMemory(DataSize);
+	  Key->Data = MmAllocateMemory(DataSize);
 	  Key->DataSize = DataSize;
 	  Key->DataType = Type;
 	  memcpy(Key->Data, Data, DataSize);
@@ -571,7 +571,7 @@ RegSetValue(FRLDRHKEY Key,
 	}
       else
 	{
-	  Value->Data = (PUCHAR)MmAllocateMemory(DataSize);
+	  Value->Data = MmAllocateMemory(DataSize);
 	  if (Value->Data == NULL)
 	    return(ERROR_OUTOFMEMORY);
 	  Value->DataType = Type;

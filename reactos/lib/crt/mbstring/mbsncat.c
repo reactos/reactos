@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/msvcrt/mbstring/mbsncat.c 
+ * FILE:        lib/msvcrt/mbstring/mbsncat.c
  * PURPOSE:     Concatenate two multi byte string to maximum of n characters or bytes
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:
@@ -21,7 +21,7 @@ unsigned char * _mbsncat(unsigned char *dst, const unsigned char *src, size_t n)
 	unsigned char *d = dst;
 	const unsigned char *s = src;
 	if (n != 0) {
-		d = dst + _mbslen(dst); // get the end of string 
+		d = dst + _mbslen(dst); // get the end of string
 		d += _mbclen2(*d); // move 1 or 2 up
 
 		do {
@@ -43,10 +43,10 @@ unsigned char * _mbsncat(unsigned char *dst, const unsigned char *src, size_t n)
  */
 unsigned char * _mbsnbcat(unsigned char *dst, const unsigned char *src, size_t n)
 {
-	unsigned char *d; 
+	unsigned char *d;
 	const unsigned char *s = src;
 	if (n != 0) {
-		d = dst + _mbslen(dst); // get the end of string 
+		d = dst + _mbslen(dst); // get the end of string
 		d += _mbclen2(*d); // move 1 or 2 up
 
 		do {

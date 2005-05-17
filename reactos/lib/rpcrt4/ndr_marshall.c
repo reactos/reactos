@@ -388,7 +388,12 @@ unsigned char *WINAPI NdrConformantStringMarshall(MIDL_STUB_MESSAGE *pStubMsg,
   TRACE("(pStubMsg == ^%p, pszMessage == ^%p, pFormat == ^%p)\n", pStubMsg, pszMessage, pFormat);
   
   assert(pFormat);
-  if (*pFormat == RPC_FC_C_CSTRING) {
+  if (pszMessage == NULL) {
+    TRACE("string=%s\n", debugstr_a(pszMessage));
+    len = 0;
+    esize = 0;
+  }
+  else if (*pFormat == RPC_FC_C_CSTRING) {
     TRACE("string=%s\n", debugstr_a(pszMessage));
     len = strlen(pszMessage)+1;
     esize = 1;
@@ -416,8 +421,10 @@ unsigned char *WINAPI NdrConformantStringMarshall(MIDL_STUB_MESSAGE *pStubMsg,
   c += 8;                         /* offset: 0 */
   NDR_LOCAL_UINT32_WRITE(c, len); /* actual length: (same) */
   c += 4;
-  memcpy(c, pszMessage, len*esize); /* the string itself */
-  c += len*esize;
+  if (len != 0) {
+    memcpy(c, pszMessage, len*esize); /* the string itself */
+    c += len*esize;
+  }
   pStubMsg->Buffer = c;
 
   STD_OVERFLOW_CHECK(pStubMsg);
@@ -435,7 +442,12 @@ void WINAPI NdrConformantStringBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
   TRACE("(pStubMsg == ^%p, pMemory == ^%p, pFormat == ^%p)\n", pStubMsg, pMemory, pFormat);
 
   assert(pFormat);
-  if (*pFormat == RPC_FC_C_CSTRING) {
+  if (pMemory == NULL) {
+    /* we need 12 octets for the [maxlen, offset, len] DWORDS */
+    TRACE("string=NULL\n");
+    pStubMsg->BufferLength += 12 + BUFFER_PARANOIA;
+  }
+  else if (*pFormat == RPC_FC_C_CSTRING) {
     /* we need 12 octets for the [maxlen, offset, len] DWORDS, + 1 octet for '\0' */
     TRACE("string=%s\n", debugstr_a(pMemory));
     pStubMsg->BufferLength += strlen(pMemory) + 13 + BUFFER_PARANOIA;
@@ -528,6 +540,11 @@ unsigned char *WINAPI NdrConformantStringUnmarshall( PMIDL_STUB_MESSAGE pStubMsg
     /* for clients, memory should be provided by caller */
   }
 
+  if (len == 0) {
+    *ppMemory = NULL;
+    return NULL;
+  }
+
   pMem = *ppMemory + ofs*esize;
 
   if (pMem != pStubMsg->Buffer)
@@ -572,6 +589,8 @@ void WINAPI PointerMarshall(PMIDL_STUB_MESSAGE pStubMsg,
   switch (type) {
   case RPC_FC_RP: /* ref pointer (always non-null) */
     break;
+  case RPC_FC_UP: /* unique pointer */
+    break;
   default:
     FIXME("unhandled ptr type=%02x\n", type);
   }
@@ -609,6 +628,8 @@ void WINAPI PointerUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
   switch (type) {
   case RPC_FC_RP: /* ref pointer (always non-null) */
     break;
+  case RPC_FC_UP: /* unique pointer */
+    break;
   default:
     FIXME("unhandled ptr type=%02x\n", type);
   }
@@ -644,6 +665,8 @@ void WINAPI PointerBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
 
   switch (type) {
   case RPC_FC_RP: /* ref pointer (always non-null) */
+    break;
+  case RPC_FC_UP: /* unique pointer */
     break;
   default:
     FIXME("unhandled ptr type=%02x\n", type);
@@ -1138,7 +1161,15 @@ unsigned char * WINAPI NdrSimpleStructMarshall(PMIDL_STUB_MESSAGE pStubMsg,
   if (pFormat[0] != RPC_FC_STRUCT)
     EmbeddedPointerMarshall(pStubMsg, pMemory, pFormat+4);
 
+  /*
+   * This test does not work when NdrSimpleStructMarshall is called
+   * by an rpc-server to marshall data to return to the client because
+   * BufferStart and BufferEnd are bogus. MIDL does not update them
+   * when a new buffer is allocated in order to return data to the caller.
+   */
+#if 0
   STD_OVERFLOW_CHECK(pStubMsg);
+#endif
 
   return NULL;
 }
@@ -1178,20 +1209,22 @@ unsigned char * WINAPI NdrSimpleStructUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
 
 
 /***********************************************************************
- *           NdrSimpleStructUnmarshall [RPCRT4.@]
+ *           NdrSimpleTypeUnmarshall [RPCRT4.@]
  */
-void WINAPI NdrSimpleTypeMarshall( PMIDL_STUB_MESSAGE pStubMsg, unsigned char* pMemory,
-                                   unsigned char FormatChar )
+void WINAPI NdrSimpleTypeMarshall(PMIDL_STUB_MESSAGE pStubMsg,
+                                  unsigned char *pMemory,
+                                  unsigned char FormatChar)
 {
     FIXME("stub\n");
 }
 
 
 /***********************************************************************
- *           NdrSimpleStructUnmarshall [RPCRT4.@]
+ *           NdrSimpleTypeUnmarshall [RPCRT4.@]
  */
-void WINAPI NdrSimpleTypeUnmarshall( PMIDL_STUB_MESSAGE pStubMsg, unsigned char* pMemory,
-                                     unsigned char FormatChar )
+void WINAPI NdrSimpleTypeUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
+                                    unsigned char *pMemory,
+                                    unsigned char FormatChar)
 {
     FIXME("stub\n");
 }

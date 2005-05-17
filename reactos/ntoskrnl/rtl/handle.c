@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/handle.c
  * PURPOSE:         Handle table
- * 
+ *
  * PROGRAMMERS:     Eric Kohl <ekohl@rz-online.de>
  */
 
@@ -114,14 +114,14 @@ RtlpFreeHandle(PRTL_HANDLE_TABLE HandleTable,
 			 &Handle,
 			 Index))
      return FALSE;
-   
+
    /* clear handle */
    memset(Handle, 0, sizeof(RTL_HANDLE));
-   
+
    /* add handle to free list */
    Handle->Next = HandleTable->FirstFree;
    HandleTable->FirstFree = Handle;
-   
+
    return TRUE;
 }
 

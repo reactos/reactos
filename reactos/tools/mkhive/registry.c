@@ -58,7 +58,7 @@ RegInitializeRegistry(VOID)
   RootKey->ValueCount = 0;
 
   RootKey->NameSize = 2;
-  RootKey->Name = (PUCHAR)malloc(2);
+  RootKey->Name = (PCHAR)malloc(2);
   strcpy(RootKey->Name, "\\");
 
   RootKey->DataType = 0;
@@ -82,7 +82,7 @@ RegInitializeRegistry(VOID)
   RegSetValue(LinkKey,
 	      NULL,
 	      REG_LINK,
-	      (PUCHAR)&ControlSetKey,
+	      (PCHAR)&ControlSetKey,
 	      sizeof(PVOID));
 
   /* Create HARDWARE key */
@@ -392,7 +392,7 @@ LONG
 RegSetValue(HKEY Key,
 	    PCHAR ValueName,
 	    ULONG Type,
-	    PUCHAR Data,
+	    PCHAR Data,
 	    ULONG DataSize)
 {
   PLIST_ENTRY Ptr;
@@ -404,12 +404,12 @@ RegSetValue(HKEY Key,
   if ((ValueName == NULL) || (*ValueName == 0))
     {
       /* set default value */
-      if ((Key->Data != NULL) && (Key->DataSize > sizeof(PUCHAR)))
+      if ((Key->Data != NULL) && (Key->DataSize > sizeof(PCHAR)))
 	{
 	  free(Key->Data);
 	}
 
-      if (DataSize <= sizeof(PUCHAR))
+      if (DataSize <= sizeof(PCHAR))
 	{
 	  Key->DataSize = DataSize;
 	  Key->DataType = Type;
@@ -417,7 +417,7 @@ RegSetValue(HKEY Key,
 	}
       else
 	{
-	  Key->Data = (PUCHAR)malloc(DataSize);
+	  Key->Data = (PCHAR)malloc(DataSize);
 	  Key->DataSize = DataSize;
 	  Key->DataType = Type;
 	  memcpy(Key->Data, Data, DataSize);
@@ -462,12 +462,12 @@ RegSetValue(HKEY Key,
 	}
 
       /* set new value */
-      if ((Value->Data != NULL) && (Value->DataSize > sizeof(PUCHAR)))
+      if ((Value->Data != NULL) && (Value->DataSize > sizeof(PCHAR)))
 	{
 	  free(Value->Data);
 	}
 
-      if (DataSize <= sizeof(PUCHAR))
+      if (DataSize <= sizeof(PCHAR))
 	{
 	  Value->DataSize = DataSize;
 	  Value->DataType = Type;
@@ -475,7 +475,7 @@ RegSetValue(HKEY Key,
 	}
       else
 	{
-	  Value->Data = (PUCHAR)malloc(DataSize);
+	  Value->Data = (PCHAR)malloc(DataSize);
 	  if (Value->Data == NULL)
 	    return(ERROR_OUTOFMEMORY);
 	  Value->DataType = Type;
@@ -491,7 +491,7 @@ LONG
 RegQueryValue(HKEY Key,
 	      PCHAR ValueName,
 	      PULONG Type,
-	      PUCHAR Data,
+	      PCHAR Data,
 	      PULONG DataSize)
 {
   ULONG Size;
@@ -508,7 +508,7 @@ RegQueryValue(HKEY Key,
 	*Type = Key->DataType;
       if ((Data != NULL) && (DataSize != NULL))
 	{
-	  if (Key->DataSize <= sizeof(PUCHAR))
+	  if (Key->DataSize <= sizeof(PCHAR))
 	    {
 	      Size = min(Key->DataSize, *DataSize);
 	      memcpy(Data, &Key->Data, Size);
@@ -551,7 +551,7 @@ RegQueryValue(HKEY Key,
 	*Type = Value->DataType;
       if ((Data != NULL) && (DataSize != NULL))
 	{
-	  if (Value->DataSize <= sizeof(PUCHAR))
+	  if (Value->DataSize <= sizeof(PCHAR))
 	    {
 	      Size = min(Value->DataSize, *DataSize);
 	      memcpy(Data, &Value->Data, Size);
@@ -615,7 +615,7 @@ RegDeleteValue(HKEY Key,
       Value->Name = NULL;
       Value->NameSize = 0;
 
-      if (Value->DataSize > sizeof(PUCHAR))
+      if (Value->DataSize > sizeof(PCHAR))
 	{
 	  if (Value->Data != NULL)
 	    free(Value->Data);
@@ -637,7 +637,7 @@ RegEnumValue(HKEY Key,
 	     PCHAR ValueName,
 	     PULONG NameSize,
 	     PULONG Type,
-	     PUCHAR Data,
+	     PCHAR Data,
 	     PULONG DataSize)
 {
   PLIST_ENTRY Ptr;

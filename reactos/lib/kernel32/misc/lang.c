@@ -12,7 +12,7 @@
 #define NDEBUG
 #include "../include/debug.h"
 
-/* FIXME:  these are included in winnls.h, however including this file causes alot of 
+/* FIXME:  these are included in winnls.h, however including this file causes alot of
            conflicting type errors. */
 
 #define LOCALE_SYEARMONTH 0x1006
@@ -22,6 +22,8 @@
 #define LOCALE_LOCALEINFOFLAGSMASK (LOCALE_NOUSEROVERRIDE|LOCALE_USE_CP_ACP|LOCALE_RETURN_NUMBER)
 
 //static LCID SystemLocale = MAKELCID(LANG_ENGLISH, SORT_DEFAULT);
+
+//static RTL_CRITICAL_SECTION LocalesListLock;
 
 
 /******************************************************************************
@@ -213,24 +215,24 @@ EnumSystemGeoID(
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   switch(GeoClass)
   {
     case GEOCLASS_NATION:
       /*RtlEnterCriticalSection(&DllLock);
-      
+
         FIXME - Get GEO IDs calling Csr
-      
+
       RtlLeaveCriticalSection(&DllLock);*/
-      
+
       SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
       break;
-    
+
     default:
       SetLastError(ERROR_INVALID_FLAGS);
       return FALSE;
   }
- 
+
   return FALSE;
 }
 
@@ -281,7 +283,7 @@ EnumSystemLocalesA (
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -290,8 +292,91 @@ EnumSystemLocalesW (
     DWORD            dwFlags
     )
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+	NTSTATUS result;
+	HANDLE langKey;
+	UNICODE_STRING langKeyName;
+	OBJECT_ATTRIBUTES objectAttributes;
+	ULONG index, length;
+	unsigned char fullInfo[sizeof(KEY_VALUE_FULL_INFORMATION)+255*2]; //FIXME: MAX_PATH*2
+	PKEY_VALUE_FULL_INFORMATION pFullInfo;
+
+	//TODO: Combine with EnumSystemLocalesA - maybe by having one common part, driven by some
+	//      unicode/non-unicode flag.
+
+	//FIXME: dwFlags is really not used, sorry
+
+	// Check if enum proc is a real one
+	if (lpLocaleEnumProc == NULL)
+	{
+		SetLastError(ERROR_INVALID_PARAMETER);
+		return FALSE;
+	}
+
+	// Open language registry key
+	//FIXME: Should we use critical section here?
+
+	RtlRosInitUnicodeStringFromLiteral(&langKeyName,
+		L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Nls\\Locale");
+
+	InitializeObjectAttributes(&objectAttributes,
+			     &langKeyName,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+
+	result = NtOpenKey(&langKey,
+			 KEY_READ,
+			 &objectAttributes);
+
+	if (!NT_SUCCESS(result))
+		return result;
+
+	DPRINT1("Registry key succesfully opened\n");
+
+	length = sizeof(KEY_VALUE_FULL_INFORMATION) + 255*2;//MAX_PATH*sizeof(WCHAR);
+	pFullInfo = (PKEY_VALUE_FULL_INFORMATION)&fullInfo;
+	RtlZeroMemory(pFullInfo, length);
+
+	index = 0;
+
+	result = NtEnumerateValueKey(langKey,
+								index,
+								KeyValueFullInformation,
+								pFullInfo,
+								length,
+								&length);
+
+	DPRINT1("First enumerate call result=%x\n", result);
+	while (result != STATUS_NO_MORE_ENTRIES)
+	{
+		int i;
+		WCHAR lpLocale[9];
+
+		// TODO: Here we should check, in case dwFlags & LCID_INSTALLED is specified,
+		// if this locale is really installed
+		// but for now we skip it
+
+		for (i=0; i<8; i++)
+			lpLocale[i] = pFullInfo->Name[i];
+
+		lpLocale[8]=0;
+
+		DPRINT1("Locale=%S\n", lpLocale);
+
+		// Call Enum func
+		if (!lpLocaleEnumProc((LPWSTR)lpLocale))
+            break;
+
+		// Zero previous values
+		RtlZeroMemory(pFullInfo, length);
+
+		index++;
+		result = NtEnumerateValueKey(langKey, index,KeyValueFullInformation, pFullInfo, length, &length);
+	}
+
+	NtClose(langKey);
+
+	return STATUS_SUCCESS;
 }
 
 
@@ -552,7 +637,7 @@ INT RosGetRegistryLocaleInfo( LPCWSTR lpValue, LPWSTR lpBuffer, INT nLen )
     if (!ntStatus)
     {
         nRet = (dwSize - nInfoSize) / sizeof(WCHAR);
-        
+
         if (!nRet || ((WCHAR *)kvpiInfo->Data)[nRet - 1])
         {
             if (nRet < nLen || !lpBuffer) nRet++;
@@ -656,7 +741,7 @@ GetLocaleInfoW (
         UINT uiNum;
         WCHAR *chEnd, *chTmp = HeapAlloc( GetProcessHeap(), 0, (*ch + 1) * sizeof(WCHAR) );
 
-        if (!chTmp) 
+        if (!chTmp)
 			return 0;
 
         memcpy( chTmp, ch + 1, *ch * sizeof(WCHAR) );
@@ -1248,7 +1333,7 @@ SetLocaleInfoW (
  * RIPPED FROM WINE's dlls\kernel\locale.c rev 1.42
  *
  *           SetThreadLocale    (KERNEL32.@)
- *  
+ *
  * Set the current threads locale.
  *
  * PARAMS
@@ -1278,7 +1363,7 @@ BOOL WINAPI SetThreadLocale( LCID lcid )
          * Wine save the acp for easy/fast access, but ROS has no such Teb member.
          * Maybe add this member to ros as well?
          */
-         
+
         /*
         Lag test app for å se om locale etc, endres i en app. etter at prosessen er
         startet, eller om bare nye prosesser blir berørt.

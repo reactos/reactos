@@ -1,0 +1,45 @@
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+IDD_SHUTDOWNCOMPUTER DIALOG  45, 22, 164, 52
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Vypnutн poинtaиe"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Nynн mщћete bez obav vypnout Vбљ poинtaи.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
+    ICON  IDI_WINLOGON, IDC_SHTDOWNICON, 6, 7, 18, 20
+    DEFPUSHBUTTON "&Restartovat", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
+END
+
+IDD_GINALOADFAILED DIALOG  58, 83, 231, 119
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Chyba uћivatelskйho rozhranн"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Dynamickб knihovna %s selhala pшi nahrбvanн.", IDC_GINALOADFAILED, 39, 16, 156, 24
+    LTEXT "Kontaktujte sprбvce poинtaиe pro nahrazenн dynamickм knihovny nebo obnovte pщvodnн dynamickou knihovnu.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    DEFPUSHBUTTON "&Restart", 1, 80, 91, 68, 14
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_PREPARENETWORKCONNECTIONS "Pшнprava sнќovэch pшipojenн..."
+    IDS_APPLYINGCOMPUTERSETTINGS "Nastavenн poинtaиe..."
+    IDS_RUNNINGSTARTUPSCRIPTS "Spouљtмcн skripty..."
+    IDS_RUNNINGSHUTDOWNSCRIPTS "Ukonиovacн skripty..."
+    IDS_APPLYINGYOURPERSONALSETTINGS "Osobnн nastavenн..."
+    IDS_RUNNINGLOGOFFSCRIPTS "Skripty po odhlбљenн..."
+    IDS_RUNNINGLOGONSCRIPTS "Skripty po pшihlбљenн..."
+    IDS_LOADINGYOURPERSONALSETTINGS "Nahrбvбnн osobnнho nastavenн..."
+    IDS_CLOSINGNETWORKCONNECTIONS "Ukonиenн sнќovэch pшipojenн..."
+    IDS_REACTOSISSHUTTINGDOWN "ReactOS se vypнnб..."
+    IDS_PREPARETOSTANDBY "Pшнprava k pшechodu do ъspornйho reћimu..."
+    IDS_PREPARETOHIBERNATE "Pшнprava k pшechodu do reћimu hibernace..."
+    IDS_SAVEYOURSETTINGS "Uklбdбnн osobnнho nastavenн..."
+    IDS_REACTOSISSTARTINGUP "ReactOS se spouљtн..."
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_FAILEDACTIVATEUSERSHELL "Aplikace Winlogon selhala pшi aktivaci shellu!"
+END
+

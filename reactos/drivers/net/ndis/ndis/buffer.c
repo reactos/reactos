@@ -60,7 +60,7 @@ UINT CopyBufferToBufferChain(
 /*
  * FUNCTION: Copies data from a buffer to an NDIS buffer chain
  * ARGUMENTS:
- *     DstBuffer = Pointer to destination NDIS buffer 
+ *     DstBuffer = Pointer to destination NDIS buffer
  *     DstOffset = Destination start offset
  *     SrcData   = Pointer to source buffer
  *     Length    = Number of bytes to copy
@@ -132,7 +132,7 @@ UINT CopyBufferChainToBuffer(
     PUCHAR SrcData;
 
     NDIS_DbgPrint(MAX_TRACE, ("DstData 0x%X  SrcBuffer 0x%X  SrcOffset 0x%X  Length %d\n",DstData,SrcBuffer, SrcOffset, Length));
-    
+
     /* Skip SrcOffset bytes in the source buffer chain */
     if (SkipToOffset(SrcBuffer, SrcOffset, &SrcData, &SrcSize) == -1)
         return 0;
@@ -318,7 +318,7 @@ NDIS_BUFFER_TO_SPAN_PAGES(
 {
     if (MmGetMdlByteCount(Buffer) == 0)
         return 1;
-    
+
     return ADDRESS_AND_SIZE_TO_SPAN_PAGES(
             MmGetMdlVirtualAddress(Buffer),
             MmGetMdlByteCount(Buffer));
@@ -360,7 +360,7 @@ NdisAllocateBuffer(
 	NDIS_DbgPrint(MID_TRACE,("Free buffer -> %x\n", Temp));
 	Temp = Temp->Next;
     }
-    
+
     NDIS_DbgPrint(MID_TRACE,("|:. <- End free buffers"));
 #endif
 
@@ -379,7 +379,7 @@ NdisAllocateBuffer(
         MmInitializeMdl(&Temp->Mdl, VirtualAddress, Length);
         Temp->Mdl.MdlFlags      |= (MDL_SOURCE_IS_NONPAGED_POOL | MDL_ALLOCATED_FIXED_SIZE);
         Temp->Mdl.MappedSystemVa = VirtualAddress;
-        
+
         Temp->BufferPool = Pool;
 
         *Buffer = (PNDIS_BUFFER)Temp;

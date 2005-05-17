@@ -171,7 +171,7 @@ CdfsRead(PDEVICE_OBJECT DeviceObject,
     {
       if (FileObject->Flags & FO_SYNCHRONOUS_IO)
 	{
-	  FileObject->CurrentByteOffset.QuadPart = 
+	  FileObject->CurrentByteOffset.QuadPart =
 	    ReadOffset.QuadPart + ReturnedReadLength;
 	}
       Irp->IoStatus.Information = ReturnedReadLength;

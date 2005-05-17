@@ -1,5 +1,10 @@
-/* $Id:$
+<<<<<<< .working
+/* $Id$
  * 
+=======
+/* $Id$
+ *
+>>>>>>> .merge-rechts.r15187
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mkconfig.c

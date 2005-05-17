@@ -41,7 +41,7 @@ struct ext2_super_block {
 	 * the incompatible feature set is that if there is a bit set
 	 * in the incompatible feature set that the kernel doesn't
 	 * know about, it should refuse to mount the filesystem.
-	 * 
+	 *
 	 * e2fsck's requirements are more strict; if it doesn't know
 	 * about a feature in either the compatible or incompatible
 	 * feature set, it must abort and not try to meddle with
@@ -187,7 +187,7 @@ struct ext2_inode {
 #define EXT2_APPEND_FL			0x00000020 /* writes to file may only append */
 #define EXT2_NODUMP_FL			0x00000040 /* do not dump file */
 #define EXT2_RESERVED_FL		0x80000000 /* reserved for ext2 lib */
-	
+
 
 /*
  * Structure of a blocks group descriptor
@@ -257,12 +257,12 @@ typedef struct _EXT2_FCB
 ULONG Ext2BlockMap(PDEVICE_EXTENSION DeviceExt,
 		   struct ext2_inode* inode,
 		   ULONG offset);
-NTSTATUS Ext2OpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject, 
+NTSTATUS Ext2OpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 		      PWSTR FileName);
-NTSTATUS Ext2ReadFile(PDEVICE_EXTENSION DeviceExt, 
+NTSTATUS Ext2ReadFile(PDEVICE_EXTENSION DeviceExt,
 		      PFILE_OBJECT FileObject,
-		      PVOID Buffer, 
-		      ULONG Length, 
+		      PVOID Buffer,
+		      ULONG Length,
                       LARGE_INTEGER Offset);
 NTSTATUS STDCALL Ext2Create(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 NTSTATUS STDCALL Ext2DirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);

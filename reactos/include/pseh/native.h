@@ -111,7 +111,7 @@ static __inline void _SEHCallFinally
 
 /* FINALLY FUNCTIONS */
 /* Declares a finally function's prototype */
-#define _SEH_FINALLY(NAME_) \
+#define _SEH_FINALLYFUNC(NAME_) \
  void __stdcall NAME_ \
  ( \
   int _SEHAbnormalTermination, \
@@ -123,13 +123,13 @@ static __inline void _SEHCallFinally
  _SEH_WRAP_FINALLY_ARGS(WRAPPER_, NAME_, ())
 
 #define _SEH_WRAP_FINALLY_ARGS(WRAPPER_, NAME_, ARGS_) \
- static __inline _SEH_FINALLY(WRAPPER_) \
+ static __inline _SEH_FINALLYFUNC(WRAPPER_) \
  { \
   NAME_ ARGS_; \
  }
 
 #define _SEH_WRAP_FINALLY_LOCALS_ARGS(WRAPPER_, LOCALS_, NAME_, ARGS_) \
- static __inline _SEH_FINALLY(WRAPPER_) \
+ static __inline _SEH_FINALLYFUNC(WRAPPER_) \
  { \
   _SEH_ACCESS_LOCALS(LOCALS_); \
   NAME_ ARGS_; \

@@ -27,44 +27,44 @@ MsfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
    PMSFS_MAILSLOT Mailslot;
    PMSFS_FCB Fcb;
    NTSTATUS Status;
-   
+
    DPRINT1("MsfsFileSystemControl(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
-   
+
    IoStack = IoGetCurrentIrpStackLocation(Irp);
    FileObject = IoStack->FileObject;
    Fcb = FileObject->FsContext;
    Mailslot = Fcb->Mailslot;
-   
+
    DPRINT1("Mailslot name: %wZ\n", &Mailslot->Name);
-   
+
    switch (IoStack->Parameters.FileSystemControl.FsControlCode)
      {
 #if 0
       case FSCTL_WAIT_PIPE:
 	break;
-	
+
       case FSCTL_LISTEN:
 	break;
-	
+
       case FSCTL_SET_STATE:
 	break;
-	
+
       case FSCTL_GET_STATE:
 	  {
-	     
-	     
+
+
 	     break;
 	  }
-	
+
 #endif
      default:
 	Status = STATUS_NOT_IMPLEMENTED;
      }
-   
+
    Irp->IoStatus.Status = Status;
    Irp->IoStatus.Information = 0;
    IoCompleteRequest (Irp, IO_NO_INCREMENT);
-   
+
    return(Status);
 }
 

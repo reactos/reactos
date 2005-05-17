@@ -34,8 +34,8 @@ COMPONENTS = ntoskrnl
 HALS = halx86/up halx86/mp
 
 # Bus drivers
-# acpi isapnp pci
-BUS = acpi isapnp pci
+# acpi isapnp pci serenum
+BUS = acpi isapnp pci serenum
 
 # Filesystem libraries
 # vfatlib
@@ -48,7 +48,7 @@ LIBUNICODE =
 LIB_STATIC = string rosrtl epsapi uuid libwine zlib rtl tgetopt pseh adns dxguid strmiids crt rossym wdmguid
 
 # Keyboard layout libraries
-DLLS_KBD = kbdda kbddv kbdes kbdfr kbdgr kbdse kbduk kbdus
+DLLS_KBD = kbdda kbddv kbdes kbdfr kbdgr kbdru kbdse kbdsg kbduk kbdus
 
 # Control Panels
 DLLS_CPL = cpl
@@ -61,9 +61,10 @@ DLLS_SHELLEXT = shellext
 DLLS = acledit aclui advapi32 advpack cabinet cards comctl32 crtdll comdlg32 d3d8thk dbghelp expat fmifs freetype \
 	gdi32 gdiplus glu32 hid imagehlp imm32 iphlpapi kernel32 lzexpand mesa32 midimap mmdrv mpr msacm msafd \
 	msgina msi msimg32 msvcrt20 msvideo mswsock netapi32 ntdll ole32 oleaut32 oledlg olepro32 opengl32 \
-	packet psapi riched20 richedit rpcrt4 samlib secur32 setupapi shell32 shlwapi smlib smdll snmpapi \
+	packet psapi riched20 richedit rpcrt4 samlib secur32 serialui setupapi shell32 shlwapi smlib smdll snmpapi \
 	syssetup twain user32 userenv version wininet winmm winspool ws2help ws2_32 wsock32 wshirda dnsapi \
-	urlmon shdocvw dinput dinput8 dxdiagn devenum dsound lsasrv $(DLLS_KBD) $(DLLS_CPL) $(DLLS_SHELLEXT)
+	urlmon shdocvw dinput dinput8 dxdiagn devenum dsound lsasrv dhcpcapi \
+	$(DLLS_KBD) $(DLLS_CPL) $(DLLS_SHELLEXT)
 
 SUBSYS = smss win32k csrss ntvdm
 
@@ -83,7 +84,7 @@ DRIVERS_LIB = bzip2 oskittcp ip csq
 DEVICE_DRIVERS = beep blue debugout null serial bootvid
 
 # Kernel mode input drivers
-INPUT_DRIVERS = keyboard mouclass psaux sermouse
+INPUT_DRIVERS = mouclass sermouse i8042prt kbdclass
 
 # Kernel mode file system drivers
 # cdfs ext2 fs_rec ms np vfat
@@ -105,7 +106,7 @@ STORAGE_DRIVERS = atapi cdrom class2 disk floppy scsiport diskdump
 # autochk cmd format services setup usetup welcome winlogon msiexec 
 SYS_APPS = autochk calc cmd explorer expand format ibrowser msiexec regsvr32 \
   reporterror services setup taskmgr userinit usetup welcome vmwinst rundll32 \
-  winlogon regedit winefile notepad reactos lsass
+  winlogon regedit winefile notepad reactos lsass dhcp
 
 # System services
 SYS_SVC = rpcss eventlog umpnpmgr

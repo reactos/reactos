@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  *  CALL.C - call internal batch command.
  *
  *
@@ -24,9 +23,13 @@
  *
  *    20-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Unicode and redirection safe!
+ *
+ *    02-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 
 /*
@@ -47,10 +50,7 @@ INT cmd_call (LPTSTR cmd, LPTSTR param)
 #endif
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Calls one batch program from another.\n\n"
-					   "CALL [drive:][path]filename [batch-parameter]\n\n"
-					   "  batch-parameter  Specifies any command-line information required by the\n"
-					   "                   batch program."));
+		ConOutResPuts(STRING_CALL_HELP);
 		return 0;
 	}
 

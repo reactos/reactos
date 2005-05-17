@@ -1,6 +1,6 @@
 
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            lib/rtl/mem.c
@@ -12,8 +12,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <string.h>
+#include "rtl.h"
 
 #define NDEBUG
 #include <debug.h>

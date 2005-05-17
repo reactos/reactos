@@ -441,7 +441,7 @@ UINT WINAPI mixerGetControlDetailsA(HMIXEROBJ hmix, LPMIXERCONTROLDETAILS lpmcdA
 	    if (lpmcdA->u.cMultipleItems != 0) {
 		size *= lpmcdA->u.cMultipleItems;
 	    }
-	    pDetailsW = (MIXERCONTROLDETAILS_LISTTEXTW *)HeapAlloc(GetProcessHeap(), 0, size);
+	    pDetailsW = HeapAlloc(GetProcessHeap(), 0, size);
             lpmcdA->paDetails = pDetailsW;
             lpmcdA->cbDetails = sizeof(MIXERCONTROLDETAILS_LISTTEXTW);
 	    /* set up lpmcd->paDetails */
@@ -492,7 +492,15 @@ UINT WINAPI mixerGetLineControlsA(HMIXEROBJ hmix, LPMIXERLINECONTROLSA lpmlcA,
     mlcW.dwLineID = lpmlcA->dwLineID;
     mlcW.u.dwControlID = lpmlcA->u.dwControlID;
     mlcW.u.dwControlType = lpmlcA->u.dwControlType;
-    mlcW.cControls = lpmlcA->cControls;
+
+    /* Debugging on Windows shows for MIXER_GETLINECONTROLSF_ONEBYTYPE only,
+       the control count is assumed to be 1 - This is relied upon by a game,
+       "Dynomite Deluze"                                                    */
+    if (MIXER_GETLINECONTROLSF_ONEBYTYPE == fdwControls) {
+        mlcW.cControls = 1;
+    } else {
+        mlcW.cControls = lpmlcA->cControls;
+    }
     mlcW.cbmxctrl = sizeof(MIXERCONTROLW);
     mlcW.pamxctrl = HeapAlloc(GetProcessHeap(), 0,
 			      mlcW.cControls * mlcW.cbmxctrl);
@@ -2580,6 +2588,7 @@ UINT WINAPI waveInPrepareHeader(HWAVEIN hWaveIn, WAVEHDR* lpWaveInHdr,
 				UINT uSize)
 {
     LPWINE_MLD		wmld;
+    UINT                result;
 
     TRACE("(%p, %p, %u);\n", hWaveIn, lpWaveInHdr, uSize);
 
@@ -2589,9 +2598,18 @@ UINT WINAPI waveInPrepareHeader(HWAVEIN hWaveIn, WAVEHDR* lpWaveInHdr,
     if ((wmld = MMDRV_Get(hWaveIn, MMDRV_WAVEIN, FALSE)) == NULL)
 	return MMSYSERR_INVALHANDLE;
 
+    if ((result = MMDRV_Message(wmld, WIDM_PREPARE, (DWORD_PTR)lpWaveInHdr,
+                                uSize, TRUE)) != MMSYSERR_NOTSUPPORTED)
+        return result;
+
+    if (lpWaveInHdr->dwFlags & WHDR_INQUEUE)
+        return WAVERR_STILLPLAYING;
+
+    lpWaveInHdr->dwFlags |= WHDR_PREPARED;
+    lpWaveInHdr->dwFlags &= ~WHDR_DONE;
     lpWaveInHdr->dwBytesRecorded = 0;
 
-    return MMDRV_Message(wmld, WIDM_PREPARE, (DWORD_PTR)lpWaveInHdr, uSize, TRUE);
+    return MMSYSERR_NOERROR;
 }
 
 /**************************************************************************
@@ -2601,20 +2619,30 @@ UINT WINAPI waveInUnprepareHeader(HWAVEIN hWaveIn, WAVEHDR* lpWaveInHdr,
 				  UINT uSize)
 {
     LPWINE_MLD		wmld;
+    UINT                result;
 
     TRACE("(%p, %p, %u);\n", hWaveIn, lpWaveInHdr, uSize);
 
     if (lpWaveInHdr == NULL || uSize < sizeof (WAVEHDR))
 	return MMSYSERR_INVALPARAM;
 
-    if (!(lpWaveInHdr->dwFlags & WHDR_PREPARED)) {
+    if (!(lpWaveInHdr->dwFlags & WHDR_PREPARED))
 	return MMSYSERR_NOERROR;
-    }
 
     if ((wmld = MMDRV_Get(hWaveIn, MMDRV_WAVEIN, FALSE)) == NULL)
 	return MMSYSERR_INVALHANDLE;
 
-    return MMDRV_Message(wmld, WIDM_UNPREPARE, (DWORD_PTR)lpWaveInHdr, uSize, TRUE);
+    if ((result = MMDRV_Message(wmld, WIDM_UNPREPARE, (DWORD_PTR)lpWaveInHdr,
+                                uSize, TRUE)) != MMSYSERR_NOTSUPPORTED)
+        return result;
+
+    if (lpWaveInHdr->dwFlags & WHDR_INQUEUE)
+        return WAVERR_STILLPLAYING;
+
+    lpWaveInHdr->dwFlags &= ~WHDR_PREPARED;
+    lpWaveInHdr->dwFlags |= WHDR_DONE;
+
+    return MMSYSERR_NOERROR;
 }
 
 /**************************************************************************

@@ -494,7 +494,7 @@ rtrequest(req, dst, gateway, netmask, flags, ret_nrt)
 			 */
 			rt2 = rtalloc1(dst, 0, RTF_PRCLONING);
 			if (rt2 && rt2->rt_parent) {
-				rtrequest(RTM_DELETE, 
+				rtrequest(RTM_DELETE,
 					  (struct sockaddr *)rt_key(rt2),
 					  rt2->rt_gateway,
 					  rt_mask(rt2), rt2->rt_flags, 0);

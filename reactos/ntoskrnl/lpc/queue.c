@@ -1,10 +1,10 @@
 /* $Id$
- * 
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/lpc/queue.c
  * PURPOSE:         Communication mechanism
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
@@ -39,7 +39,7 @@ EiDequeueMessagePort (IN OUT	PEPORT	Port)
 {
   PQUEUEDMESSAGE	Message;
   PLIST_ENTRY	entry;
-  
+
   if (IsListEmpty(&Port->QueueListHead))
     {
       return(NULL);
@@ -47,7 +47,7 @@ EiDequeueMessagePort (IN OUT	PEPORT	Port)
   entry = RemoveHeadList (&Port->QueueListHead);
   Message = CONTAINING_RECORD (entry, QUEUEDMESSAGE, QueueListEntry);
   Port->QueueLength--;
-   
+
   return (Message);
 }
 
@@ -67,7 +67,7 @@ EiDequeueConnectMessagePort (IN OUT	PEPORT	Port)
 {
   PQUEUEDMESSAGE	Message;
   PLIST_ENTRY	entry;
-  
+
   if (IsListEmpty(&Port->ConnectQueueListHead))
     {
       return(NULL);
@@ -75,7 +75,7 @@ EiDequeueConnectMessagePort (IN OUT	PEPORT	Port)
   entry = RemoveHeadList (&Port->ConnectQueueListHead);
   Message = CONTAINING_RECORD (entry, QUEUEDMESSAGE, QueueListEntry);
   Port->ConnectQueueLength--;
-  
+
   return (Message);
 }
 

@@ -90,11 +90,11 @@ GetSystemInfo (
 			Si->dwProcessorType = PROCESSOR_INTEL_PENTIUM;
 		}
 		break;
-		
+
 	case PROCESSOR_ARCHITECTURE_MIPS:
 		Si->dwProcessorType = PROCESSOR_MIPS_R4000;
 		break;
-		
+
 	case PROCESSOR_ARCHITECTURE_ALPHA:
 		Si->dwProcessorType = PROCESSOR_ALPHA_21064;
 		break;
@@ -130,7 +130,7 @@ GetSystemInfo (
 			Si->dwProcessorType = -1;
 		}
 		break;
-		
+
 	}
 	/* Once hardcoded to 64kb */
 	Si->dwAllocationGranularity	= Sbi.AllocationGranularity;

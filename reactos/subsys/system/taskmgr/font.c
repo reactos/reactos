@@ -19,16 +19,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-    
+
 #include "precomp.h"
-#include <commctrl.h>
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
-#include <stdio.h>
-    
-#include "font.h"
 
 void Font_DrawText(HDC hDC, LPCTSTR lpszText, int x, int y)
 {
@@ -36,11 +28,11 @@ void Font_DrawText(HDC hDC, LPCTSTR lpszText, int x, int y)
     HBITMAP    hFontBitmap;
     HBITMAP    hOldBitmap;
     int        i;
-    
+
     hFontDC = CreateCompatibleDC(hDC);
     hFontBitmap = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_FONT));
     hOldBitmap = (HBITMAP)SelectObject(hFontDC, hFontBitmap);
-    
+
     for (i = 0; i < (int)_tcslen(lpszText); i++) {
         if ((lpszText[i] >= '0') && (lpszText[i] <= '9')) {
             BitBlt(hDC, x + (i * 8), y, 8, 11, hFontDC, (lpszText[i] - '0') * 8, 0, SRCCOPY);

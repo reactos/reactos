@@ -22,15 +22,6 @@
  */
 
 #include "precomp.h"
-#include <commctrl.h>
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
-#include <stdio.h>
-    
-#include "column.h"
-#include "procpage.h"
 
 UINT    ColumnDataHints[25];
 TCHAR       szTemp[256];

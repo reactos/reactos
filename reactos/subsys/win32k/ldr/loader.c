@@ -114,7 +114,7 @@ EngFindImageProcAddress(IN HANDLE Module,
   Win32kExports[] =
     {
       { "BRUSHOBJ_hGetColorTransform",    BRUSHOBJ_hGetColorTransform    },
-      { "EngAlphaBlend",                  EngAlphaBlend                  }, 
+      { "EngAlphaBlend",                  EngAlphaBlend                  },
       { "EngClearEvent",                  EngClearEvent                  },
       { "EngControlSprites",              EngControlSprites              },
       { "EngCreateEvent",                 EngCreateEvent                 },
@@ -179,7 +179,7 @@ EngFindImageProcAddress(IN HANDLE Module,
       return NULL;
     }
   RtlInitAnsiString(&ProcNameString, ProcName);
-  Status = LdrGetProcedureAddress(Module, 
+  Status = LdrGetProcedureAddress(Module,
 				  &ProcNameString,
 				  0,
 				  &Function);

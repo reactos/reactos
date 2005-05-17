@@ -27,6 +27,7 @@
 #include <windows.h>
 #include <tchar.h>
 #include <syssetup.h>
+#include <userenv.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -58,6 +59,9 @@ RunNewSetup (HINSTANCE hInstance)
 {
   HMODULE hDll;
   PINSTALL_REACTOS InstallReactOS;
+
+  /* some dlls (loaded by syssetup) need a valid user profile */
+  InitializeProfiles();
 
   hDll = LoadLibrary (TEXT("syssetup"));
   if (hDll == NULL)
