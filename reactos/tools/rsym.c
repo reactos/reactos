@@ -330,9 +330,6 @@ MergeStabsAndCoffs(ULONG *MergedSymbolCount, PROSSYM_ENTRY *MergedSymbols,
   ULONG_PTR StabFunctionStartAddress;
   ULONG StabFunctionStringOffset, NewStabFunctionStringOffset;
 
-  fprintf(stderr, "StabSymbolsCount %lu, StabSymbols %p\n", StabSymbolsCount, StabSymbols);
-  fprintf(stderr, "CoffSymbolsCount %lu, CoffSymbols %p\n", CoffSymbolsCount, CoffSymbols);
-
   *MergedSymbols = malloc(StabSymbolsCount * sizeof(ROSSYM_ENTRY));
   if (NULL == *MergedSymbols)
     {
