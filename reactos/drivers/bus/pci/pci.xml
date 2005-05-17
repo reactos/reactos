@@ -1,4 +1,4 @@
-<module name="pci" type="kernelmodedriver" installbase="system32/drivers" installname="pci.sys">
+<module name="pci" type="kernelmodedriver" installbase="system32/drivers" installname="pci.sys" warnings="true">
 	<include base="pci">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>

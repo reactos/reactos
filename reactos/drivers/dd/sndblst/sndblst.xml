@@ -1,4 +1,4 @@
-<module name="sndblst" type="kernelmodedriver">
+<module name="sndblst" type="kernelmodedriver" warnings="true">
 	<include base="sndblst">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>
