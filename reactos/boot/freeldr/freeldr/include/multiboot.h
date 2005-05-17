@@ -133,6 +133,9 @@ typedef struct memory_map
 } memory_map_t;
 
 
+/* Base Addres of Kernel in Physical Memory */
+#define KERNEL_BASE_PHYS 0x200000
+
 LOADER_PARAMETER_BLOCK LoaderBlock; /* Multiboot info structure passed to kernel */
 char					multiboot_kernel_cmdline[255];	// Command line passed to kernel
 FRLDR_MODULE			multiboot_modules[64];		// Array to hold boot module info loaded for the kernel
@@ -190,24 +193,8 @@ FrLdrCloseModule(ULONG_PTR ModuleBase,
                  ULONG dwModuleSize);
 
 VOID
-STDCALL
-FrLdrStartup(ULONG Magic);
-
-VOID
 FASTCALL
 FrLdrGetKernelBase(VOID);
-
-VOID
-FASTCALL
-FrLdrSetupPae(ULONG Magic);
-
-VOID
-FASTCALL
-FrLdrGetPaeMode(VOID);
-
-VOID
-FASTCALL
-FrLdrSetupPageDirectory(VOID);
 
 VOID
 LoadAndBootReactOS(PCHAR OperatingSystemName);
@@ -215,10 +202,6 @@ LoadAndBootReactOS(PCHAR OperatingSystemName);
 VOID FASTCALL AsmCode(VOID);
 typedef VOID (FASTCALL *ASMCODE)(ULONG Magic,
                                  PLOADER_PARAMETER_BLOCK LoaderBlock);
-
-int	GetBootPartition(char *OperatingSystemName);
-
-
 
 #endif /* ! ASM */
 

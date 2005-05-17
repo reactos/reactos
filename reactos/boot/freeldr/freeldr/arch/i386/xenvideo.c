@@ -187,5 +187,34 @@ XenVideoCopyOffScreenBufferToVRAM(PVOID Buffer)
   AnsiMoveToPos(COLS, ROWS);
   XenConsFlush();
 }
+VOID
+XenVideoSetTextCursorPosition(ULONG X, ULONG Y)
+  {
+    AnsiMoveToPos(X, Y);
+  }
+
+BOOL
+XenVideoIsPaletteFixed(VOID)
+  {
+    return TRUE;
+  }
+
+VOID
+XenVideoSetPaletteColor(UCHAR Color, UCHAR Red, UCHAR Green, UCHAR Blue)
+  {
+    /* Should never be called */
+  }
+
+VOID
+XenVideoGetPaletteColor(UCHAR Color, UCHAR* Red, UCHAR* Green, UCHAR* Blue)
+  {
+    /* Should never be called */
+  }
+
+VOID
+XenVideoSync(VOID)
+  {
+    /* Nothing to do */
+  }
 
 /* EOF */

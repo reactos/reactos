@@ -35,7 +35,6 @@
 #undef MachVideoSetPaletteColor
 #undef MachVideoGetPaletteColor
 #undef MachVideoSync
-#undef MachVideoPrepareForReactOS
 #undef MachGetMemoryMap
 #undef MachDiskGetBootVolume
 #undef MachDiskGetSystemVolume
@@ -47,6 +46,7 @@
 #undef MachDiskGetDriveGeometry
 #undef MachDiskGetCacheableBlockCount
 #undef MachRTCGetCurrentDateTime
+#undef MachBootReactOS
 #undef MachHwDetect
 #undef MachDie
 
@@ -142,12 +142,6 @@ MachVideoSync(VOID)
   MachVtbl.VideoSync();
 }
 
-VOID
-MachVideoPrepareForReactOS(VOID)
-{
-  MachVtbl.VideoPrepareForReactOS();
-}
-
 ULONG
 MachGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
 {
@@ -226,6 +220,12 @@ VOID
 MachHwDetect(VOID)
 {
   MachVtbl.HwDetect();
+}
+
+VOID
+MachBootReactOS(VOID)
+{
+  MachVtbl.BootReactOS();
 }
 
 VOID

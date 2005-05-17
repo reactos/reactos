@@ -135,7 +135,7 @@ endif
 
 # fathelp.o must come first in the link line because it contains bootsector helper code
 # arch.o must come second in the link line because it contains the startup code
-ARCH_I386_OBJS = fathelp.o	\
+ARCH_I386_OBJS = fathelp.o \
   arch.o \
   i386idt.o \
   i386trap.o \
@@ -144,8 +144,9 @@ ARCH_I386_OBJS = fathelp.o	\
   boot.o \
   linux.o \
   mb.o \
-  i386rtl.o	\
-  i386vid.o	\
+  i386boot.o \
+  i386rtl.o \
+  i386vid.o \
   drvmap.o \
   int386.o \
   i386disk.o \
@@ -159,18 +160,21 @@ ARCH_I386_OBJS = fathelp.o	\
   machpc.o \
   machxbox.o \
   machxen.o \
+  pcboot.o \
   pccons.o \
   pcdisk.o \
   pcmem.o \
   pcrtc.o \
-  pcvideo.o	\
+  pcvideo.o \
+  xboxboot.o \
   xboxcons.o \
   xboxdisk.o \
   xboxfont.o \
   xboxhw.o \
-  xboxmem.o	\
-  xboxrtc.o	\
-  xboxvideo.o	\
+  xboxmem.o \
+  xboxrtc.o \
+  xboxvideo.o \
+  xenboot.o \
   xencons.o \
   xenctrlif.o \
   xendisk.o \

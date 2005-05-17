@@ -52,7 +52,6 @@ typedef struct tagMACHVTBL
   VOID (*VideoSetPaletteColor)(UCHAR Color, UCHAR Red, UCHAR Green, UCHAR Blue);
   VOID (*VideoGetPaletteColor)(UCHAR Color, UCHAR* Red, UCHAR* Green, UCHAR* Blue);
   VOID (*VideoSync)(VOID);
-  VOID (*VideoPrepareForReactOS)(VOID);
 
   ULONG (*GetMemoryMap)(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize);
 
@@ -69,6 +68,8 @@ typedef struct tagMACHVTBL
   VOID (*RTCGetCurrentDateTime)(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second);
 
   VOID (*HwDetect)(VOID);
+
+  VOID (*BootReactOS)(VOID);
 
   VOID (*Die)(VOID);
 } MACHVTBL, *PMACHVTBL;
@@ -92,7 +93,6 @@ extern MACHVTBL MachVtbl;
 #define MachVideoSetPaletteColor(Col, R, G, B)	MachVtbl.VideoSetPaletteColor((Col), (R), (G), (B))
 #define MachVideoGetPaletteColor(Col, R, G, B)	MachVtbl.VideoGetPaletteColor((Col), (R), (G), (B))
 #define MachVideoSync()				MachVtbl.VideoSync()
-#define MachVideoPrepareForReactOS()		MachVtbl.VideoPrepareForReactOS()
 #define MachGetMemoryMap(MMap, Size)		MachVtbl.GetMemoryMap((MMap), (Size))
 #define MachDiskGetBootVolume(Drv, Start, Cnt, FsType)	MachVtbl.DiskGetBootVolume((Drv), (Start), (Cnt), (FsType))
 #define MachDiskGetSystemVolume(SysPath, RemPath, Dev, Drv, Start, Cnt, FsType)	MachVtbl.DiskGetSystemVolume((SysPath), (RemPath), (Dev), (Drv), (Start), (Cnt), (FsType))
@@ -105,6 +105,7 @@ extern MACHVTBL MachVtbl;
 #define MachDiskGetCacheableBlockCount(Drive)	MachVtbl.DiskGetCacheableBlockCount(Drive)
 #define MachRTCGetCurrentDateTime(Y, Mo, D, H, Mi, S)	MachVtbl.RTCGetCurrentDateTime((Y), (Mo), (D), (H), (Mi), (S));
 #define MachHwDetect()				MachVtbl.HwDetect()
+#define MachBootReactOS()			MachVtbl.BootReactOS()
 #define MachDie()				MachVtbl.Die()
 
 #endif /* __MACHINE_H_ */

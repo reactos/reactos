@@ -46,7 +46,6 @@ PcMachInit(char *CmdLine)
   MachVtbl.VideoSetPaletteColor = PcVideoSetPaletteColor;
   MachVtbl.VideoGetPaletteColor = PcVideoGetPaletteColor;
   MachVtbl.VideoSync = PcVideoSync;
-  MachVtbl.VideoPrepareForReactOS = PcVideoPrepareForReactOS;
   MachVtbl.GetMemoryMap = PcMemGetMemoryMap;
   MachVtbl.DiskGetBootVolume = i386DiskGetBootVolume;
   MachVtbl.DiskGetSystemVolume = i386DiskGetSystemVolume;
@@ -59,6 +58,7 @@ PcMachInit(char *CmdLine)
   MachVtbl.DiskGetCacheableBlockCount = PcDiskGetCacheableBlockCount;
   MachVtbl.RTCGetCurrentDateTime = PcRTCGetCurrentDateTime;
   MachVtbl.HwDetect = PcHwDetect;
+  MachVtbl.BootReactOS = PcBootReactOS;
   MachVtbl.Die = PcDie;
 }
 

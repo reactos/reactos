@@ -109,7 +109,6 @@ XenMachInit(char *CmdLine)
   MachVtbl.VideoSetPaletteColor = XenVideoSetPaletteColor;
   MachVtbl.VideoGetPaletteColor = XenVideoGetPaletteColor;
   MachVtbl.VideoSync = XenVideoSync;
-  MachVtbl.VideoPrepareForReactOS = XenVideoPrepareForReactOS;
   MachVtbl.GetMemoryMap = XenMemGetMemoryMap;
   MachVtbl.DiskGetBootVolume = i386DiskGetBootVolume;
   MachVtbl.DiskGetSystemVolume = i386DiskGetSystemVolume;
@@ -122,6 +121,7 @@ XenMachInit(char *CmdLine)
   MachVtbl.DiskGetCacheableBlockCount = XenDiskGetCacheableBlockCount;
   MachVtbl.RTCGetCurrentDateTime = XenRTCGetCurrentDateTime;
   MachVtbl.HwDetect = XenHwDetect;
+  MachVtbl.BootReactOS = XenBootReactOS;
   MachVtbl.Die = XenDie;
 
   XenCtrlIfInit();
@@ -192,47 +192,6 @@ void _start()
   /* Shouldn't get here */
   XenDie();
 }
-
-#define XEN_UNIMPLEMENTED(routine) \
-  printf(routine " unimplemented. Shutting down\n"); \
-  XenDie()
-
-VOID
-XenVideoSetTextCursorPosition(ULONG X, ULONG Y)
-  {
-    XEN_UNIMPLEMENTED("XenVideoSetTextCursorPosition");
-  }
-
-BOOL
-XenVideoIsPaletteFixed(VOID)
-  {
-    XEN_UNIMPLEMENTED("XenVideoIsPaletteFixed");
-    return TRUE;
-  }
-
-VOID
-XenVideoSetPaletteColor(UCHAR Color, UCHAR Red, UCHAR Green, UCHAR Blue)
-  {
-    XEN_UNIMPLEMENTED("XenVideoSetPaletteColor");
-  }
-
-VOID
-XenVideoGetPaletteColor(UCHAR Color, UCHAR* Red, UCHAR* Green, UCHAR* Blue)
-  {
-    XEN_UNIMPLEMENTED("XenVideoGetPaletteColor");
-  }
-
-VOID
-XenVideoSync(VOID)
-  {
-    XEN_UNIMPLEMENTED("XenVideoSync");
-  }
-
-VOID
-XenVideoPrepareForReactOS(VOID)
-  {
-    XEN_UNIMPLEMENTED("XenVideoPrepareForReactOS");
-  }
 
 /* emit the elf segment Xen builder expects in kernel image */
 asm(".section __xen_guest;"

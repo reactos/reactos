@@ -576,9 +576,13 @@ for(;;);
 #endif
 
   /* Now boot the kernel */
+#ifdef TODO
   DiskStopFloppyMotor();
   MachVideoPrepareForReactOS();
   FrLdrStartup(0x2badb002);
+#else
+  MachBootReactOS();
+#endif
 }
 
 /* EOF */

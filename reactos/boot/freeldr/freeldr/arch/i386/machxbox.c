@@ -44,7 +44,6 @@ XboxMachInit(char *CmdLine)
   MachVtbl.VideoSetPaletteColor = XboxVideoSetPaletteColor;
   MachVtbl.VideoGetPaletteColor = XboxVideoGetPaletteColor;
   MachVtbl.VideoSync = XboxVideoSync;
-  MachVtbl.VideoPrepareForReactOS = XboxVideoPrepareForReactOS;
   MachVtbl.GetMemoryMap = XboxMemGetMemoryMap;
   MachVtbl.DiskGetBootVolume = i386DiskGetBootVolume;
   MachVtbl.DiskGetSystemVolume = i386DiskGetSystemVolume;
@@ -57,6 +56,7 @@ XboxMachInit(char *CmdLine)
   MachVtbl.DiskGetCacheableBlockCount = XboxDiskGetCacheableBlockCount;
   MachVtbl.RTCGetCurrentDateTime = XboxRTCGetCurrentDateTime;
   MachVtbl.HwDetect = XboxHwDetect;
+  MachVtbl.BootReactOS = XboxBootReactOS;
   MachVtbl.Die = XboxDie;
 }
 

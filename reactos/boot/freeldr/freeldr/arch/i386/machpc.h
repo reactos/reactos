@@ -55,6 +55,8 @@ ULONG PcDiskGetCacheableBlockCount(ULONG DriveNumber);
 
 VOID PcRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second);
 
+VOID PcBootReactOS(VOID);
+
 VOID PcHwDetect(VOID);
 
 VOID PcDie(VOID);

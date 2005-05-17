@@ -69,7 +69,6 @@ BOOL XenVideoIsPaletteFixed(VOID);
 VOID XenVideoSetPaletteColor(UCHAR Color, UCHAR Red, UCHAR Green, UCHAR Blue);
 VOID XenVideoGetPaletteColor(UCHAR Color, UCHAR* Red, UCHAR* Green, UCHAR* Blue);
 VOID XenVideoSync(VOID);
-VOID XenVideoPrepareForReactOS(VOID);
 
 ULONG XenMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize);
 VOID XenMemInit(start_info_t *StartInfo);
@@ -86,7 +85,10 @@ VOID XenRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour
 
 VOID XenHwDetect(VOID);
 
+VOID XenBootReactOS(VOID);
+
 VOID XenDie(VOID);
+
 VOID XenHypervisorCallback(VOID);
 VOID XenFailsafeCallback(VOID);
 

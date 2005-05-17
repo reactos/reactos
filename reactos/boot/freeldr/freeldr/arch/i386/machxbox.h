@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  *  FreeLoader
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -59,6 +58,8 @@ ULONG XboxDiskGetCacheableBlockCount(ULONG DriveNumber);
 VOID XboxRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second);
 
 VOID XboxHwDetect(VOID);
+
+VOID XboxBootReactOS(VOID);
 
 VOID XboxDie(VOID);
 
