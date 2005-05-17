@@ -176,6 +176,7 @@ ARCH_I386_OBJS = fathelp.o	\
   xendisk.o \
   xenentry.o \
   xenevtchn.o \
+  xenhw.o \
   xenmem.o \
   xenrtc.o \
   xenvideo.o \

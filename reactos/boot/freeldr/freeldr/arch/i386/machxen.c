@@ -234,12 +234,6 @@ XenVideoPrepareForReactOS(VOID)
     XEN_UNIMPLEMENTED("XenVideoPrepareForReactOS");
   }
 
-VOID
-XenHwDetect(VOID)
-  {
-    XEN_UNIMPLEMENTED("XenHwDetect");
-  }
-
 /* emit the elf segment Xen builder expects in kernel image */
 asm(".section __xen_guest;"
     ".ascii \"GUEST_OS=linux,GUEST_VER=2.6\";"
