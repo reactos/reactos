@@ -217,7 +217,15 @@ IopCreateDriverObject(
    {
       return Status;
    }
-   
+
+   if (Status == STATUS_OBJECT_EXISTS)
+   {
+      /* The driver object already exists, so it is already
+       * initialized. Don't initialize it once more. */
+      *DriverObject = Object;
+      return STATUS_SUCCESS;
+   }
+
      /* Create driver extension */
    Object->DriverExtension = (PDRIVER_EXTENSION)
       ExAllocatePoolWithTag(
