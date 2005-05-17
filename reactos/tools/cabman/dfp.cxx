@@ -329,8 +329,8 @@ unsigned long CDFParser::Parse()
                     } else {
                         /* File copy */
                         Status = PerformFileCopy();
-    
-                        if (Status == CAB_STATUS_FAILURE) {
+
+                        if (Status != CAB_STATUS_SUCCESS) {
                             printf("Directive file contains errors at line %d.\n", (unsigned int)CurrentLine);
                             DPRINT(MID_TRACE, ("Error while copying file.\n"));
                         }

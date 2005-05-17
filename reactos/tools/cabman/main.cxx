@@ -316,9 +316,9 @@ bool CCABManager::CreateCabinet()
         return false;
     }
 
-    Parse();
+    Status = Parse();
 
-    return true;
+    return (Status == CAB_STATUS_SUCCESS ? true : false);
 }
 
 
