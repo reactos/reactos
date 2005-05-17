@@ -46,6 +46,9 @@
 <directory name="setup">
 	<xi:include href="setup/setup.xml" />
 </directory>
+<directory name="sm">
+	<xi:include href="sm/sm.xml" />
+</directory>
 <directory name="taskmgr">
 	<xi:include href="taskmgr/taskmgr.xml" />
 </directory>
