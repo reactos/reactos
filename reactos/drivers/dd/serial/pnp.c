@@ -126,7 +126,8 @@ SerialAddDevice(
 NTSTATUS STDCALL
 SerialPnpStartDevice(
 	IN PDEVICE_OBJECT DeviceObject,
-	IN PCM_RESOURCE_LIST ResourceList)
+	IN PCM_RESOURCE_LIST ResourceList,
+	IN PCM_RESOURCE_LIST ResourceListTranslated)
 {
 	PSERIAL_DEVICE_EXTENSION DeviceExtension;
 	WCHAR DeviceNameBuffer[32];
@@ -174,8 +175,8 @@ SerialPnpStartDevice(
 				case CmResourceTypeInterrupt:
 					if (Dirql != 0)
 						return STATUS_UNSUCCESSFUL;
-					Dirql = (KIRQL)PartialDescriptor->u.Interrupt.Level;
-					Vector = PartialDescriptor->u.Interrupt.Vector;
+					Dirql = (KIRQL)ResourceListTranslated->List[i].PartialResourceList.PartialDescriptors[j].u.Interrupt.Level;
+					Vector = ResourceListTranslated->List[i].PartialResourceList.PartialDescriptors[j].u.Interrupt.Vector;
 					Affinity = PartialDescriptor->u.Interrupt.Affinity;
 					if (PartialDescriptor->Flags & CM_RESOURCE_INTERRUPT_LATCHED)
 						InterruptMode = Latched;
@@ -338,16 +339,9 @@ SerialPnp(
 			BOOLEAN ConflictDetected;
 			DPRINT("Serial: IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
 
-			/* FIXME: first HACK: PnP manager can send multiple
-			 * IRP_MN_START_DEVICE for one device
-			 */
-			if (((PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->PnpState != dsStopped)
-			{
-				DPRINT1("Serial: device already started. Ignoring this irp!\n");
-				Status = STATUS_SUCCESS;
-				break;
-			}
-			/* FIXME: second HACK: verify that we have some allocated resources.
+			ASSERT(((PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->PnpState == dsStopped);
+
+			/* FIXME: HACK: verify that we have some allocated resources.
 			 * It seems not to be always the case on some hardware
 			 */
 			if (Stack->Parameters.StartDevice.AllocatedResources == NULL)
@@ -357,7 +351,7 @@ SerialPnp(
 				Status = STATUS_INSUFFICIENT_RESOURCES;
 				break;
 			}
-			/* FIXME: third HACK: verify that we don't have resource conflict,
+			/* FIXME: HACK: verify that we don't have resource conflict,
 			 * because PnP manager doesn't do it automatically
 			 */
 			Status = IoReportResourceForDetection(
@@ -377,7 +371,8 @@ SerialPnp(
 			if (NT_SUCCESS(Status))
 				Status = SerialPnpStartDevice(
 					DeviceObject,
-					Stack->Parameters.StartDevice.AllocatedResources);
+					Stack->Parameters.StartDevice.AllocatedResources,
+					Stack->Parameters.StartDevice.AllocatedResourcesTranslated);
 			break;
 		}
 		case IRP_MN_QUERY_DEVICE_RELATIONS: /* (optional) 0x7 */

@@ -83,12 +83,13 @@ DetectLegacyDevice(
 {
 	ULONG ResourceListSize;
 	PCM_RESOURCE_LIST ResourceList;
+	PCM_RESOURCE_LIST ResourceListTranslated;
 	PCM_PARTIAL_RESOURCE_DESCRIPTOR ResourceDescriptor;
+	PCM_PARTIAL_RESOURCE_DESCRIPTOR ResourceDescriptorTranslated;
 	BOOLEAN ConflictDetected;
 	UART_TYPE UartType;
 	PDEVICE_OBJECT Pdo = NULL;
 	PDEVICE_OBJECT Fdo;
-	KIRQL Dirql;
 	NTSTATUS Status;
 
 	/* Create resource list */
@@ -96,29 +97,60 @@ DetectLegacyDevice(
 	ResourceList = (PCM_RESOURCE_LIST)ExAllocatePoolWithTag(PagedPool, ResourceListSize, SERIAL_TAG);
 	if (!ResourceList)
 		return STATUS_INSUFFICIENT_RESOURCES;
-	ResourceList->Count = 1;
-	ResourceList->List[0].InterfaceType = InterfaceTypeUndefined;
-	ResourceList->List[0].BusNumber = -1; /* unknown */
-	ResourceList->List[0].PartialResourceList.Version = 1;
-	ResourceList->List[0].PartialResourceList.Revision = 1;
-	ResourceList->List[0].PartialResourceList.Count = 2;
+	ResourceListTranslated = (PCM_RESOURCE_LIST)ExAllocatePoolWithTag(PagedPool, ResourceListSize, SERIAL_TAG);
+	if (!ResourceListTranslated)
+	{
+		ExFreePoolWithTag(ResourceList, SERIAL_TAG);
+		return STATUS_INSUFFICIENT_RESOURCES;
+	}
+
+	/* Resource header */
+	ResourceList->Count = ResourceListTranslated->Count
+		= 1;
+	ResourceList->List[0].InterfaceType = ResourceListTranslated->List[0].InterfaceType
+		= InterfaceTypeUndefined;
+	ResourceList->List[0].BusNumber = ResourceListTranslated->List[0].BusNumber
+		= -1; /* unknown */
+	ResourceList->List[0].PartialResourceList.Version = ResourceListTranslated->List[0].PartialResourceList.Version
+		= 1;
+	ResourceList->List[0].PartialResourceList.Revision = ResourceListTranslated->List[0].PartialResourceList.Revision
+		= 1;
+	ResourceList->List[0].PartialResourceList.Count = ResourceListTranslated->List[0].PartialResourceList.Count
+		= 2;
+
+	/* I/O port */
 	ResourceDescriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[0];
-	ResourceDescriptor->Type = CmResourceTypePort;
-	ResourceDescriptor->ShareDisposition = CmResourceShareDriverExclusive;
-	ResourceDescriptor->Flags = CM_RESOURCE_PORT_IO;
-	ResourceDescriptor->u.Port.Start.u.HighPart = 0;
-	ResourceDescriptor->u.Port.Start.u.LowPart = ComPortBase;
-	ResourceDescriptor->u.Port.Length = 8;
+	ResourceDescriptorTranslated = &ResourceListTranslated->List[0].PartialResourceList.PartialDescriptors[0];
+	ResourceDescriptor->Type = ResourceDescriptorTranslated->Type
+		= CmResourceTypePort;
+	ResourceDescriptor->ShareDisposition = ResourceDescriptorTranslated->ShareDisposition
+		= CmResourceShareDriverExclusive;
+	ResourceDescriptor->Flags = ResourceDescriptorTranslated->Flags
+		= CM_RESOURCE_PORT_IO;
+	ResourceDescriptor->u.Port.Start.u.HighPart = ResourceDescriptorTranslated->u.Port.Start.u.HighPart
+		= 0;
+	ResourceDescriptor->u.Port.Start.u.LowPart = ResourceDescriptorTranslated->u.Port.Start.u.LowPart
+		= ComPortBase;
+	ResourceDescriptor->u.Port.Length = ResourceDescriptorTranslated->u.Port.Length
+		= 8;
 
 	ResourceDescriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[1];
-	ResourceDescriptor->Type = CmResourceTypeInterrupt;
-	ResourceDescriptor->ShareDisposition = CmResourceShareShared;
-	ResourceDescriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
-	ResourceDescriptor->u.Interrupt.Vector = HalGetInterruptVector(
-		Internal, 0, 0, Irq,
-		&Dirql,
+	ResourceDescriptorTranslated = &ResourceListTranslated->List[0].PartialResourceList.PartialDescriptors[1];
+	ResourceDescriptor->Type = ResourceDescriptorTranslated->Type
+		= CmResourceTypeInterrupt;
+	ResourceDescriptor->ShareDisposition = ResourceDescriptorTranslated->ShareDisposition
+		= CmResourceShareShared;
+	ResourceDescriptor->Flags = ResourceDescriptorTranslated->Flags
+		= CM_RESOURCE_INTERRUPT_LATCHED;
+	ResourceDescriptor->u.Interrupt.Level = Irq;
+	ResourceDescriptorTranslated->u.Interrupt.Vector = HalGetInterruptVector(
+		ResourceList->List[0].InterfaceType,
+		ResourceList->List[0].BusNumber,
+		ResourceDescriptor->u.Interrupt.Level,
+		ResourceDescriptor->u.Interrupt.Vector,
+		(PKIRQL)&ResourceDescriptorTranslated->u.Interrupt.Level,
 		&ResourceDescriptor->u.Interrupt.Affinity);
-	ResourceDescriptor->u.Interrupt.Level = (ULONG)Dirql;
+	ResourceDescriptorTranslated->u.Interrupt.Affinity = ResourceDescriptor->u.Interrupt.Affinity;
 
 	/* Report resource list */
 	Status = IoReportResourceForDetection(
@@ -129,11 +161,13 @@ DetectLegacyDevice(
 	{
 		DPRINT("Serial: conflict detected for serial port at 0x%lx (Irq %lu)\n", ComPortBase, Irq);
 		ExFreePoolWithTag(ResourceList, SERIAL_TAG);
+		ExFreePoolWithTag(ResourceListTranslated, SERIAL_TAG);
 		return STATUS_DEVICE_NOT_CONNECTED;
 	}
 	if (!NT_SUCCESS(Status))
 	{
 		ExFreePoolWithTag(ResourceList, SERIAL_TAG);
+		ExFreePoolWithTag(ResourceListTranslated, SERIAL_TAG);
 		return Status;
 	}
 
@@ -154,7 +188,7 @@ DetectLegacyDevice(
 			Status = SerialAddDeviceInternal(DriverObject, Pdo, UartType, pComPortNumber, &Fdo);
 			if (NT_SUCCESS(Status))
 			{
-				Status = SerialPnpStartDevice(Fdo, ResourceList);
+				Status = SerialPnpStartDevice(Fdo, ResourceList, ResourceListTranslated);
 			}
 		}
 	}
@@ -168,6 +202,7 @@ DetectLegacyDevice(
 		Status = STATUS_DEVICE_NOT_CONNECTED;
 	}
 	ExFreePoolWithTag(ResourceList, SERIAL_TAG);
+	ExFreePoolWithTag(ResourceListTranslated, SERIAL_TAG);
 	return Status;
 }
 
