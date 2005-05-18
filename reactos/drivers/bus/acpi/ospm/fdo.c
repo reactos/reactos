@@ -119,12 +119,16 @@ AcpiCreateInstanceIDString(PUNICODE_STRING InstanceID,
 static BOOLEAN
 AcpiCreateResourceList(PCM_RESOURCE_LIST* pResourceList,
                        PULONG ResourceListSize,
+                       PIO_RESOURCE_REQUIREMENTS_LIST* pRequirementsList,
+                       PULONG RequirementsListSize,
                        RESOURCE* resources)
 {
   BOOLEAN Done;
   ULONG NumberOfResources = 0;
   PCM_RESOURCE_LIST ResourceList;
+  PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR ResourceDescriptor;
+  PIO_RESOURCE_DESCRIPTOR RequirementDescriptor;
   RESOURCE* resource;
   ULONG i;
   KIRQL Dirql;
@@ -176,6 +180,24 @@ AcpiCreateResourceList(PCM_RESOURCE_LIST* pResourceList,
   ResourceList->List[0].PartialResourceList.Count = NumberOfResources;
   ResourceDescriptor = ResourceList->List[0].PartialResourceList.PartialDescriptors;
 
+  *RequirementsListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST) + sizeof(IO_RESOURCE_DESCRIPTOR) * (NumberOfResources - 1);
+  RequirementsList = (PIO_RESOURCE_REQUIREMENTS_LIST)ExAllocatePool(PagedPool, *RequirementsListSize);
+  *pRequirementsList = RequirementsList;
+  if (!RequirementsList)
+  {
+    ExFreePool(ResourceList);
+    return FALSE;
+  }
+  RequirementsList->ListSize = *RequirementsListSize;
+  RequirementsList->InterfaceType = ResourceList->List[0].InterfaceType;
+  RequirementsList->BusNumber = ResourceList->List[0].BusNumber;
+  RequirementsList->SlotNumber = 0; /* Not used by WDM drivers */
+  RequirementsList->AlternativeLists = 1;
+  RequirementsList->List[0].Version = 1;
+  RequirementsList->List[0].Revision = 1;
+  RequirementsList->List[0].Count = NumberOfResources;
+  RequirementDescriptor = RequirementsList->List[0].Descriptors;
+
   /* Fill resources list structure */
   Done = FALSE;
   resource = resources;
@@ -199,7 +221,16 @@ AcpiCreateResourceList(PCM_RESOURCE_LIST* pResourceList,
             &Dirql,
             &ResourceDescriptor->u.Interrupt.Affinity);
           ResourceDescriptor->u.Interrupt.Level = (ULONG)Dirql;
+
+          RequirementDescriptor->Option = 0; /* Required */
+          RequirementDescriptor->Type = ResourceDescriptor->Type;
+          RequirementDescriptor->ShareDisposition = ResourceDescriptor->ShareDisposition;
+          RequirementDescriptor->Flags = ResourceDescriptor->Flags;
+          RequirementDescriptor->u.Interrupt.MinimumVector = RequirementDescriptor->u.Interrupt.MaximumVector
+            = irq_data->interrupts[i];
+
           ResourceDescriptor++;
+          RequirementDescriptor++;
         }
         break;
       }
@@ -225,7 +256,16 @@ AcpiCreateResourceList(PCM_RESOURCE_LIST* pResourceList,
             case TRANSFER_8_16: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_8_AND_16; break;
           }
           ResourceDescriptor->u.Dma.Channel = dma_data->channels[i];
+
+          RequirementDescriptor->Option = 0; /* Required */
+          RequirementDescriptor->Type = ResourceDescriptor->Type;
+          RequirementDescriptor->ShareDisposition = ResourceDescriptor->ShareDisposition;
+          RequirementDescriptor->Flags = ResourceDescriptor->Flags;
+          RequirementDescriptor->u.Dma.MinimumChannel = RequirementDescriptor->u.Dma.MaximumChannel
+            = ResourceDescriptor->u.Dma.Channel;
+
           ResourceDescriptor++;
+          RequirementDescriptor++;
         }
         break;
       }
@@ -242,7 +282,18 @@ AcpiCreateResourceList(PCM_RESOURCE_LIST* pResourceList,
         ResourceDescriptor->u.Port.Start.u.HighPart = 0;
         ResourceDescriptor->u.Port.Start.u.LowPart = io_data->min_base_address;
         ResourceDescriptor->u.Port.Length = io_data->range_length;
+
+        RequirementDescriptor->Option = 0; /* Required */
+        RequirementDescriptor->Type = ResourceDescriptor->Type;
+        RequirementDescriptor->ShareDisposition = ResourceDescriptor->ShareDisposition;
+        RequirementDescriptor->Flags = ResourceDescriptor->Flags;
+        RequirementDescriptor->u.Port.Length = ResourceDescriptor->u.Port.Length;
+        RequirementDescriptor->u.Port.Alignment = 1; /* Start address is specified, so it doesn't matter */
+        RequirementDescriptor->u.Port.MinimumAddress = RequirementDescriptor->u.Port.MaximumAddress
+          = ResourceDescriptor->u.Port.Start;
+
         ResourceDescriptor++;
+        RequirementDescriptor++;
         break;
       }
       case end_tag:
@@ -366,6 +417,8 @@ FdoQueryBusRelations(
           }
           if (!AcpiCreateResourceList(&PdoDeviceExtension->ResourceList,
                                       &PdoDeviceExtension->ResourceListSize,
+                                      &PdoDeviceExtension->ResourceRequirementsList,
+                                      &PdoDeviceExtension->ResourceRequirementsListSize,
                                       (RESOURCE*)Buffer.pointer))
           {
             ASSERT(FALSE);
