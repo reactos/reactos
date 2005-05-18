@@ -46,6 +46,14 @@
 
 PHANDLE_TABLE ObpKernelHandleTable = NULL;
 
+/* TEMPORARY HACK. DO NOT REMOVE -- Alex */
+NTSTATUS
+STDCALL
+ExpDesktopCreate(PVOID ObjectBody,
+                 PVOID Parent,
+                 PWSTR RemainingPath,
+                 POBJECT_CREATE_INFORMATION ObjectCreateInformation);
+
 /* FUNCTIONS ***************************************************************/
 
 static VOID
@@ -64,7 +72,7 @@ ObpDecrementHandleCount(PVOID ObjectBody)
 
   if(NewHandleCount == 0)
   {
-    if(ObjectHeader->Parent != NULL && !ObjectHeader->Permanent)
+    if(ObjectHeader->NameInfo->Directory != NULL && !ObjectHeader->Permanent)
     {
       /* delete the object from the namespace when the last handle got closed.
          Only do this if it's actually been inserted into the namespace and
@@ -925,27 +933,221 @@ NtClose(IN HANDLE Handle)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS 
+STDCALL
 ObInsertObject(IN PVOID Object,
-	       IN PACCESS_STATE PassedAccessState OPTIONAL,
-	       IN ACCESS_MASK DesiredAccess,
-	       IN ULONG AdditionalReferences,
-	       OUT PVOID* ReferencedObject OPTIONAL,
-	       OUT PHANDLE Handle)
+               IN PACCESS_STATE PassedAccessState OPTIONAL,
+               IN ACCESS_MASK DesiredAccess,
+               IN ULONG AdditionalReferences,
+               OUT PVOID* ReferencedObject OPTIONAL,
+               OUT PHANDLE Handle)
 {
-  POBJECT_HEADER ObjectHeader;
-  ACCESS_MASK Access;
+    POBJECT_CREATE_INFORMATION ObjectCreateInfo;
+    POBJECT_HEADER Header;
+    POBJECT_HEADER_NAME_INFO ObjectNameInfo;
+    PVOID FoundObject = NULL;
+    POBJECT_HEADER FoundHeader = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
+    UNICODE_STRING RemainingPath;
+    BOOLEAN ObjectAttached = FALSE; 
+    PSECURITY_DESCRIPTOR NewSecurityDescriptor = NULL;
+    SECURITY_SUBJECT_CONTEXT SubjectContext;
 
-  PAGED_CODE();
+    PAGED_CODE();
+    
+    /* Get the Header and Create Info */
+    DPRINT("ObInsertObject: %x\n", Object);
+    Header = BODY_TO_HEADER(Object);
+    ObjectCreateInfo = Header->ObjectCreateInfo;
+    ObjectNameInfo = Header->NameInfo;
+    
+    /* First try to find the Object */
+    if (ObjectNameInfo && ObjectNameInfo->Name.Buffer)
+    {
+        DPRINT("Object has a name. Trying to find it: %wZ.\n", &ObjectNameInfo->Name);
+        Status = ObFindObject(ObjectCreateInfo,
+                              &ObjectNameInfo->Name,
+                              &FoundObject,
+                              &RemainingPath,
+                              NULL);
+        DPRINT("FoundObject: %x, Path: %wZ\n", FoundObject, &RemainingPath);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ObFindObject() failed! (Status 0x%x)\n", Status);
+            return Status;
+        }
+        
+        if (FoundObject)
+        {
+            DPRINT("Getting header: %x\n", FoundObject);
+            FoundHeader = BODY_TO_HEADER(FoundObject);
+        }
+        
+        if (FoundHeader && RemainingPath.Buffer == NULL)
+        {
+            DPRINT("Object exists\n");
+            if (FoundHeader->ObjectType != Header->ObjectType
+                || !(ObjectCreateInfo->Attributes & OBJ_OPENIF))
+            {
+                ObDereferenceObject(FoundObject);
+                return STATUS_OBJECT_NAME_COLLISION;
+            }
+            return STATUS_OBJECT_EXISTS;
+        }
+    }
+    else
+    {
+        DPRINT("No name, empty remaining path\n");
+        RtlInitUnicodeString(&RemainingPath, NULL);
+    }
 
-  Access = DesiredAccess;
-  ObjectHeader = BODY_TO_HEADER(Object);
+    if (FoundHeader && FoundHeader->ObjectType == ObDirectoryType &&
+        RemainingPath.Buffer)
+    {
+        DPRINT("Adding to Object Directory\n");
+        ObpAddEntryDirectory(FoundObject, Header, NULL);
+        ObjectAttached = TRUE;
+        
+        /* The name was changed so let's update it */
+        /* FIXME: TEMPORARY HACK This will go in ObFindObject in the next commit */
+        PVOID NewName;
+        PWSTR BufferPos = RemainingPath.Buffer;
+        
+        NewName = ExAllocatePool(NonPagedPool, RemainingPath.MaximumLength);
+        ObjectNameInfo = Header->NameInfo;
+        
+        if (BufferPos[0] == L'\\')
+        {
+            BufferPos++;
+        }
+        
+        RtlMoveMemory(NewName, BufferPos, RemainingPath.MaximumLength);
+        if (ObjectNameInfo->Name.Buffer) ExFreePool(ObjectNameInfo->Name.Buffer);
+        ObjectNameInfo->Name.Buffer = NewName;
+        ObjectNameInfo->Name.Length = RemainingPath.Length;
+        ObjectNameInfo->Name.MaximumLength = RemainingPath.MaximumLength;
+        DPRINT("Name: %S\n", ObjectNameInfo->Name.Buffer);
+    }
 
-  return(ObpCreateHandle(PsGetCurrentProcess(),
-			Object,
-			Access,
-			ObjectHeader->Inherit,
-			Handle));
+    if ((Header->ObjectType == IoFileObjectType) ||
+        (Header->ObjectType == ExDesktopObjectType) ||
+        (Header->ObjectType->TypeInfo.OpenProcedure != NULL))
+    {    
+        DPRINT("About to call Open Routine\n");
+        if (Header->ObjectType == IoFileObjectType)
+        {
+            /* TEMPORARY HACK. DO NOT TOUCH -- Alex */
+            DPRINT("Calling IopCreateFile: %x\n", FoundObject);
+            Status = IopCreateFile(HEADER_TO_BODY(Header),
+                                   FoundObject,
+                                   RemainingPath.Buffer,            
+                                   ObjectCreateInfo);
+            DPRINT("Called IopCreateFile: %x\n", Status);
+                                   
+        }
+        else if (Header->ObjectType == ExDesktopObjectType)
+        {
+            /* TEMPORARY HACK. DO NOT TOUCH -- Alex */
+            DPRINT("Calling ExpDesktopCreate\n");
+            Status = ExpDesktopCreate(HEADER_TO_BODY(Header),
+                                      FoundObject,
+                                      RemainingPath.Buffer,            
+                                      ObjectCreateInfo);
+        }
+        else if (Header->ObjectType->TypeInfo.OpenProcedure != NULL)
+        {
+            DPRINT("Calling %x\n", Header->ObjectType->TypeInfo.OpenProcedure);
+            Status = Header->ObjectType->TypeInfo.OpenProcedure(ObCreateHandle,
+                                                                HEADER_TO_BODY(Header),
+                                                                NULL,
+                                                                0,
+                                                                0);
+        }
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("Create Failed\n");
+            if (ObjectAttached == TRUE)
+            {
+                ObpRemoveEntryDirectory(Header);
+            }
+            if (FoundObject)
+            {
+                ObDereferenceObject(FoundObject);
+            }
+            RtlFreeUnicodeString(&RemainingPath);
+            return Status;
+        }
+    }
+
+    RtlFreeUnicodeString(&RemainingPath);
+  
+    DPRINT("Security Assignment in progress\n");  
+    SeCaptureSubjectContext(&SubjectContext);
+
+    /* Build the new security descriptor */
+    Status = SeAssignSecurity((FoundHeader != NULL) ? FoundHeader->SecurityDescriptor : NULL,
+			    (ObjectCreateInfo != NULL) ? ObjectCreateInfo->SecurityDescriptor : NULL,
+			    &NewSecurityDescriptor,
+			    (Header->ObjectType == ObDirectoryType),
+			    &SubjectContext,
+			    &Header->ObjectType->TypeInfo.GenericMapping,
+			    PagedPool);
+
+    if (NT_SUCCESS(Status))
+    {
+        DPRINT("NewSecurityDescriptor %p\n", NewSecurityDescriptor);
+
+        if (Header->ObjectType->TypeInfo.SecurityProcedure != NULL)
+        {
+            /* Call the security method */
+            Status = Header->ObjectType->TypeInfo.SecurityProcedure(HEADER_TO_BODY(Header),
+                                                                    AssignSecurityDescriptor,
+                                                                    0,
+                                                                    NewSecurityDescriptor,
+                                                                    NULL);
+        }
+        else
+        {
+            /* Assign the security descriptor to the object header */
+            Status = ObpAddSecurityDescriptor(NewSecurityDescriptor,
+                                              &Header->SecurityDescriptor);
+            DPRINT("Object security descriptor %p\n", Header->SecurityDescriptor);
+        }
+
+        /* Release the new security descriptor */
+        SeDeassignSecurity(&NewSecurityDescriptor);
+    }
+
+    DPRINT("Security Complete\n");
+    SeReleaseSubjectContext(&SubjectContext);
+
+    /* We can delete the Create Info now */
+    Header->ObjectCreateInfo = NULL;
+    ObpReleaseCapturedAttributes(ObjectCreateInfo);
+    ExFreePool(ObjectCreateInfo);
+    
+    /* Create the Handle */
+    /* HACKHACK: Because of ROS's incorrect startup, this can be called
+     * without a valid Process until I finalize the startup patch,
+     * so don't create a handle if this is the case. We also don't create
+     * a handle if Handle is NULL when the Registry Code calls it, because
+     * the registry code totally bastardizes the Ob and needs to be fixed
+     */
+    DPRINT("Creating handle\n");
+    if (Handle != NULL)
+    {
+        Status = ObpCreateHandle(PsGetCurrentProcess(),
+                                 HEADER_TO_BODY(Header),
+                                 DesiredAccess,
+                                 Header->Inherit,
+                                 Handle);
+        DPRINT("handle Created: %d. refcount. handlecount %d %d\n",
+                 *Handle, Header->RefCount, Header->HandleCount);
+    }
+    
+    DPRINT("Status %x\n", Status);
+    return Status;
 }
 
 

@@ -63,6 +63,15 @@ typedef NTSTATUS STDCALL_FUNC
                         PSECURITY_DESCRIPTOR SecurityDescriptor,
                         PULONG BufferLength);
 
+typedef struct _OBJECT_HEADER_NAME_INFO
+{
+    struct _DIRECTORY_OBJECT *Directory;
+    UNICODE_STRING Name;
+    ULONG QueryReferences;
+    ULONG Reserved2;
+    ULONG DbgReferenceCount;
+} OBJECT_HEADER_NAME_INFO, *POBJECT_HEADER_NAME_INFO;
+
 typedef struct _OBJECT_CREATE_INFORMATION 
 {
     ULONG Attributes;

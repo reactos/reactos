@@ -253,7 +253,7 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
           EntryHeader = CONTAINING_RECORD(ListEntry, OBJECT_HEADER, Entry);
 
           /* calculate the size of the required buffer space for this entry */
-          Name = (EntryHeader->Name.Length != 0 ? &EntryHeader->Name : NULL);
+          Name = (EntryHeader->NameInfo->Name.Length != 0 ? &EntryHeader->NameInfo->Name : NULL);
           Type = &EntryHeader->ObjectType->Name;
           EntrySize = sizeof(OBJECT_DIRECTORY_INFORMATION) +
                       ((Name != NULL) ? ((ULONG)Name->Length + sizeof(WCHAR)) : 0) +
@@ -440,8 +440,8 @@ NtCreateDirectoryObject (OUT PHANDLE DirectoryHandle,
   PAGED_CODE();
 
   DPRINT("NtCreateDirectoryObject(DirectoryHandle %x, "
-	 "DesiredAccess %x, ObjectAttributes %x\n",
-	 DirectoryHandle, DesiredAccess, ObjectAttributes);
+         "DesiredAccess %x, ObjectAttributes %x\n",
+          DirectoryHandle, DesiredAccess, ObjectAttributes);
 
   PreviousMode = ExGetPreviousMode();
 

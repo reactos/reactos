@@ -218,6 +218,17 @@ IopCreateDriverObject(
    {
       return Status;
    }
+   
+   Status = ObInsertObject(Object,
+                           NULL,
+                           FILE_ALL_ACCESS,
+                           0,
+                           NULL,
+                           NULL);
+   if (!NT_SUCCESS(Status))
+   {
+      return Status;
+   }  
 
    if (Status == STATUS_OBJECT_EXISTS)
    {

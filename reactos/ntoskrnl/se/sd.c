@@ -604,6 +604,7 @@ SeCaptureSecurityDescriptor(
     {
       ULONG_PTR Offset = sizeof(SECURITY_DESCRIPTOR);
 
+      RtlZeroMemory(NewDescriptor, DescriptorSize);
       NewDescriptor->Revision = DescriptorCopy.Revision;
       NewDescriptor->Sbz1 = DescriptorCopy.Sbz1;
       NewDescriptor->Control = DescriptorCopy.Control | SE_SELF_RELATIVE;

@@ -385,11 +385,6 @@ IoSecondStageCompletion(
    PVOID* SystemArgument2);
 
 NTSTATUS STDCALL
-IopCreateFile(PVOID ObjectBody,
-	      PVOID Parent,
-	      PWSTR RemainingPath,
-	      POBJECT_ATTRIBUTES ObjectAttributes);
-NTSTATUS STDCALL
 IopCreateDevice(PVOID ObjectBody,
 		PVOID Parent,
 		PWSTR RemainingPath,
@@ -553,7 +548,7 @@ STDCALL
 IopCreateFile(PVOID ObjectBody,
               PVOID Parent,
               PWSTR RemainingPath,
-              POBJECT_ATTRIBUTES ObjectAttributes);
+              POBJECT_CREATE_INFORMATION ObjectAttributes);
 
 VOID
 STDCALL

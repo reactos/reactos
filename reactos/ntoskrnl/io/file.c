@@ -47,7 +47,7 @@ STDCALL
 IopCreateFile(PVOID ObjectBody,
               PVOID Parent,
               PWSTR RemainingPath,
-              POBJECT_ATTRIBUTES ObjectAttributes)
+              POBJECT_CREATE_INFORMATION ObjectCreateInfo)
 {
   PDEVICE_OBJECT DeviceObject;
   PFILE_OBJECT FileObject = (PFILE_OBJECT) ObjectBody;
@@ -73,8 +73,8 @@ IopCreateFile(PVOID ObjectBody,
       ParentObjectType != IoFileObjectType)
     {
       DPRINT("Parent [%wZ] is a %S which is neither a file type nor a device type ; remaining path = %S\n",
-        &BODY_TO_HEADER(Parent)->Name,
-        BODY_TO_HEADER(Parent)->ObjectType->TypeName.Buffer,
+        &BODY_TO_HEADER(Parent)->NameInfo->Name,
+        BODY_TO_HEADER(Parent)->ObjectType->Name.Buffer,
         RemainingPath);
       return(STATUS_UNSUCCESSFUL);
     }
@@ -852,6 +852,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
    if (CreateDisposition == FILE_OPEN ||
        CreateDisposition == FILE_OPEN_IF)
    {
+
       Status = ObOpenObjectByName(ObjectAttributes,
                            NULL,
       NULL,
@@ -859,6 +860,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
       DesiredAccess,
       NULL,
       &LocalHandle);
+
       if (NT_SUCCESS(Status))
       {
          Status = ObReferenceObjectByHandle(LocalHandle,
@@ -1012,7 +1014,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
     */
    Status = IofCallDriver(FileObject->DeviceObject, Irp );
    DPRINT("Status :%x\n", Status);
-
+   
    if (Status == STATUS_PENDING)
      {
  KeWaitForSingleObject(&FileObject->Event,

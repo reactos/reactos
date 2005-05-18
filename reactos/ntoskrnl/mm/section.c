@@ -2099,6 +2099,16 @@ MmCreatePhysicalMemorySection(VOID)
       DbgPrint("Failed to create PhysicalMemory section\n");
       KEBUGCHECK(0);
    }
+   Status = ObInsertObject(PhysSection,
+                           NULL,
+                           SECTION_ALL_ACCESS,
+                           0,
+                           NULL,
+                           NULL);
+   if (!NT_SUCCESS(Status))
+   {
+      ObDereferenceObject(PhysSection);
+   }
    PhysSection->AllocationAttributes |= SEC_PHYSICALMEMORY;
 
    return(STATUS_SUCCESS);
@@ -2239,7 +2249,6 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
    {
       return(Status);
    }
-
    /*
     * Initialize it
     */
@@ -3140,6 +3149,7 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
                                       UserMode,
                                       (PVOID*)(PVOID)&FileObject,
                                       NULL);
+
    if (!NT_SUCCESS(Status))
    {
       return Status;

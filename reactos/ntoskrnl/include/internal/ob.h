@@ -29,14 +29,14 @@ typedef struct _OBJECT_HEADER
  * PURPOSE: Header for every object managed by the object manager
  */
 {
-   UNICODE_STRING Name;
+   POBJECT_HEADER_NAME_INFO NameInfo;
    LIST_ENTRY Entry;
    LONG RefCount;
    LONG HandleCount;
    BOOLEAN Permanent;
    BOOLEAN Inherit;
-   struct _DIRECTORY_OBJECT* Parent;
    POBJECT_TYPE ObjectType;
+   POBJECT_CREATE_INFORMATION ObjectCreateInfo;
    PSECURITY_DESCRIPTOR SecurityDescriptor;
 
    /*
@@ -133,7 +133,8 @@ NTSTATUS ObpCreateHandle(struct _EPROCESS* Process,
 VOID ObCreateHandleTable(struct _EPROCESS* Parent,
 			 BOOLEAN Inherit,
 			 struct _EPROCESS* Process);
-NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
+NTSTATUS ObFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
+            PUNICODE_STRING ObjectName,
 		      PVOID* ReturnedObject,
 		      PUNICODE_STRING RemainingPath,
 		      POBJECT_TYPE ObjectType);
@@ -148,7 +149,7 @@ ObpSetHandleAttributes(HANDLE Handle,
 
 NTSTATUS
 STDCALL
-ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer, 
+ObpCreateTypeObject(struct _OBJECT_TYPE_INITIALIZER *ObjectTypeInitializer, 
                     PUNICODE_STRING TypeName, 
                     POBJECT_TYPE *ObjectType);
 
@@ -224,18 +225,22 @@ typedef struct _CAPTURED_OBJECT_ATTRIBUTES
 } CAPTURED_OBJECT_ATTRIBUTES, *PCAPTURED_OBJECT_ATTRIBUTES;
 
 NTSTATUS
-ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
+STDCALL
+ObpCaptureObjectName(IN PUNICODE_STRING CapturedName,
+                     IN PUNICODE_STRING ObjectName,
+                     IN KPROCESSOR_MODE AccessMode);
+                     
+NTSTATUS
+STDCALL
+ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
                            IN KPROCESSOR_MODE AccessMode,
-                           IN POOL_TYPE PoolType,
-                           IN BOOLEAN CaptureIfKernel,
-                           OUT PCAPTURED_OBJECT_ATTRIBUTES CapturedObjectAttributes  OPTIONAL,
-                           OUT PUNICODE_STRING ObjectName  OPTIONAL);
+                           IN POBJECT_TYPE ObjectType,
+                           IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
+                           OUT PUNICODE_STRING ObjectName);
 
 VOID
-ObpReleaseObjectAttributes(IN PCAPTURED_OBJECT_ATTRIBUTES CapturedObjectAttributes  OPTIONAL,
-                           IN PUNICODE_STRING ObjectName  OPTIONAL,
-                           IN KPROCESSOR_MODE AccessMode,
-                           IN BOOLEAN CaptureIfKernel);
+STDCALL
+ObpReleaseCapturedAttributes(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo);
 
 /* object information classes */
 

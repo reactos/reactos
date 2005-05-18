@@ -12,6 +12,13 @@
 static HANDLE WindowsApiPort = NULL;
 PEPROCESS CsrProcess = NULL;
 
+NTSTATUS
+ObpCreateHandle(PEPROCESS Process,
+                PVOID ObjectBody,
+                ACCESS_MASK GrantedAccess,
+                BOOLEAN Inherit,
+                PHANDLE HandleReturn);
+           
 NTSTATUS FASTCALL
 CsrInit(void)
 {
@@ -94,12 +101,13 @@ CsrInsertObject(PVOID Object,
       KeAttachProcess(CsrProcess);
     }
 
-  Status = ObInsertObject(Object,
-                          PassedAccessState,
-                          DesiredAccess,
-                          AdditionalReferences,
-                          ReferencedObject,
-                          Handle);
+  /* FIXME!!!!!!!!! SOMETHING HAS GOT TO BE DONE ABOUT THIS !!!!! */
+  Status = ObpCreateHandle(PsGetCurrentProcess(),
+                           Object,
+                           DesiredAccess,
+                           BODY_TO_HEADER(Object)->Inherit,
+                           Handle);
+  /* FIXME!!!!!!!!! SOMETHING HAS GOT TO BE DONE ABOUT ^^^^ THAT !!!!! */
 
   if (CsrProcess != OldProcess)
     {

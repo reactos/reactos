@@ -1808,6 +1808,12 @@ SepCreateSystemProcessToken(VOID)
     {
       return NULL;
     }
+  Status = ObInsertObject(AccessToken,
+                          NULL,
+                          TOKEN_ALL_ACCESS,
+                          0,
+                          NULL,
+                          NULL);
 
   Status = ExpAllocateLocallyUniqueId(&AccessToken->TokenId);
   if (!NT_SUCCESS(Status))
