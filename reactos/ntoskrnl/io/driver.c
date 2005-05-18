@@ -18,6 +18,7 @@
 /* ke/main.c */
 extern LOADER_PARAMETER_BLOCK EXPORTED KeLoaderBlock;
 extern ULONG KeTickCount;
+extern BOOLEAN SetupMode;
 
 NTSTATUS
 LdrProcessModule(PVOID ModuleLoadBase,
@@ -272,12 +273,23 @@ IopCreateDriverObject(
  * Display 'Loading XXX...' message.
  */
 
-VOID FASTCALL
-IopDisplayLoadingMessage(PWCHAR ServiceName)
+VOID 
+FASTCALL
+INIT_FUNCTION
+IopDisplayLoadingMessage(PVOID ServiceName, 
+                         BOOLEAN Unicode)
 {
-   CHAR TextBuffer[256];
-   sprintf(TextBuffer, "Loading %S...\n", ServiceName);
-   HalDisplayString(TextBuffer);
+    if (SetupMode) return;
+    CHAR TextBuffer[256];
+    if (Unicode) 
+    {
+        sprintf(TextBuffer, "Loading %S...\n", (PWCHAR)ServiceName);
+    }
+    else
+    {
+        sprintf(TextBuffer, "Loading %s...\n", (PCHAR)ServiceName);
+    }
+    HalDisplayString(TextBuffer);
 }
 
 /*
@@ -390,8 +402,8 @@ IopLoadServiceModule(
       DPRINT("RtlQueryRegistryValues() failed (Status %x)\n", Status);
       return Status;
    }
-
-   IopDisplayLoadingMessage(ServiceName->Buffer);
+   
+   IopDisplayLoadingMessage(ServiceName->Buffer, TRUE);
 
    /*
     * Normalize the image path for all later processing.
@@ -1122,7 +1134,6 @@ IopInitializeBuiltinDriver(
    PDEVICE_NODE DeviceNode;
    PDRIVER_OBJECT DriverObject;
    NTSTATUS Status;
-   CHAR TextBuffer[256];
    PCHAR FileNameWithoutPath;
    LPWSTR FileExtension;
 
@@ -1130,11 +1141,9 @@ IopInitializeBuiltinDriver(
       FileName, ModuleLoadBase, ModuleLength);
 
    /*
-    * Display 'Initializing XXX...' message
+    * Display 'Loading XXX...' message
     */
-
-   sprintf(TextBuffer, "Initializing %s...\n", FileName);
-   HalDisplayString(TextBuffer);
+   IopDisplayLoadingMessage(FileName, FALSE);
 
    /*
     * Determine the right device object
@@ -1307,7 +1316,7 @@ IopLoadDriver(PSERVICE Service)
 {
    NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
-   IopDisplayLoadingMessage(Service->ServiceName.Buffer);
+   IopDisplayLoadingMessage(Service->ServiceName.Buffer, TRUE);
    Status = ZwLoadDriver(&Service->RegistryPath);
    IopBootLog(&Service->ImagePath, NT_SUCCESS(Status) ? TRUE : FALSE);
    if (!NT_SUCCESS(Status))

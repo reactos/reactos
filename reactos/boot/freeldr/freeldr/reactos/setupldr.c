@@ -34,7 +34,7 @@
 #include "registry.h"
 
 
-//#define USE_UI
+#define USE_UI
 
 
 static BOOL
@@ -88,7 +88,7 @@ LoadKernel(PCHAR szSourcePath, PCHAR szFileName)
    * Update the status bar with the current file
    */
 #ifdef USE_UI
-  sprintf(szBuffer, "Reading %s", szShortName);
+  sprintf(szBuffer, "Setup is loading files (%s)", szShortName);
   UiDrawStatusText(szBuffer);
 #else
   printf("Reading %s\n", szShortName);
@@ -155,7 +155,7 @@ LoadDriver(PCHAR szSourcePath, PCHAR szFileName)
    * Update the status bar with the current file
    */
 #ifdef USE_UI
-  sprintf(szBuffer, "Reading %s", szShortName);
+  sprintf(szBuffer, "Setup is loading files (%s)", szShortName);
   UiDrawStatusText(szBuffer);
 #else
   printf("Reading %s\n", szShortName);
@@ -220,7 +220,7 @@ LoadNlsFile(PCHAR szSourcePath, PCHAR szFileName, PCHAR szModuleName)
    * Update the status bar with the current file
    */
 #ifdef USE_UI
-  sprintf(szBuffer, "Reading %s", szShortName);
+  sprintf(szBuffer, "Setup is loading files (%s)", szShortName);
   UiDrawStatusText(szBuffer);
 #else
   printf("Reading %s\n", szShortName);
@@ -232,6 +232,7 @@ LoadNlsFile(PCHAR szSourcePath, PCHAR szFileName, PCHAR szModuleName)
   return(TRUE);
 }
 
+BOOL SetupUiInitialize(VOID);
 
 VOID RunLoader(VOID)
 {
@@ -294,7 +295,7 @@ VOID RunLoader(VOID)
 #endif
 
 #ifdef USE_UI
-  UiInitialize();
+  SetupUiInitialize();
   UiDrawStatusText("");
 #endif
 

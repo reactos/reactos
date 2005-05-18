@@ -27,6 +27,7 @@
 #include <inifile.h>
 #include <version.h>
 #include <video.h>
+#include <reactos/buildno.h>
 
 ULONG	UiScreenWidth = 80;							// Screen Width
 ULONG	UiScreenHeight = 25;							// Screen Height
@@ -195,6 +196,39 @@ BOOL UiInitialize(BOOLEAN ShowGui)
 	UiFadeInBackdrop();
 
 	UserInterfaceUp = TRUE;
+
+	DbgPrint((DPRINT_UI, "UiInitialize() returning TRUE.\n"));
+	return TRUE;
+}
+
+BOOL SetupUiInitialize(VOID)
+{
+
+	CHAR	DisplayModeText[260];
+	ULONG	Depth;
+
+	
+	DisplayModeText[0] = '\0';
+	
+
+	UiDisplayMode = MachVideoSetDisplayMode(DisplayModeText, TRUE);
+	MachVideoGetDisplaySize(&UiScreenWidth, &UiScreenHeight, &Depth);
+
+	TuiInitialize();
+
+	// Draw the backdrop and fade it in if special effects are enabled
+	TuiFillArea(0,
+			0,
+			UiScreenWidth - 1,
+			UiScreenHeight - 2,
+			0,
+			ATTR(UiBackdropFgColor, UiBackdropBgColor));
+
+    UiStatusBarBgColor = 7;
+	UserInterfaceUp = TRUE;
+    
+    TuiDrawText(4, 1, "ReactOS " KERNEL_VERSION_STR " Setup", ATTR(COLOR_GRAY, UiBackdropBgColor));
+    TuiDrawText(3, 2, "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD", ATTR(COLOR_GRAY, UiBackdropBgColor));
 
 	DbgPrint((DPRINT_UI, "UiInitialize() returning TRUE.\n"));
 

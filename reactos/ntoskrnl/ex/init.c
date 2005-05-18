@@ -29,6 +29,7 @@ extern PRTL_MESSAGE_RESOURCE_DATA KiBugCodeMessages;
 extern LIST_ENTRY KiProfileListHead;
 extern LIST_ENTRY KiProfileSourceListHead;
 extern KSPIN_LOCK KiProfileLock;
+BOOLEAN SetupMode = TRUE;
 
 VOID PspPostInitSystemProcess(VOID);
 
@@ -258,7 +259,7 @@ ExecuteRuntimeAsserts(VOID)
 inline
 VOID
 STDCALL
-ParseAndCacheLoadedModules(PBOOLEAN SetupBoot)
+ParseAndCacheLoadedModules(VOID)
 {
     ULONG i;
     PCHAR Name;
@@ -294,7 +295,7 @@ ParseAndCacheLoadedModules(PBOOLEAN SetupBoot)
         } else if (!_stricmp(Name, "system") || !_stricmp(Name, "system.hiv")) {
 
             CachedModules[SystemRegistry] = &KeLoaderModules[i];
-            *SetupBoot = FALSE;
+            SetupMode = FALSE;
 
         } else if (!_stricmp(Name, "hardware") || !_stricmp(Name, "hardware.hiv")) {
 
@@ -369,20 +370,54 @@ ParseCommandLine(PULONG MaxMem,
         p1 = p2;
     }
 }
+   
+VOID
+INIT_FUNCTION
+ExpDisplayNotice(VOID)
+{
+    CHAR str[50];
+   
+    if (SetupMode)
+    {
+        HalDisplayString(
+        "\n\n\n     ReactOS " KERNEL_VERSION_STR " Setup \n");
+        HalDisplayString(
+        "    \xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD");
+        HalDisplayString(
+        "\xCD\xCD\n");
+        return;
+    }
+    
+    HalDisplayString("Starting ReactOS "KERNEL_VERSION_STR" (Build "
+                     KERNEL_VERSION_BUILD_STR")\n");
+    HalDisplayString(RES_STR_LEGAL_COPYRIGHT);
+    HalDisplayString("\n\nReactOS is free software, covered by the GNU General "
+                     "Public License, and you\n");
+    HalDisplayString("are welcome to change it and/or distribute copies of it "
+                     "under certain\n");
+    HalDisplayString("conditions. There is absolutely no warranty for "
+                      "ReactOS.\n\n");
 
+    /* Display number of Processors */
+    sprintf(str,
+            "Found %x system processor(s). [%lu MB Memory]\n",
+            (int)KeNumberProcessors,
+            (KeLoaderBlock.MemHigher + 1088)/ 1024);
+    HalDisplayString(str);
+    
+}
+   
 VOID
 INIT_FUNCTION
 STDCALL
 ExpInitializeExecutive(VOID)
 {
-    CHAR str[50];
     UNICODE_STRING EventName;
     HANDLE InitDoneEventHandle;
     OBJECT_ATTRIBUTES ObjectAttributes;
     BOOLEAN NoGuiBoot = FALSE;
     BOOLEAN BootLog = FALSE;
     ULONG MaxMem = 0;
-    BOOLEAN SetupBoot = TRUE;
     BOOLEAN ForceAcpiDisable = FALSE;
     LARGE_INTEGER Timeout;
     HANDLE ProcessHandle;
@@ -413,7 +448,7 @@ ExpInitializeExecutive(VOID)
             MaxMem > 8 ? MaxMem : 4096);
 
     /* Parse the Loaded Modules (by FreeLoader) and cache the ones we'll need */
-    ParseAndCacheLoadedModules(&SetupBoot);
+    ParseAndCacheLoadedModules();
 
     /* Initialize the kernel debugger parameters */
     KdInitSystem(0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
@@ -511,27 +546,12 @@ ExpInitializeExecutive(VOID)
 
     /* Report all resources used by hal */
     HalReportResourceUsage();
-
+    
     /* Clear the screen to blue */
     HalInitSystem(2, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
     /* Display version number and copyright/warranty message */
-    HalDisplayString("Starting ReactOS "KERNEL_VERSION_STR" (Build "
-                     KERNEL_VERSION_BUILD_STR")\n");
-    HalDisplayString(RES_STR_LEGAL_COPYRIGHT);
-    HalDisplayString("\n\nReactOS is free software, covered by the GNU General "
-                     "Public License, and you\n");
-    HalDisplayString("are welcome to change it and/or distribute copies of it "
-                     "under certain\n");
-    HalDisplayString("conditions. There is absolutely no warranty for "
-                      "ReactOS.\n\n");
-
-    /* Display number of Processors */
-    sprintf(str,
-            "Found %d system processor(s). [%lu MB Memory]\n",
-            KeNumberProcessors,
-            (KeLoaderBlock.MemHigher + 1088)/ 1024);
-    HalDisplayString(str);
+    ExpDisplayNotice();
 
     /* Call KD Providers at Phase 2 */
     KdInitSystem(2, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
@@ -540,13 +560,13 @@ ExpInitializeExecutive(VOID)
     RtlpInitNls();
 
     /* Import and Load Registry Hives */
-    CmInitHives(SetupBoot);
+    CmInitHives(SetupMode);
 
     /* Initialize the time zone information from the registry */
     ExpInitTimeZoneInfo();
 
-   /* Enter the kernel debugger before starting up the boot drivers */
-    KdbEnter();
+    /* Enter the kernel debugger before starting up the boot drivers */
+    if (KdDebuggerEnabled) KdbEnter();
 
     /* Setup Drivers and Root Device Node */
     IoInit2(BootLog);

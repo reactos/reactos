@@ -756,6 +756,16 @@ LoadAndBootReactOS(PCHAR OperatingSystemName)
 	if (!FrLdrLoadDriver(szHalName, 10))
 		return;
 
+#if 0
+    /* Load bootvid */
+		strcpy(value, "INBV.DLL");
+		strcpy(szHalName, szBootPath);
+		strcat(szHalName, "SYSTEM32\\");
+		strcat(szHalName, value);
+
+	if (!FrLdrLoadDriver(szHalName, 10))
+		return;
+#endif
 	/*
 	 * Load the System hive from disk
 	 */

@@ -107,7 +107,8 @@ FormatPartition (PUNICODE_STRING DriveRoot)
   ProgressBar = CreateProgressBar (6,
 				   yScreen - 14,
 				   xScreen - 7,
-				   yScreen - 10);
+				   yScreen - 10,
+                   "Setup is formatting your disk");
 
   ProgressSetStepCount (ProgressBar, 100);
 
