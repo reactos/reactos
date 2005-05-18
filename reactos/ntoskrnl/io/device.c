@@ -135,7 +135,6 @@ NTSTATUS
 IopStartDevice(
    PDEVICE_NODE DeviceNode)
 {
-
    IO_STATUS_BLOCK IoStatusBlock;
    IO_STACK_LOCATION Stack;
    PDEVICE_OBJECT Fdo;
@@ -144,10 +143,8 @@ IopStartDevice(
    DPRINT("Sending IRP_MN_START_DEVICE to driver\n");
 
    Fdo = IoGetAttachedDeviceReference(DeviceNode->PhysicalDeviceObject);
-   /* FIXME: Should be DeviceNode->ResourceList */
-   Stack.Parameters.StartDevice.AllocatedResources = DeviceNode->BootResources;
-   /* FIXME: Should be DeviceNode->ResourceListTranslated */
-   Stack.Parameters.StartDevice.AllocatedResourcesTranslated = DeviceNode->BootResources;
+   Stack.Parameters.StartDevice.AllocatedResources = DeviceNode->ResourceList;
+   Stack.Parameters.StartDevice.AllocatedResourcesTranslated = DeviceNode->ResourceListTranslated;
 
    Status = IopInitiatePnpIrp(
       Fdo,
