@@ -702,13 +702,12 @@ ScmStartUserModeService(PSERVICE Service)
   ResumeThread(ProcessInformation.hThread);
 
   /* Connect control pipe */
-  DPRINT1("Connect named pipe\n")
   if (ConnectNamedPipe(Service->ControlPipeHandle, NULL))
     {
       DWORD dwProcessId = 0;
       DWORD dwRead = 0;
 
-      DPRINT1("Control pipe connected!\n");
+      DPRINT("Control pipe connected!\n");
 
       /* Read thread id from pipe */
       if (!ReadFile(Service->ControlPipeHandle,
@@ -732,7 +731,7 @@ ScmStartUserModeService(PSERVICE Service)
     }
   else
     {
-      DPRINT1("Connecting control pipe failed!\n");
+      DPRINT("Connecting control pipe failed!\n");
 
       /* Close control pipe */
       CloseHandle(Service->ControlPipeHandle);
