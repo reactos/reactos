@@ -236,6 +236,7 @@ IoGetDeviceProperty(
       if (Ptr != NULL)
       {
 	Length = (ULONG)((ULONG_PTR)Ptr - (ULONG_PTR)DeviceNode->InstancePath.Buffer) + sizeof(WCHAR);
+	Data = DeviceNode->InstancePath.Buffer;
       }
       else
       {
@@ -245,7 +246,9 @@ IoGetDeviceProperty(
       break;
 
     case DevicePropertyPhysicalDeviceObjectName:
-      return STATUS_NOT_IMPLEMENTED;
+      Length = DeviceNode->InstancePath.Length + sizeof(WCHAR);
+      Data = DeviceNode->InstancePath.Buffer;
+      break;
 
     default:
       return STATUS_INVALID_PARAMETER_2;
@@ -257,7 +260,8 @@ IoGetDeviceProperty(
   RtlCopyMemory(PropertyBuffer, Data, Length);
 
   /* Terminate the string */
-  if (DeviceProperty == DevicePropertyEnumeratorName)
+  if (DeviceProperty == DevicePropertyEnumeratorName
+    || DeviceProperty == DevicePropertyPhysicalDeviceObjectName)
   {
     Ptr = (PWSTR)PropertyBuffer;
     Ptr[(Length / sizeof(WCHAR)) - 1] = 0;
