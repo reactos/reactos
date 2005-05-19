@@ -60,7 +60,7 @@ IoGetDeviceProperty(
 {
   PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
   ULONG Length;
-  PVOID Data;
+  PVOID Data = NULL;
   PWSTR Ptr;
 
   DPRINT("IoGetDeviceProperty(%x %d)\n", DeviceObject, DeviceProperty);
