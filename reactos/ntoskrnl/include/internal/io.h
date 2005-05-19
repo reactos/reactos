@@ -518,6 +518,12 @@ IopCreateDriverObject(
    ULONG DriverImageSize);
 
 NTSTATUS FASTCALL
+IopGetDriverObject(
+   PDRIVER_OBJECT *DriverObject,
+   PUNICODE_STRING ServiceName,
+   BOOLEAN FileSystem);
+
+NTSTATUS FASTCALL
 IopLoadServiceModule(
    IN PUNICODE_STRING ServiceName,
    OUT PMODULE_OBJECT *ModuleObject);

@@ -152,6 +152,64 @@ IopDeleteDriver(PVOID ObjectBody)
 }
 
 NTSTATUS FASTCALL
+IopGetDriverObject(
+   PDRIVER_OBJECT *DriverObject,
+   PUNICODE_STRING ServiceName,
+   BOOLEAN FileSystem)
+{
+   PDRIVER_OBJECT Object;
+   WCHAR NameBuffer[MAX_PATH];
+   UNICODE_STRING DriverName;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   NTSTATUS Status;
+
+   DPRINT("IopOpenDriverObject(%p '%wZ' %x)\n",
+      DriverObject, ServiceName, FileSystem);
+
+   *DriverObject = NULL;
+
+   /* Create ModuleName string */
+   if (ServiceName == NULL || ServiceName->Buffer == NULL)
+      /* We don't know which DriverObject we have to open */
+      return STATUS_INVALID_PARAMETER_2;
+
+   if (FileSystem == TRUE)
+      wcscpy(NameBuffer, FILESYSTEM_ROOT_NAME);
+   else
+      wcscpy(NameBuffer, DRIVER_ROOT_NAME);
+   wcscat(NameBuffer, ServiceName->Buffer);
+
+   RtlInitUnicodeString(&DriverName, NameBuffer);
+   DPRINT("Driver name: '%wZ'\n", &DriverName);
+
+   /* Initialize ObjectAttributes for driver object */
+   InitializeObjectAttributes(
+      &ObjectAttributes,
+      &DriverName,
+      OBJ_OPENIF | OBJ_KERNEL_HANDLE,
+      NULL,
+      NULL);
+
+   /* Open driver object */
+   Status = ObReferenceObjectByName(
+      &DriverName,
+      0, /* Attributes */
+      NULL, /* PassedAccessState */
+      0, /* DesiredAccess */
+      IoDriverObjectType,
+      KernelMode,
+      NULL, /* ParseContext */
+      (PVOID*)&Object);
+
+   if (!NT_SUCCESS(Status))
+      return Status;
+
+   *DriverObject = Object;
+
+   return STATUS_SUCCESS;
+}
+
+NTSTATUS FASTCALL
 IopCreateDriverObject(
    PDRIVER_OBJECT *DriverObject,
    PUNICODE_STRING ServiceName,
@@ -229,18 +287,8 @@ IopCreateDriverObject(
    {
       return Status;
    }  
-   
-   /* This function shouldn't be called twice for the same driver anyways..why is it? */
-#if 0
-   if (Status == STATUS_OBJECT_EXISTS)
-   {
-      /* The driver object already exists, so it is already
-       * initialized. Don't initialize it once more. */
-      *DriverObject = Object;
-      return STATUS_SUCCESS;
-   }
-#endif
-     /* Create driver extension */
+
+   /* Create driver extension */
    Object->DriverExtension = (PDRIVER_EXTENSION)
       ExAllocatePoolWithTag(
          NonPagedPool,
@@ -652,13 +700,10 @@ IopAttachFilterDriversCallback(
       else
       {
          /* get existing DriverObject pointer */
-         Status = IopCreateDriverObject(
+         Status = IopGetDriverObject(
             &DriverObject,
             &ServiceName,
-            OBJ_OPENIF,
-            FALSE,
-            ModuleObject->Base,
-            ModuleObject->Length);
+            FALSE);
          if (!NT_SUCCESS(Status))
             continue;
       }

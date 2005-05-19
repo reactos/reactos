@@ -1668,13 +1668,10 @@ IopActionInitChildServices(
          else
          {
             /* get existing DriverObject pointer */
-            Status = IopCreateDriverObject(
-            	&DriverObject,
-            	&DeviceNode->ServiceName,
-            	OBJ_OPENIF,
-            	FALSE,
-            	ModuleObject->Base,
-            	ModuleObject->Length);
+            Status = IopGetDriverObject(
+               &DriverObject,
+               &DeviceNode->ServiceName,
+               FALSE);
          }
          if (NT_SUCCESS(Status))
          {
