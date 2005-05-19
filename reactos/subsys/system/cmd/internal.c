@@ -156,8 +156,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 {
 	LPTSTR dir;		/* pointer to the directory to change to */
 	LPTSTR lpOldPath;
-	LPTSTR endofstring; /* pointer to the null character in the directory to change to */
-	LPTSTR lastquote; /* pointer to the last quotation mark in the directory to change to */
+	size_t size, str_len;
 
 	/*Should we better declare a variable containing _tsclen(dir) ? It's used a few times,
 	  but on the other hand paths are generally not very long*/
@@ -171,17 +170,29 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	/* The whole param string is our parameter these days. The only thing we do is eliminating every quotation mark */
 	/* Is it safe to change the characters param is pointing to? I presume it is, as there doesn't seem to be any
 	post-processing of it after the function call (what would that accomplish?) */
+	
+    size = _tcscspn(param,  _T("\"") );
+	str_len = _tcslen(param)-1;
 
-	dir=param;
-	endofstring=dir+_tcslen(dir);
-
-	while ((lastquote = _tcsrchr(dir, _T('\"'))))
+	if ((param[size] == _T('"')) && (str_len >1))
 	{
-		endofstring--;
-		memmove(lastquote,lastquote+1,endofstring-lastquote);
-		*endofstring=_T('\0');
-	}
+	 
+	 if (size==0)
+	 {
+	  _tcsncpy(param,&param[size+1],str_len);
+	  param[str_len] = _T('\0');	 
+	 }
 
+	 size = _tcscspn(param,  _T("\"") );	
+     if (param[size] == _T('"'))
+	 {
+	  param[size] = _T('\0');
+	 }
+
+	}
+	
+	dir=param;
+	
 	/* if doing a CD and no parameters given, print out current directory */
 	if (!dir || !dir[0])
 	{
