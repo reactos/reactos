@@ -46,30 +46,21 @@ static WCHAR CabinetNext[256];          // Filename of next cabinet
 static WCHAR DiskNext[256];             // Label of cabinet in file CabinetNext
 static ULONG FolderUncompSize = 0;      // Uncompressed size of folder
 static ULONG BytesLeftInBlock = 0;      // Number of bytes left in current block
-static BOOL ReuseBlock = FALSE;
 static WCHAR DestPath[MAX_PATH];
 static HANDLE FileHandle;
+static HANDLE FileSectionHandle;
+static PUCHAR FileBuffer;
+static ULONG DestFileSize;
+static ULONG FileSize;
 static BOOL FileOpen = FALSE;
-static CFHEADER CABHeader;
+static PCFHEADER PCABHeader;
+static PCFFOLDER CabinetFolders;
 static ULONG CabinetReserved = 0;
 static ULONG FolderReserved = 0;
 static ULONG DataReserved = 0;
-static PCFFOLDER_NODE FolderListHead = NULL;
-static PCFFOLDER_NODE FolderListTail = NULL;
-static PCFFOLDER_NODE CurrentFolderNode = NULL;
-static PCFDATA_NODE CurrentDataNode = NULL;
-static PCFFILE_NODE FileListHead = NULL;
-static PCFFILE_NODE FileListTail = NULL;
 static ULONG CodecId;
 static PCABINET_CODEC_UNCOMPRESS CodecUncompress = NULL;
 static BOOL CodecSelected = FALSE;
-static PVOID InputBuffer = NULL;
-static PVOID CurrentIBuffer = NULL;       // Current offset in input buffer
-static ULONG CurrentIBufferSize = 0;      // Bytes left in input buffer
-static PVOID OutputBuffer = NULL;
-static PVOID CurrentOBuffer = NULL;       // Current offset in output buffer
-static ULONG CurrentOBufferSize = 0;      // Bytes left in output buffer
-static BOOL RestartSearch = FALSE;
 static ULONG LastFileOffset = 0;          // Uncompressed offset of last extracted file
 static PCABINET_OVERWRITE OverwriteHandler = NULL;
 static PCABINET_EXTRACT ExtractHandler = NULL;
@@ -94,20 +85,23 @@ void* calloc(size_t _nmemb, size_t _size)
 
 ULONG
 RawCodecUncompress(PVOID OutputBuffer,
-  PVOID InputBuffer,
-  ULONG InputLength,
-  PULONG OutputLength)
+				   PVOID InputBuffer,
+				   PLONG InputLength,
+				   PLONG OutputLength)
 /*
  * FUNCTION: Uncompresses data in a buffer
  * ARGUMENTS:
  *     OutputBuffer = Pointer to buffer to place uncompressed data
  *     InputBuffer  = Pointer to buffer with data to be uncompressed
- *     InputLength  = Length of input buffer
- *     OutputLength = Address of buffer to place size of uncompressed data
+ *     InputLength  = Length of input buffer before, and amount consumed after
+ *                    Negative to indicate that this is not the start of a new block
+ *     OutputLength = Length of output buffer before, amount filled after
+ *                    Negative to indicate that this is not the end of the block
  */
 {
-  memcpy(OutputBuffer, InputBuffer, InputLength);
-  *OutputLength = InputLength;
+  LONG In = abs(*InputLength), Out = abs(*OutputLength);
+  memcpy(OutputBuffer, InputBuffer, In < Out ? In : Out);
+  *InputLength = *OutputLength = In < Out ? In : Out;
   return CS_SUCCESS;
 }
 
@@ -116,70 +110,80 @@ RawCodecUncompress(PVOID OutputBuffer,
 
 ULONG
 MSZipCodecUncompress(PVOID OutputBuffer,
-  PVOID InputBuffer,
-  ULONG InputLength,
-  PULONG OutputLength)
+					 PVOID InputBuffer,
+					 PLONG InputLength,
+					 PLONG OutputLength)
 /*
  * FUNCTION: Uncompresses data in a buffer
  * ARGUMENTS:
  *     OutputBuffer = Pointer to buffer to place uncompressed data
  *     InputBuffer  = Pointer to buffer with data to be uncompressed
- *     InputLength  = Length of input buffer
- *     OutputLength = Address of buffer to place size of uncompressed data
+ *     InputLength  = Length of input buffer before, and amount consumed after
+ *                    Negative to indicate that this is not the start of a new block
+ *     OutputLength = Length of output buffer before, amount filled after
+ *                    Negative to indicate that this is not the end of the block
  */
 {
   USHORT Magic;
   INT Status;
 
-  DPRINT("InputLength (%d).\n", InputLength);
+  DPRINT("MSZipCodecUncompress( OutputBuffer = %x, InputBuffer = %x, InputLength = %d, OutputLength = %d.\n", OutputBuffer, InputBuffer, *InputLength, *OutputLength);
+  if( *InputLength > 0 )
+	{
+	  Magic = *((PUSHORT)InputBuffer);
 
-  Magic = *((PUSHORT)InputBuffer);
+	  if (Magic != MSZIP_MAGIC)
+		{
+		  DPRINT("Bad MSZIP block header magic (0x%X)\n", Magic);
+		  return CS_BADSTREAM;
+		}
+	
+	  ZStream.next_in   = (PUCHAR)((ULONG)InputBuffer + 2);
+	  ZStream.avail_in  = *InputLength - 2;
+	  ZStream.next_out  = (PUCHAR)OutputBuffer;
+	  ZStream.avail_out = abs(*OutputLength);
 
-  if (Magic != MSZIP_MAGIC)
-    {
-      DPRINT("Bad MSZIP block header magic (0x%X)\n", Magic);
-      return CS_BADSTREAM;
-    }
+	  /* WindowBits is passed < 0 to tell that there is no zlib header.
+	   * Note that in this case inflate *requires* an extra "dummy" byte
+	   * after the compressed stream in order to complete decompression and
+	   * return Z_STREAM_END.
+	   */
+	  Status = inflateInit2(&ZStream, -MAX_WBITS);
+	  if (Status != Z_OK)
+		{
+		  DPRINT("inflateInit2() returned (%d).\n", Status);
+		  return CS_BADSTREAM;
+		}
+	  ZStream.total_in = 2;
+	}
+  else {
+	ZStream.avail_in = -*InputLength;
+	ZStream.next_in = (PUCHAR)InputBuffer;
+	ZStream.next_out = (PUCHAR)OutputBuffer;
+	ZStream.avail_out = abs(*OutputLength);
+	ZStream.total_in = 0;
+  }
+  ZStream.total_out = 0;
+  Status = inflate(&ZStream, Z_SYNC_FLUSH );
+  if (Status != Z_OK && Status != Z_STREAM_END)
+	{
+	  DPRINT("inflate() returned (%d) (%s).\n", Status, ZStream.msg);
+	  if (Status == Z_MEM_ERROR)
+		return CS_NOMEMORY;
+	  return CS_BADSTREAM;
+	}
 
-	ZStream.next_in   = (PUCHAR)((ULONG)InputBuffer + 2);
-	ZStream.avail_in  = InputLength - 2;
-	ZStream.next_out  = (PUCHAR)OutputBuffer;
-  ZStream.avail_out = CAB_BLOCKSIZE + 12;
-
-  /* WindowBits is passed < 0 to tell that there is no zlib header.
-   * Note that in this case inflate *requires* an extra "dummy" byte
-   * after the compressed stream in order to complete decompression and
-   * return Z_STREAM_END.
-   */
-  Status = inflateInit2(&ZStream, -MAX_WBITS);
-  if (Status != Z_OK)
-    {
-      DPRINT("inflateInit2() returned (%d).\n", Status);
-      return CS_BADSTREAM;
-    }
-
-  while ((ZStream.total_out < CAB_BLOCKSIZE + 12) &&
-    (ZStream.total_in < InputLength - 2))
-    {
-      Status = inflate(&ZStream, Z_NO_FLUSH);
-      if (Status == Z_STREAM_END) break;
-      if (Status != Z_OK)
-        {
-          DPRINT("inflate() returned (%d) (%s).\n", Status, ZStream.msg);
-          if (Status == Z_MEM_ERROR)
-              return CS_NOMEMORY;
-          return CS_BADSTREAM;
-        }
-    }
-
+  if( *OutputLength > 0 )
+	{
+	  Status = inflateEnd(&ZStream);
+	  if (Status != Z_OK)
+		{
+		  DPRINT("inflateEnd() returned (%d).\n", Status);
+		  return CS_BADSTREAM;
+		}
+	}
   *OutputLength = ZStream.total_out;
-
-  Status = inflateEnd(&ZStream);
-  if (Status != Z_OK)
-    {
-      DPRINT("inflateEnd() returned (%d).\n", Status);
-      return CS_BADSTREAM;
-    }
+  *InputLength = ZStream.total_in;
   return CS_SUCCESS;
 }
 
@@ -197,97 +201,14 @@ void MSZipFree (voidpf opaque, voidpf address)
   RtlFreeHeap(ProcessHeap, 0, address);
 }
 
-
-static DWORD
-SeekInFile(HANDLE hFile,
-  LONG lDistanceToMove,
-  PLONG lpDistanceToMoveHigh,
-  DWORD dwMoveMethod,
-  PNTSTATUS Status)
-{
-  FILE_POSITION_INFORMATION FilePosition;
-  FILE_STANDARD_INFORMATION FileStandard;
-  NTSTATUS errCode;
-  IO_STATUS_BLOCK IoStatusBlock;
-  LARGE_INTEGER Distance;
-
-  DPRINT("SeekInFile(hFile %x, lDistanceToMove %d, dwMoveMethod %d)\n",
-    hFile,lDistanceToMove,dwMoveMethod);
-
-  Distance.u.LowPart = lDistanceToMove;
-  if (lpDistanceToMoveHigh)
-    {
-      Distance.u.HighPart = *lpDistanceToMoveHigh;
-    }
-  else if (lDistanceToMove >= 0)
-    {
-      Distance.u.HighPart = 0;
-    }
-  else
-    {
-      Distance.u.HighPart = -1;
-    }
-
-  if (dwMoveMethod == SEEK_CURRENT)
-    {
-      NtQueryInformationFile(hFile,
-        &IoStatusBlock,
-        &FilePosition,
-        sizeof(FILE_POSITION_INFORMATION),
-        FilePositionInformation);
-        FilePosition.CurrentByteOffset.QuadPart += Distance.QuadPart;
-    }
-  else if (dwMoveMethod == SEEK_END)
-    {
-      NtQueryInformationFile(hFile,
-        &IoStatusBlock,
-        &FileStandard,
-        sizeof(FILE_STANDARD_INFORMATION),
-        FileStandardInformation);
-        FilePosition.CurrentByteOffset.QuadPart =
-        FileStandard.EndOfFile.QuadPart + Distance.QuadPart;
-    }
-  else if ( dwMoveMethod == SEEK_BEGIN )
-    {
-      FilePosition.CurrentByteOffset.QuadPart = Distance.QuadPart;
-    }
-
-//  DPRINT1("GOTO FILE OFFSET: %I64d\n", FilePosition.CurrentByteOffset.QuadPart);
-
-  errCode = NtSetInformationFile(hFile,
-    &IoStatusBlock,
-    &FilePosition,
-    sizeof(FILE_POSITION_INFORMATION),
-    FilePositionInformation);
-  if (!NT_SUCCESS(errCode))
-    {
-      if (Status != NULL)
-        {
-          *Status = errCode;
-        }
-      return -1;
-    }
-
-  if (lpDistanceToMoveHigh != NULL)
-    {
-      *lpDistanceToMoveHigh = FilePosition.CurrentByteOffset.u.HighPart;
-    }
-  if (Status != NULL)
-    {
-      *Status = STATUS_SUCCESS;
-    }
-  return FilePosition.CurrentByteOffset.u.LowPart;
-}
-
-
 static BOOL
 ConvertSystemTimeToFileTime(
-  CONST SYSTEMTIME *  lpSystemTime,
+  CONST SYSTEMTIME *  lpSystemTime,	
   LPFILETIME  lpFileTime)
 {
   TIME_FIELDS TimeFields;
   LARGE_INTEGER liTime;
-
+  
   TimeFields.Year = lpSystemTime->wYear;
   TimeFields.Month = lpSystemTime->wMonth;
   TimeFields.Day = lpSystemTime->wDay;
@@ -295,7 +216,7 @@ ConvertSystemTimeToFileTime(
   TimeFields.Minute = lpSystemTime->wMinute;
   TimeFields.Second = lpSystemTime->wSecond;
   TimeFields.Milliseconds = lpSystemTime->wMilliseconds;
-
+  
   if (RtlTimeFieldsToTime(&TimeFields, &liTime))
     {
       lpFileTime->dwLowDateTime = liTime.u.LowPart;
@@ -315,21 +236,21 @@ ConvertDosDateTimeToFileTime(
   PDOSTIME  pdtime = (PDOSTIME) &wFatTime;
   PDOSDATE  pddate = (PDOSDATE) &wFatDate;
   SYSTEMTIME SystemTime;
-
+  
   if (lpFileTime == NULL)
     return FALSE;
-
+  
   SystemTime.wMilliseconds = 0;
   SystemTime.wSecond = pdtime->Second;
   SystemTime.wMinute = pdtime->Minute;
   SystemTime.wHour = pdtime->Hour;
-
+  
   SystemTime.wDay = pddate->Day;
   SystemTime.wMonth = pddate->Month;
   SystemTime.wYear = 1980 + pddate->Year;
-
+  
   ConvertSystemTimeToFileTime(&SystemTime,lpFileTime);
-
+  
   return TRUE;
 }
 
@@ -345,9 +266,9 @@ GetFileName(PWCHAR Path)
  */
 {
   ULONG i, j;
-
+  
   j = i = 0;
-
+  
   while (Path [i++])
     {
       if (Path[i - 1] == L'\\') j = i;
@@ -366,10 +287,10 @@ RemoveFileName(PWCHAR Path)
 {
   PWCHAR FileName;
   DWORD i;
-
+  
   i = 0;
   FileName = GetFileName(Path + i);
-
+  
   if ((FileName != (Path + i)) && (FileName [-1] == L'\\'))
     FileName--;
   if ((FileName == (Path + i)) && (FileName [0] == L'\\'))
@@ -379,7 +300,7 @@ RemoveFileName(PWCHAR Path)
 
 
 static BOOL
-SetAttributesOnFile(PCFFILE_NODE File, HANDLE hFile)
+SetAttributesOnFile(PCFFILE File, HANDLE hFile)
 /*
  * FUNCTION: Sets attributes on a file
  * ARGUMENTS:
@@ -393,19 +314,19 @@ SetAttributesOnFile(PCFFILE_NODE File, HANDLE hFile)
   NTSTATUS NtStatus;
   ULONG Attributes = 0;
 
-  if (File->File.Attributes & CAB_ATTRIB_READONLY)
+  if (File->Attributes & CAB_ATTRIB_READONLY)
     Attributes |= FILE_ATTRIBUTE_READONLY;
 
-  if (File->File.Attributes & CAB_ATTRIB_HIDDEN)
+  if (File->Attributes & CAB_ATTRIB_HIDDEN)
     Attributes |= FILE_ATTRIBUTE_HIDDEN;
 
-  if (File->File.Attributes & CAB_ATTRIB_SYSTEM)
+  if (File->Attributes & CAB_ATTRIB_SYSTEM)
     Attributes |= FILE_ATTRIBUTE_SYSTEM;
 
-  if (File->File.Attributes & CAB_ATTRIB_DIRECTORY)
+  if (File->Attributes & CAB_ATTRIB_DIRECTORY)
     Attributes |= FILE_ATTRIBUTE_DIRECTORY;
 
-  if (File->File.Attributes & CAB_ATTRIB_ARCHIVE)
+  if (File->Attributes & CAB_ATTRIB_ARCHIVE)
     Attributes |= FILE_ATTRIBUTE_ARCHIVE;
 
   NtStatus = NtQueryInformationFile(hFile,
@@ -435,697 +356,6 @@ SetAttributesOnFile(PCFFILE_NODE File, HANDLE hFile)
   return NT_SUCCESS(NtStatus);
 }
 
-
-static ULONG
-ReadBlock(PVOID Buffer,
-  ULONG Size,
-  PULONG BytesRead)
-/*
- * FUNCTION: Read a block of data from file
- * ARGUMENTS:
- *     Buffer    = Pointer to data buffer
- *     Size      = Length of data buffer
- *     BytesRead = Pointer to ULONG that on return will contain
- *                 number of bytes read
- * RETURNS:
- *     Status of operation
- */
-{
-  IO_STATUS_BLOCK IoStatusBlock;
-  NTSTATUS NtStatus;
-
-  NtStatus = NtReadFile(FileHandle,
-	  NULL,
-	  NULL,
-	  NULL,
-	  &IoStatusBlock,
-	  Buffer,
-	  Size,
-	  NULL,
-	  NULL);
-  if (!NT_SUCCESS(NtStatus))
-	  {
-      DPRINT("ReadBlock for %d bytes failed (%x)\n", Size, NtStatus);
-      *BytesRead = 0;
-      return CAB_STATUS_INVALID_CAB;
-    }
-  *BytesRead = Size;
-  return CAB_STATUS_SUCCESS;
-}
-
-
-static PCFFOLDER_NODE
-NewFolderNode()
-/*
- * FUNCTION: Creates a new folder node
- * RETURNS:
- *     Pointer to node if there was enough free memory available, otherwise NULL
- */
-{
-  PCFFOLDER_NODE Node;
-
-  Node = (PCFFOLDER_NODE)RtlAllocateHeap (ProcessHeap, 0, sizeof(CFFOLDER_NODE));
-  if (!Node)
-    return NULL;
-
-  RtlZeroMemory(Node, sizeof(CFFOLDER_NODE));
-
-  Node->Folder.CompressionType = CAB_COMP_NONE;
-
-  Node->Prev = FolderListTail;
-
-  if (FolderListTail != NULL)
-    {
-      FolderListTail->Next = Node;
-    }
-  else
-    {
-      FolderListHead = Node;
-    }
-  FolderListTail = Node;
-
-  return Node;
-}
-
-
-static PCFFILE_NODE
-NewFileNode()
-/*
- * FUNCTION: Creates a new file node
- * ARGUMENTS:
- *     FolderNode = Pointer to folder node to bind file to
- * RETURNS:
- *     Pointer to node if there was enough free memory available, otherwise NULL
- */
-{
-  PCFFILE_NODE Node;
-
-  Node = (PCFFILE_NODE)RtlAllocateHeap (ProcessHeap, 0, sizeof(CFFILE_NODE));
-  if (!Node)
-    return NULL;
-
-  RtlZeroMemory(Node, sizeof(CFFILE_NODE));
-
-  Node->Prev = FileListTail;
-
-  if (FileListTail != NULL)
-    {
-      FileListTail->Next = Node;
-    }
-  else
-    {
-      FileListHead = Node;
-    }
-  FileListTail = Node;
-
-  return Node;
-}
-
-
-static PCFDATA_NODE
-NewDataNode(PCFFOLDER_NODE FolderNode)
-/*
- * FUNCTION: Creates a new data block node
- * ARGUMENTS:
- *     FolderNode = Pointer to folder node to bind data block to
- * RETURNS:
- *     Pointer to node if there was enough free memory available, otherwise NULL
- */
-{
-  PCFDATA_NODE Node;
-
-  Node = (PCFDATA_NODE)RtlAllocateHeap (ProcessHeap, 0, sizeof(CFDATA_NODE));
-  if (!Node)
-    return NULL;
-
-  RtlZeroMemory(Node, sizeof(CFDATA_NODE));
-
-  Node->Prev = FolderNode->DataListTail;
-
-  if (FolderNode->DataListTail != NULL)
-    {
-      FolderNode->DataListTail->Next = Node;
-    }
-  else
-    {
-      FolderNode->DataListHead = Node;
-    }
-  FolderNode->DataListTail = Node;
-
-  return Node;
-}
-
-
-static VOID
-DestroyDataNodes(PCFFOLDER_NODE FolderNode)
-/*
- * FUNCTION: Destroys data block nodes bound to a folder node
- * ARGUMENTS:
- *     FolderNode = Pointer to folder node
- */
-{
-  PCFDATA_NODE PrevNode;
-  PCFDATA_NODE NextNode;
-
-  NextNode = FolderNode->DataListHead;
-  while (NextNode != NULL)
-    {
-      PrevNode = NextNode->Next;
-      RtlFreeHeap(ProcessHeap, 0, NextNode);
-      NextNode = PrevNode;
-    }
-  FolderNode->DataListHead = NULL;
-  FolderNode->DataListTail = NULL;
-}
-
-
-static VOID
-DestroyFileNodes()
-/*
- * FUNCTION: Destroys file nodes
- * ARGUMENTS:
- *     FolderNode = Pointer to folder node
- */
-{
-  PCFFILE_NODE PrevNode;
-  PCFFILE_NODE NextNode;
-
-  NextNode = FileListHead;
-  while (NextNode != NULL)
-    {
-      PrevNode = NextNode->Next;
-      if (NextNode->FileName)
-        RtlFreeHeap(ProcessHeap, 0, NextNode->FileName);
-      RtlFreeHeap(ProcessHeap, 0, NextNode);
-      NextNode = PrevNode;
-    }
-  FileListHead = NULL;
-  FileListTail = NULL;
-}
-
-
-#if 0
-static VOID
-DestroyDeletedFileNodes()
-/*
- * FUNCTION: Destroys file nodes that are marked for deletion
- */
-{
-  PCFFILE_NODE CurNode;
-  PCFFILE_NODE NextNode;
-
-  CurNode = FileListHead;
-  while (CurNode != NULL)
-    {
-      NextNode = CurNode->Next;
-
-      if (CurNode->Delete)
-        {
-          if (CurNode->Prev != NULL)
-            {
-              CurNode->Prev->Next = CurNode->Next;
-            }
-          else
-            {
-              FileListHead = CurNode->Next;
-              if (FileListHead)
-                  FileListHead->Prev = NULL;
-            }
-
-          if (CurNode->Next != NULL)
-            {
-              CurNode->Next->Prev = CurNode->Prev;
-            }
-          else
-            {
-              FileListTail = CurNode->Prev;
-              if (FileListTail)
-                  FileListTail->Next = NULL;
-            }
-
-          DPRINT("Deleting file: '%S'\n", CurNode->FileName);
-
-          if (CurNode->FileName)
-            RtlFreeHeap(ProcessHeap, 0, CurNode->FileName);
-          RtlFreeHeap(ProcessHeap, 0, CurNode);
-        }
-      CurNode = NextNode;
-    }
-}
-#endif
-
-static VOID
-DestroyFolderNodes()
-/*
- * FUNCTION: Destroys folder nodes
- */
-{
-  PCFFOLDER_NODE PrevNode;
-  PCFFOLDER_NODE NextNode;
-
-  NextNode = FolderListHead;
-  while (NextNode != NULL)
-    {
-      PrevNode = NextNode->Next;
-      DestroyDataNodes(NextNode);
-      RtlFreeHeap(ProcessHeap, 0, NextNode);
-      NextNode = PrevNode;
-    }
-  FolderListHead = NULL;
-  FolderListTail = NULL;
-}
-
-#if 0
-static VOID
-DestroyDeletedFolderNodes()
-/*
- * FUNCTION: Destroys folder nodes that are marked for deletion
- */
-{
-  PCFFOLDER_NODE CurNode;
-  PCFFOLDER_NODE NextNode;
-
-  CurNode = FolderListHead;
-  while (CurNode != NULL)
-    {
-      NextNode = CurNode->Next;
-
-      if (CurNode->Delete)
-        {
-          if (CurNode->Prev != NULL)
-            {
-              CurNode->Prev->Next = CurNode->Next;
-            }
-          else
-            {
-              FolderListHead = CurNode->Next;
-              if (FolderListHead)
-                FolderListHead->Prev = NULL;
-            }
-
-          if (CurNode->Next != NULL)
-            {
-              CurNode->Next->Prev = CurNode->Prev;
-            }
-          else
-            {
-              FolderListTail = CurNode->Prev;
-              if (FolderListTail)
-                  FolderListTail->Next = NULL;
-            }
-
-          DestroyDataNodes(CurNode);
-          RtlFreeHeap(ProcessHeap, 0, CurNode);
-      }
-      CurNode = NextNode;
-    }
-}
-#endif
-
-static PCFFOLDER_NODE
-LocateFolderNode(ULONG Index)
-/*
- * FUNCTION: Locates a folder node
- * ARGUMENTS:
- *     Index = Folder index
- * RETURNS:
- *     Pointer to folder node or NULL if the folder node was not found
- */
-{
-  PCFFOLDER_NODE Node;
-
-  switch (Index)
-    {
-      case CAB_FILE_SPLIT:
-        return FolderListTail;
-
-      case CAB_FILE_CONTINUED:
-      case CAB_FILE_PREV_NEXT:
-        return FolderListHead;
-    }
-
-  Node = FolderListHead;
-  while (Node != NULL)
-    {
-      if (Node->Index == Index)
-        return Node;
-      Node = Node->Next;
-    }
-  return NULL;
-}
-
-
-static ULONG
-GetAbsoluteOffset(PCFFILE_NODE File)
-/*
- * FUNCTION: Returns the absolute offset of a file
- * ARGUMENTS:
- *     File = Pointer to CFFILE_NODE structure for file
- * RETURNS:
- *     Status of operation
- */
-{
-  PCFDATA_NODE Node;
-
-  DPRINT("FileName '%S'  FileOffset (0x%X)  FileSize (%d).\n",
-    (PWCHAR)File->FileName,
-    (UINT)File->File.FileOffset,
-    (UINT)File->File.FileSize);
-
-  Node = CurrentFolderNode->DataListHead;
-  while (Node != NULL)
-    {
-      DPRINT("GetAbsoluteOffset(): Comparing (0x%X, 0x%X) (%d).\n",
-          (UINT)Node->UncompOffset,
-          (UINT)Node->UncompOffset + Node->Data.UncompSize,
-          (UINT)Node->Data.UncompSize);
-
-      /* Node->Data.UncompSize will be 0 if the block is split
-         (ie. it is the last block in this cabinet) */
-      if ((Node->Data.UncompSize == 0) ||
-        ((File->File.FileOffset >= Node->UncompOffset) &&
-        (File->File.FileOffset < Node->UncompOffset +
-        Node->Data.UncompSize)))
-        {
-          File->DataBlock = Node;
-          return CAB_STATUS_SUCCESS;
-        }
-
-      Node = Node->Next;
-    }
-  return CAB_STATUS_INVALID_CAB;
-}
-
-
-static ULONG
-LocateFile(PWCHAR FileName,
-  PCFFILE_NODE *File)
-/*
- * FUNCTION: Locates a file in the cabinet
- * ARGUMENTS:
- *     FileName = Pointer to string with name of file to locate
- *     File     = Address of pointer to CFFILE_NODE structure to fill
- * RETURNS:
- *     Status of operation
- * NOTES:
- *     Current folder is set to the folder of the file
- */
-{
-  PCFFILE_NODE Node;
-  ULONG Status;
-
-  DPRINT("FileName '%S'\n", FileName);
-
-  Node = FileListHead;
-  while (Node != NULL)
-    {
-      if (_wcsicmp(FileName, Node->FileName) == 0)
-        {
-          CurrentFolderNode = LocateFolderNode(Node->File.FileControlID);
-          if (!CurrentFolderNode)
-            {
-              DPRINT("Folder with index number (%d) not found.\n",
-                (UINT)Node->File.FileControlID);
-              return CAB_STATUS_INVALID_CAB;
-            }
-
-          if (Node->DataBlock == NULL)
-            {
-              Status = GetAbsoluteOffset(Node);
-            }
-          else
-            Status = CAB_STATUS_SUCCESS;
-          *File = Node;
-          return Status;
-      }
-      Node = Node->Next;
-  }
-  return CAB_STATUS_NOFILE;
-}
-
-
-static ULONG
-ReadString(PWCHAR String, ULONG MaxLength)
-/*
- * FUNCTION: Reads a NULL-terminated string from the cabinet
- * ARGUMENTS:
- *     String    = Pointer to buffer to place string
- *     MaxLength = Maximum length of string
- * RETURNS:
- *     Status of operation
- */
-{
-  NTSTATUS NtStatus;
-  ULONG BytesRead;
-  ULONG Offset;
-  ULONG Status;
-  ULONG Size;
-  BOOL Found;
-  CHAR buf[MAX_PATH];
-  ANSI_STRING as;
-  UNICODE_STRING us;
-
-  Offset = 0;
-  Found  = FALSE;
-  do
-    {
-      Size = ((Offset + 32) <= MaxLength)? 32 : MaxLength - Offset;
-
-      if (Size == 0)
-        {
-          DPRINT("Too long a filename.\n");
-          return CAB_STATUS_INVALID_CAB;
-        }
-
-      Status = ReadBlock((PCFDATA)&buf[Offset], Size, &BytesRead);
-      if ((Status != CAB_STATUS_SUCCESS) || (BytesRead != Size))
-        {
-          DPRINT("Cannot read from file (%d).\n", (UINT)Status);
-          return CAB_STATUS_INVALID_CAB;
-        }
-
-      for (Size = Offset; Size < Offset + BytesRead; Size++)
-        {
-          if (buf[Size] == '\0')
-            {
-              Found = TRUE;
-              break;
-            }
-        }
-
-      Offset += BytesRead;
-    } while (!Found);
-
-  /* Back up some bytes */
-  Size = (BytesRead - Size) - 1;
-  SeekInFile(FileHandle, -(LONG)Size, NULL, SEEK_CURRENT, &NtStatus);
-  if (!NT_SUCCESS(NtStatus))
-    {
-      DPRINT("SeekInFile() failed (%x).\n", NtStatus);
-      return CAB_STATUS_INVALID_CAB;
-    }
-
-  RtlInitAnsiString(&as, buf);
-  us.Buffer = String;
-  us.MaximumLength = MaxLength * sizeof(WCHAR);
-  us.Length = 0;
-
-  RtlAnsiStringToUnicodeString(&us, &as, FALSE);
-
-  return CAB_STATUS_SUCCESS;
-}
-
-
-static ULONG
-ReadFileTable(VOID)
-/*
- * FUNCTION: Reads the file table from the cabinet file
- * RETURNS:
- *     Status of operation
- */
-{
-  ULONG i;
-  ULONG Status;
-  ULONG BytesRead;
-  PCFFILE_NODE File;
-  NTSTATUS NtStatus;
-
-  DPRINT("Reading file table at absolute offset (0x%X).\n",
-    CABHeader.FileTableOffset);
-
-  /* Seek to file table */
-  SeekInFile(FileHandle, CABHeader.FileTableOffset, NULL, SEEK_BEGIN, &NtStatus);
-  if (!NT_SUCCESS(NtStatus))
-    {
-      DPRINT("SeekInFile() failed (%x).\n", NtStatus);
-      return CAB_STATUS_INVALID_CAB;
-    }
-
-  for (i = 0; i < CABHeader.FileCount; i++)
-    {
-      File = NewFileNode();
-      if (!File)
-        {
-          DPRINT("Insufficient memory.\n");
-          return CAB_STATUS_NOMEMORY;
-        }
-
-      if ((Status = ReadBlock(&File->File, sizeof(CFFILE),
-          &BytesRead)) != CAB_STATUS_SUCCESS) {
-          DPRINT("Cannot read from file (%d).\n", (UINT)Status);
-          return CAB_STATUS_INVALID_CAB;
-      }
-
-      File->FileName = (PWCHAR)RtlAllocateHeap(ProcessHeap, 0, MAX_PATH * sizeof(WCHAR));
-      if (!File->FileName)
-        {
-          DPRINT("Insufficient memory.\n");
-          return CAB_STATUS_NOMEMORY;
-        }
-
-      /* Read file name */
-      Status = ReadString(File->FileName, MAX_PATH);
-      if (Status != CAB_STATUS_SUCCESS)
-        return Status;
-
-      DPRINT("Found file '%S' at uncompressed offset (0x%X).  Size (%d bytes)  ControlId (0x%X).\n",
-        (PWCHAR)File->FileName,
-        (UINT)File->File.FileOffset,
-        (UINT)File->File.FileSize,
-        (UINT)File->File.FileControlID);
-    }
-  return CAB_STATUS_SUCCESS;
-}
-
-
-static ULONG
-ReadDataBlocks(PCFFOLDER_NODE FolderNode)
-/*
- * FUNCTION: Reads all CFDATA blocks for a folder from the cabinet file
- * ARGUMENTS:
- *     FolderNode = Pointer to CFFOLDER_NODE structure for folder
- * RETURNS:
- *     Status of operation
- */
-{
-  ULONG AbsoluteOffset;
-  ULONG UncompOffset;
-  PCFDATA_NODE Node;
-  NTSTATUS NtStatus;
-  ULONG BytesRead;
-  ULONG Status;
-  ULONG i;
-
-  DPRINT("Reading data blocks for folder (%d)  at absolute offset (0x%X).\n",
-    FolderNode->Index, FolderNode->Folder.DataOffset);
-
-  AbsoluteOffset = FolderNode->Folder.DataOffset;
-  UncompOffset = FolderNode->UncompOffset;
-
-  for (i = 0; i < FolderNode->Folder.DataBlockCount; i++)
-    {
-      Node = NewDataNode(FolderNode);
-      if (!Node)
-        {
-          DPRINT("Insufficient memory.\n");
-          return CAB_STATUS_NOMEMORY;
-        }
-
-      /* Seek to data block */
-      SeekInFile(FileHandle, AbsoluteOffset, NULL, SEEK_BEGIN, &NtStatus);
-      if (!NT_SUCCESS(NtStatus))
-        {
-          DPRINT("SeekInFile() failed (%x).\n", NtStatus);
-          return CAB_STATUS_INVALID_CAB;
-        }
-
-      if ((Status = ReadBlock(&Node->Data, sizeof(CFDATA),
-          &BytesRead)) != CAB_STATUS_SUCCESS)
-        {
-          DPRINT("Cannot read from file (%d).\n", (UINT)Status);
-          return CAB_STATUS_INVALID_CAB;
-        }
-
-      DPRINT("AbsOffset (0x%X)  UncompOffset (0x%X)  Checksum (0x%X)  CompSize (%d)  UncompSize (%d).\n",
-        (UINT)AbsoluteOffset,
-        (UINT)UncompOffset,
-        (UINT)Node->Data.Checksum,
-        (UINT)Node->Data.CompSize,
-        (UINT)Node->Data.UncompSize);
-
-      Node->AbsoluteOffset = AbsoluteOffset;
-      Node->UncompOffset = UncompOffset;
-
-      AbsoluteOffset += sizeof(CFDATA) + Node->Data.CompSize;
-      UncompOffset += Node->Data.UncompSize;
-    }
-
-  FolderUncompSize = UncompOffset;
-
-  return CAB_STATUS_SUCCESS;
-}
-
-#if 0
-static ULONG
-ComputeChecksum(PVOID Buffer,
-  UINT Size,
-  ULONG Seed)
-/*
- * FUNCTION: Computes checksum for data block
- * ARGUMENTS:
- *     Buffer = Pointer to data buffer
- *     Size   = Length of data buffer
- *     Seed   = Previously computed checksum
- * RETURNS:
- *     Checksum of buffer
- */
-{
-  INT UlongCount; // Number of ULONGs in block
-  ULONG Checksum; // Checksum accumulator
-  PBYTE pb;
-  ULONG ul;
-
-  /* FIXME: Doesn't seem to be correct. EXTRACT.EXE
-     won't accept checksums computed by this routine */
-
-  DPRINT("Checksumming buffer (0x%X)  Size (%d)\n", (UINT)Buffer, Size);
-
-  UlongCount = Size / 4;            // Number of ULONGs
-  Checksum = Seed;                  // Init checksum
-  pb = (PBYTE)Buffer;               // Start at front of data block
-
-  /* Checksum integral multiple of ULONGs */
-  while (UlongCount-- > 0)
-    {
-      /* NOTE: Build ULONG in big/little-endian independent manner */
-      ul = *pb++;                     // Get low-order byte
-      ul |= (((ULONG)(*pb++)) <<  8); // Add 2nd byte
-      ul |= (((ULONG)(*pb++)) << 16); // Add 3nd byte
-      ul |= (((ULONG)(*pb++)) << 24); // Add 4th byte
-
-      Checksum ^= ul;                 // Update checksum
-  }
-
-  /* Checksum remainder bytes */
-  ul = 0;
-  switch (Size % 4)
-    {
-      case 3:
-          ul |= (((ULONG)(*pb++)) << 16); // Add 3rd byte
-      case 2:
-          ul |= (((ULONG)(*pb++)) <<  8); // Add 2nd byte
-      case 1:
-          ul |= *pb++;                    // Get low-order byte
-      default:
-          break;
-    }
-  Checksum ^= ul;                         // Update checksum
-
-  /* Return computed checksum */
-  return Checksum;
-}
-#endif
-
 static ULONG
 CloseCabinet(VOID)
 /*
@@ -1134,23 +364,14 @@ CloseCabinet(VOID)
  *     Status of operation
  */
 {
-  DestroyFileNodes();
-
-  DestroyFolderNodes();
-
-  if (InputBuffer)
+  if (FileBuffer)
     {
-      RtlFreeHeap(ProcessHeap, 0, InputBuffer);
-      InputBuffer = NULL;
+      NtUnmapViewOfSection( NtCurrentProcess(), FileBuffer );
+	  NtClose( FileSectionHandle );
+	  NtClose( FileHandle );
+      FileBuffer = NULL;
     }
-
-  if (OutputBuffer)
-    {
-      RtlFreeHeap(ProcessHeap, 0, OutputBuffer);
-      OutputBuffer = NULL;
-    }
-
-  NtClose(FileHandle);
+  
   return 0;
 }
 
@@ -1167,32 +388,16 @@ CabinetInitialize(VOID)
 
   FileOpen = FALSE;
   wcscpy(DestPath, L"");
-
-  FolderListHead = NULL;
-  FolderListTail = NULL;
-  FileListHead   = NULL;
-  FileListTail   = NULL;
-
+  
   CodecId       = CAB_CODEC_RAW;
   CodecSelected = TRUE;
-
-  OutputBuffer = NULL;
-  CurrentOBuffer = NULL;
-  CurrentOBufferSize = 0;
-  InputBuffer  = NULL;
-  CurrentIBuffer = NULL;
-  CurrentIBufferSize = 0;
-
+  
   FolderUncompSize = 0;
   BytesLeftInBlock = 0;
   CabinetReserved = 0;
   FolderReserved = 0;
   DataReserved = 0;
-  ReuseBlock       = FALSE;
-  CurrentFolderNode = NULL;
-  CurrentDataNode  = NULL;
   CabinetReservedArea = NULL;
-  RestartSearch = FALSE;
   LastFileOffset = 0;
 }
 
@@ -1221,7 +426,7 @@ CabinetNormalizePath(PWCHAR Path,
 {
   ULONG n;
   BOOL OK = TRUE;
-
+  
   if ((n = wcslen(Path)) &&
     (Path[n - 1] != L'\\') &&
     (OK = ((n + 1) < Length)))
@@ -1291,24 +496,18 @@ CabinetOpen(VOID)
  *     Status of operation
  */
 {
-  WCHAR CabinetFileName[256];
-  PCFFOLDER_NODE FolderNode;
-  ULONG Status;
-  ULONG Index;
-
+  PUCHAR Buffer;
+  UNICODE_STRING ustring;
+  ANSI_STRING astring;
+  
   if (!FileOpen)
     {
       OBJECT_ATTRIBUTES ObjectAttributes;
       IO_STATUS_BLOCK IoStatusBlock;
       UNICODE_STRING FileName;
       NTSTATUS NtStatus;
-      ULONG BytesRead;
       ULONG Size;
-
-      OutputBuffer = RtlAllocateHeap(ProcessHeap, 0, CAB_BLOCKSIZE + 12); // This should be enough
-      if (!OutputBuffer)
-        return CAB_STATUS_NOMEMORY;
-
+    
       RtlInitUnicodeString(&FileName,
         CabinetName);
 
@@ -1319,168 +518,137 @@ CabinetOpen(VOID)
         NULL);
 
       NtStatus = NtOpenFile(&FileHandle,
-		    GENERIC_READ,
-		    &ObjectAttributes,
-		    &IoStatusBlock,
-		    FILE_SHARE_READ,
-		    FILE_SYNCHRONOUS_IO_NONALERT);
+							GENERIC_READ | SYNCHRONIZE,
+							&ObjectAttributes,
+							&IoStatusBlock,
+							FILE_SHARE_READ,
+							FILE_SYNCHRONOUS_IO_NONALERT);
       if (!NT_SUCCESS(NtStatus))
         {
           DPRINT("Cannot open file (%S) (%x).\n", CabinetName, NtStatus);
           return CAB_STATUS_CANNOT_OPEN;
         }
-
       FileOpen = TRUE;
 
-      /* Load CAB header */
-      if ((Status = ReadBlock(&CABHeader, sizeof(CFHEADER), &BytesRead)) != CAB_STATUS_SUCCESS)
-        {
-          DPRINT("Cannot read from file (%d).\n", (UINT)Status);
-          return CAB_STATUS_INVALID_CAB;
-        }
-
+	  NtStatus = NtCreateSection(&FileSectionHandle,
+								 SECTION_ALL_ACCESS,
+								 0,
+								 0,
+								 PAGE_READONLY,
+								 SEC_COMMIT,
+								 FileHandle);
+      if(!NT_SUCCESS(NtStatus))
+		{
+		  DPRINT("NtCreateSection failed: %x\n", NtStatus);
+		  return CAB_STATUS_NOMEMORY;
+		}
+	  FileBuffer = 0;
+	  FileSize = 0;
+	  NtStatus = NtMapViewOfSection(FileSectionHandle,
+									NtCurrentProcess(),
+									(PVOID *)&FileBuffer,
+									0,
+									0,
+									0,
+									&FileSize,
+									ViewUnmap,
+									0,
+									PAGE_READONLY);
+	  if(!NT_SUCCESS(NtStatus))
+		{
+		  DPRINT("NtMapViewOfSection failed: %x\n", NtStatus);
+		  return CAB_STATUS_NOMEMORY;
+		}
+	  DPRINT( "Cabinet file %S opened and mapped to %x\n", CabinetName, FileBuffer );
+	  PCABHeader = (PCFHEADER)FileBuffer;
+    
       /* Check header */
-      if ((BytesRead               != sizeof(CFHEADER)) ||
-        (CABHeader.Signature       != CAB_SIGNATURE   ) ||
-        (CABHeader.Version         != CAB_VERSION     ) ||
-        (CABHeader.FolderCount     == 0               ) ||
-        (CABHeader.FileCount       == 0               ) ||
-        (CABHeader.FileTableOffset < sizeof(CFHEADER))) {
-        CloseCabinet();
-        DPRINT("File has invalid header.\n");
-        return CAB_STATUS_INVALID_CAB;
-      }
-
+      if(FileSize <= sizeof(CFHEADER) ||
+		 PCABHeader->Signature != CAB_SIGNATURE ||
+		 PCABHeader->Version != CAB_VERSION ||
+		 PCABHeader->FolderCount == 0 ||
+		 PCABHeader->FileCount == 0 ||
+		 PCABHeader->FileTableOffset < sizeof(CFHEADER))
+		{
+		  CloseCabinet();
+		  DPRINT("File has invalid header.\n");
+		  return CAB_STATUS_INVALID_CAB;
+		}
+  
       Size = 0;
-
+	  Buffer = (PUCHAR)(PCABHeader+1);  
       /* Read/skip any reserved bytes */
-      if (CABHeader.Flags & CAB_FLAG_RESERVE)
+      if (PCABHeader->Flags & CAB_FLAG_RESERVE)
         {
-          if ((Status = ReadBlock(&Size, sizeof(ULONG), &BytesRead)) != CAB_STATUS_SUCCESS)
-            {
-              DPRINT("Cannot read from file (%d).\n", (UINT)Status);
-              return CAB_STATUS_INVALID_CAB;
-            }
-          CabinetReserved = Size & 0xFFFF;
-          FolderReserved = (Size >> 16) & 0xFF;
-          DataReserved = (Size >> 24) & 0xFF;
-
+		  CabinetReserved = *(PUSHORT)Buffer;
+		  Buffer += 2;
+          FolderReserved = *Buffer;
+		  Buffer++;
+          DataReserved = *Buffer;
+		  Buffer++;
           if (CabinetReserved > 0)
             {
-              CabinetReservedArea = RtlAllocateHeap(ProcessHeap, 0, CabinetReserved);
-              if (!CabinetReservedArea)
-                {
-                  return CAB_STATUS_NOMEMORY;
-                }
-
-              if ((Status = ReadBlock(CabinetReservedArea, CabinetReserved, &BytesRead)) != CAB_STATUS_SUCCESS)
-                {
-                  DPRINT("Cannot read from file (%d).\n", (UINT)Status);
-                  return CAB_STATUS_INVALID_CAB;
-                }
+			  CabinetReservedArea = Buffer;
+			  Buffer += CabinetReserved;
             }
-#if 0
-          SeekInFile(FileHandle, CabinetReserved, NULL, SEEK_CURRENT, &NtStatus);
-          if (!NT_SUCCESS(NtStatus))
-            {
-              DPRINT("SeekInFile() failed (%x).\n", NtStatus);
-              return CAB_STATUS_INVALID_CAB;
-            }
-#endif
         }
-
-      if ((CABHeader.Flags & CAB_FLAG_HASPREV) > 0)
+  
+      if (PCABHeader->Flags & CAB_FLAG_HASPREV)
         {
-          /* Read name of previous cabinet */
-          Status = ReadString(CabinetFileName, 256);
-          if (Status != CAB_STATUS_SUCCESS)
-            return Status;
-
           /* The previous cabinet file is in the same directory as the current */
           wcscpy(CabinetPrev, CabinetName);
           RemoveFileName(CabinetPrev);
           CabinetNormalizePath(CabinetPrev, 256);
-          wcscat(CabinetPrev, CabinetFileName);
+		  RtlInitAnsiString( &astring, Buffer );
+		  ustring.Length = wcslen( CabinetPrev );
+		  ustring.Buffer = CabinetPrev + ustring.Length;
+		  ustring.MaximumLength = sizeof( CabinetPrev ) - ustring.Length;
+		  RtlAnsiStringToUnicodeString( &ustring, &astring, FALSE );
+		  Buffer += astring.Length + 1;
 
-          /* Read label of previous disk */
-          Status = ReadString(DiskPrev, 256);
-          if (Status != CAB_STATUS_SUCCESS)
-            return Status;
+          /* Read label of prev disk */
+		  RtlInitAnsiString( &astring, Buffer );
+		  ustring.Length = 0;
+		  ustring.Buffer = DiskPrev;
+		  ustring.MaximumLength = sizeof( DiskPrev );
+		  RtlAnsiStringToUnicodeString( &ustring, &astring, FALSE );
+		  Buffer += astring.Length + 1;
         }
       else
         {
           wcscpy(CabinetPrev, L"");
           wcscpy(DiskPrev, L"");
         }
-
-      if ((CABHeader.Flags & CAB_FLAG_HASNEXT) > 0)
+    
+      if (PCABHeader->Flags & CAB_FLAG_HASNEXT)
         {
-          /* Read name of next cabinet */
-          Status = ReadString(CabinetFileName, 256);
-          if (Status != CAB_STATUS_SUCCESS)
-              return Status;
-
           /* The next cabinet file is in the same directory as the previous */
           wcscpy(CabinetNext, CabinetName);
           RemoveFileName(CabinetNext);
           CabinetNormalizePath(CabinetNext, 256);
-          wcscat(CabinetNext, CabinetFileName);
+		  RtlInitAnsiString( &astring, Buffer );
+		  ustring.Length = wcslen( CabinetNext );
+		  ustring.Buffer = CabinetNext + ustring.Length;
+		  ustring.MaximumLength = sizeof( CabinetNext ) - ustring.Length;
+		  RtlAnsiStringToUnicodeString( &ustring, &astring, FALSE );
+		  Buffer += astring.Length + 1;
 
           /* Read label of next disk */
-          Status = ReadString(DiskNext, 256);
-          if (Status != CAB_STATUS_SUCCESS)
-              return Status;
+		  RtlInitAnsiString( &astring, Buffer );
+		  ustring.Length = 0;
+		  ustring.Buffer = DiskNext;
+		  ustring.MaximumLength = sizeof( DiskNext );
+		  RtlAnsiStringToUnicodeString( &ustring, &astring, FALSE );
+		  Buffer += astring.Length + 1;
         }
       else
         {
           wcscpy(CabinetNext, L"");
           wcscpy(DiskNext,    L"");
         }
-
-      /* Read all folders */
-      for (Index = 0; Index < CABHeader.FolderCount; Index++)
-        {
-          FolderNode = NewFolderNode();
-          if (!FolderNode)
-            {
-              DPRINT("Insufficient resources.\n");
-              return CAB_STATUS_NOMEMORY;
-            }
-
-          if (Index == 0)
-            FolderNode->UncompOffset = FolderUncompSize;
-
-          FolderNode->Index = Index;
-
-          if ((Status = ReadBlock(&FolderNode->Folder,
-            sizeof(CFFOLDER), &BytesRead)) != CAB_STATUS_SUCCESS)
-            {
-              DPRINT("Cannot read from file (%d).\n", (UINT)Status);
-              return CAB_STATUS_INVALID_CAB;
-            }
-        }
-
-      /* Read file entries */
-      Status = ReadFileTable();
-      if (Status != CAB_STATUS_SUCCESS)
-        {
-          DPRINT("ReadFileTable() failed (%d).\n", (UINT)Status);
-          return Status;
-        }
-
-      /* Read data blocks for all folders */
-      FolderNode = FolderListHead;
-      while (FolderNode != NULL)
-        {
-          Status = ReadDataBlocks(FolderNode);
-          if (Status != CAB_STATUS_SUCCESS)
-            {
-              DPRINT("ReadDataBlocks() failed (%d).\n", (UINT)Status);
-              return Status;
-            }
-          FolderNode = FolderNode->Next;
-        }
+	  CabinetFolders = (PCFFOLDER)Buffer;
     }
+  DPRINT( "CabinetOpen returning SUCCESS\n" );
   return CAB_STATUS_SUCCESS;
 }
 
@@ -1495,12 +663,6 @@ CabinetClose(VOID)
     {
       CloseCabinet();
 
-      if (CabinetReservedArea != NULL)
-        {
-          RtlFreeHeap(ProcessHeap, 0, CabinetReservedArea);
-          CabinetReservedArea = NULL;
-        }
-
       FileOpen = FALSE;
     }
 }
@@ -1508,7 +670,7 @@ CabinetClose(VOID)
 
 ULONG
 CabinetFindFirst(PWCHAR FileName,
-  PCAB_SEARCH Search)
+				 PCAB_SEARCH Search)
 /*
  * FUNCTION: Finds the first file in the cabinet that matches a search criteria
  * ARGUMENTS:
@@ -1518,9 +680,10 @@ CabinetFindFirst(PWCHAR FileName,
  *     Status of operation
  */
 {
-  RestartSearch = FALSE;
+  DPRINT( "CabinetFindFirst( FileName = %S )\n", FileName );
   wcsncpy(Search->Search, FileName, MAX_PATH);
-  Search->Next = FileListHead;
+  wcsncpy(Search->Cabinet, CabinetName, MAX_PATH);
+  Search->File = 0;
   return CabinetFindNext(Search);
 }
 
@@ -1536,172 +699,212 @@ CabinetFindNext(PCAB_SEARCH Search)
  */
 {
   ULONG Status;
+  PCFFILE Prev;
+  ANSI_STRING AnsiString;
+  UNICODE_STRING UnicodeString;
+  WCHAR FileName[MAX_PATH];
 
-  if (RestartSearch)
-    {
-      Search->Next = FileListHead;
+  if( wcscmp( Search->Cabinet, CabinetName ) != 0 )
+	Search->File = 0;    // restart search of cabinet has changed since last find
+  if( !Search->File )
+	{
+	  // starting new search or cabinet
+	  Search->File = (PCFFILE)(FileBuffer + PCABHeader->FileTableOffset);
+	  Search->Index = 0;
+	  Prev = 0;
+	}
+  else Prev = Search->File;
+  while(1)
+	{
+	  // look at each file in the archive and see if we found a match
+	  if( Search->File->FolderIndex == 0xFFFD || Search->File->FolderIndex == 0xFFFF )
+		{
+		  // skip files continued from previous cab
+		  DPRINT("Skipping file (%s)  FileOffset (0x%X)  LastFileOffset (0x%X).\n",
+				 (char *)(Search->File + 1), Search->File->FileOffset, LastFileOffset);
+		}
+	  else {
+		// FIXME: check for match against search criteria
+		if( Search->File != Prev )
+		  {
+			// don't match the file we started with
+			if( wcscmp( Search->Search, L"*" ) == 0 )
+			  {
+				// take any file
+				break;
+			  }
+			else {
+			  // otherwise, try to match the exact file name
+			  RtlInitAnsiString( &AnsiString, Search->File->FileName );
+			  UnicodeString.Buffer = FileName;
+			  UnicodeString.Length = 0;
+			  UnicodeString.MaximumLength = sizeof( FileName );
+			  RtlAnsiStringToUnicodeString( &UnicodeString, &AnsiString, FALSE );
+			  if( wcscmp( Search->Search, UnicodeString.Buffer ) == 0 )
+				break;
+			}
+		  }
+	  }
+	  // if we make it here we found no match, so move to the next file
+	  Search->Index++;
+	  if( Search->Index >= PCABHeader->FileCount )
+		{
+		  // we have reached the end of this cabinet, try to open the next
+		  DPRINT( "End of cabinet reached\n" );
+		  if (wcslen(DiskNext) > 0)
+			{
+			  CloseCabinet();
+			  
+			  CabinetSetCabinetName(CabinetNext);
+			  wcscpy( Search->Cabinet, CabinetName );
+			  
+			  if (DiskChangeHandler != NULL)
+				{
+				  DiskChangeHandler(CabinetNext, DiskNext);
+				}
+			  
+			  Status = CabinetOpen();
+			  if (Status != CAB_STATUS_SUCCESS) 
+				return Status;
 
-      /* Skip split files already extracted */
-      while ((Search->Next) &&
-        (Search->Next->File.FileControlID > CAB_FILE_MAX_FOLDER) &&
-        (Search->Next->File.FileOffset <= LastFileOffset))
-        {
-          DPRINT("Skipping file (%s)  FileOffset (0x%X)  LastFileOffset (0x%X).\n",
-            Search->Next->FileName, Search->Next->File.FileOffset, LastFileOffset);
-          Search->Next = Search->Next->Next;
-        }
-
-      RestartSearch = FALSE;
-    }
-
-  /* FIXME: Check search criteria */
-
-  if (!Search->Next)
-    {
-      if (wcslen(DiskNext) > 0)
-        {
-          CloseCabinet();
-
-          CabinetSetCabinetName(CabinetNext);
-
-          if (DiskChangeHandler != NULL)
-            {
-              DiskChangeHandler(CabinetNext, DiskNext);
-            }
-
-          Status = CabinetOpen();
-          if (Status != CAB_STATUS_SUCCESS)
-            return Status;
-
-          Search->Next = FileListHead;
-          if (!Search->Next)
-            return CAB_STATUS_NOFILE;
-        }
-      else
-        {
-          return CAB_STATUS_NOFILE;
-        }
-  }
-
-  Search->File = &Search->Next->File;
-  Search->FileName = Search->Next->FileName;
-  Search->Next = Search->Next->Next;
+			}
+		  else
+			{
+			  return CAB_STATUS_NOFILE;
+			}
+		  // starting new search or cabinet
+		  Search->File = (PCFFILE)(FileBuffer + PCABHeader->FileTableOffset);
+		  Search->Index = 0;
+		  Prev = 0;
+		}
+	  else Search->File = (PCFFILE)(strchr( (char *)(Search->File + 1), 0 ) + 1);
+	}
+  DPRINT( "Found file %s\n", Search->File->FileName );
   return CAB_STATUS_SUCCESS;
 }
 
 
-ULONG
-CabinetExtractFile(PWCHAR FileName)
+int Validate()
+{
+  return (int)RtlValidateHeap(ProcessHeap, 0, 0);
+}
+
+ULONG CabinetExtractFile( PCAB_SEARCH Search )
 /*
  * FUNCTION: Extracts a file from the cabinet
  * ARGUMENTS:
- *     FileName = Pointer to buffer with name of file
+ *     Search = Pointer to PCAB_SEARCH structure used to locate the file
  * RETURNS
  *     Status of operation
  */
 {
-  ULONG Size;
-  ULONG Offset;
-  ULONG BytesRead;
-  ULONG BytesToRead;
-  ULONG BytesWritten;
-  ULONG BytesSkipped;
-  ULONG BytesToWrite;
-  ULONG TotalBytesRead;
-  ULONG CurrentOffset;
-  PUCHAR Buffer;
-  PUCHAR CurrentBuffer;
+  ULONG Size;                // remaining file bytes to decompress
+  ULONG CurrentOffset;       // current uncompressed offset within the folder
+  PUCHAR CurrentBuffer;      // current pointer to compressed data in the block
+  LONG RemainingBlock;       // remaining comp data in the block
   HANDLE DestFile;
-  PCFFILE_NODE File;
-  CFDATA CFData;
+  HANDLE DestFileSection;
+  PVOID DestFileBuffer;      // mapped view of dest file
+  PVOID CurrentDestBuffer;   // pointer to the current position in the dest view
+  PCFDATA CFData;            // current data block
   ULONG Status;
-  BOOL Skip;
   FILETIME FileTime;
   WCHAR DestName[MAX_PATH];
-  WCHAR TempName[MAX_PATH];
-  PWCHAR s;
   NTSTATUS NtStatus;
   UNICODE_STRING UnicodeString;
+  ANSI_STRING AnsiString;
   IO_STATUS_BLOCK IoStatusBlock;
   OBJECT_ATTRIBUTES ObjectAttributes;
   FILE_BASIC_INFORMATION FileBasic;
+  PCFFOLDER CurrentFolder;
+  LARGE_INTEGER MaxDestFileSize;
+  LONG InputLength, OutputLength;
+  char Junk[512];
 
-  Status = LocateFile(FileName, &File);
-  if (Status != CAB_STATUS_SUCCESS)
+  if( wcscmp( Search->Cabinet, CabinetName ) != 0 )
+	{
+	  // the file is not in the current cabinet
+	  DPRINT( "File is not in this cabinet ( %S != %S )\n", Search->Cabinet, CabinetName );
+	  return CAB_STATUS_NOFILE;
+	}
+  // look up the folder that the file specifies
+  if( Search->File->FolderIndex == 0xFFFD || Search->File->FolderIndex == 0xFFFF )
+	{
+	  // folder is continued from previous cabinet, that shouldn't happen here
+	  return CAB_STATUS_NOFILE;
+	}
+  else if( Search->File->FolderIndex == 0xFFFE )
+	{
+	  // folder is the last in this cabinet and continues into next
+	  CurrentFolder = &CabinetFolders[PCABHeader->FolderCount-1];
+	}
+  else {
+	// folder is completely contained within this cabinet
+	CurrentFolder = &CabinetFolders[Search->File->FolderIndex];
+  }
+  switch (CurrentFolder->CompressionType & CAB_COMP_MASK)
     {
-      DPRINT("Cannot locate file (%d).\n", (UINT)Status);
-      return Status;
+	case CAB_COMP_NONE:
+	  CabinetSelectCodec(CAB_CODEC_RAW);
+	  break;
+	case CAB_COMP_MSZIP:
+	  CabinetSelectCodec(CAB_CODEC_MSZIP);
+	  break;
+	default:
+	  return CAB_STATUS_UNSUPPCOMP;
     }
-
-  LastFileOffset = File->File.FileOffset;
-
-  switch (CurrentFolderNode->Folder.CompressionType & CAB_COMP_MASK)
-    {
-      case CAB_COMP_NONE:
-        CabinetSelectCodec(CAB_CODEC_RAW);
-        break;
-      case CAB_COMP_MSZIP:
-        CabinetSelectCodec(CAB_CODEC_MSZIP);
-        break;
-      default:
-        return CAB_STATUS_UNSUPPCOMP;
-    }
-
-  DPRINT("Extracting file at uncompressed offset (0x%X)  Size (%d bytes)  AO (0x%X)  UO (0x%X).\n",
-    (UINT)File->File.FileOffset,
-    (UINT)File->File.FileSize,
-    (UINT)File->DataBlock->AbsoluteOffset,
-    (UINT)File->DataBlock->UncompOffset);
-
-  wcscpy(DestName, DestPath);
-  wcscat(DestName, FileName);
-
-  while (NULL != (s = wcsstr(DestName, L"\\.\\")))
-    {
-      memmove(s, s + 2, (wcslen(s + 2) + 1) *sizeof(WCHAR));
-    }
+  
+  DPRINT("Extracting file at uncompressed offset (0x%X)  Size (%d bytes)).\n",
+		 (UINT)Search->File->FileOffset,
+		 (UINT)Search->File->FileSize);
+  RtlInitAnsiString( &AnsiString, Search->File->FileName );
+  wcscpy( DestName, DestPath );
+  UnicodeString.MaximumLength = sizeof( DestName ) - wcslen( DestName );
+  UnicodeString.Buffer = DestName + wcslen( DestName );
+  UnicodeString.Length = 0;
+  RtlAnsiStringToUnicodeString( &UnicodeString, &AnsiString, FALSE );
 
   /* Create destination file, fail if it already exists */
   RtlInitUnicodeString(&UnicodeString,
-    DestName);
+					   DestName);
 
 
   InitializeObjectAttributes(&ObjectAttributes,
-    &UnicodeString,
-    OBJ_CASE_INSENSITIVE,
-    NULL,
-    NULL);
+							 &UnicodeString,
+							 OBJ_CASE_INSENSITIVE,
+							 NULL,
+							 NULL);
 
   NtStatus = NtCreateFile(&DestFile,
-    GENERIC_WRITE|FILE_READ_ATTRIBUTES,
-    &ObjectAttributes,
-    &IoStatusBlock,
-    NULL,
-    FILE_ATTRIBUTE_NORMAL,
-    0,
-    FILE_CREATE,
-    FILE_SYNCHRONOUS_IO_NONALERT,
-    NULL,
-    0);
+						  GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
+						  &ObjectAttributes,
+						  &IoStatusBlock,
+						  NULL,
+						  FILE_ATTRIBUTE_NORMAL,
+						  0,
+						  FILE_CREATE,
+						  FILE_SYNCHRONOUS_IO_NONALERT,
+						  NULL,
+						  0);
   if (!NT_SUCCESS(NtStatus))
     {
       DPRINT("NtCreateFile() failed (%S) (%x).\n", DestName, NtStatus);
 
       /* If file exists, ask to overwrite file */
-      if (OverwriteHandler == NULL || OverwriteHandler(&File->File, FileName))
+      if (OverwriteHandler == NULL || OverwriteHandler(Search->File, DestName))
         {
           /* Create destination file, overwrite if it already exists */
           NtStatus = NtCreateFile(&DestFile,
-            GENERIC_WRITE|FILE_READ_ATTRIBUTES,
-            &ObjectAttributes,
-            &IoStatusBlock,
-            NULL,
-            FILE_ATTRIBUTE_NORMAL,
-            0,
-            FILE_OVERWRITE,
-            FILE_SYNCHRONOUS_IO_ALERT,
-            NULL,
-            0);
+								  GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
+								  &ObjectAttributes,
+								  &IoStatusBlock,
+								  NULL,
+								  FILE_ATTRIBUTE_NORMAL,
+								  0,
+								  FILE_OVERWRITE,
+								  FILE_SYNCHRONOUS_IO_ALERT,
+								  NULL,
+								  0);
           if (!NT_SUCCESS(NtStatus))
             {
               DPRINT("NtCreateFile() failed 2 (%S) (%x).\n", DestName, NtStatus);
@@ -1714,315 +917,149 @@ CabinetExtractFile(PWCHAR FileName)
           return CAB_STATUS_FILE_EXISTS;
         }
     }
-
-  if (!ConvertDosDateTimeToFileTime(File->File.FileDate, File->File.FileTime, &FileTime))
+  MaxDestFileSize.QuadPart = Search->File->FileSize;
+  NtStatus = NtCreateSection(&DestFileSection,
+							 SECTION_ALL_ACCESS,
+							 0,
+							 &MaxDestFileSize,
+							 PAGE_READWRITE,
+							 SEC_COMMIT,
+							 DestFile);
+  if(!NT_SUCCESS(NtStatus))
+	{
+	  DPRINT("NtCreateSection failed: %x\n", NtStatus);
+	  Status = CAB_STATUS_NOMEMORY;
+	  goto CloseDestFile;
+	}
+  DestFileBuffer = 0;
+  DestFileSize = 0;
+  NtStatus = NtMapViewOfSection(DestFileSection,
+								NtCurrentProcess(),
+								&DestFileBuffer,
+								0,
+								0,
+								0,
+								&DestFileSize,
+								ViewUnmap,
+								0,
+								PAGE_READWRITE);
+  if(!NT_SUCCESS(NtStatus))
+	{
+	  DPRINT("NtMapViewOfSection failed: %x\n", NtStatus);
+	  Status = CAB_STATUS_NOMEMORY;
+	  goto CloseDestFileSection;
+	}
+  CurrentDestBuffer = DestFileBuffer;
+  if (!ConvertDosDateTimeToFileTime(Search->File->FileDate, Search->File->FileTime, &FileTime))
     {
-      NtClose(DestFile);
       DPRINT("DosDateTimeToFileTime() failed.\n");
-      return CAB_STATUS_CANNOT_WRITE;
+      Status = CAB_STATUS_CANNOT_WRITE;
+	  goto UnmapDestFile;
     }
 
   NtStatus = NtQueryInformationFile(DestFile,
-    &IoStatusBlock,
-    &FileBasic,
-    sizeof(FILE_BASIC_INFORMATION),
-    FileBasicInformation);
-  if (!NT_SUCCESS(Status))
+									&IoStatusBlock,
+									&FileBasic,
+									sizeof(FILE_BASIC_INFORMATION),
+									FileBasicInformation);
+  if (!NT_SUCCESS(NtStatus))
     {
       DPRINT("NtQueryInformationFile() failed (%x).\n", NtStatus);
     }
   else
     {
       memcpy(&FileBasic.LastAccessTime, &FileTime, sizeof(FILETIME));
-
+	  
       NtStatus = NtSetInformationFile(DestFile,
-        &IoStatusBlock,
-        &FileBasic,
-        sizeof(FILE_BASIC_INFORMATION),
-        FileBasicInformation);
+									  &IoStatusBlock,
+									  &FileBasic,
+									  sizeof(FILE_BASIC_INFORMATION),
+									  FileBasicInformation);
       if (!NT_SUCCESS(NtStatus))
         {
           DPRINT("NtSetInformationFile() failed (%x).\n", NtStatus);
         }
     }
 
-  SetAttributesOnFile(File, DestFile);
-
-  Buffer = RtlAllocateHeap(ProcessHeap, 0, CAB_BLOCKSIZE + 12); // This should be enough
-  if (!Buffer)
-    {
-      NtClose(DestFile);
-      DPRINT("Insufficient memory.\n");
-      return CAB_STATUS_NOMEMORY;
-    }
-
+  SetAttributesOnFile(Search->File, DestFile);
+  
   /* Call extract event handler */
   if (ExtractHandler != NULL)
     {
-      ExtractHandler(&File->File, FileName);
+      ExtractHandler(Search->File, DestName);
     }
-
-  /* Search to start of file */
-  Offset = SeekInFile(FileHandle,
-    File->DataBlock->AbsoluteOffset,
-    NULL,
-    SEEK_BEGIN,
-    &NtStatus);
-  if (!NT_SUCCESS(NtStatus))
+  // find the starting block of the file
+  // start with the first data block of the folder
+  CFData = (PCFDATA)(CabinetFolders[Search->File->FolderIndex].DataOffset + FileBuffer);
+  CurrentOffset = 0;
+  while( CurrentOffset + CFData->UncompSize <= Search->File->FileOffset )
+	{
+	  // walk the data blocks until we reach the one containing the start of the file
+	  CurrentOffset += CFData->UncompSize;
+	  CFData = (PCFDATA)((char *)(CFData+1) + DataReserved + CFData->CompSize);
+	}
+  // now decompress and discard any data in the block before the start of the file
+  CurrentBuffer = ((char *)(CFData+1)) + DataReserved; // start of comp data
+  RemainingBlock = CFData->CompSize;
+  InputLength = RemainingBlock;
+  while( CurrentOffset < Search->File->FileOffset )
+	{
+	  // compute remaining uncomp bytes to start of file, bounded by sizeof junk
+	  OutputLength = Search->File->FileOffset - CurrentOffset;
+	  if( OutputLength > sizeof( Junk ) )
+		OutputLength = sizeof( Junk );
+	  OutputLength = -OutputLength;     // negate to signal NOT end of block
+	  CodecUncompress( Junk,
+					   CurrentBuffer,
+					   &InputLength,
+					   &OutputLength );
+	  CurrentOffset += OutputLength;   // add the uncomp bytes extracted to current folder offset
+	  CurrentBuffer += InputLength;    // add comp bytes consumed to CurrentBuffer
+	  RemainingBlock -= InputLength;   // subtract bytes consumed from bytes remaining in block
+	  InputLength = -RemainingBlock;   // neg for resume decompression of the same block
+	}
+  // now CurrentBuffer points to the first comp byte of the file, so we can begin decompressing
+  
+  Size = Search->File->FileSize;   // Size = remaining uncomp bytes of the file to decompress
+  while(Size > 0)
     {
-      DPRINT("SeekInFile() failed (%x).\n", NtStatus);
-      return CAB_STATUS_INVALID_CAB;
-    }
-
-  Size   = File->File.FileSize;
-  Offset = File->File.FileOffset;
-  CurrentOffset = File->DataBlock->UncompOffset;
-
-  Skip = TRUE;
-
-  ReuseBlock = (CurrentDataNode == File->DataBlock);
-  if (Size > 0)
-    {
-      do
-        {
-      	  DPRINT("CO (0x%X)    ReuseBlock (%d)    Offset (0x%X)   Size (%d)  BytesLeftInBlock (%d)\n",
-      		  File->DataBlock->UncompOffset, (UINT)ReuseBlock, Offset, Size,
-      		  BytesLeftInBlock);
-
-      	  if (/*(CurrentDataNode != File->DataBlock) &&*/ (!ReuseBlock) || (BytesLeftInBlock <= 0))
-            {
-      		    DPRINT("Filling buffer. ReuseBlock (%d)\n", (UINT)ReuseBlock);
-
-              CurrentBuffer  = Buffer;
-              TotalBytesRead = 0;
-              do
-                {
-                  DPRINT("Size (%d bytes).\n", Size);
-
-                  if (((Status = ReadBlock(&CFData, sizeof(CFDATA), &BytesRead)) !=
-                    CAB_STATUS_SUCCESS) || (BytesRead != sizeof(CFDATA)))
-                    {
-                      NtClose(DestFile);
-                      RtlFreeHeap(ProcessHeap, 0, Buffer);
-                      DPRINT("Cannot read from file (%d).\n", (UINT)Status);
-                      return CAB_STATUS_INVALID_CAB;
-                    }
-
-                  DPRINT("Data block: Checksum (0x%X)  CompSize (%d bytes)  UncompSize (%d bytes)  Offset (0x%X).\n",
-                    (UINT)CFData.Checksum,
-                    (UINT)CFData.CompSize,
-                    (UINT)CFData.UncompSize,
-    				      (UINT)SeekInFile(FileHandle, 0, NULL, SEEK_CURRENT, &NtStatus));
-
-                  //ASSERT(CFData.CompSize <= CAB_BLOCKSIZE + 12);
-
-                  BytesToRead = CFData.CompSize;
-
-            			DPRINT("Read: (0x%X,0x%X).\n",
-            				CurrentBuffer, Buffer);
-
-                  if (((Status = ReadBlock(CurrentBuffer, BytesToRead, &BytesRead)) !=
-                      CAB_STATUS_SUCCESS) || (BytesToRead != BytesRead))
-                    {
-                      NtClose(DestFile);
-                      RtlFreeHeap(ProcessHeap, 0, Buffer);
-                      DPRINT("Cannot read from file (%d).\n", (UINT)Status);
-                      return CAB_STATUS_INVALID_CAB;
-                    }
-
-                    /* FIXME: Does not work with files generated by makecab.exe */
-/*
-                  if (CFData.Checksum != 0)
-                    {
-                      ULONG Checksum = ComputeChecksum(CurrentBuffer, BytesRead, 0);
-                      if (Checksum != CFData.Checksum)
-                        {
-                          NtClose(DestFile);
-                          RtlFreeHeap(ProcessHeap, 0, Buffer);
-                          DPRINT("Bad checksum (is 0x%X, should be 0x%X).\n",
-                            Checksum, CFData.Checksum);
-                          return CAB_STATUS_INVALID_CAB;
-                        }
-                    }
-*/
-                  TotalBytesRead += BytesRead;
-
-                  CurrentBuffer += BytesRead;
-
-                  if (CFData.UncompSize == 0)
-                    {
-                      if (wcslen(DiskNext) == 0)
-                          return CAB_STATUS_NOFILE;
-
-                      /* CloseCabinet() will destroy all file entries so in case
-                         FileName refers to the FileName field of a CFFOLDER_NODE
-                         structure, we have to save a copy of the filename */
-                      wcscpy(TempName, FileName);
-
-                      CloseCabinet();
-
-                      CabinetSetCabinetName(CabinetNext);
-
-                      if (DiskChangeHandler != NULL)
-                        {
-                          DiskChangeHandler(CabinetNext, DiskNext);
-                        }
-
-                      Status = CabinetOpen();
-                      if (Status != CAB_STATUS_SUCCESS)
-                        return Status;
-
-                      /* The first data block of the file will not be
-                         found as it is located in the previous file */
-                      Status = LocateFile(TempName, &File);
-                      if (Status == CAB_STATUS_NOFILE)
-                        {
-                          DPRINT("Cannot locate file (%d).\n", (UINT)Status);
-                          return Status;
-                        }
-
-                      /* The file is continued in the first data block in the folder */
-                      File->DataBlock = CurrentFolderNode->DataListHead;
-
-                      /* Search to start of file */
-                      SeekInFile(FileHandle,
-                        File->DataBlock->AbsoluteOffset,
-                        NULL,
-                        SEEK_BEGIN,
-                        &NtStatus);
-                      if (!NT_SUCCESS(NtStatus))
-                        {
-                          DPRINT("SeekInFile() failed (%x).\n", NtStatus);
-                          return CAB_STATUS_INVALID_CAB;
-                        }
-
-                      DPRINT("Continuing extraction of file at uncompressed offset (0x%X)  Size (%d bytes)  AO (0x%X)  UO (0x%X).\n",
-                          (UINT)File->File.FileOffset,
-                          (UINT)File->File.FileSize,
-                          (UINT)File->DataBlock->AbsoluteOffset,
-                          (UINT)File->DataBlock->UncompOffset);
-
-                      CurrentDataNode = File->DataBlock;
-                      ReuseBlock = TRUE;
-
-                      RestartSearch = TRUE;
-                    }
-                } while (CFData.UncompSize == 0);
-
-              DPRINT("TotalBytesRead (%d).\n", TotalBytesRead);
-
-              Status = CodecUncompress(OutputBuffer, Buffer, TotalBytesRead, &BytesToWrite);
-              if (Status != CS_SUCCESS)
-                {
-                  NtClose(DestFile);
-                  RtlFreeHeap(ProcessHeap, 0, Buffer);
-                  DPRINT("Cannot uncompress block.\n");
-                  if (Status == CS_NOMEMORY)
-                    return CAB_STATUS_NOMEMORY;
-                  return CAB_STATUS_INVALID_CAB;
-                }
-
-              if (BytesToWrite != CFData.UncompSize)
-                {
-                  DPRINT("BytesToWrite (%d) != CFData.UncompSize (%d)\n",
-                    BytesToWrite, CFData.UncompSize);
-                  return CAB_STATUS_INVALID_CAB;
-                }
-
-              BytesLeftInBlock = BytesToWrite;
-            }
-          else
-            {
-              DPRINT("Using same buffer. ReuseBlock (%d)\n", (UINT)ReuseBlock);
-
-              BytesToWrite = BytesLeftInBlock;
-
-          		DPRINT("Seeking to absolute offset 0x%X.\n",
-          			CurrentDataNode->AbsoluteOffset + sizeof(CFDATA) +
-                  CurrentDataNode->Data.CompSize);
-
-          		if (((Status = ReadBlock(&CFData, sizeof(CFDATA), &BytesRead)) !=
-          			CAB_STATUS_SUCCESS) || (BytesRead != sizeof(CFDATA)))
-                {
-            			NtClose(DestFile);
-                  RtlFreeHeap(ProcessHeap, 0, Buffer);
-            			DPRINT("Cannot read from file (%d).\n", (UINT)Status);
-            			return CAB_STATUS_INVALID_CAB;
-            		}
-
-          		DPRINT("CFData.CompSize 0x%X  CFData.UncompSize 0x%X.\n",
-          			CFData.CompSize, CFData.UncompSize);
-
-              /* Go to next data block */
-              SeekInFile(FileHandle,
-                CurrentDataNode->AbsoluteOffset + sizeof(CFDATA) +
-                CurrentDataNode->Data.CompSize,
-                NULL,
-                SEEK_BEGIN,
-                &NtStatus);
-              if (!NT_SUCCESS(NtStatus))
-                {
-                  DPRINT("SeekInFile() failed (%x).\n", NtStatus);
-                  return CAB_STATUS_INVALID_CAB;
-                }
-
-              ReuseBlock = FALSE;
-            }
-
-          if (Skip)
-              BytesSkipped = (Offset - CurrentOffset);
-          else
-              BytesSkipped = 0;
-
-  	      BytesToWrite -= BytesSkipped;
-
-        	if (Size < BytesToWrite)
-            BytesToWrite = Size;
-
-          DPRINT("Offset (0x%X)  CurrentOffset (0x%X)  ToWrite (%d)  Skipped (%d)(%d)  Size (%d).\n",
-            (UINT)Offset,
-            (UINT)CurrentOffset,
-            (UINT)BytesToWrite,
-            (UINT)BytesSkipped, (UINT)Skip,
-            (UINT)Size);
-
-//          if (!WriteFile(DestFile, (PVOID)((ULONG)OutputBuffer + BytesSkipped),
-//            BytesToWrite, &BytesWritten, NULL) ||
-//              (BytesToWrite != BytesWritten))
-
-          NtStatus = NtWriteFile(DestFile,
-            NULL,
-            NULL,
-            NULL,
-            &IoStatusBlock,
-            (PVOID)((ULONG)OutputBuffer + BytesSkipped),
-            BytesToWrite,
-            NULL,
-            NULL);
-          BytesWritten = BytesToWrite;
-          if (!NT_SUCCESS(NtStatus))
-            {
-      		    DPRINT("Status 0x%X.\n", NtStatus);
-
-              NtClose(DestFile);
-              RtlFreeHeap(ProcessHeap, 0, Buffer);
-              DPRINT("Cannot write to file.\n");
-              return CAB_STATUS_CANNOT_WRITE;
-            }
-          Size -= BytesToWrite;
-
-    	    CurrentOffset += BytesToWrite;
-
-          /* Don't skip any more bytes */
-          Skip = FALSE;
-        } while (Size > 0);
-    }
-
+	  OutputLength = Size;
+	  DPRINT( "Decompressing block at %x with RemainingBlock = %d, Size = %d\n", CurrentBuffer, RemainingBlock, Size );
+	  Status = CodecUncompress(CurrentDestBuffer,
+							   CurrentBuffer,
+							   &InputLength,
+							   &OutputLength);
+	  if (Status != CS_SUCCESS)
+		{
+		  DPRINT("Cannot uncompress block.\n");
+		  if(Status == CS_NOMEMORY)
+			Status = CAB_STATUS_NOMEMORY;
+		  Status = CAB_STATUS_INVALID_CAB;
+		  goto UnmapDestFile;
+		}
+	  CurrentDestBuffer += OutputLength;  // advance dest buffer by bytes produced
+	  CurrentBuffer += InputLength;       // advance src buffer by bytes consumed
+	  Size -= OutputLength;               // reduce remaining file bytes by bytes produced
+	  RemainingBlock -= InputLength;      // reduce remaining block size by bytes consumed
+	  if( RemainingBlock == 0 )
+		{
+		  // used up this block, move on to the next
+		  DPRINT( "Out of block data\n" );
+		  CFData = (PCFDATA)CurrentBuffer;
+		  RemainingBlock = CFData->CompSize;
+		  CurrentBuffer = ((char *)(CFData+1) + DataReserved);
+		  InputLength = RemainingBlock;
+		}
+	}
+  Status = CAB_STATUS_SUCCESS;
+ UnmapDestFile:
+  NtUnmapViewOfSection(NtCurrentProcess(), DestFileBuffer);
+ CloseDestFileSection:
+  NtClose(DestFileSection);
+ CloseDestFile:
   NtClose(DestFile);
 
-  RtlFreeHeap(ProcessHeap, 0, Buffer);
-
-  return CAB_STATUS_SUCCESS;
+  return Status;
 }
 
 

@@ -82,12 +82,13 @@ typedef struct _CFFOLDER
 
 typedef struct _CFFILE
 {
-    ULONG FileSize;         // Uncompressed file size in bytes
-    ULONG FileOffset;       // Uncompressed offset of file in the folder
-    WORD  FileControlID;    // File control ID (CAB_FILE_*)
-    WORD  FileDate;         // File date stamp, as used by DOS
-    WORD  FileTime;         // File time stamp, as used by DOS
-    WORD  Attributes;       // File attributes (CAB_ATTRIB_*)
+  ULONG FileSize;         // Uncompressed file size in bytes
+  ULONG FileOffset;       // Uncompressed offset of file in the folder
+  WORD  FolderIndex;      // Index number of the folder that contains this file
+  WORD  FileDate;         // File date stamp, as used by DOS
+  WORD  FileTime;         // File time stamp, as used by DOS
+  WORD  Attributes;       // File attributes (CAB_ATTRIB_*)
+  CHAR  FileName[];
     /* After this is the NULL terminated filename */
 } CFFILE, *PCFFILE;
 
@@ -102,50 +103,12 @@ typedef struct _CFDATA
  */
 } CFDATA, *PCFDATA;
 
-typedef struct _CFDATA_NODE
-{
-    struct _CFDATA_NODE *Next;
-    struct _CFDATA_NODE *Prev;
-    ULONG               ScratchFilePosition;    // Absolute offset in scratch file
-    ULONG               AbsoluteOffset;         // Absolute offset in cabinet
-    ULONG               UncompOffset;           // Uncompressed offset in folder
-    CFDATA              Data;
-} CFDATA_NODE, *PCFDATA_NODE;
-
-typedef struct _CFFOLDER_NODE
-{
-    struct _CFFOLDER_NODE *Next;
-    struct _CFFOLDER_NODE *Prev;
-    ULONG                 UncompOffset;     // File size accumulator
-    ULONG                 AbsoluteOffset;
-    ULONG                 TotalFolderSize;  // Total size of folder in current disk
-    PCFDATA_NODE          DataListHead;
-    PCFDATA_NODE          DataListTail;
-    ULONG                 Index;
-    BOOL                  Commit;           // TRUE if the folder should be committed
-    BOOL                  Delete;           // TRUE if marked for deletion
-    CFFOLDER              Folder;
-} CFFOLDER_NODE, *PCFFOLDER_NODE;
-
-typedef struct _CFFILE_NODE
-{
-    struct _CFFILE_NODE *Next;
-    struct _CFFILE_NODE *Prev;
-    CFFILE              File;
-    PWCHAR              FileName;
-    PCFDATA_NODE        DataBlock;      // First data block of file. NULL if not known
-    BOOL                Commit;         // TRUE if the file data should be committed
-    BOOL                Delete;         // TRUE if marked for deletion
-	PCFFOLDER_NODE		FolderNode;		// Folder this file belong to
-} CFFILE_NODE, *PCFFILE_NODE;
-
-
 typedef struct _CAB_SEARCH
 {
-    WCHAR        Search[MAX_PATH];   // Search criteria
-    PCFFILE_NODE Next;               // Pointer to next node
-    PCFFILE      File;               // Pointer to current CFFILE
-    PWCHAR       FileName;           // Current filename
+  WCHAR        Search[MAX_PATH];   // Search criteria
+  WCHAR        Cabinet[MAX_PATH];
+  USHORT       Index;
+  PCFFILE      File;               // Pointer to current CFFILE
 } CAB_SEARCH, *PCAB_SEARCH;
 
 
@@ -169,9 +132,9 @@ typedef struct _CAB_SEARCH
 
 /* Uncompresses a data block */
 typedef ULONG (*PCABINET_CODEC_UNCOMPRESS)(PVOID OutputBuffer,
-  PVOID InputBuffer,
-  ULONG InputLength,
-  PULONG OutputLength);
+										   PVOID InputBuffer,
+										   PLONG InputLength,
+										   PLONG OutputLength);
 
 
 /* Codec status codes */
@@ -232,7 +195,7 @@ ULONG CabinetFindFirst(PWCHAR FileName, PCAB_SEARCH Search);
 /* Locates the next file in the current cabinet file */
 ULONG CabinetFindNext(PCAB_SEARCH Search);
 /* Extracts a file from the current cabinet file */
-ULONG CabinetExtractFile(PWCHAR FileName);
+ULONG CabinetExtractFile(PCAB_SEARCH Search);
 /* Select codec engine to use */
 VOID CabinetSelectCodec(ULONG Id);
 /* Set event handlers */

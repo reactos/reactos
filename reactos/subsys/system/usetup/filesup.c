@@ -107,11 +107,13 @@ SetupCopyFile(PWCHAR SourceFileName,
   IO_STATUS_BLOCK IoStatusBlock;
   FILE_STANDARD_INFORMATION FileStandard;
   FILE_BASIC_INFORMATION FileBasic;
-  FILE_POSITION_INFORMATION FilePosition;
   PUCHAR Buffer;
   ULONG RegionSize;
   UNICODE_STRING FileName;
   NTSTATUS Status;
+  PVOID SourceFileMap = 0;
+  HANDLE SourceFileSection;
+  ULONG SourceSectionSize = 0;
 
   Buffer = NULL;
 
@@ -130,9 +132,10 @@ SetupCopyFile(PWCHAR SourceFileName,
 		      &IoStatusBlock,
 		      FILE_SHARE_READ,
 		      FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY);
-  if (!NT_SUCCESS(Status))
+  if(!NT_SUCCESS(Status))
     {
-      return(Status);
+      DPRINT1("NtOpenFile failed: %x\n", Status);
+      goto done;
     }
 
   Status = NtQueryInformationFile(FileHandleSource,
@@ -140,20 +143,48 @@ SetupCopyFile(PWCHAR SourceFileName,
 				  &FileStandard,
 				  sizeof(FILE_STANDARD_INFORMATION),
 				  FileStandardInformation);
-  if (!NT_SUCCESS(Status))
+  if(!NT_SUCCESS(Status))
     {
-     NtClose(FileHandleSource);
-     return(Status);
+      DPRINT1("NtQueryInformationFile failed: %x\n", Status);
+      goto closesrc;
     }
-
   Status = NtQueryInformationFile(FileHandleSource,
 				  &IoStatusBlock,&FileBasic,
 				  sizeof(FILE_BASIC_INFORMATION),
 				  FileBasicInformation);
-  if (!NT_SUCCESS(Status))
+  if(!NT_SUCCESS(Status))
     {
-      NtClose(FileHandleSource);
-      return(Status);
+      DPRINT1("NtQueryInformationFile failed: %x\n", Status);
+      goto closesrc;
+    }
+
+  Status = NtCreateSection( &SourceFileSection,
+			    SECTION_MAP_READ,
+			    0,
+			    0,
+			    PAGE_READONLY,
+			    0,
+			    FileHandleSource);
+  if(!NT_SUCCESS(Status))
+    {
+      DPRINT1("NtCreateSection failed: %x\n", Status);
+      goto closesrc;
+    }
+
+  Status = NtMapViewOfSection( SourceFileSection,
+			       NtCurrentProcess(),
+			       &SourceFileMap,
+			       0,
+			       0,
+			       0,
+			       &SourceSectionSize,
+			       0,
+			       SEC_COMMIT,
+			       PAGE_READONLY );
+  if(!NT_SUCCESS(Status))
+    {
+      DPRINT1("NtMapViewOfSection failed: %x\n", Status);
+      goto closesrcsec;
     }
 
   RtlInitUnicodeString(&FileName,
@@ -176,121 +207,55 @@ SetupCopyFile(PWCHAR SourceFileName,
 			FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY,
 			NULL,
 			0);
-  if (!NT_SUCCESS(Status))
+  if(!NT_SUCCESS(Status))
     {
-      NtClose(FileHandleSource);
-      return(Status);
-    }
-
-  FilePosition.CurrentByteOffset.QuadPart = 0;
-
-  Status = NtSetInformationFile(FileHandleSource,
-				&IoStatusBlock,
-				&FilePosition,
-				sizeof(FILE_POSITION_INFORMATION),
-				FilePositionInformation);
-  if (!NT_SUCCESS(Status))
-    {
-      NtClose(FileHandleSource);
-      NtClose(FileHandleDest);
-      return(Status);
-    }
-
-  Status = NtSetInformationFile(FileHandleDest,
-				&IoStatusBlock,
-				&FilePosition,
-				sizeof(FILE_POSITION_INFORMATION),
-				FilePositionInformation);
-  if (!NT_SUCCESS(Status))
-    {
-      NtClose(FileHandleSource);
-      NtClose(FileHandleDest);
-      return(Status);
+      DPRINT1("NtCreateFile failed: %x\n", Status);
+      goto unmapsrcsec;
     }
 
   RegionSize = PAGE_ROUND_UP(FileStandard.EndOfFile.u.LowPart);
-  if (RegionSize > 0x100000)
+  IoStatusBlock.Status = 0;
+  Status = NtWriteFile(FileHandleDest,
+		       0,
+		       0,
+		       0,
+		       &IoStatusBlock,
+		       SourceFileMap,
+		       RegionSize,
+		       0,
+		       0);
+  if(!NT_SUCCESS(Status))
     {
-      RegionSize = 0x100000;
+      DPRINT1("NtWriteFile failed: %x:%x, iosb: %p src: %p, size: %x\n", Status, IoStatusBlock.Status, &IoStatusBlock, SourceFileMap, RegionSize);
+      goto closedest;
     }
-  Status = NtAllocateVirtualMemory(NtCurrentProcess(),
-				   (PVOID *)&Buffer,
-				   2,
-				   &RegionSize,
-				   MEM_RESERVE | MEM_COMMIT,
-				   PAGE_READWRITE);
-  if (!NT_SUCCESS(Status))
-    {
-      NtClose(FileHandleSource);
-      NtClose(FileHandleDest);
-      return(Status);
-    }
-
-  while (TRUE)
-    {
-      Status = NtReadFile(FileHandleSource,
-			  NULL,
-			  NULL,
-			  NULL,
-			  &IoStatusBlock,
-			  Buffer,
-			  RegionSize,
-			  NULL,
-			  NULL);
-      if (!NT_SUCCESS(Status))
-	{
-	  NtFreeVirtualMemory(NtCurrentProcess(),
-			      (PVOID *)&Buffer,
-			      &RegionSize,
-			      MEM_RELEASE);
-	  if (Status == STATUS_END_OF_FILE)
-	    {
-	      DPRINT("STATUS_END_OF_FILE\n");
-	      break;
-	    }
-	  NtClose(FileHandleSource);
-	  NtClose(FileHandleDest);
-	  return(Status);
-	}
-
-      DPRINT("Bytes read %lu\n", IoStatusBlock.Information);
-
-      Status = NtWriteFile(FileHandleDest,
-			   NULL,
-			   NULL,
-			   NULL,
-			   &IoStatusBlock,
-			   Buffer,
-			   IoStatusBlock.Information,
-			   NULL,
-			   NULL);
-      if (!NT_SUCCESS(Status))
-	{
-	  NtFreeVirtualMemory(NtCurrentProcess(),
-			      (PVOID *)&Buffer,
-			      &RegionSize,
-			      MEM_RELEASE);
-	  NtClose(FileHandleSource);
-	  NtClose(FileHandleDest);
-	  return(Status);
-	}
-    }
-
-
   /* Copy file date/time from source file */
   Status = NtSetInformationFile(FileHandleDest,
 				&IoStatusBlock,
 				&FileBasic,
 				sizeof(FILE_BASIC_INFORMATION),
 				FileBasicInformation);
-  if (!NT_SUCCESS(Status))
+  if(!NT_SUCCESS(Status))
     {
-      DPRINT("NtSetInformationFile() failed (Status %lx)\n", Status);
+      DPRINT1("NtSetInformationFile failed: %x\n", Status);
+      goto closedest;
     }
 
-  NtClose(FileHandleSource);
+  /* shorten the file back to it's real size after completing the write */
+  NtSetInformationFile(FileHandleDest,
+		       &IoStatusBlock,
+		       &FileStandard.EndOfFile,
+		       sizeof(FILE_END_OF_FILE_INFORMATION),
+		       FileEndOfFileInformation);
+ closedest:
   NtClose(FileHandleDest);
-
+ unmapsrcsec:
+  NtUnmapViewOfSection( NtCurrentProcess(), SourceFileMap );
+ closesrcsec:
+  NtClose(SourceFileSection);
+ closesrc:
+  NtClose(FileHandleSource);
+ done:
   return(Status);
 }
 
@@ -301,6 +266,7 @@ SetupExtractFile(PWCHAR CabinetFileName,
 	      PWCHAR DestinationPathName)
 {
   ULONG CabStatus;
+  CAB_SEARCH Search;
 
   DPRINT("SetupExtractFile(CabinetFileName %S, SourceFileName %S, DestinationPathName %S)\n",
     CabinetFileName, SourceFileName, DestinationPathName);
@@ -343,7 +309,8 @@ SetupExtractFile(PWCHAR CabinetFileName,
     }
 
   CabinetSetDestinationPath(DestinationPathName);
-  CabStatus = CabinetExtractFile(SourceFileName);
+  CabinetFindFirst( SourceFileName, &Search );
+  CabStatus = CabinetExtractFile(&Search);
   if (CabStatus != CAB_STATUS_SUCCESS)
     {
       DPRINT("Cannot extract file %S (%d)\n", SourceFileName, CabStatus);
