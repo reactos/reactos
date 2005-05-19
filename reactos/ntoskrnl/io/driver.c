@@ -218,7 +218,7 @@ IopCreateDriverObject(
    {
       return Status;
    }
-   
+
    Status = ObInsertObject(Object,
                            NULL,
                            FILE_ALL_ACCESS,
@@ -229,7 +229,9 @@ IopCreateDriverObject(
    {
       return Status;
    }  
-
+   
+   /* This function shouldn't be called twice for the same driver anyways..why is it? */
+#if 0
    if (Status == STATUS_OBJECT_EXISTS)
    {
       /* The driver object already exists, so it is already
@@ -237,7 +239,7 @@ IopCreateDriverObject(
       *DriverObject = Object;
       return STATUS_SUCCESS;
    }
-
+#endif
      /* Create driver extension */
    Object->DriverExtension = (PDRIVER_EXTENSION)
       ExAllocatePoolWithTag(
