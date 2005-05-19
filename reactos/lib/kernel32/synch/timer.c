@@ -38,7 +38,7 @@ CreateWaitableTimerW(LPSECURITY_ATTRIBUTES lpTimerAttributes,
    InitializeObjectAttributes(&ObjectAttributes,
 			      (lpTimerName ? &UnicodeName : NULL),
 			      0,
-			      hBaseDir,
+			      (lpTimerName ? hBaseDir : NULL),
 			      NULL);
 
    if (lpTimerAttributes != NULL)

@@ -278,7 +278,7 @@ IopSecurityFile(PVOID ObjectBody,
         if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
         {
             /* Get the Device Object */
-            DPRINT1("here\n");
+            DPRINT("here\n");
             DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
 
             /* Assign the Security Descriptor */

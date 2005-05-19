@@ -77,7 +77,7 @@ CreateFileMappingA(HANDLE hFile,
    InitializeObjectAttributes(&ObjectAttributes,
 			      (lpName ? &UnicodeName : NULL),
 			      0,
-			      hBaseDir,
+			      (lpName ? hBaseDir : NULL),
 			      SecurityDescriptor);
 
    Status = NtCreateSection(&SectionHandle,
@@ -155,7 +155,7 @@ CreateFileMappingW(HANDLE hFile,
    InitializeObjectAttributes(&ObjectAttributes,
 			      (lpName ? &UnicodeName : NULL),
 			      0,
-			      hBaseDir,
+			      (lpName ? hBaseDir : NULL),
 			      SecurityDescriptor);
 
    Status = NtCreateSection(&SectionHandle,

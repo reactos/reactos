@@ -74,7 +74,11 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
         }
         
         /* Fail if anything up to here died */
-        if (!NT_SUCCESS(Status)) return Status;
+        if (!NT_SUCCESS(Status)) 
+        {
+            DPRINT1("Probing failed\n");
+            return Status;
+        }
     }
     else
     {
@@ -228,14 +232,12 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
     }
     else
     {
-        #if 0 /*FIXME: FIX KERNEL32 and STUFF!!! */
         /* He can't have specified a Root Directory */
         if (ObjectCreateInfo->RootDirectory)
         {
             DPRINT1("Invalid name\n");
             Status = STATUS_OBJECT_NAME_INVALID;
         }
-        #endif
     }
     
 fail:

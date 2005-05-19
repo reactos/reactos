@@ -77,7 +77,7 @@ CreateEventW(LPSECURITY_ATTRIBUTES lpEventAttributes,
    InitializeObjectAttributes(&ObjectAttributes,
 			      (lpName ? &UnicodeName : NULL),
 			      0,
-			      hBaseDir,
+			      (lpName ? hBaseDir : NULL),
 			      NULL);
 
    if (lpEventAttributes != NULL)
