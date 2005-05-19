@@ -15,7 +15,11 @@ extern PEPROCESS CsrProcess;
 extern NTSTATUS FASTCALL CsrInit(void);
 extern NTSTATUS FASTCALL CsrNotify(PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply);
 extern NTSTATUS FASTCALL CsrCloseHandle(HANDLE Handle);
-extern NTSTATUS STDCALL CsrInsertObject(PVOID, PACCESS_STATE, ACCESS_MASK, ULONG, PVOID*, PHANDLE);
+NTSTATUS
+STDCALL
+CsrInsertObject(HANDLE ObjectHandle,
+                ACCESS_MASK DesiredAccess,
+                PHANDLE Handle);
 
 #endif /* CSR_H_INCLUDED */
 

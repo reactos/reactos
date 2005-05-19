@@ -823,7 +823,6 @@ ObAssignSecurity@16
 ;ObCheckCreateObjectAccess@28
 ;ObCheckObjectAccess@20
 ObCreateObject@36
-ObpCreateHandle ; FIXME! See win32k/ntuser/csr.c!
 ObFindHandleForObject@20
 ObGetObjectPointerCount@4
 ObGetObjectSecurity@12
