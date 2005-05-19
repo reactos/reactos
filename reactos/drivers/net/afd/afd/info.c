@@ -141,7 +141,7 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	}
 
 	/* MmUnlockPages( Mdl ); */
-	IoFreeMdl( Mdl );
+	/* IoFreeMdl( Mdl ); */
     } else {
     	Status = STATUS_INSUFFICIENT_RESOURCES;
     }
