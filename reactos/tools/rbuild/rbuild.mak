@@ -115,6 +115,7 @@ RBUILD_COMMON_SOURCES = \
 		bootstrap.cpp \
 		cdfile.cpp \
 		compilerflag.cpp \
+		configuration.cpp \
 		define.cpp \
 		exception.cpp \
 		filesupportcode.cpp \
@@ -222,6 +223,10 @@ $(RBUILD_INT_)cdfile.o: $(RBUILD_BASE_)cdfile.cpp $(RBUILD_HEADERS) | $(RBUILD_I
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)compilerflag.o: $(RBUILD_BASE_)compilerflag.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_INT_)configuration.o: $(RBUILD_BASE_)configuration.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 

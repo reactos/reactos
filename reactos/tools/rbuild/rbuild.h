@@ -68,6 +68,16 @@ class StubbedSymbol;
 class SourceFileTest;
 
 
+class Configuration
+{
+public:
+	Configuration ();
+	~Configuration ();
+	bool Verbose;
+	bool CleanAsYouGo;
+	bool AutomaticDependencies;
+};
+
 class Environment
 {
 public:

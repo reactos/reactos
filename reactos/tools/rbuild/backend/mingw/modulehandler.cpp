@@ -1280,7 +1280,7 @@ MingwModuleHandler::GetObjectsVector ( const IfableData& data,
 void
 MingwModuleHandler::GenerateCleanObjectsAsYouGoCode () const
 {
-	if ( backend->cleanAsYouGo )
+	if ( backend->configuration.CleanAsYouGo )
 	{
 		vector<string> objectFiles;
 		GetObjectsVector ( module.non_if_data,

@@ -212,20 +212,17 @@ static class MingwFactory : public Backend::Factory
 public:
 	MingwFactory() : Factory ( "mingw" ) {}
 	Backend* operator() ( Project& project,
-	                      bool verbose,
-	                      bool cleanAsYouGo )
+	                      Configuration& configuration )
 	{
 		return new MingwBackend ( project,
-		                          verbose,
-		                          cleanAsYouGo );
+		                          configuration );
 	}
 } factory;
 
 
 MingwBackend::MingwBackend ( Project& project,
-                             bool verbose,
-                             bool cleanAsYouGo )
-	: Backend ( project, verbose, cleanAsYouGo ),
+                             Configuration& configuration )
+	: Backend ( project, configuration ),
 	  intermediateDirectory ( new Directory ("$(INTERMEDIATE)" ) ),
 	  outputDirectory ( new Directory ( "$(OUTPUT)" ) ),
 	  installDirectory ( new Directory ( "$(INSTALL)" ) )
@@ -622,7 +619,7 @@ MingwBackend::UnpackWineResources ()
 	printf ( "Unpacking WINE resources..." );
 	WineResource wineResource ( ProjectNode,
 	                            GetBin2ResExecutable () );
-	wineResource.UnpackResources ( verbose );
+	wineResource.UnpackResources ( configuration.Verbose );
 	printf ( "done\n" );
 }
 
@@ -631,7 +628,7 @@ MingwBackend::GenerateTestSupportCode ()
 {
 	printf ( "Generating test support code..." );
 	TestSupportCode testSupportCode ( ProjectNode );
-	testSupportCode.GenerateTestSupportCode ( verbose );
+	testSupportCode.GenerateTestSupportCode ( configuration.Verbose );
 	printf ( "done\n" );
 }
 
@@ -640,18 +637,21 @@ MingwBackend::GenerateProxyMakefiles ()
 {
 	printf ( "Generating proxy makefiles..." );
 	ProxyMakefile proxyMakefile ( ProjectNode );
-	proxyMakefile.GenerateProxyMakefiles ( verbose );
+	proxyMakefile.GenerateProxyMakefiles ( configuration.Verbose );
 	printf ( "done\n" );
 }
 
 void
 MingwBackend::CheckAutomaticDependencies ()
 {
-	printf ( "Checking automatic dependencies..." );
-	AutomaticDependency automaticDependency ( ProjectNode );
-	automaticDependency.Process ();
-	automaticDependency.CheckAutomaticDependencies ( verbose );
-	printf ( "done\n" );
+	if ( configuration.AutomaticDependencies )
+	{
+		printf ( "Checking automatic dependencies..." );
+		AutomaticDependency automaticDependency ( ProjectNode );
+		automaticDependency.Process ();
+		automaticDependency.CheckAutomaticDependencies ( configuration.Verbose );
+		printf ( "done\n" );
+	}
 }
 
 bool
@@ -667,9 +667,9 @@ void
 MingwBackend::GenerateDirectories ()
 {
 	printf ( "Creating directories..." );
-	intermediateDirectory->GenerateTree ( "", verbose );
-	outputDirectory->GenerateTree ( "", verbose );
-	installDirectory->GenerateTree ( "", verbose );
+	intermediateDirectory->GenerateTree ( "", configuration.Verbose );
+	outputDirectory->GenerateTree ( "", configuration.Verbose );
+	installDirectory->GenerateTree ( "", configuration.Verbose );
 	printf ( "done\n" );
 }
 

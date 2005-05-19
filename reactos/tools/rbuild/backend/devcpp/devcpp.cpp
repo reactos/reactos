@@ -35,18 +35,16 @@ static class DevCppFactory : public Backend::Factory
 
 		DevCppFactory() : Factory("devcpp") {}
 		Backend *operator() (Project &project,
-		                     bool verbose,
-		                     bool cleanAsYouGo)
+		                     Configuration& configuration)
 		{
-			return new DevCppBackend(project, verbose, cleanAsYouGo);
+			return new DevCppBackend(project, configuration);
 		}
 		
 } factory;
 
 
 DevCppBackend::DevCppBackend(Project &project,
-                             bool verbose,
-                             bool cleanAsYouGo) : Backend(project, verbose, cleanAsYouGo)
+                             Configuration& configuration) : Backend(project, configuration)
 {
 	m_unitCount = 0;
 }
@@ -113,8 +111,7 @@ void DevCppBackend::Process()
 	
 	Backend *backend = Backend::Factory::Create("mingw",
 	                                            ProjectNode,
-	                                            verbose,
-	                                            cleanAsYouGo );
+	                                            configuration );
 	backend->Process();
 	delete backend;
 

@@ -34,8 +34,7 @@ Backend::Factory::~Factory ()
 /*static*/ Backend*
 Backend::Factory::Create ( const string& name,
                            Project& project,
-                           bool verbose,
-                           bool cleanAsYouGo )
+                           Configuration& configuration )
 {
 	string sname ( name );
 	strlwr ( &sname[0] );
@@ -49,14 +48,12 @@ Backend::Factory::Create ( const string& name,
 		throw UnknownBackendException ( sname );
 		return NULL;
 	}
-	return (*f) ( project, verbose, cleanAsYouGo );
+	return (*f) ( project, configuration );
 }
 
 Backend::Backend ( Project& project,
-                   bool verbose,
-                   bool cleanAsYouGo )
+                   Configuration& configuration )
 	: ProjectNode ( project ),
-	  verbose ( verbose ),
-	  cleanAsYouGo ( cleanAsYouGo )
+	  configuration ( configuration )
 {
 }

@@ -18,8 +18,7 @@ using std::vector;
 
 static string BuildSystem;
 static string RootXmlFile = "ReactOS.xml";
-static bool Verbose = false;
-static bool CleanAsYouGo = false;
+static Configuration configuration;
 
 bool
 ParseSwitch ( int argc, char** argv, int index )
@@ -28,10 +27,13 @@ ParseSwitch ( int argc, char** argv, int index )
 	switch ( switchChar )
 	{
 		case 'v':
-			Verbose = true;
+			configuration.Verbose = true;
 			break;
 		case 'c':
-			CleanAsYouGo = true;
+			configuration.CleanAsYouGo = true;
+			break;
+		case 'd':
+			configuration.AutomaticDependencies = false;
 			break;
 		case 'r':
 			RootXmlFile = string(&argv[index][2]);
@@ -74,6 +76,7 @@ main ( int argc, char** argv )
 		printf ( "Switches:\n" );
 		printf ( "  -v           Be verbose\n" );
 		printf ( "  -c           Clean as you go. Delete generated files as soon as they are not needed anymore\n" );
+		printf ( "  -d           Disable automatic dependencies.\n" );
 		printf ( "  -rfile.xml   Name of the root xml file. Default is ReactOS.xml\n" );
 		printf ( "\n" );
 		printf ( "  buildsystem  Target build system. Can be one of:\n" );
@@ -91,8 +94,7 @@ main ( int argc, char** argv )
 		project.ExecuteInvocations ();
 		Backend* backend = Backend::Factory::Create ( BuildSystem,
 		                                              project,
-		                                              Verbose,
-		                                              CleanAsYouGo );
+		                                              configuration );
 		backend->Process ();
 		delete backend;
 

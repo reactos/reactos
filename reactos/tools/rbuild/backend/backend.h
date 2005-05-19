@@ -6,7 +6,7 @@
 class Backend;
 
 typedef Backend* BackendFactory ( Project& project,
-                                  bool verbose );
+                                  Configuration& configuration );
 
 class Backend
 {
@@ -22,26 +22,22 @@ public:
 		virtual ~Factory();
 
 		virtual Backend* operator() ( Project&,
-		                              bool verbose,
-		                              bool cleanAsYouGo ) = 0;
+		                              Configuration& configuration ) = 0;
 
 	public:
 		static Backend* Create ( const std::string& name,
 		                         Project& project,
-		                         bool verbose,
-		                         bool cleanAsYouGo );
+		                         Configuration& configuration );
 	};
 
 protected:
 	Backend ( Project& project,
-	          bool verbose,
-	          bool cleanAsYouGo );
+	          Configuration& configuration );
 
 public:
 	virtual void Process () = 0;
 	Project& ProjectNode;
-	bool verbose;
-	bool cleanAsYouGo;
+	Configuration& configuration;
 };
 
 #endif /* __BACKEND_H */

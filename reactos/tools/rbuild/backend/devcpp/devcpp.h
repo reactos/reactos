@@ -20,8 +20,7 @@ class DevCppBackend : public Backend
 	public:
 
 		DevCppBackend(Project &project,
-	                  bool verbose,
-	                  bool cleanAsYouGo);
+		              Configuration& configuration);
 		virtual ~DevCppBackend() {}
 
 		virtual void Process();
