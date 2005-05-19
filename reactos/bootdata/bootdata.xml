@@ -6,3 +6,9 @@
 <cdfile base="reactos">hivesft.inf</cdfile>
 <cdfile base="reactos">hivesys.inf</cdfile>
 <cdfile base="reactos">txtsetup.sif</cdfile>
+<directory name="bootcd">
+	<xi:include href="bootcd/bootcd.xml" />
+</directory>
+<directory name="livecd">
+	<xi:include href="livecd/livecd.xml" />
+</directory>

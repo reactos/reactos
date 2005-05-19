@@ -65,11 +65,4 @@
 	<directory name="subsys">
 		<xi:include href="subsys/directory.xml" />
 	</directory>
-
-	<module name="bootcd" type="iso">
-	</module>
-
-	<module name="livecd" type="liveiso">
-	</module>
-
 </project>
