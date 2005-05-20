@@ -448,7 +448,11 @@ XenMemSetOldPageReadonly(ULONG Mfn)
 VOID
 XenMemInstallPageDir(PPAGE_DIRECTORY_X86 NewPageDir)
 {
+#if 2 == XEN_VER
+  mmu_update_t MmuReq;
+#else /* XEN_VER */
   struct mmuext_op MmuExtReq;
+#endif /* XEN_VER */
   ULONG NewPageDirMfn;
   ULONG PageIndex;
 
@@ -487,9 +491,15 @@ XenMemInstallPageDir(PPAGE_DIRECTORY_X86 NewPageDir)
     }
 
   /* Set the PDBR */
+#if 2 == XEN_VER
+  MmuReq.ptr = (NewPageDirMfn << PFN_SHIFT) | MMU_EXTENDED_COMMAND;
+  MmuReq.val = MMUEXT_NEW_BASEPTR;
+  if (0 != XEN_MMU_UPDATE(&MmuReq, 1, NULL, DOMID_SELF))
+#else /* XEN_VER */
   MmuExtReq.cmd = MMUEXT_NEW_BASEPTR;
   MmuExtReq.mfn = NewPageDirMfn;
   if (0 != HYPERVISOR_mmuext_op(&MmuExtReq, 1, NULL, DOMID_SELF))
+#endif /* XEN_VER */
     {
       printf("Failed to set new page dir\n");
       XenDie();
