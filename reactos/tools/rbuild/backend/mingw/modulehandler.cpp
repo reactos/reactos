@@ -1754,7 +1754,7 @@ MingwModuleHandler::GenerateRules ()
 	if ( module.type == Test )
 	{
 		fprintf ( fMakefile,
-		          "\t%s\n",
+		          "\t@%s\n",
 		          targetMacro.c_str ());
 	}
 
