@@ -16,7 +16,7 @@
  */
 
 /*
- *  $Id: xremote.c,v 1.5 2004/11/22 19:10:57 davidmpye Exp $
+ *  $Id$
  *
  *  Copyright (c) 2002 Steven Toth <steve@toth.demon.co.uk>
  *
