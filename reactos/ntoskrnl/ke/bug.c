@@ -53,7 +53,7 @@ KiInitializeBugCheck(VOID)
     /* Make sure it worked */
     if (NT_SUCCESS(Status)) {
 
-        DPRINT1("Found Bugcheck Resource Data!\n");
+        DPRINT("Found Bugcheck Resource Data!\n");
 
         /* Now actually get a pointer to it */
         Status = LdrAccessResource((PVOID)KERNEL_BASE,
@@ -64,7 +64,7 @@ KiInitializeBugCheck(VOID)
         /* Make sure it worked */
         if (NT_SUCCESS(Status)) {
 
-            DPRINT1("Got Pointer to Bugcheck Resource Data!\n");
+            DPRINT("Got Pointer to Bugcheck Resource Data!\n");
             KiBugCodeMessages = BugCheckData;
         }
     }

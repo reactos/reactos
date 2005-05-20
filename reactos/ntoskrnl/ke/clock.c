@@ -77,7 +77,7 @@ KiInitializeSystemClock(VOID)
 {
     TIME_FIELDS TimeFields;
 
-    DPRINT1("KiInitializeSystemClock()\n");
+    DPRINT("KiInitializeSystemClock()\n");
     InitializeListHead(&KiTimerListHead);
     KeInitializeDpc(&KiExpireTimerDpc, (PKDEFERRED_ROUTINE)KiExpireTimers, 0);
 
@@ -96,7 +96,7 @@ KiInitializeSystemClock(VOID)
     SharedUserData->SystemTime.High1Time = SystemBootTime.u.HighPart;
 
     KiClockSetupComplete = TRUE;
-    DPRINT1("Finished KiInitializeSystemClock()\n");
+    DPRINT("Finished KiInitializeSystemClock()\n");
 }
 
 VOID

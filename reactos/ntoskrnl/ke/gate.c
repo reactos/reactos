@@ -19,7 +19,7 @@ VOID
 FASTCALL
 KeInitializeGate(PKGATE Gate)
 {
-    DPRINT1("KeInitializeGate(Gate %x)\n", Gate);
+    DPRINT("KeInitializeGate(Gate %x)\n", Gate);
 
     /* Initialize the Dispatcher Header */
     KeInitializeDispatcherHeader(&Gate->Header,
@@ -39,7 +39,7 @@ KeWaitForGate(PKGATE Gate,
     PKWAIT_BLOCK GateWaitBlock;
     NTSTATUS Status;
 
-    DPRINT1("KeWaitForGate(Gate %x)\n", Gate);
+    DPRINT("KeWaitForGate(Gate %x)\n", Gate);
 
     do
     {
@@ -74,7 +74,7 @@ KeWaitForGate(PKGATE Gate,
         /* Handle Kernel Queues */
         if (CurrentThread->Queue)
         {
-            DPRINT1("Waking Queue\n");
+            DPRINT("Waking Queue\n");
             KiWakeQueue(CurrentThread->Queue);
         }
 
@@ -82,7 +82,7 @@ KeWaitForGate(PKGATE Gate,
         KeReleaseSpinLock(&CurrentThread->ApcQueueLock, OldIrql);
 
         /* Block the Thread */
-        DPRINT1("Blocking the Thread: %x\n", CurrentThread);
+        DPRINT("Blocking the Thread: %x\n", CurrentThread);
         KiBlockThread(&Status,
                       CurrentThread->Alertable,
                       WaitMode,
@@ -91,7 +91,7 @@ KeWaitForGate(PKGATE Gate,
         /* Check if we were executing an APC */
         if (Status != STATUS_KERNEL_APC) return;
 
-        DPRINT1("Looping Again\n");
+        DPRINT("Looping Again\n");
     } while (TRUE);
 }
 
@@ -104,7 +104,7 @@ KeSignalGateBoostPriority(PKGATE Gate)
     KIRQL OldIrql;
     NTSTATUS WaitStatus = STATUS_SUCCESS;
 
-    DPRINT1("KeSignalGateBoostPriority(EveGate %x)\n", Gate);
+    DPRINT("KeSignalGateBoostPriority(EveGate %x)\n", Gate);
 
     /* Acquire Dispatcher Database Lock */
     OldIrql = KeAcquireDispatcherDatabaseLock();
@@ -132,12 +132,12 @@ KeSignalGateBoostPriority(PKGATE Gate)
     /* Increment the Queue's active threads */
     if (WaitThread->Queue)
     {
-        DPRINT1("Incrementing Queue's active threads\n");
+        DPRINT("Incrementing Queue's active threads\n");
         WaitThread->Queue->CurrentCount++;
     }
 
     /* Reschedule the Thread */
-    DPRINT1("Unblocking the Thread\n");
+    DPRINT("Unblocking the Thread\n");
     KiUnblockThread(WaitThread, &WaitStatus, EVENT_INCREMENT);
     return;
 
