@@ -195,6 +195,15 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	 }
 
 	}
+
+	str_len = _tcslen(param);
+	if (str_len==1) 
+	{
+	    if (param[0] == _T('*')) 
+	    {
+		    param[0] = _T('.');
+		}
+	}
 	
 	dir=param;
 	
