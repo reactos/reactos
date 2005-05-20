@@ -113,7 +113,7 @@ IopInitLookasideLists(VOID)
     {
         /* Get the PRCB for this CPU */
         Prcb = ((PKPCR)(KPCR_BASE + i * PAGE_SIZE))->Prcb;
-        DPRINT1("Setting up lookaside for CPU: %x, PRCB: %p\n", i, Prcb);
+        DPRINT("Setting up lookaside for CPU: %x, PRCB: %p\n", i, Prcb);
         
         /* Set the Large IRP List */
         Prcb->PPLookasideList[LookasideLargeIrpList].L = &IoLargeIrpLookaside.L;
@@ -182,7 +182,7 @@ IopInitLookasideLists(VOID)
         Prcb->PPLookasideList[LookasideCompletionList].P = &CurrentList->L;
     }
     
-    DPRINT1("Done allocation\n");
+    DPRINT("Done allocation\n");
 }
 
 VOID
@@ -411,10 +411,10 @@ IoInit3(VOID)
     IoCreateArcNames();
 
     /* Create the SystemRoot symbolic link */
-    CPRINT("CommandLine: %s\n", (PCHAR)KeLoaderBlock.CommandLine);
+    DPRINT("CommandLine: %s\n", (PCHAR)KeLoaderBlock.CommandLine);
     Status = IoCreateSystemRootLink((PCHAR)KeLoaderBlock.CommandLine);
     if (!NT_SUCCESS(Status)) {
-        DbgPrint("IoCreateSystemRootLink FAILED: (0x%x) - ", Status);
+        CPRINT("IoCreateSystemRootLink FAILED: (0x%x) - ", Status);
         KEBUGCHECK(INACCESSIBLE_BOOT_DEVICE);
     }
 

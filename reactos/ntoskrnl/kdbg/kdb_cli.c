@@ -2278,7 +2278,7 @@ KdbpCliInterpretInitFile()
    CHAR c;
 
    /* Execute the commands in the init file */
-   DbgPrint("KDB: Executing KDBinit file...\n");
+   DPRINT("KDB: Executing KDBinit file...\n");
    p1 = KdbInitFileBuffer;
    while (p1[0] != '\0')
    {
@@ -2309,7 +2309,7 @@ KdbpCliInterpretInitFile()
       while (p1[0] == '\r' || p1[0] == '\n')
          p1++;
    }
-   DbgPrint("KDB: KDBinit executed\n");
+   DPRINT("KDB: KDBinit executed\n");
 }
 
 /*!\brief Called when KDB is initialized
