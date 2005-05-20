@@ -85,7 +85,7 @@ SourceFile::SkipWhitespace ()
 
 bool
 SourceFile::ReadInclude ( string& filename,
-	                      bool& includeNext)
+                          bool& includeNext)
 {
 	while ( p < end )
 	{
@@ -94,31 +94,44 @@ SourceFile::ReadInclude ( string& filename,
 			bool include = false;
 			p++;
 			SkipWhitespace ();
-			if ( strncmp ( p, "include ", 8 ) == 0 )
+			if ( *p == 'i' )
 			{
-				p += 8;
-				includeNext = false;
-				include = true;
-			}
-	        if ( strncmp ( p, "include_next ", 13 ) == 0 )
-	        {
-				p += 13;
-				includeNext = true;
-	        	include = true;
-	        }
-	        
-       		if ( include )
-			{
-				SkipWhitespace ();
-				if ( p < end && *p == '<' || *p == '"' )
+				if ( strncmp ( p, "include ", 8 ) == 0 )
 				{
-					p++;
-					filename.resize ( MAX_PATH );
-					int i = 0;
-					while ( p < end && *p != '>' && *p != '"' && *p != '\n' )
-						filename[i++] = *p++;
-					filename.resize ( i );
-					return true;
+					p += 8;
+					includeNext = false;
+					include = true;
+				}
+			        if ( strncmp ( p, "include_next ", 13 ) == 0 )
+			        {
+					p += 13;
+					includeNext = true;
+		        		include = true;
+			        }
+	
+	       			if ( include )
+				{
+					SkipWhitespace ();
+					if ( p < end )
+					{
+						register char ch = *p;
+						if ( ch == '<' || ch == '"' )
+						{
+							p++;
+							filename.resize ( MAX_PATH );
+							int i = 0;
+							ch = *p;
+							while ( p < end && ch != '>' && ch != '"' && ch != '\n' )
+							{
+								filename[i++] = *p;
+								p++;
+								if ( p < end )
+									ch = *p;
+							}
+							filename.resize ( i );
+							return true;
+						}
+					}
 				}
 			}
 		}
@@ -131,7 +144,7 @@ SourceFile::ReadInclude ( string& filename,
 
 bool
 SourceFile::IsParentOf ( const SourceFile* parent,
-	                     const SourceFile* child )
+                         const SourceFile* child )
 {
 	size_t i;
 	for ( i = 0; i < child->parents.size (); i++ )
