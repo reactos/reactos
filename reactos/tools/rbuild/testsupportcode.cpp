@@ -63,7 +63,7 @@ TestSupportCode::WriteStubbedSymbolToHooksFile ( char* buffer,
 	buffer = buffer + sprintf ( buffer,
 	                            "  {\"%s\", \"%s\", NULL, NULL, NULL},\n",
 	                            component.name.c_str (),
-	                            symbol.strippedName.c_str () );
+	                            symbol.newname.c_str () );
 	return buffer;
 }
 

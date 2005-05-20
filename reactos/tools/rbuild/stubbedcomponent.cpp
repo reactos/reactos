@@ -72,13 +72,13 @@ StubbedSymbol::ProcessXML ()
 	}
 	symbol = node.value;
 
+	strippedName = StripSymbol ( symbol );
+
 	const XMLAttribute* att = node.GetAttribute ( "newname", false );
 	if ( att != NULL )
 		newname = att->value;
 	else
-		newname = symbol;
-
-	strippedName = StripSymbol ( symbol );
+		newname = strippedName;
 }
 
 string
