@@ -16,10 +16,6 @@
 
 /* GLOBALS *******************************************************************/
 
-#define TAG_SYSB        TAG('S', 'Y', 'S', 'B')
-#define TAG_LOCK        TAG('F','l','c','k')
-#define TAG_FILE_NAME   TAG('F', 'N', 'A', 'M')
-
 extern GENERIC_MAPPING IopFileMapping;
 
 NTSTATUS

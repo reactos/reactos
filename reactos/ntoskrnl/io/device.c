@@ -16,10 +16,6 @@
 
 /* GLOBALS ********************************************************************/
 
-#define TAG_DEVICE_EXTENSION   TAG('D', 'E', 'X', 'T')
-#define TAG_SHUTDOWN_ENTRY    TAG('S', 'H', 'U', 'T')
-#define TAG_IO_TIMER      TAG('I', 'O', 'T', 'M')
-
 static ULONG IopDeviceObjectNumber = 0;
 
 typedef struct _SHUTDOWN_ENTRY

@@ -76,9 +76,6 @@ static UNICODE_STRING IopHardwareDatabaseKey =
 
 POBJECT_TYPE EXPORTED IoDriverObjectType = NULL;
 
-#define TAG_DRIVER             TAG('D', 'R', 'V', 'R')
-#define TAG_DRIVER_EXTENSION   TAG('D', 'R', 'V', 'E')
-
 /* DECLARATIONS ***************************************************************/
 
 VOID STDCALL

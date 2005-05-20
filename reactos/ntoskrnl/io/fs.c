@@ -38,10 +38,6 @@ static LIST_ENTRY FileSystemListHead;
 static KGUARDED_MUTEX FsChangeNotifyListLock;
 static LIST_ENTRY FsChangeNotifyListHead;
 
-#define TAG_FILE_SYSTEM       TAG('F', 'S', 'Y', 'S')
-#define TAG_FS_CHANGE_NOTIFY  TAG('F', 'S', 'C', 'N')
-
-
 static VOID
 IopNotifyFileSystemChange(PDEVICE_OBJECT DeviceObject,
 			  BOOLEAN DriverActive);

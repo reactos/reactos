@@ -13,8 +13,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#define IOC_TAG   TAG('I', 'O', 'C', 'T')
-
 POBJECT_TYPE IoCompletionType;
 
 NPAGED_LOOKASIDE_LIST IoCompletionPacketLookaside;

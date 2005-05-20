@@ -13,18 +13,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* GLOBALS *******************************************************************/
-
-#define TAG_DEVICE_TYPE     TAG('D', 'E', 'V', 'T')
-#define TAG_FILE_TYPE       TAG('F', 'I', 'L', 'E')
-#define TAG_ADAPTER_TYPE    TAG('A', 'D', 'P', 'T')
-#define IO_LARGEIRP         TAG('I', 'r', 'p', 'l')
-#define IO_SMALLIRP         TAG('I', 'r', 'p', 's')
-#define IO_LARGEIRP_CPU     TAG('I', 'r', 'p', 'L')
-#define IO_SMALLIRP_CPU     TAG('I', 'r', 'p', 'S')
-#define IOC_TAG             TAG('I', 'p', 'c', ' ')
-#define IOC_CPU             TAG('I', 'p', 'c', 'P')
-
 /* DATA ********************************************************************/
 
 POBJECT_TYPE EXPORTED IoDeviceObjectType = NULL;
@@ -105,7 +93,7 @@ IopInitLookasideLists(VOID)
                                     NULL,
                                     0,
                                     sizeof(IO_COMPLETION_PACKET),
-                                    IOC_TAG,
+                                    IOC_TAG1,
                                     0);
                                     
     /* Now allocate the per-processor lists */
