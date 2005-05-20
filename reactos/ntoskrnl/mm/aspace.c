@@ -17,8 +17,6 @@
 
 STATIC MADDRESS_SPACE KernelAddressSpace;
 
-#define TAG_PTRC      TAG('P', 'T', 'R', 'C')
-
 /* FUNCTIONS *****************************************************************/
 
 VOID

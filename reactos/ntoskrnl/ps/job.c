@@ -17,8 +17,6 @@
 
 /* GLOBALS *******************************************************************/
 
-#define TAG_EJOB TAG('E', 'J', 'O', 'B') /* EJOB */
-
 POBJECT_TYPE EXPORTED PsJobType = NULL;
 
 LIST_ENTRY PsJobListHead;

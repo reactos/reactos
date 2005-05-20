@@ -38,9 +38,6 @@ static GENERIC_MAPPING MmpSectionMapping = {
          STANDARD_RIGHTS_EXECUTE | SECTION_MAP_EXECUTE,
          SECTION_ALL_ACCESS};
 
-#define TAG_MM_SECTION_SEGMENT   TAG('M', 'M', 'S', 'S')
-#define TAG_SECTION_PAGE_TABLE   TAG('M', 'S', 'P', 'T')
-
 #define PAGE_FROM_SSE(E)         ((E) & 0xFFFFF000)
 #define PFN_FROM_SSE(E)          ((E) >> PAGE_SHIFT)
 #define SHARE_COUNT_FROM_SSE(E)  (((E) & 0x00000FFE) >> 1)

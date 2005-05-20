@@ -41,11 +41,6 @@ STATIC MODULE_TEXT_SECTION NtoskrnlTextSection;
 STATIC MODULE_TEXT_SECTION LdrHalTextSection;
 ULONG_PTR LdrHalBase;
 
-#define TAG_DRIVER_MEM  TAG('D', 'R', 'V', 'M') /* drvm */
-#define TAG_MODULE_OBJECT TAG('k', 'l', 'm', 'o') /* klmo - kernel ldr module object */
-#define TAG_LDR_WSTR TAG('k', 'l', 'w', 's') /* klws - kernel ldr wide string */
-#define TAG_MODULE_TEXT_SECTION TAG('k', 'l', 'm', 't') /* klmt - kernel ldr module text */
-
 #ifndef HIWORD
 #define HIWORD(X)   ((WORD) (((DWORD) (X) >> 16) & 0xFFFF))
 #endif

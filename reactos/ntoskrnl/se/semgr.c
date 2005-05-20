@@ -14,9 +14,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#define TAG_SXPT   TAG('S', 'X', 'P', 'T')
-
-
 /* GLOBALS ******************************************************************/
 
 PSE_EXPORTS EXPORTED SeExports = NULL;

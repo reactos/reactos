@@ -15,9 +15,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#define TAG_SID    TAG('S', 'I', 'D', 'T')
-
-
 /* GLOBALS ******************************************************************/
 
 SID_IDENTIFIER_AUTHORITY SeNullSidAuthority = {SECURITY_NULL_SID_AUTHORITY};

@@ -30,8 +30,6 @@ typedef struct _PNP_NOTIFY_ENTRY
 static KGUARDED_MUTEX PnpNotifyListLock;
 static LIST_ENTRY PnpNotifyListHead;
 
-#define TAG_PNP_NOTIFY  TAG('P', 'n', 'P', 'N')
-
 /* FUNCTIONS *****************************************************************/
 
 /*

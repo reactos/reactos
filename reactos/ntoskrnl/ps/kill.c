@@ -16,8 +16,6 @@
 
 /* GLOBALS *******************************************************************/
 
-#define TAG_TERMINATE_APC   TAG('T', 'A', 'P', 'C')
-
 PETHREAD PspReaperList = NULL;
 WORK_QUEUE_ITEM PspReaperWorkItem;
 BOOLEAN PspReaping = FALSE;

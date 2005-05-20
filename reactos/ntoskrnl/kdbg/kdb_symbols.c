@@ -19,8 +19,6 @@
 
 /* GLOBALS ******************************************************************/
 
-#define TAG_KDBS TAG('K', 'D', 'B', 'S')
-
 typedef struct _IMAGE_SYMBOL_INFO_CACHE {
   LIST_ENTRY ListEntry;
   ULONG RefCount;

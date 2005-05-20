@@ -13,9 +13,6 @@
 #include <ntoskrnl.h>
 #include <internal/debug.h>
 
-#define TAG_ACL    TAG('A', 'C', 'L', 'T')
-
-
 /* GLOBALS ******************************************************************/
 
 PACL EXPORTED SePublicDefaultDacl = NULL;
