@@ -39,8 +39,12 @@ static unsigned long __inline__ pci_resource_len (struct pci_dev *dev, int x)
 // ???
 static int __inline__ pci_resource_flags(struct pci_dev *dev, int x)
 {
-	DPRINT1("pci_resource_flags() called, x=0x%x\n");
-	return dev->flags[x];
+	POHCI_DEVICE_EXTENSION ext = (POHCI_DEVICE_EXTENSION)dev->dev_ext;
+	
+	DPRINT1("pci_resource_flags() called, x=0x%x\n", x);
+	
+		//FIXME: Take x into account
+    return ext->Flags;
 }
 
 /*
@@ -79,8 +83,8 @@ name   name of requester
 */
 static int __inline__ request_region(PHYSICAL_ADDRESS addr, unsigned long len, const char * d)
 {
-	DPRINT1("request_region(): addr=0x%x, len=0x%x\n", addr, len);
-	return 0;
+	DPRINT1("request_region(): addr=0x%lx, len=0x%lx\n", addr.u.LowPart, len);
+	return ~0;
 }
 
 /*
@@ -108,7 +112,7 @@ n  length of region
 */
 static int __inline__ release_region(PHYSICAL_ADDRESS addr, unsigned long len)
 {
-	DPRINT1("release_region(): addr=0x%x, len=0x%x\n", addr, len);
+	DPRINT1("release_region(): addr=0x%lx, len=0x%lx\n", addr.u.LowPart, len);
 	return 0;
 }
 

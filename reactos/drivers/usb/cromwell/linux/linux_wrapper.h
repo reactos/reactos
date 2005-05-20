@@ -266,7 +266,7 @@ struct usbdevfs_hub_portinfo
 #define KERN_WARNING "WRN: "
 #define KERN_INFO "INF: "
 #define GFP_KERNEL 0
-#define GFP_ATOMIC 0
+#define GFP_ATOMIC 0x20
 #define GFP_NOIO 0
 #define SLAB_ATOMIC 0
 #define PCI_ANY_ID (~0)
@@ -406,7 +406,7 @@ struct usbdevfs_hub_portinfo
 
 #define pci_pool_alloc(a,b,c)  my_pci_pool_alloc(a,b,c) 
 
-static void  __inline__ *my_pci_pool_alloc(void* pool, size_t size,
+static void __inline__ *my_pci_pool_alloc(void* pool, size_t size,
 						dma_addr_t *dma_handle)
 {
 	void* a;
@@ -479,8 +479,8 @@ int my_pci_module_init(struct pci_driver *x);
 #define PCI_DMA_FROMDEVICE
 #define PCI_DMA_TODEVICE
 
-#define PCI_ROM_RESOURCE 0
-#define IORESOURCE_IO 1
+#define PCI_ROM_RESOURCE 1
+#define IORESOURCE_IO CM_RESOURCE_PORT_IO
 
 #define DECLARE_WAITQUEUE(a,b) KEVENT a=0
 #define init_waitqueue_head(a) my_init_waitqueue_head(a)

@@ -81,7 +81,7 @@
 #ifdef DEBUG
 static int debug = 1;
 #else
-static int debug = 0;
+static int debug = 2;
 #endif
 MODULE_PARM(debug, "i");
 MODULE_PARM_DESC(debug, "Debug level");

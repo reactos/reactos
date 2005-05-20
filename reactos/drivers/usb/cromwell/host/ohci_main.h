@@ -31,6 +31,7 @@ typedef struct _OHCI_DEVICE_EXTENSTION
    ULONG InterruptLevel;
    PHYSICAL_ADDRESS BaseAddress;
    ULONG BaseAddrLength;
+   ULONG Flags;
    ULONG AdapterInterfaceType;
    ULONG SystemIoBusNumber;
    ULONG SystemIoSlotNumber;

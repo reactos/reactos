@@ -133,7 +133,7 @@ NTSTATUS InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 	dev = ExAllocatePoolWithTag(PagedPool, sizeof(struct pci_dev), USB_UHCI_TAG);
 	
 	init_wrapper(dev);
-	dev->irq = DeviceExtension->InterruptLevel;
+	dev->irq = DeviceExtension->InterruptVector;
 	dev->dev_ext = (PVOID)DeviceExtension;
 	dev->slot_name = ExAllocatePoolWithTag(NonPagedPool, 128, USB_UHCI_TAG); // 128 max len for slot name
 
@@ -226,8 +226,9 @@ OHCD_PnPStartDevice(IN PDEVICE_OBJECT DeviceObject,
 				}
 				else if (Descriptor->Type == CmResourceTypePort)
 				{
-					DeviceExtension->BaseAddress	= Descriptor->u.Memory.Start;
-					DeviceExtension->BaseAddrLength = Descriptor->u.Memory.Length;
+					DeviceExtension->BaseAddress	= Descriptor->u.Port.Start;
+					DeviceExtension->BaseAddrLength = Descriptor->u.Port.Length;
+					DeviceExtension->Flags          = Descriptor->Flags;
 					
      				DPRINT1("I/O resource: start=0x%x, length=0x%x\n",
                                  DeviceExtension->BaseAddress.u.LowPart, DeviceExtension->BaseAddrLength);

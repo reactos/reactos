@@ -122,7 +122,7 @@ clean_1:
 			dbg ("no i/o regions available");
 			return -EBUSY;
 		}
-		base = NULL; //(void *) resource; // this isn't possible
+		base = (void *) (ULONG_PTR)resource.u.LowPart;
 	}
 
 	// driver->start(), later on, will transfer device from
