@@ -14,33 +14,22 @@
 #include <debug.h>
 
 #include "i386boot.h"
-
-/* Bits to shift to convert a Virtual Address into an Offset in the Page Table */
-#define PFN_SHIFT 12
-
-/* Bits to shift to convert a Virtual Address into an Offset in the Page Directory */
-#define PDE_SHIFT 20
-#define PDE_SHIFT_PAE 18
-
-
-/* Converts a Phsyical Address Pointer into a Page Frame Number */
-#define PaPtrToPfn(p) \
-    (((ULONG_PTR)&p) >> PFN_SHIFT)
-
-/* Converts a Phsyical Address into a Page Frame Number */
-#define PaToPfn(p) \
-    ((p) >> PFN_SHIFT)
+#include "i386mem.h"
 
 #define STARTUP_BASE                0xF0000000
 #define HYPERSPACE_BASE             0xF0800000
 #define APIC_BASE                   0xFEC00000
+#ifdef XEN_VER
+#define KPCR_BASE                   0xFB000000
+#else
 #define KPCR_BASE                   0xFF000000
+#endif
 
 #define LowMemPageTableIndex        0
-#define StartupPageTableIndex       (STARTUP_BASE >> 20)    / sizeof(HARDWARE_PTE_X86)
-#define HyperspacePageTableIndex    (HYPERSPACE_BASE >> 20) / sizeof(HARDWARE_PTE_X86)
-#define KpcrPageTableIndex          (KPCR_BASE >> 20)       / sizeof(HARDWARE_PTE_X86)
-#define ApicPageTableIndex          (APIC_BASE >> 20)       / sizeof(HARDWARE_PTE_X86)
+#define StartupPageTableIndex       (STARTUP_BASE >> PDN_SHIFT)
+#define HyperspacePageTableIndex    (HYPERSPACE_BASE >> PDN_SHIFT)
+#define KpcrPageTableIndex          (KPCR_BASE >> PDN_SHIFT)
+#define ApicPageTableIndex          (APIC_BASE >> PDN_SHIFT)
 
 #define LowMemPageTableIndexPae     0
 #define StartupPageTableIndexPae    (STARTUP_BASE >> 21)
@@ -48,81 +37,30 @@
 #define KpcrPageTableIndexPae       (KPCR_BASE >> 21)
 #define ApicPageTableIndexPae       (APIC_BASE >> 21)
 
-
-#define KernelEntryPoint            (KernelEntry - KERNEL_BASE_PHYS) + KernelBase
-
-/* Unrelocated Kernel Base in Virtual Memory */
-extern ULONG_PTR KernelBase;
-
-/* Kernel Entrypoint in Physical Memory */
-extern ULONG_PTR KernelEntry;
-
-/* Page Directory and Tables for non-PAE Systems */
-extern ULONG_PTR startup_pagedirectory;
-extern ULONG_PTR lowmem_pagetable;
-extern ULONG_PTR kernel_pagetable;
-extern ULONG_PTR hyperspace_pagetable;
-extern ULONG_PTR _pae_pagedirtable;
-extern ULONG_PTR apic_pagetable;
-extern ULONG_PTR kpcr_pagetable;
-
-/* Page Directory and Tables for PAE Systems */
-extern ULONG_PTR startup_pagedirectorytable_pae;
-extern ULONG_PTR startup_pagedirectory_pae;
-extern ULONG_PTR lowmem_pagetable_pae;
-extern ULONG_PTR kernel_pagetable_pae;
-extern ULONG_PTR hyperspace_pagetable_pae;
-extern ULONG_PTR pagedirtable_pae;
-extern ULONG_PTR apic_pagetable_pae;
-extern ULONG_PTR kpcr_pagetable_pae;
-
-typedef struct _HARDWARE_PTE_X86 {
-    ULONG Valid             : 1;
-    ULONG Write             : 1;
-    ULONG Owner             : 1;
-    ULONG WriteThrough      : 1;
-    ULONG CacheDisable      : 1;
-    ULONG Accessed          : 1;
-    ULONG Dirty             : 1;
-    ULONG LargePage         : 1;
-    ULONG Global            : 1;
-    ULONG CopyOnWrite       : 1;
-    ULONG Prototype         : 1;
-    ULONG reserved          : 1;
-    ULONG PageFrameNumber   : 20;
-} HARDWARE_PTE_X86, *PHARDWARE_PTE_X86;
-
-typedef struct _HARDWARE_PTE_X64 {
-    ULONG Valid             : 1;
-    ULONG Write             : 1;
-    ULONG Owner             : 1;
-    ULONG WriteThrough      : 1;
-    ULONG CacheDisable      : 1;
-    ULONG Accessed          : 1;
-    ULONG Dirty             : 1;
-    ULONG LargePage         : 1;
-    ULONG Global            : 1;
-    ULONG CopyOnWrite       : 1;
-    ULONG Prototype         : 1;
-    ULONG reserved          : 1;
-    ULONG PageFrameNumber   : 20;
-    ULONG reserved2         : 31;
-    ULONG NoExecute         : 1;
-} HARDWARE_PTE_X64, *PHARDWARE_PTE_X64;
-
-typedef struct _PAGE_DIRECTORY_X86 {
-    HARDWARE_PTE_X86 Pde[1024];
-} PAGE_DIRECTORY_x86, *PPAGE_DIRECTORY_X86;
-
-typedef struct _PAGE_DIRECTORY_X64 {
-    HARDWARE_PTE_X64 Pde[2048];
-} PAGE_DIRECTORY_X64, *PPAGE_DIRECTORY_X64;
-
-typedef struct _PAGE_DIRECTORY_TABLE_X64 {
-    HARDWARE_PTE_X64 Pde[4];
-} PAGE_DIRECTORY_TABLE_X64, *PPAGE_DIRECTORY_TABLE_X64;
-
 /* FUNCTIONS *****************************************************************/
+
+/*++
+ * i386BootAddrToPfn
+ * INTERNAL
+ *
+ *     Translate an address to a page frame number
+ *
+ * Params:
+ *     Addr - address to translate
+ *
+ * Returns:
+ *     Frame number.
+ *
+ * Remarks:
+ *     None.
+ *
+ *--*/
+ULONG
+STDCALL
+i386BootAddrToPfn(ULONG_PTR Addr)
+{
+  return PaToPfn(Addr);
+}
 
 /*++
  * i386BootStartup
@@ -156,7 +94,7 @@ i386BootStartup(ULONG Magic)
     PaeModeEnabled = i386BootGetPaeMode();
 
     /* Initialize the page directory */
-    i386BootSetupPageDirectory(PaeModeEnabled);
+    i386BootSetupPageDirectory(PaeModeEnabled, TRUE, i386BootAddrToPfn);
 
     /* Initialize Paging, Write-Protection and Load NTOSKRNL */
     i386BootSetupPae(PaeModeEnabled, Magic);
@@ -257,7 +195,8 @@ i386BootGetPaeMode(VOID)
  *--*/
 VOID
 FASTCALL
-i386BootSetupPageDirectory(BOOLEAN PaeModeEnabled)
+i386BootSetupPageDirectory(BOOLEAN PaeModeEnabled, BOOLEAN SetupApic,
+                           ULONG (STDCALL *AddrToPfn)(ULONG_PTR Addr))
 {
     PPAGE_DIRECTORY_X86 PageDir;
     PPAGE_DIRECTORY_TABLE_X64 PageDirTablePae;
@@ -369,7 +308,7 @@ i386BootSetupPageDirectory(BOOLEAN PaeModeEnabled)
     } else {
 
         /* Get the Kernel Table Index */
-        KernelPageTableIndex = (KernelBase >> PDE_SHIFT) / sizeof(HARDWARE_PTE_X86);
+        KernelPageTableIndex = KernelBase >> PDN_SHIFT;
 
         /* Get the Startup Page Directory */
         PageDir = (PPAGE_DIRECTORY_X86)&startup_pagedirectory;
@@ -377,35 +316,37 @@ i386BootSetupPageDirectory(BOOLEAN PaeModeEnabled)
         /* Set up the Low Memory PDE */
         PageDir->Pde[LowMemPageTableIndex].Valid = 1;
         PageDir->Pde[LowMemPageTableIndex].Write = 1;
-        PageDir->Pde[LowMemPageTableIndex].PageFrameNumber = PaPtrToPfn(lowmem_pagetable);
+        PageDir->Pde[LowMemPageTableIndex].PageFrameNumber = (*AddrToPfn)((ULONG_PTR) &lowmem_pagetable);
 
         /* Set up the Kernel PDEs */
         PageDir->Pde[KernelPageTableIndex].Valid = 1;
         PageDir->Pde[KernelPageTableIndex].Write = 1;
-        PageDir->Pde[KernelPageTableIndex].PageFrameNumber = PaPtrToPfn(kernel_pagetable);
+        PageDir->Pde[KernelPageTableIndex].PageFrameNumber = (*AddrToPfn)((ULONG_PTR) &kernel_pagetable);
         PageDir->Pde[KernelPageTableIndex + 1].Valid = 1;
         PageDir->Pde[KernelPageTableIndex + 1].Write = 1;
-        PageDir->Pde[KernelPageTableIndex + 1].PageFrameNumber = PaPtrToPfn(kernel_pagetable + 4096);
+        PageDir->Pde[KernelPageTableIndex + 1].PageFrameNumber = (*AddrToPfn)((ULONG_PTR) &kernel_pagetable + 4096);
 
         /* Set up the Startup PDE */
         PageDir->Pde[StartupPageTableIndex].Valid = 1;
         PageDir->Pde[StartupPageTableIndex].Write = 1;
-        PageDir->Pde[StartupPageTableIndex].PageFrameNumber = PaPtrToPfn(startup_pagedirectory);
+        PageDir->Pde[StartupPageTableIndex].PageFrameNumber = (*AddrToPfn)((LONG_PTR) &startup_pagedirectory);
 
         /* Set up the Hyperspace PDE */
         PageDir->Pde[HyperspacePageTableIndex].Valid = 1;
         PageDir->Pde[HyperspacePageTableIndex].Write = 1;
-        PageDir->Pde[HyperspacePageTableIndex].PageFrameNumber = PaPtrToPfn(hyperspace_pagetable);
+        PageDir->Pde[HyperspacePageTableIndex].PageFrameNumber = (*AddrToPfn)((LONG_PTR) &hyperspace_pagetable);
 
         /* Set up the Apic PDE */
-        PageDir->Pde[ApicPageTableIndex].Valid = 1;
-        PageDir->Pde[ApicPageTableIndex].Write = 1;
-        PageDir->Pde[ApicPageTableIndex].PageFrameNumber = PaPtrToPfn(apic_pagetable);
+        if (SetupApic) {
+            PageDir->Pde[ApicPageTableIndex].Valid = 1;
+            PageDir->Pde[ApicPageTableIndex].Write = 1;
+            PageDir->Pde[ApicPageTableIndex].PageFrameNumber = (*AddrToPfn)((LONG_PTR) &apic_pagetable);
+        }
 
         /* Set up the KPCR PDE */
         PageDir->Pde[KpcrPageTableIndex].Valid = 1;
         PageDir->Pde[KpcrPageTableIndex].Write = 1;
-        PageDir->Pde[KpcrPageTableIndex].PageFrameNumber = PaPtrToPfn(kpcr_pagetable);
+        PageDir->Pde[KpcrPageTableIndex].PageFrameNumber = (*AddrToPfn)((LONG_PTR) &kpcr_pagetable);
 
         /* Set up Low Memory PTEs */
         PageDir = (PPAGE_DIRECTORY_X86)&lowmem_pagetable;
@@ -414,7 +355,7 @@ i386BootSetupPageDirectory(BOOLEAN PaeModeEnabled)
             PageDir->Pde[i].Valid = 1;
             PageDir->Pde[i].Write = 1;
             PageDir->Pde[i].Owner = 1;
-            PageDir->Pde[i].PageFrameNumber = PaToPfn(i * PAGE_SIZE);
+            PageDir->Pde[i].PageFrameNumber = (*AddrToPfn)(i * PAGE_SIZE);
         }
 
         /* Set up Kernel PTEs */
@@ -423,27 +364,29 @@ i386BootSetupPageDirectory(BOOLEAN PaeModeEnabled)
 
             PageDir->Pde[i].Valid = 1;
             PageDir->Pde[i].Write = 1;
-            PageDir->Pde[i].PageFrameNumber = PaToPfn(KERNEL_BASE_PHYS + i * PAGE_SIZE);
+            PageDir->Pde[i].PageFrameNumber = (*AddrToPfn)(KERNEL_BASE_PHYS + i * PAGE_SIZE);
         }
 
         /* Set up APIC PTEs */
-        PageDir = (PPAGE_DIRECTORY_X86)&apic_pagetable;
-        PageDir->Pde[0].Valid = 1;
-        PageDir->Pde[0].Write = 1;
-        PageDir->Pde[0].CacheDisable = 1;
-        PageDir->Pde[0].WriteThrough = 1;
-        PageDir->Pde[0].PageFrameNumber = PaToPfn(APIC_BASE);
-        PageDir->Pde[0x200].Valid = 1;
-        PageDir->Pde[0x200].Write = 1;
-        PageDir->Pde[0x200].CacheDisable = 1;
-        PageDir->Pde[0x200].WriteThrough = 1;
-        PageDir->Pde[0x200].PageFrameNumber = PaToPfn(APIC_BASE + KERNEL_BASE_PHYS);
+        if (SetupApic) {
+            PageDir = (PPAGE_DIRECTORY_X86)&apic_pagetable;
+            PageDir->Pde[0].Valid = 1;
+            PageDir->Pde[0].Write = 1;
+            PageDir->Pde[0].CacheDisable = 1;
+            PageDir->Pde[0].WriteThrough = 1;
+            PageDir->Pde[0].PageFrameNumber = (*AddrToPfn)(APIC_BASE);
+            PageDir->Pde[0x200].Valid = 1;
+            PageDir->Pde[0x200].Write = 1;
+            PageDir->Pde[0x200].CacheDisable = 1;
+            PageDir->Pde[0x200].WriteThrough = 1;
+            PageDir->Pde[0x200].PageFrameNumber = (*AddrToPfn)(APIC_BASE + KERNEL_BASE_PHYS);
+        }
 
         /* Set up KPCR PTEs */
         PageDir = (PPAGE_DIRECTORY_X86)&kpcr_pagetable;
         PageDir->Pde[0].Valid = 1;
         PageDir->Pde[0].Write = 1;
-        PageDir->Pde[0].PageFrameNumber = 1;
+        PageDir->Pde[0].PageFrameNumber = (*AddrToPfn)(PAGE_SIZE);
     }
     return;
 }

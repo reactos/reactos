@@ -22,17 +22,24 @@
 #include "machine.h"
 #include "machxen.h"
 
+static ULONG STDCALL
+XenBootAddrToPfn(ULONG_PTR Addr)
+{  
+  return (ULONG) XenMemVirtualToMachine((void *) Addr) >> PAGE_SHIFT;
+}
+
 VOID
 XenBootReactOS(VOID)
-  {
+{
   BOOLEAN PaeModeEnabled;
+  ASMCODE PagedJump;
 
+  /* Clear screen and make sure all console output is written */
   XenVideoClearScreen(0x07);
+  XenConsFlushWait();
 
   /* Disable events */
-#ifdef TODO
   XenEvtchnDisableEvents();
-#endif
 
   /* Re-initalize EFLAGS */
   Ke386EraseFlags();
@@ -41,10 +48,14 @@ XenBootReactOS(VOID)
   PaeModeEnabled = FALSE;
 
   /* Initialize the page directory */
-  i386BootSetupPageDirectory(PaeModeEnabled);
+  i386BootSetupPageDirectory(PaeModeEnabled, FALSE, XenBootAddrToPfn);
 
-  /* Initialize Paging, Write-Protection and Load NTOSKRNL */
-  i386BootSetupPae(PaeModeEnabled, 0x2badb002);
-  }
+  /* Switch to the new page directory */
+  XenMemInstallPageDir((PPAGE_DIRECTORY_X86) &startup_pagedirectory);
+
+  /* Jump to Kernel */
+  PagedJump = (ASMCODE)KernelEntryPoint;
+  PagedJump(0x2badb002, &LoaderBlock);
+}
 
 /* EOF */

@@ -21,9 +21,8 @@
 #ifndef __I386_MACHXEN_H_
 #define __I386_MACHXEN_H_
 
-#ifndef __MEMORY_H
+#include "i386mem.h"
 #include "mm.h"
-#endif
 
 #include <rosxen.h>
 #include <xen.h>
@@ -74,6 +73,7 @@ ULONG XenMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
 VOID XenMemInit(start_info_t *StartInfo);
 u32 XenMemVirtualToMachine(void *VirtualAddress);
 int XenMemGrantForeignAccess(domid_t DomId, void *VirtAddr, BOOL ReadOnly);
+VOID XenMemInstallPageDir(PPAGE_DIRECTORY_X86 NewPageDir);
 
 BOOL XenDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
 BOOL XenDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);

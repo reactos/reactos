@@ -17,6 +17,8 @@
  */
 
 #include "freeldr.h"
+#include "i386boot.h"
+#include "i386mem.h"
 #include "machxen.h"
 
 #include <rosxen.h>
@@ -27,53 +29,10 @@
 #include <grant_table.h>
 #endif /* CONFIG_XEN_BLKDEV_GRANT */
 
-/* Page Directory Entry */
-typedef struct _PDE
-{
-  u32 Pde;
-} PDE, *PPDE;
-
-/* Page Table Entry */
-typedef struct _PTE
-{
-  u32 Pte;
-} PTE, *PPTE;
-
-#define PGDIR_SHIFT   22
-#define PTRS_PER_PD   (PAGE_SIZE / sizeof(PDE))
-#define PTRS_PER_PT   (PAGE_SIZE / sizeof(PTE))
-
-/* Page Directory Index of a given virtual address */
-#define PD_IDX(Va) ((((ULONG_PTR) Va) >> PGDIR_SHIFT) & (PTRS_PER_PD - 1))
-/* Page Table Index of a give virtual address */
-#define PT_IDX(Va) ((((ULONG_PTR) Va) >> PAGE_SHIFT) & (PTRS_PER_PT - 1))
-/* Convert a Page Directory or Page Table entry to a (machine) address */
-#define PAGE_MASK  (~(PAGE_SIZE-1))
-
-/* The PA_* definitions below were copied from ntoskrnl/mm/i386/page.c, maybe
-   we need a public header for them?? */
-#define PA_BIT_PRESENT   (0)
-#define PA_BIT_READWRITE (1)
-#define PA_BIT_USER      (2)
-#define PA_BIT_WT        (3)
-#define PA_BIT_CD        (4)
-#define PA_BIT_ACCESSED  (5)
-#define PA_BIT_DIRTY     (6)
-#define PA_BIT_GLOBAL    (8)
-
-#define PA_PRESENT   (1 << PA_BIT_PRESENT)
-#define PA_READWRITE (1 << PA_BIT_READWRITE)
-#define PA_USER      (1 << PA_BIT_USER)
-#define PA_DIRTY     (1 << PA_BIT_DIRTY)
-#define PA_WT        (1 << PA_BIT_WT)
-#define PA_CD        (1 << PA_BIT_CD)
-#define PA_ACCESSED  (1 << PA_BIT_ACCESSED)
-#define PA_GLOBAL    (1 << PA_BIT_GLOBAL)
-
 start_info_t *XenStartInfo;
 shared_info_t *XenSharedInfo;
 
-static PPDE XenPageDir;
+static PPAGE_DIRECTORY_X86 XenPageDir;
 
 #if 2 == XEN_VER
 #define XEN_MMU_UPDATE(req, count, success, domid) \
@@ -169,8 +128,8 @@ XenMemInit(start_info_t *StartInfo)
   static char ErrMsg[] = "XenMemInit failed\n";
   unsigned long StartPfn;           /* (Virtual) page frame number of beginning
                                        of freeldr */
-  PPDE PageDir;                     /* Virtual address of page directory */
-  PPTE PageTableForPageDir;         /* Virtual address of page table which
+  PPAGE_DIRECTORY_X86 PageDir;      /* Virtual address of page directory */
+  PPAGE_TABLE_X86 PageTableForPageDir; /* Virtual address of page table which
                                        contains entry for the page directory */
   unsigned long PageDirMachineAddr; /* Machine address of page directory */
   unsigned PageTablesRequired;      /* Number of page tables we require */
@@ -180,16 +139,18 @@ XenMemInit(start_info_t *StartInfo)
   unsigned long HighAddr;           /* Virtual address after reloc to high
                                        memory */
   unsigned long PageNumber;         /* Index of current page */
-  PPTE PageTable;                   /* Page table containing current page */
+  PPAGE_TABLE_X86 PageTable;        /* Page table containing current page */
+  HARDWARE_PTE_X86 Pte;             /* Page table entry */
 #ifdef CONFIG_XEN_BLKDEV_GRANT
   gnttab_setup_table_t Setup;       /* Grant table setup request */
   unsigned long Frame;              /* Grant table frame */
 #endif /* CONFIG_XEN_BLKDEV_GRANT */
 
-  PageDir = (PPDE) StartInfo->pt_base;
-  PageTableForPageDir = (PPTE)((char *) StartInfo->pt_base
-                               + PAGE_SIZE * (PD_IDX(StartInfo->pt_base) + 1));
-  PageDirMachineAddr = PageTableForPageDir[PT_IDX(StartInfo->pt_base)].Pte
+  PageDir = (PPAGE_DIRECTORY_X86) StartInfo->pt_base;
+  PageTableForPageDir = (PPAGE_TABLE_X86)((char *) StartInfo->pt_base
+                                          + PAGE_SIZE
+                                            * (PD_IDX(StartInfo->pt_base) + 1));
+  PageDirMachineAddr = PageTableForPageDir->Pte[PT_IDX(StartInfo->pt_base)].Val
                        & PAGE_MASK;
 
   /* Determine pfn of first allocated memory */
@@ -197,20 +158,21 @@ XenMemInit(start_info_t *StartInfo)
 
   /* First, lets connect all our page tables */
 #ifdef CONFIG_XEN_BLKDEV_GRANT
-  PageTablesRequired = ROUND_UP(StartInfo->nr_pages + 2, PTRS_PER_PT)
-                       / PTRS_PER_PT;
+  PageTablesRequired = ROUND_UP(StartInfo->nr_pages + 2, PTRS_PER_PT_X86)
+                       / PTRS_PER_PT_X86;
 #else /* CONFIG_XEN_BLKDEV_GRANT */
-  PageTablesRequired = ROUND_UP(StartInfo->nr_pages + 1, PTRS_PER_PT)
-                       / PTRS_PER_PT;
+  PageTablesRequired = ROUND_UP(StartInfo->nr_pages + 1, PTRS_PER_PT_X86)
+                       / PTRS_PER_PT_X86;
 #endif /* CONFIG_XEN_BLKDEV_GRANT */
   for (PageTableNumber = 0; PageTableNumber < PageTablesRequired;
        PageTableNumber++)
     {
       MfnIndex = StartInfo->nr_pages - (StartPfn + PageTablesRequired)
                  + PageTableNumber;
-      if (0 == PageDir[PageTableNumber].Pde)
+      if (0 == PageDir->Pde[PageTableNumber].Val)
         {
-          MmuReq.ptr = PageDirMachineAddr + PageTableNumber * sizeof(PTE);
+          MmuReq.ptr = PageDirMachineAddr
+                       + PageTableNumber * sizeof(HARDWARE_PTE_X86);
         }
       else
         {
@@ -218,14 +180,18 @@ XenMemInit(start_info_t *StartInfo)
            * means that it's also mapped in the area following pt_base. We
            * don't want it there, so let's map another page at that pos.
            * This page table will be mapped near the top of memory later */
-          PageTable = (PPTE)((char *) PageDir
-                             + (PageTableNumber + 1) * PAGE_SIZE);
-          MmuReq.ptr = (PageDir[PD_IDX((unsigned long) PageTable)].Pde
+          PageTable = (PPAGE_TABLE_X86)((char *) PageDir
+                                        + (PageTableNumber + 1) * PAGE_SIZE);
+          MmuReq.ptr = (PageDir->Pde[PD_IDX(PageTable)].Val
                         & PAGE_MASK) +
-                       PT_IDX((unsigned long) PageTable) * sizeof(PTE);
+                       PT_IDX(PageTable) * sizeof(HARDWARE_PTE_X86);
         }
-      MmuReq.val = (((u32*)StartInfo->mfn_list)[MfnIndex] << PAGE_SHIFT)
-                   | (PA_PRESENT | PA_READWRITE | PA_USER);
+      Pte.Val = 0;
+      Pte.PageFrameNumber = ((u32*)StartInfo->mfn_list)[MfnIndex];
+      Pte.Valid = 1;
+      Pte.Write = 1;
+      Pte.Owner = 1;
+      MmuReq.val = Pte.Val;
       if (0 != XEN_MMU_UPDATE(&MmuReq, 1, NULL, DOMID_SELF))
         {
           HYPERVISOR_console_io(CONSOLEIO_write, sizeof(ErrMsg), ErrMsg);
@@ -235,24 +201,31 @@ XenMemInit(start_info_t *StartInfo)
 
   /* Now, let's make the page directory visible near the top of mem */
   HighAddr = (StartInfo->nr_pages - (PageTablesRequired + 1)) * PAGE_SIZE;
-  MmuReq.ptr = (PageDir[PD_IDX(HighAddr)].Pde & PAGE_MASK)
-               + PT_IDX(HighAddr) * sizeof(PTE);
-  MmuReq.val = PageDirMachineAddr
-               | (PA_PRESENT | PA_USER);
+  MmuReq.ptr = (PageDir->Pde[PD_IDX(HighAddr)].Val & PAGE_MASK)
+               + PT_IDX(HighAddr) * sizeof(HARDWARE_PTE_X86);
+  Pte.Val = 0;
+  Pte.PageFrameNumber = PageDirMachineAddr >> PFN_SHIFT;
+  Pte.Valid = 1;
+  Pte.Owner = 1;
+  MmuReq.val = Pte.Val;
   if (0 != XEN_MMU_UPDATE(&MmuReq, 1, NULL, DOMID_SELF))
     {
       HYPERVISOR_console_io(CONSOLEIO_write, sizeof(ErrMsg), ErrMsg);
       XenDie();
     }
-  XenPageDir = (PPDE) HighAddr;
+  XenPageDir = (PPAGE_DIRECTORY_X86) HighAddr;
 
   /* We don't need the page directory mapped at the low address (pt_base)
    * anymore, so we'll map another page there */
-  MmuReq.ptr = (PageDir[PD_IDX((unsigned long) PageDir)].Pde & PAGE_MASK)
-               + PT_IDX((unsigned long) PageDir) * sizeof(PTE);
+  MmuReq.ptr = (PageDir->Pde[PD_IDX((unsigned long) PageDir)].Val & PAGE_MASK)
+               + PT_IDX((unsigned long) PageDir) * sizeof(HARDWARE_PTE_X86);
   MfnIndex = StartInfo->nr_pages - (StartPfn + PageTablesRequired + 1);
-  MmuReq.val = (((u32*)StartInfo->mfn_list)[MfnIndex] << PAGE_SHIFT)
-               | (PA_PRESENT | PA_READWRITE | PA_USER);
+  Pte.Val = 0;
+  Pte.PageFrameNumber = ((u32*)StartInfo->mfn_list)[MfnIndex];
+  Pte.Valid = 1;
+  Pte.Write = 1;
+  Pte.Owner = 1;
+  MmuReq.val = Pte.Val;
   if (0 != XEN_MMU_UPDATE(&MmuReq, 1, NULL, DOMID_SELF))
     {
       HYPERVISOR_console_io(CONSOLEIO_write, sizeof(ErrMsg), ErrMsg);
@@ -265,10 +238,13 @@ XenMemInit(start_info_t *StartInfo)
     {
       HighAddr = (StartInfo->nr_pages - PageTablesRequired + PageTableNumber)
                  * PAGE_SIZE;
-      MmuReq.ptr = (XenPageDir[PD_IDX(HighAddr)].Pde & PAGE_MASK)
-                    + PT_IDX(HighAddr) * sizeof(PTE);
-      MmuReq.val = (XenPageDir[PageTableNumber].Pde & PAGE_MASK)
-                   | (PA_PRESENT | PA_USER);
+      MmuReq.ptr = (XenPageDir->Pde[PD_IDX(HighAddr)].Val & PAGE_MASK)
+                    + PT_IDX(HighAddr) * sizeof(HARDWARE_PTE_X86);
+      Pte.Val = 0;
+      Pte.PageFrameNumber = XenPageDir->Pde[PageTableNumber].Val >> PFN_SHIFT;
+      Pte.Valid = 1;
+      Pte.Owner = 1;
+      MmuReq.val = Pte.Val;
       if (0 != XEN_MMU_UPDATE(&MmuReq, 1, NULL, DOMID_SELF))
         {
           HYPERVISOR_console_io(CONSOLEIO_write, sizeof(ErrMsg), ErrMsg);
@@ -281,9 +257,10 @@ XenMemInit(start_info_t *StartInfo)
        PageNumber < StartInfo->nr_pages - (PageTablesRequired + 1);
        PageNumber++)
     {
-      PageTable = (PPTE)((char *) XenPageDir +
-                         (PD_IDX(PageNumber * PAGE_SIZE) + 1) * PAGE_SIZE);
-      if (0 == PageTable[PT_IDX(PageNumber * PAGE_SIZE)].Pte)
+      PageTable = (PPAGE_TABLE_X86)((char *) XenPageDir
+                                    + (PD_IDX(PageNumber * PAGE_SIZE) + 1)
+                                      * PAGE_SIZE);
+      if (0 == PageTable->Pte[PT_IDX(PageNumber * PAGE_SIZE)].Val)
         {
           if (PageNumber < StartPfn)
             {
@@ -293,11 +270,16 @@ XenMemInit(start_info_t *StartInfo)
             {
               MfnIndex = PageNumber - StartPfn;
             }
-          MmuReq.ptr = (XenPageDir[PD_IDX(PageNumber * PAGE_SIZE)].Pde
+          MmuReq.ptr = (XenPageDir->Pde[PD_IDX(PageNumber * PAGE_SIZE)].Val
                         & PAGE_MASK)
-                        + PT_IDX(PageNumber * PAGE_SIZE) * sizeof(PTE);
-          MmuReq.val = (((u32 *) StartInfo->mfn_list)[MfnIndex] << PAGE_SHIFT)
-                       | (PA_PRESENT | PA_READWRITE | PA_USER);
+                        + PT_IDX(PageNumber * PAGE_SIZE)
+                          * sizeof(HARDWARE_PTE_X86);
+          Pte.Val = 0;
+          Pte.PageFrameNumber = ((u32 *) StartInfo->mfn_list)[MfnIndex];
+          Pte.Valid = 1;
+          Pte.Write = 1;
+          Pte.Owner = 1;
+          MmuReq.val = Pte.Val;
           if (0 != XEN_MMU_UPDATE(&MmuReq, 1, NULL, DOMID_SELF))
             {
               HYPERVISOR_console_io(CONSOLEIO_write, sizeof(ErrMsg), ErrMsg);
@@ -313,11 +295,16 @@ XenMemInit(start_info_t *StartInfo)
   /* We don't own the shared_info page, map it as an extra page just after
    * our "normal" memory */
   XenSharedInfo = (shared_info_t *)(XenStartInfo->nr_pages * PAGE_SIZE);
-  MmuReq.ptr = (XenPageDir[PD_IDX(XenStartInfo->nr_pages * PAGE_SIZE)].Pde
+  MmuReq.ptr = (XenPageDir->Pde[PD_IDX(XenStartInfo->nr_pages * PAGE_SIZE)].Val
                 & PAGE_MASK)
-               + PT_IDX(XenStartInfo->nr_pages * PAGE_SIZE) * sizeof(PTE);
-  MmuReq.val = XenStartInfo->shared_info
-               | (PA_PRESENT | PA_READWRITE | PA_USER);
+               + PT_IDX(XenStartInfo->nr_pages * PAGE_SIZE)
+                 * sizeof(HARDWARE_PTE_X86);
+  Pte.Val = 0;
+  Pte.PageFrameNumber = XenStartInfo->shared_info >> PFN_SHIFT;
+  Pte.Valid = 1;
+  Pte.Write = 1;
+  Pte.Owner = 1;
+  MmuReq.val = Pte.Val;
   if (0 != XEN_MMU_UPDATE(&MmuReq, 1, NULL, DOMID_SELF))
     {
       HYPERVISOR_console_io(CONSOLEIO_write, sizeof(ErrMsg), ErrMsg);
@@ -339,11 +326,15 @@ XenMemInit(start_info_t *StartInfo)
     }
   XenMemBlkdevGrantShared = (grant_entry_t *)((XenStartInfo->nr_pages + 1)
                                               * PAGE_SIZE);
-  MmuReq.ptr = (XenPageDir[PD_IDX(XenMemBlkdevGrantShared)].Pde
+  MmuReq.ptr = (XenPageDir->Pde[PD_IDX(XenMemBlkdevGrantShared)].Val
                 & PAGE_MASK)
-               + PT_IDX(XenMemBlkdevGrantShared) * sizeof(PTE);
-  MmuReq.val = (Frame << PAGE_SHIFT)
-               | (PA_PRESENT | PA_READWRITE | PA_USER);
+               + PT_IDX(XenMemBlkdevGrantShared) * sizeof(HARDWARE_PTE_X86);
+  Pte.Val = 0;
+  Pte.PageFrameNumber = Frame;
+  Pte.Valid = 1;
+  Pte.Write = 1;
+  Pte.Owner = 1;
+  MmuReq.val = Pte.Val;
   if (0 != XEN_MMU_UPDATE(&MmuReq, 1, NULL, DOMID_SELF))
     {
       HYPERVISOR_console_io(CONSOLEIO_write, sizeof(ErrMsg), ErrMsg);
@@ -355,12 +346,30 @@ XenMemInit(start_info_t *StartInfo)
 u32
 XenMemVirtualToMachine(void *VirtualAddress)
 {
-  PPTE PageTable;
+  PPAGE_TABLE_X86 PageTable;
 
-  PageTable = (PPTE)((char *) XenPageDir +
-                     (PD_IDX((ULONG_PTR) VirtualAddress) + 1) * PAGE_SIZE);
-  return PageTable[PT_IDX((ULONG_PTR) VirtualAddress)].Pte
-         & PAGE_MASK;
+  PageTable = (PPAGE_TABLE_X86)((char *) XenPageDir
+                                + (PD_IDX((ULONG_PTR) VirtualAddress) + 1)
+                                  * PAGE_SIZE);
+  return PageTable->Pte[PT_IDX(VirtualAddress)].Val & PAGE_MASK;
+}
+
+static void *
+XenMemMachineToVirtual(ULONG Mfn)
+{
+  PPAGE_TABLE_X86 PageTable;
+  ULONG Index;
+
+  PageTable = (PPAGE_TABLE_X86)(XenPageDir + 1);
+  Index = 0;
+  while (TRUE)
+    {
+      if ((PageTable->Pte[Index].PageFrameNumber) == Mfn)
+        {
+          return (void *)(Index * PAGE_SIZE);
+        }
+      Index++;
+    }
 }
 
 #ifdef CONFIG_XEN_BLKDEV_GRANT
@@ -370,7 +379,7 @@ XenMemGrantForeignAccess(domid_t DomId, void *VirtualAddress, BOOL ReadOnly)
   int Ref = 0; /* We only do 1 page at the moment */
 
   XenMemBlkdevGrantShared[Ref].frame = (XenMemVirtualToMachine(VirtualAddress)
-                                        >> PAGE_SHIFT);
+                                        >> PFN_SHIFT);
   XenMemBlkdevGrantShared[Ref].domid = DomId;
   wmb();
   XenMemBlkdevGrantShared[Ref].flags = GTF_permit_access
@@ -379,5 +388,112 @@ XenMemGrantForeignAccess(domid_t DomId, void *VirtualAddress, BOOL ReadOnly)
   return Ref;
 }
 #endif /* CONFIG_XEN_BLKDEV_GRANT */
+
+static VOID
+XenMemSetNewPageReadonly(PPAGE_DIRECTORY_X86 NewPageDir, ULONG Mfn)
+{
+  PPAGE_TABLE_X86 PageTable;
+  unsigned PdIndex;
+  unsigned PtIndex;
+
+  for (PdIndex = 0; PdIndex < PTRS_PER_PD_X86; PdIndex++)
+    {
+      if (NewPageDir->Pde[PdIndex].Valid)
+        {
+          PageTable = (PPAGE_TABLE_X86)
+                      XenMemMachineToVirtual(NewPageDir->Pde[PdIndex].PageFrameNumber);
+          for (PtIndex = 0; PtIndex < PTRS_PER_PT_X86; PtIndex++)
+            {
+              if (PageTable->Pte[PtIndex].PageFrameNumber == Mfn)
+                {
+                  PageTable->Pte[PtIndex].Write = 0;
+                }
+            }
+        }
+    }
+}
+
+static VOID
+XenMemSetOldPageReadonly(ULONG Mfn)
+{
+  PPAGE_TABLE_X86 PageTable;
+  ULONG Index;
+  mmu_update_t MmuReq;
+  ULONG_PTR Address;
+  HARDWARE_PTE_X86 Pte;
+
+  PageTable = (PPAGE_TABLE_X86)(XenPageDir + 1);
+  Index = 0;
+  while (TRUE)
+    {
+      if ((PageTable->Pte[Index].PageFrameNumber) == Mfn)
+        {
+          Address = Index * PAGE_SIZE;
+          MmuReq.ptr = (XenPageDir->Pde[PD_IDX(Address)].Val & PAGE_MASK)
+                       + PT_IDX(Address) * sizeof(HARDWARE_PTE_X86);
+          Pte.Val = PageTable->Pte[Index].Val;
+          Pte.Write = 0;
+          MmuReq.val = Pte.Val;
+          if (0 != XEN_MMU_UPDATE(&MmuReq, 1, NULL, DOMID_SELF))
+            {
+              printf("Failed to map new page dir/table read-only\n");
+              XenDie();
+            }
+          return;
+        }
+      Index++;
+    }
+}
+
+VOID
+XenMemInstallPageDir(PPAGE_DIRECTORY_X86 NewPageDir)
+{
+  struct mmuext_op MmuExtReq;
+  ULONG NewPageDirMfn;
+  ULONG PageIndex;
+
+  NewPageDirMfn = PaToPfn(XenMemVirtualToMachine((void *) NewPageDir));
+
+  for (PageIndex = PTRS_PER_PD_X86; 0 < PageIndex; PageIndex--)
+    {
+      if (NewPageDir->Pde[PageIndex - 1].PageFrameNumber == NewPageDirMfn)
+        {
+        /* A machine page cannot be a page directory and a page table at
+           the same time. We're trying to map the page dir as page table here,
+           undo the mapping and deal with it later. */
+        NewPageDir->Pde[PageIndex - 1].Val = 0;
+        }
+    }
+
+  XenMemSetNewPageReadonly(NewPageDir, NewPageDirMfn);
+  for (PageIndex = PTRS_PER_PD_X86; 0 < PageIndex; PageIndex--)
+    {
+      if (NewPageDir->Pde[PageIndex - 1].Valid)
+        {
+          XenMemSetNewPageReadonly(NewPageDir,
+                                   NewPageDir->Pde[PageIndex - 1].Val
+                                   >> PFN_SHIFT);
+        }
+    }
+
+  XenMemSetOldPageReadonly(NewPageDirMfn);
+  for (PageIndex = PTRS_PER_PD_X86; 0 < PageIndex; PageIndex--)
+    {
+      if (NewPageDir->Pde[PageIndex - 1].Valid)
+        {
+          XenMemSetOldPageReadonly(NewPageDir->Pde[PageIndex - 1].Val
+                                   >> PFN_SHIFT);
+        }
+    }
+
+  /* Set the PDBR */
+  MmuExtReq.cmd = MMUEXT_NEW_BASEPTR;
+  MmuExtReq.mfn = NewPageDirMfn;
+  if (0 != HYPERVISOR_mmuext_op(&MmuExtReq, 1, NULL, DOMID_SELF))
+    {
+      printf("Failed to set new page dir\n");
+      XenDie();
+    }
+}
 
 /* EOF */

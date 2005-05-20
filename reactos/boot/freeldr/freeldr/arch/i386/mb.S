@@ -61,6 +61,7 @@ EXTERN(multiboot_memory_map)
 	.endr
 
 .bss
+	.align 4096
 PageDirectoryStart:
 startup_pagedirectory:
 	.fill 4096, 1, 0
