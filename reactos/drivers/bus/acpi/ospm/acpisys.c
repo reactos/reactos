@@ -162,7 +162,7 @@ DriverEntry(
   IN PDRIVER_OBJECT DriverObject,
   IN PUNICODE_STRING RegistryPath)
 {
-  DbgPrint("Advanced Configuration and Power Interface Bus Driver\n");
+  DPRINT("Advanced Configuration and Power Interface Bus Driver\n");
 
   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH) ACPIDispatchDeviceControl;
   DriverObject->MajorFunction[IRP_MJ_PNP] = (PDRIVER_DISPATCH) ACPIPnpControl;

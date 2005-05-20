@@ -626,7 +626,9 @@ FdoStartDevice(
     }
   }
 
+#ifndef NDEBUG
   ACPIPrintInfo(DeviceExtension);
+#endif
 
   /* Initialize ACPI bus manager */
   AcpiStatus = bm_initialize();
