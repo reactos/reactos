@@ -2271,6 +2271,7 @@ static int __devinit uhci_start(struct usb_hcd *hcd)
 		err("unable to allocate root hub");
 		goto err_alloc_root_hub;
 	}
+	hcd->pdev->bus = udev; /* Fix bus pointer for initial device */
 
 	uhci->term_td = uhci_alloc_td(uhci, udev);
 	if (!uhci->term_td) {
