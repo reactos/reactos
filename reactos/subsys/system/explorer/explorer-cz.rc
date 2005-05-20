@@ -1,0 +1,493 @@
+/////////////////////////////////////////////////////////////////////////////
+// Czech resources
+// Translated by denzil <d3nzil@gmail.com>
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CZE)
+#ifdef _WIN32
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+#pragma code_page(1250)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MDIFRAME MENU PRELOAD DISCARDABLE
+BEGIN
+    POPUP "&Soubor"
+    BEGIN
+        MENUITEM "&UkonËit",                       ID_FILE_EXIT
+    END
+    POPUP "&ZobrazenÌ"
+    BEGIN
+        MENUITEM "&Liöta n·stroj˘",                    ID_VIEW_TOOL_BAR
+        MENUITEM "&Extra Bar",                  ID_VIEW_EXTRA_BAR
+        MENUITEM "L&iöta disk˘",                   ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&BoËnÌ liöta",                   ID_VIEW_SIDE_BAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Aktualizovat\tF5",                ID_REFRESH
+        MENUITEM "&Cel· obrazovka\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+        MENUITEM "SDI",                         ID_VIEW_SDI
+    END
+    POPUP "&Okno"
+    BEGIN
+        MENUITEM "&NovÈ Okno",                 ID_WINDOW_NEW
+        MENUITEM "&Kask·dovat\tShift+F5",         ID_WINDOW_CASCADE
+        MENUITEM "&Uspo¯·dat vodorovnÏ",          ID_WINDOW_TILE_HORZ
+        MENUITEM "U&spo¯·dat svisle\tShift+F4",  ID_WINDOW_TILE_VERT
+        MENUITEM "Us&po¯·dat automaticky",       ID_WINDOW_AUTOSORT
+        MENUITEM "Usp&o¯·dat symboly",            ID_WINDOW_ARRANGE
+    END
+    POPUP "&N·stroje"
+    BEGIN
+        MENUITEM "&NastavenÌ",                    ID_TOOLS_OPTIONS
+    END
+    POPUP "&Pomoc"
+    BEGIN
+        MENUITEM "&Pr˘zkumnÌk &FAQ...",            ID_EXPLORER_FAQ
+        MENUITEM "O p&r˘zkumnÌku...",          ID_ABOUT_EXPLORER
+        MENUITEM "&O OS...",                ID_ABOUT_WINDOWS
+    END
+END
+
+IDM_WINEFILE MENU FIXED IMPURE
+BEGIN
+    POPUP "&Soubor"
+    BEGIN
+        MENUITEM "&Otev¯Ìt\tEnter",                101
+        MENUITEM "&P¯esunout...\tF7",                106
+        MENUITEM "&KopÌrovat...\tF8",                107
+        MENUITEM "&Ve schr·nce...\tF9",        118
+        MENUITEM "&Smazat\tDel",                108
+        MENUITEM "P¯&ejmenovat...",                  109
+        MENUITEM "&Vlastnosti...\tAlt+Enter",   ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "Ko&mprimovat...",                119
+        MENUITEM "Dekomp&rimovat...",              120
+        MENUITEM SEPARATOR
+        MENUITEM "Sp&ustit...",                     ID_EXECUTE
+        MENUITEM "&Tisknout...",                   102
+        MENUITEM "&Asociovat...",                103
+        MENUITEM SEPARATOR
+        MENUITEM "Vytvo¯it adres·¯...",        ID_EXECUTE
+        MENUITEM "&Hledat...",                  104
+        MENUITEM "&Vybrat soubory...",            116
+        MENUITEM SEPARATOR
+        MENUITEM "UkonËit\tAlt+X",                ID_FILE_EXIT
+    END
+    POPUP "&Disk"
+    BEGIN
+        MENUITEM "&KopÌrovat disk...",               201
+        MENUITEM "&Jmenovka disku...",              202
+        MENUITEM SEPARATOR
+        MENUITEM "&Form·tovat disk...",             203
+        MENUITEM SEPARATOR
+        MENUITEM "&Pipojit sÌùov˝ disk",      252
+        MENUITEM "&Odpojit sÌùov˝ disk",   253
+        MENUITEM SEPARATOR
+        MENUITEM "&SdÌlet jako...",                 254
+        MENUITEM "&Zruöit sdÌlenÌ...",            255
+        MENUITEM SEPARATOR
+        MENUITEM "Z&volit disk...",            251
+    END
+    POPUP "&Adres·¯e"
+    BEGIN
+        MENUITEM "&DalöÌ ˙roveÚ\t+",              301
+        MENUITEM "&Rozbalit strom\t*",             302
+        MENUITEM "R&ozbalit vöe\tCtrl+*",         303
+        MENUITEM "&Sbalit strom\t-",           304
+        MENUITEM SEPARATOR
+        MENUITEM "O&znaËit potomky",                505
+    END
+    POPUP "&ZobrazenÌ"
+    BEGIN
+        MENUITEM "&Strom a adres·¯e",         413
+        MENUITEM "&Jen strom",                  411
+        MENUITEM "J&en adres·¯e",             412
+        MENUITEM SEPARATOR
+        MENUITEM "&RozdÏlit",                      414
+        MENUITEM SEPARATOR
+        MENUITEM "&JmÈno",                       ID_VIEW_NAME
+        MENUITEM "&Vöechny detaily",           ID_VIEW_ALL_ATTRIBUTES
+        , CHECKED
+        MENUITEM "»·st&eËnÈ detaily...",         ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "T¯Ìdit podle jmÈ&na",               404
+        MENUITEM "T¯Ìdit podle &druhu",               405
+        MENUITEM "T¯Ìdit podle ve&likosti",               406
+        MENUITEM "T¯Ìdit podle &data",               407
+        MENUITEM SEPARATOR
+        MENUITEM "&T¯Ìdit podle...",                409
+    END
+    POPUP "&NastavenÌ"
+    BEGIN
+        MENUITEM "&Potvtrzov·nÌ...",            65535
+        MENUITEM "PÌ&smo...",                    65535
+        MENUITEM "&Upravit liötu n·stroj˘...",       65535
+        MENUITEM SEPARATOR
+        MENUITEM "&Liöta n·stroj˘",                    ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "L&iöta disk˘",                   ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&BoËnÌ liöta",                   ID_VIEW_SIDE_BAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR, CHECKED
+        MENUITEM "&Cel· obrazovka\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+        MENUITEM SEPARATOR
+        MENUITEM "S&ymbol po bÏhu",  65535
+        MENUITEM "&Uloûit zmÏny p¯i ukonËenÌ", 511
+    END
+    POPUP "&ZabezpeËenÌ"
+    BEGIN
+        MENUITEM "&P¯Ìstup...",                  605
+        MENUITEM "&Logov·nÌ...",                 606
+        MENUITEM "&VlastnÌk...",                   607
+    END
+    POPUP "&Okno"
+    BEGIN
+        MENUITEM "&NovÈ okno",                 ID_WINDOW_NEW
+        MENUITEM "&Kask·dovat\tCtrl+F5",          ID_WINDOW_CASCADE
+        MENUITEM "&Uspo¯·dat vodorovnÏ",          ID_WINDOW_TILE_HORZ
+        MENUITEM "U&spo¯·dat svisle\tCtrl+F4",   ID_WINDOW_TILE_VERT
+        MENUITEM "Us&po¯·dat automaticky",       ID_WINDOW_AUTOSORT
+        MENUITEM "Usp&o¯·dat symboly",            ID_WINDOW_ARRANGE
+        MENUITEM "&Aktualizovat\tF5",                ID_REFRESH
+    END
+    POPUP "&?"
+    BEGIN
+        MENUITEM "&TÈmata n·povÏdy\tF1",            ID_HELP
+        MENUITEM "&Hledat v n·povÏdÏ...\tF1",         ID_HELP
+        MENUITEM "&Jak pouûÌvat n·povÏdu\tF1",             ID_HELP_USING
+        MENUITEM SEPARATOR
+        MENUITEM "&Informace o Winefile...",     ID_ABOUT_WINEFILE
+    END
+END
+
+IDM_DESKTOPBAR MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&NastavenÌ...",                ID_DESKTOPBAR_SETTINGS
+        MENUITEM "&Spr·vce ˙loh...",            ID_TASKMGR
+        MENUITEM SEPARATOR
+        MENUITEM "&O Exploreru...",          ID_ABOUT_EXPLORER
+    END
+END
+
+IDM_VOLUME MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Otev¯Ìt ovl·d·nÌ hlasitosti",         ID_TRAY_VOLUME
+        MENUITEM "&Upravit vlastnosti zvuku",     ID_VOLUME_PROPERTIES
+    END
+END
+
+IDM_NOTIFYAREA MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Zobrazit skrytÈ ikony",          ID_SHOW_HIDDEN_ICONS
+        MENUITEM "Z&obrazit ikonu tlaËÌtka",           ID_SHOW_ICON_BUTTON
+        MENUITEM "&Nastavit upozornÏnÌ...", ID_CONFIG_NOTIFYAREA
+        MENUITEM "N&astavit datum a Ëas...",        ID_CONFIG_TIME
+        MENUITEM SEPARATOR
+        MENUITEM "&O pr˘zkunÌku...",          ID_ABOUT_EXPLORER
+    END
+END
+
+IDM_SDIFRAME MENU PRELOAD DISCARDABLE
+BEGIN
+    POPUP "&Soubor"
+    BEGIN
+        MENUITEM "&UkonËit",                       ID_FILE_EXIT
+    END
+    POPUP "&ZobrazenÌ"
+    BEGIN
+        MENUITEM "&Liöta n·stroj˘",                    ID_VIEW_TOOL_BAR
+        MENUITEM "&BoËnÌ liöta",                   ID_VIEW_SIDE_BAR, GRAYED
+        MENUITEM "&Status liöta",                 ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Aktualizovat\tF5",                ID_REFRESH
+        MENUITEM "Cel· obrazovka\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+        MENUITEM "&MDI",                        ID_VIEW_MDI
+    END
+    POPUP "&N·stroje"
+    BEGIN
+        MENUITEM "&NastavenÌ",                    ID_TOOLS_OPTIONS
+    END
+    POPUP "&Pomoc"
+    BEGIN
+        MENUITEM "Pr˘zkumnÌk &FAQ...",            ID_EXPLORER_FAQ
+        MENUITEM "O &pr˘zkumnÌku...",          ID_ABOUT_EXPLORER
+        MENUITEM "O &OS...",                ID_ABOUT_WINDOWS
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_EXECUTE DIALOG FIXED IMPURE  15, 13, 210, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Spustit"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",101,"Static",SS_SIMPLE | SS_NOPREFIX,3,6,162,10
+    CONTROL         "&Command:",-1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,3,
+                    18,60,10
+    EDITTEXT        201,3,29,134,12,ES_AUTOHSCROLL
+    CONTROL         "As &Symbol",214,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,
+                    45,71,12
+    DEFPUSHBUTTON   "&Spustit",1,158,6,47,14
+    PUSHBUTTON      "&Zruöit",2,158,23,47,14
+    PUSHBUTTON      "&Pomoc",254,158,43,47,14
+END
+
+IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Hledat program v nabÌdce Start"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    LTEXT           "&Filter:",IDC_STATIC,7,9,18,8
+    EDITTEXT        IDC_FILTER,34,7,100,14,ES_AUTOHSCROLL
+    CONTROL         "List1",IDC_PROGRAMS_FOUND,"SysListView32",LVS_REPORT |
+                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER |
+                    WS_TABSTOP,7,25,186,33
+    PUSHBUTTON      "&Vyhledat",IDC_CHECK_ENTRIES,143,7,50,14
+END
+
+IDD_DESKBAR_DESKTOP DIALOG DISCARDABLE  0, 0, 212, 194
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Vlastnosti plochy"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "ProsÌm zvolte si zp˘sob zarovn·nÌ ikon:",
+                    IDC_STATIC,7,7,166,8
+    CONTROL         "left/top dwn",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW |
+                    BS_BOTTOM | WS_TABSTOP,7,25,46,44
+    CONTROL         "left/top right",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW |
+                    BS_BOTTOM | WS_TABSTOP,57,25,46,44
+    CONTROL         "right/top left",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW |
+                    BS_BOTTOM | WS_TABSTOP,110,25,46,44
+    CONTROL         "rig./top dwn",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW |
+                    BS_BOTTOM | WS_TABSTOP,159,25,46,44
+    CONTROL         "left/bot. up",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW |
+                    BS_BOTTOM | WS_TABSTOP,7,73,46,44
+    CONTROL         "left/bot. right",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW |
+                    BS_BOTTOM | WS_TABSTOP,57,73,46,44
+    CONTROL         "right/bot. left",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW |
+                    BS_BOTTOM | WS_TABSTOP,110,73,46,44
+    CONTROL         "rig./bot. dwn",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW |
+                    BS_BOTTOM | WS_TABSTOP,159,73,46,44
+    CONTROL         "border down",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW |
+                    BS_BOTTOM | WS_TABSTOP,7,121,46,44
+    CONTROL         "border H/V",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW |
+                    BS_BOTTOM | WS_TABSTOP,57,121,46,44
+    CONTROL         "round about",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW |
+                    BS_BOTTOM | WS_TABSTOP,110,121,46,44
+    CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM |
+                    WS_TABSTOP,159,121,46,44
+    CONTROL         "Zobrazit verzi",ID_DESKTOP_VERSION,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,177,91,10
+END
+
+IDD_DESKBAR_TASKBAR DIALOG DISCARDABLE  0, 0, 210, 194
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Vlastnosti panelu ˙loh"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "&Zobrazit Ëas",ID_SHOW_CLOCK,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,7,152,52,10
+    CONTROL         "&Skr˝t neaktivnÌ ikony",
+                    ID_HIDE_INACTIVE_ICONS,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,7,174,111,10
+    PUSHBUTTON      "&UpozornÏnÌ...",ID_CONFIG_NOTIFYAREA,153,173,50,14
+END
+
+IDD_DESKBAR_STARTMENU DIALOG DISCARDABLE  0, 0, 210, 194
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Vlastnosti nabÌdky Start"
+FONT 8, "MS Sans Serif"
+BEGIN
+END
+
+IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "NastavenÌ ikon v oblasti upozorÚov·nÌ"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES |
+                    TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,194,31
+    LTEXT           "&Tooltip Text:",IDC_LABEL1,7,44,40,8
+    EDITTEXT        IDC_NOTIFY_TOOLTIP,58,42,143,14,ES_AUTOHSCROLL
+    LTEXT           "W&indow Title:",IDC_LABEL2,7,63,44,8
+    EDITTEXT        IDC_NOTIFY_TITLE,58,60,143,14,ES_AUTOHSCROLL
+    LTEXT           "&Module Path:",IDC_LABEL3,7,81,43,8
+    EDITTEXT        IDC_NOTIFY_MODULE,58,78,143,14,ES_AUTOHSCROLL
+    GROUPBOX        "&Display Mode",IDC_LABEL4,7,96,157,28
+    CONTROL         "&show",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON |
+                    WS_TABSTOP,15,108,33,10
+    CONTROL         "&hide",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,66,
+                    108,29,10
+    CONTROL         "a&utohide",IDC_NOTIFY_AUTOHIDE,"Button",
+                    BS_AUTORADIOBUTTON,112,108,43,10
+    ICON            "",IDC_PICTURE,173,101,21,20
+    LTEXT           "&Last Change:",IDC_LABEL6,7,132,43,8
+    EDITTEXT        IDC_LAST_CHANGE,59,129,105,14,ES_AUTOHSCROLL |
+                    ES_READONLY
+    CONTROL         "sho&w hidden",ID_SHOW_HIDDEN_ICONS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,154,56,10
+    DEFPUSHBUTTON   "&Nastavit",IDOK,91,153,50,14,WS_GROUP
+    PUSHBUTTON      "&Zruöit",IDCANCEL,151,153,50,14
+END
+
+IDD_MDI_SDI DIALOGEX 0, 0, 188, 126
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Volba MDI / SDI mÛdu"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    LTEXT           "ProsÌm zvolte si V·mi up¯ednostÚovan˝ zp˘sob zobrazenÌ oken pr˘zkumnÌka:",
+                    IDC_STATIC,7,7,160,8
+    CONTROL         "&MDI (Mnoho dokumentov˝ interface)",IDC_MDI,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,30,121,10
+    CONTROL         "&SDI (Jedno dokumentov˝ interface)",IDC_SDI,"Button",
+                    BS_AUTORADIOBUTTON,7,53,115,10
+    LTEXT           "Toto nastavenÌ bude pouûito jako implicitnÌ pro vöechny okna pr˘zkumnÌka.",
+                    IDC_STATIC,7,76,174,22
+    DEFPUSHBUTTON   "&Nastavit",IDOK,29,105,50,14,WS_GROUP
+    PUSHBUTTON      "&Zruöit",IDCANCEL,106,105,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE
+BEGIN
+    IDD_SEARCH_PROGRAM, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 193
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 58
+    END
+
+    IDD_DESKBAR_DESKTOP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 205
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 187
+    END
+
+    IDD_DESKBAR_TASKBAR, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 203
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 187
+    END
+
+    IDD_DESKBAR_STARTMENU, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 203
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 187
+    END
+
+    IDD_NOTIFYAREA, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 201
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 167
+    END
+
+    IDD_MDI_SDI, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 181
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 119
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TITLE               "Reactos pr˘zkumnÌk"
+    IDS_START               "Start"
+    IDS_LOGOFF              "Odhl·sit se..."
+    IDS_TERMINATE           "UkonËit ReactOS pr˘zkumnÌk"
+    IDS_SHUTDOWN            "Vypnout..."
+    IDS_LAUNCH              "Spustit..."
+    IDS_START_HELP          "Pomoc"
+    IDS_SEARCH_FILES        "Hledat..."
+    IDS_DOCUMENTS           "Dokumenty"
+    IDS_FAVORITES           "OblÌbenÈ"
+    IDS_PROGRAMS            "Programy"
+    IDS_SETTINGS            "NastavenÌ"
+    IDS_EXPLORE             "Prozkoumat"
+    IDS_EMPTY               "(Pr·zdnÈ)"
+    IDS_RECENT              "Ned·vnÈ dokumenty"
+    IDS_ADMIN               "Administrace"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_NETWORK             "SÌç"
+    IDS_CONNECTIONS         "SÌùovÈ spojenÌ"
+    IDS_DRIVES              "Disky"
+    IDS_SEARCH_COMPUTER     "Hledat..."
+    IDS_SETTINGS_MENU       "NastavenÌ"
+    IDS_CONTROL_PANEL       "Ovl·dacÌ panel"
+    IDS_PRINTERS            "Tisk·rny"
+    IDS_BROWSE              "ProhlÌûet soubory"
+    IDS_SEARCH_PRG          "Search Program..."
+    IDS_ALL_USERS           "Vöichni uûivatelÈ\\"
+    IDS_SEARCH              "Hledat"
+    IDS_ABOUT_EXPLORER      "&O pr˘zkumnÌku..."
+    IDS_LAUNCH_MANY_PROGRAMS
+                            "Spustili jste vÌce neû jeden program.\nJste si jisti, ûe je chcete spustit vöechny?"
+    IDS_DESKTOPBAR_SETTINGS "NastavenÌ plochy"
+    IDS_DESKTOP             "Plocha"
+    IDS_TASKBAR             "Panel ˙loh"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_STARTMENU           "NabÌdka Start"
+    IDS_MINIMIZE_ALL        "minimalizovat vöechna okna"
+    IDS_DESKTOP_NUM         "Plocha %d"
+    IDS_VOLUME              "Hlasitost"
+    IDS_ITEMS_CUR           "souËasnÈ poloûky"
+    IDS_ITEMS_CONFIGURED    "nastavenÌ"
+    IDS_ITEMS_VISIBLE       "viditelnÈ"
+    IDS_ITEMS_HIDDEN        "skrytÈ"
+    IDS_NOTIFY_SHOW         "zobrazit"
+    IDS_NOTIFY_HIDE         "skr˝t"
+    IDS_NOTIFY_AUTOHIDE     "skr˝vat automaticky"
+    IDS_SHOW_HIDDEN_ICONS   "Zobrazit skrytÈ ikony"
+    IDS_HIDE_ICONS          "Skr˝t ikony"
+END
+
+#endif    // Czech resources
+/////////////////////////////////////////////////////////////////////////////
+

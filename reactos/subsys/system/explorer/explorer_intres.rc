@@ -2311,6 +2311,7 @@ IDS_EXPLORER_VERSION_STR "ROS Explorer Ansi%0s"
 END
 #endif
 
+#include "explorer-cz.rc"
 #include "explorer-jp.rc"
 
 #ifndef __WINDRES__
