@@ -104,17 +104,20 @@ CsrInsertObject(HANDLE ObjectHandle,
                          &ObjectAttributes,
                          &Cid);
                          
-  /* Duplicate the Handle */
-  Status = ZwDuplicateObject(NtCurrentProcess(),
-                             ObjectHandle,
-                             CsrProcessHandle,
-                             Handle,
-                             DesiredAccess,
-                             TRUE,
-                             0);
+  if ((NT_SUCCESS(Status)))
+  {                         
+      /* Duplicate the Handle */
+      Status = ZwDuplicateObject(NtCurrentProcess(),
+                                 ObjectHandle,
+                                 CsrProcessHandle,
+                                 Handle,
+                                 DesiredAccess,
+                                 TRUE,
+                                 0);
   
-  /* Close our handle to CSRSS */
-  NtClose(CsrProcessHandle);
+      /* Close our handle to CSRSS */
+      ZwClose(CsrProcessHandle);
+  }
 
   return Status;
 }
