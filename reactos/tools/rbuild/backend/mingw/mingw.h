@@ -105,6 +105,8 @@ private:
 	std::string GetRegistryTargetFiles ();
 	void OutputRegistryInstallTarget ();
 	void GenerateInstallTarget ();
+	void GetModuleTestTargets ( std::vector<std::string>& out ) const;
+	void GenerateTestTarget ();
 	void GenerateDirectoryTargets ();
 	FILE* fMakefile;
 	bool use_pch;

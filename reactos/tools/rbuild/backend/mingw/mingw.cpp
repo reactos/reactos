@@ -308,6 +308,7 @@ MingwBackend::Process ()
 	GenerateXmlBuildFilesMacro ();
 	ProcessModules ();
 	GenerateInstallTarget ();
+	GenerateTestTarget ();
 	GenerateDirectoryTargets ();
 	GenerateDirectories ();
 	UnpackWineResources ();
@@ -945,6 +946,32 @@ MingwBackend::GenerateInstallTarget ()
 	OutputNonModuleInstallTargets ();
 	OutputModuleInstallTargets ();
 	OutputRegistryInstallTarget ();
+	fprintf ( fMakefile,
+	          "\n" );
+}
+
+void
+MingwBackend::GetModuleTestTargets (
+	vector<string>& out ) const
+{
+	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
+	{
+		const Module& module = *ProjectNode.modules[i];
+		if ( module.type == Test )
+			out.push_back ( module.name );
+	}
+}
+
+void
+MingwBackend::GenerateTestTarget ()
+{
+	vector<string> vTestTargets;
+	GetModuleTestTargets ( vTestTargets );
+	string testTargets = v2s ( vTestTargets, 5 );
+
+	fprintf ( fMakefile,
+	          "test: %s\n",
+		  testTargets.c_str () );
 	fprintf ( fMakefile,
 	          "\n" );
 }
