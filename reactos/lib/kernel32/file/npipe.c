@@ -324,8 +324,7 @@ ConnectNamedPipe(IN HANDLE hNamedPipe,
                                  0);
 
         /* return FALSE in case of failure and pending operations! */
-        if ((!NT_SUCCESS(Status) && Status != STATUS_PIPE_CONNECTED) || 
-            Status == STATUS_PENDING)
+        if (!NT_SUCCESS(Status) || Status == STATUS_PENDING)
           {
              SetLastErrorByStatus(Status);
              return FALSE;
@@ -358,7 +357,7 @@ ConnectNamedPipe(IN HANDLE hNamedPipe,
                }
           }
 
-        if (!NT_SUCCESS(Status) && Status != STATUS_PIPE_CONNECTED)
+        if (!NT_SUCCESS(Status))
           {
              SetLastErrorByStatus(Status);
              return FALSE;
