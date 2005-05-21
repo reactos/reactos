@@ -204,7 +204,7 @@ IopInitIoCompletionImplementation(VOID)
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
 
-    DPRINT1("Creating IoCompletion Object Type\n");
+    DPRINT("Creating IoCompletion Object Type\n");
   
     /* Initialize the Driver object type  */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));

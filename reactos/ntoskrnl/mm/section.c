@@ -2117,7 +2117,7 @@ MmInitSectionImplementation(VOID)
    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
    UNICODE_STRING Name;
 
-   DPRINT1("Creating Section Object Type\n");
+   DPRINT("Creating Section Object Type\n");
   
    /* Initialize the Section object type  */
    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));

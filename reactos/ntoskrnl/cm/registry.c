@@ -350,7 +350,7 @@ CmInitializeRegistry(VOID)
   OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
   UNICODE_STRING Name;
 
-  DPRINT1("Creating Registry Object Type\n");
+  DPRINT("Creating Registry Object Type\n");
   
   /*  Initialize the Key object type  */
   RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));

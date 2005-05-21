@@ -129,7 +129,7 @@ ExpWin32kInit(VOID)
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
 
-    DPRINT1("Creating window station  Object Type\n");
+    DPRINT("Creating window station  Object Type\n");
   
     /* Create the window station Object Type */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));

@@ -12,6 +12,7 @@
 /* Note: Jobs are only supported on Win2K+ */
 /* INCLUDES *****************************************************************/
 
+#define NDEBUG
 #include <ntoskrnl.h>
 #include <internal/debug.h>
 
@@ -61,7 +62,7 @@ PsInitJobManagment ( VOID )
     UNICODE_STRING Name;
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     
-    DPRINT1("Creating Job Object Type\n");
+    DPRINT("Creating Job Object Type\n");
   
     /*  Initialize the Job type  */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));

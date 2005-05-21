@@ -186,7 +186,7 @@ IoInit (VOID)
 
     IopInitDriverImplementation();
 
-    DPRINT1("Creating Device Object Type\n");
+    DPRINT("Creating Device Object Type\n");
   
     /* Initialize the Driver object type  */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));

@@ -36,7 +36,7 @@ ExpInitializeEventPairImplementation(VOID)
   OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
   UNICODE_STRING Name;
 
-  DPRINT1("Creating Event Pair Object Type\n");
+  DPRINT("Creating Event Pair Object Type\n");
   
   /* Create the Event Pair Object Type */
   RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));

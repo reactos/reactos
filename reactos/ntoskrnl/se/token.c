@@ -565,7 +565,7 @@ SepInitializeTokenImplementation(VOID)
     
     ExInitializeResource(&SepTokenLock);
     
-    DPRINT1("Creating Token Object Type\n");
+    DPRINT("Creating Token Object Type\n");
   
     /*  Initialize the Token type  */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));

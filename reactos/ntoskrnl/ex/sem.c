@@ -37,7 +37,7 @@ ExpInitializeSemaphoreImplementation(VOID)
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
 
-    DPRINT1("Creating Semaphore Object Type\n");
+    DPRINT("Creating Semaphore Object Type\n");
   
     /* Create the Event Pair Object Type */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));

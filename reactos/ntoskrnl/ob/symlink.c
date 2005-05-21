@@ -136,7 +136,7 @@ ObInitSymbolicLinkImplementation (VOID)
   UNICODE_STRING Name;
   OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     
-  DPRINT1("Creating SymLink Object Type\n");
+  DPRINT("Creating SymLink Object Type\n");
   
   /*  Initialize the Directory type  */
   RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));

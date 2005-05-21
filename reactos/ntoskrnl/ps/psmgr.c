@@ -81,7 +81,7 @@ PsInitThreadManagment(VOID)
 	InitializeListHead(&PriorityListHead[i]);
      }
 
-    DPRINT1("Creating Thread Object Type\n");
+    DPRINT("Creating Thread Object Type\n");
   
     /*  Initialize the Thread type  */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
@@ -124,7 +124,7 @@ PsInitProcessManagment(VOID)
     * Register the process object type
     */
 
-    DPRINT1("Creating Process Object Type\n");
+    DPRINT("Creating Process Object Type\n");
   
     /*  Initialize the Thread type  */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
