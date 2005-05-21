@@ -757,7 +757,7 @@ static void __inline__ complete(struct completion *p)
 {
 	/* Wake up x->wait */
 	p->done++;
-	wake_up(&p->wait);
+	wake_up((PKEVENT)&p->wait);
 }
 
 #define kernel_thread(a,b,c) my_kernel_thread(a,b,c)
