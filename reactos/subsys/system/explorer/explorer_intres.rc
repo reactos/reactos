@@ -509,6 +509,7 @@ BEGIN
     "END\r\n"
     "#endif\r\n"
     "\r\n"
+    "#include ""explorer-cz.rc""\r\n"
     "#include ""explorer-jp.rc""\r\n"
     "\r\n"
     "#ifndef __WINDRES__\r\n"
