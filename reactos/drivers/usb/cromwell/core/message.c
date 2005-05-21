@@ -16,6 +16,7 @@
 #include "hcd.h"	/* for usbcore internals */
 
 // ReactOS specific: No WAITQUEUEs here
+#undef wake_up
 #define wake_up(a) do {} while(0)
 
 struct usb_api_data {
@@ -39,7 +40,7 @@ static int usb_start_wait_urb(struct urb *urb, int timeout, int* actual_length)
 	struct usb_api_data awd;
 	int status;
 
-	init_waitqueue_head(&awd.wqh); 	
+	init_waitqueue_head((PKEVENT)&awd.wqh); 	
 	awd.done = 0;
 
 	set_current_state(TASK_UNINTERRUPTIBLE);
