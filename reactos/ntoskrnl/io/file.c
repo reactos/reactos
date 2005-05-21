@@ -877,6 +877,10 @@ IoCreateFile(OUT PHANDLE  FileHandle,
   }
          /* FIXME: wt... */
          FileObject = IoCreateStreamFileObject(NULL, DeviceObject);
+         /* HACK */
+         FileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
+         DPRINT("%wZ\n", ObjectAttributes->ObjectName);
+
   ObDereferenceObject (DeviceObject);
       }
    }
@@ -1145,8 +1149,6 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
     CreatedFileObject->DeviceObject = DeviceObject; 
     CreatedFileObject->Vpb = DeviceObject->Vpb;
     CreatedFileObject->Type = IO_TYPE_FILE;
-    /* HACK */
-    CreatedFileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
     CreatedFileObject->Flags |= FO_STREAM_FILE;
 
     /* Initialize Lock and Event */
