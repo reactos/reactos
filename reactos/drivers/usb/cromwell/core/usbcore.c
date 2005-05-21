@@ -6,7 +6,8 @@
 #include <ddk/ntddk.h>
 #include <debug.h>
 
-NTSTATUS AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT pdo)
+NTSTATUS STDCALL
+AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT pdo)
 {
 	DbgPrint("usbcore: AddDevice called\n");
 	
@@ -19,13 +20,15 @@ NTSTATUS AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT pdo)
 	return STATUS_SUCCESS;
 }
 
-VOID DriverUnload(PDRIVER_OBJECT DriverObject)
+VOID STDCALL
+DriverUnload(PDRIVER_OBJECT DriverObject)
 {
 	// nothing to do here yet
 }
 
 // Dispatch PNP
-NTSTATUS DispatchPnp(PDEVICE_OBJECT fdo, PIRP Irp)
+NTSTATUS STDCALL
+DispatchPnp(PDEVICE_OBJECT fdo, PIRP Irp)
 {
 	ULONG fcn;
 	PIO_STACK_LOCATION stack;
@@ -42,7 +45,8 @@ NTSTATUS DispatchPnp(PDEVICE_OBJECT fdo, PIRP Irp)
 	return STATUS_SUCCESS;
 }
 
-NTSTATUS DispatchPower(PDEVICE_OBJECT fido, PIRP Irp)
+NTSTATUS STDCALL
+DispatchPower(PDEVICE_OBJECT fido, PIRP Irp)
 {
 	DbgPrint("IRP_MJ_POWER dispatch\n");
 	return STATUS_SUCCESS;

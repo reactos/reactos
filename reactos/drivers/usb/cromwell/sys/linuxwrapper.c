@@ -75,6 +75,7 @@ void handle_irqs(int irq)
 {
 	int n;
 //	printk("handle irqs\n");
+	DPRINT1("Handle Irqs\n");
 	for(n=0;n<MAX_IRQS;n++)
 	{
 		if (reg_irqs[n].handler && (irq==reg_irqs[n].irq || irq==-1))
@@ -101,6 +102,7 @@ void do_all_timers(void)
 
 			main_timer_list[n]=NULL; // remove timer
 //			printk("do timer %i fn %p\n",n,function);
+			DPRINT1("do timer %i fn %p\n",n,function);
 
 			function(data);
 		}
@@ -155,6 +157,8 @@ int my_device_add(struct device *dev)
 {
 	int n,found=0;
 //	printk("drv_num %i %p %p\n",drvs_num,m_drivers[0]->probe,m_drivers[1]->probe);
+	DPRINT1("drv_num %i %p %p\n",drvs_num,m_drivers[0]->probe,m_drivers[1]->probe);
+
 	if (dev->driver)
 	{
 		if (dev->driver->probe)
@@ -168,6 +172,8 @@ int my_device_add(struct device *dev)
 			{
 				dev->driver=m_drivers[n];
 //				printk("probe%i %p ",n,m_drivers[n]->probe);
+				DPRINT1("probe%i %p ",n,m_drivers[n]->probe);
+
 				if (m_drivers[n]->probe(dev) == 0)
 				{
 //					return 0;
@@ -187,6 +193,8 @@ int my_driver_register(struct device_driver *driver)
 	if (drvs_num<MAX_DRVS)
 	{
 //		printk("driver_register %i: %p %p",drvs_num,driver,driver->probe);
+		DPRINT1("driver_register %i: %p %p",drvs_num,driver,driver->probe);
+
 		m_drivers[drvs_num++]=driver;
 		return 0;
 	}
@@ -229,6 +237,8 @@ int my_schedule_timeout(int x)
 	int wait=1;
 	x+=10; // safety
 //	printk("schedule_timeout %i\n",x);
+	DPRINT1("schedule_timeout %i\n",x);
+
 	while(x>0)
 	{
 		do_all_timers();
@@ -244,6 +254,8 @@ int my_schedule_timeout(int x)
 	}
 	need_wakeup=0;
 //	printk("schedule DONE!!!!!!\n");
+	DPRINT1("schedule DONE!!!!!!\n");
+
 	return x;
 }
 /*------------------------------------------------------------------------*/ 
@@ -251,6 +263,8 @@ void my_wait_for_completion(struct completion *x)
 {
 	int n=100;
 //	printk("wait for completion\n");
+	DPRINT1("wait for completion\n");
+
 	while(!x->done && (n>0))
 	{
 		do_all_timers();	
@@ -262,6 +276,8 @@ void my_wait_for_completion(struct completion *x)
 		n--;
 	}
 //	printk("wait for completion done %i\n",x->done);
+	DPRINT1("wait for completion done %i\n",x->done);
+
 }
 /*------------------------------------------------------------------------*/ 
 void my_interruptible_sleep_on(PKEVENT evnt)
@@ -278,7 +294,7 @@ int my_pci_module_init(struct pci_driver *x)
 	const struct pci_device_id *id=NULL;
 	if (!pci_probe_dev)
 	{
-		printk(KERN_ERR "PCI device not set!\n");
+		DPRINT1("PCI device not set!\n");
 		return 0;
 	}
 	x->probe(dev, id);

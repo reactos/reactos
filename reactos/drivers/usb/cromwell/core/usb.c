@@ -869,12 +869,14 @@ void usb_disconnect(struct usb_device **pdev)
 	might_sleep ();
 
 	if (!dev) {
-		pr_debug ("%s nodev\n", __FUNCTION__);
+//		pr_debug ("%s nodev\n", __FUNCTION__);
+		DPRINT ("%s nodev\n", __FUNCTION__);
 		return;
 	}
 	bus = dev->bus;
 	if (!bus) {
-		pr_debug ("%s nobus\n", __FUNCTION__);
+//		pr_debug ("%s nobus\n", __FUNCTION__);
+		DPRINT ("%s nobus\n", __FUNCTION__);
 		return;
 	}
 	ops = bus->op;
