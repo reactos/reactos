@@ -13,3 +13,4 @@ void wait_ms(int mils);
 
 #include "linux/usb.h"
 #include "linux/pci_ids.h"
+
