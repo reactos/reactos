@@ -21,9 +21,7 @@ _irq_handler_0:
 	pushl	%esp
 	pushl	$(IRQ_BASE + 0)
 	call	_KiInterruptDispatch
-	popl	%eax
-	popl	%eax
-	popl	%eax
+	addl	$0xC, %esp
 	popl	%gs
 	popl	%fs
 	popl	%es
@@ -50,9 +48,7 @@ _irq_handler_1:
 	pushl	%esp
 	pushl	$(IRQ_BASE + 1)
 	call	_KiInterruptDispatch
-	popl	%eax
-	popl	%eax
-	popl	%eax
+	addl	$0xC, %esp
 	popl	%gs
 	popl	%fs
 	popl	%es
@@ -79,9 +75,7 @@ _irq_handler_2:
 	pushl	%esp
 	pushl	$(IRQ_BASE + 2)
 	call	_KiInterruptDispatch
-	popl	%eax
-	popl	%eax
-	popl	%eax
+	addl	$0xC, %esp
 	popl	%gs
 	popl	%fs
 	popl	%es
@@ -108,9 +102,7 @@ _irq_handler_3:
 	pushl	%esp
 	pushl	$(IRQ_BASE + 3)
 	call	_KiInterruptDispatch
-	popl	%eax
-	popl	%eax
-	popl	%eax
+	addl	$0xC, %esp
 	popl	%gs
 	popl	%fs
 	popl	%es
@@ -137,9 +129,7 @@ _irq_handler_4:
 	pushl	%esp
 	pushl	$(IRQ_BASE + 4)
 	call	_KiInterruptDispatch
-	popl	%eax
-	popl	%eax
-	popl	%eax
+	addl	$0xC, %esp
 	popl	%gs
 	popl	%fs
 	popl	%es
@@ -166,9 +156,7 @@ _irq_handler_5:
 	pushl	%esp
 	pushl	$(IRQ_BASE + 5)
 	call	_KiInterruptDispatch
-	popl	%eax
-	popl	%eax
-	popl	%eax
+	addl	$0xC, %esp
 	popl	%gs
 	popl	%fs
 	popl	%es
@@ -195,9 +183,7 @@ _irq_handler_6:
 	pushl	%esp
 	pushl	$(IRQ_BASE + 6)
 	call	_KiInterruptDispatch
-	popl	%eax
-	popl	%eax
-	popl	%eax
+	addl	$0xC, %esp
 	popl	%gs
 	popl	%fs
 	popl	%es
@@ -224,9 +210,7 @@ _irq_handler_7:
 	pushl	%esp
 	pushl	$(IRQ_BASE + 7)
 	call	_KiInterruptDispatch
-	popl	%eax
-	popl	%eax
-	popl	%eax
+	addl	$0xC, %esp
 	popl	%gs
 	popl	%fs
 	popl	%es
@@ -253,9 +237,7 @@ _irq_handler_8:
 	pushl	%esp
 	pushl	$(IRQ_BASE + 8)
 	call	_KiInterruptDispatch
-	popl	%eax
-	popl	%eax
-	popl	%eax
+	addl	$0xC, %esp
 	popl	%gs
 	popl	%fs
 	popl	%es
@@ -282,9 +264,7 @@ _irq_handler_9:
 	pushl	%esp
 	pushl	$(IRQ_BASE + 9)
 	call	_KiInterruptDispatch
-	popl	%eax
-	popl	%eax
-	popl	%eax
+	addl	$0xC, %esp
 	popl	%gs
 	popl	%fs
 	popl	%es
@@ -311,9 +291,7 @@ _irq_handler_10:
 	pushl	%esp
 	pushl	$(IRQ_BASE + 10)
 	call	_KiInterruptDispatch
-	popl	%eax
-	popl	%eax
-	popl	%eax
+	addl	$0xC, %esp
 	popl	%gs
 	popl	%fs
 	popl	%es
@@ -340,9 +318,7 @@ _irq_handler_11:
 	pushl	%esp
 	pushl	$(IRQ_BASE + 11)
 	call	_KiInterruptDispatch
-	popl	%eax
-	popl	%eax
-	popl	%eax
+	addl	$0xC, %esp
 	popl	%gs
 	popl	%fs
 	popl	%es
@@ -369,9 +345,7 @@ _irq_handler_12:
 	pushl	%esp
 	pushl	$(IRQ_BASE + 12)
 	call	_KiInterruptDispatch
-	popl	%eax
-	popl	%eax
-	popl	%eax
+	addl	$0xC, %esp
 	popl	%gs
 	popl	%fs
 	popl	%es
@@ -398,9 +372,7 @@ _irq_handler_13:
 	pushl	%esp
 	pushl	$(IRQ_BASE + 13)
 	call	_KiInterruptDispatch
-	popl	%eax
-	popl	%eax
-	popl	%eax
+	addl	$0xC, %esp
 	popl	%gs
 	popl	%fs
 	popl	%es
@@ -427,9 +399,7 @@ _irq_handler_14:
 	pushl	%esp
 	pushl	$(IRQ_BASE + 14)
 	call	_KiInterruptDispatch
-	popl	%eax
-	popl	%eax
-	popl	%eax
+	addl	$0xC, %esp
 	popl	%gs
 	popl	%fs
 	popl	%es
@@ -456,9 +426,7 @@ _irq_handler_15:
 	pushl	%esp
 	pushl	$(IRQ_BASE + 15)
 	call	_KiInterruptDispatch
-	popl	%eax
-	popl	%eax
-	popl	%eax
+	addl	$0xC, %esp
 	popl	%gs
 	popl	%fs
 	popl	%es
