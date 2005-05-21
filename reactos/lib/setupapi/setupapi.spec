@@ -193,7 +193,7 @@
 @ stdcall CaptureAndConvertAnsiArg(str ptr)
 @ stdcall CaptureStringArg(wstr ptr)
 @ stub CenterWindowRelativeToParent
-@ stub ConcatenatePaths
+@ stdcall ConcatenatePaths(wstr wstr long ptr)
 @ stdcall DelayedMove(wstr wstr)
 @ stub DelimStringToMultiSz
 @ stub DestroyTextFileReadBuffer
@@ -220,7 +220,7 @@
 @ stdcall MultiByteToUnicode(str long)
 @ stub MultiSzFromSearchControl
 @ stdcall MyFree(ptr)
-@ stub MyGetFileTitle
+@ stdcall MyGetFileTitle(wstr)
 @ stdcall MyMalloc(long)
 @ stdcall MyRealloc(ptr long)
 @ stdcall OpenAndMapFileForRead(wstr ptr ptr ptr ptr)
@@ -424,8 +424,8 @@
 @ stub SetupGetTargetPathW
 @ stdcall SetupInitDefaultQueueCallback(long)
 @ stdcall SetupInitDefaultQueueCallbackEx(long long long long ptr)
-@ stdcall SetupInitializeFileLogA (str long)
-@ stdcall SetupInitializeFileLogW (wstr long)
+@ stdcall SetupInitializeFileLogA(str long)
+@ stdcall SetupInitializeFileLogW(wstr long)
 @ stub SetupInstallFileA
 @ stub SetupInstallFileExA
 @ stub SetupInstallFileExW
