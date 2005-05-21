@@ -309,7 +309,7 @@ LdrLoadModule(
         GENERIC_READ,
         &ObjectAttributes,
         &IoStatusBlock,
-        0,
+        FILE_SHARE_READ,
         FILE_SYNCHRONOUS_IO_NONALERT);
     CHECKPOINT;
     if (!NT_SUCCESS(Status))
