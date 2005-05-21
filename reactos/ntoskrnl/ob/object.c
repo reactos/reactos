@@ -801,20 +801,29 @@ ObpDeleteObject(POBJECT_HEADER Header)
       KEBUGCHECK(0);
     }
 
+  if (Header->ObjectType != NULL &&
+      Header->ObjectType->TypeInfo.DeleteProcedure != NULL)
+    {
+      Header->ObjectType->TypeInfo.DeleteProcedure(HEADER_TO_BODY(Header));
+    }
+
   if (Header->SecurityDescriptor != NULL)
     {
       ObpRemoveSecurityDescriptor(Header->SecurityDescriptor);
     }
     
-  if (Header->NameInfo && Header->NameInfo->Name.Buffer)
-  {
-      ExFreePool(Header->NameInfo->Name.Buffer);
-  }
-
-  if (Header->ObjectType != NULL &&
-      Header->ObjectType->TypeInfo.DeleteProcedure != NULL)
+  if (Header->NameInfo)
     {
-      Header->ObjectType->TypeInfo.DeleteProcedure(HEADER_TO_BODY(Header));
+      if(Header->NameInfo->Name.Buffer)
+        {
+          ExFreePool(Header->NameInfo->Name.Buffer);
+        }
+      ExFreePool(Header->NameInfo);
+    }
+  if (Header->ObjectCreateInfo)
+    {
+      ObpReleaseCapturedAttributes(Header->ObjectCreateInfo);
+      ExFreePool(Header->ObjectCreateInfo);
     }
 
   DPRINT("ObPerformRetentionChecks() = Freeing object\n");
