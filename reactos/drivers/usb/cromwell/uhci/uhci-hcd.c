@@ -42,11 +42,15 @@
 #include <linux/interrupt.h>
 #include <linux/spinlock.h>
 #include <linux/proc_fs.h>
+#endif
+
 #ifdef CONFIG_USB_DEBUG
 #define DEBUG
 #else
 #undef DEBUG
 #endif
+
+#if 0
 #include <linux/usb.h>
 
 #include <asm/uaccess.h>
@@ -79,7 +83,7 @@
  * debug = 3, show all TD's in URB's when dumping
  */
 #ifdef DEBUG
-static int debug = 1;
+static int debug = 3;
 #else
 static int debug = 2;
 #endif
