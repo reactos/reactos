@@ -573,11 +573,13 @@ IoRegisterDeviceInterface(
    PUNICODE_STRING InstancePath;
    UNICODE_STRING GuidString;
    UNICODE_STRING SubKeyName;
+   UNICODE_STRING InterfaceKeyName;
    UNICODE_STRING BaseKeyName;
    UCHAR PdoNameInfoBuffer[sizeof(OBJECT_NAME_INFORMATION) + (256 * sizeof(WCHAR))];
    POBJECT_NAME_INFORMATION PdoNameInfo = (POBJECT_NAME_INFORMATION)PdoNameInfoBuffer;
    UNICODE_STRING DeviceInstance = RTL_CONSTANT_STRING(L"DeviceInstance");
    UNICODE_STRING SymbolicLink = RTL_CONSTANT_STRING(L"SymbolicLink");
+   HANDLE ClassKey;
    HANDLE InterfaceKey;
    HANDLE SubKey;
    ULONG StartIndex;
@@ -611,15 +613,11 @@ IoRegisterDeviceInterface(
    }
    ASSERT(PdoNameInfo->Name.Length);
 
-   /* Create base key name for this interface: HKLM\SYSTEM\CurrentControlSet\DeviceClasses\{GUID}\##?#ACPI#PNP0501#1#{GUID} */
+   /* Create base key name for this interface: HKLM\SYSTEM\CurrentControlSet\Control\DeviceClasses\{GUID} */
    ASSERT(PhysicalDeviceObject->DeviceObjectExtension->DeviceNode);
    InstancePath = &PhysicalDeviceObject->DeviceObjectExtension->DeviceNode->InstancePath;
    BaseKeyName.Length = wcslen(BaseKeyString) * sizeof(WCHAR);
    BaseKeyName.MaximumLength = BaseKeyName.Length
-      + GuidString.Length
-      + 5 * sizeof(WCHAR) /* 5  = size of \##?# */
-      + InstancePath->Length
-      + sizeof(WCHAR)     /* 1  = size of # */
       + GuidString.Length;
    BaseKeyName.Buffer = ExAllocatePool(
       NonPagedPool,
@@ -631,16 +629,6 @@ IoRegisterDeviceInterface(
    }
    wcscpy(BaseKeyName.Buffer, BaseKeyString);
    RtlAppendUnicodeStringToString(&BaseKeyName, &GuidString);
-   RtlAppendUnicodeToString(&BaseKeyName, L"\\##?#");
-   StartIndex = BaseKeyName.Length / sizeof(WCHAR);
-   RtlAppendUnicodeStringToString(&BaseKeyName, InstancePath);
-   for (i = 0; i < InstancePath->Length / sizeof(WCHAR); i++)
-   {
-      if (BaseKeyName.Buffer[StartIndex + i] == '\\')
-         BaseKeyName.Buffer[StartIndex + i] = '#';
-   }
-   RtlAppendUnicodeToString(&BaseKeyName, L"#");
-   RtlAppendUnicodeStringToString(&BaseKeyName, &GuidString);
 
    /* Create BaseKeyName key in registry */
    InitializeObjectAttributes(
@@ -648,6 +636,57 @@ IoRegisterDeviceInterface(
       &BaseKeyName,
       OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE | OBJ_OPENIF,
       NULL, /* RootDirectory */
+      NULL); /* SecurityDescriptor */
+
+   Status = ZwCreateKey(
+      &ClassKey,
+      KEY_WRITE,
+      &ObjectAttributes,
+      0, /* TileIndex */
+      NULL, /* Class */
+      REG_OPTION_VOLATILE,
+      NULL); /* Disposition */
+
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("ZwCreateKey() failed with status 0x%08lx\n", Status);
+      ExFreePool(BaseKeyName.Buffer);
+      return Status;
+   }
+
+   /* Create key name for this interface: ##?#ACPI#PNP0501#1#{GUID} */
+   InterfaceKeyName.Length = 0;
+   InterfaceKeyName.MaximumLength =
+      4 * sizeof(WCHAR) + /* 4  = size of ##?# */
+      InstancePath->Length +
+      sizeof(WCHAR) +     /* 1  = size of # */
+      GuidString.Length;
+   InterfaceKeyName.Buffer = ExAllocatePool(
+      NonPagedPool,
+      InterfaceKeyName.MaximumLength);
+   if (!InterfaceKeyName.Buffer)
+   {
+      DPRINT("ExAllocatePool() failed\n");
+      return STATUS_INSUFFICIENT_RESOURCES;
+   }
+
+   RtlAppendUnicodeToString(&InterfaceKeyName, L"##?#");
+   StartIndex = InterfaceKeyName.Length / sizeof(WCHAR);
+   RtlAppendUnicodeStringToString(&InterfaceKeyName, InstancePath);
+   for (i = 0; i < InstancePath->Length / sizeof(WCHAR); i++)
+   {
+      if (InterfaceKeyName.Buffer[StartIndex + i] == '\\')
+         InterfaceKeyName.Buffer[StartIndex + i] = '#';
+   }
+   RtlAppendUnicodeToString(&InterfaceKeyName, L"#");
+   RtlAppendUnicodeStringToString(&InterfaceKeyName, &GuidString);
+
+   /* Create the interface key in registry */
+   InitializeObjectAttributes(
+      &ObjectAttributes,
+      &InterfaceKeyName,
+      OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE | OBJ_OPENIF,
+      ClassKey,
       NULL); /* SecurityDescriptor */
 
    Status = ZwCreateKey(
@@ -662,6 +701,7 @@ IoRegisterDeviceInterface(
    if (!NT_SUCCESS(Status))
    {
       DPRINT("ZwCreateKey() failed with status 0x%08lx\n", Status);
+      ZwClose(ClassKey);
       ExFreePool(BaseKeyName.Buffer);
       return Status;
    }
@@ -678,6 +718,8 @@ IoRegisterDeviceInterface(
    {
       DPRINT("ZwSetValueKey() failed with status 0x%08lx\n", Status);
       ZwClose(InterfaceKey);
+      ZwClose(ClassKey);
+      ExFreePool(InterfaceKeyName.Buffer);
       ExFreePool(BaseKeyName.Buffer);
       return Status;
    }
@@ -694,6 +736,8 @@ IoRegisterDeviceInterface(
    {
       DPRINT("ExAllocatePool() failed\n");
       ZwClose(InterfaceKey);
+      ZwClose(ClassKey);
+      ExFreePool(InterfaceKeyName.Buffer);
       ExFreePool(BaseKeyName.Buffer);
       return STATUS_INSUFFICIENT_RESOURCES;
    }
@@ -722,6 +766,8 @@ IoRegisterDeviceInterface(
    {
       DPRINT("ZwCreateKey() failed with status 0x%08lx\n", Status);
       ZwClose(InterfaceKey);
+      ZwClose(ClassKey);
+      ExFreePool(InterfaceKeyName.Buffer);
       ExFreePool(BaseKeyName.Buffer);
       return Status;
    }
@@ -742,8 +788,10 @@ IoRegisterDeviceInterface(
    if (!SymbolicLinkName->Buffer)
    {
       DPRINT("ExAllocatePool() failed\n");
-      ZwClose(InterfaceKey);
       ZwClose(SubKey);
+      ZwClose(InterfaceKey);
+      ZwClose(ClassKey);
+      ExFreePool(InterfaceKeyName.Buffer);
       ExFreePool(SubKeyName.Buffer);
       ExFreePool(BaseKeyName.Buffer);
       return STATUS_INSUFFICIENT_RESOURCES;
@@ -771,9 +819,11 @@ IoRegisterDeviceInterface(
    if (!NT_SUCCESS(Status))
    {
       DPRINT("IoCreateSymbolicLink() failed with status 0x%08lx\n", Status);
-      ZwClose(InterfaceKey);
       ZwClose(SubKey);
+      ZwClose(InterfaceKey);
+      ZwClose(ClassKey);
       ExFreePool(SubKeyName.Buffer);
+      ExFreePool(InterfaceKeyName.Buffer);
       ExFreePool(BaseKeyName.Buffer);
       ExFreePool(SymbolicLinkName->Buffer);
       return Status;
@@ -793,9 +843,11 @@ IoRegisterDeviceInterface(
       ExFreePool(SymbolicLinkName->Buffer);
    }
 
-   ZwClose(InterfaceKey);
    ZwClose(SubKey);
+   ZwClose(InterfaceKey);
+   ZwClose(ClassKey);
    ExFreePool(SubKeyName.Buffer);
+   ExFreePool(InterfaceKeyName.Buffer);
    ExFreePool(BaseKeyName.Buffer);
 
    return Status;
