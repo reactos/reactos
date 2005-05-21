@@ -1,5 +1,8 @@
 /*
- * Copyright 2004 Mike McCormack for CodeWeavers
+ * Russian resources for MSI
+ *
+ * Copyright 2005 Mikhail Y. Zvyozdochkin
+ *                Aleksey Bragin
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,18 +19,16 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "windef.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "commctrl.h"
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
-#include "version.rc"
-
-#include "De.rc"
-#include "En.rc"
-#include "Es.rc"
-#include "Fr.rc"
-#include "Nl.rc"
-#include "Pt.rc"
-#include "Ru.rc"
-#include "Sv.rc"
+STRINGTABLE DISCARDABLE
+{
+	5 "путь %s не найден"
+	9 "вставьте диск %s"
+	10 "неверные параметры"
+	11 "введите, какая папка содержит %s"
+	12 "недоступен источник установки (съемный или компакт-диск невставлен в дисковод)"
+	13 "недоступен сетевой диск, содержащий необходимый файл"
+	14 "функциональность из:"
+	15 "выберите, какая папка содержит %s"
+}

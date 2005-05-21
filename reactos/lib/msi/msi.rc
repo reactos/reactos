@@ -33,3 +33,4 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "msi_Fr.rc"
 #include "msi_Nl.rc"
 #include "msi_Pt.rc"
+#include "msi_Ru.rc"

@@ -40,3 +40,4 @@
 #include "oledlg_Ja.rc"
 #include "oledlg_Nl.rc"
 #include "oledlg_Pt.rc"
+#include "oledlg_Ru.rc"
