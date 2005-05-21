@@ -3945,6 +3945,7 @@ NtProcessStartup(PPEB Peb)
   /* Reboot */
   FreeConsole();
   NtShutdownSystem(ShutdownReboot);
+  NtTerminateProcess(NtCurrentProcess(), 0);
 }
 
 /* EOF */
