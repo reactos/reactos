@@ -76,13 +76,13 @@ ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
 			      NULL,
 			      NULL);
     
-    /* Capture all the info */
-    DPRINT("Capturing Create Info\n");
-    Status = ObpCaptureObjectAttributes(&ObjectAttributes,
-                                        AccessMode,
-                                        ObjectType,
-                                        &ObjectCreateInfo,
-                                        &ObjectName);
+   /* Capture all the info */
+   DPRINT("Capturing Create Info\n");
+   Status = ObpCaptureObjectAttributes(&ObjectAttributes,
+                                       AccessMode,
+                                       ObjectType,
+                                       &ObjectCreateInfo,
+                                       &ObjectName);
    if (!NT_SUCCESS(Status))
      {
 	DPRINT("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
@@ -90,22 +90,23 @@ ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
      }
      
    Status = ObFindObject(&ObjectCreateInfo,
-             &ObjectName,
+                         &ObjectName,
 			 &Object,
 			 &RemainingPath,
 			 ObjectType);
+
+   ObpReleaseCapturedAttributes(&ObjectCreateInfo);
+   if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
 
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
-CHECKPOINT;
-DPRINT("RemainingPath.Buffer '%S' Object %p\n", RemainingPath.Buffer, Object);
+   DPRINT("RemainingPath.Buffer '%S' Object %p\n", RemainingPath.Buffer, Object);
 
    if (RemainingPath.Buffer != NULL || Object == NULL)
      {
-CHECKPOINT;
-DPRINT("Object %p\n", Object);
+        DPRINT("Object %p\n", Object);
 	*ObjectPtr = NULL;
 	RtlFreeUnicodeString (&RemainingPath);
 	return(STATUS_OBJECT_NAME_NOT_FOUND);
@@ -177,22 +178,22 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
      }
                                         
    Status = ObFindObject(&ObjectCreateInfo,
-             &ObjectName,
+                         &ObjectName,
 			 &Object,
 			 &RemainingPath,
 			 ObjectType);
+   ObpReleaseCapturedAttributes(&ObjectCreateInfo);
+   if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
    if (!NT_SUCCESS(Status))
      {
 	DPRINT("ObFindObject() failed (Status %lx)\n", Status);
 	return Status;
      }
 
-    DPRINT("OBject: %x, Remaining Path: %wZ\n", Object, &RemainingPath);
+   DPRINT("OBject: %x, Remaining Path: %wZ\n", Object, &RemainingPath);
    if (Object == NULL)
      {
        RtlFreeUnicodeString(&RemainingPath);
-       ObpReleaseCapturedAttributes(&ObjectCreateInfo);
-       if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
        return STATUS_UNSUCCESSFUL;
      }
    if (RemainingPath.Buffer != NULL)
@@ -203,8 +204,6 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
          Status =STATUS_OBJECT_PATH_NOT_FOUND;
       RtlFreeUnicodeString(&RemainingPath);
       ObDereferenceObject(Object);
-      ObpReleaseCapturedAttributes(&ObjectCreateInfo);
-      if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
       return Status;
    }
    
@@ -216,8 +215,6 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
 
    ObDereferenceObject(Object);
    RtlFreeUnicodeString(&RemainingPath);
-   ObpReleaseCapturedAttributes(&ObjectCreateInfo);
-   if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
 
    return Status;
 }
