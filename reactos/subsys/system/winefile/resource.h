@@ -53,6 +53,7 @@
 #define	ID_VIEW_SORT_TYPE				405
 #define	ID_VIEW_SORT_SIZE				406
 #define	ID_VIEW_SORT_DATE				407
+#define	ID_VIEW_SPLIT					414
 #define ID_SELECT_FONT					510
 #define ID_VIEW_TOOL_BAR				508
 #define ID_VIEW_DRIVE_BAR				507

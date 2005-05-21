@@ -83,7 +83,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Только &дерево" ,			411
 		MENUITEM "Только &папка" ,			412
 		MENUITEM SEPARATOR
-		MENUITEM "Раз&бить" ,			414
+		MENUITEM "Раз&бить" ,			ID_VIEW_SPLIT
 		MENUITEM SEPARATOR
 		MENUITEM "И&мя" ,			ID_VIEW_NAME
 		MENUITEM "В&се подробности о файле" ,				ID_VIEW_ALL_ATTRIBUTES, CHECKED

@@ -87,7 +87,7 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "Bara tr&äd",                  411
         MENUITEM "Bara &mapp",             412
         MENUITEM SEPARATOR
-        MENUITEM "De&la",                      414
+        MENUITEM "De&la",                      ID_VIEW_SPLIT
         MENUITEM SEPARATOR
         MENUITEM "&Namn",                       ID_VIEW_NAME
 		MENUITEM "&Alla Fildetaljer" ,				ID_VIEW_ALL_ATTRIBUTES, CHECKED
