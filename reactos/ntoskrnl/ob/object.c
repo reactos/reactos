@@ -709,12 +709,12 @@ ObReferenceObjectByPointer(IN PVOID Object,
 
    if (ObjectType != NULL && Header->ObjectType != ObjectType)
      {
-	DPRINT("Failed %x (type was %x %S) should be %x %S\n",
+	DPRINT("Failed %p (type was %x %wZ) should be %x %wZ\n",
 		Header,
 		Header->ObjectType,
-		Header->ObjectType->TypeName.Buffer,
+		&BODY_TO_HEADER(Header->ObjectType)->NameInfo,
 		ObjectType,
-		ObjectType->TypeName.Buffer);
+		&BODY_TO_HEADER(ObjectType)->NameInfo);
 	return(STATUS_UNSUCCESSFUL);
      }
    if (Header->ObjectType == PsProcessType)
