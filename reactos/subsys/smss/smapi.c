@@ -52,12 +52,13 @@ SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request);
 #endif
 
 /**********************************************************************
- * SmpCallback/2
+ * SmpCallbackServer/2
  *
- * The SM calls back a previously connected subsystem process to
- * authorizes it to bootstrap (initialize). The SM connects to a
- * named LPC port which name was sent in the connection data by the
- * candidate subsystem server process.
+ * DESCRIPTION
+ *	The SM calls back a previously connected subsystem process to
+ *	authorize it to bootstrap (initialize). The SM connects to a
+ *	named LPC port which name was sent in the connection data by
+ *	the candidate subsystem server process.
  */
 static NTSTATUS
 SmpCallbackServer (PSM_PORT_MESSAGE Request,
@@ -72,7 +73,8 @@ SmpCallbackServer (PSM_PORT_MESSAGE Request,
 
 	DPRINT("SM: %s called\n", __FUNCTION__);
 
-	if(IMAGE_SUBSYSTEM_NATIVE == ConnectData->SubSystemId)
+	if (	(IMAGE_SUBSYSTEM_UNKNOWN == ConnectData->SubSystemId) ||
+		(IMAGE_SUBSYSTEM_NATIVE  == ConnectData->SubSystemId))
 	{
 		DPRINT("SM: %s: we do not need calling back SM!\n",
 				__FUNCTION__);
@@ -210,12 +212,10 @@ SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request)
 			{
 				DPRINT("SM: %s: id = %d\n", __FUNCTION__, ConnectData->SubSystemId);
 				/*
-				 * SmCreateClient/2 is called here explicitly to *fail*.
-				 * If it succeeds, there is something wrong in the
-				 * connection request. An environment subsystem *never*
-				 * registers twice. (security issue)
+				 * SmBeginClientInitialization/2 will succeed only if there
+				 * is a candidate client ready.
 				 */
-				Status = SmCreateClient (Request, & ClientData);
+				Status = SmBeginClientInitialization (Request, & ClientData);
 				if(STATUS_SUCCESS == Status)
 				{
 					DPRINT("SM: %s: ClientData = 0x%08lx\n",
@@ -310,7 +310,7 @@ SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request)
  *
  * DECRIPTION
  * 	Due to differences in LPC implementation between NT and ROS,
- * 	we need a thread to listen for connection request that
+ * 	we need a thread to listen to for connection request that
  * 	creates a new thread for each connected port. This is not
  * 	necessary in NT LPC, because server side connected ports are
  * 	never used to receive requests.

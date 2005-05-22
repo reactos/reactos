@@ -34,16 +34,20 @@
  */
 SMAPI(SmCompSes)
 {
-	NTSTATUS Status = STATUS_SUCCESS;
+	NTSTATUS                  Status = STATUS_SUCCESS;
 
 	DPRINT("SM: %s called\n", __FUNCTION__);
-	
-	Status = SmCompleteClientInitialization (Request->Header.ClientId.UniqueProcess);
-	if(!NT_SUCCESS(Status))
+
+	DPRINT("SM: %s: ClientId.UniqueProcess=%lx\n",
+		__FUNCTION__, Request->Header.ClientId.UniqueProcess);
+	Status = SmCompleteClientInitialization ((ULONG) Request->Header.ClientId.UniqueProcess);
+	if (!NT_SUCCESS(Status))
 	{
-		Request->SmHeader.Status = STATUS_UNSUCCESSFUL;
+		DPRINT1("SM: %s: NtQueryInformationProcess failed (Status=0x%08lx)\n",
+			__FUNCTION__, Status);
 	}
-	return Status;
+	Request->SmHeader.Status = Status;
+	return STATUS_SUCCESS;
 }
 
 

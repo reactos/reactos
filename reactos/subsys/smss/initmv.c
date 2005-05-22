@@ -23,6 +23,7 @@
  *
  * --------------------------------------------------------------------
  */
+ 
 
 #include "smss.h"
 
@@ -35,6 +36,13 @@ SmProcessFileRenameList(VOID)
   DPRINT("SmProcessFileRenameList() called\n");
 
   /* FIXME: implement it! */
+/*
+ * open HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\FileRenameOperations
+ * for each item in its value
+ *     clone the old file in the new name,
+ *     delete the source.
+ *
+ */
 
   DPRINT("SmProcessFileRenameList() done\n");
 

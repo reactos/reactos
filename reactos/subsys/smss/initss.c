@@ -55,23 +55,40 @@ static NTSTATUS
 SmpRegisterSmss(VOID)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
-	UNICODE_STRING SbApiPortName = {0,0,NULL};
+	RTL_PROCESS_INFO ProcessInfo;
 
 	
 	DPRINT("SM: %s called\n",__FUNCTION__);
-
-	RtlInitUnicodeString (& SbApiPortName, L"");	
-	Status = SmConnectApiPort(& SbApiPortName,
-				  (HANDLE) -1, /* SM has no SB port */
-				  IMAGE_SUBSYSTEM_NATIVE,
-				  & hSmApiPort);
-	if(!NT_SUCCESS(Status))
+	
+	RtlZeroMemory (& ProcessInfo, sizeof ProcessInfo);
+	ProcessInfo.Size = sizeof ProcessInfo;
+	ProcessInfo.ProcessHandle = (HANDLE) SmSsProcessId;
+	ProcessInfo.ClientId.UniqueProcess = (HANDLE) SmSsProcessId;
+	DPRINT("SM: %s: ProcessInfo.ProcessHandle=%lx\n",
+		__FUNCTION__,ProcessInfo.ProcessHandle);
+	Status = SmCreateClient (& ProcessInfo, L"Session Manager");
+	if (NT_SUCCESS(Status))
 	{
-		DPRINT("SM: %s: SMLIB!SmConnectApiPort failed (Status=0x%08lx)\n",
-			__FUNCTION__,Status);
-		return Status;
+		UNICODE_STRING SbApiPortName = {0,0,NULL};
+		
+		RtlInitUnicodeString (& SbApiPortName, L"");	
+		Status = SmConnectApiPort(& SbApiPortName,
+					  (HANDLE) -1, /* SM has no SB port */
+					  IMAGE_SUBSYSTEM_NATIVE,
+					  & hSmApiPort);
+		if(!NT_SUCCESS(Status))
+		{
+			DPRINT("SM: %s: SMLIB!SmConnectApiPort failed (Status=0x%08lx)\n",
+				__FUNCTION__,Status);
+			return Status;
+		}
+		DPRINT("SM self registered\n");
 	}
-	DPRINT("SM self registered\n");
+	else
+	{
+		DPRINT1("SM: %s: SmCreateClient failed (Status=0x%08lx)\n",
+			__FUNCTION__, Status);
+	}
 	/*
 	 * Note that you don't need to call complete session
 	 * because connection handling code autocompletes

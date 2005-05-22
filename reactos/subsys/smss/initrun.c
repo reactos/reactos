@@ -29,7 +29,7 @@
 #define NDEBUG
 #include <debug.h>
 
-HANDLE Children[2] = {0, 0}; /* csrss, winlogon */
+//HANDLE Children[2] = {0, 0}; /* csrss, winlogon */
 
 
 /**********************************************************************
@@ -99,10 +99,12 @@ SmpRunBootAppsQueryRoutine(PWSTR ValueName,
   Status = SmCreateUserProcess (ImagePath,
 		  		CommandLine,
 				TRUE, /* wait */
-				NULL,
-				TRUE, /* terminate */
-				NULL);
-
+				NULL, NULL);
+  if (!NT_SUCCESS(Status))
+  {
+		DPRINT1("SM: %s: running '$S' failed (Status=0x%08lx)\n",
+			__FUNCTION__, Status);
+  }
   return(STATUS_SUCCESS);
 }
 
