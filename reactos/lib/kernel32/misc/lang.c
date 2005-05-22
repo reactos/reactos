@@ -25,7 +25,6 @@
 
 //static RTL_CRITICAL_SECTION LocalesListLock;
 
-
 /******************************************************************************
  * @implemented
  * RIPPED FROM WINE's dlls\kernel\locale.c rev 1.42
@@ -849,6 +848,85 @@ CompareStringA (
 }
 
 
+static int compare_unicode_string( 
+    PUNICODE_STRING String1, 
+    PUNICODE_STRING String2,
+    DWORD Flags
+    )
+{
+    ULONG len1, len2;
+    PWCHAR s1, s2;
+    WCHAR c1, c2;
+    
+    if (String1 && String2)
+    {
+      len1 = String1->Length / sizeof(WCHAR);
+      len2 = String2->Length / sizeof(WCHAR);
+      s1 = String1->Buffer;
+      s2 = String2->Buffer;
+
+      while (len1 > 0 && len2 > 0)
+      {
+        if (Flags & NORM_IGNORESYMBOLS)
+        {
+            int skip = 0;
+            /* FIXME: not tested */
+            if (iswctype(*s1, _SPACE | _PUNCT))
+            {
+                s1++;
+                len1--;
+                skip = 1;
+            }
+            if (iswctype(*s2, _SPACE | _PUNCT))
+            {
+                s2++;
+                len2--;
+                skip = 1;
+            }
+            if (skip) continue;
+        }
+
+       /* hyphen and apostrophe are treated differently depending on
+        * whether SORT_STRINGSORT specified or not
+        */
+        if (!(Flags & SORT_STRINGSORT))
+        {
+            if (*s1 == '-' || *s1 == '\'')
+            {
+                if (*s2 != '-' && *s2 != '\'')
+                {
+                    s1++;
+                    len1--;
+                    continue;
+                }
+            }
+            else if (*s2 == '-' || *s2 == '\'')
+            {
+                s2++;
+                len2--;
+                continue;
+            }
+        }
+        if (Flags & NORM_IGNORECASE)
+        {
+            c1 = len1-- ? RtlUpcaseUnicodeChar(*s1++) : 0;
+            c2 = len2-- ? RtlUpcaseUnicodeChar(*s2++) : 0;
+            if (!c1 || !c2 || c1 != c2)
+               return c1 - c2;
+        }
+        else
+        {
+            c1 = len1-- ? *s1++ : 0;
+            c2 = len2-- ? *s2++ : 0;
+            if (!c1 || !c2 || c1 != c2)
+               return c1 - c2;
+        }
+      }
+    }
+    return 0;
+}
+
+
 /*
  * @unimplemented
  */
@@ -880,12 +958,6 @@ CompareStringW (
         return 0;
     }
 
-    if (dwCmpFlags & ~NORM_IGNORECASE)
-    {
-        DPRINT1("CompareString: STUB flags - 0x%x\n",
-           dwCmpFlags & ~NORM_IGNORECASE);
-    }
-
     if (cchCount1 < 0) cchCount1 = lstrlenW(lpString1);
     if (cchCount2 < 0) cchCount2 = lstrlenW(lpString2);
 
@@ -894,9 +966,17 @@ CompareStringW (
     String2.Length = String2.MaximumLength = cchCount2 * sizeof(WCHAR);
     String2.Buffer = (LPWSTR)lpString2;
 
-    Result = RtlCompareUnicodeString(
-       &String1, &String2, dwCmpFlags & NORM_IGNORECASE);
 
+    if (dwCmpFlags & ~NORM_IGNORECASE)
+    {
+        DPRINT1("CompareString: STUB flags - 0x%x\n", dwCmpFlags);
+	Result = compare_unicode_string(&String1, &String2, dwCmpFlags);
+    }
+    else
+        Result = RtlCompareUnicodeString(
+                      &String1, &String2, dwCmpFlags & NORM_IGNORECASE);
+    
+    
     if (Result) /* need to translate result */
         return (Result < 0) ? CSTR_LESS_THAN : CSTR_GREATER_THAN;
 
