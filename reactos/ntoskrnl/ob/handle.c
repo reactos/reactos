@@ -739,6 +739,10 @@ ObReferenceObjectByHandle(HANDLE Handle,
 	   "ObjectType %x, AccessMode %d, Object %x)\n",Handle,DesiredAccess,
 	   ObjectType,AccessMode,Object);
 
+   if (Handle == NULL)
+     {
+       return STATUS_INVALID_HANDLE;
+     }
    /*
     * Handle special handle names
     */
@@ -986,13 +990,8 @@ ObInsertObject(IN PVOID Object,
         if (FoundHeader && RemainingPath.Buffer == NULL)
         {
             DPRINT("Object exists\n");
-            if (FoundHeader->ObjectType != Header->ObjectType
-                || !(ObjectCreateInfo->Attributes & OBJ_OPENIF))
-            {
-                ObDereferenceObject(FoundObject);
-                return STATUS_OBJECT_NAME_COLLISION;
-            }
-            return STATUS_OBJECT_EXISTS;
+            ObDereferenceObject(FoundObject);
+            return STATUS_OBJECT_NAME_COLLISION;
         }
     }
     else
