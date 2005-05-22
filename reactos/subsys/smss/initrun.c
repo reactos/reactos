@@ -1,4 +1,4 @@
-/* $Id: init.c 13449 2005-02-06 21:55:07Z ea $
+/* $Id$
  *
  * initrun.c - Run all programs in the boot execution list
  * 

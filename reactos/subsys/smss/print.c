@@ -1,4 +1,4 @@
-/* $Id: print.c 12852 2005-01-06 13:58:04Z mf $
+/* $Id$
  *
  * print.c - Print on the blue screen
  * 

@@ -1,4 +1,4 @@
-/* $Id: smss.c 12852 2005-01-06 13:58:04Z mf $
+/* $Id$
  *
  * client.c - Session Manager client Management
  * 

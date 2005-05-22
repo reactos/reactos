@@ -1,4 +1,4 @@
-/* $Id: $
+/* $Id$
  *
  * smapicomp.c - SM_API_COMPLETE_SESSION
  *
