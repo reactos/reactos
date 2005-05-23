@@ -371,8 +371,8 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
 
    MmInitGlobalKernelPageDirectory();
 
-   DPRINT("Used memory %dKb\n", (MmStats.NrTotalPages * PAGE_SIZE) / 1024);
-   DPRINT("Kernel Stack Limits. InitTop = 0x%x, Init = 0x%x\n", init_stack_top, init_stack);
+   DbgPrint("Used memory %dKb\n", (MmStats.NrTotalPages * PAGE_SIZE) / 1024);
+   DPRINT1("Kernel Stack Limits. InitTop = 0x%x, Init = 0x%x\n", init_stack_top, init_stack);
 
    LastKernelAddress = (ULONG_PTR)MmInitializePageList(
                        FirstKrnlPhysAddr,

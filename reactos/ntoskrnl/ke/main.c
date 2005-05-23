@@ -85,12 +85,6 @@ VOID
 __attribute((noinline))
 KiSystemStartup(BOOLEAN BootProcessor)
 {
-#if defined(DBG) || defined(KDBG)
-   DbgPrint("\n-------------------------------------------------------------------------------\n");
-   DbgPrint("Starting ReactOS "KERNEL_VERSION_STR" (Build "
-                     KERNEL_VERSION_BUILD_STR")\n");
-#endif
-
     DPRINT("KiSystemStartup(%d)\n", BootProcessor);
 
     /* Initialize the Application Processor */
