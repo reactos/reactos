@@ -23,8 +23,7 @@
 */
 
 #include <windows.h>
-/* NOTE: W32API ddk/ntapi.h header has wrong definition of SYSTEM_PROCESSES. */
-#include <ntos/types.h>
+#include <ddk/ntapi.h>
 
 
 //                     x00000000 00000000 000:00:00  000:00:00 ()
@@ -48,39 +47,47 @@ struct status {
     {-1,"    ?     "}
 };
 
+
 struct waitres {
     DWORD state;
-    char  desc[11];
-}   waitreason[28 + 1] = {
-    {0,	"Executive  "},
-    {1,	"FreePage   "},
-    {2,	"PageIn     "},
-    {3,	"PoolAlloc  "},
-    {4,	"DelayExec  "},
-    {5,	"Suspended  "},
-    {6,	"UserReq    "},
-    {7, "WrExecutive"},
-    {8,	"WrFreePage "},
-    {9,	"WrPageIn   "},
-    {10,"WrPoolAlloc"},
-    {11,"WrDelayExec"},
-    {12,"WrSuspended"},
-    {13,"WrUserReq  "},
-    {14,"WrEventPair"},
-    {15,"WrQueue    "},
-    {16,"WrLpcRec   "},
-    {17,"WrLpcReply "},
-    {18,"WrVirtualMm"},
-    {19,"WrPageOut  "},
-    {20,"WrRendez   "},
-    {21,"Spare1     "},
-    {22,"Spare2     "},
-    {23,"Spare3     "},
-    {24,"Spare4     "},
-    {25,"Spare5     "},
-    {26,"Spare6     "},
-    {27,"WrKernel   "},
-    {-1,"     ?     "}
+    char  desc[17];
+}   waitreason[35 + 1] = { 
+   {0, "Executive        "},
+   {1, "FreePage         "},
+   {2, "PageIn           "},
+   {3, "PoolAllocation   "},
+   {4, "DelayExecution   "},
+   {5, "Suspended        "},
+   {6, "UserRequest      "},
+   {7, "WrExecutive      "},
+   {8, "WrFreePage       "},
+   {9, "WrPageIn         "},
+   {10,"WrPoolAllocation "},
+   {11,"WrDelayExecution "},
+   {12,"WrSuspended      "},
+   {13,"WrUserRequest    "},
+   {14,"WrEventPair      "},
+   {15,"WrQueue          "},
+   {16,"WrLpcReceive     "},
+   {17,"WrLpcReply       "},
+   {18,"WrVirtualMemory  "},
+   {19,"WrPageOut        "},
+   {20,"WrRendezvous     "},
+   {21,"Spare2           "},
+   {22,"WrGuardedMutex   "},
+   {23,"Spare4           "},
+   {24,"Spare5           "},
+   {25,"Spare6           "},
+   {26,"WrKernel         "},
+   {27,"WrResource       "},
+   {28,"WrPushLock       "},
+   {29,"WrMutex          "},
+   {30,"WrQuantumEnd     "},
+   {31,"WrDispatchInt    "},
+   {32,"WrPreempted      "},
+   {33,"WrYieldExecution "},
+   {34,"MaximumWaitReason"},
+   {-1,"       ?         "}
 };
 
 BOOL CALLBACK
