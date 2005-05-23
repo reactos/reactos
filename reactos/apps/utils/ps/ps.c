@@ -1,4 +1,4 @@
-/* $Id$
+/* 
  *
  *  ReactOS ps - process list console viewer
  *
@@ -23,8 +23,70 @@
 */
 
 #include <windows.h>
-#include <ddk/ntapi.h>
+/* NOTE: W32API ddk/ntapi.h header has wrong definition of SYSTEM_PROCESSES. */
+#include <ntos/types.h>
 
+typedef struct _SYSTEM_THREADS 	 
+ { 	 
+    LARGE_INTEGER KernelTime;
+    LARGE_INTEGER UserTime;
+    LARGE_INTEGER CreateTime;
+    ULONG WaitTime;
+    PVOID StartAddress;
+    CLIENT_ID ClientId;
+    KPRIORITY Priority;
+    LONG BasePriority;
+    ULONG ContextSwitches;
+    ULONG ThreadState;
+    ULONG WaitReason;
+ } SYSTEM_THREADS, *PSYSTEM_THREADS; 	 
+  	 
+ typedef struct _SYSTEM_PROCESSES 	 
+ { 	 
+    ULONG NextEntryOffset;
+    ULONG NumberOfThreads;
+    LARGE_INTEGER SpareLi1;
+    LARGE_INTEGER SpareLi2;
+    LARGE_INTEGER SpareLi3;
+    LARGE_INTEGER CreateTime;
+    LARGE_INTEGER UserTime;
+    LARGE_INTEGER KernelTime;
+    UNICODE_STRING ImageName;
+    KPRIORITY BasePriority;
+    HANDLE UniqueProcessId;
+    HANDLE InheritedFromUniqueProcessId;
+    ULONG HandleCount;
+    ULONG SessionId;
+    ULONG PageDirectoryFrame;
+
+    /*
+     * This part corresponds to VM_COUNTERS_EX.
+     * NOTE: *NOT* THE SAME AS VM_COUNTERS!
+     */
+    ULONG PeakVirtualSize;
+    ULONG VirtualSize;
+    ULONG PageFaultCount;
+    ULONG PeakWorkingSetSize;
+    ULONG WorkingSetSize;
+    ULONG QuotaPeakPagedPoolUsage;
+    ULONG QuotaPagedPoolUsage;
+    ULONG QuotaPeakNonPagedPoolUsage;
+    ULONG QuotaNonPagedPoolUsage;
+    ULONG PagefileUsage;
+    ULONG PeakPagefileUsage;
+    ULONG PrivateUsage;
+
+    /* This part corresponds to IO_COUNTERS */
+    LARGE_INTEGER ReadOperationCount;
+    LARGE_INTEGER WriteOperationCount;
+    LARGE_INTEGER OtherOperationCount;
+    LARGE_INTEGER ReadTransferCount;
+    LARGE_INTEGER WriteTransferCount;
+    LARGE_INTEGER OtherTransferCount;
+
+         SYSTEM_THREADS       Threads [1];  	 
+ } SYSTEM_PROCESSES, *PSYSTEM_PROCESSES; 	 
+ 
 
 //                     x00000000 00000000 000:00:00  000:00:00 ()
 static char* title  = "P     PID     PPID     KTime      UTime   NAME\n";
@@ -35,7 +97,7 @@ static char* title2 = "w     PID     Hwnd  WndStile        TID   WndName\n";
 struct status {
     DWORD state;
     char  desc[10];
-}   thread_stat[8 + 1] = {
+}   thread_stat[8 + 1] = { 
     {0,	"Init      "},
     {1,	"Ready     "},
     {2,	"Running   "},
@@ -46,7 +108,6 @@ struct status {
     {7, "Unknown   "},
     {-1,"    ?     "}
 };
-
 
 struct waitres {
     DWORD state;
@@ -89,7 +150,6 @@ struct waitres {
    {34,"MaximumWaitReason"},
    {-1,"       ?         "}
 };
-
 BOOL CALLBACK
 EnumThreadProc(HWND hwnd, LPARAM lp)
 {
@@ -97,9 +157,9 @@ EnumThreadProc(HWND hwnd, LPARAM lp)
 	LONG style;
         HANDLE stdout = GetStdHandle(STD_OUTPUT_HANDLE);
 	char buf[256];
-
+	
 	GetWindowText(hwnd, (LPTSTR)lp, 30);
-
+	
 	if(hwnd != 0)
 	{
 	style = GetWindowLong(hwnd, GWL_STYLE);
@@ -117,13 +177,13 @@ int main()
     DWORD r;
     ANSI_STRING astring;
     HANDLE stdout = GetStdHandle(STD_OUTPUT_HANDLE);
-    PSYSTEM_PROCESS_INFORMATION SystemProcesses = NULL;
-    PSYSTEM_PROCESS_INFORMATION CurrentProcess;
+    PSYSTEM_PROCESSES SystemProcesses = NULL;
+    PSYSTEM_PROCESSES CurrentProcess;
     ULONG BufferSize, ReturnSize;
     NTSTATUS Status;
     char buf[256];
     char buf1[256];
-
+    
     WriteFile(stdout, title, lstrlen(title), &r, NULL);
     WriteFile(stdout, title1, lstrlen(title1), &r, NULL);
     WriteFile(stdout, title2, lstrlen(title2), &r, NULL);
@@ -160,7 +220,7 @@ int main()
 	hour    = (ptime.QuadPart / (10000000LL * 3600LL));
 	minute  = (ptime.QuadPart / (10000000LL * 60LL)) % 60LL;
 	seconds = (ptime.QuadPart / 10000000LL) % 60LL;
-
+	
 	ptime.QuadPart = CurrentProcess->UserTime.QuadPart;
 	hour1    = (ptime.QuadPart / (10000000LL * 3600LL));
 	minute1  = (ptime.QuadPart / (10000000LL * 60LL)) % 60LL;
@@ -173,7 +233,7 @@ int main()
                  hour, minute, seconds, hour1, minute1, seconds1,
                  astring.Buffer);
         WriteFile(stdout, buf, lstrlen(buf), &r, NULL);
-
+        
         RtlFreeAnsiString(&astring);
 
 	for (ti = 0; ti < CurrentProcess->NumberOfThreads; ti++)
@@ -182,37 +242,37 @@ int main()
 		struct waitres *waitt;
 		char szWindowName[30] = {" "};
 
-		ptime = CurrentProcess->TH[ti].KernelTime;
+		ptime = CurrentProcess->Threads[ti].KernelTime;
 		thour = (ptime.QuadPart / (10000000LL * 3600LL));
 		tmin  = (ptime.QuadPart / (10000000LL * 60LL)) % 60LL;
 		tsec  = (ptime.QuadPart / 10000000LL) % 60LL;
 
-		ptime  = CurrentProcess->TH[ti].UserTime;
+		ptime = CurrentProcess->Threads[ti].UserTime;
 		thour1 = (ptime.QuadPart / (10000000LL * 3600LL));
 		tmin1  = (ptime.QuadPart / (10000000LL * 60LL)) % 60LL;
 		tsec1  = (ptime.QuadPart / 10000000LL) % 60LL;
 
 		statt = thread_stat;
-                while (statt->state != CurrentProcess->TH[ti].ThreadState  && statt->state >= 0)
+                while (statt->state != CurrentProcess->Threads[ti].ThreadState  && statt->state >= 0)
                 	statt++;
 
 		waitt = waitreason;
-                while (waitt->state != CurrentProcess->TH[ti].WaitReason  && waitt->state >= 0)
+                while (waitt->state != CurrentProcess->Threads[ti].WaitReason  && waitt->state >= 0)
                         waitt++;
 
-		wsprintf (buf1,
+		wsprintf (buf1, 
 		          "t%         %8d %3d:%02d:%02d  %3d:%02d:%02d   %s %s\n",
-		          CurrentProcess->TH[ti].ClientId.UniqueThread,
+		          CurrentProcess->Threads[ti].ClientId.UniqueThread,
 		          thour, tmin, tsec, thour1, tmin1, tsec1,
 		          statt->desc , waitt->desc);
         	WriteFile(stdout, buf1, lstrlen(buf1), &r, NULL);
 
-		EnumThreadWindows((DWORD)CurrentProcess->TH[ti].ClientId.UniqueThread,
+		EnumThreadWindows((DWORD)CurrentProcess->Threads[ti].ClientId.UniqueThread,
 		                  (ENUMWINDOWSPROC) EnumThreadProc,
 		                  (LPARAM)(LPTSTR) szWindowName );
 	   }
-	   CurrentProcess = (PSYSTEM_PROCESS_INFORMATION)((ULONG_PTR)CurrentProcess +
+	   CurrentProcess = (PSYSTEM_PROCESSES)((ULONG_PTR)CurrentProcess +
 	                     CurrentProcess->NextEntryOffset);
-	}
+	} 
   	return (0);
 }
