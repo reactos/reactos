@@ -563,29 +563,15 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
     }
     else
     {   
-        #if 0
-        ANSI_STRING Tag;
-        ULONG i;
+        CHAR Tag[4];
+        Tag[0] = TypeName->Buffer[0];
+        Tag[1] = TypeName->Buffer[1];
+        Tag[2] = TypeName->Buffer[2];
+        Tag[3] = TypeName->Buffer[3];
         
-        DPRINT1("Convert: %wZ \n", TypeName);
-        Status = RtlUnicodeStringToAnsiString(&Tag, TypeName, TRUE);
-        DPRINT1("Convert done\n");
-        if (NT_SUCCESS(Status))
-        {
-            /* Add spaces if needed */
-            for (i = 3; i >= Tag.Length; i--) Tag.Buffer[i] = ' ';
-            
-            /* Use the first four letters */
-            LocalObjectType->Key = *(PULONG)Tag.Buffer;
-            ExFreePool(Tag.Buffer);
-        }
-        else
-        #endif
-        {
-            /* Some weird problem. Use Unicode name */
-            LocalObjectType->Key = *(PULONG)TypeName->Buffer;
-            Status = STATUS_SUCCESS;
-        }
+        /* Set Tag */
+        DPRINT1("Convert: %s \n", Tag);
+        LocalObjectType->Key = *(PULONG)Tag;
     }
     
     /* Set it up */
