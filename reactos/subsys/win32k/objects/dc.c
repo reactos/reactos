@@ -2509,6 +2509,8 @@ IntChangeDisplaySettings(
   BOOLEAN SetPrimary = FALSE;
   LONG Ret;
 
+  DPRINT1("display flag : %x\n",dwflags);
+
   if ((dwflags & CDS_UPDATEREGISTRY) == CDS_UPDATEREGISTRY)
   {
     /* Check global, reset and noreset flags */
@@ -2530,12 +2532,16 @@ IntChangeDisplaySettings(
   switch (dwflags)
   {
   case 0: /* Dynamically change graphics mode */
+	DPRINT1("flag 0 UNIMPLEMENT \n");
+	
     Ret = DISP_CHANGE_FAILED;
     break;
 
   case CDS_FULLSCREEN: /* Given mode is temporary */
+    DPRINT1("flag CDS_FULLSCREEN UNIMPLEMENT \n");
     Ret = DISP_CHANGE_FAILED;
     break;
+
 
   case CDS_UPDATEREGISTRY:
     {
@@ -2550,6 +2556,8 @@ IntChangeDisplaySettings(
 		OBJECT_ATTRIBUTES ObjectAttributes;
 		HANDLE DevInstRegKey;
 		ULONG NewValue;
+
+		DPRINT1("set CDS_UPDATEREGISTRY \n");
 
 		/* Get device name (pDeviceName is "\.\xxx") */
 		for (LastSlash = pDeviceName->Length / sizeof(WCHAR); LastSlash > 0; LastSlash--)
@@ -2619,44 +2627,49 @@ IntChangeDisplaySettings(
 		{
 			RtlInitUnicodeString(&RegistryKey, L"DefaultSettings.BitsPerPel");
 			NewValue = DevMode->dmBitsPerPel;
-			Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));
+			Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));			
 		}
 
 		if (NT_SUCCESS(Status) && DevMode->dmFields & DM_PELSWIDTH)
 		{
 			RtlInitUnicodeString(&RegistryKey, L"DefaultSettings.XResolution");
 			NewValue = DevMode->dmPelsWidth;
-			Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));
+			Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));			
 		}
 
 		if (NT_SUCCESS(Status) && DevMode->dmFields & DM_PELSHEIGHT)
 		{
 			RtlInitUnicodeString(&RegistryKey, L"DefaultSettings.YResolution");
 			NewValue = DevMode->dmPelsHeight;
-			Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));
+			Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));			
 		}
 
 		ZwClose(DevInstRegKey);
 		if (NT_SUCCESS(Status))
 			Ret = DISP_CHANGE_RESTART;
 		else
-			Ret = DISP_CHANGE_FAILED;
+			/* return DISP_CHANGE_NOTUPDATED when we can save to reg only vaild for NT */ 
+			Ret = DISP_CHANGE_NOTUPDATED;
 		break;
     }
 
   case CDS_TEST: /* Test if the mode could be set */
+	DPRINT1("flag CDS_TEST UNIMPLEMENT");
     Ret = DISP_CHANGE_FAILED;
     break;
 
-#ifdef CDS_VIDEOPARAMETERS
+
   case CDS_VIDEOPARAMETERS:
-    if (lParam == NULL)
-      return DISP_CHANGE_BADPARAM;
+
+    if (lParam == NULL) return DISP_CHANGE_BADPARAM;
+
+	DPRINT1("flag CDS_VIDEOPARAMETERS UNIMPLEMENT");
     Ret = DISP_CHANGE_FAILED;
     break;
-#endif
+
 
   default:
+	DPRINT1("flag DISP_CHANGE_BADFLAGS\n");
     Ret = DISP_CHANGE_BADFLAGS;
     break;
   }
