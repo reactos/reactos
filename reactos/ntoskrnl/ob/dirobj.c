@@ -253,11 +253,11 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
           EntryHeader = CONTAINING_RECORD(ListEntry, OBJECT_HEADER, Entry);
 
           /* calculate the size of the required buffer space for this entry */
-          Name = (EntryHeader->NameInfo->Name.Length != 0 ? &EntryHeader->NameInfo->Name : NULL);
-          Type = &EntryHeader->ObjectType->Name;
+          Name = (HEADER_TO_OBJECT_NAME(EntryHeader)->Name.Length != 0 ? &HEADER_TO_OBJECT_NAME(EntryHeader)->Name : NULL);
+          Type = &EntryHeader->Type->Name;
           EntrySize = sizeof(OBJECT_DIRECTORY_INFORMATION) +
                       ((Name != NULL) ? ((ULONG)Name->Length + sizeof(WCHAR)) : 0) +
-                      (ULONG)EntryHeader->ObjectType->Name.Length + sizeof(WCHAR);
+                      (ULONG)EntryHeader->Type->Name.Length + sizeof(WCHAR);
 
           if(RequiredSize + EntrySize <= BufferLength)
           {

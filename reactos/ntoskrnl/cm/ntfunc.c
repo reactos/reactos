@@ -122,14 +122,14 @@ CmpFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 	CurrentHeader = BODY_TO_HEADER(CurrentObject);
 
 	DPRINT("Current ObjectType %wZ\n",
-	       &CurrentHeader->ObjectType->TypeName);
+	       &CurrentHeader->Type->TypeName);
 
-	if (CurrentHeader->ObjectType->TypeInfo.ParseProcedure == NULL)
+	if (CurrentHeader->Type->TypeInfo.ParseProcedure == NULL)
 	  {
 	     DPRINT("Current object can't parse\n");
 	     break;
 	  }
-	Status = CurrentHeader->ObjectType->TypeInfo.ParseProcedure(CurrentObject,
+	Status = CurrentHeader->Type->TypeInfo.ParseProcedure(CurrentObject,
 						  &NextObject,
 						  &PathString,
 						  &current,

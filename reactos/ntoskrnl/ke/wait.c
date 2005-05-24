@@ -799,14 +799,14 @@ KiIsObjectWaitable(PVOID Object)
     POBJECT_HEADER Header;
     Header = BODY_TO_HEADER(Object);
 
-    if (Header->ObjectType == ExEventObjectType ||
-        Header->ObjectType == IoCompletionType ||
-        Header->ObjectType == ExMutantObjectType ||
-        Header->ObjectType == ExSemaphoreObjectType ||
-        Header->ObjectType == ExTimerType ||
-        Header->ObjectType == PsProcessType ||
-        Header->ObjectType == PsThreadType ||
-        Header->ObjectType == IoFileObjectType) {
+    if (Header->Type == ExEventObjectType ||
+        Header->Type == IoCompletionType ||
+        Header->Type == ExMutantObjectType ||
+        Header->Type == ExSemaphoreObjectType ||
+        Header->Type == ExTimerType ||
+        Header->Type == PsProcessType ||
+        Header->Type == PsThreadType ||
+        Header->Type == IoFileObjectType) {
 
         return TRUE;
 

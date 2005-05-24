@@ -60,19 +60,24 @@ static VOID
 ObpDecrementHandleCount(PVOID ObjectBody)
 {
   POBJECT_HEADER ObjectHeader = BODY_TO_HEADER(ObjectBody);
+  DPRINT("Header: %x\n", ObjectHeader);
   LONG NewHandleCount = InterlockedDecrement(&ObjectHeader->HandleCount);
+  DPRINT("NewHandleCount: %x\n", NewHandleCount);
+  DPRINT("HEADER_TO_OBJECT_NAME: %x\n", HEADER_TO_OBJECT_NAME(ObjectHeader));
 
-  if ((ObjectHeader->ObjectType != NULL) &&
-      (ObjectHeader->ObjectType->TypeInfo.CloseProcedure != NULL))
+  if ((ObjectHeader->Type != NULL) &&
+      (ObjectHeader->Type->TypeInfo.CloseProcedure != NULL))
   {
     /* the handle count should be decremented but we pass the previous value
        to the callback */
-    ObjectHeader->ObjectType->TypeInfo.CloseProcedure(ObjectBody, NewHandleCount + 1);
+    ObjectHeader->Type->TypeInfo.CloseProcedure(ObjectBody, NewHandleCount + 1);
   }
 
   if(NewHandleCount == 0)
   {
-    if(ObjectHeader->NameInfo->Directory != NULL && !ObjectHeader->Permanent)
+    if(HEADER_TO_OBJECT_NAME(ObjectHeader) && 
+       HEADER_TO_OBJECT_NAME(ObjectHeader)->Directory != NULL &&
+       !(ObjectHeader->Flags & OB_FLAG_PERMANENT))
     {
       /* delete the object from the namespace when the last handle got closed.
          Only do this if it's actually been inserted into the namespace and
@@ -215,7 +220,7 @@ ObpDeleteHandle(PHANDLE_TABLE HandleTable,
      }
 
      ObjectHeader = EX_HTE_TO_HDR(HandleEntry);
-     Body = HEADER_TO_BODY(ObjectHeader);
+     Body = &ObjectHeader->Body;
 
      ObpDecrementHandleCount(Body);
 
@@ -276,7 +281,7 @@ ObDuplicateObject(PEPROCESS SourceProcess,
     }
 
   ObjectHeader = EX_HTE_TO_HDR(SourceHandleEntry);
-  ObjectBody = HEADER_TO_BODY(ObjectHeader);
+  ObjectBody = &ObjectHeader->Body;
 
   NewHandleEntry.u1.Object = SourceHandleEntry->u1.Object;
   if(InheritHandle)
@@ -295,7 +300,7 @@ ObDuplicateObject(PEPROCESS SourceProcess,
     if (DesiredAccess & GENERIC_ANY)
     {
       RtlMapGenericMask(&DesiredAccess,
-                        &ObjectHeader->ObjectType->TypeInfo.GenericMapping);
+                        &ObjectHeader->Type->TypeInfo.GenericMapping);
     }
     NewHandleEntry.u2.GrantedAccess = DesiredAccess;
   }
@@ -524,7 +529,7 @@ DeleteHandleCallback(PHANDLE_TABLE HandleTable,
   PAGED_CODE();
 
   ObjectHeader = EX_OBJ_TO_HDR(Object);
-  ObjectBody = HEADER_TO_BODY(ObjectHeader);
+  ObjectBody = &ObjectHeader->Body;
 
   ObpDecrementHandleCount(ObjectBody);
 }
@@ -545,7 +550,7 @@ DuplicateHandleCallback(PHANDLE_TABLE HandleTable,
     ObjectHeader = EX_HTE_TO_HDR(HandleTableEntry);
     if(InterlockedIncrement(&ObjectHeader->HandleCount) == 1)
     {
-      ObReferenceObject(HEADER_TO_BODY(ObjectHeader));
+      ObReferenceObject(&ObjectHeader->Body);
     }
   }
 
@@ -631,7 +636,7 @@ ObpCreateHandle(PEPROCESS Process,
    if (GrantedAccess & GENERIC_ANY)
      {
        RtlMapGenericMask(&GrantedAccess,
-		         &ObjectHeader->ObjectType->TypeInfo.GenericMapping);
+		         &ObjectHeader->Type->TypeInfo.GenericMapping);
      }
 
    NewEntry.u1.Object = ObjectHeader;
@@ -822,13 +827,13 @@ ObReferenceObjectByHandle(HANDLE Handle,
      }
 
    ObjectHeader = EX_HTE_TO_HDR(HandleEntry);
-   ObjectBody = HEADER_TO_BODY(ObjectHeader);
+   ObjectBody = &ObjectHeader->Body;
 
    DPRINT("locked1: ObjectHeader: 0x%x [HT:0x%x]\n", ObjectHeader, HandleTable);
 
-   if (ObjectType != NULL && ObjectType != ObjectHeader->ObjectType)
+   if (ObjectType != NULL && ObjectType != ObjectHeader->Type)
      {
-        DPRINT("ObjectType mismatch: %wZ vs %wZ (handle 0x%x)\n", &ObjectType->TypeName, ObjectHeader->ObjectType ? &ObjectHeader->ObjectType->TypeName : NULL, Handle);
+        DPRINT("ObjectType mismatch: %wZ vs %wZ (handle 0x%x)\n", &ObjectType->TypeName, ObjectHeader->Type ? &ObjectHeader->Type->TypeName : NULL, Handle);
 
         ExUnlockHandleTableEntry(HandleTable,
                                  HandleEntry);
@@ -842,7 +847,7 @@ ObReferenceObjectByHandle(HANDLE Handle,
    if (DesiredAccess & GENERIC_ANY)
      {
         RtlMapGenericMask(&DesiredAccess,
-                          &BODY_TO_HEADER(ObjectBody)->ObjectType->TypeInfo.GenericMapping);
+                          &BODY_TO_HEADER(ObjectBody)->Type->TypeInfo.GenericMapping);
      }
 
    GrantedAccess = HandleEntry->u2.GrantedAccess;
@@ -963,7 +968,7 @@ ObInsertObject(IN PVOID Object,
     DPRINT("ObInsertObject: %x\n", Object);
     Header = BODY_TO_HEADER(Object);
     ObjectCreateInfo = Header->ObjectCreateInfo;
-    ObjectNameInfo = Header->NameInfo;
+    ObjectNameInfo = HEADER_TO_OBJECT_NAME(Header);
     
     /* First try to find the Object */
     if (ObjectNameInfo && ObjectNameInfo->Name.Buffer)
@@ -1000,10 +1005,9 @@ ObInsertObject(IN PVOID Object,
         RtlInitUnicodeString(&RemainingPath, NULL);
     }
 
-    if (FoundHeader && FoundHeader->ObjectType == ObDirectoryType &&
+    if (FoundHeader && FoundHeader->Type == ObDirectoryType &&
         RemainingPath.Buffer)
     {
-        DPRINT("Adding to Object Directory\n");
         ObpAddEntryDirectory(FoundObject, Header, NULL);
         ObjectAttached = TRUE;
         
@@ -1013,7 +1017,7 @@ ObInsertObject(IN PVOID Object,
         PWSTR BufferPos = RemainingPath.Buffer;
         
         NewName = ExAllocatePool(NonPagedPool, RemainingPath.MaximumLength);
-        ObjectNameInfo = Header->NameInfo;
+        ObjectNameInfo = HEADER_TO_OBJECT_NAME(Header);
         
         if (BufferPos[0] == L'\\')
         {
@@ -1028,36 +1032,36 @@ ObInsertObject(IN PVOID Object,
         DPRINT("Name: %S\n", ObjectNameInfo->Name.Buffer);
     }
 
-    if ((Header->ObjectType == IoFileObjectType) ||
-        (Header->ObjectType == ExDesktopObjectType) ||
-        (Header->ObjectType->TypeInfo.OpenProcedure != NULL))
+    if ((Header->Type == IoFileObjectType) ||
+        (Header->Type == ExDesktopObjectType) ||
+        (Header->Type->TypeInfo.OpenProcedure != NULL))
     {    
         DPRINT("About to call Open Routine\n");
-        if (Header->ObjectType == IoFileObjectType)
+        if (Header->Type == IoFileObjectType)
         {
             /* TEMPORARY HACK. DO NOT TOUCH -- Alex */
             DPRINT("Calling IopCreateFile: %x\n", FoundObject);
-            Status = IopCreateFile(HEADER_TO_BODY(Header),
+            Status = IopCreateFile(&Header->Body,
                                    FoundObject,
                                    RemainingPath.Buffer,            
                                    ObjectCreateInfo);
             DPRINT("Called IopCreateFile: %x\n", Status);
                                    
         }
-        else if (Header->ObjectType == ExDesktopObjectType)
+        else if (Header->Type == ExDesktopObjectType)
         {
             /* TEMPORARY HACK. DO NOT TOUCH -- Alex */
             DPRINT("Calling ExpDesktopCreate\n");
-            Status = ExpDesktopCreate(HEADER_TO_BODY(Header),
+            Status = ExpDesktopCreate(&Header->Body,
                                       FoundObject,
                                       RemainingPath.Buffer,            
                                       ObjectCreateInfo);
         }
-        else if (Header->ObjectType->TypeInfo.OpenProcedure != NULL)
+        else if (Header->Type->TypeInfo.OpenProcedure != NULL)
         {
-            DPRINT("Calling %x\n", Header->ObjectType->TypeInfo.OpenProcedure);
-            Status = Header->ObjectType->TypeInfo.OpenProcedure(ObCreateHandle,
-                                                                HEADER_TO_BODY(Header),
+            DPRINT("Calling %x\n", Header->Type->TypeInfo.OpenProcedure);
+            Status = Header->Type->TypeInfo.OpenProcedure(ObCreateHandle,
+                                                                &Header->Body,
                                                                 NULL,
                                                                 0,
                                                                 0);
@@ -1088,19 +1092,19 @@ ObInsertObject(IN PVOID Object,
     Status = SeAssignSecurity((FoundHeader != NULL) ? FoundHeader->SecurityDescriptor : NULL,
 			    (ObjectCreateInfo != NULL) ? ObjectCreateInfo->SecurityDescriptor : NULL,
 			    &NewSecurityDescriptor,
-			    (Header->ObjectType == ObDirectoryType),
+			    (Header->Type == ObDirectoryType),
 			    &SubjectContext,
-			    &Header->ObjectType->TypeInfo.GenericMapping,
+			    &Header->Type->TypeInfo.GenericMapping,
 			    PagedPool);
 
     if (NT_SUCCESS(Status))
     {
         DPRINT("NewSecurityDescriptor %p\n", NewSecurityDescriptor);
 
-        if (Header->ObjectType->TypeInfo.SecurityProcedure != NULL)
+        if (Header->Type->TypeInfo.SecurityProcedure != NULL)
         {
             /* Call the security method */
-            Status = Header->ObjectType->TypeInfo.SecurityProcedure(HEADER_TO_BODY(Header),
+            Status = Header->Type->TypeInfo.SecurityProcedure(&Header->Body,
                                                                     AssignSecurityDescriptor,
                                                                     0,
                                                                     NewSecurityDescriptor,
@@ -1120,12 +1124,7 @@ ObInsertObject(IN PVOID Object,
 
     DPRINT("Security Complete\n");
     SeReleaseSubjectContext(&SubjectContext);
-
-    /* We can delete the Create Info now */
-    Header->ObjectCreateInfo = NULL;
-    ObpReleaseCapturedAttributes(ObjectCreateInfo);
-    ExFreePool(ObjectCreateInfo);
-    
+        
     /* Create the Handle */
     /* HACKHACK: Because of ROS's incorrect startup, this can be called
      * without a valid Process until I finalize the startup patch,
@@ -1137,13 +1136,18 @@ ObInsertObject(IN PVOID Object,
     if (Handle != NULL)
     {
         Status = ObpCreateHandle(PsGetCurrentProcess(),
-                                 HEADER_TO_BODY(Header),
+                                 &Header->Body,
                                  DesiredAccess,
-                                 Header->Inherit,
+                                 ObjectCreateInfo->Attributes & OBJ_INHERIT,
                                  Handle);
         DPRINT("handle Created: %d. refcount. handlecount %d %d\n",
                  *Handle, Header->RefCount, Header->HandleCount);
     }
+    
+    /* We can delete the Create Info now */
+    Header->ObjectCreateInfo = NULL;
+    ObpReleaseCapturedAttributes(ObjectCreateInfo);
+    ExFreePool(ObjectCreateInfo);
     
     DPRINT("Status %x\n", Status);
     return Status;
@@ -1227,7 +1231,7 @@ ObpGetNextHandleByProcessCount(PSYSTEM_HANDLE_TABLE_ENTRY_INFO pshi,
 
 //      pshi->GrantedAccess;
 //      pshi->Object;
-//      pshi->ObjectTypeIndex;
+//      pshi->TypeIndex;
 //      pshi->HandleAttributes;
 
 //      KeReleaseSpinLock( &Process->HandleTable.ListLock, oldIrql );

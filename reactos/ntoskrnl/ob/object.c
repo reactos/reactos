@@ -379,14 +379,14 @@ ObFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
 	CurrentHeader = BODY_TO_HEADER(CurrentObject);
 
 	DPRINT("Current ObjectType %wZ\n",
-	       &CurrentHeader->ObjectType->Name);
+	       &CurrentHeader->Type->Name);
 
-	if (CurrentHeader->ObjectType->TypeInfo.ParseProcedure == NULL)
+	if (CurrentHeader->Type->TypeInfo.ParseProcedure == NULL)
 	  {
 	     DPRINT("Current object can't parse\n");
 	     break;
 	  }
-	Status = CurrentHeader->ObjectType->TypeInfo.ParseProcedure(CurrentObject,
+	Status = CurrentHeader->Type->TypeInfo.ParseProcedure(CurrentObject,
 						  &NextObject,
 						  &PathString,
 						  &current,
@@ -461,27 +461,27 @@ ObQueryNameString (IN PVOID Object,
 
   ObjectHeader = BODY_TO_HEADER(Object);
 
-  if (ObjectHeader->ObjectType != NULL &&
-      ObjectHeader->ObjectType->TypeInfo.QueryNameProcedure != NULL)
+  if (ObjectHeader->Type != NULL &&
+      ObjectHeader->Type->TypeInfo.QueryNameProcedure != NULL)
     {
-      DPRINT ("Calling %x\n", ObjectHeader->ObjectType->TypeInfo.QueryNameProcedure);
-      Status = ObjectHeader->ObjectType->TypeInfo.QueryNameProcedure (Object,
+      DPRINT ("Calling %x\n", ObjectHeader->Type->TypeInfo.QueryNameProcedure);
+      Status = ObjectHeader->Type->TypeInfo.QueryNameProcedure (Object,
 						    ObjectNameInfo,
 						    Length,
 						    ReturnLength);
     }
-  else if (ObjectHeader->NameInfo->Name.Length > 0 && ObjectHeader->NameInfo->Name.Buffer != NULL)
+  else if (HEADER_TO_OBJECT_NAME(ObjectHeader)->Name.Length > 0 && HEADER_TO_OBJECT_NAME(ObjectHeader)->Name.Buffer != NULL)
     {
       DPRINT ("Object does not have a 'QueryName' function\n");
 
-      if (ObjectHeader->NameInfo->Directory == NameSpaceRoot)
+      if (HEADER_TO_OBJECT_NAME(ObjectHeader)->Directory == NameSpaceRoot)
 	{
 	  DPRINT ("Reached the root directory\n");
 	  ObjectNameInfo->Name.Length = 0;
 	  ObjectNameInfo->Name.Buffer[0] = 0;
 	  Status = STATUS_SUCCESS;
 	}
-      else if (ObjectHeader->NameInfo->Directory != NULL)
+      else if (HEADER_TO_OBJECT_NAME(ObjectHeader)->Directory != NULL)
 	{
 	  LocalInfo = ExAllocatePool (NonPagedPool,
 				      sizeof(OBJECT_NAME_INFORMATION) +
@@ -489,7 +489,7 @@ ObQueryNameString (IN PVOID Object,
 	  if (LocalInfo == NULL)
 	    return STATUS_INSUFFICIENT_RESOURCES;
 
-	  Status = ObQueryNameString (ObjectHeader->NameInfo->Directory,
+	  Status = ObQueryNameString (HEADER_TO_OBJECT_NAME(ObjectHeader)->Directory,
 				      LocalInfo,
 				      MAX_PATH * sizeof(WCHAR),
 				      &LocalReturnLength);
@@ -508,14 +508,14 @@ ObQueryNameString (IN PVOID Object,
 	    return Status;
 	}
 
-      DPRINT ("Object path %wZ\n", &ObjectHeader->NameInfo->Name);
+      DPRINT ("Object path %wZ\n", &HEADER_TO_OBJECT_NAME(ObjectHeader)->Name);
       Status = RtlAppendUnicodeToString (&ObjectNameInfo->Name,
 					 L"\\");
       if (!NT_SUCCESS (Status))
 	return Status;
 
       Status = RtlAppendUnicodeStringToString (&ObjectNameInfo->Name,
-					       &ObjectHeader->NameInfo->Name);
+					       &HEADER_TO_OBJECT_NAME(ObjectHeader)->Name);
     }
   else
     {
@@ -549,8 +549,14 @@ ObpAllocateObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
                   POBJECT_HEADER *ObjectHeader)
 {
     POBJECT_HEADER Header;
-    POBJECT_HEADER_NAME_INFO ObjectNameInfo;
+    BOOLEAN HasHandleInfo = FALSE;
+    BOOLEAN HasNameInfo = FALSE;
+    BOOLEAN HasCreatorInfo = FALSE;
+    POBJECT_HEADER_HANDLE_INFO HandleInfo;
+    POBJECT_HEADER_NAME_INFO NameInfo;
+    POBJECT_HEADER_CREATOR_INFO CreatorInfo;
     POOL_TYPE PoolType;
+    ULONG FinalSize = ObjectSize;
     ULONG Tag;
         
     /* If we don't have an Object Type yet, force NonPaged */
@@ -566,35 +572,104 @@ ObpAllocateObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
         Tag = ObjectType->Key;
     }
     
-    /* Allocate memory for the Object */
-    Header = ExAllocatePoolWithTag(PoolType, ObjectSize, Tag);
+    DPRINT("Checking ObjectName: %x\n", ObjectName);
+    /* Check if the Object has a name */
+    if (ObjectName->Buffer) 
+    {
+        FinalSize += sizeof(OBJECT_HEADER_NAME_INFO);
+        HasNameInfo = TRUE;
+    }
+    
+    if (ObjectType)
+    {
+        /* Check if the Object maintains handle counts */
+        DPRINT("Checking ObjectType->TypeInfo: %x\n", &ObjectType->TypeInfo);
+        if (ObjectType->TypeInfo.MaintainHandleCount)
+        {
+            FinalSize += sizeof(OBJECT_HEADER_HANDLE_INFO);
+            HasHandleInfo = TRUE;
+        }
+        
+        /* Check if the Object maintains type lists */
+        if (ObjectType->TypeInfo.MaintainTypeList) 
+        {
+            FinalSize += sizeof(OBJECT_HEADER_CREATOR_INFO);
+            HasCreatorInfo = TRUE;
+        }
+    }
+
+    /* Allocate memory for the Object and Header */
+    DPRINT("Allocating: %x %x\n", FinalSize, Tag);
+    Header = ExAllocatePoolWithTag(PoolType, FinalSize, Tag);
     if (!Header) {
         DPRINT1("Not enough memory!\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+           
+    /* Initialize Handle Info */
+    if (HasHandleInfo)
+    {
+        HandleInfo = (POBJECT_HEADER_HANDLE_INFO)Header;
+        DPRINT("Info: %x\n", HandleInfo);
+        HandleInfo->SingleEntry.HandleCount = 0;
+        Header = (POBJECT_HEADER)(HandleInfo + 1);
+    }
+       
+    /* Initialize the Object Name Info */
+    if (HasNameInfo) 
+    {
+        NameInfo = (POBJECT_HEADER_NAME_INFO)Header;
+        DPRINT("Info: %x %wZ\n", NameInfo, ObjectName);
+        NameInfo->Name = *ObjectName;
+        NameInfo->Directory = NULL;
+        Header = (POBJECT_HEADER)(NameInfo + 1);
+    }
+    
+    /* Initialize Creator Info */
+    if (HasCreatorInfo)
+    {
+        CreatorInfo = (POBJECT_HEADER_CREATOR_INFO)Header;
+        DPRINT("Info: %x\n", CreatorInfo);
+        /* FIXME: Needs Alex's Init patch
+         * CreatorInfo->CreatorUniqueProcess = PsGetCurrentProcessId();
+         */
+        InitializeListHead(&CreatorInfo->TypeList);
+        Header = (POBJECT_HEADER)(CreatorInfo + 1);
+    }
     
     /* Initialize the object header */
     RtlZeroMemory(Header, ObjectSize);
-    DPRINT("Initalizing header %p\n", Header);
+    DPRINT("Initalized header %p\n", Header);
     Header->HandleCount = 0;
-    Header->RefCount = 1;
-    Header->ObjectType = ObjectType;
+    Header->PointerCount = 1;
+    Header->Type = ObjectType;
+    Header->Flags = OB_FLAG_CREATE_INFO;
+    
+    /* Set the Offsets for the Info */
+    if (HasHandleInfo)
+    {
+        Header->HandleInfoOffset = HasNameInfo * sizeof(OBJECT_HEADER_NAME_INFO) + 
+                                   sizeof(OBJECT_HEADER_HANDLE_INFO) +
+                                   HasCreatorInfo * sizeof(OBJECT_HEADER_CREATOR_INFO);
+        Header->Flags |= OB_FLAG_SINGLE_PROCESS;
+    }
+    if (HasNameInfo)
+    {
+        Header->NameInfoOffset = sizeof(OBJECT_HEADER_NAME_INFO) + 
+                                 HasCreatorInfo * sizeof(OBJECT_HEADER_CREATOR_INFO);
+    }
+    if (HasCreatorInfo) Header->Flags |= OB_FLAG_CREATOR_INFO;
+    
     if (ObjectCreateInfo && ObjectCreateInfo->Attributes & OBJ_PERMANENT)
     {
-        Header->Permanent = TRUE;
+        Header->Flags |= OB_FLAG_PERMANENT;
     }
-    if (ObjectCreateInfo && ObjectCreateInfo->Attributes & OBJ_INHERIT)
+    if (ObjectCreateInfo && ObjectCreateInfo->Attributes & OBJ_EXCLUSIVE)
     {
-        Header->Inherit = TRUE;
+        Header->Flags |= OB_FLAG_EXCLUSIVE;
     }
-       
-    /* Initialize the Object Name Info [part of header in OB 2.0] */
-    ObjectNameInfo = ExAllocatePool(PoolType, ObjectSize);
-    ObjectNameInfo->Name = *ObjectName;
-    ObjectNameInfo->Directory = NULL;
     
     /* Link stuff to Object Header */
-    Header->NameInfo = ObjectNameInfo;
     Header->ObjectCreateInfo = ObjectCreateInfo;
     
     /* Return Header */
@@ -663,7 +738,7 @@ ObCreateObject(IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
         {
             /* Return the Object */
             DPRINT("Returning Object\n");
-            *Object = HEADER_TO_BODY(Header);
+            *Object = &Header->Body;
             
             /* Return to caller, leave the Capture Info Alive for ObInsert */
             return Status;
@@ -707,43 +782,43 @@ ObReferenceObjectByPointer(IN PVOID Object,
 
    Header = BODY_TO_HEADER(Object);
 
-   if (ObjectType != NULL && Header->ObjectType != ObjectType)
+   if (ObjectType != NULL && Header->Type != ObjectType)
      {
 	DPRINT("Failed %p (type was %x %wZ) should be %x %wZ\n",
 		Header,
-		Header->ObjectType,
-		&BODY_TO_HEADER(Header->ObjectType)->NameInfo,
+		Header->Type,
+		&BODY_TO_HEADER(Header->Type)->NameInfo,
 		ObjectType,
 		&BODY_TO_HEADER(ObjectType)->NameInfo);
 	return(STATUS_UNSUCCESSFUL);
      }
-   if (Header->ObjectType == PsProcessType)
+   if (Header->Type == PsProcessType)
      {
-	DPRINT("Ref p 0x%x refcount %d type %x ",
-		Object, Header->RefCount, PsProcessType);
+	DPRINT("Ref p 0x%x PointerCount %d type %x ",
+		Object, Header->PointerCount, PsProcessType);
 	DPRINT("eip %x\n", ((PULONG)&Object)[-1]);
      }
-   if (Header->ObjectType == PsThreadType)
+   if (Header->Type == PsThreadType)
      {
-	DPRINT("Deref t 0x%x with refcount %d type %x ",
-		Object, Header->RefCount, PsThreadType);
+	DPRINT("Deref t 0x%x with PointerCount %d type %x ",
+		Object, Header->PointerCount, PsThreadType);
 	DPRINT("eip %x\n", ((PULONG)&Object)[-1]);
      }
 
-   if (Header->RefCount == 0 && !Header->Permanent)
+   if (Header->PointerCount == 0 && !(Header->Flags & OB_FLAG_PERMANENT))
    {
-      if (Header->ObjectType == PsProcessType)
+      if (Header->Type == PsProcessType)
         {
 	  return STATUS_PROCESS_IS_TERMINATING;
 	}
-      if (Header->ObjectType == PsThreadType)
+      if (Header->Type == PsThreadType)
         {
 	  return STATUS_THREAD_IS_TERMINATING;
 	}
       return(STATUS_UNSUCCESSFUL);
    }
 
-   if (1 == InterlockedIncrement(&Header->RefCount) && !Header->Permanent)
+   if (1 == InterlockedIncrement(&Header->PointerCount) && !(Header->Flags & OB_FLAG_PERMANENT))
    {
       KEBUGCHECK(0);
    }
@@ -794,6 +869,11 @@ ObOpenObjectByPointer(IN POBJECT Object,
 static NTSTATUS
 ObpDeleteObject(POBJECT_HEADER Header)
 {
+  PVOID HeaderLocation = Header;
+  POBJECT_HEADER_HANDLE_INFO HandleInfo;
+  POBJECT_HEADER_NAME_INFO NameInfo;
+  POBJECT_HEADER_CREATOR_INFO CreatorInfo;
+  
   DPRINT("ObpDeleteObject(Header %p)\n", Header);
   if (KeGetCurrentIrql() != PASSIVE_LEVEL)
     {
@@ -801,10 +881,10 @@ ObpDeleteObject(POBJECT_HEADER Header)
       KEBUGCHECK(0);
     }
 
-  if (Header->ObjectType != NULL &&
-      Header->ObjectType->TypeInfo.DeleteProcedure != NULL)
+  if (Header->Type != NULL &&
+      Header->Type->TypeInfo.DeleteProcedure != NULL)
     {
-      Header->ObjectType->TypeInfo.DeleteProcedure(HEADER_TO_BODY(Header));
+      Header->Type->TypeInfo.DeleteProcedure(&Header->Body);
     }
 
   if (Header->SecurityDescriptor != NULL)
@@ -812,22 +892,35 @@ ObpDeleteObject(POBJECT_HEADER Header)
       ObpRemoveSecurityDescriptor(Header->SecurityDescriptor);
     }
     
-  if (Header->NameInfo)
+  if (HEADER_TO_OBJECT_NAME(Header))
     {
-      if(Header->NameInfo->Name.Buffer)
+      if(HEADER_TO_OBJECT_NAME(Header)->Name.Buffer)
         {
-          ExFreePool(Header->NameInfo->Name.Buffer);
+          ExFreePool(HEADER_TO_OBJECT_NAME(Header)->Name.Buffer);
         }
-      ExFreePool(Header->NameInfo);
     }
   if (Header->ObjectCreateInfo)
     {
       ObpReleaseCapturedAttributes(Header->ObjectCreateInfo);
       ExFreePool(Header->ObjectCreateInfo);
     }
+    
+  /* To find the header, walk backwards from how we allocated */
+  if ((CreatorInfo = HEADER_TO_CREATOR_INFO(Header)))
+  {
+      HeaderLocation = CreatorInfo;
+  }   
+  if ((NameInfo = HEADER_TO_OBJECT_NAME(Header)))
+  {
+      HeaderLocation = NameInfo;
+  }
+  if ((HandleInfo = HEADER_TO_HANDLE_INFO(Header)))
+  {
+      HeaderLocation = HandleInfo;
+  }
 
   DPRINT("ObPerformRetentionChecks() = Freeing object\n");
-  ExFreePool(Header);
+  ExFreePool(HeaderLocation);
 
   return(STATUS_SUCCESS);
 }
@@ -843,7 +936,7 @@ ObpDeleteObjectWorkRoutine (IN PVOID Parameter)
   ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL); /* We need PAGED_CODE somewhere... */
 
   /* Turn this on when we have ExFreePoolWithTag
-  Tag = Params->ObjectHeader->ObjectType->Tag; */
+  Tag = Params->ObjectHeader->Type->Tag; */
   ObpDeleteObject(Params->ObjectHeader);
   ExFreePool(Params);
   /* ExFreePoolWithTag(Params, Tag); */
@@ -852,14 +945,14 @@ ObpDeleteObjectWorkRoutine (IN PVOID Parameter)
 
 STATIC NTSTATUS
 ObpDeleteObjectDpcLevel(IN POBJECT_HEADER ObjectHeader,
-			IN LONG OldRefCount)
+			IN LONG OldPointerCount)
 {
 #if 0
-  if (ObjectHeader->RefCount < 0)
+  if (ObjectHeader->PointerCount < 0)
     {
       CPRINT("Object %p/%p has invalid reference count (%d)\n",
 	     ObjectHeader, HEADER_TO_BODY(ObjectHeader),
-	     ObjectHeader->RefCount);
+	     ObjectHeader->PointerCount);
       KEBUGCHECK(0);
     }
 
@@ -890,7 +983,7 @@ ObpDeleteObjectDpcLevel(IN POBJECT_HEADER ObjectHeader,
 	Params = (PRETENTION_CHECK_PARAMS)
 	  ExAllocatePoolWithTag(NonPagedPoolMustSucceed,
 				sizeof(RETENTION_CHECK_PARAMS),
-				ObjectHeader->ObjectType->Key);
+				ObjectHeader->Type->Key);
 	Params->ObjectHeader = ObjectHeader;
 	ExInitializeWorkItem(&Params->WorkItem,
 			     ObpDeleteObjectWorkRoutine,
@@ -937,7 +1030,7 @@ ObfReferenceObject(IN PVOID Object)
   Header = BODY_TO_HEADER(Object);
 
   /* No one should be referencing an object once we are deleting it. */
-  if (InterlockedIncrement(&Header->RefCount) == 1 && !Header->Permanent)
+  if (InterlockedIncrement(&Header->PointerCount) == 1 && !(Header->Flags & OB_FLAG_PERMANENT))
   {
      KEBUGCHECK(0);
   }
@@ -964,28 +1057,28 @@ VOID FASTCALL
 ObfDereferenceObject(IN PVOID Object)
 {
   POBJECT_HEADER Header;
-  LONG NewRefCount;
+  LONG NewPointerCount;
   BOOL Permanent;
 
   ASSERT(Object);
 
   /* Extract the object header. */
   Header = BODY_TO_HEADER(Object);
-  Permanent = Header->Permanent;
+  Permanent = Header->Flags & OB_FLAG_PERMANENT;
 
   /*
      Drop our reference and get the new count so we can tell if this was the
      last reference.
   */
-  NewRefCount = InterlockedDecrement(&Header->RefCount);
-  DPRINT("ObfDereferenceObject(0x%x)==%d\n", Object, NewRefCount);
-  ASSERT(NewRefCount >= 0);
+  NewPointerCount = InterlockedDecrement(&Header->PointerCount);
+  DPRINT("ObfDereferenceObject(0x%x)==%d\n", Object, NewPointerCount);
+  ASSERT(NewPointerCount >= 0);
 
   /* Check whether the object can now be deleted. */
-  if (NewRefCount == 0 &&
+  if (NewPointerCount == 0 &&
       !Permanent)
     {
-      ObpDeleteObjectDpcLevel(Header, NewRefCount);
+      ObpDeleteObjectDpcLevel(Header, NewPointerCount);
     }
 }
 
@@ -1065,7 +1158,7 @@ ObGetObjectPointerCount(PVOID Object)
   ASSERT(Object);
   Header = BODY_TO_HEADER(Object);
 
-  return Header->RefCount;
+  return Header->PointerCount;
 }
 
 

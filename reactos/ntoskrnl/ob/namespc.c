@@ -256,7 +256,8 @@ ObpAddEntryDirectory(PDIRECTORY_OBJECT Parent,
 {
   KIRQL oldlvl;
 
-  Header->NameInfo->Directory = Parent;
+  ASSERT(HEADER_TO_OBJECT_NAME(Header));
+  HEADER_TO_OBJECT_NAME(Header)->Directory = Parent;
 
   KeAcquireSpinLock(&Parent->Lock, &oldlvl);
   InsertTailList(&Parent->head, &Header->Entry);
@@ -276,13 +277,13 @@ ObpRemoveEntryDirectory(POBJECT_HEADER Header)
 
   DPRINT("ObpRemoveEntryDirectory(Header %x)\n",Header);
 
-  KeAcquireSpinLock(&(Header->NameInfo->Directory->Lock),&oldlvl);
+  KeAcquireSpinLock(&(HEADER_TO_OBJECT_NAME(Header)->Directory->Lock),&oldlvl);
   if (Header->Entry.Flink && Header->Entry.Blink)
   {
     RemoveEntryList(&(Header->Entry));
     Header->Entry.Flink = Header->Entry.Blink = NULL;
   }
-  KeReleaseSpinLock(&(Header->NameInfo->Directory->Lock),oldlvl);
+  KeReleaseSpinLock(&(HEADER_TO_OBJECT_NAME(Header)->Directory->Lock),oldlvl);
 }
 
 NTSTATUS
@@ -324,26 +325,26 @@ ObpFindEntryDirectory(PDIRECTORY_OBJECT DirectoryObject,
      }
    if (Name[0]=='.' && Name[1]=='.' && Name[2]==0)
      {
-	return(BODY_TO_HEADER(DirectoryObject)->NameInfo->Directory);
+	return(HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(DirectoryObject))->Directory);
      }
    while (current!=(&(DirectoryObject->head)))
      {
 	current_obj = CONTAINING_RECORD(current,OBJECT_HEADER,Entry);
-	DPRINT("  Scanning: %S for: %S\n",current_obj->NameInfo->Name.Buffer, Name);
+	DPRINT("  Scanning: %S for: %S\n",HEADER_TO_OBJECT_NAME(current_obj)->Name.Buffer, Name);
 	if (Attributes & OBJ_CASE_INSENSITIVE)
 	  {
-	     if (_wcsicmp(current_obj->NameInfo->Name.Buffer, Name)==0)
+	     if (_wcsicmp(HEADER_TO_OBJECT_NAME(current_obj)->Name.Buffer, Name)==0)
 	       {
-		  DPRINT("Found it %x\n",HEADER_TO_BODY(current_obj));
-		  return(HEADER_TO_BODY(current_obj));
+		  DPRINT("Found it %x\n",&current_obj->Body);
+		  return(&current_obj->Body);
 	       }
 	  }
 	else
 	  {
-	     if ( wcscmp(current_obj->NameInfo->Name.Buffer, Name)==0)
+	     if ( wcscmp(HEADER_TO_OBJECT_NAME(current_obj)->Name.Buffer, Name)==0)
 	       {
-		  DPRINT("Found it %x\n",HEADER_TO_BODY(current_obj));
-		  return(HEADER_TO_BODY(current_obj));
+		  DPRINT("Found it %x\n",&current_obj->Body);
+		  return(&current_obj->Body);
 	       }
 	  }
 	current = current->Flink;
@@ -550,17 +551,43 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
         return Status;
     }
     
-    LocalObjectType = HEADER_TO_BODY(Header);
+    LocalObjectType = (POBJECT_TYPE)&Header->Body;
+    DPRINT("Local ObjectType: %p Header: %p \n", LocalObjectType, Header);
     
     /* Check if this is the first Object Type */
     if (!ObTypeObjectType)
     {
         ObTypeObjectType = LocalObjectType;
-        Header->ObjectType = ObTypeObjectType;
+        Header->Type = ObTypeObjectType;
+        LocalObjectType->Key = TAG('O', 'b', 'j', 'T');
+    }
+    else
+    {   
+        #if 0
+        ANSI_STRING Tag;
+        ULONG i;
+        
+        DPRINT1("Convert: %wZ \n", TypeName);
+        Status = RtlUnicodeStringToAnsiString(&Tag, TypeName, TRUE);
+        DPRINT1("Convert done\n");
+        if (NT_SUCCESS(Status))
+        {
+            /* Add spaces if needed */
+            for (i = 3; i >= Tag.Length; i--) Tag.Buffer[i] = ' ';
+            
+            /* Use the first four letters */
+            LocalObjectType->Key = *(PULONG)Tag.Buffer;
+            ExFreePool(Tag.Buffer);
+        }
+        else
+        #endif
+        {
+            /* Some weird problem. Use Unicode name */
+            LocalObjectType->Key = *(PULONG)TypeName->Buffer;
+            Status = STATUS_SUCCESS;
+        }
     }
     
-    /* FIXME: Generate Tag */
-        
     /* Set it up */
     LocalObjectType->TypeInfo = *ObjectTypeInitializer;
     LocalObjectType->Name = *TypeName;
