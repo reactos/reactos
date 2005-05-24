@@ -186,8 +186,10 @@ dispatch(void)
             if (errno == EAGAIN || errno == EINTR) {
                 time(&cur_time);
                 continue;
-            } else
+            } else {
                 error("poll: %m");
+                break;
+            }
         }
 
         /* Get the current time... */
