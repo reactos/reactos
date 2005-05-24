@@ -929,6 +929,12 @@ HKLM,"SYSTEM\CurrentControlSet\Services\VBE","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\VBE","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\VBE\Device0","InstalledDisplayDrivers",0x00010000,"framebuf"
 
+HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","DefaultSettings.VRefresh",0x00010001,1
+HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","DefaultSettings.BitsPerPel",0x00010001,8
+HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","DefaultSettings.XResolution",0x00010001,640
+HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","DefaultSettings.YResolution",0x00010001,480
+
+
 ; VGA miniport driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Group",0x00000000,"Video Save"
@@ -936,6 +942,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Vga","ImagePath",0x00020000,"system32\dr
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga\Device0","InstalledDisplayDrivers",0x00010000,"vgaddi"
+
 
 ; VMware SVGA driver
 HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","ErrorControl",0x00010001,0x00000000
