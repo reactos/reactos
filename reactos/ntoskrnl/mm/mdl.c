@@ -85,7 +85,9 @@ MmInitializeMdlImplementation(VOID)
    }
    MmUnlockAddressSpace(MmGetKernelAddressSpace());
 
-   Buffer = ExAllocatePool(NonPagedPool, MI_MDL_MAPPING_REGION_SIZE / (PAGE_SIZE * 8));
+   Buffer = ExAllocatePoolWithTag(NonPagedPool, 
+                                  MI_MDL_MAPPING_REGION_SIZE / (PAGE_SIZE * 8),
+                                  TAG_MDL);
 
    RtlInitializeBitMap(&MiMdlMappingRegionAllocMap, Buffer, MI_MDL_MAPPING_REGION_SIZE / PAGE_SIZE);
    RtlClearAllBits(&MiMdlMappingRegionAllocMap);
