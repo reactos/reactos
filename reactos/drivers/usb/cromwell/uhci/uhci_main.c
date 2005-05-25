@@ -6,8 +6,13 @@
 
 #include <ddk/ntddk.h>
 #include <debug.h>
-#include "../linux/linux_wrapper.h"
+
+// config and include core/hcd.h, for hc_device struct
+#include "../usb_wrapper.h"
+#include "../core/hcd.h"
+
 #include "../host/ohci_main.h"
+
 
 // declare basic init funcs
 void init_wrapper(struct pci_dev *probe_dev);
@@ -16,14 +21,12 @@ void uhci_hcd_cleanup(void);
 int STDCALL usb_init(void);
 void STDCALL usb_exit(void);
 extern struct pci_driver uhci_pci_driver;
-extern const struct pci_device_id uhci_pci_ids[];
-
+extern struct pci_device_id uhci_pci_ids[];
 
 
 // This should be removed, but for testing purposes it's here
 struct pci_dev *dev;
 //struct pci_device_id *dev_id;
-
 
 #define USB_UHCI_TAG TAG('u','s','b','u')
 
@@ -229,8 +232,21 @@ OHCD_PnPStartDevice(IN PDEVICE_OBJECT DeviceObject,
 					DeviceExtension->BaseAddress	= Descriptor->u.Port.Start;
 					DeviceExtension->BaseAddrLength = Descriptor->u.Port.Length;
 					DeviceExtension->Flags          = Descriptor->Flags;
+
+					((struct hc_driver *)uhci_pci_ids->driver_data)->flags &= ~HCD_MEMORY;
 					
      				DPRINT1("I/O resource: start=0x%x, length=0x%x\n",
+                                 DeviceExtension->BaseAddress.u.LowPart, DeviceExtension->BaseAddrLength);
+				}
+				else if (Descriptor->Type == CmResourceTypeMemory)
+				{
+					DeviceExtension->BaseAddress	= Descriptor->u.Memory.Start;
+					DeviceExtension->BaseAddrLength = Descriptor->u.Memory.Length;
+					DeviceExtension->Flags          = Descriptor->Flags;
+
+					((struct hc_driver *)uhci_pci_ids->driver_data)->flags |= HCD_MEMORY;
+					
+     				DPRINT1("Memory resource: start=0x%x, length=0x%x\n",
                                  DeviceExtension->BaseAddress.u.LowPart, DeviceExtension->BaseAddrLength);
 				}
 				else

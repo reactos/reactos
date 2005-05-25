@@ -2491,7 +2491,7 @@ static int uhci_hcd_get_frame_number(struct usb_hcd *hcd)
 
 static const char hcd_name[] = "uhci-hcd";
 
-static const struct hc_driver uhci_driver = {
+static struct hc_driver uhci_driver = {
 	.description =		hcd_name,
 
 	/* Generic hardware linkage */
