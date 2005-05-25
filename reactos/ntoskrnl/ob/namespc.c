@@ -570,7 +570,7 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
         Tag[3] = TypeName->Buffer[3];
         
         /* Set Tag */
-        DPRINT1("Convert: %s \n", Tag);
+        DPRINT("Convert: %s \n", Tag);
         LocalObjectType->Key = *(PULONG)Tag;
     }
     
