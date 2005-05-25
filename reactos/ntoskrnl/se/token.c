@@ -571,9 +571,9 @@ SepInitializeTokenImplementation(VOID)
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
     RtlInitUnicodeString(&Name, L"Token");
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(TOKEN);
+    ObjectTypeInitializer.DefaultPagedPoolCharge = sizeof(TOKEN);
     ObjectTypeInitializer.GenericMapping = SepTokenMapping;
-    ObjectTypeInitializer.PoolType = NonPagedPool;
+    ObjectTypeInitializer.PoolType = PagedPool;
     ObjectTypeInitializer.ValidAccessMask = TOKEN_ALL_ACCESS;
     ObjectTypeInitializer.UseDefaultObject = TRUE;
     ObjectTypeInitializer.DeleteProcedure = SepDeleteToken;
@@ -1853,7 +1853,7 @@ SepCreateSystemProcessToken(VOID)
   uSize += uAdminsLength;
 
   AccessToken->UserAndGroups =
-    (PSID_AND_ATTRIBUTES)ExAllocatePoolWithTag(NonPagedPool,
+    (PSID_AND_ATTRIBUTES)ExAllocatePoolWithTag(PagedPool,
 					       uSize,
 					       TAG('T', 'O', 'K', 'u'));
   SidArea = &AccessToken->UserAndGroups[AccessToken->UserAndGroupCount];
@@ -1885,7 +1885,7 @@ SepCreateSystemProcessToken(VOID)
 
   uSize = AccessToken->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES);
   AccessToken->Privileges =
-	(PLUID_AND_ATTRIBUTES)ExAllocatePoolWithTag(NonPagedPool,
+	(PLUID_AND_ATTRIBUTES)ExAllocatePoolWithTag(PagedPool,
 						    uSize,
 						    TAG('T', 'O', 'K', 'p'));
 
@@ -1964,7 +1964,7 @@ SepCreateSystemProcessToken(VOID)
   uSize += sizeof(ACE) + uAdminsLength;
   uSize = (uSize & (~3)) + 8;
   AccessToken->DefaultDacl =
-    (PACL) ExAllocatePoolWithTag(NonPagedPool,
+    (PACL) ExAllocatePoolWithTag(PagedPool,
 				 uSize,
 				 TAG('T', 'O', 'K', 'd'));
   Status = RtlCreateAcl(AccessToken->DefaultDacl, uSize, ACL_REVISION);

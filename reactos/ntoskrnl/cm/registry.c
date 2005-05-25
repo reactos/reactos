@@ -356,9 +356,9 @@ CmInitializeRegistry(VOID)
   RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
   RtlInitUnicodeString(&Name, L"Key");
   ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-  ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(KEY_OBJECT);
+  ObjectTypeInitializer.DefaultPagedPoolCharge = sizeof(KEY_OBJECT);
   ObjectTypeInitializer.GenericMapping = CmiKeyMapping;
-  ObjectTypeInitializer.PoolType = NonPagedPool;
+  ObjectTypeInitializer.PoolType = PagedPool;
   ObjectTypeInitializer.ValidAccessMask = KEY_ALL_ACCESS;
   ObjectTypeInitializer.UseDefaultObject = TRUE;
   ObjectTypeInitializer.DeleteProcedure = CmiObjectDelete;

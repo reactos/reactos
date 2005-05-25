@@ -2123,8 +2123,8 @@ MmInitSectionImplementation(VOID)
    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
    RtlInitUnicodeString(&Name, L"Section");
    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-   ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(SECTION_OBJECT);
-   ObjectTypeInitializer.PoolType = NonPagedPool;
+   ObjectTypeInitializer.DefaultPagedPoolCharge = sizeof(SECTION_OBJECT);
+   ObjectTypeInitializer.PoolType = PagedPool;
    ObjectTypeInitializer.UseDefaultObject = TRUE;
    ObjectTypeInitializer.GenericMapping = MmpSectionMapping;
    ObjectTypeInitializer.DeleteProcedure = MmpDeleteSection;
@@ -2499,7 +2499,7 @@ ExeFmtpAllocateSegments(IN ULONG NrSegments)
  /* TODO: check for integer overflow */
  SizeOfSegments = sizeof(MM_SECTION_SEGMENT) * NrSegments;
 
- Segments = ExAllocatePoolWithTag(NonPagedPool,
+ Segments = ExAllocatePoolWithTag(PagedPool,
                                   SizeOfSegments,
                                   TAG_MM_SECTION_SEGMENT);
 

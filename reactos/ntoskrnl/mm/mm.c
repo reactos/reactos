@@ -321,8 +321,11 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
    }
    if (PsGetCurrentProcess() == NULL)
    {
+      /* Allow this! It lets us page alloc much earlier! It won't be needed 
+       * after my init patch anyways
+       */
       DbgPrint("No current process\n");
-      return(STATUS_UNSUCCESSFUL);
+      //return(STATUS_UNSUCCESSFUL);
    }
 
    /*

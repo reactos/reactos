@@ -17,6 +17,7 @@
 /* GLOBALS ******************************************************************/
 
 PSE_EXPORTS EXPORTED SeExports = NULL;
+SE_EXPORTS SepExports;
 
 static ERESOURCE SepSubjectContextLock;
 
@@ -121,56 +122,51 @@ SeInitSRM(VOID)
 static BOOLEAN INIT_FUNCTION
 SepInitExports(VOID)
 {
-  SeExports = ExAllocatePoolWithTag(NonPagedPool,
-				    sizeof(SE_EXPORTS),
-				    TAG_SXPT);
-  if (SeExports == NULL)
-    return FALSE;
+  SepExports.SeCreateTokenPrivilege = SeCreateTokenPrivilege;
+  SepExports.SeAssignPrimaryTokenPrivilege = SeAssignPrimaryTokenPrivilege;
+  SepExports.SeLockMemoryPrivilege = SeLockMemoryPrivilege;
+  SepExports.SeIncreaseQuotaPrivilege = SeIncreaseQuotaPrivilege;
+  SepExports.SeUnsolicitedInputPrivilege = SeUnsolicitedInputPrivilege;
+  SepExports.SeTcbPrivilege = SeTcbPrivilege;
+  SepExports.SeSecurityPrivilege = SeSecurityPrivilege;
+  SepExports.SeTakeOwnershipPrivilege = SeTakeOwnershipPrivilege;
+  SepExports.SeLoadDriverPrivilege = SeLoadDriverPrivilege;
+  SepExports.SeCreatePagefilePrivilege = SeCreatePagefilePrivilege;
+  SepExports.SeIncreaseBasePriorityPrivilege = SeIncreaseBasePriorityPrivilege;
+  SepExports.SeSystemProfilePrivilege = SeSystemProfilePrivilege;
+  SepExports.SeSystemtimePrivilege = SeSystemtimePrivilege;
+  SepExports.SeProfileSingleProcessPrivilege = SeProfileSingleProcessPrivilege;
+  SepExports.SeCreatePermanentPrivilege = SeCreatePermanentPrivilege;
+  SepExports.SeBackupPrivilege = SeBackupPrivilege;
+  SepExports.SeRestorePrivilege = SeRestorePrivilege;
+  SepExports.SeShutdownPrivilege = SeShutdownPrivilege;
+  SepExports.SeDebugPrivilege = SeDebugPrivilege;
+  SepExports.SeAuditPrivilege = SeAuditPrivilege;
+  SepExports.SeSystemEnvironmentPrivilege = SeSystemEnvironmentPrivilege;
+  SepExports.SeChangeNotifyPrivilege = SeChangeNotifyPrivilege;
+  SepExports.SeRemoteShutdownPrivilege = SeRemoteShutdownPrivilege;
 
-  SeExports->SeCreateTokenPrivilege = SeCreateTokenPrivilege;
-  SeExports->SeAssignPrimaryTokenPrivilege = SeAssignPrimaryTokenPrivilege;
-  SeExports->SeLockMemoryPrivilege = SeLockMemoryPrivilege;
-  SeExports->SeIncreaseQuotaPrivilege = SeIncreaseQuotaPrivilege;
-  SeExports->SeUnsolicitedInputPrivilege = SeUnsolicitedInputPrivilege;
-  SeExports->SeTcbPrivilege = SeTcbPrivilege;
-  SeExports->SeSecurityPrivilege = SeSecurityPrivilege;
-  SeExports->SeTakeOwnershipPrivilege = SeTakeOwnershipPrivilege;
-  SeExports->SeLoadDriverPrivilege = SeLoadDriverPrivilege;
-  SeExports->SeCreatePagefilePrivilege = SeCreatePagefilePrivilege;
-  SeExports->SeIncreaseBasePriorityPrivilege = SeIncreaseBasePriorityPrivilege;
-  SeExports->SeSystemProfilePrivilege = SeSystemProfilePrivilege;
-  SeExports->SeSystemtimePrivilege = SeSystemtimePrivilege;
-  SeExports->SeProfileSingleProcessPrivilege = SeProfileSingleProcessPrivilege;
-  SeExports->SeCreatePermanentPrivilege = SeCreatePermanentPrivilege;
-  SeExports->SeBackupPrivilege = SeBackupPrivilege;
-  SeExports->SeRestorePrivilege = SeRestorePrivilege;
-  SeExports->SeShutdownPrivilege = SeShutdownPrivilege;
-  SeExports->SeDebugPrivilege = SeDebugPrivilege;
-  SeExports->SeAuditPrivilege = SeAuditPrivilege;
-  SeExports->SeSystemEnvironmentPrivilege = SeSystemEnvironmentPrivilege;
-  SeExports->SeChangeNotifyPrivilege = SeChangeNotifyPrivilege;
-  SeExports->SeRemoteShutdownPrivilege = SeRemoteShutdownPrivilege;
+  SepExports.SeNullSid = SeNullSid;
+  SepExports.SeWorldSid = SeWorldSid;
+  SepExports.SeLocalSid = SeLocalSid;
+  SepExports.SeCreatorOwnerSid = SeCreatorOwnerSid;
+  SepExports.SeCreatorGroupSid = SeCreatorGroupSid;
+  SepExports.SeNtAuthoritySid = SeNtAuthoritySid;
+  SepExports.SeDialupSid = SeDialupSid;
+  SepExports.SeNetworkSid = SeNetworkSid;
+  SepExports.SeBatchSid = SeBatchSid;
+  SepExports.SeInteractiveSid = SeInteractiveSid;
+  SepExports.SeLocalSystemSid = SeLocalSystemSid;
+  SepExports.SeAliasAdminsSid = SeAliasAdminsSid;
+  SepExports.SeAliasUsersSid = SeAliasUsersSid;
+  SepExports.SeAliasGuestsSid = SeAliasGuestsSid;
+  SepExports.SeAliasPowerUsersSid = SeAliasPowerUsersSid;
+  SepExports.SeAliasAccountOpsSid = SeAliasAccountOpsSid;
+  SepExports.SeAliasSystemOpsSid = SeAliasSystemOpsSid;
+  SepExports.SeAliasPrintOpsSid = SeAliasPrintOpsSid;
+  SepExports.SeAliasBackupOpsSid = SeAliasBackupOpsSid;
 
-  SeExports->SeNullSid = SeNullSid;
-  SeExports->SeWorldSid = SeWorldSid;
-  SeExports->SeLocalSid = SeLocalSid;
-  SeExports->SeCreatorOwnerSid = SeCreatorOwnerSid;
-  SeExports->SeCreatorGroupSid = SeCreatorGroupSid;
-  SeExports->SeNtAuthoritySid = SeNtAuthoritySid;
-  SeExports->SeDialupSid = SeDialupSid;
-  SeExports->SeNetworkSid = SeNetworkSid;
-  SeExports->SeBatchSid = SeBatchSid;
-  SeExports->SeInteractiveSid = SeInteractiveSid;
-  SeExports->SeLocalSystemSid = SeLocalSystemSid;
-  SeExports->SeAliasAdminsSid = SeAliasAdminsSid;
-  SeExports->SeAliasUsersSid = SeAliasUsersSid;
-  SeExports->SeAliasGuestsSid = SeAliasGuestsSid;
-  SeExports->SeAliasPowerUsersSid = SeAliasPowerUsersSid;
-  SeExports->SeAliasAccountOpsSid = SeAliasAccountOpsSid;
-  SeExports->SeAliasSystemOpsSid = SeAliasSystemOpsSid;
-  SeExports->SeAliasPrintOpsSid = SeAliasPrintOpsSid;
-  SeExports->SeAliasBackupOpsSid = SeAliasBackupOpsSid;
-
+  SeExports = &SepExports;
   return TRUE;
 }
 
@@ -498,7 +494,7 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
 	 DaclLength,
 	 SaclLength);
 
-  Descriptor = ExAllocatePool(NonPagedPool,
+  Descriptor = ExAllocatePool(PagedPool,
 			      Length);
   RtlZeroMemory( Descriptor, Length );
 

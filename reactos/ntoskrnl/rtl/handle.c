@@ -63,7 +63,7 @@ RtlpAllocateHandle(PRTL_HANDLE_TABLE HandleTable,
 	  {
 	     /* allocate handle array */
 	     ArraySize = sizeof(RTL_HANDLE) * HandleTable->TableSize;
-	     ArrayPointer = ExAllocatePoolWithTag(NonPagedPool,
+	     ArrayPointer = ExAllocatePoolWithTag(PagedPool,
 						  ArraySize,
 						  TAG_HDTB);
 	     if (ArrayPointer == NULL)

@@ -134,12 +134,12 @@
 #define TAG_HDTB  TAG('H', 'D', 'T', 'B')
 
 /* formerly located in se/acl.c */
-#define TAG_ACL    TAG('A', 'C', 'L', 'T')
-
-/* formerly located in se/semgr.c */
-#define TAG_SXPT   TAG('S', 'X', 'P', 'T')
+#define TAG_ACL    TAG('S', 'e', 'A', 'c')
 
 /* formerly located in se/sid.c */
-#define TAG_SID    TAG('S', 'I', 'D', 'T')
+#define TAG_SID    TAG('S', 'e', 'S', 'i')
+
+/* formerly located in se/sd.c */
+#define TAG_SD     TAG('S', 'e', 'S', 'd')
 
 #endif /* _NTOSKRNL_TAG_H */
