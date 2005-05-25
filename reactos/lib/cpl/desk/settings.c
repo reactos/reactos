@@ -62,14 +62,18 @@ UpdateDisplay(IN HWND hwndDlg)
 	LoadString(hApplet, IDS_PIXEL, Pixel, sizeof(Pixel) / sizeof(TCHAR));
 	_stprintf(Buffer, Pixel, CurrentDisplayDevice->CurrentSettings->dmPelsWidth, CurrentDisplayDevice->CurrentSettings->dmPelsHeight, Pixel);
 	SendDlgItemMessage(hwndDlg, IDC_SETTINGS_RESOLUTION_TEXT, WM_SETTEXT, 0, (LPARAM)Buffer);
-	
+		
+
 	for (index = 0; index < CurrentDisplayDevice->ResolutionsCount; index++)
+	{		
+
 		if (CurrentDisplayDevice->Resolutions[index].dmPelsWidth == CurrentDisplayDevice->CurrentSettings->dmPelsWidth &&
 		    CurrentDisplayDevice->Resolutions[index].dmPelsHeight == CurrentDisplayDevice->CurrentSettings->dmPelsHeight)
 		{
 			SendDlgItemMessage(hwndDlg, IDC_SETTINGS_RESOLUTION, TBM_SETPOS, TRUE, index);
 			break;
 		}
+	}
 	if (LoadString(hApplet, (2900 + CurrentDisplayDevice->CurrentSettings->dmBitsPerPel), Buffer, sizeof(Buffer) / sizeof(TCHAR))) 
 		SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_SELECTSTRING, -1, (LPARAM)Buffer);
 }
