@@ -275,7 +275,7 @@ APIENTRY DWORD wodMessage(DWORD dwId, DWORD dwMessage, DWORD dwUser, DWORD dwPar
         case WODM_GETVOLUME:
             DPRINT("WODM_GETVOLUME");
             {
-                WAVE_DD_VOLUME Vol;
+                WAVE_DD_VOLUME Vol = {};
                 DWORD res;
 
                 res = soundGetData(WaveOutDevice, dwId, sizeof(Vol),

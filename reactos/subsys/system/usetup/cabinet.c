@@ -599,7 +599,7 @@ CabinetOpen(VOID)
           wcscpy(CabinetPrev, CabinetName);
           RemoveFileName(CabinetPrev);
           CabinetNormalizePath(CabinetPrev, 256);
-		  RtlInitAnsiString( &astring, Buffer );
+		  RtlInitAnsiString( &astring, (LPSTR)Buffer );
 		  ustring.Length = wcslen( CabinetPrev );
 		  ustring.Buffer = CabinetPrev + ustring.Length;
 		  ustring.MaximumLength = sizeof( CabinetPrev ) - ustring.Length;
@@ -607,7 +607,7 @@ CabinetOpen(VOID)
 		  Buffer += astring.Length + 1;
 
           /* Read label of prev disk */
-		  RtlInitAnsiString( &astring, Buffer );
+		  RtlInitAnsiString( &astring, (LPSTR)Buffer );
 		  ustring.Length = 0;
 		  ustring.Buffer = DiskPrev;
 		  ustring.MaximumLength = sizeof( DiskPrev );
@@ -626,7 +626,7 @@ CabinetOpen(VOID)
           wcscpy(CabinetNext, CabinetName);
           RemoveFileName(CabinetNext);
           CabinetNormalizePath(CabinetNext, 256);
-		  RtlInitAnsiString( &astring, Buffer );
+		  RtlInitAnsiString( &astring, (LPSTR)Buffer );
 		  ustring.Length = wcslen( CabinetNext );
 		  ustring.Buffer = CabinetNext + ustring.Length;
 		  ustring.MaximumLength = sizeof( CabinetNext ) - ustring.Length;
@@ -634,7 +634,7 @@ CabinetOpen(VOID)
 		  Buffer += astring.Length + 1;
 
           /* Read label of next disk */
-		  RtlInitAnsiString( &astring, Buffer );
+		  RtlInitAnsiString( &astring, (LPSTR)Buffer );
 		  ustring.Length = 0;
 		  ustring.Buffer = DiskNext;
 		  ustring.MaximumLength = sizeof( DiskNext );
@@ -999,7 +999,7 @@ ULONG CabinetExtractFile( PCAB_SEARCH Search )
 	  CFData = (PCFDATA)((char *)(CFData+1) + DataReserved + CFData->CompSize);
 	}
   // now decompress and discard any data in the block before the start of the file
-  CurrentBuffer = ((char *)(CFData+1)) + DataReserved; // start of comp data
+  CurrentBuffer = ((unsigned char *)(CFData+1)) + DataReserved; // start of comp data
   RemainingBlock = CFData->CompSize;
   InputLength = RemainingBlock;
   while( CurrentOffset < Search->File->FileOffset )
@@ -1047,7 +1047,7 @@ ULONG CabinetExtractFile( PCAB_SEARCH Search )
 		  DPRINT( "Out of block data\n" );
 		  CFData = (PCFDATA)CurrentBuffer;
 		  RemainingBlock = CFData->CompSize;
-		  CurrentBuffer = ((char *)(CFData+1) + DataReserved);
+		  CurrentBuffer = ((unsigned char *)(CFData+1) + DataReserved);
 		  InputLength = RemainingBlock;
 		}
 	}

@@ -31,7 +31,7 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
                      IN KPROCESSOR_MODE AccessMode)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    UNICODE_STRING LocalName;
+    UNICODE_STRING LocalName = {}; /* <= GCC 4.0 + Optimizer */
     
     /* First Probe the String */
     DPRINT("ObpCaptureObjectName: %wZ\n", ObjectName);
