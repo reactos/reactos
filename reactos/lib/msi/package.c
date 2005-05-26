@@ -73,7 +73,7 @@ static UINT clone_properties(MSIDATABASE *db)
        'Y',' ','K','E','Y',' ','`','_','P','r','o','p','e','r','t','y','`',')',0};
     static const WCHAR Query[] = {
        'S','E','L','E','C','T',' ','*',' ',
-       'f','r','o','m',' ','P','r','o','p','e','r','t','y',0};
+       'F','R','O','M',' ','`','P','r','o','p','e','r','t','y','`',0};
     static const WCHAR Insert[] = {
        'I','N','S','E','R','T',' ','i','n','t','o',' ',
        '`','_','P','r','o','p','e','r','t','y','`',' ',
@@ -139,6 +139,7 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     WCHAR pth[MAX_PATH];
     WCHAR *ptr;
     OSVERSIONINFOA OSVersion;
+    MEMORYSTATUSEX msex;
     DWORD verval;
     WCHAR verstr[10], bufstr[20];
     HDC dc;
@@ -202,6 +203,7 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     static const WCHAR szSix[] = {'6',0 };
 
     static const WCHAR szVersionMsi[] = { 'V','e','r','s','i','o','n','M','s','i',0 };
+    static const WCHAR szPhysicalMemory[] = { 'P','h','y','s','i','c','a','l','M','e','m','o','r','y',0 };
     static const WCHAR szFormat2[] = {'%','l','i','.','%','l','i',0};
 /* Screen properties */
     static const WCHAR szScreenX[] = {'S','c','r','e','e','n','X',0};
@@ -217,7 +219,6 @@ ComputerName
 UserLanguageID
 LogonUser
 VirtualMemory
-PhysicalMemory
 Intel
 ShellAdvSupport
 DefaultUIFont
@@ -306,6 +307,12 @@ Privileged
     SHGetFolderPathW(NULL,CSIDL_WINDOWS,NULL,0,pth);
     strcatW(pth,cszbs);
     MSI_SetPropertyW(package, WF, pth);
+    
+    /* Physical Memory is specified in MB. Using total amount. */
+    msex.dwLength = sizeof(msex);
+    GlobalMemoryStatusEx( &msex );
+    sprintfW( bufstr, szScreenFormat, (int)(msex.ullTotalPhys/1024/1024));
+    MSI_SetPropertyW(package, szPhysicalMemory, bufstr);
 
     SHGetFolderPathW(NULL,CSIDL_WINDOWS,NULL,0,pth);
     ptr = strchrW(pth,'\\');
@@ -740,9 +747,10 @@ static UINT MSI_GetPropertyRow(MSIPACKAGE *package, LPCWSTR szName, MSIRECORD **
     MSIQUERY *view;
     UINT rc, sz;
     static const WCHAR select[]=
-    {'s','e','l','e','c','t',' ','V','a','l','u','e',' ','f','r','o','m',' '
-     ,'_','P','r','o','p','e','r','t','y',' ','w','h','e','r','e',' '
-     ,'_','P','r','o','p','e','r','t','y','=','`','%','s','`',0};
+    {'S','E','L','E','C','T',' ','`','V','a','l','u','e','`',' ',
+     'F','R','O','M',' ' ,'`','_','P','r','o','p','e','r','t','y','`',
+     ' ','W','H','E','R','E',' ' ,'`','_','P','r','o','p','e','r','t','y','`',
+     '=','\'','%','s','\'',0};
     LPWSTR query;
 
     if (!szName)
@@ -793,7 +801,7 @@ UINT MSI_GetPropertyW(MSIPACKAGE *package, LPCWSTR szName,
     else
     {
         *pchValueBuf = 0;
-        TRACE("property not found\n");
+        TRACE("property %s not found\n", debugstr_w(szName));
     }
 
     return rc;

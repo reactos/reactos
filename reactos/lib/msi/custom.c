@@ -80,9 +80,10 @@ UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
     MSIQUERY * view;
     MSIRECORD * row = 0;
     static const WCHAR ExecSeqQuery[] =
-    {'s','e','l','e','c','t',' ','*',' ','f','r','o','m',' ','C','u','s','t','o'
-        ,'m','A','c','t','i','o','n',' ','w','h','e','r','e',' ','`','A','c','t','i'
-        ,'o','n','`',' ','=',' ','`','%','s','`',0};
+    {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
+     '`','C','u','s','t','o' ,'m','A','c','t','i','o','n','`',
+     ' ','W','H','E','R','E',' ','`','A','c','t','i' ,'o','n','`',' ',
+     '=',' ','\'','%','s','\'',0};
     UINT type;
     LPWSTR source;
     LPWSTR target;
@@ -251,8 +252,9 @@ static UINT store_binary_to_temp(MSIPACKAGE *package, LPCWSTR source,
         MSIQUERY * view;
         MSIRECORD * row = 0;
         static const WCHAR fmt[] =
-        {'s','e','l','e','c','t',' ','*',' ','f','r','o','m',' ','B','i'
-,'n','a','r','y',' ','w','h','e','r','e',' ','N','a','m','e','=','`','%','s','`',0};
+        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
+         '`','B','i' ,'n','a','r','y','`',' ','W','H','E','R','E',
+         ' ','`','N','a','m','e','`',' ','=',' ','\'','%','s','\'',0};
         HANDLE the_file;
         CHAR buffer[1024];
 
@@ -333,7 +335,7 @@ static void file_running_action(MSIPACKAGE* package, HANDLE Handle,
 
 static UINT process_action_return_value(UINT type, HANDLE ThreadHandle)
 {
-    DWORD rc;
+    DWORD rc=0;
     
     if (type == 2)
     {
@@ -357,7 +359,8 @@ static UINT process_action_return_value(UINT type, HANDLE ThreadHandle)
         case ERROR_NO_MORE_ITEMS:
             return ERROR_SUCCESS;
         default:
-            return ERROR_FUNCTION_FAILED;
+            ERR("Invalid Return Code %lx\n",rc);
+            return ERROR_INSTALL_FAILURE;
     }
 }
 
@@ -372,9 +375,9 @@ static UINT process_handle(MSIPACKAGE* package, UINT type,
         /* synchronous */
         TRACE("Synchronous Execution of action %s\n",debugstr_w(Name));
         if (ProcessHandle)
-            msi_dialog_check_messages(package->dialog, ProcessHandle);
+            msi_dialog_check_messages(ProcessHandle);
         else
-            msi_dialog_check_messages(package->dialog, ThreadHandle);
+            msi_dialog_check_messages(ThreadHandle);
 
         if (!(type & 0x40))
         {
@@ -479,7 +482,7 @@ static DWORD WINAPI DllThread(LPVOID info)
     stuff = (thread_struct*)info;
     rc = ACTION_CallDllFunction(stuff);
 
-    TRACE("MSI Thread (0x%lx) finished\n",GetCurrentThreadId());
+    TRACE("MSI Thread (0x%lx) finished (rc %li)\n",GetCurrentThreadId(), rc);
     /* clse all handles for this thread */
     MsiCloseAllHandles();
     return rc;
@@ -630,7 +633,8 @@ static UINT HANDLE_CustomType19(MSIPACKAGE *package, LPCWSTR source,
     static const WCHAR query[] = {
       'S','E','L','E','C','T',' ','`','M','e','s','s','a','g','e','`',' ',
       'F','R','O','M',' ','`','E','r','r','o','r','`',' ',
-      'W','H','E','R','E',' ','`','E','r','r','o','r','`',' ','=',' ','%','s',0
+      'W','H','E','R','E',' ','`','E','r','r','o','r','`',' ','=',' ',
+      '\'','%','s','\'',0
     };
     MSIQUERY *view = NULL;
     MSIRECORD *row = 0;
@@ -685,7 +689,7 @@ static UINT HANDLE_CustomType50(MSIPACKAGE *package, LPCWSTR source,
 
     prop = load_dynamic_property(package,source,&prc);
     if (!prop)
-        return prc;
+        return ERROR_SUCCESS;
 
     deformat_string(package,target,&deformated);
     len = strlenW(prop) + 2;
@@ -782,8 +786,7 @@ void ACTION_FinishCustomActions(MSIPACKAGE* package)
         {
             TRACE("Waiting on action %s\n",
                debugstr_w(package->RunningAction[i].name));
-            msi_dialog_check_messages(package->dialog,
-                                      package->RunningAction[i].handle);
+            msi_dialog_check_messages(package->RunningAction[i].handle);
         }
 
         HeapFree(GetProcessHeap(),0,package->RunningAction[i].name);

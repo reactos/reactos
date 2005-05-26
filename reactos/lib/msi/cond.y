@@ -181,7 +181,7 @@ term:
         }
   | value_s
         {
-            $$ = $1[0] ? MSICONDITION_TRUE : MSICONDITION_FALSE;
+            $$ = ($1 && $1[0]) ? MSICONDITION_TRUE : MSICONDITION_FALSE;
         }
   | value_i comp_op_i value_i
         {
@@ -739,7 +739,9 @@ MSICONDITION MSI_EvaluateConditionW( MSIPACKAGE *package, LPCWSTR szCondition )
     
     TRACE("Evaluating %s\n",debugstr_w(szCondition));    
 
-    if( szCondition && !COND_parse( &cond ) )
+    if ( szCondition == NULL || szCondition[0] == 0)
+    	r = MSICONDITION_NONE;
+    else if ( !COND_parse( &cond ) )
         r = cond.result;
     else
         r = MSICONDITION_ERROR;

@@ -3,6 +3,7 @@ TOPOBJDIR = ../..
 SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = msi.dll
+IMPORTLIB = libmsi.$(IMPLIBEXT)
 IMPORTS   = shell32 cabinet oleaut32 ole32 version user32 gdi32 advapi32 kernel32
 EXTRALIBS = -luuid $(LIBUNICODE)
 

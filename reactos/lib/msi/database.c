@@ -65,6 +65,7 @@ VOID MSI_CloseDatabase( MSIOBJECTHDR *arg )
     DWORD r;
 
     free_cached_tables( db );
+    msi_destroy_stringtable( db->strings );
     r = IStorage_Release( db->storage );
     if( r )
         ERR("database reference count was not zero (%ld)\n", r);
@@ -213,7 +214,8 @@ UINT WINAPI MsiOpenDatabaseA(LPCSTR szDBPath, LPCSTR szPersist, MSIHANDLE *phDB)
     r = MsiOpenDatabaseW( szwDBPath, szwPersist, phDB );
 
 end:
-    HeapFree( GetProcessHeap(), 0, szwPersist );
+    if( HIWORD(szPersist) )
+        HeapFree( GetProcessHeap(), 0, szwPersist );
     HeapFree( GetProcessHeap(), 0, szwDBPath );
 
     return r;
@@ -334,7 +336,7 @@ UINT WINAPI MsiDatabaseExportA( MSIHANDLE handle, LPCSTR szTable,
             goto end;
     }
 
-    r = MsiDatabaseImportW( handle, path, file );
+    r = MsiDatabaseExportW( handle, table, path, file );
 
 end:
     HeapFree( GetProcessHeap(), 0, table );

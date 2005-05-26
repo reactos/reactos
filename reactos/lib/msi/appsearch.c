@@ -23,8 +23,10 @@
 
 #include "windef.h"
 #include "winbase.h"
+#include "winreg.h"
 #include "msi.h"
 #include "msiquery.h"
+#include "msidefs.h"
 #include "winver.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"
@@ -243,6 +245,9 @@ static UINT ACTION_AppSearchReg(MSIPACKAGE *package, BOOL *appFound,
    'R','e','g','L','o','c','a','t','o','r',' ',
    'w','h','e','r','e',' ','S','i','g','n','a','t','u','r','e','_',' ','=',' ',
    '\'','%','s','\'',0};
+    static const WCHAR dwordFmt[] = { '#','%','d','\0' };
+    static const WCHAR expandSzFmt[] = { '#','%','%','%','s','\0' };
+    static const WCHAR binFmt[] = { '#','x','%','x','\0' };
 
     TRACE("(package %p, appFound %p, sig %p)\n", package, appFound, sig);
     *appFound = FALSE;
@@ -250,7 +255,11 @@ static UINT ACTION_AppSearchReg(MSIPACKAGE *package, BOOL *appFound,
     if (rc == ERROR_SUCCESS)
     {
         MSIRECORD *row = 0;
-        LPWSTR keyPath;
+        LPWSTR keyPath = NULL, valueName = NULL, propertyValue = NULL;
+        int root, type;
+        HKEY rootKey, key = NULL;
+        DWORD sz = 0, regType, i;
+        LPBYTE value = NULL;
 
         rc = MSI_ViewExecute(view, 0);
         if (rc != ERROR_SUCCESS)
@@ -266,13 +275,121 @@ static UINT ACTION_AppSearchReg(MSIPACKAGE *package, BOOL *appFound,
             goto end;
         }
 
-        /* get key path */
+        root = MSI_RecordGetInteger(row,2);
         keyPath = load_dynamic_stringW(row,3);
-        FIXME("AppSearch unimplemented for RegLocator (key path %s)\n",
-         debugstr_w(keyPath));
-        HeapFree(GetProcessHeap(), 0, keyPath);
+        /* FIXME: keyPath needs to be expanded for properties */
+        valueName = load_dynamic_stringW(row,4);
+        /* FIXME: valueName probably does too */
+        type = MSI_RecordGetInteger(row,5);
+
+        if ((type & 0x0f) != msidbLocatorTypeRawValue)
+        {
+            FIXME("AppSearch unimplemented for type %d (key path %s, value %s)\n",
+             type, debugstr_w(keyPath), debugstr_w(valueName));
+            goto end;
+        }
+
+        switch (root)
+        {
+            case msidbRegistryRootClassesRoot:
+                rootKey = HKEY_CLASSES_ROOT;
+                break;
+            case msidbRegistryRootCurrentUser:
+                rootKey = HKEY_CURRENT_USER;
+                break;
+            case msidbRegistryRootLocalMachine:
+                rootKey = HKEY_LOCAL_MACHINE;
+                break;
+            case msidbRegistryRootUsers:
+                rootKey = HKEY_USERS;
+                break;
+            default:
+                WARN("Unknown root key %d\n", root);
+                goto end;
+        }
+
+        rc = RegCreateKeyW(rootKey, keyPath, &key);
+        if (rc)
+        {
+            TRACE("RegCreateKeyW returned %d\n", rc);
+            rc = ERROR_SUCCESS;
+            goto end;
+        }
+        rc = RegQueryValueExW(key, valueName, NULL, NULL, NULL, &sz);
+        if (rc)
+        {
+            TRACE("RegQueryValueExW returned %d\n", rc);
+            rc = ERROR_SUCCESS;
+            goto end;
+        }
+        /* FIXME: sanity-check sz before allocating (is there an upper-limit
+         * on the value of a property?)
+         */
+        value = HeapAlloc(GetProcessHeap(), 0, sz);
+        rc = RegQueryValueExW(key, valueName, NULL, &regType, value, &sz);
+        if (rc)
+        {
+            TRACE("RegQueryValueExW returned %d\n", rc);
+            rc = ERROR_SUCCESS;
+            goto end;
+        }
+
+        switch (regType)
+        {
+            case REG_SZ:
+                if (*(LPWSTR)value == '#')
+                {
+                    /* escape leading pound with another */
+                    propertyValue = HeapAlloc(GetProcessHeap(), 0,
+                     sz + sizeof(WCHAR));
+                    propertyValue[0] = '#';
+                    strcpyW(propertyValue + 1, (LPWSTR)value);
+                }
+                else
+                {
+                    propertyValue = HeapAlloc(GetProcessHeap(), 0, sz);
+                    strcpyW(propertyValue, (LPWSTR)value);
+                }
+                break;
+            case REG_DWORD:
+                /* 7 chars for digits, 1 for NULL, 1 for #, and 1 for sign
+                 * char if needed
+                 */
+                propertyValue = HeapAlloc(GetProcessHeap(), 0,
+                 10 * sizeof(WCHAR));
+                sprintfW(propertyValue, dwordFmt, *(DWORD *)value);
+                break;
+            case REG_EXPAND_SZ:
+                /* space for extra #% characters in front */
+                propertyValue = HeapAlloc(GetProcessHeap(), 0,
+                 sz + 2 * sizeof(WCHAR));
+                sprintfW(propertyValue, expandSzFmt, (LPWSTR)value);
+                break;
+            case REG_BINARY:
+                /* 3 == length of "#x<nibble>" */
+                propertyValue = HeapAlloc(GetProcessHeap(), 0,
+                 (sz * 3 + 1) * sizeof(WCHAR));
+                for (i = 0; i < sz; i++)
+                    sprintfW(propertyValue + i * 3, binFmt, value[i]);
+                break;
+            default:
+                WARN("unimplemented for values of type %ld\n", regType);
+                goto end;
+        }
+
+        TRACE("found registry value, setting %s to %s\n",
+         debugstr_w(sig->Property), debugstr_w(propertyValue));
+        rc = MSI_SetPropertyW(package, sig->Property, propertyValue);
+        *appFound = TRUE;
 
 end:
+        HeapFree(GetProcessHeap(), 0, propertyValue);
+        HeapFree(GetProcessHeap(), 0, value);
+        RegCloseKey(key);
+
+        HeapFree(GetProcessHeap(), 0, keyPath);
+        HeapFree(GetProcessHeap(), 0, valueName);
+
         msiobj_release(&row->hdr);
         MSI_ViewClose(view);
         msiobj_release(&view->hdr);

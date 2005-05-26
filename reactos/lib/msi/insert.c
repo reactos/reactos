@@ -233,7 +233,6 @@ static UINT INSERT_delete( struct tagMSIVIEW *view )
     sv = iv->sv;
     if( sv )
         sv->ops->delete( sv );
-    delete_value_list( iv->vals );
     msiobj_release( &iv->db->hdr );
     HeapFree( GetProcessHeap(), 0, iv );
 

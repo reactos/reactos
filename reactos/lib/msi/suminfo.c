@@ -39,7 +39,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
-#define MSI_MAX_PROPS 19
+#define MSI_MAX_PROPS 20
 
 #include "pshpack1.h"
 
@@ -80,6 +80,8 @@ typedef struct {
 } PROPERTY_DATA;
  
 #include "poppack.h"
+
+#define SECT_HDR_SIZE (sizeof(PROPERTYSECTIONHEADER))
 
 typedef struct {
     BOOL unicode;
@@ -162,17 +164,21 @@ static UINT get_property_count( PROPVARIANT *property )
 }
 
 /* FIXME: doesn't deal with endian conversion */
-static void read_properties_from_data( PROPVARIANT *prop,
-              PROPERTYIDOFFSET *idofs, DWORD count, LPBYTE data, DWORD sz )
+static void read_properties_from_data( PROPVARIANT *prop, LPBYTE data, DWORD sz )
 {
     UINT type;
     DWORD i;
     int size;
     PROPERTY_DATA *propdata;
     PROPVARIANT *property;
+    PROPERTYIDOFFSET *idofs;
+    PROPERTYSECTIONHEADER *section_hdr;
+
+    section_hdr = (PROPERTYSECTIONHEADER*) &data[0];
+    idofs = (PROPERTYIDOFFSET*) &data[SECT_HDR_SIZE];
 
     /* now set all the properties */
-    for( i = 0; i < count; i++ )
+    for( i = 0; i < section_hdr->cProperties; i++ )
     {
         type = get_type( idofs[i].propid );
         if( type == VT_EMPTY )
@@ -181,12 +187,12 @@ static void read_properties_from_data( PROPVARIANT *prop,
             break;
         }
 
-        propdata = (PROPERTY_DATA*) &data[idofs[i].dwOffset];
+        propdata = (PROPERTY_DATA*) &data[ idofs[i].dwOffset ];
 
         /* check the type is the same as we expect */
         if( type != propdata->type )
         {
-            ERR("wrong type\n");
+            ERR("wrong type %d != %ld\n", type, propdata->type);
             break;
         }
 
@@ -197,6 +203,12 @@ static void read_properties_from_data( PROPVARIANT *prop,
             ( type == VT_LPSTR && (propdata->u.str.len + sizeof(DWORD)) > size ) )
         {
             ERR("not enough data\n");
+            break;
+        }
+
+        if( idofs[i].propid >= MSI_MAX_PROPS )
+        {
+            ERR("Unknown property ID %ld\n", idofs[i].propid );
             break;
         }
 
@@ -225,7 +237,6 @@ static UINT load_summary_info( MSISUMMARYINFO *si, IStream *stm )
     PROPERTYSETHEADER set_hdr;
     FORMATIDOFFSET format_hdr;
     PROPERTYSECTIONHEADER section_hdr;
-    PROPERTYIDOFFSET idofs[MSI_MAX_PROPS];
     LPBYTE data = NULL;
     LARGE_INTEGER ofs;
     ULONG count, sz;
@@ -261,7 +272,7 @@ static UINT load_summary_info( MSISUMMARYINFO *si, IStream *stm )
         return ret;
 
     /* read the section itself */
-    sz = sizeof section_hdr;
+    sz = SECT_HDR_SIZE;
     r = IStream_Read( stm, &section_hdr, sz, &count );
     if( FAILED(r) || count != sz )
         return ret;
@@ -272,23 +283,19 @@ static UINT load_summary_info( MSISUMMARYINFO *si, IStream *stm )
         return ret;
     }
 
-    /* read the offsets */
-    sz = sizeof idofs[0] * section_hdr.cProperties;
-    r = IStream_Read( stm, idofs, sz, &count );
-    if( FAILED(r) || count != sz )
-        return ret;
-
-    /* read all the data in one go */
-    sz = section_hdr.cbSection;
-    data = HeapAlloc( GetProcessHeap(), 0, sz );
+    data = HeapAlloc( GetProcessHeap(), 0, section_hdr.cbSection);
     if( !data )
         return ret;
-    r = IStream_Read( stm, data, sz, &count );
+
+    memcpy( data, &section_hdr, SECT_HDR_SIZE );
+
+    /* read all the data in one go */
+    sz = section_hdr.cbSection - SECT_HDR_SIZE;
+    r = IStream_Read( stm, &data[ SECT_HDR_SIZE ], sz, &count );
     if( SUCCEEDED(r) && count == sz )
-    {
-        read_properties_from_data( si->property, idofs,
-                                   section_hdr.cProperties, data, sz );
-    }
+        read_properties_from_data( si->property, data, sz + SECT_HDR_SIZE );
+    else
+        ERR("failed to read properties %ld %ld\n", count, sz);
 
     HeapFree( GetProcessHeap(), 0, data );
     return ret;
@@ -481,7 +488,7 @@ UINT WINAPI MsiGetSummaryInformationW( MSIHANDLE hDatabase,
 
 end:
     if( db )
-        msiobj_release(&db->hdr);
+        msiobj_release( &db->hdr );
 
     return ret;
 }
@@ -531,24 +538,20 @@ static UINT get_prop( MSIHANDLE handle, UINT uiProperty, UINT *puiDataType,
 {
     MSISUMMARYINFO *si;
     PROPVARIANT *prop;
-    UINT type;
 
     TRACE("%ld %d %p %p %p %p %p\n", handle, uiProperty, puiDataType,
           piValue, pftValue, str, pcchValueBuf);
-
-    type = get_type( uiProperty );
-    if( puiDataType )
-        *puiDataType = type;
 
     si = msihandle2msiinfo( handle, MSIHANDLETYPE_SUMMARYINFO );
     if( !si )
         return ERROR_INVALID_HANDLE;
 
     prop = &si->property[uiProperty];
-    if( prop->vt != type )
-        goto end;
 
-    switch( type )
+    if( puiDataType )
+        *puiDataType = prop->vt;
+
+    switch( prop->vt )
     {
     case VT_I2:
         if( piValue )
@@ -587,7 +590,6 @@ static UINT get_prop( MSIHANDLE handle, UINT uiProperty, UINT *puiDataType,
         FIXME("Unknown property variant type\n");
         break;
     }
-end:
     msiobj_release( &si->hdr );
     return ERROR_SUCCESS;
 }
