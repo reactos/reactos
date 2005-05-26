@@ -110,7 +110,7 @@ EnumDisplayDevicesW(
     lpDisplayDevice,
     dwFlags );
 
-  RtlFreeUnicodeString ( &Device );
+  //RtlFreeUnicodeString ( &Device );
 
   return rc;
 }
