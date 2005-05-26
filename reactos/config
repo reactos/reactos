@@ -14,7 +14,7 @@ ARCH := i386
 # be optimized for. 
 #
 
-OARCH := i486
+OARCH := i486 
 
 #
 # Whether to compile in the kernel debugger
@@ -25,7 +25,7 @@ KDBG := 0
 # Whether to compile for debugging
 # Enabling this enables ASSERTS, GDB and Special Debug Routines
 #
-DBG := 0
+DBG := 1
 
 #
 # Whether to compile a multiprocessor or single processor version
