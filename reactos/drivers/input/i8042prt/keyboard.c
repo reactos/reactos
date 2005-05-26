@@ -113,7 +113,7 @@ BOOLEAN STDCALL I8042InterruptServiceKbd(struct _KINTERRUPT *Interrupt,
 	} while (Iterations < DevExt->Settings.PollStatusIterations);
 
 	if (STATUS_SUCCESS != Status) {
-		DPRINT1("Spurious I8042 interrupt\n");
+		DPRINT("Spurious I8042 interrupt\n");
 		return FALSE;
 	}
 
