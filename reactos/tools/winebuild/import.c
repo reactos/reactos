@@ -34,8 +34,14 @@
 #endif
 
 #include "winglue.h"
-#include "wine/exception.h"
+//#include "wine/exception.h"
 #include "build.h"
+
+#ifndef EXCEPTION_NONCONTINUABLE
+#define EXCEPTION_NONCONTINUABLE 1
+#endif
+
+#define EXCEPTION_WINE_STUB       0x80000100  /* stub entry point called */
 
 struct import
 {
