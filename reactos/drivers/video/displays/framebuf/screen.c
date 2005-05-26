@@ -90,24 +90,15 @@ GetAvailableModes(
 
    while (ulTemp--)
    {
-	   /*
-	     FIXME
-		 Do only remove no supporet mode not reste the ModeInfoPtr->Length=0
-         if the mode should be betwin 8 - 32 it will not found the rest 
-		 of the mode that comes after it. That why 24bits graphic card 
-		 fails. and that reason We add 15bpp check here
-	  */
       if ((ModeInfoPtr->NumberOfPlanes != 1) ||
           !(ModeInfoPtr->AttributeFlags & VIDEO_MODE_GRAPHICS) ||
           ((ModeInfoPtr->BitsPerPlane != 8) &&
-		   (ModeInfoPtr->BitsPerPlane != 15) &&
            (ModeInfoPtr->BitsPerPlane != 16) &&
            (ModeInfoPtr->BitsPerPlane != 24) &&
            (ModeInfoPtr->BitsPerPlane != 32)))
       {
          ModeInfoPtr->Length = 0;
       }
-
 
       ModeInfoPtr = (PVIDEO_MODE_INFORMATION)
          (((PUCHAR)ModeInfoPtr) + Modes.ModeInformationLength);
@@ -167,7 +158,6 @@ IntInitScreenInfo(
       ModeInfoPtr = ModeInfo;
       while (ModeCount-- > 0)
       {
-
          if (ModeInfoPtr->Length > 0 &&
 	     pDevMode->dmPelsWidth == ModeInfoPtr->VisScreenWidth &&
              pDevMode->dmPelsHeight == ModeInfoPtr->VisScreenHeight &&
@@ -179,7 +169,8 @@ IntInitScreenInfo(
             break;
          }
 
-         ModeInfoPtr++;
+         ModeInfoPtr = (PVIDEO_MODE_INFORMATION)
+            (((PUCHAR)ModeInfoPtr) + ModeInfoSize);
       }
    }
 
@@ -392,6 +383,7 @@ DrvGetModes(
    {
       if (ModeInfoPtr->Length == 0)
       {
+         ModeInfoPtr = (PVIDEO_MODE_INFORMATION)(((ULONG_PTR)ModeInfoPtr) + ModeInfoSize);
          continue;
       }
 
