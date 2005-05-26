@@ -607,7 +607,7 @@ DATETIME_Refresh (DATETIME_INFO *infoPtr, HDC hdc)
     RECT *checkbox = &infoPtr->checkbox;
     SIZE size;
     COLORREF oldTextColor;
-    SHORT fieldWidth;
+    SHORT fieldWidth = 0;
 
     /* draw control edge */
     TRACE("\n");

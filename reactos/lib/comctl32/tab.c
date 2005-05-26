@@ -1727,12 +1727,12 @@ TAB_DrawItemInterior
       else
         drawRect->bottom-=center_offset_h;
 
-      center_offset_v = ((drawRect->right - drawRect->left) - ((rcText.bottom - rcText.top) + infoPtr->uVItemPadding)) / 2;
+      center_offset_v = ((drawRect->right - drawRect->left) - (rcText.bottom - rcText.top) + infoPtr->uVItemPadding) / 2;
     }
     else
     {
       drawRect->left += center_offset_h;
-      center_offset_v = ((drawRect->bottom - drawRect->top) - ((rcText.bottom - rcText.top) + infoPtr->uVItemPadding)) / 2;
+      center_offset_v = ((drawRect->bottom - drawRect->top) - (rcText.bottom - rcText.top) + infoPtr->uVItemPadding) / 2;
     }
 
     if (center_offset_v < 0)
@@ -2961,9 +2961,16 @@ TAB_Destroy (TAB_INFO *infoPtr)
   return 0;
 }
 
+static LRESULT TAB_NCCalcSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
+{
+  if (!wParam)
+    return 0;
+  return WVR_ALIGNTOP;
+}
+
 static inline LRESULT
 TAB_SetItemExtra (TAB_INFO *infoPtr, INT cbInfo)
-{   
+{
   if (!infoPtr || cbInfo <= 0)
     return FALSE;
 
@@ -3142,6 +3149,9 @@ TAB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       return TAB_KeyUp(infoPtr, wParam);
     case WM_NCHITTEST:
       return TAB_NCHitTest(infoPtr, lParam);
+
+    case WM_NCCALCSIZE:
+      return TAB_NCCalcSize(hwnd, wParam, lParam);
 
     default:
       if (uMsg >= WM_USER && uMsg < WM_APP)

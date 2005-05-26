@@ -588,7 +588,7 @@ static void MRU_SaveChanged ( LPWINEMRULIST mp )
     if ((err = RegOpenKeyExW( mp->extview.hKey, mp->extview.lpszSubKey,
 			      0, KEY_WRITE, &newkey))) {
 	/* not present - what to do ??? */
-	ERR("Can not open key, error=%d, attempting to create\n",
+	ERR("Could not open key, error=%d, attempting to create\n",
 	    err);
 	if ((err = RegCreateKeyExW( mp->extview.hKey, mp->extview.lpszSubKey,
 				    0,
@@ -980,7 +980,7 @@ static HANDLE CreateMRUListLazy_common(LPWINEMRULIST mp)
 				&newkey,
 				&dwdisp))) {
 	/* error - what to do ??? */
-	ERR("(%lu %lu %lx %lx \"%s\" %p): Can not open key, error=%d\n",
+	ERR("(%lu %lu %lx %lx \"%s\" %p): Could not open key, error=%d\n",
 	    mp->extview.cbSize, mp->extview.nMaxItems, mp->extview.dwFlags,
 	    (DWORD)mp->extview.hKey, debugstr_w(mp->extview.lpszSubKey),
 				 mp->extview.lpfnCompare, err);

@@ -6233,7 +6233,7 @@ TOOLBAR_NCCreate (HWND hwnd, WPARAM wParam, LPARAM lParam)
      * forgets to specify TBSTYLE_TRANSPARENT but does specify either
      * CCS_TOP or CCS_BOTTOM (_NOMOVEY and _TOP), then the control
      * does *not* set TBSTYLE_TRANSPARENT even though it should!!!!
-     * Some how, the only cases of this seem to be MFC programs.
+     * Somehow, the only cases of this seem to be MFC programs.
      *
      * Note also that the addition of _TRANSPARENT occurs *only* here. It
      * does not occur in the WM_STYLECHANGING routine.

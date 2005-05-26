@@ -283,6 +283,26 @@ static void COMBOEX_FreeText (CBE_ITEMDATA *item)
 }
 
 
+static INT COMBOEX_GetIndex(COMBOEX_INFO *infoPtr, CBE_ITEMDATA *item)
+{
+    CBE_ITEMDATA *moving;
+    INT index;
+    
+    moving = infoPtr->items;
+    index = infoPtr->nb_items - 1;
+
+    while (moving && (moving != item)) {
+        moving = moving->next;
+        index--;
+    }
+    if (!moving || (index < 0)) {
+        ERR("COMBOBOXEX item structures broken. Please report!\n");
+        return -1;
+    }
+    return index;
+}
+
+
 static LPCWSTR COMBOEX_GetText(COMBOEX_INFO *infoPtr, CBE_ITEMDATA *item)
 {
     NMCOMBOBOXEXW nmce;
@@ -295,6 +315,7 @@ static LPCWSTR COMBOEX_GetText(COMBOEX_INFO *infoPtr, CBE_ITEMDATA *item)
     ZeroMemory(&nmce, sizeof(nmce));
     nmce.ceItem.mask = CBEIF_TEXT;
     nmce.ceItem.lParam = item->lParam;
+    nmce.ceItem.iItem = COMBOEX_GetIndex(infoPtr, item);
     COMBOEX_NotifyItem(infoPtr, CBEN_GETDISPINFOW, &nmce);
 
     if (is_textW(nmce.ceItem.pszText)) {
@@ -1389,6 +1410,7 @@ static LRESULT COMBOEX_DrawItem (COMBOEX_INFO *infoPtr, DRAWITEMSTRUCT *dis)
 	    ZeroMemory(&nmce, sizeof(nmce));
 	    nmce.ceItem.mask = CBEIF_INDENT;
 	    nmce.ceItem.lParam = item->lParam;
+	    nmce.ceItem.iItem = dis->itemID;
 	    COMBOEX_NotifyItem(infoPtr, CBEN_GETDISPINFOW, &nmce);
 	    if (nmce.ceItem.mask & CBEIF_DI_SETITEM)
 		item->iIndent = nmce.ceItem.iIndent;
@@ -1453,6 +1475,7 @@ static LRESULT COMBOEX_DrawItem (COMBOEX_INFO *infoPtr, DRAWITEMSTRUCT *dis)
 	    ZeroMemory(&nmce, sizeof(nmce));
 	    nmce.ceItem.mask = (drawstate == ILD_NORMAL) ? CBEIF_IMAGE : CBEIF_SELECTEDIMAGE;
 	    nmce.ceItem.lParam = item->lParam;
+	    nmce.ceItem.iItem = dis->itemID;
 	    COMBOEX_NotifyItem(infoPtr, CBEN_GETDISPINFOW, &nmce);
 	    if (drawstate == ILD_NORMAL) {
 	    	if (nmce.ceItem.mask & CBEIF_DI_SETITEM) item->iImage = nmce.ceItem.iImage;
@@ -1468,6 +1491,7 @@ static LRESULT COMBOEX_DrawItem (COMBOEX_INFO *infoPtr, DRAWITEMSTRUCT *dis)
 	    ZeroMemory(&nmce, sizeof(nmce));
 	    nmce.ceItem.mask = CBEIF_OVERLAY;
 	    nmce.ceItem.lParam = item->lParam;
+	    nmce.ceItem.iItem = dis->itemID;
 	    COMBOEX_NotifyItem(infoPtr, CBEN_GETDISPINFOW, &nmce);
 	    if (nmce.ceItem.mask & CBEIF_DI_SETITEM)
 		item->iOverlay = nmce.ceItem.iOverlay;
