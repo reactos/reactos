@@ -2507,6 +2507,7 @@ IntChangeDisplaySettings(
   BOOLEAN Reset = FALSE;
   BOOLEAN SetPrimary = FALSE;
   LONG Ret;
+  NTSTATUS Status;
 
   DPRINT1("display flag : %x\n",dwflags);
 
@@ -2545,10 +2546,29 @@ IntChangeDisplaySettings(
   
   if ((dwflags & CDS_FULLSCREEN) == CDS_FULLSCREEN)
   {
+   DEVMODE lpDevMode;
    /* Full Screen */
    dwflags &= ~CDS_FULLSCREEN;
-   DPRINT1("flag CDS_FULLSCREEN UNIMPLEMENT");
+   DPRINT1("flag CDS_FULLSCREEN partially implemented");
    Ret = DISP_CHANGE_FAILED;
+
+   lpDevMode.dmBitsPerPel =0;
+   lpDevMode.dmPelsWidth  =0;
+   lpDevMode.dmPelsHeight =0;
+   lpDevMode.dmDriverExtra =0;
+
+   lpDevMode.dmSize = sizeof(DEVMODE);
+   Status = IntEnumDisplaySettings(pDeviceName,  ENUM_CURRENT_SETTINGS, &lpDevMode, 0);
+   if (!NT_SUCCESS(Status)) return DISP_CHANGE_FAILED;
+
+   DPRINT1("Req Mode     : %d x %d x %d\n", DevMode->dmPelsWidth,DevMode->dmPelsHeight,DevMode->dmBitsPerPel);
+   DPRINT1("Current Mode : %d x %d x %d\n", lpDevMode.dmPelsWidth,lpDevMode.dmPelsHeight, lpDevMode.dmBitsPerPel);
+
+
+   if ((lpDevMode.dmBitsPerPel == DevMode->dmBitsPerPel) &&
+       (lpDevMode.dmPelsWidth  == DevMode->dmPelsWidth) &&
+       (lpDevMode.dmPelsHeight == DevMode->dmPelsHeight))
+	   Ret = DISP_CHANGE_SUCCESSFUL; 
   }
 
   if ((dwflags & CDS_VIDEOPARAMETERS) == CDS_VIDEOPARAMETERS)
@@ -2571,8 +2591,7 @@ IntChangeDisplaySettings(
 	  	WCHAR KernelModeNameBuffer[256];
 		UNICODE_STRING RegistryKey;
 		WCHAR RegistryKeyBuffer[512];
-		PDEVICE_OBJECT DeviceObject;
-		NTSTATUS Status;
+		PDEVICE_OBJECT DeviceObject;		
 		ULONG LastSlash;
 		OBJECT_ATTRIBUTES ObjectAttributes;
 		HANDLE DevInstRegKey;
