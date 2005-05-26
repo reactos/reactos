@@ -207,15 +207,6 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
                      *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
 		     break;
 		  case MEMORY_AREA_SYSTEM:
-		     {
-			static int warned = 0;
-			if ( !warned )
-			{
-			  DPRINT1("FIXME: MEMORY_AREA_SYSTEM case incomplete (or possibly wrong) for NtQueryVirtualMemory()\n");
-			  warned = 1;
-			}
-		     }
-		     /* FIXME - don't have a clue if this is right, but it's better than nothing */
 	             Info->Type = 0;
                      Info->State = MEM_COMMIT;
 	             Info->Protect = MemoryArea->Attributes;
@@ -228,15 +219,6 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
                      *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
 		     break;
 		  case MEMORY_AREA_KERNEL_STACK:
-		     {
-			static int warned = 0;
-			if ( !warned )
-			{
-			  DPRINT1("FIXME: MEMORY_AREA_KERNEL_STACK case incomplete (or possibly wrong) for NtQueryVirtualMemory()\n");
-			  warned = 1;
-			}
-		     }
-		     /* FIXME - don't have a clue if this is right, but it's better than nothing */
 	             Info->Type = 0;
                      Info->State = MEM_COMMIT;
 	             Info->Protect = MemoryArea->Attributes;
@@ -304,7 +286,7 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
 
    PrevMode =  ExGetPreviousMode();
 
-   if (PrevMode == UserMode && Address >= (PVOID)KERNEL_BASE)
+   if (Address >= (PVOID)KERNEL_BASE)
    {
       DPRINT1("Invalid parameter\n");
       return STATUS_INVALID_PARAMETER;
