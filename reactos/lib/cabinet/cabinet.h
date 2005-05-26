@@ -2,6 +2,7 @@
  * cabinet.h
  *
  * Copyright 2002 Greg Turner
+ * Copyright 2005 Gerold Jens Wucherpfennig
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -292,6 +293,19 @@ typedef struct cds_forward {
 
 typedef struct {
   unsigned int     FCI_Intmagic;
+  PERF perf;
+  PFNFCIFILEPLACED   pfnfiledest;
+  PFNFCIALLOC        pfnalloc;
+  PFNFCIFREE         pfnfree;
+  PFNFCIOPEN         pfnopen;
+  PFNFCIREAD         pfnread;
+  PFNFCIWRITE        pfnwrite;
+  PFNFCICLOSE        pfnclose;
+  PFNFCISEEK         pfnseek;
+  PFNFCIDELETE       pfndelete;
+  PFNFCIGETTEMPFILE  pfnfcigtf;
+  PCCAB              pccab;
+  void *pv;
 } FCI_Int, *PFCI_Int;
 
 typedef struct {
@@ -307,7 +321,7 @@ typedef struct {
 } FDI_Int, *PFDI_Int;
 
 /* cast an HFCI into a PFCI_Int */
-#define PFCI_INT(hfci) ((PFDI_Int)(hfci))
+#define PFCI_INT(hfci) ((PFCI_Int)(hfci))
 
 /* cast an HFDI into a PFDI_Int */
 #define PFDI_INT(hfdi) ((PFDI_Int)(hfdi))

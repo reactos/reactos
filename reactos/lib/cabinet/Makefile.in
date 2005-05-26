@@ -3,6 +3,7 @@ TOPOBJDIR = ../..
 SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = cabinet.dll
+IMPORTLIB = libcabinet.$(IMPLIBEXT)
 IMPORTS   = kernel32
 
 C_SRCS = \
