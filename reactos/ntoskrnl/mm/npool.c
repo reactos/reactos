@@ -872,7 +872,7 @@ MiDebugDumpNonPagedPoolStats(BOOLEAN NewOnly)
 VOID
 MiDebugDumpNonPagedPool(BOOLEAN NewOnly)
 {
-#ifndef WHOLE_PAGE_ALLOCATIONS
+#if defined(POOL_DEBUG_APIS) && !defined(WHOLE_PAGE_ALLOCATIONS)
    BLOCK_HDR* current;
    PLIST_ENTRY current_entry;
    KIRQL oldIrql;
