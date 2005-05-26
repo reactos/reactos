@@ -126,7 +126,7 @@ name   name of requester
 */
 static int __inline__ request_mem_region(PHYSICAL_ADDRESS addr, unsigned long len, const char * d)
 {
-	DPRINT1("request_mem_region(): addr=0x%x, len=0x%x\n", addr, len);
+	DPRINT1("request_mem_region(): addr=0x%lx, len=0x%lx\n", addr.u.LowPart, len);
 	return 1;
 }
 
@@ -143,7 +143,7 @@ virtual start address of mapped range
 static void __inline__ *ioremap_nocache(PHYSICAL_ADDRESS addr, unsigned long len)
 {
 	// MmMapIoSpace with NoCache param
-	DPRINT1("ioremap_nocache(): addr=0x%x, len=0x%x\n", addr, len);
+	DPRINT1("ioremap_nocache(): addr=0x%lx, len=0x%lx\n", addr.u.LowPart, len);
 
 	return MmMapIoSpace(addr, len, MmNonCached);
 }
@@ -157,6 +157,6 @@ n      length of region
 */
 static int __inline__ release_mem_region(PHYSICAL_ADDRESS addr, unsigned long len)
 {
-	DPRINT1("release_mem_region(): addr=0x%x, len=0x%x\n", addr, len);
+	DPRINT1("release_mem_region(): addr=0x%lx, len=0x%lx\n", addr.u.LowPart, len);
 	return 0;
 }
