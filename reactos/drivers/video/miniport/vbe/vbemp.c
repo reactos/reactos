@@ -885,6 +885,14 @@ VBEQueryMode(
    VideoMode->YMillimeter = 0; /* FIXME */
    if (VBEMode->BitsPerPixel > 8)
    {
+      /*
+       * Always report 16bpp modes and not 15bpp mode...
+       */
+      if (VBEMode->BitsPerPixel == 15 && VBEMode->NumberOfPlanes == 1)
+      {
+         VideoMode->BitsPerPlane = 16;
+      }
+
       if (DeviceExtension->VbeInfo.Version < 0x300)
       {
          VideoMode->NumberRedBits = VBEMode->RedMaskSize;
