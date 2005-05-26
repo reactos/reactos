@@ -3,6 +3,7 @@ TOPOBJDIR = ../..
 SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = comdlg32.dll
+IMPORTLIB = libcomdlg32.$(IMPLIBEXT)
 IMPORTS   = shell32 shlwapi comctl32 winspool user32 gdi32 kernel32 ntdll
 EXTRALIBS = -luuid
 
@@ -22,7 +23,6 @@ C_SRCS16 = \
 	filedlg16.c \
 	finddlg.c \
 	fontdlg16.c \
-	generic.c \
 	printdlg16.c
 
 SPEC_SRCS16 = commdlg.spec
