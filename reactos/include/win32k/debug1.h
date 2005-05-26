@@ -39,9 +39,13 @@
 #endif
 #endif
 
+#ifdef DBG
 #define DPRINT1 DbgPrint("(%s:%d) ",__FILE__,__LINE__), DbgPrint
 #define CHECKPOINT1 DbgPrint("%s:%d\n",__FILE__,__LINE__);
-
+#else
+#define DPRINT1(args...)
+#define CHECKPOINT1(args...)
+#endif
 
 #ifdef __NTOSKRNL__
 #define DPRINT_CHECKS

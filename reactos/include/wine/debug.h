@@ -12,7 +12,11 @@
 
 unsigned long DbgPrint(char *Format,...);
 
+#if DBG
 #define DPRINT1 DbgPrint("(%s:%d:%s) ",__FILE__,__LINE__,__FUNCTION__), DbgPrint
+#else
+#define DPRINT1(args...)
+#endif
 
 #if !defined(DBG) || !defined(YDEBUG)
 #ifdef __GNUC__
