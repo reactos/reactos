@@ -93,6 +93,7 @@ GetAvailableModes(
       if ((ModeInfoPtr->NumberOfPlanes != 1) ||
           !(ModeInfoPtr->AttributeFlags & VIDEO_MODE_GRAPHICS) ||
           ((ModeInfoPtr->BitsPerPlane != 8) &&
+		   (ModeInfoPtr->BitsPerPlane != 15) &&
            (ModeInfoPtr->BitsPerPlane != 16) &&
            (ModeInfoPtr->BitsPerPlane != 24) &&
            (ModeInfoPtr->BitsPerPlane != 32)))
