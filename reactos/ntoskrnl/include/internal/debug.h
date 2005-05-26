@@ -73,21 +73,22 @@
 #define CPRINT DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint
 #endif
 
+#ifdef __GNUC__ /* using GNU C/C99 macro ellipsis */
+#define DPRINT1(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0)
+#else
+#define DPRINT1 DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint
+#endif
+
 #else /* DBG */
 
 #define CPRINT(args...)
+#define DPRINT1(args...)
 #define assert(x)
 #define ASSERT(x)
 #define assertmsg(_c_, _m_)
 #define ASSERTMSG(_c_, _m_)
 
 #endif /* DBG */
-
-#ifdef __GNUC__ /* using GNU C/C99 macro ellipsis */
-#define DPRINT1(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0)
-#else
-#define DPRINT1 DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint
-#endif
 
 #define CHECKPOINT1 do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0)
 
