@@ -74,6 +74,13 @@ char *strupper(char *s)
     return s;
 }
 
+int strendswith(const char* str, const char* end)
+{
+    int l = strlen(str);
+    int m = strlen(end);
+    return l >= m && strcmp(str + l - m, end) == 0;
+}
+
 void fatal_error( const char *msg, ... )
 {
     va_list valist;

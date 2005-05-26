@@ -511,6 +511,12 @@ static int parse_spec_ordinal( int ordinal, DLLSPEC *spec )
         odp->ordinal = ordinal;
     }
 
+    if (spec->type == SPEC_WIN32 && odp->flags & FLAG_REGISTER)
+    {
+        error( "-register flag not supported for Win32 entry points\n" );
+        goto error;
+    }
+
     if (odp->type == TYPE_STDCALL && !(odp->flags & FLAG_PRIVATE))
     {
         if (!strcmp( odp->name, "DllRegisterServer" ) ||

@@ -26,16 +26,23 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#ifdef HAVE_SYS_STAT_H
+# include <sys/stat.h>
+#endif
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
 
 #include "winglue.h"
+#include "wine/exception.h"
 #include "build.h"
 
 struct import
 {
-    DLLSPEC     *spec;         /* description of the imported dll */
+    DLLSPEC     *spec;        /* description of the imported dll */
+    char        *full_name;   /* full name of the input file */
+    dev_t        dev;         /* device/inode of the input file */
+    ino_t        ino;
     int          delay;       /* delay or not dll loading ? */
     ORDDEF     **exports;     /* functions exported from this dll */
     int          nb_exports;  /* number of exported functions */
@@ -58,6 +65,8 @@ static int nb_imports = 0;      /* number of imported dlls (delayed or not) */
 static int nb_delayed = 0;      /* number of delayed dlls */
 static int total_imports = 0;   /* total number of imported functions */
 static int total_delayed = 0;   /* total number of imported functions in delayed DLLs */
+static char **delayed_imports;  /* names of delayed import dlls */
+static int nb_delayed_imports;  /* size of the delayed_imports array */
 
 /* list of symbols that are ignored by default */
 static const char * const default_ignored_symbols[] =
@@ -187,6 +196,7 @@ static void free_imports( struct import *imp )
     free( imp->exports );
     free( imp->imports );
     free_dll_spec( imp->spec );
+    free( imp->full_name );
     free( imp );
 }
 
@@ -196,16 +206,28 @@ static void remove_ld_tmp_file(void)
     if (ld_tmp_file) unlink( ld_tmp_file );
 }
 
+/* check whether a given dll is imported in delayed mode */
+static int is_delayed_import( const char *name )
+{
+    int i;
+
+    for (i = 0; i < nb_delayed_imports; i++)
+    {
+        if (!strcmp( delayed_imports[i], name )) return 1;
+    }
+    return 0;
+}
+
 /* check whether a given dll has already been imported */
-static int is_already_imported( const char *name )
+static struct import *is_already_imported( const char *name )
 {
     int i;
 
     for (i = 0; i < nb_imports; i++)
     {
-        if (!strcmp( dll_imports[i]->spec->file_name, name )) return 1;
+        if (!strcmp( dll_imports[i]->spec->file_name, name )) return dll_imports[i];
     }
-    return 0;
+    return NULL;
 }
 
 /* open the .so library for a given dll in a specified path */
@@ -227,8 +249,8 @@ static char *try_library_path( const char *path, const char *name )
     return NULL;
 }
 
-/* open the .so library for a given dll */
-static char *open_library( const char *name )
+/* find the .def import library for a given dll */
+static char *find_library( const char *name )
 {
     char *fullname;
     int i;
@@ -242,24 +264,36 @@ static char *open_library( const char *name )
 }
 
 /* read in the list of exported symbols of an import library */
-static int read_import_lib( const char *name, struct import *imp )
+static int read_import_lib( struct import *imp )
 {
     FILE *f;
-    char *fullname;
     int i, ret;
+    struct stat stat;
+    struct import *prev_imp;
     DLLSPEC *spec = imp->spec;
 
-    imp->exports    = NULL;
-    imp->nb_exports = 0;
-
-    fullname = open_library( name );
-    f = open_input_file( NULL, fullname );
-    free( fullname );
-
+    f = open_input_file( NULL, imp->full_name );
+    fstat( fileno(f), &stat );
+    imp->dev = stat.st_dev;
+    imp->ino = stat.st_ino;
     ret = parse_def_file( f, spec );
     close_input_file( f );
     if (!ret) return 0;
-    if (is_already_imported( spec->file_name )) return 0;
+
+    /* check if we already imported that library from a different file */
+    if ((prev_imp = is_already_imported( spec->file_name )))
+    {
+        if (prev_imp->dev != imp->dev || prev_imp->ino != imp->ino)
+            fatal_error( "%s and %s have the same export name '%s'\n",
+                         prev_imp->full_name, imp->full_name, spec->file_name );
+        return 0;  /* the same file was already loaded, ignore this one */
+    }
+
+    if (is_delayed_import( spec->file_name ))
+    {
+        imp->delay = 1;
+        nb_delayed++;
+    }
 
     imp->exports = xmalloc( spec->nb_entry_points * sizeof(*imp->exports) );
 
@@ -277,32 +311,47 @@ static int read_import_lib( const char *name, struct import *imp )
     return 1;
 }
 
-/* add a dll to the list of imports */
-void add_import_dll( const char *name, int delay )
+/* build the dll exported name from the import lib name or path */
+static char *get_dll_name( const char *name, const char *filename )
 {
-    struct import *imp;
-    char *fullname;
+    char *ret;
 
-    fullname = xmalloc( strlen(name) + 5 );
-    strcpy( fullname, name );
-    if (!strchr( fullname, '.' )) strcat( fullname, ".dll" );
-
-    /* check if we already imported it */
-    if (is_already_imported( fullname ))
+    if (filename)
     {
-        free( fullname );
-        return;
+        const char *basename = strrchr( filename, '/' );
+        if (!basename) basename = filename;
+        else basename++;
+        if (!strncmp( basename, "lib", 3 )) basename += 3;
+        ret = xmalloc( strlen(basename) + 5 );
+        strcpy( ret, basename );
+        if (strendswith( ret, ".def" )) ret[strlen(ret)-4] = 0;
     }
+    else
+    {
+        ret = xmalloc( strlen(name) + 5 );
+        strcpy( ret, name );
+    }
+    if (!strchr( ret, '.' )) strcat( ret, ".dll" );
+    return ret;
+}
 
-    imp = xmalloc( sizeof(*imp) );
+/* add a dll to the list of imports */
+void add_import_dll( const char *name, const char *filename )
+{
+    struct import *imp = xmalloc( sizeof(*imp) );
+
     imp->spec            = alloc_dll_spec();
-    imp->spec->file_name = fullname;
-    imp->delay           = delay;
+    imp->spec->file_name = get_dll_name( name, filename );
+    imp->delay           = 0;
     imp->imports         = NULL;
     imp->nb_imports      = 0;
-    if (delay) nb_delayed++;
+    imp->exports         = NULL;
+    imp->nb_exports      = 0;
 
-    if (read_import_lib( name, imp ))
+    if (filename) imp->full_name = xstrdup( filename );
+    else imp->full_name = find_library( name );
+
+    if (read_import_lib( imp ))
     {
         dll_imports = xrealloc( dll_imports, (nb_imports+1) * sizeof(*dll_imports) );
         dll_imports[nb_imports++] = imp;
@@ -311,6 +360,21 @@ void add_import_dll( const char *name, int delay )
     {
         free_imports( imp );
         if (nb_errors) exit(1);
+    }
+}
+
+/* add a library to the list of delayed imports */
+void add_delayed_import( const char *name )
+{
+    struct import *imp;
+    char *fullname = get_dll_name( name, NULL );
+
+    delayed_imports = xrealloc( delayed_imports, (nb_delayed_imports+1) * sizeof(*delayed_imports) );
+    delayed_imports[nb_delayed_imports++] = fullname;
+    if ((imp = is_already_imported( fullname )) && !imp->delay)
+    {
+        imp->delay = 1;
+        nb_delayed++;
     }
 }
 
@@ -438,7 +502,7 @@ static int add_extra_symbol( const char **extras, int *count, const char *name, 
 static void add_extra_undef_symbols( const DLLSPEC *spec )
 {
     const char *extras[10];
-    int i, count = 0, nb_stubs = 0, nb_regs = 0;
+    int i, count = 0, nb_stubs = 0;
     int kernel_imports = 0, ntdll_imports = 0;
 
     sort_symbols( undef_symbols, nb_undef_symbols );
@@ -447,7 +511,6 @@ static void add_extra_undef_symbols( const DLLSPEC *spec )
     {
         ORDDEF *odp = &spec->entry_points[i];
         if (odp->type == TYPE_STUB) nb_stubs++;
-        if (odp->flags & FLAG_REGISTER) nb_regs++;
     }
 
     /* add symbols that will be contained in the spec file itself */
@@ -467,16 +530,16 @@ static void add_extra_undef_symbols( const DLLSPEC *spec )
     if (nb_delayed)
     {
         kernel_imports += add_extra_symbol( extras, &count, "LoadLibraryA", spec );
+        kernel_imports += add_extra_symbol( extras, &count, "FreeLibrary", spec );
         kernel_imports += add_extra_symbol( extras, &count, "GetProcAddress", spec );
+        kernel_imports += add_extra_symbol( extras, &count, "RaiseException", spec );
     }
-    if (nb_regs)
-        ntdll_imports += add_extra_symbol( extras, &count, "__wine_call_from_32_regs", spec );
-    if (nb_delayed || nb_stubs)
+    if (nb_stubs)
         ntdll_imports += add_extra_symbol( extras, &count, "RtlRaiseException", spec );
 
     /* make sure we import the dlls that contain these functions */
-    if (kernel_imports) add_import_dll( "kernel32", 0 );
-    if (ntdll_imports) add_import_dll( "ntdll", 0 );
+    if (kernel_imports) add_import_dll( "kernel32", NULL );
+    if (ntdll_imports) add_import_dll( "ntdll", NULL );
 
     if (count)
     {
@@ -777,10 +840,10 @@ static int output_delayed_imports( FILE *outfile, const DLLSPEC *spec )
 
     if (!nb_delayed) goto done;
 
+    fprintf( outfile, "static void *__wine_delay_imp_hmod[%d];\n", nb_delayed );
     for (i = 0; i < nb_imports; i++)
     {
         if (!dll_imports[i]->delay) continue;
-        fprintf( outfile, "static void *__wine_delay_imp_%d_hmod;\n", i);
         for (j = 0; j < dll_imports[i]->nb_imports; j++)
         {
             ORDDEF *odp = dll_imports[i]->imports[j];
@@ -807,7 +870,7 @@ static int output_delayed_imports( FILE *outfile, const DLLSPEC *spec )
     for (i = j = 0; i < nb_imports; i++)
     {
         if (!dll_imports[i]->delay) continue;
-        fprintf( outfile, "    { 0, \"%s\", &__wine_delay_imp_%d_hmod, &delay_imports.IAT[%d], &delay_imports.INT[%d], 0, 0, 0 },\n",
+        fprintf( outfile, "    { 0, \"%s\", &__wine_delay_imp_hmod[%d], &delay_imports.IAT[%d], &delay_imports.INT[%d], 0, 0, 0 },\n",
                  dll_imports[i]->spec->file_name, i, j, j );
         j += dll_imports[i]->nb_imports;
     }
@@ -839,21 +902,7 @@ static int output_delayed_imports( FILE *outfile, const DLLSPEC *spec )
     }
     fprintf( outfile, "  }\n};\n\n" );
 
-    /* check if there's some stub defined. if so, exception struct
-     *  is already defined, so don't emit it twice
-     */
-    for (i = 0; i < spec->nb_entry_points; i++) if (spec->entry_points[i].type == TYPE_STUB) break;
-
-    if (i == spec->nb_entry_points) {
-       fprintf( outfile, "struct exc_record {\n" );
-       fprintf( outfile, "  unsigned int code, flags;\n" );
-       fprintf( outfile, "  void *rec, *addr;\n" );
-       fprintf( outfile, "  unsigned int params;\n" );
-       fprintf( outfile, "  const void *info[15];\n" );
-       fprintf( outfile, "};\n\n" );
-       fprintf( outfile, "extern void __stdcall RtlRaiseException( struct exc_record * );\n" );
-    }
-
+    fprintf( outfile, "extern void __stdcall RaiseException(unsigned int, unsigned int, unsigned int, const void *args[]);\n" );
     fprintf( outfile, "extern void * __stdcall LoadLibraryA(const char*);\n");
     fprintf( outfile, "extern void * __stdcall GetProcAddress(void *, const char*);\n");
     fprintf( outfile, "\n" );
@@ -871,20 +920,12 @@ static int output_delayed_imports( FILE *outfile, const DLLSPEC *spec )
     fprintf( outfile, "    /* patch IAT with final value */\n" );
     fprintf( outfile, "    return *pIAT = fn;\n" );
     fprintf( outfile, "  else {\n");
-    fprintf( outfile, "    struct exc_record rec;\n" );
-    fprintf( outfile, "    rec.code    = 0x80000100;\n" );
-    fprintf( outfile, "    rec.flags   = 1;\n" );
-    fprintf( outfile, "    rec.rec     = 0;\n" );
-    fprintf( outfile, "    rec.params  = 2;\n" );
-    fprintf( outfile, "    rec.info[0] = imd->szName;\n" );
-    fprintf( outfile, "    rec.info[1] = *pINT;\n" );
-    fprintf( outfile, "#ifdef __GNUC__\n" );
-    fprintf( outfile, "    rec.addr = __builtin_return_address(1);\n" );
-    fprintf( outfile, "#else\n" );
-    fprintf( outfile, "    rec.addr = 0;\n" );
-    fprintf( outfile, "#endif\n" );
-    fprintf( outfile, "    for (;;) RtlRaiseException( &rec );\n" );
-    fprintf( outfile, "    return 0; /* shouldn't go here */\n" );
+    fprintf( outfile, "    const void *args[2];\n" );
+    fprintf( outfile, "    args[0] = imd->szName;\n" );
+    fprintf( outfile, "    args[1] = *pINT;\n" );
+    fprintf( outfile, "    RaiseException( 0x%08x, %d, 2, args );\n",
+             EXCEPTION_WINE_STUB, EXCEPTION_NONCONTINUABLE );
+    fprintf( outfile, "    return 0;\n" );
     fprintf( outfile, "  }\n}\n\n" );
 
     fprintf( outfile, "#ifndef __GNUC__\n" );
@@ -1100,8 +1141,8 @@ static int output_delayed_imports( FILE *outfile, const DLLSPEC *spec )
 /* output the import and delayed import tables of a Win32 module
  * returns number of DLLs exported in 'immediate' mode
  */
-int output_imports( FILE *outfile, DLLSPEC *spec )
+int output_imports( FILE *outfile, DLLSPEC *spec, int *nb_delayed )
 {
-   output_delayed_imports( outfile, spec );
-   return output_immediate_imports( outfile );
+    *nb_delayed = output_delayed_imports( outfile, spec );
+    return output_immediate_imports( outfile );
 }

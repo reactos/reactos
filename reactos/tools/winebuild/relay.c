@@ -27,7 +27,7 @@
 #include <ctype.h>
 
 #include "thread.h"
-#include "stackframe.h"
+#include "wine/winbase16.h"
 
 #include "build.h"
 
