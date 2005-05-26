@@ -198,7 +198,7 @@ MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
       {
          Table =
             Segment->PageDirectory.PageTables[DirectoryOffset] =
-               ExAllocatePoolWithTag(NonPagedPool, sizeof(SECTION_PAGE_TABLE),
+               ExAllocatePoolWithTag(PagedPool, sizeof(SECTION_PAGE_TABLE),
                                      TAG_SECTION_PAGE_TABLE);
          if (Table == NULL)
          {
@@ -2183,7 +2183,7 @@ MmCreatePageFileSection(PSECTION_OBJECT *SectionObject,
    KeInitializeSpinLock(&Section->ViewListLock);
    Section->FileObject = NULL;
    Section->MaximumSize = MaximumSize;
-   Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
+   Segment = ExAllocatePoolWithTag(PagedPool, sizeof(MM_SECTION_SEGMENT),
                                    TAG_MM_SECTION_SEGMENT);
    if (Segment == NULL)
    {
@@ -2387,7 +2387,7 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
     */
    if (FileObject->SectionObjectPointer->DataSectionObject == NULL)
    {
-      Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
+      Segment = ExAllocatePoolWithTag(PagedPool, sizeof(MM_SECTION_SEGMENT),
                                       TAG_MM_SECTION_SEGMENT);
       if (Segment == NULL)
       {
@@ -3073,7 +3073,7 @@ ExeFmtpCreateImageSection(HANDLE FileHandle,
 
       SizeOfSegments = sizeof(MM_SECTION_SEGMENT) * ImageSectionObject->NrSegments;
 
-      Segments = ExAllocatePoolWithTag(NonPagedPool,
+      Segments = ExAllocatePoolWithTag(PagedPool,
                                        SizeOfSegments,
                                        TAG_MM_SECTION_SEGMENT);
 
@@ -3188,7 +3188,7 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
    {
       NTSTATUS StatusExeFmt;
 
-      ImageSectionObject = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_IMAGE_SECTION_OBJECT), TAG_MM_SECTION_SEGMENT);
+      ImageSectionObject = ExAllocatePoolWithTag(PagedPool, sizeof(MM_IMAGE_SECTION_OBJECT), TAG_MM_SECTION_SEGMENT);
       if (ImageSectionObject == NULL)
       {
          ObDereferenceObject(FileObject);
