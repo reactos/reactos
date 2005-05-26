@@ -16,7 +16,7 @@
 #include <apic.h>
 #include <ioapic.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS ******************************************************************/
@@ -58,7 +58,7 @@ HaliMPIntSrcInfo(PMP_CONFIGURATION_INTSRC m)
   IRQCount++;
 }
 
-static PCHAR 
+PCHAR 
 HaliMPFamily(ULONG Family,
 	     ULONG Model)
 {
@@ -275,9 +275,9 @@ HaliReadMPConfigTable(PMP_CONFIGURATION_TABLE Table)
      {
        PUCHAR pc = (PUCHAR)&Table->Signature;
        
-       DPRINT1("Bad MP configuration block signature: %c%c%c%c\n", 
+       DPRINT1("Bad MP configuration block signature: %c%c%c%c\n",
 		pc[0], pc[1], pc[2], pc[3]);
-       KEBUGCHECK(0);
+       KEBUGCHECKEX(0, pc[0], pc[1], pc[2], pc[3]);
        return FALSE;
      }
 
