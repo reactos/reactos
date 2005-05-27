@@ -33,7 +33,7 @@
 #define R_EXTRA_STACK_UP 2
 #define R_GET_STACK_FRAMES(ptr,cnt) KeRosGetStackFrames(ptr,cnt)
 
-#include "RPoolMgr.h"
+#include "rpoolmgr.h"
 
 /* GLOBALS *******************************************************************/
 

@@ -1715,7 +1715,7 @@ DetectKeyboardPeripheral(FRLDRHKEY ControllerKey)
     /* Set 'Identifier' value */
     strcpy(Buffer,
 	   "PCAT_ENHANCED");
-    Error = RegSetValue(ControllerKey,
+    Error = RegSetValue(PeripheralKey,
 			"Identifier",
 			REG_SZ,
 			Buffer,

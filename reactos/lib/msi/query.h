@@ -30,6 +30,7 @@
 #include "msi.h"
 #include "msiquery.h"
 #include "msipriv.h"
+#include "wine/list.h"
 
 
 #define OP_EQ       1
@@ -50,7 +51,6 @@
 #define EXPR_SVAL     5
 #define EXPR_UVAL     6
 #define EXPR_STRCMP   7
-#define EXPR_UTF8     8
 #define EXPR_WILDCARD 9
 #define EXPR_COL_NUMBER_STRING 10
 
@@ -83,7 +83,6 @@ struct expr
         LPWSTR sval;
         LPWSTR column;
         UINT col_number;
-        char *utf8;
     } u;
 };
 
@@ -107,7 +106,8 @@ typedef struct _column_assignment
 } column_assignment;
 
 
-UINT MSI_ParseSQL( MSIDATABASE *db, LPCWSTR command, MSIVIEW **phView);
+UINT MSI_ParseSQL( MSIDATABASE *db, LPCWSTR command, MSIVIEW **phview,
+                   struct list *mem );
 
 UINT TABLE_CreateView( MSIDATABASE *db, LPCWSTR name, MSIVIEW **view );
 
@@ -116,8 +116,8 @@ UINT SELECT_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
 
 UINT DISTINCT_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table );
 
-UINT ORDER_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table );
-UINT ORDER_AddColumn( MSIVIEW *group, LPWSTR name );
+UINT ORDER_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
+                       string_list *columns );
 
 UINT WHERE_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
                        struct expr *cond );
@@ -132,10 +132,6 @@ UINT UPDATE_CreateView( MSIDATABASE *db, MSIVIEW **, LPWSTR table,
                         column_assignment *list, struct expr *expr );
 
 UINT DELETE_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table );
-
-void delete_expr( struct expr *e );
-void delete_string_list( string_list *sl );
-void delete_value_list( value_list *vl );
 
 int sqliteGetToken(const WCHAR *z, int *tokenType);
 

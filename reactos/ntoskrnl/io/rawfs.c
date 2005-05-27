@@ -90,8 +90,6 @@ typedef struct _RAWFS_CCB
 
 /* GLOBALS ******************************************************************/
 
-#define TAG_IRP TAG('R', 'I', 'R', 'P')
-
 static PDRIVER_OBJECT RawFsDriverObject;
 static PDEVICE_OBJECT DiskDeviceObject;
 static PDEVICE_OBJECT CdromDeviceObject;

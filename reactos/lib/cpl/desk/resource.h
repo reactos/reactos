@@ -61,6 +61,7 @@
 #define IDS_COLOR_4BIT			2904
 #define IDS_COLOR_8BIT			2908
 #define IDS_COLOR_16BIT			2916
+#define IDS_COLOR_24BIT			2924
 #define IDS_COLOR_32BIT			2932  
 
 #endif /* __CPL_DESK_RESOURCE_H__ */

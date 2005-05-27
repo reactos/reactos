@@ -226,7 +226,7 @@ ExpInitializeTimerImplementation(VOID)
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
 
-    DPRINT1("Creating Timer Object Type\n");
+    DPRINT("Creating Timer Object Type\n");
   
     /* Create the Event Pair Object Type */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));

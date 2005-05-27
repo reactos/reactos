@@ -82,6 +82,7 @@ typedef struct tagMSIFILE
     LPWSTR File;
     INT ComponentIndex;
     LPWSTR FileName;
+    LPWSTR ShortName;
     INT FileSize;
     LPWSTR Version;
     LPWSTR Language;

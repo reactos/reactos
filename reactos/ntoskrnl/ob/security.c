@@ -79,10 +79,10 @@ ObGetObjectSecurity(IN PVOID Object,
   PAGED_CODE();
 
   Header = BODY_TO_HEADER(Object);
-  if (Header->ObjectType == NULL)
+  if (Header->Type == NULL)
     return STATUS_UNSUCCESSFUL;
 
-  if (Header->ObjectType->TypeInfo.SecurityProcedure == NULL)
+  if (Header->Type->TypeInfo.SecurityProcedure == NULL)
     {
       ObpReferenceCachedSecurityDescriptor(Header->SecurityDescriptor);
       *SecurityDescriptor = Header->SecurityDescriptor;
@@ -92,7 +92,7 @@ ObGetObjectSecurity(IN PVOID Object,
 
   /* Get the security descriptor size */
   Length = 0;
-  Status = Header->ObjectType->TypeInfo.SecurityProcedure(Object,
+  Status = Header->Type->TypeInfo.SecurityProcedure(Object,
 					QuerySecurityDescriptor,
 					OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION |
 					DACL_SECURITY_INFORMATION | SACL_SECURITY_INFORMATION,
@@ -108,7 +108,7 @@ ObGetObjectSecurity(IN PVOID Object,
     return STATUS_INSUFFICIENT_RESOURCES;
 
   /* Query security descriptor */
-  Status = Header->ObjectType->TypeInfo.SecurityProcedure(Object,
+  Status = Header->Type->TypeInfo.SecurityProcedure(Object,
 					QuerySecurityDescriptor,
 					OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION |
 					DACL_SECURITY_INFORMATION | SACL_SECURITY_INFORMATION,
@@ -180,17 +180,17 @@ NtQuerySecurityObject(IN HANDLE Handle,
     }
 
   Header = BODY_TO_HEADER(Object);
-  if (Header->ObjectType == NULL)
+  if (Header->Type == NULL)
     {
       DPRINT1("Invalid object type\n");
       ObDereferenceObject(Object);
       return STATUS_UNSUCCESSFUL;
     }
 
-  if (Header->ObjectType->TypeInfo.SecurityProcedure != NULL)
+  if (Header->Type->TypeInfo.SecurityProcedure != NULL)
     {
       *ResultLength = Length;
-      Status = Header->ObjectType->TypeInfo.SecurityProcedure(Object,
+      Status = Header->Type->TypeInfo.SecurityProcedure(Object,
 					    QuerySecurityDescriptor,
 					    SecurityInformation,
 					    SecurityDescriptor,
@@ -252,16 +252,16 @@ NtSetSecurityObject(IN HANDLE Handle,
     }
 
   Header = BODY_TO_HEADER(Object);
-  if (Header->ObjectType == NULL)
+  if (Header->Type == NULL)
     {
       DPRINT1("Invalid object type\n");
       ObDereferenceObject(Object);
       return STATUS_UNSUCCESSFUL;
     }
 
-  if (Header->ObjectType->TypeInfo.SecurityProcedure != NULL)
+  if (Header->Type->TypeInfo.SecurityProcedure != NULL)
     {
-      Status = Header->ObjectType->TypeInfo.SecurityProcedure(Object,
+      Status = Header->Type->TypeInfo.SecurityProcedure(Object,
 					    SetSecurityDescriptor,
 					    SecurityInformation,
 					    SecurityDescriptor,

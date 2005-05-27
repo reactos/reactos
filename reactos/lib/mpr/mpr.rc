@@ -33,4 +33,5 @@
 #include "mpr_Ja.rc"
 #include "mpr_Nl.rc"
 #include "mpr_Pt.rc"
+#include "mpr_Ru.rc"
 #include "mpr_Sv.rc"

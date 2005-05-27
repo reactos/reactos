@@ -16,8 +16,6 @@
 
 PAGED_LOOKASIDE_LIST    NotifyEntryLookaside;
 
-#define FSRTL_NOTIFY_TAG TAG('N','O','T','I')
-
 typedef struct _NOTIFY_ENTRY
 {
    LIST_ENTRY ListEntry;

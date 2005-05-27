@@ -473,29 +473,23 @@ static void MONTHCAL_Refresh(MONTHCAL_INFO *infoPtr, HDC hdc, PAINTSTRUCT* ps)
   SetTextColor(hdc, infoPtr->titletxt);
   currentFont = SelectObject(hdc, infoPtr->hBoldFont);
 
-  /* titlemonth->left and right are set in MONTHCAL_UpdateSize */
-  titlemonth->left   = title->left;
-  titlemonth->right  = title->right;
-
   GetLocaleInfoW( LOCALE_USER_DEFAULT,LOCALE_SMONTHNAME1+infoPtr->currentMonth -1,
 		  buf1,countof(buf1));
   wsprintfW(buf, fmt1W, buf1, infoPtr->currentYear);
 
-  if(IntersectRect(&rcTemp, &(ps->rcPaint), titlemonth))
+  if(IntersectRect(&rcTemp, &(ps->rcPaint), title))
   {
-    DrawTextW(hdc, buf, strlenW(buf), titlemonth,
+    DrawTextW(hdc, buf, strlenW(buf), title,
                         DT_CENTER | DT_VCENTER | DT_SINGLELINE);
   }
-
-  SelectObject(hdc, infoPtr->hFont);
 
 /* titlemonth left/right contained rect for whole titletxt('June  1999')
   * MCM_HitTestInfo wants month & year rects, so prepare these now.
   *(no, we can't draw them separately; the whole text is centered)
   */
   GetTextExtentPoint32W(hdc, buf, strlenW(buf), &size);
-  titlemonth->left = title->right / 2 - size.cx / 2;
-  titleyear->right = title->right / 2 + size.cx / 2;
+  titlemonth->left = title->right / 2 + title->left / 2 - size.cx / 2;
+  titleyear->right = title->right / 2 + title->left / 2 + size.cx / 2;
   GetTextExtentPoint32W(hdc, buf1, strlenW(buf1), &size);
   titlemonth->right = titlemonth->left + size.cx;
   titleyear->left = titlemonth->right;
@@ -524,6 +518,7 @@ static void MONTHCAL_Refresh(MONTHCAL_INFO *infoPtr, HDC hdc, PAINTSTRUCT* ps)
   infoPtr->wdays.left   = infoPtr->days.left   = infoPtr->weeknums.right;
 /* draw day abbreviations */
 
+  SelectObject(hdc, infoPtr->hFont);
   SetBkColor(hdc, infoPtr->monthbk);
   SetTextColor(hdc, infoPtr->trailingtxt);
 
@@ -673,9 +668,9 @@ static void MONTHCAL_Refresh(MONTHCAL_INFO *infoPtr, HDC hdc, PAINTSTRUCT* ps)
     wsprintfW(buf, fmt2W, buf1, buf2);
     SelectObject(hdc, infoPtr->hBoldFont);
 
+    DrawTextW(hdc, buf, -1, &rtoday, DT_CALCRECT | DT_LEFT | DT_VCENTER | DT_SINGLELINE);
     if(IntersectRect(&rcTemp, &(ps->rcPaint), &rtoday))
     {
-      DrawTextW(hdc, buf, -1, &rtoday, DT_CALCRECT | DT_LEFT | DT_VCENTER | DT_SINGLELINE);
       DrawTextW(hdc, buf, -1, &rtoday, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
     }
     SelectObject(hdc, infoPtr->hFont);
@@ -1424,18 +1419,19 @@ MONTHCAL_LButtonDown(MONTHCAL_INFO *infoPtr, LPARAM lParam)
 			   0,
 			 WS_VISIBLE | WS_CHILD |UDS_SETBUDDYINT,
 			 infoPtr->titleyear.left+3,infoPtr->titlebtnnext.top,
-			 infoPtr->titleyear.right-infoPtr->titleyear.left,
+			 infoPtr->titleyear.right-infoPtr->titleyear.left+4,
 			 infoPtr->textHeight,
 			 infoPtr->hwndSelf,
 			 NULL,
 			 NULL,
 			 NULL);
+    SendMessageW( infoPtr->hWndYearEdit, WM_SETFONT, (WPARAM) infoPtr->hBoldFont, (LPARAM)TRUE);
     infoPtr->hWndYearUpDown=CreateWindowExW(0,
 			 UPDOWN_CLASSW,
 			   0,
 			 WS_VISIBLE | WS_CHILD |UDS_SETBUDDYINT|UDS_NOTHOUSANDS|UDS_ARROWKEYS,
-			 infoPtr->titleyear.right+6,infoPtr->titlebtnnext.top,
-			 20,
+			 infoPtr->titleyear.right+7,infoPtr->titlebtnnext.top,
+			 18,
 			 infoPtr->textHeight,
 			 infoPtr->hwndSelf,
 			 NULL,
@@ -1733,7 +1729,7 @@ static void MONTHCAL_UpdateSize(MONTHCAL_INFO *infoPtr)
 
   xdiv = (dwStyle & MCS_WEEKNUMBERS) ? 8 : 7;
 
-  infoPtr->width_increment = size.cx * 2;
+  infoPtr->width_increment = size.cx * 2 + 4;
   infoPtr->height_increment = infoPtr->textHeight;
   left_offset = (rcClient.right - rcClient.left) - (infoPtr->width_increment * xdiv);
 
@@ -1852,7 +1848,7 @@ MONTHCAL_Create(HWND hwnd, WPARAM wParam, LPARAM lParam)
   /* initialize info structure */
   /* FIXME: calculate systemtime ->> localtime(substract timezoneinfo) */
 
-  GetSystemTime(&infoPtr->todaysDate);
+  GetLocalTime(&infoPtr->todaysDate);
   MONTHCAL_SetFirstDayOfWeek(infoPtr, (LPARAM)-1);
   infoPtr->currentMonth = infoPtr->todaysDate.wMonth;
   infoPtr->currentYear = infoPtr->todaysDate.wYear;

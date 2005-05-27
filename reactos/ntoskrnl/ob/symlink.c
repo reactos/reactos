@@ -25,10 +25,6 @@ static GENERIC_MAPPING ObpSymbolicLinkMapping = {
 	STANDARD_RIGHTS_EXECUTE|SYMBOLIC_LINK_QUERY,
 	SYMBOLIC_LINK_ALL_ACCESS};
 
-#define TAG_SYMLINK_TTARGET     TAG('S', 'Y', 'T', 'T')
-#define TAG_SYMLINK_TARGET      TAG('S', 'Y', 'M', 'T')
-
-
 /* FUNCTIONS ****************************************************************/
 
 /**********************************************************************
@@ -140,7 +136,7 @@ ObInitSymbolicLinkImplementation (VOID)
   UNICODE_STRING Name;
   OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     
-  DPRINT1("Creating SymLink Object Type\n");
+  DPRINT("Creating SymLink Object Type\n");
   
   /*  Initialize the Directory type  */
   RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));

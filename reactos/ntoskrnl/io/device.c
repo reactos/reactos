@@ -16,10 +16,6 @@
 
 /* GLOBALS ********************************************************************/
 
-#define TAG_DEVICE_EXTENSION   TAG('D', 'E', 'X', 'T')
-#define TAG_SHUTDOWN_ENTRY    TAG('S', 'H', 'U', 'T')
-#define TAG_IO_TIMER      TAG('I', 'O', 'T', 'M')
-
 static ULONG IopDeviceObjectNumber = 0;
 
 typedef struct _SHUTDOWN_ENTRY
@@ -80,8 +76,6 @@ FASTCALL
 IopInitializeDevice(PDEVICE_NODE DeviceNode,
                     PDRIVER_OBJECT DriverObject)
 {
-   IO_STATUS_BLOCK IoStatusBlock;
-   IO_STACK_LOCATION Stack;
    PDEVICE_OBJECT Fdo;
    NTSTATUS Status;
 
@@ -115,26 +109,6 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
 
       IopDeviceNodeSetFlag(DeviceNode, DNF_ADDED);
 
-      DPRINT("Sending IRP_MN_START_DEVICE to driver\n");
-
-      /* FIXME: Should be DeviceNode->ResourceList */
-      Stack.Parameters.StartDevice.AllocatedResources = DeviceNode->BootResources;
-      /* FIXME: Should be DeviceNode->ResourceListTranslated */
-      Stack.Parameters.StartDevice.AllocatedResourcesTranslated = DeviceNode->BootResources;
-
-      Status = IopInitiatePnpIrp(
-         Fdo,
-         &IoStatusBlock,
-         IRP_MN_START_DEVICE,
-         &Stack);
-
-      if (!NT_SUCCESS(Status))
-      {
-          DPRINT("IopInitiatePnpIrp() failed\n");
-          ObDereferenceObject(Fdo);
-          return Status;
-      }
-
       if (Fdo->DeviceType == FILE_DEVICE_ACPI)
       {
          static BOOLEAN SystemPowerDeviceNodeCreated = FALSE;
@@ -147,23 +121,51 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
          }
       }
 
+      ObDereferenceObject(Fdo);
+   }
+
+   return STATUS_SUCCESS;
+}
+
+NTSTATUS
+IopStartDevice(
+   PDEVICE_NODE DeviceNode)
+{
+   IO_STATUS_BLOCK IoStatusBlock;
+   IO_STACK_LOCATION Stack;
+   PDEVICE_OBJECT Fdo;
+   NTSTATUS Status;
+
+   DPRINT("Sending IRP_MN_START_DEVICE to driver\n");
+
+   Fdo = IoGetAttachedDeviceReference(DeviceNode->PhysicalDeviceObject);
+   Stack.Parameters.StartDevice.AllocatedResources = DeviceNode->ResourceList;
+   Stack.Parameters.StartDevice.AllocatedResourcesTranslated = DeviceNode->ResourceListTranslated;
+
+   Status = IopInitiatePnpIrp(
+      Fdo,
+      &IoStatusBlock,
+      IRP_MN_START_DEVICE,
+      &Stack);
+
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("IopInitiatePnpIrp() failed\n");
+   }
+   else
+   {
       if (Fdo->DeviceType == FILE_DEVICE_BUS_EXTENDER ||
           Fdo->DeviceType == FILE_DEVICE_ACPI)
       {
          DPRINT("Bus extender found\n");
 
          Status = IopInvalidateDeviceRelations(DeviceNode, BusRelations);
-         if (!NT_SUCCESS(Status))
-         {
-            ObDereferenceObject(Fdo);
-            return Status;
-         }
       }
-
-      ObDereferenceObject(Fdo);
    }
 
-   return STATUS_SUCCESS;
+   ObDereferenceObject(Fdo);
+   
+   return Status;
 }
 
 NTSTATUS
@@ -1099,131 +1101,6 @@ IoValidateDeviceIoControlAccess(IN  PIRP Irp,
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @implemented
- */
-NTSTATUS 
-STDCALL
-NtDeviceIoControlFile(IN HANDLE DeviceHandle,
-                      IN HANDLE Event OPTIONAL,
-                      IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL,
-                      IN PVOID UserApcContext OPTIONAL,
-                      OUT PIO_STATUS_BLOCK IoStatusBlock,
-                      IN ULONG IoControlCode,
-                      IN PVOID InputBuffer,
-                      IN ULONG InputBufferLength OPTIONAL,
-                      OUT PVOID OutputBuffer,
-                      IN ULONG OutputBufferLength OPTIONAL)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-    PFILE_OBJECT FileObject;
-    PDEVICE_OBJECT DeviceObject;
-    PIRP Irp;
-    PIO_STACK_LOCATION StackPtr;
-    PKEVENT EventObject = NULL;
-    BOOLEAN LocalEvent = FALSE;
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-
-    DPRINT("NtDeviceIoControlFile(DeviceHandle %x Event %x UserApcRoutine %x "
-           "UserApcContext %x IoStatusBlock %x IoControlCode %x "
-           "InputBuffer %x InputBufferLength %x OutputBuffer %x "
-           "OutputBufferLength %x)\n",
-           DeviceHandle,Event,UserApcRoutine,UserApcContext,IoStatusBlock,
-           IoControlCode,InputBuffer,InputBufferLength,OutputBuffer,
-           OutputBufferLength);
-
-    if (IoStatusBlock == NULL) return STATUS_ACCESS_VIOLATION;
-
-    /* Check granted access against the access rights from IoContolCode */
-    Status = ObReferenceObjectByHandle(DeviceHandle,
-                                       (IoControlCode >> 14) & 0x3,
-                                       IoFileObjectType,
-                                       PreviousMode,
-                                       (PVOID *) &FileObject,
-                                       NULL);
-    if (!NT_SUCCESS(Status)) return Status;
-
-    /* Check for an event */
-    if (Event)
-    {
-        /* Reference it */
-        Status = ObReferenceObjectByHandle(Event,
-                                           EVENT_MODIFY_STATE,
-                                           ExEventObjectType,
-                                           PreviousMode,
-                                           (PVOID*)&EventObject,
-                                           NULL);
-        if (!NT_SUCCESS(Status))
-        {
-            ObDereferenceObject (FileObject);
-            return Status;
-        }
-        
-        /* Clear it */
-        KeClearEvent(EventObject);
-    }
-
-    /* Check if this is a direct open or not */
-    if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
-    {
-        DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
-    }
-    else
-    {
-        DeviceObject = IoGetRelatedDeviceObject(FileObject);
-    }
-
-    /* Check if we should use Sync IO or not */
-    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
-    {
-        /* Use File Object event */
-        KeClearEvent(&FileObject->Event);
-    }
-    else
-    {
-        /* Use local event */
-        LocalEvent = TRUE;
-    }
-
-    /* Build the IRP */
-    Irp = IoBuildDeviceIoControlRequest(IoControlCode,
-                                        DeviceObject,
-                                        InputBuffer,
-                                        InputBufferLength,
-                                        OutputBuffer,
-                                        OutputBufferLength,
-                                        FALSE,
-                                        EventObject,
-                                        IoStatusBlock);
-
-    /* Set some extra settings */
-    Irp->Tail.Overlay.OriginalFileObject = FileObject;
-    Irp->RequestorMode = PreviousMode;
-    Irp->Overlay.AsynchronousParameters.UserApcRoutine = UserApcRoutine;
-    Irp->Overlay.AsynchronousParameters.UserApcContext = UserApcContext;
-    StackPtr = IoGetNextIrpStackLocation(Irp);
-    StackPtr->FileObject = FileObject;
-    
-
-    /* Call the Driver */
-    Status = IoCallDriver(DeviceObject, Irp);
-    if (Status == STATUS_PENDING)
-    {
-        if (!LocalEvent)
-        {
-            KeWaitForSingleObject(&FileObject->Event,
-                                  Executive,
-                                  PreviousMode,
-                                  FileObject->Flags & FO_ALERTABLE_IO,
-                                  NULL);
-            Status = FileObject->FinalStatus;
-        }
-    }
-
-    /* Return the Status */
-    return Status;
 }
 
 /* EOF */

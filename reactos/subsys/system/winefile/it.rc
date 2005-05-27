@@ -87,7 +87,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "So&lo Albero" ,			411
 		MENUITEM "&Solo Directory" ,			412
 		MENUITEM SEPARATOR
-		MENUITEM "Di&vidi" ,			414
+		MENUITEM "Di&vidi" ,			ID_VIEW_SPLIT
 		MENUITEM SEPARATOR
 		MENUITEM "&Nome" ,			ID_VIEW_NAME
 		MENUITEM "&Mostra tutti i dettagli sui file" ,				ID_VIEW_ALL_ATTRIBUTES, CHECKED

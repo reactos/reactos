@@ -35,8 +35,6 @@
 #include "msipriv.h"
 #include "winnls.h"
 
-#include "wine/unicode.h"
-
 #include "query.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
@@ -98,7 +96,7 @@ static LPWSTR encode_streamname(BOOL bTable, LPCWSTR in)
     LPWSTR out, p;
 
     if( !bTable )
-        count = strlenW( in )+2;
+        count = lstrlenW( in )+2;
     out = HeapAlloc( GetProcessHeap(), 0, count*sizeof(WCHAR) );
     p = out;
 
@@ -231,13 +229,13 @@ static UINT read_stream_data( IStorage *stg, LPCWSTR stname,
     r = IStream_Stat(stm, &stat, STATFLAG_NONAME );
     if( FAILED( r ) )
     {
-        ERR("open stream failed r = %08lx!\n",r);
+        WARN("open stream failed r = %08lx!\n",r);
         goto end;
     }
 
     if( stat.cbSize.QuadPart >> 32 )
     {
-        ERR("Too big!\n");
+        WARN("Too big!\n");
         goto end;
     }
         
@@ -245,7 +243,7 @@ static UINT read_stream_data( IStorage *stg, LPCWSTR stname,
     data = HeapAlloc( GetProcessHeap(), 0, sz );
     if( !data )
     {
-        ERR("couldn't allocate memory r=%08lx!\n",r);
+        WARN("couldn't allocate memory r=%08lx!\n",r);
         ret = ERROR_NOT_ENOUGH_MEMORY;
         goto end;
     }
@@ -254,7 +252,7 @@ static UINT read_stream_data( IStorage *stg, LPCWSTR stname,
     if( FAILED( r ) || ( count != sz ) )
     {
         HeapFree( GetProcessHeap(), 0, data );
-        ERR("read stream failed r = %08lx!\n",r);
+        WARN("read stream failed r = %08lx!\n",r);
         goto end;
     }
 
@@ -305,13 +303,13 @@ UINT read_raw_stream_data( MSIDATABASE *db, LPCWSTR stname,
     r = IStream_Stat(stm, &stat, STATFLAG_NONAME );
     if( FAILED( r ) )
     {
-        ERR("open stream failed r = %08lx!\n",r);
+        WARN("open stream failed r = %08lx!\n",r);
         goto end;
     }
 
     if( stat.cbSize.QuadPart >> 32 )
     {
-        ERR("Too big!\n");
+        WARN("Too big!\n");
         goto end;
     }
         
@@ -319,7 +317,7 @@ UINT read_raw_stream_data( MSIDATABASE *db, LPCWSTR stname,
     data = HeapAlloc( GetProcessHeap(), 0, sz );
     if( !data )
     {
-        ERR("couldn't allocate memory r=%08lx!\n",r);
+        WARN("couldn't allocate memory r=%08lx!\n",r);
         ret = ERROR_NOT_ENOUGH_MEMORY;
         goto end;
     }
@@ -328,7 +326,7 @@ UINT read_raw_stream_data( MSIDATABASE *db, LPCWSTR stname,
     if( FAILED( r ) || ( count != sz ) )
     {
         HeapFree( GetProcessHeap(), 0, data );
-        ERR("read stream failed r = %08lx!\n",r);
+        WARN("read stream failed r = %08lx!\n",r);
         goto end;
     }
 
@@ -364,7 +362,7 @@ static UINT write_stream_data( IStorage *stg, LPCWSTR stname,
     HeapFree( GetProcessHeap(), 0, encname );
     if( FAILED( r ) )
     {
-        ERR("open stream failed r = %08lx\n",r);
+        WARN("open stream failed r = %08lx\n",r);
         return ret;
     }
 
@@ -372,7 +370,7 @@ static UINT write_stream_data( IStorage *stg, LPCWSTR stname,
     r = IStream_SetSize( stm, size );
     if( FAILED( r ) )
     {
-        ERR("Failed to SetSize\n");
+        WARN("Failed to SetSize\n");
         goto end;
     }
 
@@ -380,14 +378,14 @@ static UINT write_stream_data( IStorage *stg, LPCWSTR stname,
     r = IStream_Seek( stm, pos, STREAM_SEEK_SET, NULL );
     if( FAILED( r ) )
     {
-        ERR("Failed to Seek\n");
+        WARN("Failed to Seek\n");
         goto end;
     }
 
     r = IStream_Write(stm, data, sz, &count );
     if( FAILED( r ) || ( count != sz ) )
     {
-        ERR("Failed to Write\n");
+        WARN("Failed to Write\n");
         goto end;
     }
 
@@ -438,7 +436,7 @@ UINT read_table_from_storage( MSIDATABASE *db, LPCWSTR name, MSITABLE **ptable)
 
     if( rawsize % row_size )
     {
-        ERR("Table size is invalid %d/%d\n", rawsize, row_size );
+        WARN("Table size is invalid %d/%d\n", rawsize, row_size );
         return ERROR_FUNCTION_FAILED;
     }
 
@@ -773,13 +771,13 @@ UINT save_string_table( MSIDATABASE *db )
     pool = HeapAlloc( GetProcessHeap(), 0, poolsize );
     if( ! pool )
     {
-        ERR("Failed to alloc pool %d bytes\n", poolsize );
+        WARN("Failed to alloc pool %d bytes\n", poolsize );
         goto err;
     }
     data = HeapAlloc( GetProcessHeap(), 0, datasize );
     if( ! data )
     {
-        ERR("Failed to alloc data %d bytes\n", poolsize );
+        WARN("Failed to alloc data %d bytes\n", poolsize );
         goto err;
     }
 
@@ -923,7 +921,7 @@ static UINT get_tablecolumns( MSIDATABASE *db,
     r = get_table( db, szColumns, &table);
     if( r != ERROR_SUCCESS )
     {
-        ERR("table %s not available\n", debugstr_w(szColumns));
+        WARN("table %s not available\n", debugstr_w(szColumns));
         return r;
     }
 
@@ -932,7 +930,7 @@ static UINT get_tablecolumns( MSIDATABASE *db,
     if( r != ERROR_SUCCESS )
     {
         release_table( db, table );
-        ERR("Couldn't find id for %s\n", debugstr_w(szTableName));
+        WARN("Couldn't find id for %s\n", debugstr_w(szTableName));
         return r;
     }
 
@@ -1001,7 +999,7 @@ BOOL TABLE_Exists( MSIDATABASE *db, LPWSTR name )
     r = get_table( db, szTables, &table);
     if( r != ERROR_SUCCESS )
     {
-        ERR("table %s not available\n", debugstr_w(szTables));
+        TRACE("table %s not available\n", debugstr_w(szTables));
         return FALSE;
     }
 
@@ -1016,7 +1014,7 @@ BOOL TABLE_Exists( MSIDATABASE *db, LPWSTR name )
     if (i!=count)
         return TRUE;
 
-    ERR("Searched %d tables, but %d was not found\n", count, table_id );
+    TRACE("Searched %d tables, but %d was not found\n", count, table_id );
 
     return FALSE;
 }
@@ -1117,11 +1115,11 @@ static UINT TABLE_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, ISt
     if( !sval )
         return ERROR_INVALID_PARAMETER;
 
-    len = strlenW( tv->name ) + 2 + strlenW( sval );
+    len = lstrlenW( tv->name ) + 2 + lstrlenW( sval );
     full_name = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
-    strcpyW( full_name, tv->name );
-    strcatW( full_name, szDot );
-    strcatW( full_name, sval );
+    lstrcpyW( full_name, tv->name );
+    lstrcatW( full_name, szDot );
+    lstrcatW( full_name, sval );
 
     r = db_get_raw_stream( tv->db, full_name, stm );
     if( r )
@@ -1397,7 +1395,7 @@ UINT MSI_CommitTables( MSIDATABASE *db )
     r = save_string_table( db );
     if( r != ERROR_SUCCESS )
     {
-        ERR("failed to save string table r=%08x\n",r);
+        WARN("failed to save string table r=%08x\n",r);
         return r;
     }
 
@@ -1406,7 +1404,7 @@ UINT MSI_CommitTables( MSIDATABASE *db )
         r = save_table( db, table );
         if( r != ERROR_SUCCESS )
         {
-            ERR("failed to save table %s (r=%08x)\n",
+            WARN("failed to save table %s (r=%08x)\n",
                   debugstr_w(table->name), r);
             return r;
         }

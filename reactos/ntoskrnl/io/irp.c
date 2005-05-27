@@ -15,11 +15,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* GLOBALS *******************************************************************/
-
-#define TAG_IRP      TAG('I', 'R', 'P', ' ')
-#define TAG_SYS_BUF  TAG('S', 'Y', 'S' , 'B')
-
 /* PRIVATE FUNCTIONS  ********************************************************/
 
 VOID

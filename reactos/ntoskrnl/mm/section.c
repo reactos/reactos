@@ -38,9 +38,6 @@ static GENERIC_MAPPING MmpSectionMapping = {
          STANDARD_RIGHTS_EXECUTE | SECTION_MAP_EXECUTE,
          SECTION_ALL_ACCESS};
 
-#define TAG_MM_SECTION_SEGMENT   TAG('M', 'M', 'S', 'S')
-#define TAG_SECTION_PAGE_TABLE   TAG('M', 'S', 'P', 'T')
-
 #define PAGE_FROM_SSE(E)         ((E) & 0xFFFFF000)
 #define PFN_FROM_SSE(E)          ((E) >> PAGE_SHIFT)
 #define SHARE_COUNT_FROM_SSE(E)  (((E) & 0x00000FFE) >> 1)
@@ -201,7 +198,7 @@ MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
       {
          Table =
             Segment->PageDirectory.PageTables[DirectoryOffset] =
-               ExAllocatePoolWithTag(NonPagedPool, sizeof(SECTION_PAGE_TABLE),
+               ExAllocatePoolWithTag(PagedPool, sizeof(SECTION_PAGE_TABLE),
                                      TAG_SECTION_PAGE_TABLE);
          if (Table == NULL)
          {
@@ -2099,6 +2096,16 @@ MmCreatePhysicalMemorySection(VOID)
       DbgPrint("Failed to create PhysicalMemory section\n");
       KEBUGCHECK(0);
    }
+   Status = ObInsertObject(PhysSection,
+                           NULL,
+                           SECTION_ALL_ACCESS,
+                           0,
+                           NULL,
+                           NULL);
+   if (!NT_SUCCESS(Status))
+   {
+      ObDereferenceObject(PhysSection);
+   }
    PhysSection->AllocationAttributes |= SEC_PHYSICALMEMORY;
 
    return(STATUS_SUCCESS);
@@ -2110,14 +2117,14 @@ MmInitSectionImplementation(VOID)
    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
    UNICODE_STRING Name;
 
-   DPRINT1("Creating Section Object Type\n");
+   DPRINT("Creating Section Object Type\n");
   
    /* Initialize the Section object type  */
    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
    RtlInitUnicodeString(&Name, L"Section");
    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-   ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(SECTION_OBJECT);
-   ObjectTypeInitializer.PoolType = NonPagedPool;
+   ObjectTypeInitializer.DefaultPagedPoolCharge = sizeof(SECTION_OBJECT);
+   ObjectTypeInitializer.PoolType = PagedPool;
    ObjectTypeInitializer.UseDefaultObject = TRUE;
    ObjectTypeInitializer.GenericMapping = MmpSectionMapping;
    ObjectTypeInitializer.DeleteProcedure = MmpDeleteSection;
@@ -2176,7 +2183,7 @@ MmCreatePageFileSection(PSECTION_OBJECT *SectionObject,
    KeInitializeSpinLock(&Section->ViewListLock);
    Section->FileObject = NULL;
    Section->MaximumSize = MaximumSize;
-   Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
+   Segment = ExAllocatePoolWithTag(PagedPool, sizeof(MM_SECTION_SEGMENT),
                                    TAG_MM_SECTION_SEGMENT);
    if (Segment == NULL)
    {
@@ -2239,7 +2246,6 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
    {
       return(Status);
    }
-
    /*
     * Initialize it
     */
@@ -2381,7 +2387,7 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
     */
    if (FileObject->SectionObjectPointer->DataSectionObject == NULL)
    {
-      Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
+      Segment = ExAllocatePoolWithTag(PagedPool, sizeof(MM_SECTION_SEGMENT),
                                       TAG_MM_SECTION_SEGMENT);
       if (Segment == NULL)
       {
@@ -2493,7 +2499,7 @@ ExeFmtpAllocateSegments(IN ULONG NrSegments)
  /* TODO: check for integer overflow */
  SizeOfSegments = sizeof(MM_SECTION_SEGMENT) * NrSegments;
 
- Segments = ExAllocatePoolWithTag(NonPagedPool,
+ Segments = ExAllocatePoolWithTag(PagedPool,
                                   SizeOfSegments,
                                   TAG_MM_SECTION_SEGMENT);
 
@@ -3067,7 +3073,7 @@ ExeFmtpCreateImageSection(HANDLE FileHandle,
 
       SizeOfSegments = sizeof(MM_SECTION_SEGMENT) * ImageSectionObject->NrSegments;
 
-      Segments = ExAllocatePoolWithTag(NonPagedPool,
+      Segments = ExAllocatePoolWithTag(PagedPool,
                                        SizeOfSegments,
                                        TAG_MM_SECTION_SEGMENT);
 
@@ -3140,6 +3146,7 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
                                       UserMode,
                                       (PVOID*)(PVOID)&FileObject,
                                       NULL);
+
    if (!NT_SUCCESS(Status))
    {
       return Status;
@@ -3181,7 +3188,7 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
    {
       NTSTATUS StatusExeFmt;
 
-      ImageSectionObject = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_IMAGE_SECTION_OBJECT), TAG_MM_SECTION_SEGMENT);
+      ImageSectionObject = ExAllocatePoolWithTag(PagedPool, sizeof(MM_IMAGE_SECTION_OBJECT), TAG_MM_SECTION_SEGMENT);
       if (ImageSectionObject == NULL)
       {
          ObDereferenceObject(FileObject);

@@ -11,7 +11,7 @@
 
 static HANDLE WindowsApiPort = NULL;
 PEPROCESS CsrProcess = NULL;
-
+           
 NTSTATUS FASTCALL
 CsrInit(void)
 {
@@ -76,35 +76,48 @@ CsrNotify(PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply)
   return Status;
 }
 
-NTSTATUS STDCALL
-CsrInsertObject(PVOID Object,
-                PACCESS_STATE PassedAccessState,
+NTSTATUS
+STDCALL
+CsrInsertObject(HANDLE ObjectHandle,
                 ACCESS_MASK DesiredAccess,
-                ULONG AdditionalReferences,
-                PVOID* ReferencedObject,
                 PHANDLE Handle)
 {
   NTSTATUS Status;
-  PEPROCESS OldProcess;
-
-  /* Switch to the process in which the handle is valid */
-  OldProcess = PsGetCurrentProcess();
-  if (CsrProcess != OldProcess)
-    {
-      KeAttachProcess(CsrProcess);
-    }
-
-  Status = ObInsertObject(Object,
-                          PassedAccessState,
-                          DesiredAccess,
-                          AdditionalReferences,
-                          ReferencedObject,
-                          Handle);
-
-  if (CsrProcess != OldProcess)
-    {
-      KeDetachProcess();
-    }
+  HANDLE CsrProcessHandle;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  CLIENT_ID Cid;
+  
+  /* Put CSR'S CID */
+  Cid.UniqueProcess = CsrProcess->UniqueProcessId;
+  Cid.UniqueThread = 0;
+  
+  /* Empty Attributes */
+  InitializeObjectAttributes(&ObjectAttributes,
+                             NULL,
+                             0,
+                             NULL,
+                             NULL);
+  
+  /* Get a Handle to Csrss */
+  Status = ZwOpenProcess(&CsrProcessHandle,
+                         PROCESS_DUP_HANDLE,
+                         &ObjectAttributes,
+                         &Cid);
+                         
+  if ((NT_SUCCESS(Status)))
+  {                         
+      /* Duplicate the Handle */
+      Status = ZwDuplicateObject(NtCurrentProcess(),
+                                 ObjectHandle,
+                                 CsrProcessHandle,
+                                 Handle,
+                                 DesiredAccess,
+                                 TRUE,
+                                 0);
+  
+      /* Close our handle to CSRSS */
+      ZwClose(CsrProcessHandle);
+  }
 
   return Status;
 }

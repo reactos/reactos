@@ -1199,8 +1199,8 @@ int usb_hub_init(void)
 		return -1;
 	}
 
-	pid = kernel_thread(hub_thread, NULL,
-		CLONE_FS | CLONE_FILES | CLONE_SIGHAND);
+	pid = kernel_thread((void*)hub_thread, NULL,
+		(CLONE_FS | CLONE_FILES | CLONE_SIGHAND));
 	if (pid >= 0) {
 		khubd_pid = pid;
 		return 0;

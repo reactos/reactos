@@ -3,6 +3,7 @@ TOPOBJDIR = ../..
 SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = mpr.dll
+IMPORTLIB = libmpr.$(IMPLIBEXT)
 IMPORTS   = user32 advapi32 kernel32
 EXTRALIBS = $(LIBUNICODE)
 

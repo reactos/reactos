@@ -22,8 +22,6 @@ static KSPIN_LOCK MmPageOpHashTableLock;
 static PMM_PAGEOP MmPageOpHashTable[PAGEOP_HASH_TABLE_SIZE];
 static NPAGED_LOOKASIDE_LIST MmPageOpLookasideList;
 
-#define TAG_MM_PAGEOP   TAG('M', 'P', 'O', 'P')
-
 /* FUNCTIONS *****************************************************************/
 
 VOID

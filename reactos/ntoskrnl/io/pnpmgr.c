@@ -60,7 +60,7 @@ IoGetDeviceProperty(
 {
   PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
   ULONG Length;
-  PVOID Data;
+  PVOID Data = NULL;
   PWSTR Ptr;
 
   DPRINT("IoGetDeviceProperty(%x %d)\n", DeviceObject, DeviceProperty);
@@ -236,15 +236,19 @@ IoGetDeviceProperty(
       if (Ptr != NULL)
       {
 	Length = (ULONG)((ULONG_PTR)Ptr - (ULONG_PTR)DeviceNode->InstancePath.Buffer) + sizeof(WCHAR);
+	Data = DeviceNode->InstancePath.Buffer;
       }
       else
       {
 	Length = 0;
 	Data = NULL;
       }
+      break;
 
     case DevicePropertyPhysicalDeviceObjectName:
-      return STATUS_NOT_IMPLEMENTED;
+      Length = DeviceNode->InstancePath.Length + sizeof(WCHAR);
+      Data = DeviceNode->InstancePath.Buffer;
+      break;
 
     default:
       return STATUS_INVALID_PARAMETER_2;
@@ -256,7 +260,8 @@ IoGetDeviceProperty(
   RtlCopyMemory(PropertyBuffer, Data, Length);
 
   /* Terminate the string */
-  if (DeviceProperty == DevicePropertyEnumeratorName)
+  if (DeviceProperty == DevicePropertyEnumeratorName
+    || DeviceProperty == DevicePropertyPhysicalDeviceObjectName)
   {
     Ptr = (PWSTR)PropertyBuffer;
     Ptr[(Length / sizeof(WCHAR)) - 1] = 0;
@@ -894,6 +899,200 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
 }
 
 
+NTSTATUS
+IopAssignDeviceResources(
+   PDEVICE_NODE DeviceNode)
+{
+   PIO_RESOURCE_LIST ResourceList;
+   PIO_RESOURCE_DESCRIPTOR ResourceDescriptor;
+   PCM_PARTIAL_RESOURCE_DESCRIPTOR DescriptorRaw, DescriptorTranslated;
+   ULONG NumberOfResources = 0;
+   ULONG i;
+   NTSTATUS Status;
+   
+   /* Fill DeviceNode->ResourceList and DeviceNode->ResourceListTranslated;
+    * by using DeviceNode->ResourceRequirements */
+   
+   if (!DeviceNode->ResourceRequirements
+      || DeviceNode->ResourceRequirements->AlternativeLists == 0)
+   {
+      DeviceNode->ResourceList = DeviceNode->ResourceListTranslated = NULL;
+      return STATUS_SUCCESS;
+   }
+   
+   /* FIXME: that's here that PnP arbiter should go */
+   /* Actually, simply use resource list #0 as assigned resource list */
+   ResourceList = &DeviceNode->ResourceRequirements->List[0];
+   if (ResourceList->Version != 1 || ResourceList->Revision != 1)
+   {
+      Status = STATUS_REVISION_MISMATCH;
+      goto ByeBye;
+   }
+   
+   DeviceNode->ResourceList = ExAllocatePool(PagedPool, 
+      sizeof(CM_RESOURCE_LIST) + ResourceList->Count * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
+   if (!DeviceNode->ResourceList)
+   {
+      Status = STATUS_INSUFFICIENT_RESOURCES;
+      goto ByeBye;
+   }
+   
+   DeviceNode->ResourceListTranslated = ExAllocatePool(PagedPool, 
+      sizeof(CM_RESOURCE_LIST) + ResourceList->Count * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
+   if (!DeviceNode->ResourceListTranslated)
+   {
+      Status = STATUS_INSUFFICIENT_RESOURCES;
+      goto ByeBye;
+   }
+   
+   DeviceNode->ResourceList->Count = 1;
+   DeviceNode->ResourceList->List[0].InterfaceType = DeviceNode->ResourceRequirements->InterfaceType;
+   DeviceNode->ResourceList->List[0].BusNumber = DeviceNode->ResourceRequirements->BusNumber;
+   DeviceNode->ResourceList->List[0].PartialResourceList.Version = 1;
+   DeviceNode->ResourceList->List[0].PartialResourceList.Revision = 1;
+   
+   DeviceNode->ResourceListTranslated->Count = 1;
+   DeviceNode->ResourceListTranslated->List[0].InterfaceType = DeviceNode->ResourceRequirements->InterfaceType;
+   DeviceNode->ResourceListTranslated->List[0].BusNumber = DeviceNode->ResourceRequirements->BusNumber;
+   DeviceNode->ResourceListTranslated->List[0].PartialResourceList.Version = 1;
+   DeviceNode->ResourceListTranslated->List[0].PartialResourceList.Revision = 1;
+   
+   for (i = 0; i < ResourceList->Count; i++)
+   {
+      ResourceDescriptor = &ResourceList->Descriptors[i];
+      
+      if (ResourceDescriptor->Option == 0 || ResourceDescriptor->Option == IO_RESOURCE_PREFERRED)
+      {
+         DescriptorRaw = &DeviceNode->ResourceList->List[0].PartialResourceList.PartialDescriptors[NumberOfResources];
+         DescriptorTranslated = &DeviceNode->ResourceListTranslated->List[0].PartialResourceList.PartialDescriptors[NumberOfResources];
+         NumberOfResources++;
+         
+         /* Copy ResourceDescriptor to DescriptorRaw and DescriptorTranslated */
+         DescriptorRaw->Type = DescriptorTranslated->Type = ResourceDescriptor->Type;
+         DescriptorRaw->ShareDisposition = DescriptorTranslated->ShareDisposition = ResourceDescriptor->ShareDisposition;
+         DescriptorRaw->Flags = DescriptorTranslated->Flags = ResourceDescriptor->Flags;
+         switch (ResourceDescriptor->Type)
+         {
+            case CmResourceTypePort:
+            {
+               ULONG AddressSpace = 0; /* IO space */
+               DescriptorRaw->u.Port.Start = ResourceDescriptor->u.Port.MinimumAddress;
+               DescriptorRaw->u.Port.Length = DescriptorTranslated->u.Port.Length
+                  = ResourceDescriptor->u.Port.Length;
+               if (!HalTranslateBusAddress(
+                  DeviceNode->ResourceRequirements->InterfaceType,
+                  DeviceNode->ResourceRequirements->BusNumber,
+                  DescriptorRaw->u.Port.Start,
+                  &AddressSpace,
+                  &DescriptorTranslated->u.Port.Start))
+               {
+                  Status = STATUS_UNSUCCESSFUL;
+                  goto ByeBye;
+               }
+               break;
+            }
+            case CmResourceTypeInterrupt:
+            {
+               DescriptorRaw->u.Interrupt.Level = 0;
+               /* FIXME: if IRQ 9 is in the possible range, use it.
+                * This should be a PCI device */
+               if (ResourceDescriptor->u.Interrupt.MinimumVector <= 9
+                  && ResourceDescriptor->u.Interrupt.MaximumVector >= 9)
+                  DescriptorRaw->u.Interrupt.Vector = 9;
+               else
+                  DescriptorRaw->u.Interrupt.Vector = ResourceDescriptor->u.Interrupt.MinimumVector;
+               
+               DescriptorTranslated->u.Interrupt.Vector = HalGetInterruptVector(
+                  DeviceNode->ResourceRequirements->InterfaceType,
+                  DeviceNode->ResourceRequirements->BusNumber,
+                  DescriptorRaw->u.Interrupt.Level,
+                  DescriptorRaw->u.Interrupt.Vector,
+                  (PKIRQL)&DescriptorTranslated->u.Interrupt.Level,
+                  &DescriptorRaw->u.Interrupt.Affinity);
+               DescriptorTranslated->u.Interrupt.Affinity = DescriptorRaw->u.Interrupt.Affinity;
+               break;
+            }
+            case CmResourceTypeMemory:
+            {
+               ULONG AddressSpace = 1; /* Memory space */
+               DescriptorRaw->u.Memory.Start = ResourceDescriptor->u.Memory.MinimumAddress;
+               DescriptorRaw->u.Memory.Length = DescriptorTranslated->u.Memory.Length
+                  = ResourceDescriptor->u.Memory.Length;
+               if (!HalTranslateBusAddress(
+                  DeviceNode->ResourceRequirements->InterfaceType,
+                  DeviceNode->ResourceRequirements->BusNumber,
+                  DescriptorRaw->u.Memory.Start,
+                  &AddressSpace,
+                  &DescriptorTranslated->u.Memory.Start))
+               {
+                  Status = STATUS_UNSUCCESSFUL;
+                  goto ByeBye;
+               }
+               break;
+            }
+            case CmResourceTypeDma:
+            {
+               DescriptorRaw->u.Dma.Channel = DescriptorTranslated->u.Dma.Channel
+                  = ResourceDescriptor->u.Dma.MinimumChannel;
+               DescriptorRaw->u.Dma.Port = DescriptorTranslated->u.Dma.Port
+                  = 0; /* FIXME */
+               DescriptorRaw->u.Dma.Reserved1 = DescriptorTranslated->u.Dma.Reserved1
+                  = 0;
+               break;
+            }
+            /*case CmResourceTypeBusNumber:
+            {
+               DescriptorRaw->u.BusNumber.Start = DescriptorTranslated->u.BusNumber.Start
+                  = ResourceDescriptor->u.BusNumber.MinBusNumber;
+               DescriptorRaw->u.BusNumber.Length = DescriptorTranslated->u.BusNumber.Length
+                  = ResourceDescriptor->u.BusNumber.Length;
+               DescriptorRaw->u.BusNumber.Reserved = DescriptorTranslated->u.BusNumber.Reserved
+                  = ResourceDescriptor->u.BusNumber.Reserved;
+               break;
+            }*/
+            /*CmResourceTypeDevicePrivate:
+            case CmResourceTypePcCardConfig:
+            case CmResourceTypeMfCardConfig:
+            {
+               RtlCopyMemory(
+                  &DescriptorRaw->u.DevicePrivate,
+                  &ResourceDescriptor->u.DevicePrivate,
+                  sizeof(ResourceDescriptor->u.DevicePrivate));
+               RtlCopyMemory(
+                  &DescriptorTranslated->u.DevicePrivate,
+                  &ResourceDescriptor->u.DevicePrivate,
+                  sizeof(ResourceDescriptor->u.DevicePrivate));
+               break;
+            }*/
+            default:
+               DPRINT1("IopAssignDeviceResources(): unknown resource descriptor type 0x%x\n", ResourceDescriptor->Type);
+               NumberOfResources--;
+         }
+      }
+      
+   }
+   
+   DeviceNode->ResourceList->List[0].PartialResourceList.Count = NumberOfResources;
+   DeviceNode->ResourceListTranslated->List[0].PartialResourceList.Count = NumberOfResources;
+   
+   return STATUS_SUCCESS;
+
+ByeBye:
+   if (DeviceNode->ResourceList)
+   {
+      ExFreePool(DeviceNode->ResourceList);
+      DeviceNode->ResourceList = NULL;
+   }
+   if (DeviceNode->ResourceListTranslated)
+   {
+      ExFreePool(DeviceNode->ResourceListTranslated);
+      DeviceNode->ResourceListTranslated = NULL;
+   }
+
+   return Status;
+}
+
+
 /*
  * IopActionInterrogateDeviceStack
  *
@@ -1317,6 +1516,12 @@ IopActionInterrogateDeviceStack(
 
    ZwClose(InstanceKey);
 
+   Status = IopAssignDeviceResources(DeviceNode);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("IopAssignDeviceResources() failed (Status %x)\n", Status);
+   }
+
    DeviceNode->Flags |= DNF_PROCESSED;
 
    /* Report the device to the user-mode pnp manager */
@@ -1507,13 +1712,10 @@ IopActionInitChildServices(
          else
          {
             /* get existing DriverObject pointer */
-            Status = IopCreateDriverObject(
-            	&DriverObject,
-            	&DeviceNode->ServiceName,
-            	OBJ_OPENIF,
-            	FALSE,
-            	ModuleObject->Base,
-            	ModuleObject->Length);
+            Status = IopGetDriverObject(
+               &DriverObject,
+               &DeviceNode->ServiceName,
+               FALSE);
          }
          if (NT_SUCCESS(Status))
          {
@@ -1523,9 +1725,11 @@ IopActionInitChildServices(
             Status = IopInitializeDevice(DeviceNode, DriverObject);
             if (NT_SUCCESS(Status))
             {
-               IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
                /* Attach upper level filter drivers. */
                IopAttachFilterDrivers(DeviceNode, FALSE);
+               IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
+
+               Status = IopStartDevice(DeviceNode);
             }
          }
       }

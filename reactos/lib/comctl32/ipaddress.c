@@ -62,6 +62,7 @@ typedef struct
 {
     HWND	Self;
     HWND	Notify;
+    BOOL	Enabled;
     IPPART_INFO	Part[4];
 } IPADDRESS_INFO;
 
@@ -127,12 +128,26 @@ static LRESULT IPADDRESS_Draw (IPADDRESS_INFO *infoPtr, HDC hdc)
     static const WCHAR dotW[] = { '.', 0 };
     RECT rect, rcPart;
     POINT pt;
+    COLORREF bgCol, fgCol;
     int i;
 
     TRACE("\n");
 
     GetClientRect (infoPtr->Self, &rect);
+
+    if (infoPtr->Enabled) {
+        bgCol = COLOR_WINDOW;
+        fgCol = COLOR_WINDOWTEXT;
+    } else {
+        bgCol = COLOR_3DFACE;
+        fgCol = COLOR_GRAYTEXT;
+    }
+    
+    FillRect (hdc, &rect, (HBRUSH) (bgCol+1));
     DrawEdge (hdc, &rect, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
+    
+    SetBkColor  (hdc, GetSysColor(bgCol));
+    SetTextColor(hdc, GetSysColor(fgCol));
 
     for (i = 0; i < 3; i++) {
         GetWindowRect (infoPtr->Part[i].EditHwnd, &rcPart);
@@ -174,6 +189,7 @@ static LRESULT IPADDRESS_Create (HWND hwnd, LPCREATESTRUCTA lpCreate)
     edit.bottom = rcClient.bottom - 2;
 
     infoPtr->Self = hwnd;
+    infoPtr->Enabled = FALSE;
     infoPtr->Notify = lpCreate->hwndParent;
 
     for (i = 0; i < 4; i++) {
@@ -211,6 +227,20 @@ static LRESULT IPADDRESS_Destroy (IPADDRESS_INFO *infoPtr)
 
     SetWindowLongPtrW (infoPtr->Self, 0, 0);
     Free (infoPtr);
+    return 0;
+}
+
+
+static LRESULT IPADDRESS_Enable (IPADDRESS_INFO *infoPtr, BOOL enabled)
+{
+    int i;
+
+    infoPtr->Enabled = enabled;
+
+    for (i = 0; i < 4; i++)
+        EnableWindow(infoPtr->Part[i].EditHwnd, enabled);
+
+    InvalidateRgn(infoPtr->Self, NULL, FALSE);
     return 0;
 }
 
@@ -516,6 +546,10 @@ IPADDRESS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_DESTROY:
 	    return IPADDRESS_Destroy (infoPtr);
+
+	case WM_ENABLE:
+	    return IPADDRESS_Enable (infoPtr, (BOOL)wParam);
+	    break;
 
 	case WM_PAINT:
 	    return IPADDRESS_Paint (infoPtr, (HDC)wParam);

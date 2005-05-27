@@ -156,8 +156,12 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 {
 	LPTSTR dir;		/* pointer to the directory to change to */
 	LPTSTR lpOldPath;
-	LPTSTR endofstring; /* pointer to the null character in the directory to change to */
-	LPTSTR lastquote; /* pointer to the last quotation mark in the directory to change to */
+	size_t size, str_len;
+	WIN32_FIND_DATA FileData; 
+    HANDLE hSearch; 
+    DWORD dwAttrs;  
+    BOOL fFinished = FALSE; 
+ 
 
 	/*Should we better declare a variable containing _tsclen(dir) ? It's used a few times,
 	  but on the other hand paths are generally not very long*/
@@ -171,17 +175,38 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	/* The whole param string is our parameter these days. The only thing we do is eliminating every quotation mark */
 	/* Is it safe to change the characters param is pointing to? I presume it is, as there doesn't seem to be any
 	post-processing of it after the function call (what would that accomplish?) */
+	
+    size = _tcscspn(param,  _T("\"") );
+	str_len = _tcslen(param)-1;
 
-	dir=param;
-	endofstring=dir+_tcslen(dir);
-
-	while ((lastquote = _tcsrchr(dir, _T('\"'))))
+	if ((param[size] == _T('"')) && (str_len >1))
 	{
-		endofstring--;
-		memmove(lastquote,lastquote+1,endofstring-lastquote);
-		*endofstring=_T('\0');
+	 
+	 if (size==0)
+	 {
+	  _tcsncpy(param,&param[size+1],str_len);
+	  param[str_len] = _T('\0');	 
+	 }
+
+	 size = _tcscspn(param,  _T("\"") );	
+     if (param[size] == _T('"'))
+	 {
+	  param[size] = _T('\0');
+	 }
+
 	}
 
+	str_len = _tcslen(param);
+	if (str_len==1) 
+	{
+	    if (param[0] == _T('*')) 
+	    {
+		    param[0] = _T('.');
+		}
+	}
+	
+	dir=param;
+	
 	/* if doing a CD and no parameters given, print out current directory */
 	if (!dir || !dir[0])
 	{
@@ -231,6 +256,49 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 
 	if (!SetCurrentDirectory (dir))
 	{
+
+	    hSearch = FindFirstFile(dir, &FileData); 
+        if (hSearch == INVALID_HANDLE_VALUE) 
+        { 
+	        ConOutFormatMessage(GetLastError());
+			free (lpOldPath);
+		    lpOldPath = NULL;
+            return 1;
+		}
+
+		
+        while (!fFinished) 
+        { 
+            dwAttrs = GetFileAttributes(FileData.cFileName); 
+#ifdef _DEBUG
+			DebugPrintf(_T("Search found folder :%s\n"),FileData.cFileName);
+#endif
+            if ((dwAttrs & FILE_ATTRIBUTE_DIRECTORY)) 
+            {
+			  FindClose(hSearch);		     
+	          // change folder
+			 if (!SetCurrentDirectory (FileData.cFileName))
+			 {
+				 ConOutFormatMessage(GetLastError());
+			     free (lpOldPath);
+		         lpOldPath = NULL;
+				 return 1;
+			 }
+				
+             
+			 return 0;
+             }
+        
+             else if (!FindNextFile(hSearch, &FileData)) 
+            {             
+		     FindClose(hSearch);
+			 ConOutFormatMessage(GetLastError());
+			 free (lpOldPath);
+		     lpOldPath = NULL;
+			 return 1;
+             }
+        }  
+
 		//ErrorMessage (GetLastError(), _T("CD"));
 		ConOutFormatMessage(GetLastError());
 

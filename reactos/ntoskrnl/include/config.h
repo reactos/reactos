@@ -15,18 +15,30 @@
 
 /********** mm/ppool.c **********/
 
-/* Enable strict checking of the nonpaged pool on every allocation */
-#undef ENABLE_VALIDATE_POOL
+/* Disable Debugging Features */
+#ifndef DBG
+    /* Enable strict checking of the nonpaged pool on every allocation */
+    #undef ENABLE_VALIDATE_POOL
 
-/* Enable tracking of statistics about the tagged blocks in the pool */
-#undef TAG_STATISTICS_TRACKING
+    /* Enable tracking of statistics about the tagged blocks in the pool */
+    #undef TAG_STATISTICS_TRACKING
+    
+    /* Enable Memory Debugging Features/Helpers */
+    #undef POOL_DEBUG_APIS
+    
+    /* Enable Redzone */
+    #define R_RZ 0
+    
+    /* Enable Allocator Stack */
+    #define R_STACK 0
 
-/*
- * Put each block in its own range of pages and position the block at the
- * end of the range so any accesses beyond the end of block are to invalid
- * memory locations.
- */
-#undef WHOLE_PAGE_ALLOCATIONS
+    /*
+     * Put each block in its own range of pages and position the block at the
+     * end of the range so any accesses beyond the end of block are to invalid
+     * memory locations.
+     */
+    #undef WHOLE_PAGE_ALLOCATIONS
+#endif
 
 #endif /* __INCLUDE_NTOSKRNL_CONFIG_H */
 

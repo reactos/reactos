@@ -76,7 +76,7 @@ BEGIN
     IDS_COLOR_4BIT "16 färger"
     IDS_COLOR_8BIT "256 färger"
     IDS_COLOR_16BIT "65 536 färger (16 Bit)"
-    IDS_COLOR_32BIT "16,7 miljoner färger (24 Bit)"
+    IDS_COLOR_24BIT "16,7 miljoner färger (24 Bit)"
     IDS_COLOR_32BIT "16,7 miljoner färger (32 Bit)"
     IDS_PIXEL "%lux%lu Pixlar"
 END

@@ -63,12 +63,12 @@ BOOL DiskGetActivePartitionEntry(ULONG DriveNumber, PPARTITION_TABLE_ENTRY Parti
 	// Make sure there was only one bootable partition
 	if (BootablePartitionCount == 0)
 	{
-		DiskError("No bootable (active) partitions found.", 0);
+		DbgPrint((DPRINT_DISK, "No bootable (active) partitions found.\n"));
 		return FALSE;
 	}
 	else if (BootablePartitionCount != 1)
 	{
-		DiskError("Too many bootable (active) partitions found.", 0);
+		DbgPrint((DPRINT_DISK, "Too many bootable (active) partitions found.\n"));
 		return FALSE;
 	}
 

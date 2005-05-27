@@ -63,6 +63,43 @@ typedef NTSTATUS STDCALL_FUNC
                         PSECURITY_DESCRIPTOR SecurityDescriptor,
                         PULONG BufferLength);
 
+typedef struct _OBJECT_HANDLE_COUNT_ENTRY
+{
+    struct _EPROCESS *Process;
+    ULONG HandleCount;
+} OBJECT_HANDLE_COUNT_ENTRY, *POBJECT_HANDLE_COUNT_ENTRY;
+                        
+typedef struct _OBJECT_HANDLE_COUNT_DATABASE
+{
+    ULONG CountEntries;
+    POBJECT_HANDLE_COUNT_ENTRY HandleCountEntries[1];
+} OBJECT_HANDLE_COUNT_DATABASE, *POBJECT_HANDLE_COUNT_DATABASE;
+                        
+typedef struct _OBJECT_HEADER_HANDLE_INFO
+{
+    union {
+        POBJECT_HANDLE_COUNT_DATABASE HandleCountDatabase;
+        OBJECT_HANDLE_COUNT_ENTRY SingleEntry;
+    };
+} OBJECT_HEADER_HANDLE_INFO, *POBJECT_HEADER_HANDLE_INFO;
+                        
+typedef struct _OBJECT_HEADER_CREATOR_INFO
+{
+    LIST_ENTRY TypeList;
+    PVOID CreatorUniqueProcess;
+    USHORT CreatorBackTraceIndex;
+    USHORT Reserved;
+} OBJECT_HEADER_CREATOR_INFO, *POBJECT_HEADER_CREATOR_INFO;
+
+typedef struct _OBJECT_HEADER_NAME_INFO
+{
+    struct _DIRECTORY_OBJECT *Directory;
+    UNICODE_STRING Name;
+    ULONG QueryReferences;
+    ULONG Reserved2;
+    ULONG DbgReferenceCount;
+} OBJECT_HEADER_NAME_INFO, *POBJECT_HEADER_NAME_INFO;
+
 typedef struct _OBJECT_CREATE_INFORMATION 
 {
     ULONG Attributes;

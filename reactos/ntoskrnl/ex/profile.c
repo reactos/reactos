@@ -9,6 +9,7 @@
 
 /* INCLUDES *****************************************************************/
 
+#define NDEBUG
 #include <ntoskrnl.h>
 #include <internal/debug.h>
 
@@ -81,7 +82,7 @@ ExpInitializeProfileImplementation(VOID)
     /* Initialize the Mutex to lock the States */
     KeInitializeMutex(&ExpProfileMutex, 0x40);
 
-    DPRINT1("Creating Profile Object Type\n");
+    DPRINT("Creating Profile Object Type\n");
   
     /* Create the Event Pair Object Type */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));

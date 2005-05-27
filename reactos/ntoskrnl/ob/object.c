@@ -22,346 +22,248 @@ typedef struct _RETENTION_CHECK_PARAMS
   POBJECT_HEADER ObjectHeader;
 } RETENTION_CHECK_PARAMS, *PRETENTION_CHECK_PARAMS;
 
-/* TEMPORARY HACK. DO NOT REMOVE -- Alex */
-NTSTATUS
-STDCALL
-ExpDesktopCreate(PVOID ObjectBody,
-                 PVOID Parent,
-                 PWSTR RemainingPath,
-                 struct _OBJECT_ATTRIBUTES* ObjectAttributes);
 /* FUNCTIONS ************************************************************/
 
 NTSTATUS
-ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
-                           IN KPROCESSOR_MODE AccessMode,
-                           IN POOL_TYPE PoolType,
-                           IN BOOLEAN CaptureIfKernel,
-                           OUT PCAPTURED_OBJECT_ATTRIBUTES CapturedObjectAttributes  OPTIONAL,
-                           OUT PUNICODE_STRING ObjectName  OPTIONAL)
+STDCALL
+ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
+                     IN PUNICODE_STRING ObjectName,
+                     IN KPROCESSOR_MODE AccessMode)
 {
-  OBJECT_ATTRIBUTES AttributesCopy;
-  NTSTATUS Status = STATUS_SUCCESS;
-
-  /* at least one output parameter must be != NULL! */
-  ASSERT(CapturedObjectAttributes != NULL || ObjectName != NULL);
-
-  if(ObjectAttributes == NULL)
-  {
-    /* we're going to return STATUS_SUCCESS! */
-    goto failbasiccleanup;
-  }
-
-  if(AccessMode != KernelMode)
-  {
-    RtlZeroMemory(&AttributesCopy, sizeof(AttributesCopy));
-
-    _SEH_TRY
+    NTSTATUS Status = STATUS_SUCCESS;
+    UNICODE_STRING LocalName = {}; /* <= GCC 4.0 + Optimizer */
+    
+    /* First Probe the String */
+    DPRINT("ObpCaptureObjectName: %wZ\n", ObjectName);
+    if (AccessMode != KernelMode)
     {
-      ProbeForRead(ObjectAttributes,
-                   sizeof(ObjectAttributes),
-                   sizeof(ULONG));
-      /* make a copy on the stack */
-      AttributesCopy = *ObjectAttributes;
-    }
-    _SEH_HANDLE
-    {
-      Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
-
-    if(!NT_SUCCESS(Status))
-    {
-      DPRINT1("ObpCaptureObjectAttributes failed to probe object attributes\n");
-      goto failbasiccleanup;
-    }
-  }
-  else if(!CaptureIfKernel)
-  {
-    if(ObjectAttributes->Length == sizeof(OBJECT_ATTRIBUTES))
-    {
-      if(ObjectName != NULL)
-      {
-        /* we don't have to capture any memory, the caller considers the passed data
-           as valid */
-        if(ObjectAttributes->ObjectName != NULL)
-        {
-          *ObjectName = *ObjectAttributes->ObjectName;
-        }
-        else
-        {
-          ObjectName->Length = ObjectName->MaximumLength = 0;
-          ObjectName->Buffer = NULL;
-        }
-      }
-      if(CapturedObjectAttributes != NULL)
-      {
-        CapturedObjectAttributes->RootDirectory = ObjectAttributes->RootDirectory;
-        CapturedObjectAttributes->Attributes = ObjectAttributes->Attributes;
-        CapturedObjectAttributes->SecurityDescriptor = ObjectAttributes->SecurityDescriptor;
-        CapturedObjectAttributes->SecurityQualityOfService = ObjectAttributes->SecurityQualityOfService;
-      }
-
-      return STATUS_SUCCESS;
-    }
-    else
-    {
-      Status = STATUS_INVALID_PARAMETER;
-      goto failbasiccleanup;
-    }
-  }
-  else
-  {
-    AttributesCopy = *ObjectAttributes;
-  }
-
-  /* if Length isn't as expected, bail with an invalid parameter status code so
-     the caller knows he passed garbage... */
-  if(AttributesCopy.Length != sizeof(OBJECT_ATTRIBUTES))
-  {
-    Status = STATUS_INVALID_PARAMETER;
-    goto failbasiccleanup;
-  }
-
-  if(CapturedObjectAttributes != NULL)
-  {
-    CapturedObjectAttributes->RootDirectory = AttributesCopy.RootDirectory;
-    CapturedObjectAttributes->Attributes = AttributesCopy.Attributes;
-
-    if(AttributesCopy.SecurityDescriptor != NULL)
-    {
-      Status = SeCaptureSecurityDescriptor(AttributesCopy.SecurityDescriptor,
-                                           AccessMode,
-                                           PoolType,
-                                           TRUE,
-                                           &CapturedObjectAttributes->SecurityDescriptor);
-      if(!NT_SUCCESS(Status))
-      {
-        DPRINT1("Unable to capture the security descriptor!!!\n");
-        goto failbasiccleanup;
-      }
-    }
-    else
-    {
-      CapturedObjectAttributes->SecurityDescriptor = NULL;
-    }
-
-    if(AttributesCopy.SecurityQualityOfService != NULL)
-    {
-      SECURITY_QUALITY_OF_SERVICE SafeQoS;
-
-      RtlZeroMemory(&SafeQoS, sizeof(SafeQoS));
-
-      _SEH_TRY
-      {
-        ProbeForRead(AttributesCopy.SecurityQualityOfService,
-                     sizeof(SECURITY_QUALITY_OF_SERVICE),
-                     sizeof(ULONG));
-        SafeQoS = *(PSECURITY_QUALITY_OF_SERVICE)AttributesCopy.SecurityQualityOfService;
-      }
-      _SEH_HANDLE
-      {
-        Status = _SEH_GetExceptionCode();
-      }
-      _SEH_END;
-
-      if(!NT_SUCCESS(Status))
-      {
-        DPRINT1("Unable to capture QoS!!!\n");
-        goto failcleanupsdescriptor;
-      }
-
-      if(SafeQoS.Length != sizeof(SECURITY_QUALITY_OF_SERVICE))
-      {
-        DPRINT1("Unable to capture QoS, wrong size!!!\n");
-        Status = STATUS_INVALID_PARAMETER;
-        goto failcleanupsdescriptor;
-      }
-
-      CapturedObjectAttributes->SecurityQualityOfService = ExAllocatePool(PoolType,
-                                                                          sizeof(SECURITY_QUALITY_OF_SERVICE));
-      if(CapturedObjectAttributes->SecurityQualityOfService != NULL)
-      {
-        *CapturedObjectAttributes->SecurityQualityOfService = SafeQoS;
-      }
-      else
-      {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto failcleanupsdescriptor;
-      }
-    }
-    else
-    {
-      CapturedObjectAttributes->SecurityQualityOfService = NULL;
-    }
-  }
-
-  if(ObjectName != NULL)
-  {
-    if(AttributesCopy.ObjectName != NULL)
-    {
-      UNICODE_STRING OriginalCopy;
-
-      if(AccessMode != KernelMode)
-      {
-        RtlZeroMemory(&OriginalCopy, sizeof(OriginalCopy));
-
+        DPRINT("Probing Struct\n");
         _SEH_TRY
         {
-          /* probe the ObjectName structure and make a local stack copy of it */
-          ProbeForRead(AttributesCopy.ObjectName,
-                       sizeof(UNICODE_STRING),
-                       sizeof(ULONG));
-          OriginalCopy = *AttributesCopy.ObjectName;
-          if(OriginalCopy.Length > 0)
-          {
-            ProbeForRead(OriginalCopy.Buffer,
-                         OriginalCopy.Length,
-                         sizeof(WCHAR));
-          }
+            /* FIXME: Explorer or win32 broken I think */
+            #if 0
+            ProbeForRead(ObjectName,
+                         sizeof(UNICODE_STRING),
+                         sizeof(USHORT));
+            #endif
+            LocalName = *ObjectName;
         }
         _SEH_HANDLE
         {
-          Status = _SEH_GetExceptionCode();
+            Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
-
-        if(NT_SUCCESS(Status))
+        
+        if (NT_SUCCESS(Status))
         {
-          if(OriginalCopy.Length > 0)
-          {
-            ObjectName->MaximumLength = OriginalCopy.Length + sizeof(WCHAR);
-            ObjectName->Buffer = ExAllocatePool(PoolType,
-                                                ObjectName->MaximumLength);
-            if(ObjectName->Buffer != NULL)
+            DPRINT("Probing OK\n");
+             _SEH_TRY
             {
-              _SEH_TRY
-              {
-                /* no need to probe OriginalCopy.Buffer again, we already did that
-                   when capturing the UNICODE_STRING structure itself */
-                RtlCopyMemory(ObjectName->Buffer, OriginalCopy.Buffer, OriginalCopy.Length);
-                ObjectName->Buffer[OriginalCopy.Length / sizeof(WCHAR)] = L'\0';
-              }
-              _SEH_HANDLE
-              {
+                #if 0
+                DPRINT("Probing buffer\n");
+                ProbeForRead(LocalName.Buffer,
+                             LocalName.Length,
+                             sizeof(USHORT));
+                #endif
+            }
+            _SEH_HANDLE
+            {
                 Status = _SEH_GetExceptionCode();
-              }
-              _SEH_END;
-
-              if(!NT_SUCCESS(Status))
-              {
-                DPRINT1("ObpCaptureObjectAttributes failed to copy the unicode string!\n");
-              }
             }
-            else
-            {
-              Status = STATUS_INSUFFICIENT_RESOURCES;
-            }
-          }
-          else if(AttributesCopy.RootDirectory != NULL /* && OriginalCopy.Length == 0 */)
-          {
-            /* if the caller specified a root directory, there must be an object name! */
-            Status = STATUS_OBJECT_NAME_INVALID;
-          }
+            _SEH_END;
         }
-        else
+        
+        /* Fail if anything up to here died */
+        if (!NT_SUCCESS(Status)) 
         {
-          DPRINT1("ObpCaptureObjectAttributes failed to probe the object name UNICODE_STRING structure!\n");
+            DPRINT1("Probing failed\n");
+            return Status;
         }
-      }
-      else /* AccessMode == KernelMode */
-      {
-        OriginalCopy = *AttributesCopy.ObjectName;
-
-        if(OriginalCopy.Length > 0)
-        {
-          ObjectName->MaximumLength = OriginalCopy.Length + sizeof(WCHAR);
-          ObjectName->Buffer = ExAllocatePool(PoolType,
-                                              ObjectName->MaximumLength);
-          if(ObjectName->Buffer != NULL)
-          {
-            RtlCopyMemory(ObjectName->Buffer, OriginalCopy.Buffer, OriginalCopy.Length);
-            ObjectName->Buffer[OriginalCopy.Length / sizeof(WCHAR)] = L'\0';
-          }
-          else
-          {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-          }
-        }
-        else if(AttributesCopy.RootDirectory != NULL /* && OriginalCopy.Length == 0 */)
-        {
-          /* if the caller specified a root directory, there must be an object name! */
-          Status = STATUS_OBJECT_NAME_INVALID;
-        }
-      }
     }
     else
     {
-      ObjectName->Length = ObjectName->MaximumLength = 0;
-      ObjectName->Buffer = NULL;
+        LocalName = *ObjectName;
     }
-  }
-
-  if(!NT_SUCCESS(Status))
-  {
-    if(ObjectName->Buffer)
+    
+    /* Make sure there really is a string */
+    DPRINT("Probing OK\n");
+    if (LocalName.Length)
     {
-      ExFreePool(ObjectName->Buffer);
+        /* Allocate a non-paged buffer for this string */
+        DPRINT("Capturing String\n");
+        CapturedName->Length = LocalName.Length;
+        CapturedName->MaximumLength = LocalName.Length + sizeof(WCHAR);
+        CapturedName->Buffer = ExAllocatePoolWithTag(NonPagedPool, 
+                                                     CapturedName->MaximumLength,
+                                                     TAG('O','b','N','m'));
+                                                     
+        /* Copy the string and null-terminate it */
+        RtlMoveMemory(CapturedName->Buffer, LocalName.Buffer, LocalName.Length);
+        CapturedName->Buffer[LocalName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+        DPRINT("String Captured: %p, %wZ\n", CapturedName, CapturedName);
     }
+    
+    return Status;
+}
 
-failcleanupsdescriptor:
-    if(CapturedObjectAttributes != NULL)
-    {
-      /* cleanup allocated resources */
-      SeReleaseSecurityDescriptor(CapturedObjectAttributes->SecurityDescriptor,
-                                  AccessMode,
-                                  TRUE);
-    }
+NTSTATUS
+STDCALL
+ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
+                           IN KPROCESSOR_MODE AccessMode,
+                           IN POBJECT_TYPE ObjectType,
+                           IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
+                           OUT PUNICODE_STRING ObjectName)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PSECURITY_DESCRIPTOR SecurityDescriptor;
+    PSECURITY_QUALITY_OF_SERVICE SecurityQos;
+    PUNICODE_STRING LocalObjectName = NULL;
 
-failbasiccleanup:
-    if(ObjectName != NULL)
+    /* Zero out the Capture Data */
+    DPRINT("ObpCaptureObjectAttributes\n");
+    RtlZeroMemory(ObjectCreateInfo, sizeof(OBJECT_CREATE_INFORMATION));
+    
+    /* Check if we got Oba */
+    if (ObjectAttributes)
     {
-      ObjectName->Length = ObjectName->MaximumLength = 0;
-      ObjectName->Buffer = NULL;
-    }
-    if(CapturedObjectAttributes != NULL)
-    {
-      RtlZeroMemory(CapturedObjectAttributes, sizeof(CAPTURED_OBJECT_ATTRIBUTES));
-    }
-  }
+        if (AccessMode != KernelMode)
+        {
+            DPRINT("Probing OBA\n");
+            _SEH_TRY
+            {
+                /* FIXME: SMSS SENDS BULLSHIT. */
+                #if 0
+                ProbeForRead(ObjectAttributes,
+                             sizeof(ObjectAttributes),
+                             sizeof(ULONG));
+                #endif
+            }
+            _SEH_HANDLE
+            {
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+        }
+        
+        /* Validate the Size */
+        DPRINT("Validating OBA\n");
+        if (ObjectAttributes->Length != sizeof(OBJECT_ATTRIBUTES))
+        {
+            Status = STATUS_INVALID_PARAMETER;
+        }
 
-  return Status;
+        /* Fail if SEH or Size Validation failed */
+        if(!NT_SUCCESS(Status))
+        {
+            DPRINT1("ObpCaptureObjectAttributes failed to probe object attributes\n");
+            goto fail;
+        }
+        
+        /* Set some Create Info */
+        DPRINT("Creating OBCI\n");
+        ObjectCreateInfo->RootDirectory = ObjectAttributes->RootDirectory;
+        ObjectCreateInfo->Attributes = ObjectAttributes->Attributes;
+        LocalObjectName = ObjectAttributes->ObjectName;
+        SecurityDescriptor = ObjectAttributes->SecurityDescriptor;
+        SecurityQos = ObjectAttributes->SecurityQualityOfService;
+        
+        /* Validate the SD */
+        if (SecurityDescriptor)
+        {
+            DPRINT("Probing SD: %x\n", SecurityDescriptor);
+            Status = SeCaptureSecurityDescriptor(SecurityDescriptor,
+                                                 AccessMode,
+                                                 NonPagedPool,
+                                                 TRUE,
+                                                 &ObjectCreateInfo->SecurityDescriptor);
+            if(!NT_SUCCESS(Status))
+            {
+                DPRINT1("Unable to capture the security descriptor!!!\n");
+                ObjectCreateInfo->SecurityDescriptor = NULL;
+                goto fail;
+            }
+            
+            DPRINT("Probe done\n");
+            ObjectCreateInfo->SecurityDescriptorCharge = 0; /* FIXME */
+            ObjectCreateInfo->ProbeMode = AccessMode;
+        }
+        
+        /* Validate the QoS */
+        if (SecurityQos)
+        {
+            if (AccessMode != KernelMode)
+            {
+                DPRINT("Probing QoS\n");
+                _SEH_TRY
+                {
+                    ProbeForRead(SecurityQos,
+                                 sizeof(SECURITY_QUALITY_OF_SERVICE),
+                                 sizeof(ULONG));
+                }
+                _SEH_HANDLE
+                {
+                    Status = _SEH_GetExceptionCode();
+                }
+                _SEH_END;
+            }
+
+            if(!NT_SUCCESS(Status))
+            {
+                DPRINT1("Unable to capture QoS!!!\n");
+                goto fail;
+            }
+            
+            ObjectCreateInfo->SecurityQualityOfService = *SecurityQos;
+            ObjectCreateInfo->SecurityQos = &ObjectCreateInfo->SecurityQualityOfService;
+        }
+    }
+    
+    /* Clear Local Object Name */
+    DPRINT("Clearing name\n");
+    RtlZeroMemory(ObjectName, sizeof(UNICODE_STRING));
+    
+    /* Now check if the Object Attributes had an Object Name */
+    if (LocalObjectName)
+    {
+        DPRINT("Name Buffer: %x\n", LocalObjectName->Buffer);
+        Status = ObpCaptureObjectName(ObjectName,
+                                      LocalObjectName,
+                                      AccessMode);
+    }
+    else
+    {
+        /* He can't have specified a Root Directory */
+        if (ObjectCreateInfo->RootDirectory)
+        {
+            DPRINT1("Invalid name\n");
+            Status = STATUS_OBJECT_NAME_INVALID;
+        }
+    }
+    
+fail:
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to capture, cleaning up\n");
+        ObpReleaseCapturedAttributes(ObjectCreateInfo);
+    }
+    
+    DPRINT("Return to caller\n");
+    return Status;
 }
 
 
 VOID
-ObpReleaseObjectAttributes(IN PCAPTURED_OBJECT_ATTRIBUTES CapturedObjectAttributes  OPTIONAL,
-                           IN PUNICODE_STRING ObjectName  OPTIONAL,
-                           IN KPROCESSOR_MODE AccessMode,
-                           IN BOOLEAN CaptureIfKernel)
+STDCALL
+ObpReleaseCapturedAttributes(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo)
 {
-  /* WARNING - You need to pass the same parameters to this function as you passed
-               to ObpCaptureObjectAttributes() to avoid memory leaks */
-  if(AccessMode != KernelMode || CaptureIfKernel)
-  {
-    if(CapturedObjectAttributes != NULL)
+    /* Release the SD, it's the only thing we allocated */
+    if (ObjectCreateInfo->SecurityDescriptor)
     {
-      if(CapturedObjectAttributes->SecurityDescriptor != NULL)
-      {
-        ExFreePool(CapturedObjectAttributes->SecurityDescriptor);
-        CapturedObjectAttributes->SecurityDescriptor = NULL;
-      }
-      if(CapturedObjectAttributes->SecurityQualityOfService != NULL)
-      {
-        ExFreePool(CapturedObjectAttributes->SecurityQualityOfService);
-        CapturedObjectAttributes->SecurityQualityOfService = NULL;
-      }
+        SeReleaseSecurityDescriptor(ObjectCreateInfo->SecurityDescriptor,
+                                    ObjectCreateInfo->ProbeMode,
+                                    TRUE);
+        ObjectCreateInfo->SecurityDescriptor = NULL;                                        
     }
-    if(ObjectName != NULL &&
-       ObjectName->Length > 0)
-    {
-      ExFreePool(ObjectName->Buffer);
-    }
-  }
 }
 
 
@@ -389,7 +291,8 @@ ObpReleaseObjectAttributes(IN PCAPTURED_OBJECT_ATTRIBUTES CapturedObjectAttribut
  * RETURN VALUE
  */
 NTSTATUS
-ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
+ObFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
+            PUNICODE_STRING ObjectName,
 	     PVOID* ReturnedObject,
 	     PUNICODE_STRING RemainingPath,
 	     POBJECT_TYPE ObjectType)
@@ -402,18 +305,15 @@ ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
   PWSTR current;
   UNICODE_STRING PathString;
   ULONG Attributes;
-  PUNICODE_STRING ObjectName;
 
   PAGED_CODE();
 
-  DPRINT("ObFindObject(ObjectAttributes %x, ReturnedObject %x, "
-	 "RemainingPath %x)\n",ObjectAttributes,ReturnedObject,RemainingPath);
-  DPRINT("ObjectAttributes->ObjectName %wZ\n",
-	 ObjectAttributes->ObjectName);
+  DPRINT("ObFindObject(ObjectCreateInfo %x, ReturnedObject %x, "
+	 "RemainingPath %x)\n",ObjectCreateInfo,ReturnedObject,RemainingPath);
 
   RtlInitUnicodeString (RemainingPath, NULL);
 
-  if (ObjectAttributes->RootDirectory == NULL)
+  if (ObjectCreateInfo->RootDirectory == NULL)
     {
       ObReferenceObjectByPointer(NameSpaceRoot,
 				 DIRECTORY_TRAVERSE,
@@ -423,7 +323,7 @@ ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
     }
   else
     {
-      Status = ObReferenceObjectByHandle(ObjectAttributes->RootDirectory,
+      Status = ObReferenceObjectByHandle(ObjectCreateInfo->RootDirectory,
 					 0,
 					 NULL,
 					 UserMode,
@@ -435,7 +335,6 @@ ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 	}
     }
 
-  ObjectName = ObjectAttributes->ObjectName;
   if (ObjectName->Length == 0 ||
       ObjectName->Buffer[0] == UNICODE_NULL)
     {
@@ -443,10 +342,11 @@ ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
       return STATUS_SUCCESS;
     }
 
-  if (ObjectAttributes->RootDirectory == NULL &&
+  if (ObjectCreateInfo->RootDirectory == NULL &&
       ObjectName->Buffer[0] != L'\\')
     {
       ObDereferenceObject (CurrentObject);
+      DPRINT1("failed\n");
       return STATUS_UNSUCCESSFUL;
     }
 
@@ -469,7 +369,7 @@ ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
   current = PathString.Buffer;
 
   RootObject = CurrentObject;
-  Attributes = ObjectAttributes->Attributes;
+  Attributes = ObjectCreateInfo->Attributes;
   if (ObjectType == ObSymbolicLinkType)
     Attributes |= OBJ_OPENLINK;
 
@@ -479,14 +379,14 @@ ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 	CurrentHeader = BODY_TO_HEADER(CurrentObject);
 
 	DPRINT("Current ObjectType %wZ\n",
-	       &CurrentHeader->ObjectType->TypeName);
+	       &CurrentHeader->Type->Name);
 
-	if (CurrentHeader->ObjectType->TypeInfo.ParseProcedure == NULL)
+	if (CurrentHeader->Type->TypeInfo.ParseProcedure == NULL)
 	  {
 	     DPRINT("Current object can't parse\n");
 	     break;
 	  }
-	Status = CurrentHeader->ObjectType->TypeInfo.ParseProcedure(CurrentObject,
+	Status = CurrentHeader->Type->TypeInfo.ParseProcedure(CurrentObject,
 						  &NextObject,
 						  &PathString,
 						  &current,
@@ -512,7 +412,10 @@ ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
     }
 
   if (current)
+  {
      RtlpCreateUnicodeString (RemainingPath, current, NonPagedPool);
+  }
+
   RtlFreeUnicodeString (&PathString);
   *ReturnedObject = CurrentObject;
 
@@ -558,27 +461,27 @@ ObQueryNameString (IN PVOID Object,
 
   ObjectHeader = BODY_TO_HEADER(Object);
 
-  if (ObjectHeader->ObjectType != NULL &&
-      ObjectHeader->ObjectType->TypeInfo.QueryNameProcedure != NULL)
+  if (ObjectHeader->Type != NULL &&
+      ObjectHeader->Type->TypeInfo.QueryNameProcedure != NULL)
     {
-      DPRINT ("Calling %x\n", ObjectHeader->ObjectType->TypeInfo.QueryNameProcedure);
-      Status = ObjectHeader->ObjectType->TypeInfo.QueryNameProcedure (Object,
+      DPRINT ("Calling %x\n", ObjectHeader->Type->TypeInfo.QueryNameProcedure);
+      Status = ObjectHeader->Type->TypeInfo.QueryNameProcedure (Object,
 						    ObjectNameInfo,
 						    Length,
 						    ReturnLength);
     }
-  else if (ObjectHeader->Name.Length > 0 && ObjectHeader->Name.Buffer != NULL)
+  else if (HEADER_TO_OBJECT_NAME(ObjectHeader)->Name.Length > 0 && HEADER_TO_OBJECT_NAME(ObjectHeader)->Name.Buffer != NULL)
     {
       DPRINT ("Object does not have a 'QueryName' function\n");
 
-      if (ObjectHeader->Parent == NameSpaceRoot)
+      if (HEADER_TO_OBJECT_NAME(ObjectHeader)->Directory == NameSpaceRoot)
 	{
 	  DPRINT ("Reached the root directory\n");
 	  ObjectNameInfo->Name.Length = 0;
 	  ObjectNameInfo->Name.Buffer[0] = 0;
 	  Status = STATUS_SUCCESS;
 	}
-      else if (ObjectHeader->Parent != NULL)
+      else if (HEADER_TO_OBJECT_NAME(ObjectHeader)->Directory != NULL)
 	{
 	  LocalInfo = ExAllocatePool (NonPagedPool,
 				      sizeof(OBJECT_NAME_INFORMATION) +
@@ -586,7 +489,7 @@ ObQueryNameString (IN PVOID Object,
 	  if (LocalInfo == NULL)
 	    return STATUS_INSUFFICIENT_RESOURCES;
 
-	  Status = ObQueryNameString (ObjectHeader->Parent,
+	  Status = ObQueryNameString (HEADER_TO_OBJECT_NAME(ObjectHeader)->Directory,
 				      LocalInfo,
 				      MAX_PATH * sizeof(WCHAR),
 				      &LocalReturnLength);
@@ -605,14 +508,14 @@ ObQueryNameString (IN PVOID Object,
 	    return Status;
 	}
 
-      DPRINT ("Object path %wZ\n", &ObjectHeader->Name);
+      DPRINT ("Object path %wZ\n", &HEADER_TO_OBJECT_NAME(ObjectHeader)->Name);
       Status = RtlAppendUnicodeToString (&ObjectNameInfo->Name,
 					 L"\\");
       if (!NT_SUCCESS (Status))
 	return Status;
 
       Status = RtlAppendUnicodeStringToString (&ObjectNameInfo->Name,
-					       &ObjectHeader->Name);
+					       &HEADER_TO_OBJECT_NAME(ObjectHeader)->Name);
     }
   else
     {
@@ -639,13 +542,21 @@ ObQueryNameString (IN PVOID Object,
 
 NTSTATUS
 STDCALL
-ObpAllocateObject(POBJECT_ATTRIBUTES ObjectAttributes,
+ObpAllocateObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
+                  PUNICODE_STRING ObjectName,
                   POBJECT_TYPE ObjectType,
                   ULONG ObjectSize,
                   POBJECT_HEADER *ObjectHeader)
 {
     POBJECT_HEADER Header;
+    BOOLEAN HasHandleInfo = FALSE;
+    BOOLEAN HasNameInfo = FALSE;
+    BOOLEAN HasCreatorInfo = FALSE;
+    POBJECT_HEADER_HANDLE_INFO HandleInfo;
+    POBJECT_HEADER_NAME_INFO NameInfo;
+    POBJECT_HEADER_CREATOR_INFO CreatorInfo;
     POOL_TYPE PoolType;
+    ULONG FinalSize = ObjectSize;
     ULONG Tag;
         
     /* If we don't have an Object Type yet, force NonPaged */
@@ -661,28 +572,105 @@ ObpAllocateObject(POBJECT_ATTRIBUTES ObjectAttributes,
         Tag = ObjectType->Key;
     }
     
-    /* Allocate memory for the Object */
-    Header = (POBJECT_HEADER)ExAllocatePoolWithTag(PoolType, ObjectSize, Tag);
+    DPRINT("Checking ObjectName: %x\n", ObjectName);
+    /* Check if the Object has a name */
+    if (ObjectName->Buffer) 
+    {
+        FinalSize += sizeof(OBJECT_HEADER_NAME_INFO);
+        HasNameInfo = TRUE;
+    }
+    
+    if (ObjectType)
+    {
+        /* Check if the Object maintains handle counts */
+        DPRINT("Checking ObjectType->TypeInfo: %x\n", &ObjectType->TypeInfo);
+        if (ObjectType->TypeInfo.MaintainHandleCount)
+        {
+            FinalSize += sizeof(OBJECT_HEADER_HANDLE_INFO);
+            HasHandleInfo = TRUE;
+        }
+        
+        /* Check if the Object maintains type lists */
+        if (ObjectType->TypeInfo.MaintainTypeList) 
+        {
+            FinalSize += sizeof(OBJECT_HEADER_CREATOR_INFO);
+            HasCreatorInfo = TRUE;
+        }
+    }
+
+    /* Allocate memory for the Object and Header */
+    DPRINT("Allocating: %x %x\n", FinalSize, Tag);
+    Header = ExAllocatePoolWithTag(PoolType, FinalSize, Tag);
     if (!Header) {
         DPRINT1("Not enough memory!\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+           
+    /* Initialize Handle Info */
+    if (HasHandleInfo)
+    {
+        HandleInfo = (POBJECT_HEADER_HANDLE_INFO)Header;
+        DPRINT("Info: %x\n", HandleInfo);
+        HandleInfo->SingleEntry.HandleCount = 0;
+        Header = (POBJECT_HEADER)(HandleInfo + 1);
+    }
+       
+    /* Initialize the Object Name Info */
+    if (HasNameInfo) 
+    {
+        NameInfo = (POBJECT_HEADER_NAME_INFO)Header;
+        DPRINT("Info: %x %wZ\n", NameInfo, ObjectName);
+        NameInfo->Name = *ObjectName;
+        NameInfo->Directory = NULL;
+        Header = (POBJECT_HEADER)(NameInfo + 1);
+    }
+    
+    /* Initialize Creator Info */
+    if (HasCreatorInfo)
+    {
+        CreatorInfo = (POBJECT_HEADER_CREATOR_INFO)Header;
+        DPRINT("Info: %x\n", CreatorInfo);
+        /* FIXME: Needs Alex's Init patch
+         * CreatorInfo->CreatorUniqueProcess = PsGetCurrentProcessId();
+         */
+        InitializeListHead(&CreatorInfo->TypeList);
+        Header = (POBJECT_HEADER)(CreatorInfo + 1);
+    }
     
     /* Initialize the object header */
     RtlZeroMemory(Header, ObjectSize);
-    DPRINT("Initalizing header %p\n", Header);
+    DPRINT("Initalized header %p\n", Header);
     Header->HandleCount = 0;
-    Header->RefCount = 1;
-    Header->ObjectType = ObjectType;
-    if (ObjectAttributes && ObjectAttributes->Attributes & OBJ_PERMANENT)
+    Header->PointerCount = 1;
+    Header->Type = ObjectType;
+    Header->Flags = OB_FLAG_CREATE_INFO;
+    
+    /* Set the Offsets for the Info */
+    if (HasHandleInfo)
     {
-        Header->Permanent = TRUE;
+        Header->HandleInfoOffset = HasNameInfo * sizeof(OBJECT_HEADER_NAME_INFO) + 
+                                   sizeof(OBJECT_HEADER_HANDLE_INFO) +
+                                   HasCreatorInfo * sizeof(OBJECT_HEADER_CREATOR_INFO);
+        Header->Flags |= OB_FLAG_SINGLE_PROCESS;
     }
-    if (ObjectAttributes && ObjectAttributes->Attributes & OBJ_INHERIT)
+    if (HasNameInfo)
     {
-        Header->Inherit = TRUE;
+        Header->NameInfoOffset = sizeof(OBJECT_HEADER_NAME_INFO) + 
+                                 HasCreatorInfo * sizeof(OBJECT_HEADER_CREATOR_INFO);
     }
-    RtlInitUnicodeString(&Header->Name, NULL);
+    if (HasCreatorInfo) Header->Flags |= OB_FLAG_CREATOR_INFO;
+    
+    if (ObjectCreateInfo && ObjectCreateInfo->Attributes & OBJ_PERMANENT)
+    {
+        Header->Flags |= OB_FLAG_PERMANENT;
+    }
+    if (ObjectCreateInfo && ObjectCreateInfo->Attributes & OBJ_EXCLUSIVE)
+    {
+        Header->Flags |= OB_FLAG_EXCLUSIVE;
+    }
+    
+    /* Link stuff to Object Header */
+    Header->ObjectCreateInfo = ObjectCreateInfo;
     
     /* Return Header */
     *ObjectHeader = Header;
@@ -702,222 +690,71 @@ ObpAllocateObject(POBJECT_ATTRIBUTES ObjectAttributes,
  *
  * @implemented
  */
-NTSTATUS STDCALL
-ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
-		IN POBJECT_TYPE Type,
-		IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-		IN KPROCESSOR_MODE AccessMode,
-		IN OUT PVOID ParseContext OPTIONAL,
-		IN ULONG ObjectSize,
-		IN ULONG PagedPoolCharge OPTIONAL,
-		IN ULONG NonPagedPoolCharge OPTIONAL,
-		OUT PVOID *Object)
+NTSTATUS 
+STDCALL
+ObCreateObject(IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
+               IN POBJECT_TYPE Type,
+               IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+               IN KPROCESSOR_MODE AccessMode,
+               IN OUT PVOID ParseContext OPTIONAL,
+               IN ULONG ObjectSize,
+               IN ULONG PagedPoolCharge OPTIONAL,
+               IN ULONG NonPagedPoolCharge OPTIONAL,
+               OUT PVOID *Object)
 {
-  PVOID Parent = NULL;
-  UNICODE_STRING RemainingPath;
-  POBJECT_HEADER Header;
-  POBJECT_HEADER ParentHeader = NULL;
-  NTSTATUS Status;
-  BOOLEAN ObjectAttached = FALSE;
-  PWCHAR NamePtr;
-  PSECURITY_DESCRIPTOR NewSecurityDescriptor = NULL;
-  SECURITY_SUBJECT_CONTEXT SubjectContext;
-
-  PAGED_CODE();
-
-  if(ObjectAttributesAccessMode == UserMode && ObjectAttributes != NULL)
-  {
-    Status = STATUS_SUCCESS;
-    _SEH_TRY
-    {
-      ProbeForRead(ObjectAttributes,
-                   sizeof(OBJECT_ATTRIBUTES),
-                   sizeof(ULONG));
-    }
-    _SEH_HANDLE
-    {
-      Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
-
-    if(!NT_SUCCESS(Status))
-    {
-      return Status;
-    }
-  }
-
-  DPRINT("ObCreateObject(Type %p ObjectAttributes %p, Object %p)\n",
-	 Type, ObjectAttributes, Object);
-
-  if (Type == NULL)
-    {
-      DPRINT1("Invalid object type!\n");
-      return STATUS_INVALID_PARAMETER;
-    }
-
-  if (ObjectAttributes != NULL &&
-      ObjectAttributes->ObjectName != NULL &&
-      ObjectAttributes->ObjectName->Buffer != NULL)
-    {
-      Status = ObFindObject(ObjectAttributes,
-			    &Parent,
-			    &RemainingPath,
-			    NULL);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1("ObFindObject() failed! (Status 0x%x)\n", Status);
-	  return Status;
-	}
-      if (Parent != NULL)
-        {
-          ParentHeader = BODY_TO_HEADER(Parent);
-        }
-      if (ParentHeader &&
-	  RemainingPath.Buffer == NULL)
-        {
-	  if (ParentHeader->ObjectType != Type
-	  	|| !(ObjectAttributes->Attributes & OBJ_OPENIF))
-	    {
-              ObDereferenceObject(Parent);
-	      return STATUS_OBJECT_NAME_COLLISION;
-	    }
-	  *Object = Parent;
-          return STATUS_OBJECT_EXISTS;
-	}
-    }
-  else
-    {
-      RtlInitUnicodeString(&RemainingPath, NULL);
-    }
+    NTSTATUS Status;
+    POBJECT_CREATE_INFORMATION ObjectCreateInfo;
+    UNICODE_STRING ObjectName;
+    POBJECT_HEADER Header;
     
-    /* Allocate the Object */
-    Status = ObpAllocateObject(ObjectAttributes, 
-                               Type, 
-                               OBJECT_ALLOC_SIZE(ObjectSize), 
-                               &Header);
-    if (!NT_SUCCESS(Status))
+    DPRINT("ObCreateObject(Type %p ObjectAttributes %p, Object %p)\n", 
+            Type, ObjectAttributes, Object);
+            
+    /* Allocate a Buffer for the Object Create Info */
+    DPRINT("Allocating Create Buffer\n");
+    ObjectCreateInfo = ExAllocatePoolWithTag(NonPagedPool, 
+                                             sizeof(*ObjectCreateInfo),
+                                             TAG('O','b','C', 'I'));
+
+    /* Capture all the info */
+    DPRINT("Capturing Create Info\n");
+    Status = ObpCaptureObjectAttributes(ObjectAttributes,
+                                        AccessMode,
+                                        Type,
+                                        ObjectCreateInfo,
+                                        &ObjectName);
+                                        
+    if (NT_SUCCESS(Status))
     {
-        DPRINT1("ObpAllocateObject failed!\n");
-        return Status;
+        /* Allocate the Object */
+        DPRINT("Allocating: %wZ\n", &ObjectName);
+        Status = ObpAllocateObject(ObjectCreateInfo,
+                                   &ObjectName,
+                                   Type, 
+                                   OBJECT_ALLOC_SIZE(ObjectSize), 
+                                   &Header);
+                                   
+        if (NT_SUCCESS(Status))
+        {
+            /* Return the Object */
+            DPRINT("Returning Object\n");
+            *Object = &Header->Body;
+            
+            /* Return to caller, leave the Capture Info Alive for ObInsert */
+            return Status;
+        }
+        
+        /* Release the Capture Info, we don't need it */
+        DPRINT1("Allocation failed\n");
+        ObpReleaseCapturedAttributes(ObjectCreateInfo);
+        if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
     }
-
-  DPRINT("Getting Parent and adding entry\n");
-  if (ParentHeader != NULL &&
-      ParentHeader->ObjectType == ObDirectoryType &&
-      RemainingPath.Buffer != NULL)
-    {
-      NamePtr = RemainingPath.Buffer;
-      if (*NamePtr == L'\\')
-	NamePtr++;
-
-      ObpAddEntryDirectory(Parent,
-			   Header,
-			   NamePtr);
-
-      ObjectAttached = TRUE;
-    }
-
-    if ((Header->ObjectType == IoFileObjectType) ||
-        (Header->ObjectType == ExDesktopObjectType) ||
-        (Header->ObjectType->TypeInfo.OpenProcedure != NULL))
-    {    
-     DPRINT("About to call Open Routine\n");
-     if (Header->ObjectType == IoFileObjectType)
-     {
-         /* TEMPORARY HACK. DO NOT TOUCH -- Alex */
-         DPRINT("Calling IopCreateFile\n");
-         Status = IopCreateFile(HEADER_TO_BODY(Header),
-                                Parent,
-                                RemainingPath.Buffer,            
-                                ObjectAttributes);
-     }
-     else if (Header->ObjectType == ExDesktopObjectType)
-     {
-         /* TEMPORARY HACK. DO NOT TOUCH -- Alex */
-         DPRINT("Calling ExpDesktopCreate\n");
-         Status = ExpDesktopCreate(HEADER_TO_BODY(Header),
-                                   Parent,
-                                   RemainingPath.Buffer,            
-                                   ObjectAttributes);
-     }
-     else if (Header->ObjectType->TypeInfo.OpenProcedure != NULL)
-     {
-      DPRINT("Calling %x\n", Header->ObjectType->TypeInfo.OpenProcedure);
-      Status = Header->ObjectType->TypeInfo.OpenProcedure(ObCreateHandle,
-                                        HEADER_TO_BODY(Header),
-                                        NULL,
-                                        0,
-                                        0);
-     }
-
-      if (!NT_SUCCESS(Status))
-	{
-	  if (ObjectAttached == TRUE)
-	    {
-	      ObpRemoveEntryDirectory(Header);
-	    }
-	  if (Parent)
-	    {
-	      ObDereferenceObject(Parent);
-	    }
-	  RtlFreeUnicodeString(&Header->Name);
-	  RtlFreeUnicodeString(&RemainingPath);
-	  ExFreePool(Header);
-	  DPRINT("Create Failed\n");
-	  return Status;
-	}
-  }
-
-  RtlFreeUnicodeString(&RemainingPath);
-
-  SeCaptureSubjectContext(&SubjectContext);
-
-  DPRINT("Security Assignment in progress\n");
-  /* Build the new security descriptor */
-  Status = SeAssignSecurity((ParentHeader != NULL) ? ParentHeader->SecurityDescriptor : NULL,
-			    (ObjectAttributes != NULL) ? ObjectAttributes->SecurityDescriptor : NULL,
-			    &NewSecurityDescriptor,
-			    (Header->ObjectType == ObDirectoryType),
-			    &SubjectContext,
-			    &Header->ObjectType->TypeInfo.GenericMapping,
-			    PagedPool);
-  if (NT_SUCCESS(Status))
-    {
-      DPRINT("NewSecurityDescriptor %p\n", NewSecurityDescriptor);
-
-      if (Header->ObjectType->TypeInfo.SecurityProcedure != NULL)
-	{
-	  /* Call the security method */
-	  Status = Header->ObjectType->TypeInfo.SecurityProcedure(HEADER_TO_BODY(Header),
-						AssignSecurityDescriptor,
-						0,
-						NewSecurityDescriptor,
-						NULL);
-	}
-      else
-	{
-	  /* Assign the security descriptor to the object header */
-	  Status = ObpAddSecurityDescriptor(NewSecurityDescriptor,
-					    &Header->SecurityDescriptor);
-	  DPRINT("Object security descriptor %p\n", Header->SecurityDescriptor);
-	}
-
-      /* Release the new security descriptor */
-      SeDeassignSecurity(&NewSecurityDescriptor);
-    }
-
-  DPRINT("Security Complete\n");
-  SeReleaseSubjectContext(&SubjectContext);
-
-  if (Object != NULL)
-    {
-      *Object = HEADER_TO_BODY(Header);
-    }
-
-  DPRINT("Sucess!\n");
-  return STATUS_SUCCESS;
+     
+    /* We failed, so release the Buffer */
+    DPRINT1("Capture failed\n");
+    ExFreePool(ObjectCreateInfo);
+    return Status;
 }
-
 
 /*
  * FUNCTION: Increments the pointer reference count for a given object
@@ -945,43 +782,43 @@ ObReferenceObjectByPointer(IN PVOID Object,
 
    Header = BODY_TO_HEADER(Object);
 
-   if (ObjectType != NULL && Header->ObjectType != ObjectType)
+   if (ObjectType != NULL && Header->Type != ObjectType)
      {
-	DPRINT("Failed %x (type was %x %S) should be %x %S\n",
+	DPRINT("Failed %p (type was %x %wZ) should be %x %wZ\n",
 		Header,
-		Header->ObjectType,
-		Header->ObjectType->TypeName.Buffer,
+		Header->Type,
+		&BODY_TO_HEADER(Header->Type)->NameInfo,
 		ObjectType,
-		ObjectType->TypeName.Buffer);
+		&BODY_TO_HEADER(ObjectType)->NameInfo);
 	return(STATUS_UNSUCCESSFUL);
      }
-   if (Header->ObjectType == PsProcessType)
+   if (Header->Type == PsProcessType)
      {
-	DPRINT("Ref p 0x%x refcount %d type %x ",
-		Object, Header->RefCount, PsProcessType);
+	DPRINT("Ref p 0x%x PointerCount %d type %x ",
+		Object, Header->PointerCount, PsProcessType);
 	DPRINT("eip %x\n", ((PULONG)&Object)[-1]);
      }
-   if (Header->ObjectType == PsThreadType)
+   if (Header->Type == PsThreadType)
      {
-	DPRINT("Deref t 0x%x with refcount %d type %x ",
-		Object, Header->RefCount, PsThreadType);
+	DPRINT("Deref t 0x%x with PointerCount %d type %x ",
+		Object, Header->PointerCount, PsThreadType);
 	DPRINT("eip %x\n", ((PULONG)&Object)[-1]);
      }
 
-   if (Header->RefCount == 0 && !Header->Permanent)
+   if (Header->PointerCount == 0 && !(Header->Flags & OB_FLAG_PERMANENT))
    {
-      if (Header->ObjectType == PsProcessType)
+      if (Header->Type == PsProcessType)
         {
 	  return STATUS_PROCESS_IS_TERMINATING;
 	}
-      if (Header->ObjectType == PsThreadType)
+      if (Header->Type == PsThreadType)
         {
 	  return STATUS_THREAD_IS_TERMINATING;
 	}
       return(STATUS_UNSUCCESSFUL);
    }
 
-   if (1 == InterlockedIncrement(&Header->RefCount) && !Header->Permanent)
+   if (1 == InterlockedIncrement(&Header->PointerCount) && !(Header->Flags & OB_FLAG_PERMANENT))
    {
       KEBUGCHECK(0);
    }
@@ -1032,6 +869,11 @@ ObOpenObjectByPointer(IN POBJECT Object,
 static NTSTATUS
 ObpDeleteObject(POBJECT_HEADER Header)
 {
+  PVOID HeaderLocation = Header;
+  POBJECT_HEADER_HANDLE_INFO HandleInfo;
+  POBJECT_HEADER_NAME_INFO NameInfo;
+  POBJECT_HEADER_CREATOR_INFO CreatorInfo;
+  
   DPRINT("ObpDeleteObject(Header %p)\n", Header);
   if (KeGetCurrentIrql() != PASSIVE_LEVEL)
     {
@@ -1039,25 +881,46 @@ ObpDeleteObject(POBJECT_HEADER Header)
       KEBUGCHECK(0);
     }
 
+  if (Header->Type != NULL &&
+      Header->Type->TypeInfo.DeleteProcedure != NULL)
+    {
+      Header->Type->TypeInfo.DeleteProcedure(&Header->Body);
+    }
+
   if (Header->SecurityDescriptor != NULL)
     {
       ObpRemoveSecurityDescriptor(Header->SecurityDescriptor);
     }
-
-  if (Header->ObjectType != NULL &&
-      Header->ObjectType->TypeInfo.DeleteProcedure != NULL)
+    
+  if (HEADER_TO_OBJECT_NAME(Header))
     {
-      Header->ObjectType->TypeInfo.DeleteProcedure(HEADER_TO_BODY(Header));
+      if(HEADER_TO_OBJECT_NAME(Header)->Name.Buffer)
+        {
+          ExFreePool(HEADER_TO_OBJECT_NAME(Header)->Name.Buffer);
+        }
     }
-
-  if (Header->Name.Buffer != NULL)
+  if (Header->ObjectCreateInfo)
     {
-      ObpRemoveEntryDirectory(Header);
-      RtlFreeUnicodeString(&Header->Name);
+      ObpReleaseCapturedAttributes(Header->ObjectCreateInfo);
+      ExFreePool(Header->ObjectCreateInfo);
     }
+    
+  /* To find the header, walk backwards from how we allocated */
+  if ((CreatorInfo = HEADER_TO_CREATOR_INFO(Header)))
+  {
+      HeaderLocation = CreatorInfo;
+  }   
+  if ((NameInfo = HEADER_TO_OBJECT_NAME(Header)))
+  {
+      HeaderLocation = NameInfo;
+  }
+  if ((HandleInfo = HEADER_TO_HANDLE_INFO(Header)))
+  {
+      HeaderLocation = HandleInfo;
+  }
 
   DPRINT("ObPerformRetentionChecks() = Freeing object\n");
-  ExFreePool(Header);
+  ExFreePool(HeaderLocation);
 
   return(STATUS_SUCCESS);
 }
@@ -1073,7 +936,7 @@ ObpDeleteObjectWorkRoutine (IN PVOID Parameter)
   ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL); /* We need PAGED_CODE somewhere... */
 
   /* Turn this on when we have ExFreePoolWithTag
-  Tag = Params->ObjectHeader->ObjectType->Tag; */
+  Tag = Params->ObjectHeader->Type->Tag; */
   ObpDeleteObject(Params->ObjectHeader);
   ExFreePool(Params);
   /* ExFreePoolWithTag(Params, Tag); */
@@ -1082,14 +945,14 @@ ObpDeleteObjectWorkRoutine (IN PVOID Parameter)
 
 STATIC NTSTATUS
 ObpDeleteObjectDpcLevel(IN POBJECT_HEADER ObjectHeader,
-			IN LONG OldRefCount)
+			IN LONG OldPointerCount)
 {
 #if 0
-  if (ObjectHeader->RefCount < 0)
+  if (ObjectHeader->PointerCount < 0)
     {
       CPRINT("Object %p/%p has invalid reference count (%d)\n",
 	     ObjectHeader, HEADER_TO_BODY(ObjectHeader),
-	     ObjectHeader->RefCount);
+	     ObjectHeader->PointerCount);
       KEBUGCHECK(0);
     }
 
@@ -1120,7 +983,7 @@ ObpDeleteObjectDpcLevel(IN POBJECT_HEADER ObjectHeader,
 	Params = (PRETENTION_CHECK_PARAMS)
 	  ExAllocatePoolWithTag(NonPagedPoolMustSucceed,
 				sizeof(RETENTION_CHECK_PARAMS),
-				ObjectHeader->ObjectType->Key);
+				ObjectHeader->Type->Key);
 	Params->ObjectHeader = ObjectHeader;
 	ExInitializeWorkItem(&Params->WorkItem,
 			     ObpDeleteObjectWorkRoutine,
@@ -1167,7 +1030,7 @@ ObfReferenceObject(IN PVOID Object)
   Header = BODY_TO_HEADER(Object);
 
   /* No one should be referencing an object once we are deleting it. */
-  if (InterlockedIncrement(&Header->RefCount) == 1 && !Header->Permanent)
+  if (InterlockedIncrement(&Header->PointerCount) == 1 && !(Header->Flags & OB_FLAG_PERMANENT))
   {
      KEBUGCHECK(0);
   }
@@ -1194,28 +1057,28 @@ VOID FASTCALL
 ObfDereferenceObject(IN PVOID Object)
 {
   POBJECT_HEADER Header;
-  LONG NewRefCount;
+  LONG NewPointerCount;
   BOOL Permanent;
 
   ASSERT(Object);
 
   /* Extract the object header. */
   Header = BODY_TO_HEADER(Object);
-  Permanent = Header->Permanent;
+  Permanent = Header->Flags & OB_FLAG_PERMANENT;
 
   /*
      Drop our reference and get the new count so we can tell if this was the
      last reference.
   */
-  NewRefCount = InterlockedDecrement(&Header->RefCount);
-  DPRINT("ObfDereferenceObject(0x%x)==%d (%wZ)\n", Object, NewRefCount, &Header->ObjectType->TypeName);
-  ASSERT(NewRefCount >= 0);
+  NewPointerCount = InterlockedDecrement(&Header->PointerCount);
+  DPRINT("ObfDereferenceObject(0x%x)==%d\n", Object, NewPointerCount);
+  ASSERT(NewPointerCount >= 0);
 
   /* Check whether the object can now be deleted. */
-  if (NewRefCount == 0 &&
+  if (NewPointerCount == 0 &&
       !Permanent)
     {
-      ObpDeleteObjectDpcLevel(Header, NewRefCount);
+      ObpDeleteObjectDpcLevel(Header, NewPointerCount);
     }
 }
 
@@ -1295,7 +1158,7 @@ ObGetObjectPointerCount(PVOID Object)
   ASSERT(Object);
   Header = BODY_TO_HEADER(Object);
 
-  return Header->RefCount;
+  return Header->PointerCount;
 }
 
 

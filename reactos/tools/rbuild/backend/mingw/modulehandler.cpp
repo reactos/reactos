@@ -981,21 +981,20 @@ MingwModuleHandler::GenerateWinebuildCommands (
 	          dependencies.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_WINEBLD)\n" );
 	fprintf ( fMakefile,
-	          "\t%s --def=%s -o %s\n",
+	          "\t%s -o %s --def -E %s\n",
 	          "$(Q)$(WINEBUILD_TARGET)",
-	          sourceFilename.c_str (),
-	          def_file.c_str () );
-
+	          def_file.c_str (),
+	          sourceFilename.c_str () );
 	fprintf ( fMakefile,
 	          "%s: %s $(WINEBUILD_TARGET)\n",
 	          stub_file.c_str (),
 	          sourceFilename.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_WINEBLD)\n" );
 	fprintf ( fMakefile,
-	          "\t%s --pedll=%s -o %s\n",
+	          "\t%s -o %s --pedll %s\n",
 	          "$(Q)$(WINEBUILD_TARGET)",
-	          sourceFilename.c_str (),
-	          stub_file.c_str () );
+	          stub_file.c_str (),
+	          sourceFilename.c_str () );
 }
 
 string

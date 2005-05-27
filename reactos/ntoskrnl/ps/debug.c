@@ -267,6 +267,7 @@ NtSetContextThread(IN HANDLE ThreadHandle,
     return Status;
 }
 
+#ifdef DBG
 VOID
 STDCALL
 PspDumpThreads(BOOLEAN IncludeSystem)
@@ -339,5 +340,6 @@ PspDumpThreads(BOOLEAN IncludeSystem)
         CurrentProcess = CurrentProcess->Flink;
     }
 }
+#endif
 
 /* EOF */

@@ -27,6 +27,14 @@ typedef struct _ATM_ADDRESS *PATM_ADDRESS;
 #include <ddk/ntapi.h>
 #endif /* _MSC_VER */
 
+struct _ADAPTER_BINDING;
+
+typedef struct _INTERNAL_NDIS_MINIPORT_WORK_ITEM {
+    SINGLE_LIST_ENTRY Link;
+    struct _ADAPTER_BINDING *AdapterBinding;
+    NDIS_MINIPORT_WORK_ITEM RealWorkItem;
+} INTERNAL_NDIS_MINIPORT_WORK_ITEM, *PINTERNAL_NDIS_MINIPORT_WORK_ITEM;
+
 #include "miniport.h"
 #include "protocol.h"
 

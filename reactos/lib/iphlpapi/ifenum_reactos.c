@@ -129,15 +129,15 @@ NTSTATUS tdiGetSetOfThings( HANDLE tcpFile,
     DWORD allocationSizeForEntityArray = entrySize * MAX_TDI_ENTITIES, 
         arraySize = entrySize * MAX_TDI_ENTITIES;
 
-    DbgPrint("TdiGetSetOfThings(tcpFile %x,toiClass %x,toiType %x,toiId %x,"
-           "teiEntity %x,fixedPart %d,entrySize %d)\n",
-           (int)tcpFile, 
-           (int)toiClass, 
-           (int)toiType, 
-           (int)toiId, 
-           (int)teiEntity,
-           (int)fixedPart, 
-           (int)entrySize );
+    TRACE("TdiGetSetOfThings(tcpFile %x,toiClass %x,toiType %x,toiId %x,"
+          "teiEntity %x,fixedPart %d,entrySize %d)\n",
+          (int)tcpFile, 
+          (int)toiClass, 
+          (int)toiType, 
+          (int)toiId, 
+          (int)teiEntity,
+          (int)fixedPart, 
+          (int)entrySize );
 
     req.ID.toi_class                = toiClass;
     req.ID.toi_type                 = toiType;

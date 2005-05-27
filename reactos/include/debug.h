@@ -48,11 +48,19 @@
 #endif
 #endif
 
-
 /* TODO: Make the output of file/line and the debug message atomic */
+#ifdef DBG
 #define DPRINT1 DbgPrint("(%s:%d) ",__FILE__,__LINE__), DbgPrint
 #define CHECKPOINT1 do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0);
-
+#else
+#ifdef __GNUC__
+#define DPRINT1(args...)
+#define CHECKPOINT1
+#else
+#define DPRINT1
+#define CHECKPOINT1
+#endif	/* __GNUC__ */
+#endif
 
 #ifndef NDEBUG
 #define DPRINT(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);

@@ -80,8 +80,14 @@ IoReportResourceForDetection(
   IN ULONG DeviceListSize   OPTIONAL,
   OUT PBOOLEAN ConflictDetected)
 {
+  static int warned = 0;
+  if (!warned)
+  {
+    DPRINT1("IoReportResourceForDetection partly implemented\n");
+    warned = 1;
+  }
+
   *ConflictDetected = FALSE;
-  DPRINT1("IoReportResourceForDetection partly implemented\n");
 
   /* FIXME: Manually indicate conflicts with KD Ports */
   if (DriverList)

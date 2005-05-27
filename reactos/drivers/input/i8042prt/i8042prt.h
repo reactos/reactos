@@ -86,7 +86,7 @@ typedef struct _I8042_SETTINGS
 	DWORD OverrideKeyboardType;
 	DWORD OverrideKeyboardSubtype;
 	DWORD MouseResendStallTime;
-	DWORD MouseSynchIn100ns;
+	DWORD MouseSynchIn100ns;      /* done */
 	DWORD MouseResolution;        /* done */
 	DWORD NumberOfButtons;
 	DWORD EnableWheelDetection;
@@ -169,6 +169,7 @@ typedef struct _DEVICE_EXTENSION
 	MOUSE_INPUT_DATA *MouseBuffer;
 	ULONG MouseInBuffer;
 	USHORT MouseButtonState;
+	ULARGE_INTEGER MousePacketStartTime;
 
 	UCHAR MouseLogiBuffer[3];
 	UCHAR MouseLogitechID;

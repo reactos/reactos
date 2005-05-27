@@ -31,15 +31,27 @@
 /**********************************************************************
  * SmCreateUserProcess/5
  *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *	ImagePath: bsolute path of the image to run;
+ *	CommandLine: arguments and options for ImagePath;
+ *	WaitForIt: TRUE for boot time processes and FALSE for
+ *		subsystems bootstrapping;
+ *	Timeout: optional: used if WaitForIt==TRUE;
+ *	ProcessHandle: optional: a duplicated handle for
+ 		the child process (storage provided by the caller).
+ *
+ * RETURN VALUE
+ * 	NTSTATUS:
+ *
  */
 NTSTATUS STDCALL
 SmCreateUserProcess (LPWSTR ImagePath,
 		     LPWSTR CommandLine,
 		     BOOLEAN WaitForIt,
 		     PLARGE_INTEGER Timeout OPTIONAL,
-		     BOOLEAN TerminateIt,
-		     PRTL_PROCESS_INFO UserProcessInfo OPTIONAL
-		     )
+		     PRTL_PROCESS_INFO UserProcessInfo OPTIONAL)
 {
 	UNICODE_STRING			ImagePathString = {0};
 	UNICODE_STRING			CommandLineString = {0};
@@ -48,8 +60,12 @@ SmCreateUserProcess (LPWSTR ImagePath,
 	PRTL_PROCESS_INFO		pProcessInfo = & ProcessInfo;
 	NTSTATUS			Status = STATUS_SUCCESS;
 
-
-	DPRINT("SM: %s called\n",__FUNCTION__);
+	DPRINT("SM: %s called\n", __FUNCTION__);
+	
+	if (NULL != UserProcessInfo)
+	{
+		pProcessInfo = UserProcessInfo;
+	}
 
 	RtlInitUnicodeString (& ImagePathString, ImagePath);
 	RtlInitUnicodeString (& CommandLineString, CommandLine);
@@ -65,12 +81,6 @@ SmCreateUserProcess (LPWSTR ImagePath,
 				   NULL,
 				   NULL);
 
-	if(NULL != UserProcessInfo)
-	{
-		/* Use caller provided storage */
-		pProcessInfo = UserProcessInfo;
-	}
-
 	Status = RtlCreateUserProcess (& ImagePathString,
 				       OBJ_CASE_INSENSITIVE,
 				       ProcessParameters,
@@ -82,7 +92,7 @@ SmCreateUserProcess (LPWSTR ImagePath,
 				       NULL,
 				       pProcessInfo);
                    
-   RtlDestroyProcessParameters (ProcessParameters);
+	RtlDestroyProcessParameters (ProcessParameters);
    
 	if (!NT_SUCCESS(Status))
 	{
@@ -90,25 +100,52 @@ SmCreateUserProcess (LPWSTR ImagePath,
 			__FUNCTION__, ImagePathString.Buffer, Status);
 		return Status;
 	}
-
-   ZwResumeThread(pProcessInfo->ThreadHandle, NULL);
-
+	/*
+	 * It the caller is *not* interested in the child info,
+	 * resume it immediately.
+	 */
+	if (NULL == UserProcessInfo)
+	{
+		Status = NtResumeThread (ProcessInfo.ThreadHandle, NULL);
+		if(!NT_SUCCESS(Status))
+		{
+			DPRINT1("SM: %s: NtResumeThread failed (Status=0x%08lx)\n",
+				__FUNCTION__, Status);
+		}
+	}
+	else
+	{
+		HANDLE DupProcessHandle = (HANDLE) 0;
+		
+		Status = NtDuplicateObject (NtCurrentProcess(),
+					    pProcessInfo->ProcessHandle,
+					    NtCurrentProcess(),
+					    & DupProcessHandle,
+					    PROCESS_ALL_ACCESS,
+					    0, 0);
+		if(!NT_SUCCESS(Status))
+		{
+			DPRINT1("SM: %s: NtDuplicateObject failed (Status=0x%08lx)\n",
+				__FUNCTION__, Status);
+		}
+		pProcessInfo->ProcessHandle = DupProcessHandle;
+		
+	}
 
 	/* Wait for process termination */
-	if(WaitForIt)
+	if (WaitForIt)
 	{
-		NtWaitForSingleObject (pProcessInfo->ProcessHandle,
-				       FALSE,
-				       Timeout);
+		Status = NtWaitForSingleObject (pProcessInfo->ProcessHandle,
+						FALSE,
+						Timeout);
+		if (!NT_SUCCESS(Status))
+		{
+			DPRINT1("SM: %s: NtWaitForSingleObject failed with Status=0x%08lx\n",
+				__FUNCTION__, Status);
+		}
+		
 	}
-
-	/* Terminate process */
-	if(TerminateIt)
-	{
-		NtClose(pProcessInfo->ThreadHandle);
-		NtClose(pProcessInfo->ProcessHandle);
-	}
-	return STATUS_SUCCESS;
+	return Status;
 }
 
 /**********************************************************************
@@ -259,60 +296,93 @@ SMAPI(SmExecPgm)
 	   (ExecPgm->NameLength <= SM_EXEXPGM_MAX_LENGTH) &&
 	   TRUE /* TODO: check LPC payload size */)
 	{
+		WCHAR Data [MAX_PATH + 1] = {0};
+		ULONG DataLength = sizeof Data;
+		ULONG DataType = REG_EXPAND_SZ;
+
 		
 		RtlZeroMemory (Name, sizeof Name);
 		RtlCopyMemory (Name,
 			       ExecPgm->Name,
 			       (sizeof ExecPgm->Name[0] * ExecPgm->NameLength));
 		DPRINT("SM: %s: Name='%S'\n", __FUNCTION__, Name);
-		/*
-		 * Check if program name is internal
-		 * (Is this correct? Debug is in the registry too)
-		 */
-		if(0 == _wcsicmp(L"DEBUG", Name))
+		/* Lookup Name in the registry */
+		Status = SmLookupSubsystem (Name,
+					    Data,
+					    & DataLength,
+					    & DataType,
+					    TRUE); /* expand */
+		if(NT_SUCCESS(Status))
 		{
-			/*
-			 * Initialize DBGSS.
-			 * NOTE: probably in early prototypes it was an
-			 * independent process; now it is embedded in the
-			 * SM for performance or security.
-			 */
-			Request->SmHeader.Status = SmInitializeDbgSs();
-		}
-		else
-		{
-			WCHAR Data [MAX_PATH + 1] = {0};
-			ULONG DataLength = sizeof Data;
-			ULONG DataType = REG_EXPAND_SZ;
-
-			/* Lookup Name in the registry */
-			Status = SmLookupSubsystem (Name,
-						    Data,
-						    & DataLength,
-						    & DataType,
-						    TRUE); /* expand */
-			if(NT_SUCCESS(Status))
+			/* Is the subsystem definition non-empty? */
+			if (DataLength > sizeof Data[0])
 			{
 				WCHAR ImagePath [MAX_PATH + 1] = {0};
+				PWCHAR CommandLine = ImagePath;
+				RTL_PROCESS_INFO ProcessInfo = {0};
 
 				wcscpy (ImagePath, L"\\??\\");
 				wcscat (ImagePath, Data);
-			
-				/* Create native process */
-				Request->SmHeader.Status = SmCreateUserProcess(ImagePath,
-								      L"", /* FIXME */
-								      FALSE, /* wait */
-				      				      NULL,
-			      					      FALSE, /* terminate */
-			      					      NULL);
-			}else{
-				Request->SmHeader.Status = Status;
+				/*
+				 * Look for the beginning of the command line.
+				 */
+				for (;	(*CommandLine != L'\0') && (*CommandLine != L' ');
+					CommandLine ++);
+				for (; *CommandLine == L' '; CommandLine ++)
+				{
+					*CommandLine = L'\0';
+				}
+				/*
+				 * Create a native process (suspended).
+				 */
+				ProcessInfo.Size = sizeof ProcessInfo;
+				Request->SmHeader.Status =
+					SmCreateUserProcess(ImagePath,
+							      CommandLine,
+							      FALSE, /* wait */
+				      			      NULL, /* timeout */
+			      				      & ProcessInfo);
+				if (NT_SUCCESS(Request->SmHeader.Status))
+				{
+					Status = SmCreateClient (& ProcessInfo, Name);
+					if (NT_SUCCESS(Status))
+					{
+						Status = NtResumeThread (ProcessInfo.ThreadHandle, NULL);
+						if (!NT_SUCCESS(Status))
+						{
+							//Status = SmDestroyClient TODO
+						}
+					} else {
+						DPRINT1("SM: %s: SmCreateClient failed (Status=0x%08lx)\n",
+							__FUNCTION__, Status);
+					}
+				}
 			}
+			else
+			{
+				/*
+				 * OK, the definition is empty, but check
+				 * if it is the name of an embedded subsystem.
+				 */
+				if(0 == _wcsicmp(L"DEBUG", Name))
+				{
+					/*
+					 * Initialize the embedded DBGSS.
+					 */
+					Request->SmHeader.Status = SmInitializeDbgSs();
+				}
+				else
+				{
+					/*
+					 * Badly defined subsystem. Check the registry!
+					 */
+					Request->SmHeader.Status = STATUS_NOT_FOUND;
+				}
+			}
+		} else {
+			/* It couldn't lookup the Name! */
+			Request->SmHeader.Status = Status;
 		}
-	}
-	else
-	{
-		Request->SmHeader.Status = Status = STATUS_INVALID_PARAMETER;
 	}
 	return Status;
 }

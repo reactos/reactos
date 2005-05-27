@@ -843,11 +843,8 @@ NtUserCreateDesktop(
    * Create a handle for CSRSS and notify CSRSS
    */
   Request.Type = CSRSS_CREATE_DESKTOP;
-  Status = CsrInsertObject((PVOID)DesktopObject,
-                           NULL,
+  Status = CsrInsertObject(Desktop,
                            GENERIC_ALL,
-                           0,
-                           NULL,
                            (HANDLE*)&Request.Data.CreateDesktopRequest.DesktopHandle);
   if (! NT_SUCCESS(Status))
   {

@@ -16,44 +16,45 @@
 
 struct _EPROCESS;
 
-typedef struct
-{
-   CSHORT Type;
-   CSHORT Size;
-} COMMON_BODY_HEADER, *PCOMMON_BODY_HEADER;
-
 typedef PVOID POBJECT;
 
-typedef struct _OBJECT_HEADER
-/*
- * PURPOSE: Header for every object managed by the object manager
- */
+typedef struct _QUAD
 {
-   UNICODE_STRING Name;
-   LIST_ENTRY Entry;
-   LONG RefCount;
-   LONG HandleCount;
-   BOOLEAN Permanent;
-   BOOLEAN Inherit;
-   struct _DIRECTORY_OBJECT* Parent;
-   POBJECT_TYPE ObjectType;
-   PSECURITY_DESCRIPTOR SecurityDescriptor;
+    union {
+        LONGLONG UseThisFieldToCopy;
+        float DoNotUseThisField;
+    };
+} QUAD, *PQUAD;
 
-   /*
-    * PURPOSE: Object type
-    * NOTE: This overlaps the first member of the object body
-    */
-   CSHORT Type;
+#define OB_FLAG_CREATE_INFO    0x01 // has OBJECT_CREATE_INFO
+#define OB_FLAG_KERNEL_MODE    0x02 // created by kernel
+#define OB_FLAG_CREATOR_INFO   0x04 // has OBJECT_CREATOR_INFO
+#define OB_FLAG_EXCLUSIVE      0x08 // OBJ_EXCLUSIVE
+#define OB_FLAG_PERMANENT      0x10 // OBJ_PERMANENT
+#define OB_FLAG_SECURITY       0x20 // has security descriptor
+#define OB_FLAG_SINGLE_PROCESS 0x40 // no HandleDBList
 
-   /*
-    * PURPOSE: Object size
-    * NOTE: This overlaps the second member of the object body
-    */
-   CSHORT Size;
-
-
+/* Will be moved to public headers once "Entry" is gone */
+typedef struct _OBJECT_HEADER
+{
+    LIST_ENTRY Entry;
+    LONG PointerCount;
+    union {
+        LONG HandleCount;
+        PVOID NextToFree;
+    };
+    POBJECT_TYPE Type;
+    UCHAR NameInfoOffset;
+    UCHAR HandleInfoOffset;
+    UCHAR QuotaInfoOffset;
+    UCHAR Flags;
+    union {
+        POBJECT_CREATE_INFORMATION ObjectCreateInfo;
+        PVOID QuotaBlockCharged;
+    };
+    PSECURITY_DESCRIPTOR SecurityDescriptor;
+    QUAD Body;
 } OBJECT_HEADER, *POBJECT_HEADER;
-
 
 typedef struct _DIRECTORY_OBJECT
 {
@@ -92,13 +93,19 @@ enum
    OBJTYP_MAX,
 };
 
-#define HEADER_TO_BODY(objhdr)                                                 \
-  (PVOID)((ULONG_PTR)objhdr + sizeof(OBJECT_HEADER) - sizeof(COMMON_BODY_HEADER))
-
 #define BODY_TO_HEADER(objbdy)                                                 \
-  CONTAINING_RECORD(&(((PCOMMON_BODY_HEADER)objbdy)->Type), OBJECT_HEADER, Type)
+  CONTAINING_RECORD((objbdy), OBJECT_HEADER, Body)
+  
+#define HEADER_TO_OBJECT_NAME(objhdr) ((POBJECT_HEADER_NAME_INFO)              \
+  (!(objhdr)->NameInfoOffset ? NULL: ((PCHAR)(objhdr) - (objhdr)->NameInfoOffset)))
+  
+#define HEADER_TO_HANDLE_INFO(objhdr) ((POBJECT_HEADER_HANDLE_INFO)            \
+  (!(objhdr)->HandleInfoOffset ? NULL: ((PCHAR)(objhdr) - (objhdr)->HandleInfoOffset)))
+  
+#define HEADER_TO_CREATOR_INFO(objhdr) ((POBJECT_HEADER_CREATOR_INFO)          \
+  (!((objhdr)->Flags & OB_FLAG_CREATOR_INFO) ? NULL: ((PCHAR)(objhdr) - sizeof(OBJECT_HEADER_CREATOR_INFO))))
 
-#define OBJECT_ALLOC_SIZE(ObjectSize) ((ObjectSize)+sizeof(OBJECT_HEADER)-sizeof(COMMON_BODY_HEADER))
+#define OBJECT_ALLOC_SIZE(ObjectSize) ((ObjectSize)+sizeof(OBJECT_HEADER))
 
 #define HANDLE_TO_EX_HANDLE(handle)                                            \
   (LONG)(((LONG)(handle) >> 2) - 1)
@@ -133,7 +140,8 @@ NTSTATUS ObpCreateHandle(struct _EPROCESS* Process,
 VOID ObCreateHandleTable(struct _EPROCESS* Parent,
 			 BOOLEAN Inherit,
 			 struct _EPROCESS* Process);
-NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
+NTSTATUS ObFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
+            PUNICODE_STRING ObjectName,
 		      PVOID* ReturnedObject,
 		      PUNICODE_STRING RemainingPath,
 		      POBJECT_TYPE ObjectType);
@@ -148,7 +156,7 @@ ObpSetHandleAttributes(HANDLE Handle,
 
 NTSTATUS
 STDCALL
-ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer, 
+ObpCreateTypeObject(struct _OBJECT_TYPE_INITIALIZER *ObjectTypeInitializer, 
                     PUNICODE_STRING TypeName, 
                     POBJECT_TYPE *ObjectType);
 
@@ -224,18 +232,22 @@ typedef struct _CAPTURED_OBJECT_ATTRIBUTES
 } CAPTURED_OBJECT_ATTRIBUTES, *PCAPTURED_OBJECT_ATTRIBUTES;
 
 NTSTATUS
-ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
+STDCALL
+ObpCaptureObjectName(IN PUNICODE_STRING CapturedName,
+                     IN PUNICODE_STRING ObjectName,
+                     IN KPROCESSOR_MODE AccessMode);
+                     
+NTSTATUS
+STDCALL
+ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
                            IN KPROCESSOR_MODE AccessMode,
-                           IN POOL_TYPE PoolType,
-                           IN BOOLEAN CaptureIfKernel,
-                           OUT PCAPTURED_OBJECT_ATTRIBUTES CapturedObjectAttributes  OPTIONAL,
-                           OUT PUNICODE_STRING ObjectName  OPTIONAL);
+                           IN POBJECT_TYPE ObjectType,
+                           IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
+                           OUT PUNICODE_STRING ObjectName);
 
 VOID
-ObpReleaseObjectAttributes(IN PCAPTURED_OBJECT_ATTRIBUTES CapturedObjectAttributes  OPTIONAL,
-                           IN PUNICODE_STRING ObjectName  OPTIONAL,
-                           IN KPROCESSOR_MODE AccessMode,
-                           IN BOOLEAN CaptureIfKernel);
+STDCALL
+ObpReleaseCapturedAttributes(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo);
 
 /* object information classes */
 

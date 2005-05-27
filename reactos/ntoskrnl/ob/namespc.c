@@ -40,7 +40,8 @@ static GENERIC_MAPPING ObpTypeMapping = {
 
 NTSTATUS
 STDCALL
-ObpAllocateObject(POBJECT_ATTRIBUTES ObjectAttributes,
+ObpAllocateObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
+                  PUNICODE_STRING ObjectName,
                   POBJECT_TYPE ObjectType,
                   ULONG ObjectSize,
                   POBJECT_HEADER *ObjectHeader);
@@ -62,7 +63,9 @@ ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
 {
    PVOID Object = NULL;
    UNICODE_STRING RemainingPath;
+   UNICODE_STRING ObjectName;
    OBJECT_ATTRIBUTES ObjectAttributes;
+   OBJECT_CREATE_INFORMATION ObjectCreateInfo;
    NTSTATUS Status;
 
    PAGED_CODE();
@@ -72,21 +75,38 @@ ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
 			      Attributes | OBJ_OPENIF,
 			      NULL,
 			      NULL);
-   Status = ObFindObject(&ObjectAttributes,
+    
+   /* Capture all the info */
+   DPRINT("Capturing Create Info\n");
+   Status = ObpCaptureObjectAttributes(&ObjectAttributes,
+                                       AccessMode,
+                                       ObjectType,
+                                       &ObjectCreateInfo,
+                                       &ObjectName);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
+	return Status;
+     }
+     
+   Status = ObFindObject(&ObjectCreateInfo,
+                         &ObjectName,
 			 &Object,
 			 &RemainingPath,
 			 ObjectType);
+
+   ObpReleaseCapturedAttributes(&ObjectCreateInfo);
+   if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
+
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
-CHECKPOINT;
-DPRINT("RemainingPath.Buffer '%S' Object %p\n", RemainingPath.Buffer, Object);
+   DPRINT("RemainingPath.Buffer '%S' Object %p\n", RemainingPath.Buffer, Object);
 
    if (RemainingPath.Buffer != NULL || Object == NULL)
      {
-CHECKPOINT;
-DPRINT("Object %p\n", Object);
+        DPRINT("Object %p\n", Object);
 	*ObjectPtr = NULL;
 	RtlFreeUnicodeString (&RemainingPath);
 	return(STATUS_OBJECT_NAME_NOT_FOUND);
@@ -136,22 +156,41 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
 {
    UNICODE_STRING RemainingPath;
    PVOID Object = NULL;
+   UNICODE_STRING ObjectName;
+   OBJECT_CREATE_INFORMATION ObjectCreateInfo;
    NTSTATUS Status;
 
    PAGED_CODE();
 
    DPRINT("ObOpenObjectByName(...)\n");
 
-   Status = ObFindObject(ObjectAttributes,
+    /* Capture all the info */
+    DPRINT("Capturing Create Info\n");
+    Status = ObpCaptureObjectAttributes(ObjectAttributes,
+                                        AccessMode,
+                                        ObjectType,
+                                        &ObjectCreateInfo,
+                                        &ObjectName);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
+	return Status;
+     }
+                                        
+   Status = ObFindObject(&ObjectCreateInfo,
+                         &ObjectName,
 			 &Object,
 			 &RemainingPath,
 			 ObjectType);
+   ObpReleaseCapturedAttributes(&ObjectCreateInfo);
+   if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
    if (!NT_SUCCESS(Status))
      {
 	DPRINT("ObFindObject() failed (Status %lx)\n", Status);
 	return Status;
      }
 
+   DPRINT("OBject: %x, Remaining Path: %wZ\n", Object, &RemainingPath);
    if (Object == NULL)
      {
        RtlFreeUnicodeString(&RemainingPath);
@@ -167,7 +206,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
       ObDereferenceObject(Object);
       return Status;
    }
-
+   
    Status = ObpCreateHandle(PsGetCurrentProcess(),
 			   Object,
 			   DesiredAccess,
@@ -217,8 +256,8 @@ ObpAddEntryDirectory(PDIRECTORY_OBJECT Parent,
 {
   KIRQL oldlvl;
 
-  RtlpCreateUnicodeString(&Header->Name, Name, NonPagedPool);
-  Header->Parent = Parent;
+  ASSERT(HEADER_TO_OBJECT_NAME(Header));
+  HEADER_TO_OBJECT_NAME(Header)->Directory = Parent;
 
   KeAcquireSpinLock(&Parent->Lock, &oldlvl);
   InsertTailList(&Parent->head, &Header->Entry);
@@ -238,13 +277,13 @@ ObpRemoveEntryDirectory(POBJECT_HEADER Header)
 
   DPRINT("ObpRemoveEntryDirectory(Header %x)\n",Header);
 
-  KeAcquireSpinLock(&(Header->Parent->Lock),&oldlvl);
+  KeAcquireSpinLock(&(HEADER_TO_OBJECT_NAME(Header)->Directory->Lock),&oldlvl);
   if (Header->Entry.Flink && Header->Entry.Blink)
   {
     RemoveEntryList(&(Header->Entry));
     Header->Entry.Flink = Header->Entry.Blink = NULL;
   }
-  KeReleaseSpinLock(&(Header->Parent->Lock),oldlvl);
+  KeReleaseSpinLock(&(HEADER_TO_OBJECT_NAME(Header)->Directory->Lock),oldlvl);
 }
 
 NTSTATUS
@@ -286,26 +325,26 @@ ObpFindEntryDirectory(PDIRECTORY_OBJECT DirectoryObject,
      }
    if (Name[0]=='.' && Name[1]=='.' && Name[2]==0)
      {
-	return(BODY_TO_HEADER(DirectoryObject)->Parent);
+	return(HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(DirectoryObject))->Directory);
      }
    while (current!=(&(DirectoryObject->head)))
      {
 	current_obj = CONTAINING_RECORD(current,OBJECT_HEADER,Entry);
-	DPRINT("  Scanning: %S for: %S\n",current_obj->Name.Buffer, Name);
+	DPRINT("  Scanning: %S for: %S\n",HEADER_TO_OBJECT_NAME(current_obj)->Name.Buffer, Name);
 	if (Attributes & OBJ_CASE_INSENSITIVE)
 	  {
-	     if (_wcsicmp(current_obj->Name.Buffer, Name)==0)
+	     if (_wcsicmp(HEADER_TO_OBJECT_NAME(current_obj)->Name.Buffer, Name)==0)
 	       {
-		  DPRINT("Found it %x\n",HEADER_TO_BODY(current_obj));
-		  return(HEADER_TO_BODY(current_obj));
+		  DPRINT("Found it %x\n",&current_obj->Body);
+		  return(&current_obj->Body);
 	       }
 	  }
 	else
 	  {
-	     if ( wcscmp(current_obj->Name.Buffer, Name)==0)
+	     if ( wcscmp(HEADER_TO_OBJECT_NAME(current_obj)->Name.Buffer, Name)==0)
 	       {
-		  DPRINT("Found it %x\n",HEADER_TO_BODY(current_obj));
-		  return(HEADER_TO_BODY(current_obj));
+		  DPRINT("Found it %x\n",&current_obj->Body);
+		  return(&current_obj->Body);
 	       }
 	  }
 	current = current->Flink;
@@ -389,7 +428,7 @@ ObInit(VOID)
     ObpInitSdCache();
 
     /* Create the Type Type */
-    DPRINT1("Creating Type Type\n");
+    DPRINT("Creating Type Type\n");
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
     RtlInitUnicodeString(&Name, L"Type");
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
@@ -402,7 +441,7 @@ ObInit(VOID)
     ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ObTypeObjectType);
   
     /* Create the Directory Type */
-    DPRINT1("Creating Directory Type\n");
+    DPRINT("Creating Directory Type\n");
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
     RtlInitUnicodeString(&Name, L"Directory");
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
@@ -430,7 +469,7 @@ ObInit(VOID)
                                  FALSE);
 
     /* Create root directory */
-    DPRINT1("Creating Root Directory\n");    
+    DPRINT("Creating Root Directory\n");    
     InitializeObjectAttributes(&ObjectAttributes,
                                NULL,
                                OBJ_PERMANENT,
@@ -445,6 +484,12 @@ ObInit(VOID)
                    0,
                    0,
                    (PVOID*)&NameSpaceRoot);
+    ObInsertObject((PVOID)NameSpaceRoot,
+                   NULL,
+                   DIRECTORY_ALL_ACCESS,
+                   0,
+                   NULL,
+                   NULL);
 
     /* Create '\ObjectTypes' directory */
     RtlInitUnicodeString(&Name, L"\\ObjectTypes");
@@ -462,11 +507,17 @@ ObInit(VOID)
                    0,
                    0,
                    (PVOID*)&ObpTypeDirectoryObject);
+    ObInsertObject((PVOID)ObpTypeDirectoryObject,
+                   NULL,
+                   DIRECTORY_ALL_ACCESS,
+                   0,
+                   NULL,
+                   NULL);
     
     /* Insert the two objects we already created but couldn't add */
     /* NOTE: Uses TypeList & Creator Info in OB 2.0 */
-    ObpAddEntryDirectory(ObpTypeDirectoryObject, BODY_TO_HEADER(ObTypeObjectType), L"Type");
-    ObpAddEntryDirectory(ObpTypeDirectoryObject, BODY_TO_HEADER(ObDirectoryType), L"Directory");
+    ObpAddEntryDirectory(ObpTypeDirectoryObject, BODY_TO_HEADER(ObTypeObjectType), NULL);
+    ObpAddEntryDirectory(ObpTypeDirectoryObject, BODY_TO_HEADER(ObDirectoryType), NULL);
 
     /* Create 'symbolic link' object type */
     ObInitSymbolicLinkImplementation();
@@ -490,6 +541,7 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
     
     /* Allocate the Object */
     Status = ObpAllocateObject(NULL, 
+                               TypeName,
                                ObTypeObjectType, 
                                OBJECT_ALLOC_SIZE(sizeof(OBJECT_TYPE)),
                                &Header);
@@ -499,17 +551,29 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
         return Status;
     }
     
-    LocalObjectType =  HEADER_TO_BODY(Header);
+    LocalObjectType = (POBJECT_TYPE)&Header->Body;
+    DPRINT("Local ObjectType: %p Header: %p \n", LocalObjectType, Header);
     
     /* Check if this is the first Object Type */
     if (!ObTypeObjectType)
     {
         ObTypeObjectType = LocalObjectType;
-        Header->ObjectType = ObTypeObjectType;
+        Header->Type = ObTypeObjectType;
+        LocalObjectType->Key = TAG('O', 'b', 'j', 'T');
+    }
+    else
+    {   
+        CHAR Tag[4];
+        Tag[0] = TypeName->Buffer[0];
+        Tag[1] = TypeName->Buffer[1];
+        Tag[2] = TypeName->Buffer[2];
+        Tag[3] = TypeName->Buffer[3];
+        
+        /* Set Tag */
+        DPRINT("Convert: %s \n", Tag);
+        LocalObjectType->Key = *(PULONG)Tag;
     }
     
-    /* FIXME: Generate Tag */
-        
     /* Set it up */
     LocalObjectType->TypeInfo = *ObjectTypeInitializer;
     LocalObjectType->Name = *TypeName;

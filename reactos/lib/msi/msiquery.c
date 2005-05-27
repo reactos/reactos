@@ -41,13 +41,19 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 void MSI_CloseView( MSIOBJECTHDR *arg )
 {
     MSIQUERY *query = (MSIQUERY*) arg;
+    struct list *ptr, *t;
 
     if( query->view && query->view->ops->delete )
         query->view->ops->delete( query->view );
     msiobj_release( &query->db->hdr );
+
+    LIST_FOR_EACH_SAFE( ptr, t, &query->mem )
+    {
+        HeapFree( GetProcessHeap(), 0, ptr );
+    }
 }
 
-UINT VIEW_find_column( MSIVIEW *table, LPWSTR name, UINT *n )
+UINT VIEW_find_column( MSIVIEW *table, LPCWSTR name, UINT *n )
 {
     LPWSTR col_name;
     UINT i, count, r;
@@ -120,8 +126,9 @@ UINT MSI_DatabaseOpenViewW(MSIDATABASE *db,
     query->row = 0;
     query->db = db;
     query->view = NULL;
+    list_init( &query->mem );
 
-    r = MSI_ParseSQL( db, szQuery, &query->view );
+    r = MSI_ParseSQL( db, szQuery, &query->view, &query->mem );
     if( r == ERROR_SUCCESS )
     {
         msiobj_addref( &query->hdr );
@@ -141,7 +148,7 @@ UINT MSI_OpenQuery( MSIDATABASE *db, MSIQUERY **view, LPCWSTR fmt, ... )
 
     /* figure out how much space we need to allocate */
     va_start(va, fmt);
-    sz = strlenW(fmt) + 1;
+    sz = lstrlenW(fmt) + 1;
     p = fmt;
     while (*p)
     {
@@ -152,7 +159,7 @@ UINT MSI_OpenQuery( MSIDATABASE *db, MSIQUERY **view, LPCWSTR fmt, ... )
         switch (*p)
         {
         case 's':  /* a string */
-            sz += strlenW(va_arg(va,LPCWSTR));
+            sz += lstrlenW(va_arg(va,LPCWSTR));
             break;
         case 'd':
         case 'i':  /* an integer -2147483648 seems to be longest */

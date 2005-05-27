@@ -18,8 +18,8 @@
 18 stdcall MsiDatabaseApplyTransformA(long str long)
 19 stdcall MsiDatabaseApplyTransformW(long wstr long)
 20 stdcall MsiDatabaseCommit(long)
-21 stub MsiDatabaseExportA
-22 stub MsiDatabaseExportW
+21 stdcall MsiDatabaseExportA(long str str str)
+22 stdcall MsiDatabaseExportW(long wstr wstr wstr)
 23 stdcall MsiDatabaseGenerateTransformA(long long str long long)
 24 stdcall MsiDatabaseGenerateTransformW(long long wstr long long)
 25 stdcall MsiDatabaseGetPrimaryKeysA(long str ptr)
@@ -78,7 +78,7 @@
 78 stdcall MsiGetSummaryInformationW(long wstr long ptr)
 79 stdcall MsiGetTargetPathA(long str ptr ptr)
 80 stdcall MsiGetTargetPathW(long wstr ptr ptr)
-81 stub MsiGetUserInfoA
+81 stdcall MsiGetUserInfoA(str ptr ptr ptr ptr ptr ptr)
 82 stdcall MsiGetUserInfoW(wstr ptr ptr ptr ptr ptr ptr)
 83 stub MsiInstallMissingComponentA
 84 stub MsiInstallMissingComponentW
@@ -105,8 +105,8 @@
 105 stdcall MsiProvideComponentFromDescriptorA(str ptr ptr ptr)
 106 stdcall MsiProvideComponentFromDescriptorW(wstr ptr ptr ptr)
 107 stub MsiProvideComponentW
-108 stub MsiProvideQualifiedComponentA
-109 stub MsiProvideQualifiedComponentW
+108 stdcall MsiProvideQualifiedComponentA(str str long ptr ptr)
+109 stdcall MsiProvideQualifiedComponentW(str str long ptr ptr)
 110 stdcall MsiQueryFeatureStateA(str str)
 111 stdcall MsiQueryFeatureStateW(wstr wstr)
 112 stdcall MsiQueryProductStateA(str)

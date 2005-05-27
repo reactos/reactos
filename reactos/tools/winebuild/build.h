@@ -133,7 +133,7 @@ typedef struct
 #define STACK32OFFSET(reg)  STRUCTOFFSET(STACK32FRAME,reg)
 
   /* Offset of the stack pointer relative to %fs:(0) */
-#define STACKOFFSET (STRUCTOFFSET(TEB,cur_stack))
+#define STACKOFFSET (STRUCTOFFSET(TEB,WOW32Reserved))
 
 
 #define MAX_ORDINALS  65535
@@ -148,6 +148,7 @@ extern void *xmalloc (size_t size);
 extern void *xrealloc (void *ptr, size_t size);
 extern char *xstrdup( const char *str );
 extern char *strupper(char *s);
+extern int strendswith(const char* str, const char* end);
 extern void fatal_error( const char *msg, ... )
    __attribute__ ((__format__ (__printf__, 1, 2)));
 extern void fatal_perror( const char *msg, ... )
@@ -167,16 +168,22 @@ extern void free_dll_spec( DLLSPEC *spec );
 extern const char *make_c_identifier( const char *str );
 extern int get_alignment(int alignBoundary);
 
-extern void add_import_dll( const char *name, int delay );
+extern void add_import_dll( const char *name, const char *filename );
+extern void add_delayed_import( const char *name );
 extern void add_ignore_symbol( const char *name );
 extern void read_undef_symbols( char **argv );
 extern int resolve_imports( DLLSPEC *spec );
-extern int output_imports( FILE *outfile, DLLSPEC *spec );
+extern int output_imports( FILE *outfile, DLLSPEC *spec, int *nb_delayed );
 extern int load_res32_file( const char *name, DLLSPEC *spec );
 extern void output_resources( FILE *outfile, DLLSPEC *spec );
 extern void load_res16_file( const char *name, DLLSPEC *spec );
-extern int output_res16_data( FILE *outfile, DLLSPEC *spec );
-extern int output_res16_directory( unsigned char *buffer, DLLSPEC *spec );
+extern unsigned int get_res16_data_size( DLLSPEC *spec, unsigned int res_offset,
+                                         unsigned int alignment );
+extern unsigned int output_res16_data( unsigned char **ret_buf, DLLSPEC *spec,
+                                       unsigned int res_offset, unsigned int alignment );
+extern unsigned int get_res16_directory_size( DLLSPEC *spec );
+extern unsigned int output_res16_directory( unsigned char **ret_buf, DLLSPEC *spec,
+                                            unsigned int res_offset, unsigned int alignment );
 extern void output_dll_init( FILE *outfile, const char *constructor, const char *destructor );
 
 extern void BuildRelays16( FILE *outfile );

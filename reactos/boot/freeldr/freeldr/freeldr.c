@@ -35,7 +35,7 @@ VOID BootMain(char *CmdLine)
 
 	DebugInit();
 
-	DbgPrint((DPRINT_WARNING, "BootMain() called. BootDrive = 0x%x BootPartition = %d\n", BootDrive, BootPartition));
+	DbgPrint((DPRINT_WARNING, "BootMain() called.\n"));
 
 	if (!MmInitializeMemoryManager())
 	{

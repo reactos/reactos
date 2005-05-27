@@ -158,7 +158,7 @@ ProRequest(
   /* MiniQueueWorkItem must be called at IRQL >= DISPATCH_LEVEL */
   if (QueueWorkItem)
     {
-      MiniQueueWorkItem(Adapter, NdisWorkItemRequest, (PVOID)NdisRequest);
+      MiniQueueWorkItem(AdapterBinding, NdisWorkItemRequest, (PVOID)NdisRequest);
       KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
       return NDIS_STATUS_PENDING;
     }
@@ -169,7 +169,7 @@ ProRequest(
   /* TODO (?): move the irql raise into MiniDoRequest */
   KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
     {
-      NdisStatus = MiniDoRequest(Adapter, NdisRequest);
+      NdisStatus = MiniDoRequest(AdapterBinding, NdisRequest);
 
       NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
       KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
@@ -278,7 +278,7 @@ ProSend(
 
       if (QueueWorkItem)
         {
-          MiniQueueWorkItem(Adapter, NdisWorkItemSendLoopback, (PVOID)Packet);
+          MiniQueueWorkItem(AdapterBinding, NdisWorkItemSendLoopback, (PVOID)Packet);
           return NDIS_STATUS_PENDING;
         }
 
@@ -315,7 +315,7 @@ ProSend(
   /* This is a normal send packet, not a loopback packet. */
   if (QueueWorkItem)
     {
-      MiniQueueWorkItem(Adapter, NdisWorkItemSend, (PVOID)Packet);
+      MiniQueueWorkItem(AdapterBinding, NdisWorkItemSend, (PVOID)Packet);
       NDIS_DbgPrint(MAX_TRACE, ("Queued a work item and returning\n"));
       return NDIS_STATUS_PENDING;
     }

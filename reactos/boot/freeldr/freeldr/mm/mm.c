@@ -36,10 +36,30 @@ VOID		DecrementAllocationCount(VOID);
 VOID		MemAllocTest(VOID);
 #endif // DEBUG
 
+/*
+ * Hack alert
+ * Normally, we allocate whole pages. This is ofcourse wastefull for small
+ * allocations (a few bytes). So, for small allocations (smaller than a page)
+ * we sub-allocate. When the first small allocation is done, a page is
+ * requested. We keep a pointer to that page in SubAllocationPage. The alloc
+ * is satisfied by returning a pointer to the beginning of the page. We also
+ * keep track of how many bytes are still available in the page in SubAllocationRest.
+ * When the next small request comes in, we try to allocate it just after the
+ * memory previously allocated. If it won't fit, we allocate a new page and
+ * the whole process starts again.
+ * Note that suballocations are done back-to-back, there's no bookkeeping at all.
+ * That also means that we cannot really free suballocations. So, when a free is
+ * done and it is determined that this might be a free of a sub-allocation, we
+ * just no-op the free.
+ * Perhaps we should use the heap routines from ntdll here.
+ */
+static PVOID    SubAllocationPage = NULL;
+static unsigned SubAllocationRest = 0;
+
 PVOID MmAllocateMemory(ULONG MemorySize)
 {
-	ULONG		PagesNeeded;
-	ULONG		FirstFreePageFromEnd;
+	ULONG	PagesNeeded;
+	ULONG	FirstFreePageFromEnd;
 	PVOID	MemPointer;
 
 	if (MemorySize == 0)
@@ -47,6 +67,14 @@ PVOID MmAllocateMemory(ULONG MemorySize)
 		DbgPrint((DPRINT_MEMORY, "MmAllocateMemory() called for 0 bytes. Returning NULL.\n"));
 		UiMessageBoxCritical("Memory allocation failed: MmAllocateMemory() called for 0 bytes.");
 		return NULL;
+	}
+
+	MemorySize = ROUND_UP(MemorySize, 4);
+	if (MemorySize <= SubAllocationRest)
+	{
+		MemPointer = SubAllocationPage + MM_PAGE_SIZE - SubAllocationRest;
+		SubAllocationRest -= MemorySize;
+		return MemPointer;
 	}
 
 	// Find out how many blocks it will take to
@@ -75,6 +103,13 @@ PVOID MmAllocateMemory(ULONG MemorySize)
 
 	FreePagesInLookupTable -= PagesNeeded;
 	MemPointer = (PVOID)(FirstFreePageFromEnd * MM_PAGE_SIZE);
+
+	if (MemorySize < MM_PAGE_SIZE)
+	{
+		SubAllocationPage = MemPointer;
+		SubAllocationRest = MM_PAGE_SIZE - MemorySize;
+	}
+		
 
 #ifdef DEBUG
 	IncrementAllocationCount();
@@ -234,6 +269,13 @@ VOID MmFreeMemory(PVOID MemoryPointer)
 	}
 
 #endif
+
+	/* If this allocation is only a single page, it could be a sub-allocated page.
+	 * Just don't free it */
+	if (1 == PageCount)
+	{
+		return;
+	}
 
 	// Loop through our array and mark all the
 	// blocks as free

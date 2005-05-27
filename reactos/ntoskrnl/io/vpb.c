@@ -18,9 +18,6 @@
 
 static KSPIN_LOCK IoVpbLock;
 
-#define TAG_VPB    TAG('V', 'P', 'B', ' ')
-#define TAG_SYSB   TAG('S', 'Y', 'S', 'B')
-
 /* FUNCTIONS *****************************************************************/
 
 VOID INIT_FUNCTION

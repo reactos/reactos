@@ -1835,7 +1835,13 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
 
       TRACE("parse now=%s next=%s sf=%p\n",debugstr_w(lpwstrTemp), debugstr_w(lpszTemp), lpsf);
 
-      if(lstrlenW(lpwstrTemp)==2) PathAddBackslashW(lpwstrTemp);
+      /* append a backslash to drive letters */
+      if(lstrlenW(lpwstrTemp)==2 && lpwstrTemp[1] == ':' && 
+	 ((lpwstrTemp[0] >= 'a' && lpwstrTemp[0] <= 'z') ||
+	  (lpwstrTemp[0] >= 'A' && lpwstrTemp[0] <= 'Z'))) 
+      {
+        PathAddBackslashW(lpwstrTemp);
+      }
 
       dwAttributes = SFGAO_FOLDER;
       if(SUCCEEDED(IShellFolder_ParseDisplayName(lpsf, hwnd, NULL, lpwstrTemp, &dwEaten, &pidl, &dwAttributes)))

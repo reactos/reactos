@@ -239,6 +239,8 @@ VOID STDCALL MsqRemoveWindowMessagesFromQueue(PVOID pWindow); /* F*(&$ headers, 
     if(InterlockedDecrement(&(MsgQueue)->References) == 0) \
     { \
       DPRINT("Free message queue 0x%x\n", (MsgQueue)); \
+      if ((MsgQueue)->NewMessages != NULL) \
+        ObDereferenceObject((MsgQueue)->NewMessages); \
       if ((MsgQueue)->NewMessagesHandle != NULL) \
         ZwClose((MsgQueue)->NewMessagesHandle); \
       ExFreePool((MsgQueue)); \

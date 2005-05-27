@@ -59,7 +59,8 @@
  *
  * Store this function in the HCD's struct pci_driver as probe().
  */
-int STDCALL usb_hcd_pci_probe (struct pci_dev *dev, const struct pci_device_id *id)
+int STDCALL
+usb_hcd_pci_probe (struct pci_dev *dev, const struct pci_device_id *id)
 {
 	struct hc_driver	*driver;
 	PHYSICAL_ADDRESS	resource;
@@ -122,7 +123,7 @@ clean_1:
 			dbg ("no i/o regions available");
 			return -EBUSY;
 		}
-		base = NULL; //(void *) resource; // this isn't possible
+		base = (void *) (ULONG_PTR)resource.u.LowPart;
 	}
 
 	// driver->start(), later on, will transfer device from

@@ -41,12 +41,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* GLOBALS *******************************************************************/
-
-#define TAG_OWNER_TABLE     TAG('R', 'O', 'W', 'N')
-#define TAG_EXCLUSIVE_LOCK  TAG('E', 'R', 'E', 'L')
-#define TAG_SHARED_SEM      TAG('E', 'R', 'S', 'S')
-
 /* FUNCTIONS *****************************************************************/
 
 

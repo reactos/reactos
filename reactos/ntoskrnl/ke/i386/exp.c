@@ -725,7 +725,7 @@ KeDumpStackFrames(PULONG Frame)
 			&ResultLength );
 		if ( !NT_SUCCESS(Status) )
 		{
-			DPRINT1("Can't dump stack frames: NtQueryVirtualMemory() failed: %x\n", Status );
+			DPRINT1("Can't dump stack frames: MiQueryVirtualMemory() failed: %x\n", Status );
 			return;
 		}
 
@@ -782,7 +782,7 @@ KeRosDumpStackFrames ( PULONG Frame, ULONG FrameCount )
 			&ResultLength );
 		if ( !NT_SUCCESS(Status) )
 		{
-			DPRINT1("Can't dump stack frames: NtQueryVirtualMemory() failed: %x\n", Status );
+			DPRINT1("Can't dump stack frames: MiQueryVirtualMemory() failed: %x\n", Status );
 			return;
 		}
 
@@ -834,7 +834,7 @@ KeRosGetStackFrames ( PULONG Frames, ULONG FrameCount )
 			&ResultLength );
 		if ( !NT_SUCCESS(Status) )
 		{
-			DPRINT1("Can't get stack frames: NtQueryVirtualMemory() failed: %x\n", Status );
+			DPRINT1("Can't get stack frames: MiQueryVirtualMemory() failed: %x\n", Status );
 			return 0;
 		}
 

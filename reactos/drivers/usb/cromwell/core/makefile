@@ -13,6 +13,9 @@ TARGET_OBJECTS = \
   buffer_simple.o usb-debug.o ../sys/ros_wrapper.o \
   ../sys/linuxwrapper.o usbcore.o
 
+TARGET_LIBS = \
+        $(PATH_TO_TOP)/dk/nkm/lib/libusbcore.a
+
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk

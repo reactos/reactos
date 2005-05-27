@@ -17,8 +17,6 @@
 
 /* GLOBALS *******************************************************************/
 
-#define TAG_IO_TIMER      TAG('I', 'O', 'T', 'M')
-
 /* Timer Database */
 KSPIN_LOCK IopTimerLock;
 LIST_ENTRY IopTimerQueueHead;

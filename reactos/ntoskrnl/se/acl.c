@@ -13,9 +13,6 @@
 #include <ntoskrnl.h>
 #include <internal/debug.h>
 
-#define TAG_ACL    TAG('A', 'C', 'L', 'T')
-
-
 /* GLOBALS ******************************************************************/
 
 PACL EXPORTED SePublicDefaultDacl = NULL;
@@ -39,7 +36,7 @@ SepInitDACLs(VOID)
 	      (sizeof(ACE) + RtlLengthSid(SeWorldSid)) +
 	      (sizeof(ACE) + RtlLengthSid(SeLocalSystemSid));
 
-  SePublicDefaultDacl = ExAllocatePoolWithTag(NonPagedPool,
+  SePublicDefaultDacl = ExAllocatePoolWithTag(PagedPool,
 					      AclLength,
 					      TAG_ACL);
   if (SePublicDefaultDacl == NULL)
@@ -67,7 +64,7 @@ SepInitDACLs(VOID)
 	      (sizeof(ACE) + RtlLengthSid(SeAliasAdminsSid)) +
 	      (sizeof(ACE) + RtlLengthSid(SeRestrictedCodeSid));
 
-  SePublicDefaultUnrestrictedDacl = ExAllocatePoolWithTag(NonPagedPool,
+  SePublicDefaultUnrestrictedDacl = ExAllocatePoolWithTag(PagedPool,
 							  AclLength,
 							  TAG_ACL);
   if (SePublicDefaultUnrestrictedDacl == NULL)
@@ -103,7 +100,7 @@ SepInitDACLs(VOID)
 	      (sizeof(ACE) + RtlLengthSid(SeLocalSystemSid)) +
 	      (sizeof(ACE) + RtlLengthSid(SeAliasAdminsSid));
 
-  SePublicOpenDacl = ExAllocatePoolWithTag(NonPagedPool,
+  SePublicOpenDacl = ExAllocatePoolWithTag(PagedPool,
 					   AclLength,
 					   TAG_ACL);
   if (SePublicOpenDacl == NULL)
@@ -135,7 +132,7 @@ SepInitDACLs(VOID)
 	      (sizeof(ACE) + RtlLengthSid(SeAliasAdminsSid)) +
 	      (sizeof(ACE) + RtlLengthSid(SeRestrictedCodeSid));
 
-  SePublicOpenUnrestrictedDacl = ExAllocatePoolWithTag(NonPagedPool,
+  SePublicOpenUnrestrictedDacl = ExAllocatePoolWithTag(PagedPool,
 						       AclLength,
 						       TAG_ACL);
   if (SePublicOpenUnrestrictedDacl == NULL)
@@ -170,7 +167,7 @@ SepInitDACLs(VOID)
 	      (sizeof(ACE) + RtlLengthSid(SeLocalSystemSid)) +
 	      (sizeof(ACE) + RtlLengthSid(SeAliasAdminsSid));
 
-  SeSystemDefaultDacl = ExAllocatePoolWithTag(NonPagedPool,
+  SeSystemDefaultDacl = ExAllocatePoolWithTag(PagedPool,
 					      AclLength,
 					      TAG_ACL);
   if (SeSystemDefaultDacl == NULL)
@@ -195,7 +192,7 @@ SepInitDACLs(VOID)
 	      (sizeof(ACE) + RtlLengthSid(SeWorldSid)) +
 	      (sizeof(ACE) + RtlLengthSid(SeRestrictedCodeSid));
 
-  SeUnrestrictedDacl = ExAllocatePoolWithTag(NonPagedPool,
+  SeUnrestrictedDacl = ExAllocatePoolWithTag(PagedPool,
 					     AclLength,
 					     TAG_ACL);
   if (SeUnrestrictedDacl == NULL)

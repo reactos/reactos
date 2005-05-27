@@ -319,6 +319,8 @@ static void RPC_UuidGetSystemTime(ULONGLONG *time)
     *time += TICKS_15_OCT_1582_TO_1601;
 }
 
+typedef DWORD WINAPI (*LPGETADAPTERSINFO)(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen);
+
 /* Assume that a hardware address is at least 6 bytes long */ 
 #define ADDRESS_BYTES_NEEDED 6
 
@@ -329,28 +331,46 @@ static RPC_STATUS RPC_UuidGetNodeAddress(BYTE *address)
 
     ULONG buflen = sizeof(IP_ADAPTER_INFO);
     PIP_ADAPTER_INFO adapter = HeapAlloc(GetProcessHeap(), 0, buflen);
+    HANDLE hIpHlpApi;
+    LPGETADAPTERSINFO pGetAdaptersInfo;
+    
+    hIpHlpApi = LoadLibrary("iphlpapi.dll");
+    if (hIpHlpApi)
+    {
+        pGetAdaptersInfo = (LPGETADAPTERSINFO)GetProcAddress(hIpHlpApi, "GetAdaptersInfo");
+        if (pGetAdaptersInfo)
+        {
+            if (pGetAdaptersInfo(adapter, &buflen) == ERROR_BUFFER_OVERFLOW) {
+                HeapFree(GetProcessHeap(), 0, adapter);
+                adapter = HeapAlloc(GetProcessHeap(), 0, buflen);
+            }
 
-    if (GetAdaptersInfo(adapter, &buflen) == ERROR_BUFFER_OVERFLOW) {
-        HeapFree(GetProcessHeap(), 0, adapter);
-        adapter = HeapAlloc(GetProcessHeap(), 0, buflen);
-    }
-
-    if (GetAdaptersInfo(adapter, &buflen) == NO_ERROR) {
-        for (i = 0; i < ADDRESS_BYTES_NEEDED; i++) {
-            address[i] = adapter->Address[i];
+            if (pGetAdaptersInfo(adapter, &buflen) == NO_ERROR) {
+                for (i = 0; i < ADDRESS_BYTES_NEEDED; i++) {
+                    address[i] = adapter->Address[i];
+                }
+            }
+            else
+            {
+                goto local;
+            }   
         }
+        
+        /* Free the Library */
+        FreeLibrary(hIpHlpApi);
+        goto exit;
     }
+     
+local:   
     /* We can't get a hardware address, just use random numbers.
-       Set the multicast bit to prevent conflicts with real cards. */
-    else {
-        for (i = 0; i < ADDRESS_BYTES_NEEDED; i++) {
-            address[i] = rand() & 0xff;
-        }
-
-        address[0] |= 0x01;
-        status = RPC_S_UUID_LOCAL_ONLY;
+        Set the multicast bit to prevent conflicts with real cards. */
+    for (i = 0; i < ADDRESS_BYTES_NEEDED; i++) {
+        address[i] = rand() & 0xff;
     }
-
+    address[0] |= 0x01;
+    status = RPC_S_UUID_LOCAL_ONLY;
+    
+exit:
     HeapFree(GetProcessHeap(), 0, adapter);
     return status;
 }

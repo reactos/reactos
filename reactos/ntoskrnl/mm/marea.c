@@ -14,10 +14,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* GLOBALS *******************************************************************/
-
-#define TAG_MAREA   TAG('M', 'A', 'R', 'E')
-
 /* #define VALIDATE_MEMORY_AREAS */
 
 /* FUNCTIONS *****************************************************************/

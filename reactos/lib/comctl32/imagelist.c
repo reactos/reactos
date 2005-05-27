@@ -98,7 +98,7 @@ static inline BOOL is_valid(HIMAGELIST himl)
  *     nothing
  *
  * NOTES
- *     This function can NOT be used to reduce the number of images.
+ *     This function CANNOT be used to reduce the number of images.
  */
 static void
 IMAGELIST_InternalExpandBitmaps (HIMAGELIST himl, INT nImageCount, INT cx, INT cy)

@@ -50,12 +50,11 @@
 #include <malloc.h>	/* for alloca() */
 #endif
 
+#include <shellapi.h>	/* for ShellExecute() */
+#include <shlobj.h>		/* for SHFormatDrive() */
+
 #ifndef _NO_EXTENSIONS
 #define	_SHELL_FOLDERS
-
-#include <objbase.h>
-#include <shellapi.h>
-#include <shlobj.h>
 #endif /* _NO_EXTENSIONS */
 
 #ifndef FILE_ATTRIBUTE_NOT_CONTENT_INDEXED

@@ -16,7 +16,6 @@
 /* GLOBAL *******************************************************************/
 
 #define MAX_THREAD_NOTIFY_ROUTINE_COUNT    8
-#define TAG_KAPC TAG('k','p','a','p') /* kpap - kernel ps apc */
 
 static ULONG PspThreadNotifyRoutineCount = 0;
 static PCREATE_THREAD_NOTIFY_ROUTINE

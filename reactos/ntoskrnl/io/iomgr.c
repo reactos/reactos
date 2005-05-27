@@ -13,18 +13,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* GLOBALS *******************************************************************/
-
-#define TAG_DEVICE_TYPE     TAG('D', 'E', 'V', 'T')
-#define TAG_FILE_TYPE       TAG('F', 'I', 'L', 'E')
-#define TAG_ADAPTER_TYPE    TAG('A', 'D', 'P', 'T')
-#define IO_LARGEIRP         TAG('I', 'r', 'p', 'l')
-#define IO_SMALLIRP         TAG('I', 'r', 'p', 's')
-#define IO_LARGEIRP_CPU     TAG('I', 'r', 'p', 'L')
-#define IO_SMALLIRP_CPU     TAG('I', 'r', 'p', 'S')
-#define IOC_TAG             TAG('I', 'p', 'c', ' ')
-#define IOC_CPU             TAG('I', 'p', 'c', 'P')
-
 /* DATA ********************************************************************/
 
 POBJECT_TYPE EXPORTED IoDeviceObjectType = NULL;
@@ -105,7 +93,7 @@ IopInitLookasideLists(VOID)
                                     NULL,
                                     0,
                                     sizeof(IO_COMPLETION_PACKET),
-                                    IOC_TAG,
+                                    IOC_TAG1,
                                     0);
                                     
     /* Now allocate the per-processor lists */
@@ -113,7 +101,7 @@ IopInitLookasideLists(VOID)
     {
         /* Get the PRCB for this CPU */
         Prcb = ((PKPCR)(KPCR_BASE + i * PAGE_SIZE))->Prcb;
-        DPRINT1("Setting up lookaside for CPU: %x, PRCB: %p\n", i, Prcb);
+        DPRINT("Setting up lookaside for CPU: %x, PRCB: %p\n", i, Prcb);
         
         /* Set the Large IRP List */
         Prcb->PPLookasideList[LookasideLargeIrpList].L = &IoLargeIrpLookaside.L;
@@ -182,7 +170,7 @@ IopInitLookasideLists(VOID)
         Prcb->PPLookasideList[LookasideCompletionList].P = &CurrentList->L;
     }
     
-    DPRINT1("Done allocation\n");
+    DPRINT("Done allocation\n");
 }
 
 VOID
@@ -198,7 +186,7 @@ IoInit (VOID)
 
     IopInitDriverImplementation();
 
-    DPRINT1("Creating Device Object Type\n");
+    DPRINT("Creating Device Object Type\n");
   
     /* Initialize the Driver object type  */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
@@ -378,6 +366,14 @@ IoInit2(BOOLEAN BootLog)
       return;
     }
 
+  Status = IopStartDevice(DeviceNode);
+  if (!NT_SUCCESS(Status))
+    {
+      IopFreeDeviceNode(DeviceNode);
+      CPRINT("IopInitializeDevice() failed with status (%x)\n", Status);
+      return;
+    }
+
   /*
    * Initialize PnP root releations
    */
@@ -403,10 +399,10 @@ IoInit3(VOID)
     IoCreateArcNames();
 
     /* Create the SystemRoot symbolic link */
-    CPRINT("CommandLine: %s\n", (PCHAR)KeLoaderBlock.CommandLine);
+    DPRINT("CommandLine: %s\n", (PCHAR)KeLoaderBlock.CommandLine);
     Status = IoCreateSystemRootLink((PCHAR)KeLoaderBlock.CommandLine);
     if (!NT_SUCCESS(Status)) {
-        DbgPrint("IoCreateSystemRootLink FAILED: (0x%x) - ", Status);
+        CPRINT("IoCreateSystemRootLink FAILED: (0x%x) - ", Status);
         KEBUGCHECK(INACCESSIBLE_BOOT_DEVICE);
     }
 

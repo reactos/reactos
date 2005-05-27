@@ -16,10 +16,6 @@
 
 /* GLOBALS *******************************************************************/
 
-#define TAG_SYSB        TAG('S', 'Y', 'S', 'B')
-#define TAG_LOCK        TAG('F','l','c','k')
-#define TAG_FILE_NAME   TAG('F', 'N', 'A', 'M')
-
 extern GENERIC_MAPPING IopFileMapping;
 
 NTSTATUS
@@ -47,7 +43,7 @@ STDCALL
 IopCreateFile(PVOID ObjectBody,
               PVOID Parent,
               PWSTR RemainingPath,
-              POBJECT_ATTRIBUTES ObjectAttributes)
+              POBJECT_CREATE_INFORMATION ObjectCreateInfo)
 {
   PDEVICE_OBJECT DeviceObject;
   PFILE_OBJECT FileObject = (PFILE_OBJECT) ObjectBody;
@@ -67,14 +63,14 @@ IopCreateFile(PVOID ObjectBody,
       return(STATUS_SUCCESS);
     }
 
-  ParentObjectType = BODY_TO_HEADER(Parent)->ObjectType;
+  ParentObjectType = BODY_TO_HEADER(Parent)->Type;
 
   if (ParentObjectType != IoDeviceObjectType &&
       ParentObjectType != IoFileObjectType)
     {
       DPRINT("Parent [%wZ] is a %S which is neither a file type nor a device type ; remaining path = %S\n",
-        &BODY_TO_HEADER(Parent)->Name,
-        BODY_TO_HEADER(Parent)->ObjectType->TypeName.Buffer,
+        &BODY_TO_HEADER(Parent)->NameInfo->Name,
+        BODY_TO_HEADER(Parent)->Type->Name.Buffer,
         RemainingPath);
       return(STATUS_UNSUCCESSFUL);
     }
@@ -278,7 +274,7 @@ IopSecurityFile(PVOID ObjectBody,
         if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
         {
             /* Get the Device Object */
-            DPRINT1("here\n");
+            DPRINT("here\n");
             DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
 
             /* Assign the Security Descriptor */
@@ -343,6 +339,8 @@ IopSecurityFile(PVOID ObjectBody,
         StackPtr->Parameters.SetSecurity.SecurityInformation = SecurityInformation;
         StackPtr->Parameters.SetSecurity.SecurityDescriptor = SecurityDescriptor;
     }
+
+    ObReferenceObject(FileObject);
 
     /* Call the Driver */
     Status = IoCallDriver(FileObject->DeviceObject, Irp);
@@ -511,6 +509,130 @@ IopCloseFile(PVOID ObjectBody,
     IoFreeIrp(Irp);
 }
 
+NTSTATUS 
+STDCALL
+IopDeviceFsIoControl(IN HANDLE DeviceHandle,
+                     IN HANDLE Event OPTIONAL,
+                     IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL,
+                     IN PVOID UserApcContext OPTIONAL,
+                     OUT PIO_STATUS_BLOCK IoStatusBlock,
+                     IN ULONG IoControlCode,
+                     IN PVOID InputBuffer,
+                     IN ULONG InputBufferLength OPTIONAL,
+                     OUT PVOID OutputBuffer,
+                     IN ULONG OutputBufferLength OPTIONAL,
+                     BOOLEAN IsDevIoCtl)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PFILE_OBJECT FileObject;
+    PDEVICE_OBJECT DeviceObject;
+    PIRP Irp;
+    PIO_STACK_LOCATION StackPtr;
+    PKEVENT EventObject = NULL;
+    BOOLEAN LocalEvent = FALSE;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+
+    DPRINT("IopDeviceFsIoControl(DeviceHandle %x Event %x UserApcRoutine %x "
+           "UserApcContext %x IoStatusBlock %x IoControlCode %x "
+           "InputBuffer %x InputBufferLength %x OutputBuffer %x "
+           "OutputBufferLength %x)\n",
+           DeviceHandle,Event,UserApcRoutine,UserApcContext,IoStatusBlock,
+           IoControlCode,InputBuffer,InputBufferLength,OutputBuffer,
+           OutputBufferLength);
+
+    if (IoStatusBlock == NULL) return STATUS_ACCESS_VIOLATION;
+
+    /* Check granted access against the access rights from IoContolCode */
+    Status = ObReferenceObjectByHandle(DeviceHandle,
+                                       (IoControlCode >> 14) & 0x3,
+                                       IoFileObjectType,
+                                       PreviousMode,
+                                       (PVOID *) &FileObject,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Check for an event */
+    if (Event)
+    {
+        /* Reference it */
+        Status = ObReferenceObjectByHandle(Event,
+                                           EVENT_MODIFY_STATE,
+                                           ExEventObjectType,
+                                           PreviousMode,
+                                           (PVOID*)&EventObject,
+                                           NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            ObDereferenceObject (FileObject);
+            return Status;
+        }
+        
+        /* Clear it */
+        KeClearEvent(EventObject);
+    }
+
+    /* Check if this is a direct open or not */
+    if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
+    {
+        DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
+    }
+    else
+    {
+        DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    }
+
+    /* Check if we should use Sync IO or not */
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+    {
+        /* Use File Object event */
+        KeClearEvent(&FileObject->Event);
+    }
+    else
+    {
+        /* Use local event */
+        LocalEvent = TRUE;
+    }
+
+    /* Build the IRP */
+    Irp = IoBuildDeviceIoControlRequest(IoControlCode,
+                                        DeviceObject,
+                                        InputBuffer,
+                                        InputBufferLength,
+                                        OutputBuffer,
+                                        OutputBufferLength,
+                                        FALSE,
+                                        EventObject,
+                                        IoStatusBlock);
+
+    /* Set some extra settings */
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    Irp->RequestorMode = PreviousMode;
+    Irp->Overlay.AsynchronousParameters.UserApcRoutine = UserApcRoutine;
+    Irp->Overlay.AsynchronousParameters.UserApcContext = UserApcContext;
+    StackPtr = IoGetNextIrpStackLocation(Irp);
+    StackPtr->FileObject = FileObject;
+    StackPtr->MajorFunction = IsDevIoCtl ? 
+                              IRP_MJ_DEVICE_CONTROL : IRP_MJ_FILE_SYSTEM_CONTROL;
+    
+    /* Call the Driver */
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        if (!LocalEvent)
+        {
+            KeWaitForSingleObject(&FileObject->Event,
+                                  Executive,
+                                  PreviousMode,
+                                  FileObject->Flags & FO_ALERTABLE_IO,
+                                  NULL);
+            Status = FileObject->FinalStatus;
+        }
+    }
+
+    /* Return the Status */
+    return Status;
+}
+                      
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -726,6 +848,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
    if (CreateDisposition == FILE_OPEN ||
        CreateDisposition == FILE_OPEN_IF)
    {
+
       Status = ObOpenObjectByName(ObjectAttributes,
                            NULL,
       NULL,
@@ -733,6 +856,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
       DesiredAccess,
       NULL,
       &LocalHandle);
+
       if (NT_SUCCESS(Status))
       {
          Status = ObReferenceObjectByHandle(LocalHandle,
@@ -746,13 +870,17 @@ IoCreateFile(OUT PHANDLE  FileHandle,
   {
      return Status;
   }
-         if (BODY_TO_HEADER(DeviceObject)->ObjectType != IoDeviceObjectType)
+         if (BODY_TO_HEADER(DeviceObject)->Type != IoDeviceObjectType)
   {
      ObDereferenceObject (DeviceObject);
      return STATUS_OBJECT_NAME_COLLISION;
   }
          /* FIXME: wt... */
          FileObject = IoCreateStreamFileObject(NULL, DeviceObject);
+         /* HACK */
+         FileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
+         DPRINT("%wZ\n", ObjectAttributes->ObjectName);
+
   ObDereferenceObject (DeviceObject);
       }
    }
@@ -776,7 +904,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
       }
    }
    RtlMapGenericMask(&DesiredAccess,
-                      &BODY_TO_HEADER(FileObject)->ObjectType->TypeInfo.GenericMapping);
+                      &BODY_TO_HEADER(FileObject)->Type->TypeInfo.GenericMapping);
 
    Status = ObInsertObject ((PVOID)FileObject,
        NULL,
@@ -886,7 +1014,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
     */
    Status = IofCallDriver(FileObject->DeviceObject, Irp );
    DPRINT("Status :%x\n", Status);
-
+   
    if (Status == STATUS_PENDING)
      {
  KeWaitForSingleObject(&FileObject->Event,
@@ -1021,9 +1149,7 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
     CreatedFileObject->DeviceObject = DeviceObject; 
     CreatedFileObject->Vpb = DeviceObject->Vpb;
     CreatedFileObject->Type = IO_TYPE_FILE;
-    /* HACK */
-    CreatedFileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
-    //CreatedFileObject->Flags = FO_STREAM_FILE;
+    CreatedFileObject->Flags |= FO_STREAM_FILE;
 
     /* Initialize Lock and Event */
     KeInitializeEvent(&CreatedFileObject->Event, NotificationEvent, FALSE);
@@ -1507,6 +1633,65 @@ NtDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
     UNIMPLEMENTED;
     return(STATUS_NOT_IMPLEMENTED);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS 
+STDCALL
+NtDeviceIoControlFile(IN HANDLE DeviceHandle,
+                      IN HANDLE Event OPTIONAL,
+                      IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL,
+                      IN PVOID UserApcContext OPTIONAL,
+                      OUT PIO_STATUS_BLOCK IoStatusBlock,
+                      IN ULONG IoControlCode,
+                      IN PVOID InputBuffer,
+                      IN ULONG InputBufferLength OPTIONAL,
+                      OUT PVOID OutputBuffer,
+                      IN ULONG OutputBufferLength OPTIONAL)
+{
+    /* Call the Generic Function */
+    return IopDeviceFsIoControl(DeviceHandle,
+                                Event,
+                                UserApcRoutine,
+                                UserApcContext,
+                                IoStatusBlock,
+                                IoControlCode,
+                                InputBuffer,
+                                InputBufferLength,
+                                OutputBuffer,
+                                OutputBufferLength,
+                                TRUE);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS 
+STDCALL
+NtFsControlFile(IN HANDLE DeviceHandle,
+                IN HANDLE Event OPTIONAL,
+                IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL,
+                IN PVOID UserApcContext OPTIONAL,
+                OUT PIO_STATUS_BLOCK IoStatusBlock,
+                IN ULONG IoControlCode,
+                IN PVOID InputBuffer,
+                IN ULONG InputBufferLength OPTIONAL,
+                OUT PVOID OutputBuffer,
+                IN ULONG OutputBufferLength OPTIONAL)
+{
+    return IopDeviceFsIoControl(DeviceHandle,
+                                Event,
+                                UserApcRoutine,
+                                UserApcContext,
+                                IoStatusBlock,
+                                IoControlCode,
+                                InputBuffer,
+                                InputBufferLength,
+                                OutputBuffer,
+                                OutputBufferLength,
+                                FALSE);
 }
 
 NTSTATUS
@@ -2536,7 +2721,12 @@ NtReadFile(IN HANDLE FileHandle,
     Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
     Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
     Irp->Flags |= IRP_READ_OPERATION;
+#if 0
+    /* FIXME:
+     *    Vfat doesn't handle non cached files correctly.
+     */     
     if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) Irp->Flags |= IRP_NOCACHE;
+#endif      
 
     /* Setup Stack Data */
     StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -3114,7 +3304,7 @@ NtWriteFile (IN HANDLE FileHandle,
     _SEH_TRY
     {
         Irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
-                                           FileObject->DeviceObject,
+                                           DeviceObject,
                                            Buffer,
                                            Length,
                                            ByteOffset,
@@ -3148,7 +3338,12 @@ NtWriteFile (IN HANDLE FileHandle,
     Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
     Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
     Irp->Flags |= IRP_WRITE_OPERATION;
+#if 0    
+    /* FIXME:
+     *    Vfat doesn't handle non cached files correctly.
+     */     
     if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) Irp->Flags |= IRP_NOCACHE;
+#endif    
 
     /* Setup Stack Data */
     StackPtr = IoGetNextIrpStackLocation(Irp);

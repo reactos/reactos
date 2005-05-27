@@ -206,8 +206,26 @@ BOOL i386DiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector, PULONGLON
 		// Partition requested was zero which means the boot partition
 		if (! DiskGetActivePartitionEntry(i386BootDrive, &PartitionTableEntry))
 		{
+			/* Try partition-less disk */
+			*StartSector = 0;
+			*SectorCount = 0;
+		}
+		/* Check for valid partition */
+		else if (PartitionTableEntry.SystemIndicator == PARTITION_ENTRY_UNUSED)
+		{
 			return FALSE;
 		}
+		else
+		{
+			*StartSector = PartitionTableEntry.SectorCountBeforePartition;
+			*SectorCount = PartitionTableEntry.PartitionSectorCount;
+		}
+	}
+	else if (0xff == i386BootPartition)
+	{
+		/* Partition-less disk */
+		*StartSector = 0;
+		*SectorCount = 0;
 	}
 	else
 	{
@@ -216,25 +234,26 @@ BOOL i386DiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector, PULONGLON
 		{
 			return FALSE;
 		}
-	}
-
-	// Check for valid partition
-	if (PartitionTableEntry.SystemIndicator == PARTITION_ENTRY_UNUSED)
-	{
-		return FALSE;
+		/* Check for valid partition */
+		else if (PartitionTableEntry.SystemIndicator == PARTITION_ENTRY_UNUSED)
+		{
+			return FALSE;
+		}
+		else
+		{
+			*StartSector = PartitionTableEntry.SectorCountBeforePartition;
+			*SectorCount = PartitionTableEntry.PartitionSectorCount;
+		}
 	}
 
 	// Try to recognize the file system
-	if (!FsRecognizeVolume(i386BootDrive, PartitionTableEntry.SectorCountBeforePartition, &VolumeType))
+	if (!FsRecognizeVolume(i386BootDrive, *StartSector, &VolumeType))
 	{
 		return FALSE;
 	}
 
 	*DriveNumber = i386BootDrive;
-	*StartSector = PartitionTableEntry.SectorCountBeforePartition;
-	*SectorCount = PartitionTableEntry.PartitionSectorCount;
 
-	//switch (PartitionTableEntry.SystemIndicator)
 	switch (VolumeType)
 	{
 	case PARTITION_FAT_12:

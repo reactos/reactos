@@ -385,11 +385,6 @@ IoSecondStageCompletion(
    PVOID* SystemArgument2);
 
 NTSTATUS STDCALL
-IopCreateFile(PVOID ObjectBody,
-	      PVOID Parent,
-	      PWSTR RemainingPath,
-	      POBJECT_ATTRIBUTES ObjectAttributes);
-NTSTATUS STDCALL
 IopCreateDevice(PVOID ObjectBody,
 		PVOID Parent,
 		PWSTR RemainingPath,
@@ -501,6 +496,10 @@ IopInitializeDevice(
    PDEVICE_NODE DeviceNode,
    PDRIVER_OBJECT DriverObject);
 
+NTSTATUS
+IopStartDevice(
+   PDEVICE_NODE DeviceNode);
+
 /* driver.c */
 
 VOID FASTCALL
@@ -517,6 +516,12 @@ IopCreateDriverObject(
    BOOLEAN FileSystemDriver,
    PVOID DriverImageStart,
    ULONG DriverImageSize);
+
+NTSTATUS FASTCALL
+IopGetDriverObject(
+   PDRIVER_OBJECT *DriverObject,
+   PUNICODE_STRING ServiceName,
+   BOOLEAN FileSystem);
 
 NTSTATUS FASTCALL
 IopLoadServiceModule(
@@ -549,7 +554,7 @@ STDCALL
 IopCreateFile(PVOID ObjectBody,
               PVOID Parent,
               PWSTR RemainingPath,
-              POBJECT_ATTRIBUTES ObjectAttributes);
+              POBJECT_CREATE_INFORMATION ObjectAttributes);
 
 VOID
 STDCALL

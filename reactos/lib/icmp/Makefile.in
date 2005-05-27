@@ -3,6 +3,7 @@ TOPOBJDIR = ../..
 SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = icmp.dll
+IMPORTLIB = libicmp.$(IMPLIBEXT)
 IMPORTS   = kernel32
 EXTRALIBS = @SOCKETLIBS@
 

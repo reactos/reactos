@@ -13,8 +13,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#define IOC_TAG   TAG('I', 'O', 'C', 'T')
-
 POBJECT_TYPE IoCompletionType;
 
 NPAGED_LOOKASIDE_LIST IoCompletionPacketLookaside;
@@ -206,7 +204,7 @@ IopInitIoCompletionImplementation(VOID)
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
 
-    DPRINT1("Creating IoCompletion Object Type\n");
+    DPRINT("Creating IoCompletion Object Type\n");
   
     /* Initialize the Driver object type  */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
@@ -514,9 +512,6 @@ NtRemoveIoCompletion(IN  HANDLE IoCompletionHandle,
 
                 Status = _SEH_GetExceptionCode();
             } _SEH_END;
-
-            /* Free packet */
-            ExFreeToNPagedLookasideList(&IoCompletionPacketLookaside, Packet);
         }
 
         /* Dereference the Object */

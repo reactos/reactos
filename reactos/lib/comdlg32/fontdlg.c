@@ -1024,18 +1024,15 @@ LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam,
 LRESULT CFn_WMDestroy(HWND hwnd, WPARAM wParam, LPARAM lParam, LPCHOOSEFONTW lpcfw)
 {
     LPCHOOSEFONTA lpcfa;
-    LPCSTR lpTemplateName;
     LPSTR lpszStyle;
     LPLOGFONTA lpLogFonta;
     int len;
 
     lpcfa = GetPropW(hwnd, strWineFontData_a);
     lpLogFonta = lpcfa->lpLogFont;
-    lpTemplateName = lpcfa->lpTemplateName;
     lpszStyle = lpcfa->lpszStyle;
     memcpy(lpcfa, lpcfw, sizeof(CHOOSEFONTA));
     lpcfa->lpLogFont = lpLogFonta;
-    lpcfa->lpTemplateName = lpTemplateName;
     lpcfa->lpszStyle = lpszStyle;
     memcpy(lpcfa->lpLogFont, lpcfw->lpLogFont, sizeof(LOGFONTA));
     WideCharToMultiByte(CP_ACP, 0, lpcfw->lpLogFont->lfFaceName,
@@ -1047,9 +1044,9 @@ LRESULT CFn_WMDestroy(HWND hwnd, WPARAM wParam, LPARAM lParam, LPCHOOSEFONTW lpc
         HeapFree(GetProcessHeap(), 0, lpcfw->lpszStyle);
     }
 
-    HeapFree(GetProcessHeap(), 0, (LPBYTE)lpcfw->lpTemplateName);
     HeapFree(GetProcessHeap(), 0, lpcfw->lpLogFont);
     HeapFree(GetProcessHeap(), 0, lpcfw);
+    SetPropW(hwnd, strWineFontData, 0);
 
     return TRUE;
 }
@@ -1139,13 +1136,6 @@ INT_PTR CALLBACK FormatCharDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam,
             len = MultiByteToWideChar(CP_ACP, 0, lpcfa->lpszStyle, -1, NULL, 0);
             lpcfw->lpszStyle = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
             MultiByteToWideChar(CP_ACP, 0, lpcfa->lpszStyle, -1, lpcfw->lpszStyle, len);
-        }
-
-        if((lpcfa->Flags & CF_ENABLETEMPLATE) && lpcfa->lpTemplateName) {
-            len = MultiByteToWideChar(CP_ACP, 0, lpcfa->lpTemplateName, -1, NULL, 0);
-            lpcfw->lpTemplateName = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
-            MultiByteToWideChar(CP_ACP, 0, lpcfa->lpTemplateName,
-                                -1, (LPWSTR)lpcfw->lpTemplateName, len);
         }
 
         if (!CFn_WMInitDialog(hDlg, wParam, lParam, lpcfw))

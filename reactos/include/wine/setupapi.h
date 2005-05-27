@@ -669,6 +669,7 @@ LONG     WINAPI AddTagToGroupOrderList(PCWSTR lpGroupName, DWORD dwUnknown2, DWO
 VOID     WINAPI AssertFail(LPSTR, UINT, LPSTR);
 DWORD    WINAPI CaptureAndConvertAnsiArg(PCSTR lpSrc, PWSTR *lpDst);
 DWORD    WINAPI CaptureStringArg(PCWSTR lpSrc, PWSTR *lpDst);
+BOOL     WINAPI ConcatenatePaths(LPWSTR, LPCWSTR, DWORD, LPDWORD);
 BOOL     WINAPI DelayedMove(PCWSTR lpExistingFileName, PCWSTR lpNewFileName);
 BOOL     WINAPI DoesUserHavePrivilege(PCWSTR lpPrivilegeName);
 PWSTR    WINAPI DuplicateString(PCWSTR lpSrc);
@@ -681,6 +682,7 @@ void     WINAPI InstallHinfSectionW( HWND hwnd, HINSTANCE handle, PCWSTR cmdline
 BOOL     WINAPI IsUserAdmin(VOID);
 PWSTR    WINAPI MultiByteToUnicode(PCSTR lpMultiByteStr, UINT uCodePage);
 VOID     WINAPI MyFree(PVOID lpMem);
+PWSTR    WINAPI MyGetFileTitle(PCWSTR);
 PVOID    WINAPI MyMalloc(DWORD dwSize);
 PVOID    WINAPI MyRealloc(PVOID lpSrc, DWORD dwSize);
 DWORD    WINAPI OpenAndMapForRead(PCWSTR, PDWORD, PHANDLE, PHANDLE, PVOID *);

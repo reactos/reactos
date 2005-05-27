@@ -76,7 +76,7 @@ CreateMutexW(LPSECURITY_ATTRIBUTES lpMutexAttributes,
    InitializeObjectAttributes(&ObjectAttributes,
 			      (lpName ? &UnicodeName : NULL),
 			      0,
-			      hBaseDir,
+			      (lpName ? hBaseDir : NULL),
 			      NULL);
 
    if (lpMutexAttributes != NULL)

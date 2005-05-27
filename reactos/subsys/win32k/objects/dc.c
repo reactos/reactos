@@ -2494,7 +2494,6 @@ IntEnumDisplaySettings(
 
   return TRUE;
 }
-
 LONG
 FASTCALL
 IntChangeDisplaySettings(
@@ -2507,7 +2506,10 @@ IntChangeDisplaySettings(
   BOOLEAN NoReset = FALSE;
   BOOLEAN Reset = FALSE;
   BOOLEAN SetPrimary = FALSE;
-  LONG Ret;
+  LONG Ret=0;
+  NTSTATUS Status ;
+
+  DPRINT1("display flag : %x\n",dwflags);
 
   if ((dwflags & CDS_UPDATEREGISTRY) == CDS_UPDATEREGISTRY)
   {
@@ -2527,29 +2529,78 @@ IntChangeDisplaySettings(
   if (Reset && NoReset)
     return DISP_CHANGE_BADFLAGS;
 
-  switch (dwflags)
+  if (dwflags == 0)
   {
-  case 0: /* Dynamically change graphics mode */
-    Ret = DISP_CHANGE_FAILED;
-    break;
+   /* Dynamically change graphics mode */
+   DPRINT1("flag 0 UNIMPLEMENT \n");
+   return DISP_CHANGE_FAILED;
+  }
 
-  case CDS_FULLSCREEN: /* Given mode is temporary */
-    Ret = DISP_CHANGE_FAILED;
-    break;
+  if ((dwflags & CDS_TEST) == CDS_TEST)
+  {
+   /* Test reslution */
+   dwflags &= ~CDS_TEST;
+   DPRINT1("flag CDS_TEST UNIMPLEMENT");
+   Ret = DISP_CHANGE_FAILED;
+  }
+  
+  if ((dwflags & CDS_FULLSCREEN) == CDS_FULLSCREEN)
+  {
+   DEVMODE lpDevMode;
+   /* Full Screen */
+   dwflags &= ~CDS_FULLSCREEN;
+   DPRINT1("flag CDS_FULLSCREEN partially implemented");
+   Ret = DISP_CHANGE_FAILED;
 
-  case CDS_UPDATEREGISTRY:
-    {
+   lpDevMode.dmBitsPerPel =0;
+   lpDevMode.dmPelsWidth  =0;
+   lpDevMode.dmPelsHeight =0;
+   lpDevMode.dmDriverExtra =0;
+
+   lpDevMode.dmSize = sizeof(DEVMODE);
+   Status = IntEnumDisplaySettings(pDeviceName,  ENUM_CURRENT_SETTINGS, &lpDevMode, 0);
+   if (!NT_SUCCESS(Status)) return DISP_CHANGE_FAILED;
+
+   DPRINT1("Req Mode     : %d x %d x %d\n", DevMode->dmPelsWidth,DevMode->dmPelsHeight,DevMode->dmBitsPerPel);
+   DPRINT1("Current Mode : %d x %d x %d\n", lpDevMode.dmPelsWidth,lpDevMode.dmPelsHeight, lpDevMode.dmBitsPerPel);
+
+
+   if ((lpDevMode.dmBitsPerPel == DevMode->dmBitsPerPel) &&
+       (lpDevMode.dmPelsWidth  == DevMode->dmPelsWidth) &&
+       (lpDevMode.dmPelsHeight == DevMode->dmPelsHeight))
+	   Ret = DISP_CHANGE_SUCCESSFUL; 
+  }
+
+  if ((dwflags & CDS_VIDEOPARAMETERS) == CDS_VIDEOPARAMETERS)
+  {  
+    dwflags &= ~CDS_VIDEOPARAMETERS;
+    if (lParam == NULL) Ret=DISP_CHANGE_BADPARAM;
+	else
+	{
+		DPRINT1("flag CDS_VIDEOPARAMETERS UNIMPLEMENT");
+		Ret = DISP_CHANGE_FAILED;
+	}
+
+  }    
+
+  if ((dwflags & CDS_UPDATEREGISTRY) == CDS_UPDATEREGISTRY)
+  {  
+  
 	  	UNICODE_STRING ObjectName;
 		UNICODE_STRING KernelModeName;
 	  	WCHAR KernelModeNameBuffer[256];
 		UNICODE_STRING RegistryKey;
 		WCHAR RegistryKeyBuffer[512];
-		PDEVICE_OBJECT DeviceObject;
-		NTSTATUS Status;
+		PDEVICE_OBJECT DeviceObject;		
 		ULONG LastSlash;
 		OBJECT_ATTRIBUTES ObjectAttributes;
 		HANDLE DevInstRegKey;
 		ULONG NewValue;
+		
+
+		DPRINT1("set CDS_UPDATEREGISTRY \n");
+		
+		dwflags &= ~CDS_UPDATEREGISTRY;	
 
 		/* Get device name (pDeviceName is "\.\xxx") */
 		for (LastSlash = pDeviceName->Length / sizeof(WCHAR); LastSlash > 0; LastSlash--)
@@ -2557,7 +2608,8 @@ IntChangeDisplaySettings(
 			if (pDeviceName->Buffer[LastSlash - 1] == L'\\')
 				break;
 		}
-		if (LastSlash == 0) return DISP_CHANGE_FAILED;
+		
+		if (LastSlash == 0) return DISP_CHANGE_RESTART;
 		ObjectName = *pDeviceName;
 		ObjectName.Length -= LastSlash * sizeof(WCHAR);
 		ObjectName.MaximumLength -= LastSlash * sizeof(WCHAR);
@@ -2569,8 +2621,10 @@ IntChangeDisplaySettings(
 
 		/* Open \??\xxx (ex: "\??\DISPLAY1") */
 		Status = RtlAppendUnicodeToString(&KernelModeName, L"\\??\\");
+		
 		if (!NT_SUCCESS(Status)) return DISP_CHANGE_FAILED;
 		Status = RtlAppendUnicodeStringToString(&KernelModeName, &ObjectName);
+		
 		if (!NT_SUCCESS(Status)) return DISP_CHANGE_FAILED;
 		Status = ObReferenceObjectByName(
 			&KernelModeName,
@@ -2581,6 +2635,7 @@ IntChangeDisplaySettings(
 			KernelMode,
 			NULL,
 			(PVOID*)&DeviceObject);
+
 		if (!NT_SUCCESS(Status)) return DISP_CHANGE_FAILED;
 		/* Get associated driver name (ex: "VBE") */
 		for (LastSlash = DeviceObject->DriverObject->DriverName.Length / sizeof(WCHAR); LastSlash > 0; LastSlash--)
@@ -2588,6 +2643,7 @@ IntChangeDisplaySettings(
 			if (DeviceObject->DriverObject->DriverName.Buffer[LastSlash - 1] == L'\\')
 				break;
 		}
+
 		if (LastSlash == 0) { ObDereferenceObject(DeviceObject); return DISP_CHANGE_FAILED; }
 		ObjectName = DeviceObject->DriverObject->DriverName;
 		ObjectName.Length -= LastSlash * sizeof(WCHAR);
@@ -2601,11 +2657,14 @@ IntChangeDisplaySettings(
 		/* Open registry key */
 		Status = RtlAppendUnicodeToString(&RegistryKey,
 			L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Hardware Profiles\\Current\\System\\CurrentControlSet\\Services\\");
+		
 		if (!NT_SUCCESS(Status)) { ObDereferenceObject(DeviceObject); return DISP_CHANGE_FAILED; }
 		Status = RtlAppendUnicodeStringToString(&RegistryKey, &ObjectName);
+
 		if (!NT_SUCCESS(Status)) { ObDereferenceObject(DeviceObject); return DISP_CHANGE_FAILED; }
 		Status = RtlAppendUnicodeToString(&RegistryKey,
 			L"\\Device0");
+
 		if (!NT_SUCCESS(Status)) { ObDereferenceObject(DeviceObject); return DISP_CHANGE_FAILED; }
 
 		InitializeObjectAttributes(&ObjectAttributes, &RegistryKey,
@@ -2619,47 +2678,34 @@ IntChangeDisplaySettings(
 		{
 			RtlInitUnicodeString(&RegistryKey, L"DefaultSettings.BitsPerPel");
 			NewValue = DevMode->dmBitsPerPel;
-			Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));
+			Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));			
 		}
 
 		if (NT_SUCCESS(Status) && DevMode->dmFields & DM_PELSWIDTH)
 		{
 			RtlInitUnicodeString(&RegistryKey, L"DefaultSettings.XResolution");
-			NewValue = DevMode->dmPelsWidth;
-			Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));
+			NewValue = DevMode->dmPelsWidth;			
+			Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));			
 		}
 
 		if (NT_SUCCESS(Status) && DevMode->dmFields & DM_PELSHEIGHT)
 		{
 			RtlInitUnicodeString(&RegistryKey, L"DefaultSettings.YResolution");
 			NewValue = DevMode->dmPelsHeight;
-			Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));
+			Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));			
 		}
 
 		ZwClose(DevInstRegKey);
 		if (NT_SUCCESS(Status))
 			Ret = DISP_CHANGE_RESTART;
 		else
-			Ret = DISP_CHANGE_FAILED;
-		break;
+			/* return DISP_CHANGE_NOTUPDATED when we can save to reg only vaild for NT */ 
+			Ret = DISP_CHANGE_NOTUPDATED;
+		
     }
-
-  case CDS_TEST: /* Test if the mode could be set */
-    Ret = DISP_CHANGE_FAILED;
-    break;
-
-#ifdef CDS_VIDEOPARAMETERS
-  case CDS_VIDEOPARAMETERS:
-    if (lParam == NULL)
-      return DISP_CHANGE_BADPARAM;
-    Ret = DISP_CHANGE_FAILED;
-    break;
-#endif
-
-  default:
+ 
+ if (dwflags != 0)  
     Ret = DISP_CHANGE_BADFLAGS;
-    break;
-  }
 
   return Ret;
 }

@@ -38,7 +38,7 @@ LpcpInitSystem (VOID)
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
 
-    DPRINT1("Creating Port Object Type\n");
+    DPRINT("Creating Port Object Type\n");
   
     /* Create the Port Object Type */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));

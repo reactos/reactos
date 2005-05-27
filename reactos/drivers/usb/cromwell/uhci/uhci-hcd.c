@@ -42,11 +42,15 @@
 #include <linux/interrupt.h>
 #include <linux/spinlock.h>
 #include <linux/proc_fs.h>
+#endif
+
 #ifdef CONFIG_USB_DEBUG
 #define DEBUG
 #else
 #undef DEBUG
 #endif
+
+#if 0
 #include <linux/usb.h>
 
 #include <asm/uaccess.h>
@@ -79,9 +83,9 @@
  * debug = 3, show all TD's in URB's when dumping
  */
 #ifdef DEBUG
-static int debug = 1;
+static int debug = 3;
 #else
-static int debug = 0;
+static int debug = 2;
 #endif
 MODULE_PARM(debug, "i");
 MODULE_PARM_DESC(debug, "Debug level");
@@ -1873,7 +1877,7 @@ static void uhci_remove_pending_qhs(struct uhci_hcd *uhci)
 	spin_unlock_irqrestore(&uhci->urb_remove_list_lock, flags);
 }
 
-static void uhci_irq(struct usb_hcd *hcd, struct pt_regs *regs)
+static int uhci_irq(struct usb_hcd *hcd, struct pt_regs *regs)
 {
 	struct uhci_hcd *uhci = hcd_to_uhci(hcd);
 	unsigned int io_addr = uhci->io_addr;
@@ -1886,7 +1890,7 @@ static void uhci_irq(struct usb_hcd *hcd, struct pt_regs *regs)
 	 */
 	status = inw(io_addr + USBSTS);
 	if (!status)	/* shared interrupt, not mine */
-		return;
+		return 0;
 	outw(status, io_addr + USBSTS);		/* Clear it */
 
 	if (status & ~(USBSTS_USBINT | USBSTS_ERROR | USBSTS_RD)) {
@@ -1925,6 +1929,8 @@ static void uhci_irq(struct usb_hcd *hcd, struct pt_regs *regs)
 	spin_unlock(&uhci->urb_list_lock);
 
 	uhci_finish_completion(hcd, regs);
+	
+	return 0;
 }
 
 static void reset_hc(struct uhci_hcd *uhci)
@@ -2271,6 +2277,7 @@ static int __devinit uhci_start(struct usb_hcd *hcd)
 		err("unable to allocate root hub");
 		goto err_alloc_root_hub;
 	}
+	hcd->pdev->bus = (struct pci_bus  *)udev; /* Fix bus pointer for initial device */
 
 	uhci->term_td = uhci_alloc_td(uhci, udev);
 	if (!uhci->term_td) {
@@ -2484,7 +2491,7 @@ static int uhci_hcd_get_frame_number(struct usb_hcd *hcd)
 
 static const char hcd_name[] = "uhci-hcd";
 
-static const struct hc_driver uhci_driver = {
+static struct hc_driver uhci_driver = {
 	.description =		hcd_name,
 
 	/* Generic hardware linkage */

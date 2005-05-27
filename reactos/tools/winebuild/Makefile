@@ -22,7 +22,7 @@ OBJECTS = \
 
 CLEAN_FILES = *.o $(TARGET)
 
-HOST_CFLAGS = $(HOSTARCH) -D__USE_W32API -I$(PATH_TO_TOP)/include/wine
+HOST_CFLAGS = $(HOSTARCH) -D__USE_W32API -I$(PATH_TO_TOP)/include/wine -I$(PATH_TO_TOP)/include
 
 %.o: %.c
 	$(HOST_CC) $(HOST_CFLAGS) -c $< -o $@

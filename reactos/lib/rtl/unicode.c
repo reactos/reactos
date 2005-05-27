@@ -990,7 +990,7 @@ RtlUnicodeStringToAnsiString(
              AnsiDest,
              UniSource,
              AllocateDestinationString,
-             NonPagedPool);
+             PagedPool);
 }
 
 
@@ -1073,7 +1073,7 @@ RtlOemStringToUnicodeString(
              UniDest,
              OemSource,
              AllocateDestinationString,
-             NonPagedPool);
+             PagedPool);
 }
 
 
@@ -1157,7 +1157,7 @@ RtlUnicodeStringToOemString(
              OemDest,
              UniSource,
              AllocateDestinationString,
-             NonPagedPool);
+             PagedPool);
 }
 
 
@@ -1304,7 +1304,7 @@ RtlOemStringToCountedUnicodeString(
              UniDest,
              OemSource,
              AllocateDestinationString,
-             NonPagedPool);
+             PagedPool);
 }
 
 
@@ -1634,7 +1634,7 @@ RtlUnicodeStringToCountedOemString(
              OemDest,
              UniSource,
              AllocateDestinationString,
-             NonPagedPool);
+             PagedPool);
 }
 
 /*
@@ -1766,7 +1766,7 @@ RtlUpcaseUnicodeString(
              UniDest,
              UniSource,
              AllocateDestinationString,
-             NonPagedPool);
+             PagedPool);
 }
 
 
@@ -1833,7 +1833,7 @@ RtlUpcaseUnicodeStringToAnsiString(
              AnsiDest,
              UniSource,
              AllocateDestinationString,
-             NonPagedPool);
+             PagedPool);
 }
 
 /*
@@ -1921,7 +1921,7 @@ RtlUpcaseUnicodeStringToCountedOemString(
              OemDest,
              UniSource,
              AllocateDestinationString,
-             NonPagedPool);
+             PagedPool);
 }
 
 
@@ -2007,7 +2007,7 @@ RtlUpcaseUnicodeStringToOemString (
              OemDest,
              UniSource,
              AllocateDestinationString,
-             NonPagedPool);
+             PagedPool);
 }
 
 
@@ -2287,7 +2287,7 @@ RtlCreateUnicodeString(
 {
 
    DPRINT("RtlCreateUnicodeString\n");
-   return RtlpCreateUnicodeString(UniDest, Source, NonPagedPool);
+   return RtlpCreateUnicodeString(UniDest, Source, PagedPool);
 }
 
 
@@ -2306,7 +2306,7 @@ RtlpCreateUnicodeString(
    ULONG Length;
 
    Length = (wcslen (Source) + 1) * sizeof(WCHAR);
-
+   PoolType = PagedPool;
    UniDest->Buffer = ExAllocatePoolWithTag(PoolType, Length, TAG_USTR);
    if (UniDest->Buffer == NULL)
       return FALSE;
@@ -2363,7 +2363,7 @@ RtlDowncaseUnicodeString(
              UniDest,
              UniSource,
              AllocateDestinationString,
-             NonPagedPool);
+             PagedPool);
 }
 
 
@@ -2473,7 +2473,7 @@ RtlAnsiStringToUnicodeString(
              UniDest,
              AnsiSource,
              AllocateDestinationString,
-             NonPagedPool);
+             PagedPool);
 }
 
 
@@ -2664,7 +2664,7 @@ RtlDuplicateUnicodeString(
             AddNull,
             SourceString,
             DestinationString,
-            NonPagedPool);
+            PagedPool);
 }
 
 

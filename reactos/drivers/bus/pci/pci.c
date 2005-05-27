@@ -172,7 +172,7 @@ DriverEntry(
   IN PDRIVER_OBJECT DriverObject,
   IN PUNICODE_STRING RegistryPath)
 {
-  DbgPrint("Peripheral Component Interconnect Bus Driver\n");
+  DPRINT("Peripheral Component Interconnect Bus Driver\n");
 
   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = PciDispatchDeviceControl;
   DriverObject->MajorFunction[IRP_MJ_PNP] = PciPnpControl;

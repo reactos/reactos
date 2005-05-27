@@ -37,6 +37,7 @@ KdpServiceDispatcher(ULONG Service,
             Result = KdpPrintString ((PANSI_STRING)Context1);
             break;
 
+#ifdef DBG
         case TAG('R', 'o', 's', ' '): /* ROS-INTERNAL */
         {
             switch ((ULONG)Context1)
@@ -77,7 +78,7 @@ KdpServiceDispatcher(ULONG Service,
                     break;
             }
         }
-
+#endif
         default:
             HalDisplayString ("Invalid debug service call!\n");
             break;

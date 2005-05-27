@@ -50,6 +50,9 @@ typedef struct _PDO_DEVICE_EXTENSION
   // Resource list
   PCM_RESOURCE_LIST ResourceList;
   ULONG ResourceListSize;
+  // Requirement list
+  PIO_RESOURCE_REQUIREMENTS_LIST ResourceRequirementsList;
+  ULONG ResourceRequirementsListSize;
 } PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
 

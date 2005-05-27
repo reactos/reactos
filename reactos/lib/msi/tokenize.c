@@ -346,7 +346,10 @@ int sqliteGetToken(const WCHAR *z, int *tokenType){
         }
       }
       if( z[i] ) i++;
-      *tokenType = TK_STRING;
+      if( delim == '`' )
+        *tokenType = TK_ID;
+      else
+        *tokenType = TK_STRING;
       return i;
     }
     case '.': {

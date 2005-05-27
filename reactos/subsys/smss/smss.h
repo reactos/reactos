@@ -6,11 +6,8 @@
 #include <sm/api.h>
 #include <sm/helper.h>
 
-#define CHILD_CSRSS     0
-#define CHILD_WINLOGON  1
-
 /* smss.c */
-extern HANDLE SmSsProcessId;
+extern ULONG SmSsProcessId;
 
 /* init.c */
 NTSTATUS InitSessionManager(VOID);
@@ -63,8 +60,7 @@ NTSTATUS STDCALL SmCreateUserProcess(LPWSTR ImagePath,
 				     LPWSTR CommandLine,
 				     BOOLEAN WaitForIt,
 				     PLARGE_INTEGER Timeout OPTIONAL,
-				     BOOLEAN TerminateIt,
-				     PRTL_PROCESS_INFO ProcessInfo OPTIONAL);
+				     PRTL_PROCESS_INFO UserProcessInfo OPTIONAL);
 NTSTATUS STDCALL
 SmLookupSubsystem (IN     PWSTR   Name,
 		   IN OUT PWSTR   Data,
@@ -80,22 +76,30 @@ NTSTATUS FASTCALL SmCompSes(PSM_PORT_MESSAGE);
 NTSTATUS FASTCALL SmQryInfo(PSM_PORT_MESSAGE);
 
 /* client.c */
+#define SM_CLIENT_FLAG_CANDIDATE   0x8000
+#define SM_CLIENT_FLAG_INITIALIZED 0x0001
+#define SM_CLIENT_FLAG_REQUIRED    0x0002
 typedef struct _SM_CLIENT_DATA
 {
-	USHORT	SubsystemId;
-	BOOL	Initialized;
-	HANDLE	ServerProcess;
-	HANDLE	ApiPort;
-	HANDLE	ApiPortThread;
-	HANDLE	SbApiPort;
-	WCHAR	SbApiPortName [SM_SB_NAME_MAX_LENGTH];
-	struct _SM_CLIENT_DATA * Next;
+  RTL_CRITICAL_SECTION  Lock;
+  WCHAR                 ProgramName [SM_SB_NAME_MAX_LENGTH];
+  USHORT                SubsystemId;
+  WORD                  Flags;
+  WORD                  Unused;
+  ULONG                 ServerProcessId;
+  HANDLE	        ServerProcess;
+  HANDLE	        ApiPort;
+  HANDLE	        ApiPortThread;
+  HANDLE	        SbApiPort;
+  WCHAR	                SbApiPortName [SM_SB_NAME_MAX_LENGTH];
+  struct _SM_CLIENT_DATA * Next;
 
 } SM_CLIENT_DATA, *PSM_CLIENT_DATA;
-NTSTATUS SmInitializeClientManagement(VOID);
-NTSTATUS STDCALL SmCreateClient(PSM_PORT_MESSAGE,PSM_CLIENT_DATA*);
-NTSTATUS STDCALL SmDestroyClient(ULONG);
-NTSTATUS STDCALL SmCompleteClientInitialization (HANDLE hProcess);
+NTSTATUS SmInitializeClientManagement (VOID);
+NTSTATUS STDCALL SmCreateClient (PRTL_PROCESS_INFO,PWSTR);
+NTSTATUS STDCALL SmDestroyClient (ULONG);
+NTSTATUS STDCALL SmBeginClientInitialization (PSM_PORT_MESSAGE,PSM_CLIENT_DATA*);
+NTSTATUS STDCALL SmCompleteClientInitialization (ULONG);
 NTSTATUS FASTCALL SmGetClientBasicInformation (PSM_BASIC_INFORMATION);
 NTSTATUS FASTCALL SmGetSubSystemInformation (PSM_SUBSYSTEM_INFORMATION);
 

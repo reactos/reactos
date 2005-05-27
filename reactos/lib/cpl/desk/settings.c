@@ -62,14 +62,18 @@ UpdateDisplay(IN HWND hwndDlg)
 	LoadString(hApplet, IDS_PIXEL, Pixel, sizeof(Pixel) / sizeof(TCHAR));
 	_stprintf(Buffer, Pixel, CurrentDisplayDevice->CurrentSettings->dmPelsWidth, CurrentDisplayDevice->CurrentSettings->dmPelsHeight, Pixel);
 	SendDlgItemMessage(hwndDlg, IDC_SETTINGS_RESOLUTION_TEXT, WM_SETTEXT, 0, (LPARAM)Buffer);
-	
+		
+
 	for (index = 0; index < CurrentDisplayDevice->ResolutionsCount; index++)
+	{		
+
 		if (CurrentDisplayDevice->Resolutions[index].dmPelsWidth == CurrentDisplayDevice->CurrentSettings->dmPelsWidth &&
 		    CurrentDisplayDevice->Resolutions[index].dmPelsHeight == CurrentDisplayDevice->CurrentSettings->dmPelsHeight)
 		{
 			SendDlgItemMessage(hwndDlg, IDC_SETTINGS_RESOLUTION, TBM_SETPOS, TRUE, index);
 			break;
 		}
+	}
 	if (LoadString(hApplet, (2900 + CurrentDisplayDevice->CurrentSettings->dmBitsPerPel), Buffer, sizeof(Buffer) / sizeof(TCHAR))) 
 		SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_SELECTSTRING, -1, (LPARAM)Buffer);
 }
@@ -84,7 +88,7 @@ GetPossibleSettings(IN LPTSTR DeviceName, OUT DWORD* pSettingsCount, OUT PSETTIN
 	PSETTINGS_ENTRY Settings = NULL;
 	HDC hDC;
 	PSETTINGS_ENTRY Current;
-	DWORD bpp, xres, yres;
+	DWORD bpp, xres, yres, checkbpp;
 	
 	/* Get current settings */
 	*CurrentSettings = NULL;
@@ -101,13 +105,16 @@ GetPossibleSettings(IN LPTSTR DeviceName, OUT DWORD* pSettingsCount, OUT PSETTIN
 	while (EnumDisplaySettingsEx(DeviceName, iMode, &devmode, dwFlags))
 	{
 	
+		if (devmode.dmBitsPerPel==8 || devmode.dmBitsPerPel==16 || devmode.dmBitsPerPel==24 || devmode.dmBitsPerPel==32) checkbpp=1;
+		else checkbpp=0;
+
 		if (devmode.dmPelsWidth < 640 ||
-			devmode.dmPelsHeight < 480)
+			devmode.dmPelsHeight < 480 || checkbpp == 0)
 		{
  			iMode++;
  			continue;
 		}
-
+		
 		Current = HeapAlloc(GetProcessHeap(), 0, sizeof(SETTINGS_ENTRY));
 		if (Current != NULL)
 		{

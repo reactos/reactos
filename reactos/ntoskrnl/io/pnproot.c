@@ -671,7 +671,7 @@ PnpRootQueryBusRelations(
         /* FIXME: */
       }
 
-      DPRINT1("DeviceID: %wZ  PDO %p\n",
+      DPRINT("DeviceID: %wZ  PDO %p\n",
         &PdoDeviceExtension->DeviceID,
         Device->Pdo);
 
@@ -684,7 +684,7 @@ PnpRootQueryBusRelations(
         /* FIXME: */
       }
 
-      DPRINT1("InstanceID: %wZ  PDO %p\n",
+      DPRINT("InstanceID: %wZ  PDO %p\n",
         &PdoDeviceExtension->InstanceID,
         Device->Pdo);
     }

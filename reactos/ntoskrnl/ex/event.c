@@ -39,7 +39,7 @@ ExpInitializeEventImplementation(VOID)
   OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
   UNICODE_STRING Name;
 
-  DPRINT1("Creating Event Object Type\n");
+  DPRINT("Creating Event Object Type\n");
   
   /* Create the Event Object Type */
   RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));

@@ -6,8 +6,13 @@
 
 #include <ddk/ntddk.h>
 #include <debug.h>
-#include "../linux/linux_wrapper.h"
+
+// config and include core/hcd.h, for hc_device struct
+#include "../usb_wrapper.h"
+#include "../core/hcd.h"
+
 #include "../host/ohci_main.h"
+
 
 // declare basic init funcs
 void init_wrapper(struct pci_dev *probe_dev);
@@ -16,14 +21,12 @@ void uhci_hcd_cleanup(void);
 int STDCALL usb_init(void);
 void STDCALL usb_exit(void);
 extern struct pci_driver uhci_pci_driver;
-extern const struct pci_device_id uhci_pci_ids[];
-
+extern struct pci_device_id uhci_pci_ids[];
 
 
 // This should be removed, but for testing purposes it's here
 struct pci_dev *dev;
 //struct pci_device_id *dev_id;
-
 
 #define USB_UHCI_TAG TAG('u','s','b','u')
 
@@ -133,7 +136,7 @@ NTSTATUS InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 	dev = ExAllocatePoolWithTag(PagedPool, sizeof(struct pci_dev), USB_UHCI_TAG);
 	
 	init_wrapper(dev);
-	dev->irq = DeviceExtension->InterruptLevel;
+	dev->irq = DeviceExtension->InterruptVector;
 	dev->dev_ext = (PVOID)DeviceExtension;
 	dev->slot_name = ExAllocatePoolWithTag(NonPagedPool, 128, USB_UHCI_TAG); // 128 max len for slot name
 
@@ -208,6 +211,9 @@ OHCD_PnPStartDevice(IN PDEVICE_OBJECT DeviceObject,
 				FullList->BusNumber	== DeviceExtension->SystemIoBusNumber &&
 				1 == FullList->PartialResourceList.Version &&
 				1 == FullList->PartialResourceList.Revision);*/
+			DPRINT1("AllocRess->Count: %d, PartResList.Count: %d\n",
+					AllocatedResources->Count, FullList->PartialResourceList.Count);
+
 			for	(Descriptor	= FullList->PartialResourceList.PartialDescriptors;
 				Descriptor < FullList->PartialResourceList.PartialDescriptors +	FullList->PartialResourceList.Count;
 				Descriptor++)
@@ -216,18 +222,40 @@ OHCD_PnPStartDevice(IN PDEVICE_OBJECT DeviceObject,
 				{
 					DeviceExtension->InterruptLevel	= Descriptor->u.Interrupt.Level;
 					DeviceExtension->InterruptVector = Descriptor->u.Interrupt.Vector;
+
+	                DPRINT1("Interrupt level: 0x%x Interrupt	Vector:	0x%x\n",
+                                 DeviceExtension->InterruptLevel,
+                                 DeviceExtension->InterruptVector);
 				}
-				else if (Descriptor->Type ==	CmResourceTypeMemory)
+				else if (Descriptor->Type == CmResourceTypePort)
+				{
+					DeviceExtension->BaseAddress	= Descriptor->u.Port.Start;
+					DeviceExtension->BaseAddrLength = Descriptor->u.Port.Length;
+					DeviceExtension->Flags          = Descriptor->Flags;
+
+					((struct hc_driver *)uhci_pci_ids->driver_data)->flags &= ~HCD_MEMORY;
+					
+     				DPRINT1("I/O resource: start=0x%x, length=0x%x\n",
+                                 DeviceExtension->BaseAddress.u.LowPart, DeviceExtension->BaseAddrLength);
+				}
+				else if (Descriptor->Type == CmResourceTypeMemory)
 				{
 					DeviceExtension->BaseAddress	= Descriptor->u.Memory.Start;
 					DeviceExtension->BaseAddrLength = Descriptor->u.Memory.Length;
+					DeviceExtension->Flags          = Descriptor->Flags;
+
+					((struct hc_driver *)uhci_pci_ids->driver_data)->flags |= HCD_MEMORY;
+					
+     				DPRINT1("Memory resource: start=0x%x, length=0x%x\n",
+                                 DeviceExtension->BaseAddress.u.LowPart, DeviceExtension->BaseAddrLength);
 				}
+				else
+     				DPRINT1("Get resource type: %d, Generic start=0x%x Generic length=0x%x\n",
+	     				Descriptor->Type, Descriptor->u.Generic.Start.u.LowPart, Descriptor->u.Generic.Length);
+				
 			}
 		}
 	}
-	DPRINT1("Interrupt level: 0x%x Interrupt	Vector:	0x%x\n",
-		DeviceExtension->InterruptLevel,
-		DeviceExtension->InterruptVector);
 
 	/*
 	* Init wrapper with this object

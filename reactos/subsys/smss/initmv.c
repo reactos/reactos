@@ -1,4 +1,4 @@
-/* $Id: init.c 13449 2005-02-06 21:55:07Z ea $
+/* $Id$
  *
  * initmv.c - Process the file rename list
  * 
@@ -23,6 +23,7 @@
  *
  * --------------------------------------------------------------------
  */
+ 
 
 #include "smss.h"
 
@@ -35,6 +36,13 @@ SmProcessFileRenameList(VOID)
   DPRINT("SmProcessFileRenameList() called\n");
 
   /* FIXME: implement it! */
+/*
+ * open HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\FileRenameOperations
+ * for each item in its value
+ *     clone the old file in the new name,
+ *     delete the source.
+ *
+ */
 
   DPRINT("SmProcessFileRenameList() done\n");
 

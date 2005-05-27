@@ -26,6 +26,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <tchar.h>
+#include "resource.h"
 
 #define NTOS_MODE_USER
 #include <ntos.h>
@@ -39,10 +41,10 @@ HANDLE hSmApiPort = (HANDLE) 0;
 
 typedef struct _SM_CMD_DESCRIPTOR
 {
-	const char * Name;
-	int (*EntryPoint)(int,char**);
-	const char * Synopsis;
-	const char * Description;
+	TCHAR Name[RC_STRING_MAX_SIZE];
+	int (*EntryPoint)(int,TCHAR**);
+	TCHAR Synopsis[RC_STRING_MAX_SIZE];
+	TCHAR Description[RC_STRING_MAX_SIZE];
 	
 } SM_CMD_DESCRIPTOR, *PSM_CMD_DESCRIPTOR;
 
@@ -55,16 +57,19 @@ SM_CMD_DECL(shutdown);
 /* internal commands directory */
 SM_CMD_DESCRIPTOR Command [] =
 {
-	{"boot",     SM_CMD(boot),     "boot subsystem_name",   "bootstrap an optional environment subsystem;"},
-	{"help",     SM_CMD(help),     "help [command]",        "print help for command;"},
-	{"info",     SM_CMD(info),     "info [subsystem_id]",   "print information about a booted subsystem\n"
+	{"boot",     SM_CMD(boot),     _T("boot subsystem_name"),   _T("bootstrap an optional environment subsystem;")},
+	{"help",     SM_CMD(help),     _T("help [command]"),        _T("print help for command;")},
+	{"info",     SM_CMD(info),     _T("info [subsystem_id]"),   _T("print information about a booted subsystem\n"
 							        "if subsystem_id is omitted, a list of booted\n"
-							        "environment subsystems is printed."},
-	{"reboot",   SM_CMD(reboot),   "reboot subsystem_id",   "reboot an optional environment subsystem;"},
-	{"shutdown", SM_CMD(shutdown), "shutdown subsystem_id", "shutdown an optional environment subsystem;"},
+							        "environment subsystems is printed.")},
+	{"reboot",   SM_CMD(reboot),   _T("reboot subsystem_id"),   _T("reboot an optional environment subsystem;")},
+	{"shutdown", SM_CMD(shutdown), _T("shutdown subsystem_id"), _T("shutdown an optional environment subsystem;")},
 };
 
-PSM_CMD_DESCRIPTOR LookupCommand (const char * CommandName)
+TCHAR UsageMessage[RC_STRING_MAX_SIZE];
+void loadlang(PSM_CMD_DESCRIPTOR );
+
+PSM_CMD_DESCRIPTOR LookupCommand (const TCHAR * CommandName)
 {
 	int i;
 	const int command_count = (sizeof Command / sizeof Command[0]);
@@ -73,14 +78,16 @@ PSM_CMD_DESCRIPTOR LookupCommand (const char * CommandName)
 
 	for (i=0; (i < command_count); i ++)
 	{
-		if (0 == strcmp(CommandName, Command[i].Name))
+		if (0 == _tcscmp(CommandName, Command[i].Name))
 		{
 			break;
 		}
 	}
 	if (i == command_count)
 	{
-		fprintf(stderr, "Unknown command '%s'.\n", CommandName);
+		LoadString( GetModuleHandle(NULL), IDS_Unknown, (LPTSTR) UsageMessage,RC_STRING_MAX_SIZE);
+
+		_ftprintf(stderr, _T("%s '%s'.\n"), UsageMessage, CommandName);
 		return NULL;
 	}
 	return & Command [i];
@@ -97,18 +104,26 @@ SM_CMD_DECL(boot)
 
 	if (3 == argc)
 	{
+#ifndef _UNICODE
 		RtlInitAnsiString (& ProgramA, argv[2]);
 		RtlAnsiStringToUnicodeString (& ProgramW, & ProgramA, TRUE);
 		Status = SmExecuteProgram (hSmApiPort, & ProgramW);
 		RtlFreeUnicodeString (& ProgramW);
+#else
+		ProgramW = &argv[2];      
+		Status = SmExecuteProgram (hSmApiPort, & ProgramW);		
+#endif
 		if (STATUS_SUCCESS != Status)
 		{
-			printf ("Status 0x%08lx\n", Status);
+			LoadString( GetModuleHandle(NULL), IDS_Status, (LPTSTR) UsageMessage,RC_STRING_MAX_SIZE);
+
+			_tprintf(UsageMessage, Status);
 		}
+
 	}
 	else
 	{
-		argv[2]="boot";
+		argv[2]=_T("boot");
 		return SM_CMD_CALL(help,3,argv);
 	}
 	return rc;
@@ -125,7 +140,7 @@ SM_CMD_DECL(help)
 	case 2:
 		for (i=0; (i < (sizeof Command / sizeof Command[0])); i ++)
 		{
-			printf("%s\n", Command[i].Synopsis);
+			_tprintf(_T("%s\n"), Command[i].Synopsis);
 		}
 		break;
 	case 3:
@@ -135,7 +150,7 @@ SM_CMD_DECL(help)
 			rc = EXIT_FAILURE;
 			break;
 		}
-		printf("%s\n%s\n\n%s\n",
+		_tprintf(_T("%s\n%s\n\n%s\n"),
 			cmd->Name,
 			cmd->Synopsis,
 			cmd->Description);
@@ -180,27 +195,29 @@ SM_CMD_DECL(info)
 				     & ReturnDataLength);
 	if (STATUS_SUCCESS != Status)
 	{
-		printf ("Status 0x%08lx\n", Status);
+		LoadString( GetModuleHandle(NULL), IDS_Status, (LPTSTR) UsageMessage,RC_STRING_MAX_SIZE);
+		_tprintf(UsageMessage, Status);
 		return EXIT_FAILURE;
 	}
 	switch (argc)
 	{
 	case 2:
-		printf ("SM SubSystem Directory\n\n");
-		printf ("SSID PID      Flags\n");
-		printf ("---- -------- ------------\n");
+        LoadString( GetModuleHandle(NULL), IDS_SM1, (LPTSTR) UsageMessage,RC_STRING_MAX_SIZE);		
+		_tprintf(UsageMessage);
+        
+		LoadString( GetModuleHandle(NULL), IDS_SM2, (LPTSTR) UsageMessage,RC_STRING_MAX_SIZE);		
 		for (i = 0; i < Info.bi.SubSystemCount; i ++)
 		{
-			printf ("%04x %08lx %04x\n",
+			_tprintf(UsageMessage,
 				Info.bi.SubSystem[i].Id,
 		       		Info.bi.SubSystem[i].ProcessId,
 				Info.bi.SubSystem[i].Flags);
 		}
 		break;
 	case 3:
-		printf  ("SubSystem ID: %d\n",   Info.ssi.SubSystemId);
-		printf  ("       Flags: %04x\n", Info.ssi.Flags);
-		printf  ("  Process ID: %ld\n",  Info.ssi.ProcessId);
+        LoadString( GetModuleHandle(NULL), IDS_ID, (LPTSTR) UsageMessage,RC_STRING_MAX_SIZE);		
+		
+		_tprintf  (UsageMessage, Info.ssi.SubSystemId, Info.ssi.Flags,  Info.ssi.ProcessId);
 		wprintf(L"  NSRootNode: '%s'\n", Info.ssi.NameSpaceRootNode);
 		break;
 	default:
@@ -212,8 +229,10 @@ SM_CMD_DECL(info)
 SM_CMD_DECL(shutdown)
 {
 	int rc = EXIT_SUCCESS;
-	
-	fprintf(stderr,"not implemented\n");
+
+	LoadString( GetModuleHandle(NULL), IDS_Not_Imp, (LPTSTR) UsageMessage,RC_STRING_MAX_SIZE);		
+ 	
+	_ftprintf(stderr,UsageMessage);
 	return rc;
 }
 
@@ -228,19 +247,18 @@ SM_CMD_DECL(reboot)
 }
 
 /* print command's synopsys */
-int print_synopsys (int argc, char *argv[])
+int print_synopsys (int argc, TCHAR *argv[])
 {
-	fprintf (stderr, "ReactOS/Win32 Session Manager Control Tool\n\n");
-	printf ("Usage:\n"
-		"\tsm\n"
-		"\tsm help [command]\n"
-		"\tsm command [arguments]\n\n"
-		"'sm help' will print the list of valid commands.\n");
+	LoadString( GetModuleHandle(NULL), IDS_Mangers, (LPTSTR) UsageMessage,RC_STRING_MAX_SIZE);
+	_ftprintf (stderr, UsageMessage);
+
+	LoadString( GetModuleHandle(NULL), IDS_USING, (LPTSTR) UsageMessage,RC_STRING_MAX_SIZE);	
+	_tprintf (UsageMessage);
 	return EXIT_SUCCESS;
 }
 
 /* parse and execute */
-int pande (int argc, char *argv[])
+int pande (int argc, TCHAR *argv[])
 {
 	PSM_CMD_DESCRIPTOR Command = NULL;
 	NTSTATUS Status = STATUS_SUCCESS;
@@ -258,12 +276,26 @@ int pande (int argc, char *argv[])
 		/* ...and execute it */
 		return Command->EntryPoint (argc, argv);
 	}
-	fprintf (stderr, "Failed to connect to the Session Manager! (Status=0x%08lx)\n", Status);
+    LoadString( GetModuleHandle(NULL), IDS_FAILS_MNG, (LPTSTR) UsageMessage,RC_STRING_MAX_SIZE);		
+	_ftprintf (stderr, UsageMessage, Status);
+
 	return EXIT_FAILURE;
 }
 
-int main (int argc, char *argv[])
+void loadlang(PSM_CMD_DESCRIPTOR cmd)
 {
+ int i=0;
+ if (cmd==NULL) return;
+  for (i=0;i < 5; i++)
+  {
+	LoadString( GetModuleHandle(NULL), IDS_boot+i, (LPTSTR) &cmd->Synopsis[i],RC_STRING_MAX_SIZE);
+  }
+}
+
+int _tmain (int argc, TCHAR *argv[])
+{ 
+   loadlang(Command);
+
 	return (1==argc)
 		? print_synopsys (argc, argv)
 		: pande (argc, argv);
