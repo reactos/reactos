@@ -31,6 +31,9 @@ static HPALETTE hPrimaryPalette = 0; // used for WM_PALETTECHANGED
 #endif
 //static HPALETTE hLastRealizedPalette = 0; // UnrealizeObject() needs it
 
+
+static UINT SystemPaletteUse = SYSPAL_STATIC;  /* currently not considered */
+
 const PALETTEENTRY COLOR_sysPalTemplate[NB_RESERVED_COLORS] =
 {
   // first 10 entries in the system palette
@@ -286,9 +289,8 @@ UINT STDCALL NtGdiGetSystemPaletteEntries(HDC  hDC,
 }
 
 UINT STDCALL NtGdiGetSystemPaletteUse(HDC  hDC)
-{
-  DPRINT1("NtGdiGetSystemPaletteUse is unimplemented\n");
-  return 0;
+{  
+  return SystemPaletteUse;
 }
 
 /*!
@@ -520,8 +522,27 @@ UINT STDCALL NtGdiSetPaletteEntries(HPALETTE  hpal,
 UINT STDCALL
 NtGdiSetSystemPaletteUse(HDC hDC, UINT Usage)
 {
-   UNIMPLEMENTED;
-   return 0;
+    UINT old = SystemPaletteUse;
+
+    /* Device doesn't support colour palettes */
+    if (!(NtGdiGetDeviceCaps(hDC, RASTERCAPS) & RC_PALETTE)) {
+        return SYSPAL_ERROR;
+    }
+
+    switch (Usage) 
+	{
+		case SYSPAL_NOSTATIC:
+        case SYSPAL_NOSTATIC256:       
+        case SYSPAL_STATIC:
+				SystemPaletteUse = Usage;				
+				break;
+
+        default:
+				old=SYSPAL_ERROR;
+				break;
+	}
+
+ return old;
 }
 
 BOOL STDCALL
