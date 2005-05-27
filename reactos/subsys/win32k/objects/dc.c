@@ -2506,8 +2506,8 @@ IntChangeDisplaySettings(
   BOOLEAN NoReset = FALSE;
   BOOLEAN Reset = FALSE;
   BOOLEAN SetPrimary = FALSE;
-  LONG Ret;
-  NTSTATUS Status;
+  LONG Ret=0;
+  NTSTATUS Status ;
 
   DPRINT1("display flag : %x\n",dwflags);
 
