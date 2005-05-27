@@ -8,7 +8,7 @@ TARGET_NAME = isapnp
 
 TARGET_OBJECTS = isapnp.o
 
-TARGET_CFLAGS = -Werror -Wall
+TARGET_CFLAGS = -D__USE_W32API -Werror -Wall
 
 include $(PATH_TO_TOP)/rules.mak
 
