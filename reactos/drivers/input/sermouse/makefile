@@ -9,7 +9,7 @@ TARGET_NAME = sermouse
 TARGET_OBJECTS = \
   sermouse.o
 
-TARGET_CFLAGS = -Wall -Werror
+TARGET_CFLAGS = -D__USE_W32API -Wall -Werror
 
 #mouse.o - Old Serial mouse driver
 

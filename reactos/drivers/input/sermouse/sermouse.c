@@ -10,6 +10,7 @@
 
 /* INCLUDES *****************************************************************/
 
+#include <stdio.h>
 #include <ddk/ntddk.h>
 #include <ddk/ntddmou.h>
 
