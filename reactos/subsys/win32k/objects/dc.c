@@ -2298,8 +2298,8 @@ IntEnumDisplaySettings(
   INT Size, OldSize;
   ULONG DisplayNumber = 0; /* only default display supported */
 
-  DPRINT1("DevMode->dmSize = %d\n", pDevMode->dmSize);
-  DPRINT1("DevMode->dmExtraSize = %d\n", pDevMode->dmDriverExtra);
+  DPRINT("DevMode->dmSize = %d\n", pDevMode->dmSize);
+  DPRINT("DevMode->dmExtraSize = %d\n", pDevMode->dmDriverExtra);
   if (pDevMode->dmSize != SIZEOF_DEVMODEW_300 &&
       pDevMode->dmSize != SIZEOF_DEVMODEW_400 &&
       pDevMode->dmSize != SIZEOF_DEVMODEW_500)
