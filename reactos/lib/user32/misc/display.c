@@ -255,8 +255,6 @@ EnumDisplaySettingsExW(
 
   rc = NtUserEnumDisplaySettings ( &DeviceName, iModeNum, lpDevMode, dwFlags );
 
-  RtlFreeUnicodeString ( &DeviceName );
-
   return rc;
 }
 
