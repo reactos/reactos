@@ -1,0 +1,6 @@
+<directory name="hal">
+	<xi:include href="hal/hal.xml" />
+</directory>
+<directory name="halx86">
+	<xi:include href="halx86/directory.xml" />
+</directory>

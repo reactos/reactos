@@ -206,7 +206,7 @@ CopyKey (HKEY hDstKey,
 	      return FALSE;
 	    }
 
-	  if (RegSetValueEx (hDstKey,
+	  if (RegSetValueExW (hDstKey,
 			     lpNameBuffer,
 			     0,
 			     dwType,

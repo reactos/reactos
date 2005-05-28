@@ -577,7 +577,7 @@ void write_bin_files(void)
 
   for (lbp = lanblockhead; lbp; lbp = lbp->next)
     {
-      unsigned offs = 4 * (lbp->nblk * 3 + 1); 
+      unsigned offs = 4 * (lbp->nblk * 3 + 1);
 
       char *cptr = NULL;
       for(i = 0; i < ntab; i++)

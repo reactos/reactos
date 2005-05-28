@@ -181,7 +181,7 @@ int wscanf(const wchar_t *format, ...)
 /*********************************************************************
  *		sscanf (MSVCRT.@)
  */
-int sscanf(const char *str, const char *format, ...)
+int crt_sscanf(const char *str, const char *format, ...)
 {
     va_list valist;
     int res;

@@ -176,7 +176,7 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
             break;
         case REG_MULTI_SZ:
             {
-              LPTSTR src, str, cursrc;
+              LPTSTR src, str;
               if(dwCount >= 2)
               {
 	          src = (LPTSTR)ValBuf;
@@ -374,17 +374,6 @@ static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSor
     return g_invertSort ? _tcscmp(r->name, l->name) : _tcscmp(l->name, r->name);
 }
 
-static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    switch (LOWORD(wParam)) {
-        /*    case ID_FILE_OPEN: */
-        /*        break; */
-    default:
-        return FALSE;
-    }
-    return TRUE;
-}
-
 BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
 {
     NMLVDISPINFO* Info;
@@ -445,7 +434,6 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
                 }
                 else
                 {
-                  LONG ret;
 		  //if((ret = RenameValue(lineinfo->name, Info->item.pszText)) != ERROR_SUCCESS)
                   {
 		    TCHAR msg[128], caption[128];

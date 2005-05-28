@@ -34,7 +34,7 @@ static long _GetSizeOfFile(FILEHANDLE handle)
 #define ReadFileData(handle, buffer, size, bytesread) _ReadFileData(handle, buffer, size, bytesread)
 static bool _ReadFileData(FILEHANDLE handle, void* buffer, unsigned long size, unsigned long* bytesread)
 {
-    return ReadFile(handle, buffer, size, bytesread, NULL);
+    return ReadFile(handle, buffer, size, bytesread, NULL) != 0;
 }
 #else
 #define GetSizeOfFile(handle) _GetSizeOfFile(handle)
@@ -70,7 +70,7 @@ void DumpBuffer(void* Buffer, unsigned long Size)
         0,                              // No sharing
         NULL,                           // No security
         CREATE_ALWAYS,                  // Create or overwrite
-        FILE_ATTRIBUTE_NORMAL,          // Normal file 
+        FILE_ATTRIBUTE_NORMAL,          // Normal file
         NULL);                          // No attribute template
     if (FileHandle == INVALID_HANDLE_VALUE) {
         DPRINT(MID_TRACE, ("ERROR OPENING '%d'.\n", (unsigned int)GetLastError()));
@@ -143,7 +143,7 @@ unsigned long CCFDATAStorage::Create(char* FileName)
     if ((FileHandle = tmpfile()) == NULL)
         return CAB_STATUS_CANNOT_CREATE;
 		/*
-    FileHandle = fopen(FullName, "w+b"); 
+    FileHandle = fopen(FullName, "w+b");
     if (FileHandle == NULL) {
         DPRINT(MID_TRACE, ("ERROR '%d'.\n", (unsigned int)errno));
         return CAB_STATUS_CANNOT_CREATE;
@@ -297,9 +297,15 @@ CCabinet::CCabinet()
  * FUNCTION: Default constructor
  */
 {
+    *CabinetName = '\0';
+    *CabinetPrev = '\0';
+    *DiskPrev = '\0';
+    *CabinetNext = '\0';
+    *DiskNext = '\0';
+    *DestPath = '\0';
+    *CabinetReservedFile = '\0';
+
     FileOpen = false;
-    strcpy(DestPath, "");
-    strcpy(CabinetReservedFile, "");
     CabinetReservedFileBuffer = NULL;
     CabinetReservedFileSize = 0;
 
@@ -521,19 +527,18 @@ bool CCabinet::SetCabinetReservedFile(char* FileName)
 
 #if defined(WIN32)
     FileHandle = CreateFile(ConvertPath(FileName, true),  // Open this file
-        GENERIC_READ,                    // Open for reading 
-        FILE_SHARE_READ,                 // Share for reading 
-        NULL,                            // No security 
-        OPEN_EXISTING,                   // Existing file only 
-        FILE_ATTRIBUTE_NORMAL,           // Normal file 
-        NULL);                           // No attribute template 
+        GENERIC_READ,                    // Open for reading
+        FILE_SHARE_READ,                 // Share for reading
+        NULL,                            // No security
+        OPEN_EXISTING,                   // Existing file only
+        FILE_ATTRIBUTE_NORMAL,           // Normal file
+        NULL);                           // No attribute template
     if (FileHandle == INVALID_HANDLE_VALUE) {
         DPRINT(MID_TRACE, ("Cannot open cabinet reserved file.\n"));
         return false;
     }
 #else /* !WIN32 */
-    
-    FileHandle = fopen(ConvertPath(FileName, true), "rb"); 
+    FileHandle = fopen(ConvertPath(FileName, true), "rb");
     if (FileHandle == NULL) {
         DPRINT(MID_TRACE, ("Cannot open cabinet reserved file.\n"));
         return false;
@@ -614,19 +619,19 @@ unsigned long CCabinet::Open()
 
 #if defined(WIN32)
         FileHandle = CreateFile(CabinetName, // Open this file
-            GENERIC_READ,                    // Open for reading 
-            FILE_SHARE_READ,                 // Share for reading 
-            NULL,                            // No security 
-            OPEN_EXISTING,                   // Existing file only 
-            FILE_ATTRIBUTE_NORMAL,           // Normal file 
-            NULL);                           // No attribute template 
- 
+            GENERIC_READ,                    // Open for reading
+            FILE_SHARE_READ,                 // Share for reading
+            NULL,                            // No security
+            OPEN_EXISTING,                   // Existing file only
+            FILE_ATTRIBUTE_NORMAL,           // Normal file
+            NULL);                           // No attribute template
+
         if (FileHandle == INVALID_HANDLE_VALUE) {
             DPRINT(MID_TRACE, ("Cannot open file.\n"));
             return CAB_STATUS_CANNOT_OPEN;
         }
 #else /* !WIN32 */
-        FileHandle = fopen(CabinetName, "rb"); 
+        FileHandle = fopen(CabinetName, "rb");
         if (FileHandle == NULL) {
             DPRINT(MID_TRACE, ("Cannot open file.\n"));
             return CAB_STATUS_CANNOT_OPEN;
@@ -694,7 +699,7 @@ unsigned long CCabinet::Open()
             strcpy(CabinetPrev, "");
             strcpy(DiskPrev,    "");
         }
-  
+
         if ((CABHeader.Flags & CAB_FLAG_HASNEXT) > 0) {
             /* Read name of next cabinet */
             Status = ReadString(CabinetNext, 256);
@@ -818,7 +823,7 @@ unsigned long CCabinet::FindNext(PCAB_SEARCH Search)
             OnDiskChange(CabinetNext, DiskNext);
 
             Status = Open();
-            if (Status != CAB_STATUS_SUCCESS) 
+            if (Status != CAB_STATUS_SUCCESS)
                 return Status;
 
             Search->Next = FileListHead;
@@ -925,7 +930,7 @@ unsigned long CCabinet::ExtractFile(char* FileName)
         }
     }
 #else /* !WIN32 */
-    DestFile = fopen(DestName, "rb"); 
+    DestFile = fopen(DestName, "rb");
     if (DestFile != NULL) {
         fclose(DestFile);
         /* If file exists, ask to overwrite file */
@@ -961,7 +966,7 @@ unsigned long CCabinet::ExtractFile(char* FileName)
     if (!Buffer) {
         CloseFile(DestFile);
         DPRINT(MIN_TRACE, ("Insufficient memory.\n"));
-        return CAB_STATUS_NOMEMORY; 
+        return CAB_STATUS_NOMEMORY;
     }
 
     /* Call OnExtract event handler */
@@ -1007,7 +1012,7 @@ unsigned long CCabinet::ExtractFile(char* FileName)
                 do {
                     DPRINT(MAX_TRACE, ("Size (%lu bytes).\n", Size));
 
-                    if (((Status = ReadBlock(&CFData, sizeof(CFDATA), &BytesRead)) != 
+                    if (((Status = ReadBlock(&CFData, sizeof(CFDATA), &BytesRead)) !=
                         CAB_STATUS_SUCCESS) || (BytesRead != sizeof(CFDATA))) {
                         CloseFile(DestFile);
                         FreeMemory(Buffer);
@@ -1027,7 +1032,7 @@ unsigned long CCabinet::ExtractFile(char* FileName)
 					DPRINT(MAX_TRACE, ("Read: (0x%lX,0x%lX).\n",
 						(long unsigned int)CurrentBuffer, (long unsigned int)Buffer));
 
-                    if (((Status = ReadBlock(CurrentBuffer, BytesToRead, &BytesRead)) != 
+                    if (((Status = ReadBlock(CurrentBuffer, BytesToRead, &BytesRead)) !=
                         CAB_STATUS_SUCCESS) || (BytesToRead != BytesRead)) {
                         CloseFile(DestFile);
                         FreeMemory(Buffer);
@@ -1068,7 +1073,7 @@ unsigned long CCabinet::ExtractFile(char* FileName)
                         OnDiskChange(CabinetNext, DiskNext);
 
                         Status = Open();
-                        if (Status != CAB_STATUS_SUCCESS) 
+                        if (Status != CAB_STATUS_SUCCESS)
                             return Status;
 
                         /* The first data block of the file will not be
@@ -1140,7 +1145,7 @@ unsigned long CCabinet::ExtractFile(char* FileName)
 					CurrentDataNode->AbsoluteOffset + sizeof(CFDATA) +
                     CurrentDataNode->Data.CompSize));
 
-				if (((Status = ReadBlock(&CFData, sizeof(CFDATA), &BytesRead)) != 
+				if (((Status = ReadBlock(&CFData, sizeof(CFDATA), &BytesRead)) !=
 					CAB_STATUS_SUCCESS) || (BytesRead != sizeof(CFDATA))) {
 					CloseFile(DestFile);
 					FreeMemory(Buffer);
@@ -1274,7 +1279,7 @@ unsigned long CCabinet::NewCabinet()
     InputBuffer  = AllocateMemory(CAB_BLOCKSIZE + 12); // This should be enough
     if ((!OutputBuffer) || (!InputBuffer)) {
         DPRINT(MIN_TRACE, ("Insufficient memory.\n"));
-        return CAB_STATUS_NOMEMORY; 
+        return CAB_STATUS_NOMEMORY;
     }
     CurrentIBuffer     = InputBuffer;
     CurrentIBufferSize = 0;
@@ -1417,14 +1422,14 @@ unsigned long CCabinet::WriteFileToScratchStorage(PCFFILE_NODE FileNode)
             FILE_SHARE_READ,         // Share for reading
             NULL,                    // No security
             OPEN_EXISTING,           // File must exist
-            FILE_ATTRIBUTE_NORMAL,   // Normal file 
+            FILE_ATTRIBUTE_NORMAL,   // Normal file
             NULL);                   // No attribute template
         if (SourceFile == INVALID_HANDLE_VALUE) {
             DPRINT(MID_TRACE, ("File not found (%s).\n", FileNode->FileName));
             return CAB_STATUS_NOFILE;
         }
 #else /* !WIN32 */
-        SourceFile = fopen(FileNode->FileName, "rb"); 
+        SourceFile = fopen(FileNode->FileName, "rb");
         if (SourceFile == NULL) {
             DPRINT(MID_TRACE, ("Cannot open cabinet reserved file.\n"));
             return CAB_STATUS_NOFILE;
@@ -1447,7 +1452,7 @@ unsigned long CCabinet::WriteFileToScratchStorage(PCFFILE_NODE FileNode)
 
         FileNode->File.FileOffset        = CurrentFolderNode->UncompOffset;
         CurrentFolderNode->UncompOffset += TotalBytesLeft;
-        FileNode->File.FileControlID     = NextFolderNumber - 1;
+        FileNode->File.FileControlID     = (unsigned short)(NextFolderNumber - 1);
         CurrentFolderNode->Commit        = true;
         PrevCabinetNumber				 = CurrentDiskNumber;
 
@@ -1543,7 +1548,7 @@ unsigned long CCabinet::WriteDisk(unsigned long MoreDisks)
                 ContinueFile = true;
                 CreateNewDisk = false;
 
-                DPRINT(MAX_TRACE, ("First on new disk. CurrentIBufferSize (%lu)  CurrentOBufferSize (%lu).\n", 
+                DPRINT(MAX_TRACE, ("First on new disk. CurrentIBufferSize (%lu)  CurrentOBufferSize (%lu).\n",
                     CurrentIBufferSize, CurrentOBufferSize));
 
                 if ((CurrentIBufferSize > 0) || (CurrentOBufferSize > 0)) {
@@ -1635,7 +1640,7 @@ unsigned long CCabinet::CommitDisk(unsigned long MoreDisks)
         }
     }
 #else /* !WIN32 */
-    FileHandle = fopen(CabinetName, "rb"); 
+    FileHandle = fopen(CabinetName, "rb");
     if (FileHandle != NULL) {
         fclose(FileHandle);
         /* If file exists, ask to overwrite file */
@@ -1655,7 +1660,7 @@ unsigned long CCabinet::CommitDisk(unsigned long MoreDisks)
     }
 #endif
 
-    WriteCabinetHeader(MoreDisks);
+    WriteCabinetHeader(MoreDisks != 0);
 
     Status = WriteFolderEntries();
     if (Status != CAB_STATUS_SUCCESS)
@@ -1749,45 +1754,55 @@ unsigned long CCabinet::AddFile(char* FileName)
 {
     FILEHANDLE SrcFile;
     PCFFILE_NODE FileNode;
+    char* NewFileName;
 
-    FileNode = NewFileNode();
-    if (!FileNode) {
+    NewFileName = (char*)AllocateMemory(strlen(FileName) + 1);
+    if (!NewFileName) {
         DPRINT(MIN_TRACE, ("Insufficient memory.\n"));
         return CAB_STATUS_NOMEMORY;
     }
-
-	FileNode->FolderNode = CurrentFolderNode;
-
-    FileNode->FileName = (char*)AllocateMemory(strlen(FileName) + 1);
-    strcpy(FileNode->FileName, FileName);
-    ConvertPath(FileNode->FileName, false);
+    strcpy(NewFileName, FileName);
+    ConvertPath(NewFileName, false);
 
     /* Try to open file */
 #if defined(WIN32)
     SrcFile = CreateFile(
-        FileNode->FileName,      // Open this file
+        NewFileName,             // Open this file
         GENERIC_READ,            // Open for reading
         FILE_SHARE_READ,         // Share for reading
         NULL,                    // No security
         OPEN_EXISTING,           // File must exist
-        FILE_ATTRIBUTE_NORMAL,   // Normal file 
+        FILE_ATTRIBUTE_NORMAL,   // Normal file
         NULL);                   // No attribute template
     if (SrcFile == INVALID_HANDLE_VALUE) {
-        DPRINT(MID_TRACE, ("File not found (%s).\n", FileNode->FileName));
+        DPRINT(MID_TRACE, ("File not found (%s).\n", NewFileName));
+        FreeMemory(NewFileName);
         return CAB_STATUS_CANNOT_OPEN;
     }
 #else /* !WIN32 */
-    SrcFile = fopen(FileNode->FileName, "rb"); 
+    SrcFile = fopen(NewFileName, "rb");
     if (SrcFile == NULL) {
-        DPRINT(MID_TRACE, ("File not found (%s).\n", FileNode->FileName));
+        DPRINT(MID_TRACE, ("File not found (%s).\n", NewFileName));
+        FreeMemory(NewFileName);
         return CAB_STATUS_CANNOT_OPEN;
     }
 #endif
+
+    FileNode = NewFileNode();
+    if (!FileNode) {
+        DPRINT(MIN_TRACE, ("Insufficient memory.\n"));
+        FreeMemory(NewFileName);
+        return CAB_STATUS_NOMEMORY;
+    }
+
+	FileNode->FolderNode = CurrentFolderNode;
+    FileNode->FileName = NewFileName;
 
     /* FIXME: Check for and handle large files (>= 2GB) */
     FileNode->File.FileSize = GetSizeOfFile(SrcFile);
     if (FileNode->File.FileSize == (unsigned long)-1) {
         DPRINT(MIN_TRACE, ("Cannot read from file.\n"));
+        FreeMemory(NewFileName);
         return CAB_STATUS_CANNOT_READ;
     }
 
@@ -2545,8 +2560,8 @@ unsigned long CCabinet::InitCabinetHeader()
     CABHeader.FileCount       = 0;    // Not known yet
     CABHeader.Flags           = 0;    // Not known yet
 
-    CABHeader.CabinetNumber = CurrentDiskNumber;
-    
+    CABHeader.CabinetNumber = (unsigned short)CurrentDiskNumber;
+
     if ((CurrentDiskNumber > 0) && (OnCabinetName(PrevCabinetNumber, CabinetPrev))) {
         CABHeader.Flags |= CAB_FLAG_HASPREV;
         if (!OnDiskLabel(PrevCabinetNumber, DiskPrev))
@@ -2672,7 +2687,7 @@ unsigned long CCabinet::WriteCabinetHeader(bool MoreDisks)
     /* Write per-cabinet reserved area if present */
     if (CABHeader.Flags & CAB_FLAG_RESERVE) {
         unsigned long ReservedSize;
-        
+
         ReservedSize = CabinetReservedFileSize & 0xffff;
         ReservedSize |= (0 << 16); /* Folder reserved area size */
         ReservedSize |= (0 << 24); /* Folder reserved area size */
@@ -2846,7 +2861,7 @@ unsigned long CCabinet::WriteFileEntries()
 
             /* The file could end in the last (split) block and should therefore
                appear in the next disk too */
-            
+
             if ((File->File.FileOffset + File->File.FileSize >= LastBlockStart) &&
                 (File->File.FileControlID <= CAB_FILE_MAX_FOLDER) && (BlockIsSplit)) {
                 File->File.FileControlID = CAB_FILE_SPLIT;
@@ -2914,7 +2929,7 @@ unsigned long CCabinet::CommitDataBlocks(PCFFOLDER_NODE FolderNode)
     DataNode = FolderNode->DataListHead;
     if (DataNode != NULL)
         Status = ScratchFile->Seek(DataNode->ScratchFilePosition);
-    
+
     while (DataNode != NULL) {
         DPRINT(MAX_TRACE, ("Reading block at (0x%lX)  CompSize (%d)  UncompSize (%d).\n",
             DataNode->ScratchFilePosition,

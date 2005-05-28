@@ -22,9 +22,9 @@ segment .text use32
 
 ; Note: the undecorated names are for Borland C++ (and possibly other compilers
 ; using the OMF format)
-global SEHSetJmp
+global _SEHSetJmp
 global __SEHSetJmp@4
-SEHSetJmp:
+_SEHSetJmp:
 __SEHSetJmp@4:
  ; jump buffer
  mov eax, [esp+4]
@@ -46,9 +46,9 @@ __SEHSetJmp@4:
  xor eax, eax
  ret 4
 
-global SEHLongJmp
+global _SEHLongJmp
 global __SEHLongJmp@8
-SEHLongJmp:
+_SEHLongJmp:
 __SEHLongJmp@8:
  ; return value
  mov eax, [esp+8]
@@ -65,10 +65,9 @@ __SEHLongJmp@8:
  mov edi, [ecx+20]
  jmp edx
 
-
-global SEHLongJmp_KeepEsp
+global _SEHLongJmp_KeepEsp
 global __SEHLongJmp_KeepEsp@8
-SEHLongJmp_KeepEsp:
+_SEHLongJmp_KeepEsp:
 __SEHLongJmp_KeepEsp@8:
  ; return value
  mov eax, [esp+8]

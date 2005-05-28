@@ -32,7 +32,7 @@ Cambridge, MA 02139, USA.  */
  * @implemented
  */
 int
-_stprintf(_TCHAR *str, const _TCHAR *fmt, ...)
+crt_sprintf(_TCHAR *str, const _TCHAR *fmt, ...)
 {
   va_list arg;
   int done;
@@ -47,11 +47,8 @@ _stprintf(_TCHAR *str, const _TCHAR *fmt, ...)
 /* Write formatted output into S, according to the format
    string FORMAT, writing no more than MAXLEN characters.  */
 /* VARARGS3 */
-/*
- * @implemented
- */
 int
-_sntprintf (_TCHAR *s, size_t maxlen,const _TCHAR *format, ...)
+crt__snprintf (_TCHAR *s, size_t maxlen,const _TCHAR *format, ...)
 {
   va_list arg;
   int done;

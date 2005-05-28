@@ -14,14 +14,6 @@ BOOLEAN CheckIRQ(PDEVICE_EXTENSION Parameters)
 
     for (i = 0; ValidIRQs[i] != 0xffff; i ++)
     {
-        UCHAR ThisIRQ = ValidIRQs[i];
-        UCHAR bConfig = (UCHAR)(0x40 |
-                            (ThisIRQ == 7 ? 0x08 :
-                             ThisIRQ == 9 ? 0x10 :
-                             ThisIRQ == 10 ? 0x18 :
-                             ThisIRQ == 11 ? 0x20 :
-                             0));
-
         // Consult the card
 
 //        OUTPORT(pHw, BOARD_CONFIG, bConfig);
@@ -37,7 +29,6 @@ BOOLEAN CheckIRQ(PDEVICE_EXTENSION Parameters)
     // else
     // Compaq stuff?
     {
-        UCHAR CompaqPIDR;
         UCHAR Expected;
 
         switch (Parameters->IRQ)
@@ -59,9 +50,6 @@ BOOLEAN ISR(
     IN PKINTERRUPT pInterrupt,
     IN PVOID Context)
 {
-    PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)Context;
-    PDEVICE_EXTENSION Parameters = DeviceObject->DeviceExtension;
-
     DPRINT("*** Processing ISR ***\n");
 
     // What do we do here then?

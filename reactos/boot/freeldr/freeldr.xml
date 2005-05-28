@@ -1,0 +1,12 @@
+<directory name="bootsect">
+	<xi:include href="bootsect/bootsect.xml" />
+</directory>
+<directory name="freeldr">
+	<xi:include href="freeldr/freeldr_startup.xml" />
+	<xi:include href="freeldr/freeldr_base64k.xml" />
+	<xi:include href="freeldr/freeldr_base.xml" />
+	<xi:include href="freeldr/freeldr_main.xml" />
+	<xi:include href="freeldr/setupldr_main.xml" />
+	<xi:include href="freeldr/freeldr.xml" />
+	<xi:include href="freeldr/setupldr.xml" />
+</directory>

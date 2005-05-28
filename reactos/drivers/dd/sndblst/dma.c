@@ -70,7 +70,6 @@ BOOLEAN CreateDMA(PDEVICE_OBJECT DeviceObject)
 {
     DEVICE_DESCRIPTION Desc;
     ULONG MappedRegs = 0;
-    NTSTATUS Status;
     PDEVICE_EXTENSION Device = DeviceObject->DeviceExtension;
     KEVENT DMAEvent;
     KIRQL OldIrql;

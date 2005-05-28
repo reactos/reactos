@@ -1,0 +1,5 @@
+<module name="wine" type="staticlibrary">
+	<define name="_DISABLE_TIDENTS" />
+	<define name="__REACTOS__" />
+	<file>debug.c</file>
+</module>

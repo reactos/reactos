@@ -1,0 +1,21 @@
+<module name="kernel32_test" type="test">
+	<include base="rtshared">.</include>
+	<define name="_DISABLE_TIDENTS" />
+	<define name="_SEH_NO_NATIVE_NLG" />
+	<define name="WINVER">0x0500</define>
+	<library>rtshared</library>
+	<library>regtests</library>
+	<library>kernel32_base</library>
+	<library>pseh</library>
+	<library>rosrtl</library>
+	<library>ntdll</library>
+	<library>msvcrt</library>
+	<linkerflag>-lgcc</linkerflag>
+	<linkerflag>-nostartfiles</linkerflag>
+	<linkerflag>-nostdlib</linkerflag>
+	<directory name="tests">
+		<file>CreateFile.c</file>
+	</directory>
+	<file>setup.c</file>
+	<xi:include href="stubs.xml" />
+</module>

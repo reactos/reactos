@@ -232,7 +232,7 @@ AddDesktopItemW (BOOL bCommonDesktop,
   WCHAR szLinkPath[MAX_PATH];
   WCHAR szArguments[MAX_PATH];
   WCHAR szCommand[MAX_PATH];
-  WIN32_FIND_DATA FindData;
+  WIN32_FIND_DATAW FindData;
   HANDLE hFind;
   LPWSTR Ptr;
   DWORD dwLength;
@@ -416,7 +416,7 @@ DeleteDesktopItemW (BOOL bCommonItem,
   wcscat (szLinkPath, L".lnk");
   DPRINT ("Link path: '%S'\n", szLinkPath);
 
-  return DeleteFile (szLinkPath);
+  return DeleteFileW (szLinkPath);
 }
 
 
@@ -657,7 +657,7 @@ AddItemW (LPCWSTR lpGroupName,  /* Optional */
   WCHAR szLinkPath[MAX_PATH];
   WCHAR szArguments[MAX_PATH];
   WCHAR szCommand[MAX_PATH];
-  WIN32_FIND_DATA FindData;
+  WIN32_FIND_DATAW FindData;
   HANDLE hFind;
   LPWSTR Ptr;
   DWORD dwLength;

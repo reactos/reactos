@@ -21,6 +21,8 @@
 #define WIN32_LEAN_AND_MEAN     /* Exclude rarely-used stuff from Windows headers */
 #include <windows.h>
 #include <commctrl.h>
+#include <accctrl.h>
+#include <unknwn.h>
 #include <stdlib.h>
 #include <tchar.h>
 #include <process.h>
@@ -29,7 +31,7 @@
 
 #include "main.h"
 #include "hexedit.h"
-
+#include "security.h"
 
 BOOL ProcessCmdLine(LPSTR lpCmdLine);
 
@@ -118,7 +120,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     if(!AclUiAvailable)
     {
       HMENU hEditMenu;
-      int mePos;
       /* hide the Edit/Permissions... menu entry */
       hEditMenu = GetSubMenu(hMenuFrame, 1);
       if(hEditMenu != NULL)

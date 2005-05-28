@@ -872,8 +872,6 @@ DriverEntry(
   DueTime.QuadPart = -(LONGLONG)IP_TIMEOUT * 10000;
   KeSetTimerEx(&IPTimer, DueTime, IP_TIMEOUT, &IPTimeoutDpc);
 
-  PREPARE_TESTS
-
   return STATUS_SUCCESS;
 }
 

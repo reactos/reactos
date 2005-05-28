@@ -29,7 +29,7 @@ SB16 sb16;
 
 ULONG OldIRQ;
 PKINTERRUPT IrqObject;
-BOOLEAN DMAOutputISR(PKINTERRUPT Interrupt, PVOID ServiceContext)
+BOOLEAN STDCALL DMAOutputISR(PKINTERRUPT Interrupt, PVOID ServiceContext)
 {
 	DPRINT1("interrupt\n");
 	return FALSE;
@@ -42,7 +42,7 @@ void sb16_play(WAVE_HDR* wave)
 	KIRQL Dirql;
 	KAFFINITY Affinity;
 	PKINTERRUPT IrqObject;
-	unsigned int mask,newmask;
+	unsigned int newmask;
 
 	unsigned int i;
 	unsigned int tmp[255];

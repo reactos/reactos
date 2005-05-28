@@ -1,0 +1,25 @@
+<module name="imagehlp" type="win32dll" baseaddress="${BASEADDRESS_IMAGEHLP}" installbase="system32" installname="imagehlp.dll">
+	<importlibrary definition="imagehlp.def" />
+	<include base="imagehlp">.</include>
+	<include base="ReactOS">include/wine</include>
+	<define name="_DISABLE_TIDENTS" />
+	<define name="__REACTOS__" />
+	<define name="__USE_W32API" />
+	<define name="_WIN32_IE">0x600</define>
+	<define name="_WIN32_WINNT">0x501</define>
+	<define name="WINVER">0x501</define>
+	<define name="COBJMACROS" />
+	<define name="__need_offsetof" />
+	<define name="DCX_USESTYLE">0x10000L</define>
+	<library>wine</library>
+	<library>ntdll</library>
+	<library>kernel32</library>
+	<file>access.c</file>
+	<file>debug.c</file>
+	<file>imagehlp_main.c</file>
+	<file>integrity.c</file>
+	<file>internal.c</file>
+	<file>modify.c</file>
+	<file>symbol.c</file>
+	<file>imagehlp.rc</file>
+</module>

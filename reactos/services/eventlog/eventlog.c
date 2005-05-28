@@ -36,7 +36,6 @@
 
 #include "eventlog.h"
 
-#define DBG
 #define NDEBUG
 #include <debug.h>
 

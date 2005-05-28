@@ -33,11 +33,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static char sccsid[] = "@(#)net.c	8.4 (Berkeley) 4/28/95";
-#endif /* not lint */
-
 #include <sys/types.h>
 #include <winsock2.h>
 #include "unistd.h"

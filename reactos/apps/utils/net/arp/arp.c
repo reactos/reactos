@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
 
         DWORD dwUptime = SnmpSvcGetUptime();
 
-        _tprintf(_T("SNMP uptime: %d\n"), dwUptime);
+        _tprintf(_T("SNMP uptime: %ld\n"), dwUptime);
 
         SnmpUtilMemFree(pCache);
     } else {

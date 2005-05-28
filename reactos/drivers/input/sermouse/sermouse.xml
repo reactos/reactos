@@ -1,0 +1,8 @@
+<module name="sermouse" type="kernelmodedriver" installbase="system32/drivers" installname="sermouse.sys">
+	<include base="sermouse">.</include>
+	<define name="__USE_W32API" />
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<file>sermouse.c</file>
+	<file>sermouse.rc</file>
+</module>

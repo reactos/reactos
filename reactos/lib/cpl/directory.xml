@@ -1,0 +1,27 @@
+<directory name="access">
+	<xi:include href="access/access.xml" />
+</directory>
+<directory name="appwiz">
+	<xi:include href="appwiz/appwiz.xml" />
+</directory>
+<directory name="control">
+	<xi:include href="control/control.xml" />
+</directory>
+<directory name="desk">
+	<xi:include href="desk/desk.xml" />
+</directory>
+<directory name="intl">
+	<xi:include href="intl/intl.xml" />
+</directory>
+<directory name="main">
+	<xi:include href="main/main.xml" />
+</directory>
+<directory name="ncpa">
+	<xi:include href="ncpa/ncpa.xml" />
+</directory>
+<directory name="sysdm">
+	<xi:include href="sysdm/sysdm.xml" />
+</directory>
+<directory name="timedate">
+	<xi:include href="timedate/timedate.xml" />
+</directory>

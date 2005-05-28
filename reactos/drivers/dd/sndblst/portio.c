@@ -83,7 +83,7 @@ WORD InitSoundCard(UINT BasePort)
     {
         // Check to make sure the reset was acknowledged:
         for (TimeOut = SB_TIMEOUT;
-             Status = (SB_READ_DATA(BasePort) != SB_DSP_READY) && TimeOut > 0;
+             (Status = (SB_READ_DATA(BasePort) != SB_DSP_READY) && (TimeOut > 0));
              TimeOut --);
     }
 

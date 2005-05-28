@@ -1,0 +1,11 @@
+<module name="vgamp" type="kernelmodedriver" installbase="system32/drivers" installname="vgamp.dll">
+	<include base="vgamp">.</include>
+	<include base="ntoskrnl">include</include>
+	<define name="__USE_W32API" />
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<library>videoprt</library>
+	<file>initvga.c</file>
+	<file>vgamp.c</file>
+	<file>vgamp.rc</file>
+</module>

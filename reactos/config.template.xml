@@ -1,0 +1,39 @@
+<!--
+  This file is a template used as a starting point for compile-time
+  configuration of ReactOS. Make a copy of this file and name it config.xml.
+  Then change the options in config.xml. If you don't have a config.xml file,
+  then the defaults in this file, config.template.xml, will be used instead.
+
+  Boolean options can obtain the values 0 (disabled) or 1 (enabled). String
+  options can obtain any value specified in the comment before it.
+-->
+
+
+<!--
+  Architecture to build for. Specify one of:
+    i386
+-->
+<property name="ARCH" value="i386" />
+
+
+<!--
+  Which CPU ReactOS should be optimized for. Specify one of:
+    i486, i586, pentium, pentium2, pentum3, pentium4, athlon-xp, athlon-mp,
+    k6-2
+
+  See GCC manual for more CPU names and which CPUs GCC can optimize for.
+-->
+<property name="OARCH" value="i486" />
+
+
+<!--
+  Whether to compile in the integrated kernel debugger.
+-->
+<property name="KDBG" value="0" />
+
+
+<!--
+  Whether to compile for debugging. No compiler optimizations will be
+  performed.
+-->
+<property name="DBG" value="0" />

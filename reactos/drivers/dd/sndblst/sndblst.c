@@ -294,8 +294,6 @@ BlasterDeviceControl(PDEVICE_OBJECT DeviceObject,
 {
     PIO_STACK_LOCATION Stack;
     PDEVICE_EXTENSION DeviceExtension;
-    UINT ByteCount;
-    PBYTE Data;
 
     DPRINT("BlasterDeviceControl() called!\n");
 

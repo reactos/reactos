@@ -1,0 +1,24 @@
+<directory name="bus">
+	<xi:include href="bus/directory.xml" />
+</directory>
+<directory name="dd">
+	<xi:include href="dd/directory.xml" />
+</directory>
+<directory name="fs">
+	<xi:include href="fs/directory.xml" />
+</directory>
+<directory name="input">
+	<xi:include href="input/directory.xml" />
+</directory>
+<directory name="lib">
+	<xi:include href="lib/directory.xml" />
+</directory>
+<directory name="net">
+	<xi:include href="net/directory.xml" />
+</directory>
+<directory name="storage">
+	<xi:include href="storage/directory.xml" />
+</directory>
+<directory name="video">
+	<xi:include href="video/directory.xml" />
+</directory>

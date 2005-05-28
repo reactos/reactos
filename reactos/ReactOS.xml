@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<project name="ReactOS" makefile="makefile.auto" xmlns:xi="http://www.w3.org/2001/XInclude">
+	<xi:include href="config.xml">
+		<xi:fallback>
+			<xi:include href="config.template.xml" />
+		</xi:fallback>
+	</xi:include>
+
+	<xi:include href="baseaddress.xml" />
+
+	<define name="_M_IX86" />
+	<if property="DBG" value="1">
+		<define name="DBG" value="1" />
+		<property name="DBG_OR_KDBG" value="true" />
+	</if>
+	<if property="DBG" value="0">
+		<compilerflag>-Wno-strict-aliasing</compilerflag>
+		<compilerflag>-ftracer</compilerflag>
+		<compilerflag>-momit-leaf-frame-pointer</compilerflag>
+		<compilerflag>-mpreferred-stack-boundary=2</compilerflag>
+	</if>
+	<if property="KDBG" value="1">
+		<define name="KDBG" value="1" />
+		<property name="DBG_OR_KDBG" value="true" />
+	</if>
+
+	<include>include</include>
+	<include>w32api/include</include>
+	<include>w32api/include/ddk</include>
+
+	<directory name="apps">
+		<xi:include href="apps/directory.xml" />
+	</directory>
+	<directory name="boot">
+		<xi:include href="boot/boot.xml" />
+	</directory>
+	<directory name="bootdata">
+		<xi:include href="bootdata/bootdata.xml" />
+	</directory>
+	<directory name="drivers">
+		<xi:include href="drivers/directory.xml" />
+	</directory>
+	<directory name="hal">
+		<xi:include href="hal/directory.xml" />
+	</directory>
+	<directory name="include">
+		<xi:include href="include/directory.xml" />
+	</directory>
+	<directory name="lib">
+		<xi:include href="lib/directory.xml" />
+	</directory>
+	<directory name="media">
+		<xi:include href="media/directory.xml" />
+	</directory>
+	<directory name="ntoskrnl">
+		<xi:include href="ntoskrnl/ntoskrnl.xml" />
+	</directory>
+	<directory name="regtests">
+		<xi:include href="regtests/directory.xml" />
+	</directory>
+	<directory name="services">
+		<xi:include href="services/directory.xml" />
+	</directory>
+	<directory name="subsys">
+		<xi:include href="subsys/directory.xml" />
+	</directory>
+</project>

@@ -1,0 +1,27 @@
+<directory name="arp">
+	<xi:include href="arp/arp.xml" />
+</directory>
+<directory name="finger">
+	<xi:include href="finger/finger.xml" />
+</directory>
+<directory name="ftp">
+	<xi:include href="ftp/ftp.xml" />
+</directory>
+<directory name="ipconfig">
+	<xi:include href="ipconfig/ipconfig.xml" />
+</directory>
+<directory name="netstat">
+	<xi:include href="netstat/netstat.xml" />
+</directory>
+<directory name="ping">
+	<xi:include href="ping/ping.xml" />
+</directory>
+<directory name="route">
+	<xi:include href="route/route.xml" />
+</directory>
+<directory name="telnet">
+	<xi:include href="telnet/telnet.xml" />
+</directory>
+<directory name="whois">
+	<xi:include href="whois/whois.xml" />
+</directory>

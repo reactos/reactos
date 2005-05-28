@@ -7,4 +7,3 @@ _LoadLibraryA@4
 _CreateThread@24
 _TerminateThread@8
 _WaitForSingleObject@8
-
