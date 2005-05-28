@@ -861,7 +861,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Map anonymous memory for BSS sections
     */
-   if (Segment->Characteristics & IMAGE_SCN_LNK_OTHER)
+   if (Segment->Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA)
    {
       MmUnlockSectionSegment(Segment);
       Status = MmRequestPageMemoryConsumer(MC_USER, FALSE, &Page);
