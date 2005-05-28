@@ -4,6 +4,7 @@
 	<define name="_DISABLE_TIDENTS" />
 	<define name="_SEH_NO_NATIVE_NLG" />
 	<define name="__NTDRIVER__" />
+	<define name="__NO_CTYPE_INLINES" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<directory name="i386">
