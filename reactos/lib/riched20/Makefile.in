@@ -3,6 +3,7 @@ TOPOBJDIR = ../..
 SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = riched20.dll
+IMPORTLIB = libriched20.$(IMPLIBEXT)
 IMPORTS   = user32 gdi32 kernel32
 EXTRALIBS = -luuid
 

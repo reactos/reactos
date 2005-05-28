@@ -38,7 +38,10 @@
   - EM_FINDWORDBREAK
   - EM_FMTLINES
   - EM_FORMATRANGE
+  - EM_GETAUTOURLDETECT 2.0
+  - EM_GETBIDIOPTIONS 3.0
   - EM_GETCHARFORMAT (partly done)
+  - EM_GETEDITSTYLE
   + EM_GETEVENTMASK
   - EM_GETFIRSTVISIBLELINE
   - EM_GETIMECOLOR 1.0asian
@@ -53,24 +56,30 @@
   - EM_GETOLEINTERFACE
   - EM_GETOPTIONS
   + EM_GETPARAFORMAT
+  - EM_GETPASSWORDCHAR 2.0
   - EM_GETPUNCTUATION 1.0asian
   - EM_GETRECT
   - EM_GETREDONAME 2.0
   + EM_GETSEL
   + EM_GETSELTEXT (ANSI&Unicode)
+  - EM_GETSCROLLPOS 3.0
 ! - EM_GETTHUMB
+  - EM_GETTEXTEX 2.0
+  - EM_GETTEXTLENGTHEX
   - EM_GETTEXTMODE 2.0
 ? + EM_GETTEXTRANGE (ANSI&Unicode)
+  - EM_GETTYPOGRAPHYOPTIONS 3.0
   - EM_GETUNDONAME
   - EM_GETWORDBREAKPROC
   - EM_GETWORDBREAKPROCEX
   - EM_GETWORDWRAPMODE 1.0asian
+  - EM_SETZOOM 3.0
   - EM_HIDESELECTION
   - EM_LIMITTEXT
   - EM_LINEFROMCHAR
   - EM_LINEINDEX
   - EM_LINELENGTH
-  - EM_LINESCROLL
+  + EM_LINESCROLL
   - EM_PASTESPECIAL
   - EM_POSFROMCHARS
   + EM_REDO 2.0
@@ -79,9 +88,12 @@
   - EM_SCROLL
   - EM_SCROLLCARET
   - EM_SELECTIONTYPE
+  - EM_SETBIDIOPTIONS 3.0
   + EM_SETBKGNDCOLOR
   - EM_SETCHARFORMAT (partly done, no ANSI)
+  - EM_SETEDITSTYLE
   + EM_SETEVENTMASK (few notifications supported)
+  - EM_SETFONTSIZE
   - EM_SETIMECOLOR 1.0asian
   - EM_SETIMEOPTIONS 1.0asian
   - EM_SETLANGOPTIONS 2.0
@@ -89,18 +101,26 @@
   + EM_SETMODIFY (not sure if implementation is correct)
   - EM_SETOLECALLBACK
   - EM_SETOPTIONS
+  - EM_SETPALETTE 2.0
   + EM_SETPARAFORMAT
+  - EM_SETPASSWORDCHAR 2.0
   - EM_SETPUNCTUATION 1.0asian
   + EM_SETREADONLY no beep on modification attempt
   - EM_SETRECT
   - EM_SETRECTNP (EM_SETRECT without repainting) - not supported in RICHEDIT
   + EM_SETSEL
+  - EM_SETSCROLLPOS 3.0
+  - EM_SETTABSTOPS 3.0
   - EM_SETTARGETDEVICE
+  - EM_SETTEXTEX 3.0
   - EM_SETTEXTMODE 2.0
+  - EM_SETTYPOGRAPHYOPTIONS 3.0
   - EM_SETUNDOLIMIT 2.0
   - EM_SETWORDBREAKPROC
   - EM_SETWORDBREAKPROCEX
   - EM_SETWORDWRAPMODE 1.0asian
+  - EM_SETZOOM 3.0
+  - EM_SHOWSCROLLBAR 2.0
   - EM_STOPGROUPTYPING 2.0
   + EM_STREAMIN (can't fall back to text when the RTF isn't really RTF)
   + EM_STREAMOUT
@@ -268,6 +288,7 @@ static LRESULT ME_StreamInText(ME_TextEditor *editor, DWORD dwFormat, ME_InStrea
     ME_InsertTextFromCursor(editor, 0, pText, nWideChars, style);
     if (stream->dwSize < STREAMIN_BUFFER_SIZE)
       break;
+    stream->dwSize = 0;
   } while(1);
   ME_CommitUndo(editor);
   ME_Repaint(editor);
@@ -485,7 +506,7 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
   int nEventMask = editor->nEventMask;
   ME_InStream inStream;
 
-  TRACE("%p %p\n", stream, editor->hWnd);
+  TRACE("stream==%p hWnd==%p format==0x%X\n", stream, editor->hWnd, (UINT)format);
   editor->nEventMask = 0;
   
   ME_GetSelection(editor, &from, &to);
@@ -740,6 +761,33 @@ void ME_DestroyEditor(ME_TextEditor *editor)
   FREE_OBJ(editor);
 }
 
+static WCHAR wszClassName[] = {'R', 'i', 'c', 'h', 'E', 'd', 'i', 't', '2', '0', 'W', 0};
+static WCHAR wszClassName50[] = {'R', 'i', 'c', 'h', 'E', 'd', 'i', 't', '5', '0', 'W', 0};
+
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+    TRACE("\n");
+    switch (fdwReason)
+    {
+    case DLL_PROCESS_ATTACH:
+      DisableThreadLibraryCalls(hinstDLL);
+      me_heap = HeapCreate (0, 0x10000, 0);
+      ME_RegisterEditorClass(hinstDLL);
+      break;
+
+    case DLL_PROCESS_DETACH:
+      UnregisterClassW(wszClassName, 0);
+      UnregisterClassW(wszClassName50, 0);
+      UnregisterClassA("RichEdit20A", 0);
+      UnregisterClassA("RichEdit50A", 0);
+      HeapDestroy (me_heap);
+      me_heap = NULL;
+      break;
+    }
+    return TRUE;
+}
+
+
 #define UNSUPPORTED_MSG(e) \
   case e: \
     FIXME(#e ": stub\n"); \
@@ -766,6 +814,9 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   UNSUPPORTED_MSG(EM_FINDWORDBREAK)
   UNSUPPORTED_MSG(EM_FMTLINES)
   UNSUPPORTED_MSG(EM_FORMATRANGE)
+  UNSUPPORTED_MSG(EM_GETAUTOURLDETECT)
+  UNSUPPORTED_MSG(EM_GETBIDIOPTIONS)
+  UNSUPPORTED_MSG(EM_GETEDITSTYLE)
   UNSUPPORTED_MSG(EM_GETFIRSTVISIBLELINE)
   UNSUPPORTED_MSG(EM_GETIMECOMPMODE)
   /* UNSUPPORTED_MSG(EM_GETIMESTATUS) missing in Wine headers */
@@ -775,34 +826,50 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   UNSUPPORTED_MSG(EM_GETLINECOUNT)
   /* UNSUPPORTED_MSG(EM_GETOLEINTERFACE) separate stub */
   UNSUPPORTED_MSG(EM_GETOPTIONS)
+  UNSUPPORTED_MSG(EM_GETPASSWORDCHAR)
   UNSUPPORTED_MSG(EM_GETRECT)
   UNSUPPORTED_MSG(EM_GETREDONAME)
+  UNSUPPORTED_MSG(EM_GETSCROLLPOS)
+  UNSUPPORTED_MSG(EM_GETTEXTEX)
+  UNSUPPORTED_MSG(EM_GETTEXTLENGTHEX)
   UNSUPPORTED_MSG(EM_GETTEXTMODE)
+  UNSUPPORTED_MSG(EM_GETTYPOGRAPHYOPTIONS)
   UNSUPPORTED_MSG(EM_GETUNDONAME)
   UNSUPPORTED_MSG(EM_GETWORDBREAKPROC)
   UNSUPPORTED_MSG(EM_GETWORDBREAKPROCEX)
+  UNSUPPORTED_MSG(EM_GETZOOM)
   UNSUPPORTED_MSG(EM_HIDESELECTION)
   UNSUPPORTED_MSG(EM_LIMITTEXT) /* also known as EM_SETLIMITTEXT */
   UNSUPPORTED_MSG(EM_LINEFROMCHAR)
   UNSUPPORTED_MSG(EM_LINEINDEX)
   UNSUPPORTED_MSG(EM_LINELENGTH)
-  UNSUPPORTED_MSG(EM_LINESCROLL)
   UNSUPPORTED_MSG(EM_PASTESPECIAL)
 /*  UNSUPPORTED_MSG(EM_POSFROMCHARS) missing in Wine headers */
   UNSUPPORTED_MSG(EM_REQUESTRESIZE)
   UNSUPPORTED_MSG(EM_SCROLL)
   UNSUPPORTED_MSG(EM_SCROLLCARET)
   UNSUPPORTED_MSG(EM_SELECTIONTYPE)
+  UNSUPPORTED_MSG(EM_SETBIDIOPTIONS)
+  UNSUPPORTED_MSG(EM_SETEDITSTYLE)
+  UNSUPPORTED_MSG(EM_SETFONTSIZE)
   UNSUPPORTED_MSG(EM_SETLANGOPTIONS)
   UNSUPPORTED_MSG(EM_SETOLECALLBACK)
   UNSUPPORTED_MSG(EM_SETOPTIONS)
+  UNSUPPORTED_MSG(EM_SETPALETTE)
+  UNSUPPORTED_MSG(EM_SETPASSWORDCHAR)
   UNSUPPORTED_MSG(EM_SETRECT)
   UNSUPPORTED_MSG(EM_SETRECTNP)
+  UNSUPPORTED_MSG(EM_SETSCROLLPOS)
+  UNSUPPORTED_MSG(EM_SETTABSTOPS)
   UNSUPPORTED_MSG(EM_SETTARGETDEVICE)
+  UNSUPPORTED_MSG(EM_SETTEXTEX)
   UNSUPPORTED_MSG(EM_SETTEXTMODE)
+  UNSUPPORTED_MSG(EM_SETTYPOGRAPHYOPTIONS)
   UNSUPPORTED_MSG(EM_SETUNDOLIMIT)
   UNSUPPORTED_MSG(EM_SETWORDBREAKPROC)
   UNSUPPORTED_MSG(EM_SETWORDBREAKPROCEX)
+  UNSUPPORTED_MSG(EM_SHOWSCROLLBAR)
+  UNSUPPORTED_MSG(EM_SETZOOM)
   UNSUPPORTED_MSG(WM_SETFONT)
   UNSUPPORTED_MSG(WM_STYLECHANGING)
   UNSUPPORTED_MSG(WM_STYLECHANGED)
@@ -950,6 +1017,22 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   case EM_GETPARAFORMAT:
     ME_GetSelectionParaFormat(editor, (PARAFORMAT2 *)lParam);
     return 0;
+  case EM_LINESCROLL:
+  {
+    int nPos = editor->nScrollPosY, nEnd= editor->nTotalLength - editor->sizeWindow.cy;
+    nPos += 8 * lParam; /* FIXME follow the original */
+    if (nPos>=nEnd)
+      nPos = nEnd;
+    if (nPos<0)
+      nPos = 0;
+    if (nPos != editor->nScrollPosY) {
+      ScrollWindow(hWnd, 0, editor->nScrollPosY-nPos, NULL, NULL);
+      editor->nScrollPosY = nPos;
+      SetScrollPos(hWnd, SB_VERT, nPos, TRUE);
+      UpdateWindow(hWnd);
+    }
+    return TRUE; /* Should return false if a single line richedit control */
+  }
   case WM_CLEAR:
   {
     int from, to;
@@ -1246,16 +1329,15 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   }
   case WM_MOUSEWHEEL:
   {
-    int gcWheelDelta = 0, nPos = editor->nScrollPosY;
+    int gcWheelDelta = 0, nPos = editor->nScrollPosY, nEnd = editor->nTotalLength - editor->sizeWindow.cy; 
     UINT pulScrollLines;
-
     SystemParametersInfoW(SPI_GETWHEELSCROLLLINES,0, &pulScrollLines, 0);
     gcWheelDelta -= GET_WHEEL_DELTA_WPARAM(wParam);
     if (abs(gcWheelDelta) >= WHEEL_DELTA && pulScrollLines)
-      nPos += pulScrollLines * (gcWheelDelta / WHEEL_DELTA) * 8;
-    if(nPos>=editor->nTotalLength)
-      nPos = editor->nTotalLength - 1;
-    if (nPos<0) 
+      nPos += pulScrollLines * (gcWheelDelta / WHEEL_DELTA) * 8; /* FIXME follow the original */
+    if (nPos>=nEnd)
+      nPos = nEnd;
+    if (nPos<0)
       nPos = 0;
     if (nPos != editor->nScrollPosY) {
       ScrollWindow(hWnd, 0, editor->nScrollPosY-nPos, NULL, NULL);
@@ -1376,9 +1458,6 @@ int ME_GetTextW(ME_TextEditor *editor, WCHAR *buffer, int nStart, int nChars, in
   return nWritten;  
 }
 
-static WCHAR wszClassName[] = {'R', 'i', 'c', 'h', 'E', 'd', 'i', 't', '2', '0', 'W', 0};
-static WCHAR wszClassName50[] = {'R', 'i', 'c', 'h', 'E', 'd', 'i', 't', '5', '0', 'W', 0};
-
 void ME_RegisterEditorClass(HINSTANCE hInstance)
 {
   BOOL bResult;
@@ -1417,30 +1496,6 @@ void ME_RegisterEditorClass(HINSTANCE hInstance)
   bResult = RegisterClassA(&wcA);  
   assert(bResult);
 }
-
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-    TRACE("\n");
-    switch (fdwReason)
-    {
-    case DLL_PROCESS_ATTACH:
-      DisableThreadLibraryCalls(hinstDLL);
-      me_heap = HeapCreate (0, 0x10000, 0);
-      ME_RegisterEditorClass(hinstDLL);
-      break;
-
-    case DLL_PROCESS_DETACH:
-      UnregisterClassW(wszClassName, 0);
-      UnregisterClassW(wszClassName50, 0);
-      UnregisterClassA("RichEdit20A", 0);
-      UnregisterClassA("RichEdit50A", 0);
-      HeapDestroy (me_heap);
-      me_heap = NULL;
-      break;
-    }
-    return TRUE;
-}
-
 /******************************************************************
  *        CreateTextServices (RICHED20.4)
  *
