@@ -1,4 +1,5 @@
 <module name="usbport" type="kernelmodedriver" installbase="system32/drivers" installname="usbport.sys">
+        <importlibrary definition="usbport.def" />
 	<define name="__USE_W32API" />
 	<include base="ntoskrnl">include</include>
 	<library>ntoskrnl</library>
