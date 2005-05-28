@@ -1,20 +1,44 @@
 This doc can be also found on the wiki.
 
-ArchBlackman is a IRC-Chat bot. He has been coded by Royce3 and currently DrFred (mbosma) runs him. 
+ArchBlackman is a IRC-Chat bot of the #reactos irc channel. He has been coded by Royce3 and DrFred (mbosma) currently runs him. 
 
-If some one use a swear word he'll tell him not to do so. You can also ask him something technical about reactos. :)
 
-He also knows some commands. You can give him one like this "ArchBlackmann: !grovel". (don't forget to address him)
+If some one use a swear word he'll tell him not to do so and you can also ask him something technical about reactos. :)
 
-* !grovel - This is the only command that non ops can do (No Parameter)
-* !kiss <person>
-* !hug <person>
-* !give <someone> <something> 
-* !say <something> - You can tell him to say something on the channel via PrivateMessage
+Besides this he also knows some commands. The systax for giving him commands "ArchBlackmann: !grovel". (don't forget to address him)
 
-* !add <list> <item>
-* !remove <list> <item>
+  - !grovel - This is the only command that non ops can do (No Parameter)
+  - !kiss <person>
+  - !hug <person>
+  - !give <someone> <something> 
+  - !say <something> - You can tell him to say something on the channel via PrivateMessage
 
-The lists are the same as the text files. Most of the lists are not used directly, but by the other lists. Like this:
 
+ArchBlackmann know what he should say from some text files. They can be found on the svn-dir. But can also edit them online if you are op using:
+
+  - !add <list> <item>
+  - !remove <list> <item>
+
+List that are used directly to create responses are:
+  
+  - tech - here are the sentces ArchBlackmann sais when he finds his name 
+  - curse - this are the curses he looks for 
+  - cursecop - this the responces to them
+  - grovel - this is said when a op does the grovel command
+  - nogrovel - this when someone else does it
+
+The remaining lists are not used directly, but by the other lists.
+
+They are: 
+
+  - dev
+  - func
+  - irql
+  - module
+  - period
+  - status
+  - stru
+  - type
+
+And they are used like this:
   /me thinks %s is smarter than %dev%
