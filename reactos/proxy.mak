@@ -6,6 +6,9 @@ $(DEFAULT):
 all:
 	@$(MAKE) -C $(TOP) all
 
+install:
+	@$(MAKE) -C $(TOP) $(DEFAULT)_install
+
 clean:
 	@$(MAKE) -C $(TOP) $(DEFAULT)_clean
 
