@@ -156,7 +156,6 @@ typedef char                            NATIVE_CHAR;
 #define ACPI_UINT64_MAX                 (UINT64) 0xFFFFFFFFFFFFFFFF
 #endif
 
-
 #ifdef DEFINE_ALTERNATE_TYPES
 /*
  * Types used only in translated source
