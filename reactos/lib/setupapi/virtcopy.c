@@ -305,7 +305,7 @@ RETERR16 WINAPI VcpOpen16(VIFPROC vifproc, LPARAM lparamMsgRef)
     VCP_MsgRef = lparamMsgRef;
 
     /* load SETUPAPI needed for dialog resources etc. */
-    SETUPAPI_hInstance = LoadLibraryA("setupapi.dll");
+    SETUPAPI_hInstance = GetModuleHandleA("setupapi.dll");
     if (!SETUPAPI_hInstance)
     {
 	ERR("Could not load sibling setupapi.dll\n");
@@ -555,7 +555,6 @@ RETERR16 WINAPI VcpClose16(WORD fl, LPCSTR lpszBackupDest)
     cbres = VCP_Callback(&vcp_status, VCPM_VSTATCLOSEEND, 0, 0, VCP_MsgRef);
     TRACE("#6\n");
     VCP_Proc = NULL;
-    FreeLibrary(SETUPAPI_hInstance);
     VCP_opened = FALSE;
     return OK;
 }
