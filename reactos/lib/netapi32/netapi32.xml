@@ -1,4 +1,4 @@
-<module name="netapi32" type="win32dll" baseaddress="${BASEADDRESS_NETAPI32}" installbase="system32" installname="netapi32.dll">
+<module name="netapi32" type="win32dll" baseaddress="${BASEADDRESS_NETAPI32}" installbase="system32" installname="netapi32.dll" warnings="true">
 	<importlibrary definition="netapi32.spec.def" />
 	<include base="netapi32">.</include>
 	<include base="ReactOS">include/wine</include>
