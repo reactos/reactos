@@ -23,6 +23,7 @@
 	<file>regsvr.c</file>
 	<file>sec_mgr.c</file>
 	<file>umon.c</file>
+	<file>umstream.c</file>
 	<file>urlmon_main.c</file>
 	<file>urlmon.spec</file>
 </module>

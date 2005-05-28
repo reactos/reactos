@@ -3,6 +3,7 @@ TOPOBJDIR = ../..
 SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = urlmon.dll
+IMPORTLIB = liburlmon.$(IMPLIBEXT)
 IMPORTS   = cabinet ole32 shlwapi wininet user32 advapi32 kernel32 ntdll
 EXTRALIBS = -luuid
 
@@ -10,6 +11,7 @@ C_SRCS = \
 	regsvr.c \
 	sec_mgr.c \
 	umon.c \
+	umstream.c \
 	urlmon_main.c
 
 SUBDIRS = tests

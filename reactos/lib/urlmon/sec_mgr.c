@@ -353,6 +353,21 @@ static HRESULT WINAPI ZoneMgrImpl_SetZoneActionPolicy(IInternetZoneManager* ifac
 }
 
 /********************************************************************
+ *      IInternetZoneManager_PromptAction
+ */
+static HRESULT WINAPI ZoneMgrImpl_PromptAction(IInternetZoneManager* iface,
+                                               DWORD dwAction,
+                                               HWND hwndParent,
+                                               LPCWSTR pwszUrl,
+                                               LPCWSTR pwszText,
+                                               DWORD dwPromptFlags)
+{
+    FIXME("%p %08lx %p %s %s %08lx\n", iface, dwAction, hwndParent,
+          debugstr_w(pwszUrl), debugstr_w(pwszText), dwPromptFlags );
+    return E_NOTIMPL;
+}
+
+/********************************************************************
  *      IInternetZoneManager_LogAction
  */
 static HRESULT WINAPI ZoneMgrImpl_LogAction(IInternetZoneManager* iface,
@@ -425,12 +440,14 @@ static IInternetZoneManagerVtbl ZoneMgrImplVtbl = {
     ZoneMgrImpl_SetZoneCustomPolicy,
     ZoneMgrImpl_GetZoneActionPolicy,
     ZoneMgrImpl_SetZoneActionPolicy,
+    ZoneMgrImpl_PromptAction,
     ZoneMgrImpl_LogAction,
     ZoneMgrImpl_CreateZoneEnumerator,
     ZoneMgrImpl_GetZoneAt,
     ZoneMgrImpl_DestroyZoneEnumerator,
     ZoneMgrImpl_CopyTemplatePoliciesToZone,
 };
+
 HRESULT ZoneMgrImpl_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
 {
     ZoneMgrImpl* ret = HeapAlloc(GetProcessHeap(), 0, sizeof(ZoneMgrImpl));

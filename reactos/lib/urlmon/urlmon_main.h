@@ -37,4 +37,17 @@ static inline void URLMON_UnlockModule() { InterlockedDecrement( &URLMON_refCoun
 
 #define ICOM_THIS_MULTI(impl,field,iface) impl* const This=(impl*)((char*)(iface) - offsetof(impl,field))
 
+typedef struct
+{	
+	const IStreamVtbl	*lpVtbl;
+	DWORD		ref;
+	HANDLE		handle;
+	BOOL		closed;
+	WCHAR		*pszFileName;
+	WCHAR		*pszURL;
+} IUMCacheStream;
+
+HRESULT	UMCreateStreamOnCacheFile(LPCWSTR pszURL, DWORD dwSize, LPWSTR pszFileName, HANDLE *phfile, IUMCacheStream **ppstr);
+void	UMCloseCacheFileStream(IUMCacheStream *pstr);
+
 #endif /* __WINE_URLMON_MAIN_H */
