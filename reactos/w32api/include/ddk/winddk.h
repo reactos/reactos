@@ -7111,8 +7111,6 @@ IoReuseIrp(
                                _InvokeOnCancel) \
 { \
   PIO_STACK_LOCATION _IrpSp; \
-  ASSERT(_InvokeOnSuccess || _InvokeOnError || _InvokeOnCancel ? \
-    _CompletionRoutine != NULL : TRUE); \
   _IrpSp = IoGetNextIrpStackLocation(_Irp); \
   _IrpSp->CompletionRoutine = (PIO_COMPLETION_ROUTINE)(_CompletionRoutine); \
 	_IrpSp->Context = (_Context); \
