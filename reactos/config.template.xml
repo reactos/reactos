@@ -36,4 +36,4 @@
   Whether to compile for debugging. No compiler optimizations will be
   performed.
 -->
-<property name="DBG" value="0" />
+<property name="DBG" value="1" />
