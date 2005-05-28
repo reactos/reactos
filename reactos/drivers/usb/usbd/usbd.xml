@@ -1,0 +1,7 @@
+<module name="usbd" type="kernelmodedriver" installbase="system32/drivers" installname="usbd.sys">
+	<define name="__USE_W32API" />
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<file>usbd.c</file>
+	<file>usbd.rc</file>
+</module>
