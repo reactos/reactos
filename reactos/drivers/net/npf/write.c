@@ -26,7 +26,7 @@
 #include "ndis.h"
 #else
 #include <ddk/ntddk.h>
-#include <net/ndis.h>
+#include <ddk/ndis.h>
 #define NdisReinitializePacket(Packet)										\
 {																			\
 	(Packet)->Private.Head = (PNDIS_BUFFER)NULL;							\
