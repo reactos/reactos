@@ -97,7 +97,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Cl&assificar por tamanho" , 		ID_VIEW_SORT_SIZE
 		MENUITEM "Cla&ssificar por &data" , 		ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
-		MENUITEM "Classificar &por..." ,			409
+		MENUITEM "Classificar &por..." ,			ID_VIEW_FILTER
 	}
 
 	POPUP "&Opções"  {
@@ -225,7 +225,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Cl&assificar por tamanho" , 		ID_VIEW_SORT_SIZE
 		MENUITEM "Cla&ssificar por &data" , 		ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
-		MENUITEM "Classificar &por..." ,			409
+		MENUITEM "Classificar &por..." ,			ID_VIEW_FILTER
 	}
 
 	POPUP "&Opções"  {

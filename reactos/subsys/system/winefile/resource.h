@@ -35,6 +35,7 @@
 
 #define IDD_EXECUTE						103
 #define IDD_SELECT_DESTINATION			104
+#define IDD_DIALOG_VIEW_TYPE			105
 
 
 /* control ids */
@@ -53,6 +54,7 @@
 #define	ID_VIEW_SORT_TYPE				405
 #define	ID_VIEW_SORT_SIZE				406
 #define	ID_VIEW_SORT_DATE				407
+#define	ID_VIEW_FILTER					409
 #define	ID_VIEW_SPLIT					414
 #define ID_SELECT_FONT					510
 #define ID_VIEW_TOOL_BAR				508
@@ -70,6 +72,13 @@
 #define ID_WINDOW_SPLIT 				0xE135
 #define ID_HELP_USING					0xE144
 #define ID_HELP 						0xE146
+
+#define IDC_VIEW_PATTERN				1000
+#define IDC_VIEW_TYPE_DIRECTORIES		1001
+#define IDC_VIEW_TYPE_PROGRAMS			1002
+#define IDC_VIEW_TYPE_DOCUMENTS 		1003
+#define IDC_VIEW_TYPE_OTHERS			1004
+#define IDC_VIEW_TYPE_HIDDEN			1005
 
 
 /* winefile extensions */

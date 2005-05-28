@@ -98,7 +98,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Rendezés &méret szerint" , 		ID_VIEW_SORT_SIZE
 		MENUITEM "Rendezés &dátum szerint" , 		ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
-		MENUITEM "Egyedi rendezés &..." ,			409
+		MENUITEM "Egyedi rendezés &..." ,			ID_VIEW_FILTER
 	}
 
 	POPUP "&Beállítások"  {

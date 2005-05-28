@@ -141,6 +141,8 @@ typedef struct {
 	BOOL	header_wdths_ok;
 
 	TCHAR	path[MAX_PATH];
+	TCHAR	filter_pattern[MAX_PATH];
+	int		filter_flags;
 	Root	root;
 
 	SORT_ORDER sortOrder;
@@ -1375,10 +1377,22 @@ static Entry* read_tree(Root* root, LPCTSTR path, LPITEMIDLIST pidl, LPTSTR drv,
 }
 
 
+/* flags to filter different file types */
+enum TYPE_FILTER {
+	TF_DIRECTORIES	= 0x01,
+	TF_PROGRAMS		= 0x02,
+	TF_DOCUMENTS	= 0x04,
+	TF_OTHERS		= 0x08,
+	TF_HIDDEN		= 0x10,
+	TF_ALL			= 0x1F
+};
+
+
 static ChildWnd* alloc_child_window(LPCTSTR path, LPITEMIDLIST pidl, HWND hwnd)
 {
 	TCHAR drv[_MAX_DRIVE+1], dir[_MAX_DIR], name[_MAX_FNAME], ext[_MAX_EXT];
 	TCHAR b1[BUFFER_LEN];
+	const static TCHAR sAsterics[] = {'*', '\0'};
 
 	ChildWnd* child = (ChildWnd*) malloc(sizeof(ChildWnd));
 	Root* root = &child->root;
@@ -1415,6 +1429,9 @@ static ChildWnd* alloc_child_window(LPCTSTR path, LPITEMIDLIST pidl, HWND hwnd)
 
 		_tsplitpath(path, drv, dir, name, ext);
 	}
+
+	_tcscpy(child->filter_pattern, sAsterics);
+	child->filter_flags = TF_ALL;
 
 	root->entry.level = 0;
 
@@ -1637,7 +1654,6 @@ struct ExecuteDialog {
 	int		cmdshow;
 };
 
-
 static INT_PTR CALLBACK ExecuteDialogDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	static struct ExecuteDialog* dlg;
@@ -1663,6 +1679,7 @@ static INT_PTR CALLBACK ExecuteDialogDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam
 
 	return 0;
 }
+
 
 static INT_PTR CALLBACK DestinationDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
@@ -1695,6 +1712,53 @@ static INT_PTR CALLBACK DestinationDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam, 
 
 			return 1;
 		}
+	}
+
+	return 0;
+}
+
+
+struct FilterDialog {
+	TCHAR	pattern[MAX_PATH];
+	int		flags;
+};
+
+static INT_PTR CALLBACK FilterDialogDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	static struct FilterDialog* dlg;
+
+	switch(nmsg) {
+		case WM_INITDIALOG:
+			dlg = (struct FilterDialog*) lparam;
+			SetWindowText(GetDlgItem(hwnd, IDC_VIEW_PATTERN), dlg->pattern);
+			Button_SetCheck(GetDlgItem(hwnd,IDC_VIEW_TYPE_DIRECTORIES), (dlg->flags&TF_DIRECTORIES? BST_CHECKED: BST_UNCHECKED));
+			Button_SetCheck(GetDlgItem(hwnd,IDC_VIEW_TYPE_PROGRAMS), dlg->flags&TF_PROGRAMS? BST_CHECKED: BST_UNCHECKED);
+			Button_SetCheck(GetDlgItem(hwnd,IDC_VIEW_TYPE_DOCUMENTS), dlg->flags&TF_DOCUMENTS? BST_CHECKED: BST_UNCHECKED);
+			Button_SetCheck(GetDlgItem(hwnd,IDC_VIEW_TYPE_OTHERS), dlg->flags&TF_OTHERS? BST_CHECKED: BST_UNCHECKED);
+			Button_SetCheck(GetDlgItem(hwnd,IDC_VIEW_TYPE_HIDDEN), dlg->flags&TF_HIDDEN? BST_CHECKED: BST_UNCHECKED);
+			return 1;
+
+		case WM_COMMAND: {
+			int id = (int)wparam;
+
+			if (id == IDOK) {
+				int flags = 0;
+
+				GetWindowText(GetDlgItem(hwnd, IDC_VIEW_PATTERN), dlg->pattern, MAX_PATH);
+
+				flags |= Button_GetCheck(GetDlgItem(hwnd,IDC_VIEW_TYPE_DIRECTORIES))&BST_CHECKED? TF_DIRECTORIES: 0;
+				flags |= Button_GetCheck(GetDlgItem(hwnd,IDC_VIEW_TYPE_PROGRAMS))&BST_CHECKED? TF_PROGRAMS: 0;
+				flags |= Button_GetCheck(GetDlgItem(hwnd,IDC_VIEW_TYPE_DOCUMENTS))&BST_CHECKED? TF_DOCUMENTS: 0;
+				flags |= Button_GetCheck(GetDlgItem(hwnd,IDC_VIEW_TYPE_OTHERS))&BST_CHECKED? TF_OTHERS: 0;
+				flags |= Button_GetCheck(GetDlgItem(hwnd,IDC_VIEW_TYPE_HIDDEN))&BST_CHECKED? TF_HIDDEN: 0;
+
+				dlg->flags = flags;
+
+				EndDialog(hwnd, id);
+			} else if (id == IDCANCEL)
+				EndDialog(hwnd, id);
+
+			return 1;}
 	}
 
 	return 0;
@@ -2434,9 +2498,46 @@ static void calc_single_width(Pane* pane, int col)
 }
 
 
+static BOOL pattern_match(LPCTSTR str, LPCTSTR pattern)
+{
+	for( ; *str&&*pattern; str++,pattern++) {
+		if (*pattern == '*') {
+			do pattern++;
+			while(*pattern == '*');
+
+			if (!*pattern)
+				return TRUE;
+
+			for(; *str; str++)
+				if (_totupper(*str)==_totupper(*pattern) && pattern_match(str, pattern))
+					return TRUE;
+
+			return FALSE;
+		}
+		else if (_totupper(*str)!=_totupper(*pattern) && *pattern!='?')
+			return FALSE;
+	}
+
+	if (*str || *pattern)
+		if (*pattern!='*' || pattern[1]!='\0')
+			return FALSE;
+
+	return TRUE;
+}
+
+
+enum FILE_TYPE {
+	FT_OTHER		= 0,
+	FT_EXECUTABLE	= 1,
+	FT_DOCUMENT		= 2
+};
+
+static enum FILE_TYPE get_file_type(LPCTSTR filename);
+
+
 /* insert listbox entries after index idx */
 
-static int insert_entries(Pane* pane, Entry* dir, int idx)
+static int insert_entries(Pane* pane, Entry* dir, LPCTSTR pattern, int filter_flags, int idx)
 {
 	Entry* entry = dir;
 
@@ -2451,15 +2552,46 @@ static int insert_entries(Pane* pane, Entry* dir, int idx)
 			continue;
 #endif
 
-		/* don't display entries "." and ".." in the left pane */
-		if (pane->treePane && (entry->data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)
-				&& entry->data.cFileName[0]==TEXT('.'))
-			if (
-#ifndef _NO_EXTENSIONS
-				entry->data.cFileName[1]==TEXT('\0') ||
-#endif
-				(entry->data.cFileName[1]==TEXT('.') && entry->data.cFileName[2]==TEXT('\0')))
+		if (entry->data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			/* don't display entries "." and ".." in the left pane */
+			if (pane->treePane && entry->data.cFileName[0]==TEXT('.'))
+				if (
+	#ifndef _NO_EXTENSIONS
+					entry->data.cFileName[1]==TEXT('\0') ||
+	#endif
+					(entry->data.cFileName[1]==TEXT('.') && entry->data.cFileName[2]==TEXT('\0')))
+					continue;
+
+			if (pattern)
+				if (!pattern_match(entry->data.cFileName, pattern))
+					continue;
+
+			/* filter directories in right pane */
+			if (!pane->treePane && !(filter_flags&TF_DIRECTORIES))
 				continue;
+		}
+
+		/* filter system and hidden files */
+		if (!(filter_flags&TF_HIDDEN) && (entry->data.dwFileAttributes&(FILE_ATTRIBUTE_HIDDEN|FILE_ATTRIBUTE_SYSTEM)))
+			continue;
+
+		/* filter looking at the file type */
+		if ((filter_flags&(TF_PROGRAMS|TF_DOCUMENTS|TF_OTHERS)) != (TF_PROGRAMS|TF_DOCUMENTS|TF_OTHERS))
+			switch(get_file_type(entry->data.cFileName)) {
+			  case FT_EXECUTABLE:
+			  	if (!(filter_flags & TF_PROGRAMS))
+					continue;
+				break;
+
+			  case FT_DOCUMENT:
+				if (!(filter_flags & TF_DOCUMENTS))
+					continue;
+				break;
+
+			  default: // TF_OTHERS
+				if (!(filter_flags & TF_OTHERS))
+					continue;
+			}
 
 		if (idx != -1)
 			idx++;
@@ -2467,7 +2599,7 @@ static int insert_entries(Pane* pane, Entry* dir, int idx)
 		ListBox_InsertItemData(pane->hwnd, idx, entry);
 
 		if (pane->treePane && entry->expanded)
-			idx = insert_entries(pane, entry->down, idx);
+			idx = insert_entries(pane, entry->down, pattern, filter_flags, idx);
 	}
 
 	ShowWindow(pane->hwnd, SW_SHOW);
@@ -2512,7 +2644,7 @@ static void set_space_status()
 
 static WNDPROC g_orgTreeWndProc;
 
-static void create_tree_window(HWND parent, Pane* pane, int id, int id_header)
+static void create_tree_window(HWND parent, Pane* pane, int id, int id_header, LPCTSTR pattern, int filter_flags)
 {
 	const static TCHAR sListBox[] = {'L','i','s','t','B','o','x','\0'};
 
@@ -2530,7 +2662,7 @@ static void create_tree_window(HWND parent, Pane* pane, int id, int id_header)
 
 	/* insert entries into listbox */
 	if (entry)
-		insert_entries(pane, entry, -1);
+		insert_entries(pane, entry, pattern, filter_flags, -1);
 
 	/* calculate column widths */
 	if (!s_init) {
@@ -2548,8 +2680,8 @@ static void create_tree_window(HWND parent, Pane* pane, int id, int id_header)
 
 static void InitChildWindow(ChildWnd* child)
 {
-	create_tree_window(child->hwnd, &child->left, IDW_TREE_LEFT, IDW_HEADER_LEFT);
-	create_tree_window(child->hwnd, &child->right, IDW_TREE_RIGHT, IDW_HEADER_RIGHT);
+	create_tree_window(child->hwnd, &child->left, IDW_TREE_LEFT, IDW_HEADER_LEFT, NULL, TF_ALL);
+	create_tree_window(child->hwnd, &child->right, IDW_TREE_RIGHT, IDW_HEADER_RIGHT, child->filter_pattern, child->filter_flags);
 }
 
 
@@ -2674,7 +2806,7 @@ static void output_number(Pane* pane, LPDRAWITEMSTRUCT dis, int col, LPCTSTR str
 }
 
 
-static int is_exe_file(LPCTSTR ext)
+static BOOL is_exe_file(LPCTSTR ext)
 {
 	static const TCHAR executable_extensions[][4] = {
 		{'C','O','M','\0'},
@@ -2698,17 +2830,33 @@ static int is_exe_file(LPCTSTR ext)
 		d++;
 
 	for(p=executable_extensions; (*p)[0]; p++)
-		if (!_tcscmp(ext_buffer, *p))
-			return 1;
+		if (!_tcsicmp(ext_buffer, *p))
+			return TRUE;
 
-	return 0;
+	return FALSE;
 }
 
-static int is_registered_type(LPCTSTR ext)
+static BOOL is_registered_type(LPCTSTR ext)
 {
-        /* TODO */
+	/* check if there exists a classname for this file extension in the registry */
+	if (!RegQueryValue(HKEY_CLASSES_ROOT, ext, NULL, NULL))
+		return TRUE;
 
-	return 1;
+	return FALSE;
+}
+
+static enum FILE_TYPE get_file_type(LPCTSTR filename)
+{
+	LPCTSTR ext = _tcsrchr(filename, '.');
+	if (!ext)
+		ext = sEmpty;
+
+	if (is_exe_file(ext))
+		return FT_EXECUTABLE;
+	else if (is_registered_type(ext))
+		return FT_DOCUMENT;
+	else
+		return FT_OTHER;
 }
 
 
@@ -2744,16 +2892,11 @@ static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWi
 			else
 				img = IMG_FOLDER;
 		} else {
-			LPCTSTR ext = _tcsrchr(entry->data.cFileName, '.');
-			if (!ext)
-				ext = sEmpty;
-
-			if (is_exe_file(ext))
-				img = IMG_EXECUTABLE;
-			else if (is_registered_type(ext))
-				img = IMG_DOCUMENT;
-			else
-				img = IMG_FILE;
+			switch(get_file_type(entry->data.cFileName)) {
+			  case FT_EXECUTABLE:	img = IMG_EXECUTABLE;	break;
+			  case FT_DOCUMENT:		img = IMG_DOCUMENT;		break;
+			  default:				img = IMG_FILE;
+			}
 		}
 	} else {
 		attrs = 0;
@@ -3254,7 +3397,7 @@ static void scan_entry(ChildWnd* child, Entry* entry, int idx, HWND hwnd)
 	}
 
 	/* insert found entries in right pane */
-	insert_entries(&child->right, entry->down, -1);
+	insert_entries(&child->right, entry->down, child->filter_pattern, child->filter_flags, -1);
 	calc_widths(&child->right, FALSE);
 #ifndef _NO_EXTENSIONS
 	set_header(&child->right);
@@ -3295,7 +3438,7 @@ static BOOL expand_entry(ChildWnd* child, Entry* dir)
 	dir->expanded = TRUE;
 
 	/* insert entries in left pane */
-	insert_entries(&child->left, p, idx);
+	insert_entries(&child->left, p, NULL, TF_ALL, idx);
 
 	if (!child->header_wdths_ok) {
 		if (calc_widths(&child->left, FALSE)) {
@@ -3334,6 +3477,17 @@ static void collapse_entry(Pane* pane, Entry* dir)
 }
 
 
+static void refresh_right_pane(ChildWnd* child)
+{
+	ListBox_ResetContent(child->right.hwnd);
+	insert_entries(&child->right, child->right.root, child->filter_pattern, child->filter_flags, -1);
+	calc_widths(&child->right, FALSE);
+
+#ifndef _NO_EXTENSIONS
+	set_header(&child->right);
+#endif
+}
+
 static void set_curdir(ChildWnd* child, Entry* entry, int idx, HWND hwnd)
 {
 	TCHAR path[MAX_PATH];
@@ -3341,19 +3495,14 @@ static void set_curdir(ChildWnd* child, Entry* entry, int idx, HWND hwnd)
 	path[0] = '\0';
 
 	child->left.cur = entry;
+
 	child->right.root = entry->down? entry->down: entry;
 	child->right.cur = entry;
 
 	if (!entry->scanned)
 		scan_entry(child, entry, idx, hwnd);
-	else {
-		ListBox_ResetContent(child->right.hwnd);
-		insert_entries(&child->right, entry->down, -1);
-		calc_widths(&child->right, FALSE);
-#ifndef _NO_EXTENSIONS
-		set_header(&child->right);
-#endif
-	}
+	else
+		refresh_right_pane(child);
 
 	get_path(entry, path);
 	lstrcpy(child->path, path);
@@ -3390,7 +3539,7 @@ static void refresh_child(ChildWnd* child)
 	if (!entry)
 		entry = &child->root.entry;
 
-	insert_entries(&child->left, child->root.entry.down, 0);
+	insert_entries(&child->left, child->root.entry.down, NULL, TF_ALL, 0);
 
 	set_curdir(child, entry, 0, child->hwnd);
 
@@ -3999,6 +4148,20 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 				case ID_VIEW_SORT_DATE:
 					set_sort_order(child, SORT_DATE);
 					break;
+
+				case ID_VIEW_FILTER: {
+					struct FilterDialog dlg;
+
+					memset(&dlg, 0, sizeof(struct FilterDialog));
+					_tcscpy(dlg.pattern, child->filter_pattern);
+					dlg.flags = child->filter_flags;
+
+					if (DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_DIALOG_VIEW_TYPE), hwnd, FilterDialogDlgProc, (LPARAM)&dlg) == IDOK) {
+						_tcscpy(child->filter_pattern, dlg.pattern);
+						child->filter_flags = dlg.flags;
+						refresh_right_pane(child);
+					}
+					break;}
 
 				case ID_VIEW_SPLIT: {
 					last_split = child->split_pos;
