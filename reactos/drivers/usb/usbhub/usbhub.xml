@@ -1,0 +1,7 @@
+<module name="usbhub" type="kernelmodedriver" installbase="system32/drivers" installname="usbhub.sys">
+	<define name="__USE_W32API" />
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<file>usbhub.c</file>
+	<file>usbhub.rc</file>
+</module>
