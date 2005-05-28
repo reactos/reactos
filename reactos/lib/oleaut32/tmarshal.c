@@ -1979,7 +1979,8 @@ TMStubImpl_Invoke(
 
     memset(&buf,0,sizeof(buf));
     buf.size	= xmsg->cbBuffer;
-    buf.base	= xmsg->Buffer;
+    buf.base	= HeapAlloc(GetProcessHeap(), 0, xmsg->cbBuffer);
+    memcpy(buf.base, xmsg->Buffer, xmsg->cbBuffer);
     buf.curoff	= 0;
     buf.iid	= IID_IUnknown;
 
@@ -2173,9 +2174,9 @@ afterserialize:
     if (hres != S_OK)
 	return hres;
    
-    /* might need to use IRpcChannelBuffer_GetBuffer ? */
     xmsg->cbBuffer	= buf.curoff;
-    xmsg->Buffer	= buf.base;
+    I_RpcGetBuffer((RPC_MESSAGE *)xmsg);
+    memcpy(xmsg->Buffer, buf.base, buf.curoff);
     HeapFree(GetProcessHeap(),0,args);
     return S_OK;
 }
