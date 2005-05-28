@@ -32,7 +32,7 @@ int usage() {
 }
 
 int print_routes() {
-    PMIB_IPFORWARDTABLE IpForwardTable;
+    PMIB_IPFORWARDTABLE IpForwardTable = NULL;
     DWORD Error;
     ULONG Size = 0;
     char Destination[IPBUF], Gateway[IPBUF], Netmask[IPBUF];
