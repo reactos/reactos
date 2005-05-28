@@ -844,9 +844,9 @@ DriverEntry(
     Miniport.QueryInformationHandler    = MiniportQueryInformation;
     Miniport.ReconfigureHandler         = MiniportReconfigure;
     Miniport.ResetHandler               = MiniportReset;
-    Miniport.u1.SendHandler             = MiniportSend;
+    Miniport.SendHandler                = MiniportSend;
     Miniport.SetInformationHandler      = MiniportSetInformation;
-    Miniport.u2.TransferDataHandler     = MiniportTransferData;
+    Miniport.TransferDataHandler        = MiniportTransferData;
 
     NdisMInitializeWrapper(&NdisWrapperHandle,
                            DriverObject,
