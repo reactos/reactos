@@ -276,7 +276,7 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
     TCHAR ValueString[32];
     LPTSTR Remainder;
     DWORD Base;
-    DWORD Value;
+    DWORD Value = 0;
 
     switch(uMsg) {
     case WM_INITDIALOG:
@@ -315,18 +315,10 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                 {
                     if ((len = GetWindowTextLength(hwndValue)))
                     {
-                        if (!GetWindowText(hwndValue, ValueString, 32))
-                        {
-                            Value = 0;
-                        }
-                        else
+                        if (GetWindowText(hwndValue, ValueString, 32))
                         {
                             Value = _tcstoul (ValueString, &Remainder, 10);
                         }
-                    }
-                    else
-                    {
-                        Value = 0;
                     }
                 }
                 _stprintf (ValueString, _T("%lx"), Value);
@@ -343,18 +335,10 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                 {
                     if ((len = GetWindowTextLength(hwndValue)))
                     {
-                        if (!GetWindowText(hwndValue, ValueString, 32))
-                        {
-                            Value = 0;
-                        }
-                        else
+                        if (GetWindowText(hwndValue, ValueString, 32))
                         {
                             Value = _tcstoul (ValueString, &Remainder, 16);
                         }
-                    }
-                    else
-                    {
-                        Value = 0;
                     }
                 }
                 _stprintf (ValueString, _T("%lu"), Value);
