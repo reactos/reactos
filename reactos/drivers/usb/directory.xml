@@ -1,3 +1,6 @@
+<directory name="miniport">
+	<xi:include href="miniport/directory.xml" />
+</directory>
 <directory name="usbd">
 	<xi:include href="usbd/usbd.xml" />
 </directory>
