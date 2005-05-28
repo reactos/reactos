@@ -383,7 +383,7 @@ static HRESULT WINAPI IExtractIconW_fnExtract(IExtractIconW * iface, LPCWSTR psz
 	FIXME("(%p) (file=%p index=%d %p %p size=%08x) semi-stub\n", This, debugstr_w(pszFile), (signed)nIconIndex,
               phiconLarge, phiconSmall, nIconSize);
 
-        index = SIC_GetIconIndex(pszFile, nIconIndex);
+        index = SIC_GetIconIndex(pszFile, nIconIndex, 0);
 
 	if (phiconLarge)
 	  *phiconLarge = ImageList_GetIcon(ShellBigIconList, index, ILD_TRANSPARENT);

@@ -31,6 +31,8 @@
 #define IDS_SHV_COLUMN7		13
 #define IDS_SHV_COLUMN8		14
 #define IDS_SHV_COLUMN9		15
+#define IDS_SHV_COLUMN10	16
+#define IDS_SHV_COLUMN11	17
 
 #define IDS_DESKTOP		20
 #define IDS_MYCOMPUTER		21
@@ -108,6 +110,7 @@
 #define IDI_SHELL_COMPUTERS_NEAR_ME 19
 #define IDI_SHELL_SEARCH            23
 #define IDI_SHELL_HELP              24
+#define IDI_SHELL_SHORTCUT          30
 #define IDI_SHELL_EMPTY_RECYCLE_BIN 32
 #define IDI_SHELL_FULL_RECYCLE_BIN  33
 #define IDI_SHELL_DESKTOP           35

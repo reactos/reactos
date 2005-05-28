@@ -817,7 +817,7 @@ int WINAPI SHFileOperationA(LPSHFILEOPSTRUCTA lpFileOp)
 	  if (ForFree)
 	  {
 	    retCode = SHFileOperationW(&nFileOp);
-	    HeapFree(GetProcessHeap(), 0, ForFree); /* we can not use wString, it was changed */
+	    HeapFree(GetProcessHeap(), 0, ForFree); /* we cannot use wString, it was changed */
 	    break;
 	  }
 	  else

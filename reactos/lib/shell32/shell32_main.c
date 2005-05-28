@@ -236,6 +236,67 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
     return argv;
 }
 
+static DWORD shgfi_get_exe_type(LPCWSTR szFullPath)
+{
+    BOOL status = FALSE;
+    HANDLE hfile;
+    DWORD BinaryType;
+    IMAGE_DOS_HEADER mz_header;
+    IMAGE_NT_HEADERS nt;
+    DWORD len;
+    char magic[4];
+
+    status = GetBinaryTypeW (szFullPath, &BinaryType);
+    if (!status)
+        return 0;
+    if (BinaryType == SCS_DOS_BINARY || BinaryType == SCS_PIF_BINARY)
+        return 0x4d5a;
+
+    hfile = CreateFileW( szFullPath, GENERIC_READ, FILE_SHARE_READ,
+                         NULL, OPEN_EXISTING, 0, 0 );
+    if ( hfile == INVALID_HANDLE_VALUE )
+        return 0;
+
+    /*
+     * The next section is adapted from MODULE_GetBinaryType, as we need
+     * to examine the image header to get OS and version information. We
+     * know from calling GetBinaryTypeA that the image is valid and either
+     * an NE or PE, so much error handling can be omitted.
+     * Seek to the start of the file and read the header information.
+     */
+
+    SetFilePointer( hfile, 0, NULL, SEEK_SET );
+    ReadFile( hfile, &mz_header, sizeof(mz_header), &len, NULL );
+
+    SetFilePointer( hfile, mz_header.e_lfanew, NULL, SEEK_SET );
+    ReadFile( hfile, magic, sizeof(magic), &len, NULL );
+    if ( *(DWORD*)magic == IMAGE_NT_SIGNATURE )
+    {
+        SetFilePointer( hfile, mz_header.e_lfanew, NULL, SEEK_SET );
+        ReadFile( hfile, &nt, sizeof(nt), &len, NULL );
+        CloseHandle( hfile );
+        if (nt.OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI)
+        {
+             return IMAGE_NT_SIGNATURE | 
+                   (nt.OptionalHeader.MajorSubsystemVersion << 24) |
+                   (nt.OptionalHeader.MinorSubsystemVersion << 16);
+        }
+        return IMAGE_NT_SIGNATURE;
+    }
+    else if ( *(WORD*)magic == IMAGE_OS2_SIGNATURE )
+    {
+        IMAGE_OS2_HEADER ne;
+        SetFilePointer( hfile, mz_header.e_lfanew, NULL, SEEK_SET );
+        ReadFile( hfile, &ne, sizeof(ne), &len, NULL );
+        CloseHandle( hfile );
+        if (ne.ne_exetyp == 2)
+            return IMAGE_OS2_SIGNATURE | (ne.ne_expver << 16);
+        return 0;
+    }
+    CloseHandle( hfile );
+    return 0;
+}
+
 #define SHGFI_KNOWN_FLAGS \
     (SHGFI_SMALLICON | SHGFI_OPENICON | SHGFI_SHELLICONSIZE | SHGFI_PIDL | \
      SHGFI_USEFILEATTRIBUTES | SHGFI_ADDOVERLAYS | SHGFI_OVERLAYINDEX | \
@@ -277,7 +338,7 @@ DWORD WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
 
     if (!(flags & SHGFI_PIDL))
     {
-        /* SHGitFileInfo should work with absolute and relative paths */
+        /* SHGetFileInfo should work with absolute and relative paths */
         if (PathIsRelativeW(path))
         {
             GetCurrentDirectoryW(MAX_PATH, szLocation);
@@ -291,66 +352,9 @@ DWORD WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
 
     if (flags & SHGFI_EXETYPE)
     {
-        BOOL status = FALSE;
-        HANDLE hfile;
-        DWORD BinaryType;
-        IMAGE_DOS_HEADER mz_header;
-        IMAGE_NT_HEADERS nt;
-        DWORD len;
-        char magic[4];
-
         if (flags != SHGFI_EXETYPE)
             return 0;
-
-        status = GetBinaryTypeW (szFullPath, &BinaryType);
-        if (!status)
-            return 0;
-        if ((BinaryType == SCS_DOS_BINARY) || (BinaryType == SCS_PIF_BINARY))
-            return 0x4d5a;
-
-        hfile = CreateFileW( szFullPath, GENERIC_READ, FILE_SHARE_READ,
-                             NULL, OPEN_EXISTING, 0, 0 );
-        if ( hfile == INVALID_HANDLE_VALUE )
-            return 0;
-
-        /*
-         * The next section is adapted from MODULE_GetBinaryType, as we need
-         * to examine the image header to get OS and version information. We
-         * know from calling GetBinaryTypeA that the image is valid and either
-         * an NE or PE, so much error handling can be omitted.
-         * Seek to the start of the file and read the header information.
-         */
-
-        SetFilePointer( hfile, 0, NULL, SEEK_SET );
-        ReadFile( hfile, &mz_header, sizeof(mz_header), &len, NULL );
-
-        SetFilePointer( hfile, mz_header.e_lfanew, NULL, SEEK_SET );
-        ReadFile( hfile, magic, sizeof(magic), &len, NULL );
-        if ( *(DWORD*)magic      == IMAGE_NT_SIGNATURE )
-        {
-            SetFilePointer( hfile, mz_header.e_lfanew, NULL, SEEK_SET );
-            ReadFile( hfile, &nt, sizeof(nt), &len, NULL );
-            CloseHandle( hfile );
-            if (nt.OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI)
-            {
-                 return IMAGE_NT_SIGNATURE | 
-                       (nt.OptionalHeader.MajorSubsystemVersion << 24) |
-                       (nt.OptionalHeader.MinorSubsystemVersion << 16);
-            }
-            return IMAGE_NT_SIGNATURE;
-        }
-        else if ( *(WORD*)magic == IMAGE_OS2_SIGNATURE )
-        {
-            IMAGE_OS2_HEADER ne;
-            SetFilePointer( hfile, mz_header.e_lfanew, NULL, SEEK_SET );
-            ReadFile( hfile, &ne, sizeof(ne), &len, NULL );
-            CloseHandle( hfile );
-            if (ne.ne_exetyp == 2)
-                return IMAGE_OS2_SIGNATURE | (ne.ne_expver << 16);
-            return 0;
-        }
-        CloseHandle( hfile );
-        return 0;
+        return shgfi_get_exe_type(szFullPath);
     }
 
     /*
@@ -502,7 +506,7 @@ DWORD WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
             lstrcpynW(sTemp, szFullPath, MAX_PATH);
 
             if (dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                psfi->iIcon = SIC_GetIconIndex(swShell32Name, -IDI_SHELL_FOLDER);
+                psfi->iIcon = SIC_GetIconIndex(swShell32Name, -IDI_SHELL_FOLDER, 0);
             else
             {
                 static const WCHAR p1W[] = {'%','1',0};
@@ -518,7 +522,7 @@ DWORD WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
 
                     if (flags & SHGFI_SYSICONINDEX) 
                     {
-                        psfi->iIcon = SIC_GetIconIndex(sTemp,dwNr);
+                        psfi->iIcon = SIC_GetIconIndex(sTemp,dwNr,0);
                         if (psfi->iIcon == -1)
                             psfi->iIcon = 0;
                     }

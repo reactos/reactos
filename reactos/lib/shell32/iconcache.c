@@ -43,6 +43,7 @@
 #include "pidl.h"
 #include "shell32_main.h"
 #include "undocshell.h"
+#include "shresdef.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -77,23 +78,165 @@ static CRITICAL_SECTION SHELL32_SicCS = { &critsect_debug, -1, 0, 0, 0, 0 };
  *  Callback for DPA_Search
  */
 static INT CALLBACK SIC_CompareEntries( LPVOID p1, LPVOID p2, LPARAM lparam)
-{	TRACE("%p %p %8lx\n", p1, p2, lparam);
+{	LPSIC_ENTRY e1 = (LPSIC_ENTRY)p1, e2 = (LPSIC_ENTRY)p2;
+	
+	TRACE("%p %p %8lx\n", p1, p2, lparam);
 
-	if (((LPSIC_ENTRY)p1)->dwSourceIndex != ((LPSIC_ENTRY)p2)->dwSourceIndex) /* first the faster one*/
+	/* Icons in the cache are keyed by the name of the file they are
+	 * loaded from, their resource index and the fact if they have a shortcut
+	 * icon overlay or not. 
+	 */
+	if (e1->dwSourceIndex != e2->dwSourceIndex || /* first the faster one */
+	    (e1->dwFlags & GIL_FORSHORTCUT) != (e2->dwFlags & GIL_FORSHORTCUT)) 
 	  return 1;
 
-	if (strcmpiW(((LPSIC_ENTRY)p1)->sSourceFile,((LPSIC_ENTRY)p2)->sSourceFile))
+	if (strcmpiW(e1->sSourceFile,e2->sSourceFile))
 	  return 1;
 
 	return 0;
 }
+
+/*****************************************************************************
+ * SIC_OverlayShortcutImage			[internal]
+ *
+ * NOTES
+ *  Creates a new icon as a copy of the passed-in icon, overlayed with a
+ *  shortcut image. 
+ */
+static HICON SIC_OverlayShortcutImage(HICON SourceIcon)
+{	ICONINFO SourceIconInfo, ShortcutIconInfo, TargetIconInfo;
+	HICON ShortcutIcon, TargetIcon;
+	BITMAP SourceBitmapInfo, ShortcutBitmapInfo;
+	HDC SourceDC = NULL,
+	  ShortcutDC = NULL,
+	  TargetDC = NULL,
+	  ScreenDC = NULL;
+	HBITMAP OldSourceBitmap = NULL,
+	  OldShortcutBitmap = NULL,
+	  OldTargetBitmap = NULL;
+
+	/* Get information about the source icon and shortcut overlay */
+	if (! GetIconInfo(SourceIcon, &SourceIconInfo)
+	    || 0 == GetObjectW(SourceIconInfo.hbmColor, sizeof(BITMAP), &SourceBitmapInfo))
+	{
+	  return NULL;
+	}
+	ShortcutIcon = LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_SHORTCUT),
+	                          IMAGE_ICON, SourceBitmapInfo.bmWidth, SourceBitmapInfo.bmWidth,
+	                          LR_SHARED);
+	if (NULL == ShortcutIcon
+	    || ! GetIconInfo(ShortcutIcon, &ShortcutIconInfo)
+	    || 0 == GetObjectW(ShortcutIconInfo.hbmColor, sizeof(BITMAP), &ShortcutBitmapInfo))
+	{
+	  return NULL;
+	}
+
+	TargetIconInfo = SourceIconInfo;
+	TargetIconInfo.hbmMask = NULL;
+	TargetIconInfo.hbmColor = NULL;
+
+	/* Setup the source, shortcut and target masks */
+	SourceDC = CreateCompatibleDC(NULL);
+	if (NULL == SourceDC) goto fail;
+	OldSourceBitmap = SelectObject(SourceDC, SourceIconInfo.hbmMask);
+	if (NULL == OldSourceBitmap) goto fail;
+
+	ShortcutDC = CreateCompatibleDC(NULL);
+	if (NULL == ShortcutDC) goto fail;
+	OldShortcutBitmap = SelectObject(ShortcutDC, ShortcutIconInfo.hbmMask);
+	if (NULL == OldShortcutBitmap) goto fail;
+
+	TargetDC = CreateCompatibleDC(NULL);
+	if (NULL == TargetDC) goto fail;
+	TargetIconInfo.hbmMask = CreateCompatibleBitmap(TargetDC, SourceBitmapInfo.bmWidth,
+	                                                SourceBitmapInfo.bmHeight);
+	if (NULL == TargetIconInfo.hbmMask) goto fail;
+	ScreenDC = GetDC(NULL);
+	if (NULL == ScreenDC) goto fail;
+	TargetIconInfo.hbmColor = CreateCompatibleBitmap(ScreenDC, SourceBitmapInfo.bmWidth,
+	                                                 SourceBitmapInfo.bmHeight);
+	ReleaseDC(NULL, ScreenDC);
+	if (NULL == TargetIconInfo.hbmColor) goto fail;
+	OldTargetBitmap = SelectObject(TargetDC, TargetIconInfo.hbmMask);
+	if (NULL == OldTargetBitmap) goto fail;
+
+	/* Create the target mask by ANDing the source and shortcut masks */
+	if (! BitBlt(TargetDC, 0, 0, SourceBitmapInfo.bmWidth, SourceBitmapInfo.bmHeight,
+	             SourceDC, 0, 0, SRCCOPY) ||
+	    ! BitBlt(TargetDC, 0, SourceBitmapInfo.bmHeight - ShortcutBitmapInfo.bmHeight,
+	             ShortcutBitmapInfo.bmWidth, ShortcutBitmapInfo.bmHeight,
+	             ShortcutDC, 0, 0, SRCAND))
+	{
+	  goto fail;
+	}
+
+	/* Setup the source and target xor bitmap */
+	if (NULL == SelectObject(SourceDC, SourceIconInfo.hbmColor) ||
+	    NULL == SelectObject(TargetDC, TargetIconInfo.hbmColor))
+	{
+	  goto fail;
+	}
+
+	/* Copy the source xor bitmap to the target and clear out part of it by using
+	   the shortcut mask */
+	if (! BitBlt(TargetDC, 0, 0, SourceBitmapInfo.bmWidth, SourceBitmapInfo.bmHeight,
+	             SourceDC, 0, 0, SRCCOPY) ||
+	    ! BitBlt(TargetDC, 0, SourceBitmapInfo.bmHeight - ShortcutBitmapInfo.bmHeight,
+	             ShortcutBitmapInfo.bmWidth, ShortcutBitmapInfo.bmHeight,
+	             ShortcutDC, 0, 0, SRCAND))
+	{
+	  goto fail;
+	}
+
+	if (NULL == SelectObject(ShortcutDC, ShortcutIconInfo.hbmColor)) goto fail;
+
+	/* Now put in the shortcut xor mask */
+	if (! BitBlt(TargetDC, 0, SourceBitmapInfo.bmHeight - ShortcutBitmapInfo.bmHeight,
+	             ShortcutBitmapInfo.bmWidth, ShortcutBitmapInfo.bmHeight,
+	             ShortcutDC, 0, 0, SRCINVERT))
+	{
+	  goto fail;
+	}
+
+	/* Clean up, we're not goto'ing to 'fail' after this so we can be lazy and not set
+	   handles to NULL */
+	SelectObject(TargetDC, OldTargetBitmap);
+	DeleteObject(TargetDC);
+	SelectObject(ShortcutDC, OldShortcutBitmap);
+	DeleteObject(ShortcutDC);
+	SelectObject(SourceDC, OldSourceBitmap);
+	DeleteObject(SourceDC);
+
+	/* Create the icon using the bitmaps prepared earlier */
+	TargetIcon = CreateIconIndirect(&TargetIconInfo);
+
+	/* CreateIconIndirect copies the bitmaps, so we can release our bitmaps now */
+	DeleteObject(TargetIconInfo.hbmColor);
+	DeleteObject(TargetIconInfo.hbmMask);
+
+	return TargetIcon;
+
+fail:
+	/* Clean up scratch resources we created */
+	if (NULL != OldTargetBitmap) SelectObject(TargetDC, OldTargetBitmap);
+	if (NULL != TargetIconInfo.hbmColor) DeleteObject(TargetIconInfo.hbmColor);
+	if (NULL != TargetIconInfo.hbmMask) DeleteObject(TargetIconInfo.hbmMask);
+	if (NULL != TargetDC) DeleteObject(TargetDC);
+	if (NULL != OldShortcutBitmap) SelectObject(ShortcutDC, OldShortcutBitmap);
+	if (NULL != ShortcutDC) DeleteObject(ShortcutDC);
+	if (NULL != OldSourceBitmap) SelectObject(SourceDC, OldSourceBitmap);
+	if (NULL != SourceDC) DeleteObject(SourceDC);
+
+	return NULL;
+}
+
 /*****************************************************************************
  * SIC_IconAppend			[internal]
  *
  * NOTES
  *  appends an icon pair to the end of the cache
  */
-static INT SIC_IconAppend (LPCWSTR sSourceFile, INT dwSourceIndex, HICON hSmallIcon, HICON hBigIcon)
+static INT SIC_IconAppend (LPCWSTR sSourceFile, INT dwSourceIndex, HICON hSmallIcon, HICON hBigIcon, DWORD dwFlags)
 {	LPSIC_ENTRY lpsice;
 	INT ret, index, index1;
 	WCHAR path[MAX_PATH];
@@ -101,11 +244,12 @@ static INT SIC_IconAppend (LPCWSTR sSourceFile, INT dwSourceIndex, HICON hSmallI
 
 	lpsice = (LPSIC_ENTRY) SHAlloc (sizeof (SIC_ENTRY));
 
-       GetFullPathNameW(sSourceFile, MAX_PATH, path, NULL);
+	GetFullPathNameW(sSourceFile, MAX_PATH, path, NULL);
 	lpsice->sSourceFile = HeapAlloc( GetProcessHeap(), 0, (strlenW(path)+1)*sizeof(WCHAR) );
 	strcpyW( lpsice->sSourceFile, path );
 
 	lpsice->dwSourceIndex = dwSourceIndex;
+	lpsice->dwFlags = dwFlags;
 
 	EnterCriticalSection(&SHELL32_SicCS);
 
@@ -138,9 +282,11 @@ static INT SIC_IconAppend (LPCWSTR sSourceFile, INT dwSourceIndex, HICON hSmallI
  * NOTES
  *  gets small/big icon by number from a file
  */
-static INT SIC_LoadIcon (LPCWSTR sSourceFile, INT dwSourceIndex)
+static INT SIC_LoadIcon (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags)
 {	HICON	hiconLarge=0;
 	HICON	hiconSmall=0;
+	HICON 	hiconLargeShortcut;
+	HICON	hiconSmallShortcut;
 
 #if defined(__CYGWIN__) || defined (__MINGW32__) || defined(_MSC_VER)
 	static UINT (WINAPI*PrivateExtractIconExW)(LPCWSTR,int,HICON*,HICON*,UINT) = NULL;
@@ -164,7 +310,26 @@ static INT SIC_LoadIcon (LPCWSTR sSourceFile, INT dwSourceIndex)
 	  WARN("failure loading icon %i from %s (%p %p)\n", dwSourceIndex, debugstr_w(sSourceFile), hiconLarge, hiconSmall);
 	  return -1;
 	}
-	return SIC_IconAppend (sSourceFile, dwSourceIndex, hiconSmall, hiconLarge);
+
+	if (0 != (dwFlags & GIL_FORSHORTCUT))
+	{
+	  hiconLargeShortcut = SIC_OverlayShortcutImage(hiconLarge);
+	  hiconSmallShortcut = SIC_OverlayShortcutImage(hiconSmall);
+	  if (NULL != hiconLargeShortcut && NULL != hiconSmallShortcut)
+	  {
+	    hiconLarge = hiconLargeShortcut;
+	    hiconSmall = hiconSmallShortcut;
+	  }
+	  else
+	  {
+	    WARN("Failed to create shortcut overlayed icons\n");
+	    if (NULL != hiconLargeShortcut) DestroyIcon(hiconLargeShortcut);
+	    if (NULL != hiconSmallShortcut) DestroyIcon(hiconSmallShortcut);
+	    dwFlags &= ~ GIL_FORSHORTCUT;
+	  }
+	}
+
+	return SIC_IconAppend (sSourceFile, dwSourceIndex, hiconSmall, hiconLarge, dwFlags);
 }
 /*****************************************************************************
  * SIC_GetIconIndex			[internal]
@@ -177,7 +342,7 @@ static INT SIC_LoadIcon (LPCWSTR sSourceFile, INT dwSourceIndex)
  *  look in the cache for a proper icon. if not available the icon is taken
  *  from the file and cached
  */
-INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex )
+INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags )
 {
 	SIC_ENTRY sice;
 	INT ret, index = INVALID_INDEX;
@@ -188,6 +353,7 @@ INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex )
 	GetFullPathNameW(sSourceFile, MAX_PATH, path, NULL);
 	sice.sSourceFile = path;
 	sice.dwSourceIndex = dwSourceIndex;
+	sice.dwFlags = dwFlags;
 
 	EnterCriticalSection(&SHELL32_SicCS);
 
@@ -199,7 +365,7 @@ INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex )
 
 	if ( INVALID_INDEX == index )
 	{
-	  ret = SIC_LoadIcon (sSourceFile, dwSourceIndex);
+	  ret = SIC_LoadIcon (sSourceFile, dwSourceIndex, dwFlags);
 	}
 	else
 	{
@@ -257,8 +423,8 @@ BOOL SIC_Initialize(void)
 	    hSm = LoadImageA(shell32_hInstance, MAKEINTRESOURCEA(1), IMAGE_ICON, cx_small, cy_small, LR_SHARED);
 	    hLg = LoadImageA(shell32_hInstance, MAKEINTRESOURCEA(1), IMAGE_ICON, cx_large, cy_large, LR_SHARED);
 	  }
-         SIC_IconAppend (swShell32Name, index - 1, hSm, hLg);
-         SIC_IconAppend (swShell32Name, -index, hSm, hLg);
+         SIC_IconAppend (swShell32Name, index - 1, hSm, hLg, 0);
+         SIC_IconAppend (swShell32Name, -index, hSm, hLg, 0);
 	}
 
 	TRACE("hIconSmall=%p hIconBig=%p\n",ShellSmallIconList, ShellBigIconList);
@@ -332,24 +498,52 @@ BOOL PidlToSicIndex (
 {
 	IExtractIconW	*ei;
 	WCHAR		szIconFile[MAX_PATH];	/* file containing the icon */
+	char		szTemp[MAX_PATH];
 	INT		iSourceIndex;		/* index or resID(negated) in this file */
 	BOOL		ret = FALSE;
 	UINT		dwFlags = 0;
+	HKEY		keyCls;
+	int		iShortcutDefaultIndex = INVALID_INDEX;
 
 	TRACE("sf=%p pidl=%p %s\n", sh, pidl, bBigIcon?"Big":"Small");
 
 	if (SUCCEEDED (IShellFolder_GetUIObjectOf(sh, 0, 1, &pidl, &IID_IExtractIconW, 0, (void **)&ei)))
 	{
+	  if (_ILGetExtension(pidl, szTemp, MAX_PATH) &&
+	      HCR_MapTypeToValueA(szTemp, szTemp, MAX_PATH, TRUE))
+	  {
+	    if (ERROR_SUCCESS == RegOpenKeyExA(HKEY_CLASSES_ROOT, szTemp, 0, KEY_QUERY_VALUE, &keyCls))
+	    {
+	      if (ERROR_SUCCESS == RegQueryValueExA(keyCls, "IsShortcut", NULL, NULL, NULL, NULL))
+	      {
+	        uFlags |= GIL_FORSHORTCUT;
+	      }
+	      RegCloseKey(keyCls);
+	    }
+	  }
 	  if (SUCCEEDED(IExtractIconW_GetIconLocation(ei, uFlags, szIconFile, MAX_PATH, &iSourceIndex, &dwFlags)))
 	  {
-	    *pIndex = SIC_GetIconIndex(szIconFile, iSourceIndex);
+	    *pIndex = SIC_GetIconIndex(szIconFile, iSourceIndex, uFlags);
 	    ret = TRUE;
 	  }
 	  IExtractIconW_Release(ei);
 	}
 
 	if (INVALID_INDEX == *pIndex)	/* default icon when failed */
-	  *pIndex = 0;
+	{
+	  if (0 == (uFlags & GIL_FORSHORTCUT))
+	  {
+	    *pIndex = 0;
+	  }
+	  else
+	  {
+	    if (INVALID_INDEX == iShortcutDefaultIndex)
+	    {
+	      iShortcutDefaultIndex = SIC_LoadIcon(swShell32Name, 0, GIL_FORSHORTCUT);
+	    }
+	    *pIndex = (INVALID_INDEX != iShortcutDefaultIndex ? iShortcutDefaultIndex : 0);
+	  }
+	}
 
 	return ret;
 
@@ -399,7 +593,7 @@ INT WINAPI Shell_GetCachedImageIndexA(LPCSTR szPath, INT nIndex, BOOL bSimulateD
 	szTemp = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
 	MultiByteToWideChar( CP_ACP, 0, szPath, -1, szTemp, len );
 
-	ret = SIC_GetIconIndex( szTemp, nIndex );
+	ret = SIC_GetIconIndex( szTemp, nIndex, 0 );
 
 	HeapFree( GetProcessHeap(), 0, szTemp );
 
@@ -410,7 +604,7 @@ INT WINAPI Shell_GetCachedImageIndexW(LPCWSTR szPath, INT nIndex, BOOL bSimulate
 {
 	WARN("(%s,%08x,%08x) semi-stub.\n",debugstr_w(szPath), nIndex, bSimulateDoc);
 
-	return SIC_GetIconIndex(szPath, nIndex);
+	return SIC_GetIconIndex(szPath, nIndex, 0);
 }
 
 INT WINAPI Shell_GetCachedImageIndexAW(LPCVOID szPath, INT nIndex, BOOL bSimulateDoc)

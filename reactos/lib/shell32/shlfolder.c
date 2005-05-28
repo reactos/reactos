@@ -415,6 +415,22 @@ HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWO
 	    if (!_ILGetExtension(pidl, ext, MAX_PATH) || lstrcmpiA(ext, "lnk"))
 		*pdwAttributes &= ~SFGAO_LINK;
 	}
+
+	if (SFGAO_HASSUBFOLDER & *pdwAttributes)
+	{
+	    IShellFolder *psf2;
+	    if (SUCCEEDED(IShellFolder_BindToObject(psf, pidl, 0, (REFIID)&IID_IShellFolder, (LPVOID *)&psf2)))
+	    {
+	        IEnumIDList	*pEnumIL = NULL;
+	        if (SUCCEEDED(IShellFolder_EnumObjects(psf2, 0, SHCONTF_FOLDERS, &pEnumIL)))
+	        {
+	            if (IEnumIDList_Skip(pEnumIL, 1) != S_OK)
+	                *pdwAttributes &= ~SFGAO_HASSUBFOLDER;
+	            IEnumIDList_Release(pEnumIL);
+	        }
+	        IShellFolder_Release(psf2);
+	    }
+	}
     } else {
 	*pdwAttributes &= SFGAO_HASSUBFOLDER|SFGAO_FOLDER|SFGAO_FILESYSANCESTOR|SFGAO_DROPTARGET|SFGAO_HASPROPSHEET|SFGAO_CANRENAME|SFGAO_CANLINK;
     }

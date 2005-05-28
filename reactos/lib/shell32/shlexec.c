@@ -971,6 +971,11 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfun
     static const WCHAR wHttp[] = {'h','t','t','p',':','/','/',0};
     static const WCHAR wExtLnk[] = {'.','l','n','k',0};
     static const WCHAR wExplorer[] = {'e','x','p','l','o','r','e','r','.','e','x','e',0};
+    static const DWORD unsupportedFlags =
+        SEE_MASK_INVOKEIDLIST  | SEE_MASK_ICON         | SEE_MASK_HOTKEY |
+        SEE_MASK_CONNECTNETDRV | SEE_MASK_FLAG_DDEWAIT | SEE_MASK_FLAG_NO_UI |
+        SEE_MASK_UNICODE       | SEE_MASK_NO_CONSOLE   | SEE_MASK_ASYNCOK |
+        SEE_MASK_HMONITOR;
 
     WCHAR wszApplicationName[MAX_PATH+2], wszParameters[1024], wszDir[MAX_PATH];
     SHELLEXECUTEINFOW sei_tmp;	/* modifiable copy of SHELLEXECUTEINFO struct */
@@ -1016,12 +1021,9 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfun
     sei_tmp.lpParameters = wszParameters;
     sei_tmp.lpDirectory = wszDir;
 
-    if (sei_tmp.fMask & (SEE_MASK_INVOKEIDLIST | SEE_MASK_ICON | SEE_MASK_HOTKEY |
-        SEE_MASK_CONNECTNETDRV | SEE_MASK_FLAG_DDEWAIT |
-        SEE_MASK_DOENVSUBST | SEE_MASK_FLAG_NO_UI | SEE_MASK_UNICODE |
-        SEE_MASK_NO_CONSOLE | SEE_MASK_ASYNCOK | SEE_MASK_HMONITOR ))
+    if (sei_tmp.fMask & unsupportedFlags)
     {
-        FIXME("flags ignored: 0x%08lx\n", sei_tmp.fMask);
+        FIXME("flags ignored: 0x%08lx\n", sei_tmp.fMask & unsupportedFlags);
     }
 
     /* process the IDList */
