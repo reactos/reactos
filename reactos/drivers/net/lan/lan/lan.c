@@ -1208,7 +1208,6 @@ LanDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     NTSTATUS Status = STATUS_SUCCESS;
-    PFILE_OBJECT FileObject = IrpSp->FileObject;
 
     LA_DbgPrint(MID_TRACE,("LanDispatch: %d\n", IrpSp->MajorFunction));
     if( IrpSp->MajorFunction != IRP_MJ_CREATE) {
