@@ -45,7 +45,6 @@
 #include "wine/winbase16.h"
 #include "wine/wingdi16.h"
 #include "wine/winuser16.h"
-#include "ole32_main.h"
 #include "ifs.h"
 
 #include "wine/debug.h"

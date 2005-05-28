@@ -86,217 +86,6 @@ struct HGLOBALStreamImpl
 
 typedef struct HGLOBALStreamImpl HGLOBALStreamImpl;
 
-/*
- * Method definition for the StgStreamImpl class.
- */
-HGLOBALStreamImpl* HGLOBALStreamImpl_Construct(
-		HGLOBAL  hGlobal,
-		BOOL     fDeleteOnRelease);
-
-void HGLOBALStreamImpl_Destroy(
-                HGLOBALStreamImpl* This);
-
-void HGLOBALStreamImpl_OpenBlockChain(
-                HGLOBALStreamImpl* This);
-
-HRESULT WINAPI HGLOBALStreamImpl_QueryInterface(
-		IStream*      iface,
-		REFIID         riid,		/* [in] */
-		void**         ppvObject);  /* [iid_is][out] */
-
-ULONG WINAPI HGLOBALStreamImpl_AddRef(
-		IStream*      iface);
-
-ULONG WINAPI HGLOBALStreamImpl_Release(
-		IStream*      iface);
-
-HRESULT WINAPI HGLOBALStreamImpl_Read(
-	        IStream*      iface,
-		void*          pv,        /* [length_is][size_is][out] */
-		ULONG          cb,        /* [in] */
-		ULONG*         pcbRead);  /* [out] */
-
-HRESULT WINAPI HGLOBALStreamImpl_Write(
-		IStream*      iface,
-		const void*    pv,          /* [size_is][in] */
-		ULONG          cb,          /* [in] */
-		ULONG*         pcbWritten); /* [out] */
-
-HRESULT WINAPI HGLOBALStreamImpl_Seek(
-		IStream*      iface,
-		LARGE_INTEGER   dlibMove,         /* [in] */
-		DWORD           dwOrigin,         /* [in] */
-		ULARGE_INTEGER* plibNewPosition); /* [out] */
-
-HRESULT WINAPI HGLOBALStreamImpl_SetSize(
-	        IStream*      iface,
-		ULARGE_INTEGER  libNewSize);  /* [in] */
-
-HRESULT WINAPI HGLOBALStreamImpl_CopyTo(
-		IStream*      iface,
-		IStream*      pstm,         /* [unique][in] */
-		ULARGE_INTEGER  cb,           /* [in] */
-		ULARGE_INTEGER* pcbRead,      /* [out] */
-		ULARGE_INTEGER* pcbWritten);  /* [out] */
-
-HRESULT WINAPI HGLOBALStreamImpl_Commit(
-	    	IStream*      iface,
-		DWORD           grfCommitFlags); /* [in] */
-
-HRESULT WINAPI HGLOBALStreamImpl_Revert(
-		IStream*  iface);
-
-HRESULT WINAPI HGLOBALStreamImpl_LockRegion(
-		IStream*     iface,
-		ULARGE_INTEGER libOffset,   /* [in] */
-		ULARGE_INTEGER cb,          /* [in] */
-		DWORD          dwLockType); /* [in] */
-
-HRESULT WINAPI HGLOBALStreamImpl_UnlockRegion(
-		IStream*     iface,
-		ULARGE_INTEGER libOffset,   /* [in] */
-	        ULARGE_INTEGER cb,          /* [in] */
-		DWORD          dwLockType); /* [in] */
-
-HRESULT WINAPI HGLOBALStreamImpl_Stat(
-		IStream*     iface,
-	        STATSTG*       pstatstg,     /* [out] */
-	        DWORD          grfStatFlag); /* [in] */
-
-HRESULT WINAPI HGLOBALStreamImpl_Clone(
-		IStream*     iface,
-		IStream**    ppstm);       /* [out] */
-
-
-/*
- * Virtual function table for the HGLOBALStreamImpl class.
- */
-static IStreamVtbl HGLOBALStreamImpl_Vtbl =
-{
-    HGLOBALStreamImpl_QueryInterface,
-    HGLOBALStreamImpl_AddRef,
-    HGLOBALStreamImpl_Release,
-    HGLOBALStreamImpl_Read,
-    HGLOBALStreamImpl_Write,
-    HGLOBALStreamImpl_Seek,
-    HGLOBALStreamImpl_SetSize,
-    HGLOBALStreamImpl_CopyTo,
-    HGLOBALStreamImpl_Commit,
-    HGLOBALStreamImpl_Revert,
-    HGLOBALStreamImpl_LockRegion,
-    HGLOBALStreamImpl_UnlockRegion,
-    HGLOBALStreamImpl_Stat,
-    HGLOBALStreamImpl_Clone
-};
-
-/***********************************************************************
- *           CreateStreamOnHGlobal     [OLE32.@]
- */
-HRESULT WINAPI CreateStreamOnHGlobal(
-		HGLOBAL   hGlobal,
-		BOOL      fDeleteOnRelease,
-		LPSTREAM* ppstm)
-{
-  HGLOBALStreamImpl* newStream;
-
-  newStream = HGLOBALStreamImpl_Construct(hGlobal,
-					  fDeleteOnRelease);
-
-  if (newStream!=NULL)
-  {
-    return IUnknown_QueryInterface((IUnknown*)newStream,
-				   &IID_IStream,
-				   (void**)ppstm);
-  }
-
-  return E_OUTOFMEMORY;
-}
-
-/***********************************************************************
- *           GetHGlobalFromStream     [OLE32.@]
- */
-HRESULT WINAPI GetHGlobalFromStream(IStream* pstm, HGLOBAL* phglobal)
-{
-  HGLOBALStreamImpl* pStream;
-
-  if (pstm == NULL)
-    return E_INVALIDARG;
-
-  pStream = (HGLOBALStreamImpl*) pstm;
-
-  /*
-   * Verify that the stream object was created with CreateStreamOnHGlobal.
-   */
-  if (pStream->lpVtbl == &HGLOBALStreamImpl_Vtbl)
-    *phglobal = pStream->supportHandle;
-  else
-  {
-    *phglobal = 0;
-    return E_INVALIDARG;
-  }
-
-  return S_OK;
-}
-
-/******************************************************************************
-** HGLOBALStreamImpl implementation
-*/
-
-/***
- * This is the constructor for the HGLOBALStreamImpl class.
- *
- * Params:
- *    hGlobal          - Handle that will support the stream. can be NULL.
- *    fDeleteOnRelease - Flag set to TRUE if the HGLOBAL will be released
- *                       when the IStream object is destroyed.
- */
-HGLOBALStreamImpl* HGLOBALStreamImpl_Construct(
-		HGLOBAL  hGlobal,
-		BOOL     fDeleteOnRelease)
-{
-  HGLOBALStreamImpl* newStream;
-
-  newStream = HeapAlloc(GetProcessHeap(), 0, sizeof(HGLOBALStreamImpl));
-
-  if (newStream!=0)
-  {
-    /*
-     * Set-up the virtual function table and reference count.
-     */
-    newStream->lpVtbl = &HGLOBALStreamImpl_Vtbl;
-    newStream->ref    = 0;
-
-    /*
-     * Initialize the support.
-     */
-    newStream->supportHandle = hGlobal;
-    newStream->deleteOnRelease = fDeleteOnRelease;
-
-    /*
-     * This method will allocate a handle if one is not supplied.
-     */
-    if (!newStream->supportHandle)
-    {
-      newStream->supportHandle = GlobalAlloc(GMEM_MOVEABLE | GMEM_NODISCARD |
-					     GMEM_SHARE, 0);
-    }
-
-    /*
-     * Start the stream at the beginning.
-     */
-    newStream->currentPosition.u.HighPart = 0;
-    newStream->currentPosition.u.LowPart = 0;
-
-    /*
-     * Initialize the size of the stream to the size of the handle.
-     */
-    newStream->streamSize.u.HighPart = 0;
-    newStream->streamSize.u.LowPart  = GlobalSize(newStream->supportHandle);
-  }
-
-  return newStream;
-}
-
 /***
  * This is the destructor of the HGLOBALStreamImpl class.
  *
@@ -304,7 +93,7 @@ HGLOBALStreamImpl* HGLOBALStreamImpl_Construct(
  * class. The pointer passed-in to this function will be freed and will not
  * be valid anymore.
  */
-void HGLOBALStreamImpl_Destroy(HGLOBALStreamImpl* This)
+static void HGLOBALStreamImpl_Destroy(HGLOBALStreamImpl* This)
 {
   TRACE("(%p)\n", This);
 
@@ -324,10 +113,21 @@ void HGLOBALStreamImpl_Destroy(HGLOBALStreamImpl* This)
 }
 
 /***
+ * This implements the IUnknown method AddRef for this
+ * class
+ */
+static ULONG WINAPI HGLOBALStreamImpl_AddRef(
+		IStream* iface)
+{
+  HGLOBALStreamImpl* const This=(HGLOBALStreamImpl*)iface;
+  return InterlockedIncrement(&This->ref);
+}
+
+/***
  * This implements the IUnknown method QueryInterface for this
  * class
  */
-HRESULT WINAPI HGLOBALStreamImpl_QueryInterface(
+static HRESULT WINAPI HGLOBALStreamImpl_QueryInterface(
 		  IStream*     iface,
 		  REFIID         riid,	      /* [in] */
 		  void**         ppvObject)   /* [iid_is][out] */
@@ -373,21 +173,10 @@ HRESULT WINAPI HGLOBALStreamImpl_QueryInterface(
 }
 
 /***
- * This implements the IUnknown method AddRef for this
- * class
- */
-ULONG WINAPI HGLOBALStreamImpl_AddRef(
-		IStream* iface)
-{
-  HGLOBALStreamImpl* const This=(HGLOBALStreamImpl*)iface;
-  return InterlockedIncrement(&This->ref);
-}
-
-/***
  * This implements the IUnknown method Release for this
  * class
  */
-ULONG WINAPI HGLOBALStreamImpl_Release(
+static ULONG WINAPI HGLOBALStreamImpl_Release(
 		IStream* iface)
 {
   HGLOBALStreamImpl* const This=(HGLOBALStreamImpl*)iface;
@@ -415,7 +204,7 @@ ULONG WINAPI HGLOBALStreamImpl_Release(
  *
  * See the documentation of ISequentialStream for more info.
  */
-HRESULT WINAPI HGLOBALStreamImpl_Read(
+static HRESULT WINAPI HGLOBALStreamImpl_Read(
 		  IStream*     iface,
 		  void*          pv,        /* [length_is][size_is][out] */
 		  ULONG          cb,        /* [in] */
@@ -486,7 +275,7 @@ HRESULT WINAPI HGLOBALStreamImpl_Read(
  *
  * See the documentation of ISequentialStream for more info.
  */
-HRESULT WINAPI HGLOBALStreamImpl_Write(
+static HRESULT WINAPI HGLOBALStreamImpl_Write(
 	          IStream*     iface,
 		  const void*    pv,          /* [size_is][in] */
 		  ULONG          cb,          /* [in] */
@@ -560,7 +349,7 @@ HRESULT WINAPI HGLOBALStreamImpl_Write(
  *
  * See the documentation of IStream for more info.
  */
-HRESULT WINAPI HGLOBALStreamImpl_Seek(
+static HRESULT WINAPI HGLOBALStreamImpl_Seek(
 		  IStream*      iface,
 		  LARGE_INTEGER   dlibMove,         /* [in] */
 		  DWORD           dwOrigin,         /* [in] */
@@ -617,7 +406,7 @@ HRESULT WINAPI HGLOBALStreamImpl_Seek(
  *
  * See the documentation of IStream for more info.
  */
-HRESULT WINAPI HGLOBALStreamImpl_SetSize(
+static HRESULT WINAPI HGLOBALStreamImpl_SetSize(
 				     IStream*      iface,
 				     ULARGE_INTEGER  libNewSize)   /* [in] */
 {
@@ -656,7 +445,7 @@ HRESULT WINAPI HGLOBALStreamImpl_SetSize(
  *
  * See the documentation of IStream for more info.
  */
-HRESULT WINAPI HGLOBALStreamImpl_CopyTo(
+static HRESULT WINAPI HGLOBALStreamImpl_CopyTo(
 				    IStream*      iface,
 				    IStream*      pstm,         /* [unique][in] */
 				    ULARGE_INTEGER  cb,           /* [in] */
@@ -741,7 +530,7 @@ HRESULT WINAPI HGLOBALStreamImpl_CopyTo(
  *
  * See the documentation of IStream for more info.
  */
-HRESULT WINAPI HGLOBALStreamImpl_Commit(
+static HRESULT WINAPI HGLOBALStreamImpl_Commit(
 		  IStream*      iface,
 		  DWORD         grfCommitFlags)  /* [in] */
 {
@@ -756,7 +545,7 @@ HRESULT WINAPI HGLOBALStreamImpl_Commit(
  *
  * See the documentation of IStream for more info.
  */
-HRESULT WINAPI HGLOBALStreamImpl_Revert(
+static HRESULT WINAPI HGLOBALStreamImpl_Revert(
 		  IStream* iface)
 {
   return S_OK;
@@ -770,7 +559,7 @@ HRESULT WINAPI HGLOBALStreamImpl_Revert(
  *
  * See the documentation of IStream for more info.
  */
-HRESULT WINAPI HGLOBALStreamImpl_LockRegion(
+static HRESULT WINAPI HGLOBALStreamImpl_LockRegion(
 		  IStream*       iface,
 		  ULARGE_INTEGER libOffset,   /* [in] */
 		  ULARGE_INTEGER cb,          /* [in] */
@@ -787,7 +576,7 @@ HRESULT WINAPI HGLOBALStreamImpl_LockRegion(
  *
  * See the documentation of IStream for more info.
  */
-HRESULT WINAPI HGLOBALStreamImpl_UnlockRegion(
+static HRESULT WINAPI HGLOBALStreamImpl_UnlockRegion(
 		  IStream*       iface,
 		  ULARGE_INTEGER libOffset,   /* [in] */
 		  ULARGE_INTEGER cb,          /* [in] */
@@ -804,7 +593,7 @@ HRESULT WINAPI HGLOBALStreamImpl_UnlockRegion(
  *
  * See the documentation of IStream for more info.
  */
-HRESULT WINAPI HGLOBALStreamImpl_Stat(
+static HRESULT WINAPI HGLOBALStreamImpl_Stat(
 		  IStream*     iface,
 		  STATSTG*     pstatstg,     /* [out] */
 		  DWORD        grfStatFlag)  /* [in] */
@@ -820,7 +609,7 @@ HRESULT WINAPI HGLOBALStreamImpl_Stat(
   return S_OK;
 }
 
-HRESULT WINAPI HGLOBALStreamImpl_Clone(
+static HRESULT WINAPI HGLOBALStreamImpl_Clone(
 		  IStream*     iface,
 		  IStream**    ppstm) /* [out] */
 {
@@ -834,5 +623,135 @@ HRESULT WINAPI HGLOBALStreamImpl_Clone(
     return hr;
   offset.QuadPart=(LONGLONG)This->currentPosition.QuadPart;
   HGLOBALStreamImpl_Seek(*ppstm,offset,STREAM_SEEK_SET,&dummy);
+  return S_OK;
+}
+
+/*
+ * Virtual function table for the HGLOBALStreamImpl class.
+ */
+static IStreamVtbl HGLOBALStreamImpl_Vtbl =
+{
+    HGLOBALStreamImpl_QueryInterface,
+    HGLOBALStreamImpl_AddRef,
+    HGLOBALStreamImpl_Release,
+    HGLOBALStreamImpl_Read,
+    HGLOBALStreamImpl_Write,
+    HGLOBALStreamImpl_Seek,
+    HGLOBALStreamImpl_SetSize,
+    HGLOBALStreamImpl_CopyTo,
+    HGLOBALStreamImpl_Commit,
+    HGLOBALStreamImpl_Revert,
+    HGLOBALStreamImpl_LockRegion,
+    HGLOBALStreamImpl_UnlockRegion,
+    HGLOBALStreamImpl_Stat,
+    HGLOBALStreamImpl_Clone
+};
+
+/******************************************************************************
+** HGLOBALStreamImpl implementation
+*/
+
+/***
+ * This is the constructor for the HGLOBALStreamImpl class.
+ *
+ * Params:
+ *    hGlobal          - Handle that will support the stream. can be NULL.
+ *    fDeleteOnRelease - Flag set to TRUE if the HGLOBAL will be released
+ *                       when the IStream object is destroyed.
+ */
+HGLOBALStreamImpl* HGLOBALStreamImpl_Construct(
+		HGLOBAL  hGlobal,
+		BOOL     fDeleteOnRelease)
+{
+  HGLOBALStreamImpl* newStream;
+
+  newStream = HeapAlloc(GetProcessHeap(), 0, sizeof(HGLOBALStreamImpl));
+
+  if (newStream!=0)
+  {
+    /*
+     * Set-up the virtual function table and reference count.
+     */
+    newStream->lpVtbl = &HGLOBALStreamImpl_Vtbl;
+    newStream->ref    = 0;
+
+    /*
+     * Initialize the support.
+     */
+    newStream->supportHandle = hGlobal;
+    newStream->deleteOnRelease = fDeleteOnRelease;
+
+    /*
+     * This method will allocate a handle if one is not supplied.
+     */
+    if (!newStream->supportHandle)
+    {
+      newStream->supportHandle = GlobalAlloc(GMEM_MOVEABLE | GMEM_NODISCARD |
+					     GMEM_SHARE, 0);
+    }
+
+    /*
+     * Start the stream at the beginning.
+     */
+    newStream->currentPosition.u.HighPart = 0;
+    newStream->currentPosition.u.LowPart = 0;
+
+    /*
+     * Initialize the size of the stream to the size of the handle.
+     */
+    newStream->streamSize.u.HighPart = 0;
+    newStream->streamSize.u.LowPart  = GlobalSize(newStream->supportHandle);
+  }
+
+  return newStream;
+}
+
+
+/***********************************************************************
+ *           CreateStreamOnHGlobal     [OLE32.@]
+ */
+HRESULT WINAPI CreateStreamOnHGlobal(
+		HGLOBAL   hGlobal,
+		BOOL      fDeleteOnRelease,
+		LPSTREAM* ppstm)
+{
+  HGLOBALStreamImpl* newStream;
+
+  newStream = HGLOBALStreamImpl_Construct(hGlobal,
+					  fDeleteOnRelease);
+
+  if (newStream!=NULL)
+  {
+    return IUnknown_QueryInterface((IUnknown*)newStream,
+				   &IID_IStream,
+				   (void**)ppstm);
+  }
+
+  return E_OUTOFMEMORY;
+}
+
+/***********************************************************************
+ *           GetHGlobalFromStream     [OLE32.@]
+ */
+HRESULT WINAPI GetHGlobalFromStream(IStream* pstm, HGLOBAL* phglobal)
+{
+  HGLOBALStreamImpl* pStream;
+
+  if (pstm == NULL)
+    return E_INVALIDARG;
+
+  pStream = (HGLOBALStreamImpl*) pstm;
+
+  /*
+   * Verify that the stream object was created with CreateStreamOnHGlobal.
+   */
+  if (pStream->lpVtbl == &HGLOBALStreamImpl_Vtbl)
+    *phglobal = pStream->supportHandle;
+  else
+  {
+    *phglobal = 0;
+    return E_INVALIDARG;
+  }
+
   return S_OK;
 }

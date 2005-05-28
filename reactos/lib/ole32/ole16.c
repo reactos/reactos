@@ -50,9 +50,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
-HINSTANCE16     COMPOBJ_hInstance = 0;
-static int      COMPOBJ_Attach = 0;
-
 HTASK16 hETask = 0;
 WORD Table_ETask[62];
 
@@ -299,7 +296,7 @@ extern BOOL WINAPI K32WOWCallback16Ex(	DWORD vpfn16, DWORD dwFlags,
  * RETURNS
  *	the allocated segmented pointer and a HRESULT
  */
-HRESULT
+static HRESULT
 _xmalloc16(DWORD size, SEGPTR *ptr) {
   LPMALLOC16 mllc;
   DWORD args[2];
@@ -512,16 +509,5 @@ HRESULT WINAPI CoGetState16(LPDWORD state)
 BOOL WINAPI COMPOBJ_DllEntryPoint(DWORD Reason, HINSTANCE16 hInst, WORD ds, WORD HeapSize, DWORD res1, WORD res2)
 {
         TRACE("(%08lx, %04x, %04x, %04x, %08lx, %04x)\n", Reason, hInst, ds, HeapSize, res1, res2);
-        switch(Reason)
-        {
-        case DLL_PROCESS_ATTACH:
-                if (!COMPOBJ_Attach++) COMPOBJ_hInstance = hInst;
-                break;
-
-        case DLL_PROCESS_DETACH:
-                if(!--COMPOBJ_Attach)
-                        COMPOBJ_hInstance = 0;
-                break;
-        }
         return TRUE;
 }

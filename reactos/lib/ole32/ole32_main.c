@@ -27,12 +27,10 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "winnls.h"
-#include "ole32_main.h"
+#include "objbase.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
-
-HINSTANCE OLE32_hInstance = 0;
 
 /***********************************************************************
  *		OleMetafilePictFromIconAndLabel (OLE32.@)
@@ -110,33 +108,3 @@ HGLOBAL WINAPI OleMetafilePictFromIconAndLabel(HICON hIcon, LPOLESTR lpszLabel,
 
 	return hmem;
 }
-
-
-/***********************************************************************
- *		DllMain (OLE32.@)
- */
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
-{
-    TRACE("%p 0x%lx %p\n", hinstDLL, fdwReason, fImpLoad);
-
-    switch(fdwReason) {
-    case DLL_PROCESS_ATTACH:
-        OLE32_hInstance = hinstDLL;
-        COMPOBJ_InitProcess();
-	if (TRACE_ON(ole)) CoRegisterMallocSpy((LPVOID)-1);
-	break;
-
-    case DLL_PROCESS_DETACH:
-        if (TRACE_ON(ole)) CoRevokeMallocSpy();
-        COMPOBJ_UninitProcess();
-        OLE32_hInstance = 0;
-	break;
-
-    case DLL_THREAD_DETACH:
-        COM_TlsDestroy();
-        break;
-    }
-    return TRUE;
-}
-
-/* NOTE: DllRegisterServer and DllUnregisterServer are in regsvr.c */

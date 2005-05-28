@@ -203,7 +203,7 @@ HRESULT WINAPI RunningObjectTableImpl_Initialize(void);
 HRESULT WINAPI RunningObjectTableImpl_UnInitialize(void);
 
 /* This function decomposes a String path to a String Table containing all the elements ("\" or "subDirectory" or "Directory" or "FileName") of the path */
-int WINAPI FileMonikerImpl_DecomposePath(LPCOLESTR str, LPOLESTR** stringTable);
+int FileMonikerImpl_DecomposePath(LPCOLESTR str, LPOLESTR** stringTable);
 
 
 /* Apartment Functions */
@@ -253,5 +253,7 @@ static inline APARTMENT* COM_CurrentApt(void)
 # define DEBUG_SET_CRITSEC_NAME(cs, name)
 # define DEBUG_CLEAR_CRITSEC_NAME(cs)
 #endif
+
+extern HINSTANCE OLE32_hInstance; /* FIXME: make static */
 
 #endif /* __WINE_OLE_COMPOBJ_H */

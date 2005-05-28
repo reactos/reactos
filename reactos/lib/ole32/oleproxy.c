@@ -58,6 +58,7 @@
 #include "wtypes.h"
 
 #include "compobj_private.h"
+#include "moniker.h"
 
 #include "wine/debug.h"
 
@@ -972,10 +973,8 @@ static IPSFactoryBufferVtbl *lppsfac = &psfacbufvtbl;
 HRESULT WINAPI OLE32_DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv)
 {
     *ppv = NULL;
-    if (IsEqualIID(rclsid,&CLSID_PSFactoryBuffer)) {
-	*ppv = &lppsfac;
-	return S_OK;
-    }
+    if (IsEqualIID(rclsid, &CLSID_PSFactoryBuffer))
+        return IPSFactoryBuffer_QueryInterface((IPSFactoryBuffer *)&lppsfac, iid, ppv);
     if (IsEqualIID(rclsid,&CLSID_DfMarshal)&&(
 		IsEqualIID(iid,&IID_IClassFactory) ||
 		IsEqualIID(iid,&IID_IUnknown)
@@ -984,6 +983,10 @@ HRESULT WINAPI OLE32_DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv)
 	return MARSHAL_GetStandardMarshalCF(ppv);
     if (IsEqualIID(rclsid,&CLSID_StdGlobalInterfaceTable) && (IsEqualIID(iid,&IID_IClassFactory) || IsEqualIID(iid,&IID_IUnknown)))
         return StdGlobalInterfaceTable_GetFactory(ppv);
+    if (IsEqualCLSID(rclsid, &CLSID_FileMoniker))
+        return FileMonikerCF_Create(iid, ppv);
+    if (IsEqualCLSID(rclsid, &CLSID_ItemMoniker))
+        return ItemMonikerCF_Create(iid, ppv);
 
     FIXME("\n\tCLSID:\t%s,\n\tIID:\t%s\n",debugstr_guid(rclsid),debugstr_guid(iid));
     return CLASS_E_CLASSNOTAVAILABLE;

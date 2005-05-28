@@ -40,7 +40,7 @@
 @ stdcall CoInitializeEx(ptr long)
 @ stdcall CoInitializeSecurity(ptr long ptr ptr long long ptr long ptr)
 @ stdcall CoInitializeWOW(long long)
-@ stub CoIsHandlerConnected       #@ stdcall (ptr) return 0,ERR_NOTIMPLEMENTED
+@ stdcall CoIsHandlerConnected(ptr)
 @ stdcall CoIsOle1Class (ptr)
 @ stdcall CoLoadLibrary(wstr long)
 @ stdcall CoLockObjectExternal(ptr long long)
@@ -247,7 +247,7 @@
 @ stub STGMEDIUM_UserUnmarshal
 @ stub StgOpenAsyncDocfileOnIFillLockBytes
 @ stdcall StgOpenStorage(wstr ptr long ptr long ptr)
-@ stub StgOpenStorageEx
+@ stdcall StgOpenStorageEx(wstr long long long ptr ptr ptr ptr)
 @ stdcall StgOpenStorageOnILockBytes(ptr ptr long long long ptr)
 @ stdcall StgSetTimes(wstr ptr ptr ptr )
 @ stdcall StringFromCLSID(ptr ptr)
