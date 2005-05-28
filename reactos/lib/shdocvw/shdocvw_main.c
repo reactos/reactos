@@ -128,7 +128,7 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD fdwReason, LPVOID fImpLoad)
 /*************************************************************************
  *              DllCanUnloadNow (SHDOCVW.@)
  */
-HRESULT WINAPI SHDOCVW_DllCanUnloadNow(void)
+HRESULT WINAPI DllCanUnloadNow(void)
 {
     HRESULT moz_can_unload = S_OK;
     fnCanUnloadNow pCanUnloadNow;
@@ -443,7 +443,7 @@ static BOOL SHDOCVW_TryLoadMozillaControl()
 /*************************************************************************
  *              DllGetClassObject (SHDOCVW.@)
  */
-HRESULT WINAPI SHDOCVW_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
+HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
     TRACE("\n");
 
@@ -482,7 +482,7 @@ HRESULT WINAPI SHDOCVW_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *p
 /***********************************************************************
  *              DllGetVersion (SHDOCVW.@)
  */
-HRESULT WINAPI SHDOCVW_DllGetVersion(DLLVERSIONINFO *info)
+HRESULT WINAPI DllGetVersion(DLLVERSIONINFO *info)
 {
     if (info->cbSize != sizeof(DLLVERSIONINFO)) FIXME("support DLLVERSIONINFO2\n");
 
@@ -498,7 +498,7 @@ HRESULT WINAPI SHDOCVW_DllGetVersion(DLLVERSIONINFO *info)
 /*************************************************************************
  *              DllInstall (SHDOCVW.@)
  */
-HRESULT WINAPI SHDOCVW_DllInstall(BOOL bInstall, LPCWSTR cmdline)
+HRESULT WINAPI DllInstall(BOOL bInstall, LPCWSTR cmdline)
 {
    FIXME("(%s, %s): stub!\n", bInstall ? "TRUE":"FALSE", debugstr_w(cmdline));
 

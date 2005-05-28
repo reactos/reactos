@@ -4,6 +4,7 @@ TOPOBJDIR = ../..
 SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = shdocvw.dll
+IMPORTLIB = libshdocvw.$(IMPLIBEXT)
 IMPORTS   = urlmon ole32 user32 advapi32 kernel32
 EXTRALIBS = -luuid
 

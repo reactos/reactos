@@ -523,7 +523,7 @@ static struct regsvr_interface const interface_list[] = {
 /***********************************************************************
  *		DllRegisterServer (SHDOCVW.@)
  */
-HRESULT WINAPI SHDOCVW_DllRegisterServer(void)
+HRESULT WINAPI DllRegisterServer(void)
 {
     HRESULT hr;
 
@@ -538,7 +538,7 @@ HRESULT WINAPI SHDOCVW_DllRegisterServer(void)
 /***********************************************************************
  *		DllUnregisterServer (SHDOCVW.@)
  */
-HRESULT WINAPI SHDOCVW_DllUnregisterServer(void)
+HRESULT WINAPI DllUnregisterServer(void)
 {
     HRESULT hr;
 
