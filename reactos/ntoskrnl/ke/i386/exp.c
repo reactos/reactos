@@ -245,7 +245,7 @@ KiDoubleFaultHandler(VOID)
    if (PsGetCurrentProcess() != NULL)
      {
 	DbgPrint("Pid: %x <", PsGetCurrentProcess()->UniqueProcessId);
-	DbgPrint("%.8s> ", PsGetCurrentProcess()->ImageFileName);
+	DbgPrint("%.16s> ", PsGetCurrentProcess()->ImageFileName);
      }
    if (PsGetCurrentThread() != NULL)
      {
@@ -258,7 +258,7 @@ KiDoubleFaultHandler(VOID)
 	    OldTss->Fs, OldTss->Gs);
    DbgPrint("EAX: %.8x   EBX: %.8x   ECX: %.8x\n", OldTss->Eax, OldTss->Ebx,
 	    OldTss->Ecx);
-   DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x\n   ESP: %.8x", OldTss->Edx,
+   DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x\nESP: %.8x ", OldTss->Edx,
 	    OldTss->Ebp, OldTss->Esi, Esp0);
    DbgPrint("EDI: %.8x   EFLAGS: %.8x ", OldTss->Edi, OldTss->Eflags);
    if (OldTss->Cs == KERNEL_CS)
@@ -420,7 +420,7 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
    if (PsGetCurrentProcess() != NULL)
      {
 	DbgPrint("Pid: %x <", PsGetCurrentProcess()->UniqueProcessId);
-	DbgPrint("%.8s> ", PsGetCurrentProcess()->ImageFileName);
+	DbgPrint("%.16s> ", PsGetCurrentProcess()->ImageFileName);
      }
    if (PsGetCurrentThread() != NULL)
      {
@@ -504,8 +504,8 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    if (PsGetCurrentThread() != NULL &&
        Esp0 < (ULONG)PsGetCurrentThread()->Tcb.StackLimit)
      {
-	DPRINT1("Stack underflow (tf->esp %x Limit %x)\n",
-		 Esp0, (ULONG)PsGetCurrentThread()->Tcb.StackLimit);
+	DPRINT1("Stack underflow (tf->esp %x Limit %x Eip %x)\n",
+		Esp0, (ULONG)PsGetCurrentThread()->Tcb.StackLimit, Tf->Eip);
 	ExceptionNr = 12;
      }
 
