@@ -3231,6 +3231,17 @@ typedef struct _PCI_COMMON_CONFIG {
 #define PCI_INVALID_VENDORID   0xFFFF
 #define PCI_COMMON_HDR_LENGTH (FIELD_OFFSET(PCI_COMMON_CONFIG, DeviceSpecific))
 
+#define PCI_ADDRESS_IO_SPACE                0x01
+#define PCI_ADDRESS_MEMORY_TYPE_MASK        0x06
+#define PCI_ADDRESS_MEMORY_PREFETCHABLE     0x08
+#define PCI_ADDRESS_IO_ADDRESS_MASK         0xfffffffc
+#define PCI_ADDRESS_MEMORY_ADDRESS_MASK     0xfffffff0
+#define PCI_ADDRESS_ROM_ADDRESS_MASK        0xfffff800
+
+#define PCI_TYPE_32BIT 0
+#define PCI_TYPE_20BIT 2
+#define PCI_TYPE_64BIT 4
+
 typedef struct _PCI_SLOT_NUMBER {
   union {
     struct {

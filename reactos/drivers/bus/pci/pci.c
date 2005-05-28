@@ -9,6 +9,7 @@
  */
 
 #include <ddk/ntddk.h>
+#include <stdio.h>
 
 #include "pcidef.h"
 #include "pci.h"

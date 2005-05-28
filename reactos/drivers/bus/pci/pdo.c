@@ -9,14 +9,13 @@
  */
 
 #include <ddk/ntddk.h>
-
+#include <initguid.h>
+#include <ddk/wdmguid.h>
 #include "pcidef.h"
 #include "pci.h"
 
 #define NDEBUG
 #include <debug.h>
-
-DEFINE_GUID(GUID_BUS_TYPE_PCI, 0xc8ebdfb0L, 0xb510, 0x11d0, 0x80, 0xe5, 0x00, 0xa0, 0xc9, 0x25, 0x42, 0xe3);
 
 /*** PRIVATE *****************************************************************/
 
