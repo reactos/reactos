@@ -360,16 +360,12 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
    * of bugd in it (calling SetPalette for high/true-color modes,
    * using DEFAULT_PALETTE instead of the device palette, ...).
    */
-#if 1
-  DPRINT1("NtGdiRealizePalette is unimplemented\n");
-  return 0;
-#else
+ 
   PALOBJ *palPtr, *sysPtr;
   PPALGDI palGDI, sysGDI;
   int realized = 0;
   PDC dc;
   HPALETTE systemPalette;
-  SURFOBJ *SurfObj;
   BOOLEAN success;
   USHORT sysMode, palMode;
 
@@ -377,7 +373,6 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
   if (!dc)
   	return 0;
 
-  SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
   systemPalette = NtGdiGetStockObject((INT)DEFAULT_PALETTE);
   palGDI = PALETTE_LockPalette(dc->w.hPalette);
   palPtr = (PALOBJ*) palGDI;
@@ -405,11 +400,11 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
     // Memory managed DC
     DbgPrint("win32k: realizepalette unimplemented step 2 for DC_MEMORY");
   } else {
-    if(GDIDEVFUNCS(SurfObj).SetPalette)
+    if( ((GDIDEVICE *)dc->GDIDevice)->DriverFunctions.SetPalette)
     {
-      ASSERT(sysGDI->NumColors <= 256);
-      success = GDIDEVFUNCS(SurfObj).SetPalette(
-        dc->PDev, sysPtr, 0, 0, sysGDI->NumColors);
+      ASSERT(palGDI->NumColors <= 256);
+      success = ((GDIDEVICE *)dc->GDIDevice)->DriverFunctions.SetPalette(
+        dc->PDev, palPtr, 0, 0, palGDI->NumColors);
     }
   }
 
@@ -429,7 +424,6 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
   DC_UnlockDc(hDC);
 
   return realized;
-#endif
 }
 
 BOOL STDCALL NtGdiResizePalette(HPALETTE  hpal,
