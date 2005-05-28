@@ -165,7 +165,7 @@ struct	types {
 	{ "image",	"I",	TYPE_I,	0 },
 	{ "ebcdic",	"E",	TYPE_E,	0 },
 	{ "tenex",	"L",	TYPE_L,	bytename },
-	0
+	{0 }
 };
 
 /*
@@ -1276,7 +1276,7 @@ void mls(argc, argv)
  * Do a shell escape
  */
 /*ARGSUSED*/
-shell(argc, argv)
+int shell(argc, argv)
 	char *argv[];
 {
 #if 0
@@ -1405,7 +1405,7 @@ shell(argc, argv)
 /*
  * Send new user information (re-login)
  */
-user(argc, argv)
+int user(argc, argv)
 	int argc;
 	char **argv;
 {
@@ -1704,7 +1704,7 @@ void disconnect()
 	}
 }
 
-confirm(cmd, file)
+int confirm(cmd, file)
 	char *cmd, *file;
 {
 	char line[BUFSIZ];
@@ -1731,7 +1731,7 @@ void fatal(msg)
  * Can't control multiple values being expanded
  * from the expression, we return only the first.
  */
-globulize(cpp)
+int globulize(cpp)
 	char **cpp;
 {
 	char **globbed;
@@ -1810,7 +1810,7 @@ void doproxy(argc,argv)
 	void proxabort();
 	register struct cmd *c;
 	struct cmd *getcmd();
-	extern struct cmd cmdtab[];
+//	extern struct cmd cmdtab[];
 	extern jmp_buf abortprox;
 
 	if (argc < 2) {
