@@ -1,4 +1,4 @@
-1    stub     WEP
+#1    stub     WEP
 2    pascal -ret16 IpOpen(str ptr) IpOpen16
 3    stub     IpOpenAppend #(str word)
 4    pascal -ret16 IpClose(word) IpClose16

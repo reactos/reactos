@@ -1,0 +1,9 @@
+<module name="scsiport" type="kernelmodedriver" installbase="system32/drivers" installname="scsiport.sys">
+	<bootstrap base="reactos" />
+	<importlibrary definition="scsiport.def" />
+	<include base="scsiport">.</include>
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<file>scsiport.c</file>
+	<file>scsiport.rc</file>
+</module>

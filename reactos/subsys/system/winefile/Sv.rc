@@ -98,7 +98,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 	MENUITEM "Sortera efter st&orlek",	ID_VIEW_SORT_SIZE
 	MENUITEM "Sortera efter &datum",	ID_VIEW_SORT_DATE
         MENUITEM SEPARATOR
-        MENUITEM "Sortera efter &...",                409
+        MENUITEM "Sortera efter &...",                ID_VIEW_FILTER
 	}
 
 	POPUP "&Inställningar"  {

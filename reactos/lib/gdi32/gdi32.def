@@ -17,7 +17,7 @@ AddFontResourceExW@12
 AddFontResourceW@4
 AddFontResourceTracking@8
 AngleArc@24
-AnimatePalette@16
+AnimatePalette@16=NtGdiAnimatePalette@16
 AnyLinkedFonts@0
 Arc@36=NtGdiArc@36
 ArcTo@36=NtGdiArcTo@36

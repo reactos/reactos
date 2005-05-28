@@ -767,7 +767,10 @@ BOOL RPCRT4_RPCSSOnDemandCall(PRPCSS_NP_MESSAGE msg, char *vardata_payload, PRPC
     return TRUE;
 }
 
-/* DceErrorInqText
+#define MAX_RPC_ERROR_TEXT 256
+
+/******************************************************************************
+ * DceErrorInqTextW   (rpcrt4.@)
  *
  * Notes
  * 1. On passing a NULL pointer the code does bomb out.
@@ -778,9 +781,6 @@ BOOL RPCRT4_RPCSSOnDemandCall(PRPCSS_NP_MESSAGE msg, char *vardata_payload, PRPC
  * 4. The MSDN documentation currently declares that the second argument is
  *    unsigned char *, even for the W version.  I don't believe it.
  */
-
-#define MAX_RPC_ERROR_TEXT 256
-
 RPC_STATUS RPC_ENTRY DceErrorInqTextW (RPC_STATUS e, unsigned short *buffer)
 {
     DWORD count;
@@ -801,6 +801,9 @@ RPC_STATUS RPC_ENTRY DceErrorInqTextW (RPC_STATUS e, unsigned short *buffer)
     return RPC_S_OK;
 }
 
+/******************************************************************************
+ * DceErrorInqTextA   (rpcrt4.@)
+ */
 RPC_STATUS RPC_ENTRY DceErrorInqTextA (RPC_STATUS e, unsigned char *buffer)
 {
     RPC_STATUS status;

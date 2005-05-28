@@ -1,0 +1,7 @@
+<module name="kbdfr" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdfr.dll" warnings="true">
+	<importlibrary definition="kbdfr.def" />
+	<include base="ntoskrnl">include</include>
+	<define name="_DISABLE_TIDENTS" />
+	<file>kbdfr.c</file>
+	<file>kbdfr.rc</file>
+</module>

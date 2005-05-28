@@ -58,6 +58,7 @@ typedef struct ItemMonikerImpl{
 
     LPOLESTR itemDelimiter; /* Delimiter string */
 
+    IUnknown *pMarshal; /* custom marshaler */
 } ItemMonikerImpl;
 
 /********************************************************************************/
@@ -107,7 +108,7 @@ static ULONG   WINAPI ItemMonikerROTDataImpl_AddRef(IROTData* iface);
 static ULONG   WINAPI ItemMonikerROTDataImpl_Release(IROTData* iface);
 
 /* IROTData prototype function */
-static HRESULT WINAPI ItemMonikerROTDataImpl_GetComparaisonData(IROTData* iface,BYTE* pbData,ULONG cbMax,ULONG* pcbData);
+static HRESULT WINAPI ItemMonikerROTDataImpl_GetComparisonData(IROTData* iface,BYTE* pbData,ULONG cbMax,ULONG* pcbData);
 
 /********************************************************************************/
 /* Virtual function table for the ItemMonikerImpl class which  include IPersist,*/
@@ -146,7 +147,7 @@ static IROTDataVtbl VT_ROTDataImpl =
     ItemMonikerROTDataImpl_QueryInterface,
     ItemMonikerROTDataImpl_AddRef,
     ItemMonikerROTDataImpl_Release,
-    ItemMonikerROTDataImpl_GetComparaisonData
+    ItemMonikerROTDataImpl_GetComparisonData
 };
 
 /*******************************************************************************
@@ -175,6 +176,15 @@ HRESULT WINAPI ItemMonikerImpl_QueryInterface(IMoniker* iface,REFIID riid,void**
 
     else if (IsEqualIID(&IID_IROTData, riid))
         *ppvObject = (IROTData*)&(This->lpvtbl2);
+    else if (IsEqualIID(&IID_IMarshal, riid))
+    {
+        HRESULT hr = S_OK;
+        if (!This->pMarshal)
+            hr = MonikerMarshal_Create(iface, &This->pMarshal);
+        if (hr != S_OK)
+            return hr;
+        return IUnknown_QueryInterface(This->pMarshal, riid, ppvObject);
+    }
 
   /* Check that we obtained an interface.*/
     if ((*ppvObject)==0)
@@ -359,17 +369,16 @@ HRESULT WINAPI ItemMonikerImpl_GetSizeMax(IMoniker* iface,
 
     TRACE("(%p,%p)\n",iface,pcbSize);
 
-    if (pcbSize!=NULL)
+    if (!pcbSize)
         return E_POINTER;
 
     /* for more details see ItemMonikerImpl_Save coments */
 
     pcbSize->u.LowPart =  sizeof(DWORD) + /* DWORD which contains delimiter length */
-                        delimiterLength + /* item delimiter string */
+                        delimiterLength*4 + /* item delimiter string */
                         sizeof(DWORD) + /* DWORD which contains item name length */
-                        nameLength + /* item name string */
-                        34; /* this constant was added ! because when I tested this function it usually */
-                            /*  returns 34 bytes more than the number of bytes used by IMoniker::Save function */
+                        nameLength*4 + /* item name string */
+                        18; /* strange, but true */
     pcbSize->u.HighPart=0;
 
     return S_OK;
@@ -391,6 +400,7 @@ HRESULT WINAPI ItemMonikerImpl_Construct(ItemMonikerImpl* This, LPCOLESTR lpszDe
     This->lpvtbl1      = &VT_ItemMonikerImpl;
     This->lpvtbl2      = &VT_ROTDataImpl;
     This->ref          = 0;
+    This->pMarshal     = NULL;
 
     This->itemName=HeapAlloc(GetProcessHeap(),0,sizeof(WCHAR)*(sizeStr1+1));
     if (!This->itemName)
@@ -419,6 +429,7 @@ HRESULT WINAPI ItemMonikerImpl_Destroy(ItemMonikerImpl* This)
 {
     TRACE("(%p)\n",This);
 
+    if (This->pMarshal) IUnknown_Release(This->pMarshal);
     HeapFree(GetProcessHeap(),0,This->itemName);
     HeapFree(GetProcessHeap(),0,This->itemDelimiter);
     HeapFree(GetProcessHeap(),0,This);
@@ -952,13 +963,35 @@ ULONG   WINAPI ItemMonikerROTDataImpl_Release(IROTData* iface)
 /******************************************************************************
  *        ItemMonikerIROTData_GetComparaisonData
  ******************************************************************************/
-HRESULT WINAPI ItemMonikerROTDataImpl_GetComparaisonData(IROTData* iface,
+HRESULT WINAPI ItemMonikerROTDataImpl_GetComparisonData(IROTData* iface,
                                                          BYTE* pbData,
                                                          ULONG cbMax,
                                                          ULONG* pcbData)
 {
-    FIXME("(),stub!\n");
-    return E_NOTIMPL;
+    ICOM_THIS_From_IROTData(IMoniker, iface);
+    ItemMonikerImpl *This1 = (ItemMonikerImpl *)This;
+    int len = (strlenW(This1->itemName)+1);
+    int i;
+    LPWSTR pszItemName;
+    LPWSTR pszItemDelimiter;
+
+    TRACE("(%p, %lu, %p)\n", pbData, cbMax, pcbData);
+
+    *pcbData = sizeof(CLSID) + sizeof(WCHAR) + len * sizeof(WCHAR);
+    if (cbMax < *pcbData)
+        return E_OUTOFMEMORY;
+
+    /* write CLSID */
+    memcpy(pbData, &CLSID_ItemMoniker, sizeof(CLSID));
+    /* write delimiter */
+    pszItemDelimiter = (LPWSTR)(pbData+sizeof(CLSID));
+    *pszItemDelimiter = *This1->itemDelimiter;
+    /* write name */
+    pszItemName = pszItemDelimiter + 1;
+    for (i = 0; i < len; i++)
+        pszItemName[i] = toupperW(This1->itemName[i]);
+
+    return S_OK;
 }
 
 /******************************************************************************
@@ -985,4 +1018,76 @@ HRESULT WINAPI CreateItemMoniker(LPCOLESTR lpszDelim,LPCOLESTR  lpszItem, LPMONI
     }
 
     return ItemMonikerImpl_QueryInterface((IMoniker*)newItemMoniker,&IID_IMoniker,(void**)ppmk);
+}
+
+static HRESULT WINAPI ItemMonikerCF_QueryInterface(LPCLASSFACTORY iface,
+                                                  REFIID riid, LPVOID *ppv)
+{
+    *ppv = NULL;
+    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IClassFactory))
+    {
+        *ppv = iface;
+        IUnknown_AddRef(iface);
+        return S_OK;
+    }
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI ItemMonikerCF_AddRef(LPCLASSFACTORY iface)
+{
+    return 2; /* non-heap based object */
+}
+
+static ULONG WINAPI ItemMonikerCF_Release(LPCLASSFACTORY iface)
+{
+    return 1; /* non-heap based object */
+}
+
+static HRESULT WINAPI ItemMonikerCF_CreateInstance(LPCLASSFACTORY iface,
+    LPUNKNOWN pUnk, REFIID riid, LPVOID *ppv)
+{
+    ItemMonikerImpl* newItemMoniker;
+    HRESULT  hr;
+    static const WCHAR wszEmpty[] = { 0 };
+
+    TRACE("(%p, %s, %p)\n", pUnk, debugstr_guid(riid), ppv);
+
+    *ppv = NULL;
+
+    if (pUnk)
+        return CLASS_E_NOAGGREGATION;
+
+    newItemMoniker = HeapAlloc(GetProcessHeap(), 0, sizeof(ItemMonikerImpl));
+    if (!newItemMoniker)
+        return E_OUTOFMEMORY;
+
+    hr = ItemMonikerImpl_Construct(newItemMoniker, wszEmpty, wszEmpty);
+
+    if (SUCCEEDED(hr))
+	hr = ItemMonikerImpl_QueryInterface((IMoniker*)newItemMoniker, riid, ppv);
+    if (FAILED(hr))
+        HeapFree(GetProcessHeap(),0,newItemMoniker);
+
+    return hr;
+}
+
+static HRESULT WINAPI ItemMonikerCF_LockServer(LPCLASSFACTORY iface, BOOL fLock)
+{
+    FIXME("(%d), stub!\n",fLock);
+    return S_OK;
+}
+
+static const IClassFactoryVtbl ItemMonikerCFVtbl =
+{
+    ItemMonikerCF_QueryInterface,
+    ItemMonikerCF_AddRef,
+    ItemMonikerCF_Release,
+    ItemMonikerCF_CreateInstance,
+    ItemMonikerCF_LockServer
+};
+static const IClassFactoryVtbl *ItemMonikerCF = &ItemMonikerCFVtbl;
+
+HRESULT ItemMonikerCF_Create(REFIID riid, LPVOID *ppv)
+{
+    return IClassFactory_QueryInterface((IClassFactory *)&ItemMonikerCF, riid, ppv);
 }

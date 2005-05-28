@@ -21,6 +21,7 @@
 #define WIN32_LEAN_AND_MEAN     /* Exclude rarely-used stuff from Windows headers */
 #include <windows.h>
 #include <commctrl.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <tchar.h>
 
@@ -227,7 +228,7 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
       dx = hed->LeftMargin;
 
       /* draw address */
-      _stprintf(addr, _T("%04X"), linestart);
+      _stprintf(addr, _T("%04lX"), linestart);
       TextOut(hDC, dx, dy, addr, 4);
 
       dx += ((4 + hed->AddressSpacing) * hed->CharWidth);
@@ -274,7 +275,6 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
 static DWORD
 HEXEDIT_HitRegionTest(PHEXEDIT_DATA hed, POINTS pt)
 {
-  WINDOWINFO wi;
   int d;
 
   if(pt.x <= hed->LeftMargin)
@@ -479,6 +479,7 @@ HEXEDIT_HEM_SETMAXBUFFERSIZE(PHEXEDIT_DATA hed, DWORD nMaxSize)
     hed->hBuffer = LocalReAlloc(hed->hBuffer, hed->MaxBuffer, LMEM_MOVEABLE);
     HEXEDIT_Update(hed);
   }
+  return 0;
 }
 
 /*** Message Proc *************************************************************/

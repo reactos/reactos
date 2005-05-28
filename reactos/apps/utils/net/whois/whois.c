@@ -36,16 +36,6 @@
  *          more convenient fdopen()/fprintf() to send()/recv().
  */
 
-#ifndef lint
-static char copyright[] =
-"@(#) Copyright (c) 1980, 1993\n\
-	The Regents of the University of California.  All rights reserved.\n";
-#endif /* not lint */
-
-#ifndef lint
-static char sccsid[] = "@(#)whois.c	8.1 (Berkeley) 6/6/93";
-#endif /* not lint */
-
 #include <sys/types.h>
 #include <winsock2.h>
 /* #include <sys/socket.h> */
@@ -161,6 +151,7 @@ int main(int argc, char **argv)
 		putchar(ch);
 
 	leave(0);
+	return 0;
 }
 
 void usage()

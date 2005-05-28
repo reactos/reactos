@@ -1,0 +1,7 @@
+<module name="hal" type="kernelmodedll">
+	<importlibrary basename="hal" definition="hal.def" />
+	<include base="ntoskrnl">include</include>
+	<library>ntoskrnl</library>
+	<file>hal.c</file>
+	<file>hal.rc</file>
+</module>

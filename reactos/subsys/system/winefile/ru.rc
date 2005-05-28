@@ -94,7 +94,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Сортировать по &размеру" , 		ID_VIEW_SORT_SIZE
 		MENUITEM "Сортировать по д&ате" , 		ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
-		MENUITEM "Сортировать по &..." ,			409
+		MENUITEM "Сортировать по &..." ,			ID_VIEW_FILTER
 	}
 
 	POPUP "&Настройки"  {

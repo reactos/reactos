@@ -94,7 +94,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Sorteer op &grootte" , ID_VIEW_SORT_SIZE
 		MENUITEM "Sorteer op &datum" ,   ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
-		MENUITEM "Sorteer op &..." ,     409
+		MENUITEM "Sorteer op &..." ,     ID_VIEW_FILTER
 	}
 
 	POPUP "&Opties"  {

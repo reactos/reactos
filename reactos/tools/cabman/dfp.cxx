@@ -78,6 +78,8 @@ CDFParser::CDFParser()
 
     InfModeEnabled = false;
     InfFileHandle = NULL;
+    
+    strcpy(FileRelativePath, "");
 }
 
 CDFParser::~CDFParser()
@@ -382,6 +384,20 @@ unsigned long CDFParser::Parse()
     }
 
     return CAB_STATUS_SUCCESS;
+}
+
+
+void CDFParser::SetFileRelativePath(char* Path)
+/*
+ * FUNCTION: Sets path where files in the .dff is assumed relative to
+ * ARGUMENTS:
+ *    Path = Pointer to string with path
+ */
+{
+    strcpy(FileRelativePath, Path);
+    ConvertPath(FileRelativePath, false);
+    if (strlen(FileRelativePath) > 0)
+        NormalizePath(FileRelativePath, MAX_PATH);
 }
 
 
@@ -1000,6 +1016,7 @@ unsigned long CDFParser::PerformFileCopy()
     char SrcName[MAX_PATH];
     char DstName[MAX_PATH];
     char InfLine[MAX_PATH];
+    char BaseFilename[MAX_PATH];
 
     strcpy(SrcName, "");
     strcpy(DstName, "");
@@ -1015,7 +1032,8 @@ unsigned long CDFParser::PerformFileCopy()
     CurrentString[i] = '\0';
     CurrentToken = TokenString;
     CurrentChar  = i + 1;
-    strcpy(SrcName, CurrentString);
+    strcpy(BaseFilename, CurrentString);
+    strcat(SrcName, BaseFilename);
 
     SkipSpaces();
 
@@ -1064,6 +1082,11 @@ unsigned long CDFParser::PerformFileCopy()
     WriteInfLine(InfLine);
 
     Status = AddFile(SrcName);
+    if (Status == CAB_STATUS_CANNOT_OPEN) {
+	    strcpy(SrcName, FileRelativePath);
+	    strcat(SrcName, BaseFilename);
+    	Status = AddFile(SrcName);
+    }
     if (Status != CAB_STATUS_SUCCESS) {
         if (Status == CAB_STATUS_CANNOT_OPEN)
 		    printf("File does not exist: %s.\n", SrcName);
@@ -1089,7 +1112,7 @@ void CDFParser::SkipSpaces()
 }
 
 
-bool CDFParser::IsNextToken(TOKEN Token, bool NoSpaces)
+bool CDFParser::IsNextToken(DFP_TOKEN Token, bool NoSpaces)
 /*
  * FUNCTION: Checks if next token equals Token
  * ARGUMENTS:

@@ -19,6 +19,9 @@
 #include <internal/debug.h>
 #include <hal.h>
 
+/* Hmm, needed for KDBG := 1. Why? */
+#undef KeGetCurrentIrql
+
 /* FUNCTIONS *****************************************************************/
 
 /* NOTE: IoAllocateAdapterChannel in NTOSKRNL.EXE */

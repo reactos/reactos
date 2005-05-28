@@ -1,0 +1,9 @@
+<directory name="vbe">
+	<xi:include href="vbe/vbemp.xml" />
+</directory>
+<directory name="vga">
+	<xi:include href="vga/vgamp.xml" />
+</directory>
+<directory name="xboxvmp">
+	<xi:include href="xboxvmp/xboxvmp.xml" />
+</directory>

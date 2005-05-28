@@ -27,6 +27,11 @@
 #define NDEBUG
 #include <debug.h>
 
+/* NDK FIXME */
+NTSTATUS
+STDCALL
+NtVdmControl (ULONG ControlCode, PVOID ControlData);
+
 static PKINTERRUPT AcpiInterrupt;
 static BOOLEAN AcpiInterruptHandlerRegistered = FALSE;
 static OSD_HANDLER AcpiIrqHandler = NULL;

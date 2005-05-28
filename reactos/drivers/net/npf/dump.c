@@ -26,7 +26,7 @@
 #include "ndis.h"
 #else
 #include <ddk/ntddk.h>
-#include <net/ndis.h>
+#include <ddk/ndis.h>
 //#define PsGetCurrentProcess() IoGetCurrentProcess()
 #ifndef PsGetCurrentThread
 #define PsGetCurrentThread() ((PETHREAD) (KeGetCurrentThread()))
@@ -37,7 +37,6 @@
 #include "packet.h"
 #include "win_bpf.h"
 
-#define assert(exp)     ((void)0)
 //-------------------------------------------------------------------
 
 NTSTATUS

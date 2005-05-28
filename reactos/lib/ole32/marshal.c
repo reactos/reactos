@@ -63,26 +63,25 @@ static HRESULT unmarshal_object(const STDOBJREF *stdobjref, APARTMENT *apt, REFI
  *
  * So basically we need a set of values that make it unique.
  *
- * 	Process Identifier, Object IUnknown ptr, IID
- *
  * Note that the IUnknown_QI(ob,xiid,&ppv) always returns the SAME ppv value!
  *
- * In Windows, a different triple is used: OXID (apt id), OID (stub
- * manager id), IPID (interface ptr/stub id).
+ * A triple is used: OXID (apt id), OID (stub manager id),
+ * IPID (interface ptr/stub id).
  *
  * OXIDs identify an apartment and are network scoped
  * OIDs identify a stub manager and are apartment scoped
  * IPIDs identify an interface stub and are apartment scoped
  */
 
-inline static HRESULT
-get_facbuf_for_iid(REFIID riid,IPSFactoryBuffer **facbuf) {
-    HRESULT       hres;
-    CLSID         pxclsid;
+inline static HRESULT get_facbuf_for_iid(REFIID riid, IPSFactoryBuffer **facbuf)
+{
+    HRESULT       hr;
+    CLSID         clsid;
 
-    if ((hres = CoGetPSClsid(riid,&pxclsid)))
-	return hres;
-    return CoGetClassObject(&pxclsid,CLSCTX_INPROC_SERVER,NULL,&IID_IPSFactoryBuffer,(LPVOID*)facbuf);
+    if ((hr = CoGetPSClsid(riid, &clsid)))
+        return hr;
+    return CoGetClassObject(&clsid, CLSCTX_INPROC_SERVER, NULL,
+        &IID_IPSFactoryBuffer, (LPVOID*)facbuf);
 }
 
 /* creates a new stub manager */
@@ -747,56 +746,61 @@ HRESULT apartment_disconnectproxies(struct apartment *apt)
 }
 
 /********************** StdMarshal implementation ****************************/
-typedef struct _StdMarshalImpl {
-  IMarshalVtbl	*lpvtbl;
-  DWORD			ref;
+typedef struct _StdMarshalImpl
+{
+    const IMarshalVtbl	*lpvtbl;
+    DWORD		ref;
 
-  IID			iid;
-  DWORD			dwDestContext;
-  LPVOID		pvDestContext;
-  DWORD			mshlflags;
+    IID			iid;
+    DWORD		dwDestContext;
+    LPVOID		pvDestContext;
+    DWORD		mshlflags;
 } StdMarshalImpl;
 
-static HRESULT WINAPI
-StdMarshalImpl_QueryInterface(LPMARSHAL iface,REFIID riid,LPVOID *ppv) {
-  *ppv = NULL;
-  if (IsEqualIID(&IID_IUnknown,riid) || IsEqualIID(&IID_IMarshal,riid)) {
-    *ppv = iface;
-    IUnknown_AddRef(iface);
-    return S_OK;
-  }
-  FIXME("No interface for %s.\n",debugstr_guid(riid));
-  return E_NOINTERFACE;
+static HRESULT WINAPI 
+StdMarshalImpl_QueryInterface(LPMARSHAL iface, REFIID riid, LPVOID *ppv)
+{
+    *ppv = NULL;
+    if (IsEqualIID(&IID_IUnknown, riid) || IsEqualIID(&IID_IMarshal, riid))
+    {
+        *ppv = iface;
+        IUnknown_AddRef(iface);
+        return S_OK;
+    }
+    FIXME("No interface for %s.\n", debugstr_guid(riid));
+    return E_NOINTERFACE;
 }
 
 static ULONG WINAPI
-StdMarshalImpl_AddRef(LPMARSHAL iface) {
-  StdMarshalImpl *This = (StdMarshalImpl *)iface;
-  return InterlockedIncrement(&This->ref);
+StdMarshalImpl_AddRef(LPMARSHAL iface)
+{
+    StdMarshalImpl *This = (StdMarshalImpl *)iface;
+    return InterlockedIncrement(&This->ref);
 }
 
 static ULONG WINAPI
-StdMarshalImpl_Release(LPMARSHAL iface) {
-  StdMarshalImpl *This = (StdMarshalImpl *)iface;
-  ULONG ref = InterlockedDecrement(&This->ref);
+StdMarshalImpl_Release(LPMARSHAL iface)
+{
+    StdMarshalImpl *This = (StdMarshalImpl *)iface;
+    ULONG ref = InterlockedDecrement(&This->ref);
 
-  if (!ref) HeapFree(GetProcessHeap(),0,This);
-  return ref;
+    if (!ref) HeapFree(GetProcessHeap(),0,This);
+    return ref;
 }
 
 static HRESULT WINAPI
 StdMarshalImpl_GetUnmarshalClass(
-  LPMARSHAL iface, REFIID riid, void* pv, DWORD dwDestContext,
-  void* pvDestContext, DWORD mshlflags, CLSID* pCid
-) {
-  memcpy(pCid,&CLSID_DfMarshal,sizeof(CLSID_DfMarshal));
-  return S_OK;
+    LPMARSHAL iface, REFIID riid, void* pv, DWORD dwDestContext,
+    void* pvDestContext, DWORD mshlflags, CLSID* pCid)
+{
+    *pCid = CLSID_DfMarshal;
+    return S_OK;
 }
 
 static HRESULT WINAPI
 StdMarshalImpl_GetMarshalSizeMax(
-  LPMARSHAL iface, REFIID riid, void* pv, DWORD dwDestContext,
-  void* pvDestContext, DWORD mshlflags, DWORD* pSize)
+    LPMARSHAL iface, REFIID riid, void* pv, DWORD dwDestContext,
+    void* pvDestContext, DWORD mshlflags, DWORD* pSize)
 {
     *pSize = sizeof(STDOBJREF);
     return S_OK;
@@ -804,48 +808,48 @@ StdMarshalImpl_GetMarshalSizeMax(
 
 static HRESULT WINAPI
 StdMarshalImpl_MarshalInterface(
-  LPMARSHAL iface, IStream *pStm,REFIID riid, void* pv, DWORD dwDestContext,
-  void* pvDestContext, DWORD mshlflags
-) {
-  STDOBJREF             stdobjref;
-  IUnknown             *pUnk;  
-  ULONG                 res;
-  HRESULT               hres;
-  APARTMENT            *apt = COM_CurrentApt();
-    
-  TRACE("(...,%s,...)\n",debugstr_guid(riid));
+    LPMARSHAL iface, IStream *pStm,REFIID riid, void* pv, DWORD dwDestContext,
+    void* pvDestContext, DWORD mshlflags)
+{
+    STDOBJREF             stdobjref;
+    IUnknown             *pUnk;  
+    ULONG                 res;
+    HRESULT               hres;
+    APARTMENT            *apt = COM_CurrentApt();
 
-  if (!apt)
-  {
-      ERR("Apartment not initialized\n");
-      return CO_E_NOTINITIALIZED;
-  }
+    TRACE("(...,%s,...)\n", debugstr_guid(riid));
 
-  /* make sure this apartment can be reached from other threads / processes */
-  RPC_StartRemoting(apt);
+    if (!apt)
+    {
+        ERR("Apartment not initialized\n");
+        return CO_E_NOTINITIALIZED;
+    }
 
-  hres = IUnknown_QueryInterface((LPUNKNOWN)pv, riid, (LPVOID*)&pUnk);
-  if (hres != S_OK)
-  {
-      ERR("object doesn't expose interface %s, failing with error 0x%08lx\n",
-        debugstr_guid(riid), hres);
-      return E_NOINTERFACE;
-  }
+    /* make sure this apartment can be reached from other threads / processes */
+    RPC_StartRemoting(apt);
 
-  hres = marshal_object(apt, &stdobjref, riid, pUnk, mshlflags);
+    hres = IUnknown_QueryInterface((LPUNKNOWN)pv, riid, (LPVOID*)&pUnk);
+    if (hres != S_OK)
+    {
+        ERR("object doesn't expose interface %s, failing with error 0x%08lx\n",
+            debugstr_guid(riid), hres);
+        return E_NOINTERFACE;
+    }
+
+    hres = marshal_object(apt, &stdobjref, riid, pUnk, mshlflags);
   
-  IUnknown_Release(pUnk);
+    IUnknown_Release(pUnk);
   
-  if (hres)
-  {
-    FIXME("Failed to create ifstub, hres=0x%lx\n", hres);
-    return hres;
-  }
+    if (hres)
+    {
+        ERR("Failed to create ifstub, hres=0x%lx\n", hres);
+        return hres;
+    }
 
-  hres = IStream_Write(pStm, &stdobjref, sizeof(stdobjref), &res);
-  if (hres) return hres;
+    hres = IStream_Write(pStm, &stdobjref, sizeof(stdobjref), &res);
+    if (hres) return hres;
 
-  return S_OK;
+    return S_OK;
 }
 
 /* helper for StdMarshalImpl_UnmarshalInterface - does the unmarshaling with
@@ -907,85 +911,86 @@ static HRESULT unmarshal_object(const STDOBJREF *stdobjref, APARTMENT *apt, REFI
 static HRESULT WINAPI
 StdMarshalImpl_UnmarshalInterface(LPMARSHAL iface, IStream *pStm, REFIID riid, void **ppv)
 {
-  struct stub_manager  *stubmgr;
-  STDOBJREF stdobjref;
-  ULONG			res;
-  HRESULT		hres;
-  APARTMENT *apt = COM_CurrentApt();
-  APARTMENT *stub_apt;
-  OXID oxid;
+    struct stub_manager  *stubmgr;
+    STDOBJREF stdobjref;
+    ULONG res;
+    HRESULT hres;
+    APARTMENT *apt = COM_CurrentApt();
+    APARTMENT *stub_apt;
+    OXID oxid;
 
-  TRACE("(...,%s,....)\n",debugstr_guid(riid));
+    TRACE("(...,%s,....)\n", debugstr_guid(riid));
 
-  /* we need an apartment to unmarshal into */
-  if (!apt)
-  {
-      ERR("Apartment not initialized\n");
-      return CO_E_NOTINITIALIZED;
-  }
+    /* we need an apartment to unmarshal into */
+    if (!apt)
+    {
+        ERR("Apartment not initialized\n");
+        return CO_E_NOTINITIALIZED;
+    }
 
-  /* read STDOBJREF from wire */
-  hres = IStream_Read(pStm, &stdobjref, sizeof(stdobjref), &res);
-  if (hres) return hres;
+    /* read STDOBJREF from wire */
+    hres = IStream_Read(pStm, &stdobjref, sizeof(stdobjref), &res);
+    if (hres) return hres;
 
-  hres = apartment_getoxid(apt, &oxid);
-  if (hres) return hres;
+    hres = apartment_getoxid(apt, &oxid);
+    if (hres) return hres;
 
-  /* check if we're marshalling back to ourselves */
-  if ((oxid == stdobjref.oxid) && (stubmgr = get_stub_manager(apt, stdobjref.oid)))
-  {
-      TRACE("Unmarshalling object marshalled in same apartment for iid %s, "
-            "returning original object %p\n", debugstr_guid(riid), stubmgr->object);
+    /* check if we're marshalling back to ourselves */
+    if ((oxid == stdobjref.oxid) && (stubmgr = get_stub_manager(apt, stdobjref.oid)))
+    {
+        TRACE("Unmarshalling object marshalled in same apartment for iid %s, "
+              "returning original object %p\n", debugstr_guid(riid), stubmgr->object);
     
-      hres = IUnknown_QueryInterface(stubmgr->object, riid, ppv);
+        hres = IUnknown_QueryInterface(stubmgr->object, riid, ppv);
       
-      /* unref the ifstub. FIXME: only do this on success? */
-      if (!stub_manager_is_table_marshaled(stubmgr))
-          stub_manager_ext_release(stubmgr, 1);
+        /* unref the ifstub. FIXME: only do this on success? */
+        if (!stub_manager_is_table_marshaled(stubmgr))
+            stub_manager_ext_release(stubmgr, 1);
 
-      stub_manager_int_release(stubmgr);
-      return hres;
-  }
+        stub_manager_int_release(stubmgr);
+        return hres;
+    }
 
-  /* notify stub manager about unmarshal if process-local object.
-   * note: if the oxid is not found then we and native will quite happily
-   * ignore table marshaling and normal marshaling rules regarding number of
-   * unmarshals, etc, but if you abuse these rules then your proxy could end
-   * up returning RPC_E_DISCONNECTED. */
-  if ((stub_apt = apartment_findfromoxid(stdobjref.oxid, TRUE)))
-  {
-      if ((stubmgr = get_stub_manager(stub_apt, stdobjref.oid)))
-      {
-          if (!stub_manager_notify_unmarshal(stubmgr))
-              hres = CO_E_OBJNOTCONNECTED;
+    /* notify stub manager about unmarshal if process-local object.
+     * note: if the oxid is not found then we and native will quite happily
+     * ignore table marshaling and normal marshaling rules regarding number of
+     * unmarshals, etc, but if you abuse these rules then your proxy could end
+     * up returning RPC_E_DISCONNECTED. */
+    if ((stub_apt = apartment_findfromoxid(stdobjref.oxid, TRUE)))
+    {
+        if ((stubmgr = get_stub_manager(stub_apt, stdobjref.oid)))
+        {
+            if (!stub_manager_notify_unmarshal(stubmgr))
+                hres = CO_E_OBJNOTCONNECTED;
 
-          stub_manager_int_release(stubmgr);
-      }
-      else
-      {
-          WARN("Couldn't find object for OXID %s, OID %s, assuming disconnected\n",
-              wine_dbgstr_longlong(stdobjref.oxid),
-              wine_dbgstr_longlong(stdobjref.oid));
-          hres = CO_E_OBJNOTCONNECTED;
-      }
+            stub_manager_int_release(stubmgr);
+        }
+        else
+        {
+            WARN("Couldn't find object for OXID %s, OID %s, assuming disconnected\n",
+                wine_dbgstr_longlong(stdobjref.oxid),
+                wine_dbgstr_longlong(stdobjref.oid));
+            hres = CO_E_OBJNOTCONNECTED;
+        }
 
-      apartment_release(stub_apt);
-  }
-  else
-      TRACE("Treating unmarshal from OXID %s as inter-process\n",
+        apartment_release(stub_apt);
+    }
+    else
+        TRACE("Treating unmarshal from OXID %s as inter-process\n",
             wine_dbgstr_longlong(stdobjref.oxid));
 
-  if (hres == S_OK)
-      hres = unmarshal_object(&stdobjref, apt, riid, ppv);
+    if (hres == S_OK)
+        hres = unmarshal_object(&stdobjref, apt, riid, ppv);
 
-  if (hres) WARN("Failed with error 0x%08lx\n", hres);
-  else TRACE("Successfully created proxy %p\n", *ppv);
+    if (hres) WARN("Failed with error 0x%08lx\n", hres);
+    else TRACE("Successfully created proxy %p\n", *ppv);
 
-  return hres;
+    return hres;
 }
 
 static HRESULT WINAPI
-StdMarshalImpl_ReleaseMarshalData(LPMARSHAL iface, IStream *pStm) {
+StdMarshalImpl_ReleaseMarshalData(LPMARSHAL iface, IStream *pStm)
+{
     STDOBJREF            stdobjref;
     ULONG                res;
     HRESULT              hres;
@@ -996,6 +1001,11 @@ StdMarshalImpl_ReleaseMarshalData(LPMARSHAL iface, IStream *pStm) {
     
     hres = IStream_Read(pStm, &stdobjref, sizeof(stdobjref), &res);
     if (hres) return hres;
+
+    TRACE("oxid = %s, oid = %s, ipid = %s\n",
+        wine_dbgstr_longlong(stdobjref.oxid),
+        wine_dbgstr_longlong(stdobjref.oid),
+        wine_dbgstr_guid(&stdobjref.ipid));
 
     if (!(apt = apartment_findfromoxid(stdobjref.oxid, TRUE)))
     {
@@ -1020,12 +1030,14 @@ StdMarshalImpl_ReleaseMarshalData(LPMARSHAL iface, IStream *pStm) {
 }
 
 static HRESULT WINAPI
-StdMarshalImpl_DisconnectObject(LPMARSHAL iface, DWORD dwReserved) {
-  FIXME("(), stub!\n");
-  return S_OK;
+StdMarshalImpl_DisconnectObject(LPMARSHAL iface, DWORD dwReserved)
+{
+    FIXME("(), stub!\n");
+    return S_OK;
 }
 
-IMarshalVtbl stdmvtbl = {
+static const IMarshalVtbl VT_StdMarshal =
+{
     StdMarshalImpl_QueryInterface,
     StdMarshalImpl_AddRef,
     StdMarshalImpl_Release,
@@ -1043,7 +1055,7 @@ static HRESULT StdMarshalImpl_Construct(REFIID riid, void** ppvObject)
         HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(StdMarshalImpl));
     if (!pStdMarshal)
         return E_OUTOFMEMORY;
-    pStdMarshal->lpvtbl = &stdmvtbl;
+    pStdMarshal->lpvtbl = &VT_StdMarshal;
     pStdMarshal->ref = 0;
     return IMarshal_QueryInterface((IMarshal*)pStdMarshal, riid, ppvObject);
 }
@@ -1075,28 +1087,27 @@ HRESULT WINAPI CoGetStandardMarshal(REFIID riid, IUnknown *pUnk,
                                     DWORD dwDestContext, LPVOID pvDestContext,
                                     DWORD mshlflags, LPMARSHAL *ppMarshal)
 {
-  StdMarshalImpl *dm;
+    StdMarshalImpl *dm;
 
-  if (pUnk == NULL) {
-    FIXME("(%s,NULL,%lx,%p,%lx,%p), unimplemented yet.\n",
-      debugstr_guid(riid),dwDestContext,pvDestContext,mshlflags,ppMarshal
-    );
-    return E_FAIL;
-  }
-  TRACE("(%s,%p,%lx,%p,%lx,%p)\n",
-    debugstr_guid(riid),pUnk,dwDestContext,pvDestContext,mshlflags,ppMarshal
-  );
-  *ppMarshal = HeapAlloc(GetProcessHeap(),0,sizeof(StdMarshalImpl));
-  dm = (StdMarshalImpl*) *ppMarshal;
-  if (!dm) return E_FAIL;
-  dm->lpvtbl		= &stdmvtbl;
-  dm->ref		= 1;
+    if (pUnk == NULL)
+    {
+        FIXME("(%s,NULL,%lx,%p,%lx,%p), unimplemented yet.\n",
+            debugstr_guid(riid),dwDestContext,pvDestContext,mshlflags,ppMarshal);
+        return E_NOTIMPL;
+    }
+    TRACE("(%s,%p,%lx,%p,%lx,%p)\n",
+        debugstr_guid(riid),pUnk,dwDestContext,pvDestContext,mshlflags,ppMarshal);
+    *ppMarshal = HeapAlloc(GetProcessHeap(),0,sizeof(StdMarshalImpl));
+    dm = (StdMarshalImpl*) *ppMarshal;
+    if (!dm) return E_FAIL;
+    dm->lpvtbl		= &VT_StdMarshal;
+    dm->ref		= 1;
 
-  memcpy(&dm->iid,riid,sizeof(dm->iid));
-  dm->dwDestContext	= dwDestContext;
-  dm->pvDestContext	= pvDestContext;
-  dm->mshlflags		= mshlflags;
-  return S_OK;
+    dm->iid		= *riid;
+    dm->dwDestContext	= dwDestContext;
+    dm->pvDestContext	= pvDestContext;
+    dm->mshlflags	= mshlflags;
+    return S_OK;
 }
 
 /***********************************************************************
@@ -1157,7 +1168,7 @@ static HRESULT get_unmarshaler_from_stream(IStream *stream, IMarshal **marshal, 
     }
     else if (objref.flags & OBJREF_CUSTOM)
     {
-        ULONG custom_header_size = FIELD_OFFSET(OBJREF, u_objref.u_custom.size) - 
+        ULONG custom_header_size = FIELD_OFFSET(OBJREF, u_objref.u_custom.pData) - 
                                    FIELD_OFFSET(OBJREF, u_objref.u_custom);
         TRACE("Using custom unmarshaling\n");
         /* read constant sized OR_CUSTOM data from stream */
@@ -1234,7 +1245,7 @@ HRESULT WINAPI CoGetMarshalSizeMax(ULONG *pulSize, REFIID riid, IUnknown *pUnk,
 
     /* if custom marshaling, add on size of custom header */
     if (!IsEqualCLSID(&marshaler_clsid, &CLSID_DfMarshal))
-        *pulSize += FIELD_OFFSET(OBJREF, u_objref.u_custom.size) - 
+        *pulSize += FIELD_OFFSET(OBJREF, u_objref.u_custom.pData) - 
                     FIELD_OFFSET(OBJREF, u_objref.u_custom);
 
     IMarshal_Release(pMarshal);
@@ -1281,7 +1292,6 @@ HRESULT WINAPI CoMarshalInterface(IStream *pStream, REFIID riid, IUnknown *pUnk,
     HRESULT	hr;
     CLSID marshaler_clsid;
     OBJREF objref;
-    IStream * pMarshalStream = NULL;
     LPMARSHAL pMarshal;
 
     TRACE("(%p, %s, %p, %lx, %p, %lx)\n", pStream, debugstr_guid(riid), pUnk,
@@ -1314,33 +1324,43 @@ HRESULT WINAPI CoMarshalInterface(IStream *pStream, REFIID riid, IUnknown *pUnk,
     {
         TRACE("Using standard marshaling\n");
         objref.flags = OBJREF_STANDARD;
-        pMarshalStream = pStream;
+
+        /* write the common OBJREF header to the stream */
+        hr = IStream_Write(pStream, &objref, FIELD_OFFSET(OBJREF, u_objref), NULL);
+        if (hr)
+        {
+            ERR("Failed to write OBJREF header to stream, 0x%08lx\n", hr);
+            goto cleanup;
+        }
     }
     else
     {
         TRACE("Using custom marshaling\n");
         objref.flags = OBJREF_CUSTOM;
-        /* we do custom marshaling into a memory stream so that we know what
-         * size to write into the OR_CUSTOM header */
-        hr = CreateStreamOnHGlobal(NULL, TRUE, &pMarshalStream);
+        objref.u_objref.u_custom.clsid = marshaler_clsid;
+        objref.u_objref.u_custom.cbExtension = 0;
+        objref.u_objref.u_custom.size = 0;
+        hr = IMarshal_GetMarshalSizeMax(pMarshal, riid, pUnk, dwDestContext,
+                                        pvDestContext, mshlFlags,
+                                        &objref.u_objref.u_custom.size);
         if (hr)
         {
-            ERR("CreateStreamOnHGLOBAL failed with 0x%08lx\n", hr);
+            ERR("Failed to get max size of marshal data, error 0x%08lx\n", hr);
+            goto cleanup;
+        }
+        /* write constant sized common header and OR_CUSTOM data into stream */
+        hr = IStream_Write(pStream, &objref,
+                          FIELD_OFFSET(OBJREF, u_objref.u_custom.pData), NULL);
+        if (hr)
+        {
+            ERR("Failed to write OR_CUSTOM header to stream with 0x%08lx\n", hr);
             goto cleanup;
         }
     }
 
-    /* write the common OBJREF header to the stream */
-    hr = IStream_Write(pStream, &objref, FIELD_OFFSET(OBJREF, u_objref), NULL);
-    if (hr)
-    {
-        ERR("Failed to write OBJREF header to stream, 0x%08lx\n", hr);
-        goto cleanup;
-    }
-
     TRACE("Calling IMarshal::MarshalInterace\n");
     /* call helper object to do the actual marshaling */
-    hr = IMarshal_MarshalInterface(pMarshal, pMarshalStream, riid, pUnk, dwDestContext,
+    hr = IMarshal_MarshalInterface(pMarshal, pStream, riid, pUnk, dwDestContext,
                                    pvDestContext, mshlFlags);
 
     if (hr)
@@ -1349,51 +1369,7 @@ HRESULT WINAPI CoMarshalInterface(IStream *pStream, REFIID riid, IUnknown *pUnk,
         goto cleanup;
     }
 
-    if (objref.flags & OBJREF_CUSTOM)
-    {
-        ULONG custom_header_size = FIELD_OFFSET(OBJREF, u_objref.u_custom.size) - 
-                                   FIELD_OFFSET(OBJREF, u_objref.u_custom);
-        HGLOBAL hGlobal;
-        LPVOID data;
-        hr = GetHGlobalFromStream(pMarshalStream, &hGlobal);
-        if (hr)
-        {
-            ERR("Couldn't get HGLOBAL from stream\n");
-            hr = E_UNEXPECTED;
-            goto cleanup;
-        }
-        objref.u_objref.u_custom.clsid = marshaler_clsid;
-        objref.u_objref.u_custom.cbExtension = 0;
-        objref.u_objref.u_custom.size = GlobalSize(hGlobal);
-        /* write constant sized OR_CUSTOM data into stream */
-        hr = IStream_Write(pStream, &objref.u_objref.u_custom,
-                          custom_header_size, NULL);
-        if (hr)
-        {
-            ERR("Failed to write OR_CUSTOM header to stream with 0x%08lx\n", hr);
-            goto cleanup;
-        }
-
-        data = GlobalLock(hGlobal);
-        if (!data)
-        {
-            ERR("GlobalLock failed\n");
-            hr = E_UNEXPECTED;
-            goto cleanup;
-        }
-        /* write custom marshal data */
-        hr = IStream_Write(pStream, data, objref.u_objref.u_custom.size, NULL);
-        if (hr)
-        {
-            ERR("Failed to write custom marshal data with 0x%08lx\n", hr);
-            goto cleanup;
-        }
-        GlobalUnlock(hGlobal);
-    }
-
 cleanup:
-    if (pMarshalStream && (objref.flags & OBJREF_CUSTOM))
-        IStream_Release(pMarshalStream);
     IMarshal_Release(pMarshal);
 
     TRACE("completed with hr 0x%08lx\n", hr);
@@ -1602,11 +1578,11 @@ static ULONG WINAPI StdMarshalCF_Release(LPCLASSFACTORY iface)
 static HRESULT WINAPI StdMarshalCF_CreateInstance(LPCLASSFACTORY iface,
     LPUNKNOWN pUnk, REFIID riid, LPVOID *ppv)
 {
-  if (IsEqualIID(riid,&IID_IMarshal))
-    return StdMarshalImpl_Construct(riid, ppv);
+    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IMarshal))
+        return StdMarshalImpl_Construct(riid, ppv);
 
-  FIXME("(%s), not supported.\n",debugstr_guid(riid));
-  return E_NOINTERFACE;
+    FIXME("(%s), not supported.\n",debugstr_guid(riid));
+    return E_NOINTERFACE;
 }
 
 static HRESULT WINAPI StdMarshalCF_LockServer(LPCLASSFACTORY iface, BOOL fLock)
@@ -1615,7 +1591,7 @@ static HRESULT WINAPI StdMarshalCF_LockServer(LPCLASSFACTORY iface, BOOL fLock)
     return S_OK;
 }
 
-static IClassFactoryVtbl StdMarshalCFVtbl =
+static const IClassFactoryVtbl StdMarshalCFVtbl =
 {
     StdMarshalCF_QueryInterface,
     StdMarshalCF_AddRef,
@@ -1623,7 +1599,7 @@ static IClassFactoryVtbl StdMarshalCFVtbl =
     StdMarshalCF_CreateInstance,
     StdMarshalCF_LockServer
 };
-static IClassFactoryVtbl *StdMarshalCF = &StdMarshalCFVtbl;
+static const IClassFactoryVtbl *StdMarshalCF = &StdMarshalCFVtbl;
 
 HRESULT MARSHAL_GetStandardMarshalCF(LPVOID *ppv)
 {

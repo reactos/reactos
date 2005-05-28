@@ -32,13 +32,9 @@
 
 #define NTKERNEL    ///< Forces the compilation of the jitter with kernel calls
 
-#ifdef __GNUC__
+struct bpf_insn;
 #undef EXIT_SUCCESS
 #undef EXIT_FAILURE
-#define UNICODE_NULL ((WCHAR)0) // winnt
-#include "win_bpf.h"
-#include <internal/ps.h>
-#endif
 
 #include "jitter.h"
 #include "tme.h"

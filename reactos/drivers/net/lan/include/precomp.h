@@ -8,7 +8,7 @@
 #include <roscfg.h>
 #include <debug.h>
 #include <pseh.h>
-#include "net/lan.h"
+#include "net_lan.h"
 #include "lan.h"
 
 #endif/*_LAN_PRECOMP_H*/

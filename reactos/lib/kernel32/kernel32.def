@@ -178,7 +178,7 @@ EnterCriticalSection@4=NTDLL.RtlEnterCriticalSection
 EnumCalendarInfoA@16
 EnumCalendarInfoExA@16
 EnumCalendarInfoExW@16
-EnumCalendarInfoW@16
+;EnumCalendarInfoW@16
 EnumDateFormatsA@12
 EnumDateFormatsExA@12
 EnumDateFormatsExW@12
@@ -659,7 +659,7 @@ OpenJobObjectW@12
 OpenMutexA@12
 OpenMutexW@12
 OpenProcess@12
-OpenProfileUserMapping@0
+;OpenProfileUserMapping@0
 OpenSemaphoreA@12
 OpenSemaphoreW@12
 OpenThread@12
@@ -691,7 +691,7 @@ QueryPerformanceCounter@4
 QueryPerformanceFrequency@4
 QueueUserAPC@12
 QueueUserWorkItem@12
-QueryWin31IniFilesMappedToRegistry@16
+;QueryWin31IniFilesMappedToRegistry@16
 RaiseException@16
 ReadConsoleA@20
 ReadConsoleInputA@16

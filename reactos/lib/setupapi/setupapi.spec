@@ -253,7 +253,7 @@
 @ stub SetupCopyErrorA
 @ stub SetupCopyErrorW
 @ stdcall SetupCopyOEMInfA(str str long long ptr long ptr ptr)
-@ stub SetupCopyOEMInfW
+@ stdcall SetupCopyOEMInfW(wstr wstr long long ptr long ptr ptr)
 @ stdcall SetupCreateDiskSpaceListA(ptr long long)
 @ stdcall SetupCreateDiskSpaceListW(ptr long long)
 @ stub SetupDecompressOrCopyFileA

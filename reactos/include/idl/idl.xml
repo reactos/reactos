@@ -1,0 +1,24 @@
+<module name="pnp_server" type="rpcserver">
+	<include base="ReactOS">.</include>
+	<include base="ReactOS">w32api/include</include>
+	<define name="_X86_" />
+	<file>pnp.idl</file>
+</module>
+<module name="pnp_client" type="rpcclient">
+	<include base="ReactOS">.</include>
+	<include base="ReactOS">w32api/include</include>
+	<define name="_X86_" />
+	<file>pnp.idl</file>
+</module>
+<module name="scm_server" type="rpcserver">
+	<include base="ReactOS">.</include>
+	<include base="ReactOS">w32api/include</include>
+	<define name="_X86_" />
+	<file switches="-o">svcctl.idl</file>
+</module>
+<module name="scm_client" type="rpcclient">
+	<include base="ReactOS">.</include>
+	<include base="ReactOS">w32api/include</include>
+	<define name="_X86_" />
+	<file switches="-o">svcctl.idl</file>
+</module>

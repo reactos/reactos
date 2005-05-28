@@ -35,6 +35,8 @@
 #include "winbase.h"
 #include "winnt.h"
 #include "objbase.h"
+#include "winreg.h"
+#include "winternl.h"
 
 /*
  * Definitions for the file format offsets.
@@ -237,6 +239,11 @@ struct StorageBaseImpl
    * virtual Destructor method.
    */
   void (*v_destructor)(StorageBaseImpl*);
+
+  /*
+   * flags that this storage was opened or created with
+   */
+  DWORD openFlags;
 };
 
 
@@ -397,6 +404,7 @@ struct StorageInternalImpl
  */
 StorageInternalImpl* StorageInternalImpl_Construct(
 	    StorageImpl* ancestorStorage,
+            DWORD          openFlags,
 	    ULONG          rootTropertyIndex);
 
 void StorageInternalImpl_Destroy(
@@ -524,15 +532,38 @@ StgStreamImpl* StgStreamImpl_Construct(
     ULONG            ownerProperty);
 
 
-/********************************************************************************
- * The StorageUtl_ functions are miscelaneous utility functions. Most of which are
- * abstractions used to read values from file buffers without having to worry
- * about bit order
+/******************************************************************************
+ * Endian conversion macros
+ */
+#ifdef WORDS_BIGENDIAN
+
+#define htole32(x) RtlUlongByteSwap(x)
+#define htole16(x) RtlUshortByteSwap(x)
+#define le32toh(x) RtlUlongByteSwap(x)
+#define le16toh(x) RtlUshortByteSwap(x)
+
+#else
+
+#define htole32(x) (x)
+#define htole16(x) (x)
+#define le32toh(x) (x)
+#define le16toh(x) (x)
+
+#endif
+
+/******************************************************************************
+ * The StorageUtl_ functions are miscellaneous utility functions. Most of which
+ * are abstractions used to read values from file buffers without having to
+ * worry about bit order
  */
 void StorageUtl_ReadWord(const BYTE* buffer, ULONG offset, WORD* value);
 void StorageUtl_WriteWord(BYTE* buffer, ULONG offset, WORD value);
 void StorageUtl_ReadDWord(const BYTE* buffer, ULONG offset, DWORD* value);
 void StorageUtl_WriteDWord(BYTE* buffer, ULONG offset, DWORD value);
+void StorageUtl_ReadULargeInteger(const BYTE* buffer, ULONG offset,
+ ULARGE_INTEGER* value);
+void StorageUtl_WriteULargeInteger(BYTE* buffer, ULONG offset,
+ const ULARGE_INTEGER *value);
 void StorageUtl_ReadGUID(const BYTE* buffer, ULONG offset, GUID* value);
 void StorageUtl_WriteGUID(BYTE* buffer, ULONG offset, const GUID* value);
 void StorageUtl_CopyPropertyToSTATSTG(STATSTG*     destination,

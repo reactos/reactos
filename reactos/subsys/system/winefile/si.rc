@@ -95,7 +95,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Sort by Si&ze" , 		ID_VIEW_SORT_SIZE
 		MENUITEM "Sort by &Date" , 		ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
-		MENUITEM "Filter by &..." ,			409
+		MENUITEM "Filter by &..." ,			ID_VIEW_FILTER
 	}
 
 	POPUP "&Options"  {

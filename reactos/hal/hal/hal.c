@@ -357,13 +357,23 @@ HalProcessorIdle(VOID)
 }
 
 
+BOOLEAN
+STDCALL
+HalQueryDisplayOwnership(VOID)
+{
+  UNIMPLEMENTED;
+
+  return FALSE;
+}
+
+
 VOID
 STDCALL
 HalQueryDisplayParameters(
-  PULONG DispSizeX,
-  PULONG DispSizeY,
-  PULONG CursorPosX,
-  PULONG CursorPosY)
+  OUT PULONG DispSizeX,
+  OUT PULONG DispSizeY,
+  OUT PULONG CursorPosX,
+  OUT PULONG CursorPosY)
 {
   UNIMPLEMENTED;
 }
@@ -391,6 +401,13 @@ HalReadDmaCounter(
 
 VOID
 STDCALL
+HalReleaseDisplayOwnership(VOID)
+{
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
 HalReportResourceUsage(VOID)
 {
   UNIMPLEMENTED;
@@ -401,6 +418,15 @@ VOID
 STDCALL
 HalRequestIpi(
   ULONG Unknown)
+{
+  UNIMPLEMENTED;
+}
+
+
+VOID
+FASTCALL
+HalRequestSoftwareInterrupt(
+  KIRQL Request)
 {
   UNIMPLEMENTED;
 }
@@ -618,6 +644,17 @@ KdPortInitialize(
   UNIMPLEMENTED;
 
   return TRUE;
+}
+
+
+BOOLEAN
+STDCALL
+KdPortInitializeEx(
+  PKD_PORT_INFORMATION PortInformation,
+  DWORD Unknown1,
+  DWORD Unknown2)
+{
+  UNIMPLEMENTED;
 }
 
 

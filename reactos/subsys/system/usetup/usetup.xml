@@ -1,0 +1,29 @@
+<module name="usetup" type="nativecui" installbase="system32" installname="usetup.exe" warnings="true">
+	<bootstrap base="reactos/system32" nameoncd="smss.exe" />
+	<include base="usetup">.</include>
+	<include base="zlib">.</include>
+	<define name="_DISABLE_TIDENTS" />
+	<linkerflag>-lgcc</linkerflag>
+	<library>zlib</library>
+	<library>vfatlib</library>
+	<library>ntdll</library>
+	<pch>precomp.h</pch>
+	<file>bootsup.c</file>
+	<file>cabinet.c</file>
+	<file>console.c</file>
+	<file>drivesup.c</file>
+	<file>filequeue.c</file>
+	<file>filesup.c</file>
+	<file>format.c</file>
+	<file>fslist.c</file>
+	<file>genlist.c</file>
+	<file>infcache.c</file>
+	<file>inicache.c</file>
+	<file>keytrans.c</file>
+	<file>partlist.c</file>
+	<file>progress.c</file>
+	<file>registry.c</file>
+	<file>settings.c</file>
+	<file>usetup.c</file>
+	<file>usetup.rc</file>
+</module>

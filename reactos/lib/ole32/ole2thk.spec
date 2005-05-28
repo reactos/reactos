@@ -1,4 +1,4 @@
-1 stub WEP
+#1 stub WEP
 2 stub ROT16_ISRUNNING16
 3 stub ISWIN32SHANDLE
 4 stub ___EXPORTEDSTUB

@@ -493,8 +493,8 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_R4:       return VarDecFromR4(V_R4(ps), &V_DECIMAL(pd));
     case VT_R8:       return VarDecFromR8(V_R8(ps), &V_DECIMAL(pd));
     case VT_DATE:     return VarDecFromDate(V_DATE(ps), &V_DECIMAL(pd));
-    case VT_CY:       return VarDecFromCy(V_CY(pd), &V_DECIMAL(ps));
-    case VT_DISPATCH: return VarDecFromDisp(V_DISPATCH(ps), lcid, &V_DECIMAL(ps));
+    case VT_CY:       return VarDecFromCy(V_CY(ps), &V_DECIMAL(pd));
+    case VT_DISPATCH: return VarDecFromDisp(V_DISPATCH(ps), lcid, &V_DECIMAL(pd));
     case VT_BSTR:     return VarDecFromStr(V_BSTR(ps), lcid, dwFlags, &V_DECIMAL(pd));
     }
     break;
@@ -2914,58 +2914,168 @@ HRESULT WINAPI VarAdd(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 /**********************************************************************
  *              VarMul [OLEAUT32.156]
  *
+ * Multiply two variants.
+ *
+ * PARAMS
+ *  left    [I] First variant
+ *  right   [I] Second variant
+ *  result  [O] Result variant
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: An HRESULT error code indicating the error.
+ *
+ * NOTES
+ *  Native VarMul up to and including WinXP dosn't like as input variants
+ *  I1, UI2, UI4, UI8, INT and UINT. But it can multiply apples with oranges.
+ *
+ *  Native VarMul dosn't check for NULL in/out pointers and crashes. We do the
+ *  same here.
+ *
+ * FIXME
+ *  Overflow checking for R8 (double) overflow. Return DISP_E_OVERFLOW in that
+ *  case.
  */
 HRESULT WINAPI VarMul(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 {
-    HRESULT rc = E_FAIL;
-    VARTYPE lvt,rvt,resvt;
-    VARIANT lv,rv;
-    BOOL found;
+    HRESULT hres;
+    VARTYPE lvt, rvt, resvt, tvt;
+    VARIANT lv, rv, tv;
+    double r8res;
+
+    /* Variant priority for coercion. Sorted from lowest to highest.
+       VT_ERROR shows an invalid input variant type. */
+    enum coerceprio { vt_UI1 = 0, vt_I2, vt_I4, vt_I8, vt_CY, vt_R4, vt_R8,
+                      vt_DECIMAL, vt_NULL, vt_ERROR };
+    /* Mapping from priority to variant type. Keep in sync with coerceprio! */
+    VARTYPE prio2vt[] = { VT_UI1, VT_I2, VT_I4, VT_I8, VT_CY, VT_R4, VT_R8,
+                          VT_DECIMAL, VT_NULL, VT_ERROR };
+
+    /* Mapping for coercion from input variant to priority of result variant. */
+    static VARTYPE coerce[] = {
+        /* VT_EMPTY, VT_NULL, VT_I2, VT_I4, VT_R4 */
+        vt_UI1, vt_NULL, vt_I2, vt_I4, vt_R4,
+        /* VT_R8, VT_CY, VT_DATE, VT_BSTR, VT_DISPATCH */
+        vt_R8, vt_CY, vt_R8, vt_R8, vt_ERROR,
+        /* VT_ERROR, VT_BOOL, VT_VARIANT, VT_UNKNOWN, VT_DECIMAL */
+        vt_ERROR, vt_I2, vt_ERROR, vt_ERROR, vt_DECIMAL,
+        /* 15, VT_I1, VT_UI1, VT_UI2, VT_UI4 VT_I8 */
+        vt_ERROR, vt_ERROR, vt_UI1, vt_ERROR, vt_ERROR, vt_I8
+    };
 
     TRACE("(%p->(%s%s),%p->(%s%s),%p)\n", left, debugstr_VT(left),
-          debugstr_VF(left), right, debugstr_VT(right), debugstr_VF(right), result);
+          debugstr_VF(left), right, debugstr_VT(right), debugstr_VF(right),
+          result);
 
-    VariantInit(&lv);VariantInit(&rv);
+    VariantInit(&lv);
+    VariantInit(&rv);
+    VariantInit(&tv);
     lvt = V_VT(left)&VT_TYPEMASK;
     rvt = V_VT(right)&VT_TYPEMASK;
-    found = FALSE;resvt=VT_VOID;
-    if (((1<<lvt) | (1<<rvt)) & (VTBIT_R4|VTBIT_R8)) {
-	found = TRUE;
-	resvt = VT_R8;
+
+    /* If we have any flag set (VT_ARRAY, VT_VECTOR, etc.) bail out.
+       Same for any input variant type > VT_I8 */
+    if (V_VT(left) & ~VT_TYPEMASK || V_VT(right) & ~VT_TYPEMASK ||
+        lvt > VT_I8 || rvt > VT_I8) {
+        hres = DISP_E_BADVARTYPE;
+        goto end;
     }
-    if (!found && (((1<<lvt) | (1<<rvt)) & (VTBIT_I1|VTBIT_I2|VTBIT_UI1|VTBIT_UI2|VTBIT_I4|VTBIT_UI4|(1<<VT_INT)|(1<<VT_UINT)))) {
-	found = TRUE;
-	resvt = VT_I4;
+
+    /* Determine the variant type to coerce to. */
+    if (coerce[lvt] > coerce[rvt]) {
+        resvt = prio2vt[coerce[lvt]];
+        tvt = prio2vt[coerce[rvt]];
+    } else {
+        resvt = prio2vt[coerce[rvt]];
+        tvt = prio2vt[coerce[lvt]];
     }
-    if (!found) {
-	FIXME("can't expand vt %d vs %d to a target type.\n",lvt,rvt);
-	return E_FAIL;
-    }
-    rc = VariantChangeType(&lv, left, 0, resvt);
-    if (FAILED(rc)) {
-	FIXME("Could not convert 0x%x to %d?\n",V_VT(left),resvt);
-	return rc;
-    }
-    rc = VariantChangeType(&rv, right, 0, resvt);
-    if (FAILED(rc)) {
-	FIXME("Could not convert 0x%x to %d?\n",V_VT(right),resvt);
-	return rc;
-    }
+
+    /* Special cases where the result variant type is defined by both
+       input variants and not only that with the highest priority */
+    if (resvt == VT_R4 && (tvt == VT_CY || tvt == VT_I8 || tvt == VT_I4))
+        resvt = VT_R8;
+    if (lvt == VT_EMPTY && rvt == VT_EMPTY)
+        resvt = VT_I2;
+
+    /* For overflow detection use the biggest compatible type for the
+       multiplication */
     switch (resvt) {
-    case VT_R8:
-	V_VT(result) = resvt;
-	V_R8(result) = V_R8(&lv) * V_R8(&rv);
-	rc = S_OK;
-	break;
-    case VT_I4:
-	V_VT(result) = resvt;
-	V_I4(result) = V_I4(&lv) * V_I4(&rv);
-	rc = S_OK;
-	break;
+        case VT_ERROR:
+            hres = DISP_E_BADVARTYPE;
+            goto end;
+        case VT_NULL:
+            hres = S_OK;
+            V_VT(result) = VT_NULL;
+            goto end;
+        case VT_UI1:
+        case VT_I2:
+        case VT_I4:
+        case VT_I8:
+            tvt = VT_I8;
+            break;
+        case VT_R4:
+            tvt = VT_R8;
+            break;
+        default:
+            tvt = resvt;
     }
-    TRACE("returning 0x%8lx (%s%s),%g\n", rc, debugstr_VT(result),
-          debugstr_VF(result), V_VT(result) == VT_R8 ? V_R8(result) : (double)V_I4(result));
-    return rc;
+
+    /* Now coerce the variants */
+    hres = VariantChangeType(&lv, left, 0, tvt);
+    if (FAILED(hres))
+        goto end;
+    hres = VariantChangeType(&rv, right, 0, tvt);
+    if (FAILED(hres))
+        goto end;
+
+    /* Do the math */
+    hres = S_OK;
+    V_VT(&tv) = tvt;
+    V_VT(result) = resvt;
+    switch (tvt) {
+        case VT_DECIMAL:
+            hres = VarDecMul(&V_DECIMAL(&lv), &V_DECIMAL(&rv),
+                             &V_DECIMAL(result));
+            goto end;
+        case VT_CY:
+            hres = VarCyMul(V_CY(&lv), V_CY(&rv), &V_CY(result));
+            goto end;
+        case VT_I8:
+            /* Overflow detection */
+            r8res = (double)V_I8(&lv) * (double)V_I8(&rv);
+            if (r8res > (double)I8_MAX || r8res < (double)I8_MIN) {
+                V_VT(result) = VT_R8;
+                V_R8(result) = r8res;
+                goto end;
+            } else
+                V_I8(&tv) = V_I8(&lv) * V_I8(&rv);
+            break;
+        case VT_R8:
+            /* FIXME: overflow detection */
+            V_R8(&tv) = V_R8(&lv) * V_R8(&rv);
+            break;
+        default:
+            ERR("We shouldn't get here! tvt = %d!\n", tvt);
+            break;
+    }
+    if (rvt != tvt) {
+        while ((hres = VariantChangeType(result, &tv, 0, resvt)) != S_OK) {
+            /* Overflow! Change to the vartype with the next higher priority */
+            resvt = prio2vt[coerce[resvt] + 1];
+        }
+    } else
+        hres = VariantCopy(result, &tv);
+
+end:
+    if (hres != S_OK) {
+        V_VT(result) = VT_EMPTY;
+        V_I4(result) = 0;       /* No V_EMPTY */
+    }
+    VariantClear(&lv);
+    VariantClear(&rv);
+    VariantClear(&tv);
+    TRACE("returning 0x%8lx (variant type %s)\n", hres, debugstr_VT(result));
+    return hres;
 }
 
 /**********************************************************************
@@ -4267,7 +4377,7 @@ HRESULT WINAPI VarMod(LPVARIANT left, LPVARIANT right, LPVARIANT result)
       return DISP_E_TYPEMISMATCH;
     case VT_DECIMAL:
       V_VT(result) = VT_EMPTY;
-      return E_INVALIDARG;
+      return DISP_E_OVERFLOW;
     case VT_ERROR:
       return DISP_E_TYPEMISMATCH;
     case VT_RECORD:
@@ -4352,7 +4462,7 @@ HRESULT WINAPI VarMod(LPVARIANT left, LPVARIANT right, LPVARIANT result)
       } else
       {
 	V_VT(result) = VT_EMPTY;
-        return E_INVALIDARG;
+        return DISP_E_OVERFLOW;
       }
     case VT_ERROR:
       return DISP_E_TYPEMISMATCH;

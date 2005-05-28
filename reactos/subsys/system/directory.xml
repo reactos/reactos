@@ -1,0 +1,72 @@
+<directory name="autochk">
+	<xi:include href="autochk/autochk.xml" />
+</directory>
+<directory name="calc">
+	<xi:include href="calc/calc.xml" />
+</directory>
+<directory name="cmd">
+	<xi:include href="cmd/cmd.xml" />
+</directory>
+<directory name="dhcp">
+	<xi:include href="dhcp/dhcp.xml" />
+</directory>
+<directory name="explorer">
+	<xi:include href="explorer/explorer.xml" />
+</directory>
+<directory name="ibrowser">
+	<xi:include href="ibrowser/ibrowser.xml" />
+</directory>
+<directory name="format">
+	<xi:include href="format/format.xml" />
+</directory>
+<directory name="msiexec">
+	<xi:include href="msiexec/msiexec.xml" />
+</directory>
+<directory name="notepad">
+	<xi:include href="notepad/notepad.xml" />
+</directory>
+<directory name="reactos">
+	<xi:include href="reactos/reactos.xml" />
+</directory>
+<directory name="regedit">
+	<xi:include href="regedit/regedit.xml" />
+</directory>
+<directory name="regsvr32">
+	<xi:include href="regsvr32/regsvr32.xml" />
+</directory>
+<directory name="reporterror">
+	<xi:include href="reporterror/reporterror.xml" />
+</directory>
+<directory name="rundll32">
+	<xi:include href="rundll32/rundll32.xml" />
+</directory>
+<directory name="services">
+	<xi:include href="services/services.xml" />
+</directory>
+<directory name="setup">
+	<xi:include href="setup/setup.xml" />
+</directory>
+<directory name="sm">
+	<xi:include href="sm/sm.xml" />
+</directory>
+<directory name="taskmgr">
+	<xi:include href="taskmgr/taskmgr.xml" />
+</directory>
+<directory name="userinit">
+	<xi:include href="userinit/userinit.xml" />
+</directory>
+<directory name="usetup">
+	<xi:include href="usetup/usetup.xml" />
+</directory>
+<directory name="vmwinst">
+	<xi:include href="vmwinst/vmwinst.xml" />
+</directory>
+<directory name="winefile">
+	<xi:include href="winefile/winefile.xml" />
+</directory>
+<directory name="winlogon">
+	<xi:include href="winlogon/winlogon.xml" />
+</directory>
+<directory name="welcome">
+	<xi:include href="welcome/welcome.xml" />
+</directory>

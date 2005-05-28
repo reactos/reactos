@@ -1,0 +1,7 @@
+<module name="kbdsg" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdsg.dll" warnings="true">
+	<importlibrary definition="kbdsg.def" />
+	<include base="ntoskrnl">include</include>
+	<define name="_DISABLE_TIDENTS" />
+	<file>kbdsg.c</file>
+	<file>kbdsg.rc</file>
+</module>

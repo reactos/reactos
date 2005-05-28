@@ -132,6 +132,7 @@ typedef struct OLEPictureImpl {
 
   /* Bitmap transparency mask */
     HBITMAP hbmMask;
+    HBITMAP hbmXor;
     COLORREF rgbTrans;
 
   /* data */
@@ -262,6 +263,7 @@ static OLEPictureImpl* OLEPictureImpl_Construct(LPPICTDESC pictDesc, BOOL fOwn)
   newObject->keepOrigFormat = TRUE;
 
   newObject->hbmMask = NULL;
+  newObject->hbmXor = NULL;
   newObject->loadtime_magic = 0xdeadbeef;
   newObject->loadtime_format = 0;
   newObject->bIsDirty = FALSE;
@@ -320,6 +322,8 @@ static void OLEPictureImpl_Destroy(OLEPictureImpl* Obj)
     switch(Obj->desc.picType) {
     case PICTYPE_BITMAP:
       DeleteObject(Obj->desc.u.bmp.hbitmap);
+      if (Obj->hbmMask != NULL) DeleteObject(Obj->hbmMask);
+      if (Obj->hbmXor != NULL) DeleteObject(Obj->hbmXor);
       break;
     case PICTYPE_METAFILE:
       DeleteMetaFile(Obj->desc.u.wmf.hmeta);
@@ -588,11 +592,11 @@ static HRESULT WINAPI OLEPictureImpl_Render(IPicture *iface, HDC hdc,
       SetViewportOrgEx(hdcBmp, 0, This->origHeight, NULL);
       SetViewportExtEx(hdcBmp, This->origWidth, -This->origHeight, NULL);
 
-      hbmpOld = SelectObject(hdcBmp, This->desc.u.bmp.hbitmap);
-
       if (This->hbmMask) {
 	  HDC hdcMask = CreateCompatibleDC(0);
 	  HBITMAP hOldbm = SelectObject(hdcMask, This->hbmMask);
+
+          hbmpOld = SelectObject(hdcBmp, This->hbmXor);
 
 	  SetMapMode(hdcMask, MM_ANISOTROPIC);
 	  SetWindowOrgEx(hdcMask, 0, 0, NULL);
@@ -607,8 +611,10 @@ static HRESULT WINAPI OLEPictureImpl_Render(IPicture *iface, HDC hdc,
 
 	  SelectObject(hdcMask, hOldbm);
 	  DeleteDC(hdcMask);
-      } else
+      } else {
+          hbmpOld = SelectObject(hdcBmp, This->desc.u.bmp.hbitmap);
 	  StretchBlt(hdc, x, y, cx, cy, hdcBmp, xSrc, ySrc, cxSrc, cySrc, SRCCOPY);
+      }
 
       SelectObject(hdcBmp, hbmpOld);
       DeleteDC(hdcBmp);
@@ -739,7 +745,7 @@ static HRESULT WINAPI OLEPictureImpl_get_Attributes(IPicture *iface,
   TRACE("(%p)->(%p).\n", This, pdwAttr);
   *pdwAttr = 0;
   switch (This->desc.picType) {
-  case PICTYPE_BITMAP: 	break;	/* not 'truly' scalable, see MSDN. */
+  case PICTYPE_BITMAP: 	if (This->hbmMask) *pdwAttr = PICTURE_TRANSPARENT; break;	/* not 'truly' scalable, see MSDN. */
   case PICTYPE_ICON: *pdwAttr     = PICTURE_TRANSPARENT;break;
   case PICTYPE_METAFILE: *pdwAttr = PICTURE_TRANSPARENT|PICTURE_SCALABLE;break;
   default:FIXME("Unknown pictype %d\n",This->desc.picType);break;
@@ -1175,15 +1181,60 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface,IStream*pStm) {
 	HBITMAP hOldbitmap; 
 	HBITMAP hOldbitmapmask;
 
-	This->hbmMask = CreateBitmap(bmi->bmiHeader.biWidth, bmi->bmiHeader.biHeight, 1, 1, NULL);
+        unsigned int monopadding = (((unsigned)(gif->SWidth + 31)) >> 5) << 2;
+        HBITMAP hTempMask;
 
-	hOldbitmap = SelectObject(hdc,This->desc.u.bmp.hbitmap);
+        This->hbmXor = CreateDIBitmap(
+            hdcref,
+            &bmi->bmiHeader,
+            CBM_INIT,
+            bytes,
+            bmi,
+            DIB_RGB_COLORS
+        );
+
+        bmi->bmiColors[0].rgbRed = 0;
+        bmi->bmiColors[0].rgbGreen = 0;
+        bmi->bmiColors[0].rgbBlue = 0;
+        bmi->bmiColors[1].rgbRed = 255;
+        bmi->bmiColors[1].rgbGreen = 255;
+        bmi->bmiColors[1].rgbBlue = 255;
+
+        bmi->bmiHeader.biBitCount		= 1;
+        bmi->bmiHeader.biSizeImage		= monopadding*gif->SHeight;
+        bmi->bmiHeader.biClrUsed		= 2;
+
+        for (i = 0; i < gif->SHeight; i++) {
+            unsigned char * colorPointer = bytes + padding * i;
+            unsigned char * monoPointer = bytes + monopadding * i;
+            for (j = 0; j < gif->SWidth; j++) {
+                unsigned char pixel = colorPointer[j];
+                if ((j & 7) == 0) monoPointer[j >> 3] = 0;
+                if (pixel == (transparent & 0x000000FFU)) monoPointer[j >> 3] |= 1 << (7 - (j & 7));
+            }
+        }
+        hdcref = GetDC(0);
+        hTempMask = CreateDIBitmap(
+                hdcref,
+                &bmi->bmiHeader,
+                CBM_INIT,
+                bytes,
+                bmi,
+                DIB_RGB_COLORS
+        );
+        DeleteDC(hdcref);
+
+        bmi->bmiHeader.biHeight = -bmi->bmiHeader.biHeight;
+        This->hbmMask = CreateBitmap(bmi->bmiHeader.biWidth, bmi->bmiHeader.biHeight, 1, 1, NULL);
+	hOldbitmap = SelectObject(hdc, hTempMask);
 	hOldbitmapmask = SelectObject(hdcMask, This->hbmMask);
-	SetBkColor(hdc, This->rgbTrans);
+
+        SetBkColor(hdc, RGB(255, 255, 255));
 	BitBlt(hdcMask, 0, 0, bmi->bmiHeader.biWidth, bmi->bmiHeader.biHeight, hdc, 0, 0, SRCCOPY);
 
 	/* We no longer need the original bitmap, so we apply the first
 	   transformation with the mask to speed up the rendering */
+        SelectObject(hdc, This->hbmXor);
 	SetBkColor(hdc, RGB(0,0,0));
 	SetTextColor(hdc, RGB(255,255,255));
 	BitBlt(hdc, 0, 0, bmi->bmiHeader.biWidth, bmi->bmiHeader.biHeight, 
@@ -1193,6 +1244,7 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface,IStream*pStm) {
 	SelectObject(hdcMask, hOldbitmapmask);
 	DeleteDC(hdcMask);
 	DeleteDC(hdc);
+        DeleteObject(hTempMask);
     }
     
     DeleteDC(hdcref);

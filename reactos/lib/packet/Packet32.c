@@ -22,7 +22,7 @@
 #define UNICODE 1
 
 #include <windows.h>
-#include <net/ntddndis.h>
+#include <ddk/ntddndis.h>
 #include <string.h>
 #include <stdlib.h>
 

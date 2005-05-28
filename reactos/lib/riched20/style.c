@@ -383,7 +383,7 @@ void ME_ReleaseStyle(ME_Style *s)
     TRACE("destroy style %p, total refs=%d\n", s, all_refs);
   else
     TRACE("release style %p, new refs=%d, total refs=%d\n", s, s->nRefs, all_refs);
-  if (!all_refs) FIXME("all style references freed (good!)\n");
+  if (!all_refs) TRACE("all style references freed (good!)\n");
   assert(s->nRefs>=0);
   if (!s->nRefs)
     ME_DestroyStyle(s);

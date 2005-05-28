@@ -38,9 +38,8 @@
 #include <rpc.h>
 #include <rpcdce.h>
 
-#include "pnp.h"
+#include "pnp_c.h"
 
-#define DBG
 #define NDEBUG
 #include <debug.h>
 

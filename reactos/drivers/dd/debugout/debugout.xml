@@ -1,0 +1,7 @@
+<module name="debugout" type="kernelmodedriver">
+	<include base="debugout">.</include>
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<file>debugout.c</file>
+	<file>debugout.rc</file>
+</module>

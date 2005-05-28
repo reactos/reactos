@@ -50,60 +50,6 @@ typedef struct OleAdviseHolderImpl
 
 } OleAdviseHolderImpl;
 
-static LPOLEADVISEHOLDER OleAdviseHolderImpl_Constructor(void);
-static void              OleAdviseHolderImpl_Destructor(OleAdviseHolderImpl* ptrToDestroy);
-static HRESULT WINAPI    OleAdviseHolderImpl_QueryInterface(LPOLEADVISEHOLDER,REFIID,LPVOID*);
-static ULONG WINAPI      OleAdviseHolderImpl_AddRef(LPOLEADVISEHOLDER);
-static ULONG WINAPI      OleAdviseHolderImpl_Release(LPOLEADVISEHOLDER);
-static HRESULT WINAPI    OleAdviseHolderImpl_Advise(LPOLEADVISEHOLDER, IAdviseSink*, DWORD*);
-static HRESULT WINAPI    OleAdviseHolderImpl_Unadvise (LPOLEADVISEHOLDER, DWORD);
-static HRESULT WINAPI    OleAdviseHolderImpl_EnumAdvise (LPOLEADVISEHOLDER, IEnumSTATDATA **);
-static HRESULT WINAPI    OleAdviseHolderImpl_SendOnRename (LPOLEADVISEHOLDER, IMoniker *);
-static HRESULT WINAPI    OleAdviseHolderImpl_SendOnSave (LPOLEADVISEHOLDER);
-static HRESULT WINAPI    OleAdviseHolderImpl_SendOnClose (LPOLEADVISEHOLDER);
-
-
-/**************************************************************************
- *  OleAdviseHolderImpl_VTable
- */
-static struct IOleAdviseHolderVtbl oahvt =
-{
-    OleAdviseHolderImpl_QueryInterface,
-    OleAdviseHolderImpl_AddRef,
-    OleAdviseHolderImpl_Release,
-    OleAdviseHolderImpl_Advise,
-    OleAdviseHolderImpl_Unadvise,
-    OleAdviseHolderImpl_EnumAdvise,
-    OleAdviseHolderImpl_SendOnRename,
-    OleAdviseHolderImpl_SendOnSave,
-    OleAdviseHolderImpl_SendOnClose
-};
-
-/**************************************************************************
- *  OleAdviseHolderImpl_Constructor
- */
-
-static LPOLEADVISEHOLDER OleAdviseHolderImpl_Constructor()
-{
-  OleAdviseHolderImpl* lpoah;
-  DWORD                index;
-
-  lpoah = HeapAlloc(GetProcessHeap(), 0, sizeof(OleAdviseHolderImpl));
-
-  lpoah->lpVtbl = &oahvt;
-  lpoah->ref = 1;
-  lpoah->maxSinks = INITIAL_SINKS;
-  lpoah->arrayOfSinks = HeapAlloc(GetProcessHeap(),
-				  0,
-				  lpoah->maxSinks * sizeof(IAdviseSink*));
-
-  for (index = 0; index < lpoah->maxSinks; index++)
-    lpoah->arrayOfSinks[index]=0;
-
-  TRACE("returning %p\n", lpoah);
-  return (LPOLEADVISEHOLDER)lpoah;
-}
-
 /**************************************************************************
  *  OleAdviseHolderImpl_Destructor
  */
@@ -358,6 +304,47 @@ OleAdviseHolderImpl_SendOnClose (LPOLEADVISEHOLDER iface)
 }
 
 /**************************************************************************
+ *  OleAdviseHolderImpl_VTable
+ */
+static struct IOleAdviseHolderVtbl oahvt =
+{
+    OleAdviseHolderImpl_QueryInterface,
+    OleAdviseHolderImpl_AddRef,
+    OleAdviseHolderImpl_Release,
+    OleAdviseHolderImpl_Advise,
+    OleAdviseHolderImpl_Unadvise,
+    OleAdviseHolderImpl_EnumAdvise,
+    OleAdviseHolderImpl_SendOnRename,
+    OleAdviseHolderImpl_SendOnSave,
+    OleAdviseHolderImpl_SendOnClose
+};
+
+/**************************************************************************
+ *  OleAdviseHolderImpl_Constructor
+ */
+
+static LPOLEADVISEHOLDER OleAdviseHolderImpl_Constructor()
+{
+  OleAdviseHolderImpl* lpoah;
+  DWORD                index;
+
+  lpoah = HeapAlloc(GetProcessHeap(), 0, sizeof(OleAdviseHolderImpl));
+
+  lpoah->lpVtbl = &oahvt;
+  lpoah->ref = 1;
+  lpoah->maxSinks = INITIAL_SINKS;
+  lpoah->arrayOfSinks = HeapAlloc(GetProcessHeap(),
+				  0,
+				  lpoah->maxSinks * sizeof(IAdviseSink*));
+
+  for (index = 0; index < lpoah->maxSinks; index++)
+    lpoah->arrayOfSinks[index]=0;
+
+  TRACE("returning %p\n", lpoah);
+  return (LPOLEADVISEHOLDER)lpoah;
+}
+
+/**************************************************************************
  *  DataAdviseHolder Implementation
  */
 typedef struct DataAdviseConnection {
@@ -374,73 +361,6 @@ typedef struct DataAdviseHolder
   DWORD                 maxCons;
   DataAdviseConnection* Connections;
 } DataAdviseHolder;
-
-/**************************************************************************
- *  DataAdviseHolder method prototypes
- */
-static IDataAdviseHolder* DataAdviseHolder_Constructor(void);
-static void               DataAdviseHolder_Destructor(DataAdviseHolder* ptrToDestroy);
-static HRESULT WINAPI     DataAdviseHolder_QueryInterface(
-			    IDataAdviseHolder*      iface,
-			    REFIID                  riid,
-			    void**                  ppvObject);
-static ULONG WINAPI       DataAdviseHolder_AddRef(
-                            IDataAdviseHolder*      iface);
-static ULONG WINAPI       DataAdviseHolder_Release(
-                            IDataAdviseHolder*      iface);
-static HRESULT WINAPI     DataAdviseHolder_Advise(
-                            IDataAdviseHolder*      iface,
-			    IDataObject*            pDataObject,
-			    FORMATETC*              pFetc,
-			    DWORD                   advf,
-			    IAdviseSink*            pAdvise,
-			    DWORD*                  pdwConnection);
-static HRESULT WINAPI     DataAdviseHolder_Unadvise(
-                            IDataAdviseHolder*      iface,
-			    DWORD                   dwConnection);
-static HRESULT WINAPI     DataAdviseHolder_EnumAdvise(
-                            IDataAdviseHolder*      iface,
-			    IEnumSTATDATA**         ppenumAdvise);
-static HRESULT WINAPI     DataAdviseHolder_SendOnDataChange(
-                            IDataAdviseHolder*      iface,
-			    IDataObject*            pDataObject,
-			    DWORD                   dwReserved,
-			    DWORD                   advf);
-
-/**************************************************************************
- *  DataAdviseHolderImpl_VTable
- */
-static struct IDataAdviseHolderVtbl DataAdviseHolderImpl_VTable =
-{
-  DataAdviseHolder_QueryInterface,
-  DataAdviseHolder_AddRef,
-  DataAdviseHolder_Release,
-  DataAdviseHolder_Advise,
-  DataAdviseHolder_Unadvise,
-  DataAdviseHolder_EnumAdvise,
-  DataAdviseHolder_SendOnDataChange
-};
-
-/******************************************************************************
- * DataAdviseHolder_Constructor
- */
-static IDataAdviseHolder* DataAdviseHolder_Constructor()
-{
-  DataAdviseHolder* newHolder;
-
-  newHolder = HeapAlloc(GetProcessHeap(), 0, sizeof(DataAdviseHolder));
-
-  newHolder->lpVtbl = &DataAdviseHolderImpl_VTable;
-  newHolder->ref = 1;
-  newHolder->maxCons = INITIAL_SINKS;
-  newHolder->Connections = HeapAlloc(GetProcessHeap(),
-				     HEAP_ZERO_MEMORY,
-				     newHolder->maxCons *
-				     sizeof(DataAdviseConnection));
-
-  TRACE("returning %p\n", newHolder);
-  return (IDataAdviseHolder*)newHolder;
-}
 
 /******************************************************************************
  * DataAdviseHolder_Destructor
@@ -605,7 +525,7 @@ static HRESULT WINAPI DataAdviseHolder_Advise(
   if (This->Connections[index].sink != NULL) {
     IAdviseSink_AddRef(This->Connections[index].sink);
     if(advf & ADVF_PRIMEFIRST) {
-      DataAdviseHolder_SendOnDataChange(iface, pDataObject, 0, advf);
+      IDataAdviseHolder_SendOnDataChange(iface, pDataObject, 0, advf);
     }
   }
   /*
@@ -700,6 +620,41 @@ static HRESULT WINAPI     DataAdviseHolder_SendOnDataChange(
     }
   }
   return S_OK;
+}
+
+/**************************************************************************
+ *  DataAdviseHolderImpl_VTable
+ */
+static struct IDataAdviseHolderVtbl DataAdviseHolderImpl_VTable =
+{
+  DataAdviseHolder_QueryInterface,
+  DataAdviseHolder_AddRef,
+  DataAdviseHolder_Release,
+  DataAdviseHolder_Advise,
+  DataAdviseHolder_Unadvise,
+  DataAdviseHolder_EnumAdvise,
+  DataAdviseHolder_SendOnDataChange
+};
+
+/******************************************************************************
+ * DataAdviseHolder_Constructor
+ */
+static IDataAdviseHolder* DataAdviseHolder_Constructor()
+{
+  DataAdviseHolder* newHolder;
+
+  newHolder = HeapAlloc(GetProcessHeap(), 0, sizeof(DataAdviseHolder));
+
+  newHolder->lpVtbl = &DataAdviseHolderImpl_VTable;
+  newHolder->ref = 1;
+  newHolder->maxCons = INITIAL_SINKS;
+  newHolder->Connections = HeapAlloc(GetProcessHeap(),
+				     HEAP_ZERO_MEMORY,
+				     newHolder->maxCons *
+				     sizeof(DataAdviseConnection));
+
+  TRACE("returning %p\n", newHolder);
+  return (IDataAdviseHolder*)newHolder;
 }
 
 /***********************************************************************

@@ -425,7 +425,7 @@ static DWORD getNumInterfacesInt(BOOL onlyNonLoopback)
     }
 
     DPRINT("getNumInterfaces: success: %d %d %08x\n", 
-           onlyLoopback, numInterfaces, status );
+           onlyNonLoopback, numInterfaces, status );
 
     tdiFreeThingSet( entitySet );
     

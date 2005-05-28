@@ -98,7 +98,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Rozmieœæ &po wielkoœci" , 		406
 		MENUITEM "&Sortuj po dacie" , 		407
 		MENUITEM SEPARATOR
-		MENUITEM "Sortuj po &..." ,			409
+		MENUITEM "Sortuj po &..." ,			ID_VIEW_FILTER
 	}
 
 	POPUP "&Opcje"  {

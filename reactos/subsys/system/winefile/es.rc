@@ -95,7 +95,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Ordenar por t&amaño" , 		ID_VIEW_SORT_SIZE
 		MENUITEM "Ordenar por &fecha" , 		ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
-		MENUITEM "Ordenar por &..." ,			409
+		MENUITEM "Ordenar por &..." ,			ID_VIEW_FILTER
 	}
 
 	POPUP "&Opciones"  {

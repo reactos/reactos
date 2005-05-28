@@ -64,7 +64,7 @@ KdbpSymFindUserModule(IN PVOID Address  OPTIONAL,
       Peb = CurrentProcess->Peb;
     }
 
-  if (Peb == NULL)
+  if (Peb == NULL || Peb->Ldr == NULL)
     {
       return FALSE;
     }

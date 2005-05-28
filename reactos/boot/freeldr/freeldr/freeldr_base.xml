@@ -1,0 +1,109 @@
+<module name="freeldr_base" type="objectlibrary" warnings="true">
+	<include base="freeldr_base">include</include>
+	<include base="freeldr_base">cache</include>
+	<include base="ntoskrnl">include</include>
+	<define name="__USE_W32API" />
+	<compilerflag>-nostdlib</compilerflag>
+	<compilerflag>-ffreestanding</compilerflag>
+	<compilerflag>-fno-builtin</compilerflag>
+	<compilerflag>-fno-inline</compilerflag>
+	<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
+	<compilerflag>-Os</compilerflag>
+	<directory name="arch">
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>_alloca.S</file>
+				<file>archmach.c</file>
+				<file>hardware.c</file>
+				<file>hwacpi.c</file>
+				<file>hwapm.c</file>
+				<file>hwcpu.c</file>
+				<file>hwpci.c</file>
+				<file>i386disk.c</file>
+				<file>i386rtl.c</file>
+				<file>i386vid.c</file>
+				<file>machpc.c</file>
+				<file>machxbox.c</file>
+				<file>pccons.c</file>
+				<file>pcdisk.c</file>
+				<file>pcmem.c</file>
+				<file>pcrtc.c</file>
+				<file>pcvideo.c</file>
+				<file>portio.c</file>
+				<file>xboxcons.c</file>
+				<file>xboxdisk.c</file>
+				<file>xboxfont.c</file>
+				<file>xboxhw.c</file>
+				<file>xboxmem.c</file>
+				<file>xboxrtc.c</file>
+				<file>xboxvideo.c</file>
+			</directory>
+		</if>
+	</directory>
+	<directory name="cache">
+		<file>blocklist.c</file>
+		<file>cache.c</file>
+	</directory>
+	<directory name="comm">
+		<file>rs232.c</file>
+	</directory>
+	<directory name="disk">
+		<file>disk.c</file>
+		<file>partition.c</file>
+	</directory>
+	<directory name="fs">
+		<file>ext2.c</file>
+		<file>fat.c</file>
+		<file>fs.c</file>
+		<file>fsrec.c</file>
+		<file>iso.c</file>
+		<file>ntfs.c</file>
+	</directory>
+	<directory name="inifile">
+		<file>ini_init.c</file>
+		<file>inifile.c</file>
+		<file>parse.c</file>
+	</directory>
+	<directory name="math">
+		<file>libgcc2.c</file>
+	</directory>
+	<directory name="mm">
+		<file>meminit.c</file>
+		<file>mm.c</file>
+	</directory>
+	<directory name="reactos">
+		<file>arcname.c</file>
+		<file>binhive.c</file>
+		<file>reactos.c</file>
+		<file>registry.c</file>
+	</directory>
+	<directory name="rtl">
+		<file>list.c</file>
+		<file>memcmp.c</file>
+		<file>memcpy.c</file>
+		<file>memmove.c</file>
+		<file>memset.c</file>
+		<file>print.c</file>
+		<file>stdlib.c</file>
+		<file>string.c</file>
+	</directory>
+	<directory name="ui">
+		<file>gui.c</file>
+		<file>tui.c</file>
+		<file>tuimenu.c</file>
+		<file>ui.c</file>
+	</directory>
+	<directory name="video">
+		<file>bank.c</file>
+		<file>fade.c</file>
+		<file>palette.c</file>
+		<file>pixel.c</file>
+		<file>video.c</file>
+	</directory>
+	<file>freeldr.c</file>
+	<file>debug.c</file>
+	<file>multiboot.c</file>
+	<file>version.c</file>
+	<file>cmdline.c</file>
+	<file>machine.c</file>
+</module>

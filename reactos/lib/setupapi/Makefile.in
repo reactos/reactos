@@ -4,6 +4,7 @@ TOPOBJDIR = ../..
 SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = setupapi.dll
+IMPORTLIB = libsetupapi.$(IMPLIBEXT)
 IMPORTS   = user32 version advapi32 rpcrt4 kernel32 ntdll
 DELAYIMPORTS = shell32
 EXTRALIBS = $(LIBUNICODE)

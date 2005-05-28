@@ -289,7 +289,6 @@ LdrpInitializeTlsForProccess(VOID)
                 *   Is this region allways writable ?
                 */
                *(PULONG)TlsDirectory->AddressOfIndex = Module->TlsIndex;
-               CHECKPOINT1;
              }
            Entry = Entry->Flink;
         }
@@ -1969,7 +1968,6 @@ PEPFUNC LdrPEStartup (PVOID  ImageBase,
    RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);
    if (!NT_SUCCESS(Status))
      {
-       CHECKPOINT1;
        return NULL;
      }
 
@@ -2158,7 +2156,6 @@ LdrpUnloadModule(PLDR_MODULE Module,
    if (LoadCount == 0)
      {
        /* ?????????????????? */
-       CHECKPOINT1;
      }
    else if (LoadCount == 1)
      {

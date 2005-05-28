@@ -5,6 +5,7 @@
  * Copyright 1999 Francis Beaudet
  * Copyright 1999 Noel Borthwick
  * Copyright 1999, 2000 Marcus Meissner
+ * Copyright 2005 Juan Lang
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -48,7 +49,6 @@
 #include "wine/winbase16.h"
 #include "wine/wingdi16.h"
 #include "wine/winuser16.h"
-#include "ole32_main.h"
 #include "compobj_private.h"
 
 #include "wine/debug.h"
@@ -2292,13 +2292,13 @@ HRESULT WINAPI OleCreate(
 /******************************************************************************
  *              OleSetAutoConvert        [OLE32.@]
  */
-/* FIXME: convert to Unicode */
 HRESULT WINAPI OleSetAutoConvert(REFCLSID clsidOld, REFCLSID clsidNew)
 {
     HKEY hkey = 0;
     char buf[200], szClsidNew[200];
     HRESULT res = S_OK;
 
+    /* FIXME: convert to Unicode */
     TRACE("(%s,%s)\n", debugstr_guid(clsidOld), debugstr_guid(clsidNew));
     sprintf(buf,"CLSID\\");WINE_StringFromCLSID(clsidOld,&buf[6]);
     WINE_StringFromCLSID(clsidNew, szClsidNew);
@@ -2541,26 +2541,40 @@ HRESULT WINAPI PropVariantClear(PROPVARIANT * pvar) /* [in/out] */
         }
         break;
     default:
-        switch (pvar->vt & ~VT_VECTOR)
+        if (pvar->vt & VT_VECTOR)
         {
-        case VT_VARIANT:
-            FreePropVariantArray(pvar->u.capropvar.cElems, pvar->u.capropvar.pElems);
-            break;
-        case VT_CF:
-            OLE_FreeClipDataArray(pvar->u.caclipdata.cElems, pvar->u.caclipdata.pElems);
-            break;
-        case VT_BSTR:
-        case VT_LPSTR:
-        case VT_LPWSTR:
-        case VT_CLSID:
-            FIXME("Freeing of vector sub-type not supported yet\n");
+            ULONG i;
+
+            switch (pvar->vt & ~VT_VECTOR)
+            {
+            case VT_VARIANT:
+                FreePropVariantArray(pvar->u.capropvar.cElems, pvar->u.capropvar.pElems);
+                break;
+            case VT_CF:
+                OLE_FreeClipDataArray(pvar->u.caclipdata.cElems, pvar->u.caclipdata.pElems);
+                break;
+            case VT_BSTR:
+                for (i = 0; i < pvar->u.cabstr.cElems; i++)
+                    PropSysFreeString(pvar->u.cabstr.pElems[i]);
+                break;
+            case VT_LPSTR:
+                for (i = 0; i < pvar->u.calpstr.cElems; i++)
+                    CoTaskMemFree(pvar->u.calpstr.pElems[i]);
+                break;
+            case VT_LPWSTR:
+                for (i = 0; i < pvar->u.calpwstr.cElems; i++)
+                    CoTaskMemFree(pvar->u.calpwstr.pElems[i]);
+                break;
+            }
+            if (pvar->vt & ~VT_VECTOR)
+            {
+                /* pick an arbitary VT_VECTOR structure - they all have the same
+                 * memory layout */
+                CoTaskMemFree(pvar->u.capropvar.pElems);
+            }
         }
-        if (pvar->vt & ~VT_VECTOR)
-        {
-            /* pick an arbitary VT_VECTOR structure - they all have the same
-             * memory layout */
-            CoTaskMemFree(pvar->u.capropvar.pElems);
-        }
+        else
+            WARN("Invalid/unsupported type %d\n", pvar->vt);
     }
 
     ZeroMemory(pvar, sizeof(*pvar));
@@ -2632,7 +2646,9 @@ HRESULT WINAPI PropVariantCopy(PROPVARIANT *pvarDest,      /* [out] */
         if (pvarSrc->vt & VT_VECTOR)
         {
             int elemSize;
-            switch(pvarSrc->vt & VT_VECTOR)
+            ULONG i;
+
+            switch(pvarSrc->vt & ~VT_VECTOR)
             {
             case VT_I1:       elemSize = sizeof(pvarSrc->u.cVal); break;
             case VT_UI1:      elemSize = sizeof(pvarSrc->u.bVal); break;
@@ -2651,20 +2667,19 @@ HRESULT WINAPI PropVariantCopy(PROPVARIANT *pvarDest,      /* [out] */
             case VT_FILETIME: elemSize = sizeof(pvarSrc->u.filetime); break;
             case VT_CLSID:    elemSize = sizeof(*pvarSrc->u.puuid); break;
             case VT_CF:       elemSize = sizeof(*pvarSrc->u.pclipdata); break;
+            case VT_BSTR:     elemSize = sizeof(*pvarSrc->u.bstrVal); break;
+            case VT_LPSTR:    elemSize = sizeof(*pvarSrc->u.pszVal); break;
+            case VT_LPWSTR:   elemSize = sizeof(*pvarSrc->u.pwszVal); break;
 
-            case VT_BSTR:
-            case VT_LPSTR:
-            case VT_LPWSTR:
             case VT_VARIANT:
             default:
-                FIXME("Invalid element type: %ul\n", pvarSrc->vt & VT_VECTOR);
+                FIXME("Invalid element type: %ul\n", pvarSrc->vt & ~VT_VECTOR);
                 return E_INVALIDARG;
             }
             len = pvarSrc->u.capropvar.cElems;
             pvarDest->u.capropvar.pElems = CoTaskMemAlloc(len * elemSize);
             if (pvarSrc->vt == (VT_VECTOR | VT_VARIANT))
             {
-                ULONG i;
                 for (i = 0; i < len; i++)
                     PropVariantCopy(&pvarDest->u.capropvar.pElems[i], &pvarSrc->u.capropvar.pElems[i]);
             }
@@ -2674,19 +2689,37 @@ HRESULT WINAPI PropVariantCopy(PROPVARIANT *pvarDest,      /* [out] */
             }
             else if (pvarSrc->vt == (VT_VECTOR | VT_BSTR))
             {
-                FIXME("Copy BSTRs\n");
+                for (i = 0; i < len; i++)
+                    pvarDest->u.cabstr.pElems[i] = PropSysAllocString(pvarSrc->u.cabstr.pElems[i]);
             }
             else if (pvarSrc->vt == (VT_VECTOR | VT_LPSTR))
             {
-                FIXME("Copy LPSTRs\n");
+                size_t strLen;
+                for (i = 0; i < len; i++)
+                {
+                    strLen = lstrlenA(pvarSrc->u.calpstr.pElems[i]) + 1;
+                    pvarDest->u.calpstr.pElems[i] = CoTaskMemAlloc(strLen);
+                    memcpy(pvarDest->u.calpstr.pElems[i],
+                     pvarSrc->u.calpstr.pElems[i], strLen);
+                }
             }
-            else if (pvarSrc->vt == (VT_VECTOR | VT_LPSTR))
+            else if (pvarSrc->vt == (VT_VECTOR | VT_LPWSTR))
             {
-                FIXME("Copy LPWSTRs\n");
+                size_t strLen;
+                for (i = 0; i < len; i++)
+                {
+                    strLen = (lstrlenW(pvarSrc->u.calpwstr.pElems[i]) + 1) *
+                     sizeof(WCHAR);
+                    pvarDest->u.calpstr.pElems[i] = CoTaskMemAlloc(strLen);
+                    memcpy(pvarDest->u.calpstr.pElems[i],
+                     pvarSrc->u.calpstr.pElems[i], strLen);
+                }
             }
             else
                 CopyMemory(pvarDest->u.capropvar.pElems, pvarSrc->u.capropvar.pElems, len * elemSize);
         }
+        else
+            WARN("Invalid/unsupported type %d\n", pvarSrc->vt);
     }
 
     return S_OK;

@@ -17,21 +17,8 @@
 #include <tdikrnl.h>
 #include <tdiinfo.h>
 #include <string.h>
-#include <ndis.h>
-#include <shared.h>
-
-#ifndef _MSC_VER
-#include <roscfg.h>
-#include <rosrtl/string.h>
 #include <winsock2.h>
-#include <ddk/tdi.h>
-#include <ddk/ndis.h>
-#include <tcpmisc.h>
-#include <tcpioctl.h>
-#else
-#include <ntdef.h>
-#define STDCALL
-#endif
+#include <shared.h>
 
 #ifndef MIN
 #define MIN(x,y) (((x)<(y))?(x):(y))

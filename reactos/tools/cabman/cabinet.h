@@ -58,6 +58,10 @@
 
 extern unsigned long DebugTraceLevel;
 
+#ifdef _MSC_VER
+#define __FUNCTION__ ""
+#endif//_MSC_VER
+
 #define DPRINT(_t_, _x_) \
     if (((DebugTraceLevel & NORMAL_MASK) >= _t_) || \
         ((DebugTraceLevel & _t_) > NORMAL_MASK)) { \

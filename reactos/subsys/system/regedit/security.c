@@ -36,6 +36,23 @@
    Implementation of the CRegKeySecurity interface
  ******************************************************************************/
 
+static ifaceCRegKeySecurityVbtl efvt =
+{
+  /* IUnknown methods */
+  CRegKeySecurity_fnQueryInterface,
+  CRegKeySecurity_fnAddRef,
+  CRegKeySecurity_fnRelease,
+
+  /* CRegKeySecurity methods */
+  CRegKeySecurity_fnGetObjectInformation,
+  CRegKeySecurity_fnGetSecurity,
+  CRegKeySecurity_fnSetSecurity,
+  CRegKeySecurity_fnGetAccessRights,
+  CRegKeySecurity_fnMapGeneric,
+  CRegKeySecurity_fnGetInheritTypes,
+  CRegKeySecurity_fnPropertySheetPageCallback
+};
+
 SI_ACCESS RegAccess[] = {
   {&GUID_NULL, KEY_ALL_ACCESS,         (LPWSTR)MAKEINTRESOURCE(IDS_ACCESS_FULLCONTROL),      SI_ACCESS_GENERAL | SI_ACCESS_SPECIFIC},
   {&GUID_NULL, KEY_READ,               (LPWSTR)MAKEINTRESOURCE(IDS_ACCESS_READ),             SI_ACCESS_GENERAL},
@@ -257,7 +274,6 @@ RegKeyEditPermissions(HWND hWndOwner,
                       LPCTSTR lpKeyName)
 {
   BOOL Result;
-  HMODULE hAclEditDll;
   LPWSTR Machine, KeyName;
   HKEY hInfoKey;
   LPREGKEYSECURITY RegKeySecurity;

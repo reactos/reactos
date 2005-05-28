@@ -1,0 +1,12 @@
+<directory name="drivers">
+	<xi:include href="drivers/directory.xml" />
+</directory>
+<directory name="fonts">
+	<xi:include href="fonts/fonts.xml" />
+</directory>
+<directory name="inf">
+	<xi:include href="inf/inf.xml" />
+</directory>
+<directory name="nls">
+	<xi:include href="nls/nls.xml" />
+</directory>

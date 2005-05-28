@@ -41,7 +41,11 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
-LONG_PTR /* CLIENT_CALL_RETURN */ RPCRT4_NdrClientCall2(PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pFormat, va_list args)
+/***********************************************************************
+ * Note: this should return a CLIENT_CALL_RETURN, but calling convention for
+ * returning structures/unions is different between Windows and gcc on i386.
+ */
+LONG_PTR RPCRT4_NdrClientCall2(PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pFormat, va_list args)
 {
 
   RPC_CLIENT_INTERFACE *rpc_cli_if = (RPC_CLIENT_INTERFACE *)(pStubDesc->RpcInterfaceInformation);
@@ -83,8 +87,11 @@ LONG_PTR /* CLIENT_CALL_RETURN */ RPCRT4_NdrClientCall2(PMIDL_STUB_DESC pStubDes
 
 /***********************************************************************
  *           NdrClientCall2 [RPCRT4.@]
+ *
+ * Note: this should return a CLIENT_CALL_RETURN, but calling convention for
+ * returning structures/unions is different between Windows and gcc on i386.
  */
-LONG_PTR /* CLIENT_CALL_RETURN */ WINAPIV NdrClientCall2(PMIDL_STUB_DESC pStubDesc,
+LONG_PTR WINAPIV NdrClientCall2(PMIDL_STUB_DESC pStubDesc,
   PFORMAT_STRING pFormat, ...)
 {
     LONG_PTR ret;

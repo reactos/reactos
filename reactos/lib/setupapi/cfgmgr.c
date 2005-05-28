@@ -33,7 +33,7 @@
 
 #include "rpc.h"
 
-#include "pnp.h"
+#include "pnp_c.h"
 
 #include "wine/debug.h"
 

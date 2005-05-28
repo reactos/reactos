@@ -34,7 +34,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 /***********************************************************************
  *		DllUnregisterServer (OLEPRO32.258)
  */
-HRESULT WINAPI OLEPRO32_DllUnregisterServer()
+HRESULT WINAPI DllUnregisterServer()
 {
 	FIXME("not implemented (olepro32.dll) \n");
 	return S_OK;
@@ -43,7 +43,7 @@ HRESULT WINAPI OLEPRO32_DllUnregisterServer()
 /***********************************************************************
  *		DllRegisterServer (OLEPRO32.257)
  */
-HRESULT WINAPI OLEPRO32_DllRegisterServer()
+HRESULT WINAPI DllRegisterServer()
 {
 	FIXME("not implemented (olepro32.dll) \n");
 	return S_OK;
@@ -52,7 +52,7 @@ HRESULT WINAPI OLEPRO32_DllRegisterServer()
 /***********************************************************************
  *		DllCanUnloadNow (OLEPRO32.255)
  */
-HRESULT WINAPI OLEPRO32_DllCanUnloadNow(void)
+HRESULT WINAPI DllCanUnloadNow(void)
 {
 	FIXME("not implemented (olepro32.dll) \n");
 	return S_OK;
@@ -61,7 +61,7 @@ HRESULT WINAPI OLEPRO32_DllCanUnloadNow(void)
 /***********************************************************************
  *		DllGetClassObject (OLEPRO32.256)
  */
-HRESULT WINAPI OLEPRO32_DllGetClassObject( REFCLSID rclsid, REFIID riid, LPVOID* ppv )
+HRESULT WINAPI DllGetClassObject( REFCLSID rclsid, REFIID riid, LPVOID* ppv )
 {
 	FIXME("not implemented (olepro32.dll) \n");
 	return S_OK;

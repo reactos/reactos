@@ -4605,7 +4605,7 @@ AccessCheck(
 	    LPBOOL  AccessStatus
 	    );
 
-#ifndef __NTDRIVER__
+#if !defined(__NTDRIVER__)
 LONG
 STDCALL
 InterlockedIncrement(

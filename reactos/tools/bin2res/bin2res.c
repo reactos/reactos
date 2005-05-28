@@ -35,7 +35,17 @@
 # include <unistd.h>
 #endif
 
+#if defined(WIN32)
+#define DIR_SEPARATOR "\\"
+#else
+#define DIR_SEPARATOR "/"
+#endif
+
 extern int mkstemps(char *template, int suffix_len);
+
+int process_resources(const char* input_file_name, const char* specific_file_name, 
+		      const char* relative_path,
+		      int inserting, int force_processing, int verbose);
 
 static const char* help =
         "Usage: bin2res [OPTIONS] <rsrc.rc>\n"
@@ -43,6 +53,7 @@ static const char* help =
 	"  -x extract binaries from the <rsrc.rc> file\n"
 	"  -i <filename> archive the named file into the <rsrc.rc> file\n"
 	"  -o <filename> extract the named file from the <rsrc.rc> file\n"
+	"  -b <path> assume resources are relative to this base path\n"
 	"  -f force processing of older resources\n"
 	"  -v causes the command to be verbous during processing\n" 
 	"  -h print this help screen and exit\n"
@@ -127,9 +138,62 @@ const char* parse_marker(const char *line, time_t* last_updated)
     return res_file_name;
 }
 
+const char* parse_include(const char *line)
+{
+    static char include_filename[PATH_MAX], *rpos, *wpos;
+
+    if (!(rpos = strstr(line, "#"))) return 0;
+    for (rpos += 1; *rpos && isspace(*rpos); rpos++) /**/;
+    if (!(rpos = strstr(line, "include"))) return 0;
+    for (rpos += 7; *rpos && isspace(*rpos); rpos++) /**/;
+    for (; *rpos && (*rpos == '"' || *rpos == '<'); rpos++) /**/;
+    for (wpos = include_filename; *rpos && !(*rpos == '"' || *rpos == '<'); ) *wpos++ = *rpos++;
+    if (!(rpos = strstr(include_filename, ".rc"))) return 0;
+    *wpos = 0;
+
+    return include_filename;
+}
+
+char* get_filename_with_full_path(char* output, const char* filename, const char* relative_path)
+{
+	if (relative_path != NULL && relative_path[0] != 0)
+	{
+		strcpy(output, relative_path);
+		strcat(output, DIR_SEPARATOR);
+		strcat(output, filename);
+	}
+	else
+		strcpy(output, filename);
+	return output;
+}
+
+void process_includes(const char* input_file_name, const char* specific_file_name, 
+		     const char* relative_path,
+		     int inserting, int force_processing, int verbose)
+{
+    char filename[PATH_MAX];
+    char buffer[2048];
+    const char *include_file_name;
+    FILE *fin;
+    int c;
+
+    if (!(fin = fopen(input_file_name, "r"))) return;
+    for (c = EOF; fgets(buffer, sizeof(buffer), fin); c = EOF)
+    {
+	if (!(include_file_name = parse_include(buffer))) continue;
+	if ( verbose ) printf ( "Processing included file %s\n", include_file_name);
+	process_resources(get_filename_with_full_path(filename, include_file_name, relative_path),
+	                  specific_file_name, relative_path,
+		          inserting, force_processing, verbose);
+    }
+    fclose(fin);
+}
+
 int process_resources(const char* input_file_name, const char* specific_file_name, 
+		      const char* relative_path,
 		      int inserting, int force_processing, int verbose)
 {
+    char filename[PATH_MAX];
     char buffer[2048], tmp_file_name[PATH_MAX];
     const char *res_file_name;
     time_t rc_last_update, res_last_update;
@@ -169,7 +233,8 @@ int process_resources(const char* input_file_name, const char* specific_file_nam
 	    if (inserting) fputc(c, ftmp);
 	if (c == EOF) break;
 
-	if (!(fres = fopen(res_file_name, inserting ? "rb" : "wb"))) break;
+	if (!(fres = fopen(get_filename_with_full_path(filename, res_file_name, relative_path),
+	    inserting ? "rb" : "wb"))) break;
 	if (inserting)
 	{
 	    if (!insert_hexdump(ftmp, fres)) break;
@@ -201,6 +266,11 @@ int process_resources(const char* input_file_name, const char* specific_file_nam
         }
 	else unlink(tmp_file_name);
     }
+    else
+    {
+	process_includes(input_file_name, specific_file_name, relative_path,
+		         inserting, force_processing, verbose);
+    }
 
     return c == EOF;
 }
@@ -211,8 +281,9 @@ int main(int argc, char **argv)
     int force_overwrite = 0, verbose = 0;
     const char* input_file_name = 0;
     const char* specific_file_name = 0;
+    const char* relative_path = 0;
 
-    while((optc = getopt(argc, argv, "axi:o:fhv")) != EOF)
+    while((optc = getopt(argc, argv, "axi:o:b:fhv")) != EOF)
     {
 	switch(optc)
 	{
@@ -228,6 +299,10 @@ int main(int argc, char **argv)
 	    optc = ((optc == 'i') ? 'a' : 'x');
 	    if (convert_dir && convert_dir != optc) usage();
 	    convert_dir = optc;
+	break;
+	case 'b':
+	    if (relative_path) usage();
+	    relative_path = optarg;
 	break;
 	case 'f':
 	    force_overwrite = 1;
@@ -249,7 +324,7 @@ int main(int argc, char **argv)
 
     if (!convert_dir) usage();
 
-    if (!process_resources(input_file_name, specific_file_name, 
+    if (!process_resources(input_file_name, specific_file_name, relative_path,
 			   convert_dir == 'a', force_overwrite, verbose))
     {
 	perror("Processing failed");

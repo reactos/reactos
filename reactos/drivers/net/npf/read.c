@@ -26,10 +26,8 @@
 #include <ndis.h>
 #else
 #include <ddk/ntddk.h>
-#include <net/ndis.h>
+#include <ddk/ndis.h>
 
-#define NdisMoveMappedMemory(Destination,Source,Length) RtlCopyMemory(Destination,Source,Length)
-#define NdisZeroMappedMemory(Destination,Length)		RtlZeroMemory(Destination,Length)
 #define NdisReinitializePacket(Packet)										\
 {																			\
 	(Packet)->Private.Head = (PNDIS_BUFFER)NULL;							\
