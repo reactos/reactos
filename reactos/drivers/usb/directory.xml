@@ -4,3 +4,6 @@
 <directory name="usbhub">
 	<xi:include href="usbhub/usbhub.xml" />
 </directory>
+<directory name="usbport">
+	<xi:include href="usbport/usbport.xml" />
+</directory>
