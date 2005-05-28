@@ -459,7 +459,7 @@ HRESULT WINAPI UrlCanonicalizeW(LPCWSTR pszUrl, LPWSTR pszCanonicalized,
         lpszUrlCpy[--nLen]=0;
 
     if(dwFlags & URL_UNESCAPE)
-        UrlUnescapeW(lpszUrlCpy, NULL, NULL, URL_UNESCAPE_INPLACE);
+        UrlUnescapeW(lpszUrlCpy, NULL, &nLen, URL_UNESCAPE_INPLACE);
 
     if((EscapeFlags = dwFlags & (URL_ESCAPE_UNSAFE |
                                  URL_ESCAPE_SPACES_ONLY |
@@ -1160,7 +1160,7 @@ HRESULT WINAPI UrlUnescapeW(
     TRACE("(%s, %p, %p, 0x%08lx)\n", debugstr_w(pszUrl), pszUnescaped,
 	  pcchUnescaped, dwFlags);
 
-    if(!pszUrl || !pszUnescaped || !pcchUnescaped)
+    if(!pszUrl || (!pszUnescaped && !(dwFlags & URL_UNESCAPE_INPLACE))|| !pcchUnescaped)
 	return E_INVALIDARG;
 
     if(dwFlags & URL_UNESCAPE_INPLACE)
