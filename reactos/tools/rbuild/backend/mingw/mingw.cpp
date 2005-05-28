@@ -670,7 +670,8 @@ MingwBackend::GenerateDirectories ()
 	printf ( "Creating directories..." );
 	intermediateDirectory->GenerateTree ( "", configuration.Verbose );
 	outputDirectory->GenerateTree ( "", configuration.Verbose );
-	installDirectory->GenerateTree ( "", configuration.Verbose );
+	if ( !configuration.MakeHandlesInstallDirectories )
+		installDirectory->GenerateTree ( "", configuration.Verbose );
 	printf ( "done\n" );
 }
 

@@ -21,9 +21,26 @@ static string RootXmlFile = "ReactOS.xml";
 static Configuration configuration;
 
 bool
+ParseMakeSwitch ( char switchChar2 )
+{
+	switch ( switchChar2 )
+	{
+		case 'i':
+			configuration.MakeHandlesInstallDirectories = true;
+			break;
+		default:
+			printf ( "Unknown switch -m%c",
+			         switchChar2 );
+			return false;
+	}
+	return true;
+}
+
+bool
 ParseSwitch ( int argc, char** argv, int index )
 {
-	char switchChar = argv[index][1];
+	char switchChar = strlen ( argv[index] ) > 1 ? argv[index][1] : ' ';
+	char switchChar2 = strlen ( argv[index] ) > 2 ? argv[index][2] : ' ';
 	switch ( switchChar )
 	{
 		case 'v':
@@ -38,6 +55,8 @@ ParseSwitch ( int argc, char** argv, int index )
 		case 'r':
 			RootXmlFile = string(&argv[index][2]);
 			break;
+		case 'm':
+			return ParseMakeSwitch ( switchChar2 );
 		default:
 			printf ( "Unknown switch -%c",
 			         switchChar );
@@ -72,12 +91,13 @@ main ( int argc, char** argv )
 	if ( !ParseArguments ( argc, argv ) )
 	{
 		printf ( "Generates project files for buildsystems\n\n" );
-		printf ( "  rbuild [-v] [-rfile.xml] buildsystem\n\n" );
+		printf ( "  rbuild [switches] buildsystem\n\n" );
 		printf ( "Switches:\n" );
-		printf ( "  -v           Be verbose\n" );
-		printf ( "  -c           Clean as you go. Delete generated files as soon as they are not needed anymore\n" );
+		printf ( "  -v           Be verbose.\n" );
+		printf ( "  -c           Clean as you go. Delete generated files as soon as they are not needed anymore.\n" );
 		printf ( "  -d           Disable automatic dependencies.\n" );
-		printf ( "  -rfile.xml   Name of the root xml file. Default is ReactOS.xml\n" );
+		printf ( "  -rfile.xml   Name of the root xml file. Default is ReactOS.xml.\n" );
+		printf ( "  -mi          Let make handle creation of install directories. Rbuild will not generate the directories.\n" );
 		printf ( "\n" );
 		printf ( "  buildsystem  Target build system. Can be one of:\n" );
 		printf ( "                 mingw   MinGW\n" );

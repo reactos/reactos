@@ -76,6 +76,7 @@ public:
 	bool Verbose;
 	bool CleanAsYouGo;
 	bool AutomaticDependencies;
+	bool MakeHandlesInstallDirectories;
 };
 
 class Environment
