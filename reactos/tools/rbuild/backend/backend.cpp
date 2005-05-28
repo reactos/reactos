@@ -60,6 +60,4 @@ Backend::Backend ( Project& project,
 
 Backend::~Backend()
 {
-	delete &ProjectNode;
-	delete &configuration;
 }
