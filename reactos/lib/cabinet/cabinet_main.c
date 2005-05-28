@@ -94,9 +94,10 @@ HRESULT WINAPI Extract(EXTRACTdest *dest, LPCSTR what)
 #define DUMPH(idx)      idx >= sizeof(EXTRACTdest) ? 0x55 : ptr[idx]
 
   LPSTR dir;
-  unsigned char *ptr = (unsigned char*) dest;
+  unsigned char *ptr;
   unsigned int i;
 
+   ptr = ((unsigned char*) dest);
   TRACE("(dest == %0lx, what == %s)\n", (long) dest, debugstr_a(what));
 
   if (!dest) {

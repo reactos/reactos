@@ -2523,8 +2523,12 @@ exit_handler:
  * print_fileinfo (internal)
  */
 void print_fileinfo(struct cab_file *fi) {
-  int d = fi->date, t = fi->time;
+  int d;
+  int t; 
   char *fname = NULL;
+
+  d = fi->date;
+  t = fi->time;
 
   if (fi->attribs & cffile_A_NAME_IS_UTF) {
     fname = malloc(strlen(fi->filename) + 1);
