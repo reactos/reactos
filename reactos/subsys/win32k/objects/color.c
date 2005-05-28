@@ -70,12 +70,57 @@ const PALETTEENTRY* FASTCALL COLOR_GetSystemPaletteTemplate(void)
    return (const PALETTEENTRY*)&COLOR_sysPalTemplate;
 }
 
-BOOL STDCALL NtGdiAnimatePalette(HPALETTE hPalette, UINT uStartIndex,
-   UINT uEntries, CONST PPALETTEENTRY ppe)
+BOOL STDCALL NtGdiAnimatePalette(HPALETTE hPal, UINT StartIndex,
+   UINT NumEntries, CONST PPALETTEENTRY PaletteColors)
 {
-   UNIMPLEMENTED;
-   SetLastWin32Error(ERROR_CALL_NOT_IMPLEMENTED);
-   return FALSE;
+    if( hPal != NtGdiGetStockObject(DEFAULT_PALETTE) )
+    {
+        PPALGDI palPtr;
+        UINT pal_entries;
+        HDC hDC;
+        PDC dc;	
+		HWND hHwd;
+        const PALETTEENTRY *pptr = PaletteColors;
+ 
+        palPtr = (PPALGDI)PALETTE_LockPalette(hPal);
+        if (!palPtr) return FALSE;
+ 
+        pal_entries = palPtr->NumColors;
+        if (StartIndex >= pal_entries)
+        {
+          PALETTE_UnlockPalette(hPal);
+          return FALSE;
+        }
+        if (StartIndex+NumEntries > pal_entries) NumEntries = pal_entries - StartIndex;
+ 
+        for (NumEntries += StartIndex; StartIndex < NumEntries; StartIndex++, pptr++) {
+          /* According to MSDN, only animate PC_RESERVED colours */
+          if (palPtr->IndexedColors[StartIndex].peFlags & PC_RESERVED) {
+            memcpy( &palPtr->IndexedColors[StartIndex], pptr,
+                    sizeof(PALETTEENTRY) );
+            PALETTE_ValidateFlags(&palPtr->IndexedColors[StartIndex], 1);
+          }
+        }
+ 
+        PALETTE_UnlockPalette(hPal);
+ 
+        /* Immediately apply the new palette if current window uses it */		
+		hHwd = NtUserGetDesktopWindow();
+        hDC =  (HDC)NtUserGetWindowDC(hHwd);
+        dc = DC_LockDc(hDC);
+        if (NULL != dc)
+        {
+          if (dc->w.hPalette == hPal)
+          {
+            DC_UnlockDc(hDC);
+            NtGdiRealizePalette(hDC);
+          }
+          else
+            DC_UnlockDc(hDC);
+        }		
+		NtUserReleaseDC(hHwd,hDC);   
+    }
+    return TRUE;
 }
 
 HPALETTE STDCALL NtGdiCreateHalftonePalette(HDC  hDC)
