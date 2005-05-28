@@ -4,7 +4,8 @@
 #        This variable specifies the prefix of the MinGW installation. On Windows
 #        a prefix is usually not needed, but on linux it is usually "mingw32". If
 #        not present and no executable named "gcc" can be found, then the prefix is
-#        assumed to be "mingw32".
+#        assumed to be "mingw32". If your gcc is named i386-mingw32-gcc then set
+#        ROS_PREFIX to i386-mingw32. Don't include the dash (-) before gcc.
 #
 #    ROS_INTERMEDIATE
 #        This variable controls where to put intermediate files. Intermediate
