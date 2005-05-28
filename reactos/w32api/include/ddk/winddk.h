@@ -5928,6 +5928,12 @@ FsRtlIsTotalDeviceFailure(
 /** Hardware abstraction layer routines **/
 
 NTOSAPI
+BOOLEAN
+DDKAPI
+HalMakeBeep(
+  IN ULONG Frequency);
+
+NTOSAPI
 VOID
 DDKFASTAPI
 HalExamineMBR(
