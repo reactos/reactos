@@ -7,7 +7,7 @@
 #ifndef __BUFFER_H
 #define __BUFFER_H
 
-#include <ndissys.h>
+#include "ndissys.h"
 
 
 /* FIXME: Possibly move this to ntddk.h */

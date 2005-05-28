@@ -655,6 +655,8 @@ KdPortInitializeEx(
   DWORD Unknown2)
 {
   UNIMPLEMENTED;
+  
+  return TRUE;
 }
 
 
