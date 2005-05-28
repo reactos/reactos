@@ -1,4 +1,4 @@
-<module name="mesa32" type="win32dll" baseaddress="${BASEADDRESS_MESA32}" installbase="system32" installname="mesa32.dll">
+<module name="mesa32" type="win32dll" baseaddress="${BASEADDRESS_MESA32}" installbase="system32" installname="mesa32.dll" warnings="true">
 	<importlibrary definition="mesa32.def" />
 	<linkerflag>-Wl,--enable-stdcall-fixup</linkerflag>
 	<include base="mesa32">include</include>
