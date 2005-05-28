@@ -5,7 +5,7 @@
 252 stdcall OleCreatePictureIndirect(ptr ptr long ptr) oleaut32.OleCreatePictureIndirect
 253 stdcall OleCreateFontIndirect(ptr ptr ptr) oleaut32.OleCreateFontIndirect
 254 stdcall OleTranslateColor(long long long) oleaut32.OleTranslateColor
-@ stdcall -private DllCanUnloadNow() OLEPRO32_DllCanUnloadNow
-@ stdcall -private DllGetClassObject( ptr ptr ptr )  OLEPRO32_DllGetClassObject
-@ stdcall -private DllRegisterServer() OLEPRO32_DllRegisterServer
-@ stdcall -private DllUnregisterServer() OLEPRO32_DllUnregisterServer
+@ stdcall -private DllCanUnloadNow()
+@ stdcall -private DllGetClassObject( ptr ptr ptr )
+@ stdcall -private DllRegisterServer()
+@ stdcall -private DllUnregisterServer()
