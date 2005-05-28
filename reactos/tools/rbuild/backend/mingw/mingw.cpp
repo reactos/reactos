@@ -227,6 +227,7 @@ MingwBackend::MingwBackend ( Project& project,
 	  outputDirectory ( new Directory ( "$(OUTPUT)" ) ),
 	  installDirectory ( new Directory ( "$(INSTALL)" ) )
 {
+	compilerPrefix = "";
 }
 
 MingwBackend::~MingwBackend()
@@ -482,6 +483,10 @@ MingwBackend::GenerateProjectLFLAGS () const
 void
 MingwBackend::GenerateGlobalVariables () const
 {
+	fprintf ( fMakefile,
+	          "PREFIX := %s\n",
+	          compilerPrefix.c_str () );
+
 	GenerateGlobalCFlagsAndProperties ( "=", ProjectNode.non_if_data );
 	GenerateProjectGccOptions ( "=", ProjectNode.non_if_data );
 
@@ -695,19 +700,22 @@ MingwBackend::DetectCompiler ()
 	const string& ROS_PREFIXValue = Environment::GetVariable ( "ROS_PREFIX" );
 	if ( ROS_PREFIXValue.length () > 0 )
 	{
-		compilerCommand = ROS_PREFIXValue + "-gcc";
+		compilerPrefix = ROS_PREFIXValue;
+		compilerCommand = compilerPrefix + "-gcc";
 		detectedCompiler = TryToDetectThisCompiler ( compilerCommand );
 	}
 #if defined(WIN32)
 	if ( !detectedCompiler )
 	{
+		compilerPrefix = "";
 		compilerCommand = "gcc";
 		detectedCompiler = TryToDetectThisCompiler ( compilerCommand );
 	}
 #endif
 	if ( !detectedCompiler )
 	{
-		compilerCommand = "mingw32-gcc";
+		compilerPrefix = "mingw32";
+		compilerCommand = compilerPrefix + "-gcc";
 		detectedCompiler = TryToDetectThisCompiler ( compilerCommand );
 	}
 	if ( detectedCompiler )

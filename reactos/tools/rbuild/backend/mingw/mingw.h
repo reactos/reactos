@@ -51,6 +51,7 @@ public:
 	virtual void Process ();
 	std::string AddDirectoryTarget ( const std::string& directory,
 	                                 Directory* directoryTree );
+	std::string compilerPrefix;
 	std::string compilerCommand;
 	bool usePipe;
 	Directory* intermediateDirectory;
