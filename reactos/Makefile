@@ -256,3 +256,8 @@ makefile_auto_clean:
 
 .PHONY: clean
 clean: makefile_auto_clean
+
+.PHONY: depends
+depends:
+	@-$(rm) makefile.auto
+	@$(MAKE) $(filter-out depends, $(MAKECMDGOALS))
