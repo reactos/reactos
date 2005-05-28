@@ -1,3 +1,6 @@
 <directory name="vfatlib">
 	<xi:include href="vfatlib/vfatlib.xml" />
 </directory>
+<directory name="vfatxlib">
+	<xi:include href="vfatxlib/vfatxlib.xml" />
+</directory>
