@@ -10,6 +10,7 @@ He also knows some commands. You can give him one like this "ArchBlackmann: !gro
 * !kiss <person>
 * !hug <person>
 * !give <someone> <something> 
+* !say <something> - You can tell him to say something on the channel via PrivateMessage
 
 * !add <list> <item>
 * !remove <list> <item>
