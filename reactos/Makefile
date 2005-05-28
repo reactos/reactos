@@ -70,7 +70,7 @@ ifeq ($(VERBOSE),no)
   HALFVERBOSEECHO = no
   BUILDNO_QUIET = -q
 else
-ifeq ($(VERBOSE),yes)
+ifeq ($(VERBOSE),full)
   Q =
   HALFVERBOSEECHO = no
   BUILDNO_QUIET =
