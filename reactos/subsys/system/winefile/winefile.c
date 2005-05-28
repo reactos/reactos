@@ -2562,14 +2562,15 @@ static int insert_entries(Pane* pane, Entry* dir, LPCTSTR pattern, int filter_fl
 					(entry->data.cFileName[1]==TEXT('.') && entry->data.cFileName[2]==TEXT('\0')))
 					continue;
 
-			if (pattern)
-				if (!pattern_match(entry->data.cFileName, pattern))
-					continue;
-
 			/* filter directories in right pane */
 			if (!pane->treePane && !(filter_flags&TF_DIRECTORIES))
 				continue;
 		}
+
+		/* filter using the file name pattern */
+		if (pattern)
+			if (!pattern_match(entry->data.cFileName, pattern))
+				continue;
 
 		/* filter system and hidden files */
 		if (!(filter_flags&TF_HIDDEN) && (entry->data.dwFileAttributes&(FILE_ATTRIBUTE_HIDDEN|FILE_ATTRIBUTE_SYSTEM)))
