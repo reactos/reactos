@@ -22,3 +22,6 @@
 <directory name="video">
 	<xi:include href="video/directory.xml" />
 </directory>
+<directory name="usb">
+	<xi:include href="usb/directory.xml" />
+</directory>
