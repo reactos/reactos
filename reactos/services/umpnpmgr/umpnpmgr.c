@@ -40,7 +40,6 @@
 
 #include "pnp_c.h"
 
-#define DBG
 #define NDEBUG
 #include <debug.h>
 
