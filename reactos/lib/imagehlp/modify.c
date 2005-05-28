@@ -643,7 +643,7 @@ BindpAddBoundForwarder(
 	PUCHAR					TempDllName;
     PLOADED_IMAGE			LoadedLibrary;
     ULONG					DllNameSize;
-    USHORT					OrdinalNumber;
+    USHORT					OrdinalNumber = 0;
     USHORT					HintIndex;
     ULONG					ExportSize;
     PIMAGE_EXPORT_DIRECTORY Exports;

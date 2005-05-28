@@ -1033,8 +1033,8 @@ void monoTriangulationRec(directedLine* inc_chain, Int inc_index,
 			  primStream* pStream)
 {
   Int i;
-  directedLine *temp, *oldtemp;
-  Int tempIndex, oldtempIndex;
+  directedLine *temp, *oldtemp = NULL;
+  Int tempIndex, oldtempIndex = 0;
   
   assert(inc_chain != NULL && dec_chain != NULL);
   

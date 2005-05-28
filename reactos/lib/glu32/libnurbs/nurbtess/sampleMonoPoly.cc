@@ -976,11 +976,11 @@ void findNeck(vertexArray *leftChain, Int botLeftIndex,
 void findLeftGridIndices(directedLine* topEdge, Int firstGridIndex, Int lastGridIndex, gridWrap* grid,  Int* ret_indices, Int* ret_innerIndices)
 {
 
-  Int i,k,isHoriz;
+  Int i,k,isHoriz = 0;
   Int n_ulines = grid->get_n_ulines();
   Real uMin = grid->get_u_min();
   Real uMax = grid->get_u_max();
-  Real slop, uinterc;
+  Real slop = 0.0f, uinterc;
 
 #ifdef SHORTEN_GRID_LINE
   //uintercBuf stores all the interction u value for each grid line
@@ -1094,7 +1094,7 @@ void findRightGridIndices(directedLine* topEdge, Int firstGridIndex, Int lastGri
   Int n_ulines = grid->get_n_ulines();
   Real uMin = grid->get_u_min();
   Real uMax = grid->get_u_max();
-  Real slop, uinterc;
+  Real slop = 0.0f, uinterc;
 
 #ifdef SHORTEN_GRID_LINE
   //uintercBuf stores all the interction u value for each grid line
