@@ -59,7 +59,7 @@ static LRESULT          MMIO_Callback16(SEGPTR, LPMMIOINFO, UINT, LPARAM, LPARAM
  */
 
 /**************************************************************************
- * 			DllEntryPoint (MMSYSTEM.2046)
+ * 			DllEntryPoint (MMSYSTEM.4)
  *
  * MMSYSTEM DLL entry point
  *
@@ -74,12 +74,12 @@ BOOL WINAPI MMSYSTEM_LibMain(DWORD fdwReason, HINSTANCE hinstDLL, WORD ds,
 	/* need to load WinMM in order to:
 	 * - initiate correctly shared variables (WINMM_Init())
 	 */
-        if (!GetModuleHandleA("WINMM.DLL") && !LoadLibraryA("WINMM.DLL"))
+        if (!GetModuleHandleA("WINMM.DLL"))
         {
             ERR("Could not load sibling WinMM.dll\n");
             return FALSE;
 	}
-	WINMM_IData->hWinMM16Instance = hinstDLL;
+	WINMM_IData.hWinMM16Instance = hinstDLL;
         /* hook in our 16 bit function pointers */
         pFnGetMMThread16    = WINMM_GetmmThread;
         pFnOpenDriver16     = DRIVER_OpenDriver16;
@@ -91,7 +91,7 @@ BOOL WINAPI MMSYSTEM_LibMain(DWORD fdwReason, HINSTANCE hinstDLL, WORD ds,
         MMDRV_Init16();
 	break;
     case DLL_PROCESS_DETACH:
-	WINMM_IData->hWinMM16Instance = 0;
+	WINMM_IData.hWinMM16Instance = 0;
         pFnGetMMThread16    = NULL;
         pFnOpenDriver16     = NULL;
         pFnCloseDriver16    = NULL;
@@ -114,7 +114,7 @@ BOOL WINAPI MMSYSTEM_LibMain(DWORD fdwReason, HINSTANCE hinstDLL, WORD ds,
 int WINAPI MMSYSTEM_WEP(HINSTANCE16 hInstance, WORD wDataSeg,
                         WORD cbHeapSize, LPSTR lpCmdLine)
 {
-    FIXME("STUB: Unloading MMSystem DLL ... hInst=%04X \n", hInstance);
+    TRACE("STUB: Unloading MMSystem DLL ... hInst=%04X \n", hInstance);
     return TRUE;
 }
 
@@ -1946,6 +1946,7 @@ LRESULT	WINAPI mmThreadCreate16(FARPROC16 fpThreadAddr, LPHANDLE16 lpHndl, DWORD
 		    CloseHandle(lpMMThd->hEvent);
 		ret = 2;
 	    } else {
+                SetThreadPriority(lpMMThd->hThread, THREAD_PRIORITY_TIME_CRITICAL);
 		TRACE("Got a nice thread hndl=%p id=0x%08lx\n", lpMMThd->hThread, lpMMThd->dwThreadID);
 		ret = 0;
 	    }

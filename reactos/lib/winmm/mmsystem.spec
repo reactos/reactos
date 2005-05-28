@@ -1,6 +1,7 @@
-#1      pascal  MMSYSTEM_WEP(word word word ptr) MMSYSTEM_WEP
+1      pascal  WEP(word word word ptr) MMSYSTEM_WEP
 2      pascal  sndPlaySound(ptr word) sndPlaySound16
 3      pascal  PlaySound(ptr word long) PlaySound16
+4      pascal  DllEntryPoint(long word word word long word) MMSYSTEM_LibMain
 5      pascal  mmsystemGetVersion() mmsystemGetVersion16
 6      pascal  DriverProc(long word word long long) DriverProc16
 8      pascal  WMMMidiRunOnce() WMMMidiRunOnce16
@@ -171,6 +172,5 @@
 #2005   stub    MCIGETTHUNKTABLE
 #2006   stub    WINMMSL_THUNKDATA16
 
-2046   pascal  DllEntryPoint(long word word word long word) MMSYSTEM_LibMain
 # these are Wine only exported functions. Is there another way to do it ?
 2047   pascal  __wine_mmThreadEntryPoint(long) WINE_mmThreadEntryPoint

@@ -65,25 +65,23 @@ void    (WINAPI *pFnRestoreThunkLock)(DWORD);
  *                   G L O B A L   S E T T I N G S
  * ========================================================================*/
 
-LPWINE_MM_IDATA		WINMM_IData /* = NULL */;
+WINE_MM_IDATA WINMM_IData;
 
 /**************************************************************************
  * 			WINMM_CreateIData			[internal]
  */
 static	BOOL	WINMM_CreateIData(HINSTANCE hInstDLL)
 {
-    WINMM_IData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WINE_MM_IDATA));
+    memset( &WINMM_IData, 0, sizeof WINMM_IData );
 
-    if (!WINMM_IData)
-	return FALSE;
-    WINMM_IData->hWinMM32Instance = hInstDLL;
-    InitializeCriticalSection(&WINMM_IData->cs);
+    WINMM_IData.hWinMM32Instance = hInstDLL;
+    InitializeCriticalSection(&WINMM_IData.cs);
 /* FIXME crashes in ReactOS
-    WINMM_IData->cs.DebugInfo->Spare[1] = (DWORD)"WINMM_IData";
+    WINMM_IData.cs.DebugInfo->Spare[1] = (DWORD)"WINMM_IData";
 */
-    WINMM_IData->psStopEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
-    WINMM_IData->psLastEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
-    TRACE("Created IData (%p)\n", WINMM_IData);
+    WINMM_IData.psStopEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+    WINMM_IData.psLastEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+    TRACE("Initialized IData (%p)\n", &WINMM_IData);
     return TRUE;
 }
 
@@ -92,17 +90,13 @@ static	BOOL	WINMM_CreateIData(HINSTANCE hInstDLL)
  */
 static	void WINMM_DeleteIData(void)
 {
-    if (WINMM_IData) {
-	TIME_MMTimeStop();
+    TIME_MMTimeStop();
 
-	/* FIXME: should also free content and resources allocated
-	 * inside WINMM_IData */
-        CloseHandle(WINMM_IData->psStopEvent);
-        CloseHandle(WINMM_IData->psLastEvent);
-        DeleteCriticalSection(&WINMM_IData->cs);
-        HeapFree(GetProcessHeap(), 0, WINMM_IData);
-        WINMM_IData = NULL;
-    }
+    /* FIXME: should also free content and resources allocated
+     * inside WINMM_IData */
+    CloseHandle(WINMM_IData.psStopEvent);
+    CloseHandle(WINMM_IData.psLastEvent);
+    DeleteCriticalSection(&WINMM_IData.cs);
 }
 
 /******************************************************************
@@ -867,7 +861,7 @@ UINT WINAPI midiOutGetErrorTextW(UINT uError, LPWSTR lpText, UINT uSize)
 		* a warning for the test was always true */
 	       (/*uError >= MMSYSERR_BASE && */ uError <= MMSYSERR_LASTERROR) ||
 	       (uError >= MIDIERR_BASE  && uError <= MIDIERR_LASTERROR)) {
-	if (LoadStringW(WINMM_IData->hWinMM32Instance,
+	if (LoadStringW(WINMM_IData.hWinMM32Instance,
 			uError, lpText, uSize) > 0) {
 	    ret = MMSYSERR_NOERROR;
 	}
@@ -1796,6 +1790,7 @@ MMRESULT MIDI_StreamOpen(HMIDISTRM* lphMidiStrm, LPUINT lpuDeviceID, DWORD cMidi
 	midiStreamClose((HMIDISTRM)hMidiOut);
 	return MMSYSERR_NOMEM;
     }
+    SetThreadPriority(lpMidiStrm->hThread, THREAD_PRIORITY_TIME_CRITICAL);
 
     /* wait for thread to have started, and for its queue to be created */
     {
@@ -2177,7 +2172,7 @@ UINT WINAPI waveOutGetErrorTextW(UINT uError, LPWSTR lpText, UINT uSize)
 		* a warning for the test was always true */
 	       (/*uError >= MMSYSERR_BASE && */ uError <= MMSYSERR_LASTERROR) ||
 	       (uError >= WAVERR_BASE  && uError <= WAVERR_LASTERROR)) {
-	if (LoadStringW(WINMM_IData->hWinMM32Instance,
+	if (LoadStringW(WINMM_IData.hWinMM32Instance,
 			uError, lpText, uSize) > 0) {
 	    ret = MMSYSERR_NOERROR;
 	}
@@ -2807,6 +2802,7 @@ MMRESULT WINAPI mmTaskCreate(LPTASKCALLBACK cb, HANDLE* ph, DWORD client)
         if (hEvent) CloseHandle(hEvent);
         return TASKERR_OUTOFMEMORY;
     }
+    SetThreadPriority(hThread, THREAD_PRIORITY_TIME_CRITICAL);
     if (ph) *ph = hEvent;
     CloseHandle(hThread);
     return 0;

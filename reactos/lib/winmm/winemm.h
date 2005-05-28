@@ -292,7 +292,7 @@ void    	TIME_MMTimeStart(void);
 void		TIME_MMTimeStop(void);
 
 /* Global variables */
-extern LPWINE_MM_IDATA  WINMM_IData;
+extern WINE_MM_IDATA  WINMM_IData;
 
 /* pointers to 16 bit functions (if sibling MMSYSTEM.DLL is loaded
  * NULL otherwise
