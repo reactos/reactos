@@ -603,8 +603,7 @@ MingwBackend::GenerateXmlBuildFilesMacro() const
 			else
 			{
 				fprintf ( fMakefile,
-				          " \\\n",
-				          xmlbuildFilenames.c_str () );
+				          " \\\n" );
 			}
 			xmlbuildFilenames.resize ( 0 );
 		}

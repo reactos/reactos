@@ -35,6 +35,8 @@ protected:
 	          Configuration& configuration );
 
 public:
+	virtual ~Backend();
+
 	virtual void Process () = 0;
 	Project& ProjectNode;
 	Configuration& configuration;

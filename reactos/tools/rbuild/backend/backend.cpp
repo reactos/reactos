@@ -57,3 +57,9 @@ Backend::Backend ( Project& project,
 	  configuration ( configuration )
 {
 }
+
+Backend::~Backend()
+{
+	delete &ProjectNode;
+	delete &configuration;
+}

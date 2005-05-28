@@ -47,7 +47,7 @@ class MingwBackend : public Backend
 public:
 	MingwBackend ( Project& project,
 	               Configuration& configuration );
-	virtual ~MingwBackend ();
+	~MingwBackend ();
 	virtual void Process ();
 	std::string AddDirectoryTarget ( const std::string& directory,
 	                                 Directory* directoryTree );
