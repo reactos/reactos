@@ -13,10 +13,12 @@
 	<library>gdi32</library>
 	<library>comctl32</library>
 	<library>comdlg32</library>
-	<file>desk.c</file>
+	<file>desk.c</file>           
 	<file>background.c</file>
 	<file>screensaver.c</file>
 	<file>appearance.c</file>
 	<file>settings.c</file>
-	<file>dibitmap.c</file>
+	<file>dibitmap.c</file>      
+      <file>desk.rc</file>           
+
 </module>

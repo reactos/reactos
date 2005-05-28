@@ -74,7 +74,7 @@ BEGIN
     IDS_COLOR_4BIT "16 Farben"
     IDS_COLOR_8BIT "256 Farben"
     IDS_COLOR_16BIT "High Color (16 Bit)"
-    IDS_COLOR_32BIT "True Color (24 Bit)"
+    IDS_COLOR_24BIT "True Color (24 Bit)"
     IDS_COLOR_32BIT "True Color (32 Bit)"
     IDS_PIXEL "%lux%lu Pixel"
 END
