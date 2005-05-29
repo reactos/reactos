@@ -3811,28 +3811,51 @@ static void update_view_menu(ChildWnd* child)
 }
 
 
-BOOL prompt_target(Pane* pane, LPTSTR source, LPTSTR target)
+	
+static BOOL is_directory(LPCTSTR target)
 {
-	int len, ret;
+	/*TODO correctly handle UNIX paths */
+	DWORD target_attr = GetFileAttributes(target);
 
-	get_path(pane->cur, target);
-
-	ret = DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_SELECT_DESTINATION), pane->hwnd, DestinationDlgProc, (LPARAM)target);
-	if (ret != IDOK)
+	if (target_attr == INVALID_FILE_ATTRIBUTES)
 		return FALSE;
 
-	if (target[0]!='/' && target[1]!=':') {
-		get_path(pane->cur->up, source);
-		len = lstrlen(source);
+	return target_attr&FILE_ATTRIBUTE_DIRECTORY? TRUE: FALSE;
+}
+	
+static BOOL prompt_target(Pane* pane, LPTSTR source, LPTSTR target)
+{
+	TCHAR path[MAX_PATH];
+	int len;
 
-		if (source[len-1]!='\\' && source[len-1]!='/')
-			source[len++] = '/';
+	get_path(pane->cur, path);
 
-		lstrcpy(source+len, target);
-		lstrcpy(target, source);
-	}
+	if (DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_SELECT_DESTINATION), pane->hwnd, DestinationDlgProc, (LPARAM)path) != IDOK)
+		return FALSE;
 
 	get_path(pane->cur, source);
+
+	/* convert relative targets to absolute paths */
+	if (path[0]!='/' && path[1]!=':') {
+		get_path(pane->cur->up, target);
+		len = lstrlen(target);
+
+		if (target[len-1]!='\\' && target[len-1]!='/')
+			target[len++] = '/';
+
+		lstrcpy(target+len, path);
+	}
+
+	/* If the target already exists as directory, create a new target below this. */
+	if (is_directory(path)) {
+		TCHAR fname[_MAX_FNAME], ext[_MAX_EXT];
+		const static TCHAR sAppend[] = {'%','s','/','%','s','%','s','\0'};
+
+		_tsplitpath(source, NULL, NULL, fname, ext);
+
+		wsprintf(target, sAppend, path, fname, ext);
+	} else
+		lstrcpy(target, path);
 
 	return TRUE;
 }
@@ -3934,6 +3957,22 @@ static HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParen
 	}
 
 	return hr;
+}
+
+
+static DWORD CALLBACK CopyProgressRoutine(
+	LARGE_INTEGER TotalFileSize,
+	LARGE_INTEGER TotalBytesTransferred,
+	LARGE_INTEGER StreamSize,
+	LARGE_INTEGER StreamBytesTransferred,
+	DWORD dwStreamNumber,
+	DWORD dwCallbackReason,
+	HANDLE hSourceFile,
+	HANDLE hDestinationFile,
+	LPVOID lpData
+)
+{
+	return PROGRESS_CONTINUE;
 }
 
 
@@ -4129,7 +4168,11 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 					TCHAR source[BUFFER_LEN], target[BUFFER_LEN];
 
 					if (prompt_target(pane, source, target)) {
-						if (MoveFileEx(source, target, MOVEFILE_COPY_ALLOWED))
+						/*TODO handle moving of directory trees
+						if (is_directory(source) && drive_from_path(source)!=drive_from_path(target))
+						 ...
+						*/
+						if (MoveFileWithProgress(source, target, CopyProgressRoutine, NULL, MOVEFILE_COPY_ALLOWED))
 							refresh_child(child);
 						else
 							display_error(hwnd, GetLastError());
@@ -4140,7 +4183,11 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 					TCHAR source[BUFFER_LEN], target[BUFFER_LEN];
 
 					if (prompt_target(pane, source, target)) {
-						if (CopyFileEx(source, target, NULL, NULL, NULL, COPY_FILE_RESTARTABLE|COPY_FILE_ALLOW_DECRYPTED_DESTINATION))
+						/*TODO handle copying of directory trees
+						if (is_directory(source))
+						 ...
+						*/
+						if (CopyFileEx(source, target, CopyProgressRoutine, NULL, NULL, COPY_FILE_RESTARTABLE|COPY_FILE_ALLOW_DECRYPTED_DESTINATION))
 							refresh_child(child);
 						else
 							display_error(hwnd, GetLastError());
