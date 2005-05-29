@@ -223,12 +223,19 @@ ObpSetPermanentObject (IN PVOID ObjectBody, IN BOOLEAN Permanent)
   POBJECT_HEADER ObjectHeader;
 
   ObjectHeader = BODY_TO_HEADER(ObjectBody);
-  ObjectHeader->Flags |= OB_FLAG_PERMANENT;
-
-  if (ObjectHeader->HandleCount == 0 && !Permanent && HEADER_TO_OBJECT_NAME(ObjectHeader)->Directory)
+  ASSERT (ObjectHeader->PointerCount > 0);
+  if (Permanent)
   {
-    /* Remove the object from the namespace */
-    ObpRemoveEntryDirectory(ObjectHeader);
+     ObjectHeader->Flags |= OB_FLAG_PERMANENT;
+  }
+  else
+  {
+     ObjectHeader->Flags &= ~OB_FLAG_PERMANENT;
+     if (ObjectHeader->HandleCount == 0 && HEADER_TO_OBJECT_NAME(ObjectHeader)->Directory)
+     {
+        /* Remove the object from the namespace */
+        ObpRemoveEntryDirectory(ObjectHeader);
+     }
   }
 }
 
