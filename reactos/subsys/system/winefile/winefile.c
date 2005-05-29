@@ -3811,7 +3811,6 @@ static void update_view_menu(ChildWnd* child)
 }
 
 
-	
 static BOOL is_directory(LPCTSTR target)
 {
 	/*TODO correctly handle UNIX paths */
@@ -3844,7 +3843,8 @@ static BOOL prompt_target(Pane* pane, LPTSTR source, LPTSTR target)
 			target[len++] = '/';
 
 		lstrcpy(target+len, path);
-	}
+	} else
+		lstrcpy(target, path);
 
 	/* If the target already exists as directory, create a new target below this. */
 	if (is_directory(path)) {
@@ -3854,8 +3854,7 @@ static BOOL prompt_target(Pane* pane, LPTSTR source, LPTSTR target)
 		_tsplitpath(source, NULL, NULL, fname, ext);
 
 		wsprintf(target, sAppend, path, fname, ext);
-	} else
-		lstrcpy(target, path);
+	}
 
 	return TRUE;
 }
@@ -3957,22 +3956,6 @@ static HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParen
 	}
 
 	return hr;
-}
-
-
-static DWORD CALLBACK CopyProgressRoutine(
-	LARGE_INTEGER TotalFileSize,
-	LARGE_INTEGER TotalBytesTransferred,
-	LARGE_INTEGER StreamSize,
-	LARGE_INTEGER StreamBytesTransferred,
-	DWORD dwStreamNumber,
-	DWORD dwCallbackReason,
-	HANDLE hSourceFile,
-	HANDLE hDestinationFile,
-	LPVOID lpData
-)
-{
-	return PROGRESS_CONTINUE;
 }
 
 
@@ -4168,14 +4151,13 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 					TCHAR source[BUFFER_LEN], target[BUFFER_LEN];
 
 					if (prompt_target(pane, source, target)) {
-						/*TODO handle moving of directory trees
-						if (is_directory(source) && drive_from_path(source)!=drive_from_path(target))
-						 ...
-						*/
-						if (MoveFileWithProgress(source, target, CopyProgressRoutine, NULL, MOVEFILE_COPY_ALLOWED))
+						SHFILEOPSTRUCT shfo = {hwnd, FO_MOVE, source, target};
+
+						source[lstrlen(source)+1] = '\0';
+						target[lstrlen(target)+1] = '\0';
+
+						if (!SHFileOperation(&shfo))
 							refresh_child(child);
-						else
-							display_error(hwnd, GetLastError());
 					}
 					break;}
 
@@ -4183,14 +4165,13 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 					TCHAR source[BUFFER_LEN], target[BUFFER_LEN];
 
 					if (prompt_target(pane, source, target)) {
-						/*TODO handle copying of directory trees
-						if (is_directory(source))
-						 ...
-						*/
-						if (CopyFileEx(source, target, CopyProgressRoutine, NULL, NULL, COPY_FILE_RESTARTABLE|COPY_FILE_ALLOW_DECRYPTED_DESTINATION))
+						SHFILEOPSTRUCT shfo = {hwnd, FO_COPY, source, target};
+
+						source[lstrlen(source)+1] = '\0';
+						target[lstrlen(target)+1] = '\0';
+
+						if (!SHFileOperation(&shfo))
 							refresh_child(child);
-						else
-							display_error(hwnd, GetLastError());
 					}
 					break;}
 
