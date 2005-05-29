@@ -320,6 +320,7 @@ char reply_string[BUFSIZ];		/* last line of previous reply */
 
 #include <ctype.h>
 
+int
 getreply(expecteof)
 	int expecteof;
 {
@@ -371,7 +372,7 @@ getreply(expecteof)
 			if (c != '\r' && (verbose > 0 ||
 			    (verbose > -1 && n == '5' && dig > 4))) {
 				if (proxflag &&
-				   (dig == 1 || dig == 5 && verbose == 0))
+				   ((dig == 1 || dig == 5) && verbose == 0))
 					printf("%s:",hostname);
 				(void) putchar(c);
 				(void) fflush(stdout);
@@ -400,7 +401,7 @@ getreply(expecteof)
 			if (cp < &reply_string[sizeof(reply_string) - 1])
 				*cp++ = c;
 		}
-		if (verbose > 0 || verbose > -1 && n == '5') {
+		if (verbose > 0 || (verbose > -1 && n == '5')) {
 			(void) putchar(c);
 			(void) fflush (stdout);
 		}
@@ -421,6 +422,7 @@ getreply(expecteof)
 	}
 }
 
+int
 empty(mask, sec)
 	struct fd_set *mask;
 	int sec;
@@ -995,7 +997,7 @@ done:
 		}
 break2:
 		if (bare_lfs) {
-			printf("WARNING! %d bare linefeeds received in ASCII mode\n");
+			printf("WARNING! %d bare linefeeds received in ASCII mode\n", bare_lfs);
 			printf("File may not have transferred correctly.\n");
 			(void) fflush(stdout);
 		}
@@ -1134,6 +1136,7 @@ null();//	(void) signal(SIGINT,oldintr);
  */
 int sendport = -1;
 
+int
 initconn()
 {
 	register char *p, *a;

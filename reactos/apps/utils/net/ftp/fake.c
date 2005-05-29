@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <winsock.h>
+#include "fake.h"
 #include "prototypes.h"
 
 #define MAX_ASCII 100
@@ -305,12 +306,7 @@ int access(const char *filename, int accessmethod)
 #define EPOCHFILETIME (116444736000000000LL)
 #endif
 
-struct timezone {
-    int tz_minuteswest; /* minutes W of Greenwich */
-    int tz_dsttime;     /* type of dst correction */
-};
-
-__inline int gettimeofday(struct timeval *tv, struct timezone *tz)
+int gettimeofday(struct timeval *tv, struct timezone *tz)
 {
     FILETIME        ft;
     LARGE_INTEGER   li;
