@@ -3811,6 +3811,33 @@ static void update_view_menu(ChildWnd* child)
 }
 
 
+BOOL prompt_target(Pane* pane, LPTSTR source, LPTSTR target)
+{
+	int len, ret;
+
+	get_path(pane->cur, target);
+
+	ret = DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_SELECT_DESTINATION), pane->hwnd, DestinationDlgProc, (LPARAM)target);
+	if (ret != IDOK)
+		return FALSE;
+
+	if (target[0]!='/' && target[1]!=':') {
+		get_path(pane->cur->up, source);
+		len = lstrlen(source);
+
+		if (source[len-1]!='\\' && source[len-1]!='/')
+			source[len++] = '/';
+
+		lstrcpy(source+len, target);
+		lstrcpy(target, source);
+	}
+
+	get_path(pane->cur, source);
+
+	return TRUE;
+}
+
+
 static IContextMenu2* s_pctxmenu2 = NULL;
 
 #ifndef __MINGW32__	/* IContextMenu3 missing in MinGW (as of 6.2.2005) */
@@ -4099,39 +4126,25 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 					break;
 
 				case ID_FILE_MOVE: {
-					TCHAR new_name[BUFFER_LEN], old_name[BUFFER_LEN];
-					int len, ret;
+					TCHAR source[BUFFER_LEN], target[BUFFER_LEN];
 
-					get_path(pane->cur, new_name);
-
-					ret = DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_SELECT_DESTINATION), hwnd, DestinationDlgProc, (LPARAM)new_name);
-					if (ret != IDOK)
-						break;
-
-					if (new_name[0]!='/' && new_name[1]!=':') {
-						get_path(pane->cur->up, old_name);
-						len = lstrlen(old_name);
-
-						if (old_name[len-1]!='\\' && old_name[len-1]!='/')
-							old_name[len++] = '/';
-
-						lstrcpy(old_name+len, new_name);
-						lstrcpy(new_name, old_name);
-					}
-
-					get_path(pane->cur, old_name);
-
-					if (MoveFileEx(old_name, new_name, MOVEFILE_COPY_ALLOWED)) {
-						if (pane->treePane) {
-							pane->root->scanned = FALSE;
-							pane->cur = pane->root;
-							activate_entry(child, pane, hwnd);
-						}
-						else
+					if (prompt_target(pane, source, target)) {
+						if (MoveFileEx(source, target, MOVEFILE_COPY_ALLOWED))
 							refresh_child(child);
+						else
+							display_error(hwnd, GetLastError());
 					}
-					else
-						display_error(hwnd, GetLastError());
+					break;}
+
+				case ID_FILE_COPY: {
+					TCHAR source[BUFFER_LEN], target[BUFFER_LEN];
+
+					if (prompt_target(pane, source, target)) {
+						if (CopyFileEx(source, target, NULL, NULL, NULL, COPY_FILE_RESTARTABLE|COPY_FILE_ALLOW_DECRYPTED_DESTINATION))
+							refresh_child(child);
+						else
+							display_error(hwnd, GetLastError());
+					}
 					break;}
 
 				case ID_VIEW_SORT_NAME:

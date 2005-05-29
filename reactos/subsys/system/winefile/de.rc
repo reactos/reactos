@@ -32,7 +32,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 	POPUP "&Datei"  {
 		MENUITEM "Ö&ffnen\tEingabetaste" ,			ID_ACTIVATE
 		MENUITEM "&Verschieben...\tF7" , 			ID_FILE_MOVE
-		MENUITEM "&Kopieren...\tF8" ,			107
+		MENUITEM "&Kopieren...\tF8" ,			ID_FILE_COPY
 		MENUITEM "&In Zwischenablage...\tF9" ,		118
 		MENUITEM "&Löschen\tEntf" ,			108
 		MENUITEM "&Umbenennen..." ,			109

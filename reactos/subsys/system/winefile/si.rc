@@ -28,7 +28,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 	POPUP "&File"  {
 		MENUITEM "&Open\tEnter" ,			ID_ACTIVATE
 		MENUITEM "&Move...\tF7" , 			ID_FILE_MOVE
-		MENUITEM "&Copy...\tF8" ,			107
+		MENUITEM "&Copy...\tF8" ,			ID_FILE_COPY
 		MENUITEM "&In Clipboard...\tF9" ,		118
 		MENUITEM "&Delete\tDel" ,			108
 		MENUITEM "Re&name..." ,			109

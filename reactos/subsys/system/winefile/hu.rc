@@ -31,7 +31,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 	POPUP "&Fájl"  {
 		MENUITEM "&Megynitás\tEnter" ,			ID_ACTIVATE
 		MENUITEM "Át&helyezés...\tF7" , 			ID_FILE_MOVE
-		MENUITEM "&Másolás...\tF8" ,			107
+		MENUITEM "&Másolás...\tF8" ,			ID_FILE_COPY
 		MENUITEM "&Vágólapon...\tF9" ,		118
 		MENUITEM "&Törlés\tDel" ,			108
 		MENUITEM "Át&nevezés..." ,			109

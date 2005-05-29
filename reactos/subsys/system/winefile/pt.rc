@@ -30,7 +30,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 	POPUP "&Arquivo"  {
 		MENUITEM "A&brir\tEnter" ,			ID_ACTIVATE
 		MENUITEM "&Mover...\tF7" , 			ID_FILE_MOVE
-		MENUITEM "&Copiar...\tF8" ,			107
+		MENUITEM "&Copiar...\tF8" ,			ID_FILE_COPY
 		MENUITEM "&In Clipboard...\tF9" ,		118
 		MENUITEM "E&xcluir\tDel" ,			108
 		MENUITEM "Re&nomear..." ,			109
@@ -158,7 +158,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 	POPUP "&Ficheiro"  {
 		MENUITEM "A&brir\tEnter" ,			ID_ACTIVATE
 		MENUITEM "&Mover...\tF7" , 			ID_FILE_MOVE
-		MENUITEM "&Copiar...\tF8" ,			107
+		MENUITEM "&Copiar...\tF8" ,			ID_FILE_COPY
 		MENUITEM "&Na Area de Transferencia...\tF9" ,		118
 		MENUITEM "E&xcluir\tDel" ,			108
 		MENUITEM "Re&nomear..." ,			109

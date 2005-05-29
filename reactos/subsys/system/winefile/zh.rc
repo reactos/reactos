@@ -28,7 +28,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 	POPUP "文件（&F）"  {
 		MENUITEM "打开（&O）\tEnter" ,			ID_ACTIVATE
 		MENUITEM "移动（&M）...\tF7" , 			ID_FILE_MOVE
-		MENUITEM "复制（&C）...\tF8" ,			107
+		MENUITEM "复制（&C）...\tF8" ,			ID_FILE_COPY
 		MENUITEM "位于剪贴板（&I）...\tF9" ,		118
 		MENUITEM "删除（&D）\tDel" ,			108
 		MENUITEM "改名（&N）..." ,			109
