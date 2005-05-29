@@ -1,4 +1,3 @@
-BOOLEAN
 CcCanIWrite
 CcCopyRead
 CcCopyWrite
