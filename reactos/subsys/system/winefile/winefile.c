@@ -4223,7 +4223,6 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 			idx = ListBox_GetCurSel(pane->hwnd);
 
 			if (idx != -1) {
-				HRESULT hr;
 				Entry* entry = (Entry*) ListBox_GetItemData(pane->hwnd, idx);
 
 				LPITEMIDLIST pidl_abs = get_to_absolute_pidl(entry, hwnd);
@@ -4234,7 +4233,8 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 
 					 /* get and use the parent folder to display correct context menu in all cases */
 					if (SUCCEEDED(SHBindToParent(pidl_abs, &IID_IShellFolder, (LPVOID*)&parentFolder, &pidlLast))) {
-						hr = ShellFolderContextMenu(parentFolder, hwnd, 1, &pidlLast, pt.x, pt.y);
+						if (SUCCEEDED(ShellFolderContextMenu(parentFolder, hwnd, 1, &pidlLast, pt.x, pt.y)))
+							refresh_child(child);
 
 						(*parentFolder->lpVtbl->Release)(parentFolder);
 					}
