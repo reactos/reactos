@@ -899,7 +899,7 @@ MingwModuleHandler::GenerateNasmCommand (
 	fprintf ( fMakefile, "\t$(ECHO_NASM)\n" );
 	fprintf ( fMakefile,
 	          "\t%s -f win32 $< -o $@ %s\n",
-	          "$(Q)nasm",
+	          "$(Q)${nasm}",
 	          nasmflagsMacro.c_str () );
 }
 

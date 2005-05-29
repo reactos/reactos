@@ -53,6 +53,7 @@ public:
 	                                 Directory* directoryTree );
 	std::string compilerPrefix;
 	std::string compilerCommand;
+	std::string nasmCommand;
 	bool usePipe;
 	Directory* intermediateDirectory;
 	Directory* outputDirectory;
@@ -87,6 +88,8 @@ private:
 	bool IncludeDirectoryTarget ( const std::string& directory ) const;
 	bool TryToDetectThisCompiler ( const std::string& compiler );
 	void DetectCompiler ();
+	bool TryToDetectThisNetwideAssembler ( const std::string& assembler );
+	void DetectNetwideAssembler ();
 	void DetectPipeSupport ();
 	void DetectPCHSupport ();
 	void ProcessModules ();

@@ -301,6 +301,7 @@ void
 MingwBackend::Process ()
 {
 	DetectCompiler ();
+	DetectNetwideAssembler ();
 	DetectPipeSupport ();
 	DetectPCHSupport ();
 	CreateMakefile ();
@@ -486,6 +487,9 @@ MingwBackend::GenerateGlobalVariables () const
 	fprintf ( fMakefile,
 	          "PREFIX := %s\n",
 	          compilerPrefix.c_str () );
+	fprintf ( fMakefile,
+	          "nasm := %s\n",
+	          nasmCommand.c_str () );
 
 	GenerateGlobalCFlagsAndProperties ( "=", ProjectNode.non_if_data );
 	GenerateProjectGccOptions ( "=", ProjectNode.non_if_data );
@@ -683,8 +687,9 @@ bool
 MingwBackend::TryToDetectThisCompiler ( const string& compiler )
 {
 	string command = ssprintf (
-		"%s -v 2>%s",
+		"%s -v 1>%s 2>%s",
 		compiler.c_str (),
+		NUL,
 		NUL );
 	int exitcode = system ( command.c_str () );
 	return (exitcode == 0);
@@ -723,6 +728,38 @@ MingwBackend::DetectCompiler ()
 		printf ( "not detected\n" );
 }
 
+bool
+MingwBackend::TryToDetectThisNetwideAssembler ( const string& assembler )
+{
+	string command = ssprintf (
+		"%s -h 1>%s 2>%s",
+		assembler.c_str (),
+		NUL,
+		NUL );
+	int exitcode = system ( command.c_str () );
+	return (exitcode == 0);
+}
+
+void
+MingwBackend::DetectNetwideAssembler ()
+{
+	printf ( "Detecting netwide assembler..." );
+
+	nasmCommand = "nasm";
+	bool detectedNasm = TryToDetectThisNetwideAssembler ( nasmCommand );
+#if defined(WIN32)
+	if ( !detectedNasm )
+	{
+		nasmCommand = "nasmw";
+		detectedNasm = TryToDetectThisNetwideAssembler ( nasmCommand );
+	}
+#endif
+	if ( detectedNasm )
+		printf ( "detected (%s)\n", nasmCommand.c_str () );
+	else
+		printf ( "not detected\n" );
+}
+
 void
 MingwBackend::DetectPipeSupport ()
 {
@@ -732,10 +769,11 @@ MingwBackend::DetectPipeSupport ()
 	string pipe_detectionObjectFilename = ReplaceExtension ( pipe_detection,
 	                                                         ".o" );
 	string command = ssprintf (
-		"%s -pipe -c %s -o %s 2>%s",
+		"%s -pipe -c %s -o %s 1>%s 2>%s",
 		compilerCommand.c_str (),
 		pipe_detection.c_str (),
 		pipe_detectionObjectFilename.c_str (),
+		NUL,
 		NUL );
 	int exitcode = system ( command.c_str () );
 	FILE* f = fopen ( pipe_detectionObjectFilename.c_str (), "rb" );
@@ -761,9 +799,10 @@ MingwBackend::DetectPCHSupport ()
 
 	string path = "tools" SSEP "rbuild" SSEP "backend" SSEP "mingw" SSEP "pch_detection.h";
 	string cmd = ssprintf (
-		"%s -c %s 2>%s",
+		"%s -c %s 1>%s 2>%s",
 		compilerCommand.c_str (),
 		path.c_str (),
+		NUL,
 		NUL );
 	system ( cmd.c_str () );
 	path += ".gch";
