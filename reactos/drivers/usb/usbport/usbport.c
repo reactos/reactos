@@ -48,7 +48,7 @@ USBPORT_RegisterUSBPortDriver(PDRIVER_OBJECT DriverObject, DWORD Unknown1,
     PUSB_CONTROLLER_INTERFACE Interface)
 {
 	DPRINT1("USBPORT_RegisterUSBPortDriver\n");
-//	ASSERT(KeGetCurrentIRQL() < DISPATCH_LEVEL);
+	ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
 
 	return STATUS_SUCCESS;
 }
@@ -65,8 +65,8 @@ NTSTATUS STDCALL
 USBPORT_AllocateUsbControllerInterface(OUT PUSB_CONTROLLER_INTERFACE *pControllerInterface)
 {
 	DPRINT1("USBPORT_AllocateUsbControllerInterface\n");
-//	ASSERT(KeGetCurrentIRQL() < DISPATCH_LEVEL);
-//	ASSERT(0 != ControllerObject);
+	ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
+	ASSERT(0 != pControllerInterface);
 
 	*pControllerInterface = (PUSB_CONTROLLER_INTERFACE)ExAllocatePoolWithTag(PagedPool, sizeof(USB_CONTROLLER_INTERFACE),USB_CONTROLLER_INTERFACE_TAG);
 	RtlZeroMemory(*pControllerInterface, sizeof(USB_CONTROLLER_INTERFACE));
@@ -78,7 +78,7 @@ NTSTATUS STDCALL
 USBPORT_FreeUsbControllerInterface(IN PUSB_CONTROLLER_INTERFACE ControllerInterface)
 {
 	DPRINT1("USBPORT_FreeUsbControllerInterface\n");
-//	ASSERT(KeGetCurrentIRQL() < DISPATCH_LEVEL);	
+	ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);	
 
 	ExFreePool(ControllerInterface);
 	
