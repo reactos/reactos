@@ -73,9 +73,9 @@
 <property name="BASEADDRESS_USER32" value="0x77e50000" />
 <property name="BASEADDRESS_GDI32" value="0x77ee0000" />
 <property name="BASEADDRESS_DNSAPI" value="0x77f00000" />
-<property name="BASEADDRESS_KERNEL32" value="0x77800000" />
 <property name="BASEADDRESS_MSVCRT" value="0x78000000" />
 <property name="BASEADDRESS_MSVCRT20" value="0x78500000" />
+<property name="BASEADDRESS_KERNEL32" value="0x7c800000" />
 <property name="BASEADDRESS_NTDLL" value="0x7C900000" />
 <property name="BASEADDRESS_FREETYPE" value="0x7F000000" />
 
