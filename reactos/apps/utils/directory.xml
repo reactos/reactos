@@ -1,3 +1,7 @@
 <directory name="net">
 	<xi:include href="net/directory.xml" />
 </directory>
+<directory name="rosperf">
+	<xi:include href="rosperf/rosperf.xml" />
+</directory>
+
