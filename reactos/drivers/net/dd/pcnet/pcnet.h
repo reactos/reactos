@@ -139,17 +139,6 @@ MiGetMediaState(PADAPTER Adapter);
 /* flags */
 #define RESET_IN_PROGRESS 0x1
 
-/* debugging */
-#if DBG
-#define PCNET_DbgPrint(_x) \
-{\
-  DbgPrint("%s:%d %s: ", __FILE__, __LINE__, __FUNCTION__); \
-  DbgPrint _x; \
-}
-#else
-#define PCNET_DbgPrint(_x)
-#endif
-
 #if DBG
 #define BREAKPOINT __asm__ ("int $3\n");
 #else

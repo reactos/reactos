@@ -43,6 +43,9 @@
 #include "pcnethw.h"
 #include "pcnet.h"
 
+#define NDEBUG
+#include <debug.h>
+
 VOID
 STDCALL
 MiniportHandleInterrupt(
@@ -58,14 +61,14 @@ MiniportHandleInterrupt(
   PADAPTER Adapter = (PADAPTER)MiniportAdapterContext;
   USHORT Data;
 
-  PCNET_DbgPrint(("Called\n"));
+  DPRINT("Called\n");
 
   NdisDprAcquireSpinLock(&Adapter->Lock);
 
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR0);
   NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
 
-  PCNET_DbgPrint(("CSR0 is 0x%x\n", Data));
+  DPRINT("CSR0 is 0x%x\n", Data);
 
   while(Data & CSR0_INTR)
     {
@@ -74,17 +77,17 @@ MiniportHandleInterrupt(
 
       if(Data & CSR0_ERR)
         {
-          PCNET_DbgPrint(("error: %x\n", Data & (CSR0_MERR|CSR0_BABL|CSR0_CERR|CSR0_MISS)))
+          DPRINT("error: %x\n", Data & (CSR0_MERR|CSR0_BABL|CSR0_CERR|CSR0_MISS));
           if (Data & CSR0_CERR)
             Adapter->Statistics.XmtCollisions++;
         }
       else if(Data & CSR0_IDON)
         {
-          PCNET_DbgPrint(("IDON\n"));
+          DPRINT("IDON\n");
         }
       else if(Data & CSR0_RINT)
         {
-          PCNET_DbgPrint(("receive interrupt\n"));
+          DPRINT("receive interrupt\n");
 
           while(1)
             {
@@ -94,13 +97,13 @@ MiniportHandleInterrupt(
 
               if(Descriptor->FLAGS & RD_OWN)
                 {
-                  PCNET_DbgPrint(("no more receive descriptors to process\n"));
+                  DPRINT("no more receive descriptors to process\n");
                   break;
                 }
 
               if(Descriptor->FLAGS & RD_ERR)
                 {
-                  PCNET_DbgPrint(("receive descriptor error: 0x%x\n", Descriptor->FLAGS));
+                  DPRINT("receive descriptor error: 0x%x\n", Descriptor->FLAGS);
                   if (Descriptor->FLAGS & RD_BUFF)
                     Adapter->Statistics.RcvBufferErrors++;
                   if (Descriptor->FLAGS & RD_CRC)
@@ -114,14 +117,14 @@ MiniportHandleInterrupt(
 
               if(!((Descriptor->FLAGS & RD_STP) && (Descriptor->FLAGS & RD_ENP)))
                 {
-                  PCNET_DbgPrint(("receive descriptor not start&end: 0x%x\n", Descriptor->FLAGS));
+                  DPRINT("receive descriptor not start&end: 0x%x\n", Descriptor->FLAGS);
                   break;
                 }
 
               Buffer = Adapter->ReceiveBufferPtrVirt + Adapter->CurrentReceiveDescriptorIndex * BUFFER_SIZE;
               ByteCount = Descriptor->MCNT & 0xfff;
 
-              PCNET_DbgPrint(("Indicating a %d-byte packet (index %d)\n", ByteCount, Adapter->CurrentReceiveDescriptorIndex));
+              DPRINT("Indicating a %d-byte packet (index %d)\n", ByteCount, Adapter->CurrentReceiveDescriptorIndex);
 
               NdisMEthIndicateReceive(Adapter->MiniportAdapterHandle, 0, Buffer, 14, Buffer+14, ByteCount-14, ByteCount-14);
               NdisMEthIndicateReceiveComplete(Adapter->MiniportAdapterHandle);
@@ -142,20 +145,20 @@ MiniportHandleInterrupt(
         {
           PTRANSMIT_DESCRIPTOR Descriptor;
 
-          PCNET_DbgPrint(("transmit interrupt\n"));
+          DPRINT("transmit interrupt\n");
 
           while (Adapter->CurrentTransmitStartIndex !=
                  Adapter->CurrentTransmitEndIndex)
             {
               Descriptor = Adapter->TransmitDescriptorRingVirt + Adapter->CurrentTransmitStartIndex;
 
-              PCNET_DbgPrint(("buffer %d flags %x flags2 %x\n",
-                              Adapter->CurrentTransmitStartIndex,
-                              Descriptor->FLAGS, Descriptor->FLAGS2));
+              DPRINT("buffer %d flags %x flags2 %x\n",
+                     Adapter->CurrentTransmitStartIndex,
+                     Descriptor->FLAGS, Descriptor->FLAGS2);
 
               if (Descriptor->FLAGS & TD1_OWN)
                 {
-                  PCNET_DbgPrint(("non-TXed buffer\n"));
+                  DPRINT("non-TXed buffer\n");
                   break;
                 }
 
@@ -169,7 +172,7 @@ MiniportHandleInterrupt(
 
               if (Descriptor->FLAGS & TD1_ERR)
                 {
-                  PCNET_DbgPrint(("major error: %x\n", Descriptor->FLAGS2));
+                  DPRINT("major error: %x\n", Descriptor->FLAGS2);
                   if (Descriptor->FLAGS2 & TD2_RTRY)
                     Adapter->Statistics.XmtRetryErrors++;
                   if (Descriptor->FLAGS2 & TD2_LCAR)
@@ -194,7 +197,7 @@ MiniportHandleInterrupt(
         }
       else
         {
-          PCNET_DbgPrint(("UNHANDLED INTERRUPT\n"));
+          DPRINT1("UNHANDLED INTERRUPT\n");
           ASSERT(FALSE);
         }
 
@@ -205,7 +208,7 @@ MiniportHandleInterrupt(
   NdisRawWritePortUshort(Adapter->PortOffset + RDP, CSR0_IENA);
 
   NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
-  PCNET_DbgPrint(("CSR0 is now 0x%x\n", Data));
+  DPRINT("CSR0 is now 0x%x\n", Data);
 
   NdisDprReleaseSpinLock(&Adapter->Lock);
 }
@@ -232,7 +235,7 @@ MiQueryCard(
   if(Status != 4)
     {
       Status =  NDIS_STATUS_FAILURE;
-      PCNET_DbgPrint(("NdisReadPciSlotInformation failed\n"));
+      DPRINT("NdisReadPciSlotInformation failed\n");
       BREAKPOINT;
       return Status;
     }
@@ -240,7 +243,7 @@ MiQueryCard(
   if(buf32 != PCI_ID)
     {
       Status = NDIS_STATUS_ADAPTER_NOT_FOUND;
-      PCNET_DbgPrint(("card in slot isn't our: 0x%x\n", 0, buf32));
+      DPRINT("card in slot isn't our: 0x%x\n", 0, buf32);
       BREAKPOINT;
       return Status;
     }
@@ -255,20 +258,20 @@ MiQueryCard(
   if(Status != 4)
     {
       Status = NDIS_STATUS_FAILURE;
-      PCNET_DbgPrint(("NdisReadPciSlotInformation failed\n"));
+      DPRINT("NdisReadPciSlotInformation failed\n");
       BREAKPOINT;
       return Status;
     }
 
   if(!buf32)
     {
-      PCNET_DbgPrint(("No base i/o address set\n"));
+      DPRINT("No base i/o address set\n");
       return NDIS_STATUS_FAILURE;
     }
 
   buf32 &= ~1;  /* even up address - comes out odd for some reason */
 
-  PCNET_DbgPrint(("detected io address 0x%x\n", buf32));
+  DPRINT("detected io address 0x%x\n", buf32);
   Adapter->IoBaseAddress = buf32;
 
   /* get interrupt vector */
@@ -276,12 +279,12 @@ MiQueryCard(
   if(Status != 1)
     {
       Status = NDIS_STATUS_FAILURE;
-      PCNET_DbgPrint(("NdisReadPciSlotInformation failed\n"));
+      DPRINT1("NdisReadPciSlotInformation failed\n");
       BREAKPOINT;
       return Status;
     }
 
-  PCNET_DbgPrint(("interrupt: 0x%x\n", buf8));
+  DPRINT("interrupt: 0x%x\n", buf8);
   Adapter->InterruptVector = buf8;
 
   return NDIS_STATUS_SUCCESS;
@@ -310,14 +313,14 @@ MiAllocateSharedMemory(
       FALSE, (PVOID *)&Adapter->InitializationBlockVirt, &PhysicalAddress);
   if(!Adapter->InitializationBlockVirt)
     {
-      PCNET_DbgPrint(("insufficient resources\n"));
+      DPRINT1("insufficient resources\n");
       BREAKPOINT;
       return NDIS_STATUS_RESOURCES;
     }
 
   if(((ULONG)Adapter->InitializationBlockVirt & 0x00000003) != 0)
     {
-      PCNET_DbgPrint(("address 0x%x not dword-aligned\n", Adapter->InitializationBlockVirt));
+      DPRINT("address 0x%x not dword-aligned\n", Adapter->InitializationBlockVirt);
       BREAKPOINT;
       return NDIS_STATUS_RESOURCES;
     }
@@ -330,14 +333,14 @@ MiAllocateSharedMemory(
       FALSE, (PVOID *)&Adapter->TransmitDescriptorRingVirt, &PhysicalAddress);
   if(!Adapter->TransmitDescriptorRingVirt)
     {
-      PCNET_DbgPrint(("insufficient resources\n"));
+      DPRINT1("insufficient resources\n");
       BREAKPOINT;
       return NDIS_STATUS_RESOURCES;
     }
 
   if(((ULONG)Adapter->TransmitDescriptorRingVirt & 0x00000003) != 0)
     {
-      PCNET_DbgPrint(("address 0x%x not dword-aligned\n", Adapter->TransmitDescriptorRingVirt));
+      DPRINT("address 0x%x not dword-aligned\n", Adapter->TransmitDescriptorRingVirt);
       BREAKPOINT;
       return NDIS_STATUS_RESOURCES;
     }
@@ -351,14 +354,14 @@ MiAllocateSharedMemory(
       FALSE, (PVOID *)&Adapter->ReceiveDescriptorRingVirt, &PhysicalAddress);
   if(!Adapter->ReceiveDescriptorRingVirt)
     {
-      PCNET_DbgPrint(("insufficient resources\n"));
+      DPRINT1("insufficient resources\n");
       BREAKPOINT;
       return NDIS_STATUS_RESOURCES;
     }
 
   if(((ULONG)Adapter->ReceiveDescriptorRingVirt & 0x00000003) != 0)
     {
-      PCNET_DbgPrint(("address 0x%x not dword-aligned\n", Adapter->ReceiveDescriptorRingVirt));
+      DPRINT("address 0x%x not dword-aligned\n", Adapter->ReceiveDescriptorRingVirt);
       BREAKPOINT;
       return NDIS_STATUS_RESOURCES;
     }
@@ -372,14 +375,14 @@ MiAllocateSharedMemory(
       FALSE, (PVOID *)&Adapter->TransmitBufferPtrVirt, &PhysicalAddress);
   if(!Adapter->TransmitBufferPtrVirt)
     {
-      PCNET_DbgPrint(("insufficient resources\n"));
+      DPRINT1("insufficient resources\n");
       BREAKPOINT;
       return NDIS_STATUS_RESOURCES;
     }
 
   if(((ULONG)Adapter->TransmitBufferPtrVirt & 0x00000003) != 0)
     {
-      PCNET_DbgPrint(("address 0x%x not dword-aligned\n", Adapter->TransmitBufferPtrVirt));
+      DPRINT("address 0x%x not dword-aligned\n", Adapter->TransmitBufferPtrVirt);
       BREAKPOINT;
       return NDIS_STATUS_RESOURCES;
     }
@@ -393,14 +396,14 @@ MiAllocateSharedMemory(
       FALSE, (PVOID *)&Adapter->ReceiveBufferPtrVirt, &PhysicalAddress);
   if(!Adapter->ReceiveBufferPtrVirt)
     {
-      PCNET_DbgPrint(("insufficient resources\n"));
+      DPRINT1("insufficient resources\n");
       BREAKPOINT;
       return NDIS_STATUS_RESOURCES;
     }
 
   if(((ULONG)Adapter->ReceiveBufferPtrVirt & 0x00000003) != 0)
     {
-      PCNET_DbgPrint(("address 0x%x not dword-aligned\n", Adapter->ReceiveBufferPtrVirt));
+      DPRINT("address 0x%x not dword-aligned\n", Adapter->ReceiveBufferPtrVirt);
       BREAKPOINT;
       return NDIS_STATUS_RESOURCES;
     }
@@ -417,7 +420,7 @@ MiAllocateSharedMemory(
       (TransmitDescriptor+i)->FLAGS = TD1_STP | TD1_ENP;
     }
 
-  PCNET_DbgPrint(("transmit ring initialized\n"));
+  DPRINT("transmit ring initialized\n");
 
   /* initialize rx */
   ReceiveDescriptor = Adapter->ReceiveDescriptorRingVirt;
@@ -428,7 +431,7 @@ MiAllocateSharedMemory(
       (ReceiveDescriptor+i)->FLAGS = RD_OWN;
     }
 
-  PCNET_DbgPrint(("receive ring initialized\n"));
+  DPRINT("receive ring initialized\n");
 
   return NDIS_STATUS_SUCCESS;
 }
@@ -449,21 +452,21 @@ MiPrepareInitializationBlock(
   /* read burned-in address from card */
   for(i = 0; i < 6; i++)
     NdisRawReadPortUchar(Adapter->PortOffset + i, Adapter->InitializationBlockVirt->PADR + i);
-  PCNET_DbgPrint(("MAC address: %02x-%02x-%02x-%02x-%02x-%02x\n",
-                  Adapter->InitializationBlockVirt->PADR[0],
-                  Adapter->InitializationBlockVirt->PADR[1],
-                  Adapter->InitializationBlockVirt->PADR[2],
-                  Adapter->InitializationBlockVirt->PADR[3],
-                  Adapter->InitializationBlockVirt->PADR[4],
-                  Adapter->InitializationBlockVirt->PADR[5]));
+  DPRINT("MAC address: %02x-%02x-%02x-%02x-%02x-%02x\n",
+         Adapter->InitializationBlockVirt->PADR[0],
+         Adapter->InitializationBlockVirt->PADR[1],
+         Adapter->InitializationBlockVirt->PADR[2],
+         Adapter->InitializationBlockVirt->PADR[3],
+         Adapter->InitializationBlockVirt->PADR[4],
+         Adapter->InitializationBlockVirt->PADR[5]);
 
   /* set up receive ring */
-  PCNET_DbgPrint(("Receive ring physical address: 0x%x\n", Adapter->ReceiveDescriptorRingPhys));
+  DPRINT("Receive ring physical address: 0x%x\n", Adapter->ReceiveDescriptorRingPhys);
   Adapter->InitializationBlockVirt->RDRA = (ULONG)Adapter->ReceiveDescriptorRingPhys;
   Adapter->InitializationBlockVirt->RLEN = (LOG_NUMBER_OF_BUFFERS << 4) & 0xf0;
 
   /* set up transmit ring */
-  PCNET_DbgPrint(("Transmit ring physical address: 0x%x\n", Adapter->TransmitDescriptorRingPhys));
+  DPRINT("Transmit ring physical address: 0x%x\n", Adapter->TransmitDescriptorRingPhys);
   Adapter->InitializationBlockVirt->TDRA = (ULONG)Adapter->TransmitDescriptorRingPhys;
   Adapter->InitializationBlockVirt->TLEN = (LOG_NUMBER_OF_BUFFERS << 4) & 0xf0;
 }
@@ -548,7 +551,7 @@ MiniportHalt(
   PADAPTER Adapter = (PADAPTER)MiniportAdapterContext;
   BOOLEAN TimerCancelled;
 
-  PCNET_DbgPrint(("Called\n"));
+  DPRINT("Called\n");
   ASSERT(Adapter);
 
   /* stop the media detection timer */
@@ -589,8 +592,8 @@ MiSyncMediaDetection(
   PADAPTER Adapter = (PADAPTER)SynchronizeContext;
   NDIS_MEDIA_STATE MediaState = MiGetMediaState(Adapter);
 
-  PCNET_DbgPrint(("Called\n"));
-  PCNET_DbgPrint(("MediaState: %d\n", MediaState));
+  DPRINT("Called\n");
+  DPRINT("MediaState: %d\n", MediaState);
   if (MediaState != Adapter->MediaState)
     {
       Adapter->MediaState = MediaState;
@@ -642,7 +645,7 @@ MiInitChip(
 {
   USHORT Data = 0;
 
-  PCNET_DbgPrint(("Called\n"));
+  DPRINT("Called\n");
 
   /*
    * first reset the chip - 32-bit reset followed by 16-bit reset.  if it's in 32-bit mode, it'll reset
@@ -659,7 +662,7 @@ MiInitChip(
   /* pause for 1ms so the chip will have time to reset */
   NdisStallExecution(1);
 
-  PCNET_DbgPrint(("chip stopped\n"));
+  DPRINT("chip stopped\n");
 
   /* set the software style to 2 (32 bits) */
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR58);
@@ -689,7 +692,7 @@ MiInitChip(
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR2);
   NdisRawWritePortUshort(Adapter->PortOffset + RDP, (USHORT)((ULONG)Adapter->InitializationBlockPhys >> 16) & 0xffff);
 
-  PCNET_DbgPrint(("programmed with init block\n"));
+  DPRINT("programmed with init block\n");
 
   /* Set mode to 0 */
   Data = 0;
@@ -705,7 +708,7 @@ MiInitChip(
   NdisRawWritePortUshort(Adapter->PortOffset + BDP, BCR4_LNKSTE|BCR4_FDLSE);
   Adapter->MediaState = MiGetMediaState(Adapter);
 
-  PCNET_DbgPrint(("card started\n"));
+  DPRINT("card started\n");
 
   Adapter->Flags &= ~RESET_IN_PROGRESS;
 }
@@ -732,37 +735,37 @@ MiTestCard(
   /* see if we can read/write now */
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR0);
   NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
-  PCNET_DbgPrint(("Port 0x%x RAP 0x%x CSR0 0x%x RDP 0x%x, Interupt status register is 0x%x\n", Adapter->PortOffset, RAP, CSR0, RDP, Data));
+  DPRINT("Port 0x%x RAP 0x%x CSR0 0x%x RDP 0x%x, Interupt status register is 0x%x\n", Adapter->PortOffset, RAP, CSR0, RDP, Data);
 
   /* read the BIA */
   for(i = 0; i < 6; i++)
       NdisRawReadPortUchar(Adapter->PortOffset + i, &address[i]);
 
-  PCNET_DbgPrint(("burned-in address: %x:%x:%x:%x:%x:%x\n", address[0], address[1], address[2], address[3], address[4], address[5]));
+  DPRINT("burned-in address: %x:%x:%x:%x:%x:%x\n", address[0], address[1], address[2], address[3], address[4], address[5]);
   /* Read status flags from CSR0 */
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR0);
   NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
-  PCNET_DbgPrint(("CSR0: 0x%x\n", Data));
+  DPRINT("CSR0: 0x%x\n", Data);
 
   /* Read status flags from CSR3 */
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR3);
   NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
 
-  PCNET_DbgPrint(("CSR3: 0x%x\n", Data));
+  DPRINT("CSR3: 0x%x\n", Data);
   /* Read status flags from CSR4 */
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR4);
   NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
-  PCNET_DbgPrint(("CSR4: 0x%x\n", Data));
+  DPRINT("CSR4: 0x%x\n", Data);
 
   /* Read status flags from CSR5 */
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR5);
   NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
-  PCNET_DbgPrint(("CSR5: 0x%x\n", Data));
+  DPRINT("CSR5: 0x%x\n", Data);
 
   /* Read status flags from CSR6 */
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR6);
   NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
-  PCNET_DbgPrint(("CSR6: 0x%x\n", Data));
+  DPRINT("CSR6: 0x%x\n", Data);
 
   return TRUE;
 }
@@ -810,7 +813,7 @@ MiniportInitialize(
   if(i == MediumArraySize)
     {
       Status = NDIS_STATUS_UNSUPPORTED_MEDIA;
-      PCNET_DbgPrint(("unsupported media\n"));
+      DPRINT1("unsupported media\n");
       BREAKPOINT;
       *OpenErrorStatus = Status;
       return Status;
@@ -823,7 +826,7 @@ MiniportInitialize(
   if(Status != NDIS_STATUS_SUCCESS)
     {
       Status =  NDIS_STATUS_RESOURCES;
-      PCNET_DbgPrint(("Insufficient resources\n"));
+      DPRINT1("Insufficient resources\n");
       BREAKPOINT;
       *OpenErrorStatus = Status;
       return Status;
@@ -842,7 +845,7 @@ MiniportInitialize(
       Status = MiQueryCard(Adapter);
       if(Status != NDIS_STATUS_SUCCESS)
         {
-          PCNET_DbgPrint(("MiQueryCard failed\n"));
+          DPRINT1("MiQueryCard failed\n");
           Status = NDIS_STATUS_ADAPTER_NOT_FOUND;
           BREAKPOINT;
           break;
@@ -853,7 +856,7 @@ MiniportInitialize(
           Adapter->IoBaseAddress, NUMBER_OF_PORTS);
       if(Status != NDIS_STATUS_SUCCESS)
         {
-          PCNET_DbgPrint(("NdisMRegisterIoPortRange failed: 0x%x\n", Status));
+          DPRINT1("NdisMRegisterIoPortRange failed: 0x%x\n", Status);
           BREAKPOINT
           break;
         }
@@ -863,7 +866,7 @@ MiniportInitialize(
           NDIS_DMA_32BITS, 8, BUFFER_SIZE);
       if(Status != NDIS_STATUS_SUCCESS)
         {
-          PCNET_DbgPrint(("NdisMAllocateMapRegisters failed: 0x%x\n", Status));
+          DPRINT1("NdisMAllocateMapRegisters failed: 0x%x\n", Status);
           BREAKPOINT
           break;
         }
@@ -873,7 +876,7 @@ MiniportInitialize(
           Adapter->InterruptVector, TRUE, TRUE, NdisInterruptLevelSensitive);
       if(Status != NDIS_STATUS_SUCCESS)
         {
-          PCNET_DbgPrint(("NdisMRegisterInterrupt failed: 0x%x\n", Status));
+          DPRINT("NdisMRegisterInterrupt failed: 0x%x\n", Status);
           BREAKPOINT
           break;
         }
@@ -885,7 +888,7 @@ MiniportInitialize(
       if(Status != NDIS_STATUS_SUCCESS)
         {
           Status = NDIS_STATUS_RESOURCES;
-          PCNET_DbgPrint(("MiAllocateSharedMemory failed", Status));
+          DPRINT("MiAllocateSharedMemory failed", Status);
           BREAKPOINT
           break;
         }
@@ -893,7 +896,7 @@ MiniportInitialize(
       /* set up the initialization block */
       MiPrepareInitializationBlock(Adapter);
 
-      PCNET_DbgPrint(("Interrupt registered successfully\n"));
+      DPRINT("Interrupt registered successfully\n");
 
       /* Initialize and start the chip */
       MiInitChip(Adapter);
@@ -906,7 +909,7 @@ MiniportInitialize(
 
   if(Status != NDIS_STATUS_SUCCESS && Adapter)
     {
-      PCNET_DbgPrint(("Error; freeing stuff\n"));
+      DPRINT("Error; freeing stuff\n");
 
       NdisMFreeMapRegisters(Adapter->MiniportAdapterHandle); /* doesn't hurt to free if we never alloc'd? */
 
@@ -936,7 +939,7 @@ MiniportInitialize(
     ASSERT(0);
 #endif
 
-  PCNET_DbgPrint(("returning 0x%x\n", Status));
+  DPRINT("returning 0x%x\n", Status);
   *OpenErrorStatus = Status;
   return Status;
 }
@@ -963,7 +966,7 @@ MiniportISR(
   USHORT Rap;
   PADAPTER Adapter = (PADAPTER)MiniportAdapterContext;
 
-  PCNET_DbgPrint(("Called\n"));
+  DPRINT("Called\n");
 
   /* save the old RAP value */
   NdisRawReadPortUshort(Adapter->PortOffset + RAP, &Rap);
@@ -974,13 +977,13 @@ MiniportISR(
 
   if(!(Data & CSR0_INTR))
     {
-      PCNET_DbgPrint(("not our interrupt.\n"));
+      DPRINT("not our interrupt.\n");
       *InterruptRecognized = FALSE;
       *QueueMiniportHandleInterrupt = FALSE;
     }
   else
     {
-      PCNET_DbgPrint(("detected our interrupt\n"));
+      DPRINT("detected our interrupt\n");
 
       /* disable interrupts */
       NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR0);
@@ -1011,7 +1014,7 @@ MiniportReset(
  *     - Called by NDIS at PASSIVE_LEVEL when it thinks we need a reset
  */
 {
-  PCNET_DbgPrint(("Called\n"));
+  DPRINT("Called\n");
 
   /* MiniportReset doesn't do anything at the moment... perhaps this should be fixed. */
 
@@ -1060,7 +1063,7 @@ MiniportSend(
   PVOID SourceBuffer;
   UINT TotalPacketLength, SourceLength, Position = 0;
 
-  PCNET_DbgPrint(("Called\n"));
+  DPRINT("Called\n");
 
   NdisDprAcquireSpinLock(&Adapter->Lock);
 
@@ -1070,7 +1073,7 @@ MiniportSend(
       (Adapter->CurrentTransmitEndIndex == NUMBER_OF_BUFFERS - 1 &&
        Adapter->CurrentTransmitStartIndex == 0))
     {
-      PCNET_DbgPrint(("No free space in circular buffer\n"));
+      DPRINT("No free space in circular buffer\n");
       NdisDprReleaseSpinLock(&Adapter->Lock);
       return NDIS_STATUS_RESOURCES;
     }
@@ -1080,13 +1083,13 @@ MiniportSend(
   NdisQueryPacket(Packet, NULL, NULL, &NdisBuffer, &TotalPacketLength);
   ASSERT(TotalPacketLength <= BUFFER_SIZE);
 
-  PCNET_DbgPrint(("TotalPacketLength: %x\n", TotalPacketLength));
+  DPRINT("TotalPacketLength: %x\n", TotalPacketLength);
 
   while (NdisBuffer)
     {
       NdisQueryBuffer(NdisBuffer, &SourceBuffer, &SourceLength);
 
-      PCNET_DbgPrint(("Buffer: %x Length: %x\n", SourceBuffer, SourceLength));
+      DPRINT("Buffer: %x Length: %x\n", SourceBuffer, SourceLength);
 
       RtlCopyMemory(Adapter->TransmitBufferPtrVirt +
                     Adapter->CurrentTransmitEndIndex * BUFFER_SIZE + Position,
