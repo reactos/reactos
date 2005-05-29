@@ -199,8 +199,10 @@
 	</directory>
 	<directory name="kd">
 		<directory name="wrappers">
-			<file>bochs.c</file>
-			<file>gdbstub.c</file>
+			<if property="DBG" value="1">
+				<file>bochs.c</file>
+				<file>gdbstub.c</file>
+			</if>
 		</directory>
 		<file>kdinit.c</file>
 		<file>kdio.c</file>
