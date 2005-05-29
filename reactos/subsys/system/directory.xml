@@ -10,6 +10,9 @@
 <directory name="dhcp">
 	<xi:include href="dhcp/dhcp.xml" />
 </directory>
+<directory name="expand">
+	<xi:include href="expand/expand.xml" />
+</directory>
 <directory name="explorer">
 	<xi:include href="explorer/explorer.xml" />
 </directory>

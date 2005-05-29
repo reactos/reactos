@@ -170,6 +170,7 @@ subsys\system\winlogon\winlogon.exe     1
 subsys\system\winefile\winefile.exe     1
 subsys\system\dhcp\dhcp.exe             1
 subsys\system\sm\sm.exe                 1
+subsys\system\expand\expand.exe         1
 services\eventlog\eventlog.exe          1
 services\rpcss\rpcss.exe                1
 services\umpnpmgr\umpnpmgr.exe          1
