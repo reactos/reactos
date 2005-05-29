@@ -4175,6 +4175,18 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 					}
 					break;}
 
+				case ID_FILE_DELETE: {
+					TCHAR path[BUFFER_LEN];
+					SHFILEOPSTRUCT shfo = {hwnd, FO_DELETE, path};
+
+					get_path(pane->cur, path);
+
+					path[lstrlen(path)+1] = '\0';
+
+					if (!SHFileOperation(&shfo))
+						refresh_child(child);
+					break;}
+
 				case ID_VIEW_SORT_NAME:
 					set_sort_order(child, SORT_NAME);
 					break;

@@ -32,7 +32,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Pøesunout...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Kopírovat...\tF8" ,			ID_FILE_COPY
 		MENUITEM "&Ve schránce...\tF9" ,		118
-		MENUITEM "&Smazat\tDel" ,			108
+		MENUITEM "&Smazat\tDel" ,			ID_FILE_DELETE
 		MENUITEM "Pø&ejmenovat..." ,			109
 		MENUITEM "V&lastnosti...\tAlt+Enter" , ID_EDIT_PROPERTIES
 		MENUITEM SEPARATOR

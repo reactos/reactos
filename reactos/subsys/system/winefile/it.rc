@@ -33,7 +33,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Sposta...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Copia...\tF8" ,			ID_FILE_COPY
 		MENUITEM "&Negli Appunti...\tF9" ,		118
-		MENUITEM "&Cancella\tDel" ,			108
+		MENUITEM "&Cancella\tDel" ,			ID_FILE_DELETE
 		MENUITEM "Ri&nomina..." ,			109
 		MENUITEM "Propri&età...\tAlt+Invio" , ID_EDIT_PROPERTIES
 		MENUITEM SEPARATOR

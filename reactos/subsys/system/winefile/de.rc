@@ -34,7 +34,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Verschieben...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Kopieren...\tF8" ,			ID_FILE_COPY
 		MENUITEM "&In Zwischenablage...\tF9" ,		118
-		MENUITEM "&Löschen\tEntf" ,			108
+		MENUITEM "&Löschen\tEntf" ,			ID_FILE_DELETE
 		MENUITEM "&Umbenennen..." ,			109
 		MENUITEM "&Eigenschaften...\tAlt+Eingabetaste" , ID_EDIT_PROPERTIES
 		MENUITEM SEPARATOR

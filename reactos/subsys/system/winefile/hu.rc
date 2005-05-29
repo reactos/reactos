@@ -33,7 +33,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Át&helyezés...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Másolás...\tF8" ,			ID_FILE_COPY
 		MENUITEM "&Vágólapon...\tF9" ,		118
-		MENUITEM "&Törlés\tDel" ,			108
+		MENUITEM "&Törlés\tDel" ,			ID_FILE_DELETE
 		MENUITEM "Át&nevezés..." ,			109
 		MENUITEM "T&ulajdonságok...\tAlt+Enter" , ID_EDIT_PROPERTIES
 		MENUITEM SEPARATOR

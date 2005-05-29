@@ -33,7 +33,7 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "&Flytta...\tF7",                ID_FILE_MOVE
         MENUITEM "&Kopiera...\tF8",                ID_FILE_COPY
         MENUITEM "&I urklipp...\tF9",        118
-        MENUITEM "&Ta bort\tDel",                108
+        MENUITEM "&Ta bort\tDel",                ID_FILE_DELETE
         MENUITEM "&Byt namn...",                  109
         MENUITEM "&Egenskaper...\tAlt+Enter",   ID_EDIT_PROPERTIES
         MENUITEM SEPARATOR

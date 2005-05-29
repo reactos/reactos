@@ -33,7 +33,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Déplacer...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Copier...\tF8" ,			ID_FILE_COPY
 		MENUITEM "P&resse-Papiers...\tF9" ,		118
-		MENUITEM "&Effacer\tDel" ,			108
+		MENUITEM "&Effacer\tDel" ,			ID_FILE_DELETE
 		MENUITEM "Re&nommer..." ,			109
 		MENUITEM "&Propriétés...\tAlt+Entree" , ID_EDIT_PROPERTIES
 		MENUITEM SEPARATOR

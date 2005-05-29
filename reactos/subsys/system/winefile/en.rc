@@ -34,7 +34,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Move...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Copy...\tF8" ,			ID_FILE_COPY
 		MENUITEM "&In Clipboard...\tF9" ,		118
-		MENUITEM "&Delete\tDel" ,			108
+		MENUITEM "&Delete\tDel" ,			ID_FILE_DELETE
 		MENUITEM "Re&name..." ,			109
 		MENUITEM "Propert&ies...\tAlt+Enter" , ID_EDIT_PROPERTIES
 		MENUITEM SEPARATOR

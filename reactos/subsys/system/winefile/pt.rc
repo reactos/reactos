@@ -32,7 +32,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Mover...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Copiar...\tF8" ,			ID_FILE_COPY
 		MENUITEM "&In Clipboard...\tF9" ,		118
-		MENUITEM "E&xcluir\tDel" ,			108
+		MENUITEM "E&xcluir\tDel" ,			ID_FILE_DELETE
 		MENUITEM "Re&nomear..." ,			109
 		MENUITEM "&Propriedades...\tAlt+Enter" , ID_EDIT_PROPERTIES
 		MENUITEM SEPARATOR
@@ -160,7 +160,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Mover...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Copiar...\tF8" ,			ID_FILE_COPY
 		MENUITEM "&Na Area de Transferencia...\tF9" ,		118
-		MENUITEM "E&xcluir\tDel" ,			108
+		MENUITEM "E&xcluir\tDel" ,			ID_FILE_DELETE
 		MENUITEM "Re&nomear..." ,			109
 		MENUITEM "&Propriedades...\tAlt+Enter" , ID_EDIT_PROPERTIES
 		MENUITEM SEPARATOR
