@@ -34,6 +34,8 @@ typedef struct _PNPROOT_DEVICE
   UNICODE_STRING InstanceID;
   // Device description
   UNICODE_STRING DeviceDescription;
+  // Resource requirement list
+  PIO_RESOURCE_REQUIREMENTS_LIST ResourceRequirementsList;
 } PNPROOT_DEVICE, *PPNPROOT_DEVICE;
 
 typedef enum
@@ -70,6 +72,8 @@ typedef struct _PNPROOT_PDO_DEVICE_EXTENSION
   UNICODE_STRING DeviceID;
   // Instance ID
   UNICODE_STRING InstanceID;
+  // Resource requirement list
+  PIO_RESOURCE_REQUIREMENTS_LIST ResourceRequirementsList;
 } PNPROOT_PDO_DEVICE_EXTENSION, *PPNPROOT_PDO_DEVICE_EXTENSION;
 
 
@@ -119,7 +123,7 @@ PnpRootCreateDevice(
 
   DeviceExtension = (PPNPROOT_FDO_DEVICE_EXTENSION)PnpRootDeviceObject->DeviceExtension;
 
-  Device = (PPNPROOT_DEVICE)ExAllocatePool(PagedPool, sizeof(PNPROOT_DEVICE));
+  Device = (PPNPROOT_DEVICE)ExAllocatePoolWithTag(PagedPool, sizeof(PNPROOT_DEVICE), TAG_PNP_ROOT);
   if (!Device)
     return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -271,19 +275,43 @@ PdoQueryResourceRequirements(
   IN PIRP Irp,
   PIO_STACK_LOCATION IrpSp)
 {
+  PPNPROOT_PDO_DEVICE_EXTENSION DeviceExtension;
   PIO_RESOURCE_REQUIREMENTS_LIST ResourceList;
   ULONG ResourceListSize = FIELD_OFFSET(IO_RESOURCE_REQUIREMENTS_LIST, List);
 
-  ResourceList = ExAllocatePool(PagedPool, ResourceListSize);
-  if (ResourceList == NULL)
-    return STATUS_INSUFFICIENT_RESOURCES;
+  DPRINT("Called\n");
 
-  RtlZeroMemory(ResourceList, ResourceListSize);
-  ResourceList->ListSize = ResourceListSize;
+  DeviceExtension = (PPNPROOT_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+  
+  if (DeviceExtension->ResourceRequirementsList == NULL)
+  {
+    /* Create an empty resource list */
+    ResourceList = ExAllocatePool(PagedPool, ResourceListSize);
+    if (ResourceList == NULL)
+      return STATUS_INSUFFICIENT_RESOURCES;
 
-  Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
+    RtlZeroMemory(ResourceList, ResourceListSize);
+    ResourceList->ListSize = ResourceListSize;
 
-  return STATUS_SUCCESS;
+    Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
+
+    return STATUS_SUCCESS;
+  }
+  else
+  {
+    /* Copy existing resource requirement list */
+    ResourceList = ExAllocatePool(PagedPool, DeviceExtension->ResourceRequirementsList->ListSize);
+    if (ResourceList == NULL)
+      return STATUS_INSUFFICIENT_RESOURCES;
+
+    RtlCopyMemory(
+      ResourceList,
+      DeviceExtension->ResourceRequirementsList,
+      DeviceExtension->ResourceRequirementsList->ListSize);
+    Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
+
+    return STATUS_NOT_IMPLEMENTED;
+  }
 }
 
 
@@ -453,32 +481,34 @@ PnpRootFdoEnumerateDevices(
   PDEVICE_OBJECT DeviceObject)
 {
   PPNPROOT_FDO_DEVICE_EXTENSION DeviceExtension;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  PKEY_BASIC_INFORMATION KeyInfo;
-  UNICODE_STRING KeyName;
+  OBJECT_ATTRIBUTES ObjectAttributes, SubKeyAttributes;
+  PKEY_BASIC_INFORMATION KeyInfo, SubKeyInfo;
+  UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\" ENUM_NAME_ROOT);
+  UNICODE_STRING SubKeyName;
   PPNPROOT_DEVICE Device;
   WCHAR Buffer[MAX_PATH];
-  HANDLE KeyHandle;
+  HANDLE KeyHandle, SubKeyHandle;
   ULONG BufferSize;
   ULONG ResultSize;
   NTSTATUS Status;
-  ULONG Index;
+  ULONG Index1, Index2;
 
   DPRINT("Called\n");
 
   DeviceExtension = (PPNPROOT_FDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
   BufferSize = sizeof(KEY_BASIC_INFORMATION) + (MAX_PATH+1) * sizeof(WCHAR);
-  KeyInfo = ExAllocatePool(PagedPool, BufferSize);
+  KeyInfo = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_PNP_ROOT);
   if (!KeyInfo)
   {
     return STATUS_INSUFFICIENT_RESOURCES;
   }
-
-  RtlRosInitUnicodeStringFromLiteral(
-    &KeyName,
-    L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\" \
-    ENUM_NAME_ROOT);
+  SubKeyInfo = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_PNP_ROOT);
+  if (!SubKeyInfo)
+  {
+    ExFreePoolWithTag(KeyInfo, TAG_PNP_ROOT);
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
 
   InitializeObjectAttributes(
     &ObjectAttributes,
@@ -487,11 +517,12 @@ PnpRootFdoEnumerateDevices(
 		NULL,
 		NULL);
 
-  Status = ZwOpenKey(&KeyHandle, KEY_ALL_ACCESS, &ObjectAttributes);
+  Status = ZwOpenKey(&KeyHandle, KEY_ENUMERATE_SUB_KEYS, &ObjectAttributes);
   if (!NT_SUCCESS(Status))
   {
-    DPRINT("ZwOpenKey() failed (Status %x)\n", Status);
-    ExFreePool(KeyInfo);
+    DPRINT("ZwOpenKey() failed (Status 0x%08lx)\n", Status);
+    ExFreePoolWithTag(KeyInfo, TAG_PNP_ROOT);
+    ExFreePoolWithTag(SubKeyInfo, TAG_PNP_ROOT);
     return Status;
   }
 
@@ -500,82 +531,127 @@ PnpRootFdoEnumerateDevices(
             drivers are passed on the command line */
 //  DeviceExtension->DeviceListCount = 0;
 
-  Index = 0;
-  do {
+  /* Devices are sub-sub-keys of 'KeyName'. KeyName is already opened as
+   * KeyHandle. We'll first do a first enumeration to have first level keys,
+   * and an inner one to have the real devices list.
+   */
+  Index1 = 0;
+  
+  while (TRUE)
+  {
     Status = ZwEnumerateKey(
       KeyHandle,
-      Index,
+      Index1,
       KeyBasicInformation,
       KeyInfo,
       BufferSize,
       &ResultSize);
     if (!NT_SUCCESS(Status))
     {
-      DPRINT("ZwEnumerateKey() (Status %x)\n", Status);
+      DPRINT("ZwEnumerateKey() (Status 0x%08lx)\n", Status);
       break;
     }
 
     /* Terminate the string */
     KeyInfo->Name[KeyInfo->NameLength / sizeof(WCHAR)] = 0;
-
-    Device = (PPNPROOT_DEVICE)ExAllocatePool(PagedPool, sizeof(PNPROOT_DEVICE));
-    if (!Device)
-    {
-      /* FIXME: */
-      break;
-    }
-
-    RtlZeroMemory(Device, sizeof(PNPROOT_DEVICE));
-
-    if (!IopCreateUnicodeString(&Device->ServiceName, KeyInfo->Name, PagedPool))
-    {
-      /* FIXME: */
-      DPRINT("IopCreateUnicodeString() failed\n");
-    }
-
-    wcscpy(Buffer, ENUM_NAME_ROOT);
-    wcscat(Buffer, L"\\");
-    wcscat(Buffer, KeyInfo->Name);
-
-    if (!IopCreateUnicodeString(&Device->DeviceID, Buffer, PagedPool))
-    {
-      /* FIXME: */
-      DPRINT("IopCreateUnicodeString() failed\n");
-    }
-
-    DPRINT("Got entry: %S\n", Device->DeviceID.Buffer);
-
-    if (!IopCreateUnicodeString(
-      &Device->InstanceID,
-      L"0000",
-      PagedPool))
-    {
-      /* FIXME: */
-      DPRINT("IopCreateUnicodeString() failed\n");
-    }
-
-    Status = PnpRootFdoReadDeviceInfo(Device);
+    
+    /* Open the key */
+    RtlInitUnicodeString(&SubKeyName, KeyInfo->Name);
+    InitializeObjectAttributes(
+      &SubKeyAttributes,
+      &SubKeyName,
+      0, /* Attributes */
+      KeyHandle,
+      NULL); /* Security descriptor */
+    Status = ZwOpenKey(&SubKeyHandle, KEY_ENUMERATE_SUB_KEYS, &SubKeyAttributes);
     if (!NT_SUCCESS(Status))
     {
-      DPRINT("PnpRootFdoReadDeviceInfo() failed with status %x\n", Status);
-      /* FIXME: */
+      DPRINT("ZwOpenKey() failed (Status 0x%08lx)\n", Status);
+      break;
     }
+    
+    /* Enumerate the sub-keys */
+    Index2 = 0;
+    while (TRUE)
+    {
+      Status = ZwEnumerateKey(
+        SubKeyHandle,
+        Index2,
+        KeyBasicInformation,
+        SubKeyInfo,
+        BufferSize,
+        &ResultSize);
+      if (!NT_SUCCESS(Status))
+      {
+        DPRINT("ZwEnumerateKey() (Status 0x%08lx)\n", Status);
+        break;
+      }
+      
+      /* Terminate the string */
+      SubKeyInfo->Name[SubKeyInfo->NameLength / sizeof(WCHAR)] = 0;
+      
+      Device = (PPNPROOT_DEVICE)ExAllocatePoolWithTag(PagedPool, sizeof(PNPROOT_DEVICE), TAG_PNP_ROOT);
+      if (!Device)
+      {
+        /* FIXME: */
+        DPRINT("ExAllocatePoolWithTag() failed\n");
+        break;
+      }
 
-    ExInterlockedInsertTailList(
-      &DeviceExtension->DeviceListHead,
-      &Device->ListEntry,
-      &DeviceExtension->DeviceListLock);
+      RtlZeroMemory(Device, sizeof(PNPROOT_DEVICE));
 
-    DeviceExtension->DeviceListCount++;
+      if (!IopCreateUnicodeString(&Device->ServiceName, KeyInfo->Name, PagedPool))
+      {
+        /* FIXME: */
+        DPRINT("IopCreateUnicodeString() failed\n");
+      }
 
-    Index++;
-  } while (TRUE);
+      wcscpy(Buffer, ENUM_NAME_ROOT);
+      wcscat(Buffer, L"\\");
+      wcscat(Buffer, KeyInfo->Name);
 
-  DPRINT("Entries found: %d\n", Index);
+      if (!IopCreateUnicodeString(&Device->DeviceID, Buffer, PagedPool))
+      {
+        /* FIXME: */
+        DPRINT("IopCreateUnicodeString() failed\n");
+      }
+
+      DPRINT("Got entry: %S\n", Device->DeviceID.Buffer);
+
+      if (!IopCreateUnicodeString(
+        &Device->InstanceID,
+        SubKeyInfo->Name,
+        PagedPool))
+      {
+        /* FIXME: */
+        DPRINT("IopCreateUnicodeString() failed\n");
+      }
+
+      Status = PnpRootFdoReadDeviceInfo(Device);
+      if (!NT_SUCCESS(Status))
+      {
+        /* FIXME */
+        DPRINT("PnpRootFdoReadDeviceInfo() failed with status 0x%08lx\n", Status);
+      }
+
+      ExInterlockedInsertTailList(
+        &DeviceExtension->DeviceListHead,
+        &Device->ListEntry,
+        &DeviceExtension->DeviceListLock);
+
+      DeviceExtension->DeviceListCount++;
+      
+      Index2++;
+    }
+    
+    ZwClose(SubKeyHandle);
+    Index1++;
+  }
 
   ZwClose(KeyHandle);
 
-  ExFreePool(KeyInfo);
+  ExFreePoolWithTag(KeyInfo, TAG_PNP_ROOT);
+  ExFreePoolWithTag(SubKeyInfo, TAG_PNP_ROOT);
 
   return STATUS_SUCCESS;
 }
@@ -686,6 +762,30 @@ PnpRootQueryBusRelations(
 
       DPRINT("InstanceID: %wZ  PDO %p\n",
         &PdoDeviceExtension->InstanceID,
+        Device->Pdo);
+
+      if (Device->ResourceRequirementsList != NULL)
+      {
+        PdoDeviceExtension->ResourceRequirementsList = ExAllocatePoolWithTag(
+          PagedPool,
+          Device->ResourceRequirementsList->ListSize,
+          TAG_PNP_ROOT);
+        if (PdoDeviceExtension->ResourceRequirementsList)
+        {
+          RtlCopyMemory(
+            PdoDeviceExtension->ResourceRequirementsList,
+            Device->ResourceRequirementsList,
+            Device->ResourceRequirementsList->ListSize);
+        }
+        else
+        {
+          /* FIXME */
+          DPRINT("ExAllocatePoolWithTag() failed\n");
+        }
+      }
+
+      DPRINT("ResourceRequirementsList: %p  PDO %p\n",
+        &PdoDeviceExtension->ResourceRequirementsList,
         Device->Pdo);
     }
 
