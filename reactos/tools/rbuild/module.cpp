@@ -584,7 +584,7 @@ Module::GetDefaultModuleBaseaddress () const
 	switch ( type )
 	{
 		case Kernel:
-			return "0xc0000000";
+			return "0x80000000";
 		case Win32DLL:
 			return "0x10000000";
 		case NativeDLL:

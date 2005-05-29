@@ -4,7 +4,6 @@
 	<define name="_SEH_NO_NATIVE_NLG" />
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__NTOSKRNL__" />
-	<define name="__3GB__" />
 	<include base="kjs">include</include>
 	<include base="ntoskrnl">include</include>
 	<library>csq</library>
