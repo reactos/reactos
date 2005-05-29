@@ -1,4 +1,4 @@
-<module name="serialui" type="win32dll" baseaddress="${BASEADDRESS_SERIALUI}" installname="serialui.dll">
+<module name="serialui" type="win32dll" baseaddress="${BASEADDRESS_SERIALUI}" installbase="system32" installname="serialui.dll">
 	<importlibrary definition="serialui.def" />
 	<include base="serialui">.</include>
 	<define name="__USE_W32API" />
