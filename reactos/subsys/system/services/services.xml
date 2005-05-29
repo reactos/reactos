@@ -1,4 +1,4 @@
-<module name="services" type="win32cui">
+<module name="services" type="win32cui" installbase="system32" installname="services.exe">
 	<include base="services">.</include>
 	<include base="ReactOS">include/idl</include>
 	<define name="__USE_W32API" />
