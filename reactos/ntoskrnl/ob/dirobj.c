@@ -484,6 +484,10 @@ NtCreateDirectoryObject (OUT PHANDLE DirectoryHandle,
                             0,
                             NULL,
                             &hDirectory);
+    if (!NT_SUCCESS(Status))
+    {
+       ObMakeTemporaryObject(Directory);
+    }
     ObDereferenceObject(Directory);
 
     if(NT_SUCCESS(Status))
