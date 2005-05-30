@@ -156,7 +156,7 @@ NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
             {
               if (pProcessData->HandleTable[c])
                 {
-                  CsrReleaseObject(pProcessData, (HANDLE)((c + 1) << 2));
+                  CsrReleaseObject(pProcessData, (HANDLE)(((c + 1) << 2)|0x3));
                 }
             }
           RtlFreeHeap(CsrssApiHeap, 0, pProcessData->HandleTable);
