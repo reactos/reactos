@@ -166,6 +166,12 @@
 <directory name="msvcrt20">
 	<xi:include href="msvcrt20/msvcrt20.xml" />
 </directory>
+<directory name="msvideo">
+	<xi:include href="msvideo/msvfw32.xml" />
+</directory>
+<directory name="mswsock">
+	<xi:include href="mswsock/mswsock.xml" />
+</directory>
 <directory name="netapi32">
 	<xi:include href="netapi32/netapi32.xml" />
 </directory>

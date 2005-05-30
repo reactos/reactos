@@ -107,6 +107,8 @@ lib\msi\msi.dll                         1
 lib\msimg32\msimg32.dll                 1
 lib\msvcrt\msvcrt.dll                   1
 lib\msvcrt20\msvcrt20.dll               1
+lib\msvideo\msvfw32.dll                 1
+lib\mswsock\mswsock.dll                 1
 lib\netapi32\netapi32.dll               1
 lib\ntdll\ntdll.dll                     1
 lib\ole32\ole32.dll                     1
