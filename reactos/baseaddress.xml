@@ -98,6 +98,5 @@
 <property name="BASEADDRESS_ODBC32" value="0x76660000" />
 <property name="BASEADDRESS_MSACM32" value="0x77400000" />
 <property name="BASEADDRESS_PACKET" value="0x77780000" />
-<property name="BASEADDRESS_W2_32" value="0x77780000" />
 <property name="BASEADDRESS_IPRTPRIO" value="0x777c0000" />
 <property name="BASEADDRESS_WSHTCPIP" value="0x777c0000" />
