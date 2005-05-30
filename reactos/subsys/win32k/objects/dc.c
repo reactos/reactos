@@ -729,7 +729,6 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   HDC      hNewDC;
   PDC      NewDC;
   HDC      hDC = NULL;
-  SURFOBJ *SurfObj;
   HRGN     hVisRgn;
   UNICODE_STRING StdDriver;
 
@@ -793,24 +792,13 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 
   if (! CreateAsIC)
   {
-    SurfObj = EngLockSurface((HSURF)PrimarySurface.Handle);
-    if ( !SurfObj )
-    {
-      DC_UnlockDc ( hNewDC );
-      DC_FreeDC ( hNewDC) ;
-      return NULL;
-    }
-    ASSERT(NewDC->GDIInfo->cBitsPixel * NewDC->GDIInfo->cPlanes == BitsPerFormat(SurfObj->iBitmapFormat));
-    ASSERT(NewDC->GDIInfo->ulHorzRes == SurfObj->sizlBitmap.cx);
-    ASSERT(NewDC->GDIInfo->ulVertRes == SurfObj->sizlBitmap.cy);
-
     NewDC->w.hPalette = NewDC->DevInfo->hpalDefault;
     NewDC->w.ROPmode = R2_COPYPEN;
 
     DC_UnlockDc( hNewDC );
 
-    hVisRgn = NtGdiCreateRectRgn(0, 0, SurfObj->sizlBitmap.cx,
-                                 SurfObj->sizlBitmap.cy);
+    hVisRgn = NtGdiCreateRectRgn(0, 0, NewDC->GDIInfo->ulHorzRes,
+                                 NewDC->GDIInfo->ulVertRes);
     NtGdiSelectVisRgn(hNewDC, hVisRgn);
     NtGdiDeleteObject(hVisRgn);
 
@@ -820,8 +808,6 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
     NtGdiSetTextAlign(hNewDC, TA_TOP);
     NtGdiSetBkColor(hNewDC, RGB(255, 255, 255));
     NtGdiSetBkMode(hNewDC, OPAQUE);
-
-    EngUnlockSurface(SurfObj);
   }
   else
   {
