@@ -294,8 +294,6 @@ PdoQueryResourceRequirements(
     ResourceList->ListSize = ResourceListSize;
 
     Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
-
-    return STATUS_SUCCESS;
   }
   else
   {
@@ -309,9 +307,9 @@ PdoQueryResourceRequirements(
       DeviceExtension->ResourceRequirementsList,
       DeviceExtension->ResourceRequirementsList->ListSize);
     Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
-
-    return STATUS_NOT_IMPLEMENTED;
   }
+
+  return STATUS_SUCCESS;
 }
 
 
@@ -424,6 +422,96 @@ PnpRootPdoPowerControl(
 
 /* Functional Device Object routines */
 
+static NTSTATUS
+PnpRootReadRegistryBinary(
+  IN PWSTR KeyName,
+  IN PWSTR ValueKeyName,
+  OUT PVOID* Buffer)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING KeyNameU;
+  UNICODE_STRING ValueKeyNameU;
+  KEY_VALUE_PARTIAL_INFORMATION Size;
+  PKEY_VALUE_PARTIAL_INFORMATION Data = NULL;
+  ULONG DataSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION);
+  HANDLE KeyHandle;
+  NTSTATUS Status;
+  
+  DPRINT("Called\n");
+  
+  RtlInitUnicodeString(&KeyNameU, KeyName);
+  RtlInitUnicodeString(&ValueKeyNameU, ValueKeyName);
+  
+  InitializeObjectAttributes(
+    &ObjectAttributes,
+    &KeyNameU,
+    OBJ_CASE_INSENSITIVE,
+    NULL, /* Root dir */
+    NULL); /* Security descriptor */
+  Status = ZwOpenKey(&KeyHandle, KEY_READ, &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT("ZwOpenKey() failed (Status 0x%08lx)\n", Status);
+    return Status;
+  }
+  
+  Status = ZwQueryValueKey(
+    KeyHandle,
+    &ValueKeyNameU,
+    KeyValuePartialInformation,
+    &Size, DataSize,
+    &DataSize);
+  if (Status != STATUS_BUFFER_OVERFLOW)
+  {
+    DPRINT("ZwQueryValueKey() failed (Status 0x%08lx)\n", Status);
+    ZwClose(KeyHandle);
+    return Status;
+  }
+  
+  while (Status == STATUS_BUFFER_OVERFLOW)
+  {
+    if (Data)
+      ExFreePoolWithTag(Data, TAG_PNP_ROOT);
+    Data = (PKEY_VALUE_PARTIAL_INFORMATION)ExAllocatePoolWithTag(PagedPool, DataSize, TAG_PNP_ROOT);
+    if (!Data)
+    {
+      DPRINT("ExAllocatePoolWithTag() failed\n", Status);
+      ZwClose(KeyHandle);
+      return Status;
+    }
+    
+    Status = ZwQueryValueKey(
+      KeyHandle,
+      &ValueKeyNameU,
+      KeyValuePartialInformation,
+      Data, DataSize,
+      &DataSize);
+    if (NT_SUCCESS(Status))
+    {
+      *Buffer = ExAllocatePoolWithTag(PagedPool, Data->DataLength, TAG_PNP_ROOT);
+      if (!*Buffer)
+      {
+        DPRINT("ExAllocatePoolWithTag() failed\n", Status);
+        ExFreePoolWithTag(Data, TAG_PNP_ROOT);
+        ZwClose(KeyHandle);
+        return Status;
+      }
+      
+      RtlCopyMemory(
+        *Buffer,
+        Data->Data,
+        Data->DataLength);
+      break;
+    }
+  }
+  
+  if (Data)
+    ExFreePoolWithTag(Data, TAG_PNP_ROOT);
+  ZwClose(KeyHandle);
+  
+  return Status;
+}
+
 NTSTATUS
 PnpRootFdoReadDeviceInfo(
   PPNPROOT_DEVICE Device)
@@ -448,6 +536,7 @@ PnpRootFdoReadDeviceInfo(
 
   DPRINT("KeyName %S\n", KeyName);
 
+  /* 1. Read informations in instance key */
   RtlZeroMemory(QueryTable, sizeof(QueryTable));
 
   RtlInitUnicodeString(DeviceDesc, NULL);
@@ -457,13 +546,13 @@ PnpRootFdoReadDeviceInfo(
   QueryTable[0].EntryContext = DeviceDesc;
 
   Status = RtlQueryRegistryValues(
-    RTL_REGISTRY_ABSOLUTE,
+    RTL_REGISTRY_ABSOLUTE | RTL_REGISTRY_OPTIONAL,
     KeyName,
     QueryTable,
     NULL,
     NULL);
 
-  DPRINT("RtlQueryRegistryValues() returned status %x\n", Status);
+  DPRINT("RtlQueryRegistryValues() returned status 0x%08lx\n", Status);
 
   if (!NT_SUCCESS(Status))
   {
@@ -471,6 +560,22 @@ PnpRootFdoReadDeviceInfo(
   }
 
   DPRINT("Got device description: %S\n", DeviceDesc->Buffer);
+
+  /* 2. Read informations in instance key, LogConf subkey */
+  RtlZeroMemory(QueryTable, sizeof(QueryTable));
+  wcscat(KeyName, L"\\LogConf");
+  
+  Status = PnpRootReadRegistryBinary(
+    KeyName,
+    L"BasicConfigVector",
+    (PVOID*)&Device->ResourceRequirementsList);
+
+  DPRINT("PnpRootReadRegistryBinary() returned status 0x%08lx\n", Status);
+
+  if (!NT_SUCCESS(Status))
+  {
+    /* FIXME: */
+  }
 
   return STATUS_SUCCESS;
 }
@@ -785,7 +890,7 @@ PnpRootQueryBusRelations(
       }
 
       DPRINT("ResourceRequirementsList: %p  PDO %p\n",
-        &PdoDeviceExtension->ResourceRequirementsList,
+        PdoDeviceExtension->ResourceRequirementsList,
         Device->Pdo);
     }
 
