@@ -886,7 +886,7 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
 			     &KeyName,
 			     0,
 			     REG_RESOURCE_REQUIREMENTS_LIST,
-			     &DeviceNode->ResourceRequirements,
+			     DeviceNode->ResourceRequirements,
 			     DeviceNode->ResourceRequirements->ListSize);
     }
 
