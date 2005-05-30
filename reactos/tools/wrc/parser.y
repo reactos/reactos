@@ -1002,8 +1002,8 @@ optional_style_pair
 style
 	: style '|' style	{ $$ = new_style($1->or_mask | $3->or_mask, $1->and_mask | $3->and_mask); free($1); free($3);}
 	| '(' style ')'		{ $$ = $2; }
-        | xpr       		{ $$ = new_style($1, 0); }
-        | tNOT xpr		{ $$ = new_style(0, $2); }
+        | any_num       	{ $$ = new_style($1, 0); }
+        | tNOT any_num		{ $$ = new_style(0, $2); }
         ;
 
 ctlclass
@@ -2249,32 +2249,27 @@ static event_t *add_event(int key, int id, int flags, event_t *prev)
 
 static event_t *add_string_event(string_t *key, int id, int flags, event_t *prev)
 {
-	int keycode = 0, keysym = 0;
+	int keycode = 0;
 	event_t *ev = new_event();
 
-	if(key->type == str_char)
-		keysym = key->str.cstr[0];
-	else
-		keysym = key->str.wstr[0];
+	if(key->type != str_char)
+		yyerror("Key code must be an ascii string");
 
-	if((flags & WRC_AF_VIRTKEY) && (!isupper(keysym & 0xff) && !isdigit(keysym & 0xff)))
+	if((flags & WRC_AF_VIRTKEY) && (!isupper(key->str.cstr[0] & 0xff) && !isdigit(key->str.cstr[0] & 0xff)))
 		yyerror("VIRTKEY code is not equal to ascii value");
 
-	if(keysym == '^' && (flags & WRC_AF_CONTROL) != 0)
+	if(key->str.cstr[0] == '^' && (flags & WRC_AF_CONTROL) != 0)
 	{
 		yyerror("Cannot use both '^' and CONTROL modifier");
 	}
-	else if(keysym == '^')
+	else if(key->str.cstr[0] == '^')
 	{
-		if(key->type == str_char)
-			keycode = toupper(key->str.cstr[1]) - '@';
-		else
-			keycode = toupper(key->str.wstr[1]) - '@';
+		keycode = toupper(key->str.cstr[1]) - '@';
 		if(keycode >= ' ')
 			yyerror("Control-code out of range");
 	}
 	else
-		keycode = keysym;
+		keycode = key->str.cstr[0];
 	ev->key = keycode;
 	ev->id = id;
 	ev->flags = flags & ~WRC_AF_ASCII;
