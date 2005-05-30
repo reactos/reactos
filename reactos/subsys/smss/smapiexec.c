@@ -113,24 +113,6 @@ SmCreateUserProcess (LPWSTR ImagePath,
 				__FUNCTION__, Status);
 		}
 	}
-	else
-	{
-		HANDLE DupProcessHandle = (HANDLE) 0;
-		
-		Status = NtDuplicateObject (NtCurrentProcess(),
-					    pProcessInfo->ProcessHandle,
-					    NtCurrentProcess(),
-					    & DupProcessHandle,
-					    PROCESS_ALL_ACCESS,
-					    0, 0);
-		if(!NT_SUCCESS(Status))
-		{
-			DPRINT1("SM: %s: NtDuplicateObject failed (Status=0x%08lx)\n",
-				__FUNCTION__, Status);
-		}
-		pProcessInfo->ProcessHandle = DupProcessHandle;
-		
-	}
 
 	/* Wait for process termination */
 	if (WaitForIt)
@@ -145,6 +127,11 @@ SmCreateUserProcess (LPWSTR ImagePath,
 		}
 		
 	}
+        if (NULL == UserProcessInfo)
+        {
+           NtClose(pProcessInfo->ProcessHandle);
+           NtClose(pProcessInfo->ThreadHandle);
+        }
 	return Status;
 }
 
