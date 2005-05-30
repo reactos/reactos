@@ -32,7 +32,7 @@ BEGIN
     IDS_MYPICTURES     "Мои документы\\Мои рисунки"
     IDS_MYMUSIC        "Мои документы\\Моя музыка"
     IDS_MYVIDEOS       "Мои документы\\Мои видеозаписи"
-    IDS_TEMPLATES      "Templates"
+    IDS_TEMPLATES      "Шаблоны"
     IDS_RECENT         "Recent"
     IDS_SENDTO         "Отправить"
     IDS_PRINTHOOD      "PrintHood"
