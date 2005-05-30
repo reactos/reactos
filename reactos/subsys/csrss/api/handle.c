@@ -22,6 +22,13 @@
 static unsigned ObjectDefinitionsCount = 0;
 static PCSRSS_OBJECT_DEFINITION ObjectDefinitions = NULL;
 
+BOOL 
+CsrIsConsoleHandle(HANDLE Handle)
+{
+  return ((((ULONG)Handle) & 0x10000003) == 0x3) ? TRUE : FALSE;
+}
+
+
 NTSTATUS FASTCALL
 CsrRegisterObjectDefinitions(PCSRSS_OBJECT_DEFINITION NewDefinitions)
 {
@@ -66,7 +73,7 @@ NTSTATUS STDCALL CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, O
     {
       return STATUS_INVALID_PARAMETER;
     }
-  if (ProcessData->HandleTableSize <= h)
+  if (!CsrIsConsoleHandle(Handle) || ProcessData->HandleTableSize <= h)
     {
       DPRINT1("CsrGetObject returning invalid handle\n");
       return STATUS_INVALID_HANDLE;
@@ -117,7 +124,7 @@ CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
     {
       return STATUS_INVALID_PARAMETER;
     }
-  if (h >= ProcessData->HandleTableSize || ProcessData->HandleTable[h] == NULL)
+  if (!CsrIsConsoleHandle(Handle) || h >= ProcessData->HandleTableSize || ProcessData->HandleTable[h] == NULL)
     {
       return STATUS_INVALID_HANDLE;
     }
@@ -133,7 +140,7 @@ CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
 NTSTATUS STDCALL CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handle, Object_t *Object )
 {
    ULONG i;
-   PVOID* NewBlock;
+   PVOID* Block;
 
    if (ProcessData == NULL)
    {
@@ -151,19 +158,19 @@ NTSTATUS STDCALL CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handl
      }
    if (i >= ProcessData->HandleTableSize)
      {
-       NewBlock = RtlAllocateHeap(CsrssApiHeap,
-			          HEAP_ZERO_MEMORY,
-			          (ProcessData->HandleTableSize + 64) * sizeof(HANDLE));
-       if (NewBlock == NULL)
+       Block = RtlAllocateHeap(CsrssApiHeap,
+			       HEAP_ZERO_MEMORY,
+			       (ProcessData->HandleTableSize + 64) * sizeof(HANDLE));
+       if (Block == NULL)
          {
            RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 	   return(STATUS_UNSUCCESSFUL);
          }
-       RtlCopyMemory(NewBlock,
+       RtlCopyMemory(Block,
 		     ProcessData->HandleTable,
 		     ProcessData->HandleTableSize * sizeof(HANDLE));
-       RtlFreeHeap( CsrssApiHeap, 0, ProcessData->HandleTable );
-       ProcessData->HandleTable = (Object_t **)NewBlock;
+       Block = InterlockedExchangePointer(&ProcessData->HandleTable, Block);
+       RtlFreeHeap( CsrssApiHeap, 0, Block );
        ProcessData->HandleTableSize += 64;
      }
    ProcessData->HandleTable[i] = Object;
@@ -178,10 +185,10 @@ NTSTATUS STDCALL CsrVerifyObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle
   ULONG h = (((ULONG)Handle) >> 2) - 1;
 
   if (ProcessData == NULL)
-  {
+    {
       return STATUS_INVALID_PARAMETER;
-  }
-  if (h >= ProcessData->HandleTableSize)
+    }
+  if (!CsrIsConsoleHandle(Handle) || h >= ProcessData->HandleTableSize)
     {
       return STATUS_INVALID_HANDLE;
     }
