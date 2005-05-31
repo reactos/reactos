@@ -627,6 +627,8 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
    int DesY;
    int color;
    int zoomX;
+   int zoomY;
+   int count;
 
   DPRINT("DIB_16BPP_StretchBlt: Source BPP: %u, srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
      BitsPerFormat(SourceSurf->iBitmapFormat), SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom,
@@ -641,13 +643,16 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 	zoomX = DesSizeX / SrcSizeX;
     if (zoomX==0) zoomX=1;
 
+	zoomY = DesSizeY / SrcSizeY;
+    if (zoomY==0) zoomY=1;
+
     switch(SourceSurf->iBitmapFormat)
     {
             case BMF_1BPP:
 		   /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
    		   /* This is a reference implementation, it hasn't been optimized for speed */
 
- 		  	for (DesY=0; DesY<DestRect->bottom; DesY++)
+ 		  	for (DesY=0; DesY<DestRect->bottom; DesY+=zoomY)
 			{				
 				if (DesSizeY>SrcSizeY)
 				    sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -665,19 +670,25 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 					
 					if (sx > SourceRect->right) break;
 
-				    if(DIB_1BPP_GetPixel(SourceSurf, sx, sy) == 0)
+				     if(DIB_1BPP_GetPixel(SourceSurf, sx, sy) == 0)
 					{
-					 if (zoomX>1) 
-						DIB_16BPP_HLine(DestSurf, DesX, DesX + zoomX, DesY, XLATEOBJ_iXlate(ColorTranslation, 0));
-					else
-					    DIB_16BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, 0));		
+						for (count=DesY;count<DesY+zoomY;count++)
+						{
+						 if (zoomX>1) 
+						   DIB_16BPP_HLine(DestSurf, DesX, DesX + zoomX, count, XLATEOBJ_iXlate(ColorTranslation, 0));
+						 else
+						   DIB_16BPP_PutPixel(DestSurf, DesX, count, XLATEOBJ_iXlate(ColorTranslation, 0));
+						}					 
 					 
 					 } else {
-                       if (zoomX>1) 
-							DIB_16BPP_HLine(DestSurf, DesX, DesX + zoomX, DesY, XLATEOBJ_iXlate(ColorTranslation, 1));
-						else
-							DIB_16BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, 1));		
 
+						for (count=DesY;count<DesY+zoomY;count++)
+						{
+						 if (zoomX>1) 
+						   DIB_16BPP_HLine(DestSurf, DesX, DesX + zoomX, count, XLATEOBJ_iXlate(ColorTranslation, 1));
+						 else
+						   DIB_16BPP_PutPixel(DestSurf, DesX, count, XLATEOBJ_iXlate(ColorTranslation, 1));
+						}					 
                      }					
 					}
 				}
@@ -687,7 +698,7 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		   /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
    		   /* This is a reference implementation, it hasn't been optimized for speed */
 
-		  	for (DesY=0; DesY<DestRect->bottom; DesY++)
+		  	for (DesY=0; DesY<DestRect->bottom; DesY+=zoomY)
 			{				
 				if (DesSizeY>SrcSizeY)
 				    sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -709,10 +720,13 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					color = DIB_4BPP_GetPixel(SourceSurf, sx, sy);
 					
-					if (zoomX>1) 
-						DIB_16BPP_HLine(DestSurf, DesX, DesX + zoomX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
-					else
-					    DIB_16BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));		
+					for (count=DesY;count<DesY+zoomY;count++)
+					{
+					 if (zoomX>1) 
+						   DIB_16BPP_HLine(DestSurf, DesX, DesX + zoomX, count, XLATEOBJ_iXlate(ColorTranslation, color));
+					 else
+						   DIB_16BPP_PutPixel(DestSurf, DesX, count, XLATEOBJ_iXlate(ColorTranslation, color));
+					}			
 
 					}
 				}
@@ -722,7 +736,7 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   		   /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
    		   /* This is a reference implementation, it hasn't been optimized for speed */
 
-		  	for (DesY=0; DesY<DestRect->bottom; DesY++)
+		  	for (DesY=0; DesY<DestRect->bottom; DesY+=zoomY)
 			{
 				if (DesSizeY>SrcSizeY)
 				    sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -742,10 +756,13 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					color = DIB_8BPP_GetPixel(SourceSurf, sx, sy);
 
-					if (zoomX>1) 
-						DIB_16BPP_HLine(DestSurf, DesX, DesX + zoomX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
-					else
-					    DIB_16BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));	
+					for (count=DesY;count<DesY+zoomY;count++)
+					{
+					 if (zoomX>1) 
+						   DIB_16BPP_HLine(DestSurf, DesX, DesX + zoomX, count, XLATEOBJ_iXlate(ColorTranslation, color));
+					 else
+						   DIB_16BPP_PutPixel(DestSurf, DesX, count, XLATEOBJ_iXlate(ColorTranslation, color));
+					}		
 
 					}
 				}
@@ -755,7 +772,7 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		   /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
    		   /* This is a reference implementation, it hasn't been optimized for speed */
 
-		  	for (DesY=0; DesY<DestRect->bottom; DesY++)
+		  	for (DesY=0; DesY<DestRect->bottom; DesY+=zoomY)
 			{
 				if (DesSizeY>SrcSizeY)
 				    sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -774,10 +791,13 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 					if (sx > SourceRect->right) break;
 
 					color = DIB_24BPP_GetPixel(SourceSurf, sx, sy);
-					if (zoomX>1) 
-						DIB_16BPP_HLine(DestSurf, DesX, DesX + zoomX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
-					else
-					    DIB_16BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));					
+					for (count=DesY;count<DesY+zoomY;count++)
+					{
+					 if (zoomX>1) 
+						   DIB_16BPP_HLine(DestSurf, DesX, DesX + zoomX, count, XLATEOBJ_iXlate(ColorTranslation, color));
+					 else
+						   DIB_16BPP_PutPixel(DestSurf, DesX, count, XLATEOBJ_iXlate(ColorTranslation, color));
+					}						
 					}
 				}
 	  break;
@@ -786,7 +806,7 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   		   /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
    		   /* This is a reference implementation, it hasn't been optimized for speed */
 
-		  	for (DesY=0; DesY<DestRect->bottom; DesY++)
+		  	for (DesY=0; DesY<DestRect->bottom; DesY+=zoomY)
 			{
 				if (DesSizeY>SrcSizeY)
 				    sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -805,10 +825,13 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 					if (sx > SourceRect->right) break;
 
 					color = DIB_32BPP_GetPixel(SourceSurf, sx, sy);
-					if (zoomX>1) 
-						DIB_16BPP_HLine(DestSurf, DesX, DesX + zoomX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
-					else
-					    DIB_16BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));					
+					for (count=DesY;count<DesY+zoomY;count++)
+					{
+					 if (zoomX>1) 
+						   DIB_16BPP_HLine(DestSurf, DesX, DesX + zoomX, count, XLATEOBJ_iXlate(ColorTranslation, color));
+					 else
+						   DIB_16BPP_PutPixel(DestSurf, DesX, count, XLATEOBJ_iXlate(ColorTranslation, color));
+					}						
 					}
 				}		  
       break;
