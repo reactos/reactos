@@ -22,7 +22,7 @@ typedef unsigned long cpureg_t;   /* Full-sized register.                    */
 
 typedef struct
 {
-} PACKED execution_context_t;
+} PACKED cpu_user_regs;
 
 /*
  * NB. This may become a 64-bit count with no shift. If this happens then the 
@@ -63,24 +63,8 @@ typedef struct {
 	unsigned long bank1_regs[16]; // bank1 regs (r16-r31) when bank0 active
 	unsigned long rrs[8];	// region registers
 	unsigned long krs[8];	// kernel registers
-	unsigned long pkrs[8]; // protection key registers
-	// FIXME:  These shouldn't be here as they can be overwritten by guests
-	// and validation at TLB miss time would be too expensive.
-	TR_ENTRY itrs[NITRS];
-	TR_ENTRY dtrs[NDTRS];
-	TR_ENTRY itlb;
-	TR_ENTRY dtlb;
-	unsigned long itlb_pte;
-	unsigned long dtlb_pte;
-	unsigned long irr[4];
-	unsigned long insvc[4];
-	unsigned long iva;
-	unsigned long dcr;
-	unsigned long itc;
-	unsigned long domain_itm;
-	unsigned long domain_itm_last;
-	unsigned long xen_itm;
-	unsigned long xen_timer_interval;
+	unsigned long pkrs[8];	// protection key registers
+	unsigned long tmp[8];	// temp registers (e.g. for hyperprivops)
 //} PACKED arch_shared_info_t;
 } arch_vcpu_info_t;		// DON'T PACK 
 
@@ -91,10 +75,17 @@ typedef struct {
  * The following is all CPU context. Note that the i387_ctxt block is filled 
  * in by FXSAVE if the CPU has feature FXSR; otherwise FSAVE is used.
  */
-typedef struct {
+typedef struct vcpu_guest_context {
     //unsigned long flags;
-} PACKED full_execution_context_t;
+} PACKED vcpu_guest_context_t;
 
 #endif /* !__ASSEMBLY__ */
+
+#define	XEN_HYPER_RFI			1
+#define	XEN_HYPER_RSM_PSR_DT		2
+#define	XEN_HYPER_SSM_PSR_DT		3
+#define	XEN_HYPER_COVER			4
+#define	XEN_HYPER_ITC_D			5
+#define	XEN_HYPER_ITC_I			6
 
 #endif /* __HYPERVISOR_IF_IA64_H__ */

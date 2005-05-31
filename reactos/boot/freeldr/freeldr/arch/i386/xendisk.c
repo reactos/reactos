@@ -413,24 +413,19 @@ XenDiskProbe()
   for (Disk = 0; Disk < XenDiskCount; Disk++)
     {
       XenDiskInfo[Disk].SectorCount = Probe[Disk].capacity;
-      switch (VDISK_TYPE(Probe[Disk].info))
+      if (0 != (Probe[Disk].info & VDISK_REMOVABLE))
         {
-          case VDISK_TYPE_FLOPPY:
-            XenDiskInfo[Disk].DriveNumber = FloppyNumber++;
-            break;
-          case VDISK_TYPE_CDROM:
-            XenDiskInfo[Disk].DriveNumber = CDRomNumber--;
-            break;
-          case VDISK_TYPE_DISK:
-            XenDiskInfo[Disk].DriveNumber = HarddiskNumber++;
-            break;
-          case VDISK_TYPE_TAPE:
-          case VDISK_TYPE_OPTICAL:
-          default:
-            XenDiskInfo[Disk].DriveNumber = 0xff;
-            break;
+          XenDiskInfo[Disk].DriveNumber = FloppyNumber++;
         }
-      XenDiskInfo[Disk].BytesPerSector = 512;
+      else if (0 != (Probe[Disk].info & VDISK_CDROM))
+        {
+          XenDiskInfo[Disk].DriveNumber = CDRomNumber--;
+        }
+      else
+        {
+          XenDiskInfo[Disk].DriveNumber = HarddiskNumber++;
+        }
+      XenDiskInfo[Disk].BytesPerSector = Probe[Disk].sector_size;
       XenDiskInfo[Disk].XenDevice = Probe[Disk].device;
       XenDiskInfo[Disk].XenInfo = Probe[Disk].info;
     }

@@ -31,19 +31,19 @@
 #ifndef __ASM_EVTCHN_H__
 #define __ASM_EVTCHN_H__
 
-#include <hypervisor.h>
+#include <hypercall.h>
 #include <event_channel.h>
 
 /*
  * LOW-LEVEL DEFINITIONS
  */
 
-static inline void notify_via_evtchn(int port)
+static inline int notify_via_evtchn(int port)
 {
     evtchn_op_t op;
     op.cmd = EVTCHNOP_send;
     op.u.send.local_port = port;
-    (void)HYPERVISOR_event_channel_op(&op);
+    return HYPERVISOR_event_channel_op(&op);
 }
 
 /*

@@ -280,11 +280,12 @@ typedef struct {
     u16        __pad;
     u32        blkif_handle;  /*  4: ...ditto...                         */
     blkif_pdev_t pdevice;     /*  8 */
-    blkif_vdev_t vdevice;     /* 12: Interface-specific id for this VBD. */
-    u16        readonly;      /* 14: Non-zero -> VBD isn't writable.     */
+    u32        dev_handle;    /* 12: Extended device id field.           */
+    blkif_vdev_t vdevice;     /* 16: Interface-specific id for this VBD. */
+    u16        readonly;      /* 18: Non-zero -> VBD isn't writable.     */
     /* OUT */
-    u32        status;        /* 16 */
-} PACKED blkif_be_vbd_create_t; /* 20 bytes */
+    u32        status;        /* 20 */
+} PACKED blkif_be_vbd_create_t; /* 24 bytes */
 
 /* CMSG_BLKIF_BE_VBD_DESTROY */
 typedef struct {

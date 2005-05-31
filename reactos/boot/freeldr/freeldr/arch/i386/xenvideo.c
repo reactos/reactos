@@ -106,19 +106,39 @@ XenVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y)
     {
       switch(Ch)
         {
+        case 0xda: /* top-left single corner */
+        case 0xbf: /* top-right single corner */
+        case 0xc0: /* bottom-left single corner */
+        case 0xd9: /* bottom-right single corner */
         case 0xc9: /* top-left double corner */
         case 0xbb: /* top-right double corner */
         case 0xc8: /* bottom-left double corner */
         case 0xbc: /* bottom-right double corner */
+        case 0xd5: /* top-left single/double corner */
+        case 0xb8: /* top-right single/double corner */
+        case 0xd4: /* bottom-left single/double corner */
+        case 0xbe: /* bottom-right single/double corner */
+        case 0xd6: /* top-left single/double corner */
+        case 0xb7: /* top-right single/double corner */
+        case 0xd3: /* bottom-left single/double corner */
+        case 0xbd: /* bottom-right single/double corner */
           Ch = '+';
           break;
+        case 0xc4: /* horizontal single */
         case 0xcd: /* horizontal double */
           Ch = '-';
           break;
+        case 0xb3: /* vertical single */
         case 0xba: /* vertical double */
           Ch = '|';
           break;
         case 0xb1: /* dotted pattern */
+          Ch = ' ';
+          break;
+        case 0xdb: /* progress bar, completed */
+          Ch = '*';
+          break;
+        case 0xb2: /* progress bar, to do */
           Ch = ' ';
           break;
         }
@@ -184,7 +204,11 @@ XenVideoCopyOffScreenBufferToVRAM(PVOID Buffer)
           BufPtr += 2;
         }
     }
-  AnsiMoveToPos(COLS, ROWS);
+  if (COLS - 1 != CurrentX || ROWS - 1 != CurrentY)
+    {
+      AnsiMoveToPos(COLS - 1, ROWS - 1);
+    }
+
   XenConsFlush();
 }
 VOID

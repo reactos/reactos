@@ -42,7 +42,6 @@
 #define __HYPERVISOR_set_debugreg          8
 #define __HYPERVISOR_get_debugreg          9
 #define __HYPERVISOR_update_descriptor    10
-#define __HYPERVISOR_set_fast_trap        11 /* x86/32 only */
 #define __HYPERVISOR_dom_mem_op           12
 #define __HYPERVISOR_multicall            13
 #define __HYPERVISOR_update_va_mapping    14
@@ -472,6 +471,8 @@ typedef struct {
 #define SIF_USB_BE_DOMAIN (1<<6)  /* Is this a usb backend domain? */
 /* For use in guest OSes. */
 extern shared_info_t *HYPERVISOR_shared_info;
+
+typedef u64 cpumap_t;
 
 #endif /* !__ASSEMBLY__ */
 

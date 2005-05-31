@@ -30,7 +30,7 @@
 #ifndef __ASM_XEN__CTRL_IF_H__
 #define __ASM_XEN__CTRL_IF_H__
 
-#include <hypervisor.h>
+#include <hypercall.h>
 
 typedef control_msg_t ctrl_msg_t;
 

@@ -83,26 +83,16 @@ DEFINE_RING_TYPES(blkif, blkif_request_t, blkif_response_t);
  * of vdisk_t elements.
  */
 
-/* XXX SMH: Type values below are chosen to match ide_xxx in Linux ide.h. */
-#define VDISK_TYPE_FLOPPY  0x00
-#define VDISK_TYPE_TAPE    0x01
-#define VDISK_TYPE_CDROM   0x05
-#define VDISK_TYPE_OPTICAL 0x07
-#define VDISK_TYPE_DISK    0x20 
+#define VDISK_CDROM        0x1
+#define VDISK_REMOVABLE    0x2
+#define VDISK_READONLY     0x4
 
-#define VDISK_TYPE_MASK    0x3F
-#define VDISK_TYPE(_x)     ((_x) & VDISK_TYPE_MASK) 
-
-/* The top two bits of the type field encode various flags. */
-#define VDISK_FLAG_RO      0x40
-#define VDISK_FLAG_VIRT    0x80
-#define VDISK_READONLY(_x) ((_x) & VDISK_FLAG_RO)
-#define VDISK_VIRTUAL(_x)  ((_x) & VDISK_FLAG_VIRT) 
-
-typedef struct {
+typedef struct vdisk {
     blkif_sector_t capacity;     /*  0: Size in terms of 512-byte sectors.   */
     blkif_vdev_t   device;       /*  8: Device number (opaque 16 bit value). */
     u16            info;         /* 10: Device type and flags (VDISK_*).     */
-} PACKED vdisk_t; /* 12 bytes */
+    u16            sector_size;  /* 12: Minimum alignment for requests.      */
+    u16            _pad;
+} PACKED vdisk_t; /* 16 bytes */
 
 #endif /* __XEN_PUBLIC_IO_BLKIF_H__ */

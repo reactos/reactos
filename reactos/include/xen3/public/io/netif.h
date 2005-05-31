@@ -12,7 +12,8 @@
 typedef struct {
     memory_t addr;   /*  0: Machine address of packet.  */
     MEMORY_PADDING;
-    u16      id;     /*  8: Echoed in response message. */
+    u16      csum_blank:1; /* Proto csum field blank?   */
+    u16      id:15;  /*  8: Echoed in response message. */
     u16      size;   /* 10: Packet size in bytes.       */
 } PACKED netif_tx_request_t; /* 12 bytes */
 
@@ -29,7 +30,8 @@ typedef struct {
 typedef struct {
     memory_t addr;   /*  0: Machine address of packet.              */
     MEMORY_PADDING;
-    u16      id;     /*  8:  */
+    u16      csum_valid:1; /* Protocol checksum is validated?       */
+    u16      id:15;  /*  8:  */
     s16      status; /* 10: -ve: BLKIF_RSP_* ; +ve: Rx'ed pkt size. */
 } PACKED netif_rx_response_t; /* 12 bytes */
 

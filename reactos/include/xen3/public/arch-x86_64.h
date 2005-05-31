@@ -25,15 +25,11 @@
  * A number of GDT entries are reserved by Xen. These are not situated at the
  * start of the GDT because some stupid OSes export hard-coded selector values
  * in their ABI. These hard-coded values are always near the start of the GDT,
- * so Xen places itself out of the way.
- * 
- * NB. The reserved range is inclusive (that is, both FIRST_RESERVED_GDT_ENTRY
- * and LAST_RESERVED_GDT_ENTRY are reserved).
+ * so Xen places itself out of the way, at the far end of the GDT.
  */
-#define NR_RESERVED_GDT_ENTRIES    72
-#define FIRST_RESERVED_GDT_ENTRY   256
-#define LAST_RESERVED_GDT_ENTRY    \
-  (FIRST_RESERVED_GDT_ENTRY + NR_RESERVED_GDT_ENTRIES - 1)
+#define FIRST_RESERVED_GDT_PAGE  14
+#define FIRST_RESERVED_GDT_BYTE  (FIRST_RESERVED_GDT_PAGE * 4096)
+#define FIRST_RESERVED_GDT_ENTRY (FIRST_RESERVED_GDT_BYTE / 8)
 
 /*
  * 64-bit segment selectors
@@ -42,12 +38,12 @@
  * installing their own GDT.
  */
 
-#define FLAT_RING3_CS32 0x0823  /* GDT index 260 */
-#define FLAT_RING3_CS64 0x0833  /* GDT index 261 */
-#define FLAT_RING3_DS32 0x082b  /* GDT index 262 */
+#define FLAT_RING3_CS32 0xe023  /* GDT index 260 */
+#define FLAT_RING3_CS64 0xe033  /* GDT index 261 */
+#define FLAT_RING3_DS32 0xe02b  /* GDT index 262 */
 #define FLAT_RING3_DS64 0x0000  /* NULL selector */
-#define FLAT_RING3_SS32 0x082b  /* GDT index 262 */
-#define FLAT_RING3_SS64 0x082b  /* GDT index 262 */
+#define FLAT_RING3_SS32 0xe02b  /* GDT index 262 */
+#define FLAT_RING3_SS64 0xe02b  /* GDT index 262 */
 
 #define FLAT_KERNEL_DS64 FLAT_RING3_DS64
 #define FLAT_KERNEL_DS32 FLAT_RING3_DS32
@@ -98,7 +94,7 @@
  * int HYPERVISOR_switch_to_user(void)
  * All arguments are on the kernel stack, in the following format.
  * Never returns if successful. Current kernel context is lost.
- * If flags contains ECF_IN_SYSCALL:
+ * If flags contains VGCF_IN_SYSCALL:
  *   Restore RAX, RIP, RFLAGS, RSP. 
  *   Discard R11, RCX, CS, SS.
  * Otherwise:
@@ -106,7 +102,7 @@
  * All other registers are saved on hypercall entry and restored to user.
  */
 /* Guest exited in SYSCALL context? Return to guest with SYSRET? */
-#define ECF_IN_SYSCALL (1<<8)
+#define VGCF_IN_SYSCALL (1<<8)
 struct switch_to_user {
     /* Top of stack (%rsp at point of hypercall). */
     u64 rax, r11, rcx, flags, rip, cs, rflags, rsp, ss;
@@ -139,71 +135,74 @@ typedef struct {
     memory_t address; /* 8: code address                                  */
 } PACKED trap_info_t; /* 16 bytes */
 
-typedef struct xen_regs
-{
+typedef struct cpu_user_regs {
     u64 r15;
     u64 r14;
     u64 r13;
     u64 r12;
-    union { u64 rbp, ebp; } PACKED;
-    union { u64 rbx, ebx; } PACKED;
+    union { u64 rbp, ebp; };
+    union { u64 rbx, ebx; };
     u64 r11;
     u64 r10;
     u64 r9;
     u64 r8;
-    union { u64 rax, eax; } PACKED;
-    union { u64 rcx, ecx; } PACKED;
-    union { u64 rdx, edx; } PACKED;
-    union { u64 rsi, esi; } PACKED;
-    union { u64 rdi, edi; } PACKED;
+    union { u64 rax, eax; };
+    union { u64 rcx, ecx; };
+    union { u64 rdx, edx; };
+    union { u64 rsi, esi; };
+    union { u64 rdi, edi; };
     u32 error_code;    /* private */
     u32 entry_vector;  /* private */
-    union { u64 rip, eip; } PACKED;
-    u64 cs;
-    union { u64 rflags, eflags; } PACKED;
-    union { u64 rsp, esp; } PACKED;
-    u64 ss;
-    u64 es;
-    u64 ds;
-    u64 fs;      /* Non-zero => takes precedence over fs_base.     */
-    u64 gs;      /* Non-zero => takes precedence over gs_base_app. */
-    u64 fs_base;
-    u64 gs_base_kernel;
-    u64 gs_base_user;
-} PACKED execution_context_t;
+    union { u64 rip, eip; };
+    u16 cs;
+    u8  saved_upcall_mask;
+    u8  _pad0[5];
+    union { u64 rflags, eflags; };
+    union { u64 rsp, esp; };
+    u16 ss, _pad1[3];
+    u16 es, _pad2[3];
+    u16 ds, _pad3[3];
+    u16 fs, _pad4[3]; /* Non-zero => takes precedence over fs_base.      */
+    u16 gs, _pad5[3]; /* Non-zero => takes precedence over gs_base_user. */
+} cpu_user_regs_t;
 
 typedef u64 tsc_timestamp_t; /* RDTSC timestamp */
 
 /*
- * The following is all CPU context. Note that the i387_ctxt block is filled 
+ * The following is all CPU context. Note that the fpu_ctxt block is filled 
  * in by FXSAVE if the CPU has feature FXSR; otherwise FSAVE is used.
  */
-typedef struct {
-#define ECF_I387_VALID (1<<0)
-#define ECF_VMX_GUEST  (1<<1)
-#define ECF_IN_KERNEL (1<<2)
-    unsigned long flags;
-    execution_context_t cpu_ctxt;           /* User-level CPU registers     */
-    char          fpu_ctxt[512];            /* User-level FPU registers     */
+typedef struct vcpu_guest_context {
+#define VGCF_I387_VALID (1<<0)
+#define VGCF_VMX_GUEST  (1<<1)
+#define VGCF_IN_KERNEL  (1<<2)
+    unsigned long flags;                    /* VGCF_* flags                 */
+    cpu_user_regs_t user_regs;              /* User-level CPU registers     */
+    struct { char x[512]; } fpu_ctxt        /* User-level FPU registers     */
+    __attribute__((__aligned__(16)));       /* (needs 16-byte alignment)    */
     trap_info_t   trap_ctxt[256];           /* Virtual IDT                  */
     unsigned long ldt_base, ldt_ents;       /* LDT (linear address, # ents) */
     unsigned long gdt_frames[16], gdt_ents; /* GDT (machine frames, # ents) */
-    unsigned long kernel_ss, kernel_esp;  /* Virtual TSS (only SS1/ESP1)  */
+    unsigned long kernel_ss, kernel_sp;     /* Virtual TSS (only SS1/SP1)   */
     unsigned long pt_base;                  /* CR3 (pagetable base)         */
     unsigned long debugreg[8];              /* DB0-DB7 (debug registers)    */
     unsigned long event_callback_eip;
     unsigned long failsafe_callback_eip;
     unsigned long syscall_callback_eip;
     unsigned long vm_assist;                /* VMASST_TYPE_* bitmap */
-} PACKED full_execution_context_t;
+    /* Segment base addresses. */
+    u64           fs_base;
+    u64           gs_base_kernel;
+    u64           gs_base_user;
+} vcpu_guest_context_t;
 
 typedef struct {
     /* MFN of a table of MFNs that make up p2m table */
     u64 pfn_to_mfn_frame_list;
-} PACKED arch_shared_info_t;
+} arch_shared_info_t;
 
 typedef struct {
-} PACKED arch_vcpu_info_t;
+} arch_vcpu_info_t;
 
 #endif /* !__ASSEMBLY__ */
 
