@@ -10,6 +10,9 @@
 	<xi:include href="baseaddress.xml" />
 
 	<define name="_M_IX86" />
+	<if property="MP" value="1">
+		<define name="CONFIG_SMP" value="1" />
+	</if>
 	<if property="DBG" value="1">
 		<define name="DBG" value="1" />
 		<property name="DBG_OR_KDBG" value="true" />
