@@ -42,5 +42,5 @@ DriverEntry(
 	DriverObject->MajorFunction[IRP_MJ_PNP] = SerialPnp;
 	DriverObject->MajorFunction[IRP_MJ_POWER] = SerialPower;
 
-	return DetectLegacyDevices(DriverObject);
+	return STATUS_SUCCESS;
 }

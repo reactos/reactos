@@ -163,6 +163,7 @@ SerialPnpStartDevice(
 		for (j = 0; j < ResourceList->List[i].PartialResourceList.Count; j++)
 		{
 			PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor = &ResourceList->List[i].PartialResourceList.PartialDescriptors[j];
+			PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptorTranslated = &ResourceListTranslated->List[i].PartialResourceList.PartialDescriptors[j];
 			switch (PartialDescriptor->Type)
 			{
 				case CmResourceTypePort:
@@ -173,16 +174,14 @@ SerialPnpStartDevice(
 					DeviceExtension->BaseAddress = PartialDescriptor->u.Port.Start.u.LowPart;
 					break;
 				case CmResourceTypeInterrupt:
-					if (Dirql != 0)
-						return STATUS_UNSUCCESSFUL;
-					Dirql = (KIRQL)ResourceListTranslated->List[i].PartialResourceList.PartialDescriptors[j].u.Interrupt.Level;
-					Vector = ResourceListTranslated->List[i].PartialResourceList.PartialDescriptors[j].u.Interrupt.Vector;
-					Affinity = PartialDescriptor->u.Interrupt.Affinity;
-					if (PartialDescriptor->Flags & CM_RESOURCE_INTERRUPT_LATCHED)
+					Dirql = (KIRQL)PartialDescriptorTranslated->u.Interrupt.Level;
+					Vector = PartialDescriptorTranslated->u.Interrupt.Vector;
+					Affinity = PartialDescriptorTranslated->u.Interrupt.Affinity;
+					if (PartialDescriptorTranslated->Flags & CM_RESOURCE_INTERRUPT_LATCHED)
 						InterruptMode = Latched;
 					else
 						InterruptMode = LevelSensitive;
-					ShareInterrupt = (PartialDescriptor->ShareDisposition == CmResourceShareShared);
+					ShareInterrupt = (PartialDescriptorTranslated->ShareDisposition == CmResourceShareShared);
 					break;
 			}
 		}
