@@ -372,12 +372,16 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
    int DesX;
    int DesY;
    int color;
+   int zoomX;
 
    SrcSizeY = SourceRect->bottom;
    SrcSizeX = SourceRect->right;
   
    DesSizeY = DestRect->bottom;
-   DesSizeX = DestRect->right;   
+   DesSizeX = DestRect->right; 
+
+   zoomX = DesSizeX / SrcSizeX;
+   if (zoomX==0) zoomX=1;
 
     switch(SourceSurf->iBitmapFormat)
     {
@@ -394,7 +398,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 				if (sy > SourceRect->bottom) break;
 
-				for (DesX=0; DesX<DestRect->right; DesX++)
+				for (DesX=0; DesX<DestRect->right; DesX+=zoomX)
 				{
 					if (DesSizeX>SrcSizeX)
 						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
@@ -405,9 +409,17 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 				    if(DIB_1BPP_GetPixel(SourceSurf, sx, sy) == 0)
 					{
-					 DIB_4BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, 0));
-					 } else {
-                     DIB_4BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, 1));
+					 if (zoomX>1) 
+						DIB_4BPP_HLine(DestSurf, DesX, DesX + zoomX, DesY, XLATEOBJ_iXlate(ColorTranslation, 0));
+					else
+					    DIB_4BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, 0));
+					 
+					 } else {                     
+					 if (zoomX>1) 
+						DIB_4BPP_HLine(DestSurf, DesX, DesX + zoomX, DesY, XLATEOBJ_iXlate(ColorTranslation, 1));
+					else
+					    DIB_4BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, 1));
+
                      }					
 					}
 				}
@@ -428,7 +440,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 				if (sy > SourceRect->bottom) break;
 
 
-				for (DesX=0; DesX<DestRect->right; DesX++)
+				for (DesX=0; DesX<DestRect->right; DesX+=zoomX)
 				{
 					if (DesSizeX>SrcSizeX)
 						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
@@ -438,7 +450,12 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 					if (sx > SourceRect->right) break;
 
 					color = DIB_4BPP_GetPixel(SourceSurf, sx, sy);
-					DIB_4BPP_PutPixel(DestSurf, DesX, DesY, color);
+					
+					if (zoomX>1) 
+						DIB_4BPP_HLine(DestSurf, DesX, DesX + zoomX, DesY, color);
+					else
+					    DIB_4BPP_PutPixel(DestSurf, DesX, DesY, color);
+
 					}
 				}
       break;
@@ -456,7 +473,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                 				
 				if (sy > SourceRect->bottom) break;
 
-				for (DesX=0; DesX<DestRect->right; DesX++)
+				for (DesX=0; DesX<DestRect->right; DesX+=zoomX)
 				{
 					if (DesSizeX>SrcSizeX)
 						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
@@ -466,7 +483,12 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 					if (sx > SourceRect->right) break;
 
 					color = DIB_8BPP_GetPixel(SourceSurf, sx, sy);
-					DIB_4BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
+					
+					if (zoomX>1) 
+						DIB_4BPP_HLine(DestSurf, DesX, DesX + zoomX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
+					else
+					    DIB_4BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
+
 					}
 				}
 		break;
@@ -484,7 +506,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                 				
 				if (sy > SourceRect->bottom) break;
 
-				for (DesX=0; DesX<DestRect->right; DesX++)
+				for (DesX=0; DesX<DestRect->right; DesX+=zoomX)
 				{
 					if (DesSizeX>SrcSizeX)
 						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
@@ -494,7 +516,12 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 					if (sx > SourceRect->right) break;
 
 					color = DIB_16BPP_GetPixel(SourceSurf, sx, sy);
-					DIB_4BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
+
+					if (zoomX>1) 
+						DIB_4BPP_HLine(DestSurf, DesX, DesX + zoomX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
+					else
+					    DIB_4BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
+
 					}
 				}
 	  break;
@@ -512,7 +539,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                 				
 				if (sy > SourceRect->bottom) break;
 
-				for (DesX=0; DesX<DestRect->right; DesX++)
+				for (DesX=0; DesX<DestRect->right; DesX+=zoomX)
 				{
 					if (DesSizeX>SrcSizeX)
 						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
@@ -522,7 +549,12 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 					if (sx > SourceRect->right) break;
 
 					color = DIB_24BPP_GetPixel(SourceSurf, sx, sy);
-					DIB_4BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
+					
+					if (zoomX>1) 
+						DIB_4BPP_HLine(DestSurf, DesX, DesX + zoomX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
+					else
+					    DIB_4BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
+
 					}
 				}		  
       break;
@@ -540,7 +572,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                 				
 				if (sy > SourceRect->bottom) break;
 
-				for (DesX=0; DesX<DestRect->right; DesX++)
+				for (DesX=0; DesX<DestRect->right; DesX+=zoomX)
 				{
 					if (DesSizeX>SrcSizeX)
 						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
@@ -550,7 +582,12 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 					if (sx > SourceRect->right) break;
 
 					color = DIB_32BPP_GetPixel(SourceSurf, sx, sy);
-					DIB_4BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
+					
+					if (zoomX>1) 
+						DIB_4BPP_HLine(DestSurf, DesX, DesX + zoomX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
+					else
+					    DIB_4BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
+
 					}
 				}		  
       break;
