@@ -811,7 +811,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Null","Type",0x00010001,0x00000001
 
 ; Serial device driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Serial","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Serial","Group",0x00000000,"Base"
+HKLM,"SYSTEM\CurrentControlSet\Services\Serial","Group",0x00000000,"Extended Base"
 HKLM,"SYSTEM\CurrentControlSet\Services\Serial","ImagePath",0x00020000,"system32\drivers\serial.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Serial","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Serial","Type",0x00010001,0x00000001
@@ -870,8 +870,15 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","Group",0x00000000,"Pointer Port"
 HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","ImagePath",0x00020000,"system32\drivers\sermouse.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","Type",0x00010001,0x00000001
+;hard coded values for some serial mice
+HKLM,"SYSTEM\CurrentControlSet\Enum\*PNP0F01","Service",0x0000000,"sermouse"
+HKLM,"SYSTEM\CurrentControlSet\Enum\*PNP0F01","ClassGUID",0x0000000,"{4D36E96F-E325-11CE-BFC1-08002BE10318}"
+HKLM,"SYSTEM\CurrentControlSet\Enum\*PNP0F08","Service",0x0000000,"sermouse"
+HKLM,"SYSTEM\CurrentControlSet\Enum\*PNP0F08","ClassGUID",0x0000000,"{4D36E96F-E325-11CE-BFC1-08002BE10318}"
+HKLM,"SYSTEM\CurrentControlSet\Enum\*PNP0F09","Service",0x0000000,"sermouse"
+HKLM,"SYSTEM\CurrentControlSet\Enum\*PNP0F09","ClassGUID",0x0000000,"{4D36E96F-E325-11CE-BFC1-08002BE10318}"
 
 ; TCP/IP driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","ErrorControl",0x00010001,0x00000001
