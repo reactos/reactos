@@ -2,7 +2,6 @@
 	<importlibrary definition="iphlpapi.spec.def" />
 	<include base="iphlpapi">include</include>
 	<include base="ReactOS">include/wine</include>
-	<define name="YDEBUG" />
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
 	<define name="__REACTOS__" />
