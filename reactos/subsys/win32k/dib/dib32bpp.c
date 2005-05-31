@@ -79,6 +79,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
   switch(BltInfo->SourceSurface->iBitmapFormat)
   {
     case BMF_1BPP:
+	  
       sx = BltInfo->SourcePoint.x;
       sy = BltInfo->SourcePoint.y;
 
@@ -541,6 +542,7 @@ BOOLEAN ScaleRectAvg32(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   return TRUE;
 }
 
+
 //NOTE: If you change something here, please do the same in other dibXXbpp.c files!
 BOOLEAN DIB_32BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                             RECTL* DestRect, RECTL *SourceRect,
@@ -548,19 +550,173 @@ BOOLEAN DIB_32BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                             CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
                             ULONG Mode)
 {
-  DPRINT("DIB_32BPP_StretchBlt: Source BPP: %u, srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
+  
+   int SrcSizeY;
+   int SrcSizeX;
+   int DesSizeY;
+   int DesSizeX;      
+   int sx;
+   int sy;
+   int DesX;
+   int DesY;
+   int color;
+
+   DPRINT("DIB_32BPP_StretchBlt: Source BPP: %u, srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
      BitsPerFormat(SourceSurf->iBitmapFormat), SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom,
      DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
+
+   SrcSizeY = SourceRect->bottom;
+   SrcSizeX = SourceRect->right;
+  
+   DesSizeY = DestRect->bottom;
+   DesSizeX = DestRect->right;   
 
     switch(SourceSurf->iBitmapFormat)
     {
       case BMF_1BPP:
+		   /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
+   		   /* This is a reference implementation, it hasn't been optimized for speed */
+
+ 		  	for (DesY=0; DesY<DestRect->bottom; DesY++)
+			{				
+				if (DesSizeY>SrcSizeY)
+				    sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+				else
+                    sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY);                 				
+
+				if (sy > SourceRect->bottom) break;
+
+				for (DesX=0; DesX<DestRect->right; DesX++)
+				{
+					if (DesSizeY>SrcSizeY)
+						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
+					else
+						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
+					
+					if (sx > SourceRect->right) break;
+
+				    if(DIB_1BPP_GetPixel(SourceSurf, sx, sy) == 0)
+					{
+					 DIB_32BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, 0));
+					 } else {
+                     DIB_32BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, 1));
+                     }					
+					}
+				}
+      break;
+
       case BMF_4BPP:
-      case BMF_8BPP:
+		   /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
+   		   /* This is a reference implementation, it hasn't been optimized for speed */
+
+		  	for (DesY=0; DesY<DestRect->bottom; DesY++)
+			{				
+				if (DesSizeY>SrcSizeY)
+				    sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+				else
+                    sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+                				
+
+				if (sy > SourceRect->bottom) break;
+
+
+				for (DesX=0; DesX<DestRect->right; DesX++)
+				{
+					if (DesSizeY>SrcSizeY)
+						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
+					else
+						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
+					
+					if (sx > SourceRect->right) break;
+
+					color = DIB_4BPP_GetPixel(SourceSurf, sx, sy);
+					DIB_32BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
+					}
+				}
+      break;
+
+      case BMF_8BPP:		
+  		   /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
+   		   /* This is a reference implementation, it hasn't been optimized for speed */
+
+		  	for (DesY=0; DesY<DestRect->bottom; DesY++)
+			{
+				if (DesSizeY>SrcSizeY)
+				    sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+				else
+                    sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+                				
+				if (sy > SourceRect->bottom) break;
+
+				for (DesX=0; DesX<DestRect->right; DesX++)
+				{
+					if (DesSizeY>SrcSizeY)
+						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
+					else
+						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
+					
+					if (sx > SourceRect->right) break;
+
+					color = DIB_8BPP_GetPixel(SourceSurf, sx, sy);
+					DIB_32BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
+					}
+				}
+		break;
+
       case BMF_16BPP:
+		   /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
+   		   /* This is a reference implementation, it hasn't been optimized for speed */
+
+		  	for (DesY=0; DesY<DestRect->bottom; DesY++)
+			{
+				if (DesSizeY>SrcSizeY)
+				    sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+				else
+                    sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+                				
+				if (sy > SourceRect->bottom) break;
+
+				for (DesX=0; DesX<DestRect->right; DesX++)
+				{
+					if (DesSizeY>SrcSizeY)
+						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
+					else
+						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
+					
+					if (sx > SourceRect->right) break;
+
+					color = DIB_16BPP_GetPixel(SourceSurf, sx, sy);
+					DIB_32BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
+					}
+				}
+	  break;
+
       case BMF_24BPP:
-         /* Not implemented yet. */
-         return FALSE;
+  		   /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
+   		   /* This is a reference implementation, it hasn't been optimized for speed */
+
+		  	for (DesY=0; DesY<DestRect->bottom; DesY++)
+			{
+				if (DesSizeY>SrcSizeY)
+				    sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+				else
+                    sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+                				
+				if (sy > SourceRect->bottom) break;
+
+				for (DesX=0; DesX<DestRect->right; DesX++)
+				{
+					if (DesSizeY>SrcSizeY)
+						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
+					else
+						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
+					
+					if (sx > SourceRect->right) break;
+
+					color = DIB_24BPP_GetPixel(SourceSurf, sx, sy);
+					DIB_32BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
+					}
+				}		  
       break;
 
       case BMF_32BPP:
