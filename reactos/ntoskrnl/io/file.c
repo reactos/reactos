@@ -844,44 +844,39 @@ IoCreateFile(OUT PHANDLE  FileHandle,
      DPRINT1("FIXME: IO_CHECK_CREATE_PARAMETERS not yet supported!\n");
    }
 
-   if (CreateDisposition == FILE_OPEN ||
-       CreateDisposition == FILE_OPEN_IF)
+   Status = ObOpenObjectByName(ObjectAttributes,
+                               NULL,
+                               NULL,
+                               AccessMode,
+                               DesiredAccess,
+                               NULL,
+                               &LocalHandle);
+
+   if (NT_SUCCESS(Status))
    {
-
-      Status = ObOpenObjectByName(ObjectAttributes,
-                                  NULL,
-                                  NULL,
-                                  AccessMode,
-                                  DesiredAccess,
-                                  NULL,
-                                  &LocalHandle);
-
-      if (NT_SUCCESS(Status))
+      Status = ObReferenceObjectByHandle(LocalHandle,
+                                         DesiredAccess,
+                                         NULL,
+                                         AccessMode,
+                                         (PVOID*)&DeviceObject,
+                                         NULL);
+      ZwClose(LocalHandle);
+      if (!NT_SUCCESS(Status))
       {
-         Status = ObReferenceObjectByHandle(LocalHandle,
-                                            DesiredAccess,
-                                            NULL,
-                                            AccessMode,
-                                            (PVOID*)&DeviceObject,
-                                            NULL);
-         ZwClose(LocalHandle);
-         if (!NT_SUCCESS(Status))
-         {
-            return Status;
-         }
-         if (BODY_TO_HEADER(DeviceObject)->Type != IoDeviceObjectType)
-         {
-            ObDereferenceObject (DeviceObject);
-            return STATUS_OBJECT_NAME_COLLISION;
-         }
-         /* FIXME: wt... */
-         FileObject = IoCreateStreamFileObject(NULL, DeviceObject);
-         /* HACK */
-         FileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
-         DPRINT("%wZ\n", ObjectAttributes->ObjectName);
-
-         ObDereferenceObject (DeviceObject);
+         return Status;
       }
+      if (BODY_TO_HEADER(DeviceObject)->Type != IoDeviceObjectType)
+      {
+         ObDereferenceObject (DeviceObject);
+         return STATUS_OBJECT_NAME_COLLISION;
+      }
+      /* FIXME: wt... */
+      FileObject = IoCreateStreamFileObject(NULL, DeviceObject);
+      /* HACK */
+      FileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
+      DPRINT("%wZ\n", ObjectAttributes->ObjectName);
+
+      ObDereferenceObject (DeviceObject);
    }
 
 
