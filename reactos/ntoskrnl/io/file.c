@@ -51,9 +51,9 @@ IopCreateFile(PVOID ObjectBody,
   NTSTATUS Status;
 
   DPRINT("IopCreateFile(ObjectBody %x, Parent %x, RemainingPath %S)\n",
-  ObjectBody,
-  Parent,
-  RemainingPath);
+         ObjectBody,
+         Parent,
+         RemainingPath);
 
   if (NULL == Parent)
     {
@@ -69,16 +69,16 @@ IopCreateFile(PVOID ObjectBody,
       ParentObjectType != IoFileObjectType)
     {
       DPRINT("Parent [%wZ] is a %S which is neither a file type nor a device type ; remaining path = %S\n",
-        &BODY_TO_HEADER(Parent)->NameInfo->Name,
-        BODY_TO_HEADER(Parent)->Type->Name.Buffer,
-        RemainingPath);
+             &BODY_TO_HEADER(Parent)->NameInfo->Name,
+             BODY_TO_HEADER(Parent)->Type->Name.Buffer,
+             RemainingPath);
       return(STATUS_UNSUCCESSFUL);
     }
 
   Status = ObReferenceObjectByPointer(Parent,
-          STANDARD_RIGHTS_REQUIRED,
-          ParentObjectType,
-          UserMode);
+                                      STANDARD_RIGHTS_REQUIRED,
+                                      ParentObjectType,
+                                      UserMode);
   if (!NT_SUCCESS(Status))
     {
       CPRINT("Failed to reference parent object %x\n", Parent);
@@ -92,56 +92,55 @@ IopCreateFile(PVOID ObjectBody,
       DPRINT("DeviceObject %x\n", DeviceObject);
 
       if (RemainingPath == NULL)
- {
-   FileObject->Flags = FileObject->Flags | FO_DIRECT_DEVICE_OPEN;
-   FileObject->FileName.Buffer = 0;
-   FileObject->FileName.Length = FileObject->FileName.MaximumLength = 0;
- }
+        {
+          FileObject->Flags = FileObject->Flags | FO_DIRECT_DEVICE_OPEN;
+          FileObject->FileName.Buffer = 0;
+          FileObject->FileName.Length = FileObject->FileName.MaximumLength = 0;
+        }
       else
- {
-   if ((DeviceObject->DeviceType != FILE_DEVICE_FILE_SYSTEM)
-       && (DeviceObject->DeviceType != FILE_DEVICE_DISK)
-       && (DeviceObject->DeviceType != FILE_DEVICE_CD_ROM)
-       && (DeviceObject->DeviceType != FILE_DEVICE_TAPE)
-       && (DeviceObject->DeviceType != FILE_DEVICE_NETWORK)
-       && (DeviceObject->DeviceType != FILE_DEVICE_NAMED_PIPE)
-       && (DeviceObject->DeviceType != FILE_DEVICE_MAILSLOT))
-     {
-       CPRINT("Device was wrong type\n");
-       return(STATUS_UNSUCCESSFUL);
-     }
+        {
+          if ((DeviceObject->DeviceType != FILE_DEVICE_FILE_SYSTEM)
+              && (DeviceObject->DeviceType != FILE_DEVICE_DISK)
+              && (DeviceObject->DeviceType != FILE_DEVICE_CD_ROM)
+              && (DeviceObject->DeviceType != FILE_DEVICE_TAPE)
+              && (DeviceObject->DeviceType != FILE_DEVICE_NETWORK)
+              && (DeviceObject->DeviceType != FILE_DEVICE_NAMED_PIPE)
+              && (DeviceObject->DeviceType != FILE_DEVICE_MAILSLOT))
+            {
+              CPRINT("Device was wrong type\n");
+              return(STATUS_UNSUCCESSFUL);
+            }
 
-   if (DeviceObject->DeviceType != FILE_DEVICE_NETWORK
-       && (DeviceObject->DeviceType != FILE_DEVICE_NAMED_PIPE)
-       && (DeviceObject->DeviceType != FILE_DEVICE_MAILSLOT))
-     {
-       if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
-  {
-    DPRINT("Mount the logical volume\n");
-    Status = IoMountVolume(DeviceObject, FALSE);
-    DPRINT("Status %x\n", Status);
-    if (!NT_SUCCESS(Status))
-      {
-        CPRINT("Failed to mount logical volume (Status %x)\n",
-        Status);
-        return(Status);
-      }
-  }
-       DeviceObject = DeviceObject->Vpb->DeviceObject;
-       DPRINT("FsDeviceObject %lx\n", DeviceObject);
-     }
-   RtlpCreateUnicodeString(&(FileObject->FileName),
-             RemainingPath, NonPagedPool);
- }
+          if (DeviceObject->DeviceType != FILE_DEVICE_NETWORK
+              && (DeviceObject->DeviceType != FILE_DEVICE_NAMED_PIPE)
+              && (DeviceObject->DeviceType != FILE_DEVICE_MAILSLOT))
+            {
+              if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
+                {
+                  DPRINT("Mount the logical volume\n");
+                  Status = IoMountVolume(DeviceObject, FALSE);
+                  DPRINT("Status %x\n", Status);
+                  if (!NT_SUCCESS(Status))
+                    {
+                      CPRINT("Failed to mount logical volume (Status %x)\n", Status);
+                      return(Status);
+                    }
+                }
+              DeviceObject = DeviceObject->Vpb->DeviceObject;
+              DPRINT("FsDeviceObject %lx\n", DeviceObject);
+            }
+          RtlpCreateUnicodeString(&(FileObject->FileName),
+                                  RemainingPath, NonPagedPool);
+        }
     }
   else
     {
       /* Parent is a file object */
       if (RemainingPath == NULL)
- {
-   CPRINT("Device is unnamed\n");
-   return STATUS_UNSUCCESSFUL;
- }
+        {
+          CPRINT("Device is unnamed\n");
+          return STATUS_UNSUCCESSFUL;
+        }
 
       DeviceObject = ((PFILE_OBJECT)Parent)->DeviceObject;
       DPRINT("DeviceObject %x\n", DeviceObject);
@@ -149,15 +148,15 @@ IopCreateFile(PVOID ObjectBody,
       FileObject->RelatedFileObject = (PFILE_OBJECT)Parent;
 
       RtlpCreateUnicodeString(&(FileObject->FileName),
-              RemainingPath, NonPagedPool);
+                              RemainingPath, NonPagedPool);
     }
 
   DPRINT("FileObject->FileName %wZ\n",
-  &FileObject->FileName);
+         &FileObject->FileName);
   FileObject->DeviceObject = DeviceObject;
   DPRINT("FileObject %x DeviceObject %x\n",
-  FileObject,
-  DeviceObject);
+         FileObject,
+         DeviceObject);
   FileObject->Vpb = DeviceObject->Vpb;
   FileObject->Type = IO_TYPE_FILE;
 
@@ -760,9 +759,9 @@ IoCreateFile(OUT PHANDLE  FileHandle,
    NTSTATUS  Status = STATUS_SUCCESS;
 
    DPRINT("IoCreateFile(FileHandle %x, DesiredAccess %x, "
-   "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %S)\n",
-   FileHandle,DesiredAccess,ObjectAttributes,
-   ObjectAttributes->ObjectName->Buffer);
+          "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %S)\n",
+          FileHandle,DesiredAccess,ObjectAttributes,
+          ObjectAttributes->ObjectName->Buffer);
 
    ASSERT_IRQL(PASSIVE_LEVEL);
 
@@ -850,38 +849,38 @@ IoCreateFile(OUT PHANDLE  FileHandle,
    {
 
       Status = ObOpenObjectByName(ObjectAttributes,
-                           NULL,
-      NULL,
-      AccessMode,
-      DesiredAccess,
-      NULL,
-      &LocalHandle);
+                                  NULL,
+                                  NULL,
+                                  AccessMode,
+                                  DesiredAccess,
+                                  NULL,
+                                  &LocalHandle);
 
       if (NT_SUCCESS(Status))
       {
          Status = ObReferenceObjectByHandle(LocalHandle,
-                                     DesiredAccess,
-         NULL,
-         AccessMode,
-         (PVOID*)&DeviceObject,
-         NULL);
+                                            DesiredAccess,
+                                            NULL,
+                                            AccessMode,
+                                            (PVOID*)&DeviceObject,
+                                            NULL);
          ZwClose(LocalHandle);
-  if (!NT_SUCCESS(Status))
-  {
-     return Status;
-  }
+         if (!NT_SUCCESS(Status))
+         {
+            return Status;
+         }
          if (BODY_TO_HEADER(DeviceObject)->Type != IoDeviceObjectType)
-  {
-     ObDereferenceObject (DeviceObject);
-     return STATUS_OBJECT_NAME_COLLISION;
-  }
+         {
+            ObDereferenceObject (DeviceObject);
+            return STATUS_OBJECT_NAME_COLLISION;
+         }
          /* FIXME: wt... */
          FileObject = IoCreateStreamFileObject(NULL, DeviceObject);
          /* HACK */
          FileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
          DPRINT("%wZ\n", ObjectAttributes->ObjectName);
 
-  ObDereferenceObject (DeviceObject);
+         ObDereferenceObject (DeviceObject);
       }
    }
 
@@ -889,43 +888,43 @@ IoCreateFile(OUT PHANDLE  FileHandle,
    if (FileObject == NULL)
    {
       Status = ObCreateObject(AccessMode,
-         IoFileObjectType,
-         ObjectAttributes,
-         AccessMode,
-         NULL,
-         sizeof(FILE_OBJECT),
-         0,
-         0,
-         (PVOID*)&FileObject);
+                              IoFileObjectType,
+                              ObjectAttributes,
+                              AccessMode,
+                              NULL,
+                              sizeof(FILE_OBJECT),
+                              0,
+                              0,
+                              (PVOID*)&FileObject);
       if (!NT_SUCCESS(Status))
       {
- DPRINT("ObCreateObject() failed! (Status %lx)\n", Status);
- return Status;
+         DPRINT("ObCreateObject() failed! (Status %lx)\n", Status);
+         return Status;
       }
    }
    RtlMapGenericMask(&DesiredAccess,
-                      &BODY_TO_HEADER(FileObject)->Type->TypeInfo.GenericMapping);
+                     &BODY_TO_HEADER(FileObject)->Type->TypeInfo.GenericMapping);
 
    Status = ObInsertObject ((PVOID)FileObject,
-       NULL,
-       DesiredAccess,
-       0,
-       NULL,
-       &LocalHandle);
+                            NULL,
+                            DesiredAccess,
+                            0,
+                            NULL,
+                            &LocalHandle);
    if (!NT_SUCCESS(Status))
      {
- DPRINT("ObInsertObject() failed! (Status %lx)\n", Status);
- ObDereferenceObject (FileObject);
- return Status;
+       DPRINT("ObInsertObject() failed! (Status %lx)\n", Status);
+       ObDereferenceObject (FileObject);
+       return Status;
      }
 
    if (CreateOptions & FILE_SYNCHRONOUS_IO_ALERT)
      {
- FileObject->Flags |= (FO_ALERTABLE_IO | FO_SYNCHRONOUS_IO);
+       FileObject->Flags |= (FO_ALERTABLE_IO | FO_SYNCHRONOUS_IO);
      }
    if (CreateOptions & FILE_SYNCHRONOUS_IO_NONALERT)
      {
- FileObject->Flags |= FO_SYNCHRONOUS_IO;
+       FileObject->Flags |= FO_SYNCHRONOUS_IO;
      }
 
    if (CreateOptions & FILE_NO_INTERMEDIATE_BUFFERING)
@@ -949,8 +948,8 @@ IoCreateFile(OUT PHANDLE  FileHandle,
    Irp = IoAllocateIrp(FileObject->DeviceObject->StackSize, FALSE);
    if (Irp == NULL)
      {
- ZwClose(LocalHandle);
- return STATUS_UNSUCCESSFUL;
+       ZwClose(LocalHandle);
+       return STATUS_UNSUCCESSFUL;
      }
 
    //trigger FileObject/Event dereferencing
@@ -976,34 +975,34 @@ IoCreateFile(OUT PHANDLE  FileHandle,
 
    switch (CreateFileType)
      {
- default:
- case CreateFileTypeNone:
-   StackLoc->MajorFunction = IRP_MJ_CREATE;
-   StackLoc->Parameters.Create.SecurityContext = &SecurityContext;
-   StackLoc->Parameters.Create.Options = (CreateOptions & FILE_VALID_OPTION_FLAGS);
-   StackLoc->Parameters.Create.Options |= (CreateDisposition << 24);
-   StackLoc->Parameters.Create.FileAttributes = (USHORT)FileAttributes;
-   StackLoc->Parameters.Create.ShareAccess = (USHORT)ShareAccess;
-   StackLoc->Parameters.Create.EaLength = SystemEaBuffer != NULL ? EaLength : 0;
-   break;
+       default:
+       case CreateFileTypeNone:
+         StackLoc->MajorFunction = IRP_MJ_CREATE;
+         StackLoc->Parameters.Create.SecurityContext = &SecurityContext;
+         StackLoc->Parameters.Create.Options = (CreateOptions & FILE_VALID_OPTION_FLAGS);
+         StackLoc->Parameters.Create.Options |= (CreateDisposition << 24);
+         StackLoc->Parameters.Create.FileAttributes = (USHORT)FileAttributes;
+         StackLoc->Parameters.Create.ShareAccess = (USHORT)ShareAccess;
+         StackLoc->Parameters.Create.EaLength = SystemEaBuffer != NULL ? EaLength : 0;
+         break;
 
- case CreateFileTypeNamedPipe:
-   StackLoc->MajorFunction = IRP_MJ_CREATE_NAMED_PIPE;
-   StackLoc->Parameters.CreatePipe.SecurityContext = &SecurityContext;
-   StackLoc->Parameters.CreatePipe.Options = (CreateOptions & FILE_VALID_OPTION_FLAGS);
-   StackLoc->Parameters.CreatePipe.Options |= (CreateDisposition << 24);
-   StackLoc->Parameters.CreatePipe.ShareAccess = (USHORT)ShareAccess;
-   StackLoc->Parameters.CreatePipe.Parameters = ExtraCreateParameters;
-   break;
+      case CreateFileTypeNamedPipe:
+        StackLoc->MajorFunction = IRP_MJ_CREATE_NAMED_PIPE;
+        StackLoc->Parameters.CreatePipe.SecurityContext = &SecurityContext;
+        StackLoc->Parameters.CreatePipe.Options = (CreateOptions & FILE_VALID_OPTION_FLAGS);
+        StackLoc->Parameters.CreatePipe.Options |= (CreateDisposition << 24);
+        StackLoc->Parameters.CreatePipe.ShareAccess = (USHORT)ShareAccess;
+        StackLoc->Parameters.CreatePipe.Parameters = ExtraCreateParameters;
+        break;
 
- case CreateFileTypeMailslot:
-   StackLoc->MajorFunction = IRP_MJ_CREATE_MAILSLOT;
-   StackLoc->Parameters.CreateMailslot.SecurityContext = &SecurityContext;
-   StackLoc->Parameters.CreateMailslot.Options = (CreateOptions & FILE_VALID_OPTION_FLAGS);
-   StackLoc->Parameters.CreateMailslot.Options |= (CreateDisposition << 24);
-   StackLoc->Parameters.CreateMailslot.ShareAccess = (USHORT)ShareAccess;
-   StackLoc->Parameters.CreateMailslot.Parameters = ExtraCreateParameters;
-   break;
+      case CreateFileTypeMailslot:
+        StackLoc->MajorFunction = IRP_MJ_CREATE_MAILSLOT;
+        StackLoc->Parameters.CreateMailslot.SecurityContext = &SecurityContext;
+        StackLoc->Parameters.CreateMailslot.Options = (CreateOptions & FILE_VALID_OPTION_FLAGS);
+        StackLoc->Parameters.CreateMailslot.Options |= (CreateDisposition << 24);
+        StackLoc->Parameters.CreateMailslot.ShareAccess = (USHORT)ShareAccess;
+        StackLoc->Parameters.CreateMailslot.Parameters = ExtraCreateParameters;
+        break;
      }
 
    /*
@@ -1017,33 +1016,33 @@ IoCreateFile(OUT PHANDLE  FileHandle,
    
    if (Status == STATUS_PENDING)
      {
- KeWaitForSingleObject(&FileObject->Event,
-         Executive,
-         AccessMode,
-         FALSE,
-         NULL);
- Status = LocalIoStatusBlock.Status;
+       KeWaitForSingleObject(&FileObject->Event,
+                             Executive,
+                             AccessMode,
+                             FALSE,
+                             NULL);
+       Status = LocalIoStatusBlock.Status;
      }
    if (!NT_SUCCESS(Status))
      {
- DPRINT("Failing create request with status %x\n", Status);
-        FileObject->DeviceObject = NULL;
-        FileObject->Vpb = NULL;
+       DPRINT("Failing create request with status %x\n", Status);
+       FileObject->DeviceObject = NULL;
+       FileObject->Vpb = NULL;
 
- ZwClose(LocalHandle);
+       ZwClose(LocalHandle);
      }
    else
      {
-  _SEH_TRY
-    {
-       *FileHandle = LocalHandle;
-       *IoStatusBlock = LocalIoStatusBlock;
-    }
-  _SEH_HANDLE
-    {
-       Status = _SEH_GetExceptionCode();
-    }
-  _SEH_END;
+       _SEH_TRY
+         {
+           *FileHandle = LocalHandle;
+           *IoStatusBlock = LocalIoStatusBlock;
+         }
+       _SEH_HANDLE
+         {
+           Status = _SEH_GetExceptionCode();
+         }
+       _SEH_END;
      }
 
    /* cleanup EABuffer if captured */
@@ -1875,8 +1874,8 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
    if (Irp==NULL)
      {
- ObDereferenceObject(FileObject);
- return STATUS_UNSUCCESSFUL;
+       ObDereferenceObject(FileObject);
+       return STATUS_UNSUCCESSFUL;
      }
 
    if (Event == NULL)
@@ -1906,7 +1905,7 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
 
    if (WatchTree)
      {
- IoStack->Flags = SL_WATCH_TREE;
+       IoStack->Flags = SL_WATCH_TREE;
      }
 
    IoStack->Parameters.NotifyDirectory.CompletionFilter = CompletionFilter;
