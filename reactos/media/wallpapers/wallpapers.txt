@@ -2,7 +2,7 @@ ReactOS Wallpapers suggestion:
 
 
 
-ReactOS Wallpapers for Version 0.2.6:
+ReactOS Wallpapers for Version 0.3:
 
 * ReactOS Wallpaper (original with new text; GNU GPL)
   http://reactosde.re.funpic.de/mediadetail.php?sec=Graphic%20arts&cat=wallp&mdnr=92
@@ -18,6 +18,9 @@ ReactOS Wallpapers for Version 0.2.6:
 
 * ReactOS Wallpapers (Earth)
   http://reactosde.re.funpic.de/mediadetail.php?sec=Graphic%20arts&cat=wallp&mdnr=36
+
+* Ros Nature (Flowers + Logo)
+  http://reactosde.re.funpic.de/mediadetail.php?sec=Graphic%20arts&cat=wallp&mdnr=112
 
 
 
@@ -63,3 +66,4 @@ Some useful links:
 History: 
 
 2005-02-25 Klemens Friedl
+2005-05-31 Klemens Friedl
