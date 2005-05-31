@@ -342,7 +342,7 @@ BOOLEAN DIB_24BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 				for (DesX=0; DesX<DestRect->right; DesX++)
 				{
-					if (DesSizeY>SrcSizeY)
+					if (DesSizeX>SrcSizeX)
 						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
 					else
 						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
@@ -376,7 +376,7 @@ BOOLEAN DIB_24BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 				for (DesX=0; DesX<DestRect->right; DesX++)
 				{
-					if (DesSizeY>SrcSizeY)
+					if (DesSizeX>SrcSizeX)
 						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
 					else
 						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
@@ -404,7 +404,7 @@ BOOLEAN DIB_24BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 				for (DesX=0; DesX<DestRect->right; DesX++)
 				{
-					if (DesSizeY>SrcSizeY)
+					if (DesSizeX>SrcSizeX)
 						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
 					else
 						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
@@ -432,7 +432,7 @@ BOOLEAN DIB_24BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 				for (DesX=0; DesX<DestRect->right; DesX++)
 				{
-					if (DesSizeY>SrcSizeY)
+					if (DesSizeX>SrcSizeX)
 						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
 					else
 						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
@@ -460,7 +460,7 @@ BOOLEAN DIB_24BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 				for (DesX=0; DesX<DestRect->right; DesX++)
 				{
-					if (DesSizeY>SrcSizeY)
+					if (DesSizeX>SrcSizeX)
 						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
 					else
 						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
@@ -488,7 +488,7 @@ BOOLEAN DIB_24BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 				for (DesX=0; DesX<DestRect->right; DesX++)
 				{
-					if (DesSizeY>SrcSizeY)
+					if (DesSizeX>SrcSizeX)
 						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
 					else
 						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
