@@ -1,3 +1,6 @@
+<directory name="cromwell">
+	<xi:include href="cromwell/directory.xml" />
+</directory>
 <directory name="miniport">
 	<xi:include href="miniport/directory.xml" />
 </directory>
