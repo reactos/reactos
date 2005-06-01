@@ -1,5 +1,7 @@
 <module name="eventlog" type="win32cui" installbase="system32" installname="eventlog.exe">
 	<include base="eventlog">.</include>
+	<define name="UNICODE" />
+	<define name="_UNICODE" />
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>advapi32</library>
