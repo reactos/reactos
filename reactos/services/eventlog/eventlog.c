@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2002 ReactOS Team
+ *  Copyright (C) 2002, 2005 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             services/eventlog/eventlog.c
@@ -26,8 +25,6 @@
  */
 
 /* INCLUDES *****************************************************************/
-
-#define UNICODE
 
 #define NTOS_MODE_USER
 #include <ntos.h>
@@ -40,9 +37,17 @@
 #include <debug.h>
 
 
+VOID CALLBACK
+ServiceMain(DWORD argc, LPTSTR *argv);
+
 
 /* GLOBALS ******************************************************************/
 
+SERVICE_TABLE_ENTRY ServiceTable[2] =
+{
+  {L"EventLog", (LPSERVICE_MAIN_FUNCTION)ServiceMain},
+  {NULL, NULL}
+};
 
 
 /* FUNCTIONS *****************************************************************/
@@ -53,6 +58,10 @@ ServiceMain(DWORD argc, LPTSTR *argv)
 {
   DPRINT("ServiceMain() called\n");
 
+  if (StartPortThread() == FALSE)
+    {
+      DPRINT("StartPortThread() failed\n");
+    }
 
   DPRINT("ServiceMain() done\n");
 }
@@ -61,37 +70,15 @@ ServiceMain(DWORD argc, LPTSTR *argv)
 int
 main(int argc, char *argv[])
 {
-  SERVICE_TABLE_ENTRY ServiceTable[2] = {{L"EventLog", (LPSERVICE_MAIN_FUNCTION)ServiceMain},
-					 {NULL, NULL}};
-
-  HANDLE hEvent;
-//  NTSTATUS Status;
-
-  DPRINT("EventLog started\n");
-
-
-
-
+  DPRINT("main() called\n");
 
   StartServiceCtrlDispatcher(ServiceTable);
 
-  DPRINT("StartServiceCtrlDispatcher() done\n");
-
-  if (StartPortThread() == FALSE)
-    {
-      DPRINT1("StartPortThread() failed\n");
-    }
-
-  DPRINT("EventLog waiting\n");
-
-  hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-  WaitForSingleObject(hEvent, INFINITE);
-
-  DPRINT("EventLog done\n");
+  DPRINT("main() done\n");
 
   ExitThread(0);
 
-  return(0);
+  return 0;
 }
 
 /* EOF */
