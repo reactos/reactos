@@ -1,0 +1,21 @@
+<module name="usbcore" type="kernelmodedriver" installbase="system32/drivers" installname="usbcore.sys" warnings="true">
+        <importlibrary definition="usbcore.def" />
+	<define name="__USE_W32API" />
+	<define name="DEBUG_MODE" />
+	<include base="ntoskrnl">include</include>
+	<library>ntoskrnl</library>
+	<library>hal</library> 
+	<file>message.c</file>
+	<file>hcd.c</file>
+	<file>hcd-pci.c</file>
+	<file>hub.c</file>
+	<file>usb.c</file>
+	<file>config.c</file>
+	<file>urb.c</file>
+	<file>buffer_simple.c</file>
+	<file>usb-debug.c</file>
+	<file>../sys/ros_wrapper.c</file>
+	<file>../sys/linuxwrapper.c</file>
+	<file>usbcore.c</file>
+	<file>usbcore.rc</file>
+</module>

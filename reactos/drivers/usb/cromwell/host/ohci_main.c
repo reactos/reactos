@@ -6,7 +6,8 @@
 
 #include <ddk/ntddk.h>
 #include <debug.h>
-#include "../linux/linux_wrapper.h"
+#include "../usb_wrapper.h"
+#include "../core/hcd.h"
 #include "ohci_main.h"
 
 // declare basic init funcs

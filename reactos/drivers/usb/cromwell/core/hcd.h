@@ -424,7 +424,7 @@ extern void usb_bus_get (struct usb_bus *bus);
 extern void usb_bus_put (struct usb_bus *bus);
 
 extern int usb_find_interface_driver (struct usb_device *dev,
-	struct usb_interface *interface);
+	struct usb_interface *pinterface);
 
 #define usb_endpoint_halt(dev, ep, out) ((dev)->halted[out] |= (1 << (ep)))
 

@@ -683,7 +683,7 @@ void usb_set_maxpacket(struct usb_device *dev)
 
 	/* NOTE:  affects all endpoints _except_ ep0 */
 	for (i=0; i<dev->actconfig->desc.bNumInterfaces; i++) {
-		struct usb_interface *ifp = dev->actconfig->interface + i;
+		struct usb_interface *ifp = dev->actconfig->pinterface + i;
 		struct usb_host_interface *as = ifp->altsetting + ifp->act_altsetting;
 		struct usb_host_endpoint *ep = as->endpoint;
 		int e;
@@ -800,16 +800,16 @@ int usb_clear_halt(struct usb_device *dev, int pipe)
  * Returns zero on success, or else the status code returned by the
  * underlying usb_control_msg() call.
  */
-int usb_set_interface(struct usb_device *dev, int interface, int alternate)
+int usb_set_interface(struct usb_device *dev, int pinterface, int alternate)
 {
 	struct usb_interface *iface;
 	struct usb_host_interface *iface_as;
 	int i, ret;
 	void (*disable)(struct usb_device *, int) = dev->bus->op->disable;
 
-	iface = usb_ifnum_to_if(dev, interface);
+	iface = usb_ifnum_to_if(dev, pinterface);
 	if (!iface) {
-		warn("selecting invalid interface %d", interface);
+		warn("selecting invalid interface %d", pinterface);
 		return -EINVAL;
 	}
 
@@ -817,7 +817,7 @@ int usb_set_interface(struct usb_device *dev, int interface, int alternate)
 	   only has one alternate setting */
 	if (iface->num_altsetting == 1) {
 		dbg("ignoring set_interface for dev %d, iface %d, alt %d",
-			dev->devnum, interface, alternate);
+			dev->devnum, pinterface, alternate);
 		return 0;
 	}
 
@@ -828,7 +828,7 @@ int usb_set_interface(struct usb_device *dev, int interface, int alternate)
 				   USB_REQ_SET_INTERFACE, USB_RECIP_INTERFACE,
 				   iface->altsetting[alternate]
 				   	.desc.bAlternateSetting,
-				   interface, NULL, 0, HZ * 5)) < 0)
+				   pinterface, NULL, 0, HZ * 5)) < 0)
 		return ret;
 
 	/* FIXME drivers shouldn't need to replicate/bugfix the logic here

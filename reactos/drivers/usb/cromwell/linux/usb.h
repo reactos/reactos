@@ -109,10 +109,12 @@ struct usb_host_interface {
  * All standards-conformant USB devices that use isochronous endpoints
  * will use them in non-default settings.
  */
+
 struct usb_interface {
 	/* array of alternate settings for this interface.
 	 * these will be in numeric order, 0..num_altsettting
 	 */
+
 	struct usb_host_interface *altsetting;
 
 	unsigned act_altsetting;	/* active alternate setting */
@@ -123,7 +125,7 @@ struct usb_interface {
 	int minor;			/* minor number this interface is bound to */
 	struct device dev;		/* interface specific device info */
 	struct class_device class_dev;
-};
+}USB_INTERFACE, *PUSB_INTERFACE;
 #define	to_usb_interface(d) container_of(d, struct usb_interface, dev)
 #define class_dev_to_usb_interface(d) container_of(d, struct usb_interface, class_dev)
 #define	interface_to_usbdev(intf) \
@@ -148,11 +150,12 @@ static inline void usb_set_intfdata (struct usb_interface *intf, void *data)
  */
 struct usb_host_config {
 	struct usb_config_descriptor	desc;
-
-	/* the interfaces associated with this configuration
-	 * these will be in numeric order, 0..desc.bNumInterfaces
-	 */
-	struct usb_interface *interface;
+//	
+//	/* the interfaces associated with this configuration
+//	 * these will be in numeric order, 0..desc.bNumInterfaces
+//	 */
+//
+	struct usb_interface *pinterface;
 
 	unsigned char *extra;   /* Extra descriptors */
 	int extralen;
@@ -289,7 +292,7 @@ extern void usb_driver_claim_interface(struct usb_driver *driver,
 extern int usb_interface_claimed(struct usb_interface *iface);
 extern void usb_driver_release_interface(struct usb_driver *driver,
 			struct usb_interface *iface);
-const struct usb_device_id *usb_match_id(struct usb_interface *interface,
+const struct usb_device_id *usb_match_id(struct usb_interface *pinterface,
 					 const struct usb_device_id *id);
 
 extern struct usb_interface *usb_find_interface(struct usb_driver *drv, int minor);
