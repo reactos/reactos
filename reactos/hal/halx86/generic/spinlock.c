@@ -18,6 +18,7 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/ps.h>
 
 #include <internal/debug.h>
 

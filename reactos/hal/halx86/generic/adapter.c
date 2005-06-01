@@ -15,6 +15,7 @@
 
 #include <ddk/ntddk.h>
 #include <ddk/iotypes.h>
+#include <internal/ps.h>
 #define NDEBUG
 #include <internal/debug.h>
 #include <hal.h>
