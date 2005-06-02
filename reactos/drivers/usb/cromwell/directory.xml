@@ -1,9 +1,12 @@
+<directory name="sys">
+	<xi:include href="sys/sys.xml" />
+</directory>
 <directory name="core">
 	<xi:include href="core/usbcore.xml" />
 </directory>
 <directory name="host">
-	<xi:include href="host/host.xml" />
+        <xi:include href="host/host.xml" />
 </directory>
 <directory name="uhci">
-	<xi:include href="uhci/uhci.xml" />
+        <xi:include href="uhci/uhci.xml" />
 </directory>
