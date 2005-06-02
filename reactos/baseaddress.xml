@@ -49,6 +49,7 @@
 <property name="BASEADDRESS_RICHED20" value="0x76360000" />
 <property name="BASEADDRESS_TWAIN_32" value="0x76380000" />
 <property name="BASEADDRESS_MIDIMAP" value="0x76600000" />
+<property name="BASEADDRESS_WAVEMAP" value="0x76610000" />
 <property name="BASEADDRESS_MPR" value="0x76620000" />
 <property name="BASEADDRESS_SETUPAPI" value="0x76660000" />
 <property name="BASEADDRESS_GDIPLUS" value="0x76a00000" />

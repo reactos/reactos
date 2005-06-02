@@ -136,9 +136,6 @@
 <directory name="mesa32">
 	<xi:include href="mesa32/mesa32.xml" />
 </directory>
-<directory name="midimap">
-	<xi:include href="midimap/midimap.xml" />
-</directory>
 <directory name="mmdrv">
 	<xi:include href="mmdrv/mmdrv.xml" />
 </directory>
@@ -275,7 +272,7 @@
 	<xi:include href="wininet/wininet.xml" />
 </directory>
 <directory name="winmm">
-	<xi:include href="winmm/winmm.xml" />
+	<xi:include href="winmm/directory.xml" />
 </directory>
 <directory name="winspool">
 	<xi:include href="winspool/winspool.xml" />
