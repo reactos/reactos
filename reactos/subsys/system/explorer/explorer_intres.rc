@@ -1,4 +1,4 @@
-//Microsoft Developer Studio generated resource script.
+// Microsoft Visual C++ generated resource script.
 //
 #include "explorer_intres.h"
 
@@ -26,7 +26,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 // Menu
 //
 
-IDM_MDIFRAME MENU PRELOAD DISCARDABLE 
+IDM_MDIFRAME MENU 
 BEGIN
     POPUP "&Fiєier"
     BEGIN
@@ -65,7 +65,7 @@ BEGIN
     END
 END
 
-IDM_SDIFRAME MENU PRELOAD DISCARDABLE 
+IDM_SDIFRAME MENU 
 BEGIN
     POPUP "&Fiєier"
     BEGIN
@@ -99,8 +99,8 @@ END
 // Dialog
 //
 
-IDD_EXECUTE DIALOG FIXED IMPURE  15, 13, 210, 63
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_EXECUTE DIALOG  15, 13, 210, 63
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Execute"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -121,7 +121,7 @@ END
 // String Table
 //
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_TITLE               "ReactOS Explorer"
     IDS_START               "Оncepe"
@@ -140,7 +140,7 @@ BEGIN
     IDS_ADMIN               "Administrare"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_STARTMENU           "Startmenu"
     IDS_MINIMIZE_ALL        "mimimize all windows"
@@ -158,7 +158,7 @@ BEGIN
     IDS_TERMINATE           "Оnchide sesiunea"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_NETWORK             "Reюea"
     IDS_CONNECTIONS         "Conecюii"
@@ -189,7 +189,7 @@ END
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
 #ifdef _WIN32
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-#pragma code_page(1252)
+#pragma code_page(1251)
 #endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
@@ -197,34 +197,500 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 // Bitmap
 //
 
-IDB_DRIVEBAR            BITMAP  DISCARDABLE     "res/drivebar.bmp"
-IDB_LOGOV               BITMAP  DISCARDABLE     "res/logov.bmp"
-IDB_LOGOV256            BITMAP  DISCARDABLE     "res/logov256.bmp"
-IDB_LOGOV16             BITMAP  DISCARDABLE     "res/logov16.bmp"
+IDB_DRIVEBAR            BITMAP                  "res/drivebar.bmp"
+IDB_LOGOV               BITMAP                  "res/logov.bmp"
+IDB_LOGOV256            BITMAP                  "res/logov256.bmp"
+IDB_LOGOV16             BITMAP                  "res/logov16.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // Accelerator
 //
 
-IDA_EXPLORER ACCELERATORS DISCARDABLE 
+IDA_EXPLORER ACCELERATORS 
 BEGIN
     "X",            ID_FILE_EXIT,           VIRTKEY, ALT, NOINVERT
     "S",            ID_VIEW_FULLSCREEN,     VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
 END
 
-IDA_SEARCH_PROGRAM ACCELERATORS DISCARDABLE 
+IDA_SEARCH_PROGRAM ACCELERATORS 
 BEGIN
     VK_F5,          ID_REFRESH,             VIRTKEY, NOINVERT
 END
 
-IDA_TRAYNOTIFY ACCELERATORS DISCARDABLE 
+IDA_TRAYNOTIFY ACCELERATORS 
 BEGIN
     VK_F5,          ID_REFRESH,             VIRTKEY, NOINVERT
 END
 
 #endif    // Neutral resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Russian resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_RUS)
+#ifdef _WIN32
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+#pragma code_page(1251)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_DESKTOPBAR MENU 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Настройки...",               ID_DESKTOPBAR_SETTINGS
+        MENUITEM "&Диспетчер Задач...",         ID_TASKMGR
+        MENUITEM SEPARATOR
+        MENUITEM "&О Проводнике...",            ID_ABOUT_EXPLORER
+    END
+END
+
+IDM_MDIFRAME MENU 
+BEGIN
+    POPUP "&Файл"
+    BEGIN
+        MENUITEM "В&ыход",                      ID_FILE_EXIT
+    END
+    POPUP "&Вид"
+    BEGIN
+        MENUITEM "&Панель инструментов",        ID_VIEW_TOOL_BAR
+        MENUITEM "&Дополнительная панель",      ID_VIEW_EXTRA_BAR
+        MENUITEM "&Диски",                      ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "И&збранное",                  ID_VIEW_SIDE_BAR
+        MENUITEM "&Строка состояния",           ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Обновить\tF5",               ID_REFRESH
+        MENUITEM "По&лный экран\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM "SDI",                         ID_VIEW_SDI
+    END
+    POPUP "О&кна"
+    BEGIN
+        MENUITEM "Новое о&кно",                 ID_WINDOW_NEW
+        MENUITEM "Расположить каскадом\tShift+F5", ID_WINDOW_CASCADE
+        MENUITEM "&Горизонтально",              ID_WINDOW_TILE_HORZ
+        MENUITEM "&Вертикально\tShift+F4",      ID_WINDOW_TILE_VERT
+        MENUITEM "Упорядочить автоматически",   ID_WINDOW_AUTOSORT
+        MENUITEM "Упорядочить &значки",         ID_WINDOW_ARRANGE
+    END
+    POPUP "&Инструменты"
+    BEGIN
+        MENUITEM "&Опции",                      ID_TOOLS_OPTIONS
+    END
+    POPUP "По&мощь"
+    BEGIN
+        MENUITEM "&FAQ(ЧаВо) по Проводнику...", ID_EXPLORER_FAQ
+        MENUITEM "О &Проводнике...",            ID_ABOUT_EXPLORER
+        MENUITEM "Об &ОС...",                   ID_ABOUT_WINDOWS
+    END
+END
+
+IDM_NOTIFYAREA MENU 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Показывать скрытые значки",  ID_SHOW_HIDDEN_ICONS
+        MENUITEM "Показывать значки на &кнопках", ID_SHOW_ICON_BUTTON
+        MENUITEM "&Настройка уведомлений...",   ID_CONFIG_NOTIFYAREA
+        MENUITEM "Настройка даты/&времени",     ID_CONFIG_TIME
+        MENUITEM SEPARATOR
+        MENUITEM "&О Проводнике...",            ID_ABOUT_EXPLORER
+    END
+END
+
+IDM_SDIFRAME MENU 
+BEGIN
+    POPUP "&Файл"
+    BEGIN
+        MENUITEM "В&ыход",                      ID_FILE_EXIT
+    END
+    POPUP "&Вид"
+    BEGIN
+        MENUITEM "&Панель инструментов",        ID_VIEW_TOOL_BAR
+        MENUITEM "И&збранное",                  ID_VIEW_SIDE_BAR, GRAYED
+        MENUITEM "&Строка состояния",           ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Обновить\tF5",               ID_REFRESH
+        MENUITEM "По&лный экран\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM "&MDI",                        ID_VIEW_MDI
+    END
+    POPUP "&Инструменты"
+    BEGIN
+        MENUITEM "&Опции",                      ID_TOOLS_OPTIONS
+    END
+    POPUP "&Справка"
+    BEGIN
+        MENUITEM "&FAQ(ЧаВО) по Проводнику...", ID_EXPLORER_FAQ
+        MENUITEM "О &Проводнике...",            ID_ABOUT_EXPLORER
+        MENUITEM "Об &ОС...",                   ID_ABOUT_WINDOWS
+    END
+END
+
+IDM_VOLUME MENU 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Громкость",                   ID_TRAY_VOLUME
+        MENUITEM "Свойства звука",              ID_VOLUME_PROPERTIES
+    END
+END
+
+IDM_WINEFILE MENU 
+BEGIN
+    POPUP "&Файл"
+    BEGIN
+        MENUITEM "&Открыть\tEnter",             101
+        MENUITEM "Пе&реместить...\tF7",         106
+        MENUITEM "&Копировать...\tF8",          107
+        MENUITEM "В буфер обм&ена...\tF9",      118
+        MENUITEM "&Удалить\tDel",               108
+        MENUITEM "Пе&реименовать...",           109
+        MENUITEM "Свойс&тва...\tAlt+Enter",     ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "Запако&вать...",              119
+        MENUITEM "Ра&спаковать...",             120
+        MENUITEM SEPARATOR
+        MENUITEM "&Запуск...",                  ID_EXECUTE
+        MENUITEM "&Печать...",                  102
+        MENUITEM "Объеденить...",               103
+        MENUITEM SEPARATOR
+        MENUITEM "Создат&ь папку...",           ID_EXECUTE
+        MENUITEM "По&иск...",                   104
+        MENUITEM "В&ыбрать файл...",            116
+        MENUITEM SEPARATOR
+        MENUITEM "Выхо&д\tAlt+X",               ID_FILE_EXIT
+    END
+    POPUP "&Диск"
+    BEGIN
+        MENUITEM "&Копировать диск...",         201
+        MENUITEM "&Метка диска...",             202
+        MENUITEM SEPARATOR
+        MENUITEM "&Форматировать диск...",      203
+        MENUITEM SEPARATOR
+        MENUITEM "Подключить &сетевой диск",    252
+        MENUITEM "&Отключить сетевой диск",     253
+        MENUITEM SEPARATOR
+        MENUITEM "Открыть доступ...",           254
+        MENUITEM "&Закрыть доступ...",          255
+        MENUITEM SEPARATOR
+        MENUITEM "&Выбрать диск...",            251
+    END
+    POPUP "&Папки"
+    BEGIN
+        MENUITEM "&Следующий уровень\t+",       301
+        MENUITEM "Развернуть &дерево\t*",       302
+        MENUITEM "Развернуть &всё\tCtrl+*",     303
+        MENUITEM "Свернуть &дерево\t-",         304
+        MENUITEM SEPARATOR
+        MENUITEM "&Отметить вложения",          505
+    END
+    POPUP "&Вид"
+    BEGIN
+        MENUITEM "Д&ерево и папки",             413
+        MENUITEM "То&лько дерево",              411
+        MENUITEM "Только &папка",               412
+        MENUITEM SEPARATOR
+        MENUITEM "Разд&елить",                  414
+        MENUITEM SEPARATOR
+        MENUITEM "&Имя",                        ID_VIEW_NAME
+        MENUITEM "&Все подробности о файле",    ID_VIEW_ALL_ATTRIBUTES
+        , CHECKED
+        MENUITEM "&Частичные подробности...",   ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "&Сортировать по имени",       404
+        MENUITEM "Сортировать &по типу",        405
+        MENUITEM "Сортировать по ра&змеру",     406
+        MENUITEM "Сортировать по &дате",        407
+        MENUITEM SEPARATOR
+        MENUITEM "Сортировать по &...",         409
+    END
+    POPUP "&Настройки"
+    BEGIN
+        MENUITEM "&Подтевржедение...",          65535
+        MENUITEM "&Шрифт...",                   65535
+        MENUITEM "Настроить панель &инструментов...", 65535
+        MENUITEM SEPARATOR
+        MENUITEM "&Панель инструментов",        ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "&Диски",                      ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Избранное",                  ID_VIEW_SIDE_BAR
+        MENUITEM "&Строка состояния",           ID_VIEW_STATUSBAR, CHECKED
+        MENUITEM "В по&лный экран\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM SEPARATOR
+        MENUITEM "&Обоначить после выполнения", 65535
+        MENUITEM "&Сохранить изменения и выйти", 511
+    END
+    POPUP "&Безопасность"
+    BEGIN
+        MENUITEM "&Доступ...",                  605
+        MENUITEM "&Регистрация...",             606
+        MENUITEM "&Владелец...",                607
+    END
+    POPUP "&Окно"
+    BEGIN
+        MENUITEM "Новое &окно",                 ID_WINDOW_NEW
+        MENUITEM "Расположить каскадом\tCtrl+F5", ID_WINDOW_CASCADE
+        MENUITEM "Плиткой &горизонтально",      ID_WINDOW_TILE_HORZ
+        MENUITEM "Плиткой &вертикально\tCtrl+F4", ID_WINDOW_TILE_VERT
+        MENUITEM "Упорядочить автоматически",   ID_WINDOW_AUTOSORT
+        MENUITEM "Упорядочить &значки",         ID_WINDOW_ARRANGE
+        MENUITEM "&Обновить\tF5",               ID_REFRESH
+    END
+    POPUP "&?"
+    BEGIN
+        MENUITEM "&Вызов справки\tF1",          ID_HELP
+        MENUITEM "Поиск &справки...\tF1",       ID_HELP
+        MENUITEM "&Использование справки\tF1",  ID_HELP_USING
+        MENUITEM SEPARATOR
+        MENUITEM "Информация о &Winefile...",   ID_ABOUT_WINEFILE
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUT_EXPLORER DIALOGEX 0, 0, 199, 106
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "О Проводнике ReactOS"
+FONT 10, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    LTEXT           "Проводник ReactOS",IDC_ROS_EXPLORER,91,13,104,11
+    LTEXT           "V 0.9",IDC_VERSION_TXT,91,27,104,8
+    LTEXT           "(c) 2003-2005 Martin Fuchs",IDC_STATIC,91,42,104,8
+    LTEXT           "",IDC_WIN_VERSION,91,58,98,22
+    LTEXT           "http://www.sky.franken.de/explorer/",IDC_WWW,17,84,129,
+                    8
+    CONTROL         "&OK",IDOK,"Button",BS_OWNERDRAW | BS_FLAT | WS_GROUP,
+                    154,90,38,12
+END
+
+IDD_DESKBAR_DESKTOP DIALOGEX 0, 0, 212, 194
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Свойства Рабочего Стола"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    LTEXT           "Выберите, наиболее предпочтительный для вас, \nспособ выравнивания значков",
+                    IDC_STATIC,7,7,195,18
+    CONTROL         "left/top dwn",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,7,25,46,44
+    CONTROL         "left/top right",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,57,25,46,44
+    CONTROL         "right/top left",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,110,25,46,44
+    CONTROL         "rig./top dwn",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,159,25,46,44
+    CONTROL         "left/bot. up",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,7,73,46,44
+    CONTROL         "left/bot. right",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,57,73,46,44
+    CONTROL         "right/bot. left",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,110,73,46,44
+    CONTROL         "rig./bot. dwn",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,159,73,46,44
+    CONTROL         "border down",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,7,121,46,44
+    CONTROL         "border H/V",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,57,121,46,44
+    CONTROL         "round about",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,110,121,46,44
+    CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM | 
+                    WS_TABSTOP,159,121,46,44
+    CONTROL         "Показывать Номер &Версии",ID_DESKTOP_VERSION,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,177,109,10
+END
+
+IDD_DESKBAR_STARTMENU DIALOG  0, 0, 210, 194
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Свойтсва меню Пуск"
+FONT 8, "MS Sans Serif"
+BEGIN
+END
+
+IDD_DESKBAR_TASKBAR DIALOGEX 0, 0, 227, 202
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Свойства панели задач"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    CONTROL         "Отображать &часы",ID_SHOW_CLOCK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,17,161,76,10
+    CONTROL         "&Скрывать неиспользуемые значки",ID_HIDE_INACTIVE_ICONS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,178,135,10
+    PUSHBUTTON      "&Уведомления...",ID_CONFIG_NOTIFYAREA,156,174,63,14
+END
+
+IDD_EXECUTE DIALOGEX 15, 13, 210, 63
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Выполнить"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    CONTROL         "",101,"Static",SS_SIMPLE | SS_NOPREFIX,3,6,150,10
+    CONTROL         "&Команда:",-1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,3,
+                    18,60,10
+    EDITTEXT        201,3,29,134,12,ES_AUTOHSCROLL
+    CONTROL         "As &Symbol",214,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,
+                    45,71,12
+    DEFPUSHBUTTON   "&OK",1,158,6,47,14
+    PUSHBUTTON      "&Отмена",2,158,24,47,14
+    PUSHBUTTON      "&Справка",254,158,42,47,14
+END
+
+IDD_MDI_SDI DIALOGEX 0, 0, 188, 126
+STYLE DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | 
+    WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Выберите режим MDI / SDI"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    LTEXT           "Выберите наиболее предпочтительный для вас\nвид проводника:",
+                    IDC_STATIC,7,7,171,17
+    CONTROL         "&MDI (многодокументный нтерфейс)",IDC_MDI,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,30,136,10
+    CONTROL         "&SDI (однодокументный интерфейс)",IDC_SDI,"Button",
+                    BS_AUTORADIOBUTTON,7,53,134,10
+    LTEXT           "Эти настройки будут использованны, как значение по умолчанию для всех окон проводника в будущем.",
+                    IDC_STATIC,7,76,174,26
+    DEFPUSHBUTTON   "&OK",IDOK,29,105,50,14,WS_GROUP
+    PUSHBUTTON      "&Cancel",IDCANCEL,106,105,50,14
+END
+
+IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Конфигурация значков"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES | 
+                    TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,194,31
+    LTEXT           "&Текст Подсказки:",IDC_LABEL1,7,44,62,8
+    EDITTEXT        IDC_NOTIFY_TOOLTIP,76,42,125,14,ES_AUTOHSCROLL
+    LTEXT           "Заголовок О&кна:",IDC_LABEL2,7,63,58,8
+    EDITTEXT        IDC_NOTIFY_TITLE,76,60,125,14,ES_AUTOHSCROLL
+    LTEXT           "&Путь к Модулю:",IDC_LABEL3,7,81,54,8
+    EDITTEXT        IDC_NOTIFY_MODULE,76,78,125,14,ES_AUTOHSCROLL
+    GROUPBOX        "&Режим Отображения",IDC_LABEL4,7,96,169,28
+    CONTROL         "&показать",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,15,108,47,10
+    CONTROL         "&скрыть",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,66,
+                    108,41,10
+    CONTROL         "а&втоскрытие",IDC_NOTIFY_AUTOHIDE,"Button",
+                    BS_AUTORADIOBUTTON,112,108,60,10
+    ICON            "",IDC_PICTURE,181,101,20,20
+    LTEXT           "&Последние\nИзменения",IDC_LABEL6,7,129,40,19
+    EDITTEXT        IDC_LAST_CHANGE,59,129,105,14,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    CONTROL         "пока&зать скрытое",ID_SHOW_HIDDEN_ICONS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,154,78,10
+    DEFPUSHBUTTON   "&OK",IDOK,91,153,50,14,WS_GROUP
+    PUSHBUTTON      "&Отмена",IDCANCEL,151,153,50,14
+END
+
+IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Поиск программы в Псуке"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    LTEXT           "&Фильтр:",IDC_STATIC,7,9,30,8
+    EDITTEXT        IDC_FILTER,40,7,94,14,ES_AUTOHSCROLL
+    CONTROL         "List1",IDC_PROGRAMS_FOUND,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | 
+                    WS_TABSTOP,7,25,186,33
+    PUSHBUTTON      "&Проверить",IDC_CHECK_ENTRIES,143,7,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_DESKBAR_TASKBAR, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 199
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_TITLE               "Проводник Reactos"
+    IDS_START               "Пуск"
+    IDS_LOGOFF              "Выход из системы..."
+    IDS_SHUTDOWN            "Выключить..."
+    IDS_LAUNCH              "Выполнить..."
+    IDS_START_HELP          "Справка"
+    IDS_SEARCH_FILES        "Поиск..."
+    IDS_DOCUMENTS           "Документы"
+    IDS_FAVORITES           "Избранное"
+    IDS_PROGRAMS            "Программы"
+    IDS_SETTINGS            "Настройки"
+    IDS_EXPLORE             "Обзор"
+    IDS_EMPTY               "(Пусто)"
+    IDS_RECENT              "Недавние документы"
+    IDS_ADMIN               "Администрирование"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_NETWORK             "Сеть"
+    IDS_CONNECTIONS         "Сетевые подключения"
+    IDS_DRIVES              "Диски"
+    IDS_SEARCH_COMPUTER     "Найти компьютер..."
+    IDS_SETTINGS_MENU       "Настройка меню"
+    IDS_CONTROL_PANEL       "Панель управления"
+    IDS_PRINTERS            "Принтеры"
+    IDS_BROWSE              "Обзор файлов"
+    IDS_SEARCH_PRG          "Найти программу..."
+    IDS_ALL_USERS           "Все пользователи\\"
+    IDS_SEARCH              "Поиск"
+    IDS_ABOUT_EXPLORER      "&О Проводнике..."
+    IDS_LAUNCH_MANY_PROGRAMS 
+                            "Вы выбрали более одной программы.\nВы уверены, что хотите выполнить их все?"
+    IDS_DESKTOPBAR_SETTINGS "Настройки рабочего стола"
+    IDS_DESKTOP             "Рабочий Стол"
+    IDS_TASKBAR             "Панель задач"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_STARTMENU           "Меню Пуска"
+    IDS_MINIMIZE_ALL        "свернуть все окна"
+    IDS_DESKTOP_NUM         "Рабочий Стол %d"
+    IDS_VOLUME              "Объём"
+    IDS_ITEMS_CUR           "текущей элемент"
+    IDS_ITEMS_CONFIGURED    "конфигурация"
+    IDS_ITEMS_VISIBLE       "видимый"
+    IDS_ITEMS_HIDDEN        "скрытый"
+    IDS_NOTIFY_SHOW         "показать"
+    IDS_NOTIFY_HIDE         "скрыть"
+    IDS_NOTIFY_AUTOHIDE     "автоскрытие"
+    IDS_SHOW_HIDDEN_ICONS   "Показать скрытые значки"
+    IDS_HIDE_ICONS          "Скрыть значки"
+    IDS_TERMINATE           "Завершить работу Проводника"
+END
+
+#endif    // Russian resources
 /////////////////////////////////////////////////////////////////////////////
 
 
@@ -242,7 +708,7 @@ LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 // Menu
 //
 
-IDM_WINEFILE MENU FIXED IMPURE 
+IDM_WINEFILE MENU 
 BEGIN
     POPUP "&Datei"
     BEGIN
@@ -351,7 +817,7 @@ BEGIN
     END
 END
 
-IDM_MDIFRAME MENU PRELOAD DISCARDABLE 
+IDM_MDIFRAME MENU 
 BEGIN
     POPUP "&Datei"
     BEGIN
@@ -390,7 +856,7 @@ BEGIN
     END
 END
 
-IDM_SDIFRAME MENU PRELOAD DISCARDABLE 
+IDM_SDIFRAME MENU 
 BEGIN
     POPUP "&Datei"
     BEGIN
@@ -424,8 +890,8 @@ END
 // Dialog
 //
 
-IDD_EXECUTE DIALOG FIXED IMPURE  15, 13, 210, 63
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_EXECUTE DIALOG  15, 13, 210, 63
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Ausfьhren"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -440,8 +906,8 @@ BEGIN
     PUSHBUTTON      "&Hilfe",254,158,43,47,14
 END
 
-IDD_ABOUT_EXPLORER DIALOG DISCARDABLE  0, 0, 199, 106
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_ABOUT_EXPLORER DIALOG  0, 0, 199, 106
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About ReactOS Explorer"
 FONT 10, "MS Sans Serif"
 BEGIN
@@ -461,17 +927,17 @@ END
 // Bitmap
 //
 
-IDB_ICON_ALIGN_0        BITMAP  DISCARDABLE     "res/icoalig0.bmp"
-IDB_ICON_ALIGN_1        BITMAP  DISCARDABLE     "res/icoalig1.bmp"
-IDB_ICON_ALIGN_2        BITMAP  DISCARDABLE     "res/icoalig2.bmp"
-IDB_ICON_ALIGN_3        BITMAP  DISCARDABLE     "res/icoalig3.bmp"
-IDB_ICON_ALIGN_4        BITMAP  DISCARDABLE     "res/icoalig4.bmp"
-IDB_ICON_ALIGN_5        BITMAP  DISCARDABLE     "res/icoalig5.bmp"
-IDB_ICON_ALIGN_6        BITMAP  DISCARDABLE     "res/icoalig6.bmp"
-IDB_ICON_ALIGN_7        BITMAP  DISCARDABLE     "res/icoalig7.bmp"
-IDB_ICON_ALIGN_8        BITMAP  DISCARDABLE     "res/icoalig8.bmp"
-IDB_ICON_ALIGN_9        BITMAP  DISCARDABLE     "res/icoalig9.bmp"
-IDB_ICON_ALIGN_10       BITMAP  DISCARDABLE     "res/icoali10.bmp"
+IDB_ICON_ALIGN_0        BITMAP                  "res/icoalig0.bmp"
+IDB_ICON_ALIGN_1        BITMAP                  "res/icoalig1.bmp"
+IDB_ICON_ALIGN_2        BITMAP                  "res/icoalig2.bmp"
+IDB_ICON_ALIGN_3        BITMAP                  "res/icoalig3.bmp"
+IDB_ICON_ALIGN_4        BITMAP                  "res/icoalig4.bmp"
+IDB_ICON_ALIGN_5        BITMAP                  "res/icoalig5.bmp"
+IDB_ICON_ALIGN_6        BITMAP                  "res/icoalig6.bmp"
+IDB_ICON_ALIGN_7        BITMAP                  "res/icoalig7.bmp"
+IDB_ICON_ALIGN_8        BITMAP                  "res/icoalig8.bmp"
+IDB_ICON_ALIGN_9        BITMAP                  "res/icoalig9.bmp"
+IDB_ICON_ALIGN_10       BITMAP                  "res/icoali10.bmp"
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -479,18 +945,18 @@ IDB_ICON_ALIGN_10       BITMAP  DISCARDABLE     "res/icoali10.bmp"
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE DISCARDABLE 
+1 TEXTINCLUDE 
 BEGIN
     "explorer_intres.h\0"
 END
 
-2 TEXTINCLUDE DISCARDABLE 
+2 TEXTINCLUDE 
 BEGIN
     "#include <windows.h>\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE 
+3 TEXTINCLUDE 
 BEGIN
     "#ifndef ROSSHELL\r\n"
     "IDB_IMAGES         BITMAP DISCARDABLE ""res/images.bmp""\r\n"
@@ -528,42 +994,42 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_REACTOS             ICON    DISCARDABLE     "res/reactos.ico"
-IDI_EXPLORER            ICON    DISCARDABLE     "res/explorer.ico"
-IDI_STARTMENU           ICON    DISCARDABLE     "res/startmenu.ico"
-IDI_LOGOFF              ICON    DISCARDABLE     "res/logoff.ico"
-IDI_ARROW               ICON    DISCARDABLE     "res/arrow.ico"
-IDI_ARROW_SELECTED      ICON    DISCARDABLE     "res/arrowsel.ico"
-IDI_APPICON             ICON    DISCARDABLE     "res/appicon.ico"
-IDI_FLOATING            ICON    DISCARDABLE     "res/floating.ico"
-IDI_REACTOS_BIG         ICON    DISCARDABLE     "res/ros-big.ico"
-IDI_CONFIG              ICON    DISCARDABLE     "res/config.ico"
-IDI_DOCUMENTS           ICON    DISCARDABLE     "res/documents.ico"
-IDI_FAVORITES           ICON    DISCARDABLE     "res/favorites.ico"
-IDI_INFO                ICON    DISCARDABLE     "res/info.ico"
-IDI_APPS                ICON    DISCARDABLE     "res/apps.ico"
-IDI_SEARCH              ICON    DISCARDABLE     "res/search.ico"
-IDI_ACTION              ICON    DISCARDABLE     "res/action.ico"
-IDI_FOLDER              ICON    DISCARDABLE     "res/folder.ico"
-IDI_SEARCH_DOC          ICON    DISCARDABLE     "res/search-doc.ico"
-IDI_PRINTER             ICON    DISCARDABLE     "res/printer.ico"
-IDI_NETWORK             ICON    DISCARDABLE     "res/network.ico"
-IDI_COMPUTER            ICON    DISCARDABLE     "res/computer.ico"
-IDI_SPEAKER             ICON    DISCARDABLE     "res/speaker.ico"
-IDI_DOT                 ICON    DISCARDABLE     "res/dot.ico"
-IDI_DOT_TRANS           ICON    DISCARDABLE     "res/dot_trans.ico"
-IDI_DOT_RED             ICON    DISCARDABLE     "res/dot_red.ico"
-IDI_ARROW_UP            ICON    DISCARDABLE     "res/arrow_up.ico"
-IDI_ARROW_DOWN          ICON    DISCARDABLE     "res/arrow_dwn.ico"
-IDI_NOTIFY_L            ICON    DISCARDABLE     "res/notify_l.ico"
-IDI_NOTIFY_R            ICON    DISCARDABLE     "res/notify_r.ico"
+IDI_REACTOS             ICON                    "res/reactos.ico"
+IDI_EXPLORER            ICON                    "res/explorer.ico"
+IDI_STARTMENU           ICON                    "res/startmenu.ico"
+IDI_LOGOFF              ICON                    "res/logoff.ico"
+IDI_ARROW               ICON                    "res/arrow.ico"
+IDI_ARROW_SELECTED      ICON                    "res/arrowsel.ico"
+IDI_APPICON             ICON                    "res/appicon.ico"
+IDI_FLOATING            ICON                    "res/floating.ico"
+IDI_REACTOS_BIG         ICON                    "res/ros-big.ico"
+IDI_CONFIG              ICON                    "res/config.ico"
+IDI_DOCUMENTS           ICON                    "res/documents.ico"
+IDI_FAVORITES           ICON                    "res/favorites.ico"
+IDI_INFO                ICON                    "res/info.ico"
+IDI_APPS                ICON                    "res/apps.ico"
+IDI_SEARCH              ICON                    "res/search.ico"
+IDI_ACTION              ICON                    "res/action.ico"
+IDI_FOLDER              ICON                    "res/folder.ico"
+IDI_SEARCH_DOC          ICON                    "res/search-doc.ico"
+IDI_PRINTER             ICON                    "res/printer.ico"
+IDI_NETWORK             ICON                    "res/network.ico"
+IDI_COMPUTER            ICON                    "res/computer.ico"
+IDI_SPEAKER             ICON                    "res/speaker.ico"
+IDI_DOT                 ICON                    "res/dot.ico"
+IDI_DOT_TRANS           ICON                    "res/dot_trans.ico"
+IDI_DOT_RED             ICON                    "res/dot_red.ico"
+IDI_ARROW_UP            ICON                    "res/arrow_up.ico"
+IDI_ARROW_DOWN          ICON                    "res/arrow_dwn.ico"
+IDI_NOTIFY_L            ICON                    "res/notify_l.ico"
+IDI_NOTIFY_R            ICON                    "res/notify_r.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // String Table
 //
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_TITLE               "Reactos Explorer"
     IDS_START               "Start"
@@ -582,7 +1048,7 @@ BEGIN
     IDS_ADMIN               "Verwaltung"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_STARTMENU           "Startmenь"
     IDS_MINIMIZE_ALL        "alle Fenster minimieren"
@@ -600,7 +1066,7 @@ BEGIN
     IDS_TERMINATE           "ROS Explorer beenden"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_NETWORK             "Netzwerk"
     IDS_CONNECTIONS         "Netzwerk-Verbindungen"
@@ -639,7 +1105,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // Menu
 //
 
-IDM_MDIFRAME MENU PRELOAD DISCARDABLE 
+IDM_MDIFRAME MENU 
 BEGIN
     POPUP "&File"
     BEGIN
@@ -678,7 +1144,68 @@ BEGIN
     END
 END
 
-IDM_WINEFILE MENU FIXED IMPURE 
+IDM_DESKTOPBAR MENU 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Settings...",                ID_DESKTOPBAR_SETTINGS
+        MENUITEM "&Task Manager...",            ID_TASKMGR
+        MENUITEM SEPARATOR
+        MENUITEM "&About Explorer...",          ID_ABOUT_EXPLORER
+    END
+END
+
+IDM_VOLUME MENU 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Open Volume Control",         ID_TRAY_VOLUME
+        MENUITEM "Adjust Audio Properties",     ID_VOLUME_PROPERTIES
+    END
+END
+
+IDM_NOTIFYAREA MENU 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Show hidden icons",          ID_SHOW_HIDDEN_ICONS
+        MENUITEM "Show Icon &Button",           ID_SHOW_ICON_BUTTON
+        MENUITEM "&Configure Notifications...", ID_CONFIG_NOTIFYAREA
+        MENUITEM "Adjust Date/&Time...",        ID_CONFIG_TIME
+        MENUITEM SEPARATOR
+        MENUITEM "&About Explorer...",          ID_ABOUT_EXPLORER
+    END
+END
+
+IDM_SDIFRAME MENU 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "E&xit",                       ID_FILE_EXIT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOL_BAR
+        MENUITEM "S&ide Bar",                   ID_VIEW_SIDE_BAR, GRAYED
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Refresh\tF5",                ID_REFRESH
+        MENUITEM "F&ull Screen\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+        MENUITEM "&MDI",                        ID_VIEW_MDI
+    END
+    POPUP "&Tools"
+    BEGIN
+        MENUITEM "&Options",                    ID_TOOLS_OPTIONS
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
+        MENUITEM "&About Explorer...",          ID_ABOUT_EXPLORER
+        MENUITEM "About &OS...",                ID_ABOUT_WINDOWS
+    END
+END
+
+IDM_WINEFILE MENU 
 BEGIN
     POPUP "&File"
     BEGIN
@@ -760,6 +1287,7 @@ BEGIN
         MENUITEM "F&ull Screen\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
         MENUITEM SEPARATOR
         MENUITEM "&Symbol after Running",       65535
+
         MENUITEM "&Save Changes on Exit",       511
     END
     POPUP "&Security"
@@ -788,79 +1316,18 @@ BEGIN
     END
 END
 
-IDM_DESKTOPBAR MENU DISCARDABLE 
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM "&Settings...",                ID_DESKTOPBAR_SETTINGS
-        MENUITEM "&Task Manager...",            ID_TASKMGR
-        MENUITEM SEPARATOR
-        MENUITEM "&About Explorer...",          ID_ABOUT_EXPLORER
-    END
-END
-
-IDM_VOLUME MENU DISCARDABLE 
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM "Open Volume Control",         ID_TRAY_VOLUME
-        MENUITEM "Adjust Audio Properties",     ID_VOLUME_PROPERTIES
-    END
-END
-
-IDM_NOTIFYAREA MENU DISCARDABLE 
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM "&Show hidden icons",          ID_SHOW_HIDDEN_ICONS
-        MENUITEM "Show Icon &Button",           ID_SHOW_ICON_BUTTON
-        MENUITEM "&Configure Notifications...", ID_CONFIG_NOTIFYAREA
-        MENUITEM "Adjust Date/&Time...",        ID_CONFIG_TIME
-        MENUITEM SEPARATOR
-        MENUITEM "&About Explorer...",          ID_ABOUT_EXPLORER
-    END
-END
-
-IDM_SDIFRAME MENU PRELOAD DISCARDABLE 
-BEGIN
-    POPUP "&File"
-    BEGIN
-        MENUITEM "E&xit",                       ID_FILE_EXIT
-    END
-    POPUP "&View"
-    BEGIN
-        MENUITEM "&Toolbar",                    ID_VIEW_TOOL_BAR
-        MENUITEM "S&ide Bar",                   ID_VIEW_SIDE_BAR, GRAYED
-        MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR
-        MENUITEM SEPARATOR
-        MENUITEM "&Refresh\tF5",                ID_REFRESH
-        MENUITEM "F&ull Screen\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
-        MENUITEM "&MDI",                        ID_VIEW_MDI
-    END
-    POPUP "&Tools"
-    BEGIN
-        MENUITEM "&Options",                    ID_TOOLS_OPTIONS
-    END
-    POPUP "&Help"
-    BEGIN
-        MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
-        MENUITEM "&About Explorer...",          ID_ABOUT_EXPLORER
-        MENUITEM "About &OS...",                ID_ABOUT_WINDOWS
-    END
-END
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // Dialog
 //
 
-IDD_EXECUTE DIALOG FIXED IMPURE  15, 13, 210, 63
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_EXECUTE DIALOG  15, 13, 210, 63
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Execute"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "",101,"Static",SS_SIMPLE | SS_NOPREFIX,3,6,162,10
+    CONTROL         "",101,"Static",SS_SIMPLE | SS_NOPREFIX,3,6,150,10
     CONTROL         "&Command:",-1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,3,
                     18,60,10
     EDITTEXT        201,3,29,134,12,ES_AUTOHSCROLL
@@ -872,8 +1339,8 @@ BEGIN
 END
 
 IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
-STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
-    WS_SYSMENU | WS_THICKFRAME
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Search Program in Startmenu"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
@@ -886,8 +1353,8 @@ BEGIN
     PUSHBUTTON      "&Check Entries",IDC_CHECK_ENTRIES,143,7,50,14
 END
 
-IDD_DESKBAR_DESKTOP DIALOG DISCARDABLE  0, 0, 212, 194
-STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_DESKBAR_DESKTOP DIALOG  0, 0, 212, 194
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Desktop Properties"
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -921,8 +1388,8 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,177,91,10
 END
 
-IDD_DESKBAR_TASKBAR DIALOG DISCARDABLE  0, 0, 210, 194
-STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_DESKBAR_TASKBAR DIALOG  0, 0, 210, 194
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Taskbar Properties"
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -934,16 +1401,16 @@ BEGIN
     PUSHBUTTON      "&Notifications...",ID_CONFIG_NOTIFYAREA,153,173,50,14
 END
 
-IDD_DESKBAR_STARTMENU DIALOG DISCARDABLE  0, 0, 210, 194
-STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_DESKBAR_STARTMENU DIALOG  0, 0, 210, 194
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Startmenu Properties"
 FONT 8, "MS Sans Serif"
 BEGIN
 END
 
 IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
-STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
-    WS_SYSMENU | WS_THICKFRAME
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Configure Notification Icons"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
@@ -974,7 +1441,8 @@ BEGIN
 END
 
 IDD_MDI_SDI DIALOGEX 0, 0, 188, 126
-STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+STYLE DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | 
+    WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Choose MDI / SDI mode"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
@@ -997,7 +1465,7 @@ END
 // String Table
 //
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_TITLE               "Reactos Explorer"
     IDS_START               "Start"
@@ -1016,7 +1484,7 @@ BEGIN
     IDS_ADMIN               "Administration"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_STARTMENU           "Startmenu"
     IDS_MINIMIZE_ALL        "mimimize all windows"
@@ -1034,7 +1502,7 @@ BEGIN
     IDS_TERMINATE           "Terminate ROS Explorer"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_NETWORK             "Network"
     IDS_CONNECTIONS         "Network Connections"
@@ -1073,7 +1541,7 @@ LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
 // Menu
 //
 
-IDM_MDIFRAME MENU PRELOAD DISCARDABLE 
+IDM_MDIFRAME MENU 
 BEGIN
     POPUP "&Archivo"
     BEGIN
@@ -1112,7 +1580,7 @@ BEGIN
     END
 END
 
-IDM_WINEFILE MENU FIXED IMPURE 
+IDM_WINEFILE MENU 
 BEGIN
     POPUP "&Archivo"
     BEGIN
@@ -1219,7 +1687,7 @@ BEGIN
     END
 END
 
-IDM_DESKTOPBAR MENU DISCARDABLE 
+IDM_DESKTOPBAR MENU 
 BEGIN
     POPUP ""
     BEGIN
@@ -1230,7 +1698,7 @@ BEGIN
     END
 END
 
-IDM_VOLUME MENU DISCARDABLE 
+IDM_VOLUME MENU 
 BEGIN
     POPUP ""
     BEGIN
@@ -1239,7 +1707,7 @@ BEGIN
     END
 END
 
-IDM_NOTIFYAREA MENU DISCARDABLE 
+IDM_NOTIFYAREA MENU 
 BEGIN
     POPUP ""
     BEGIN
@@ -1252,7 +1720,7 @@ BEGIN
     END
 END
 
-IDM_SDIFRAME MENU PRELOAD DISCARDABLE 
+IDM_SDIFRAME MENU 
 BEGIN
     POPUP "&Archivo"
     BEGIN
@@ -1286,8 +1754,8 @@ END
 // Dialog
 //
 
-IDD_EXECUTE DIALOG FIXED IMPURE  15, 13, 210, 63
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_EXECUTE DIALOG  15, 13, 210, 63
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Execute"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -1303,8 +1771,8 @@ BEGIN
 END
 
 IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
-STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
-    WS_SYSMENU | WS_THICKFRAME
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Buscar Programa en el menu Inicio"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
@@ -1317,8 +1785,8 @@ BEGIN
     PUSHBUTTON      "&Marcar Entradas",IDC_CHECK_ENTRIES,143,7,50,14
 END
 
-IDD_DESKBAR_DESKTOP DIALOG DISCARDABLE  0, 0, 212, 194
-STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_DESKBAR_DESKTOP DIALOG  0, 0, 212, 194
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Propiedades de Pantalla"
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -1352,8 +1820,8 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,177,91,10
 END
 
-IDD_DESKBAR_TASKBAR DIALOG DISCARDABLE  0, 0, 210, 194
-STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_DESKBAR_TASKBAR DIALOG  0, 0, 210, 194
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Propiedades de la Barra de Tareas"
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -1365,16 +1833,16 @@ BEGIN
     PUSHBUTTON      "&Notificaciones...",ID_CONFIG_NOTIFYAREA,153,173,50,14
 END
 
-IDD_DESKBAR_STARTMENU DIALOG DISCARDABLE  0, 0, 210, 194
-STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_DESKBAR_STARTMENU DIALOG  0, 0, 210, 194
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Propiedades del Menu Inicio"
 FONT 8, "MS Sans Serif"
 BEGIN
 END
 
 IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
-STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
-    WS_SYSMENU | WS_THICKFRAME
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Configure Notification Icons"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
@@ -1410,7 +1878,7 @@ END
 // String Table
 //
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_TITLE               "Reactos Explorer"
     IDS_START               "Iniciar"
@@ -1429,7 +1897,7 @@ BEGIN
     IDS_ADMIN               "Administracion"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_STARTMENU           "Menu Inicio"
     IDS_MINIMIZE_ALL        "mimimizar todas las ventanas"
@@ -1447,7 +1915,7 @@ BEGIN
     IDS_TERMINATE           "Salir"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_NETWORK             "Res"
     IDS_CONNECTIONS         "Conexiones de Red"
@@ -1486,7 +1954,7 @@ LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
 // Menu
 //
 
-IDM_MDIFRAME MENU PRELOAD DISCARDABLE 
+IDM_MDIFRAME MENU 
 BEGIN
     POPUP "&Fichier"
     BEGIN
@@ -1525,7 +1993,7 @@ BEGIN
     END
 END
 
-IDM_SDIFRAME MENU PRELOAD DISCARDABLE 
+IDM_SDIFRAME MENU 
 BEGIN
     POPUP "&Fichier"
     BEGIN
@@ -1559,8 +2027,8 @@ END
 // Dialog
 //
 
-IDD_EXECUTE DIALOG FIXED IMPURE  15, 13, 210, 63
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_EXECUTE DIALOG  15, 13, 210, 63
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Execute"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -1581,7 +2049,7 @@ END
 // String Table
 //
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_TITLE               "Explorateur Reactos"
     IDS_START               "Dйmarrer"
@@ -1600,7 +2068,7 @@ BEGIN
     IDS_ADMIN               "Administration"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_STARTMENU           "Startmenu"
     IDS_MINIMIZE_ALL        "mimimize all windows"
@@ -1618,7 +2086,7 @@ BEGIN
     IDS_TERMINATE           "Dйconnexion"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_NETWORK             "Rйseaux"
     IDS_CONNECTIONS         "Connexions rйseaux"
@@ -1657,7 +2125,7 @@ LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
 // Menu
 //
 
-IDM_MDIFRAME MENU PRELOAD DISCARDABLE 
+IDM_MDIFRAME MENU 
 BEGIN
     POPUP "&Arkiv"
     BEGIN
@@ -1696,7 +2164,7 @@ BEGIN
     END
 END
 
-IDM_WINEFILE MENU FIXED IMPURE 
+IDM_WINEFILE MENU 
 BEGIN
     POPUP "&Arkiv"
     BEGIN
@@ -1806,7 +2274,7 @@ BEGIN
     END
 END
 
-IDM_DESKTOPBAR MENU DISCARDABLE 
+IDM_DESKTOPBAR MENU 
 BEGIN
     POPUP ""
     BEGIN
@@ -1817,7 +2285,7 @@ BEGIN
     END
 END
 
-IDM_VOLUME MENU DISCARDABLE 
+IDM_VOLUME MENU 
 BEGIN
     POPUP ""
     BEGIN
@@ -1826,7 +2294,7 @@ BEGIN
     END
 END
 
-IDM_NOTIFYAREA MENU DISCARDABLE 
+IDM_NOTIFYAREA MENU 
 BEGIN
     POPUP ""
     BEGIN
@@ -1839,7 +2307,7 @@ BEGIN
     END
 END
 
-IDM_SDIFRAME MENU PRELOAD DISCARDABLE 
+IDM_SDIFRAME MENU 
 BEGIN
     POPUP "&Arkiv"
     BEGIN
@@ -1873,8 +2341,8 @@ END
 // Dialog
 //
 
-IDD_EXECUTE DIALOG FIXED IMPURE  15, 13, 210, 63
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_EXECUTE DIALOG  15, 13, 210, 63
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Kцr"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -1890,8 +2358,8 @@ BEGIN
 END
 
 IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
-STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
-    WS_SYSMENU | WS_THICKFRAME
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Sцk program pе startmenyn"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
@@ -1904,8 +2372,8 @@ BEGIN
     PUSHBUTTON      "&Kontrollera poster",IDC_CHECK_ENTRIES,143,7,50,14
 END
 
-IDD_DESKBAR_DESKTOP DIALOG DISCARDABLE  0, 0, 212, 194
-STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_DESKBAR_DESKTOP DIALOG  0, 0, 212, 194
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Skrivbordsinstдllningar"
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -1939,8 +2407,8 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,177,91,10
 END
 
-IDD_DESKBAR_TASKBAR DIALOG DISCARDABLE  0, 0, 210, 194
-STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_DESKBAR_TASKBAR DIALOG  0, 0, 210, 194
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Aktivitetsfдltsinstдllningar"
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -1951,16 +2419,16 @@ BEGIN
     PUSHBUTTON      "&Meddelanden...",ID_CONFIG_NOTIFYAREA,153,173,50,14
 END
 
-IDD_DESKBAR_STARTMENU DIALOG DISCARDABLE  0, 0, 210, 194
-STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_DESKBAR_STARTMENU DIALOG  0, 0, 210, 194
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Startmenyinstдllningar"
 FONT 8, "MS Sans Serif"
 BEGIN
 END
 
 IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
-STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
-    WS_SYSMENU | WS_THICKFRAME
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Instдllningar fцr meddelandeikoner"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
@@ -1991,7 +2459,8 @@ BEGIN
 END
 
 IDD_MDI_SDI DIALOGEX 0, 0, 188, 126
-STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+STYLE DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | 
+    WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Vдlj MDI / SDI Lдge"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
@@ -2013,7 +2482,7 @@ END
 // String Table
 //
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_TITLE               "Reactos Explorer"
     IDS_START               "Start"
@@ -2032,7 +2501,7 @@ BEGIN
     IDS_ADMIN               "Administration"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_STARTMENU           "Startmeny"
     IDS_MINIMIZE_ALL        "minimera alla fцnster"
@@ -2050,7 +2519,7 @@ BEGIN
     IDS_TERMINATE           "Logga ut"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_NETWORK             "Nдtverk"
     IDS_CONNECTIONS         "Nдtverksanslutningar"
@@ -2089,7 +2558,7 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 // Menu
 //
 
-IDM_WINEFILE MENU FIXED IMPURE 
+IDM_WINEFILE MENU 
 BEGIN
     POPUP "&Ficheiro"
     BEGIN
@@ -2205,8 +2674,8 @@ END
 // Dialog
 //
 
-IDD_EXECUTE DIALOG FIXED IMPURE  15, 13, 210, 63
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_EXECUTE DIALOG  15, 13, 210, 63
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Executar"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -2227,7 +2696,7 @@ END
 // String Table
 //
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_TITLE               "Explorador do Reactos"
     IDS_START               "Iniciar"
@@ -2246,7 +2715,7 @@ BEGIN
     IDS_ADMIN               "Administrar"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_STARTMENU           "Startmenu"
     IDS_MINIMIZE_ALL        "mimimize all windows"
@@ -2264,7 +2733,7 @@ BEGIN
     IDS_TERMINATE           "Terminar ROS Explorador"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_NETWORK             "Rede"
     IDS_CONNECTIONS         "Conecзхes da rede"
