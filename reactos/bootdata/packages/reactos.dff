@@ -57,6 +57,7 @@ drivers\net\dd\pcnet\pcnet.sys          2
 lib\advapi32\advapi32.dll               1
 lib\advpack\advpack.dll                 1
 lib\aclui\aclui.dll                     1
+lib\cabinet\cabinet.dll                 1
 lib\cards\cards.dll                     1
 lib\cpl\access\access.cpl               1
 lib\cpl\appwiz\appwiz.cpl               1
