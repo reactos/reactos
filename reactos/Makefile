@@ -55,6 +55,7 @@
 .PHONY: clean
 all: makefile.auto
 
+
 .SUFFIXES:
 
 ifeq ($(HOST),)
@@ -81,33 +82,38 @@ else
   BUILDNO_QUIET = -q
 endif
 endif
+ifeq ($(HOST),mingw32-linux)
+  QUOTE = "
+else
+  QUOTE =
+endif
 ifeq ($(HALFVERBOSEECHO),yes)
-  ECHO_CP      =@echo [COPY]     $@
-  ECHO_MKDIR   =@echo [MKDIR]    $@
-  ECHO_BUILDNO =@echo [BUILDNO]  $@
-  ECHO_INVOKE  =@echo [INVOKE]   $<
-  ECHO_PCH     =@echo [PCH]      $@
-  ECHO_CC      =@echo [CC]       $<
-  ECHO_GAS     =@echo [GAS]      $<
-  ECHO_NASM    =@echo [NASM]     $<
-  ECHO_AR      =@echo [AR]       $@
-  ECHO_WINEBLD =@echo [WINEBLD]  $@
-  ECHO_WRC     =@echo [WRC]      $@
-  ECHO_WIDL    =@echo [WIDL]     $@
-  ECHO_BIN2RES =@echo [BIN2RES]  $<
-  ECHO_DLLTOOL =@echo [DLLTOOL]  $@
-  ECHO_LD      =@echo [LD]       $@
-  ECHO_NM      =@echo [NM]       $@
-  ECHO_OBJDUMP =@echo [OBJDUMP]  $@
-  ECHO_RBUILD  =@echo [RBUILD]   $@
-  ECHO_RSYM    =@echo [RSYM]     $@
-  ECHO_WMC     =@echo [WMC]      $@
-  ECHO_NCI     =@echo [NCI]      $@
-  ECHO_CABMAN  =@echo [CABMAN]   $<
-  ECHO_CDMAKE  =@echo [CDMAKE]   $@
-  ECHO_MKHIVE  =@echo [MKHIVE]   $@
-  ECHO_REGTESTS=@echo [REGTESTS] $@
-  ECHO_TEST    =@echo [TEST]     $@
+  ECHO_CP      =@echo $(QUOTE)[COPY]     $@$(QUOTE)
+  ECHO_MKDIR   =@echo $(QUOTE)[MKDIR]    $@$(QUOTE)
+  ECHO_BUILDNO =@echo $(QUOTE)[BUILDNO]  $@$(QUOTE)
+  ECHO_INVOKE  =@echo $(QUOTE)[INVOKE]   $<$(QUOTE)
+  ECHO_PCH     =@echo $(QUOTE)[PCH]      $@$(QUOTE)
+  ECHO_CC      =@echo $(QUOTE)[CC]       $<$(QUOTE)
+  ECHO_GAS     =@echo $(QUOTE)[GAS]      $<$(QUOTE)
+  ECHO_NASM    =@echo $(QUOTE)[NASM]     $<$(QUOTE)
+  ECHO_AR      =@echo $(QUOTE)[AR]       $@$(QUOTE)
+  ECHO_WINEBLD =@echo $(QUOTE)[WINEBLD]  $@$(QUOTE)
+  ECHO_WRC     =@echo $(QUOTE)[WRC]      $@$(QUOTE)
+  ECHO_WIDL    =@echo $(QUOTE)[WIDL]     $@$(QUOTE)
+  ECHO_BIN2RES =@echo $(QUOTE)[BIN2RES]  $<$(QUOTE)
+  ECHO_DLLTOOL =@echo $(QUOTE)[DLLTOOL]  $@$(QUOTE)
+  ECHO_LD      =@echo $(QUOTE)[LD]       $@$(QUOTE)
+  ECHO_NM      =@echo $(QUOTE)[NM]       $@$(QUOTE)
+  ECHO_OBJDUMP =@echo $(QUOTE)[OBJDUMP]  $@$(QUOTE)
+  ECHO_RBUILD  =@echo $(QUOTE)[RBUILD]   $@$(QUOTE)
+  ECHO_RSYM    =@echo $(QUOTE)[RSYM]     $@$(QUOTE)
+  ECHO_WMC     =@echo $(QUOTE)[WMC]      $@$(QUOTE)
+  ECHO_NCI     =@echo $(QUOTE)[NCI]      $@$(QUOTE)
+  ECHO_CABMAN  =@echo $(QUOTE)[CABMAN]   $<$(QUOTE)
+  ECHO_CDMAKE  =@echo $(QUOTE)[CDMAKE]   $@$(QUOTE)
+  ECHO_MKHIVE  =@echo $(QUOTE)[MKHIVE]   $@$(QUOTE)
+  ECHO_REGTESTS=@echo $(QUOTE)[REGTESTS] $@$(QUOTE)
+  ECHO_TEST    =@echo $(QUOTE)[TEST]     $@$(QUOTE)
 else
   ECHO_CP      =
   ECHO_MKDIR   =
