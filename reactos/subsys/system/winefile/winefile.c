@@ -204,6 +204,7 @@ static void set_curdir(ChildWnd* child, Entry* entry, int idx, HWND hwnd);
 static void refresh_child(ChildWnd* child);
 static void refresh_drives();
 static void get_path(Entry* dir, PTSTR path);
+static void format_date(const FILETIME* ft, TCHAR* buffer, int visible_cols);
 
 LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
 LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
@@ -1762,6 +1763,186 @@ static INT_PTR CALLBACK FilterDialogDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam,
 	}
 
 	return 0;
+}
+
+
+struct PropertiesDialog {
+	TCHAR	path[MAX_PATH];
+	Entry	entry;
+	void*	pVersionData;
+};
+
+/* Structure used to store enumerated languages and code pages. */
+struct LANGANDCODEPAGE {
+	WORD wLanguage;
+	WORD wCodePage;
+} *lpTranslate;
+
+static LPCSTR InfoStrings[] = {
+	"Comments",
+	"CompanyName",
+	"FileDescription",
+	"FileVersion",
+	"InternalName",
+	"LegalCopyright",
+	"LegalTrademarks",
+	"OriginalFilename",
+	"PrivateBuild",
+	"ProductName",
+	"ProductVersion",
+	"SpecialBuild",
+	NULL
+};
+
+static void PropDlg_DisplayValue(HWND hlbox, HWND hedit)
+{
+	int idx = ListBox_GetCurSel(hlbox);
+
+	if (idx != LB_ERR) {
+		LPCTSTR pValue = (LPCTSTR) ListBox_GetItemData(hlbox, idx);
+
+		if (pValue)
+			SetWindowText(hedit, pValue);
+	}
+}
+
+static void CheckForFileInfo(struct PropertiesDialog* dlg, HWND hwnd, LPCTSTR strFilename)
+{
+	static TCHAR sBackSlash[] = {'\\','\0'};
+	static TCHAR sTranslation[] = {'\\','V','a','r','F','i','l','e','I','n','f','o','\\','T','r','a','n','s','l','a','t','i','o','n','\0'};
+	static TCHAR sStringFileInfo[] = {'\\','S','t','r','i','n','g','F','i','l','e','I','n','f','o','\\',
+										'%','0','4','x','%','0','4','x','\\','%','s','\0'};
+	DWORD dwVersionDataLen = GetFileVersionInfoSize(strFilename, NULL);
+
+	if (dwVersionDataLen) {
+		dlg->pVersionData = malloc(dwVersionDataLen);
+
+		if (GetFileVersionInfo(strFilename, 0, dwVersionDataLen, dlg->pVersionData)) {
+			LPVOID pVal;
+			UINT nValLen;
+
+			if (VerQueryValue(dlg->pVersionData, sBackSlash, &pVal, &nValLen)) {
+				if (nValLen == sizeof(VS_FIXEDFILEINFO)) {
+					VS_FIXEDFILEINFO* pFixedFileInfo = (VS_FIXEDFILEINFO*)pVal;
+					char buffer[BUFFER_LEN];
+
+					sprintf(buffer, "%d.%d.%d.%d",
+						HIWORD(pFixedFileInfo->dwFileVersionMS), LOWORD(pFixedFileInfo->dwFileVersionMS),
+						HIWORD(pFixedFileInfo->dwFileVersionLS), LOWORD(pFixedFileInfo->dwFileVersionLS));
+
+					SetDlgItemTextA(hwnd, IDC_STATIC_PROP_VERSION, buffer);
+				}
+			}
+
+			/* Read the list of languages and code pages. */
+			if (VerQueryValue(dlg->pVersionData, sTranslation, &pVal, &nValLen)) {
+				struct LANGANDCODEPAGE* pTranslate = (struct LANGANDCODEPAGE*)pVal;
+				struct LANGANDCODEPAGE* pEnd = (struct LANGANDCODEPAGE*)((LPBYTE)pVal+nValLen);
+
+				HWND hlbox = GetDlgItem(hwnd, IDC_LIST_PROP_VERSION_TYPES);
+
+				/* Read the file description for each language and code page. */
+				for(; pTranslate<pEnd; ++pTranslate) {
+					LPCSTR* p;
+
+					for(p=InfoStrings; *p; ++p) {
+						TCHAR subblock[200];
+						LPCTSTR pTxt;
+						UINT nValLen;
+
+						LPCSTR pInfoString = *p;
+						wsprintf(subblock, sStringFileInfo, pTranslate->wLanguage, pTranslate->wCodePage, pInfoString);
+
+						/* Retrieve file description for language and code page */
+						if (VerQueryValue(dlg->pVersionData, subblock, (PVOID)&pTxt, &nValLen)) {
+							int idx = ListBox_AddString(hlbox, pInfoString);
+							ListBox_SetItemData(hlbox, idx, pTxt);
+						}
+					}
+				}
+
+				ListBox_SetCurSel(hlbox, 0);
+
+				PropDlg_DisplayValue(hlbox, GetDlgItem(hwnd,IDC_LIST_PROP_VERSION_VALUES));
+			}
+		}
+	}
+}
+
+static INT_PTR CALLBACK PropertiesDialogDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	static struct PropertiesDialog* dlg;
+
+	switch(nmsg) {
+		case WM_INITDIALOG: {
+			const static TCHAR sByteFmt[] = {'%','s',' ','B','y','t','e','s','\0'};
+			TCHAR b1[BUFFER_LEN], b2[BUFFER_LEN];
+			NUMBERFMT fmt = {0};
+			LPWIN32_FIND_DATA pWFD;
+			ULONGLONG size;
+
+			dlg = (struct PropertiesDialog*) lparam;
+			pWFD = (LPWIN32_FIND_DATA) &dlg->entry.data;
+
+			GetWindowText(hwnd, b1, MAX_PATH);
+			wsprintf(b2, b1, pWFD->cFileName);
+			SetWindowText(hwnd, b2);
+
+			format_date(&pWFD->ftLastWriteTime, b1, COL_DATE|COL_TIME);
+			SetWindowText(GetDlgItem(hwnd, IDC_STATIC_PROP_LASTCHANGE), b1);
+
+			size = ((ULONGLONG)pWFD->nFileSizeHigh << 32) | pWFD->nFileSizeLow;
+			wsprintf(b1, sLongNumFmt, size);
+			wsprintf(b2, sByteFmt, b1);
+			SetWindowText(GetDlgItem(hwnd, IDC_STATIC_PROP_SIZE), b2);
+
+			SetWindowText(GetDlgItem(hwnd, IDC_STATIC_PROP_FILENAME), pWFD->cFileName);
+			SetWindowText(GetDlgItem(hwnd, IDC_STATIC_PROP_PATH), dlg->path);
+
+			Button_SetCheck(GetDlgItem(hwnd,IDC_CHECK_READONLY), (pWFD->dwFileAttributes&FILE_ATTRIBUTE_READONLY? BST_CHECKED: BST_UNCHECKED));
+			Button_SetCheck(GetDlgItem(hwnd,IDC_CHECK_ARCHIVE), (pWFD->dwFileAttributes&FILE_ATTRIBUTE_ARCHIVE? BST_CHECKED: BST_UNCHECKED));
+			Button_SetCheck(GetDlgItem(hwnd,IDC_CHECK_COMPRESSED), (pWFD->dwFileAttributes&FILE_ATTRIBUTE_COMPRESSED? BST_CHECKED: BST_UNCHECKED));
+			Button_SetCheck(GetDlgItem(hwnd,IDC_CHECK_HIDDEN), (pWFD->dwFileAttributes&FILE_ATTRIBUTE_HIDDEN? BST_CHECKED: BST_UNCHECKED));
+			Button_SetCheck(GetDlgItem(hwnd,IDC_CHECK_SYSTEM), (pWFD->dwFileAttributes&FILE_ATTRIBUTE_SYSTEM? BST_CHECKED: BST_UNCHECKED));
+
+			CheckForFileInfo(dlg, hwnd, dlg->path);
+			return 1;}
+
+		case WM_COMMAND: {
+			int id = (int)wparam;
+
+			switch(HIWORD(wparam)) {
+			  case LBN_SELCHANGE: {
+				HWND hlbox = GetDlgItem(hwnd, IDC_LIST_PROP_VERSION_TYPES);
+				PropDlg_DisplayValue(hlbox, GetDlgItem(hwnd,IDC_LIST_PROP_VERSION_VALUES));
+				break;
+			  }
+
+			  case BN_CLICKED:
+				if (id==IDOK || id==IDCANCEL)
+					EndDialog(hwnd, id);
+			}
+
+			return 1;}
+
+		case WM_NCDESTROY:
+			free(dlg->pVersionData);
+			dlg->pVersionData = NULL;
+			break;
+	}
+
+	return 0;
+}
+
+static void show_properties_dlg(Entry* entry, HWND hwnd)
+{
+	struct PropertiesDialog dlg;
+
+	memset(&dlg, 0, sizeof(struct PropertiesDialog));
+	get_path(entry, dlg.path);
+	memcpy(&dlg.entry, entry, sizeof(Entry));
+
+	DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_DIALOG_PROPERTIES), hwnd, PropertiesDialogDlgProc, (LPARAM)&dlg);
 }
 
 
@@ -3740,7 +3921,10 @@ static void activate_entry(ChildWnd* child, Pane* pane, HWND hwnd)
 #endif
 		}
 	} else {
-		launch_entry(entry, child->hwnd, SW_SHOWNORMAL);
+		if (GetKeyState(VK_MENU) < 0)
+			show_properties_dlg(entry, child->hwnd);
+		else
+			launch_entry(entry, child->hwnd, SW_SHOWNORMAL);
 	}
 }
 
@@ -4224,6 +4408,10 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 #endif
 					SetCapture(hwnd);
 					break;}
+
+				case ID_EDIT_PROPERTIES:
+					show_properties_dlg(pane->cur, child->hwnd);
+					break;
 
 				default:
 					return pane_command(pane, LOWORD(wparam));
