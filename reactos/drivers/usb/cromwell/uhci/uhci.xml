@@ -4,12 +4,11 @@
 	<define name="DEBUG_MODE" />
 	<include base="ntoskrnl">include</include>
 	<include>../linux</include>
+	<library>sys_base</library>
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<library>usbcore</library>
 	<file>uhci-hcd.c</file>
-	<file>../sys/ros_wrapper.c</file>
-	<file>../sys/linuxwrapper.c</file>
 	<file>uhci_main.c</file>
 	<file>uhci.rc</file>
 </module>
