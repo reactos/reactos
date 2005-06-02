@@ -37,6 +37,17 @@ DIB_32BPP_GetPixel(SURFOBJ *SurfObj, LONG x, LONG y)
   return (ULONG)(*addr);
 }
 
+
+#ifdef _M_IX86
+VOID
+DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
+{    
+ PBYTE byteaddr = SurfObj->pvScan0 + y * SurfObj->lDelta;
+  PDWORD addr = (PDWORD)byteaddr + x1;
+  LONG cx = x2 - x1;
+  if (cx>0) memset4(addr, c, cx);    
+}
+#else
 VOID
 DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
@@ -50,6 +61,7 @@ DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
     ++cx;
   }
 }
+#endif
 
 VOID
 DIB_32BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
@@ -293,6 +305,80 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
    BOOL UsesSource;
    BOOL UsesPattern;
    PULONG DestBits;
+
+   switch (BltInfo->Rop4)
+	{
+		 case  ROP4_BLACKNESS:  
+			 //return(0x00000000);	
+			 
+#ifdef _M_IX86              			 			 
+             if (BltInfo->DestRect.left!=0)
+			 {
+			  SourceX = (BltInfo->DestRect.right - BltInfo->DestRect.left) ;
+			  if (SourceX<=0) return TRUE;
+
+				for (DestY=BltInfo->DestRect.bottom-1;DestY>=BltInfo->DestRect.top;DestY--)
+				{			 
+					memset4( (PDWORD) (BltInfo->DestSurface->pvScan0 + DestY * 
+					                   BltInfo->DestSurface->lDelta + 
+					                   BltInfo->DestRect.left),  0x00000000, SourceX);  					 
+				}
+			
+			  }
+			 else
+			 {
+			  
+			   SourceX = ((BltInfo->DestRect.bottom - BltInfo->DestRect.top) * 
+			  	           BltInfo->DestRect.right) ;
+
+			   if (SourceX<=0) return TRUE
+			   memset4( (PDWORD) (BltInfo->DestSurface->pvScan0 + BltInfo->DestRect.top * 
+				                  BltInfo->DestSurface->lDelta), 0x00000000, SourceX);  			  
+			 }
+#else			 	
+			 for (DestY=BltInfo->DestRect.bottom-1;DestY>=BltInfo->DestRect.top;DestY--)
+			 {			 				
+					DIB_32BPP_HLine(BltInfo->DestSurface, BltInfo->DestRect.bottom, SourceX, DestY, 0x00000000);			  				
+			 }
+#endif
+
+		 return TRUE;
+		 break;
+
+		 case ROP4_WHITENESS:   
+			 //return(0xFFFFFFFF);
+			 SourceX = ((BltInfo->DestRect.bottom - BltInfo->DestRect.top) * BltInfo->DestRect.right) ;
+             if (SourceX<=0) return TRUE
+#ifdef _M_IX86
+			 
+             if (BltInfo->DestRect.left!=0)
+			 {								
+				for (DestY=BltInfo->DestRect.bottom-1;DestY>=BltInfo->DestRect.top;DestY--)
+				{			 				
+					memset4( (PDWORD) (BltInfo->DestSurface->pvScan0 + DestY * 
+					                   BltInfo->DestSurface->lDelta + 
+					                   BltInfo->DestRect.left),  0xFFFFFFFF, SourceX);  					 
+				}
+			
+			 }
+			 else
+			 {			  			   
+			   memset4( (PDWORD) (BltInfo->DestSurface->pvScan0 + BltInfo->DestRect.top * 
+				       BltInfo->DestSurface->lDelta), 0xFFFFFFFF, SourceX);  			  
+			 }
+#else
+			 for (DestY=BltInfo->DestRect.bottom-1;DestY>=BltInfo->DestRect.top;DestY--)
+			 {			 				
+					DIB_32BPP_HLine(BltInfo->DestSurface, BltInfo->DestRect.bottom, SourceX, DestY, 0xFFFFFFFF);			  				
+			 }
+#endif
+
+		 return TRUE;
+		 break;
+
+		 default:
+		 break;
+         }	
 
    UsesSource = ROP4_USES_SOURCE(BltInfo->Rop4);
    UsesPattern = ROP4_USES_PATTERN(BltInfo->Rop4);
