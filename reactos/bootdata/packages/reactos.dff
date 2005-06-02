@@ -97,7 +97,7 @@ lib\kbdus\kbdus.dll                     1
 lib\kernel32\kernel32.dll               1
 lib\lzexpand\lz32.dll                   1
 lib\mesa32\mesa32.dll                   1
-lib\midimap\midimap.dll                 1
+lib\winmm\midimap\midimap.dll           1
 lib\mmdrv\mmdrv.dll                     1
 lib\mpr\mpr.dll                         1
 lib\msacm\msacm32.dll                   1
