@@ -4449,7 +4449,7 @@ static void InitInstance(HINSTANCE hinstance)
 #endif
 
 	/* load column strings */
-	col = 0;
+	col = 1;
 
 	load_string(g_pos_names[col++], IDS_COL_NAME);
 	load_string(g_pos_names[col++], IDS_COL_SIZE);
