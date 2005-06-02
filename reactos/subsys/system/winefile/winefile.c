@@ -1847,15 +1847,23 @@ static void CheckForFileInfo(struct PropertiesDialog* dlg, HWND hwnd, LPCTSTR st
 
 					for(p=InfoStrings; *p; ++p) {
 						TCHAR subblock[200];
+#ifdef UNICODE
+						TCHAR infoStr[100];
+#endif
 						LPCTSTR pTxt;
 						UINT nValLen;
 
 						LPCSTR pInfoString = *p;
-						wsprintf(subblock, sStringFileInfo, pTranslate->wLanguage, pTranslate->wCodePage, pInfoString);
+#ifdef UNICODE
+						MultiByteToWideChar(CP_ACP, 0, pInfoString, -1, infoStr, 100);
+#else
+#define	infoStr pInfoString
+#endif
+						wsprintf(subblock, sStringFileInfo, pTranslate->wLanguage, pTranslate->wCodePage, infoStr);
 
 						/* Retrieve file description for language and code page */
 						if (VerQueryValue(dlg->pVersionData, subblock, (PVOID)&pTxt, &nValLen)) {
-							int idx = ListBox_AddString(hlbox, pInfoString);
+							int idx = ListBox_AddString(hlbox, infoStr);
 							ListBox_SetItemData(hlbox, idx, pTxt);
 						}
 					}
