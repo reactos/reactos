@@ -331,7 +331,7 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
 			   SourceX = ((BltInfo->DestRect.bottom - BltInfo->DestRect.top) * 
 			  	           BltInfo->DestRect.right) ;
 
-			   if (SourceX<=0) return TRUE
+			   if (SourceX<=0) return TRUE;
 			   memset4( (PDWORD) (BltInfo->DestSurface->pvScan0 + BltInfo->DestRect.top * 
 				                  BltInfo->DestSurface->lDelta), 0x00000000, SourceX);  			  
 			 }
@@ -348,10 +348,11 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
 		 case ROP4_WHITENESS:   
 			 //return(0xFFFFFFFF);
 			 SourceX = ((BltInfo->DestRect.bottom - BltInfo->DestRect.top) * BltInfo->DestRect.right) ;
-             if (SourceX<=0) return TRUE
+             if (SourceX<=0) return TRUE;
+
 #ifdef _M_IX86
 			 
-             if (BltInfo->DestRect.left!=0)
+             if ( BltInfo->DestRect.left!=0)
 			 {								
 				for (DestY=BltInfo->DestRect.bottom-1;DestY>=BltInfo->DestRect.top;DestY--)
 				{			 				
