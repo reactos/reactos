@@ -1,7 +1,7 @@
 #if !defined(INCLUDE_SM_NS_H)
 #define INCLUDE_SM_NS_H
 
-/* $Id: helper.h 13689 2005-02-20 16:46:10Z ea $ */
+/* $Id$ */
 
 #define SM_REGISTRY_ROOT_NAME	     L"\\Session Manager"
 #define SM_REGISTRY_SUBSYSTEMS_NAME  L"SubSystems"

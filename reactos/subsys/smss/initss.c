@@ -99,46 +99,6 @@ SmpRegisterSmss(VOID)
 
 
 /**********************************************************************
- * 	SmpLoadKernelModeSubsystem/0
- */
-static NTSTATUS
-SmpLoadKernelModeSubsystem (VOID)
-{
-	NTSTATUS  Status = STATUS_SUCCESS;
-	WCHAR     Data [MAX_PATH + 1];
-	ULONG     DataLength = sizeof Data;
-	ULONG     DataType = 0;
-
-
-	DPRINT("SM: %s called\n", __FUNCTION__);
-
-	Status = SmLookupSubsystem (L"Kmode",
-				    Data,
-				    & DataLength,
-				    & DataType,
-				    TRUE);
-	if((STATUS_SUCCESS == Status) && (DataLength > sizeof Data[0]))
-	{
-		WCHAR                      ImagePath [MAX_PATH + 1] = {0};
-		SYSTEM_LOAD_AND_CALL_IMAGE ImageInfo;
-
-		wcscpy (ImagePath, L"\\??\\");
-		wcscat (ImagePath, Data);
-		RtlZeroMemory (& ImageInfo, sizeof ImageInfo);
-		RtlInitUnicodeString (& ImageInfo.ModuleName, ImagePath);
-		Status = NtSetSystemInformation(SystemLoadAndCallImage,
-						& ImageInfo,
-						sizeof ImageInfo);
-		if(!NT_SUCCESS(Status))
-		{
-			DPRINT("SM: %s: loading Kmode failed (Status=0x%08lx)\n",
-				__FUNCTION__, Status);
-		}
-	}
-	return Status;
-}
-
-/**********************************************************************
  * 	SmpLoadRequiredSubsystems/0
  */
 static NTSTATUS
@@ -157,7 +117,7 @@ SmpLoadRequiredSubsystems (VOID)
 				    Data,
 				    & DataLength,
 				    & DataType,
-				    FALSE);
+				    NULL);
 	if((STATUS_SUCCESS == Status) && (DataLength > sizeof Data[0]))
 	{
 		PWCHAR Name = NULL;
@@ -205,9 +165,6 @@ SmLoadSubsystems(VOID)
 
 	/* SM self registers */
 	Status = SmpRegisterSmss();
-	if(!NT_SUCCESS(Status)) return Status;
-	/* Load Kmode subsystem (aka win32k.sys) */
-	Status = SmpLoadKernelModeSubsystem();
 	if(!NT_SUCCESS(Status)) return Status;
 	/* Load Required subsystems (Debug Windows) */
 	Status = SmpLoadRequiredSubsystems();

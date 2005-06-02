@@ -135,128 +135,6 @@ SmCreateUserProcess (LPWSTR ImagePath,
 	return Status;
 }
 
-/**********************************************************************
- * NAME
- *	SmLookupSubsystem/5
- *
- * DESCRIPTION
- * 	Read from the registry key
- * 	\Registry\SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems
- * 	the value which name is Name.
- *
- * ARGUMENTS
- * 	Name: name of the program to run, that is a value's name in
- * 	      the SM registry key Subsystems;
- * 	Data: what the registry gave back for Name;
- * 	DataLength: how much Data the registry returns;
- * 	DataType: what is Data?
- * 	Expand: set it TRUE if you want this function to use the env
- * 	      to possibly expand Data before giving it back.
- */
-NTSTATUS STDCALL
-SmLookupSubsystem (IN     PWSTR   Name,
-		   IN OUT PWSTR   Data,
-		   IN OUT PULONG  DataLength,
-		   IN OUT PULONG  DataType,
-		   IN     BOOLEAN Expand)
-{
-	NTSTATUS           Status = STATUS_SUCCESS;
-	UNICODE_STRING     usKeyName = {0};
-	OBJECT_ATTRIBUTES  Oa = {0};
-	HANDLE             hKey = (HANDLE) 0;
-
-	DPRINT("SM: %s(Name='%S') called\n", __FUNCTION__, Name);
-	/*
-	 * Prepare the key name to scan and
-	 * related object attributes.
-	 */
-	RtlInitUnicodeString (& usKeyName,
-		L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\SubSystems");
-
-	InitializeObjectAttributes (& Oa,
-				    & usKeyName,
-				    OBJ_CASE_INSENSITIVE,
-				    NULL,
-				    NULL);
-	/*
-	 * Open the key. This MUST NOT fail, if the
-	 * request is for a legitimate subsystem.
-	 */
-	Status = NtOpenKey (& hKey,
-			      MAXIMUM_ALLOWED,
-			      & Oa);
-	if(NT_SUCCESS(Status))
-	{
-		UNICODE_STRING usValueName = {0};
-		WCHAR          KeyValueInformation [1024] = {L'\0'};
-		ULONG          ResultLength = 0L;
-		PKEY_VALUE_PARTIAL_INFORMATION
-			       kvpi = (PKEY_VALUE_PARTIAL_INFORMATION) KeyValueInformation;
-
-		
-		RtlInitUnicodeString (& usValueName, Name);
-		Status = NtQueryValueKey (hKey,
-					  & usValueName,
-					  KeyValuePartialInformation,
-					  KeyValueInformation,
-					  sizeof KeyValueInformation,
-					  & ResultLength);
-		if(NT_SUCCESS(Status))
-		{
-			DPRINT("nkvpi.TitleIndex = %ld\n", kvpi->TitleIndex);
-			DPRINT("kvpi.Type        = %ld\n", kvpi->Type);
-			DPRINT("kvpi.DataLength  = %ld\n", kvpi->DataLength);
-
-			if((NULL != Data) && (NULL != DataLength) && (NULL != DataType))
-			{
-				*DataType = kvpi->Type;
-				if((Expand) && (REG_EXPAND_SZ == *DataType))
-				{
-					UNICODE_STRING Source;
-					WCHAR          DestinationBuffer [2048] = {0};
-					UNICODE_STRING Destination;
-					ULONG          Length = 0;
-
-					DPRINT("SM: %s: value will be expanded\n", __FUNCTION__);
-
-					Source.Length        = kvpi->DataLength;
-					Source.MaximumLength = kvpi->DataLength;
-					Source.Buffer        = (PWCHAR) & kvpi->Data;
-
-					Destination.Length        = 0;
-					Destination.MaximumLength = sizeof DestinationBuffer;
-					Destination.Buffer        = DestinationBuffer;
-
-					Status = RtlExpandEnvironmentStrings_U (SmSystemEnvironment,
-										& Source,
-										& Destination,
-										& Length);
-					if(NT_SUCCESS(Status))
-					{
-						*DataLength = min(*DataLength, Destination.Length);
-						RtlCopyMemory (Data, Destination.Buffer, *DataLength);				
-					}
-							
-				}else{
-					DPRINT("SM: %s: value won't be expanded\n", __FUNCTION__);
-					*DataLength = min(*DataLength, kvpi->DataLength);
-					RtlCopyMemory (Data, & kvpi->Data, *DataLength);
-				}
-				*DataType = kvpi->Type;
-			}else{
-				DPRINT1("SM: %s: Data or DataLength or DataType is NULL!\n", __FUNCTION__);
-				Status = STATUS_INVALID_PARAMETER;
-			}
-		}else{
-			DPRINT1("%s: NtQueryValueKey failed (Status=0x%08lx)\n", __FUNCTION__, Status);
-		}
-		NtClose (hKey);
-	}else{
-		DPRINT1("%s: NtOpenKey failed (Status=0x%08lx)\n", __FUNCTION__, Status);
-	}
-	return Status;
-}
-
 
 /**********************************************************************
  * SmExecPgm/1							API
@@ -298,7 +176,7 @@ SMAPI(SmExecPgm)
 					    Data,
 					    & DataLength,
 					    & DataType,
-					    TRUE); /* expand */
+					    SmSystemEnvironment /* expand */);
 		if(NT_SUCCESS(Status))
 		{
 			/* Is the subsystem definition non-empty? */

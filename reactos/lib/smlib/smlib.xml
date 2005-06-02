@@ -4,4 +4,5 @@
 	<file>connect.c</file>
 	<file>execpgm.c</file>
 	<file>compses.c</file>
+	<file>lookupss.c</file>
 </module>

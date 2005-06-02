@@ -30,5 +30,11 @@ SmQueryInformation (IN      HANDLE                SmApiPort,
 		    IN OUT  PVOID                 Data,
 		    IN      ULONG                 DataLength,
 		    IN OUT  PULONG                ReturnedDataLength OPTIONAL);
-
+/* smlib/lookupss.c */
+NTSTATUS STDCALL
+SmLookupSubsystem (IN     PWSTR   Name,
+		   IN OUT PWSTR   Data,
+		   IN OUT PULONG  DataLength,
+		   IN OUT PULONG  DataType,
+		   IN     PVOID   Environment OPTIONAL);
 #endif /* ndef INCLUDE_SM_HELPER_H */
