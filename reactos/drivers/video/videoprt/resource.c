@@ -1,7 +1,7 @@
 /*
  * VideoPort driver
  *
- * Copyright (C) 2002, 2003, 2004 ReactOS Team
+ * Copyright (C) 2002 - 2005 ReactOS Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -43,7 +43,7 @@ IntVideoPortMapPhysicalMemory(
    RtlInitUnicodeString(&UnicodeString, L"\\Device\\PhysicalMemory");
    InitializeObjectAttributes(&ObjAttribs,
                               &UnicodeString,
-                              OBJ_CASE_INSENSITIVE/* | OBJ_KERNEL_HANDLE*/,
+                              OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                               NULL, NULL);
 
    /* Open physical memory section */
