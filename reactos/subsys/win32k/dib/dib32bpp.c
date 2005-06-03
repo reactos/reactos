@@ -329,18 +329,17 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
 			 else
 			 {			  			 
 			  SourceX = ((BltInfo->DestRect.bottom - BltInfo->DestRect.top) * 
-			  	           BltInfo->DestRect.right) << 2;
+			  	           BltInfo->DestRect.right);
 
 			   memset4(BltInfo->DestSurface->pvScan0 + BltInfo->DestRect.top * 
 				       BltInfo->DestSurface->lDelta, 0x00000000, SourceX);  
 			   
 
 			 }
-#else
-			 	SourceX = (BltInfo->DestRect.right - BltInfo->DestRect.left) << 2;
+#else			 	
 				for (DestY=BltInfo->DestRect.bottom-1;DestY>=BltInfo->DestRect.top;DestY--)
 				{			 				
-					DIB_32BPP_HLine(BltInfo->DestSurface, BltInfo->DestRect.bottom, SourceX, DestY, 0x00000000);			  				
+					DIB_32BPP_HLine(BltInfo->DestSurface, BltInfo->DestRect.left, BltInfo->DestRect.right, DestY, 0x00000000);			  				
 				}
 #endif
 
@@ -364,7 +363,7 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
 			 else
 			 {			  			 
 			  SourceX = ((BltInfo->DestRect.bottom - BltInfo->DestRect.top) * 
-			  	           BltInfo->DestRect.right) << 2;
+			  	           BltInfo->DestRect.right);
 
 			   memset4(BltInfo->DestSurface->pvScan0 + BltInfo->DestRect.top * 
 				       BltInfo->DestSurface->lDelta, 0xFFFFFFFF, SourceX);  
@@ -372,10 +371,9 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
 
 			 }
 #else
-			 	SourceX = (BltInfo->DestRect.right - BltInfo->DestRect.left) << 2;
 				for (DestY=BltInfo->DestRect.bottom-1;DestY>=BltInfo->DestRect.top;DestY--)
 				{			 				
-					DIB_32BPP_HLine(BltInfo->DestSurface, BltInfo->DestRect.bottom, SourceX, DestY, 0xFFFFFFFF);			  				
+					DIB_32BPP_HLine(BltInfo->DestSurface, BltInfo->DestRect.left, BltInfo->DestRect.left, DestY, 0xFFFFFFFF);			  				
 				}
 #endif
 		 return TRUE;
@@ -395,6 +393,7 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
 				case BMF_24BPP:
 				break;
 				case BMF_32BPP:
+
 					 SrcmaxX = BltInfo->SourceSurface->sizlBitmap.cx - BltInfo->SourcePoint.x;
 					 SrcmaxY = BltInfo->SourceSurface->sizlBitmap.cy - BltInfo->SourcePoint.y;
  
