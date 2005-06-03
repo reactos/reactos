@@ -464,26 +464,7 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
 			   }
 
 		 break;	
-         case ROP4_DSTINVERT:   
-			 // return(~Dest);
-			 {
-			  /* calc dest start position */
-			  PBYTE Destbyteaddr = BltInfo->SourceSurface->pvScan0 + BltInfo->DestRect.top * BltInfo->SourceSurface->lDelta;
-              PDWORD Destaddr = (PDWORD)Destbyteaddr + BltInfo->DestRect.left;
-			  LONG  DestxlDelta =  BltInfo->SourceSurface->lDelta - (BltInfo->DestRect.right - BltInfo->DestRect.left) ;				
-					 					 					 
-			  for (DestY=BltInfo->DestRect.top; DestY<BltInfo->DestRect.bottom; DestY++)
-			  {  					   					 					                 	  						
-					for (DestX=BltInfo->DestRect.left; DestX<BltInfo->DestRect.right; DestX++, Destaddr++)				
-					{																																			                    										  
-					  *Destaddr = ~(*Destaddr);
-					 }	
-					  Destaddr+=DestxlDelta;
-                } 
-                 return TRUE;					 				
-				}
-		 break;	
-
+        
          case ROP4_NOTSRCERASE: 
 			 // return(~(Dest | Source));
 			  switch (BltInfo->SourceSurface->iBitmapFormat)
