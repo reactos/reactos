@@ -387,30 +387,36 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
 				case BMF_16BPP:
 				case BMF_24BPP:
 				{
-					PBYTE byteaddr = BltInfo->SourceSurface->pvScan0 + BltInfo->DestRect.top * BltInfo->SourceSurface->lDelta;
-                    PDWORD addr = (PDWORD)byteaddr + BltInfo->DestRect.left;
-					LONG  xlDelta =  BltInfo->SourceSurface->lDelta - (BltInfo->DestRect.right - BltInfo->DestRect.left) ;
+					/* calc dest start position */
+					PBYTE Destbyteaddr = BltInfo->SourceSurface->pvScan0 + BltInfo->DestRect.top * BltInfo->SourceSurface->lDelta;
+                    PDWORD Destaddr = (PDWORD)Destbyteaddr + BltInfo->DestRect.left;
+					LONG  DestxlDelta =  BltInfo->SourceSurface->lDelta - (BltInfo->DestRect.right - BltInfo->DestRect.left) ;
+
+					/* calc src start position */
 
 					 SourceY = BltInfo->SourcePoint.y;					 
 					 					 
 					 for (DestY=BltInfo->DestRect.top; DestY<BltInfo->DestRect.bottom; DestY++)
 			         {  
 					   					 
-				      if (SourceY > BltInfo->SourceSurface->sizlBitmap.cy) break;
+						if (SourceY > BltInfo->SourceSurface->sizlBitmap.cy) break;
                  	  
-					  SourceX = BltInfo->SourcePoint.x;
+						SourceX = BltInfo->SourcePoint.x;
 
-				      for (DestX=BltInfo->DestRect.left; DestX<BltInfo->DestRect.right; DestX++, SourceX++, addr++)				
-					  {																														
+						for (DestX=BltInfo->DestRect.left; DestX<BltInfo->DestRect.right; DestX++, SourceX++, Destaddr++)				
+						{																														
 						   if (SourceX > BltInfo->SourceSurface->sizlBitmap.cx) break;														
 					                    										  
-								*addr = DIB_GetSource(BltInfo->SourceSurface,  SourceX, 
+								*Destaddr = DIB_GetSource(BltInfo->SourceSurface,  SourceX, 
 												      SourceY, BltInfo->XlateSourceToDest);										
-							}						
+						 }	
+					  Destaddr+=DestxlDelta;
 					  } 
-					 addr+=xlDelta;
+                 return TRUE;					 
+				 break;
 				}
-				break;
+				
+
 				case BMF_32BPP:
 				{
 					INT Destdelta;
@@ -449,16 +455,78 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
 						}
 						while (--DesmaxY);
 					}
-					return TRUE;
-					break;
+				 return TRUE;	
+				 break;
 				}
-				
-
+								
 				default:
 				break;
 			   }
-		 break;
 
+		 break;	
+         case ROP4_DSTINVERT:   
+			 // return(~Dest);
+			 {
+			  /* calc dest start position */
+			  PBYTE Destbyteaddr = BltInfo->SourceSurface->pvScan0 + BltInfo->DestRect.top * BltInfo->SourceSurface->lDelta;
+              PDWORD Destaddr = (PDWORD)Destbyteaddr + BltInfo->DestRect.left;
+			  LONG  DestxlDelta =  BltInfo->SourceSurface->lDelta - (BltInfo->DestRect.right - BltInfo->DestRect.left) ;				
+					 					 					 
+			  for (DestY=BltInfo->DestRect.top; DestY<BltInfo->DestRect.bottom; DestY++)
+			  {  					   					 					                 	  						
+					for (DestX=BltInfo->DestRect.left; DestX<BltInfo->DestRect.right; DestX++, Destaddr++)				
+					{																																			                    										  
+					  *Destaddr = ~(*Destaddr);
+					 }	
+					  Destaddr+=DestxlDelta;
+                } 
+                 return TRUE;					 				
+				}
+		 break;	
+
+         case ROP4_NOTSRCERASE: 
+			 // return(~(Dest | Source));
+			  switch (BltInfo->SourceSurface->iBitmapFormat)
+			  {			   
+			    case BMF_1BPP:
+				case BMF_4BPP:						
+				case BMF_16BPP:
+				case BMF_24BPP:
+				case BMF_32BPP:
+				{
+					/* calc dest start position */
+					PBYTE Destbyteaddr = BltInfo->SourceSurface->pvScan0 + BltInfo->DestRect.top * BltInfo->SourceSurface->lDelta;
+                    PDWORD Destaddr = (PDWORD)Destbyteaddr + BltInfo->DestRect.left;
+					LONG  DestxlDelta =  BltInfo->SourceSurface->lDelta - (BltInfo->DestRect.right - BltInfo->DestRect.left) ;				
+
+					 SourceY = BltInfo->SourcePoint.y;					 
+					 					 
+					 for (DestY=BltInfo->DestRect.top; DestY<BltInfo->DestRect.bottom; DestY++)
+			         {  
+					   					 
+						if (SourceY > BltInfo->SourceSurface->sizlBitmap.cy) break;
+                 	  
+						SourceX = BltInfo->SourcePoint.x;
+
+						for (DestX=BltInfo->DestRect.left; DestX<BltInfo->DestRect.right; DestX++, SourceX++, Destaddr++)				
+						{																														
+						   if (SourceX > BltInfo->SourceSurface->sizlBitmap.cx) break;														
+					                    										  
+								*Destaddr = ~(*Destaddr | DIB_GetSource(BltInfo->SourceSurface,  SourceX, 
+												      SourceY, BltInfo->XlateSourceToDest));										
+						 }	
+					  Destaddr+=DestxlDelta;
+					  } 
+                 return TRUE;					 
+				 break;				
+																				
+				default:
+				break;
+			   }
+			  }
+         break;
+
+				
 		 default:
 		 break;
          }	
