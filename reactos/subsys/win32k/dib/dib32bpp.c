@@ -310,15 +310,14 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
 	{
 		 case  ROP4_BLACKNESS:  
 			 //return(0x00000000);	
+
 			 
 #ifdef _M_IX86              			 			 
              if (BltInfo->DestRect.left!=0)
 			 {
-			  SourceX = (BltInfo->DestRect.right - BltInfo->DestRect.left) ;
-			  if (SourceX<=0) return TRUE;
-
+			   SourceX = (BltInfo->DestRect.right - BltInfo->DestRect.left) << 2;
 				for (DestY=BltInfo->DestRect.bottom-1;DestY>=BltInfo->DestRect.top;DestY--)
-				{			 
+				{			 				
 					memset4( (PDWORD) (BltInfo->DestSurface->pvScan0 + DestY * 
 					                   BltInfo->DestSurface->lDelta + 
 					                   BltInfo->DestRect.left),  0x00000000, SourceX);  					 
@@ -326,20 +325,21 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
 			
 			  }
 			 else
-			 {
-			  
-			   SourceX = ((BltInfo->DestRect.bottom - BltInfo->DestRect.top) * 
-			  	           BltInfo->DestRect.right) ;
+			 {			  			 
+			  SourceX = ((BltInfo->DestRect.bottom - BltInfo->DestRect.top) * 
+			  	           BltInfo->DestRect.right) << 2;
 
-			   if (SourceX<=0) return TRUE;
-			   memset4( (PDWORD) (BltInfo->DestSurface->pvScan0 + BltInfo->DestRect.top * 
-				                  BltInfo->DestSurface->lDelta), 0x00000000, SourceX);  			  
+			   memset4(BltInfo->DestSurface->pvScan0 + BltInfo->DestRect.top * 
+				       BltInfo->DestSurface->lDelta, 0x00000000, SourceX);  
+			   
+
 			 }
-#else			 	
-			 for (DestY=BltInfo->DestRect.bottom-1;DestY>=BltInfo->DestRect.top;DestY--)
-			 {			 				
+#else
+			 	SourceX = (BltInfo->DestRect.right - BltInfo->DestRect.left) << 2;
+				for (DestY=BltInfo->DestRect.bottom-1;DestY>=BltInfo->DestRect.top;DestY--)
+				{			 				
 					DIB_32BPP_HLine(BltInfo->DestSurface, BltInfo->DestRect.bottom, SourceX, DestY, 0x00000000);			  				
-			 }
+				}
 #endif
 
 		 return TRUE;
@@ -347,13 +347,10 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
 
 		 case ROP4_WHITENESS:   
 			 //return(0xFFFFFFFF);
-			 SourceX = ((BltInfo->DestRect.bottom - BltInfo->DestRect.top) * BltInfo->DestRect.right) ;
-             if (SourceX<=0) return TRUE;
-
-#ifdef _M_IX86
-			 
-             if ( BltInfo->DestRect.left!=0)
-			 {								
+#ifdef _M_IX86           
+             if (BltInfo->DestRect.left!=0)
+			 {
+			   SourceX = (BltInfo->DestRect.right - BltInfo->DestRect.left) << 2;
 				for (DestY=BltInfo->DestRect.bottom-1;DestY>=BltInfo->DestRect.top;DestY--)
 				{			 				
 					memset4( (PDWORD) (BltInfo->DestSurface->pvScan0 + DestY * 
@@ -361,19 +358,24 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
 					                   BltInfo->DestRect.left),  0xFFFFFFFF, SourceX);  					 
 				}
 			
-			 }
+			  }
 			 else
-			 {			  			   
-			   memset4( (PDWORD) (BltInfo->DestSurface->pvScan0 + BltInfo->DestRect.top * 
-				       BltInfo->DestSurface->lDelta), 0xFFFFFFFF, SourceX);  			  
+			 {			  			 
+			  SourceX = ((BltInfo->DestRect.bottom - BltInfo->DestRect.top) * 
+			  	           BltInfo->DestRect.right) << 2;
+
+			   memset4(BltInfo->DestSurface->pvScan0 + BltInfo->DestRect.top * 
+				       BltInfo->DestSurface->lDelta, 0xFFFFFFFF, SourceX);  
+			   
+
 			 }
 #else
-			 for (DestY=BltInfo->DestRect.bottom-1;DestY>=BltInfo->DestRect.top;DestY--)
-			 {			 				
+			 	SourceX = (BltInfo->DestRect.right - BltInfo->DestRect.left) << 2;
+				for (DestY=BltInfo->DestRect.bottom-1;DestY>=BltInfo->DestRect.top;DestY--)
+				{			 				
 					DIB_32BPP_HLine(BltInfo->DestSurface, BltInfo->DestRect.bottom, SourceX, DestY, 0xFFFFFFFF);			  				
-			 }
+				}
 #endif
-
 		 return TRUE;
 		 break;
 
