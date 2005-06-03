@@ -308,6 +308,7 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
 
    switch (BltInfo->Rop4)
 	{
+
 		 case  ROP4_BLACKNESS:  
 			 //return(0x00000000);	
 
@@ -376,17 +377,39 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
 #endif
 		 return TRUE;
 		 break;
+
 		case  ROP4_SRCCOPY:     
 			 // return(Source);
 			  switch (BltInfo->SourceSurface->iBitmapFormat)
 			  {			   
 			    case BMF_1BPP:
-				break;
-				case BMF_4BPP:
-				break;								
+				case BMF_4BPP:						
 				case BMF_16BPP:
-				break;
 				case BMF_24BPP:
+				{
+					PBYTE byteaddr = BltInfo->SourceSurface->pvScan0 + BltInfo->DestRect.top * BltInfo->SourceSurface->lDelta;
+                    PDWORD addr = (PDWORD)byteaddr + BltInfo->DestRect.left;
+					LONG  xlDelta =  BltInfo->SourceSurface->lDelta - (BltInfo->DestRect.right - BltInfo->DestRect.left) ;
+
+					 SourceY = BltInfo->SourcePoint.y;					 
+					 					 
+					 for (DestY=BltInfo->DestRect.top; DestY<BltInfo->DestRect.bottom; DestY++)
+			         {  
+					   					 
+				      if (SourceY > BltInfo->SourceSurface->sizlBitmap.cy) break;
+                 	  
+					  SourceX = BltInfo->SourcePoint.x;
+
+				      for (DestX=BltInfo->DestRect.left; DestX<BltInfo->DestRect.right; DestX++, SourceX++, addr++)				
+					  {																														
+						   if (SourceX > BltInfo->SourceSurface->sizlBitmap.cx) break;														
+					                    										  
+								*addr = DIB_GetSource(BltInfo->SourceSurface,  SourceX, 
+												      SourceY, BltInfo->XlateSourceToDest);										
+							}						
+					  } 
+					 addr+=xlDelta;
+				}
 				break;
 				case BMF_32BPP:
 				{
