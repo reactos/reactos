@@ -1,6 +1,6 @@
 //Microsoft Developer Studio generated resource script.
 //
-#include "resrc1.h"
+#include "resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -203,7 +203,7 @@ LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 
 1 TEXTINCLUDE DISCARDABLE 
 BEGIN
-    "resrc1.h\0"
+    "resource.h\0"
 END
 
 2 TEXTINCLUDE DISCARDABLE 
