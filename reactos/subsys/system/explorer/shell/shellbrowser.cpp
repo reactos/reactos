@@ -28,7 +28,7 @@
 
 #include "precomp.h"
 
-#include "../explorer_intres.h"
+#include "../resource.h"
 
 
 ShellBrowser::ShellBrowser(HWND hwnd, HWND left_hwnd, WindowHandle& right_hwnd, ShellPathInfo& create_info,

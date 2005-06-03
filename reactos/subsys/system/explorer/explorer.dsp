@@ -401,16 +401,52 @@ SOURCE=.\res\drivebar.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=".\explorer-cz.rc"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=".\explorer-de.rc"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=".\explorer-en.rc"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=".\explorer-es.rc"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=".\explorer-fr.rc"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
 SOURCE=".\explorer-jp.rc"
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\res\explorer.ico
+SOURCE=".\explorer-pt.rc"
+# PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\explorer_intres.h
+SOURCE=".\explorer-ru.rc"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=".\explorer-sw.rc"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\explorer.ico
 # End Source File
 # Begin Source File
 
@@ -515,6 +551,10 @@ SOURCE=.\res\printer.ico
 # Begin Source File
 
 SOURCE=.\res\reactos.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\resource.h
 # End Source File
 # Begin Source File
 

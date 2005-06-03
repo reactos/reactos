@@ -32,7 +32,7 @@
 
 #include "precomp.h"
 
-#include "../explorer_intres.h"
+#include "../resource.h"
 
 #include "desktopbar.h"
 #include "startmenu.h"
@@ -115,7 +115,7 @@ BtnWindowClass& StartMenu::GetWndClasss()
 
 Window::CREATORFUNC_INFO StartMenu::s_def_creator = STARTMENU_CREATOR(StartMenu);
 
-HWND StartMenu::Create(int x, int y, const StartMenuFolders& folders, HWND hwndParent, LPCTSTR title, CREATORFUNC_INFO creator, void* info)
+HWND StartMenu::Create(int x, int y, const StartMenuFolders& folders, HWND hwndParent, LPCTSTR title, CREATORFUNC_INFO creator, void* info, const String& filter)
 {
 	UINT style, ex_style;
 	int top_height;
@@ -144,6 +144,7 @@ HWND StartMenu::Create(int x, int y, const StartMenuFolders& folders, HWND hwndP
 	create_info._border_top = top_height;
 	create_info._creator = creator;
 	create_info._info = info;
+	create_info._filter = filter;
 
 	if (title)
 		create_info._title = title;
@@ -255,6 +256,11 @@ void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, const String
 	} else
 		*ignore_name = '\0';
 
+	String lwr_filter = _create_info._filter;
+#ifndef __WINE__ ///@todo _tcslwr() for Wine
+	_tcslwr((LPTSTR)lwr_filter.c_str());
+#endif
+
 	int cnt = 0;
 	for(Entry*entry=dir._down; entry; entry=entry->_next) {
 		 // hide files like "desktop.ini"
@@ -269,6 +275,20 @@ void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, const String
 		 // only 'max' entries shall be added.
 		if (++cnt == max)
 			break;
+
+		 // filter only non-directory entries
+		if (!(entry->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY) && !lwr_filter.empty()) {
+			String lwr_name = entry->_data.cFileName;
+			String lwr_disp = entry->_display_name;
+
+#ifndef __WINE__ ///@todo _tcslwr() for Wine
+			_tcslwr((LPTSTR)lwr_name.c_str());
+			_tcslwr((LPTSTR)lwr_disp.c_str());
+#endif
+
+			if (!_tcsstr(lwr_name,lwr_filter) && !_tcsstr(lwr_disp,lwr_filter))
+				continue;
+		}
 
 		if (entry->_etype == ET_SHELL)
 			AddEntry(dir._folder, static_cast<ShellEntry*>(entry));
@@ -1245,7 +1265,7 @@ void StartMenu::CreateSubmenu(int id, const StartMenuFolders& new_folders, LPCTS
 	}
 
 	_submenu_id = id;
-	_submenu = StartMenu::Create(x, y, new_folders, _hwnd, title, creator, info);
+	_submenu = StartMenu::Create(x, y, new_folders, _hwnd, title, creator, info, _create_info._filter);
 }
 
 
@@ -2166,6 +2186,11 @@ void FavoritesMenu::AddEntries()
 {
 	super::AddEntries();
 
+	String lwr_filter = _create_info._filter;
+#ifndef __WINE__ ///@todo _tcslwr() for Wine
+	_tcslwr((LPTSTR)lwr_filter.c_str());
+#endif
+
 	for(BookmarkList::iterator it=_bookmarks.begin(); it!=_bookmarks.end(); ++it) {
 		BookmarkNode& node = *it;
 
@@ -2184,6 +2209,22 @@ void FavoritesMenu::AddEntries()
 
 			if (!bookmark._icon_path.empty())
 				icon = g_Globals._icon_cache.extract(bookmark._icon_path, bookmark._icon_idx);
+
+			 // filter non-directory entries
+			if (!lwr_filter.empty()) {
+				String lwr_name = bookmark._name;
+				String lwr_desc = bookmark._description;
+				String lwr_url = bookmark._url;
+
+#ifndef __WINE__ ///@todo _tcslwr() for Wine
+				_tcslwr((LPTSTR)lwr_name.c_str());
+				_tcslwr((LPTSTR)lwr_desc.c_str());
+				_tcslwr((LPTSTR)lwr_url.c_str());
+#endif
+
+				if (!_tcsstr(lwr_name,lwr_filter) && !_tcsstr(lwr_desc,lwr_filter) && !_tcsstr(lwr_url,lwr_filter))
+					continue;
+			}
 
 			AddButton(bookmark._name, icon!=ICID_NONE?icon:ICID_BOOKMARK, false, id);
 		}

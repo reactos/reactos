@@ -294,7 +294,7 @@ SOURCE=.\res\explorer.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\explorer_intres.h
+SOURCE=.\resource.h
 # End Source File
 # Begin Source File
 

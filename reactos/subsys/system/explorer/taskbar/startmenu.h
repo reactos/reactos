@@ -148,6 +148,7 @@ struct StartMenuCreateInfo
 	String	_title;
 	Window::CREATORFUNC_INFO _creator;
 	void*	_info;
+	String	_filter;
 };
 
 #define STARTMENU_CREATOR(WND_CLASS) WINDOW_CREATOR_INFO(WND_CLASS, StartMenuCreateInfo)
@@ -218,7 +219,7 @@ struct StartMenu :
 	~StartMenu();
 
 	static HWND Create(int x, int y, const StartMenuFolders&, HWND hwndParent, LPCTSTR title,
-						CREATORFUNC_INFO creator=s_def_creator, void* info=NULL);
+						CREATORFUNC_INFO creator=s_def_creator, void* info=NULL, const String& filter="");
 	static CREATORFUNC_INFO s_def_creator;
 
 protected:

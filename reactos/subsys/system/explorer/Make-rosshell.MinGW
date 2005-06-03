@@ -19,7 +19,7 @@ CFLAGS	+= -D_DEBUG -g
 RCFLAGS	+= -D_DEBUG
 LFLAGS	+= -g
 else
-CFLAGS	+= -DNDEBUG -Os -march=pentium4
+CFLAGS	+= -DNDEBUG -Os #-march=pentium4
 RCFLAGS	+= -DNDEBUG
 LFLAGS	+= -s
 endif
