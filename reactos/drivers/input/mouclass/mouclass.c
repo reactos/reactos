@@ -19,6 +19,8 @@
 #define NDEBUG
 #include <debug.h>
 
+PDEVICE_OBJECT MouclassDeviceObject;
+
 BOOLEAN MouseClassCallBack(
    PDEVICE_OBJECT ClassDeviceObject, PMOUSE_INPUT_DATA MouseDataStart,
    PMOUSE_INPUT_DATA MouseDataEnd, PULONG ConsumedCount)
@@ -160,7 +162,7 @@ NTSTATUS STDCALL MouseClassDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    switch (Stack->MajorFunction)
    {
       case IRP_MJ_CREATE:
-         Status = STATUS_SUCCESS;
+         Status = ConnectMousePortDriver(MouclassDeviceObject);
          break;
 
       case IRP_MJ_CLOSE:
@@ -264,13 +266,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
       return Status;
    }
 
-   Status = ConnectMousePortDriver(DeviceObject);
-   if (!NT_SUCCESS(Status))
-   {
-      IoDeleteSymbolicLink(&SymlinkName);
-      IoDeleteDevice(DeviceObject);
-      return Status;
-   }
+   MouclassDeviceObject = DeviceObject;
 
    return STATUS_SUCCESS;
 }
