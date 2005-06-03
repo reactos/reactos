@@ -289,9 +289,10 @@ static int hub_hub_status(struct usb_hub *hub,
 	int ret;
 
 	ret = get_hub_status(dev, &hub->status->hub);
-	if (ret < 0)
+	if (ret < 0) {
 		dev_err (hubdev (dev),
 			"%s failed (err = %d)\n", __FUNCTION__, ret);
+        }
 	else {
 		*status = le16_to_cpu(hub->status->hub.wHubStatus);
 		*change = le16_to_cpu(hub->status->hub.wHubChange); 
@@ -703,9 +704,10 @@ static int hub_port_status(struct usb_device *dev, int port,
 	int ret;
 
 	ret = get_port_status(dev, port + 1, &hub->status->port);
-	if (ret < 0)
+        if (ret < 0) {
 		dev_err (hubdev (dev),
 			"%s failed (err = %d)\n", __FUNCTION__, ret);
+        }
 	else {
 		*status = le16_to_cpu(hub->status->port.wPortStatus);
 		*change = le16_to_cpu(hub->status->port.wPortChange); 
@@ -1115,8 +1117,9 @@ static void hub_events(void)
 		} /* end for i */
 
 		/* deal with hub status changes */
-		if (hub_hub_status(hub, &hubstatus, &hubchange) < 0)
+                if (hub_hub_status(hub, &hubstatus, &hubchange) < 0) {
 			dev_err (&hub->intf->dev, "get_hub_status failed\n");
+                }
 		else {
 			if (hubchange & HUB_CHANGE_LOCAL_POWER) {
 				dev_dbg (&hub->intf->dev, "power change\n");
@@ -1321,15 +1324,16 @@ int usb_physical_reset_device(struct usb_device *dev)
 
 		ret = usb_get_device_descriptor(dev);
 		if (ret < sizeof(dev->descriptor)) {
-			if (ret < 0)
+                        if (ret < 0) {
 				err("unable to get device %s descriptor "
 					"(error=%d)", dev->devpath, ret);
-			else
+                        }
+                        else {
 				err("USB device %s descriptor short read "
 					"(expected %Zi, got %i)",
 					dev->devpath,
 					sizeof(dev->descriptor), ret);
-
+                        }
 			clear_bit(dev->devnum, dev->bus->devmap.devicemap);
 			dev->devnum = -1;
 			return -EIO;

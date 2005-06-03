@@ -275,12 +275,13 @@ void usb_driver_claim_interface(struct usb_driver *driver, struct usb_interface 
 		return;
 
 	// FIXME change API to report an error in this case
-	if (iface->driver)
+        if (iface->driver) {
 	    err ("%s driver booted %s off interface %p",
 	    	driver->name, iface->driver->name, iface);
-	else
+        }
+        else {
 	    dbg("%s driver claimed interface %p", driver->name, iface);
-
+        }
 	iface->driver = driver;
 	usb_set_intfdata(iface, priv);
 }
@@ -1139,10 +1140,12 @@ int usb_new_device(struct usb_device *dev, struct device *parent)
 	}
 
 	if (err < 8) {
-		if (err < 0)
+                if (err < 0) {
 			dev_err(&dev->dev, "USB device not responding, giving up (error=%d)\n", err);
-		else
+                }
+                else {
 			dev_err(&dev->dev, "USB device descriptor short read (expected %i, got %i)\n", 8, err);
+                }
 		clear_bit(dev->devnum, dev->bus->devmap.devicemap);
 		dev->devnum = -1;
 		return 1;
@@ -1156,11 +1159,13 @@ int usb_new_device(struct usb_device *dev, struct device *parent)
 
 	err = usb_get_device_descriptor(dev);
 	if (err < (signed)sizeof(dev->descriptor)) {
-		if (err < 0)
+                if (err < 0) {
 			dev_err(&dev->dev, "unable to get device descriptor (error=%d)\n", err);
-		else
+                }
+                else {
 			dev_err(&dev->dev, "USB device descriptor short read (expected %Zi, got %i)\n",
 				sizeof(dev->descriptor), err);
+                }
 	
 		clear_bit(dev->devnum, dev->bus->devmap.devicemap);
 		dev->devnum = -1;

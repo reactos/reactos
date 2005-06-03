@@ -453,8 +453,9 @@ int usb_get_configuration(struct usb_device *dev)
 		/*  configuration is */
 		result = usb_get_descriptor(dev, USB_DT_CONFIG, cfgno, buffer, 8);
 		if (result < 8) {
-			if (result < 0)
+                        if (result < 0) {
 				err("unable to get descriptor");
+                        }
 			else {
 				err("config descriptor too short (expected %i, got %i)", 8, result);
 				result = -EINVAL;
