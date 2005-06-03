@@ -12,8 +12,8 @@
 	<library>pseh</library>
 	<library>rtl</library>
 	<library>rosrtl</library>
-	<library>string</library>
 	<library>rossym</library>
+	<library>string</library>
 	<directory name="include">
 		<pch>ntoskrnl.h</pch>
 	</directory>
@@ -346,4 +346,7 @@
 		<file>token.c</file>
 	</directory>
 	<file>ntoskrnl.rc</file>
+	<linkerflag>-nostartfiles</linkerflag>
+	<linkerflag>-nostdlib</linkerflag>
+	<linkerflag>-lgcc</linkerflag>
 </module>

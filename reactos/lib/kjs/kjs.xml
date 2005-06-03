@@ -2,6 +2,7 @@
 	<include base="kjs">.</include>
 	<include base="kjs">src</include>
 	<include base="kjs">include</include>
+	<define name="__NO_CTYPE_INLINES" />
 	<directory name="ksrc">
 		<file>setjmp.S</file>
 		<file>longjmp.S</file>
