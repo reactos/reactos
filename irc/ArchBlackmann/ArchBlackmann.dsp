@@ -110,6 +110,10 @@ SOURCE=.\chomp.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\config.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\cram_md5.cpp
 # End Source File
 # Begin Source File

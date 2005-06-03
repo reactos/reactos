@@ -12,17 +12,10 @@
 #include "trim.h"
 
 #include "IRCClient.h"
+#include "config.h"
 
 using std::string;
 using std::vector;
-
-#if defined(_DEBUG) && 0
-const char* BOTNAME = "RoyBot";
-const char* CHANNEL = "#RoyBotTest";
-#else
-const char* BOTNAME = "ArchBlackmann";
-const char* CHANNEL = "#ReactOS";
-#endif
 
 //vector<string> tech, module, dev, stru, period, status, type, func, irql, curse, cursecop;
 
@@ -157,14 +150,46 @@ bool isop ( const string& who )
 	return false;
 }
 
+
 // do custom stuff with the IRCClient from your subclass via the provided callbacks...
 class MyIRCClient : public IRCClient
 {
 	File flog;
+	clock_t brake_silence;
+
+	// wait another 30 mins to brake the silence
+	#define NOIDLE brake_silence = clock () + 30 * CLK_TCK * 60
+
+	void CheckIdle ( void )
+	{
+		while (true) // _inRun
+		{
+			while (clock() < brake_silence)
+				Sleep(10000);
+
+			string out = TaggedReply("idle");
+
+			if ( !strnicmp ( out.c_str(), "/me ", 4 ) )
+				Action ( CHANNEL, &out[4] );
+			else
+				PrivMsg ( CHANNEL, out );
+
+			NOIDLE;
+		}
+	}
+
+	static void THREADAPI CallMe ( MyIRCClient* irc )
+	{
+		irc->CheckIdle();
+	}
+
 public:
+
 	MyIRCClient()
 	{
-		flog.open ( "arch.log", "w+" );
+		NOIDLE;
+		ThreadPool::Instance().Launch ( (ThreadPoolFunc*)MyIRCClient::CallMe, this );
+		flog.open ( "arch.log", "r+" );
 	}
 	// see IRCClient.h for documentation on these callbacks...
 	bool OnConnected()
@@ -173,7 +198,7 @@ public:
 	}
 	bool OnJoin ( const string& user, const string& channel )
 	{
-		printf ( "user '%s' joined channel '%s'\n", user.c_str(), channel.c_str() );
+		//printf ( "user '%s' joined channel '%s'\n", user.c_str(), channel.c_str() );
 		return true;
 	}
 	bool OnPart ( const std::string& user, const std::string& channel )
@@ -207,11 +232,18 @@ public:
 	}
 	bool OnPrivMsg ( const string& from, const string& text )
 	{
+		//flog.flush();
 		printf ( "<%s> %s\n", from.c_str(), text.c_str() );
 		flog.printf ( "<%s> %s\n", from.c_str(), text.c_str() );
-		if ( strnicmp ( text.c_str(), "!say ", 5 ) || !isop(from) )
+
+		if ( !isop(from) )
 			return PrivMsg ( from, "hey, your tongue doesn't belong there!" );
+
+		else if ( strnicmp ( text.c_str(), "!say ", 5 ) )
+			return PrivMsg ( from, "Talk to me on normal Chanel" );
+
 		string say = trim(&text[5]);
+
 		if ( !strnicmp ( say.c_str(), "/me ", 4 ) )
 			return Action ( CHANNEL, trim(&say[4]) );
 		else
@@ -219,140 +251,176 @@ public:
 	}
 	bool OnChannelMsg ( const string& channel, const string& from, const string& text )
 	{
+		fflush ( flog );
 		printf ( "%s <%s> %s\n", channel.c_str(), from.c_str(), text.c_str() );
 		flog.printf ( "%s <%s> %s\n", channel.c_str(), from.c_str(), text.c_str() );
+		NOIDLE; // add 30 mins till idle
+
 		bool found_name = false;
 		string text2 ( text );
 		strlwr ( &text2[0] );
 
 		if ( !strnicmp ( text.c_str(), BOTNAME, strlen(BOTNAME) ) )
 			found_name = true;
-		else if ( !strnicmp ( text.c_str(), "arch ", 5 ) )
-			found_name = true;
+
+		string s ( text );
 
 		if ( found_name )
-		{
-			string s ( text );
 			gobble ( s, " \t" ); // remove bot name
-			found_name = true;
-			if ( s[0] == '!' )
+
+		// command
+		if ( s[0] == '!' )
+		{
+			bool from_op = isop(from);
+			string cmd = gobble ( s, " \t" );
+
+			// from all		
+			if ( false && cmd == "!svn" && from == "TechBot" ) // || cmd == "!help" && !TechBotOnline
 			{
-				bool from_op = isop(from);
-				string cmd = gobble ( s, " \t" );
-				if ( !from_op )
+					PrivMsg ( channel, "For my help try !what." );
+			}
+
+			// from normel user
+			else if ( !from_op )
+			{
+				if ( cmd == "!grovel" )
 				{
-					if ( cmd == "!grovel" )
-					{
-						string out = ssprintf(TaggedReply("nogrovel").c_str(),from.c_str());
-						if ( !strnicmp ( out.c_str(), "/me ", 4 ) )
-							return Action ( channel, &out[4] );
-						else
-							return PrivMsg ( channel, out );
-					}
-					return PrivMsg ( channel, ssprintf("%s: I don't take commands from non-ops",from.c_str()) );
-				}
-				if ( cmd == "!add" )
-				{
-					string listname = gobble ( s, " \t" );
-					int i = GetListIndex ( listname.c_str() );
-					if ( i == -1 )
-						return PrivMsg ( channel, ssprintf("%s: I don't have a list named '%s'",from.c_str(),listname.c_str()) );
-					List& list = lists[i];
-					if ( s[0] == '\"' || s[0] == '\'' )
-					{
-						char delim = s[0];
-						const char* p = &s[1];
-						const char* p2 = strchr ( p, delim );
-						if ( !p2 )
-							return PrivMsg ( channel, ssprintf("%s: Couldn't add, unmatched quotes",from.c_str()) );
-						s = string ( p, p2-p );
-					}
-					for ( i = 0; i < list.list.size(); i++ )
-					{
-						if ( list.list[i] == s )
-							return PrivMsg ( channel, ssprintf("%s: entry already exists in list '%s'",from.c_str(),listname.c_str()) );
-					}
-					if ( !stricmp ( listname.c_str(), "curse" ) )
-						strlwr ( &s[0] );
-					list.list.push_back ( s );
-					{
-						File f ( ssprintf("%s.txt",list.name.c_str()), "w" );
-						for ( i = 0; i < list.list.size(); i++ )
-							f.printf ( "%s\n", list.list[i].c_str() );
-					}
-					return PrivMsg ( channel, ssprintf("%s: entry added to list '%s'",from.c_str(),listname.c_str()) );
-				}
-				else if ( cmd == "!remove" )
-				{
-					string listname = gobble ( s, " \t" );
-					int i = GetListIndex ( listname.c_str() );
-					if ( i == -1 )
-						return PrivMsg ( channel, ssprintf("%s: I don't have a list named '%s'",from.c_str(),listname.c_str()) );
-					List& list = lists[i];
-					if ( s[0] == '\"' || s[0] == '\'' )
-					{
-						char delim = s[0];
-						const char* p = &s[1];
-						const char* p2 = strchr ( p, delim );
-						if ( !p2 )
-							return PrivMsg ( channel, ssprintf("%s: Couldn't add, unmatched quotes",from.c_str()) );
-						s = string ( p, p2-p );
-					}
-					for ( i = 0; i < list.list.size(); i++ )
-					{
-						if ( list.list[i] == s )
-						{
-							list.list.erase ( &list.list[i] );
-							{
-								File f ( ssprintf("%s.txt",list.name.c_str()), "w" );
-								for ( i = 0; i < list.list.size(); i++ )
-									f.printf ( "%s\n", list.list[i].c_str() );
-							}
-							return PrivMsg ( channel, ssprintf("%s: entry removed from list '%s'",from.c_str(),listname.c_str()) );
-						}
-					}
-					return PrivMsg ( channel, ssprintf("%s: entry doesn't exist in list '%s'",from.c_str(),listname.c_str()) );
-				}
-				else if ( cmd == "!grovel" )
-				{
-					string out = ssprintf(TaggedReply("grovel").c_str(),from.c_str());
+					string out = ssprintf(TaggedReply("nogrovel").c_str(),from.c_str());
 					if ( !strnicmp ( out.c_str(), "/me ", 4 ) )
 						return Action ( channel, &out[4] );
 					else
 						return PrivMsg ( channel, out );
 				}
-				else if ( cmd == "!kiss" )
+				
+				else if ( cmd == "!what" )
 				{
-					if ( s.size() )
-						return Action ( channel, ssprintf("kisses %s",s.c_str()) );
-					else
-						return PrivMsg ( channel, ssprintf("%s: huh?",from.c_str()) );
+					return PrivMsg ( channel, ssprintf("For you, %s, I only support the \"!grovel\" command.", from.c_str()).c_str() );
 				}
-				else if ( cmd == "!hug" )
+				
+				else if ( cmd == "!grovel" || cmd == "!kiss" || cmd == "!hug" 
+				       || cmd == "!give" || cmd == "!what" || cmd == "!add" || cmd == "!remove" )
 				{
-					if ( s.size() )
-						return Action ( channel, ssprintf("hugs %s",s.c_str()) );
-					else
-						return PrivMsg ( channel, ssprintf("%s: huh?",from.c_str()) );
-				}
-				else if ( cmd == "!give" )
-				{
-					string who = gobble(s," \t");
-					if ( who.size() && s.size() )
-						return Action ( channel, ssprintf("gives %s a %s",who.c_str(),s.c_str()) );
-					else
-						return PrivMsg ( channel, ssprintf("%s: huh?",from.c_str()) );
-				}
-				else
-				{
-					return PrivMsg ( channel, ssprintf("%s: huh?",from.c_str()) );
+					PrivMsg ( channel, ssprintf("%s: I only take commands from ops",from.c_str()) );
 				}
 			}
-		}
+			
+			// from op
+			else if ( cmd == "!grovel" )
+			{
+				string out = ssprintf(TaggedReply("grovel").c_str(),from.c_str());
+				if ( !strnicmp ( out.c_str(), "/me ", 4 ) )
+					return Action ( channel, &out[4] );
+				else
+					return PrivMsg ( channel, out );
+			}
+			else if ( cmd == "!kiss" )
+			{
+				if ( s.size() )
+					return Action ( channel, ssprintf("kisses %s",s.c_str()) );
+				else
+					return PrivMsg ( channel, ssprintf("%s: huh?",from.c_str()) );
+			}
+			else if ( cmd == "!hug" )
+			{
+				if ( s.size() )
+					return Action ( channel, ssprintf("hugs %s",s.c_str()) );
+				else
+					return PrivMsg ( channel, ssprintf("%s: huh?",from.c_str()) );
+			}	
+			else if ( cmd == "!give" )
+			{
+				string who = gobble(s," \t");
+				if ( who.size() && s.size() )
+					return Action ( channel, ssprintf("gives %s a %s",who.c_str(),s.c_str()) );
+				else
+					return PrivMsg ( channel, ssprintf("%s: huh?",from.c_str()) );
+			}
+			else if ( cmd == "!what" )
+			{		
+				PrivMsg ( channel, "For ops I support the following commands:" );
+				PrivMsg ( channel, "!grovel" );
+				PrivMsg ( channel, "!kiss" );
+				PrivMsg ( channel, "!hug" );
+				PrivMsg ( channel, "!give" );
+				PrivMsg ( channel, "!say (the input is a private message)" );
+				PrivMsg ( channel, "!add" );
+				PrivMsg ( channel, "!remove" );
+				PrivMsg ( channel, " - for more info see wiki" );
+			}
+			else if ( cmd == "!add" )
+			{
+				string listname = gobble ( s, " \t" );
+				int i = GetListIndex ( listname.c_str() );
+				if ( i == -1 )
+					return PrivMsg ( channel, ssprintf("%s: I don't have a list named '%s'",from.c_str(),listname.c_str()) );
+				List& list = lists[i];
+				if ( s[0] == '\"' || s[0] == '\'' )
+				{
+					char delim = s[0];
+					const char* p = &s[1];
+					const char* p2 = strchr ( p, delim );
+					if ( !p2 )
+						return PrivMsg ( channel, ssprintf("%s: Couldn't add, unmatched quotes",from.c_str()) );
+					s = string ( p, p2-p );
+				}
+				for ( i = 0; i < list.list.size(); i++ )
+				{
+					if ( list.list[i] == s )
+						return PrivMsg ( channel, ssprintf("%s: entry already exists in list '%s'",from.c_str(),listname.c_str()) );
+				}
+				if ( !stricmp ( listname.c_str(), "curse" ) )
+					strlwr ( &s[0] );
+				list.list.push_back ( s );
+				{
+					File f ( ssprintf("%s.txt",list.name.c_str()), "w" );
+					for ( i = 0; i < list.list.size(); i++ )
+						f.printf ( "%s\n", list.list[i].c_str() );
+				}
+				return PrivMsg ( channel, ssprintf("%s: entry added to list '%s'",from.c_str(),listname.c_str()) );
+			}
+			else if ( cmd == "!remove" )
+			{
+				string listname = gobble ( s, " \t" );
+				int i = GetListIndex ( listname.c_str() );
+				if ( i == -1 )
+					return PrivMsg ( channel, ssprintf("%s: I don't have a list named '%s'",from.c_str(),listname.c_str()) );
+				List& list = lists[i];
+				if ( s[0] == '\"' || s[0] == '\'' )
+				{
+					char delim = s[0];
+					const char* p = &s[1];
+					const char* p2 = strchr ( p, delim );
+					if ( !p2 )
+						return PrivMsg ( channel, ssprintf("%s: Couldn't add, unmatched quotes",from.c_str()) );
+					s = string ( p, p2-p );
+				}
+				for ( i = 0; i < list.list.size(); i++ )
+				{
+					if ( list.list[i] == s )
+					{
+						list.list.erase ( &list.list[i] );
+						{
+								File f ( ssprintf("%s.txt",list.name.c_str()), "w" );
+							for ( i = 0; i < list.list.size(); i++ )
+								f.printf ( "%s\n", list.list[i].c_str() );
+						}
+						return PrivMsg ( channel, ssprintf("%s: entry removed from list '%s'",from.c_str(),listname.c_str()) );
+					}
+				}
+				return PrivMsg ( channel, ssprintf("%s: entry doesn't exist in list '%s'",from.c_str(),listname.c_str()) );
+			}
+			else
+			{
+				if (found_name)
+					return PrivMsg ( channel, ssprintf("%s: huh?",from.c_str()) );
+			}
+		
+		} // if (command)
 
 		bool found_curse = false;
 		static vector<string>& curse = GetList("curse").list;
-		text2 = ssprintf(" %s ",text2.c_str());
+		text2 = " " + text2 + " ";
+
 		for ( int i = 0; i < curse.size() && !found_curse; i++ )
 		{
 			if ( strstr ( text2.c_str(), curse[i].c_str() ) )
@@ -363,7 +431,12 @@ public:
 			static List& cursecop = GetList("cursecop");
 			return PrivMsg ( channel, ssprintf("%s: %s", from.c_str(), ListRand(cursecop)) );
 		}
-		else if ( found_name )
+
+		string botname (BOTNAME);
+		strlwr ( &botname[0] );
+		//botname = " " + botname + " ";
+
+		if ( strstr(text2.c_str(), botname.c_str()) || strstr(text2.c_str(), " arch ") || found_name )
 		{
 			string out = ssprintf("%s: %s", from.c_str(), TaggedReply("tech").c_str());
 			flog.printf ( "TECH-REPLY: %s\n", out.c_str() );
@@ -373,7 +446,9 @@ public:
 				return PrivMsg ( channel, out );
 		}
 		return true;
-	}
+
+	} // On Chanel Message
+
 	bool OnChannelMode ( const string& channel, const string& mode )
 	{
 		//printf ( "OnChannelMode(%s,%s)\n", channel.c_str(), mode.c_str() );
@@ -439,6 +514,16 @@ public:
 		//printf ( "\n" );
 		return true;
 	}
+	bool OnKick ( void )
+	{
+		Join(CHANNEL);
+		return true;
+	}
+	bool OnBanned ( const std::string& channel )
+	{
+		Sleep(10000);
+		return Join(CHANNEL);
+	}
 };
 
 int main ( int argc, char** argv )
@@ -461,50 +546,59 @@ int main ( int argc, char** argv )
 	ImportList ( "cursecop", false );
 	ImportList ( "grovel", false );
 	ImportList ( "nogrovel", false );
+	ImportList ( "idle", false );
 
 #ifdef _DEBUG
 	printf ( "initializing IRCClient debugging\n" );
 	IRCClient::SetDebug ( true );
 #endif//_DEBUG
-	printf ( "calling suStartup()\n" );
-	suStartup();
-	printf ( "creating IRCClient object\n" );
-	MyIRCClient irc;
-	printf ( "connecting to freenode\n" );
 
-	//const char* server = "212.204.214.114";
-	const char* server = "irc.freenode.net";
+	while (true)
+	{
+		printf ( "calling suStartup()\n" );
+		suStartup();
+		printf ( "creating IRCClient object\n" );
+		MyIRCClient irc;
+		printf ( "connecting to freenode\n" );
 
-	if ( !irc.Connect ( server ) ) // irc.freenode.net
-	{
-		printf ( "couldn't connect to server\n" );
-		return -1;
+		if ( !irc.Connect ( SERVER ) ) // irc.freenode.net
+		{
+			printf ( "couldn't connect to server\n" );
+			Sleep(10000);
+			continue;
+		}
+		printf ( "sending user command\n" );
+		if ( !irc.User ( BOTNAME, "reactos.com", SERVER, "ArchBlackmann" ) )
+		{
+			printf ( "USER command failed, retying ...\n" );
+			Sleep(10000);
+			continue;
+		}
+		printf ( "sending nick\n" );
+		if ( !irc.Nick ( BOTNAME ) )
+		{
+			printf ( "NICK command failed, retying ...\n" );
+			Sleep(10000);
+			continue;
+		}
+		printf ( "setting mode\n" );
+		if ( !irc.Mode ( MODE ) )
+		{
+			printf ( "MODE command failed, retying ...\n" );
+			Sleep(10000);
+			continue;
+		}
+		printf ( "joining channel\n" );
+		if ( !irc.Join ( CHANNEL ) )
+		{
+			printf ( "JOIN command failed, retying ...\n" );
+			Sleep(10000);
+			continue;
+		}
+
+		printf ( "entering irc client processor\n" );
+		irc.Run ( false ); // do the processing in this thread...
 	}
-	printf ( "sending user command\n" );
-	if ( !irc.User ( BOTNAME, "", "irc.freenode.net", BOTNAME ) )
-	{
-		printf ( "USER command failed\n" );
-		return -1;
-	}
-	printf ( "sending nick\n" );
-	if ( !irc.Nick ( BOTNAME ) )
-	{
-		printf ( "NICK command failed\n" );
-		return -1;
-	}
-	printf ( "setting mode\n" );
-	if ( !irc.Mode ( "+i" ) )
-	{
-		printf ( "MODE command failed\n" );
-		return -1;
-	}
-	printf ( "joining channel\n" );
-	if ( !irc.Join ( CHANNEL ) )
-	{
-		printf ( "JOIN command failed\n" );
-		return -1;
-	}
-	printf ( "entering irc client processor\n" );
-	irc.Run ( false ); // do the processing in this thread...
+
 	return 0;
 }

@@ -12,9 +12,11 @@
 
 class IRCClient : public suBufferedRecvSocket
 {
+
 public:
 	IRCClient();
 
+	std::string mychannel;
 	static bool GetDebug() { return _debug; }
 	static bool SetDebug ( bool debug ) { bool old = _debug; _debug = debug; return old; }
 
@@ -98,6 +100,12 @@ public:
 	// notification of what users are in a channel ( you may get multiple of these... )
 	virtual bool OnChannelUsers ( const std::string& channel, const std::vector<std::string>& users )
 		{ return true; }
+
+	// OnKick: if the client has been kicked
+	virtual bool OnKick ( void ) { return true; }
+
+	// OnKick: if the client has been kicked
+	virtual bool OnBanned ( const std::string& channel ) { return true; }
 
 	// notification that you have received the entire list of users for a channel
 	virtual bool OnEndChannelUsers ( const std::string& channel ) { return true; }

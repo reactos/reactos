@@ -16,12 +16,15 @@
 #include "chomp.h"
 #include "SplitJoin.h"
 #include "base64.h"
+#include "config.h"
 
 using std::string;
 using std::stringstream;
 using std::vector;
 
 bool IRCClient::_debug = true;
+
+// see rfc1459 for IRC-Protocoll Reference
 
 IRCClient::IRCClient()
 	: _timeout(10*60*1000), _inRun(false)
@@ -51,7 +54,9 @@ bool
 IRCClient::Nick ( const string& nick )
 {
 	_nick = nick;
-	return Send ( "NICK " + _nick + "\n" );
+	Send ( "NICK " + _nick + "\n" );
+	PrivMsg ("NickServ", "IDENTIFY " + (string)PASS);
+	return true;
 }
 
 bool
@@ -75,7 +80,7 @@ IRCClient::Mode ( const string& channel, const string& mode, const string& targe
 bool
 IRCClient::Join ( const string& channel )
 {
-	return Send ( "JOIN " + channel + "\n" );
+	return Send("JOIN " + channel + "\n");
 }
 
 bool
@@ -145,7 +150,7 @@ int IRCClient::Run ( bool launch_thread )
 	{
 		ThreadPool::Instance().Launch ( (ThreadPoolFunc*)IRCClient::Callback, this );
 		return 1;
-	}
+	} 
 	_inRun = true;
 	if ( _debug ) printf ( "IRCClient::Run() - waiting for responses\n" );
 	string buf;
@@ -296,6 +301,7 @@ int IRCClient::Run ( bool launch_thread )
 			}
 			else if ( cmd == "join" )
 			{
+				mychannel = text;
 				OnJoin ( src, text );
 			}
 			else if ( cmd == "part" )
@@ -306,14 +312,20 @@ int IRCClient::Run ( bool launch_thread )
 			{
 				OnNick ( src, text );
 			}
+			else if ( cmd == "kick" )
+			{
+				OnKick ();
+			}
 			else if ( isdigit(cmd[0]) )
 			{
 				int i = atoi(cmd.c_str());
 				switch ( i )
 				{
+
 				case 1: // "Welcome!" - i.e. it's okay to issue commands now...
 					OnConnected();
 					break;
+
 				case 353: // user list for channel....
 					{
 						p = text.c_str();
@@ -336,6 +348,7 @@ int IRCClient::Run ( bool launch_thread )
 						OnChannelUsers ( channel, users );
 					}
 					break;
+
 				case 366: // END of user list for channel
 					{
 						p = text.c_str();
@@ -345,6 +358,38 @@ int IRCClient::Run ( bool launch_thread )
 						OnEndChannelUsers ( channel );
 					}
 					break;
+
+				case 474: // You are banned
+					{
+						p = text.c_str();
+						p2 = strpbrk ( p, " :" );
+						if ( !p2 ) continue;
+						string channel ( p, p2-p );
+						OnBanned ( channel ); 
+					}
+					break;
+
+				case 433: // Nick in Use
+					{
+						string nick = _nick;
+						Nick (nick + "_");
+
+						PrivMsg ("NickServ", "GHOST " + nick + " " + PASS);
+
+						//	HACK HACK HACK 
+						Mode ( "+i" );
+						Join ( CHANNEL ); // this is because IRC client does not review if his commands were sucessfull
+
+						Sleep ( 1000 );
+						Nick ( nick );
+					}
+					break;
+
+				case 2: //MOTD
+				case 376: //MOTD
+				case 372:
+					break;
+
 				default:
 					if ( _debug ) printf ( "unknown command %i: %s", i, buf.c_str() );
 					break;
