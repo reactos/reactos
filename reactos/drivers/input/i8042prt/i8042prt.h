@@ -217,9 +217,6 @@ typedef struct _I8042_HOOK_WORKITEM
 
 #define KBD_WRAP_MASK      0x1F
 
-#define disable()          __asm__("cli\n\t")
-#define enable()           __asm__("sti\n\t")
-
 #define ALT_PRESSED			(LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)
 #define CTRL_PRESSED			(LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)
 
