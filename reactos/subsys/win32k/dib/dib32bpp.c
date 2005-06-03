@@ -305,8 +305,6 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
    BOOL UsesSource;
    BOOL UsesPattern;
    PULONG DestBits;
-   LONG  DesmaxX, DesmaxY; 
-   LONG  SrcmaxX, SrcmaxY;
 
    switch (BltInfo->Rop4)
 	{
@@ -385,9 +383,7 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
 			    case BMF_1BPP:
 				break;
 				case BMF_4BPP:
-				break;
-				case BMF_8BPP:
-				break;
+				break;								
 				case BMF_16BPP:
 				break;
 				case BMF_24BPP:
@@ -398,19 +394,22 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
 					INT Sourcedelta;
 					register PBYTE Destaddr;
 					register PBYTE Srcaddr;
+					LONG  DesmaxX, DesmaxY; 
+                    LONG  SrcmaxX, SrcmaxY;
+
 					
                     SrcmaxX = BltInfo->SourceSurface->sizlBitmap.cx - BltInfo->SourcePoint.x;
 					SrcmaxY = BltInfo->SourceSurface->sizlBitmap.cy - BltInfo->SourcePoint.y;
  
-					/* calc the dst BMP size */
+					
 					DesmaxX = BltInfo->DestRect.right - BltInfo->DestRect.left;
 					DesmaxY = BltInfo->DestRect.bottom - BltInfo->DestRect.top;
  
-					/* calc max X and Y size to blt */
+					
 					if (DesmaxX > SrcmaxX ) DesmaxX = SrcmaxX;
 					if (DesmaxY > SrcmaxY ) DesmaxY = SrcmaxY;
  
-					/* do blt */
+					
 					Destdelta = BltInfo->DestSurface->lDelta;
 					Sourcedelta = BltInfo->SourceSurface->lDelta;
 					Destaddr = BltInfo->DestSurface->pvScan0 + BltInfo->DestRect.top * Destdelta + BltInfo->DestRect.left;
@@ -427,8 +426,10 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
 						}
 						while (--DesmaxY);
 					}
+					return TRUE;
 					break;
 				}
+				
 
 				default:
 				break;
