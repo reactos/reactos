@@ -1561,9 +1561,13 @@ INT WINAPI SHHandleUpdateImage(LPCITEMIDLIST pidlExtra)
     return -1;
 }
 
+
 BOOL WINAPI SHObjectProperties(HWND hwnd, DWORD dwType, LPCWSTR szObject, LPCWSTR szPage)
 {
     FIXME("%p, 0x%08lx, %s, %s - stub\n", hwnd, dwType, debugstr_w(szObject), debugstr_w(szPage));
+
+    MessageBox (NULL, TEXT("SHObjectProperties-WINAPI:\n\nTODO: Add the function code."), TEXT("SHObjectProperties; Dev: frik85"), 0);
+
 
     return TRUE;
 }

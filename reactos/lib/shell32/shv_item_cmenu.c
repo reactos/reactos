@@ -254,7 +254,13 @@ static HRESULT WINAPI ISvItemCm_fnQueryContextMenu(
 	  _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_DELETE, MFT_STRING, "&Delete", MFS_ENABLED);
 
 	  if(uFlags & CMF_CANRENAME)
+	  {
 	    _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_RENAME, MFT_STRING, "&Rename", ISvItemCm_CanRenameItems(This) ? MFS_ENABLED : MFS_DISABLED);
+	  }
+
+	  _InsertMenuItem(hmenu, indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
+	  _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_PROPERTIES, MFT_STRING, "&Properties::", MFS_ENABLED);
+
 
 	  return MAKE_HRESULT(SEVERITY_SUCCESS, 0, (FCIDM_SHVIEWLAST));
 	}
@@ -431,6 +437,11 @@ static HRESULT WINAPI ISvItemCm_fnInvokeCommand(
         case FCIDM_SHVIEW_CUT:
             TRACE("Verb FCIDM_SHVIEW_CUT\n");
             DoCopyOrCut(iface, lpcmi->hwnd, TRUE);
+            break;
+        case FCIDM_SHVIEW_PROPERTIES:
+            TRACE("Verb FCIDM_SHVIEW_PROPERTIES\n");
+            /* Open the property sheet page */
+            SHObjectProperties(NULL, TEXT("SHOP_FILEPATH"), lpcmi->hwnd, NULL);
             break;
         default:
             FIXME("Unhandled Verb %xl\n",LOWORD(lpcmi->lpVerb));
