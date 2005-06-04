@@ -37,6 +37,87 @@ IopAbortIrpKernelApc(PKAPC Apc)
     IoFreeIrp(CONTAINING_RECORD(Apc, IRP, Tail.Apc));
 }
 
+VOID
+STDCALL
+IopRemoveThreadIrp(VOID)
+{
+    KIRQL OldIrql;
+    PIRP DeadIrp;
+    PETHREAD IrpThread;
+    PLIST_ENTRY IrpEntry;
+    PIO_ERROR_LOG_PACKET ErrorLogEntry;
+    
+    /* First, raise to APC to protect IrpList */
+    KeRaiseIrql(APC_LEVEL, &OldIrql);
+    
+    /* Get the Thread and check the list */
+    IrpThread = PsGetCurrentThread();
+    if (IsListEmpty(&IrpThread->IrpList))
+    {
+        /* It got completed now, so quit */
+        KeLowerIrql(OldIrql);
+        return;
+    }
+    
+    /* Get the misbehaving IRP */
+    IrpEntry = IrpThread->IrpList.Flink;
+    DeadIrp = CONTAINING_RECORD(IrpEntry, IRP, ThreadListEntry);
+    
+    /* Disown the IRP! */
+    DeadIrp->Tail.Overlay.Thread = NULL;
+    InitializeListHead(&DeadIrp->ThreadListEntry);
+    RemoveHeadList(&IrpThread->IrpList);
+    
+    /* Lower IRQL now */
+    KeLowerIrql(OldIrql);
+        
+    /* Check if we can send an Error Log Entry*/
+    if (DeadIrp->CurrentLocation <= DeadIrp->StackCount)
+    {
+        /* Allocate an entry */
+        ErrorLogEntry = IoAllocateErrorLogEntry(IoGetCurrentIrpStackLocation(DeadIrp)->DeviceObject, 
+                                                sizeof(IO_ERROR_LOG_PACKET));
+        
+        /* Write the entry */
+        ErrorLogEntry->ErrorCode = 0xBAADF00D; /* FIXME */
+        IoWriteErrorLogEntry(ErrorLogEntry);
+    }
+}
+
+VOID
+STDCALL
+IopCleanupIrp(PIRP Irp,
+              PFILE_OBJECT FileObject)
+{
+    PMDL Mdl;
+    
+    /* Check if there's an MDL */
+    while ((Mdl = Irp->MdlAddress))
+    {
+        /* Clear all of them */
+        Irp->MdlAddress = Mdl->Next;
+        IoFreeMdl(Mdl);
+    }
+    
+    /* Free the buffer */
+    if (Irp->Flags & IRP_DEALLOCATE_BUFFER)
+    {
+        ExFreePoolWithTag(Irp->AssociatedIrp.SystemBuffer, TAG_SYS_BUF);
+    }
+    
+    /* Derefernce the User Event */
+    if (Irp->UserEvent && !(Irp->Flags & IRP_SYNCHRONOUS_API) && FileObject)
+    {
+        ObDereferenceObject(Irp->UserEvent);
+    }
+    
+    /* Dereference the File Object */
+    if (FileObject) ObDereferenceObject(FileObject);
+    
+    /* Free the IRP */
+    IoFreeIrp(Irp);
+}
+    
 /*
  * FUNCTION: Performs the second stage of irp completion for read/write irps
  *
@@ -884,59 +965,55 @@ IoCancelIrp(PIRP Irp)
  * @param Thread
  *        Thread to cancel requests for.
  */
-
 VOID
 STDCALL
 IoCancelThreadIo(PETHREAD Thread)
 {
-   PLIST_ENTRY IrpEntry;
-   PIRP Irp;
-   KIRQL OldIrql;
-   ULONG Retries = 3000;
-   LARGE_INTEGER Interval;
+    PLIST_ENTRY IrpEntry;
+    PIRP Irp;
+    KIRQL OldIrql;
+    ULONG Retries = 3000;
+    LARGE_INTEGER Interval;
 
-   OldIrql = KfRaiseIrql(APC_LEVEL);
+    /* Raise to APC to protect the IrpList */
+    OldIrql = KfRaiseIrql(APC_LEVEL);
 
-   /*
-    * Start by cancelling all the IRPs in the current thread queue.
-    */
-
-   for (IrpEntry = Thread->IrpList.Flink;
+    /* Start by cancelling all the IRPs in the current thread queue. */
+    for (IrpEntry = Thread->IrpList.Flink;
         IrpEntry != &Thread->IrpList;
         IrpEntry = IrpEntry->Flink)
-   {
-      Irp = CONTAINING_RECORD(IrpEntry, IRP, ThreadListEntry);
-      IoCancelIrp(Irp);
-   }
+    {
+       /* Get the IRP */
+        Irp = CONTAINING_RECORD(IrpEntry, IRP, ThreadListEntry);
+        
+        /* Cancel it */
+        IoCancelIrp(Irp);
+    }
+    
+     /* Wait 100 milliseconds */
+    Interval.QuadPart = -1000000;
 
-   /*
-    * Wait till all the IRPs are completed or cancelled.
-    */
+    /* Wait till all the IRPs are completed or cancelled. */
+    while (!IsListEmpty(&Thread->IrpList))
+    {
+        /* Now we can lower */
+        KfLowerIrql(OldIrql);
 
-   while (!IsListEmpty(&Thread->IrpList))
-   {
-      KfLowerIrql(OldIrql);
+        /* Wait a short while and then look if all our IRPs were completed. */
+        KeDelayExecutionThread(KernelMode, FALSE, &Interval);
 
-      /* Wait a short while and then look if all our IRPs were completed. */
-      Interval.QuadPart = -1000000; /* 100 milliseconds */
-      KeDelayExecutionThread(KernelMode, FALSE, &Interval);
+        /*
+         * Don't stay here forever if some broken driver doesn't complete
+         * the IRP.
+         */
+        if (Retries-- == 0) IopRemoveThreadIrp();
 
-      /*
-       * Don't stay here forever if some broken driver doesn't complete
-       * the IRP.
-       */
-
-      if (Retries-- == 0)
-      {
-         /* FIXME: Handle this gracefully. */
-         DPRINT1("Thread with dead IRPs!");
-         ASSERT(FALSE);
-      }
-
-      OldIrql = KfRaiseIrql(APC_LEVEL);
-   }
-
-   KfLowerIrql(OldIrql);
+        /* Raise the IRQL Again */
+        OldIrql = KfRaiseIrql(APC_LEVEL);
+    }
+    
+    /* We're done, lower the IRQL */
+    KfLowerIrql(OldIrql);
 }
 
 #ifdef IoCallDriver
@@ -1204,8 +1281,29 @@ IofCompleteRequest(PIRP Irp,
     }
     else
     {
-        /* The IRP just got cancelled... don't think this happens in ROS yet */
-        DPRINT1("The IRP was cancelled. Go Bug Alex\n");
+        /* The IRP just got cancelled... does a thread still own it? */
+        if ((Thread = Irp->Tail.Overlay.Thread))
+        {
+            /* Yes! There is still hope! */
+            DPRINT("KMODE APC QUEUE\n");
+            KeInitializeApc(&Irp->Tail.Apc,
+                            &Thread->Tcb,
+                            Irp->ApcEnvironment,
+                            IopCompleteRequest,
+                            NULL,
+                            (PKNORMAL_ROUTINE) NULL,
+                            KernelMode,
+                            NULL);
+            KeInsertQueueApc(&Irp->Tail.Apc,
+                             FileObject,
+                             NULL, /* This is used for REPARSE stuff */
+                             PriorityBoost);
+        }
+        else
+        {
+            /* Nothing left for us to do, kill it */
+            IopCleanupIrp(Irp, FileObject);
+        }
     }
 }
 
