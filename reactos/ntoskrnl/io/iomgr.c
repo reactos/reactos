@@ -40,7 +40,7 @@ NPAGED_LOOKASIDE_LIST IoLargeIrpLookaside;
 NPAGED_LOOKASIDE_LIST IoSmallIrpLookaside;
 
 /* INIT FUNCTIONS ************************************************************/
-                                
+
 VOID
 INIT_FUNCTION
 IoInitCancelHandling(VOID)
@@ -64,11 +64,11 @@ IopInitLookasideLists(VOID)
     ULONG i;
     PKPRCB Prcb;
     PNPAGED_LOOKASIDE_LIST CurrentList = NULL;
-    
+
     /* Calculate the sizes */
     LargeIrpSize = sizeof(IRP) + (8 * sizeof(IO_STACK_LOCATION));
     SmallIrpSize = sizeof(IRP) + sizeof(IO_STACK_LOCATION);
-    
+
     /* Initialize the Lookaside List for Large IRPs */
     ExInitializeNPagedLookasideList(&IoLargeIrpLookaside,
                                     NULL,
@@ -77,7 +77,7 @@ IopInitLookasideLists(VOID)
                                     LargeIrpSize,
                                     IO_LARGEIRP,
                                     0);
-                                    
+
     /* Initialize the Lookaside List for Small IRPs */
     ExInitializeNPagedLookasideList(&IoSmallIrpLookaside,
                                     NULL,
@@ -95,14 +95,14 @@ IopInitLookasideLists(VOID)
                                     sizeof(IO_COMPLETION_PACKET),
                                     IOC_TAG1,
                                     0);
-                                    
+
     /* Now allocate the per-processor lists */
     for (i = 0; i < KeNumberProcessors; i++)
     {
         /* Get the PRCB for this CPU */
         Prcb = ((PKPCR)(KPCR_BASE + i * PAGE_SIZE))->Prcb;
         DPRINT("Setting up lookaside for CPU: %x, PRCB: %p\n", i, Prcb);
-        
+
         /* Set the Large IRP List */
         Prcb->PPLookasideList[LookasideLargeIrpList].L = &IoLargeIrpLookaside.L;
         CurrentList = ExAllocatePoolWithTag(NonPagedPool,
@@ -124,7 +124,7 @@ IopInitLookasideLists(VOID)
             CurrentList = &IoLargeIrpLookaside;
         }
         Prcb->PPLookasideList[LookasideLargeIrpList].P = &CurrentList->L;
-        
+
         /* Set the Small IRP List */
         Prcb->PPLookasideList[LookasideSmallIrpList].L = &IoSmallIrpLookaside.L;
         CurrentList = ExAllocatePoolWithTag(NonPagedPool,
@@ -146,7 +146,7 @@ IopInitLookasideLists(VOID)
             CurrentList = &IoSmallIrpLookaside;
         }
         Prcb->PPLookasideList[LookasideSmallIrpList].P = &CurrentList->L;
-        
+
         /* Set the I/O Completion List */
         Prcb->PPLookasideList[LookasideCompletionList].L = &IoCompletionPacketLookaside.L;
         CurrentList = ExAllocatePoolWithTag(NonPagedPool,
@@ -169,7 +169,7 @@ IopInitLookasideLists(VOID)
         }
         Prcb->PPLookasideList[LookasideCompletionList].P = &CurrentList->L;
     }
-    
+
     DPRINT("Done allocation\n");
 }
 
@@ -187,7 +187,7 @@ IoInit (VOID)
     IopInitDriverImplementation();
 
     DPRINT("Creating Device Object Type\n");
-  
+
     /* Initialize the Driver object type  */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
     RtlInitUnicodeString(&Name, L"Device");
@@ -198,16 +198,16 @@ IoInit (VOID)
     ObjectTypeInitializer.UseDefaultObject = TRUE;
     ObjectTypeInitializer.GenericMapping = IopFileMapping;
     ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &IoDeviceObjectType);
-    
+
     /* Do the Adapter Type */
     RtlInitUnicodeString(&Name, L"Adapter");
     ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &IoAdapterObjectType);
-    
+
     /* Do the Controller Type */
     RtlInitUnicodeString(&Name, L"Controller");
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(CONTROLLER_OBJECT);
-    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &IoControllerObjectType);    
-    
+    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &IoControllerObjectType);
+
     /* Initialize the File object type  */
     RtlInitUnicodeString(&Name, L"File");
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
@@ -315,7 +315,7 @@ IoInit (VOID)
    */
   PnpInit();
 }
-                                   
+
 VOID
 INIT_FUNCTION
 IoInit2(BOOLEAN BootLog)
@@ -324,6 +324,8 @@ IoInit2(BOOLEAN BootLog)
   PDRIVER_OBJECT DriverObject;
   MODULE_OBJECT ModuleObject;
   NTSTATUS Status;
+
+  PnpInit2();
 
   IoCreateDriverList();
 

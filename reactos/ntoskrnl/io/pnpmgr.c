@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/pnpmgr.c
@@ -893,6 +892,39 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
     ZwClose(LogConfKey);
   }
 
+  if (DeviceNode->PhysicalDeviceObject != NULL)
+  {
+    /* Create the 'Control' key */
+    RtlInitUnicodeString(&KeyName,
+		         L"Control");
+    InitializeObjectAttributes(&ObjectAttributes,
+			       &KeyName,
+			       OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+			       InstanceKey,
+			       NULL);
+    Status = ZwCreateKey(&LogConfKey,
+		         KEY_ALL_ACCESS,
+		         &ObjectAttributes,
+		         0,
+		         NULL,
+		         REG_OPTION_VOLATILE,
+		         NULL);
+    if (NT_SUCCESS(Status))
+    {
+      ULONG Reference = (ULONG)DeviceNode->PhysicalDeviceObject;
+      RtlInitUnicodeString(&KeyName,
+			   L"DeviceReference");
+      Status = ZwSetValueKey(LogConfKey,
+			     &KeyName,
+			     0,
+			     REG_DWORD,
+			     &Reference,
+			     sizeof(PVOID));
+
+      ZwClose(LogConfKey);
+    }
+  }
+
   DPRINT("IopSetDeviceInstanceData() done\n");
 
   return STATUS_SUCCESS;
@@ -909,17 +941,17 @@ IopAssignDeviceResources(
    ULONG NumberOfResources = 0;
    ULONG i;
    NTSTATUS Status;
-   
+
    /* Fill DeviceNode->ResourceList and DeviceNode->ResourceListTranslated;
     * by using DeviceNode->ResourceRequirements */
-   
+
    if (!DeviceNode->ResourceRequirements
       || DeviceNode->ResourceRequirements->AlternativeLists == 0)
    {
       DeviceNode->ResourceList = DeviceNode->ResourceListTranslated = NULL;
       return STATUS_SUCCESS;
    }
-   
+
    /* FIXME: that's here that PnP arbiter should go */
    /* Actually, simply use resource list #0 as assigned resource list */
    ResourceList = &DeviceNode->ResourceRequirements->List[0];
@@ -928,45 +960,45 @@ IopAssignDeviceResources(
       Status = STATUS_REVISION_MISMATCH;
       goto ByeBye;
    }
-   
-   DeviceNode->ResourceList = ExAllocatePool(PagedPool, 
+
+   DeviceNode->ResourceList = ExAllocatePool(PagedPool,
       sizeof(CM_RESOURCE_LIST) + ResourceList->Count * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
    if (!DeviceNode->ResourceList)
    {
       Status = STATUS_INSUFFICIENT_RESOURCES;
       goto ByeBye;
    }
-   
-   DeviceNode->ResourceListTranslated = ExAllocatePool(PagedPool, 
+
+   DeviceNode->ResourceListTranslated = ExAllocatePool(PagedPool,
       sizeof(CM_RESOURCE_LIST) + ResourceList->Count * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
    if (!DeviceNode->ResourceListTranslated)
    {
       Status = STATUS_INSUFFICIENT_RESOURCES;
       goto ByeBye;
    }
-   
+
    DeviceNode->ResourceList->Count = 1;
    DeviceNode->ResourceList->List[0].InterfaceType = DeviceNode->ResourceRequirements->InterfaceType;
    DeviceNode->ResourceList->List[0].BusNumber = DeviceNode->ResourceRequirements->BusNumber;
    DeviceNode->ResourceList->List[0].PartialResourceList.Version = 1;
    DeviceNode->ResourceList->List[0].PartialResourceList.Revision = 1;
-   
+
    DeviceNode->ResourceListTranslated->Count = 1;
    DeviceNode->ResourceListTranslated->List[0].InterfaceType = DeviceNode->ResourceRequirements->InterfaceType;
    DeviceNode->ResourceListTranslated->List[0].BusNumber = DeviceNode->ResourceRequirements->BusNumber;
    DeviceNode->ResourceListTranslated->List[0].PartialResourceList.Version = 1;
    DeviceNode->ResourceListTranslated->List[0].PartialResourceList.Revision = 1;
-   
+
    for (i = 0; i < ResourceList->Count; i++)
    {
       ResourceDescriptor = &ResourceList->Descriptors[i];
-      
+
       if (ResourceDescriptor->Option == 0 || ResourceDescriptor->Option == IO_RESOURCE_PREFERRED)
       {
          DescriptorRaw = &DeviceNode->ResourceList->List[0].PartialResourceList.PartialDescriptors[NumberOfResources];
          DescriptorTranslated = &DeviceNode->ResourceListTranslated->List[0].PartialResourceList.PartialDescriptors[NumberOfResources];
          NumberOfResources++;
-         
+
          /* Copy ResourceDescriptor to DescriptorRaw and DescriptorTranslated */
          DescriptorRaw->Type = DescriptorTranslated->Type = ResourceDescriptor->Type;
          DescriptorRaw->ShareDisposition = DescriptorTranslated->ShareDisposition = ResourceDescriptor->ShareDisposition;
@@ -1001,7 +1033,7 @@ IopAssignDeviceResources(
                   DescriptorRaw->u.Interrupt.Vector = 9;
                else
                   DescriptorRaw->u.Interrupt.Vector = ResourceDescriptor->u.Interrupt.MinimumVector;
-               
+
                DescriptorTranslated->u.Interrupt.Vector = HalGetInterruptVector(
                   DeviceNode->ResourceRequirements->InterfaceType,
                   DeviceNode->ResourceRequirements->BusNumber,
@@ -1069,12 +1101,12 @@ IopAssignDeviceResources(
                NumberOfResources--;
          }
       }
-      
+
    }
-   
+
    DeviceNode->ResourceList->List[0].PartialResourceList.Count = NumberOfResources;
    DeviceNode->ResourceListTranslated->List[0].PartialResourceList.Count = NumberOfResources;
-   
+
    return STATUS_SUCCESS;
 
 ByeBye:
@@ -1818,7 +1850,8 @@ IopInitializePnpServices(
          DeviceNode,
          IopActionInitBootServices,
          DeviceNode);
-   } else
+   }
+   else
    {
       IopInitDeviceTreeTraverseContext(
          &Context,
@@ -1981,6 +2014,35 @@ IopInvalidateDeviceRelations(
 }
 
 
+static NTSTATUS INIT_FUNCTION
+IopSetRootDeviceInstanceData(PDEVICE_NODE DeviceNode)
+{
+    PWSTR KeyBuffer;
+    HANDLE InstanceKey = NULL;
+    NTSTATUS Status;
+
+    /* Create registry key for the instance id, if it doesn't exist yet */
+    KeyBuffer = ExAllocatePool(PagedPool,
+                               (49 * sizeof(WCHAR)) + DeviceNode->InstancePath.Length);
+    wcscpy(KeyBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
+    wcscat(KeyBuffer, DeviceNode->InstancePath.Buffer);
+    Status = IopCreateDeviceKeyPath(KeyBuffer,
+                                    &InstanceKey);
+    ExFreePool(KeyBuffer);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create the instance key! (Status %lx)\n", Status);
+        return Status;
+    }
+
+    /* FIXME: Set 'ConfigFlags' value */
+
+    ZwClose(InstanceKey);
+
+    return Status;
+}
+
+
 VOID INIT_FUNCTION
 PnpInit(VOID)
 {
@@ -2026,7 +2088,7 @@ PnpInit(VOID)
    }
 
    if (!IopCreateUnicodeString(&IopRootDeviceNode->InstancePath,
-       L"HTREE\\Root\\0",
+       L"HTREE\\ROOT\\0",
        PagedPool))
    {
      CPRINT("Failed to create the instance path!\n");
@@ -2042,6 +2104,21 @@ PnpInit(VOID)
    IopRootDriverObject->DriverExtension->AddDevice(
       IopRootDriverObject,
       IopRootDeviceNode->PhysicalDeviceObject);
+}
+
+
+VOID INIT_FUNCTION
+PnpInit2(VOID)
+{
+    NTSTATUS Status;
+
+    /* Set root device instance data */
+    Status = IopSetRootDeviceInstanceData(IopRootDeviceNode);
+    if (!NT_SUCCESS(Status))
+    {
+        CPRINT("Failed to set instance data\n");
+        KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
+    }
 }
 
 /* EOF */
