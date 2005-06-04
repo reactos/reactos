@@ -398,24 +398,24 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
 }
 
 /* optimze functions for bitblt */
-VOID
+BOOLEAN
 FASTCALL
 DIB_32DstInvert(PBLTINFO BltInfo)   
 {
     PULONG DestBits;
     ULONG top  = BltInfo->DestRect.top; 
-    ULONG bottom = BltInfo->DestRect.left;
+    ULONG left = BltInfo->DestRect.left;
     ULONG DestX = BltInfo->DestRect.right - left;
     ULONG DestY = BltInfo->DestRect.bottom - top;
-    ULONG delta  = BltInfo->DestSurface->lDelta - (DestX << 2);
+    ULONG delta = BltInfo->DestSurface->lDelta - (DestX << 2);
 
     /* Calculate the Initial Destination */
     DestBits = (PULONG)(BltInfo->DestSurface->pvScan0 + (left  << 2) +
                         top * BltInfo->DestSurface->lDelta);
 
-    do while (DestY > 0)
+    while (DestY > 0)
     {      
-        do while (DestX > 0)
+        while (DestX > 0)
         {
             /* Invert bits */
             *DestBits =~ *DestBits;
@@ -433,6 +433,9 @@ DIB_32DstInvert(PBLTINFO BltInfo)
         /* Decrease distance to do */
         DestY--;
     }
+    
+    /* Return TRUE */
+    return TRUE;
 }
 
 BOOLEAN
