@@ -345,7 +345,7 @@ static int rsrcid_to_token(int lookahead);
 %type <lan>	opt_language
 %type <chars>	opt_characts
 %type <ver>	opt_version
-%type <num>	expr xpr
+%type <num>	expr xpr xpr_no_not
 %type <iptr>	e_expr
 %type <tlbar>	toolbar
 %type <tlbarItems>	toolbar_items
@@ -1002,8 +1002,8 @@ optional_style_pair
 style
 	: style '|' style	{ $$ = new_style($1->or_mask | $3->or_mask, $1->and_mask | $3->and_mask); free($1); free($3);}
 	| '(' style ')'		{ $$ = $2; }
-        | xpr       		{ $$ = new_style($1, 0); }
-        | tNOT xpr		{ $$ = new_style(0, $2); }
+        | xpr_no_not    	{ $$ = new_style($1, 0); }
+        | tNOT xpr_no_not	{ $$ = new_style(0, $2); }
         ;
 
 ctlclass
@@ -1823,18 +1823,22 @@ e_expr	: /* Empty */	{ $$ = 0; }
 expr	: xpr	{ $$ = ($1); }
 	;
 
-xpr	: xpr '+' xpr	{ $$ = ($1) + ($3); }
-	| xpr '-' xpr	{ $$ = ($1) - ($3); }
-	| xpr '|' xpr	{ $$ = ($1) | ($3); }
-	| xpr '&' xpr	{ $$ = ($1) & ($3); }
-	| xpr '*' xpr	{ $$ = ($1) * ($3); }
-	| xpr '/' xpr	{ $$ = ($1) / ($3); }
-	| xpr '^' xpr	{ $$ = ($1) ^ ($3); }
-	| '~' xpr	{ $$ = ~($2); }
-	| '-' xpr %prec pUPM	{ $$ = -($2); }
-	| '+' xpr %prec pUPM	{ $$ = $2; }
-	| '(' xpr ')'	{ $$ = $2; }
-	| any_num	{ $$ = $1; }
+xpr_no_not	: xpr '+' xpr	{ $$ = ($1) + ($3); }
+		| xpr '-' xpr	{ $$ = ($1) - ($3); }
+		| xpr '|' xpr	{ $$ = ($1) | ($3); }
+		| xpr '&' xpr	{ $$ = ($1) & ($3); }
+		| xpr '*' xpr	{ $$ = ($1) * ($3); }
+		| xpr '/' xpr	{ $$ = ($1) / ($3); }
+		| xpr '^' xpr	{ $$ = ($1) ^ ($3); }
+		| '~' xpr	{ $$ = ~($2); }
+		| '-' xpr %prec pUPM	{ $$ = -($2); }
+		| '+' xpr %prec pUPM	{ $$ = $2; }
+		| '(' xpr ')'	{ $$ = $2; }
+		| any_num	{ $$ = $1; }
+		;
+
+
+xpr	: xpr_no_not	{ $$ = ($1); }
 	| tNOT any_num	{ $$ = ~($2); }
 	;
 
