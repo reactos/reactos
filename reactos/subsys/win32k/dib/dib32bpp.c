@@ -20,7 +20,6 @@
 #include <w32k.h>
 
 
-#include <w32k.h>
 
 
 VOID
