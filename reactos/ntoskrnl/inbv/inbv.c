@@ -66,7 +66,6 @@ InbvAcquireDisplayOwnership(VOID)
 {
 }
 
-
 BOOLEAN
 STDCALL
 InbvCheckDisplayOwnership(VOID)
@@ -74,14 +73,23 @@ InbvCheckDisplayOwnership(VOID)
   return FALSE;
 }
 
-
 BOOLEAN
 STDCALL
 InbvDisplayString(IN PCHAR String)
 {
-  return FALSE;
+    /* Call Bootvid (we don't support bootvid for now) 
+     * vidDisplayString(String);
+     * so instead, we'll fall-back to HAL
+     */
+     HalDisplayString(String);
+     
+     /* Call Headless (We don't support headless for now) 
+     HeadlessDispatch(DISPLAY_STRING);
+     */
+     
+     /* Return success */
+     return TRUE;
 }
-
 
 BOOLEAN
 STDCALL

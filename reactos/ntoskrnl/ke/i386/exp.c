@@ -135,7 +135,7 @@ KiRosPrintAddress(PVOID address)
           current_entry = current_entry->Flink;
        }
 
-     address = (PVOID)((ULONG_PTR)address & ~0xC0000000);
+     address = (PVOID)((ULONG_PTR)address & ~KERNEL_BASE);
    } while(++i <= 1);
 
    return(FALSE);

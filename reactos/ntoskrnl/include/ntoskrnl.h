@@ -64,6 +64,7 @@
 #include <internal/safe.h>
 #include <internal/tag.h>
 #include <internal/test.h>
+#include <internal/inbv.h>
 #include <napi/core.h>
 #include <napi/dbg.h>
 #include <napi/teb.h>
