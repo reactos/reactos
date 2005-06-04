@@ -1,0 +1,9 @@
+<module name="usbehci" type="kernelmodedriver" installbase="system32/drivers" installname="usbehci.sys">
+	<define name="__USE_W32API" />
+	<include base="ntoskrnl">include</include>
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<library>usbport</library>
+	<file>usbehci.c</file>
+	<file>usbehci.rc</file>
+</module>

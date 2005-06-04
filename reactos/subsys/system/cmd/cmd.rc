@@ -10,6 +10,7 @@
 #include <reactos/version.rc>
 #include "En.rc"
 #include "Fr.rc"
+#include "De.rc"
 
 
 STRINGTABLE DISCARDABLE

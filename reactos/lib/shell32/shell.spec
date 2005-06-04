@@ -5,6 +5,7 @@
   5 pascal   RegSetValue(long str long str long) RegSetValue16
   6 pascal   RegQueryValue(long str ptr ptr) RegQueryValue16
   7 pascal   RegEnumKey(long long ptr long) RegEnumKey16
+# 8 stub     WEP
   9 pascal -ret16 DragAcceptFiles(word word) DragAcceptFiles16
  11 pascal -ret16 DragQueryFile(word s_word ptr s_word) DragQueryFile16
  12 pascal -ret16 DragFinish(word) DragFinish16
@@ -41,5 +42,4 @@
 401 stub SHCHECKDRIVE
 #  402 _RUNDLLCHECKDRIVE
 
-# 8 WEP
 #32 WCI

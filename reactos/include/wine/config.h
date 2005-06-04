@@ -493,7 +493,7 @@
 #define HAVE_SIZE_T 1
 
 /* Define to 1 if you have the `snprintf' function. */
-#define HAVE_SNPRINTF 1
+/* #undef HAVE_SNPRINTF */
 
 /* Define to 1 if you have the <socket.h> header file. */
 /* #undef HAVE_SOCKET_H */
@@ -517,7 +517,7 @@
 #define HAVE_STDLIB_H 1
 
 /* Define to 1 if you have the `strcasecmp' function. */
-#define HAVE_STRCASECMP 1
+/* #undef HAVE_STRCASECMP */
 
 /* Define to 1 if you have the `strerror' function. */
 #define HAVE_STRERROR 1
@@ -529,7 +529,7 @@
 #define HAVE_STRING_H 1
 
 /* Define to 1 if you have the `strncasecmp' function. */
-#define HAVE_STRNCASECMP 1
+/* #undef HAVE_STRNCASECMP */
 
 /* Define to 1 if `msg_accrights' is member of `struct msghdr'. */
 /* #undef HAVE_STRUCT_MSGHDR_MSG_ACCRIGHTS */

@@ -84,6 +84,7 @@ typedef struct _VIDEO_PORT_DRIVER_EXTENSION
 typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
 {
    ULONG DeviceNumber;
+   PDRIVER_OBJECT DriverObject;
    PDEVICE_OBJECT PhysicalDeviceObject;
    PDEVICE_OBJECT FunctionalDeviceObject;
    PDEVICE_OBJECT NextDeviceObject;
@@ -94,7 +95,7 @@ typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
    ULONG InterruptVector;
    ULONG InterruptLevel;
    BOOLEAN InterruptShared;
-   ULONG AdapterInterfaceType;
+   INTERFACE_TYPE AdapterInterfaceType;
    ULONG SystemIoBusNumber;
    ULONG SystemIoSlotNumber;
    LIST_ENTRY AddressMappingListHead;

@@ -32,7 +32,7 @@
 #include "regfs.h"
 #include "fatfs.h"
 
-#include "../explorer_intres.h"
+#include "../resource.h"
 
 
 FileChildWndInfo::FileChildWndInfo(HWND hmdiclient, LPCTSTR path, ENTRY_TYPE etype)

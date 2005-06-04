@@ -26,7 +26,7 @@
 
 #include "resource.h"
 
-_tmain(int argc, TCHAR *argv[])
+int _tmain(int argc, TCHAR *argv[])
 {
   OFSTRUCT SourceOpenStruct1, SourceOpenStruct2;
   LONG ret;

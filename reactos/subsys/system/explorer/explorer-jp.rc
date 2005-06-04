@@ -1,6 +1,6 @@
-// Microsoft Visual C++ generated resource script.
+//Microsoft Developer Studio generated resource script.
 //
-#include "explorer_intres.h"
+#include "resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Japanisch resources
+// Japanese resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
 #ifdef _WIN32
@@ -26,7 +26,7 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 // Menu
 //
 
-IDM_MDIFRAME MENU 
+IDM_MDIFRAME MENU DISCARDABLE 
 BEGIN
     POPUP "ファイル(&F)"
     BEGIN
@@ -55,7 +55,7 @@ BEGIN
     END
 END
 
-IDM_WINEFILE MENU
+IDM_WINEFILE MENU DISCARDABLE 
 BEGIN
     POPUP "ファイル(&F)"
     BEGIN
@@ -165,7 +165,7 @@ BEGIN
     END
 END
 
-IDM_DESKTOPBAR MENU 
+IDM_DESKTOPBAR MENU DISCARDABLE 
 BEGIN
     POPUP ""
     BEGIN
@@ -176,7 +176,7 @@ BEGIN
     END
 END
 
-IDM_SDIFRAME MENU 
+IDM_SDIFRAME MENU DISCARDABLE 
 BEGIN
     POPUP "ファイル(&F)"
     BEGIN
@@ -202,8 +202,8 @@ END
 // Dialog
 //
 
-IDD_EXECUTE DIALOG  15, 13, 210, 63
-STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_EXECUTE DIALOG DISCARDABLE  15, 13, 210, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Execute"
 FONT 8, "MS UI Gothic"
 BEGIN
@@ -219,8 +219,8 @@ BEGIN
 END
 
 IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 144, 65
-STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | 
-    WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "スタートメニューからプログラムを検索"
 FONT 9, "MS UI Gothic", 0, 0, 0x1
@@ -232,8 +232,8 @@ BEGIN
                     WS_TABSTOP,7,25,130,33
 END
 
-IDD_DESKBAR_DESKTOP DIALOG  0, 0, 212, 172
-STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_DESKBAR_DESKTOP DIALOG DISCARDABLE  0, 0, 212, 172
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "デスクトップのプロパティ"
 FONT 9, "MS UI Gothic"
 BEGIN
@@ -265,19 +265,45 @@ BEGIN
                     WS_TABSTOP,159,121,46,44
 END
 
-IDD_DESKBAR_TASKBAR DIALOG  0, 0, 210, 154
-STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_DESKBAR_TASKBAR DIALOG DISCARDABLE  0, 0, 210, 154
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "タスクバーのプロパティ"
 FONT 9, "MS UI Gothic"
 BEGIN
 END
 
-IDD_DESKBAR_STARTMENU DIALOG  0, 0, 210, 154
-STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_DESKBAR_STARTMENU DIALOG DISCARDABLE  0, 0, 210, 154
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "スタートメニューのプロパティ"
 FONT 9, "MS UI Gothic"
 BEGIN
 END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE MOVEABLE PURE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE MOVEABLE PURE 
+BEGIN
+    "#include <windows.h>\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE MOVEABLE PURE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -285,12 +311,11 @@ END
 // String Table
 //
 
-STRINGTABLE 
+STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_TITLE               "ReactOS Explorer"
     IDS_START               "ｽﾀｰﾄ"
     IDS_LOGOFF              "ログオフ..."
-    IDS_TERMINATE           "ログオフ"
     IDS_SHUTDOWN            "シャットダウン..."
     IDS_LAUNCH              "ファイル名を指定して実行..."
     IDS_START_HELP          "ヘルプ"
@@ -305,7 +330,14 @@ BEGIN
     IDS_ADMIN               "管理ツール"
 END
 
-STRINGTABLE 
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STARTMENU           "スタートメニュー"
+    IDS_MINIMIZE_ALL        "全ウィンドウを最小化"
+    IDS_TERMINATE           "ログオフ"
+END
+
+STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_NETWORK             "ネットワーク"
     IDS_CONNECTIONS         "ネットワーク接続"
@@ -326,51 +358,7 @@ BEGIN
     IDS_TASKBAR             "タスクバー"
 END
 
-STRINGTABLE 
-BEGIN
-    IDS_STARTMENU           "スタートメニュー"
-    IDS_MINIMIZE_ALL        "全ウィンドウを最小化"
-END
-
-#endif    // Japanisch resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
-// Deutsch (Deutschland) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_DEU)
-#ifdef _WIN32
-LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
-#pragma code_page(1252)
-#endif //_WIN32
-
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
-
-1 TEXTINCLUDE 
-BEGIN
-    "explorer_intres.h\0"
-END
-
-2 TEXTINCLUDE 
-BEGIN
-    "#include <windows.h>\r\n"
-    "\0"
-END
-
-3 TEXTINCLUDE 
-BEGIN
-    "\r\n"
-    "\0"
-END
-
-#endif    // APSTUDIO_INVOKED
-
-#endif    // Deutsch (Deutschland) resources
+#endif    // Japanese resources
 /////////////////////////////////////////////////////////////////////////////
 
 

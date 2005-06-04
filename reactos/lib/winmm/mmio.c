@@ -440,12 +440,12 @@ LPWINE_MMIO	MMIO_Get(HMMIO h)
 {
     LPWINE_MMIO		wm = NULL;
 
-    EnterCriticalSection(&WINMM_IData->cs);
-    for (wm = WINMM_IData->lpMMIO; wm; wm = wm->lpNext) {
+    EnterCriticalSection(&WINMM_IData.cs);
+    for (wm = WINMM_IData.lpMMIO; wm; wm = wm->lpNext) {
 	if (wm->info.hmmio == h)
 	    break;
     }
-    LeaveCriticalSection(&WINMM_IData->cs);
+    LeaveCriticalSection(&WINMM_IData.cs);
     return wm;
 }
 
@@ -461,13 +461,13 @@ static	LPWINE_MMIO		MMIO_Create(void)
 
     wm = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WINE_MMIO));
     if (wm) {
-	EnterCriticalSection(&WINMM_IData->cs);
+	EnterCriticalSection(&WINMM_IData.cs);
         /* lookup next unallocated WORD handle, with a non NULL value */
 	while (++MMIO_counter == 0 || MMIO_Get((HMMIO)(ULONG_PTR)MMIO_counter));
 	wm->info.hmmio = (HMMIO)(ULONG_PTR)MMIO_counter;
-	wm->lpNext = WINMM_IData->lpMMIO;
-	WINMM_IData->lpMMIO = wm;
-	LeaveCriticalSection(&WINMM_IData->cs);
+	wm->lpNext = WINMM_IData.lpMMIO;
+	WINMM_IData.lpMMIO = wm;
+	LeaveCriticalSection(&WINMM_IData.cs);
     }
     return wm;
 }
@@ -481,9 +481,9 @@ static	BOOL		MMIO_Destroy(LPWINE_MMIO wm)
 {
     LPWINE_MMIO*	m;
 
-    EnterCriticalSection(&WINMM_IData->cs);
+    EnterCriticalSection(&WINMM_IData.cs);
     /* search for the matching one... */
-    m = &(WINMM_IData->lpMMIO);
+    m = &(WINMM_IData.lpMMIO);
     while (*m && *m != wm) m = &(*m)->lpNext;
     /* ...and destroy */
     if (*m) {
@@ -491,7 +491,7 @@ static	BOOL		MMIO_Destroy(LPWINE_MMIO wm)
 	HeapFree(GetProcessHeap(), 0, wm);
 	wm = NULL;
     }
-    LeaveCriticalSection(&WINMM_IData->cs);
+    LeaveCriticalSection(&WINMM_IData.cs);
     return wm ? FALSE : TRUE;
 }
 

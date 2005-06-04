@@ -15,9 +15,13 @@
 
 #include <ddk/ntddk.h>
 #include <ddk/iotypes.h>
+#include <internal/ps.h>
 #define NDEBUG
 #include <internal/debug.h>
 #include <hal.h>
+
+/* Hmm, needed for KDBG := 1. Why? */
+#undef KeGetCurrentIrql
 
 /* FUNCTIONS *****************************************************************/
 

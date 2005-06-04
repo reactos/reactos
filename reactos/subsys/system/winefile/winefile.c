@@ -18,6 +18,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifdef __WINE__
+#include "config.h"
+#include "wine/port.h"
+#endif
+
 #include "winefile.h"
 
 #include "resource.h"
@@ -141,6 +146,8 @@ typedef struct {
 	BOOL	header_wdths_ok;
 
 	TCHAR	path[MAX_PATH];
+	TCHAR	filter_pattern[MAX_PATH];
+	int		filter_flags;
 	Root	root;
 
 	SORT_ORDER sortOrder;
@@ -202,6 +209,7 @@ static void set_curdir(ChildWnd* child, Entry* entry, int idx, HWND hwnd);
 static void refresh_child(ChildWnd* child);
 static void refresh_drives();
 static void get_path(Entry* dir, PTSTR path);
+static void format_date(const FILETIME* ft, TCHAR* buffer, int visible_cols);
 
 LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
 LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
@@ -1375,10 +1383,22 @@ static Entry* read_tree(Root* root, LPCTSTR path, LPITEMIDLIST pidl, LPTSTR drv,
 }
 
 
+/* flags to filter different file types */
+enum TYPE_FILTER {
+	TF_DIRECTORIES	= 0x01,
+	TF_PROGRAMS		= 0x02,
+	TF_DOCUMENTS	= 0x04,
+	TF_OTHERS		= 0x08,
+	TF_HIDDEN		= 0x10,
+	TF_ALL			= 0x1F
+};
+
+
 static ChildWnd* alloc_child_window(LPCTSTR path, LPITEMIDLIST pidl, HWND hwnd)
 {
 	TCHAR drv[_MAX_DRIVE+1], dir[_MAX_DIR], name[_MAX_FNAME], ext[_MAX_EXT];
 	TCHAR b1[BUFFER_LEN];
+	const static TCHAR sAsterics[] = {'*', '\0'};
 
 	ChildWnd* child = (ChildWnd*) malloc(sizeof(ChildWnd));
 	Root* root = &child->root;
@@ -1415,6 +1435,9 @@ static ChildWnd* alloc_child_window(LPCTSTR path, LPITEMIDLIST pidl, HWND hwnd)
 
 		_tsplitpath(path, drv, dir, name, ext);
 	}
+
+	_tcscpy(child->filter_pattern, sAsterics);
+	child->filter_flags = TF_ALL;
 
 	root->entry.level = 0;
 
@@ -1637,7 +1660,6 @@ struct ExecuteDialog {
 	int		cmdshow;
 };
 
-
 static INT_PTR CALLBACK ExecuteDialogDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	static struct ExecuteDialog* dlg;
@@ -1663,6 +1685,7 @@ static INT_PTR CALLBACK ExecuteDialogDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam
 
 	return 0;
 }
+
 
 static INT_PTR CALLBACK DestinationDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
@@ -1698,6 +1721,241 @@ static INT_PTR CALLBACK DestinationDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam, 
 	}
 
 	return 0;
+}
+
+
+struct FilterDialog {
+	TCHAR	pattern[MAX_PATH];
+	int		flags;
+};
+
+static INT_PTR CALLBACK FilterDialogDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	static struct FilterDialog* dlg;
+
+	switch(nmsg) {
+		case WM_INITDIALOG:
+			dlg = (struct FilterDialog*) lparam;
+			SetWindowText(GetDlgItem(hwnd, IDC_VIEW_PATTERN), dlg->pattern);
+			Button_SetCheck(GetDlgItem(hwnd,IDC_VIEW_TYPE_DIRECTORIES), (dlg->flags&TF_DIRECTORIES? BST_CHECKED: BST_UNCHECKED));
+			Button_SetCheck(GetDlgItem(hwnd,IDC_VIEW_TYPE_PROGRAMS), dlg->flags&TF_PROGRAMS? BST_CHECKED: BST_UNCHECKED);
+			Button_SetCheck(GetDlgItem(hwnd,IDC_VIEW_TYPE_DOCUMENTS), dlg->flags&TF_DOCUMENTS? BST_CHECKED: BST_UNCHECKED);
+			Button_SetCheck(GetDlgItem(hwnd,IDC_VIEW_TYPE_OTHERS), dlg->flags&TF_OTHERS? BST_CHECKED: BST_UNCHECKED);
+			Button_SetCheck(GetDlgItem(hwnd,IDC_VIEW_TYPE_HIDDEN), dlg->flags&TF_HIDDEN? BST_CHECKED: BST_UNCHECKED);
+			return 1;
+
+		case WM_COMMAND: {
+			int id = (int)wparam;
+
+			if (id == IDOK) {
+				int flags = 0;
+
+				GetWindowText(GetDlgItem(hwnd, IDC_VIEW_PATTERN), dlg->pattern, MAX_PATH);
+
+				flags |= Button_GetCheck(GetDlgItem(hwnd,IDC_VIEW_TYPE_DIRECTORIES))&BST_CHECKED? TF_DIRECTORIES: 0;
+				flags |= Button_GetCheck(GetDlgItem(hwnd,IDC_VIEW_TYPE_PROGRAMS))&BST_CHECKED? TF_PROGRAMS: 0;
+				flags |= Button_GetCheck(GetDlgItem(hwnd,IDC_VIEW_TYPE_DOCUMENTS))&BST_CHECKED? TF_DOCUMENTS: 0;
+				flags |= Button_GetCheck(GetDlgItem(hwnd,IDC_VIEW_TYPE_OTHERS))&BST_CHECKED? TF_OTHERS: 0;
+				flags |= Button_GetCheck(GetDlgItem(hwnd,IDC_VIEW_TYPE_HIDDEN))&BST_CHECKED? TF_HIDDEN: 0;
+
+				dlg->flags = flags;
+
+				EndDialog(hwnd, id);
+			} else if (id == IDCANCEL)
+				EndDialog(hwnd, id);
+
+			return 1;}
+	}
+
+	return 0;
+}
+
+
+struct PropertiesDialog {
+	TCHAR	path[MAX_PATH];
+	Entry	entry;
+	void*	pVersionData;
+};
+
+/* Structure used to store enumerated languages and code pages. */
+struct LANGANDCODEPAGE {
+	WORD wLanguage;
+	WORD wCodePage;
+} *lpTranslate;
+
+static LPCSTR InfoStrings[] = {
+	"Comments",
+	"CompanyName",
+	"FileDescription",
+	"FileVersion",
+	"InternalName",
+	"LegalCopyright",
+	"LegalTrademarks",
+	"OriginalFilename",
+	"PrivateBuild",
+	"ProductName",
+	"ProductVersion",
+	"SpecialBuild",
+	NULL
+};
+
+static void PropDlg_DisplayValue(HWND hlbox, HWND hedit)
+{
+	int idx = ListBox_GetCurSel(hlbox);
+
+	if (idx != LB_ERR) {
+		LPCTSTR pValue = (LPCTSTR) ListBox_GetItemData(hlbox, idx);
+
+		if (pValue)
+			SetWindowText(hedit, pValue);
+	}
+}
+
+static void CheckForFileInfo(struct PropertiesDialog* dlg, HWND hwnd, LPCTSTR strFilename)
+{
+	static TCHAR sBackSlash[] = {'\\','\0'};
+	static TCHAR sTranslation[] = {'\\','V','a','r','F','i','l','e','I','n','f','o','\\','T','r','a','n','s','l','a','t','i','o','n','\0'};
+	static TCHAR sStringFileInfo[] = {'\\','S','t','r','i','n','g','F','i','l','e','I','n','f','o','\\',
+										'%','0','4','x','%','0','4','x','\\','%','s','\0'};
+	DWORD dwVersionDataLen = GetFileVersionInfoSize(strFilename, NULL);
+
+	if (dwVersionDataLen) {
+		dlg->pVersionData = malloc(dwVersionDataLen);
+
+		if (GetFileVersionInfo(strFilename, 0, dwVersionDataLen, dlg->pVersionData)) {
+			LPVOID pVal;
+			UINT nValLen;
+
+			if (VerQueryValue(dlg->pVersionData, sBackSlash, &pVal, &nValLen)) {
+				if (nValLen == sizeof(VS_FIXEDFILEINFO)) {
+					VS_FIXEDFILEINFO* pFixedFileInfo = (VS_FIXEDFILEINFO*)pVal;
+					char buffer[BUFFER_LEN];
+
+					sprintf(buffer, "%d.%d.%d.%d",
+						HIWORD(pFixedFileInfo->dwFileVersionMS), LOWORD(pFixedFileInfo->dwFileVersionMS),
+						HIWORD(pFixedFileInfo->dwFileVersionLS), LOWORD(pFixedFileInfo->dwFileVersionLS));
+
+					SetDlgItemTextA(hwnd, IDC_STATIC_PROP_VERSION, buffer);
+				}
+			}
+
+			/* Read the list of languages and code pages. */
+			if (VerQueryValue(dlg->pVersionData, sTranslation, &pVal, &nValLen)) {
+				struct LANGANDCODEPAGE* pTranslate = (struct LANGANDCODEPAGE*)pVal;
+				struct LANGANDCODEPAGE* pEnd = (struct LANGANDCODEPAGE*)((LPBYTE)pVal+nValLen);
+
+				HWND hlbox = GetDlgItem(hwnd, IDC_LIST_PROP_VERSION_TYPES);
+
+				/* Read the file description for each language and code page. */
+				for(; pTranslate<pEnd; ++pTranslate) {
+					LPCSTR* p;
+
+					for(p=InfoStrings; *p; ++p) {
+						TCHAR subblock[200];
+#ifdef UNICODE
+						TCHAR infoStr[100];
+#endif
+						LPCTSTR pTxt;
+						UINT nValLen;
+
+						LPCSTR pInfoString = *p;
+#ifdef UNICODE
+						MultiByteToWideChar(CP_ACP, 0, pInfoString, -1, infoStr, 100);
+#else
+#define	infoStr pInfoString
+#endif
+						wsprintf(subblock, sStringFileInfo, pTranslate->wLanguage, pTranslate->wCodePage, infoStr);
+
+						/* Retrieve file description for language and code page */
+						if (VerQueryValue(dlg->pVersionData, subblock, (PVOID)&pTxt, &nValLen)) {
+							int idx = ListBox_AddString(hlbox, infoStr);
+							ListBox_SetItemData(hlbox, idx, pTxt);
+						}
+					}
+				}
+
+				ListBox_SetCurSel(hlbox, 0);
+
+				PropDlg_DisplayValue(hlbox, GetDlgItem(hwnd,IDC_LIST_PROP_VERSION_VALUES));
+			}
+		}
+	}
+}
+
+static INT_PTR CALLBACK PropertiesDialogDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	static struct PropertiesDialog* dlg;
+
+	switch(nmsg) {
+		case WM_INITDIALOG: {
+			const static TCHAR sByteFmt[] = {'%','s',' ','B','y','t','e','s','\0'};
+			TCHAR b1[BUFFER_LEN], b2[BUFFER_LEN];
+			NUMBERFMT fmt = {0};
+			LPWIN32_FIND_DATA pWFD;
+			ULONGLONG size;
+
+			dlg = (struct PropertiesDialog*) lparam;
+			pWFD = (LPWIN32_FIND_DATA) &dlg->entry.data;
+
+			GetWindowText(hwnd, b1, MAX_PATH);
+			wsprintf(b2, b1, pWFD->cFileName);
+			SetWindowText(hwnd, b2);
+
+			format_date(&pWFD->ftLastWriteTime, b1, COL_DATE|COL_TIME);
+			SetWindowText(GetDlgItem(hwnd, IDC_STATIC_PROP_LASTCHANGE), b1);
+
+			size = ((ULONGLONG)pWFD->nFileSizeHigh << 32) | pWFD->nFileSizeLow;
+			wsprintf(b1, sLongNumFmt, size);
+			wsprintf(b2, sByteFmt, b1);
+			SetWindowText(GetDlgItem(hwnd, IDC_STATIC_PROP_SIZE), b2);
+
+			SetWindowText(GetDlgItem(hwnd, IDC_STATIC_PROP_FILENAME), pWFD->cFileName);
+			SetWindowText(GetDlgItem(hwnd, IDC_STATIC_PROP_PATH), dlg->path);
+
+			Button_SetCheck(GetDlgItem(hwnd,IDC_CHECK_READONLY), (pWFD->dwFileAttributes&FILE_ATTRIBUTE_READONLY? BST_CHECKED: BST_UNCHECKED));
+			Button_SetCheck(GetDlgItem(hwnd,IDC_CHECK_ARCHIVE), (pWFD->dwFileAttributes&FILE_ATTRIBUTE_ARCHIVE? BST_CHECKED: BST_UNCHECKED));
+			Button_SetCheck(GetDlgItem(hwnd,IDC_CHECK_COMPRESSED), (pWFD->dwFileAttributes&FILE_ATTRIBUTE_COMPRESSED? BST_CHECKED: BST_UNCHECKED));
+			Button_SetCheck(GetDlgItem(hwnd,IDC_CHECK_HIDDEN), (pWFD->dwFileAttributes&FILE_ATTRIBUTE_HIDDEN? BST_CHECKED: BST_UNCHECKED));
+			Button_SetCheck(GetDlgItem(hwnd,IDC_CHECK_SYSTEM), (pWFD->dwFileAttributes&FILE_ATTRIBUTE_SYSTEM? BST_CHECKED: BST_UNCHECKED));
+
+			CheckForFileInfo(dlg, hwnd, dlg->path);
+			return 1;}
+
+		case WM_COMMAND: {
+			int id = (int)wparam;
+
+			switch(HIWORD(wparam)) {
+			  case LBN_SELCHANGE: {
+				HWND hlbox = GetDlgItem(hwnd, IDC_LIST_PROP_VERSION_TYPES);
+				PropDlg_DisplayValue(hlbox, GetDlgItem(hwnd,IDC_LIST_PROP_VERSION_VALUES));
+				break;
+			  }
+
+			  case BN_CLICKED:
+				if (id==IDOK || id==IDCANCEL)
+					EndDialog(hwnd, id);
+			}
+
+			return 1;}
+
+		case WM_NCDESTROY:
+			free(dlg->pVersionData);
+			dlg->pVersionData = NULL;
+			break;
+	}
+
+	return 0;
+}
+
+static void show_properties_dlg(Entry* entry, HWND hwnd)
+{
+	struct PropertiesDialog dlg;
+
+	memset(&dlg, 0, sizeof(struct PropertiesDialog));
+	get_path(entry, dlg.path);
+	memcpy(&dlg.entry, entry, sizeof(Entry));
+
+	DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_DIALOG_PROPERTIES), hwnd, PropertiesDialogDlgProc, (LPARAM)&dlg);
 }
 
 
@@ -2434,9 +2692,46 @@ static void calc_single_width(Pane* pane, int col)
 }
 
 
+static BOOL pattern_match(LPCTSTR str, LPCTSTR pattern)
+{
+	for( ; *str&&*pattern; str++,pattern++) {
+		if (*pattern == '*') {
+			do pattern++;
+			while(*pattern == '*');
+
+			if (!*pattern)
+				return TRUE;
+
+			for(; *str; str++)
+				if (_totupper(*str)==_totupper(*pattern) && pattern_match(str, pattern))
+					return TRUE;
+
+			return FALSE;
+		}
+		else if (_totupper(*str)!=_totupper(*pattern) && *pattern!='?')
+			return FALSE;
+	}
+
+	if (*str || *pattern)
+		if (*pattern!='*' || pattern[1]!='\0')
+			return FALSE;
+
+	return TRUE;
+}
+
+
+enum FILE_TYPE {
+	FT_OTHER		= 0,
+	FT_EXECUTABLE	= 1,
+	FT_DOCUMENT		= 2
+};
+
+static enum FILE_TYPE get_file_type(LPCTSTR filename);
+
+
 /* insert listbox entries after index idx */
 
-static int insert_entries(Pane* pane, Entry* dir, int idx)
+static int insert_entries(Pane* pane, Entry* dir, LPCTSTR pattern, int filter_flags, int idx)
 {
 	Entry* entry = dir;
 
@@ -2451,15 +2746,47 @@ static int insert_entries(Pane* pane, Entry* dir, int idx)
 			continue;
 #endif
 
-		/* don't display entries "." and ".." in the left pane */
-		if (pane->treePane && (entry->data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)
-				&& entry->data.cFileName[0]==TEXT('.'))
-			if (
-#ifndef _NO_EXTENSIONS
-				entry->data.cFileName[1]==TEXT('\0') ||
-#endif
-				(entry->data.cFileName[1]==TEXT('.') && entry->data.cFileName[2]==TEXT('\0')))
+		if (entry->data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			/* don't display entries "." and ".." in the left pane */
+			if (pane->treePane && entry->data.cFileName[0]==TEXT('.'))
+				if (
+	#ifndef _NO_EXTENSIONS
+					entry->data.cFileName[1]==TEXT('\0') ||
+	#endif
+					(entry->data.cFileName[1]==TEXT('.') && entry->data.cFileName[2]==TEXT('\0')))
+					continue;
+
+			/* filter directories in right pane */
+			if (!pane->treePane && !(filter_flags&TF_DIRECTORIES))
 				continue;
+		}
+
+		/* filter using the file name pattern */
+		if (pattern)
+			if (!pattern_match(entry->data.cFileName, pattern))
+				continue;
+
+		/* filter system and hidden files */
+		if (!(filter_flags&TF_HIDDEN) && (entry->data.dwFileAttributes&(FILE_ATTRIBUTE_HIDDEN|FILE_ATTRIBUTE_SYSTEM)))
+			continue;
+
+		/* filter looking at the file type */
+		if ((filter_flags&(TF_PROGRAMS|TF_DOCUMENTS|TF_OTHERS)) != (TF_PROGRAMS|TF_DOCUMENTS|TF_OTHERS))
+			switch(get_file_type(entry->data.cFileName)) {
+			  case FT_EXECUTABLE:
+			  	if (!(filter_flags & TF_PROGRAMS))
+					continue;
+				break;
+
+			  case FT_DOCUMENT:
+				if (!(filter_flags & TF_DOCUMENTS))
+					continue;
+				break;
+
+			  default: // TF_OTHERS
+				if (!(filter_flags & TF_OTHERS))
+					continue;
+			}
 
 		if (idx != -1)
 			idx++;
@@ -2467,7 +2794,7 @@ static int insert_entries(Pane* pane, Entry* dir, int idx)
 		ListBox_InsertItemData(pane->hwnd, idx, entry);
 
 		if (pane->treePane && entry->expanded)
-			idx = insert_entries(pane, entry->down, idx);
+			idx = insert_entries(pane, entry->down, pattern, filter_flags, idx);
 	}
 
 	ShowWindow(pane->hwnd, SW_SHOW);
@@ -2512,7 +2839,7 @@ static void set_space_status()
 
 static WNDPROC g_orgTreeWndProc;
 
-static void create_tree_window(HWND parent, Pane* pane, int id, int id_header)
+static void create_tree_window(HWND parent, Pane* pane, int id, int id_header, LPCTSTR pattern, int filter_flags)
 {
 	const static TCHAR sListBox[] = {'L','i','s','t','B','o','x','\0'};
 
@@ -2530,7 +2857,7 @@ static void create_tree_window(HWND parent, Pane* pane, int id, int id_header)
 
 	/* insert entries into listbox */
 	if (entry)
-		insert_entries(pane, entry, -1);
+		insert_entries(pane, entry, pattern, filter_flags, -1);
 
 	/* calculate column widths */
 	if (!s_init) {
@@ -2548,8 +2875,8 @@ static void create_tree_window(HWND parent, Pane* pane, int id, int id_header)
 
 static void InitChildWindow(ChildWnd* child)
 {
-	create_tree_window(child->hwnd, &child->left, IDW_TREE_LEFT, IDW_HEADER_LEFT);
-	create_tree_window(child->hwnd, &child->right, IDW_TREE_RIGHT, IDW_HEADER_RIGHT);
+	create_tree_window(child->hwnd, &child->left, IDW_TREE_LEFT, IDW_HEADER_LEFT, NULL, TF_ALL);
+	create_tree_window(child->hwnd, &child->right, IDW_TREE_RIGHT, IDW_HEADER_RIGHT, child->filter_pattern, child->filter_flags);
 }
 
 
@@ -2674,7 +3001,7 @@ static void output_number(Pane* pane, LPDRAWITEMSTRUCT dis, int col, LPCTSTR str
 }
 
 
-static int is_exe_file(LPCTSTR ext)
+static BOOL is_exe_file(LPCTSTR ext)
 {
 	static const TCHAR executable_extensions[][4] = {
 		{'C','O','M','\0'},
@@ -2698,17 +3025,33 @@ static int is_exe_file(LPCTSTR ext)
 		d++;
 
 	for(p=executable_extensions; (*p)[0]; p++)
-		if (!_tcscmp(ext_buffer, *p))
-			return 1;
+		if (!_tcsicmp(ext_buffer, *p))
+			return TRUE;
 
-	return 0;
+	return FALSE;
 }
 
-static int is_registered_type(LPCTSTR ext)
+static BOOL is_registered_type(LPCTSTR ext)
 {
-        /* TODO */
+	/* check if there exists a classname for this file extension in the registry */
+	if (!RegQueryValue(HKEY_CLASSES_ROOT, ext, NULL, NULL))
+		return TRUE;
 
-	return 1;
+	return FALSE;
+}
+
+static enum FILE_TYPE get_file_type(LPCTSTR filename)
+{
+	LPCTSTR ext = _tcsrchr(filename, '.');
+	if (!ext)
+		ext = sEmpty;
+
+	if (is_exe_file(ext))
+		return FT_EXECUTABLE;
+	else if (is_registered_type(ext))
+		return FT_DOCUMENT;
+	else
+		return FT_OTHER;
 }
 
 
@@ -2744,16 +3087,11 @@ static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWi
 			else
 				img = IMG_FOLDER;
 		} else {
-			LPCTSTR ext = _tcsrchr(entry->data.cFileName, '.');
-			if (!ext)
-				ext = sEmpty;
-
-			if (is_exe_file(ext))
-				img = IMG_EXECUTABLE;
-			else if (is_registered_type(ext))
-				img = IMG_DOCUMENT;
-			else
-				img = IMG_FILE;
+			switch(get_file_type(entry->data.cFileName)) {
+			  case FT_EXECUTABLE:	img = IMG_EXECUTABLE;	break;
+			  case FT_DOCUMENT:		img = IMG_DOCUMENT;		break;
+			  default:				img = IMG_FILE;
+			}
 		}
 	} else {
 		attrs = 0;
@@ -3254,7 +3592,7 @@ static void scan_entry(ChildWnd* child, Entry* entry, int idx, HWND hwnd)
 	}
 
 	/* insert found entries in right pane */
-	insert_entries(&child->right, entry->down, -1);
+	insert_entries(&child->right, entry->down, child->filter_pattern, child->filter_flags, -1);
 	calc_widths(&child->right, FALSE);
 #ifndef _NO_EXTENSIONS
 	set_header(&child->right);
@@ -3295,7 +3633,7 @@ static BOOL expand_entry(ChildWnd* child, Entry* dir)
 	dir->expanded = TRUE;
 
 	/* insert entries in left pane */
-	insert_entries(&child->left, p, idx);
+	insert_entries(&child->left, p, NULL, TF_ALL, idx);
 
 	if (!child->header_wdths_ok) {
 		if (calc_widths(&child->left, FALSE)) {
@@ -3334,6 +3672,17 @@ static void collapse_entry(Pane* pane, Entry* dir)
 }
 
 
+static void refresh_right_pane(ChildWnd* child)
+{
+	ListBox_ResetContent(child->right.hwnd);
+	insert_entries(&child->right, child->right.root, child->filter_pattern, child->filter_flags, -1);
+	calc_widths(&child->right, FALSE);
+
+#ifndef _NO_EXTENSIONS
+	set_header(&child->right);
+#endif
+}
+
 static void set_curdir(ChildWnd* child, Entry* entry, int idx, HWND hwnd)
 {
 	TCHAR path[MAX_PATH];
@@ -3341,19 +3690,14 @@ static void set_curdir(ChildWnd* child, Entry* entry, int idx, HWND hwnd)
 	path[0] = '\0';
 
 	child->left.cur = entry;
+
 	child->right.root = entry->down? entry->down: entry;
 	child->right.cur = entry;
 
 	if (!entry->scanned)
 		scan_entry(child, entry, idx, hwnd);
-	else {
-		ListBox_ResetContent(child->right.hwnd);
-		insert_entries(&child->right, entry->down, -1);
-		calc_widths(&child->right, FALSE);
-#ifndef _NO_EXTENSIONS
-		set_header(&child->right);
-#endif
-	}
+	else
+		refresh_right_pane(child);
 
 	get_path(entry, path);
 	lstrcpy(child->path, path);
@@ -3390,7 +3734,7 @@ static void refresh_child(ChildWnd* child)
 	if (!entry)
 		entry = &child->root.entry;
 
-	insert_entries(&child->left, child->root.entry.down, 0);
+	insert_entries(&child->left, child->root.entry.down, NULL, TF_ALL, 0);
 
 	set_curdir(child, entry, 0, child->hwnd);
 
@@ -3590,7 +3934,10 @@ static void activate_entry(ChildWnd* child, Pane* pane, HWND hwnd)
 #endif
 		}
 	} else {
-		launch_entry(entry, child->hwnd, SW_SHOWNORMAL);
+		if (GetKeyState(VK_MENU) < 0)
+			show_properties_dlg(entry, child->hwnd);
+		else
+			launch_entry(entry, child->hwnd, SW_SHOWNORMAL);
 	}
 }
 
@@ -3658,6 +4005,55 @@ static void update_view_menu(ChildWnd* child)
 	CheckMenuItem(Globals.hMenuView, ID_VIEW_SORT_TYPE, child->sortOrder==SORT_EXT? MF_CHECKED: MF_UNCHECKED);
 	CheckMenuItem(Globals.hMenuView, ID_VIEW_SORT_SIZE, child->sortOrder==SORT_SIZE? MF_CHECKED: MF_UNCHECKED);
 	CheckMenuItem(Globals.hMenuView, ID_VIEW_SORT_DATE, child->sortOrder==SORT_DATE? MF_CHECKED: MF_UNCHECKED);
+}
+
+
+static BOOL is_directory(LPCTSTR target)
+{
+	/*TODO correctly handle UNIX paths */
+	DWORD target_attr = GetFileAttributes(target);
+
+	if (target_attr == INVALID_FILE_ATTRIBUTES)
+		return FALSE;
+
+	return target_attr&FILE_ATTRIBUTE_DIRECTORY? TRUE: FALSE;
+}
+	
+static BOOL prompt_target(Pane* pane, LPTSTR source, LPTSTR target)
+{
+	TCHAR path[MAX_PATH];
+	int len;
+
+	get_path(pane->cur, path);
+
+	if (DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_SELECT_DESTINATION), pane->hwnd, DestinationDlgProc, (LPARAM)path) != IDOK)
+		return FALSE;
+
+	get_path(pane->cur, source);
+
+	/* convert relative targets to absolute paths */
+	if (path[0]!='/' && path[1]!=':') {
+		get_path(pane->cur->up, target);
+		len = lstrlen(target);
+
+		if (target[len-1]!='\\' && target[len-1]!='/')
+			target[len++] = '/';
+
+		lstrcpy(target+len, path);
+	} else
+		lstrcpy(target, path);
+
+	/* If the target already exists as directory, create a new target below this. */
+	if (is_directory(path)) {
+		TCHAR fname[_MAX_FNAME], ext[_MAX_EXT];
+		const static TCHAR sAppend[] = {'%','s','/','%','s','%','s','\0'};
+
+		_tsplitpath(source, NULL, NULL, fname, ext);
+
+		wsprintf(target, sAppend, path, fname, ext);
+	}
+
+	return TRUE;
 }
 
 
@@ -3949,39 +4345,43 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 					break;
 
 				case ID_FILE_MOVE: {
-					TCHAR new_name[BUFFER_LEN], old_name[BUFFER_LEN];
-					int len, ret;
+					TCHAR source[BUFFER_LEN], target[BUFFER_LEN];
 
-					get_path(pane->cur, new_name);
+					if (prompt_target(pane, source, target)) {
+						SHFILEOPSTRUCT shfo = {hwnd, FO_MOVE, source, target};
 
-					ret = DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_SELECT_DESTINATION), hwnd, DestinationDlgProc, (LPARAM)new_name);
-					if (ret != IDOK)
-						break;
+						source[lstrlen(source)+1] = '\0';
+						target[lstrlen(target)+1] = '\0';
 
-					if (new_name[0]!='/' && new_name[1]!=':') {
-						get_path(pane->cur->up, old_name);
-						len = lstrlen(old_name);
-
-						if (old_name[len-1]!='\\' && old_name[len-1]!='/')
-							old_name[len++] = '/';
-
-						lstrcpy(old_name+len, new_name);
-						lstrcpy(new_name, old_name);
-					}
-
-					get_path(pane->cur, old_name);
-
-					if (MoveFileEx(old_name, new_name, MOVEFILE_COPY_ALLOWED)) {
-						if (pane->treePane) {
-							pane->root->scanned = FALSE;
-							pane->cur = pane->root;
-							activate_entry(child, pane, hwnd);
-						}
-						else
+						if (!SHFileOperation(&shfo))
 							refresh_child(child);
 					}
-					else
-						display_error(hwnd, GetLastError());
+					break;}
+
+				case ID_FILE_COPY: {
+					TCHAR source[BUFFER_LEN], target[BUFFER_LEN];
+
+					if (prompt_target(pane, source, target)) {
+						SHFILEOPSTRUCT shfo = {hwnd, FO_COPY, source, target};
+
+						source[lstrlen(source)+1] = '\0';
+						target[lstrlen(target)+1] = '\0';
+
+						if (!SHFileOperation(&shfo))
+							refresh_child(child);
+					}
+					break;}
+
+				case ID_FILE_DELETE: {
+					TCHAR path[BUFFER_LEN];
+					SHFILEOPSTRUCT shfo = {hwnd, FO_DELETE, path};
+
+					get_path(pane->cur, path);
+
+					path[lstrlen(path)+1] = '\0';
+
+					if (!SHFileOperation(&shfo))
+						refresh_child(child);
 					break;}
 
 				case ID_VIEW_SORT_NAME:
@@ -4000,6 +4400,20 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 					set_sort_order(child, SORT_DATE);
 					break;
 
+				case ID_VIEW_FILTER: {
+					struct FilterDialog dlg;
+
+					memset(&dlg, 0, sizeof(struct FilterDialog));
+					_tcscpy(dlg.pattern, child->filter_pattern);
+					dlg.flags = child->filter_flags;
+
+					if (DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_DIALOG_VIEW_TYPE), hwnd, FilterDialogDlgProc, (LPARAM)&dlg) == IDOK) {
+						_tcscpy(child->filter_pattern, dlg.pattern);
+						child->filter_flags = dlg.flags;
+						refresh_right_pane(child);
+					}
+					break;}
+
 				case ID_VIEW_SPLIT: {
 					last_split = child->split_pos;
 #ifdef _NO_EXTENSIONS
@@ -4007,6 +4421,10 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 #endif
 					SetCapture(hwnd);
 					break;}
+
+				case ID_EDIT_PROPERTIES:
+					show_properties_dlg(pane->cur, child->hwnd);
+					break;
 
 				default:
 					return pane_command(pane, LOWORD(wparam));
@@ -4059,7 +4477,6 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 			idx = ListBox_GetCurSel(pane->hwnd);
 
 			if (idx != -1) {
-				HRESULT hr;
 				Entry* entry = (Entry*) ListBox_GetItemData(pane->hwnd, idx);
 
 				LPITEMIDLIST pidl_abs = get_to_absolute_pidl(entry, hwnd);
@@ -4070,7 +4487,8 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 
 					 /* get and use the parent folder to display correct context menu in all cases */
 					if (SUCCEEDED(SHBindToParent(pidl_abs, &IID_IShellFolder, (LPVOID*)&parentFolder, &pidlLast))) {
-						hr = ShellFolderContextMenu(parentFolder, hwnd, 1, &pidlLast, pt.x, pt.y);
+						if (SUCCEEDED(ShellFolderContextMenu(parentFolder, hwnd, 1, &pidlLast, pt.x, pt.y)))
+							refresh_child(child);
 
 						(*parentFolder->lpVtbl->Release)(parentFolder);
 					}
@@ -4232,7 +4650,7 @@ static void InitInstance(HINSTANCE hinstance)
 #endif
 
 	/* load column strings */
-	col = 0;
+	col = 1;
 
 	load_string(g_pos_names[col++], IDS_COL_NAME);
 	load_string(g_pos_names[col++], IDS_COL_SIZE);

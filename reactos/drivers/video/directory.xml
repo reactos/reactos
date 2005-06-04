@@ -1,0 +1,9 @@
+<directory name="displays">
+	<xi:include href="displays/directory.xml" />
+</directory>
+<directory name="miniport">
+	<xi:include href="miniport/directory.xml" />
+</directory>
+<directory name="videoprt">
+	<xi:include href="videoprt/videoprt.xml" />
+</directory>

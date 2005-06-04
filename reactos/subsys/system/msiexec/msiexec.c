@@ -273,7 +273,7 @@ static VOID *LoadProc(LPCWSTR DllName, LPCSTR ProcName, HMODULE* DllHandle)
 	return proc;
 }
 
-static DWORD DllRegisterServer(LPCWSTR DllName)
+static DWORD DoDllRegisterServer(LPCWSTR DllName)
 {
 	HRESULT hr;
 	DLLREGISTERSERVER pfDllRegisterServer = NULL;
@@ -293,7 +293,7 @@ static DWORD DllRegisterServer(LPCWSTR DllName)
 	return 0;
 }
 
-static DWORD DllUnregisterServer(LPCWSTR DllName)
+static DWORD DoDllUnregisterServer(LPCWSTR DllName)
 {
 	HRESULT hr;
 	DLLUNREGISTERSERVER pfDllUnregisterServer = NULL;
@@ -887,11 +887,11 @@ int main(int argc, char **argv)
 	}
 	else if(FunctionDllRegisterServer)
 	{
-		ReturnCode = DllRegisterServer(DllName);
+		ReturnCode = DoDllRegisterServer(DllName);
 	}
 	else if(FunctionDllUnregisterServer)
 	{
-		ReturnCode = DllUnregisterServer(DllName);
+		ReturnCode = DoDllUnregisterServer(DllName);
 	}
 	else if (FunctionRegServer)
 	{

@@ -70,9 +70,6 @@ static HHOOK	SHELL_hHook = 0;
 static UINT	uMsgWndCreated = 0;
 static UINT	uMsgWndDestroyed = 0;
 static UINT	uMsgShellActivate = 0;
-HINSTANCE16	SHELL_hInstance = 0;
-HINSTANCE SHELL_hInstance32;
-static int SHELL_Attach = 0;
 
 /***********************************************************************
  * DllEntryPoint [SHELL.101]
@@ -87,33 +84,6 @@ static int SHELL_Attach = 0;
 BOOL WINAPI SHELL_DllEntryPoint(DWORD Reason, HINSTANCE16 hInst,
 				WORD ds, WORD HeapSize, DWORD res1, WORD res2)
 {
-    TRACE("(%08lx, %04x, %04x, %04x, %08lx, %04x)\n",
-          Reason, hInst, ds, HeapSize, res1, res2);
-
-    switch(Reason)
-    {
-    case DLL_PROCESS_ATTACH:
-	if (SHELL_Attach++) break;
-	SHELL_hInstance = hInst;
-	if(!SHELL_hInstance32)
-	{
-	    if(!(SHELL_hInstance32 = LoadLibraryA("shell32.dll")))
-	    {
-		ERR("Could not load sibling shell32.dll\n");
-		return FALSE;
-	    }
-	}
-	break;
-
-    case DLL_PROCESS_DETACH:
-	if(!--SHELL_Attach)
-	{
-	    SHELL_hInstance = 0;
-	    if(SHELL_hInstance32)
-		FreeLibrary(SHELL_hInstance32);
-	}
-	break;
-    }
     return TRUE;
 }
 
@@ -363,74 +333,82 @@ SEGPTR WINAPI FindEnvironmentString16(LPSTR str)
  *              		DoEnvironmentSubst      [SHELL.37]
  *
  * Replace %KEYWORD% in the str with the value of variable KEYWORD
- * from "DOS" environment.
+ * from "DOS" environment. If it is not found the %KEYWORD% is left
+ * intact. If the buffer is too small, str is not modified.
+ *
+ * str         [I] '\0' terminated string with %keyword%.
+ *             [O] '\0' terminated string with %keyword% substituted.
+ * length      [I] size of str.
+ *
+ * Return
+ *     str length in the LOWORD and 1 in HIWORD if subst was successful.
  */
 DWORD WINAPI DoEnvironmentSubst16(LPSTR str,WORD length)
 {
   LPSTR   lpEnv = MapSL(GetDOSEnvironment16());
-  LPSTR   lpBuffer = HeapAlloc( GetProcessHeap(), 0, length);
   LPSTR   lpstr = str;
-  LPSTR   lpbstr = lpBuffer;
+  LPSTR   lpend;
+  LPSTR   lpBuffer = HeapAlloc( GetProcessHeap(), 0, length);
+  WORD    bufCnt = 0;
+  WORD    envKeyLen;
+  LPSTR   lpKey;
+  WORD    retStatus = 0;
+  WORD    retLength = length;
 
   CharToOemA(str,str);
 
   TRACE("accept %s\n", str);
 
-  while( *lpstr && lpbstr - lpBuffer < length )
-   {
-     LPSTR lpend = lpstr;
+  while( *lpstr && bufCnt <= length - 1 ) {
+     if ( *lpstr != '%' ) {
+        lpBuffer[bufCnt++] = *lpstr++;
+        continue;
+     }
 
-     if( *lpstr == '%' )
-       {
-	  do { lpend++; } while( *lpend && *lpend != '%' );
-	  if( *lpend == '%' && lpend - lpstr > 1 )	/* found key */
-	    {
-	       LPSTR lpKey;
-	      *lpend = '\0';
-	       lpKey = SHELL_FindString(lpEnv, lpstr+1);
-	       if( lpKey )				/* found key value */
-		 {
-		   int l = strlen(lpKey);
+     for( lpend = lpstr + 1; *lpend && *lpend != '%'; lpend++) /**/;
 
-		   if( l > length - (lpbstr - lpBuffer) - 1 )
-		     {
-           WARN("-- Env subst aborted - string too short\n");
-		      *lpend = '%';
-		       break;
-		     }
-		   strcpy(lpbstr, lpKey);
-		   lpbstr += l;
-		 }
-	       else break;
-	      *lpend = '%';
-	       lpstr = lpend + 1;
-	    }
-	  else break;					/* back off and whine */
+     envKeyLen = lpend - lpstr - 1;
+     if( *lpend != '%' || envKeyLen == 0)
+        goto err; /* "%\0" or "%%" found; back off and whine */
 
-	  continue;
-       }
+     *lpend = '\0';
+     lpKey = SHELL_FindString(lpEnv, lpstr+1);
+     *lpend = '%';
+     if( lpKey ) {
+         int l = strlen(lpKey);
 
-     *lpbstr++ = *lpstr++;
-   }
+         if( bufCnt + l > length - 1 )
+                goto err;
 
- *lpbstr = '\0';
-  if( lpstr - str == strlen(str) )
-    {
-      strncpy(str, lpBuffer, length);
-      length = 1;
-    }
-  else
-      length = 0;
+        memcpy(lpBuffer + bufCnt, lpKey, l);
+        bufCnt += l;
+     } else { /* Keyword not found; Leave the %KEYWORD% intact */
+        if( bufCnt + envKeyLen + 2 > length - 1 )
+            goto err;
 
+         memcpy(lpBuffer + bufCnt, lpstr, envKeyLen + 2);
+        bufCnt += envKeyLen + 2;
+     }
+
+     lpstr = lpend + 1;
+  }
+
+  if (!*lpstr && bufCnt <= length - 1) {
+      memcpy(str,lpBuffer, bufCnt);
+      str[bufCnt] = '\0';
+      retLength = bufCnt + 1;
+      retStatus = 1;
+  }
+
+  err:
+  if (!retStatus)
+      WARN("-- Env subst aborted - string too short or invalid input\n");
   TRACE("-- return %s\n", str);
 
   OemToCharA(str,str);
   HeapFree( GetProcessHeap(), 0, lpBuffer);
 
-  /*  Return str length in the LOWORD
-   *  and 1 in HIWORD if subst was successful.
-   */
- return (DWORD)MAKELONG(strlen(str), length);
+  return (DWORD)MAKELONG(retLength, retStatus);
 }
 
 /*************************************************************************

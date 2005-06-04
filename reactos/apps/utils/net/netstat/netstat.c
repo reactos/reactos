@@ -16,6 +16,7 @@
 #include <winsock.h>
 #include <tchar.h>
 #include <stdio.h>
+#include <ctype.h>
 #include <time.h>
 
 #include <iptypes.h>
@@ -56,31 +57,32 @@ VOID PrintError(DWORD ErrorCode)
 	FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
 				  NULL, ErrorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 				  (LPTSTR)&lpMsgBuf, 0, NULL);
-	printf("%s\n", lpMsgBuf);
+	printf("%s\n", (TCHAR*)lpMsgBuf);
 	LocalFree(lpMsgBuf);
 }
 
+#if 0
 static void ShowTcpStatistics()
 {
     MIB_TCPSTATS TcpStatsMIB;
     GetTcpStatistics(&TcpStatsMIB);
 
     _tprintf(_T("TCP/IP Statistics\t\n"));
-    _tprintf(_T("  time-out algorithm:\t\t%d\n"), TcpStatsMIB.dwRtoAlgorithm);
-    _tprintf(_T("  minimum time-out:\t\t%d\n"), TcpStatsMIB.dwRtoMin);
-    _tprintf(_T("  maximum time-out:\t\t%d\n"), TcpStatsMIB.dwRtoMax);
-    _tprintf(_T("  maximum connections:\t\t%d\n"), TcpStatsMIB.dwMaxConn);
-    _tprintf(_T("  active opens:\t\t\t%d\n"), TcpStatsMIB.dwActiveOpens);
-    _tprintf(_T("  passive opens:\t\t\t%d\n"), TcpStatsMIB.dwPassiveOpens);
-    _tprintf(_T("  failed attempts:\t\t%d\n"), TcpStatsMIB.dwAttemptFails);
-    _tprintf(_T("  established connections reset:\t%d\n"), TcpStatsMIB.dwEstabResets);
-    _tprintf(_T("  established connections:\t%d\n"), TcpStatsMIB.dwCurrEstab);
-    _tprintf(_T("  segments received:\t\t%d\n"), TcpStatsMIB.dwInSegs);
-    _tprintf(_T("  segment sent:\t\t\t%d\n"), TcpStatsMIB.dwOutSegs);
-    _tprintf(_T("  segments retransmitted:\t\t%d\n"), TcpStatsMIB.dwRetransSegs);
-    _tprintf(_T("  incoming errors:\t\t%d\n"), TcpStatsMIB.dwInErrs);
-    _tprintf(_T("  outgoing resets:\t\t%d\n"), TcpStatsMIB.dwOutRsts);
-    _tprintf(_T("  cumulative connections:\t\t%d\n"), TcpStatsMIB.dwNumConns);
+    _tprintf(_T("  time-out algorithm:\t\t%lu\n"), TcpStatsMIB.dwRtoAlgorithm);
+    _tprintf(_T("  minimum time-out:\t\t%lu\n"), TcpStatsMIB.dwRtoMin);
+    _tprintf(_T("  maximum time-out:\t\t%lu\n"), TcpStatsMIB.dwRtoMax);
+    _tprintf(_T("  maximum connections:\t\t%lu\n"), TcpStatsMIB.dwMaxConn);
+    _tprintf(_T("  active opens:\t\t\t%lu\n"), TcpStatsMIB.dwActiveOpens);
+    _tprintf(_T("  passive opens:\t\t\t%lu\n"), TcpStatsMIB.dwPassiveOpens);
+    _tprintf(_T("  failed attempts:\t\t%lu\n"), TcpStatsMIB.dwAttemptFails);
+    _tprintf(_T("  established connections reset:\t%lu\n"), TcpStatsMIB.dwEstabResets);
+    _tprintf(_T("  established connections:\t%lu\n"), TcpStatsMIB.dwCurrEstab);
+    _tprintf(_T("  segments received:\t\t%lu\n"), TcpStatsMIB.dwInSegs);
+    _tprintf(_T("  segment sent:\t\t\t%lu\n"), TcpStatsMIB.dwOutSegs);
+    _tprintf(_T("  segments retransmitted:\t\t%lu\n"), TcpStatsMIB.dwRetransSegs);
+    _tprintf(_T("  incoming errors:\t\t%lu\n"), TcpStatsMIB.dwInErrs);
+    _tprintf(_T("  outgoing resets:\t\t%lu\n"), TcpStatsMIB.dwOutRsts);
+    _tprintf(_T("  cumulative connections:\t\t%lu\n"), TcpStatsMIB.dwNumConns);
 }
 
 static void ShowUdpStatistics()
@@ -89,11 +91,11 @@ static void ShowUdpStatistics()
     GetUdpStatistics(&UDPStatsMIB);
 
     _tprintf(_T("UDP Statistics\t\n"));
-    _tprintf(_T("  received datagrams:\t\t\t%d\n"), UDPStatsMIB.dwInDatagrams);
-    _tprintf(_T("  datagrams for which no port exists:\t%d\n"), UDPStatsMIB.dwNoPorts);
-    _tprintf(_T("  errors on received datagrams:\t\t%d\n"), UDPStatsMIB.dwInErrors);
-    _tprintf(_T("  sent datagrams:\t\t\t\t%d\n"), UDPStatsMIB.dwOutDatagrams);
-    _tprintf(_T("  number of entries in listener table:\t%d\n"), UDPStatsMIB.dwNumAddrs);
+    _tprintf(_T("  received datagrams:\t\t\t%lu\n"), UDPStatsMIB.dwInDatagrams);
+    _tprintf(_T("  datagrams for which no port exists:\t%lu\n"), UDPStatsMIB.dwNoPorts);
+    _tprintf(_T("  errors on received datagrams:\t\t%lu\n"), UDPStatsMIB.dwInErrors);
+    _tprintf(_T("  sent datagrams:\t\t\t\t%lu\n"), UDPStatsMIB.dwOutDatagrams);
+    _tprintf(_T("  number of entries in listener table:\t%lu\n"), UDPStatsMIB.dwNumAddrs);
 }
 
 static void ShowIpStatistics()
@@ -102,27 +104,27 @@ static void ShowIpStatistics()
     GetIpStatistics(&IPStatsMIB);
 
     _tprintf(_T("IP Statistics\t\n"));
-    _tprintf(_T("  IP forwarding enabled or disabled:\t%d\n"), IPStatsMIB.dwForwarding);
-    _tprintf(_T("  default time-to-live:\t\t\t%d\n"), IPStatsMIB.dwDefaultTTL);
-    _tprintf(_T("  datagrams received:\t\t\t%d\n"), IPStatsMIB.dwInReceives);
-    _tprintf(_T("  received header errors:\t\t\t%d\n"), IPStatsMIB.dwInHdrErrors);
-    _tprintf(_T("  received address errors:\t\t%d\n"), IPStatsMIB.dwInAddrErrors);
-    _tprintf(_T("  datagrams forwarded:\t\t\t%d\n"), IPStatsMIB.dwForwDatagrams);
-    _tprintf(_T("  datagrams with unknown protocol:\t%d\n"), IPStatsMIB.dwInUnknownProtos);
-    _tprintf(_T("  received datagrams discarded:\t\t%d\n"), IPStatsMIB.dwInDiscards);
-    _tprintf(_T("  received datagrams delivered:\t\t%d\n"), IPStatsMIB.dwInDelivers);
-    _tprintf(_T("  sent datagrams discarded:\t\t%d\n"), IPStatsMIB.dwOutDiscards);
-    _tprintf(_T("  datagrams for which no route exists:\t%d\n"), IPStatsMIB.dwOutNoRoutes);
-    _tprintf(_T("  datagrams for which frags didn't arrive:%d\n"), IPStatsMIB.dwReasmTimeout);
-    _tprintf(_T("  datagrams requiring reassembly:\t\t%d\n"), IPStatsMIB.dwReasmReqds);
-    _tprintf(_T("  successful reassemblies:\t\t%d\n"), IPStatsMIB.dwReasmOks);
-    _tprintf(_T("  failed reassemblies:\t\t\t%d\n"), IPStatsMIB.dwReasmFails);
-    _tprintf(_T("  successful fragmentations:\t\t%d\n"), IPStatsMIB.dwFragOks);
-    _tprintf(_T("  failed fragmentations:\t\t\t%d\n"), IPStatsMIB.dwFragFails);
-    _tprintf(_T("  datagrams fragmented:\t\t\t%d\n"), IPStatsMIB.dwFragCreates);
-    _tprintf(_T("  number of interfaces on computer:\t%d\n"), IPStatsMIB.dwNumIf);
-    _tprintf(_T("  number of IP address on computer:\t%d\n"), IPStatsMIB.dwNumAddr);
-    _tprintf(_T("  number of routes in routing table:\t%d\n"), IPStatsMIB.dwNumRoutes);
+    _tprintf(_T("  IP forwarding enabled or disabled:\t%lu\n"), IPStatsMIB.dwForwarding);
+    _tprintf(_T("  default time-to-live:\t\t\t%lu\n"), IPStatsMIB.dwDefaultTTL);
+    _tprintf(_T("  datagrams received:\t\t\t%lu\n"), IPStatsMIB.dwInReceives);
+    _tprintf(_T("  received header errors:\t\t\t%lu\n"), IPStatsMIB.dwInHdrErrors);
+    _tprintf(_T("  received address errors:\t\t%lu\n"), IPStatsMIB.dwInAddrErrors);
+    _tprintf(_T("  datagrams forwarded:\t\t\t%lu\n"), IPStatsMIB.dwForwDatagrams);
+    _tprintf(_T("  datagrams with unknown protocol:\t%lu\n"), IPStatsMIB.dwInUnknownProtos);
+    _tprintf(_T("  received datagrams discarded:\t\t%lu\n"), IPStatsMIB.dwInDiscards);
+    _tprintf(_T("  received datagrams delivered:\t\t%lu\n"), IPStatsMIB.dwInDelivers);
+    _tprintf(_T("  sent datagrams discarded:\t\t%lu\n"), IPStatsMIB.dwOutDiscards);
+    _tprintf(_T("  datagrams for which no route exists:\t%lu\n"), IPStatsMIB.dwOutNoRoutes);
+    _tprintf(_T("  datagrams for which frags didn't arrive:%lu\n"), IPStatsMIB.dwReasmTimeout);
+    _tprintf(_T("  datagrams requiring reassembly:\t\t%lu\n"), IPStatsMIB.dwReasmReqds);
+    _tprintf(_T("  successful reassemblies:\t\t%lu\n"), IPStatsMIB.dwReasmOks);
+    _tprintf(_T("  failed reassemblies:\t\t\t%lu\n"), IPStatsMIB.dwReasmFails);
+    _tprintf(_T("  successful fragmentations:\t\t%lu\n"), IPStatsMIB.dwFragOks);
+    _tprintf(_T("  failed fragmentations:\t\t\t%lu\n"), IPStatsMIB.dwFragFails);
+    _tprintf(_T("  datagrams fragmented:\t\t\t%lu\n"), IPStatsMIB.dwFragCreates);
+    _tprintf(_T("  number of interfaces on computer:\t%lu\n"), IPStatsMIB.dwNumIf);
+    _tprintf(_T("  number of IP address on computer:\t%lu\n"), IPStatsMIB.dwNumAddr);
+    _tprintf(_T("  number of routes in routing table:\t%lu\n"), IPStatsMIB.dwNumRoutes);
 }
 
 static void ShowNetworkParams()
@@ -140,8 +142,8 @@ static void ShowNetworkParams()
         GlobalFree(FixedInfo);
         FixedInfo =(FIXED_INFO*)GlobalAlloc(GPTR, ulOutBufLen);
     }
-    if (dwRetVal = GetNetworkParams(FixedInfo, &ulOutBufLen)) {
-        _tprintf(_T("Call to GetNetworkParams failed. Return Value: %08x\n"), dwRetVal);
+    if ((dwRetVal = GetNetworkParams(FixedInfo, &ulOutBufLen))) {
+        _tprintf(_T("Call to GetNetworkParams failed. Return Value: 0x%08lx\n"), dwRetVal);
     } else {
         printf("  Host Name: %s", FixedInfo->HostName);
         printf("\n  Domain Name: %s", FixedInfo->DomainName);
@@ -168,8 +170,8 @@ static void ShowAdapterInfo()
         GlobalFree(pAdaptorInfo);
         pAdaptorInfo = (IP_ADAPTER_INFO*)GlobalAlloc(GPTR, ulOutBufLen);
     }
-    if (dwRetVal = GetAdaptersInfo(pAdaptorInfo, &ulOutBufLen)) {
-        _tprintf(_T("Call to GetAdaptersInfo failed. Return Value: %08x\n"), dwRetVal);
+    if ((dwRetVal = GetAdaptersInfo(pAdaptorInfo, &ulOutBufLen))) {
+        _tprintf(_T("Call to GetAdaptersInfo failed. Return Value: 0x%08lx\n"), dwRetVal);
     } else {
         while (pAdaptorInfo) {
             printf("  AdapterName: %s\n", pAdaptorInfo->AdapterName);
@@ -178,6 +180,7 @@ static void ShowAdapterInfo()
         }
     }
 }
+#endif
 
 /*
 typedef struct {
@@ -271,7 +274,7 @@ GetPortName(DWORD Flags, UINT port, PCHAR proto, PCHAR name, int namelen)
 		return name;
 	}
 	// Try to translate to a name
-	if (psrvent = getservbyport(port, proto)) {
+	if ((psrvent = getservbyport(port, proto))) {
 		strcpy(name, psrvent->s_name );
 	} else {
 		sprintf(name, "%d", htons((WORD)port));
@@ -351,9 +354,9 @@ GetIpHostName(DWORD Flags, BOOL local, UINT ipaddr, PCHAR name, int namelen)
 
 BOOLEAN usage(void)
 {
-    TCHAR buffer[MAX_RESLEN];
+	TCHAR buffer[MAX_RESLEN];
 
-    int length = LoadString(GetModuleHandle(NULL), IDS_APP_USAGE, buffer, sizeof(buffer)/sizeof(buffer[0]));
+	LoadString(GetModuleHandle(NULL), IDS_APP_USAGE, buffer, sizeof(buffer)/sizeof(buffer[0]));
 	_fputts(buffer, stderr);
 	return FALSE;
 }

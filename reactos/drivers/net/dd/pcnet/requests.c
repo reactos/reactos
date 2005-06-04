@@ -37,6 +37,9 @@
 #include "pcnethw.h"
 #include "pcnet.h"
 
+#define NDEBUG
+#include <debug.h>
+
 /* List of supported OIDs */
 static ULONG MiniportOIDList[] =
 {
@@ -113,7 +116,7 @@ MiniportQueryInformation(
   ULONG GenericULONG;
   PADAPTER Adapter = (PADAPTER)MiniportAdapterContext;
 
-  PCNET_DbgPrint(("Called. OID 0x%x\n", Oid));
+  DPRINT("Called. OID 0x%x\n", Oid);
 
   ASSERT(Adapter);
 
@@ -249,7 +252,7 @@ MiniportQueryInformation(
 
     case OID_GEN_PROTOCOL_OPTIONS:
         {
-          PCNET_DbgPrint(("OID_GEN_PROTOCOL_OPTIONS.\n"));
+          DPRINT("OID_GEN_PROTOCOL_OPTIONS.\n");
           Status = NDIS_STATUS_NOT_SUPPORTED;
           break;
         }
@@ -336,7 +339,7 @@ MiniportQueryInformation(
 
     default:
         {
-          PCNET_DbgPrint(("Unknown OID\n"));
+          DPRINT1("Unknown OID\n");
           Status = NDIS_STATUS_NOT_SUPPORTED;
           break;
         }
@@ -360,7 +363,7 @@ MiniportQueryInformation(
 
   NdisReleaseSpinLock(&Adapter->Lock);
 
-  PCNET_DbgPrint(("Leaving. Status is 0x%x\n", Status));
+  DPRINT("Leaving. Status is 0x%x\n", Status);
 
   return Status;
 }
@@ -397,7 +400,7 @@ MiniportSetInformation(
 
   ASSERT(Adapter);
 
-  PCNET_DbgPrint(("Called, OID 0x%x\n", Oid));
+  DPRINT("Called, OID 0x%x\n", Oid);
 
   NdisAcquireSpinLock(&Adapter->Lock);
 
@@ -484,7 +487,7 @@ MiniportSetInformation(
 
     default:
       {
-        PCNET_DbgPrint(("Invalid object ID (0x%X).\n", Oid));
+        DPRINT1("Invalid object ID (0x%X).\n", Oid);
         *BytesRead   = 0;
         *BytesNeeded = 0;
         Status       = NDIS_STATUS_NOT_SUPPORTED;
@@ -500,7 +503,7 @@ MiniportSetInformation(
 
   NdisReleaseSpinLock(&Adapter->Lock);
 
-  PCNET_DbgPrint(("Leaving. Status (0x%X).\n", Status));
+  DPRINT("Leaving. Status (0x%X).\n", Status);
 
   return Status;
 }

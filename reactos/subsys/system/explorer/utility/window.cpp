@@ -28,7 +28,7 @@
 
 #include "precomp.h"
 
-#include "../explorer_intres.h"	// for ID_GO_BACK, ...
+#include "../resource.h"	// for ID_GO_BACK, ...
 
 
 WindowClass::WindowClass(LPCTSTR classname, UINT style_, WNDPROC wndproc)

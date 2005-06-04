@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             services/eventlog/logport.c
@@ -26,8 +25,6 @@
  */
 
 /* INCLUDES *****************************************************************/
-
-#define UNICODE
 
 #define NTOS_MODE_USER
 #include <ntos.h>
@@ -50,7 +47,7 @@ HANDLE MessagePortHandle = NULL;
 /* FUNCTIONS ****************************************************************/
 
 static NTSTATUS
-InitLogPort (VOID)
+InitLogPort(VOID)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING PortName;
@@ -93,27 +90,27 @@ InitLogPort (VOID)
 			       TRUE,
 			       NULL,
 			       NULL);
-  if (!NT_SUCCESS (Status))
+  if (!NT_SUCCESS(Status))
     {
       DPRINT1("NtAcceptConnectPort() failed (Status %lx)\n", Status);
       goto ByeBye;
     }
 
-  Status = NtCompleteConnectPort (MessagePortHandle);
-  if (!NT_SUCCESS (Status))
+  Status = NtCompleteConnectPort(MessagePortHandle);
+  if (!NT_SUCCESS(Status))
     {
       DPRINT1("NtCompleteConnectPort() failed (Status %lx)\n", Status);
       goto ByeBye;
     }
 
 ByeBye:
-  if (!NT_SUCCESS (Status))
+  if (!NT_SUCCESS(Status))
     {
       if (ConnectPortHandle != NULL)
-	NtClose (ConnectPortHandle);
+	NtClose(ConnectPortHandle);
 
       if (MessagePortHandle != NULL)
-	NtClose (MessagePortHandle);
+	NtClose(MessagePortHandle);
     }
 
   return Status;
@@ -148,40 +145,40 @@ ProcessPortMessage(VOID)
 	  break;
 	}
 
-      DPRINT ("Received message\n");
+      DPRINT("Received message\n");
 
       if (Request.Header.MessageType == LPC_PORT_CLOSED)
 	{
-	  DPRINT ("Port closed\n");
+	  DPRINT("Port closed\n");
 
-	  return (STATUS_UNSUCCESSFUL);
+	  return STATUS_SUCCESS;
 	}
       if (Request.Header.MessageType == LPC_REQUEST)
 	{
-	  DPRINT ("Received request\n");
+	  DPRINT("Received request\n");
 
 	}
       else if (Request.Header.MessageType == LPC_DATAGRAM)
 	{
-	  DPRINT ("Received datagram\n");
+	  DPRINT("Received datagram\n");
 
 
 	  Message = (PIO_ERROR_LOG_MESSAGE)&Request.Data;
 
-	  DPRINT ("Message->Type %hx\n", Message->Type);
-	  DPRINT ("Message->Size %hu\n", Message->Size);
+	  DPRINT("Message->Type %hx\n", Message->Type);
+	  DPRINT("Message->Size %hu\n", Message->Size);
 
 //#ifndef NDEBUG
-	  DbgPrint ("\n Error mesage:\n");
-	  DbgPrint ("Error code: %lx\n", Message->EntryData.ErrorCode);
-	  DbgPrint ("Retry count: %u\n", Message->EntryData.RetryCount);
-	  DbgPrint ("Sequence number: %lu\n", Message->EntryData.SequenceNumber);
+	  DbgPrint("\n Error mesage:\n");
+	  DbgPrint("Error code: %lx\n", Message->EntryData.ErrorCode);
+	  DbgPrint("Retry count: %u\n", Message->EntryData.RetryCount);
+	  DbgPrint("Sequence number: %lu\n", Message->EntryData.SequenceNumber);
 
 	  if (Message->DriverNameLength != 0)
 	    {
-	      DbgPrint ("Driver name: %.*S\n",
-		        Message->DriverNameLength / sizeof(WCHAR),
-		        (PWCHAR)((ULONG_PTR)Message + Message->DriverNameOffset));
+	      DbgPrint("Driver name: %.*S\n",
+		       Message->DriverNameLength / sizeof(WCHAR),
+		       (PWCHAR)((ULONG_PTR)Message + Message->DriverNameOffset));
 	    }
 
 	  if (Message->EntryData.NumberOfStrings != 0)
@@ -189,13 +186,16 @@ ProcessPortMessage(VOID)
 	      p = (PWSTR)((ULONG_PTR)&Message->EntryData + Message->EntryData.StringOffset);
 	      for (i = 0; i < Message->EntryData.NumberOfStrings; i++)
 		{
-		  DbgPrint ("String %lu: %S\n", i, p);
+		  DbgPrint("String %lu: %S\n", i, p);
 		  p += wcslen(p) + 1;
 		}
 	      DbgPrint("\n");
 	    }
 
 //#endif
+
+	  /* FIXME: Enqueue message */
+
 	}
     }
 
@@ -210,7 +210,7 @@ PortThreadRoutine(PVOID Param)
 
   Status = InitLogPort();
   if (!NT_SUCCESS(Status))
-    return(Status);
+    return Status;
 
   while (NT_SUCCESS(Status))
     {
@@ -218,12 +218,12 @@ PortThreadRoutine(PVOID Param)
     }
 
   if (ConnectPortHandle != NULL)
-    NtClose (ConnectPortHandle);
+    NtClose(ConnectPortHandle);
 
   if (MessagePortHandle != NULL)
-    NtClose (MessagePortHandle);
+    NtClose(MessagePortHandle);
 
-  return(Status);
+  return Status;
 }
 
 
@@ -239,7 +239,7 @@ StartPortThread(VOID)
 				  0,
 				  &ThreadId);
 
-  return((PortThreadHandle != NULL));
+  return (PortThreadHandle != NULL);
 }
 
 /* EOF */

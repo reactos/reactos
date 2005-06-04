@@ -45,7 +45,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /Yu"stdafx.h" /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /D "_DEBUG" /D WINE_UNUSED= /FR /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /D "_DEBUG" /D _WIN32_WINNT=0x0501 /D WINE_UNUSED= /FR /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x407 /d "_DEBUG"
@@ -55,7 +55,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib mpr.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib version.lib mpr.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 
 !ELSEIF  "$(CFG)" == "winefile - Win32 Unicode Debug"
 
@@ -71,7 +71,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /FR /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /D "_DEBUG" /D "UNICODE" /D WINE_UNUSED= /FR /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /D "_DEBUG" /D "UNICODE" /D _WIN32_WINNT=0x0501 /D WINE_UNUSED= /FR /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x407 /d "_DEBUG"
@@ -81,7 +81,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib mpr.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib version.lib mpr.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 
 !ELSEIF  "$(CFG)" == "winefile - Win32 UNICODE Release"
 
@@ -98,7 +98,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /D "NDEBUG" /D "UNICODE" /D WINE_UNUSED= /YX /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /D "NDEBUG" /D "UNICODE" /D _WIN32_WINNT=0x0501 /D WINE_UNUSED= /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x407 /d "NDEBUG"
@@ -108,7 +108,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib mpr.lib /nologo /subsystem:windows /machine:I386
+# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib version.lib mpr.lib /nologo /subsystem:windows /machine:I386
 
 !ELSEIF  "$(CFG)" == "winefile - Win32 Release"
 
@@ -125,7 +125,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "NDEBUG" /D "UNICODE" /D WINE_UNUSED= /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /D "NDEBUG" /D WINE_UNUSED= /YX /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /D "NDEBUG" /D _WIN32_WINNT=0x0501 /D WINE_UNUSED= /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x407 /d "NDEBUG"
@@ -135,7 +135,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib mpr.lib /nologo /subsystem:windows /machine:I386
+# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib version.lib mpr.lib /nologo /subsystem:windows /machine:I386
 
 !ENDIF 
 

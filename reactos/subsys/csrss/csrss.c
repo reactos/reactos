@@ -52,6 +52,8 @@ typedef struct _COMMAND_LINE_ARGUMENT
 
 } COMMAND_LINE_ARGUMENT, *PCOMMAND_LINE_ARGUMENT;
 
+PRTL_USER_PROCESS_PARAMETERS RtlProcessParameters = NULL;
+
 /**********************************************************************
  * NAME							PRIVATE
  * 	CsrpParseCommandLine/3
@@ -150,7 +152,6 @@ CsrpFreeCommandLine (HANDLE                 ProcessHeap,
 
 VOID STDCALL NtProcessStartup(PPEB Peb)
 {
-   PRTL_USER_PROCESS_PARAMETERS RtlProcessParameters = NULL;
    COMMAND_LINE_ARGUMENT        CmdLineArg = {0};
    NTSTATUS                     Status = STATUS_SUCCESS;
 

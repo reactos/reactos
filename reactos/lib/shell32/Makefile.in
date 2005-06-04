@@ -4,6 +4,7 @@ TOPOBJDIR = ../..
 SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = shell32.dll
+IMPORTLIB = libshell32.$(IMPLIBEXT)
 IMPORTS   = shlwapi comctl32 user32 gdi32 advapi32 kernel32
 DELAYIMPORTS = ole32
 EXTRALIBS = -luuid $(LIBUNICODE)
@@ -63,7 +64,8 @@ RC_BINARIES = \
 	netdrive.ico \
 	netdrive2.ico \
 	printer.ico \
-	ramdisk.ico
+	ramdisk.ico \
+	shortcut.ico
 
 C_SRCS16  = shell.c
 RC_SRCS16 = version16.rc

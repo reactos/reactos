@@ -420,6 +420,7 @@ IncludeRelocationsForSection(PIMAGE_SECTION_HEADER SectionHeader)
 {
   static char *BlacklistedSections[] =
     {
+      ".edata",
       ".idata",
       ".reloc"
     };

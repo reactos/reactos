@@ -34,6 +34,7 @@ HANDLE CsrObjectDirectory = (HANDLE) 0;
 UNICODE_STRING CsrDirectoryName;
 
 extern HANDLE CsrssApiHeap;
+extern PRTL_USER_PROCESS_PARAMETERS RtlProcessParameters;
 
 static unsigned InitCompleteProcCount;
 static CSRPLUGIN_INIT_COMPLETE_PROC *InitCompleteProcs = NULL;
@@ -306,7 +307,7 @@ CsrpCreateListenPort (IN     LPWSTR  Name,
 /* === INIT ROUTINES === */
 
 /**********************************************************************
- * CsrpCreateCallbackPort/0
+ * CsrpCreateHeap/2
  */
 static NTSTATUS
 CsrpCreateHeap (ULONG argc, PWSTR* argv)
@@ -327,7 +328,7 @@ CsrpCreateHeap (ULONG argc, PWSTR* argv)
 }
 
 /**********************************************************************
- * CsrpCreateCallbackPort/0
+ * CsrpCreateCallbackPort/2
  */
 static NTSTATUS
 CsrpCreateCallbackPort (ULONG argc, PWSTR* argv)
@@ -401,7 +402,47 @@ CsrpRegisterSubsystem (ULONG argc, PWSTR* argv)
 }
 
 /**********************************************************************
- * CsrpCreateApiPort/0
+ * 	CsrpLoadKernelModeDriver/2
+ */
+static NTSTATUS
+CsrpLoadKernelModeDriver (ULONG argc, PWSTR* argv)
+{
+	NTSTATUS  Status = STATUS_SUCCESS;
+	WCHAR     Data [MAX_PATH + 1];
+	ULONG     DataLength = sizeof Data;
+	ULONG     DataType = 0;
+
+
+	DPRINT("SM: %s called\n", __FUNCTION__);
+
+	Status = SmLookupSubsystem (L"Kmode",
+				    Data,
+				    & DataLength,
+				    & DataType,
+				    RtlProcessParameters->Environment);
+	if((STATUS_SUCCESS == Status) && (DataLength > sizeof Data[0]))
+	{
+		WCHAR                      ImagePath [MAX_PATH + 1] = {0};
+		SYSTEM_LOAD_AND_CALL_IMAGE ImageInfo;
+
+		wcscpy (ImagePath, L"\\??\\");
+		wcscat (ImagePath, Data);
+		RtlZeroMemory (& ImageInfo, sizeof ImageInfo);
+		RtlInitUnicodeString (& ImageInfo.ModuleName, ImagePath);
+		Status = NtSetSystemInformation(SystemLoadAndCallImage,
+						& ImageInfo,
+						sizeof ImageInfo);
+		if(!NT_SUCCESS(Status))
+		{
+			DPRINT("WIN: %s: loading Kmode failed (Status=0x%08lx)\n",
+				__FUNCTION__, Status);
+		}
+	}
+	return Status;
+}
+
+/**********************************************************************
+ * CsrpCreateApiPort/2
  */
 static NTSTATUS
 CsrpCreateApiPort (ULONG argc, PWSTR* argv)
@@ -495,16 +536,17 @@ struct {
 	CSR_INIT_ROUTINE EntryPoint;
 	PCHAR ErrorMessage;
 } InitRoutine [] = {
-	{TRUE, CsrpCreateCallbackPort, "create the callback port \\Windows\\SbApiPort"},
-	{TRUE, CsrpRegisterSubsystem,  "register with SM"},
-	{TRUE, CsrpCreateHeap,         "create the CSR heap"},
-	{TRUE, CsrpCreateApiPort,      "create the api port \\Windows\\ApiPort"},
-	{TRUE, CsrpParseCommandLine,   "parse the command line"},
-	{TRUE, CsrpInitVideo,          "initialize video"},
-	{TRUE, CsrpApiRegisterDef,     "initialize api definitions"},
-	{TRUE, CsrpCCTS,               "connect client to server"},
-	{TRUE, CsrpInitWin32Csr,       "load usermode dll"},
-	{TRUE, CsrpRunWinlogon,        "run WinLogon"},
+	{TRUE, CsrpCreateCallbackPort,   "create the callback port \\Windows\\SbApiPort"},
+	{TRUE, CsrpRegisterSubsystem,    "register with SM"},
+	{TRUE, CsrpCreateHeap,           "create the CSR heap"},
+	{TRUE, CsrpCreateApiPort,        "create the api port \\Windows\\ApiPort"},
+	{TRUE, CsrpParseCommandLine,     "parse the command line"},
+	{TRUE, CsrpLoadKernelModeDriver, "load Kmode driver"},
+	{TRUE, CsrpInitVideo,            "initialize video"},
+	{TRUE, CsrpApiRegisterDef,       "initialize api definitions"},
+	{TRUE, CsrpCCTS,                 "connect client to server"},
+	{TRUE, CsrpInitWin32Csr,         "load usermode dll"},
+	{TRUE, CsrpRunWinlogon,          "run WinLogon"},
 };
 
 /**********************************************************************

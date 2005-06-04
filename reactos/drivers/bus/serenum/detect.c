@@ -484,7 +484,7 @@ SerenumDetectLegacyDevice(
 	
 	/* Open port */
 	Status = SerenumSendIrp(LowerDevice, IRP_MJ_CREATE);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
+	if (!NT_SUCCESS(Status)) return Status;
 
 	/* Reset UART */
 	CHECKPOINT;

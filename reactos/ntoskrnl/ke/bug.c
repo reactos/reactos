@@ -206,19 +206,19 @@ KeGetBugMessageText(ULONG BugCheckCode, PANSI_STRING OutputString)
     PCHAR BugCode;
 
     /* Find the message. This code is based on RtlFindMesssage -- Alex */
-    for (i = 0; i < KiBugCodeMessages->NumberOfBlocks; i++)  {
-
+    for (i = 0; i < KiBugCodeMessages->NumberOfBlocks; i++)  
+    {
         /* Check if the ID Matches */
         if ((BugCheckCode >= KiBugCodeMessages->Blocks[i].LowId) &&
-            (BugCheckCode <= KiBugCodeMessages->Blocks[i].HighId)) {
-
+            (BugCheckCode <= KiBugCodeMessages->Blocks[i].HighId)) 
+            {
             /* Get Offset to Entry */
             MessageEntry = (ULONG_PTR)KiBugCodeMessages + KiBugCodeMessages->Blocks[i].OffsetToEntries;
             IdOffset = BugCheckCode - KiBugCodeMessages->Blocks[i].LowId;
 
             /* Get offset to ID */
-            for (i = 0; i < IdOffset; i++) {
-
+            for (i = 0; i < IdOffset; i++)
+            {
                 /* Advance in the Entries */
                 MessageEntry += ((PRTL_MESSAGE_RESOURCE_ENTRY)MessageEntry)->Length;
             }
@@ -227,16 +227,18 @@ KeGetBugMessageText(ULONG BugCheckCode, PANSI_STRING OutputString)
             BugCode = ((PRTL_MESSAGE_RESOURCE_ENTRY)MessageEntry)->Text;
 
             /* Return it in the OutputString */
-            if (OutputString) {
-
+            if (OutputString) 
+            {
                 OutputString->Buffer = BugCode;
                 OutputString->Length = strlen(BugCode) + 1;
                 OutputString->MaximumLength = strlen(BugCode) + 1;
-
-            } else {
-
+            }
+            else 
+            {
                 /* Direct Output to Screen */
-                DbgPrint("%s\n", BugCode);
+                CHAR BugString[100];
+                sprintf(BugString, "%s\n", BugCode);
+                InbvDisplayString(BugString);
                 break;
             }
         }
@@ -297,24 +299,25 @@ KeBugCheckWithTf(ULONG BugCheckCode,
     PLIST_ENTRY CurrentEntry;
     MODULE_TEXT_SECTION* CurrentSection = NULL;
     extern LIST_ENTRY ModuleTextListHead;
+    CHAR PrintString[100];
 
     /* Make sure we're switching back to the blue screen and print messages on it */
     HalReleaseDisplayOwnership();
-    if (KdpDebugMode.Gdb) KdpDebugMode.Screen = TRUE;
+    KdpDebugMode.Screen = TRUE;
 
     /* Try to find out who did this. For this, we need a Trap Frame.
      * Note: Some special BSODs pass the Frame/EIP as a Param. MSDN has the
      * info so it eventually needs to be supported.
      */
-    if (Tf) {
-
+    if (Tf) 
+    {
         /* For now, get Address from EIP */
         Address = (PVOID)Tf->Eip;
 
         /* Try to get information on the module */
         CurrentEntry = ModuleTextListHead.Flink;
-        while (CurrentEntry != &ModuleTextListHead && CurrentEntry != NULL) {
-
+        while (CurrentEntry != &ModuleTextListHead && CurrentEntry) 
+        {
             /* Get the current Section */
             CurrentSection = CONTAINING_RECORD(CurrentEntry,
                                                MODULE_TEXT_SECTION,
@@ -322,8 +325,8 @@ KeBugCheckWithTf(ULONG BugCheckCode,
 
             /* Check if this is the right one */
             if ((Address != NULL && (Address >= (PVOID)CurrentSection->Base &&
-                 Address < (PVOID)(CurrentSection->Base + CurrentSection->Length)))) {
-
+                 Address < (PVOID)(CurrentSection->Base + CurrentSection->Length)))) 
+            {
                 /* We got it */
                 GotExtendedCrashInfo = TRUE;
                 break;
@@ -345,60 +348,67 @@ KeBugCheckWithTf(ULONG BugCheckCode,
     /* FIXMEs: Use inbv to clear, fill and write to screen. */
 
     /* Show the STOP Message */
-    DbgPrint("A problem has been detected and ReactOS has been shut down to prevent "
-             "damage to your computer.\n\n");
+    InbvDisplayString("A problem has been detected and ReactOS has been shut down to prevent "
+                      "damage to your computer.\n\n");
 
     /* Show the module name of who caused this */
-    if (GotExtendedCrashInfo) {
-
-        DbgPrint("The problem seems to be caused by the following file: %S\n\n", CurrentSection->Name);
+    if (GotExtendedCrashInfo) 
+    {
+        sprintf(PrintString, 
+                "The problem seems to be caused by the following file: %S\n\n",
+                CurrentSection->Name);
+        InbvDisplayString(PrintString);
     }
 
     /* Find the Bug Code String */
     KeGetBugMessageText(BugCheckCode, NULL);
 
     /* Show the techincal Data */
-    DbgPrint("Technical information:\n\n*** STOP: 0x%08lX (0x%p,0x%p,0x%p,0x%p)\n\n",
-             BugCheckCode,
-             BugCheckParameter1,
-             BugCheckParameter2,
-             BugCheckParameter3,
-             BugCheckParameter4);
+    sprintf(PrintString,
+            "Technical information:\n\n*** STOP: 0x%08lX (0x%p,0x%p,0x%p,0x%p)\n\n",
+            BugCheckCode,
+            (PVOID)BugCheckParameter1,
+            (PVOID)BugCheckParameter2,
+            (PVOID)BugCheckParameter3,
+            (PVOID)BugCheckParameter4);
+    InbvDisplayString(PrintString);
 
     /* Show the module name and more data of who caused this */
-    if (GotExtendedCrashInfo) {
-
-        DbgPrint("***    %S - Address 0x%p base at 0x%p, DateStamp 0x%x\n\n",
-                 CurrentSection->Name,
-                 Address,
-                 CurrentSection->Base,
-                 0);
+    if (GotExtendedCrashInfo) 
+    {
+        sprintf(PrintString,
+                "***    %S - Address 0x%p base at 0x%p, DateStamp 0x%x\n\n",
+                CurrentSection->Name,
+                Address,
+                (PVOID)CurrentSection->Base,
+                0);
+        InbvDisplayString(PrintString);
     }
 
     /* There can only be one Bugcheck per Bootup */
-    if (!InterlockedDecrement((PLONG)&KeBugCheckCount)) {
-
+    if (!InterlockedDecrement((PLONG)&KeBugCheckCount)) 
+    {
 #ifdef CONFIG_SMP
         ULONG i;
         /* Freeze the other CPUs */
-        for (i = 0; i < KeNumberProcessors; i++) {
-            if (i != KeGetCurrentProcessorNumber()) {
-
+        for (i = 0; i < KeNumberProcessors; i++) 
+        {
+            if (i != KeGetCurrentProcessorNumber()) 
+            {
                 /* Send the IPI and give them one second to catch up */
                 KiIpiSendRequest(1 << i, IPI_REQUEST_FREEZE);
                 KeStallExecutionProcessor(1000000);
             }
         }
 #endif
-
         /* Check if we got a Trap Frame */
-        if (Tf) {
-
+        if (Tf) 
+        {
             /* Dump it */
             KiDumpTrapFrame(Tf, BugCheckParameter1, BugCheckParameter2);
-
-        } else {
-
+        } 
+        else 
+        {
             /* We can only dump the frames */
 #if defined(__GNUC__)
             KeDumpStackFrames((PULONG)__builtin_frame_address(0));
@@ -423,7 +433,8 @@ KeBugCheckWithTf(ULONG BugCheckCode,
                            Tf);
 
         /* Wake up the Debugger */
-        if (KdDebuggerEnabled) {
+        if (KdDebuggerEnabled) 
+        {
             Ke386EnableInterrupts();
             DbgBreakPointWithStatus(DBG_STATUS_BUGCHECK_SECOND);
             Ke386DisableInterrupts();
@@ -470,10 +481,11 @@ KeBugCheckEx(ULONG BugCheckCode,
  *           BugCheckCode = Specifies the reason for the bug check
  * RETURNS: Doesn't
  */
-VOID STDCALL
+VOID
+STDCALL
 KeBugCheck(ULONG BugCheckCode)
 {
-  KeBugCheckEx(BugCheckCode, 0, 0, 0, 0);
+    KeBugCheckEx(BugCheckCode, 0, 0, 0, 0);
 }
 
 /* EOF */

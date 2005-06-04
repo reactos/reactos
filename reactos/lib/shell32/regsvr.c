@@ -70,6 +70,7 @@ struct regsvr_coclass
 
 /* flags for regsvr_coclass.flags */
 #define SHELLEX_MAYCHANGEDEFAULTMENU 0x00000001
+#define SHELLFOLDER_WANTSFORPARSING  0x00000002
 
 static HRESULT register_coclasses(struct regsvr_coclass const *list);
 static HRESULT unregister_coclasses(struct regsvr_coclass const *list);
@@ -102,10 +103,13 @@ static WCHAR const progid_keyname[7] = {
     'P', 'r', 'o', 'g', 'I', 'D', 0 };
 static WCHAR const shellex_keyname[8] = {
     's', 'h', 'e', 'l', 'l', 'e', 'x', 0 };
+static WCHAR const shellfolder_keyname[12] = {
+    'S', 'h', 'e', 'l', 'l', 'F', 'o', 'l', 'd', 'e', 'r', 0 };
 static WCHAR const mcdm_keyname[21] = {
     'M', 'a', 'y', 'C', 'h', 'a', 'n', 'g', 'e', 'D', 'e', 'f',
     'a', 'u', 'l', 't', 'M', 'e', 'n', 'u', 0 };
 static char const tmodel_valuename[] = "ThreadingModel";
+static char const wfparsing_valuename[] = "WantsFORPARSING";
 
 /***********************************************************************
  *		static helper functions
@@ -279,6 +283,19 @@ static HRESULT register_coclasses(struct regsvr_coclass const *list)
 	    RegCloseKey(shellex_key);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 	    RegCloseKey(mcdm_key);
+	}
+
+	if (list->flags & SHELLFOLDER_WANTSFORPARSING) {
+	    HKEY shellfolder_key;
+
+	    res = RegCreateKeyExW(clsid_key, shellfolder_keyname, 0, NULL, 0,
+			     	  KEY_READ | KEY_WRITE, NULL,
+				  &shellfolder_key, NULL);
+	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
+	    res = RegSetValueExA(shellfolder_key, wfparsing_valuename, 0, REG_SZ, 
+						     "", 1);
+	    RegCloseKey(shellfolder_key);
+	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 	}
 
 	if (list->clsid_str) {

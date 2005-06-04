@@ -2,7 +2,7 @@
 #ifndef __INCLUDE_DDK_KEFUNCS_H
 #define __INCLUDE_DDK_KEFUNCS_H
 
-#define KEBUGCHECK(a) DbgPrint("KeBugCheck at %s:%i\n",__FILE__,__LINE__), KeBugCheck(a)
+#define KEBUGCHECK(a) DbgPrint("KeBugCheck (0x%X) at %s:%i\n", a, __FILE__,__LINE__), KeBugCheck(a)
 
 /* KERNEL FUNCTIONS ********************************************************/
 

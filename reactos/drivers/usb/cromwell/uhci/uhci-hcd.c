@@ -44,11 +44,11 @@
 #include <linux/proc_fs.h>
 #endif
 
-#ifdef CONFIG_USB_DEBUG
+//#ifdef CONFIG_USB_DEBUG
 #define DEBUG
-#else
-#undef DEBUG
-#endif
+//#else
+//#undef DEBUG
+//#endif
 
 #if 0
 #include <linux/usb.h>
@@ -2615,7 +2615,7 @@ void __exit uhci_hcd_cleanup(void)
 		kfree(errbuf);
 }
 
-module_init(uhci_hcd_init);
+/*module_init(uhci_hcd_init);*/
 module_exit(uhci_hcd_cleanup);
 
 MODULE_AUTHOR(DRIVER_AUTHOR);

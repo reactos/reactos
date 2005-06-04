@@ -5,6 +5,7 @@
 */
 
 #include <ddk/ntddk.h>
+#define DEBUG
 #include <debug.h>
 
 // config and include core/hcd.h, for hc_device struct
@@ -12,7 +13,6 @@
 #include "../core/hcd.h"
 
 #include "../host/ohci_main.h"
-
 
 // declare basic init funcs
 void init_wrapper(struct pci_dev *probe_dev);
@@ -30,7 +30,8 @@ struct pci_dev *dev;
 
 #define USB_UHCI_TAG TAG('u','s','b','u')
 
-NTSTATUS STDCALL AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT pdo)
+NTSTATUS STDCALL 
+AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT pdo)
 {
 	PDEVICE_OBJECT fdo;
 	NTSTATUS Status;
@@ -61,20 +62,21 @@ NTSTATUS STDCALL AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT pdo)
    
 	// Create a unicode device name
 	DeviceNumber = 0; //TODO: Allocate new device number every time
-	swprintf(DeviceBuffer, L"\\Device\\USBFDO-%lu", DeviceNumber);
+	swprintf(DeviceBuffer, L"\\Device\\USBPDO-%lu", DeviceNumber);
 	RtlInitUnicodeString(&DeviceName, DeviceBuffer);
 
 	Status = IoCreateDevice(DriverObject,
-		                    sizeof(OHCI_DEVICE_EXTENSION)/* + DriverExtension->InitializationData.HwDeviceExtensionSize*/,
-							&DeviceName,
-							FILE_DEVICE_CONTROLLER,
-							0,
-							FALSE,
-							&fdo);
+                sizeof(OHCI_DEVICE_EXTENSION),
+            /* + DriverExtension->InitializationData.HwDeviceExtensionSize*/
+		&DeviceName,
+		FILE_DEVICE_CONTROLLER,
+		0,
+		FALSE,
+		&fdo);
 
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("IoCreateDevice call failed with status 0x%08x\n", Status);
+		DPRINT1("IoCreateDevice call failed with status 0x%08x\n", Status);
 		return Status;
 	}
 
@@ -93,7 +95,7 @@ NTSTATUS STDCALL AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT pdo)
 
 	/* Get bus number from the upper level bus driver. */
 	Size = sizeof(ULONG);
-	Status = IoGetDeviceProperty(
+/*	Status = IoGetDeviceProperty(
 				pdo,
 				DevicePropertyBusNumber,
 				Size,
@@ -102,15 +104,16 @@ NTSTATUS STDCALL AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT pdo)
 	
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("Couldn't get an information from bus driver. Panic!!!\n");
+		DPRINT1("Couldn't get an information from bus driver. Panic!!!\n");
 		return Status;
 	}
-
-	DPRINT("Done AddDevice\n");
+*/
+	DPRINT1("Done AddDevice\n");
 	return STATUS_SUCCESS;
 }
 
-VOID STDCALL DriverUnload(PDRIVER_OBJECT DriverObject)
+VOID STDCALL 
+DriverUnload(PDRIVER_OBJECT DriverObject)
 {
 	DPRINT1("DriverUnload()\n");
 
@@ -127,7 +130,8 @@ VOID STDCALL DriverUnload(PDRIVER_OBJECT DriverObject)
 	uhci_hcd_cleanup();
 }
 
-NTSTATUS InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
+NTSTATUS
+InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 {
 	NTSTATUS Status;
 	POHCI_DEVICE_EXTENSION DeviceExtension = (POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -153,7 +157,7 @@ NTSTATUS InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 	// Probe device with real id now
 	uhci_pci_driver.probe(dev, uhci_pci_ids);
 
-	DPRINT("InitLinuxWrapper() done\n");
+	DPRINT1("InitLinuxWrapper() done\n");
 
 	return STATUS_SUCCESS;
 }
@@ -264,7 +268,8 @@ OHCD_PnPStartDevice(IN PDEVICE_OBJECT DeviceObject,
 }
 
 // Dispatch PNP
-NTSTATUS STDCALL DispatchPnp(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+DispatchPnp(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    PIO_STACK_LOCATION IrpSp;
    NTSTATUS Status;
@@ -274,10 +279,9 @@ NTSTATUS STDCALL DispatchPnp(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    switch (IrpSp->MinorFunction)
    {
       case IRP_MN_START_DEVICE:
-         //Status = IntVideoPortForwardIrpAndWait(DeviceObject, Irp);
-         //if (NT_SUCCESS(Status) && NT_SUCCESS(Irp->IoStatus.Status))
-         
-		 Status = OHCD_PnPStartDevice(DeviceObject, Irp);
+//         Status = ForwardIrpAndWait(DeviceObject, Irp);
+//         if (NT_SUCCESS(Status) && NT_SUCCESS(Irp->IoStatus.Status))
+         	 Status = OHCD_PnPStartDevice(DeviceObject, Irp);
          Irp->IoStatus.Status = Status;
          Irp->IoStatus.Information = 0;
          IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -290,8 +294,8 @@ NTSTATUS STDCALL DispatchPnp(PDEVICE_OBJECT DeviceObject, PIRP Irp)
       case IRP_MN_SURPRISE_REMOVAL:
 
       case IRP_MN_STOP_DEVICE:
-         //Status = IntVideoPortForwardIrpAndWait(DeviceObject, Irp);
-         //if (NT_SUCCESS(Status) && NT_SUCCESS(Irp->IoStatus.Status))
+//         Status = ForwardIrpAndWait(DeviceObject, Irp);
+//         if (NT_SUCCESS(Status) && NT_SUCCESS(Irp->IoStatus.Status))
             Status = STATUS_SUCCESS;
          Irp->IoStatus.Status = Status;
          Irp->IoStatus.Information = 0;
@@ -316,11 +320,13 @@ NTSTATUS STDCALL DispatchPnp(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return Status;
 }
 
-NTSTATUS STDCALL DispatchPower(PDEVICE_OBJECT fido, PIRP Irp)
+NTSTATUS STDCALL 
+DispatchPower(PDEVICE_OBJECT fido, PIRP Irp)
 {
 	DbgPrint("IRP_MJ_POWER dispatch\n");
 	return STATUS_SUCCESS;
 }
+
 
 /*
  * Standard DriverEntry method.
@@ -328,10 +334,14 @@ NTSTATUS STDCALL DispatchPower(PDEVICE_OBJECT fido, PIRP Irp)
 NTSTATUS STDCALL
 DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegPath)
 {
-	DriverObject->DriverUnload = DriverUnload;
-	DriverObject->DriverExtension->AddDevice = AddDevice;
-	DriverObject->MajorFunction[IRP_MJ_PNP] = DispatchPnp;
-	DriverObject->MajorFunction[IRP_MJ_POWER] = DispatchPower;
 
-	return STATUS_SUCCESS;
+   DPRINT1("******************** Cromwell UHCI ********************\n");
+
+   DriverObject->DriverUnload = DriverUnload;
+   DriverObject->DriverExtension->AddDevice = AddDevice;
+
+   DriverObject->MajorFunction[IRP_MJ_PNP] = DispatchPnp;
+   DriverObject->MajorFunction[IRP_MJ_POWER] = DispatchPower;
+
+   return STATUS_SUCCESS;
 }

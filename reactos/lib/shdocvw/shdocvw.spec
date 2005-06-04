@@ -102,12 +102,12 @@
 228 stub -noname SafeOpenPromptForShellExec
 229 stub -noname SafeOpenPromptForPackager
 
-@ stdcall -private DllCanUnloadNow() SHDOCVW_DllCanUnloadNow
-@ stdcall -private DllGetClassObject(long long ptr) SHDOCVW_DllGetClassObject
-@ stdcall DllGetVersion(ptr) SHDOCVW_DllGetVersion
-@ stdcall DllInstall(long wstr) SHDOCVW_DllInstall
-@ stdcall -private DllRegisterServer() SHDOCVW_DllRegisterServer
-@ stdcall -private DllUnregisterServer() SHDOCVW_DllUnregisterServer
+@ stdcall -private DllCanUnloadNow()
+@ stdcall -private DllGetClassObject(long long ptr)
+@ stdcall -private DllGetVersion(ptr)
+@ stdcall -private DllInstall(long wstr)
+@ stdcall -private DllRegisterServer()
+@ stdcall -private DllUnregisterServer()
 @ stub DllRegisterWindowClasses
 @ stub DoAddToFavDlg
 @ stub DoAddToFavDlgW

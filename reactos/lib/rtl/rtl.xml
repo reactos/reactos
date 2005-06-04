@@ -1,0 +1,49 @@
+<module name="rtl" type="staticlibrary">
+	<include base="rtl">.</include>
+	<directory name="i386">
+		<file>allshl.s</file>
+		<file>aulldiv.s</file>
+		<file>aullrem.s</file>
+		<file>allshr.s</file>
+		<file>allmul.s</file>
+		<file>aullshr.s</file>
+		<file>alldiv.s</file>
+		<file>allrem.s</file>
+		<file>chkstk.s</file>
+		<file>except.s</file>
+		<file>exception.c</file>
+	</directory>
+	<file>access.c</file>
+	<file>acl.c</file>
+	<file>bit.c</file>
+	<file>bitmap.c</file>
+	<file>bootdata.c</file>
+	<file>compress.c</file>
+	<file>dos8dot3.c</file>
+	<file>encode.c</file>
+	<file>env.c</file>
+	<file>error.c</file>
+	<file>exception.c</file>
+	<file>generictable.c</file>
+	<file>heap.c</file>
+	<file>image.c</file>
+	<file>largeint.c</file>
+	<file>luid.c</file>
+	<file>mem.c</file>
+	<file>network.c</file>
+	<file>nls.c</file>
+	<file>ppb.c</file>
+	<file>process.c</file>
+	<file>random.c</file>
+	<file>registry.c</file>
+	<file>sd.c</file>
+	<file>security.c</file>
+	<file>sid.c</file>
+	<file>splaytree.c</file>
+	<file>thread.c</file>
+	<file>time.c</file>
+	<file>timezone.c</file>
+	<file>unicode.c</file>
+	<file>unicodeprefix.c</file>
+	<file>version.c</file>
+</module>

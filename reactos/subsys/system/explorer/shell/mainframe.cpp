@@ -33,7 +33,7 @@
 */
 extern HWND create_webchildwindow(const WebChildWndInfo& info);
 
-#include "../explorer_intres.h"
+#include "../resource.h"
 
 #include "../dialogs/settings.h"	// for MdiSdiDlg
 

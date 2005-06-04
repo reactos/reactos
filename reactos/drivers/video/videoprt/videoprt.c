@@ -232,6 +232,7 @@ IntVideoPortCreateAdapterDeviceObject(
 
    DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)((*DeviceObject)->DeviceExtension);
    DeviceExtension->DeviceNumber = DeviceNumber;
+   DeviceExtension->DriverObject = DriverObject;
    DeviceExtension->PhysicalDeviceObject = PhysicalDeviceObject;
    DeviceExtension->FunctionalDeviceObject = *DeviceObject;
    DeviceExtension->DriverExtension = DriverExtension;

@@ -28,9 +28,9 @@ IDM_WINEFILE MENU FIXED IMPURE
 	POPUP "文件（&F）"  {
 		MENUITEM "打开（&O）\tEnter" ,			ID_ACTIVATE
 		MENUITEM "移动（&M）...\tF7" , 			ID_FILE_MOVE
-		MENUITEM "复制（&C）...\tF8" ,			107
+		MENUITEM "复制（&C）...\tF8" ,			ID_FILE_COPY
 		MENUITEM "位于剪贴板（&I）...\tF9" ,		118
-		MENUITEM "删除（&D）\tDel" ,			108
+		MENUITEM "删除（&D）\tDel" ,			ID_FILE_DELETE
 		MENUITEM "改名（&N）..." ,			109
 		MENUITEM "属性（&I）...\tAlt+Enter" , ID_EDIT_PROPERTIES
 		MENUITEM SEPARATOR
@@ -95,7 +95,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "按大小排序（&Z）" , 		ID_VIEW_SORT_SIZE
 		MENUITEM "按日期排序（&D）" , 		ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
-		MENUITEM "定制排序..." ,			409
+		MENUITEM "定制排序..." ,			ID_VIEW_FILTER
 	}
 
 	POPUP "选项（&O）"  {

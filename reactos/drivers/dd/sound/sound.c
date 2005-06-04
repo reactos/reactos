@@ -77,6 +77,7 @@ NTSTATUS ModuleEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
  * RETURNS: Success or failure
  */
 {
+#if 0
 	PDEVICE_OBJECT DeviceObject;
 	NTSTATUS ret;
 
@@ -86,7 +87,7 @@ NTSTATUS ModuleEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
   		DPRINT1("Soundblaster 16 not found\n");
 	  	return 0;
 	}
-	ret = IoCreateDevice(DriverObject,0,"\\Device\\WaveOut",FILE_DEVICE_WAVE_OUT,0,FALSE,&DeviceObject);
+	ret = IoCreateDevice(DriverObject,0,L"\\Device\\WaveOut",FILE_DEVICE_WAVE_OUT,0,FALSE,&DeviceObject);
 	if (ret!=STATUS_SUCCESS)
 		return(ret);
 
@@ -96,7 +97,7 @@ NTSTATUS ModuleEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 	DriverObject->MajorFunction[IRP_MJ_WRITE] = Dispatch;
 	DriverObject->MajorFunction[IRP_MJ_WRITE] = Dispatch;
 	DriverObject->DriverUnload = NULL;
-
+#endif
 	return(STATUS_SUCCESS);
 }
 

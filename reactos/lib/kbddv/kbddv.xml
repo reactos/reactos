@@ -1,0 +1,7 @@
+<module name="kbddv" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbddv.dll" warnings="true">
+	<importlibrary definition="kbddv.def" />
+	<include base="ntoskrnl">include</include>
+	<define name="_DISABLE_TIDENTS" />
+	<file>kbddv.c</file>
+	<file>kbddv.rc</file>
+</module>

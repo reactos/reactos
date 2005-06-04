@@ -430,10 +430,12 @@ static HRESULT WINAPI ISF_Desktop_fnGetAttributesOf (IShellFolder2 * iface,
     IGenericSFImpl *This = (IGenericSFImpl *)iface;
     HRESULT hr = S_OK;
 
-    TRACE ("(%p)->(cidl=%d apidl=%p mask=0x%08lx)\n",
-           This, cidl, apidl, *rgfInOut);
+    TRACE ("(%p)->(cidl=%d apidl=%p mask=%p (0x%08lx))\n",
+           This, cidl, apidl, rgfInOut, rgfInOut ? *rgfInOut : 0);
 
-    if (!cidl || !apidl || !rgfInOut)
+    if (!rgfInOut)
+        return E_INVALIDARG;
+    if (cidl && !apidl)
         return E_INVALIDARG;
 
     if (*rgfInOut == 0)
@@ -446,6 +448,8 @@ static HRESULT WINAPI ISF_Desktop_fnGetAttributesOf (IShellFolder2 * iface,
         apidl++;
         cidl--;
     }
+    /* make sure SFGAO_VALIDATE is cleared, some apps depend on that */
+    *rgfInOut &= ~SFGAO_VALIDATE;
 
     TRACE ("-- result=0x%08lx\n", *rgfInOut);
 
@@ -555,7 +559,7 @@ static HRESULT WINAPI ISF_Desktop_fnGetDisplayNameOf (IShellFolder2 * iface,
     if (_ILIsDesktop (pidl))
     {
         if ((GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL) &&
-            (GET_SHGDN_FOR (dwFlags) == SHGDN_FORPARSING))
+            (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING))
         {
             BOOL defCharUsed;
 
@@ -585,7 +589,7 @@ static HRESULT WINAPI ISF_Desktop_fnGetDisplayNameOf (IShellFolder2 * iface,
 
         if ((clsid = _ILGetGUIDPointer (pidl)))
         {
-            if (GET_SHGDN_FOR (dwFlags) == SHGDN_FORPARSING)
+            if (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING)
             {
                 int bWantsForParsing;
 

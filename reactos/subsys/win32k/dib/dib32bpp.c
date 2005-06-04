@@ -19,6 +19,9 @@
 /* $Id$ */
 #include <w32k.h>
 
+
+
+
 VOID
 DIB_32BPP_PutPixel(SURFOBJ *SurfObj, LONG x, LONG y, ULONG c)
 {
@@ -37,6 +40,17 @@ DIB_32BPP_GetPixel(SURFOBJ *SurfObj, LONG x, LONG y)
   return (ULONG)(*addr);
 }
 
+
+#ifdef _M_IX86
+VOID
+DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
+{    
+ PBYTE byteaddr = SurfObj->pvScan0 + y * SurfObj->lDelta;
+  PDWORD addr = (PDWORD)byteaddr + x1;
+  LONG cx = x2 - x1;
+  if (cx>0) memset4(addr, c, cx);    
+}
+#else
 VOID
 DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
@@ -50,6 +64,7 @@ DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
     ++cx;
   }
 }
+#endif
 
 VOID
 DIB_32BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
@@ -79,6 +94,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
   switch(BltInfo->SourceSurface->iBitmapFormat)
   {
     case BMF_1BPP:
+	  
       sx = BltInfo->SourcePoint.x;
       sy = BltInfo->SourcePoint.y;
 
@@ -293,6 +309,38 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
    BOOL UsesPattern;
    PULONG DestBits;
 
+   switch (BltInfo->Rop4)
+	{
+
+		 case  ROP4_BLACKNESS:  
+			 //return(0x00000000);	
+			 return DIB32_ColorFill(BltInfo, 0x00000000);
+		 break;
+
+		 case ROP4_WHITENESS:   
+			 //return(0xFFFFFFFF);
+			  return DIB32_ColorFill(BltInfo, 0xFFFFFFFF);
+		 break;
+
+		case  ROP4_SRCCOPY:     
+			  // return(Source);
+              return DIB32_Srccopy(BltInfo); 
+		break;	
+        
+		case ROP4_DSTINVERT:
+			 // return(~Dest);
+			 return DIB_32DstInvert(BltInfo);
+		break;	
+
+		case  ROP4_SRCPAINT:    
+			 // return(Dest | Source);	
+		     return DIB32_SrcPaint(BltInfo);
+			 break;
+				
+		default:
+		break;
+         }	
+
    UsesSource = ROP4_USES_SOURCE(BltInfo->Rop4);
    UsesPattern = ROP4_USES_PATTERN(BltInfo->Rop4);
 
@@ -351,6 +399,255 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
    return TRUE;
 }
 
+/* optimze functions for bitblt */
+BOOLEAN
+FASTCALL
+DIB_32DstInvert(PBLTINFO BltInfo)   
+{
+    PULONG DestBits;
+    ULONG top  = BltInfo->DestRect.top; 
+    ULONG left = BltInfo->DestRect.left;
+    ULONG DestX = BltInfo->DestRect.right - left;
+    ULONG DestY = BltInfo->DestRect.bottom - top;
+    ULONG delta = BltInfo->DestSurface->lDelta - (DestX << 2);
+
+    /* Calculate the Initial Destination */
+    DestBits = (PULONG)(BltInfo->DestSurface->pvScan0 + (left  << 2) +
+                        top * BltInfo->DestSurface->lDelta);
+
+    while (DestY > 0)
+    {      
+        while (DestX > 0)
+        {
+            /* Invert bits */
+            *DestBits =~ *DestBits;
+            
+            /* Update Position */
+            DestBits++;
+            
+            /* Decrease distance to do */
+            DestX--;
+        }
+      
+        /* Update position */
+        DestBits = (PULONG)((ULONG_PTR)DestBits + delta);
+        
+        /* Decrease distance to do */
+        DestY--;
+    }
+    
+    /* Return TRUE */
+    return TRUE;
+}
+
+BOOLEAN
+DIB32_SrcPaint(PBLTINFO BltInfo)
+{
+	BOOLEAN status = FALSE;
+
+	// return(Source);
+	switch (BltInfo->SourceSurface->iBitmapFormat)
+	{			   
+		case BMF_1BPP:
+		case BMF_4BPP:						
+		case BMF_16BPP:
+		case BMF_24BPP:				
+		{
+			ULONG DestX, DestY;
+			ULONG SourceX, SourceY;
+			PULONG DestBits;
+
+			ULONG bottom = BltInfo->DestRect.bottom;
+			ULONG right  = BltInfo->DestRect.right; 
+			ULONG delta  = BltInfo->DestSurface->lDelta - ((BltInfo->DestRect.right - BltInfo->DestRect.left) <<2)  ;
+
+			DestBits = (PULONG)(BltInfo->DestSurface->pvScan0 + (BltInfo->DestRect.left << 2) +
+                                BltInfo->DestRect.top * BltInfo->DestSurface->lDelta);
+									
+			SourceY =  BltInfo->SourcePoint.y;
+
+			for (DestY = BltInfo->DestRect.top; DestY < bottom; DestY++)
+			{							
+				SourceX = BltInfo->SourcePoint.x;
+				for (DestX = BltInfo->DestRect.left; DestX < right; DestX++, DestBits++, SourceX++)
+				{
+										
+					*DestBits = (*DestBits | DIB_GetSource(BltInfo->SourceSurface,  SourceX, 
+                                               SourceY, BltInfo->XlateSourceToDest));
+				}
+				
+			 DestBits = (PULONG)((ULONG_PTR)DestBits + delta);	
+			 SourceY++;	 
+			 }
+		
+		}
+		status = TRUE;
+	    break;			
+
+        case BMF_32BPP:
+		{
+			ULONG DestX, DestY;
+			ULONG SourceX, SourceY;			
+			PULONG DestBits;
+
+			ULONG bottom = BltInfo->DestRect.bottom;
+			ULONG right  = BltInfo->DestRect.right; 
+			ULONG delta  = BltInfo->DestSurface->lDelta - ((BltInfo->DestRect.right - BltInfo->DestRect.left) <<2)  ;
+
+			DestBits = (PULONG)(BltInfo->DestSurface->pvScan0 + (BltInfo->DestRect.left << 2) +
+                                BltInfo->DestRect.top * BltInfo->DestSurface->lDelta);
+									
+			SourceY =  BltInfo->SourcePoint.y;
+
+			for (DestY = BltInfo->DestRect.top; DestY < bottom; DestY++)
+			{
+							
+				SourceX = BltInfo->SourcePoint.x;
+				for (DestX = BltInfo->DestRect.left; DestX < right; DestX++, DestBits++, SourceX++)
+				{										
+					*DestBits = (*DestBits | DIB_32BPP_GetPixel(BltInfo->SourceSurface,  SourceX, SourceY));
+				}
+				
+			 DestBits = (PULONG)((ULONG_PTR)DestBits + delta);	
+			 SourceY++;	 
+			 }
+		
+		}
+		status = TRUE;
+	    break;
+
+		default:
+		break;
+	}
+
+ return status;
+}
+BOOLEAN
+DIB32_Srccopy(PBLTINFO BltInfo)
+{
+	BOOLEAN status = FALSE;
+
+	// return(Source);
+	switch (BltInfo->SourceSurface->iBitmapFormat)
+	{			   
+		case BMF_1BPP:
+		case BMF_4BPP:						
+		case BMF_16BPP:
+		case BMF_24BPP:
+		{
+			ULONG DestX, DestY;
+			ULONG SourceX, SourceY;			
+			PULONG DestBits;
+
+			ULONG bottom = BltInfo->DestRect.bottom;
+			ULONG right  = BltInfo->DestRect.right; 
+			ULONG delta  = ((BltInfo->DestRect.right - BltInfo->DestRect.left) <<2) + BltInfo->DestSurface->lDelta;
+
+			DestBits = (PULONG)(BltInfo->DestSurface->pvScan0 + (BltInfo->DestRect.left << 2) +
+                                BltInfo->DestRect.top * BltInfo->DestSurface->lDelta);
+									
+			SourceY =  BltInfo->SourcePoint.y;
+
+			for (DestY = BltInfo->DestRect.top; DestY < bottom; DestY++)
+			{
+							
+				SourceX = BltInfo->SourcePoint.x;
+				for (DestX = BltInfo->DestRect.left; DestX < right; DestX++, DestBits++, SourceX++)
+				{
+					if (SourceX > BltInfo->SourceSurface->sizlBitmap.cx) break;	
+					
+					*DestBits = DIB_GetSource(BltInfo->SourceSurface,  SourceX, 
+                                               SourceY, BltInfo->XlateSourceToDest);
+				}
+				
+			 DestBits = (PULONG)((ULONG_PTR)DestBits - delta);	
+			 SourceY++;
+			 }
+			 
+		}
+		status = TRUE;
+	    break;							
+
+		case BMF_32BPP:
+		{
+			 INT Destdelta;
+			 INT Sourcedelta;
+			 register PBYTE Destaddr;
+			 register PBYTE Srcaddr;
+			 LONG  DesmaxX, DesmaxY; 
+			 LONG  SrcmaxX, SrcmaxY;
+					
+			 SrcmaxX = BltInfo->SourceSurface->sizlBitmap.cx - BltInfo->SourcePoint.x;
+			 SrcmaxY = BltInfo->SourceSurface->sizlBitmap.cy - BltInfo->SourcePoint.y;
+ 					
+			 DesmaxX = BltInfo->DestRect.right - BltInfo->DestRect.left;
+			 DesmaxY = BltInfo->DestRect.bottom - BltInfo->DestRect.top;
+ 					
+			if (DesmaxX > SrcmaxX ) DesmaxX = SrcmaxX;
+			if (DesmaxY > SrcmaxY ) DesmaxY = SrcmaxY;
+ 					
+			Destdelta = BltInfo->DestSurface->lDelta;
+			Sourcedelta = BltInfo->SourceSurface->lDelta;
+			Destaddr = BltInfo->DestSurface->pvScan0 + BltInfo->DestRect.top * Destdelta + BltInfo->DestRect.left;
+			Srcaddr = BltInfo->SourceSurface->pvScan0 + BltInfo->SourcePoint.y * Sourcedelta + BltInfo->SourcePoint.x;
+ 
+			DesmaxX *= 4;
+			if (DesmaxY > 0)
+			{
+				do
+				{
+					RtlCopyMemory(Destaddr, Srcaddr, DesmaxX);
+					Destaddr += Destdelta;
+					Srcaddr += Sourcedelta;
+				}
+				while (--DesmaxY);
+			}
+			status = TRUE;	
+			break;
+			}
+		default:
+		break;
+	    }
+
+return status;
+}
+
+BOOLEAN
+DIB32_ColorFill(PBLTINFO BltInfo, ULONG color)
+{			 
+	ULONG DestY;	
+
+#ifdef _M_IX86   
+	ULONG SourceX;
+
+	if (BltInfo->DestRect.left!=0)
+	{
+		SourceX = (BltInfo->DestRect.right - BltInfo->DestRect.left) -1;
+		for (DestY=BltInfo->DestRect.bottom-1;DestY>=BltInfo->DestRect.top;DestY--)
+		{			 				
+			memset4( (PDWORD) (BltInfo->DestSurface->pvScan0 + DestY * 
+							   BltInfo->DestSurface->lDelta + 
+							   BltInfo->DestRect.left),  color, SourceX);  					 
+		}
+			
+    } else {			  			 
+		SourceX = ((BltInfo->DestRect.bottom - BltInfo->DestRect.top) * BltInfo->DestRect.right) -1;
+
+		memset4(BltInfo->DestSurface->pvScan0 + BltInfo->DestRect.top * 
+			    BltInfo->DestSurface->lDelta, color, SourceX);  
+			   
+			}
+#else			
+	ULONG SourceY;
+
+	for (DestY=BltInfo->DestRect.bottom-1;DestY>=BltInfo->DestRect.top;DestY--)
+	{			 				
+		DIB_32BPP_HLine(BltInfo->DestSurface, BltInfo->DestRect.left, BltInfo->DestRect.right, DestY, color);			  				
+	}
+#endif
+
+	return TRUE;
+}
 /*
 =======================================
  Stretching functions goes below
@@ -541,6 +838,7 @@ BOOLEAN ScaleRectAvg32(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   return TRUE;
 }
 
+
 //NOTE: If you change something here, please do the same in other dibXXbpp.c files!
 BOOLEAN DIB_32BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                             RECTL* DestRect, RECTL *SourceRect,
@@ -548,20 +846,677 @@ BOOLEAN DIB_32BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                             CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
                             ULONG Mode)
 {
-  DPRINT("DIB_32BPP_StretchBlt: Source BPP: %u, srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
+  
+   int SrcSizeY;
+   int SrcSizeX;
+   int DesSizeY;
+   int DesSizeX;      
+   int sx;
+   int sy;
+   int DesX;
+   int DesY;
+   int color;
+   int zoomX;
+   int zoomY;
+   int count;
+   int saveX;
+   int saveY;
+   BOOLEAN DesIsBiggerY=FALSE;
+      
+   DPRINT("DIB_32BPP_StretchBlt: Source BPP: %u, srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
      BitsPerFormat(SourceSurf->iBitmapFormat), SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom,
      DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
 
+   SrcSizeY = SourceRect->bottom;
+   SrcSizeX = SourceRect->right;
+  
+   DesSizeY = DestRect->bottom;
+   DesSizeX = DestRect->right; 
+
+   zoomX = DesSizeX / SrcSizeX;
+   if (zoomX==0) zoomX=1;
+    
+   zoomY = DesSizeY / SrcSizeY;
+   if (zoomY==0) zoomY=1;
+
+   if (DesSizeY>SrcSizeY)
+      DesIsBiggerY = TRUE;  
+
     switch(SourceSurf->iBitmapFormat)
     {
-      case BMF_1BPP:
-      case BMF_4BPP:
-      case BMF_8BPP:
-      case BMF_16BPP:
-      case BMF_24BPP:
-         /* Not implemented yet. */
-         return FALSE;
-      break;
+      case BMF_1BPP:		
+  		   /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
+   		   /* This is a reference implementation, it hasn't been optimized for speed */
+           if (zoomX>1)
+		   {
+		     /* Draw one Hline on X - Led to the Des Zoom In*/
+		     if (DesSizeX>SrcSizeX)
+			 {
+		  		for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				{
+					if (DesIsBiggerY)
+						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+					else
+						sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+                				
+					if (sy > SourceRect->bottom) break;
+
+					saveY = DesY+zoomY;
+
+					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					{						
+						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
+						
+						if (sx > SourceRect->right) break;
+					
+						saveX = DesX + zoomX;
+
+						if (DIB_1BPP_GetPixel(SourceSurf, sx, sy) == 0) 
+						   for (count=DesY;count<saveY;count++)
+							DIB_32BPP_HLine(DestSurf, DesX, saveX, count, 0);
+						else
+							for (count=DesY;count<saveY;count++)
+							DIB_32BPP_HLine(DestSurf, DesX, saveX, count, 1);
+					                    																	
+					  }										
+				  }
+			    }
+			 else
+			 {
+			   /* Draw one Hline on X - Led to the Des Zoom Out*/
+
+               for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				{
+					if (DesIsBiggerY)
+						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+					else
+						sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+                				
+					if (sy > SourceRect->bottom) break;
+
+					saveY = DesY+zoomY;
+
+					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					{
+						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
+					
+						if (sx > SourceRect->right) break;
+					
+						saveX = DesX + zoomX;
+
+						if (DIB_1BPP_GetPixel(SourceSurf, sx, sy) == 0) 
+						   for (count=DesY;count<saveY;count++)
+							DIB_32BPP_HLine(DestSurf, DesX, saveX, count, 0);
+						else
+							for (count=DesY;count<saveY;count++)
+							DIB_32BPP_HLine(DestSurf, DesX, saveX, count, 1);
+					                    																	
+					  }										
+				  }
+			 }
+		   }			
+		   else
+		   {
+		    
+		    if (DesSizeX>SrcSizeX)
+			{
+				/* Draw one pixel on X - Led to the Des Zoom In*/
+				for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				{
+					if (DesIsBiggerY)
+						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+					else
+						sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+                				
+					if (sy > SourceRect->bottom) break;
+
+					saveY = DesY+zoomY;
+
+					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					{						
+						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
+						
+						if (sx > SourceRect->right) break;
+					
+						if (DIB_1BPP_GetPixel(SourceSurf, sx, sy) == 0) 
+						   for (count=DesY;count<saveY;count++)
+							DIB_32BPP_PutPixel(DestSurf, DesX, count, 0);										
+						else
+							for (count=DesY;count<saveY;count++)
+							DIB_32BPP_PutPixel(DestSurf, DesX, count, 1);										
+					                    
+						
+					 }
+		          }
+			 }
+			else
+			{
+				/* Draw one pixel on X - Led to the Des Zoom Out*/
+				for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				{
+					if (DesIsBiggerY)
+						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+					else
+						sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+                				
+					if (sy > SourceRect->bottom) break;
+
+					saveY = DesY+zoomY;
+
+					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					{
+						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
+					
+						if (sx > SourceRect->right) break;
+					
+						if (DIB_1BPP_GetPixel(SourceSurf, sx, sy) == 0) 
+						   for (count=DesY;count<saveY;count++)
+							DIB_32BPP_PutPixel(DestSurf, DesX, count, 0);										
+						else
+							for (count=DesY;count<saveY;count++)
+							DIB_32BPP_PutPixel(DestSurf, DesX, count, 1);										
+					                    						
+					 }
+		          }
+			}
+		   }
+		break;
+
+ case BMF_4BPP:		
+  		   /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
+   		   /* This is a reference implementation, it hasn't been optimized for speed */
+           if (zoomX>1)
+		   {
+		     /* Draw one Hline on X - Led to the Des Zoom In*/
+		     if (DesSizeX>SrcSizeX)
+			 {
+		  		for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				{
+					if (DesIsBiggerY)
+						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+					else
+						sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+                				
+					if (sy > SourceRect->bottom) break;
+
+					saveY = DesY+zoomY;
+
+					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					{						
+						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
+						
+						if (sx > SourceRect->right) break;
+					
+						color =  XLATEOBJ_iXlate(ColorTranslation, DIB_4BPP_GetPixel(SourceSurf, sx, sy));
+					                    					
+						saveX = DesX + zoomX;
+						for (count=DesY;count<saveY;count++)
+							DIB_32BPP_HLine(DestSurf, DesX, saveX, count, color);
+					  }										
+				  }
+			    }
+			 else
+			 {
+			   /* Draw one Hline on X - Led to the Des Zoom Out*/
+
+               for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				{
+					if (DesIsBiggerY)
+						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+					else
+						sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+                				
+					if (sy > SourceRect->bottom) break;
+
+					saveY = DesY+zoomY;
+
+					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					{
+						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
+					
+						if (sx > SourceRect->right) break;
+					
+						color =  XLATEOBJ_iXlate(ColorTranslation, DIB_4BPP_GetPixel(SourceSurf, sx, sy));
+					                    					
+						saveX = DesX + zoomX;
+						for (count=DesY;count<saveY;count++)
+							DIB_32BPP_HLine(DestSurf, DesX, saveX, count, color);
+					  }										
+				  }
+			 }
+		   }
+			
+		   else
+		   {
+		    
+		    if (DesSizeX>SrcSizeX)
+			{
+				/* Draw one pixel on X - Led to the Des Zoom In*/
+				for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				{
+					if (DesIsBiggerY)
+						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+					else
+						sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+                				
+					if (sy > SourceRect->bottom) break;
+
+					saveY = DesY+zoomY;
+
+					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					{						
+						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
+						
+						if (sx > SourceRect->right) break;
+					
+						color =  XLATEOBJ_iXlate(ColorTranslation, DIB_4BPP_GetPixel(SourceSurf, sx, sy));
+					                    
+						for (count=DesY;count<saveY;count++)
+							DIB_32BPP_PutPixel(DestSurf, DesX, count, color);										
+					 }
+		          }
+			 }
+			else
+			{
+				/* Draw one pixel on X - Led to the Des Zoom Out*/
+				for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				{
+					if (DesIsBiggerY)
+						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+					else
+						sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+                				
+					if (sy > SourceRect->bottom) break;
+
+					saveY = DesY+zoomY;
+
+					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					{
+						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
+					
+						if (sx > SourceRect->right) break;
+					
+						color =  XLATEOBJ_iXlate(ColorTranslation, DIB_4BPP_GetPixel(SourceSurf, sx, sy));
+					                    
+						for (count=DesY;count<saveY;count++)
+							DIB_32BPP_PutPixel(DestSurf, DesX, count, color);										
+					 }
+		          }
+			}
+		   }
+		break;
+
+      case BMF_8BPP:		
+  		   /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
+   		   /* This is a reference implementation, it hasn't been optimized for speed */
+           if (zoomX>1)
+		   {
+		     /* Draw one Hline on X - Led to the Des Zoom In*/
+		     if (DesSizeX>SrcSizeX)
+			 {
+		  		for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				{
+					if (DesIsBiggerY)
+						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+					else
+						sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+                				
+					if (sy > SourceRect->bottom) break;
+
+					saveY = DesY+zoomY;
+
+					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					{						
+						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
+						
+						if (sx > SourceRect->right) break;
+					
+						color =  XLATEOBJ_iXlate(ColorTranslation, DIB_8BPP_GetPixel(SourceSurf, sx, sy));
+					                    					
+						saveX = DesX + zoomX;
+						for (count=DesY;count<saveY;count++)
+							DIB_32BPP_HLine(DestSurf, DesX, saveX, count, color);
+					  }										
+				  }
+			    }
+			 else
+			 {
+			   /* Draw one Hline on X - Led to the Des Zoom Out*/
+
+               for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				{
+					if (DesIsBiggerY)
+						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+					else
+						sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+                				
+					if (sy > SourceRect->bottom) break;
+
+					saveY = DesY+zoomY;
+
+					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					{
+						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
+					
+						if (sx > SourceRect->right) break;
+					
+						color =  XLATEOBJ_iXlate(ColorTranslation, DIB_8BPP_GetPixel(SourceSurf, sx, sy));
+					                    					
+						saveX = DesX + zoomX;
+						for (count=DesY;count<saveY;count++)
+							DIB_32BPP_HLine(DestSurf, DesX, saveX, count, color);
+					  }										
+				  }
+			 }
+		   }
+			
+		   else
+		   {
+		    
+		    if (DesSizeX>SrcSizeX)
+			{
+				/* Draw one pixel on X - Led to the Des Zoom In*/
+				for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				{
+					if (DesIsBiggerY)
+						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+					else
+						sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+                				
+					if (sy > SourceRect->bottom) break;
+
+					saveY = DesY+zoomY;
+
+					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					{						
+						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
+						
+						if (sx > SourceRect->right) break;
+					
+						color =  XLATEOBJ_iXlate(ColorTranslation, DIB_8BPP_GetPixel(SourceSurf, sx, sy));
+					                    
+						for (count=DesY;count<saveY;count++)
+							DIB_32BPP_PutPixel(DestSurf, DesX, count, color);										
+					 }
+		          }
+			 }
+			else
+			{
+				/* Draw one pixel on X - Led to the Des Zoom Out*/
+				for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				{
+					if (DesIsBiggerY)
+						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+					else
+						sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+                				
+					if (sy > SourceRect->bottom) break;
+
+					saveY = DesY+zoomY;
+
+					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					{
+						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
+					
+						if (sx > SourceRect->right) break;
+					
+						color =  XLATEOBJ_iXlate(ColorTranslation, DIB_8BPP_GetPixel(SourceSurf, sx, sy));
+					                    
+						for (count=DesY;count<saveY;count++)
+							DIB_32BPP_PutPixel(DestSurf, DesX, count, color);										
+					 }
+		          }
+			}
+		   }
+		break;
+
+      case BMF_16BPP:		
+  		   /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
+   		   /* This is a reference implementation, it hasn't been optimized for speed */
+           if (zoomX>1)
+		   {
+		     /* Draw one Hline on X - Led to the Des Zoom In*/
+		     if (DesSizeX>SrcSizeX)
+			 {
+		  		for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				{
+					if (DesIsBiggerY)
+						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+					else
+						sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+                				
+					if (sy > SourceRect->bottom) break;
+
+					saveY = DesY+zoomY;
+
+					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					{						
+						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
+						
+						if (sx > SourceRect->right) break;
+					
+						color =  XLATEOBJ_iXlate(ColorTranslation, DIB_16BPP_GetPixel(SourceSurf, sx, sy));
+					                    					
+						saveX = DesX + zoomX;
+						for (count=DesY;count<saveY;count++)
+							DIB_32BPP_HLine(DestSurf, DesX, saveX, count, color);
+					  }										
+				  }
+			    }
+			 else
+			 {
+			   /* Draw one Hline on X - Led to the Des Zoom Out*/
+
+               for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				{
+					if (DesIsBiggerY)
+						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+					else
+						sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+                				
+					if (sy > SourceRect->bottom) break;
+
+					saveY = DesY+zoomY;
+
+					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					{
+						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
+					
+						if (sx > SourceRect->right) break;
+					
+						color =  XLATEOBJ_iXlate(ColorTranslation, DIB_16BPP_GetPixel(SourceSurf, sx, sy));
+					                    					
+						saveX = DesX + zoomX;
+						for (count=DesY;count<saveY;count++)
+							DIB_32BPP_HLine(DestSurf, DesX, saveX, count, color);
+					  }										
+				  }
+			 }
+		   }
+			
+		   else
+		   {
+		    
+		    if (DesSizeX>SrcSizeX)
+			{
+				/* Draw one pixel on X - Led to the Des Zoom In*/
+				for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				{
+					if (DesIsBiggerY)
+						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+					else
+						sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+                				
+					if (sy > SourceRect->bottom) break;
+
+					saveY = DesY+zoomY;
+
+					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					{						
+						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
+						
+						if (sx > SourceRect->right) break;
+					
+						color =  XLATEOBJ_iXlate(ColorTranslation, DIB_16BPP_GetPixel(SourceSurf, sx, sy));
+					                    
+						for (count=DesY;count<saveY;count++)
+							DIB_32BPP_PutPixel(DestSurf, DesX, count, color);										
+					 }
+		          }
+			 }
+			else
+			{
+				/* Draw one pixel on X - Led to the Des Zoom Out*/
+				for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				{
+					if (DesIsBiggerY)
+						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+					else
+						sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+                				
+					if (sy > SourceRect->bottom) break;
+
+					saveY = DesY+zoomY;
+
+					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					{
+						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
+					
+						if (sx > SourceRect->right) break;
+					
+						color =  XLATEOBJ_iXlate(ColorTranslation, DIB_16BPP_GetPixel(SourceSurf, sx, sy));
+					                    
+						for (count=DesY;count<saveY;count++)
+							DIB_32BPP_PutPixel(DestSurf, DesX, count, color);										
+					 }
+		          }
+			}
+		   }
+		break;
+
+      case BMF_24BPP:		
+  		   /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
+   		   /* This is a reference implementation, it hasn't been optimized for speed */
+           if (zoomX>1)
+		   {
+		     /* Draw one Hline on X - Led to the Des Zoom In*/
+		     if (DesSizeX>SrcSizeX)
+			 {
+		  		for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				{
+					if (DesIsBiggerY)
+						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+					else
+						sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+                				
+					if (sy > SourceRect->bottom) break;
+
+					saveY = DesY+zoomY;
+
+					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					{						
+						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
+						
+						if (sx > SourceRect->right) break;
+					
+						color =  XLATEOBJ_iXlate(ColorTranslation, DIB_24BPP_GetPixel(SourceSurf, sx, sy));
+					                    					
+						saveX = DesX + zoomX;
+						for (count=DesY;count<saveY;count++)
+							DIB_32BPP_HLine(DestSurf, DesX, saveX, count, color);
+					  }										
+				  }
+			    }
+			 else
+			 {
+			   /* Draw one Hline on X - Led to the Des Zoom Out*/
+
+               for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				{
+					if (DesIsBiggerY)
+						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+					else
+						sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+                				
+					if (sy > SourceRect->bottom) break;
+
+					saveY = DesY+zoomY;
+
+					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					{
+						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
+					
+						if (sx > SourceRect->right) break;
+					
+						color =  XLATEOBJ_iXlate(ColorTranslation, DIB_24BPP_GetPixel(SourceSurf, sx, sy));
+					                    					
+						saveX = DesX + zoomX;
+						for (count=DesY;count<saveY;count++)
+							DIB_32BPP_HLine(DestSurf, DesX, saveX, count, color);
+					  }										
+				  }
+			 }
+		   }
+			
+		   else
+		   {
+		    
+		    if (DesSizeX>SrcSizeX)
+			{
+				/* Draw one pixel on X - Led to the Des Zoom In*/
+				for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				{
+					if (DesIsBiggerY)
+						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+					else
+						sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+                				
+					if (sy > SourceRect->bottom) break;
+
+					saveY = DesY+zoomY;
+
+					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					{						
+						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
+						
+						if (sx > SourceRect->right) break;
+					
+						color =  XLATEOBJ_iXlate(ColorTranslation, DIB_24BPP_GetPixel(SourceSurf, sx, sy));
+					                    
+						for (count=DesY;count<saveY;count++)
+							DIB_32BPP_PutPixel(DestSurf, DesX, count, color);										
+					 }
+		          }
+			 }
+			else
+			{
+				/* Draw one pixel on X - Led to the Des Zoom Out*/
+				for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				{
+					if (DesIsBiggerY)
+						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
+					else
+						sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+                				
+					if (sy > SourceRect->bottom) break;
+
+					saveY = DesY+zoomY;
+
+					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					{
+						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
+					
+						if (sx > SourceRect->right) break;
+					
+						color =  XLATEOBJ_iXlate(ColorTranslation, DIB_24BPP_GetPixel(SourceSurf, sx, sy));
+					                    
+						for (count=DesY;count<saveY;count++)
+							DIB_32BPP_PutPixel(DestSurf, DesX, count, color);										
+					 }
+		          }
+			}
+		   }
+		break;
 
       case BMF_32BPP:
         return ScaleRectAvg32(DestSurf, SourceSurf, DestRect, SourceRect, MaskOrigin, BrushOrigin,

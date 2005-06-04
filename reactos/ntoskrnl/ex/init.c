@@ -450,8 +450,6 @@ ExpInitializeExecutive(VOID)
     /* Parse the Loaded Modules (by FreeLoader) and cache the ones we'll need */
     ParseAndCacheLoadedModules();
 
-    /* Initialize the kernel debugger parameters */
-    KdInitSystem(0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
     /* Initialize the Dispatcher, Clock and Bug Check Mechanisms. */
     KeInit2();

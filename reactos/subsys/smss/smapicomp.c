@@ -43,7 +43,7 @@ SMAPI(SmCompSes)
 	Status = SmCompleteClientInitialization ((ULONG) Request->Header.ClientId.UniqueProcess);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT1("SM: %s: NtQueryInformationProcess failed (Status=0x%08lx)\n",
+		DPRINT1("SM: %s: SmCompleteClientInitialization failed (Status=0x%08lx)\n",
 			__FUNCTION__, Status);
 	}
 	Request->SmHeader.Status = Status;

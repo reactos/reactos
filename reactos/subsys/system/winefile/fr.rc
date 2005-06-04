@@ -31,9 +31,9 @@ IDM_WINEFILE MENU FIXED IMPURE
 	POPUP "&Fichier"  {
 		MENUITEM "&Ouvrir\tEntrée" ,			ID_ACTIVATE
 		MENUITEM "&Déplacer...\tF7" , 			ID_FILE_MOVE
-		MENUITEM "&Copier...\tF8" ,			107
+		MENUITEM "&Copier...\tF8" ,			ID_FILE_COPY
 		MENUITEM "P&resse-Papiers...\tF9" ,		118
-		MENUITEM "&Effacer\tDel" ,			108
+		MENUITEM "&Effacer\tDel" ,			ID_FILE_DELETE
 		MENUITEM "Re&nommer..." ,			109
 		MENUITEM "&Propriétés...\tAlt+Entree" , ID_EDIT_PROPERTIES
 		MENUITEM SEPARATOR
@@ -98,7 +98,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Trier par Ta&ille" , 		ID_VIEW_SORT_SIZE
 		MENUITEM "Trier par Dat&e" , 		ID_VIEW_SORT_DATE
 		MENUITEM SEPARATOR
-		MENUITEM "Trier par &..." ,			409
+		MENUITEM "Trier par &..." ,			ID_VIEW_FILTER
 	}
 
 	POPUP "&Options"  {

@@ -127,7 +127,6 @@ int main(int argc, char *argv[])
 {
 	register char *cp;
 	int top;
-	struct passwd *pw = NULL;
 #if 0
 	char homedir[MAXPATHLEN];
 #endif
@@ -369,7 +368,7 @@ getcmd(name)
 	longest = 0;
 	nmatches = 0;
 	found = 0;
-	for (c = cmdtab; p = c->c_name; c++) {
+	for (c = cmdtab; (p = c->c_name); c++) {
 		for (q = name; *q == *p++; q++)
 			if (*q == 0)		/* exact match? */
 				return (c);
@@ -403,7 +402,7 @@ void makeargv()
 	stringbase = line;		/* scan from first of buffer */
 	argbase = argbuf;		/* store from first of buffer */
 	slrflag = 0;
-	while (*argp++ = slurpstring())
+	while ((*argp++ = slurpstring()))
 		margc++;
 }
 

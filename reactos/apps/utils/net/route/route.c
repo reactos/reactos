@@ -32,11 +32,10 @@ int usage() {
 }
 
 int print_routes() {
-    PMIB_IPFORWARDTABLE IpForwardTable;
+    PMIB_IPFORWARDTABLE IpForwardTable = NULL;
     DWORD Error;
     ULONG Size = 0;
-    char Destination[IPBUF], Gateway[IPBUF], Netmask[IPBUF],
-	Index[IPBUF], Metric[IPBUF];
+    char Destination[IPBUF], Gateway[IPBUF], Netmask[IPBUF];
     int i;
 
     if( (Error = GetIpForwardTable( NULL, &Size, TRUE )) ==
@@ -63,7 +62,7 @@ int print_routes() {
 		    inet_ntoa( IN_ADDR_OF(IpForwardTable->table[i].
 		    		dwForwardNextHop) ) );
 
-	    printf( "%-16s%-16s%-16s%-10d%-10d\n",
+	    printf( "%-16s%-16s%-16s%-10ld%-10ld\n", 
 		    Destination,
 		    Netmask,
 		    Gateway,

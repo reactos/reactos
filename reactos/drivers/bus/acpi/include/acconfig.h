@@ -148,6 +148,5 @@
 #define HI_RSDP_WINDOW_SIZE         0x20000
 #define RSDP_SCAN_STEP              16
 
-
 #endif /* _ACCONFIG_H */
 

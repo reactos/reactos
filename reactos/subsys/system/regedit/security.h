@@ -1,6 +1,12 @@
 #ifndef _REGEXP_SECURITY_H
 #define _REGEXP_SECURITY_H
 
+BOOL
+InitializeAclUiDll(VOID);
+
+VOID
+UnloadAclUiDll(VOID);
+
 /* FIXME - remove the definition */
 DWORD STDCALL
 GetSecurityInfo(HANDLE handle,
@@ -102,23 +108,6 @@ HRESULT STDMETHODCALLTYPE CRegKeySecurity_fnPropertySheetPageCallback(LPREGKEYSE
                                                                       HWND hwnd,
                                                                       UINT uMsg,
                                                                       SI_PAGE_TYPE uPage);
-
-static ifaceCRegKeySecurityVbtl efvt =
-{
-  /* IUnknown methods */
-  CRegKeySecurity_fnQueryInterface,
-  CRegKeySecurity_fnAddRef,
-  CRegKeySecurity_fnRelease,
-
-  /* CRegKeySecurity methods */
-  CRegKeySecurity_fnGetObjectInformation,
-  CRegKeySecurity_fnGetSecurity,
-  CRegKeySecurity_fnSetSecurity,
-  CRegKeySecurity_fnGetAccessRights,
-  CRegKeySecurity_fnMapGeneric,
-  CRegKeySecurity_fnGetInheritTypes,
-  CRegKeySecurity_fnPropertySheetPageCallback
-};
 
 #endif /* _REGEXP_SECURITY_H */
 

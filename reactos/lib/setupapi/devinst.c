@@ -1259,8 +1259,7 @@ BOOL WINAPI SetupDiInstallClassW(
     BOOL bFileQueueCreated = FALSE;
     HKEY hClassKey;
 
-
-    FIXME("\n");
+    FIXME("not fully implemented\n");
 
     if ((Flags & DI_NOVCP) && (FileQueue == NULL || FileQueue == INVALID_HANDLE_VALUE))
     {

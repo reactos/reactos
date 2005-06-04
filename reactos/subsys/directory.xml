@@ -1,0 +1,15 @@
+<directory name="csrss">
+	<xi:include href="csrss/csrss.xml" />
+</directory>
+<directory name="ntvdm">
+	<xi:include href="ntvdm/ntvdm.xml" />
+</directory>
+<directory name="smss">
+	<xi:include href="smss/smss.xml" />
+</directory>
+<directory name="system">
+	<xi:include href="system/directory.xml" />
+</directory>
+<directory name="win32k">
+	<xi:include href="win32k/win32k.xml" />
+</directory>

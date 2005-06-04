@@ -52,7 +52,7 @@ static void ShowNetworkFixedInfo()
     if (result == ERROR_BUFFER_OVERFLOW) {
         pFixedInfo = (FIXED_INFO*)malloc(OutBufLen);
         if (!pFixedInfo) {
-            _tprintf(_T("ERROR: failed to allocate 0x%08X bytes of memory\n"), OutBufLen);
+            _tprintf(_T("ERROR: failed to allocate 0x%08lX bytes of memory\n"), OutBufLen);
             return;
         }
     } else {
@@ -100,7 +100,7 @@ static void ShowNetworkFixedInfo()
             _tprintf(_T("This function is not supported on the operating system in use on the local system\n"));
             break;
         default:
-            _tprintf(_T("0x%08X - Use FormatMessage to obtain the message string for the returned error\n"), result);
+            _tprintf(_T("0x%08lX - Use FormatMessage to obtain the message string for the returned error\n"), result);
             break;
         }
     }
@@ -114,10 +114,10 @@ static void ShowNetworkInterfaces()
     DWORD dwOutBufLen = 0;
 
     if ((result = GetNumberOfInterfaces(&dwNumIf)) != NO_ERROR) {
-        _tprintf(_T("GetNumberOfInterfaces() failed with code 0x%08X - Use FormatMessage to obtain the message string for the returned error\n"), result);
+        _tprintf(_T("GetNumberOfInterfaces() failed with code 0x%08lX - Use FormatMessage to obtain the message string for the returned error\n"), result);
         return;
     } else {
-        _tprintf(_T("GetNumberOfInterfaces() returned %d\n"), dwNumIf);
+        _tprintf(_T("GetNumberOfInterfaces() returned %lu\n"), dwNumIf);
     }
 
     result = GetInterfaceInfo(pIfTable, &dwOutBufLen);
@@ -127,7 +127,7 @@ static void ShowNetworkInterfaces()
 
     pIfTable = (IP_INTERFACE_INFO*)malloc(dwOutBufLen);
     if (!pIfTable) {
-        _tprintf(_T("ERROR: failed to allocate 0x%08X bytes of memory\n"), dwOutBufLen);
+        _tprintf(_T("ERROR: failed to allocate 0x%08lX bytes of memory\n"), dwOutBufLen);
         return;
     }
 /*
@@ -144,7 +144,7 @@ typedef struct _IP_INTERFACE_INFO {
     result = GetInterfaceInfo(pIfTable, &dwOutBufLen);
     if (result == NO_ERROR) {
         int i;
-        _tprintf(_T("GetInterfaceInfo() returned with %d adaptor entries\n"), pIfTable->NumAdapters);
+        _tprintf(_T("GetInterfaceInfo() returned with %ld adaptor entries\n"), pIfTable->NumAdapters);
         for (i = 0; i < pIfTable->NumAdapters; i++) {
            wprintf(L"[%d] %s\n", i + 1, pIfTable->Adapter[i].Name);
            //wprintf(L"[%d] %s\n", pIfTable->Adapter[i].Index, pIfTable->Adapter[i].Name);
@@ -162,13 +162,13 @@ typedef struct _IP_INTERFACE_INFO {
             break;
         case ERROR_INSUFFICIENT_BUFFER:
             _tprintf(_T("The buffer pointed to by the pIfTable parameter is not large enough. The required size is returned in the DWORD variable pointed to by the dwOutBufLen parameter\n"));
-            _tprintf(_T("\tdwOutBufLen: %d\n"), dwOutBufLen);
+            _tprintf(_T("\tdwOutBufLen: %lu\n"), dwOutBufLen);
             break;
         case ERROR_NOT_SUPPORTED:
             _tprintf(_T("This function is not supported on the operating system in use on the local system\n"));
             break;
         default:
-            _tprintf(_T("0x%08X - Use FormatMessage to obtain the message string for the returned error\n"), result);
+            _tprintf(_T("0x%08lX - Use FormatMessage to obtain the message string for the returned error\n"), result);
             break;
         }
     }
@@ -227,8 +227,8 @@ static void ShowAdapterInfo()
         GlobalFree(pAdaptorInfo);
         pAdaptorInfo = (IP_ADAPTER_INFO*)GlobalAlloc(GPTR, ulOutBufLen);
     }
-    if (dwRetVal = GetAdaptersInfo(pAdaptorInfo, &ulOutBufLen)) {
-        _tprintf(_T("Call to GetAdaptersInfo failed. Return Value: %08x\n"), dwRetVal);
+    if ((dwRetVal = GetAdaptersInfo(pAdaptorInfo, &ulOutBufLen))) {
+        _tprintf(_T("Call to GetAdaptersInfo failed. Return Value: 0x%08lx\n"), dwRetVal);
     } else {
         while (pAdaptorInfo) {
             printf("  AdapterName: %s\n", pAdaptorInfo->AdapterName);

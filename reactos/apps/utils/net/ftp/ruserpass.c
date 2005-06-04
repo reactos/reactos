@@ -53,17 +53,18 @@ static struct toktab {
 	char *tokstr;
 	int tval;
 } toktab[]= {
-	"default",	DEFAULT,
-	"login",	LOGIN,
-	"password",	PASSWD,
-	"passwd",	PASSWD,
-	"account",	ACCOUNT,
-	"machine",	MACH,
-	"macdef",	MACDEF,
-	0,		0
+	{"default",	DEFAULT},
+	{"login",	LOGIN},
+	{"password",	PASSWD},
+	{"passwd",	PASSWD},
+	{"account",	ACCOUNT},
+	{"machine",	MACH},
+	{"macdef",	MACDEF},
+	{0,		0}
 };
 
 extern char *hostname;
+static int token(void);
 
 int ruserpass(char *host, char **aname, char **apass, char **aacct)
 {
@@ -125,7 +126,7 @@ next:
 		while ((t = token()) && t != MACH && t != DEFAULT) switch(t) {
 
 		case LOGIN:
-			if (token())
+			if (token()) {
 				if (*aname == 0) {
 					*aname = malloc((unsigned) strlen(tokval) + 1);
 					(void) strcpy(*aname, tokval);
@@ -133,6 +134,7 @@ next:
 					if (strcmp(*aname, tokval))
 						goto next;
 				}
+			}
 			break;
 		case PASSWD:
 			if (strcmp(*aname, "anonymous") &&
@@ -164,7 +166,7 @@ next:
 				(void) fclose(cfile);
 				return(0);
 			}
-			while ((c=getc(cfile)) != EOF && c == ' ' || c == '\t');
+			while ((c=getc(cfile)) != EOF && (c == ' ' || c == '\t'));
 			if (c == EOF || c == '\n') {
 				printf("Missing macdef name argument.\n");
 				goto bad;

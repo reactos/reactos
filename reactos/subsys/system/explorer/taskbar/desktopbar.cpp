@@ -28,7 +28,7 @@
 
 #include "precomp.h"
 
-#include "../explorer_intres.h"
+#include "../resource.h"
 
 #include "desktopbar.h"
 #include "taskbar.h"

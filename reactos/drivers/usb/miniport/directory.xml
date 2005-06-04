@@ -1,0 +1,9 @@
+<directory name="usbehci">
+	<xi:include href="usbehci/usbehci.xml" />
+</directory>
+<directory name="usbohci">
+	<xi:include href="usbohci/usbohci.xml" />
+</directory>
+<directory name="usbuhci">
+	<xi:include href="usbuhci/usbuhci.xml" />
+</directory>

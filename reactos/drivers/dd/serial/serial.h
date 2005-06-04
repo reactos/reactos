@@ -274,10 +274,6 @@ UART_TYPE
 SerialDetectUartType(
 	IN PUCHAR ComPortBase);
 
-NTSTATUS
-DetectLegacyDevices(
-	IN PDRIVER_OBJECT DriverObject);
-
 /************************************ misc.c */
 
 NTSTATUS

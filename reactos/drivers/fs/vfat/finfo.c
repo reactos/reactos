@@ -109,7 +109,7 @@ VfatGetAttributeTagInformation(PVFATFCB FCB,
     return STATUS_BUFFER_OVERFLOW;
 
   /* PRECONDITION */
-  ASSERT(StandardInfo != NULL);
+  ASSERT(AttributeTagInfo != NULL);
   ASSERT(FCB != NULL);
 
   AttributeTagInfo->FileAttributes = *FCB->Attributes & 0x3f;

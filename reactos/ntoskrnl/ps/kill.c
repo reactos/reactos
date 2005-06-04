@@ -266,19 +266,18 @@ PspExitThread(NTSTATUS ExitStatus)
     }
 
     /* Process the Termination Ports */
-    TerminationPort = CurrentThread->TerminationPort;
-    DPRINT("TerminationPort: %p\n", TerminationPort);
-    while (TerminationPort) {
+    while ((TerminationPort = CurrentThread->TerminationPort)) {
+
+        DPRINT("TerminationPort: %p\n", TerminationPort);
+
+        /* Get the next one */
+        CurrentThread->TerminationPort = TerminationPort->Next;
 
         /* Send the LPC Message */
         LpcSendTerminationPort(TerminationPort->Port, CurrentThread->CreateTime);
 
         /* Free the Port */
         ExFreePool(TerminationPort);
-
-        /* Get the next one */
-        TerminationPort = TerminationPort->Next;
-        DPRINT("TerminationPort: %p\n", TerminationPort);
     }
 
     /* Rundown Win32 Structures */
@@ -463,6 +462,7 @@ NtTerminateProcess(IN HANDLE ProcessHandle  OPTIONAL,
     if(Process->ExitTime.QuadPart != 0)
     {
       PsUnlockProcess(Process);
+      ObDereferenceObject(Process);
       return STATUS_PROCESS_IS_TERMINATING;
     }
 

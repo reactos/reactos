@@ -4839,7 +4839,7 @@ static void fill_image(const PixelStorageModes *psm,
     GLint group_size;
     GLint elements_per_line;
     const GLubyte *start;
-    const GLubyte *iter;
+    const GLubyte *iter = NULL;
     GLushort *iter2;
     GLint i, j, k;
     GLint myswap_bytes;
@@ -6650,7 +6650,7 @@ static void fillImage3D(const PixelStorageModes *psm,
    int elementsPerLine;
    int rowsPerImage;
    int imageSize;
-   const GLubyte *start, *rowStart, *iter;
+   const GLubyte *start, *rowStart, *iter = NULL;
    GLushort *iter2;
    int ww, hh, dd, k;
 

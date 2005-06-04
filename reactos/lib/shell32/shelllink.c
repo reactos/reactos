@@ -32,22 +32,6 @@
  *   in that string is parsed an stored.
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#include <ctype.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
-#include <errno.h>
-#include <limits.h>
-#ifdef HAVE_SYS_WAIT_H
-# include <sys/wait.h>
-#endif
-
 #define COBJMACROS
 
 #include "wine/debug.h"
@@ -1996,6 +1980,9 @@ static LPWSTR ShellLink_GetAdvertisedArg(LPCWSTR str)
     LPCWSTR p;
     DWORD len;
 
+    if( !str )
+        return NULL;
+
     p = strchrW( str, ':' );
     if( !p )
         return NULL;
@@ -2057,8 +2044,8 @@ static HRESULT ShellLink_SetAdvertiseInfo(IShellLinkImpl *This, LPCWSTR str)
             return E_FAIL;
     }
 
-    /* we have to have at least one of these two for an advertised shortcut */
-    if( !szComponent && !szProduct )
+    /* we have to have a component for an advertised shortcut */
+    if( !szComponent )
         return E_FAIL;
 
     This->sComponent = ShellLink_GetAdvertisedArg( szComponent );

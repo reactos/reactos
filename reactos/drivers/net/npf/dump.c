@@ -37,7 +37,6 @@
 #include "packet.h"
 #include "win_bpf.h"
 
-#define assert(exp)     ((void)0)
 //-------------------------------------------------------------------
 
 NTSTATUS

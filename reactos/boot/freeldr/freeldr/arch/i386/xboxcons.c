@@ -73,6 +73,8 @@ XboxConsGetCh(void)
     {
       ;
     }
+
+  return 0;
 }
 
 /* EOF */

@@ -18,8 +18,12 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/ps.h>
 
 #include <internal/debug.h>
+
+/* Hmm, needed for KDBG := 1. Why? */
+#undef KeGetCurrentIrql
 
 /* FUNCTIONS ***************************************************************/
 

@@ -57,6 +57,7 @@ drivers\net\dd\pcnet\pcnet.sys          2
 lib\advapi32\advapi32.dll               1
 lib\advpack\advpack.dll                 1
 lib\aclui\aclui.dll                     1
+lib\cabinet\cabinet.dll                 1
 lib\cards\cards.dll                     1
 lib\cpl\access\access.cpl               1
 lib\cpl\appwiz\appwiz.cpl               1
@@ -97,7 +98,7 @@ lib\kbdus\kbdus.dll                     1
 lib\kernel32\kernel32.dll               1
 lib\lzexpand\lz32.dll                   1
 lib\mesa32\mesa32.dll                   1
-lib\midimap\midimap.dll                 1
+lib\winmm\midimap\midimap.dll           1
 lib\mmdrv\mmdrv.dll                     1
 lib\mpr\mpr.dll                         1
 lib\msacm\msacm32.dll                   1
@@ -107,6 +108,8 @@ lib\msi\msi.dll                         1
 lib\msimg32\msimg32.dll                 1
 lib\msvcrt\msvcrt.dll                   1
 lib\msvcrt20\msvcrt20.dll               1
+lib\msvideo\msvfw32.dll                 1
+lib\mswsock\mswsock.dll                 1
 lib\netapi32\netapi32.dll               1
 lib\ntdll\ntdll.dll                     1
 lib\ole32\ole32.dll                     1
@@ -170,6 +173,7 @@ subsys\system\winlogon\winlogon.exe     1
 subsys\system\winefile\winefile.exe     1
 subsys\system\dhcp\dhcp.exe             1
 subsys\system\sm\sm.exe                 1
+subsys\system\expand\expand.exe         1
 services\eventlog\eventlog.exe          1
 services\rpcss\rpcss.exe                1
 services\umpnpmgr\umpnpmgr.exe          1

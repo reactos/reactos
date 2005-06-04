@@ -1,0 +1,7 @@
+<module name="blue" type="kernelmodedriver" installbase="system32/drivers" installname="blue.sys">
+	<bootstrap base="reactos" />
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<file>blue.c</file>
+	<file>blue.rc</file>
+</module>

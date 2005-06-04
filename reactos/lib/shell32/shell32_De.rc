@@ -132,43 +132,9 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "&Durchsuchen...", 12288, 170, 63, 50, 14, WS_TABSTOP
 }
 
-/*
-	special folders
-*/
 STRINGTABLE DISCARDABLE
 {
-	IDS_DESKTOP		"Desktop"
-	IDS_MYCOMPUTER		"Arbeitsplatz"
-}
-
-/*
-	context menus
-*/
-STRINGTABLE DISCARDABLE
-{
-	IDS_VIEW_LARGE		"&Große Symbole"
-	IDS_VIEW_SMALL		"&Kleine Symbole"
-	IDS_VIEW_LIST		"&Liste"
-	IDS_VIEW_DETAILS	"&Details"
-	IDS_SELECT		"Auswählen"
-	IDS_OPEN		"Öffnen"
-}
-
-STRINGTABLE DISCARDABLE
-{
-	IDS_CREATEFOLDER_DENIED "Es konnte kein neues Verzeichnis erstellt werden: Zugriff verweigert."
-	IDS_CREATEFOLDER_CAPTION "Es trat ein Fehler beim Erstellen eines neuen Verzeichnisses auf"
-	IDS_DELETEITEM_CAPTION "Bestätigung: Datei löschen"
-	IDS_DELETEFOLDER_CAPTION "Bestätigung: Verzeichnis löschen"
-	IDS_DELETEITEM_TEXT "Sind Sie sich sicher, dass Sie die Datei '%1' löschen möchten ?"
-	IDS_DELETEMULTIPLE_TEXT "Sind Sie sich sicher, dass Sie diese %1 Dateien löschen möchten ?"
-	IDS_OVERWRITEFILE_TEXT "Möchten Sie, dass die Datei '%1' überschrieben wird ?"
-	IDS_OVERWRITEFILE_CAPTION "Bestätigung: Datei überschreiben"
-}
-
-/*	columns in the shellview	*/
-STRINGTABLE
-BEGIN
+        /* columns in the shellview */
 	IDS_SHV_COLUMN1		"Datei"
 	IDS_SHV_COLUMN2		"Größe"
 	IDS_SHV_COLUMN3		"Typ"
@@ -178,20 +144,37 @@ BEGIN
 	IDS_SHV_COLUMN7		"Freier Speicher"
 	IDS_SHV_COLUMN8		"Name"
 	IDS_SHV_COLUMN9		"Kommentar"
-END
+	IDS_SHV_COLUMN10	"Besitzer"
+	IDS_SHV_COLUMN11	"Gruppe"
 
-/* message box strings */
-STRINGTABLE DISCARDABLE
-{
-       IDS_RESTART_TITLE       "Neustarten"
-       IDS_RESTART_PROMPT      "Möchten Sie, dass ein simulierter Windows Neustart durchgeführt wird ?"
-       IDS_SHUTDOWN_TITLE      "Anhalten"
-       IDS_SHUTDOWN_PROMPT     "Möchten Sie die aktuelle ReactOS Sitzung beenden ?"
-}
+        /* special folders */
+	IDS_DESKTOP		"Desktop"
+	IDS_MYCOMPUTER		"Arbeitsplatz"
 
-/* shell folder path default values */
-STRINGTABLE DISCARDABLE
-{
+        /* context menus */
+	IDS_VIEW_LARGE		"&Große Symbole"
+	IDS_VIEW_SMALL		"&Kleine Symbole"
+	IDS_VIEW_LIST		"&Liste"
+	IDS_VIEW_DETAILS	"&Details"
+	IDS_SELECT		"Auswählen"
+	IDS_OPEN		"Öffnen"
+
+	IDS_CREATEFOLDER_DENIED "Es konnte kein neues Verzeichnis erstellt werden: Zugriff verweigert."
+	IDS_CREATEFOLDER_CAPTION "Es trat ein Fehler beim Erstellen eines neuen Verzeichnisses auf"
+	IDS_DELETEITEM_CAPTION "Bestätigung: Datei löschen"
+	IDS_DELETEFOLDER_CAPTION "Bestätigung: Verzeichnis löschen"
+	IDS_DELETEITEM_TEXT "Sind Sie sich sicher, dass Sie die Datei '%1' löschen möchten ?"
+	IDS_DELETEMULTIPLE_TEXT "Sind Sie sich sicher, dass Sie diese %1 Dateien löschen möchten ?"
+	IDS_OVERWRITEFILE_TEXT "Möchten Sie, dass die Datei '%1' überschrieben wird ?"
+	IDS_OVERWRITEFILE_CAPTION "Bestätigung: Datei überschreiben"
+
+        /* message box strings */
+        IDS_RESTART_TITLE       "Neustarten"
+        IDS_RESTART_PROMPT      "Möchten Sie, dass ein simulierter Windows Neustart durchgeführt wird ?"
+        IDS_SHUTDOWN_TITLE      "Anhalten"
+        IDS_SHUTDOWN_PROMPT     "Möchten Sie die aktuelle ReactOS Sitzung beenden ?"
+
+        /* shell folder path default values */
 	IDS_PROGRAMS		"Startmenü\\Programme"
 	IDS_PERSONAL		"Eigene Dateien"
 	IDS_FAVORITES		"Favoriten"

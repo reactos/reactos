@@ -11,15 +11,24 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+/* Make bochs debug output in the very early boot phase available */
+//#define AUTO_ENABLE_BOCHS
+
 /* VARIABLES ***************************************************************/
 
 KD_PORT_INFORMATION PortInfo = {DEFAULT_DEBUG_PORT, DEFAULT_DEBUG_BAUD_RATE, 0};
 ULONG KdpPortIrq;
+#ifdef AUTO_ENABLE_BOCHS
+KDP_DEBUG_MODE KdpDebugMode = {{{.Bochs=TRUE}}};;
+PKDP_INIT_ROUTINE WrapperInitRoutine = KdpBochsInit;
+KD_DISPATCH_TABLE WrapperTable = {.KdpInitRoutine = KdpBochsInit, .KdpPrintRoutine = KdpBochsDebugPrint};
+#else
 KDP_DEBUG_MODE KdpDebugMode;
-LIST_ENTRY KdProviders;
 PKDP_INIT_ROUTINE WrapperInitRoutine;
-KD_DISPATCH_TABLE DispatchTable[KdMax];
 KD_DISPATCH_TABLE WrapperTable;
+#endif
+LIST_ENTRY KdProviders = {&KdProviders, &KdProviders};
+KD_DISPATCH_TABLE DispatchTable[KdMax];
 
 PKDP_INIT_ROUTINE InitRoutines[KdMax] = {KdpScreenInit,
                                          KdpSerialInit,
@@ -158,8 +167,6 @@ KdInitSystem(ULONG BootPhase,
     /* Set Default Port Options */
     if (BootPhase == 0)
     {
-        /* Initialize the Provider List */
-        InitializeListHead(&KdProviders);
 
         /* Parse the Command Line */
         p1 = (PCHAR)LoaderBlock->CommandLine;

@@ -32,7 +32,7 @@ static HPALETTE hPrimaryPalette = 0; // used for WM_PALETTECHANGED
 //static HPALETTE hLastRealizedPalette = 0; // UnrealizeObject() needs it
 
 
-static UINT SystemPaletteUse = SYSPAL_STATIC;  /* currently not considered */
+static UINT SystemPaletteUse = SYSPAL_NOSTATIC;  /* the program need save the palate and restore it */
 
 const PALETTEENTRY COLOR_sysPalTemplate[NB_RESERVED_COLORS] =
 {

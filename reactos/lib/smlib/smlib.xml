@@ -1,0 +1,8 @@
+<module name="smlib" type="staticlibrary">
+	<include base="smlib">.</include>
+	<define name="_DISABLE_TIDENTS" />
+	<file>connect.c</file>
+	<file>execpgm.c</file>
+	<file>compses.c</file>
+	<file>lookupss.c</file>
+</module>

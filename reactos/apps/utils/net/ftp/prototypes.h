@@ -28,5 +28,4 @@ void recvrequest(char *cmd, char *local, char *remote, char *mode,
 int confirm(char *cmd, char *file);
 void blkfree(char **av0);
 int getit(int argc, char *argv[], int restartit, char *mode);
-static int token(void);
 int sleep(int time);

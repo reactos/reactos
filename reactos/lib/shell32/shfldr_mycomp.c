@@ -428,9 +428,12 @@ static HRESULT WINAPI ISF_MyComputer_fnGetAttributesOf (IShellFolder2 * iface,
     IGenericSFImpl *This = (IGenericSFImpl *)iface;
     HRESULT hr = S_OK;
 
-    TRACE ("(%p)->(cidl=%d apidl=%p mask=0x%08lx)\n", This, cidl, apidl, *rgfInOut);
+    TRACE ("(%p)->(cidl=%d apidl=%p mask=%p (0x%08lx))\n",
+           This, cidl, apidl, rgfInOut, rgfInOut ? *rgfInOut : 0);
 
-    if (!cidl || !apidl || !rgfInOut)
+    if (!rgfInOut)
+        return E_INVALIDARG;
+    if (cidl && !apidl)
         return E_INVALIDARG;
 
     if (*rgfInOut == 0)
@@ -443,6 +446,8 @@ static HRESULT WINAPI ISF_MyComputer_fnGetAttributesOf (IShellFolder2 * iface,
         apidl++;
         cidl--;
     }
+    /* make sure SFGAO_VALIDATE is cleared, some apps depend on that */
+    *rgfInOut &= ~SFGAO_VALIDATE;
 
     TRACE ("-- result=0x%08lx\n", *rgfInOut);
     return hr;
@@ -535,9 +540,7 @@ static HRESULT WINAPI ISF_MyComputer_fnGetDisplayNameOf (IShellFolder2 *iface,
 {
     IGenericSFImpl *This = (IGenericSFImpl *)iface;
 
-    char szPath[MAX_PATH], szDrive[18];
-    int len = 0;
-    BOOL bSimplePidl;
+    char szPath[MAX_PATH];
     HRESULT hr = S_OK;
 
     TRACE ("(%p)->(pidl=%p,0x%08lx,%p)\n", This, pidl, dwFlags, strRet);
@@ -547,9 +550,6 @@ static HRESULT WINAPI ISF_MyComputer_fnGetDisplayNameOf (IShellFolder2 *iface,
         return E_INVALIDARG;
 
     szPath[0] = 0x00;
-    szDrive[0] = 0x00;
-
-    bSimplePidl = _ILIsPidlSimple (pidl);
 
     if (!pidl->mkid.cb)
     {
@@ -557,17 +557,17 @@ static HRESULT WINAPI ISF_MyComputer_fnGetDisplayNameOf (IShellFolder2 *iface,
         lstrcpyA (szPath, "::");
         SHELL32_GUIDToStringA(&CLSID_MyComputer, &szPath[2]);
     }
-    else if (_ILIsSpecialFolder (pidl))
+    else if (_ILIsPidlSimple(pidl))    
     {
         /* take names of special folders only if its only this folder */
-        if (bSimplePidl)
+        if (_ILIsSpecialFolder(pidl))
         {
             GUID const *clsid;
 
             clsid = _ILGetGUIDPointer (pidl);
             if (clsid)
             {
-                if (GET_SHGDN_FOR (dwFlags) == SHGDN_FORPARSING)
+                if (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING)
                 {
                     static const WCHAR clsidW[] =
                      { 'C','L','S','I','D','\\',0 };
@@ -634,42 +634,37 @@ static HRESULT WINAPI ISF_MyComputer_fnGetDisplayNameOf (IShellFolder2 *iface,
                 _ILSimpleGetText (pidl, szPath, MAX_PATH);
             }
         }
-        else
-            FIXME ("special folder\n");
+        else if (_ILIsDrive(pidl))
+        {        
+            _ILSimpleGetText (pidl, szPath, MAX_PATH);    /* append my own path */
+
+            /* long view "lw_name (C:)" */
+            if (!(dwFlags & SHGDN_FORPARSING))
+            {
+                DWORD dwVolumeSerialNumber, dwMaximumComponetLength, dwFileSystemFlags;
+                char szDrive[18] = "";
+
+                GetVolumeInformationA (szPath, szDrive, sizeof (szDrive) - 6,
+                           &dwVolumeSerialNumber,
+                           &dwMaximumComponetLength, &dwFileSystemFlags, NULL, 0);
+                strcat (szDrive, " (");
+                strncat (szDrive, szPath, 2);
+                strcat (szDrive, ")");
+                strcpy (szPath, szDrive);
+            }
+        }
+        else 
+        {
+            /* Neither a shell namespace extension nor a drive letter. */
+            ERR("Wrong pidl type\n");
+            return E_INVALIDARG;
+        }
     }
     else
     {
-        if (!_ILIsDrive (pidl))
-        {
-            ERR ("Wrong pidl type\n");
-            return E_INVALIDARG;
-        }
-
-        _ILSimpleGetText (pidl, szPath, MAX_PATH);    /* append my own path */
-
-        /* long view "lw_name (C:)" */
-        if (bSimplePidl && !(dwFlags & SHGDN_FORPARSING))
-        {
-            DWORD dwVolumeSerialNumber, dwMaximumComponetLength, dwFileSystemFlags;
-
-            GetVolumeInformationA (szPath, szDrive, sizeof (szDrive) - 6,
-                       &dwVolumeSerialNumber,
-                       &dwMaximumComponetLength, &dwFileSystemFlags, NULL, 0);
-            strcat (szDrive, " (");
-            strncat (szDrive, szPath, 2);
-            strcat (szDrive, ")");
-            strcpy (szPath, szDrive);
-        }
-    }
-
-    if (!bSimplePidl)
-    {
-        /* go deeper if needed */
-        PathAddBackslashA (szPath);
-        len = strlen (szPath);
-
-        hr = SHELL32_GetDisplayNameOfChild (iface, pidl,
-                  dwFlags | SHGDN_INFOLDER, szPath + len, MAX_PATH - len);
+        /* Complex pidl. Let the child folder do the work */
+        strRet->uType = STRRET_CSTR;
+        hr = SHELL32_GetDisplayNameOfChild(iface, pidl, dwFlags, szPath, MAX_PATH);
     }
 
     if (SUCCEEDED (hr))

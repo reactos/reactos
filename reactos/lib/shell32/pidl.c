@@ -1219,7 +1219,7 @@ HRESULT SHELL_GetPathFromIDListA(LPCITEMIDLIST pidl, LPSTR pszPath, UINT uOutSiz
     pszPath[0]=0;
 
     /* One case is a PIDL rooted at desktop level */
-    if (_ILIsValue(pidl) || _ILIsFolder(pidl))
+    if (_ILIsDesktop(pidl) || _ILIsValue(pidl) || _ILIsFolder(pidl))
     {
         hr = SHGetSpecialFolderPathA(0, pszPath, CSIDL_DESKTOP, FALSE);
 
@@ -1331,7 +1331,7 @@ HRESULT SHELL_GetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath, UINT uOutSi
     pszPath[0]=0;
 
     /* One case is a PIDL rooted at desktop level */
-    if (_ILIsValue(pidl) || _ILIsFolder(pidl))
+    if (_ILIsDesktop(pidl) ||_ILIsValue(pidl) || _ILIsFolder(pidl))
     {
         hr = SHGetSpecialFolderPathW(0, pszPath, CSIDL_DESKTOP, FALSE);
 

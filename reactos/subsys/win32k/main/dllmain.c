@@ -247,9 +247,8 @@ Win32kInitWin32Thread(PETHREAD Thread)
 /*
  * This definition doesn't work
  */
-// BOOL STDCALL DllMain(VOID)
 NTSTATUS STDCALL
-DllMain (
+DriverEntry (
   IN	PDRIVER_OBJECT	DriverObject,
   IN	PUNICODE_STRING	RegistryPath)
 {
@@ -395,8 +394,6 @@ DllMain (
      used by win32 applications */
   CreateStockObjects();
   CreateSysColorObjects();
-
-  PREPARE_TESTS
 
   return STATUS_SUCCESS;
 }

@@ -1300,10 +1300,10 @@ LONG WINAPI SHQueryInfoKeyW(HKEY hKey, LPDWORD pwSubKeys, LPDWORD pwSubKeyMax,
  *
  *   REG_EXPAND_SZ:
  *     case-1: the unexpanded string is smaller than the expanded one
- *       subcase-1: the buffer is to small to hold the unexpanded string:
+ *       subcase-1: the buffer is too small to hold the unexpanded string:
  *          function fails and returns the size of the unexpanded string.
  *
- *       subcase-2: buffer is to small to hold the expanded string:
+ *       subcase-2: buffer is too small to hold the expanded string:
  *          the function return success (!!) and the result is truncated
  *	    *** This is clearly an error in the native implementation. ***
  *
@@ -1332,7 +1332,7 @@ DWORD WINAPI SHQueryValueExA( HKEY hKey, LPCSTR lpszValue,
     /* Expand type REG_EXPAND_SZ into REG_SZ */
     LPSTR szData;
 
-    /* If the caller didn't supply a buffer or the buffer is to small we have
+    /* If the caller didn't supply a buffer or the buffer is too small we have
      * to allocate our own
      */
     if ((!pvData) || (dwRet == ERROR_MORE_DATA) )

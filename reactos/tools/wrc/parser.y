@@ -345,7 +345,7 @@ static int rsrcid_to_token(int lookahead);
 %type <lan>	opt_language
 %type <chars>	opt_characts
 %type <ver>	opt_version
-%type <num>	expr xpr
+%type <num>	expr xpr xpr_no_not
 %type <iptr>	e_expr
 %type <tlbar>	toolbar
 %type <tlbarItems>	toolbar_items
@@ -1002,8 +1002,8 @@ optional_style_pair
 style
 	: style '|' style	{ $$ = new_style($1->or_mask | $3->or_mask, $1->and_mask | $3->and_mask); free($1); free($3);}
 	| '(' style ')'		{ $$ = $2; }
-        | any_num       	{ $$ = new_style($1, 0); }
-        | tNOT any_num		{ $$ = new_style(0, $2); }
+        | xpr_no_not    	{ $$ = new_style($1, 0); }
+        | tNOT xpr_no_not	{ $$ = new_style(0, $2); }
         ;
 
 ctlclass
@@ -1823,18 +1823,22 @@ e_expr	: /* Empty */	{ $$ = 0; }
 expr	: xpr	{ $$ = ($1); }
 	;
 
-xpr	: xpr '+' xpr	{ $$ = ($1) + ($3); }
-	| xpr '-' xpr	{ $$ = ($1) - ($3); }
-	| xpr '|' xpr	{ $$ = ($1) | ($3); }
-	| xpr '&' xpr	{ $$ = ($1) & ($3); }
-	| xpr '*' xpr	{ $$ = ($1) * ($3); }
-	| xpr '/' xpr	{ $$ = ($1) / ($3); }
-	| xpr '^' xpr	{ $$ = ($1) ^ ($3); }
-	| '~' xpr	{ $$ = ~($2); }
-	| '-' xpr %prec pUPM	{ $$ = -($2); }
-	| '+' xpr %prec pUPM	{ $$ = $2; }
-	| '(' xpr ')'	{ $$ = $2; }
-	| any_num	{ $$ = $1; }
+xpr_no_not	: xpr '+' xpr	{ $$ = ($1) + ($3); }
+		| xpr '-' xpr	{ $$ = ($1) - ($3); }
+		| xpr '|' xpr	{ $$ = ($1) | ($3); }
+		| xpr '&' xpr	{ $$ = ($1) & ($3); }
+		| xpr '*' xpr	{ $$ = ($1) * ($3); }
+		| xpr '/' xpr	{ $$ = ($1) / ($3); }
+		| xpr '^' xpr	{ $$ = ($1) ^ ($3); }
+		| '~' xpr	{ $$ = ~($2); }
+		| '-' xpr %prec pUPM	{ $$ = -($2); }
+		| '+' xpr %prec pUPM	{ $$ = $2; }
+		| '(' xpr ')'	{ $$ = $2; }
+		| any_num	{ $$ = $1; }
+		;
+
+
+xpr	: xpr_no_not	{ $$ = ($1); }
 	| tNOT any_num	{ $$ = ~($2); }
 	;
 
@@ -2249,27 +2253,32 @@ static event_t *add_event(int key, int id, int flags, event_t *prev)
 
 static event_t *add_string_event(string_t *key, int id, int flags, event_t *prev)
 {
-	int keycode = 0;
+	int keycode = 0, keysym = 0;
 	event_t *ev = new_event();
 
-	if(key->type != str_char)
-		yyerror("Key code must be an ascii string");
+	if(key->type == str_char)
+		keysym = key->str.cstr[0];
+	else
+		keysym = key->str.wstr[0];
 
-	if((flags & WRC_AF_VIRTKEY) && (!isupper(key->str.cstr[0] & 0xff) && !isdigit(key->str.cstr[0] & 0xff)))
+	if((flags & WRC_AF_VIRTKEY) && (!isupper(keysym & 0xff) && !isdigit(keysym & 0xff)))
 		yyerror("VIRTKEY code is not equal to ascii value");
 
-	if(key->str.cstr[0] == '^' && (flags & WRC_AF_CONTROL) != 0)
+	if(keysym == '^' && (flags & WRC_AF_CONTROL) != 0)
 	{
 		yyerror("Cannot use both '^' and CONTROL modifier");
 	}
-	else if(key->str.cstr[0] == '^')
+	else if(keysym == '^')
 	{
-		keycode = toupper(key->str.cstr[1]) - '@';
+		if(key->type == str_char)
+			keycode = toupper(key->str.cstr[1]) - '@';
+		else
+			keycode = toupper(key->str.wstr[1]) - '@';
 		if(keycode >= ' ')
 			yyerror("Control-code out of range");
 	}
 	else
-		keycode = key->str.cstr[0];
+		keycode = keysym;
 	ev->key = keycode;
 	ev->id = id;
 	ev->flags = flags & ~WRC_AF_ASCII;

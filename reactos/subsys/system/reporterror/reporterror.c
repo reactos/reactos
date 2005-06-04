@@ -86,6 +86,7 @@ FillErrorReport(HWND hwndDlg)
   return errorReport;
 }
 
+VOID
 ReleaseErrorReport(LPERROR_REPORT errorReport)
 {
   if (errorReport->YourEmail)
@@ -336,10 +337,8 @@ ReceiveResponse(SOCKET socket, LPSTR responseBuffer, PULONG responseBufferSize)
 {
   PCHAR pch = (PCHAR)responseBuffer;
   ULONG length = 0;
-  INT contentLength = 0;
   fd_set fdset[1];
   struct timeval timeout;
-  CHAR buf[4000];
 
   FD_ZERO(&fdset);
   FD_SET(socket, &fdset);
@@ -396,7 +395,6 @@ SubmissionThread(LPVOID lpParameter)
   SOCKET socket;
   HANDLE hThread;
   INT error;
-  INT i;
 
   if (AbortSubmission != 0)
     goto done;
@@ -601,11 +599,9 @@ WinMain(HINSTANCE hInstance,
 	LPSTR lpszCmdLine,
 	int nCmdShow)
 {
-	WORD wVersionRequested;
-	WSADATA wsaData;
-	INT error;
-  INT version;
-  WCHAR *lc;
+  WORD wVersionRequested;
+  WSADATA wsaData;
+  INT error;
 
   hAppInstance = hInstance;
 
@@ -618,12 +614,12 @@ WinMain(HINSTANCE hInstance,
     LoadString(hAppInstance, IDS_FAILED_TO_INITIALIZE_WINSOCK, format, sizeof(format) / sizeof(WCHAR));
     wsprintf(message, format, error);
     MessageBox(NULL, message, NULL, MB_ICONWARNING);
-    return;
+    return 0;
   }
   
   CreateWizard();
 
- 	WSACleanup();
+  WSACleanup();
   
   return 0;
 }

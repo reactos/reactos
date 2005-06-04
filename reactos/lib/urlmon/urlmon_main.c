@@ -341,3 +341,17 @@ HRESULT WINAPI FaultInIEFeature( HWND hwnd, uCLSSPEC * pClassSpec,
     FIXME("%p %p %p %08lx\n", hwnd, pClassSpec, pQuery, flags);
     return E_NOTIMPL;
 }
+
+/**************************************************************************
+ *                 CoGetClassObjectFromURL (URLMON.@)
+ */
+HRESULT WINAPI CoGetClassObjectFromURL( REFCLSID rclsid, LPCWSTR szCodeURL, DWORD dwFileVersionMS,
+                                        DWORD dwFileVersionLS, LPCWSTR szContentType,
+                                        LPBINDCTX pBindCtx, DWORD dwClsContext, LPVOID pvReserved,
+                                        REFIID riid, LPVOID *ppv )
+{
+    FIXME("(%s %s %ld %ld %s %p %ld %p %s %p) Stub!\n", debugstr_guid(rclsid), debugstr_w(szCodeURL),
+	dwFileVersionMS, dwFileVersionLS, debugstr_w(szContentType), pBindCtx, dwClsContext, pvReserved,
+	debugstr_guid(riid), ppv);
+    return E_NOINTERFACE;
+}

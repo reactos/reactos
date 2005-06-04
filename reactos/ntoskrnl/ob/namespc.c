@@ -364,6 +364,7 @@ ObpParseDirectory(PVOID Object,
   PWSTR Start;
   PWSTR End;
   PVOID FoundObject;
+  KIRQL oldlvl;
 
   DPRINT("ObpParseDirectory(Object %x, Path %x, *Path %S)\n",
 	 Object,Path,*Path);
@@ -385,9 +386,11 @@ ObpParseDirectory(PVOID Object,
       *End = 0;
     }
 
+  KeAcquireSpinLock(&(((PDIRECTORY_OBJECT)Object)->Lock), &oldlvl);
   FoundObject = ObpFindEntryDirectory(Object, Start, Attributes);
   if (FoundObject == NULL)
     {
+      KeReleaseSpinLock(&(((PDIRECTORY_OBJECT)Object)->Lock), oldlvl);
       if (End != NULL)
 	{
 	  *End = L'\\';
@@ -399,7 +402,7 @@ ObpParseDirectory(PVOID Object,
 			     STANDARD_RIGHTS_REQUIRED,
 			     NULL,
 			     UserMode);
-
+  KeReleaseSpinLock(&(((PDIRECTORY_OBJECT)Object)->Lock), oldlvl);
   if (End != NULL)
     {
       *End = L'\\';

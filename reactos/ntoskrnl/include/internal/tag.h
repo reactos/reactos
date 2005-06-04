@@ -70,6 +70,9 @@
 /* formerly located in io/pnpnotify.c */
 #define TAG_PNP_NOTIFY  TAG('P', 'n', 'P', 'N')
 
+/* for io/pnproot.c */
+#define TAG_PNP_ROOT    TAG('P', 'n', 'P', 'R')
+
 /* formerly located in io/resource.c */
 #define TAG_IO_RESOURCE    TAG('R', 'S', 'R', 'C')
 

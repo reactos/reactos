@@ -1,7 +1,5 @@
 #include "../vgaddi.h"
 #include "../vgavideo/vgavideo.h"
-
-#define DBG
 #include <debug.h>
 
 BOOL STDCALL

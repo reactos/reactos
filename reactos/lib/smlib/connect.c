@@ -1,4 +1,4 @@
-/* $Id: connect.c 14015 2005-03-13 17:00:19Z ea $
+/* $Id$
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS system libraries

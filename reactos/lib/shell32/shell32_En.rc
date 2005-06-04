@@ -131,43 +131,9 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "&Browse...", 12288, 170, 63, 50, 14, WS_TABSTOP
 }
 
-/*
-	special folders
-*/
 STRINGTABLE DISCARDABLE
 {
-	IDS_DESKTOP		"Desktop"
-	IDS_MYCOMPUTER		"My Computer"
-}
-
-/*
-	context menus
-*/
-STRINGTABLE DISCARDABLE
-{
-	IDS_VIEW_LARGE		"Lar&ge Icons"
-	IDS_VIEW_SMALL		"S&mall Icons"
-	IDS_VIEW_LIST		"&List"
-	IDS_VIEW_DETAILS	"&Details"
-	IDS_SELECT		"Select"
-	IDS_OPEN		"Open"
-}
-
-STRINGTABLE DISCARDABLE
-{
-	IDS_CREATEFOLDER_DENIED "Can not create new Folder: Permission denied."
-	IDS_CREATEFOLDER_CAPTION "Error during creation of a new folder"
-	IDS_DELETEITEM_CAPTION "Confirm file delete"
-	IDS_DELETEFOLDER_CAPTION "Confirm folder delete"
-	IDS_DELETEITEM_TEXT "Are you sure you want to delete '%1'?"
-	IDS_DELETEMULTIPLE_TEXT "Are you sure you want to delete these %1 items?"
-	IDS_OVERWRITEFILE_TEXT "OverWrite File %1?"
-	IDS_OVERWRITEFILE_CAPTION "Confirm File OverWrite"
-}
-
-/*	columns in the shellview	*/
-STRINGTABLE
-BEGIN
+        /* columns in the shellview */
 	IDS_SHV_COLUMN1		"File"
 	IDS_SHV_COLUMN2		"Size"
 	IDS_SHV_COLUMN3		"Type"
@@ -177,20 +143,37 @@ BEGIN
 	IDS_SHV_COLUMN7		"Size available"
 	IDS_SHV_COLUMN8		"Name"
 	IDS_SHV_COLUMN9		"Comments"
-END
+	IDS_SHV_COLUMN10	"Owner"
+	IDS_SHV_COLUMN11	"Group"
 
-/* message box strings */
-STRINGTABLE DISCARDABLE
-{
+        /* special folders */
+	IDS_DESKTOP		"Desktop"
+	IDS_MYCOMPUTER		"My Computer"
+
+        /* context menus */
+	IDS_VIEW_LARGE		"Lar&ge Icons"
+	IDS_VIEW_SMALL		"S&mall Icons"
+	IDS_VIEW_LIST		"&List"
+	IDS_VIEW_DETAILS	"&Details"
+	IDS_SELECT		"Select"
+	IDS_OPEN		"Open"
+
+	IDS_CREATEFOLDER_DENIED "Unable to create new Folder: Permission denied."
+	IDS_CREATEFOLDER_CAPTION "Error during creation of a new folder"
+	IDS_DELETEITEM_CAPTION "Confirm file deletion"
+	IDS_DELETEFOLDER_CAPTION "Confirm folder deletion"
+	IDS_DELETEITEM_TEXT "Are you sure you want to delete '%1'?"
+	IDS_DELETEMULTIPLE_TEXT "Are you sure you want to delete these %1 items?"
+	IDS_OVERWRITEFILE_TEXT "OverWrite File %1?"
+	IDS_OVERWRITEFILE_CAPTION "Confirm File OverWrite"
+
+        /* message box strings */
 	IDS_RESTART_TITLE	"Restart"
 	IDS_RESTART_PROMPT	"Do you want to restart the system?"
 	IDS_SHUTDOWN_TITLE	"Shutdown"
 	IDS_SHUTDOWN_PROMPT	"Do you want to shutdown?"
-}
 
-/* shell folder path default values */
-STRINGTABLE DISCARDABLE
-{
+        /* shell folder path default values */
 	IDS_PROGRAMS                "Start Menu\\Programs"
 	IDS_PERSONAL                "My Documents"
 	IDS_FAVORITES               "Favorites"

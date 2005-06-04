@@ -1,4 +1,4 @@
-/* $Id: execpgm.c 13731 2005-02-23 23:37:06Z ea $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

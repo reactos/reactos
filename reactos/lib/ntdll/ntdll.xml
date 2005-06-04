@@ -1,0 +1,96 @@
+<module name="ntdll" type="nativedll" baseaddress="${BASEADDRESS_NTDLL}" installbase="system32" installname="ntdll.dll">
+	<bootstrap base="reactos/system32" />
+	<importlibrary definition="def/ntdll.def" />
+	<define name="__NTDLL__" />
+	<define name="_DISABLE_TIDENTS" />
+	<library>rtl</library>
+	<library>rosrtl</library>
+	<library>string</library>
+	<linkerflag>-lgcc</linkerflag>
+	<directory name="csr">
+		<file>capture.c</file>
+		<file>lpc.c</file>
+		<file>probe.c</file>
+		<file>thread.c</file>
+	</directory>
+	<directory name="dbg">
+		<file>brkpoint.c</file>
+		<file>debug.c</file>
+		<file>print.c</file>
+	</directory>
+	<directory name="ldr">
+		<file>entry.S</file>
+		<file>res.c</file>
+		<file>startup.c</file>
+		<file>utils.c</file>
+	</directory>
+	<directory name="main">
+		<file>dllmain.c</file>
+	</directory>
+	<directory name="rtl">
+		<directory name="i386">
+			<file>ftol.c</file>
+		</directory>
+		<file>apc.c</file>
+		<file>atom.c</file>
+		<file>callback.c</file>
+		<file>crc32.c</file>
+		<file>critical.c</file>
+		<file>dbgbuffer.c</file>
+		<file>exception.c</file>
+		<file>handle.c</file>
+		<file>intrlck.c</file>
+		<file>libsupp.c</file>
+		<file>math.c</file>
+		<file>message.c</file>
+		<file>misc.c</file>
+		<file>path.c</file>
+		<file>process.c</file>
+		<file>propvar.c</file>
+		<file>rangelist.c</file>
+		<file>resource.c</file>
+		<file>teb.c</file>
+		<file>timerqueue.c</file>
+	</directory>
+	<directory name="stdio">
+		<file>sprintf.c</file>
+		<file>sscanf.c</file>
+		<file>swprintf.c</file>
+	</directory>
+	<directory name="stdlib">
+		<file>abs.c</file>
+		<file>atoi64.c</file>
+		<file>atoi.c</file>
+		<file>atol.c</file>
+		<file>bsearch.c</file>
+		<file>itoa.c</file>
+		<file>itow.c</file>
+		<file>labs.c</file>
+		<file>lfind.c</file>
+		<file>mbstowcs.c</file>
+		<file>splitp.c</file>
+		<file>strtol.c</file>
+		<file>strtoul.c</file>
+		<file>wcstol.c</file>
+		<file>wcstombs.c</file>
+		<file>wcstoul.c</file>
+		<file>wtoi64.c</file>
+		<file>wtoi.c</file>
+		<file>wtol.c</file>
+	</directory>
+	<directory name="string">
+		<file>ctype.c</file>
+		<file>memicmp.c</file>
+		<file>stricmp.c</file>
+		<file>strlwr.c</file>
+		<file>strnicmp.c</file>
+		<file>strpbrk.c</file>
+		<file>strstr.c</file>
+		<file>strupr.c</file>
+		<file>wstring.c</file>
+	</directory>
+	<directory name="def">
+		<file>ntdll.rc</file>
+	</directory>
+	<file>napi.S</file>
+</module>

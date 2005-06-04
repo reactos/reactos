@@ -1,0 +1,8 @@
+<module name="format" type="win32cui" installbase="system32" installname="format.exe" warnings="true">
+	<include base="format">.</include>
+	<define name="__USE_W32API" />
+	<library>ntdll</library>
+	<library>kernel32</library>
+	<library>fmifs</library>
+	<file>format.c</file>
+</module>

@@ -1,0 +1,8 @@
+<module name="dsound" type="win32dll" baseaddress="${BASEADDRESS_DSOUND}" installbase="system32" installname="dsound.dll">
+	<importlibrary definition="dsound.def" />
+	<include base="dsound">.</include>
+	<define name="_DISABLE_TIDENTS" />
+	<define name="__USE_W32API" />
+	<library>kernel32</library>
+	<file>dsound.c</file>
+</module>
