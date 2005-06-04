@@ -517,7 +517,7 @@ void my_interruptible_sleep_on(PKEVENT evnt);
 
 #define flush_scheduled_work() do {} while(0)
 #define refrigerator(x)        do {} while(0)
-#define signal_pending(x)      1  // fall through threads
+#define signal_pending(x)      0  // Don't fall through threads! ReactOS implements this correctly
 #define complete_and_exit(a,b) return 0
 
 //#define kill_proc(a,b,c)     0

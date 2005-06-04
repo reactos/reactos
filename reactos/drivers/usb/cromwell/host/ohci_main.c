@@ -125,7 +125,8 @@ VOID STDCALL DriverUnload(PDRIVER_OBJECT DriverObject)
 	ohci_hcd_pci_cleanup();
 }
 
-NTSTATUS InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
+NTSTATUS
+InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 {
 	NTSTATUS Status;
 	POHCI_DEVICE_EXTENSION DeviceExtension = (POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -134,7 +135,7 @@ NTSTATUS InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 	dev = ExAllocatePoolWithTag(PagedPool, sizeof(struct pci_dev), USB_OHCI_TAG);
 	
 	init_wrapper(dev);
-	dev->irq = DeviceExtension->InterruptLevel;
+	dev->irq = DeviceExtension->InterruptVector;
 	dev->dev_ext = (PVOID)DeviceExtension;
 	dev->slot_name = ExAllocatePoolWithTag(NonPagedPool, 128, USB_OHCI_TAG); // 128 max len for slot name
 
@@ -151,7 +152,7 @@ NTSTATUS InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 	// Probe device with real id now
 	ohci_pci_driver.probe(dev, pci_ids);
 
-	DPRINT("InitLinuxWrapper() done\n");
+	DPRINT1("InitLinuxWrapper() done\n");
 
 	return STATUS_SUCCESS;
 }

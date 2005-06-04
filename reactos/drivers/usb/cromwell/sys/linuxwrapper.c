@@ -126,6 +126,8 @@ int my_kernel_thread(int STDCALL (*handler)(void*), void* parm, int flags)
 			     (PKSTART_ROUTINE)handler,
 				 parm);
 
+	DPRINT1("usbcore: Created system thread %d\n", (int)hThread);
+
     return (int)hThread; // FIXME: Correct?
 }
 

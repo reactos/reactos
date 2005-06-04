@@ -1019,6 +1019,7 @@ static void hub_events(void)
 	 * safe since we delete the hub from the event list.
 	 * Not the most efficient, but avoids deadlocks.
 	 */
+	DPRINT1("hub_events() called\n");
 
 	while (m<5) {
 		m++;
@@ -1138,7 +1139,8 @@ static void hub_events(void)
 	spin_unlock_irqrestore(&hub_event_lock, flags);
 }
 
-static int hub_thread(void *__hub)
+// ReactOS: STDCALL is needed here
+static int STDCALL hub_thread(void *__hub)
 {
 	/*
 	 * This thread doesn't need any user-level access,
@@ -1149,14 +1151,25 @@ static int hub_thread(void *__hub)
 	allow_signal(SIGKILL);
 	/* Send me a signal to get me die (for debugging) */
 	do {
-		
+
+		/* The following is just for debug */
+		inc_jiffies(1);
+        do_all_timers();
+        handle_irqs(-1);
+		/* End of debug hack*/
+
 		hub_events();
+
+		/* The following is just for debug */
+        handle_irqs(-1);
+		/* End of debug hack*/
+
 
 		//FIXME: Correct this
 		//wait_event_interruptible(khubd_wait, !list_empty(&hub_event_list)); // interruptable_sleep_on analog - below
-		while (!list_empty(&hub_event_list)) {
-			interruptible_sleep_on(&khubd_wait);
-		}
+		//while (!list_empty(&hub_event_list)) {
+		//	interruptible_sleep_on(&khubd_wait);
+		//}
 
 		if (current->flags & PF_FREEZE)
 			refrigerator(PF_IOTHREAD);
