@@ -26,6 +26,11 @@
 #endif /* __GNUC__ */
 #endif
 
+#if 0
+#undef ps
+#define ps(args...) DPRINT1(args)
+#endif
+
 #define NDEBUG
 #include <internal/debug.h>
 
