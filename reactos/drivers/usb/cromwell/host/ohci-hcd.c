@@ -520,7 +520,7 @@ static int hc_start (struct ohci_hcd *ohci)
 	(void) readl (&ohci->regs->control);
 
 	// POTPGT delay is bits 24-31, in 2 ms units.
-	mdelay ((roothub_a (ohci) >> 23) & 0x1fe);
+	mdelay (((int)(roothub_a (ohci) >> 23) & 0x1fe));
  
 	/* connect the virtual root hub */
 	bus = hcd_to_bus (&ohci->hcd);
@@ -552,7 +552,8 @@ static int hc_start (struct ohci_hcd *ohci)
 
 /* an interrupt happens */
 
-static void ohci_irq (struct usb_hcd *hcd, struct pt_regs *ptregs)
+static
+int ohci_irq (struct usb_hcd *hcd, struct pt_regs *ptregs)
 {
 	struct ohci_hcd		*ohci = hcd_to_ohci (hcd);
 	struct ohci_regs	*regs = ohci->regs;
@@ -567,11 +568,11 @@ static void ohci_irq (struct usb_hcd *hcd, struct pt_regs *ptregs)
 	} else if ((ints = readl (&regs->intrstatus)) == ~(u32)0) {
 		disable (ohci);
 		ohci_dbg (ohci, "device removed!\n");
-		return;
+		return 0;
 
 	/* interrupt for some other device? */
 	} else if ((ints &= readl (&regs->intrenable)) == 0) {
-		return;
+		return 0;
 	} 
 
 	if (ints & OHCI_INTR_UE) {
@@ -606,6 +607,7 @@ static void ohci_irq (struct usb_hcd *hcd, struct pt_regs *ptregs)
 	writel (OHCI_INTR_MIE, &regs->intrenable);	
 	// flush those pci writes
 	(void) readl (&ohci->regs->control);
+	return 0;
 }
 
 /*-------------------------------------------------------------------------*/

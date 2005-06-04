@@ -28,8 +28,8 @@ BOOLEAN INIT_FUNCTION
 SepInitSDs(VOID)
 {
   /* Create PublicDefaultSd */
-  SePublicDefaultSd = ExAllocatePool(NonPagedPool,
-				     sizeof(SECURITY_DESCRIPTOR));
+  SePublicDefaultSd = ExAllocatePoolWithTag(PagedPool,
+				     sizeof(SECURITY_DESCRIPTOR), TAG_SD);
   if (SePublicDefaultSd == NULL)
     return FALSE;
 
@@ -41,8 +41,8 @@ SepInitSDs(VOID)
 			       FALSE);
 
   /* Create PublicDefaultUnrestrictedSd */
-  SePublicDefaultUnrestrictedSd = ExAllocatePool(NonPagedPool,
-						 sizeof(SECURITY_DESCRIPTOR));
+  SePublicDefaultUnrestrictedSd = ExAllocatePoolWithTag(PagedPool,
+						 sizeof(SECURITY_DESCRIPTOR), TAG_SD);
   if (SePublicDefaultUnrestrictedSd == NULL)
     return FALSE;
 
@@ -54,8 +54,8 @@ SepInitSDs(VOID)
 			       FALSE);
 
   /* Create PublicOpenSd */
-  SePublicOpenSd = ExAllocatePool(NonPagedPool,
-				  sizeof(SECURITY_DESCRIPTOR));
+  SePublicOpenSd = ExAllocatePoolWithTag(PagedPool,
+				  sizeof(SECURITY_DESCRIPTOR), TAG_SD);
   if (SePublicOpenSd == NULL)
     return FALSE;
 
@@ -67,8 +67,8 @@ SepInitSDs(VOID)
 			       FALSE);
 
   /* Create PublicOpenUnrestrictedSd */
-  SePublicOpenUnrestrictedSd = ExAllocatePool(NonPagedPool,
-					      sizeof(SECURITY_DESCRIPTOR));
+  SePublicOpenUnrestrictedSd = ExAllocatePoolWithTag(PagedPool,
+					      sizeof(SECURITY_DESCRIPTOR), TAG_SD);
   if (SePublicOpenUnrestrictedSd == NULL)
     return FALSE;
 
@@ -80,8 +80,8 @@ SepInitSDs(VOID)
 			       FALSE);
 
   /* Create SystemDefaultSd */
-  SeSystemDefaultSd = ExAllocatePool(NonPagedPool,
-				     sizeof(SECURITY_DESCRIPTOR));
+  SeSystemDefaultSd = ExAllocatePoolWithTag(PagedPool,
+				     sizeof(SECURITY_DESCRIPTOR), TAG_SD);
   if (SeSystemDefaultSd == NULL)
     return FALSE;
 
@@ -93,8 +93,8 @@ SepInitSDs(VOID)
 			       FALSE);
 
   /* Create UnrestrictedSd */
-  SeUnrestrictedSd = ExAllocatePool(NonPagedPool,
-				    sizeof(SECURITY_DESCRIPTOR));
+  SeUnrestrictedSd = ExAllocatePoolWithTag(PagedPool,
+				    sizeof(SECURITY_DESCRIPTOR), TAG_SD);
   if (SeUnrestrictedSd == NULL)
     return FALSE;
 

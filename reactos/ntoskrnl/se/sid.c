@@ -15,9 +15,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#define TAG_SID    TAG('S', 'I', 'D', 'T')
-
-
 /* GLOBALS ******************************************************************/
 
 SID_IDENTIFIER_AUTHORITY SeNullSidAuthority = {SECURITY_NULL_SID_AUTHORITY};
@@ -70,7 +67,7 @@ SepInitSecurityIDs(VOID)
   SidLength2 = RtlLengthRequiredSid(2);
 
   /* create NullSid */
-  SeNullSid = ExAllocatePoolWithTag(NonPagedPool,
+  SeNullSid = ExAllocatePoolWithTag(PagedPool,
 				    SidLength1,
 				    TAG_SID);
   if (SeNullSid == NULL)
@@ -84,7 +81,7 @@ SepInitSecurityIDs(VOID)
   *SubAuthority = SECURITY_NULL_RID;
 
   /* create WorldSid */
-  SeWorldSid = ExAllocatePoolWithTag(NonPagedPool,
+  SeWorldSid = ExAllocatePoolWithTag(PagedPool,
 				     SidLength1,
 				     TAG_SID);
   if (SeWorldSid == NULL)
@@ -98,7 +95,7 @@ SepInitSecurityIDs(VOID)
   *SubAuthority = SECURITY_WORLD_RID;
 
   /* create LocalSid */
-  SeLocalSid = ExAllocatePoolWithTag(NonPagedPool,
+  SeLocalSid = ExAllocatePoolWithTag(PagedPool,
 				     SidLength1,
 				     TAG_SID);
   if (SeLocalSid == NULL)
@@ -112,7 +109,7 @@ SepInitSecurityIDs(VOID)
   *SubAuthority = SECURITY_LOCAL_RID;
 
   /* create CreatorOwnerSid */
-  SeCreatorOwnerSid = ExAllocatePoolWithTag(NonPagedPool,
+  SeCreatorOwnerSid = ExAllocatePoolWithTag(PagedPool,
 					    SidLength1,
 					    TAG_SID);
   if (SeCreatorOwnerSid == NULL)
@@ -126,7 +123,7 @@ SepInitSecurityIDs(VOID)
   *SubAuthority = SECURITY_CREATOR_OWNER_RID;
 
   /* create CreatorGroupSid */
-  SeCreatorGroupSid = ExAllocatePoolWithTag(NonPagedPool,
+  SeCreatorGroupSid = ExAllocatePoolWithTag(PagedPool,
 					    SidLength1,
 					    TAG_SID);
   if (SeCreatorGroupSid == NULL)
@@ -140,7 +137,7 @@ SepInitSecurityIDs(VOID)
   *SubAuthority = SECURITY_CREATOR_GROUP_RID;
 
   /* create CreatorOwnerServerSid */
-  SeCreatorOwnerServerSid = ExAllocatePoolWithTag(NonPagedPool,
+  SeCreatorOwnerServerSid = ExAllocatePoolWithTag(PagedPool,
 						  SidLength1,
 						  TAG_SID);
   if (SeCreatorOwnerServerSid == NULL)
@@ -154,7 +151,7 @@ SepInitSecurityIDs(VOID)
   *SubAuthority = SECURITY_CREATOR_OWNER_SERVER_RID;
 
   /* create CreatorGroupServerSid */
-  SeCreatorGroupServerSid = ExAllocatePoolWithTag(NonPagedPool,
+  SeCreatorGroupServerSid = ExAllocatePoolWithTag(PagedPool,
 						  SidLength1,
 						  TAG_SID);
   if (SeCreatorGroupServerSid == NULL)
@@ -169,7 +166,7 @@ SepInitSecurityIDs(VOID)
 
 
   /* create NtAuthoritySid */
-  SeNtAuthoritySid = ExAllocatePoolWithTag(NonPagedPool,
+  SeNtAuthoritySid = ExAllocatePoolWithTag(PagedPool,
 					   SidLength0,
 					   TAG_SID);
   if (SeNtAuthoritySid == NULL)
@@ -180,7 +177,7 @@ SepInitSecurityIDs(VOID)
 		   0);
 
   /* create DialupSid */
-  SeDialupSid = ExAllocatePoolWithTag(NonPagedPool,
+  SeDialupSid = ExAllocatePoolWithTag(PagedPool,
 				      SidLength1,
 				      TAG_SID);
   if (SeDialupSid == NULL)
@@ -194,7 +191,7 @@ SepInitSecurityIDs(VOID)
   *SubAuthority = SECURITY_DIALUP_RID;
 
   /* create NetworkSid */
-  SeNetworkSid = ExAllocatePoolWithTag(NonPagedPool,
+  SeNetworkSid = ExAllocatePoolWithTag(PagedPool,
 				       SidLength1,
 				       TAG_SID);
   if (SeNetworkSid == NULL)
@@ -208,7 +205,7 @@ SepInitSecurityIDs(VOID)
   *SubAuthority = SECURITY_NETWORK_RID;
 
   /* create BatchSid */
-  SeBatchSid = ExAllocatePoolWithTag(NonPagedPool,
+  SeBatchSid = ExAllocatePoolWithTag(PagedPool,
 				     SidLength1,
 				     TAG_SID);
   if (SeBatchSid == NULL)
@@ -222,7 +219,7 @@ SepInitSecurityIDs(VOID)
   *SubAuthority = SECURITY_BATCH_RID;
 
   /* create InteractiveSid */
-  SeInteractiveSid = ExAllocatePoolWithTag(NonPagedPool,
+  SeInteractiveSid = ExAllocatePoolWithTag(PagedPool,
 					   SidLength1,
 					   TAG_SID);
   if (SeInteractiveSid == NULL)
@@ -236,7 +233,7 @@ SepInitSecurityIDs(VOID)
   *SubAuthority = SECURITY_INTERACTIVE_RID;
 
   /* create ServiceSid */
-  SeServiceSid = ExAllocatePoolWithTag(NonPagedPool,
+  SeServiceSid = ExAllocatePoolWithTag(PagedPool,
 				       SidLength1,
 				       TAG_SID);
   if (SeServiceSid == NULL)
@@ -250,7 +247,7 @@ SepInitSecurityIDs(VOID)
   *SubAuthority = SECURITY_SERVICE_RID;
 
   /* create AnonymousLogonSid */
-  SeAnonymousLogonSid = ExAllocatePoolWithTag(NonPagedPool,
+  SeAnonymousLogonSid = ExAllocatePoolWithTag(PagedPool,
 					      SidLength1,
 					      TAG_SID);
   if (SeAnonymousLogonSid == NULL)
@@ -264,7 +261,7 @@ SepInitSecurityIDs(VOID)
   *SubAuthority = SECURITY_ANONYMOUS_LOGON_RID;
 
   /* create PrincipalSelfSid */
-  SePrincipalSelfSid = ExAllocatePoolWithTag(NonPagedPool,
+  SePrincipalSelfSid = ExAllocatePoolWithTag(PagedPool,
 					     SidLength1,
 					     TAG_SID);
   if (SePrincipalSelfSid == NULL)
@@ -278,7 +275,7 @@ SepInitSecurityIDs(VOID)
   *SubAuthority = SECURITY_PRINCIPAL_SELF_RID;
 
   /* create LocalSystemSid */
-  SeLocalSystemSid = ExAllocatePoolWithTag(NonPagedPool,
+  SeLocalSystemSid = ExAllocatePoolWithTag(PagedPool,
 					   SidLength1,
 					   TAG_SID);
   if (SeLocalSystemSid == NULL)
@@ -292,7 +289,7 @@ SepInitSecurityIDs(VOID)
   *SubAuthority = SECURITY_LOCAL_SYSTEM_RID;
 
   /* create AuthenticatedUserSid */
-  SeAuthenticatedUserSid = ExAllocatePoolWithTag(NonPagedPool,
+  SeAuthenticatedUserSid = ExAllocatePoolWithTag(PagedPool,
 						 SidLength1,
 						 TAG_SID);
   if (SeAuthenticatedUserSid == NULL)
@@ -306,7 +303,7 @@ SepInitSecurityIDs(VOID)
   *SubAuthority = SECURITY_AUTHENTICATED_USER_RID;
 
   /* create RestrictedCodeSid */
-  SeRestrictedCodeSid = ExAllocatePoolWithTag(NonPagedPool,
+  SeRestrictedCodeSid = ExAllocatePoolWithTag(PagedPool,
 					      SidLength1,
 					      TAG_SID);
   if (SeRestrictedCodeSid == NULL)
@@ -320,7 +317,7 @@ SepInitSecurityIDs(VOID)
   *SubAuthority = SECURITY_RESTRICTED_CODE_RID;
 
   /* create AliasAdminsSid */
-  SeAliasAdminsSid = ExAllocatePoolWithTag(NonPagedPool,
+  SeAliasAdminsSid = ExAllocatePoolWithTag(PagedPool,
 					   SidLength2,
 					   TAG_SID);
   if (SeAliasAdminsSid == NULL)
@@ -338,7 +335,7 @@ SepInitSecurityIDs(VOID)
   *SubAuthority = DOMAIN_ALIAS_RID_ADMINS;
 
   /* create AliasUsersSid */
-  SeAliasUsersSid = ExAllocatePoolWithTag(NonPagedPool,
+  SeAliasUsersSid = ExAllocatePoolWithTag(PagedPool,
 					  SidLength2,
 					  TAG_SID);
   if (SeAliasUsersSid == NULL)
@@ -356,7 +353,7 @@ SepInitSecurityIDs(VOID)
   *SubAuthority = DOMAIN_ALIAS_RID_USERS;
 
   /* create AliasGuestsSid */
-  SeAliasGuestsSid = ExAllocatePoolWithTag(NonPagedPool,
+  SeAliasGuestsSid = ExAllocatePoolWithTag(PagedPool,
 					   SidLength2,
 					   TAG_SID);
   if (SeAliasGuestsSid == NULL)
@@ -374,7 +371,7 @@ SepInitSecurityIDs(VOID)
   *SubAuthority = DOMAIN_ALIAS_RID_GUESTS;
 
   /* create AliasPowerUsersSid */
-  SeAliasPowerUsersSid = ExAllocatePoolWithTag(NonPagedPool,
+  SeAliasPowerUsersSid = ExAllocatePoolWithTag(PagedPool,
 					       SidLength2,
 					       TAG_SID);
   if (SeAliasPowerUsersSid == NULL)
@@ -392,7 +389,7 @@ SepInitSecurityIDs(VOID)
   *SubAuthority = DOMAIN_ALIAS_RID_POWER_USERS;
 
   /* create AliasAccountOpsSid */
-  SeAliasAccountOpsSid = ExAllocatePoolWithTag(NonPagedPool,
+  SeAliasAccountOpsSid = ExAllocatePoolWithTag(PagedPool,
 					       SidLength2,
 					       TAG_SID);
   if (SeAliasAccountOpsSid == NULL)
@@ -410,7 +407,7 @@ SepInitSecurityIDs(VOID)
   *SubAuthority = DOMAIN_ALIAS_RID_ACCOUNT_OPS;
 
   /* create AliasSystemOpsSid */
-  SeAliasSystemOpsSid = ExAllocatePoolWithTag(NonPagedPool,
+  SeAliasSystemOpsSid = ExAllocatePoolWithTag(PagedPool,
 					      SidLength2,
 					      TAG_SID);
   if (SeAliasSystemOpsSid == NULL)
@@ -428,7 +425,7 @@ SepInitSecurityIDs(VOID)
   *SubAuthority = DOMAIN_ALIAS_RID_SYSTEM_OPS;
 
   /* create AliasPrintOpsSid */
-  SeAliasPrintOpsSid = ExAllocatePoolWithTag(NonPagedPool,
+  SeAliasPrintOpsSid = ExAllocatePoolWithTag(PagedPool,
 					     SidLength2,
 					     TAG_SID);
   if (SeAliasPrintOpsSid == NULL)
@@ -446,7 +443,7 @@ SepInitSecurityIDs(VOID)
   *SubAuthority = DOMAIN_ALIAS_RID_PRINT_OPS;
 
   /* create AliasBackupOpsSid */
-  SeAliasBackupOpsSid = ExAllocatePoolWithTag(NonPagedPool,
+  SeAliasBackupOpsSid = ExAllocatePoolWithTag(PagedPool,
 					      SidLength2,
 					      TAG_SID);
   if (SeAliasBackupOpsSid == NULL)

@@ -10,6 +10,7 @@
 
 #include <ndissys.h>
 
+struct _ADAPTER_BINDING;
 
 typedef struct _HARDWARE_ADDRESS {
     union {
@@ -77,9 +78,9 @@ typedef struct _LOGICAL_ADAPTER
     KDPC                        MiniportDpc;            /* DPC routine for adapter */
     BOOLEAN                     MiniportBusy;           /* A MiniportXxx routine is executing */
     ULONG                       WorkQueueLevel;         /* Number of used work item buffers */
-    NDIS_MINIPORT_WORK_ITEM     WorkQueue[NDIS_MINIPORT_WORK_QUEUE_SIZE];
-    PNDIS_MINIPORT_WORK_ITEM    WorkQueueHead;          /* Head of work queue */
-    PNDIS_MINIPORT_WORK_ITEM    WorkQueueTail;          /* Tail of work queue */
+    INTERNAL_NDIS_MINIPORT_WORK_ITEM     WorkQueue[NDIS_MINIPORT_WORK_QUEUE_SIZE];
+    PINTERNAL_NDIS_MINIPORT_WORK_ITEM    WorkQueueHead;          /* Head of work queue */
+    PINTERNAL_NDIS_MINIPORT_WORK_ITEM    WorkQueueTail;          /* Tail of work queue */
     LIST_ENTRY                  ListEntry;              /* Entry on global list */
     LIST_ENTRY                  MiniportListEntry;      /* Entry on miniport driver list */
     LIST_ENTRY                  ProtocolListHead;       /* List of bound protocols */
@@ -145,7 +146,7 @@ MiniQueryInformation(
 NDIS_STATUS
 FASTCALL
 MiniQueueWorkItem(
-    PLOGICAL_ADAPTER    Adapter,
+    struct _ADAPTER_BINDING *AdapterBinding,
     NDIS_WORK_ITEM_TYPE WorkItemType,
     PVOID               WorkItemContext);
 
@@ -153,12 +154,13 @@ NDIS_STATUS
 FASTCALL
 MiniDequeueWorkItem(
     PLOGICAL_ADAPTER    Adapter,
+    struct _ADAPTER_BINDING **AdapterBinding,
     NDIS_WORK_ITEM_TYPE *WorkItemType,
     PVOID               *WorkItemContext);
 
 NDIS_STATUS
 MiniDoRequest(
-    PLOGICAL_ADAPTER Adapter,
+    struct _ADAPTER_BINDING *AdapterBinding,
     PNDIS_REQUEST NdisRequest);
 
 BOOLEAN

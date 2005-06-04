@@ -59,9 +59,6 @@ static GENERIC_MAPPING MmpSectionMapping = {
          STANDARD_RIGHTS_EXECUTE | SECTION_MAP_EXECUTE,
          SECTION_ALL_ACCESS};
 
-#define TAG_MM_SECTION_SEGMENT   TAG('M', 'M', 'S', 'S')
-#define TAG_SECTION_PAGE_TABLE   TAG('M', 'S', 'P', 'T')
-
 #define PAGE_FROM_SSE(E)         ((E) & 0xFFFFF000)
 #define PFN_FROM_SSE(E)          ((E) >> PAGE_SHIFT)
 #define IS_SWAP_FROM_SSE(E)      ((E) & 0x00000001)
@@ -3218,14 +3215,14 @@ MmInitSectionImplementation(VOID)
    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
    UNICODE_STRING Name;
 
-   DPRINT1("Creating Section Object Type\n");
+   DPRINT("Creating Section Object Type\n");
   
    /* Initialize the Section object type  */
    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
    RtlInitUnicodeString(&Name, L"Section");
    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-   ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(SECTION_OBJECT);
-   ObjectTypeInitializer.PoolType = NonPagedPool;
+   ObjectTypeInitializer.DefaultPagedPoolCharge = sizeof(SECTION_OBJECT);
+   ObjectTypeInitializer.PoolType = PagedPool;
    ObjectTypeInitializer.UseDefaultObject = TRUE;
    ObjectTypeInitializer.GenericMapping = MmpSectionMapping;
    ObjectTypeInitializer.DeleteProcedure = MmpDeleteSection;
@@ -3640,7 +3637,7 @@ ExeFmtpAllocateSegments(IN ULONG NrSegments)
  /* TODO: check for integer overflow */
  SizeOfSegments = sizeof(MM_SECTION_SEGMENT) * NrSegments;
 
- Segments = ExAllocatePoolWithTag(NonPagedPool,
+ Segments = ExAllocatePoolWithTag(PagedPool,
                                   SizeOfSegments,
                                   TAG_MM_SECTION_SEGMENT);
 

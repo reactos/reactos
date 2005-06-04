@@ -76,8 +76,6 @@ PWSTR ArcTypes[42] = {
     L"Undefined"
 };
 
-#define TAG_IO_RESOURCE    TAG('R', 'S', 'R', 'C')
-
 /* PRIVATE FUNCTIONS **********************************************************/
 
 /*

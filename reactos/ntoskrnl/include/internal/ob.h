@@ -16,44 +16,45 @@
 
 struct _EPROCESS;
 
-typedef struct
-{
-   CSHORT Type;
-   CSHORT Size;
-} COMMON_BODY_HEADER, *PCOMMON_BODY_HEADER;
-
 typedef PVOID POBJECT;
 
-typedef struct _OBJECT_HEADER
-/*
- * PURPOSE: Header for every object managed by the object manager
- */
+typedef struct _QUAD
 {
-   POBJECT_HEADER_NAME_INFO NameInfo;
-   LIST_ENTRY Entry;
-   LONG RefCount;
-   LONG HandleCount;
-   BOOLEAN Permanent;
-   BOOLEAN Inherit;
-   POBJECT_TYPE ObjectType;
-   POBJECT_CREATE_INFORMATION ObjectCreateInfo;
-   PSECURITY_DESCRIPTOR SecurityDescriptor;
+    union {
+        LONGLONG UseThisFieldToCopy;
+        float DoNotUseThisField;
+    };
+} QUAD, *PQUAD;
 
-   /*
-    * PURPOSE: Object type
-    * NOTE: This overlaps the first member of the object body
-    */
-   CSHORT Type;
+#define OB_FLAG_CREATE_INFO    0x01 // has OBJECT_CREATE_INFO
+#define OB_FLAG_KERNEL_MODE    0x02 // created by kernel
+#define OB_FLAG_CREATOR_INFO   0x04 // has OBJECT_CREATOR_INFO
+#define OB_FLAG_EXCLUSIVE      0x08 // OBJ_EXCLUSIVE
+#define OB_FLAG_PERMANENT      0x10 // OBJ_PERMANENT
+#define OB_FLAG_SECURITY       0x20 // has security descriptor
+#define OB_FLAG_SINGLE_PROCESS 0x40 // no HandleDBList
 
-   /*
-    * PURPOSE: Object size
-    * NOTE: This overlaps the second member of the object body
-    */
-   CSHORT Size;
-
-
+/* Will be moved to public headers once "Entry" is gone */
+typedef struct _OBJECT_HEADER
+{
+    LIST_ENTRY Entry;
+    LONG PointerCount;
+    union {
+        LONG HandleCount;
+        PVOID NextToFree;
+    };
+    POBJECT_TYPE Type;
+    UCHAR NameInfoOffset;
+    UCHAR HandleInfoOffset;
+    UCHAR QuotaInfoOffset;
+    UCHAR Flags;
+    union {
+        POBJECT_CREATE_INFORMATION ObjectCreateInfo;
+        PVOID QuotaBlockCharged;
+    };
+    PSECURITY_DESCRIPTOR SecurityDescriptor;
+    QUAD Body;
 } OBJECT_HEADER, *POBJECT_HEADER;
-
 
 typedef struct _DIRECTORY_OBJECT
 {
@@ -92,13 +93,19 @@ enum
    OBJTYP_MAX,
 };
 
-#define HEADER_TO_BODY(objhdr)                                                 \
-  (PVOID)((ULONG_PTR)objhdr + sizeof(OBJECT_HEADER) - sizeof(COMMON_BODY_HEADER))
-
 #define BODY_TO_HEADER(objbdy)                                                 \
-  CONTAINING_RECORD(&(((PCOMMON_BODY_HEADER)objbdy)->Type), OBJECT_HEADER, Type)
+  CONTAINING_RECORD((objbdy), OBJECT_HEADER, Body)
+  
+#define HEADER_TO_OBJECT_NAME(objhdr) ((POBJECT_HEADER_NAME_INFO)              \
+  (!(objhdr)->NameInfoOffset ? NULL: ((PCHAR)(objhdr) - (objhdr)->NameInfoOffset)))
+  
+#define HEADER_TO_HANDLE_INFO(objhdr) ((POBJECT_HEADER_HANDLE_INFO)            \
+  (!(objhdr)->HandleInfoOffset ? NULL: ((PCHAR)(objhdr) - (objhdr)->HandleInfoOffset)))
+  
+#define HEADER_TO_CREATOR_INFO(objhdr) ((POBJECT_HEADER_CREATOR_INFO)          \
+  (!((objhdr)->Flags & OB_FLAG_CREATOR_INFO) ? NULL: ((PCHAR)(objhdr) - sizeof(OBJECT_HEADER_CREATOR_INFO))))
 
-#define OBJECT_ALLOC_SIZE(ObjectSize) ((ObjectSize)+sizeof(OBJECT_HEADER)-sizeof(COMMON_BODY_HEADER))
+#define OBJECT_ALLOC_SIZE(ObjectSize) ((ObjectSize)+sizeof(OBJECT_HEADER))
 
 #define HANDLE_TO_EX_HANDLE(handle)                                            \
   (LONG)(((LONG)(handle) >> 2) - 1)

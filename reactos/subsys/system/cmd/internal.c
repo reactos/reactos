@@ -157,6 +157,11 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	LPTSTR dir;		/* pointer to the directory to change to */
 	LPTSTR lpOldPath;
 	size_t size, str_len;
+	WIN32_FIND_DATA FileData; 
+    HANDLE hSearch; 
+    DWORD dwAttrs;  
+    BOOL fFinished = FALSE; 
+ 
 
 	/*Should we better declare a variable containing _tsclen(dir) ? It's used a few times,
 	  but on the other hand paths are generally not very long*/
@@ -189,6 +194,15 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	  param[size] = _T('\0');
 	 }
 
+	}
+
+	str_len = _tcslen(param);
+	if (str_len==1) 
+	{
+	    if (param[0] == _T('*')) 
+	    {
+		    param[0] = _T('.');
+		}
 	}
 	
 	dir=param;
@@ -242,6 +256,49 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 
 	if (!SetCurrentDirectory (dir))
 	{
+
+	    hSearch = FindFirstFile(dir, &FileData); 
+        if (hSearch == INVALID_HANDLE_VALUE) 
+        { 
+	        ConOutFormatMessage(GetLastError());
+			free (lpOldPath);
+		    lpOldPath = NULL;
+            return 1;
+		}
+
+		
+        while (!fFinished) 
+        { 
+            dwAttrs = GetFileAttributes(FileData.cFileName); 
+#ifdef _DEBUG
+			DebugPrintf(_T("Search found folder :%s\n"),FileData.cFileName);
+#endif
+            if ((dwAttrs & FILE_ATTRIBUTE_DIRECTORY)) 
+            {
+			  FindClose(hSearch);		     
+	          // change folder
+			 if (!SetCurrentDirectory (FileData.cFileName))
+			 {
+				 ConOutFormatMessage(GetLastError());
+			     free (lpOldPath);
+		         lpOldPath = NULL;
+				 return 1;
+			 }
+				
+             
+			 return 0;
+             }
+        
+             else if (!FindNextFile(hSearch, &FileData)) 
+            {             
+		     FindClose(hSearch);
+			 ConOutFormatMessage(GetLastError());
+			 free (lpOldPath);
+		     lpOldPath = NULL;
+			 return 1;
+             }
+        }  
+
 		//ErrorMessage (GetLastError(), _T("CD"));
 		ConOutFormatMessage(GetLastError());
 

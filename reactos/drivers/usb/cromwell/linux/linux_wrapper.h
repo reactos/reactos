@@ -234,8 +234,8 @@ struct pci_driver {
         struct list_head node;
         char *name;
         const struct pci_device_id *id_table;   /* must be non-NULL for probe to be called */
-        int  (*probe)  (struct pci_dev *dev, const struct pci_device_id *id);   /* New device inserted */
-        void (*remove) (struct pci_dev *dev);   /* Device removed (NULL if not a hot-plug capable driver) */
+        int STDCALL (*probe)  (struct pci_dev *dev, const struct pci_device_id *id);   /* New device inserted */
+        void STDCALL (*remove) (struct pci_dev *dev);   /* Device removed (NULL if not a hot-plug capable driver) */
         int  (*save_state) (struct pci_dev *dev, u32 state);    /* Save Device Context */
         int  (*suspend) (struct pci_dev *dev, u32 state);       /* Device suspended */
         int  (*resume) (struct pci_dev *dev);                   /* Device woken up */
@@ -266,7 +266,7 @@ struct usbdevfs_hub_portinfo
 #define KERN_WARNING "WRN: "
 #define KERN_INFO "INF: "
 #define GFP_KERNEL 0
-#define GFP_ATOMIC 0
+#define GFP_ATOMIC 0x20
 #define GFP_NOIO 0
 #define SLAB_ATOMIC 0
 #define PCI_ANY_ID (~0)
@@ -328,7 +328,7 @@ struct usbdevfs_hub_portinfo
 
 #define inw(x) READ_PORT_USHORT((PUSHORT)(x))
 #define outw(x,p) WRITE_PORT_USHORT((PUSHORT)(p),(x))
-#define outl(x,p) WRITE_PORT_ULONG((PUSHORT)(p),(x))
+#define outl(x,p) WRITE_PORT_ULONG((PULONG)(p),(x))
 
 /* The kernel macro for list_for_each_entry makes nonsense (have no clue
  * why, this is just the same definition...) */
@@ -406,7 +406,7 @@ struct usbdevfs_hub_portinfo
 
 #define pci_pool_alloc(a,b,c)  my_pci_pool_alloc(a,b,c) 
 
-static void  __inline__ *my_pci_pool_alloc(void* pool, size_t size,
+static void __inline__ *my_pci_pool_alloc(void* pool, size_t size,
 						dma_addr_t *dma_handle)
 {
 	void* a;
@@ -479,8 +479,8 @@ int my_pci_module_init(struct pci_driver *x);
 #define PCI_DMA_FROMDEVICE
 #define PCI_DMA_TODEVICE
 
-#define PCI_ROM_RESOURCE 0
-#define IORESOURCE_IO 1
+#define PCI_ROM_RESOURCE 1
+#define IORESOURCE_IO CM_RESOURCE_PORT_IO
 
 #define DECLARE_WAITQUEUE(a,b) KEVENT a=0
 #define init_waitqueue_head(a) my_init_waitqueue_head(a)
@@ -757,7 +757,7 @@ static void __inline__ complete(struct completion *p)
 {
 	/* Wake up x->wait */
 	p->done++;
-	wake_up(&p->wait);
+	wake_up((PKEVENT)&p->wait);
 }
 
 #define kernel_thread(a,b,c) my_kernel_thread(a,b,c)
@@ -799,4 +799,5 @@ void do_all_timers(void);
 
 #define __KERNEL_DS   0x18
 
+int my_pci_write_config_word(struct pci_dev *, int, u16);
 

@@ -122,13 +122,13 @@ NtQueryObject (IN HANDLE ObjectHandle,
 	    BasicInfo->Attributes = HandleInfo.HandleAttributes;
 	    BasicInfo->GrantedAccess = HandleInfo.GrantedAccess;
 	    BasicInfo->HandleCount = ObjectHeader->HandleCount;
-	    BasicInfo->PointerCount = ObjectHeader->RefCount;
+	    BasicInfo->PointerCount = ObjectHeader->PointerCount;
 	    BasicInfo->PagedPoolUsage = 0; /* FIXME*/
 	    BasicInfo->NonPagedPoolUsage = 0; /* FIXME*/
 	    BasicInfo->NameInformationLength = 0; /* FIXME*/
 	    BasicInfo->TypeInformationLength = 0; /* FIXME*/
 	    BasicInfo->SecurityDescriptorLength = 0; /* FIXME*/
-	    if (ObjectHeader->ObjectType == ObSymbolicLinkType)
+	    if (ObjectHeader->Type == ObSymbolicLinkType)
 	      {
 		BasicInfo->CreateTime.QuadPart =
 		  ((PSYMLINK_OBJECT)Object)->CreateTime.QuadPart;
@@ -169,10 +169,10 @@ NtQueryObject (IN HANDLE ObjectHandle,
 	    break;
 	  }
 
-	RtlCopyUnicodeString(&typeinfo->Type,&ObjectHeader->ObjectType->TypeName);
+	RtlCopyUnicodeString(&typeinfo->Type,&ObjectHeader->Type->TypeName);
 	//This should be info from the object header, not the object type, right?
 	typeinfo->TotalHandles = ObjectHeader-> HandleCount;
-	typeinfo->ReferenceCount = ObjectHeader -> RefCount;
+	typeinfo->ReferenceCount = ObjectHeader -> PointerCount;
 	  }
 #endif
 	Status = STATUS_NOT_IMPLEMENTED;
@@ -223,9 +223,9 @@ ObpSetPermanentObject (IN PVOID ObjectBody, IN BOOLEAN Permanent)
   POBJECT_HEADER ObjectHeader;
 
   ObjectHeader = BODY_TO_HEADER(ObjectBody);
-  ObjectHeader->Permanent = Permanent;
+  ObjectHeader->Flags |= OB_FLAG_PERMANENT;
 
-  if (ObjectHeader->HandleCount == 0 && !Permanent && ObjectHeader->NameInfo->Directory)
+  if (ObjectHeader->HandleCount == 0 && !Permanent && HEADER_TO_OBJECT_NAME(ObjectHeader)->Directory)
   {
     /* Remove the object from the namespace */
     ObpRemoveEntryDirectory(ObjectHeader);

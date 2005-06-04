@@ -288,6 +288,10 @@ _main(ULONG MultiBootMagic,
     /* Initialize HAL */
     HalInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
+    /* Display separator + ReactOS version at start of the debug log */
+    DPRINT1("---------------------------------------------------------------\n");
+    DPRINT1("ReactOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
+
     /* Do general System Startup */
     KiSystemStartup(1);
 }

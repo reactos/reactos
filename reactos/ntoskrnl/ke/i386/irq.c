@@ -53,9 +53,7 @@ __asm__( \
   "pushl %esp\n\t" \
   "pushl %ebx\n\t" \
   "call	_KiInterruptDispatch\n\t" \
-  "popl	%eax\n\t" \
-  "popl	%eax\n\t" \
-  "popl	%eax\n\t" \
+  "addl	$0xC, %esp\n\t" \
   "popl	%gs\n\t" \
   "popl	%fs\n\t" \
   "popl	%es\n\t" \

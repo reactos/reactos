@@ -24,8 +24,6 @@ typedef struct _MM_RMAP_ENTRY
 }
 MM_RMAP_ENTRY, *PMM_RMAP_ENTRY;
 
-#define TAG_RMAP    TAG('R', 'M', 'A', 'P')
-
 /* GLOBALS ******************************************************************/
 
 static FAST_MUTEX RmapListLock;

@@ -512,7 +512,7 @@ CmiObjectQueryName (PVOID ObjectBody,
   else
     {
       /* KeyObject is the root key */
-      Status = ObQueryNameString (BODY_TO_HEADER(KeyObject)->NameInfo->Directory,
+      Status = ObQueryNameString (HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(KeyObject))->Directory,
 				  LocalInfo,
 				  MAX_PATH * sizeof(WCHAR),
 				  &LocalReturnLength);

@@ -908,6 +908,7 @@ IopAssignDeviceResources(
    PCM_PARTIAL_RESOURCE_DESCRIPTOR DescriptorRaw, DescriptorTranslated;
    ULONG NumberOfResources = 0;
    ULONG i;
+   NTSTATUS Status;
    
    /* Fill DeviceNode->ResourceList and DeviceNode->ResourceListTranslated;
     * by using DeviceNode->ResourceRequirements */
@@ -923,19 +924,25 @@ IopAssignDeviceResources(
    /* Actually, simply use resource list #0 as assigned resource list */
    ResourceList = &DeviceNode->ResourceRequirements->List[0];
    if (ResourceList->Version != 1 || ResourceList->Revision != 1)
-      return STATUS_REVISION_MISMATCH;
+   {
+      Status = STATUS_REVISION_MISMATCH;
+      goto ByeBye;
+   }
    
    DeviceNode->ResourceList = ExAllocatePool(PagedPool, 
       sizeof(CM_RESOURCE_LIST) + ResourceList->Count * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
    if (!DeviceNode->ResourceList)
-      return STATUS_INSUFFICIENT_RESOURCES;
+   {
+      Status = STATUS_INSUFFICIENT_RESOURCES;
+      goto ByeBye;
+   }
    
    DeviceNode->ResourceListTranslated = ExAllocatePool(PagedPool, 
       sizeof(CM_RESOURCE_LIST) + ResourceList->Count * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
    if (!DeviceNode->ResourceListTranslated)
    {
-      ExFreePool(DeviceNode->ResourceList);
-      return STATUS_INSUFFICIENT_RESOURCES;
+      Status = STATUS_INSUFFICIENT_RESOURCES;
+      goto ByeBye;
    }
    
    DeviceNode->ResourceList->Count = 1;
@@ -968,22 +975,32 @@ IopAssignDeviceResources(
          {
             case CmResourceTypePort:
             {
+               ULONG AddressSpace = 0; /* IO space */
                DescriptorRaw->u.Port.Start = ResourceDescriptor->u.Port.MinimumAddress;
                DescriptorRaw->u.Port.Length = DescriptorTranslated->u.Port.Length
                   = ResourceDescriptor->u.Port.Length;
-               /*FIXME: DescriptorTranslated->u.Port.Start? */
+               if (!HalTranslateBusAddress(
+                  DeviceNode->ResourceRequirements->InterfaceType,
+                  DeviceNode->ResourceRequirements->BusNumber,
+                  DescriptorRaw->u.Port.Start,
+                  &AddressSpace,
+                  &DescriptorTranslated->u.Port.Start))
+               {
+                  Status = STATUS_UNSUCCESSFUL;
+                  goto ByeBye;
+               }
                break;
             }
             case CmResourceTypeInterrupt:
             {
-               DescriptorRaw->u.Interrupt.Vector = 0;
+               DescriptorRaw->u.Interrupt.Level = 0;
                /* FIXME: if IRQ 9 is in the possible range, use it.
                 * This should be a PCI device */
                if (ResourceDescriptor->u.Interrupt.MinimumVector <= 9
                   && ResourceDescriptor->u.Interrupt.MaximumVector >= 9)
-                  DescriptorRaw->u.Interrupt.Level = 9;
+                  DescriptorRaw->u.Interrupt.Vector = 9;
                else
-                  DescriptorRaw->u.Interrupt.Level = ResourceDescriptor->u.Interrupt.MinimumVector;
+                  DescriptorRaw->u.Interrupt.Vector = ResourceDescriptor->u.Interrupt.MinimumVector;
                
                DescriptorTranslated->u.Interrupt.Vector = HalGetInterruptVector(
                   DeviceNode->ResourceRequirements->InterfaceType,
@@ -997,15 +1014,24 @@ IopAssignDeviceResources(
             }
             case CmResourceTypeMemory:
             {
+               ULONG AddressSpace = 1; /* Memory space */
                DescriptorRaw->u.Memory.Start = ResourceDescriptor->u.Memory.MinimumAddress;
                DescriptorRaw->u.Memory.Length = DescriptorTranslated->u.Memory.Length
-                  = ResourceDescriptor->u.Port.Length;
-               /*FIXME: DescriptorTranslated->u.Memory.Start? */
+                  = ResourceDescriptor->u.Memory.Length;
+               if (!HalTranslateBusAddress(
+                  DeviceNode->ResourceRequirements->InterfaceType,
+                  DeviceNode->ResourceRequirements->BusNumber,
+                  DescriptorRaw->u.Memory.Start,
+                  &AddressSpace,
+                  &DescriptorTranslated->u.Memory.Start))
+               {
+                  Status = STATUS_UNSUCCESSFUL;
+                  goto ByeBye;
+               }
                break;
             }
             case CmResourceTypeDma:
             {
-               DPRINT1("IopAssignDeviceResources(): CmResourceTypeDma case not implemented\n");
                DescriptorRaw->u.Dma.Channel = DescriptorTranslated->u.Dma.Channel
                   = ResourceDescriptor->u.Dma.MinimumChannel;
                DescriptorRaw->u.Dma.Port = DescriptorTranslated->u.Dma.Port
@@ -1050,6 +1076,20 @@ IopAssignDeviceResources(
    DeviceNode->ResourceListTranslated->List[0].PartialResourceList.Count = NumberOfResources;
    
    return STATUS_SUCCESS;
+
+ByeBye:
+   if (DeviceNode->ResourceList)
+   {
+      ExFreePool(DeviceNode->ResourceList);
+      DeviceNode->ResourceList = NULL;
+   }
+   if (DeviceNode->ResourceListTranslated)
+   {
+      ExFreePool(DeviceNode->ResourceListTranslated);
+      DeviceNode->ResourceListTranslated = NULL;
+   }
+
+   return Status;
 }
 
 

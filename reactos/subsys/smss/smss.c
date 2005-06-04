@@ -30,16 +30,18 @@
 #define NDEBUG
 #include <debug.h>
 
-HANDLE SmSsProcessId = 0;
+ULONG SmSsProcessId = 0;
 
 /* Native image's entry point */
 
 VOID STDCALL
 NtProcessStartup(PPEB Peb)
 {
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
   PROCESS_BASIC_INFORMATION PBI = {0};
 
+PrintString("*** EXPERIMENTAL ***\n");
+  
   PrintString("ReactOS Session Manager %s (Build %s)\n",
 	     KERNEL_RELEASE_STR,
 	     KERNEL_VERSION_BUILD_STR);
@@ -52,7 +54,7 @@ NtProcessStartup(PPEB Peb)
       				      NULL);
   if(NT_SUCCESS(Status))
   {
-	  SmSsProcessId = PBI.UniqueProcessId;
+	  SmSsProcessId = (ULONG) PBI.UniqueProcessId;
   }
   /* Initialize the system */
   Status = InitSessionManager();

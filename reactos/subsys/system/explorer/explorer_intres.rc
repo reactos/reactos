@@ -509,6 +509,7 @@ BEGIN
     "END\r\n"
     "#endif\r\n"
     "\r\n"
+    "#include ""explorer-cz.rc""\r\n"
     "#include ""explorer-jp.rc""\r\n"
     "\r\n"
     "#ifndef __WINDRES__\r\n"
@@ -2311,6 +2312,7 @@ IDS_EXPLORER_VERSION_STR "ROS Explorer Ansi%0s"
 END
 #endif
 
+#include "explorer-cz.rc"
 #include "explorer-jp.rc"
 
 #ifndef __WINDRES__

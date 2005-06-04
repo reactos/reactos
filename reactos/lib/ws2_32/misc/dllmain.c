@@ -17,10 +17,10 @@
 #ifdef DBG
 
 /* See debug.h for debug/trace constants */
-DWORD DebugTraceLevel = MIN_TRACE;
+//DWORD DebugTraceLevel = MIN_TRACE;
 //DWORD DebugTraceLevel = MAX_TRACE;
 //DWORD DebugTraceLevel = DEBUG_ULTRA;
-
+DWORD DebugTraceLevel = 0;
 #endif /* DBG */
 
 /* To make the linker happy */
@@ -386,8 +386,8 @@ select(
 	  Sleep( timeout->tv_sec * 1000 + (timeout->tv_usec / 1000) );
       }
       return 0;
-  } else {
-      WS_DbgPrint(MID_TRACE,("Calling WSPSelect\n"));
+  } else if (Provider->ProcTable.lpWSPSelect) {
+      WS_DbgPrint(MID_TRACE,("Calling WSPSelect:%x\n", Provider->ProcTable.lpWSPSelect));
       Count = Provider->ProcTable.lpWSPSelect(
 	  nfds, readfds, writefds, exceptfds, (LPTIMEVAL)timeout, &Errno);
       
@@ -400,6 +400,9 @@ select(
 	  WSASetLastError(Errno);
 	  return SOCKET_ERROR;
       }
+  } else {
+      WSASetLastError(WSAEINVAL);
+      return SOCKET_ERROR;
   }
 
   return Count;

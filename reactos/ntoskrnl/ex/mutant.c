@@ -52,7 +52,7 @@ ExpInitializeMutantImplementation(VOID)
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
 
-    DPRINT1("Creating Mutant Object Type\n");
+    DPRINT("Creating Mutant Object Type\n");
   
     /* Create the Event Pair Object Type */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));

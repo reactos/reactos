@@ -146,13 +146,20 @@ ConvertStabs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
 
   StabEntry = StabSymbolsBase;
   Count = StabSymbolsLength / sizeof(STAB_ENTRY);
+  *SymbolsCount = 0;
+  if (Count == 0)
+    {
+      /* No symbol info */
+      *SymbolsBase = NULL;
+      return 0;
+    }
+
   *SymbolsBase = malloc(Count * sizeof(ROSSYM_ENTRY));
   if (NULL == *SymbolsBase)
     {
       fprintf(stderr, "Failed to allocate memory for converted .stab symbols\n");
       return 1;
     }
-  *SymbolsCount = 0;
 
   LastFunctionAddress = 0;
   First = 1;
@@ -330,13 +337,18 @@ MergeStabsAndCoffs(ULONG *MergedSymbolCount, PROSSYM_ENTRY *MergedSymbols,
   ULONG_PTR StabFunctionStartAddress;
   ULONG StabFunctionStringOffset, NewStabFunctionStringOffset;
 
+  *MergedSymbolCount = 0;
+  if (StabSymbolsCount == 0)
+    {
+      *MergedSymbols = NULL;
+      return 0;
+    }
   *MergedSymbols = malloc(StabSymbolsCount * sizeof(ROSSYM_ENTRY));
   if (NULL == *MergedSymbols)
     {
       fprintf(stderr, "Unable to allocate memory for merged symbols\n");
       return 1;
     }
-  *MergedSymbolCount = 0;
 
   StabFunctionStartAddress = 0;
   StabFunctionStringOffset = 0;
@@ -627,32 +639,38 @@ CreateOutputFile(FILE *OutFile, void *InData,
                                                 OutOptHeader->FileAlignment);
     }
 
-  RosSymFileLength = ROUND_UP(RosSymLength, OutOptHeader->FileAlignment);
-  memcpy(CurrentSectionHeader->Name, ".rossym", 8); /* We're lucky: string is exactly 8 bytes long */
-  CurrentSectionHeader->Misc.VirtualSize = RosSymLength;
-  CurrentSectionHeader->VirtualAddress = OutOptHeader->SizeOfImage;
-  CurrentSectionHeader->SizeOfRawData = RosSymFileLength;
-  CurrentSectionHeader->PointerToRawData = RosSymOffset;
-  CurrentSectionHeader->PointerToRelocations = 0;
-  CurrentSectionHeader->PointerToLinenumbers = 0;
-  CurrentSectionHeader->NumberOfRelocations = 0;
-  CurrentSectionHeader->NumberOfLinenumbers = 0;
-  CurrentSectionHeader->Characteristics = IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_DISCARDABLE
-                                          | IMAGE_SCN_LNK_REMOVE | IMAGE_SCN_TYPE_NOLOAD;
-  OutOptHeader->SizeOfImage = ROUND_UP(CurrentSectionHeader->VirtualAddress +
-                                       CurrentSectionHeader->Misc.VirtualSize,
-                                       OutOptHeader->SectionAlignment);
-  (OutFileHeader->NumberOfSections)++;
-
-  PaddedRosSym = malloc(RosSymFileLength);
-  if (NULL == PaddedRosSym)
+  if (RosSymLength > 0)
     {
-      fprintf(stderr, "Failed to allocate %lu bytes for padded .rossym\n", RosSymFileLength);
-      return 1;
-    }
-  memcpy(PaddedRosSym, RosSymSection, RosSymLength);
-  memset((char *) PaddedRosSym + RosSymLength, '\0', RosSymFileLength - RosSymLength);
+      RosSymFileLength = ROUND_UP(RosSymLength, OutOptHeader->FileAlignment);
+      memcpy(CurrentSectionHeader->Name, ".rossym", 8); /* We're lucky: string is exactly 8 bytes long */
+      CurrentSectionHeader->Misc.VirtualSize = RosSymLength;
+      CurrentSectionHeader->VirtualAddress = OutOptHeader->SizeOfImage;
+      CurrentSectionHeader->SizeOfRawData = RosSymFileLength;
+      CurrentSectionHeader->PointerToRawData = RosSymOffset;
+      CurrentSectionHeader->PointerToRelocations = 0;
+      CurrentSectionHeader->PointerToLinenumbers = 0;
+      CurrentSectionHeader->NumberOfRelocations = 0;
+      CurrentSectionHeader->NumberOfLinenumbers = 0;
+      CurrentSectionHeader->Characteristics = IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_DISCARDABLE
+                                              | IMAGE_SCN_LNK_REMOVE | IMAGE_SCN_TYPE_NOLOAD;
+      OutOptHeader->SizeOfImage = ROUND_UP(CurrentSectionHeader->VirtualAddress +
+                                           CurrentSectionHeader->Misc.VirtualSize,
+                                       OutOptHeader->SectionAlignment);
+      (OutFileHeader->NumberOfSections)++;
 
+      PaddedRosSym = malloc(RosSymFileLength);
+      if (NULL == PaddedRosSym)
+        {
+          fprintf(stderr, "Failed to allocate %lu bytes for padded .rossym\n", RosSymFileLength);
+          return 1;
+        }
+      memcpy(PaddedRosSym, RosSymSection, RosSymLength);
+      memset((char *) PaddedRosSym + RosSymLength, '\0', RosSymFileLength - RosSymLength);
+    }
+  else
+    {
+      PaddedRosSym = NULL;
+    }
   CheckSum = 0;
   for (i = 0; i < StartOfRawData / 2; i++)
    {
@@ -666,7 +684,7 @@ CreateOutputFile(FILE *OutFile, void *InData,
         {
           Data = (void *) ProcessedRelocs;
         }
-      else if (Section + 1 == OutFileHeader->NumberOfSections)
+      else if (RosSymLength > 0 && Section + 1 == OutFileHeader->NumberOfSections)
         {
           Data = (void *) PaddedRosSym;
         }
@@ -700,7 +718,7 @@ CreateOutputFile(FILE *OutFile, void *InData,
             {
               Data = (void *) ProcessedRelocs;
             }
-          else if (Section + 1 == OutFileHeader->NumberOfSections)
+          else if (RosSymLength > 0 && Section + 1 == OutFileHeader->NumberOfSections)
             {
               Data = (void *) PaddedRosSym;
             }
@@ -719,7 +737,10 @@ CreateOutputFile(FILE *OutFile, void *InData,
         }
    }
 
-  free(PaddedRosSym);
+  if (PaddedRosSym)
+    {
+      free(PaddedRosSym);
+    }
   free(OutHeader);
 
   return 0;
@@ -800,13 +821,6 @@ int main(int argc, char* argv[])
       exit(1);
     }
 
-  if (StabsLength == 0 || StabStringsLength == 0)
-    {
-      /* no symbol info */
-      free(FileData);
-      return 0;
-    }
-
   if (GetCoffInfo(FileData, PEFileHeader, PESectionHeaders, &CoffsLength, &CoffBase,
                   &CoffStringsLength, &CoffStringBase))
     {
@@ -840,7 +854,10 @@ int main(int argc, char* argv[])
                    CoffsLength, CoffBase, CoffStringsLength, CoffStringBase,
                    ImageBase, PEFileHeader, PESectionHeaders))
     {
-      free(StabSymbols);
+      if (StabSymbols)
+        {
+          free(StabSymbols);
+        }
       free(StringBase);
       free(FileData);
       exit(1);
@@ -850,43 +867,61 @@ int main(int argc, char* argv[])
                          StabSymbolsCount, StabSymbols,
                          CoffSymbolsCount, CoffSymbols))
     {
-      free(CoffSymbols);
-      free(StabSymbols);
+      if (CoffSymbols)
+        {
+         free(CoffSymbols);
+        }
+      if (StabSymbols)
+        {
+          free(StabSymbols);
+        }
       free(StringBase);
       free(FileData);
       exit(1);
     }
 
-  free(CoffSymbols);
-  free(StabSymbols);
-
-  RosSymLength = sizeof(SYMBOLFILE_HEADER) + MergedSymbolsCount * sizeof(ROSSYM_ENTRY)
-                 + StringsLength;
-  RosSymSection = malloc(RosSymLength);
-  if (NULL == RosSymSection)
+  if (CoffSymbols)
     {
-      free(MergedSymbols);
-      free(StringBase);
-      free(FileData);
-      fprintf(stderr, "Unable to allocate memory for .rossym section\n");
-      exit(1);
+      free(CoffSymbols);
     }
-  memset(RosSymSection, '\0', RosSymLength);
+  if (StabSymbols)
+    {
+      free(StabSymbols);
+    }
+  if (MergedSymbolsCount == 0)
+    {
+      RosSymLength = 0;
+      RosSymSection = NULL;
+    }
+  else
+    {
+      RosSymLength = sizeof(SYMBOLFILE_HEADER) + MergedSymbolsCount * sizeof(ROSSYM_ENTRY)
+                            + StringsLength;
+      RosSymSection = malloc(RosSymLength);
+      if (NULL == RosSymSection)
+        {
+          free(MergedSymbols);
+          free(StringBase);
+          free(FileData);
+          fprintf(stderr, "Unable to allocate memory for .rossym section\n");
+          exit(1);
+        }
+      memset(RosSymSection, '\0', RosSymLength);
 
-  SymbolFileHeader = (PSYMBOLFILE_HEADER) RosSymSection;
-  SymbolFileHeader->SymbolsOffset = sizeof(SYMBOLFILE_HEADER);
-  SymbolFileHeader->SymbolsLength = MergedSymbolsCount * sizeof(ROSSYM_ENTRY);
-  SymbolFileHeader->StringsOffset = SymbolFileHeader->SymbolsOffset + SymbolFileHeader->SymbolsLength;
-  SymbolFileHeader->StringsLength = StringsLength;
+      SymbolFileHeader = (PSYMBOLFILE_HEADER) RosSymSection;
+      SymbolFileHeader->SymbolsOffset = sizeof(SYMBOLFILE_HEADER);
+      SymbolFileHeader->SymbolsLength = MergedSymbolsCount * sizeof(ROSSYM_ENTRY);
+      SymbolFileHeader->StringsOffset = SymbolFileHeader->SymbolsOffset + SymbolFileHeader->SymbolsLength;
+      SymbolFileHeader->StringsLength = StringsLength;
 
-  memcpy((char *) RosSymSection + SymbolFileHeader->SymbolsOffset, MergedSymbols,
-         SymbolFileHeader->SymbolsLength);
-  memcpy((char *) RosSymSection + SymbolFileHeader->StringsOffset, StringBase,
-         SymbolFileHeader->StringsLength);
+      memcpy((char *) RosSymSection + SymbolFileHeader->SymbolsOffset, MergedSymbols,
+             SymbolFileHeader->SymbolsLength);
+      memcpy((char *) RosSymSection + SymbolFileHeader->StringsOffset, StringBase,
+             SymbolFileHeader->StringsLength);
 
-  free(MergedSymbols);
+      free(MergedSymbols);
+    }
   free(StringBase);
-
   out = fopen(path2, "wb");
   if (out == NULL)
     {
@@ -900,13 +935,19 @@ int main(int argc, char* argv[])
                        PESectionHeaders, RosSymLength, RosSymSection))
     {
       fclose(out);
-      free(RosSymSection);
+      if (RosSymSection)
+        {
+          free(RosSymSection);
+        }
       free(FileData);
       exit(1);
     }
 
   fclose(out);
-  free(RosSymSection);
+  if (RosSymSection)
+    {
+      free(RosSymSection);
+    }
   free(FileData);
 
   return 0;

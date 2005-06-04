@@ -14,10 +14,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* GLOBALS *******************************************************************/
-
-#define TAG_MM_REGION    TAG('M', 'R', 'G', 'N')
-
 /* FUNCTIONS *****************************************************************/
 
 VOID STATIC

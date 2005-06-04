@@ -14,10 +14,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-
-#define TAG_HDTB  TAG('H', 'D', 'T', 'B')
-
-
 static BOOLEAN
 RtlpIsValidHandle(PRTL_HANDLE_TABLE HandleTable, PRTL_HANDLE Handle);
 static BOOLEAN
@@ -67,7 +63,7 @@ RtlpAllocateHandle(PRTL_HANDLE_TABLE HandleTable,
 	  {
 	     /* allocate handle array */
 	     ArraySize = sizeof(RTL_HANDLE) * HandleTable->TableSize;
-	     ArrayPointer = ExAllocatePoolWithTag(NonPagedPool,
+	     ArrayPointer = ExAllocatePoolWithTag(PagedPool,
 						  ArraySize,
 						  TAG_HDTB);
 	     if (ArrayPointer == NULL)

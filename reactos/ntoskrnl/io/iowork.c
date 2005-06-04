@@ -25,10 +25,6 @@ typedef struct _IO_WORKITEM
   PVOID           Context;
 } IO_WORKITEM;
 
-/* GLOBALS ******************************************************************/
-
-#define TAG_IOWI TAG('I', 'O', 'W', 'I')
-
 /* FUNCTIONS ****************************************************************/
 
 VOID STATIC STDCALL

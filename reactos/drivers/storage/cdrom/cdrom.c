@@ -391,17 +391,10 @@ static VOID
 CdromClassCreateMediaChangeEvent(IN PDEVICE_EXTENSION DeviceExtension,
 				 IN ULONG DeviceNumber)
 {
-  WCHAR NameBuffer[MAX_PATH];
-  UNICODE_STRING Name;
 
-  swprintf (NameBuffer,
-	    L"\\Device\\MediaChangeEvent%lu",
-	    DeviceNumber);
-  RtlInitUnicodeString (&Name,
-			NameBuffer);
 
   DeviceExtension->MediaChangeEvent =
-    IoCreateSynchronizationEvent (&Name,
+    IoCreateSynchronizationEvent (NULL,
 				  &DeviceExtension->MediaChangeEventHandle);
 
   KeClearEvent (DeviceExtension->MediaChangeEvent);

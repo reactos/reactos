@@ -76,9 +76,6 @@ static UNICODE_STRING IopHardwareDatabaseKey =
 
 POBJECT_TYPE EXPORTED IoDriverObjectType = NULL;
 
-#define TAG_DRIVER             TAG('D', 'R', 'V', 'R')
-#define TAG_DRIVER_EXTENSION   TAG('D', 'R', 'V', 'E')
-
 /* DECLARATIONS ***************************************************************/
 
 VOID STDCALL
@@ -93,7 +90,7 @@ IopInitDriverImplementation(VOID)
    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
    UNICODE_STRING Name;
 
-   DPRINT1("Creating Registry Object Type\n");
+   DPRINT("Creating Registry Object Type\n");
   
    /* Initialize the Driver object type  */
    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));

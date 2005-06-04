@@ -350,15 +350,15 @@ CmInitializeRegistry(VOID)
   OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
   UNICODE_STRING Name;
 
-  DPRINT1("Creating Registry Object Type\n");
+  DPRINT("Creating Registry Object Type\n");
   
   /*  Initialize the Key object type  */
   RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
   RtlInitUnicodeString(&Name, L"Key");
   ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-  ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(KEY_OBJECT);
+  ObjectTypeInitializer.DefaultPagedPoolCharge = sizeof(KEY_OBJECT);
   ObjectTypeInitializer.GenericMapping = CmiKeyMapping;
-  ObjectTypeInitializer.PoolType = NonPagedPool;
+  ObjectTypeInitializer.PoolType = PagedPool;
   ObjectTypeInitializer.ValidAccessMask = KEY_ALL_ACCESS;
   ObjectTypeInitializer.UseDefaultObject = TRUE;
   ObjectTypeInitializer.DeleteProcedure = CmiObjectDelete;

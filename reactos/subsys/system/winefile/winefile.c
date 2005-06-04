@@ -211,6 +211,8 @@ LRESULT CALLBACK TreeWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
 /* globals */
 WINEFILE_GLOBALS Globals;
 
+static int last_split;
+
 
 /* some common string constants */
 const static TCHAR sEmpty[] = {'\0'};
@@ -346,6 +348,15 @@ static void read_directory_win(Entry* dir, LPCTSTR path)
 
 	if (hFind != INVALID_HANDLE_VALUE) {
 		do {
+#ifdef _NO_EXTENSIONS
+			/* hide directory entry "." */
+			if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+				LPCTSTR name = w32fd.cFileName;
+
+				if (name[0]=='.' && name[1]=='\0')
+					continue;
+			}
+#endif
 			entry = alloc_entry();
 
 			if (!first_entry)
@@ -361,15 +372,7 @@ static void read_directory_win(Entry* dir, LPCTSTR path)
 			entry->scanned = FALSE;
 			entry->level = level;
 
-#ifdef _NO_EXTENSIONS
-			/* hide directory entry "." */
-			if (entry->data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-				LPCTSTR name = entry->data.cFileName;
-
-				if (name[0]=='.' && name[1]=='\0')
-					continue;
-			}
-#else
+#ifndef _NO_EXTENSIONS
 			entry->etype = ET_WINDOWS;
 			entry->bhfi_valid = FALSE;
 
@@ -387,9 +390,10 @@ static void read_directory_win(Entry* dir, LPCTSTR path)
 #endif
 
 			last = entry;
-		} while(FindNextFile(hFind, &entry->data));
+		} while(FindNextFile(hFind, &w32fd));
 
-		last->next = NULL;
+		if (last)
+			last->next = NULL;
 
 		FindClose(hFind);
 	}
@@ -568,7 +572,8 @@ static void read_directory_unix(Entry* dir, LPCTSTR path)
 			last = entry;
 		}
 
-		last->next = NULL;
+		if (last)
+			last->next = NULL;
 
 		call_closedir(pdir);
 	}
@@ -1219,7 +1224,7 @@ static void SortDirectory(Entry* dir, SORT_ORDER sortOrder)
 		len++;
 
 	if (len) {
-		array = (Entry**) HeapAlloc(GetProcessHeap(), 0, len*sizeof(Entry*));
+		array = HeapAlloc(GetProcessHeap(), 0, len*sizeof(Entry*));
 
 		p = array;
 		for(entry=dir->down; entry; entry=entry->next)
@@ -1321,10 +1326,10 @@ static void read_directory(Entry* dir, LPCTSTR path, SORT_ORDER sortOrder, HWND 
 
 static Entry* read_tree(Root* root, LPCTSTR path, LPITEMIDLIST pidl, LPTSTR drv, SORT_ORDER sortOrder, HWND hwnd)
 {
-	const static TCHAR sBackslash[] = {'\\', '\0'};
 #if !defined(_NO_EXTENSIONS) && defined(__WINE__)
 	const static TCHAR sSlash[] = {'/', '\0'};
 #endif
+	const static TCHAR sBackslash[] = {'\\', '\0'};
 
 #ifdef _SHELL_FOLDERS
 	if (pidl)
@@ -3397,7 +3402,9 @@ static void refresh_child(ChildWnd* child)
 static void create_drive_bar()
 {
 	TBBUTTON drivebarBtn = {0, 0, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0};
+#ifndef _NO_EXTENSIONS
 	TCHAR b1[BUFFER_LEN];
+#endif
 	int btn = 1;
 	PTSTR p;
 
@@ -3755,8 +3762,6 @@ static HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParen
 
 LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
-	static int last_split;
-
 	ChildWnd* child = (ChildWnd*) GetWindowLong(hwnd, GWL_USERDATA);
 	ASSERT(child);
 
@@ -3994,6 +3999,14 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 				case ID_VIEW_SORT_DATE:
 					set_sort_order(child, SORT_DATE);
 					break;
+
+				case ID_VIEW_SPLIT: {
+					last_split = child->split_pos;
+#ifdef _NO_EXTENSIONS
+					draw_splitbar(hwnd, last_split);
+#endif
+					SetCapture(hwnd);
+					break;}
 
 				default:
 					return pane_command(pane, LOWORD(wparam));
@@ -4244,7 +4257,6 @@ void show_frame(HWND hwndParent, int cmdshow)
 	TCHAR path[MAX_PATH], b1[BUFFER_LEN];
 	ChildWnd* child;
 	HMENU hMenuFrame, hMenuWindow;
-	TBBUTTON drivebarBtn = {0, 0, TBSTATE_ENABLED, BTNS_SEP, {0, 0}, 0, 0};
 
 	CLIENTCREATESTRUCT ccs;
 

@@ -934,3 +934,113 @@ DWORD WINAPI GetSetFileTimestamp(LPCWSTR lpFileName,
 
      return dwError;
 }
+
+
+/**************************************************************************
+ * MyGetFileTitle [SETUPAPI.@]
+ *
+ * Returns a pointer to the last part of a fully qualified file name.
+ *
+ * PARAMS
+ *     lpFileName [I] File name
+ *
+ * RETURNS
+ *     Pointer to a files name.
+ */
+LPWSTR WINAPI
+MyGetFileTitle(LPCWSTR lpFileName)
+{
+    LPWSTR ptr;
+    LPWSTR ret;
+    WCHAR c;
+
+    TRACE("%s\n", debugstr_w(lpFileName));
+
+    ptr = (LPWSTR)lpFileName;
+    ret = ptr;
+    while (TRUE)
+    {
+        c = *ptr;
+
+        if (c == 0)
+            break;
+
+        ptr++;
+        if (c == (WCHAR)'\\' || c == (WCHAR)'/' || c == (WCHAR)':')
+            ret = ptr;
+    }
+
+    return ret;
+}
+
+
+/**************************************************************************
+ * ConcatenatePaths [SETUPAPI.@]
+ *
+ * Concatenates two paths.
+ *
+ * PARAMS
+ *     lpPath         [I/O] Path to append path to
+ *     lpAppend       [I]   Path to append
+ *     dwBufferSize   [I]   Size of the path buffer
+ *     lpRequiredSize [O]   Required size for the concatenated path. Optional
+ *
+ * RETURNS
+ *     Success: TRUE
+ *     Failure: FALSE
+ */
+BOOL WINAPI
+ConcatenatePaths(LPWSTR lpPath,
+                 LPCWSTR lpAppend,
+                 DWORD dwBufferSize,
+                 LPDWORD lpRequiredSize)
+{
+    DWORD dwPathSize;
+    DWORD dwAppendSize;
+    DWORD dwTotalSize;
+    BOOL bBackslash = FALSE;
+
+    TRACE("%s %s %lu %p\n", debugstr_w(lpPath), debugstr_w(lpAppend),
+          dwBufferSize, lpRequiredSize);
+
+    dwPathSize = lstrlenW(lpPath);
+
+    /* Ignore trailing backslash */
+    if (lpPath[dwPathSize - 1] == (WCHAR)'\\')
+        dwPathSize--;
+
+    dwAppendSize = lstrlenW(lpAppend);
+
+    /* Does the source string have a leading backslash? */
+    if (lpAppend[0] == (WCHAR)'\\')
+    {
+        bBackslash = TRUE;
+        dwAppendSize--;
+    }
+
+    dwTotalSize = dwPathSize + dwAppendSize + 2;
+    if (lpRequiredSize != NULL)
+        *lpRequiredSize = dwTotalSize;
+
+    /* Append a backslash to the destination string */
+    if (bBackslash == FALSE)
+    {
+        if (dwPathSize < dwBufferSize)
+        {
+            lpPath[dwPathSize - 1] = (WCHAR)'\\';
+            dwPathSize++;
+        }
+    }
+
+    if (dwPathSize + dwAppendSize < dwBufferSize)
+    {
+        lstrcpynW(&lpPath[dwPathSize],
+                  lpAppend,
+                  dwAppendSize);
+    }
+
+    if (dwBufferSize >= dwTotalSize)
+        lpPath[dwTotalSize - 1] = 0;
+
+    return (dwBufferSize >= dwTotalSize);
+}

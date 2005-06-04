@@ -327,6 +327,23 @@ MiniResetComplete(
 }
 
 
+
+VOID STDCALL
+MiniRequestComplete(
+    IN PADAPTER_BINDING AdapterBinding,
+    IN PNDIS_REQUEST Request,
+    IN  NDIS_STATUS Status)
+{
+    NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
+
+    if( AdapterBinding->ProtocolBinding->Chars.RequestCompleteHandler ) {
+        (*AdapterBinding->ProtocolBinding->Chars.RequestCompleteHandler)(
+            AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.ProtocolBindingContext,
+            Request,
+            Status);
+    }
+}
+
 VOID STDCALL
 MiniSendComplete(
     IN  NDIS_HANDLE     MiniportAdapterHandle,
@@ -615,7 +632,7 @@ MiniQueryInformation(
 NDIS_STATUS
 FASTCALL
 MiniQueueWorkItem(
-    PLOGICAL_ADAPTER    Adapter,
+    PADAPTER_BINDING    AdapterBinding,
     NDIS_WORK_ITEM_TYPE WorkItemType,
     PVOID               WorkItemContext)
 /*
@@ -630,49 +647,51 @@ MiniQueueWorkItem(
  *     Status of operation
  */
 {
-  PNDIS_MINIPORT_WORK_ITEM Item;
+    PINTERNAL_NDIS_MINIPORT_WORK_ITEM Item;
+    PLOGICAL_ADAPTER Adapter = AdapterBinding->Adapter;
 
-  NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-
-  ASSERT(Adapter);
-  ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
-
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+    
+    ASSERT(Adapter);
+    ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
+    
 #if 0
-  if (Adapter->WorkQueueLevel < NDIS_MINIPORT_WORK_QUEUE_SIZE - 1)
+    if (Adapter->WorkQueueLevel < NDIS_MINIPORT_WORK_QUEUE_SIZE - 1)
     {
-      Item = &Adapter->WorkQueue[Adapter->WorkQueueLevel];
-      Adapter->WorkQueueLevel++;
+        Item = &Adapter->WorkQueue[Adapter->WorkQueueLevel];
+        Adapter->WorkQueueLevel++;
     }
-  else
+    else
 #endif
     {
-      Item = ExAllocatePool(NonPagedPool, sizeof(NDIS_MINIPORT_WORK_ITEM));
-      if (Item == NULL)
+        Item = ExAllocatePool(NonPagedPool, sizeof(INTERNAL_NDIS_MINIPORT_WORK_ITEM));
+        if (Item == NULL)
         {
-          NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-          return NDIS_STATUS_RESOURCES;
+            NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+            return NDIS_STATUS_RESOURCES;
         }
     }
-
-  Item->WorkItemType    = WorkItemType;
-  Item->WorkItemContext = WorkItemContext;
-
-  /* safe due to adapter lock held */
-  Item->Link.Next = NULL;
-  if (!Adapter->WorkQueueHead)
+    
+    Item->AdapterBinding = AdapterBinding;
+    Item->RealWorkItem.WorkItemType    = WorkItemType;
+    Item->RealWorkItem.WorkItemContext = WorkItemContext;
+    
+    /* safe due to adapter lock held */
+    Item->Link.Next = NULL;
+    if (!Adapter->WorkQueueHead)
     {
-      Adapter->WorkQueueHead = Item;
-      Adapter->WorkQueueTail = Item;
+        Adapter->WorkQueueHead = Item;
+        Adapter->WorkQueueTail = Item;
     }
-  else
+    else
     {
-      Adapter->WorkQueueTail->Link.Next = (PSINGLE_LIST_ENTRY)Item;
-      Adapter->WorkQueueTail = Item;
+        Adapter->WorkQueueTail->Link.Next = (PSINGLE_LIST_ENTRY)Item;
+        Adapter->WorkQueueTail = Item;
     }
-
-  KeInsertQueueDpc(&Adapter->MiniportDpc, NULL, NULL);
-
-  return NDIS_STATUS_SUCCESS;
+    
+    KeInsertQueueDpc(&Adapter->MiniportDpc, NULL, NULL);
+    
+    return NDIS_STATUS_SUCCESS;
 }
 
 
@@ -680,12 +699,14 @@ NDIS_STATUS
 FASTCALL
 MiniDequeueWorkItem(
     PLOGICAL_ADAPTER    Adapter,
+    PADAPTER_BINDING    *AdapterBinding,
     NDIS_WORK_ITEM_TYPE *WorkItemType,
     PVOID               *WorkItemContext)
 /*
  * FUNCTION: Dequeues a work item from the work queue of a logical adapter
  * ARGUMENTS:
  *     Adapter         = Pointer to the logical adapter object to dequeue work item from
+ *     AdapterBinding  = Address of buffer for adapter binding for this request
  *     WorkItemType    = Address of buffer for work item type
  *     WorkItemContext = Address of buffer for pointer to context information
  * NOTES:
@@ -694,52 +715,55 @@ MiniDequeueWorkItem(
  *     Status of operation
  */
 {
-  PNDIS_MINIPORT_WORK_ITEM Item;
-
-  NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-
-  Item = Adapter->WorkQueueHead;
-
-  if (Item)
+    PINTERNAL_NDIS_MINIPORT_WORK_ITEM Item;
+    
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+    
+    Item = Adapter->WorkQueueHead;
+    
+    if (Item)
     {
-      /* safe due to adapter lock held */
-      Adapter->WorkQueueHead = (PNDIS_MINIPORT_WORK_ITEM)Item->Link.Next;
-
-      if (Item == Adapter->WorkQueueTail)
-        Adapter->WorkQueueTail = NULL;
-
-      *WorkItemType    = Item->WorkItemType;
-      *WorkItemContext = Item->WorkItemContext;
-
-      ExFreePool(Item);
-
-      return NDIS_STATUS_SUCCESS;
+        /* safe due to adapter lock held */
+        Adapter->WorkQueueHead = (PINTERNAL_NDIS_MINIPORT_WORK_ITEM)Item->Link.Next;
+        
+        if (Item == Adapter->WorkQueueTail)
+            Adapter->WorkQueueTail = NULL;
+        
+        *AdapterBinding  = Item->AdapterBinding;
+        *WorkItemType    = Item->RealWorkItem.WorkItemType;
+        *WorkItemContext = Item->RealWorkItem.WorkItemContext;
+        
+        ExFreePool(Item);
+        
+        return NDIS_STATUS_SUCCESS;
     }
-
-  return NDIS_STATUS_FAILURE;
+    
+    return NDIS_STATUS_FAILURE;
 }
 
 
 NDIS_STATUS
 MiniDoRequest(
-    PLOGICAL_ADAPTER Adapter,
+    PADAPTER_BINDING AdapterBinding,
     PNDIS_REQUEST NdisRequest)
 /*
  * FUNCTION: Sends a request to a miniport
  * ARGUMENTS:
- *     Adapter     = Pointer to logical adapter object
- *     NdisRequest = Pointer to NDIS request structure describing request
+ *     AdapterBinding = Pointer to binding used in the request
+ *     NdisRequest    = Pointer to NDIS request structure describing request
  * RETURNS:
  *     Status of operation
  */
 {
-  NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
+    PLOGICAL_ADAPTER Adapter = AdapterBinding->Adapter;
 
-  Adapter->NdisMiniportBlock.MediaRequest = NdisRequest;
-
-  switch (NdisRequest->RequestType)
+    NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
+    
+    Adapter->NdisMiniportBlock.MediaRequest = NdisRequest;
+    
+    switch (NdisRequest->RequestType)
     {
-      case NdisRequestQueryInformation:
+    case NdisRequestQueryInformation:
         return (*Adapter->Miniport->Chars.QueryInformationHandler)(
             Adapter->NdisMiniportBlock.MiniportAdapterContext,
             NdisRequest->DATA.QUERY_INFORMATION.Oid,
@@ -748,8 +772,8 @@ MiniDoRequest(
             (PULONG)&NdisRequest->DATA.QUERY_INFORMATION.BytesWritten,
             (PULONG)&NdisRequest->DATA.QUERY_INFORMATION.BytesNeeded);
         break;
-
-      case NdisRequestSetInformation:
+        
+    case NdisRequestSetInformation:
         return (*Adapter->Miniport->Chars.SetInformationHandler)(
             Adapter->NdisMiniportBlock.MiniportAdapterContext,
             NdisRequest->DATA.SET_INFORMATION.Oid,
@@ -758,8 +782,8 @@ MiniDoRequest(
             (PULONG)&NdisRequest->DATA.SET_INFORMATION.BytesRead,
             (PULONG)&NdisRequest->DATA.SET_INFORMATION.BytesNeeded);
         break;
-
-      default:
+        
+    default:
         return NDIS_STATUS_FAILURE;
     }
 }
@@ -800,11 +824,14 @@ VOID STDCALL MiniportDpc(
   NDIS_STATUS NdisStatus;
   PVOID WorkItemContext;
   NDIS_WORK_ITEM_TYPE WorkItemType;
+  PADAPTER_BINDING AdapterBinding;
   PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(DeferredContext);
 
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
-  NdisStatus = MiniDequeueWorkItem(Adapter, &WorkItemType, &WorkItemContext);
+  NdisStatus = 
+      MiniDequeueWorkItem
+      (Adapter, &AdapterBinding, &WorkItemType, &WorkItemContext);
 
   if (NdisStatus == NDIS_STATUS_SUCCESS)
     {
@@ -873,7 +900,7 @@ VOID STDCALL MiniportDpc(
             break;
 
           case NdisWorkItemRequest:
-            NdisStatus = MiniDoRequest(Adapter, (PNDIS_REQUEST)WorkItemContext);
+            NdisStatus = MiniDoRequest(AdapterBinding, (PNDIS_REQUEST)WorkItemContext);
 
             if (NdisStatus == NDIS_STATUS_PENDING)
               break;
@@ -882,10 +909,12 @@ VOID STDCALL MiniportDpc(
               {
                 case NdisRequestQueryInformation:
 		  NdisMQueryInformationComplete((NDIS_HANDLE)Adapter, NdisStatus);
+                  MiniRequestComplete( AdapterBinding, (PNDIS_REQUEST)WorkItemContext, NdisStatus );
                   break;
 
                 case NdisRequestSetInformation:
                   NdisMSetInformationComplete((NDIS_HANDLE)Adapter, NdisStatus);
+                  MiniRequestComplete( AdapterBinding, (PNDIS_REQUEST)WorkItemContext, NdisStatus );
                   break;
 
                 default:

@@ -22,8 +22,6 @@ extern MM_STATS MmStats;
 
 /* GLOBALS *****************************************************************/
 
-#define TAG_NONE (ULONG)(('N'<<0) + ('o'<<8) + ('n'<<16) + ('e'<<24))
-
 ULONG STDCALL
 ExRosQueryPagedPoolTag ( PVOID Block );
 

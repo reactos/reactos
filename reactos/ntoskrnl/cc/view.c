@@ -26,9 +26,6 @@
 #define ROUND_UP(N, S)	    (((N) + (S) - 1) & ~((S) - 1))
 #define ROUND_DOWN(N, S)    ((N) & ~((S) - 1))
 
-#define TAG_BCB   TAG('B', 'C', 'B', ' ')
-#define TAG_IBCB  TAG('i', 'B', 'C', 'B')
-
 NPAGED_LOOKASIDE_LIST iBcbLookasideList;
 static NPAGED_LOOKASIDE_LIST BcbLookasideList;
 

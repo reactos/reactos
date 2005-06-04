@@ -83,7 +83,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Alleen hierarchie" ,        411
 		MENUITEM "Alleen &mapinhoud" ,         412
 		MENUITEM SEPARATOR
-		MENUITEM "Sp&litsen" ,                 414
+		MENUITEM "Sp&litsen" ,                 ID_VIEW_SPLIT
 		MENUITEM SEPARATOR
 		MENUITEM "&Naam" ,                     ID_VIEW_NAME
 		MENUITEM "&Alle details" ,             ID_VIEW_ALL_ATTRIBUTES, CHECKED

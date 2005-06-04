@@ -481,10 +481,10 @@ ExpInitializeExecutive(VOID)
 
     /* Set 1 CPU for now, we'll increment this later */
     KeNumberProcessors = 1;
-
+    
     /* Initalize the Process Manager */
     PiInitProcessManager();
-
+    
     /* Break into the Debugger if requested */
     if (KdPollBreakIn()) DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
 
