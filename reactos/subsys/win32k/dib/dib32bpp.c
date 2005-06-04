@@ -317,7 +317,7 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
 
 		 case ROP4_WHITENESS:   
 			 //return(0xFFFFFFFF);
-			 return DIB32_ColorFill(BltInfo, 0xFFFFFFFF);
+			  return DIB32_ColorFill(BltInfo, 0xFFFFFFFF);
 		 break;
 
 		case  ROP4_SRCCOPY:     
@@ -453,7 +453,6 @@ DIB32_SrcPaint(PBLTINFO BltInfo)
 		{
 			ULONG DestX, DestY;
 			ULONG SourceX, SourceY;
-			ULONG Dest;  
 			PULONG DestBits;
 
 			ULONG bottom = BltInfo->DestRect.bottom;
@@ -470,9 +469,8 @@ DIB32_SrcPaint(PBLTINFO BltInfo)
 				SourceX = BltInfo->SourcePoint.x;
 				for (DestX = BltInfo->DestRect.left; DestX < right; DestX++, DestBits++, SourceX++)
 				{
-					
-					Dest = *DestBits;
-					*DestBits = (Dest | DIB_GetSource(BltInfo->SourceSurface,  SourceX, 
+										
+					*DestBits = (*DestBits | DIB_GetSource(BltInfo->SourceSurface,  SourceX, 
                                                SourceY, BltInfo->XlateSourceToDest));
 				}
 				
@@ -487,8 +485,7 @@ DIB32_SrcPaint(PBLTINFO BltInfo)
         case BMF_32BPP:
 		{
 			ULONG DestX, DestY;
-			ULONG SourceX, SourceY;
-			ULONG Dest;  
+			ULONG SourceX, SourceY;			
 			PULONG DestBits;
 
 			ULONG bottom = BltInfo->DestRect.bottom;
@@ -505,10 +502,8 @@ DIB32_SrcPaint(PBLTINFO BltInfo)
 							
 				SourceX = BltInfo->SourcePoint.x;
 				for (DestX = BltInfo->DestRect.left; DestX < right; DestX++, DestBits++, SourceX++)
-				{
-					
-					Dest = *DestBits;
-					*DestBits = (Dest | DIB_32BPP_GetPixel(BltInfo->SourceSurface,  SourceX, SourceY));
+				{										
+					*DestBits = (*DestBits | DIB_32BPP_GetPixel(BltInfo->SourceSurface,  SourceX, SourceY));
 				}
 				
 			 DestBits = (PULONG)((ULONG_PTR)DestBits + delta);	
@@ -539,8 +534,7 @@ DIB32_Srccopy(PBLTINFO BltInfo)
 		case BMF_24BPP:
 		{
 			ULONG DestX, DestY;
-			ULONG SourceX, SourceY;
-			ULONG Dest;  
+			ULONG SourceX, SourceY;			
 			PULONG DestBits;
 
 			ULONG bottom = BltInfo->DestRect.bottom;
@@ -559,8 +553,7 @@ DIB32_Srccopy(PBLTINFO BltInfo)
 				for (DestX = BltInfo->DestRect.left; DestX < right; DestX++, DestBits++, SourceX++)
 				{
 					if (SourceX > BltInfo->SourceSurface->sizlBitmap.cx) break;	
-
-					Dest = *DestBits;
+					
 					*DestBits = DIB_GetSource(BltInfo->SourceSurface,  SourceX, 
                                                SourceY, BltInfo->XlateSourceToDest);
 				}
@@ -627,7 +620,7 @@ DIB32_ColorFill(PBLTINFO BltInfo, ULONG color)
 
 	if (BltInfo->DestRect.left!=0)
 	{
-		SourceX = (BltInfo->DestRect.right - BltInfo->DestRect.left) << 2;
+		SourceX = (BltInfo->DestRect.right - BltInfo->DestRect.left) -1;
 		for (DestY=BltInfo->DestRect.bottom-1;DestY>=BltInfo->DestRect.top;DestY--)
 		{			 				
 			memset4( (PDWORD) (BltInfo->DestSurface->pvScan0 + DestY * 
@@ -635,8 +628,8 @@ DIB32_ColorFill(PBLTINFO BltInfo, ULONG color)
 							   BltInfo->DestRect.left),  color, SourceX);  					 
 		}
 			
-     } else {			  			 
-		SourceX = ((BltInfo->DestRect.bottom - BltInfo->DestRect.top) * BltInfo->DestRect.right);
+    } else {			  			 
+		SourceX = ((BltInfo->DestRect.bottom - BltInfo->DestRect.top) * BltInfo->DestRect.right) -1;
 
 		memset4(BltInfo->DestSurface->pvScan0 + BltInfo->DestRect.top * 
 			    BltInfo->DestSurface->lDelta, color, SourceX);  
