@@ -77,7 +77,7 @@ CreateSemaphoreW(LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
    InitializeObjectAttributes(&ObjectAttributes,
 			      (lpName ? &UnicodeName : NULL),
 			      0,
-			      hBaseDir,
+			      (lpName ? hBaseDir : NULL),
 			      NULL);
 
    if (lpSemaphoreAttributes != NULL)

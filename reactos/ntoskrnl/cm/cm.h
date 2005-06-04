@@ -744,4 +744,11 @@ NTSTATUS
 CmiSaveTempHive (PREGISTRY_HIVE Hive,
 		 HANDLE FileHandle);
 
+/* TEMPORARY HACK UNTIL PROPER PARSE ROUTINES SOON. DO NOT REMOVE -- Alex */         
+NTSTATUS
+CmpFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
+	     PVOID* ReturnedObject,
+	     PUNICODE_STRING RemainingPath,
+	     POBJECT_TYPE ObjectType);
+
 #endif /*__INCLUDE_CM_H*/

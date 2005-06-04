@@ -30,6 +30,138 @@ FAST_MUTEX CmiCallbackLock;
 
 /* FUNCTIONS ****************************************************************/
 
+/* TEMPORARY HACK UNTIL PROPER PARSE ROUTINES SOON. DO NOT REMOVE -- Alex */
+NTSTATUS
+CmpFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
+	     PVOID* ReturnedObject,
+	     PUNICODE_STRING RemainingPath,
+	     POBJECT_TYPE ObjectType)
+{
+  PVOID NextObject;
+  PVOID CurrentObject;
+  PVOID RootObject;
+  POBJECT_HEADER CurrentHeader;
+  NTSTATUS Status;
+  PWSTR current;
+  UNICODE_STRING PathString;
+  ULONG Attributes;
+  PUNICODE_STRING ObjectName;
+
+  PAGED_CODE();
+
+  DPRINT("CmpFindObject(ObjectAttributes %x, ReturnedObject %x, "
+	 "RemainingPath %x)\n",ObjectAttributes,ReturnedObject,RemainingPath);
+  DPRINT("ObjectAttributes->ObjectName %wZ\n",
+	 ObjectAttributes->ObjectName);
+
+  RtlInitUnicodeString (RemainingPath, NULL);
+
+  if (ObjectAttributes->RootDirectory == NULL)
+    {
+      ObReferenceObjectByPointer(NameSpaceRoot,
+				 DIRECTORY_TRAVERSE,
+				 NULL,
+				 UserMode);
+      CurrentObject = NameSpaceRoot;
+    }
+  else
+    {
+      Status = ObReferenceObjectByHandle(ObjectAttributes->RootDirectory,
+					 0,
+					 NULL,
+					 UserMode,
+					 &CurrentObject,
+					 NULL);
+      if (!NT_SUCCESS(Status))
+	{
+	  return Status;
+	}
+    }
+
+  ObjectName = ObjectAttributes->ObjectName;
+  if (ObjectName->Length == 0 ||
+      ObjectName->Buffer[0] == UNICODE_NULL)
+    {
+      *ReturnedObject = CurrentObject;
+      return STATUS_SUCCESS;
+    }
+
+  if (ObjectAttributes->RootDirectory == NULL &&
+      ObjectName->Buffer[0] != L'\\')
+    {
+      ObDereferenceObject (CurrentObject);
+      return STATUS_UNSUCCESSFUL;
+    }
+
+  /* Create a zero-terminated copy of the object name */
+  PathString.Length = ObjectName->Length;
+  PathString.MaximumLength = ObjectName->Length + sizeof(WCHAR);
+  PathString.Buffer = ExAllocatePool (NonPagedPool,
+				      PathString.MaximumLength);
+  if (PathString.Buffer == NULL)
+    {
+      ObDereferenceObject (CurrentObject);
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+  RtlCopyMemory (PathString.Buffer,
+		 ObjectName->Buffer,
+		 ObjectName->Length);
+  PathString.Buffer[PathString.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+  current = PathString.Buffer;
+
+  RootObject = CurrentObject;
+  Attributes = ObjectAttributes->Attributes;
+  if (ObjectType == ObSymbolicLinkType)
+    Attributes |= OBJ_OPENLINK;
+
+  while (TRUE)
+    {
+	DPRINT("current %S\n",current);
+	CurrentHeader = BODY_TO_HEADER(CurrentObject);
+
+	DPRINT("Current ObjectType %wZ\n",
+	       &CurrentHeader->ObjectType->TypeName);
+
+	if (CurrentHeader->ObjectType->TypeInfo.ParseProcedure == NULL)
+	  {
+	     DPRINT("Current object can't parse\n");
+	     break;
+	  }
+	Status = CurrentHeader->ObjectType->TypeInfo.ParseProcedure(CurrentObject,
+						  &NextObject,
+						  &PathString,
+						  &current,
+						  Attributes);
+	if (Status == STATUS_REPARSE)
+	  {
+	     /* reparse the object path */
+	     NextObject = NameSpaceRoot;
+	     current = PathString.Buffer;
+
+	     ObReferenceObjectByPointer(NextObject,
+					DIRECTORY_TRAVERSE,
+					NULL,
+					UserMode);
+	  }
+
+	if (NextObject == NULL)
+	  {
+	     break;
+	  }
+	ObDereferenceObject(CurrentObject);
+	CurrentObject = NextObject;
+    }
+
+  if (current)
+     RtlpCreateUnicodeString (RemainingPath, current, NonPagedPool);
+  RtlFreeUnicodeString (&PathString);
+  *ReturnedObject = CurrentObject;
+
+  return STATUS_SUCCESS;
+}
+
 /*
  * @implemented
  */
@@ -199,13 +331,13 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 	 KeyHandle,
 	 ObjectAttributes->RootDirectory);
 
-  Status = ObFindObject(ObjectAttributes,
+  Status = CmpFindObject(ObjectAttributes,
 			&Object,
 			&RemainingPath,
 			CmiKeyType);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("ObFindObject failed, Status: 0x%x\n", Status);
+      DPRINT("CmpFindObject failed, Status: 0x%x\n", Status);
       return(Status);
     }
 
@@ -379,7 +511,7 @@ NtDeleteKey(IN HANDLE KeyHandle)
 
   PAGED_CODE();
 
-  DPRINT1("NtDeleteKey(KeyHandle %x) called\n", KeyHandle);
+  DPRINT("NtDeleteKey(KeyHandle %x) called\n", KeyHandle);
 
   PreviousMode = ExGetPreviousMode();
 
@@ -418,7 +550,7 @@ NtDeleteKey(IN HANDLE KeyHandle)
   ExReleaseResourceLite(&CmiRegistryLock);
   KeLeaveCriticalRegion();
 
-  DPRINT1("PointerCount %lu\n", ObGetObjectPointerCount((PVOID)KeyObject));
+  DPRINT("PointerCount %lu\n", ObGetObjectPointerCount((PVOID)KeyObject));
 
   /* Dereference the object */
   ObDereferenceObject(KeyObject);
@@ -1146,14 +1278,14 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 	  return(STATUS_BUFFER_OVERFLOW);*/
 
   RemainingPath.Buffer = NULL;
-  Status = ObFindObject(ObjectAttributes,
+  Status = CmpFindObject(ObjectAttributes,
 			&Object,
 			&RemainingPath,
 			CmiKeyType);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("ObFindObject() returned 0x%08lx\n", Status);
-	  Status = STATUS_INVALID_HANDLE; /* Because ObFindObject returns STATUS_UNSUCCESSFUL */
+      DPRINT("CmpFindObject() returned 0x%08lx\n", Status);
+	  Status = STATUS_INVALID_HANDLE; /* Because CmpFindObject returns STATUS_UNSUCCESSFUL */
 	  hKey = *KeyHandle; /* Preserve hkResult value */
 	  goto openkey_cleanup;
     }

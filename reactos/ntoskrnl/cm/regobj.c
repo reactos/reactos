@@ -176,6 +176,15 @@ CmiObjectParse(PVOID ParsedObject,
 	  RtlFreeUnicodeString(&KeyName);
 	  return(Status);
 	}
+    DPRINT("Inserting Key into Object Tree\n");
+    Status =  ObInsertObject((PVOID)FoundObject,
+                             NULL,
+                             KEY_ALL_ACCESS,
+                             0,
+                             NULL,
+                             NULL);
+    DPRINT("Status %x\n", Status);
+
       /* Add the keep-alive reference */
       ObReferenceObject(FoundObject);
 
@@ -503,7 +512,7 @@ CmiObjectQueryName (PVOID ObjectBody,
   else
     {
       /* KeyObject is the root key */
-      Status = ObQueryNameString (BODY_TO_HEADER(KeyObject)->Parent,
+      Status = ObQueryNameString (BODY_TO_HEADER(KeyObject)->NameInfo->Directory,
 				  LocalInfo,
 				  MAX_PATH * sizeof(WCHAR),
 				  &LocalReturnLength);

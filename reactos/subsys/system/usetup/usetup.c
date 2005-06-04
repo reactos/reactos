@@ -59,6 +59,7 @@ typedef enum _PAGE_NUMBER
   START_PAGE,
   INTRO_PAGE,
   LICENSE_PAGE,
+  WARNING_PAGE,
   INSTALL_INTRO_PAGE,
 
 //  SCSI_CONTROLLER_PAGE,
@@ -87,8 +88,6 @@ typedef enum _PAGE_NUMBER
   BOOT_LOADER_HARDDISK_PAGE,
 
   REPAIR_INTRO_PAGE,
-
-  EMERGENCY_INTRO_PAGE,
 
   SUCCESS_PAGE,
   QUIT_PAGE,
@@ -710,12 +709,11 @@ IntroPage(PINPUT_RECORD Ir)
   SetTextXY(6, 12, "computer and prepares the second part of the setup.");
 
   SetTextXY(8, 15, "\x07  Press ENTER to install ReactOS.");
-  SetTextXY(8, 17, "\x07  Press L to view the licensing terms for ReactOS.");
-  SetTextXY(8, 19, "\x07  Press E to start the emergency console.");
-  SetTextXY(8, 21, "\x07  Press R to repair ReactOS.");
-  SetTextXY(8, 23, "\x07  Press F3 to quit without installing ReactOS.");
+  SetTextXY(8, 17, "\x07  Press R to repair ReactOS.");
+  SetTextXY(8, 19, "\x07  Press L to view the ReactOS Licensing Terms and Conditions");
+  SetTextXY(8, 21, "\x07  Press F3 to quit without installing ReactOS.");
 
-  SetStatusText("   ENTER = Continue   F3 = Quit");
+  SetStatusText("   ENTER = Continue  R = Repair F3 = Quit");
 
   if (IsUnattendedSetup)
     {
@@ -735,20 +733,19 @@ IntroPage(PINPUT_RECORD Ir)
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
-	  return INSTALL_INTRO_PAGE;
-	}
-      else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'L') /* L */
-	{
-	  return LICENSE_PAGE;
-	}
-      else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'E') /* E */
-	{
-	  return EMERGENCY_INTRO_PAGE;
+	  return WARNING_PAGE;
+      break;
 	}
       else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'R') /* R */
 	{
 	  return REPAIR_INTRO_PAGE;
+      break;
 	}
+      else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'L') /* R */
+	{
+	  return LICENSE_PAGE;
+      break;
+	}   
     }
 
   return INTRO_PAGE;
@@ -779,60 +776,61 @@ LicensePage(PINPUT_RECORD Ir)
   SetTextXY(8, 23, "GNU General Public License with ReactOS please visit");
   SetHighlightedTextXY(8, 25, "http://www.gnu.org/licenses/licenses.html");
 
-  SetStatusText("ENTER = Continue   F3 = Quit");
+  SetStatusText("   ENTER = Return");
+
+  while (TRUE)
+    {
+      ConInKey(Ir);
+
+      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
+      {
+          return INTRO_PAGE;
+          break;
+      }
+    }
+
+  return LICENSE_PAGE;
+}
+
+/*
+ * Warning Page
+ * RETURNS
+ *	Continues to setup
+ */
+static PAGE_NUMBER
+WarningPage(PINPUT_RECORD Ir)
+{
+  SetUnderlinedTextXY(4, 3, " ReactOS " KERNEL_VERSION_STR " Warranty Statement");
+  SetHighlightedTextXY(6, 8, "Warranty:");
+
+  SetTextXY(8, 11, "This is free software; see the source for copying conditions.");
+  SetTextXY(8, 12, "There is NO warranty; not even for MERCHANTABILITY or");
+  SetTextXY(8, 13, "FITNESS FOR A PARTICULAR PURPOSE");
+
+  SetTextXY(8, 15, "For more information on ReactOS, please visit:");
+  SetHighlightedTextXY(8, 16, "http://www.reactos.org");
+
+  SetStatusText("   F8 = Continue   ESC = Exit");
 
   while (TRUE)
     {
       ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F8)) /* F8 */
 	{
-	  if (ConfirmQuit(Ir) == TRUE)
-	    return QUIT_PAGE;
+	    return INSTALL_INTRO_PAGE;
 	  break;
 	}
-      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)) /* ESC */
 	{
-	  return INTRO_PAGE;
+	  return QUIT_PAGE;
 	}
     }
 
   return LICENSE_PAGE;
 }
-
-static PAGE_NUMBER
-EmergencyIntroPage(PINPUT_RECORD Ir)
-{
-  SetTextXY(6, 8, "ReactOS Setup is in an early development phase. It does not yet");
-  SetTextXY(6, 9, "support all the functions of a fully usable setup application.");
-
-  SetTextXY(6, 12, "The emergency console is not implemented yet.");
-
-  SetTextXY(8, 15, "\x07  Press ESC to return to the main page.");
-
-  SetTextXY(8, 17, "\x07  Press ENTER to reboot your computer.");
-
-  SetStatusText("   ESC = Main page  ENTER = Reboot");
-
-  while(TRUE)
-    {
-      ConInKey(Ir);
-
-      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
-	{
-	  return REBOOT_PAGE;
-	}
-      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)) /* ESC */
-	{
-	  return INTRO_PAGE;
-	}
-    }
-
-  return REPAIR_INTRO_PAGE;
-}
-
 
 static PAGE_NUMBER
 RepairIntroPage(PINPUT_RECORD Ir)
@@ -842,9 +840,11 @@ RepairIntroPage(PINPUT_RECORD Ir)
 
   SetTextXY(6, 12, "The repair functions are not implemented yet.");
 
-  SetTextXY(8, 15, "\x07  Press ESC to return to the main page.");
+  SetTextXY(8, 15, "\x07  Press R for the Recovery Console.");
+  
+  SetTextXY(8, 17, "\x07  Press ESC to return to the main page.");
 
-  SetTextXY(8, 17, "\x07  Press ENTER to reboot your computer.");
+  SetTextXY(8, 19, "\x07  Press ENTER to reboot your computer.");
 
   SetStatusText("   ESC = Main page  ENTER = Reboot");
 
@@ -855,6 +855,10 @@ RepairIntroPage(PINPUT_RECORD Ir)
       if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
 	  return REBOOT_PAGE;
+	}
+    else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'R') /* R */
+	{
+	  return INTRO_PAGE;
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)) /* ESC */
@@ -870,6 +874,8 @@ RepairIntroPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 InstallIntroPage(PINPUT_RECORD Ir)
 {
+  SetUnderlinedTextXY(4, 3, " ReactOS " KERNEL_VERSION_STR " Setup ");
+
   SetTextXY(6, 8, "ReactOS Setup is in an early development phase. It does not yet");
   SetTextXY(6, 9, "support all the functions of a fully usable setup application.");
 
@@ -3140,11 +3146,7 @@ FileCopyCallback(PVOID Context,
 
       case SPFILENOTIFY_STARTCOPY:
 	/* Display copy message */
-	PrintTextXYN(6, 16, 60, "Copying file: %S", (PWSTR)Param1);
-
-	PrintTextXYN(6, 18, 60, "File %lu of %lu",
-		     CopyContext->CompletedOperations + 1,
-		     CopyContext->TotalOperations);
+    SetStatusText("                                                   \xB3 Copying file: %S", (PWSTR)Param1);
 	break;
 
       case SPFILENOTIFY_ENDCOPY:
@@ -3164,18 +3166,20 @@ FileCopyPage(PINPUT_RECORD Ir)
   SHORT xScreen;
   SHORT yScreen;
 
-  SetStatusText("   Please wait...");
+  SetStatusText("                                                           \xB3 Please wait...    ");
 
-  SetTextXY(6, 8, "Copying files");
+  SetTextXY(11, 12, "Please wait while ReactOS Setup copies files to your ReactOS");
+  SetTextXY(30, 13, "installation folder.");
+  SetTextXY(20, 14, "This may take several minutes to complete.");
 
-  GetScreenSize(&xScreen, &yScreen);
-
+  GetScreenSize(&xScreen, &yScreen);  
   CopyContext.TotalOperations = 0;
   CopyContext.CompletedOperations = 0;
-  CopyContext.ProgressBar = CreateProgressBar(6,
-					      yScreen - 14,
-					      xScreen - 7,
-					      yScreen - 10);
+  CopyContext.ProgressBar = CreateProgressBar(13,
+					      26,
+					      xScreen - 13,
+					      yScreen - 20,
+                          "Setup is copying files...");
 
   SetupCommitFileQueue(SetupFileQueue,
 		       DestinationRootPath.Buffer,
@@ -3811,6 +3815,11 @@ NtProcessStartup(PPEB Peb)
 	  case LICENSE_PAGE:
 	    Page = LicensePage(&Ir);
 	    break;
+        
+	  /* Warning page */
+	  case WARNING_PAGE:
+	    Page = WarningPage(&Ir);
+	    break;
 
 	  /* Intro page */
 	  case INTRO_PAGE:
@@ -3915,13 +3924,6 @@ NtProcessStartup(PPEB Peb)
 	  case REPAIR_INTRO_PAGE:
 	    Page = RepairIntroPage(&Ir);
 	    break;
-
-
-	  /* Emergency pages */
-	  case EMERGENCY_INTRO_PAGE:
-	    Page = EmergencyIntroPage(&Ir);
-	    break;
-
 
 	  case SUCCESS_PAGE:
 	    Page = SuccessPage(&Ir);

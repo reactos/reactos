@@ -18,6 +18,7 @@
 /* ke/main.c */
 extern LOADER_PARAMETER_BLOCK EXPORTED KeLoaderBlock;
 extern ULONG KeTickCount;
+extern BOOLEAN SetupMode;
 
 NTSTATUS
 LdrProcessModule(PVOID ModuleLoadBase,
@@ -151,6 +152,64 @@ IopDeleteDriver(PVOID ObjectBody)
 }
 
 NTSTATUS FASTCALL
+IopGetDriverObject(
+   PDRIVER_OBJECT *DriverObject,
+   PUNICODE_STRING ServiceName,
+   BOOLEAN FileSystem)
+{
+   PDRIVER_OBJECT Object;
+   WCHAR NameBuffer[MAX_PATH];
+   UNICODE_STRING DriverName;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   NTSTATUS Status;
+
+   DPRINT("IopOpenDriverObject(%p '%wZ' %x)\n",
+      DriverObject, ServiceName, FileSystem);
+
+   *DriverObject = NULL;
+
+   /* Create ModuleName string */
+   if (ServiceName == NULL || ServiceName->Buffer == NULL)
+      /* We don't know which DriverObject we have to open */
+      return STATUS_INVALID_PARAMETER_2;
+
+   if (FileSystem == TRUE)
+      wcscpy(NameBuffer, FILESYSTEM_ROOT_NAME);
+   else
+      wcscpy(NameBuffer, DRIVER_ROOT_NAME);
+   wcscat(NameBuffer, ServiceName->Buffer);
+
+   RtlInitUnicodeString(&DriverName, NameBuffer);
+   DPRINT("Driver name: '%wZ'\n", &DriverName);
+
+   /* Initialize ObjectAttributes for driver object */
+   InitializeObjectAttributes(
+      &ObjectAttributes,
+      &DriverName,
+      OBJ_OPENIF | OBJ_KERNEL_HANDLE,
+      NULL,
+      NULL);
+
+   /* Open driver object */
+   Status = ObReferenceObjectByName(
+      &DriverName,
+      0, /* Attributes */
+      NULL, /* PassedAccessState */
+      0, /* DesiredAccess */
+      IoDriverObjectType,
+      KernelMode,
+      NULL, /* ParseContext */
+      (PVOID*)&Object);
+
+   if (!NT_SUCCESS(Status))
+      return Status;
+
+   *DriverObject = Object;
+
+   return STATUS_SUCCESS;
+}
+
+NTSTATUS FASTCALL
 IopCreateDriverObject(
    PDRIVER_OBJECT *DriverObject,
    PUNICODE_STRING ServiceName,
@@ -218,15 +277,18 @@ IopCreateDriverObject(
       return Status;
    }
 
-   if (Status == STATUS_OBJECT_EXISTS)
+   Status = ObInsertObject(Object,
+                           NULL,
+                           FILE_ALL_ACCESS,
+                           0,
+                           NULL,
+                           NULL);
+   if (!NT_SUCCESS(Status))
    {
-      /* The driver object already exists, so it is already
-       * initialized. Don't initialize it once more. */
-      *DriverObject = Object;
-      return STATUS_SUCCESS;
-   }
+      return Status;
+   }  
 
-     /* Create driver extension */
+   /* Create driver extension */
    Object->DriverExtension = (PDRIVER_EXTENSION)
       ExAllocatePoolWithTag(
          NonPagedPool,
@@ -272,12 +334,23 @@ IopCreateDriverObject(
  * Display 'Loading XXX...' message.
  */
 
-VOID FASTCALL
-IopDisplayLoadingMessage(PWCHAR ServiceName)
+VOID 
+FASTCALL
+INIT_FUNCTION
+IopDisplayLoadingMessage(PVOID ServiceName, 
+                         BOOLEAN Unicode)
 {
-   CHAR TextBuffer[256];
-   sprintf(TextBuffer, "Loading %S...\n", ServiceName);
-   HalDisplayString(TextBuffer);
+    if (SetupMode) return;
+    CHAR TextBuffer[256];
+    if (Unicode) 
+    {
+        sprintf(TextBuffer, "Loading %S...\n", (PWCHAR)ServiceName);
+    }
+    else
+    {
+        sprintf(TextBuffer, "Loading %s...\n", (PCHAR)ServiceName);
+    }
+    HalDisplayString(TextBuffer);
 }
 
 /*
@@ -390,8 +463,8 @@ IopLoadServiceModule(
       DPRINT("RtlQueryRegistryValues() failed (Status %x)\n", Status);
       return Status;
    }
-
-   IopDisplayLoadingMessage(ServiceName->Buffer);
+   
+   IopDisplayLoadingMessage(ServiceName->Buffer, TRUE);
 
    /*
     * Normalize the image path for all later processing.
@@ -627,13 +700,10 @@ IopAttachFilterDriversCallback(
       else
       {
          /* get existing DriverObject pointer */
-         Status = IopCreateDriverObject(
+         Status = IopGetDriverObject(
             &DriverObject,
             &ServiceName,
-            OBJ_OPENIF,
-            FALSE,
-            ModuleObject->Base,
-            ModuleObject->Length);
+            FALSE);
          if (!NT_SUCCESS(Status))
             continue;
       }
@@ -1122,7 +1192,6 @@ IopInitializeBuiltinDriver(
    PDEVICE_NODE DeviceNode;
    PDRIVER_OBJECT DriverObject;
    NTSTATUS Status;
-   CHAR TextBuffer[256];
    PCHAR FileNameWithoutPath;
    LPWSTR FileExtension;
 
@@ -1130,11 +1199,9 @@ IopInitializeBuiltinDriver(
       FileName, ModuleLoadBase, ModuleLength);
 
    /*
-    * Display 'Initializing XXX...' message
+    * Display 'Loading XXX...' message
     */
-
-   sprintf(TextBuffer, "Initializing %s...\n", FileName);
-   HalDisplayString(TextBuffer);
+   IopDisplayLoadingMessage(FileName, FALSE);
 
    /*
     * Determine the right device object
@@ -1307,7 +1374,7 @@ IopLoadDriver(PSERVICE Service)
 {
    NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
-   IopDisplayLoadingMessage(Service->ServiceName.Buffer);
+   IopDisplayLoadingMessage(Service->ServiceName.Buffer, TRUE);
    Status = ZwLoadDriver(&Service->RegistryPath);
    IopBootLog(&Service->ImagePath, NT_SUCCESS(Status) ? TRUE : FALSE);
    if (!NT_SUCCESS(Status))

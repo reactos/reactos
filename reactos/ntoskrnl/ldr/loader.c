@@ -792,7 +792,7 @@ LdrPEProcessModule(
         CPRINT("Failed to allocate a virtual section for driver\n");
         return STATUS_UNSUCCESSFUL;
     }
-    DbgPrint("DriverBase for %wZ: %x\n", FileName, DriverBase);
+    DPRINT("DriverBase for %wZ: %x\n", FileName, DriverBase);
 
     /*  Copy headers over */
     memcpy(DriverBase, ModuleLoadBase, PENtHeaders->OptionalHeader.SizeOfHeaders);

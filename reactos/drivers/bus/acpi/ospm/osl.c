@@ -98,7 +98,7 @@ acpi_os_vprintf(const NATIVE_CHAR *fmt, va_list args)
 	static char Buffer[512];
   LONG Size = vsprintf(Buffer, fmt, args);
 
-	DbgPrint("%s", Buffer);
+	DPRINT("%s", Buffer);
 	return Size;
 }
 

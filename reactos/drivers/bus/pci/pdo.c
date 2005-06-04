@@ -409,6 +409,8 @@ PdoQueryResourceRequirements(
 
   ResourceList->ListSize = ListSize;
   ResourceList->InterfaceType = PCIBus;
+  ResourceList->BusNumber = DeviceExtension->BusNumber,
+  ResourceList->SlotNumber = DeviceExtension->SlotNumber.u.AsULONG,
   ResourceList->AlternativeLists = 1;
 
   ResourceList->List[0].Version = 1;

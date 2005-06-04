@@ -45,6 +45,39 @@ NTSTATUS STDCALL I8042SynchWritePortMouse(PVOID Context,
 	                           WaitForAck);
 }
 
+/* Test if packets are taking too long to come in. If they do, we
+ * might have gotten out of sync and should just drop what we have.
+ *
+ * If we want to be totally right, we'd also have to keep a count of
+ * errors, and totally reset the mouse after too much of them (can
+ * happen if the user is using a KVM switch and an OS on another port
+ * resets the mouse, or if the user hotplugs the mouse, or if we're just
+ * generally unlucky). Also note the input parsing routine where we
+ * drop invalid input packets.
+ */
+static VOID STDCALL I8042MouseInputTestTimeout(PDEVICE_EXTENSION DevExt)
+{
+	ULARGE_INTEGER Now;
+
+	if (DevExt->MouseState == MouseExpectingACK ||
+	    DevExt->MouseState == MouseResetting)
+		return;
+
+	Now.QuadPart = KeQueryInterruptTime();
+
+	if (DevExt->MouseState != MouseIdle) {
+		/* Check if the last byte came too long ago */
+		if (Now.QuadPart - DevExt->MousePacketStartTime.QuadPart >
+		                           DevExt->Settings.MouseSynchIn100ns) {
+			DPRINT1("Mouse input packet timeout\n");
+			DevExt->MouseState = MouseIdle;
+		}
+	}
+
+	if (DevExt->MouseState == MouseIdle)
+		DevExt->MousePacketStartTime.QuadPart = Now.QuadPart;
+}
+
 /*
  * Call the customization hook. The Ret2 parameter is about wether
  * we should go on with the interrupt. The return value is what
@@ -516,6 +549,8 @@ BOOLEAN STDCALL I8042InterruptServiceMouse(struct _KINTERRUPT *Interrupt,
 		DPRINT("Irq eaten by packet\n");
 		return TRUE;
 	}
+
+	I8042MouseInputTestTimeout(DevExt);
 
 	if (I8042MouseResetIsr(DevExt, PortStatus, &Output)) {
 		DPRINT("Handled by ResetIsr or hooked Isr\n");

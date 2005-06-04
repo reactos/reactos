@@ -42,6 +42,8 @@ typedef struct _PROGRESS
 
   ULONG StepCount;
   ULONG CurrentStep;
+  
+  CHAR *Text;
 } PROGRESSBAR, *PPROGRESSBAR;
 
 /* FUNCTIONS ****************************************************************/
@@ -50,7 +52,8 @@ PPROGRESSBAR
 CreateProgressBar(SHORT Left,
 		  SHORT Top,
 		  SHORT Right,
-		  SHORT Bottom);
+		  SHORT Bottom,
+          char* Text);
 
 VOID
 DestroyProgressBar(PPROGRESSBAR Bar);

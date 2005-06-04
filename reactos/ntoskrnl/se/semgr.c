@@ -362,9 +362,11 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
     {
       DPRINT("Use explicit owner sid!\n");
       Owner = ExplicitDescriptor->Owner;
+      
       if (ExplicitDescriptor->Control & SE_SELF_RELATIVE)
 	{
 	  Owner = (PSID)(((ULONG_PTR)Owner) + (ULONG_PTR)ExplicitDescriptor);
+
 	}
     }
   else

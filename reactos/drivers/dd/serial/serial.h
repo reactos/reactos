@@ -327,7 +327,8 @@ SerialAddDevice(
 NTSTATUS STDCALL
 SerialPnpStartDevice(
 	IN PDEVICE_OBJECT DeviceObject,
-	IN PCM_RESOURCE_LIST ResourceList);
+	IN PCM_RESOURCE_LIST ResourceList,
+	IN PCM_RESOURCE_LIST ResourceListTranslated);
 
 NTSTATUS STDCALL
 SerialPnp(

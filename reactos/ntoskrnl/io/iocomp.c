@@ -514,9 +514,6 @@ NtRemoveIoCompletion(IN  HANDLE IoCompletionHandle,
 
                 Status = _SEH_GetExceptionCode();
             } _SEH_END;
-
-            /* Free packet */
-            ExFreeToNPagedLookasideList(&IoCompletionPacketLookaside, Packet);
         }
 
         /* Dereference the Object */

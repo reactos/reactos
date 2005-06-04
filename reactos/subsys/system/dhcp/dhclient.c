@@ -71,7 +71,7 @@
 #define	middlechar(c) (borderchar(c) || hyphenchar(c))
 #define	domainchar(c) ((c) > 0x20 && (c) < 0x7f)
 
-unsigned long debug_trace_level = DEBUG_ULTRA;
+unsigned long debug_trace_level = 0; /* DEBUG_ULTRA */
 time_t cur_time;
 time_t default_lease_time = 43200; /* 12 hours... */
 
@@ -661,7 +661,7 @@ dhcpoffer(struct packet *packet)
 	struct interface_info *ip = packet->interface;
 	struct client_lease *lease, *lp;
 	int i;
-	int arp_timeout_needed, stop_selecting;
+	int arp_timeout_needed = 0, stop_selecting;
 	char *name = packet->options[DHO_DHCP_MESSAGE_TYPE].len ?
 	    "DHCPOFFER" : "BOOTREPLY";
 

@@ -702,7 +702,7 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
   DPRINT("CmiConnectHive(%p, %p) called.\n",
 	 KeyObjectAttributes, RegistryHive);
 
-  Status = ObFindObject(KeyObjectAttributes,
+  Status = CmpFindObject(KeyObjectAttributes,
 			(PVOID*)&ParentKey,
 			&RemainingPath,
 			CmiKeyType);
@@ -746,6 +746,7 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 			  0,
 			  0,
 			  (PVOID*)&NewKey);
+                            
   if (!NT_SUCCESS(Status))
     {
       DPRINT1 ("ObCreateObject() failed (Status %lx)\n", Status);
@@ -753,7 +754,14 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
       RtlFreeUnicodeString(&RemainingPath);
       return Status;
     }
-
+    DPRINT("Inserting Key into Object Tree\n");
+    Status =  ObInsertObject((PVOID)NewKey,
+                             NULL,
+                             KEY_ALL_ACCESS,
+                             0,
+                             NULL,
+                             NULL);
+DPRINT("Status %x\n", Status);
   NewKey->RegistryHive = RegistryHive;
   NewKey->KeyCellOffset = RegistryHive->HiveHeader->RootKeyOffset;
   NewKey->KeyCell = CmiGetCell (RegistryHive, NewKey->KeyCellOffset, NULL);

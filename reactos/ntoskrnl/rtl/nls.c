@@ -139,7 +139,16 @@ RtlpCreateNlsSection(VOID)
       DPRINT1("MmCreateSection() failed\n");
       KEBUGCHECKEX(0x32, Status, 1, 1, 0);
     }
-
+   Status = ObInsertObject(NlsSectionObject,
+                           NULL,
+                           SECTION_ALL_ACCESS,
+                           0,
+                           NULL,
+                           NULL);
+   if (!NT_SUCCESS(Status))
+   {
+      ObDereferenceObject(NlsSectionObject);
+   }
   Status = MmMapViewInSystemSpace(NlsSectionObject,
               &NlsSectionBase,
               &NlsSectionViewSize);

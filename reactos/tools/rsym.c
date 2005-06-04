@@ -368,7 +368,8 @@ MergeStabsAndCoffs(ULONG *MergedSymbolCount, PROSSYM_ENTRY *MergedSymbols,
           CoffIndex++;
         }
       NewStabFunctionStringOffset = (*MergedSymbols)[*MergedSymbolCount].FunctionOffset;
-      if (CoffSymbols[CoffIndex].Address < (*MergedSymbols)[*MergedSymbolCount].Address
+      if (CoffSymbolsCount > 0 &&
+          CoffSymbols[CoffIndex].Address < (*MergedSymbols)[*MergedSymbolCount].Address
           && StabFunctionStartAddress < CoffSymbols[CoffIndex].Address
           && 0 != CoffSymbols[CoffIndex].FunctionOffset)
         {
@@ -797,6 +798,13 @@ int main(int argc, char* argv[])
     {
       free(FileData);
       exit(1);
+    }
+
+  if (StabsLength == 0 || StabStringsLength == 0)
+    {
+      /* no symbol info */
+      free(FileData);
+      return 0;
     }
 
   if (GetCoffInfo(FileData, PEFileHeader, PESectionHeaders, &CoffsLength, &CoffBase,

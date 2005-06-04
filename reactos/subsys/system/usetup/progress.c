@@ -84,6 +84,78 @@ DrawBorder(PPROGRESSBAR Bar)
 			     &Written);
 }
 
+static VOID
+DrawThickBorder(PPROGRESSBAR Bar)
+{
+  COORD coPos;
+  ULONG Written;
+  SHORT i;
+
+  /* draw upper left corner */
+  coPos.X = Bar->Left;
+  coPos.Y = Bar->Top + 1;
+  FillConsoleOutputCharacter(0xC9, // '+',
+			     1,
+			     coPos,
+			     &Written);
+
+  /* draw upper edge */
+  coPos.X = Bar->Left + 1;
+  coPos.Y = Bar->Top + 1;
+  FillConsoleOutputCharacter(0xCD, // '-',
+			     Bar->Right - Bar->Left - 1,
+			     coPos,
+			     &Written);
+
+  /* draw upper right corner */
+  coPos.X = Bar->Right;
+  coPos.Y = Bar->Top + 1;
+  FillConsoleOutputCharacter(0xBB, // '+',
+			     1,
+			     coPos,
+			     &Written);
+
+  /* draw left and right edge */
+  for (i = Bar->Top + 2; i < Bar->Bottom; i++)
+    {
+      coPos.X = Bar->Left;
+      coPos.Y = i;
+      FillConsoleOutputCharacter(0xBA, // '|',
+				 1,
+				 coPos,
+				 &Written);
+
+      coPos.X = Bar->Right;
+      FillConsoleOutputCharacter(0xBA, //'|',
+				 1,
+				 coPos,
+				 &Written);
+    }
+
+  /* draw lower left corner */
+  coPos.X = Bar->Left;
+  coPos.Y = Bar->Bottom;
+  FillConsoleOutputCharacter(0xC8, // '+',
+			     1,
+			     coPos,
+			     &Written);
+
+  /* draw lower edge */
+  coPos.X = Bar->Left + 1;
+  coPos.Y = Bar->Bottom;
+  FillConsoleOutputCharacter(0xCD, // '-',
+			     Bar->Right - Bar->Left - 1,
+			     coPos,
+			     &Written);
+
+  /* draw lower right corner */
+  coPos.X = Bar->Right;
+  coPos.Y = Bar->Bottom;
+  FillConsoleOutputCharacter(0xBC, // '+',
+			     1,
+			     coPos,
+			     &Written);
+}
 
 static VOID
 DrawProgressBar(PPROGRESSBAR Bar)
@@ -91,6 +163,7 @@ DrawProgressBar(PPROGRESSBAR Bar)
   CHAR TextBuffer[8];
   COORD coPos;
   ULONG Written;
+  PROGRESSBAR BarBorder = *Bar;
 
   /* Print percentage */
   sprintf(TextBuffer, "%-3lu%%", Bar->Percent);
@@ -101,7 +174,18 @@ DrawProgressBar(PPROGRESSBAR Bar)
 			       4,
 			       coPos);
 
+  /* Draw the progress bar border */
   DrawBorder(Bar);
+  
+  /* Write Text Associated with Bar */
+  SetTextXY(10, 24, Bar->Text);
+  
+  /* Draw the progress bar "border" border */
+  BarBorder.Top -= 5;
+  BarBorder.Bottom += 2;
+  BarBorder.Right += 5;
+  BarBorder.Left -= 5;
+  DrawThickBorder(&BarBorder);
 
   /* Draw the bar */
   coPos.X = Bar->Left + 1;
@@ -126,7 +210,8 @@ PPROGRESSBAR
 CreateProgressBar(SHORT Left,
 		  SHORT Top,
 		  SHORT Right,
-		  SHORT Bottom)
+		  SHORT Bottom,
+          char* Text)
 {
   PPROGRESSBAR Bar;
 
@@ -140,6 +225,7 @@ CreateProgressBar(SHORT Left,
   Bar->Top = Top;
   Bar->Right = Right;
   Bar->Bottom = Bottom;
+  Bar->Text = Text;
 
   Bar->Width = Bar->Right - Bar->Left + 1;
 
