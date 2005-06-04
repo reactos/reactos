@@ -519,8 +519,8 @@ l_ReadHeaderFromFile:
  /* size of the executable's headers */
  if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, SizeOfHeaders))
  {
-  if(!IsAligned(piohOptHeader->SizeOfHeaders, nFileAlignment))
-   DIE(("SizeOfHeaders is not aligned\n"));
+  //if(!IsAligned(piohOptHeader->SizeOfHeaders, nFileAlignment))
+   //DIE(("SizeOfHeaders is not aligned\n"));
 
   if(cbSectionHeadersSize > piohOptHeader->SizeOfHeaders)
    DIE(("The section headers overflow SizeOfHeaders\n"));
@@ -613,7 +613,7 @@ l_ReadHeaderFromFile:
  /* initialize the headers segment */
  pssSegments = ImageSectionObject->Segments;
 
- ASSERT(IsAligned(cbHeadersSize, nFileAlignment));
+ //ASSERT(IsAligned(cbHeadersSize, nFileAlignment));
 
  if(!AlignUp(&nFileSizeOfHeaders, cbHeadersSize, nFileAlignment))
   DIE(("Cannot align the size of the section headers\n"));
@@ -657,8 +657,8 @@ l_ReadHeaderFromFile:
     DIE(("SizeOfRawData[%u] is not aligned\n", i));
 #endif
 
-   if(!IsAligned(pishSectionHeaders[i].PointerToRawData, nFileAlignment))
-    DIE(("PointerToRawData[%u] is not aligned\n", i));
+   //if(!IsAligned(pishSectionHeaders[i].PointerToRawData, nFileAlignment))
+    //DIE(("PointerToRawData[%u] is not aligned\n", i));
 
    /* conversion */
    pssSegments[i].FileOffset = pishSectionHeaders[i].PointerToRawData;

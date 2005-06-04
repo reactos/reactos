@@ -176,9 +176,7 @@ static int output_exports( FILE *outfile, int nr_exports, DLLSPEC *spec )
         case TYPE_CDECL:
             if (!(odp->flags & FLAG_FORWARD))
             {
-                fprintf( outfile, "    \"\\t.long " __ASM_NAME("%s") "\\n\"\n",
-                         (odp->flags & FLAG_REGISTER) ? make_internal_name( odp, spec, "regs" )
-                         : odp->link_name );
+                fprintf( outfile, "    \"\\t.long " __ASM_NAME("%s") "\\n\"\n", odp->link_name );
             }
             else
             {
@@ -261,7 +259,6 @@ static int output_exports( FILE *outfile, int nr_exports, DLLSPEC *spec )
         {
             ORDDEF *odp = spec->ordinals[i];
             unsigned int j, args, mask = 0;
-            const char *name;
 
             /* skip nonexistent entry points */
             if (!odp) goto ignore;
@@ -277,22 +274,20 @@ static int output_exports( FILE *outfile, int nr_exports, DLLSPEC *spec )
             }
             if ((odp->flags & FLAG_RET64) && (j < 16)) mask |= 0x80000000;
 
-            name = odp->link_name;
             args = strlen(odp->u.func.arg_types) * sizeof(int);
-            if (odp->flags & FLAG_REGISTER) name = make_internal_name( odp, spec, "regs" );
 
             switch(odp->type)
             {
             case TYPE_STDCALL:
-                fprintf( outfile, "    \"\\tjmp " __ASM_NAME("%s") "\\n\"\n", name );
+                fprintf( outfile, "    \"\\tjmp " __ASM_NAME("%s") "\\n\"\n", odp->link_name );
                 fprintf( outfile, "    \"\\tret $%d\\n\"\n", args );
-                fprintf( outfile, "    \"\\t.long " __ASM_NAME("%s") ",0x%08x\\n\"\n", name, mask );
+                fprintf( outfile, "    \"\\t.long " __ASM_NAME("%s") ",0x%08x\\n\"\n", odp->link_name, mask );
                 break;
             case TYPE_CDECL:
-                fprintf( outfile, "    \"\\tjmp " __ASM_NAME("%s") "\\n\"\n", name );
+                fprintf( outfile, "    \"\\tjmp " __ASM_NAME("%s") "\\n\"\n", odp->link_name );
                 fprintf( outfile, "    \"\\tret\\n\"\n" );
                 fprintf( outfile, "    \"\\t" __ASM_SHORT " %d\\n\"\n", args );
-                fprintf( outfile, "    \"\\t.long " __ASM_NAME("%s") ",0x%08x\\n\"\n", name, mask );
+                fprintf( outfile, "    \"\\t.long " __ASM_NAME("%s") ",0x%08x\\n\"\n", odp->link_name, mask );
                 break;
             default:
                 assert(0);
@@ -363,38 +358,6 @@ static void output_stub_funcs( FILE *outfile, DLLSPEC *spec )
             fprintf( outfile, "{ __wine_unimplemented(\"%s\"); }\n", odp->export_name );
         else
             fprintf( outfile, "{ __wine_unimplemented(\"%d\"); }\n", odp->ordinal );
-    }
-}
-
-
-/*******************************************************************
- *         output_register_funcs
- *
- * Output the functions for register entry points
- */
-static void output_register_funcs( FILE *outfile, DLLSPEC *spec )
-{
-    const char *name;
-    int i;
-
-    for (i = 0; i < spec->nb_entry_points; i++)
-    {
-        const ORDDEF *odp = &spec->entry_points[i];
-        if (odp->type != TYPE_STDCALL && odp->type != TYPE_CDECL) continue;
-        if (!(odp->flags & FLAG_REGISTER)) continue;
-        if (odp->flags & FLAG_FORWARD) continue;
-        name = make_internal_name( odp, spec, "regs" );
-        fprintf( outfile,
-                 "asm(\".align %d\\n\\t\"\n"
-                 "    \"" __ASM_FUNC("%s") "\\n\\t\"\n"
-                 "    \"" __ASM_NAME("%s") ":\\n\\t\"\n"
-                 "    \"call " __ASM_NAME("__wine_call_from_32_regs") "\\n\\t\"\n"
-                 "    \".long " __ASM_NAME("%s") "\\n\\t\"\n"
-                 "    \".byte %d,%d\");\n",
-                 get_alignment(4),
-                 name, name, odp->link_name,
-                 strlen(odp->u.func.arg_types) * sizeof(int),
-                 (odp->type == TYPE_CDECL) ? 0 : (strlen(odp->u.func.arg_types) * sizeof(int)) );
     }
 }
 
@@ -499,7 +462,7 @@ void output_dll_init( FILE *outfile, const char *constructor, const char *destru
 void BuildSpec32File( FILE *outfile, DLLSPEC *spec )
 {
     int exports_size = 0;
-    int nr_exports, nr_imports;
+    int nr_exports, nr_imports, nr_delayed;
     DWORD page_size;
     const char *init_func = spec->init_func;
 
@@ -561,10 +524,6 @@ void BuildSpec32File( FILE *outfile, DLLSPEC *spec )
         fprintf( outfile, "static void __asm__dummy(void) {\n" );
         fprintf( outfile, "#endif /* !defined(__GNUC__) */\n" );
 
-        /* Output code for all register functions */
-
-        output_register_funcs( outfile, spec );
-
         /* Output the exports and relay entry points */
 
         exports_size = output_exports( outfile, nr_exports, spec );
@@ -576,7 +535,7 @@ void BuildSpec32File( FILE *outfile, DLLSPEC *spec )
 
     /* Output the DLL imports */
 
-    nr_imports = output_imports( outfile, spec );
+    nr_imports = output_imports( outfile, spec, &nr_delayed );
 
     /* Output the resources */
 
@@ -626,10 +585,20 @@ void BuildSpec32File( FILE *outfile, DLLSPEC *spec )
                  "    if (reason == %d && __wine_spec_init_state == 1)\n"
                  "        _init( __wine_main_argc, __wine_main_argv, __wine_main_environ );\n"
                  "    ret = %s ? %s( inst, reason, reserved ) : 1;\n"
-                 "    if (reason == %d && __wine_spec_init_state == 1) _fini();\n"
-                 "    return ret;\n"
-                 "}\n",
+                 "    if (reason == %d && __wine_spec_init_state == 1)\n",
                  DLL_PROCESS_ATTACH, init_func, init_func, DLL_PROCESS_DETACH );
+        if (!nr_delayed)
+            fprintf( outfile, "        _fini();\n" );
+        else
+            fprintf( outfile,
+                     "    {\n"
+                     "        extern int __stdcall FreeLibrary(void *);\n"
+                     "        unsigned int i;\n"
+                     "        _fini();\n"
+                     "        for (i = 0; i < sizeof(__wine_delay_imp_hmod)/sizeof(__wine_delay_imp_hmod[0]); i++)\n"
+                     "            if (__wine_delay_imp_hmod[i]) FreeLibrary( __wine_delay_imp_hmod[i] );\n"
+                     "    }\n" );
+        fprintf( outfile, "    return ret;\n}\n" );
         init_func = "__wine_dll_main";
     }
     else switch(spec->subsystem)

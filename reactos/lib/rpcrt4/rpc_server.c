@@ -103,8 +103,6 @@ static HANDLE mgr_event;
 static HANDLE mgr_mutex;
 /* set when server thread has finished opening connections */
 static HANDLE server_ready_event;
-/* thread that waits for connections */
-static HANDLE server_thread;
 
 static CRITICAL_SECTION spacket_cs;
 static CRITICAL_SECTION_DEBUG spacket_cs_debug =
@@ -587,14 +585,18 @@ static void RPCRT4_sync_with_server_thread(void)
   ReleaseMutex(mgr_mutex);
 }
 
-static void RPCRT4_start_listen(BOOL auto_listen)
+static RPC_STATUS RPCRT4_start_listen(BOOL auto_listen)
 {
+  RPC_STATUS status = RPC_S_ALREADY_LISTENING;
+
   TRACE("\n");
 
   EnterCriticalSection(&listen_cs);
   if (auto_listen || (manual_listen_count++ == 0))
   {
+    status = RPC_S_OK;
     if (++listen_count == 1) {
+      HANDLE server_thread;
       /* first listener creates server thread */
       if (!mgr_mutex) mgr_mutex = CreateMutexW(NULL, FALSE, NULL);
       if (!mgr_event) mgr_event = CreateEventW(NULL, FALSE, FALSE, NULL);
@@ -603,13 +605,12 @@ static void RPCRT4_start_listen(BOOL auto_listen)
       if (!worker_tls) worker_tls = TlsAlloc();
       std_listen = TRUE;
       server_thread = CreateThread(NULL, 0, RPCRT4_server_thread, NULL, 0, NULL);
-    } else {
-      LeaveCriticalSection(&listen_cs);
-      RPCRT4_sync_with_server_thread();
-      return;
+      CloseHandle(server_thread);
     }
   }
   LeaveCriticalSection(&listen_cs);
+
+  return status;
 }
 
 static void RPCRT4_stop_listen(BOOL auto_listen)
@@ -977,23 +978,16 @@ RPC_STATUS WINAPI RpcServerRegisterAuthInfoW( LPWSTR ServerPrincName, unsigned l
  */
 RPC_STATUS WINAPI RpcServerListen( UINT MinimumCallThreads, UINT MaxCalls, UINT DontWait )
 {
+  RPC_STATUS status;
+
   TRACE("(%u,%u,%u)\n", MinimumCallThreads, MaxCalls, DontWait);
 
   if (!protseqs)
     return RPC_S_NO_PROTSEQS_REGISTERED;
 
-  EnterCriticalSection(&listen_cs);
+  status = RPCRT4_start_listen(FALSE);
 
-  if (std_listen) {
-    LeaveCriticalSection(&listen_cs);
-    return RPC_S_ALREADY_LISTENING;
-  }
-
-  RPCRT4_start_listen(FALSE);
-
-  LeaveCriticalSection(&listen_cs);
-
-  if (DontWait) return RPC_S_OK;
+  if (DontWait || (status != RPC_S_OK)) return status;
 
   return RpcMgmtWaitServerListen();
 }
@@ -1003,29 +997,20 @@ RPC_STATUS WINAPI RpcServerListen( UINT MinimumCallThreads, UINT MaxCalls, UINT 
  */
 RPC_STATUS WINAPI RpcMgmtWaitServerListen( void )
 {
-  RPC_STATUS rslt = RPC_S_OK;
-
-  TRACE("\n");
+  TRACE("()\n");
 
   EnterCriticalSection(&listen_cs);
 
-  if (!std_listen)
-    if ( (rslt = RpcServerListen(1, 0, TRUE)) != RPC_S_OK ) {
-      LeaveCriticalSection(&listen_cs);
-      return rslt;
-    }
+  if (!std_listen) {
+    LeaveCriticalSection(&listen_cs);
+    return RPC_S_NOT_LISTENING;
+  }
   
   LeaveCriticalSection(&listen_cs);
 
-  while (std_listen) {
-    WaitForSingleObject(mgr_event, INFINITE);
-    if (!std_listen) {
-      Sleep(100); /* don't spin violently */
-      TRACE("spinning.\n");
-    }
-  }
+  RPCRT4_sync_with_server_thread();
 
-  return rslt;
+  return RPC_S_OK;
 }
 
 /***********************************************************************

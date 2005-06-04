@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+#define IO_RESOURCE_REQUIRED  0x00  //ROS Extension
+ 
 #define ISAPNP_ADDRESS_PORT   0x0279    // ADDRESS (W)
 #define ISAPNP_WRITE_PORT     0x0A79    // WRITE_DATA (W)
 #define ISAPNP_MIN_READ_PORT  0x0203    // READ_DATA (R)

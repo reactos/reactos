@@ -29,12 +29,17 @@
 #define CHECKPOINT do { DbgPrint("(NTDLL:%s:%d) Checkpoint\n",__FILE__,__LINE__); } while(0)
 #endif
 
+#ifdef DBG
 #if defined(__GNUC__)
 #define DPRINT1(args...) do { DbgPrint("(NTDLL:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0)
 #else
 #define DPRINT1              DbgPrint("(NTDLL:%s:%d) ",__FILE__,__LINE__); DbgPrint
 #endif
 #define CHECKPOINT1 do { DbgPrint("(NTDLL:%s:%d) Checkpoint\n",__FILE__,__LINE__); } while(0)
+#else
+#define DPRINT1(args...)
+#define CHECKPOINT1(args...)
+#endif
 
 #define ROUNDUP(a,b)	((((a)+(b)-1)/(b))*(b))
 #define ROUNDDOWN(a,b)	(((a)/(b))*(b))

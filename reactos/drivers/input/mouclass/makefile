@@ -6,7 +6,7 @@ TARGET_TYPE = driver
 
 TARGET_NAME = mouclass
 
-TARGET_CFLAGS = -Wall -Werror
+TARGET_CFLAGS = -D__USE_32API -Wall -Werror
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 

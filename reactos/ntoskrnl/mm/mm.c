@@ -193,12 +193,12 @@ NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
 
    if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
    {
-      DbgPrint("Page fault at high IRQL was %d\n", KeGetCurrentIrql());
+      CPRINT("Page fault at high IRQL was %d\n", KeGetCurrentIrql());
       return(STATUS_UNSUCCESSFUL);
    }
    if (PsGetCurrentProcess() == NULL)
    {
-      DbgPrint("No current process\n");
+      CPRINT("No current process\n");
       return(STATUS_UNSUCCESSFUL);
    }
 
@@ -316,7 +316,7 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
 
    if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
    {
-      DbgPrint("Page fault at high IRQL was %d\n", KeGetCurrentIrql());
+      CPRINT("Page fault at high IRQL was %d, address %x\n", KeGetCurrentIrql(), Address);
       return(STATUS_UNSUCCESSFUL);
    }
    if (PsGetCurrentProcess() == NULL)
@@ -324,8 +324,11 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
       /* Allow this! It lets us page alloc much earlier! It won't be needed 
        * after my init patch anyways
        */
-      DbgPrint("No current process\n");
-      //return(STATUS_UNSUCCESSFUL);
+      CPRINT("No current process\n");
+      if (Address < KERNEL_BASE)
+      {
+         return(STATUS_UNSUCCESSFUL);
+      }
    }
 
    /*
@@ -338,7 +341,7 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
        */
       if (Mode != KernelMode)
       {
-         DbgPrint("%s:%d\n",__FILE__,__LINE__);
+	 CPRINT("Address: %x\n", Address);
          return(STATUS_UNSUCCESSFUL);
       }
       AddressSpace = MmGetKernelAddressSpace();

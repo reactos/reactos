@@ -30,6 +30,7 @@
 #include "objbase.h"
 #include "objidl.h"
 #include "wine/unicode.h"
+#include "wine/list.h"
 
 #define MSI_DATASIZEMASK 0x00ff
 #define MSITYPE_VALID    0x0100
@@ -77,6 +78,7 @@ typedef struct tagMSIQUERY
     MSIVIEW *view;
     UINT row;
     MSIDATABASE *db;
+    struct list mem;
 } MSIQUERY;
 
 /* maybe we can use a Variant instead of doing it ourselves? */
@@ -288,7 +290,7 @@ extern const WCHAR *msi_string_lookup_id( string_table *st, UINT id );
 extern UINT msi_string_get_codepage( string_table *st );
 
 
-extern UINT VIEW_find_column( MSIVIEW *view, LPWSTR name, UINT *n );
+extern UINT VIEW_find_column( MSIVIEW *view, LPCWSTR name, UINT *n );
 
 extern BOOL TABLE_Exists( MSIDATABASE *db, LPWSTR name );
 
@@ -342,6 +344,7 @@ extern MSICONDITION MSI_EvaluateConditionW( MSIPACKAGE *, LPCWSTR );
 extern UINT MSI_SetPropertyW( MSIPACKAGE *, LPCWSTR, LPCWSTR );
 extern UINT MSI_GetComponentStateW( MSIPACKAGE *, LPWSTR, INSTALLSTATE *, INSTALLSTATE * );
 extern UINT MSI_GetFeatureStateW( MSIPACKAGE *, LPWSTR, INSTALLSTATE *, INSTALLSTATE * );
+extern UINT WINAPI MSI_SetFeatureStateW(MSIPACKAGE*, LPCWSTR, INSTALLSTATE );
 
 /* for deformating */
 extern UINT MSI_FormatRecordW(MSIPACKAGE* package, MSIRECORD* record, 
@@ -357,6 +360,7 @@ extern UINT MSIREG_OpenUserProductsKey(LPCWSTR szProduct, HKEY* key, BOOL create
 extern UINT MSIREG_OpenFeatures(HKEY* key);
 extern UINT MSIREG_OpenFeaturesKey(LPCWSTR szProduct, HKEY* key, BOOL create);
 extern UINT MSIREG_OpenComponents(HKEY* key);
+extern UINT MSIREG_OpenUserComponentsKey(LPCWSTR szComponent, HKEY* key, BOOL create);
 extern UINT MSIREG_OpenComponentsKey(LPCWSTR szComponent, HKEY* key, BOOL create);
 extern UINT MSIREG_OpenProductsKey(LPCWSTR szProduct, HKEY* key, BOOL create);
 extern UINT MSIREG_OpenUserFeaturesKey(LPCWSTR szProduct, HKEY* key, BOOL create);
@@ -367,10 +371,10 @@ typedef VOID (*msi_dialog_event_handler)( MSIPACKAGE*, LPCWSTR, LPCWSTR, msi_dia
 extern msi_dialog *msi_dialog_create( MSIPACKAGE*, LPCWSTR, msi_dialog_event_handler );
 extern UINT msi_dialog_run_message_loop( msi_dialog* );
 extern void msi_dialog_end_dialog( msi_dialog* );
-extern void msi_dialog_check_messages( msi_dialog*, HANDLE );
+extern void msi_dialog_check_messages( HANDLE );
 extern void msi_dialog_do_preview( msi_dialog* );
 extern void msi_dialog_destroy( msi_dialog* );
-extern void msi_dialog_register_class( void );
+extern BOOL msi_dialog_register_class( void );
 extern void msi_dialog_unregister_class( void );
 
 /* UI globals */

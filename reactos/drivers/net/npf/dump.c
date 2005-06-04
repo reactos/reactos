@@ -26,7 +26,7 @@
 #include "ndis.h"
 #else
 #include <ddk/ntddk.h>
-#include <net/ndis.h>
+#include <ddk/ndis.h>
 //#define PsGetCurrentProcess() IoGetCurrentProcess()
 #ifndef PsGetCurrentThread
 #define PsGetCurrentThread() ((PETHREAD) (KeGetCurrentThread()))

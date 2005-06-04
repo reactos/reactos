@@ -26,7 +26,7 @@
 #include "ndis.h"
 #else
 #include <ddk/ntddk.h>
-#include <net/ndis.h>
+#include <ddk/ndis.h>
 #endif
 
 #include "ntddpack.h"
@@ -114,27 +114,14 @@ DriverEntry(
     ProtocolChar.MajorNdisVersion            = 3;
 #endif
     ProtocolChar.MinorNdisVersion            = 0;
-#ifndef __GNUC__
     ProtocolChar.Reserved                    = 0;
-#else
-    ProtocolChar.u1.Reserved                 = 0;
-#endif
     ProtocolChar.OpenAdapterCompleteHandler  = NPF_OpenAdapterComplete;
     ProtocolChar.CloseAdapterCompleteHandler = NPF_CloseAdapterComplete;
-#ifndef __GNUC__
     ProtocolChar.SendCompleteHandler         = NPF_SendComplete;
     ProtocolChar.TransferDataCompleteHandler = NPF_TransferDataComplete;
-#else
-    ProtocolChar.u2.SendCompleteHandler         = NPF_SendComplete;
-    ProtocolChar.u3.TransferDataCompleteHandler = NPF_TransferDataComplete;
-#endif
     ProtocolChar.ResetCompleteHandler        = NPF_ResetComplete;
     ProtocolChar.RequestCompleteHandler      = NPF_RequestComplete;
-#ifndef __GNUC__
     ProtocolChar.ReceiveHandler              = NPF_tap;
-#else
-    ProtocolChar.u4.ReceiveHandler           = NPF_tap;
-#endif
     ProtocolChar.ReceiveCompleteHandler      = NPF_ReceiveComplete;
     ProtocolChar.StatusHandler               = NPF_Status;
     ProtocolChar.StatusCompleteHandler       = NPF_StatusComplete;

@@ -24,6 +24,7 @@
 #include <setjmp.h>
 #include <windef.h>
 #include <excpt.h>
+#include <wine/port.h>
 
 /* The following definitions allow using exceptions in Wine and Winelib code
  *
@@ -75,6 +76,10 @@
 
 #else  /* USE_COMPILER_EXCEPTIONS */
 
+#ifndef __GNUC__
+#define __attribute__(x) /* nothing */
+#endif
+
 #define __TRY \
     do { __WINE_FRAME __f; \
          int __first = 1; \
@@ -91,7 +96,7 @@
              __f.u.filter = (func); \
              __wine_push_frame( &__f.frame ); \
              if (sigsetjmp( __f.jmp, 1 )) { \
-                 const __WINE_FRAME * const __eptr WINE_UNUSED = &__f; \
+                 const __WINE_FRAME * const __eptr __attribute__((unused)) = &__f; \
                  do {
 
 #define __ENDTRY \
@@ -125,10 +130,7 @@ typedef void (CALLBACK *__WINE_FINALLY)(BOOL);
 #define GetExceptionInformation() (__eptr)
 #define GetExceptionCode()        (__eptr->ExceptionRecord->ExceptionCode)
 
-#if defined(AbnormalTermination) && defined(__REACTOS__)
 #undef AbnormalTermination
-#endif 
-
 #define AbnormalTermination()     (!__normal)
 
 typedef struct __tagWINE_FRAME
@@ -175,8 +177,6 @@ static inline EXCEPTION_REGISTRATION_RECORD *__wine_pop_frame( EXCEPTION_REGISTR
 {
 #if defined(__GNUC__) && defined(__i386__)
     __asm__ __volatile__(".byte 0x64\n\tmovl %0,(0)"
-                         //: : "r" (frame->Prev) : "memory" );
-    //return frame->Prev;
                          : : "r" (frame->prev) : "memory" );
     return frame->prev;
 

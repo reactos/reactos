@@ -535,13 +535,13 @@ typedef struct versioninfo {
 	int	filetype;
 	int	filesubtype;
 	struct {
-		int fv:1;
-		int pv:1;
-		int fo:1;
-		int ff:1;
-		int ffm:1;
-		int ft:1;
-		int fst:1;
+		unsigned fv:1;
+		unsigned pv:1;
+		unsigned fo:1;
+		unsigned ff:1;
+		unsigned ffm:1;
+		unsigned ft:1;
+		unsigned fst:1;
 	} gotit;
 	ver_block_t	*blocks;
 	lvc_t		lvc;

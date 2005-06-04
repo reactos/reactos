@@ -54,7 +54,7 @@ typedef struct tagHOTKEY_INFO
     BYTE  CurrMod;
     INT   CaretPos;
     DWORD ScanCode;
-    WCHAR strNone[15]; /* hope its long enough ... */
+    WCHAR strNone[15]; /* hope it's long enough ... */
 } HOTKEY_INFO;
 
 static const WCHAR HOTKEY_plussep[] = { ' ', '+', ' ' };

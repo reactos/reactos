@@ -76,23 +76,19 @@ void ME_PaintContent(ME_TextEditor *editor, HDC hDC, BOOL bOnlyNew, RECT *rcUpda
       if (rcUpdate->bottom < ye)
         ye = rcUpdate->bottom;
     }
-    
-    rc.left = xs; /* FIXME remove if it's not necessary anymore */
-    rc.top = c.pt.y;
-    rc.right = xe;
-    rc.bottom = c.pt.y+1;
-    FillRect(hDC, &rc, (HBRUSH)GetStockObject(BLACK_BRUSH));
 
-    if (ys == c.pt.y) /* don't overwrite the top bar */
-      ys++;
     if (ye>ys) {
+      HBRUSH hbr;
+      hbr = CreateSolidBrush(ME_GetBackColor(c.editor));
       rc.left = xs;
       rc.top = ys;
       rc.right = xe;
       rc.bottom = ye;
-      /* this is not supposed to be gray, I know, but lets keep it gray for now for debugging purposes */
-      FillRect(hDC, &rc, (HBRUSH)GetStockObject(LTGRAY_BRUSH));
+      FillRect(hDC, &rc, hbr);
+      DeleteObject(hbr);
     }
+    if (ys == c.pt.y) /* don't overwrite the top bar */
+      ys++;
   }
   editor->nLastTotalLength = editor->nTotalLength;
   ME_DestroyContext(&c);

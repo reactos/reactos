@@ -163,7 +163,7 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
     HEADER_ITEM *phdi = &infoPtr->items[iItem];
     RECT r;
-    INT  oldBkMode;
+    INT  oldBkMode, cxEdge = GetSystemMetrics(SM_CXEDGE);
 
     TRACE("DrawItem(iItem %d bHotTrack %d unicode flag %d)\n", iItem, bHotTrack, infoPtr->bUnicode);
 
@@ -188,6 +188,9 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
     else
         DrawEdge (hdc, &r, EDGE_ETCHED, BF_BOTTOM | BF_RIGHT | BF_ADJUST);
 
+    r.left  -= cxEdge;
+    r.right += cxEdge;
+
     if (phdi->fmt & HDF_OWNERDRAW) {
 	DRAWITEMSTRUCT dis;
 	dis.CtlType    = ODT_HEADER;
@@ -206,149 +209,117 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
             SetBkMode(hdc, oldBkMode);
     }
     else {
-        UINT uTextJustify = DT_LEFT;
+	UINT rw, rh, /* width and height of r */
+	     *x = NULL, *w = NULL; /* x and width of the pic (bmp or img) which is part of cnt */
+	  /* cnt,txt,img,bmp */
+	UINT cx, tx, ix, bx,
+	     cw, tw, iw, bw;
+	BITMAP bmp;
 
-        if ((phdi->fmt & HDF_JUSTIFYMASK) == HDF_CENTER)
-            uTextJustify = DT_CENTER;
-        else if ((phdi->fmt & HDF_JUSTIFYMASK) == HDF_RIGHT)
-            uTextJustify = DT_RIGHT;
+	cw = tw = iw = bw = 0;
+	rw = r.right - r.left;
+	rh = r.bottom - r.top;
 
-	if ((phdi->fmt & HDF_BITMAP) && !(phdi->fmt & HDF_BITMAP_ON_RIGHT) && (phdi->hbm)) {
-	    BITMAP bmp;
-	    HDC    hdcBitmap;
-	    INT    yD, yS, cx, cy, rx, ry;
-
-	    GetObjectW (phdi->hbm, sizeof(BITMAP), (LPVOID)&bmp);
-
-	    ry = r.bottom - r.top;
-	    rx = r.right - r.left;
-
-	    if (ry >= bmp.bmHeight) {
-		cy = bmp.bmHeight;
-		yD = r.top + (ry - bmp.bmHeight) / 2;
-		yS = 0;
-	    }
-	    else {
-		cy = ry;
-		yD = r.top;
-		yS = (bmp.bmHeight - ry) / 2;
-
-	    }
-
-	    if (rx >= bmp.bmWidth + infoPtr->iMargin) {
-		cx = bmp.bmWidth;
-	    }
-	    else {
-		cx = rx - infoPtr->iMargin;
-	    }
-
-	    hdcBitmap = CreateCompatibleDC (hdc);
-	    SelectObject (hdcBitmap, phdi->hbm);
-	    BitBlt (hdc, r.left + infoPtr->iMargin, yD, cx, cy, hdcBitmap, 0, yS, SRCCOPY);
-	    DeleteDC (hdcBitmap);
-
-	    r.left += (bmp.bmWidth + infoPtr->iMargin);
-	}
-
-
-	if ((phdi->fmt & HDF_BITMAP) && (phdi->fmt & HDF_BITMAP_ON_RIGHT) && (phdi->hbm)) {
-	    BITMAP bmp;
-	    HDC    hdcBitmap;
-	    INT    xD, yD, yS, cx, cy, rx, ry, tx;
-	    RECT   textRect;
-
-	    GetObjectW (phdi->hbm, sizeof(BITMAP), (LPVOID)&bmp);
-
-	    textRect = r;
-	    if (phdi->fmt & HDF_STRING) {
-		DrawTextW (hdc, phdi->pszText, -1,
-			   &textRect, DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_CALCRECT);
-		tx = textRect.right - textRect.left;
-	    }
-	    else
-		tx = 0;
-	    ry = r.bottom - r.top;
-	    rx = r.right - r.left;
-
-	    if (ry >= bmp.bmHeight) {
-		cy = bmp.bmHeight;
-		yD = r.top + (ry - bmp.bmHeight) / 2;
-		yS = 0;
-	    }
-	    else {
-		cy = ry;
-		yD = r.top;
-		yS = (bmp.bmHeight - ry) / 2;
-
-	    }
-
-	    if (r.left + tx + bmp.bmWidth + 2*infoPtr->iMargin <= r.right) {
-		cx = bmp.bmWidth;
-		xD = r.left + tx + infoPtr->iMargin;
-	    }
-	    else {
-		if (rx >= bmp.bmWidth + infoPtr->iMargin ) {
-		    cx = bmp.bmWidth;
-		    xD = r.right - bmp.bmWidth - infoPtr->iMargin;
-		    r.right = xD - infoPtr->iMargin;
-		}
-		else {
-		    cx = rx - infoPtr->iMargin;
-		    xD = r.left;
-		    r.right = r.left;
-		}
-	    }
-
-	    hdcBitmap = CreateCompatibleDC (hdc);
-	    SelectObject (hdcBitmap, phdi->hbm);
-	    BitBlt (hdc, xD, yD, cx, cy, hdcBitmap, 0, yS, SRCCOPY);
-	    DeleteDC (hdcBitmap);
-	}
-
-	if ((phdi->fmt & HDF_IMAGE) && !(phdi->fmt & HDF_BITMAP_ON_RIGHT) && (infoPtr->himl)) {
-	    r.left += infoPtr->iMargin;
-	    ImageList_DrawEx(infoPtr->himl, phdi->iImage, hdc, r.left, r.top + (r.bottom-r.top- infoPtr->himl->cy)/2,
-			     infoPtr->himl->cx, r.bottom-r.top, CLR_DEFAULT, CLR_DEFAULT, 0); 
-	    r.left += infoPtr->himl->cx;
-	}
-
-	if ((phdi->fmt & HDF_IMAGE) && (phdi->fmt & HDF_BITMAP_ON_RIGHT) && (infoPtr->himl)) {
+	if (phdi->fmt & HDF_STRING) {
 	    RECT textRect;
-	    INT  tx;    
 
-	    textRect = r;
-	    if (phdi->fmt & HDF_STRING) {
-		DrawTextW (hdc, phdi->pszText, -1,
-			   &textRect, DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_CALCRECT);
-		tx = textRect.right - textRect.left;
-	    } 
-	    else
-		tx = 0;
+	    DrawTextW (hdc, phdi->pszText, -1,
+	               &textRect, DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_CALCRECT);
+	    cw = textRect.right - textRect.left + 2 * infoPtr->iMargin;
+	}
 
-	    if (tx < (r.right-r.left - infoPtr->himl->cx - GetSystemMetrics(SM_CXEDGE)))
-		ImageList_DrawEx(infoPtr->himl, phdi->iImage, hdc, r.left + tx + 2*infoPtr->iMargin,
-				 r.top + (r.bottom-r.top-infoPtr->himl->cy)/2, infoPtr->himl->cx, r.bottom-r.top, 
-				 CLR_DEFAULT, CLR_DEFAULT, 0);
-	    else {
-		INT x = max(r.right - infoPtr->iMargin - infoPtr->himl->cx, r.left);
-		INT cx = min(infoPtr->himl->cx, r.right-r.left - GetSystemMetrics(SM_CXEDGE));
-		ImageList_DrawEx(infoPtr->himl, phdi->iImage, hdc, x ,
-				 r.top + (r.bottom-r.top-infoPtr->himl->cy)/2, cx, r.bottom-r.top, 
-				 CLR_DEFAULT, CLR_DEFAULT, 0);	
-		r.right -= infoPtr->himl->cx - infoPtr->iMargin;
+	if ((phdi->fmt & HDF_IMAGE) && (infoPtr->himl)) {
+	    iw = infoPtr->himl->cx + 2 * infoPtr->iMargin;
+	    x = &ix;
+	    w = &iw;
+	}
+
+	if ((phdi->fmt & HDF_BITMAP) && (phdi->hbm)) {
+	    GetObjectW (phdi->hbm, sizeof(BITMAP), (LPVOID)&bmp);
+	    bw = bmp.bmWidth + 2 * infoPtr->iMargin;
+	    if (!iw) {
+		x = &bx;
+		w = &bw;
 	    }
-	}	
+	}
 
-        if (((phdi->fmt & HDF_STRING)
+	if (bw || iw)
+	    cw += *w; 
+
+	/* align cx using the unclipped cw */
+	if ((phdi->fmt & HDF_JUSTIFYMASK) == HDF_LEFT)
+	    cx = r.left;
+	else if ((phdi->fmt & HDF_JUSTIFYMASK) == HDF_CENTER)
+	    cx = r.left + rw / 2 - cw / 2;
+	else /* HDF_RIGHT */
+	    cx = r.right - cw;
+        
+	/* clip cx & cw */
+	if (cx < r.left)
+	    cx = r.left;
+	if (cx + cw > r.right)
+	    cw = r.right - cx;
+	
+	tx = cx + infoPtr->iMargin;
+	/* since cw might have changed we have to recalculate tw */
+	tw = cw - infoPtr->iMargin * 2;
+			
+	if (iw || bw) {
+	    tw -= *w;
+	    if (phdi->fmt & HDF_BITMAP_ON_RIGHT) {
+		/* put pic behind text */
+		*x = cx + tw + infoPtr->iMargin * 3;
+	    } else {
+		*x = cx + infoPtr->iMargin;
+		/* move text behind pic */
+		tx += *w;
+	    }
+	}
+
+	if (iw && bw) {
+	    /* since we're done with the layout we can
+	       now calculate the position of bmp which
+	       has no influence on alignment and layout
+	       because of img */
+	    if ((phdi->fmt & HDF_JUSTIFYMASK) == HDF_RIGHT)
+	        bx = cx - bw + infoPtr->iMargin;
+	    else
+	        bx = cx + cw + infoPtr->iMargin;
+	}
+
+	if (iw || bw) {
+	    HDC hClipDC = GetDC(hwnd);
+	    HRGN hClipRgn = CreateRectRgn(r.left, r.top, r.right, r.bottom);
+	    SelectClipRgn(hClipDC, hClipRgn);
+	    
+	    if (bw) {
+	        HDC hdcBitmap = CreateCompatibleDC (hClipDC);
+	        SelectObject (hdcBitmap, phdi->hbm);
+	        BitBlt (hClipDC, bx, r.top + ((INT)rh - bmp.bmHeight) / 2, 
+		        bmp.bmWidth, bmp.bmHeight, hdcBitmap, 0, 0, SRCCOPY);
+	        DeleteDC (hdcBitmap);
+	    }
+
+	    if (iw) {
+	        ImageList_DrawEx (infoPtr->himl, phdi->iImage, hClipDC, 
+	                          ix, r.top + ((INT)rh - infoPtr->himl->cy) / 2,
+	                          infoPtr->himl->cx, infoPtr->himl->cy, CLR_DEFAULT, CLR_DEFAULT, 0);
+	    }
+
+	    DeleteObject(hClipRgn);
+	    DeleteDC(hClipDC);
+	}
+        
+	if (((phdi->fmt & HDF_STRING)
 		|| (!(phdi->fmt & (HDF_OWNERDRAW|HDF_STRING|HDF_BITMAP|
 				   HDF_BITMAP_ON_RIGHT|HDF_IMAGE)))) /* no explicit format specified? */
 	    && (phdi->pszText)) {
-            oldBkMode = SetBkMode(hdc, TRANSPARENT);
-	    r.left += infoPtr->iMargin;
-	    r.right -= infoPtr->iMargin;
+	    oldBkMode = SetBkMode(hdc, TRANSPARENT);
 	    SetTextColor (hdc, (bHotTrack) ? COLOR_HIGHLIGHT : COLOR_BTNTEXT);
+	    r.left  = tx;
+	    r.right = tx + tw;
 	    DrawTextW (hdc, phdi->pszText, -1,
-	               &r, uTextJustify|DT_END_ELLIPSIS|DT_VCENTER|DT_SINGLELINE);
+	               &r, DT_LEFT|DT_END_ELLIPSIS|DT_VCENTER|DT_SINGLELINE);
 	    if (oldBkMode != TRANSPARENT)
 	        SetBkMode(hdc, oldBkMode);
         }

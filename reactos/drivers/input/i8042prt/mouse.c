@@ -334,7 +334,7 @@ BOOLEAN STDCALL I8042MouseResetIsr(PDEVICE_EXTENSION DevExt,
 	case ExpectingFinalResolutionACK:
 		I8042IsrWritePortMouse(DevExt,
 		                       DevExt->Settings.MouseResolution & 0xff);
-		DPRINT1("%x\n", DevExt->Settings.MouseResolution);
+		DPRINT("%x\n", DevExt->Settings.MouseResolution);
 		DevExt->MouseResetState = ExpectingFinalResolutionValueACK;
 		return TRUE;
 	case ExpectingFinalResolutionValueACK:

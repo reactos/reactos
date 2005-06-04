@@ -158,7 +158,6 @@ IntInitScreenInfo(
       ModeInfoPtr = ModeInfo;
       while (ModeCount-- > 0)
       {
-
          if (ModeInfoPtr->Length > 0 &&
 	     pDevMode->dmPelsWidth == ModeInfoPtr->VisScreenWidth &&
              pDevMode->dmPelsHeight == ModeInfoPtr->VisScreenHeight &&
@@ -170,7 +169,8 @@ IntInitScreenInfo(
             break;
          }
 
-         ModeInfoPtr++;
+         ModeInfoPtr = (PVIDEO_MODE_INFORMATION)
+            (((PUCHAR)ModeInfoPtr) + ModeInfoSize);
       }
    }
 
@@ -383,6 +383,7 @@ DrvGetModes(
    {
       if (ModeInfoPtr->Length == 0)
       {
+         ModeInfoPtr = (PVIDEO_MODE_INFORMATION)(((ULONG_PTR)ModeInfoPtr) + ModeInfoSize);
          continue;
       }
 

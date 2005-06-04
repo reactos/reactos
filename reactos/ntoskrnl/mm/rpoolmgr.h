@@ -249,6 +249,10 @@ RPoolRemoveFree ( PR_POOL pool, PR_FREE Item )
 #endif//DBG
 }
 
+#if !R_STACK
+#define RFreeFillStack(free)
+#define RUsedFillStack(used)
+#else
 static void
 RFreeFillStack ( PR_FREE free )
 {
@@ -270,6 +274,7 @@ RUsedFillStack ( PR_USED used )
 	for ( i = 0; i < R_EXTRA_STACK_UP; i++ )
 		used->LastOwnerStack[i] = stack[i+2];
 }
+#endif
 
 static PR_FREE
 RFreeInit ( void* memory )
@@ -332,7 +337,7 @@ RFormatTag ( rulong Tag, char* buf )
 }
 
 #if !R_RZ
-#define RUsedRedZoneCheck(pUsed,Addr,file,line)
+#define RUsedRedZoneCheck(pUsed,Addr,file,line, printzone)
 #else//R_RZ
 static void
 RiBadBlock ( PR_USED pUsed, char* Addr, const char* violation, const char* file, int line, int printzone )

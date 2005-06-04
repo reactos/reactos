@@ -103,7 +103,8 @@ PCSRSS_PROCESS_DATA STDCALL CsrCreateProcessData(HANDLE ProcessId)
             ProcessData[hash] = pProcessData->next;
 	    RtlFreeHeap(CsrssApiHeap, 0, pProcessData);
 	    pProcessData = NULL;
-        }
+         }
+         RtlInitializeCriticalSection(&pProcessData->HandleTableLock);
       }
    }
    else
@@ -160,6 +161,7 @@ NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
             }
           RtlFreeHeap(CsrssApiHeap, 0, pProcessData->HandleTable);
         }
+      RtlDeleteCriticalSection(&pProcessData->HandleTableLock);
       if (pProcessData->Console)
         {
           CsrReleaseObjectByPointer((Object_t *) pProcessData->Console);
@@ -254,7 +256,6 @@ CSR_API(CsrCreateProcess)
        if( !NT_SUCCESS( Status ) )
 	 {
 	   DbgPrint( "CSR: NtDuplicateObject() failed: %x\n", Status );
-	   InterlockedDecrement( &(NewProcessData->Console->Header.ReferenceCount) );
 	   CsrFreeProcessData( NewProcessData->ProcessId );
 	   Reply->Status = Status;
 	   return Status;

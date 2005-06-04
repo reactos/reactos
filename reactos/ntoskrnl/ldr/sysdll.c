@@ -56,6 +56,7 @@ PVOID LdrpGetSystemDllRaiseExceptionDispatcher(VOID)
 
 NTSTATUS
 STDCALL
+INIT_FUNCTION
 LdrpGetSystemDllEntryPoints(VOID)
 {
     ANSI_STRING ProcedureName;
@@ -169,6 +170,7 @@ LdrpMapSystemDll(PEPROCESS Process,
 
 NTSTATUS
 STDCALL
+INIT_FUNCTION
 LdrpInitializeSystemDll(VOID)
 {
     UNICODE_STRING DllPathname = ROS_STRING_INITIALIZER(L"\\SystemRoot\\system32\\ntdll.dll");

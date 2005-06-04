@@ -1,6 +1,6 @@
 #ifndef _NET_LAN_H
 
-#include "net/wh.h"
+#include "net_wh.h"
 
 #define FSCTL_LAN_BASE FILE_DEVICE_NETWORK
 #define _LAN_CONTROL_CODE(Function, Method) \

@@ -3,6 +3,7 @@ TOPOBJDIR = ../..
 SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = olepro32.dll
+IMPORTLIB = libolepro32.$(IMPLIBEXT)
 IMPORTS   = oleaut32
 
 C_SRCS = olepro32stubs.c

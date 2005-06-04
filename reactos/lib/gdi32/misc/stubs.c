@@ -13,22 +13,7 @@
 
 #define UNIMPLEMENTED DbgPrint("GDI32: %s is unimplemented, please try again later.\n", __FUNCTION__);
 
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-AnimatePalette(
-	HPALETTE		a0,
-	UINT			a1,
-	UINT			a2,
-	CONST PALETTEENTRY	*a3
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
+
 
 
 

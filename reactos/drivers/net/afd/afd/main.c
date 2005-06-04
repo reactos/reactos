@@ -488,7 +488,7 @@ NTSTATUS STDCALL
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
     PDEVICE_OBJECT DeviceObject;
-    UNICODE_STRING wstrDeviceName;
+    UNICODE_STRING wstrDeviceName = RTL_CONSTANT_STRING(L"\\Device\\Afd");
     PAFD_DEVICE_EXTENSION DeviceExt;
     NTSTATUS Status;
 
@@ -499,9 +499,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     DriverObject->MajorFunction[IRP_MJ_READ] = AfdDispatch;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = AfdDispatch;
     DriverObject->DriverUnload = AfdUnload;
-
-    /* create afd device */
-    RtlRosInitUnicodeStringFromLiteral(&wstrDeviceName, L"\\Device\\Afd");
 
     Status = IoCreateDevice
 	( DriverObject,

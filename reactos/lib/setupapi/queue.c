@@ -767,6 +767,7 @@ BOOL WINAPI SetupQueueCopySectionW( HSPFILEQ queue, PCWSTR src_root, HINF hinf, 
     params.SecurityDescriptor = NULL;
 
     if (!hlist) hlist = hinf;
+    if (!hinf) hinf = hlist;
     if (!SetupFindFirstLineW( hlist, section, NULL, &context )) return FALSE;
     if (!(params.TargetDirectory = get_destination_dir( hinf, section ))) return FALSE;
     do

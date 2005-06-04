@@ -110,7 +110,7 @@ EnumDisplayDevicesW(
     lpDisplayDevice,
     dwFlags );
 
-  RtlFreeUnicodeString ( &Device );
+  //RtlFreeUnicodeString ( &Device );
 
   return rc;
 }
@@ -200,15 +200,7 @@ EnumDisplaySettingsExA(
 {
   BOOL rc;
   UNICODE_STRING DeviceName;
-  LPDEVMODEW lpDevModeW;
-
-  lpDevModeW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                         sizeof(DEVMODEW) + lpDevMode->dmDriverExtra);
-  if ( lpDevModeW == NULL )
-    {
-      SetLastError ( ERROR_OUTOFMEMORY );
-      return FALSE;
-    }
+  DEVMODEW lpDevModeW;
 
   if ( !RtlCreateUnicodeStringFromAsciiz ( &DeviceName, (PCSZ)lpszDeviceName ) )
     {
@@ -216,16 +208,16 @@ EnumDisplaySettingsExA(
       return FALSE;
     }
 
-  lpDevModeW->dmSize = sizeof(DEVMODEW);
-  lpDevModeW->dmDriverExtra = 0;
-
-  rc = NtUserEnumDisplaySettings ( &DeviceName, iModeNum, lpDevModeW,
+  memset(&lpDevModeW,0,sizeof(DEVMODEW));
+  lpDevModeW.dmSize = sizeof(DEVMODEW);
+ 
+  rc = NtUserEnumDisplaySettings ( &DeviceName, iModeNum, &lpDevModeW,
                                    dwFlags );
 
-  RosRtlDevModeW2A ( lpDevMode, lpDevModeW );
+  RosRtlDevModeW2A ( lpDevMode, &lpDevModeW );
 
   RtlFreeUnicodeString ( &DeviceName );
-  HeapFree ( GetProcessHeap(), 0, lpDevModeW );
+
 
   return rc;
 }
@@ -262,8 +254,6 @@ EnumDisplaySettingsExW(
   RtlInitUnicodeString ( &DeviceName, lpszDeviceName );
 
   rc = NtUserEnumDisplaySettings ( &DeviceName, iModeNum, lpDevMode, dwFlags );
-
-  RtlFreeUnicodeString ( &DeviceName );
 
   return rc;
 }

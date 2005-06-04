@@ -3066,6 +3066,11 @@ NdisGetCurrentSystemTime(
 #endif
 
 NDISAPI
+CCHAR
+DDKAPI
+NdisSystemProcessorCount(VOID);
+
+NDISAPI
 VOID
 DDKAPI
 NdisGetCurrentProcessorCpuUsage(
@@ -5166,6 +5171,35 @@ NdisMUnmapIoSpace(
   IN NDIS_HANDLE  MiniportAdapterHandle,
   IN PVOID  VirtualAddress,
   IN UINT  Length);
+
+
+
+/* Event functions */
+
+NDISAPI
+VOID
+DDKAPI
+NdisInitializeEvent(
+  IN PNDIS_EVENT  Event);
+
+NDISAPI
+VOID
+DDKAPI
+NdisSetEvent(
+  IN PNDIS_EVENT  Event);
+
+NDISAPI
+VOID
+DDKAPI
+NdisResetEvent(
+  IN PNDIS_EVENT  Event);
+
+NDISAPI
+BOOLEAN
+DDKAPI
+NdisWaitEvent(
+  IN PNDIS_EVENT  Event,
+  IN UINT  Timeout);
 
 
 

@@ -776,7 +776,8 @@ HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_OnDefaultCommand(ICommDlgBrowse
         else
 	{
           /* Tell the dialog that the user selected a file */
-	  hRes = PostMessageA(This->hwndOwner, WM_COMMAND, IDOK, 0L);
+	  PostMessageA(This->hwndOwner, WM_COMMAND, IDOK, 0L);
+         hRes = S_OK;
 	}
 
         /* Free memory used by pidl */

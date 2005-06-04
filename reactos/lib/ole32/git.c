@@ -83,27 +83,6 @@ typedef struct StdGlobalInterfaceTableImpl
 
 void* StdGlobalInterfaceTableInstance;
 
-
-/* IUnknown */
-static HRESULT WINAPI StdGlobalInterfaceTable_QueryInterface(IGlobalInterfaceTable* iface, REFIID riid, void** ppvObject);
-static ULONG   WINAPI StdGlobalInterfaceTable_AddRef(IGlobalInterfaceTable* iface);
-static ULONG   WINAPI StdGlobalInterfaceTable_Release(IGlobalInterfaceTable* iface);
-/* IGlobalInterfaceTable */
-static HRESULT WINAPI StdGlobalInterfaceTable_RegisterInterfaceInGlobal(IGlobalInterfaceTable* iface, IUnknown* pUnk, REFIID riid, DWORD* pdwCookie);
-static HRESULT WINAPI StdGlobalInterfaceTable_RevokeInterfaceFromGlobal(IGlobalInterfaceTable* iface, DWORD dwCookie);
-static HRESULT WINAPI StdGlobalInterfaceTable_GetInterfaceFromGlobal(IGlobalInterfaceTable* iface, DWORD dwCookie, REFIID riid, void **ppv);
-
-/* Virtual function table */
-static IGlobalInterfaceTableVtbl StdGlobalInterfaceTableImpl_Vtbl =
-{
-  StdGlobalInterfaceTable_QueryInterface,
-  StdGlobalInterfaceTable_AddRef,
-  StdGlobalInterfaceTable_Release,
-  StdGlobalInterfaceTable_RegisterInterfaceInGlobal,
-  StdGlobalInterfaceTable_RevokeInterfaceFromGlobal,
-  StdGlobalInterfaceTable_GetInterfaceFromGlobal
-};
-
 static CRITICAL_SECTION git_section;
 static CRITICAL_SECTION_DEBUG critsect_debug =
 {
@@ -113,28 +92,6 @@ static CRITICAL_SECTION_DEBUG critsect_debug =
 };
 static CRITICAL_SECTION git_section = { &critsect_debug, -1, 0, 0, 0, 0 };
 
-
-/***
- * Let's go! Here is the constructor and destructor for the class.
- *
- */
-
-/** This function constructs the GIT. It should only be called once **/
-void* StdGlobalInterfaceTable_Construct() {
-  StdGlobalInterfaceTableImpl* newGIT;
-
-  newGIT = HeapAlloc(GetProcessHeap(), 0, sizeof(StdGlobalInterfaceTableImpl));
-  if (newGIT == 0) return newGIT;
-
-  newGIT->lpVtbl = &StdGlobalInterfaceTableImpl_Vtbl;
-  newGIT->ref = 1;      /* Initialise the reference count */
-  newGIT->firstEntry = NULL; /* we start with an empty table   */
-  newGIT->lastEntry  = NULL;
-  newGIT->nextCookie = 0xf100; /* that's where windows starts, so that's where we start */
-  TRACE("Created the GIT at %p\n", newGIT);
-
-  return (void*)newGIT;
-}
 
 /** This destroys it again. It should revoke all the held interfaces first **/
 void StdGlobalInterfaceTable_Destroy(void* self) {
@@ -149,7 +106,9 @@ void StdGlobalInterfaceTable_Destroy(void* self) {
  * A helper function to traverse the list and find the entry that matches the cookie.
  * Returns NULL if not found
  */
-StdGITEntry* StdGlobalInterfaceTable_FindEntry(IGlobalInterfaceTable* iface, DWORD cookie) {
+static StdGITEntry*
+StdGlobalInterfaceTable_FindEntry(IGlobalInterfaceTable* iface, DWORD cookie)
+{
   StdGlobalInterfaceTableImpl* const self = (StdGlobalInterfaceTableImpl*) iface;
   StdGITEntry* e;
 
@@ -174,34 +133,39 @@ StdGITEntry* StdGlobalInterfaceTable_FindEntry(IGlobalInterfaceTable* iface, DWO
  * Here's the boring boilerplate stuff for IUnknown
  */
 
-HRESULT WINAPI StdGlobalInterfaceTable_QueryInterface(IGlobalInterfaceTable* iface, REFIID riid, void** ppvObject) {
-  StdGlobalInterfaceTableImpl* const self = (StdGlobalInterfaceTableImpl*) iface;
-
+static HRESULT WINAPI
+StdGlobalInterfaceTable_QueryInterface(IGlobalInterfaceTable* iface,
+               REFIID riid, void** ppvObject)
+{
   /* Make sure silly coders can't crash us */
   if (ppvObject == 0) return E_INVALIDARG;
 
   *ppvObject = 0; /* assume we don't have the interface */
 
   /* Do we implement that interface? */
-  if (IsEqualIID(&IID_IUnknown, riid)) {
-    *ppvObject = (IGlobalInterfaceTable*) self;
-  } else if (IsEqualIID(&IID_IGlobalInterfaceTable, riid)) {
-    *ppvObject = (IGlobalInterfaceTable*) self;
-  } else return E_NOINTERFACE;
+  if (IsEqualIID(&IID_IUnknown, riid) ||
+      IsEqualIID(&IID_IGlobalInterfaceTable, riid))
+    *ppvObject = iface;
+  else
+    return E_NOINTERFACE;
 
   /* Now inc the refcount */
-  StdGlobalInterfaceTable_AddRef(iface);
+  IGlobalInterfaceTable_AddRef(iface);
   return S_OK;
 }
 
-ULONG WINAPI StdGlobalInterfaceTable_AddRef(IGlobalInterfaceTable* iface) {
+static ULONG WINAPI
+StdGlobalInterfaceTable_AddRef(IGlobalInterfaceTable* iface)
+{
   StdGlobalInterfaceTableImpl* const self = (StdGlobalInterfaceTableImpl*) iface;
 
   /* InterlockedIncrement(&self->ref); */
   return self->ref;
 }
 
-ULONG WINAPI StdGlobalInterfaceTable_Release(IGlobalInterfaceTable* iface) {
+static ULONG WINAPI
+StdGlobalInterfaceTable_Release(IGlobalInterfaceTable* iface)
+{
   StdGlobalInterfaceTableImpl* const self = (StdGlobalInterfaceTableImpl*) iface;
 
   /* InterlockedDecrement(&self->ref); */
@@ -218,12 +182,16 @@ ULONG WINAPI StdGlobalInterfaceTable_Release(IGlobalInterfaceTable* iface) {
  * Now implement the actual IGlobalInterfaceTable interface
  */
 
-HRESULT WINAPI StdGlobalInterfaceTable_RegisterInterfaceInGlobal(IGlobalInterfaceTable* iface, IUnknown* pUnk, REFIID riid, DWORD* pdwCookie) {
+static HRESULT WINAPI
+StdGlobalInterfaceTable_RegisterInterfaceInGlobal(
+               IGlobalInterfaceTable* iface, IUnknown* pUnk,
+               REFIID riid, DWORD* pdwCookie)
+{
   StdGlobalInterfaceTableImpl* const self = (StdGlobalInterfaceTableImpl*) iface;
   IStream* stream = NULL;
   HRESULT hres;
   StdGITEntry* entry;
-  static const LARGE_INTEGER zero;
+  LARGE_INTEGER zero;
 
   TRACE("iface=%p, pUnk=%p, riid=%s, pdwCookie=0x%p\n", iface, pUnk, debugstr_guid(riid), pdwCookie);
 
@@ -241,6 +209,7 @@ HRESULT WINAPI StdGlobalInterfaceTable_RegisterInterfaceInGlobal(IGlobalInterfac
     return hres;
   }
 
+  zero.QuadPart = 0;
   IStream_Seek(stream, zero, SEEK_SET, NULL);
 
   entry = HeapAlloc(GetProcessHeap(), 0, sizeof(StdGITEntry));
@@ -269,7 +238,10 @@ HRESULT WINAPI StdGlobalInterfaceTable_RegisterInterfaceInGlobal(IGlobalInterfac
   return S_OK;
 }
 
-HRESULT WINAPI StdGlobalInterfaceTable_RevokeInterfaceFromGlobal(IGlobalInterfaceTable* iface, DWORD dwCookie) {
+static HRESULT WINAPI
+StdGlobalInterfaceTable_RevokeInterfaceFromGlobal(
+               IGlobalInterfaceTable* iface, DWORD dwCookie)
+{
   StdGlobalInterfaceTableImpl* const self = (StdGlobalInterfaceTableImpl*) iface;
   StdGITEntry* entry;
   HRESULT hr;
@@ -303,7 +275,11 @@ HRESULT WINAPI StdGlobalInterfaceTable_RevokeInterfaceFromGlobal(IGlobalInterfac
   return S_OK;
 }
 
-HRESULT WINAPI StdGlobalInterfaceTable_GetInterfaceFromGlobal(IGlobalInterfaceTable* iface, DWORD dwCookie, REFIID riid, void **ppv) {
+static HRESULT WINAPI
+StdGlobalInterfaceTable_GetInterfaceFromGlobal(
+               IGlobalInterfaceTable* iface, DWORD dwCookie,
+               REFIID riid, void **ppv)
+{
   StdGITEntry* entry;
   HRESULT hres;
   LARGE_INTEGER move;
@@ -341,18 +317,33 @@ HRESULT WINAPI StdGlobalInterfaceTable_GetInterfaceFromGlobal(IGlobalInterfaceTa
 
 /* Classfactory definition - despite what MSDN says, some programs need this */
 
-static HRESULT WINAPI GITCF_QueryInterface(LPCLASSFACTORY iface,REFIID riid, LPVOID *ppv) {
+static HRESULT WINAPI
+GITCF_QueryInterface(LPCLASSFACTORY iface,REFIID riid, LPVOID *ppv)
+{
   *ppv = NULL;
-  if (IsEqualIID(riid,&IID_IUnknown) || IsEqualIID(riid,&IID_IGlobalInterfaceTable)) {
+  if (IsEqualIID(riid,&IID_IUnknown) ||
+      IsEqualIID(riid,&IID_IGlobalInterfaceTable))
+  {
     *ppv = (LPVOID)iface;
     return S_OK;
   }
   return E_NOINTERFACE;
 }
-static ULONG WINAPI GITCF_AddRef(LPCLASSFACTORY iface) { return 2; }
-static ULONG WINAPI GITCF_Release(LPCLASSFACTORY iface) { return 1; }
 
-static HRESULT WINAPI GITCF_CreateInstance(LPCLASSFACTORY iface, LPUNKNOWN pUnk, REFIID riid, LPVOID *ppv) {
+static ULONG WINAPI GITCF_AddRef(LPCLASSFACTORY iface)
+{
+  return 2;
+}
+
+static ULONG WINAPI GITCF_Release(LPCLASSFACTORY iface)
+{
+  return 1;
+}
+
+static HRESULT WINAPI
+GITCF_CreateInstance(LPCLASSFACTORY iface, LPUNKNOWN pUnk,
+                     REFIID riid, LPVOID *ppv)
+{
   if (IsEqualIID(riid,&IID_IGlobalInterfaceTable)) {
     if (StdGlobalInterfaceTableInstance == NULL) 
       StdGlobalInterfaceTableInstance = StdGlobalInterfaceTable_Construct();
@@ -363,7 +354,8 @@ static HRESULT WINAPI GITCF_CreateInstance(LPCLASSFACTORY iface, LPUNKNOWN pUnk,
   return E_NOINTERFACE;
 }
 
-static HRESULT WINAPI GITCF_LockServer(LPCLASSFACTORY iface, BOOL fLock) {
+static HRESULT WINAPI GITCF_LockServer(LPCLASSFACTORY iface, BOOL fLock)
+{
     FIXME("(%d), stub!\n",fLock);
     return S_OK;
 }
@@ -375,10 +367,41 @@ static IClassFactoryVtbl GITClassFactoryVtbl = {
     GITCF_CreateInstance,
     GITCF_LockServer
 };
+
 static IClassFactoryVtbl *PGITClassFactoryVtbl = &GITClassFactoryVtbl;
 
-HRESULT StdGlobalInterfaceTable_GetFactory(LPVOID *ppv) {
+HRESULT StdGlobalInterfaceTable_GetFactory(LPVOID *ppv)
+{
   *ppv = &PGITClassFactoryVtbl;
   TRACE("Returning GIT classfactory\n");
   return S_OK;
+}
+
+/* Virtual function table */
+static IGlobalInterfaceTableVtbl StdGlobalInterfaceTableImpl_Vtbl =
+{
+  StdGlobalInterfaceTable_QueryInterface,
+  StdGlobalInterfaceTable_AddRef,
+  StdGlobalInterfaceTable_Release,
+  StdGlobalInterfaceTable_RegisterInterfaceInGlobal,
+  StdGlobalInterfaceTable_RevokeInterfaceFromGlobal,
+  StdGlobalInterfaceTable_GetInterfaceFromGlobal
+};
+
+/** This function constructs the GIT. It should only be called once **/
+void* StdGlobalInterfaceTable_Construct()
+{
+  StdGlobalInterfaceTableImpl* newGIT;
+
+  newGIT = HeapAlloc(GetProcessHeap(), 0, sizeof(StdGlobalInterfaceTableImpl));
+  if (newGIT == 0) return newGIT;
+
+  newGIT->lpVtbl = &StdGlobalInterfaceTableImpl_Vtbl;
+  newGIT->ref = 1;      /* Initialise the reference count */
+  newGIT->firstEntry = NULL; /* we start with an empty table   */
+  newGIT->lastEntry  = NULL;
+  newGIT->nextCookie = 0xf100; /* that's where windows starts, so that's where we start */
+  TRACE("Created the GIT at %p\n", newGIT);
+
+  return (void*)newGIT;
 }

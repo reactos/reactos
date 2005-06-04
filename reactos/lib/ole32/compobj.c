@@ -66,7 +66,6 @@
 #include "wownt32.h"
 #include "wine/unicode.h"
 #include "objbase.h"
-#include "ole32_main.h"
 #include "compobj_private.h"
 
 #include "wine/debug.h"
@@ -74,6 +73,8 @@
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 typedef LPCSTR LPCOLESTR16;
+
+HINSTANCE OLE32_hInstance = 0; /* FIXME: make static ... */
 
 /****************************************************************************
  * This section defines variables internal to the COM module.
@@ -169,7 +170,7 @@ static LRESULT CALLBACK apartment_wndproc(HWND hWnd, UINT msg, WPARAM wParam, LP
 static void COMPOBJ_DLLList_Add(HANDLE hLibrary);
 static void COMPOBJ_DllList_FreeUnused(int Timeout);
 
-void COMPOBJ_InitProcess( void )
+static void COMPOBJ_InitProcess( void )
 {
     WNDCLASSW wclass;
 
@@ -189,12 +190,12 @@ void COMPOBJ_InitProcess( void )
     RegisterClassW(&wclass);
 }
 
-void COMPOBJ_UninitProcess( void )
+static void COMPOBJ_UninitProcess( void )
 {
     UnregisterClassW(wszAptWinClass, OLE32_hInstance);
 }
 
-void COM_TlsDestroy()
+static void COM_TlsDestroy()
 {
     struct oletls *info = NtCurrentTeb()->ReservedForOle;
     if (info)
@@ -624,7 +625,7 @@ HRESULT WINAPI CoInitializeEx(LPVOID lpReserved, DWORD dwCoInit)
 /* On COM finalization for a STA thread, the message queue is flushed to ensure no
    pending RPCs are ignored. Non-COM messages are discarded at this point.
  */
-void COM_FlushMessageQueue(void)
+static void COM_FlushMessageQueue(void)
 {
     MSG message;
     APARTMENT *apt = COM_CurrentApt();
@@ -1531,7 +1532,8 @@ end:
  *
  *	Reads a registry value and expands it when necessary
  */
-HRESULT compobj_RegReadPath(char * keyname, char * valuename, char * dst, DWORD dstlen)
+static HRESULT
+compobj_RegReadPath(char * keyname, char * valuename, char * dst, DWORD dstlen)
 {
 	HRESULT hres;
 	HKEY key;
@@ -2426,6 +2428,25 @@ ULONG WINAPI CoReleaseServerProcess(void)
 }
 
 /***********************************************************************
+ *           CoIsHandlerConnected [OLE32.@]
+ *
+ * Determines whether a proxy is connected to a remote stub.
+ *
+ * PARAMS
+ *  pUnk [I] Pointer to object that may or may not be connected.
+ *
+ * RETURNS
+ *  TRUE if pUnk is not a proxy or if pUnk is connected to a remote stub, or
+ *  FALSE otherwise.
+ */
+BOOL WINAPI CoIsHandlerConnected(IUnknown *pUnk)
+{
+    FIXME("%p\n", pUnk);
+
+    return TRUE;
+}
+ 
+/***********************************************************************
  *           CoQueryProxyBlanket [OLE32.@]
  *
  * Retrieves the security settings being used by a proxy.
@@ -2635,3 +2656,32 @@ HRESULT WINAPI CoWaitForMultipleHandles(DWORD dwFlags, DWORD dwTimeout,
     TRACE("-- 0x%08lx\n", hr);
     return hr;
 }
+
+/***********************************************************************
+ *		DllMain (OLE32.@)
+ */
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
+{
+    TRACE("%p 0x%lx %p\n", hinstDLL, fdwReason, fImpLoad);
+
+    switch(fdwReason) {
+    case DLL_PROCESS_ATTACH:
+        OLE32_hInstance = hinstDLL;
+        COMPOBJ_InitProcess();
+	if (TRACE_ON(ole)) CoRegisterMallocSpy((LPVOID)-1);
+	break;
+
+    case DLL_PROCESS_DETACH:
+        if (TRACE_ON(ole)) CoRevokeMallocSpy();
+        COMPOBJ_UninitProcess();
+        OLE32_hInstance = 0;
+	break;
+
+    case DLL_THREAD_DETACH:
+        COM_TlsDestroy();
+        break;
+    }
+    return TRUE;
+}
+
+/* NOTE: DllRegisterServer and DllUnregisterServer are in regsvr.c */

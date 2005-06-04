@@ -201,20 +201,10 @@ static UINT CREATE_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
 static UINT CREATE_delete( struct tagMSIVIEW *view )
 {
     MSICREATEVIEW *cv = (MSICREATEVIEW*)view;
-    create_col_info *col;
 
     TRACE("%p\n", cv );
 
-    col = cv->col_info; 
-    while( col )
-    {
-        create_col_info *t = col;
-        col = col->next;
-        HeapFree( GetProcessHeap(), 0, t->colname );
-        HeapFree( GetProcessHeap(), 0, t );
-    }
     msiobj_release( &cv->db->hdr );
-    HeapFree( GetProcessHeap(), 0, cv->name );
     HeapFree( GetProcessHeap(), 0, cv );
 
     return ERROR_SUCCESS;
@@ -250,7 +240,7 @@ UINT CREATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
     cv->view.ops = &create_ops;
     msiobj_addref( &db->hdr );
     cv->db = db;
-    cv->name = table;  /* FIXME: strdupW it? */
+    cv->name = table;
     cv->col_info = col_info;
     cv->bIsTemp = temp;
     *view = (MSIVIEW*) cv;

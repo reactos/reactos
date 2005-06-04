@@ -296,6 +296,7 @@ HRESULT WINAPI StorageBaseImpl_OpenStream(
   StgProperty       currentProperty;
   ULONG             foundPropertyIndex;
   HRESULT           res = STG_E_UNKNOWN;
+  DWORD             parent_grfMode;
 
   TRACE("(%p, %s, %p, %lx, %ld, %p)\n",
 	iface, debugstr_w(pwcsName), reserved1, grfMode, reserved2, ppstm);
@@ -331,6 +332,16 @@ HRESULT WINAPI StorageBaseImpl_OpenStream(
         (grfMode & STGM_TRANSACTED) )
   {
     res = STG_E_INVALIDFUNCTION;
+    goto end;
+  }
+
+  /*
+   * Check that we're compatible with the parent's storage mode
+   */
+  parent_grfMode = STGM_ACCESS_MODE( This->ancestorStorage->base.openFlags );
+  if ( STGM_ACCESS_MODE( grfMode ) > STGM_ACCESS_MODE( parent_grfMode ) )
+  {
+    res = STG_E_ACCESSDENIED;
     goto end;
   }
 
@@ -412,6 +423,7 @@ HRESULT WINAPI StorageBaseImpl_OpenStorage(
   StgProperty            currentProperty;
   ULONG                  foundPropertyIndex;
   HRESULT                res = STG_E_UNKNOWN;
+  DWORD                  parent_grfMode;
 
   TRACE("(%p, %s, %p, %lx, %p, %ld, %p)\n",
 	iface, debugstr_w(pwcsName), pstgPriority,
@@ -454,6 +466,16 @@ HRESULT WINAPI StorageBaseImpl_OpenStorage(
   }
 
   /*
+   * Check that we're compatible with the parent's storage mode
+   */
+  parent_grfMode = STGM_ACCESS_MODE( This->ancestorStorage->base.openFlags );
+  if ( STGM_ACCESS_MODE( grfMode ) > STGM_ACCESS_MODE( parent_grfMode ) )
+  {
+    res = STG_E_ACCESSDENIED;
+    goto end;
+  }
+
+  /*
    * Initialize the out parameter
    */
   *ppstg = NULL;
@@ -489,6 +511,7 @@ HRESULT WINAPI StorageBaseImpl_OpenStorage(
      */
     newStorage = StorageInternalImpl_Construct(
                    This->ancestorStorage,
+                   grfMode,
                    foundPropertyIndex);
 
     if (newStorage != 0)
@@ -804,6 +827,7 @@ HRESULT WINAPI StorageBaseImpl_CreateStream(
   StgStreamImpl*    newStream;
   StgProperty       currentProperty, newStreamProperty;
   ULONG             foundPropertyIndex, newPropertyIndex;
+  DWORD             parent_grfMode;
 
   TRACE("(%p, %s, %lx, %ld, %ld, %p)\n",
 	iface, debugstr_w(pwcsName), grfMode,
@@ -836,6 +860,13 @@ HRESULT WINAPI StorageBaseImpl_CreateStream(
   if ((grfMode & STGM_DELETEONRELEASE) ||
       (grfMode & STGM_TRANSACTED))
     return STG_E_INVALIDFUNCTION;
+
+  /*
+   * Check that we're compatible with the parent's storage mode
+   */
+  parent_grfMode = STGM_ACCESS_MODE( This->ancestorStorage->base.openFlags );
+  if ( STGM_ACCESS_MODE( grfMode ) > STGM_ACCESS_MODE( parent_grfMode ) )
+    return STG_E_ACCESSDENIED;
 
   /*
    * Initialize the out parameter
@@ -1005,6 +1036,7 @@ HRESULT WINAPI StorageImpl_CreateStorage(
   ULONG            foundPropertyIndex;
   ULONG            newPropertyIndex;
   HRESULT          hr;
+  DWORD            parent_grfMode;
 
   TRACE("(%p, %s, %lx, %ld, %ld, %p)\n",
 	iface, debugstr_w(pwcsName), grfMode,
@@ -1025,6 +1057,13 @@ HRESULT WINAPI StorageImpl_CreateStorage(
   if ( FAILED( validateSTGM(grfMode) ) ||
        (grfMode & STGM_DELETEONRELEASE) )
     return STG_E_INVALIDFLAG;
+
+  /*
+   * Check that we're compatible with the parent's storage mode
+   */
+  parent_grfMode = STGM_ACCESS_MODE( This->base.ancestorStorage->base.openFlags );
+  if ( STGM_ACCESS_MODE( grfMode ) > STGM_ACCESS_MODE( parent_grfMode ) )
+    return STG_E_ACCESSDENIED;
 
   /*
    * Initialize the out parameter
@@ -2186,6 +2225,7 @@ HRESULT StorageImpl_Construct(
   This->base.lpVtbl = &Storage32Impl_Vtbl;
   This->base.pssVtbl = &IPropertySetStorage_Vtbl;
   This->base.v_destructor = &StorageImpl_Destroy;
+  This->base.openFlags = openFlags;
 
   /*
    * This is the top-level storage so initialize the ancestor pointer
@@ -2379,7 +2419,7 @@ void StorageImpl_Destroy(StorageBaseImpl* iface)
   BlockChainStream_Destroy(This->smallBlockDepotChain);
 
   BIGBLOCKFILE_Destructor(This->bigBlockFile);
-  return;
+  HeapFree(GetProcessHeap(), 0, This);
 }
 
 /******************************************************************************
@@ -4013,7 +4053,8 @@ static IStorageVtbl Storage32InternalImpl_Vtbl =
 
 StorageInternalImpl* StorageInternalImpl_Construct(
   StorageImpl* ancestorStorage,
-  ULONG          rootPropertyIndex)
+  DWORD        openFlags,
+  ULONG        rootPropertyIndex)
 {
   StorageInternalImpl* newStorage;
 
@@ -4031,6 +4072,7 @@ StorageInternalImpl* StorageInternalImpl_Construct(
      */
     newStorage->base.lpVtbl = &Storage32InternalImpl_Vtbl;
     newStorage->base.v_destructor = &StorageInternalImpl_Destroy;
+    newStorage->base.openFlags = openFlags;
 
     /*
      * Keep the ancestor storage pointer and nail a reference to it.
@@ -4051,28 +4093,62 @@ StorageInternalImpl* StorageInternalImpl_Construct(
 
 /******************************************************************************
 ** StorageUtl implementation
-* FIXME: these should read and write in little-endian order on all
-* architectures, but right now just assume the host is little-endian.
 */
 
 void StorageUtl_ReadWord(const BYTE* buffer, ULONG offset, WORD* value)
 {
-  memcpy(value, buffer+offset, sizeof(WORD));
+  WORD tmp;
+
+  memcpy(&tmp, buffer+offset, sizeof(WORD));
+  *value = le16toh(tmp);
 }
 
 void StorageUtl_WriteWord(BYTE* buffer, ULONG offset, WORD value)
 {
+  value = htole16(value);
   memcpy(buffer+offset, &value, sizeof(WORD));
 }
 
 void StorageUtl_ReadDWord(const BYTE* buffer, ULONG offset, DWORD* value)
 {
-  memcpy(value, buffer+offset, sizeof(DWORD));
+  DWORD tmp;
+
+  memcpy(&tmp, buffer+offset, sizeof(DWORD));
+  *value = le32toh(tmp);
 }
 
 void StorageUtl_WriteDWord(BYTE* buffer, ULONG offset, DWORD value)
 {
+  value = htole32(value);
   memcpy(buffer+offset, &value, sizeof(DWORD));
+}
+
+void StorageUtl_ReadULargeInteger(const BYTE* buffer, ULONG offset,
+ ULARGE_INTEGER* value)
+{
+#ifdef WORDS_BIGENDIAN
+    ULARGE_INTEGER tmp;
+
+    memcpy(&tmp, buffer + offset, sizeof(ULARGE_INTEGER));
+    value->u.LowPart = htole32(tmp.u.HighPart);
+    value->u.HighPart = htole32(tmp.u.LowPart);
+#else
+    memcpy(value, buffer + offset, sizeof(ULARGE_INTEGER));
+#endif
+}
+
+void StorageUtl_WriteULargeInteger(BYTE* buffer, ULONG offset,
+ const ULARGE_INTEGER *value)
+{
+#ifdef WORDS_BIGENDIAN
+    ULARGE_INTEGER tmp;
+
+    tmp.u.LowPart = htole32(value->u.HighPart);
+    tmp.u.HighPart = htole32(value->u.LowPart);
+    memcpy(buffer + offset, &tmp, sizeof(ULARGE_INTEGER));
+#else
+    memcpy(buffer + offset, value, sizeof(ULARGE_INTEGER));
+#endif
 }
 
 void StorageUtl_ReadGUID(const BYTE* buffer, ULONG offset, GUID* value)
@@ -5579,7 +5655,33 @@ HRESULT WINAPI StgCreateStorageEx(const WCHAR* pwcsName, DWORD grfMode, DWORD st
 {
     TRACE("(%s, %lx, %lx, %lx, %p, %p, %p, %p)\n", debugstr_w(pwcsName),
           grfMode, stgfmt, grfAttrs, pStgOptions, reserved, riid, ppObjectOpen);
-    return STG_E_UNIMPLEMENTEDFUNCTION;
+
+    if (stgfmt != STGFMT_FILE && grfAttrs != 0)
+    {
+        ERR("grfAttrs must be 0 if stgfmt != STGFMT_FILE\n");
+        return STG_E_INVALIDPARAMETER;  
+    }
+
+    if (stgfmt != STGFMT_FILE && grfAttrs != 0 && grfAttrs != FILE_FLAG_NO_BUFFERING)
+    {
+        ERR("grfAttrs must be 0 or FILE_FLAG_NO_BUFFERING if stgfmt == STGFMT_FILE\n");
+        return STG_E_INVALIDPARAMETER;  
+    }
+
+    if (stgfmt == STGFMT_FILE)
+    {
+        ERR("Cannot use STGFMT_FILE - this is NTFS only\n");  
+        return STG_E_INVALIDPARAMETER;
+    }
+
+    if (stgfmt == STGFMT_STORAGE || stgfmt == STGFMT_DOCFILE)
+    {
+        FIXME("Stub: calling StgCreateDocfile, but ignoring pStgOptions and grfAttrs\n");
+        return StgCreateDocfile(pwcsName, grfMode, 0, (IStorage **)ppObjectOpen); 
+    }
+
+    ERR("Invalid stgfmt argument\n");
+    return STG_E_INVALIDPARAMETER;
 }
 
 /******************************************************************************
@@ -5598,6 +5700,45 @@ HRESULT WINAPI StgCreatePropSetStg(IStorage *pstg, DWORD reserved,
          (void**)ppPropSetStg);
     return hr;
 }
+
+/******************************************************************************
+ *              StgOpenStorageEx      [OLE32.@]
+ */
+HRESULT WINAPI StgOpenStorageEx(const WCHAR* pwcsName, DWORD grfMode, DWORD stgfmt, DWORD grfAttrs, STGOPTIONS* pStgOptions, void* reserved, REFIID riid, void** ppObjectOpen)
+{
+    TRACE("(%s, %lx, %lx, %lx, %p, %p, %p, %p)\n", debugstr_w(pwcsName),
+          grfMode, stgfmt, grfAttrs, pStgOptions, reserved, riid, ppObjectOpen);
+
+    if (stgfmt != STGFMT_DOCFILE && grfAttrs != 0)
+    {
+        ERR("grfAttrs must be 0 if stgfmt != STGFMT_DOCFILE\n");
+        return STG_E_INVALIDPARAMETER;  
+    }
+
+    if (stgfmt != STGFMT_DOCFILE && grfAttrs != 0 && grfAttrs != FILE_FLAG_NO_BUFFERING)
+    {
+        ERR("grfAttrs must be 0 or FILE_FLAG_NO_BUFFERING if stgfmt == STGFMT_DOCFILE\n");
+        return STG_E_INVALIDPARAMETER;  
+    }
+
+    if (stgfmt == STGFMT_FILE)
+    {
+        ERR("Cannot use STGFMT_FILE - this is NTFS only\n");  
+        return STG_E_INVALIDPARAMETER;
+    }
+
+    if (stgfmt == STGFMT_STORAGE || stgfmt == STGFMT_DOCFILE || stgfmt == STGFMT_ANY)
+    {
+        if (stgfmt == STGFMT_ANY) 
+            WARN("STGFMT_ANY assuming storage\n");
+        FIXME("Stub: calling StgOpenStorage, but ignoring pStgOptions and grfAttrs\n");
+        return StgOpenStorage(pwcsName, NULL, grfMode, (SNB)NULL, 0, (IStorage **)ppObjectOpen); 
+    }
+
+    ERR("Invalid stgfmt argument\n");
+    return STG_E_INVALIDPARAMETER;
+}
+
 
 /******************************************************************************
  *              StgOpenStorage        [OLE32.@]

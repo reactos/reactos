@@ -13,6 +13,7 @@ TARGET_PCH = include/precomp.h
 # -DMEMTRACK
 TARGET_CFLAGS = \
 	-D__USE_W32API \
+	-D_SEH_NO_NATIVE_NLG \
 	-DNDIS40 \
 	-DMEMTRACK \
 	-Wall -Werror \
@@ -20,8 +21,10 @@ TARGET_CFLAGS = \
 	-I$(PATH_TO_TOP)/w32api/include \
 	-I$(PATH_TO_TOP)/include
 
-TARGET_DDKLIBS = ndis.a \
-	$(PATH_TO_TOP)/dk/w32/lib/pseh.a
+TARGET_DDKLIBS = ndis.a
+
+TARGET_LIBS = \
+	$(PATH_TO_TOP)/dk/w32/lib/libpseh.a
 
 TARGET_CLEAN = \
 	lan/*.o

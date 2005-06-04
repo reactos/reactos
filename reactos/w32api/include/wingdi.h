@@ -8,6 +8,12 @@
 extern "C" {
 #endif
 
+/* Get/SetSystemPaletteUse() values */
+#define SYSPAL_ERROR        0
+#define SYSPAL_STATIC       1
+#define SYSPAL_NOSTATIC     2
+#define SYSPAL_NOSTATIC256  3
+
 #define WINGDIAPI
 #define BI_RGB 0
 #define BI_RLE8 1

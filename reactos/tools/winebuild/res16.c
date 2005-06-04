@@ -20,6 +20,7 @@
 
 #include "config.h"
 
+#include <assert.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,9 +39,6 @@
 
 #include "winglue.h"
 #include "build.h"
-
-#define ALIGNMENT 2 /* alignment for resource data */
-#define ALIGN_MASK ((1 << ALIGNMENT) - 1)
 
 /* Unicode string or integer id */
 struct string_id
@@ -265,48 +263,115 @@ static void output_string( unsigned char **buffer, const char *str )
     while (len--) put_byte( buffer, *str++ );
 }
 
-/* output the resource data */
-int output_res16_data( FILE *outfile, DLLSPEC *spec )
+/* get the resource data total size */
+unsigned int get_res16_data_size( DLLSPEC *spec, unsigned int res_offset, unsigned int alignment )
 {
     const struct resource *res;
-    unsigned char *buffer, *p;
-    unsigned int i;
-    int total;
+    unsigned int i, total;
+    unsigned int align_mask = (1 << alignment) - 1;
 
     if (!spec->nb_resources) return 0;
 
-    for (i = total = 0, res = spec->resources; i < spec->nb_resources; i++, res++)
-        total += (res->data_size + ALIGN_MASK) & ~ALIGN_MASK;
+    /* add padding at the beginning if needed so that resources are properly aligned */
+    total = ((res_offset + align_mask) & ~align_mask) - res_offset;
 
-    buffer = p = xmalloc( total );
     for (i = 0, res = spec->resources; i < spec->nb_resources; i++, res++)
-    {
-        memcpy( p, res->data, res->data_size );
-        p += res->data_size;
-        while ((int)p & ALIGN_MASK) *p++ = 0;
-    }
-    dump_bytes( outfile, buffer, total, "resource_data", 1 );
-    free( buffer );
+        total += (res->data_size + align_mask) & ~align_mask;
+
     return total;
 }
 
-/* output the resource definitions */
-int output_res16_directory( unsigned char *buffer, DLLSPEC *spec )
+/* output the resource data */
+unsigned int output_res16_data( unsigned char **ret_buf, DLLSPEC *spec,
+                                unsigned int res_offset, unsigned int alignment )
 {
-    int offset, res_offset = 0;
-    unsigned int i, j;
+    const struct resource *res;
+    unsigned char *p;
+    unsigned int i, total, padding;
+    unsigned int align_mask = (1 << alignment) - 1;
+
+    if (!spec->nb_resources) return 0;
+
+    /* add padding at the beginning if needed so that resources are properly aligned */
+    padding = ((res_offset + align_mask) & ~align_mask) - res_offset;
+
+    for (i = total = 0, res = spec->resources; i < spec->nb_resources; i++, res++)
+        total += (res->data_size + align_mask) & ~align_mask;
+
+    *ret_buf = p = xmalloc( total + padding );
+    memset( p, 0, padding );
+    p += padding;
+    for (i = 0, res = spec->resources; i < spec->nb_resources; i++, res++)
+    {
+        unsigned int size = (res->data_size + align_mask) & ~align_mask;
+        memcpy( p, res->data, res->data_size );
+        memset( p + res->data_size, 0, size - res->data_size );
+        p += size;
+    }
+    return total;
+}
+
+/* get the resource definitions total size */
+unsigned int get_res16_directory_size( DLLSPEC *spec )
+{
+    unsigned int i, j, total_size;
     struct res_tree *tree;
     const struct res_type *type;
     const struct resource *res;
-    unsigned char *start = buffer;
 
     tree = build_resource_tree( spec );
+
+    total_size = 4;  /* alignment + terminator */
+    total_size += tree->nb_types * 8;  /* typeinfo structures */
+    total_size += spec->nb_resources * 12;  /* nameinfo structures */
+
+    for (i = 0, type = tree->types; i < tree->nb_types; i++, type++)
+    {
+        if (type->type->str) total_size += strlen(type->type->str) + 1;
+        for (j = 0, res = type->res; j < type->nb_names; j++, res++)
+            if (res->name.str) total_size += strlen(res->name.str) + 1;
+    }
+    total_size++;  /* final terminator */
+    if (total_size & 1) total_size++;
+    return total_size;
+}
+
+/* output the resource definitions */
+unsigned int output_res16_directory( unsigned char **ret_buf, DLLSPEC *spec,
+                                     unsigned int res_offset, unsigned int alignment )
+{
+    int offset;
+    unsigned int i, j, total_size;
+    unsigned int align_mask = (1 << alignment) - 1;
+    struct res_tree *tree;
+    const struct res_type *type;
+    const struct resource *res;
+    unsigned char *buffer;
+
+    tree = build_resource_tree( spec );
+
+    /* make sure data offset is properly aligned */
+    res_offset = (res_offset + align_mask) & ~align_mask;
+
+    /* first compute total size */
 
     offset = 4;  /* alignment + terminator */
     offset += tree->nb_types * 8;  /* typeinfo structures */
     offset += spec->nb_resources * 12;  /* nameinfo structures */
 
-    put_word( &buffer, ALIGNMENT );
+    total_size = offset;
+
+    for (i = 0, type = tree->types; i < tree->nb_types; i++, type++)
+    {
+        if (type->type->str) total_size += strlen(type->type->str) + 1;
+        for (j = 0, res = type->res; j < type->nb_names; j++, res++)
+            if (res->name.str) total_size += strlen(res->name.str) + 1;
+    }
+    total_size++;  /* final terminator */
+    if (total_size & 1) total_size++;
+    *ret_buf = buffer = xmalloc( total_size );
+
+    put_word( &buffer, alignment );
 
     /* type and name structures */
 
@@ -326,8 +391,8 @@ int output_res16_directory( unsigned char *buffer, DLLSPEC *spec )
 
         for (j = 0, res = type->res; j < type->nb_names; j++, res++)
         {
-            put_word( &buffer, res_offset >> ALIGNMENT );
-            put_word( &buffer, (res->data_size + ALIGN_MASK) >> ALIGNMENT );
+            put_word( &buffer, res_offset >> alignment );
+            put_word( &buffer, (res->data_size + align_mask) >> alignment );
             put_word( &buffer, res->memopt );
             if (res->name.str)
             {
@@ -338,7 +403,7 @@ int output_res16_directory( unsigned char *buffer, DLLSPEC *spec )
                 put_word( &buffer, res->name.id | 0x8000 );
             put_word( &buffer, 0 );
             put_word( &buffer, 0 );
-            res_offset += (res->data_size + ALIGN_MASK) & ~ALIGN_MASK;
+            res_offset += (res->data_size + align_mask) & ~align_mask;
         }
     }
     put_word( &buffer, 0 );  /* terminator */
@@ -354,8 +419,9 @@ int output_res16_directory( unsigned char *buffer, DLLSPEC *spec )
         }
     }
     put_byte( &buffer, 0 );  /* names terminator */
-    if ((buffer - start) & 1) put_byte( &buffer, 0 );  /* align on word boundary */
+    if ((buffer - *ret_buf) & 1) put_byte( &buffer, 0 );  /* align on word boundary */
+    assert( buffer - *ret_buf == total_size );
 
     free_resource_tree( tree );
-    return buffer - start;
+    return total_size;
 }

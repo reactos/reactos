@@ -264,40 +264,8 @@ MSIVIEWOPS order_ops =
     ORDER_delete
 };
 
-UINT ORDER_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table )
+static UINT ORDER_AddColumn( MSIORDERVIEW *ov, LPCWSTR name )
 {
-    MSIORDERVIEW *ov = NULL;
-    UINT count = 0, r;
-
-    TRACE("%p\n", ov );
-
-    r = table->ops->get_dimensions( table, NULL, &count );
-    if( r != ERROR_SUCCESS )
-    {
-        ERR("can't get table dimensions\n");
-        return r;
-    }
-
-    ov = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, 
-                    sizeof *ov + sizeof (UINT) * count );
-    if( !ov )
-        return ERROR_FUNCTION_FAILED;
-    
-    /* fill the structure */
-    ov->view.ops = &order_ops;
-    msiobj_addref( &db->hdr );
-    ov->db = db;
-    ov->table = table;
-    ov->reorder = NULL;
-    ov->num_cols = 0;
-    *view = (MSIVIEW*) ov;
-
-    return ERROR_SUCCESS;
-}
-
-UINT ORDER_AddColumn( MSIVIEW *view, LPWSTR name )
-{
-    MSIORDERVIEW *ov = (MSIORDERVIEW*)view;
     UINT n, count, r;
     MSIVIEW *table;
 
@@ -329,6 +297,42 @@ UINT ORDER_AddColumn( MSIVIEW *view, LPWSTR name )
     TRACE("Ordering by column %s (%d)\n", debugstr_w( name ), n);
 
     ov->num_cols++;
+
+    return ERROR_SUCCESS;
+}
+
+UINT ORDER_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
+                       string_list *columns )
+{
+    MSIORDERVIEW *ov = NULL;
+    UINT count = 0, r;
+    string_list *x;
+
+    TRACE("%p\n", ov );
+
+    r = table->ops->get_dimensions( table, NULL, &count );
+    if( r != ERROR_SUCCESS )
+    {
+        ERR("can't get table dimensions\n");
+        return r;
+    }
+
+    ov = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, 
+                    sizeof *ov + sizeof (UINT) * count );
+    if( !ov )
+        return ERROR_FUNCTION_FAILED;
+    
+    /* fill the structure */
+    ov->view.ops = &order_ops;
+    msiobj_addref( &db->hdr );
+    ov->db = db;
+    ov->table = table;
+    ov->reorder = NULL;
+    ov->num_cols = 0;
+    *view = (MSIVIEW*) ov;
+
+    for( x = columns; x ; x = x->next )
+        ORDER_AddColumn( ov, x->string );
 
     return ERROR_SUCCESS;
 }

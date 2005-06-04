@@ -34,6 +34,7 @@ typedef struct tagCSRSS_CONSOLE *PCSRSS_CONSOLE;
 typedef struct _CSRSS_PROCESS_DATA
 {
   PCSRSS_CONSOLE Console;
+  RTL_CRITICAL_SECTION HandleTableLock;
   ULONG HandleTableSize;
   Object_t ** HandleTable;
   HANDLE ProcessId;

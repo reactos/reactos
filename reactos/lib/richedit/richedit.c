@@ -40,26 +40,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 extern LRESULT WINAPI RichEdit10ANSIWndProc(HWND, UINT, WPARAM, LPARAM);
 
 
-/***********************************************************************
- * DllGetVersion [RICHED32.2]
- *
- * Retrieves version information
- */
-HRESULT WINAPI RICHED32_DllGetVersion (DLLVERSIONINFO *pdvi)
-{
-    TRACE("\n");
-
-    if (pdvi->cbSize != sizeof(DLLVERSIONINFO))
-	return E_INVALIDARG;
-
-    pdvi->dwMajorVersion = 4;
-    pdvi->dwMinorVersion = 0;
-    pdvi->dwBuildNumber = 0;
-    pdvi->dwPlatformID = 0;
-
-    return S_OK;
-}
-
 /* Unregisters the window class. */
 static BOOL RICHED32_Unregister(void)
 {
@@ -103,4 +83,24 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         return RICHED32_Unregister();
     }
     return TRUE;
+}
+
+/***********************************************************************
+ * DllGetVersion [RICHED32.2]
+ *
+ * Retrieves version information
+ */
+HRESULT WINAPI RICHED32_DllGetVersion (DLLVERSIONINFO *pdvi)
+{
+    TRACE("\n");
+
+    if (pdvi->cbSize != sizeof(DLLVERSIONINFO))
+	return E_INVALIDARG;
+
+    pdvi->dwMajorVersion = 4;
+    pdvi->dwMinorVersion = 0;
+    pdvi->dwBuildNumber = 0;
+    pdvi->dwPlatformID = 0;
+
+    return S_OK;
 }

@@ -16,6 +16,11 @@
 
 #if defined(__GNUC__)
 
+/*
+ * Do not declare any variable after this point!!
+ */
+__asm__("\n\t.text\n\t");
+
 #ifdef CONFIG_SMP
 #define LOCK "lock ; "
 #else

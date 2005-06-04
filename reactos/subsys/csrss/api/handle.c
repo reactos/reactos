@@ -123,8 +123,10 @@ CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
     }
 
   Status = CsrReleaseObjectByPointer(ProcessData->HandleTable[h]);
-  ProcessData->HandleTable[h] = 0;
 
+  RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+  ProcessData->HandleTable[h] = 0;
+  RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
   return Status;
 }
 
@@ -138,33 +140,36 @@ NTSTATUS STDCALL CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handl
       return STATUS_INVALID_PARAMETER;
    }
 
+   RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+
    for (i = 0; i < ProcessData->HandleTableSize; i++)
      {
 	if (ProcessData->HandleTable[i] == NULL)
 	  {
-	     ProcessData->HandleTable[i] = Object;
-	     *Handle = (HANDLE)(((i + 1) << 2) | 0x3);
-	     InterlockedIncrement( &Object->ReferenceCount );
-	     return(STATUS_SUCCESS);
+            break;
 	  }
      }
-   NewBlock = RtlAllocateHeap(CsrssApiHeap,
-			      HEAP_ZERO_MEMORY,
-			      (ProcessData->HandleTableSize + 64) *
-			      sizeof(HANDLE));
-   if (NewBlock == NULL)
+   if (i >= ProcessData->HandleTableSize)
      {
-	return(STATUS_UNSUCCESSFUL);
+       NewBlock = RtlAllocateHeap(CsrssApiHeap,
+			          HEAP_ZERO_MEMORY,
+			          (ProcessData->HandleTableSize + 64) * sizeof(HANDLE));
+       if (NewBlock == NULL)
+         {
+           RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+	   return(STATUS_UNSUCCESSFUL);
+         }
+       RtlCopyMemory(NewBlock,
+		     ProcessData->HandleTable,
+		     ProcessData->HandleTableSize * sizeof(HANDLE));
+       RtlFreeHeap( CsrssApiHeap, 0, ProcessData->HandleTable );
+       ProcessData->HandleTable = (Object_t **)NewBlock;
+       ProcessData->HandleTableSize += 64;
      }
-   RtlCopyMemory(NewBlock,
-		 ProcessData->HandleTable,
-		 ProcessData->HandleTableSize * sizeof(HANDLE));
-   RtlFreeHeap( CsrssApiHeap, 0, ProcessData->HandleTable );
-   ProcessData->HandleTable = (Object_t **)NewBlock;
    ProcessData->HandleTable[i] = Object;
    *Handle = (HANDLE)(((i + 1) << 2) | 0x3);
    InterlockedIncrement( &Object->ReferenceCount );
-   ProcessData->HandleTableSize = ProcessData->HandleTableSize + 64;
+   RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
    return(STATUS_SUCCESS);
 }
 

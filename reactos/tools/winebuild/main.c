@@ -283,7 +283,7 @@ static char **parse_options( int argc, char **argv, DLLSPEC *spec )
             spec->dll_name = xstrdup( optarg );
             break;
         case 'd':
-            add_import_dll( optarg, 1 );
+            add_delayed_import( optarg );
             break;
         case 'e':
             spec->init_func = xstrdup( optarg );
@@ -312,7 +312,7 @@ static char **parse_options( int argc, char **argv, DLLSPEC *spec )
             kill_at = 1;
             break;
         case 'l':
-            add_import_dll( optarg, 0 );
+            add_import_dll( optarg, NULL );
             break;
         case 'o':
             if (unlink( optarg ) == -1 && errno != ENOENT)
@@ -408,6 +408,21 @@ static void load_resources( char *argv[], DLLSPEC *spec )
     }
 }
 
+/* add input files that look like import libs to the import list */
+static void load_import_libs( char *argv[] )
+{
+    char **ptr, **last;
+
+    for (ptr = last = argv; *ptr; ptr++)
+    {
+        if (strendswith( *ptr, ".def" ))
+            add_import_dll( NULL, *ptr );
+        else
+            *last++ = *ptr; /* not an import dll, keep it in the list */
+    }
+    *last = NULL;
+}
+
 static int parse_input_file( DLLSPEC *spec )
 {
     FILE *input_file = open_input_file( NULL, spec_file_name );
@@ -444,6 +459,7 @@ int main(int argc, char **argv)
     case MODE_DLL:
         spec->characteristics |= IMAGE_FILE_DLL;
         load_resources( argv, spec );
+        load_import_libs( argv );
         if (!spec_file_name) fatal_error( "missing .spec file\n" );
         if (!parse_input_file( spec )) break;
         switch (spec->type)
@@ -462,6 +478,7 @@ int main(int argc, char **argv)
         if (spec->type == SPEC_WIN16) fatal_error( "Cannot build 16-bit exe files\n" );
 	if (!spec->file_name) fatal_error( "executable must be named via the -F option\n" );
         load_resources( argv, spec );
+        load_import_libs( argv );
         if (spec_file_name && !parse_input_file( spec )) break;
         read_undef_symbols( argv );
         BuildSpec32File( output_file, spec );

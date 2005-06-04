@@ -47,7 +47,7 @@
 
 typedef UCHAR u_char;
 typedef USHORT u_short;
-typedef ULONG u_int;
+typedef UINT u_int;
 typedef LONG bpf_int32;
 typedef ULONG bpf_u_int32;
 typedef ULONG u_int32;

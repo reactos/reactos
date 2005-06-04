@@ -277,6 +277,8 @@ ifeq ($(TARGET_TYPE),export_driver)
   MK_BOOTCDDIR := .
   MK_DISTDIR := drivers
   MK_RES_BASE := $(TARGET_NAME)
+  MK_LFLAGS := -Wl,--file-alignment,0x1000 \
+	           -Wl,--section-alignment,0x1000
 endif
 
 ifeq ($(TARGET_TYPE),hal)
@@ -697,6 +699,7 @@ ifneq ($(DBG),1)
   
   MK_CPPFLAGS += -O2 -Wno-strict-aliasing
   MK_CPPFLAGS += -mpreferred-stack-boundary=2
+  OPTIMIZE = yes
 endif
 
 ifneq ($(TARGET_LIBS),)
@@ -877,6 +880,11 @@ endif
 $(MK_FULLNAME): $(MK_NOSTRIPNAME) $(MK_EXTRADEP)
 	$(HALFVERBOSEECHO) [RSYM]    $(MK_FULLNAME)
 	$(RSYM) $(MK_NOSTRIPNAME) $(MK_FULLNAME)
+    
+# Strip the files on release builds
+ifeq ($(DBG),0)
+	$(STRIP) -x $(MK_FULLNAME)
+endif # DBG
 
 endif # KM_MODE
 
@@ -908,8 +916,6 @@ $(MK_NOSTRIPNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_BASENAME).a $(MK_LIBS)
 	$(LD_CC) $(TARGET_LFLAGS) \
 		-Wl,--subsystem,native \
 		-Wl,--image-base,$(TARGET_BASE) \
-		-Wl,--file-alignment,0x1000 \
-		-Wl,--section-alignment,0x1000 \
 		-Wl,--entry,$(TARGET_ENTRY) \
 		-Wl,temp.exp -mdll \
 		-o $(MK_NOSTRIPNAME) \
@@ -929,6 +935,11 @@ $(MK_FULLNAME): $(MK_NOSTRIPNAME)
 	$(HALFVERBOSEECHO) [RSYM]    $(MK_FULLNAME)
 	$(RSYM) $(MK_NOSTRIPNAME) $(MK_FULLNAME)
 
+# Strip the files on release builds
+ifeq ($(DBG),0)
+	$(STRIP) -x $(MK_FULLNAME)
+endif # DBG    
+    
 endif # MK_MODE
 
 # Static library target

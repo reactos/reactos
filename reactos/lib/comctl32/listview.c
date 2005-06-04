@@ -24,13 +24,24 @@
  * NOTES
  *
  * This code was audited for completeness against the documented features
- * of Comctl32.dll version 6.0 on Oct. 21, 2002, by Dimitrie O. Paun.
+ * of Comctl32.dll version 6.0 on May. 20, 2005, by James Hawkins.
  * 
  * Unless otherwise noted, we believe this code to be complete, as per
  * the specification mentioned above.
  * If you discover missing features, or bugs, please note them below.
  * 
  * TODO:
+ *
+ * Default Message Processing
+ *   -- EN_KILLFOCUS should be handled in WM_COMMAND
+ *   -- WM_CREATE: create the icon and small icon image lists at this point only if
+ *      the LVS_SHAREIMAGELISTS style is not specified.
+ *   -- WM_ERASEBKGND: forward this message to the parent window if the bkgnd
+ *      color is CLR_NONE.
+ *   -- WM_WINDOWPOSCHANGED: arrange the list items if the current view is icon
+ *      or small icon and the LVS_AUTOARRANGE style is specified.
+ *   -- WM_TIMER
+ *   -- WM_WININICHANGE
  *
  * Features
  *   -- Hot item handling, mouse hovering
@@ -74,6 +85,8 @@
  *   -- LVS_NOLABELWRAP
  *   -- LVS_NOSCROLL (see Q137520)
  *   -- LVS_SORTASCENDING, LVS_SORTDESCENDING
+ *   -- LVS_ALIGNTOP
+ *   -- LVS_TYPESTYLEMASK
  *
  * Extended Styles
  *   -- LVS_EX_BORDERSELECT
@@ -99,6 +112,7 @@
  *   -- LVN_ODFINDITEM
  *   -- LVN_SETDISPINFO
  *   -- NM_HOVER
+ *   -- LVN_BEGINRDRAG
  *
  * Messages:
  *   -- LVM_CANCELEDITLABEL
@@ -129,6 +143,20 @@
  *   -- LVM_SETTILEWIDTH
  *   -- LVM_SORTGROUPS
  *   -- LVM_SORTITEMSEX
+ *
+ * Macros:
+ *   -- ListView_GetCheckSate, ListView_SetCheckState
+ *   -- ListView_GetHoverTime, ListView_SetHoverTime
+ *   -- ListView_GetISearchString
+ *   -- ListView_GetNumberOfWorkAreas
+ *   -- ListView_GetOrigin
+ *   -- ListView_GetTextBkColor
+ *   -- ListView_GetUnicodeFormat, ListView_SetUnicodeFormat
+ *   -- ListView_GetWorkAreas, ListView_SetWorkAreas
+ *   -- ListView_SortItemsEx
+ *
+ * Functions:
+ *   -- LVGroupComparE
  *
  * Known differences in message stream from native control (not known if
  * these differences cause problems):
@@ -225,6 +253,7 @@ typedef struct tagLISTVIEW_INFO
   HIMAGELIST himlState;
   BOOL bLButtonDown;
   BOOL bRButtonDown;
+  POINT ptClickPos;         /* point where the user clicked */ 
   BOOL bNoItemMetrics;		/* flags if item metrics are not yet computed */
   INT nItemHeight;
   INT nItemWidth;
@@ -394,6 +423,7 @@ static INT LISTVIEW_GetTopIndex(LISTVIEW_INFO *);
 static BOOL LISTVIEW_EnsureVisible(LISTVIEW_INFO *, INT, BOOL);
 static HWND CreateEditLabelT(LISTVIEW_INFO *, LPCWSTR, DWORD, INT, INT, INT, INT, BOOL);
 static HIMAGELIST LISTVIEW_SetImageList(LISTVIEW_INFO *, INT, HIMAGELIST);
+static INT LISTVIEW_HitTest(LISTVIEW_INFO *, LPLVHITTESTINFO, BOOL, BOOL);
 
 /******** Text handling functions *************************************/
 
@@ -3143,6 +3173,22 @@ static BOOL LISTVIEW_KeySelection(LISTVIEW_INFO *infoPtr, INT nItem)
   return bResult;
 }
 
+static BOOL LISTVIEW_GetItemAtPt(LISTVIEW_INFO *infoPtr, LPLVITEMW lpLVItem, POINT pt)
+{
+    LVHITTESTINFO lvHitTestInfo;
+
+    ZeroMemory(&lvHitTestInfo, sizeof(lvHitTestInfo));
+    lvHitTestInfo.pt.x = pt.x;
+    lvHitTestInfo.pt.y = pt.y;
+
+    LISTVIEW_HitTest(infoPtr, &lvHitTestInfo, TRUE, FALSE);
+
+    lpLVItem->mask = LVIF_PARAM;
+    lpLVItem->iItem = lvHitTestInfo.iItem;
+    lpLVItem->iSubItem = 0;
+
+    return LISTVIEW_GetItemT(infoPtr, lpLVItem, TRUE);
+}
 
 /***
  * DESCRIPTION:
@@ -3164,9 +3210,17 @@ static BOOL LISTVIEW_KeySelection(LISTVIEW_INFO *infoPtr, INT nItem)
  */
 static LRESULT LISTVIEW_MouseHover(LISTVIEW_INFO *infoPtr, WORD fwKyes, INT x, INT y)
 {
-    if(infoPtr->dwLvExStyle & LVS_EX_TRACKSELECT)
-	/* FIXME: select the item!!! */
-	/*LISTVIEW_GetItemAtPt(infoPtr, pt)*/;
+    if (infoPtr->dwLvExStyle & LVS_EX_TRACKSELECT)
+    {
+        LVITEMW item;
+        POINT pt;
+
+        pt.x = x;
+        pt.y = y;
+
+        if (LISTVIEW_GetItemAtPt(infoPtr, &item, pt))
+            LISTVIEW_SetSelection(infoPtr, item.iItem);
+    }
 
     return 0;
 }
@@ -3185,7 +3239,24 @@ static LRESULT LISTVIEW_MouseHover(LISTVIEW_INFO *infoPtr, WORD fwKyes, INT x, I
  */
 static LRESULT LISTVIEW_MouseMove(LISTVIEW_INFO *infoPtr, WORD fwKeys, INT x, INT y)
 {
-  TRACKMOUSEEVENT trackinfo;
+    TRACKMOUSEEVENT trackinfo;
+
+    if (infoPtr->bLButtonDown && DragDetect(infoPtr->hwndSelf, infoPtr->ptClickPos))
+    {
+        LVHITTESTINFO lvHitTestInfo;
+        NMLISTVIEW nmlv;
+
+        lvHitTestInfo.pt = infoPtr->ptClickPos;
+        LISTVIEW_HitTest(infoPtr, &lvHitTestInfo, TRUE, TRUE);
+
+        ZeroMemory(&nmlv, sizeof(nmlv));
+        nmlv.iItem = lvHitTestInfo.iItem;
+        nmlv.ptAction = infoPtr->ptClickPos;
+
+        notify_listview(infoPtr, LVN_BEGINDRAG, &nmlv);
+
+        return 0;
+    } 
 
   /* see if we are supposed to be tracking mouse hovering */
   if(infoPtr->dwLvExStyle & LVS_EX_TRACKSELECT) {
@@ -7492,6 +7563,25 @@ fail:
 
 /***
  * DESCRIPTION:
+ * Enables the listview control.
+ *
+ * PARAMETER(S):
+ * [I] infoPtr : valid pointer to the listview structure
+ * [I] bEnable : specifies whether to enable or disable the window
+ *
+ * RETURN:
+ *   SUCCESS : TRUE
+ *   FAILURE : FALSE
+ */
+static BOOL LISTVIEW_Enable(LISTVIEW_INFO *infoPtr, BOOL bEnable)
+{
+    if (infoPtr->dwStyle & LVS_OWNERDRAWFIXED)
+        InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
+    return TRUE;
+}
+
+/***
+ * DESCRIPTION:
  * Erases the background of the listview control.
  *
  * PARAMETER(S):
@@ -7905,68 +7995,6 @@ static LRESULT LISTVIEW_KillFocus(LISTVIEW_INFO *infoPtr)
     return 0;
 }
 
-
-/***
- * DESCRIPTION:
- * Track mouse/dragging
- *
- * PARAMETER(S):
- * [I] infoPtr : valid pointer to the listview structure
- * [I] pt : mouse coordinate
- *
- * RETURN:
- * Zero
- */
-static LRESULT LISTVIEW_TrackMouse(LISTVIEW_INFO *infoPtr, POINT pt)
-{
-    INT cxDrag = GetSystemMetrics(SM_CXDRAG);
-    INT cyDrag = GetSystemMetrics(SM_CYDRAG);
-    RECT r;
-    MSG msg;
-
-    TRACE("\n");
-
-    r.top = pt.y - cyDrag;
-    r.left = pt.x - cxDrag;
-    r.bottom = pt.y + cyDrag;
-    r.right = pt.x + cxDrag;
-
-    SetCapture(infoPtr->hwndSelf);
-
-    while (1)
-    {
-	if (PeekMessageW(&msg, 0, 0, 0, PM_REMOVE | PM_NOYIELD))
-	{
-	    if (msg.message == WM_MOUSEMOVE)
-	    {
-		pt.x = (short)LOWORD(msg.lParam);
-		pt.y = (short)HIWORD(msg.lParam);
-		if (PtInRect(&r, pt))
-		    continue;
-		else
-		{
-		    ReleaseCapture();
-		    return 1;
-		}
-	    }
-	    else if (msg.message >= WM_LBUTTONDOWN &&
-		     msg.message <= WM_RBUTTONDBLCLK)
-	    {
-		break;
-	    }
-
-	    DispatchMessageW(&msg);
-	}
-
-	if (GetCapture() != infoPtr->hwndSelf)
-	    return 0;
-    }
-
-    ReleaseCapture();
-    return 0;
-}
-
-
 /***
  * DESCRIPTION:
  * Processes double click messages (left mouse button).
@@ -8027,8 +8055,9 @@ static LRESULT LISTVIEW_LButtonDown(LISTVIEW_INFO *infoPtr, WORD wKey, INT x, IN
 
   if (!infoPtr->bFocus) SetFocus(infoPtr->hwndSelf);
 
-  /* set left button down flag */
+  /* set left button down flag and record the click position */
   infoPtr->bLButtonDown = TRUE;
+  infoPtr->ptClickPos = pt;
 
   lvHitTestInfo.pt.x = x;
   lvHitTestInfo.pt.y = y;
@@ -8049,19 +8078,6 @@ static LRESULT LISTVIEW_LButtonDown(LISTVIEW_INFO *infoPtr, WORD wKey, INT x, IN
             lvitem.stateMask = LVIS_STATEIMAGEMASK;
             LISTVIEW_SetItemState(infoPtr, nItem, &lvitem);
         }
-        return 0;
-    }
-    if (LISTVIEW_TrackMouse(infoPtr, lvHitTestInfo.pt))
-    {
-        NMLISTVIEW nmlv;
-
-	ZeroMemory(&nmlv, sizeof(nmlv));
-        nmlv.iItem = nItem;
-        nmlv.ptAction.x = lvHitTestInfo.pt.x;
-        nmlv.ptAction.y = lvHitTestInfo.pt.y;
-
-        notify_listview(infoPtr, LVN_BEGINDRAG, &nmlv);
-
         return 0;
     }
 
@@ -8292,6 +8308,11 @@ static LRESULT LISTVIEW_HeaderNotification(LISTVIEW_INFO *infoPtr, const NMHEADE
             notify_listview(infoPtr, LVN_COLUMNCLICK, &nmlv);
         }
 	break;
+
+	case HDN_DIVIDERDBLCLICKW:
+	case HDN_DIVIDERDBLCLICKA:
+            LISTVIEW_SetColumnWidth(infoPtr, lpnmh->iItem, LVSCW_AUTOSIZE);
+            break;
     }
 
     return 0;
@@ -8621,7 +8642,7 @@ static LRESULT LISTVIEW_SetRedraw(LISTVIEW_INFO *infoPtr, BOOL bRedraw)
 {
     TRACE("infoPtr->bRedraw=%d, bRedraw=%d\n", infoPtr->bRedraw, bRedraw);
 
-    /* we can not use straight equality here because _any_ non-zero value is TRUE */
+    /* we cannot use straight equality here because _any_ non-zero value is TRUE */
     if ((infoPtr->bRedraw && bRedraw) || (!infoPtr->bRedraw && !bRedraw)) return 0;
 
     infoPtr->bRedraw = bRedraw;
@@ -9193,6 +9214,9 @@ LISTVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
   case WM_CREATE:
     return LISTVIEW_Create(hwnd, (LPCREATESTRUCTW)lParam);
+
+  case WM_ENABLE:
+    return LISTVIEW_Enable(infoPtr, (BOOL)wParam);
 
   case WM_ERASEBKGND:
     return LISTVIEW_EraseBkgnd(infoPtr, (HDC)wParam);

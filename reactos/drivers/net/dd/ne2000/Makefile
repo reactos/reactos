@@ -6,7 +6,7 @@ TARGET_TYPE = driver
 
 TARGET_NAME = ne2000
 
-TARGET_CFLAGS = -I./include -Werror -Wall
+TARGET_CFLAGS = -I./include -D__USE_W32API -Werror -Wall
 
 TARGET_OBJECTS = \
   ne2000/8390.o \

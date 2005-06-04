@@ -3,6 +3,7 @@ TOPOBJDIR = ../..
 SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = dinput8.dll
+IMPORTLIB = libdinput8.$(IMPLIBEXT)
 IMPORTS   = dinput
 EXTRALIBS = -luuid
 

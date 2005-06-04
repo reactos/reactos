@@ -25,7 +25,7 @@
 #include "ndis.h"
 #else
 #include <ddk/ntddk.h>
-#include <net/ndis.h>
+#include <ddk/ndis.h>
 #endif
 #include "debug.h"
 #include "packet.h"

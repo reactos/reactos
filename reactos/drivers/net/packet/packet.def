@@ -1,8 +1,0 @@
-; packet capture driver - ReactOS Operating System
-
-LIBRARY PACKET.SYS
-
-EXPORTS
-DriverEntry@8
-
-; EOF

@@ -616,9 +616,36 @@ CompositeMonikerImpl_IsEqual(IMoniker* iface,IMoniker* pmkOtherMoniker)
 static HRESULT WINAPI
 CompositeMonikerImpl_Hash(IMoniker* iface,DWORD* pdwHash)
 {
-    FIXME("(),stub!\n");
+    IEnumMoniker *enumMoniker;
+    IMoniker *tempMk;
+    HRESULT res;
+    DWORD tempHash;
 
-    return E_NOTIMPL;
+    TRACE("(%p,%p)\n",iface,pdwHash);
+
+    if (pdwHash==NULL)
+        return E_POINTER;
+
+    res = IMoniker_Enum(iface,TRUE,&enumMoniker);
+    if(FAILED(res))
+        return res;
+
+    while(1){
+        res=IEnumMoniker_Next(enumMoniker,1,&tempMk,NULL);
+        if(FAILED(res))
+            break;
+            
+        res = IMoniker_Hash(tempMk, &tempHash);
+        if(FAILED(res))
+            break;
+        *pdwHash = (*pdwHash * 37) + tempHash;
+        
+        IMoniker_Release(tempMk);
+    }
+
+    IEnumMoniker_Release(enumMoniker);
+
+    return res;
 }
 
 /******************************************************************************

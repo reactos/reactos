@@ -44,6 +44,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 const WCHAR szMsiDialogClass[] = {
     'M','s','i','D','i','a','l','o','g','C','l','o','s','e','C','l','a','s','s',0
 };
+const WCHAR szMsiHiddenWindow[] = {
+    'M','s','i','H','i','d','d','e','n','W','i','n','d','o','w',0
+};
 const static WCHAR szStatic[] = { 'S','t','a','t','i','c',0 };
 const static WCHAR szButton[] = { 'B','U','T','T','O','N', 0 };
 
@@ -105,6 +108,14 @@ static UINT msi_dialog_edit_handler( msi_dialog *, msi_control *, WPARAM );
 static UINT msi_dialog_radiogroup_handler( msi_dialog *, msi_control *, WPARAM param );
 static LRESULT WINAPI MSIRadioGroup_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+
+/* dialog sequencing */
+
+#define WM_MSI_DIALOG_CREATE  (WM_USER+0x100)
+#define WM_MSI_DIALOG_DESTROY (WM_USER+0x101)
+
+static DWORD uiThreadId;
+static HWND hMsiHiddenWindow;
 
 INT msi_dialog_scale_unit( msi_dialog *dialog, INT val )
 {
@@ -725,41 +736,51 @@ static INT msi_dialog_get_sans_serif_height( HWND hwnd )
     return height;
 }
 
-static LRESULT msi_dialog_oncreate( HWND hwnd, LPCREATESTRUCTW cs )
+/* fetch the associated record from the Dialog table */
+static MSIRECORD *msi_get_dialog_record( msi_dialog *dialog )
 {
     static const WCHAR query[] = {
         'S','E','L','E','C','T',' ','*',' ',
         'F','R','O','M',' ','D','i','a','l','o','g',' ',
         'W','H','E','R','E',' ',
            '`','D','i','a','l','o','g','`',' ','=',' ','\'','%','s','\'',0};
-    static const WCHAR df[] = {
-        'D','e','f','a','u','l','t','U','I','F','o','n','t',0 };
-    msi_dialog *dialog = (msi_dialog*) cs->lpCreateParams;
     MSIPACKAGE *package = dialog->package;
     MSIQUERY *view = NULL;
     MSIRECORD *rec = NULL;
-    DWORD width, height;
-    LPCWSTR text;
-    LPWSTR title = NULL;
     UINT r;
 
-    TRACE("%p %p\n", dialog, package);
+    TRACE("%p %s\n", dialog, debugstr_w(dialog->name) );
 
-    dialog->hwnd = hwnd;
-    SetWindowLongPtrW( hwnd, GWLP_USERDATA, (LONG_PTR) dialog );
-
-    /* fetch the associated record from the Dialog table */
     r = MSI_OpenQuery( package->db, &view, query, dialog->name );
     if( r != ERROR_SUCCESS )
     {
         ERR("query failed for dialog %s\n", debugstr_w(dialog->name));
-        return -1;
+        return NULL;
     }
     MSI_ViewExecute( view, NULL );
     MSI_ViewFetch( view, &rec );
     MSI_ViewClose( view );
     msiobj_release( &view->hdr );
 
+    return rec;
+}
+
+static LRESULT msi_dialog_oncreate( HWND hwnd, LPCREATESTRUCTW cs )
+{
+    static const WCHAR df[] = {
+        'D','e','f','a','u','l','t','U','I','F','o','n','t',0 };
+    msi_dialog *dialog = (msi_dialog*) cs->lpCreateParams;
+    MSIRECORD *rec = NULL;
+    DWORD width, height;
+    LPCWSTR text;
+    LPWSTR title = NULL;
+
+    TRACE("%p %p\n", dialog, dialog->package);
+
+    dialog->hwnd = hwnd;
+    SetWindowLongPtrW( hwnd, GWLP_USERDATA, (LONG_PTR) dialog );
+
+    rec = msi_get_dialog_record( dialog );
     if( !rec )
     {
         TRACE("No record found for dialog %s\n", debugstr_w(dialog->name));
@@ -1004,7 +1025,8 @@ static LRESULT WINAPI MSIDialog_WndProc( HWND hwnd, UINT msg,
 {
     msi_dialog *dialog = (LPVOID) GetWindowLongPtrW( hwnd, GWLP_USERDATA );
 
-    TRACE(" 0x%04x\n", msg);
+    TRACE("0x%04x\n", msg);
+
     switch (msg)
     {
     case WM_CREATE:
@@ -1020,13 +1042,43 @@ static LRESULT WINAPI MSIDialog_WndProc( HWND hwnd, UINT msg,
     return DefWindowProcW(hwnd, msg, wParam, lParam);
 }
 
+static LRESULT WINAPI MSIRadioGroup_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    WNDPROC oldproc = (WNDPROC) GetPropW(hWnd, szButtonData);
+
+    TRACE("hWnd %p msg %04x wParam 0x%08x lParam 0x%08lx\n", hWnd, msg, wParam, lParam);
+
+    if (msg == WM_COMMAND) /* Forward notifications to dialog */
+        SendMessageW(GetParent(hWnd), msg, wParam, lParam);
+
+    return CallWindowProcW(oldproc, hWnd, msg, wParam, lParam);
+}
+
+static LRESULT WINAPI MSIHiddenWindowProc( HWND hwnd, UINT msg,
+                WPARAM wParam, LPARAM lParam )
+{
+    msi_dialog *dialog = (msi_dialog*) lParam;
+
+    TRACE("%d %p\n", msg, dialog);
+
+    switch (msg)
+    {
+    case WM_MSI_DIALOG_CREATE:
+        return msi_dialog_run_message_loop( dialog );
+    case WM_MSI_DIALOG_DESTROY:
+        msi_dialog_destroy( dialog );
+        return 0;
+    }
+    return DefWindowProcW( hwnd, msg, wParam, lParam );
+}
+
 /* functions that interface to other modules within MSI */
 
 msi_dialog *msi_dialog_create( MSIPACKAGE* package, LPCWSTR szDialogName,
                                 msi_dialog_event_handler event_handler )
 {
+    MSIRECORD *rec = NULL;
     msi_dialog *dialog;
-    HWND hwnd;
 
     TRACE("%p %s\n", package, debugstr_w(szDialogName));
 
@@ -1036,44 +1088,101 @@ msi_dialog *msi_dialog_create( MSIPACKAGE* package, LPCWSTR szDialogName,
     if( !dialog )
         return NULL;
     strcpyW( dialog->name, szDialogName );
+    msiobj_addref( &package->hdr );
     dialog->package = package;
     dialog->event_handler = event_handler;
+    dialog->finished = 0;
 
-    /* create the dialog window, don't show it yet */
-    hwnd = CreateWindowW( szMsiDialogClass, szDialogName, WS_OVERLAPPEDWINDOW,
-                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                     NULL, NULL, NULL, dialog );
-    if( !hwnd )
+    /* verify that the dialog exists */
+    rec = msi_get_dialog_record( dialog );
+    if( !rec )
     {
-        ERR("Failed to create dialog %s\n", debugstr_w( szDialogName ));
-        msi_dialog_destroy( dialog );
+        HeapFree( GetProcessHeap(), 0, dialog );
         return NULL;
     }
+    dialog->attributes = MSI_RecordGetInteger( rec, 6 );
+    msiobj_release( &rec->hdr );
 
     return dialog;
 }
 
+static void msi_process_pending_messages(void)
+{
+    MSG msg;
+
+    while( PeekMessageW( &msg, 0, 0, 0, PM_REMOVE ) )
+    {
+        TranslateMessage( &msg );
+        DispatchMessageW( &msg );
+    }
+}
+
 void msi_dialog_end_dialog( msi_dialog *dialog )
 {
+    TRACE("%p\n", dialog);
     dialog->finished = 1;
+    PostMessageW(dialog->hwnd, WM_NULL, 0, 0);
+}
+
+void msi_dialog_check_messages( HANDLE handle )
+{
+    DWORD r;
+
+    /* in threads other than the UI thread, block */
+    if( uiThreadId != GetCurrentThreadId() )
+    {
+        if( handle )
+            WaitForSingleObject( handle, INFINITE );
+        return;
+    }
+
+    /* there's two choices for the UI thread */
+    while (1)
+    {
+        msi_process_pending_messages();
+
+        if( !handle )
+            break;
+
+        /*
+         * block here until somebody creates a new dialog or
+         * the handle we're waiting on becomes ready
+         */
+        r = MsgWaitForMultipleObjects( 1, &handle, 0, INFINITE, QS_ALLINPUT );
+        if( r == WAIT_OBJECT_0 )
+            break;
+    }
 }
 
 UINT msi_dialog_run_message_loop( msi_dialog *dialog )
 {
-    MSG msg;
+    HWND hwnd;
 
-    if( dialog->attributes & msidbDialogAttributesVisible )
+    if( !(dialog->attributes & msidbDialogAttributesVisible) )
+        return ERROR_SUCCESS;
+
+    if( uiThreadId != GetCurrentThreadId() )
+        return SendMessageW( hMsiHiddenWindow, WM_MSI_DIALOG_CREATE, 0, (LPARAM) dialog );
+
+    /* create the dialog window, don't show it yet */
+    hwnd = CreateWindowW( szMsiDialogClass, dialog->name, WS_OVERLAPPEDWINDOW,
+                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+                     NULL, NULL, NULL, dialog );
+    if( !hwnd )
     {
-        ShowWindow( dialog->hwnd, SW_SHOW );
-        UpdateWindow( dialog->hwnd );
+        ERR("Failed to create dialog %s\n", debugstr_w( dialog->name ));
+        return ERROR_FUNCTION_FAILED;
     }
+
+    ShowWindow( hwnd, SW_SHOW );
+    UpdateWindow( hwnd );
 
     if( dialog->attributes & msidbDialogAttributesModal )
     {
-        while( !dialog->finished && GetMessageW( &msg, 0, 0, 0 ) )
+        while( !dialog->finished )
         {
-            TranslateMessage( &msg );
-            DispatchMessageW( &msg );
+            MsgWaitForMultipleObjects( 0, NULL, 0, INFINITE, QS_ALLEVENTS );
+            msi_process_pending_messages();
         }
     }
     else
@@ -1082,27 +1191,9 @@ UINT msi_dialog_run_message_loop( msi_dialog *dialog )
     return ERROR_SUCCESS;
 }
 
-void msi_dialog_check_messages( msi_dialog *dialog, HANDLE handle )
-{
-    MSG msg;
-    DWORD r;
-
-    do
-    {
-        while( PeekMessageW( &msg, 0, 0, 0, PM_REMOVE ) )
-        {
-            TranslateMessage( &msg );
-            DispatchMessageW( &msg );
-        }
-        if( !handle )
-            break;
-        r = MsgWaitForMultipleObjects( 1, &handle, 0, INFINITE, QS_ALLEVENTS );
-    }
-    while( WAIT_OBJECT_0 != r );
-}
-
 void msi_dialog_do_preview( msi_dialog *dialog )
 {
+    TRACE("\n");
     dialog->attributes |= msidbDialogAttributesVisible;
     dialog->attributes &= ~msidbDialogAttributesModal;
     msi_dialog_run_message_loop( dialog );
@@ -1110,6 +1201,12 @@ void msi_dialog_do_preview( msi_dialog *dialog )
 
 void msi_dialog_destroy( msi_dialog *dialog )
 {
+    if( uiThreadId != GetCurrentThreadId() )
+    {
+        SendMessageW( hMsiHiddenWindow, WM_MSI_DIALOG_DESTROY, 0, (LPARAM) dialog );
+        return;
+    }
+
     if( dialog->hwnd )
         ShowWindow( dialog->hwnd, SW_HIDE );
     
@@ -1138,11 +1235,12 @@ void msi_dialog_destroy( msi_dialog *dialog )
     if( dialog->hwnd )
         DestroyWindow( dialog->hwnd );
 
+    msiobj_release( &dialog->package->hdr );
     dialog->package = NULL;
     HeapFree( GetProcessHeap(), 0, dialog );
 }
 
-void msi_dialog_register_class( void )
+BOOL msi_dialog_register_class( void )
 {
     WNDCLASSW cls;
 
@@ -1155,22 +1253,28 @@ void msi_dialog_register_class( void )
     cls.lpszMenuName  = NULL;
     cls.lpszClassName = szMsiDialogClass;
 
-    RegisterClassW( &cls );
+    if( !RegisterClassW( &cls ) )
+        return FALSE;
+
+    cls.lpfnWndProc   = MSIHiddenWindowProc;
+    cls.lpszClassName = szMsiHiddenWindow;
+
+    if( !RegisterClassW( &cls ) )
+        return FALSE;
+
+    uiThreadId = GetCurrentThreadId();
+
+    hMsiHiddenWindow = CreateWindowW( szMsiHiddenWindow, NULL, WS_OVERLAPPED,
+                                   0, 0, 100, 100, NULL, NULL, NULL, NULL );
+    if( !hMsiHiddenWindow )
+        return FALSE;
+
+    return TRUE;
 }
 
 void msi_dialog_unregister_class( void )
 {
+    DestroyWindow( hMsiHiddenWindow );
     UnregisterClassW( szMsiDialogClass, NULL );
-}
-
-static LRESULT WINAPI MSIRadioGroup_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    WNDPROC oldproc = (WNDPROC) GetPropW(hWnd, szButtonData);
-
-    TRACE("hWnd %p msg %04x wParam 0x%08x lParam 0x%08lx\n", hWnd, msg, wParam, lParam);
-
-    if (msg == WM_COMMAND) /* Forward notifications to dialog */
-        SendMessageW(GetParent(hWnd), msg, wParam, lParam);
-
-    return CallWindowProcW(oldproc, hWnd, msg, wParam, lParam);
+    uiThreadId = 0;
 }

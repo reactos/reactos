@@ -69,6 +69,12 @@ Change to the specified directory before reading source files. Only
 meaningful in
 .BR \--debug\  mode.
 .TP
+.BI \-d,\ --delay-lib= name
+Set the delayed import mode for the specified library, which must be
+one of the libraries imported with the \fB-l\fR option. Delayed mode
+means that the library won't be loaded until a function imported from
+it is actually called.
+.TP
 .BI \-D\  symbol
 Ignored for compatibility with the C compiler.
 .TP
@@ -137,11 +143,6 @@ searched for import libraries.
 Import the specified library, looking for a corresponding
 \fIlibname.def\fR file in the directories specified with the \fB-L\fR
 option.
-.TP
-.BI \-d,\ --delay-lib= name
-Same as the \fB-l\fR option, but import the specified library in
-delayed mode (i.e. the library won't be loaded until a function
-imported from it is actually called).
 .TP
 .BI \-M,\ --main-module= module
 Specify that we are building a 16-bit dll, that will ultimately be
@@ -249,7 +250,7 @@ The function returns a 64-bit value (Win32 only).
 The entry point is only available on i386 platforms.
 .TP
 .B -register
-The function uses CPU register to pass arguments.
+The function uses CPU register to pass arguments (Win16 only).
 .TP
 .B -private
 The function cannot be imported from other dlls, it can only be
