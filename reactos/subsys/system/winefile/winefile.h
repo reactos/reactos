@@ -1,5 +1,5 @@
 /*
- * Copyright 2000, 2003, 2004 Martin Fuchs
+ * Copyright 2000, 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -35,7 +35,7 @@
 #include <commdlg.h>
 
 #ifdef UNICODE
-#define _UNICODE
+#define	_UNICODE
 #include <wchar.h>
 #endif
 #include <tchar.h>
@@ -44,7 +44,6 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <locale.h>
-#include <time.h>
 
 #ifndef __WINE__
 #include <malloc.h>	/* for alloca() */
@@ -142,6 +141,8 @@ typedef struct
   UINT			cfStrFName;
 #endif
 } WINEFILE_GLOBALS;
+
+extern WINEFILE_GLOBALS Globals;
 
 #ifdef __WINE__
 #ifdef UNICODE

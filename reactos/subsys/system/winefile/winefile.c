@@ -18,6 +18,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifdef __WINE__
+#include "config.h"
+#include "wine/port.h"
+#endif
+
 #include "winefile.h"
 
 #include "resource.h"
