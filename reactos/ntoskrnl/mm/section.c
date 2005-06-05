@@ -2183,7 +2183,7 @@ MmCreatePageFileSection(PSECTION_OBJECT *SectionObject,
    KeInitializeSpinLock(&Section->ViewListLock);
    Section->FileObject = NULL;
    Section->MaximumSize = MaximumSize;
-   Segment = ExAllocatePoolWithTag(PagedPool, sizeof(MM_SECTION_SEGMENT),
+   Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
                                    TAG_MM_SECTION_SEGMENT);
    if (Segment == NULL)
    {
@@ -2387,7 +2387,7 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
     */
    if (FileObject->SectionObjectPointer->DataSectionObject == NULL)
    {
-      Segment = ExAllocatePoolWithTag(PagedPool, sizeof(MM_SECTION_SEGMENT),
+      Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
                                       TAG_MM_SECTION_SEGMENT);
       if (Segment == NULL)
       {
@@ -2499,7 +2499,7 @@ ExeFmtpAllocateSegments(IN ULONG NrSegments)
  /* TODO: check for integer overflow */
  SizeOfSegments = sizeof(MM_SECTION_SEGMENT) * NrSegments;
 
- Segments = ExAllocatePoolWithTag(PagedPool,
+ Segments = ExAllocatePoolWithTag(NonPagedPool,
                                   SizeOfSegments,
                                   TAG_MM_SECTION_SEGMENT);
 
