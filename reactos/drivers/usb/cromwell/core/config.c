@@ -101,56 +101,56 @@ static int usb_parse_endpoint(struct usb_host_endpoint *endpoint, unsigned char 
 	return parsed;
 }
 
-static int usb_parse_interface(struct usb_interface *pinterface, unsigned char *buffer, int size)
+static int usb_parse_interface(struct usb_interface *interface, unsigned char *buffer, int size)
 {
 	int i, len, numskipped, retval, parsed = 0;
 	struct usb_descriptor_header *header;
 	struct usb_host_interface *ifp;
 	unsigned char *begin;
 
-	pinterface->act_altsetting = 0;
-	pinterface->num_altsetting = 0;
-	pinterface->max_altsetting = USB_ALTSETTINGALLOC;
-	device_initialize(&pinterface->dev);
+	interface->act_altsetting = 0;
+	interface->num_altsetting = 0;
+	interface->max_altsetting = USB_ALTSETTINGALLOC;
+	device_initialize(&interface->dev);
 
-	pinterface->altsetting = kmalloc(sizeof(*pinterface->altsetting) * pinterface->max_altsetting,
+	interface->altsetting = kmalloc(sizeof(*interface->altsetting) * interface->max_altsetting,
 					GFP_KERNEL);
 	
-	if (!pinterface->altsetting) {
-		err("couldn't kmalloc pinterface->altsetting");
+	if (!interface->altsetting) {
+		err("couldn't kmalloc interface->altsetting");
 		return -1;
 	}
 
 	while (size > 0) {
 		struct usb_interface_descriptor	*d;
 	
-		if (pinterface->num_altsetting >= pinterface->max_altsetting) {
+		if (interface->num_altsetting >= interface->max_altsetting) {
 			struct usb_host_interface *ptr;
 			int oldmas;
 
-			oldmas = pinterface->max_altsetting;
-			pinterface->max_altsetting += USB_ALTSETTINGALLOC;
-			if (pinterface->max_altsetting > USB_MAXALTSETTING) {
+			oldmas = interface->max_altsetting;
+			interface->max_altsetting += USB_ALTSETTINGALLOC;
+			if (interface->max_altsetting > USB_MAXALTSETTING) {
 				warn("too many alternate settings (incr %d max %d)\n",
 					USB_ALTSETTINGALLOC, USB_MAXALTSETTING);
 				return -1;
 			}
 
-			ptr = kmalloc(sizeof(*ptr) * pinterface->max_altsetting, GFP_KERNEL);
+			ptr = kmalloc(sizeof(*ptr) * interface->max_altsetting, GFP_KERNEL);
 			if (ptr == NULL) {
-				err("couldn't kmalloc pinterface->altsetting");
+				err("couldn't kmalloc interface->altsetting");
 				return -1;
 			}
-			memcpy(ptr, pinterface->altsetting, sizeof(*pinterface->altsetting) * oldmas);
-			kfree(pinterface->altsetting);
-			pinterface->altsetting = ptr;
+			memcpy(ptr, interface->altsetting, sizeof(*interface->altsetting) * oldmas);
+			kfree(interface->altsetting);
+			interface->altsetting = ptr;
 		}
 
-		ifp = pinterface->altsetting + pinterface->num_altsetting;
+		ifp = interface->altsetting + interface->num_altsetting;
 		ifp->endpoint = NULL;
 		ifp->extra = NULL;
 		ifp->extralen = 0;
-		pinterface->num_altsetting++;
+		interface->num_altsetting++;
 
 		memcpy(ifp, buffer, USB_DT_INTERFACE_SIZE);
 
@@ -268,16 +268,16 @@ int usb_parse_configuration(struct usb_host_config *config, char *buffer)
 		return -1;
 	}
 
-	config->pinterface = (struct usb_interface *)
+	config->interface = (struct usb_interface *)
 		kmalloc(config->desc.bNumInterfaces *
 		sizeof(struct usb_interface), GFP_KERNEL);
-	dbg("kmalloc IF %p, numif %i", config->pinterface, config->desc.bNumInterfaces);
-	if (!config->pinterface) {
+	dbg("kmalloc IF %p, numif %i", config->interface, config->desc.bNumInterfaces);
+	if (!config->interface) {
 		err("out of memory");
 		return -1;	
 	}
 
-	memset(config->pinterface, 0,
+	memset(config->interface, 0,
 	       config->desc.bNumInterfaces * sizeof(struct usb_interface));
 
 	buffer += config->desc.bLength;
@@ -337,7 +337,7 @@ int usb_parse_configuration(struct usb_host_config *config, char *buffer)
 			}
 		}
 
-		retval = usb_parse_interface(config->pinterface + i, buffer, size);
+		retval = usb_parse_interface(config->interface + i, buffer, size);
 		if (retval < 0)
 			return retval;
 
@@ -367,12 +367,12 @@ void usb_destroy_configuration(struct usb_device *dev)
 	for (c = 0; c < dev->descriptor.bNumConfigurations; c++) {
 		struct usb_host_config *cf = &dev->config[c];
 
-		if (!cf->pinterface)
+		if (!cf->interface)
 			break;
 
 		for (i = 0; i < cf->desc.bNumInterfaces; i++) {
 			struct usb_interface *ifp =
-				&cf->pinterface[i];
+				&cf->interface[i];
 				
 			if (!ifp->altsetting)
 				break;
@@ -398,7 +398,7 @@ void usb_destroy_configuration(struct usb_device *dev)
 
 			kfree(ifp->altsetting);
 		}
-		kfree(cf->pinterface);
+		kfree(cf->interface);
 	}
 	kfree(dev->config);
 }

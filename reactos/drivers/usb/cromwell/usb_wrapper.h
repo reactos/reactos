@@ -2,7 +2,6 @@
 //#include <ntos/types.h>
 //#include <ddk/extypes.h>
 #include <ddk/ntddk.h>
-#define NDEBUG
 #include <debug.h>
 
 void wait_ms(int mils);
@@ -16,6 +15,8 @@ int sprintf(char * buf, const char *fmt, ...);
 #ifndef swprintf
 int swprintf(wchar_t *buf, const wchar_t *fmt, ...);
 #endif
+
+#undef interface
 
 #include "linux/linux_wrapper.h"
 #define __KERNEL__

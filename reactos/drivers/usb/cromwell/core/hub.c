@@ -67,7 +67,7 @@ static inline char *portspeed (int portstatus)
 /* for dev_info, dev_dbg, etc */
 static inline struct device *hubdev (struct usb_device *dev)
 {
-	return &dev->actconfig->pinterface [0].dev;
+	return &dev->actconfig->interface [0].dev;
 }
 
 /* USB 2.0 spec Section 11.24.4.5 */
@@ -700,7 +700,7 @@ static void hub_start_disconnect(struct usb_device *dev)
 static int hub_port_status(struct usb_device *dev, int port,
 			       u16 *status, u16 *change)
 {
-	struct usb_hub *hub = usb_get_intfdata (dev->actconfig->pinterface);
+	struct usb_hub *hub = usb_get_intfdata (dev->actconfig->interface);
 	int ret;
 
 	ret = get_port_status(dev, port + 1, &hub->status->port);
@@ -1377,7 +1377,7 @@ int usb_physical_reset_device(struct usb_device *dev)
 	}
 
 	for (i = 0; i < dev->actconfig->desc.bNumInterfaces; i++) {
-		struct usb_interface *intf = &dev->actconfig->pinterface[i];
+		struct usb_interface *intf = &dev->actconfig->interface[i];
 		struct usb_interface_descriptor *as;
 
 		as = &intf->altsetting[intf->act_altsetting].desc;

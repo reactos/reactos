@@ -212,9 +212,9 @@ struct usb_interface *usb_ifnum_to_if(struct usb_device *dev, unsigned ifnum)
 	int i;
 
 	for (i = 0; i < dev->actconfig->desc.bNumInterfaces; i++)
-		if (dev->actconfig->pinterface[i].altsetting[0]
+		if (dev->actconfig->interface[i].altsetting[0]
 				.desc.bInterfaceNumber == ifnum)
-			return &dev->actconfig->pinterface[i];
+			return &dev->actconfig->interface[i];
 
 	return NULL;
 }
@@ -239,13 +239,13 @@ usb_epnum_to_ep_desc(struct usb_device *dev, unsigned epnum)
 	int i, j, k;
 
 	for (i = 0; i < dev->actconfig->desc.bNumInterfaces; i++)
-		for (j = 0; j < dev->actconfig->pinterface[i].num_altsetting; j++)
-			for (k = 0; k < dev->actconfig->pinterface[i]
+		for (j = 0; j < dev->actconfig->interface[i].num_altsetting; j++)
+			for (k = 0; k < dev->actconfig->interface[i]
 				.altsetting[j].desc.bNumEndpoints; k++)
-				if (epnum == dev->actconfig->pinterface[i]
+				if (epnum == dev->actconfig->interface[i]
 						.altsetting[j].endpoint[k]
 						.desc.bEndpointAddress)
-					return &dev->actconfig->pinterface[i]
+					return &dev->actconfig->interface[i]
 						.altsetting[j].endpoint[k]
 						.desc;
 
@@ -392,7 +392,7 @@ void usb_driver_release_interface(struct usb_driver *driver, struct usb_interfac
  * its associated class and subclass.
  */   
 const struct usb_device_id *
-usb_match_id(struct usb_interface *pinterface, const struct usb_device_id *id)
+usb_match_id(struct usb_interface *interface, const struct usb_device_id *id)
 {
 	struct usb_host_interface *intf;
 	struct usb_device *dev;
@@ -401,8 +401,8 @@ usb_match_id(struct usb_interface *pinterface, const struct usb_device_id *id)
 	if (id == NULL)
 		return NULL;
 
-	intf = &pinterface->altsetting [pinterface->act_altsetting];
-	dev = interface_to_usbdev(pinterface);
+	intf = &interface->altsetting [interface->act_altsetting];
+	dev = interface_to_usbdev(interface);
 
 	/* It is important to check that id->driver_info is nonzero,
 	   since an entry that is all zeroes except for a nonzero
@@ -902,11 +902,11 @@ void usb_disconnect(struct usb_device **pdev)
 	dev_dbg (&dev->dev, "unregistering interfaces\n");
 	if (dev->actconfig) {
 		for (i = 0; i < dev->actconfig->desc.bNumInterfaces; i++) {
-			struct usb_interface	*pinterface;
+			struct usb_interface	*interface;
 
 			/* remove this interface */
-			pinterface = &dev->actconfig->pinterface[i];
-			device_unregister(&pinterface->dev);
+			interface = &dev->actconfig->interface[i];
+			device_unregister(&interface->dev);
 		}
 	}
 
@@ -1210,35 +1210,35 @@ int usb_new_device(struct usb_device *dev, struct device *parent)
 	/* Register all of the interfaces for this device with the driver core.
 	 * Remember, interfaces get bound to drivers, not devices. */
 	for (i = 0; i < dev->actconfig->desc.bNumInterfaces; i++) {
-		struct usb_interface *pinterface = &dev->actconfig->pinterface[i];
+		struct usb_interface *interface = &dev->actconfig->interface[i];
 		struct usb_interface_descriptor *desc;
 
-		desc = &pinterface->altsetting [pinterface->act_altsetting].desc;
-		pinterface->dev.parent = &dev->dev;
-		pinterface->dev.driver = NULL;
-		pinterface->dev.bus = &usb_bus_type;
-		pinterface->dev.dma_mask = parent->dma_mask;
-		sprintf (&pinterface->dev.bus_id[0], "%d-%s:%d",
+		desc = &interface->altsetting [interface->act_altsetting].desc;
+		interface->dev.parent = &dev->dev;
+		interface->dev.driver = NULL;
+		interface->dev.bus = &usb_bus_type;
+		interface->dev.dma_mask = parent->dma_mask;
+		sprintf (&interface->dev.bus_id[0], "%d-%s:%d",
 			 dev->bus->busnum, dev->devpath,
 			 desc->bInterfaceNumber);
 		if (!desc->iInterface
 				|| usb_string (dev, desc->iInterface,
-					pinterface->dev.name,
-					sizeof pinterface->dev.name) <= 0) {
+					interface->dev.name,
+					sizeof interface->dev.name) <= 0) {
 			/* typically devices won't bother with interface
 			 * descriptions; this is the normal case.  an
 			 * interface's driver might describe it better.
 			 * (also: iInterface is per-altsetting ...)
 			 */
-			sprintf (&pinterface->dev.name[0],
+			sprintf (&interface->dev.name[0],
 				"usb-%s-%s interface %d",
 				dev->bus->bus_name, dev->devpath,
 				desc->bInterfaceNumber);
-			DPRINT1("usb_new_device: %s\n", pinterface->dev.name);
+			DPRINT1("usb_new_device: %s\n", interface->dev.name);
 		}
-		dev_dbg (&dev->dev, "%s - registering interface %s\n", __FUNCTION__, pinterface->dev.bus_id);
-		device_add (&pinterface->dev);
-		usb_create_driverfs_intf_files (pinterface);
+		dev_dbg (&dev->dev, "%s - registering interface %s\n", __FUNCTION__, interface->dev.bus_id);
+		device_add (&interface->dev);
+		usb_create_driverfs_intf_files (interface);
 	}
 	/* add a /proc/bus/usb entry */
 	usbfs_add_device(dev);
