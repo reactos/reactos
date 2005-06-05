@@ -458,19 +458,13 @@ MingwModuleHandler::GenerateInstallTarget () const
 	if ( module.installName.length () == 0 )
 		return;
 	fprintf ( fMakefile, ".PHONY: %s_install\n", module.name.c_str() );
-	fprintf ( fMakefile, "%s_install:\n", module.name.c_str() );
-	string sourceFilename = MingwModuleHandler::PassThruCacheDirectory (
-		NormalizeFilename ( module.GetPath () ),
-		backend->outputDirectory );
 	string normalizedTargetFilename = MingwModuleHandler::PassThruCacheDirectory (
 		NormalizeFilename ( module.installBase + SSEP + module.installName ),
 		backend->installDirectory );
 	fprintf ( fMakefile,
-	          "\t$(ECHO_CP)\n" );
-	fprintf ( fMakefile,
-	          "\t${cp} %s %s 1>$(NUL)\n",
-	          sourceFilename.c_str (),
-	          normalizedTargetFilename.c_str () );
+	          "%s_install: %s\n",
+	          module.name.c_str (),
+	          normalizedTargetFilename.c_str() );
 }
 
 string
