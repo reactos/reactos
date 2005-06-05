@@ -44,25 +44,38 @@ DIB_32BPP_GetPixel(SURFOBJ *SurfObj, LONG x, LONG y)
 #ifdef _M_IX86
 VOID
 DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
-{    
- PBYTE byteaddr = SurfObj->pvScan0 + y * SurfObj->lDelta;
-  PDWORD addr = (PDWORD)byteaddr + x1;
-  LONG cx = x2 - x1;
-  if (cx>0) memset4(addr, c, cx);    
+{      
+  LONG cx  = (x2 - x1) ;
+  if (cx>0)
+  {
+   PBYTE byteaddr = SurfObj->pvScan0 + y * SurfObj->lDelta;  
+   PDWORD addr = (PDWORD)byteaddr + x1;
+   memset4(addr, c, cx);  
+  }
+  else if (cx<0)
+  {
+   PBYTE byteaddr = SurfObj->pvScan0 + y * SurfObj->lDelta;  
+   PDWORD addr = (PDWORD)byteaddr + x2;
+   cx = (x1 - x2) ;
+   memset4(addr, c, cx);  
+  }
+  
 }
 #else
 VOID
 DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
-  PBYTE byteaddr = SurfObj->pvScan0 + y * SurfObj->lDelta;
-  PDWORD addr = (PDWORD)byteaddr + x1;
-  LONG cx = x1;
-
-  while(cx < x2) {
-    *addr = (DWORD)c;
-    ++addr;
-    ++cx;
-  }
+ 
+ 
+	PBYTE byteaddr = SurfObj->pvScan0 + y * SurfObj->lDelta;  
+	PDWORD addr = (PDWORD)byteaddr + x1;		
+	LONG cx = x1;
+	while(cx < x2) 
+	{
+		*addr = (DWORD)c;
+		++addr;
+		++cx;
+	}	  
 }
 #endif
 
@@ -74,11 +87,12 @@ DIB_32BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
   LONG lDelta = SurfObj->lDelta >> 2; /* >> 2 == / sizeof(DWORD) */
 
   byteaddr = (PBYTE)addr;
-  while(y1++ < y2) {
-    *addr = (DWORD)c;
-
-    addr += lDelta;
-  }
+  while(y1++ < y2) 
+  {
+	*addr = (DWORD)c;
+	addr += lDelta;
+	}
+   
 }
 
 BOOLEAN
@@ -335,7 +349,19 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
 		case  ROP4_SRCPAINT:    
 			 // return(Dest | Source);	
 		     return DIB32_SrcPaint(BltInfo);
-			 break;
+		break;
+
+		case ROP4_NOTSRCERASE:  
+			 return DIB32_NotSrcErase(BltInfo);
+        break; 
+		case ROP4_SRCERASE:  
+			 return DIB32_SrcErase(BltInfo);
+        break; 
+
+		 case  ROP4_PATCOPY:     
+			 // return(Pattern);
+			 return DIB_32PatCopy(BltInfo);
+		 break;
 				
 		default:
 		break;
@@ -400,47 +426,183 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
 }
 
 /* optimze functions for bitblt */
+
+BOOLEAN
+FASTCALL
+DIB_32PatCopy(PBLTINFO BltInfo)   
+{
+	ULONG delta;
+	ULONG DestX, DestY, PatternY;    
+	PULONG DestBits; 	 
+
+    if (!BltInfo->PatternSurface)
+	{	
+		return DIB32_ColorFill(BltInfo, XLATEOBJ_iXlate(BltInfo->XlatePatternToDest, BltInfo->Brush->iSolidColor));
+	}
+
+
+	DestBits = (PULONG)(BltInfo->DestSurface->pvScan0 + (BltInfo->DestRect.left << 2) +
+					   BltInfo->DestRect.top * BltInfo->DestSurface->lDelta);
+
+	delta  = BltInfo->DestSurface->lDelta - ((BltInfo->DestRect.right - BltInfo->DestRect.left) <<2);
+   
+	PatternY = (BltInfo->DestRect.top + BltInfo->BrushOrigin.y) % BltInfo->PatternSurface->sizlBitmap.cy;
+   
+   for (DestY = BltInfo->DestRect.top; DestY < BltInfo->DestRect.bottom; DestY++)
+   {
+
+      for (DestX = BltInfo->DestRect.left; DestX < BltInfo->DestRect.right; DestX++, DestBits++)
+      {       
+       *DestBits = DIB_GetSource(BltInfo->PatternSurface, (DestX + BltInfo->BrushOrigin.x) % BltInfo->PatternSurface->sizlBitmap.cx, PatternY, BltInfo->XlatePatternToDest);                  
+      }
+      
+      PatternY++;
+      PatternY %= BltInfo->PatternSurface->sizlBitmap.cy;      
+
+      DestBits = (PULONG)((ULONG_PTR)DestBits + delta);	
+   }
+
+   
+   return TRUE;
+}
+
 BOOLEAN
 FASTCALL
 DIB_32DstInvert(PBLTINFO BltInfo)   
 {
-    PULONG DestBits;
-    ULONG top  = BltInfo->DestRect.top; 
-    ULONG left = BltInfo->DestRect.left;
-    ULONG DestX = BltInfo->DestRect.right - left;
-    ULONG DestY = BltInfo->DestRect.bottom - top;
-    ULONG delta = BltInfo->DestSurface->lDelta - (DestX << 2);
+			ULONG DestX, DestY;		
+			PULONG DestBits;
 
-    /* Calculate the Initial Destination */
-    DestBits = (PULONG)(BltInfo->DestSurface->pvScan0 + (left  << 2) +
-                        top * BltInfo->DestSurface->lDelta);
+			ULONG bottom = BltInfo->DestRect.bottom;
+			ULONG right  = BltInfo->DestRect.right; 
+			ULONG delta  = BltInfo->DestSurface->lDelta - ((BltInfo->DestRect.right - BltInfo->DestRect.left) <<2)  ;
 
-    while (DestY > 0)
-    {      
-        while (DestX > 0)
-        {
-            /* Invert bits */
-            *DestBits =~ *DestBits;
-            
-            /* Update Position */
-            DestBits++;
-            
-            /* Decrease distance to do */
-            DestX--;
-        }
-      
-        /* Update position */
-        DestBits = (PULONG)((ULONG_PTR)DestBits + delta);
-        
-        /* Decrease distance to do */
-        DestY--;
-    }
+			 DestBits = (PULONG)(BltInfo->DestSurface->pvScan0 +
+                      (BltInfo->DestRect.left << 2) +
+                       BltInfo->DestRect.top * BltInfo->DestSurface->lDelta);
+												
+			for (DestY = BltInfo->DestRect.top; DestY < bottom; DestY++)
+			{											
+				for (DestX = BltInfo->DestRect.left; DestX < right; DestX++, DestBits++)
+				{
+										
+					*DestBits = ~*DestBits ;
+				}
+				
+			 DestBits = (PULONG)((ULONG_PTR)DestBits + delta);				
+			 }
+		
     
     /* Return TRUE */
     return TRUE;
 }
 
-BOOLEAN
+BOOLEAN 
+FASTCALL 
+DIB32_SrcErase(PBLTINFO BltInfo)
+{
+	BOOLEAN status = FALSE;
+	
+	switch (BltInfo->SourceSurface->iBitmapFormat)
+	{			   
+		case BMF_1BPP:
+		case BMF_4BPP:						
+		case BMF_16BPP:
+		case BMF_24BPP:				
+		case BMF_32BPP:
+		{
+			ULONG DestX, DestY;
+			ULONG SourceX, SourceY;
+			PULONG DestBits;
+
+			ULONG bottom = BltInfo->DestRect.bottom;
+			ULONG right  = BltInfo->DestRect.right; 
+			ULONG delta  = BltInfo->DestSurface->lDelta - ((BltInfo->DestRect.right - BltInfo->DestRect.left) <<2)  ;
+
+			DestBits = (PULONG)(BltInfo->DestSurface->pvScan0 + (BltInfo->DestRect.left << 2) +
+                                BltInfo->DestRect.top * BltInfo->DestSurface->lDelta);
+									
+			SourceY =  BltInfo->SourcePoint.y;
+
+			for (DestY = BltInfo->DestRect.top; DestY < bottom; DestY++)
+			{							
+				SourceX = BltInfo->SourcePoint.x;
+				for (DestX = BltInfo->DestRect.left; DestX < right; DestX++, DestBits++, SourceX++)
+				{						
+					*DestBits = ~(*DestBits & DIB_GetSource(BltInfo->SourceSurface,  SourceX, 
+                                               SourceY, BltInfo->XlateSourceToDest));
+				}
+				
+			 DestBits = (PULONG)((ULONG_PTR)DestBits + delta);				 
+			 SourceY++;	 
+			 }
+		
+		}
+		status = TRUE;
+	    break;			
+
+
+		default:
+		break;
+	}
+
+ return status;
+}
+
+BOOLEAN 
+FASTCALL 
+DIB32_NotSrcErase(PBLTINFO BltInfo)
+{
+	BOOLEAN status = FALSE;
+	
+	switch (BltInfo->SourceSurface->iBitmapFormat)
+	{			   
+		case BMF_1BPP:
+		case BMF_4BPP:						
+		case BMF_16BPP:
+		case BMF_24BPP:				
+		case BMF_32BPP:
+		{
+			ULONG DestX, DestY;
+			ULONG SourceX, SourceY;
+			PULONG DestBits;
+
+			ULONG bottom = BltInfo->DestRect.bottom;
+			ULONG right  = BltInfo->DestRect.right; 
+			ULONG delta  = BltInfo->DestSurface->lDelta - ((BltInfo->DestRect.right - BltInfo->DestRect.left) <<2)  ;
+
+			DestBits = (PULONG)(BltInfo->DestSurface->pvScan0 + (BltInfo->DestRect.left << 2) +
+                                BltInfo->DestRect.top * BltInfo->DestSurface->lDelta);
+									
+			SourceY =  BltInfo->SourcePoint.y;
+
+			for (DestY = BltInfo->DestRect.top; DestY < bottom; DestY++)
+			{							
+				SourceX = BltInfo->SourcePoint.x;
+				for (DestX = BltInfo->DestRect.left; DestX < right; DestX++, DestBits++, SourceX++)
+				{						
+					*DestBits = ~(*DestBits | DIB_GetSource(BltInfo->SourceSurface,  SourceX, 
+                                               SourceY, BltInfo->XlateSourceToDest));
+				}
+				
+			 DestBits = (PULONG)((ULONG_PTR)DestBits + delta);				 
+			 SourceY++;	 
+			 }
+		
+		}
+		status = TRUE;
+	    break;			
+
+
+		default:
+		break;
+	}
+
+ return status;
+}
+
+BOOLEAN 
+FASTCALL 
 DIB32_SrcPaint(PBLTINFO BltInfo)
 {
 	BOOLEAN status = FALSE;
@@ -461,8 +623,9 @@ DIB32_SrcPaint(PBLTINFO BltInfo)
 			ULONG right  = BltInfo->DestRect.right; 
 			ULONG delta  = BltInfo->DestSurface->lDelta - ((BltInfo->DestRect.right - BltInfo->DestRect.left) <<2)  ;
 
-			DestBits = (PULONG)(BltInfo->DestSurface->pvScan0 + (BltInfo->DestRect.left << 2) +
-                                BltInfo->DestRect.top * BltInfo->DestSurface->lDelta);
+			 DestBits = (PULONG)(BltInfo->DestSurface->pvScan0 +
+                      (BltInfo->DestRect.left << 2) +
+                       BltInfo->DestRect.top * BltInfo->DestSurface->lDelta);
 									
 			SourceY =  BltInfo->SourcePoint.y;
 
@@ -494,8 +657,9 @@ DIB32_SrcPaint(PBLTINFO BltInfo)
 			ULONG right  = BltInfo->DestRect.right; 
 			ULONG delta  = BltInfo->DestSurface->lDelta - ((BltInfo->DestRect.right - BltInfo->DestRect.left) <<2)  ;
 
-			DestBits = (PULONG)(BltInfo->DestSurface->pvScan0 + (BltInfo->DestRect.left << 2) +
-                                BltInfo->DestRect.top * BltInfo->DestSurface->lDelta);
+			 DestBits = (PULONG)(BltInfo->DestSurface->pvScan0 +
+                      (BltInfo->DestRect.left << 2) +
+                       BltInfo->DestRect.top * BltInfo->DestSurface->lDelta);
 									
 			SourceY =  BltInfo->SourcePoint.y;
 
@@ -522,7 +686,9 @@ DIB32_SrcPaint(PBLTINFO BltInfo)
 
  return status;
 }
-BOOLEAN
+
+BOOLEAN 
+FASTCALL 
 DIB32_Srccopy(PBLTINFO BltInfo)
 {
 	BOOLEAN status = FALSE;
@@ -543,8 +709,9 @@ DIB32_Srccopy(PBLTINFO BltInfo)
 			ULONG right  = BltInfo->DestRect.right; 
 			ULONG delta  = ((BltInfo->DestRect.right - BltInfo->DestRect.left) <<2) + BltInfo->DestSurface->lDelta;
 
-			DestBits = (PULONG)(BltInfo->DestSurface->pvScan0 + (BltInfo->DestRect.left << 2) +
-                                BltInfo->DestRect.top * BltInfo->DestSurface->lDelta);
+			 DestBits = (PULONG)(BltInfo->DestSurface->pvScan0 +
+                      (BltInfo->DestRect.left << 2) +
+                       BltInfo->DestRect.top * BltInfo->DestSurface->lDelta);
 									
 			SourceY =  BltInfo->SourcePoint.y;
 
@@ -588,8 +755,8 @@ DIB32_Srccopy(PBLTINFO BltInfo)
  					
 			Destdelta = BltInfo->DestSurface->lDelta;
 			Sourcedelta = BltInfo->SourceSurface->lDelta;
-			Destaddr = BltInfo->DestSurface->pvScan0 + BltInfo->DestRect.top * Destdelta + BltInfo->DestRect.left;
-			Srcaddr = BltInfo->SourceSurface->pvScan0 + BltInfo->SourcePoint.y * Sourcedelta + BltInfo->SourcePoint.x;
+			Destaddr = BltInfo->DestSurface->pvScan0 + BltInfo->DestRect.top * Destdelta + (BltInfo->DestRect.left<<2);
+			Srcaddr = BltInfo->SourceSurface->pvScan0 + BltInfo->SourcePoint.y * Sourcedelta + (BltInfo->SourcePoint.x<<2);
  
 			DesmaxX *= 4;
 			if (DesmaxY > 0)
@@ -605,6 +772,7 @@ DIB32_Srccopy(PBLTINFO BltInfo)
 			status = TRUE;	
 			break;
 			}
+
 		default:
 		break;
 	    }
@@ -612,7 +780,8 @@ DIB32_Srccopy(PBLTINFO BltInfo)
 return status;
 }
 
-BOOLEAN
+BOOLEAN 
+FASTCALL 
 DIB32_ColorFill(PBLTINFO BltInfo, ULONG color)
 {			 
 	ULONG DestY;	
