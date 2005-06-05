@@ -2573,6 +2573,8 @@ MingwIsoModuleHandler::OutputBootstrapfileCopyCommands (
 	for ( size_t i = 0; i < module.project.modules.size (); i++ )
 	{
 		const Module& m = *module.project.modules[i];
+		if ( !m.enabled )
+			continue;
 		if ( m.bootstrap != NULL )
 		{
 			string sourceFilename = PassThruCacheDirectory (
@@ -2619,6 +2621,8 @@ MingwIsoModuleHandler::GetBootstrapCdDirectories ( const string& bootcdDirectory
 	for ( size_t i = 0; i < module.project.modules.size (); i++ )
 	{
 		const Module& m = *module.project.modules[i];
+		if ( !m.enabled )
+			continue;
 		if ( m.bootstrap != NULL )
 		{
 			string targetDirectory ( bootcdDirectory + SSEP + m.bootstrap->base );
@@ -2664,6 +2668,8 @@ MingwIsoModuleHandler::GetBootstrapCdFiles (
 	for ( size_t i = 0; i < module.project.modules.size (); i++ )
 	{
 		const Module& m = *module.project.modules[i];
+		if ( !m.enabled )
+			continue;
 		if ( m.bootstrap != NULL )
 		{
 			string filename = PassThruCacheDirectory (
@@ -2795,6 +2801,8 @@ MingwLiveIsoModuleHandler::OutputModuleCopyCommands ( string& livecdDirectory,
 	for ( size_t i = 0; i < module.project.modules.size (); i++ )
 	{
 		const Module& m = *module.project.modules[i];
+		if ( !m.enabled )
+			continue;
 		if ( m.installName.length () > 0 )
 		{
 			string sourceFilename = MingwModuleHandler::PassThruCacheDirectory (

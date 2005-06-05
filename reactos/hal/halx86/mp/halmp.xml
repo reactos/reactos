@@ -1,4 +1,4 @@
-<module name="halmp" type="kernelmodedll">
+<module if="${MP}" name="halmp" type="kernelmodedll" installbase="system32" installname="hal.dll">
 	<importlibrary definition="../../hal/hal.def" />
 	<include base="hal_generic">../include</include>
 	<include base="ntoskrnl">include</include>

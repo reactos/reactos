@@ -256,6 +256,8 @@ MingwBackend::ProcessModules ()
 	for ( i = 0; i < ProjectNode.modules.size (); i++ )
 	{
 		Module& module = *ProjectNode.modules[i];
+		if ( !module.enabled )
+			continue;
 		MingwModuleHandler* h = MingwModuleHandler::InstanciateHandler (
 			module,
 			this );
@@ -547,6 +549,8 @@ MingwBackend::GetBuildToolDependencies () const
 	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
 	{
 		Module& module = *ProjectNode.modules[i];
+		if ( !module.enabled )
+			continue;
 		if ( module.type == BuildTool )
 		{
 			if ( dependencies.length () > 0 )
@@ -845,6 +849,8 @@ MingwBackend::GetModuleInstallTargetFiles (
 	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
 	{
 		const Module& module = *ProjectNode.modules[i];
+		if ( !module.enabled )
+			continue;
 		if ( module.installName.length () > 0 )
 		{
 			string targetFilenameNoFixup;
@@ -915,6 +921,8 @@ MingwBackend::OutputModuleInstallTargets ()
 	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
 	{
 		const Module& module = *ProjectNode.modules[i];
+		if ( !module.enabled )
+			continue;
 		if ( module.installName.length () > 0 )
 		{
 			string sourceFilename = MingwModuleHandler::PassThruCacheDirectory (
@@ -1004,6 +1012,8 @@ MingwBackend::GetModuleTestTargets (
 	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
 	{
 		const Module& module = *ProjectNode.modules[i];
+		if ( !module.enabled )
+			continue;
 		if ( module.type == Test )
 			out.push_back ( module.name );
 	}

@@ -99,6 +99,15 @@ NormalizeFilename ( const string& filename )
 	return FixSeparator ( relativeNormalizedPath );
 }
 
+bool
+GetBooleanValue ( const string& value )
+{
+	if ( value == "1" )
+		return true;
+	else
+		return false;
+}
+
 IfableData::~IfableData()
 {
 	size_t i;
@@ -153,11 +162,21 @@ Module::Module ( const Project& project,
 		                                  __LINE__,
 		                                  "Module created with non-<module> node" );
 
-	xmlbuildFile = Path::RelativeFromWorkingDirectory ( moduleNode.xmlFile->filename() );
+	xmlbuildFile = Path::RelativeFromWorkingDirectory ( moduleNode.xmlFile->filename () );
 
 	path = FixSeparator ( modulePath );
 
-	const XMLAttribute* att = moduleNode.GetAttribute ( "name", true );
+	enabled = true;
+
+	const XMLAttribute* att = moduleNode.GetAttribute ( "if", false );
+	if ( att != NULL )
+		enabled = GetBooleanValue ( project.ResolveProperties ( att->value ) );
+
+	att = moduleNode.GetAttribute ( "ifnot", false );
+	if ( att != NULL )
+		enabled = !GetBooleanValue ( project.ResolveProperties ( att->value ) );
+
+	att = moduleNode.GetAttribute ( "name", true );
 	assert(att);
 	name = att->value;
 

@@ -134,7 +134,9 @@ public:
 	Module* LocateModule ( const std::string& name );
 	const Module* LocateModule ( const std::string& name ) const;
 	std::string GetProjectFilename () const;
+	std::string ResolveProperties ( const std::string& s ) const;
 private:
+	std::string ResolveNextProperty ( std::string& s ) const;
 	const Property* LookupProperty ( const std::string& name ) const;
 	void SetConfigurationOption ( char* s,
 	                              std::string name,
@@ -210,6 +212,7 @@ public:
 	std::string installName;
 	bool useWRC;
 	bool enableWarnings;
+	bool enabled;
 
 	Module ( const Project& project,
 	         const XMLElement& moduleNode,

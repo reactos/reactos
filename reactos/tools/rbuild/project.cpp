@@ -85,10 +85,49 @@ Project::LookupProperty ( const string& name ) const
 	return NULL;
 }
 
+string
+Project::ResolveNextProperty ( string& s ) const
+{
+	size_t i = s.find ( "${" );
+	if ( i == string::npos )
+		i = s.find ( "$(" );
+	if ( i != string::npos )
+	{
+		string endCharacter;
+		if ( s[i + 1] == '{' )
+			endCharacter = "}";
+		else
+			endCharacter = ")";
+		size_t j = s.find ( endCharacter );
+		if ( j != string::npos )
+		{
+			int propertyNameLength = j - i - 2;
+			string propertyName = s.substr ( i + 2, propertyNameLength );
+			const Property* property = LookupProperty ( propertyName );
+			if ( property != NULL )
+				return s.replace ( i, propertyNameLength + 3, property->value );
+		}
+	}
+	return s;
+}
+
+string
+Project::ResolveProperties ( const string& s ) const
+{
+	string s2 = s;
+	string s3;
+	do
+	{
+		s3 = s2;
+		s2 = ResolveNextProperty ( s3 );
+	} while ( s2 != s3 );
+	return s2;
+}
+
 void
 Project::SetConfigurationOption ( char* s,
-	                              string name,
-	                              string* alternativeName )
+                                  string name,
+                                  string* alternativeName )
 {
 	const Property* property = LookupProperty ( name );
 	if ( property != NULL && property->value.length () > 0 )

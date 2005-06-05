@@ -1,4 +1,4 @@
-<module name="halup" type="kernelmodedll" installbase="system32" installname="hal.dll">
+<module ifnot="${MP}" name="halup" type="kernelmodedll" installbase="system32" installname="hal.dll">
 	<importlibrary definition="../../hal/hal.def" />
 	<bootstrap base="reactos" nameoncd="hal.dll" />
 	<include base="hal_generic">../include</include>

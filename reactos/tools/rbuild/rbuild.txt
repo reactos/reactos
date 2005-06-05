@@ -107,11 +107,13 @@ Module element
 There can be zero or more modules per xml build file.
 
 Syntax:
-	<module name="msvcrt" type="win32dll" extension=".dll" entrypoint="_DllMain@12" baseaddress="0x70000000" mangledsymbols="true" installbase="system32" installname="msvcrt.dll" usewrc="false" warnings="true">
+	<module if="${MP}" ifnot="${MP}" name="msvcrt" type="win32dll" extension=".dll" entrypoint="_DllMain@12" baseaddress="0x70000000" mangledsymbols="true" installbase="system32" installname="msvcrt.dll" usewrc="false" warnings="true">
 		...
 	</module>
 
 Attributes:
+	if - If the value is 1, then the module is enabled, otherwise it is disabled. A disabled module is not processed.
+	ifnot - If the value is 1, then the module is disabled, otherwise it is enabled. A disabled module is not processed.
 	name - Name of the module. Also the base name of the generated file if such file is generated for the particular module type.
 	type - Type of module. See below for an explanation of module types.
 	extension - Extension of the generated file if such file is generated for the particular module type.
