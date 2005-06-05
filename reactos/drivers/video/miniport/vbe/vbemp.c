@@ -27,8 +27,10 @@
 
 /* INCLUDES *******************************************************************/
 
-#define NDEBUG
 #include "vbemp.h"
+
+#define NDEBUG
+#include <debug.h>
 
 /* PUBLIC AND PRIVATE FUNCTIONS ***********************************************/
 
@@ -78,11 +80,11 @@ VBEFindAdapter(
 static int
 VBESortModesCallback(PVBE_MODEINFO VbeModeInfoA, PVBE_MODEINFO VbeModeInfoB)
 {
-   DPRINT(("VBESortModesCallback: %dx%dx%d / %dx%dx%d\n",
+   DPRINT("VBESortModesCallback: %dx%dx%d / %dx%dx%d\n",
       VbeModeInfoA->XResolution, VbeModeInfoA->YResolution,
       VbeModeInfoA->BitsPerPixel,
       VbeModeInfoB->XResolution, VbeModeInfoB->YResolution,
-      VbeModeInfoB->BitsPerPixel));
+      VbeModeInfoB->BitsPerPixel);
 
    /*
     * FIXME: Until some reasonable method for changing video modes will
@@ -188,7 +190,7 @@ VBEInitialize(PVOID HwDeviceExtension)
 
    if (Status != NO_ERROR)
    {
-      DPRINT(("Failed to get Int 10 service functions (Status %x)\n", Status));
+      DPRINT1("Failed to get Int 10 service functions (Status %x)\n", Status);
       return FALSE;
    }
 
@@ -207,7 +209,7 @@ VBEInitialize(PVOID HwDeviceExtension)
 
    if (Status != NO_ERROR)
    {
-      DPRINT(("Failed to allocate virtual memory (Status %x)\n", Status));
+      DPRINT1("Failed to allocate virtual memory (Status %x)\n", Status);
       return FALSE;
    }
 
@@ -239,10 +241,10 @@ VBEInitialize(PVOID HwDeviceExtension)
          &VBEDeviceExtension->VbeInfo,
          sizeof(VBEDeviceExtension->VbeInfo));
 
-      DPRINT(("VBE BIOS Present (%d.%d, %8ld Kb)\n",
+      DPRINT("VBE BIOS Present (%d.%d, %8ld Kb)\n",
          VBEDeviceExtension->VbeInfo.Version / 0x100,
          VBEDeviceExtension->VbeInfo.Version & 0xFF,
-         VBEDeviceExtension->VbeInfo.TotalMemory * 16));
+         VBEDeviceExtension->VbeInfo.TotalMemory * 16);
 
 #ifdef VBE12_SUPPORT
       if (VBEDeviceExtension->VbeInfo.Version < 0x102)
@@ -250,13 +252,13 @@ VBEInitialize(PVOID HwDeviceExtension)
       if (VBEDeviceExtension->VbeInfo.Version < 0x200)
 #endif
       {
-         DPRINT(("VBE BIOS present, but incompatible version.\n"));
+         DPRINT("VBE BIOS present, but incompatible version.\n");
          return FALSE;
       }
    }
    else
    {
-      DPRINT(("No VBE BIOS found.\n"));
+      DPRINT("No VBE BIOS found.\n");
       return FALSE;
    }
 
@@ -357,7 +359,7 @@ VBEInitialize(PVOID HwDeviceExtension)
 
    if (SuitableModeCount == 0)
    {
-      DPRINT(("VBEMP: No video modes supported\n"));
+      DPRINT("VBEMP: No video modes supported\n");
       return FALSE;
    }
 
@@ -373,15 +375,15 @@ VBEInitialize(PVOID HwDeviceExtension)
     * Print the supported video modes when DBG is set.
     */
 
-#ifdef DBG
+#if defined(DBG) && ! defined(NDEBUG)
    for (CurrentMode = 0;
         CurrentMode < SuitableModeCount;
         CurrentMode++)
    {
-      DPRINT(("%dx%dx%d\n",
+      DPRINT("%dx%dx%d\n",
          VBEDeviceExtension->ModeInfo[CurrentMode].XResolution,
          VBEDeviceExtension->ModeInfo[CurrentMode].YResolution,
-         VBEDeviceExtension->ModeInfo[CurrentMode].BitsPerPixel));
+         VBEDeviceExtension->ModeInfo[CurrentMode].BitsPerPixel);
    }
 #endif
 
@@ -731,7 +733,7 @@ VBESetCurrentMode(
    }
    else
    {
-      DPRINT(("VBEMP: VBESetCurrentMode failed (%x)\n", BiosRegisters.Eax));
+      DPRINT1("VBEMP: VBESetCurrentMode failed (%x)\n", BiosRegisters.Eax);
       DeviceExtension->CurrentMode = -1;
    }
 

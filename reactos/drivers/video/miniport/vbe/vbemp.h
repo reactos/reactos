@@ -31,12 +31,6 @@
 #include <ddk/ntddvdeo.h>
 #include <ddk/ntapi.h>
 
-#ifdef DBG
-#define DPRINT(arg) DbgPrint arg;
-#else
-#define DPRINT(arg)
-#endif
-
 /*
  * Compile-time define to get VBE 1.2 support. The implementation
  * is far from complete now and so it's left undefined.
