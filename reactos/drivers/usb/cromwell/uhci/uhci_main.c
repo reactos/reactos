@@ -37,6 +37,8 @@ AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT pdo)
 	NTSTATUS Status;
 	WCHAR DeviceBuffer[20];
 	UNICODE_STRING DeviceName;
+	WCHAR LinkDeviceBuffer[20];
+	UNICODE_STRING LinkDeviceName;
 	POHCI_DRIVER_EXTENSION DriverExtension;
 	POHCI_DEVICE_EXTENSION DeviceExtension;
 	ULONG Size, DeviceNumber;
@@ -62,7 +64,7 @@ AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT pdo)
    
 	// Create a unicode device name
 	DeviceNumber = 0; //TODO: Allocate new device number every time
-	swprintf(DeviceBuffer, L"\\Device\\USBPDO-%lu", DeviceNumber);
+	swprintf(DeviceBuffer, L"\\Device\\USBFDO-%lu", DeviceNumber);
 	RtlInitUnicodeString(&DeviceName, DeviceBuffer);
 
 	Status = IoCreateDevice(DriverObject,
@@ -92,6 +94,16 @@ AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT pdo)
 	DeviceExtension->PhysicalDeviceObject = pdo;
 	DeviceExtension->FunctionalDeviceObject = fdo;
 	DeviceExtension->DriverExtension = DriverExtension;
+
+	swprintf(LinkDeviceBuffer, L"\\??\\HCD%lu", DeviceNumber);
+	RtlInitUnicodeString(&LinkDeviceName, LinkDeviceBuffer);
+	Status = IoCreateSymbolicLink(&LinkDeviceName, &DeviceName);
+
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT1("IoCreateSymbolicLink call failed with status 0x%08x\n", Status);
+		return Status;
+	}
 
 	/* Get bus number from the upper level bus driver. */
 	Size = sizeof(ULONG);
