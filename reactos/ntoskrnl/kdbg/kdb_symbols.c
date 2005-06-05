@@ -26,6 +26,7 @@ typedef struct _IMAGE_SYMBOL_INFO_CACHE {
   PROSSYM_INFO RosSymInfo;
 } IMAGE_SYMBOL_INFO_CACHE, *PIMAGE_SYMBOL_INFO_CACHE;
 
+static BOOLEAN LoadSymbols;
 static LIST_ENTRY SymbolFileListHead;
 static KSPIN_LOCK SymbolFileListLock;
 
@@ -415,6 +416,12 @@ KdbpSymLoadModuleSymbols(IN PUNICODE_STRING FileName,
   /* Allow KDB to break on module load */
   KdbModuleLoaded(FileName);
 
+  if (! LoadSymbols)
+    {
+      *RosSymInfo = NULL;
+      return;
+    }
+
   /*  Try to find cached (already loaded) symbol file  */
   *RosSymInfo = KdbpSymFindCachedFile(FileName);
   if (*RosSymInfo != NULL)
@@ -490,6 +497,8 @@ KdbSymLoadUserModuleSymbols(IN PLDR_MODULE LdrModule)
   UNICODE_STRING KernelName;
   DPRINT("LdrModule %p\n", LdrModule);
 
+  LdrModule->RosSymInfo = NULL;
+
   KernelName.MaximumLength = sizeof(Prefix) + LdrModule->FullDllName.Length;
   KernelName.Length = KernelName.MaximumLength - sizeof(WCHAR);
   KernelName.Buffer = ExAllocatePoolWithTag(PagedPool, KernelName.MaximumLength, TAG_KDBS);
@@ -501,8 +510,6 @@ KdbSymLoadUserModuleSymbols(IN PLDR_MODULE LdrModule)
   memcpy(KernelName.Buffer + sizeof(Prefix) / sizeof(WCHAR) - 1, LdrModule->FullDllName.Buffer,
          LdrModule->FullDllName.Length);
   KernelName.Buffer[KernelName.Length / sizeof(WCHAR)] = L'\0';
-
-  LdrModule->RosSymInfo = NULL;
 
   KdbpSymLoadModuleSymbols(&KernelName, &LdrModule->RosSymInfo);
 
@@ -612,6 +619,12 @@ KdbSymProcessBootSymbols(IN PCHAR FileName)
 
   if (ModuleObject != NULL)
   {
+     if (! LoadSymbols)
+     {
+        ModuleObject->TextSection->RosSymInfo = NULL;
+        return;
+     }
+
      for (i = 0; i < KeLoaderBlock.ModsCount; i++)
      {
         if (0 == _stricmp(FileName, (PCHAR)KeLoaderModules[i].String))
@@ -670,11 +683,62 @@ VOID
 KdbSymInit(IN PMODULE_TEXT_SECTION NtoskrnlTextSection,
 	   IN PMODULE_TEXT_SECTION LdrHalTextSection)
 {
+  PCHAR p1, p2;
+  int Found;
+  char YesNo;
+
   NtoskrnlTextSection->RosSymInfo = NULL;
   LdrHalTextSection->RosSymInfo = NULL;
 
   InitializeListHead(&SymbolFileListHead);
   KeInitializeSpinLock(&SymbolFileListLock);
+
+#ifdef DBG
+  LoadSymbols = TRUE;
+#else
+  LoadSymbols = FALSE;
+#endif
+
+  /* Check the command line for /LOADSYMBOLS, /NOLOADSYMBOLS,
+   * /LOADSYMBOLS={YES|NO}, /NOLOADSYMBOLS={YES|NO} */
+  p1 = (PCHAR) KeLoaderBlock.CommandLine;
+  while('\0' != *p1 && NULL != (p2 = strchr(p1, '/')))
+    {
+      p2++;
+      Found = 0;
+      if (0 == _strnicmp(p2, "LOADSYMBOLS", 11))
+        {
+          Found = +1;
+          p2 += 11;
+        }
+      else if (0 == _strnicmp(p2, "NOLOADSYMBOLS", 13))
+        {
+          Found = -1;
+          p2 += 13;
+        }
+      if (0 != Found)
+        {
+          while (isspace(*p2))
+            {
+              p2++;
+            }
+          if ('=' == *p2)
+            {
+              p2++;
+              while (isspace(*p2))
+                {
+                  p2++;
+                }
+              YesNo = toupper(*p2);
+              if ('N' == YesNo || 'F' == YesNo || '0' == YesNo)
+                {
+                  Found = -1 * Found;
+                }
+            }
+          LoadSymbols = (0 < Found);
+        }
+      p1 = p2;
+    }
 
   RosSymInitKernelMode();
 }
