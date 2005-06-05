@@ -50,6 +50,10 @@
 #
 #    ROS_RBUILDFLAGS
 #        Pass parameters to rbuild.
+#            -v   Be verbose.
+#            -c   Clean as you go. Delete generated files as soon as they are not needed anymore.
+#            -d   Disable automatic dependencies.
+#            -mi  Let make handle creation of install directories. Rbuild will not generate the directories.
 
 .PHONY: all
 .PHONY: clean
