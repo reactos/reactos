@@ -1732,8 +1732,15 @@ MingwModuleHandler::GenerateRules ()
 	string cppc = ( module.host == HostTrue ? "${host_gpp}" : "${gpp}" );
 	string ar = ( module.host == HostTrue ? "${host_ar}" : "${ar}" );
 
-	string targetMacro = GetTargetMacro ( module );
+	if ( module.name != "zlib" ) /* Avoid make warning */
+	{
+		string proxyMakefile = PassThruCacheDirectory (
+			NormalizeFilename ( module.GetBasePath () + SSEP + "makefile" ),
+			backend->outputDirectory );
+		CLEAN_FILE ( proxyMakefile );
+	}
 
+	string targetMacro = GetTargetMacro ( module );
 	CLEAN_FILE ( targetMacro );
 
 	// generate phony target for module name
