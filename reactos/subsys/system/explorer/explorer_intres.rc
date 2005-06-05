@@ -186,6 +186,7 @@ END
 #include "explorer-en.rc"
 #include "explorer-de.rc"
 #include "explorer-es.rc"
+#include "explorer-fr.rc"
 #include "explorer-sw.rc"
 #include "explorer-pt.rc"
 #include "explorer-cz.rc"
