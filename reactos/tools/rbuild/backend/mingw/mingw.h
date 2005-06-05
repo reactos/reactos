@@ -83,6 +83,7 @@ private:
 	std::string GetBin2ResExecutable ();
 	void UnpackWineResources ();
 	void GenerateTestSupportCode ();
+	std::string GetProxyMakefileTree () const;
 	void GenerateProxyMakefiles ();
 	void CheckAutomaticDependencies ();
 	bool IncludeDirectoryTarget ( const std::string& directory ) const;
@@ -122,12 +123,15 @@ class ProxyMakefile
 public:
 	ProxyMakefile ( const Project& project );
 	~ProxyMakefile ();
-	void GenerateProxyMakefiles ( bool verbose );
+	void GenerateProxyMakefiles ( bool verbose,
+                                      std::string outputTree );
 private:
 	std::string GeneratePathToParentDirectory ( int numberOfParentDirectories );
 	std::string GetPathToTopDirectory ( Module& module );
+	bool GenerateProxyMakefile ( Module& module );
 	void GenerateProxyMakefileForModule ( Module& module,
-                                              bool verbose );
+                                              bool verbose,
+                                              std::string outputTree );
 	const Project& project;
 };
 

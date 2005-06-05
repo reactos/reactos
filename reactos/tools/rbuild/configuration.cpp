@@ -9,6 +9,7 @@ Configuration::Configuration ()
 	CleanAsYouGo = false;
 	AutomaticDependencies = true;
 	MakeHandlesInstallDirectories = false;
+	GenerateProxyMakefilesInSourceTree = false;
 }
 
 Configuration::~Configuration ()

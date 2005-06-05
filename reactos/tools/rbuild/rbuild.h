@@ -77,6 +77,7 @@ public:
 	bool CleanAsYouGo;
 	bool AutomaticDependencies;
 	bool MakeHandlesInstallDirectories;
+	bool GenerateProxyMakefilesInSourceTree;
 };
 
 class Environment
@@ -222,6 +223,7 @@ public:
 	                           const XMLAttribute& attribute );
 	bool HasImportLibrary () const;
 	bool IsDLL () const;
+	bool GenerateInOutputTree () const;
 	std::string GetTargetName () const;
 	std::string GetDependencyPath () const;
 	std::string GetBasePath () const;

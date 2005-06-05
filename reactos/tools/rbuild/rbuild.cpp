@@ -37,6 +37,22 @@ ParseMakeSwitch ( char switchChar2 )
 }
 
 bool
+ParseProxyMakefileSwitch ( char switchChar2 )
+{
+	switch ( switchChar2 )
+	{
+		case 's':
+			configuration.GenerateProxyMakefilesInSourceTree = true;
+			break;
+		default:
+			printf ( "Unknown switch -p%c",
+			         switchChar2 );
+			return false;
+	}
+	return true;
+}
+
+bool
 ParseSwitch ( int argc, char** argv, int index )
 {
 	char switchChar = strlen ( argv[index] ) > 1 ? argv[index][1] : ' ';
@@ -57,6 +73,8 @@ ParseSwitch ( int argc, char** argv, int index )
 			break;
 		case 'm':
 			return ParseMakeSwitch ( switchChar2 );
+		case 'p':
+			return ParseProxyMakefileSwitch ( switchChar2 );
 		default:
 			printf ( "Unknown switch -%c",
 			         switchChar );
@@ -98,6 +116,7 @@ main ( int argc, char** argv )
 		printf ( "  -d           Disable automatic dependencies.\n" );
 		printf ( "  -rfile.xml   Name of the root xml file. Default is ReactOS.xml.\n" );
 		printf ( "  -mi          Let make handle creation of install directories. Rbuild will not generate the directories.\n" );
+		printf ( "  -ps          Generate proxy makefiles in source tree instead of the output tree.\n" );
 		printf ( "\n" );
 		printf ( "  buildsystem  Target build system. Can be one of:\n" );
 		printf ( "                 mingw   MinGW\n" );

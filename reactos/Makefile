@@ -54,6 +54,7 @@
 #            -c   Clean as you go. Delete generated files as soon as they are not needed anymore.
 #            -d   Disable automatic dependencies.
 #            -mi  Let make handle creation of install directories. Rbuild will not generate the directories.
+#            -ps  Generate proxy makefiles in source tree instead of the output tree.
 
 .PHONY: all
 .PHONY: clean

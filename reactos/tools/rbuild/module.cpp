@@ -667,6 +667,36 @@ Module::IsDLL () const
 	                                  __LINE__ );
 }
 
+bool
+Module::GenerateInOutputTree () const
+{
+	switch ( type )
+	{
+		case Kernel:
+		case KernelModeDLL:
+		case NativeDLL:
+		case Win32DLL:
+		case KernelModeDriver:
+		case NativeCUI:
+		case Win32CUI:
+		case Test:
+		case Win32GUI:
+		case BuildTool:
+		case BootLoader:
+		case BootSector:
+		case Iso:
+		case LiveIso:
+			return true;
+		case StaticLibrary:
+		case ObjectLibrary:
+		case RpcServer:
+		case RpcClient:
+			return false;
+	}
+	throw InvalidOperationException ( __FILE__,
+	                                  __LINE__ );
+}
+
 string
 Module::GetTargetName () const
 {

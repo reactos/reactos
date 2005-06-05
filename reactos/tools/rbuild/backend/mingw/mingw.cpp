@@ -645,12 +645,22 @@ MingwBackend::GenerateTestSupportCode ()
 	printf ( "done\n" );
 }
 
+string
+MingwBackend::GetProxyMakefileTree () const
+{
+	if ( configuration.GenerateProxyMakefilesInSourceTree )
+		return "";
+	else
+		return Environment::GetOutputPath ();
+}
+
 void
 MingwBackend::GenerateProxyMakefiles ()
 {
 	printf ( "Generating proxy makefiles..." );
 	ProxyMakefile proxyMakefile ( ProjectNode );
-	proxyMakefile.GenerateProxyMakefiles ( configuration.Verbose );
+	proxyMakefile.GenerateProxyMakefiles ( configuration.Verbose,
+	                                       GetProxyMakefileTree () );
 	printf ( "done\n" );
 }
 
@@ -929,8 +939,8 @@ MingwBackend::OutputModuleInstallTargets ()
 				NormalizeFilename ( module.GetPath () ),
 				outputDirectory );
 			OutputInstallTarget ( sourceFilename,
-		                          module.installName,
-		                          module.installBase );
+			                      module.installName,
+			                      module.installBase );
 		}
 	}
 }
