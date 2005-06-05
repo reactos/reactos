@@ -367,9 +367,6 @@ typedef VOID (*PMM_FREE_PAGE_FUNC)(PVOID Context, PMEMORY_AREA MemoryArea,
 
 /* FUNCTIONS */
 
-VOID MmLockPagedPool(VOID);
-VOID MmUnlockPagedPool(VOID);
-
 /* aspace.c ******************************************************************/
 
 VOID MmLockAddressSpace(PMADDRESS_SPACE AddressSpace);

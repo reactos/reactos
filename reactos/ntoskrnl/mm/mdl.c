@@ -364,7 +364,6 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
    PFN_TYPE Page;
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
    PMADDRESS_SPACE AddressSpace;
-   BOOLEAN PagedPool;
 
    DPRINT("MmProbeAndLockPages(Mdl %x)\n", Mdl);
 
@@ -399,7 +398,6 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
       Mode = KernelMode;
       Mdl->Process = NULL;
       AddressSpace = MmGetKernelAddressSpace();
-      PagedPool = Mdl->StartVa >= MmPagedPoolBase && Mdl->StartVa < MmPagedPoolBase + MmPagedPoolSize ? TRUE : FALSE;
    }
    else
    {
@@ -407,21 +405,14 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
       Mode = UserMode;
       Mdl->Process = CurrentProcess;
       AddressSpace = &CurrentProcess->AddressSpace;
-      PagedPool = FALSE;
    }
 
-   if (PagedPool)
-   {
-      MmLockPagedPool();
-   }
-   else
-   {
-      MmLockAddressSpace(AddressSpace);
-   }
 
    /*
     * Lock the pages
     */
+   MmLockAddressSpace(AddressSpace);
+
    for (i = 0; i < NrPages; i++)
    {
       PVOID Address;
@@ -447,14 +438,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
                   MmDereferencePage(Page);
                }
             }
-            if (PagedPool)
-            {
-               MmUnlockPagedPool();
-            }
-            else
-            {
-               MmUnlockAddressSpace(AddressSpace);
-            }
+            MmUnlockAddressSpace(AddressSpace);
             ExRaiseStatus(STATUS_ACCESS_VIOLATION);
          }
       }
@@ -478,14 +462,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
                   MmDereferencePage(Page);
                }
             }
-            if (PagedPool)
-            {
-               MmUnlockPagedPool();
-            }
-            else
-            {
-               MmUnlockAddressSpace(AddressSpace);
-            }
+            MmUnlockAddressSpace(AddressSpace);
             ExRaiseStatus(STATUS_ACCESS_VIOLATION);
          }
       }
@@ -497,14 +474,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
          MmReferencePage(Page);
    }
 
-   if (PagedPool)
-   {
-      MmUnlockPagedPool();
-   }
-   else
-   {
-      MmUnlockAddressSpace(AddressSpace);
-   }
+   MmUnlockAddressSpace(AddressSpace);
    Mdl->MdlFlags |= MDL_PAGES_LOCKED;
 }
 

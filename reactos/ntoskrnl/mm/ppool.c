@@ -41,7 +41,6 @@ PVOID MmPagedPoolBase;
 ULONG MmPagedPoolSize;
 ULONG MmTotalPagedPoolQuota = 0; // TODO FIXME commented out until we use it
 static PR_POOL MmPagedPool = NULL;
-static FAST_MUTEX MmPagedPoolLock;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -61,17 +60,6 @@ MmInitializePagedPool(VOID)
 		PAGE_SIZE );
 
 	ExInitializeFastMutex(&MmPagedPool->Mutex);
-        ExInitializeFastMutex(&MmPagedPoolLock);
-}
-
-VOID MmLockPagedPool(VOID)
-{
-   ExAcquireFastMutex(&MmPagedPoolLock);
-}
-
-VOID MmUnlockPagedPool(VOID)
-{
-   ExReleaseFastMutex(&MmPagedPoolLock);
 }
 
 /**********************************************************************
