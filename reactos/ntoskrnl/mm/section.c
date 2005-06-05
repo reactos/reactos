@@ -2123,8 +2123,8 @@ MmInitSectionImplementation(VOID)
    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
    RtlInitUnicodeString(&Name, L"Section");
    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-   ObjectTypeInitializer.DefaultPagedPoolCharge = sizeof(SECTION_OBJECT);
-   ObjectTypeInitializer.PoolType = PagedPool;
+   ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(SECTION_OBJECT);
+   ObjectTypeInitializer.PoolType = NonPagedPool;
    ObjectTypeInitializer.UseDefaultObject = TRUE;
    ObjectTypeInitializer.GenericMapping = MmpSectionMapping;
    ObjectTypeInitializer.DeleteProcedure = MmpDeleteSection;
