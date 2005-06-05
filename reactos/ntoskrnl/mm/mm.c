@@ -215,6 +215,10 @@ NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
          DbgPrint("%s:%d\n",__FILE__,__LINE__);
          return(STATUS_UNSUCCESSFUL);
       }
+      if (Address >= (ULONG_PTR)MmPagedPoolBase && Address < (ULONG_PTR)MmPagedPoolBase + MmPagedPoolSize)
+      {
+         return STATUS_SUCCESS;
+      }
       AddressSpace = MmGetKernelAddressSpace();
    }
    else
@@ -285,9 +289,7 @@ NTSTATUS MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
    Status = MmRequestPageMemoryConsumer(MC_PPOOL, FALSE, &AllocatedPage);
    if (!NT_SUCCESS(Status))
    {
-      MmUnlockAddressSpace(MmGetKernelAddressSpace());
-      Status = MmRequestPageMemoryConsumer(MC_PPOOL, TRUE, &AllocatedPage);
-      MmLockAddressSpace(MmGetKernelAddressSpace());
+      return Status;
    }
    Status =
       MmCreateVirtualMapping(NULL,
@@ -311,6 +313,7 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
    NTSTATUS Status;
    BOOLEAN Locked = FromMdl;
    PFN_TYPE Pfn;
+   BOOLEAN PagedPool;
 
    DPRINT("MmNotPresentFault(Mode %d, Address %x)\n", Mode, Address);
 
@@ -344,16 +347,25 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
 	 CPRINT("Address: %x\n", Address);
          return(STATUS_UNSUCCESSFUL);
       }
+      PagedPool = Address >= (ULONG_PTR)MmPagedPoolBase && Address < (ULONG_PTR)MmPagedPoolBase + MmPagedPoolSize ? TRUE : FALSE;
       AddressSpace = MmGetKernelAddressSpace();
    }
    else
    {
+      PagedPool = FALSE;
       AddressSpace = &PsGetCurrentProcess()->AddressSpace;
    }
 
    if (!FromMdl)
    {
-      MmLockAddressSpace(AddressSpace);
+      if (PagedPool)
+      {
+         MmLockPagedPool();
+      }
+      else
+      {
+         MmLockAddressSpace(AddressSpace);
+      }
    }
 
    /*
@@ -361,56 +373,56 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
     */
    do
    {
-      MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, (PVOID)Address);
-      if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
+      if (PagedPool)
       {
-         if (!FromMdl)
-         {
-            MmUnlockAddressSpace(AddressSpace);
-         }
-         return (STATUS_UNSUCCESSFUL);
+         Status = MmCommitPagedPoolAddress((PVOID)Address, Locked);
       }
-
-      switch (MemoryArea->Type)
+      else
       {
-         case MEMORY_AREA_PAGED_POOL:
+         MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, (PVOID)Address);
+         if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
+         {
+            if (!FromMdl)
             {
-               Status = MmCommitPagedPoolAddress((PVOID)Address, Locked);
-               break;
+               MmUnlockAddressSpace(AddressSpace);
             }
+            return (STATUS_UNSUCCESSFUL);
+         }
 
-         case MEMORY_AREA_SYSTEM:
-            Status = STATUS_UNSUCCESSFUL;
-            break;
+         switch (MemoryArea->Type)
+         {
+            case MEMORY_AREA_SYSTEM:
+               Status = STATUS_UNSUCCESSFUL;
+               break;
 
-         case MEMORY_AREA_SECTION_VIEW:
-            Status = MmNotPresentFaultSectionView(AddressSpace,
-                                                  MemoryArea,
-                                                  (PVOID)Address,
-                                                  Locked);
-            break;
+            case MEMORY_AREA_SECTION_VIEW:
+               Status = MmNotPresentFaultSectionView(AddressSpace,
+                                                     MemoryArea,
+                                                     (PVOID)Address,
+                                                     Locked);
+               break;
 
-         case MEMORY_AREA_VIRTUAL_MEMORY:
-         case MEMORY_AREA_PEB_OR_TEB:
-            Status = MmNotPresentFaultVirtualMemory(AddressSpace,
-                                                    MemoryArea,
-                                                    (PVOID)Address,
-                                                    Locked);
-            break;
+            case MEMORY_AREA_VIRTUAL_MEMORY:
+            case MEMORY_AREA_PEB_OR_TEB:
+               Status = MmNotPresentFaultVirtualMemory(AddressSpace,
+                                                       MemoryArea,
+                                                       (PVOID)Address,
+                                                       Locked);
+               break;
 
-         case MEMORY_AREA_SHARED_DATA:
-	    Pfn = MmSharedDataPagePhysicalAddress.QuadPart >> PAGE_SHIFT;
-            Status =
-               MmCreateVirtualMapping(PsGetCurrentProcess(),
-                                      (PVOID)PAGE_ROUND_DOWN(Address),
-                                      PAGE_READONLY,
-                                      &Pfn,
-                                      1);
-            break;
+            case MEMORY_AREA_SHARED_DATA:
+	       Pfn = MmSharedDataPagePhysicalAddress.QuadPart >> PAGE_SHIFT;
+               Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
+                                               (PVOID)PAGE_ROUND_DOWN(Address),
+                                               PAGE_READONLY,
+                                               &Pfn,
+                                               1);
+               break;
 
-         default:
-            Status = STATUS_UNSUCCESSFUL;
-            break;
+            default:
+               Status = STATUS_UNSUCCESSFUL;
+               break;
+         }
       }
    }
    while (Status == STATUS_MM_RESTART_OPERATION);
@@ -418,7 +430,14 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
    DPRINT("Completed page fault handling\n");
    if (!FromMdl)
    {
-      MmUnlockAddressSpace(AddressSpace);
+      if (PagedPool)
+      {
+         MmUnlockPagedPool();
+      }
+      else
+      {
+         MmUnlockAddressSpace(AddressSpace);
+      }
    }
    return(Status);
 }
