@@ -14,5 +14,8 @@ VOID
 STDCALL
 KdpBochsInit(struct _KD_DISPATCH_TABLE *DispatchTable,
              ULONG BootPhase);
+VOID
+STDCALL
+KdpBochsDebugPrint(IN PCH Message);
 
 #endif /* __INCLUDE_INTERNAL_KD_BOCHS_H */
