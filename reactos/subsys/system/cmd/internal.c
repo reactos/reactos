@@ -515,4 +515,10 @@ INT CommandShowCommands (LPTSTR cmd, LPTSTR param)
 	return 0;
 }
 
+INT CommandShowCommandsDetail (LPTSTR cmd, LPTSTR param)
+{
+	PrintCommandListDetail ();
+	return 0;
+}
+
 /* EOF */

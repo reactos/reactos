@@ -129,8 +129,11 @@
  *    12-Jul-2004 (Jens Collin <jens.collin@lakhei.com>)
  *       Added ShellExecute call when all else fails to be able to "launch" any file.
  *
- *    02-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *    02-Apr-2005 (Magnus Olsen <magnus@greatlord.com>)
  *        Remove all hardcode string to En.rc
+ *
+ *    06-May-2005 (Klemens Friedl <frik85@gmail.com>)
+ *        Add 'help' command (list all commands plus description)
  */
 
 #include "precomp.h"
