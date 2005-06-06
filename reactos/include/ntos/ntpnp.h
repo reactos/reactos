@@ -38,9 +38,10 @@ DEFINE_GUID(GUID_DEVICE_REMOVAL_VETOED, 0x60DBD5FA, 0xDDD2, 0x11D2, 0x97, 0xB8, 
 DEFINE_GUID(GUID_DEVICE_HIBERNATE_VETOED, 0x61173AD9, 0x194F, 0x11D3, 0x97, 0xDC, 0x00, 0xA0, 0xC9, 0x40, 0x52, 0x2E);
 DEFINE_GUID(GUID_DEVICE_BATTERY, 0x72631E54, 0x78A4, 0x11D0, 0xBC, 0xF7, 0x00, 0xAA, 0x00, 0xB7, 0xB3, 0x2A);
 DEFINE_GUID(GUID_DEVICE_SAFE_REMOVAL, 0x8FBEF967, 0xD6C5, 0x11D2, 0x97, 0xB5, 0x00, 0xA0, 0xC9, 0x40, 0x52, 0x2E);
-/* These GUIDs are documented, and they are defined in wdmguid.h */
-/* DEFINE_GUID(GUID_DEVICE_INTERFACE_ARRIVAL, 0xCB3A4004, 0x46F0, 0x11D0, 0xB0, 0x8F, 0x00, 0x60, 0x97, 0x13, 0x05, 0x3F); */
-/* DEFINE_GUID(GUID_DEVICE_INTERFACE_REMOVAL, 0xCB3A4005, 0x46F0, 0x11D0, 0xB0, 0x8F, 0x00, 0x60, 0x97, 0x13, 0x05, 0x3F); */
+#ifndef __USE_W32API
+DEFINE_GUID(GUID_DEVICE_INTERFACE_ARRIVAL, 0xCB3A4004, 0x46F0, 0x11D0, 0xB0, 0x8F, 0x00, 0x60, 0x97, 0x13, 0x05, 0x3F);
+DEFINE_GUID(GUID_DEVICE_INTERFACE_REMOVAL, 0xCB3A4005, 0x46F0, 0x11D0, 0xB0, 0x8F, 0x00, 0x60, 0x97, 0x13, 0x05, 0x3F);
+#endif
 DEFINE_GUID(GUID_DEVICE_ARRIVAL, 0xCB3A4009, 0x46F0, 0x11D0, 0xB0, 0x8F, 0x00, 0x60, 0x97, 0x13, 0x05, 0x3F);
 DEFINE_GUID(GUID_DEVICE_ENUMERATED, 0xCB3A400A, 0x46F0, 0x11D0, 0xB0, 0x8F, 0x00, 0x60, 0x97, 0x13, 0x05, 0x3F);
 DEFINE_GUID(GUID_DEVICE_ENUMERATE_REQUEST, 0xCB3A400B, 0x46F0, 0x11D0, 0xB0, 0x8F, 0x00, 0x60, 0x97, 0x13, 0x05, 0x3F);
@@ -220,7 +221,7 @@ NtGetPlugPlayEvent(
  *       0x0B   Device class association (Registration)
  *       0x0C   Get related device
  *       0x0D   Get device interface alias
- *       0x0E   Get/set device status
+ *       0x0E   Get/set/clear device status
  *       0x0F   Get device depth
  *       0x10   Query device relations
  *       0x11   Query target device relation
@@ -245,7 +246,52 @@ NtGetPlugPlayEvent(
  *    ...
  */
 
-#define PLUGPLAY_USER_RESPONSE 0x07
+#define PLUGPLAY_USER_RESPONSE      0x07
+#define PLUGPLAY_GET_PROPERTY       0x0A
+#define PLUGPLAY_GET_RELATED_DEVICE 0x0C
+#define PLUGPLAY_DEVICE_STATUS      0x0E
+
+
+typedef struct _PLUGPLAY_PROPERTY_DATA
+{
+  UNICODE_STRING DeviceInstance;
+  ULONG Property;
+  PVOID Buffer;
+  ULONG BufferSize;
+} PLUGPLAY_PROPERTY_DATA, *PPLUGPLAY_PROPERTY_DATA;
+
+
+/* PLUGPLAY_GET_RELATED_DEVICE (Code 0x0C) */
+
+/* Relation values */
+#define PNP_GET_PARENT_DEVICE  1
+#define PNP_GET_CHILD_DEVICE   2
+#define PNP_GET_SIBLING_DEVICE 3
+
+typedef struct _PLUGPLAY_RELATED_DEVICE_DATA
+{
+  UNICODE_STRING DeviceInstance;
+  UNICODE_STRING RelatedDeviceInstance;
+  ULONG Relation; /* 1: Parent  2: Child  3: Sibling */
+} PLUGPLAY_RELATED_DEVICE_DATA, *PPLUGPLAY_RELATED_DEVICE_DATA;
+
+
+/* PLUGPLAY_DEVICE_STATUS (Code 0x0E) */
+
+/* Action values */
+#define PNP_GET_DEVICE_STATUS    0
+#define PNP_SET_DEVICE_STATUS    1
+#define PNP_CLEAR_DEVICE_STATUS  2
+
+
+typedef struct _PLUGPLAY_DEVICE_STATUS_DATA
+{
+  UNICODE_STRING DeviceInstance;
+  ULONG Action;   /* 0: Get  1: Set  2: Clear */
+  ULONG Problem;  /* CM_PROB_  see cfg.h */
+  ULONG Flags;    /* DN_       see cfg.h */
+} PLUGPLAY_DEVICE_STATUS_DATA, *PPLUGPLAY_DEVICE_STATUS_DATA;
+
 
 NTSTATUS STDCALL
 NtPlugPlayControl(
