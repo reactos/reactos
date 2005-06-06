@@ -892,6 +892,7 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
     ZwClose(LogConfKey);
   }
 
+#if 0
   if (DeviceNode->PhysicalDeviceObject != NULL)
   {
     /* Create the 'Control' key */
@@ -924,6 +925,7 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
       ZwClose(LogConfKey);
     }
   }
+#endif
 
   DPRINT("IopSetDeviceInstanceData() done\n");
 
@@ -2017,6 +2019,7 @@ IopInvalidateDeviceRelations(
 static NTSTATUS INIT_FUNCTION
 IopSetRootDeviceInstanceData(PDEVICE_NODE DeviceNode)
 {
+#if 0
     PWSTR KeyBuffer;
     HANDLE InstanceKey = NULL;
     NTSTATUS Status;
@@ -2040,6 +2043,8 @@ IopSetRootDeviceInstanceData(PDEVICE_NODE DeviceNode)
     ZwClose(InstanceKey);
 
     return Status;
+#endif
+    return STATUS_SUCCESS;
 }
 
 
