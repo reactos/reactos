@@ -146,8 +146,6 @@ typedef struct _SECTION_OBJECT
   ULONG SectionPageProtection;
   ULONG AllocationAttributes;
   PFILE_OBJECT FileObject;
-  LIST_ENTRY ViewListHead;
-  KSPIN_LOCK ViewListLock;
   union
   {
     PMM_IMAGE_SECTION_OBJECT ImageSection;
@@ -229,7 +227,6 @@ typedef struct _MEMORY_AREA
     {
       SECTION_OBJECT* Section;
       ULONG ViewOffset;
-      LIST_ENTRY ViewListEntry;
       PMM_SECTION_SEGMENT Segment;
       BOOLEAN WriteCopyView;
       LIST_ENTRY RegionListHead;

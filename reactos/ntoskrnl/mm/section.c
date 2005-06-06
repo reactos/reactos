@@ -1898,9 +1898,7 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
    PMM_REGION Region;
    PVOID RegionBaseAddress;
    PSECTION_OBJECT Section;
-   PLIST_ENTRY CurrentEntry;
-   PMEMORY_AREA CurrentMArea;
-   KIRQL oldIrql;
+   PMM_SECTION_SEGMENT Segment;
 
    Region = MmFindRegion((PVOID)MemoryArea->StartingAddress,
                          &MemoryArea->Data.SectionData.RegionListHead,
@@ -1909,37 +1907,21 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
    {
       return STATUS_UNSUCCESSFUL;
    }
+
    Section = MemoryArea->Data.SectionData.Section;
    if (Section->AllocationAttributes & SEC_IMAGE)
    {
-      KeAcquireSpinLock(&Section->ViewListLock, &oldIrql);
-      CurrentEntry = Section->ViewListHead.Flink;
-      Info->AllocationBase = NULL;
-      while (CurrentEntry != &Section->ViewListHead)
-      {
-         CurrentMArea = CONTAINING_RECORD(CurrentEntry, MEMORY_AREA, Data.SectionData.ViewListEntry);
-         CurrentEntry = CurrentEntry->Flink;
-         if (Info->AllocationBase == NULL)
-         {
-            Info->AllocationBase = CurrentMArea->StartingAddress;
-         }
-         else if (CurrentMArea->StartingAddress < Info->AllocationBase)
-         {
-            Info->AllocationBase = CurrentMArea->StartingAddress;
-         }
-      }
-      KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
-      Info->BaseAddress = RegionBaseAddress;
-      Info->AllocationProtect = MemoryArea->Attributes;
+      Segment = MemoryArea->Data.SectionData.Segment;
+      Info->AllocationBase = MemoryArea->StartingAddress - Segment->VirtualAddress;
       Info->Type = MEM_IMAGE;
    }
    else
    {
-      Info->BaseAddress = RegionBaseAddress;
       Info->AllocationBase = MemoryArea->StartingAddress;
-      Info->AllocationProtect = MemoryArea->Attributes;
       Info->Type = MEM_MAPPED;
    }
+   Info->BaseAddress = RegionBaseAddress;
+   Info->AllocationProtect = MemoryArea->Attributes;
    Info->RegionSize = PAGE_ROUND_UP((ULONG_PTR)MemoryArea->EndingAddress -
                                     (ULONG_PTR)MemoryArea->StartingAddress);
    Info->State = MEM_COMMIT;
@@ -2123,8 +2105,8 @@ MmInitSectionImplementation(VOID)
    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
    RtlInitUnicodeString(&Name, L"Section");
    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-   ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(SECTION_OBJECT);
-   ObjectTypeInitializer.PoolType = NonPagedPool;
+   ObjectTypeInitializer.DefaultPagedPoolCharge = sizeof(SECTION_OBJECT);
+   ObjectTypeInitializer.PoolType = PagedPool;
    ObjectTypeInitializer.UseDefaultObject = TRUE;
    ObjectTypeInitializer.GenericMapping = MmpSectionMapping;
    ObjectTypeInitializer.DeleteProcedure = MmpDeleteSection;
@@ -2179,8 +2161,6 @@ MmCreatePageFileSection(PSECTION_OBJECT *SectionObject,
    Section->SectionPageProtection = SectionPageProtection;
    Section->AllocationAttributes = AllocationAttributes;
    Section->Segment = NULL;
-   InitializeListHead(&Section->ViewListHead);
-   KeInitializeSpinLock(&Section->ViewListLock);
    Section->FileObject = NULL;
    Section->MaximumSize = MaximumSize;
    Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
@@ -2252,8 +2232,6 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
    Section->SectionPageProtection = SectionPageProtection;
    Section->AllocationAttributes = AllocationAttributes;
    Section->Segment = NULL;
-   InitializeListHead(&Section->ViewListHead);
-   KeInitializeSpinLock(&Section->ViewListLock);
 
    /*
     * Check file access required
@@ -3175,8 +3153,6 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
     */
    Section->SectionPageProtection = SectionPageProtection;
    Section->AllocationAttributes = AllocationAttributes;
-   InitializeListHead(&Section->ViewListHead);
-   KeInitializeSpinLock(&Section->ViewListLock);
 
    /*
     * Initialized caching for this file object if previously caching
@@ -3439,7 +3415,6 @@ MmMapViewOfSegment(PEPROCESS Process,
 {
    PMEMORY_AREA MArea;
    NTSTATUS Status;
-   KIRQL oldIrql;
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
 
    BoundaryAddressMultiple.QuadPart = 0;
@@ -3461,10 +3436,6 @@ MmMapViewOfSegment(PEPROCESS Process,
       return(Status);
    }
 
-   KeAcquireSpinLock(&Section->ViewListLock, &oldIrql);
-   InsertTailList(&Section->ViewListHead,
-                  &MArea->Data.SectionData.ViewListEntry);
-   KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
 
    ObReferenceObjectByPointer((PVOID)Section,
                               SECTION_MAP_READ,
@@ -3781,7 +3752,6 @@ MmUnmapViewOfSegment(PMADDRESS_SPACE AddressSpace,
    PMEMORY_AREA MemoryArea;
    PSECTION_OBJECT Section;
    PMM_SECTION_SEGMENT Segment;
-   KIRQL oldIrql;
    PLIST_ENTRY CurrentEntry;
    PMM_REGION CurrentRegion;
    PLIST_ENTRY RegionListHead;
@@ -3798,9 +3768,6 @@ MmUnmapViewOfSegment(PMADDRESS_SPACE AddressSpace,
    Segment = MemoryArea->Data.SectionData.Segment;
 
    MmLockSectionSegment(Segment);
-   KeAcquireSpinLock(&Section->ViewListLock, &oldIrql);
-   RemoveEntryList(&MemoryArea->Data.SectionData.ViewListEntry);
-   KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
 
    RegionListHead = &MemoryArea->Data.SectionData.RegionListHead;
    while (!IsListEmpty(RegionListHead))
