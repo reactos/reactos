@@ -44,7 +44,46 @@ DragDetect(
   HWND hWnd,
   POINT pt)
 {
+#if 0
   return NtUserDragDetect(hWnd, pt.x, pt.y);
+#else
+  MSG msg;
+  RECT rect;
+  POINT tmp;
+  ULONG dx = NtUserGetSystemMetrics(SM_CXDRAG);
+  ULONG dy = NtUserGetSystemMetrics(SM_CYDRAG);
+
+  rect.left = pt.x - dx;
+  rect.right = pt.x + dx;
+  rect.top = pt.y - dy;
+  rect.bottom = pt.y + dy;
+
+  SetCapture(hWnd);
+
+  for (;;)
+  {
+    while (PeekMessageW(&msg, 0, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE))
+    {
+      if (msg.message == WM_LBUTTONUP)
+      {
+        ReleaseCapture();
+        return 0;
+      }
+      if (msg.message == WM_MOUSEMOVE)
+      {
+        tmp.x = LOWORD(msg.lParam);
+        tmp.y = HIWORD(msg.lParam);
+        if (!PtInRect(&rect, tmp))
+        {
+          ReleaseCapture();
+          return 1;
+        }
+      }
+    }
+    WaitMessage();
+  }
+  return 0;
+#endif
 }
 
 
