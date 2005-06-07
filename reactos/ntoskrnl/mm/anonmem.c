@@ -1,11 +1,42 @@
 /* $Id$
  *
- * COPYRIGHT:       See COPYING in the top level directory
+ * Copyright (C) 2002-2005 ReactOS Team (and the authors from the programmers section)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/anonmem.c
  * PURPOSE:         Implementing anonymous memory.
  *
  * PROGRAMMERS:     David Welch
+ *                  Hartmut Birr
+ *                  Casper Hornstrup
+ *                  KJK::Hyperion
+ *                  Ge van Geldorp
+ *                  Eric Kohl
+ *                  Royce Mitchell III
+ *                  Aleksey Bragin 
+ *                  Jason Filby
+ *                  Art Yerkes
+ *                  Gunnar Andre' Dalsnes
+ *                  Filip Navara
+ *                  Thomas Weidenmueller
+ *                  Alex Ionescu
+ *                  Trevor McCort 
+ *                  Steven Edwards
  */
 
 /* INCLUDE *****************************************************************/
@@ -42,7 +73,7 @@ MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
    /*
     * Get that the page actually is dirty.
     */
-   if (!MmIsDirtyPage(MemoryArea->Process, Address))
+   if (!MmIsDirtyPage(AddressSpace->Process, Address))
    {
       PageOp->Status = STATUS_SUCCESS;
       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
@@ -53,7 +84,7 @@ MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
    /*
     * Speculatively set the mapping to clean.
     */
-   MmSetCleanPage(MemoryArea->Process, Address);
+   MmSetCleanPage(AddressSpace->Process, Address);
 
    /*
     * If necessary, allocate an entry in the paging file for this page
@@ -64,7 +95,7 @@ MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
       SwapEntry = MmAllocSwapPage();
       if (SwapEntry == 0)
       {
-         MmSetDirtyPage(MemoryArea->Process, Address);
+         MmSetDirtyPage(AddressSpace->Process, Address);
          PageOp->Status = STATUS_PAGEFILE_QUOTA_EXCEEDED;
          KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
          MmReleasePageOp(PageOp);
@@ -80,7 +111,7 @@ MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
    {
       DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n",
               Status);
-      MmSetDirtyPage(MemoryArea->Process, Address);
+      MmSetDirtyPage(AddressSpace->Process, Address);
       PageOp->Status = STATUS_UNSUCCESSFUL;
       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
       MmReleasePageOp(PageOp);
@@ -125,7 +156,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
    /*
     * Disable the virtual mapping.
     */
-   MmDisableVirtualMapping(MemoryArea->Process, Address,
+   MmDisableVirtualMapping(AddressSpace->Process, Address,
                            &WasDirty, &Page);
 
    if (Page == 0)
@@ -138,11 +169,11 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
     */
    if (!WasDirty)
    {
-      MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE, NULL, NULL);
+      MmDeleteVirtualMapping(AddressSpace->Process, Address, FALSE, NULL, NULL);
       MmDeleteAllRmaps(Page, NULL, NULL);
       if ((SwapEntry = MmGetSavedSwapEntryPage(Page)) != 0)
       {
-         MmCreatePageFileMapping(MemoryArea->Process, Address, SwapEntry);
+         MmCreatePageFileMapping(AddressSpace->Process, Address, SwapEntry);
          MmSetSavedSwapEntryPage(Page, 0);
       }
       MmReleasePageMemoryConsumer(MC_USER, Page);
@@ -162,7 +193,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
       if (SwapEntry == 0)
       {
          MmShowOutOfSpaceMessagePagingFile();
-         MmEnableVirtualMapping(MemoryArea->Process, Address);
+         MmEnableVirtualMapping(AddressSpace->Process, Address);
          PageOp->Status = STATUS_UNSUCCESSFUL;
          KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
          MmReleasePageOp(PageOp);
@@ -178,7 +209,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
    {
       DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n",
               Status);
-      MmEnableVirtualMapping(MemoryArea->Process, Address);
+      MmEnableVirtualMapping(AddressSpace->Process, Address);
       PageOp->Status = STATUS_UNSUCCESSFUL;
       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
       MmReleasePageOp(PageOp);
@@ -189,8 +220,8 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
     * Otherwise we have succeeded, free the page
     */
    DPRINT("MM: Swapped out virtual memory page 0x%.8X!\n", Page << PAGE_SHIFT);
-   MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE, NULL, NULL);
-   MmCreatePageFileMapping(MemoryArea->Process, Address, SwapEntry);
+   MmDeleteVirtualMapping(AddressSpace->Process, Address, FALSE, NULL, NULL);
+   MmCreatePageFileMapping(AddressSpace->Process, Address, SwapEntry);
    MmDeleteAllRmaps(Page, NULL, NULL);
    MmSetSavedSwapEntryPage(Page, 0);
    MmReleasePageMemoryConsumer(MC_USER, Page);
@@ -256,7 +287,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
    /*
     * Get or create a page operation
     */
-   PageOp = MmGetPageOp(MemoryArea, MemoryArea->Process->UniqueProcessId,
+   PageOp = MmGetPageOp(MemoryArea, AddressSpace->Process->UniqueProcessId,
                         (PVOID)PAGE_ROUND_DOWN(Address), NULL, 0,
                         MM_PAGEOP_PAGEIN, FALSE);
    if (PageOp == NULL)
@@ -344,7 +375,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
    {
       SWAPENTRY SwapEntry;
 
-      MmDeletePageFileMapping(MemoryArea->Process, Address, &SwapEntry);
+      MmDeletePageFileMapping(AddressSpace->Process, Address, &SwapEntry);
       Status = MmReadFromSwapPage(SwapEntry, Page);
       if (!NT_SUCCESS(Status))
       {
@@ -357,7 +388,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
     * Set the page. If we fail because we are out of memory then
     * try again
     */
-   Status = MmCreateVirtualMapping(MemoryArea->Process,
+   Status = MmCreateVirtualMapping(AddressSpace->Process,
                                    (PVOID)PAGE_ROUND_DOWN(Address),
                                    Region->Protect,
                                    &Page,
@@ -365,7 +396,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
    while (Status == STATUS_NO_MEMORY)
    {
       MmUnlockAddressSpace(AddressSpace);
-      Status = MmCreateVirtualMapping(MemoryArea->Process,
+      Status = MmCreateVirtualMapping(AddressSpace->Process,
                                       Address,
                                       Region->Protect,
                                       &Page,
@@ -382,7 +413,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
    /*
     * Add the page to the process's working set
     */
-   MmInsertRmap(Page, MemoryArea->Process, (PVOID)PAGE_ROUND_DOWN(Address));
+   MmInsertRmap(Page, AddressSpace->Process, (PVOID)PAGE_ROUND_DOWN(Address));
 
    /*
     * Finish the operation

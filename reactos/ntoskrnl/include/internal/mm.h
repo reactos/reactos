@@ -1,5 +1,40 @@
-/*
- * Higher level memory managment definitions
+/* $Id$
+ *
+ * Copyright (C) 1998-2005 ReactOS Team (and the authors from the programmers section)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/include/internal/mm.h
+ * PURPOSE:         level memory managment definitions
+ * 
+ * PROGRAMMERS:     David Welch
+ *                  Casper Hornstrup
+ *                  Hartmut Birr
+ *                  Ge van Geldorp
+ *                  Eric Kohl
+ *                  silverblade
+ *                  James Tabor
+ *                  Alex Ionescu
+ *                  tamlin
+ *                  Thomas Weidenmueller
+ *                  Filip Navara
+ *                  KJK::Hyperion
+ *                  Gregor Anich
+ *                  Steven Edwards
  */
 
 #ifndef __INCLUDE_INTERNAL_MM_H
@@ -218,7 +253,6 @@ typedef struct _MEMORY_AREA
   ULONG Type;
   ULONG Attributes;
   ULONG LockCount;
-  struct _EPROCESS* Process; /* FIXME: We don't need this! */
   BOOLEAN DeleteInProgress;
   ULONG PageOpCount;
   union
