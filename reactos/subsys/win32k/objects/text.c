@@ -2577,7 +2577,7 @@ NtGdiGetTextFace(HDC hDC, INT Count, LPWSTR FaceName)
    hFont = Dc->w.hFont;
    DC_UnlockDc(Dc);
 
-   TextObj = TEXTOBJ_LockText(Dc->w.hFont);
+   TextObj = TEXTOBJ_LockText(hFont);
    ASSERT(TextObj != NULL);
    Count = min(Count, wcslen(TextObj->logfont.lfFaceName));
    Status = MmCopyToCaller(FaceName, TextObj->logfont.lfFaceName, Count * sizeof(WCHAR));
