@@ -2564,6 +2564,7 @@ INT STDCALL
 NtGdiGetTextFace(HDC hDC, INT Count, LPWSTR FaceName)
 {
    PDC Dc;
+   HFONT hFont;
    PTEXTOBJ TextObj;
    NTSTATUS Status;
 
@@ -2573,11 +2574,14 @@ NtGdiGetTextFace(HDC hDC, INT Count, LPWSTR FaceName)
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
    }
-   TextObj = TEXTOBJ_LockText(Dc->w.hFont);
+   hFont = Dc->w.hFont;
    DC_UnlockDc(Dc);
 
+   TextObj = TEXTOBJ_LockText(Dc->w.hFont);
+   ASSERT(TextObj != NULL);
    Count = min(Count, wcslen(TextObj->logfont.lfFaceName));
    Status = MmCopyToCaller(FaceName, TextObj->logfont.lfFaceName, Count * sizeof(WCHAR));
+   TEXTOBJ_UnlockText(TextObj);
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);

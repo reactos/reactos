@@ -559,6 +559,9 @@ LockHandle:
          * The object is currently locked, so freeing is forbidden!
          */
         DPRINT1("GdiHdr->Locks: %d\n", GdiHdr->Locks);
+#ifdef GDI_DEBUG
+        DPRINT1("Locked from: %s:%d\n", GdiHdr->lockfile, GdiHdr->lockline);
+#endif
         ASSERT(FALSE);
       }
     }
@@ -781,6 +784,10 @@ GDIOBJ_LockObj (HGDIOBJ hObj, DWORD ObjectType)
             {
                GdiHdr->LockingThread = Thread;
                GdiHdr->Locks = 1;
+#ifdef GDI_DEBUG
+               GdiHdr->lockfile = file;
+               GdiHdr->lockline = line;
+#endif
                Object = HandleEntry->KernelData;
             }
             else
@@ -925,7 +932,15 @@ GDIOBJ_ShareLockObj (HGDIOBJ hObj, DWORD ObjectType)
          {
             PGDIOBJHDR GdiHdr = GDIBdyToHdr(HandleEntry->KernelData);
 
+#ifdef GDI_DEBUG
+            if (InterlockedIncrement(&GdiHdr->Locks) == 1)
+            {
+               GdiHdr->lockfile = file;
+               GdiHdr->lockline = line;
+            }
+#else
             InterlockedIncrement(&GdiHdr->Locks);
+#endif
             Object = HandleEntry->KernelData;
          }
          else
