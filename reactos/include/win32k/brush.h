@@ -71,7 +71,7 @@ typedef struct
 #define  BRUSHOBJ_AllocBrush() ((HBRUSH) GDIOBJ_AllocObj (GDI_OBJECT_TYPE_BRUSH))
 #define  BRUSHOBJ_FreeBrush(hBrush) GDIOBJ_FreeObj((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH)
 #define  BRUSHOBJ_LockBrush(hBrush) ((PGDIBRUSHOBJ)GDIOBJ_LockObj((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH))
-#define  BRUSHOBJ_UnlockBrush(hBrush) GDIOBJ_UnlockObj((HGDIOBJ)hBrush)
+#define  BRUSHOBJ_UnlockBrush(pBrush) GDIOBJ_UnlockObjByPtr(pBrush)
 BOOL INTERNAL_CALL BRUSH_Cleanup(PVOID ObjectBody);
 
 #ifdef __USE_W32API

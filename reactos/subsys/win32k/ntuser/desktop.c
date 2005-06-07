@@ -349,9 +349,9 @@ IntGetDesktopWorkArea(PDESKTOP_OBJECT Desktop, PRECT Rect)
     {
       Ret->right = BitmapObj->SurfObj.sizlBitmap.cx;
       Ret->bottom = BitmapObj->SurfObj.sizlBitmap.cy;
-      BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+      BITMAPOBJ_UnlockBitmap(BitmapObj);
     }
-    DC_UnlockDc(ScreenDeviceContext);
+    DC_UnlockDc(dc);
   }
 
   if(Rect)

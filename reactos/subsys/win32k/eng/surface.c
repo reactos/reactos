@@ -281,7 +281,7 @@ IntCreateBitmap(IN SIZEL Size,
             }
           if (SurfObj->pvBits == NULL)
             {
-              BITMAPOBJ_UnlockBitmap(NewBitmap);
+              BITMAPOBJ_UnlockBitmap(BitmapObj);
               BITMAPOBJ_FreeBitmap(NewBitmap);
               return 0;
             }
@@ -315,7 +315,7 @@ IntCreateBitmap(IN SIZEL Size,
   BitmapObj->dimension.cy = 0;
   BitmapObj->dib = NULL;
 
-  BITMAPOBJ_UnlockBitmap(NewBitmap);
+  BITMAPOBJ_UnlockBitmap(BitmapObj);
 
   return NewBitmap;
 }
@@ -372,7 +372,7 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
 
   BitmapObj->flHooks = 0;
 
-  BITMAPOBJ_UnlockBitmap(NewSurface);
+  BITMAPOBJ_UnlockBitmap(BitmapObj);
 
   return NewSurface;
 }
@@ -414,7 +414,7 @@ EngAssociateSurface(IN HSURF Surface,
   /* Hook up specified functions */
   BitmapObj->flHooks = Hooks;
 
-  BITMAPOBJ_UnlockBitmap(Surface);
+  BITMAPOBJ_UnlockBitmap(BitmapObj);
 
   return TRUE;
 }
@@ -481,19 +481,21 @@ EngEraseSurface(SURFOBJ *Surface,
   return FillSolid(Surface, Rect, iColor);
 }
 
+#define GDIBdyToHdr(body)                                                      \
+  ((PGDIOBJHDR)(body) - 1)
+
 /*
  * @implemented
  */
 SURFOBJ * STDCALL
 EngLockSurface(IN HSURF Surface)
 {
-  BITMAPOBJ *bmp = (BITMAPOBJ*)BITMAPOBJ_LockBitmap(Surface);
-  if(bmp != NULL)
-  {
-    return &bmp->SurfObj;
-  }
+   BITMAPOBJ *bmp = GDIOBJ_ShareLockObj(Surface, GDI_OBJECT_TYPE_BITMAP);
 
-  return NULL;
+   if (bmp != NULL)
+      return &bmp->SurfObj;
+
+   return NULL;
 }
 
 /*
@@ -502,7 +504,7 @@ EngLockSurface(IN HSURF Surface)
 VOID STDCALL
 EngUnlockSurface(IN SURFOBJ *Surface)
 {
-  ASSERT (Surface);
-  BITMAPOBJ_UnlockBitmap (Surface->hsurf);
+   if (Surface != NULL)
+      GDIOBJ_UnlockObjByPtr(Surface);
 }
 /* EOF */

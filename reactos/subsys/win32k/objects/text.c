@@ -501,7 +501,7 @@ TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
 	/* this should really depend on whether GM_ADVANCED is set */
 	TextObj->logfont.lfOrientation = TextObj->logfont.lfEscapement;
       }
-      TEXTOBJ_UnlockText(*NewFont);
+      TEXTOBJ_UnlockText(TextObj);
     }
     else
     {
@@ -1536,7 +1536,7 @@ NtGdiExtTextOut(
    }
    if (dc->IsIC)
    {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       /* Yes, Windows really returns TRUE in this case */
       return TRUE;
    }
@@ -1576,7 +1576,7 @@ NtGdiExtTextOut(
    else
    {
       Mode = PalDestGDI->Mode;
-      PALETTE_UnlockPalette(dc->w.hPalette);
+      PALETTE_UnlockPalette(PalDestGDI);
    }
    XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
    if ( !XlateObj )
@@ -1941,21 +1941,21 @@ NtGdiExtTextOut(
 
    EngDeleteXlate(XlateObj);
    EngDeleteXlate(XlateObj2);
-   BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+   BITMAPOBJ_UnlockBitmap(BitmapObj);
    if(TextObj != NULL)
-     TEXTOBJ_UnlockText(dc->w.hFont);
+     TEXTOBJ_UnlockText(TextObj);
    if (hBrushBg != NULL)
    {
-      BRUSHOBJ_UnlockBrush(hBrushBg);
+      BRUSHOBJ_UnlockBrush(BrushBg);
       NtGdiDeleteObject(hBrushBg);
    }
-   BRUSHOBJ_UnlockBrush(hBrushFg);
+   BRUSHOBJ_UnlockBrush(BrushFg);
    NtGdiDeleteObject(hBrushFg);
    if (NULL != Dx)
    {
       ExFreePool(Dx);
    }
-   DC_UnlockDc( hDC );
+   DC_UnlockDc( dc );
 
    return TRUE;
 
@@ -1965,23 +1965,23 @@ fail:
    if ( XlateObj != NULL )
       EngDeleteXlate(XlateObj);
    if(TextObj != NULL)
-     TEXTOBJ_UnlockText(dc->w.hFont);
-   BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+     TEXTOBJ_UnlockText(TextObj);
+   BITMAPOBJ_UnlockBitmap(BitmapObj);
    if (hBrushBg != NULL)
    {
-      BRUSHOBJ_UnlockBrush(hBrushBg);
+      BRUSHOBJ_UnlockBrush(BrushBg);
       NtGdiDeleteObject(hBrushBg);
    }
    if (hBrushFg != NULL)
    {
-      BRUSHOBJ_UnlockBrush(hBrushFg);
+      BRUSHOBJ_UnlockBrush(BrushFg);
       NtGdiDeleteObject(hBrushFg);
    }
    if (NULL != Dx)
    {
       ExFreePool(Dx);
    }
-   DC_UnlockDc(hDC);
+   DC_UnlockDc(dc);
 
    return FALSE;
 }
@@ -2069,7 +2069,7 @@ NtGdiGetCharWidth32(HDC  hDC,
    }
    hFont = dc->w.hFont;
    TextObj = TEXTOBJ_LockText(hFont);
-   DC_UnlockDc(hDC);
+   DC_UnlockDc(dc);
 
    if (TextObj == NULL)
    {
@@ -2121,7 +2121,7 @@ NtGdiGetCharWidth32(HDC  hDC,
       SafeBuffer[i - FirstChar] = (face->glyph->advance.x + 32) >> 6;
    }
    IntUnLockFreeType;
-   TEXTOBJ_UnlockText(hFont);
+   TEXTOBJ_UnlockText(TextObj);
    MmCopyToCaller(Buffer, SafeBuffer, BufferSize);
    ExFreePool(SafeBuffer);
    return TRUE;
@@ -2414,8 +2414,8 @@ NtGdiGetTextExtentExPoint(HDC hDC,
   }
   else
     Result = FALSE;
-  TEXTOBJ_UnlockText(dc->w.hFont);
-  DC_UnlockDc(hDC);
+  TEXTOBJ_UnlockText(TextObj);
+  DC_UnlockDc(dc);
 
   ExFreePool(String);
   if (! Result)
@@ -2538,11 +2538,11 @@ NtGdiGetTextExtentPoint32(HDC hDC,
   {
     Result = TextIntGetTextExtentPoint (
       dc, TextObj, String, Count, 0, NULL, NULL, &Size);
-    TEXTOBJ_UnlockText(dc->w.hFont);
+    TEXTOBJ_UnlockText(TextObj);
   }
   else
     Result = FALSE;
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(dc);
 
   ExFreePool(String);
   if (! Result)
@@ -2574,7 +2574,7 @@ NtGdiGetTextFace(HDC hDC, INT Count, LPWSTR FaceName)
       return FALSE;
    }
    TextObj = TEXTOBJ_LockText(Dc->w.hFont);
-   DC_UnlockDc(hDC);
+   DC_UnlockDc(Dc);
 
    Count = min(Count, wcslen(TextObj->logfont.lfFaceName));
    Status = MmCopyToCaller(FaceName, TextObj->logfont.lfFaceName, Count * sizeof(WCHAR));
@@ -2661,13 +2661,13 @@ NtGdiGetTextMetrics(HDC hDC,
               Status = MmCopyToCaller(tm, &SafeTm, sizeof(TEXTMETRICW));
             }
 	}
-      TEXTOBJ_UnlockText(dc->w.hFont);
+      TEXTOBJ_UnlockText(TextObj);
     }
   else
     {
       Status = STATUS_INVALID_HANDLE;
     }
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(dc);
 
   if(!NT_SUCCESS(Status))
     {
@@ -2721,7 +2721,7 @@ NtGdiSetTextAlign(HDC  hDC,
     }
   prevAlign = dc->w.textAlign;
   dc->w.textAlign = Mode;
-  DC_UnlockDc( hDC );
+  DC_UnlockDc( dc );
   return  prevAlign;
 }
 
@@ -2743,7 +2743,7 @@ NtGdiSetTextColor(HDC hDC,
   oldColor = dc->w.textColor;
   dc->w.textColor = color;
   hBrush = dc->w.hBrush;
-  DC_UnlockDc( hDC );
+  DC_UnlockDc( dc );
   NtGdiSelectObject(hDC, hBrush);
   return  oldColor;
 }
@@ -2791,7 +2791,7 @@ NtGdiGetFontData(
    }
    hFont = Dc->w.hFont;
    TextObj = TEXTOBJ_LockText(hFont);
-   DC_UnlockDc(hDC);
+   DC_UnlockDc(Dc);
 
    if (TextObj == NULL)
    {
@@ -2818,7 +2818,7 @@ NtGdiGetFontData(
 
    IntUnLockFreeType;
 
-   TEXTOBJ_UnlockText(hFont);
+   TEXTOBJ_UnlockText(TextObj);
 
    return Result;
 }
@@ -2973,13 +2973,13 @@ TextIntRealizeFont(HFONT FontHandle)
 
   if (TextObj->Initialized)
     {
-      TEXTOBJ_UnlockText(FontHandle);
+      TEXTOBJ_UnlockText(TextObj);
       return STATUS_SUCCESS;
     }
 
   if (! RtlCreateUnicodeString(&FaceName, TextObj->logfont.lfFaceName))
     {
-      TEXTOBJ_UnlockText(FontHandle);
+      TEXTOBJ_UnlockText(TextObj);
       return STATUS_NO_MEMORY;
     }
   SubstituteFontFamily(&FaceName, 0);
@@ -3014,7 +3014,7 @@ TextIntRealizeFont(HFONT FontHandle)
     }
 
   RtlFreeUnicodeString(&FaceName);
-  TEXTOBJ_UnlockText(FontHandle);
+  TEXTOBJ_UnlockText(TextObj);
 
   ASSERT((NT_SUCCESS(Status) ^ (NULL == TextObj->Font)) != 0);
 

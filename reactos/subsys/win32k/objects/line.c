@@ -113,8 +113,8 @@ IntGdiLineTo(DC  *dc,
                            ROP2_TO_MIX(dc->w.ROPmode));
       }
 
-      BITMAPOBJ_UnlockBitmap ( dc->w.hBitmap );
-      PENOBJ_UnlockPen( dc->w.hPen );
+      BITMAPOBJ_UnlockBitmap ( BitmapObj );
+      PENOBJ_UnlockPen( PenBrushObj );
     }
 
   if (Ret)
@@ -230,7 +230,7 @@ IntGdiPolyline(DC      *dc,
      			   &PenBrushInst.BrushObject, Points, Count,
      			   ROP2_TO_MIX(dc->w.ROPmode));
 
-         BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+         BITMAPOBJ_UnlockBitmap(BitmapObj);
          EngFreeMem(Points);
       }
       else
@@ -239,7 +239,7 @@ IntGdiPolyline(DC      *dc,
       }
    }
 
-   PENOBJ_UnlockPen(dc->w.hPen);
+   PENOBJ_UnlockPen(PenBrushObj);
 
    return Ret;
 }
@@ -370,7 +370,7 @@ NtGdiArc(HDC  hDC,
   }
   if (dc->IsIC)
   {
-    DC_UnlockDc(hDC);
+    DC_UnlockDc(dc);
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
@@ -385,7 +385,7 @@ NtGdiArc(HDC  hDC,
                   XEndArc,
                   YEndArc);
 
-  DC_UnlockDc( hDC );
+  DC_UnlockDc( dc );
   return Ret;
 }
 
@@ -412,7 +412,7 @@ NtGdiArcTo(HDC  hDC,
   }
   if (dc->IsIC)
   {
-    DC_UnlockDc(hDC);
+    DC_UnlockDc(dc);
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
@@ -420,7 +420,7 @@ NtGdiArcTo(HDC  hDC,
   // Line from current position to starting point of arc
   if ( !IntGdiLineTo(dc, XRadial1, YRadial1) )
   {
-    DC_UnlockDc( hDC );
+    DC_UnlockDc(dc);
     return FALSE;
   }
 
@@ -432,13 +432,13 @@ NtGdiArcTo(HDC  hDC,
   result = IntGdiArc(dc, LeftRect, TopRect, RightRect, BottomRect,
                      XRadial1, YRadial1, XRadial2, YRadial2);
 
-  //DC_UnlockDc( hDC );
+  //DC_UnlockDc(dc);
 
   // If no error occured, the current position is moved to the ending point of the arc.
   if(result)
     IntGdiMoveToEx(dc, XRadial2, YRadial2, NULL);
 
-  DC_UnlockDc( hDC );
+  DC_UnlockDc(dc);
 
   return result;
 }
@@ -453,7 +453,7 @@ NtGdiGetArcDirection(HDC  hDC)
   if ( dc )
   {
     ret = IntGdiGetArcDirection ( dc );
-    DC_UnlockDc( hDC );
+    DC_UnlockDc(dc);
   }
   else
   {
@@ -480,14 +480,14 @@ NtGdiLineTo(HDC  hDC,
   }
   if (dc->IsIC)
   {
-    DC_UnlockDc(hDC);
+    DC_UnlockDc(dc);
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
 
   Ret = IntGdiLineTo(dc, XEnd, YEnd);
 
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(dc);
   return Ret;
 }
 
@@ -511,7 +511,7 @@ NtGdiMoveToEx(HDC      hDC,
   }
   if (dc->IsIC)
   {
-    DC_UnlockDc(hDC);
+    DC_UnlockDc(dc);
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
@@ -521,7 +521,7 @@ NtGdiMoveToEx(HDC      hDC,
     Status = MmCopyFromCaller(&SafePoint, Point, sizeof(POINT));
     if(!NT_SUCCESS(Status))
     {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       SetLastNtError(Status);
       return FALSE;
     }
@@ -529,7 +529,7 @@ NtGdiMoveToEx(HDC      hDC,
 
   Ret = IntGdiMoveToEx(dc, X, Y, (Point ? &SafePoint : NULL));
 
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(dc);
   return Ret;
 }
 
@@ -552,7 +552,7 @@ NtGdiPolyBezier(HDC           hDC,
   }
   if (dc->IsIC)
   {
-    DC_UnlockDc(hDC);
+    DC_UnlockDc(dc);
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
@@ -562,7 +562,7 @@ NtGdiPolyBezier(HDC           hDC,
     Safept = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * Count, TAG_BEZIER);
     if(!Safept)
     {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
@@ -570,14 +570,14 @@ NtGdiPolyBezier(HDC           hDC,
     Status = MmCopyFromCaller(Safept, pt, sizeof(POINT) * Count);
     if(!NT_SUCCESS(Status))
     {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       SetLastNtError(Status);
       return FALSE;
     }
   }
   else
   {
-    DC_UnlockDc(hDC);
+    DC_UnlockDc(dc);
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
@@ -585,7 +585,7 @@ NtGdiPolyBezier(HDC           hDC,
   Ret = IntGdiPolyBezier(dc, Safept, Count);
 
   ExFreePool(Safept);
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(dc);
 
   return Ret;
 }
@@ -609,7 +609,7 @@ NtGdiPolyBezierTo(HDC  hDC,
   }
   if (dc->IsIC)
   {
-    DC_UnlockDc(hDC);
+    DC_UnlockDc(dc);
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
@@ -619,7 +619,7 @@ NtGdiPolyBezierTo(HDC  hDC,
     Safept = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * Count, TAG_BEZIER);
     if(!Safept)
     {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
@@ -627,14 +627,14 @@ NtGdiPolyBezierTo(HDC  hDC,
     Status = MmCopyFromCaller(Safept, pt, sizeof(POINT) * Count);
     if(!NT_SUCCESS(Status))
     {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       SetLastNtError(Status);
       return FALSE;
     }
   }
   else
   {
-    DC_UnlockDc(hDC);
+    DC_UnlockDc(dc);
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
@@ -642,7 +642,7 @@ NtGdiPolyBezierTo(HDC  hDC,
   Ret = IntGdiPolyBezierTo(dc, Safept, Count);
 
   ExFreePool(Safept);
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(dc);
 
   return Ret;
 }
@@ -677,7 +677,7 @@ NtGdiPolyline(HDC            hDC,
   }
   if (dc->IsIC)
   {
-    DC_UnlockDc(hDC);
+    DC_UnlockDc(dc);
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
@@ -687,7 +687,7 @@ NtGdiPolyline(HDC            hDC,
     Safept = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * Count, TAG_SHAPE);
     if(!Safept)
     {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
@@ -695,14 +695,14 @@ NtGdiPolyline(HDC            hDC,
     Status = MmCopyFromCaller(Safept, pt, sizeof(POINT) * Count);
     if(!NT_SUCCESS(Status))
     {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       SetLastNtError(Status);
       return FALSE;
     }
   }
   else
   {
-    DC_UnlockDc(hDC);
+    DC_UnlockDc(dc);
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
@@ -710,7 +710,7 @@ NtGdiPolyline(HDC            hDC,
   Ret = IntGdiPolyline(dc, Safept, Count);
 
   ExFreePool(Safept);
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(dc);
 
   return Ret;
 }
@@ -734,7 +734,7 @@ NtGdiPolylineTo(HDC            hDC,
   }
   if (dc->IsIC)
   {
-    DC_UnlockDc(hDC);
+    DC_UnlockDc(dc);
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
@@ -744,7 +744,7 @@ NtGdiPolylineTo(HDC            hDC,
     Safept = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * Count, TAG_SHAPE);
     if(!Safept)
     {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
@@ -752,14 +752,14 @@ NtGdiPolylineTo(HDC            hDC,
     Status = MmCopyFromCaller(Safept, pt, sizeof(POINT) * Count);
     if(!NT_SUCCESS(Status))
     {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       SetLastNtError(Status);
       return FALSE;
     }
   }
   else
   {
-    DC_UnlockDc(hDC);
+    DC_UnlockDc(dc);
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
@@ -767,7 +767,7 @@ NtGdiPolylineTo(HDC            hDC,
   Ret = IntGdiPolylineTo(dc, Safept, Count);
 
   ExFreePool(Safept);
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(dc);
 
   return Ret;
 }
@@ -793,7 +793,7 @@ NtGdiPolyPolyline(HDC            hDC,
   }
   if (dc->IsIC)
   {
-    DC_UnlockDc(hDC);
+    DC_UnlockDc(dc);
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
@@ -803,7 +803,7 @@ NtGdiPolyPolyline(HDC            hDC,
     Safept = ExAllocatePoolWithTag(PagedPool, (sizeof(POINT) + sizeof(DWORD)) * Count, TAG_SHAPE);
     if(!Safept)
     {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
@@ -813,7 +813,7 @@ NtGdiPolyPolyline(HDC            hDC,
     Status = MmCopyFromCaller(Safept, pt, sizeof(POINT) * Count);
     if(!NT_SUCCESS(Status))
     {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       ExFreePool(Safept);
       SetLastNtError(Status);
       return FALSE;
@@ -821,7 +821,7 @@ NtGdiPolyPolyline(HDC            hDC,
     Status = MmCopyFromCaller(SafePolyPoints, PolyPoints, sizeof(DWORD) * Count);
     if(!NT_SUCCESS(Status))
     {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       ExFreePool(Safept);
       SetLastNtError(Status);
       return FALSE;
@@ -829,7 +829,7 @@ NtGdiPolyPolyline(HDC            hDC,
   }
   else
   {
-    DC_UnlockDc(hDC);
+    DC_UnlockDc(dc);
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
@@ -837,7 +837,7 @@ NtGdiPolyPolyline(HDC            hDC,
   Ret = IntGdiPolyPolyline(dc, Safept, SafePolyPoints, Count);
 
   ExFreePool(Safept);
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(dc);
 
   return Ret;
 }
@@ -859,7 +859,7 @@ NtGdiSetArcDirection(HDC  hDC,
     dc->w.ArcDirection = ArcDirection;
   }
 
-  DC_UnlockDc( hDC );
+  DC_UnlockDc( dc );
   return nOldDirection;
 }
 /* EOF */

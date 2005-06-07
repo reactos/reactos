@@ -952,7 +952,7 @@ IntMouseInput(MOUSEINPUT *mi)
     if (dc)
     {
       hBitmap = dc->w.hBitmap;
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
 
       BitmapObj = BITMAPOBJ_LockBitmap(hBitmap);
       if (BitmapObj)
@@ -970,7 +970,7 @@ IntMouseInput(MOUSEINPUT *mi)
 	GDIDEV(SurfObj)->Pointer.Pos.x = MousePos.x;
 	GDIDEV(SurfObj)->Pointer.Pos.y = MousePos.y;
 
-        BITMAPOBJ_UnlockBitmap(hBitmap);
+        BITMAPOBJ_UnlockBitmap(BitmapObj);
       }
     }
   }

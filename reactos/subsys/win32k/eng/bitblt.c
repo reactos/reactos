@@ -89,7 +89,6 @@ BltMask(SURFOBJ* Dest,
    static BYTE maskbit[8] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
    /* Pattern brushes */
    PGDIBRUSHINST GdiBrush = NULL;
-   HBITMAP PatternSurface = NULL;
    SURFOBJ *PatternObj = NULL;
    PBITMAPOBJ PatternBitmap;
    ULONG PatternWidth = 0, PatternHeight = 0, PatternY = 0;
@@ -109,7 +108,6 @@ BltMask(SURFOBJ* Dest,
          GDIBRUSHINST,
          BrushObject);
 
-      PatternSurface = GdiBrush->GdiBrushObject->hbmPattern;
       PatternBitmap = BITMAPOBJ_LockBitmap(GdiBrush->GdiBrushObject->hbmPattern);
       if(PatternBitmap != NULL)
       {
@@ -157,7 +155,7 @@ BltMask(SURFOBJ* Dest,
    }
 
    if (PatternBitmap != NULL)
-      BITMAPOBJ_UnlockBitmap(PatternSurface);
+      BITMAPOBJ_UnlockBitmap(PatternBitmap);
 
    return TRUE;
 }
@@ -245,7 +243,7 @@ CallDibBitBlt(SURFOBJ* OutputObj,
    /* Pattern brush */
    if (bmPattern != NULL)
    {
-      BITMAPOBJ_UnlockBitmap(BltInfo.PatternSurface->hsurf);
+      BITMAPOBJ_UnlockBitmap(bmPattern);
    }
 
    return Result;

@@ -841,7 +841,7 @@ IntSystemParametersInfo(
             WinStaObject->cxWallpaper = bmp->SurfObj.sizlBitmap.cx;
             WinStaObject->cyWallpaper = bmp->SurfObj.sizlBitmap.cy;
 
-            BITMAPOBJ_UnlockBitmap(hNewBitmap);
+            BITMAPOBJ_UnlockBitmap(bmp);
 
             /* change the bitmap's ownership */
             GDIOBJ_SetOwnership(hNewBitmap, NULL);

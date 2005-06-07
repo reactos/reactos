@@ -29,8 +29,9 @@ typedef struct _BITMAPOBJ
   ((HBITMAP) GDIOBJ_AllocObj (GDI_OBJECT_TYPE_BITMAP))
 #define  BITMAPOBJ_FreeBitmap(hBMObj)  \
   GDIOBJ_FreeObj((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP)
-#define  BITMAPOBJ_LockBitmap(hBMObj) GDIOBJ_LockObj((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP)
-#define  BITMAPOBJ_UnlockBitmap(hBMObj) GDIOBJ_UnlockObj((HGDIOBJ) hBMObj)
+/* NOTE: Use shared locks! */
+#define  BITMAPOBJ_LockBitmap(hBMObj) (PBITMAPOBJ)EngLockSurface((HSURF)hBMObj)
+#define  BITMAPOBJ_UnlockBitmap(pBMObj) EngUnlockSurface(&pBMObj->SurfObj)
 BOOL INTERNAL_CALL BITMAP_Cleanup(PVOID ObjectBody);
 
 INT     FASTCALL BITMAPOBJ_GetWidthBytes (INT bmWidth, INT bpp);

@@ -3918,7 +3918,7 @@ IntGetWindowRgn(HWND hWnd, HRGN hRgn)
   if((pRgn = RGNDATA_LockRgn(hRgn)))
   {
     Ret = pRgn->rdh.iType;
-    RGNDATA_UnlockRgn(hRgn);
+    RGNDATA_UnlockRgn(pRgn);
   }
   else
     Ret = ERROR;
@@ -3959,7 +3959,7 @@ IntGetWindowRgnBox(HWND hWnd, RECT *Rect)
   {
     Ret = pRgn->rdh.iType;
     *Rect = pRgn->rdh.rcBound;
-    RGNDATA_UnlockRgn(VisRgn);
+    RGNDATA_UnlockRgn(pRgn);
   }
   else
     Ret = ERROR;

@@ -743,7 +743,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
       if (NULL != Rgn)
       {
          UnsafeIntGetRgnBox(Rgn, &Ps.rcPaint);
-         RGNDATA_UnlockRgn(Window->UpdateRegion);
+         RGNDATA_UnlockRgn(Rgn);
          IntGdiOffsetRect(&Ps.rcPaint,
                           Window->WindowRect.left - Window->ClientRect.left,
                           Window->WindowRect.top - Window->ClientRect.top);
@@ -933,7 +933,7 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
       ASSERT(RgnData != NULL);
       RegionType = UnsafeIntGetRgnBox(RgnData, &Rect);
       ASSERT(RegionType != ERROR);
-      RGNDATA_UnlockRgn(Window->UpdateRegion);
+      RGNDATA_UnlockRgn(RgnData);
    }
    AlwaysPaint = (Window->Flags & WINDOWOBJECT_NEED_NCPAINT) ||
                  (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT);
@@ -1062,7 +1062,7 @@ NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *lprcScroll,
       IntGdiOffsetRect(&rSrc_lp, offset.left - offset.right, offset.top - offset.bottom);
       IntDPtoLP(DC, (LPPOINT)&rDst_lp, 2);
       IntDPtoLP(DC, (LPPOINT)&rSrc_lp, 2);
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(DC);
 
       if (!NtGdiBitBlt(hDC, rDst_lp.left, rDst_lp.top, rDst_lp.right - rDst_lp.left,
                        rDst_lp.bottom - rDst_lp.top, hDC, rSrc_lp.left, rSrc_lp.top,
@@ -1071,7 +1071,7 @@ NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *lprcScroll,
    }
    else
    {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(DC);
    }
 
    /*

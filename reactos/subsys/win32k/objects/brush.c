@@ -77,7 +77,7 @@ IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
          Result = IntEngCreateXlate(0, 0, Dc->w.hPalette, Pattern->hDIBPalette);
       }
 
-      BITMAPOBJ_UnlockBitmap(BrushObj->hbmPattern);
+      BITMAPOBJ_UnlockBitmap(Pattern);
       *Failed = FALSE;
    }
 
@@ -276,7 +276,7 @@ IntGdiCreateDIBBrush(
    BitmapObject = BITMAPOBJ_LockBitmap(hPattern);
    ASSERT(BitmapObject != NULL);
    BitmapObject->hDIBPalette = BuildDIBPalette(BitmapInfo, &PaletteType);
-   BITMAPOBJ_UnlockBitmap(hPattern);
+   BITMAPOBJ_UnlockBitmap(BitmapObject);
 
    hBrush = BRUSHOBJ_AllocBrush();
    if (hBrush == NULL)
@@ -295,7 +295,7 @@ IntGdiCreateDIBBrush(
 
    GDIOBJ_SetOwnership(hPattern, NULL);
 
-   BRUSHOBJ_UnlockBrush(hBrush);
+   BRUSHOBJ_UnlockBrush(BrushObject);
 
    return hBrush;
 }
@@ -338,7 +338,7 @@ IntGdiCreateHatchBrush(
 
    GDIOBJ_SetOwnership(hPattern, NULL);
 
-   BRUSHOBJ_UnlockBrush(hBrush);
+   BRUSHOBJ_UnlockBrush(BrushObject);
 
    return hBrush;
 }
@@ -375,7 +375,7 @@ IntGdiCreatePatternBrush(
 
    GDIOBJ_SetOwnership(hPattern, NULL);
 
-   BRUSHOBJ_UnlockBrush(hBrush);
+   BRUSHOBJ_UnlockBrush(BrushObject);
 
    return hBrush;
 }
@@ -401,7 +401,7 @@ IntGdiCreateSolidBrush(
    BrushObject->BrushAttr.lbColor = Color & 0xFFFFFF;
    /* FIXME: Fill in the rest of fields!!! */
 
-   BRUSHOBJ_UnlockBrush(hBrush);
+   BRUSHOBJ_UnlockBrush(BrushObject);
 
    return hBrush;
 }
@@ -422,7 +422,7 @@ IntGdiCreateNullBrush(VOID)
    BrushObject = BRUSHOBJ_LockBrush(hBrush);
    ASSERT(BrushObject != NULL);
    BrushObject->flAttrs |= GDIBRUSH_IS_NULL;
-   BRUSHOBJ_UnlockBrush(hBrush);
+   BRUSHOBJ_UnlockBrush(BrushObject);
 
    return hBrush;
 }
@@ -495,7 +495,7 @@ IntPatBlt(
          ROP3_TO_ROP4(ROP));
    }
 
-   BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+   BITMAPOBJ_UnlockBitmap(BitmapObj);
 
    return ret;
 }
@@ -521,7 +521,7 @@ IntGdiPolyPatBlt(
    }
    if (dc->IsIC)
    {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       /* Yes, Windows really returns TRUE in this case */
       return TRUE;
    }
@@ -539,12 +539,12 @@ IntGdiPolyPatBlt(
            r->r.bottom,
            dwRop,
            BrushObj);
-        BRUSHOBJ_UnlockBrush(r->hBrush);
+        BRUSHOBJ_UnlockBrush(BrushObj);
       }
       r++;
    }
 
-   DC_UnlockDc( hDC );
+   DC_UnlockDc(dc);
 
    return TRUE;
 }
@@ -635,7 +635,7 @@ NtGdiSetBrushOrgEx(HDC hDC, INT XOrg, INT YOrg, LPPOINT Point)
       Status = MmCopyToCaller(Point, &SafePoint, sizeof(POINT));
       if(!NT_SUCCESS(Status))
       {
-        DC_UnlockDc(hDC);
+        DC_UnlockDc(dc);
         SetLastNtError(Status);
         return FALSE;
       }
@@ -643,7 +643,7 @@ NtGdiSetBrushOrgEx(HDC hDC, INT XOrg, INT YOrg, LPPOINT Point)
 
    dc->w.brushOrgX = XOrg;
    dc->w.brushOrgY = YOrg;
-   DC_UnlockDc(hDC);
+   DC_UnlockDc(dc);
 
    return TRUE;
 }
@@ -705,7 +705,7 @@ NtGdiPatBlt(
    }
    if (dc->IsIC)
    {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       /* Yes, Windows really returns TRUE in this case */
       return TRUE;
    }
@@ -714,7 +714,7 @@ NtGdiPatBlt(
    if (BrushObj == NULL)
    {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       return FALSE;
    }
 
@@ -727,8 +727,8 @@ NtGdiPatBlt(
       ROP,
       BrushObj);
 
-   BRUSHOBJ_UnlockBrush(dc->w.hBrush);
-   DC_UnlockDc(hDC);
+   BRUSHOBJ_UnlockBrush(BrushObj);
+   DC_UnlockDc(dc);
 
    return ret;
 }

@@ -81,6 +81,7 @@ BOOL    INTERNAL_CALL GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle);
 void    INTERNAL_CALL GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS Owner);
 void    INTERNAL_CALL GDIOBJ_CopyOwnership(HGDIOBJ CopyFrom, HGDIOBJ CopyTo);
 BOOL    INTERNAL_CALL GDIOBJ_ConvertToStockObj(HGDIOBJ *hObj);
+VOID    INTERNAL_CALL GDIOBJ_UnlockObjByPtr(PGDIOBJ Object);
 
 #define GDIOBJ_GetObjectType(Handle) \
   GDI_HANDLE_GET_TYPE(Handle)
@@ -91,19 +92,18 @@ BOOL    INTERNAL_CALL GDIOBJ_ConvertToStockObj(HGDIOBJ *hObj);
 #define GDIOBJ_AllocObj(ty) GDIOBJ_AllocObjDbg(__FILE__,__LINE__,ty)
 #define GDIOBJ_FreeObj(obj,ty) GDIOBJ_FreeObjDbg(__FILE__,__LINE__,obj,ty)
 #define GDIOBJ_LockObj(obj,ty) GDIOBJ_LockObjDbg(__FILE__,__LINE__,obj,ty)
-#define GDIOBJ_UnlockObj(obj) GDIOBJ_UnlockObjDbg(__FILE__,__LINE__,obj)
+#define GDIOBJ_ShareLockObj(obj,ty) GDIOBJ_ShareLockObjDbg(__FILE__,__LINE__,obj,ty)
 
 HGDIOBJ INTERNAL_CALL GDIOBJ_AllocObjDbg(const char* file, int line, ULONG ObjectType);
 BOOL    INTERNAL_CALL GDIOBJ_FreeObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType);
 PGDIOBJ INTERNAL_CALL GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType);
-BOOL    INTERNAL_CALL GDIOBJ_UnlockObjDbg (const char* file, int line, HGDIOBJ hObj);
+PGDIOBJ INTERNAL_CALL GDIOBJ_ShareLockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType);
 
 #else /* !GDI_DEBUG */
 
 HGDIOBJ INTERNAL_CALL GDIOBJ_AllocObj(ULONG ObjectType);
 BOOL    INTERNAL_CALL GDIOBJ_FreeObj (HGDIOBJ hObj, DWORD ObjectType);
-PGDIOBJ INTERNAL_CALL GDIOBJ_LockObj (HGDIOBJ hObj, DWORD ObjectType);
-BOOL    INTERNAL_CALL GDIOBJ_UnlockObj (HGDIOBJ hObj);
+PGDIOBJ INTERNAL_CALL GDIOBJ_ShareLockObj (HGDIOBJ hObj, DWORD ObjectType);
 
 #endif /* GDI_DEBUG */
 

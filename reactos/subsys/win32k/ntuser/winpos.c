@@ -853,13 +853,13 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
          if (VisBefore != NULL && (VisRgn = (PROSRGNDATA)RGNDATA_LockRgn(VisBefore)) &&
              UnsafeIntGetRgnBox(VisRgn, &TempRect) == NULLREGION)
          {
-            RGNDATA_UnlockRgn(VisBefore);
+            RGNDATA_UnlockRgn(VisRgn);
             NtGdiDeleteObject(VisBefore);
             VisBefore = NULL;
          }
          else if(VisRgn)
          {
-            RGNDATA_UnlockRgn(VisBefore);
+            RGNDATA_UnlockRgn(VisRgn);
          }
       }
    }
@@ -988,13 +988,13 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
       if (VisAfter != NULL && (VisRgn = (PROSRGNDATA)RGNDATA_LockRgn(VisAfter)) &&
           UnsafeIntGetRgnBox(VisRgn, &TempRect) == NULLREGION)
       {
-         RGNDATA_UnlockRgn(VisAfter);
+         RGNDATA_UnlockRgn(VisRgn);
          NtGdiDeleteObject(VisAfter);
          VisAfter = NULL;
       }
       else if(VisRgn)
       {
-         RGNDATA_UnlockRgn(VisAfter);
+         RGNDATA_UnlockRgn(VisRgn);
       }
 
       /*
@@ -1048,7 +1048,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
              UnsafeIntGetRgnBox(VisRgn, &CopyRect) == NULLREGION)
          {
             /* Nothing to copy, clean up */
-            RGNDATA_UnlockRgn(CopyRgn);
+            RGNDATA_UnlockRgn(VisRgn);
             NtGdiDeleteObject(CopyRgn);
             CopyRgn = NULL;
          }
@@ -1057,7 +1057,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
          {
             if(VisRgn)
             {
-               RGNDATA_UnlockRgn(CopyRgn);
+               RGNDATA_UnlockRgn(VisRgn);
             }
             /*
              * Small trick here: there is no function to bitblt a region. So
@@ -1083,7 +1083,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
          }
          else if(VisRgn)
          {
-            RGNDATA_UnlockRgn(CopyRgn);
+            RGNDATA_UnlockRgn(VisRgn);
          }
       }
       else

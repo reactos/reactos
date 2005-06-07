@@ -61,7 +61,7 @@ NtGdiBitBlt(
 	}
 	if (DCDest->IsIC)
 	{
-		DC_UnlockDc(hDCDest);
+		DC_UnlockDc(DCDest);
 		/* Yes, Windows really returns TRUE in this case */
 		return TRUE;
 	}
@@ -73,15 +73,15 @@ NtGdiBitBlt(
 			DCSrc = DC_LockDc(hDCSrc);
 			if (NULL == DCSrc)
 			{
-				DC_UnlockDc(hDCDest);
+				DC_UnlockDc(DCDest);
 				DPRINT1("Invalid source dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCSrc);
 				SetLastWin32Error(ERROR_INVALID_HANDLE);
 				return FALSE;
 			}
 			if (DCSrc->IsIC)
 			{
-				DC_UnlockDc(hDCSrc);
-				DC_UnlockDc(hDCDest);
+				DC_UnlockDc(DCSrc);
+				DC_UnlockDc(DCDest);
 				/* Yes, Windows really returns TRUE in this case */
 				return TRUE;
 			}
@@ -137,17 +137,17 @@ NtGdiBitBlt(
 		{
 			if (UsesSource && hDCSrc != hDCDest)
 			{
-				DC_UnlockDc(hDCSrc);
+				DC_UnlockDc(DCSrc);
 			}
 			if(BitmapDest != NULL)
 			{
-                                BITMAPOBJ_UnlockBitmap(DCDest->w.hBitmap);
+                                BITMAPOBJ_UnlockBitmap(BitmapDest);
 			}
 			if(BitmapSrc != NULL && BitmapSrc != BitmapDest)
 			{
-                                BITMAPOBJ_UnlockBitmap(DCSrc->w.hBitmap);
+                                BITMAPOBJ_UnlockBitmap(BitmapSrc);
 			}
-			DC_UnlockDc(hDCDest);
+			DC_UnlockDc(DCDest);
 			SetLastWin32Error(ERROR_INVALID_HANDLE);
 			return FALSE;
 		}
@@ -191,20 +191,20 @@ NtGdiBitBlt(
 			{
 				if (UsesSource && hDCSrc != hDCDest)
 				{
-					DC_UnlockDc(hDCSrc);
+					DC_UnlockDc(DCSrc);
 				}
-				DC_UnlockDc(hDCDest);
+				DC_UnlockDc(DCDest);
 				if(BitmapDest != NULL)
 				{
-                                	BITMAPOBJ_UnlockBitmap(DCDest->w.hBitmap);
+                                	BITMAPOBJ_UnlockBitmap(BitmapDest);
 				}
 				if(BitmapSrc != NULL && BitmapSrc != BitmapDest)
 				{
-                                	BITMAPOBJ_UnlockBitmap(DCSrc->w.hBitmap);
+                                	BITMAPOBJ_UnlockBitmap(BitmapSrc);
 				}
 				if(BrushObj != NULL)
 				{
-                                        BRUSHOBJ_UnlockBrush(DCDest->w.hBrush);
+                                        BRUSHOBJ_UnlockBrush(BrushObj);
 				}
 				SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
 				return FALSE;
@@ -222,21 +222,21 @@ NtGdiBitBlt(
 
         if(BitmapDest != NULL)
         {
-                BITMAPOBJ_UnlockBitmap(DCDest->w.hBitmap);
+                BITMAPOBJ_UnlockBitmap(BitmapDest);
         }
 	if (UsesSource && BitmapSrc != BitmapDest)
 	{
-		BITMAPOBJ_UnlockBitmap(DCSrc->w.hBitmap);
+		BITMAPOBJ_UnlockBitmap(BitmapSrc);
 	}
 	if (BrushObj != NULL)
 	{
-		BRUSHOBJ_UnlockBrush(DCDest->w.hBrush);
+		BRUSHOBJ_UnlockBrush(BrushObj);
 	}
 	if (UsesSource && hDCSrc != hDCDest)
 	{
-		DC_UnlockDc(hDCSrc);
+		DC_UnlockDc(DCSrc);
 	}
-	DC_UnlockDc(hDCDest);
+	DC_UnlockDc(DCDest);
 
 	return Status;
 }
@@ -273,14 +273,14 @@ NtGdiTransparentBlt(
   }
   if (DCDest->IsIC)
   {
-    DC_UnlockDc(hdcDst);
+    DC_UnlockDc(DCDest);
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
 
   if((hdcDst != hdcSrc) && !(DCSrc = DC_LockDc(hdcSrc)))
   {
-    DC_UnlockDc(hdcDst);
+    DC_UnlockDc(DCDest);
     DPRINT1("Invalid source dc handle (0x%08x) passed to NtGdiTransparentBlt\n", hdcSrc);
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
@@ -291,10 +291,10 @@ NtGdiTransparentBlt(
   }
   if (DCSrc->IsIC)
   {
-    DC_UnlockDc(hdcSrc);
+    DC_UnlockDc(DCSrc);
     if(hdcDst != hdcSrc)
     {
-      DC_UnlockDc(hdcDst);
+      DC_UnlockDc(DCDest);
     }
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
@@ -314,16 +314,16 @@ NtGdiTransparentBlt(
 
   if(!(PalSourceGDI = PALETTE_LockPalette(SourcePalette)))
   {
-    DC_UnlockDc(hdcSrc);
-    DC_UnlockDc(hdcDst);
+    DC_UnlockDc(DCSrc);
+    DC_UnlockDc(DCDest);
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
   }
   if((DestPalette != SourcePalette) && !(PalDestGDI = PALETTE_LockPalette(DestPalette)))
   {
-    PALETTE_UnlockPalette(SourcePalette);
-    DC_UnlockDc(hdcSrc);
-    DC_UnlockDc(hdcDst);
+    PALETTE_UnlockPalette(PalSourceGDI);
+    DC_UnlockDc(DCSrc);
+    DC_UnlockDc(DCDest);
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
   }
@@ -331,13 +331,13 @@ NtGdiTransparentBlt(
   {
     PalDestMode = PalDestGDI->Mode;
     PalSrcMode = PalSourceGDI->Mode;
-    PALETTE_UnlockPalette(DestPalette);
+    PALETTE_UnlockPalette(PalDestGDI);
   }
   else
   {
     PalDestMode = PalSrcMode = PalSourceGDI->Mode;
   }
-  PALETTE_UnlockPalette(SourcePalette);
+  PALETTE_UnlockPalette(PalSourceGDI);
 
   /* Translate Transparent (RGB) Color to the source palette */
   if((XlateObj = (XLATEOBJ*)IntEngCreateXlate(PalSrcMode, PAL_RGB, SourcePalette, NULL)))
@@ -375,12 +375,12 @@ NtGdiTransparentBlt(
                              TransparentColor, 0);
 
 done:
-  BITMAPOBJ_UnlockBitmap(DCDest->w.hBitmap);
-  BITMAPOBJ_UnlockBitmap(DCSrc->w.hBitmap);
-  DC_UnlockDc(hdcSrc);
+  BITMAPOBJ_UnlockBitmap(BitmapDest);
+  BITMAPOBJ_UnlockBitmap(BitmapSrc);
+  DC_UnlockDc(DCSrc);
   if(hdcDst != hdcSrc)
   {
-    DC_UnlockDc(hdcDst);
+    DC_UnlockDc(DCDest);
   }
   if(XlateObj)
   {
@@ -432,7 +432,7 @@ NtGdiCreateBitmap(
    bmp = BITMAPOBJ_LockBitmap( hBitmap );
    /* FIXME - bmp can be NULL!!!!!! */
    bmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
-   BITMAPOBJ_UnlockBitmap( hBitmap );
+   BITMAPOBJ_UnlockBitmap( bmp );
 
    /*
     * NOTE: It's ugly practice, but we are using the object even
@@ -524,7 +524,7 @@ NtGdiCreateCompatibleBitmap(
 	Bmp = IntCreateCompatibleBitmap(Dc, Width, Height);
 
 	DPRINT ("\t\t%04x\n", Bmp);
-	DC_UnlockDc(hDC);
+	DC_UnlockDc(Dc);
 	return Bmp;
 }
 
@@ -587,7 +587,7 @@ NtGdiGetBitmapDimensionEx(
 
 	*Dimension = bmp->dimension;
 
-	BITMAPOBJ_UnlockBitmap(hBitmap);
+	BITMAPOBJ_UnlockBitmap(bmp);
 
 	return  TRUE;
 }
@@ -612,7 +612,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 	}
 	if (dc->IsIC)
 	{
-		DC_UnlockDc(hDC);
+		DC_UnlockDc(dc);
 		return Result;
 	}
 	XPos += dc->w.DCOrgX;
@@ -639,10 +639,10 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 				}
 				EngDeleteXlate(XlateObj);
 			}
-			BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+			BITMAPOBJ_UnlockBitmap(BitmapObject);
 		}
 	}
-	DC_UnlockDc(hDC);
+	DC_UnlockDc(dc);
 
 	// if Result is still CLR_INVALID, then the "quick" method above didn't work
 	if ( bInRect && Result == CLR_INVALID )
@@ -671,7 +671,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 					if ( bmpobj )
 					{
 						Result = *(COLORREF*)bmpobj->SurfObj.pvScan0;
-						BITMAPOBJ_UnlockBitmap ( hBmpTmp );
+						BITMAPOBJ_UnlockBitmap ( bmpobj );
 					}
 				}
 				NtGdiDeleteObject ( hBmpTmp );
@@ -970,7 +970,7 @@ NtGdiSetBitmapBits(
 		ret = Bytes;
 	}
 
-	BITMAPOBJ_UnlockBitmap(hBitmap);
+	BITMAPOBJ_UnlockBitmap(bmp);
 
 	return ret;
 }
@@ -997,7 +997,7 @@ NtGdiSetBitmapDimensionEx(
 	bmp->dimension.cx = Width;
 	bmp->dimension.cy = Height;
 
-	BITMAPOBJ_UnlockBitmap (hBitmap);
+	BITMAPOBJ_UnlockBitmap (bmp);
 
 	return TRUE;
 }
@@ -1081,7 +1081,7 @@ NtGdiStretchBlt(
 	}
 	if (DCDest->IsIC)
 	{
-		DC_UnlockDc(hDCDest);
+		DC_UnlockDc(DCDest);
 		/* Yes, Windows really returns TRUE in this case */
 		return TRUE;
 	}
@@ -1093,15 +1093,15 @@ NtGdiStretchBlt(
 			DCSrc = DC_LockDc(hDCSrc);
 			if (NULL == DCSrc)
 			{
-				DC_UnlockDc(hDCDest);
+				DC_UnlockDc(DCDest);
 				DPRINT1("Invalid source dc handle (0x%08x) passed to NtGdiStretchBlt\n", hDCSrc);
 				SetLastWin32Error(ERROR_INVALID_HANDLE);
 				return FALSE;
 			}
 			if (DCSrc->IsIC)
 			{
-				DC_UnlockDc(hDCSrc);
-				DC_UnlockDc(hDCDest);
+				DC_UnlockDc(DCSrc);
+				DC_UnlockDc(DCDest);
 				/* Yes, Windows really returns TRUE in this case */
 				return TRUE;
 			}
@@ -1210,9 +1210,9 @@ NtGdiStretchBlt(
 		{
 			if (UsesSource && hDCSrc != hDCDest)
 			{
-				DC_UnlockDc(hDCSrc);
+				DC_UnlockDc(DCSrc);
 			}
-			DC_UnlockDc(hDCDest);
+			DC_UnlockDc(DCDest);
 			SetLastWin32Error(ERROR_INVALID_HANDLE);
 			return FALSE;
 		}
@@ -1237,9 +1237,9 @@ NtGdiStretchBlt(
 		{
 			if (UsesSource && hDCSrc != hDCDest)
 			{
-				DC_UnlockDc(hDCSrc);
+				DC_UnlockDc(DCSrc);
 			}
-			DC_UnlockDc(hDCDest);
+			DC_UnlockDc(DCDest);
 			SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
 			return FALSE;
 		}
@@ -1253,19 +1253,19 @@ NtGdiStretchBlt(
 		EngDeleteXlate(XlateObj);
 	if (UsesPattern)
 	{
-		BRUSHOBJ_UnlockBrush(DCDest->w.hBrush);
+		BRUSHOBJ_UnlockBrush(BrushObj);
 	}
 failed:
 	if (UsesSource && DCSrc->w.hBitmap != DCDest->w.hBitmap)
 	{
-		BITMAPOBJ_UnlockBitmap(DCSrc->w.hBitmap);
+		BITMAPOBJ_UnlockBitmap(BitmapSrc);
 	}
-	BITMAPOBJ_UnlockBitmap(DCDest->w.hBitmap);
+	BITMAPOBJ_UnlockBitmap(BitmapDest);
 	if (UsesSource && hDCSrc != hDCDest)
 	{
-		DC_UnlockDc(hDCSrc);
+		DC_UnlockDc(DCSrc);
 	}
-	DC_UnlockDc(hDCDest);
+	DC_UnlockDc(DCDest);
 
 	return Status;
 }
@@ -1336,7 +1336,7 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 		ExFreePool (buf);
 	}
 
-	GDIOBJ_UnlockObj(hBitmap);
+	GDIOBJ_UnlockObjByPtr(Bitmap);
 
 	return  res;
 }

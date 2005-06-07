@@ -106,6 +106,7 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
       {
       EngDeleteClip(EnterLeave->TrivialClipObj);
       EngFreeMem((*OutputObj)->pvBits);
+      EngUnlockSurface(*OutputObj);
       EngDeleteSurface((HSURF)EnterLeave->OutputBitmap);
       return FALSE;
       }

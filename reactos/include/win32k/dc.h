@@ -151,8 +151,8 @@ typedef struct
 
 #define  DC_LockDc(hDC)  \
   ((PDC) GDIOBJ_LockObj ((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC))
-#define  DC_UnlockDc(hDC)  \
-  GDIOBJ_UnlockObj ((HGDIOBJ) hDC)
+#define  DC_UnlockDc(pDC)  \
+  GDIOBJ_UnlockObjByPtr (pDC)
 
 HDC  FASTCALL RetrieveDisplayHDC(VOID);
 HDC  FASTCALL DC_AllocDC(PUNICODE_STRING  Driver);

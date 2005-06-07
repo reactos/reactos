@@ -93,7 +93,7 @@ IntGdiPolygon(PDC    dc,
           IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
 	  ret = FillPolygon ( dc, BitmapObj, &FillBrushInst.BrushObject, ROP2_TO_MIX(dc->w.ROPmode), UnsafePoints, Count, DestRect );
 	}
-	BRUSHOBJ_UnlockBrush(dc->w.hBrush);
+	BRUSHOBJ_UnlockBrush(FillBrushObj);
 
 	/* get BRUSHOBJ from current pen. */
 	PenBrushObj = PENOBJ_LockPen(dc->w.hPen);
@@ -127,10 +127,10 @@ IntGdiPolygon(PDC    dc,
 			       ROP2_TO_MIX(dc->w.ROPmode)); /* MIX */
 	  }
 	}
-	PENOBJ_UnlockPen( dc->w.hPen );
+	PENOBJ_UnlockPen(PenBrushObj);
       }
 
-      BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+      BITMAPOBJ_UnlockBitmap(BitmapObj);
 
   return ret;
 }
@@ -239,7 +239,7 @@ NtGdiEllipse(
    }
    if (dc->IsIC)
    {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       /* Yes, Windows really returns TRUE in this case */
       return TRUE;
    }
@@ -247,7 +247,7 @@ NtGdiEllipse(
    FillBrush = BRUSHOBJ_LockBrush(dc->w.hBrush);
    if (NULL == FillBrush)
    {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_INTERNAL_ERROR);
       return FALSE;
    }
@@ -255,8 +255,8 @@ NtGdiEllipse(
    PenBrush = PENOBJ_LockPen(dc->w.hPen);
    if (NULL == PenBrush)
    {
-      BRUSHOBJ_UnlockBrush(dc->w.hBrush);
-      DC_UnlockDc(hDC);
+      BRUSHOBJ_UnlockBrush(FillBrush);
+      DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_INTERNAL_ERROR);
       return FALSE;
    }
@@ -264,9 +264,9 @@ NtGdiEllipse(
    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
    if (NULL == BitmapObj)
    {
-      BRUSHOBJ_UnlockBrush(dc->w.hBrush);
-      BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
-      DC_UnlockDc(hDC);
+      BRUSHOBJ_UnlockBrush(FillBrush);
+      PENOBJ_UnlockPen(PenBrush);
+      DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_INTERNAL_ERROR);
       return FALSE;
    }
@@ -391,10 +391,10 @@ NtGdiEllipse(
       }
    } while (B > A);
 
-   BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
-   BRUSHOBJ_UnlockBrush(dc->w.hBrush);
-   PENOBJ_UnlockPen(dc->w.hPen);
-   DC_UnlockDc(hDC);
+   BITMAPOBJ_UnlockBitmap(BitmapObj);
+   BRUSHOBJ_UnlockBrush(FillBrush);
+   PENOBJ_UnlockPen(PenBrush);
+   DC_UnlockDc(dc);
 
    return ret;
 }
@@ -672,7 +672,7 @@ NtGdiPie(HDC  hDC,
     }
   if (dc->IsIC)
     {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       /* Yes, Windows really returns TRUE in this case */
       return TRUE;
     }
@@ -680,7 +680,7 @@ NtGdiPie(HDC  hDC,
   FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
   if (NULL == FillBrushObj)
     {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_INTERNAL_ERROR);
       return FALSE;
     }
@@ -708,8 +708,8 @@ NtGdiPie(HDC  hDC,
   ShapePoints = ExAllocatePoolWithTag(PagedPool, 8 * (Right - Left + 1) / 2 * sizeof(SHAPEPOINT), TAG_SHAPE);
   if (NULL == ShapePoints)
     {
-      BRUSHOBJ_UnlockBrush(dc->w.hBrush);
-      DC_UnlockDc(hDC);
+      BRUSHOBJ_UnlockBrush(FillBrushObj);
+      DC_UnlockDc(dc);
 
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
@@ -718,8 +718,8 @@ NtGdiPie(HDC  hDC,
   if (Left == Right)
     {
       PUTPIXEL(Left, Top, &PenBrushObj);
-      BRUSHOBJ_UnlockBrush(dc->w.hBrush);
-      DC_UnlockDc(hDC);
+      BRUSHOBJ_UnlockBrush(FillBrushObj);
+      DC_UnlockDc(dc);
 
       return ret;
     }
@@ -804,8 +804,8 @@ NtGdiPie(HDC  hDC,
     }
 
   ExFreePool(ShapePoints);
-  BRUSHOBJ_UnlockBrush(dc->w.hBrush);
-  DC_UnlockDc(hDC);
+  BRUSHOBJ_UnlockBrush(FillBrushObj);
+  DC_UnlockDc(dc);
 
   return ret;
 #else
@@ -858,7 +858,7 @@ NtGdiPolygon(HDC          hDC,
   {
     if (dc->IsIC)
     {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       /* Yes, Windows really returns TRUE in this case */
       return TRUE;
     }
@@ -875,7 +875,7 @@ NtGdiPolygon(HDC          hDC,
 
       ExFreePool(Safept);
     }
-    DC_UnlockDc(hDC);
+    DC_UnlockDc(dc);
   }
 
   return Ret;
@@ -903,7 +903,7 @@ NtGdiPolyPolygon(HDC           hDC,
   }
   if (dc->IsIC)
   {
-    DC_UnlockDc(hDC);
+    DC_UnlockDc(dc);
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
@@ -913,7 +913,7 @@ NtGdiPolyPolygon(HDC           hDC,
     Safept = ExAllocatePoolWithTag(PagedPool, (sizeof(POINT) + sizeof(INT)) * Count, TAG_SHAPE);
     if(!Safept)
     {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
@@ -923,7 +923,7 @@ NtGdiPolyPolygon(HDC           hDC,
     Status = MmCopyFromCaller(Safept, Points, sizeof(POINT) * Count);
     if(!NT_SUCCESS(Status))
     {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       ExFreePool(Safept);
       SetLastNtError(Status);
       return FALSE;
@@ -931,7 +931,7 @@ NtGdiPolyPolygon(HDC           hDC,
     Status = MmCopyFromCaller(SafePolyPoints, PolyCounts, sizeof(INT) * Count);
     if(!NT_SUCCESS(Status))
     {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       ExFreePool(Safept);
       SetLastNtError(Status);
       return FALSE;
@@ -939,7 +939,7 @@ NtGdiPolyPolygon(HDC           hDC,
   }
   else
   {
-    DC_UnlockDc(hDC);
+    DC_UnlockDc(dc);
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
@@ -947,7 +947,7 @@ NtGdiPolyPolygon(HDC           hDC,
   Ret = IntGdiPolyPolygon(dc, Safept, SafePolyPoints, Count);
 
   ExFreePool(Safept);
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(dc);
 
   return Ret;
 }
@@ -1008,14 +1008,14 @@ IntRectangle(PDC dc,
       }
     }
 
-    BRUSHOBJ_UnlockBrush(dc->w.hBrush);
+    BRUSHOBJ_UnlockBrush(FillBrushObj);
 
     /* get BRUSHOBJ from current pen. */
     PenBrushObj = PENOBJ_LockPen(dc->w.hPen);
     if (PenBrushObj == NULL)
     {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
-      BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+      BITMAPOBJ_UnlockBitmap(BitmapObj);
       return FALSE;
     }
 
@@ -1057,10 +1057,10 @@ IntRectangle(PDC dc,
 			 Mix);
     }
 
-    PENOBJ_UnlockPen(dc->w.hPen);
+    PENOBJ_UnlockPen(PenBrushObj);
   }
 
-  BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+  BITMAPOBJ_UnlockBitmap(BitmapObj);
 
   /* Move current position in DC?
      MSDN: The current position is neither used nor updated by Rectangle. */
@@ -1087,13 +1087,13 @@ NtGdiRectangle(HDC  hDC,
   }
   if (dc->IsIC)
   {
-    DC_UnlockDc(hDC);
+    DC_UnlockDc(dc);
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
 
   ret = IntRectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
-  DC_UnlockDc ( hDC );
+  DC_UnlockDc ( dc );
 
   return ret;
 }
@@ -1147,7 +1147,6 @@ IntRoundRect(
   if (!BitmapObj)
   {
     /* Nothing to do, as we don't have a bitmap */
-    BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
     SetLastWin32Error(ERROR_INTERNAL_ERROR);
     return FALSE;
   }
@@ -1158,7 +1157,7 @@ IntRoundRect(
     if (FillBrushObj->flAttrs & GDIBRUSH_IS_NULL)
     {
       /* make null brush check simpler... */
-      BRUSHOBJ_UnlockBrush(dc->w.hBrush);
+      BRUSHOBJ_UnlockBrush(FillBrushObj);
       FillBrushObj = NULL;
     }
     else
@@ -1173,7 +1172,7 @@ IntRoundRect(
     if (PenBrushObj->flAttrs & GDIBRUSH_IS_NULL)
     {
       /* make null pen check simpler... */
-      PENOBJ_UnlockPen(dc->w.hPen);
+      PENOBJ_UnlockPen(PenBrushObj);
       PenBrushObj = NULL;
     }
     else
@@ -1359,11 +1358,11 @@ IntRoundRect(
     PUTLINE ( left,  y2,     left,  y1,     PenBrushInst );
   }
 
-  BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+  BITMAPOBJ_UnlockBitmap(BitmapObj);
   if(PenBrushObj != NULL)
-    PENOBJ_UnlockPen(dc->w.hPen);
+    PENOBJ_UnlockPen(PenBrushObj);
   if(FillBrushObj != NULL)
-    BRUSHOBJ_UnlockBrush(dc->w.hBrush);
+    BRUSHOBJ_UnlockBrush(FillBrushObj);
 
   return ret;
 }
@@ -1390,14 +1389,14 @@ NtGdiRoundRect(
   }
   else if (dc->IsIC)
   {
-    DC_UnlockDc(hDC);
+    DC_UnlockDc(dc);
     /* Yes, Windows really returns TRUE in this case */
     ret = TRUE;
   }
   else
   {
     ret = IntRoundRect ( dc, LeftRect, TopRect, RightRect, BottomRect, Width, Height );
-    DC_UnlockDc ( hDC );
+    DC_UnlockDc ( dc );
   }
 
   return ret;
@@ -1481,7 +1480,7 @@ IntGdiGradientFill(
   /* FIXME - PalDestGDI can be NULL!!! Don't assert but handle this case gracefully! */
   ASSERT(PalDestGDI);
   Mode = PalDestGDI->Mode;
-  PALETTE_UnlockPalette(dc->w.hPalette);
+  PALETTE_UnlockPalette(PalDestGDI);
 
   XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
   ASSERT(XlateObj);
@@ -1497,7 +1496,7 @@ IntGdiGradientFill(
                            &DitherOrg,
                            ulMode);
 
-  BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+  BITMAPOBJ_UnlockBitmap(BitmapObj);
   EngDeleteXlate(XlateObj);
 
   return Ret;
@@ -1528,13 +1527,13 @@ NtGdiGradientFill(
   }
   if (dc->IsIC)
   {
-    DC_UnlockDc(hdc);
+    DC_UnlockDc(dc);
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
   if(!pVertex || !uVertex || !pMesh || !uMesh)
   {
-    DC_UnlockDc(hdc);
+    DC_UnlockDc(dc);
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
@@ -1549,21 +1548,21 @@ NtGdiGradientFill(
       SizeMesh = uMesh * sizeof(TRIVERTEX);
       break;
     default:
-      DC_UnlockDc(hdc);
+      DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return FALSE;
   }
 
   if(!(SafeVertex = ExAllocatePoolWithTag(PagedPool, (uVertex * sizeof(TRIVERTEX)) + SizeMesh, TAG_SHAPE)))
   {
-    DC_UnlockDc(hdc);
+    DC_UnlockDc(dc);
     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
     return FALSE;
   }
   Status = MmCopyFromCaller(SafeVertex, pVertex, uVertex * sizeof(TRIVERTEX));
   if(!NT_SUCCESS(Status))
   {
-    DC_UnlockDc(hdc);
+    DC_UnlockDc(dc);
     ExFreePool(SafeVertex);
     SetLastNtError(Status);
     return FALSE;
@@ -1572,7 +1571,7 @@ NtGdiGradientFill(
   Status = MmCopyFromCaller(SafeMesh, pMesh, SizeMesh);
   if(!NT_SUCCESS(Status))
   {
-    DC_UnlockDc(hdc);
+    DC_UnlockDc(dc);
     ExFreePool(SafeVertex);
     SetLastNtError(Status);
     return FALSE;
@@ -1580,7 +1579,7 @@ NtGdiGradientFill(
 
   Ret = IntGdiGradientFill(dc, SafeVertex, uVertex, SafeMesh, uMesh, ulMode);
 
-  DC_UnlockDc(hdc);
+  DC_UnlockDc(dc);
   ExFreePool(SafeVertex);
   return Ret;
 }
