@@ -90,7 +90,7 @@ DIB_16BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 
 VOID
 DIB_16BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
-{ /* 2610-2700 */
+{
 #ifdef _M_IX86
   asm volatile(
     "   testl %2, %2"       "\n\t"
