@@ -137,13 +137,8 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Поиск...\tF1" ,			ID_HELP
 		MENUITEM "&Использование справки\tF1" ,			ID_HELP_USING
 		MENUITEM SEPARATOR
-		POPUP "&Сведения..."  {
-		  MENUITEM "&О Wine..." ,			ID_ABOUT_WINE	  
-/*
- *		  MENUITEM "&Лицензия..."		ID_LICENSE
- *		  MENUITEM "&БЕЗ ГАРАНТИЙ"		ID_NO_WARRANTY
- */
-		}
+		MENUITEM "&О Winefile..." ,			ID_ABOUT
+		MENUITEM "О &Wine..." ,			ID_ABOUT_WINE
 	}
 }
 

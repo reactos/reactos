@@ -58,7 +58,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM SEPARATOR
 		MENUITEM "&Formatear disco..." ,		ID_FORMAT_DISK
 #ifdef _WIN95
-		MENUITEM "&Hacer disco de sistema...", -1	/*@@ */
+		MENUITEM "&Hacer disco de sistema...", -1	/*TODO*/
 #endif
 		MENUITEM SEPARATOR
 		MENUITEM "C&onectar unidad de red" ,		ID_CONNECT_NETWORK_DRIVE
@@ -138,13 +138,8 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Buscar en la ayuda...\tF1" ,			ID_HELP
 		MENUITEM "&Usando la ayuda\tF1" ,			ID_HELP_USING
 		MENUITEM SEPARATOR
-		POPUP "&Información..."  {
-		  MENUITEM "Acerca de &Wine..." ,			ID_ABOUT_WINE
-/*
- *		  MENUITEM "&Licencia..."		ID_LICENSE
- *		  MENUITEM "&SIN GARANTÍA"		ID_NO_WARRANTY
- */
-		}
+		MENUITEM "&Acerca de Winefile..." ,		ID_ABOUT
+		MENUITEM "Acerca de &Wine..." ,			ID_ABOUT_WINE
 	}
 }
 

@@ -141,13 +141,8 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "&Cerca nella Guida...\tF1" ,			ID_HELP
 		MENUITEM "&Uso dell Guida\tF1" ,			ID_HELP_USING
 		MENUITEM SEPARATOR
-		POPUP "Info..."  {
-		  MENUITEM "Informazioni su &Wine..." ,			ID_ABOUT_WINE
-/*
- *		  MENUITEM "&Licenza..."		ID_LICENSE
- *		  MENUITEM "&Garanzia"		ID_NO_WARRANTY
- */
-		}
+		MENUITEM "&Informazioni su Winefile..." ,			ID_ABOUT
+		MENUITEM "Informazioni su &Wine..." ,			ID_ABOUT_WINE
 	}
 }
 

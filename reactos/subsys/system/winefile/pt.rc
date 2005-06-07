@@ -113,7 +113,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 #endif
 		MENUITEM SEPARATOR
 		MENUITEM "&Minimizar durante o uso" ,		504
-		MENUITEM "&Salvar configurações ao sair" ,			511 /* FIXME */
+		MENUITEM "&Salvar configurações ao sair" ,			511
 	}
 
 
@@ -140,13 +140,8 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Pesquisar..." ,			ID_HELP
 		MENUITEM "&Usando a ajuda" ,			ID_HELP_USING
 		MENUITEM SEPARATOR
-		POPUP "&Informações..."  {
-		  MENUITEM "Sobre o &Wine..." ,			ID_ABOUT_WINE
-/*
- *		  MENUITEM "&License..."		ID_LICENSE
- *		  MENUITEM "&NO WARRANTY"		ID_NO_WARRANTY
- */
-		}
+		MENUITEM "&Sobre o Winefile..." ,			ID_ABOUT
+		MENUITEM "Sobre o &Wine..." ,			ID_ABOUT_WINE
 	}
 }
 
@@ -268,13 +263,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Pesquisar..." ,			ID_HELP
 		MENUITEM "&Usando a ajuda" ,			ID_HELP_USING
 		MENUITEM SEPARATOR
-		POPUP "&Informações..."  {
-		  MENUITEM "Acerca do &Wine..." ,			ID_ABOUT_WINE
-/*
- *		  MENUITEM "&Licença..."		ID_LICENSE
- *		  MENUITEM "&SEM GARANTIA"		ID_NO_WARRANTY
- */
-		}
+		MENUITEM "Acerca do &Wine..." ,			ID_ABOUT_WINE
 	}
 }
 
@@ -340,3 +329,4 @@ STRINGTABLE
  IDS_COL_ATTR "Atributos"
  IDS_COL_SEC  "Segurança"
 }
+

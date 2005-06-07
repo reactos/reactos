@@ -140,12 +140,8 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Hledání v &nápovìdì...\tF1" ,			ID_HELP
 		MENUITEM "&Jak používat nápovìdu\tF1" ,			ID_HELP_USING
 		MENUITEM SEPARATOR
-		MENUITEM "Informace o &Winefile..." ,		ID_ABOUT
-/*		POPUP "Info..."  {
-		  MENUITEM "Informace o &Wine..." ,			ID_ABOUT_WINE
-//		  MENUITEM "&Licence..."		ID_LICENSE
-//		  MENUITEM "&BEZ ZÁRUKY"		ID_NO_WARRANTY
-		} */
+		MENUITEM "&Informace o Winefile..." ,		ID_ABOUT
+		MENUITEM "Informace o &Wine..." ,			ID_ABOUT_WINE
 	}
 }
 

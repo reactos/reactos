@@ -141,13 +141,8 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Súgó &keresés...\tF1" ,			ID_HELP
 		MENUITEM "&Használat\tF1" ,			ID_HELP_USING
 		MENUITEM SEPARATOR
-		POPUP "Információ..."  {
-		  MENUITEM "&Wine-ról..." ,			ID_ABOUT_WINE
-/*
- *		  MENUITEM "&License..."		ID_LICENSE
- *		  MENUITEM "&NO WARRANTY"		ID_NO_WARRANTY
- */
-		}
+		MENUITEM "&Winefile-ról..." ,			ID_ABOUT
+		MENUITEM "W&ine-ról..." ,			ID_ABOUT_WINE
 	}
 }
 

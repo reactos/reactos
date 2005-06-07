@@ -111,7 +111,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 #endif
 		MENUITEM SEPARATOR
 		MENUITEM "&Minimize on run" ,		504
-		MENUITEM "&Einstellungen beim Beenden speichern" ,			511
+		MENUITEM "&Save settings on exit" ,			511
 	}
 
 
@@ -138,13 +138,8 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "搜索帮助（&S）...\tF1" ,			ID_HELP
 		MENUITEM "使用帮助（&U）\tF1" ,			ID_HELP_USING
 		MENUITEM SEPARATOR
-		POPUP "资料信息..."  {
-		  MENUITEM "关于 &Wine..." ,			ID_ABOUT_WINE
-/*
- *		  MENUITEM "用户许可协议（&L）..."		ID_LICENSE
- *		  MENUITEM "责任无关（&N）"		ID_NO_WARRANTY
- */
-		}
+		MENUITEM "&关于 Winefile..." ,			ID_ABOUT
+		MENUITEM "关于 &Wine..." ,			ID_ABOUT_WINE
 	}
 }
 
