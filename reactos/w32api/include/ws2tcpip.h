@@ -306,15 +306,8 @@ WCHAR* WSAAPI gai_strerrorW(int);
 #define gai_strerror   gai_strerrorA
 #endif  /* UNICODE */
 
-int WSAAPI getnameinfoA(const struct sockaddr*,socklen_t,char*,DWORD,
-		        char*,DWORD,int);
-int WSAAPI getnameinfoW(const struct sockaddr*,socklen_t,WCHAR*,DWORD,
-		        WCHAR*,DWORD,int);
-#ifdef UNICODE
-#define getnameinfo   getnameinfoW
-#else
-#define getnameinfo   getnameinfoA
-#endif  /* UNICODE */
+int WSAAPI getnameinfo(const struct sockaddr*,socklen_t,char*,DWORD,
+		       char*,DWORD,int);
 
 
 /* Some older IPv4/IPv6 compatability stuff */
