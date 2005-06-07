@@ -1716,7 +1716,7 @@ ShowPartitionSizeInputBox(SHORT Left,
 				strlen (Buffer),
 				coPos);
 
-  sprintf(Buffer, "%d", MaxSize);
+  sprintf(Buffer, "%lu", MaxSize);
   Index = strlen(Buffer);
   DrawInputField (PARTITION_SIZE_INPUT_FIELD_LENGTH,
 		  iLeft,
