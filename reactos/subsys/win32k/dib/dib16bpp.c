@@ -96,7 +96,7 @@ DIB_16BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
     "   testl %2, %2"       "\n\t"
     "   jle   2f"           "\n\t"
     "   movl  %2, %%ecx"    "\n\t"
-    "   shr   $2, %2"       "\n\t"
+    "   shrl  $2, %2"       "\n\t"
     "   andl  $3, %%ecx"    "\n\t"
     "   jz    1f"           "\n\t"
     "0:"                    "\n\t"
