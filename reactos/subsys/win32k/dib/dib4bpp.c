@@ -356,6 +356,20 @@ DIB_4BPP_BitBlt(PBLTINFO BltInfo)
    return TRUE;
 }
 
+/* BitBlt Optimze */
+BOOLEAN 
+DIB_4BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
+{
+  ULONG DestY;	
+
+	 for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
+	{			 				
+		DIB_4BPP_HLine(DestSurface, DestRect->left, DestRect->right, DestY, color);			  				
+	}
+
+return TRUE;
+}
+
 //NOTE: If you change something here, please do the same in other dibXXbpp.c files!
 BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                             RECTL* DestRect, RECTL *SourceRect,

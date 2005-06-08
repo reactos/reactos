@@ -174,15 +174,8 @@ BltPatCopy(SURFOBJ* Dest,
 {
   // These functions are assigned if we're working with a DIB
   // The assigned functions depend on the bitsPerPixel of the DIB
-  LONG y;
-  ULONG LineWidth;
 
-  LineWidth  = DestRect->right - DestRect->left;
-  for (y = DestRect->top; y < DestRect->bottom; y++)
-  {
-    DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_HLine(
-      Dest, DestRect->left, DestRect->right, y,  Brush->iSolidColor);
-  }
+  DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_ColorFill(Dest, DestRect, Brush->iSolidColor);
 
   return TRUE;
 }

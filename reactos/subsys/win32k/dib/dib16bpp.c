@@ -42,6 +42,7 @@ DIB_16BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
   PDWORD addr = (PDWORD)((PWORD)(SurfObj->pvScan0 + y * SurfObj->lDelta) + x1);
 
+ 
 #ifdef _M_IX86
   /* This is about 10% faster than the generic C code below */
   LONG Count = x2 - x1;
@@ -65,7 +66,7 @@ DIB_16BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 "  jz   .L2\n"
 "  stosw\n"
 ".L2:\n"
-  : /* no output */
+  : // no output */
   : "r"(c), "r"(Count), "D"(addr)
   : "%eax", "%ecx");
 #else /* _M_IX86 */
@@ -87,6 +88,7 @@ DIB_16BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
   }
 #endif /* _M_IX86 */
 }
+
 
 VOID
 DIB_16BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
@@ -423,7 +425,17 @@ DIB_16BPP_BitBlt(PBLTINFO BltInfo)
    return TRUE;
 }
 
-
+/* Optimze for bitBlt */
+BOOLEAN
+DIB_16BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
+{
+  ULONG DestY;	
+	for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
+  {
+    DIB_16BPP_HLine (DestSurface, DestRect->left, DestRect->right, DestY, color);
+  }
+return TRUE;
+}
 /*
 =======================================
  Stretching functions goes below
