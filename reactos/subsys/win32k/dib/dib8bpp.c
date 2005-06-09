@@ -345,7 +345,7 @@ DIB_8BPP_BitBlt(PBLTINFO BltInfo)
    return TRUE;
 }
 
-/* Optimze BitBlt */
+/* BitBlt Optimize */
 BOOLEAN 
 DIB_8BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 {			 

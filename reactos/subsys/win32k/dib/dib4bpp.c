@@ -356,7 +356,7 @@ DIB_4BPP_BitBlt(PBLTINFO BltInfo)
    return TRUE;
 }
 
-/* BitBlt Optimze */
+/* BitBlt Optimize */
 BOOLEAN 
 DIB_4BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 {

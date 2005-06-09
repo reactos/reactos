@@ -464,7 +464,8 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
    return TRUE;
 }
 
-/* optimze functions for bitblt */
+
+/* Optimize functions for bitblt */
 
 BOOLEAN
 FASTCALL
