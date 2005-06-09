@@ -352,7 +352,7 @@ DIB_8BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
   ULONG DestY;			
 	for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
   {
-    DIB_32BPP_HLine (DestSurface, DestRect->left, DestRect->right, DestY, color);
+    DIB_8BPP_HLine (DestSurface, DestRect->left, DestRect->right, DestY, color);
   }
 	
 	return TRUE;
