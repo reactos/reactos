@@ -25,6 +25,7 @@ typedef struct _OHCI_DEVICE_EXTENSTION
    PDEVICE_OBJECT FunctionalDeviceObject;
    PDEVICE_OBJECT NextDeviceObject;
    //UNICODE_STRING RegistryPath;
+   UNICODE_STRING HcdInterfaceName;
    PKINTERRUPT InterruptObject;
    KSPIN_LOCK InterruptSpinLock;
    PCM_RESOURCE_LIST AllocatedResources;
