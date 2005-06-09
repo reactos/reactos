@@ -66,7 +66,7 @@ DIB_16BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 "  jz   .L2\n"
 "  stosw\n"
 ".L2:\n"
-  : // no output */
+  : /* no output */
   : "r"(c), "r"(Count), "D"(addr)
   : "%eax", "%ecx");
 #else /* _M_IX86 */
