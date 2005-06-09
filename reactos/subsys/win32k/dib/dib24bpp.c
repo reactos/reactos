@@ -38,16 +38,100 @@ VOID
 DIB_24BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
   PBYTE addr = SurfObj->pvScan0 + y * SurfObj->lDelta + (x1 << 1) + x1;
-  LONG cx = x1;
+  ULONG Count = x2 - x1;
+#ifndef _M_IX86
+  ULONG MultiCount;
+  ULONG Fill[3];
+#endif
 
-  c &= 0xFFFFFF;
-  while(cx < x2) {
-    *(PUSHORT)(addr) = c & 0xFFFF;
-    addr += 2;
-    *(addr) = c >> 16;
-    addr += 1;
-    ++cx;
-  }
+  if (Count < 8)
+    {
+      /* For small fills, don't bother doing anything fancy */
+      while (Count--)
+        {
+          *(PUSHORT)(addr) = c;
+          addr += 2;
+          *(addr) = c >> 16;
+          addr += 1;
+        }
+    }
+  else
+    {
+      /* Align to 4-byte address */
+      while (0 != ((ULONG_PTR) addr & 0x3))
+        {
+          *(PUSHORT)(addr) = c;
+          addr += 2;
+          *(addr) = c >> 16;
+          addr += 1;
+          Count--;
+        }
+      /* If the color we need to fill with is 0ABC, then the final mem pattern
+       * (note little-endianness) would be:
+       *
+       * |C.B.A|C.B.A|C.B.A|C.B.A|   <- pixel borders
+       * |C.B.A.C|B.A.C.B|A.C.B.A|   <- ULONG borders
+       *
+       * So, taking endianness into account again, we need to fill with these
+       * ULONGs: CABC BCAB ABCA */
+#ifdef _M_IX86
+       /* This is about 30% faster than the generic C code below */
+       __asm__ __volatile__ (
+"      movl %1, %%ecx\n"
+"      andl $0xffffff, %%ecx\n"         /* 0ABC */
+"      movl %%ecx, %%ebx\n"             /* Construct BCAB in ebx */
+"      shrl $8, %%ebx\n"
+"      movl %%ecx, %%eax\n"
+"      shll $16, %%eax\n"
+"      orl  %%eax, %%ebx\n"
+"      movl %%ecx, %%edx\n"             /* Construct ABCA in edx */
+"      shll $8, %%edx\n"
+"      movl %%ecx, %%eax\n"
+"      shrl $16, %%eax\n"
+"      orl  %%eax, %%edx\n"
+"      movl %%ecx, %%eax\n"             /* Construct CABC in eax */
+"      shll $24, %%eax\n"
+"      orl  %%ecx, %%eax\n"
+"      movl %2, %%ecx\n"                /* Load count */
+"      shr  $2, %%ecx\n"
+"      movl %3, %%edi\n"                /* Load dest */
+".L1:\n"
+"      movl %%eax, (%%edi)\n"           /* Store 4 pixels, 12 bytes */
+"      movl %%ebx, 4(%%edi)\n"
+"      movl %%edx, 8(%%edi)\n"
+"      addl $12, %%edi\n"
+"      dec  %%ecx\n"
+"      jnz  .L1\n"
+"      movl %%edi, %0\n"
+  : "=m"(addr)
+  : "m"(c), "m"(Count), "m"(addr)
+  : "%eax", "%ebx", "%ecx", "%edx", "%edi");
+#else
+      c = c & 0xffffff;                /* 0ABC */
+      Fill[0] = c | (c << 24);         /* CABC */
+      Fill[1] = (c >> 8) | (c << 16);  /* BCAB */
+      Fill[2] = (c << 8) | (c >> 16);  /* ABCA */
+      MultiCount = Count / 4;
+      do
+        {
+          *(PULONG)addr = Fill[0];
+          addr += 4;
+          *(PULONG)addr = Fill[1];
+          addr += 4;
+          *(PULONG)addr = Fill[2];
+          addr += 4;
+        }
+      while (0 != --MultiCount);
+#endif
+      Count = Count & 0x03;
+      while (0 != Count--)
+        {
+          *(PUSHORT)(addr) = c;
+          addr += 2;
+          *(addr) = c >> 16;
+          addr += 1;
+        }
+    }
 }
 
 VOID
@@ -308,12 +392,12 @@ DIB_24BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 {
   ULONG DestY;	
 
-	 for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
-	{			 				
-		DIB_24BPP_HLine(DestSurface, DestRect->left, DestRect->right, DestY, color);			  				
-	}
+  for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
+    {			 				
+      DIB_24BPP_HLine(DestSurface, DestRect->left, DestRect->right, DestY, color);			  				
+    }
 
-return TRUE;
+  return TRUE;
 }
 
 //NOTE: If you change something here, please do the same in other dibXXbpp.c files!
