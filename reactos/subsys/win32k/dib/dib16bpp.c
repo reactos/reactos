@@ -53,7 +53,7 @@ DIB_16BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 "  shl  $16, %%eax\n"
 "  andl $0xffff, %0\n"  /* If the pixel value is "abcd", put "abcdabcd" in %eax */
 "  or   %0, %%eax\n"
-"  test $0x01, %%edi\n" /* Align to fullword boundary */
+"  test $0x03, %%edi\n" /* Align to fullword boundary */
 "  jz   .L1\n"
 "  stosw\n"
 "  dec  %1\n"

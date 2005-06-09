@@ -381,6 +381,11 @@ EngLineTo(SURFOBJ *DestObj,
   deltax = x2 - x1;
   deltay = y2 - y1;
 
+  if (0 == deltax && 0 == deltay)
+    {
+      return TRUE;
+    }
+
   if (deltax < 0)
     {
       xchange = -1;
