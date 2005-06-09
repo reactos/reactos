@@ -42,6 +42,8 @@ typedef struct _OHCI_DEVICE_EXTENSTION
    ULONG DeviceOpened;
    //KMUTEX DeviceLock;
    //CHAR MiniPortDeviceExtension[1];
+   BOOLEAN IsFDO;
+   struct pci_dev * pdev;
 } OHCI_DEVICE_EXTENSION, *POHCI_DEVICE_EXTENSION;
 
 
