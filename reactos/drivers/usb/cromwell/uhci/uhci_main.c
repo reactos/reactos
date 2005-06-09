@@ -25,7 +25,7 @@ extern struct pci_device_id uhci_pci_ids[];
 
 
 // This should be removed, but for testing purposes it's here
-struct pci_dev *dev;
+//struct pci_dev *dev;
 //struct pci_device_id *dev_id;
 
 #define USB_UHCI_TAG TAG('u','s','b','u')
@@ -124,9 +124,19 @@ AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT pdo)
 	return STATUS_SUCCESS;
 }
 
+
 VOID STDCALL 
 DriverUnload(PDRIVER_OBJECT DriverObject)
 {
+	POHCI_DEVICE_EXTENSION DeviceExtension;
+	PDEVICE_OBJECT DeviceObject;
+	struct pci_dev *dev;	
+
+	DeviceObject = DriverObject->DeviceObject;
+	DeviceExtension = (POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+	dev = DeviceExtension->pdev;
+
 	DPRINT1("DriverUnload()\n");
 
 	// Exit usb device
@@ -147,10 +157,14 @@ InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 {
 	NTSTATUS Status;
 	POHCI_DEVICE_EXTENSION DeviceExtension = (POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+	struct pci_dev *dev;
 
 	// Fill generic linux structs
 	dev = ExAllocatePoolWithTag(PagedPool, sizeof(struct pci_dev), USB_UHCI_TAG);
-	
+
+	/* dev->data = (struct usb_hcd hcd) used in uhci-hub.c called from uhci-hcd.c */
+	DeviceExtension->pdev = dev;
+
 	init_wrapper(dev);
 	dev->irq = DeviceExtension->InterruptVector;
 	dev->dev_ext = (PVOID)DeviceExtension;
