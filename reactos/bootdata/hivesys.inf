@@ -941,6 +941,22 @@ HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSe
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","DefaultSettings.XResolution",0x00010001,640
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","DefaultSettings.YResolution",0x00010001,480
 
+; QEMU SVGA Driver
+
+HKLM,"SYSTEM\CurrentControlSet\Services\CL54XX","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\CL54XX","Group",0x00000000,"Video Save SVGA"
+HKLM,"SYSTEM\CurrentControlSet\Services\CL54XX","ImagePath",0x00020000,"system32\drivers\cl54xx.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\CL54XX","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\CL54XX","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\CL54XX","Tag",0x00010001,0x0000000C
+HKLM,"SYSTEM\CurrentControlSet\Services\CL54XX\Device0","InstalledDisplayDrivers",0x00010000,"CL54XX"
+
+HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\CL54XX\Device0","DefaultSettings.VgaCompatible",0x00010001,1
+HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\CL54XX\Device0","DefaultSettings.VRefresh",0x00010001,60
+HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\CL54XX\Device0","DefaultSettings.BitsPerPel",0x00010001,16
+HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\CL54XX\Device0","DefaultSettings.Interlaced",0x00010001,0
+HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\CL54XX\Device0","DefaultSettings.XResolution",0x00010001,800
+HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\CL54XX\Device0","DefaultSettings.YResolution",0x00010001,600
 
 ; VGA miniport driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","ErrorControl",0x00010001,0x00000000
