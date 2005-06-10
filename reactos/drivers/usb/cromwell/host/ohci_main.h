@@ -45,6 +45,7 @@ typedef struct _OHCI_DEVICE_EXTENSTION
    //CHAR MiniPortDeviceExtension[1];
    BOOLEAN IsFDO;
    struct pci_dev * pdev;
+   PDEVICE_OBJECT RootHubPdo;
 } OHCI_DEVICE_EXTENSION, *POHCI_DEVICE_EXTENSION;
 
 
