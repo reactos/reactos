@@ -47,7 +47,7 @@ DIB_16BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
   /* This is about 10% faster than the generic C code below */
   LONG Count = x2 - x1;
 
-  __asm__(
+  __asm__ __volatile__ (
 "  cld\n"
 "  mov  %0, %%eax\n"
 "  shl  $16, %%eax\n"
@@ -344,6 +344,24 @@ DIB_16BPP_BitBlt(PBLTINFO BltInfo)
    PULONG DestBits;
    ULONG RoundedRight;
 
+   /*
+    switch (BltInfo->Rop4)
+  {  
+    case ROP4_PATCOPY:	
+        if (!BltInfo->PatternSurface)
+        {
+          Pattern = BltInfo->Brush->iSolidColor | (BltInfo->Brush->iSolidColor << 16);
+          DIB_16BPP_ColorFill(BltInfo->DestSurface, BltInfo->DestRect, Pattern);       
+          return TRUE;          
+        }
+    
+    break;	
+    		
+    default:
+    break;
+   }	
+*/
+
    UsesSource = ROP4_USES_SOURCE(BltInfo->Rop4);
    UsesPattern = ROP4_USES_PATTERN(BltInfo->Rop4);
 
@@ -430,10 +448,47 @@ BOOLEAN
 DIB_16BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 {
   ULONG DestY;	
+
+#ifdef _M_IX86
+  /* This is about 10% faster than the generic C code below */ 
+  ULONG delta = DestSurface->lDelta;
+  ULONG width = (DestRect->right - DestRect->left) ;
+  PULONG pos =  (PULONG) (DestSurface->pvScan0 + DestRect->top * delta + (DestRect->left<<1));
+  
+  for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
+  {
+  __asm__ __volatile__ (
+    "  cld\n"
+    "  mov  %0, %%eax\n"
+    "  mov  %%eax, %%ecx\n"
+    "  shl  $16, %%eax\n"
+    "  andl $0xffff, %%ecx\n"  /* If the pixel value is "abcd", put "abcdabcd" in %eax */
+    "  or   %%ecx, %%eax\n"
+    "  test $0x03, %%edi\n" /* Align to fullword boundary */
+    "  jz   .FL1\n"
+    "  stosw\n"
+    "  dec  %1\n"
+    "  jz   .FL2\n"
+    ".FL1:\n"
+    "  mov  %1,%%ecx\n"     /* Setup count of fullwords to fill */
+    "  shr  $1,%%ecx\n"
+    "  rep stosl\n"         /* The actual fill */
+    "  test $0x01, %1\n"    /* One left to do at the right side? */
+    "  jz   .FL2\n"
+    "  stosw\n"
+    ".FL2:\n"
+    : /* no output */
+    : "r"(color), "r"(width), "D"(pos)
+    : "%eax", "%ecx");
+     pos =(PULONG)((ULONG_PTR)pos + delta);	 
+  }
+#else /* _M_IX86 */
+
 	for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
   {
     DIB_16BPP_HLine (DestSurface, DestRect->left, DestRect->right, DestY, color);
   }
+#endif
 return TRUE;
 }
 /*
