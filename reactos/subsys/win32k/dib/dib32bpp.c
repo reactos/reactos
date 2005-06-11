@@ -48,9 +48,28 @@ DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
   LONG cx  = (x2 - x1) ;  
    PBYTE byteaddr = SurfObj->pvScan0 + y * SurfObj->lDelta;  
    PDWORD addr = (PDWORD)byteaddr + x1;
-   memset4(addr, c, cx);  
-  
-  
+
+    __asm__(
+"  cld\n"
+"  mov  %0, %%eax\n"
+"  test $0x03, %%edi\n" /* Align to fullword boundary */
+"  jnz   .L1\n"
+"  mov  %1,%%ecx\n"     /* Setup count of fullwords to fill */
+"  rep stosl\n"         /* The actual fill */
+"  jz   .L2\n"
+".L1:\n"
+"  mov %%eax, %%ecx\n"
+"  stosw\n"
+"  sub  $0x04,%1\n"
+"  mov  %1,%%ecx\n"     /* Setup count of fullwords to fill */
+"  rep stosl\n"         /* The actual fill */
+"  shr $0x08,%%eax\n"
+"  stosw\n"
+".L2:\n"
+  : /* no output */
+  : "r"(c), "r"(cx), "D"(addr)
+  : "%eax", "%ecx");
+
   
 }
 #else
@@ -693,9 +712,28 @@ DIB_32BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
   pos =  (PULONG) (DestSurface->pvScan0 + DestRect->top * delta + (DestRect->left<<2));
   
   for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
-  {			 				
-    memset4( ((PDWORD)(pos)),  color, width);  					 
-    pos =(PULONG)((ULONG_PTR)pos + delta);	 
+  {			
+    __asm__(
+            "  cld\n"
+            "  mov  %0, %%eax\n"
+            "  test $0x03, %%edi\n" /* Align to fullword boundary */
+            "  jnz   .FL1\n"
+            "  mov  %1,%%ecx\n"     /* Setup count of fullwords to fill */
+            "  rep stosl\n"         /* The actual fill */
+            "  jz   .FL2\n"
+            ".FL1:\n"
+            "  mov %%eax, %%ecx\n"
+            "  stosw\n"
+            "  sub  $0x04,%1\n"
+            "  mov  %1,%%ecx\n"     /* Setup count of fullwords to fill */
+            "  rep stosl\n"         /* The actual fill */
+            "  shr $0x08,%%eax\n"
+            "  stosw\n"
+            ".FL2:\n"            
+            : /* no output */
+            : "r"(color), "r"(width), "D"(pos)
+            : "%eax", "%ecx");    
+            pos =(PULONG)((ULONG_PTR)pos + delta);	 
   }
 
 #else				
