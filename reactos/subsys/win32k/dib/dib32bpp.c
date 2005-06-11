@@ -56,14 +56,14 @@ DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 "  jnz   .L1\n"
 "  mov  %1,%%ecx\n"     /* Setup count of fullwords to fill */
 "  rep stosl\n"         /* The actual fill */
-"  jz   .L2\n"
+"  jmp   .L2\n"
 ".L1:\n"
-"  mov %%eax, %%ecx\n"
 "  stosw\n"
-"  sub  $0x04,%1\n"
 "  mov  %1,%%ecx\n"     /* Setup count of fullwords to fill */
+"  dec  %%ecx\n"
+"  rol $16,%%eax\n"
 "  rep stosl\n"         /* The actual fill */
-"  shr $0x08,%%eax\n"
+"  shr $0x10,%%eax\n"
 "  stosw\n"
 ".L2:\n"
   : /* no output */
@@ -720,14 +720,14 @@ DIB_32BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
             "  jnz   .FL1\n"
             "  mov  %1,%%ecx\n"     /* Setup count of fullwords to fill */
             "  rep stosl\n"         /* The actual fill */
-            "  jz   .FL2\n"
-            ".FL1:\n"
-            "  mov %%eax, %%ecx\n"
+            "  jmp   .FL2\n"
+            ".FL1:\n"            
             "  stosw\n"
-            "  sub  $0x04,%1\n"
             "  mov  %1,%%ecx\n"     /* Setup count of fullwords to fill */
+            "  dec  %%ecx\n"            
+            "  rol $16,%%eax\n"
             "  rep stosl\n"         /* The actual fill */
-            "  shr $0x08,%%eax\n"
+            "  shr $0x10,%%eax\n"
             "  stosw\n"
             ".FL2:\n"            
             : /* no output */
