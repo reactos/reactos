@@ -77,7 +77,7 @@ NTSTATUS STDCALL AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT pdo)
 	}
 
 	// zerofill device extension
-	DeviceExtension = (POHCI_DEVICE_EXTENSION)pdo->DeviceExtension;
+	DeviceExtension = (POHCI_DEVICE_EXTENSION)fdo->DeviceExtension;
 	RtlZeroMemory(DeviceExtension, sizeof(OHCI_DEVICE_EXTENSION));
 	DeviceExtension->NextDeviceObject = IoAttachDeviceToDeviceStack(fdo, pdo);
 
