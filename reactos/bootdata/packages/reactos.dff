@@ -75,6 +75,7 @@ lib\dbghelp\dbghelp.dll                 1
 lib\devenum\devenum.dll                 1
 lib\dinput\dinput.dll                   1
 lib\dinput8\dinput8.dll                 1
+lib\dnsapi\dnsapi.dll                   1
 lib\dsound\dsound.dll                   1
 lib\dxdiagn\dxdiagn.dll                 1
 lib\fmifs\fmifs.dll                     1
@@ -115,6 +116,7 @@ lib\ntdll\ntdll.dll                     1
 lib\ole32\ole32.dll                     1
 lib\oleaut32\oleaut32.dll               1
 lib\olepro32\olepro32.dll               1
+lib\opengl32\opengl32.dll               1
 lib\psapi\psapi.dll                     1
 lib\riched20\riched20.dll               1
 lib\richedit\riched32.dll               1
@@ -140,11 +142,6 @@ lib\ws2_32\ws2_32.dll                   1
 lib\ws2help\ws2help.dll                 1
 lib\wshirda\wshirda.dll                 1
 lib\wsock32\wsock32.dll                 1
-lib\dnsapi\dnsapi.dll                   1
-lib\iphlpapi\iphlpapi.dll               1
-lib\rpcrt4\rpcrt4.dll                   1
-lib\ole32\ole32.dll                     1
-lib\opengl32\opengl32.dll               1
 subsys\csrss\csrss.exe                  1
 subsys\csrss\win32csr\win32csr.dll      1
 subsys\ntvdm\ntvdm.exe                  1
