@@ -49,7 +49,7 @@ DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
    PBYTE byteaddr = SurfObj->pvScan0 + y * SurfObj->lDelta;  
    PDWORD addr = (PDWORD)byteaddr + x1;
 
-    __asm__(
+    __asm__ __volatile__ (
 "  cld\n"
 "  mov  %0, %%eax\n"
 "  test $0x03, %%edi\n" /* Align to fullword boundary */
@@ -713,7 +713,7 @@ DIB_32BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
   
   for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
   {			
-    __asm__(
+    __asm__ __volatile__ (
             "  cld\n"
             "  mov  %0, %%eax\n"
             "  test $0x03, %%edi\n" /* Align to fullword boundary */
