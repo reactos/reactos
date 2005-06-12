@@ -339,7 +339,7 @@ select(
  *     Number of ready socket descriptors, or SOCKET_ERROR if an error ocurred
  */
 {
-  PCATALOG_ENTRY Provider;
+  PCATALOG_ENTRY Provider = NULL;
   INT Count;
   INT Errno;
 
