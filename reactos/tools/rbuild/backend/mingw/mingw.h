@@ -94,6 +94,8 @@ private:
 	void DetectPipeSupport ();
 	void DetectPCHSupport ();
 	void ProcessModules ();
+	void CheckAutomaticDependenciesForModuleOnly ();
+	void ProcessNormal ();
 	std::string GetNonModuleInstallDirectories ( const std::string& installDirectory );
 	std::string GetInstallDirectories ( const std::string& installDirectory );
 	void GetNonModuleInstallFiles ( std::vector<std::string>& out ) const;

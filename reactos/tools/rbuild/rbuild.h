@@ -76,6 +76,8 @@ public:
 	bool Verbose;
 	bool CleanAsYouGo;
 	bool AutomaticDependencies;
+	bool CheckDependenciesForModuleOnly;
+	std::string CheckDependenciesForModuleOnlyModule;
 	bool MakeHandlesInstallDirectories;
 	bool GenerateProxyMakefilesInSourceTree;
 };
@@ -571,7 +573,6 @@ public:
 
 	AutomaticDependency ( const Project& project );
 	~AutomaticDependency ();
-	void Process ();
 	std::string GetFilename ( const std::string& filename );
 	bool LocateIncludedFile ( const std::string& directory,
 	                          const std::string& includedFilename,
@@ -586,13 +587,19 @@ public:
 	                                       SourceFile* parentSourceFile );
 	SourceFile* RetrieveFromCache ( const std::string& filename );
 	void CheckAutomaticDependencies ( bool verbose );
+	void CheckAutomaticDependencies ( Module& module,
+	                                  bool verbose );
+	void CheckAutomaticDependencies ( Module& module,
+	                                  bool verbose,
+	                                  bool parseFiles );
 	void CheckAutomaticDependenciesForFile ( SourceFile* sourceFile );
 private:
 	void GetModuleFiles ( Module& module,
                               std::vector<File*>& files ) const;
-	void ProcessModule ( Module& module );
-	void ProcessFile ( Module& module,
-	                   const File& file );
+	void ParseFiles ();
+	void ParseFiles ( Module& module );
+	void ParseFile ( Module& module,
+	                 const File& file );
 	std::map<std::string, SourceFile*> sourcefile_map;
 };
 

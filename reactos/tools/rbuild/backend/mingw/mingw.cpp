@@ -293,14 +293,46 @@ MingwBackend::ProcessModules ()
 		h.GenerateInvocations ();
 		h.GenerateCleanTarget ();
 		h.GenerateInstallTarget ();
+		h.GenerateDependsTarget ();
 		delete v[i];
 	}
 
 	printf ( "done\n" );
 }
-	
+
 void
 MingwBackend::Process ()
+{
+	if ( configuration.CheckDependenciesForModuleOnly )
+		CheckAutomaticDependenciesForModuleOnly ();
+	else
+		ProcessNormal ();
+}
+
+void
+MingwBackend::CheckAutomaticDependenciesForModuleOnly ()
+{
+	if ( configuration.AutomaticDependencies )
+	{
+		Module* module = ProjectNode.LocateModule ( configuration.CheckDependenciesForModuleOnlyModule );
+		if ( module == NULL )
+		{
+			printf ( "Module '%s' does not exist\n",
+			        configuration.CheckDependenciesForModuleOnlyModule.c_str () );
+			return;
+		}
+		
+		printf ( "Checking automatic dependencies for module '%s'...",
+		         module->name.c_str () );
+		AutomaticDependency automaticDependency ( ProjectNode );
+		automaticDependency.CheckAutomaticDependencies ( *module,
+		                                                 configuration.Verbose );
+		printf ( "done\n" );
+	}
+}
+
+void
+MingwBackend::ProcessNormal ()
 {
 	DetectCompiler ();
 	DetectNetwideAssembler ();
@@ -671,7 +703,6 @@ MingwBackend::CheckAutomaticDependencies ()
 	{
 		printf ( "Checking automatic dependencies..." );
 		AutomaticDependency automaticDependency ( ProjectNode );
-		automaticDependency.Process ();
 		automaticDependency.CheckAutomaticDependencies ( configuration.Verbose );
 		printf ( "done\n" );
 	}

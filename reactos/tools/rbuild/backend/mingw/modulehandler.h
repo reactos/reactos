@@ -61,6 +61,7 @@ public:
 	void GenerateInvocations () const;
 	void GenerateCleanTarget () const;
 	void GenerateInstallTarget () const;
+	void GenerateDependsTarget () const;
 	static bool ReferenceObjects ( const Module& module );
 protected:
 	virtual void GetModuleSpecificSourceFiles ( std::vector<File*>& sourceFiles );

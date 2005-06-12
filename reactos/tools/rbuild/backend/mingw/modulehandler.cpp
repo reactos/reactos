@@ -467,6 +467,22 @@ MingwModuleHandler::GenerateInstallTarget () const
 	          normalizedTargetFilename.c_str() );
 }
 
+void
+MingwModuleHandler::GenerateDependsTarget () const
+{
+	fprintf ( fMakefile,
+	          ".PHONY: %s_depends\n",
+	          module.name.c_str() );
+	fprintf ( fMakefile,
+	          "%s_depends: $(RBUILD_TARGET)\n",
+	          module.name.c_str () );
+	fprintf ( fMakefile,
+	          "\t$(ECHO_RBUILD)\n" );
+	fprintf ( fMakefile,
+	          "\t$(Q)$(RBUILD_TARGET) -dm%s mingw\n",
+	          module.name.c_str () );
+}
+
 string
 MingwModuleHandler::GetObjectFilenames ()
 {
