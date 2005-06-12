@@ -17,7 +17,6 @@
 	<library>oleaut32</library>
 	<library>version</library>
 	<library>mpr</library>
-	<file>license.c</file>
 	<file>winefile.c</file>
 	<file>winefile.rc</file>
 </module>
