@@ -1,3 +1,52 @@
+# Well-known targets:
+#
+#    all (default target)
+#        This target builds all of ReactOS.
+#
+#    module
+#        These targets builds a single module. Replace module with the name of
+#        the module you want to build.
+#
+#    bootcd
+#        This target builds an ISO (ReactOS.iso) from which ReactOS can be booted
+#        and installed.
+#
+#    livecd
+#        This target builds an ISO (ReactOS-Live.iso) from which ReactOS can be
+#        booted, but not installed.
+#
+#    install
+#        This target installs all of ReactOS to a location specified by the
+#        ROS_INSTALL environment variable.
+#
+#    module_install
+#        These targets installs a single module to a location specified by the
+#        ROS_INSTALL environment variable. Replace module with the name of the
+#        module you want to install.
+#
+#    clean
+#        This target cleans (deletes) all files that are generated when building
+#        ReactOS.
+#
+#    module_clean
+#        These targets cleans (deletes) files that are generated when building a
+#        single module. Replace module with the name of the module you want to
+#        clean.
+#
+#    depends
+#        This target does a complete dependency check of the ReactOS codebase.
+#        This can require several minutes to complete. If you only need to check
+#        dependencies for a single or few modules then you can use the
+#        module_depends targets instead. This target can also repair a damaged or
+#        missing makefile.auto if needed.
+#
+#    module_depends
+#        These targets do a dependency check of individual modules. Replace module
+#        with the name of the module for which you want to check dependencies.
+#        This is faster than the depends target which does a complete dependency
+#        check of the ReactOS codebase.
+#
+#
 # Accepted environment variables:
 #
 #    ROS_PREFIX
