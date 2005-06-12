@@ -3153,13 +3153,7 @@ static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWi
 #endif
 					)
 					LineTo(dis->hDC, x, dis->rcItem.bottom);
-/*@@
-				if (entry->down && entry->expanded) {
-					x += IMAGE_WIDTH+TREE_LINE_DX;
-					MoveToEx(dis->hDC, x, dis->rcItem.top+IMAGE_HEIGHT, 0);
-					LineTo(dis->hDC, x, dis->rcItem.bottom);
-				}
-*/
+
 				SelectClipRgn(dis->hDC, hrgn_org);
 				if (hrgn_org) DeleteObject(hrgn_org);
 				/* SelectObject(dis->hDC, holdPen); */
