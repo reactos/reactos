@@ -3746,7 +3746,7 @@ static void create_drive_bar(void)
 
 	Globals.hdrivebar = CreateToolbarEx(Globals.hMainWnd, WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST,
 				IDW_DRIVEBAR, 2, Globals.hInstance, IDB_DRIVEBAR, &drivebarBtn,
-				1, 16, 13, 16, 13, sizeof(TBBUTTON));
+				0, 16, 13, 16, 13, sizeof(TBBUTTON));
 
 #ifndef _NO_EXTENSIONS
 #ifdef __WINE__
