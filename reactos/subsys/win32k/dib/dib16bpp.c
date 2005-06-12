@@ -344,24 +344,6 @@ DIB_16BPP_BitBlt(PBLTINFO BltInfo)
    PULONG DestBits;
    ULONG RoundedRight;
 
-   /*
-    switch (BltInfo->Rop4)
-  {  
-    case ROP4_PATCOPY:	
-        if (!BltInfo->PatternSurface)
-        {
-          Pattern = BltInfo->Brush->iSolidColor | (BltInfo->Brush->iSolidColor << 16);
-          DIB_16BPP_ColorFill(BltInfo->DestSurface, BltInfo->DestRect, Pattern);       
-          return TRUE;          
-        }
-    
-    break;	
-    		
-    default:
-    break;
-   }	
-*/
-
    UsesSource = ROP4_USES_SOURCE(BltInfo->Rop4);
    UsesPattern = ROP4_USES_PATTERN(BltInfo->Rop4);
 
@@ -454,31 +436,34 @@ DIB_16BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
   ULONG delta = DestSurface->lDelta;
   ULONG width = (DestRect->right - DestRect->left) ;
   PULONG pos =  (PULONG) (DestSurface->pvScan0 + DestRect->top * delta + (DestRect->left<<1));
-  color = (color<<16)|(color&0xffff); /* If the color value is "abcd", put "abcdabcd" into color */
+  color = (color&0xffff);  /* If the color value is "abcd", put "abcdabcd" into color */
+  color += (color<<16);
   
   for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
-  {
-    int d0, d1, d2;
+  {   
   __asm__ __volatile__ (
     "  cld\n"
+    "  mov  %0,%%eax\n"
+    "  mov  %1,%%ebx\n" 
     "  test $0x03, %%edi\n" /* Align to fullword boundary */
     "  jz   .FL1\n"
     "  stosw\n"
-    "  dec  %4\n"
+    "  dec  %%ebx\n"
     "  jz   .FL2\n"
     ".FL1:\n"
-    "  mov  %4,%%ecx\n"     /* Setup count of fullwords to fill */
+    "  mov  %%ebx,%%ecx\n"     /* Setup count of fullwords to fill */
     "  shr  $1,%%ecx\n"
     "  rep stosl\n"         /* The actual fill */
-    "  test $0x01, %4\n"    /* One left to do at the right side? */
+    "  test $0x01, %%ebx\n"    /* One left to do at the right side? */
     "  jz   .FL2\n"
     "  stosw\n"
     ".FL2:\n"
-    : "=&A" (d0), "=&r" (d1), "=&D" (d2)
-    : "0"(color), "1"(width), "2"(pos)
-    : "%ecx");
+    : 
+    : "r" (color), "r" (width), "D" (pos)
+    : "%eax", "%ecx","%ebx");
      pos =(PULONG)((ULONG_PTR)pos + delta);	 
   }
+
 #else /* _M_IX86 */
 
 	for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
