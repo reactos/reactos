@@ -188,6 +188,23 @@ _TerminateThread(HANDLE hThread, DWORD dwExitCode);
 DWORD STDCALL
 _WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds);
 
+DWORD STDCALL
+_GetLastError();
+
+VOID STDCALL
+_CloseHandle(HANDLE handle);
+
+BOOL STDCALL
+_GetThreadTimes(HANDLE hThread, LPFILETIME lpCreationTime,
+	            LPFILETIME lpExitTime, LPFILETIME lpKernelTime,
+	            LPFILETIME lpUserTime);
+
+BOOL STDCALL
+_SetPriorityClass(HANDLE hProcess, DWORD dwPriorityClass);
+
+BOOL STDCALL
+_SetThreadPriority(HANDLE hThread, int nPriority);
+
 
 static inline PCHAR
 FrameworkGetExportedFunctionNameInternal(PAPI_DESCRIPTION ApiDescription)

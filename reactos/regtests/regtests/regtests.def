@@ -7,3 +7,8 @@ _LoadLibraryA@4
 _CreateThread@24
 _TerminateThread@8
 _WaitForSingleObject@8
+_GetLastError@0
+_CloseHandle@4
+_GetThreadTimes@20
+_SetPriorityClass@8
+_SetThreadPriority@8

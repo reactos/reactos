@@ -54,3 +54,35 @@ _WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
   return WaitForSingleObject(hHandle, dwMilliseconds);
 }
 
+DWORD STDCALL
+_GetLastError()
+{
+  return GetLastError();
+}
+
+VOID STDCALL
+_CloseHandle(HANDLE handle)
+{
+  CloseHandle (handle);
+}
+
+BOOL STDCALL
+_GetThreadTimes(HANDLE hThread, LPFILETIME lpCreationTime,
+	            LPFILETIME lpExitTime, LPFILETIME lpKernelTime,
+	            LPFILETIME lpUserTime)
+{
+  return GetThreadTimes(hThread, lpCreationTime, lpExitTime,
+                        lpKernelTime, lpUserTime);
+}
+
+BOOL STDCALL
+_SetPriorityClass(HANDLE hProcess, DWORD dwPriorityClass)
+{
+  return SetPriorityClass(hProcess, dwPriorityClass);
+}
+
+BOOL STDCALL
+_SetThreadPriority(HANDLE hThread, int nPriority)
+{
+  return SetThreadPriority(hThread, nPriority);
+}

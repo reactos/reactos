@@ -333,6 +333,7 @@ TestSupportCode::WriteStartupFile ( Module& module )
 	s = s + sprintf ( s, "  LPSTR lpszCmdParam,\n" );
 	s = s + sprintf ( s, "  int nCmdShow)\n" );
 	s = s + sprintf ( s, "{\n" );
+	s = s + sprintf ( s, "  _SetPriorityClass(GetCurrentProcess(), IDLE_PRIORITY_CLASS);\n" );
 	s = s + sprintf ( s, "  InitializeTests();\n" );
 	s = s + sprintf ( s, "  RegisterTests();\n" );
 	s = s + sprintf ( s, "  SetupOnce();\n" );

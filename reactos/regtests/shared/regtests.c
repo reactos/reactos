@@ -37,6 +37,17 @@ InitializeTests()
   InitializeListHead(&AllTests);
 }
 
+char*
+FormatExecutionTime(char *buffer, LPFILETIME time)
+{
+  ULONG milliseconds = time->dwLowDateTime / 10000;
+  
+  sprintf(buffer,
+	      "%ldms",
+	      milliseconds);
+  return buffer;
+}
+
 DWORD WINAPI
 PerformTest(PVOID _arg)
 {
@@ -44,11 +55,18 @@ PerformTest(PVOID _arg)
   TestOutputRoutine OutputRoutine = Args->OutputRoutine;
   PROS_TEST Test = Args->Test;
   LPSTR TestName = Args->TestName;
+  HANDLE hThread;
+  FILETIME time;
+  FILETIME ExecutionTime;
   char OutputBuffer[5000];
   char Buffer[5000];
+  char Format[100];
+
+  hThread = GetCurrentThread();
+  _SetThreadPriority(hThread, THREAD_PRIORITY_IDLE);
 
   memset(Buffer, 0, sizeof(Buffer));
-
+  
   _SEH_TRY {
     _Result = TS_OK;
     _Buffer = Buffer;
@@ -58,22 +76,30 @@ PerformTest(PVOID _arg)
     sprintf(Buffer, "due to exception 0x%lx", _SEH_GetExceptionCode());
   } _SEH_END;
 
-  if (_Result != TS_OK)
+  if (_Result == TS_OK)
     {
+      if (!_GetThreadTimes(hThread,
+  	                       &time,
+  	                       &time,
+  	                       &time,
+  	                       &ExecutionTime))
+      {
+        ExecutionTime.dwLowDateTime = 10;
+        ExecutionTime.dwHighDateTime = 10;
+      }
+      sprintf(OutputBuffer,
+              "[%s] Success [%s]\n",
+              TestName,
+              FormatExecutionTime(Format,
+                                  &ExecutionTime));
+    }
+  else
       sprintf(OutputBuffer, "[%s] Failed (%s)\n", TestName, Buffer);
-    }
-  else
-    {
-      sprintf(OutputBuffer, "[%s] Success\n", TestName);
-    }
+
   if (OutputRoutine != NULL)
-    {
       (*OutputRoutine)(OutputBuffer);
-    }
   else
-    {
       DbgPrint(OutputBuffer);
-    }
   return 1;
 }
 
@@ -108,19 +134,12 @@ PerformTests(TestOutputRoutine OutputRoutine, LPSTR TestName)
       if (_Result != TS_OK)
         {
           if (TestName != NULL)
-            {
-              continue;
-            }
+            continue;
           strcpy(Name, "Unnamed");
         }
 
-      if (TestName != NULL)
-        {
-          if (_stricmp(Name, TestName) != 0)
-            {
-              continue;
-            }
-        }
+      if ((TestName != NULL) && (_stricmp(Name, TestName) != 0))
+        continue;
 
       /* Get timeout for test */
       TimeOut = 0;
@@ -128,44 +147,34 @@ PerformTests(TestOutputRoutine OutputRoutine, LPSTR TestName)
       _Buffer = (char *)&TimeOut;
       (Current->Routine)(TESTCMD_TIMEOUT);
       if (_Result != TS_OK || TimeOut == INFINITE)
-        {
           TimeOut = 5000;
-        }
 
       /* Run test in thread */
       hThread = _CreateThread(NULL, 0, PerformTest, (PVOID)&Args, 0, NULL);
       if (hThread == NULL)
-        {
           sprintf(OutputBuffer,
-                  "[%s] Failed (CreateThread failed: 0x%x)\n",
-                  Name, (unsigned int)GetLastError());
-        }
+                  "[%s] Failed (CreateThread() failed: %d)\n",
+                  Name, (unsigned int)_GetLastError());
       else if (_WaitForSingleObject(hThread, TimeOut) == WAIT_TIMEOUT)
         {
           if (!_TerminateThread(hThread, 0))
-            {
               sprintf(OutputBuffer,
-                      "[%s] Failed (Test timed out - %d ms, TerminateThread failed: 0x%x)\n",
-                      Name, (int)TimeOut, (unsigned int)GetLastError());
-            }
+                      "[%s] Failed (timed out after %dms; TerminateThread() failed: %d)\n",
+                      Name, (int)TimeOut, (unsigned int)_GetLastError());
           else
-            {
-              sprintf(OutputBuffer, "[%s] Failed (Test timed out - %d ms)\n", Name, (int)TimeOut);
-            }
+              sprintf(OutputBuffer, "[%s] Failed (timed out after %dms)\n", Name, (int)TimeOut);          
+      	  _CloseHandle(hThread);
         }
       else
         {
+      	  _CloseHandle(hThread);
           continue;
         }
 
       if (OutputRoutine != NULL)
-        {
           (*OutputRoutine)(OutputBuffer);
-        }
       else
-        {
           DbgPrint(OutputBuffer);
-        }
     }
 }
 
