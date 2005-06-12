@@ -39,6 +39,9 @@
 #define NDEBUG
 #include <debug.h>
 
+/* #define TRACE_DRV_CALLS to get a log of all calls into the display driver. */
+#undef TRACE_DRV_CALLS
+
 typedef struct _GRAPHICS_DRIVER
 {
   PWSTR  Name;
@@ -164,17 +167,208 @@ PGD_ENABLEDRIVER DRIVER_FindDDIDriver(LPCWSTR Name)
     switch(DED->pdrvfn[i].iFunc) \
     {
 
-#define DRIVER_FUNCTION(function) \
-      case INDEX_Drv##function: \
-        *(PVOID*)&DF->function = DED->pdrvfn[i].pfn; \
-        break
-
 #define END_FUNCTION_MAP() \
       default: \
         DPRINT1("Unsupported DDI function 0x%x\n", DED->pdrvfn[i].iFunc); \
         break; \
     } \
   }
+
+#ifdef TRACE_DRV_CALLS
+
+typedef struct _TRACEDRVINFO
+  {
+  unsigned Index;
+  char *Name;
+  PVOID DrvRoutine;
+  }
+TRACEDRVINFO, *PTRACEDRVINFO;
+
+__asm__(
+" .text\n"
+"TraceDrv:\n"
+" pushl %eax\n"
+" call  _FindTraceInfo\n"
+" add   $4,%esp\n"
+" pushl %eax\n"
+" pushl 4(%eax)\n"
+" call  _DbgPrint\n"
+" addl  $4,%esp\n"
+" popl  %eax\n"
+" mov   8(%eax),%eax\n"
+" jmp   *%eax\n"
+);
+
+#define TRACEDRV_ROUTINE(function) \
+unsigned TraceDrvIndex##function = INDEX_Drv##function; \
+__asm__ ( \
+" .text\n" \
+"_Trace" #function ":\n" \
+" movl _TraceDrvIndex" #function ",%eax\n" \
+" jmp TraceDrv\n" \
+); \
+extern PVOID Trace##function;
+
+TRACEDRV_ROUTINE(EnablePDEV)
+TRACEDRV_ROUTINE(CompletePDEV)
+TRACEDRV_ROUTINE(DisablePDEV)
+TRACEDRV_ROUTINE(EnableSurface)
+TRACEDRV_ROUTINE(DisableSurface)
+TRACEDRV_ROUTINE(AssertMode)
+TRACEDRV_ROUTINE(Offset)
+TRACEDRV_ROUTINE(ResetPDEV)
+TRACEDRV_ROUTINE(DisableDriver)
+TRACEDRV_ROUTINE(CreateDeviceBitmap)
+TRACEDRV_ROUTINE(DeleteDeviceBitmap)
+TRACEDRV_ROUTINE(RealizeBrush)
+TRACEDRV_ROUTINE(DitherColor)
+TRACEDRV_ROUTINE(StrokePath)
+TRACEDRV_ROUTINE(FillPath)
+TRACEDRV_ROUTINE(StrokeAndFillPath)
+TRACEDRV_ROUTINE(Paint)
+TRACEDRV_ROUTINE(BitBlt)
+TRACEDRV_ROUTINE(TransparentBlt)
+TRACEDRV_ROUTINE(CopyBits)
+TRACEDRV_ROUTINE(StretchBlt)
+TRACEDRV_ROUTINE(StretchBltROP)
+TRACEDRV_ROUTINE(SetPalette)
+TRACEDRV_ROUTINE(TextOut)
+TRACEDRV_ROUTINE(Escape)
+TRACEDRV_ROUTINE(DrawEscape)
+TRACEDRV_ROUTINE(QueryFont)
+TRACEDRV_ROUTINE(QueryFontTree)
+TRACEDRV_ROUTINE(QueryFontData)
+TRACEDRV_ROUTINE(SetPointerShape)
+TRACEDRV_ROUTINE(MovePointer)
+TRACEDRV_ROUTINE(LineTo)
+TRACEDRV_ROUTINE(SendPage)
+TRACEDRV_ROUTINE(StartPage)
+TRACEDRV_ROUTINE(EndDoc)
+TRACEDRV_ROUTINE(StartDoc)
+TRACEDRV_ROUTINE(GetGlyphMode)
+TRACEDRV_ROUTINE(Synchronize)
+TRACEDRV_ROUTINE(SaveScreenBits)
+TRACEDRV_ROUTINE(GetModes)
+TRACEDRV_ROUTINE(Free)
+TRACEDRV_ROUTINE(DestroyFont)
+TRACEDRV_ROUTINE(QueryFontCaps)
+TRACEDRV_ROUTINE(LoadFontFile)
+TRACEDRV_ROUTINE(UnloadFontFile)
+TRACEDRV_ROUTINE(FontManagement)
+TRACEDRV_ROUTINE(QueryTrueTypeTable)
+TRACEDRV_ROUTINE(QueryTrueTypeOutline)
+TRACEDRV_ROUTINE(GetTrueTypeFile)
+TRACEDRV_ROUTINE(QueryFontFile)
+TRACEDRV_ROUTINE(QueryAdvanceWidths)
+TRACEDRV_ROUTINE(SetPixelFormat)
+TRACEDRV_ROUTINE(DescribePixelFormat)
+TRACEDRV_ROUTINE(SwapBuffers)
+TRACEDRV_ROUTINE(StartBanding)
+TRACEDRV_ROUTINE(NextBand)
+TRACEDRV_ROUTINE(GetDirectDrawInfo)
+TRACEDRV_ROUTINE(EnableDirectDraw)
+TRACEDRV_ROUTINE(DisableDirectDraw)
+TRACEDRV_ROUTINE(QuerySpoolType)
+TRACEDRV_ROUTINE(GradientFill)
+TRACEDRV_ROUTINE(SynchronizeSurface)
+TRACEDRV_ROUTINE(AlphaBlend)
+
+#define TRACEDRVINFO_ENTRY(function) \
+    { INDEX_Drv##function, "Drv" #function "\n", NULL }
+static TRACEDRVINFO TraceDrvInfo[] =
+  {
+    TRACEDRVINFO_ENTRY(EnablePDEV),
+    TRACEDRVINFO_ENTRY(CompletePDEV),
+    TRACEDRVINFO_ENTRY(DisablePDEV),
+    TRACEDRVINFO_ENTRY(EnableSurface),
+    TRACEDRVINFO_ENTRY(DisableSurface),
+    TRACEDRVINFO_ENTRY(AssertMode),
+    TRACEDRVINFO_ENTRY(Offset),
+    TRACEDRVINFO_ENTRY(ResetPDEV),
+    TRACEDRVINFO_ENTRY(DisableDriver),
+    TRACEDRVINFO_ENTRY(CreateDeviceBitmap),
+    TRACEDRVINFO_ENTRY(DeleteDeviceBitmap),
+    TRACEDRVINFO_ENTRY(RealizeBrush),
+    TRACEDRVINFO_ENTRY(DitherColor),
+    TRACEDRVINFO_ENTRY(StrokePath),
+    TRACEDRVINFO_ENTRY(FillPath),
+    TRACEDRVINFO_ENTRY(StrokeAndFillPath),
+    TRACEDRVINFO_ENTRY(Paint),
+    TRACEDRVINFO_ENTRY(BitBlt),
+    TRACEDRVINFO_ENTRY(TransparentBlt),
+    TRACEDRVINFO_ENTRY(CopyBits),
+    TRACEDRVINFO_ENTRY(StretchBlt),
+    TRACEDRVINFO_ENTRY(StretchBltROP),
+    TRACEDRVINFO_ENTRY(SetPalette),
+    TRACEDRVINFO_ENTRY(TextOut),
+    TRACEDRVINFO_ENTRY(Escape),
+    TRACEDRVINFO_ENTRY(DrawEscape),
+    TRACEDRVINFO_ENTRY(QueryFont),
+    TRACEDRVINFO_ENTRY(QueryFontTree),
+    TRACEDRVINFO_ENTRY(QueryFontData),
+    TRACEDRVINFO_ENTRY(SetPointerShape),
+    TRACEDRVINFO_ENTRY(MovePointer),
+    TRACEDRVINFO_ENTRY(LineTo),
+    TRACEDRVINFO_ENTRY(SendPage),
+    TRACEDRVINFO_ENTRY(StartPage),
+    TRACEDRVINFO_ENTRY(EndDoc),
+    TRACEDRVINFO_ENTRY(StartDoc),
+    TRACEDRVINFO_ENTRY(GetGlyphMode),
+    TRACEDRVINFO_ENTRY(Synchronize),
+    TRACEDRVINFO_ENTRY(SaveScreenBits),
+    TRACEDRVINFO_ENTRY(GetModes),
+    TRACEDRVINFO_ENTRY(Free),
+    TRACEDRVINFO_ENTRY(DestroyFont),
+    TRACEDRVINFO_ENTRY(QueryFontCaps),
+    TRACEDRVINFO_ENTRY(LoadFontFile),
+    TRACEDRVINFO_ENTRY(UnloadFontFile),
+    TRACEDRVINFO_ENTRY(FontManagement),
+    TRACEDRVINFO_ENTRY(QueryTrueTypeTable),
+    TRACEDRVINFO_ENTRY(QueryTrueTypeOutline),
+    TRACEDRVINFO_ENTRY(GetTrueTypeFile),
+    TRACEDRVINFO_ENTRY(QueryFontFile),
+    TRACEDRVINFO_ENTRY(QueryAdvanceWidths),
+    TRACEDRVINFO_ENTRY(SetPixelFormat),
+    TRACEDRVINFO_ENTRY(DescribePixelFormat),
+    TRACEDRVINFO_ENTRY(SwapBuffers),
+    TRACEDRVINFO_ENTRY(StartBanding),
+    TRACEDRVINFO_ENTRY(NextBand),
+    TRACEDRVINFO_ENTRY(GetDirectDrawInfo),
+    TRACEDRVINFO_ENTRY(EnableDirectDraw),
+    TRACEDRVINFO_ENTRY(DisableDirectDraw),
+    TRACEDRVINFO_ENTRY(QuerySpoolType),
+    TRACEDRVINFO_ENTRY(GradientFill),
+    TRACEDRVINFO_ENTRY(SynchronizeSurface),
+    TRACEDRVINFO_ENTRY(AlphaBlend)
+  };
+
+PTRACEDRVINFO
+FindTraceInfo(unsigned Index)
+{
+  unsigned i;
+
+  for (i = 0; i < sizeof(TraceDrvInfo) / sizeof(TRACEDRVINFO); i++)
+    {
+      if (TraceDrvInfo[i].Index == Index)
+        {
+          return TraceDrvInfo + i;
+        }
+    }
+
+  return NULL;
+}
+
+#define DRIVER_FUNCTION(function) \
+      case INDEX_Drv##function: \
+        FindTraceInfo(INDEX_Drv##function)->DrvRoutine = DED->pdrvfn[i].pfn; \
+        *(PVOID*)&DF->function = &Trace##function; \
+        break
+#else
+#define DRIVER_FUNCTION(function) \
+      case INDEX_Drv##function: \
+        *(PVOID*)&DF->function = DED->pdrvfn[i].pfn; \
+        break
+#endif
 
 BOOL DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
                                PDRIVER_FUNCTIONS  DF)
