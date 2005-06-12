@@ -657,7 +657,8 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    }
 
    PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
-   Offset = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress;
+   Offset = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress 
+            + MemoryArea->Data.SectionData.ViewOffset;
 
    Segment = MemoryArea->Data.SectionData.Segment;
    Section = MemoryArea->Data.SectionData.Section;
@@ -864,7 +865,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
       /*
       * Just map the desired physical page
       */
-      Page = (Offset + MemoryArea->Data.SectionData.ViewOffset) >> PAGE_SHIFT;
+      Page = Offset >> PAGE_SHIFT;
       Status = MmCreateVirtualMappingUnsafe(AddressSpace->Process,
                                             Address,
                                             Region->Protect,
@@ -940,7 +941,6 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Get the entry corresponding to the offset within the section
     */
-   Offset += MemoryArea->Data.SectionData.ViewOffset;
    Entry = MmGetPageEntrySectionSegment(Segment, Offset);
 
    if (Entry == 0)
@@ -1172,7 +1172,8 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
     * Find the offset of the page
     */
    PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
-   Offset = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress;
+   Offset = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress 
+            + MemoryArea->Data.SectionData.ViewOffset;
 
    Segment = MemoryArea->Data.SectionData.Segment;
    Section = MemoryArea->Data.SectionData.Section;
@@ -1371,7 +1372,8 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
    Context.Segment = MemoryArea->Data.SectionData.Segment;
    Context.Section = MemoryArea->Data.SectionData.Section;
 
-   Context.Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
+   Context.Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress 
+                    + MemoryArea->Data.SectionData.ViewOffset;
    FileOffset = Context.Offset + Context.Segment->FileOffset;
 
    IsImageSection = Context.Section->AllocationAttributes & SEC_IMAGE ? TRUE : FALSE;
@@ -1425,7 +1427,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
     * Prepare the context structure for the rmap delete call.
     */
    Context.WasDirty = FALSE;
-   if (Context.Segment->Characteristics & IMAGE_SCN_LNK_OTHER ||
+   if (Context.Segment->Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA ||
          IS_SWAP_FROM_SSE(Entry) ||
          PFN_FROM_SSE(Entry) != Page)
    {
@@ -1711,7 +1713,8 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
 
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
-   Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
+   Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress 
+            + MemoryArea->Data.SectionData.ViewOffset;
 
    /*
     * Get the segment and section.
@@ -1767,7 +1770,7 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Check for a private (COWed) page.
     */
-   if (Segment->Characteristics & IMAGE_SCN_LNK_OTHER ||
+   if (Segment->Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA ||
          IS_SWAP_FROM_SSE(Entry) ||
          PFN_FROM_SSE(Entry) != Page)
    {
@@ -1790,7 +1793,7 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
    if (DirectMapped && !Private)
    {
       ASSERT(SwapEntry == 0);
-      CcRosMarkDirtyCacheSegment(Bcb, Offset + MemoryArea->Data.SectionData.ViewOffset);
+      CcRosMarkDirtyCacheSegment(Bcb, Offset + Segment->FileOffset);
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
       return(STATUS_SUCCESS);
@@ -1875,12 +1878,13 @@ MmAlterViewAttributes(PMADDRESS_SPACE AddressSpace,
             ULONG Entry;
             PFN_TYPE Page;
 
-            Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
+            Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress 
+                     + MemoryArea->Data.SectionData.ViewOffset;
             Entry = MmGetPageEntrySectionSegment(Segment, Offset);
             Page = MmGetPfnForProcess(AddressSpace->Process, Address);
 
             Protect = PAGE_READONLY;
-            if (Segment->Characteristics & IMAGE_SCN_LNK_OTHER ||
+            if (Segment->Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA ||
                   IS_SWAP_FROM_SSE(Entry) ||
                   PFN_FROM_SSE(Entry) != Page)
             {
@@ -2125,6 +2129,7 @@ MmCreatePhysicalMemorySection(VOID)
       ObDereferenceObject(PhysSection);
    }
    PhysSection->AllocationAttributes |= SEC_PHYSICALMEMORY;
+   PhysSection->Segment->Flags &= ~MM_PAGEFILE_SEGMENT;
 
    return(STATUS_SUCCESS);
 }
@@ -3730,7 +3735,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
       {
          FileObject = MemoryArea->Data.SectionData.Section->FileObject;
          Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
-         CcRosMarkDirtyCacheSegment(Bcb, Offset);
+         CcRosMarkDirtyCacheSegment(Bcb, Offset + Segment->FileOffset);
          ASSERT(SwapEntry == 0);
       }
    }
