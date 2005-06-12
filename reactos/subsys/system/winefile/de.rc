@@ -29,118 +29,120 @@ LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 
 IDM_WINEFILE MENU FIXED IMPURE
 {
-	POPUP "&Datei"  {
-		MENUITEM "Ö&ffnen\tEingabetaste" ,			ID_ACTIVATE
-		MENUITEM "&Verschieben...\tF7" , 			ID_FILE_MOVE
-		MENUITEM "&Kopieren...\tF8" ,			ID_FILE_COPY
-		MENUITEM "&In Zwischenablage...\tF9" ,		118
-		MENUITEM "&Löschen\tEntf" ,			ID_FILE_DELETE
-		MENUITEM "&Umbenennen..." ,			109
-		MENUITEM "&Eigenschaften...\tAlt+Eingabetaste" , ID_EDIT_PROPERTIES
-		MENUITEM SEPARATOR
-		MENUITEM "K&omprimieren..." ,		119
-		MENUITEM "Deko&mprimieren..." ,		120
-		MENUITEM SEPARATOR
-		MENUITEM "&Ausführen..." ,			ID_EXECUTE
-		MENUITEM "&Drucken..." , 			102
-		MENUITEM "Zuord&nen..." ,		103
-		MENUITEM SEPARATOR
-		MENUITEM "Ver&zeichnis erstellen..." ,			111
-		MENUITEM "&Suchen..." ,			104
-		MENUITEM "Dateien aus&wählen..." ,			116
-		MENUITEM SEPARATOR
-		MENUITEM "&Beenden\tAlt+X" , 			ID_FILE_EXIT
-	}
+    POPUP "&Datei"  {
+        MENUITEM "Ö&ffnen\tEingabetaste",       ID_ACTIVATE
+        MENUITEM "&Verschieben...\tF7",         ID_FILE_MOVE
+        MENUITEM "&Kopieren...\tF8",            ID_FILE_COPY
+        MENUITEM "&In Zwischenablage...\tF9",   118
+        MENUITEM "&Löschen\tEntf",              ID_FILE_DELETE
+        MENUITEM "&Umbenennen...",              109
+        MENUITEM "&Eigenschaften...\tAlt+Eingabetaste", ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "K&omprimieren...",            119
+        MENUITEM "Deko&mprimieren...",          120
+        MENUITEM SEPARATOR
+        MENUITEM "&Ausführen...",               ID_EXECUTE
+        MENUITEM "&Drucken...",                 102
+        MENUITEM "Zuord&nen...",                103
+        MENUITEM SEPARATOR
+        MENUITEM "Ver&zeichnis erstellen...",   111
+        MENUITEM "&Suchen...",                  104
+        MENUITEM "Dateien aus&wählen...",       116
+        MENUITEM SEPARATOR
+        MENUITEM "&Beenden\tAlt+X",             ID_FILE_EXIT
+    }
 
-	POPUP "Da&tenträger"  {
-		MENUITEM "Datenträger &kopieren..." ,			201
-		MENUITEM "Datenträger &benennen..." ,			202
-		MENUITEM SEPARATOR
-		MENUITEM "Datenträger &formatieren..." ,			ID_FORMAT_DISK
+    POPUP "Da&tenträger"  {
+        MENUITEM "Datenträger &kopieren...",    201
+        MENUITEM "Datenträger &benennen...",    202
+        MENUITEM SEPARATOR
+        MENUITEM "Datenträger &formatieren...", ID_FORMAT_DISK
 #ifdef _WIN95
-		MENUITEM "...",			-1	/*TODO*/
+        MENUITEM "...",         -1  /*TODO*/
 #endif
-		MENUITEM SEPARATOR
-		MENUITEM "Netzwerklaufwerk &verbinden..." ,			ID_CONNECT_NETWORK_DRIVE
-		MENUITEM "Netzwerklaufwerk &trennen..." ,		ID_DISCONNECT_NETWORK_DRIVE
-		MENUITEM SEPARATOR
-		MENUITEM "F&reigeben als..." ,			254
-		MENUITEM "Freigabe been&den..." ,			255
-		MENUITEM SEPARATOR
-		MENUITEM "Laufwerk aus&wählen..." ,			251
-	}
+        MENUITEM SEPARATOR
+        MENUITEM "Netzwerklaufwerk &verbinden...",ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "Netzwerklaufwerk &trennen...",ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM SEPARATOR
+        MENUITEM "F&reigeben als...",           254
+        MENUITEM "Freigabe been&den...",        255
+        MENUITEM SEPARATOR
+        MENUITEM "Laufwerk aus&wählen...",      251
+    }
 
 
-	POPUP "&Verzeichnisse"  {
-		MENUITEM "&Nächste Ebene einblenden\t+" ,			301
-		MENUITEM "&Zweig einblenden\t*" ,		302
-		MENUITEM "Alle &Ebenen einblenden\tStrg+*" ,		303
-		MENUITEM "Zweig &ausblenden\t-" ,			304
-		MENUITEM SEPARATOR
-		MENUITEM "&Verzweigungen kennzeichnen" ,				505
-	}
+    POPUP "&Verzeichnisse"  {
+        MENUITEM "&Nächste Ebene einblenden\t+",301
+        MENUITEM "&Zweig einblenden\t*",        302
+        MENUITEM "Alle &Ebenen einblenden\tStrg+*",303
+        MENUITEM "Zweig &ausblenden\t-",        304
+        MENUITEM SEPARATOR
+        MENUITEM "&Verzweigungen kennzeichnen", 505
+    }
 
-	POPUP "&Ansicht"  {
-		MENUITEM "Struktur &und Verzeichnis" ,			413
-		MENUITEM "Nur St&ruktur" ,			411
-		MENUITEM "Nur &Verzeichnis" ,			412
-		MENUITEM SEPARATOR
-		MENUITEM "&Teilen" ,			ID_VIEW_SPLIT
-		MENUITEM SEPARATOR
-		MENUITEM "&Name" ,			ID_VIEW_NAME
-		MENUITEM "A&lle Dateiangaben" ,				ID_VIEW_ALL_ATTRIBUTES, CHECKED
-		MENUITEM "&Bestimmte Dateiangaben..." ,			ID_VIEW_SELECTED_ATTRIBUTES
-		MENUITEM SEPARATOR
-		MENUITEM "Nach N&ame" ,		ID_VIEW_SORT_NAME
-		MENUITEM "Nach T&yp" ,		ID_VIEW_SORT_TYPE
-		MENUITEM "Nach &Größe" , 	ID_VIEW_SORT_SIZE
-		MENUITEM "Nach &Datum" , 	ID_VIEW_SORT_DATE
-		MENUITEM SEPARATOR
-		MENUITEM "Angaben ausw&ählen..." ,			ID_VIEW_FILTER
-	}
+    POPUP "&Ansicht"  {
+        MENUITEM "Struktur &und Verzeichnis",   413
+        MENUITEM "Nur St&ruktur",               411
+        MENUITEM "Nur &Verzeichnis",            412
+        MENUITEM SEPARATOR
+        MENUITEM "&Teilen",                     ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Name",                       ID_VIEW_NAME
+        MENUITEM "A&lle Dateiangaben",          ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "&Bestimmte Dateiangaben...",  ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "Nach N&ame",                  ID_VIEW_SORT_NAME
+        MENUITEM "Nach T&yp",                   ID_VIEW_SORT_TYPE
+        MENUITEM "Nach &Größe",                 ID_VIEW_SORT_SIZE
+        MENUITEM "Nach &Datum",                 ID_VIEW_SORT_DATE
+        MENUITEM SEPARATOR
+        MENUITEM "Angaben ausw&ählen...",       ID_VIEW_FILTER
+    }
 
-	POPUP "&Optionen"  {
-		MENUITEM "&Bestätigen..." ,		501
-		MENUITEM "Schrift&art..." ,			ID_SELECT_FONT
-		MENUITEM "Symbolleiste &definieren..." , 512
-		MENUITEM SEPARATOR
-		MENUITEM "Sy&mbolleiste" ,		ID_VIEW_TOOL_BAR, CHECKED
-		MENUITEM "Lauf&werkleiste" ,		ID_VIEW_DRIVE_BAR, CHECKED
-		MENUITEM "&Statusleiste" ,	ID_VIEW_STATUSBAR, CHECKED
+    POPUP "&Optionen"  {
+        MENUITEM "&Bestätigen...",              501
+        MENUITEM "Schrift&art...",              ID_SELECT_FONT
+        MENUITEM "Symbolleiste &definieren...", 512
+        MENUITEM SEPARATOR
+        MENUITEM "Sy&mbolleiste",               ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "Lauf&werkleiste",             ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Statusleiste",               ID_VIEW_STATUSBAR, CHECKED
 #ifndef _NO_EXTENSIONS
-		MENUITEM "Vollb&ild\tStrg+Umschalt+S" , 	ID_VIEW_FULLSCREEN
+        MENUITEM "Vollb&ild\tStrg+Umschalt+S",  ID_VIEW_FULLSCREEN
 #endif
-		MENUITEM SEPARATOR
-		MENUITEM "&Symbol nach Programmstart" ,		504
-		MENUITEM "&Einstellungen beim Beenden speichern" ,			511
-	}
+        MENUITEM SEPARATOR
+        MENUITEM "&Symbol nach Programmstart",  504
+        MENUITEM "&Einstellungen beim Beenden speichern", 511
+    }
 
-	POPUP "&Sicherheit"  {
-		MENUITEM "&Berechtigungen..." ,		605
-		MENUITEM "Über&wachen..." ,			606
-		MENUITEM "Besi&tzer..." ,		607
-	}
+    POPUP "&Sicherheit"  {
+        MENUITEM "&Berechtigungen...",          605
+        MENUITEM "Über&wachen...",              606
+        MENUITEM "Besi&tzer...",                607
+    }
 
-	POPUP "&Fenster"  {
-		MENUITEM "Neues &Fenster" ,			ID_WINDOW_NEW
-		MENUITEM "Über&lappend\tUmschalt+F5" ,		ID_WINDOW_CASCADE
-		MENUITEM "&Untereinander" ,		ID_WINDOW_TILE_HORZ
-		MENUITEM "&Nebeneinander\tUmschalt+F4" ,		ID_WINDOW_TILE_VERT
+    POPUP "&Fenster"  {
+        MENUITEM "Neues &Fenster",              ID_WINDOW_NEW
+        MENUITEM "Über&lappend\tUmschalt+F5",   ID_WINDOW_CASCADE
+        MENUITEM "&Untereinander",              ID_WINDOW_TILE_HORZ
+        MENUITEM "&Nebeneinander\tUmschalt+F4", ID_WINDOW_TILE_VERT
 #ifndef _NO_EXTENSIONS
-		MENUITEM "au&tomatisch anordnen" ,		ID_WINDOW_AUTOSORT
+        MENUITEM "au&tomatisch anordnen",       ID_WINDOW_AUTOSORT
 #endif
-		MENUITEM "&Symbole anordnen" ,		ID_WINDOW_ARRANGE
-		MENUITEM "&Aktualisieren\tF5" ,		ID_REFRESH
-	}
+        MENUITEM "&Symbole anordnen",           ID_WINDOW_ARRANGE
+        MENUITEM "&Aktualisieren\tF5",          ID_REFRESH
+    }
 
-	POPUP "&?"  {
-		MENUITEM "&Hilfethemen\tF1" ,			ID_HELP
-		MENUITEM "&Suchen...\tF1" ,			ID_HELP
-		MENUITEM "Hilfe &verwenden\tF1" ,			ID_HELP_USING
-		MENUITEM SEPARATOR
-		MENUITEM "&Info über Winefile..." ,		ID_ABOUT
-		MENUITEM "Info über &Wine..." ,			ID_ABOUT_WINE
-	}
+    POPUP "&?"  {
+        MENUITEM "&Hilfethemen\tF1",            ID_HELP
+        MENUITEM "&Suchen...\tF1",              ID_HELP
+        MENUITEM "Hilfe &verwenden\tF1",        ID_HELP_USING
+        MENUITEM SEPARATOR
+        MENUITEM "&Info über Winefile...",      ID_ABOUT
+#ifdef __WINE__
+        MENUITEM "Info über &Wine...",          ID_ABOUT_WINE
+#endif
+    }
 }
 
 
@@ -149,13 +151,13 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Ausführen"
 FONT 8, "MS Shell Dlg"
 {
-	CONTROL 		"", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
-	CONTROL 		"Befehls&zeile:" , -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
-	EDITTEXT		201, 3, 29, 134, 12, ES_AUTOHSCROLL
-	CONTROL 		"Als &Symbol" , 214, "Button", BS_AUTOCHECKBOX|WS_TABSTOP,3, 45, 71, 12
-	DEFPUSHBUTTON	"OK" , 1, 158, 6, 47, 14
-	PUSHBUTTON		"Abbrechen" , 2, 158, 23, 47, 14
-	PUSHBUTTON		"&Hilfe" , 254, 158, 43, 47, 14
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "Befehls&zeile:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    CONTROL         "Als &Symbol", 214, "Button", BS_AUTOCHECKBOX|WS_TABSTOP,3, 45, 71, 12
+    DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
+    PUSHBUTTON      "Abbrechen", 2, 158, 23, 47, 14
+    PUSHBUTTON      "&Hilfe", 254, 158, 43, 47, 14
 }
 
 IDD_SELECT_DESTINATION DIALOG FIXED IMPURE 15, 13, 210, 63
@@ -163,12 +165,12 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Ziel auswählen"
 FONT 8, "MS Shell Dlg"
 {
-	CONTROL 		"", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
-	CONTROL 		"&Verzeichnis:" , -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
-	EDITTEXT		201, 3, 29, 134, 12, ES_AUTOHSCROLL
-	DEFPUSHBUTTON		"OK" , 1, 158, 6, 47, 14
-	PUSHBUTTON		"Abbrechen" , 2, 158, 23, 47, 14
-	PUSHBUTTON		"&Durchsuchen" , 254, 158, 43, 47, 14
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "&Verzeichnis:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
+    PUSHBUTTON      "Abbrechen", 2, 158, 23, 47, 14
+    PUSHBUTTON      "&Durchsuchen", 254, 158, 43, 47, 14
 }
 
 IDD_DIALOG_VIEW_TYPE DIALOG DISCARDABLE 15, 13, 161, 97
@@ -226,35 +228,35 @@ END
 
 STRINGTABLE
 {
-	IDS_FONT_SEL_DLG_NAME	"Anwenden der Schriftarteinstellung"
-	IDS_FONT_SEL_ERROR	"Fehler während der Schriftart-Auswahl."
+    IDS_FONT_SEL_DLG_NAME   "Anwenden der Schriftarteinstellung"
+    IDS_FONT_SEL_ERROR      "Fehler während der Schriftart-Auswahl."
 }
 
 STRINGTABLE
 {
-	IDS_WINEFILE	"Winefile"
-	IDS_ERROR		"Fehler"
-	IDS_ROOT_FS		"root fs"
-	IDS_UNIXFS		"unixfs"
-	IDS_DESKTOP		"Desktop"
-	IDS_SHELL		"Shell"
-	IDS_TITLEFMT	"%s - %s"
-	IDS_NO_IMPL		"Noch nicht implementiert"
-	IDS_WINE		"WINE"
-	IDS_WINE_FILE	"Wine File"
+    IDS_WINEFILE            "Winefile"
+    IDS_ERROR               "Fehler"
+    IDS_ROOT_FS             "root fs"
+    IDS_UNIXFS              "unixfs"
+    IDS_DESKTOP             "Desktop"
+    IDS_SHELL               "Shell"
+    IDS_TITLEFMT            "%s - %s"
+    IDS_NO_IMPL             "Noch nicht implementiert"
+    IDS_WINE                "WINE"
+    IDS_WINE_FILE           "Wine File"
 }
 
 STRINGTABLE
 {
-	IDS_COL_NAME	"Name"
-	IDS_COL_SIZE	"Größe"
-	IDS_COL_CDATE	"CDatum"
-	IDS_COL_ADATE	"ZDatum"
-	IDS_COL_MDATE	"ÄDatum"
-	IDS_COL_IDX		"Index/Inode"
-	IDS_COL_LINKS	"Links"
-	IDS_COL_ATTR	"Attribute"
-	IDS_COL_SEC		"Sicherheit"
+    IDS_COL_NAME            "Name"
+    IDS_COL_SIZE            "Größe"
+    IDS_COL_CDATE           "CDatum"
+    IDS_COL_ADATE           "ZDatum"
+    IDS_COL_MDATE           "ÄDatum"
+    IDS_COL_IDX             "Index/Inode"
+    IDS_COL_LINKS           "Links"
+    IDS_COL_ATTR            "Attribute"
+    IDS_COL_SEC             "Sicherheit"
 
-	IDS_FREE_SPACE_FMT	"%s von %s frei"
+    IDS_FREE_SPACE_FMT      "%s von %s frei"
 }

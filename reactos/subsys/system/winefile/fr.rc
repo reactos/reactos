@@ -28,122 +28,124 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 IDM_WINEFILE MENU FIXED IMPURE
 {
-	POPUP "&Fichier"  {
-		MENUITEM "&Ouvrir\tEntrée" ,			ID_ACTIVATE
-		MENUITEM "&Déplacer...\tF7" , 			ID_FILE_MOVE
-		MENUITEM "&Copier...\tF8" ,			ID_FILE_COPY
-		MENUITEM "P&resse-Papiers...\tF9" ,		118
-		MENUITEM "&Effacer\tDel" ,			ID_FILE_DELETE
-		MENUITEM "Re&nommer..." ,			109
-		MENUITEM "&Propriétés...\tAlt+Entree" , ID_EDIT_PROPERTIES
-		MENUITEM SEPARATOR
-		MENUITEM "Co&mpresser..." ,		119
-		MENUITEM "Décompre&sser..." ,		120
-		MENUITEM SEPARATOR
-		MENUITEM "E&xécuter..." ,			ID_EXECUTE
-		MENUITEM "&Imprimer..." , 			102
-		MENUITEM "&Associer..." ,		103
-		MENUITEM SEPARATOR
-		MENUITEM "Créer Réper&toire..." ,			111
-		MENUITEM "Rec&hercher..." ,			104
-		MENUITEM "Sélectionner &Fichiers..." ,			116
-		MENUITEM SEPARATOR
+    POPUP "&Fichier"  {
+        MENUITEM "&Ouvrir\tEntrée",             ID_ACTIVATE
+        MENUITEM "&Déplacer...\tF7",            ID_FILE_MOVE
+        MENUITEM "&Copier...\tF8",              ID_FILE_COPY
+        MENUITEM "P&resse-Papiers...\tF9",      118
+        MENUITEM "&Effacer\tDel",               ID_FILE_DELETE
+        MENUITEM "Re&nommer...",                109
+        MENUITEM "&Propriétés...\tAlt+Entree", ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "Co&mpresser...",              119
+        MENUITEM "Décompre&sser...",            120
+        MENUITEM SEPARATOR
+        MENUITEM "E&xécuter...",                ID_EXECUTE
+        MENUITEM "&Imprimer...",                102
+        MENUITEM "&Associer...",                103
+        MENUITEM SEPARATOR
+        MENUITEM "Créer Réper&toire...",        111
+        MENUITEM "Rec&hercher...",              104
+        MENUITEM "Sélectionner &Fichiers...",   116
+        MENUITEM SEPARATOR
 #ifndef _NO_EXTENSIONS
-		MENUITEM "&Quitter\tAlt+X" , 			ID_FILE_EXIT
+        MENUITEM "&Quitter\tAlt+X",             ID_FILE_EXIT
 #else
-		MENUITEM "&Quitter", 				ID_FILE_EXIT
+        MENUITEM "&Quitter",                    ID_FILE_EXIT
 #endif
-	}
+    }
 
-	POPUP "&Disque"  {
-		MENUITEM "&Copier Disque..." ,			201
-		MENUITEM "&Nommer Disque..." ,			202
-		MENUITEM SEPARATOR
-		MENUITEM "&Formater Disque..." ,			ID_FORMAT_DISK
+    POPUP "&Disque"  {
+        MENUITEM "&Copier Disque...",           201
+        MENUITEM "&Nommer Disque...",           202
+        MENUITEM SEPARATOR
+        MENUITEM "&Formater Disque...",         ID_FORMAT_DISK
 #ifdef _WIN95
-		MENUITEM "Créer un disque *système...", -1	/*@@ */
+        MENUITEM "Créer un disque *système...", -1  /*TODO*/
 #endif
-		MENUITEM SEPARATOR
-		MENUITEM "Connecter un lecteur &réseau" ,			ID_CONNECT_NETWORK_DRIVE
-		MENUITEM "&Déconnecter un lecteur réseau" ,		ID_DISCONNECT_NETWORK_DRIVE
-		MENUITEM SEPARATOR
-		MENUITEM "&Partager..." ,			254
-		MENUITEM "Cesser de parta&ger" ,			255
-		MENUITEM SEPARATOR
-		MENUITEM "Choisir le &lecteur" ,			251
-	}
+        MENUITEM SEPARATOR
+        MENUITEM "Connecter un lecteur &réseau",ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Déconnecter un lecteur réseau",ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Partager...",                254
+        MENUITEM "Cesser de parta&ger",         255
+        MENUITEM SEPARATOR
+        MENUITEM "Choisir le &lecteur",         251
+    }
 
-	POPUP "&Répertoires"  {
-		MENUITEM "&Développer un niveau\t+" ,			301
-		MENUITEM "Développer une &branche\t*" ,		302
-		MENUITEM "&Tout développer\tCtrl+*" ,		303
-		MENUITEM "&Réduire une branche\t-" ,			304
-		MENUITEM SEPARATOR
-		MENUITEM "&Indiquer l'arborescence" ,				505
-	}
+    POPUP "&Répertoires"  {
+        MENUITEM "&Développer un niveau\t+",    301
+        MENUITEM "Développer une &branche\t*",  302
+        MENUITEM "&Tout développer\tCtrl+*",    303
+        MENUITEM "&Réduire une branche\t-",     304
+        MENUITEM SEPARATOR
+        MENUITEM "&Indiquer l'arborescence",    505
+    }
 
-	POPUP "&Vue"  {
-		MENUITEM "Arbre et ré&pertoire" ,			413
-		MENUITEM "&Arbre seulement" ,			411
-		MENUITEM "&Répertoire seulement" ,			412
-		MENUITEM SEPARATOR
-		MENUITEM "&Séparer" ,			ID_VIEW_SPLIT
-		MENUITEM SEPARATOR
-		MENUITEM "&Nom" ,			ID_VIEW_NAME
-		MENUITEM "Tous &les Détails" ,				ID_VIEW_ALL_ATTRIBUTES, CHECKED
-		MENUITEM "&Détails..." ,			ID_VIEW_SELECTED_ATTRIBUTES
-		MENUITEM SEPARATOR
-		MENUITEM "Trier par N&om" ,		ID_VIEW_SORT_NAME
-		MENUITEM "Trier par &Type" ,		ID_VIEW_SORT_TYPE
-		MENUITEM "Trier par Ta&ille" , 		ID_VIEW_SORT_SIZE
-		MENUITEM "Trier par Dat&e" , 		ID_VIEW_SORT_DATE
-		MENUITEM SEPARATOR
-		MENUITEM "Trier par &..." ,			ID_VIEW_FILTER
-	}
+    POPUP "&Vue"  {
+        MENUITEM "Arbre et ré&pertoire",        413
+        MENUITEM "&Arbre seulement",            411
+        MENUITEM "&Répertoire seulement",       412
+        MENUITEM SEPARATOR
+        MENUITEM "&Séparer",                    ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Nom",                        ID_VIEW_NAME
+        MENUITEM "Tous &les Détails",           ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "&Détails...",                 ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "Trier par N&om",              ID_VIEW_SORT_NAME
+        MENUITEM "Trier par &Type",             ID_VIEW_SORT_TYPE
+        MENUITEM "Trier par Ta&ille",           ID_VIEW_SORT_SIZE
+        MENUITEM "Trier par Dat&e",             ID_VIEW_SORT_DATE
+        MENUITEM SEPARATOR
+        MENUITEM "Trier par &...",              ID_VIEW_FILTER
+    }
 
-	POPUP "&Options"  {
-		MENUITEM "&Confirmation..." ,		501
-		MENUITEM "&Police..." ,			ID_SELECT_FONT
-		MENUITEM "Personnaliser la &barre d'Outils..." , 512
-		MENUITEM SEPARATOR
-		MENUITEM "Barre d'&Outils" ,		ID_VIEW_TOOL_BAR, CHECKED
-		MENUITEM "Barre de &Lecteur" ,		ID_VIEW_DRIVE_BAR, CHECKED
-		MENUITEM "Barre d'&État" ,	ID_VIEW_STATUSBAR, CHECKED
+    POPUP "&Options"  {
+        MENUITEM "&Confirmation...",            501
+        MENUITEM "&Police...",                  ID_SELECT_FONT
+        MENUITEM "Personnaliser la &barre d'Outils...", 512
+        MENUITEM SEPARATOR
+        MENUITEM "Barre d'&Outils",             ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "Barre de &Lecteur",           ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "Barre d'&État",               ID_VIEW_STATUSBAR, CHECKED
 #ifndef _NO_EXTENSIONS
-		MENUITEM "P&lein Écran\tCtrl+Shift+S" , 	ID_VIEW_FULLSCREEN
+        MENUITEM "P&lein Écran\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
 #endif
-		MENUITEM SEPARATOR
-		MENUITEM "&Réduire a l'utilisation" ,		504
-		MENUITEM "&Enregistrer la configuration en quittant" ,			511
-	}
+        MENUITEM SEPARATOR
+        MENUITEM "&Réduire a l'utilisation",    504
+        MENUITEM "&Enregistrer la configuration en quittant",511
+    }
 
 
-	POPUP "&Sécurité"  {
-		MENUITEM "&Accès..." ,		605
-		MENUITEM "&Surveillance..." ,			606
-		MENUITEM "&Propriétaire..." ,		607
-	}
+    POPUP "&Sécurité"  {
+        MENUITEM "&Accès...",                   605
+        MENUITEM "&Surveillance...",            606
+        MENUITEM "&Propriétaire...",            607
+    }
 
-	POPUP "&Fenêtre"  {
-		MENUITEM "Nouvelle &fenêtre" ,			ID_WINDOW_NEW
-		MENUITEM "&En cascade\tCtrl+F5" ,		ID_WINDOW_CASCADE
-		MENUITEM "Mosaïque &horizontale" ,		ID_WINDOW_TILE_HORZ
-		MENUITEM "Mosaïque &verticale\tCtrl+F4" ,		ID_WINDOW_TILE_VERT
+    POPUP "&Fenêtre"  {
+        MENUITEM "Nouvelle &fenêtre",           ID_WINDOW_NEW
+        MENUITEM "&En cascade\tCtrl+F5",        ID_WINDOW_CASCADE
+        MENUITEM "Mosaïque &horizontale",       ID_WINDOW_TILE_HORZ
+        MENUITEM "Mosaïque &verticale\tCtrl+F4",ID_WINDOW_TILE_VERT
 #ifndef _NO_EXTENSIONS
-		MENUITEM "Réorganisation &Automatique" ,		ID_WINDOW_AUTOSORT
+        MENUITEM "Réorganisation &Automatique", ID_WINDOW_AUTOSORT
 #endif
-		MENUITEM "Réorganiser les &icônes" ,		ID_WINDOW_ARRANGE
-		MENUITEM "&Actualiser\tF5" ,		ID_REFRESH
-	}
+        MENUITEM "Réorganiser les &icônes",     ID_WINDOW_ARRANGE
+        MENUITEM "&Actualiser\tF5",             ID_REFRESH
+    }
 
-	POPUP "&Aide"  {
-		MENUITEM "&Sommaire de l'aide\tF1" ,			ID_HELP
-		MENUITEM "&Rechercher dans l'aide\tF1" ,			ID_HELP
-		MENUITEM "&Utiliser l'aide\tF1" ,			ID_HELP_USING
-		MENUITEM SEPARATOR
-		MENUITEM "&A propos de Winefile..." ,			ID_ABOUT
-		MENUITEM "A propos de &Wine..." ,			ID_ABOUT_WINE
-	}
+    POPUP "&Aide"  {
+        MENUITEM "&Sommaire de l'aide\tF1",     ID_HELP
+        MENUITEM "&Rechercher dans l'aide\tF1", ID_HELP
+        MENUITEM "&Utiliser l'aide\tF1",        ID_HELP_USING
+        MENUITEM SEPARATOR
+        MENUITEM "&A propos de Winefile...",    ID_ABOUT
+#ifdef __WINE__
+        MENUITEM "A propos de &Wine...",        ID_ABOUT_WINE
+#endif
+    }
 }
 
 
@@ -152,13 +154,13 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Exécuter"
 FONT 8, "MS Shell Dlg"
 {
-	CONTROL 		"", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
-	CONTROL 		"&Commande :" , -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
-	EDITTEXT		201, 3, 29, 134, 12, ES_AUTOHSCROLL
-	CONTROL 		"Sous forme d'icône" , 214, "Button", BS_AUTOCHECKBOX|WS_TABSTOP,3, 45, 71, 12
-	DEFPUSHBUTTON	"OK" , 1, 158, 6, 47, 14
-	PUSHBUTTON		"Annuler" , 2, 158, 23, 47, 14
-	PUSHBUTTON		"&Aide" , 254, 158, 43, 47, 14
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "&Commande :", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    CONTROL         "Sous forme d'icône", 214, "Button", BS_AUTOCHECKBOX|WS_TABSTOP,3, 45, 71, 12
+    DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
+    PUSHBUTTON      "Annuler", 2, 158, 23, 47, 14
+    PUSHBUTTON      "&Aide", 254, 158, 43, 47, 14
 }
 
 IDD_SELECT_DESTINATION DIALOG FIXED IMPURE 15, 13, 210, 63
@@ -166,16 +168,16 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Sélectionner la destination"
 FONT 8, "MS Shell Dlg"
 {
-	CONTROL 		"", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
-	CONTROL 		"&Dossier:" , -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
-	EDITTEXT		201, 3, 29, 134, 12, ES_AUTOHSCROLL
-	DEFPUSHBUTTON		"OK" , 1, 158, 6, 47, 14
-	PUSHBUTTON		"Annuler" , 2, 158, 23, 47, 14
-	PUSHBUTTON		"Pa&rcourir..." , 254, 158, 43, 47, 14
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "&Dossier:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
+    PUSHBUTTON      "Annuler", 2, 158, 23, 47, 14
+    PUSHBUTTON      "Pa&rcourir...", 254, 158, 43, 47, 14
 }
 
 STRINGTABLE
 {
-	IDS_FONT_SEL_DLG_NAME	"Appliquer les réglages des fontes"
-	IDS_FONT_SEL_ERROR	"Erreur dans la sélection de la nouvelle fonte."
+    IDS_FONT_SEL_DLG_NAME   "Appliquer les réglages des fontes"
+    IDS_FONT_SEL_ERROR      "Erreur dans la sélection de la nouvelle fonte."
 }

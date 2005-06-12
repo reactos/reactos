@@ -29,122 +29,124 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 IDM_WINEFILE MENU FIXED IMPURE
 {
-	POPUP "&File"  {
-		MENUITEM "&Open\tEnter" ,			ID_ACTIVATE
-		MENUITEM "&Move...\tF7" , 			ID_FILE_MOVE
-		MENUITEM "&Copy...\tF8" ,			ID_FILE_COPY
-		MENUITEM "&In Clipboard...\tF9" ,		118
-		MENUITEM "&Delete\tDel" ,			ID_FILE_DELETE
-		MENUITEM "Re&name..." ,			109
-		MENUITEM "Propert&ies...\tAlt+Enter" , ID_EDIT_PROPERTIES
-		MENUITEM SEPARATOR
-		MENUITEM "C&ompress..." ,		119
-		MENUITEM "Dec&ompress..." ,		120
-		MENUITEM SEPARATOR
-		MENUITEM "&Run..." ,			ID_EXECUTE
-		MENUITEM "&Print..." , 			102
-		MENUITEM "Associate..." ,		103
-		MENUITEM SEPARATOR
-		MENUITEM "Cr&eate Directory..." ,			111
-		MENUITEM "Searc&h..." ,			104
-		MENUITEM "&Select Files..." ,			116
-		MENUITEM SEPARATOR
+    POPUP "&File"  {
+        MENUITEM "&Open\tEnter",                ID_ACTIVATE
+        MENUITEM "&Move...\tF7",                ID_FILE_MOVE
+        MENUITEM "&Copy...\tF8",                ID_FILE_COPY
+        MENUITEM "&In Clipboard...\tF9",        118
+        MENUITEM "&Delete\tDel",                ID_FILE_DELETE
+        MENUITEM "Re&name...",                  109
+        MENUITEM "Propert&ies...\tAlt+Enter",   ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "C&ompress...",                119
+        MENUITEM "Dec&ompress...",              120
+        MENUITEM SEPARATOR
+        MENUITEM "&Run...",                     ID_EXECUTE
+        MENUITEM "&Print...",                   102
+        MENUITEM "Associate...",                103
+        MENUITEM SEPARATOR
+        MENUITEM "Cr&eate Directory...",        111
+        MENUITEM "Searc&h...",                  104
+        MENUITEM "&Select Files...",            116
+        MENUITEM SEPARATOR
 #ifndef _NO_EXTENSIONS
-		MENUITEM "E&xit\tAlt+X" , 			ID_FILE_EXIT
+        MENUITEM "E&xit\tAlt+X",                ID_FILE_EXIT
 #else
-		MENUITEM "E&xit", 				ID_FILE_EXIT
+        MENUITEM "E&xit",                       ID_FILE_EXIT
 #endif
-	}
+    }
 
-	POPUP "&Disk"  {
-		MENUITEM "&Copy Disk..." ,			201
-		MENUITEM "&Label Disk..." ,			202
-		MENUITEM SEPARATOR
-		MENUITEM "&Format Disk..." ,			ID_FORMAT_DISK
+    POPUP "&Disk"  {
+        MENUITEM "&Copy Disk...",               201
+        MENUITEM "&Label Disk...",              202
+        MENUITEM SEPARATOR
+        MENUITEM "&Format Disk...",             ID_FORMAT_DISK
 #ifdef _WIN95
-		MENUITEM "&Make System Disk...", -1	/*TODO*/
+        MENUITEM "&Make System Disk...", -1 /*TODO*/
 #endif
-		MENUITEM SEPARATOR
-		MENUITEM "Connect &Network Drive" ,			ID_CONNECT_NETWORK_DRIVE
-		MENUITEM "&Disconnect Network Drive" ,		ID_DISCONNECT_NETWORK_DRIVE
-		MENUITEM SEPARATOR
-		MENUITEM "Share as..." ,			254
-		MENUITEM "&Remove Share..." ,			255
-		MENUITEM SEPARATOR
-		MENUITEM "&Select Drive..." ,			251
-	}
+        MENUITEM SEPARATOR
+        MENUITEM "Connect &Network Drive",      ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Disconnect Network Drive",   ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM SEPARATOR
+        MENUITEM "Share as...",                 254
+        MENUITEM "&Remove Share...",            255
+        MENUITEM SEPARATOR
+        MENUITEM "&Select Drive...",            251
+    }
 
-	POPUP "Di&rectories"  {
-		MENUITEM "&Next Level\t+" ,			301
-		MENUITEM "Expand &Tree\t*" ,		302
-		MENUITEM "Expand &all\tStrg+*" ,		303
-		MENUITEM "Collapse &Tree\t-" ,			304
-		MENUITEM SEPARATOR
-		MENUITEM "&Mark Children" ,				505
-	}
+    POPUP "Di&rectories"  {
+        MENUITEM "&Next Level\t+",              301
+        MENUITEM "Expand &Tree\t*",             302
+        MENUITEM "Expand &all\tStrg+*",         303
+        MENUITEM "Collapse &Tree\t-",           304
+        MENUITEM SEPARATOR
+        MENUITEM "&Mark Children",              505
+    }
 
-	POPUP "&View"  {
-		MENUITEM "T&ree and Directory" ,			413
-		MENUITEM "Tr&ee Only" ,			411
-		MENUITEM "Directory &Only" ,			412
-		MENUITEM SEPARATOR
-		MENUITEM "Sp&lit" ,			ID_VIEW_SPLIT
-		MENUITEM SEPARATOR
-		MENUITEM "&Name" ,			ID_VIEW_NAME
-		MENUITEM "&All File Details" ,				ID_VIEW_ALL_ATTRIBUTES, CHECKED
-		MENUITEM "&Partial Details..." ,			ID_VIEW_SELECTED_ATTRIBUTES
-		MENUITEM SEPARATOR
-		MENUITEM "&Sort by Name" ,		ID_VIEW_SORT_NAME
-		MENUITEM "Sort &by Type" ,		ID_VIEW_SORT_TYPE
-		MENUITEM "Sort by Si&ze" , 		ID_VIEW_SORT_SIZE
-		MENUITEM "Sort by &Date" , 		ID_VIEW_SORT_DATE
-		MENUITEM SEPARATOR
-		MENUITEM "Filter by &..." ,			ID_VIEW_FILTER
-	}
+    POPUP "&View"  {
+        MENUITEM "T&ree and Directory",         413
+        MENUITEM "Tr&ee Only",                  411
+        MENUITEM "Directory &Only",             412
+        MENUITEM SEPARATOR
+        MENUITEM "Sp&lit",                      ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Name",                       ID_VIEW_NAME
+        MENUITEM "&All File Details",           ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "&Partial Details...",         ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "&Sort by Name",               ID_VIEW_SORT_NAME
+        MENUITEM "Sort &by Type",               ID_VIEW_SORT_TYPE
+        MENUITEM "Sort by Si&ze",               ID_VIEW_SORT_SIZE
+        MENUITEM "Sort by &Date",               ID_VIEW_SORT_DATE
+        MENUITEM SEPARATOR
+        MENUITEM "Filter by &...",              ID_VIEW_FILTER
+    }
 
-	POPUP "&Options"  {
-		MENUITEM "&Confirmation..." ,		501
-		MENUITEM "&Font..." ,			ID_SELECT_FONT
-		MENUITEM "Customize Tool&bar..." , 512
-		MENUITEM SEPARATOR
-		MENUITEM "&Toolbar" ,		ID_VIEW_TOOL_BAR, CHECKED
-		MENUITEM "&Drivebar" ,		ID_VIEW_DRIVE_BAR, CHECKED
-		MENUITEM "&Status Bar" ,	ID_VIEW_STATUSBAR, CHECKED
+    POPUP "&Options"  {
+        MENUITEM "&Confirmation...",            501
+        MENUITEM "&Font...",                    ID_SELECT_FONT
+        MENUITEM "Customize Tool&bar...",       512
+        MENUITEM SEPARATOR
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "&Drivebar",                   ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR, CHECKED
 #ifndef _NO_EXTENSIONS
-		MENUITEM "F&ull Screen\tCtrl+Shift+S" , 	ID_VIEW_FULLSCREEN
+        MENUITEM "F&ull Screen\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
 #endif
-		MENUITEM SEPARATOR
-		MENUITEM "&Minimize on run" ,		504
-		MENUITEM "&Save settings on exit" ,			511
-	}
+        MENUITEM SEPARATOR
+        MENUITEM "&Minimize on run",            504
+        MENUITEM "&Save settings on exit",      511
+    }
 
 
-	POPUP "&Security"  {
-		MENUITEM "&Access..." ,		605
-		MENUITEM "&Logging..." ,			606
-		MENUITEM "&Owner..." ,		607
-	}
+    POPUP "&Security"  {
+        MENUITEM "&Access...",                  605
+        MENUITEM "&Logging...",                 606
+        MENUITEM "&Owner...",                   607
+    }
 
-	POPUP "&Window"  {
-		MENUITEM "New &Window" ,			ID_WINDOW_NEW
-		MENUITEM "Cascading\tCtrl+F5" ,		ID_WINDOW_CASCADE
-		MENUITEM "Tile &Horizontally" ,		ID_WINDOW_TILE_HORZ
-		MENUITEM "Tile &Vertically\tCtrl+F4" ,		ID_WINDOW_TILE_VERT
+    POPUP "&Window"  {
+        MENUITEM "New &Window",                 ID_WINDOW_NEW
+        MENUITEM "Cascading\tCtrl+F5",          ID_WINDOW_CASCADE
+        MENUITEM "Tile &Horizontally",          ID_WINDOW_TILE_HORZ
+        MENUITEM "Tile &Vertically\tCtrl+F4",   ID_WINDOW_TILE_VERT
 #ifndef _NO_EXTENSIONS
-		MENUITEM "Arrange Automatically" ,		ID_WINDOW_AUTOSORT
+        MENUITEM "Arrange Automatically",       ID_WINDOW_AUTOSORT
 #endif
-		MENUITEM "Arrange &Symbols" ,		ID_WINDOW_ARRANGE
-		MENUITEM "&Refresh\tF5" ,		ID_REFRESH
-	}
+        MENUITEM "Arrange &Symbols",            ID_WINDOW_ARRANGE
+        MENUITEM "&Refresh\tF5",                ID_REFRESH
+    }
 
-	POPUP "&?"  {
-		MENUITEM "&Help Topics\tF1" ,			ID_HELP
-		MENUITEM "Help &Search...\tF1" ,			ID_HELP
-		MENUITEM "&Using Help\tF1" ,			ID_HELP_USING
-		MENUITEM SEPARATOR
-		MENUITEM "&Info about Winefile..." ,		ID_ABOUT
-		MENUITEM "Info about &Wine..." ,			ID_ABOUT_WINE
-	}
+    POPUP "&?"  {
+        MENUITEM "&Help Topics\tF1",            ID_HELP
+        MENUITEM "Help &Search...\tF1",         ID_HELP
+        MENUITEM "&Using Help\tF1",             ID_HELP_USING
+        MENUITEM SEPARATOR
+        MENUITEM "&Info about Winefile...",     ID_ABOUT
+#ifdef __WINE__
+        MENUITEM "Info about &Wine...",         ID_ABOUT_WINE
+#endif
+    }
 }
 
 
@@ -153,13 +155,13 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Execute"
 FONT 8, "MS Shell Dlg"
 {
-	CONTROL 		"", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
-	CONTROL 		"&Command:" , -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
-	EDITTEXT		201, 3, 29, 134, 12, ES_AUTOHSCROLL
-	CONTROL 		"As &Symbol" , 214, "Button", BS_AUTOCHECKBOX|WS_TABSTOP,3, 45, 71, 12
-	DEFPUSHBUTTON		"OK" , 1, 158, 6, 47, 14
-	PUSHBUTTON		"Cancel" , 2, 158, 23, 47, 14
-	PUSHBUTTON		"&Help" , 254, 158, 43, 47, 14
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "&Command:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    CONTROL         "As &Symbol", 214, "Button", BS_AUTOCHECKBOX|WS_TABSTOP,3, 45, 71, 12
+    DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
+    PUSHBUTTON      "Cancel", 2, 158, 23, 47, 14
+    PUSHBUTTON      "&Help", 254, 158, 43, 47, 14
 }
 
 IDD_SELECT_DESTINATION DIALOG FIXED IMPURE 15, 13, 210, 63
@@ -167,12 +169,12 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Select destination"
 FONT 8, "MS Shell Dlg"
 {
-	CONTROL 		"", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
-	CONTROL 		"&Path:" , -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
-	EDITTEXT		201, 3, 29, 134, 12, ES_AUTOHSCROLL
-	DEFPUSHBUTTON		"OK" , 1, 158, 6, 47, 14
-	PUSHBUTTON		"Cancel" , 2, 158, 23, 47, 14
-	PUSHBUTTON		"&Browse" , 254, 158, 43, 47, 14
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "&Path:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
+    PUSHBUTTON      "Cancel", 2, 158, 23, 47, 14
+    PUSHBUTTON      "&Browse", 254, 158, 43, 47, 14
 }
 
 IDD_DIALOG_VIEW_TYPE DIALOG DISCARDABLE 15, 13, 161, 97
@@ -230,35 +232,35 @@ END
 
 STRINGTABLE
 {
-	IDS_FONT_SEL_DLG_NAME	"Applying font settings"
-	IDS_FONT_SEL_ERROR	"Error while selecting new font."
+    IDS_FONT_SEL_DLG_NAME   "Applying font settings"
+    IDS_FONT_SEL_ERROR      "Error while selecting new font."
 }
 
 STRINGTABLE
 {
-	IDS_WINEFILE	"Winefile"
-	IDS_ERROR		"Error"
-	IDS_ROOT_FS		"root fs"
-	IDS_UNIXFS		"unixfs"
-	IDS_DESKTOP		"Desktop"
-	IDS_SHELL		"Shell"
-	IDS_TITLEFMT	"%s - %s"
-	IDS_NO_IMPL		"Not yet implemented"
-	IDS_WINE		"WINE"
-	IDS_WINE_FILE	"Wine File"
+    IDS_WINEFILE            "Winefile"
+    IDS_ERROR               "Error"
+    IDS_ROOT_FS             "root fs"
+    IDS_UNIXFS              "unixfs"
+    IDS_DESKTOP             "Desktop"
+    IDS_SHELL               "Shell"
+    IDS_TITLEFMT            "%s - %s"
+    IDS_NO_IMPL             "Not yet implemented"
+    IDS_WINE                "WINE"
+    IDS_WINE_FILE           "Wine File"
 }
 
 STRINGTABLE
 {
-	IDS_COL_NAME	"Name"
-	IDS_COL_SIZE	"Size"
-	IDS_COL_CDATE	"CDate"
-	IDS_COL_ADATE	"ADate"
-	IDS_COL_MDATE	"MDate"
-	IDS_COL_IDX		"Index/Inode"
-	IDS_COL_LINKS	"Links"
-	IDS_COL_ATTR	"Attributes"
-	IDS_COL_SEC		"Security"
+    IDS_COL_NAME            "Name"
+    IDS_COL_SIZE            "Size"
+    IDS_COL_CDATE           "CDate"
+    IDS_COL_ADATE           "ADate"
+    IDS_COL_MDATE           "MDate"
+    IDS_COL_IDX             "Index/Inode"
+    IDS_COL_LINKS           "Links"
+    IDS_COL_ATTR            "Attributes"
+    IDS_COL_SEC             "Security"
 
-	IDS_FREE_SPACE_FMT	"%s of %s free"
+    IDS_FREE_SPACE_FMT      "%s of %s free"
 }
