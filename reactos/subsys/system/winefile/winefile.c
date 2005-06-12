@@ -2386,11 +2386,11 @@ static LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM
 				case ID_NO_WARRANTY:
 					WineWarranty(Globals.hMainWnd);
 					break;
-#endif
 
 				case ID_ABOUT_WINE:
 					ShellAbout(hwnd, RS(b2,IDS_WINE), RS(b1,IDS_WINEFILE), 0);
 					break;
+#endif
 
 				case ID_ABOUT:
 					ShellAbout(hwnd, RS(b1,IDS_WINEFILE), NULL, 0);
@@ -2779,7 +2779,7 @@ static int insert_entries(Pane* pane, Entry* dir, LPCTSTR pattern, int filter_fl
 					continue;
 				break;
 
-			  default: // TF_OTHERS
+			  default: /* TF_OTHERS */
 				if (!(filter_flags & TF_OTHERS))
 					continue;
 			}
@@ -4008,7 +4008,7 @@ static BOOL is_directory(LPCTSTR target)
 
 	return target_attr&FILE_ATTRIBUTE_DIRECTORY? TRUE: FALSE;
 }
-	
+
 static BOOL prompt_target(Pane* pane, LPTSTR source, LPTSTR target)
 {
 	TCHAR path[MAX_PATH];

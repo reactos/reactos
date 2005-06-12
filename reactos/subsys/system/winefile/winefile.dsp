@@ -208,10 +208,6 @@ SOURCE=.\pt.rc
 # End Source File
 # Begin Source File
 
-SOURCE=.\resource.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\resource.rc
 # PROP Exclude_From_Build 1
 # End Source File
@@ -256,6 +252,10 @@ SOURCE=.\license.c
 # Begin Source File
 
 SOURCE=.\license.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\resource.h
 # End Source File
 # Begin Source File
 

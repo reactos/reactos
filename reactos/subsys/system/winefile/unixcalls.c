@@ -88,4 +88,3 @@ int call_stat(
 #endif /* _NO_EXTENSIONS */
 
 #endif /* __WINE__ */
-
