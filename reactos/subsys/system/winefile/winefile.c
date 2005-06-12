@@ -1887,7 +1887,6 @@ static INT_PTR CALLBACK PropertiesDialogDlgProc(HWND hwnd, UINT nmsg, WPARAM wpa
 		case WM_INITDIALOG: {
 			const static TCHAR sByteFmt[] = {'%','s',' ','B','y','t','e','s','\0'};
 			TCHAR b1[BUFFER_LEN], b2[BUFFER_LEN];
-			NUMBERFMT fmt = {0};
 			LPWIN32_FIND_DATA pWFD;
 			ULONGLONG size;
 
