@@ -486,7 +486,7 @@ EngLineTo(SURFOBJ *DestObj,
 
 BOOL STDCALL
 IntEngLineTo(BITMAPOBJ *DestObj,
-	     CLIPOBJ *Clip,
+	     CLIPOBJ *ClipObj,
 	     BRUSHOBJ *Brush,
 	     LONG x1,
 	     LONG y1,
@@ -517,6 +517,26 @@ IntEngLineTo(BITMAPOBJ *DestObj,
   /* No success yet */
   ret = FALSE;
 
+  /* Clip lines totally outside the clip region. This is not done as an
+   * optimization (there are very few lines drawn outside the region) but
+   * as a workaround for what seems to be a problem in the CL54XX driver */
+  if (NULL == ClipObj || DC_TRIVIAL == ClipObj->iDComplexity)
+    {
+      b.left = 0;
+      b.right = DestSurf->sizlBitmap.cx;
+      b.top = 0;
+      b.bottom = DestSurf->sizlBitmap.cy;
+    }
+  else
+    {
+      b = ClipObj->rclBounds;
+    }
+  if ((x1 < b.left && x2 < b.left) || (b.right <= x1 && b.right <= x2) ||
+      (y1 < b.top && y2 < b.top) || (b.bottom <= y1 && b.bottom <= y2))
+    {
+      return TRUE;
+    }
+
   b.left = min(x1, x2);
   b.right = max(x1, x2);
   b.top = min(y1, y2);
@@ -529,7 +549,7 @@ IntEngLineTo(BITMAPOBJ *DestObj,
     {
     /* Call the driver's DrvLineTo */
     ret = GDIDEVFUNCS(DestSurf).LineTo(
-      DestSurf, Clip, Brush, x1, y1, x2, y2, /*RectBounds*/&b, Mix);
+      DestSurf, ClipObj, Brush, x1, y1, x2, y2, &b, Mix);
     }
 
 #if 0
@@ -541,7 +561,7 @@ IntEngLineTo(BITMAPOBJ *DestObj,
 
   if (! ret)
     {
-      ret = EngLineTo(DestSurf, Clip, Brush, x1, y1, x2, y2, RectBounds, Mix);
+      ret = EngLineTo(DestSurf, ClipObj, Brush, x1, y1, x2, y2, RectBounds, Mix);
     }
 
   MouseSafetyOnDrawEnd(DestSurf);
