@@ -26,14 +26,14 @@ KdpBochsDebugPrint(IN PCH Message)
         {
 #if defined(_M_IX86) && defined(__GNUC__) 
            /* Don't use WRITE_PORT_UCHAR because hal isn't initialized yet in the very early boot phase. */
-           __asm__("outb %0, %w1\n\t" :: "a" ('\r'), "d" (BOCHS_LOGGER_PORT));
+           __asm__("outb %b0, %w1\n\t" :: "a" ('\r'), "d" (BOCHS_LOGGER_PORT));
 #else
            WRITE_PORT_UCHAR((PUCHAR)BOCHS_LOGGER_PORT, '\r');
 #endif
         }
 #if defined(_M_IX86) && defined(__GNUC__) 
         /* Don't use WRITE_PORT_UCHAR because hal isn't initialized yet in the very early boot phase. */
-        __asm__("outb %0, %w1\n\t" :: "a" (*Message), "d" (BOCHS_LOGGER_PORT));
+        __asm__("outb %b0, %w1\n\t" :: "a" (*Message), "d" (BOCHS_LOGGER_PORT));
 #else
         WRITE_PORT_UCHAR((PUCHAR)BOCHS_LOGGER_PORT, *Message);
 #endif
