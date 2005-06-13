@@ -26,3 +26,5 @@ int swprintf(wchar_t *buf, const wchar_t *fmt, ...);
 #include "linux/usb.h"
 #include "linux/pci_ids.h"
 
+#define IOCTL_INTERNAL_USB_GET_ROOT_USB_DEVICE \
+	CTL_CODE(FILE_DEVICE_USB, 4000, METHOD_BUFFERED, FILE_ANY_ACCESS)
