@@ -141,6 +141,7 @@ ReportDetectedDevice(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PUNICODE_STRING DeviceDescription,
 	IN PUNICODE_STRING DeviceId,
+	IN PUNICODE_STRING InstanceId,
 	IN PUNICODE_STRING HardwareIds,
 	IN PUNICODE_STRING CompatibleIds)
 {
@@ -149,7 +150,7 @@ ReportDetectedDevice(
 	PFDO_DEVICE_EXTENSION FdoDeviceExtension;
 	NTSTATUS Status;
 
-	DPRINT("Serenum: SerenumReportDetectedDevice() called with %wZ (%wZ) detected\n", DeviceId, DeviceDescription);
+	DPRINT("Serenum: ReportDetectedDevice() called with %wZ (%wZ) detected\n", DeviceId, DeviceDescription);
 
 	Status = IoCreateDevice(
 		DeviceObject->DriverObject,
@@ -170,6 +171,8 @@ ReportDetectedDevice(
 	Status = SerenumDuplicateUnicodeString(&PdoDeviceExtension->DeviceDescription, DeviceDescription, PagedPool);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 	Status = SerenumDuplicateUnicodeString(&PdoDeviceExtension->DeviceId, DeviceId, PagedPool);
+	if (!NT_SUCCESS(Status)) goto ByeBye;
+	Status = SerenumDuplicateUnicodeString(&PdoDeviceExtension->InstanceId, InstanceId, PagedPool);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 	Status = SerenumDuplicateUnicodeString(&PdoDeviceExtension->HardwareIds, HardwareIds, PagedPool);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
@@ -195,6 +198,8 @@ ByeBye:
 			RtlFreeUnicodeString(&PdoDeviceExtension->DeviceDescription);
 		if (PdoDeviceExtension->DeviceId.Buffer)
 			RtlFreeUnicodeString(&PdoDeviceExtension->DeviceId);
+		if (PdoDeviceExtension->InstanceId.Buffer)
+			RtlFreeUnicodeString(&PdoDeviceExtension->InstanceId);
 		if (PdoDeviceExtension->HardwareIds.Buffer)
 			RtlFreeUnicodeString(&PdoDeviceExtension->HardwareIds);
 		if (PdoDeviceExtension->CompatibleIds.Buffer)
@@ -472,6 +477,7 @@ SerenumDetectLegacyDevice(
 	UCHAR Buffer[16];
 	UNICODE_STRING DeviceDescription;
 	UNICODE_STRING DeviceId;
+	UNICODE_STRING InstanceId;
 	UNICODE_STRING HardwareIds;
 	UNICODE_STRING CompatibleIds;
 	NTSTATUS Status;
@@ -546,6 +552,8 @@ SerenumDetectLegacyDevice(
 	Status = ReadBytes(LowerDevice, Buffer, sizeof(Buffer)/sizeof(Buffer[0]), &Count);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 
+	RtlInitUnicodeString(&DeviceId, L"Serenum\\Mouse");
+	RtlInitUnicodeString(&InstanceId, L"0000"); /* FIXME */
 	for (i = 0; i < Count; i++)
 	{
 		if (Buffer[i] == 'B')
@@ -555,11 +563,10 @@ SerenumDetectLegacyDevice(
 			 * Compatible id: *PNP0F0F, SERIAL_MOUSE
 			 */
 			RtlInitUnicodeString(&DeviceDescription, L"Microsoft Ballpoint device");
-			RtlInitUnicodeString(&DeviceId, L"*PNP0F09");
 			SerenumInitMultiSzString(&HardwareIds, "*PNP0F09", NULL);
 			SerenumInitMultiSzString(&CompatibleIds, "*PNP0F0F", "SERIAL_MOUSE", NULL);
 			Status = ReportDetectedDevice(DeviceObject,
-				&DeviceDescription, &DeviceId, &HardwareIds, &CompatibleIds);
+				&DeviceDescription, &DeviceId, &InstanceId, &HardwareIds, &CompatibleIds);
 			RtlFreeUnicodeString(&HardwareIds);
 			RtlFreeUnicodeString(&CompatibleIds);
 			goto ByeBye;
@@ -580,7 +587,6 @@ SerenumDetectLegacyDevice(
 					 * Compatible id: SERIAL_MOUSE
 					 */
 					RtlInitUnicodeString(&DeviceDescription, L"Microsoft Mouse with 3-buttons");
-					RtlInitUnicodeString(&DeviceId, L"*PNP0F08");
 					SerenumInitMultiSzString(&HardwareIds, "*PNP0F08", NULL);
 					SerenumInitMultiSzString(&CompatibleIds, "SERIAL_MOUSE", NULL);
 				default:
@@ -588,12 +594,11 @@ SerenumDetectLegacyDevice(
 					 * Compatible id: SERIAL_MOUSE
 					 */
 					RtlInitUnicodeString(&DeviceDescription, L"Microsoft Mouse with 2-buttons or Microsoft Wheel Mouse");
-					RtlInitUnicodeString(&DeviceId, L"*PNP0F01");
 					SerenumInitMultiSzString(&HardwareIds, "*PNP0F01", NULL);
 					SerenumInitMultiSzString(&CompatibleIds, "SERIAL_MOUSE", NULL);
 			}
 			Status = ReportDetectedDevice(DeviceObject,
-				&DeviceDescription, &DeviceId, &HardwareIds, &CompatibleIds);
+				&DeviceDescription, &DeviceId, &InstanceId, &HardwareIds, &CompatibleIds);
 			RtlFreeUnicodeString(&HardwareIds);
 			RtlFreeUnicodeString(&CompatibleIds);
 			goto ByeBye;

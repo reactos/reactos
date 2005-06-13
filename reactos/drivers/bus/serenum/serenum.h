@@ -79,6 +79,7 @@ typedef struct _PDO_DEVICE_EXTENSION
 
 	UNICODE_STRING DeviceDescription; // REG_SZ
 	UNICODE_STRING DeviceId;          // REG_SZ
+	UNICODE_STRING InstanceId;        // REG_SZ
 	UNICODE_STRING HardwareIds;       // REG_MULTI_SZ
 	UNICODE_STRING CompatibleIds;     // REG_MULTI_SZ
 } PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;

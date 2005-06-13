@@ -61,11 +61,9 @@ SerenumPdoQueryId(
 			break;
 		case BusQueryInstanceID:
 		{
-			/* We don't have any instance id to report, and
-			 * this query is optional, so ignore it.
-			 */
-			*Information = Irp->IoStatus.Information;
-			return Irp->IoStatus.Status;
+			DPRINT("Serenum: IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryInstanceID\n");
+			SourceString = &DeviceExtension->InstanceId;
+			break;
 		}
 		default:
 			DPRINT1("Serenum: IRP_MJ_PNP / IRP_MN_QUERY_ID / unknown query id type 0x%lx\n", IdType);
