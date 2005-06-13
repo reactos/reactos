@@ -222,12 +222,7 @@ int SetButton (DWORD id, BOOL state)
 
     ti.cbSize = sizeof (ti);
     ti.dwMask = TBIF_STATE;
-/*
-	if(state&&id==1)
-		MessageBox(0,L"on",0,0);
-	else if(!state&&id==1)
-		MessageBox(0,L"off",0,0);
-*/
+
 	if(state)
 		ti.fsState = TBSTATE_ENABLED;
 	else
