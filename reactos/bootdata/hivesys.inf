@@ -744,6 +744,16 @@ HKLM,"SYSTEM\CurrentControlSet\Services\usbohci\Enum","Count",0x00010001,0x00000
 HKLM,"SYSTEM\CurrentControlSet\Services\usbohci\Enum","NextInstance",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_2955&DEV_6E61&SUBSYS_6E612955&REV_11\0000","Service",0x0000000,"usbohci"
 
+;USB Hub driver
+HKLM,"SYSTEM\CurrentControlSet\Services\usbhub","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\usbhub","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\usbhub","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\usbhub","Group",0x00000000,"Base"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbhub","ImagePath",0x00020000,"System32\drivers\usbhub.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbhub","Tag",0x00010001,0x00000011
+HKLM,"SYSTEM\CurrentControlSet\Services\usbhub","DisplayName",0x00000000,"ReactOS USB HUB cromwell-type driver"
+;hard coded values
+HKLM,"SYSTEM\CurrentControlSet\Enum\USB\ROOT_HUB\0000","Service",0x0000000,"usbhub"
 
 ; ReactOS PCNet NIC driver 
 ; To use the AMD supplied driver change the driver name to pcntn5m.sys
