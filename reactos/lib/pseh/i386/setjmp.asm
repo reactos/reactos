@@ -33,7 +33,7 @@ __SEHSetJmp@4:
  mov ecx, [esp+0]
 
  ; stack pointer
- lea edx, [esp+4]
+ lea edx, [esp+8]
 
  ; fill the jump buffer
  mov [eax+0], ebp
