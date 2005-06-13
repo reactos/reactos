@@ -31,7 +31,7 @@
 #define ADNS_INTERNAL_H_INCLUDED
 
 #include "config.h"
-typedef unsigned char byte;
+/*typedef unsigned char byte;*/ /* FIXME: horrible kludge to avoid conflicts with an SDK type */
 
 #include <stdarg.h>
 #include <assert.h>

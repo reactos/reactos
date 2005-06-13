@@ -108,24 +108,20 @@ typedef enum _KD_CONTINUE_TYPE
 
 typedef
 VOID
-STDCALL
-(*PKDP_INIT_ROUTINE)(struct _KD_DISPATCH_TABLE *DispatchTable,
+(STDCALL*PKDP_INIT_ROUTINE)(struct _KD_DISPATCH_TABLE *DispatchTable,
                      ULONG BootPhase);
 
 typedef
 VOID
-STDCALL
-(*PKDP_PRINT_ROUTINE)(PCH String);
+(STDCALL*PKDP_PRINT_ROUTINE)(PCH String);
 
 typedef
 VOID
-STDCALL
-(*PKDP_PROMPT_ROUTINE)(PCH String);
+(STDCALL*PKDP_PROMPT_ROUTINE)(PCH String);
 
 typedef
 KD_CONTINUE_TYPE
-STDCALL
-(*PKDP_EXCEPTION_ROUTINE)(PEXCEPTION_RECORD ExceptionRecord,
+(STDCALL*PKDP_EXCEPTION_ROUTINE)(PEXCEPTION_RECORD ExceptionRecord,
                           PCONTEXT Context,
                           PKTRAP_FRAME TrapFrame);
 

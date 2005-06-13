@@ -36,10 +36,9 @@
 #ifndef __USE_W32API
 
 typedef struct _KPROCESS *PKPROCESS;
+typedef struct _DISPATCHER_HEADER *PDISPATCHER_HEADER;
 
 #endif /* __USE_W32API */
-
-typedef struct _DISPATCHER_HEADER *PDISPATCHER_HEADER;
 
 typedef struct _HARDWARE_PTE_X86 {
     ULONG Valid             : 1;
