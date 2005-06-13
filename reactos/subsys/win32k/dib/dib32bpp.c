@@ -59,9 +59,9 @@ DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 "  jmp   .L2\n"
 ".L1:\n"
 "  stosw\n"
+"  ror  $0x10,%%eax\n"
 "  mov  %1,%%ecx\n"     /* Setup count of fullwords to fill */
 "  dec  %%ecx\n"
-"  rol $16,%%eax\n"
 "  rep stosl\n"         /* The actual fill */
 "  shr $0x10,%%eax\n"
 "  stosw\n"
@@ -703,45 +703,11 @@ DIB_32BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 {			 
   ULONG DestY;	
 
-#ifdef _M_IX86   
-  ULONG width;
-  PULONG pos;
-  ULONG delta = DestSurface->lDelta;
-  
-  width = (DestRect->right - DestRect->left) ;
-  pos =  (PULONG) (DestSurface->pvScan0 + DestRect->top * delta + (DestRect->left<<2));
-  
-  for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
-  {			
-    __asm__ __volatile__ (
-            "  cld\n"
-            "  mov  %0, %%eax\n"
-            "  test $0x03, %%edi\n" /* Align to fullword boundary */
-            "  jnz   .FL1\n"
-            "  mov  %1,%%ecx\n"     /* Setup count of fullwords to fill */
-            "  rep stosl\n"         /* The actual fill */
-            "  jmp   .FL2\n"
-            ".FL1:\n"            
-            "  stosw\n"
-            "  mov  %1,%%ecx\n"     /* Setup count of fullwords to fill */
-            "  dec  %%ecx\n"            
-            "  rol $16,%%eax\n"
-            "  rep stosl\n"         /* The actual fill */
-            "  shr $0x10,%%eax\n"
-            "  stosw\n"
-            ".FL2:\n"            
-            : /* no output */
-            : "r"(color), "r"(width), "D"(pos)
-            : "%eax", "%ecx");    
-            pos =(PULONG)((ULONG_PTR)pos + delta);	 
-  }
-
-#else				
 	for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
   {
     DIB_32BPP_HLine (DestSurface, DestRect->left, DestRect->right, DestY, color);
   }
-#endif
+
 
 	return TRUE;
 }
