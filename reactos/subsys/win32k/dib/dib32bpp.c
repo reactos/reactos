@@ -52,6 +52,7 @@ DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
     __asm__ __volatile__ (
 "  cld\n"
 "  mov  %0, %%eax\n"
+"  mov  %2, %%edi\n"
 "  test $0x03, %%edi\n" /* Align to fullword boundary */
 "  jnz   .L1\n"
 "  mov  %1,%%ecx\n"     /* Setup count of fullwords to fill */
@@ -67,8 +68,8 @@ DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 "  stosw\n"
 ".L2:\n"
   : /* no output */
-  : "r"(c), "r"(cx), "D"(addr)
-  : "%eax", "%ecx");
+  : "m"(c), "r"(cx), "m"(addr)
+  : "%eax", "%ecx", "%edi");
 
   
 }

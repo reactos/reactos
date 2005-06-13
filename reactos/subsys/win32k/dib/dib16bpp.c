@@ -17,6 +17,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 /* $Id$ */
+
 #include <w32k.h>
 
 VOID
@@ -53,6 +54,7 @@ DIB_16BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 "  shl  $16, %%eax\n"
 "  andl $0xffff, %0\n"  /* If the pixel value is "abcd", put "abcdabcd" in %eax */
 "  or   %0, %%eax\n"
+"  mov  %2, %%edi\n"
 "  test $0x03, %%edi\n" /* Align to fullword boundary */
 "  jz   .L1\n"
 "  stosw\n"
@@ -67,8 +69,8 @@ DIB_16BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 "  stosw\n"
 ".L2:\n"
   : /* no output */
-  : "r"(c), "r"(Count), "D"(addr)
-  : "%eax", "%ecx");
+  : "r"(c), "r"(Count), "m"(addr)
+  : "%eax", "%ecx", "%edi");
 #else /* _M_IX86 */
   LONG cx = x1;
   DWORD cc;
@@ -443,8 +445,8 @@ DIB_16BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
   {   
   __asm__ __volatile__ (
     "  cld\n"
-    "  mov  %0,%%eax\n"
     "  mov  %1,%%ebx\n" 
+    "  mov  %2,%%edi\n" 
     "  test $0x03, %%edi\n" /* Align to fullword boundary */
     "  jz   .FL1\n"
     "  stosw\n"
@@ -458,9 +460,9 @@ DIB_16BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
     "  jz   .FL2\n"
     "  stosw\n"
     ".FL2:\n"
-    : 
-    : "r" (color), "r" (width), "D" (pos)
-    : "%eax", "%ecx","%ebx");
+    :
+    : "a" (color), "r" (width), "m" (pos)
+    : "%ecx", "%ebx", "%edi");
      pos =(PULONG)((ULONG_PTR)pos + delta);	 
   }
 
