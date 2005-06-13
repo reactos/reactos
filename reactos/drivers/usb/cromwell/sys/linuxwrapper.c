@@ -74,7 +74,7 @@ void init_wrapper(struct pci_dev *probe_dev)
 void handle_irqs(int irq)
 {
 	int n;
-	printk("handle irqs\n");
+	//printk("handle irqs\n");
 	for(n=0;n<MAX_IRQS;n++)
 	{
 		if (reg_irqs[n].handler && (irq==reg_irqs[n].irq || irq==-1))
@@ -100,7 +100,7 @@ void do_all_timers(void)
 			main_timer_list[n]->expires=0;
 
 			main_timer_list[n]=NULL; // remove timer
-			printk("do timer %i fn %p\n",n,function);
+			//printk("do timer %i fn %p\n",n,function);
 
 			function(data);
 		}
@@ -170,7 +170,7 @@ int my_device_add(struct device *dev)
 			if (m_drivers[n]->probe)
 			{
 				dev->driver=m_drivers[n];
-				printk("probe%i %p ",n,m_drivers[n]->probe);
+				printk("probe%i %p\n",n,m_drivers[n]->probe);
 
 				if (m_drivers[n]->probe(dev) == 0)
 				{
