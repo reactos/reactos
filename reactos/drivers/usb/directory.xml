@@ -1,7 +1,7 @@
 <directory name="cromwell">
 	<xi:include href="cromwell/directory.xml" />
 </directory>
-<directory name="miniport">
+<!--directory name="miniport">
 	<xi:include href="miniport/directory.xml" />
 </directory>
 <directory name="usbd">
@@ -11,5 +11,5 @@
 	<xi:include href="usbhub/usbhub.xml" />
 </directory>
 <directory name="usbport">
-	<xi:include href="usbport/usbport.xml" />
+	<xi:include href="usbport/usbport.xml" /-->
 </directory>
