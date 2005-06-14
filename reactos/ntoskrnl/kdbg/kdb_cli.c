@@ -1453,7 +1453,7 @@ KdbpCmdPcr(ULONG Argc, PCHAR Argv[])
              "  SetMember:                 0x%08x\n"
              "  StallScaleFactor:          0x%08x\n"
              "  DebugActive:               0x%02x\n"
-             "  ProcessorNumber:           0x%02x\n"
+             "  Number:                    0x%02x\n"
              "  L2CacheAssociativity:      0x%02x\n"
              "  VdmAlert:                  0x%08x\n"
              "  L2CacheSize:               0x%08x\n"
@@ -1463,7 +1463,7 @@ KdbpCmdPcr(ULONG Argc, PCHAR Argv[])
              Pcr->Tib.Self, Pcr->Self, Pcr->Prcb, Pcr->Irql, Pcr->IRR, Pcr->IrrActive,
              Pcr->IDR, Pcr->KdVersionBlock, Pcr->IDT, Pcr->GDT, Pcr->TSS,
              Pcr->MajorVersion, Pcr->MinorVersion, Pcr->SetMember, Pcr->StallScaleFactor,
-             Pcr->DebugActive, Pcr->ProcessorNumber, Pcr->L2CacheAssociativity,
+             Pcr->DebugActive, Pcr->Number, Pcr->L2CacheAssociativity,
              Pcr->VdmAlert, Pcr->L2CacheSize, Pcr->InterruptMode);
 
    return TRUE;
