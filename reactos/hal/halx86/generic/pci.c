@@ -22,6 +22,7 @@
 #include <bus.h>
 #include <halirq.h>
 #include <hal.h>
+#include <internal/ob.h>
 #include <internal/ps.h>
 
 #define NDEBUG

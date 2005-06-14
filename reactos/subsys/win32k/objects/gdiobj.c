@@ -656,7 +656,7 @@ GDI_CleanupForProcess (struct _EPROCESS *Process)
   CurrentProcess = PsGetCurrentProcess();
   if (CurrentProcess != Process)
     {
-      KeAttachProcess(Process);
+      KeAttachProcess(EPROCESS_TO_KPROCESS(Process));
     }
   W32Process = (PW32PROCESS)Process->Win32Process;
   ASSERT(W32Process);

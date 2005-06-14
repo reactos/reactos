@@ -40,6 +40,7 @@
 #include <internal/module.h>
 #include <internal/handle.h>
 #include <internal/pool.h>
+#include <internal/ob.h>
 #include <internal/ps.h>
 #include <internal/mm.h>
 #include <internal/cc.h>
@@ -50,7 +51,6 @@
 #include <internal/ldr.h>
 #include <internal/kd.h>
 #include <internal/ex.h>
-#include <internal/ob.h>
 #include "internal/xhal.h"
 #include <internal/v86m.h>
 #include <internal/ifs.h>

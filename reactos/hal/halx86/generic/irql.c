@@ -10,6 +10,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/ob.h>
 #include <internal/ps.h>
 #include <ntos/minmax.h>
 #include <hal.h>

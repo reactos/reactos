@@ -14,6 +14,7 @@
 #include <ddk/ntddk.h>
 #include <hal.h>
 #include "halxbox.h"
+#include <internal/ob.h>
 #include <internal/ps.h>
 
 #define NDEBUG

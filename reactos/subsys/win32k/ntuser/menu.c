@@ -1250,7 +1250,7 @@ IntCleanupMenus(struct _EPROCESS *Process, PW32PROCESS Win32Process)
   CurrentProcess = PsGetCurrentProcess();
   if (CurrentProcess != Process)
   {
-    KeAttachProcess(Process);
+    KeAttachProcess(EPROCESS_TO_KPROCESS(Process));
   }
 
   IntLockProcessMenus(Win32Process);
