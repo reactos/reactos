@@ -451,19 +451,17 @@ ObQueryNameString(IN  PVOID Object,
     PWCH ObjectName;
     NTSTATUS Status;
 
-    DPRINT1("ObQueryNameString: %x, %x\n", Object, ObjectNameInfo);
+    DPRINT("ObQueryNameString: %x, %x\n", Object, ObjectNameInfo);
 
     /* Get the Kernel Meta-Structures */
     ObjectHeader = BODY_TO_HEADER(Object);
     LocalInfo = HEADER_TO_OBJECT_NAME(ObjectHeader);
-    DPRINT1("LocalInfo %x, Name Buffer %x, Name Size %x\n",
-            LocalInfo, LocalInfo->Name.Buffer, LocalInfo->Name.Length);
 
     /* Check if a Query Name Procedure is available */
     if (ObjectHeader->Type->TypeInfo.QueryNameProcedure) 
     {  
         /* Call the procedure */
-        DPRINT1("Calling Object's Procedure\n");
+        DPRINT("Calling Object's Procedure\n");
         Status = ObjectHeader->Type->TypeInfo.QueryNameProcedure(Object,
                                                                  ObjectNameInfo,
                                                                  Length,
@@ -477,7 +475,7 @@ ObQueryNameString(IN  PVOID Object,
     if (!LocalInfo || !LocalInfo->Name.Buffer) 
     {
         /* We're returning the name structure */
-        DPRINT1("Nameless Object\n");
+        DPRINT("Nameless Object\n");
         *ReturnLength = sizeof(OBJECT_NAME_INFORMATION);
 
         /* Check if we were given enough space */
@@ -505,32 +503,26 @@ ObQueryNameString(IN  PVOID Object,
     if (Object == NameSpaceRoot) 
     {
         /* Size of the '\' string */
-        DPRINT1("Object is Root\n");
+        DPRINT("Object is Root\n");
         NameSize = sizeof(UNICODE_PATH_SEP);
     } 
     else 
     {
         /* Get the Object Directory and add name of Object */
         ParentDirectory = LocalInfo->Directory;
-        DPRINT1("LocalInfo->Name.Length %d\n", LocalInfo->Name.Length);
-        DPRINT1("LocalInfo->Name %S\n", LocalInfo->Name.Buffer);
         NameSize = sizeof(UNICODE_PATH_SEP) + LocalInfo->Name.Length;
-        DPRINT1("Parent: %x, Size: %d\n", ParentDirectory, NameSize);
 
         /* Loop inside the directory to get the top-most one (meaning root) */
         while ((ParentDirectory != NameSpaceRoot) && (ParentDirectory)) 
         {
             /* Get the Name Information */
             LocalInfo = HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(ParentDirectory));
-            DPRINT1("LocalInfo %x, Name Buffer %x, Name Size %x\n",
-                    LocalInfo, LocalInfo->Name.Buffer, LocalInfo->Name.Length);
 
             /* Add the size of the Directory Name */
             if (LocalInfo && LocalInfo->Directory) 
             {
                 /* Size of the '\' string + Directory Name */
                 NameSize += sizeof(UNICODE_PATH_SEP) + LocalInfo->Name.Length;
-                DPRINT1("Directory: %x. NameSize: %d\n", ParentDirectory, NameSize);
 
                 /* Move to next parent Directory */
                 ParentDirectory = LocalInfo->Directory;
@@ -538,7 +530,7 @@ ObQueryNameString(IN  PVOID Object,
             else 
             {
                 /* Directory with no name. We append "...\" */
-                DPRINT1("Nameless Directory\n");
+                DPRINT("Nameless Directory\n");
                 NameSize += sizeof(UNICODE_NO_PATH) + sizeof(UNICODE_PATH_SEP);
                 break;
             }
@@ -547,7 +539,7 @@ ObQueryNameString(IN  PVOID Object,
 
     /* Finally, add the name of the structure and the null char */
     *ReturnLength = NameSize + sizeof(OBJECT_NAME_INFORMATION) + sizeof(UNICODE_NULL);
-    DPRINT1("Final Length: %x\n", *ReturnLength);
+    DPRINT("Final Length: %x\n", *ReturnLength);
 
     /* Check if we were given enough space */
     if (*ReturnLength > Length) 
@@ -563,13 +555,12 @@ ObQueryNameString(IN  PVOID Object,
      */
     LocalInfo = HEADER_TO_OBJECT_NAME(ObjectHeader);
     ObjectName = (PWCH)((ULONG_PTR)ObjectNameInfo + *ReturnLength);
-    DPRINT1("ObjectName : %x, NameInfo: %x LocalInfo %x\n", ObjectName, ObjectNameInfo, LocalInfo);
     *--ObjectName = UNICODE_NULL;
 
     if (Object == NameSpaceRoot) 
     {
         /* This is already the Root Directory, return "\\" */
-        DPRINT1("Returning Root Dir\n");
+        DPRINT("Returning Root Dir\n");
         *--ObjectName = UNICODE_PATH_SEP;
         ObjectNameInfo->Name.Length = (USHORT)NameSize;
         ObjectNameInfo->Name.MaximumLength = (USHORT)(NameSize + sizeof(UNICODE_NULL));
@@ -580,37 +571,25 @@ ObQueryNameString(IN  PVOID Object,
     else 
     {
         /* Start by adding the Object's Name */
-        DPRINT1("LocalInfo %x, Name Buffer %x, Name Size %d\n",
-                LocalInfo, LocalInfo->Name.Buffer, LocalInfo->Name.Length);
-        DPRINT1("ObjectName: %x, Length %d\n", ObjectName, LocalInfo->Name.Length);
         ObjectName = (PWCH)((ULONG_PTR)ObjectName - LocalInfo->Name.Length);
-        DPRINT1("ObjectName: %x\n", ObjectName);
         RtlMoveMemory(ObjectName, LocalInfo->Name.Buffer, LocalInfo->Name.Length);
-        DPRINT1("Current Buffer: %S\n", ObjectName);
-        DPRINT1("Object Name: %S\n", LocalInfo->Name.Buffer);
 
         /* Now parse the Parent directories until we reach the top */
         ParentDirectory = LocalInfo->Directory;
-        DPRINT1("Parent: %x\n", ParentDirectory);
         while ((ParentDirectory != NameSpaceRoot) && (ParentDirectory)) 
         {
             /* Get the name information */
             LocalInfo = HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(ParentDirectory));
-            DPRINT1("Scanning: %x\n", ParentDirectory);
 
             /* Add the "\" */
-            DPRINT1("ObjectName: %x\n", ObjectName);
             *(--ObjectName) = UNICODE_PATH_SEP;
-            DPRINT1("Current Buffer: %S\n", ObjectName);
 
             /* Add the Parent Directory's Name */
             if (LocalInfo && LocalInfo->Name.Buffer) 
             {
                 /* Add the name */
                 ObjectName = (PWCH)((ULONG_PTR)ObjectName - LocalInfo->Name.Length);
-                DPRINT1("ObjectName: %x, Length %d\n", ObjectName, LocalInfo->Name.Length);
                 RtlMoveMemory(ObjectName, LocalInfo->Name.Buffer, LocalInfo->Name.Length);
-                DPRINT1("Current Buffer: %S\n", ObjectName);
 
                 /* Move to next parent */
                 ParentDirectory = LocalInfo->Directory;
@@ -618,7 +597,7 @@ ObQueryNameString(IN  PVOID Object,
             else 
             {
                 /* Directory without a name, we add "..." */
-                DPRINT1("Nameless Directory\n");
+                DPRINT("Nameless Directory\n");
                 ObjectName -= sizeof(UNICODE_NO_PATH);
                 ObjectName = UNICODE_NO_PATH;
                 break;
@@ -627,11 +606,11 @@ ObQueryNameString(IN  PVOID Object,
 
         /* Add Root Directory Name */
         *(--ObjectName) = UNICODE_PATH_SEP;
-        DPRINT1("Current Buffer: %S\n", ObjectName);
+        DPRINT("Current Buffer: %S\n", ObjectName);
         ObjectNameInfo->Name.Length = (USHORT)NameSize;
         ObjectNameInfo->Name.MaximumLength = (USHORT)(NameSize + sizeof(UNICODE_NULL));
         ObjectNameInfo->Name.Buffer = ObjectName;
-        DPRINT1("Complete: %wZ\n", ObjectNameInfo);
+        DPRINT("Complete: %wZ\n", ObjectNameInfo);
     }
 
     return STATUS_SUCCESS;
