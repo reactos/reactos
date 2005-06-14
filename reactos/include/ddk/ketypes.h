@@ -5,6 +5,8 @@
 
 /* include ntos/ketypes.h here? */
 
+#include <arc/arc.h>
+
 # define RESTRICTED_POINTER __restrict
 
 struct _KMUTANT;
@@ -338,6 +340,14 @@ typedef struct _M128 {
     ULONGLONG Low;
     LONGLONG High;
 } M128, *PM128;
+
+typedef struct _CONFIGURATION_COMPONENT_DATA 
+{
+    struct _CONFIGURATION_COMPONENT_DATA *Parent;
+    struct _CONFIGURATION_COMPONENT_DATA *Child;
+    struct _CONFIGURATION_COMPONENT_DATA *Sibling;
+    CONFIGURATION_COMPONENT Component;
+} CONFIGURATION_COMPONENT_DATA, *PCONFIGURATION_COMPONENT_DATA;
 
 typedef struct _KEXCEPTION_FRAME {
     ULONG64 P1Home;

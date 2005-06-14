@@ -636,25 +636,25 @@ KeSetEventBoostPriority(
 	IN PKTHREAD *Thread OPTIONAL
 );
 
-PVOID
-STDCALL
-KeFindConfigurationEntry(
-    IN PVOID Unknown,
-    IN ULONG Class,
-    IN CONFIGURATION_TYPE Type,
-    IN PULONG RegKey
-);
-
-PVOID
+PCONFIGURATION_COMPONENT_DATA
 STDCALL
 KeFindConfigurationNextEntry(
-    IN PVOID Unknown,
-    IN ULONG Class,
+    IN PCONFIGURATION_COMPONENT_DATA Child,
+    IN CONFIGURATION_CLASS Class,
     IN CONFIGURATION_TYPE Type,
-    IN PULONG RegKey,
-    IN PVOID *NextLink
+    IN PULONG ComponentKey OPTIONAL,
+    IN PCONFIGURATION_COMPONENT_DATA *NextLink
 );
-
+                             
+PCONFIGURATION_COMPONENT_DATA
+STDCALL
+KeFindConfigurationEntry(
+    IN PCONFIGURATION_COMPONENT_DATA Child,
+    IN CONFIGURATION_CLASS Class,
+    IN CONFIGURATION_TYPE Type,
+    IN PULONG ComponentKey OPTIONAL
+);
+                         
 VOID
 STDCALL
 KeFlushEntireTb(
