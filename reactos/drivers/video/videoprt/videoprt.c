@@ -22,7 +22,6 @@
  */
 
 #include "videoprt.h"
-#include "internal/ps.h"
 
 /* GLOBAL VARIABLES ***********************************************************/
 
@@ -495,34 +494,21 @@ IntVideoPortFindAdapter(
 }
 
 VOID FASTCALL
-IntAttachToCSRSS(PKPROCESS *CallingProcess, PKPROCESS *PrevAttachedProcess)
+IntAttachToCSRSS(PKPROCESS *CallingProcess, PKAPC_STATE ApcState)
 {
-   *CallingProcess = &PsGetCurrentProcess()->Pcb;
+   *CallingProcess = (PKPROCESS)PsGetCurrentProcess();
    if (*CallingProcess != Csrss)
    {
-      if (&PsGetCurrentThread()->ThreadsProcess->Pcb != *CallingProcess)
-      {
-         *PrevAttachedProcess = *CallingProcess;
-         KeDetachProcess();
-      }
-      else
-      {
-         *PrevAttachedProcess = NULL;
-      }
-      KeAttachProcess(Csrss);
+      KeStackAttachProcess(Csrss, ApcState);
    }
 }
 
 VOID FASTCALL
-IntDetachFromCSRSS(PKPROCESS *CallingProcess, PKPROCESS *PrevAttachedProcess)
+IntDetachFromCSRSS(PKPROCESS *CallingProcess, PKAPC_STATE ApcState)
 {
    if (*CallingProcess != Csrss)
    {
-      KeDetachProcess();
-      if (NULL != *PrevAttachedProcess)
-      {
-         KeAttachProcess(*PrevAttachedProcess);
-      }
+      KeUnstackDetachProcess(ApcState);
    }
 }
 
@@ -853,7 +839,7 @@ VideoPortGetRomImage(
 {
    static PVOID RomImageBuffer = NULL;
    PKPROCESS CallingProcess;
-   PKPROCESS PrevAttachedProcess;
+   KAPC_STATE ApcState;
 
    DPRINT("VideoPortGetRomImage(HwDeviceExtension 0x%X Length 0x%X)\n",
           HwDeviceExtension, Length);
@@ -890,9 +876,9 @@ VideoPortGetRomImage(
          return NULL;
       }
 
-      IntAttachToCSRSS(&CallingProcess, &PrevAttachedProcess);
+      IntAttachToCSRSS(&CallingProcess, &ApcState);
       RtlCopyMemory(RomImageBuffer, (PUCHAR)0xC0000, Length);
-      IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
+      IntDetachFromCSRSS(&CallingProcess, &ApcState);
 
       return RomImageBuffer;
    }

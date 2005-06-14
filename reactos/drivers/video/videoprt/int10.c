@@ -36,11 +36,11 @@ IntInt10AllocateBuffer(
    PVOID MemoryAddress;
    NTSTATUS Status;
    PKPROCESS CallingProcess;
-   PKPROCESS PrevAttachedProcess;
+   KAPC_STATE ApcState;
 
    DPRINT("IntInt10AllocateBuffer\n");
 
-   IntAttachToCSRSS(&CallingProcess, &PrevAttachedProcess);
+   IntAttachToCSRSS(&CallingProcess, &ApcState);
 
    MemoryAddress = (PVOID)0x20000;
    Status = ZwAllocateVirtualMemory(NtCurrentProcess(), &MemoryAddress, 0,
@@ -49,7 +49,7 @@ IntInt10AllocateBuffer(
    if (!NT_SUCCESS(Status))
    {
       DPRINT("- ZwAllocateVirtualMemory failed\n");
-      IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
+      IntDetachFromCSRSS(&CallingProcess, &ApcState);
       return ERROR_NOT_ENOUGH_MEMORY;
    }
 
@@ -58,7 +58,7 @@ IntInt10AllocateBuffer(
       ZwFreeVirtualMemory(NtCurrentProcess(), &MemoryAddress, Length,
          MEM_RELEASE);
       DPRINT("- Unacceptable memory allocated\n");
-      IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
+      IntDetachFromCSRSS(&CallingProcess, &ApcState);
       return ERROR_NOT_ENOUGH_MEMORY;
    }
 
@@ -69,7 +69,7 @@ IntInt10AllocateBuffer(
    DPRINT("- Offset: %x\n", (ULONG)MemoryAddress & 0xF);
    DPRINT("- Length: %x\n", *Length);
 
-   IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
+   IntDetachFromCSRSS(&CallingProcess, &ApcState);
 
    return NO_ERROR;
 }
@@ -83,16 +83,16 @@ IntInt10FreeBuffer(
    PVOID MemoryAddress = (PVOID)((Seg << 4) | Off);
    NTSTATUS Status;
    PKPROCESS CallingProcess;
-   PKPROCESS PrevAttachedProcess;
+   KAPC_STATE ApcState;
 
    DPRINT("IntInt10FreeBuffer\n");
    DPRINT("- Segment: %x\n", Seg);
    DPRINT("- Offset: %x\n", Off);
 
-   IntAttachToCSRSS(&CallingProcess, &PrevAttachedProcess);
+   IntAttachToCSRSS(&CallingProcess, &ApcState);
    Status = ZwFreeVirtualMemory(NtCurrentProcess(), &MemoryAddress, 0,
       MEM_RELEASE);
-   IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
+   IntDetachFromCSRSS(&CallingProcess, &ApcState);
 
    return Status;
 }
@@ -106,7 +106,7 @@ IntInt10ReadMemory(
    IN ULONG Length)
 {
    PKPROCESS CallingProcess;
-   PKPROCESS PrevAttachedProcess;
+   KAPC_STATE ApcState;
 
    DPRINT("IntInt10ReadMemory\n");
    DPRINT("- Segment: %x\n", Seg);
@@ -114,9 +114,9 @@ IntInt10ReadMemory(
    DPRINT("- Buffer: %x\n", Buffer);
    DPRINT("- Length: %x\n", Length);
 
-   IntAttachToCSRSS(&CallingProcess, &PrevAttachedProcess);
+   IntAttachToCSRSS(&CallingProcess, &ApcState);
    RtlCopyMemory(Buffer, (PVOID)((Seg << 4) | Off), Length);
-   IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
+   IntDetachFromCSRSS(&CallingProcess, &ApcState);
 
    return NO_ERROR;
 }
@@ -130,7 +130,7 @@ IntInt10WriteMemory(
    IN ULONG Length)
 {
    PKPROCESS CallingProcess;
-   PKPROCESS PrevAttachedProcess;
+   KAPC_STATE ApcState;
 
    DPRINT("IntInt10WriteMemory\n");
    DPRINT("- Segment: %x\n", Seg);
@@ -138,9 +138,9 @@ IntInt10WriteMemory(
    DPRINT("- Buffer: %x\n", Buffer);
    DPRINT("- Length: %x\n", Length);
 
-   IntAttachToCSRSS(&CallingProcess, &PrevAttachedProcess);
+   IntAttachToCSRSS(&CallingProcess, &ApcState);
    RtlCopyMemory((PVOID)((Seg << 4) | Off), Buffer, Length);
-   IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
+   IntDetachFromCSRSS(&CallingProcess, &ApcState);
 
    return NO_ERROR;
 }
@@ -153,11 +153,11 @@ IntInt10CallBios(
    KV86M_REGISTERS Regs;
    NTSTATUS Status;
    PKPROCESS CallingProcess;
-   PKPROCESS PrevAttachedProcess;
+   KAPC_STATE ApcState;
 
    DPRINT("IntInt10CallBios\n");
 
-   IntAttachToCSRSS(&CallingProcess, &PrevAttachedProcess);
+   IntAttachToCSRSS(&CallingProcess, &ApcState);
 
    memset(&Regs, 0, sizeof(Regs));
    DPRINT("- Input register Eax: %x\n", BiosArguments->Eax);
@@ -189,7 +189,7 @@ IntInt10CallBios(
    BiosArguments->SegDs = Regs.Ds;
    BiosArguments->SegEs = Regs.Es;
 
-   IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
+   IntDetachFromCSRSS(&CallingProcess, &ApcState);
 
    return Status;
 }
@@ -208,7 +208,7 @@ VideoPortInt10(
    KV86M_REGISTERS Regs;
    NTSTATUS Status;
    PKPROCESS CallingProcess;
-   PKPROCESS PrevAttachedProcess;
+   KAPC_STATE ApcState;
 
    DPRINT("VideoPortInt10\n");
 
@@ -217,7 +217,7 @@ VideoPortInt10(
       return ERROR_INVALID_PARAMETER;
    }
 
-   IntAttachToCSRSS(&CallingProcess, &PrevAttachedProcess);
+   IntAttachToCSRSS(&CallingProcess, &ApcState);
 
    memset(&Regs, 0, sizeof(Regs));
    DPRINT("- Input register Eax: %x\n", BiosArguments->Eax);
@@ -243,7 +243,7 @@ VideoPortInt10(
    BiosArguments->Edi = Regs.Edi;
    BiosArguments->Ebp = Regs.Ebp;
 
-   IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
+   IntDetachFromCSRSS(&CallingProcess, &ApcState);
 
    return Status;
 }

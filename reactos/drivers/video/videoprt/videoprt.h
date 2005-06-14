@@ -29,6 +29,8 @@
 #include <ddk/ntddvdeo.h>
 #include <ddk/ntapi.h>
 #include <ddk/ntagp.h>
+/* For process attaching functions */
+#include <ddk/ntifs.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -201,10 +203,10 @@ VideoPortGetProcAddress(
    IN PUCHAR FunctionName);
 
 VOID FASTCALL
-IntAttachToCSRSS(PKPROCESS *CallingProcess, PKPROCESS *PrevAttachedProcess);
+IntAttachToCSRSS(PKPROCESS *CallingProcess, PKAPC_STATE ApcState);
 
 VOID FASTCALL
-IntDetachFromCSRSS(PKPROCESS *CallingProcess, PKPROCESS *PrevAttachedProcess);
+IntDetachFromCSRSS(PKPROCESS *CallingProcess, PKAPC_STATE ApcState);
 
 NTSTATUS STDCALL
 IntVideoPortCreateAdapterDeviceObject(
