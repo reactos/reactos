@@ -35,6 +35,7 @@
 
 #ifndef __USE_W32API
 
+typedef struct _KPROCESS *PKPROCESS;
 typedef struct _DISPATCHER_HEADER *PDISPATCHER_HEADER;
 
 #else
