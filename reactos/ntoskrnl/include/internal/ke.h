@@ -35,8 +35,11 @@
 
 #ifndef __USE_W32API
 
-typedef struct _KPROCESS *PKPROCESS;
 typedef struct _DISPATCHER_HEADER *PDISPATCHER_HEADER;
+
+#else
+
+typedef struct _KEVENT_PAIR *PKEVENT_PAIR;
 
 #endif /* __USE_W32API */
 
