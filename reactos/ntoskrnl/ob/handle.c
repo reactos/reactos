@@ -1015,22 +1015,21 @@ ObInsertObject(IN PVOID Object,
         /* FIXME: TEMPORARY HACK This will go in ObFindObject in the next commit */
         PVOID NewName;
         PWSTR BufferPos = RemainingPath.Buffer;
+        ULONG Delta = 0;
         
-        NewName = ExAllocatePool(NonPagedPool, RemainingPath.MaximumLength);
         ObjectNameInfo = HEADER_TO_OBJECT_NAME(Header);
         
         if (BufferPos[0] == L'\\')
         {
             BufferPos++;
-            RemainingPath.Length -= 2;
-            RemainingPath.MaximumLength -= 2;
+            Delta = sizeof(WCHAR);
         }
-        
-        RtlMoveMemory(NewName, BufferPos, RemainingPath.MaximumLength);
+        NewName = ExAllocatePool(NonPagedPool, RemainingPath.MaximumLength - Delta);
+        RtlMoveMemory(NewName, BufferPos, RemainingPath.MaximumLength - Delta);
         if (ObjectNameInfo->Name.Buffer) ExFreePool(ObjectNameInfo->Name.Buffer);
         ObjectNameInfo->Name.Buffer = NewName;
-        ObjectNameInfo->Name.Length = RemainingPath.Length;
-        ObjectNameInfo->Name.MaximumLength = RemainingPath.MaximumLength;
+        ObjectNameInfo->Name.Length = RemainingPath.Length - Delta;
+        ObjectNameInfo->Name.MaximumLength = RemainingPath.MaximumLength - Delta;
         DPRINT("Name: %S\n", ObjectNameInfo->Name.Buffer);
     }
 
