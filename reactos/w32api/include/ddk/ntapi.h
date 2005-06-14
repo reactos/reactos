@@ -269,7 +269,7 @@ typedef enum _THREAD_STATE {
 	Running,
 	Standby,
 	Terminated,
-	Wait,
+	Waiting,
 	Transition,
 	DeferredReady
 } THREAD_STATE;

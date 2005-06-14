@@ -13,22 +13,6 @@
 #include <internal/debug.h>
 
 /*
- * @implemented
- */
-STDCALL
-PVOID
-KeFindConfigurationEntry(
-    IN PVOID Unknown,
-    IN ULONG Class,
-    IN CONFIGURATION_TYPE Type,
-    IN PULONG RegKey
-)
-{
-	/* Start Search at Root */
-	return KeFindConfigurationNextEntry(Unknown, Class, Type, RegKey, NULL);
-}
-
-/*
  * @unimplemented
  */
 STDCALL
@@ -43,6 +27,22 @@ KeFindConfigurationNextEntry(
 {
 	UNIMPLEMENTED;
 	return 0;
+}
+
+/*
+ * @implemented
+ */
+STDCALL
+PVOID
+KeFindConfigurationEntry(
+    IN PVOID Unknown,
+    IN ULONG Class,
+    IN CONFIGURATION_TYPE Type,
+    IN PULONG RegKey
+)
+{
+	/* Start Search at Root */
+	return KeFindConfigurationNextEntry(Unknown, Class, Type, RegKey, NULL);
 }
 
 /*

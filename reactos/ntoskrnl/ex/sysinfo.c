@@ -78,7 +78,7 @@ ExGetCurrentProcessorCounts (
 
 	*ThreadKernelTime = Prcb->KernelTime + Prcb->UserTime;
 	*TotalCpuTime = Prcb->CurrentThread->KernelTime;
-	*ProcessorNumber = KeGetCurrentKPCR()->ProcessorNumber;
+	*ProcessorNumber = KeGetCurrentKPCR()->Number;
 }
 
 /*

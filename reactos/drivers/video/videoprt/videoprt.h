@@ -188,7 +188,7 @@ IntVideoPortMapPhysicalMemory(
 /* videoprt.c */
 
 extern ULONG CsrssInitialized;
-extern PEPROCESS Csrss;
+extern PKPROCESS Csrss;
 
 VP_STATUS STDCALL
 VideoPortEnumerateChildren(
@@ -201,10 +201,10 @@ VideoPortGetProcAddress(
    IN PUCHAR FunctionName);
 
 VOID FASTCALL
-IntAttachToCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess);
+IntAttachToCSRSS(PKPROCESS *CallingProcess, PKPROCESS *PrevAttachedProcess);
 
 VOID FASTCALL
-IntDetachFromCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess);
+IntDetachFromCSRSS(PKPROCESS *CallingProcess, PKPROCESS *PrevAttachedProcess);
 
 NTSTATUS STDCALL
 IntVideoPortCreateAdapterDeviceObject(

@@ -159,6 +159,7 @@ typedef enum _MODE {
 
 /* Structures not exposed to drivers */
 typedef struct _IO_TIMER *PIO_TIMER;
+typedef struct _KPROCESS *PKPROCESS;
 typedef struct _EPROCESS *PEPROCESS;
 typedef struct _ETHREAD *PETHREAD;
 typedef struct _KINTERRUPT *PKINTERRUPT;
@@ -548,30 +549,30 @@ typedef VOID
 ** Plug and Play structures
 */
 
-typedef VOID DDKAPI
-(*PINTERFACE_REFERENCE)(
+typedef VOID
+(DDKAPI *PINTERFACE_REFERENCE)(
   PVOID  Context);
 
-typedef VOID DDKAPI
-(*PINTERFACE_DEREFERENCE)(
+typedef VOID
+(DDKAPI *PINTERFACE_DEREFERENCE)(
   PVOID Context);
 
-typedef BOOLEAN DDKAPI
-(*PTRANSLATE_BUS_ADDRESS)(
+typedef BOOLEAN
+(DDKAPI *PTRANSLATE_BUS_ADDRESS)(
   IN PVOID  Context,
   IN PHYSICAL_ADDRESS  BusAddress,
   IN ULONG  Length,
   IN OUT PULONG  AddressSpace,
   OUT PPHYSICAL_ADDRESS  TranslatedAddress);
 
-typedef struct _DMA_ADAPTER* DDKAPI
-(*PGET_DMA_ADAPTER)(
+typedef struct _DMA_ADAPTER*
+(DDKAPI *PGET_DMA_ADAPTER)(
   IN PVOID  Context,
   IN struct _DEVICE_DESCRIPTION  *DeviceDescriptor,
   OUT PULONG  NumberOfMapRegisters);
 
-typedef ULONG DDKAPI
-(*PGET_SET_DEVICE_DATA)(
+typedef ULONG
+(DDKAPI *PGET_SET_DEVICE_DATA)(
   IN PVOID  Context,
   IN ULONG  DataType,
   IN PVOID  Buffer,
@@ -747,13 +748,13 @@ typedef enum _IO_NOTIFICATION_EVENT_CATEGORY {
 
 #define PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES    0x00000001
 
-typedef NTSTATUS DDKAPI
-(*PDRIVER_NOTIFICATION_CALLBACK_ROUTINE)(
+typedef NTSTATUS
+(DDKAPI *PDRIVER_NOTIFICATION_CALLBACK_ROUTINE)(
   IN PVOID NotificationStructure,
   IN PVOID Context);
 
-typedef VOID DDKAPI
-(*PDEVICE_CHANGE_COMPLETE_CALLBACK)(
+typedef VOID
+(DDKAPI *PDEVICE_CHANGE_COMPLETE_CALLBACK)(
   IN PVOID Context);
 
 
@@ -774,8 +775,8 @@ typedef struct _OBJECT_NAME_INFORMATION {
   UNICODE_STRING  Name;
 } OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;
 
-typedef VOID DDKAPI
-(*PIO_APC_ROUTINE)(
+typedef VOID
+(DDKAPI *PIO_APC_ROUTINE)(
   IN PVOID ApcContext,
   IN PIO_STATUS_BLOCK IoStatusBlock,
   IN ULONG Reserved);
@@ -788,26 +789,26 @@ typedef struct _IO_STATUS_BLOCK {
   ULONG_PTR  Information;
 } IO_STATUS_BLOCK;
 
-typedef VOID DDKAPI
-(*PKNORMAL_ROUTINE)(
+typedef VOID
+(DDKAPI *PKNORMAL_ROUTINE)(
   IN PVOID  NormalContext,
   IN PVOID  SystemArgument1,
   IN PVOID  SystemArgument2);
 
-typedef VOID DDKAPI
-(*PKKERNEL_ROUTINE)(
+typedef VOID
+(DDKAPI *PKKERNEL_ROUTINE)(
   IN struct _KAPC  *Apc,
   IN OUT PKNORMAL_ROUTINE  *NormalRoutine,
   IN OUT PVOID  *NormalContext,
   IN OUT PVOID  *SystemArgument1,
   IN OUT PVOID  *SystemArgument2);
 
-typedef VOID DDKAPI
-(*PKRUNDOWN_ROUTINE)(
+typedef VOID
+(DDKAPI *PKRUNDOWN_ROUTINE)(
   IN struct _KAPC  *Apc);
 
-typedef BOOLEAN DDKAPI
-(*PKTRANSFER_ROUTINE)(
+typedef BOOLEAN
+(DDKAPI *PKTRANSFER_ROUTINE)(
   VOID);
 
 typedef struct _KAPC {
@@ -883,7 +884,7 @@ typedef struct _KDPC {
   PVOID  DeferredContext;
   PVOID  SystemArgument1;
   PVOID  SystemArgument2;
-  PULONG_PTR  Lock;
+  PVOID  DpcData;
 } KDPC, *PKDPC, *RESTRICTED_POINTER PRKDPC;
 
 typedef struct _KDPC_DATA {
@@ -1824,35 +1825,35 @@ typedef struct _MDL {
   MDL_SYSTEM_VA               | \
   MDL_IO_SPACE)
 
-typedef VOID DDKAPI
-(*PPUT_DMA_ADAPTER)(
+typedef VOID
+(DDKAPI *PPUT_DMA_ADAPTER)(
   IN PDMA_ADAPTER  DmaAdapter);
 
-typedef PVOID DDKAPI
-(*PALLOCATE_COMMON_BUFFER)(
+typedef PVOID
+(DDKAPI *PALLOCATE_COMMON_BUFFER)(
   IN PDMA_ADAPTER  DmaAdapter,
   IN ULONG  Length,
   OUT PPHYSICAL_ADDRESS  LogicalAddress,
   IN BOOLEAN  CacheEnabled);
 
-typedef VOID DDKAPI
-(*PFREE_COMMON_BUFFER)(
+typedef VOID
+(DDKAPI *PFREE_COMMON_BUFFER)(
   IN PDMA_ADAPTER  DmaAdapter,
   IN ULONG  Length,
   IN PHYSICAL_ADDRESS  LogicalAddress,
   IN PVOID  VirtualAddress,
   IN BOOLEAN  CacheEnabled);
 
-typedef NTSTATUS DDKAPI
-(*PALLOCATE_ADAPTER_CHANNEL)(
+typedef NTSTATUS
+(DDKAPI *PALLOCATE_ADAPTER_CHANNEL)(
   IN PDMA_ADAPTER  DmaAdapter,
   IN PDEVICE_OBJECT  DeviceObject,
   IN ULONG  NumberOfMapRegisters,
   IN PDRIVER_CONTROL  ExecutionRoutine,
   IN PVOID  Context);
 
-typedef BOOLEAN DDKAPI
-(*PFLUSH_ADAPTER_BUFFERS)(
+typedef BOOLEAN
+(DDKAPI *PFLUSH_ADAPTER_BUFFERS)(
   IN PDMA_ADAPTER  DmaAdapter,
   IN PMDL  Mdl,
   IN PVOID  MapRegisterBase,
@@ -1860,18 +1861,18 @@ typedef BOOLEAN DDKAPI
   IN ULONG  Length,
   IN BOOLEAN  WriteToDevice);
 
-typedef VOID DDKAPI
-(*PFREE_ADAPTER_CHANNEL)(
+typedef VOID
+(DDKAPI *PFREE_ADAPTER_CHANNEL)(
   IN PDMA_ADAPTER  DmaAdapter);
 
-typedef VOID DDKAPI
-(*PFREE_MAP_REGISTERS)(
+typedef VOID
+(DDKAPI *PFREE_MAP_REGISTERS)(
   IN PDMA_ADAPTER  DmaAdapter,
   PVOID  MapRegisterBase,
   ULONG  NumberOfMapRegisters);
 
-typedef PHYSICAL_ADDRESS DDKAPI
-(*PMAP_TRANSFER)(
+typedef PHYSICAL_ADDRESS
+(DDKAPI *PMAP_TRANSFER)(
   IN PDMA_ADAPTER  DmaAdapter,
   IN PMDL  Mdl,
   IN PVOID  MapRegisterBase,
@@ -1879,16 +1880,16 @@ typedef PHYSICAL_ADDRESS DDKAPI
   IN OUT PULONG  Length,
   IN BOOLEAN  WriteToDevice);
 
-typedef ULONG DDKAPI
-(*PGET_DMA_ALIGNMENT)(
+typedef ULONG
+(DDKAPI *PGET_DMA_ALIGNMENT)(
   IN PDMA_ADAPTER  DmaAdapter);
 
-typedef ULONG DDKAPI
-(*PREAD_DMA_COUNTER)(
+typedef ULONG
+(DDKAPI *PREAD_DMA_COUNTER)(
   IN PDMA_ADAPTER  DmaAdapter);
 
-typedef NTSTATUS DDKAPI
-(*PGET_SCATTER_GATHER_LIST)(
+typedef NTSTATUS
+(DDKAPI *PGET_SCATTER_GATHER_LIST)(
   IN PDMA_ADAPTER  DmaAdapter,
   IN PDEVICE_OBJECT  DeviceObject,
   IN PMDL  Mdl,
@@ -1898,14 +1899,14 @@ typedef NTSTATUS DDKAPI
   IN PVOID  Context,
   IN BOOLEAN  WriteToDevice);
 
-typedef VOID DDKAPI
-(*PPUT_SCATTER_GATHER_LIST)(
+typedef VOID
+(DDKAPI *PPUT_SCATTER_GATHER_LIST)(
   IN PDMA_ADAPTER  DmaAdapter,
   IN PSCATTER_GATHER_LIST  ScatterGather,
   IN BOOLEAN  WriteToDevice);
 
-typedef NTSTATUS DDKAPI
-(*PCALCULATE_SCATTER_GATHER_LIST_SIZE)(
+typedef NTSTATUS
+(DDKAPI *PCALCULATE_SCATTER_GATHER_LIST_SIZE)(
   IN PDMA_ADAPTER  DmaAdapter,
   IN PMDL  Mdl  OPTIONAL,
   IN PVOID  CurrentVa,
@@ -1913,8 +1914,8 @@ typedef NTSTATUS DDKAPI
   OUT PULONG  ScatterGatherListSize,
   OUT PULONG  pNumberOfMapRegisters  OPTIONAL);
 
-typedef NTSTATUS DDKAPI
-(*PBUILD_SCATTER_GATHER_LIST)(
+typedef NTSTATUS
+(DDKAPI *PBUILD_SCATTER_GATHER_LIST)(
   IN PDMA_ADAPTER  DmaAdapter,
   IN PDEVICE_OBJECT  DeviceObject,
   IN PMDL  Mdl,
@@ -1926,8 +1927,8 @@ typedef NTSTATUS DDKAPI
   IN PVOID  ScatterGatherBuffer,
   IN ULONG  ScatterGatherLength);
 
-typedef NTSTATUS DDKAPI
-(*PBUILD_MDL_FROM_SCATTER_GATHER_LIST)(
+typedef NTSTATUS
+(DDKAPI *PBUILD_MDL_FROM_SCATTER_GATHER_LIST)(
   IN PDMA_ADAPTER  DmaAdapter,
   IN PSCATTER_GATHER_LIST  ScatterGather,
   IN PMDL  OriginalMdl,
@@ -2275,8 +2276,8 @@ typedef struct _DRIVER_EXTENSION {
   UNICODE_STRING  ServiceKeyName;
 } DRIVER_EXTENSION, *PDRIVER_EXTENSION;
 
-typedef BOOLEAN DDKAPI
-(*PFAST_IO_CHECK_IF_POSSIBLE)(
+typedef BOOLEAN
+(DDKAPI *PFAST_IO_CHECK_IF_POSSIBLE)(
   IN struct _FILE_OBJECT  *FileObject,
   IN PLARGE_INTEGER  FileOffset,
   IN ULONG  Length,
@@ -2286,8 +2287,8 @@ typedef BOOLEAN DDKAPI
   OUT PIO_STATUS_BLOCK  IoStatus,
   IN struct _DEVICE_OBJECT  *DeviceObject);
 
-typedef BOOLEAN DDKAPI
-(*PFAST_IO_READ)(
+typedef BOOLEAN
+(DDKAPI *PFAST_IO_READ)(
   IN struct _FILE_OBJECT  *FileObject,
   IN PLARGE_INTEGER  FileOffset,
   IN ULONG  Length,
@@ -2297,8 +2298,8 @@ typedef BOOLEAN DDKAPI
   OUT PIO_STATUS_BLOCK  IoStatus,
   IN struct _DEVICE_OBJECT  *DeviceObject);
 
-typedef BOOLEAN DDKAPI
-(*PFAST_IO_WRITE)(
+typedef BOOLEAN
+(DDKAPI *PFAST_IO_WRITE)(
   IN struct _FILE_OBJECT  *FileObject,
   IN PLARGE_INTEGER  FileOffset,
   IN ULONG  Length,
@@ -2308,24 +2309,24 @@ typedef BOOLEAN DDKAPI
   OUT PIO_STATUS_BLOCK  IoStatus,
   IN struct _DEVICE_OBJECT  *DeviceObject);
 
-typedef BOOLEAN DDKAPI
-(*PFAST_IO_QUERY_BASIC_INFO)(
+typedef BOOLEAN
+(DDKAPI *PFAST_IO_QUERY_BASIC_INFO)(
   IN struct _FILE_OBJECT  *FileObject,
   IN BOOLEAN  Wait,
   OUT PFILE_BASIC_INFORMATION  Buffer,
   OUT PIO_STATUS_BLOCK  IoStatus,
   IN struct _DEVICE_OBJECT  *DeviceObject);
 
-typedef BOOLEAN DDKAPI
-(*PFAST_IO_QUERY_STANDARD_INFO)(
+typedef BOOLEAN
+(DDKAPI *PFAST_IO_QUERY_STANDARD_INFO)(
   IN struct _FILE_OBJECT  *FileObject,
   IN BOOLEAN  Wait,
   OUT PFILE_STANDARD_INFORMATION  Buffer,
   OUT PIO_STATUS_BLOCK  IoStatus,
   IN struct _DEVICE_OBJECT  *DeviceObject);
 
-typedef BOOLEAN DDKAPI
-(*PFAST_IO_LOCK)(
+typedef BOOLEAN
+(DDKAPI *PFAST_IO_LOCK)(
   IN struct _FILE_OBJECT  *FileObject,
   IN PLARGE_INTEGER  FileOffset,
   IN PLARGE_INTEGER  Length,
@@ -2336,8 +2337,8 @@ typedef BOOLEAN DDKAPI
   OUT PIO_STATUS_BLOCK  IoStatus,
   IN struct _DEVICE_OBJECT  *DeviceObject);
 
-typedef BOOLEAN DDKAPI
-(*PFAST_IO_UNLOCK_SINGLE)(
+typedef BOOLEAN
+(DDKAPI *PFAST_IO_UNLOCK_SINGLE)(
   IN struct _FILE_OBJECT  *FileObject,
   IN PLARGE_INTEGER  FileOffset,
   IN PLARGE_INTEGER  Length,
@@ -2346,23 +2347,23 @@ typedef BOOLEAN DDKAPI
   OUT PIO_STATUS_BLOCK  IoStatus,
   IN struct _DEVICE_OBJECT  *DeviceObject);
 
-typedef BOOLEAN DDKAPI
-(*PFAST_IO_UNLOCK_ALL)(
+typedef BOOLEAN
+(DDKAPI *PFAST_IO_UNLOCK_ALL)(
   IN struct _FILE_OBJECT  *FileObject,
   PEPROCESS  ProcessId,
   OUT PIO_STATUS_BLOCK  IoStatus,
   IN struct _DEVICE_OBJECT  *DeviceObject);
 
-typedef BOOLEAN DDKAPI
-(*PFAST_IO_UNLOCK_ALL_BY_KEY)(
+typedef BOOLEAN
+(DDKAPI *PFAST_IO_UNLOCK_ALL_BY_KEY)(
   IN struct _FILE_OBJECT  *FileObject,
   PEPROCESS  ProcessId,
   ULONG  Key,
   OUT PIO_STATUS_BLOCK  IoStatus,
   IN struct _DEVICE_OBJECT  *DeviceObject);
 
-typedef BOOLEAN DDKAPI
-(*PFAST_IO_DEVICE_CONTROL)(
+typedef BOOLEAN
+(DDKAPI *PFAST_IO_DEVICE_CONTROL)(
   IN struct _FILE_OBJECT  *FileObject,
   IN BOOLEAN  Wait,
   IN PVOID  InputBuffer  OPTIONAL,
@@ -2373,36 +2374,36 @@ typedef BOOLEAN DDKAPI
   OUT PIO_STATUS_BLOCK  IoStatus,
   IN struct _DEVICE_OBJECT  *DeviceObject);
 
-typedef VOID DDKAPI
-(*PFAST_IO_ACQUIRE_FILE)(
+typedef VOID
+(DDKAPI *PFAST_IO_ACQUIRE_FILE)(
   IN struct _FILE_OBJECT  *FileObject);
 
-typedef VOID DDKAPI
-(*PFAST_IO_RELEASE_FILE)(
+typedef VOID
+(DDKAPI *PFAST_IO_RELEASE_FILE)(
   IN struct _FILE_OBJECT  *FileObject);
 
-typedef VOID DDKAPI
-(*PFAST_IO_DETACH_DEVICE)(
+typedef VOID
+(DDKAPI *PFAST_IO_DETACH_DEVICE)(
   IN struct _DEVICE_OBJECT  *SourceDevice,
   IN struct _DEVICE_OBJECT  *TargetDevice);
 
-typedef BOOLEAN DDKAPI
-(*PFAST_IO_QUERY_NETWORK_OPEN_INFO)(
+typedef BOOLEAN
+(DDKAPI *PFAST_IO_QUERY_NETWORK_OPEN_INFO)(
   IN struct _FILE_OBJECT  *FileObject,
   IN BOOLEAN  Wait,
   OUT struct _FILE_NETWORK_OPEN_INFORMATION  *Buffer,
   OUT struct _IO_STATUS_BLOCK  *IoStatus,
   IN struct _DEVICE_OBJECT  *DeviceObject);
 
-typedef NTSTATUS DDKAPI
-(*PFAST_IO_ACQUIRE_FOR_MOD_WRITE)(
+typedef NTSTATUS
+(DDKAPI *PFAST_IO_ACQUIRE_FOR_MOD_WRITE)(
   IN struct _FILE_OBJECT  *FileObject,
   IN PLARGE_INTEGER  EndingOffset,
   OUT struct _ERESOURCE  **ResourceToRelease,
   IN struct _DEVICE_OBJECT  *DeviceObject);
 
-typedef BOOLEAN DDKAPI
-(*PFAST_IO_MDL_READ)(
+typedef BOOLEAN
+(DDKAPI *PFAST_IO_MDL_READ)(
   IN struct _FILE_OBJECT  *FileObject,
   IN PLARGE_INTEGER  FileOffset,
   IN ULONG  Length,
@@ -2411,14 +2412,14 @@ typedef BOOLEAN DDKAPI
   OUT PIO_STATUS_BLOCK  IoStatus,
   IN struct _DEVICE_OBJECT  *DeviceObject);
 
-typedef BOOLEAN DDKAPI
-(*PFAST_IO_MDL_READ_COMPLETE)(
+typedef BOOLEAN
+(DDKAPI *PFAST_IO_MDL_READ_COMPLETE)(
   IN struct _FILE_OBJECT *FileObject,
   IN PMDL MdlChain,
   IN struct _DEVICE_OBJECT *DeviceObject);
 
-typedef BOOLEAN DDKAPI
-(*PFAST_IO_PREPARE_MDL_WRITE)(
+typedef BOOLEAN
+(DDKAPI *PFAST_IO_PREPARE_MDL_WRITE)(
   IN struct _FILE_OBJECT  *FileObject,
   IN PLARGE_INTEGER  FileOffset,
   IN ULONG  Length,
@@ -2427,15 +2428,15 @@ typedef BOOLEAN DDKAPI
   OUT PIO_STATUS_BLOCK  IoStatus,
   IN struct _DEVICE_OBJECT  *DeviceObject);
 
-typedef BOOLEAN DDKAPI
-(*PFAST_IO_MDL_WRITE_COMPLETE)(
+typedef BOOLEAN
+(DDKAPI *PFAST_IO_MDL_WRITE_COMPLETE)(
   IN struct _FILE_OBJECT  *FileObject,
   IN PLARGE_INTEGER  FileOffset,
   IN PMDL  MdlChain,
   IN struct _DEVICE_OBJECT  *DeviceObject);
 
-typedef BOOLEAN DDKAPI
-(*PFAST_IO_READ_COMPRESSED)(
+typedef BOOLEAN
+(DDKAPI *PFAST_IO_READ_COMPRESSED)(
   IN struct _FILE_OBJECT  *FileObject,
   IN PLARGE_INTEGER  FileOffset,
   IN ULONG  Length,
@@ -2447,8 +2448,8 @@ typedef BOOLEAN DDKAPI
   IN ULONG  CompressedDataInfoLength,
   IN struct _DEVICE_OBJECT  *DeviceObject);
 
-typedef BOOLEAN DDKAPI
-(*PFAST_IO_WRITE_COMPRESSED)(
+typedef BOOLEAN
+(DDKAPI *PFAST_IO_WRITE_COMPRESSED)(
   IN struct _FILE_OBJECT  *FileObject,
   IN PLARGE_INTEGER  FileOffset,
   IN ULONG  Length,
@@ -2460,38 +2461,38 @@ typedef BOOLEAN DDKAPI
   IN ULONG  CompressedDataInfoLength,
   IN struct _DEVICE_OBJECT  *DeviceObject);
 
-typedef BOOLEAN DDKAPI
-(*PFAST_IO_MDL_READ_COMPLETE_COMPRESSED)(
+typedef BOOLEAN
+(DDKAPI *PFAST_IO_MDL_READ_COMPLETE_COMPRESSED)(
   IN struct _FILE_OBJECT  *FileObject,
   IN PMDL  MdlChain,
   IN struct _DEVICE_OBJECT  *DeviceObject);
 
-typedef BOOLEAN DDKAPI
-(*PFAST_IO_MDL_WRITE_COMPLETE_COMPRESSED)(
+typedef BOOLEAN
+(DDKAPI *PFAST_IO_MDL_WRITE_COMPLETE_COMPRESSED)(
   IN struct _FILE_OBJECT  *FileObject,
   IN PLARGE_INTEGER  FileOffset,
   IN PMDL  MdlChain,
   IN struct _DEVICE_OBJECT  *DeviceObject);
 
-typedef BOOLEAN DDKAPI
-(*PFAST_IO_QUERY_OPEN)(
+typedef BOOLEAN
+(DDKAPI *PFAST_IO_QUERY_OPEN)(
   IN struct _IRP  *Irp,
   OUT PFILE_NETWORK_OPEN_INFORMATION  NetworkInformation,
   IN struct _DEVICE_OBJECT  *DeviceObject);
 
-typedef NTSTATUS DDKAPI
-(*PFAST_IO_RELEASE_FOR_MOD_WRITE)(
+typedef NTSTATUS
+(DDKAPI *PFAST_IO_RELEASE_FOR_MOD_WRITE)(
   IN struct _FILE_OBJECT  *FileObject,
   IN struct _ERESOURCE  *ResourceToRelease,
   IN struct _DEVICE_OBJECT  *DeviceObject);
 
-typedef NTSTATUS DDKAPI
-(*PFAST_IO_ACQUIRE_FOR_CCFLUSH)(
+typedef NTSTATUS
+(DDKAPI *PFAST_IO_ACQUIRE_FOR_CCFLUSH)(
   IN struct _FILE_OBJECT  *FileObject,
   IN struct _DEVICE_OBJECT  *DeviceObject);
 
-typedef NTSTATUS DDKAPI
-(*PFAST_IO_RELEASE_FOR_CCFLUSH) (
+typedef NTSTATUS
+(DDKAPI *PFAST_IO_RELEASE_FOR_CCFLUSH) (
   IN struct _FILE_OBJECT  *FileObject,
   IN struct _DEVICE_OBJECT  *DeviceObject);
 
@@ -2677,34 +2678,34 @@ typedef struct _IO_CSQ_IRP_CONTEXT {
   struct _IO_CSQ  *Csq;
 } IO_CSQ_IRP_CONTEXT, *PIO_CSQ_IRP_CONTEXT;
 
-typedef VOID DDKAPI
-(*PIO_CSQ_INSERT_IRP)(
+typedef VOID
+(DDKAPI *PIO_CSQ_INSERT_IRP)(
   IN struct _IO_CSQ  *Csq,
   IN PIRP  Irp);
 
-typedef VOID DDKAPI
-(*PIO_CSQ_REMOVE_IRP)(
+typedef VOID
+(DDKAPI *PIO_CSQ_REMOVE_IRP)(
   IN struct _IO_CSQ  *Csq,
   IN PIRP  Irp);
 
-typedef PIRP DDKAPI
-(*PIO_CSQ_PEEK_NEXT_IRP)(
+typedef PIRP
+(DDKAPI *PIO_CSQ_PEEK_NEXT_IRP)(
   IN struct _IO_CSQ  *Csq,
   IN PIRP  Irp,
   IN PVOID  PeekContext);
 
-typedef VOID DDKAPI
-(*PIO_CSQ_ACQUIRE_LOCK)(
+typedef VOID
+(DDKAPI *PIO_CSQ_ACQUIRE_LOCK)(
   IN  struct _IO_CSQ  *Csq,
   OUT PKIRQL  Irql);
 
-typedef VOID DDKAPI
-(*PIO_CSQ_RELEASE_LOCK)(
+typedef VOID
+(DDKAPI *PIO_CSQ_RELEASE_LOCK)(
   IN struct _IO_CSQ  *Csq,
   IN KIRQL  Irql);
 
-typedef VOID DDKAPI
-(*PIO_CSQ_COMPLETE_CANCELED_IRP)(
+typedef VOID
+(DDKAPI *PIO_CSQ_COMPLETE_CANCELED_IRP)(
   IN  struct _IO_CSQ  *Csq,
   IN  PIRP  Irp);
 
@@ -3356,8 +3357,8 @@ typedef struct _RTL_BITMAP_RUN {
     ULONG  NumberOfBits;
 } RTL_BITMAP_RUN, *PRTL_BITMAP_RUN;
 
-typedef NTSTATUS DDKAPI
-(*PRTL_QUERY_REGISTRY_ROUTINE)(
+typedef NTSTATUS
+(DDKAPI *PRTL_QUERY_REGISTRY_ROUTINE)(
   IN PWSTR  ValueName,
   IN ULONG  ValueType,
   IN PVOID  ValueData,
@@ -3404,14 +3405,14 @@ typedef struct _TIME_FIELDS {
   CSHORT  Weekday;
 } TIME_FIELDS, *PTIME_FIELDS;
 
-typedef PVOID DDKAPI
-(*PALLOCATE_FUNCTION)(
+typedef PVOID
+(DDKAPI *PALLOCATE_FUNCTION)(
   IN POOL_TYPE  PoolType,
   IN SIZE_T  NumberOfBytes,
   IN ULONG  Tag);
 
-typedef VOID DDKAPI
-(*PFREE_FUNCTION)(
+typedef VOID
+(DDKAPI *PFREE_FUNCTION)(
   IN PVOID  Buffer);
 
 #define GENERAL_LOOKASIDE_S \
@@ -3462,7 +3463,8 @@ typedef struct _PP_LOOKASIDE_LIST {
 
 typedef struct _CALLBACK_OBJECT *PCALLBACK_OBJECT;
 
-typedef VOID DDKAPI (*PCALLBACK_FUNCTION)(
+typedef VOID
+(DDKAPI *PCALLBACK_FUNCTION)(
   IN PVOID  CallbackContext,
   IN PVOID  Argument1,
   IN PVOID  Argument2);
@@ -3495,11 +3497,18 @@ typedef enum _KWAIT_REASON {
   WrPageOut,
   WrRendezvous,
   Spare2,
-  Spare3,
+  WrGuardedMutex,
   Spare4,
   Spare5,
   Spare6,
   WrKernel,
+  WrResource,
+  WrPushLock,
+  WrMutex,
+  WrQuantumEnd,
+  WrDispatchInt,
+  WrPreempted,
+  WrYieldExecution,
   MaximumWaitReason
 } KWAIT_REASON;
 
@@ -3543,8 +3552,8 @@ typedef struct _IO_REMOVE_LOCK {
 
 typedef struct _IO_WORKITEM *PIO_WORKITEM;
 
-typedef VOID DDKAPI
-(*PIO_WORKITEM_ROUTINE)(
+typedef VOID
+(DDKAPI *PIO_WORKITEM_ROUTINE)(
   IN PDEVICE_OBJECT  DeviceObject,
   IN PVOID  Context);
 
@@ -3563,8 +3572,8 @@ typedef enum _KINTERRUPT_MODE {
   Latched
 } KINTERRUPT_MODE;
 
-typedef VOID DDKAPI
-(*PKINTERRUPT_ROUTINE)(
+typedef VOID
+(DDKAPI *PKINTERRUPT_ROUTINE)(
   VOID);
 
 typedef enum _KPROFILE_SOURCE {
@@ -3659,7 +3668,8 @@ typedef enum _CONFIGURATION_TYPE {
   MaximumType
 } CONFIGURATION_TYPE, *PCONFIGURATION_TYPE;
 
-typedef NTSTATUS (*PIO_QUERY_DEVICE_ROUTINE)(
+typedef NTSTATUS
+(DDKAPI *PIO_QUERY_DEVICE_ROUTINE)(
   IN PVOID  Context,
   IN PUNICODE_STRING  PathName,
   IN INTERFACE_TYPE  BusType,
@@ -3679,8 +3689,8 @@ typedef enum _WORK_QUEUE_TYPE {
   MaximumWorkQueue
 } WORK_QUEUE_TYPE;
 
-typedef VOID DDKAPI
-(*PWORKER_THREAD_ROUTINE)(
+typedef VOID
+(DDKAPI *PWORKER_THREAD_ROUTINE)(
   IN PVOID Parameter);
 
 typedef struct _WORK_QUEUE_ITEM {
@@ -3697,8 +3707,8 @@ typedef enum _KBUGCHECK_BUFFER_DUMP_STATE {
     BufferIncomplete
 } KBUGCHECK_BUFFER_DUMP_STATE;
 
-typedef VOID DDKAPI
-(*PKBUGCHECK_CALLBACK_ROUTINE)(
+typedef VOID
+(DDKAPI *PKBUGCHECK_CALLBACK_ROUTINE)(
   IN PVOID  Buffer,
   IN ULONG  Length);
 
@@ -3768,18 +3778,18 @@ typedef struct _CLIENT_ID {
   HANDLE  UniqueThread;
 } CLIENT_ID, *PCLIENT_ID;
 
-typedef VOID DDKAPI
-(*PKSTART_ROUTINE)(
+typedef VOID
+(DDKAPI *PKSTART_ROUTINE)(
   IN PVOID  StartContext);
 
-typedef VOID DDKAPI
-(*PCREATE_PROCESS_NOTIFY_ROUTINE)(
+typedef VOID
+(DDKAPI *PCREATE_PROCESS_NOTIFY_ROUTINE)(
   IN HANDLE  ParentId,
   IN HANDLE  ProcessId,
   IN BOOLEAN  Create);
 
-typedef VOID DDKAPI
-(*PCREATE_THREAD_NOTIFY_ROUTINE)(
+typedef VOID
+(DDKAPI *PCREATE_THREAD_NOTIFY_ROUTINE)(
   IN HANDLE  ProcessId,
   IN HANDLE  ThreadId,
   IN BOOLEAN  Create);
@@ -3802,8 +3812,8 @@ typedef struct _IMAGE_INFO {
 
 #define IMAGE_ADDRESSING_MODE_32BIT       3
 
-typedef VOID DDKAPI
-(*PLOAD_IMAGE_NOTIFY_ROUTINE)(
+typedef VOID
+(DDKAPI *PLOAD_IMAGE_NOTIFY_ROUTINE)(
   IN PUNICODE_STRING  FullImageName,
   IN HANDLE  ProcessId,
   IN PIMAGE_INFO  ImageInfo);
@@ -3879,8 +3889,8 @@ typedef enum _THREADINFOCLASS {
 
 typedef ULONG EXECUTION_STATE;
 
-typedef VOID DDKAPI
-(*PREQUEST_POWER_COMPLETE)(
+typedef VOID
+(DDKAPI *PREQUEST_POWER_COMPLETE)(
   IN PDEVICE_OBJECT  DeviceObject,
   IN UCHAR  MinorFunction,
   IN POWER_STATE  PowerState,
@@ -3898,8 +3908,8 @@ typedef enum _TRACE_INFORMATION_CLASS {
   TraceHandleByNameClass
 } TRACE_INFORMATION_CLASS;
 
-typedef NTSTATUS DDKAPI
-(*PEX_CALLBACK_FUNCTION)(
+typedef NTSTATUS
+(DDKAPI *PEX_CALLBACK_FUNCTION)(
   IN PVOID  CallbackContext,
   IN PVOID  Argument1,
   IN PVOID  Argument2);
@@ -4035,8 +4045,8 @@ typedef enum _SUITE_TYPE {
   MaxSuiteType
 } SUITE_TYPE;
 
-typedef VOID DDKAPI
-(*PTIMER_APC_ROUTINE)(
+typedef VOID
+(DDKAPI *PTIMER_APC_ROUTINE)(
   IN PVOID  TimerContext,
   IN ULONG  TimerLowValue,
   IN LONG  TimerHighValue);
@@ -4047,8 +4057,8 @@ typedef VOID DDKAPI
 ** WMI structures
 */
 
-typedef VOID DDKAPI
-(*WMI_NOTIFICATION_CALLBACK)(
+typedef VOID
+(DDKAPI *WMI_NOTIFICATION_CALLBACK)(
   PVOID  Wnode,
   PVOID  Context);
 
@@ -4092,7 +4102,7 @@ typedef struct _KPCR_TIB {
 typedef struct _KPCR {
   KPCR_TIB  Tib;                /* 00 */
   struct _KPCR  *Self;          /* 1C */
-  struct _KPRCB  *PCRCB;        /* 20 */
+  struct _KPRCB  *Prcb;         /* 20 */
   KIRQL  Irql;                  /* 24 */
   ULONG  IRR;                   /* 28 */
   ULONG  IrrActive;             /* 2C */
@@ -4162,7 +4172,7 @@ KeGetCurrentIrql(
  *   VOID)
  */
 #define KeGetCurrentProcessorNumber() \
-  ((ULONG)KeGetCurrentKPCR()->ProcessorNumber)
+  ((ULONG)KeGetCurrentKPCR()->Number)
 
 #if !defined(__INTERLOCKED_DECLARED)
 #define __INTERLOCKED_DECLARED
@@ -7496,7 +7506,7 @@ NTOSAPI
 VOID
 DDKAPI
 KeAttachProcess(
-  IN PEPROCESS  Process);
+  IN PKPROCESS  Process);
 
 NTOSAPI
 VOID
@@ -7578,19 +7588,6 @@ ULONG
 DDKAPI
 KeGetRecommendedSharedDataAlignment(
   VOID);
-
-NTOSAPI
-VOID
-DDKAPI
-KeInitializeApc(
-  IN PKAPC  Apc,
-	IN PKTHREAD  Thread,
-	IN UCHAR  StateIndex,
-	IN PKKERNEL_ROUTINE  KernelRoutine,
-	IN PKRUNDOWN_ROUTINE  RundownRoutine,
-	IN PKNORMAL_ROUTINE  NormalRoutine,
-	IN UCHAR  Mode,
-	IN PVOID  Context);
 
 NTOSAPI
 VOID
@@ -8475,117 +8472,128 @@ typedef enum _OB_OPEN_REASON
     
 /* TEMPORARY HACK */
 typedef NTSTATUS
-(DDKAPI *OB_CREATE_METHOD)(PVOID ObjectBody,
-                     PVOID Parent,
-                     PWSTR RemainingPath,
-                     struct _OBJECT_ATTRIBUTES* ObjectAttributes);
+(DDKAPI *OB_CREATE_METHOD)(
+  PVOID  ObjectBody,
+  PVOID  Parent,
+  PWSTR  RemainingPath,
+  struct _OBJECT_ATTRIBUTES*  ObjectAttributes);
                          
 /* Object Callbacks */
 typedef NTSTATUS
-(DDKAPI *OB_OPEN_METHOD)(OB_OPEN_REASON Reason,
-                  PVOID ObjectBody,
-                  PEPROCESS Process,
-                  ULONG HandleCount,
-                  ACCESS_MASK GrantedAccess);
+(DDKAPI *OB_OPEN_METHOD)(
+  OB_OPEN_REASON  Reason,
+  PVOID  ObjectBody,
+  PEPROCESS  Process,
+  ULONG  HandleCount,
+  ACCESS_MASK  GrantedAccess);
 
 typedef NTSTATUS 
-(DDKAPI *OB_PARSE_METHOD)(PVOID Object,
-                    PVOID *NextObject,
-                    PUNICODE_STRING FullPath,
-                    PWSTR *Path,
-                    ULONG Attributes);
+(DDKAPI *OB_PARSE_METHOD)(
+  PVOID  Object,
+  PVOID  *NextObject,
+  PUNICODE_STRING  FullPath,
+  PWSTR  *Path,
+  ULONG  Attributes);
                         
 typedef VOID 
-(DDKAPI *OB_DELETE_METHOD)(PVOID DeletedObject);
+(DDKAPI *OB_DELETE_METHOD)(
+  PVOID  DeletedObject);
 
 typedef VOID 
-(DDKAPI *OB_CLOSE_METHOD)(PVOID ClosedObject, ULONG HandleCount);
+(DDKAPI *OB_CLOSE_METHOD)(
+  PVOID  ClosedObject,
+  ULONG  HandleCount);
 
 typedef VOID
-(DDKAPI *OB_DUMP_METHOD)(VOID);
+(DDKAPI *OB_DUMP_METHOD)(
+  VOID);
 
 typedef NTSTATUS 
-(DDKAPI *OB_OKAYTOCLOSE_METHOD)(VOID);
+(DDKAPI *OB_OKAYTOCLOSE_METHOD)(
+  VOID);
 
 typedef NTSTATUS 
-(DDKAPI *OB_QUERYNAME_METHOD)(PVOID ObjectBody,
-                        POBJECT_NAME_INFORMATION ObjectNameInfo,
-                        ULONG Length,
-                        PULONG ReturnLength);
+(DDKAPI *OB_QUERYNAME_METHOD)(
+  PVOID  ObjectBody,
+  POBJECT_NAME_INFORMATION  ObjectNameInfo,
+  ULONG  Length,
+  PULONG  ReturnLength);
 
 typedef PVOID 
-(DDKAPI *OB_FIND_METHOD)(PVOID WinStaObject,
-                   PWSTR Name,
-                   ULONG Attributes);
+(DDKAPI *OB_FIND_METHOD)(
+  PVOID  WinStaObject,
+  PWSTR  Name,
+  ULONG  Attributes);
 
 typedef NTSTATUS 
-(DDKAPI *OB_SECURITY_METHOD)(PVOID ObjectBody,
-                        SECURITY_OPERATION_CODE OperationCode,
-                        SECURITY_INFORMATION SecurityInformation,
-                        PSECURITY_DESCRIPTOR SecurityDescriptor,
-                        PULONG BufferLength);
+(DDKAPI *OB_SECURITY_METHOD)(
+  PVOID  ObjectBody,
+  SECURITY_OPERATION_CODE  OperationCode,
+  SECURITY_INFORMATION  SecurityInformation,
+  PSECURITY_DESCRIPTOR  SecurityDescriptor,
+  PULONG  BufferLength);
 
 typedef struct _OBJECT_HEADER_NAME_INFO
 {
-    struct _DIRECTORY_OBJECT *Directory;
-    UNICODE_STRING Name;
-    ULONG QueryReferences;
-    ULONG Reserved2;
-    ULONG DbgReferenceCount;
+  struct _DIRECTORY_OBJECT  *Directory;
+  UNICODE_STRING  Name;
+  ULONG  QueryReferences;
+  ULONG  Reserved2;
+  ULONG  DbgReferenceCount;
 } OBJECT_HEADER_NAME_INFO, *POBJECT_HEADER_NAME_INFO;
 
 typedef struct _OBJECT_CREATE_INFORMATION 
 {
-    ULONG Attributes;
-    HANDLE RootDirectory;
-    PVOID ParseContext;
-    KPROCESSOR_MODE ProbeMode;
-    ULONG PagedPoolCharge;
-    ULONG NonPagedPoolCharge;
-    ULONG SecurityDescriptorCharge;
-    PSECURITY_DESCRIPTOR SecurityDescriptor;
-    PSECURITY_QUALITY_OF_SERVICE SecurityQos;
-    SECURITY_QUALITY_OF_SERVICE SecurityQualityOfService;
+  ULONG  Attributes;
+  HANDLE  RootDirectory;
+  PVOID  ParseContext;
+  KPROCESSOR_MODE  ProbeMode;
+  ULONG  PagedPoolCharge;
+  ULONG  NonPagedPoolCharge;
+  ULONG  SecurityDescriptorCharge;
+  PSECURITY_DESCRIPTOR  SecurityDescriptor;
+  PSECURITY_QUALITY_OF_SERVICE  SecurityQos;
+  SECURITY_QUALITY_OF_SERVICE  SecurityQualityOfService;
 } OBJECT_CREATE_INFORMATION, *POBJECT_CREATE_INFORMATION;
 
 typedef struct _OBJECT_TYPE_INITIALIZER
 {
-    WORD Length;
-    UCHAR UseDefaultObject;
-    UCHAR CaseInsensitive;
-    ULONG InvalidAttributes;
-    GENERIC_MAPPING GenericMapping;
-    ULONG ValidAccessMask;
-    UCHAR SecurityRequired;
-    UCHAR MaintainHandleCount;
-    UCHAR MaintainTypeList;
-    POOL_TYPE PoolType;
-    ULONG DefaultPagedPoolCharge;
-    ULONG DefaultNonPagedPoolCharge;
-    OB_DUMP_METHOD DumpProcedure;
-    OB_OPEN_METHOD OpenProcedure;
-    OB_CLOSE_METHOD CloseProcedure;
-    OB_DELETE_METHOD DeleteProcedure;
-    OB_PARSE_METHOD ParseProcedure;
-    OB_SECURITY_METHOD SecurityProcedure;
-    OB_QUERYNAME_METHOD QueryNameProcedure;
-    OB_OKAYTOCLOSE_METHOD OkayToCloseProcedure;
+  WORD  Length;
+  UCHAR  UseDefaultObject;
+  UCHAR  CaseInsensitive;
+  ULONG  InvalidAttributes;
+  GENERIC_MAPPING  GenericMapping;
+  ULONG  ValidAccessMask;
+  UCHAR  SecurityRequired;
+  UCHAR  MaintainHandleCount;
+  UCHAR  MaintainTypeList;
+  POOL_TYPE  PoolType;
+  ULONG  DefaultPagedPoolCharge;
+  ULONG  DefaultNonPagedPoolCharge;
+  OB_DUMP_METHOD  DumpProcedure;
+  OB_OPEN_METHOD  OpenProcedure;
+  OB_CLOSE_METHOD  CloseProcedure;
+  OB_DELETE_METHOD  DeleteProcedure;
+  OB_PARSE_METHOD  ParseProcedure;
+  OB_SECURITY_METHOD  SecurityProcedure;
+  OB_QUERYNAME_METHOD  QueryNameProcedure;
+  OB_OKAYTOCLOSE_METHOD  OkayToCloseProcedure;
 } OBJECT_TYPE_INITIALIZER, *POBJECT_TYPE_INITIALIZER;
 
 typedef struct _OBJECT_TYPE
 {
-    ERESOURCE Mutex;                    /* Used to lock the Object Type */
-    LIST_ENTRY TypeList;                /* Links all the Types Together for Debugging */
-    UNICODE_STRING Name;                /* Name of the Type */
-    PVOID DefaultObject;                /* What Object to use during a Wait (ie, FileObjects wait on FileObject->Event) */
-    ULONG Index;                        /* Index of this Type in the Object Directory */
-    ULONG TotalNumberOfObjects;         /* Total number of objects of this type */
-    ULONG TotalNumberOfHandles;         /* Total number of handles of this type */
-    ULONG HighWaterNumberOfObjects;     /* Peak number of objects of this type */
-    ULONG HighWaterNumberOfHandles;     /* Peak number of handles of this type */
-    OBJECT_TYPE_INITIALIZER TypeInfo;   /* Information captured during type creation */
-    ULONG Key;                          /* Key to use when allocating objects of this type */
-    ERESOURCE ObjectLocks[4];           /* Locks for locking the Objects */
+  ERESOURCE  Mutex;                    /* Used to lock the Object Type */
+  LIST_ENTRY  TypeList;                /* Links all the Types Together for Debugging */
+  UNICODE_STRING  Name;                /* Name of the Type */
+  PVOID  DefaultObject;                /* What Object to use during a Wait (ie, FileObjects wait on FileObject->Event) */
+  ULONG  Index;                        /* Index of this Type in the Object Directory */
+  ULONG  TotalNumberOfObjects;         /* Total number of objects of this type */
+  ULONG  TotalNumberOfHandles;         /* Total number of handles of this type */
+  ULONG  HighWaterNumberOfObjects;     /* Peak number of objects of this type */
+  ULONG  HighWaterNumberOfHandles;     /* Peak number of handles of this type */
+  OBJECT_TYPE_INITIALIZER  TypeInfo;   /* Information captured during type creation */
+  ULONG  Key;                          /* Key to use when allocating objects of this type */
+  ERESOURCE  ObjectLocks[4];           /* Locks for locking the Objects */
 } OBJECT_TYPE;
 
 NTOSAPI

@@ -238,7 +238,7 @@ typedef struct _KPCR {
   KAFFINITY  SetMember;         /* 48 */
   ULONG  StallScaleFactor;      /* 4C */
   UCHAR  DebugActive;           /* 50 */
-  UCHAR  ProcessorNumber;       /* 51 */
+  UCHAR  Number;                /* 51 */
   UCHAR  Reserved;              /* 52 */
   UCHAR  L2CacheAssociativity;  /* 53 */
   ULONG  VdmAlert;              /* 54 */

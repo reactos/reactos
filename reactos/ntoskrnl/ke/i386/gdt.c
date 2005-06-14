@@ -72,10 +72,10 @@ KiInitializeGdt(PKPCR Pcr)
   /*
    * Allocate a GDT
    */
-  Gdt = KiGdtArray[Pcr->ProcessorNumber];
+  Gdt = KiGdtArray[Pcr->Number];
   if (Gdt == NULL)
     {
-      DbgPrint("No GDT (%d)\n", Pcr->ProcessorNumber);
+      DbgPrint("No GDT (%d)\n", Pcr->Number);
       KEBUGCHECK(0);
     }
 

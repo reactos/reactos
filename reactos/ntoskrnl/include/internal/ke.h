@@ -266,7 +266,7 @@ typedef enum _KTHREAD_STATE {
 }
 
 #ifndef __USE_W32API
-#define KeGetCurrentProcessorNumber() (KeGetCurrentKPCR()->ProcessorNumber)
+#define KeGetCurrentProcessorNumber() (KeGetCurrentKPCR()->Number)
 #endif
 
 /* threadsch.c ********************************************************************/

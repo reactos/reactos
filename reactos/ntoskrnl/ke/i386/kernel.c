@@ -181,7 +181,7 @@ KePrepareForApplicationProcessorInit(ULONG Id)
    * Create a PCR for this processor
    */
   memset(Pcr, 0, PAGE_SIZE);
-  Pcr->ProcessorNumber = Id;
+  Pcr->Number = Id;
   Pcr->Tib.Self = &Pcr->Tib;
   Pcr->Self = Pcr;
   Pcr->Prcb = &Pcr->PrcbData;
@@ -283,7 +283,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    KPCR->GDT = KiBootGdt;
    KPCR->IDT = (PUSHORT)KiIdt;
    KPCR->TSS = &KiBootTss;
-   KPCR->ProcessorNumber = 0;
+   KPCR->Number = 0;
    KiPcrInitDone = 1;
    PcrsAllocated++;
 

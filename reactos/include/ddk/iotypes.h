@@ -650,7 +650,7 @@ typedef NTSTATUS STDCALL_FUNC
 /*
  * Driver cancel declaration
  */
-typedef NTSTATUS STDCALL_FUNC
+typedef VOID STDCALL_FUNC
 (*PDRIVER_CANCEL)(struct _DEVICE_OBJECT* DeviceObject,
 		  struct _IRP* RegistryPath);
 

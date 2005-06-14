@@ -124,7 +124,7 @@ VOID STDCALL KeEnterKernelDebugger (VOID);
 KIRQL STDCALL KeGetCurrentIrql (VOID);
 
 #ifndef __USE_W32API
-#define KeGetCurrentProcessorNumber() (KeGetCurrentKPCR()->ProcessorNumber)
+#define KeGetCurrentProcessorNumber() (KeGetCurrentKPCR()->Number)
 ULONG KeGetDcacheFillSize(VOID);
 KPROCESSOR_MODE STDCALL KeGetPreviousMode (VOID);
 #endif

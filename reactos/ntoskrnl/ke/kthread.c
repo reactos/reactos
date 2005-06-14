@@ -1090,7 +1090,7 @@ KeSetAffinityThread(PKTHREAD Thread,
 
         if (Thread->State == Running) {
 
-            ProcessorMask = 1 << KeGetCurrentKPCR()->ProcessorNumber;
+            ProcessorMask = 1 << KeGetCurrentKPCR()->Number;
             if (Thread == KeGetCurrentThread()) {
 
                 if (!(Affinity & ProcessorMask)) {

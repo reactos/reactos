@@ -469,7 +469,6 @@ typedef struct _CACHE_MANAGER_CALLBACKS         *PCACHE_MANAGER_CALLBACKS;
 typedef struct _EPROCESS_QUOTA_BLOCK            *PEPROCESS_QUOTA_BLOCK;
 typedef struct _FILE_GET_QUOTA_INFORMATION      *PFILE_GET_QUOTA_INFORMATION;
 typedef struct _HANDLE_TABLE                    *PHANDLE_TABLE;
-typedef struct _KEVENT_PAIR                     *PKEVENT_PAIR;
 typedef struct _KPROCESS                        *PKPROCESS;
 typedef struct _KQUEUE                          *PKQUEUE;
 typedef struct _KTRAP_FRAME                     *PKTRAP_FRAME;
@@ -481,7 +480,6 @@ typedef struct _PAGEFAULT_HISTORY               *PPAGEFAULT_HISTORY;
 typedef struct _PS_IMPERSONATION_INFORMATION    *PPS_IMPERSONATION_INFORMATION;
 typedef struct _SECTION_OBJECT                  *PSECTION_OBJECT;
 typedef struct _SHARED_CACHE_MAP                *PSHARED_CACHE_MAP;
-typedef struct _TERMINATION_PORT                *PTERMINATION_PORT;
 typedef struct _VACB                            *PVACB;
 typedef struct _VAD_HEADER                      *PVAD_HEADER;
 
@@ -1208,13 +1206,6 @@ typedef struct _IO_COMPLETION_BASIC_INFORMATION {
     LONG Depth;
 } IO_COMPLETION_BASIC_INFORMATION, *PIO_COMPLETION_BASIC_INFORMATION;
 
-typedef struct _KEVENT_PAIR {
-    USHORT Type;
-    USHORT Size;
-    KEVENT Event1;
-    KEVENT Event2;
-} KEVENT_PAIR, *PKEVENT_PAIR;
-
 typedef struct _KQUEUE {
     DISPATCHER_HEADER   Header;
     LIST_ENTRY          EntryListHead;
@@ -1526,11 +1517,6 @@ typedef struct _SYSTEM_CACHE_INFORMATION {
     ULONG MaximumWorkingSet;
     ULONG Unused[4];
 } SYSTEM_CACHE_INFORMATION, *PSYSTEM_CACHE_INFORMATION;
-
-typedef struct _TERMINATION_PORT {
-    struct _TERMINATION_PORT*   Next;
-    PVOID                       Port;
-} TERMINATION_PORT, *PTERMINATION_PORT;
 
 typedef struct _SECURITY_CLIENT_CONTEXT {
     SECURITY_QUALITY_OF_SERVICE SecurityQos;
@@ -2977,7 +2963,7 @@ NTKERNELAPI
 VOID
 NTAPI
 KeAttachProcess (
-    IN PEPROCESS Process
+    IN PKPROCESS Process
 );
 
 NTKERNELAPI

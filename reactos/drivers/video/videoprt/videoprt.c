@@ -27,7 +27,7 @@
 /* GLOBAL VARIABLES ***********************************************************/
 
 ULONG CsrssInitialized = FALSE;
-PEPROCESS Csrss = NULL;
+PKPROCESS Csrss = NULL;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -495,12 +495,12 @@ IntVideoPortFindAdapter(
 }
 
 VOID FASTCALL
-IntAttachToCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess)
+IntAttachToCSRSS(PKPROCESS *CallingProcess, PKPROCESS *PrevAttachedProcess)
 {
-   *CallingProcess = PsGetCurrentProcess();
+   *CallingProcess = &PsGetCurrentProcess()->Pcb;
    if (*CallingProcess != Csrss)
    {
-      if (PsGetCurrentThread()->ThreadsProcess != *CallingProcess)
+      if (&PsGetCurrentThread()->ThreadsProcess->Pcb != *CallingProcess)
       {
          *PrevAttachedProcess = *CallingProcess;
          KeDetachProcess();
@@ -514,7 +514,7 @@ IntAttachToCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess)
 }
 
 VOID FASTCALL
-IntDetachFromCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess)
+IntDetachFromCSRSS(PKPROCESS *CallingProcess, PKPROCESS *PrevAttachedProcess)
 {
    if (*CallingProcess != Csrss)
    {
@@ -852,8 +852,8 @@ VideoPortGetRomImage(
    IN ULONG Length)
 {
    static PVOID RomImageBuffer = NULL;
-   PEPROCESS CallingProcess;
-   PEPROCESS PrevAttachedProcess;
+   PKPROCESS CallingProcess;
+   PKPROCESS PrevAttachedProcess;
 
    DPRINT("VideoPortGetRomImage(HwDeviceExtension 0x%X Length 0x%X)\n",
           HwDeviceExtension, Length);
