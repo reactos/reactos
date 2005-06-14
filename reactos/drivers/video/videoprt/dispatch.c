@@ -115,7 +115,7 @@ IntVideoPortDispatchOpen(
        */
 
       DPRINT("Referencing CSRSS\n");
-      Csrss = PsGetCurrentProcess();
+      Csrss = &PsGetCurrentProcess()->Pcb;
       DPRINT("Csrss %p\n", Csrss);
 
       CsrssInitialized = TRUE;
