@@ -1022,6 +1022,8 @@ ObInsertObject(IN PVOID Object,
         if (BufferPos[0] == L'\\')
         {
             BufferPos++;
+            RemainingPath.Length -= 2;
+            RemainingPath.MaximumLength -= 2;
         }
         
         RtlMoveMemory(NewName, BufferPos, RemainingPath.MaximumLength);
