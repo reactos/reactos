@@ -22,6 +22,9 @@
 <directory name="telnet">
 	<xi:include href="telnet/telnet.xml" />
 </directory>
+<directory name="tracert">
+	<xi:include href="tracert/tracert.xml" />
+</directory>
 <directory name="whois">
 	<xi:include href="whois/whois.xml" />
 </directory>
