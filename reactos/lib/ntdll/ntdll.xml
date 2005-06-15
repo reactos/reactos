@@ -84,7 +84,6 @@
 		<file>stricmp.c</file>
 		<file>strlwr.c</file>
 		<file>strnicmp.c</file>
-		<file>strpbrk.c</file>
 		<file>strstr.c</file>
 		<file>strupr.c</file>
 		<file>wstring.c</file>
