@@ -39,7 +39,6 @@
 		<file>dbgbuffer.c</file>
 		<file>exception.c</file>
 		<file>handle.c</file>
-		<file>intrlck.c</file>
 		<file>libsupp.c</file>
 		<file>math.c</file>
 		<file>message.c</file>
