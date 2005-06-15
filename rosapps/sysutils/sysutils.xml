@@ -1,0 +1,68 @@
+<directory name="ctm">
+	<xi:include href="ctm/ctm.xml" />
+</directory>
+
+<directory name="kill">
+	<xi:include href="kill/kill.xml" />
+</directory>
+
+<directory name="man">
+	<xi:include href="man/man.xml" />
+</directory>
+
+<directory name="regexpl">
+	<xi:include href="regexpl/regexpl.xml" />
+</directory>
+
+<directory name="tcat">
+	<xi:include href="tcat/cat.xml" />
+</directory>
+
+<directory name="tlist">
+	<xi:include href="tlist/tlist.xml" />
+</directory>
+
+
+<module name="chklib" type="win32cui" installbase="system32" installname="chklib.exe" warnings="true">
+	<linkerflag>--numeric-sort</linkerflag>
+	<define name="__USE_W32API" />
+	<define name="_WIN32_IE">0x0501</define>
+	<define name="_WIN32_WINNT">0x0501</define>
+	<library>kernel32</library>
+	<file>chklib.c</file>
+	<file>win32err.c</file>
+	<file>chklib.rc</file>
+</module>
+
+<module name="shutdown" type="win32cui" installbase="system32" installname="shutdown.exe">
+	<linkerflag>--numeric-sort</linkerflag>
+	<define name="__USE_W32API" />
+	<define name="_WIN32_IE">0x0501</define>
+	<define name="_WIN32_WINNT">0x0501</define>
+	<library>kernel32</library>
+	<library>user32</library>
+	<file>shutdown.c</file>
+	<file>win32err.c</file>
+	<file>shutdown.rc</file>
+</module>
+
+<module name="pedump" type="win32cui" installbase="system32" installname="pedump.exe" warnings="true">
+	<linkerflag>--numeric-sort</linkerflag>
+	<define name="__USE_W32API" />
+	<define name="_WIN32_IE">0x0501</define>
+	<define name="_WIN32_WINNT">0x0501</define>
+	<library>ntdll</library>
+	<library>kernel32</library>
+	<file>pedump.c</file>
+	<file>pedump.rc</file>
+</module>
+
+<module name="ldd" type="win32cui" installbase="system32" installname="ldd.exe">
+	<linkerflag>--numeric-sort</linkerflag>
+	<define name="__USE_W32API" />
+	<define name="_WIN32_IE">0x0501</define>
+	<define name="_WIN32_WINNT">0x0501</define>
+	<file>ldd.c</file>
+	<file>win32err.c</file>
+	<file>ldd.rc</file>
+</module>

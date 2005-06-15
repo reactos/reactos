@@ -1,0 +1,52 @@
+<directory name="mode">
+	<xi:include href="mode/mode.xml" />
+</directory>
+
+<directory name="touch">
+	<xi:include href="touch/touch.xml" />
+</directory>
+
+<module name="find" type="win32cui" installbase="system32" installname="find.exe">
+	<define name="__USE_W32API" />
+	<define name="_WIN32_IE">0x0501</define>
+	<define name="_WIN32_WINNT">0x0501</define>
+	<library>kernel32</library>
+	<file>find.c</file>
+	<file>find.rc</file>
+</module>
+
+<module name="more" type="win32cui" installbase="system32" installname="more.exe">
+	<define name="__USE_W32API" />
+	<define name="_WIN32_IE">0x0501</define>
+	<define name="_WIN32_WINNT">0x0501</define>
+	<library>kernel32</library>
+	<file>more.c</file>
+	<file>more.rc</file>
+</module>
+
+<module name="sort" type="win32cui" installbase="system32" installname="sort.exe">
+	<define name="__USE_W32API" />
+	<define name="_WIN32_IE">0x0501</define>
+	<define name="_WIN32_WINNT">0x0501</define>
+	<library>kernel32</library>
+	<file>sort.c</file>
+	<file>sort.rc</file>
+</module>
+
+<module name="tee" type="win32cui" installbase="system32" installname="tee.exe">
+	<define name="__USE_W32API" />
+	<define name="_WIN32_IE">0x0501</define>
+	<define name="_WIN32_WINNT">0x0501</define>
+	<library>kernel32</library>
+	<file>tee.c</file>
+	<file>tee.rc</file>
+</module>
+
+<module name="y" type="win32cui" installbase="system32" installname="y.exe">
+	<define name="__USE_W32API" />
+	<define name="_WIN32_IE">0x0501</define>
+	<define name="_WIN32_WINNT">0x0501</define>
+	<library>kernel32</library>
+	<file>y.c</file>
+	<file>y.rc</file>
+</module>
