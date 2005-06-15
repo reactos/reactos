@@ -7,7 +7,7 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
  */
 
-//#define NDEBUG
+#define NDEBUG
 #include "usbhub.h"
 
 extern struct usb_driver hub_driver;
@@ -122,8 +122,6 @@ UsbhubDeviceControlFdo(
 	PVOID BufferIn, BufferOut;
 	NTSTATUS Status;
 
-	DPRINT("Usbhub: UsbhubDeviceControlFdo() called\n");
-
 	Stack = IoGetCurrentIrpStackLocation(Irp);
 	LengthIn = Stack->Parameters.DeviceIoControl.InputBufferLength;
 	LengthOut = Stack->Parameters.DeviceIoControl.OutputBufferLength;
@@ -137,10 +135,6 @@ UsbhubDeviceControlFdo(
 		{
 			PUSB_NODE_INFORMATION NodeInformation;
 			struct usb_device* dev;
-			struct device* device;
-			struct usb_interface * intf;
-			struct usb_hub *hub;
-			struct usb_hub_descriptor *descriptor;
 			DPRINT("Usbhub: IOCTL_USB_GET_NODE_INFORMATION\n");
 			if (LengthOut < sizeof(USB_NODE_INFORMATION))
 				Status = STATUS_BUFFER_TOO_SMALL;
@@ -150,19 +144,83 @@ UsbhubDeviceControlFdo(
 			{
 				NodeInformation = (PUSB_NODE_INFORMATION)BufferOut;
 				dev = ((PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->dev;
-				device = hubdev(dev);
-				intf = to_usb_interface(device);
-				hub = usb_get_intfdata(intf);
-				descriptor = hub->descriptor;
 				NodeInformation->NodeType = UsbHub;
 				RtlCopyMemory(
 					&NodeInformation->u.HubInformation.HubDescriptor,
-					descriptor,
+					((struct usb_hub *)usb_get_intfdata(to_usb_interface(hubdev(dev))))->descriptor,
 					sizeof(USB_HUB_DESCRIPTOR));
 				NodeInformation->u.HubInformation.HubIsBusPowered = TRUE; /* FIXME */
 				Information = sizeof(USB_NODE_INFORMATION);
 				Status = STATUS_SUCCESS;
 			}
+			break;
+		}
+		case IOCTL_USB_GET_NODE_CONNECTION_NAME:
+		{
+			PUSB_NODE_CONNECTION_NAME ConnectionName;
+			
+			DPRINT("Usbhub: IOCTL_USB_GET_NODE_CONNECTION_NAME\n");
+			if (LengthOut < sizeof(USB_NODE_CONNECTION_NAME))
+				Status = STATUS_BUFFER_TOO_SMALL;
+			else
+			{
+				ConnectionName = (PUSB_NODE_CONNECTION_NAME)BufferOut;
+				DPRINT1("Usbhub: IOCTL_USB_GET_NODE_CONNECTION_NAME unimplemented\n");
+				ConnectionName->ActualLength = 0;
+				ConnectionName->NodeName[0] = UNICODE_NULL;
+				Information = sizeof(USB_NODE_CONNECTION_NAME);
+				Status = STATUS_SUCCESS;
+			}
+			break;
+		}
+		case IOCTL_USB_GET_NODE_CONNECTION_INFORMATION:
+		{
+			PUSB_NODE_CONNECTION_INFORMATION ConnectionInformation;
+			struct usb_device* dev;
+			//ULONG i;
+			
+			DPRINT("Usbhub: IOCTL_USB_GET_NODE_CONNECTION_INFORMATION\n");
+			if (LengthOut < sizeof(USB_NODE_CONNECTION_INFORMATION))
+				Status = STATUS_BUFFER_TOO_SMALL;
+			else if (BufferOut == NULL)
+				Status = STATUS_INVALID_PARAMETER;
+			else
+			{
+				ConnectionInformation = (PUSB_NODE_CONNECTION_INFORMATION)BufferOut;
+				DPRINT1("Usbhub: IOCTL_USB_GET_NODE_CONNECTION_INFORMATION partially implemented\n");
+				dev = ((PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->dev;
+				ConnectionInformation->ConnectionIndex = 0; /* FIXME */
+				RtlCopyMemory(
+					&ConnectionInformation->DeviceDescriptor,
+					&dev->descriptor,
+					sizeof(USB_DEVICE_DESCRIPTOR));
+				ConnectionInformation->CurrentConfigurationValue = 0; /* FIXME */
+				ConnectionInformation->LowSpeed = TRUE; /* FIXME */
+				ConnectionInformation->DeviceIsHub = TRUE;
+				RtlZeroMemory(&ConnectionInformation->DeviceAddress, sizeof(ConnectionInformation->DeviceAddress)); /* FIXME */
+				RtlZeroMemory(&ConnectionInformation->NumberOfOpenPipes, sizeof(ConnectionInformation->NumberOfOpenPipes)); /* FIXME */
+				RtlZeroMemory(&ConnectionInformation->ConnectionStatus, sizeof(ConnectionInformation->ConnectionStatus)); /* FIXME */
+				RtlZeroMemory(&ConnectionInformation->PipeList, sizeof(ConnectionInformation->PipeList)); /* FIXME */
+				/*for (i = 0; i < 32; i++)
+				{
+					RtlCopyMemory(
+						&ConnectionInformation->PipeList[i].EndpointDescriptor,
+						xxx, // FIXME
+						sizeof(USB_ENDPOINT_DESCRIPTOR));
+					ConnectionInformation->PipeList[i].ScheduleOffset = 0; // FIXME
+				}*/
+				Information = sizeof(USB_NODE_CONNECTION_INFORMATION);
+				Status = STATUS_SUCCESS;
+			}
+			break;
+		}
+		case IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION:
+		{
+			//PUSB_DESCRIPTOR_REQUEST Descriptor;
+			DPRINT("Usbhub: IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION\n");
+			DPRINT1("Usbhub: IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION unimplemented\n");
+			Information = 0;
+			Status = STATUS_NOT_IMPLEMENTED;
 			break;
 		}
 		default:
