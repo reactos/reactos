@@ -178,7 +178,7 @@ KiKernelTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
   return(0);
 }
 
-ULONG
+VOID
 KiDoubleFaultHandler(VOID)
 {
   unsigned int cr2;
@@ -384,7 +384,6 @@ KiDoubleFaultHandler(VOID)
 
    DbgPrint("\n");
    for(;;);
-   return 0;
 }
 
 VOID
