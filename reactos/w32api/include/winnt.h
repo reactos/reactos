@@ -19,6 +19,9 @@
 #define _X86_
 #elif defined(_M_ALPHA) && !defined(_ALPHA_)
 #define _ALPHA_
+
+#elif defined(_M_ARM) && !defined(ARM)
+#define ARM
 #elif defined(_M_PPC) && !defined(_PPC_)
 #define _PPC_
 #elif defined(_M_MRX000) && !defined(_MIPS_)
