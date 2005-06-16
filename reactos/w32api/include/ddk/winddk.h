@@ -5350,6 +5350,52 @@ RtlxUnicodeStringToAnsiSize(
 #endif
 
 
+/* Guarded Mutex routines */
+
+VOID 
+FASTCALL
+KeAcquireGuardedMutex(
+    PKGUARDED_MUTEX GuardedMutex
+);
+
+VOID
+FASTCALL
+KeAcquireGuardedMutexUnsafe(
+    PKGUARDED_MUTEX GuardedMutex
+);
+
+VOID 
+STDCALL
+KeEnterGuardedRegion(VOID);
+
+VOID
+STDCALL
+KeLeaveGuardedRegion(VOID);
+
+VOID 
+FASTCALL
+KeInitializeGuardedMutex(
+    PKGUARDED_MUTEX GuardedMutex
+);
+
+VOID 
+FASTCALL
+KeReleaseGuardedMutexUnsafe(
+    PKGUARDED_MUTEX GuardedMutex
+);
+
+VOID 
+FASTCALL
+KeReleaseGuardedMutex(
+    PKGUARDED_MUTEX GuardedMutex
+);
+
+BOOL 
+FASTCALL
+KeTryToAcquireGuardedMutex(
+    PKGUARDED_MUTEX GuardedMutex
+);
+
 /** Executive support routines **/
 
 NTOSAPI

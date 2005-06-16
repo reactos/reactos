@@ -508,6 +508,8 @@ Ke386CallBios@8
 Ke386IoSetAccessProcess@8
 Ke386QueryIoAccessMap@8
 Ke386SetIoAccessMap@8
+@KeAcquireGuardedMutex@4
+@KeAcquireGuardedMutexUnsafe@4
 KeAcquireSpinLockAtDpcLevel@4
 @KeAcquireDispatcherDatabaseLockAtDpcLevel@0
 @KeAcquireInStackQueuedSpinLockAtDpcLevel@8
@@ -529,6 +531,7 @@ KeDeregisterBugCheckReasonCallback@4
 KeDetachProcess@0
 KeDisconnectInterrupt@4
 KeEnterCriticalRegion@0
+KeEnterGuardedRegion@0
 KeEnterKernelDebugger@0
 KeFindConfigurationEntry@16
 KeFindConfigurationNextEntry@20
@@ -552,6 +555,7 @@ KeInitializeApc@32
 KeInitializeDeviceQueue@4
 KeInitializeDpc@12
 KeInitializeEvent@12
+@KeInitializeGuardedMutex@4
 KeInitializeInterrupt@44
 KeInitializeMutant@8
 KeInitializeMutex@8
@@ -569,6 +573,7 @@ KeInsertQueueDpc@12
 KeIsAttachedProcess@0
 KeIsExecutingDpc@0
 KeLeaveCriticalRegion@0
+KeLeaveGuardedRegion@0
 KeLoaderBlock DATA
 KeNumberProcessors DATA
 KeProfileInterrupt@4
@@ -591,6 +596,8 @@ KeReadStateTimer@4
 KeRegisterBugCheckCallback@20
 KeRegisterBugCheckReasonCallback@16
 @KeReleaseDispatcherDatabaseLockFromDpcLevel@0
+@KeReleaseGuardedMutexUnsafe@4
+@KeReleaseGuardedMutex@4
 @KeReleaseInStackQueuedSpinLockFromDpcLevel@4
 KeReleaseInterruptSpinLock@8
 KeReleaseMutant@16
@@ -633,6 +640,7 @@ KeStackAttachProcess@8
 KeSynchronizeExecution@12
 KeTerminateThread@4
 KeTickCount DATA
+@KeTryToAcquireGuardedMutex@4
 KeUpdateRunTime@8
 KeUpdateSystemTime@8
 KeUnstackDetachProcess@4
