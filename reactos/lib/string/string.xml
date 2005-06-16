@@ -1,68 +1,67 @@
 <module name="string" type="staticlibrary">
-        <if property="ARCH" value="i386">
-                <directory name="i386">
-	                <file>memchr.s</file>
-                        <file>memcpy.s</file>
-	                <file>memmove.s</file>
-	                <file>memset.s</file>
-	                <file>strcat.s</file>
-	                <file>strchr.s</file>
-	                <file>strcmp.s</file>
-	                <file>strcpy.s</file>
-	                <file>strlen.s</file>
-	                <file>strncat.s</file>
-	                <file>strncmp.s</file>
-	                <file>strncpy.s</file>
-	                <file>strnlen.s</file>
-	                <file>strrchr.s</file>
-	                <file>wcscat.s</file>
-	                <file>wcschr.s</file>
-	                <file>wcscmp.s</file>
-	                <file>wcscpy.s</file>
-	                <file>wcslen.s</file>
-	                <file>wcsncat.s</file>
-	                <file>wcsncmp.s</file>
-	                <file>wcsncpy.s</file>
-	                <file>wcsnlen.s</file>
-	                <file>wcsrchr.s</file>
+	<if property="ARCH" value="i386">
+		<directory name="i386">
+			<file>memchr.s</file>
+			<file>memcpy.s</file>
+			<file>memmove.s</file>
+			<file>memset.s</file>
+			<file>strcat.s</file>
+			<file>strchr.s</file>
+			<file>strcmp.s</file>
+			<file>strcpy.s</file>
+			<file>strlen.s</file>
+			<file>strncat.s</file>
+			<file>strncmp.s</file>
+			<file>strncpy.s</file>
+			<file>strnlen.s</file>
+			<file>strrchr.s</file>
+			<file>wcscat.s</file>
+			<file>wcschr.s</file>
+			<file>wcscmp.s</file>
+			<file>wcscpy.s</file>
+			<file>wcslen.s</file>
+			<file>wcsncat.s</file>
+			<file>wcsncmp.s</file>
+			<file>wcsncpy.s</file>
+			<file>wcsnlen.s</file>
+			<file>wcsrchr.s</file>
 		</directory>
-
 	</if>
-        <if property="ARCH" value="unknown">
-	        <file>memchr.c</file>
-	        <file>memcpy.c</file>
-	        <file>memmove.c</file>
-	        <file>memset.c</file>
-	        <file>strcat.c</file>
-	        <file>strchr.c</file>
-	        <file>strcmp.c</file>
-	        <file>strcpy.c</file>
-	        <file>strlen.c</file>
-	        <file>strncat.c</file>
-	        <file>strncmp.c</file>
-	        <file>strncpy.c</file>
-	        <file>strnlen.c</file>
-	        <file>strrchr.c</file>
-	        <file>wcscat.c</file>
-	        <file>wcschr.c</file>
-	        <file>wcscmp.c</file>
-	        <file>wcscpy.c</file>
-	        <file>wcslen.c</file>
-	        <file>wcsncat.c</file>
-	        <file>wcsncmp.c</file>
-	        <file>wcsncpy.c</file>
-	        <file>wcsnlen.c</file>
-	        <file>wcsrchr.c</file>
-	</if>        
+	<ifnot property="ARCH" value="i386">
+		<file>memchr.c</file>
+		<file>memcpy.c</file>
+		<file>memmove.c</file>
+		<file>memset.c</file>
+		<file>strcat.c</file>
+		<file>strchr.c</file>
+		<file>strcmp.c</file>
+		<file>strcpy.c</file>
+		<file>strlen.c</file>
+		<file>strncat.c</file>
+		<file>strncmp.c</file>
+		<file>strncpy.c</file>
+		<file>strnlen.c</file>
+		<file>strrchr.c</file>
+		<file>wcscat.c</file>
+		<file>wcschr.c</file>
+		<file>wcscmp.c</file>
+		<file>wcscpy.c</file>
+		<file>wcslen.c</file>
+		<file>wcsncat.c</file>
+		<file>wcsncmp.c</file>
+		<file>wcsncpy.c</file>
+		<file>wcsnlen.c</file>
+		<file>wcsrchr.c</file>
+	</ifnot>
 <!--
-  FIXME:
-    The next files should be a part of ARCH=i386 and ARCH=unknown. 
-    The current implemention of rbuild generates a dependency rule 
-    for each occurence of a file. 
+	FIXME:
+	The next files should be a part of ARCH=i386 and ARCH=unknown. 
+	The current implemention of rbuild generates a dependency rule 
+	for each occurence of a file. 
 -->
-        <file>memccpy.c</file>
-        <file>memcmp.c</file>
-        <file>strcspn.c</file>
-        <file>strpbrk.c</file>
-        <file>strspn.c</file>
+	<file>memccpy.c</file>
+	<file>memcmp.c</file>
+	<file>strcspn.c</file>
+	<file>strpbrk.c</file>
+	<file>strspn.c</file>
 </module>
