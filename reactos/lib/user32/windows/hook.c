@@ -67,8 +67,50 @@ CallMsgFilterA(
   LPMSG lpMsg,
   int nCode)
 {
+   BOOL ret = FALSE;
+
   UNIMPLEMENTED;
-  return FALSE;
+  if (nCode != HCBT_CREATEWND) ret = NtUserCallMsgFilter((LPMSG) lpMsg, nCode);
+  else
+     {
+        UNICODE_STRING usBuffer;
+        CBT_CREATEWNDA *cbtcwA = (CBT_CREATEWNDA *)lpMsg->lParam;
+        CBT_CREATEWNDW cbtcwW;
+        CREATESTRUCTW csW;
+	MSG Msg;
+	
+	Msg.hwnd = lpMsg->hwnd;
+	Msg.message = lpMsg->message;
+	Msg.time = lpMsg->time;
+	Msg.pt = lpMsg->pt;
+	Msg.wParam = lpMsg->wParam;
+		
+        cbtcwW.lpcs = &csW;
+        cbtcwW.hwndInsertAfter = cbtcwA->hwndInsertAfter;
+        csW = *(CREATESTRUCTW *)cbtcwA->lpcs;
+
+        if (HIWORD(cbtcwA->lpcs->lpszName))
+        {
+            RtlCreateUnicodeStringFromAsciiz(&usBuffer,cbtcwA->lpcs->lpszName);
+            csW.lpszName = usBuffer.Buffer;
+        }
+        if (HIWORD(cbtcwA->lpcs->lpszClass))
+        {
+            RtlCreateUnicodeStringFromAsciiz(&usBuffer,cbtcwA->lpcs->lpszClass);
+            csW.lpszClass = usBuffer.Buffer;
+        }
+        Msg.lParam =(LPARAM) &cbtcwW;
+        
+        ret = NtUserCallMsgFilter((LPMSG)&Msg, nCode);
+
+        lpMsg->time = Msg.time;
+        lpMsg->pt = Msg.pt;
+                
+        cbtcwA->hwndInsertAfter = cbtcwW.hwndInsertAfter;
+        if (HIWORD(csW.lpszName)) HeapFree( GetProcessHeap(), 0, (LPWSTR)csW.lpszName );
+        if (HIWORD(csW.lpszClass)) HeapFree( GetProcessHeap(), 0, (LPWSTR)csW.lpszClass );
+     }
+  return ret;
 }
 
 
@@ -82,7 +124,8 @@ CallMsgFilterW(
   int nCode)
 {
   UNIMPLEMENTED;
-  return FALSE;
+  return  NtUserCallMsgFilter((LPMSG) lpMsg, nCode);
+//  return FALSE;
 }
 
 

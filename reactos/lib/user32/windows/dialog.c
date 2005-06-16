@@ -2060,7 +2060,7 @@ IsDialogMessageA(
      INT dlgCode = 0;
 
      // FIXME: hooks
-     //if (CallMsgFilterA( lpMsg, MSGF_DIALOGBOX )) return TRUE;
+     if (CallMsgFilterA( lpMsg, MSGF_DIALOGBOX )) return TRUE;
 
      if ((hDlg != lpMsg->hwnd) && !IsChild( hDlg, lpMsg->hwnd )) return FALSE;
 
@@ -2152,7 +2152,7 @@ IsDialogMessageW(
      INT dlgCode = 0;
 
      // FIXME: hooks
-     //if (CallMsgFilterW( lpMsg, MSGF_DIALOGBOX )) return TRUE;
+     if (CallMsgFilterW( lpMsg, MSGF_DIALOGBOX )) return TRUE;
 
      if ((hDlg != lpMsg->hwnd) && !IsChild( hDlg, lpMsg->hwnd )) return FALSE;
 
