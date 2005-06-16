@@ -450,7 +450,7 @@ INT ReceivePacket(INT datasize)
 {
     TIMEVAL timeVal;
     FD_SET readFDS;
-    int iSockRet, iSelRet;
+    int iSockRet = 0, iSelRet;
     int iFromLen;
     int iPacketSize;
 
