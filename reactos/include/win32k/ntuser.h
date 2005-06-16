@@ -147,12 +147,12 @@ NtUserCallHwndParamLock(
   DWORD Unknown1,
   DWORD Unknown2);
 
-DWORD
+BOOL
 STDCALL
 NtUserCallMsgFilter(
-  DWORD Unknown0,
-  DWORD Unknown1);
-
+  LPMSG msg,
+  INT code);
+ 
 LRESULT
 STDCALL
 NtUserCallNextHookEx(
