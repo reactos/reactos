@@ -395,12 +395,14 @@ public:
 	const XMLElement& node;
 	const Project& project;
 	const Module* module;
+	const bool negated;
 	std::string property, value;
 	IfableData data;
 
 	If ( const XMLElement& node_,
 	     const Project& project_,
-	     const Module* module_ );
+	     const Module* module_,
+	     const bool negated_ = false );
 	~If();
 
 	void ProcessXML();

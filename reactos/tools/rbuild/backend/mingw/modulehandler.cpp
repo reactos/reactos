@@ -731,7 +731,8 @@ MingwModuleHandler::GenerateMacros (
 		{
 			fprintf (
 				fMakefile,
-				"ifeq (\"$(%s)\",\"%s\")\n",
+				"%s (\"$(%s)\",\"%s\")\n",
+				rIf.negated ? "ifneq" : "ifeq",
 				rIf.property.c_str(),
 				rIf.value.c_str() );
 			GenerateMacros (
@@ -815,7 +816,8 @@ MingwModuleHandler::GenerateObjectMacros (
 		{
 			fprintf (
 				fMakefile,
-				"ifeq (\"$(%s)\",\"%s\")\n",
+				"%s (\"$(%s)\",\"%s\")\n",
+				rIf.negated ? "ifneq" : "ifeq",
 				rIf.property.c_str(),
 				rIf.value.c_str() );
 			GenerateObjectMacros (
