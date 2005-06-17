@@ -4358,20 +4358,20 @@ RtlAssert(
 #ifdef DBG
 
 #define ASSERT(exp) \
-  ((!(exp)) ? \
-    (RtlAssert( #exp, __FILE__, __LINE__, NULL ), FALSE) : TRUE)
+  (VOID)((!(exp)) ? \
+    RtlAssert( #exp, __FILE__, __LINE__, NULL ), FALSE : TRUE)
 
 #define ASSERTMSG(msg, exp) \
-  ((!(exp)) ? \
-    (RtlAssert( #exp, __FILE__, __LINE__, msg ), FALSE) : TRUE)
+  (VOID)((!(exp)) ? \
+    RtlAssert( #exp, __FILE__, __LINE__, msg ), FALSE : TRUE)
 
 #define RTL_SOFT_ASSERT(exp) \
-  ((!(_exp)) ? \
-    (DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n", __FILE__, __LINE__, #exp), FALSE) : TRUE)
+  (VOID)((!(_exp)) ? \
+    DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n", __FILE__, __LINE__, #exp), FALSE : TRUE)
 
 #define RTL_SOFT_ASSERTMSG(msg, exp) \
-  ((!(exp)) ? \
-    (DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n   Message: %s\n", __FILE__, __LINE__, #exp, (msg)), FALSE) : TRUE)
+  (VOID)((!(exp)) ? \
+    DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n   Message: %s\n", __FILE__, __LINE__, #exp, (msg)), FALSE : TRUE)
 
 #define RTL_VERIFY(exp) ASSERT(exp)
 #define RTL_VERIFYMSG(msg, exp) ASSERT(msg, exp)
