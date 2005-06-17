@@ -536,7 +536,7 @@ CheckUnattendedSetup(VOID)
  *	Number of the next page.
  */
 static PAGE_NUMBER
-StartPage(PINPUT_RECORD Ir)
+SetupStartPage(PINPUT_RECORD Ir)
 {
   SYSTEM_DEVICE_INFORMATION Sdi;
   NTSTATUS Status;
@@ -2896,7 +2896,7 @@ PrepareCopyPageInfFile(HINF InfFile,
     }
 
   /* Create the install directory */
-  Status = CreateDirectory(PathBuffer);
+  Status = SetupCreateDirectory(PathBuffer);
   if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_COLLISION)
     {
       DPRINT("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
@@ -2967,7 +2967,7 @@ PrepareCopyPageInfFile(HINF InfFile,
 
 	  DPRINT("FullPath: '%S'\n", PathBuffer);
 
-	  Status = CreateDirectory(PathBuffer);
+	  Status = SetupCreateDirectory(PathBuffer);
 	  if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_COLLISION)
 	    {
 	      DPRINT("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
@@ -3808,7 +3808,7 @@ NtProcessStartup(PPEB Peb)
 	{
 	  /* Start page */
 	  case START_PAGE:
-	    Page = StartPage(&Ir);
+	    Page = SetupStartPage(&Ir);
 	    break;
 
 	  /* License page */

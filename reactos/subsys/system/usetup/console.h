@@ -29,47 +29,56 @@
 
 #include <ntos/keyboard.h>
 
+#define AllocConsole ConAllocConsole
+#define FreeConsole ConFreeConsole
+#define ReadConsoleOutputCharacters ConReadConsoleOutputCharacters
+#define ReadConsoleOutputAttributes ConReadConsoleOutputAttributes
+#define WriteConsoleOutputCharacters ConWriteConsoleOutputCharacters
+#define WriteConsoleOutputAttributes ConWriteConsoleOutputAttributes
+#define FillConsoleOutputAttribute ConFillConsoleOutputAttribute
+#undef FillConsoleOutputCharacter
+#define FillConsoleOutputCharacter ConFillConsoleOutputCharacter
 
 NTSTATUS
-AllocConsole(VOID);
+ConAllocConsole(VOID);
 
 VOID
-FreeConsole(VOID);
+ConFreeConsole(VOID);
 
 
 NTSTATUS
-ReadConsoleOutputCharacters(LPSTR lpCharacter,
-			    ULONG nLength,
-			    COORD dwReadCoord,
-			    PULONG lpNumberOfCharsRead);
+ConReadConsoleOutputCharacters(LPSTR lpCharacter,
+			       ULONG nLength,
+			       COORD dwReadCoord,
+			       PULONG lpNumberOfCharsRead);
 
 NTSTATUS
-ReadConsoleOutputAttributes(PUSHORT lpAttribute,
-			    ULONG nLength,
-			    COORD dwReadCoord,
-			    PULONG lpNumberOfAttrsRead);
+ConReadConsoleOutputAttributes(PUSHORT lpAttribute,
+			       ULONG nLength,
+			       COORD dwReadCoord,
+			       PULONG lpNumberOfAttrsRead);
 
 NTSTATUS
-WriteConsoleOutputCharacters(LPCSTR lpCharacter,
-			     ULONG nLength,
-			     COORD dwWriteCoord);
+ConWriteConsoleOutputCharacters(LPCSTR lpCharacter,
+			        ULONG nLength,
+			        COORD dwWriteCoord);
 
 NTSTATUS
-WriteConsoleOutputAttributes(CONST USHORT *lpAttribute,
-			     ULONG nLength,
-			     COORD dwWriteCoord,
-			     PULONG lpNumberOfAttrsWritten);
+ConWriteConsoleOutputAttributes(CONST USHORT *lpAttribute,
+			        ULONG nLength,
+			        COORD dwWriteCoord,
+			        PULONG lpNumberOfAttrsWritten);
 
 NTSTATUS
-FillConsoleOutputAttribute(USHORT wAttribute,
-			   ULONG nLength,
-			   COORD dwWriteCoord,
-			   PULONG lpNumberOfAttrsWritten);
+ConFillConsoleOutputAttribute(USHORT wAttribute,
+			      ULONG nLength,
+			      COORD dwWriteCoord,
+			      PULONG lpNumberOfAttrsWritten);
 NTSTATUS
-FillConsoleOutputCharacter(CHAR Character,
-			   ULONG Length,
-			   COORD WriteCoord,
-			   PULONG NumberOfCharsWritten);
+ConFillConsoleOutputCharacter(CHAR Character,
+			      ULONG Length,
+			      COORD WriteCoord,
+			      PULONG NumberOfCharsWritten);
 
 #if 0
 NTSTATUS
