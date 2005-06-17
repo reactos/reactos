@@ -118,13 +118,13 @@ int my_kernel_thread(int STDCALL (*handler)(void*), void* parm, int flags)
 	
 	ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
 
-	PsCreateSystemThread(&hThread,
+	/*PsCreateSystemThread(&hThread,
 			     THREAD_ALL_ACCESS,
 			     NULL,
 			     NULL,
 			     NULL,
 			     (PKSTART_ROUTINE)handler,
-				 parm);
+				 parm);*/
 
 	DPRINT1("usbcore: Created system thread %d\n", (int)hThread);
 
