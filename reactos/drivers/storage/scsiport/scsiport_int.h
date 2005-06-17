@@ -7,6 +7,9 @@
 
 #define VERSION "0.0.3"
 
+#define PAGE_ROUND_UP(x) ( (((ULONG_PTR)x)%PAGE_SIZE) ? ((((ULONG_PTR)x)&(~(PAGE_SIZE-1)))+PAGE_SIZE) : ((ULONG_PTR)x) )
+#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
+
 typedef enum _SCSI_PORT_TIMER_STATES
 {
   IDETimerIdle,

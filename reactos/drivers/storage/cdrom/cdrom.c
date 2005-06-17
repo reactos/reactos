@@ -35,9 +35,12 @@
 
 #include <ddk/ntddk.h>
 #include <ddk/scsi.h>
-#include <ddk/class2.h>
 #include <ddk/ntddscsi.h>
+#include <ddk/ntdddisk.h>
+#include <ddk/ntddcdrm.h>
+#include <ddk/class2.h>
 #include <ntos/minmax.h>
+#include <stdio.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -134,7 +137,7 @@ VOID STDCALL
 CdromTimerRoutine(IN PDEVICE_OBJECT DeviceObject,
 		  IN PVOID Context);
 
-VOID
+VOID STDCALL
 CdromWorkItem(IN PDEVICE_OBJECT DeviceObject,
 	      IN PVOID Context);
 
@@ -1633,7 +1636,7 @@ CdromTimerRoutine(IN PDEVICE_OBJECT DeviceObject,
 }
 
 
-VOID
+VOID STDCALL
 CdromWorkItem(IN PDEVICE_OBJECT DeviceObject,
 	      IN PVOID Context)
 {

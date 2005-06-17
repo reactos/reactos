@@ -52,7 +52,6 @@
 #include <ddk/srb.h>
 #include <ddk/scsi.h>
 #include <ddk/ntddscsi.h>
-#include <ntos/kefuncs.h>
 
 #include "atapi.h"
 

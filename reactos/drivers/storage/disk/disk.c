@@ -28,9 +28,11 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ddk/ntdddisk.h>
 #include <ddk/scsi.h>
 #include <ddk/class2.h>
 #include <ddk/ntddscsi.h>
+#include <stdio.h>
 
 #define NDEBUG
 #include <debug.h>

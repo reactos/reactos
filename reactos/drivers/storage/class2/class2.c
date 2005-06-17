@@ -33,12 +33,15 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ddk/ntdddisk.h>
 #include <ddk/scsi.h>
 #include <ddk/class2.h>
+#include <stdio.h>
 
 #define NDEBUG
 #include <debug.h>
 
+#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
 #define VERSION "0.0.2"
 

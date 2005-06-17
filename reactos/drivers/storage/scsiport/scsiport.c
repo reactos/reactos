@@ -33,7 +33,7 @@
 #include <ddk/scsi.h>
 #include <ddk/ntddscsi.h>
 #include <ntos/minmax.h>
-#include <rosrtl/string.h>
+#include <stdio.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -2337,7 +2337,8 @@ SpiBuildDeviceMap (PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 {
   PSCSI_PORT_LUN_EXTENSION LunExtension;
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyName;
+  UNICODE_STRING KeyName =
+    RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Hardware\\DeviceMap\\Scsi");
   UNICODE_STRING ValueName;
   WCHAR NameBuffer[64];
   ULONG Disposition;
@@ -2365,8 +2366,6 @@ SpiBuildDeviceMap (PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     }
 
   /* Open or create the 'Scsi' subkey */
-  RtlRosInitUnicodeStringFromLiteral(&KeyName,
-				  L"\\Registry\\Machine\\Hardware\\DeviceMap\\Scsi");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
 			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,

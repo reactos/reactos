@@ -29,8 +29,10 @@
 
 #include <ddk/ntddk.h>
 #include <ddk/scsi.h>
-#include <ddk/class2.h>
+#include <ddk/ntdddisk.h>
 #include <ddk/ntddscsi.h>
+#include <ddk/class2.h>
+#include <ntos.h>
 #include <napi/core.h>
 #include "../scsiport/scsiport_int.h"
 

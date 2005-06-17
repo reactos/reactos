@@ -29,13 +29,11 @@
 #define MAX_DRIVES_PER_CONTROLLER 4
 #define MAX_CONTROLLERS 4
 
-#ifdef _MSC_VER
 /* MS doesn't prototype this but the w2k kernel exports it */
 int _cdecl swprintf(const WCHAR *, ...);
 
 /* need ioctls in ddk build mode */
 #include <ntdddisk.h>
-#endif
 
 /* missing from ros headers */
 /* TODO: fix this right */
