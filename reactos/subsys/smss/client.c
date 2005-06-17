@@ -177,6 +177,7 @@ SmBeginClientInitialization (IN  PSM_PORT_MESSAGE Request,
 		DPRINT("SM: %s: attempt to register again subsystem %d.\n",
 			__FUNCTION__,
 			ConnectData->SubSystemId);
+		RtlLeaveCriticalSection (& SmpClientDirectory.Lock);
 		return STATUS_UNSUCCESSFUL;
 	}
 	DPRINT("SM: %s: registering subsystem ID=%d \n",
@@ -245,7 +246,7 @@ SmBeginClientInitialization (IN  PSM_PORT_MESSAGE Request,
 NTSTATUS STDCALL
 SmCompleteClientInitialization (ULONG ProcessId)
 {
-	NTSTATUS        Status = STATUS_SUCCESS;
+	NTSTATUS        Status = STATUS_NOT_FOUND;
 	PSM_CLIENT_DATA Client = NULL;
 
 	DPRINT("SM: %s called\n", __FUNCTION__);
@@ -259,11 +260,11 @@ SmCompleteClientInitialization (ULONG ProcessId)
 			if (ProcessId == Client->ServerProcessId)
 			{
 				SmpSetClientInitialized (Client);
+				Status = STATUS_SUCCESS;
 				break;
 			}
 			Client = Client->Next;
 		}
-		Status = STATUS_NOT_FOUND;
 	}
 	RtlLeaveCriticalSection (& SmpClientDirectory.Lock);
 	return Status;
@@ -321,13 +322,14 @@ SmCreateClient (PRTL_PROCESS_INFO ProcessInfo, PWSTR ProgramName)
 			(HANDLE) ProcessInfo->ProcessHandle;
 		SmpClientDirectory.CandidateClient->ServerProcessId = 
 			(ULONG) ProcessInfo->ClientId.UniqueProcess;
+		/*
+		 * Copy the program name
+		 */
+		RtlCopyMemory (SmpClientDirectory.CandidateClient->ProgramName,
+			       ProgramName,
+			       SM_SB_NAME_MAX_LENGTH);
 	}
-	/*
-	 * Copy the program name
-	 */
-	RtlCopyMemory (SmpClientDirectory.CandidateClient->ProgramName,
-		       ProgramName,
-		       SM_SB_NAME_MAX_LENGTH);
+
 	RtlLeaveCriticalSection (& SmpClientDirectory.Lock);
 	return Status;
 }
