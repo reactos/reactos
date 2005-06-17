@@ -16,7 +16,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "windows.h"
+#include "winefile.h"
+
+#ifdef __WINE__
 
 static const CHAR LicenseCaption[] = "LICENSE";
 static const CHAR License[] =
@@ -50,3 +52,5 @@ VOID WineWarranty(HWND hwnd)
 {
   MessageBoxA(hwnd, NoWarranty, NoWarrantyCaption, MB_ICONEXCLAMATION|MB_OK);
 }
+
+#endif
