@@ -319,7 +319,7 @@ InitiateSystemShutdownA@20
 InitiateSystemShutdownW@20
 ;InstallApplication
 IsTextUnicode@12=NTDLL.RtlIsTextUnicode
-;IsTokenRestricted
+IsTokenRestricted@4
 ;IsTokenUntrusted
 IsValidAcl@4
 IsValidSecurityDescriptor@4
