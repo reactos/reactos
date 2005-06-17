@@ -94,5 +94,8 @@
 	<directory name="def">
 		<file>ntdll.rc</file>
 	</directory>
+	<directory name="inc">
+		<pch>ntdll.h</pch>
+	</directory>
 	<file>napi.S</file>
 </module>
