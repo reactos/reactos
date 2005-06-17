@@ -290,7 +290,7 @@ EngBitBlt(SURFOBJ *DestObj,
     return TRUE;
     }
 
-  if (NULL != SourcePoint)
+  if (UsesSource && NULL != SourcePoint)
     {
     InputRect.left = SourcePoint->x;
     InputRect.right = SourcePoint->x + (DestRect->right - DestRect->left);
@@ -362,10 +362,10 @@ EngBitBlt(SURFOBJ *DestObj,
     return FALSE;
     }
 
-  OutputRect.left = DestRect->left + Translate.x;
-  OutputRect.right = DestRect->right + Translate.x;
-  OutputRect.top = DestRect->top + Translate.y;
-  OutputRect.bottom = DestRect->bottom + Translate.y;
+  OutputRect.left += Translate.x;
+  OutputRect.right += Translate.x;
+  OutputRect.top += Translate.y;
+  OutputRect.bottom += Translate.y;
 
   if(BrushOrigin)
   {
@@ -412,11 +412,13 @@ EngBitBlt(SURFOBJ *DestObj,
       ClipRect.right = ClipRegion->rclBounds.right + Translate.x;
       ClipRect.top = ClipRegion->rclBounds.top + Translate.y;
       ClipRect.bottom = ClipRegion->rclBounds.bottom + Translate.y;
-      EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect);
-      Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
-      Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
-      Ret = (*BltRectFunc)(OutputObj, InputObj, Mask, ColorTranslation,
-                           &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, Rop4);
+      if (EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect))
+        {
+          Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
+          Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
+          Ret = (*BltRectFunc)(OutputObj, InputObj, Mask, ColorTranslation,
+                               &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, Rop4);
+        }
       break;
     case DC_COMPLEX:
       Ret = TRUE;
@@ -446,12 +448,15 @@ EngBitBlt(SURFOBJ *DestObj,
 	      ClipRect.right = RectEnum.arcl[i].right + Translate.x;
 	      ClipRect.top = RectEnum.arcl[i].top + Translate.y;
 	      ClipRect.bottom = RectEnum.arcl[i].bottom + Translate.y;
-	      EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect);
-	      Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
-	      Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
-	      Ret = (*BltRectFunc)(OutputObj, InputObj, Mask, ColorTranslation,
-	                           &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, Rop4) &&
-	            Ret;
+	      if (EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect))
+                {
+                  Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
+                  Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
+                  Ret = (*BltRectFunc)(OutputObj, InputObj, Mask,
+                                       ColorTranslation, &CombinedRect, &Pt,
+                                       MaskOrigin, Brush, &AdjustedBrushOrigin,
+                                       Rop4) && Ret;
+                }
 	    }
 	}
       while(EnumMore);
@@ -1001,15 +1006,21 @@ EngMaskBitBlt(SURFOBJ *DestObj,
       ClipRect.right = ClipRegion->rclBounds.right + Translate.x;
       ClipRect.top = ClipRegion->rclBounds.top + Translate.y;
       ClipRect.bottom = ClipRegion->rclBounds.bottom + Translate.y;
-      EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect);
-      Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
-      Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
-      if(Mask->iBitmapFormat == BMF_8BPP)
-        Ret = AlphaBltMask(OutputObj, InputObj, Mask, DestColorTranslation, SourceColorTranslation,
-                           &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin);
-      else
-        Ret = BltMask(OutputObj, InputObj, Mask, DestColorTranslation,
-                           &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, R4_MASK);
+      if (EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect))
+        {
+          Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
+          Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
+          if(Mask->iBitmapFormat == BMF_8BPP)
+            {
+              Ret = AlphaBltMask(OutputObj, InputObj, Mask, DestColorTranslation, SourceColorTranslation,
+                                 &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin);
+            }
+          else
+            {
+              Ret = BltMask(OutputObj, InputObj, Mask, DestColorTranslation,
+                            &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, R4_MASK);
+            }
+        }
       break;
     case DC_COMPLEX:
       Ret = TRUE;
@@ -1039,15 +1050,26 @@ EngMaskBitBlt(SURFOBJ *DestObj,
 	      ClipRect.right = RectEnum.arcl[i].right + Translate.x;
 	      ClipRect.top = RectEnum.arcl[i].top + Translate.y;
 	      ClipRect.bottom = RectEnum.arcl[i].bottom + Translate.y;
-	      EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect);
-	      Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
-	      Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
-	      if(Mask->iBitmapFormat == BMF_8BPP)
-	        Ret = AlphaBltMask(OutputObj, InputObj, Mask, DestColorTranslation, SourceColorTranslation,
-	                           &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin) && Ret;
-              else
-                Ret = BltMask(OutputObj, InputObj, Mask, DestColorTranslation,
-                                   &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, R4_MASK) && Ret;
+	      if (EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect))
+                {
+                  Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
+                  Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
+                  if(Mask->iBitmapFormat == BMF_8BPP)
+                    {
+                      Ret = AlphaBltMask(OutputObj, InputObj, Mask,
+                                         DestColorTranslation,
+                                         SourceColorTranslation,
+                                         &CombinedRect, &Pt, MaskOrigin, Brush,
+                                         &AdjustedBrushOrigin) && Ret;
+                    }
+                  else
+                    {
+                      Ret = BltMask(OutputObj, InputObj, Mask,
+                                    DestColorTranslation, &CombinedRect, &Pt,
+                                    MaskOrigin, Brush, &AdjustedBrushOrigin,
+                                    R4_MASK) && Ret;
+                    }
+                }
 	    }
 	}
       while(EnumMore);
