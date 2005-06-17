@@ -1,7 +1,3 @@
-#include <reactos/resource.h>
-#include <defines.h>
-#include "resource.h"
-
 LANGUAGE LANG_GERMAN, SUBLANG_DEFAULT
 
 IDD_SECPAGE DIALOGEX 0, 0, 227, 215

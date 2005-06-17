@@ -1,6 +1,6 @@
 /* $Id$ */
 
-#include <defines.h>
+#include <windows.h>
 
 #include "explorer_intres.rc"
 

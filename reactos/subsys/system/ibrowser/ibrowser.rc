@@ -1,6 +1,6 @@
 /* $Id: ibrowser.rc 12752 2005-01-03 11:25:40Z mf $ */
 
-#include <defines.h>
+#include <windows.h>
 
 #include "ibrowser_intres.rc"
 

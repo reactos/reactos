@@ -1,6 +1,5 @@
 #include <windows.h>
 #include <commctrl.h>
-#include <defines.h>
 
 #include "resource.h"
 

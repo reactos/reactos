@@ -1,7 +1,6 @@
 /* $Id$ */
 
-#include <defines.h>
-#include <winuser.h>
+#include <windows.h>
 
 #include <resource.h>
 

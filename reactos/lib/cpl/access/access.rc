@@ -1,4 +1,4 @@
-#include <defines.h>
+#include <windows.h>
 #include "resource.h"
 
 #define REACTOS_VERSION_DLL
