@@ -10,14 +10,12 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ntos.h>
 #include <ntdll/rtl.h>
 #include <ntos/minmax.h>
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
-#include <base.h>
-#include <ddk/obfuncs.h>
 
 #define NDEBUG
 #include <ntdll/ntdll.h>

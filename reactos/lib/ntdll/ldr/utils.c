@@ -21,11 +21,12 @@
 
 #include <reactos/config.h>
 #include <ddk/ntddk.h>
+#include <ntos.h>
 #include <windows.h>
 #include <string.h>
 #include <wchar.h>
 #include <ntdll/ldr.h>
-#include <ntos/minmax.h>
+#include <ntdll/rtl.h>
 
 #define LDRP_PROCESS_CREATION_TIME 0x8000000
 
@@ -264,7 +265,7 @@ LdrpInitializeTlsForProccess(VOID)
                                                               TRUE,
                                                               IMAGE_DIRECTORY_ENTRY_TLS,
                                                               NULL);
-               assert(Module->TlsIndex < LdrpTlsCount);
+               ASSERT(Module->TlsIndex < LdrpTlsCount);
                TlsData = &LdrpTlsArray[Module->TlsIndex];
                TlsData->StartAddressOfRawData = (PVOID)TlsDirectory->StartAddressOfRawData;
                TlsData->TlsDataSize = TlsDirectory->EndAddressOfRawData - TlsDirectory->StartAddressOfRawData;
@@ -466,7 +467,7 @@ LdrAddModuleEntry(PVOID ImageBase,
   PLDR_MODULE Module;
 
   Module = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof (LDR_MODULE));
-  assert(Module);
+  ASSERT(Module);
   memset(Module, 0, sizeof(LDR_MODULE));
   Module->BaseAddress = (PVOID)ImageBase;
   Module->EntryPoint = NTHeaders->OptionalHeader.AddressOfEntryPoint;
@@ -2076,7 +2077,7 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
         DPRINT("Mapped %wZ at %x\n", &FullDosName, ImageBase);
         if (MappedAsDataFile)
           {
-            assert(NULL != BaseAddress);
+            ASSERT(NULL != BaseAddress);
             if (NULL != BaseAddress)
               {
                 *BaseAddress = (PVOID) ((char *) *BaseAddress + 1);

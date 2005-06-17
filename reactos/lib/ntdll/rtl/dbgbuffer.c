@@ -36,7 +36,7 @@
 #include <napi/teb.h>
 #include <ntdll/rtl.h>
 #include <ntdll/ldr.h>
-#include <ddk/ntddk.h>
+#include <ntos.h>
 
 #include <rosrtl/thread.h>
 

@@ -9,15 +9,15 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ntos.h>
 #include <string.h>
 #include <napi/teb.h>
 
 
 /* TYPES *********************************************************************/
 
-typedef NTSTATUS STDCALL_FUNC (*CALLBACK_FUNCTION)(PVOID Argument,
-					      ULONG ArgumentLength);
+typedef NTSTATUS (STDCALL *KERNEL_CALLBACK_FUNCTION)(PVOID Argument,
+                                                    ULONG ArgumentLength);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -28,10 +28,10 @@ KiUserCallbackDispatcher(ULONG RoutineIndex,
 {
    PPEB Peb;
    NTSTATUS Status;
-   CALLBACK_FUNCTION Callback;
+   KERNEL_CALLBACK_FUNCTION Callback;
 
    Peb = NtCurrentPeb();
-   Callback = (CALLBACK_FUNCTION)Peb->KernelCallbackTable[RoutineIndex];
+   Callback = (KERNEL_CALLBACK_FUNCTION)Peb->KernelCallbackTable[RoutineIndex];
    Status = Callback(Argument, ArgumentLength);
    ZwCallbackReturn(NULL, 0, Status);
 }

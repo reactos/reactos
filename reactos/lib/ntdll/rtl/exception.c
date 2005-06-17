@@ -14,15 +14,16 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ntos.h>
 #include <windows.h>
 #include <string.h>
+#include <ntdll/rtl.h>
 #include <napi/teb.h>
 
 #define NDEBUG
 #include <debug.h>
 
-static CRITICAL_SECTION RtlpVectoredExceptionLock;
+static RTL_CRITICAL_SECTION RtlpVectoredExceptionLock;
 static LIST_ENTRY RtlpVectoredExceptionHead;
 
 typedef struct _RTL_VECTORED_EXCEPTION_HANDLER

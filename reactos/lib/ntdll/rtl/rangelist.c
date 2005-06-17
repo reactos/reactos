@@ -26,7 +26,8 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ntos.h>
+#include <ntdll/rtl.h>
 
 #define NDEBUG
 #include <ntdll/ntdll.h>

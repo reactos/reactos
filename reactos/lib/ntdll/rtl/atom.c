@@ -11,7 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ntos.h>
 #include <ntdll/rtl.h>
 #include <ntos/heap.h>
 
@@ -653,11 +653,11 @@ RtlpInitAtomTableLock(PRTL_ATOM_TABLE AtomTable)
 {
    AtomTable->Lock = RtlAllocateHeap(RtlGetProcessHeap(),
 				     HEAP_ZERO_MEMORY,
-				     sizeof(CRITICAL_SECTION));
+				     sizeof(RTL_CRITICAL_SECTION));
    if (AtomTable->Lock == NULL)
      return STATUS_NO_MEMORY;
 
-   RtlInitializeCriticalSection((PCRITICAL_SECTION)AtomTable->Lock);
+   RtlInitializeCriticalSection((PRTL_CRITICAL_SECTION)AtomTable->Lock);
 
    return STATUS_SUCCESS;
 }
@@ -668,7 +668,7 @@ RtlpDestroyAtomTableLock(PRTL_ATOM_TABLE AtomTable)
 {
    if (AtomTable->Lock)
      {
-	RtlDeleteCriticalSection((PCRITICAL_SECTION)AtomTable->Lock);
+	RtlDeleteCriticalSection((PRTL_CRITICAL_SECTION)AtomTable->Lock);
 	RtlFreeHeap(RtlGetProcessHeap(),
 		    0,
 		    AtomTable->Lock);
@@ -680,7 +680,7 @@ RtlpDestroyAtomTableLock(PRTL_ATOM_TABLE AtomTable)
 static BOOLEAN
 RtlpLockAtomTable(PRTL_ATOM_TABLE AtomTable)
 {
-   RtlEnterCriticalSection((PCRITICAL_SECTION)AtomTable->Lock);
+   RtlEnterCriticalSection((PRTL_CRITICAL_SECTION)AtomTable->Lock);
    return TRUE;
 }
 
@@ -688,7 +688,7 @@ RtlpLockAtomTable(PRTL_ATOM_TABLE AtomTable)
 static VOID
 RtlpUnlockAtomTable(PRTL_ATOM_TABLE AtomTable)
 {
-   RtlLeaveCriticalSection((PCRITICAL_SECTION)AtomTable->Lock);
+   RtlLeaveCriticalSection((PRTL_CRITICAL_SECTION)AtomTable->Lock);
 }
 
 

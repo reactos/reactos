@@ -3,6 +3,9 @@
 	<importlibrary definition="def/ntdll.def" />
 	<define name="__NTDLL__" />
 	<define name="_DISABLE_TIDENTS" />
+	<define name="__USE_W32API" />
+	<define name="_WIN32_WINNT">0x0502</define>
+	<define name="_NTOSKRNL_" />
 	<library>rtl</library>
 	<library>rosrtl</library>
 	<library>string</library>

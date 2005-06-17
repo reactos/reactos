@@ -11,7 +11,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ntos.h>
 #include <windows.h>
 #include <napi/i386/segment.h>
 #include <ntdll/ldr.h>

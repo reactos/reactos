@@ -12,6 +12,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ntos.h>
 #include <ntdll/rtl.h>
 #include <rosrtl/string.h>
 #include <rosrtl/thread.h>

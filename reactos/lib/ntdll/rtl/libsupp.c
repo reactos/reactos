@@ -9,7 +9,7 @@
  *
  */
 
-#include <ddk/ntddk.h>
+#include <ntos.h>
 #include <ntdll/rtl.h>
 #include <ctype.h>
 #include <ntos/minmax.h>

@@ -26,7 +26,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ntos.h>
 #include <string.h>
 #include <debug.h>
 

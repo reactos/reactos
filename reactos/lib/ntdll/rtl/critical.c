@@ -12,9 +12,9 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
+#include <windows.h>
+#include <ntos.h>
 #include <ntdll/rtl.h>
-#include <ntos/synch.h>
 
 #define NDEBUG
 #include <ntdll/ntdll.h>

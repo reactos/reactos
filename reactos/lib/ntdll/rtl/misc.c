@@ -12,7 +12,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <windows.h>
-#include <ddk/ntddk.h>
+#include <ntos.h>
 #include <ntdll/rtl.h>
 
 #define NDEBUG

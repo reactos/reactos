@@ -104,7 +104,7 @@ CsrClientCallServer(PCSRSS_API_REQUEST Request,
       return (STATUS_UNSUCCESSFUL);
     }
 
-   Request->Header.DataSize = Length - sizeof(LPC_MESSAGE);
+   Request->Header.DataSize = Length - LPC_MESSAGE_BASE_SIZE;
    Request->Header.MessageSize = Length;
 
    Status = NtRequestWaitReplyPort(WindowsApiPort,

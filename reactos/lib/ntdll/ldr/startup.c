@@ -32,8 +32,8 @@ VOID LdrpInitLoader(VOID);
 
 extern unsigned int _image_base__;
 
-static CRITICAL_SECTION PebLock;
-static CRITICAL_SECTION LoaderLock;
+static RTL_CRITICAL_SECTION PebLock;
+static RTL_CRITICAL_SECTION LoaderLock;
 static RTL_BITMAP TlsBitMap;
 PLDR_MODULE ExeModule;
 
