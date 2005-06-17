@@ -275,7 +275,7 @@ FsRtlUninitializeMcb@4
 FsRtlUninitializeOplock@4
 HalDispatchTable DATA
 HalPrivateDispatchTable DATA
-@HalExamineMBR=@xHalExamineMBR@16
+@HalExamineMBR@16
 InbvAcquireDisplayOwnership@0
 InbvCheckDisplayOwnership@0
 InbvDisplayString@4
