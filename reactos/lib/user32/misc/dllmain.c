@@ -1,4 +1,3 @@
-#undef __USE_W32API
 #include <windows.h>
 #include <debug.h>
 #include <ddk/ntddk.h>
@@ -11,6 +10,9 @@
 #include <user32.h>
 #include <strpool.h>
 #include <roscfg.h>
+
+/* FIXME: Belongs to some header. */
+WINBOOL STDCALL GdiDllInitialize(HANDLE, DWORD, LPVOID);
 
 #ifdef DBG
 
