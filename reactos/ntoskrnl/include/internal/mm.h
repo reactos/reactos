@@ -856,6 +856,16 @@ ULONG MiGetUserPageDirectoryCount(VOID);
 
 NTSTATUS MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages);
 
+/* cont.c ********************************************************************/
+
+PVOID STDCALL
+MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
+					  IN PHYSICAL_ADDRESS LowestAcceptableAddress,
+			          IN PHYSICAL_ADDRESS HighestAcceptableAddress,
+			          IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
+			          IN MEMORY_CACHING_TYPE CacheType OPTIONAL,
+					  IN ULONG Alignment);
+                      
 /* region.c ************************************************************/
 
 NTSTATUS MmAlterRegion(PMADDRESS_SPACE AddressSpace, PVOID BaseAddress,
