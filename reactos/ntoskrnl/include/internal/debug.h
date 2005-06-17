@@ -33,6 +33,7 @@
 
 #ifdef DBG
 
+#ifndef __USE_W32API
 /* Assert only on "checked" version */
 #ifndef NASSERT
 #ifdef CONFIG_SMP
@@ -65,6 +66,7 @@
 #define ASSERTMSG(_c_, _m_)
 
 #endif
+#endif /* !__USE_W32API */
 
 /* Print if using a "checked" version */
 #ifdef __GNUC__ /* using GNU C/C99 macro ellipsis */
@@ -83,10 +85,12 @@
 
 #define CPRINT(args...)
 #define DPRINT1(args...)
+#ifndef __USE_W32API
 #define assert(x)
 #define ASSERT(x)
 #define assertmsg(_c_, _m_)
 #define ASSERTMSG(_c_, _m_)
+#endif /* !__USE_W32API */
 
 #endif /* DBG */
 
