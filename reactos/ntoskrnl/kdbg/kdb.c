@@ -6,7 +6,7 @@
  *
  * PROGRAMMERS:     Gregor Anich
  */
-
+      
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
@@ -105,6 +105,65 @@ STATIC CONST PCHAR ExceptionNrToString[] =
 };
 
 /* FUNCTIONS *****************************************************************/
+
+STATIC VOID
+KdbpTrapFrameToKdbTrapFrame(PKTRAP_FRAME TrapFrame, PKDB_KTRAP_FRAME KdbTrapFrame)
+{
+   /* Copy the TrapFrame only up to Eflags and zero the rest*/
+   RtlCopyMemory(&KdbTrapFrame->Tf, TrapFrame, FIELD_OFFSET(KTRAP_FRAME, Esp));
+   RtlZeroMemory((PVOID)((ULONG_PTR)&KdbTrapFrame->Tf + FIELD_OFFSET(KTRAP_FRAME, Esp)),
+                 sizeof (KTRAP_FRAME) - FIELD_OFFSET(KTRAP_FRAME, Esp));
+   asm volatile(
+      "movl %%cr0, %0"    "\n\t"
+      "movl %%cr2, %1"    "\n\t"
+      "movl %%cr3, %2"    "\n\t"
+      "movl %%cr4, %3"    "\n\t"
+      : "=r"(KdbTrapFrame->Cr0), "=r"(KdbTrapFrame->Cr2),
+        "=r"(KdbTrapFrame->Cr3), "=r"(KdbTrapFrame->Cr4));
+   
+   if (TrapFrame->PreviousMode == KernelMode)
+   {
+      /* If the trapframe is a kmode one use the temp ss:esp */
+      KdbTrapFrame->Tf.Esp = (ULONG)TrapFrame->TempEsp;
+      KdbTrapFrame->Tf.Ss = (USHORT)((ULONG)TrapFrame->TempSegSs & 0xFFFF);
+   }
+   else
+   {
+      /* Otherwise use ss:esp pushed by the CPU */
+      /* FIXME: maybe change all trapframes to always put ss:esp into tempss:tempesp so we
+       *        can handle umode and kmode the same way */
+      KdbTrapFrame->Tf.Esp = TrapFrame->Esp;
+      KdbTrapFrame->Tf.Ss = TrapFrame->Ss;
+   }
+   
+   /* FIXME: copy v86 registers if TrapFrame is a V86 trapframe */
+}
+
+STATIC VOID
+KdbpKdbTrapFrameToTrapFrame(PKDB_KTRAP_FRAME KdbTrapFrame, PKTRAP_FRAME TrapFrame)
+{
+   /* Copy the TrapFrame only up to Eflags and zero the rest*/
+   RtlCopyMemory(TrapFrame, &KdbTrapFrame->Tf, FIELD_OFFSET(KTRAP_FRAME, Esp));
+   
+   /* FIXME: write cr0, cr2, cr3 and cr4 (not needed atm) */
+   
+   if (TrapFrame->PreviousMode == KernelMode)
+   {
+      /* If the trapframe is a kmode one write to the temp ss:esp */
+      TrapFrame->TempEsp = (PVOID)KdbTrapFrame->Tf.Esp;
+      TrapFrame->TempSegSs = (PVOID)(((ULONG)TrapFrame->TempSegSs & ~0xffff) | KdbTrapFrame->Tf.Ss);
+   }
+   else
+   {
+      /* Otherwise write to ss:esp pushed by the CPU */
+      /* FIXME: maybe change all trap-epilogs to always put temp ss:esp into ss:esp so we
+       *        can handle umode and kmode the same way */
+      TrapFrame->Esp = KdbTrapFrame->Tf.Esp;
+      TrapFrame->Ss = KdbTrapFrame->Tf.Ss;
+   }
+   
+   /* FIXME: copy v86 registers if TrapFrame is a V86 trapframe */
+}
 
 /*!\brief Overwrites the instruction at \a Address with \a NewInst and stores
  *        the old instruction in *OldInst.
@@ -981,7 +1040,7 @@ KdbpAttachToThread(
    if (KdbCurrentThread != KdbOriginalThread)
    {
       ASSERT(KdbCurrentTrapFrame == &KdbThreadTrapFrame);
-      RtlCopyMemory(KdbCurrentThread->Tcb.TrapFrame, &KdbCurrentTrapFrame->Tf, sizeof (KTRAP_FRAME));
+      KdbpKdbTrapFrameToTrapFrame(KdbCurrentTrapFrame, KdbCurrentThread->Tcb.TrapFrame);
    }
    else
    {
@@ -991,15 +1050,12 @@ KdbpAttachToThread(
    /* Switch to the thread's context */
    if (Thread != KdbOriginalThread)
    {
-      ASSERT(Thread->Tcb.TrapFrame != NULL);
-      RtlCopyMemory(&KdbThreadTrapFrame.Tf, Thread->Tcb.TrapFrame, sizeof (KTRAP_FRAME));
-      asm volatile(
-         "movl %%cr0, %0"    "\n\t"
-         "movl %%cr2, %1"    "\n\t"
-         "movl %%cr3, %2"    "\n\t"
-         "movl %%cr4, %3"    "\n\t"
-         : "=r"(KdbTrapFrame.Cr0), "=r"(KdbTrapFrame.Cr2),
-           "=r"(KdbTrapFrame.Cr3), "=r"(KdbTrapFrame.Cr4));
+      if (Thread->Tcb.TrapFrame == NULL)
+      {
+         KdbpPrint("Threads TrapFrame is NULL! Cannot attach.\n");
+         return FALSE;
+      }
+      KdbpTrapFrameToKdbTrapFrame(Thread->Tcb.TrapFrame, &KdbThreadTrapFrame);
       KdbCurrentTrapFrame = &KdbThreadTrapFrame;
    }
    else /* Switching back to original thread */
@@ -1243,14 +1299,7 @@ KdbEnterDebuggerException(
       if (BreakPoint->Condition != NULL)
       {
          /* Setup the KDB trap frame */
-         RtlCopyMemory(&KdbTrapFrame.Tf, TrapFrame, sizeof (KTRAP_FRAME));
-         asm volatile(
-            "movl %%cr0, %0"    "\n\t"
-            "movl %%cr2, %1"    "\n\t"
-            "movl %%cr3, %2"    "\n\t"
-            "movl %%cr4, %3"    "\n\t"
-            : "=r"(KdbTrapFrame.Cr0), "=r"(KdbTrapFrame.Cr2),
-              "=r"(KdbTrapFrame.Cr3), "=r"(KdbTrapFrame.Cr4));
+         KdbpTrapFrameToKdbTrapFrame(TrapFrame, &KdbTrapFrame);
 
          ull = 0;
          if (!KdbpRpnEvaluateParsedExpression(BreakPoint->Condition, &KdbTrapFrame, &ull, NULL, NULL))
@@ -1395,14 +1444,7 @@ KdbEnterDebuggerException(
    KdbCurrentTrapFrame = &KdbTrapFrame;
 
    /* Setup the KDB trap frame */
-   RtlCopyMemory(&KdbTrapFrame.Tf, TrapFrame, sizeof(KTRAP_FRAME));
-   asm volatile(
-      "movl %%cr0, %0"    "\n\t"
-      "movl %%cr2, %1"    "\n\t"
-      "movl %%cr3, %2"    "\n\t"
-      "movl %%cr4, %3"    "\n\t"
-      : "=r"(KdbTrapFrame.Cr0), "=r"(KdbTrapFrame.Cr2),
-        "=r"(KdbTrapFrame.Cr3), "=r"(KdbTrapFrame.Cr4));
+   KdbpTrapFrameToKdbTrapFrame(TrapFrame, &KdbTrapFrame);
 
    /* Enter critical section */
    Ke386SaveFlags(OldEflags);
@@ -1436,7 +1478,7 @@ KdbEnterDebuggerException(
    /* Save the current thread's trapframe */
    if (KdbCurrentTrapFrame == &KdbThreadTrapFrame)
    {
-      RtlCopyMemory(KdbCurrentThread->Tcb.TrapFrame, KdbCurrentTrapFrame, sizeof (KTRAP_FRAME));
+      KdbpKdbTrapFrameToTrapFrame(KdbCurrentTrapFrame, KdbCurrentThread->Tcb.TrapFrame);
    }
 
    /* Detach from attached process */
@@ -1446,16 +1488,7 @@ KdbEnterDebuggerException(
    }
 
    /* Update the exception TrapFrame */
-   RtlCopyMemory(TrapFrame, &KdbTrapFrame.Tf, sizeof(KTRAP_FRAME));
-#if 0
-   asm volatile(
-      "movl %0, %%cr0"    "\n\t"
-      "movl %1, %%cr2"    "\n\t"
-      "movl %2, %%cr3"    "\n\t"
-      "movl %3, %%cr4"    "\n\t"
-      : : "r"(KdbTrapFrame.Cr0), "r"(KdbTrapFrame.Cr2),
-          "r"(KdbTrapFrame.Cr3), "r"(KdbTrapFrame.Cr4));
-#endif
+   KdbpKdbTrapFrameToTrapFrame(&KdbTrapFrame, TrapFrame);
 
    /* Decrement the entry count */
    InterlockedDecrement(&KdbEntryCount);

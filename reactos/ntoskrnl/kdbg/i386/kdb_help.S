@@ -8,15 +8,17 @@ _KdbEnter:
 	/*
 	 * Set up a trap frame
 	 */
-                                /* Ss - space already reserved by return EIP */
-        pushl   %esp            /* Esp */
 	pushfl			/* Eflags */
 	pushl	%cs		/* Cs */
-	pushl	12(%esp)	/* Eip */
-	movl    %ss, 16(%esp)   /* Save Ss */
 	pushl	$0		/* ErrorCode */
 	pushl	%ebp		/* Ebp */
 	pushl	%ebx		/* Ebx */
+	movl	20(%esp), %ebp	/* Eip */
+	movl	16(%esp), %ebx	/* Eflags */
+	movl	%ebx, 20(%esp)
+	movl	12(%esp), %ebx	/* Cs */
+	movl	%ebx, 16(%esp)
+	movl	%ebp, 12(%esp)
 	pushl	%esi		/* Esi */
 	pushl	%edi		/* Edi */
 	pushl	%fs		/* Fs */
@@ -43,8 +45,9 @@ _KdbEnter:
 	pushl	%eax		/* Dr1 */
 	movl	%dr0, %eax
 	pushl	%eax		/* Dr0 */
-	pushl	$0		/* TempEip */
-	pushl	$0		/* TempCs */
+	leal	0x58(%esp), %eax
+	pushl	%eax		/* TempEsp */
+	pushl	%ss		/* TempSegSs */
 	pushl	$0		/* DebugPointer */
 	pushl	$3       	/* DebugArgMark (Exception number) */
 	pushl	0x60(%esp)	/* DebugEip */
@@ -67,8 +70,8 @@ _KdbEnter:
 	 *   DebugEip
 	 *   DebugArgMark
 	 *   DebugPointer
-	 *   TempCs
-	 *   TempEip
+	 *   TempSegSs
+	 *   TempEsp
 	 */
 	addl	$(11*4), %esp
 
@@ -98,23 +101,13 @@ _KdbEnter:
 	popl	%edx		/* Edx */
 	popl	%ecx		/* Ecx */
 	popl	%eax		/* Eax */
-	addl	$4, %esp	/* PreviousMode */
-	addl	$4, %esp	/* ExceptionList */
+	addl	$8, %esp	/* PreviousMode, ExceptionList */
 	popl	%fs		/* Fs */
 	popl	%edi		/* Edi */
 	popl	%esi		/* Esi */
 	popl	%ebx		/* Ebx */
-
-        /* Remove SS:ESP from the stack */
-        movl    16(%esp), %ebp
-        movl    %ebp, 24(%esp)
-        movl    12(%esp), %ebp
-        movl    %ebp, 20(%esp)
-        movl    8(%esp), %ebp
-        movl    %ebp, 16(%esp)
-        
 	popl	%ebp		/* Ebp */
-	addl	$12, %esp	/* ErrorCode and SS:ESP */
+	addl	$4, %esp	/* ErrorCode */
 
 	/*
 	 * Return to the caller.
