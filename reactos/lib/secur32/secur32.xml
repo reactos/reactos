@@ -2,6 +2,7 @@
 	<importlibrary definition="secur32.def" />
 	<include base="secur32">.</include>
 	<define name="__SECUR32__" />
+	<define name="__USE_W32API" />
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>advapi32</library>

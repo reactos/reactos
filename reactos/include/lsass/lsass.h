@@ -95,20 +95,23 @@ typedef struct _LSASS_REGISTER_LOGON_PROCESS_REPLY
    LSA_OPERATIONAL_MODE OperationalMode;
 } LSASS_REGISTER_LOGON_PROCESS_REPLY, *PLSASS_REGISTER_LOGON_PROCESS_REPLY;
 
-typedef struct _LSASS_REQUEST
+typedef union _LSASS_REQUEST
 {
    LPC_MESSAGE Header;
-   ULONG Type;
-   union
-     {
-	LSASS_REGISTER_LOGON_PROCESS_REQUEST RegisterLogonProcessRequest;
-	LSASS_LOGON_USER_REQUEST LogonUserRequest;
-	LSASS_CALL_AUTHENTICATION_PACKAGE_REQUEST 
-	  CallAuthenticationPackageRequest;
-	LSASS_DEREGISTER_LOGON_PROCESS_REPLY DeregisterLogonProcessRequest;
-	LSASS_LOOKUP_AUTHENTICATION_PACKAGE_REQUEST
-	  LookupAuthenticationPackageRequest;
-     } d;
+   struct {
+      UCHAR LpcHeader[LPC_MESSAGE_BASE_SIZE];
+      ULONG Type;
+      union
+        {
+           LSASS_REGISTER_LOGON_PROCESS_REQUEST RegisterLogonProcessRequest;
+           LSASS_LOGON_USER_REQUEST LogonUserRequest;
+           LSASS_CALL_AUTHENTICATION_PACKAGE_REQUEST 
+             CallAuthenticationPackageRequest;
+           LSASS_DEREGISTER_LOGON_PROCESS_REPLY DeregisterLogonProcessRequest;
+           LSASS_LOOKUP_AUTHENTICATION_PACKAGE_REQUEST
+             LookupAuthenticationPackageRequest;
+        } d;
+   };
 } LSASS_REQUEST, *PLSASS_REQUEST;
 
 typedef struct _LSASS_REPLY
