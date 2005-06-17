@@ -3933,12 +3933,35 @@ typedef struct _WORK_QUEUE_ITEM {
   PVOID  Parameter;
 } WORK_QUEUE_ITEM, *PWORK_QUEUE_ITEM;
 
+typedef enum _KBUGCHECK_CALLBACK_REASON {
+  KbCallbackInvalid,
+  KbCallbackReserved1,
+  KbCallbackSecondaryDumpData,
+  KbCallbackDumpIo,
+} KBUGCHECK_CALLBACK_REASON;
+
+typedef VOID
+(DDKAPI *PKBUGCHECK_REASON_CALLBACK_ROUTINE)(
+  IN KBUGCHECK_CALLBACK_REASON  Reason,
+  IN struct _KBUGCHECK_REASON_CALLBACK_RECORD  *Record,
+  IN OUT PVOID  ReasonSpecificData,
+  IN ULONG  ReasonSpecificDataLength);
+
+typedef struct _KBUGCHECK_REASON_CALLBACK_RECORD {
+  LIST_ENTRY  Entry;
+  PKBUGCHECK_REASON_CALLBACK_ROUTINE  CallbackRoutine;
+  PUCHAR  Component;
+  ULONG_PTR  Checksum;
+  KBUGCHECK_CALLBACK_REASON  Reason;
+  UCHAR  State;
+} KBUGCHECK_REASON_CALLBACK_RECORD, *PKBUGCHECK_REASON_CALLBACK_RECORD;
+
 typedef enum _KBUGCHECK_BUFFER_DUMP_STATE {
-    BufferEmpty,
-    BufferInserted,
-    BufferStarted,
-    BufferFinished,
-    BufferIncomplete
+  BufferEmpty,
+  BufferInserted,
+  BufferStarted,
+  BufferFinished,
+  BufferIncomplete
 } KBUGCHECK_BUFFER_DUMP_STATE;
 
 typedef VOID
