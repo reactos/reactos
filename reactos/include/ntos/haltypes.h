@@ -390,7 +390,6 @@ typedef struct _TRANSLATOR_INTERFACE {
     PTRANSLATE_RESOURCE_REQUIREMENTS_HANDLER TranslateResourceRequirements;
 } TRANSLATOR_INTERFACE, *PTRANSLATOR_INTERFACE;
 
-#endif /* __USE_W32API */
 
 /* Hal dispatch table */
 
@@ -425,7 +424,7 @@ typedef struct _DEVICE_HANDLER_OBJECT *PDEVICE_HANDLER_OBJECT;
 typedef BOOLEAN STDCALL_FUNC
 (*PHAL_RESET_DISPLAY_PARAMETERS)(ULONG Columns, ULONG Rows);
 
-
+#endif /* __USE_W32API */
 /* Control codes of HalDeviceControl function */
 #define BCTL_EJECT				0x0001
 #define BCTL_QUERY_DEVICE_ID			0x0002
@@ -449,7 +448,7 @@ typedef struct
   BOOLEAN Removable;
 } BCTL_DEVICE_CAPABILITIES, *PBCTL_DEVICE_CAPABILITIES;
 
-
+#ifndef __USE_W32API
 typedef struct _DEVICE_CONTROL_CONTEXT
 {
   NTSTATUS Status;
@@ -605,8 +604,6 @@ typedef struct {
 
 } HAL_DISPATCH, *PHAL_DISPATCH;
 
-#ifndef __USE_W32API
-
 #ifdef __NTOSKRNL__
 extern HAL_DISPATCH EXPORTED HalDispatchTable;
 #else
@@ -615,6 +612,7 @@ extern PHAL_DISPATCH IMPORTED HalDispatchTable;
 
 #endif /* !__USE_W32API */
 
+#ifndef __USE_W32API
 #ifdef __NTOSKRNL__
 #define HALDISPATCH (&HalDispatchTable)
 #else
@@ -644,8 +642,6 @@ typedef struct _HAL_PRIVATE_DISPATCH
 {
   ULONG Version;
 } HAL_PRIVATE_DISPATCH, *PHAL_PRIVATE_DISPATCH;
-
-#ifndef __USE_W32API
 
 #ifdef __NTOSKRNL__
 extern HAL_PRIVATE_DISPATCH EXPORTED HalPrivateDispatchTable;
