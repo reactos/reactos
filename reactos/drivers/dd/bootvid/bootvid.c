@@ -25,7 +25,8 @@
 
 #include <ddk/ntddk.h>
 #include <ddk/ntbootvid.h>
-#include <rosrtl/string.h>
+#include <ntos/ldrtypes.h>
+#include <ddk/ldrfuncs.h>
 #include "bootvid.h"
 #include "resource.h"
 
@@ -634,7 +635,7 @@ NTSTATUS STDCALL
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
    PDEVICE_OBJECT BootVidDevice;
-   UNICODE_STRING DeviceName;
+   UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\BootVid");
    NTSTATUS Status;
 
    BootVidDriverObject = DriverObject;
@@ -648,8 +649,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    DriverObject->Flags |= DO_BUFFERED_IO;
 
    /* Create device */
-   RtlRosInitUnicodeStringFromLiteral(&DeviceName, L"\\Device\\BootVid");
-
    Status = IoCreateDevice(
       DriverObject,
       0,

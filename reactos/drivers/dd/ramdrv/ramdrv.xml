@@ -1,5 +1,6 @@
 <module name="ramdrv" type="kernelmodedriver">
 	<include base="ramdrv">.</include>
+        <define name="__USE_W32API" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<library>bzip2</library>
