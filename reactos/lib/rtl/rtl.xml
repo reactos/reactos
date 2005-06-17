@@ -48,4 +48,5 @@
 	<file>unicode.c</file>
 	<file>unicodeprefix.c</file>
 	<file>version.c</file>
+	<pch>rtl.h</pch>
 </module>
