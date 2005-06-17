@@ -12,7 +12,6 @@
 #ifndef __INCLUDES_MPU401_H__
 #define __INCLUDES_MPU401_H__
 
-#include <windows.h>
 //#include <mmsystem.h>
 //#include <mmddk.h>
 //#include <winioctl.h>

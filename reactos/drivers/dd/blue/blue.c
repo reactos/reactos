@@ -16,7 +16,6 @@
 #include <ddk/ntddblue.h>
 #include <rosrtl/string.h>
 #include <string.h>
-#include <defines.h>
 
 #define NDEBUG
 #include <debug.h>
