@@ -50,6 +50,7 @@ RtlCopyLuidAndAttributesArray(ULONG Count,
 }
 
 
+#undef RtlEqualLuid
 /*
  * @implemented
  */

@@ -84,6 +84,7 @@ RtlCompareMemoryUlong (
 }
 
 
+#undef RtlFillMemory
 /*
  * @implemented
  */
@@ -123,7 +124,7 @@ RtlFillMemoryUlong (
 }
 
 
-
+#undef RtlMoveMemory
 /*
  * @implemented
  */
@@ -155,6 +156,8 @@ RtlPrefetchMemoryNonTemporal(
 	UNIMPLEMENTED;
 }
 
+
+#undef RtlZeroMemory
 /*
  * @implemented
  */

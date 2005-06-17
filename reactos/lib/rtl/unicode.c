@@ -341,8 +341,8 @@ RtlEqualString(
 BOOLEAN
 STDCALL
 RtlEqualUnicodeString(
-   IN PUNICODE_STRING String1,
-   IN PUNICODE_STRING String2,
+   IN CONST UNICODE_STRING *String1,
+   IN CONST UNICODE_STRING *String2,
    IN BOOLEAN  CaseInsensitive)
 {
    ULONG i;

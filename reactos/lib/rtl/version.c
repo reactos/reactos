@@ -29,7 +29,7 @@
  */
 
 /* INCLUDES *****************************************************************/
-#define __USE_W32API
+
 #include "rtl.h"
 
 #define NDEBUG

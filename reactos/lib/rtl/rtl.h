@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ddk/ntifs.h>
 #include <windows.h>
 #include <ntdll/rtl.h>
 #include <napi/teb.h>
@@ -20,6 +21,7 @@
 #include <ntdll/rtl.h>
 #include <rosrtl/thread.h>
 #include <winerror.h>
+#include <ntos.h>
 #include <stdio.h>
 
 #define ROUNDUP(a,b)    ((((a)+(b)-1)/(b))*(b))
