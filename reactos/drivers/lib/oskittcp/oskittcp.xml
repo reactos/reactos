@@ -3,6 +3,7 @@
 	<define name="__NTDRIVER__"/>
 	<define name="KERNEL"/>
 	<define name="_DISABLE_TIDENTS"/>
+	<define name="__USE_W32API"/>
 	<include>drivers/lib/oskittcp/include/freebsd</include>
 	<include>drivers/lib/oskittcp/include/freebsd/sys/include</include>
 	<include>drivers/lib/oskittcp/include/freebsd/src/sys</include>
