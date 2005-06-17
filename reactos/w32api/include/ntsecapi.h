@@ -229,6 +229,15 @@ typedef enum _POLICY_DOMAIN_INFORMATION_CLASS {
   PolicyDomainLockoutInformation,
   PolicyDomainKerberosTicketInformation
 } POLICY_DOMAIN_INFORMATION_CLASS, *PPOLICY_DOMAIN_INFORMATION_CLASS;
+typedef enum _POLICY_NOTIFICATION_INFORMATION_CLASS {
+  PolicyNotifyAuditEventsInformation = 1,
+  PolicyNotifyAccountDomainInformation,
+  PolicyNotifyServerRoleInformation,
+  PolicyNotifyDnsDomainInformation,
+  PolicyNotifyDomainEfsInformation,
+  PolicyNotifyDomainKerberosTicketInformation,
+  PolicyNotifyMachineAccountPasswordInformation
+} POLICY_NOTIFICATION_INFORMATION_CLASS, *PPOLICY_NOTIFICATION_INFORMATION_CLASS;
 typedef enum _SECURITY_LOGON_TYPE {
   Interactive = 2,
   Network,
@@ -237,6 +246,20 @@ typedef enum _SECURITY_LOGON_TYPE {
   Proxy,
   Unlock
 } SECURITY_LOGON_TYPE, *PSECURITY_LOGON_TYPE;
+typedef struct _SECURITY_LOGON_SESSION_DATA {
+  ULONG Size;
+  LUID LogonId;
+  LSA_UNICODE_STRING UserName;
+  LSA_UNICODE_STRING LogonDomain;
+  LSA_UNICODE_STRING AuthenticationPackage;
+  ULONG LogonType;
+  ULONG Session;
+  PSID Sid;
+  LARGE_INTEGER LogonTime;
+  LSA_UNICODE_STRING LogonServer;
+  LSA_UNICODE_STRING DnsDomainName;
+  LSA_UNICODE_STRING Upn;
+} SECURITY_LOGON_SESSION_DATA, *PSECURITY_LOGON_SESSION_DATA;
 typedef enum _TRUSTED_INFORMATION_CLASS {
   TrustedDomainNameInformation = 1,
   TrustedControllersInformation,

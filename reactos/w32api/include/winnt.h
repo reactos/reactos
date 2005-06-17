@@ -2287,7 +2287,7 @@ typedef struct _RTL_CRITICAL_SECTION {
 	LONG RecursionCount;
 	HANDLE OwningThread;
 	HANDLE LockSemaphore;
-	DWORD Reserved;
+	ULONG_PTR SpinCount;
 } RTL_CRITICAL_SECTION,*PRTL_CRITICAL_SECTION;
 typedef struct _EVENTLOGRECORD {
 	DWORD Length;
