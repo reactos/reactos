@@ -272,6 +272,7 @@ link_code (JSVirtualMachine *vm, unsigned char *code, unsigned int code_len,
 
 #define DONE() goto done
 
+#undef ERROR
 #define ERROR(msg)		\
   do {				\
     JS_SAVE_REGS ();		\

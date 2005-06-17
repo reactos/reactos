@@ -1,10 +1,10 @@
 #include "ddk/ntddk.h"
-#include "ddk/kefuncs.h"
 #include "ctype.h"
 #include "jsconfig.h"
 
 void __kernel_abort() {
-  KEBUGCHECK(0);
+  DbgPrint("KeBugCheck (0x%X) at %s:%i\n", 0, __FILE__,__LINE__);
+  KeBugCheck(0);
 }
 
 void _assert( const char *expr, const char *file, int line ) {

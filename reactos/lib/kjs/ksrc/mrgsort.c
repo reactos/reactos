@@ -28,7 +28,6 @@
  */
 
 #include "jsconfig.h"
-#include "ddk/exfuncs.h"
 #define js_malloc(x) ExAllocatePool(NonPagedPool,x)
 #define js_free(x) ExFreePool(x)
 

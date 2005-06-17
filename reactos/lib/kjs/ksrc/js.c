@@ -30,7 +30,6 @@
 #include "js.h"
 #include "jsint.h"
 #include "kjs.h"
-#include "ddk/kefuncs.h"
 
 /*
  * Types and definitions.
@@ -226,7 +225,7 @@ js_create_interp (JSInterpOptions *options, PKJS kjs)
 			     options->stacktrace_on_error,
 			     s_stdin, s_stdout, s_stderr);
   if (interp->vm == NULL)
-    KEBUGCHECK(0);
+    __kernel_abort();
 
   /* Set some options. */
   interp->vm->warn_undef = options->warn_undef;
@@ -253,17 +252,17 @@ js_create_interp (JSInterpOptions *options, PKJS kjs)
       /* Define compiler to the virtual machine. */
       bc = js_bc_read_data (js_compiler_bytecode, js_compiler_bytecode_len);
       if (bc == NULL)
-	KEBUGCHECK(0);
+	__kernel_abort();
 
       result = js_vm_execute (interp->vm, bc);
       js_bc_free (bc);
       if (!result)
-	KEBUGCHECK(0);
+	__kernel_abort();
     }
 
   /* Initialize our extensions. */
   if (!js_define_module (interp, js_core_globals))
-    KEBUGCHECK(0);
+    __kernel_abort();
 
   /* Ok, we'r done. */
   return interp;
