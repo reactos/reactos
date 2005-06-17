@@ -63,10 +63,31 @@ extern PACL                         SeSystemDefaultDacl;
 #define DOS_DOT                         (L'"')
 
 /* also in winnt.h */
-#define ACCESS_ALLOWED_ACE_TYPE         (0x0)
-#define ACCESS_DENIED_ACE_TYPE          (0x1)
-#define SYSTEM_AUDIT_ACE_TYPE           (0x2)
-#define SYSTEM_ALARM_ACE_TYPE           (0x3)
+#define ACCESS_MIN_MS_ACE_TYPE                  (0x0)
+#define ACCESS_ALLOWED_ACE_TYPE                 (0x0)
+#define ACCESS_DENIED_ACE_TYPE                  (0x1)
+#define SYSTEM_AUDIT_ACE_TYPE                   (0x2)
+#define SYSTEM_ALARM_ACE_TYPE                   (0x3)
+#define ACCESS_MAX_MS_V2_ACE_TYPE               (0x3)
+#define ACCESS_ALLOWED_COMPOUND_ACE_TYPE        (0x4)
+#define ACCESS_MAX_MS_V3_ACE_TYPE               (0x4)
+#define ACCESS_MIN_MS_OBJECT_ACE_TYPE           (0x5)
+#define ACCESS_ALLOWED_OBJECT_ACE_TYPE          (0x5)
+#define ACCESS_DENIED_OBJECT_ACE_TYPE           (0x6)
+#define SYSTEM_AUDIT_OBJECT_ACE_TYPE            (0x7)
+#define SYSTEM_ALARM_OBJECT_ACE_TYPE            (0x8)
+#define ACCESS_MAX_MS_OBJECT_ACE_TYPE           (0x8)
+#define ACCESS_MAX_MS_V4_ACE_TYPE               (0x8)
+#define ACCESS_MAX_MS_ACE_TYPE                  (0x8)
+#define ACCESS_ALLOWED_CALLBACK_ACE_TYPE        (0x9)
+#define ACCESS_DENIED_CALLBACK_ACE_TYPE         (0xA)
+#define ACCESS_ALLOWED_CALLBACK_OBJECT_ACE_TYPE (0xB)
+#define ACCESS_DENIED_CALLBACK_OBJECT_ACE_TYPE  (0xC)
+#define SYSTEM_AUDIT_CALLBACK_ACE_TYPE          (0xD)
+#define SYSTEM_ALARM_CALLBACK_ACE_TYPE          (0xE)
+#define SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE   (0xF)
+#define SYSTEM_ALARM_CALLBACK_OBJECT_ACE_TYPE   (0x10)
+#define ACCESS_MAX_MS_V5_ACE_TYPE               (0x10)
 
 #define COMPRESSION_FORMAT_NONE         (0x0000)
 #define COMPRESSION_FORMAT_DEFAULT      (0x0001)
@@ -306,6 +327,8 @@ extern PACL                         SeSystemDefaultDacl;
 #define SECURITY_WORLD_RID              (0x00000000L)
 
 #define SID_REVISION                    1
+#define SID_MAX_SUB_AUTHORITIES         15
+#define SID_RECOMMENDED_SUB_AUTHORITIES 1
 
 #define TOKEN_ASSIGN_PRIMARY            (0x0001)
 #define TOKEN_DUPLICATE                 (0x0002)
@@ -349,6 +372,23 @@ extern PACL                         SeSystemDefaultDacl;
 
 #define VACB_MAPPING_GRANULARITY        (0x40000)
 #define VACB_OFFSET_SHIFT               (18)
+
+#define SE_OWNER_DEFAULTED              0x0001
+#define SE_GROUP_DEFAULTED              0x0002
+#define SE_DACL_PRESENT                 0x0004
+#define SE_DACL_DEFAULTED               0x0008
+#define SE_SACL_PRESENT                 0x0010
+#define SE_SACL_DEFAULTED               0x0020
+#define SE_DACL_UNTRUSTED               0x0040
+#define SE_SERVER_SECURITY              0x0080
+#define SE_DACL_AUTO_INHERIT_REQ        0x0100
+#define SE_SACL_AUTO_INHERIT_REQ        0x0200
+#define SE_DACL_AUTO_INHERITED          0x0400
+#define SE_SACL_AUTO_INHERITED          0x0800
+#define SE_DACL_PROTECTED               0x1000
+#define SE_SACL_PROTECTED               0x2000
+#define SE_RM_CONTROL_VALID             0x4000
+#define SE_SELF_RELATIVE                0x8000
 
 #define FSCTL_REQUEST_OPLOCK_LEVEL_1    CTL_CODE(FILE_DEVICE_FILE_SYSTEM,  0, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define FSCTL_REQUEST_OPLOCK_LEVEL_2    CTL_CODE(FILE_DEVICE_FILE_SYSTEM,  1, METHOD_BUFFERED, FILE_ANY_ACCESS)
