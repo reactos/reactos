@@ -2,6 +2,12 @@
 
 #include_next <ddk/ntifs.h>
 
+NTSTATUS STDCALL
+CcRosInitializeFileCache (PFILE_OBJECT	FileObject,
+		          ULONG		CacheSegmentSize);
+NTSTATUS STDCALL
+CcRosReleaseFileCache (PFILE_OBJECT	FileObject);
+
 #else /* __USE_W32API */
 
 #ifndef __INCLUDE_DDK_NTIFS_H
