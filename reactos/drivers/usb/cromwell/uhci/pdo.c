@@ -168,10 +168,114 @@ UhciPnpPdo(
 	{
 		case IRP_MN_START_DEVICE: /* 0x00 */
 		{
-			DPRINT("UHCI: IRP_MJ_PNP/IRP_MN_START_DEVICE\n");
+			DPRINT("UHCI: IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
 			Status = UhciPnpStartDevice(DeviceObject);
 			break;
 		}
+		case IRP_MN_QUERY_CAPABILITIES: /* 0x09 */
+		{
+			PDEVICE_CAPABILITIES DeviceCapabilities;
+			ULONG i;
+			DPRINT("UHCI: IRP_MJ_PNP / IRP_MN_QUERY_CAPABILITIES\n");
+
+			DeviceCapabilities = (PDEVICE_CAPABILITIES)Stack->Parameters.DeviceCapabilities.Capabilities;
+			/* FIXME: capabilities can change with connected device */
+			DeviceCapabilities->LockSupported = FALSE;
+			DeviceCapabilities->EjectSupported = FALSE;
+			DeviceCapabilities->Removable = TRUE;
+			DeviceCapabilities->DockDevice = FALSE;
+			DeviceCapabilities->UniqueID = FALSE;
+			DeviceCapabilities->SilentInstall = FALSE;
+			DeviceCapabilities->RawDeviceOK = TRUE;
+			DeviceCapabilities->SurpriseRemovalOK = TRUE;
+			DeviceCapabilities->HardwareDisabled = FALSE; /* FIXME */
+			//DeviceCapabilities->NoDisplayInUI = FALSE; /* FIXME */
+			DeviceCapabilities->DeviceState[0] = PowerDeviceD0; /* FIXME */
+			for (i = 0; i < PowerSystemMaximum; i++)
+				DeviceCapabilities->DeviceState[i] = PowerDeviceD3; /* FIXME */
+			//DeviceCapabilities->DeviceWake = PowerDeviceUndefined; /* FIXME */
+			DeviceCapabilities->D1Latency = 0; /* FIXME */
+			DeviceCapabilities->D2Latency = 0; /* FIXME */
+			DeviceCapabilities->D3Latency = 0; /* FIXME */
+			Status = STATUS_SUCCESS;
+			break;
+		}
+		case IRP_MN_QUERY_RESOURCES: /* 0x0a */
+		{
+			DPRINT("UHCI: IRP_MJ_PNP / IRP_MN_QUERY_RESOURCES\n");
+			/* Root buses don't need resources, except the ones of
+			 * the usb controller. This PDO is the root bus PDO, so
+			 * report no resource by not changing Information and
+			 * Status
+			 */
+			Information = Irp->IoStatus.Information;
+			Status = Irp->IoStatus.Status;
+			break;
+		}
+		case IRP_MN_QUERY_RESOURCE_REQUIREMENTS: /* 0x0b */
+		{
+			DPRINT("UHCI: IRP_MJ_PNP / IRP_MN_QUERY_RESOURCE_REQUIREMENTS\n");
+			/* Root buses don't need resources, except the ones of
+			 * the usb controller. This PDO is the root bus PDO, so
+			 * report no resource by not changing Information and
+			 * Status
+			 */
+			Information = Irp->IoStatus.Information;
+			Status = Irp->IoStatus.Status;
+			break;
+		}
+#if 0 /* FIXME */
+		case IRP_MN_QUERY_DEVICE_TEXT: /* 0x0c */
+		{
+			switch (Stack->Parameters.QueryDeviceText.DeviceTextType)
+			{
+				case DeviceTextDescription:
+				{
+					ULONG DescriptionSize;
+					PWSTR Description;
+					DPRINT("UHCI: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextDescription\n");
+					
+					Status = IoGetDeviceProperty(
+						DeviceObject,
+						DevicePropertyDeviceDescription,
+						0, NULL,
+						&DescriptionSize);
+					if (Status == STATUS_BUFFER_TOO_SMALL)
+					{
+						Description = ExAllocatePool(PagedPool, DescriptionSize);
+						if (!Description)
+							Status = STATUS_INSUFFICIENT_RESOURCES;
+						else
+						{
+							Status = IoGetDeviceProperty(
+								DeviceObject,
+								DevicePropertyDeviceDescription,
+								DescriptionSize, Description,
+								&DescriptionSize);
+							Information = DescriptionSize;
+						}
+					}
+					break;
+				}
+				case DeviceTextLocationInformation:
+				{
+					/* We don't have any text location to report,
+					 * and this query is optional, so ignore it.
+					 */
+					Information = Irp->IoStatus.Information;
+					Status = Irp->IoStatus.Status;
+					break;
+				}
+				default:
+				{
+					DPRINT1("UHCI: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / unknown type 0x%lx\n",
+						Stack->Parameters.QueryDeviceText.DeviceTextType);
+					Status = STATUS_NOT_SUPPORTED;
+				}
+			}
+			break;
+		}
+#endif
 		case IRP_MN_QUERY_ID: /* 0x13 */
 		{
 			Status = UhciPdoQueryId(DeviceObject, Irp, &Information);
