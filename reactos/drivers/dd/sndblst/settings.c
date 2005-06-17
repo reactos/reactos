@@ -10,7 +10,6 @@
  */
 
 #include <ntddk.h>
-#include <windows.h>
 #include "sndblst.h"
 #include "sbdebug.h"  // our own debug helper
 
