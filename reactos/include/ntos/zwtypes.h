@@ -1727,11 +1727,22 @@ typedef struct _LPC_MESSAGE
 
 #define MAX_MESSAGE_DATA   (0x130)
 
+#ifdef __USE_W32API
+typedef union _LPC_MAX_MESSAGE
+{
+   LPC_MESSAGE Header;
+   struct {
+     BYTE LpcHeader[LPC_MESSAGE_BASE_SIZE];
+     BYTE Data[MAX_MESSAGE_DATA];
+   };
+} LPC_MAX_MESSAGE, *PLPC_MAX_MESSAGE;
+#else
 typedef struct _LPC_MAX_MESSAGE
 {
    LPC_MESSAGE Header;
    BYTE Data[MAX_MESSAGE_DATA];
 } LPC_MAX_MESSAGE, *PLPC_MAX_MESSAGE;
+#endif
 
 typedef struct _LPC_PORT_BASIC_INFORMATION
 {
