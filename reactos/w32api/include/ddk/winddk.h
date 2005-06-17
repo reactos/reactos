@@ -2700,6 +2700,9 @@ typedef struct _IO_SECURITY_CONTEXT {
   ULONG  FullCreateOptions;
 } IO_SECURITY_CONTEXT, *PIO_SECURITY_CONTEXT;
 
+#define IO_TYPE_CSQ_IRP_CONTEXT 1
+#define IO_TYPE_CSQ 2
+
 struct _IO_CSQ;
 
 typedef struct _IO_CSQ_IRP_CONTEXT {
@@ -6551,7 +6554,7 @@ IoCreateUnprotectedSymbolicLink(
   IN PUNICODE_STRING  DeviceName);
 
 NTOSAPI
-VOID
+NTSTATUS
 DDKAPI
 IoCsqInitialize(
   PIO_CSQ  Csq,
