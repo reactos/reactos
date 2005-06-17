@@ -16,7 +16,6 @@ typedef enum tagSTRRET_TYPE {
     STRRET_CSTR = 2
 } STRRET_TYPE;
 
-#include <poppack.h>
 #ifdef __cplusplus
 }
 #endif
