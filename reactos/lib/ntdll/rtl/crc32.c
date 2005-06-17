@@ -17,9 +17,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-
+#define NDEBUG
+#include <ntdll.h>
 /* FUNCTIONS ****************************************************************/
 
 /* CRC polynomial 0xedb88320 */

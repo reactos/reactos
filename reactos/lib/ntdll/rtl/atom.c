@@ -11,13 +11,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntos.h>
-#include <ntdll/rtl.h>
-#include <ntos/heap.h>
-
 #define NDEBUG
-#include <ntdll/ntdll.h>
-
+#include <ntdll.h>
 
 /* LOCAL TYPES ***************************************************************/
 

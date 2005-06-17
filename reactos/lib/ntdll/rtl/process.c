@@ -11,15 +11,8 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ntos.h>
-#include <windows.h>
-#include <napi/i386/segment.h>
-#include <ntdll/ldr.h>
-#include <ntdll/base.h>
-#include <ntdll/rtl.h>
-
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <ntdll.h>
 
 /* FUNCTIONS ****************************************************************/
 

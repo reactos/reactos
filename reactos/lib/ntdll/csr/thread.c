@@ -5,16 +5,9 @@
  * FILE:            lib/ntdll/csr/propvar.c
  * PURPOSE:         CSRSS threads API
  */
-#define NTOS_MODE_USER
-#include <ntos.h>
-
-#include <ntdll/csr.h>
-#include <string.h>
-
-#include <csrss/csrss.h>
 
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <ntdll.h>
 
 /*
  * @implemented

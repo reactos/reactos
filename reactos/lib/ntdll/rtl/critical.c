@@ -12,12 +12,9 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
-#include <ntos.h>
 #include <ntdll/rtl.h>
-
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <ntdll.h>
 
 /* FUNCTIONS *****************************************************************/
 

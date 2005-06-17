@@ -7,11 +7,9 @@
  * AUTHOR:          Eric Kohl
  * DATE:            2001-06-17
  */
-#define NTOS_MODE_USER
-#include <ntos.h>
-
+ 
 #define NDEBUG
-#include <ntdll/rtl.h>
+#include <ntdll.h>
 
 /*
  * @implemented

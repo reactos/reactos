@@ -5,8 +5,8 @@
  * FILE:            lib/ntdll/csr/propvar.c
  * PURPOSE:         CSRSS properties and variants API
  */
-#define NTOS_MODE_USER
-#include <ntos.h>
+#define NDEBUG
+#include <ntdll.h>
 
 /*
  * @unimplemented

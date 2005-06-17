@@ -26,9 +26,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntos.h>
-#include <string.h>
-#include <debug.h>
+#define NDEBUG
+#include <ntdll.h>
 
 /* FUNCTIONS ***************************************************************/
 

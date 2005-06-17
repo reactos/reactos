@@ -6,8 +6,8 @@
  * PURPOSE:
  */
 
-#include <ddk/ntddk.h>
-#include <napi/teb.h>
+#define NDEBUG
+#include <ntdll.h>
 
 
 PTEB STDCALL

@@ -18,11 +18,8 @@
  * The code is based on information published in WDJ January 1999 issue.
  */
 
-#include <ntos.h>
-#include <ntdll/rtl.h>
-
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <ntdll.h>
 
 
 /* FUNCTIONS ****************************************************************/

@@ -7,11 +7,8 @@
  * PROGRAMMER:
  */
 
-#include <ddk/ntddk.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <ntdll/ntdll.h>
-#include <windows.h>
+#define NDEBUG
+#include <ntdll.h>
 
 BOOL WINAPI DllMainCRTStartup(HINSTANCE hinstDll,
 			      DWORD fdwReason,

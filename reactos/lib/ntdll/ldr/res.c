@@ -23,17 +23,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <reactos/config.h>
-#include <ddk/ntddk.h>
-#include <ntos.h>
-#include <ntos/ldrtypes.h>
-#include <windows.h>
-#include <string.h>
-#include <wchar.h>
-#include <ntdll/ldr.h>
-
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <ntdll.h>
 
 /* PROTOTYPES ****************************************************************/
 

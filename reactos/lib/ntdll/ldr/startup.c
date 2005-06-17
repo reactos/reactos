@@ -10,19 +10,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <reactos/config.h>
-#include <ddk/ntddk.h>
-#include <windows.h>
-#include <ntdll/ldr.h>
-#include <ntdll/rtl.h>
-#include <csrss/csrss.h>
-#include <ntdll/csr.h>
-#include <user32/callback.h>
-#include <rosrtl/string.h>
-
 #define NDEBUG
-#include <ntdll/ntdll.h>
-
+#include <ntdll.h>
+#include <user32/callback.h>
 
 VOID RtlInitializeHeapManager (VOID);
 VOID LdrpInitLoader(VOID);

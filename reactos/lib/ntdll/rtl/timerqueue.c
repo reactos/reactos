@@ -26,10 +26,8 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <ntdll.h>
 
 typedef VOID (CALLBACK *WAITORTIMERCALLBACKFUNC) (PVOID, BOOLEAN );
 

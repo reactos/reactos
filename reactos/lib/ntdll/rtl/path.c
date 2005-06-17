@@ -10,15 +10,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ntos.h>
-#include <ntdll/rtl.h>
-#include <ntos/minmax.h>
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
-
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <ntdll.h>
 
 /* DEFINITONS and MACROS ******************************************************/
 

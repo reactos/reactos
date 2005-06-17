@@ -11,13 +11,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntos.h>
-#include <ntos/ldrtypes.h>
-#include <ddk/ldrfuncs.h>
-
 #define NDEBUG
-#include <ntdll/ntdll.h>
-
+#include <ntdll.h>
+#include <ddk/ldrfuncs.h>
 
 /* FUNCTIONS *****************************************************************/
 

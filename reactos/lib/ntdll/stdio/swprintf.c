@@ -22,16 +22,10 @@
  * Wirzenius wrote this portably, Torvalds fucked it up :-)
  */
 
-#include <ddk/ntddk.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <ctype.h>
+#define NDEBUG
+#include <ntdll.h>
 #include <wchar.h>
 #include <limits.h>
-
-#define NDEBUG
-#include <ntdll/ntdll.h>
-
 
 #define ZEROPAD	1		/* pad with zero */
 #define SIGN	2		/* unsigned/signed long */

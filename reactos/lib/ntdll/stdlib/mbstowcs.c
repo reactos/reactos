@@ -6,10 +6,10 @@
  * PURPOSE:         converts a multi byte string to a unicode string
  */
 
-#include <ntos.h>
+#define NDEBUG
+#include <ntdll.h>
 #include <stdlib.h>
 #include <string.h>
-
 /*
  * @implemented
  */

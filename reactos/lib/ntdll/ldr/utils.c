@@ -19,21 +19,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <reactos/config.h>
-#include <ddk/ntddk.h>
-#include <ntos.h>
-#include <windows.h>
-#include <string.h>
-#include <wchar.h>
-#include <ntdll/ldr.h>
-#include <ntdll/rtl.h>
+#define NDEBUG
+#include <ntdll.h>
 
 #define LDRP_PROCESS_CREATION_TIME 0x8000000
-
-#ifdef DBG_NTDLL_LDR_UTILS
-#define NDEBUG
-#endif
-#include <ntdll/ntdll.h>
 
 /* GLOBALS *******************************************************************/
 

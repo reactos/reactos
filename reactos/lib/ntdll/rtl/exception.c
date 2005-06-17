@@ -14,14 +14,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntos.h>
-#include <windows.h>
-#include <string.h>
-#include <ntdll/rtl.h>
-#include <napi/teb.h>
-
 #define NDEBUG
-#include <debug.h>
+#include <ntdll.h>
 
 static RTL_CRITICAL_SECTION RtlpVectoredExceptionLock;
 static LIST_ENTRY RtlpVectoredExceptionHead;

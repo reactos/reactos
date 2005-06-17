@@ -9,13 +9,8 @@
  *
  */
 
-#include <ntos.h>
-#include <ntdll/rtl.h>
-#include <ctype.h>
-#include <ntos/minmax.h>
-
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <ntdll.h>
 
 /* FUNCTIONS ***************************************************************/
 
