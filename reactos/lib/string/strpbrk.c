@@ -44,7 +44,7 @@ char* strpbrk(const char *s1, const char *s2)
        {
           if (char_map[*str / BIT_SIZE] & (1 << (*str % BIT_SIZE)))
           {
-             return str;
+             return (char*)str;
           }
           str++;
        }
