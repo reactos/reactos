@@ -5,13 +5,13 @@
 #include <napi/teb.h>
 #include <reactos/rossym.h>
 
-typedef NTSTATUS STDCALL_FUNC (*PEPFUNC)(PPEB);
+typedef NTSTATUS (STDCALL *PEPFUNC)(PPEB);
 
 /* Type for a DLL's entry point */
-typedef BOOL STDCALL_FUNC
-(* PDLLMAIN_FUNC)(HANDLE hInst,
-		  ULONG ul_reason_for_call,
-		  LPVOID lpReserved);
+typedef BOOL 
+(STDCALL *PDLLMAIN_FUNC)(HANDLE hInst,
+                         ULONG ul_reason_for_call,
+                         LPVOID lpReserved);
 
 #if defined(__USE_W32API) || defined(__NTDLL__)
 /*

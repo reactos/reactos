@@ -147,7 +147,7 @@ typedef struct _RTL_PROCESS_INFO
 
 typedef struct _RTL_RESOURCE
 {
-   CRITICAL_SECTION Lock;
+   RTL_CRITICAL_SECTION Lock;
    HANDLE SharedSemaphore;
    ULONG SharedWaiters;
    HANDLE ExclusiveSemaphore;

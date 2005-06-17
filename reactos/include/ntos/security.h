@@ -420,7 +420,12 @@ typedef struct _SECURITY_ATTRIBUTES
   BOOL   bInheritHandle;
 } SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 
-#endif /* !__USE_W32API */
+#else /* !__USE_W32API */
+
+typedef struct _ACL_REVISION_INFORMATION *PACL_REVISION_INFORMATION;
+typedef struct _ACL_SIZE_INFORMATION *PACL_SIZE_INFORMATION;
+
+#endif /* __USE_W32API */
 
 typedef struct
 {
