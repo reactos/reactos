@@ -57,6 +57,9 @@
 	<directory name="media">
 		<xi:include href="media/directory.xml" />
 	</directory>
+	<directory name="modules">
+		<xi:include href="modules/directory.xml" />
+	</directory>
 	<directory name="ntoskrnl">
 		<xi:include href="ntoskrnl/ntoskrnl.xml" />
 	</directory>
