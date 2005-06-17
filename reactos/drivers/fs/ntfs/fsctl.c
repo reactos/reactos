@@ -28,13 +28,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntos/minmax.h>
+#include "ntfs.h"
+#include <ntdddisk.h>
 
 //#define NDEBUG
 #include <debug.h>
-
-#include "ntfs.h"
 
 /* FUNCTIONS ****************************************************************/
 

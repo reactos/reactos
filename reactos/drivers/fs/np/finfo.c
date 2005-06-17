@@ -9,7 +9,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ntifs.h>
 #include "npfs.h"
 
 #define NDEBUG

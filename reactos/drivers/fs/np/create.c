@@ -9,8 +9,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-
+#include <ntifs.h>
 #include "npfs.h"
 
 #define NDEBUG
@@ -387,7 +386,10 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
            return STATUS_NO_MEMORY;
          }
 
-       if (RtlCreateUnicodeString(&Pipe->PipeName, FileObject->FileName.Buffer) == FALSE)
+       Pipe->PipeName.Length = FileObject->FileName.Length;
+       Pipe->PipeName.MaximumLength = Pipe->PipeName.Length + sizeof(UNICODE_NULL);
+       Pipe->PipeName.Buffer = ExAllocatePool(NonPagedPool, Pipe->PipeName.MaximumLength);
+       if (Pipe->PipeName.Buffer == NULL)
          {
            KeUnlockMutex(&DeviceExt->PipeListLock);
            ExFreePool(Pipe);
@@ -397,6 +399,8 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
            IoCompleteRequest(Irp, IO_NO_INCREMENT);
            return STATUS_NO_MEMORY;
          }
+
+       RtlCopyUnicodeString(&Pipe->PipeName, &FileObject->FileName);
 
        InitializeListHead(&Pipe->ServerFcbListHead);
        InitializeListHead(&Pipe->ClientFcbListHead);

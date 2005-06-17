@@ -29,6 +29,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ntddcdrm.h>
 #include <ntos/minmax.h>
 
 #define NDEBUG

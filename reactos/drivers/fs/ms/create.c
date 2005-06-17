@@ -9,8 +9,9 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ddk/iotypes.h> /* FIXME: Temporary Until NDK implemented */
+#include <ntifs.h>
+/* FIXME: The headers are broken! */
+#undef CreateMailslot
 #include "msfs.h"
 
 #define NDEBUG
@@ -137,7 +138,10 @@ MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject,
 	return(STATUS_NO_MEMORY);
      }
 
-   if (!RtlCreateUnicodeString(&Mailslot->Name, FileObject->FileName.Buffer))
+   Mailslot->Name.Length = FileObject->FileName.Length;
+   Mailslot->Name.MaximumLength = Mailslot->Name.Length + sizeof(UNICODE_NULL);
+   Mailslot->Name.Buffer = ExAllocatePool(NonPagedPool, Mailslot->Name.MaximumLength);
+   if (Mailslot->Name.Buffer == NULL)
      {
 	ExFreePool(Mailslot);
 
@@ -148,6 +152,8 @@ MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject,
 
 	return(STATUS_NO_MEMORY);
      }
+
+   RtlCopyUnicodeString(&Mailslot->Name, &FileObject->FileName);
 
    Fcb = ExAllocatePool(NonPagedPool, sizeof(MSFS_FCB));
    if (Fcb == NULL)

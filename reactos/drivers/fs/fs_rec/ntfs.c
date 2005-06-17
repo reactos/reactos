@@ -27,7 +27,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ntifs.h>
+#include <ntdddisk.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -99,7 +100,8 @@ FsRecNtfsFsControl(IN PDEVICE_OBJECT DeviceObject,
 		   IN PIRP Irp)
 {
   PIO_STACK_LOCATION Stack;
-  UNICODE_STRING RegistryPath;
+  static UNICODE_STRING RegistryPath =
+    RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\Ntfs");
   NTSTATUS Status;
 
   Stack = IoGetCurrentIrpStackLocation(Irp);
@@ -119,8 +121,6 @@ FsRecNtfsFsControl(IN PDEVICE_OBJECT DeviceObject,
 
       case IRP_MN_LOAD_FILE_SYSTEM:
 	DPRINT("NTFS: IRP_MN_LOAD_FILE_SYSTEM\n");
-	RtlInitUnicodeString(&RegistryPath,
-			     L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\Ntfs");
 	Status = ZwLoadDriver(&RegistryPath);
 	if (!NT_SUCCESS(Status))
 	  {

@@ -1,5 +1,6 @@
 <module name="npfs" type="kernelmodedriver" installbase="system32/drivers" installname="npfs.sys">
 	<include base="npfs">.</include>
+        <define name="__USE_W32API" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>create.c</file>

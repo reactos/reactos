@@ -9,7 +9,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ntifs.h>
 #include "npfs.h"
 
 #define NDEBUG
@@ -28,8 +28,8 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
    DPRINT("Named Pipe FSD 0.0.2\n");
 
-   ASSERT (sizeof(NPFS_CONTEXT) <= sizeof (((PIRP)NULL)->Tail.Overlay.DriverContext));
-   ASSERT (sizeof(NPFS_WAITER_ENTRY) <= sizeof(((PIRP)NULL)->Tail.Overlay.DriverContext));
+   ASSERT (sizeof(NPFS_CONTEXT) <= FIELD_OFFSET(IRP, Tail.Overlay.DriverContext));
+   ASSERT (sizeof(NPFS_WAITER_ENTRY) <= FIELD_OFFSET(IRP, Tail.Overlay.DriverContext));
 
    DriverObject->MajorFunction[IRP_MJ_CREATE] = NpfsCreate;
    DriverObject->MajorFunction[IRP_MJ_CREATE_NAMED_PIPE] =

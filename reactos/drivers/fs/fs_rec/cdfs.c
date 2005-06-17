@@ -27,8 +27,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <rosrtl/string.h>
+#include <ntifs.h>
+#include <ntdddisk.h>
+#include <ntddcdrm.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -102,7 +103,8 @@ FsRecCdfsFsControl(IN PDEVICE_OBJECT DeviceObject,
 		   IN PIRP Irp)
 {
   PIO_STACK_LOCATION Stack;
-  UNICODE_STRING RegistryPath;
+  static UNICODE_STRING RegistryPath =
+    RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\Cdfs");
   NTSTATUS Status;
 
   Stack = IoGetCurrentIrpStackLocation(Irp);
@@ -121,8 +123,6 @@ FsRecCdfsFsControl(IN PDEVICE_OBJECT DeviceObject,
 
       case IRP_MN_LOAD_FILE_SYSTEM:
 	DPRINT("Cdfs: IRP_MN_LOAD_FILE_SYSTEM\n");
-	RtlRosInitUnicodeStringFromLiteral(&RegistryPath,
-			     L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\Cdfs");
 	Status = ZwLoadDriver(&RegistryPath);
 	if (!NT_SUCCESS(Status))
 	  {
