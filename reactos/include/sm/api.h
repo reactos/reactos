@@ -4,13 +4,11 @@
 
 #include <sm/ns.h>
 
-#pragma pack(push,4)
-
 /*** DATA TYPES ******************************************************/
 
 #define SM_SB_NAME_MAX_LENGTH 120
 
-#pragma pack(push,4)
+#include <pshpack4.h>
 
 /* SmConnectApiPort (SS->SM) */
 typedef struct _SM_CONNECT_DATA
@@ -136,7 +134,7 @@ typedef union _SM_PORT_MESSAGE
   };
 } SM_PORT_MESSAGE, * PSM_PORT_MESSAGE;
 
-#pragma pack(pop)
+#include <poppack.h>
 
 /*** MACRO ***********************************************************/
 
