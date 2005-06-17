@@ -23,9 +23,6 @@ NTSTATUS STDCALL CcRosReleaseFileCache(PFILE_OBJECT);
 typedef struct _ROS_QUERY_LCN_MAPPING { LARGE_INTEGER LcnDiskOffset; } ROS_QUERY_LCN_MAPPING, *PROS_QUERY_LCN_MAPPING;
 #endif
 
-#define KEBUGCHECK(a) DbgPrint("KeBugCheck at %s:%i\n",__FILE__,__LINE__), KeBugCheck(a)
-#define KEBUGCHECKEX(a,b,c,d,e) DbgPrint("KeBugCheckEx at %s:%i\n",__FILE__,__LINE__), KeBugCheckEx(a,b,c,d,e)
-
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 #define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
 
