@@ -1556,6 +1556,36 @@ typedef struct _IO_RESOURCE_REQUIREMENTS_LIST {
   IO_RESOURCE_LIST  List[1];
 } IO_RESOURCE_REQUIREMENTS_LIST, *PIO_RESOURCE_REQUIREMENTS_LIST;
 
+typedef struct _IO_ERROR_LOG_PACKET {
+  UCHAR  MajorFunctionCode;
+  UCHAR  RetryCount;
+  USHORT  DumpDataSize;
+  USHORT  NumberOfStrings;
+  USHORT  StringOffset;
+  USHORT  EventCategory;
+  NTSTATUS  ErrorCode;
+  ULONG  UniqueErrorValue;
+  NTSTATUS  FinalStatus;
+  ULONG  SequenceNumber;
+  ULONG  IoControlCode;
+  LARGE_INTEGER  DeviceOffset;
+  ULONG  DumpData[1];
+} IO_ERROR_LOG_PACKET, *PIO_ERROR_LOG_PACKET;
+
+typedef struct _IO_ERROR_LOG_MESSAGE {
+  USHORT  Type;
+  USHORT  Size;
+  USHORT  DriverNameLength;
+  LARGE_INTEGER  TimeStamp;
+  ULONG  DriverNameOffset;
+  IO_ERROR_LOG_PACKET  EntryData;
+} IO_ERROR_LOG_MESSAGE, *PIO_ERROR_LOG_MESSAGE;
+
+#define ERROR_LOG_LIMIT_SIZE               240
+#define IO_ERROR_LOG_MESSAGE_HEADER_LENGTH (sizeof(IO_ERROR_LOG_MESSAGE) - \
+                                            sizeof(IO_ERROR_LOG_PACKET) + \
+                                            (sizeof(WCHAR) * 40))
+
 typedef struct _CONTROLLER_OBJECT {
   CSHORT  Type;
   CSHORT  Size;
@@ -6247,22 +6277,6 @@ IoAllocateDriverObjectExtension(
   IN PVOID  ClientIdentificationAddress,
   IN ULONG  DriverObjectExtensionSize,
   OUT PVOID  *DriverObjectExtension);
-
-typedef struct _IO_ERROR_LOG_PACKET {
-	UCHAR  MajorFunctionCode;
-	UCHAR  RetryCount;
-	USHORT  DumpDataSize;
-	USHORT  NumberOfStrings;
-	USHORT  StringOffset;
-	USHORT  EventCategory;
-	NTSTATUS  ErrorCode;
-	ULONG  UniqueErrorValue;
-	NTSTATUS  FinalStatus;
-	ULONG  SequenceNumber;
-	ULONG  IoControlCode;
-	LARGE_INTEGER  DeviceOffset;
-	ULONG  DumpData[1];
-} IO_ERROR_LOG_PACKET, *PIO_ERROR_LOG_PACKET;
 
 NTOSAPI
 PVOID
