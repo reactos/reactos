@@ -28,6 +28,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <windows.h>
+#include <ntos.h>
+#include <ntdll/rtl.h>
 #include <winerror.h>
 #include <string.h>
 

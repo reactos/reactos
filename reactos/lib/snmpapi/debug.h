@@ -17,6 +17,8 @@
 
 #define DEBUG_ULTRA    0xFFFFFFFF
 
+ULONG DbgPrint(PCH Format,...);
+
 #ifdef DBG
 
 extern DWORD DebugTraceLevel;
