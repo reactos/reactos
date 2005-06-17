@@ -1091,26 +1091,6 @@ enum
    IRP_RETRY_IO_COMPLETION = 0x4000
 };
 
-
-typedef struct _DRIVE_LAYOUT_INFORMATION_MBR {
-  ULONG  Signature;
-} DRIVE_LAYOUT_INFORMATION_MBR, *PDRIVE_LAYOUT_INFORMATION_MBR;
-
-typedef struct _DRIVE_LAYOUT_INFORMATION_GPT {
-  GUID  DiskId;
-  LARGE_INTEGER  StartingUsableOffset;
-  LARGE_INTEGER  UsableLength;
-  ULONG  MaxPartitionCount;
-} DRIVE_LAYOUT_INFORMATION_GPT, *PDRIVE_LAYOUT_INFORMATION_GPT;
-
-typedef struct _PARTITION_INFORMATION_MBR {
-  UCHAR  PartitionType;
-  BOOLEAN  BootIndicator;
-  BOOLEAN  RecognizedPartition;
-  ULONG  HiddenSectors;
-} PARTITION_INFORMATION_MBR, *PPARTITION_INFORMATION_MBR;
-
-
 typedef struct _BOOTDISK_INFORMATION {
   LONGLONG  BootPartitionOffset;
   LONGLONG  SystemPartitionOffset;
@@ -3714,6 +3694,13 @@ typedef NTSTATUS
   IN CONFIGURATION_TYPE  PeripheralType,
   IN ULONG  PeripheralNumber,
   IN PKEY_VALUE_FULL_INFORMATION  *PeripheralInformation);
+
+typedef enum _IO_QUERY_DEVICE_DATA_FORMAT {
+  IoQueryDeviceIdentifier = 0,
+  IoQueryDeviceConfigurationData,
+  IoQueryDeviceComponentInformation,
+  IoQueryDeviceMaxData
+} IO_QUERY_DEVICE_DATA_FORMAT, *PIO_QUERY_DEVICE_DATA_FORMAT;
 
 typedef enum _WORK_QUEUE_TYPE {
   CriticalWorkQueue,
