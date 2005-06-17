@@ -44,8 +44,8 @@ KeWaitForGate(PKGATE Gate,
     do
     {
         /* Lock the APC Queue */
-        KeAcquireSpinLock(&CurrentThread->ApcQueueLock, &OldIrql);
-
+        OldIrql = KeAcquireDispatcherDatabaseLock();
+        
         /* Check if it's already signaled */
         if (!Gate->Header.SignalState)
         {
@@ -53,7 +53,7 @@ KeWaitForGate(PKGATE Gate,
             Gate->Header.SignalState = 0;
 
             /* Unlock the Queue and return */
-            KeReleaseSpinLock(&CurrentThread->ApcQueueLock, OldIrql);
+            KeReleaseDispatcherDatabaseLock(OldIrql);
             return;
         }
 
@@ -77,9 +77,6 @@ KeWaitForGate(PKGATE Gate,
             DPRINT("Waking Queue\n");
             KiWakeQueue(CurrentThread->Queue);
         }
-
-        /* Unlock the Queue*/
-        KeReleaseSpinLock(&CurrentThread->ApcQueueLock, OldIrql);
 
         /* Block the Thread */
         DPRINT("Blocking the Thread: %x\n", CurrentThread);
