@@ -19,6 +19,7 @@
 	<linkerflag>-nostartfiles</linkerflag>
 	<linkerflag>-nostdlib</linkerflag>
 	<directory name="tests">
+		<file>DIB_24BPP_ColorFill-performance.c</file>
 	</directory>
 	<file>setup.c</file>
 	<xi:include href="stubs.xml" />
