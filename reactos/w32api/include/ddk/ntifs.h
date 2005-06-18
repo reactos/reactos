@@ -44,15 +44,27 @@ extern "C" {
 #endif
 
 #ifndef NTKERNELAPI
-#define NTKERNELAPI STDCALL
+#define NTKERNELAPI DECLSPEC_IMPORT
 #endif
 
 typedef struct _SE_EXPORTS                  *PSE_EXPORTS;
 
-extern PUCHAR                       *FsRtlLegalAnsiCharacterArray;
+#ifdef _NTOSKRNL_
+extern PUCHAR                       FsRtlLegalAnsiCharacterArray;
+#else
+extern DECLSPEC_IMPORT PUCHAR       FsRtlLegalAnsiCharacterArray;
+#endif
 extern PSE_EXPORTS                  SeExports;
 extern PACL                         SePublicDefaultDacl;
 extern PACL                         SeSystemDefaultDacl;
+
+extern KSPIN_LOCK                   IoStatisticsLock;
+extern ULONG                        IoReadOperationCount;
+extern ULONG                        IoWriteOperationCount;
+extern ULONG                        IoOtherOperationCount;
+extern LARGE_INTEGER                IoReadTransferCount;
+extern LARGE_INTEGER                IoWriteTransferCount;
+extern LARGE_INTEGER                IoOtherTransferCount;
 
 #define ANSI_DOS_STAR                   ('<')
 #define ANSI_DOS_QM                     ('>')
@@ -240,6 +252,13 @@ extern PACL                         SeSystemDefaultDacl;
 #define FSRTL_VOLUME_MOUNT              6
 
 #define FSRTL_WILD_CHARACTER            0x08
+
+#define FSRTL_FAT_LEGAL                 0x01
+#define FSRTL_HPFS_LEGAL                0x02
+#define FSRTL_NTFS_LEGAL                0x04
+#define FSRTL_WILD_CHARACTER            0x08
+#define FSRTL_OLE_LEGAL                 0x10
+#define FSRTL_NTFS_STREAM_LEGAL         0x14
 
 #ifdef _X86_
 #define HARDWARE_PTE    HARDWARE_PTE_X86
@@ -502,7 +521,6 @@ extern PACL                         SeSystemDefaultDacl;
 
 #define IOCTL_REDIR_QUERY_PATH          CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 99, METHOD_NEITHER, FILE_ANY_ACCESS)
 
-typedef PVOID PEJOB;
 typedef PVOID OPLOCK, *POPLOCK;
 
 typedef struct _CACHE_MANAGER_CALLBACKS         *PCACHE_MANAGER_CALLBACKS;
@@ -717,6 +735,10 @@ typedef struct _EX_PUSH_LOCK {
         PVOID   Ptr;
     } DUMMYUNIONNAME;
 } EX_PUSH_LOCK, *PEX_PUSH_LOCK;
+
+#define EX_RUNDOWN_ACTIVE               0x1
+#define EX_RUNDOWN_COUNT_SHIFT          0x1
+#define EX_RUNDOWN_COUNT_INC            (1 << EX_RUNDOWN_COUNT_SHIFT)
 
 typedef struct _EX_RUNDOWN_REF {
     _ANONYMOUS_UNION union {
@@ -1197,6 +1219,33 @@ typedef struct _FSRTL_COMMON_FCB_HEADER {
     LARGE_INTEGER   ValidDataLength;
 } FSRTL_COMMON_FCB_HEADER, *PFSRTL_COMMON_FCB_HEADER;
 
+#if (VER_PRODUCTBUILD >= 2600)
+
+typedef struct _FSRTL_ADVANCED_FCB_HEADER {
+    CSHORT          NodeTypeCode;
+    CSHORT          NodeByteSize;
+    UCHAR           Flags;
+    UCHAR           IsFastIoPossible;
+    UCHAR           Flags2;
+    UCHAR           Reserved;
+    PERESOURCE      Resource;
+    PERESOURCE      PagingIoResource;
+    LARGE_INTEGER   AllocationSize;
+    LARGE_INTEGER   FileSize;
+    LARGE_INTEGER   ValidDataLength;
+    PFAST_MUTEX     FastMutex;
+    LIST_ENTRY      FilterContexts;
+} FSRTL_ADVANCED_FCB_HEADER, *PFSRTL_ADVANCED_FCB_HEADER;
+
+typedef struct _FSRTL_PER_STREAM_CONTEXT {
+    LIST_ENTRY     Links;
+    PVOID          OwnerId;
+    PVOID          InstanceId;
+    PFREE_FUNCTION FreeCallback;
+} FSRTL_PER_STREAM_CONTEXT, *PFSRTL_PER_STREAM_CONTEXT;
+
+#endif /* (VER_PRODUCTBUILD >= 2600) */
+
 typedef struct _GENERATE_NAME_CONTEXT {
     USHORT  Checksum;
     BOOLEAN CheckSumInserted;
@@ -1549,15 +1598,6 @@ typedef struct _STARTING_VCN_INPUT_BUFFER {
     LARGE_INTEGER StartingVcn;
 } STARTING_VCN_INPUT_BUFFER, *PSTARTING_VCN_INPUT_BUFFER;
 
-typedef struct _SYSTEM_CACHE_INFORMATION {
-    ULONG CurrentSize;
-    ULONG PeakSize;
-    ULONG PageFaultCount;
-    ULONG MinimumWorkingSet;
-    ULONG MaximumWorkingSet;
-    ULONG Unused[4];
-} SYSTEM_CACHE_INFORMATION, *PSYSTEM_CACHE_INFORMATION;
-
 typedef struct _SECURITY_CLIENT_CONTEXT {
     SECURITY_QUALITY_OF_SERVICE SecurityQos;
     PACCESS_TOKEN               ClientToken;
@@ -1597,6 +1637,90 @@ typedef struct _VAD_HEADER {
     ULONG       Unknown;
     LIST_ENTRY  Secured;
 } VAD_HEADER, *PVAD_HEADER;
+
+#if (VER_PRODUCTBUILD >= 2600)
+
+typedef BOOLEAN
+(NTAPI *PFILTER_REPORT_CHANGE) (
+    IN PVOID  NotifyContext,
+    IN PVOID  FilterContext
+);
+
+typedef enum _FS_FILTER_SECTION_SYNC_TYPE {
+    SyncTypeOther = 0,
+    SyncTypeCreateSection
+} FS_FILTER_SECTION_SYNC_TYPE, *PFS_FILTER_SECTION_SYNC_TYPE;
+
+typedef union _FS_FILTER_PARAMETERS {
+    struct {
+        PLARGE_INTEGER  EndingOffset;
+    } AcquireForModifiedPageWriter;
+
+    struct {
+        PERESOURCE  ResourceToRelease;
+    } ReleaseForModifiedPageWriter;
+
+    struct {
+        FS_FILTER_SECTION_SYNC_TYPE  SyncType;
+        ULONG  PageProtection;
+    } AcquireForSectionSynchronization;
+
+    struct {
+        PVOID  Argument1;
+        PVOID  Argument2;
+        PVOID  Argument3;
+        PVOID  Argument4;
+        PVOID  Argument5;
+    } Others;
+} FS_FILTER_PARAMETERS, *PFS_FILTER_PARAMETERS;
+
+typedef struct _FS_FILTER_CALLBACK_DATA {
+    ULONG                  SizeOfFsFilterCallbackData;
+    UCHAR                  Operation;
+    UCHAR                  Reserved;
+    struct _DEVICE_OBJECT  *DeviceObject;
+    struct _FILE_OBJECT    *FileObject;
+    FS_FILTER_PARAMETERS   Parameters;
+} FS_FILTER_CALLBACK_DATA, *PFS_FILTER_CALLBACK_DATA;
+
+typedef NTSTATUS
+(NTAPI *PFS_FILTER_CALLBACK) (
+    IN PFS_FILTER_CALLBACK_DATA  Data,
+    OUT PVOID                    *CompletionContext
+);
+
+typedef VOID
+(NTAPI *PFS_FILTER_COMPLETION_CALLBACK) (
+    IN PFS_FILTER_CALLBACK_DATA  Data,
+    IN NTSTATUS                  OperationStatus,
+    IN PVOID                     CompletionContext
+);
+
+typedef struct _FS_FILTER_CALLBACKS {
+    ULONG                           SizeOfFsFilterCallbacks;
+    ULONG                           Reserved;
+    PFS_FILTER_CALLBACK             PreAcquireForSectionSynchronization;
+    PFS_FILTER_COMPLETION_CALLBACK  PostAcquireForSectionSynchronization;
+    PFS_FILTER_CALLBACK             PreReleaseForSectionSynchronization;
+    PFS_FILTER_COMPLETION_CALLBACK  PostReleaseForSectionSynchronization;
+    PFS_FILTER_CALLBACK             PreAcquireForCcFlush;
+    PFS_FILTER_COMPLETION_CALLBACK  PostAcquireForCcFlush;
+    PFS_FILTER_CALLBACK             PreReleaseForCcFlush;
+    PFS_FILTER_COMPLETION_CALLBACK  PostReleaseForCcFlush;
+    PFS_FILTER_CALLBACK             PreAcquireForModifiedPageWriter;
+    PFS_FILTER_COMPLETION_CALLBACK  PostAcquireForModifiedPageWriter;
+    PFS_FILTER_CALLBACK             PreReleaseForModifiedPageWriter;
+    PFS_FILTER_COMPLETION_CALLBACK  PostReleaseForModifiedPageWriter;
+} FS_FILTER_CALLBACKS, *PFS_FILTER_CALLBACKS;
+
+typedef struct _READ_LIST {
+    PFILE_OBJECT          FileObject;
+    ULONG                 NumberOfEntries;
+    LOGICAL               IsImage;
+    FILE_SEGMENT_ELEMENT  List[ANYSIZE_ARRAY];
+} READ_LIST, *PREAD_LIST;
+
+#endif
 
 NTKERNELAPI
 BOOLEAN
@@ -1734,6 +1858,7 @@ CcGetFlushedValidData (
 
 NTKERNELAPI
 LARGE_INTEGER
+NTAPI
 CcGetLsnForFileObject (
     IN PFILE_OBJECT     FileObject,
     OUT PLARGE_INTEGER  OldestLsn OPTIONAL
@@ -2051,16 +2176,78 @@ NTKERNELAPI
 VOID
 NTAPI
 ExDisableResourceBoostLite (
-    IN PERESOURCE Resource
+    IN PERESOURCE  Resource
 );
 
 NTKERNELAPI
 ULONG
 NTAPI
 ExQueryPoolBlockSize (
-    IN PVOID        PoolBlock,
-    OUT PBOOLEAN    QuotaCharged
+    IN PVOID      PoolBlock,
+    OUT PBOOLEAN  QuotaCharged
 );
+
+#if (VER_PRODUCTBUILD >= 2600)
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExInitializeRundownProtection (
+    IN PEX_RUNDOWN_REF  RunRef
+);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExReInitializeRundownProtection (
+    IN PEX_RUNDOWN_REF  RunRef
+);
+
+NTKERNELAPI
+BOOLEAN
+FASTCALL
+ExAcquireRundownProtection (
+    IN PEX_RUNDOWN_REF  RunRef
+);
+
+NTKERNELAPI
+BOOLEAN
+FASTCALL
+ExAcquireRundownProtectionEx (
+    IN PEX_RUNDOWN_REF  RunRef,
+    IN ULONG            Count
+);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExReleaseRundownProtection (
+    IN PEX_RUNDOWN_REF  RunRef
+);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExReleaseRundownProtectionEx (
+    IN PEX_RUNDOWN_REF  RunRef,
+    IN ULONG            Count
+);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExRundownCompleted (
+    IN PEX_RUNDOWN_REF  RunRef
+);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExWaitForRundownProtectionRelease (
+    IN PEX_RUNDOWN_REF  RunRef
+);
+
+#endif /* (VER_PRODUCTBUILD >= 2600) */
 
 #define FlagOn(x, f) ((x) & (f))
 
@@ -2442,11 +2629,34 @@ FsRtlIsNtstatusExpected (
     IN NTSTATUS Ntstatus
 );
 
+#define FsRtlIsLeadDbcsCharacter(DBCS_CHAR) (                               \
+    (BOOLEAN)((UCHAR)(DBCS_CHAR) < 0x80 ? FALSE :                           \
+              (NLS_MB_CODE_PAGE_TAG &&                                      \
+               (NLS_OEM_LEAD_BYTE_INFO[(UCHAR)(DBCS_CHAR)] != 0)))          \
+)
+
+#define FsRtlIsAnsiCharacterWild(C) (                                       \
+    FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], FSRTL_WILD_CHARACTER ) \
+)
+
 #define FsRtlIsUnicodeCharacterWild(C) (                                    \
     (((C) >= 0x40) ?                                                        \
     FALSE :                                                                 \
-    FlagOn((*FsRtlLegalAnsiCharacterArray)[(C)], FSRTL_WILD_CHARACTER ))    \
+    FlagOn(FsRtlLegalAnsiCharacterArray[(C)], FSRTL_WILD_CHARACTER ))       \
 )
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlMdlReadDev (
+    IN PFILE_OBJECT       FileObject,
+    IN PLARGE_INTEGER     FileOffset,
+    IN ULONG              Length,
+    IN ULONG              LockKey,
+    OUT PMDL              *MdlChain,
+    OUT PIO_STATUS_BLOCK  IoStatus,
+    IN PDEVICE_OBJECT     DeviceObject
+);
 
 NTKERNELAPI
 BOOLEAN
@@ -2463,6 +2673,19 @@ FsRtlMdlReadCompleteDev (
     IN PFILE_OBJECT     FileObject,
     IN PMDL             MdlChain,
     IN PDEVICE_OBJECT   DeviceObject
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlPrepareMdlWriteDev (
+    IN PFILE_OBJECT       FileObject,
+    IN PLARGE_INTEGER     FileOffset,
+    IN ULONG              Length,
+    IN ULONG              LockKey,
+    OUT PMDL              *MdlChain,
+    OUT PIO_STATUS_BLOCK  IoStatus,
+    IN PDEVICE_OBJECT     DeviceObject
 );
 
 NTKERNELAPI
@@ -2555,7 +2778,7 @@ NTKERNELAPI
 VOID
 NTAPI
 FsRtlNotifyInitializeSync (
-    IN PNOTIFY_SYNC NotifySync
+    IN PNOTIFY_SYNC *NotifySync
 );
 
 NTKERNELAPI
@@ -2573,7 +2796,7 @@ NTKERNELAPI
 VOID
 NTAPI
 FsRtlNotifyUninitializeSync (
-    IN PNOTIFY_SYNC NotifySync
+    IN PNOTIFY_SYNC *NotifySync
 );
 
 #if (VER_PRODUCTBUILD >= 2195)
@@ -2670,6 +2893,30 @@ FsRtlRegisterUncProvider (
     IN BOOLEAN          MailslotsSupported
 );
 
+typedef VOID
+(NTAPI *PFSRTL_STACK_OVERFLOW_ROUTINE) (
+    IN PVOID    Context,
+    IN PKEVENT  Event
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlPostStackOverflow (
+    IN PVOID                          Context,
+    IN PKEVENT                        Event,
+    IN PFSRTL_STACK_OVERFLOW_ROUTINE  StackOverflowRoutine
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlPostPagingFileStackOverflow (
+    IN PVOID                          Context,
+    IN PKEVENT                        Event,
+    IN PFSRTL_STACK_OVERFLOW_ROUTINE  StackOverflowRoutine
+);
+
 NTKERNELAPI
 VOID
 NTAPI
@@ -2713,6 +2960,15 @@ HalSetRealTimeClock (
 }
 
 NTKERNELAPI
+NTSTATUS
+NTAPI
+IoAttachDeviceToDeviceStackSafe(
+    IN PDEVICE_OBJECT   SourceDevice,
+    IN PDEVICE_OBJECT   TargetDevice,
+    OUT PDEVICE_OBJECT  *AttachedToDeviceObject
+);
+
+NTKERNELAPI
 VOID
 NTAPI
 IoAcquireVpbSpinLock (
@@ -2744,8 +3000,8 @@ IoCheckFunctionAccess (
     IN UCHAR                    MajorFunction,
     IN UCHAR                    MinorFunction,
     IN ULONG                    IoControlCode,
-    IN PFILE_INFORMATION_CLASS  FileInformationClass OPTIONAL,
-    IN PFS_INFORMATION_CLASS    FsInformationClass OPTIONAL
+    IN PVOID                    Argument1 OPTIONAL,
+    IN PVOID                    Argument2 OPTIONAL
 );
 
 #if (VER_PRODUCTBUILD >= 2195)
@@ -2901,6 +3157,13 @@ IoQueryVolumeInformation (
 NTKERNELAPI
 VOID
 NTAPI
+IoQueueThreadIrp(
+    IN PIRP Irp
+);
+
+NTKERNELAPI
+VOID
+NTAPI
 IoRegisterFileSystem (
     IN OUT PDEVICE_OBJECT DeviceObject
 );
@@ -2982,7 +3245,7 @@ IoUnregisterFileSystem (
 #if (VER_PRODUCTBUILD >= 1381)
 
 NTKERNELAPI
-NTSTATUS
+VOID
 NTAPI
 IoUnregisterFsRegistrationChange (
     IN PDRIVER_OBJECT           DriverObject,
@@ -3068,6 +3331,31 @@ PLIST_ENTRY
 NTAPI
 KeRundownQueue (
     IN PRKQUEUE Queue
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeInitializeMutant (
+    IN PRKMUTANT  Mutant,
+    IN BOOLEAN    InitialOwner
+);
+
+NTKERNELAPI
+LONG
+NTAPI
+KeReadStateMutant (
+    IN PRKMUTANT  Mutant
+);
+
+NTKERNELAPI
+LONG
+NTAPI
+KeReleaseMutant (
+    IN PRKMUTANT  Mutant,
+    IN KPRIORITY  Increment,
+    IN BOOLEAN    Abandoned,
+    IN BOOLEAN    Wait
 );
 
 #if (VER_PRODUCTBUILD >= 2195)
@@ -3261,10 +3549,17 @@ PsChargePoolQuota (
 #define PsDereferencePrimaryToken(T) (ObDereferenceObject((T)))
 
 NTKERNELAPI
-ULONGLONG
+LARGE_INTEGER
 NTAPI
 PsGetProcessExitTime (
     VOID
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+PsIsSystemThread(
+    IN PETHREAD Thread
 );
 
 NTKERNELAPI
@@ -3682,16 +3977,6 @@ SeCaptureSubjectContext (
 NTKERNELAPI
 NTSTATUS
 NTAPI
-SeCreateAccessState (
-    OUT PACCESS_STATE   AccessState,
-    IN PVOID            AuxData,
-    IN ACCESS_MASK      AccessMask,
-    IN PGENERIC_MAPPING Mapping
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
 SeCreateClientSecurity (
     IN PETHREAD                     Thread,
     IN PSECURITY_QUALITY_OF_SERVICE QualityOfService,
@@ -3946,6 +4231,7 @@ SeUnlockSubjectContext (
 
 NTKERNELAPI
 NTSTATUS
+NTAPI
 SeUnregisterLogonSessionTerminatedRoutine (
     IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine
 );

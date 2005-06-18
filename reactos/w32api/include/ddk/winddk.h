@@ -52,6 +52,16 @@ extern "C" {
 #define DECLARE_INTERNAL_OBJECT2(x,y) struct _##x; typedef struct _##x *P##y;
 #endif
 
+#if defined(_NTHAL_)
+#ifndef NTHALAPI
+#define NTHALAPI DECL_EXPORT
+#endif
+#else
+#ifndef NTHALAPI
+#define NTHALAPI DECL_IMPORT
+#endif
+#endif
+
 /* Pseudo modifiers for parameters */
 #define IN
 #define OUT
@@ -170,6 +180,7 @@ typedef struct _HAL_DISPATCH_TABLE *PHAL_DISPATCH_TABLE;
 typedef struct _HAL_PRIVATE_DISPATCH_TABLE *PHAL_PRIVATE_DISPATCH_TABLE;
 typedef struct _DEVICE_HANDLER_OBJECT *PDEVICE_HANDLER_OBJECT;
 typedef struct _BUS_HANDLER *PBUS_HANDLER;
+typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 typedef struct _DRIVE_LAYOUT_INFORMATION *PDRIVE_LAYOUT_INFORMATION;
 typedef struct _DRIVE_LAYOUT_INFORMATION_EX *PDRIVE_LAYOUT_INFORMATION_EX;
 typedef struct _NAMED_PIPE_CREATE_PARAMETERS *PNAMED_PIPE_CREATE_PARAMETERS;
@@ -315,6 +326,14 @@ typedef struct _FILE_GET_QUOTA_INFORMATION *PFILE_GET_QUOTA_INFORMATION;
 #define DIRECTORY_CREATE_SUBDIRECTORY (0x0008)
 #define DIRECTORY_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0xF)
 
+#define EVENT_QUERY_STATE (0x0001)
+#define EVENT_MODIFY_STATE (0x0002)
+#define EVENT_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3)
+
+#define SEMAPHORE_QUERY_STATE (0x0001)
+#define SEMAPHORE_MODIFY_STATE (0x0002)
+#define SEMAPHORE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3)
+
 /* Exported object types */
 extern NTOSAPI POBJECT_TYPE ExDesktopObjectType;
 extern NTOSAPI POBJECT_TYPE ExEventObjectType;
@@ -331,7 +350,6 @@ extern NTOSAPI POBJECT_TYPE MmSectionObjectType;
 extern NTOSAPI POBJECT_TYPE SeTokenObjectType;
 
 extern NTOSAPI CCHAR KeNumberProcessors;
-extern NTOSAPI PHAL_PRIVATE_DISPATCH_TABLE HalPrivateDispatchTable;
 
 
 /*
@@ -897,7 +915,7 @@ typedef struct _KDPC_DATA {
 
 typedef struct _WAIT_CONTEXT_BLOCK {
   KDEVICE_QUEUE_ENTRY  WaitQueueEntry;
-  struct _DRIVER_CONTROL  *DeviceRoutine;
+  PDRIVER_CONTROL  DeviceRoutine;
   PVOID  DeviceContext;
   ULONG  NumberOfMapRegisters;
   PVOID  DeviceObject;
@@ -1091,6 +1109,11 @@ enum
    IRP_HOLD_DEVICE_QUEUE = 0x2000,
    IRP_RETRY_IO_COMPLETION = 0x4000
 };
+
+#define IRP_QUOTA_CHARGED                 0x01
+#define IRP_ALLOCATED_MUST_SUCCEED        0x02
+#define IRP_ALLOCATED_FIXED_SIZE          0x04
+#define IRP_LOOKASIDE_ALLOCATION          0x08
 
 typedef struct _BOOTDISK_INFORMATION {
   LONGLONG  BootPartitionOffset;
@@ -2324,8 +2347,27 @@ typedef struct {
   pHalMirrorVerify  HalMirrorVerify;
 } HAL_DISPATCH, *PHAL_DISPATCH;
 
-extern HAL_DISPATCH HalDispatchTable;
-#define HALDISPATCH HalDispatchTable
+#if defined(_NTDRIVER_) || defined(_NTDDK_) || defined(_NTIFS_) || defined(_NTHAL_)
+extern DECL_IMPORT PHAL_DISPATCH HalDispatchTable;
+#define HALDISPATCH ((PHAL_DISPATCH)&HalDispatchTable)
+#else
+extern DECL_EXPORT HAL_DISPATCH HalDispatchTable;
+#define HALDISPATCH (&HalDispatchTable)
+#endif
+
+#define HAL_DISPATCH_VERSION            3
+#define HalDispatchTableVersion         HALDISPATCH->Version
+#define HalQuerySystemInformation       HALDISPATCH->HalQuerySystemInformation
+#define HalSetSystemInformation         HALDISPATCH->HalSetSystemInformation
+#define HalQueryBusSlots                HALDISPATCH->HalQueryBusSlots
+#define HalDeviceControl                HALDISPATCH->HalDeviceControl
+#define HalIoAssignDriveLetters         HALDISPATCH->HalIoAssignDriveLetters
+#define HalIoReadPartitionTable         HALDISPATCH->HalIoReadPartitionTable
+#define HalIoSetPartitionInformation    HALDISPATCH->HalIoSetPartitionInformation
+#define HalIoWritePartitionTable        HALDISPATCH->HalIoWritePartitionTable
+#define HalReferenceHandlerForBus       HALDISPATCH->HalReferenceHandlerForBus
+#define HalReferenceBusHandler          HALDISPATCH->HalReferenceBusHandler
+#define HalDereferenceBusHandler        HALDISPATCH->HalDereferenceBusHandler
 
 typedef enum _FILE_INFORMATION_CLASS {
   FileDirectoryInformation = 1,
@@ -2492,10 +2534,9 @@ typedef struct _ERESOURCE {
   KSPIN_LOCK  SpinLock;
 } ERESOURCE, *PERESOURCE;
 
-/* NOTE: PVOID for methods to avoid 'assignment from incompatible pointer type' warning */
 typedef struct _DRIVER_EXTENSION {
   struct _DRIVER_OBJECT  *DriverObject;
-  PVOID  AddDevice;
+  PDRIVER_ADD_DEVICE  AddDevice;
   ULONG  Count;
   UNICODE_STRING  ServiceKeyName;
 } DRIVER_EXTENSION, *PDRIVER_EXTENSION;
@@ -2894,6 +2935,20 @@ typedef struct _IO_SECURITY_CONTEXT {
   ULONG  FullCreateOptions;
 } IO_SECURITY_CONTEXT, *PIO_SECURITY_CONTEXT;
 
+#define IO_TYPE_ADAPTER                 1
+#define IO_TYPE_CONTROLLER              2
+#define IO_TYPE_DEVICE                  3
+#define IO_TYPE_DRIVER                  4
+#define IO_TYPE_FILE                    5
+#define IO_TYPE_IRP                     6
+#define IO_TYPE_MASTER_ADAPTER          7
+#define IO_TYPE_OPEN_PACKET             8
+#define IO_TYPE_TIMER                   9
+#define IO_TYPE_VPB                     10
+#define IO_TYPE_ERROR_LOG               11
+#define IO_TYPE_ERROR_MESSAGE	        12
+#define IO_TYPE_DEVICE_OBJECT_EXTENSION 13
+
 #define IO_TYPE_CSQ_IRP_CONTEXT 1
 #define IO_TYPE_CSQ 2
 
@@ -3240,6 +3295,20 @@ typedef enum _KEY_VALUE_INFORMATION_CLASS {
   KeyValueFullInformationAlign64,
   KeyValuePartialInformationAlign64
 } KEY_VALUE_INFORMATION_CLASS;
+
+typedef struct _KEY_WRITE_TIME_INFORMATION {
+  LARGE_INTEGER  LastWriteTime;
+} KEY_WRITE_TIME_INFORMATION, *PKEY_WRITE_TIME_INFORMATION;
+
+typedef struct _KEY_USER_FLAGS_INFORMATION {
+  ULONG  UserFlags;
+} KEY_USER_FLAGS_INFORMATION, *PKEY_USER_FLAGS_INFORMATION;
+
+typedef enum _KEY_SET_INFORMATION_CLASS {
+  KeyWriteTimeInformation,
+  KeyUserFlagsInformation,
+  MaxKeySetInfoClass
+} KEY_SET_INFORMATION_CLASS;
 
 /* KEY_VALUE_Xxx.Type */
 
@@ -3642,44 +3711,41 @@ typedef VOID
 (DDKAPI *PFREE_FUNCTION)(
   IN PVOID  Buffer);
 
-#define GENERAL_LOOKASIDE_S \
-  SLIST_HEADER  ListHead; \
-  USHORT  Depth; \
-  USHORT  MaximumDepth; \
-  ULONG  TotalAllocates; \
-  _ANONYMOUS_UNION union { \
-    ULONG  AllocateMisses; \
-    ULONG  AllocateHits; \
-  } DUMMYUNIONNAME; \
-  ULONG  TotalFrees; \
-  _ANONYMOUS_UNION union { \
-    ULONG  FreeMisses; \
-    ULONG  FreeHits; \
-  } DUMMYUNIONNAME2; \
-  POOL_TYPE  Type; \
-  ULONG  Tag; \
-  ULONG  Size; \
-  PALLOCATE_FUNCTION  Allocate; \
-  PFREE_FUNCTION  Free; \
-  LIST_ENTRY  ListEntry; \
-  ULONG  LastTotalAllocates; \
-  _ANONYMOUS_UNION union { \
-    ULONG  LastAllocateMisses; \
-    ULONG  LastAllocateHits; \
-  } DUMMYUNIONNAME3; \
-  ULONG Future[2];
-
 typedef struct _GENERAL_LOOKASIDE {
-  GENERAL_LOOKASIDE_S
+  SLIST_HEADER  ListHead;
+  USHORT  Depth;
+  USHORT  MaximumDepth;
+  ULONG  TotalAllocates;
+  union {
+    ULONG  AllocateMisses;
+    ULONG  AllocateHits;
+  };
+  ULONG  TotalFrees;
+  union {
+    ULONG  FreeMisses;
+    ULONG  FreeHits;
+  };
+  POOL_TYPE  Type;
+  ULONG  Tag;
+  ULONG  Size;
+  PALLOCATE_FUNCTION  Allocate;
+  PFREE_FUNCTION  Free;
+  LIST_ENTRY  ListEntry;
+  ULONG  LastTotalAllocates;
+  union {
+    ULONG  LastAllocateMisses;
+    ULONG  LastAllocateHits;
+  };
+  ULONG Future[2];
 } GENERAL_LOOKASIDE, *PGENERAL_LOOKASIDE;
 
 typedef struct _NPAGED_LOOKASIDE_LIST {
-  GENERAL_LOOKASIDE_S
+  GENERAL_LOOKASIDE  L;
   KSPIN_LOCK  Obsoleted;
 } NPAGED_LOOKASIDE_LIST, *PNPAGED_LOOKASIDE_LIST;
 
 typedef struct _PAGED_LOOKASIDE_LIST {
-  GENERAL_LOOKASIDE_S
+  GENERAL_LOOKASIDE  L;
   FAST_MUTEX  Obsoleted;
 } PAGED_LOOKASIDE_LIST, *PPAGED_LOOKASIDE_LIST;
 
@@ -3894,6 +3960,9 @@ typedef enum _CONFIGURATION_TYPE {
   RealModeIrqRoutingTable,
   MaximumType
 } CONFIGURATION_TYPE, *PCONFIGURATION_TYPE;
+
+#define IO_FORCE_ACCESS_CHECK               0x001
+#define IO_NO_PARAMETER_CHECKING            0x100
 
 typedef NTSTATUS
 (DDKAPI *PIO_QUERY_DEVICE_ROUTINE)(
@@ -4350,7 +4419,7 @@ typedef struct _KPCR_TIB {
     DWORD  Version;             /* 10 */
   } DUMMYUNIONNAME;
   PVOID  ArbitraryUserPointer;  /* 14 */
-  struct _NT_TIB *Self;         /* 18 */
+  struct _KPCR_TIB *Self;       /* 18 */
 } KPCR_TIB, *PKPCR_TIB;         /* 1C */
 
 #define PCR_MINOR_VERSION 1
@@ -4390,13 +4459,13 @@ typedef struct _KFLOATING_SAVE {
 #define PAGE_SIZE                         0x1000
 #define PAGE_SHIFT                        12L
 
-extern NTOSAPI PVOID *MmHighestUserAddress;
-extern NTOSAPI PVOID *MmSystemRangeStart;
-extern NTOSAPI ULONG *MmUserProbeAddress;
+extern NTOSAPI PVOID MmHighestUserAddress;
+extern NTOSAPI PVOID MmSystemRangeStart;
+extern NTOSAPI ULONG_PTR MmUserProbeAddress;
 
-#define MM_HIGHEST_USER_ADDRESS           *MmHighestUserAddress
-#define MM_SYSTEM_RANGE_START             *MmSystemRangeStart
-#define MM_USER_PROBE_ADDRESS             *MmUserProbeAddress
+#define MM_HIGHEST_USER_ADDRESS           MmHighestUserAddress
+#define MM_SYSTEM_RANGE_START             MmSystemRangeStart
+#define MM_USER_PROBE_ADDRESS             MmUserProbeAddress
 #define MM_LOWEST_USER_ADDRESS            (PVOID)0x10000
 #define MM_LOWEST_SYSTEM_ADDRESS          (PVOID)0xC0C00000
 
@@ -4417,7 +4486,7 @@ typedef enum _INTERLOCKED_RESULT {
   ResultPositive = RESULT_POSITIVE
 } INTERLOCKED_RESULT;
 
-NTOSAPI
+NTHALAPI
 KIRQL
 DDKAPI
 KeGetCurrentIrql(
@@ -4501,8 +4570,23 @@ DDKFASTAPI
 KefReleaseSpinLockFromDpcLevel(
   IN PKSPIN_LOCK  SpinLock);
 
+NTHALAPI
+KIRQL
+DDKFASTAPI
+KfAcquireSpinLock(
+  IN PKSPIN_LOCK SpinLock);
+
+NTHALAPI
+VOID
+DDKFASTAPI
+KfReleaseSpinLock(
+  IN PKSPIN_LOCK SpinLock,
+  IN KIRQL NewIrql);
+
 #define KeAcquireSpinLockAtDpcLevel(SpinLock) KefAcquireSpinLockAtDpcLevel(SpinLock)
 #define KeReleaseSpinLockFromDpcLevel(SpinLock) KefReleaseSpinLockFromDpcLevel(SpinLock)
+#define KeAcquireSpinLock(a,b)  *(b) = KfAcquireSpinLock(a)
+#define KeReleaseSpinLock(a,b)  KfReleaseSpinLock(a,b)
 
 #define RtlCopyMemoryNonTemporal RtlCopyMemory
 
@@ -5655,7 +5739,11 @@ KeTryToAcquireGuardedMutex(
 
 /** Executive support routines **/
 
+#if defined(_X86_)
+NTHALAPI
+#else
 NTOSAPI
+#endif
 VOID
 DDKFASTAPI
 ExAcquireFastMutex(
@@ -5699,14 +5787,14 @@ static __inline PVOID
 ExAllocateFromNPagedLookasideList(
   IN PNPAGED_LOOKASIDE_LIST  Lookaside)
 {
-	PVOID Entry;
+  PVOID Entry;
 
-	Lookaside->TotalAllocates++;
-  Entry = InterlockedPopEntrySList(&Lookaside->ListHead);
-	if (Entry == NULL) {
-		Lookaside->_DDK_DUMMYUNION_MEMBER(AllocateMisses)++;
-		Entry = (Lookaside->Allocate)(Lookaside->Type, Lookaside->Size, Lookaside->Tag);
-	}
+  Lookaside->L.TotalAllocates++;
+  Entry = InterlockedPopEntrySList(&Lookaside->L.ListHead);
+  if (Entry == NULL) {
+    Lookaside->L.AllocateMisses++;
+    Entry = (Lookaside->L.Allocate)(Lookaside->L.Type, Lookaside->L.Size, Lookaside->L.Tag);
+  }
   return Entry;
 }
 
@@ -5716,12 +5804,11 @@ ExAllocateFromPagedLookasideList(
 {
   PVOID Entry;
 
-  Lookaside->TotalAllocates++;
-  Entry = InterlockedPopEntrySList(&Lookaside->ListHead);
+  Lookaside->L.TotalAllocates++;
+  Entry = InterlockedPopEntrySList(&Lookaside->L.ListHead);
   if (Entry == NULL) {
-    Lookaside->_DDK_DUMMYUNION_MEMBER(AllocateMisses)++;
-    Entry = (Lookaside->Allocate)(Lookaside->Type,
-      Lookaside->Size, Lookaside->Tag);
+    Lookaside->L.AllocateMisses++;
+    Entry = (Lookaside->L.Allocate)(Lookaside->L.Type, Lookaside->L.Size, Lookaside->L.Tag);
   }
   return Entry;
 }
@@ -5833,14 +5920,13 @@ ExFreeToNPagedLookasideList(
   IN PNPAGED_LOOKASIDE_LIST  Lookaside,
   IN PVOID  Entry)
 {
-  Lookaside->TotalFrees++;
-	if (ExQueryDepthSList(&Lookaside->ListHead) >= Lookaside->Depth) {
-		Lookaside->_DDK_DUMMYUNION_N_MEMBER(2,FreeMisses)++;
-		(Lookaside->Free)(Entry);
+  Lookaside->L.TotalFrees++;
+  if (ExQueryDepthSList(&Lookaside->L.ListHead) >= Lookaside->L.Depth) {
+    Lookaside->L.FreeMisses++;
+    (Lookaside->L.Free)(Entry);
   } else {
-		InterlockedPushEntrySList(&Lookaside->ListHead,
-      (PSLIST_ENTRY)Entry);
-	}
+    InterlockedPushEntrySList(&Lookaside->L.ListHead, (PSLIST_ENTRY)Entry);
+  }
 }
 
 static __inline VOID
@@ -5848,12 +5934,12 @@ ExFreeToPagedLookasideList(
   IN PPAGED_LOOKASIDE_LIST  Lookaside,
   IN PVOID  Entry)
 {
-  Lookaside->TotalFrees++;
-  if (ExQueryDepthSList(&Lookaside->ListHead) >= Lookaside->Depth) {
-    Lookaside->_DDK_DUMMYUNION_N_MEMBER(2,FreeMisses)++;
-    (Lookaside->Free)(Entry);
+  Lookaside->L.TotalFrees++;
+  if (ExQueryDepthSList(&Lookaside->L.ListHead) >= Lookaside->L.Depth) {
+    Lookaside->L.FreeMisses++;
+    (Lookaside->L.Free)(Entry);
   } else {
-    InterlockedPushEntrySList(&Lookaside->ListHead, (PSLIST_ENTRY)Entry);
+    InterlockedPushEntrySList(&Lookaside->L.ListHead, (PSLIST_ENTRY)Entry);
   }
 }
 
@@ -5974,6 +6060,14 @@ ExInterlockedCompareExchange64(
   IN PLONGLONG  Exchange,
   IN PLONGLONG  Comparand,
   IN PKSPIN_LOCK  Lock);
+
+NTOSAPI
+LONGLONG
+DDKFASTAPI
+ExfInterlockedCompareExchange64(
+  IN OUT LONGLONG volatile  *Destination,
+  IN PLONGLONG  Exchange,
+  IN PLONGLONG  Comperand);
 
 NTOSAPI
 PSINGLE_LIST_ENTRY
@@ -6112,7 +6206,11 @@ DDKAPI
 ExReinitializeResourceLite(
   IN PERESOURCE  Resource);
 
+#if defined(_X86_)
+NTHALAPI
+#else
 NTOSAPI
+#endif
 VOID
 DDKFASTAPI
 ExReleaseFastMutex(
@@ -6158,7 +6256,11 @@ ExSystemTimeToLocalTime(
   IN PLARGE_INTEGER  SystemTime,
   OUT PLARGE_INTEGER  LocalTime);
 
+#ifdef _M_IX86
+NTHALAPI
+#else
 NTOSAPI
+#endif
 BOOLEAN
 DDKFASTAPI
 ExTryToAcquireFastMutex(
@@ -6251,7 +6353,7 @@ FsRtlIsTotalDeviceFailure(
 
 /** Hardware abstraction layer routines **/
 
-NTOSAPI
+NTHALAPI
 BOOLEAN
 DDKAPI
 HalMakeBeep(
@@ -6266,7 +6368,7 @@ HalExamineMBR(
   IN ULONG  MBRTypeIdentifier,
   OUT PVOID  *Buffer);
 
-NTOSAPI
+NTHALAPI
 VOID
 DDKAPI
 READ_PORT_BUFFER_UCHAR(
@@ -6274,7 +6376,7 @@ READ_PORT_BUFFER_UCHAR(
   IN PUCHAR  Buffer,
   IN ULONG  Count);
 
-NTOSAPI
+NTHALAPI
 VOID
 DDKAPI
 READ_PORT_BUFFER_ULONG(
@@ -6282,7 +6384,7 @@ READ_PORT_BUFFER_ULONG(
   IN PULONG  Buffer,
   IN ULONG  Count);
 
-NTOSAPI
+NTHALAPI
 VOID
 DDKAPI
 READ_PORT_BUFFER_USHORT(
@@ -6290,19 +6392,19 @@ READ_PORT_BUFFER_USHORT(
   IN PUSHORT  Buffer,
   IN ULONG  Count);
 
-NTOSAPI
+NTHALAPI
 UCHAR
 DDKAPI
 READ_PORT_UCHAR(
   IN PUCHAR  Port);
 
-NTOSAPI
+NTHALAPI
 ULONG
 DDKAPI
 READ_PORT_ULONG(
   IN PULONG  Port);
 
-NTOSAPI
+NTHALAPI
 USHORT
 DDKAPI
 READ_PORT_USHORT(
@@ -6350,7 +6452,7 @@ DDKAPI
 READ_REGISTER_USHORT(
   IN PUSHORT  Register);
 
-NTOSAPI
+NTHALAPI
 VOID
 DDKAPI
 WRITE_PORT_BUFFER_UCHAR(
@@ -6358,7 +6460,7 @@ WRITE_PORT_BUFFER_UCHAR(
   IN PUCHAR  Buffer,
   IN ULONG  Count);
 
-NTOSAPI
+NTHALAPI
 VOID
 DDKAPI
 WRITE_PORT_BUFFER_ULONG(
@@ -6366,7 +6468,7 @@ WRITE_PORT_BUFFER_ULONG(
   IN PULONG  Buffer,
   IN ULONG  Count);
 
-NTOSAPI
+NTHALAPI
 VOID
 DDKAPI
 WRITE_PORT_BUFFER_USHORT(
@@ -6374,21 +6476,21 @@ WRITE_PORT_BUFFER_USHORT(
   IN PUSHORT  Buffer,
   IN ULONG  Count);
 
-NTOSAPI
+NTHALAPI
 VOID
 DDKAPI
 WRITE_PORT_UCHAR(
   IN PUCHAR  Port,
   IN UCHAR  Value);
 
-NTOSAPI
+NTHALAPI
 VOID
 DDKAPI
 WRITE_PORT_ULONG(
   IN PULONG  Port,
   IN ULONG  Value);
 
-NTOSAPI
+NTHALAPI
 VOID
 DDKAPI
 WRITE_PORT_USHORT(
@@ -7420,14 +7522,14 @@ IoReuseIrp(
 }
 
 NTOSAPI
-VOID
+NTSTATUS
 DDKAPI
 IoSetCompletionRoutineEx(
   IN PDEVICE_OBJECT  DeviceObject,
   IN PIRP  Irp,
   IN PIO_COMPLETION_ROUTINE  CompletionRoutine,
   IN PVOID  Context,
-  IN BOOLEAN    InvokeOnSuccess,
+  IN BOOLEAN  InvokeOnSuccess,
   IN BOOLEAN  InvokeOnError,
   IN BOOLEAN  InvokeOnCancel);
 
@@ -7734,7 +7836,7 @@ IoWritePartitionTableEx(
 
 /** Kernel routines **/
 
-NTOSAPI
+NTHALAPI
 VOID
 DDKFASTAPI
 KeAcquireInStackQueuedSpinLock(
@@ -7754,12 +7856,6 @@ DDKAPI
 KeAcquireInterruptSpinLock(
   IN PKINTERRUPT  Interrupt);
 
-NTOSAPI
-VOID
-DDKAPI
-KeAcquireSpinLock(
-  IN PKSPIN_LOCK  SpinLock,
-  OUT PKIRQL  OldIrql);
 
 /* System Service Dispatch Table */
 typedef PVOID (NTAPI * SSDT)(VOID);
@@ -7958,7 +8054,7 @@ DDKAPI
 KeQueryInterruptTime(
   VOID);
 
-NTOSAPI
+NTHALAPI
 LARGE_INTEGER
 DDKAPI
 KeQueryPerformanceCounter(
@@ -8022,7 +8118,7 @@ KeRegisterBugCheckCallback(
   IN ULONG  Length,
   IN PUCHAR  Component);
 
-NTOSAPI
+NTHALAPI
 VOID
 DDKFASTAPI
 KeReleaseInStackQueuedSpinLock(
@@ -8056,13 +8152,6 @@ KeReleaseSemaphore(
   IN KPRIORITY  Increment,
   IN LONG  Adjustment,
   IN BOOLEAN  Wait);
-
-NTOSAPI
-VOID
-DDKAPI
-KeReleaseSpinLock(
-  IN PKSPIN_LOCK  SpinLock,
-  IN KIRQL  NewIrql);
 
 NTOSAPI
 PKDEVICE_QUEUE_ENTRY
@@ -8167,7 +8256,7 @@ DDKFASTAPI
 KeSetTimeUpdateNotifyRoutine(
   IN PTIME_UPDATE_NOTIFY_ROUTINE  NotifyRoutine);
 
-NTOSAPI
+NTHALAPI
 VOID
 DDKAPI
 KeStallExecutionProcessor(
@@ -8216,17 +8305,23 @@ KeWaitForSingleObject(
 
 #if defined(_X86_)
 
-NTOSAPI
+NTHALAPI
 VOID
 FASTCALL
 KfLowerIrql(
   IN KIRQL  NewIrql);
 
-NTOSAPI
+NTHALAPI
 KIRQL
 FASTCALL
 KfRaiseIrql(
   IN KIRQL  NewIrql);
+
+NTHALAPI
+KIRQL
+DDKAPI
+KeRaiseIrqlToDpcLevel(
+  VOID);
 
 #define KeLowerIrql(a) KfLowerIrql(a)
 #define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
@@ -8245,13 +8340,13 @@ DDKAPI
 KeRaiseIrql(
   IN KIRQL  NewIrql);
 
-#endif
-
 NTOSAPI
 KIRQL
 DDKAPI
 KeRaiseIrqlToDpcLevel(
   VOID);
+
+#endif
 
 /** Memory manager routines **/
 
@@ -9742,10 +9837,21 @@ KeRosDumpStackFrames ( PULONG Frame, ULONG FrameCount );
 
 #endif /* !DBG */
 
+#if defined(_NTDDK_) || defined(_NTIFS_) || defined(_NTHAL_) || defined(_WDMDDK_) || defined(_NTOSP_)
+
 extern NTOSAPI PBOOLEAN KdDebuggerNotPresent;
 extern NTOSAPI PBOOLEAN KdDebuggerEnabled;
 #define KD_DEBUGGER_ENABLED     *KdDebuggerEnabled
 #define KD_DEBUGGER_NOT_PRESENT *KdDebuggerNotPresent
+
+#else
+
+extern BOOLEAN KdDebuggerNotPresent;
+extern BOOLEAN KdDebuggerEnabled;
+#define KD_DEBUGGER_ENABLED     KdDebuggerEnabled
+#define KD_DEBUGGER_NOT_PRESENT KdDebuggerNotPresent
+
+#endif
 
 #ifdef __cplusplus
 }
