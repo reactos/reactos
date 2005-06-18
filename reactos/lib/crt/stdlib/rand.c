@@ -11,11 +11,7 @@ rand(void)
 {
   PTHREADDATA ThreadData = GetThreadData();
 
-#ifdef HAVE_LONGLONG
   ThreadData->tnext = ThreadData->tnext * 0x5deece66dLL + 11;
-#else
-  ThreadData->tnext = ThreadData->tnext * 0x5deece66dL + 11;
-#endif
   return (int)((ThreadData->tnext >> 16) & RAND_MAX);
 }
 
