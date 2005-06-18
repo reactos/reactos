@@ -37,8 +37,8 @@
 /* Assert only on "checked" version */
 #ifndef NASSERT
 #ifdef CONFIG_SMP
-#define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d for CPU%d\n", __FILE__,__LINE__, KeGetCurrentKPCR()->ProcessorNumber), DbgBreakPoint(); }
-#define ASSERT(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d for CPU%d\n", __FILE__,__LINE__, KeGetCurrentKPCR()->ProcessorNumber), DbgBreakPoint(); }
+#define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d for CPU%d\n", __FILE__,__LINE__, KeGetCurrentKPCR()->Number), DbgBreakPoint(); }
+#define ASSERT(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d for CPU%d\n", __FILE__,__LINE__, KeGetCurrentKPCR()->Number), DbgBreakPoint(); }
 #else
 #define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); DbgBreakPoint(); }
 #define ASSERT(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); DbgBreakPoint(); }
