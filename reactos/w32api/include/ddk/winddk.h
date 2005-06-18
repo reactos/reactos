@@ -339,7 +339,6 @@ extern NTOSAPI POBJECT_TYPE ExDesktopObjectType;
 extern NTOSAPI POBJECT_TYPE ExEventObjectType;
 extern NTOSAPI POBJECT_TYPE ExSemaphoreObjectType;
 extern NTOSAPI POBJECT_TYPE ExWindowStationObjectType;
-extern NTOSAPI POBJECT_TYPE IoAdapterObjectType;
 extern NTOSAPI ULONG IoDeviceHandlerObjectSize;
 extern NTOSAPI POBJECT_TYPE IoDeviceHandlerObjectType;
 extern NTOSAPI POBJECT_TYPE IoDeviceObjectType;
