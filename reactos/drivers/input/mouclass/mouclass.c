@@ -13,7 +13,7 @@
 
 #include <ddk/ntddk.h>
 #include <ddk/ntddmou.h>
-#include <rosrtl/string.h>
+#include <ddk/kbdmou.h>
 #include "mouclass.h"
 
 #define NDEBUG
@@ -106,11 +106,11 @@ NTSTATUS ConnectMousePortDriver(PDEVICE_OBJECT ClassDeviceObject)
    PDEVICE_OBJECT PortDeviceObject = NULL;
    PFILE_OBJECT FileObject = NULL;
    NTSTATUS status;
-   UNICODE_STRING PortName = ROS_STRING_INITIALIZER(L"\\Device\\PointerClass0");
+   UNICODE_STRING PortName = RTL_CONSTANT_STRING(L"\\Device\\PointerClass0");
    IO_STATUS_BLOCK ioStatus;
    KEVENT event;
    PIRP irp;
-   CLASS_INFORMATION ClassInformation;
+   CONNECT_DATA ClassInformation;
    PDEVICE_EXTENSION DeviceExtension = ClassDeviceObject->DeviceExtension;
 
    // Get the port driver's DeviceObject
@@ -137,11 +137,11 @@ NTSTATUS ConnectMousePortDriver(PDEVICE_OBJECT ClassDeviceObject)
 
    KeInitializeEvent(&event, NotificationEvent, FALSE);
 
-   ClassInformation.DeviceObject = ClassDeviceObject;
-   ClassInformation.CallBack     = MouseClassCallBack;
+   ClassInformation.ClassDeviceObject = ClassDeviceObject;
+   ClassInformation.ClassService      = MouseClassCallBack;
 
    irp = IoBuildDeviceIoControlRequest(IOCTL_INTERNAL_MOUSE_CONNECT,
-      PortDeviceObject, &ClassInformation, sizeof(CLASS_INFORMATION), NULL, 0, TRUE, &event, &ioStatus);
+      PortDeviceObject, &ClassInformation, sizeof(CONNECT_DATA), NULL, 0, TRUE, &event, &ioStatus);
 
    status = IoCallDriver(DeviceExtension->PortDeviceObject, irp);
 
@@ -236,8 +236,8 @@ NTSTATUS STDCALL
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
    PDEVICE_OBJECT DeviceObject;
-   UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Device\\Mouse");
-   UNICODE_STRING SymlinkName = ROS_STRING_INITIALIZER(L"\\??\\Mouse");
+   UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\Mouse");
+   UNICODE_STRING SymlinkName = RTL_CONSTANT_STRING(L"\\??\\Mouse");
    NTSTATUS Status;
 
    DriverObject->MajorFunction[IRP_MJ_CREATE] = MouseClassDispatch;

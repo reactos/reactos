@@ -1,19 +1,7 @@
 #ifndef __INCLUDE_DDK_NTIFS_H
 #define __INCLUDE_DDK_NTIFS_H
 
-#ifdef __USE_W32API
-
 #include_next <ddk/ntifs.h>
-
-#else /* __USE_W32API */
-
-#include <ddk/cctypes.h>
-#include <ddk/ccfuncs.h>
-
-#include <ddk/fstypes.h>
-#include <ddk/fsfuncs.h>
-
-#endif
 
 NTSTATUS STDCALL
 CcRosInitializeFileCache (PFILE_OBJECT	FileObject,
