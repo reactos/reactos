@@ -32,13 +32,8 @@
 
 /* INCLUDES ***************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ob.h>
-#include <internal/ps.h>
-#include <hal.h>
-
 #define NDEBUG
-#include <internal/debug.h>
+#include <hal.h>
 
 /* GLOBALS ******************************************************************/
 
@@ -127,7 +122,7 @@ ROSL1:
 
 VOID STDCALL KeStallExecutionProcessor(ULONG Microseconds)
 {
-   PKPCR Pcr = KeGetCurrentKPCR();
+   PKIPCR Pcr = (PKIPCR)KeGetCurrentKPCR();
 
    if (Pcr->PrcbData.FeatureBits & X86_FEATURE_TSC)
    {
@@ -194,7 +189,7 @@ VOID HalpCalibrateStallExecution(VOID)
   ULONG i;
   ULONG calib_bit;
   ULONG CurCount;
-  PKPCR Pcr;
+  PKIPCR Pcr;
   LARGE_INTEGER StartCount, EndCount;
 
   if (UdelayCalibrated)
@@ -203,7 +198,7 @@ VOID HalpCalibrateStallExecution(VOID)
     }
 
   UdelayCalibrated = TRUE;
-  Pcr = KeGetCurrentKPCR();
+  Pcr = (PKIPCR)KeGetCurrentKPCR();
 
   /* Initialise timer interrupt with MILLISEC ms interval        */
   WRITE_PORT_UCHAR((PUCHAR) TMR_CTRL, TMR_SC0 | TMR_BOTH | TMR_MD2);  /* binary, mode 2, LSB/MSB, ch 0 */
@@ -319,14 +314,14 @@ KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFreq)
  * RETURNS: The number of performance counter ticks since boot
  */
 {
-  PKPCR Pcr;
+  PKIPCR Pcr;
   LARGE_INTEGER Value;
   ULONG Flags;
 
   Ki386SaveFlags(Flags);
   Ki386DisableInterrupts();
 
-  Pcr = KeGetCurrentKPCR();
+  Pcr = (PKIPCR)KeGetCurrentKPCR();
 
   if (Pcr->PrcbData.FeatureBits & X86_FEATURE_TSC)
   {

@@ -18,15 +18,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <bus.h>
-#include <halirq.h>
-#include <hal.h>
-#include <internal/ob.h>
-#include <internal/ps.h>
-
 #define NDEBUG
-#include <internal/debug.h>
+#include <hal.h>
 
 
 /* MACROS ******************************************************************/
@@ -639,7 +632,7 @@ HalpAssignPciSlotResources(IN PBUS_HANDLER BusHandler,
       if (0 != PciConfig.u.type0.BaseAddresses[Address])
 	{
 	  ResourceCount++;
-          Offset = offsetof(PCI_COMMON_CONFIG, u.type0.BaseAddresses[Address]);
+          Offset = FIELD_OFFSET(PCI_COMMON_CONFIG, u.type0.BaseAddresses[Address]);
 	  Status = WritePciConfigUlong((UCHAR)BusNumber, (UCHAR)SlotNumber, Offset, 0xffffffff);
 	  if (! NT_SUCCESS(Status))
 	    {

@@ -9,8 +9,8 @@
  *                  Created 18/10/99
  */
 
-#include <ddk/ntddk.h>
-
+#define NDEBUG
+#include <hal.h>
 
 /* FUNCTIONS ****************************************************************/
 

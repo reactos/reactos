@@ -12,9 +12,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-
-#include <internal/debug.h>
+#define NDEBUG
+#include <hal.h>
 
 /* FUNCTIONS *****************************************************************/
 

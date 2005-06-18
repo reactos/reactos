@@ -15,12 +15,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <hal.h>
-#include <bus.h>
-
 #define NDEBUG
-#include <internal/debug.h>
+#include <hal.h>
 
 /* GLOBALS *******************************************************************/
 

@@ -11,12 +11,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <bus.h>
-#include <halirq.h>
-
 #define NDEBUG
-#include <internal/debug.h>
+#include <hal.h>
 
 
 /* FUNCTIONS ****************************************************************/

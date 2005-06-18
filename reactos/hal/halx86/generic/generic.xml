@@ -2,7 +2,8 @@
 	<include base="hal_generic">../include</include>
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="__NTHAL__" />
+	<define name="__USE_W32API" />
+	<define name="_NTHAL_" />
 	<file>adapter.c</file>
 	<file>beep.c</file>
 	<file>bus.c</file>
@@ -28,7 +29,8 @@
 	<include base="hal_generic_up">../include</include>
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="__NTHAL__" />
+	<define name="_NTHAL_" />
+	<define name="__USE_W32API" />
 	<file>ipi.c</file>
 	<file>irql.c</file>
 	<file>processor.c</file>
@@ -38,6 +40,7 @@
 	<include base="hal_generic_pc">../include</include>
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="__NTHAL__" />
+	<define name="_NTHAL_" />
+	<define name="__USE_W32API" />
 	<file>display.c</file>
 </module>
