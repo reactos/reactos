@@ -2791,6 +2791,14 @@ typedef struct _FAST_IO_DISPATCH {
   PFAST_IO_RELEASE_FOR_CCFLUSH  ReleaseForCcFlush;
 } FAST_IO_DISPATCH, *PFAST_IO_DISPATCH;
 
+#define DRVO_UNLOAD_INVOKED               0x00000001
+#define DRVO_LEGACY_DRIVER                0x00000002
+#define DRVO_BUILTIN_DRIVER               0x00000004
+#define DRVO_REINIT_REGISTERED            0x00000008
+#define DRVO_INITIALIZED                  0x00000010
+#define DRVO_BOOTREINIT_REGISTERED        0x00000020
+#define DRVO_LEGACY_RESOURCES             0x00000040
+
 typedef struct _DRIVER_OBJECT {
   CSHORT  Type;
   CSHORT  Size;
