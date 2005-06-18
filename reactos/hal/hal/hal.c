@@ -737,7 +737,7 @@ KdPortEnableInterrupts()
   return FALSE;
 }
 
-
+#undef KeAcquireSpinLock
 VOID
 STDCALL
 KeAcquireSpinLock(
@@ -797,7 +797,7 @@ KeGetCurrentIrql(VOID)
   return (KIRQL)0;
 }
 
-
+#undef KeLowerIrql
 VOID
 STDCALL
 KeLowerIrql(
@@ -821,7 +821,7 @@ KeQueryPerformanceCounter(
   return Value;
 }
 
-
+#undef KeRaiseIrql
 VOID
 STDCALL
 KeRaiseIrql(
@@ -851,7 +851,7 @@ KeRaiseIrqlToSynchLevel(VOID)
   return (KIRQL)0;
 }
 
-
+#undef KeReleaseSpinLock
 VOID
 STDCALL
 KeReleaseSpinLock(
