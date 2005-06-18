@@ -6,6 +6,12 @@
 BOOLEAN STDCALL
 HalAllProcessorsStarted(VOID);
 
+VOID
+STDCALL
+HalDisplayString (
+    IN PCHAR String
+);
+
 BOOLEAN STDCALL
 HalBeginSystemInterrupt(ULONG Vector,
   KIRQL Irql,
@@ -37,7 +43,7 @@ HalReportResourceUsage(VOID);
 
 VOID
 STDCALL
-IoAssignDriveLetters(IN	PLOADER_PARAMETER_BLOCK	LoaderBlock,
+IoAssignDriveLetters(IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
   IN  PSTRING NtDeviceName,
   OUT PUCHAR NtSystemPath,
   OUT PSTRING NtSystemPathString);
