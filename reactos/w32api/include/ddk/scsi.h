@@ -1285,13 +1285,16 @@ typedef struct _READ_BLOCK_LIMITS {
   UCHAR  BlockMinimumSize[2];
 } READ_BLOCK_LIMITS_DATA, *PREAD_BLOCK_LIMITS_DATA;
 
+#define MODE_BLOCK_DESC_LENGTH        8
+#define MODE_HEADER_LENGTH            4
+#define MODE_HEADER_LENGTH10          8
 
 typedef struct _MODE_PARAMETER_HEADER {
   UCHAR  ModeDataLength;
   UCHAR  MediumType;
   UCHAR  DeviceSpecificParameter;
   UCHAR  BlockDescriptorLength;
-}MODE_PARAMETER_HEADER, *PMODE_PARAMETER_HEADER;
+} MODE_PARAMETER_HEADER, *PMODE_PARAMETER_HEADER;
 
 typedef struct _MODE_PARAMETER_HEADER10 {
   UCHAR  ModeDataLength[2];
@@ -1327,7 +1330,7 @@ typedef struct _MODE_DISCONNECT_PAGE {
   UCHAR  MaximumBurstSize[2];
   UCHAR  DataTransferDisconnect : 2;
   UCHAR  Reserved2[3];
-}MODE_DISCONNECT_PAGE, *PMODE_DISCONNECT_PAGE;
+} MODE_DISCONNECT_PAGE, *PMODE_DISCONNECT_PAGE;
 
 typedef struct _MODE_CACHING_PAGE {
   UCHAR  PageCode : 6;
@@ -1344,7 +1347,7 @@ typedef struct _MODE_CACHING_PAGE {
   UCHAR  MinimumPrefetch[2];
   UCHAR  MaximumPrefetch[2];
   UCHAR  MaximumPrefetchCeiling[2];
-}MODE_CACHING_PAGE, *PMODE_CACHING_PAGE;
+} MODE_CACHING_PAGE, *PMODE_CACHING_PAGE;
 
 typedef struct _MODE_CDROM_WRITE_PARAMETERS_PAGE {
   UCHAR  PageLength;

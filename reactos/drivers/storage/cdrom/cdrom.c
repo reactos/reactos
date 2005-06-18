@@ -64,6 +64,26 @@ typedef struct _ERROR_RECOVERY_DATA10
   MODE_READ_RECOVERY_PAGE ReadRecoveryPage;
 } ERROR_RECOVERY_DATA10, *PERROR_RECOVERY_DATA10;
 
+typedef struct _MODE_CAPABILITIES_PAGE2
+{
+  UCHAR PageCode:6;
+  UCHAR Reserved1:1;
+  UCHAR PSBit:1;
+  UCHAR PageLength;
+  UCHAR Reserved2[2];
+  UCHAR Capabilities[4];
+  UCHAR MaximumSpeedSupported[2];
+  UCHAR Reserved3;
+  UCHAR NumberVolumeLevels;
+  UCHAR BufferSize[2];
+  UCHAR CurrentSpeed[2];
+  UCHAR Reserved4;
+  UCHAR Reserved5:1;
+  UCHAR DigitalOutput:4;
+  UCHAR Reserved6:3;
+  UCHAR Reserved7[2];
+} MODE_CAPABILITIES_PAGE2, *PMODE_CAPABILITIES_PAGE2;
+
 typedef struct _MODE_CAPABILITIES_DATA6
 {
   MODE_PARAMETER_HEADER Header;
