@@ -4,6 +4,9 @@
 	<define name="_SEH_NO_NATIVE_NLG" />
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__NTOSKRNL__" />
+	<define name="_NTOSKRNL_" />
+	<define name="__NO_CTYPE_INLINES" />
+	<define name="__USE_W32API" />
 	<include base="kjs">include</include>
 	<include base="ntoskrnl">include</include>
 	<library>csq</library>

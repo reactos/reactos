@@ -15,6 +15,9 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+/* FIXME: Header mess */
+#undef DeviceCapabilities
+
 /* GLOBALS *******************************************************************/
 
 PDEVICE_NODE IopRootDeviceNode;

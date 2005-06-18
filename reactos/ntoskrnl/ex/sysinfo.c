@@ -415,9 +415,9 @@ QSI_DEF(SystemPerformanceInformation)
 
 	Spi->IdleTime.QuadPart = TheIdleProcess->Pcb.KernelTime * 100000LL;
 
-	Spi->ReadTransferCount.QuadPart = IoReadTransferCount;
-	Spi->WriteTransferCount.QuadPart = IoWriteTransferCount;
-	Spi->OtherTransferCount.QuadPart = IoOtherTransferCount;
+	Spi->ReadTransferCount = IoReadTransferCount;
+	Spi->WriteTransferCount = IoWriteTransferCount;
+	Spi->OtherTransferCount = IoOtherTransferCount;
 	Spi->ReadOperationCount = IoReadOperationCount;
 	Spi->WriteOperationCount = IoWriteOperationCount;
 	Spi->OtherOperationCount = IoOtherOperationCount;
@@ -984,6 +984,9 @@ QSI_DEF(SystemFileCacheInformation)
 		* ReqSize = sizeof (SYSTEM_CACHE_INFORMATION);
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
+
+	RtlZeroMemory(Sci, sizeof(SYSTEM_CACHE_INFORMATION));
+
 	/* Return the Byte size not the page size. */
 	Sci->CurrentSize =
 		MiMemoryConsumers[MC_CACHE].PagesUsed * PAGE_SIZE;
@@ -993,8 +996,6 @@ QSI_DEF(SystemFileCacheInformation)
 	Sci->PageFaultCount = 0; /* FIXME */
 	Sci->MinimumWorkingSet = 0; /* FIXME */
 	Sci->MaximumWorkingSet = 0; /* FIXME */
-	Sci->TransitionSharedPages = 0; /* FIXME */
-	Sci->TransitionSharedPagesPeak = 0; /* FIXME */
 
 	return (STATUS_SUCCESS);
 }

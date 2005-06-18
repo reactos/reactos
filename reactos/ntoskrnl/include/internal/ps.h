@@ -41,10 +41,6 @@ struct _EJOB;
 
 #ifndef __ASM__
 
-#include <internal/mm.h>
-#include <internal/ke.h>
-#include <napi/teb.h>
-
 extern LCID PsDefaultThreadLocaleId;
 extern LCID PsDefaultSystemLocaleId;
 
@@ -187,7 +183,7 @@ typedef struct _ETHREAD *PETHREAD;
  * KERNEL VERSION: 5.2
  * DOCUMENTATION:  http://reactos.com/wiki/index.php/EPROCESS
  */
-struct _EPROCESS
+typedef struct _EPROCESS
 {
     KPROCESS              Pcb;                          /* 000 */
     EX_PUSH_LOCK          ProcessLock;                  /* 078 */
@@ -317,7 +313,7 @@ struct _EPROCESS
 
     /* FIXME MOVE TO AVL TREES                                 */
     MADDRESS_SPACE        AddressSpace;                 /* 28C */
-};
+} EPROCESS;
 #include <poppack.h>
 
 #define PROCESS_STATE_TERMINATED (1)

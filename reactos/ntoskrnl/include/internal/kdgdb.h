@@ -6,10 +6,6 @@
 #ifndef __INCLUDE_INTERNAL_KD_GDB_H
 #define __INCLUDE_INTERNAL_KD_GDB_H
 
-#include <internal/ke.h>
-#include <internal/ldr.h>
-#include <ntdll/ldr.h>
-
 VOID
 STDCALL
 KdpGdbStubInit(struct _KD_DISPATCH_TABLE *DispatchTable,

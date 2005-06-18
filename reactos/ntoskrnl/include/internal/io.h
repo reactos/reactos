@@ -29,11 +29,6 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_IO_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_IO_H
 
-#include <ddk/ntddk.h>
-#include <internal/ob.h>
-#include <internal/module.h>
-
-
 #ifndef __USE_W32API
 #define DEVICE_TYPE_FROM_CTL_CODE(ctlCode) (((ULONG)(ctlCode&0xffff0000))>>16)
 #endif
@@ -333,8 +328,6 @@ typedef struct _DEVICETREE_TRAVERSE_CONTEXT
 
 
 extern PDEVICE_NODE IopRootDeviceNode;
-extern ULONG IoOtherOperationCount;
-extern ULONGLONG IoOtherTransferCount;
 
 VOID
 PnpInit(VOID);

@@ -119,5 +119,18 @@ typedef struct _KEXCEPTION_FRAME {
     ULONG64 Return;
 } KEXCEPTION_FRAME, *PKEXCEPTION_FRAME;
 
+typedef struct _KEVENT_PAIR
+{
+    CSHORT Type;
+    CSHORT Size;
+    KEVENT LowEvent;
+    KEVENT HighEvent;
+} KEVENT_PAIR, *PKEVENT_PAIR;
+
+typedef struct _RUNDOWN_DESCRIPTOR {
+    ULONG_PTR References;
+    KEVENT RundownEvent;
+} RUNDOWN_DESCRIPTOR, *PRUNDOWN_DESCRIPTOR;
+
 #endif /* __INCLUDE_NTOS_KRNLTYPES_H */
 

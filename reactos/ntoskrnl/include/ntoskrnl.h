@@ -1,34 +1,39 @@
 #ifndef __INCLUDE_NTOSKRNL_H
 #define __INCLUDE_NTOSKRNL_H
 
-#define __NO_CTYPE_INLINES
+#define NTKERNELAPI
 
 /* include the ntoskrnl config.h file */
 #include "config.h"
+
+#include <roskrnl.h>
+#include <ddk/ntddk.h>
+#include <ddk/ntifs.h>
+#include <ddk/wdmguid.h>
+
+#undef IO_TYPE_FILE
+#define IO_TYPE_FILE                    0x0F5L /* Temp Hack */
 
 #include <roscfg.h>
 #include <reactos/version.h>
 #include <reactos/resource.h>
 #include <reactos/bugcodes.h>
+#include <reactos/rossym.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <malloc.h>
 #include <wchar.h>
-#include <roskrnl.h>
 #include <ntos/minmax.h>
 #include <ntos/synch.h>
 #include <ntos/keyboard.h>
 #include <ntos/ntdef.h>
+#include <ntos/ldrtypes.h>
 #include <ntos/ntpnp.h>
+#include <ddk/ldrfuncs.h>
 #include <rosrtl/minmax.h>
 #include <rosrtl/string.h>
-#include <ddk/halfuncs.h>
-#include <ddk/kefuncs.h>
-#include <ddk/pnptypes.h>
-#include <ddk/pnpfuncs.h>
-#include <ddk/wdmguid.h>
 #include <ntdll/ldr.h>
 #include <pseh.h>
 #include <internal/ctype.h>
@@ -41,12 +46,11 @@
 #include <internal/handle.h>
 #include <internal/pool.h>
 #include <internal/ob.h>
-#include <internal/ps.h>
 #include <internal/mm.h>
+#include <internal/ps.h>
 #include <internal/cc.h>
 #include <internal/io.h>
 #include <internal/po.h>
-#include <internal/ob.h>
 #include <internal/se.h>
 #include <internal/ldr.h>
 #include <internal/kd.h>

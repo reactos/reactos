@@ -18,13 +18,13 @@
 POBJECT_TYPE EXPORTED IoDeviceObjectType = NULL;
 POBJECT_TYPE EXPORTED IoFileObjectType = NULL;
 extern POBJECT_TYPE IoControllerObjectType;
-ULONG        EXPORTED IoReadOperationCount = 0;
-ULONGLONG    EXPORTED IoReadTransferCount = 0;
-ULONG        EXPORTED IoWriteOperationCount = 0;
-ULONGLONG    EXPORTED IoWriteTransferCount = 0;
-ULONG                 IoOtherOperationCount = 0;
-ULONGLONG             IoOtherTransferCount = 0;
-KSPIN_LOCK   EXPORTED IoStatisticsLock = 0;
+ULONG         EXPORTED IoReadOperationCount = 0;
+LARGE_INTEGER EXPORTED IoReadTransferCount = {{0, 0}};
+ULONG         EXPORTED IoWriteOperationCount = 0;
+LARGE_INTEGER EXPORTED IoWriteTransferCount = {{0, 0}};
+ULONG                  IoOtherOperationCount = 0;
+LARGE_INTEGER          IoOtherTransferCount = {{0, 0}};
+KSPIN_LOCK    EXPORTED IoStatisticsLock = 0;
 
 GENERIC_MAPPING IopFileMapping = {
     FILE_GENERIC_READ,
@@ -36,6 +36,7 @@ static KSPIN_LOCK CancelSpinLock;
 extern LIST_ENTRY ShutdownListHead;
 extern KSPIN_LOCK ShutdownListLock;
 extern NPAGED_LOOKASIDE_LIST IoCompletionPacketLookaside;
+extern POBJECT_TYPE IoAdapterObjectType;
 NPAGED_LOOKASIDE_LIST IoLargeIrpLookaside;
 NPAGED_LOOKASIDE_LIST IoSmallIrpLookaside;
 

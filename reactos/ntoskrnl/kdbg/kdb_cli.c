@@ -1422,7 +1422,7 @@ KdbpCmdGdtLdtIdt(ULONG Argc, PCHAR Argv[])
 STATIC BOOLEAN
 KdbpCmdPcr(ULONG Argc, PCHAR Argv[])
 {
-   PKPCR Pcr = KeGetCurrentKPCR();
+   PKIPCR Pcr = (PKIPCR)KeGetCurrentKPCR();
 
    KdbpPrint("Current PCR is at 0x%08x.\n", (INT)Pcr);
    KdbpPrint("  Tib.ExceptionList:         0x%08x\n"
@@ -1446,7 +1446,6 @@ KdbpCmdPcr(ULONG Argc, PCHAR Argv[])
              "  MinorVersion:              0x%04x\n"
              "  SetMember:                 0x%08x\n"
              "  StallScaleFactor:          0x%08x\n"
-             "  DebugActive:               0x%02x\n"
              "  Number:                    0x%02x\n"
              "  L2CacheAssociativity:      0x%02x\n"
              "  VdmAlert:                  0x%08x\n"
@@ -1457,7 +1456,7 @@ KdbpCmdPcr(ULONG Argc, PCHAR Argv[])
              Pcr->Tib.Self, Pcr->Self, Pcr->Prcb, Pcr->Irql, Pcr->IRR, Pcr->IrrActive,
              Pcr->IDR, Pcr->KdVersionBlock, Pcr->IDT, Pcr->GDT, Pcr->TSS,
              Pcr->MajorVersion, Pcr->MinorVersion, Pcr->SetMember, Pcr->StallScaleFactor,
-             Pcr->DebugActive, Pcr->Number, Pcr->L2CacheAssociativity,
+             Pcr->Number, Pcr->L2CacheAssociativity,
              Pcr->VdmAlert, Pcr->L2CacheSize, Pcr->InterruptMode);
 
    return TRUE;

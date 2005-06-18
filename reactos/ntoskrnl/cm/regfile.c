@@ -398,8 +398,6 @@ CmiCreateNewRegFile(HANDLE FileHandle)
 
   ExFreePool(Buffer);
 
-  ASSERTMSG(NT_SUCCESS(Status), ("Status: 0x%X\n", Status));
-
   if (!NT_SUCCESS(Status))
     {
       return(Status);
@@ -688,9 +686,8 @@ CmiImportHiveBins(PREGISTRY_HIVE Hive,
 	  return STATUS_REGISTRY_CORRUPT;
 	}
 
-      ASSERTMSG((Bin->BinSize % REG_BLOCK_SIZE) == 0,
-		("Bin size (0x%.08x) must be multiple of 4K\n",
-		Bin->BinSize));
+      ASSERTMSG("Bin size must be multiple of 4K\n",
+                (Bin->BinSize % REG_BLOCK_SIZE) == 0);
 
       /* Allocate the hive block */
       Hive->BlockList[BlockIndex].Bin = ExAllocatePool (PagedPool,

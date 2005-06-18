@@ -136,10 +136,6 @@ HalSetRealTimeClock(PTIME_FIELDS Time);
 HalSetTimeIncrement
 */
 
-BOOLEAN STDCALL
-HalStartNextProcessor(ULONG Unknown1,
-		      ULONG Unknown2);
-
 /*
 HalStartProfileInterrupt
 */

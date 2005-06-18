@@ -1033,6 +1033,7 @@ IoCallDriver (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * @implemented
  */
+#undef IoCompleteRequest
 VOID
 STDCALL
 IoCompleteRequest(PIRP Irp,

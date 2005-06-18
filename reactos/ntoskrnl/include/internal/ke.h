@@ -22,11 +22,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#ifndef __ASM__
-#include <ddk/ntifs.h>
-#include <stdarg.h>
-#endif /* not __ASM__ */
-
 #include "arch/ke.h"
 
 /* INTERNAL KERNEL TYPES ****************************************************/
@@ -37,10 +32,6 @@
 
 typedef struct _KPROCESS *PKPROCESS;
 typedef struct _DISPATCHER_HEADER *PDISPATCHER_HEADER;
-
-#else
-
-typedef struct _KEVENT_PAIR *PKEVENT_PAIR;
 
 #endif /* __USE_W32API */
 
@@ -222,7 +213,7 @@ typedef struct _KPROCESS
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
 #ifdef __USE_W32API
-struct _KPROCESS* KeGetCurrentProcess(VOID);
+struct _KPROCESS* STDCALL KeGetCurrentProcess(VOID);
 VOID KeSetGdtSelector(ULONG Entry, ULONG Value1, ULONG Value2);
 #endif
 

@@ -3530,12 +3530,29 @@ ObReferenceObjectByName (
 );
 
 NTKERNELAPI
+NTSTATUS
+NTAPI
+PsAssignImpersonationToken (
+    IN PETHREAD     Thread,
+    IN HANDLE       Token
+);
+
+NTKERNELAPI
 VOID
 NTAPI
 PsChargePoolQuota (
     IN PEPROCESS    Process,
     IN POOL_TYPE    PoolType,
     IN ULONG        Amount
+);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsChargeProcessPoolQuota (
+    IN PEPROCESS    Process,
+    IN POOL_TYPE    PoolType,
+    IN ULONG_PTR    Amount
 );
 
 #define PsDereferenceImpersonationToken(T)  \
@@ -3549,10 +3566,29 @@ PsChargePoolQuota (
 #define PsDereferencePrimaryToken(T) (ObDereferenceObject((T)))
 
 NTKERNELAPI
+BOOLEAN
+NTAPI
+PsDisableImpersonation(
+    IN PETHREAD                 Thread,
+    IN PSE_IMPERSONATION_STATE  ImpersonationState
+);
+
+NTKERNELAPI
 LARGE_INTEGER
 NTAPI
 PsGetProcessExitTime (
     VOID
+);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsImpersonateClient(
+    IN PETHREAD                      Thread,
+    IN PACCESS_TOKEN                 Token,
+    IN BOOLEAN                       CopyOnOpen,
+    IN BOOLEAN                       EffectiveOnly,
+    IN SECURITY_IMPERSONATION_LEVEL  ImpersonationLevel
 );
 
 NTKERNELAPI
@@ -3609,6 +3645,14 @@ HANDLE
 NTAPI
 PsReferencePrimaryToken (
     IN PEPROCESS Process
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+PsRestoreImpersonation(
+    IN PETHREAD                 Thread,
+    IN PSE_IMPERSONATION_STATE  ImpersonationState
 );
 
 NTKERNELAPI

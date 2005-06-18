@@ -1272,7 +1272,7 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
           * 0. So do the conversion here:
           * -Gunnar     */
          u.TBI.ExitStatus = (Thread->ExitStatus == 0) ? STATUS_PENDING : Thread->ExitStatus;
-	 u.TBI.TebBaseAddress = Thread->Tcb.Teb;
+	 u.TBI.TebBaseAddress = (PVOID)Thread->Tcb.Teb;
 	 u.TBI.ClientId = Thread->Cid;
 	 u.TBI.AffinityMask = Thread->Tcb.Affinity;
 	 u.TBI.Priority = Thread->Tcb.Priority;

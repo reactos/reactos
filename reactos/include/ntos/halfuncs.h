@@ -90,6 +90,10 @@ HalSystemVectorDispatchEntry(ULONG Unknown1,
 			     ULONG Unknown2,
 			     ULONG Unknown3);
 
+BOOLEAN STDCALL
+HalStartNextProcessor(ULONG Unknown1,
+		      ULONG Unknown2);
+
 VOID
 STDCALL
 IoAssignDriveLetters(IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,

@@ -18,6 +18,9 @@
 #include <win32k/win32k.h>
 #include <csrss/csrss.h>
 
+#include <internal/ntoskrnl.h>
+#include <internal/mm.h>
+#include <internal/ke.h>
 #include <internal/ob.h>
 #include <internal/safe.h>
 #include <internal/ps.h>

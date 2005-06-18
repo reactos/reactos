@@ -6,10 +6,6 @@
 #ifndef __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H
 #define __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H
 
-#include <internal/ke.h>
-#include <internal/ldr.h>
-#include <ntdll/ldr.h>
-
 struct _KD_DISPATCH_TABLE;
 #define KdPrintEx(_x_) DbgPrintEx _x_
 

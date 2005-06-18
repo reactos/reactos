@@ -128,14 +128,6 @@ typedef struct _KEVENT
     DISPATCHER_HEADER Header;
 } KEVENT, *PKEVENT, *RESTRICTED_POINTER PRKEVENT;
 
-typedef struct _KEVENT_PAIR
-{
-   CSHORT Type;
-   CSHORT Size;
-   KEVENT LowEvent;
-   KEVENT HighEvent;
-} KEVENT_PAIR, *PKEVENT_PAIR;
-
 typedef ULONG_PTR KSPIN_LOCK, *PKSPIN_LOCK;
 
 typedef struct _KDEVICE_QUEUE 

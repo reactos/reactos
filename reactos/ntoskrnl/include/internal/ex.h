@@ -5,9 +5,6 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_EXECUTIVE_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_EXECUTIVE_H
 
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-
 typedef enum
 {
   wmCenter = 0,

@@ -9,9 +9,6 @@
 #ifndef __INCLUDE_INTERNAL_OBJMGR_H
 #define __INCLUDE_INTERNAL_OBJMGR_H
 
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-
 #define TAG_OBJECT_TYPE TAG('O', 'b', 'j', 'T')
 
 struct _EPROCESS;

@@ -14,6 +14,10 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#ifndef MUTANT_INCREMENT
+#define MUTANT_INCREMENT                1
+#endif
+
 #define THREAD_ALERT_INCREMENT 2
 
 extern EX_WORK_QUEUE ExWorkerQueue[MaximumWorkQueue];

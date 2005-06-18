@@ -84,7 +84,6 @@ HAL_DISPATCH EXPORTED HalDispatchTable =
     (pHalMirrorVerify) NULL                //HalMirrorVerify;
 };
 
-
 HAL_PRIVATE_DISPATCH EXPORTED HalPrivateDispatchTable =
 {
     HAL_PRIVATE_DISPATCH_VERSION

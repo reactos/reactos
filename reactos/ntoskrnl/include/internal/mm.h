@@ -40,7 +40,6 @@
 #ifndef __INCLUDE_INTERNAL_MM_H
 #define __INCLUDE_INTERNAL_MM_H
 
-#include <internal/ntoskrnl.h>
 #include <internal/arch/mm.h>
 
 /* TYPES *********************************************************************/

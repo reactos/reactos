@@ -37,7 +37,7 @@ Ki386GetCpuId(VOID)
    ULONG OrigFlags, Flags, FinalFlags;
    ULONG MaxCpuidLevel;
    ULONG Dummy, Eax, Ecx, Edx;
-   PKPCR Pcr = KeGetCurrentKPCR();
+   PKIPCR Pcr = (PKIPCR)KeGetCurrentKPCR();
 
    Ke386CpuidFlags2 =  Ke386CpuidExFlags = 0;
    Ke386CacheAlignment = 32;
@@ -166,11 +166,11 @@ KePrepareForApplicationProcessorInit(ULONG Id)
 {
   DPRINT("KePrepareForApplicationProcessorInit(Id %d)\n", Id);
   PFN_TYPE PrcPfn;
-  PKPCR Pcr;
-  PKPCR BootPcr;
+  PKIPCR Pcr;
+  PKIPCR BootPcr;
 
-  BootPcr = (PKPCR)KPCR_BASE;
-  Pcr = (PKPCR)((ULONG_PTR)KPCR_BASE + Id * PAGE_SIZE);
+  BootPcr = (PKIPCR)KPCR_BASE;
+  Pcr = (PKIPCR)((ULONG_PTR)KPCR_BASE + Id * PAGE_SIZE);
 
   MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &PrcPfn);
   MmCreateVirtualMappingForKernel((PVOID)Pcr,
@@ -183,7 +183,7 @@ KePrepareForApplicationProcessorInit(ULONG Id)
   memset(Pcr, 0, PAGE_SIZE);
   Pcr->Number = Id;
   Pcr->Tib.Self = &Pcr->Tib;
-  Pcr->Self = Pcr;
+  Pcr->Self = (PKPCR)Pcr;
   Pcr->Prcb = &Pcr->PrcbData;
   Pcr->Irql = SYNCH_LEVEL;
 
@@ -200,7 +200,7 @@ VOID
 KeApplicationProcessorInit(VOID)
 {
   ULONG Offset;
-  PKPCR Pcr;
+  PKIPCR Pcr;
 
   DPRINT("KeApplicationProcessorInit()\n");
 
@@ -212,12 +212,12 @@ KeApplicationProcessorInit(VOID)
 
 
   Offset = InterlockedIncrementUL(&PcrsAllocated) - 1;
-  Pcr = (PKPCR)((ULONG_PTR)KPCR_BASE + Offset * PAGE_SIZE);
+  Pcr = (PKIPCR)((ULONG_PTR)KPCR_BASE + Offset * PAGE_SIZE);
 
   /*
    * Initialize the GDT
    */
-  KiInitializeGdt(Pcr);
+  KiInitializeGdt((PKPCR)Pcr);
 
   /* Get processor information. */
   Ki386GetCpuId();
@@ -261,7 +261,7 @@ KeApplicationProcessorInit(VOID)
 VOID INIT_FUNCTION
 KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
 {
-   PKPCR KPCR;
+   PKIPCR KPCR;
    BOOLEAN Pae = FALSE;
    BOOLEAN NoExecute = FALSE;
    PCHAR p1, p2;
@@ -274,12 +274,12 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
     * called, so we use a predefined page in low memory
     */
 
-   KPCR = (PKPCR)KPCR_BASE;
+   KPCR = (PKIPCR)KPCR_BASE;
    memset(KPCR, 0, PAGE_SIZE);
-   KPCR->Self = KPCR;
+   KPCR->Self = (PKPCR)KPCR;
    KPCR->Prcb = &KPCR->PrcbData;
    KPCR->Irql = SYNCH_LEVEL;
-   KPCR->Tib.Self  = &KPCR->Tib;
+   KPCR->Tib.Self = &KPCR->Tib;
    KPCR->GDT = KiBootGdt;
    KPCR->IDT = (PUSHORT)KiIdt;
    KPCR->TSS = &KiBootTss;
@@ -391,7 +391,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
 VOID INIT_FUNCTION
 KeInit2(VOID)
 {
-   PKPCR Pcr = KeGetCurrentKPCR();
+   PKIPCR Pcr = (PKIPCR)KeGetCurrentKPCR();
 
    KiInitializeBugCheck();
    KeInitializeDispatcher();
@@ -454,7 +454,7 @@ KeInit2(VOID)
 VOID INIT_FUNCTION
 Ki386SetProcessorFeatures(VOID)
 {
-   PKPCR Pcr = KeGetCurrentKPCR();
+   PKIPCR Pcr = (PKIPCR)KeGetCurrentKPCR();
    OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING KeyName;
    UNICODE_STRING ValueName;

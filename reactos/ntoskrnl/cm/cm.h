@@ -424,9 +424,9 @@ typedef enum _REG_NOTIFY_CLASS
 } REG_NOTIFY_CLASS, *PREG_NOTIFY_CLASS;
 
 /* Registry Callback Function */
-typedef NTSTATUS (*PEX_CALLBACK_FUNCTION ) (
+typedef NTSTATUS (STDCALL *PEX_CALLBACK_FUNCTION ) (
     IN PVOID CallbackContext,
-    IN REG_NOTIFY_CLASS Argument1,
+    IN PVOID Argument1,
     IN PVOID Argument2
     );
 

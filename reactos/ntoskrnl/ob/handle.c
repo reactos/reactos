@@ -362,8 +362,8 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
 		   IN	HANDLE		TargetProcessHandle,
 		   OUT	PHANDLE		TargetHandle  OPTIONAL,
 		   IN	ACCESS_MASK	DesiredAccess,
-		   IN	BOOLEAN		InheritHandle,
-		   ULONG		Options)
+		   IN	ULONG		InheritHandle,
+		   IN   ULONG		Options)
 /*
  * FUNCTION: Copies a handle from one process space to another
  * ARGUMENTS:

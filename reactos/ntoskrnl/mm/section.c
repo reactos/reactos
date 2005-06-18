@@ -2561,7 +2561,6 @@ ExeFmtpReadFile(IN PVOID File,
       KEBUGCHECK(STATUS_INVALID_PARAMETER_5);
    }
 
-   ASSERT(PAGE_SIZE <= MAXULONG);
    AdjustOffset = PAGE_ROUND_DOWN(FileOffset.u.LowPart);
    OffsetAdjustment = FileOffset.u.LowPart - AdjustOffset;
    FileOffset.u.LowPart = AdjustOffset;

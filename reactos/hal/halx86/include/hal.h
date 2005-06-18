@@ -13,9 +13,7 @@
 #include <stdio.h>
 
 /* FIXME: NDK Headers */
-#include <ntos/types.h>
-#include <ntos/haltypes.h>
-#include <ntos/halfuncs.h>
+#include <roskrnl.h>
 
 /* Internal Kernel Headers */
 //#include <internal/mm.h>
