@@ -20,6 +20,7 @@ C_SRCS = \
 	parser.c \
 	queue.c \
 	setupcab.c \
+	stringtable.c \
 	stubs.c \
 	rpc.c
 

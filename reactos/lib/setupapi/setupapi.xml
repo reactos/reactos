@@ -29,6 +29,7 @@
 	<file>parser.c</file>
 	<file>queue.c</file>
 	<file>setupcab.c</file>
+	<file>stringtable.c</file>
 	<file>stubs.c</file>
 	<file>rpc.c</file>
 	<file>setupapi.rc</file>
