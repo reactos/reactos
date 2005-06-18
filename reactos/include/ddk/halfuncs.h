@@ -9,9 +9,6 @@ VOID STDCALL
 HalAcquireDisplayOwnership(IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters);
 
 NTSTATUS STDCALL
-HalAdjustResourceList(PCM_RESOURCE_LIST	Resources);
-
-NTSTATUS STDCALL
 HalAllocateAdapterChannel(IN PADAPTER_OBJECT AdapterObject,
 			  IN PWAIT_CONTEXT_BLOCK WaitContextBlock,
 			  IN ULONG NumberOfMapRegisters,
@@ -39,16 +36,10 @@ HalAssignSlotResources(
 	PCM_RESOURCE_LIST	*AllocatedResources
 	);
 
-VOID STDCALL
-HalCalibratePerformanceCounter(ULONG Count);
-
 /*
 FASTCALL
 HalClearSoftwareInterrupt
 */
-
-VOID STDCALL
-HalDisplayString(IN PCH String);
 
 /*
  * HalExamineMBR() is not exported explicitly.
@@ -60,16 +51,6 @@ HalDisplayString(IN PCH String);
  *               ULONG MBRTypeIdentifier,
  *               PVOID Buffer);
  */
-
-BOOLEAN STDCALL
-HalFlushCommonBuffer(ULONG Unknown1,
-		     ULONG Unknown2,
-		     ULONG Unknown3,
-		     ULONG Unknown4,
-		     ULONG Unknown5,
-		     ULONG Unknown6,
-		     ULONG Unknown7,
-		     ULONG Unknown8);
 
 VOID STDCALL
 HalFreeCommonBuffer(PADAPTER_OBJECT AdapterObject,
@@ -97,23 +78,11 @@ HalGetBusDataByOffset(BUS_DATA_TYPE BusDataType,
 		      ULONG Offset,
 		      ULONG Length);
 
-/* Is this function really exported ??
-ULONG
-HalGetDmaAlignmentRequirement(VOID);
-NTOSAPI
-DDKAPI
-*/
-
 ULONG STDCALL
 HalGetDmaAlignmentRequirement( 
   VOID);
 
 			   
-BOOLEAN STDCALL
-HalGetEnvironmentVariable(IN PCH Name,
-			  OUT PCH Value,
-			  IN USHORT ValueLength);
-
 ULONG STDCALL
 HalGetInterruptVector(INTERFACE_TYPE InterfaceType,
 		      ULONG BusNumber,
@@ -125,15 +94,6 @@ HalGetInterruptVector(INTERFACE_TYPE InterfaceType,
 BOOLEAN STDCALL
 HalMakeBeep(ULONG Frequency);
 
-VOID STDCALL
-HalQueryDisplayParameters(PULONG DispSizeX,
-			  PULONG DispSizeY,
-			  PULONG CursorPosX,
-			  PULONG CursorPosY);
-
-VOID STDCALL
-HalQueryRealTimeClock(PTIME_FIELDS Time);
-
 /*
  * HalQuerySystemInformation() is not exported explicitly.
  * It is exported by the HalDispatchTable.
@@ -144,9 +104,6 @@ HalQueryRealTimeClock(PTIME_FIELDS Time);
 
 ULONG STDCALL
 HalReadDmaCounter(PADAPTER_OBJECT AdapterObject);
-
-VOID STDCALL
-HalRequestIpi(ULONG Unknown);
 
 /*
 FASTCALL
@@ -167,14 +124,6 @@ HalSetBusDataByOffset(BUS_DATA_TYPE BusDataType,
 		      PVOID Buffer,
 		      ULONG Offset,
 		      ULONG Length);
-
-VOID STDCALL
-HalSetDisplayParameters(ULONG CursorPosX,
-			ULONG CursorPosY);
-
-BOOLEAN STDCALL
-HalSetEnvironmentVariable(IN PCH Name,
-			  IN PCH Value);
 
 /*
 HalSetProfileInterval
@@ -199,10 +148,6 @@ HalStartProfileInterrupt
 HalStopProfileInterrupt
 */
 
-ULONG FASTCALL
-HalSystemVectorDispatchEntry(ULONG Unknown1,
-			     ULONG Unknown2,
-			     ULONG Unknown3);
 
 BOOLEAN STDCALL
 HalTranslateBusAddress(INTERFACE_TYPE InterfaceType,
@@ -210,25 +155,6 @@ HalTranslateBusAddress(INTERFACE_TYPE InterfaceType,
 		       PHYSICAL_ADDRESS BusAddress,
 		       PULONG AddressSpace,
 		       PPHYSICAL_ADDRESS TranslatedAddress);
-
-
-/*
- * Kernel debugger support functions
- */
-
-BOOLEAN STDCALL
-KdPortInitialize(PKD_PORT_INFORMATION PortInformation,
-		 DWORD Unknown1,
-		 DWORD Unknown2);
-
-BOOLEAN STDCALL
-KdPortGetByte(PUCHAR ByteRecieved);
-
-BOOLEAN STDCALL
-KdPortPollByte(PUCHAR ByteRecieved);
-
-VOID STDCALL
-KdPortPutByte(UCHAR ByteToSend);
 
 
 /*
