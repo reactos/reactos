@@ -282,88 +282,6 @@ RemoveTailList(
   return Entry;
 }
 
-
-/*
- * FIFO versions are slower but ensures that entries with equal SortField value
- * are placed in FIFO order (assuming that entries are removed from Head).
- */
-
-#define InsertAscendingListFIFO(ListHead, Type, ListEntryField, NewEntry, SortField)\
-{\
-  PLIST_ENTRY current;\
-\
-  current = (ListHead)->Flink;\
-  while (current != (ListHead))\
-  {\
-    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField >\
-        (NewEntry)->SortField)\
-    {\
-      break;\
-    }\
-    current = current->Flink;\
-  }\
-\
-  InsertTailList(current, &((NewEntry)->ListEntryField));\
-}
-
-
-#define InsertDescendingListFIFO(ListHead, Type, ListEntryField, NewEntry, SortField)\
-{\
-  PLIST_ENTRY current;\
-\
-  current = (ListHead)->Flink;\
-  while (current != (ListHead))\
-  {\
-    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField <\
-        (NewEntry)->SortField)\
-    {\
-      break;\
-    }\
-    current = current->Flink;\
-  }\
-\
-  InsertTailList(current, &((NewEntry)->ListEntryField));\
-}
-
-
-#define InsertAscendingList(ListHead, Type, ListEntryField, NewEntry, SortField)\
-{\
-  PLIST_ENTRY current;\
-\
-  current = (ListHead)->Flink;\
-  while (current != (ListHead))\
-  {\
-    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField >=\
-        (NewEntry)->SortField)\
-    {\
-      break;\
-    }\
-    current = current->Flink;\
-  }\
-\
-  InsertTailList(current, &((NewEntry)->ListEntryField));\
-}
-
-
-#define InsertDescendingList(ListHead, Type, ListEntryField, NewEntry, SortField)\
-{\
-  PLIST_ENTRY current;\
-\
-  current = (ListHead)->Flink;\
-  while (current != (ListHead))\
-  {\
-    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField <=\
-        (NewEntry)->SortField)\
-    {\
-      break;\
-    }\
-    current = current->Flink;\
-  }\
-\
-  InsertTailList(current, &((NewEntry)->ListEntryField));\
-}
-
-
 /*
  * BOOLEAN
  * IsXstEntry (
@@ -462,6 +380,85 @@ RtlZeroMemory (PVOID Destination, ULONG Length);
 
 #endif /* __USE_W32API */
 
+/*
+ * FIFO versions are slower but ensures that entries with equal SortField value
+ * are placed in FIFO order (assuming that entries are removed from Head).
+ */
+
+#define InsertAscendingListFIFO(ListHead, Type, ListEntryField, NewEntry, SortField)\
+{\
+  PLIST_ENTRY current;\
+\
+  current = (ListHead)->Flink;\
+  while (current != (ListHead))\
+  {\
+    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField >\
+        (NewEntry)->SortField)\
+    {\
+      break;\
+    }\
+    current = current->Flink;\
+  }\
+\
+  InsertTailList(current, &((NewEntry)->ListEntryField));\
+}
+
+
+#define InsertDescendingListFIFO(ListHead, Type, ListEntryField, NewEntry, SortField)\
+{\
+  PLIST_ENTRY current;\
+\
+  current = (ListHead)->Flink;\
+  while (current != (ListHead))\
+  {\
+    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField <\
+        (NewEntry)->SortField)\
+    {\
+      break;\
+    }\
+    current = current->Flink;\
+  }\
+\
+  InsertTailList(current, &((NewEntry)->ListEntryField));\
+}
+
+
+#define InsertAscendingList(ListHead, Type, ListEntryField, NewEntry, SortField)\
+{\
+  PLIST_ENTRY current;\
+\
+  current = (ListHead)->Flink;\
+  while (current != (ListHead))\
+  {\
+    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField >=\
+        (NewEntry)->SortField)\
+    {\
+      break;\
+    }\
+    current = current->Flink;\
+  }\
+\
+  InsertTailList(current, &((NewEntry)->ListEntryField));\
+}
+
+
+#define InsertDescendingList(ListHead, Type, ListEntryField, NewEntry, SortField)\
+{\
+  PLIST_ENTRY current;\
+\
+  current = (ListHead)->Flink;\
+  while (current != (ListHead))\
+  {\
+    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField <=\
+        (NewEntry)->SortField)\
+    {\
+      break;\
+    }\
+    current = current->Flink;\
+  }\
+\
+  InsertTailList(current, &((NewEntry)->ListEntryField));\
+}
 
 /*
  * PURPOSE: Used with RtlCheckRegistryKey, RtlCreateRegistryKey, 
