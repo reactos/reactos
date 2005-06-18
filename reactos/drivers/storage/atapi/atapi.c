@@ -449,9 +449,9 @@ AtapiClaimHwResources(PATAPI_MINIPORT_EXTENSION DevExt,
    }
    DevExt->Handler = NULL;
    DevExt->CommandPortBase = (ULONG)IoBase;
-   ConfigInfo->AccessRanges[0].RangeStart = IoAddress;
-   ConfigInfo->AccessRanges[0].RangeLength = 8;
-   ConfigInfo->AccessRanges[0].RangeInMemory = FALSE;
+   (*ConfigInfo->AccessRanges)[0].RangeStart = IoAddress;
+   (*ConfigInfo->AccessRanges)[0].RangeLength = 8;
+   (*ConfigInfo->AccessRanges)[0].RangeInMemory = FALSE;
 
    if (ControlPortBase)
    {
@@ -469,9 +469,9 @@ AtapiClaimHwResources(PATAPI_MINIPORT_EXTENSION DevExt,
          return FALSE;
       }
       DevExt->ControlPortBase = (ULONG)IoBase;
-      ConfigInfo->AccessRanges[1].RangeStart = IoAddress;
-      ConfigInfo->AccessRanges[1].RangeLength = 1;
-      ConfigInfo->AccessRanges[1].RangeInMemory = FALSE;
+      (*ConfigInfo->AccessRanges)[1].RangeStart = IoAddress;
+      (*ConfigInfo->AccessRanges)[1].RangeLength = 1;
+      (*ConfigInfo->AccessRanges)[1].RangeInMemory = FALSE;
    }
    if (BusMasterPortBase)
    {
@@ -489,9 +489,9 @@ AtapiClaimHwResources(PATAPI_MINIPORT_EXTENSION DevExt,
          return FALSE;
       }
       DevExt->BusMasterRegisterBase = (ULONG)IoBase;
-      ConfigInfo->AccessRanges[2].RangeStart = IoAddress;
-      ConfigInfo->AccessRanges[2].RangeLength = 8;
-      ConfigInfo->AccessRanges[2].RangeInMemory = FALSE;
+      (*ConfigInfo->AccessRanges)[2].RangeStart = IoAddress;
+      (*ConfigInfo->AccessRanges)[2].RangeLength = 8;
+      (*ConfigInfo->AccessRanges)[2].RangeInMemory = FALSE;
 #ifdef ENABLE_DMA
 //      ConfigInfo->DmaChannel = SP_UNINITIALIZED_VALUE;
 //      ConfigInfo->DmaPort = SP_UNINITIALIZED_VALUE;
@@ -1094,10 +1094,10 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 
   DPRINT("AtapiFindDevices() called\n");
 
-  CommandPortBase = ScsiPortConvertPhysicalAddressToUlong(ConfigInfo->AccessRanges[0].RangeStart);
+  CommandPortBase = ScsiPortConvertPhysicalAddressToUlong((*ConfigInfo->AccessRanges)[0].RangeStart);
   DPRINT("  CommandPortBase: %x\n", CommandPortBase);
 
-  ControlPortBase = ScsiPortConvertPhysicalAddressToUlong(ConfigInfo->AccessRanges[1].RangeStart);
+  ControlPortBase = ScsiPortConvertPhysicalAddressToUlong((*ConfigInfo->AccessRanges)[1].RangeStart);
   DPRINT("  ControlPortBase: %x\n", ControlPortBase);
 
   for (UnitNumber = 0; UnitNumber < 2; UnitNumber++)
