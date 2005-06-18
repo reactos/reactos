@@ -111,7 +111,7 @@ void do_all_timers(void)
 // ReactOS Purpose: Create real kernel thread
 int my_kernel_thread(int STDCALL (*handler)(void*), void* parm, int flags)
 {
-	HANDLE hThread;
+	HANDLE hThread = NULL;
 	//thread_handler=handler;
 	//thread_parm=parm;
 	//return 42; // PID :-)
