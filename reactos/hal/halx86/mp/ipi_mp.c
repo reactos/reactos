@@ -9,12 +9,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <hal.h>
-#include <apic.h>
-
 #define NDEBUG
-#include <internal/debug.h>
+#include <hal.h>
 
 /* FUNCTIONS ****************************************************************/
 

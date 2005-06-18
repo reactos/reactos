@@ -11,18 +11,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ke.h>
-#include <internal/ps.h>
-#include <ntos/minmax.h>
-#include <halirq.h>
-#include <hal.h>
-#include <mps.h>
-#include <apic.h>
-#include <ioapic.h>
-
 #define NDEBUG
-#include <internal/debug.h>
+#include <hal.h>
 
 /* GLOBALS ******************************************************************/;
 
@@ -42,7 +32,7 @@ KIRQL STDCALL KeGetCurrentIrql (VOID)
   Ki386SaveFlags(Flags);
   Ki386DisableInterrupts();
 
-  irql = Ki386ReadFsByte(offsetof(KPCR, Irql));
+  irql = Ki386ReadFsByte(FIELD_OFFSET(KPCR, Irql));
   if (irql > HIGH_LEVEL)
     {
       DPRINT1 ("CurrentIrql %x\n", irql);
@@ -70,7 +60,7 @@ VOID KeSetCurrentIrql (KIRQL NewIrql)
   }
   Ki386SaveFlags(Flags);
   Ki386DisableInterrupts();
-  Ki386WriteFsByte(offsetof(KPCR, Irql), NewIrql);
+  Ki386WriteFsByte(FIELD_OFFSET(KPCR, Irql), NewIrql);
   if (Flags & X86_EFLAGS_IF)
     {
       Ki386EnableInterrupts();
@@ -92,9 +82,9 @@ HalpLowerIrql(KIRQL NewIrql, BOOL FromHalEndSystemInterrupt)
     {
       KeSetCurrentIrql (DISPATCH_LEVEL);
       APICWrite(APIC_TPR, IRQL2TPR (DISPATCH_LEVEL) & APIC_TPR_PRI);
-      if (FromHalEndSystemInterrupt || Ki386ReadFsByte(offsetof(KPCR, HalReserved[HAL_DPC_REQUEST])))
+      if (FromHalEndSystemInterrupt || Ki386ReadFsByte(FIELD_OFFSET(KIPCR, HalReserved[HAL_DPC_REQUEST])))
         {
-          Ki386WriteFsByte(offsetof(KPCR, HalReserved[HAL_DPC_REQUEST]), 0);
+          Ki386WriteFsByte(FIELD_OFFSET(KIPCR, HalReserved[HAL_DPC_REQUEST]), 0);
           Ki386EnableInterrupts();
           KiDispatchInterrupt();
           if (!(Flags & X86_EFLAGS_IF))
@@ -166,7 +156,7 @@ KfLowerIrql (KIRQL	NewIrql)
  *
  * NOTES
  */
-
+#undef KeLowerIrql
 VOID STDCALL
 KeLowerIrql (KIRQL NewIrql)
 {
@@ -240,6 +230,7 @@ KfRaiseIrql (KIRQL	NewIrql)
  * NOTES
  *	Calls KfRaiseIrql
  */
+#undef KeRaiseIrql
 VOID STDCALL
 KeRaiseIrql (KIRQL	NewIrql,
 	PKIRQL	OldIrql)
@@ -392,11 +383,11 @@ HalRequestSoftwareInterrupt(IN KIRQL Request)
   switch (Request)
   {
     case APC_LEVEL:
-      Ki386WriteFsByte(offsetof(KPCR, HalReserved[HAL_APC_REQUEST]), 1);
+      Ki386WriteFsByte(FIELD_OFFSET(KIPCR, HalReserved[HAL_APC_REQUEST]), 1);
       break;
 
     case DISPATCH_LEVEL:
-      Ki386WriteFsByte(offsetof(KPCR, HalReserved[HAL_DPC_REQUEST]), 1);
+      Ki386WriteFsByte(FIELD_OFFSET(KIPCR, HalReserved[HAL_DPC_REQUEST]), 1);
       break;
       
     default:

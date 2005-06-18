@@ -9,15 +9,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntos/types.h>
-#include <hal.h>
-#include <mps.h>
-#include <apic.h>
-#include <ioapic.h>
-
 #define NDEBUG
-#include <internal/debug.h>
+#include <hal.h>
 
 /* GLOBALS ******************************************************************/
 

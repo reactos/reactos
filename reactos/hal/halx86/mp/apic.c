@@ -27,16 +27,9 @@
 
 /* INCLUDE ***********************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/i386/ps.h>
-
-#include <hal.h>
-#include <halirq.h>
-#include <mps.h>
-#include <apic.h>
-
 #define NDEBUG
-#include <internal/debug.h>
+#include <hal.h>
+#include <internal/ntoskrnl.h>
 
 /* GLOBALS ***********************************************************************/
 
@@ -88,8 +81,6 @@ CHAR *APstart, *APend;
    WRITE_PORT_UCHAR((PUCHAR)0x70, address); \
    WRITE_PORT_UCHAR((PUCHAR)0x71, value); \
 })
-
-extern PVOID IMPORTED MmSystemRangeStart;
 
 /* FUNCTIONS *********************************************************************/
 
@@ -866,7 +857,7 @@ APICCalibrateTimer(ULONG CPU)
 
    APICSetupLVTT(1000000000);
 
-   TSCPresent = KeGetCurrentKPCR()->PrcbData.FeatureBits & X86_FEATURE_TSC ? TRUE : FALSE;
+   TSCPresent = ((PKIPCR)KeGetCurrentKPCR())->PrcbData.FeatureBits & X86_FEATURE_TSC ? TRUE : FALSE;
 
    /*
     * The timer chip counts down to zero. Let's wait
@@ -895,7 +886,7 @@ APICCalibrateTimer(ULONG CPU)
       DPRINT("CPU clock speed is %ld.%04ld MHz.\n",
 	     CPUMap[CPU].CoreSpeed/1000000,
 	     CPUMap[CPU].CoreSpeed%1000000);
-      KeGetCurrentKPCR()->PrcbData.MHz = CPUMap[CPU].CoreSpeed/1000000;
+      ((PKIPCR)KeGetCurrentKPCR())->PrcbData.MHz = CPUMap[CPU].CoreSpeed/1000000;
    }
 
    CPUMap[CPU].BusSpeed = (HZ * (long)(tt1 - tt2) * APIC_DIVISOR);
