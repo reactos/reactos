@@ -1181,12 +1181,6 @@ struct _FAST_IO_DISPATCH_TABLE
 #define DRVO_BOOTREINIT_REGISTERED 0x20L
 #define DRVO_LEGACY_RESOURCES 0x40L
 
-#define DOE_UNLOAD_PENDING    0x1
-#define DOE_DELETE_PENDING    0x2
-#define DOE_REMOVE_PENDING    0x4
-#define DOE_REMOVE_PROCESSED  0x8
-#define DOE_START_PENDING     0x10
-
 typedef struct _DRIVER_OBJECT
 {
    CSHORT Type;
@@ -1233,18 +1227,6 @@ typedef VOID STDCALL_FUNC
 typedef VOID STDCALL_FUNC
 (*PIO_TIMER_ROUTINE)(PDEVICE_OBJECT DeviceObject,
 		     PVOID Context);
-
-/*
- * PURPOSE: Special timer associated with each device
- */
-typedef struct _IO_TIMER {
-   USHORT Type;				/* Every IO Object has a Type */
-   USHORT TimerEnabled;			/* Tells us if the Timer is enabled or not */
-   LIST_ENTRY IoTimerList;		/* List of other Timers on the system */
-   PIO_TIMER_ROUTINE TimerRoutine;	/* The associated timer routine */
-   PVOID Context;			/* Context */
-   PDEVICE_OBJECT DeviceObject;		/* Driver that owns this IO Timer */
-} IO_TIMER, *PIO_TIMER;
 
 typedef struct _IO_WORKITEM *PIO_WORKITEM;
 typedef VOID (*PIO_WORKITEM_ROUTINE)(IN PDEVICE_OBJECT DeviceObject, IN PVOID Context);

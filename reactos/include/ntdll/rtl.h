@@ -5,10 +5,9 @@
 #ifndef __INCLUDE_NTDLL_RTL_H
 #define __INCLUDE_NTDLL_RTL_H
 
+#include <ddk/ntifs.h>
 #include <ntos/types.h>
 #include <napi/teb.h>
-#include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -90,6 +90,7 @@
 #include "ntos/obtypes.h"
 #include "ntos/setypes.h"
 #include "ntos/sefuncs.h"
+#include "ntos/krnltypes.h"
 #include "ntos/tss.h"
 #include "rosrtl/thread.h"
 #endif

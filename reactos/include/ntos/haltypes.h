@@ -636,6 +636,8 @@ extern PHAL_DISPATCH IMPORTED HalDispatchTable;
 #define HalDereferenceBusHandler	HALDISPATCH->HalDereferenceBusHandler
 
 
+#endif /* !__USE_W32API */
+
 /* Hal private dispatch table */
 
 typedef struct _HAL_PRIVATE_DISPATCH
@@ -648,8 +650,6 @@ extern HAL_PRIVATE_DISPATCH EXPORTED HalPrivateDispatchTable;
 #else
 extern PHAL_PRIVATE_DISPATCH IMPORTED HalPrivateDispatchTable;
 #endif
-
-#endif /* !__USE_W32API */
 
 #define HAL_PRIVATE_DISPATCH_VERSION	1
 

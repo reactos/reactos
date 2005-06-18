@@ -1720,10 +1720,10 @@ typedef struct _LPC_MESSAGE
 
 #define PORT_MESSAGE_TYPE(m) (LPC_TYPE)((m).Header.MessageType)
 
+#endif /* __USE_W32API */
+
 #define PORT_MAX_DATA_LENGTH    0x104
 #define PORT_MAX_MESSAGE_LENGTH 0x148
-
-#endif /* __USE_W32API */
 
 #define MAX_MESSAGE_DATA   (0x130)
 
