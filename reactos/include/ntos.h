@@ -88,6 +88,8 @@
 #include "ntos/kefuncs.h"   /* AG */
 #include "ntos/fstypes.h"   /* AG */
 #include "ntos/obtypes.h"
+#include "ntos/setypes.h"
+#include "ntos/sefuncs.h"
 #include "ntos/tss.h"
 #include "rosrtl/thread.h"
 #endif

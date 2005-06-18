@@ -32,6 +32,15 @@
 #define SE_REMOTE_SHUTDOWN_PRIVILEGE		(24L)
 #define SE_MAX_WELL_KNOWN_PRIVILEGE		SE_REMOTE_SHUTDOWN_PRIVILEGE
 
+/* TOKEN_GROUPS structure */
+#ifndef SE_GROUP_MANDATORY
+#define SE_GROUP_MANDATORY                (0x1L)
+#define SE_GROUP_ENABLED_BY_DEFAULT       (0x2L)
+#define SE_GROUP_ENABLED                  (0x4L)
+#define SE_GROUP_OWNER                    (0x8L)
+#define SE_GROUP_LOGON_ID                 (0xC0000000L)
+#endif
+
 #if 0
 /* Security descriptor control. */
 #define SECURITY_DESCRIPTOR_REVISION	(1)
