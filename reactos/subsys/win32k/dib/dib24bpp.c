@@ -95,13 +95,13 @@ DIB_24BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 "      movl %2, %%ecx\n"                /* Load count */
 "      shr  $2, %%ecx\n"
 "      movl %3, %%edi\n"                /* Load dest */
-".L1:\n"
+"0:\n"
 "      movl %%eax, (%%edi)\n"           /* Store 4 pixels, 12 bytes */
 "      movl %%ebx, 4(%%edi)\n"
 "      movl %%edx, 8(%%edi)\n"
 "      addl $12, %%edi\n"
 "      dec  %%ecx\n"
-"      jnz  .L1\n"
+"      jnz  0b\n"
 "      movl %%edi, %0\n"
   : "=m"(addr)
   : "m"(c), "m"(Count), "m"(addr)

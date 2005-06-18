@@ -56,18 +56,18 @@ DIB_16BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 "  or   %0, %%eax\n"
 "  mov  %2, %%edi\n"
 "  test $0x03, %%edi\n" /* Align to fullword boundary */
-"  jz   .L1\n"
+"  jz   0f\n"
 "  stosw\n"
 "  dec  %1\n"
-"  jz   .L2\n"
-".L1:\n"
+"  jz   1f\n"
+"0:\n"
 "  mov  %1,%%ecx\n"     /* Setup count of fullwords to fill */
 "  shr  $1,%%ecx\n"
 "  rep stosl\n"         /* The actual fill */
 "  test $0x01, %1\n"    /* One left to do at the right side? */
-"  jz   .L2\n"
+"  jz   1f\n"
 "  stosw\n"
-".L2:\n"
+"1:\n"
   : /* no output */
   : "r"(c), "r"(Count), "m"(addr)
   : "%eax", "%ecx", "%edi");

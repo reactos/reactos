@@ -54,11 +54,11 @@ DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 "  mov  %0, %%eax\n"
 "  mov  %2, %%edi\n"
 "  test $0x03, %%edi\n" /* Align to fullword boundary */
-"  jnz   .L1\n"
+"  jnz   0f\n"
 "  mov  %1,%%ecx\n"     /* Setup count of fullwords to fill */
 "  rep stosl\n"         /* The actual fill */
-"  jmp   .L2\n"
-".L1:\n"
+"  jmp   1f\n"
+"0:\n"
 "  stosw\n"
 "  ror  $0x10,%%eax\n"
 "  mov  %1,%%ecx\n"     /* Setup count of fullwords to fill */
@@ -66,7 +66,7 @@ DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 "  rep stosl\n"         /* The actual fill */
 "  shr $0x10,%%eax\n"
 "  stosw\n"
-".L2:\n"
+"1:\n"
   : /* no output */
   : "m"(c), "r"(cx), "m"(addr)
   : "%eax", "%ecx", "%edi");
