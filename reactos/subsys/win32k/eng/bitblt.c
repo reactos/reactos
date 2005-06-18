@@ -552,8 +552,8 @@ IntEngBitBlt(BITMAPOBJ *DestObj,
 	{
 	  return TRUE;
 	}
-      InputPoint.x += OutputRect.left - DestRect->left;
-      InputPoint.y += OutputRect.top - DestRect->top;
+      InputPoint.x += OutputRect.left - InputClippedRect.left;
+      InputPoint.y += OutputRect.top - InputClippedRect.top;
     }
   else
     {
