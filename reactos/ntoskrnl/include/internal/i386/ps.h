@@ -257,6 +257,8 @@ typedef struct _KPCR {
 #pragma pack(pop)
 #endif /* __USE_W32API */
 
+#pragma pack(push,4)
+
 /*
  * This is the complete, internal KPCR structure
  */
@@ -288,6 +290,8 @@ typedef struct _KIPCR {
   UCHAR  KernelReserved2[0x48]; /* D8 */
   KPRCB  PrcbData;              /* 120 */
 } KIPCR, *PKIPCR;
+
+#pragma pack(pop)
 
 #ifndef __USE_W32API
 
