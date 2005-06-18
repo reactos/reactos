@@ -20,7 +20,9 @@
 #define __NTOSKRNL_INCLUDE_INTERNAL_I386_PS_H
 
 #ifdef __USE_W32API
+#ifndef __ASM__
 #include <ddk/ntpoapi.h>
+#endif
 #endif
 
 /*
