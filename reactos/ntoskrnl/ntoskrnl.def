@@ -541,13 +541,13 @@ KeGetCurrentThread@0
 KeGetPreviousMode@0
 KeGetRecommendedSharedDataAlignment@0
 ;KeI386AbiosCall
-KeI386AllocateGdtSelectors
+KeI386AllocateGdtSelectors@8
 ;KeI386Call16BitCStyleFunction
 ;KeI386Call16BitFunction
-KeI386FlatToGdtSelector
+KeI386FlatToGdtSelector@12
 ;KeI386GetLid
 ;KeI386MachineType DATA
-KeI386ReleaseGdtSelectors
+KeI386ReleaseGdtSelectors@8
 ;KeI386ReleaseLid
 ;KeI386SetGdtSelector
 KeIcacheFlushCount DATA

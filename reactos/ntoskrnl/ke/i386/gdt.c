@@ -148,7 +148,7 @@ l4:
 /*
  * @unimplemented
  */
-NTSTATUS
+NTSTATUS STDCALL
 KeI386FlatToGdtSelector(
 	IN ULONG	Base,
 	IN USHORT	Length,
@@ -162,7 +162,7 @@ KeI386FlatToGdtSelector(
 /*
  * @unimplemented
  */
-NTSTATUS
+NTSTATUS STDCALL
 KeI386ReleaseGdtSelectors(
 	OUT PULONG SelArray,
 	IN ULONG NumOfSelectors
@@ -175,10 +175,10 @@ KeI386ReleaseGdtSelectors(
 /*
  * @unimplemented
  */
-NTSTATUS
+NTSTATUS STDCALL
 KeI386AllocateGdtSelectors(
 	OUT PULONG SelArray,
-    IN ULONG NumOfSelectors
+	IN ULONG NumOfSelectors
 )
 {
 	UNIMPLEMENTED;

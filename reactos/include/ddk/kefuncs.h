@@ -22,16 +22,6 @@ KeSaveFloatingPointState(
 
 VOID STDCALL KeAttachProcess(struct _KPROCESS *Process);
 
-BOOLEAN
-STDCALL
-KeIsAttachedProcess(VOID);
-
-VOID FASTCALL KiAcquireSpinLock(PKSPIN_LOCK SpinLock);
-
-VOID FASTCALL KiReleaseSpinLock(PKSPIN_LOCK SpinLock);
-
-VOID KeDrainApcQueue(VOID);
-
 struct _KPROCESS* STDCALL KeGetCurrentProcess(VOID);
 
 /*
@@ -99,8 +89,6 @@ BOOLEAN STDCALL KeCancelTimer (PKTIMER	Timer);
 
 VOID STDCALL KeClearEvent (PKEVENT	Event);
 
-BOOLEAN STDCALL KeConnectInterrupt(PKINTERRUPT InterruptObject);
-
 NTSTATUS STDCALL KeDelayExecutionThread (KPROCESSOR_MODE	WaitMode,
 					 BOOLEAN		Alertable,
 					 PLARGE_INTEGER	Internal);
@@ -110,16 +98,7 @@ BOOLEAN STDCALL KeDeregisterBugCheckCallback (
 
 VOID STDCALL KeDetachProcess (VOID);
 
-VOID STDCALL KeDisconnectInterrupt(PKINTERRUPT InterruptObject);
-
 VOID STDCALL KeEnterCriticalRegion (VOID);
-
-/*
- * FUNCTION: Enters the kernel debugger
- * ARGUMENTS:
- *	None
- */
-VOID STDCALL KeEnterKernelDebugger (VOID);
 
 KIRQL STDCALL KeGetCurrentIrql (VOID);
 
@@ -130,16 +109,6 @@ KPROCESSOR_MODE STDCALL KeGetPreviousMode (VOID);
 #endif
 
 struct _KTHREAD* STDCALL KeGetCurrentThread (VOID);
-
-VOID STDCALL KeInitializeApc (IN PKAPC  Apc,
-	IN PKTHREAD  Thread,
-  IN KAPC_ENVIRONMENT TargetEnvironment,
-	IN PKKERNEL_ROUTINE  KernelRoutine,
-	IN PKRUNDOWN_ROUTINE  RundownRoutine,
-	IN PKNORMAL_ROUTINE  NormalRoutine,
-  IN KPROCESSOR_MODE  Mode,
-	IN PVOID  Context);
-
 
 /*
  * VOID
@@ -161,18 +130,6 @@ VOID STDCALL KeInitializeDpc (PKDPC			Dpc,
 VOID STDCALL KeInitializeEvent (PKEVENT		Event,
 				EVENT_TYPE	Type,
 				BOOLEAN		State);
-
-VOID STDCALL KeInitializeInterrupt(PKINTERRUPT InterruptObject,
-				   PKSERVICE_ROUTINE ServiceRoutine,
-				   PVOID ServiceContext,
-				   PKSPIN_LOCK SpinLock,
-				   ULONG Vector,
-				   KIRQL Irql,
-				   KIRQL SynchronizeIrql,
-				   KINTERRUPT_MODE InterruptMode,
-				   BOOLEAN ShareVector,
-				   CHAR ProcessorNumber,
-				   BOOLEAN FloatingSave);
 
 VOID STDCALL KeInitializeMutant(IN PKMUTANT Mutant,
 				IN BOOLEAN InitialOwner);
@@ -217,11 +174,6 @@ KeInsertHeadQueue(IN PKQUEUE Queue,
 LONG STDCALL
 KeInsertQueue(IN PKQUEUE Queue,
 	      IN PLIST_ENTRY Entry);
-
-BOOLEAN STDCALL KeInsertQueueApc (PKAPC	Apc,
-			       PVOID	SystemArgument1,
-			       PVOID	SystemArgument2,
-                KPRIORITY PriorityBoost);
 
 BOOLEAN STDCALL KeInsertQueueDpc (PKDPC	Dpc,
 				  PVOID	SystemArgument1,
@@ -377,16 +329,6 @@ KeRemoveQueueDpc(IN PKDPC Dpc);
 LONG STDCALL
 KeResetEvent(IN PKEVENT Event);
 
-VOID STDCALL
-KeRosDumpStackFrames ( PULONG Frame, ULONG FrameCount );
-
-ULONG STDCALL
-KeRosGetStackFrames ( PULONG Frames, ULONG FrameCount );
-
-NTSTATUS STDCALL
-KeSetAffinityThread(PKTHREAD	Thread,
-		    KAFFINITY	Affinity);
-
 LONG STDCALL
 KeSetBasePriorityThread(struct _KTHREAD* Thread,
 			LONG Increment);
@@ -447,92 +389,6 @@ KeWaitForSingleObject (
 	);
 
 
-
-/* io permission map has a 8k size
- * Each bit in the IOPM corresponds to an io port byte address. The bitmap
- * is initialized to allow IO at any port. [ all bits set ]. 
- */
-typedef struct _IOPM
-{
-	UCHAR Bitmap[8192];
-} IOPM, *PIOPM;
-
-/*
- * FUNCTION: Provides the kernel with a new access map for a driver
- * ARGUMENTS:
- * 	NewMap: =  If FALSE the kernel's map is set to all disabled. If TRUE
- *			the kernel disables access to a particular port.
- *	IoPortMap = Caller supplies storage for the io permission map.
- * REMARKS
- *	Each bit in the IOPM corresponds to an io port byte address. The bitmap
- *	is initialized to allow IO at any port. [ all bits set ]. The IOPL determines
- *	the minium privilege level required to perform IO prior to checking the permission map.
- */
-BOOL STDCALL
-Ke386SetIoAccessMap(ULONG NewMap, PULONG IoPermissionMap);
-
-/*
- * FUNCTION: Queries the io permission  map.
- * ARGUMENTS:
- * 	NewMap: =  If FALSE the kernel's map is set to all disabled. If TRUE
- *			the kernel disables access to a particular port.
- *	IoPortMap = Caller supplies storage for the io permission map.
- * REMARKS
- *	Each bit in the IOPM corresponds to an io port byte address. The bitmap
- *	is initialized to allow IO at any port. [ all bits set ]. The IOPL determines
- *	the minium privilege level required to perform IO prior to checking the permission map.
- */
-BOOL STDCALL
-Ke386QueryIoAccessMap(ULONG NewMap, PULONG IoPermissionMap);
-
-/*
- * FUNCTION: Set the process IOPL
- * ARGUMENTS:
- *	Eprocess = Pointer to a executive process object
- *	EnableIo = Specify TRUE to enable IO and FALSE to disable 
- */
-BOOL STDCALL
-Ke386IoSetAccessProcess(struct _EPROCESS* Eprocess, BOOL EnableIo);
-
-/*
- * FUNCTION: Sets the contents of a gdt descriptor.
- * ARGUMENTS:
- *     Entry = The selector to set.
- *     Value1 = The value of the low dword of the descriptor.
- *     Value2 = The value of the high dword of the descriptor.
- */
-VOID
-KeSetGdtSelector(
-	ULONG Entry,
-	ULONG Value1,
-	ULONG Value2
-);
-
-/*
- * FUNCTION: Releases a set of Global Descriptor Table Selectors
- * ARGUMENTS:
- *	SelArray = 
- *	NumOfSelectors = 
- */
-NTSTATUS 
-KeI386ReleaseGdtSelectors(
-	OUT PULONG SelArray,
-	IN ULONG NumOfSelectors
-);
-
-/*
- * FUNCTION: Allocates a set of Global Descriptor Table Selectors
- * ARGUMENTS:
- *	SelArray = 
- *	NumOfSelectors = 
- */
-NTSTATUS
-KeI386AllocateGdtSelectors(
-	OUT PULONG SelArray,
-    IN ULONG NumOfSelectors
-);
-
-
 KIRQL
 FASTCALL
 KfAcquireSpinLock (
@@ -559,8 +415,6 @@ KfReleaseSpinLock (
 	IN	KIRQL		NewIrql
 	);
 
-
-VOID STDCALL KiDispatchInterrupt(VOID);
 
 /* Stubs Start here */
 
@@ -617,127 +471,11 @@ KeRegisterBugCheckReasonCallback(
     IN PUCHAR Component
     );
 
-VOID 
-STDCALL
-KeTerminateThread(
-	IN KPRIORITY   	 Increment  	 
-);
-
-BOOLEAN
-STDCALL
-KeIsExecutingDpc(
-	VOID
-);
-
-VOID
-STDCALL
-KeSetEventBoostPriority(
-	IN PKEVENT Event,
-	IN PKTHREAD *Thread OPTIONAL
-);
-
-PCONFIGURATION_COMPONENT_DATA
-STDCALL
-KeFindConfigurationNextEntry(
-    IN PCONFIGURATION_COMPONENT_DATA Child,
-    IN CONFIGURATION_CLASS Class,
-    IN CONFIGURATION_TYPE Type,
-    IN PULONG ComponentKey OPTIONAL,
-    IN PCONFIGURATION_COMPONENT_DATA *NextLink
-);
-                             
-PCONFIGURATION_COMPONENT_DATA
-STDCALL
-KeFindConfigurationEntry(
-    IN PCONFIGURATION_COMPONENT_DATA Child,
-    IN CONFIGURATION_CLASS Class,
-    IN CONFIGURATION_TYPE Type,
-    IN PULONG ComponentKey OPTIONAL
-);
-                         
-VOID
-STDCALL
-KeFlushEntireTb(
-    IN BOOLEAN Unknown,
-    IN BOOLEAN CurrentCpuOnly
-);
-
-VOID
-STDCALL
-KeRevertToUserAffinityThread(
-    VOID
-);
-
-VOID
-STDCALL
-KiCoprocessorError(
-    VOID
-);
-
-VOID
-STDCALL
-KiUnexpectedInterrupt(
-    VOID
-);
-
-VOID
-STDCALL
-KeSetDmaIoCoherency(
-    IN ULONG Coherency
-);
-
-VOID
-STDCALL
-KeSetProfileIrql(
-    IN KIRQL ProfileIrql
-);
-
-VOID
-STDCALL
-KeSetSystemAffinityThread(
-    IN KAFFINITY Affinity
-);
-
-NTSTATUS
-STDCALL
-KeUserModeCallback(
-    IN ULONG	FunctionID,
-    IN PVOID	InputBuffer,
-    IN ULONG	InputLength,
-    OUT PVOID	*OutputBuffer,
-    OUT PULONG	OutputLength
-);
-
 VOID
 STDCALL
 KeSetTimeIncrement(
     IN ULONG MaxIncrement,
     IN ULONG MinIncrement
-);
-
-VOID
-STDCALL
-KeCapturePersistentThreadState(
-	IN PVOID	CurrentThread,
-	IN ULONG	Setting1,
-	IN ULONG	Setting2,
-	IN ULONG	Setting3,
-	IN ULONG	Setting4,
-	IN ULONG	Setting5,
-	IN PVOID	ThreadState
-);
-
-BOOLEAN
-STDCALL
-KeRemoveSystemServiceTable(
-    IN ULONG TableIndex
-);
-
-NTSTATUS
-KeI386FlatToGdtSelector(
-	IN ULONG	Base,
-	IN USHORT	Length,
-	IN USHORT	Selector
 );
 
 CCHAR
@@ -802,12 +540,6 @@ VOID
 __cdecl
 KeSaveStateForHibernate(
     IN PVOID State
-);
-
-NTSTATUS
-STDCALL
-KeRaiseUserException(
-	IN NTSTATUS	ExceptionCode
 );
 
 VOID 
