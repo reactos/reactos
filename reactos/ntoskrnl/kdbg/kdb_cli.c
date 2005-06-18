@@ -374,19 +374,6 @@ KdbpCmdRegs(ULONG Argc, PCHAR Argv[])
 
    if (Argv[0][0] == 'r') /* regs */
    {
-      ULONG Esp;
-      USHORT Ss;
-
-      if (!(Tf->Cs & 1))
-      {
-          Esp = (ULONG)Tf->TempEsp;
-          Ss = (USHORT)((ULONG)Tf->TempSegSs & 0xFFFF);
-      }
-      else
-      {
-          Esp = Tf->Esp;
-          Ss = Tf->Ss;
-      }
       KdbpPrint("CS:EIP  0x%04x:0x%08x\n"
                 "SS:ESP  0x%04x:0x%08x\n"
                 "   EAX  0x%08x   EBX  0x%08x\n"
@@ -394,7 +381,7 @@ KdbpCmdRegs(ULONG Argc, PCHAR Argv[])
                 "   ESI  0x%08x   EDI  0x%08x\n"
                 "   EBP  0x%08x\n",
                 Tf->Cs & 0xFFFF, Tf->Eip,
-                Ss, Esp,
+                Tf->Ss, Tf->Esp,
                 Tf->Eax, Tf->Ebx,
                 Tf->Ecx, Tf->Edx,
                 Tf->Esi, Tf->Edi,
@@ -580,8 +567,10 @@ KdbpCmdBackTrace(ULONG Argc, PCHAR Argv[])
    }
 
    KdbpPrint("Frames:\n");
-   while (Frame != 0)
+   for (;;)
    {
+      if (Frame == 0)
+         break;
       if (!NT_SUCCESS(KdbpSafeReadMemory(&Address, (PVOID)(Frame + sizeof(ULONG_PTR)), sizeof (ULONG_PTR))))
       {
          KdbpPrint("Couldn't access memory at 0x%x!\n", Frame + sizeof(ULONG_PTR));
@@ -591,6 +580,8 @@ KdbpCmdBackTrace(ULONG Argc, PCHAR Argv[])
          KdbpPrint("<%08x>\n", Address);
       else
          KdbpPrint("\n");
+      if (Address == 0)
+         break;
       if (!NT_SUCCESS(KdbpSafeReadMemory(&Frame, (PVOID)Frame, sizeof (ULONG_PTR))))
       {
          KdbpPrint("Couldn't access memory at 0x%x!\n", Frame);
@@ -953,7 +944,10 @@ KdbpCmdThread(ULONG Argc, PCHAR Argv[])
 
          if (Thread->Tcb.TrapFrame != NULL)
          {
-            Esp = (PULONG)Thread->Tcb.TrapFrame->Esp;
+            if (Thread->Tcb.TrapFrame->PreviousMode == KernelMode)
+               Esp = (PULONG)Thread->Tcb.TrapFrame->TempEsp;
+            else
+               Esp = (PULONG)Thread->Tcb.TrapFrame->Esp;
             Ebp = (PULONG)Thread->Tcb.TrapFrame->Ebp;
             Eip = Thread->Tcb.TrapFrame->Eip;
          }
