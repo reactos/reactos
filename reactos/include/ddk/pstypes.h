@@ -22,7 +22,6 @@ struct _ETHREAD;
 struct _KTHREAD;
 struct _EJOB;
 
-typedef struct _EJOB *PEJOB;
 typedef struct _KTHREAD *PKTHREAD, *PRKTHREAD;
 
 typedef struct _IMAGE_INFO {
@@ -59,14 +58,6 @@ typedef VOID STDCALL_FUNC
                               HANDLE ProcessId,
                               PIMAGE_INFO ImageInfo);
 
-typedef NTSTATUS STDCALL_FUNC
-(*PW32_PROCESS_CALLBACK)(struct _EPROCESS *Process,
-			 BOOLEAN Create);
-
-typedef NTSTATUS STDCALL_FUNC
-(*PW32_THREAD_CALLBACK)(struct _ETHREAD *Thread,
-			BOOLEAN Create);
-                        
 typedef struct _STACK_INFORMATION
 {
   PVOID BaseAddress;
