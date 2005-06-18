@@ -290,12 +290,64 @@ EngBitBlt(SURFOBJ *DestObj,
     return TRUE;
     }
 
-  if (UsesSource && NULL != SourcePoint)
+  OutputRect = *DestRect;
+  if (OutputRect.right < OutputRect.left)
     {
-    InputRect.left = SourcePoint->x;
-    InputRect.right = SourcePoint->x + (DestRect->right - DestRect->left);
-    InputRect.top = SourcePoint->y;
-    InputRect.bottom = SourcePoint->y + (DestRect->bottom - DestRect->top);
+    OutputRect.left = DestRect->right;
+    OutputRect.right = DestRect->left;
+    }
+  if (OutputRect.bottom < OutputRect.top)
+    {
+    OutputRect.left = DestRect->right;
+    OutputRect.right = DestRect->left;
+    }
+
+  if (UsesSource)
+    {
+    if (NULL == SourcePoint)
+      {
+      return FALSE;
+      }
+
+    /* Make sure we don't try to copy anything outside the valid source
+       region */
+    InputPoint = *SourcePoint;
+    if (InputPoint.x < 0)
+      {
+        OutputRect.left -= InputPoint.x;
+        InputPoint.x = 0;
+      }
+    if (InputPoint.y < 0)
+      {
+        OutputRect.top -= InputPoint.y;
+        InputPoint.y = 0;
+      }
+    if (SourceObj->sizlBitmap.cx < InputPoint.x +
+                                   OutputRect.right - OutputRect.left)
+      {
+        OutputRect.right = OutputRect.left +
+                           SourceObj->sizlBitmap.cx - InputPoint.x;
+      }
+    if (SourceObj->sizlBitmap.cy < InputPoint.y +
+                                   OutputRect.bottom - OutputRect.top)
+      {
+        OutputRect.bottom = OutputRect.top +
+                            SourceObj->sizlBitmap.cy - InputPoint.y;
+      }
+
+    InputRect.left = InputPoint.x;
+    InputRect.right = InputPoint.x + (OutputRect.right - OutputRect.left);
+    InputRect.top = InputPoint.y;
+    InputRect.bottom = InputPoint.y + (OutputRect.bottom - OutputRect.top);
+
+    if (! IntEngEnter(&EnterLeaveSource, SourceObj, &InputRect, TRUE,
+                      &Translate, &InputObj))
+      {
+      return FALSE;
+      }
+
+    InputPoint.x += Translate.x;
+    InputPoint.y += Translate.y;
     }
   else
     {
@@ -305,23 +357,6 @@ EngBitBlt(SURFOBJ *DestObj,
     InputRect.bottom = DestRect->bottom - DestRect->top;
     }
 
-  if (! IntEngEnter(&EnterLeaveSource, SourceObj, &InputRect, TRUE, &Translate, &InputObj))
-    {
-    return FALSE;
-    }
-
-  if (NULL != SourcePoint)
-    {
-    InputPoint.x = SourcePoint->x + Translate.x;
-    InputPoint.y = SourcePoint->y + Translate.y;
-    }
-  else
-    {
-    InputPoint.x = 0;
-    InputPoint.y = 0;
-    }
-
-  OutputRect = *DestRect;
   if (NULL != ClipRegion)
     {
       if (OutputRect.left < ClipRegion->rclBounds.left)
@@ -348,17 +383,25 @@ EngBitBlt(SURFOBJ *DestObj,
 	}
     }
 
-  /* Check for degenerate case: if height or width of OutputRect is 0 pixels there's
-     nothing to do */
-  if (OutputRect.right <= OutputRect.left || OutputRect.bottom <= OutputRect.top)
+  /* Check for degenerate case: if height or width of OutputRect is 0 pixels
+     there's nothing to do */
+  if (OutputRect.right <= OutputRect.left ||
+      OutputRect.bottom <= OutputRect.top)
     {
-    IntEngLeave(&EnterLeaveSource);
+    if (UsesSource)
+      {
+      IntEngLeave(&EnterLeaveSource);
+      }
     return TRUE;
     }
 
-  if (! IntEngEnter(&EnterLeaveDest, DestObj, &OutputRect, FALSE, &Translate, &OutputObj))
+  if (! IntEngEnter(&EnterLeaveDest, DestObj, &OutputRect, FALSE, &Translate,
+                    &OutputObj))
     {
-    IntEngLeave(&EnterLeaveSource);
+    if (UsesSource)
+      {
+      IntEngLeave(&EnterLeaveSource);
+      }
     return FALSE;
     }
 
@@ -368,20 +411,24 @@ EngBitBlt(SURFOBJ *DestObj,
   OutputRect.bottom += Translate.y;
 
   if(BrushOrigin)
-  {
+    {
     AdjustedBrushOrigin.x = BrushOrigin->x + Translate.x;
     AdjustedBrushOrigin.y = BrushOrigin->y + Translate.y;
-  }
+    }
   else
+    {
     AdjustedBrushOrigin = Translate;
+    }
 
-  // Determine clipping type
+  /* Determine clipping type */
   if (ClipRegion == (CLIPOBJ *) NULL)
-  {
+    {
     clippingType = DC_TRIVIAL;
-  } else {
+    }
+  else
+    {
     clippingType = ClipRegion->iDComplexity;
-  }
+    }
 
   if (R4_MASK == Rop4)
     {
@@ -404,10 +451,11 @@ EngBitBlt(SURFOBJ *DestObj,
   {
     case DC_TRIVIAL:
       Ret = (*BltRectFunc)(OutputObj, InputObj, Mask, ColorTranslation,
-                           &OutputRect, &InputPoint, MaskOrigin, Brush, &AdjustedBrushOrigin, Rop4);
+                           &OutputRect, &InputPoint, MaskOrigin, Brush,
+                           &AdjustedBrushOrigin, Rop4);
       break;
     case DC_RECT:
-      // Clip the blt to the clip rectangle
+      /* Clip the blt to the clip rectangle */
       ClipRect.left = ClipRegion->rclBounds.left + Translate.x;
       ClipRect.right = ClipRegion->rclBounds.right + Translate.x;
       ClipRect.top = ClipRegion->rclBounds.top + Translate.y;
@@ -417,7 +465,8 @@ EngBitBlt(SURFOBJ *DestObj,
           Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
           Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
           Ret = (*BltRectFunc)(OutputObj, InputObj, Mask, ColorTranslation,
-                               &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, Rop4);
+                               &CombinedRect, &Pt, MaskOrigin, Brush,
+                               &AdjustedBrushOrigin, Rop4);
         }
       break;
     case DC_COMPLEX:
@@ -426,11 +475,13 @@ EngBitBlt(SURFOBJ *DestObj,
 	{
 	  if (OutputRect.top < InputPoint.y)
 	    {
-	      Direction = OutputRect.left < InputPoint.x ? CD_RIGHTDOWN : CD_LEFTDOWN;
+	      Direction = OutputRect.left < InputPoint.x ?
+                          CD_RIGHTDOWN : CD_LEFTDOWN;
 	    }
 	  else
 	    {
-	      Direction = OutputRect.left < InputPoint.x ? CD_RIGHTUP : CD_LEFTUP;
+	      Direction = OutputRect.left < InputPoint.x ?
+                          CD_RIGHTUP : CD_LEFTUP;
 	    }
 	}
       else
@@ -440,7 +491,8 @@ EngBitBlt(SURFOBJ *DestObj,
       CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, Direction, 0);
       do
 	{
-	  EnumMore = CLIPOBJ_bEnum(ClipRegion,(ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
+	  EnumMore = CLIPOBJ_bEnum(ClipRegion,(ULONG) sizeof(RectEnum),
+                                   (PVOID) &RectEnum);
 
 	  for (i = 0; i < RectEnum.c; i++)
 	    {
@@ -465,7 +517,10 @@ EngBitBlt(SURFOBJ *DestObj,
 
 
   IntEngLeave(&EnterLeaveDest);
-  IntEngLeave(&EnterLeaveSource);
+  if (UsesSource)
+    {
+    IntEngLeave(&EnterLeaveSource);
+    }
 
   return Ret;
 }
@@ -516,7 +571,8 @@ IntEngBitBlt(BITMAPOBJ *DestObj,
         }
       InputPoint = *SourcePoint;
 
-      /* Make sure we don't try to copy anything outside the valid source region */
+      /* Make sure we don't try to copy anything outside the valid source
+         region */
       if (InputPoint.x < 0)
         {
           InputClippedRect.left -= InputPoint.x;
@@ -527,13 +583,19 @@ IntEngBitBlt(BITMAPOBJ *DestObj,
           InputClippedRect.top -= InputPoint.y;
           InputPoint.y = 0;
         }
-      if (SourceSurf->sizlBitmap.cx < InputPoint.x + InputClippedRect.right - InputClippedRect.left)
+      if (SourceSurf->sizlBitmap.cx < InputPoint.x +
+                                      InputClippedRect.right -
+                                      InputClippedRect.left)
         {
-          InputClippedRect.right = InputClippedRect.left + SourceSurf->sizlBitmap.cx - InputPoint.x;
+          InputClippedRect.right = InputClippedRect.left +
+                                   SourceSurf->sizlBitmap.cx - InputPoint.x;
         }
-      if (SourceSurf->sizlBitmap.cy < InputPoint.y + InputClippedRect.bottom - InputClippedRect.top)
+      if (SourceSurf->sizlBitmap.cy < InputPoint.y +
+                                      InputClippedRect.bottom -
+                                      InputClippedRect.top)
         {
-          InputClippedRect.bottom = InputClippedRect.top + SourceSurf->sizlBitmap.cy - InputPoint.y;
+          InputClippedRect.bottom = InputClippedRect.top +
+                                    SourceSurf->sizlBitmap.cy - InputPoint.y;
         }
 
       if (InputClippedRect.right < InputClippedRect.left ||
@@ -548,7 +610,8 @@ IntEngBitBlt(BITMAPOBJ *DestObj,
    * outside the surface */
   if (NULL != ClipRegion)
     {
-      if (! EngIntersectRect(&OutputRect, &InputClippedRect, &ClipRegion->rclBounds))
+      if (! EngIntersectRect(&OutputRect, &InputClippedRect,
+                             &ClipRegion->rclBounds))
 	{
 	  return TRUE;
 	}
