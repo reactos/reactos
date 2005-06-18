@@ -7,7 +7,6 @@
 #define __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H
 
 struct _KD_DISPATCH_TABLE;
-#define KdPrintEx(_x_) DbgPrintEx _x_
 
 #ifdef DBG
 #include "kdgdb.h"
