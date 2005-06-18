@@ -12,7 +12,6 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ntdll/rtl.h>
 #define NDEBUG
 #include <ntdll.h>
 

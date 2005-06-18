@@ -9,9 +9,9 @@
 /* INCLUDES ******************************************************************/
 
 /* SDK/DDK/NDK Headers. */
+#include <windows.h>
 #include <ddk/ntddk.h> /* FIXME: NDK */
 #include <ddk/ntifs.h> /* FIXME: NDK */
-#include <windows.h>
 #include <ntos/ldrtypes.h>  /* FIXME: NDK */
 
 /* NTDLL Public Headers. FIXME: USE NDK */
