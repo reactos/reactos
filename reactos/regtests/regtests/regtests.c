@@ -86,3 +86,15 @@ _SetThreadPriority(HANDLE hThread, int nPriority)
 {
   return SetThreadPriority(hThread, nPriority);
 }
+
+HANDLE STDCALL
+_GetCurrentProcess()
+{
+  return GetCurrentProcess();
+}
+
+HANDLE STDCALL
+_GetCurrentThread()
+{
+  return GetCurrentThread();
+}

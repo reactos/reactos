@@ -23,7 +23,7 @@
 	<symbol>NtCreateSection@28</symbol>
 	<symbol>NtDelayExecution@8</symbol>
 	<symbol>NtDeviceIoControlFile@40</symbol>
-	<symbol>_imp__NtDuplicateObject@28</symbol>
+	<symbol>NtDuplicateObject@28</symbol>
 	<symbol>NtFlushBuffersFile@8</symbol>
 	<symbol>NtFlushInstructionCache@12</symbol>
 	<symbol>NtFlushVirtualMemory@16</symbol>
@@ -44,7 +44,7 @@
 	<symbol>NtQueryDefaultUILanguage@4</symbol>
 	<symbol>NtQueryDirectoryFile@44</symbol>
 	<symbol>NtQueryInformationFile@20</symbol>
-	<symbol>_imp__NtQueryInformationProcess@20</symbol>
+	<symbol>NtQueryInformationProcess@20</symbol>
 	<symbol>NtQueryInformationThread@20</symbol>
 	<symbol>NtQueryObject@20</symbol>
 	<symbol>NtQuerySystemInformation@16</symbol>
@@ -60,7 +60,7 @@
 	<symbol>NtSetEvent@8</symbol>
 	<symbol>NtSetInformationFile@20</symbol>
 	<symbol>NtSetInformationObject@16</symbol>
-	<symbol>_imp__NtSetInformationProcess@16</symbol>
+	<symbol>NtSetInformationProcess@16</symbol>
 	<symbol>NtSetInformationThread@16</symbol>
 	<symbol>NtSetSystemInformation@12</symbol>
 	<symbol>NtSetSystemTime@8</symbol>
@@ -76,7 +76,7 @@
 	<symbol>NtYieldExecution@0</symbol>
 	<symbol>RtlAcquirePebLock@0</symbol>
 	<symbol>RtlAnsiStringToUnicodeSize@4</symbol>
-	<symbol>_imp__RtlBaseProcessStartRoutine</symbol>
+	<symbol>RtlBaseProcessStartRoutine</symbol>
 	<symbol>RtlCompactHeap@8</symbol>
 	<symbol>RtlCopyUnicodeString@8</symbol>
 	<symbol>RtlCreateHeap@24</symbol>

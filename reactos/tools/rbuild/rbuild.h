@@ -494,6 +494,7 @@ private:
 	                                         int* stubIndex );
 	void WriteStubsFile ( Module& module );
 	std::string GetStartupFilename ( Module& module );
+	bool IsUnknownCharacter ( char ch );
 	std::string GetTestDispatcherName ( std::string filename );
 	bool IsTestFile ( std::string& filename ) const;
 	void GetSourceFilenames ( string_list& list,

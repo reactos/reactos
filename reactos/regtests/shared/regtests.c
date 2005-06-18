@@ -22,7 +22,7 @@
 typedef struct _PERFORM_TEST_ARGS
 {
   TestOutputRoutine OutputRoutine;
-  PROS_TEST Test;
+  _PTEST Test;
   LPSTR TestName;
 } PERFORM_TEST_ARGS;
 
@@ -53,7 +53,7 @@ PerformTest(PVOID _arg)
 {
   PERFORM_TEST_ARGS *Args = (PERFORM_TEST_ARGS *)_arg;
   TestOutputRoutine OutputRoutine = Args->OutputRoutine;
-  PROS_TEST Test = Args->Test;
+  _PTEST Test = Args->Test;
   LPSTR TestName = Args->TestName;
   HANDLE hThread;
   FILETIME time;
@@ -62,7 +62,7 @@ PerformTest(PVOID _arg)
   char Buffer[5000];
   char Format[100];
 
-  hThread = GetCurrentThread();
+  hThread = _GetCurrentThread();
   _SetThreadPriority(hThread, THREAD_PRIORITY_IDLE);
 
   memset(Buffer, 0, sizeof(Buffer));
@@ -84,8 +84,8 @@ PerformTest(PVOID _arg)
   	                       &time,
   	                       &ExecutionTime))
       {
-        ExecutionTime.dwLowDateTime = 10;
-        ExecutionTime.dwHighDateTime = 10;
+        ExecutionTime.dwLowDateTime = 0;
+        ExecutionTime.dwHighDateTime = 0;
       }
       sprintf(OutputBuffer,
               "[%s] Success [%s]\n",
@@ -108,7 +108,7 @@ PerformTests(TestOutputRoutine OutputRoutine, LPSTR TestName)
 {
   PLIST_ENTRY CurrentEntry;
   PLIST_ENTRY NextEntry;
-  PROS_TEST Current;
+  _PTEST Current;
   PERFORM_TEST_ARGS Args;
   HANDLE hThread;
   char OutputBuffer[1024];
@@ -122,7 +122,7 @@ PerformTests(TestOutputRoutine OutputRoutine, LPSTR TestName)
   for (; CurrentEntry != &AllTests; CurrentEntry = NextEntry)
     {
       NextEntry = CurrentEntry->Flink;
-      Current = CONTAINING_RECORD(CurrentEntry, ROS_TEST, ListEntry);
+      Current = CONTAINING_RECORD(CurrentEntry, _TEST, ListEntry);
       Args.Test = Current;
 
       /* Get name of test */
@@ -181,9 +181,9 @@ PerformTests(TestOutputRoutine OutputRoutine, LPSTR TestName)
 VOID
 AddTest(TestRoutine Routine)
 {
-  PROS_TEST Test;
+  _PTEST Test;
 
-  Test = (PROS_TEST) malloc(sizeof(ROS_TEST));
+  Test = (_PTEST) malloc(sizeof(_TEST));
   if (Test == NULL)
     {
       DbgPrint("Out of memory");

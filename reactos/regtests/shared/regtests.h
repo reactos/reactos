@@ -141,27 +141,27 @@ typedef void (*TestOutputRoutine)(char *Buffer);
  */
 typedef void STDCALL (*TestDriverMain)(TestOutputRoutine OutputRoutine, char *TestName);
 
-typedef struct _ROS_TEST
+typedef struct __TEST
 {
   LIST_ENTRY ListEntry;
   TestRoutine Routine;
-} ROS_TEST, *PROS_TEST;
+} _TEST, *_PTEST;
 
 extern VOID InitializeTests();
 extern VOID RegisterTests();
 extern VOID PerformTests(TestOutputRoutine OutputRoutine, LPSTR TestName);
 
 
-typedef struct _API_DESCRIPTION
+typedef struct __API_DESCRIPTION
 {
   PCHAR FileName;
   PCHAR FunctionName;
   PCHAR ForwardedFunctionName;
   PVOID FunctionAddress;
   PVOID MockFunctionAddress;
-} API_DESCRIPTION, *PAPI_DESCRIPTION;
+} _API_DESCRIPTION, *_PAPI_DESCRIPTION;
 
-extern API_DESCRIPTION ExternalDependencies[];
+extern _API_DESCRIPTION ExternalDependencies[];
 extern ULONG MaxExternalDependency;
 
 HANDLE STDCALL
@@ -205,9 +205,15 @@ _SetPriorityClass(HANDLE hProcess, DWORD dwPriorityClass);
 BOOL STDCALL
 _SetThreadPriority(HANDLE hThread, int nPriority);
 
+HANDLE STDCALL
+_GetCurrentProcess();
+
+HANDLE STDCALL
+_GetCurrentThread();
+
 
 static inline PCHAR
-FrameworkGetExportedFunctionNameInternal(PAPI_DESCRIPTION ApiDescription)
+FrameworkGetExportedFunctionNameInternal(_PAPI_DESCRIPTION ApiDescription)
 {
   if (ApiDescription->ForwardedFunctionName != NULL)
     {
@@ -220,7 +226,7 @@ FrameworkGetExportedFunctionNameInternal(PAPI_DESCRIPTION ApiDescription)
 }
 
 static inline PVOID
-FrameworkGetFunction(PAPI_DESCRIPTION ApiDescription)
+FrameworkGetFunction(_PAPI_DESCRIPTION ApiDescription)
 {
   HANDLE hModule;
   PVOID function = NULL;
@@ -284,7 +290,7 @@ static inline VOID
 _SetHook(PCHAR name,
   PVOID address)
 {
-  PAPI_DESCRIPTION api;
+  _PAPI_DESCRIPTION api;
   ULONG index;
 
   for (index = 0; index <= MaxExternalDependency; index++)
@@ -298,16 +304,16 @@ _SetHook(PCHAR name,
     }
 }
 
-typedef struct _HOOK
+typedef struct __HOOK
 {
   PCHAR FunctionName;
   PVOID FunctionAddress;
-} HOOK, *PHOOK;
+} _HOOK, *_PHOOK;
 
 static inline VOID
-_SetHooks(PHOOK hookTable)
+_SetHooks(_PHOOK hookTable)
 {
-  PHOOK hook;
+  _PHOOK hook;
 
   hook = &hookTable[0];
   while (hook->FunctionName != NULL)
@@ -319,9 +325,9 @@ _SetHooks(PHOOK hookTable)
 }
 
 static inline VOID
-_UnsetHooks(PHOOK hookTable)
+_UnsetHooks(_PHOOK hookTable)
 {
-  PHOOK hook;
+  _PHOOK hook;
 
   hook = &hookTable[0];
   while (hook->FunctionName != NULL)
@@ -335,7 +341,7 @@ _UnsetHooks(PHOOK hookTable)
 static inline VOID
 _UnsetAllHooks()
 {
-  PAPI_DESCRIPTION api;
+  _PAPI_DESCRIPTION api;
   ULONG index;
 
   for (index = 0; index <= MaxExternalDependency; index++)

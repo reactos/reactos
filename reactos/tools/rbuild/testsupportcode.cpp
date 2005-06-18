@@ -93,7 +93,7 @@ TestSupportCode::WriteHooksFile ( Module& module )
 	s = s + sprintf ( s, "#include <windows.h>\n" );
 	s = s + sprintf ( s, "#include \"regtests.h\"\n" );
 	s = s + sprintf ( s, "\n" );
-	s = s + sprintf ( s, "API_DESCRIPTION ExternalDependencies[] =\n" );
+	s = s + sprintf ( s, "_API_DESCRIPTION ExternalDependencies[] =\n" );
 	s = s + sprintf ( s, "{\n" );
 
 	int symbolCount = 0;
@@ -121,18 +121,34 @@ TestSupportCode::GetStubsFilename ( Module& module )
 	return NormalizeFilename ( Environment::GetIntermediatePath () + SSEP + module.GetBasePath () + SSEP + "_stubs.S" );
 }
 
+string
+GetImportSymbol ( const StubbedSymbol& symbol )
+{
+	if (symbol.symbol[0] == '@')
+		return "__imp_" + symbol.symbol;
+	else
+		return "__imp__" + symbol.symbol;
+}
+
 char*
 TestSupportCode::WriteStubbedSymbolToStubsFile ( char* buffer,
                                                  const StubbedComponent& component,
-	                                         const StubbedSymbol& symbol,
+                                                 const StubbedSymbol& symbol,
                                                  int stubIndex )
 {
+	string importSymbol = GetImportSymbol( symbol );
 	buffer = buffer + sprintf ( buffer,
 	                            ".globl _%s\n",
 	                            symbol.symbol.c_str () );
 	buffer = buffer + sprintf ( buffer,
+	                            ".globl %s\n",
+	                            importSymbol.c_str () );
+	buffer = buffer + sprintf ( buffer,
 	                            "_%s:\n",
 	                            symbol.symbol.c_str () );
+	buffer = buffer + sprintf ( buffer,
+	                            "%s:\n",
+	                            importSymbol.c_str () );
 	buffer = buffer + sprintf ( buffer,
 	                            "  pushl $%d\n",
 	                            stubIndex );
@@ -196,6 +212,18 @@ TestSupportCode::GetStartupFilename ( Module& module )
 	return NormalizeFilename ( Environment::GetIntermediatePath () + SSEP + module.GetBasePath () + SSEP + "_startup.c" );
 }
 
+bool
+TestSupportCode::IsUnknownCharacter ( char ch )
+{
+	if ( ch >= 'a' && ch <= 'z' )
+		return false;
+	if ( ch >= 'A' && ch <= 'Z' )
+		return false;
+	if ( ch >= '0' && ch <= '9' )
+		return false;
+	return true;
+}
+
 string
 TestSupportCode::GetTestDispatcherName ( string filename )
 {
@@ -204,7 +232,10 @@ TestSupportCode::GetTestDispatcherName ( string filename )
 		filenamePart[0] = toupper ( filenamePart[0] );
 	for ( size_t i = 1; i < filenamePart.length (); i++ )
 	{
-		filenamePart[i] = tolower ( filenamePart[i] );
+		if ( IsUnknownCharacter ( filenamePart[i] ) )
+			filenamePart[i] = '_';
+		else
+			filenamePart[i] = tolower ( filenamePart[i] );
 	}
 	return filenamePart + "Test";
 }
@@ -333,7 +364,7 @@ TestSupportCode::WriteStartupFile ( Module& module )
 	s = s + sprintf ( s, "  LPSTR lpszCmdParam,\n" );
 	s = s + sprintf ( s, "  int nCmdShow)\n" );
 	s = s + sprintf ( s, "{\n" );
-	s = s + sprintf ( s, "  _SetPriorityClass(GetCurrentProcess(), IDLE_PRIORITY_CLASS);\n" );
+	s = s + sprintf ( s, "  _SetPriorityClass(_GetCurrentProcess(), IDLE_PRIORITY_CLASS);\n" );
 	s = s + sprintf ( s, "  InitializeTests();\n" );
 	s = s + sprintf ( s, "  RegisterTests();\n" );
 	s = s + sprintf ( s, "  SetupOnce();\n" );

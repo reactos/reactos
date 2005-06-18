@@ -90,7 +90,7 @@ MockNtCreateFile(PHANDLE FileHandle,
   return STATUS_SUCCESS;
 }
 
-static HOOK NtCreateFileHooks[] =
+static _HOOK NtCreateFileHooks[] =
 {
   {"NtCreateFile", MockNtCreateFile},
   {NULL, NULL}

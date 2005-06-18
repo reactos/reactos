@@ -12,3 +12,5 @@ _CloseHandle@4
 _GetThreadTimes@20
 _SetPriorityClass@8
 _SetThreadPriority@8
+_GetCurrentProcess@0
+_GetCurrentThread@0
