@@ -11,10 +11,21 @@
 
 /* DEPENDENCIES **************************************************************/
 #include "haltypes.h"
+#include <arc/arc.h>
 
 /* CONSTANTS *****************************************************************/
 #define SSDT_MAX_ENTRIES 4
 #define PROCESSOR_FEATURE_MAX 64
+
+#define CONTEXT_DEBUGGER (CONTEXT_FULL | CONTEXT_FLOATING_POINT)
+
+#define THREAD_WAIT_OBJECTS 4
+
+/* FIXME: Create an ASM Offset File */
+#define KTSS_ESP0      (0x4)
+#define KTSS_CR3       (0x1C)
+#define KTSS_EFLAGS    (0x24)
+#define KTSS_IOMAPBASE (0x66)
 
 /* EXPORTED DATA *************************************************************/
 extern CHAR NTOSAPI KeNumberProcessors;
@@ -31,6 +42,15 @@ extern SSDT_ENTRY NTOSAPI KeServiceDescriptorTableShadow[SSDT_MAX_ENTRIES];
 /* ENUMERATIONS **************************************************************/
 
 /* TYPES *********************************************************************/
+
+typedef struct _CONFIGURATION_COMPONENT_DATA 
+{
+  struct _CONFIGURATION_COMPONENT_DATA *Parent;
+  struct _CONFIGURATION_COMPONENT_DATA *Child;
+  struct _CONFIGURATION_COMPONENT_DATA *Sibling;
+  CONFIGURATION_COMPONENT Component;
+} CONFIGURATION_COMPONENT_DATA, *PCONFIGURATION_COMPONENT_DATA;
+
 
 typedef enum _KAPC_ENVIRONMENT 
 {
@@ -120,6 +140,99 @@ typedef struct _LDT_ENTRY {
   } HighWord;
 } LDT_ENTRY, *PLDT_ENTRY, *LPLDT_ENTRY;
 
+
+#include <pshpack1.h>
+
+typedef struct _KTSSNOIOPM
+{
+    USHORT PreviousTask;
+    USHORT Reserved1;
+    ULONG  Esp0;
+    USHORT Ss0;
+    USHORT Reserved2;
+    ULONG  Esp1;
+    USHORT Ss1;
+    USHORT Reserved3;
+    ULONG  Esp2;
+    USHORT Ss2;
+    USHORT Reserved4;
+    ULONG  Cr3;
+    ULONG  Eip;
+    ULONG  Eflags;
+    ULONG  Eax;
+    ULONG  Ecx;
+    ULONG  Edx;
+    ULONG  Ebx;
+    ULONG  Esp;
+    ULONG  Ebp;
+    ULONG  Esi;
+    ULONG  Edi;
+    USHORT Es;
+    USHORT Reserved5;
+    USHORT Cs;
+    USHORT Reserved6;
+    USHORT Ss;
+    USHORT Reserved7;
+    USHORT Ds;
+    USHORT Reserved8;
+    USHORT Fs;
+    USHORT Reserved9;
+    USHORT Gs;
+    USHORT Reserved10;
+    USHORT Ldt;
+    USHORT Reserved11;
+    USHORT Trap;
+    USHORT IoMapBase;
+    /* no interrupt redirection map */
+    UCHAR IoBitmap[1];
+} KTSSNOIOPM;
+
+typedef struct _KTSS
+{
+    USHORT PreviousTask;
+    USHORT Reserved1;
+    ULONG  Esp0;
+    USHORT Ss0;
+    USHORT Reserved2;
+    ULONG  Esp1;
+    USHORT Ss1;
+    USHORT Reserved3;
+    ULONG  Esp2;
+    USHORT Ss2;
+    USHORT Reserved4;
+    ULONG  Cr3;
+    ULONG  Eip;
+    ULONG  Eflags;
+    ULONG  Eax;
+    ULONG  Ecx;
+    ULONG  Edx;
+    ULONG  Ebx;
+    ULONG  Esp;
+    ULONG  Ebp;
+    ULONG  Esi;
+    ULONG  Edi;
+    USHORT Es;
+    USHORT Reserved5;
+    USHORT Cs;
+    USHORT Reserved6;
+    USHORT Ss;
+    USHORT Reserved7;
+    USHORT Ds;
+    USHORT Reserved8;
+    USHORT Fs;
+    USHORT Reserved9;
+    USHORT Gs;
+    USHORT Reserved10;
+    USHORT Ldt;
+    USHORT Reserved11;
+    USHORT Trap;
+    USHORT IoMapBase;
+    /* no interrupt redirection map */
+    UCHAR  IoBitmap[8193];
+} KTSS;
+
+#include <poppack.h>
+
 /* i386 Doesn't have Exception Frames */
 typedef struct _KEXCEPTION_FRAME {
 
@@ -157,6 +270,43 @@ typedef struct _KEVENT_PAIR
     KEVENT HighEvent;
 } KEVENT_PAIR, *PKEVENT_PAIR;
 
-/* FIXME: Add KOBJECTS Here */
+typedef enum _KOBJECTS {
+   EventNotificationObject = 0,
+   EventSynchronizationObject = 1,
+   MutantObject = 2,
+   ProcessObject = 3,
+   QueueObject = 4,
+   SemaphoreObject = 5,
+   ThreadObject = 6,
+   GateObject = 7,
+   TimerNotificationObject = 8,
+   TimerSynchronizationObject = 9,
+   Spare2Object = 10,
+   Spare3Object = 11,
+   Spare4Object = 12,
+   Spare5Object = 13,
+   Spare6Object = 14,
+   Spare7Object = 15,
+   Spare8Object = 16,
+   Spare9Object = 17,
+   ApcObject = 18,
+   DpcObject = 19,
+   DeviceQueueObject = 20,
+   EventPairObject = 21,
+   InterruptObject = 22,
+   ProfileObject = 23,
+   ThreadedDpcObject = 24,
+   MaximumKernelObject = 25
+} KOBJECTS;
 
+typedef enum _KTHREAD_STATE {
+    Initialized,
+    Ready,
+    Running,
+    Standby,
+    Terminated,
+    Waiting,
+    Transition,
+    DeferredReady,
+} KTHREAD_STATE, *PKTHREAD_STATE;
 #endif

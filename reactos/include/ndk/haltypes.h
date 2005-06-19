@@ -10,7 +10,7 @@
 #define _HALTYPES_H
 
 /* DEPENDENCIES **************************************************************/
-#include <ddk/ntdddisk.h>
+//#include <ddk/ntdddisk.h>
 
 /* EXPORTED DATA *************************************************************/
 extern ULONG NTOSAPI KdComPortInUse;
@@ -48,7 +48,7 @@ typedef struct _LOADER_MODULE
    ULONG Reserved;
 } LOADER_MODULE, *PLOADER_MODULE;
 
-typedef struct _LOADER_PARAMETER_BLOCK 
+typedef struct _LOADER_PARAMETER_BLOCK
 {
    ULONG Flags;
    ULONG MemLower;
@@ -64,6 +64,9 @@ typedef struct _LOADER_PARAMETER_BLOCK
    ULONG DrivesAddr;
    ULONG ConfigTable;
    ULONG BootLoaderName;
+   ULONG PageDirectoryStart;
+   ULONG PageDirectoryEnd;
+   ULONG KernelBase;
 } LOADER_PARAMETER_BLOCK, *PLOADER_PARAMETER_BLOCK;
 
 #endif

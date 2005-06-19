@@ -17,6 +17,8 @@
 /* CONSTANTS *****************************************************************/
 #define MAX_BUS_NAME 24
 
+#define EVENT_PAIR_ALL_ACCESS    (0x1F0000L)
+
 /* ENUMERATIONS **************************************************************/
 
 typedef enum _PLUGPLAY_BUS_CLASS

@@ -2494,6 +2494,18 @@ ZwResumeThread(
 
 NTSTATUS
 STDCALL
+NtResumeProcess(
+    IN HANDLE ProcessHandle
+);
+
+NTSTATUS
+STDCALL
+ZwResumeProcess(
+    IN HANDLE ProcessHandle
+);
+    
+NTSTATUS
+STDCALL
 NtSaveKey(
     IN HANDLE KeyHandle,
     IN HANDLE FileHandle
@@ -3246,6 +3258,18 @@ ZwSuspendThread(
     IN PULONG PreviousSuspendCount 
 );
 
+NTSTATUS
+STDCALL
+NtSuspendProcess(
+    IN HANDLE ProcessHandle
+);
+
+NTSTATUS
+STDCALL
+ZwSuspendProcess(
+    IN HANDLE ProcessHandle
+);
+
 NTSTATUS 
 STDCALL 
 NtTerminateThread(
@@ -3482,7 +3506,7 @@ NtCreateThread(
 NTSTATUS
 STDCALL
 NtDelayExecution(
-    IN ULONG Alertable,
+    IN BOOLEAN Alertable,
     IN LARGE_INTEGER *Interval
 );
 
@@ -3603,12 +3627,12 @@ NtQueryVirtualMemory(
 NTSTATUS
 STDCALL
 NtRaiseHardError(
-    IN NTSTATUS Status,
-    ULONG Unknown2,
-    ULONG Unknown3,
-    ULONG Unknown4,
-    ULONG Unknown5,
-    ULONG Unknown6
+    IN NTSTATUS ErrorStatus,
+    IN ULONG NumberOfParameters,
+    IN PUNICODE_STRING UnicodeStringParameterMask  OPTIONAL,
+    IN PVOID *Parameters,
+    IN HARDERROR_RESPONSE_OPTION ResponseOption,
+    OUT PHARDERROR_RESPONSE Response
 );
 
 NTSTATUS
