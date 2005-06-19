@@ -1129,8 +1129,12 @@ typedef struct
 	// Output:
 	DWORD   dwActualSize;
 	HRESULT ddRVal;
+	ULONG_PTR  dwContext;
 } DD_GETDRIVERINFODATA, *PDD_GETDRIVERINFODATA;
 typedef DWORD (STDCALL *PDD_GETDRIVERINFO)(PDD_GETDRIVERINFODATA);
+
+
+
 
 /************************************************************************/
 /* Driver info structures                                               */
@@ -1203,6 +1207,7 @@ typedef struct
 	PDD_D3DBUFCALLBACKS lpD3DBufCallbacks;
 } DD_HALINFO, *PDD_HALINFO;
 
+
 DEFINE_GUID(GUID_NonLocalVidMemCaps, 0x86C4FA80, 0x8D84, 0x11D0, 0x94, 0xE8, 0x00, 0xC0, 0x4F, 0xC3, 0x41, 0x37);
 
 typedef struct
@@ -1227,6 +1232,8 @@ typedef struct
 		DDSCAPSEX ddsCapsExAlt;
 	} ddsExtendedHeapRestrictions[1];
 } DD_MORESURFACECAPS, *PDD_MORESURFACECAPS;
+
+
 
 #ifdef __cplusplus
 } /* extern "C" */
