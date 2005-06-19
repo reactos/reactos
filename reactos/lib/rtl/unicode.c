@@ -21,6 +21,7 @@
  */
 #define __NTDRIVER__
 #include "rtl.h"
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <debug.h>

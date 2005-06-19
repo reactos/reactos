@@ -22,7 +22,7 @@
  * @implemented
  */
 NTSTATUS STDCALL
-RtlQueryTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
+RtlQueryTimeZoneInformation(LPTIME_ZONE_INFORMATION TimeZoneInformation)
 {
    RTL_QUERY_REGISTRY_TABLE QueryTable[8];
    UNICODE_STRING StandardName;
@@ -86,7 +86,7 @@ RtlQueryTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
  * @implemented
  */
 NTSTATUS STDCALL
-RtlSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
+RtlSetTimeZoneInformation(LPTIME_ZONE_INFORMATION TimeZoneInformation)
 {
    ULONG Length;
    NTSTATUS Status;
