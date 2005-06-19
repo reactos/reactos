@@ -9,8 +9,9 @@
  *                  Created 11/10/99
  */
 
-#define NDEBUG
 #include <hal.h>
+#define NDEBUG
+#include <debug.h>
 
 
 static VOID

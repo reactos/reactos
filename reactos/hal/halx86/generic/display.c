@@ -121,8 +121,9 @@
  * since there is already support for them via the VideoPortInt10 routine.
  */
 
-#define NDEBUG
 #include <hal.h>
+#define NDEBUG
+#include <debug.h>
 
 
 #define SCREEN_SYNCHRONIZATION

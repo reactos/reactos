@@ -13,8 +13,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NDEBUG
 #include <hal.h>
+#define NDEBUG
+#include <debug.h>
 
 /* Hmm, needed for KDBG := 1. Why? */
 extern POBJECT_TYPE IMPORTED IoAdapterObjectType;

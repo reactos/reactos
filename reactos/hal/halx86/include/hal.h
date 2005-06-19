@@ -50,9 +50,6 @@ ObCreateObject (
     OUT PVOID               *Object
 );
 
-/* Debug Header */
-#include <debug.h>
-
 /* Internal HAL Headers */
 #include "apic.h"
 #include "bus.h"

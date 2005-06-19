@@ -8,8 +8,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NDEBUG
 #include <hal.h>
+#define NDEBUG
+#include <debug.h>
 
 
 /* MACROS and CONSTANTS ******************************************************/

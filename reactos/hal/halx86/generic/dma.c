@@ -11,8 +11,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NDEBUG
 #include <hal.h>
+#define NDEBUG
+#include <debug.h>
 
 /* Adapters for each channel */
 PADAPTER_OBJECT HalpEisaAdapter[8];

@@ -1,4 +1,4 @@
-<module name="halxbox" type="kernelmodedll">
+<module name="halxbox" type="kernelmodedll" warnings="true">
 	<importlibrary definition="../../hal/hal.def" />
 	<include base="hal_generic">../include</include>
 	<include base="ntoskrnl">include</include>

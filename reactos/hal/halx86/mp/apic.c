@@ -27,8 +27,9 @@
 
 /* INCLUDE ***********************************************************************/
 
-#define NDEBUG
 #include <hal.h>
+#define NDEBUG
+#include <debug.h>
 #include <internal/ntoskrnl.h>
 
 /* GLOBALS ***********************************************************************/

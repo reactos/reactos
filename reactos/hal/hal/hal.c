@@ -14,8 +14,9 @@
 #include <ddk/ntddk.h>
 #include <roscfg.h>
 
-#define NDEBUG
 #include <internal/debug.h>
+#define NDEBUG
+#include <debug.h>
 
 typedef struct _LOADER_PARAMETER_BLOCK *PLOADER_PARAMETER_BLOCK;
 typedef struct _KD_PORT_INFORMATION *PKD_PORT_INFORMATION;

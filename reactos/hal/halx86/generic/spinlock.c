@@ -17,8 +17,9 @@
 
 /* INCLUDES ****************************************************************/
 
-#define NDEBUG
 #include <hal.h>
+#define NDEBUG
+#include <debug.h>
 
 /* Hmm, needed for KDBG := 1. Why? */
 #undef KeGetCurrentIrql
