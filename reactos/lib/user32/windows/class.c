@@ -15,7 +15,6 @@
 #include <debug.h>
 #include <window.h>
 #include <strpool.h>
-#include <user32/regcontrol.h>
 
 
 static BOOL GetClassInfoExCommon(

@@ -43,7 +43,6 @@ Already defined in makefile now.
 #include <string.h>
 #include <menu.h>
 #include <winpos.h>
-#include <user32/wininternal.h>
 #include <user32.h>
 #include "window.h"
 

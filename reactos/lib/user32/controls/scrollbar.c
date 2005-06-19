@@ -36,7 +36,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <oleacc.h>
-#include <user32/regcontrol.h>
 #include <rosrtl/minmax.h>
 
 /* GLOBAL VARIABLES ***********************************************************/

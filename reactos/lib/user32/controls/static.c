@@ -19,7 +19,6 @@
  */
 
 #include "user32.h"
-#include "user32/regcontrol.h"
 
 #ifndef __REACTOS__
 WINE_DEFAULT_DEBUG_CHANNEL(static);

@@ -11,7 +11,7 @@
 #include "user32.h"
 #include <string.h>
 #include <debug.h>
-#include <user32/callback.h>
+#include <win32k/callback.h>
 #include <message.h>
 
 /* DDE message exchange

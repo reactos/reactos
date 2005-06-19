@@ -1,15 +1,11 @@
-#include <windows.h>
+#include "user32.h"
+#include "menu.h"
+#include "message.h"
+#include "accel.h"
+#include "strpool.h"
+#include <win32k/callback.h>
+
 #include <debug.h>
-#include <ddk/ntddk.h>
-#include <user32/callback.h>
-#include <user32/accel.h>
-#include <window.h>
-#include <menu.h>
-#include <message.h>
-#define _WIN32K_KAPI_H
-#include <user32.h>
-#include <strpool.h>
-#include <roscfg.h>
 
 /* FIXME: Belongs to some header. */
 WINBOOL STDCALL GdiDllInitialize(HANDLE, DWORD, LPVOID);

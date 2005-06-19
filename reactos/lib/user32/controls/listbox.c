@@ -22,7 +22,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include "controls.h"
-#include "user32/regcontrol.h"
 #include "wine/debug.h"
 
 #ifdef __REACTOS__

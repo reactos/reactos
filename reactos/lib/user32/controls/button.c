@@ -29,7 +29,6 @@
 #include <stdlib.h>
 
 #include "controls.h"
-#include "user32/regcontrol.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"
 

@@ -14,7 +14,6 @@
 #include "user32.h"
 #include <windowsx.h>
 #include <window.h>
-#include <user32/wininternal.h>
 #include <string.h>
 #include <cursor.h>
 #include <menu.h>

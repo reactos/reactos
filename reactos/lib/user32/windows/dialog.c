@@ -39,9 +39,6 @@
 #include <limits.h>
 #include <debug.h>
 
-#include "user32/regcontrol.h"
-#include "../controls/controls.h"
-
 /* MACROS/DEFINITIONS ********************************************************/
 
 #define DF_END  0x0001

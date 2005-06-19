@@ -39,8 +39,7 @@
 #include <draw.h>
 #include <window.h>
 #include <strpool.h>
-#include <user32/callback.h>
-#include "user32/regcontrol.h"
+#include <win32k/callback.h>
 #include "../controls/controls.h"
 
 #define NDEBUG

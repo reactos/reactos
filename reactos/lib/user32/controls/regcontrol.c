@@ -11,7 +11,6 @@
 
 #include "user32.h"
 #include <wchar.h>
-#include "user32/regcontrol.h"
 #include "win32k/ntuser.h"
 
 static void RegisterBuiltinClass(const struct builtin_class_descr *Descr)

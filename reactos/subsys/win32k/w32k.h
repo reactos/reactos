@@ -16,6 +16,7 @@
 #include <ddk/ntddmou.h>
 
 #include <win32k/win32k.h>
+#include <win32k/callback.h>
 #include <csrss/csrss.h>
 
 #include <internal/ntoskrnl.h>
@@ -33,7 +34,6 @@
 #include <windowsx.h>
 
 #include <rosrtl/string.h>
-#include <user32/callback.h>
 
 #include <include/ssec.h>
 #include <include/accelerator.h>

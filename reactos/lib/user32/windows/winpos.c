@@ -13,9 +13,7 @@
 
 #include "user32.h"
 #include <window.h>
-#include <user32/callback.h>
-#include <user32/regcontrol.h>
-#include <user32/wininternal.h>
+#include <win32k/callback.h>
 #include <window.h>
 #define NDEBUG
 #include <debug.h>

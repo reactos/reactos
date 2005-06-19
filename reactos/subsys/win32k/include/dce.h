@@ -5,7 +5,6 @@
 
 typedef struct tagDCE *PDCE;
 
-#include <user32/wininternal.h>
 #include <include/window.h>
 
 typedef HANDLE HDCE;
@@ -35,6 +34,14 @@ typedef struct tagDCE
     DWORD        DCXFlags;
     HANDLE       Self;
 } DCE;  /* PDCE already declared at top of file */
+
+/* internal DCX flags */
+#define DCX_DCEEMPTY		0x00000800
+#define DCX_DCEBUSY		0x00001000
+#define DCX_DCEDIRTY		0x00002000
+#define DCX_WINDOWPAINT		0x00020000
+#define DCX_KEEPCLIPRGN		0x00040000
+#define DCX_NOCLIPCHILDREN      0x00080000
 
 #define  DCEOBJ_AllocDCE()  \
   ((HDCE) GDIOBJ_AllocObj (GDI_OBJECT_TYPE_DCE))
