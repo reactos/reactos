@@ -83,6 +83,8 @@ typedef VOID
 typedef unsigned short RTL_ATOM;
 typedef unsigned short *PRTL_ATOM;
 
+typedef ACL_REVISION_INFORMATION *PACL_REVISION_INFORMATION;
+typedef ACL_SIZE_INFORMATION *PACL_SIZE_INFORMATION;
 typedef struct _ACE
 {
     ACE_HEADER Header;

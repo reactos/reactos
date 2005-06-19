@@ -553,7 +553,7 @@ typedef enum _THREADINFOCLASS
 /* Basic Types that aren't defined in User-Mode Headers */
 typedef CONST int CINT;
 typedef CONST char *PCSZ;
-typedef CONST short CSHORT;
+typedef short CSHORT;
 typedef CSHORT *PCSHORT;
 typedef LARGE_INTEGER PHYSICAL_ADDRESS, *PPHYSICAL_ADDRESS;
 
