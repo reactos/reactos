@@ -39,8 +39,6 @@ extern "C" {
 #include "ntddk.h"
 #include "ntpoapi.h"
 
-#pragma pack(push,4)
-
 typedef struct _PEB *PPEB;
 
 /* FIXME: Unknown definitions */
@@ -2953,8 +2951,6 @@ NTAPI
 NtVdmControl(
   IN ULONG  ControlCode,
   IN PVOID  ControlData);
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }
