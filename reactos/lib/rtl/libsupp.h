@@ -20,10 +20,12 @@ ExAllocatePoolWithTag(
 
 VOID
 STDCALL
-ExFreePool(
-    IN PVOID Pool
+ExFreePoolWithTag(
+    IN PVOID Pool,
+    IN ULONG Tag
 );
 
 #define ExAllocatePool(p,n) ExAllocatePoolWithTag(p,n, TAG_RTL)
+#define ExFreePool(P) ExFreePoolWithTag(P, TAG_RTL)
 
 /* EOF */
