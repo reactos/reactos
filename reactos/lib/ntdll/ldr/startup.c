@@ -12,7 +12,7 @@
 
 #define NDEBUG
 #include <ntdll.h>
-#include <user32/callback.h>
+#include <win32k/callback.h>
 
 VOID RtlInitializeHeapManager (VOID);
 VOID LdrpInitLoader(VOID);
