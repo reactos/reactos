@@ -2,6 +2,8 @@
 #include <ddk/winddi.h>
 #include <ddk/ntddvdeo.h>
 
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+
 #define DS_SOLIDBRUSH  0x00000001
 #define DS_GREYBRUSH   0x00000002
 #define DS_BRUSH       0x00000004
