@@ -213,6 +213,7 @@ typedef struct _I8042_HOOK_WORKITEM
 /*
  * Some defines
  */
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 #define TAG_I8042 TAG('8', '0', '4', '2')
 
 #define KBD_WRAP_MASK      0x1F
