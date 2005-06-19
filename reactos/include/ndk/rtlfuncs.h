@@ -15,6 +15,218 @@
 /*FIXME: REORGANIZE THIS */
 /* FIXME: SOME FUNCTIONS MUST BE PROTECTED AGAINST DDK/IFS. */
 
+/*
+ * VOID
+ * InitializeListHead (
+ *		PLIST_ENTRY	ListHead
+ *		);
+ *
+ * FUNCTION: Initializes a double linked list
+ * ARGUMENTS:
+ *         ListHead = Caller supplied storage for the head of the list
+ */
+static __inline VOID
+InitializeListHead(
+	IN PLIST_ENTRY  ListHead)
+{
+	ListHead->Flink = ListHead->Blink = ListHead;
+}
+
+
+/*
+ * VOID
+ * InsertHeadList (
+ *		PLIST_ENTRY	ListHead,
+ *		PLIST_ENTRY	Entry
+ *		);
+ *
+ * FUNCTION: Inserts an entry in a double linked list
+ * ARGUMENTS:
+ *        ListHead = Head of the list
+ *        Entry = Entry to insert
+ */
+static __inline VOID
+InsertHeadList(
+	IN PLIST_ENTRY  ListHead,
+	IN PLIST_ENTRY  Entry)
+{
+	PLIST_ENTRY OldFlink;
+	OldFlink = ListHead->Flink;
+	Entry->Flink = OldFlink;
+	Entry->Blink = ListHead;
+	OldFlink->Blink = Entry;
+	ListHead->Flink = Entry;
+}
+
+
+/*
+ * VOID
+ * InsertTailList (
+ *		PLIST_ENTRY	ListHead,
+ *		PLIST_ENTRY	Entry
+ *		);
+ *
+ * FUNCTION:
+ *	Inserts an entry in a double linked list
+ *
+ * ARGUMENTS:
+ *	ListHead = Head of the list
+ *	Entry = Entry to insert
+ */
+static __inline VOID
+InsertTailList(
+	IN PLIST_ENTRY  ListHead,
+	IN PLIST_ENTRY  Entry)
+{
+	PLIST_ENTRY OldBlink;
+	OldBlink = ListHead->Blink;
+	Entry->Flink = ListHead;
+	Entry->Blink = OldBlink;
+	OldBlink->Flink = Entry;
+	ListHead->Blink = Entry;
+}
+
+/*
+ * BOOLEAN
+ * IsListEmpty (
+ *	PLIST_ENTRY	ListHead
+ *	);
+ *
+ * FUNCTION:
+ *	Checks if a double linked list is empty
+ *
+ * ARGUMENTS:
+ *	ListHead = Head of the list
+*/
+#define IsListEmpty(ListHead) \
+	((ListHead)->Flink == (ListHead))
+
+
+/*
+ * PSINGLE_LIST_ENTRY
+ * PopEntryList (
+ *	PSINGLE_LIST_ENTRY	ListHead
+ *	);
+ *
+ * FUNCTION:
+ *	Removes an entry from the head of a single linked list
+ *
+ * ARGUMENTS:
+ *	ListHead = Head of the list
+ *
+ * RETURNS:
+ *	The removed entry
+ */
+#define PopEntryList(ListHead) \
+	(ListHead)->Next; \
+	{ \
+		PSINGLE_LIST_ENTRY _FirstEntry; \
+		_FirstEntry = (ListHead)->Next; \
+		if (_FirstEntry != NULL) \
+			(ListHead)->Next = _FirstEntry->Next; \
+	}
+
+#define PushEntryList(_ListHead, _Entry) \
+	(_Entry)->Next = (_ListHead)->Next; \
+	(_ListHead)->Next = (_Entry); \
+
+/*
+ *BOOLEAN
+ *RemoveEntryList (
+ *	PLIST_ENTRY	Entry
+ *	);
+ *
+ * FUNCTION:
+ *	Removes an entry from a double linked list
+ *
+ * ARGUMENTS:
+ *	ListEntry = Entry to remove
+ */
+static __inline BOOLEAN
+RemoveEntryList(
+  IN PLIST_ENTRY  Entry)
+{
+  PLIST_ENTRY OldFlink;
+  PLIST_ENTRY OldBlink;
+
+  OldFlink = Entry->Flink;
+  OldBlink = Entry->Blink;
+  OldFlink->Blink = OldBlink;
+  OldBlink->Flink = OldFlink;
+  return (OldFlink == OldBlink);
+}
+
+
+/*
+ * PLIST_ENTRY
+ * RemoveHeadList (
+ *	PLIST_ENTRY	ListHead
+ *	);
+ *
+ * FUNCTION:
+ *	Removes the head entry from a double linked list
+ *
+ * ARGUMENTS:
+ *	ListHead = Head of the list
+ *
+ * RETURNS:
+ *	The removed entry
+ */
+static __inline PLIST_ENTRY 
+RemoveHeadList(
+  IN PLIST_ENTRY  ListHead)
+{
+  PLIST_ENTRY Flink;
+  PLIST_ENTRY Entry;
+
+  Entry = ListHead->Flink;
+  Flink = Entry->Flink;
+  ListHead->Flink = Flink;
+  Flink->Blink = ListHead;
+  return Entry;
+}
+
+
+/*
+ * PLIST_ENTRY
+ * RemoveTailList (
+ *	PLIST_ENTRY	ListHead
+ *	);
+ *
+ * FUNCTION:
+ *	Removes the tail entry from a double linked list
+ *
+ * ARGUMENTS:
+ *	ListHead = Head of the list
+ *
+ * RETURNS:
+ *	The removed entry
+ */
+static __inline PLIST_ENTRY
+RemoveTailList(
+  IN PLIST_ENTRY  ListHead)
+{
+  PLIST_ENTRY Blink;
+  PLIST_ENTRY Entry;
+
+  Entry = ListHead->Blink;
+  Blink = Entry->Blink;
+  ListHead->Blink = Blink;
+  Blink->Flink = ListHead;
+  return Entry;
+}
+
+/*
+ * BOOLEAN
+ * IsXstEntry (
+ *  PLIST_ENTRY ListHead,
+ *  PLIST_ENTRY Entry
+ *  );
+*/
+#define IsFirstEntry(ListHead, Entry) ((ListHead)->Flink == Entry)
+  
+#define IsLastEntry(ListHead, Entry) ((ListHead)->Blink == Entry)
+
                       
 #define RtlGetProcessHeap() (NtCurrentPeb()->ProcessHeap)
 
@@ -247,6 +459,17 @@ RtlCreateAcl(
     ULONG AclSize,
     ULONG AclRevision
 );
+
+PVOID
+STDCALL
+RtlCreateHeap(
+    IN ULONG Flags,
+    IN PVOID BaseAddress OPTIONAL,
+    IN ULONG SizeToReserve OPTIONAL,
+    IN ULONG SizeToCommit OPTIONAL,
+    IN PVOID Lock OPTIONAL,
+    IN PRTL_HEAP_DEFINITION Definition OPTIONAL
+);
           
 NTSTATUS
 STDCALL
@@ -418,6 +641,21 @@ RtlOemStringToUnicodeSize (
 	POEM_STRING	AnsiString
 	);
     
+PVOID
+STDCALL
+RtlImageDirectoryEntryToData (
+	PVOID	BaseAddress,
+	BOOLEAN	bFlag,
+	ULONG	Directory,
+	PULONG	Size
+	);
+        
+NTSTATUS
+STDCALL
+RtlOpenCurrentUser(
+  IN  ACCESS_MASK  DesiredAccess,
+  OUT  PHANDLE  KeyHandle);
+    
 WCHAR STDCALL
 RtlDowncaseUnicodeChar(IN WCHAR Source);
 
@@ -471,6 +709,14 @@ ULONG
 STDCALL
 RtlUnicodeStringToAnsiSize (
 	IN	PUNICODE_STRING	UnicodeString
+	);
+    
+NTSTATUS
+STDCALL
+RtlUnicodeStringToInteger (
+	IN	PUNICODE_STRING	String,
+	IN	ULONG		Base,
+	OUT	PULONG		Value
 	);
     
 #ifndef _NTIFS_

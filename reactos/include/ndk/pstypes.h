@@ -38,6 +38,37 @@ extern NTOSAPI POBJECT_TYPE PsThreadType;
 
 #define USER_SHARED_DATA (0x7FFE0000)
 
+#define PROCESS_PRIORITY_CLASS_NORMAL       (2) /* FIXME */
+
+/* Global Flags */
+#define FLG_STOP_ON_EXCEPTION          0x00000001
+#define FLG_SHOW_LDR_SNAPS             0x00000002
+#define FLG_DEBUG_INITIAL_COMMAND      0x00000004
+#define FLG_STOP_ON_HUNG_GUI           0x00000008
+#define FLG_HEAP_ENABLE_TAIL_CHECK     0x00000010
+#define FLG_HEAP_ENABLE_FREE_CHECK     0x00000020
+#define FLG_HEAP_VALIDATE_PARAMETERS   0x00000040
+#define FLG_HEAP_VALIDATE_ALL          0x00000080
+#define FLG_POOL_ENABLE_TAIL_CHECK     0x00000100
+#define FLG_POOL_ENABLE_FREE_CHECK     0x00000200
+#define FLG_POOL_ENABLE_TAGGING        0x00000400
+#define FLG_HEAP_ENABLE_TAGGING        0x00000800
+#define FLG_USER_STACK_TRACE_DB        0x00001000
+#define FLG_KERNEL_STACK_TRACE_DB      0x00002000
+#define FLG_MAINTAIN_OBJECT_TYPELIST   0x00004000
+#define FLG_HEAP_ENABLE_TAG_BY_DLL     0x00008000
+#define FLG_IGNORE_DEBUG_PRIV          0x00010000
+#define FLG_ENABLE_CSRDEBUG            0x00020000
+#define FLG_ENABLE_KDEBUG_SYMBOL_LOAD  0x00040000
+#define FLG_DISABLE_PAGE_KERNEL_STACKS 0x00080000
+#define FLG_HEAP_ENABLE_CALL_TRACING   0x00100000
+#define FLG_HEAP_DISABLE_COALESCING    0x00200000
+#define FLG_ENABLE_CLOSE_EXCEPTIONS    0x00400000
+#define FLG_ENABLE_EXCEPTION_LOGGING   0x00800000
+#define FLG_ENABLE_HANDLE_TYPE_TAGGING 0x01000000
+#define FLG_HEAP_PAGE_ALLOCS           0x02000000
+#define FLG_DEBUG_INITIAL_COMMAND_EX   0x04000000
+
 /* ENUMERATIONS **************************************************************/
 
 /* FUNCTION TYPES ************************************************************/
@@ -72,13 +103,13 @@ typedef struct _PEB_FREE_BLOCK
     ULONG Size;
 } PEB_FREE_BLOCK, *PPEB_FREE_BLOCK;
 
-typedef struct _PEB 
+typedef struct _PEB
 {
     UCHAR InheritedAddressSpace;                     /* 00h */
     UCHAR ReadImageFileExecOptions;                  /* 01h */
     UCHAR BeingDebugged;                             /* 02h */
-    UCHAR Spare;                                     /* 03h */
-    PVOID Mutant;                                    /* 04h */
+    BOOLEAN SpareBool;                               /* 03h */
+    HANDLE Mutant;                                   /* 04h */
     PVOID ImageBaseAddress;                          /* 08h */
     PPEB_LDR_DATA Ldr;                               /* 0Ch */
     PRTL_USER_PROCESS_PARAMETERS ProcessParameters;  /* 10h */
@@ -103,7 +134,6 @@ typedef struct _PEB
     PVOID UnicodeCaseTableData;                      /* 60h */
     ULONG NumberOfProcessors;                        /* 64h */
     ULONG NtGlobalFlag;                              /* 68h */
-    UCHAR _Spare2[0x4];                              /* 6Ch */
     LARGE_INTEGER CriticalSectionTimeout;            /* 70h */
     ULONG HeapSegmentReserve;                        /* 78h */
     ULONG HeapSegmentCommit;                         /* 7Ch */
@@ -111,7 +141,7 @@ typedef struct _PEB
     ULONG HeapDeCommitFreeBlockThreshold;            /* 84h */
     ULONG NumberOfHeaps;                             /* 88h */
     ULONG MaximumNumberOfHeaps;                      /* 8Ch */
-    PVOID** ProcessHeaps;                            /* 90h */
+    PVOID* ProcessHeaps;                             /* 90h */
     PVOID GdiSharedHandleTable;                      /* 94h */
     PVOID ProcessStarterHelper;                      /* 98h */
     PVOID GdiDCAttributeList;                        /* 9Ch */
@@ -119,13 +149,19 @@ typedef struct _PEB
     ULONG OSMajorVersion;                            /* A4h */
     ULONG OSMinorVersion;                            /* A8h */
     USHORT OSBuildNumber;                            /* ACh */
-    UCHAR SPMajorVersion;                            /* AEh */
-    UCHAR SPMinorVersion;                            /* AFh */
+    USHORT OSCSDVersion;                             /* AEh */
     ULONG OSPlatformId;                              /* B0h */
     ULONG ImageSubSystem;                            /* B4h */
     ULONG ImageSubSystemMajorVersion;                /* B8h */
-    ULONG ImageSubSystemMinorVersion;                /* C0h */
+    ULONG ImageSubSystemMinorVersion;                /* BCh */
+    ULONG ImageProcessAffinityMask;                  /* C0h */
     ULONG GdiHandleBuffer[0x22];                     /* C4h */
+    PVOID PostProcessInitRoutine;                    /* 14Ch */
+    PVOID *TlsExpansionBitmap;                       /* 150h */
+    ULONG TlsExpansionBitmapBits[0x20];              /* 154h */
+    ULONG SessionId;                                 /* 1D4h */
+    PVOID AppCompatInfo;                             /* 1D8h */
+    UNICODE_STRING CSDVersion;                       /* 1DCh */
 } PEB;
 
 typedef struct _GDI_TEB_BATCH 
