@@ -22,8 +22,9 @@
  * Wirzenius wrote this portably, Torvalds fucked it up :-)
  */
 
-#define NDEBUG
 #include <ntdll.h>
+#define NDEBUG
+#include <debug.h>
 #include <wchar.h>
 #include <limits.h>
 

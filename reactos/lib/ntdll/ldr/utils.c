@@ -19,8 +19,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NDEBUG
 #include <ntdll.h>
+#define NDEBUG
+#include <debug.h>
 
 #define LDRP_PROCESS_CREATION_TIME 0x8000000
 

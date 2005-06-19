@@ -26,8 +26,9 @@
 
 /* INCLUDES ****************************************************************/
 
-#define NDEBUG
 #include <ntdll.h>
+#define NDEBUG
+#include <debug.h>
 
 typedef struct _RTL_RANGE_ENTRY
 {

@@ -6,8 +6,9 @@
  * PURPOSE:         converts a unicode string to a multi byte string
  */
 
-#define NDEBUG
 #include <ntdll.h>
+#define NDEBUG
+#include <debug.h>
 #include <stdlib.h>
 #include <string.h>
 

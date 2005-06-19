@@ -42,8 +42,9 @@
  * John Polstra <jdp@polstra.com>.
  */
 
-#define NDEBUG
 #include <ntdll.h>
+#define NDEBUG
+#include <debug.h>
 
 #if 0
 

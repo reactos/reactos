@@ -6,8 +6,9 @@
  * PURPOSE:         CSRSS threads API
  */
 
-#define NDEBUG
 #include <ntdll.h>
+#define NDEBUG
+#include <debug.h>
 
 /*
  * @implemented

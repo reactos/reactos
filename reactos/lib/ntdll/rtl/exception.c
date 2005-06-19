@@ -14,8 +14,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NDEBUG
 #include <ntdll.h>
+#define NDEBUG
+#include <debug.h>
 
 static RTL_CRITICAL_SECTION RtlpVectoredExceptionLock;
 static LIST_ENTRY RtlpVectoredExceptionHead;

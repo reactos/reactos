@@ -1,7 +1,8 @@
 /**/
 
-#define NDEBUG
 #include <ntdll.h>
+#define NDEBUG
+#include <debug.h>
 #include <stdio.h>
 
 /* helper function for *scanf.  Returns the value of character c in the

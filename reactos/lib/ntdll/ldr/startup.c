@@ -10,8 +10,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NDEBUG
 #include <ntdll.h>
+#define NDEBUG
+#include <debug.h>
 #include <win32k/callback.h>
 
 VOID RtlInitializeHeapManager (VOID);

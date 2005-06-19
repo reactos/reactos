@@ -18,8 +18,9 @@
  * The code is based on information published in WDJ January 1999 issue.
  */
 
-#define NDEBUG
 #include <ntdll.h>
+#define NDEBUG
+#include <debug.h>
 
 
 /* FUNCTIONS ****************************************************************/

@@ -24,8 +24,9 @@
 #include <ctype.h>
 #include <limits.h>
 
-#define NDEBUG
 #include <ntdll.h>
+#define NDEBUG
+#include <debug.h>
 
 
 #define ZEROPAD	1		/* pad with zero */

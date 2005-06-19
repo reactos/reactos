@@ -8,8 +8,9 @@
  * DATE:            2001-06-17
  */
  
-#define NDEBUG
 #include <ntdll.h>
+#define NDEBUG
+#include <debug.h>
 
 /*
  * @implemented

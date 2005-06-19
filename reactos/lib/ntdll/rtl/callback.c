@@ -9,8 +9,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NDEBUG
 #include <ntdll.h>
+#define NDEBUG
+#include <debug.h>
 /* TYPES *********************************************************************/
 
 typedef NTSTATUS (STDCALL *KERNEL_CALLBACK_FUNCTION)(PVOID Argument,
