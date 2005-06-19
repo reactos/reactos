@@ -55,6 +55,13 @@ BOOLEAN CmImportSystemHive(PCHAR ChunkBase, ULONG ChunkSize);
 BOOLEAN CmImportHardwareHive(PCHAR ChunkBase, ULONG ChunkSize);
 VOID KdInitSystem(ULONG Reserved, PLOADER_PARAMETER_BLOCK LoaderBlock);
 
+BOOLEAN
+FASTCALL
+RtlpCreateUnicodeString(
+   IN OUT PUNICODE_STRING UniDest,
+   IN PCWSTR  Source,
+   IN POOL_TYPE PoolType);
+   
 #endif /* __ASM__ */
 
 /*

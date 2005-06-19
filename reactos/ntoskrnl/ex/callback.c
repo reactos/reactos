@@ -65,7 +65,7 @@ ExpInitializeCallbacks(VOID)
    }
 
    /* Initialize the Object */
-   RtlRosInitUnicodeStringFromLiteral(&DirName, L"\\Callback" );
+   RtlInitUnicodeString(&DirName, L"\\Callback" );
    InitializeObjectAttributes(
       &ObjectAttributes,
       &DirName,

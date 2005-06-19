@@ -650,7 +650,7 @@ CmiCreateCurrentControlSetLink(VOID)
 
   DPRINT("Link target '%S'\n", TargetNameBuffer);
 
-  RtlRosInitUnicodeStringFromLiteral(&LinkName,
+  RtlInitUnicodeString(&LinkName,
 				  L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &LinkName,
@@ -670,7 +670,7 @@ CmiCreateCurrentControlSetLink(VOID)
       return(Status);
     }
 
-  RtlRosInitUnicodeStringFromLiteral(&LinkValue,
+  RtlInitUnicodeString(&LinkValue,
 				  L"SymbolicLinkValue");
   Status = ZwSetValueKey(KeyHandle,
 			 &LinkValue,
@@ -925,7 +925,7 @@ CmiInitControlSetLink (VOID)
   NTSTATUS Status;
 
   /* Create 'ControlSet001' key */
-  RtlRosInitUnicodeStringFromLiteral (&ControlSetKeyName,
+  RtlInitUnicodeString(&ControlSetKeyName,
 				   L"\\Registry\\Machine\\SYSTEM\\ControlSet001");
   InitializeObjectAttributes (&ObjectAttributes,
 			      &ControlSetKeyName,
@@ -947,7 +947,7 @@ CmiInitControlSetLink (VOID)
   ZwClose (KeyHandle);
 
   /* Link 'CurrentControlSet' to 'ControlSet001' key */
-  RtlRosInitUnicodeStringFromLiteral (&ControlSetLinkName,
+  RtlInitUnicodeString (&ControlSetLinkName,
 				   L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet");
   InitializeObjectAttributes (&ObjectAttributes,
 			      &ControlSetLinkName,
@@ -967,7 +967,7 @@ CmiInitControlSetLink (VOID)
       return Status;
     }
 
-  RtlRosInitUnicodeStringFromLiteral (&ControlSetValueName,
+  RtlInitUnicodeString (&ControlSetValueName,
 				   L"SymbolicLinkValue");
   Status = ZwSetValueKey (KeyHandle,
 			  &ControlSetValueName,
@@ -1008,7 +1008,7 @@ CmiInitHives(BOOLEAN SetupBoot)
 
   if (SetupBoot == TRUE)
     {
-      RtlRosInitUnicodeStringFromLiteral(&KeyName,
+      RtlInitUnicodeString(&KeyName,
 				      L"\\Registry\\Machine\\HARDWARE");
       InitializeObjectAttributes(&ObjectAttributes,
 				 &KeyName,
@@ -1024,7 +1024,7 @@ CmiInitHives(BOOLEAN SetupBoot)
 	  return(Status);
 	}
 
-      RtlRosInitUnicodeStringFromLiteral(&ValueName,
+      RtlInitUnicodeString(&ValueName,
 				      L"InstallPath");
 
       BufferSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 4096;
