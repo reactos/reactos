@@ -521,25 +521,17 @@ Ki386SetProcessorFeatures(VOID)
     }
 
     if (FastSystemCallDisable) {
-
         /* Use INT2E */
-        SharedUserData->SystemCall[0] = 0x8D;
-        SharedUserData->SystemCall[1] = 0x54;
-        SharedUserData->SystemCall[2] = 0x24;
-        SharedUserData->SystemCall[3] = 0x08;
-        SharedUserData->SystemCall[4] = 0xCD;
-        SharedUserData->SystemCall[5] = 0x2E;
-        SharedUserData->SystemCall[6] = 0xC3;
-
+        const unsigned char Entry[7] = {0x8D, 0x54, 0x24, 0x08,     /* lea    0x8(%esp),%edx    */
+                                        0xCD, 0x2E,                 /* int    0x2e              */
+                                        0xC3};                      /* ret                      */
+        memcpy(&SharedUserData->SystemCall, Entry, sizeof(Entry));
     } else {
-
         /* Use SYSENTER */
-        SharedUserData->SystemCall[0] = 0x8B;
-        SharedUserData->SystemCall[1] = 0xD4;
-        SharedUserData->SystemCall[2] = 0x0F;
-        SharedUserData->SystemCall[3] = 0x34;
-        SharedUserData->SystemCall[4] = 0xC3;
-
+        const unsigned char Entry[5] = {0x8B, 0xD4,                 /* movl    %esp,%edx        */ 
+                                        0x0F, 0x34,                 /* sysenter                 */
+                                        0xC3};                      /* ret                      */    
+        memcpy(&SharedUserData->SystemCall, Entry, sizeof(Entry));
         /* Enable SYSENTER/SYSEXIT */
         KiFastSystemCallDisable = 0;
     }
