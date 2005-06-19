@@ -742,23 +742,6 @@ typedef ULONG PNP_DEVICE_STATE, *PPNP_DEVICE_STATE;
 #define PNP_DEVICE_RESOURCE_REQUIREMENTS_CHANGED 0x00000010
 #define PNP_DEVICE_NOT_DISABLEABLE               0x00000020
 
-typedef enum _PNP_VETO_TYPE
-{
-  PNP_VetoTypeUnknown,
-  PNP_VetoLegacyDevice,
-  PNP_VetoPendingClose,
-  PNP_VetoWindowsApp,
-  PNP_VetoWindowsService,
-  PNP_VetoOutstandingOpen,
-  PNP_VetoDevice,
-  PNP_VetoDriver,
-  PNP_VetoIllegalDeviceRequest,
-  PNP_VetoInsufficientPower,
-  PNP_VetoNonDisableable,
-  PNP_VetoLegacyDriver,
-  PNP_VetoInsufficientRights
-} PNP_VETO_TYPE, *PPNP_VETO_TYPE;
-
 typedef struct _TARGET_DEVICE_CUSTOM_NOTIFICATION {
   USHORT  Version;
   USHORT  Size;

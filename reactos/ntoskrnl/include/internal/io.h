@@ -201,17 +201,6 @@ typedef struct _DEVICE_NODE
 #define DNUF_DONT_SHOW_IN_UI    0x0002
 #define DNUF_NOT_DISABLEABLE    0x0008
 
-/* For Problem field */
-#define CM_PROB_NOT_CONFIGURED  1
-#define CM_PROB_FAILED_START    10
-#define CM_PROB_NORMAL_CONFLICT 12
-#define CM_PROB_NEED_RESTART    14
-#define CM_PROB_REINSTALL       18
-#define CM_PROB_WILL_BE_REMOVED 21
-#define CM_PROB_DISABLED        22
-#define CM_PROB_FAILED_INSTALL  28
-#define CM_PROB_FAILED_ADD      31
-
 /*
  * VOID
  * IopDeviceNodeSetFlag(

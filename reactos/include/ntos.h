@@ -11,6 +11,7 @@
 #include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
 #include <ddk/ntnls.h>
+#include <ddk/cfg.h>
 #include <evntrace.h>
 #include "ntos/types.h"
 #include "ntos/cdrom.h"
@@ -54,6 +55,7 @@
 #include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
 #include <ddk/ntnls.h>
+#include <ddk/cfg.h>
 #include <evntrace.h>
 #include "ntos/types.h"
 #include "ntos/cdrom.h"
