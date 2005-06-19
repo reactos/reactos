@@ -181,7 +181,7 @@ typedef struct _HAL_PRIVATE_DISPATCH_TABLE *PHAL_PRIVATE_DISPATCH_TABLE;
 typedef struct _DEVICE_HANDLER_OBJECT *PDEVICE_HANDLER_OBJECT;
 typedef struct _BUS_HANDLER *PBUS_HANDLER;
 typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
-typedef struct _DRIVE_LAYOUT_INFORMATION *PDRIVE_LAYOUT_INFORMATION;
+typedef struct _DRIVE_LAYOUT_INFORMATION;
 typedef struct _DRIVE_LAYOUT_INFORMATION_EX *PDRIVE_LAYOUT_INFORMATION_EX;
 typedef struct _NAMED_PIPE_CREATE_PARAMETERS *PNAMED_PIPE_CREATE_PARAMETERS;
 typedef struct _MAILSLOT_CREATE_PARAMETERS *PMAILSLOT_CREATE_PARAMETERS;
@@ -692,6 +692,23 @@ typedef ULONG PNP_DEVICE_STATE, *PPNP_DEVICE_STATE;
 #define PNP_DEVICE_RESOURCE_REQUIREMENTS_CHANGED 0x00000010
 #define PNP_DEVICE_NOT_DISABLEABLE               0x00000020
 
+typedef enum _PNP_VETO_TYPE 
+{
+    PNP_VetoTypeUnknown,
+    PNP_VetoLegacyDevice,
+    PNP_VetoPendingClose,
+    PNP_VetoWindowsApp,
+    PNP_VetoWindowsService,
+    PNP_VetoOutstandingOpen,
+    PNP_VetoDevice,
+    PNP_VetoDriver,
+    PNP_VetoIllegalDeviceRequest,
+    PNP_VetoInsufficientPower,
+    PNP_VetoNonDisableable,
+    PNP_VetoLegacyDriver,
+    PNP_VetoInsufficientRights
+} PNP_VETO_TYPE, *PPNP_VETO_TYPE;
+
 typedef struct _TARGET_DEVICE_CUSTOM_NOTIFICATION {
   USHORT  Version;
   USHORT  Size;
@@ -775,6 +792,45 @@ typedef VOID
 (DDKAPI *PDEVICE_CHANGE_COMPLETE_CALLBACK)(
   IN PVOID Context);
 
+/* WMI, should go in a WMI header... */
+typedef struct _EVENT_TRACE_HEADER
+{
+  USHORT           Size;
+  union {
+    USHORT FieldTypeFlags;
+    struct {
+      UCHAR            HeaderType;
+      UCHAR            MarkerFlags;
+    };
+  };
+  union {
+    ULONG         Version;
+    struct {
+      UCHAR     Type;
+      UCHAR     Level;
+      USHORT    Version;
+    } Class;
+  };
+  ULONG ThreadId;
+  ULONG ProcessId;
+  LARGE_INTEGER    TimeStamp;
+  union {
+    GUID      Guid;
+    ULONGLONG GuidPtr;
+  };
+ union {
+    struct {
+      ULONG ClientContext;
+      ULONG Flags;
+    };
+    struct {
+      ULONG KernelTime;
+      ULONG UserTime;
+    };
+    ULONG64 ProcessorTime;
+  };
+} EVENT_TRACE_HEADER, *PEVENT_TRACE_HEADER;
+
 
 /*
 ** System structures
@@ -788,6 +844,33 @@ typedef VOID
 #define DUPLICATE_SAME_ACCESS             0x00000002
 #define DUPLICATE_SAME_ATTRIBUTES         0x00000004
 /* end winnt.h */
+
+/* Nls Info (ntnls.h) */
+#define MAXIMUM_LEADBYTES   12
+
+typedef struct _CPTABLEINFO 
+{
+    USHORT CodePage;
+    USHORT MaximumCharacterSize;
+    USHORT DefaultChar;
+    USHORT UniDefaultChar;
+    USHORT TransDefaultChar;
+    USHORT TransUniDefaultChar;
+    USHORT DBCSCodePage;
+    UCHAR  LeadByte[MAXIMUM_LEADBYTES];
+    PUSHORT MultiByteTable;
+    PVOID   WideCharTable;
+    PUSHORT DBCSRanges;
+    PUSHORT DBCSOffsets;
+} CPTABLEINFO, *PCPTABLEINFO;
+
+typedef struct _NLSTABLEINFO 
+{
+    CPTABLEINFO OemTableInfo;
+    CPTABLEINFO AnsiTableInfo;
+    PUSHORT UpperCaseTable;
+    PUSHORT LowerCaseTable;
+} NLSTABLEINFO, *PNLSTABLEINFO;
 
 typedef struct _OBJECT_NAME_INFORMATION {
   UNICODE_STRING  Name;
@@ -904,13 +987,6 @@ typedef struct _KDPC {
   PVOID  SystemArgument2;
   PVOID  DpcData;
 } KDPC, *PKDPC, *RESTRICTED_POINTER PRKDPC;
-
-typedef struct _KDPC_DATA {
-  LIST_ENTRY  DpcListHead;
-  ULONG  DpcLock;
-  ULONG  DpcQueueDepth;
-  ULONG  DpcCount;
-} KDPC_DATA, *PKDPC_DATA;
 
 typedef struct _WAIT_CONTEXT_BLOCK {
   KDEVICE_QUEUE_ENTRY  WaitQueueEntry;
@@ -2224,7 +2300,7 @@ typedef NTSTATUS
   IN PDEVICE_OBJECT  DeviceObject,
   IN ULONG  SectorSize,
   IN BOOLEAN  ReturnRecognizedPartitions,
-  OUT PDRIVE_LAYOUT_INFORMATION  *PartitionBuffer);
+  OUT struct _DRIVE_LAYOUT_INFORMATION **PartitionBuffer);
 
 typedef NTSTATUS
 (DDKFASTAPI *pHalIoSetPartitionInformation)(
@@ -2239,7 +2315,7 @@ typedef NTSTATUS
   IN ULONG  SectorSize,
   IN ULONG  SectorsPerTrack,
   IN ULONG  NumberOfHeads,
-  IN PDRIVE_LAYOUT_INFORMATION  PartitionBuffer);
+  IN struct _DRIVE_LAYOUT_INFORMATION *PartitionBuffer);
 
 typedef PBUS_HANDLER
 (DDKFASTAPI *pHalHandlerForBus)(
@@ -3755,11 +3831,6 @@ typedef struct _PAGED_LOOKASIDE_LIST {
   GENERAL_LOOKASIDE  L;
   FAST_MUTEX  Obsoleted;
 } PAGED_LOOKASIDE_LIST, *PPAGED_LOOKASIDE_LIST;
-
-typedef struct _PP_LOOKASIDE_LIST {
-   struct _GENERAL_LOOKASIDE *P;
-   struct _GENERAL_LOOKASIDE *L;
-} PP_LOOKASIDE_LIST, *PPP_LOOKASIDE_LIST;
 
 typedef struct _CALLBACK_OBJECT *PCALLBACK_OBJECT;
 

@@ -530,9 +530,7 @@ typedef struct _HANDLE_TABLE                    *PHANDLE_TABLE;
 typedef struct _KPROCESS                        *PKPROCESS;
 typedef struct _KQUEUE                          *PKQUEUE;
 typedef struct _KTRAP_FRAME                     *PKTRAP_FRAME;
-typedef struct _MAILSLOT_CREATE_PARAMETERS      *PMAILSLOT_CREATE_PARAMETERS;
 typedef struct _MMWSL                           *PMMWSL;
-typedef struct _NAMED_PIPE_CREATE_PARAMETERS    *PNAMED_PIPE_CREATE_PARAMETERS;
 typedef struct _OBJECT_DIRECTORY                *POBJECT_DIRECTORY;
 typedef struct _PAGEFAULT_HISTORY               *PPAGEFAULT_HISTORY;
 typedef struct _PS_IMPERSONATION_INFORMATION    *PPS_IMPERSONATION_INFORMATION;
@@ -572,10 +570,6 @@ typedef enum _FILE_STORAGE_TYPE {
     StorageTypeEmbedding,
     StorageTypeStream
 } FILE_STORAGE_TYPE;
-
-typedef enum _IO_COMPLETION_INFORMATION_CLASS {
-    IoCompletionBasicInformation
-} IO_COMPLETION_INFORMATION_CLASS;
 
 typedef enum _OBJECT_INFO_CLASS {
     ObjectBasicInfo,
@@ -1303,13 +1297,6 @@ typedef struct _KQUEUE {
     LIST_ENTRY          ThreadListHead;
 } KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
 
-typedef struct _MAILSLOT_CREATE_PARAMETERS {
-    ULONG           MailslotQuota;
-    ULONG           MaximumMessageSize;
-    LARGE_INTEGER   ReadTimeout;
-    BOOLEAN         TimeoutSpecified;
-} MAILSLOT_CREATE_PARAMETERS, *PMAILSLOT_CREATE_PARAMETERS;
-
 typedef struct _MBCB {
     CSHORT          NodeTypeCode;
     CSHORT          NodeIsInZone;
@@ -1331,17 +1318,6 @@ typedef struct _MOVEFILE_DESCRIPTOR {
      ULONG          NumVcns;
      ULONG          Reserved1;
 } MOVEFILE_DESCRIPTOR, *PMOVEFILE_DESCRIPTOR;
-
-typedef struct _NAMED_PIPE_CREATE_PARAMETERS {
-    ULONG           NamedPipeType;
-    ULONG           ReadMode;
-    ULONG           CompletionMode;
-    ULONG           MaximumInstances;
-    ULONG           InboundQuota;
-    ULONG           OutboundQuota;
-    LARGE_INTEGER   DefaultTimeout;
-    BOOLEAN         TimeoutSpecified;
-} NAMED_PIPE_CREATE_PARAMETERS, *PNAMED_PIPE_CREATE_PARAMETERS;
 
 typedef struct _OBJECT_BASIC_INFO {
     ULONG           Attributes;
@@ -1383,13 +1359,6 @@ typedef struct _OBJECT_ALL_TYPES_INFO {
     OBJECT_TYPE_INFO    ObjectsTypeInfo[1];
 } OBJECT_ALL_TYPES_INFO, *POBJECT_ALL_TYPES_INFO;
 
-typedef struct _PAGEFAULT_HISTORY {
-    ULONG                           CurrentIndex;
-    ULONG                           MaxIndex;
-    KSPIN_LOCK                      SpinLock;
-    PVOID                           Reserved;
-    PROCESS_WS_WATCH_INFORMATION    WatchInfo[1];
-} PAGEFAULT_HISTORY, *PPAGEFAULT_HISTORY;
 
 typedef struct _PATHNAME_BUFFER {
     ULONG PathNameLength;
@@ -1523,28 +1492,6 @@ typedef struct _SE_EXPORTS {
     LUID    SeEnableDelegationPrivilege;
 
 } SE_EXPORTS, *PSE_EXPORTS;
-
-typedef struct _SECTION_BASIC_INFORMATION {
-    PVOID           BaseAddress;
-    ULONG           Attributes;
-    LARGE_INTEGER   Size;
-} SECTION_BASIC_INFORMATION, *PSECTION_BASIC_INFORMATION;
-
-typedef struct _SECTION_IMAGE_INFORMATION {
-    ULONG     EntryPoint;
-    ULONG     Unknown1;
-    ULONG_PTR StackReserve;
-    ULONG_PTR StackCommit;
-    ULONG     Subsystem;
-    USHORT    MinorSubsystemVersion;
-    USHORT    MajorSubsystemVersion;
-    ULONG     Unknown2;
-    ULONG     Characteristics;
-    USHORT    ImageNumber;
-    BOOLEAN   Executable;
-    UCHAR     Unknown3;
-    ULONG     Unknown4[3];
-} SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
 
 #if (VER_PRODUCTBUILD >= 2600)
 
@@ -3915,27 +3862,6 @@ RtlSecondsSince1970ToTime (
     OUT PLARGE_INTEGER  Time
 );
 
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlSelfRelativeToAbsoluteSD (
-    IN PSECURITY_DESCRIPTOR_RELATIVE SelfRelativeSD,
-    OUT PSECURITY_DESCRIPTOR         AbsoluteSD,
-    IN PULONG                        AbsoluteSDSize,
-    IN PACL                          Dacl,
-    IN PULONG                        DaclSize,
-    IN PACL                          Sacl,
-    IN PULONG                        SaclSize,
-    IN PSID                          Owner,
-    IN PULONG                        OwnerSize,
-    IN PSID                          PrimaryGroup,
-    IN PULONG                        PrimaryGroupSize
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -4703,44 +4629,12 @@ ZwQueryInformationToken (
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwQueryObject (
-    IN HANDLE                      ObjectHandle,
-    IN OBJECT_INFORMATION_CLASS    ObjectInformationClass,
-    OUT PVOID                      ObjectInformation,
-    IN ULONG                       Length,
-    OUT PULONG                     ResultLength
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQuerySection (
-    IN HANDLE                       SectionHandle,
-    IN SECTION_INFORMATION_CLASS    SectionInformationClass,
-    OUT PVOID                       SectionInformation,
-    IN ULONG                        SectionInformationLength,
-    OUT PULONG                      ResultLength OPTIONAL
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
 ZwQuerySecurityObject (
     IN HANDLE                   FileHandle,
     IN SECURITY_INFORMATION     SecurityInformation,
     OUT PSECURITY_DESCRIPTOR    SecurityDescriptor,
     IN ULONG                    Length,
     OUT PULONG                  ResultLength
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQuerySystemInformation (
-    IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
-    OUT PVOID                   SystemInformation,
-    IN ULONG                    Length,
-    OUT PULONG                  ReturnLength
 );
 
 NTSYSAPI
@@ -4832,16 +4726,6 @@ ZwSetEvent (
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwSetInformationObject (
-    IN HANDLE                       ObjectHandle,
-    IN OBJECT_INFORMATION_CLASS    ObjectInformationClass,
-    IN PVOID                        ObjectInformation,
-    IN ULONG                        ObjectInformationLength
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
 ZwSetInformationProcess (
     IN HANDLE           ProcessHandle,
     IN PROCESSINFOCLASS ProcessInformationClass,
@@ -4861,15 +4745,6 @@ ZwSetSecurityObject (
 );
 
 #endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwSetSystemInformation (
-    IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
-    IN PVOID                    SystemInformation,
-    IN ULONG                    Length
-);
 
 NTSYSAPI
 NTSTATUS

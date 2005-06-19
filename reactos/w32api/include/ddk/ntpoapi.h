@@ -155,53 +155,6 @@ typedef struct _PROCESSOR_STATE_HANDLER2 {
 	PROCESSOR_PERF_LEVEL  PerfLevel[1];
 } PROCESSOR_STATE_HANDLER2, *PPROCESSOR_STATE_HANDLER2;
 
-typedef struct _PROCESSOR_POWER_STATE {
-	PVOID IdleFunction;
-	ULONG Idle0KernelTimeLimit;
-	ULONG Idle0LastTime;
-	PVOID IdleHandlers;
-	PVOID IdleState;
-	ULONG IdleHandlersCount;
-	ULONGLONG LastCheck;
-	PROCESSOR_IDLE_TIMES IdleTimes;
-	ULONG IdleTime1;
-	ULONG PromotionCheck;
-	ULONG IdleTime2;
-	UCHAR CurrentThrottle;
-	UCHAR ThermalThrottleLimit;
-	UCHAR CurrentThrottleIndex;
-	UCHAR ThermalThrottleIndex;
-	ULONG LastKernelUserTime;
-	ULONG PerfIdleTime;
-	ULONG DebugDelta;
-	ULONG DebugCount;
-	ULONG LastSysTime;
-	ULONG TotalIdleStateTime[3];
-	ULONG TotalIdleTransitions[3];
-	ULONGLONG PreviousC3StateTime;
-	UCHAR KneeThrottleIndex;
-	UCHAR ThrottleLimitIndex;
-	UCHAR PerfStatesCount;
-	UCHAR ProcessorMinThrottle;
-	UCHAR ProcessorMaxThrottle;
-	UCHAR LastBusyPercentage;
-	UCHAR LastC3Percentage;
-	UCHAR LastAdjustedBusyPercentage;
-	ULONG PromotionCount;
-	ULONG DemotionCount;
-	ULONG ErrorCount;
-	ULONG RetryCount;
-	ULONG Flags;
-	LARGE_INTEGER PerfCounterFrequency;
-	ULONG PerfTickCount;
-	KTIMER PerfTimer;
-	KDPC PerfDpc;
-	PROCESSOR_PERF_STATE *PerfStates;
-	PVOID PerfSetThrottle;
-	ULONG LastC3KernelUserTime;
-	ULONG Spare1[1];
-} PROCESSOR_POWER_STATE, *PPROCESSOR_POWER_STATE;
-
 NTOSAPI
 NTSTATUS
 DDKAPI
