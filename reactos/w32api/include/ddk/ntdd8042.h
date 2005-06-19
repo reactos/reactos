@@ -27,13 +27,12 @@
 #pragma GCC system_header
 #endif
 
+#include "ntddkbd.h"
+#include "ntddmou.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "ntddk.h"
-#include "ntddkbd.h"
-#include "ntddmou.h"
 
 #define IOCTL_INTERNAL_I8042_CONTROLLER_WRITE_BUFFER \
   CTL_CODE(FILE_DEVICE_KEYBOARD, 0x0FF2, METHOD_NEITHER, FILE_ANY_ACCESS)

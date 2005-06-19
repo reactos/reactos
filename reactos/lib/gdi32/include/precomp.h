@@ -1,8 +1,9 @@
 #include <wine/windef.h>
 #include <windows.h>
 #include <ddraw.h>
-#include <ddentry.h>
 #include <string.h>
+#include <ddk/ntddk.h>
+#include <ddentry.h>
 #include <win32k/kapi.h>
 #include <ddk/prntfont.h>
 #include <rosrtl/logfont.h>

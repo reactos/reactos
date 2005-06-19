@@ -36,15 +36,15 @@
 #pragma GCC system_header
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "ntddk.h"
 #include "ntddndis.h"
 #include "netpnp.h"
 #include "netevent.h"
 #include <winsock2.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #if defined(NDIS_WRAPPER)
   #define NDISAPI DECLSPEC_EXPORT

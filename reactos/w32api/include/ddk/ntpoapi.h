@@ -27,12 +27,11 @@
 #pragma GCC system_header
 #endif
 
+#include "batclass.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "ntddk.h"
-#include "batclass.h"
 
 #define POWER_PERF_SCALE                  100
 #define PERF_LEVEL_TO_PERCENT(x)          (((x) * 1000) / (POWER_PERF_SCALE * 10))

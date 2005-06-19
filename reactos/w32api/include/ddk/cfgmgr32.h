@@ -27,19 +27,17 @@
 #pragma GCC system_header
 #endif
 
+#include "cfg.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "ntddk.h"
 
 #if defined(_CFGMGR32_)
 #define CMAPI DECLSPEC_EXPORT
 #else
 #define CMAPI DECLSPEC_IMPORT
 #endif
-
-#include "cfg.h"
 
 #include <pshpack1.h>
 

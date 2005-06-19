@@ -24,6 +24,7 @@
 #ifndef VIDEOPRT_H
 #define VIDEOPRT_H
 
+#include <ddk/ntddk.h>
 #include <ddk/miniport.h>
 #include <ddk/video.h>
 #include <ddk/ntddvdeo.h>

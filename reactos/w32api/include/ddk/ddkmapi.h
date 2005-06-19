@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#include "ntddk.h"
-
 #if defined(_DXAPI_)
   #define DXAPI DECLSPEC_EXPORT
 #else

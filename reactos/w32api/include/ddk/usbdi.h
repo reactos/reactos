@@ -31,12 +31,11 @@
 #error usb.h cannot be included with usbdi.h
 #else
 
+#include "usbioctl.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "ntddk.h"
-#include "usbioctl.h"
 
 #define USBDI_VERSION                     0x300
 

@@ -28,12 +28,12 @@
 #pragma GCC system_header
 #endif
 
+#include "ntddk.h"
+#include "ntapi.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "ntddk.h"
-#include "ntapi.h"
 
 #pragma pack(push,4)
 

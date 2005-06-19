@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#include "ntddk.h"
-
 /* VIDEOPARAMETERS.dwCommand constants */
 #define VP_COMMAND_GET                    0x00000001
 #define VP_COMMAND_SET                    0x00000002

@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#include "ntddk.h"
-
 #pragma pack(push,4)
 
 typedef enum _BUS_DATA_TYPE {

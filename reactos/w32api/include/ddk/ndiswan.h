@@ -27,11 +27,11 @@
 #pragma GCC system_header
 #endif
 
+#include "ndis.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "ndis.h"
 
 #define NDIS_USE_WAN_WRAPPER         			0x00000001
 

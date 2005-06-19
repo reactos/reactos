@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#include "ntddk.h"
-
 #define FILE_DEVICE_USB_SCAN              0x8000
 #define IOCTL_INDEX                       0x0800
 

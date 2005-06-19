@@ -27,13 +27,12 @@
 #pragma GCC system_header
 #endif
 
+#include "usb100.h"
+#include "usbiodef.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "ntddk.h"
-#include "usb100.h"
-#include "usbiodef.h"
 
 #define USBD_PORT_ENABLED                 1
 #define USBD_PORT_CONNECTED               2

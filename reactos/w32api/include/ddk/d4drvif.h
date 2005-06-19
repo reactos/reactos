@@ -27,12 +27,11 @@
 #pragma GCC system_header
 #endif
 
+#include "d4iface.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "ntddk.h"
-#include "d4iface.h"
 
 #define FILE_DEVICE_DOT4                  0x3a
 #define IOCTL_DOT4_USER_BASE              2049

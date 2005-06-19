@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#include "ntddk.h"
-
 #define DD_TDI_DEVICE_NAME                "\\Device\\UNKNOWN"
 #define DD_TDI_DEVICE_NAME_U              L"\\Device\\UNKNOWN"
 

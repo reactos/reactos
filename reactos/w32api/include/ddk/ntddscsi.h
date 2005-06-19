@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#include "ntddk.h"
-
 #define DD_SCSI_DEVICE_NAME               "\\Device\\ScsiPort"
 #define DD_SCSI_DEVICE_NAME_U             L"\\Device\\ScsiPort"
 

@@ -23,6 +23,7 @@
 
 #include <windef.h>
 #include <wingdi.h>
+#include <ddk/ntddk.h>
 #include <ddk/winddi.h>
 #include <ddk/ntddvdeo.h>
 

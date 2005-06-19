@@ -27,12 +27,11 @@
 #pragma GCC system_header
 #endif
 
+#include "ntddstor.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "ntddk.h"
-#include "ntddstor.h"
 
 #define DD_DISK_DEVICE_NAME               "\\Device\\UNKNOWN"
 #define DD_DISK_DEVICE_NAME_U             L"\\Device\\UNKNOWN"

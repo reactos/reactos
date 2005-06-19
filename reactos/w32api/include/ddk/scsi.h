@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#include "ntddk.h"
-
 typedef union _CDB {
   struct _CDB6GENERIC {
     UCHAR  OperationCode;

@@ -31,12 +31,11 @@
 #error video.h cannot be included with winddi.h
 #else
 
+#include <wingdi.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "ntddk.h"
-#include <wingdi.h>
 
 #ifndef __DD_INCLUDED__
 /* FIXME: Some DirectDraw structures not added yet */

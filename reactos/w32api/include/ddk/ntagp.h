@@ -27,13 +27,11 @@
 #pragma GCC system_header
 #endif
 
+#include "video.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "ntddk.h"
-#include "video.h"
-
 
 #define AGP_BUS_INTERFACE_V1              1L
 #define AGP_BUS_INTERFACE_V2              2L

@@ -24,9 +24,7 @@
 
 /* INCLUDES *******************************************************************/
 
-#include "stddef.h"
-#include "windef.h"
-#include "wingdi.h"
+#include <ddk/ntddk.h>
 #include <ddk/miniport.h>
 #include <ddk/video.h>
 #include <ddk/ntddvdeo.h>

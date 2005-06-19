@@ -27,12 +27,11 @@
 #pragma GCC system_header
 #endif
 
+#include "ntddpar.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "ntddk.h"
-#include "ntddpar.h"
 
 #define DD_PARALLEL_PORT_BASE_NAME        "ParallelPort"
 #define DD_PARALLEL_PORT_BASE_NAME_U      L"ParallelPort"

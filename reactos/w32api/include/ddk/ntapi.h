@@ -30,14 +30,14 @@
 #pragma GCC system_header
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdarg.h>
 #include <winbase.h>
 #include "ntddk.h"
 #include "ntpoapi.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct _PEB *PPEB;
 

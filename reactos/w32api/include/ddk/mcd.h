@@ -27,14 +27,13 @@
 #pragma GCC system_header
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "ntddk.h"
 #include "srb.h"
 #include "scsi.h"
 #include "ntddchgr.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #if defined(_MCD_)
   #define CHANGERAPI DECLSPEC_EXPORT

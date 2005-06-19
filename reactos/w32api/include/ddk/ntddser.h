@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#include "ntddk.h"
-
 /* GUIDs */
 
 DEFINE_GUID(GUID_DEVINTERFACE_COMPORT,

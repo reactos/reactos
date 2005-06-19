@@ -27,12 +27,11 @@
 #pragma GCC system_header
 #endif
 
+#include "hidusage.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "ntddk.h"
-#include "hidusage.h"
 
 #if defined(_HIDPI_)
   #define HIDAPI DECLSPEC_EXPORT

@@ -11,8 +11,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntdddisk.h>
 #include <hal.h>
+#include <ddk/ntdddisk.h>
 #include "halxbox.h"
 
 #define NDEBUG
