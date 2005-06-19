@@ -10,6 +10,8 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
+#include <ddk/ntnls.h>
+#include <evntrace.h>
 #include "ntos/types.h"
 #include "ntos/cdrom.h"
 #include "ntos/console.h"
@@ -51,6 +53,8 @@
 #else /* Assume kernel mode */
 #include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
+#include <ddk/ntnls.h>
+#include <evntrace.h>
 #include "ntos/types.h"
 #include "ntos/cdrom.h"
 #include "ntos/console.h"

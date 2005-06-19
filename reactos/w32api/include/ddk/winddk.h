@@ -179,11 +179,6 @@ typedef struct _HAL_PRIVATE_DISPATCH_TABLE *PHAL_PRIVATE_DISPATCH_TABLE;
 typedef struct _DEVICE_HANDLER_OBJECT *PDEVICE_HANDLER_OBJECT;
 typedef struct _BUS_HANDLER *PBUS_HANDLER;
 typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
-typedef struct _DRIVE_LAYOUT_INFORMATION;
-typedef struct _DRIVE_LAYOUT_INFORMATION_EX *PDRIVE_LAYOUT_INFORMATION_EX;
-typedef struct _NAMED_PIPE_CREATE_PARAMETERS *PNAMED_PIPE_CREATE_PARAMETERS;
-typedef struct _MAILSLOT_CREATE_PARAMETERS *PMAILSLOT_CREATE_PARAMETERS;
-typedef struct _FILE_GET_QUOTA_INFORMATION *PFILE_GET_QUOTA_INFORMATION;
 
 /* Constants */
 #define MAXIMUM_PROCESSORS                32
@@ -747,21 +742,21 @@ typedef ULONG PNP_DEVICE_STATE, *PPNP_DEVICE_STATE;
 #define PNP_DEVICE_RESOURCE_REQUIREMENTS_CHANGED 0x00000010
 #define PNP_DEVICE_NOT_DISABLEABLE               0x00000020
 
-typedef enum _PNP_VETO_TYPE 
+typedef enum _PNP_VETO_TYPE
 {
-    PNP_VetoTypeUnknown,
-    PNP_VetoLegacyDevice,
-    PNP_VetoPendingClose,
-    PNP_VetoWindowsApp,
-    PNP_VetoWindowsService,
-    PNP_VetoOutstandingOpen,
-    PNP_VetoDevice,
-    PNP_VetoDriver,
-    PNP_VetoIllegalDeviceRequest,
-    PNP_VetoInsufficientPower,
-    PNP_VetoNonDisableable,
-    PNP_VetoLegacyDriver,
-    PNP_VetoInsufficientRights
+  PNP_VetoTypeUnknown,
+  PNP_VetoLegacyDevice,
+  PNP_VetoPendingClose,
+  PNP_VetoWindowsApp,
+  PNP_VetoWindowsService,
+  PNP_VetoOutstandingOpen,
+  PNP_VetoDevice,
+  PNP_VetoDriver,
+  PNP_VetoIllegalDeviceRequest,
+  PNP_VetoInsufficientPower,
+  PNP_VetoNonDisableable,
+  PNP_VetoLegacyDriver,
+  PNP_VetoInsufficientRights
 } PNP_VETO_TYPE, *PPNP_VETO_TYPE;
 
 typedef struct _TARGET_DEVICE_CUSTOM_NOTIFICATION {
@@ -847,45 +842,6 @@ typedef VOID
 (DDKAPI *PDEVICE_CHANGE_COMPLETE_CALLBACK)(
   IN PVOID Context);
 
-/* WMI, should go in a WMI header... */
-typedef struct _EVENT_TRACE_HEADER
-{
-  USHORT           Size;
-  union {
-    USHORT FieldTypeFlags;
-    struct {
-      UCHAR            HeaderType;
-      UCHAR            MarkerFlags;
-    };
-  };
-  union {
-    ULONG         Version;
-    struct {
-      UCHAR     Type;
-      UCHAR     Level;
-      USHORT    Version;
-    } Class;
-  };
-  ULONG ThreadId;
-  ULONG ProcessId;
-  LARGE_INTEGER    TimeStamp;
-  union {
-    GUID      Guid;
-    ULONGLONG GuidPtr;
-  };
- union {
-    struct {
-      ULONG ClientContext;
-      ULONG Flags;
-    };
-    struct {
-      ULONG KernelTime;
-      ULONG UserTime;
-    };
-    ULONG64 ProcessorTime;
-  };
-} EVENT_TRACE_HEADER, *PEVENT_TRACE_HEADER;
-
 
 /*
 ** System structures
@@ -899,33 +855,6 @@ typedef struct _EVENT_TRACE_HEADER
 #define DUPLICATE_SAME_ACCESS             0x00000002
 #define DUPLICATE_SAME_ATTRIBUTES         0x00000004
 /* end winnt.h */
-
-/* Nls Info (ntnls.h) */
-#define MAXIMUM_LEADBYTES   12
-
-typedef struct _CPTABLEINFO 
-{
-    USHORT CodePage;
-    USHORT MaximumCharacterSize;
-    USHORT DefaultChar;
-    USHORT UniDefaultChar;
-    USHORT TransDefaultChar;
-    USHORT TransUniDefaultChar;
-    USHORT DBCSCodePage;
-    UCHAR  LeadByte[MAXIMUM_LEADBYTES];
-    PUSHORT MultiByteTable;
-    PVOID   WideCharTable;
-    PUSHORT DBCSRanges;
-    PUSHORT DBCSOffsets;
-} CPTABLEINFO, *PCPTABLEINFO;
-
-typedef struct _NLSTABLEINFO 
-{
-    CPTABLEINFO OemTableInfo;
-    CPTABLEINFO AnsiTableInfo;
-    PUSHORT UpperCaseTable;
-    PUSHORT LowerCaseTable;
-} NLSTABLEINFO, *PNLSTABLEINFO;
 
 typedef struct _OBJECT_NAME_INFORMATION {
   UNICODE_STRING  Name;
@@ -3156,19 +3085,21 @@ typedef struct _IO_STACK_LOCATION {
       USHORT  ShareAccess;
       ULONG POINTER_ALIGNMENT  EaLength;
     } Create;
+    /* FIXME: CreatePipe and CreateMailslot aren't defined in official
+     * DDK/IFS headers. */
     struct {
       PIO_SECURITY_CONTEXT  SecurityContext;
       ULONG  Options;
       USHORT  Reserved;
       USHORT  ShareAccess;
-      PNAMED_PIPE_CREATE_PARAMETERS  Parameters;
+      struct _NAMED_PIPE_CREATE_PARAMETERS  *Parameters;
     } CreatePipe;
     struct {
       PIO_SECURITY_CONTEXT  SecurityContext;
       ULONG  Options;
       USHORT  Reserved;
       USHORT  ShareAccess;
-      PMAILSLOT_CREATE_PARAMETERS  Parameters;
+      struct _MAILSLOT_CREATE_PARAMETERS  *Parameters;
     } CreateMailslot;
     struct {
       ULONG  Length;
@@ -3263,7 +3194,7 @@ typedef struct _IO_STACK_LOCATION {
     struct {
       ULONG  Length;
       PSID  StartSid;
-      PFILE_GET_QUOTA_INFORMATION  SidList;
+      struct _FILE_GET_QUOTA_INFORMATION  *SidList;
       ULONG  SidListLength;
     } QueryQuota;
     struct {
