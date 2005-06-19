@@ -4,6 +4,8 @@
 #include <ddk/ntddk.h>
 #include <debug.h>
 
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+
 void wait_ms(int mils);
 
 #ifndef _snprintf

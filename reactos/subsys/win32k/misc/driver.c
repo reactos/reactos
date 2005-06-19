@@ -23,18 +23,7 @@
  *
  */
 
-#undef WIN32_LEAN_AND_MEAN
-#define WIN32_NO_PEHDR
-
-#include <ddk/ntddk.h>
-#include <windows.h>
-#include <win32k/driver.h>
-#include <win32k/misc.h>
-#include <wchar.h>
-#include <ddk/winddi.h>
-#include <ddk/ntapi.h>
-#include <rosrtl/string.h>
-#include <include/tags.h>
+#include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>

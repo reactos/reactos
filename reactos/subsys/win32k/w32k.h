@@ -85,6 +85,7 @@
 
 #include <dib/dib.h>
 
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+
 #define NDEBUG
 #include <win32k/debug1.h>
-

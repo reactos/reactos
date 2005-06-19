@@ -1,5 +1,5 @@
 /*
- * ntddmou.h
+ * kbdmou.h
  *
  * Structures and definitions for Keyboard/Mouse class and port drivers.
  *

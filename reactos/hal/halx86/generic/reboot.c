@@ -56,12 +56,12 @@ HalReturnToFirmware (
 	ULONG	Action
 	)
 {
-    if (Action == FIRMWARE_HALT)
+    if (Action == HalHaltRoutine)
     {
         DbgPrint ("HalReturnToFirmware called!\n");
         DbgBreakPoint ();
     }
-    else if (Action == FIRMWARE_REBOOT)
+    else if (Action == HalRebootRoutine)
     {
         HalReleaseDisplayOwnership();
         HalReboot ();

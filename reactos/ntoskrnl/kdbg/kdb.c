@@ -15,6 +15,10 @@
 
 /* TYPES *********************************************************************/
 
+/* FIXME: NDK headers */
+#define TempEsp TempEip
+#define TempSegSs TempCs
+
 /* DEFINES *******************************************************************/
 
 #define KDB_STACK_SIZE                   (4096*3)

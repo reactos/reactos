@@ -34,6 +34,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+
 int swprintf(wchar_t *buf, const wchar_t *fmt, ...);
 int vsprintf(char *buf, const char *fmt, va_list args);
 
