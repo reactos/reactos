@@ -7,6 +7,7 @@
 
 #include <ddk/ntifs.h>
 #include <ntos/types.h>
+#include <ntos/zwtypes.h>
 #include <napi/teb.h>
 
 #ifdef __cplusplus

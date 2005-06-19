@@ -201,6 +201,7 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
                            PVOID StartContext,
                            PCONTEXT Context);
 
+#ifdef _NTOSKRNL_ /* FIXME: Move flags above to NDK instead of here */
 VOID
 STDCALL
 KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
@@ -208,6 +209,7 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
                 PVOID StartContext,
                 BOOLEAN UserThread,
                 KTRAP_FRAME TrapFrame);
+#endif
 
 #ifdef CONFIG_SMP
 #define LOCK "lock ; "

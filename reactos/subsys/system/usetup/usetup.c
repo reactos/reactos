@@ -28,6 +28,7 @@
 
 #include "precomp.h"
 #include <ntdll/rtl.h>
+#include <ddk/ntdddisk.h> /* FIXME: NDK */
 
 #include <ntos/minmax.h>
 #include <reactos/resource.h>

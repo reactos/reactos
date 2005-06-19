@@ -14,50 +14,6 @@
 extern POBJECT_TYPE EXPORTED ExMutantObjectType;
 extern POBJECT_TYPE EXPORTED ExTimerType;
 
-typedef struct _SECTION_BASIC_INFORMATION
-{
-  PVOID BaseAddress;
-  ULONG Attributes;
-  LARGE_INTEGER Size;
-} SECTION_BASIC_INFORMATION, *PSECTION_BASIC_INFORMATION;
-
-typedef struct _SECTION_IMAGE_INFORMATION 
-{
-    ULONG     EntryPoint;
-    ULONG     Unknown1;
-    ULONG_PTR StackReserve;
-    ULONG_PTR StackCommit;
-    ULONG     Subsystem;
-    USHORT    MinorSubsystemVersion;
-    USHORT    MajorSubsystemVersion;
-    ULONG     Unknown2;
-    ULONG     Characteristics;
-    USHORT    ImageNumber;
-    BOOLEAN   Executable;
-    UCHAR     Unknown3;
-    ULONG     Unknown4[3];
-} SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
-
-typedef struct _MAILSLOT_CREATE_PARAMETERS 
-{
-    ULONG           MailslotQuota;
-    ULONG           MaximumMessageSize;
-    LARGE_INTEGER   ReadTimeout;
-    BOOLEAN         TimeoutSpecified;
-} MAILSLOT_CREATE_PARAMETERS, *PMAILSLOT_CREATE_PARAMETERS;
-
-typedef struct _NAMED_PIPE_CREATE_PARAMETERS 
-{
-    ULONG           NamedPipeType;
-    ULONG           ReadMode;
-    ULONG           CompletionMode;
-    ULONG           MaximumInstances;
-    ULONG           InboundQuota;
-    ULONG           OutboundQuota;
-    LARGE_INTEGER   DefaultTimeout;
-    BOOLEAN         TimeoutSpecified;
-} NAMED_PIPE_CREATE_PARAMETERS, *PNAMED_PIPE_CREATE_PARAMETERS;
-
 /*
  * PURPOSE: Special timer associated with each device
  */

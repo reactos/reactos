@@ -8,6 +8,7 @@
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <fslib/vfatlib.h>
+#include <ddk/ntdddisk.h>
 
 typedef struct _FATX_BOOT_SECTOR
 {

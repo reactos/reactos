@@ -1120,13 +1120,6 @@ typedef struct _RETRIEVAL_POINTERS_BUFFER {
 } RETRIEVAL_POINTERS_BUFFER, *PRETRIEVAL_POINTERS_BUFFER;
 #include <poppack.h>
 
-typedef struct _SECTION_BASIC_INFORMATION
-{
-  PVOID BaseAddress;
-  ULONG Attributes;
-  LARGE_INTEGER Size;
-} SECTION_BASIC_INFORMATION, *PSECTION_BASIC_INFORMATION;
-
 typedef enum _SECTION_INFORMATION_CLASS 
 {
   SectionBasicInformation,
@@ -1179,6 +1172,30 @@ extern EXPORTED ULONG NtBuildNumber;
 extern IMPORTED ULONG NtBuildNumber;
 #endif
 #endif	/* __GNUC__ */
+
+typedef struct _SECTION_BASIC_INFORMATION
+{
+  PVOID BaseAddress;
+  ULONG Attributes;
+  LARGE_INTEGER Size;
+} SECTION_BASIC_INFORMATION, *PSECTION_BASIC_INFORMATION;
+
+typedef struct _SECTION_IMAGE_INFORMATION 
+{
+    ULONG     EntryPoint;
+    ULONG     Unknown1;
+    ULONG_PTR StackReserve;
+    ULONG_PTR StackCommit;
+    ULONG     Subsystem;
+    USHORT    MinorSubsystemVersion;
+    USHORT    MajorSubsystemVersion;
+    ULONG     Unknown2;
+    ULONG     Characteristics;
+    USHORT    ImageNumber;
+    BOOLEAN   Executable;
+    UCHAR     Unknown3;
+    ULONG     Unknown4[3];
+} SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
 
 
 // event access mask

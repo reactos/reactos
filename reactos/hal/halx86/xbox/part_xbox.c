@@ -11,7 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ddk/ntdddisk.h>
 #include <hal.h>
 #include "halxbox.h"
 

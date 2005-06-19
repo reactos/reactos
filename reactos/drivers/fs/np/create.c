@@ -10,6 +10,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntifs.h>
+#include <ntos/fstypes.h> /* FIXME: NDK */
 #include "npfs.h"
 
 #define NDEBUG

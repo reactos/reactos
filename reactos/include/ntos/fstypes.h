@@ -24,4 +24,25 @@ typedef struct _MCB {
     LARGE_MCB LargeMcb;
 } MCB, *PMCB;
 
+
+typedef struct _MAILSLOT_CREATE_PARAMETERS 
+{
+    ULONG           MailslotQuota;
+    ULONG           MaximumMessageSize;
+    LARGE_INTEGER   ReadTimeout;
+    BOOLEAN         TimeoutSpecified;
+} MAILSLOT_CREATE_PARAMETERS, *PMAILSLOT_CREATE_PARAMETERS;
+
+typedef struct _NAMED_PIPE_CREATE_PARAMETERS 
+{
+    ULONG           NamedPipeType;
+    ULONG           ReadMode;
+    ULONG           CompletionMode;
+    ULONG           MaximumInstances;
+    ULONG           InboundQuota;
+    ULONG           OutboundQuota;
+    LARGE_INTEGER   DefaultTimeout;
+    BOOLEAN         TimeoutSpecified;
+} NAMED_PIPE_CREATE_PARAMETERS, *PNAMED_PIPE_CREATE_PARAMETERS;
+
 #endif  /* __INCLUDE_DDK_FSTYPES_H */
