@@ -10,9 +10,8 @@
 
 /* SDK/DDK/NDK Headers. */
 #include <windows.h>
-#include <ddk/ntddk.h> /* FIXME: NDK */
-#include <ddk/ntifs.h> /* FIXME: NDK */
-#include <ntos/ldrtypes.h>  /* FIXME: NDK */
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 
 /* NTDLL Public Headers. FIXME: Combine/clean these after NDK */
 #include <ntdll/csr.h>

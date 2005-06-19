@@ -279,7 +279,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
 	   ZwTerminateProcess(NtCurrentProcess(), Status);
 	 }
 
-       Peb->NumberOfProcessors = SystemInformation.NumberProcessors;
+       Peb->NumberOfProcessors = SystemInformation.NumberOfProcessors;
 
        /* Initialize Critical Section Data */
        RtlpInitDeferedCriticalSection();
