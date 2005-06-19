@@ -80,6 +80,8 @@
  *
  */
 
+#define __WINE__
+
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>

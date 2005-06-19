@@ -31,14 +31,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "user32.h"
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <debug.h>
-#include "resource.h"
-
-#include <mmsystem.h>
+#include <user32.h>
 
 /* DEFINES *******************************************************************/
 

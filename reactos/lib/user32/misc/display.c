@@ -28,11 +28,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "user32.h"
+#include <user32.h>
 #include <rosrtl/devmode.h>
-#include <win32k/ntuser.h>
-#define NDEBUG
-#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 

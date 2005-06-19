@@ -8,11 +8,7 @@
  *      06-06-2001  CSH  Created
  */
 
-#include "user32.h"
-#include <string.h>
-#include <debug.h>
-#include <win32k/callback.h>
-#include <message.h>
+#include <user32.h>
 
 /* DDE message exchange
  *

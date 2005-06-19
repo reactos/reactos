@@ -30,24 +30,7 @@ Already defined in makefile now.
 #define __REACTOS__
 */
 
-/*
- * Use w32api headers
- */
-/*
-#define __USE_W32API
-#define _WIN32_WINNT 0x0501
-*/
-
-#include <windows.h>
-#include <windowsx.h>
-#include <string.h>
-#include <menu.h>
-#include <winpos.h>
 #include <user32.h>
-#include "window.h"
-
-#define NDEBUG
-#include <debug.h>
 
 #define HAS_DLGFRAME(Style, ExStyle) \
             (((ExStyle) & WS_EX_DLGMODALFRAME) || \

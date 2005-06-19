@@ -11,17 +11,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "user32.h"
-#include <windowsx.h>
-#include <window.h>
-#include <string.h>
-#include <cursor.h>
-#include <menu.h>
-#include <scroll.h>
-#include <winpos.h>
-
-#define NDEBUG
-#include <debug.h>
+#include <user32.h>
 
 #ifndef WM_SETVISIBLE
 #define WM_SETVISIBLE 9

@@ -31,13 +31,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "user32.h"
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <limits.h>
-#include <debug.h>
+#include <user32.h>
 
 /* MACROS/DEFINITIONS ********************************************************/
 
@@ -1235,24 +1229,6 @@ static INT DIALOG_DlgDirList( HWND hDlg, LPSTR spec, INT idLBox,
 #undef SENDMSG
 }
 
-/* Hack - We dont define this anywhere and we shouldn't
- * Its only used to port buggy WINE code in to our buggy code.
- * Make it go away - sedwards
- */
-/* strdup macros */
-/* DO NOT USE IT!!  it will go away soon */
-inline static LPSTR HEAP_strdupWtoA( HANDLE heap, DWORD flags, LPCWSTR str )
-{
-    LPSTR ret;
-    INT len;
-
-    if (!str) return NULL;
-    len = WideCharToMultiByte( CP_ACP, 0, str, -1, NULL, 0, NULL, NULL );
-    ret = RtlAllocateHeap(GetProcessHeap(), flags, len );
-    if(ret) WideCharToMultiByte( CP_ACP, 0, str, -1, ret, len, NULL, NULL );
-    return ret;
-}
-
 /**********************************************************************
  *	    DIALOG_DlgDirListW
  *
@@ -1263,11 +1239,14 @@ static INT DIALOG_DlgDirListW( HWND hDlg, LPWSTR spec, INT idLBox,
 {
     if (spec)
     {
-        LPSTR specA = HEAP_strdupWtoA( GetProcessHeap(), 0, spec );
-        INT ret = DIALOG_DlgDirList( hDlg, specA, idLBox, idStatic,
-                                       attrib, combo );
+        LPSTR specA;
+        INT ret;
+
+        HEAP_strdupWtoA ( &specA, spec, lstrlenW(spec) );
+        ret = DIALOG_DlgDirList( hDlg, specA, idLBox, idStatic,
+                                 attrib, combo );
         MultiByteToWideChar( CP_ACP, 0, specA, -1, spec, 0x7fffffff );
-        HeapFree( GetProcessHeap(), 0, specA );
+        HEAP_free( specA );
         return ret;
     }
     return DIALOG_DlgDirList( hDlg, NULL, idLBox, idStatic, attrib, combo );

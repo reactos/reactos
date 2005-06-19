@@ -18,7 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "user32.h"
+#include <user32.h>
 
 #ifndef __REACTOS__
 WINE_DEFAULT_DEBUG_CHANNEL(static);

@@ -1,11 +1,4 @@
-#include "user32.h"
-#include "menu.h"
-#include "message.h"
-#include "accel.h"
-#include "strpool.h"
-#include <win32k/callback.h>
-
-#include <debug.h>
+#include <user32.h>
 
 /* FIXME: Belongs to some header. */
 WINBOOL STDCALL GdiDllInitialize(HANDLE, DWORD, LPVOID);

@@ -29,9 +29,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "user32.h"
-#include "accel.h"
-#include <win32k/ntuser.h>
+#include <user32.h>
 
 /* this is the 8 byte accel struct used in Win32 resources (internal only) */
 typedef struct

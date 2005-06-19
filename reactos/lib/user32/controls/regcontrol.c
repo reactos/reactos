@@ -9,9 +9,7 @@
  * NOTES:            Adapted from Wine
  */
 
-#include "user32.h"
-#include <wchar.h>
-#include "win32k/ntuser.h"
+#include <user32.h>
 
 static void RegisterBuiltinClass(const struct builtin_class_descr *Descr)
 {

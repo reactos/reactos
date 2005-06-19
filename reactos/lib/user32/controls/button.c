@@ -19,11 +19,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __USE_W32API
-#define __USE_W32API
-#endif
-
-#include "user32.h"
+#define __WINE__
+#include <user32.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>

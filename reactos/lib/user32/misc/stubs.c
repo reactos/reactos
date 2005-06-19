@@ -10,10 +10,7 @@
  *      08-F05-2001  CSH  Created
  */
 
-#include "user32.h"
-#include <debug.h>
-#include <string.h>
-#include <mmsystem.h>
+#include <user32.h>
 #ifdef __USE_W32API
 typedef PVOID LPIMEPROW, LPIMEPROA;
 #endif

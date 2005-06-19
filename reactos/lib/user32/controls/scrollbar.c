@@ -30,13 +30,8 @@
 
 /* INCLUDES *******************************************************************/
 
-#include "user32.h"
-#include <debug.h>
-#include <draw.h>
-#include <stdlib.h>
-#include <string.h>
+#include <user32.h>
 #include <oleacc.h>
-#include <rosrtl/minmax.h>
 
 /* GLOBAL VARIABLES ***********************************************************/
 
@@ -655,7 +650,11 @@ IntScrollGetThumbVal(HWND Wnd, INT SBType, PSCROLLBARINFO ScrollBarInfo,
       return si.nMin;
     }
 
-  Pos = RtlRosMax(0, Pos - ScrollBarInfo->dxyLineButton);
+  Pos = Pos - ScrollBarInfo->dxyLineButton;
+  if (Pos < 0)
+    {
+      Pos = 0;
+    }
   if (Pixels < Pos)
     {
       Pos = Pixels;

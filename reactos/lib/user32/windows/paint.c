@@ -28,10 +28,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "user32.h"
-#include <resource.h>
-#define NDEBUG
-#include <debug.h>
+#include <user32.h>
 
 static HBRUSH FrameBrushes[13];
 static HBITMAP hHatch;

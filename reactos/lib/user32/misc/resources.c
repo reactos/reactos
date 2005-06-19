@@ -1,5 +1,4 @@
-#include "user32.h"
-#include <string.h>
+#include <user32.h>
 
 /* FIXME: Currently IsBadWritePtr is implemented using VirtualQuery which
           does not seem to work properly for stack address space. */

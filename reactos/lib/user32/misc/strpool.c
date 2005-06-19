@@ -1,8 +1,6 @@
 // strpool.c
 
-#include "user32.h"
-#include <strpool.h>
-#include <string.h>
+#include <user32.h>
 
 typedef struct tagHEAP_STRING_POOLA
 {

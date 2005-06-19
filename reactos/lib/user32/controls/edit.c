@@ -36,11 +36,8 @@
  *
  */
 
-#ifndef __USE_W32API
-#define __USE_W32API
-#endif
-
-#include "user32.h"
+#define __WINE__
+#include <user32.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>

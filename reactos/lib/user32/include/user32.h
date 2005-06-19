@@ -4,12 +4,34 @@
  * FILE:        include/user32.h
  * PURPOSE:     Global user32 definitions
  */
+
+#ifndef USER32_H
+#define USER32_H
+
+#include <ctype.h>
+#include <stdio.h>
+#include <limits.h>
 #include <windows.h>
+#include <windowsx.h>
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <win32k/win32k.h>
-
+#include <win32k/callback.h>
+#include "accel.h"
+#include "cursor.h"
+#ifndef __WINE__
+#include "debug.h"
+#endif
+#include "draw.h"
+#include "menu.h"
+#include "message.h"
 #include "regcontrol.h"
+#include "resource.h"
+#include "scroll.h"
+#include "strpool.h"
+#include "window.h"
+#include "winpos.h"
+#include "winsta.h"
 
 extern HINSTANCE User32Instance;
 
@@ -131,3 +153,4 @@ NTSTATUS STDCALL ZwCallbackReturn(PVOID Result,
 #define NtUserEnableProcessWindowGhosting(bEnable) \
   NtUserCallOneParam((DWORD)bEnable, ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING)
 
+#endif /* USER32_H */

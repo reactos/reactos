@@ -9,13 +9,7 @@
  *      09-05-2001  CSH  Created
  */
 
-#include "user32.h"
-#include <string.h>
-#include <stdlib.h>
-#include <debug.h>
-#include <window.h>
-#include <strpool.h>
-
+#include <user32.h>
 
 static BOOL GetClassInfoExCommon(
     HINSTANCE hInst,

@@ -28,10 +28,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "user32.h"
-#include <win32k/callback.h>
-#define NDEBUG
-#include <debug.h>
+#include <user32.h>
 
 /* FUNCTIONS *****************************************************************/
 

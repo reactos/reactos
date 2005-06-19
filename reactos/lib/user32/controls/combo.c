@@ -20,7 +20,8 @@
  * FIXME: roll up in Netscape 3.01.
  */
 
-#include "user32.h"
+#define __WINE__
+#include <user32.h>
 #include <stdarg.h>
 #include <string.h>
 

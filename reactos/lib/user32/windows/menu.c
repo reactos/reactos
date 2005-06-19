@@ -33,17 +33,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "user32.h"
-#include <ctype.h>
-#include <string.h>
-#include <draw.h>
-#include <window.h>
-#include <strpool.h>
-#include <win32k/callback.h>
+#include <user32.h>
 #include "../controls/controls.h"
-
-#define NDEBUG
-#include <debug.h>
 
 /* internal popup menu window messages */
 #define MM_SETMENUHANDLE (WM_USER + 0)
