@@ -40,7 +40,7 @@ ExpInitializeCallbacks(VOID)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
    NTSTATUS Status;
-   UNICODE_STRING DirName;
+   UNICODE_STRING DirName = RTL_CONSTANT_STRING(L"\\Callback");
    UNICODE_STRING CallbackName;
    UNICODE_STRING Name;
    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
@@ -65,7 +65,6 @@ ExpInitializeCallbacks(VOID)
    }
 
    /* Initialize the Object */
-   DirName = RTL_CONSTANT_STRING(L"\\Callback" );
    InitializeObjectAttributes(
       &ObjectAttributes,
       &DirName,

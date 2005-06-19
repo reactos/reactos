@@ -601,8 +601,9 @@ CmiCreateCurrentControlSetLink(VOID)
   RTL_QUERY_REGISTRY_TABLE QueryTable[5];
   WCHAR TargetNameBuffer[80];
   ULONG TargetNameLength;
-  UNICODE_STRING LinkName;
-  UNICODE_STRING LinkValue;
+  UNICODE_STRING LinkName = RTL_CONSTANT_STRING(
+                            L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet");
+  UNICODE_STRING LinkValue = RTL_CONSTANT_STRING(L"SymbolicLinkValue");
   ULONG CurrentSet;
   ULONG DefaultSet;
   ULONG Failed;
@@ -650,8 +651,6 @@ CmiCreateCurrentControlSetLink(VOID)
 
   DPRINT("Link target '%S'\n", TargetNameBuffer);
 
-  LinkName = RTL_CONSTANT_STRING(
-				  L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &LinkName,
 			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_OPENLINK,
@@ -670,8 +669,6 @@ CmiCreateCurrentControlSetLink(VOID)
       return(Status);
     }
 
-  LinkValue = RTL_CONSTANT_STRING(
-				  L"SymbolicLinkValue");
   Status = ZwSetValueKey(KeyHandle,
 			 &LinkValue,
 			 0,
@@ -918,15 +915,15 @@ static NTSTATUS
 CmiInitControlSetLink (VOID)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING ControlSetKeyName;
-  UNICODE_STRING ControlSetLinkName;
-  UNICODE_STRING ControlSetValueName;
+  UNICODE_STRING ControlSetKeyName = RTL_CONSTANT_STRING(
+                                L"\\Registry\\Machine\\SYSTEM\\ControlSet001");
+  UNICODE_STRING ControlSetLinkName =  RTL_CONSTANT_STRING(
+                            L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet");
+  UNICODE_STRING ControlSetValueName = RTL_CONSTANT_STRING(L"SymbolicLinkValue");
   HANDLE KeyHandle;
   NTSTATUS Status;
 
   /* Create 'ControlSet001' key */
-  ControlSetKeyName = RTL_CONSTANT_STRING(
-				   L"\\Registry\\Machine\\SYSTEM\\ControlSet001");
   InitializeObjectAttributes (&ObjectAttributes,
 			      &ControlSetKeyName,
 			      OBJ_CASE_INSENSITIVE,
@@ -947,8 +944,6 @@ CmiInitControlSetLink (VOID)
   ZwClose (KeyHandle);
 
   /* Link 'CurrentControlSet' to 'ControlSet001' key */
-  ControlSetLinkName = RTL_CONSTANT_STRING(
-				   L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet");
   InitializeObjectAttributes (&ObjectAttributes,
 			      &ControlSetLinkName,
 			      OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_OPENLINK,
@@ -967,8 +962,6 @@ CmiInitControlSetLink (VOID)
       return Status;
     }
 
-    ControlSetValueName = RTL_CONSTANT_STRING(
-				   L"SymbolicLinkValue");
   Status = ZwSetValueKey (KeyHandle,
 			  &ControlSetValueName,
 			  0,
@@ -991,8 +984,8 @@ CmiInitHives(BOOLEAN SetupBoot)
   PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING FileName;
-  UNICODE_STRING KeyName;
-  UNICODE_STRING ValueName;
+  UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\HARDWARE");
+  UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"InstallPath");
   HANDLE KeyHandle;
 
   NTSTATUS Status;
@@ -1008,8 +1001,6 @@ CmiInitHives(BOOLEAN SetupBoot)
 
   if (SetupBoot == TRUE)
     {
-        KeyName = RTL_CONSTANT_STRING(
-				      L"\\Registry\\Machine\\HARDWARE");
       InitializeObjectAttributes(&ObjectAttributes,
 				 &KeyName,
 				 OBJ_CASE_INSENSITIVE,
@@ -1023,9 +1014,6 @@ CmiInitHives(BOOLEAN SetupBoot)
 	  DPRINT1("ZwOpenKey() failed (Status %lx)\n", Status);
 	  return(Status);
 	}
-
-      ValueName = RTL_CONSTANT_STRING(
-				      L"InstallPath");
 
       BufferSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 4096;
       ValueInfo = ExAllocatePool(PagedPool,
