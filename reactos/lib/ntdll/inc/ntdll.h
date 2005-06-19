@@ -14,7 +14,7 @@
 #include <ddk/ntifs.h> /* FIXME: NDK */
 #include <ntos/ldrtypes.h>  /* FIXME: NDK */
 
-/* NTDLL Public Headers. FIXME: USE NDK */
+/* NTDLL Public Headers. FIXME: Combine/clean these after NDK */
 #include <ntdll/csr.h>
 #include <ntdll/rtl.h>
 #include <ntdll/ldr.h>

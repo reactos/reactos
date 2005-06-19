@@ -22,30 +22,6 @@ extern NTOSAPI POBJECT_TYPE ExTimerType;
 
 /* ENUMERATIONS **************************************************************/
 
-typedef enum _HARDERROR_RESPONSE_OPTION 
-{
-    OptionAbortRetryIgnore,
-    OptionOk,
-    OptionOkCancel,
-    OptionRetryCancel,
-    OptionYesNo,
-    OptionYesNoCancel,
-    OptionShutdownSystem
-} HARDERROR_RESPONSE_OPTION, *PHARDERROR_RESPONSE_OPTION;
-
-typedef enum _HARDERROR_RESPONSE 
-{
-    ResponseReturnToCaller,
-    ResponseNotHandled,
-    ResponseAbort,
-    ResponseCancel,
-    ResponseIgnore,
-    ResponseNo,
-    ResponseOk,
-    ResponseRetry,
-    ResponseYes
-} HARDERROR_RESPONSE, *PHARDERROR_RESPONSE;
-
 /* TYPES *********************************************************************/
 
 typedef struct _EX_QUEUE_WORKER_INFO 

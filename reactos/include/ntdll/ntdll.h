@@ -1,5 +1,7 @@
 
+#ifndef _NTNDK_
 #include <ntos/ntdef.h>
+#endif
 
 #define UNIMPLEMENTED DbgPrint("%s in %s:%d is unimplemented\n",__FUNCTION__,__FILE__,__LINE__);
 

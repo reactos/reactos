@@ -6,8 +6,8 @@
  * UPDATE HISTORY:
  *                  Created 06/10/04
  */
-#ifndef _NT_NDK_
-#define _NT_NDK_
+#ifndef _NTNDK_
+#define _NTNDK_
 
 #ifndef NTOS_MODE_USER
     /* Kernel-Mode NDK */

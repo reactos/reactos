@@ -2,7 +2,9 @@
 #define __NTOSKRNL_INCLUDE_INTERNAL_LDR_H
 
 #include <roscfg.h>
+#ifndef _NTNDK_
 #include <napi/teb.h>
+#endif
 #include <reactos/rossym.h>
 
 typedef NTSTATUS (STDCALL *PEPFUNC)(PPEB);

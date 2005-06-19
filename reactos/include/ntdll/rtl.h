@@ -5,10 +5,12 @@
 #ifndef __INCLUDE_NTDLL_RTL_H
 #define __INCLUDE_NTDLL_RTL_H
 
+#ifndef _NTNDK_
 #include <ddk/ntifs.h>
 #include <ntos/types.h>
 #include <ntos/zwtypes.h>
 #include <napi/teb.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,7 +23,7 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 #define PAGED_CODE_RTL()
 #endif
 
-#ifndef __USE_W32API
+#if !defined(__USE_W32API) || defined(_NTNDK_)
 
 #define RTL_CONSTANT_STRING(__SOURCE_STRING__) \
 { \
@@ -104,6 +106,9 @@ typedef struct _DEBUG_LOCK_INFORMATION {
 	ULONG  NumberOfExclusiveWaiters;
 } DEBUG_LOCK_INFORMATION, *PDEBUG_LOCK_INFORMATION;
 
+#endif
+
+#ifndef __USE_W32API
 typedef struct _CRITICAL_SECTION_DEBUG
 {
   USHORT Type;
@@ -136,6 +141,7 @@ typedef PCRITICAL_SECTION_DEBUG PRTL_CRITICAL_SECTION_DEBUG;
 
 #endif /* !__USE_W32API */
 
+#ifndef _NTNDK_
 typedef struct _RTL_PROCESS_INFO
 {
    ULONG Size;
@@ -144,6 +150,7 @@ typedef struct _RTL_PROCESS_INFO
    CLIENT_ID ClientId;
    SECTION_IMAGE_INFORMATION ImageInfo;
 } RTL_PROCESS_INFO, *PRTL_PROCESS_INFO;
+#endif
 
 typedef struct _RTL_RESOURCE
 {

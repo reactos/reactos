@@ -35,23 +35,7 @@ typedef struct _PEB_LDR_DATA
 } PEB_LDR_DATA, *PPEB_LDR_DATA;
 
 /* FIXME: Update with _LDR_DATA_TABLE_ENTRY and LDR_ flags */
-typedef struct _LDR_MODULE
-{
-    LIST_ENTRY          InLoadOrderModuleList;
-    LIST_ENTRY          InMemoryOrderModuleList;
-    LIST_ENTRY          InInitializationOrderModuleList;
-    void*               BaseAddress;
-    void*               EntryPoint;
-    ULONG               SizeOfImage;
-    UNICODE_STRING      FullDllName;
-    UNICODE_STRING      BaseDllName;
-    ULONG               Flags;
-    SHORT               LoadCount;
-    SHORT               TlsIndex;
-    HANDLE              SectionHandle;
-    ULONG               CheckSum;
-    ULONG               TimeDateStamp;
-} LDR_MODULE, *PLDR_MODULE;
+//typedef struct _LDR_MODULE
 
 typedef struct _LDR_RESOURCE_INFO 
 {

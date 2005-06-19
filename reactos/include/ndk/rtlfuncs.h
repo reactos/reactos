@@ -680,7 +680,7 @@ RtlQueryEnvironmentVariable_U (
 NTSTATUS
 STDCALL
 RtlQueryTimeZoneInformation (
-	IN OUT PTIME_ZONE_INFORMATION TimeZoneInformation
+	IN OUT LPTIME_ZONE_INFORMATION TimeZoneInformation
 );
 
 VOID STDCALL RtlRaiseStatus(NTSTATUS Status);

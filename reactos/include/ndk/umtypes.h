@@ -20,8 +20,9 @@
 
 /* CONSTANTS *****************************************************************/
 
-/* NTAPI Define */
+/* NTAPI/NTOSAPI Define */
 #define NTAPI __stdcall
+#define NTOSAPI
 
 /* Definitions for Object Creation -- winternl.h */
 #define OBJ_INHERIT 2L
@@ -248,6 +249,45 @@ typedef enum _TIMER_TYPE
     NotificationTimer,
     SynchronizationTimer
 } TIMER_TYPE;
+
+typedef enum _INTERFACE_TYPE 
+{
+    InterfaceTypeUndefined = -1,
+    Internal,
+    Isa,
+    Eisa,
+    MicroChannel,
+    TurboChannel,
+    PCIBus,
+    VMEBus,
+    NuBus,
+    PCMCIABus,
+    CBus,
+    MPIBus,
+    MPSABus,
+    ProcessorInternal,
+    InternalPowerBus,
+    PNPISABus,
+    PNPBus,
+    MaximumInterfaceType
+}INTERFACE_TYPE, *PINTERFACE_TYPE;
+
+typedef enum _PNP_VETO_TYPE
+{
+    PNP_VetoTypeUnknown,
+    PNP_VetoLegacyDevice,
+    PNP_VetoPendingClose,
+    PNP_VetoWindowsApp,
+    PNP_VetoWindowsService,
+    PNP_VetoOutstandingOpen,
+    PNP_VetoDevice,
+    PNP_VetoDriver,
+    PNP_VetoIllegalDeviceRequest,
+    PNP_VetoInsufficientPower,
+    PNP_VetoNonDisableable,
+    PNP_VetoLegacyDriver,
+    PNP_VetoInsufficientRights
+} PNP_VETO_TYPE, *PPNP_VETO_TYPE;
 
 typedef enum _MODE 
 {
@@ -512,8 +552,9 @@ typedef ULONG_PTR KSPIN_LOCK, *PKSPIN_LOCK;
 typedef ULONG WAIT_TYPE;
 typedef struct _PEB *PPEB;
 typedef ULONG KPROCESSOR_MODE;
-typedef PVOID PTHREAD_START_ROUTINE;
 typedef struct _OBJECT_TYPE *POBJECT_TYPE;
+struct _ETHREAD;
+struct _EVENT_TRACE_HEADER; /* <--- We might want to declare this one */
 
 /* Basic NT Types */
 typedef struct _UNICODE_STRING 
@@ -574,6 +615,11 @@ typedef VOID NTAPI
     IN LONG  TimerHighValue);
 
 /* Kernel Types which are returned or used by Native API */
+typedef struct _OBJECT_NAME_INFORMATION
+{
+    UNICODE_STRING Name;                                
+} OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;   
+
 typedef struct _CLIENT_ID 
 {
     HANDLE  UniqueProcess;
@@ -685,6 +731,17 @@ typedef struct FILE_ALLOCATED_RANGE_BUFFER
     LARGE_INTEGER FileOffset;
     LARGE_INTEGER Length;
 } FILE_ALLOCATED_RANGE_BUFFER, *PFILE_ALLOCATED_RANGE_BUFFER;
+
+typedef struct _FILE_QUOTA_INFORMATION
+{
+    ULONG NextEntryOffset;
+    ULONG SidLength;
+    LARGE_INTEGER ChangeTime;
+    LARGE_INTEGER QuotaUsed;
+    LARGE_INTEGER QuotaThreshold;
+    LARGE_INTEGER QuotaLimit;
+    SID Sid;
+} FILE_QUOTA_INFORMATION, *PFILE_QUOTA_INFORMATION;
   
 /*
  * Registry Key Value
@@ -801,6 +858,18 @@ typedef struct _KUSER_SHARED_DATA
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 
 /* Run-Time Library (RTL) Types */
+typedef struct _RTL_BITMAP
+{
+    ULONG SizeOfBitMap;
+    PULONG Buffer;
+} RTL_BITMAP, *PRTL_BITMAP;
+
+typedef struct _RTL_BITMAP_RUN
+{
+    ULONG StartingIndex;
+    ULONG NumberOfBits;
+} RTL_BITMAP_RUN, *PRTL_BITMAP_RUN;
+
 typedef struct _COMPRESSED_DATA_INFO 
 {
     USHORT  CompressionFormatAndEngine;

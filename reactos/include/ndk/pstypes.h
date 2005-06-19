@@ -40,8 +40,21 @@ extern NTOSAPI POBJECT_TYPE PsThreadType;
 
 /* ENUMERATIONS **************************************************************/
 
-/* FUNCTION TYPES **********************************************/
-typedef DWORD (*STDCALL PTHREAD_START_ROUTINE) (LPVOID);
+/* FUNCTION TYPES ************************************************************/
+typedef DWORD (STDCALL* PTHREAD_START_ROUTINE) (LPVOID);
+typedef VOID (STDCALL *PPEBLOCKROUTINE)(PVOID);
+
+typedef NTSTATUS 
+(STDCALL *PW32_PROCESS_CALLBACK)(
+    struct _EPROCESS *Process,
+    BOOLEAN Create
+);
+
+typedef NTSTATUS
+(STDCALL *PW32_THREAD_CALLBACK)(
+    struct _ETHREAD *Thread,
+    BOOLEAN Create
+);
 
 /* TYPES *********************************************************************/
 
@@ -90,7 +103,7 @@ typedef struct _PEB
     PVOID UnicodeCaseTableData;                      /* 60h */
     ULONG NumberOfProcessors;                        /* 64h */
     ULONG NtGlobalFlag;                              /* 68h */
-    UCHAR Spare2[0x4];                               /* 6Ch */
+    UCHAR _Spare2[0x4];                              /* 6Ch */
     LARGE_INTEGER CriticalSectionTimeout;            /* 70h */
     ULONG HeapSegmentReserve;                        /* 78h */
     ULONG HeapSegmentCommit;                         /* 7Ch */

@@ -3,7 +3,9 @@
 
 #include <windows.h>
 #include <ddk/ntddblue.h>
+#ifndef _NTNDK_
 #include <ntos.h>
+#endif
 
 #define CSR_CSRSS_SECTION_SIZE          (65536)
 
