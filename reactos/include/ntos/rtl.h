@@ -4,6 +4,9 @@
 #ifndef __DDK_RTL_H
 #define __DDK_RTL_H
 
+/* RTLP Functions */
+#include <rosrtl/string.h>
+
 #if defined(__NTOSKRNL__) || defined(__NTDRIVER__) || defined(__NTHAL__) || defined(__NTDLL__) || defined (__NTAPP__)
 
 #include <stddef.h>
@@ -2760,108 +2763,6 @@ STDCALL
 RtlxUnicodeStringToOemSize (
 	IN	PUNICODE_STRING	UnicodeString
 	);
-
-NTSTATUS
-FASTCALL
-RtlpOemStringToCountedUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN POEM_STRING OemSource,
-   IN BOOLEAN AllocateDestinationString,
-   IN POOL_TYPE PoolType);
-   
-NTSTATUS 
-FASTCALL
-RtlpUpcaseUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN PCUNICODE_STRING UniSource,
-   IN BOOLEAN  AllocateDestinationString,
-   IN POOL_TYPE PoolType);
-   
-NTSTATUS 
-FASTCALL
-RtlpUpcaseUnicodeStringToAnsiString(
-   IN OUT PANSI_STRING AnsiDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN  AllocateDestinationString,
-   IN POOL_TYPE PoolType);
-   
-NTSTATUS 
-FASTCALL
-RtlpUpcaseUnicodeStringToCountedOemString(
-   IN OUT POEM_STRING OemDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN AllocateDestinationString,
-   IN POOL_TYPE PoolType);
-   
-NTSTATUS 
-FASTCALL
-RtlpUpcaseUnicodeStringToOemString (
-   IN OUT POEM_STRING OemDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN  AllocateDestinationString,
-   IN POOL_TYPE PoolType);
-   
-NTSTATUS 
-FASTCALL
-RtlpDowncaseUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN AllocateDestinationString,
-   IN POOL_TYPE PoolType);
-   
-NTSTATUS
-FASTCALL
-RtlpAnsiStringToUnicodeString(
-   IN OUT PUNICODE_STRING DestinationString,
-   IN PANSI_STRING SourceString,
-   IN BOOLEAN AllocateDestinationString,
-   IN POOL_TYPE PoolType);   
-   
-NTSTATUS
-FASTCALL
-RtlpUnicodeStringToAnsiString(
-   IN OUT PANSI_STRING AnsiDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN AllocateDestinationString,
-   IN POOL_TYPE PoolType);
-   
-NTSTATUS
-FASTCALL
-RtlpOemStringToUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN POEM_STRING OemSource,
-   IN BOOLEAN AllocateDestinationString,
-   IN POOL_TYPE PoolType);
-
-NTSTATUS
-FASTCALL
-RtlpUnicodeStringToOemString(
-   IN OUT POEM_STRING OemDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN  AllocateDestinationString,
-   IN POOL_TYPE PoolType);
-   
-BOOLEAN
-FASTCALL
-RtlpCreateUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN PCWSTR  Source,
-   IN POOL_TYPE PoolType);   
-
-NTSTATUS
-FASTCALL
-RtlpUnicodeStringToCountedOemString(
-   IN OUT POEM_STRING OemDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN AllocateDestinationString,
-   IN POOL_TYPE PoolType);
-
-NTSTATUS STDCALL
-RtlpDuplicateUnicodeString(
-   INT AddNull,
-   IN PUNICODE_STRING SourceString,
-   PUNICODE_STRING DestinationString,
-   POOL_TYPE PoolType);
    
 /* Register io functions */
 
