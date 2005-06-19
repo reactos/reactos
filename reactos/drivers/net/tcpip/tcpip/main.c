@@ -706,8 +706,11 @@ DriverEntry(
  */
 {
   NTSTATUS Status;
-  UNICODE_STRING strDeviceName;
-  UNICODE_STRING strNdisDeviceName;
+  UNICODE_STRING strIpDeviceName = RTL_CONSTANT_STRING(DD_IP_DEVICE_NAME);
+  UNICODE_STRING strRawDeviceName = RTL_CONSTANT_STRING(DD_RAWIP_DEVICE_NAME);
+  UNICODE_STRING strUdpDeviceName = RTL_CONSTANT_STRING(DD_UDP_DEVICE_NAME);
+  UNICODE_STRING strTcpDeviceName = RTL_CONSTANT_STRING(DD_TCP_DEVICE_NAME);
+  UNICODE_STRING strNdisDeviceName = RTL_CONSTANT_STRING(TCPIP_PROTOCOL_NAME);
   NDIS_STATUS NdisStatus;
   LARGE_INTEGER DueTime;
 
@@ -724,8 +727,7 @@ DriverEntry(
   /* FIXME: Create symbolic links in Win32 namespace */
 
   /* Create IP device object */
-  RtlRosInitUnicodeStringFromLiteral(&strDeviceName, DD_IP_DEVICE_NAME);
-  Status = IoCreateDevice(DriverObject, 0, &strDeviceName,
+  Status = IoCreateDevice(DriverObject, 0, &strIpDeviceName,
     FILE_DEVICE_NETWORK, 0, FALSE, &IPDeviceObject);
   if (!NT_SUCCESS(Status)) {
     TI_DbgPrint(MIN_TRACE, ("Failed to create IP device object. Status (0x%X).\n", Status));
@@ -733,8 +735,7 @@ DriverEntry(
   }
 
   /* Create RawIP device object */
-  RtlRosInitUnicodeStringFromLiteral(&strDeviceName, DD_RAWIP_DEVICE_NAME);
-  Status = IoCreateDevice(DriverObject, 0, &strDeviceName,
+  Status = IoCreateDevice(DriverObject, 0, &strRawDeviceName,
     FILE_DEVICE_NETWORK, 0, FALSE, &RawIPDeviceObject);
   if (!NT_SUCCESS(Status)) {
     TI_DbgPrint(MIN_TRACE, ("Failed to create RawIP device object. Status (0x%X).\n", Status));
@@ -743,8 +744,7 @@ DriverEntry(
   }
 
   /* Create UDP device object */
-  RtlRosInitUnicodeStringFromLiteral(&strDeviceName, DD_UDP_DEVICE_NAME);
-  Status = IoCreateDevice(DriverObject, 0, &strDeviceName,
+  Status = IoCreateDevice(DriverObject, 0, &strUdpDeviceName,
     FILE_DEVICE_NETWORK, 0, FALSE, &UDPDeviceObject);
   if (!NT_SUCCESS(Status)) {
     TI_DbgPrint(MIN_TRACE, ("Failed to create UDP device object. Status (0x%X).\n", Status));
@@ -753,8 +753,7 @@ DriverEntry(
   }
 
   /* Create TCP device object */
-  RtlRosInitUnicodeStringFromLiteral(&strDeviceName, DD_TCP_DEVICE_NAME);
-  Status = IoCreateDevice(DriverObject, 0, &strDeviceName,
+  Status = IoCreateDevice(DriverObject, 0, &strTcpDeviceName,
     FILE_DEVICE_NETWORK, 0, FALSE, &TCPDeviceObject);
   if (!NT_SUCCESS(Status)) {
     TI_DbgPrint(MIN_TRACE, ("Failed to create TCP device object. Status (0x%X).\n", Status));
@@ -823,7 +822,6 @@ DriverEntry(
 
   /* Register protocol with NDIS */
   /* This used to be IP_DEVICE_NAME but the DDK says it has to match your entry in the SCM */
-  RtlInitUnicodeString(&strNdisDeviceName, TCPIP_PROTOCOL_NAME);
   Status = LANRegisterProtocol(&strNdisDeviceName);
   if (!NT_SUCCESS(Status)) {
 	  TI_DbgPrint(MIN_TRACE,("Failed to register protocol with NDIS; status 0x%x\n", Status));
