@@ -245,6 +245,15 @@ DispatchClose(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 }
 
 static NTSTATUS STDCALL
+DispatchCleanup(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+{
+	if (((POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO)
+		return UhciCleanup(DeviceObject, Irp);
+	else
+		return IrpStub(DeviceObject, Irp);
+}
+
+static NTSTATUS STDCALL
 DispatchDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	if (((POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO)
@@ -289,6 +298,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegPath)
 
 	DriverObject->MajorFunction[IRP_MJ_CREATE] = DispatchCreate;
 	DriverObject->MajorFunction[IRP_MJ_CLOSE] = DispatchClose;
+	DriverObject->MajorFunction[IRP_MJ_CLEANUP] = DispatchCleanup;
 	DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = DispatchDeviceControl;
 	DriverObject->MajorFunction[IRP_MJ_PNP] = DispatchPnp;
 	DriverObject->MajorFunction[IRP_MJ_POWER] = DispatchPower;

@@ -7,6 +7,7 @@
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<library>usbcore</library>
+	<file>cleanup.c</file>
 	<file>close.c</file>
 	<file>create.c</file>
 	<file>fdo.c</file>

@@ -12,15 +12,21 @@
 
 #define USB_UHCI_TAG TAG('u','s','b','u')
 
-/* create.c */
+/* cleanup.c */
 NTSTATUS STDCALL
-UhciCreate(
+UhciCleanup(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
 /* close.c */
 NTSTATUS STDCALL
 UhciClose(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp);
+
+/* create.c */
+NTSTATUS STDCALL
+UhciCreate(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
