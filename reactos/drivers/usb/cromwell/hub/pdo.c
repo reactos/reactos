@@ -8,9 +8,8 @@
  */
 
 //#define NDEBUG
+#include <stdio.h>
 #include "usbhub.h"
-
-extern struct usb_driver hub_driver;
 
 #define IO_METHOD_FROM_CTL_CODE(ctlCode) (ctlCode&0x00000003)
 
@@ -44,6 +43,59 @@ UsbhubDeviceControlPdo(
 	return Status;
 }
 
+static NTSTATUS
+UsbhubPdoQueryId(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp,
+	OUT ULONG_PTR* Information)
+{
+	PHUB_DEVICE_EXTENSION DeviceExtension;
+	ULONG IdType;
+	PUNICODE_STRING SourceString;
+	UNICODE_STRING String;
+	NTSTATUS Status;
+	
+	IdType = IoGetCurrentIrpStackLocation(Irp)->Parameters.QueryId.IdType;
+	DeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+	RtlInitUnicodeString(&String, NULL);
+	
+	switch (IdType)
+	{
+		case BusQueryDeviceID:
+		{
+			DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryDeviceID\n");
+			SourceString = &DeviceExtension->DeviceId;
+			break;
+		}
+		case BusQueryHardwareIDs:
+		{
+			DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryHardwareIDs\n");
+			SourceString = &DeviceExtension->HardwareIds;
+			break;
+		}
+		case BusQueryCompatibleIDs:
+			DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryCompatibleIDs\n");
+			SourceString = &DeviceExtension->CompatibleIds;
+			break;
+		case BusQueryInstanceID:
+		{
+			DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryInstanceID\n");
+			SourceString = &DeviceExtension->InstanceId;
+			break;
+		}
+		default:
+			DPRINT1("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_ID / unknown query id type 0x%lx\n", IdType);
+			return STATUS_NOT_SUPPORTED;
+	}
+	
+	Status = UsbhubDuplicateUnicodeString(
+		&String,
+		SourceString,
+		PagedPool);
+	*Information = (ULONG_PTR)String.Buffer;
+	return Status;
+}
+
 NTSTATUS STDCALL
 UsbhubPnpPdo(
 	IN PDEVICE_OBJECT DeviceObject,
@@ -59,6 +111,11 @@ UsbhubPnpPdo(
 
 	switch (MinorFunction)
 	{
+		case IRP_MN_QUERY_ID: /* 0x13 */
+		{
+			Status = UsbhubPdoQueryId(DeviceObject, Irp, &Information);
+			break;
+		}
 		default:
 		{
 			/* We can't forward request to the lower driver, because

@@ -19,6 +19,15 @@ typedef struct _HUB_DEVICE_EXTENSION
 	BOOLEAN IsFDO;
 	struct usb_device* dev;
 	PDEVICE_OBJECT LowerDevice;
+
+	PDEVICE_OBJECT Children[USB_MAXCHILDREN];
+	
+	/* Fields valid only when IsFDO == FALSE */
+	UNICODE_STRING DeviceDescription; // REG_SZ
+	UNICODE_STRING DeviceId;          // REG_SZ
+	UNICODE_STRING InstanceId;        // REG_SZ
+	UNICODE_STRING HardwareIds;       // REG_MULTI_SZ
+	UNICODE_STRING CompatibleIds;     // REG_MULTI_SZ
 } HUB_DEVICE_EXTENSION, *PHUB_DEVICE_EXTENSION;
 
 /* createclose.c */
