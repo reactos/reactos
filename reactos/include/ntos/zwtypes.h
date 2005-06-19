@@ -1793,6 +1793,11 @@ typedef VOID STDCALL_FUNC
 
 #endif /* __USE_W32API */
 
+typedef enum _IO_COMPLETION_INFORMATION_CLASS 
+{
+    IoCompletionBasicInformation
+} IO_COMPLETION_INFORMATION_CLASS;
+
 /* BEGIN REACTOS ONLY */
 
 typedef enum _TRAVERSE_METHOD {

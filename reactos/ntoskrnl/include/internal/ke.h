@@ -212,11 +212,6 @@ typedef struct _KPROCESS
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
-#ifdef __USE_W32API
-struct _KPROCESS* STDCALL KeGetCurrentProcess(VOID);
-VOID KeSetGdtSelector(ULONG Entry, ULONG Value1, ULONG Value2);
-#endif
-
 struct _KIRQ_TRAPFRAME;
 struct _KPCR;
 struct _KPRCB;

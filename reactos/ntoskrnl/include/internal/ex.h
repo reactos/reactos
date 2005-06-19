@@ -83,9 +83,6 @@ extern LARGE_INTEGER ExpTimeZoneBias;
 extern ULONG ExpTimeZoneId;
 
 extern POBJECT_TYPE ExEventPairObjectType;
-extern POBJECT_TYPE EXPORTED ExMutantObjectType;
-extern POBJECT_TYPE EXPORTED ExSemaphoreObjectType;
-extern POBJECT_TYPE EXPORTED ExTimerType;
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 

@@ -11,6 +11,53 @@
 #define DOE_REMOVE_PROCESSED  0x8
 #define DOE_START_PENDING     0x10
 
+extern POBJECT_TYPE EXPORTED ExMutantObjectType;
+extern POBJECT_TYPE EXPORTED ExTimerType;
+
+typedef struct _SECTION_BASIC_INFORMATION
+{
+  PVOID BaseAddress;
+  ULONG Attributes;
+  LARGE_INTEGER Size;
+} SECTION_BASIC_INFORMATION, *PSECTION_BASIC_INFORMATION;
+
+typedef struct _SECTION_IMAGE_INFORMATION 
+{
+    ULONG     EntryPoint;
+    ULONG     Unknown1;
+    ULONG_PTR StackReserve;
+    ULONG_PTR StackCommit;
+    ULONG     Subsystem;
+    USHORT    MinorSubsystemVersion;
+    USHORT    MajorSubsystemVersion;
+    ULONG     Unknown2;
+    ULONG     Characteristics;
+    USHORT    ImageNumber;
+    BOOLEAN   Executable;
+    UCHAR     Unknown3;
+    ULONG     Unknown4[3];
+} SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
+
+typedef struct _MAILSLOT_CREATE_PARAMETERS 
+{
+    ULONG           MailslotQuota;
+    ULONG           MaximumMessageSize;
+    LARGE_INTEGER   ReadTimeout;
+    BOOLEAN         TimeoutSpecified;
+} MAILSLOT_CREATE_PARAMETERS, *PMAILSLOT_CREATE_PARAMETERS;
+
+typedef struct _NAMED_PIPE_CREATE_PARAMETERS 
+{
+    ULONG           NamedPipeType;
+    ULONG           ReadMode;
+    ULONG           CompletionMode;
+    ULONG           MaximumInstances;
+    ULONG           InboundQuota;
+    ULONG           OutboundQuota;
+    LARGE_INTEGER   DefaultTimeout;
+    BOOLEAN         TimeoutSpecified;
+} NAMED_PIPE_CREATE_PARAMETERS, *PNAMED_PIPE_CREATE_PARAMETERS;
+
 /*
  * PURPOSE: Special timer associated with each device
  */
@@ -38,6 +85,68 @@ typedef struct _EX_WORK_QUEUE {
     ULONG QueueDepthLastPass;
     EX_QUEUE_WORKER_INFO Info;    
 } EX_WORK_QUEUE, *PEX_WORK_QUEUE;
+
+typedef struct _KDPC_DATA 
+{
+    LIST_ENTRY  DpcListHead;
+    ULONG  DpcLock;
+    ULONG  DpcQueueDepth;
+    ULONG  DpcCount;
+} KDPC_DATA, *PKDPC_DATA;
+
+typedef struct _KTRAP_FRAME 
+{
+    PVOID DebugEbp;
+    PVOID DebugEip;
+    PVOID DebugArgMark;
+    PVOID DebugPointer;
+    PVOID TempCs;
+    PVOID TempEip;
+    ULONG Dr0;
+    ULONG Dr1;
+    ULONG Dr2;
+    ULONG Dr3;
+    ULONG Dr6;
+    ULONG Dr7;
+    USHORT Gs;
+    USHORT Reserved1;
+    USHORT Es;
+    USHORT Reserved2;
+    USHORT Ds;
+    USHORT Reserved3;
+    ULONG Edx;
+    ULONG Ecx;
+    ULONG Eax;
+    ULONG PreviousMode;
+    PVOID ExceptionList;
+    USHORT Fs;
+    USHORT Reserved4;
+    ULONG Edi;
+    ULONG Esi;
+    ULONG Ebx;
+    ULONG Ebp;
+    ULONG ErrorCode;
+    ULONG Eip;
+    ULONG Cs;
+    ULONG Eflags;
+    ULONG Esp;
+    USHORT Ss;
+    USHORT Reserved5;
+    USHORT V86_Es;
+    USHORT Reserved6;
+    USHORT V86_Ds;
+    USHORT Reserved7;
+    USHORT V86_Fs;
+    USHORT Reserved8;
+    USHORT V86_Gs;
+    USHORT Reserved9;
+} KTRAP_FRAME, *PKTRAP_FRAME;
+
+typedef struct _PP_LOOKASIDE_LIST 
+{
+   struct _GENERAL_LOOKASIDE *P;
+   struct _GENERAL_LOOKASIDE *L;
+} PP_LOOKASIDE_LIST, *PPP_LOOKASIDE_LIST;
 
 typedef enum _PP_NPAGED_LOOKASIDE_NUMBER
 {

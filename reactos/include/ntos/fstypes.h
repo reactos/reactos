@@ -24,18 +24,4 @@ typedef struct _MCB {
     LARGE_MCB LargeMcb;
 } MCB, *PMCB;
 
-
-typedef struct _FILE_LOCK_GRANTED {
-	LIST_ENTRY			ListEntry;
-	FILE_LOCK_INFO			Lock;
-   PVOID             UnlockContext;
-} FILE_LOCK_GRANTED, *PFILE_LOCK_GRANTED;
-
-
-typedef struct _FILE_LOCK_TOC {
-	KSPIN_LOCK			SpinLock;
-	LIST_ENTRY			GrantedListHead;
-	LIST_ENTRY			PendingListHead;
-} FILE_LOCK_TOC, *PFILE_LOCK_TOC;
-
 #endif  /* __INCLUDE_DDK_FSTYPES_H */

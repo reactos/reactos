@@ -237,7 +237,8 @@ KeDisconnectInterrupt(
     PKINTERRUPT InterruptObject
 );
 
-struct _KPROCESS* 
+PKPROCESS
+STDCALL
 KeGetCurrentProcess(
     VOID
 );

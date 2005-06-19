@@ -21,7 +21,7 @@
 
 #ifdef __USE_W32API
 #ifndef __ASM__
-#include <ddk/ntpoapi.h>
+#include <ndk/potypes.h> /* FIXME: TEMP HACK */
 #endif
 #endif
 

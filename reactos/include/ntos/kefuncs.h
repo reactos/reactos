@@ -94,6 +94,12 @@ KeFlushEntireTb(
   IN BOOLEAN  Unknown,
   IN BOOLEAN  CurrentCpuOnly);
 
+struct _KPROCESS*
+STDCALL
+KeGetCurrentProcess(
+    VOID
+);
+
 VOID STDCALL
 KeFlushWriteBuffer(
   VOID);

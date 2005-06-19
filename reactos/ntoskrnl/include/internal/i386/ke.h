@@ -111,54 +111,6 @@
 
 #ifndef __ASM__
 
-typedef struct _KTRAP_FRAME
-{
-   PVOID DebugEbp;
-   PVOID DebugEip;
-   PVOID DebugArgMark;
-   PVOID DebugPointer;
-   PVOID TempSegSs;
-   PVOID TempEsp;
-   ULONG Dr0;
-   ULONG Dr1;
-   ULONG Dr2;
-   ULONG Dr3;
-   ULONG Dr6;
-   ULONG Dr7;
-   USHORT Gs;
-   USHORT Reserved1;
-   USHORT Es;
-   USHORT Reserved2;
-   USHORT Ds;
-   USHORT Reserved3;
-   ULONG Edx;
-   ULONG Ecx;
-   ULONG Eax;
-   ULONG PreviousMode;
-   PVOID ExceptionList;
-   USHORT Fs;
-   USHORT Reserved4;
-   ULONG Edi;
-   ULONG Esi;
-   ULONG Ebx;
-   ULONG Ebp;
-   ULONG ErrorCode;
-   ULONG Eip;
-   ULONG Cs;
-   ULONG Eflags;
-   ULONG Esp;
-   USHORT Ss;
-   USHORT Reserved5;
-   USHORT V86_Es;
-   USHORT Reserved6;
-   USHORT V86_Ds;
-   USHORT Reserved7;
-   USHORT V86_Fs;
-   USHORT Reserved8;
-   USHORT V86_Gs;
-   USHORT Reserved9;
-} KTRAP_FRAME, *PKTRAP_FRAME;
-
 typedef struct _KIRQ_TRAPFRAME
 {
    ULONG Magic;

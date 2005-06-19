@@ -1,6 +1,8 @@
 #ifndef __INCLUDE_INTERNAL_XHAL_H
 #define __INCLUDE_INTERNAL_XHAL_H
 
+#include <ddk/ntdddisk.h>
+
 NTSTATUS
 xHalQueryDriveLayout(IN PUNICODE_STRING DeviceName,
 		     OUT PDRIVE_LAYOUT_INFORMATION *LayoutInfo);

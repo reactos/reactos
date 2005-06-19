@@ -115,7 +115,7 @@ typedef struct _ETHREAD
     struct _EPROCESS               *ThreadsProcess;             /* 218 */
     PKSTART_ROUTINE                StartAddress;                /* 21C */
     union {
-        LPTHREAD_START_ROUTINE     Win32StartAddress;           /* 220 */
+        PTHREAD_START_ROUTINE      Win32StartAddress;           /* 220 */
         ULONG                      LpcReceivedMessageId;        /* 220 */
     };
     LIST_ENTRY                     ThreadListEntry;             /* 224 */
@@ -239,7 +239,7 @@ typedef struct _EPROCESS
     ACCESS_MASK           GrantedAccess;                /* 194 */
     ULONG                 DefaultHardErrorProcessing;   /* 198 */
     NTSTATUS              LastThreadExitStatus;         /* 19C */
-    PPEB                  Peb;                          /* 1A0 */
+    struct _PEB*          Peb;                          /* 1A0 */
     EX_FAST_REF           PrefetchTrace;                /* 1A4 */
     LARGE_INTEGER         ReadOperationCount;           /* 1A8 */
     LARGE_INTEGER         WriteOperationCount;          /* 1B0 */

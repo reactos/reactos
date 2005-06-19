@@ -12,7 +12,7 @@
 #ifndef __INCLUDE_DISK_H
 #define __INCLUDE_DISK_H
 
-#ifndef __NTDDDISK_H
+#ifndef __USE_W32API
 
 #define IOCTL_DISK_BASE                   FILE_DEVICE_DISK
 
@@ -177,10 +177,7 @@ typedef struct _DRIVE_LAYOUT_INFORMATION
   PARTITION_INFORMATION PartitionEntry[1];
 } DRIVE_LAYOUT_INFORMATION;
 
-#ifndef __USE_W32API
 typedef DRIVE_LAYOUT_INFORMATION *PDRIVE_LAYOUT_INFORMATION;
-#endif
-
 #endif
 
 #endif /* __INCLUDE_DISK_H */
