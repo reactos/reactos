@@ -10,6 +10,7 @@
 #define _POTYPES_H
 
 /* DEPENDENCIES **************************************************************/
+#include <ddk/ntpoapi.h>
 
 /* EXPORTED DATA *************************************************************/
 
@@ -18,28 +19,6 @@
 /* ENUMERATIONS **************************************************************/
 
 /* TYPES *********************************************************************/
-
-typedef struct _PROCESSOR_IDLE_TIMES 
-{
-    ULONGLONG StartTime;
-    ULONGLONG EndTime;
-    ULONG IdleHandlerReserved[4];
-} PROCESSOR_IDLE_TIMES, *PPROCESSOR_IDLE_TIMES;
-
-typedef struct _PROCESSOR_PERF_STATE 
-{
-    UCHAR PercentFrequency;
-    UCHAR MinCapacity;
-    USHORT Power;
-    UCHAR IncreaseLevel;
-    UCHAR DecreaseLevel;
-    USHORT Flags;
-    ULONG IncreaseTime;
-    ULONG DecreaseTime;
-    ULONG IncreaseCount;
-    ULONG DecreaseCount;
-    ULONGLONG PerformanceTime;
-} PROCESSOR_PERF_STATE, *PPROCESSOR_PERF_STATE;
 
 typedef struct _PROCESSOR_POWER_STATE 
 {

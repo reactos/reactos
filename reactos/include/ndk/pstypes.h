@@ -40,6 +40,9 @@ extern NTOSAPI POBJECT_TYPE PsThreadType;
 
 /* ENUMERATIONS **************************************************************/
 
+/* FUNCTION TYPES **********************************************/
+typedef DWORD (*STDCALL PTHREAD_START_ROUTINE) (LPVOID);
+
 /* TYPES *********************************************************************/
 
 struct _ETHREAD;
@@ -119,6 +122,15 @@ typedef struct _GDI_TEB_BATCH
     ULONG Buffer[0x136];
 } GDI_TEB_BATCH, *PGDI_TEB_BATCH;
 
+typedef struct _INITIAL_TEB
+{
+  PVOID StackBase;
+  PVOID StackLimit;
+  PVOID StackCommit;
+  PVOID StackCommitMax;
+  PVOID StackReserved;
+} INITIAL_TEB, *PINITIAL_TEB;
+
 typedef struct _TEB 
 {
     NT_TIB Tib;                         /* 00h */
@@ -126,7 +138,7 @@ typedef struct _TEB
     CLIENT_ID Cid;                      /* 20h */
     PVOID ActiveRpcInfo;                /* 28h */
     PVOID ThreadLocalStoragePointer;    /* 2Ch */
-    PPEB Peb;                           /* 30h */
+    struct _PEB *Peb;                   /* 30h */
     ULONG LastErrorValue;               /* 34h */
     ULONG CountOfOwnedCriticalSections; /* 38h */
     PVOID CsrClientThread;              /* 3Ch */
@@ -171,14 +183,14 @@ typedef struct _TEB
     PVOID Instrumentation[0x10];        /* F2Ch */
     PVOID WinSockData;                  /* F6Ch */
     ULONG GdiBatchCount;                /* F70h */
-    USHORT Spare2;                      /* F74h */
+    USHORT _Spare2;                     /* F74h */
     BOOLEAN IsFiber;                    /* F76h */
     UCHAR Spare3;                       /* F77h */
-    ULONG Spare4;                       /* F78h */
-    ULONG Spare5;                       /* F7Ch */
+    ULONG _Spare4;                      /* F78h */
+    ULONG _Spare5;                      /* F7Ch */
     PVOID ReservedForOle;               /* F80h */
     ULONG WaitingOnLoaderLock;          /* F84h */
-    ULONG Unknown[11];                  /* F88h */
+    ULONG _Unknown[11];                 /* F88h */
     PVOID FlsSlots;                     /* FB4h */
     PVOID WineDebugInfo;                /* Needed for WINE DLL's  */
 } TEB, *PTEB;

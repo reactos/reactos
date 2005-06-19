@@ -44,6 +44,17 @@ typedef enum
     ExceptionCollidedUnwind
 } EXCEPTION_DISPOSITION;
 
+/* FUNCTION TYPES ************************************************************/
+typedef NTSTATUS
+(*PHEAP_ENUMERATION_ROUTINE)(IN PVOID HeapHandle,
+                             IN PVOID UserParam);
+
+typedef EXCEPTION_DISPOSITION 
+(*PEXCEPTION_HANDLER)(struct _EXCEPTION_RECORD*, 
+                      PVOID, 
+                      struct _CONTEXT*, 
+                      PVOID);
+                      
 /* TYPES *********************************************************************/
 
 typedef unsigned short RTL_ATOM;
@@ -151,20 +162,6 @@ typedef struct _RTL_PROCESS_INFO
    CLIENT_ID ClientId;
    SECTION_IMAGE_INFORMATION ImageInfo;
 } RTL_PROCESS_INFO, *PRTL_PROCESS_INFO;
-       
-typedef struct _RTL_BITMAP 
-{
-    ULONG SizeOfBitMap;
-    PULONG Buffer;
-} RTL_BITMAP;
-typedef RTL_BITMAP *PRTL_BITMAP;
-
-typedef struct _RTL_BITMAP_RUN
-{
-    ULONG StartingIndex;
-    ULONG NumberOfBits;
-} RTL_BITMAP_RUN;
-typedef RTL_BITMAP_RUN *PRTL_BITMAP_RUN;
 
 /* FIXME: This is a Windows Type which which we are not implementing properly
       The type below however is our own implementation. We will eventually use Windows' */
@@ -202,7 +199,5 @@ typedef struct _RTL_ATOM_TABLE
         LONG DaylightBias;
     } TIME_ZONE_INFORMATION, *PTIME_ZONE_INFORMATION, *LPTIME_ZONE_INFORMATION;
 #endif
-
-typedef LPTIME_ZONE_INFORMATION PTIME_ZONE_INFORMATION;
 
 #endif

@@ -17,6 +17,17 @@
 
 /* ENUMERATIONS **************************************************************/
 
+typedef enum _DEBUG_CONTROL_CODE
+{
+  DebugGetTraceInformation = 1,
+  DebugSetInternalBreakpoint,
+  DebugSetSpecialCall,
+  DebugClearSpecialCalls,
+  DebugQuerySpecialCalls,
+  DebugDbgBreakPoint,
+  DebugDbgLoadSymbols
+} DEBUG_CONTROL_CODE;
+
 /* TYPES *********************************************************************/
 
 typedef struct _KD_PORT_INFORMATION 

@@ -15,6 +15,7 @@
 /* EXPORTED DATA *************************************************************/
 
 /* CONSTANTS *****************************************************************/
+#define MAX_BUS_NAME 24
 
 /* ENUMERATIONS **************************************************************/
 
@@ -30,6 +31,13 @@ typedef enum _PLUGPLAY_VIRTUAL_BUS_TYPE
     Root,
     MaxPlugPlayVirtualBusType
 } PLUGPLAY_VIRTUAL_BUS_TYPE, *PPLUGPLAY_VIRTUAL_BUS_TYPE;
+
+typedef enum _SYSTEM_DOCK_STATE 
+{
+    SystemDockStateUnknown,
+    SystemUndocked,
+    SystemDocked
+} SYSTEM_DOCK_STATE, *PSYSTEM_DOCK_STATE;
 
 /**** Information Classes ****/
 /*
@@ -79,7 +87,7 @@ typedef enum _SYSTEM_INFORMATION_CLASS
     SystemPrioritySeperation,
     SystemPlugPlayBusInformation,
     SystemDockInformation,
-    SystemPowerInformation,
+    _SystemPowerInformation, /* FIXME */
     SystemProcessorSpeedInformation,
     SystemCurrentTimeZoneInformation,
     SystemLookasideInformation,
@@ -307,13 +315,33 @@ typedef struct _SEMAPHORE_BASIC_INFORMATION {
 
 /*
  * Event
- *
+ */
 /* Class 0 */
 typedef struct _EVENT_BASIC_INFORMATION 
 {
     EVENT_TYPE EventType;
     LONG EventState;
 } EVENT_BASIC_INFORMATION, *PEVENT_BASIC_INFORMATION;
+
+/*
+ * Process
+ */
+/* Class 23 */
+typedef struct _PROCESS_DEVICEMAP_INFORMATION
+{
+    union 
+    {
+        struct 
+        {
+            HANDLE DirectoryHandle;
+        } Set;
+        struct 
+        {
+            ULONG DriveMap;
+            UCHAR DriveType[32];
+        } Query;
+    };
+} PROCESS_DEVICEMAP_INFORMATION, *PPROCESS_DEVICEMAP_INFORMATION;
 
 /*
  * System
@@ -523,7 +551,7 @@ typedef struct _SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION
     LARGE_INTEGER DpcTime;
     LARGE_INTEGER InterruptTime;
     ULONG InterruptCount;
-} SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION,
+} SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION, *PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION;
 
 /* Class 9 */
 typedef struct _SYSTEM_FLAGS_INFORMATION 
@@ -585,7 +613,7 @@ typedef struct _SYSTEM_BACKTRACE_INFORMATION_ENTRY
 typedef struct _SYSTEM_BACKTRACE_INFORMATION
 {
     /* FIXME */
-    ULONG Unknown[4]
+    ULONG Unknown[4];
     ULONG Count;
     SYSTEM_BACKTRACE_INFORMATION_ENTRY Trace[1];
 } SYSTEM_BACKTRACE_INFORMATION, *PSYSTEM_BACKTRACE_INFORMATION;
@@ -715,7 +743,8 @@ typedef struct _SYSTEM_VDM_INSTEMUL_INFO
 typedef struct _SYSTEM_VDM_BOP_INFO 
 {
     /* FIXME */
-}
+    PVOID Dummy;
+} SYSTEM_VDM_BOP_INFO, *PSYSTEM_VDM_BOP_INFO;
 
 /* Class 21 */
 typedef struct _SYSTEM_CACHE_INFORMATION 
@@ -908,7 +937,8 @@ typedef struct _SYSTEM_DOCK_INFORMATION
 } SYSTEM_DOCK_INFORMATION, *PSYSTEM_DOCK_INFORMATION;
 
 /* Class 42 */
-typedef struct _SYSTEM_POWER_INFORMATION
+/* FIXME: Conflict with WINNT.H */
+typedef struct __SYSTEM_POWER_INFORMATION
 {
     BOOLEAN SystemSuspendSupported;
     BOOLEAN SystemHibernateSupported;
@@ -920,18 +950,18 @@ typedef struct _SYSTEM_POWER_INFORMATION
     BOOLEAN SystemAcOrDc;
     BOOLEAN PowerDownDisabled;
     LARGE_INTEGER SpindownDrives;
-} SYSTEM_POWER_INFORMATION, *PSYSTEM_POWER_INFORMATION;
+} _SYSTEM_POWER_INFORMATION, *P_SYSTEM_POWER_INFORMATION;
 
 /* Class 43 */
 typedef struct _SYSTEM_LEGACY_DRIVER_INFORMATION
 {
     PNP_VETO_TYPE VetoType;
-    UNCODE_STRING VetoDriver;
+    UNICODE_STRING VetoDriver;
     /* Buffer Follows */
-} SYSTEM_PROCESSOR_SPEED_INFORMATION, *PSYSTEM_PROCESSOR_SPEED_INFORMATION;
+} SYSTEM_LEGACY_DRIVER_INFORMATION, *PSYSTEM_LEGACY_DRIVER_INFORMATION;
 
 /* Class 44 */
-typedef TIME_ZONE_INFORMATION RTL_TIME_ZONE_INFORMATION;
+typedef struct _TIME_ZONE_INFORMATION RTL_TIME_ZONE_INFORMATION;
 
 /* Class 45 */
 typedef struct _SYSTEM_LOOKASIDE_INFORMATION 
@@ -948,13 +978,13 @@ typedef struct _SYSTEM_LOOKASIDE_INFORMATION
 } SYSTEM_LOOKASIDE_INFORMATION, *PSYSTEM_LOOKASIDE_INFORMATION;
 
 /* Class 46 */
-/* Not a structure. Only a HANDLE for the SlipEvent;
+/* Not a structure. Only a HANDLE for the SlipEvent; */
 
 /* Class 47 */
-/* Not a structure. Only a ULONG for the SessionId;
+/* Not a structure. Only a ULONG for the SessionId; */
 
 /* Class 48 */
-/* Not a structure. Only a ULONG for the SessionId;
+/* Not a structure. Only a ULONG for the SessionId; */
 
 /* Class 49 */
 /* FIXME */

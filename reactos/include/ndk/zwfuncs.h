@@ -12,6 +12,7 @@
 /* DEPENDENCIES **************************************************************/
 #include "lpctypes.h"
 #include "zwtypes.h"
+#include "kdtypes.h"
 
 /* FUNCTION TYPES ************************************************************/
 
@@ -1036,7 +1037,8 @@ ZwListenPort(HANDLE PortHandle,
              PLPC_MESSAGE LpcMessage
 );
 
-STDCALL 
+NTSTATUS
+STDCALL
 NtLoadDriver(
     IN PUNICODE_STRING DriverServiceName
 );
@@ -2786,7 +2788,7 @@ STDCALL
 NtSetQuotaInformationFile(
     HANDLE FileHandle,
     PIO_STATUS_BLOCK IoStatusBlock, 
-    PFILE_USER_QUOTA_INFORMATION Buffer,
+    PFILE_QUOTA_INFORMATION Buffer,
     ULONG BufferLength
 ); 
 
@@ -2795,7 +2797,7 @@ STDCALL
 ZwSetQuotaInformationFile(
     HANDLE FileHandle,
     PIO_STATUS_BLOCK IoStatusBlock, 
-    PFILE_USER_QUOTA_INFORMATION Buffer,
+    PFILE_QUOTA_INFORMATION Buffer,
     ULONG BufferLength
 ); 
 
@@ -2931,13 +2933,13 @@ ZwSetVolumeInformationFile(
 NTSTATUS
 STDCALL
 NtShutdownSystem(
-    IN SHUTDOWN_ACTION Action
+    IN ULONG Action
 );
 
 NTSTATUS
 STDCALL
 ZwShutdownSystem(
-    IN SHUTDOWN_ACTION Action
+    IN ULONG Action
 );
 
 NTSTATUS
@@ -3686,10 +3688,10 @@ NtDuplicateObject(
     IN HANDLE TargetProcessHandle,
     OUT PHANDLE TargetHandle,
     IN ACCESS_MASK DesiredAccess,
-    IN BOOLEAN InheritHandle,
+    IN ULONG HandleAttributes,
     IN ULONG Options
 );
-    
+
 NTSTATUS
 STDCALL
 ZwDuplicateObject(
@@ -3698,7 +3700,7 @@ ZwDuplicateObject(
     IN HANDLE TargetProcessHandle,
     OUT PHANDLE TargetHandle,
     IN ACCESS_MASK DesiredAccess,
-    IN BOOLEAN InheritHandle,
+    IN ULONG HandleAttributes,
     IN ULONG Options
 );
 

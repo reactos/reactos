@@ -1,22 +1,3 @@
-/* $Id: rtlfuncs.h,v 1.1.2.2 2004/10/25 02:57:20 ion Exp $
- *
- *  ReactOS Headers
- *  Copyright (C) 1998-2004 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
 /*
  * PROJECT:         ReactOS Native Headers
  * FILE:            include/ndk/rtlfuncs.h
@@ -29,19 +10,10 @@
 #define _RTLFUNCS_H
 
 #include <ndk/rtltypes.h>
+#include <ndk/pstypes.h>
 
 /*FIXME: REORGANIZE THIS */
 /* FIXME: SOME FUNCTIONS MUST BE PROTECTED AGAINST DDK/IFS. */
-
-typedef NTSTATUS
-(*PHEAP_ENUMERATION_ROUTINE)(IN PVOID HeapHandle,
-                             IN PVOID UserParam);
-
-typedef EXCEPTION_DISPOSITION 
-(*PEXCEPTION_HANDLER)(struct _EXCEPTION_RECORD*, 
-                      PVOID, 
-                      struct _CONTEXT*, 
-                      PVOID);
 
                       
 #define RtlGetProcessHeap() (NtCurrentPeb()->ProcessHeap)
@@ -122,7 +94,7 @@ typedef EXCEPTION_DISPOSITION
 }
 
 ULONG
-STDCALL
+CDECL
 DbgPrint(
   IN PCH  Format,
   IN ...);
@@ -222,8 +194,8 @@ RtlCompareUnicodeString (
 BOOLEAN
 STDCALL
 RtlEqualUnicodeString (
-    PUNICODE_STRING String1,
-    PUNICODE_STRING String2,
+    PCUNICODE_STRING String1,
+    PCUNICODE_STRING String2,
     BOOLEAN CaseInsensitive
 );
                  

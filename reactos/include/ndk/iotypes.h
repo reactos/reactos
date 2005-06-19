@@ -18,17 +18,8 @@ extern POBJECT_TYPE NTOSAPI IoDeviceHandlerObjectType;
 extern POBJECT_TYPE NTOSAPI IoDeviceObjectType;
 extern POBJECT_TYPE NTOSAPI IoDriverObjectType;
 extern POBJECT_TYPE NTOSAPI IoFileObjectType;
-extern ULONG NTOSAPI IoReadOperationCount;
-extern ULONGLONG NTOSAPI IoReadTransferCount;
-extern ULONG NTOSAPI IoWriteOperationCount;
-extern ULONGLONG NTOSAPI IoWriteTransferCount;
-extern KSPIN_LOCK NTOSAPI IoStatisticsLock;
 
 /* CONSTANTS *****************************************************************/
-
-/* I/O Types */
-#define IO_TYPE_DRIVER 4L
-#define IO_TYPE_TIMER 9L
 
 /* ENUMERATIONS **************************************************************/
 

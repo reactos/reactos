@@ -32,6 +32,11 @@ extern ULONG NTOSAPI KdComPortInUse;
 #define MB_FLAGS_GRAPHICS_TABLE   (0x800)
 
 /* ENUMERATIONS **************************************************************/
+typedef enum _FIRMWARE_ENTRY
+{
+    /*FIXME */
+    HalFixMe
+} FIRMWARE_ENTRY;
 
 /* TYPES *********************************************************************/
 
@@ -60,13 +65,6 @@ typedef struct _LOADER_PARAMETER_BLOCK
    ULONG ConfigTable;
    ULONG BootLoaderName;
 } LOADER_PARAMETER_BLOCK, *PLOADER_PARAMETER_BLOCK;
-
-typedef struct _DRIVE_LAYOUT_INFORMATION 
-{
-    DWORD PartitionCount;
-    DWORD Signature;
-    PARTITION_INFORMATION PartitionEntry[1];
-} DRIVE_LAYOUT_INFORMATION;
 
 #endif
 

@@ -12,6 +12,10 @@
 /* DEPENDENCIES **************************************************************/
 #include "haltypes.h"
 
+/* CONSTANTS *****************************************************************/
+#define SSDT_MAX_ENTRIES 4
+#define PROCESSOR_FEATURE_MAX 64
+
 /* EXPORTED DATA *************************************************************/
 extern CHAR NTOSAPI KeNumberProcessors;
 extern LOADER_PARAMETER_BLOCK NTOSAPI KeLoaderBlock;
@@ -23,10 +27,6 @@ extern ULONG NTOSAPI KeMaximumIncrement;
 extern ULONG NTOSAPI KeMinimumIncrement;
 extern SSDT_ENTRY NTOSAPI KeServiceDescriptorTable[SSDT_MAX_ENTRIES];
 extern SSDT_ENTRY NTOSAPI KeServiceDescriptorTableShadow[SSDT_MAX_ENTRIES];
-
-/* CONSTANTS *****************************************************************/
-#define SSDT_MAX_ENTRIES 4
-#define PROCESSOR_FEATURE_MAX 64
 
 /* ENUMERATIONS **************************************************************/
 
@@ -95,6 +95,31 @@ typedef struct _KTRAP_FRAME
     USHORT Reserved9;
 } KTRAP_FRAME, *PKTRAP_FRAME;
 
+typedef struct _LDT_ENTRY {
+  WORD LimitLow;
+  WORD BaseLow;
+  union {
+    struct {
+      BYTE BaseMid;
+      BYTE Flags1;
+      BYTE Flags2;
+      BYTE BaseHi;
+    } Bytes;
+    struct {
+      DWORD BaseMid : 8;
+      DWORD Type : 5;
+      DWORD Dpl : 2;
+      DWORD Pres : 1;
+      DWORD LimitHi : 4;
+      DWORD Sys : 1;
+      DWORD Reserved_0 : 1;
+      DWORD Default_Big : 1;
+      DWORD Granularity : 1;
+      DWORD BaseHi : 8;
+    } Bits;
+  } HighWord;
+} LDT_ENTRY, *PLDT_ENTRY, *LPLDT_ENTRY;
+
 /* i386 Doesn't have Exception Frames */
 typedef struct _KEXCEPTION_FRAME {
 
@@ -123,6 +148,14 @@ typedef struct _KINTERRUPT
     ULONG               DispatchCount;
     ULONG               DispatchCode[106];
 } KINTERRUPT, *PKINTERRUPT;
+
+typedef struct _KEVENT_PAIR
+{
+    CSHORT Type;
+    CSHORT Size;
+    KEVENT LowEvent;
+    KEVENT HighEvent;
+} KEVENT_PAIR, *PKEVENT_PAIR;
 
 /* FIXME: Add KOBJECTS Here */
 
