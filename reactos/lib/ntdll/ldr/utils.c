@@ -659,9 +659,9 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
   /*
    * Check it is a PE image file.
    */
-  if ((DosHeader->e_magic != IMAGE_DOS_MAGIC)
+  if ((DosHeader->e_magic != IMAGE_DOS_SIGNATURE)
       || (DosHeader->e_lfanew == 0L)
-      || (*(PULONG)(NTHeaders) != IMAGE_PE_MAGIC))
+      || (*(PULONG)(NTHeaders) != IMAGE_NT_SIGNATURE))
     {
       DPRINT("NTDLL format invalid\n");
       NtClose(FileHandle);
@@ -1365,7 +1365,7 @@ LdrpGetOrLoadModule(PWCHAR SerachPath,
 static NTSTATUS
 LdrpProcessImportDirectoryEntry(PLDR_MODULE Module,
                                 PLDR_MODULE ImportedModule,
-                                PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectory)
+                                PIMAGE_IMPORT_DESCRIPTOR ImportModuleDirectory)
 {
    NTSTATUS Status;
    PVOID* ImportAddressList;
@@ -1375,22 +1375,22 @@ LdrpProcessImportDirectoryEntry(PLDR_MODULE Module,
    ULONG Ordinal;
    ULONG IATSize;
 
-   if (ImportModuleDirectory == NULL || ImportModuleDirectory->dwRVAModuleName == 0)
+   if (ImportModuleDirectory == NULL || ImportModuleDirectory->Name == 0)
      {
        return STATUS_UNSUCCESSFUL;
      }
 
    /* Get the import address list. */
-   ImportAddressList = (PVOID *)(Module->BaseAddress + ImportModuleDirectory->dwRVAFunctionAddressList);
+   ImportAddressList = (PVOID *)(Module->BaseAddress + (ULONG_PTR)ImportModuleDirectory->FirstThunk);
 
    /* Get the list of functions to import. */
-   if (ImportModuleDirectory->dwRVAFunctionNameList != 0)
+   if (ImportModuleDirectory->OriginalFirstThunk != 0)
      {
-       FunctionNameList = (PULONG) (Module->BaseAddress + ImportModuleDirectory->dwRVAFunctionNameList);
+       FunctionNameList = (PULONG) (Module->BaseAddress + (ULONG_PTR)ImportModuleDirectory->OriginalFirstThunk);
      }
    else
      {
-       FunctionNameList = (PULONG)(Module->BaseAddress + ImportModuleDirectory->dwRVAFunctionAddressList);
+       FunctionNameList = (PULONG)(Module->BaseAddress + (ULONG_PTR)ImportModuleDirectory->FirstThunk);
      }
 
    /* Get the size of IAT. */
@@ -1464,14 +1464,14 @@ LdrpProcessImportDirectory(
    PCHAR ImportedName)
 {
    NTSTATUS Status;
-   PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectory;
+   PIMAGE_IMPORT_DESCRIPTOR ImportModuleDirectory;
    PCHAR Name;
 
    DPRINT("LdrpProcessImportDirectory(%x '%wZ', '%s')\n",
           Module, &Module->BaseDllName, ImportedName);
 
 
-   ImportModuleDirectory = (PIMAGE_IMPORT_MODULE_DIRECTORY)
+   ImportModuleDirectory = (PIMAGE_IMPORT_DESCRIPTOR)
                              RtlImageDirectoryEntryToData(Module->BaseAddress,
                                                           TRUE,
                                                           IMAGE_DIRECTORY_ENTRY_IMPORT,
@@ -1481,9 +1481,9 @@ LdrpProcessImportDirectory(
        return STATUS_UNSUCCESSFUL;
      }
 
-   while (ImportModuleDirectory->dwRVAModuleName)
+   while (ImportModuleDirectory->Name)
      {
-       Name = (PCHAR)Module->BaseAddress + ImportModuleDirectory->dwRVAModuleName;
+       Name = (PCHAR)Module->BaseAddress + ImportModuleDirectory->Name;
        if (0 == _stricmp(Name, ImportedName))
          {
            Status = LdrpProcessImportDirectoryEntry(Module,
@@ -1507,7 +1507,7 @@ LdrpAdjustImportDirectory(PLDR_MODULE Module,
                           PLDR_MODULE ImportedModule,
                           PCHAR ImportedName)
 {
-   PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectory;
+   PIMAGE_IMPORT_DESCRIPTOR ImportModuleDirectory;
    NTSTATUS Status;
    PVOID* ImportAddressList;
    PVOID Start;
@@ -1523,7 +1523,7 @@ LdrpAdjustImportDirectory(PLDR_MODULE Module,
    DPRINT("LdrpAdjustImportDirectory(Module %x '%wZ', %x '%wZ', %x '%s')\n",
           Module, &Module->BaseDllName, ImportedModule, &ImportedModule->BaseDllName, ImportedName);
 
-   ImportModuleDirectory = (PIMAGE_IMPORT_MODULE_DIRECTORY)
+   ImportModuleDirectory = (PIMAGE_IMPORT_DESCRIPTOR)
                               RtlImageDirectoryEntryToData(Module->BaseAddress,
                                                            TRUE,
                                                            IMAGE_DIRECTORY_ENTRY_IMPORT,
@@ -1533,23 +1533,23 @@ LdrpAdjustImportDirectory(PLDR_MODULE Module,
        return STATUS_UNSUCCESSFUL;
      }
 
-   while (ImportModuleDirectory->dwRVAModuleName)
+   while (ImportModuleDirectory->Name)
      {
-       Name = (PCHAR)Module->BaseAddress + ImportModuleDirectory->dwRVAModuleName;
+       Name = (PCHAR)Module->BaseAddress + ImportModuleDirectory->Name;
        if (0 == _stricmp(Name, (PCHAR)ImportedName))
          {
 
            /* Get the import address list. */
-           ImportAddressList = (PVOID *)(Module->BaseAddress + ImportModuleDirectory->dwRVAFunctionAddressList);
+           ImportAddressList = (PVOID *)(Module->BaseAddress + (ULONG_PTR)ImportModuleDirectory->FirstThunk);
 
            /* Get the list of functions to import. */
-           if (ImportModuleDirectory->dwRVAFunctionNameList != 0)
+           if (ImportModuleDirectory->OriginalFirstThunk != 0)
              {
-               FunctionNameList = (PULONG) (Module->BaseAddress + ImportModuleDirectory->dwRVAFunctionNameList);
+               FunctionNameList = (PULONG) (Module->BaseAddress + (ULONG_PTR)ImportModuleDirectory->OriginalFirstThunk);
              }
            else
              {
-               FunctionNameList = (PULONG)(Module->BaseAddress + ImportModuleDirectory->dwRVAFunctionAddressList);
+               FunctionNameList = (PULONG)(Module->BaseAddress + (ULONG_PTR)ImportModuleDirectory->FirstThunk);
              }
 
            /* Get the size of IAT. */
@@ -1628,8 +1628,8 @@ static NTSTATUS
 LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
                 IN PLDR_MODULE Module)
 {
-   PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectory;
-   PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectoryCurrent;
+   PIMAGE_IMPORT_DESCRIPTOR ImportModuleDirectory;
+   PIMAGE_IMPORT_DESCRIPTOR ImportModuleDirectoryCurrent;
    PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundImportDescriptor;
    PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundImportDescriptorCurrent;
    PIMAGE_TLS_DIRECTORY TlsDirectory;
@@ -1662,7 +1662,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
    /*
     * Process each import module.
     */
-   ImportModuleDirectory = (PIMAGE_IMPORT_MODULE_DIRECTORY)
+   ImportModuleDirectory = (PIMAGE_IMPORT_DESCRIPTOR)
                               RtlImageDirectoryEntryToData(Module->BaseAddress,
                                                            TRUE,
                                                            IMAGE_DIRECTORY_ENTRY_IMPORT,
@@ -1809,9 +1809,9 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
        DPRINT("ImportModuleDirectory %x\n", ImportModuleDirectory);
 
        ImportModuleDirectoryCurrent = ImportModuleDirectory;
-       while (ImportModuleDirectoryCurrent->dwRVAModuleName)
+       while (ImportModuleDirectoryCurrent->Name)
          {
-           ImportedName = (PCHAR)Module->BaseAddress + ImportModuleDirectoryCurrent->dwRVAModuleName;
+           ImportedName = (PCHAR)Module->BaseAddress + ImportModuleDirectoryCurrent->Name;
            TRACE_LDR("%wZ imports functions from %s\n", &Module->BaseDllName, ImportedName);
 
            Status = LdrpGetOrLoadModule(SearchPath, ImportedName, &ImportedModule, TRUE);
@@ -2125,7 +2125,7 @@ static NTSTATUS
 LdrpUnloadModule(PLDR_MODULE Module,
                  BOOLEAN Unload)
 {
-   PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectory;
+   PIMAGE_IMPORT_DESCRIPTOR ImportModuleDirectory;
    PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundImportDescriptor;
    PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundImportDescriptorCurrent;
    PCHAR ImportedName;
@@ -2183,7 +2183,7 @@ LdrpUnloadModule(PLDR_MODULE Module,
          }
        else
          {
-           ImportModuleDirectory = (PIMAGE_IMPORT_MODULE_DIRECTORY)
+           ImportModuleDirectory = (PIMAGE_IMPORT_DESCRIPTOR)
                                       RtlImageDirectoryEntryToData(Module->BaseAddress,
                                                                    TRUE,
                                                                    IMAGE_DIRECTORY_ENTRY_IMPORT,
@@ -2191,9 +2191,9 @@ LdrpUnloadModule(PLDR_MODULE Module,
            if (ImportModuleDirectory)
              {
                /* dereferencing all imported modules, use the import descriptor */
-               while (ImportModuleDirectory->dwRVAModuleName)
+               while (ImportModuleDirectory->Name)
                  {
-                   ImportedName = (PCHAR)Module->BaseAddress + ImportModuleDirectory->dwRVAModuleName;
+                   ImportedName = (PCHAR)Module->BaseAddress + ImportModuleDirectory->Name;
                    TRACE_LDR("%wZ trys to unload %s\n", &Module->BaseDllName, ImportedName);
                    Status = LdrpGetOrLoadModule(NULL, ImportedName, &ImportedModule, FALSE);
                    if (!NT_SUCCESS(Status))

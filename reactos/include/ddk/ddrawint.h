@@ -6,7 +6,6 @@
 #define __DD_INCLUDED__
 
 #include <ddraw.h>
-#include <ole32/guiddef.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -1110,7 +1110,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
 	  *    If is possible that this function overwrite the last information in runtimeinfo
 	  *    with the null terminator for the unicode string.
 	  */
-	 RuntimeInfo_U.Length = RuntimeInfo_U.MaximumLength = ROUND_UP(lpStartupInfo->cbReserved2, 2) + 2;
+	 RuntimeInfo_U.Length = RuntimeInfo_U.MaximumLength = (lpStartupInfo->cbReserved2 + 1) & ~1;
 	 RuntimeInfo_U.Buffer = RtlAllocateHeap(GetProcessHeap(), 0, RuntimeInfo_U.Length);
 	 memcpy(RuntimeInfo_U.Buffer, lpStartupInfo->lpReserved2, lpStartupInfo->cbReserved2);
       }

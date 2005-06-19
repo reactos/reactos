@@ -17,6 +17,7 @@
 	<library>rosrtl</library>
 	<library>rossym</library>
 	<library>string</library>
+	<library>wdmguid</library>
 	<directory name="include">
 		<pch>ntoskrnl.h</pch>
 	</directory>

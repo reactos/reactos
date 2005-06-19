@@ -8,7 +8,6 @@
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <sm/helper.h>
-#include <pe.h>
 
 #define NDEBUG
 #include <debug.h>

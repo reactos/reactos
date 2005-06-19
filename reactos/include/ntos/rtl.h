@@ -11,8 +11,8 @@
 
 #endif /* __NTOSKRNL__ || __NTDRIVER__ || __NTHAL__ || __NTDLL__ || __NTAPP__ */
 
-#include <pe.h>
-#include <ole32/guiddef.h>
+#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
+#define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
 
 #ifndef __USE_W32API
 

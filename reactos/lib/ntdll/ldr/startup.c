@@ -249,9 +249,9 @@ __true_LdrInitializeThunk (ULONG Unknown1,
        PEDosHeader = (PIMAGE_DOS_HEADER) ImageBase;
        DPRINT("PEDosHeader %x\n", PEDosHeader);
 
-       if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC ||
+       if (PEDosHeader->e_magic != IMAGE_DOS_SIGNATURE ||
            PEDosHeader->e_lfanew == 0L ||
-           *(PULONG)((PUCHAR)ImageBase + PEDosHeader->e_lfanew) != IMAGE_PE_MAGIC)
+           *(PULONG)((PUCHAR)ImageBase + PEDosHeader->e_lfanew) != IMAGE_NT_SIGNATURE)
          {
            DPRINT1("Image has bad header\n");
            ZwTerminateProcess(NtCurrentProcess(), STATUS_UNSUCCESSFUL);
