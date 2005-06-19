@@ -14,7 +14,6 @@
 #include <ddk/ntddk.h>
 #include <ntos/halfuncs.h>
 #include <ddk/ntddblue.h>
-#include <rosrtl/string.h>
 #include <string.h>
 
 #define NDEBUG
@@ -659,8 +658,8 @@ NTSTATUS STDCALL
 DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
     PDEVICE_OBJECT DeviceObject;
-    UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Device\\BlueScreen");
-    UNICODE_STRING SymlinkName = ROS_STRING_INITIALIZER(L"\\??\\BlueScreen");
+    UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\BlueScreen");
+    UNICODE_STRING SymlinkName = RTL_CONSTANT_STRING(L"\\??\\BlueScreen");
 
     DPRINT ("Screen Driver 0.0.6\n");
 

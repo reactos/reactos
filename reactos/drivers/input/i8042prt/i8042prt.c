@@ -11,11 +11,6 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <string.h>
-#include <ntos/keyboard.h>
-#include <ntos/minmax.h>
-#include <rosrtl/string.h>
-
 #include <ddk/ntddkbd.h>
 #include <ddk/ntdd8042.h>
 
@@ -600,8 +595,8 @@ static NTSTATUS STDCALL I8042Initialize(PDEVICE_EXTENSION DevExt)
 static NTSTATUS STDCALL I8042AddDevice(PDRIVER_OBJECT DriverObject,
                                        PDEVICE_OBJECT Pdo)
 {
-	UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Device\\KeyboardClass0");
-	UNICODE_STRING MouseName = ROS_STRING_INITIALIZER(L"\\Device\\PointerClass0");
+	UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");
+	UNICODE_STRING MouseName = RTL_CONSTANT_STRING(L"\\Device\\PointerClass0");
 	ULONG MappedIrqKeyboard = 0, MappedIrqMouse = 0;
 	KIRQL DirqlKeyboard = 0;
 	KIRQL DirqlMouse = 0;

@@ -29,7 +29,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -57,7 +56,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 {
   PDEVICE_OBJECT DeviceObject;
   NTSTATUS Status;
-  UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Cdfs");
+  UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Cdfs");
 
   DPRINT("CDFS 0.0.3\n");
 
