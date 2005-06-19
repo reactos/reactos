@@ -13,24 +13,14 @@
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
+/* Helper Macros */
+#include <reactos/helper.h>
+
 /* NTDLL Public Headers. FIXME: Combine/clean these after NDK */
 #include <ntdll/csr.h>
 #include <ntdll/rtl.h>
 #include <ntdll/ldr.h>
 #include <ntdll/ntdll.h>
 #include <debug.h> /* FIXME REMOVE THIS */
-
-/* ROSRTL Headers */
-#include <rosrtl/string.h> /* FIXME: KILL ROSRTL */
-
-/* Helper Macros FIXME: NDK */
-#define ROUNDUP(a,b)    ((((a)+(b)-1)/(b))*(b))
-#define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
-#ifndef HIWORD
-#define HIWORD(l) ((WORD)(((DWORD)(l) >> 16) & 0xFFFF))
-#endif
-#ifndef LOWORD
-#define LOWORD(l) ((WORD)(l))
-#endif
 
 /* EOF */

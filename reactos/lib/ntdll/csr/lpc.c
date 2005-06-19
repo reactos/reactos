@@ -114,7 +114,7 @@ NTSTATUS STDCALL
 CsrClientConnectToServer(VOID)
 {
    NTSTATUS Status;
-   UNICODE_STRING PortName;
+   UNICODE_STRING PortName = RTL_CONSTANT_STRING(L"\\Windows\\ApiPort");
    ULONG ConnectInfoLength;
    CSRSS_API_REQUEST Request;
    CSRSS_API_REPLY Reply;
@@ -139,7 +139,6 @@ CsrClientConnectToServer(VOID)
      {
        return(Status);
      }
-   RtlRosInitUnicodeStringFromLiteral(&PortName, L"\\Windows\\ApiPort");
    ConnectInfoLength = 0;
    LpcWrite.Length = sizeof(LPC_SECTION_WRITE);
    LpcWrite.SectionHandle = CsrSectionHandle;

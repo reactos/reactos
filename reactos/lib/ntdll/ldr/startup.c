@@ -105,7 +105,8 @@ LoadCompatibilitySettings(PPEB Peb)
 	HANDLE KeyHandle;
 	HANDLE SubKeyHandle;
 	OBJECT_ATTRIBUTES ObjectAttributes;
-	UNICODE_STRING KeyName;
+	UNICODE_STRING KeyName = RTL_CONSTANT_STRING(
+    L"Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers");
 	UNICODE_STRING ValueName;
 	UCHAR ValueBuffer[VALUE_BUFFER_SIZE];
 	PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
@@ -122,9 +123,6 @@ LoadCompatibilitySettings(PPEB Peb)
 		{
 			return FALSE;
 		}
-
-		RtlRosInitUnicodeStringFromLiteral(&KeyName,
-			L"Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers");
 
 		InitializeObjectAttributes(&ObjectAttributes,
 			&KeyName,
