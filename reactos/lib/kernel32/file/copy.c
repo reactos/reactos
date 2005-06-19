@@ -157,7 +157,7 @@ CopyLoop (
 static NTSTATUS
 SetLastWriteTime(
 	HANDLE FileHandle,
-	TIME LastWriteTime
+	LARGE_INTEGER LastWriteTime
 	)
 {
    NTSTATUS errCode = STATUS_SUCCESS;
@@ -268,7 +268,7 @@ CopyFileExW (
 			 }
 		       else
 			 {
-                TIME t;
+                LARGE_INTEGER t;
 
 			    t.QuadPart = FileBasic.LastWriteTime.QuadPart;
 			    errCode = SetLastWriteTime(FileHandleDest, t);
