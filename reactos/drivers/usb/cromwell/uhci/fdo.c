@@ -31,10 +31,10 @@ InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 	DeviceExtension->pdev = dev;
 	
 	/* Initialize generic linux structure */
-	init_wrapper(dev);
 	dev->irq = DeviceExtension->InterruptVector;
 	dev->dev_ext = (PVOID)DeviceExtension;
 	dev->slot_name = ExAllocatePoolWithTag(NonPagedPool, 128, USB_UHCI_TAG); // 128 max len for slot name
+	init_wrapper(dev);
 	
 	strcpy(dev->dev.name, "UnivHCI PCI-USB Controller");
 	strcpy(dev->slot_name, "UHCD PCI Slot");
@@ -326,12 +326,11 @@ UhciDeviceControlFdo(
 	{
 		case IOCTL_GET_HCD_DRIVERKEY_NAME:
 		{
-			DPRINT1("UHCI: IOCTL_GET_HCD_DRIVERKEY_NAME does not return correct string\n");
-			/* FIXME: should return sth like {36FC9E60-C465-11CF-8056-444553540000}\0000 */
+			DPRINT("UHCI: IOCTL_GET_HCD_DRIVERKEY_NAME\n");
 			if (LengthOut < sizeof(USB_HCD_DRIVERKEY_NAME))
-			{
 				Status = STATUS_BUFFER_TOO_SMALL;
-			}
+			else if (BufferOut == NULL)
+				Status = STATUS_INVALID_PARAMETER;
 			else
 			{
 				PUSB_HCD_DRIVERKEY_NAME StringDescriptor;
@@ -339,7 +338,7 @@ UhciDeviceControlFdo(
 				StringDescriptor = (PUSB_HCD_DRIVERKEY_NAME)BufferOut;
 				Status = IoGetDeviceProperty(
 					((POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->PhysicalDeviceObject,
-					DevicePropertyDeviceDescription,
+					DevicePropertyDriverKeyName,
 					LengthOut - FIELD_OFFSET(USB_HCD_DRIVERKEY_NAME, DriverKeyName),
 					StringDescriptor->DriverKeyName,
 					&StringSize);
@@ -356,43 +355,36 @@ UhciDeviceControlFdo(
 		case IOCTL_USB_GET_ROOT_HUB_NAME:
 		{
 			DPRINT("UHCI: IOCTL_USB_GET_ROOT_HUB_NAME\n");
-			if (LengthOut < sizeof(USB_HCD_DRIVERKEY_NAME))
-			{
+			if (LengthOut < sizeof(USB_ROOT_HUB_NAME))
 				Status = STATUS_BUFFER_TOO_SMALL;
-			}
+			else if (BufferOut == NULL)
+				Status = STATUS_INVALID_PARAMETER;
 			else
 			{
-				PUSB_HCD_DRIVERKEY_NAME StringDescriptor;
+				PUSB_ROOT_HUB_NAME StringDescriptor;
 				PUNICODE_STRING RootHubInterfaceName;
-				StringDescriptor = (PUSB_HCD_DRIVERKEY_NAME)BufferOut;
+				StringDescriptor = (PUSB_ROOT_HUB_NAME)BufferOut;
 				DeviceObject = ((POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->RootHubPdo;
 				RootHubInterfaceName = &((POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->HcdInterfaceName;
 
-				StringDescriptor->ActualLength = RootHubInterfaceName->Length + sizeof(WCHAR) + FIELD_OFFSET(USB_HCD_DRIVERKEY_NAME, DriverKeyName);
+				StringDescriptor->ActualLength = RootHubInterfaceName->Length + sizeof(WCHAR) + FIELD_OFFSET(USB_ROOT_HUB_NAME, RootHubName);
 				if (StringDescriptor->ActualLength <= LengthOut)
 				{
 					/* Copy root hub name */
 					RtlCopyMemory(
-						StringDescriptor->DriverKeyName,
+						StringDescriptor->RootHubName,
 						RootHubInterfaceName->Buffer,
 						RootHubInterfaceName->Length);
-					StringDescriptor->DriverKeyName[RootHubInterfaceName->Length / sizeof(WCHAR)] = '\0';
-					DPRINT("UHCI: IOCTL_USB_GET_ROOT_HUB_NAME returns '%S'\n", StringDescriptor->DriverKeyName);
+					StringDescriptor->RootHubName[RootHubInterfaceName->Length / sizeof(WCHAR)] = UNICODE_NULL;
+					DPRINT("UHCI: IOCTL_USB_GET_ROOT_HUB_NAME returns '%S'\n", StringDescriptor->RootHubName);
 					Information = StringDescriptor->ActualLength;
 				}
 				else
-					Information = sizeof(USB_HCD_DRIVERKEY_NAME);
+					Information = sizeof(USB_ROOT_HUB_NAME);
 				Status = STATUS_SUCCESS;
 			}
 			break;
 		}
-
-		/*case IOCTL_USB_GET_NODE_INFORMATION:
-		{
-			DPRINT1("UHCI: IOCTL_USB_GET_NODE_INFORMATION\n");
-			Status = STATUS_NOT_IMPLEMENTED;
-			break;
-		}*/
 		case IOCTL_USB_GET_NODE_CONNECTION_INFORMATION:
 		{
 			DPRINT1("UHCI: IOCTL_USB_GET_NODE_CONNECTION_INFORMATION\n");
