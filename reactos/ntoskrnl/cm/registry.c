@@ -650,7 +650,7 @@ CmiCreateCurrentControlSetLink(VOID)
 
   DPRINT("Link target '%S'\n", TargetNameBuffer);
 
-  RtlInitUnicodeString(&LinkName,
+  LinkName = RTL_CONSTANT_STRING(
 				  L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &LinkName,
@@ -670,7 +670,7 @@ CmiCreateCurrentControlSetLink(VOID)
       return(Status);
     }
 
-  RtlInitUnicodeString(&LinkValue,
+  LinkValue = RTL_CONSTANT_STRING(
 				  L"SymbolicLinkValue");
   Status = ZwSetValueKey(KeyHandle,
 			 &LinkValue,
@@ -925,7 +925,7 @@ CmiInitControlSetLink (VOID)
   NTSTATUS Status;
 
   /* Create 'ControlSet001' key */
-  RtlInitUnicodeString(&ControlSetKeyName,
+  ControlSetKeyName = RTL_CONSTANT_STRING(
 				   L"\\Registry\\Machine\\SYSTEM\\ControlSet001");
   InitializeObjectAttributes (&ObjectAttributes,
 			      &ControlSetKeyName,
@@ -947,7 +947,7 @@ CmiInitControlSetLink (VOID)
   ZwClose (KeyHandle);
 
   /* Link 'CurrentControlSet' to 'ControlSet001' key */
-  RtlInitUnicodeString (&ControlSetLinkName,
+  ControlSetLinkName = RTL_CONSTANT_STRING(
 				   L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet");
   InitializeObjectAttributes (&ObjectAttributes,
 			      &ControlSetLinkName,
@@ -967,7 +967,7 @@ CmiInitControlSetLink (VOID)
       return Status;
     }
 
-  RtlInitUnicodeString (&ControlSetValueName,
+    ControlSetValueName = RTL_CONSTANT_STRING(
 				   L"SymbolicLinkValue");
   Status = ZwSetValueKey (KeyHandle,
 			  &ControlSetValueName,
@@ -1008,7 +1008,7 @@ CmiInitHives(BOOLEAN SetupBoot)
 
   if (SetupBoot == TRUE)
     {
-      RtlInitUnicodeString(&KeyName,
+        KeyName = RTL_CONSTANT_STRING(
 				      L"\\Registry\\Machine\\HARDWARE");
       InitializeObjectAttributes(&ObjectAttributes,
 				 &KeyName,
@@ -1024,7 +1024,7 @@ CmiInitHives(BOOLEAN SetupBoot)
 	  return(Status);
 	}
 
-      RtlInitUnicodeString(&ValueName,
+      ValueName = RTL_CONSTANT_STRING(
 				      L"InstallPath");
 
       BufferSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 4096;

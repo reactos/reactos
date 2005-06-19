@@ -65,7 +65,7 @@ ExpInitializeCallbacks(VOID)
    }
 
    /* Initialize the Object */
-   RtlInitUnicodeString(&DirName, L"\\Callback" );
+   DirName = RTL_CONSTANT_STRING(L"\\Callback" );
    InitializeObjectAttributes(
       &ObjectAttributes,
       &DirName,
