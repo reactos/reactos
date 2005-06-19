@@ -24,6 +24,7 @@
 #include <ntos.h>
 #include <stdio.h>
 
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 #define ROUNDUP(a,b)    ((((a)+(b)-1)/(b))*(b))
 #ifndef HIWORD
 #define HIWORD(l) ((WORD)(((DWORD)(l) >> 16) & 0xFFFF))
