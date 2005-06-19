@@ -37,9 +37,18 @@ typedef u32 dma_addr_t;
 typedef  int spinlock_t;
 typedef int atomic_t;
 #ifndef STANDALONE
+#ifndef _MODE_T_
+#define _MODE_T_
 typedef int mode_t;
+#endif
+#ifndef _PID_T_
+#define _PID_T_
 typedef int pid_t;
+#endif
+#ifndef _SSIZE_T_
+#define _SSIZE_T_
 typedef int ssize_t;
+#endif
 
 #endif
 typedef int irqreturn_t;
