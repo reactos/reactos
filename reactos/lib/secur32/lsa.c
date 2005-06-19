@@ -13,7 +13,6 @@
 #include <windows.h>
 #include <ntsecapi.h>
 #include <lsass/lsass.h>
-#include <rosrtl/string.h>
 #include <string.h>
 
 /* GLOBALS *******************************************************************/
@@ -281,7 +280,7 @@ LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
 			PHANDLE Handle,
 			PLSA_OPERATIONAL_MODE OperationalMode)
 {
-   UNICODE_STRING Portname = ROS_STRING_INITIALIZER(L"\\SeLsaCommandPort");
+   UNICODE_STRING Portname = RTL_CONSTANT_STRING(L"\\SeLsaCommandPort");
    ULONG ConnectInfoLength;
    NTSTATUS Status;
    LSASS_REQUEST Request;
