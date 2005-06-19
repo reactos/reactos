@@ -19,6 +19,7 @@
 #include <ntdll/rtl.h>
 #include <ntdll/ldr.h>
 #include <ntdll/ntdll.h>
+#include <debug.h> /* FIXME REMOVE THIS */
 
 /* ROSRTL Headers */
 #include <rosrtl/string.h> /* FIXME: KILL ROSRTL */

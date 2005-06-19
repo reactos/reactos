@@ -46,6 +46,17 @@
 #define NT_WARNING(x) ((ULONG)(x)>>30==2)
 #define NT_ERROR(x) ((ULONG)(x)>>30==3)
 
+/* Object Access Rights FIXME: Some are in w32api's psdk..,is that normal ?*/
+#define DIRECTORY_QUERY (0x0001)
+#define DIRECTORY_TRAVERSE (0x0002)
+#define DIRECTORY_CREATE_OBJECT (0x0004)
+#define DIRECTORY_CREATE_SUBDIRECTORY (0x0008)
+#define DIRECTORY_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0xF)
+#define EVENT_QUERY_STATE (0x0001)
+#define SEMAPHORE_QUERY_STATE (0x0001)
+#define SYMBOLIC_LINK_QUERY 0x0001
+#define SYMBOLIC_LINK_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x1)
+
 /* I/O Control Codes for communicating with Mailslots */
 #define FSCTL_MAILSLOT_PEEK             \
     CTL_CODE(FILE_DEVICE_MAILSLOT, 0, METHOD_NEITHER, FILE_READ_DATA)
@@ -709,6 +720,15 @@ typedef struct _FILE_BASIC_INFORMATION
 } FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;
 
 /* Class 2 */
+typedef struct _FILE_STANDARD_INFORMATION
+{
+    LARGE_INTEGER AllocationSize;
+    LARGE_INTEGER EndOfFile;
+    ULONG NumberOfLinks;
+    BOOLEAN DeletePending;
+    BOOLEAN Directory;
+} FILE_STANDARD_INFORMATION, *PFILE_STANDARD_INFORMATION;
+
 typedef struct _FILE_NETWORK_OPEN_INFORMATION 
 {
     LARGE_INTEGER CreationTime;                                 

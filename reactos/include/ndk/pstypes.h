@@ -72,7 +72,6 @@ extern NTOSAPI POBJECT_TYPE PsThreadType;
 /* ENUMERATIONS **************************************************************/
 
 /* FUNCTION TYPES ************************************************************/
-typedef DWORD (STDCALL* PTHREAD_START_ROUTINE) (LPVOID);
 typedef VOID (STDCALL *PPEBLOCKROUTINE)(PVOID);
 
 typedef NTSTATUS 

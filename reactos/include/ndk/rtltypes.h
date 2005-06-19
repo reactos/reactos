@@ -49,15 +49,29 @@ typedef enum
 
 /* FUNCTION TYPES ************************************************************/
 typedef NTSTATUS
-(*PHEAP_ENUMERATION_ROUTINE)(IN PVOID HeapHandle,
-                             IN PVOID UserParam);
+(*PHEAP_ENUMERATION_ROUTINE)(
+    IN PVOID HeapHandle,
+    IN PVOID UserParam
+);
 
 typedef EXCEPTION_DISPOSITION 
-(*PEXCEPTION_HANDLER)(struct _EXCEPTION_RECORD*, 
-                      PVOID, 
-                      struct _CONTEXT*, 
-                      PVOID);
-                      
+(*PEXCEPTION_HANDLER)(
+    struct _EXCEPTION_RECORD*, 
+    PVOID, 
+    struct _CONTEXT*, 
+    PVOID
+);
+
+typedef DWORD (STDCALL *PTHREAD_START_ROUTINE)(
+    LPVOID Parameter
+);
+
+typedef VOID
+(STDCALL *PRTL_BASE_PROCESS_START_ROUTINE)(
+    PTHREAD_START_ROUTINE StartAddress,
+    PVOID Parameter
+);
+                        
 /* TYPES *********************************************************************/
 
 typedef unsigned short RTL_ATOM;

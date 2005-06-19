@@ -364,6 +364,15 @@ RtlAddAtomToAtomTable (
 
 VOID
 STDCALL
+RtlAssert (
+	PVOID FailedAssertion,
+	PVOID FileName,
+	ULONG LineNumber,
+	PCHAR Message
+	);
+
+VOID
+STDCALL
 RtlCopyLuid(
     IN PLUID LuidDest,
     IN PLUID LuidSrc
@@ -709,6 +718,14 @@ ULONG
 STDCALL
 RtlUnicodeStringToAnsiSize (
 	IN	PUNICODE_STRING	UnicodeString
+	);
+    
+NTSTATUS
+STDCALL
+RtlUnicodeStringToAnsiString (
+	IN OUT	PANSI_STRING	DestinationString,
+	IN	PUNICODE_STRING	SourceString,
+	IN	BOOLEAN		AllocateDestinationString
 	);
     
 NTSTATUS

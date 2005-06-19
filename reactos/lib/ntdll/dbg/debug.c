@@ -13,6 +13,7 @@
 
 #define NDEBUG
 #include <ntdll.h>
+#include <rosrtl/thread.h>
 
 /* FUNCTIONS *****************************************************************/
 
