@@ -14,3 +14,7 @@ _SetPriorityClass@8
 _SetThreadPriority@8
 _GetCurrentProcess@0
 _GetCurrentThread@0
+_GetThreadContext@8
+_SuspendThread@4
+_ResumeThread@4
+_Sleep@4

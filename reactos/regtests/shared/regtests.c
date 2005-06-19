@@ -24,6 +24,9 @@ typedef struct _PERFORM_TEST_ARGS
   TestOutputRoutine OutputRoutine;
   _PTEST Test;
   LPSTR TestName;
+  DWORD Result;
+  char Buffer[5000];
+  DWORD Time;
 } PERFORM_TEST_ARGS;
 
 int _Result;
@@ -38,13 +41,11 @@ InitializeTests()
 }
 
 char*
-FormatExecutionTime(char *buffer, LPFILETIME time)
+FormatExecutionTime(char *buffer, ULONG milliseconds)
 {
-  ULONG milliseconds = time->dwLowDateTime / 10000;
-  
   sprintf(buffer,
-	      "%ldms",
-	      milliseconds);
+	  "%ldms",
+	  milliseconds);
   return buffer;
 }
 
@@ -52,55 +53,147 @@ DWORD WINAPI
 PerformTest(PVOID _arg)
 {
   PERFORM_TEST_ARGS *Args = (PERFORM_TEST_ARGS *)_arg;
-  TestOutputRoutine OutputRoutine = Args->OutputRoutine;
   _PTEST Test = Args->Test;
-  LPSTR TestName = Args->TestName;
-  HANDLE hThread;
+
+  _SetThreadPriority(_GetCurrentThread(), THREAD_PRIORITY_IDLE);
+
+  memset(Args->Buffer, 0, sizeof(Args->Buffer));
+
+  _SEH_TRY {
+    _Result = TS_OK;
+    _Buffer = Args->Buffer;
+    (Test->Routine)(TESTCMD_RUN);
+    Args->Result = _Result;
+  } _SEH_HANDLE {
+    Args->Result = TS_FAILED;
+    sprintf(Args->Buffer, "due to exception 0x%lx", _SEH_GetExceptionCode());
+  } _SEH_END;
+  return 1;
+}
+
+BOOL
+IsContextChanged(LPCONTEXT context1, LPCONTEXT context2)
+{
+  return memcmp(context1, context2, sizeof(CONTEXT)) != 0;
+}
+
+VOID
+ControlNormalTest(HANDLE hThread,
+            PERFORM_TEST_ARGS *Args,
+            DWORD TimeOut)
+{
   FILETIME time;
-  FILETIME ExecutionTime;
-  char OutputBuffer[5000];
+  FILETIME executionTime;
+  DWORD status;
+
+  status = _WaitForSingleObject(hThread, TimeOut);
+  if (status == WAIT_TIMEOUT)
+  {
+    _TerminateThread(hThread, 0);
+    Args->Result = TS_TIMEDOUT;
+  }
+  status = _GetThreadTimes(hThread,
+                          &time,
+                          &time,
+                          &time,
+                          &executionTime);
+  Args->Time = executionTime.dwLowDateTime / 10000;
+}
+
+VOID
+ControlPerformanceTest(HANDLE hThread,
+            PERFORM_TEST_ARGS *Args,
+            DWORD TimeOut)
+{
+  DWORD status;
+  CONTEXT lastContext;
+  CONTEXT currentContext;
+
+  ZeroMemory(&lastContext, sizeof(CONTEXT));
+  lastContext.ContextFlags = CONTEXT_FULL;
+  ZeroMemory(&currentContext, sizeof(CONTEXT));
+  currentContext.ContextFlags = CONTEXT_FULL;
+
+  do {
+    _Sleep(1);
+
+    if (_SuspendThread(hThread) == -1)
+      break;
+
+    if (_GetThreadContext(hThread, &currentContext) == 0)
+      break;
+
+   if (IsContextChanged(&currentContext, &lastContext))
+     Args->Time++;
+
+    if (_ResumeThread(hThread) == -1)
+      break;
+
+    if (Args->Time >= TimeOut)
+      {
+        _TerminateThread(hThread, 0);
+        Args->Result = TS_TIMEDOUT;
+        break;
+      }
+
+    status = _WaitForSingleObject(hThread, 0);
+    if (status == WAIT_OBJECT_0 || status == WAIT_FAILED)
+      break;
+
+    lastContext = currentContext;
+  } while (TRUE);
+}
+
+VOID
+DisplayResult(PERFORM_TEST_ARGS* Args,
+              LPSTR OutputBuffer)
+{
   char Buffer[5000];
   char Format[100];
 
-  hThread = _GetCurrentThread();
-  _SetThreadPriority(hThread, THREAD_PRIORITY_IDLE);
-
-  memset(Buffer, 0, sizeof(Buffer));
-  
-  _SEH_TRY {
-    _Result = TS_OK;
-    _Buffer = Buffer;
-    (Test->Routine)(TESTCMD_RUN);
-  } _SEH_HANDLE {
-    _Result = TS_FAILED;
-    sprintf(Buffer, "due to exception 0x%lx", _SEH_GetExceptionCode());
-  } _SEH_END;
-
-  if (_Result == TS_OK)
+  if (Args->Result == TS_OK)
     {
-      if (!_GetThreadTimes(hThread,
-  	                       &time,
-  	                       &time,
-  	                       &time,
-  	                       &ExecutionTime))
-      {
-        ExecutionTime.dwLowDateTime = 0;
-        ExecutionTime.dwHighDateTime = 0;
-      }
       sprintf(OutputBuffer,
               "[%s] Success [%s]\n",
-              TestName,
+              Args->TestName,
               FormatExecutionTime(Format,
-                                  &ExecutionTime));
+                                  Args->Time));
+    }
+  else if (Args->Result == TS_TIMEDOUT)
+    {
+      sprintf(OutputBuffer,
+              "[%s] Timed out [%s]\n",
+              Args->TestName,
+              FormatExecutionTime(Format,
+                                  Args->Time));
     }
   else
-      sprintf(OutputBuffer, "[%s] Failed (%s)\n", TestName, Buffer);
+      sprintf(OutputBuffer, "[%s] Failed (%s)\n", Args->TestName, Buffer);
 
-  if (OutputRoutine != NULL)
-      (*OutputRoutine)(OutputBuffer);
+  if (Args->OutputRoutine != NULL)
+    (*Args->OutputRoutine)(OutputBuffer);
   else
-      DbgPrint(OutputBuffer);
-  return 1;
+    DbgPrint(OutputBuffer);
+}
+
+VOID
+ControlTest(HANDLE hThread,
+            PERFORM_TEST_ARGS *Args,
+            DWORD TestType,
+            DWORD TimeOut)
+{
+  switch (TestType)
+  {
+    case TT_NORMAL:
+      ControlNormalTest(hThread, Args, TimeOut);
+      break;
+    case TT_PERFORMANCE:
+      ControlPerformanceTest(hThread, Args, TimeOut);
+      break;
+    default:
+      printf("Unknown test type %ld\n", TestType);
+      break;
+  }
 }
 
 VOID
@@ -113,11 +206,13 @@ PerformTests(TestOutputRoutine OutputRoutine, LPSTR TestName)
   HANDLE hThread;
   char OutputBuffer[1024];
   char Name[200];
+  DWORD TestType;
   DWORD TimeOut;
 
   Args.OutputRoutine = OutputRoutine;
   Args.TestName = Name;
-  
+  Args.Time = 0;
+
   CurrentEntry = AllTests.Flink;
   for (; CurrentEntry != &AllTests; CurrentEntry = NextEntry)
     {
@@ -141,40 +236,34 @@ PerformTests(TestOutputRoutine OutputRoutine, LPSTR TestName)
       if ((TestName != NULL) && (_stricmp(Name, TestName) != 0))
         continue;
 
+      TestType = TT_NORMAL;
+      _Result = TS_OK;
+      _Buffer = (char *)&TestType;
+      (Current->Routine)(TESTCMD_TESTTYPE);
+      if (_Result != TS_OK)
+        TestType = TT_NORMAL;
+
       /* Get timeout for test */
       TimeOut = 0;
       _Result = TS_OK;
       _Buffer = (char *)&TimeOut;
       (Current->Routine)(TESTCMD_TIMEOUT);
       if (_Result != TS_OK || TimeOut == INFINITE)
-          TimeOut = 5000;
+        TimeOut = 5000;
 
-      /* Run test in thread */
+      /* Run test in a separate thread */
       hThread = _CreateThread(NULL, 0, PerformTest, (PVOID)&Args, 0, NULL);
       if (hThread == NULL)
-          sprintf(OutputBuffer,
-                  "[%s] Failed (CreateThread() failed: %d)\n",
-                  Name, (unsigned int)_GetLastError());
-      else if (_WaitForSingleObject(hThread, TimeOut) == WAIT_TIMEOUT)
         {
-          if (!_TerminateThread(hThread, 0))
-              sprintf(OutputBuffer,
-                      "[%s] Failed (timed out after %dms; TerminateThread() failed: %d)\n",
-                      Name, (int)TimeOut, (unsigned int)_GetLastError());
-          else
-              sprintf(OutputBuffer, "[%s] Failed (timed out after %dms)\n", Name, (int)TimeOut);          
-      	  _CloseHandle(hThread);
+          printf("[%s] Failed (CreateThread() failed: %ld)\n",
+                 Name,
+                 _GetLastError());
+          Args.Result = TS_FAILED;
         }
       else
-        {
-      	  _CloseHandle(hThread);
-          continue;
-        }
+        ControlTest(hThread, &Args, TestType, TimeOut);
 
-      if (OutputRoutine != NULL)
-          (*OutputRoutine)(OutputBuffer);
-      else
-          DbgPrint(OutputBuffer);
+      DisplayResult(&Args, OutputBuffer);
     }
 }
 

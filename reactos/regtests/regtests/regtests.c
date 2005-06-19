@@ -98,3 +98,27 @@ _GetCurrentThread()
 {
   return GetCurrentThread();
 }
+
+BOOL STDCALL
+_GetThreadContext(HANDLE hThread, LPCONTEXT lpContext)
+{
+  return GetThreadContext(hThread, lpContext);
+}
+
+DWORD STDCALL
+_SuspendThread(HANDLE hThread)
+{
+  return SuspendThread(hThread);
+}
+
+DWORD STDCALL
+_ResumeThread(HANDLE hThread)
+{
+  return ResumeThread(hThread);
+}
+
+VOID STDCALL
+_Sleep(DWORD dwMilliseconds)
+{
+  return Sleep(dwMilliseconds);
+}

@@ -31,7 +31,7 @@ static void RunTest()
   UINT i;
 
   SetupSurface(&surface, &rect);
-  for (i = 0; i < 1000; i++)
+  for (i = 0; i < 10000; i++)
   {
     BOOLEAN success = DIB_24BPP_ColorFill(&surface, &rect, color);
     _AssertTrue(success);
@@ -41,4 +41,4 @@ static void RunTest()
   CleanupSurface(&surface);
 }
 
-_Dispatcher(Dib_24bpp_colorfill_performanceTest, "DIB_24BPP_ColorFill performance")
+_DispatcherType(Dib_24bpp_colorfill_performanceTest, "DIB_24BPP_ColorFill performance", TT_PERFORMANCE)

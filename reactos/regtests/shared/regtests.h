@@ -16,10 +16,16 @@ void SetupOnce()
 
 /* Valid values for Command parameter of TestRoutine */
 #define TESTCMD_RUN       0   /* Buffer contains information about what failed */
-#define TESTCMD_TESTNAME  1   /* Buffer contains description of test */
-#define TESTCMD_TIMEOUT   2   /* Buffer contains timeout for test (DWORD, default is 5000 ms) */
+#define TESTCMD_TESTTYPE  1   /* Buffer contains type of test */
+#define TESTCMD_TESTNAME  2   /* Buffer contains description of test */
+#define TESTCMD_TIMEOUT   3   /* Buffer contains timeout for test (DWORD, default is 5000 ms) */
+
+/* Test types */
+#define TT_NORMAL         0
+#define TT_PERFORMANCE    1
 
 /* Valid values for return values of TestRoutine */
+#define TS_TIMEDOUT      -2
 #define TS_EXCEPTION     -1
 #define TS_OK             0
 #define TS_FAILED         1
@@ -28,7 +34,7 @@ extern int _Result;
 extern char *_Buffer;
 
 /* Macros to simplify tests */
-#define _DispatcherTimeout(FunctionName, TestName, TimeOut) \
+#define _DispatcherTypeTimeout(FunctionName, TestName, TestType, TimeOut) \
 void \
 FunctionName(int Command) \
 { \
@@ -36,6 +42,9 @@ FunctionName(int Command) \
     { \
       case TESTCMD_RUN: \
         RunTest(); \
+        break; \
+      case TESTCMD_TESTTYPE: \
+        *(PDWORD)_Buffer = (DWORD)TestType; \
         break; \
       case TESTCMD_TESTNAME: \
         strcpy(_Buffer, TestName); \
@@ -49,7 +58,14 @@ FunctionName(int Command) \
     } \
 }
 
-#define _Dispatcher(FunctionName, TestName) _DispatcherTimeout(FunctionName, TestName, 5000)
+#define _DispatcherTimeout(FunctionName, TestName, TimeOut) \
+  _DispatcherTypeTimeout(FunctionName, TestName, TT_NORMAL, TimeOut)
+
+#define _DispatcherType(FunctionName, TestName, TestType) \
+  _DispatcherTypeTimeout(FunctionName, TestName, TestType, 5000)
+
+#define _Dispatcher(FunctionName, TestName) \
+  _DispatcherTimeout(FunctionName, TestName, 5000)
 
 static inline void
 AppendAssertion(char *message)
@@ -210,6 +226,18 @@ _GetCurrentProcess();
 
 HANDLE STDCALL
 _GetCurrentThread();
+
+BOOL STDCALL
+_GetThreadContext(HANDLE hThread, LPCONTEXT lpContext);
+
+DWORD STDCALL
+_SuspendThread(HANDLE hThread);
+
+DWORD STDCALL
+_ResumeThread(HANDLE hThread);
+
+VOID STDCALL
+_Sleep(DWORD dwMilliseconds);
 
 
 static inline PCHAR

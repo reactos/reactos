@@ -136,6 +136,8 @@
 	<symbol>ObReferenceObjectByName@32</symbol>
 	<symbol>HalQueryDisplayOwnership@0</symbol>
 	<symbol>IoDeviceObjectType</symbol>
+	<symbol>@KfReleaseSpinLock@8</symbol>
+	<symbol>@KfAcquireSpinLock@4</symbol>
 </component>
 <component name="freetype.dll">
 	<symbol>FT_Init_FreeType</symbol>
