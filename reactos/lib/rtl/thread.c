@@ -19,6 +19,7 @@
 /* INCLUDES *****************************************************************/
 
 #include "rtl.h"
+#include <rosrtl/thread.h>
 
 #define NDEBUG
 #include <debug.h>
