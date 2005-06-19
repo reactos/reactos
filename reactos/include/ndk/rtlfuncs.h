@@ -332,6 +332,22 @@ RtlAddAccessAllowedAce (
     PSID Sid
 );
             
+NTSTATUS
+STDCALL
+RtlAllocateAndInitializeSid (
+    IN PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
+    IN UCHAR SubAuthorityCount,
+    IN ULONG SubAuthority0,
+    IN ULONG SubAuthority1,
+    IN ULONG SubAuthority2,
+    IN ULONG SubAuthority3,
+    IN ULONG SubAuthority4,
+    IN ULONG SubAuthority5,
+    IN ULONG SubAuthority6,
+    IN ULONG SubAuthority7,
+    OUT PSID *Sid
+);
+
 PVOID
 STDCALL
 RtlAllocateHeap (
@@ -461,6 +477,10 @@ RtlCopySid (
     IN PSID    Source
 );
 
+VOID STDCALL
+RtlCopyUnicodeString(PUNICODE_STRING DestinationString,
+		     PUNICODE_STRING SourceString);
+             
 NTSTATUS
 STDCALL
 RtlCreateAcl(
@@ -485,6 +505,19 @@ STDCALL
 RtlCreateAtomTable(
     IN ULONG TableSize,
     IN OUT PRTL_ATOM_TABLE *AtomTable
+);
+
+NTSTATUS
+STDCALL
+RtlCreateSecurityDescriptor(
+    PSECURITY_DESCRIPTOR SecurityDescriptor,
+    ULONG Revision
+);
+
+NTSTATUS STDCALL
+RtlCreateSecurityDescriptorRelative(
+    PSECURITY_DESCRIPTOR_RELATIVE SecurityDescriptor,
+    ULONG Revision
 );
 
 NTSTATUS
@@ -617,6 +650,14 @@ RtlMultiByteToUnicodeSize (
     ULONG  MbSize
 );
 
+BOOLEAN
+STDCALL
+RtlPrefixUnicodeString (
+	PUNICODE_STRING	String1,
+	PUNICODE_STRING	String2,
+	BOOLEAN		CaseInsensitive
+	);
+    
 CHAR STDCALL
 RtlUpperChar (CHAR Source);
 
@@ -648,6 +689,14 @@ ULONG
 STDCALL
 RtlOemStringToUnicodeSize (
 	POEM_STRING	AnsiString
+	);
+    
+NTSTATUS
+STDCALL
+RtlOemStringToUnicodeString (
+	PUNICODE_STRING	DestinationString,
+	POEM_STRING	SourceString,
+	BOOLEAN		AllocateDestinationString
 	);
     
 PVOID
@@ -720,6 +769,12 @@ RtlUnicodeStringToAnsiSize (
 	IN	PUNICODE_STRING	UnicodeString
 	);
     
+ULONG
+STDCALL
+RtlUnicodeStringToOemSize (
+	IN	PUNICODE_STRING	UnicodeString
+	);
+    
 NTSTATUS
 STDCALL
 RtlUnicodeStringToAnsiString (
@@ -764,12 +819,24 @@ RtlFindMessage (
 	OUT	PRTL_MESSAGE_RESOURCE_ENTRY	*MessageResourceEntry
 	);
 	
+VOID
+STDCALL
+RtlFreeAnsiString (
+    IN PANSI_STRING AnsiString
+);
+
 BOOLEAN
 STDCALL
 RtlFreeHeap (
     IN HANDLE  HeapHandle,
     IN ULONG   Flags,
     IN PVOID   P
+);
+
+PVOID
+STDCALL
+RtlFreeSid (
+    IN PSID Sid
 );
 
 VOID
@@ -902,6 +969,12 @@ RtlInitUnicodeString(
   IN OUT PUNICODE_STRING  DestinationString,
   IN PCWSTR  SourceString);
 
+VOID
+STDCALL
+RtlInitAnsiString (
+	PANSI_STRING	DestinationString,
+	PCSZ		SourceString
+	);
 
 BOOLEAN
 STDCALL
@@ -982,6 +1055,15 @@ RtlSelfRelativeToAbsoluteSD (
 );
 
 #endif /* (VER_PRODUCTBUILD >= 2195) */
+
+NTSTATUS
+STDCALL
+RtlSetDaclSecurityDescriptor (
+    PSECURITY_DESCRIPTOR SecurityDescriptor,
+    BOOLEAN DaclPresent,
+    PACL Dacl,
+    BOOLEAN DaclDefaulted
+);
 
 NTSTATUS
 STDCALL

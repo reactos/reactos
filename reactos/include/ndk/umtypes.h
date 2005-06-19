@@ -165,6 +165,25 @@
 #define RTL_QUERY_REGISTRY_DIRECT   0x00000020
 #define RTL_QUERY_REGISTRY_DELETE   0x00000040
 
+/* File Result Flags */
+#define FILE_SUPERSEDED                   0x00000000
+#define FILE_OPENED                       0x00000001
+#define FILE_CREATED                      0x00000002
+#define FILE_OVERWRITTEN                  0x00000003
+#define FILE_EXISTS                       0x00000004
+#define FILE_DOES_NOT_EXIST               0x00000005
+
+/* Pipe Flags */
+#define FILE_PIPE_BYTE_STREAM_MODE      0x00000000
+#define FILE_PIPE_MESSAGE_MODE          0x00000001
+#define FILE_PIPE_QUEUE_OPERATION       0x00000000
+#define FILE_PIPE_COMPLETE_OPERATION    0x00000001
+#define FILE_PIPE_INBOUND               0x00000000
+#define FILE_PIPE_OUTBOUND              0x00000001
+#define FILE_PIPE_FULL_DUPLEX           0x00000002
+#define FILE_PIPE_CLIENT_END            0x00000000
+#define FILE_PIPE_SERVER_END            0x00000001
+
 /* Device Charactertics */
 #define FILE_REMOVABLE_MEDIA            0x00000001
 
@@ -749,6 +768,31 @@ typedef struct _FILE_ZERO_DATA_INFORMATION
     LARGE_INTEGER BeyondFinalZero;
 } FILE_ZERO_DATA_INFORMATION, *PFILE_ZERO_DATA_INFORMATION;
 
+typedef struct _FILE_EA_INFORMATION 
+{
+    ULONG EaSize;
+} FILE_EA_INFORMATION, *PFILE_EA_INFORMATION;
+
+typedef struct _FILE_COMPRESSION_INFORMATION 
+{
+    LARGE_INTEGER   CompressedFileSize;
+    USHORT          CompressionFormat;
+    UCHAR           CompressionUnitShift;
+    UCHAR           ChunkShift;
+    UCHAR           ClusterShift;
+    UCHAR           Reserved[3];
+} FILE_COMPRESSION_INFORMATION, *PFILE_COMPRESSION_INFORMATION;
+
+typedef struct _FILE_POSITION_INFORMATION
+{
+  LARGE_INTEGER  CurrentByteOffset;
+} FILE_POSITION_INFORMATION, *PFILE_POSITION_INFORMATION;
+
+typedef struct _FILE_DISPOSITION_INFORMATION 
+{
+    BOOLEAN  DeleteFile;
+} FILE_DISPOSITION_INFORMATION, *PFILE_DISPOSITION_INFORMATION;
+
 typedef struct FILE_ALLOCATED_RANGE_BUFFER 
 {
     LARGE_INTEGER FileOffset;
@@ -766,6 +810,112 @@ typedef struct _FILE_QUOTA_INFORMATION
     SID Sid;
 } FILE_QUOTA_INFORMATION, *PFILE_QUOTA_INFORMATION;
   
+typedef struct _FILE_INTERNAL_INFORMATION
+{
+    LARGE_INTEGER IndexNumber;
+} FILE_INTERNAL_INFORMATION, *PFILE_INTERNAL_INFORMATION;
+
+typedef struct _FILE_RENAME_INFORMATION
+{
+    BOOLEAN ReplaceIfExists;
+    HANDLE  RootDirectory;
+    ULONG   FileNameLength;
+    WCHAR   FileName[1];
+} FILE_RENAME_INFORMATION, *PFILE_RENAME_INFORMATION;
+
+typedef struct _FILE_PIPE_INFORMATION
+{
+    ULONG ReadMode;
+    ULONG CompletionMode;
+} FILE_PIPE_INFORMATION, *PFILE_PIPE_INFORMATION;
+
+typedef struct _FILE_PIPE_LOCAL_INFORMATION
+{
+    ULONG NamedPipeType;
+    ULONG NamedPipeConfiguration;
+    ULONG MaximumInstances;
+    ULONG CurrentInstances;
+    ULONG InboundQuota;
+    ULONG ReadDataAvailable;
+    ULONG OutboundQuota;
+    ULONG WriteQuotaAvailable;
+    ULONG NamedPipeState;
+    ULONG NamedPipeEnd;
+} FILE_PIPE_LOCAL_INFORMATION, *PFILE_PIPE_LOCAL_INFORMATION;
+
+typedef struct _FILE_PIPE_REMOTE_INFORMATION
+{
+    LARGE_INTEGER   CollectDataTime;
+    ULONG           MaximumCollectionCount;
+} FILE_PIPE_REMOTE_INFORMATION, *PFILE_PIPE_REMOTE_INFORMATION;
+
+typedef struct _FILE_MAILSLOT_QUERY_INFORMATION
+{
+    ULONG           MaximumMessageSize;
+    ULONG           MailslotQuota;
+    ULONG           NextMessageSize;
+    ULONG           MessagesAvailable;
+    LARGE_INTEGER   ReadTimeout;
+} FILE_MAILSLOT_QUERY_INFORMATION, *PFILE_MAILSLOT_QUERY_INFORMATION;
+
+typedef struct _FILE_MAILSLOT_SET_INFORMATION
+{
+    LARGE_INTEGER ReadTimeout;
+} FILE_MAILSLOT_SET_INFORMATION, *PFILE_MAILSLOT_SET_INFORMATION;
+
+typedef struct _FILE_BOTH_DIR_INFORMATION 
+{
+    ULONG NextEntryOffset;
+    ULONG FileIndex;
+    LARGE_INTEGER CreationTime;
+    LARGE_INTEGER LastAccessTime;
+    LARGE_INTEGER LastWriteTime;
+    LARGE_INTEGER ChangeTime;
+    LARGE_INTEGER EndOfFile;
+    LARGE_INTEGER AllocationSize;
+    ULONG FileAttributes;
+    ULONG FileNameLength;
+    ULONG EaSize;
+    CCHAR ShortNameLength;
+    WCHAR ShortName[12];
+    WCHAR FileName[1];
+} FILE_BOTH_DIR_INFORMATION, *PFILE_BOTH_DIR_INFORMATION;
+
+typedef struct _FILE_COMPLETION_INFORMATION 
+{
+    HANDLE Port;
+    PVOID Key;
+} FILE_COMPLETION_INFORMATION, *PFILE_COMPLETION_INFORMATION;
+
+typedef struct _FILE_LINK_INFORMATION
+{
+    BOOLEAN ReplaceIfExists;
+    HANDLE RootDirectory;
+    ULONG FileNameLength;
+    WCHAR FileName[1];
+} FILE_LINK_INFORMATION, *PFILE_LINK_INFORMATION;
+
+typedef struct _FILE_NAME_INFORMATION 
+{
+    ULONG FileNameLength;
+    WCHAR FileName[1];
+} FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;
+
+typedef struct _FILE_ALLOCATION_INFORMATION
+{
+    LARGE_INTEGER AllocationSize;
+} FILE_ALLOCATION_INFORMATION, *PFILE_ALLOCATION_INFORMATION;
+
+typedef struct _FILE_END_OF_FILE_INFORMATION
+{
+    LARGE_INTEGER EndOfFile;
+} FILE_END_OF_FILE_INFORMATION, *PFILE_END_OF_FILE_INFORMATION;
+
+typedef struct _FILE_VALID_DATA_LENGTH_INFORMATION
+{
+    LARGE_INTEGER ValidDataLength;
+} FILE_VALID_DATA_LENGTH_INFORMATION, *PFILE_VALID_DATA_LENGTH_INFORMATION;
+
 /*
  * File System
  */
@@ -774,6 +924,15 @@ typedef struct _FILE_FS_DEVICE_INFORMATION
     DEVICE_TYPE DeviceType;
     ULONG Characteristics;
 } FILE_FS_DEVICE_INFORMATION, *PFILE_FS_DEVICE_INFORMATION;
+
+typedef struct _FILE_FS_VOLUME_INFORMATION
+{
+    LARGE_INTEGER   VolumeCreationTime;
+    ULONG           VolumeSerialNumber;
+    ULONG           VolumeLabelLength;
+    BOOLEAN         SupportsObjects;
+    WCHAR           VolumeLabel[1];
+} FILE_FS_VOLUME_INFORMATION, *PFILE_FS_VOLUME_INFORMATION;
 
 /*
  * Registry Key Value
@@ -845,6 +1004,23 @@ typedef struct _PROCESS_BASIC_INFORMATION
     ULONG InheritedFromUniqueProcessId;
 } PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION;
 
+/* File Pipe Structures for the FSCTLs */
+typedef struct _FILE_PIPE_WAIT_FOR_BUFFER
+{
+    LARGE_INTEGER   Timeout;
+    ULONG           NameLength;
+    BOOLEAN         TimeoutSpecified;
+    WCHAR           Name[1];
+} FILE_PIPE_WAIT_FOR_BUFFER, *PFILE_PIPE_WAIT_FOR_BUFFER;
+
+typedef struct _FILE_PIPE_PEEK_BUFFER
+{
+    ULONG NamedPipeState;
+    ULONG ReadDataAvailable;
+    ULONG NumberOfMessages;
+    ULONG MessageLength;
+    CHAR Data[1];
+} FILE_PIPE_PEEK_BUFFER, *PFILE_PIPE_PEEK_BUFFER;
 
 /* The Kerner/User Shared Data Structure */
 typedef struct _KUSER_SHARED_DATA 
