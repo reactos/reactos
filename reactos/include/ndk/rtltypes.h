@@ -37,6 +37,12 @@
 #define  EH_STACK_INVALID    0x08
 #define  EH_NESTED_CALL      0x10
 
+#define RTL_RANGE_LIST_ADD_IF_CONFLICT  0x00000001
+#define RTL_RANGE_LIST_ADD_SHARED       0x00000002
+
+#define RTL_RANGE_SHARED      0x01
+#define RTL_RANGE_CONFLICT    0x02
+
 /* ENUMERATIONS **************************************************************/
 
 typedef enum 
@@ -105,6 +111,38 @@ typedef struct _RTL_HEAP_DEFINITION
     ULONG Length;
     ULONG Unknown[11];
 } RTL_HEAP_DEFINITION, *PRTL_HEAP_DEFINITION;
+
+typedef struct _RTL_RANGE_LIST
+{
+    LIST_ENTRY ListHead;
+    ULONG Flags;  /* RTL_RANGE_LIST_... flags */
+    ULONG Count;
+    ULONG Stamp;
+} RTL_RANGE_LIST, *PRTL_RANGE_LIST;
+
+typedef struct _RTL_RANGE
+{
+    ULONGLONG Start;
+    ULONGLONG End;
+    PVOID UserData;
+    PVOID Owner;
+    UCHAR Attributes;
+    UCHAR Flags;  /* RTL_RANGE_... flags */
+} RTL_RANGE, *PRTL_RANGE;
+
+typedef BOOLEAN
+(STDCALL *PRTL_CONFLICT_RANGE_CALLBACK) (
+    PVOID Context,
+    PRTL_RANGE Range
+);
+
+typedef struct _RANGE_LIST_ITERATOR
+{
+  PLIST_ENTRY RangeListHead;
+  PLIST_ENTRY MergedHead;
+  PVOID Current;
+  ULONG Stamp;
+} RTL_RANGE_LIST_ITERATOR, *PRTL_RANGE_LIST_ITERATOR;
 
 typedef struct _RTL_MESSAGE_RESOURCE_ENTRY 
 {

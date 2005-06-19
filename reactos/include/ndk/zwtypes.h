@@ -74,6 +74,18 @@ typedef enum _SYSTEM_DOCK_STATE
 } SYSTEM_DOCK_STATE, *PSYSTEM_DOCK_STATE;
 
 /**** Information Classes ****/
+
+/*
+ * Process (extra ones not defined in DDK)
+ */
+typedef enum _PROCESS_INFORMATION_FLAGS
+{    
+    ProcessUnknown33 = 33,
+    ProcessUnknown34,
+    ProcessUnknown35,
+    ProcessCookie
+} PROCESS_INFORMATION_FLAGS;
+
 /*
  * System
  */
