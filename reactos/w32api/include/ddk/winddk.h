@@ -122,9 +122,7 @@ typedef ULONG LOGICAL;
 /*
 ** Routines specific to this DDK
 */
-
-#define TAG(_a, _b, _c, _d) (ULONG) \
-	(((_a) << 0) + ((_b) << 8) + ((_c) << 16) + ((_d) << 24))
+#define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )   
 
 static __inline struct _KPCR * KeGetCurrentKPCR(
   VOID)
@@ -350,6 +348,63 @@ extern NTOSAPI POBJECT_TYPE SeTokenObjectType;
 
 extern NTOSAPI CCHAR KeNumberProcessors;
 
+#define PROCESSOR_FEATURE_MAX 64
+
+typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE 
+{
+    StandardDesign,
+    NEC98x86,
+    EndAlternatives
+} ALTERNATIVE_ARCHITECTURE_TYPE;
+
+typedef struct _KSYSTEM_TIME 
+{
+    ULONG LowPart;
+    LONG High1Time;
+    LONG High2Time;
+} KSYSTEM_TIME, *PKSYSTEM_TIME;
+
+typedef struct _KUSER_SHARED_DATA 
+{
+    ULONG TickCountLowDeprecated;
+    ULONG TickCountMultiplier;
+    volatile KSYSTEM_TIME InterruptTime;
+    volatile KSYSTEM_TIME SystemTime;
+    volatile KSYSTEM_TIME TimeZoneBias;
+    USHORT ImageNumberLow;
+    USHORT ImageNumberHigh;
+    WCHAR NtSystemRoot[ 260 ];
+    ULONG MaxStackTraceDepth;
+    ULONG CryptoExponent;
+    ULONG TimeZoneId;
+    ULONG LargePageMinimum;
+    ULONG Reserved2[ 7 ];
+    NT_PRODUCT_TYPE NtProductType;
+    BOOLEAN ProductTypeIsValid;
+    ULONG NtMajorVersion;
+    ULONG NtMinorVersion;
+    BOOLEAN ProcessorFeatures[PROCESSOR_FEATURE_MAX];
+    ULONG Reserved1;
+    ULONG Reserved3;
+    volatile ULONG TimeSlip;
+    ALTERNATIVE_ARCHITECTURE_TYPE AlternativeArchitecture;
+    LARGE_INTEGER SystemExpirationDate;
+    ULONG SuiteMask;
+    BOOLEAN KdDebuggerEnabled;
+    volatile ULONG ActiveConsoleId;
+    volatile ULONG DismountCount;
+    ULONG ComPlusPackage;
+    ULONG LastSystemRITEventTickCount;
+    ULONG NumberOfPhysicalPages;
+    BOOLEAN SafeBootMode;
+    ULONG TraceLogging;
+    ULONGLONG   Fill0;
+    ULONGLONG   SystemCall[4];
+    union {
+        volatile KSYSTEM_TIME TickCount;
+        volatile ULONG64 TickCountQuad;
+    };
+} KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 
 /*
 ** IRP function codes
@@ -3392,6 +3447,10 @@ typedef enum _KEY_SET_INFORMATION_CLASS {
   KeyUserFlagsInformation,
   MaxKeySetInfoClass
 } KEY_SET_INFORMATION_CLASS;
+
+#define REG_CREATED_NEW_KEY         0x00000001L
+#define REG_OPENED_EXISTING_KEY     0x00000002L
+
 
 /* KEY_VALUE_Xxx.Type */
 
@@ -8400,6 +8459,12 @@ KIRQL
 DDKAPI
 KeRaiseIrqlToDpcLevel(
   VOID);
+  
+NTHALAPI
+KIRQL
+DDKAPI
+KeRaiseIrqlToSynchLevel(
+    VOID);
 
 #define KeLowerIrql(a) KfLowerIrql(a)
 #define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)

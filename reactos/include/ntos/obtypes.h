@@ -87,6 +87,8 @@ typedef struct _OBJECT_ATTRIBUTES
    PVOID SecurityQualityOfService;
 } OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 
+#endif
+
 typedef struct _HANDLE_TABLE_ENTRY_INFO {
     ULONG AuditMask;
 } HANDLE_TABLE_ENTRY_INFO, *PHANDLE_TABLE_ENTRY_INFO;
@@ -104,8 +106,6 @@ typedef struct _HANDLE_TABLE_ENTRY {
         LONG NextFreeTableEntry;
     } u2;
 } HANDLE_TABLE_ENTRY, *PHANDLE_TABLE_ENTRY;
-
-#endif /* __USE_W32API */
 
 typedef struct _HANDLE_TABLE
 {

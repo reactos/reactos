@@ -1250,25 +1250,6 @@ typedef struct _GENERATE_NAME_CONTEXT {
     ULONG   LastIndexValue;
 } GENERATE_NAME_CONTEXT, *PGENERATE_NAME_CONTEXT;
 
-typedef struct _HANDLE_TABLE_ENTRY_INFO {
-    ULONG AuditMask;
-} HANDLE_TABLE_ENTRY_INFO, *PHANDLE_TABLE_ENTRY_INFO;
-
-typedef struct _HANDLE_TABLE_ENTRY {
-    union {
-        PVOID Object;
-        ULONG ObAttributes;
-        PHANDLE_TABLE_ENTRY_INFO InfoTable;
-        ULONG_PTR Value;
-    } u1;
-    union {
-        ULONG GrantedAccess;
-        USHORT GrantedAccessIndex;
-        LONG NextFreeTableEntry;
-    } u2;
-    USHORT CreatorBackTraceIndex;
-} HANDLE_TABLE_ENTRY, *PHANDLE_TABLE_ENTRY;
-
 typedef struct _MAPPING_PAIR {
     ULONGLONG Vcn;
     ULONGLONG Lcn;
