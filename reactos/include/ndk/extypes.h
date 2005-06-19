@@ -18,6 +18,7 @@ extern NTOSAPI POBJECT_TYPE ExMutantObjectType;
 extern NTOSAPI POBJECT_TYPE ExTimerType;
 
 /* CONSTANTS *****************************************************************/
+#define INVALID_HANDLE_VALUE (HANDLE)-1
 
 /* ENUMERATIONS **************************************************************/
 
@@ -69,6 +70,12 @@ typedef struct _HANDLE_TABLE_ENTRY_INFO
 {
     ULONG AuditMask;
 } HANDLE_TABLE_ENTRY_INFO, *PHANDLE_TABLE_ENTRY_INFO;
+
+typedef struct _RUNDOWN_DESCRIPTOR 
+{
+    ULONG_PTR References;
+    KEVENT RundownEvent;
+} RUNDOWN_DESCRIPTOR, *PRUNDOWN_DESCRIPTOR;
 
 typedef struct _HANDLE_TABLE_ENTRY 
 {

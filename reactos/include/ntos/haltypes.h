@@ -24,8 +24,15 @@
 
 
 /* HalReturnToFirmware */
-#define FIRMWARE_HALT   1
-#define FIRMWARE_REBOOT 3
+typedef enum _FIRMWARE_ENTRY
+{
+  HalHaltRoutine,
+  HalPowerDownRoutine,
+  HalRestartRoutine,
+  HalRebootRoutine,
+  HalInteractiveModeRoutine,
+  HalMaximumRoutine
+} FIRMWARE_REENTRY, *PFIRMWARE_REENTRY;
 
 #ifndef __USE_W32API
 

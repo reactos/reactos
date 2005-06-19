@@ -96,11 +96,11 @@ ShutdownThreadMain(PVOID Context)
      }
    else if (Action == ShutdownReboot)
      {
-        HalReturnToFirmware (FIRMWARE_REBOOT);
+        HalReturnToFirmware (HalRebootRoutine);
      }
    else
      {
-        HalReturnToFirmware (FIRMWARE_HALT);
+        HalReturnToFirmware (HalHaltRoutine);
      }
 }
 

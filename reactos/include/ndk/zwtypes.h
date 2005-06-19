@@ -21,6 +21,13 @@
 
 /* ENUMERATIONS **************************************************************/
 
+typedef enum SHUTDOWN_ACTION_TAG 
+{
+    ShutdownNoReboot,
+    ShutdownReboot,
+    ShutdownPowerOff
+} SHUTDOWN_ACTION;
+
 typedef enum _PLUGPLAY_BUS_CLASS
 {
     SystemBus,
@@ -198,7 +205,7 @@ typedef LANGID *PLANGID;
 typedef struct _MUTANT_BASIC_INFORMATION 
 {
     LONG CurrentCount;
-    BOOLEAN OwnedbyCalled;
+    BOOLEAN OwnedByCaller;
     BOOLEAN AbandonedState;
 } MUTANT_BASIC_INFORMATION, *PMUTANT_BASIC_INFORMATION;
 

@@ -114,7 +114,7 @@ HalReleaseDisplayOwnership(VOID);
 VOID
 STDCALL
 HalReturnToFirmware(
-    FIRMWARE_ENTRY Action
+    FIRMWARE_REENTRY Action
 );
 
 VOID

@@ -34,9 +34,13 @@ extern ULONG NTOSAPI KdComPortInUse;
 /* ENUMERATIONS **************************************************************/
 typedef enum _FIRMWARE_ENTRY
 {
-    /*FIXME */
-    HalFixMe
-} FIRMWARE_ENTRY;
+  HalHaltRoutine,
+  HalPowerDownRoutine,
+  HalRestartRoutine,
+  HalRebootRoutine,
+  HalInteractiveModeRoutine,
+  HalMaximumRoutine
+} FIRMWARE_REENTRY, *PFIRMWARE_REENTRY;
 
 /* TYPES *********************************************************************/
 

@@ -1396,7 +1396,7 @@ ZwOpenSection(
 NTSTATUS
 STDCALL
 NtOpenSemaphore(
-    IN HANDLE SemaphoreHandle,
+    OUT PHANDLE SemaphoreHandle,
     IN ACCESS_MASK DesiredAcces,
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
@@ -1404,7 +1404,7 @@ NtOpenSemaphore(
 NTSTATUS
 STDCALL
 ZwOpenSemaphore(
-    IN HANDLE SemaphoreHandle,
+    OUT PHANDLE SemaphoreHandle,
     IN ACCESS_MASK DesiredAcces,
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
@@ -2945,13 +2945,13 @@ ZwSetVolumeInformationFile(
 NTSTATUS
 STDCALL
 NtShutdownSystem(
-    IN ULONG Action
+    IN SHUTDOWN_ACTION Action
 );
 
 NTSTATUS
 STDCALL
 ZwShutdownSystem(
-    IN ULONG Action
+    IN SHUTDOWN_ACTION Action
 );
 
 NTSTATUS

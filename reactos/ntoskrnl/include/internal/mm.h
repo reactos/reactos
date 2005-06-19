@@ -323,6 +323,10 @@ extern MM_STATS MmStats;
 
 #define MM_PHYSICAL_PAGE_MPW_PENDING     (0x8)
 
+#define MM_CORE_DUMP_TYPE_NONE            (0x0)
+#define MM_CORE_DUMP_TYPE_MINIMAL         (0x1)
+#define MM_CORE_DUMP_TYPE_FULL            (0x2)
+
 #define MM_PAGEOP_PAGEIN        (1)
 #define MM_PAGEOP_PAGEOUT       (2)
 #define MM_PAGEOP_PAGESYNCH     (3)
