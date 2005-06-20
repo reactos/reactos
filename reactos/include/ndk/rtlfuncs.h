@@ -1435,6 +1435,35 @@ RtlIsTextUnicode(
 );
 
 /*
+ * Misc conversion functions
+ */
+LARGE_INTEGER 
+STDCALL
+RtlConvertLongToLargeInteger(IN LONG SignedInteger);
+
+LARGE_INTEGER
+STDCALL
+RtlEnlargedIntegerMultiply(
+    LONG Multiplicand,
+    LONG Multiplier
+);
+
+ULONG
+STDCALL
+RtlEnlargedUnsignedDivide(
+    ULARGE_INTEGER Dividend,
+    ULONG Divisor,
+    PULONG Remainder
+);
+
+LARGE_INTEGER
+STDCALL
+RtlEnlargedUnsignedMultiply(
+    ULONG Multiplicand,
+    ULONG Multiplier
+);
+    
+/*
  * Time Functions
  */
 NTSTATUS

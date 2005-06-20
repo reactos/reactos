@@ -10,16 +10,14 @@
 #include <roscfg.h>
 #include <stdlib.h>
 #include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
-#include <wsahelp.h> /* comment for msvc */
-//#include "C:\Programming\ReactOS\reactos\w32api\include\wsahelp.h" uncomment for MSVC
+#include <wsahelp.h>
 #include <winsock2.h>
 #include <ws2spi.h>
-//#include "C:\Programming\ReactOS\reactos\w32api\include\ddk\tdi.h" uncomment for MSVC
-#include <ddk/tdi.h> /* comment for msvc */
+#include <ddk/tdi.h>
 #include <afd/shared.h>
 #include <helpers.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 #include <debug.h>
 
 extern HANDLE GlobalHeap;

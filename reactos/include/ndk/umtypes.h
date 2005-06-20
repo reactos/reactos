@@ -805,6 +805,15 @@ typedef struct FILE_ALLOCATED_RANGE_BUFFER
     LARGE_INTEGER Length;
 } FILE_ALLOCATED_RANGE_BUFFER, *PFILE_ALLOCATED_RANGE_BUFFER;
 
+typedef struct _FILE_FULL_EA_INFORMATION
+{
+    ULONG NextEntryOffset;
+    UCHAR Flags;
+    UCHAR EaNameLength;
+    USHORT EaValueLength;
+    CHAR EaName[1];
+} FILE_FULL_EA_INFORMATION, *PFILE_FULL_EA_INFORMATION;
+
 typedef struct _FILE_QUOTA_INFORMATION
 {
     ULONG NextEntryOffset;
