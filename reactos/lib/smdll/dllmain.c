@@ -6,8 +6,7 @@
  * PURPOSE:         SM Helper Library
  */
 
-#define NTOS_MODE_USER
-#include <ntos.h>
+#include <windows.h>
 
 BOOL STDCALL DllMain(HANDLE hinstDll, DWORD fdwReason, LPVOID fImpLoad)
 {
