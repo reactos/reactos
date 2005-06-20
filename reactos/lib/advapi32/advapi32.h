@@ -1,11 +1,19 @@
-#include <stdarg.h>
-#include <string.h>
-#include <wchar.h>
-#include <tchar.h>
-#include <ntdll/rtl.h>
-#define NTOS_MODE_USER
-#include <ntos.h>
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS System Libraries
+ * FILE:            lib/advapi32/advapi32.h
+ * PURPOSE:         Win32 Advanced API Libary Header
+ * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
+ */
+
+/* INCLUDES ******************************************************************/
+
+/* PSDK/NDK Headers */
 #include <windows.h>
-#include <sddl.h>
-#include <rosrtl/string.h>
+#include <ntsecapi.h>
 #include <accctrl.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
+
+/* FIXME: ROSRTL */
+#include <rosrtl/string.h>
