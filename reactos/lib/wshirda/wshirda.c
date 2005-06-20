@@ -16,10 +16,6 @@ DWORD DebugTraceLevel = MAX_TRACE;
 
 #endif /* DBG */
 
-/* To make the linker happy */
-VOID STDCALL KeBugCheck (ULONG	BugCheckCode) {}
-
-
 BOOL
 EXPORT
 DllMain(HANDLE hInstDll,
