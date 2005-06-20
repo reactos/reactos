@@ -616,9 +616,6 @@ typedef struct _DDHAL_GETDRIVERINFODATA {
 /*****************************************************************************
  * high-level ddraw implementation structures
  */
-#ifndef __USE_W32API
-typedef DWORD IUnknown; /* FIXME: implement proper definition */
-#endif
 typedef struct _IUNKNOWN_LIST {
     struct _IUNKNOWN_LIST *	lpLink;
     LPGUID			lpGuid;

@@ -108,39 +108,6 @@ typedef struct _DEBUG_LOCK_INFORMATION {
 
 #endif
 
-#ifndef __USE_W32API
-typedef struct _CRITICAL_SECTION_DEBUG
-{
-  USHORT Type;
-  USHORT CreatorBackTraceIndex;
-  struct _CRITICAL_SECTION *CriticalSection;
-  LIST_ENTRY ProcessLocksList;
-  ULONG EntryCount;
-  ULONG ContentionCount;
-  PVOID Spare[2];
-} CRITICAL_SECTION_DEBUG, *PCRITICAL_SECTION_DEBUG;
-
-
-typedef struct _CRITICAL_SECTION
-{
-  PCRITICAL_SECTION_DEBUG DebugInfo;
-  LONG LockCount;
-  LONG RecursionCount;
-  HANDLE OwningThread;
-  HANDLE LockSemaphore;
-  ULONG_PTR SpinCount;
-} CRITICAL_SECTION, *PCRITICAL_SECTION, *LPCRITICAL_SECTION;
-
-#define RTL_CRITSECT_TYPE 0
-
-typedef CRITICAL_SECTION RTL_CRITICAL_SECTION;
-typedef PCRITICAL_SECTION PRTL_CRITICAL_SECTION;
-typedef LPCRITICAL_SECTION LPRTL_CRITICAL_SECTION;
-typedef CRITICAL_SECTION_DEBUG RTL_CRITICAL_SECTION_DEBUG;
-typedef PCRITICAL_SECTION_DEBUG PRTL_CRITICAL_SECTION_DEBUG;
-
-#endif /* !__USE_W32API */
-
 #ifndef _NTNDK_
 typedef struct _RTL_PROCESS_INFO
 {
@@ -747,11 +714,7 @@ RtlRunEncodeUnicodeString (IN OUT PUCHAR Hash,
 
 /* Timer Queue functions */
 
-#ifdef __USE_W32API
 #include <winnt.h>
-#else /* __USE_W32API */
-typedef VOID (CALLBACK *WAITORTIMERCALLBACKFUNC) (PVOID, BOOLEAN );
-#endif /* __USE_W32API */
 
 NTSTATUS
 STDCALL

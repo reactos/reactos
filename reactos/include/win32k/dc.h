@@ -189,11 +189,6 @@ INT STDCALL  NtGdiDrawEscape(HDC  hDC,
                             INT  cbInput,
                             LPCSTR  lpszInData);
 
-#ifndef __USE_W32API
-/* FIXME: this typedef should go somewhere else...  */
-typedef VOID (*GOBJENUMPROC)(PVOID, LPARAM);
-#endif
-
 INT STDCALL  NtGdiEnumObjects(HDC  hDC,
                              INT  ObjectType,
                              GOBJENUMPROC  ObjectFunc,
