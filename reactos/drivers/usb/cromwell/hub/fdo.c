@@ -7,6 +7,7 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
  */
 
+#define INITGUID
 #define NDEBUG
 #include "usbhub.h"
 
@@ -117,7 +118,7 @@ UsbhubFdoQueryBusRelations(
 		sprintf(Buffer[0], "USB\\Vid_%04x&Pid_%04x&Rev_%04x",
 			PdoExtension->dev->descriptor.idVendor,
 			PdoExtension->dev->descriptor.idProduct,
-			0 /* FIXME: need to put the revision */);
+			PdoExtension->dev->descriptor.bcdDevice);
 		sprintf(Buffer[1], "USB\\Vid_%04x&Pid_%04x",
 			PdoExtension->dev->descriptor.idVendor,
 			PdoExtension->dev->descriptor.idProduct);
@@ -293,19 +294,47 @@ UsbhubDeviceControlFdo(
 		}
 		case IOCTL_USB_GET_NODE_CONNECTION_NAME:
 		{
+			PHUB_DEVICE_EXTENSION DeviceExtension;
 			PUSB_NODE_CONNECTION_NAME ConnectionName;
+			DeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+			ConnectionName = (PUSB_NODE_CONNECTION_NAME)BufferOut;
 			
 			DPRINT("Usbhub: IOCTL_USB_GET_NODE_CONNECTION_NAME\n");
 			if (LengthOut < sizeof(USB_NODE_CONNECTION_NAME))
 				Status = STATUS_BUFFER_TOO_SMALL;
+			else if (BufferOut == NULL)
+				Status = STATUS_INVALID_PARAMETER;
+			else if (ConnectionName->ConnectionIndex < 1
+				|| ConnectionName->ConnectionIndex > USB_MAXCHILDREN)
+				Status = STATUS_INVALID_PARAMETER;
+			else if (DeviceExtension->Children[ConnectionName->ConnectionIndex - 1] == NULL)
+				Status = STATUS_INVALID_PARAMETER;
 			else
 			{
-				ConnectionName = (PUSB_NODE_CONNECTION_NAME)BufferOut;
-				DPRINT1("Usbhub: IOCTL_USB_GET_NODE_CONNECTION_NAME unimplemented\n");
-				ConnectionName->ActualLength = 0;
-				ConnectionName->NodeName[0] = UNICODE_NULL;
-				Information = sizeof(USB_NODE_CONNECTION_NAME);
-				Status = STATUS_SUCCESS;
+				ULONG NeededStructureSize;
+				DeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceExtension->Children[ConnectionName->ConnectionIndex - 1]->DeviceExtension;
+				NeededStructureSize = DeviceExtension->SymbolicLinkName.Length + sizeof(UNICODE_NULL) + FIELD_OFFSET(USB_NODE_CONNECTION_NAME, NodeName);
+				if (ConnectionName->ActualLength < NeededStructureSize / sizeof(WCHAR)
+					|| LengthOut < NeededStructureSize)
+				{
+					/* Buffer too small */
+					ConnectionName->ActualLength = NeededStructureSize / sizeof(WCHAR);
+					Information = sizeof(USB_NODE_CONNECTION_NAME);
+					Status = STATUS_BUFFER_TOO_SMALL;
+				}
+				else
+				{
+					RtlCopyMemory(
+						ConnectionName->NodeName,
+						DeviceExtension->SymbolicLinkName.Buffer,
+						DeviceExtension->SymbolicLinkName.Length);
+					ConnectionName->NodeName[DeviceExtension->SymbolicLinkName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+					DPRINT("Usbhub: IOCTL_USB_GET_NODE_CONNECTION_NAME returns '%S'\n", ConnectionName->NodeName);
+					ConnectionName->ActualLength = NeededStructureSize / sizeof(WCHAR);
+					Information = NeededStructureSize;
+					Status = STATUS_SUCCESS;
+				}
+				Information = LengthOut;
 			}
 			break;
 		}
@@ -313,23 +342,29 @@ UsbhubDeviceControlFdo(
 		{
 			PUSB_NODE_CONNECTION_INFORMATION ConnectionInformation;
 			struct usb_device* dev;
-			//ULONG i;
+			ConnectionInformation = (PUSB_NODE_CONNECTION_INFORMATION)BufferOut;
 			
 			DPRINT("Usbhub: IOCTL_USB_GET_NODE_CONNECTION_INFORMATION\n");
 			if (LengthOut < sizeof(USB_NODE_CONNECTION_INFORMATION))
 				Status = STATUS_BUFFER_TOO_SMALL;
 			else if (BufferOut == NULL)
 				Status = STATUS_INVALID_PARAMETER;
+			else if (ConnectionInformation->ConnectionIndex < 1
+				|| ConnectionInformation->ConnectionIndex > USB_MAXCHILDREN)
+				Status = STATUS_INVALID_PARAMETER;
 			else
 			{
-				ConnectionInformation = (PUSB_NODE_CONNECTION_INFORMATION)BufferOut;
 				DPRINT1("Usbhub: IOCTL_USB_GET_NODE_CONNECTION_INFORMATION partially implemented\n");
 				dev = ((PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->dev;
-				dev = dev->children[ConnectionInformation->ConnectionIndex = 0];
+				dev = dev->children[ConnectionInformation->ConnectionIndex - 1];
 				if (dev == NULL)
 				{
 					/* No device connected to this port */
-					RtlZeroMemory(ConnectionInformation, sizeof(USB_NODE_CONNECTION_INFORMATION));
+					RtlZeroMemory(
+						&ConnectionInformation->DeviceDescriptor,
+						sizeof(USB_NODE_CONNECTION_INFORMATION) - FIELD_OFFSET(USB_NODE_CONNECTION_INFORMATION, DeviceDescriptor));
+					ConnectionInformation->ConnectionStatus = NoDeviceConnected;
+					Information = sizeof(USB_NODE_CONNECTION_INFORMATION);
 					Status = STATUS_SUCCESS;
 					break;
 				}
@@ -364,6 +399,41 @@ UsbhubDeviceControlFdo(
 			DPRINT1("Usbhub: IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION unimplemented\n");
 			Information = 0;
 			Status = STATUS_NOT_IMPLEMENTED;
+			break;
+		}
+		case IOCTL_USB_GET_NODE_CONNECTION_DRIVERKEY_NAME:
+		{
+			PHUB_DEVICE_EXTENSION DeviceExtension;
+			PUSB_NODE_CONNECTION_DRIVERKEY_NAME StringDescriptor;
+			DPRINT("Usbhub: IOCTL_USB_GET_NODE_CONNECTION_DRIVERKEY_NAME\n");
+			DeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+			StringDescriptor = (PUSB_NODE_CONNECTION_DRIVERKEY_NAME)BufferOut;
+			if (LengthOut < sizeof(USB_NODE_CONNECTION_DRIVERKEY_NAME))
+				Status = STATUS_BUFFER_TOO_SMALL;
+			else if (StringDescriptor == NULL)
+				Status = STATUS_INVALID_PARAMETER;
+			else if (StringDescriptor->ConnectionIndex < 1
+				|| StringDescriptor->ConnectionIndex > USB_MAXCHILDREN)
+				Status = STATUS_INVALID_PARAMETER;
+			else if (DeviceExtension->Children[StringDescriptor->ConnectionIndex - 1] == NULL)
+				Status = STATUS_INVALID_PARAMETER;
+			else
+			{
+				ULONG StringSize;
+				Status = IoGetDeviceProperty(
+					DeviceExtension->Children[StringDescriptor->ConnectionIndex - 1],
+					DevicePropertyDriverKeyName,
+					LengthOut - FIELD_OFFSET(USB_NODE_CONNECTION_DRIVERKEY_NAME, DriverKeyName),
+					StringDescriptor->DriverKeyName,
+					&StringSize);
+				if (NT_SUCCESS(Status) || Status == STATUS_BUFFER_TOO_SMALL)
+				{
+					DPRINT("Usbhub: IOCTL_GET_HCD_DRIVERKEY_NAME returns '%S'\n", StringDescriptor->DriverKeyName);
+					StringDescriptor->ActualLength = StringSize + FIELD_OFFSET(USB_NODE_CONNECTION_DRIVERKEY_NAME, DriverKeyName);
+					Information = LengthOut;
+					Status = STATUS_SUCCESS;
+				}
+			}
 			break;
 		}
 		default:

@@ -28,6 +28,7 @@ typedef struct _HUB_DEVICE_EXTENSION
 	UNICODE_STRING InstanceId;        // REG_SZ
 	UNICODE_STRING HardwareIds;       // REG_MULTI_SZ
 	UNICODE_STRING CompatibleIds;     // REG_MULTI_SZ
+	UNICODE_STRING SymbolicLinkName;
 } HUB_DEVICE_EXTENSION, *PHUB_DEVICE_EXTENSION;
 
 /* createclose.c */

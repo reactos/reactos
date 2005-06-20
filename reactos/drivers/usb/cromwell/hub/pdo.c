@@ -7,7 +7,7 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
  */
 
-//#define NDEBUG
+#define NDEBUG
 #include <stdio.h>
 #include "usbhub.h"
 
@@ -41,6 +41,42 @@ UsbhubDeviceControlPdo(
 	Irp->IoStatus.Status = Status;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 	return Status;
+}
+
+static NTSTATUS
+UsbhubPdoStartDevice(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp)
+{
+	PHUB_DEVICE_EXTENSION DeviceExtension;
+	NTSTATUS Status;
+	
+	DeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+	DbgBreakPoint();
+	
+	/* Register device interface */
+	/* FIXME: when should we activate this interface? */
+	Status = IoRegisterDeviceInterface(
+		DeviceObject,
+		DeviceExtension->dev->descriptor.bDeviceClass == USB_CLASS_HUB ?
+			&GUID_DEVINTERFACE_USB_HUB :
+			&GUID_DEVINTERFACE_USB_DEVICE,
+		NULL, /* Reference string */
+		&DeviceExtension->SymbolicLinkName);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT("Usbhub: IoRegisterDeviceInterface() failed with status 0x%08lx\n", Status);
+		return Status;
+	}
+	
+	Status = IoSetDeviceInterfaceState(&DeviceExtension->SymbolicLinkName, TRUE);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT("Usbhub: IoSetDeviceInterfaceState() failed with status 0x%08lx\n", Status);
+		return Status;
+	}
+	
+	return STATUS_SUCCESS;
 }
 
 static NTSTATUS
@@ -111,6 +147,12 @@ UsbhubPnpPdo(
 
 	switch (MinorFunction)
 	{
+		case IRP_MN_START_DEVICE: /* 0x0 */
+		{
+			DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
+			Status = UsbhubPdoStartDevice(DeviceObject, Irp);
+			break;
+		}
 		case IRP_MN_QUERY_ID: /* 0x13 */
 		{
 			Status = UsbhubPdoQueryId(DeviceObject, Irp, &Information);
