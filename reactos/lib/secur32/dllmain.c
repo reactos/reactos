@@ -11,7 +11,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <windows.h>
-#include <ntos.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 
 /* GLOBALS *******************************************************************/
 
