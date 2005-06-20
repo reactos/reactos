@@ -210,8 +210,8 @@ COMMDCB_ParseBool(LPWSTR *StrTail,
     BOOL bRetVal;
     ULONG_PTR nValue;
     static COMMDCB_PARAM_STRFLAG a_BoolFlags[] = {
-       { ROS_STRING_INITIALIZER(L"off"), FALSE },
-       { ROS_STRING_INITIALIZER(L"on"),  TRUE }
+       { RTL_CONSTANT_STRING(L"off"), FALSE },
+       { RTL_CONSTANT_STRING(L"on"),  TRUE }
     };
 
     /* try to recognize the next flag as a boolean */
@@ -339,9 +339,9 @@ COMMDCB_PARAM_HANDLER(dtr)
     BOOL bRetVal;
     ULONG_PTR nValue;
     static COMMDCB_PARAM_STRFLAG a_DTRFlags[] = {
-        { ROS_STRING_INITIALIZER(L"hs"),  DTR_CONTROL_HANDSHAKE },
-        { ROS_STRING_INITIALIZER(L"off"), DTR_CONTROL_DISABLE },
-        { ROS_STRING_INITIALIZER(L"on"),  DTR_CONTROL_ENABLE }
+        { RTL_CONSTANT_STRING(L"hs"),  DTR_CONTROL_HANDSHAKE },
+        { RTL_CONSTANT_STRING(L"off"), DTR_CONTROL_DISABLE },
+        { RTL_CONSTANT_STRING(L"on"),  DTR_CONTROL_ENABLE }
     };
 
     (void)Timeouts;
@@ -450,10 +450,10 @@ COMMDCB_PARAM_HANDLER(rts)
     DWORD nRetVal;
     ULONG_PTR nValue;
     static COMMDCB_PARAM_STRFLAG a_RTSFlags[] = {
-        { ROS_STRING_INITIALIZER(L"hs"),  RTS_CONTROL_HANDSHAKE },
-        { ROS_STRING_INITIALIZER(L"off"), RTS_CONTROL_DISABLE },
-        { ROS_STRING_INITIALIZER(L"on"),  RTS_CONTROL_ENABLE },
-        { ROS_STRING_INITIALIZER(L"tg"),  RTS_CONTROL_TOGGLE }
+        { RTL_CONSTANT_STRING(L"hs"),  RTS_CONTROL_HANDSHAKE },
+        { RTL_CONSTANT_STRING(L"off"), RTS_CONTROL_DISABLE },
+        { RTL_CONSTANT_STRING(L"on"),  RTS_CONTROL_ENABLE },
+        { RTL_CONSTANT_STRING(L"tg"),  RTS_CONTROL_TOGGLE }
     };
 
     (void)Timeouts;
@@ -480,9 +480,9 @@ COMMDCB_PARAM_HANDLER(stop)
     BOOL bRetVal;
     ULONG_PTR nValue;
     static COMMDCB_PARAM_STRFLAG a_StopFlags[] = {
-        { ROS_STRING_INITIALIZER(L"1"),   ONESTOPBIT },
-        { ROS_STRING_INITIALIZER(L"1.5"), ONE5STOPBITS },
-        { ROS_STRING_INITIALIZER(L"2"),   TWOSTOPBITS }
+        { RTL_CONSTANT_STRING(L"1"),   ONESTOPBIT },
+        { RTL_CONSTANT_STRING(L"1.5"), ONE5STOPBITS },
+        { RTL_CONSTANT_STRING(L"2"),   TWOSTOPBITS }
     };
 
     (void)Timeouts;
@@ -572,7 +572,7 @@ COMMDCB_PARAM_HANDLER(xon)
 /* FUNCTIONS */
 #define COMMDCB_PARAM(__P__) \
  { \
-  ROS_STRING_INITIALIZER( L""#__P__ ), \
+  RTL_CONSTANT_STRING( L""#__P__ ), \
   (ULONG_PTR)&COMMDCB_ ## __P__ ## Param \
  }
 

@@ -34,7 +34,6 @@
 
 /* FIXME: KILL ROSRTL */
 #include <rosrtl/thread.h>
-#include <rosrtl/string.h>
 #include <rosrtl/registry.h>
 
 /* Internal Kernel32 Header */

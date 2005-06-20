@@ -47,7 +47,7 @@ static NTSTATUS
 OpenBaseDirectory(PHANDLE DirHandle)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING Name = ROS_STRING_INITIALIZER(L"\\BaseNamedObjects");
+  UNICODE_STRING Name = RTL_CONSTANT_STRING(L"\\BaseNamedObjects");
   NTSTATUS Status;
 
   InitializeObjectAttributes(&ObjectAttributes,
