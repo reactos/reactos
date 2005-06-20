@@ -156,7 +156,7 @@ typedef struct _SCSI_INQUIRY_DATA {
 #define SCSI_IOCTL_DATA_UNSPECIFIED       2
 
 typedef struct _DUMP_POINTERS {
-  PADAPTER_OBJECT  AdapterObject;
+  struct _ADAPTER_OBJECT *AdapterObject;
   PVOID  MappedRegisterBase;
   PVOID  DumpData;
   PVOID  CommonBufferVa;
