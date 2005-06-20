@@ -112,8 +112,7 @@
 
 /* Kernel Shared Data Constants */
 #define PROCESSOR_FEATURE_MAX 64
-#define KI_USER_SHARED_DATA   0xffdf0000
-#define SharedUserData ((KUSER_SHARED_DATA * CONST) KI_USER_SHARED_DATA)
+#define SharedUserData ((KUSER_SHARED_DATA * CONST) USER_SHARED_DATA)
 
 /* Paging Values on x86 */
 #define PAGE_SIZE                         0x1000
