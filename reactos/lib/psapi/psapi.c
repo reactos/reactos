@@ -1129,7 +1129,7 @@ EnumPageFilesW(PENUM_PAGE_FILE_CALLBACKW pCallbackRoutine,
       return FALSE;
     }
 
-    Status = NtQuerySystemInformation(SystemPagefileInformation,
+    Status = NtQuerySystemInformation(SystemPageFileInformation,
                                       Buffer,
                                       BufferSize,
                                       NULL);
@@ -1301,16 +1301,16 @@ GetPerformanceInfo(PPERFORMANCE_INFORMATION pPerformanceInformation,
    */
 
   pPerformanceInformation->cb = sizeof(PERFORMANCE_INFORMATION);
-  pPerformanceInformation->CommitTotal = spi.TotalCommittedPages;
-  pPerformanceInformation->CommitLimit = spi.TotalCommitLimit;
+  pPerformanceInformation->CommitTotal = spi.CommittedPages;
+  pPerformanceInformation->CommitLimit = spi.CommitLimit;
   pPerformanceInformation->CommitPeak = spi.PeakCommitment;
   pPerformanceInformation->PhysicalTotal = sbi.NumberOfPhysicalPages;
   pPerformanceInformation->PhysicalAvailable = spi.AvailablePages;
   pPerformanceInformation->SystemCache = 0; /* FIXME - where to get this information from? */
-  pPerformanceInformation->KernelTotal = spi.PagedPoolUsage + spi.NonPagedPoolUsage;
-  pPerformanceInformation->KernelPaged = spi.PagedPoolUsage;
-  pPerformanceInformation->KernelNonpaged = spi.NonPagedPoolUsage;
-  pPerformanceInformation->PageSize = sbi.PhysicalPageSize;
+  pPerformanceInformation->KernelTotal = spi.PagedPoolPages + spi.NonPagedPoolPages;
+  pPerformanceInformation->KernelPaged = spi.PagedPoolPages;
+  pPerformanceInformation->KernelNonpaged = spi.NonPagedPoolPages;
+  pPerformanceInformation->PageSize = sbi.PageSize;
   pPerformanceInformation->HandleCount = shi.NumberOfHandles;
   pPerformanceInformation->ProcessCount = ProcessCount;
   pPerformanceInformation->ThreadCount = ThreadCount;
