@@ -8,14 +8,14 @@
 #define __WS2_32_H
 
 #include <roscfg.h>
-#include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
-#include <ntos.h>
-#include <napi/teb.h>
 #include <winsock2.h>
 #include <ws2spi.h>
 #include <ws2tcpip.h>
 #include <windows.h>
+#include <wsahelp.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
+
 #undef assert
 #include <debug.h>
 #include <windns.h> // DNS_A_DATA

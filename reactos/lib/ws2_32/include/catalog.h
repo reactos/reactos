@@ -7,8 +7,6 @@
 #ifndef __CATALOG_H
 #define __CATALOG_H
 
-#include <wsahelp.h>
-
 typedef struct _CATALOG_ENTRY {
     LIST_ENTRY ListEntry;
     ULONG ReferenceCount;
