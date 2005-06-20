@@ -68,6 +68,10 @@ typedef struct _DDSCAPSEX {
 typedef PVOID LPVMEMHEAP;
 #endif
 
+#ifndef DECL_IMPORT
+#define DECL_IMPORT __attribute__((dllimport))
+#endif
+
 #if defined(_WIN32K_)
 #define WIN32KAPI DECL_EXPORT
 #else
@@ -107,7 +111,7 @@ typedef ULONG MIX;
 typedef ULONG HGLYPH;
 typedef HGLYPH *PHGLYPH;
 
-typedef LONG_PTR (DDKAPI *PFN)();
+typedef LONG_PTR (APIENTRY *PFN)();
 
 DECLARE_HANDLE(HBM);
 DECLARE_HANDLE(HDEV);
@@ -347,7 +351,7 @@ typedef struct _DEVINFO {
 
 typedef struct _DRIVEROBJ *PDRIVEROBJ;
 
-typedef BOOL DDKAPI CALLBACK
+typedef BOOL APIENTRY CALLBACK
 (*FREEOBJPROC)(
   IN PDRIVEROBJ  pDriverObj);
 
@@ -1147,39 +1151,39 @@ typedef struct _XLATEOBJ {
   ULONG  *pulXlate;
 } XLATEOBJ;
 
-typedef VOID DDKAPI (CALLBACK *WNDOBJCHANGEPROC)(
+typedef VOID APIENTRY (CALLBACK *WNDOBJCHANGEPROC)(
   IN WNDOBJ  *pwo,
   IN FLONG  fl);
 
 
 WIN32KAPI
 HANDLE
-DDKAPI
+APIENTRY
 BRUSHOBJ_hGetColorTransform(
   IN BRUSHOBJ  *pbo);
 
 WIN32KAPI
 PVOID
-DDKAPI
+APIENTRY
 BRUSHOBJ_pvAllocRbrush(
   IN BRUSHOBJ  *pbo,
   IN ULONG  cj);
 
 WIN32KAPI
 PVOID
-DDKAPI
+APIENTRY
 BRUSHOBJ_pvGetRbrush(
   IN BRUSHOBJ  *pbo);
 
 WIN32KAPI
 ULONG
-DDKAPI
+APIENTRY
 BRUSHOBJ_ulGetBrushColor(
   IN BRUSHOBJ  *pbo);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 CLIPOBJ_bEnum(
   IN CLIPOBJ  *pco,
   IN ULONG  cj,
@@ -1199,7 +1203,7 @@ CLIPOBJ_bEnum(
 
 WIN32KAPI
 ULONG
-DDKAPI
+APIENTRY
 CLIPOBJ_cEnumStart(
   IN CLIPOBJ  *pco,
   IN BOOL  bAll,
@@ -1209,13 +1213,13 @@ CLIPOBJ_cEnumStart(
 
 WIN32KAPI
 PATHOBJ*
-DDKAPI
+APIENTRY
 CLIPOBJ_ppoGetPath(
   IN CLIPOBJ  *pco);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngAcquireSemaphore(
   IN HSEMAPHORE  hsem);
 
@@ -1224,7 +1228,7 @@ EngAcquireSemaphore(
 
 WIN32KAPI
 PVOID
-DDKAPI
+APIENTRY
 EngAllocMem(
   IN ULONG  Flags,
   IN ULONG  MemSize,
@@ -1232,7 +1236,7 @@ EngAllocMem(
 
 WIN32KAPI
 PVOID
-DDKAPI
+APIENTRY
 EngAllocPrivateUserMem(
   IN PDD_SURFACE_LOCAL  psl,
   IN SIZE_T  cj,
@@ -1240,14 +1244,14 @@ EngAllocPrivateUserMem(
 
 WIN32KAPI
 PVOID
-DDKAPI
+APIENTRY
 EngAllocUserMem(
   IN SIZE_T  cj,
   IN ULONG  tag);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngAlphaBlend(
   IN SURFOBJ  *psoDest,
   IN SURFOBJ  *psoSrc,
@@ -1279,7 +1283,7 @@ EngAlphaBlend(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngAssociateSurface(
   IN HSURF  hsurf,
   IN HDEV  hdev,
@@ -1287,7 +1291,7 @@ EngAssociateSurface(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngBitBlt(
   IN SURFOBJ  *psoTrg,
   IN SURFOBJ  *psoSrc,
@@ -1303,19 +1307,19 @@ EngBitBlt(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngCheckAbort(
   IN SURFOBJ  *pso);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngClearEvent(
   IN PEVENT  pEvent);
 
 WIN32KAPI
 FD_GLYPHSET*
-DDKAPI
+APIENTRY
 EngComputeGlyphSet(
   IN INT  nCodePage,
   IN INT  nFirstChar,
@@ -1327,14 +1331,14 @@ EngComputeGlyphSet(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngControlSprites(
   IN WNDOBJ  *pwo,
   IN FLONG  fl);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngCopyBits(
   OUT SURFOBJ  *psoDest,
   IN SURFOBJ  *psoSrc,
@@ -1345,7 +1349,7 @@ EngCopyBits(
 
 WIN32KAPI
 HBITMAP
-DDKAPI
+APIENTRY
 EngCreateBitmap(
   IN SIZEL  sizl,
   IN LONG  lWidth,
@@ -1355,13 +1359,13 @@ EngCreateBitmap(
 
 WIN32KAPI
 CLIPOBJ*
-DDKAPI
+APIENTRY
 EngCreateClip(
   VOID);
 
 WIN32KAPI
 HBITMAP
-DDKAPI
+APIENTRY
 EngCreateDeviceBitmap(
   IN DHSURF  dhsurf,
   IN SIZEL  sizl,
@@ -1369,7 +1373,7 @@ EngCreateDeviceBitmap(
 
 WIN32KAPI
 HSURF
-DDKAPI
+APIENTRY
 EngCreateDeviceSurface(
   DHSURF  dhsurf,
   SIZEL  sizl,
@@ -1378,7 +1382,7 @@ EngCreateDeviceSurface(
 #if 0
 WIN32KAPI
 HDRVOBJ
-DDKAPI
+APIENTRY
 EngCreateDriverObj(
   PVOID  pvObj,
   FREEOBJPROC  pFreeObjProc,
@@ -1387,7 +1391,7 @@ EngCreateDriverObj(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngCreateEvent(
   OUT PEVENT  *ppEvent);
 
@@ -1400,7 +1404,7 @@ EngCreateEvent(
 
 WIN32KAPI
 HPALETTE
-DDKAPI
+APIENTRY
 EngCreatePalette(
   IN ULONG  iMode,
   IN ULONG  cColors,
@@ -1411,13 +1415,13 @@ EngCreatePalette(
 
 WIN32KAPI
 PATHOBJ*
-DDKAPI
+APIENTRY
 EngCreatePath(
   VOID);
 
 WIN32KAPI
 HSEMAPHORE
-DDKAPI
+APIENTRY
 EngCreateSemaphore(
   VOID);
 
@@ -1434,7 +1438,7 @@ EngCreateSemaphore(
 
 WIN32KAPI
 WNDOBJ*
-DDKAPI
+APIENTRY
 EngCreateWnd(
   SURFOBJ  *pso,
   HWND  hwnd,
@@ -1444,13 +1448,13 @@ EngCreateWnd(
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngDebugBreak(
   VOID);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngDebugPrint(
   IN PCHAR StandardPrefix,
   IN PCHAR DebugMessage,
@@ -1458,13 +1462,13 @@ EngDebugPrint(
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngDeleteClip(
   IN CLIPOBJ  *pco);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngDeleteDriverObj(
   IN HDRVOBJ  hdo,
   IN BOOL  bCallBack,
@@ -1472,55 +1476,55 @@ EngDeleteDriverObj(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngDeleteEvent(
   IN PEVENT  pEvent);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngDeleteFile(
   IN LPWSTR  pwszFileName);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngDeletePalette(
   IN HPALETTE  hpal);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngDeletePath(
   IN PATHOBJ  *ppo);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngDeleteSafeSemaphore(
   IN OUT ENGSAFESEMAPHORE  *pssem);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngDeleteSemaphore(
   IN OUT HSEMAPHORE  hsem);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngDeleteSurface(
   IN HSURF  hsurf);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngDeleteWnd(
   IN WNDOBJ  *pwo);
 
 WIN32KAPI
 DWORD
-DDKAPI
+APIENTRY
 EngDeviceIoControl(
   IN HANDLE  hDevice,
   IN DWORD  dwIoControlCode,
@@ -1532,7 +1536,7 @@ EngDeviceIoControl(
 
 WIN32KAPI
 ULONG
-DDKAPI
+APIENTRY
 EngDitherColor(
   IN HDEV  hdev,
   IN ULONG  iMode,
@@ -1541,7 +1545,7 @@ EngDitherColor(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngEnumForms(
   IN HANDLE  hPrinter,
   IN DWORD  Level,
@@ -1552,7 +1556,7 @@ EngEnumForms(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngEraseSurface(
   IN SURFOBJ  *pso,
   IN RECTL  *prcl,
@@ -1560,7 +1564,7 @@ EngEraseSurface(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngFillPath(
   IN SURFOBJ  *pso,
   IN PATHOBJ  *ppo,
@@ -1572,14 +1576,14 @@ EngFillPath(
 
 WIN32KAPI
 PVOID
-DDKAPI
+APIENTRY
 EngFindImageProcAddress(
   IN HANDLE  hModule,
   IN LPSTR  lpProcName);
 
 WIN32KAPI
 PVOID
-DDKAPI
+APIENTRY
 EngFindResource(
   IN HANDLE  h,
   IN int  iName,
@@ -1588,7 +1592,7 @@ EngFindResource(
 
 WIN32KAPI
 PVOID
-DDKAPI
+APIENTRY
 EngFntCacheAlloc(
   IN ULONG  FastCheckSum,
   IN ULONG  ulSize);
@@ -1599,85 +1603,85 @@ EngFntCacheAlloc(
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngFntCacheFault(
   IN ULONG  ulFastCheckSum,
   IN ULONG  iFaultMode);
 
 WIN32KAPI
 PVOID
-DDKAPI
+APIENTRY
 EngFntCacheLookUp(
   IN ULONG  FastCheckSum,
   OUT ULONG  *pulSize);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngFreeMem(
   IN PVOID  Mem);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngFreeModule(
   IN HANDLE  h);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngFreePrivateUserMem(
   IN PDD_SURFACE_LOCAL  psl,
   IN PVOID  pv);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngFreeUserMem(
   IN PVOID  pv);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngGetCurrentCodePage(
   OUT PUSHORT  OemCodePage,
   OUT PUSHORT  AnsiCodePage);
 
 WIN32KAPI
 HANDLE
-DDKAPI
+APIENTRY
 EngGetCurrentProcessId(
   VOID);
 
 WIN32KAPI
 HANDLE
-DDKAPI
+APIENTRY
 EngGetCurrentThreadId(
   VOID);
 
 WIN32KAPI
 LPWSTR
-DDKAPI
+APIENTRY
 EngGetDriverName(
   IN HDEV  hdev);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngGetFileChangeTime(
   IN HANDLE  h,
   OUT LARGE_INTEGER  *pChangeTime);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngGetFilePath(
   IN HANDLE  h,
   OUT WCHAR  (*pDest)[MAX_PATH+1]);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngGetForm(
   IN HANDLE  hPrinter,
   IN LPWSTR  pFormName,
@@ -1688,13 +1692,13 @@ EngGetForm(
 
 WIN32KAPI
 ULONG
-DDKAPI
+APIENTRY
 EngGetLastError(
   VOID);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngGetPrinter(
   IN HANDLE  hPrinter,
   IN DWORD  dwLevel,
@@ -1704,7 +1708,7 @@ EngGetPrinter(
 
 WIN32KAPI
 DWORD
-DDKAPI
+APIENTRY
 EngGetPrinterData(
   IN HANDLE  hPrinter,
   IN LPWSTR  pValueName,
@@ -1715,13 +1719,13 @@ EngGetPrinterData(
 
 WIN32KAPI
 LPWSTR
-DDKAPI
+APIENTRY
 EngGetPrinterDataFileName(
   IN HDEV  hdev);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngGetPrinterDriver(
   IN HANDLE  hPrinter,
   IN LPWSTR  pEnvironment,
@@ -1732,13 +1736,13 @@ EngGetPrinterDriver(
 
 WIN32KAPI
 HANDLE
-DDKAPI
+APIENTRY
 EngGetProcessHandle(
   VOID);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngGetType1FontList(
   IN HDEV  hdev,
   OUT TYPE1_FONT  *pType1Buffer,
@@ -1749,7 +1753,7 @@ EngGetType1FontList(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngGradientFill(
   IN SURFOBJ  *psoDest,
   IN CLIPOBJ  *pco,
@@ -1768,32 +1772,32 @@ EngGradientFill(
 
 WIN32KAPI
 ULONG
-DDKAPI
+APIENTRY
 EngHangNotification(
   IN HDEV  hDev,
   IN PVOID  Reserved);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngInitializeSafeSemaphore(
   OUT ENGSAFESEMAPHORE  *pssem);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngIsSemaphoreOwned(
   IN HSEMAPHORE  hsem);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngIsSemaphoreOwnedByCurrentThread(
   IN HSEMAPHORE  hsem);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngLineTo(
   SURFOBJ  *pso,
   CLIPOBJ  *pco,
@@ -1807,50 +1811,50 @@ EngLineTo(
 
 WIN32KAPI
 HANDLE
-DDKAPI
+APIENTRY
 EngLoadImage(
   IN LPWSTR  pwszDriver);
 
 WIN32KAPI
 HANDLE
-DDKAPI
+APIENTRY
 EngLoadModule(
   IN LPWSTR  pwsz);
 
 WIN32KAPI
 HANDLE
-DDKAPI
+APIENTRY
 EngLoadModuleForWrite(
   IN LPWSTR  pwsz,
   IN ULONG  cjSizeOfModule);
 
 WIN32KAPI
 PDD_SURFACE_LOCAL
-DDKAPI
+APIENTRY
 EngLockDirectDrawSurface(
   IN HANDLE  hSurface);
 
 WIN32KAPI
 DRIVEROBJ*
-DDKAPI
+APIENTRY
 EngLockDriverObj(
   IN HDRVOBJ  hdo);
 
 WIN32KAPI
 SURFOBJ*
-DDKAPI
+APIENTRY
 EngLockSurface(
   IN HSURF  hsurf);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngLpkInstalled(
   VOID);
 
 WIN32KAPI
 PEVENT
-DDKAPI
+APIENTRY
 EngMapEvent(
   IN HDEV  hDev,
   IN HANDLE  hUserObject,
@@ -1860,7 +1864,7 @@ EngMapEvent(
 
 WIN32KAPI
 PVOID
-DDKAPI
+APIENTRY
 EngMapFile(
   IN LPWSTR  pwsz,
   IN ULONG  cjSize,
@@ -1868,7 +1872,7 @@ EngMapFile(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngMapFontFile(
   ULONG_PTR  iFile,
   PULONG  *ppjBuf,
@@ -1876,7 +1880,7 @@ EngMapFontFile(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngMapFontFileFD(
   IN ULONG_PTR  iFile,
   OUT PULONG  *ppjBuf,
@@ -1884,14 +1888,14 @@ EngMapFontFileFD(
 
 WIN32KAPI
 PVOID
-DDKAPI
+APIENTRY
 EngMapModule(
   IN HANDLE  h,
   OUT PULONG  pSize);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngMarkBandingSurface(
   IN HSURF  hsurf);
 
@@ -1901,7 +1905,7 @@ EngMarkBandingSurface(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngModifySurface(
   IN HSURF  hsurf,
   IN HDEV  hdev,
@@ -1914,7 +1918,7 @@ EngModifySurface(
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngMovePointer(
   IN SURFOBJ  *pso,
   IN LONG  x,
@@ -1923,7 +1927,7 @@ EngMovePointer(
 
 WIN32KAPI
 int
-DDKAPI
+APIENTRY
 EngMulDiv(
   IN int  a,
   IN int  b,
@@ -1931,7 +1935,7 @@ EngMulDiv(
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngMultiByteToUnicodeN(
   OUT LPWSTR  UnicodeString,
   IN ULONG  MaxBytesInUnicodeString,
@@ -1941,7 +1945,7 @@ EngMultiByteToUnicodeN(
 
 WIN32KAPI
 INT
-DDKAPI
+APIENTRY
 EngMultiByteToWideChar(
   IN UINT  CodePage,
   OUT LPWSTR  WideCharString,
@@ -1951,7 +1955,7 @@ EngMultiByteToWideChar(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngPaint(
   IN SURFOBJ  *pso,
   IN CLIPOBJ  *pco,
@@ -1961,7 +1965,7 @@ EngPaint(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngPlgBlt(
   IN SURFOBJ  *psoTrg,
   IN SURFOBJ  *psoSrc,
@@ -1977,7 +1981,7 @@ EngPlgBlt(
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngProbeForRead(
   IN PVOID  Address,
   IN ULONG  Length,
@@ -1985,7 +1989,7 @@ EngProbeForRead(
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngProbeForReadAndWrite(
   IN PVOID  Address,
   IN ULONG  Length,
@@ -1998,7 +2002,7 @@ typedef enum _ENG_DEVICE_ATTRIBUTE {
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngQueryDeviceAttribute(
   IN HDEV  hdev,
   IN ENG_DEVICE_ATTRIBUTE  devAttr,
@@ -2009,19 +2013,19 @@ EngQueryDeviceAttribute(
 
 WIN32KAPI
 LARGE_INTEGER
-DDKAPI
+APIENTRY
 EngQueryFileTimeStamp(
   IN LPWSTR  pwsz);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngQueryLocalTime(
   OUT PENG_TIME_FIELDS  ptf);
 
 WIN32KAPI
 ULONG
-DDKAPI
+APIENTRY
 EngQueryPalette(
   IN HPALETTE  hPal,
   OUT ULONG  *piMode,
@@ -2030,13 +2034,13 @@ EngQueryPalette(
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngQueryPerformanceCounter(
   OUT LONGLONG  *pPerformanceCount);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngQueryPerformanceFrequency(
   OUT LONGLONG  *pFrequency);
 
@@ -2053,58 +2057,58 @@ typedef enum _ENG_SYSTEM_ATTRIBUTE {
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngQuerySystemAttribute(
   IN ENG_SYSTEM_ATTRIBUTE  CapNum,
   OUT PDWORD  pCapability);
 
 WIN32KAPI
 LONG
-DDKAPI
+APIENTRY
 EngReadStateEvent(
   IN PEVENT  pEvent);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngReleaseSemaphore(
   IN HSEMAPHORE  hsem);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngRestoreFloatingPointState(
   IN VOID  *pBuffer);
 
 WIN32KAPI
 ULONG
-DDKAPI
+APIENTRY
 EngSaveFloatingPointState(
   OUT VOID  *pBuffer,
   IN ULONG  cjBufferSize);
 
 WIN32KAPI
 HANDLE
-DDKAPI
+APIENTRY
 EngSecureMem(
   IN PVOID  Address,
   IN ULONG  Length);
 
 WIN32KAPI
 LONG
-DDKAPI
+APIENTRY
 EngSetEvent(
   IN PEVENT  pEvent);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngSetLastError(
   IN ULONG  iError);
 
 WIN32KAPI
 ULONG
-DDKAPI
+APIENTRY
 EngSetPointerShape(
   IN SURFOBJ  *pso,
   IN SURFOBJ  *psoMask,
@@ -2119,7 +2123,7 @@ EngSetPointerShape(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngSetPointerTag(
   IN HDEV  hdev,
   IN SURFOBJ  *psoMask,
@@ -2129,7 +2133,7 @@ EngSetPointerTag(
 
 WIN32KAPI
 DWORD
-DDKAPI
+APIENTRY
 EngSetPrinterData(
   IN HANDLE  hPrinter,
   IN LPWSTR  pType,
@@ -2137,11 +2141,11 @@ EngSetPrinterData(
   IN LPBYTE  lpbPrinterData,
   IN DWORD  cjPrinterData);
 
-typedef int DDKCDECLAPI (*SORTCOMP)(const void *pv1, const void *pv2);
+typedef int (CDECL *SORTCOMP)(const void *pv1, const void *pv2);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngSort(
   IN OUT PBYTE  pjBuf,
   IN ULONG  c,
@@ -2150,7 +2154,7 @@ EngSort(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngStretchBlt(
   IN SURFOBJ  *psoDest,
   IN SURFOBJ  *psoSrc,
@@ -2166,7 +2170,7 @@ EngStretchBlt(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngStretchBltROP(
   IN SURFOBJ  *psoDest,
   IN SURFOBJ  *psoSrc,
@@ -2184,7 +2188,7 @@ EngStretchBltROP(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngStrokeAndFillPath(
   IN SURFOBJ  *pso,
   IN PATHOBJ  *ppo,
@@ -2199,7 +2203,7 @@ EngStrokeAndFillPath(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngStrokePath(
   IN SURFOBJ  *pso,
   IN PATHOBJ  *ppo,
@@ -2212,7 +2216,7 @@ EngStrokePath(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngTextOut(
   IN SURFOBJ  *pso,
   IN STROBJ  *pstro,
@@ -2227,7 +2231,7 @@ EngTextOut(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngTransparentBlt(
   IN SURFOBJ  *psoDst,
   IN SURFOBJ  *psoSrc,
@@ -2240,7 +2244,7 @@ EngTransparentBlt(
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngUnicodeToMultiByteN(
   OUT PCHAR  MultiByteString,
   IN ULONG  MaxBytesInMultiByteString,
@@ -2250,68 +2254,68 @@ EngUnicodeToMultiByteN(
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngUnloadImage(
   IN HANDLE  hModule);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngUnlockDirectDrawSurface(
   IN PDD_SURFACE_LOCAL  pSurface);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngUnlockDriverObj(
   IN HDRVOBJ  hdo);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngUnlockSurface(
   IN SURFOBJ  *pso);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngUnmapEvent(
   IN PEVENT  pEvent);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngUnmapFile(
   IN ULONG_PTR  iFile);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngUnmapFontFile(
   ULONG_PTR  iFile);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngUnmapFontFileFD(
   IN ULONG_PTR  iFile);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 EngUnsecureMem(
   IN HANDLE  hSecure);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngWaitForSingleObject(
   IN PEVENT  pEvent,
   IN PLARGE_INTEGER  pTimeOut);
 
 WIN32KAPI
 INT
-DDKAPI
+APIENTRY
 EngWideCharToMultiByte(
   IN UINT  CodePage,
   IN LPWSTR  WideCharString,
@@ -2321,7 +2325,7 @@ EngWideCharToMultiByte(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 EngWritePrinter(
   IN HANDLE  hPrinter,
   IN LPVOID  pBuf,
@@ -2330,172 +2334,172 @@ EngWritePrinter(
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 FLOATOBJ_Add(
   IN OUT PFLOATOBJ  pf,
   IN PFLOATOBJ  pf1);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 FLOATOBJ_AddFloat(
   IN OUT PFLOATOBJ  pf,
   IN FLOATL  f);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 FLOATOBJ_AddLong(
   IN OUT PFLOATOBJ  pf,
   IN LONG  l);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 FLOATOBJ_Div(
   IN OUT PFLOATOBJ  pf,
   IN PFLOATOBJ  pf1);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 FLOATOBJ_DivFloat(
   IN OUT PFLOATOBJ  pf,
   IN FLOATL  f);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 FLOATOBJ_DivLong(
   IN OUT PFLOATOBJ  pf,
   IN LONG  l);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 FLOATOBJ_Equal(
   IN PFLOATOBJ  pf,
   IN PFLOATOBJ  pf1);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 FLOATOBJ_EqualLong(
   IN PFLOATOBJ  pf,
   IN LONG  l);
 
 WIN32KAPI
 LONG
-DDKAPI
+APIENTRY
 FLOATOBJ_GetFloat(
   IN PFLOATOBJ  pf);
 
 WIN32KAPI
 LONG
-DDKAPI
+APIENTRY
 FLOATOBJ_GetLong(
   IN PFLOATOBJ  pf);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 FLOATOBJ_GreaterThan(
   IN PFLOATOBJ  pf,
   IN PFLOATOBJ  pf1);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 FLOATOBJ_GreaterThanLong(
   IN PFLOATOBJ  pf,
   IN LONG  l);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 FLOATOBJ_LessThan(
   IN PFLOATOBJ  pf,
   IN PFLOATOBJ  pf1);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 FLOATOBJ_LessThanLong(
   IN PFLOATOBJ  pf,
   IN LONG  l);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 FLOATOBJ_Mul(
   IN OUT PFLOATOBJ  pf,
   IN PFLOATOBJ  pf1);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 FLOATOBJ_MulFloat(
   IN OUT PFLOATOBJ  pf,
   IN FLOATL  f);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 FLOATOBJ_MulLong(
   IN OUT PFLOATOBJ  pf,
   IN LONG  l);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 FLOATOBJ_Neg(
   IN OUT PFLOATOBJ  pf);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 FLOATOBJ_SetFloat(
   OUT PFLOATOBJ  pf,
   IN FLOATL  f);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 FLOATOBJ_SetLong(
   OUT PFLOATOBJ  pf,
   IN LONG  l);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 FLOATOBJ_Sub(
   IN OUT PFLOATOBJ  pf,
   IN PFLOATOBJ  pf1);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 FLOATOBJ_SubFloat(
   IN OUT PFLOATOBJ  pf,
   IN FLOATL  f);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 FLOATOBJ_SubLong(
   IN OUT PFLOATOBJ  pf,
   IN LONG  l);
 
 WIN32KAPI
 ULONG
-DDKAPI
+APIENTRY
 FONTOBJ_cGetAllGlyphHandles(
   IN FONTOBJ  *pfo,
   OUT HGLYPH  *phg);
 
 WIN32KAPI
 ULONG
-DDKAPI
+APIENTRY
 FONTOBJ_cGetGlyphs(
   IN FONTOBJ  *pfo,
   IN ULONG  iMode,
@@ -2505,19 +2509,19 @@ FONTOBJ_cGetGlyphs(
 
 WIN32KAPI
 FD_GLYPHSET*
-DDKAPI
+APIENTRY
 FONTOBJ_pfdg(
   IN FONTOBJ  *pfo);
 
 WIN32KAPI
 IFIMETRICS*
-DDKAPI
+APIENTRY
 FONTOBJ_pifi(
   IN FONTOBJ  *pfo);
 
 WIN32KAPI
 PBYTE
-DDKAPI
+APIENTRY
 FONTOBJ_pjOpenTypeTablePointer(
   IN FONTOBJ  *pfo,
   IN ULONG  ulTag,
@@ -2525,34 +2529,34 @@ FONTOBJ_pjOpenTypeTablePointer(
 
 WIN32KAPI
 PFD_GLYPHATTR
-DDKAPI
+APIENTRY
 FONTOBJ_pQueryGlyphAttrs(
   IN FONTOBJ  *pfo,
   IN ULONG  iMode);
 
 WIN32KAPI
 PVOID
-DDKAPI
+APIENTRY
 FONTOBJ_pvTrueTypeFontFile(
   IN FONTOBJ  *pfo,
   OUT ULONG  *pcjFile);
 
 WIN32KAPI
 LPWSTR
-DDKAPI
+APIENTRY
 FONTOBJ_pwszFontFilePaths(
   IN FONTOBJ  *pfo,
   OUT ULONG  *pcwc);
 
 WIN32KAPI
 XFORMOBJ*
-DDKAPI
+APIENTRY
 FONTOBJ_pxoGetXform(
   IN FONTOBJ  *pfo);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 FONTOBJ_vGetInfo(
   IN FONTOBJ  *pfo,
   IN ULONG  cjSize,
@@ -2560,7 +2564,7 @@ FONTOBJ_vGetInfo(
 
 WIN32KAPI
 FLATPTR
-DDKAPI
+APIENTRY
 HeapVidMemAllocAligned(
   IN LPVIDMEM  lpVidMem,
   IN DWORD  dwWidth,
@@ -2570,7 +2574,7 @@ HeapVidMemAllocAligned(
 
 WIN32KAPI
 LONG
-DDKAPI
+APIENTRY
 HT_ComputeRGBGammaTable(
   IN USHORT  GammaTableEntries,
   IN USHORT  GammaTableType,
@@ -2581,7 +2585,7 @@ HT_ComputeRGBGammaTable(
 
 WIN32KAPI
 LONG
-DDKAPI
+APIENTRY
 HT_Get8BPPFormatPalette(
   OUT LPPALETTEENTRY  pPaletteEntry,
   IN USHORT  RedGamma,
@@ -2590,7 +2594,7 @@ HT_Get8BPPFormatPalette(
 
 WIN32KAPI
 LONG
-DDKAPI
+APIENTRY
 HT_Get8BPPMaskPalette(
   IN OUT LPPALETTEENTRY  pPaletteEntry,
   IN BOOL  Use8BPPMaskPal,
@@ -2601,14 +2605,14 @@ HT_Get8BPPMaskPalette(
 
 WIN32KAPI
 LONG
-DDKAPI
+APIENTRY
 HTUI_DeviceColorAdjustment(
   IN LPSTR  pDeviceName,
   OUT PDEVHTADJDATA  pDevHTAdjData);
 
 WIN32KAPI
 ULONG
-DDKAPI
+APIENTRY
 PALOBJ_cGetColors(
   IN PALOBJ  *ppalo,
   IN ULONG  iStart,
@@ -2617,20 +2621,20 @@ PALOBJ_cGetColors(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 PATHOBJ_bCloseFigure(
   IN PATHOBJ  *ppo);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 PATHOBJ_bEnum(
   IN PATHOBJ  *ppo,
   OUT PATHDATA  *ppd);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 PATHOBJ_bEnumClipLines(
   IN PATHOBJ  *ppo,
   IN ULONG  cb,
@@ -2638,14 +2642,14 @@ PATHOBJ_bEnumClipLines(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 PATHOBJ_bMoveTo(
   IN PATHOBJ  *ppo,
   IN POINTFIX  ptfx);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 PATHOBJ_bPolyBezierTo(
   IN PATHOBJ  *ppo,
   IN POINTFIX  *pptfx,
@@ -2653,7 +2657,7 @@ PATHOBJ_bPolyBezierTo(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 PATHOBJ_bPolyLineTo(
   IN PATHOBJ  *ppo,
   IN POINTFIX  *pptfx,
@@ -2661,13 +2665,13 @@ PATHOBJ_bPolyLineTo(
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 PATHOBJ_vEnumStart(
   IN PATHOBJ  *ppo);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 PATHOBJ_vEnumStartClipLines(
   IN PATHOBJ  *ppo,
   IN CLIPOBJ  *pco,
@@ -2676,14 +2680,14 @@ PATHOBJ_vEnumStartClipLines(
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 PATHOBJ_vGetBounds(
   IN PATHOBJ  *ppo,
   OUT PRECTFX  prectfx);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 STROBJ_bEnum(
   IN STROBJ  *pstro,
   OUT ULONG  *pc,
@@ -2691,7 +2695,7 @@ STROBJ_bEnum(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 STROBJ_bEnumPositionsOnly(
   IN STROBJ  *pstro,
   OUT ULONG  *pc,
@@ -2699,7 +2703,7 @@ STROBJ_bEnumPositionsOnly(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 STROBJ_bGetAdvanceWidths(
   IN STROBJ  *pso,
   IN ULONG  iFirst,
@@ -2708,38 +2712,38 @@ STROBJ_bGetAdvanceWidths(
 
 WIN32KAPI
 DWORD
-DDKAPI
+APIENTRY
 STROBJ_dwGetCodePage(
   IN STROBJ  *pstro);
 
 WIN32KAPI
 FIX
-DDKAPI
+APIENTRY
 STROBJ_fxBreakExtra(
   IN STROBJ  *pstro);
 
 WIN32KAPI
 FIX
-DDKAPI
+APIENTRY
 STROBJ_fxCharacterExtra(
   IN STROBJ  *pstro);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 STROBJ_vEnumStart(
   IN STROBJ  *pstro);
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 VidMemFree(
   IN LPVMEMHEAP  pvmh,
   IN FLATPTR  ptr);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 WNDOBJ_bEnum(
   IN WNDOBJ  *pwo,
   IN ULONG  cj,
@@ -2747,7 +2751,7 @@ WNDOBJ_bEnum(
 
 WIN32KAPI
 ULONG
-DDKAPI
+APIENTRY
 WNDOBJ_cEnumStart(
   IN WNDOBJ  *pwo,
   IN ULONG  iType,
@@ -2756,7 +2760,7 @@ WNDOBJ_cEnumStart(
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 WNDOBJ_vSetConsumer(
   IN WNDOBJ  *pwo,
   IN PVOID  pvConsumer);
@@ -2769,7 +2773,7 @@ WNDOBJ_vSetConsumer(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 XFORMOBJ_bApplyXform(
   IN XFORMOBJ  *pxo,
   IN ULONG  iMode,
@@ -2779,14 +2783,14 @@ XFORMOBJ_bApplyXform(
 
 WIN32KAPI
 ULONG
-DDKAPI
+APIENTRY
 XFORMOBJ_iGetFloatObjXform(
   IN XFORMOBJ  *pxo,
   OUT FLOATOBJ_XFORM  *pxfo);
 
 WIN32KAPI
 ULONG
-DDKAPI
+APIENTRY
 XFORMOBJ_iGetXform(
   IN XFORMOBJ  *pxo,
   OUT XFORML  *pxform);
@@ -2800,7 +2804,7 @@ XFORMOBJ_iGetXform(
 
 WIN32KAPI
 ULONG
-DDKAPI
+APIENTRY
 XLATEOBJ_cGetPalette(
   IN XLATEOBJ  *pxlo,
   IN ULONG  iPal,
@@ -2809,20 +2813,20 @@ XLATEOBJ_cGetPalette(
 
 WIN32KAPI
 HANDLE
-DDKAPI
+APIENTRY
 XLATEOBJ_hGetColorTransform(
   IN XLATEOBJ  *pxlo);
 
 WIN32KAPI
 ULONG
-DDKAPI
+APIENTRY
 XLATEOBJ_iXlate(
   IN XLATEOBJ  *pxlo,
   IN ULONG  iColor);
 
 WIN32KAPI
 ULONG*
-DDKAPI
+APIENTRY
 XLATEOBJ_piVector(
   IN XLATEOBJ  *pxlo);
 
@@ -2831,7 +2835,7 @@ XLATEOBJ_piVector(
 /* Graphics Driver Functions */
 
 BOOL
-DDKAPI
+APIENTRY
 DrvAlphaBlend(
   IN SURFOBJ  *psoDest,
   IN SURFOBJ  *psoSrc,
@@ -2842,13 +2846,13 @@ DrvAlphaBlend(
   IN BLENDOBJ  *pBlendObj);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvAssertMode(
   IN DHPDEV  dhpdev,
   IN BOOL  bEnable);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvBitBlt(
   IN SURFOBJ  *psoTrg,
   IN SURFOBJ  *psoSrc,
@@ -2863,13 +2867,13 @@ DrvBitBlt(
   IN ROP4  rop4);
 
 VOID
-DDKAPI
+APIENTRY
 DrvCompletePDEV(
   IN DHPDEV  dhpdev,
   IN HDEV  hdev);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvCopyBits(
   IN SURFOBJ  *psoDest,
   IN SURFOBJ  *psoSrc,
@@ -2879,25 +2883,25 @@ DrvCopyBits(
   IN POINTL  *pptlSrc);
 
 HBITMAP
-DDKAPI
+APIENTRY
 DrvCreateDeviceBitmap(
   IN DHPDEV  dhpdev,
   IN SIZEL  sizl,
   IN ULONG  iFormat);
 
 VOID
-DDKAPI
+APIENTRY
 DrvDeleteDeviceBitmap(
   IN DHSURF  dhsurf);
 
 HBITMAP
-DDKAPI
+APIENTRY
 DrvDeriveSurface(
   DD_DIRECTDRAW_GLOBAL  *pDirectDraw,
   DD_SURFACE_LOCAL  *pSurface);
 
 LONG
-DDKAPI
+APIENTRY
 DrvDescribePixelFormat(
   IN DHPDEV  dhpdev,
   IN LONG  iPixelFormat,
@@ -2905,22 +2909,22 @@ DrvDescribePixelFormat(
   OUT PIXELFORMATDESCRIPTOR  *ppfd);
 
 VOID
-DDKAPI
+APIENTRY
 DrvDestroyFont(
   IN FONTOBJ  *pfo);
 
 VOID
-DDKAPI
+APIENTRY
 DrvDisableDriver(
   VOID);
 
 VOID
-DDKAPI
+APIENTRY
 DrvDisablePDEV(
   IN DHPDEV  dhpdev);
 
 VOID
-DDKAPI
+APIENTRY
 DrvDisableSurface(
   IN DHPDEV  dhpdev);
 
@@ -2928,7 +2932,7 @@ DrvDisableSurface(
 #define DM_MONOCHROME                     0x00000002
 
 ULONG
-DDKAPI
+APIENTRY
 DrvDitherColor(
   IN DHPDEV  dhpdev,
   IN ULONG  iMode,
@@ -2936,7 +2940,7 @@ DrvDitherColor(
   OUT ULONG  *pul);
 
 ULONG
-DDKAPI
+APIENTRY
 DrvDrawEscape(
   IN SURFOBJ  *pso,
   IN ULONG  iEsc,
@@ -2946,14 +2950,14 @@ DrvDrawEscape(
   IN PVOID  pvIn);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvEnableDriver(
   IN ULONG  iEngineVersion,
   IN ULONG  cj,
   OUT DRVENABLEDATA  *pded);
 
 DHPDEV
-DDKAPI
+APIENTRY
 DrvEnablePDEV(
   IN DEVMODEW  *pdm,
   IN LPWSTR  pwszLogAddress,
@@ -2968,7 +2972,7 @@ DrvEnablePDEV(
   IN HANDLE  hDriver);
 
 HSURF
-DDKAPI
+APIENTRY
 DrvEnableSurface(
   IN DHPDEV  dhpdev);
 
@@ -2976,13 +2980,13 @@ DrvEnableSurface(
 #define ED_ABORTDOC                       0x00000001
 
 BOOL
-DDKAPI
+APIENTRY
 DrvEndDoc(
   IN SURFOBJ  *pso,
   IN FLONG  fl);
 
 ULONG
-DDKAPI
+APIENTRY
 DrvEscape(
   IN SURFOBJ  *pso,
   IN ULONG  iEsc,
@@ -2992,7 +2996,7 @@ DrvEscape(
   OUT PVOID  pvOut);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvFillPath(
   IN SURFOBJ  *pso,
   IN PATHOBJ  *ppo,
@@ -3003,7 +3007,7 @@ DrvFillPath(
   IN FLONG  flOptions);
 
 ULONG
-DDKAPI
+APIENTRY
 DrvFontManagement(
   IN SURFOBJ  *pso,
   IN FONTOBJ  *pfo,
@@ -3014,7 +3018,7 @@ DrvFontManagement(
   OUT PVOID  pvOut);
 
 VOID
-DDKAPI
+APIENTRY
 DrvFree(
   IN PVOID  pv,
   IN ULONG_PTR  id);
@@ -3025,26 +3029,26 @@ DrvFree(
 #define FO_PATHOBJ                        2L
 
 ULONG
-DDKAPI
+APIENTRY
 DrvGetGlyphMode(
   IN DHPDEV  dhpdev,
   IN FONTOBJ  *pfo);
 
 ULONG
-DDKAPI
+APIENTRY
 DrvGetModes(
   IN HANDLE  hDriver,
   IN ULONG  cjSize,
   OUT DEVMODEW  *pdm);
 
 PVOID
-DDKAPI
+APIENTRY
 DrvGetTrueTypeFile(
   IN ULONG_PTR  iFile,
   IN ULONG  *pcj);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvGradientFill(
   IN SURFOBJ  *psoDest,
   IN CLIPOBJ  *pco,
@@ -3058,7 +3062,7 @@ DrvGradientFill(
   IN ULONG  ulMode);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvIcmCheckBitmapBits(
   IN DHPDEV  dhpdev,
   IN HANDLE  hColorTransform,
@@ -3066,7 +3070,7 @@ DrvIcmCheckBitmapBits(
   OUT PBYTE  paResults);
 
 HANDLE
-DDKAPI
+APIENTRY
 DrvIcmCreateColorTransform(
   IN DHPDEV  dhpdev,
   IN LPLOGCOLORSPACEW  pLogColorSpace,
@@ -3079,7 +3083,7 @@ DrvIcmCreateColorTransform(
   IN DWORD  dwReserved);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvIcmDeleteColorTransform(
   IN DHPDEV  dhpdev,
   IN HANDLE  hcmXform);
@@ -3089,14 +3093,14 @@ DrvIcmDeleteColorTransform(
 #define IGRF_RGB_256WORDS                 0x00000001
 
 BOOL
-DDKAPI
+APIENTRY
 DrvIcmSetDeviceGammaRamp(
   IN DHPDEV  dhpdev,
   IN ULONG  iFormat,
   IN LPVOID  lpRamp);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvLineTo(
   SURFOBJ  *pso,
   CLIPOBJ  *pco,
@@ -3109,7 +3113,7 @@ DrvLineTo(
   MIX  mix);
 
 ULONG_PTR
-DDKAPI
+APIENTRY
 DrvLoadFontFile(
   ULONG  cFiles,
   ULONG_PTR  *piFile,
@@ -3120,7 +3124,7 @@ DrvLoadFontFile(
   ULONG  ulFastCheckSum);
 
 VOID
-DDKAPI
+APIENTRY
 DrvMovePointer(
   IN SURFOBJ  *pso,
   IN LONG  x,
@@ -3128,20 +3132,20 @@ DrvMovePointer(
   IN RECTL  *prcl);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvNextBand(
   IN SURFOBJ  *pso,
   IN POINTL  *pptl);
 
 VOID
-DDKAPI
+APIENTRY
 DrvNotify(
   IN SURFOBJ  *pso,
   IN ULONG  iType,
   IN PVOID  pvData);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvOffset(
   IN SURFOBJ  *pso,
   IN LONG  x,
@@ -3149,7 +3153,7 @@ DrvOffset(
   IN FLONG  flReserved);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvPaint(
   IN SURFOBJ  *pso,
   IN CLIPOBJ  *pco,
@@ -3158,7 +3162,7 @@ DrvPaint(
   IN MIX  mix);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvPlgBlt(
   IN SURFOBJ  *psoTrg,
   IN SURFOBJ  *psoSrc,
@@ -3177,7 +3181,7 @@ DrvPlgBlt(
 #define QAW_GETEASYWIDTHS                 1
 
 BOOL
-DDKAPI
+APIENTRY
 DrvQueryAdvanceWidths(
   IN DHPDEV  dhpdev,
   IN FONTOBJ  *pfo,
@@ -3191,7 +3195,7 @@ DrvQueryAdvanceWidths(
 #define QDS_CHECKPNGFORMAT                0x00000001
 
 BOOL
-DDKAPI
+APIENTRY
 DrvQueryDeviceSupport(
   SURFOBJ  *pso,
   XLATEOBJ  *pxlo,
@@ -3206,7 +3210,7 @@ DrvQueryDeviceSupport(
 #define DRVQUERY_USERMODE                 0x00000001
 
 BOOL
-DDKAPI
+APIENTRY
 DrvQueryDriverInfo(
   DWORD  dwMode,
   PVOID  pBuffer,
@@ -3214,7 +3218,7 @@ DrvQueryDriverInfo(
   PDWORD  pcbNeeded);
 
 PIFIMETRICS
-DDKAPI
+APIENTRY
 DrvQueryFont(
   IN DHPDEV  dhpdev,
   IN ULONG_PTR  iFile,
@@ -3229,7 +3233,7 @@ DrvQueryFont(
 #define QC_FONTDRIVERCAPS (QC_OUTLINES | QC_1BIT | QC_4BIT)
 
 LONG
-DDKAPI
+APIENTRY
 DrvQueryFontCaps(
   IN ULONG  culCaps,
   OUT ULONG  *pulCaps);
@@ -3247,7 +3251,7 @@ DrvQueryFontCaps(
 #define QFD_TT_MONO_BITMAP QFD_TT_GRAY1_BITMAP
 
 LONG
-DDKAPI
+APIENTRY
 DrvQueryFontData(
   IN DHPDEV  dhpdev,
   IN FONTOBJ  *pfo,
@@ -3262,7 +3266,7 @@ DrvQueryFontData(
 #define QFF_NUMFACES                      0x00000002
 
 LONG
-DDKAPI
+APIENTRY
 DrvQueryFontFile(
   IN ULONG_PTR  iFile,
   IN ULONG  ulMode,
@@ -3276,7 +3280,7 @@ DrvQueryFontFile(
 #define QFT_GLYPHSET                      3L
 
 PVOID
-DDKAPI
+APIENTRY
 DrvQueryFontTree(
   IN DHPDEV  dhpdev,
   IN ULONG_PTR  iFile,
@@ -3285,13 +3289,13 @@ DrvQueryFontTree(
   IN ULONG_PTR  *pid);
 
 PFD_GLYPHATTR
-DDKAPI
+APIENTRY
 DrvQueryGlyphAttrs(
   IN FONTOBJ  *pfo,
   IN ULONG  iMode);
 
 ULONG
-DDKAPI
+APIENTRY
 DrvQueryPerBandInfo(
   IN SURFOBJ  *pso,
   IN OUT PERBANDINFO  *pbi);
@@ -3302,7 +3306,7 @@ DrvQueryPerBandInfo(
 #define TTO_UNHINTED                      0x00000004
 
 LONG
-DDKAPI
+APIENTRY
 DrvQueryTrueTypeOutline(
   IN DHPDEV  dhpdev,
   IN FONTOBJ  *pfo,
@@ -3313,7 +3317,7 @@ DrvQueryTrueTypeOutline(
   OUT TTPOLYGONHEADER  *ppoly);
 
 LONG
-DDKAPI
+APIENTRY
 DrvQueryTrueTypeTable(
   IN ULONG_PTR  iFile,
   IN ULONG  ulFont,
@@ -3330,7 +3334,7 @@ DrvQueryTrueTypeTable(
 #define HS_DDI_MAX                        6
 
 BOOL
-DDKAPI
+APIENTRY
 DrvRealizeBrush(
   IN BRUSHOBJ  *pbo,
   IN SURFOBJ  *psoTarget,
@@ -3344,13 +3348,13 @@ DrvRealizeBrush(
 #define DRD_ERROR                         1
 
 ULONG
-DDKAPI
+APIENTRY
 DrvResetDevice(
   IN DHPDEV dhpdev,
   IN PVOID Reserved);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvResetPDEV(
   DHPDEV  dhpdevOld,
   DHPDEV  dhpdevNew);
@@ -3361,7 +3365,7 @@ DrvResetPDEV(
 #define SS_FREE                           0x00000002
 
 ULONG_PTR
-DDKAPI
+APIENTRY
 DrvSaveScreenBits(
   IN SURFOBJ  *pso,
   IN ULONG  iMode,
@@ -3369,12 +3373,12 @@ DrvSaveScreenBits(
   IN RECTL  *prcl);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvSendPage(
   IN SURFOBJ  *pso);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvSetPalette(
   IN DHPDEV  dhpdev,
   IN PALOBJ  *ppalo,
@@ -3383,7 +3387,7 @@ DrvSetPalette(
   IN ULONG  cColors);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvSetPixelFormat(
   IN SURFOBJ  *pso,
   IN LONG  iPixelFormat,
@@ -3406,7 +3410,7 @@ DrvSetPixelFormat(
 #define SPS_FREQMASK                      0x000FF000L
 
 ULONG
-DDKAPI
+APIENTRY
 DrvSetPointerShape(
   IN SURFOBJ  *pso,
   IN SURFOBJ  *psoMask,
@@ -3420,25 +3424,25 @@ DrvSetPointerShape(
   IN FLONG  fl);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvStartBanding(
   IN SURFOBJ  *pso,
   IN POINTL  *pptl);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvStartDoc(
   IN SURFOBJ  *pso,
   IN LPWSTR  pwszDocName,
   IN DWORD  dwJobId);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvStartPage(
   IN SURFOBJ  *pso);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvStretchBlt(
   IN SURFOBJ  *psoDest,
   IN SURFOBJ  *psoSrc,
@@ -3453,7 +3457,7 @@ DrvStretchBlt(
   IN ULONG  iMode);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvStretchBltROP(
   IN SURFOBJ  *psoDest,
   IN SURFOBJ  *psoSrc,
@@ -3470,7 +3474,7 @@ DrvStretchBltROP(
   IN DWORD  rop4);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvStrokeAndFillPath(
   IN SURFOBJ  *pso,
   IN PATHOBJ  *ppo,
@@ -3484,7 +3488,7 @@ DrvStrokeAndFillPath(
   IN FLONG  flOptions);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvStrokePath(
   IN SURFOBJ  *pso,
   IN PATHOBJ  *ppo,
@@ -3496,13 +3500,13 @@ DrvStrokePath(
   IN MIX  mix);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvSwapBuffers(
   IN SURFOBJ  *pso,
   IN WNDOBJ  *pwo);
 
 VOID
-DDKAPI
+APIENTRY
 DrvSynchronize(
   IN DHPDEV  dhpdev,
   IN RECTL  *prcl);
@@ -3512,14 +3516,14 @@ DrvSynchronize(
 #define DSS_FLUSH_EVENT                   0x00000002
 
 VOID
-DDKAPI
+APIENTRY
 DrvSynchronizeSurface(
   IN SURFOBJ  *pso,
   IN RECTL  *prcl,
   IN FLONG  fl);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvTextOut(
   IN SURFOBJ  *pso,
   IN STROBJ  *pstro,
@@ -3533,7 +3537,7 @@ DrvTextOut(
   IN MIX  mix);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvTransparentBlt(
   IN SURFOBJ  *psoDst,
   IN SURFOBJ  *psoSrc,
@@ -3545,7 +3549,7 @@ DrvTransparentBlt(
   IN ULONG  ulReserved);
 
 BOOL
-DDKAPI
+APIENTRY
 DrvUnloadFontFile(
   IN ULONG_PTR  iFile);
 
@@ -3560,13 +3564,13 @@ DrvUnloadFontFile(
 #define WOC_SPRITE_OVERLAP                0x00000080
 #define WOC_SPRITE_NO_OVERLAP             0x00000100
 
-typedef VOID DDKAPI
+typedef VOID APIENTRY
 (CALLBACK * WNDOBJCHANGEPROC)(
   WNDOBJ  *pwo,
   FLONG  fl);
 
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvAlphaBlend)(
   IN SURFOBJ  *psoDest,
   IN SURFOBJ  *psoSrc,
@@ -3576,12 +3580,12 @@ typedef BOOL DDKAPI
   IN RECTL  *prclSrc,
   IN BLENDOBJ  *pBlendObj);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvAssertMode)(
   IN DHPDEV  dhpdev,
   IN BOOL  bEnable);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvBitBlt)(
   IN SURFOBJ  *psoTrg,
   IN SURFOBJ  *psoSrc,
@@ -3595,12 +3599,12 @@ typedef BOOL DDKAPI
   IN POINTL  *pptlBrush,
   IN ROP4  rop4);
 
-typedef VOID DDKAPI
+typedef VOID APIENTRY
 (*PFN_DrvCompletePDEV)(
   IN DHPDEV  dhpdev,
   IN HDEV  hdev);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvCopyBits)(
   IN SURFOBJ  *psoDest,
   IN SURFOBJ  *psoSrc,
@@ -3609,52 +3613,52 @@ typedef BOOL DDKAPI
   IN RECTL  *prclDest,
   IN POINTL  *pptlSrc);
 
-typedef HBITMAP DDKAPI
+typedef HBITMAP APIENTRY
 (*PFN_DrvCreateDeviceBitmap)(
   IN DHPDEV  dhpdev,
   IN SIZEL  sizl,
   IN ULONG  iFormat);
 
-typedef VOID DDKAPI
+typedef VOID APIENTRY
 (*PFN_DrvDeleteDeviceBitmap)(
   IN DHSURF  dhsurf);
 
-typedef HBITMAP DDKAPI
+typedef HBITMAP APIENTRY
 (*PFN_DrvDeriveSurface)(
   DD_DIRECTDRAW_GLOBAL  *pDirectDraw,
   DD_SURFACE_LOCAL  *pSurface);
 
-typedef LONG DDKAPI
+typedef LONG APIENTRY
 (*PFN_DrvDescribePixelFormat)(
   IN DHPDEV  dhpdev,
   IN LONG  iPixelFormat,
   IN ULONG  cjpfd,
   OUT PIXELFORMATDESCRIPTOR  *ppfd);
 
-typedef VOID DDKAPI
+typedef VOID APIENTRY
 (*PFN_DrvDestroyFont)(
   IN FONTOBJ  *pfo);
 
-typedef VOID DDKAPI
+typedef VOID APIENTRY
 (*PFN_DrvDisableDriver)(
   VOID);
 
-typedef VOID DDKAPI
+typedef VOID APIENTRY
 (*PFN_DrvDisablePDEV)(
   IN DHPDEV  dhpdev);
 
-typedef VOID DDKAPI
+typedef VOID APIENTRY
 (*PFN_DrvDisableSurface)(
   IN DHPDEV  dhpdev);
 
-typedef ULONG DDKAPI
+typedef ULONG APIENTRY
 (*PFN_DrvDitherColor)(
   IN DHPDEV  dhpdev,
   IN ULONG  iMode,
   IN ULONG  rgb,
   OUT ULONG  *pul);
 
-typedef ULONG DDKAPI
+typedef ULONG APIENTRY
 (*PFN_DrvDrawEscape)(
   IN SURFOBJ  *pso,
   IN ULONG  iEsc,
@@ -3663,13 +3667,13 @@ typedef ULONG DDKAPI
   IN ULONG  cjIn,
   IN PVOID  pvIn);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvEnableDriver)(
   IN ULONG  iEngineVersion,
   IN ULONG  cj,
   OUT DRVENABLEDATA  *pded);
 #if 0
-typedef DHPDEV DDKAPI
+typedef DHPDEV APIENTRY
 (*PFN_DrvEnablePDEV)(
   IN DEVMODEW  *pdm,
   IN LPWSTR  pwszLogAddress,
@@ -3683,16 +3687,16 @@ typedef DHPDEV DDKAPI
   IN LPWSTR  pwszDeviceName,
   IN HANDLE  hDriver);
 #endif
-typedef HSURF DDKAPI
+typedef HSURF APIENTRY
 (*PFN_DrvEnableSurface)(
   IN DHPDEV  dhpdev);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvEndDoc)(
   IN SURFOBJ  *pso,
   IN FLONG  fl);
 
-typedef ULONG DDKAPI
+typedef ULONG APIENTRY
 (*PFN_DrvEscape)(
   IN SURFOBJ  *pso,
   IN ULONG  iEsc,
@@ -3701,7 +3705,7 @@ typedef ULONG DDKAPI
   IN ULONG  cjOut,
   OUT PVOID  pvOut);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvFillPath)(
   IN SURFOBJ  *pso,
   IN PATHOBJ  *ppo,
@@ -3711,7 +3715,7 @@ typedef BOOL DDKAPI
   IN MIX  mix,
   IN FLONG  flOptions);
 
-typedef ULONG DDKAPI
+typedef ULONG APIENTRY
 (*PFN_DrvFontManagement)(
   IN SURFOBJ  *pso,
   IN FONTOBJ  *pfo,
@@ -3721,28 +3725,28 @@ typedef ULONG DDKAPI
   IN ULONG  cjOut,
   OUT PVOID  pvOut);
 
-typedef VOID DDKAPI
+typedef VOID APIENTRY
 (*PFN_DrvFree)(
   IN PVOID  pv,
   IN ULONG_PTR  id);
 
-typedef ULONG DDKAPI
+typedef ULONG APIENTRY
 (*PFN_DrvGetGlyphMode)(
   IN DHPDEV  dhpdev,
   IN FONTOBJ  *pfo);
 
-typedef ULONG DDKAPI
+typedef ULONG APIENTRY
 (*PFN_DrvGetModes)(
   IN HANDLE  hDriver,
   IN ULONG  cjSize,
   OUT DEVMODEW  *pdm);
 
-typedef PVOID DDKAPI
+typedef PVOID APIENTRY
 (*PFN_DrvGetTrueTypeFile)(
   IN ULONG_PTR  iFile,
   IN ULONG  *pcj);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvGradientFill)(
   IN SURFOBJ  *psoDest,
   IN CLIPOBJ  *pco,
@@ -3755,14 +3759,14 @@ typedef BOOL DDKAPI
   IN POINTL  *pptlDitherOrg,
   IN ULONG  ulMode);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvIcmCheckBitmapBits)(
   IN DHPDEV  dhpdev,
   IN HANDLE  hColorTransform,
   IN SURFOBJ  *pso,
   OUT PBYTE  paResults);
 
-typedef HANDLE DDKAPI
+typedef HANDLE APIENTRY
 (*PFN_DrvIcmCreateColorTransform)(
   IN DHPDEV  dhpdev,
   IN LPLOGCOLORSPACEW  pLogColorSpace,
@@ -3774,18 +3778,18 @@ typedef HANDLE DDKAPI
   IN ULONG  cjTargetProfile,
   IN DWORD  dwReserved);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvIcmDeleteColorTransform)(
   IN DHPDEV  dhpdev,
   IN HANDLE  hcmXform);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvIcmSetDeviceGammaRamp)(
   IN DHPDEV  dhpdev,
   IN ULONG  iFormat,
   IN LPVOID  lpRamp);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvLineTo)(
   SURFOBJ  *pso,
   CLIPOBJ  *pco,
@@ -3797,7 +3801,7 @@ typedef BOOL DDKAPI
   RECTL  *prclBounds,
   MIX  mix);
 
-typedef ULONG_PTR DDKAPI
+typedef ULONG_PTR APIENTRY
 (*PFN_DrvLoadFontFile)(
   ULONG  cFiles,
   ULONG_PTR  *piFile,
@@ -3807,32 +3811,32 @@ typedef ULONG_PTR DDKAPI
   ULONG  ulLangID,
   ULONG  ulFastCheckSum);
 
-typedef VOID DDKAPI
+typedef VOID APIENTRY
 (*PFN_DrvMovePointer)(
   IN SURFOBJ  *pso,
   IN LONG  x,
   IN LONG  y,
   IN RECTL  *prcl);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvNextBand)(
   IN SURFOBJ  *pso,
   IN POINTL  *pptl);
 
-typedef VOID DDKAPI
+typedef VOID APIENTRY
 (*PFN_DrvNotify)(
   IN SURFOBJ  *pso,
   IN ULONG  iType,
   IN PVOID  pvData);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvOffset)(
   IN SURFOBJ  *pso,
   IN LONG  x,
   IN LONG  y,
   IN FLONG  flReserved);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvPaint)(
   IN SURFOBJ  *pso,
   IN CLIPOBJ  *pco,
@@ -3840,7 +3844,7 @@ typedef BOOL DDKAPI
   IN POINTL  *pptlBrushOrg,
   IN MIX  mix);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvPlgBlt)(
   IN SURFOBJ  *psoTrg,
   IN SURFOBJ  *psoSrc,
@@ -3854,7 +3858,7 @@ typedef BOOL DDKAPI
   IN POINTL  *pptl,
   IN ULONG  iMode);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvQueryAdvanceWidths)(
   IN DHPDEV  dhpdev,
   IN FONTOBJ  *pfo,
@@ -3863,7 +3867,7 @@ typedef BOOL DDKAPI
   OUT PVOID  pvWidths,
   IN ULONG  cGlyphs);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvQueryDeviceSupport)(
   SURFOBJ  *pso,
   XLATEOBJ  *pxlo,
@@ -3874,26 +3878,26 @@ typedef BOOL DDKAPI
   ULONG  cjOut,
   PVOID  pvOut);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvQueryDriverInfo)(
   DWORD  dwMode,
   PVOID  pBuffer,
   DWORD  cbBuf,
   PDWORD  pcbNeeded);
 
-typedef PIFIMETRICS DDKAPI
+typedef PIFIMETRICS APIENTRY
 (*PFN_DrvQueryFont)(
   IN DHPDEV  dhpdev,
   IN ULONG_PTR  iFile,
   IN ULONG  iFace,
   IN ULONG_PTR  *pid);
 
-typedef LONG DDKAPI
+typedef LONG APIENTRY
 (*PFN_DrvQueryFontCaps)(
   IN ULONG  culCaps,
   OUT ULONG  *pulCaps);
 
-typedef LONG DDKAPI
+typedef LONG APIENTRY
 (*PFN_DrvQueryFontData)(
   IN DHPDEV  dhpdev,
   IN FONTOBJ  *pfo,
@@ -3903,14 +3907,14 @@ typedef LONG DDKAPI
   IN OUT PVOID  pv,
   IN ULONG  cjSize);
 
-typedef LONG DDKAPI
+typedef LONG APIENTRY
 (*PFN_DrvQueryFontFile)(
   IN ULONG_PTR  iFile,
   IN ULONG  ulMode,
   IN ULONG  cjBuf,
   IN ULONG  *pulBuf);
 
-typedef PVOID DDKAPI
+typedef PVOID APIENTRY
 (*PFN_DrvQueryFontTree)(
   IN DHPDEV  dhpdev,
   IN ULONG_PTR  iFile,
@@ -3918,17 +3922,17 @@ typedef PVOID DDKAPI
   IN ULONG  iMode,
   IN ULONG_PTR  *pid);
 
-typedef PFD_GLYPHATTR DDKAPI
+typedef PFD_GLYPHATTR APIENTRY
 (*PFN_DrvQueryGlyphAttrs)(
   IN FONTOBJ  *pfo,
   IN ULONG  iMode);
 
-typedef ULONG DDKAPI
+typedef ULONG APIENTRY
 (*PFN_DrvQueryPerBandInfo)(
   IN SURFOBJ  *pso,
   IN OUT PERBANDINFO  *pbi);
 
-typedef LONG DDKAPI
+typedef LONG APIENTRY
 (*PFN_DrvQueryTrueTypeOutline)(
   IN DHPDEV  dhpdev,
   IN FONTOBJ  *pfo,
@@ -3938,7 +3942,7 @@ typedef LONG DDKAPI
   IN ULONG  cjBuf,
   OUT TTPOLYGONHEADER  *ppoly);
 
-typedef LONG DDKAPI
+typedef LONG APIENTRY
 (*PFN_DrvQueryTrueTypeTable)(
   IN ULONG_PTR  iFile,
   IN ULONG  ulFont,
@@ -3949,7 +3953,7 @@ typedef LONG DDKAPI
   OUT PBYTE  *ppjTable,
   OUT ULONG *pcjTable);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvRealizeBrush)(
   IN BRUSHOBJ  *pbo,
   IN SURFOBJ  *psoTarget,
@@ -3958,28 +3962,28 @@ typedef BOOL DDKAPI
   IN XLATEOBJ  *pxlo,
   IN ULONG  iHatch);
 
-typedef ULONG DDKAPI
+typedef ULONG APIENTRY
 (*PFN_DrvResetDevice)(
   IN DHPDEV dhpdev,
   IN PVOID Reserved);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvResetPDEV)(
   DHPDEV  dhpdevOld,
   DHPDEV  dhpdevNew);
 
-typedef ULONG_PTR DDKAPI
+typedef ULONG_PTR APIENTRY
 (*PFN_DrvSaveScreenBits)(
   IN SURFOBJ  *pso,
   IN ULONG  iMode,
   IN ULONG_PTR  ident,
   IN RECTL  *prcl);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvSendPage)(
   IN SURFOBJ  *pso);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvSetPalette)(
   IN DHPDEV  dhpdev,
   IN PALOBJ  *ppalo,
@@ -3987,13 +3991,13 @@ typedef BOOL DDKAPI
   IN ULONG  iStart,
   IN ULONG  cColors);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvSetPixelFormat)(
   IN SURFOBJ  *pso,
   IN LONG  iPixelFormat,
   IN HWND  hwnd);
 
-typedef ULONG DDKAPI
+typedef ULONG APIENTRY
 (*PFN_DrvSetPointerShape)(
   IN SURFOBJ  *pso,
   IN SURFOBJ  *psoMask,
@@ -4006,22 +4010,22 @@ typedef ULONG DDKAPI
   IN RECTL  *prcl,
   IN FLONG  fl);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvStartBanding)(
   IN SURFOBJ  *pso,
   IN POINTL  *pptl);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvStartDoc)(
   IN SURFOBJ  *pso,
   IN LPWSTR  pwszDocName,
   IN DWORD  dwJobId);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvStartPage)(
   IN SURFOBJ  *pso);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvStretchBlt)(
   IN SURFOBJ  *psoDest,
   IN SURFOBJ  *psoSrc,
@@ -4035,7 +4039,7 @@ typedef BOOL DDKAPI
   IN POINTL  *pptlMask,
   IN ULONG  iMode);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvStretchBltROP)(
   IN SURFOBJ  *psoDest,
   IN SURFOBJ  *psoSrc,
@@ -4051,7 +4055,7 @@ typedef BOOL DDKAPI
   IN BRUSHOBJ  *pbo,
   IN DWORD  rop4);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvStrokeAndFillPath)(
   IN SURFOBJ  *pso,
   IN PATHOBJ  *ppo,
@@ -4064,7 +4068,7 @@ typedef BOOL DDKAPI
   IN MIX  mixFill,
   IN FLONG  flOptions);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvStrokePath)(
   IN SURFOBJ  *pso,
   IN PATHOBJ  *ppo,
@@ -4075,23 +4079,23 @@ typedef BOOL DDKAPI
   IN LINEATTRS  *plineattrs,
   IN MIX  mix);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvSwapBuffers)(
   IN SURFOBJ  *pso,
   IN WNDOBJ  *pwo);
 
-typedef VOID DDKAPI
+typedef VOID APIENTRY
 (*PFN_DrvSynchronize)(
   IN DHPDEV  dhpdev,
   IN RECTL  *prcl);
 
-typedef VOID DDKAPI
+typedef VOID APIENTRY
 (*PFN_DrvSynchronizeSurface)(
   IN SURFOBJ  *pso,
   IN RECTL  *prcl,
   IN FLONG  fl);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvTextOut)(
   IN SURFOBJ  *pso,
   IN STROBJ  *pstro,
@@ -4104,7 +4108,7 @@ typedef BOOL DDKAPI
   IN POINTL  *pptlOrg,
   IN MIX  mix);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvTransparentBlt)(
   IN SURFOBJ  *psoDst,
   IN SURFOBJ  *psoSrc,
@@ -4115,20 +4119,20 @@ typedef BOOL DDKAPI
   IN ULONG  iTransColor,
   IN ULONG  ulReserved);
 
-typedef BOOL DDKAPI
+typedef BOOL APIENTRY
 (*PFN_DrvUnloadFontFile)(
   IN ULONG_PTR  iFile);
 
 
 WIN32KAPI
 VOID
-DDKAPI
+APIENTRY
 DrvDisableDirectDraw(
   IN DHPDEV  dhpdev);
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 DrvEnableDirectDraw(
   IN DHPDEV  dhpdev,
   OUT DD_CALLBACKS  *pCallBacks,
@@ -4137,7 +4141,7 @@ DrvEnableDirectDraw(
 
 WIN32KAPI
 BOOL
-DDKAPI
+APIENTRY
 DrvGetDirectDrawInfo(
   IN DHPDEV  dhpdev,
   OUT DD_HALINFO  *pHalInfo,
