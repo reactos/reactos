@@ -38,9 +38,10 @@
  */
 #include "iphlpapi_private.h"
 #include "ifenum.h"
+#include <assert.h>
 
 #define NDEBUG
-#include <debug.h>
+#include "debug.h"
 
 /* Globals */
 const PWCHAR TcpFileName = L"\\Device\\Tcp";
@@ -155,7 +156,7 @@ NTSTATUS tdiGetSetOfThings( HANDLE tcpFile,
      * stabilizes.
      */
     do {
-        ASSERT( !entitySet ); /* We must not have an entity set allocated */
+        assert( !entitySet ); /* We must not have an entity set allocated */
         status = DeviceIoControl( tcpFile,
                                   IOCTL_TCP_QUERY_INFORMATION_EX,
                                   &req,
