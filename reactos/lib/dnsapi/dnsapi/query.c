@@ -12,9 +12,8 @@
 #include <winerror.h>
 #include <windns.h>
 #include <internal/windns.h>
-#include <string.h>
 #define NTOS_MODE_USER
-#include <ntos.h>
+#include <ndk/ntndk.h>
 
 /* DnsQuery ****************************
  * Begin a DNS query, and allow the result to be placed in the application

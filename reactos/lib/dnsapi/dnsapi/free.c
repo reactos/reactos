@@ -13,7 +13,7 @@
 #include <windns.h>
 #include <internal/windns.h>
 #define NTOS_MODE_USER
-#include <ntos.h>
+#include <ndk/ntndk.h>
 
 VOID WINAPI DnsFree
 ( PVOID Data, DNS_FREE_TYPE FreeType ) {
