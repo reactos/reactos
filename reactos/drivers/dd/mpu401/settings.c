@@ -9,8 +9,7 @@
  *                       Sept 27, 2003: Created
  */
 
-//#include <ntddk.h>
-#include <windows.h>
+#include <ntddk.h>
 
 #include "mpu401.h"
 

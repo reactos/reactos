@@ -10,17 +10,15 @@
 
 /* INCLUDES ******************************************************************/
 
+#include <windows.h>
 #define NTOS_MODE_USER
-#include <ntos.h>
-#include <csrss/csrss.h>
-#include <ddk/ntddk.h>
+#include <ndk/ntndk.h>
+#include <rosrtl/thread.h>
 
-
+#include "api.h"
 
 #define NDEBUG
 #include <debug.h>
-
-#include "api.h"
 
 /* GLOBALS *******************************************************************/
 

@@ -56,6 +56,8 @@
 #include <netinet/in_var.h>
 #include <netinet/ip_var.h>
 
+#include <oskittcp.h>
+
 struct	in_addr zeroin_addr;
 
 int
@@ -89,10 +91,14 @@ in_pcbbind(inp, nam)
 	struct inpcbhead *head = inp->inp_pcbinfo->listhead;
 	unsigned short *lastport = &inp->inp_pcbinfo->lastport;
 	struct sockaddr_in *sin;
+#ifndef __REACTOS__
 	struct proc *p = curproc;		/* XXX */
+#endif
 	u_short lport = 0;
 	int wild = 0, reuseport = (so->so_options & SO_REUSEPORT);
+#ifndef __REACTOS__
 	int error;
+#endif
 
 	OS_DbgPrint(OSK_MID_TRACE,("Called\n"));
 
@@ -208,7 +214,9 @@ in_pcbladdr(inp, nam, plocal_sin)
 	struct sockaddr_in **plocal_sin;
 {
 	struct in_ifaddr *ia;
+#ifndef __REACTOS__
 	struct sockaddr_in *ifaddr = 0;
+#endif
 	register struct sockaddr_in *sin = mtod(nam, struct sockaddr_in *);
 
 	OS_DbgPrint(OSK_MID_TRACE,("Called\n"));
@@ -339,7 +347,7 @@ in_pcbconnect(inp, nam)
 	/*
 	 *   Call inner routine, to assign local interface address.
 	 */
-	if (error = in_pcbladdr(inp, nam, &ifaddr))
+	if ((error = in_pcbladdr(inp, nam, &ifaddr)))
 		return(error);
 
 	if (in_pcblookuphash(inp->inp_pcbinfo, sin->sin_addr, sin->sin_port,

@@ -26,12 +26,9 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-
+#include <ntdll.h>
 #define NDEBUG
-#include <ntdll/ntdll.h>
-
-#define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
+#include <debug.h>
 
 typedef struct _RTL_RANGE_ENTRY
 {

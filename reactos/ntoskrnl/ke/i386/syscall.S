@@ -11,7 +11,6 @@
  */
 
 #include <roscfg.h>
-#include <ddk/status.h>
 #include <internal/i386/segment.h>
 #include <internal/ps.h>
 #include <internal/i386/ke.h>
@@ -316,7 +315,7 @@ KiBBTUnexpectedRange:
 InvalidCall:
 
     /* Invalid System Call */
-    movl $STATUS_INVALID_SYSTEM_SERVICE, %eax
+    movl $0xC000001C, %eax /* STATUS_INVALID_SYSTEM_SERVICE */
     movl %eax, KTRAP_FRAME_EAX(%ebp)
     jmp _KiServiceExit
     

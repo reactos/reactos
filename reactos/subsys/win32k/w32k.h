@@ -16,8 +16,13 @@
 #include <ddk/ntddmou.h>
 
 #include <win32k/win32k.h>
+#include <win32k/callback.h>
+#include <win32k/caret.h>
 #include <csrss/csrss.h>
 
+#include <internal/ntoskrnl.h>
+#include <internal/mm.h>
+#include <internal/ke.h>
 #include <internal/ob.h>
 #include <internal/safe.h>
 #include <internal/ps.h>
@@ -30,7 +35,6 @@
 #include <windowsx.h>
 
 #include <rosrtl/string.h>
-#include <user32/callback.h>
 
 #include <include/ssec.h>
 #include <include/accelerator.h>
@@ -82,6 +86,7 @@
 
 #include <dib/dib.h>
 
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+
 #define NDEBUG
 #include <win32k/debug1.h>
-

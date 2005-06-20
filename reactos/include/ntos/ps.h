@@ -13,6 +13,8 @@
 #ifndef __INCLUDE_PS_H
 #define __INCLUDE_PS_H
 
+#include <napi/teb.h>
+
 #define THREAD_READ			(0x020048L)
 #define THREAD_WRITE			(0x020037L)
 #define THREAD_EXECUTE			(0x120000L)
@@ -42,12 +44,14 @@
 #define JOB_OBJECT_SET_SECURITY_ATTRIBUTES	(16)
 #define JOB_OBJECT_ALL_ACCESS	(STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|31)
 
+/* Thread access rights */
+#define THREAD_ALERT (0x0004L)
+
 #ifndef __USE_W32API
 
 /* Thread access rights */
 #define THREAD_TERMINATE		(0x0001L)
 #define THREAD_SUSPEND_RESUME		(0x0002L)
-#define THREAD_ALERT (0x0004L)
 #define THREAD_GET_CONTEXT		(0x0008L)
 #define THREAD_SET_CONTEXT		(0x0010L)
 #define THREAD_SET_INFORMATION		(0x0020L)
@@ -103,6 +107,8 @@
 
 #endif /* !__USE_W32API */
 
+#ifdef NTOS_MODE_KERNEL
+
 #ifdef __NTOSKRNL__
 #ifdef __GNUC__
 extern struct _EPROCESS* EXPORTED PsInitialSystemProcess;
@@ -121,5 +127,335 @@ extern POBJECT_TYPE IMPORTED PsProcessType;
 extern POBJECT_TYPE IMPORTED PsThreadType;
 #endif
 #endif
+
+typedef NTSTATUS
+(STDCALL *PW32_PROCESS_CALLBACK)(struct _EPROCESS *Process,
+			         BOOLEAN Create);
+
+typedef NTSTATUS
+(STDCALL *PW32_THREAD_CALLBACK)(struct _ETHREAD *Thread,
+			        BOOLEAN Create);
+
+typedef struct _EJOB *PEJOB;
+
+NTSTATUS STDCALL
+PsCreateSystemProcess (PHANDLE ProcessHandle,
+		       ACCESS_MASK DesiredAccess,
+		       POBJECT_ATTRIBUTES ObjectAttributes);
+
+
+NTSTATUS STDCALL PsCreateWin32Process(struct _EPROCESS* Process);
+
+NTSTATUS STDCALL PsCreateWin32Thread(struct _ETHREAD* Thread);
+
+
+NTSTATUS
+STDCALL PsChargeProcessNonPagedPoolQuota (
+   	IN PEPROCESS Process,
+    IN ULONG_PTR Amount
+	);
+
+
+NTSTATUS
+STDCALL PsChargeProcessPagedPoolQuota (
+   	IN PEPROCESS Process,
+    IN ULONG_PTR Amount
+	);
+
+
+ULONG
+STDCALL PsGetCurrentProcessSessionId (
+    VOID
+	);
+
+
+KPROCESSOR_MODE
+STDCALL PsGetCurrentThreadPreviousMode (
+    VOID
+	);
+
+
+PVOID
+STDCALL PsGetCurrentThreadStackBase (
+    VOID
+	);
+
+
+PVOID
+STDCALL PsGetCurrentThreadStackLimit (
+    VOID
+	);
+
+
+PVOID
+STDCALL PsGetJobLock(
+    PEJOB	Job
+	);
+
+
+PVOID
+STDCALL PsGetJobSessionId(
+    PEJOB	Job
+	);
+
+
+ULONG
+STDCALL PsGetJobUIRestrictionsClass(
+   	PEJOB	Job
+	);
+
+
+LONGLONG
+STDCALL PsGetProcessCreateTimeQuadPart(
+    PEPROCESS	Process
+	);
+
+
+PVOID
+STDCALL PsGetProcessDebugPort(
+    PEPROCESS	Process
+	);
+
+
+BOOLEAN
+STDCALL PsGetProcessExitProcessCalled(
+    PEPROCESS	Process
+	);
+
+
+NTSTATUS
+STDCALL PsGetProcessExitStatus(
+	PEPROCESS Process
+	);
+
+
+HANDLE
+STDCALL PsGetProcessId(
+   	PEPROCESS	Process
+	);
+
+
+LPSTR
+STDCALL PsGetProcessImageFileName(
+    PEPROCESS	Process
+	);
+
+
+HANDLE
+STDCALL PsGetProcessInheritedFromUniqueProcessId(
+    	PEPROCESS	Process
+	);
+
+
+PEJOB
+STDCALL PsGetProcessJob(
+	PEPROCESS Process
+	);
+
+
+PPEB
+STDCALL PsGetProcessPeb(
+    PEPROCESS	Process
+	);
+
+
+ULONG
+STDCALL PsGetProcessPriorityClass(
+    PEPROCESS	Process
+	);
+
+
+PVOID
+STDCALL PsGetProcessSectionBaseAddress(
+    PEPROCESS	Process
+	);
+
+
+PVOID
+STDCALL PsGetProcessSecurityPort(
+	PEPROCESS Process
+	);
+
+
+HANDLE
+STDCALL PsGetProcessSessionId(
+    PEPROCESS	Process
+	);
+
+
+PVOID
+STDCALL PsGetProcessWin32Process(
+	PEPROCESS Process
+	);
+
+
+PVOID
+STDCALL PsGetProcessWin32WindowStation(
+    PEPROCESS	Process
+	);
+
+
+ULONG
+STDCALL PsGetThreadFreezeCount(
+	struct _ETHREAD* Thread
+	);
+
+
+BOOLEAN
+STDCALL PsGetThreadHardErrorsAreDisabled(
+    struct _ETHREAD*	Thread
+	);
+
+
+HANDLE
+STDCALL PsGetThreadId(
+    struct _ETHREAD*	Thread
+	);
+
+
+PEPROCESS
+STDCALL PsGetThreadProcess(
+    struct _ETHREAD*	Thread
+	);
+
+
+HANDLE
+STDCALL PsGetThreadProcessId(
+    struct _ETHREAD*	Thread
+	);
+
+
+HANDLE
+STDCALL PsGetThreadSessionId(
+    struct _ETHREAD*	Thread
+	);
+
+
+PTEB
+STDCALL PsGetThreadTeb(
+    struct _ETHREAD*	Thread
+	);
+
+
+PVOID
+STDCALL PsGetThreadWin32Thread(
+    struct _ETHREAD*	Thread
+	);
+
+
+BOOLEAN
+STDCALL PsIsProcessBeingDebugged(
+    PEPROCESS	Process
+	);
+
+
+BOOLEAN
+STDCALL PsIsThreadImpersonating(
+    struct _ETHREAD*	Thread
+	);
+
+
+VOID
+STDCALL PsReturnProcessNonPagedPoolQuota(
+    IN PEPROCESS Process,
+    IN ULONG_PTR Amount
+    );
+
+
+VOID
+STDCALL PsReturnProcessPagedPoolQuota(
+    IN PEPROCESS Process,
+    IN ULONG_PTR Amount
+    );
+
+
+VOID
+STDCALL
+PsRevertThreadToSelf(
+	IN struct _ETHREAD* Thread
+	);
+
+
+VOID
+STDCALL PsSetJobUIRestrictionsClass(
+    PEJOB	Job,
+    ULONG	UIRestrictionsClass	
+	);
+
+
+ULONG 
+STDCALL PsSetLegoNotifyRoutine(
+	PVOID LegoNotifyRoutine  	 
+	);
+
+
+VOID
+STDCALL PsSetProcessPriorityClass(
+    PEPROCESS	Process,
+    ULONG	PriorityClass	
+	);
+
+
+VOID
+STDCALL PsSetProcessSecurityPort(
+    PEPROCESS	Process,
+    PVOID	SecurityPort	
+	);
+
+
+VOID
+STDCALL PsSetProcessWin32Process(
+    PEPROCESS	Process,
+    PVOID	Win32Process
+	);
+
+
+VOID
+STDCALL PsSetProcessWin32WindowStation(
+    PEPROCESS	Process,
+    PVOID	WindowStation
+	);
+
+
+VOID
+STDCALL PsSetThreadHardErrorsAreDisabled(
+    struct _ETHREAD*	Thread,
+    BOOLEAN	HardErrorsAreDisabled
+	);
+
+
+VOID
+STDCALL PsSetThreadWin32Thread(
+    struct _ETHREAD*	Thread,
+    PVOID	Win32Thread
+	);
+
+
+struct _W32_OBJECT_CALLBACK;
+
+
+VOID STDCALL
+STDCALL PsEstablishWin32Callouts (PW32_PROCESS_CALLBACK W32ProcessCallback,
+			  PW32_THREAD_CALLBACK W32ThreadCallback,
+			  struct _W32_OBJECT_CALLBACK *W32ObjectCallback,
+			  PVOID Param4,
+			  ULONG W32ThreadSize,
+			  ULONG W32ProcessSize);
+
+
+NTSTATUS STDCALL PsLookupProcessByProcessId(IN HANDLE ProcessId,
+					    OUT PEPROCESS *Process);
+
+
+NTSTATUS STDCALL PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
+					    OUT PEPROCESS *Process OPTIONAL,
+					    OUT struct _ETHREAD **Thread);
+					 /* OUT PETHREAD *Thread); */
+
+NTSTATUS STDCALL PsLookupThreadByThreadId(IN HANDLE ThreadId,
+					  OUT struct _ETHREAD **Thread);
+					/* OUT PETHREAD *Thread); */
+
+#endif /* NTOS_MODE_KERNEL */
 
 #endif /* __INCLUDE_PS_H */

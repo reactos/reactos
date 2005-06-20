@@ -54,6 +54,7 @@ f->code[cpos++].u.op = (a)
 
 #define DONE() goto done
 
+#undef ERROR
 #define ERROR(msg)		\
   do {				\
     JS_SAVE_REGS ();		\

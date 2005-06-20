@@ -43,7 +43,7 @@ IntEngCleanupDriverObjs(struct _EPROCESS *Process,
                         PW32PROCESS Win32Process);
 
 BOOL STDCALL
-IntEngLineTo(BITMAPOBJ *Surface,
+IntEngLineTo(SURFOBJ *Surface,
              CLIPOBJ *Clip,
              BRUSHOBJ *Brush,
              LONG x1,
@@ -54,22 +54,29 @@ IntEngLineTo(BITMAPOBJ *Surface,
              MIX mix);
 
 BOOL STDCALL
-IntEngBitBlt(BITMAPOBJ *DestObj,
-	     BITMAPOBJ *SourceObj,
-	     BITMAPOBJ *Mask,
-	     CLIPOBJ *ClipRegion,
-	     XLATEOBJ *ColorTranslation,
-	     RECTL *DestRect,
-	     POINTL *SourcePoint,
-	     POINTL *MaskOrigin,
-	     BRUSHOBJ *Brush,
-	     POINTL *BrushOrigin,
-	     ROP4 rop4);
+IntEngBitBltEx(SURFOBJ *DestObj,
+               SURFOBJ *SourceObj,
+               SURFOBJ *Mask,
+               CLIPOBJ *ClipRegion,
+               XLATEOBJ *ColorTranslation,
+               RECTL *DestRect,
+               POINTL *SourcePoint,
+               POINTL *MaskOrigin,
+               BRUSHOBJ *Brush,
+               POINTL *BrushOrigin,
+               ROP4 Rop4,
+               BOOL RemoveMouse);
+#define IntEngBitBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation, \
+                     DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin, \
+                     Rop4) \
+        IntEngBitBltEx((DestObj), (SourceObj), (Mask), (ClipRegion), \
+                       (ColorTranslation), (DestRect), (SourcePoint), \
+                       (MaskOrigin), (Brush), (BrushOrigin), (Rop4), TRUE)
 
 BOOL STDCALL
-IntEngStretchBlt(BITMAPOBJ *DestObj,
-                 BITMAPOBJ *SourceObj,
-                 BITMAPOBJ *Mask,
+IntEngStretchBlt(SURFOBJ *DestObj,
+                 SURFOBJ *SourceObj,
+                 SURFOBJ *Mask,
                  CLIPOBJ *ClipRegion,
                  XLATEOBJ *ColorTranslation,
                  RECTL *DestRect,
@@ -80,7 +87,7 @@ IntEngStretchBlt(BITMAPOBJ *DestObj,
                  ULONG Mode);
 
 BOOL STDCALL
-IntEngGradientFill(BITMAPOBJ *psoDest,
+IntEngGradientFill(SURFOBJ *psoDest,
                    CLIPOBJ *pco,
                    XLATEOBJ *pxlo,
                    TRIVERTEX *pVertex,
@@ -109,7 +116,7 @@ IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
                          ULONG BackgroundColor);
 
 BOOL STDCALL
-IntEngPolyline(BITMAPOBJ *DestSurf,
+IntEngPolyline(SURFOBJ *DestSurf,
                CLIPOBJ *Clip,
                BRUSHOBJ *Brush,
                CONST LPPOINT  pt,
@@ -131,8 +138,8 @@ ClipobjToSpans(PSPAN *Spans,
                PRECTL Boundary);
 
 BOOL FASTCALL
-IntEngTransparentBlt(BITMAPOBJ *Dest,
-                     BITMAPOBJ *Source,
+IntEngTransparentBlt(SURFOBJ *Dest,
+                     SURFOBJ *Source,
                      CLIPOBJ *Clip,
                      XLATEOBJ *ColorTranslation,
                      PRECTL DestRect,
@@ -141,10 +148,17 @@ IntEngTransparentBlt(BITMAPOBJ *Dest,
                      ULONG Reserved);
 
 BOOL STDCALL
-IntEngPaint(IN BITMAPOBJ *Surface,
+IntEngPaint(IN SURFOBJ *Surface,
             IN CLIPOBJ *ClipRegion,
             IN BRUSHOBJ *Brush,
             IN POINTL *BrushOrigin,
             IN MIX Mix);
+
+VOID STDCALL
+IntEngMovePointer(IN SURFOBJ *pso,
+                  IN LONG x,
+                  IN LONG y,
+                  IN RECTL *prcl);
+
 
 #endif /* _WIN32K_INTENG_H */

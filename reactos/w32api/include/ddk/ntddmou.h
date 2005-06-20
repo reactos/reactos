@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#include "ntddk.h"
-
 #define DD_MOUSE_DEVICE_NAME              "\\Device\\PointerClass"
 #define DD_MOUSE_DEVICE_NAME_U            L"\\Device\\PointerClass"
 

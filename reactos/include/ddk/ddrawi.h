@@ -1324,6 +1324,10 @@ typedef struct _DDHAL_WAITFORVERTICALBLANKDATA
     LPDDHAL_WAITFORVERTICALBLANK    WaitForVerticalBlank; // PRIVATE: ptr to callback
 } DDHAL_WAITFORVERTICALBLANKDATA;
 
+
+
+
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

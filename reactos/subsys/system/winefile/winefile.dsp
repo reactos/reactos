@@ -251,10 +251,6 @@ SOURCE=.\license.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\license.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\resource.h
 # End Source File
 # Begin Source File

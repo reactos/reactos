@@ -9,14 +9,9 @@
  *      06-06-2001  CSH  Created
  */
 
-#include "user32.h"
-#include "winsta.h"
-#include <string.h>
-#include <debug.h>
+#include <user32.h>
 #include <rosrtl/devmode.h>
 #include <rosrtl/logfont.h>
-#include <malloc.h>
-#include <math.h>
 
 /*
  * @implemented

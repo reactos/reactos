@@ -7,7 +7,7 @@
  * PROGRAMMER:      Eric Kohl (ekohl@rz-online.de)
  */
 
-#include "user32.h"
+#include <user32.h>
 #include <ntdll/csr.h>
 
 /*

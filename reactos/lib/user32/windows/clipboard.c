@@ -28,10 +28,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "user32.h"
-#include <strpool.h>
-#define NDEBUG
-#include <debug.h>
+#include <user32.h>
 
 /* FUNCTIONS *****************************************************************/
 

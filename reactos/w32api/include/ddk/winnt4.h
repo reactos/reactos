@@ -182,7 +182,22 @@ ExInterlockedIncrementLong(
   IN PLONG  Addend,
   IN PKSPIN_LOCK  Lock);
 
-NTOSAPI
+NTHALAPI
+VOID
+DDKAPI
+HalAcquireDisplayOwnership(
+  IN PHAL_RESET_DISPLAY_PARAMETERS  ResetDisplayParameters);
+
+NTHALAPI
+NTSTATUS
+DDKAPI
+HalAllocateAdapterChannel(
+  IN PADAPTER_OBJECT  AdapterObject,
+  IN PWAIT_CONTEXT_BLOCK  Wcb,
+  IN ULONG  NumberOfMapRegisters,
+  IN PDRIVER_CONTROL  ExecutionRoutine);
+
+NTHALAPI
 PVOID
 DDKAPI
 HalAllocateCommonBuffer(
@@ -191,7 +206,7 @@ HalAllocateCommonBuffer(
   OUT PPHYSICAL_ADDRESS  LogicalAddress,
   IN BOOLEAN  CacheEnabled);
 
-NTOSAPI
+NTHALAPI
 NTSTATUS
 DDKAPI
 HalAssignSlotResources(
@@ -204,7 +219,7 @@ HalAssignSlotResources(
   IN ULONG  SlotNumber,
   IN OUT PCM_RESOURCE_LIST  *AllocatedResources);
 
-NTOSAPI
+NTHALAPI
 VOID
 DDKAPI
 HalFreeCommonBuffer(
@@ -214,14 +229,14 @@ HalFreeCommonBuffer(
   IN PVOID  VirtualAddress,
   IN BOOLEAN  CacheEnabled);
 
-NTOSAPI
+NTHALAPI
 PADAPTER_OBJECT
 DDKAPI
 HalGetAdapter(
   IN PDEVICE_DESCRIPTION  DeviceDescription,
   IN OUT PULONG  NumberOfMapRegisters);
 
-NTOSAPI
+NTHALAPI
 ULONG
 DDKAPI
 HalGetBusData(
@@ -231,7 +246,7 @@ HalGetBusData(
   IN PVOID  Buffer,
   IN ULONG  Length);
 
-NTOSAPI
+NTHALAPI
 ULONG
 DDKAPI
 HalGetBusDataByOffset(
@@ -242,13 +257,13 @@ HalGetBusDataByOffset(
   IN ULONG  Offset,
   IN ULONG  Length);
 
-NTOSAPI
+NTHALAPI
 ULONG
 DDKAPI
 HalGetDmaAlignmentRequirement(
   VOID);
 
-NTOSAPI
+NTHALAPI
 ULONG
 DDKAPI
 HalGetInterruptVector(
@@ -259,13 +274,13 @@ HalGetInterruptVector(
   OUT PKIRQL  Irql,
   OUT PKAFFINITY  Affinity);
 
-NTOSAPI
+NTHALAPI
 ULONG
 DDKAPI
 HalReadDmaCounter(
   IN PADAPTER_OBJECT  AdapterObject);
 
-NTOSAPI
+NTHALAPI
 ULONG
 DDKAPI
 HalSetBusData(
@@ -275,7 +290,7 @@ HalSetBusData(
   IN PVOID  Buffer,
   IN ULONG  Length);
 
-NTOSAPI
+NTHALAPI
 ULONG
 DDKAPI
 HalSetBusDataByOffset(
@@ -286,7 +301,7 @@ HalSetBusDataByOffset(
   IN ULONG  Offset,
   IN ULONG  Length);
 
-NTOSAPI
+NTHALAPI
 BOOLEAN
 DDKAPI
 HalTranslateBusAddress(
@@ -324,7 +339,7 @@ IoAttachDeviceByPointer(
   IN PDEVICE_OBJECT  SourceDevice,
   IN PDEVICE_OBJECT  TargetDevice);
 
-NTOSAPI
+NTHALAPI
 BOOLEAN
 DDKAPI
 IoFlushAdapterBuffers(
@@ -335,13 +350,13 @@ IoFlushAdapterBuffers(
   IN ULONG  Length,
   IN BOOLEAN  WriteToDevice);
 
-NTOSAPI
+NTHALAPI
 VOID
 DDKAPI
 IoFreeAdapterChannel(
   IN PADAPTER_OBJECT  AdapterObject);
 
-NTOSAPI
+NTHALAPI
 VOID
 DDKAPI
 IoFreeMapRegisters(
@@ -349,7 +364,7 @@ IoFreeMapRegisters(
   IN PVOID  MapRegisterBase,
   IN ULONG  NumberOfMapRegisters);
 
-NTOSAPI
+NTHALAPI
 PHYSICAL_ADDRESS
 DDKAPI
 IoMapTransfer(

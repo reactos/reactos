@@ -49,7 +49,6 @@
 #include "ddk/ntddk.h"
 #include "jsint.h"
 #include "kjs.h"
-#include <rosrtl/string.h>
 
 /*
  * Types and definitions.

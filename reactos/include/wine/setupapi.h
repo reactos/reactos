@@ -39,6 +39,8 @@ typedef PVOID HSPFILEQ;
 
 typedef PVOID HDSKSPC;
 
+typedef PVOID HSTRING_TABLE;
+
 /* inf structure. */
 typedef struct _INFCONTEXT
 {
@@ -665,7 +667,11 @@ DECL_WINELIB_SETUPAPI_TYPE_AW(PFILEPATHS)
 #define SPDRP_MAXIMUM_PROPERTY            0x00000023
 
 
-LONG     WINAPI AddTagToGroupOrderList(PCWSTR lpGroupName, DWORD dwUnknown2, DWORD dwUnknown3);
+/* Flags for StringTableAddString and StringTableLookUpString */
+#define ST_CASE_SENSITIVE_COMPARE 0x00000001
+
+
+LONG     WINAPI AddTagToGroupOrderList(PCWSTR, DWORD, DWORD);
 VOID     WINAPI AssertFail(LPSTR, UINT, LPSTR);
 DWORD    WINAPI CaptureAndConvertAnsiArg(PCSTR lpSrc, PWSTR *lpDst);
 DWORD    WINAPI CaptureStringArg(PCWSTR lpSrc, PWSTR *lpDst);
@@ -827,6 +833,15 @@ BOOL     WINAPI SetupSetFileQueueAlternatePlatformW( HSPFILEQ, PSP_ALTPLATFORM_I
 BOOL     WINAPI SetupSetFileQueueFlags( HSPFILEQ, DWORD, DWORD );
 void     WINAPI SetupTermDefaultQueueCallback( PVOID );
 DWORD    WINAPI StampFileSecurity(PCWSTR, PSECURITY_DESCRIPTOR);
+
+DWORD    WINAPI StringTableAddString(HSTRING_TABLE, LPWSTR, DWORD);
+VOID     WINAPI StringTableDestroy(HSTRING_TABLE);
+HSTRING_TABLE WINAPI StringTableInitialize(VOID);
+DWORD    WINAPI StringTableLookUpString(HSTRING_TABLE, LPWSTR, DWORD);
+LPWSTR   WINAPI StringTableStringFromId(HSTRING_TABLE, DWORD);
+BOOL     WINAPI StringTableStringFromIdEx(HSTRING_TABLE, DWORD, LPWSTR, LPDWORD);
+VOID     WINAPI StringTableTrim(HSTRING_TABLE);
+
 DWORD    WINAPI TakeOwnershipOfFile(PCWSTR);
 PSTR     WINAPI UnicodeToMultiByte(PCWSTR lpUnicodeStr, UINT uCodePage);
 BOOL     WINAPI UnmapAndCloseFile(HANDLE, HANDLE, PVOID);

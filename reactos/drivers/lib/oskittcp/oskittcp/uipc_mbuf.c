@@ -101,7 +101,9 @@ m_clalloc(ncl, nowait)
 	register int ncl;
 	int nowait;
 {
+#ifndef __REACTOS__
 	static int logged;
+#endif
 	register caddr_t p;
 	register int i;
 	int npg;
@@ -456,7 +458,7 @@ m_adj(mp, req_len)
 {
 	register int len = req_len;
 	register struct mbuf *m;
-	register count;
+	register int count;
 
 	if ((m = mp) == NULL)
 		return;

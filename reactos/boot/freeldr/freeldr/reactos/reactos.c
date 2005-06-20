@@ -7,7 +7,6 @@
  */
 
 #include <freeldr.h>
-#include <internal/i386/ke.h>
 #include <reactos/rossym.h>
 
 #include "registry.h"

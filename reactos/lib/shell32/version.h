@@ -22,7 +22,3 @@
 #define WINE_FILEVERSION_MINOR         0
 #define WINE_FILEVERSION_BUILD      3900
 #define WINE_FILEVERSION_PLATFORMID 6975
-
-/* FIXME: when libs/wpp gets fixed to support concatenation we can remove
- * this and define it in version.rc */
-#define WINE_FILEVERSION "5.0.3900.6975"

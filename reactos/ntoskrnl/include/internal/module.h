@@ -1,11 +1,5 @@
-
 #ifndef __MODULE_H
 #define __MODULE_H
-
-#include <ddk/ntddk.h>
-#include <roscfg.h>
-#include <pe.h>
-#include <reactos/rossym.h>
 
 typedef struct _MODULE_TEXT_SECTION
 {

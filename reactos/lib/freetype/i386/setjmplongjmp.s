@@ -75,6 +75,10 @@ _longjmp:
     movl JMPBUF(%esp), %ecx   /* User's jmp_buf in %ecx.  */
 
     movl VAL(%esp), %eax      /* Second argument is return value.  */
+    testl %eax, %eax
+    jnz 0f
+    incl %eax
+0:
     /* Save the return address now.  */
     movl (JB_PC*4)(%ecx), %edx
     /* Restore registers.  */

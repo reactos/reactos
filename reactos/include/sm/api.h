@@ -4,13 +4,11 @@
 
 #include <sm/ns.h>
 
-#pragma pack(push,4)
-
 /*** DATA TYPES ******************************************************/
 
 #define SM_SB_NAME_MAX_LENGTH 120
 
-#pragma pack(push,4)
+#include <pshpack4.h>
 
 /* SmConnectApiPort (SS->SM) */
 typedef struct _SM_CONNECT_DATA
@@ -109,32 +107,34 @@ typedef struct _SM_PORT_MESSAGE_QRYINFO
 
 /*** | ****************************************************************/
 
-typedef struct _SM_PORT_MESSAGE
+typedef union _SM_PORT_MESSAGE
 {
   /*** LPC common header ***/
   LPC_MESSAGE Header;
-  /*** SM common header ***/
   struct {
-    DWORD       ApiIndex;
-    NTSTATUS    Status;
-  } SmHeader;
-  /*** SM per API arguments ***/
-  union {
+    UCHAR LpcHeader[LPC_MESSAGE_BASE_SIZE];
+    /*** SM common header ***/
+    struct {
+      DWORD       ApiIndex;
+      NTSTATUS    Status;
+    } SmHeader;
+    /*** SM per API arguments ***/
     union {
-      SM_PORT_MESSAGE_COMPSES      CompSes;
-      SM_PORT_MESSAGE_EXECPGM      ExecPgm;
-      SM_PORT_MESSAGE_QRYINFO      QryInfo;
-    } Request;
-    union {
-      SM_PORT_MESSAGE_COMPSES      CompSes;
-      SM_PORT_MESSAGE_EXECPGM      ExecPgm;
-      SM_PORT_MESSAGE_QRYINFO      QryInfo;
-    } Reply;
+      union {
+        SM_PORT_MESSAGE_COMPSES      CompSes;
+        SM_PORT_MESSAGE_EXECPGM      ExecPgm;
+        SM_PORT_MESSAGE_QRYINFO      QryInfo;
+      } Request;
+      union {
+        SM_PORT_MESSAGE_COMPSES      CompSes;
+        SM_PORT_MESSAGE_EXECPGM      ExecPgm;
+        SM_PORT_MESSAGE_QRYINFO      QryInfo;
+      } Reply;
+    };
   };
-
 } SM_PORT_MESSAGE, * PSM_PORT_MESSAGE;
 
-#pragma pack(pop)
+#include <poppack.h>
 
 /*** MACRO ***********************************************************/
 

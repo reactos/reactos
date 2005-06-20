@@ -62,6 +62,7 @@ KeAcquireInterruptSpinLock(
 {
    KIRQL oldIrql;
 
+   //KeRaiseIrql(Interrupt->SynchronizeIrql, &oldIrql);
    KeRaiseIrql(Interrupt->SynchLevel, &oldIrql);
    KiAcquireSpinLock(Interrupt->ActualLock);
    return oldIrql;

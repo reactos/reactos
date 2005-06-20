@@ -401,4 +401,71 @@ ByeBye:
   return Result;
 }
 
+BOOL STDCALL
+IsTokenRestricted(HANDLE TokenHandle)
+{
+  ULONG RetLength;
+  PTOKEN_GROUPS lpGroups;
+  NTSTATUS Status;
+  BOOL Ret = FALSE;
+  
+  /* determine the required buffer size and allocate enough memory to read the
+     list of restricted SIDs */
+
+  Status = NtQueryInformationToken(TokenHandle,
+                                   TokenRestrictedSids,
+                                   NULL,
+                                   0,
+                                   &RetLength);
+  if (Status != STATUS_BUFFER_TOO_SMALL)
+  {
+    SetLastError(RtlNtStatusToDosError(Status));
+    return FALSE;
+  }
+  
+AllocAndReadRestrictedSids:
+  lpGroups = (PTOKEN_GROUPS)HeapAlloc(GetProcessHeap(),
+                                      0,
+                                      RetLength);
+  if (lpGroups == NULL)
+  {
+    SetLastError(ERROR_OUTOFMEMORY);
+    return FALSE;
+  }
+  
+  /* actually read the list of the restricted SIDs */
+  
+  Status = NtQueryInformationToken(TokenHandle,
+                                   TokenRestrictedSids,
+                                   lpGroups,
+                                   RetLength,
+                                   &RetLength);
+  if (NT_SUCCESS(Status))
+  {
+    Ret = (lpGroups->GroupCount != 0);
+  }
+  else if (Status == STATUS_BUFFER_TOO_SMALL)
+  {
+    /* looks like the token was modified in the meanwhile, let's just try again */
+
+    HeapFree(GetProcessHeap(),
+             0,
+             lpGroups);
+
+    goto AllocAndReadRestrictedSids;
+  }
+  else
+  {
+    SetLastError(RtlNtStatusToDosError(Status));
+  }
+  
+  /* free allocated memory */
+
+  HeapFree(GetProcessHeap(),
+           0,
+           lpGroups);
+
+  return Ret;
+}
+
 /* EOF */

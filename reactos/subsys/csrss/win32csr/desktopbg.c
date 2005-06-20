@@ -7,20 +7,9 @@
  * ReactOS Operating System
  */
 
-/*
- * There is a problem with size of LPC_MESSAGE structure. In the old ReactOS
- * headers it doesn't contain the data field and so it has a different size.
- * We must use this workaround to get our Data field 0-sized.
- */
-
-#include <windef.h>
-#include <winnt.h>
-#undef ANYSIZE_ARRAY
-#define ANYSIZE_ARRAY 0
-#include <ddk/ntapi.h>
-
 #include <windows.h>
-#include <csrss/csrss.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 
 #include "api.h"
 #include "desktopbg.h"

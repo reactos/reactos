@@ -10,19 +10,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <reactos/config.h>
-#include <ddk/ntddk.h>
-#include <windows.h>
-#include <ntdll/ldr.h>
-#include <ntdll/rtl.h>
-#include <csrss/csrss.h>
-#include <ntdll/csr.h>
-#include <user32/callback.h>
-#include <rosrtl/string.h>
-
+#include <ntdll.h>
 #define NDEBUG
-#include <ntdll/ntdll.h>
-
+#include <debug.h>
+#include <win32k/callback.h>
 
 VOID RtlInitializeHeapManager (VOID);
 VOID LdrpInitLoader(VOID);
@@ -32,8 +23,8 @@ VOID LdrpInitLoader(VOID);
 
 extern unsigned int _image_base__;
 
-static CRITICAL_SECTION PebLock;
-static CRITICAL_SECTION LoaderLock;
+static RTL_CRITICAL_SECTION PebLock;
+static RTL_CRITICAL_SECTION LoaderLock;
 static RTL_BITMAP TlsBitMap;
 PLDR_MODULE ExeModule;
 
@@ -115,7 +106,8 @@ LoadCompatibilitySettings(PPEB Peb)
 	HANDLE KeyHandle;
 	HANDLE SubKeyHandle;
 	OBJECT_ATTRIBUTES ObjectAttributes;
-	UNICODE_STRING KeyName;
+	UNICODE_STRING KeyName = RTL_CONSTANT_STRING(
+    L"Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers");
 	UNICODE_STRING ValueName;
 	UCHAR ValueBuffer[VALUE_BUFFER_SIZE];
 	PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
@@ -132,9 +124,6 @@ LoadCompatibilitySettings(PPEB Peb)
 		{
 			return FALSE;
 		}
-
-		RtlRosInitUnicodeStringFromLiteral(&KeyName,
-			L"Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers");
 
 		InitializeObjectAttributes(&ObjectAttributes,
 			&KeyName,
@@ -259,9 +248,9 @@ __true_LdrInitializeThunk (ULONG Unknown1,
        PEDosHeader = (PIMAGE_DOS_HEADER) ImageBase;
        DPRINT("PEDosHeader %x\n", PEDosHeader);
 
-       if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC ||
+       if (PEDosHeader->e_magic != IMAGE_DOS_SIGNATURE ||
            PEDosHeader->e_lfanew == 0L ||
-           *(PULONG)((PUCHAR)ImageBase + PEDosHeader->e_lfanew) != IMAGE_PE_MAGIC)
+           *(PULONG)((PUCHAR)ImageBase + PEDosHeader->e_lfanew) != IMAGE_NT_SIGNATURE)
          {
            DPRINT1("Image has bad header\n");
            ZwTerminateProcess(NtCurrentProcess(), STATUS_UNSUCCESSFUL);
@@ -289,7 +278,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
 	   ZwTerminateProcess(NtCurrentProcess(), Status);
 	 }
 
-       Peb->NumberOfProcessors = SystemInformation.NumberProcessors;
+       Peb->NumberOfProcessors = SystemInformation.NumberOfProcessors;
 
        /* Initialize Critical Section Data */
        RtlpInitDeferedCriticalSection();

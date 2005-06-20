@@ -55,5 +55,5 @@ _setjmp:
 
         xorl    %eax,%eax               /* return 0 the first time */
         leave
-        ret	$4
+        ret
 

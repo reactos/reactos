@@ -14,7 +14,6 @@
 #include <string.h>
 #include <msafd.h>
 #include <helpers.h>
-#include <rosrtl/string.h>
 
 #ifdef DBG
 //DWORD DebugTraceLevel = DEBUG_ULTRA;

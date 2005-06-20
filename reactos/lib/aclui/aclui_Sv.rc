@@ -16,10 +16,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <reactos/resource.h>
-#include <defines.h>
-#include "resource.h"
-
 LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
 
 IDD_SECPAGE DIALOGEX 0, 0, 227, 215

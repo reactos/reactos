@@ -7,6 +7,9 @@
 <directory name="host">
         <xi:include href="host/host.xml" />
 </directory>
+<directory name="hub">
+	<xi:include href="hub/hub.xml" />
+</directory>
 <directory name="uhci">
         <xi:include href="uhci/uhci.xml" />
 </directory>

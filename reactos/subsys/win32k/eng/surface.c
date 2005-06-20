@@ -79,6 +79,33 @@ ULONG FASTCALL BitmapFormat(WORD Bits, DWORD Compression)
   }
 }
 
+BOOL INTERNAL_CALL
+BITMAPOBJ_InitBitsLock(BITMAPOBJ *BitmapObj)
+{
+  BitmapObj->BitsLock = ExAllocatePoolWithTag(NonPagedPool,
+                                              sizeof(FAST_MUTEX),
+                                              TAG_BITMAPOBJ);
+  if (NULL == BitmapObj->BitsLock)
+    {
+      return FALSE;
+    }
+
+  ExInitializeFastMutex(BitmapObj->BitsLock);
+
+  return TRUE;
+}
+
+void INTERNAL_CALL
+BITMAPOBJ_CleanupBitsLock(BITMAPOBJ *BitmapObj)
+{
+  if (NULL != BitmapObj->BitsLock)
+    {
+      ExFreePoolWithTag(BitmapObj->BitsLock, TAG_BITMAPOBJ);
+      BitmapObj->BitsLock = NULL;
+    }
+}
+
+
 /*
  * @implemented
  */
@@ -232,6 +259,12 @@ IntCreateBitmap(IN SIZEL Size,
 	return 0;
 
   BitmapObj = BITMAPOBJ_LockBitmap(NewBitmap);
+  if (! BITMAPOBJ_InitBitsLock(BitmapObj))
+    {
+      BITMAPOBJ_UnlockBitmap(BitmapObj);
+      BITMAPOBJ_FreeBitmap(NewBitmap);
+      return 0;
+    }
   SurfObj = &BitmapObj->SurfObj;
 
   if (Format == BMF_4RLE)
@@ -357,10 +390,16 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
   if (NewSurface == NULL)
 	return 0;
 
-  GDIOBJ_SetOwnership(NewSurface, NULL);
-
   BitmapObj = BITMAPOBJ_LockBitmap(NewSurface);
+  if (! BITMAPOBJ_InitBitsLock(BitmapObj))
+    {
+      BITMAPOBJ_UnlockBitmap(BitmapObj);
+      BITMAPOBJ_FreeBitmap(NewSurface);
+      return 0;
+    }
   SurfObj = &BitmapObj->SurfObj;
+
+  GDIOBJ_SetOwnership(NewSurface, NULL);
 
   SurfObj->dhsurf = dhsurf;
   SurfObj->hsurf = NewSurface;

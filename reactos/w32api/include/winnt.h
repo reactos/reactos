@@ -19,6 +19,9 @@
 #define _X86_
 #elif defined(_M_ALPHA) && !defined(_ALPHA_)
 #define _ALPHA_
+
+#elif defined(_M_ARM) && !defined(ARM)
+#define ARM
 #elif defined(_M_PPC) && !defined(_PPC_)
 #define _PPC_
 #elif defined(_M_MRX000) && !defined(_MIPS_)
@@ -778,6 +781,7 @@ typedef DWORD FLONG;
 #define PAGE_EXECUTE_WRITECOPY	0x0080
 #define PAGE_GUARD		0x0100
 #define PAGE_NOCACHE		0x0200
+#define PAGE_WRITECOMBINE	0x0400
 #define MEM_COMMIT           0x1000
 #define MEM_RESERVE          0x2000
 #define MEM_DECOMMIT         0x4000
@@ -840,12 +844,20 @@ typedef DWORD FLONG;
 #define IMAGE_FILE_MACHINE_R10000	360
 #define IMAGE_FILE_MACHINE_ALPHA	388
 #define IMAGE_FILE_MACHINE_POWERPC	496
+#define IMAGE_FILE_MACHINE_IA64	512
+#define IMAGE_FILE_MACHINE_AMD64	0x8664
 #define IMAGE_DOS_SIGNATURE 0x5A4D
 #define IMAGE_OS2_SIGNATURE 0x454E
 #define IMAGE_OS2_SIGNATURE_LE 0x454C
 #define IMAGE_VXD_SIGNATURE 0x454C
 #define IMAGE_NT_SIGNATURE 0x00004550
-#define IMAGE_NT_OPTIONAL_HDR_MAGIC 0x10b
+#define IMAGE_NT_OPTIONAL_HDR32_MAGIC 0x10b
+#define IMAGE_NT_OPTIONAL_HDR64_MAGIC 0x20b
+#ifdef _WIN64
+#define IMAGE_NT_OPTIONAL_HDR_MAGIC IMAGE_NT_OPTIONAL_HDR64_MAGIC
+#else
+#define IMAGE_NT_OPTIONAL_HDR_MAGIC IMAGE_NT_OPTIONAL_HDR32_MAGIC
+#endif
 #define IMAGE_ROM_OPTIONAL_HDR_MAGIC 0x107
 #define IMAGE_SEPARATE_DEBUG_SIGNATURE 0x4944
 #define IMAGE_NUMBEROF_DIRECTORY_ENTRIES 16
@@ -882,6 +894,10 @@ typedef DWORD FLONG;
 #define IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG	10
 #define IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT	11
 #define IMAGE_DIRECTORY_ENTRY_IAT	12
+#define IMAGE_SCN_TYPE_REG 0
+#define IMAGE_SCN_TYPE_DSECT 1
+#define IMAGE_SCN_TYPE_NOLOAD 2
+#define IMAGE_SCN_TYPE_GROUP 4
 #define IMAGE_SCN_TYPE_NO_PAD 8
 #define IMAGE_SCN_CNT_CODE 32
 #define IMAGE_SCN_CNT_INITIALIZED_DATA 64
@@ -1120,6 +1136,7 @@ typedef DWORD FLONG;
 #define SE_SACL_AUTO_INHERITED 2048
 #define SE_DACL_PROTECTED 4096
 #define SE_SACL_PROTECTED 8192
+#define SE_RM_CONTROL_VALID 0x4000
 #define SE_SELF_RELATIVE 0x8000
 #define SECURITY_DESCRIPTOR_MIN_LENGTH 20
 #define SECURITY_DESCRIPTOR_REVISION 1
@@ -1343,6 +1360,34 @@ typedef struct _GUID {
 } GUID, *REFGUID, *LPGUID;
 #define SYSTEM_LUID { QuadPart:999 }
 #endif /* GUID_DEFINED */
+
+/* ACE Access Types, also in ntifs.h */
+#define ACCESS_MIN_MS_ACE_TYPE                  (0x0)
+#define ACCESS_ALLOWED_ACE_TYPE                 (0x0)
+#define ACCESS_DENIED_ACE_TYPE                  (0x1)
+#define SYSTEM_AUDIT_ACE_TYPE                   (0x2)
+#define SYSTEM_ALARM_ACE_TYPE                   (0x3)
+#define ACCESS_MAX_MS_V2_ACE_TYPE               (0x3)
+#define ACCESS_ALLOWED_COMPOUND_ACE_TYPE        (0x4)
+#define ACCESS_MAX_MS_V3_ACE_TYPE               (0x4)
+#define ACCESS_MIN_MS_OBJECT_ACE_TYPE           (0x5)
+#define ACCESS_ALLOWED_OBJECT_ACE_TYPE          (0x5)
+#define ACCESS_DENIED_OBJECT_ACE_TYPE           (0x6)
+#define SYSTEM_AUDIT_OBJECT_ACE_TYPE            (0x7)
+#define SYSTEM_ALARM_OBJECT_ACE_TYPE            (0x8)
+#define ACCESS_MAX_MS_OBJECT_ACE_TYPE           (0x8)
+#define ACCESS_MAX_MS_V4_ACE_TYPE               (0x8)
+#define ACCESS_MAX_MS_ACE_TYPE                  (0x8)
+#define ACCESS_ALLOWED_CALLBACK_ACE_TYPE        (0x9)
+#define ACCESS_DENIED_CALLBACK_ACE_TYPE         (0xA)
+#define ACCESS_ALLOWED_CALLBACK_OBJECT_ACE_TYPE (0xB)
+#define ACCESS_DENIED_CALLBACK_OBJECT_ACE_TYPE  (0xC)
+#define SYSTEM_AUDIT_CALLBACK_ACE_TYPE          (0xD)
+#define SYSTEM_ALARM_CALLBACK_ACE_TYPE          (0xE)
+#define SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE   (0xF)
+#define SYSTEM_ALARM_CALLBACK_OBJECT_ACE_TYPE   (0x10)
+#define ACCESS_MAX_MS_V5_ACE_TYPE               (0x10)
+/* end ntifs.h */
 typedef struct _GENERIC_MAPPING {
 	ACCESS_MASK GenericRead;
 	ACCESS_MASK GenericWrite;
@@ -2284,7 +2329,7 @@ typedef struct _RTL_CRITICAL_SECTION {
 	LONG RecursionCount;
 	HANDLE OwningThread;
 	HANDLE LockSemaphore;
-	DWORD Reserved;
+	ULONG_PTR SpinCount;
 } RTL_CRITICAL_SECTION,*PRTL_CRITICAL_SECTION;
 typedef struct _EVENTLOGRECORD {
 	DWORD Length;
@@ -2415,7 +2460,7 @@ typedef struct _IMAGE_DATA_DIRECTORY {
 	DWORD VirtualAddress;
 	DWORD Size;
 } IMAGE_DATA_DIRECTORY,*PIMAGE_DATA_DIRECTORY;
-typedef struct _IMAGE_OPTIONAL_HEADER {
+typedef struct _IMAGE_OPTIONAL_HEADER32 {
 	WORD Magic;
 	BYTE MajorLinkerVersion;
 	BYTE MinorLinkerVersion;
@@ -2447,7 +2492,39 @@ typedef struct _IMAGE_OPTIONAL_HEADER {
 	DWORD LoaderFlags;
 	DWORD NumberOfRvaAndSizes;
 	IMAGE_DATA_DIRECTORY DataDirectory[IMAGE_NUMBEROF_DIRECTORY_ENTRIES];
-} IMAGE_OPTIONAL_HEADER,*PIMAGE_OPTIONAL_HEADER;
+} IMAGE_OPTIONAL_HEADER32,*PIMAGE_OPTIONAL_HEADER32;
+typedef struct _IMAGE_OPTIONAL_HEADER64 {
+	WORD Magic;
+	BYTE MajorLinkerVersion;
+	BYTE MinorLinkerVersion;
+	DWORD SizeOfCode;
+	DWORD SizeOfInitializedData;
+	DWORD SizeOfUninitializedData;
+	DWORD AddressOfEntryPoint;
+	DWORD BaseOfCode;
+	ULONGLONG ImageBase;
+	DWORD SectionAlignment;
+	DWORD FileAlignment;
+	WORD MajorOperatingSystemVersion;
+	WORD MinorOperatingSystemVersion;
+	WORD MajorImageVersion;
+	WORD MinorImageVersion;
+	WORD MajorSubsystemVersion;
+	WORD MinorSubsystemVersion;
+	DWORD Reserved1;
+	DWORD SizeOfImage;
+	DWORD SizeOfHeaders;
+	DWORD CheckSum;
+	WORD Subsystem;
+	WORD DllCharacteristics;
+	ULONGLONG SizeOfStackReserve;
+	ULONGLONG SizeOfStackCommit;
+	ULONGLONG SizeOfHeapReserve;
+	ULONGLONG SizeOfHeapCommit;
+	DWORD LoaderFlags;
+	DWORD NumberOfRvaAndSizes;
+	IMAGE_DATA_DIRECTORY DataDirectory[IMAGE_NUMBEROF_DIRECTORY_ENTRIES];
+} IMAGE_OPTIONAL_HEADER64,*PIMAGE_OPTIONAL_HEADER64;
 typedef struct _IMAGE_ROM_OPTIONAL_HEADER {
 	WORD Magic;
 	BYTE MajorLinkerVersion;
@@ -2520,11 +2597,27 @@ typedef struct _IMAGE_OS2_HEADER {
 } IMAGE_OS2_HEADER,*PIMAGE_OS2_HEADER;
 #pragma pack(pop)
 #pragma pack(push,4)
-typedef struct _IMAGE_NT_HEADERS {
+typedef struct _IMAGE_NT_HEADERS32 {
 	DWORD Signature;
 	IMAGE_FILE_HEADER FileHeader;
-	IMAGE_OPTIONAL_HEADER OptionalHeader;
-} IMAGE_NT_HEADERS,*PIMAGE_NT_HEADERS;
+	IMAGE_OPTIONAL_HEADER32 OptionalHeader;
+} IMAGE_NT_HEADERS32,*PIMAGE_NT_HEADERS32;
+typedef struct _IMAGE_NT_HEADERS64 {
+	DWORD Signature;
+	IMAGE_FILE_HEADER FileHeader;
+	IMAGE_OPTIONAL_HEADER64 OptionalHeader;
+} IMAGE_NT_HEADERS64,*PIMAGE_NT_HEADERS64;
+#ifdef _WIN64
+typedef IMAGE_OPTIONAL_HEADER64 IMAGE_OPTIONAL_HEADER;
+typedef PIMAGE_OPTIONAL_HEADER64 PIMAGE_OPTIONAL_HEADER;
+typedef IMAGE_NT_HEADERS64 IMAGE_NT_HEADERS;
+typedef PIMAGE_NT_HEADERS64 PIMAGE_NT_HEADERS;
+#else
+typedef IMAGE_OPTIONAL_HEADER32 IMAGE_OPTIONAL_HEADER;
+typedef PIMAGE_OPTIONAL_HEADER32 PIMAGE_OPTIONAL_HEADER;
+typedef IMAGE_NT_HEADERS32 IMAGE_NT_HEADERS;
+typedef PIMAGE_NT_HEADERS32 PIMAGE_NT_HEADERS;
+#endif
 typedef struct _IMAGE_ROM_HEADERS {
 	IMAGE_FILE_HEADER FileHeader;
 	IMAGE_ROM_OPTIONAL_HEADER OptionalHeader;

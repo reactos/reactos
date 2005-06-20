@@ -27,7 +27,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ntifs.h>
 
 //#define NDEBUG
 #include <debug.h>

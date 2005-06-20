@@ -12,7 +12,7 @@
 #include <winerror.h>
 #include <windns.h>
 #define NTOS_MODE_USER
-#include <ntos.h>
+#include <ndk/ntndk.h>
 #include <internal/windns.h>
 
 /* DnsAcquireContextHandle *************

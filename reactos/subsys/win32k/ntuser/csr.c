@@ -58,7 +58,7 @@ CsrNotify(PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply)
   OldProcess = PsGetCurrentProcess();
   if (CsrProcess != OldProcess)
     {
-      KeAttachProcess(CsrProcess);
+      KeAttachProcess(EPROCESS_TO_KPROCESS(CsrProcess));
     }
   Status = ZwRequestWaitReplyPort(WindowsApiPort,
                                   &Request->Header,
@@ -132,7 +132,7 @@ CsrCloseHandle(HANDLE Handle)
   OldProcess = PsGetCurrentProcess();
   if (CsrProcess != OldProcess)
     {
-      KeAttachProcess(CsrProcess);
+      KeAttachProcess(EPROCESS_TO_KPROCESS(CsrProcess));
     }
 
   Status = ZwClose(Handle);

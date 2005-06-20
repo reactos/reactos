@@ -62,7 +62,7 @@ GetProcessAffinityMask (HANDLE hProcess,
     }
 
   *lpProcessAffinityMask = (DWORD)ProcessInfo.AffinityMask;
-  *lpSystemAffinityMask = (DWORD)SystemInfo.ActiveProcessors;
+  *lpSystemAffinityMask = (DWORD)SystemInfo.ActiveProcessorsAffinityMask;
 
   return TRUE;
 }

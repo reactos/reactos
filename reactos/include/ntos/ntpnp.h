@@ -71,6 +71,7 @@ typedef enum _PLUGPLAY_EVENT_CATEGORY {
    MaxPlugEventCategory
 } PLUGPLAY_EVENT_CATEGORY;
 
+#ifndef __USE_W32API
 typedef enum _PNP_VETO_TYPE {
    PNP_VetoTypeUnknown,
    PNP_VetoLegacyDevice,
@@ -86,6 +87,7 @@ typedef enum _PNP_VETO_TYPE {
    PNP_VetoLegacyDriver,
    PNP_VetoInsufficientRights,
 } PNP_VETO_TYPE;
+#endif
 
 /*
  * Plug and Play event structure used by NtGetPlugPlayEvent.

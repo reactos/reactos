@@ -1,11 +1,7 @@
 /* $Id$ */
 
 #include "resource.h"
-#ifdef _MSC_VER
-#include <../../../include/defines.h>
-#else
-#include <defines.h>
-#endif
+#include <windows.h>
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Network Control Panel\0"

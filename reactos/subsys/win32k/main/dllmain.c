@@ -26,25 +26,6 @@
 #include <win32k/debug1.h>
 #include <debug.h>
 
-#ifdef __USE_W32API
-typedef NTSTATUS (STDCALL *PW32_PROCESS_CALLBACK)(
-   struct _EPROCESS *Process,
-   BOOLEAN Create);
-
-typedef NTSTATUS (STDCALL *PW32_THREAD_CALLBACK)(
-   struct _ETHREAD *Thread,
-   BOOLEAN Create);
-
-VOID STDCALL
-PsEstablishWin32Callouts(
-   PW32_PROCESS_CALLBACK W32ProcessCallback,
-   PW32_THREAD_CALLBACK W32ThreadCallback,
-   PW32_OBJECT_CALLBACK W32ObjectCallback,
-   PVOID Param4,
-   ULONG W32ThreadSize,
-   ULONG W32ProcessSize);
-#endif
-
 BOOL INTERNAL_CALL GDI_CleanupForProcess (struct _EPROCESS *Process);
 
 extern SSDT Win32kSSDT[];

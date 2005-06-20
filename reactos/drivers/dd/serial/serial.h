@@ -22,8 +22,6 @@
   #define DPRINT1 DbgPrint("(%s:%d) ", __FILE__, __LINE__), DbgPrint
   #define CHECKPOINT1 DbgPrint("(%s:%d)\n", __FILE__, __LINE__)
 
-  #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-
   NTSTATUS STDCALL
   IoAttachDeviceToDeviceStackSafe(
     IN PDEVICE_OBJECT SourceDevice,
@@ -41,6 +39,8 @@
 #else
   #error Unknown compiler!
 #endif
+
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 
 typedef enum
 {

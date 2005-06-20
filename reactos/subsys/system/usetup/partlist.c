@@ -26,7 +26,8 @@
  */
 
 #include "precomp.h"
-#include <ddk/ntddscsi.h>
+#include <ddk/ntddscsi.h>  /* FIXME: NDK */
+#include <ddk/ntdddisk.h> /* FIXME: NDK */
 
 #include <ntdll/rtl.h>
 

@@ -9,14 +9,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ps.h>
-#include <ntos/minmax.h>
 #include <hal.h>
-#include <halirq.h>
-
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS ******************************************************************/
 
@@ -173,9 +168,9 @@ HalpLowerIrql(KIRQL NewIrql)
       return;
     }
   KeGetCurrentKPCR()->Irql = DISPATCH_LEVEL;
-  if (KeGetCurrentKPCR()->HalReserved[HAL_DPC_REQUEST])
+  if (((PKIPCR)KeGetCurrentKPCR())->HalReserved[HAL_DPC_REQUEST])
     {
-      KeGetCurrentKPCR()->HalReserved[HAL_DPC_REQUEST] = FALSE;
+      ((PKIPCR)KeGetCurrentKPCR())->HalReserved[HAL_DPC_REQUEST] = FALSE;
       KiDispatchInterrupt();
     }
   KeGetCurrentKPCR()->Irql = APC_LEVEL;
@@ -239,7 +234,7 @@ KfLowerIrql (KIRQL	NewIrql)
  *
  * NOTES
  */
-
+#undef KeLowerIrql
 VOID STDCALL
 KeLowerIrql (KIRQL NewIrql)
 {
@@ -302,6 +297,7 @@ KfRaiseIrql (KIRQL	NewIrql)
  * NOTES
  *	Calls KfRaiseIrql
  */
+#undef KeRaiseIrql
 VOID STDCALL
 KeRaiseIrql (KIRQL	NewIrql,
 	     PKIRQL	OldIrql)
@@ -465,11 +461,11 @@ HalRequestSoftwareInterrupt(
   switch (Request)
   {
     case APC_LEVEL:
-      KeGetCurrentKPCR()->HalReserved[HAL_APC_REQUEST] = TRUE;
+      ((PKIPCR)KeGetCurrentKPCR())->HalReserved[HAL_APC_REQUEST] = TRUE;
       break;
 
     case DISPATCH_LEVEL:
-      KeGetCurrentKPCR()->HalReserved[HAL_DPC_REQUEST] = TRUE;
+      ((PKIPCR)KeGetCurrentKPCR())->HalReserved[HAL_DPC_REQUEST] = TRUE;
       break;
       
     default:

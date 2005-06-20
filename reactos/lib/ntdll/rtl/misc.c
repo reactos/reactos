@@ -11,12 +11,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <windows.h>
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-
+#include <ntdll.h>
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <debug.h>
 
 /**********************************************************************
  * NAME							EXPORTED

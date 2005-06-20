@@ -424,6 +424,16 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 			non_if_data.ifs.push_back ( pIf );
 		subs_invalid = false;
 	}
+	else if ( e.name == "ifnot" )
+	{
+		If* pOldIf = pIf;
+		pIf = new If ( e, project, this, true );
+		if ( pOldIf )
+			pOldIf->data.ifs.push_back ( pIf );
+		else
+			non_if_data.ifs.push_back ( pIf );
+		subs_invalid = false;
+	}
 	else if ( e.name == "compilerflag" )
 	{
 		CompilerFlag* pCompilerFlag = new CompilerFlag ( project, this, e );
@@ -1014,8 +1024,9 @@ ImportLibrary::ImportLibrary ( const XMLElement& _node,
 
 If::If ( const XMLElement& node_,
          const Project& project_,
-         const Module* module_ )
-	: node(node_), project(project_), module(module_)
+         const Module* module_,
+         const bool negated_ )
+	: node(node_), project(project_), module(module_), negated(negated_)
 {
 	const XMLAttribute* att;
 

@@ -346,7 +346,7 @@ PsRevertThreadToSelf(IN PETHREAD Thread)
 /*
  * @implemented
  */
-VOID
+NTSTATUS
 STDCALL
 PsImpersonateClient(IN PETHREAD Thread,
                     IN PACCESS_TOKEN Token,
@@ -367,7 +367,7 @@ PsImpersonateClient(IN PETHREAD Thread,
             }
         }
 
-        return;
+        return STATUS_UNSUCCESSFUL;
     }
 
     if (Thread->ImpersonationInfo == NULL) {
@@ -387,6 +387,8 @@ PsImpersonateClient(IN PETHREAD Thread,
                                KernelMode);
 
     Thread->ActiveImpersonationInfo = TRUE;
+
+    return STATUS_SUCCESS;
 }
 
 

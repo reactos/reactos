@@ -27,13 +27,12 @@
 #pragma GCC system_header
 #endif
 
+#include "usb.h"
+#include "usbiodef.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "ntddk.h"
-#include "usb.h"
-#include "usbiodef.h"
 
 #include <pshpack1.h>
 

@@ -10,7 +10,9 @@
 	((pDeviceExt)->NtfsInfo.BytesPerCluster > PAGE_SIZE ? \
 	 (pDeviceExt)->NtfsInfo.BytesPerCluster : PAGE_SIZE)
 
+#ifndef TAG
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+#endif
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
@@ -127,8 +129,6 @@ typedef struct _CCB
   ULONG LastCluster;
   ULONG LastOffset;
 } CCB, *PCCB;
-
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 
 #define TAG_CCB TAG('I', 'C', 'C', 'B')
 

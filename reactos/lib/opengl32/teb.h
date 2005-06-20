@@ -27,7 +27,7 @@ static inline PTEB __declspec(naked) NtCurrentTeb(void)
 
 #else/*_MSC_VER*/
 
-#include <ntos/types.h>
-#include <napi/teb.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 
 #endif/*_MSC_VER*/

@@ -44,7 +44,7 @@ static BOOLEAN HasCurrentCabinet = FALSE;
 static WCHAR CurrentCabinetName[MAX_PATH];
 
 NTSTATUS
-CreateDirectory(PWCHAR DirectoryName)
+SetupCreateDirectory(PWCHAR DirectoryName)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   IO_STATUS_BLOCK IoStatusBlock;

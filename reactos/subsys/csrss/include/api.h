@@ -9,7 +9,8 @@
 #ifndef API_H_INCLUDED
 #define API_H_INCLUDED
 
-#include <ntos.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 
 #include <csrss/csrss.h>
 

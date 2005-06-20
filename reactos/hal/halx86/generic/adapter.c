@@ -13,14 +13,12 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ddk/iotypes.h>
-#include <internal/ps.h>
-#define NDEBUG
-#include <internal/debug.h>
 #include <hal.h>
+#define NDEBUG
+#include <debug.h>
 
 /* Hmm, needed for KDBG := 1. Why? */
+extern POBJECT_TYPE IMPORTED IoAdapterObjectType;
 #undef KeGetCurrentIrql
 
 /* FUNCTIONS *****************************************************************/

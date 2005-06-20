@@ -9,10 +9,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <roscfg.h>
 #include <ntoskrnl.h>
-#include <reactos/rossym.h>
 
 #define NDEBUG
 #include <internal/debug.h>

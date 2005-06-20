@@ -26,11 +26,7 @@
  * REVISION HISTORY:
  *       06-06-2001  CSH  Created
  */
-#include <ddk/ntddk.h>
-#include <ddk/ntpoapi.h>
-#include <internal/ps.h>
-#include <include/error.h>
-
+#include <w32k.h>
 
 VOID FASTCALL
 SetLastNtError(NTSTATUS Status)

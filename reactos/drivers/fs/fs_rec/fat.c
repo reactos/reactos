@@ -27,8 +27,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <rosrtl/string.h>
+#include <ntifs.h>
+#include <ntdddisk.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -186,7 +186,8 @@ FsRecVfatFsControl(IN PDEVICE_OBJECT DeviceObject,
 		   IN PIRP Irp)
 {
   PIO_STACK_LOCATION Stack;
-  UNICODE_STRING RegistryPath;
+  static UNICODE_STRING RegistryPath =
+    RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\Vfatfs");
   NTSTATUS Status;
 
   Stack = IoGetCurrentIrpStackLocation(Irp);
@@ -205,8 +206,6 @@ FsRecVfatFsControl(IN PDEVICE_OBJECT DeviceObject,
 
       case IRP_MN_LOAD_FILE_SYSTEM:
 	DPRINT("FAT: IRP_MN_LOAD_FILE_SYSTEM\n");
-	RtlRosInitUnicodeStringFromLiteral(&RegistryPath,
-			     L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\Vfatfs");
 	Status = ZwLoadDriver(&RegistryPath);
 	if (!NT_SUCCESS(Status))
 	  {

@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#include "ntddk.h"
-
 #define DD_KEYBOARD_DEVICE_NAME           "\\Device\\KeyboardClass"
 #define DD_KEYBOARD_DEVICE_NAME_U         L"\\Device\\KeyboardClass"
 

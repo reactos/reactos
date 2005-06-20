@@ -609,11 +609,11 @@ FsRtlpCopyName(
 
    if (Unicode)
    {
-      memcpy(CurrentEntry->Name, RelativeName->Buffer, RelativeName->Length);
+      memcpy(CurrentEntry->FileName, RelativeName->Buffer, RelativeName->Length);
       if (StreamName)
       {
-         CurrentEntry->Name[RelativeName->Length/sizeof(WCHAR)] = ':';
-         memcpy(&CurrentEntry ->Name[(RelativeName->Length/sizeof(WCHAR))+1],
+         CurrentEntry->FileName[RelativeName->Length/sizeof(WCHAR)] = ':';
+         memcpy(&CurrentEntry->FileName[(RelativeName->Length/sizeof(WCHAR))+1],
             StreamName->Buffer,
             StreamName->Length);
       }
@@ -741,7 +741,7 @@ FsRtlNotifyFullReportChange (
             (StreamName ? ((StreamName->Length * sizeof(WCHAR)) + sizeof(WCHAR)) : 0);
       }
 
-      RecordLen = FIELD_OFFSET(FILE_NOTIFY_INFORMATION, Name) + NameLenU;
+      RecordLen = FIELD_OFFSET(FILE_NOTIFY_INFORMATION, FileName) + NameLenU;
 
       if ((Irp = FsRtlpGetNextIrp(NotifyEntry)))
       {
@@ -770,7 +770,7 @@ FsRtlNotifyFullReportChange (
             if (CurrentEntry)
             {
                CurrentEntry->Action = Action;
-               CurrentEntry->NameLength = NameLenU;
+               CurrentEntry->FileNameLength = NameLenU;
                CurrentEntry->NextEntryOffset = 0;
 
                FsRtlpCopyName(
@@ -816,7 +816,7 @@ FsRtlNotifyFullReportChange (
          CurrentEntry = (PFILE_NOTIFY_INFORMATION)NotifyEntry->Buffer;
 
          CurrentEntry->Action = Action;
-         CurrentEntry->NameLength = NameLenU;
+         CurrentEntry->FileNameLength = NameLenU;
          CurrentEntry->NextEntryOffset = 0;
 
          FsRtlpCopyName(CurrentEntry,
@@ -937,10 +937,10 @@ FsRtlNotifyReportChange (
 VOID
 STDCALL
 FsRtlNotifyUninitializeSync (
-    IN PNOTIFY_SYNC NotifySync
+    IN PNOTIFY_SYNC *NotifySync
 	)
 {
-   ExFreePool (NotifySync);
+   ExFreePool (*NotifySync);
 }
 
 /**********************************************************************

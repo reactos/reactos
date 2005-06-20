@@ -11,13 +11,6 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <string.h>
-#include <ntos/keyboard.h>
-#include <ntos/minmax.h>
-#include <rosrtl/string.h>
-
-#include <ddk/ntddkbd.h>
-#include <ddk/ntdd8042.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -254,9 +247,9 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
 	PDEVICE_EXTENSION DevExt;
 	PFILE_OBJECT I8042File;
 	NTSTATUS Status;
-	UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Device\\Keyboard");
-	UNICODE_STRING SymlinkName = ROS_STRING_INITIALIZER(L"\\??\\Keyboard");
-	UNICODE_STRING I8042Name = ROS_STRING_INITIALIZER(L"\\Device\\KeyboardClass0");
+	UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\Keyboard");
+	UNICODE_STRING SymlinkName = RTL_CONSTANT_STRING(L"\\??\\Keyboard");
+	UNICODE_STRING I8042Name = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");
 
 	DPRINT("Keyboard Class Driver 0.0.1\n");
 

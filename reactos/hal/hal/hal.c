@@ -14,12 +14,16 @@
 #include <ddk/ntddk.h>
 #include <roscfg.h>
 
-#define NDEBUG
 #include <internal/debug.h>
+#define NDEBUG
+#include <debug.h>
+
+typedef struct _LOADER_PARAMETER_BLOCK *PLOADER_PARAMETER_BLOCK;
+typedef struct _KD_PORT_INFORMATION *PKD_PORT_INFORMATION;
 
 /* DATA **********************************************************************/
 
-ULONG EXPORTED KdComPortInUse = 0;
+ULONG KdComPortInUse = 0;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -737,7 +741,7 @@ KdPortEnableInterrupts()
   return FALSE;
 }
 
-
+#undef KeAcquireSpinLock
 VOID
 STDCALL
 KeAcquireSpinLock(
@@ -797,7 +801,7 @@ KeGetCurrentIrql(VOID)
   return (KIRQL)0;
 }
 
-
+#undef KeLowerIrql
 VOID
 STDCALL
 KeLowerIrql(
@@ -821,7 +825,7 @@ KeQueryPerformanceCounter(
   return Value;
 }
 
-
+#undef KeRaiseIrql
 VOID
 STDCALL
 KeRaiseIrql(
@@ -851,7 +855,7 @@ KeRaiseIrqlToSynchLevel(VOID)
   return (KIRQL)0;
 }
 
-
+#undef KeReleaseSpinLock
 VOID
 STDCALL
 KeReleaseSpinLock(

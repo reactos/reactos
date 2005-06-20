@@ -22,7 +22,7 @@ VOID
 STDCALL
 PsChargePoolQuota(IN PEPROCESS Process,
                   IN POOL_TYPE PoolType,
-                  IN ULONG_PTR Amount)
+                  IN ULONG Amount)
 {
     NTSTATUS Status;
 
@@ -67,7 +67,7 @@ NTSTATUS
 STDCALL
 PsChargeProcessPoolQuota(IN PEPROCESS Process,
                          IN POOL_TYPE PoolType,
-                         IN ULONG_PTR Amount)
+                         IN ULONG Amount)
 {
     PEPROCESS_QUOTA_BLOCK QuotaBlock;
     ULONG NewUsageSize;

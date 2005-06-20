@@ -760,33 +760,33 @@ typedef struct _DDPIXELFORMAT {
 	DWORD	dwAlphaBitDepth;        /* C: how many bits for alpha channels*/
 	DWORD	dwLuminanceBitCount;
 	DWORD	dwBumpBitCount;
-    } DUMMYUNIONNAME1;
+    };
     union {
 	DWORD	dwRBitMask;             /* 10: mask for red bit*/
 	DWORD	dwYBitMask;             /* 10: mask for Y bits*/
 	DWORD	dwStencilBitDepth;
 	DWORD	dwLuminanceBitMask;
 	DWORD	dwBumpDuBitMask;
-    } DUMMYUNIONNAME2;
+    };
     union {
 	DWORD	dwGBitMask;             /* 14: mask for green bits*/
 	DWORD	dwUBitMask;             /* 14: mask for U bits*/
 	DWORD	dwZBitMask;
 	DWORD	dwBumpDvBitMask;
-    } DUMMYUNIONNAME3;
+    };
     union {
 	DWORD   dwBBitMask;             /* 18: mask for blue bits*/
 	DWORD   dwVBitMask;             /* 18: mask for V bits*/
 	DWORD	dwStencilBitMask;
 	DWORD	dwBumpLuminanceBitMask;
-    } DUMMYUNIONNAME4;
+    };
     union {
-    	DWORD	dwRGBAlphaBitMask;	/* 1C: mask for alpha channel */
-    	DWORD	dwYUVAlphaBitMask;	/* 1C: mask for alpha channel */
+    DWORD	dwRGBAlphaBitMask;	/* 1C: mask for alpha channel */
+    DWORD	dwYUVAlphaBitMask;	/* 1C: mask for alpha channel */
 	DWORD	dwLuminanceAlphaBitMask;
 	DWORD	dwRGBZBitMask;		/* 1C: mask for Z channel */
 	DWORD	dwYUVZBitMask;		/* 1C: mask for Z channel */
-    } DUMMYUNIONNAME5;
+    };
     					/* 20: next structure */
 } DDPIXELFORMAT,*LPDDPIXELFORMAT;
 

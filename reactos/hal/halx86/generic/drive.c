@@ -11,18 +11,20 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/debug.h>
+#include <hal.h>
+#define NDEBUG
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 
 VOID STDCALL
-IoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+IoAssignDriveLetters(IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
 		     IN PSTRING NtDeviceName,
 		     OUT PUCHAR NtSystemPath,
 		     OUT PSTRING NtSystemPathString)
 {
-  HalIoAssignDriveLetters(LoaderBlock,
+  /* FIXME FIXME FIXME FUCK SOMEONE FIXME*/
+  HalIoAssignDriveLetters(NULL,
 			  NtDeviceName,
 			  NtSystemPath,
 			  NtSystemPathString);

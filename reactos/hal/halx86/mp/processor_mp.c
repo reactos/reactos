@@ -14,23 +14,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
 #include <hal.h>
-#include <halirq.h>
-#include <mps.h>
-
-#include <ioapic.h>
-#include <apic.h>
-
-#include <internal/ntoskrnl.h>
-#include <internal/i386/segment.h>
-#include <internal/ke.h>
-#include <internal/ps.h>
-
 #define NDEBUG
-#include <internal/debug.h>
-
-
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 

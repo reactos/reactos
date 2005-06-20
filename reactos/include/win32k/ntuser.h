@@ -1,7 +1,9 @@
 #ifndef __WIN32K_NTUSER_H
 #define __WIN32K_NTUSER_H
 
+#ifndef _NTNDK_
 #include <ddk/ntapi.h>
+#endif
 
 #define WM_SYSTIMER 280
 
@@ -147,12 +149,12 @@ NtUserCallHwndParamLock(
   DWORD Unknown1,
   DWORD Unknown2);
 
-DWORD
+BOOL
 STDCALL
 NtUserCallMsgFilter(
-  DWORD Unknown0,
-  DWORD Unknown1);
-
+  LPMSG msg,
+  INT code);
+ 
 LRESULT
 STDCALL
 NtUserCallNextHookEx(

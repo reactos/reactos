@@ -14,7 +14,6 @@
 /* INCLUDES */
 #include <ntddk.h>
 
-#include <rosrtl/string.h>
 #include <pseh.h>
 
 #include "null.h"
@@ -122,7 +121,8 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
  PDEVICE_OBJECT pdoNullDevice;
  PDEVICE_OBJECT pdoZeroDevice;
- UNICODE_STRING wstrDeviceName;
+ UNICODE_STRING wstrNullDeviceName = RTL_CONSTANT_STRING(L"\\Device\\Null");
+ UNICODE_STRING wstrZeroDeviceName = RTL_CONSTANT_STRING(L"\\Device\\Zero");
  NTSTATUS nErrCode;
 
  /* register driver routines */
@@ -133,13 +133,11 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
  DriverObject->DriverUnload = NullUnload;
 
  /* create null device */
- RtlRosInitUnicodeStringFromLiteral(&wstrDeviceName, L"\\Device\\Null");
-
  nErrCode = IoCreateDevice
  (
   DriverObject,
   sizeof(NULL_EXTENSION),
-  &wstrDeviceName,
+  &wstrNullDeviceName,
   FILE_DEVICE_NULL,
   0,
   FALSE,
@@ -155,13 +153,11 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
  pdoNullDevice->DeviceExtension = (PVOID)&nxNull;
 
  /* create zero device */
- RtlRosInitUnicodeStringFromLiteral(&wstrDeviceName, L"\\Device\\Zero");
-
  nErrCode = IoCreateDevice
  (
   DriverObject,
   sizeof(NULL_EXTENSION),
-  &wstrDeviceName,
+  &wstrZeroDeviceName,
   FILE_DEVICE_NULL,
   FILE_READ_ONLY_DEVICE, /* zero device is read-only */
   FALSE,

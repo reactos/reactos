@@ -22,11 +22,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#ifndef __ASM__
-#include <ddk/ntifs.h>
-#include <stdarg.h>
-#endif /* not __ASM__ */
-
 #include "arch/ke.h"
 
 /* INTERNAL KERNEL TYPES ****************************************************/
@@ -217,11 +212,6 @@ typedef struct _KPROCESS
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
-#ifdef __USE_W32API
-struct _KPROCESS* KeGetCurrentProcess(VOID);
-VOID KeSetGdtSelector(ULONG Entry, ULONG Value1, ULONG Value2);
-#endif
-
 struct _KIRQ_TRAPFRAME;
 struct _KPCR;
 struct _KPRCB;
@@ -231,19 +221,6 @@ struct _KEXCEPTION_FRAME;
 #define IPI_REQUEST_APC		    1
 #define IPI_REQUEST_DPC		    2
 #define IPI_REQUEST_FREEZE	    3
-
-#ifndef __USE_W32API
-typedef enum _KTHREAD_STATE {
-    Initialized,
-    Ready,
-    Running,
-    Standby,
-    Terminated,
-    Waiting,
-    Transition,
-    DeferredReady,
-} THREAD_STATE, *PTHREAD_STATE;
-#endif
 
 /* MACROS *************************************************************************/
 
@@ -266,7 +243,7 @@ typedef enum _KTHREAD_STATE {
 }
 
 #ifndef __USE_W32API
-#define KeGetCurrentProcessorNumber() (KeGetCurrentKPCR()->ProcessorNumber)
+#define KeGetCurrentProcessorNumber() (KeGetCurrentKPCR()->Number)
 #endif
 
 /* threadsch.c ********************************************************************/

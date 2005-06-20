@@ -24,20 +24,11 @@
 
 //#include "config.h"
 
+#include <k32.h>
 #define NDEBUG
 #include "../include/debug.h"
-#include <string.h>
-#define __NO_CTYPE_INLINES
-#include <ctype.h>
-#include <sys/types.h>
-#include <stdio.h>
-#include <stdarg.h>
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
-
-#include "windows.h"
 #include "lzexpand.h"
+
 #define HFILE_ERROR ((HFILE)-1)
 
 /* The readahead length of the decompressor. Reading single bytes

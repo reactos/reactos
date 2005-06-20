@@ -31,10 +31,6 @@
 #pragma GCC system_header
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdarg.h>
 #include <windef.h>
 #include <ntdef.h>
@@ -78,9 +74,5 @@ typedef CONST char *PCSZ;
 
 /* Definitions only in Windows NT 4 */
 #include "winnt4.h"
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* __NTDDK_H */

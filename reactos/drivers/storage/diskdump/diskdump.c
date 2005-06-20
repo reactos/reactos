@@ -29,8 +29,10 @@
 
 #include <ddk/ntddk.h>
 #include <ddk/scsi.h>
-#include <ddk/class2.h>
+#include <ddk/ntdddisk.h>
 #include <ddk/ntddscsi.h>
+#include <ddk/class2.h>
+#include <ntos.h>
 #include <napi/core.h>
 #include "../scsiport/scsiport_int.h"
 
@@ -295,7 +297,7 @@ DiskDumpPrepare(PDEVICE_OBJECT DeviceObject, PDUMP_POINTERS DumpPointers)
   PIMAGE_NT_HEADERS NtHeader;
   PVOID ImportDirectory;
   ULONG ImportDirectorySize;
-  PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectory;
+  PIMAGE_IMPORT_DESCRIPTOR ImportModuleDirectory;
   PVOID DriverBase;
   PCH Name;
   ULONG i;
@@ -323,12 +325,12 @@ DiskDumpPrepare(PDEVICE_OBJECT DeviceObject, PDUMP_POINTERS DumpPointers)
       return(STATUS_UNSUCCESSFUL);
     }
   /*  Process each import module  */
-  ImportModuleDirectory = (PIMAGE_IMPORT_MODULE_DIRECTORY)ImportDirectory;
+  ImportModuleDirectory = (PIMAGE_IMPORT_DESCRIPTOR)ImportDirectory;
   DPRINT("Processeing import directory at %p\n", ImportModuleDirectory);
-  while (ImportModuleDirectory->dwRVAModuleName)
+  while (ImportModuleDirectory->Name)
     {
       /*  Check to make sure that import lib is kernel  */
-      Name = (PCHAR) DriverBase + ImportModuleDirectory->dwRVAModuleName;
+      Name = (PCHAR) DriverBase + ImportModuleDirectory->Name;
 
       if (strcmp(Name, "scsiport.sys") != 0)
 	{
@@ -339,18 +341,18 @@ DiskDumpPrepare(PDEVICE_OBJECT DeviceObject, PDUMP_POINTERS DumpPointers)
 
       /*  Get the import address list  */
       ImportAddressList = (PVOID *) ((PUCHAR)DriverBase +
-				     ImportModuleDirectory->dwRVAFunctionAddressList);
+				     (ULONG_PTR)ImportModuleDirectory->FirstThunk);
 
       /*  Get the list of functions to import  */
-      if (ImportModuleDirectory->dwRVAFunctionNameList != 0)
+      if (ImportModuleDirectory->OriginalFirstThunk != 0)
 	{
 	  FunctionNameList = (PULONG) ((PUCHAR)DriverBase +
-				       ImportModuleDirectory->dwRVAFunctionNameList);
+				       (ULONG_PTR)ImportModuleDirectory->OriginalFirstThunk);
 	}
       else
 	{
 	  FunctionNameList = (PULONG) ((PUCHAR)DriverBase +
-				       ImportModuleDirectory->dwRVAFunctionAddressList);
+				       (ULONG_PTR)ImportModuleDirectory->FirstThunk);
 	}
       /*  Walk through function list and fixup addresses  */
       while (*FunctionNameList != 0L)

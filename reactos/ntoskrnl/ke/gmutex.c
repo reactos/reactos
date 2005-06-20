@@ -132,17 +132,6 @@ KiAcquireGuardedMutexContented(PKGUARDED_MUTEX GuardedMutex)
 
 VOID
 FASTCALL
-KeAcquireGuardedMutex(PKGUARDED_MUTEX GuardedMutex)
-{
-    /* Disable Special APCs */
-    KeEnterGuardedRegion();
-
-    /* Do the Unsafe Acquire */
-    KeAcquireGuardedMutexUnsafe(GuardedMutex);
-}
-
-VOID
-FASTCALL
 KeAcquireGuardedMutexUnsafe(PKGUARDED_MUTEX GuardedMutex)
 {
     /* Remove the lock */
@@ -183,6 +172,17 @@ KeReleaseGuardedMutexUnsafe(PKGUARDED_MUTEX GuardedMutex)
             KeSignalGateBoostPriority(&GuardedMutex->Gate);
         }
     }
+}
+
+VOID
+FASTCALL
+KeAcquireGuardedMutex(PKGUARDED_MUTEX GuardedMutex)
+{
+    /* Disable Special APCs */
+    KeEnterGuardedRegion();
+
+    /* Do the Unsafe Acquire */
+    KeAcquireGuardedMutexUnsafe(GuardedMutex);
 }
 
 VOID

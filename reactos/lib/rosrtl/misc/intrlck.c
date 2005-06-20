@@ -43,13 +43,8 @@
 *           InterlockedIncrement			                *
 *									*
 * InterlockedIncrement adds 1 to a long variable and returns		*
-*  -  a negative number if the result < 0				*
-*  -  zero if the result == 0						*
-*  -  a positive number if the result > 0				*
-*									*
-* The returned number need not be equal to the result!!!!		*
-* note:									*
-*									*
+* the resulting incremented value.                                      *
+*                                                                       *
 ************************************************************************/
 
 #include <windows.h>
@@ -58,23 +53,22 @@ LONG
 STDCALL 
 InterlockedIncrement(PLONG Addend)
 {
-	long ret = 0;
+	long ret;
 #ifdef _M_IX86
-	__asm__
-	(	  	 
-	   "\tlock\n"	/* for SMP systems */
-	   "\tincl	(%1)\n"
-	   "\tje	2f\n"
-	   "\tjl	1f\n"
-	   "\tincl	%0\n"
-	   "\tjmp	2f\n"
-	   "1:\tdec	%0\n"    	  
-	   "2:\n"
-	   :"=r" (ret):"r" (Addend), "0" (0): "memory"
-	);
+        __asm__
+        (
+           "\tlock\n"  /* for SMP systems */
+           "\txaddl %0, (%1)\n"
+           "\tincl %0\n"
+           :"=r" (ret)
+           :"r" (Addend), "0" (1)
+           : "memory"
+        );
 #elif defined(_M_PPC)
         ret = *Addend;
         ret = InterlockedExchangeAdd( Addend, ret + 1 );
+#else
+#error Unknown compiler for inline assembler
 #endif
 	return ret;
 }
@@ -82,12 +76,9 @@ InterlockedIncrement(PLONG Addend)
 /************************************************************************
 *           InterlockedDecrement			        	*
 *									*
-* InterlockedIncrement adds 1 to a long variable and returns		*
-*  -  a negative number if the result < 0				*
-*  -  zero if the result == 0						*
-*  -  a positive number if the result > 0				*
-*									*
-* The returned number need not be equal to the result!!!!		*
+* InterlockedDecrement adds -1 to a long variable and returns           * 
+* the resulting decremented value.                                      *
+*                                                                       *
 ************************************************************************/
 
 LONG 
@@ -98,19 +89,18 @@ InterlockedDecrement(LPLONG lpAddend)
 #ifdef _M_IX86
 	__asm__
 	(	  	 
-	   "\tlock\n"	/* for SMP systems */
-	   "\tdecl	(%1)\n"
-	   "\tje	2f\n"
-	   "\tjl	1f\n"
-	   "\tincl	%0\n"
-	   "\tjmp	2f\n"
-	   "1:\tdec	%0\n"    	  
-	   "2:\n"
-	   :"=r" (ret):"r" (lpAddend), "0" (0): "memory"          
+           "\tlock\n"  /* for SMP systems */
+           "\txaddl %0, (%1)\n"
+           "\tdecl %0\n"
+           :"=r" (ret)
+           :"r" (lpAddend), "0" (-1)
+           : "memory"
 	);
 #elif defined(_M_PPC)
         ret = *lpAddend;
         ret = InterlockedExchangeAdd( lpAddend, ret - 1 );
+#else
+#error Unknown compiler for inline assembler
 #endif
 	return ret;
 
@@ -139,6 +129,8 @@ InterlockedExchange(LPLONG target, LONG value )
         do {
             ret = *(volatile LONG *)target;
         } while( InterlockedCompareExchange( target, value, ret ) != ret );
+#else
+#error Unknown compiler for inline assembler
 #endif
 	return ret;
 }
@@ -174,6 +166,8 @@ InterlockedCompareExchange(
                           : "=&r" (ret)
                           : "b" (Destination), "r" (Comperand), "r" (Exchange)
                           : "cr0", "memory"); 
+#else
+#error Unknown compiler for inline assembler
 #endif
     return ret;
 }
@@ -208,6 +202,8 @@ InterlockedExchangeAdd(
             ret = *(volatile LONG *)Addend;
             newval = ret + Increment;
         } while (InterlockedCompareExchange(Addend, ret, newval) != ret);
+#else
+#error Unknown compiler for inline assembler
 #endif
 	return ret;
 }

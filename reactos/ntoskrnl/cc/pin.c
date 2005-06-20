@@ -16,8 +16,6 @@
 
 /* GLOBALS *******************************************************************/
 
-#define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
-
 extern NPAGED_LOOKASIDE_LIST iBcbLookasideList;
 
 /* FUNCTIONS *****************************************************************/

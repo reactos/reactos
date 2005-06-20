@@ -4,6 +4,8 @@
 #include <ddk/ntddk.h>
 #include <debug.h>
 
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+
 void wait_ms(int mils);
 
 #ifndef _snprintf
@@ -26,3 +28,5 @@ int swprintf(wchar_t *buf, const wchar_t *fmt, ...);
 #include "linux/usb.h"
 #include "linux/pci_ids.h"
 
+#define IOCTL_INTERNAL_USB_GET_ROOT_USB_DEVICE \
+	CTL_CODE(FILE_DEVICE_USB, 4000, METHOD_BUFFERED, FILE_ANY_ACCESS)

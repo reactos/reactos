@@ -516,7 +516,7 @@ findpcb:
 	     *   if the segment has a CC option equal to CCrecv
 	     */
 	    ((tp->t_flags & (TF_REQ_CC|TF_RCVD_CC)) != (TF_REQ_CC|TF_RCVD_CC) ||
-	     (to.to_flag & TOF_CC) != 0 && to.to_cc == tp->cc_recv) &&
+	     ((to.to_flag & TOF_CC) != 0 && to.to_cc == tp->cc_recv)) &&
 	    ti->ti_seq == tp->rcv_nxt &&
 	    tiwin && tiwin == tp->snd_wnd &&
 	    tp->snd_nxt == tp->snd_max) {

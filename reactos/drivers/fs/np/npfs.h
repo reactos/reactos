@@ -94,6 +94,7 @@ extern NPAGED_LOOKASIDE_LIST NpfsPipeDataLookasideList;
 
 #define KeUnlockMutex(x) KeReleaseMutex(x, FALSE);
 
+#define PAGE_ROUND_UP(x) ( (((ULONG_PTR)x)%PAGE_SIZE) ? ((((ULONG_PTR)x)&(~(PAGE_SIZE-1)))+PAGE_SIZE) : ((ULONG_PTR)x) )
 
 NTSTATUS STDCALL NpfsCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 NTSTATUS STDCALL NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject, PIRP Irp);

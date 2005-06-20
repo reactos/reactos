@@ -142,10 +142,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
       if (NULL != CurInfo->CurrentCursorObject && CurInfo->ShowingCursor)
       {
          /* Remove the cursor if it was displayed */
-         if (GDIDEV(SurfObj)->Pointer.MovePointer)
-           GDIDEV(SurfObj)->Pointer.MovePointer(SurfObj, -1, -1, &GDIDEV(SurfObj)->Pointer.Exclude);
-         else
-           EngMovePointer(SurfObj, -1, -1, &GDIDEV(SurfObj)->Pointer.Exclude);
+         IntEngMovePointer(SurfObj, -1, -1, &GDIDEV(SurfObj)->Pointer.Exclude);
       }
 
       GDIDEV(SurfObj)->Pointer.Status = SPS_ACCEPT_NOEXCLUDE;
@@ -266,7 +263,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
                          GDIDEV(SurfObj)->Pointer.Pos.y,
                          &(GDIDEV(SurfObj)->Pointer.Exclude),
                          SPS_CHANGE);
-      GDIDEV(SurfObj)->Pointer.MovePointer = EngMovePointer;
+      GDIDEV(SurfObj)->Pointer.MovePointer = NULL;
     }
     else
     {

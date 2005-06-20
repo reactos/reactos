@@ -31,15 +31,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <windows.h>
-#include <ntos/types.h>
-#include <napi/teb.h>
-#include <ntdll/rtl.h>
-#include <ntdll/ldr.h>
-#include <ddk/ntddk.h>
-
-#include <rosrtl/thread.h>
-
+#include <ntdll.h>
 #define NDEBUG
 #include <debug.h>
 

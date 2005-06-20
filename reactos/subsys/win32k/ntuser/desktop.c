@@ -1361,7 +1361,7 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
      may be a bit safer (e.g. when the desktop is being destroyed */
   /* switch into the context of the thread we're trying to get the desktop from,
      so we can use the handle */
-  KeAttachProcess(Thread->ThreadsProcess);
+  KeAttachProcess(EPROCESS_TO_KPROCESS(Thread->ThreadsProcess));
   Status = ObReferenceObjectByHandle(hThreadDesktop,
                                      GENERIC_ALL,
 				     ExDesktopObjectType,

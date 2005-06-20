@@ -40,7 +40,6 @@
 #ifndef __INCLUDE_INTERNAL_MM_H
 #define __INCLUDE_INTERNAL_MM_H
 
-#include <internal/ntoskrnl.h>
 #include <internal/arch/mm.h>
 
 /* TYPES *********************************************************************/
@@ -323,6 +322,10 @@ typedef struct
 extern MM_STATS MmStats;
 
 #define MM_PHYSICAL_PAGE_MPW_PENDING     (0x8)
+
+#define MM_CORE_DUMP_TYPE_NONE            (0x0)
+#define MM_CORE_DUMP_TYPE_MINIMAL         (0x1)
+#define MM_CORE_DUMP_TYPE_FULL            (0x2)
 
 #define MM_PAGEOP_PAGEIN        (1)
 #define MM_PAGEOP_PAGEOUT       (2)
@@ -856,6 +859,16 @@ ULONG MiGetUserPageDirectoryCount(VOID);
 
 NTSTATUS MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages);
 
+/* cont.c ********************************************************************/
+
+PVOID STDCALL
+MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
+					  IN PHYSICAL_ADDRESS LowestAcceptableAddress,
+			          IN PHYSICAL_ADDRESS HighestAcceptableAddress,
+			          IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
+			          IN MEMORY_CACHING_TYPE CacheType OPTIONAL,
+					  IN ULONG Alignment);
+                      
 /* region.c ************************************************************/
 
 NTSTATUS MmAlterRegion(PMADDRESS_SPACE AddressSpace, PVOID BaseAddress,

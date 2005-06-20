@@ -1,10 +1,6 @@
 #ifndef __INCLUDE_INTERNAL_CC_H
 #define __INCLUDE_INTERNAL_CC_H
 
-/* $Id$ */
-#include <ddk/ntifs.h>
-#include <reactos/bugcodes.h>
-
 typedef struct _BCB
 {
   LIST_ENTRY BcbSegmentListHead;

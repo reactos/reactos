@@ -1,5 +1,6 @@
 <module name="disk" type="kernelmodedriver" installbase="system32/drivers" installname="disk.sys" warnings="true">
 	<bootstrap base="reactos" />
+	<define name="__USE_W32API" />
 	<linkerflag>-lgcc</linkerflag>
 	<library>ntoskrnl</library>
 	<library>hal</library>

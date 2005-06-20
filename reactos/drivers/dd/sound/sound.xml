@@ -1,4 +1,5 @@
 <module name="sound" type="kernelmodedriver">
+        <define name="__USE_W32API" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>dsp.c</file>

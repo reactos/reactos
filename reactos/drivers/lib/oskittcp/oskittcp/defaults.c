@@ -189,27 +189,8 @@ sysctl_rdstruct(oldp, oldlenp, newp, sp, len)
         return (error);
 }
 
-/* ---------------------------------------------------------------------- */
-/*
- * normally, this is a builtin function in gcc
- * net/if.c doesn't seem to get it, though
- */
-static int
-memcmp(const void *s1v, const void *s2v, size_t size)
-{
-        register const char *s1 = s1v, *s2 = s2v;
-        register unsigned int a, b;
-
-        while (size-- > 0) {
-                if ((a = *s1++) != (b = *s2++))
-                        return (a-b);
-        }
-
-        return 0;
-}
-
 int bcmp(const void *b1, const void *b2, size_t len)
 {
-	return memcmp(b1, b2, len);
+	return RtlCompareMemory(b1, b2, len);
 }
 

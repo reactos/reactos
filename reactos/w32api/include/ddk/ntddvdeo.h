@@ -31,9 +31,6 @@
 extern "C" {
 #endif
 
-#include "ntddk.h"
-
-
 #define VIDEO_DEVICE_NAME                 "DISPLAY%d"
 #define WVIDEO_DEVICE_NAME                L"DISPLAY%d"
 

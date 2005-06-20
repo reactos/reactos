@@ -26,12 +26,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/trace.h>
-#include <string.h>
-#include <stdarg.h>
-
 #include <ntdll.h>
+#define NDEBUG
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 

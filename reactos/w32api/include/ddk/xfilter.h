@@ -31,9 +31,6 @@
 extern "C" {
 #endif
 
-#include "ntddk.h"
-
-
 #define ETH_LENGTH_OF_ADDRESS             6
 
 #define ETH_IS_BROADCAST(Address) \

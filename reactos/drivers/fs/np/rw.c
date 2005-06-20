@@ -9,7 +9,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ntifs.h>
 #include <rosrtl/minmax.h>
 #include "npfs.h"
 

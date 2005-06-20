@@ -344,7 +344,6 @@
 		<file>strdup.c</file>
 		<file>strerror.c</file>
 		<file>strncoll.c</file>
-		<file>strpbrk.c</file>
 		<file>strrev.c</file>
 		<file>strset.c</file>
 		<file>strstr.c</file>

@@ -177,8 +177,9 @@ IntHideMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
       {
         if((MaskSurface = EngLockSurface(pgp->MaskSurface)))
         {
-          EngBitBlt(DestSurface, SaveSurface, MaskSurface, NULL, NULL,
-                    &DestRect, &SrcPoint, &SrcPoint, NULL, NULL, ROP3_TO_ROP4(SRCCOPY));
+          IntEngBitBltEx(DestSurface, SaveSurface, MaskSurface, NULL, NULL,
+                         &DestRect, &SrcPoint, &SrcPoint, NULL, NULL,
+                         ROP3_TO_ROP4(SRCCOPY), FALSE);
           EngUnlockSurface(MaskSurface);
         }
         EngUnlockSurface(SaveSurface);
@@ -230,8 +231,9 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
          pgp->Size.cy,
          DestSurface->sizlBitmap.cy - pt.y);
 
-      EngBitBlt(SaveSurface, DestSurface, NULL, NULL, NULL,
-                &DestRect, &SrcPoint, NULL, NULL, NULL, ROP3_TO_ROP4(SRCCOPY));
+      IntEngBitBltEx(SaveSurface, DestSurface, NULL, NULL, NULL,
+                     &DestRect, &SrcPoint, NULL, NULL, NULL,
+                     ROP3_TO_ROP4(SRCCOPY), FALSE);
       EngUnlockSurface(SaveSurface);
    }
 
@@ -266,18 +268,21 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
         {
            if((ColorSurf = EngLockSurface(pgp->ColorSurface)))
            {
-             EngBitBlt(DestSurface, ColorSurf, MaskSurf, NULL, pgp->XlateObject,
-                       &DestRect, &SrcPoint, &SrcPoint, NULL, NULL, R4_MASK);
+             IntEngBitBltEx(DestSurface, ColorSurf, MaskSurf, NULL,
+                            pgp->XlateObject, &DestRect, &SrcPoint, &SrcPoint,
+                            NULL, NULL, R4_MASK, FALSE);
              EngUnlockSurface(ColorSurf);
            }
         }
         else
         {
-           EngBitBlt(DestSurface, MaskSurf, NULL, NULL, pgp->XlateObject,
-                     &DestRect, &SrcPoint, NULL, NULL, NULL, ROP3_TO_ROP4(SRCAND));
+           IntEngBitBltEx(DestSurface, MaskSurf, NULL, NULL, pgp->XlateObject,
+                          &DestRect, &SrcPoint, NULL, NULL, NULL,
+                          ROP3_TO_ROP4(SRCAND), FALSE);
            SrcPoint.y += pgp->Size.cy;
-           EngBitBlt(DestSurface, MaskSurf, NULL, NULL, pgp->XlateObject,
-                     &DestRect, &SrcPoint, NULL, NULL, NULL, ROP3_TO_ROP4(SRCINVERT));
+           IntEngBitBltEx(DestSurface, MaskSurf, NULL, NULL, pgp->XlateObject,
+                          &DestRect, &SrcPoint, NULL, NULL, NULL,
+                          ROP3_TO_ROP4(SRCINVERT), FALSE);
         }
         EngUnlockSurface(MaskSurf);
       }
@@ -521,6 +526,27 @@ EngMovePointer(
    } else if (prcl != NULL)
      prcl->left = prcl->top = prcl->right = prcl->bottom = -1;
 
+}
+
+VOID STDCALL
+IntEngMovePointer(
+   IN SURFOBJ *SurfObj,
+   IN LONG x,
+   IN LONG y,
+   IN RECTL *prcl)
+{
+  BITMAPOBJ *BitmapObj = CONTAINING_RECORD(SurfObj, BITMAPOBJ, SurfObj);
+
+  BITMAPOBJ_LockBitmapBits(BitmapObj);
+  if (GDIDEV(SurfObj)->Pointer.MovePointer)
+    {
+    GDIDEV(SurfObj)->Pointer.MovePointer(SurfObj, x, y, prcl);
+    }
+  else
+    {
+    EngMovePointer(SurfObj, x, y, prcl);
+    }
+  BITMAPOBJ_UnlockBitmapBits(BitmapObj);
 }
 
 /* EOF */

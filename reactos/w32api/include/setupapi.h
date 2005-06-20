@@ -577,6 +577,9 @@ extern "C" {
 #define SRCLIST_APPEND	0x00000200
 #define SRCLIST_NOSTRIPPLATFORM	0x00000400
 
+/* Flags for StringTableAddString and StringTableLookUpString */
+#define ST_CASE_SENSITIVE_COMPARE	0x00000001
+
 #ifndef RC_INVOKED
 typedef PVOID HINF;
 typedef PVOID HDSKSPC;
@@ -584,6 +587,8 @@ typedef PVOID HDEVINFO;
 typedef PVOID HSPFILEQ;
 typedef PVOID HSPFILELOG;
 typedef UINT DI_FUNCTION;
+
+typedef PVOID HSTRING_TABLE;
 
 typedef enum {
     SetupFileLogSourceFilename,
@@ -1325,6 +1330,15 @@ WINSETUPAPI BOOL WINAPI SetupSetSourceListA(DWORD,PCSTR*,UINT);
 WINSETUPAPI BOOL WINAPI SetupSetSourceListW(DWORD,PCWSTR*,UINT);
 WINSETUPAPI VOID WINAPI SetupTermDefaultQueueCallback(PVOID);
 WINSETUPAPI BOOL WINAPI SetupTerminateFileLog(HSPFILELOG);
+
+WINSETUPAPI DWORD  WINAPI StringTableAddString(HSTRING_TABLE, LPWSTR, DWORD);
+WINSETUPAPI VOID   WINAPI StringTableDestroy(HSTRING_TABLE);
+WINSETUPAPI HSTRING_TABLE WINAPI StringTableInitialize(VOID);
+WINSETUPAPI DWORD  WINAPI StringTableLookUpString(HSTRING_TABLE, LPWSTR, DWORD);
+WINSETUPAPI LPWSTR WINAPI StringTableStringFromId(HSTRING_TABLE, DWORD);
+WINSETUPAPI BOOL   WINAPI StringTableStringFromIdEx(HSTRING_TABLE, DWORD, LPWSTR, LPDWORD);
+WINSETUPAPI VOID   WINAPI StringTableTrim(HSTRING_TABLE);
+
 
 /* for backward compatability */
 #define SetupDiCreateInterfaceDeviceW	SetupDiCreateDeviceInterfaceW

@@ -1019,7 +1019,7 @@ static void hub_events(void)
 	 * safe since we delete the hub from the event list.
 	 * Not the most efficient, but avoids deadlocks.
 	 */
-	DPRINT1("hub_events() called\n");
+	//DPRINT1("hub_events() called\n");
 
 	while (m<5) {
 		m++;

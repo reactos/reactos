@@ -29,7 +29,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <ntos/kefuncs.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -39,7 +38,6 @@
 
 /* MACROS *******************************************************************/
 
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 #define TAG_FCB TAG('I', 'F', 'C', 'B')
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))

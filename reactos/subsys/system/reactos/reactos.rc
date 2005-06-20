@@ -1,6 +1,6 @@
 /* $Id$ */
 
-#include <defines.h>
+#include <windows.h>
 #include "resource.h"
 
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Setup\0"

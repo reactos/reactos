@@ -28,10 +28,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "user32.h"
-#include <string.h>
-#include <stdlib.h>
-#include <debug.h>
+#include <user32.h>
 
 /* FUNCTIONS *****************************************************************/
 

@@ -1047,9 +1047,49 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	break;
 
       case TokenRestrictedSids:
-	DPRINT1("NtQueryInformationToken(TokenRestrictedSids) not implemented\n");
-	Status = STATUS_NOT_IMPLEMENTED;
+      {
+        PTOKEN_GROUPS tg = (PTOKEN_GROUPS)TokenInformation;
+
+        DPRINT("NtQueryInformationToken(TokenRestrictedSids)\n");
+        RequiredLength = sizeof(tg->GroupCount) +
+                         RtlLengthSidAndAttributes(Token->RestrictedSidCount, Token->RestrictedSids);
+
+        _SEH_TRY
+        {
+          if(TokenInformationLength >= RequiredLength)
+          {
+            ULONG SidLen = RequiredLength - sizeof(tg->GroupCount) -
+                           (Token->RestrictedSidCount * sizeof(SID_AND_ATTRIBUTES));
+            PSID_AND_ATTRIBUTES Sid = (PSID_AND_ATTRIBUTES)((ULONG_PTR)TokenInformation + sizeof(tg->GroupCount) +
+                                                            (Token->RestrictedSidCount * sizeof(SID_AND_ATTRIBUTES)));
+
+            tg->GroupCount = Token->RestrictedSidCount;
+            Status = RtlCopySidAndAttributesArray(Token->RestrictedSidCount,
+                                                  Token->RestrictedSids,
+                                                  SidLen,
+                                                  &tg->Groups[0],
+                                                  (PSID)Sid,
+                                                  &Unused.Ptr,
+                                                  &Unused.Ulong);
+          }
+          else
+          {
+            Status = STATUS_BUFFER_TOO_SMALL;
+          }
+
+          if(ReturnLength != NULL)
+          {
+            *ReturnLength = RequiredLength;
+          }
+        }
+        _SEH_HANDLE
+        {
+          Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
 	break;
+      }
 
       case TokenSandBoxInert:
 	DPRINT1("NtQueryInformationToken(TokenSandboxInert) not implemented\n");

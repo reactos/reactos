@@ -11,11 +11,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-
+#include <ntdll.h>
 #define NDEBUG
-#include <ntdll/ntdll.h>
-
+#include <debug.h>
+#include <ddk/ldrfuncs.h>
 
 /* FUNCTIONS *****************************************************************/
 

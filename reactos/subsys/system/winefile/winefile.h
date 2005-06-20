@@ -35,7 +35,7 @@
 #include <commdlg.h>
 
 #ifdef UNICODE
-#define	_UNICODE
+#define _UNICODE
 #include <wchar.h>
 #endif
 #include <tchar.h>
@@ -46,14 +46,14 @@
 #include <locale.h>
 
 #ifndef __WINE__
-#include <malloc.h>	/* for alloca() */
+#include <malloc.h> /* for alloca() */
 #endif
 
-#include <shellapi.h>	/* for ShellExecute() */
-#include <shlobj.h>		/* for SHFormatDrive() */
+#include <shellapi.h>   /* for ShellExecute() */
+#include <shlobj.h>     /* for SHFormatDrive() */
 
 #ifndef _NO_EXTENSIONS
-#define	_SHELL_FOLDERS
+#define _SHELL_FOLDERS
 #endif /* _NO_EXTENSIONS */
 
 #ifndef FILE_ATTRIBUTE_NOT_CONTENT_INDEXED
@@ -64,81 +64,81 @@
 #endif
 
 
-#ifdef	_DEBUG
-#define	ASSERT(x)	{if (!(x)) DebugBreak();}
+#ifdef  _DEBUG
+#define ASSERT(x)   {if (!(x)) DebugBreak();}
 #else
-#define	ASSERT(x)	/* nothing */
+#define ASSERT(x)   /* nothing */
 #endif
 
-#define	BUFFER_LEN	1024
+#define BUFFER_LEN  1024
 
 
 enum IMAGE {
-	IMG_NONE=-1,	IMG_FILE=0,			IMG_DOCUMENT,	IMG_EXECUTABLE,
-	IMG_FOLDER,		IMG_OPEN_FOLDER,	IMG_FOLDER_PLUS,IMG_OPEN_PLUS,	IMG_OPEN_MINUS,
-	IMG_FOLDER_UP,	IMG_FOLDER_CUR
+    IMG_NONE=-1,    IMG_FILE=0,         IMG_DOCUMENT,   IMG_EXECUTABLE,
+    IMG_FOLDER,     IMG_OPEN_FOLDER,    IMG_FOLDER_PLUS,IMG_OPEN_PLUS,  IMG_OPEN_MINUS,
+    IMG_FOLDER_UP,  IMG_FOLDER_CUR
 };
 
-#define	IMAGE_WIDTH			16
-#define	IMAGE_HEIGHT		13
-#define	SPLIT_WIDTH			5
-#define TREE_LINE_DX		3
+#define IMAGE_WIDTH         16
+#define IMAGE_HEIGHT        13
+#define SPLIT_WIDTH         5
+#define TREE_LINE_DX        3
 
-#define IDW_STATUSBAR		0x100
-#define IDW_TOOLBAR			0x101
-#define IDW_DRIVEBAR		0x102
-#define	IDW_FIRST_CHILD		0xC000	/*0x200*/
+#define IDW_STATUSBAR       0x100
+#define IDW_TOOLBAR         0x101
+#define IDW_DRIVEBAR        0x102
+#define IDW_FIRST_CHILD     0xC000  /*0x200*/
 
-#define IDW_TREE_LEFT		3
-#define IDW_TREE_RIGHT		6
-#define IDW_HEADER_LEFT		2
-#define IDW_HEADER_RIGHT	5
+#define IDW_TREE_LEFT       3
+#define IDW_TREE_RIGHT      6
+#define IDW_HEADER_LEFT     2
+#define IDW_HEADER_RIGHT    5
 
-#define	WM_DISPATCH_COMMAND	0xBF80
+#define WM_DISPATCH_COMMAND 0xBF80
 
-#define	COLOR_COMPRESSED	RGB(0,0,255)
-#define	COLOR_SELECTION		RGB(0,0,128)
+#define COLOR_COMPRESSED    RGB(0,0,255)
+#define COLOR_SELECTION     RGB(0,0,128)
 
 #ifdef _NO_EXTENSIONS
-#define	COLOR_SPLITBAR		WHITE_BRUSH
+#define COLOR_SPLITBAR      WHITE_BRUSH
 #else
-#define	COLOR_SPLITBAR		LTGRAY_BRUSH
+#define COLOR_SPLITBAR      LTGRAY_BRUSH
 #endif
 
-#define	FRM_CALC_CLIENT		0xBF83
-#define	Frame_CalcFrameClient(hwnd, prt) ((BOOL)SNDMSG(hwnd, FRM_CALC_CLIENT, 0, (LPARAM)(PRECT)prt))
+#define FRM_CALC_CLIENT     0xBF83
+#define Frame_CalcFrameClient(hwnd, prt) ((BOOL)SNDMSG(hwnd, FRM_CALC_CLIENT, 0, (LPARAM)(PRECT)prt))
 
 
 typedef struct
 {
-  HANDLE	hInstance;
-  HACCEL	haccel;
-  ATOM		hframeClass;
-  HWND		hwndParent;
+  HANDLE    hInstance;
+  HACCEL    haccel;
+  ATOM      hframeClass;
+  HWND      hwndParent;
 
-  HWND		hMainWnd;
-  HMENU		hMenuFrame;
-  HMENU		hWindowsMenu;
-  HMENU		hLanguageMenu;
-  HMENU		hMenuView;
-  HMENU		hMenuOptions;
-  HWND		hmdiclient;
-  HWND		hstatusbar;
-  HWND		htoolbar;
-  HWND		hdrivebar;
-  HFONT		hfont;
+  HWND      hMainWnd;
+  HMENU     hMenuFrame;
+  HMENU     hWindowsMenu;
+  HMENU     hLanguageMenu;
+  HMENU     hMenuView;
+  HMENU     hMenuOptions;
+  HWND      hmdiclient;
+  HWND      hstatusbar;
+  HWND      htoolbar;
+  HWND      hdrivebar;
+  HFONT     hfont;
 
-  TCHAR		num_sep;
-  SIZE		spaceSize;
+  TCHAR     num_sep;
+  SIZE      spaceSize;
   HIMAGELIST himl;
 
-  TCHAR		drives[BUFFER_LEN];
-  BOOL		prescan_node;	/*TODO*/
+  TCHAR     drives[BUFFER_LEN];
+  BOOL      prescan_node;   /*TODO*/
 
 #ifdef _SHELL_FOLDERS
-  IShellFolder*	iDesktop;
-  IMalloc*		iMalloc;
-  UINT			cfStrFName;
+  IShellFolder* iDesktop;
+  IMalloc*      iMalloc;
+  UINT          cfStrFName;
 #endif
 } WINEFILE_GLOBALS;
 

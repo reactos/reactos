@@ -31,11 +31,14 @@
  *                          and improve reusability
  */
 
-#include <ddk/ntddk.h>
-#include <debug.h>
-#include <stddef.h>
+#include <windows.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 
 #include <epsapi.h>
+
+#define NDEBUG
+#include <debug.h>
 
 NTSTATUS NTAPI
 PsaCaptureProcessesAndThreads(OUT PSYSTEM_PROCESS_INFORMATION *ProcessesAndThreads)
@@ -74,7 +77,7 @@ PsaCaptureProcessesAndThreads(OUT PSYSTEM_PROCESS_INFORMATION *ProcessesAndThrea
     pInfoBuffer = pTmp;
   
     /* query the information */
-    Status = NtQuerySystemInformation(SystemProcessesAndThreadsInformation,
+    Status = NtQuerySystemInformation(SystemProcessInformation,
                                       pInfoBuffer,
                                       nSize,
                                       NULL);
@@ -262,7 +265,7 @@ PsaWalkFirstThread(IN PSYSTEM_PROCESS_INFORMATION CurrentProcess)
   static SIZE_T nOffsetOfThreads = 0;
 
   /* get the offset of the Threads field */
-  nOffsetOfThreads = offsetof(SYSTEM_PROCESS_INFORMATION, TH);
+  nOffsetOfThreads = FIELD_OFFSET(SYSTEM_PROCESS_INFORMATION, TH);
 
   return (PSYSTEM_THREAD_INFORMATION)((ULONG_PTR)CurrentProcess + nOffsetOfThreads);
 }
@@ -271,8 +274,8 @@ PSYSTEM_THREAD_INFORMATION FASTCALL
 PsaWalkNextThread(IN PSYSTEM_THREAD_INFORMATION CurrentThread)
 {
   return (PSYSTEM_THREAD_INFORMATION)((ULONG_PTR)CurrentThread +
-                           (offsetof(SYSTEM_PROCESS_INFORMATION, TH[1]) -
-                            offsetof(SYSTEM_PROCESS_INFORMATION, TH[0])));
+                           (FIELD_OFFSET(SYSTEM_PROCESS_INFORMATION, TH[1]) -
+                            FIELD_OFFSET(SYSTEM_PROCESS_INFORMATION, TH[0])));
 }
 
 /* EOF */

@@ -441,7 +441,11 @@ static HRESULT WINAPI ISvItemCm_fnInvokeCommand(
         case FCIDM_SHVIEW_PROPERTIES:
             TRACE("Verb FCIDM_SHVIEW_PROPERTIES\n");
             /* Open the property sheet page */
-            SHObjectProperties(NULL, TEXT("SHOP_FILEPATH"), lpcmi->hwnd, NULL);
+            /*
+             * FIXME: This just can't work ... the one who added it must
+             * have been mad. - FiN, 17/06/2005
+             * SHObjectProperties(lpcmi->hwnd, SHOP_FILEPATH, NULL, NULL);
+             */
             break;
         default:
             FIXME("Unhandled Verb %xl\n",LOWORD(lpcmi->lpVerb));

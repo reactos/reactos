@@ -45,6 +45,12 @@
 #ifndef _REACTOS_CSQ_H
 #define _REACTOS_CSQ_H
 
+/*
+ * Prevent including the CSQ definitions twice. They're present in NTDDK
+ * now too, except the *_EX versions.
+ */
+#ifndef IO_TYPE_CSQ_IRP_CONTEXT
+
 struct _IO_CSQ;
 
 
@@ -74,24 +80,6 @@ struct _IO_CSQ;
 typedef VOID (NTAPI *PIO_CSQ_INSERT_IRP) (struct _IO_CSQ *Csq,
                                           PIRP Irp);
 
-
-/*
- * Function to insert an IRP into the queue with extended context information.
- * This is useful if you need to be able to de-queue particular IRPs more
- * easily in some cases.
- *
- * Same deal as above; sample implementation:
- *
-	NTSTATUS NTAPI CsqInsertIrpEx(PIO_CSQ Csq, PIRP Irp, PVOID InsertContext)
-	{
-		CsqInsertIrp(Csq, Irp);
-		return STATUS_PENDING;
-	}
- *
- */
-typedef NTSTATUS (NTAPI *PIO_CSQ_INSERT_IRP_EX) (struct _IO_CSQ *Csq,
-                                                 PIRP Irp,
-                                                 PVOID InsertContext);
 
 /*
  * Function to remove an IRP from the queue.
@@ -188,7 +176,6 @@ typedef VOID (NTAPI *PIO_CSQ_COMPLETE_CANCELED_IRP) (struct _IO_CSQ *Csq,
  */
 #define IO_TYPE_CSQ_IRP_CONTEXT 1
 #define IO_TYPE_CSQ 2
-#define IO_TYPE_CSQ_EX 3
 
 /*
  * IO_CSQ - Queue control structure
@@ -213,6 +200,28 @@ typedef struct _IO_CSQ_IRP_CONTEXT {
 	PIO_CSQ Csq;
 } IO_CSQ_IRP_CONTEXT, *PIO_CSQ_IRP_CONTEXT;
 
+#endif /* IO_TYPE_CSQ_IRP_CONTEXT */
+
+/* See IO_TYPE_CSQ_* above */
+#define IO_TYPE_CSQ_EX 3
+
+/*
+ * Function to insert an IRP into the queue with extended context information.
+ * This is useful if you need to be able to de-queue particular IRPs more
+ * easily in some cases.
+ *
+ * Same deal as above; sample implementation:
+ *
+	NTSTATUS NTAPI CsqInsertIrpEx(PIO_CSQ Csq, PIRP Irp, PVOID InsertContext)
+	{
+		CsqInsertIrp(Csq, Irp);
+		return STATUS_PENDING;
+	}
+ *
+ */
+typedef NTSTATUS (NTAPI *PIO_CSQ_INSERT_IRP_EX) (struct _IO_CSQ *Csq,
+                                                 PIRP Irp,
+                                                 PVOID InsertContext);
 
 /*
  * CANCEL-SAFE QUEUE DDIs

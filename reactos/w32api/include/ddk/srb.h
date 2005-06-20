@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#include "ntddk.h"
-
 #if defined(_SCSIPORT_)
   #define SCSIPORTAPI DECLSPEC_EXPORT
 #else

@@ -187,28 +187,6 @@ typedef struct _INITIAL_TEB
   PVOID StackReserved;
 } INITIAL_TEB, *PINITIAL_TEB;
 
-#else /* __USE_W32API */
-
-#include <ddk/ntifs.h>
-
-#endif /* __USE_W32API */
-
-typedef struct _RTL_HEAP_DEFINITION
-{
-  ULONG Length;
-  ULONG Unknown[11];
-} RTL_HEAP_DEFINITION, *PRTL_HEAP_DEFINITION;
-
-typedef struct _RTL_ATOM_TABLE
-{
-  ULONG TableSize;
-  ULONG NumberOfAtoms;
-  PVOID Lock;		/* fast mutex (kernel mode)/ critical section (user mode) */
-  PVOID HandleTable;
-  LIST_ENTRY Slot[0];
-} RTL_ATOM_TABLE, *PRTL_ATOM_TABLE;
-
-
 #define MAXIMUM_LEADBYTES 12
 
 typedef struct _CPTABLEINFO
@@ -234,6 +212,30 @@ typedef struct _NLSTABLEINFO
   PUSHORT UpperCaseTable;
   PUSHORT LowerCaseTable;
 } NLSTABLEINFO, *PNLSTABLEINFO;
+
+
+#else /* __USE_W32API */
+
+#include <ddk/ntifs.h>
+
+#endif /* __USE_W32API */
+
+typedef struct _RTL_HEAP_DEFINITION
+{
+  ULONG Length;
+  ULONG Unknown[11];
+} RTL_HEAP_DEFINITION, *PRTL_HEAP_DEFINITION;
+
+typedef struct _RTL_ATOM_TABLE
+{
+  ULONG TableSize;
+  ULONG NumberOfAtoms;
+  PVOID Lock;		/* fast mutex (kernel mode)/ critical section (user mode) */
+  PVOID HandleTable;
+  LIST_ENTRY Slot[0];
+} RTL_ATOM_TABLE, *PRTL_ATOM_TABLE;
+
+
 
 
 #include <pshpack1.h>

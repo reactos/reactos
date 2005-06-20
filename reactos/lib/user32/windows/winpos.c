@@ -11,14 +11,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "user32.h"
-#include <window.h>
-#include <user32/callback.h>
-#include <user32/regcontrol.h>
-#include <user32/wininternal.h>
-#include <window.h>
-#define NDEBUG
-#include <debug.h>
+#include <user32.h>
 
 /* FUNCTIONS *****************************************************************/
 

@@ -16,10 +16,16 @@ void SetupOnce()
 
 /* Valid values for Command parameter of TestRoutine */
 #define TESTCMD_RUN       0   /* Buffer contains information about what failed */
-#define TESTCMD_TESTNAME  1   /* Buffer contains description of test */
-#define TESTCMD_TIMEOUT   2   /* Buffer contains timeout for test (DWORD, default is 5000 ms) */
+#define TESTCMD_TESTTYPE  1   /* Buffer contains type of test */
+#define TESTCMD_TESTNAME  2   /* Buffer contains description of test */
+#define TESTCMD_TIMEOUT   3   /* Buffer contains timeout for test (DWORD, default is 5000 ms) */
+
+/* Test types */
+#define TT_NORMAL         0
+#define TT_PERFORMANCE    1
 
 /* Valid values for return values of TestRoutine */
+#define TS_TIMEDOUT      -2
 #define TS_EXCEPTION     -1
 #define TS_OK             0
 #define TS_FAILED         1
@@ -28,7 +34,7 @@ extern int _Result;
 extern char *_Buffer;
 
 /* Macros to simplify tests */
-#define _DispatcherTimeout(FunctionName, TestName, TimeOut) \
+#define _DispatcherTypeTimeout(FunctionName, TestName, TestType, TimeOut) \
 void \
 FunctionName(int Command) \
 { \
@@ -36,6 +42,9 @@ FunctionName(int Command) \
     { \
       case TESTCMD_RUN: \
         RunTest(); \
+        break; \
+      case TESTCMD_TESTTYPE: \
+        *(PDWORD)_Buffer = (DWORD)TestType; \
         break; \
       case TESTCMD_TESTNAME: \
         strcpy(_Buffer, TestName); \
@@ -49,7 +58,14 @@ FunctionName(int Command) \
     } \
 }
 
-#define _Dispatcher(FunctionName, TestName) _DispatcherTimeout(FunctionName, TestName, 5000)
+#define _DispatcherTimeout(FunctionName, TestName, TimeOut) \
+  _DispatcherTypeTimeout(FunctionName, TestName, TT_NORMAL, TimeOut)
+
+#define _DispatcherType(FunctionName, TestName, TestType) \
+  _DispatcherTypeTimeout(FunctionName, TestName, TestType, 5000)
+
+#define _Dispatcher(FunctionName, TestName) \
+  _DispatcherTimeout(FunctionName, TestName, 5000)
 
 static inline void
 AppendAssertion(char *message)
@@ -141,27 +157,27 @@ typedef void (*TestOutputRoutine)(char *Buffer);
  */
 typedef void STDCALL (*TestDriverMain)(TestOutputRoutine OutputRoutine, char *TestName);
 
-typedef struct _ROS_TEST
+typedef struct __TEST
 {
   LIST_ENTRY ListEntry;
   TestRoutine Routine;
-} ROS_TEST, *PROS_TEST;
+} _TEST, *_PTEST;
 
 extern VOID InitializeTests();
 extern VOID RegisterTests();
 extern VOID PerformTests(TestOutputRoutine OutputRoutine, LPSTR TestName);
 
 
-typedef struct _API_DESCRIPTION
+typedef struct __API_DESCRIPTION
 {
   PCHAR FileName;
   PCHAR FunctionName;
   PCHAR ForwardedFunctionName;
   PVOID FunctionAddress;
   PVOID MockFunctionAddress;
-} API_DESCRIPTION, *PAPI_DESCRIPTION;
+} _API_DESCRIPTION, *_PAPI_DESCRIPTION;
 
-extern API_DESCRIPTION ExternalDependencies[];
+extern _API_DESCRIPTION ExternalDependencies[];
 extern ULONG MaxExternalDependency;
 
 HANDLE STDCALL
@@ -205,9 +221,27 @@ _SetPriorityClass(HANDLE hProcess, DWORD dwPriorityClass);
 BOOL STDCALL
 _SetThreadPriority(HANDLE hThread, int nPriority);
 
+HANDLE STDCALL
+_GetCurrentProcess();
+
+HANDLE STDCALL
+_GetCurrentThread();
+
+BOOL STDCALL
+_GetThreadContext(HANDLE hThread, LPCONTEXT lpContext);
+
+DWORD STDCALL
+_SuspendThread(HANDLE hThread);
+
+DWORD STDCALL
+_ResumeThread(HANDLE hThread);
+
+VOID STDCALL
+_Sleep(DWORD dwMilliseconds);
+
 
 static inline PCHAR
-FrameworkGetExportedFunctionNameInternal(PAPI_DESCRIPTION ApiDescription)
+FrameworkGetExportedFunctionNameInternal(_PAPI_DESCRIPTION ApiDescription)
 {
   if (ApiDescription->ForwardedFunctionName != NULL)
     {
@@ -220,7 +254,7 @@ FrameworkGetExportedFunctionNameInternal(PAPI_DESCRIPTION ApiDescription)
 }
 
 static inline PVOID
-FrameworkGetFunction(PAPI_DESCRIPTION ApiDescription)
+FrameworkGetFunction(_PAPI_DESCRIPTION ApiDescription)
 {
   HANDLE hModule;
   PVOID function = NULL;
@@ -284,7 +318,7 @@ static inline VOID
 _SetHook(PCHAR name,
   PVOID address)
 {
-  PAPI_DESCRIPTION api;
+  _PAPI_DESCRIPTION api;
   ULONG index;
 
   for (index = 0; index <= MaxExternalDependency; index++)
@@ -298,16 +332,16 @@ _SetHook(PCHAR name,
     }
 }
 
-typedef struct _HOOK
+typedef struct __HOOK
 {
   PCHAR FunctionName;
   PVOID FunctionAddress;
-} HOOK, *PHOOK;
+} _HOOK, *_PHOOK;
 
 static inline VOID
-_SetHooks(PHOOK hookTable)
+_SetHooks(_PHOOK hookTable)
 {
-  PHOOK hook;
+  _PHOOK hook;
 
   hook = &hookTable[0];
   while (hook->FunctionName != NULL)
@@ -319,9 +353,9 @@ _SetHooks(PHOOK hookTable)
 }
 
 static inline VOID
-_UnsetHooks(PHOOK hookTable)
+_UnsetHooks(_PHOOK hookTable)
 {
-  PHOOK hook;
+  _PHOOK hook;
 
   hook = &hookTable[0];
   while (hook->FunctionName != NULL)
@@ -335,7 +369,7 @@ _UnsetHooks(PHOOK hookTable)
 static inline VOID
 _UnsetAllHooks()
 {
-  PAPI_DESCRIPTION api;
+  _PAPI_DESCRIPTION api;
   ULONG index;
 
   for (index = 0; index <= MaxExternalDependency; index++)

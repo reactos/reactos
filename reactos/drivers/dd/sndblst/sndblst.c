@@ -12,7 +12,6 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <rosrtl/string.h>
 #include "sndblst.h"
 
 
@@ -30,8 +29,8 @@ NTSTATUS InitDevice(
 //    PDEVICE_INSTANCE Instance = Context;
     PDEVICE_OBJECT DeviceObject; // = Context;
     PDEVICE_EXTENSION Parameters; // = DeviceObject->DeviceExtension;
-    UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Device\\WaveOut0");   // CHANGE THESE?
-    UNICODE_STRING SymlinkName = ROS_STRING_INITIALIZER(L"\\??\\WaveOut0");
+    UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\WaveOut0");   // CHANGE THESE?
+    UNICODE_STRING SymlinkName = RTL_CONSTANT_STRING(L"\\??\\WaveOut0");
 
 //    CONFIG Config;
     RTL_QUERY_REGISTRY_TABLE Table[2];

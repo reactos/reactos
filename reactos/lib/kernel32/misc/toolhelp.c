@@ -38,6 +38,8 @@
 
 #include <k32.h>
 
+#include <tlhelp32.h>
+
 #define NDEBUG
 #include "../include/debug.h"
 

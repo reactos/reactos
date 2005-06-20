@@ -116,7 +116,7 @@ BadThread:
 .globl @KiSwapContextInternal@0
 @KiSwapContextInternal@0:
 #ifdef KDBG
-    //jmp SaveTrapFrameForKDB
+    jmp SaveTrapFrameForKDB
 SaveTrapFrameForKDB_Return:
 #endif
 
@@ -298,32 +298,55 @@ SameProcess:
 
 SaveTrapFrameForKDB:
     /* Set up a trap frame */
-    
-    /* Fake Interrupt Stack */
-    push esp                                     // 0x74
     pushf                                        // 0x70
     push cs                                      // 0x6C
-    push [esp+12]    /* EIP */                   // 0x68
-    mov [esp+16], ss                             // 0x78
-    
-    /* Trap Frame */
-    push 0           /* Error Code */            // 0x64
+    push 0             /* Error Code */          // 0x64
     push ebp                                     // 0x60
     push ebx
+    
+    /* Fake Interrupt Stack */
+    mov ebp, [esp+20]  /* Eip */
+    mov ebx, [esp+16]  /* Eflags */
+    mov [esp+20], ebx
+    mov ebx, [esp+12]  /* Cs */
+    mov [esp+16], ebx
+    mov [esp+12], ebp
+    
     push esi
     push edi
     push fs
-    push -1          /* Exception List */        // 0x4C
-    push 0           /* Previous Mode */         // 0x48
+    push -1            /* Exception List */      // 0x4C
+    push 0             /* Previous Mode */       // 0x48
     push eax
     push ecx
     push edx
     push ds
     push es
     push gs                                      // 0x30
-    sub esp, 0x28    /* Debug Registers */       // 0x8
-    push [esp+60]    /* Debug EIP */             // 0x4
-    push ebp         /* Debug EBP */             // 0x0
+
+    mov eax, dr7
+    push eax           /* Dr7 */
+    /* Clear breakpoint enables in dr7. */
+    and eax, 0xffff0000
+    mov dr7, eax
+    mov eax, dr6
+    push eax           /* Dr6 */
+    mov eax, dr3
+    push eax           /* Dr3 */
+    mov eax, dr2
+    push eax           /* Dr2 */
+    mov eax, dr1
+    push eax           /* Dr1 */
+    mov eax, dr0
+    push eax           /* Dr0 */
+        
+    lea eax, [esp+0x58]
+    push eax           /* TempEsp */
+    push ss            /* TempSegSs */
+    push 0             /* DebugPointer */
+    push -1            /* DebugArgMark */
+    push [esp+60]      /* Debug EIP */           // 0x4
+    push ebp           /* Debug EBP */           // 0x0
     
     /* Set Stack */
     mov ebp, esp
@@ -334,19 +357,21 @@ SaveTrapFrameForKDB:
     /* Save new one */
     mov [edi+KTHREAD_TRAP_FRAME], ebp
     
+    /* Restore EBP, EBX and EAX */
+    mov ebp, [ebp+KTRAP_FRAME_EBP]
+    mov ebx, [ebp+KTRAP_FRAME_EBX]
+    mov eax, [ebp+KTRAP_FRAME_EAX]
+    
     /* Return EIP */
     push offset RestoreTrapFrameForKDB
         
-    /* Restore EBP */
-    mov ebp, [ebp+KTRAP_FRAME_EBP]
-    
     /* Jump to normal code */
     jmp SaveTrapFrameForKDB_Return
 
 RestoreTrapFrameForKDB:
   
     /* Restore the old trapframe */
-    pop [edi+KTHREAD_TRAP_FRAME]
+    pop [esi+KTHREAD_TRAP_FRAME]
         
     /* Pop unused portions of the trap frame */
     add esp, 0x30
@@ -358,23 +383,13 @@ RestoreTrapFrameForKDB:
     pop edx
     pop ecx
     pop eax
-    add esp, 8
+    add esp, 8           /* ExceptionList and PreviousMode */
     pop fs
     pop edi
     pop esi
     pop ebx
-
-    /* Remove SS:ESP from the stack */
-    mov ebp, [esp+16]
-    mov [esp+24], ebp
-    mov ebp, [esp+12]
-    mov [esp+20], ebp
-    mov ebp, [esp+8]
-    mov [esp+16], ebp
-    
-    /* Restore Fake INT Stack */
     pop ebp
-    add esp, 12
+    add esp, 4           /* ErrorCode */
 
     /* Return to the caller. */
     iret

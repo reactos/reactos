@@ -9,9 +9,7 @@
  *      04-06-2001  CSH  Created
  */
 
-#include "user32.h"
-#include <debug.h>
-
+#include <user32.h>
 
 /*
  * @implemented

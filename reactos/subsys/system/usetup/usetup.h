@@ -32,9 +32,6 @@
 #endif
 #define assert(x)
 
-#define ROUND_DOWN(N, S) (((N) / (S)) * (S))
-#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
-
 extern HANDLE ProcessHeap;
 
 extern UNICODE_STRING SourceRootPath;

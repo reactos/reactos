@@ -25,17 +25,24 @@ typedef struct _MCB {
 } MCB, *PMCB;
 
 
-typedef struct _FILE_LOCK_GRANTED {
-	LIST_ENTRY			ListEntry;
-	FILE_LOCK_INFO			Lock;
-   PVOID             UnlockContext;
-} FILE_LOCK_GRANTED, *PFILE_LOCK_GRANTED;
+typedef struct _MAILSLOT_CREATE_PARAMETERS 
+{
+    ULONG           MailslotQuota;
+    ULONG           MaximumMessageSize;
+    LARGE_INTEGER   ReadTimeout;
+    BOOLEAN         TimeoutSpecified;
+} MAILSLOT_CREATE_PARAMETERS, *PMAILSLOT_CREATE_PARAMETERS;
 
-
-typedef struct _FILE_LOCK_TOC {
-	KSPIN_LOCK			SpinLock;
-	LIST_ENTRY			GrantedListHead;
-	LIST_ENTRY			PendingListHead;
-} FILE_LOCK_TOC, *PFILE_LOCK_TOC;
+typedef struct _NAMED_PIPE_CREATE_PARAMETERS 
+{
+    ULONG           NamedPipeType;
+    ULONG           ReadMode;
+    ULONG           CompletionMode;
+    ULONG           MaximumInstances;
+    ULONG           InboundQuota;
+    ULONG           OutboundQuota;
+    LARGE_INTEGER   DefaultTimeout;
+    BOOLEAN         TimeoutSpecified;
+} NAMED_PIPE_CREATE_PARAMETERS, *PNAMED_PIPE_CREATE_PARAMETERS;
 
 #endif  /* __INCLUDE_DDK_FSTYPES_H */

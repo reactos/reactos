@@ -83,8 +83,10 @@ tcp_trace(act, ostate, tp, ti, req)
 	struct tcpiphdr *ti;
 	int req;
 {
+#ifdef TCPDEBUG
 	tcp_seq seq, ack;
 	int len, flags;
+#endif
 	struct tcp_debug *td = &tcp_debug[tcp_debx++];
 
 	if (tcp_debx == TCP_NDEBUG)

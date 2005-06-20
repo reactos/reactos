@@ -65,7 +65,7 @@ HAL_DISPATCH EXPORTED HalDispatchTable =
     (pHalSetSystemInformation) NULL,	// HalSetSystemInformation
     (pHalQueryBusSlots) NULL,			// HalQueryBusSlots
     0,
-    (pHalExamineMBR) xHalExamineMBR,
+    (pHalExamineMBR) HalExamineMBR,
     (pHalIoAssignDriveLetters) xHalIoAssignDriveLetters,
     (pHalIoReadPartitionTable) xHalIoReadPartitionTable,
     (pHalIoSetPartitionInformation) xHalIoSetPartitionInformation,
@@ -83,7 +83,6 @@ HAL_DISPATCH EXPORTED HalDispatchTable =
     (pHalEndOfBoot) NULL,                   //HalEndOfBoot;
     (pHalMirrorVerify) NULL                //HalMirrorVerify;
 };
-
 
 HAL_PRIVATE_DISPATCH EXPORTED HalPrivateDispatchTable =
 {
@@ -302,16 +301,16 @@ xHalpWriteSector (IN PDEVICE_OBJECT DeviceObject,
 
 
 VOID FASTCALL
-xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
-	       IN ULONG SectorSize,
-	       IN ULONG MBRTypeIdentifier,
-	       OUT PVOID *Buffer)
+HalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
+	      IN ULONG SectorSize,
+	      IN ULONG MBRTypeIdentifier,
+	      OUT PVOID *Buffer)
 {
   LARGE_INTEGER SectorOffset;
   PPARTITION_SECTOR Sector;
   NTSTATUS Status;
 
-  DPRINT("xHalExamineMBR()\n");
+  DPRINT("HalExamineMBR()\n");
 
   *Buffer = NULL;
 
@@ -760,10 +759,10 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
     SectorSize = 4096;
 
   /* Check for 'Ontrack Disk Manager' */
-  xHalExamineMBR(DeviceObject,
-		 SectorSize,
-		 0x54,
-		 &MbrBuffer);
+  HalExamineMBR(DeviceObject,
+		SectorSize,
+		0x54,
+		&MbrBuffer);
   if (MbrBuffer != NULL)
     {
       DPRINT("Found 'Ontrack Disk Manager'\n");
@@ -772,10 +771,10 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
     }
 
   /* Check for 'EZ-Drive' */
-  xHalExamineMBR(DeviceObject,
-		 SectorSize,
-		 0x55,
-		 &MbrBuffer);
+  HalExamineMBR(DeviceObject,
+		SectorSize,
+		0x55,
+		&MbrBuffer);
   if (MbrBuffer != NULL)
     {
       DPRINT("Found 'EZ-Drive'\n");
@@ -1012,10 +1011,10 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
     SectorSize = 4096;
 
   /* Check for 'Ontrack Disk Manager' */
-  xHalExamineMBR (DeviceObject,
-		  SectorSize,
-		  0x54,
-		  (PVOID*)(PVOID)&PartitionSector);
+  HalExamineMBR (DeviceObject,
+		 SectorSize,
+		 0x54,
+		 (PVOID*)(PVOID)&PartitionSector);
   if (PartitionSector != NULL)
     {
       DPRINT ("Found 'Ontrack Disk Manager'\n");
@@ -1024,10 +1023,10 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
     }
 
   /* Check for 'EZ-Drive' */
-  xHalExamineMBR (DeviceObject,
-		  SectorSize,
-		  0x55,
-		  (PVOID*)(PVOID)&PartitionSector);
+  HalExamineMBR (DeviceObject,
+		 SectorSize,
+		 0x55,
+		 (PVOID*)(PVOID)&PartitionSector);
   if (PartitionSector != NULL)
     {
       DPRINT ("Found 'EZ-Drive'\n");
@@ -1224,10 +1223,10 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
     SectorSize = 4096;
 
   /* Check for 'Ontrack Disk Manager' */
-  xHalExamineMBR (DeviceObject,
-		  SectorSize,
-		  0x54,
-		  (PVOID*)(PVOID)&PartitionSector);
+  HalExamineMBR (DeviceObject,
+		 SectorSize,
+		 0x54,
+		 (PVOID*)(PVOID)&PartitionSector);
   if (PartitionSector != NULL)
     {
       DPRINT ("Found 'Ontrack Disk Manager'\n");
@@ -1236,10 +1235,10 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
     }
 
   /* Check for 'EZ-Drive' */
-  xHalExamineMBR (DeviceObject,
-		  SectorSize,
-		  0x55,
-		  (PVOID*)(PVOID)&PartitionSector);
+  HalExamineMBR (DeviceObject,
+		 SectorSize,
+		 0x55,
+		 (PVOID*)(PVOID)&PartitionSector);
   if (PartitionSector != NULL)
     {
       DPRINT ("Found 'EZ-Drive'\n");

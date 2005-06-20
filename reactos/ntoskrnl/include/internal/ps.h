@@ -41,10 +41,6 @@ struct _EJOB;
 
 #ifndef __ASM__
 
-#include <internal/mm.h>
-#include <internal/ke.h>
-#include <napi/teb.h>
-
 extern LCID PsDefaultThreadLocaleId;
 extern LCID PsDefaultSystemLocaleId;
 
@@ -119,7 +115,7 @@ typedef struct _ETHREAD
     struct _EPROCESS               *ThreadsProcess;             /* 218 */
     PKSTART_ROUTINE                StartAddress;                /* 21C */
     union {
-        LPTHREAD_START_ROUTINE     Win32StartAddress;           /* 220 */
+        PTHREAD_START_ROUTINE      Win32StartAddress;           /* 220 */
         ULONG                      LpcReceivedMessageId;        /* 220 */
     };
     LIST_ENTRY                     ThreadListEntry;             /* 224 */
@@ -187,7 +183,7 @@ typedef struct _ETHREAD *PETHREAD;
  * KERNEL VERSION: 5.2
  * DOCUMENTATION:  http://reactos.com/wiki/index.php/EPROCESS
  */
-struct _EPROCESS
+typedef struct _EPROCESS
 {
     KPROCESS              Pcb;                          /* 000 */
     EX_PUSH_LOCK          ProcessLock;                  /* 078 */
@@ -243,7 +239,7 @@ struct _EPROCESS
     ACCESS_MASK           GrantedAccess;                /* 194 */
     ULONG                 DefaultHardErrorProcessing;   /* 198 */
     NTSTATUS              LastThreadExitStatus;         /* 19C */
-    PPEB                  Peb;                          /* 1A0 */
+    struct _PEB*          Peb;                          /* 1A0 */
     EX_FAST_REF           PrefetchTrace;                /* 1A4 */
     LARGE_INTEGER         ReadOperationCount;           /* 1A8 */
     LARGE_INTEGER         WriteOperationCount;          /* 1B0 */
@@ -317,7 +313,7 @@ struct _EPROCESS
 
     /* FIXME MOVE TO AVL TREES                                 */
     MADDRESS_SPACE        AddressSpace;                 /* 28C */
-};
+} EPROCESS;
 #include <poppack.h>
 
 #define PROCESS_STATE_TERMINATED (1)

@@ -1289,7 +1289,8 @@ NTSTATUS STDCALL DriverEntry( PDRIVER_OBJECT DriverObject,
 			      PUNICODE_STRING RegsitryPath ) {
     PDEVICE_OBJECT DeviceObject;
     PLAN_DEVICE_EXT DeviceExt;
-    UNICODE_STRING wstrDeviceName, LanString;
+    UNICODE_STRING wstrDeviceName = RTL_CONSTANT_STRING(L"\\Device\\Lan");
+    UNICODE_STRING LanString = RTL_CONSTANT_STRING(L"LAN");
     NTSTATUS Status;
 
     InitNdisPools();
@@ -1303,9 +1304,6 @@ NTSTATUS STDCALL DriverEntry( PDRIVER_OBJECT DriverObject,
     DriverObject->DriverUnload = LanUnload;
 
     /* create lan device */
-    RtlRosInitUnicodeStringFromLiteral(&wstrDeviceName, L"\\Device\\Lan");
-    RtlRosInitUnicodeStringFromLiteral(&LanString, L"LAN");
-
     Status = IoCreateDevice
 	( DriverObject,
 	  sizeof(LAN_DEVICE_EXT),

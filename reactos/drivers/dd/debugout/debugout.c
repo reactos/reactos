@@ -23,7 +23,6 @@
 
 /* INCLUDES */
 #include <ddk/ntddk.h>
-#include <rosrtl/string.h>
 
 /* FUNCTIONS */
 NTSTATUS STDCALL
@@ -92,8 +91,8 @@ NTSTATUS STDCALL
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
   PDEVICE_OBJECT DebugOutDevice;
-  UNICODE_STRING DeviceName;
-  UNICODE_STRING DosName;
+  UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\DebugOut");
+  UNICODE_STRING DosName = RTL_CONSTANT_STRING(L"\\DosDevices\\DebugOut");
   NTSTATUS Status;
 
   /* register driver routines */
@@ -105,8 +104,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
   DriverObject->DriverUnload = DebugOutUnload;
 
   /* create device */
-  RtlRosInitUnicodeStringFromLiteral(&DeviceName, L"\\Device\\DebugOut");
-
   Status = IoCreateDevice(DriverObject, 0, &DeviceName, FILE_DEVICE_NULL,
                             0, FALSE, &DebugOutDevice);
   if (! NT_SUCCESS(Status))
@@ -114,7 +111,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
       return Status;
     }
 
-  RtlRosInitUnicodeStringFromLiteral(&DosName, L"\\DosDevices\\DebugOut");
   Status = IoCreateSymbolicLink(&DosName, &DeviceName);
   if (! NT_SUCCESS(Status))
     {

@@ -4,6 +4,9 @@
 #ifndef __DDK_RTL_H
 #define __DDK_RTL_H
 
+/* RTLP Functions */
+#include <rosrtl/string.h>
+
 #if defined(__NTOSKRNL__) || defined(__NTDRIVER__) || defined(__NTHAL__) || defined(__NTDLL__) || defined (__NTAPP__)
 
 #include <stddef.h>
@@ -11,8 +14,8 @@
 
 #endif /* __NTOSKRNL__ || __NTDRIVER__ || __NTHAL__ || __NTDLL__ || __NTAPP__ */
 
-#include <pe.h>
-#include <ole32/guiddef.h>
+#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
+#define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
 
 #ifndef __USE_W32API
 
@@ -282,88 +285,6 @@ RemoveTailList(
   return Entry;
 }
 
-
-/*
- * FIFO versions are slower but ensures that entries with equal SortField value
- * are placed in FIFO order (assuming that entries are removed from Head).
- */
-
-#define InsertAscendingListFIFO(ListHead, Type, ListEntryField, NewEntry, SortField)\
-{\
-  PLIST_ENTRY current;\
-\
-  current = (ListHead)->Flink;\
-  while (current != (ListHead))\
-  {\
-    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField >\
-        (NewEntry)->SortField)\
-    {\
-      break;\
-    }\
-    current = current->Flink;\
-  }\
-\
-  InsertTailList(current, &((NewEntry)->ListEntryField));\
-}
-
-
-#define InsertDescendingListFIFO(ListHead, Type, ListEntryField, NewEntry, SortField)\
-{\
-  PLIST_ENTRY current;\
-\
-  current = (ListHead)->Flink;\
-  while (current != (ListHead))\
-  {\
-    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField <\
-        (NewEntry)->SortField)\
-    {\
-      break;\
-    }\
-    current = current->Flink;\
-  }\
-\
-  InsertTailList(current, &((NewEntry)->ListEntryField));\
-}
-
-
-#define InsertAscendingList(ListHead, Type, ListEntryField, NewEntry, SortField)\
-{\
-  PLIST_ENTRY current;\
-\
-  current = (ListHead)->Flink;\
-  while (current != (ListHead))\
-  {\
-    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField >=\
-        (NewEntry)->SortField)\
-    {\
-      break;\
-    }\
-    current = current->Flink;\
-  }\
-\
-  InsertTailList(current, &((NewEntry)->ListEntryField));\
-}
-
-
-#define InsertDescendingList(ListHead, Type, ListEntryField, NewEntry, SortField)\
-{\
-  PLIST_ENTRY current;\
-\
-  current = (ListHead)->Flink;\
-  while (current != (ListHead))\
-  {\
-    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField <=\
-        (NewEntry)->SortField)\
-    {\
-      break;\
-    }\
-    current = current->Flink;\
-  }\
-\
-  InsertTailList(current, &((NewEntry)->ListEntryField));\
-}
-
-
 /*
  * BOOLEAN
  * IsXstEntry (
@@ -462,6 +383,85 @@ RtlZeroMemory (PVOID Destination, ULONG Length);
 
 #endif /* __USE_W32API */
 
+/*
+ * FIFO versions are slower but ensures that entries with equal SortField value
+ * are placed in FIFO order (assuming that entries are removed from Head).
+ */
+
+#define InsertAscendingListFIFO(ListHead, Type, ListEntryField, NewEntry, SortField)\
+{\
+  PLIST_ENTRY current;\
+\
+  current = (ListHead)->Flink;\
+  while (current != (ListHead))\
+  {\
+    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField >\
+        (NewEntry)->SortField)\
+    {\
+      break;\
+    }\
+    current = current->Flink;\
+  }\
+\
+  InsertTailList(current, &((NewEntry)->ListEntryField));\
+}
+
+
+#define InsertDescendingListFIFO(ListHead, Type, ListEntryField, NewEntry, SortField)\
+{\
+  PLIST_ENTRY current;\
+\
+  current = (ListHead)->Flink;\
+  while (current != (ListHead))\
+  {\
+    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField <\
+        (NewEntry)->SortField)\
+    {\
+      break;\
+    }\
+    current = current->Flink;\
+  }\
+\
+  InsertTailList(current, &((NewEntry)->ListEntryField));\
+}
+
+
+#define InsertAscendingList(ListHead, Type, ListEntryField, NewEntry, SortField)\
+{\
+  PLIST_ENTRY current;\
+\
+  current = (ListHead)->Flink;\
+  while (current != (ListHead))\
+  {\
+    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField >=\
+        (NewEntry)->SortField)\
+    {\
+      break;\
+    }\
+    current = current->Flink;\
+  }\
+\
+  InsertTailList(current, &((NewEntry)->ListEntryField));\
+}
+
+
+#define InsertDescendingList(ListHead, Type, ListEntryField, NewEntry, SortField)\
+{\
+  PLIST_ENTRY current;\
+\
+  current = (ListHead)->Flink;\
+  while (current != (ListHead))\
+  {\
+    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField <=\
+        (NewEntry)->SortField)\
+    {\
+      break;\
+    }\
+    current = current->Flink;\
+  }\
+\
+  InsertTailList(current, &((NewEntry)->ListEntryField));\
+}
 
 /*
  * PURPOSE: Used with RtlCheckRegistryKey, RtlCreateRegistryKey, 
@@ -2763,108 +2763,6 @@ STDCALL
 RtlxUnicodeStringToOemSize (
 	IN	PUNICODE_STRING	UnicodeString
 	);
-
-NTSTATUS
-FASTCALL
-RtlpOemStringToCountedUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN POEM_STRING OemSource,
-   IN BOOLEAN AllocateDestinationString,
-   IN POOL_TYPE PoolType);
-   
-NTSTATUS 
-FASTCALL
-RtlpUpcaseUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN PCUNICODE_STRING UniSource,
-   IN BOOLEAN  AllocateDestinationString,
-   IN POOL_TYPE PoolType);
-   
-NTSTATUS 
-FASTCALL
-RtlpUpcaseUnicodeStringToAnsiString(
-   IN OUT PANSI_STRING AnsiDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN  AllocateDestinationString,
-   IN POOL_TYPE PoolType);
-   
-NTSTATUS 
-FASTCALL
-RtlpUpcaseUnicodeStringToCountedOemString(
-   IN OUT POEM_STRING OemDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN AllocateDestinationString,
-   IN POOL_TYPE PoolType);
-   
-NTSTATUS 
-FASTCALL
-RtlpUpcaseUnicodeStringToOemString (
-   IN OUT POEM_STRING OemDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN  AllocateDestinationString,
-   IN POOL_TYPE PoolType);
-   
-NTSTATUS 
-FASTCALL
-RtlpDowncaseUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN AllocateDestinationString,
-   IN POOL_TYPE PoolType);
-   
-NTSTATUS
-FASTCALL
-RtlpAnsiStringToUnicodeString(
-   IN OUT PUNICODE_STRING DestinationString,
-   IN PANSI_STRING SourceString,
-   IN BOOLEAN AllocateDestinationString,
-   IN POOL_TYPE PoolType);   
-   
-NTSTATUS
-FASTCALL
-RtlpUnicodeStringToAnsiString(
-   IN OUT PANSI_STRING AnsiDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN AllocateDestinationString,
-   IN POOL_TYPE PoolType);
-   
-NTSTATUS
-FASTCALL
-RtlpOemStringToUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN POEM_STRING OemSource,
-   IN BOOLEAN AllocateDestinationString,
-   IN POOL_TYPE PoolType);
-
-NTSTATUS
-FASTCALL
-RtlpUnicodeStringToOemString(
-   IN OUT POEM_STRING OemDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN  AllocateDestinationString,
-   IN POOL_TYPE PoolType);
-   
-BOOLEAN
-FASTCALL
-RtlpCreateUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN PCWSTR  Source,
-   IN POOL_TYPE PoolType);   
-
-NTSTATUS
-FASTCALL
-RtlpUnicodeStringToCountedOemString(
-   IN OUT POEM_STRING OemDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN AllocateDestinationString,
-   IN POOL_TYPE PoolType);
-
-NTSTATUS STDCALL
-RtlpDuplicateUnicodeString(
-   INT AddNull,
-   IN PUNICODE_STRING SourceString,
-   PUNICODE_STRING DestinationString,
-   POOL_TYPE PoolType);
    
 /* Register io functions */
 

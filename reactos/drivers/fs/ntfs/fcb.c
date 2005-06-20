@@ -27,9 +27,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntos/kefuncs.h>
-
 #include "ntfs.h"
 
 #define NDEBUG

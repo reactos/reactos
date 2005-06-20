@@ -23,6 +23,7 @@
 
 #include <windef.h>
 #include <wingdi.h>
+#include <ddk/ntddk.h>
 #include <ddk/winddi.h>
 #include <ddk/ntddvdeo.h>
 
@@ -55,6 +56,8 @@ typedef struct _PDEV
    POINTL PointerHotSpot;
 #endif
 } PDEV, *PPDEV;
+
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 
 #define DEVICE_NAME	L"framebuf"
 #define ALLOC_TAG	TAG('F','B','U','F')

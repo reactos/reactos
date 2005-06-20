@@ -8,7 +8,6 @@
  *   CSH 01/09-2000 Created
  */
 #include <wshtcpip.h>
-#include <rosrtl/string.h>
 
 #ifdef DBG
 
@@ -287,24 +286,27 @@ WSHOpenSocket2(
 {
     PSOCKET_CONTEXT Context;
     UNICODE_STRING String;
+    UNICODE_STRING TcpDeviceName = RTL_CONSTANT_STRING(DD_TCP_DEVICE_NAME);
+    UNICODE_STRING UdpDeviceName = RTL_CONSTANT_STRING(DD_UDP_DEVICE_NAME);
+    UNICODE_STRING RawDeviceName = RTL_CONSTANT_STRING(DD_RAW_IP_DEVICE_NAME);
     NTSTATUS Status;
 
     WSH_DbgPrint(MAX_TRACE, ("\n"));
 
     switch (*SocketType) {
     case SOCK_STREAM:
-        RtlRosInitUnicodeStringFromLiteral(&String, DD_TCP_DEVICE_NAME);
+        String = TcpDeviceName;
         break;
 
     case SOCK_DGRAM:
-        RtlRosInitUnicodeStringFromLiteral(&String, DD_UDP_DEVICE_NAME);
+        String = UdpDeviceName;
         break;
 
     case SOCK_RAW:
         if ((*Protocol < 0) || (*Protocol > 255))
           return WSAEINVAL;
 
-        RtlRosInitUnicodeStringFromLiteral(&String, DD_RAW_IP_DEVICE_NAME);
+        String = RawDeviceName;
         break;
 
     default:

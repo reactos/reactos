@@ -2,9 +2,6 @@
 #ifndef __WIN32K_CURSORICON_H
 #define __WIN32K_CURSORICON_H
 
-#include <win32k/dc.h>
-#include <win32k/gdiobj.h>
-
 #include <pshpack1.h>
 
 /* Structures for reading icon/cursor files and resources */

@@ -18,8 +18,8 @@
 #include "trace.h"
 
 
-VOID SNMP_FUNC_TYPE SnmpSvcInitUptime();
-DWORD SNMP_FUNC_TYPE SnmpSvcGetUptime();
+VOID WINSNMPAPI SnmpSvcInitUptime();
+DWORD WINSNMPAPI SnmpSvcGetUptime();
 
 ////////////////////////////////////////////////////////////////////////////////
 

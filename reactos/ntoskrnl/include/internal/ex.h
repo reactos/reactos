@@ -5,9 +5,6 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_EXECUTIVE_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_EXECUTIVE_H
 
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-
 typedef enum
 {
   wmCenter = 0,
@@ -86,9 +83,6 @@ extern LARGE_INTEGER ExpTimeZoneBias;
 extern ULONG ExpTimeZoneId;
 
 extern POBJECT_TYPE ExEventPairObjectType;
-extern POBJECT_TYPE EXPORTED ExMutantObjectType;
-extern POBJECT_TYPE EXPORTED ExSemaphoreObjectType;
-extern POBJECT_TYPE EXPORTED ExTimerType;
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 

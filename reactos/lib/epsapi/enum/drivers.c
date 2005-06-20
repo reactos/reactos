@@ -14,9 +14,9 @@
  *                          and improve reusability
  */
 
-#include <stddef.h>
+#include <windows.h>
 #define NTOS_MODE_USER
-#include <ntos.h>
+#include <ndk/ntndk.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -188,8 +188,8 @@ PSYSTEM_MODULE_INFORMATION_ENTRY FASTCALL
 PsaWalkNextSystemModule(IN PSYSTEM_MODULE_INFORMATION CurrentSystemModule)
 {
   return (PSYSTEM_MODULE_INFORMATION_ENTRY)((ULONG_PTR)CurrentSystemModule +
-                                            (offsetof(SYSTEM_MODULE_INFORMATION, Module[1]) -
-                                             offsetof(SYSTEM_MODULE_INFORMATION, Module[0])));
+                                            (FIELD_OFFSET(SYSTEM_MODULE_INFORMATION, Module[1]) -
+                                             FIELD_OFFSET(SYSTEM_MODULE_INFORMATION, Module[0])));
 }
 
 /* EOF */

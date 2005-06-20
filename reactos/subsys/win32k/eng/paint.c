@@ -33,9 +33,12 @@ BOOL STDCALL FillSolid(SURFOBJ *Surface, PRECTL pRect, ULONG iColor)
 {
   LONG y;
   ULONG LineWidth;
+  BITMAPOBJ *BitmapObj;
 
   ASSERT ( Surface );
   ASSERT ( pRect );
+  BitmapObj = CONTAINING_RECORD(Surface, BITMAPOBJ, SurfObj);
+  BITMAPOBJ_LockBitmapBits(BitmapObj);
   MouseSafetyOnDrawStart(Surface, pRect->left, pRect->top, pRect->right, pRect->bottom);
   LineWidth  = pRect->right - pRect->left;
   DPRINT(" LineWidth: %d, top: %d, bottom: %d\n", LineWidth, pRect->top, pRect->bottom);
@@ -45,6 +48,7 @@ BOOL STDCALL FillSolid(SURFOBJ *Surface, PRECTL pRect, ULONG iColor)
       Surface, pRect->left, pRect->right, y, iColor);
   }
   MouseSafetyOnDrawEnd(Surface);
+  BITMAPOBJ_UnlockBitmapBits(BitmapObj);
 
   return TRUE;
 }
@@ -111,13 +115,13 @@ EngPaint(IN SURFOBJ *Surface,
 }
 
 BOOL STDCALL
-IntEngPaint(IN BITMAPOBJ *BitmapObj,
+IntEngPaint(IN SURFOBJ *Surface,
             IN CLIPOBJ *ClipRegion,
             IN BRUSHOBJ *Brush,
             IN POINTL *BrushOrigin,
             IN MIX  Mix)
 {
-  SURFOBJ *Surface = &BitmapObj->SurfObj;
+  BITMAPOBJ *BitmapObj = CONTAINING_RECORD(Surface, BITMAPOBJ, SurfObj);
   BOOL ret;
 
   DPRINT("SurfGDI type: %d\n", Surface->iType);
@@ -125,6 +129,7 @@ IntEngPaint(IN BITMAPOBJ *BitmapObj,
   if((Surface->iType!=STYPE_BITMAP) && (BitmapObj->flHooks & HOOK_PAINT))
   {
     // Call the driver's DrvPaint
+    BITMAPOBJ_LockBitmapBits(BitmapObj);
     MouseSafetyOnDrawStart(Surface, ClipRegion->rclBounds.left,
 	                         ClipRegion->rclBounds.top, ClipRegion->rclBounds.right,
 							 ClipRegion->rclBounds.bottom);
@@ -132,6 +137,7 @@ IntEngPaint(IN BITMAPOBJ *BitmapObj,
     ret = GDIDEVFUNCS(Surface).Paint(
       Surface, ClipRegion, Brush, BrushOrigin, Mix);
     MouseSafetyOnDrawEnd(Surface);
+    BITMAPOBJ_UnlockBitmapBits(BitmapObj);
     return ret;
   }
   return EngPaint( Surface, ClipRegion, Brush, BrushOrigin, Mix );

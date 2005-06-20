@@ -3,10 +3,7 @@
 #include <windns.h>
 #include <internal/windns.h>
 #define NTOS_MODE_USER
-#include <ntos.h>
-#include <wchar.h>
-#include <string.h>
-#include <ctype.h>
+#include <ndk/ntndk.h>
 
 static BOOL DnsIntNameContainsDots( LPCWSTR Name ) {
   return wcschr( Name, '.' ) ? TRUE : FALSE;

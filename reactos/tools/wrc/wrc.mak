@@ -33,7 +33,7 @@ $(WRC_PORT_OUT): | $(WRC_OUT)
 endif
 
 WRC_TARGET = \
-	$(EXEPREFIX)$(WRC_BASE_)wrc$(EXEPOSTFIX)
+	$(EXEPREFIX)$(WRC_OUT_)wrc$(EXEPOSTFIX)
 
 WRC_SOURCES = $(addprefix $(WRC_BASE_), \
 	dumpres.c \

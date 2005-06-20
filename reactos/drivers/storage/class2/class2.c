@@ -33,15 +33,19 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ddk/ntdddisk.h>
 #include <ddk/scsi.h>
 #include <ddk/class2.h>
+#include <stdio.h>
 
 #define NDEBUG
 #include <debug.h>
 
+#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
 #define VERSION "0.0.2"
 
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 #define TAG_SRBT  TAG('S', 'r', 'b', 'T')
 
 #define INQUIRY_DATA_SIZE  2048

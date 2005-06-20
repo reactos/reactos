@@ -290,12 +290,64 @@ EngBitBlt(SURFOBJ *DestObj,
     return TRUE;
     }
 
-  if (NULL != SourcePoint)
+  OutputRect = *DestRect;
+  if (OutputRect.right < OutputRect.left)
     {
-    InputRect.left = SourcePoint->x;
-    InputRect.right = SourcePoint->x + (DestRect->right - DestRect->left);
-    InputRect.top = SourcePoint->y;
-    InputRect.bottom = SourcePoint->y + (DestRect->bottom - DestRect->top);
+    OutputRect.left = DestRect->right;
+    OutputRect.right = DestRect->left;
+    }
+  if (OutputRect.bottom < OutputRect.top)
+    {
+    OutputRect.left = DestRect->right;
+    OutputRect.right = DestRect->left;
+    }
+
+  if (UsesSource)
+    {
+    if (NULL == SourcePoint)
+      {
+      return FALSE;
+      }
+
+    /* Make sure we don't try to copy anything outside the valid source
+       region */
+    InputPoint = *SourcePoint;
+    if (InputPoint.x < 0)
+      {
+        OutputRect.left -= InputPoint.x;
+        InputPoint.x = 0;
+      }
+    if (InputPoint.y < 0)
+      {
+        OutputRect.top -= InputPoint.y;
+        InputPoint.y = 0;
+      }
+    if (SourceObj->sizlBitmap.cx < InputPoint.x +
+                                   OutputRect.right - OutputRect.left)
+      {
+        OutputRect.right = OutputRect.left +
+                           SourceObj->sizlBitmap.cx - InputPoint.x;
+      }
+    if (SourceObj->sizlBitmap.cy < InputPoint.y +
+                                   OutputRect.bottom - OutputRect.top)
+      {
+        OutputRect.bottom = OutputRect.top +
+                            SourceObj->sizlBitmap.cy - InputPoint.y;
+      }
+
+    InputRect.left = InputPoint.x;
+    InputRect.right = InputPoint.x + (OutputRect.right - OutputRect.left);
+    InputRect.top = InputPoint.y;
+    InputRect.bottom = InputPoint.y + (OutputRect.bottom - OutputRect.top);
+
+    if (! IntEngEnter(&EnterLeaveSource, SourceObj, &InputRect, TRUE,
+                      &Translate, &InputObj))
+      {
+      return FALSE;
+      }
+
+    InputPoint.x += Translate.x;
+    InputPoint.y += Translate.y;
     }
   else
     {
@@ -305,23 +357,6 @@ EngBitBlt(SURFOBJ *DestObj,
     InputRect.bottom = DestRect->bottom - DestRect->top;
     }
 
-  if (! IntEngEnter(&EnterLeaveSource, SourceObj, &InputRect, TRUE, &Translate, &InputObj))
-    {
-    return FALSE;
-    }
-
-  if (NULL != SourcePoint)
-    {
-    InputPoint.x = SourcePoint->x + Translate.x;
-    InputPoint.y = SourcePoint->y + Translate.y;
-    }
-  else
-    {
-    InputPoint.x = 0;
-    InputPoint.y = 0;
-    }
-
-  OutputRect = *DestRect;
   if (NULL != ClipRegion)
     {
       if (OutputRect.left < ClipRegion->rclBounds.left)
@@ -348,40 +383,52 @@ EngBitBlt(SURFOBJ *DestObj,
 	}
     }
 
-  /* Check for degenerate case: if height or width of OutputRect is 0 pixels there's
-     nothing to do */
-  if (OutputRect.right <= OutputRect.left || OutputRect.bottom <= OutputRect.top)
+  /* Check for degenerate case: if height or width of OutputRect is 0 pixels
+     there's nothing to do */
+  if (OutputRect.right <= OutputRect.left ||
+      OutputRect.bottom <= OutputRect.top)
     {
-    IntEngLeave(&EnterLeaveSource);
+    if (UsesSource)
+      {
+      IntEngLeave(&EnterLeaveSource);
+      }
     return TRUE;
     }
 
-  if (! IntEngEnter(&EnterLeaveDest, DestObj, &OutputRect, FALSE, &Translate, &OutputObj))
+  if (! IntEngEnter(&EnterLeaveDest, DestObj, &OutputRect, FALSE, &Translate,
+                    &OutputObj))
     {
-    IntEngLeave(&EnterLeaveSource);
+    if (UsesSource)
+      {
+      IntEngLeave(&EnterLeaveSource);
+      }
     return FALSE;
     }
 
-  OutputRect.left = DestRect->left + Translate.x;
-  OutputRect.right = DestRect->right + Translate.x;
-  OutputRect.top = DestRect->top + Translate.y;
-  OutputRect.bottom = DestRect->bottom + Translate.y;
+  OutputRect.left += Translate.x;
+  OutputRect.right += Translate.x;
+  OutputRect.top += Translate.y;
+  OutputRect.bottom += Translate.y;
 
   if(BrushOrigin)
-  {
+    {
     AdjustedBrushOrigin.x = BrushOrigin->x + Translate.x;
     AdjustedBrushOrigin.y = BrushOrigin->y + Translate.y;
-  }
+    }
   else
+    {
     AdjustedBrushOrigin = Translate;
+    }
 
-  // Determine clipping type
+  /* Determine clipping type */
   if (ClipRegion == (CLIPOBJ *) NULL)
-  {
+    {
     clippingType = DC_TRIVIAL;
-  } else {
+    }
+  else
+    {
     clippingType = ClipRegion->iDComplexity;
-  }
+    }
 
   if (R4_MASK == Rop4)
     {
@@ -404,19 +451,23 @@ EngBitBlt(SURFOBJ *DestObj,
   {
     case DC_TRIVIAL:
       Ret = (*BltRectFunc)(OutputObj, InputObj, Mask, ColorTranslation,
-                           &OutputRect, &InputPoint, MaskOrigin, Brush, &AdjustedBrushOrigin, Rop4);
+                           &OutputRect, &InputPoint, MaskOrigin, Brush,
+                           &AdjustedBrushOrigin, Rop4);
       break;
     case DC_RECT:
-      // Clip the blt to the clip rectangle
+      /* Clip the blt to the clip rectangle */
       ClipRect.left = ClipRegion->rclBounds.left + Translate.x;
       ClipRect.right = ClipRegion->rclBounds.right + Translate.x;
       ClipRect.top = ClipRegion->rclBounds.top + Translate.y;
       ClipRect.bottom = ClipRegion->rclBounds.bottom + Translate.y;
-      EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect);
-      Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
-      Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
-      Ret = (*BltRectFunc)(OutputObj, InputObj, Mask, ColorTranslation,
-                           &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, Rop4);
+      if (EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect))
+        {
+          Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
+          Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
+          Ret = (*BltRectFunc)(OutputObj, InputObj, Mask, ColorTranslation,
+                               &CombinedRect, &Pt, MaskOrigin, Brush,
+                               &AdjustedBrushOrigin, Rop4);
+        }
       break;
     case DC_COMPLEX:
       Ret = TRUE;
@@ -424,11 +475,13 @@ EngBitBlt(SURFOBJ *DestObj,
 	{
 	  if (OutputRect.top < InputPoint.y)
 	    {
-	      Direction = OutputRect.left < InputPoint.x ? CD_RIGHTDOWN : CD_LEFTDOWN;
+	      Direction = OutputRect.left < InputPoint.x ?
+                          CD_RIGHTDOWN : CD_LEFTDOWN;
 	    }
 	  else
 	    {
-	      Direction = OutputRect.left < InputPoint.x ? CD_RIGHTUP : CD_LEFTUP;
+	      Direction = OutputRect.left < InputPoint.x ?
+                          CD_RIGHTUP : CD_LEFTUP;
 	    }
 	}
       else
@@ -438,7 +491,8 @@ EngBitBlt(SURFOBJ *DestObj,
       CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, Direction, 0);
       do
 	{
-	  EnumMore = CLIPOBJ_bEnum(ClipRegion,(ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
+	  EnumMore = CLIPOBJ_bEnum(ClipRegion,(ULONG) sizeof(RectEnum),
+                                   (PVOID) &RectEnum);
 
 	  for (i = 0; i < RectEnum.c; i++)
 	    {
@@ -446,12 +500,15 @@ EngBitBlt(SURFOBJ *DestObj,
 	      ClipRect.right = RectEnum.arcl[i].right + Translate.x;
 	      ClipRect.top = RectEnum.arcl[i].top + Translate.y;
 	      ClipRect.bottom = RectEnum.arcl[i].bottom + Translate.y;
-	      EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect);
-	      Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
-	      Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
-	      Ret = (*BltRectFunc)(OutputObj, InputObj, Mask, ColorTranslation,
-	                           &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, Rop4) &&
-	            Ret;
+	      if (EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect))
+                {
+                  Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
+                  Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
+                  Ret = (*BltRectFunc)(OutputObj, InputObj, Mask,
+                                       ColorTranslation, &CombinedRect, &Pt,
+                                       MaskOrigin, Brush, &AdjustedBrushOrigin,
+                                       Rop4) && Ret;
+                }
 	    }
 	}
       while(EnumMore);
@@ -460,36 +517,39 @@ EngBitBlt(SURFOBJ *DestObj,
 
 
   IntEngLeave(&EnterLeaveDest);
-  IntEngLeave(&EnterLeaveSource);
+  if (UsesSource)
+    {
+    IntEngLeave(&EnterLeaveSource);
+    }
 
   return Ret;
 }
 
 BOOL STDCALL
-IntEngBitBlt(BITMAPOBJ *DestObj,
-             BITMAPOBJ *SourceObj,
-             BITMAPOBJ *MaskObj,
-             CLIPOBJ *ClipRegion,
-             XLATEOBJ *ColorTranslation,
-             RECTL *DestRect,
-             POINTL *SourcePoint,
-             POINTL *MaskOrigin,
-             BRUSHOBJ *Brush,
-             POINTL *BrushOrigin,
-             ROP4 Rop4)
+IntEngBitBltEx(SURFOBJ *DestSurf,
+               SURFOBJ *SourceSurf,
+               SURFOBJ *MaskSurf,
+               CLIPOBJ *ClipRegion,
+               XLATEOBJ *ColorTranslation,
+               RECTL *DestRect,
+               POINTL *SourcePoint,
+               POINTL *MaskOrigin,
+               BRUSHOBJ *Brush,
+               POINTL *BrushOrigin,
+               ROP4 Rop4,
+               BOOL RemoveMouse)
 {
   BOOLEAN ret;
   RECTL InputClippedRect;
   RECTL OutputRect;
   POINTL InputPoint;
   BOOLEAN UsesSource;
-  SURFOBJ *DestSurf;
-  SURFOBJ *SourceSurf = SourceObj ? &SourceObj->SurfObj : NULL;
-  SURFOBJ *MaskSurf = MaskObj ? &MaskObj->SurfObj : NULL;
+  BITMAPOBJ *DestObj;
+  BITMAPOBJ *SourceObj = NULL;
 
-  ASSERT(DestObj);
-  DestSurf = &DestObj->SurfObj;
   ASSERT(DestSurf);
+  DestObj = CONTAINING_RECORD(DestSurf, BITMAPOBJ, SurfObj);
+  ASSERT(DestObj);
 
   InputClippedRect = *DestRect;
   if (InputClippedRect.right < InputClippedRect.left)
@@ -511,7 +571,8 @@ IntEngBitBlt(BITMAPOBJ *DestObj,
         }
       InputPoint = *SourcePoint;
 
-      /* Make sure we don't try to copy anything outside the valid source region */
+      /* Make sure we don't try to copy anything outside the valid source
+         region */
       if (InputPoint.x < 0)
         {
           InputClippedRect.left -= InputPoint.x;
@@ -522,13 +583,19 @@ IntEngBitBlt(BITMAPOBJ *DestObj,
           InputClippedRect.top -= InputPoint.y;
           InputPoint.y = 0;
         }
-      if (SourceSurf->sizlBitmap.cx < InputPoint.x + InputClippedRect.right - InputClippedRect.left)
+      if (SourceSurf->sizlBitmap.cx < InputPoint.x +
+                                      InputClippedRect.right -
+                                      InputClippedRect.left)
         {
-          InputClippedRect.right = InputClippedRect.left + SourceSurf->sizlBitmap.cx - InputPoint.x;
+          InputClippedRect.right = InputClippedRect.left +
+                                   SourceSurf->sizlBitmap.cx - InputPoint.x;
         }
-      if (SourceSurf->sizlBitmap.cy < InputPoint.y + InputClippedRect.bottom - InputClippedRect.top)
+      if (SourceSurf->sizlBitmap.cy < InputPoint.y +
+                                      InputClippedRect.bottom -
+                                      InputClippedRect.top)
         {
-          InputClippedRect.bottom = InputClippedRect.top + SourceSurf->sizlBitmap.cy - InputPoint.y;
+          InputClippedRect.bottom = InputClippedRect.top +
+                                    SourceSurf->sizlBitmap.cy - InputPoint.y;
         }
 
       if (InputClippedRect.right < InputClippedRect.left ||
@@ -543,29 +610,40 @@ IntEngBitBlt(BITMAPOBJ *DestObj,
    * outside the surface */
   if (NULL != ClipRegion)
     {
-      if (! EngIntersectRect(&OutputRect, &InputClippedRect, &ClipRegion->rclBounds))
+      if (! EngIntersectRect(&OutputRect, &InputClippedRect,
+                             &ClipRegion->rclBounds))
 	{
 	  return TRUE;
 	}
-      InputPoint.x += OutputRect.left - DestRect->left;
-      InputPoint.y += OutputRect.top - DestRect->top;
+      InputPoint.x += OutputRect.left - InputClippedRect.left;
+      InputPoint.y += OutputRect.top - InputClippedRect.top;
     }
   else
     {
       OutputRect = InputClippedRect;
     }
 
-  if (UsesSource)
+  if (RemoveMouse)
     {
-    MouseSafetyOnDrawStart(SourceSurf, InputPoint.x, InputPoint.y,
-                           (InputPoint.x + abs(DestRect->right - DestRect->left)),
-			   (InputPoint.y + abs(DestRect->bottom - DestRect->top)));
+    BITMAPOBJ_LockBitmapBits(DestObj);
+
+    if (UsesSource)
+      {
+      if (SourceSurf != DestSurf)
+        {
+        SourceObj = CONTAINING_RECORD(SourceSurf, BITMAPOBJ, SurfObj);
+        BITMAPOBJ_LockBitmapBits(SourceObj);
+        }
+      MouseSafetyOnDrawStart(SourceSurf, InputPoint.x, InputPoint.y,
+                             (InputPoint.x + abs(DestRect->right - DestRect->left)),
+  			   (InputPoint.y + abs(DestRect->bottom - DestRect->top)));
+      }
+    MouseSafetyOnDrawStart(DestSurf, OutputRect.left, OutputRect.top,
+                           OutputRect.right, OutputRect.bottom);
     }
 
   /* No success yet */
   ret = FALSE;
-  MouseSafetyOnDrawStart(DestSurf, OutputRect.left, OutputRect.top,
-                         OutputRect.right, OutputRect.bottom);
 
   /* Call the driver's DrvBitBlt if available */
   if (DestObj->flHooks & HOOK_BITBLT)
@@ -583,10 +661,19 @@ IntEngBitBlt(BITMAPOBJ *DestObj,
                       Rop4);
     }
 
-  MouseSafetyOnDrawEnd(DestSurf);
-  if (UsesSource)
+  if (RemoveMouse)
     {
-    MouseSafetyOnDrawEnd(SourceSurf);
+    MouseSafetyOnDrawEnd(DestSurf);
+    if (UsesSource)
+      {
+      MouseSafetyOnDrawEnd(SourceSurf);
+      if (SourceSurf != DestSurf)
+        {
+        BITMAPOBJ_UnlockBitmapBits(SourceObj);
+        }
+      }
+
+    BITMAPOBJ_UnlockBitmapBits(DestObj);
     }
 
   return ret;
@@ -718,9 +805,9 @@ EngStretchBlt(
 }
 
 BOOL STDCALL
-IntEngStretchBlt(BITMAPOBJ *DestObj,
-                 BITMAPOBJ *SourceObj,
-                 BITMAPOBJ *MaskObj,
+IntEngStretchBlt(SURFOBJ *DestSurf,
+                 SURFOBJ *SourceSurf,
+                 SURFOBJ *MaskSurf,
                  CLIPOBJ *ClipRegion,
                  XLATEOBJ *ColorTranslation,
                  RECTL *DestRect,
@@ -733,31 +820,36 @@ IntEngStretchBlt(BITMAPOBJ *DestObj,
   BOOLEAN ret;
   COLORADJUSTMENT ca;
   POINT MaskOrigin;
-  SURFOBJ *DestSurf;
-  SURFOBJ *SourceSurf = SourceObj ? &SourceObj->SurfObj : NULL;
-  SURFOBJ *MaskSurf = MaskObj ? &MaskObj->SurfObj : NULL;
+  BITMAPOBJ *DestObj;
+  BITMAPOBJ *SourceObj = NULL;
 
-  ASSERT(DestObj);
-  DestSurf = &DestObj->SurfObj;
   ASSERT(DestSurf);
+  DestObj = CONTAINING_RECORD(DestSurf, BITMAPOBJ, SurfObj);
+  ASSERT(DestObj);
 
   if (pMaskOrigin != NULL)
     {
       MaskOrigin.x = pMaskOrigin->x; MaskOrigin.y = pMaskOrigin->y;
     }
 
-  if (NULL != SourceSurf)
-    {
-    ASSERT(SourceRect);
-    MouseSafetyOnDrawStart(SourceSurf, SourceRect->left, SourceRect->top,
-                           SourceRect->right, SourceRect->bottom);
-    }
-
   /* No success yet */
   ret = FALSE;
   ASSERT(DestRect);
+  BITMAPOBJ_LockBitmapBits(DestObj);
   MouseSafetyOnDrawStart(DestSurf, DestRect->left, DestRect->top,
                          DestRect->right, DestRect->bottom);
+
+  if (NULL != SourceSurf)
+    {
+    SourceObj = CONTAINING_RECORD(SourceSurf, BITMAPOBJ, SurfObj);
+    ASSERT(SourceRect);
+    if (SourceSurf != DestSurf)
+      {
+      BITMAPOBJ_LockBitmapBits(SourceObj);
+      }
+    MouseSafetyOnDrawStart(SourceSurf, SourceRect->left, SourceRect->top,
+                           SourceRect->right, SourceRect->bottom);
+    }
 
   /* Prepare color adjustment */
 
@@ -779,11 +871,16 @@ IntEngStretchBlt(BITMAPOBJ *DestObj,
                           &ca, BrushOrigin, DestRect, SourceRect, NULL, Mode);
     }
 
-  MouseSafetyOnDrawEnd(DestSurf);
   if (NULL != SourceSurf)
     {
     MouseSafetyOnDrawEnd(SourceSurf);
+    if (SourceSurf != DestSurf)
+      {
+      BITMAPOBJ_UnlockBitmapBits(SourceObj);
+      }
     }
+  MouseSafetyOnDrawEnd(DestSurf);
+  BITMAPOBJ_UnlockBitmapBits(DestObj);
 
   return ret;
 }
@@ -1001,15 +1098,21 @@ EngMaskBitBlt(SURFOBJ *DestObj,
       ClipRect.right = ClipRegion->rclBounds.right + Translate.x;
       ClipRect.top = ClipRegion->rclBounds.top + Translate.y;
       ClipRect.bottom = ClipRegion->rclBounds.bottom + Translate.y;
-      EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect);
-      Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
-      Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
-      if(Mask->iBitmapFormat == BMF_8BPP)
-        Ret = AlphaBltMask(OutputObj, InputObj, Mask, DestColorTranslation, SourceColorTranslation,
-                           &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin);
-      else
-        Ret = BltMask(OutputObj, InputObj, Mask, DestColorTranslation,
-                           &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, R4_MASK);
+      if (EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect))
+        {
+          Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
+          Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
+          if(Mask->iBitmapFormat == BMF_8BPP)
+            {
+              Ret = AlphaBltMask(OutputObj, InputObj, Mask, DestColorTranslation, SourceColorTranslation,
+                                 &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin);
+            }
+          else
+            {
+              Ret = BltMask(OutputObj, InputObj, Mask, DestColorTranslation,
+                            &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, R4_MASK);
+            }
+        }
       break;
     case DC_COMPLEX:
       Ret = TRUE;
@@ -1039,15 +1142,26 @@ EngMaskBitBlt(SURFOBJ *DestObj,
 	      ClipRect.right = RectEnum.arcl[i].right + Translate.x;
 	      ClipRect.top = RectEnum.arcl[i].top + Translate.y;
 	      ClipRect.bottom = RectEnum.arcl[i].bottom + Translate.y;
-	      EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect);
-	      Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
-	      Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
-	      if(Mask->iBitmapFormat == BMF_8BPP)
-	        Ret = AlphaBltMask(OutputObj, InputObj, Mask, DestColorTranslation, SourceColorTranslation,
-	                           &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin) && Ret;
-              else
-                Ret = BltMask(OutputObj, InputObj, Mask, DestColorTranslation,
-                                   &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, R4_MASK) && Ret;
+	      if (EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect))
+                {
+                  Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
+                  Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
+                  if(Mask->iBitmapFormat == BMF_8BPP)
+                    {
+                      Ret = AlphaBltMask(OutputObj, InputObj, Mask,
+                                         DestColorTranslation,
+                                         SourceColorTranslation,
+                                         &CombinedRect, &Pt, MaskOrigin, Brush,
+                                         &AdjustedBrushOrigin) && Ret;
+                    }
+                  else
+                    {
+                      Ret = BltMask(OutputObj, InputObj, Mask,
+                                    DestColorTranslation, &CombinedRect, &Pt,
+                                    MaskOrigin, Brush, &AdjustedBrushOrigin,
+                                    R4_MASK) && Ret;
+                    }
+                }
 	    }
 	}
       while(EnumMore);
@@ -1062,7 +1176,7 @@ EngMaskBitBlt(SURFOBJ *DestObj,
 }
 
 BOOL STDCALL
-IntEngMaskBlt(SURFOBJ *DestObj,
+IntEngMaskBlt(SURFOBJ *DestSurf,
               SURFOBJ *Mask,
               CLIPOBJ *ClipRegion,
               XLATEOBJ *DestColorTranslation,
@@ -1076,6 +1190,7 @@ IntEngMaskBlt(SURFOBJ *DestObj,
   BOOLEAN ret;
   RECTL OutputRect;
   POINTL InputPoint;
+  BITMAPOBJ *DestObj;
 
   ASSERT(Mask);
 
@@ -1102,26 +1217,30 @@ IntEngMaskBlt(SURFOBJ *DestObj,
 
   /* No success yet */
   ret = FALSE;
-  ASSERT(DestObj);
-  MouseSafetyOnDrawStart(DestObj, OutputRect.left, OutputRect.top,
+  ASSERT(DestSurf);
+  DestObj = CONTAINING_RECORD(DestSurf, BITMAPOBJ, SurfObj);
+
+  BITMAPOBJ_LockBitmapBits(DestObj);
+  MouseSafetyOnDrawStart(DestSurf, OutputRect.left, OutputRect.top,
                          OutputRect.right, OutputRect.bottom);
 
   /* Dummy BitBlt to let driver know that it should flush its changes.
      This should really be done using a call to DrvSynchronizeSurface,
      but the VMware driver doesn't hook that call. */
-  /* FIXME: Remove the typecast! */
-  IntEngBitBlt((BITMAPOBJ*)DestObj, NULL, (BITMAPOBJ*)Mask, ClipRegion, DestColorTranslation,
-               DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin, R4_NOOP);
+  IntEngBitBltEx(DestSurf, NULL, Mask, ClipRegion, DestColorTranslation,
+                 DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin,
+                 R4_NOOP, FALSE);
 
-  ret = EngMaskBitBlt(DestObj, Mask, ClipRegion, DestColorTranslation, SourceColorTranslation,
+  ret = EngMaskBitBlt(DestSurf, Mask, ClipRegion, DestColorTranslation, SourceColorTranslation,
                       &OutputRect, &InputPoint, MaskOrigin, Brush, BrushOrigin);
 
   /* Dummy BitBlt to let driver know that something has changed. */
-  /* FIXME: Remove the typecast! */
-  IntEngBitBlt((BITMAPOBJ*)DestObj, NULL, (BITMAPOBJ*)Mask, ClipRegion, DestColorTranslation,
-               DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin, R4_NOOP);
+  IntEngBitBltEx(DestSurf, NULL, Mask, ClipRegion, DestColorTranslation,
+                 DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin,
+                 R4_NOOP, FALSE);
 
-  MouseSafetyOnDrawEnd(DestObj);
+  MouseSafetyOnDrawEnd(DestSurf);
+  BITMAPOBJ_UnlockBitmapBits(DestObj);
 
   return ret;
 }

@@ -27,11 +27,12 @@
 /* INCLUDES ******************************************************************/
 	
 #include <roscfg.h>
-#include <ddk/status.h>
 #include <internal/i386/ke.h>
 #include <internal/i386/segment.h>
 #include <internal/ps.h>
-#include <ddk/defines.h>
+
+#define KernelMode 0
+#define UserMode 1
 
 /* FUNCTIONS *****************************************************************/
 

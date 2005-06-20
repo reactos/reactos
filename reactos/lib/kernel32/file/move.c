@@ -12,6 +12,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <k32.h>
+#include <malloc.h>
 
 #define NDEBUG
 #include "../include/debug.h"

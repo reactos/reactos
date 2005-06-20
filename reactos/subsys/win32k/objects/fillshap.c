@@ -16,26 +16,25 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$ */
 #include <w32k.h>
 
 /*
  * a couple macros to fill a single pixel or a line
  */
 #define PUTPIXEL(x,y,BrushInst)        \
-  ret = ret && IntEngLineTo(BitmapObj, \
-       dc->CombinedClip,               \
-       &BrushInst.BrushObject,         \
-       x, y, (x)+1, y,                 \
-       &RectBounds,                    \
+  ret = ret && IntEngLineTo(&BitmapObj->SurfObj, \
+       dc->CombinedClip,                         \
+       &BrushInst.BrushObject,                   \
+       x, y, (x)+1, y,                           \
+       &RectBounds,                              \
        ROP2_TO_MIX(dc->w.ROPmode));
 
 #define PUTLINE(x1,y1,x2,y2,BrushInst) \
-  ret = ret && IntEngLineTo(BitmapObj, \
-       dc->CombinedClip,               \
-       &BrushInst.BrushObject,         \
-       x1, y1, x2, y2,                 \
-       &RectBounds,                    \
+  ret = ret && IntEngLineTo(&BitmapObj->SurfObj, \
+       dc->CombinedClip,                         \
+       &BrushInst.BrushObject,                   \
+       x1, y1, x2, y2,                           \
+       &RectBounds,                              \
        ROP2_TO_MIX(dc->w.ROPmode));
 
 BOOL FASTCALL
@@ -116,7 +115,7 @@ IntGdiPolygon(PDC    dc,
 	      To = UnsafePoints[CurrentPoint + 1];
 
 	    //DPRINT("Polygon Making line from (%d,%d) to (%d,%d)\n", From.x, From.y, To.x, To.y );
-	    ret = IntEngLineTo(BitmapObj,
+	    ret = IntEngLineTo(&BitmapObj->SurfObj,
 			       dc->CombinedClip,
 			       &PenBrushInst.BrushObject,
 			       From.x,
@@ -994,7 +993,7 @@ IntRectangle(PDC dc,
       if (!(FillBrushObj->flAttrs & GDIBRUSH_IS_NULL))
       {
         IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
-        ret = IntEngBitBlt(BitmapObj,
+        ret = IntEngBitBlt(&BitmapObj->SurfObj,
                            NULL,
                            NULL,
                            dc->CombinedClip,
@@ -1028,28 +1027,28 @@ IntRectangle(PDC dc,
     if (!(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
     {
       Mix = ROP2_TO_MIX(dc->w.ROPmode);
-      ret = ret && IntEngLineTo(BitmapObj,
+      ret = ret && IntEngLineTo(&BitmapObj->SurfObj,
 			 dc->CombinedClip,
 			 &PenBrushInst.BrushObject,
 			 LeftRect, TopRect, RightRect, TopRect,
 			 &DestRect, // Bounding rectangle
 			 Mix);
 
-      ret = ret && IntEngLineTo(BitmapObj,
+      ret = ret && IntEngLineTo(&BitmapObj->SurfObj,
 			 dc->CombinedClip,
 			 &PenBrushInst.BrushObject,
 			 RightRect, TopRect, RightRect, BottomRect,
 			 &DestRect, // Bounding rectangle
 			 Mix);
 
-      ret = ret && IntEngLineTo(BitmapObj,
+      ret = ret && IntEngLineTo(&BitmapObj->SurfObj,
 			 dc->CombinedClip,
 			 &PenBrushInst.BrushObject,
 			 RightRect, BottomRect, LeftRect, BottomRect,
 			 &DestRect, // Bounding rectangle
 			 Mix);
 
-      ret = ret && IntEngLineTo(BitmapObj,
+      ret = ret && IntEngLineTo(&BitmapObj->SurfObj,
 			 dc->CombinedClip,
 			 &PenBrushInst.BrushObject,
 			 LeftRect, BottomRect, LeftRect, TopRect,
@@ -1485,7 +1484,7 @@ IntGdiGradientFill(
   XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
   ASSERT(XlateObj);
 
-  Ret = IntEngGradientFill(BitmapObj,
+  Ret = IntEngGradientFill(&BitmapObj->SurfObj,
                            dc->CombinedClip,
                            XlateObj,
                            pVertex,

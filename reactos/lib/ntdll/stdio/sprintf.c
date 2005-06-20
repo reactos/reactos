@@ -20,16 +20,13 @@
  * Wirzenius wrote this portably, Torvalds fucked it up :-)
  */
 
-#include <ddk/ntddk.h>
-#include <stdarg.h>
-#include <stdlib.h>
 #define __NO_CTYPE_INLINES
 #include <ctype.h>
-#include <string.h>
 #include <limits.h>
 
+#include <ntdll.h>
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <debug.h>
 
 
 #define ZEROPAD	1		/* pad with zero */

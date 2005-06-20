@@ -12,7 +12,7 @@ enum
    DIRECTORY_CREATE_SUBDIRECTORY,
    DIRECTORY_ALL_ACCESS,
 };
-#endif
+
 
 /*
  * General type for status information
@@ -24,7 +24,7 @@ typedef enum _NT_PRODUCT_TYPE
    NtProductLanManNt,
    NtProductServer
 } NT_PRODUCT_TYPE, *PNT_PRODUCT_TYPE;
-
+#endif
 typedef ULARGE_INTEGER TIME, *PTIME;
 
 #ifndef __USE_W32API

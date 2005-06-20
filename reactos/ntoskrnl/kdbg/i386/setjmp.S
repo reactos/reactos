@@ -38,7 +38,9 @@
          *     return PC
          */
 .globl _setjmp
+.globl __setjmp
 _setjmp:	
+__setjmp:	
         pushl   %ebp
         movl    %esp,%ebp
         
@@ -55,5 +57,5 @@ _setjmp:
 
         xorl    %eax,%eax               /* return 0 the first time */
         leave
-        ret	$4
+        ret
 

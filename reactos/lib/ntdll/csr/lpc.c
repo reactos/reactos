@@ -13,15 +13,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/csr.h>
-#include <string.h>
-#include <rosrtl/string.h>
-
-#include <csrss/csrss.h>
-
+#include <ntdll.h>
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -104,7 +98,7 @@ CsrClientCallServer(PCSRSS_API_REQUEST Request,
       return (STATUS_UNSUCCESSFUL);
     }
 
-   Request->Header.DataSize = Length - sizeof(LPC_MESSAGE);
+   Request->Header.DataSize = Length - LPC_MESSAGE_BASE_SIZE;
    Request->Header.MessageSize = Length;
 
    Status = NtRequestWaitReplyPort(WindowsApiPort,
@@ -121,7 +115,7 @@ NTSTATUS STDCALL
 CsrClientConnectToServer(VOID)
 {
    NTSTATUS Status;
-   UNICODE_STRING PortName;
+   UNICODE_STRING PortName = RTL_CONSTANT_STRING(L"\\Windows\\ApiPort");
    ULONG ConnectInfoLength;
    CSRSS_API_REQUEST Request;
    CSRSS_API_REPLY Reply;
@@ -146,7 +140,6 @@ CsrClientConnectToServer(VOID)
      {
        return(Status);
      }
-   RtlRosInitUnicodeStringFromLiteral(&PortName, L"\\Windows\\ApiPort");
    ConnectInfoLength = 0;
    LpcWrite.Length = sizeof(LPC_SECTION_WRITE);
    LpcWrite.SectionHandle = CsrSectionHandle;

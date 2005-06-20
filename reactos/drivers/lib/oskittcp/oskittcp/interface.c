@@ -1,5 +1,7 @@
 #include <oskittcp.h>
 #include <oskitdebug.h>
+#include <net/raw_cb.h>
+
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/socket.h>
@@ -14,10 +16,6 @@
 #include <sys/socketvar.h>
 #include <sys/uio.h>
 
-#ifdef WIN32
-#define snprintf _snprintf
-#endif//WIN32
-
 struct linker_set domain_set;
 
 OSKITTCP_EVENT_HANDLERS OtcpEvent = { 0 };
@@ -30,6 +28,10 @@ unsigned cpl;
 unsigned net_imask;
 unsigned volatile ipending;
 struct timeval boottime;
+
+void clock_init();
+int isprint(int c);
+int _snprintf(char * buf, size_t cnt, const char *fmt, ...);
 
 void *fbsd_malloc( unsigned int bytes, ... ) {
     if( !OtcpEvent.TCPMalloc ) panic("no malloc");
@@ -51,8 +53,6 @@ void InitOskitTCP() {
     raw_init();
     OS_DbgPrint(OSK_MID_TRACE,("Route Init\n"));
     route_init();
-    OS_DbgPrint(OSK_MID_TRACE,("Init fake freebsd scheduling\n"));
-    init_freebsd_sched();
     OS_DbgPrint(OSK_MID_TRACE,("Init clock\n"));
     clock_init();
     OS_DbgPrint(OSK_MID_TRACE,("Init TCP\n"));
@@ -92,7 +92,7 @@ void OskitDumpBuffer( OSK_PCHAR Data, OSK_UINT Len )
 		if ( !align )
 		{
 			if ( i ) DbgPrint( line );
-			snprintf ( line, sizeof(line)-1, "%08x:                                                                  \n", &Data[i] );
+			_snprintf ( line, sizeof(line)-1, "%08x:                                                                  \n", &Data[i] );
 			line[sizeof(line)-1] = '\0';
 		}
 
@@ -133,12 +133,10 @@ int OskitTCPRecv( void *connection,
 		  OSK_UINT Len,
 		  OSK_UINT *OutLen,
 		  OSK_UINT Flags ) {
-    char *output_ptr = Data;
     struct uio uio = { 0 };
     struct iovec iov = { 0 };
     int error = 0;
     int tcp_flags = 0;
-    int tocopy = 0;
 
     *OutLen = 0;
 
@@ -167,33 +165,11 @@ int OskitTCPRecv( void *connection,
     return error;
 }
 
-static int
-getsockaddr(namp, uaddr, len)
-/* [<][>][^][v][top][bottom][index][help] */
-    struct sockaddr **namp;
-caddr_t uaddr;
-size_t len;
-{
-    struct sockaddr *sa;
-    int error;
-
-    if (len > SOCK_MAXADDRLEN)
-	return ENAMETOOLONG;
-    MALLOC(sa, struct sockaddr *, len, M_SONAME, M_WAITOK);
-    error = copyin(uaddr, sa, len);
-    if (error) {
-	FREE(sa, M_SONAME);
-    } else {
-	*namp = sa;
-    }
-    return error;
-}
-
 int OskitTCPBind( void *socket, void *connection,
 		  void *nam, OSK_UINT namelen ) {
     int error = EFAULT;
     struct socket *so = socket;
-    struct mbuf sabuf = { 0 };
+    struct mbuf sabuf;
     struct sockaddr addr;
 
     OS_DbgPrint(OSK_MID_TRACE,("Called, socket = %08x\n", socket));
@@ -201,6 +177,7 @@ int OskitTCPBind( void *socket, void *connection,
     if( nam )
 	addr = *((struct sockaddr *)nam);
 
+    RtlZeroMemory(&sabuf, sizeof(sabuf));
     sabuf.m_data = (void *)&addr;
     sabuf.m_len = sizeof(addr);
 
@@ -216,11 +193,8 @@ int OskitTCPBind( void *socket, void *connection,
 int OskitTCPConnect( void *socket, void *connection,
 		     void *nam, OSK_UINT namelen ) {
     struct socket *so = socket;
-    struct connect_args _uap = {
-	0, nam, namelen
-    }, *uap = &_uap;
-    int error = EFAULT, s;
-    struct mbuf sabuf = { 0 };
+    int error = EFAULT;
+    struct mbuf sabuf;
     struct sockaddr addr;
 
     OS_DbgPrint(OSK_MID_TRACE,("Called, socket = %08x\n", socket));
@@ -236,6 +210,7 @@ int OskitTCPConnect( void *socket, void *connection,
     if( nam )
 	addr = *((struct sockaddr *)nam);
 
+    RtlZeroMemory(&sabuf, sizeof(sabuf));
     sabuf.m_data = (void *)&addr;
     sabuf.m_len = sizeof(addr);
 
@@ -264,7 +239,6 @@ done:
 }
 
 int OskitTCPShutdown( void *socket, int disconn_type ) {
-    struct socket *so = socket;
     return soshutdown( socket, disconn_type );
 }
 

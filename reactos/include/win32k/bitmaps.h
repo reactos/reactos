@@ -11,10 +11,12 @@ typedef struct _BITMAPOBJ
   SURFOBJ     SurfObj;
   FLONG	      flHooks;
   FLONG       flFlags;
-  SIZE        dimension;   /* For SetBitmapDimension(), do NOT use
-                              to get width/height of bitmap, use
-                              bitmap.bmWidth/bitmap.bmHeight for
-                              that */
+  SIZE        dimension;    /* For SetBitmapDimension(), do NOT use
+                               to get width/height of bitmap, use
+                               bitmap.bmWidth/bitmap.bmHeight for
+                               that */
+  PFAST_MUTEX BitsLock;     /* You need to hold this lock before you touch
+                               the actual bits in the bitmap */
 
   /* For device-independent bitmaps: */
   DIBSECTION *dib;
@@ -33,6 +35,11 @@ typedef struct _BITMAPOBJ
 #define  BITMAPOBJ_LockBitmap(hBMObj) (PBITMAPOBJ)EngLockSurface((HSURF)hBMObj)
 #define  BITMAPOBJ_UnlockBitmap(pBMObj) EngUnlockSurface(&pBMObj->SurfObj)
 BOOL INTERNAL_CALL BITMAP_Cleanup(PVOID ObjectBody);
+
+BOOL INTERNAL_CALL BITMAPOBJ_InitBitsLock(BITMAPOBJ *pBMObj);
+#define BITMAPOBJ_LockBitmapBits(pBMObj) ExAcquireFastMutex((pBMObj)->BitsLock)
+#define BITMAPOBJ_UnlockBitmapBits(pBMObj) ExReleaseFastMutex((pBMObj)->BitsLock)
+void INTERNAL_CALL BITMAPOBJ_CleanupBitsLock(BITMAPOBJ *pBMObj);
 
 INT     FASTCALL BITMAPOBJ_GetWidthBytes (INT bmWidth, INT bpp);
 HBITMAP FASTCALL BITMAPOBJ_CopyBitmap (HBITMAP  hBitmap);

@@ -23,7 +23,6 @@
 #ifndef __VIDEO_H
 #define __VIDEO_H
 
-
 #if __GNUC__ >=3
 #pragma GCC system_header
 #endif
@@ -31,12 +30,6 @@
 #ifdef __WINDDI_H
 #error winddi.h cannot be included with video.h
 #else
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "ntddk.h"
 
 #if defined(_VIDEOPORT_)
   #define VPAPI DECLSPEC_EXPORT
@@ -47,6 +40,9 @@ extern "C" {
 #include "videoagp.h"
 #include "ntddvdeo.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef LONG VP_STATUS;
 typedef VP_STATUS *PVP_STATUS;
@@ -227,8 +223,8 @@ typedef enum _VIDEO_CHILD_TYPE {
   Other
 } VIDEO_CHILD_TYPE, *PVIDEO_CHILD_TYPE;
 
-typedef VP_STATUS DDKAPI
-(*PVIDEO_HW_GET_CHILD_DESCRIPTOR)(
+typedef VP_STATUS
+(DDKAPI *PVIDEO_HW_GET_CHILD_DESCRIPTOR)(
   IN PVOID  HwDeviceExtension,
   IN PVIDEO_CHILD_ENUM_INFO  ChildEnumInfo,
   OUT  PVIDEO_CHILD_TYPE  VideoChildType,
@@ -236,12 +232,12 @@ typedef VP_STATUS DDKAPI
   OUT  PULONG  UId,
   OUT  PULONG  pUnused);
 
-typedef BOOLEAN DDKAPI
-(*PVIDEO_HW_INITIALIZE)(
+typedef BOOLEAN
+(DDKAPI *PVIDEO_HW_INITIALIZE)(
   IN PVOID  HwDeviceExtension);
 
-typedef BOOLEAN DDKAPI
-(*PVIDEO_HW_INTERRUPT)(
+typedef BOOLEAN
+(DDKAPI *PVIDEO_HW_INTERRUPT)(
   IN PVOID  HwDeviceExtension);
 
 /* VIDEO_ACCESS_RANGE.RangePassive */
@@ -287,27 +283,27 @@ typedef struct _QUERY_INTERFACE {
   PVOID  InterfaceSpecificData;
 } QUERY_INTERFACE, *PQUERY_INTERFACE;
 
-typedef VP_STATUS DDKAPI
-(*PVIDEO_HW_QUERY_INTERFACE)(
+typedef VP_STATUS
+(DDKAPI *PVIDEO_HW_QUERY_INTERFACE)(
   IN PVOID  HwDeviceExtension,
   IN OUT  PQUERY_INTERFACE  QueryInterface);
 
-typedef VP_STATUS DDKAPI
-(*PMINIPORT_GET_REGISTRY_ROUTINE)(
+typedef VP_STATUS
+(DDKAPI *PMINIPORT_GET_REGISTRY_ROUTINE)(
   IN PVOID  HwDeviceExtension,
   IN PVOID  Context,
   IN OUT  PWSTR  ValueName,
   IN OUT  PVOID  ValueData,
   IN ULONG  ValueLength);
 
-typedef BOOLEAN DDKAPI
-(*PVIDEO_HW_RESET_HW)(
+typedef BOOLEAN
+(DDKAPI *PVIDEO_HW_RESET_HW)(
   IN PVOID  HwDeviceExtension,
   IN ULONG  Columns,
   IN ULONG  Rows);
 
-typedef VP_STATUS DDKAPI
-(*PVIDEO_HW_POWER_SET)(
+typedef VP_STATUS
+(DDKAPI *PVIDEO_HW_POWER_SET)(
   IN PVOID  HwDeviceExtension,
   IN ULONG  HwId,
   IN PVIDEO_POWER_MANAGEMENT  VideoPowerControl);
@@ -329,63 +325,63 @@ typedef struct _VIDEO_REQUEST_PACKET {
   ULONG  OutputBufferLength;
 } VIDEO_REQUEST_PACKET, *PVIDEO_REQUEST_PACKET;
 
-typedef BOOLEAN DDKAPI
-(*PVIDEO_HW_START_IO)(
+typedef BOOLEAN
+(DDKAPI *PVIDEO_HW_START_IO)(
   IN PVOID  HwDeviceExtension,
   IN PVIDEO_REQUEST_PACKET  RequestPacket);
 
-typedef BOOLEAN DDKAPI
-(*PMINIPORT_SYNCHRONIZE_ROUTINE)(
+typedef BOOLEAN
+(DDKAPI *PMINIPORT_SYNCHRONIZE_ROUTINE)(
   IN PVOID  Context);
 
-typedef VOID DDKAPI
-(*PVIDEO_HW_TIMER)(
+typedef VOID
+(DDKAPI *PVIDEO_HW_TIMER)(
   IN PVOID  HwDeviceExtension);
 
-typedef VOID DDKAPI
-(*PMINIPORT_DPC_ROUTINE)(
+typedef VOID
+(DDKAPI *PMINIPORT_DPC_ROUTINE)(
   IN PVOID  HwDeviceExtension,
   IN PVOID  Context);
 
-typedef VP_STATUS DDKAPI
-(*PDRIVER_IO_PORT_UCHAR)(
+typedef VP_STATUS
+(DDKAPI *PDRIVER_IO_PORT_UCHAR)(
   IN ULONG_PTR  Context,
   IN ULONG  Port,
   IN UCHAR  AccessMode,
   IN PUCHAR  Data);
 
-typedef VP_STATUS DDKAPI
-(*PDRIVER_IO_PORT_UCHAR_STRING)(
+typedef VP_STATUS
+(DDKAPI *PDRIVER_IO_PORT_UCHAR_STRING)(
   IN ULONG_PTR  Context,
   IN ULONG  Port,
   IN UCHAR  AccessMode,
   IN PUCHAR  Data,
   IN ULONG  DataLength);
 
-typedef VP_STATUS DDKAPI
-(*PDRIVER_IO_PORT_ULONG)(
+typedef VP_STATUS
+(DDKAPI *PDRIVER_IO_PORT_ULONG)(
   IN ULONG_PTR  Context,
   IN ULONG  Port,
   IN UCHAR  AccessMode,
   IN PULONG  Data);
 
-typedef VP_STATUS DDKAPI
-(*PDRIVER_IO_PORT_ULONG_STRING)(
+typedef VP_STATUS
+(DDKAPI *PDRIVER_IO_PORT_ULONG_STRING)(
   IN ULONG_PTR  Context,
   IN ULONG  Port,
   IN UCHAR  AccessMode,
   IN PULONG  Data,
   IN ULONG  DataLength);
 
-typedef VP_STATUS DDKAPI
-(*PDRIVER_IO_PORT_USHORT)(
+typedef VP_STATUS
+(DDKAPI *PDRIVER_IO_PORT_USHORT)(
   IN ULONG_PTR  Context,
   IN ULONG  Port,
   IN UCHAR  AccessMode,
   IN PUSHORT  Data);
 
-typedef VP_STATUS DDKAPI
-(*PDRIVER_IO_PORT_USHORT_STRING)(
+typedef VP_STATUS
+(DDKAPI *PDRIVER_IO_PORT_USHORT_STRING)(
   IN ULONG_PTR  Context,
   IN ULONG  Port,
   IN UCHAR  AccessMode,
@@ -483,22 +479,22 @@ typedef struct _VIDEO_PORT_AGP_INTERFACE_2 {
 
 #define VIDEO_PORT_I2C_INTERFACE_VERSION_1  1
 
-typedef VOID DDKAPI
-(*PVIDEO_WRITE_CLOCK_LINE)(
+typedef VOID
+(DDKAPI *PVIDEO_WRITE_CLOCK_LINE)(
   PVOID HwDeviceExtension,
   UCHAR Data);
 
-typedef VOID DDKAPI
-(*PVIDEO_WRITE_DATA_LINE)(
+typedef VOID
+(DDKAPI *PVIDEO_WRITE_DATA_LINE)(
   PVOID HwDeviceExtension,
   UCHAR Data);
 
-typedef BOOLEAN DDKAPI
-(*PVIDEO_READ_CLOCK_LINE)(
+typedef BOOLEAN
+(DDKAPI *PVIDEO_READ_CLOCK_LINE)(
   PVOID HwDeviceExtension);
 
-typedef BOOLEAN DDKAPI
-(*PVIDEO_READ_DATA_LINE)(
+typedef BOOLEAN
+(DDKAPI *PVIDEO_READ_DATA_LINE)(
   PVOID HwDeviceExtension);
 
 typedef struct _I2C_CALLBACKS
@@ -509,25 +505,25 @@ typedef struct _I2C_CALLBACKS
   IN PVIDEO_READ_DATA_LINE  ReadDataLine;
 } I2C_CALLBACKS, *PI2C_CALLBACKS;
 
-typedef BOOLEAN DDKAPI
-(*PI2C_START)(
+typedef BOOLEAN
+(DDKAPI *PI2C_START)(
   IN PVOID  HwDeviceExtension,
   IN PI2C_CALLBACKS  I2CCallbacks);
 
-typedef BOOLEAN DDKAPI
-(*PI2C_STOP)(
+typedef BOOLEAN
+(DDKAPI *PI2C_STOP)(
   IN PVOID  HwDeviceExtension,
   IN PI2C_CALLBACKS  I2CCallbacks);
 
-typedef BOOLEAN DDKAPI
-(*PI2C_WRITE)(
+typedef BOOLEAN
+(DDKAPI *PI2C_WRITE)(
   IN PVOID  HwDeviceExtension,
   IN PI2C_CALLBACKS  I2CCallbacks,
   IN PUCHAR  Buffer,
   IN ULONG  Length);
 
-typedef BOOLEAN DDKAPI
-(*PI2C_READ)(
+typedef BOOLEAN
+(DDKAPI *PI2C_READ)(
   IN PVOID  HwDeviceExtension,
   IN PI2C_CALLBACKS  I2CCallbacks,
   OUT PUCHAR  Buffer,
@@ -548,34 +544,34 @@ typedef struct _VIDEO_PORT_I2C_INTERFACE {
 /* VIDEO_PORT_INT10_INTERFACE.Version constants */
 #define VIDEO_PORT_INT10_INTERFACE_VERSION_1 1
 
-typedef VP_STATUS DDKAPI
-(*PINT10_ALLOCATE_BUFFER)(
+typedef VP_STATUS
+(DDKAPI *PINT10_ALLOCATE_BUFFER)(
   IN PVOID  Context,
   OUT PUSHORT  Seg,
   OUT PUSHORT  Off,
   IN OUT PULONG  Length);
 
-typedef VP_STATUS DDKAPI
-(*PINT10_CALL_BIOS)(
+typedef VP_STATUS
+(DDKAPI *PINT10_CALL_BIOS)(
   IN PVOID  Context,
   IN OUT PINT10_BIOS_ARGUMENTS  BiosArguments);
 
-typedef VP_STATUS DDKAPI
-(*PINT10_FREE_BUFFER)(
+typedef VP_STATUS
+(DDKAPI *PINT10_FREE_BUFFER)(
   IN PVOID  Context,
   IN USHORT  Seg,
   IN USHORT  Off);
 
-typedef VP_STATUS DDKAPI
-(*PINT10_READ_MEMORY)(
+typedef VP_STATUS
+(DDKAPI *PINT10_READ_MEMORY)(
   IN PVOID  Context,
   IN USHORT  Seg,
   IN USHORT  Off,
   OUT PVOID  Buffer,
   IN ULONG  Length);
 
-typedef VP_STATUS DDKAPI
-(*PINT10_WRITE_MEMORY)(
+typedef VP_STATUS
+(DDKAPI *PINT10_WRITE_MEMORY)(
   IN PVOID  Context,
   IN USHORT  Seg,
   IN USHORT  Off,

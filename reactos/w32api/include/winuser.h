@@ -1881,6 +1881,19 @@ extern "C" {
 #if (_WIN32_WINNT >= 0x0500)
 #define VK_PACKET	0xE7
 #endif
+#define VK_OEM_RESET	0xE9
+#define VK_OEM_JUMP	0xEA
+#define VK_OEM_PA1	0xEB
+#define VK_OEM_PA2	0xEC
+#define VK_OEM_PA3	0xED
+#define VK_OEM_WSCTRL	0xEE
+#define VK_OEM_CUSEL	0xEF
+#define VK_OEM_ATTN	0xF0
+#define VK_OEM_FINISH	0xF1
+#define VK_OEM_COPY	0xF2
+#define VK_OEM_AUTO	0xF3
+#define VK_OEM_ENLW	0xF4
+#define VK_OEM_BACKTAB	0xF5
 #define VK_ATTN	0xF6
 #define VK_CRSEL	0xF7
 #define VK_EXSEL	0xF8

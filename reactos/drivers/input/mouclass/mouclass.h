@@ -1,3 +1,5 @@
+#define MOUSE_BUFFER_SIZE 100
+
 typedef struct _DEVICE_EXTENSION {
    PIO_WORKITEM WorkItem;
    KSPIN_LOCK SpinLock;

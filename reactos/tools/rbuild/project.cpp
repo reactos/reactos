@@ -330,6 +330,16 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 			non_if_data.ifs.push_back ( pIf );
 		subs_invalid = false;
 	}
+	else if ( e.name == "ifnot" )
+	{
+		If* pOldIf = pIf;
+		pIf = new If ( e, *this, NULL, true );
+		if ( pOldIf )
+			pOldIf->data.ifs.push_back ( pIf );
+		else
+			non_if_data.ifs.push_back ( pIf );
+		subs_invalid = false;
+	}
 	else if ( e.name == "property" )
 	{
 		Property* property = new Property ( e, *this, NULL );

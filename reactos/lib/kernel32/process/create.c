@@ -12,7 +12,9 @@
 /* INCLUDES ****************************************************************/
 
 #include <k32.h>
-#include <pseh/framebased.h>
+
+/* FIXME */
+#include <rosrtl/thread.h>
 
 #define NDEBUG
 #include "../include/debug.h"
@@ -139,11 +141,11 @@ BOOL STDCALL CreateProcessA(LPCSTR lpApplicationName,
    BOOL bRetVal;
    STARTUPINFOW wsiStartupInfo;
 
-   NTSTATUS STDCALL_FUNC (*pTrue)(UNICODE_STRING *,
+   NTSTATUS (STDCALL *pTrue)(UNICODE_STRING *,
                                   ANSI_STRING *,
 				  BOOLEAN);
 
-   ULONG STDCALL_FUNC (*pRtlMbStringToUnicodeSize)(ANSI_STRING *);
+   ULONG (STDCALL *pRtlMbStringToUnicodeSize)(ANSI_STRING *);
 
    DPRINT("dwCreationFlags %x, lpEnvironment %x, lpCurrentDirectory %x, "
           "lpStartupInfo %x, lpProcessInformation %x\n",
@@ -276,45 +278,25 @@ BOOL STDCALL CreateProcessA(LPCSTR lpApplicationName,
 }
 
 
-static EXCEPTION_DISPOSITION __cdecl
-_except_handler(EXCEPTION_RECORD *ExceptionRecord,
-		void * EstablisherFrame,
-		CONTEXT *ContextRecord,
-		void * DispatcherContext)
+_SEH_FILTER(BaseExceptionFilter)
 {
-   EXCEPTION_POINTERS ExceptionInfo;
-   EXCEPTION_DISPOSITION ExceptionDisposition = EXCEPTION_EXECUTE_HANDLER;
-
-   ExceptionInfo.ExceptionRecord = ExceptionRecord;
-   ExceptionInfo.ContextRecord = ContextRecord;
+   EXCEPTION_POINTERS * ExceptionInfo = _SEH_GetExceptionPointers();
+   LONG ExceptionDisposition = EXCEPTION_EXECUTE_HANDLER;
 
    if (GlobalTopLevelExceptionFilter != NULL)
    {
       _SEH_TRY
       {
-         ExceptionDisposition = GlobalTopLevelExceptionFilter(&ExceptionInfo);
+         ExceptionDisposition = GlobalTopLevelExceptionFilter(ExceptionInfo);
       }
       _SEH_HANDLE
       {
-         ExceptionDisposition = UnhandledExceptionFilter(&ExceptionInfo);
+         ExceptionDisposition = UnhandledExceptionFilter(ExceptionInfo);
       }
       _SEH_END;
    }
 
-   if (ExceptionDisposition == EXCEPTION_EXECUTE_HANDLER)
-      ExitProcess(ExceptionRecord->ExceptionCode);
-
-   /* translate EXCEPTION_XXX defines into EXCEPTION_DISPOSITION enum values */
-   if (ExceptionDisposition == EXCEPTION_CONTINUE_EXECUTION)
-   {
-      return ExceptionContinueExecution;
-   }
-   else if (ExceptionDisposition == EXCEPTION_CONTINUE_SEARCH)
-   {
-      return ExceptionContinueSearch;
-   }
-
-   return -1; /* unknown return from UnhandledExceptionFilter */
+   return ExceptionDisposition;
 }
 
 
@@ -326,10 +308,15 @@ BaseProcessStart(LPTHREAD_START_ROUTINE lpStartAddress,
 
    DPRINT("BaseProcessStart(..) - setting up exception frame.\n");
 
-   __try1(_except_handler)
+   _SEH_TRY
    {
       uExitCode = (lpStartAddress)((PVOID)lpParameter);
-   } __except1
+   }
+   _SEH_EXCEPT(BaseExceptionFilter)
+   {
+      uExitCode = _SEH_GetExceptionCode();
+   }
+   _SEH_END;
 
    ExitProcess(uExitCode);
 }
@@ -1110,7 +1097,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
 	  *    If is possible that this function overwrite the last information in runtimeinfo
 	  *    with the null terminator for the unicode string.
 	  */
-	 RuntimeInfo_U.Length = RuntimeInfo_U.MaximumLength = ROUND_UP(lpStartupInfo->cbReserved2, 2) + 2;
+	 RuntimeInfo_U.Length = RuntimeInfo_U.MaximumLength = (lpStartupInfo->cbReserved2 + 1) & ~1;
 	 RuntimeInfo_U.Buffer = RtlAllocateHeap(GetProcessHeap(), 0, RuntimeInfo_U.Length);
 	 memcpy(RuntimeInfo_U.Buffer, lpStartupInfo->lpReserved2, lpStartupInfo->cbReserved2);
       }
@@ -1171,7 +1158,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
     */
    CsrRequest.Type = CSRSS_CREATE_PROCESS;
    CsrRequest.Data.CreateProcessRequest.NewProcessId =
-      ProcessBasicInfo.UniqueProcessId;
+      (HANDLE)ProcessBasicInfo.UniqueProcessId;
    if (Sii.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI)
    {
       /* Do not create a console for GUI applications */
@@ -1321,7 +1308,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
       if (IsConsoleHandle(Ppb->hStdError))
       {
          CsrRequest.Type = CSRSS_DUPLICATE_HANDLE;
-         CsrRequest.Data.DuplicateHandleRequest.ProcessId = ProcessBasicInfo.UniqueProcessId;
+         CsrRequest.Data.DuplicateHandleRequest.ProcessId = (HANDLE)ProcessBasicInfo.UniqueProcessId;
          CsrRequest.Data.DuplicateHandleRequest.Handle = CsrReply.Data.CreateProcessReply.OutputHandle;
          Status = CsrClientCallServer(&CsrRequest,
                                       &CsrReply,

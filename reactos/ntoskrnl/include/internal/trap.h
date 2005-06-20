@@ -33,8 +33,6 @@
 
 #ifndef __ASM__
 
-#include <internal/ke.h>
-
 typedef struct _KV86M_TRAP_FRAME
 {
   KTRAP_FRAME Tf;

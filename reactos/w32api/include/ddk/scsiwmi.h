@@ -27,15 +27,13 @@
 #pragma GCC system_header
 #endif
 
+#include "srb.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #pragma pack(push,4)
-
-#include "ntddk.h"
-#include "srb.h"
-
 
 typedef struct _SCSIWMI_REQUEST_CONTEXT {
   PVOID  UserContext;

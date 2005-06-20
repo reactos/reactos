@@ -56,7 +56,9 @@
  * This structure is used to keep track of in_multi chains which belong to
  * deleted interface addresses.
  */
+#ifndef __REACTOS__
 static LIST_HEAD(in_mk_type, multi_kludge) in_mk; /* XXX BSS initialization */
+#endif
 
 struct multi_kludge {
 	LIST_ENTRY(multi_kludge) mk_entry;

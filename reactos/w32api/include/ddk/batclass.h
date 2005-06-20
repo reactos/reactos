@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#include "ntddk.h"
-
 #if defined(_BATTERYCLASS_)
   #define BCLASSAPI DECLSPEC_EXPORT
 #else

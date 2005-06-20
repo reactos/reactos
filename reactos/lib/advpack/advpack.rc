@@ -1,4 +1,4 @@
-#include <defines.h>
+#include <windows.h>
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Advpack User Library\0"

@@ -26,8 +26,8 @@
 #define __EPSAPI_H_INCLUDED__
 
 /* INCLUDES */
-#define NTOS_MODE_USER
-#include <ntos.h>
+#include <ntdll/rtl.h>
+#include <ntdll/ldr.h> /* FIXME: USE LDR_DATA_TABLE_ENTRY */
 
 /* OBJECTS */
 

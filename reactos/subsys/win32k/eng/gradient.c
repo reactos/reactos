@@ -516,7 +516,7 @@ EngGradientFill(
 
 BOOL STDCALL
 IntEngGradientFill(
-    IN BITMAPOBJ  *pboDest,
+    IN SURFOBJ  *psoDest,
     IN CLIPOBJ  *pco,
     IN XLATEOBJ  *pxlo,
     IN TRIVERTEX  *pVertex,
@@ -528,13 +528,14 @@ IntEngGradientFill(
     IN ULONG  ulMode)
 {
   BOOL Ret;
-  SURFOBJ *psoDest;
-  ASSERT(pboDest);
+  BITMAPOBJ *pboDest;
+  ASSERT(psoDest);
   ASSERT(pco);
 
-  psoDest = &pboDest->SurfObj;
-  ASSERT(psoDest);
+  pboDest = CONTAINING_RECORD(psoDest, BITMAPOBJ, SurfObj);
+  ASSERT(pboDest);
 
+  BITMAPOBJ_LockBitmapBits(pboDest);
   MouseSafetyOnDrawStart(
 	  psoDest,
 	  pco->rclBounds.left,
@@ -552,5 +553,7 @@ IntEngGradientFill(
   Ret = EngGradientFill(psoDest, pco, pxlo, pVertex, nVertex, pMesh, nMesh, prclExtents,
                         pptlDitherOrg, ulMode);
   MouseSafetyOnDrawEnd(psoDest);
+  BITMAPOBJ_UnlockBitmapBits(pboDest);
+
   return Ret;
 }

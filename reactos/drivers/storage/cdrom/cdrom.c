@@ -35,9 +35,12 @@
 
 #include <ddk/ntddk.h>
 #include <ddk/scsi.h>
-#include <ddk/class2.h>
 #include <ddk/ntddscsi.h>
+#include <ddk/ntdddisk.h>
+#include <ddk/ntddcdrm.h>
+#include <ddk/class2.h>
 #include <ntos/minmax.h>
+#include <stdio.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -60,6 +63,26 @@ typedef struct _ERROR_RECOVERY_DATA10
   MODE_PARAMETER_HEADER10 Header;
   MODE_READ_RECOVERY_PAGE ReadRecoveryPage;
 } ERROR_RECOVERY_DATA10, *PERROR_RECOVERY_DATA10;
+
+typedef struct _MODE_CAPABILITIES_PAGE2
+{
+  UCHAR PageCode:6;
+  UCHAR Reserved1:1;
+  UCHAR PSBit:1;
+  UCHAR PageLength;
+  UCHAR Reserved2[2];
+  UCHAR Capabilities[4];
+  UCHAR MaximumSpeedSupported[2];
+  UCHAR Reserved3;
+  UCHAR NumberVolumeLevels;
+  UCHAR BufferSize[2];
+  UCHAR CurrentSpeed[2];
+  UCHAR Reserved4;
+  UCHAR Reserved5:1;
+  UCHAR DigitalOutput:4;
+  UCHAR Reserved6:3;
+  UCHAR Reserved7[2];
+} MODE_CAPABILITIES_PAGE2, *PMODE_CAPABILITIES_PAGE2;
 
 typedef struct _MODE_CAPABILITIES_DATA6
 {
@@ -134,7 +157,7 @@ VOID STDCALL
 CdromTimerRoutine(IN PDEVICE_OBJECT DeviceObject,
 		  IN PVOID Context);
 
-VOID
+VOID STDCALL
 CdromWorkItem(IN PDEVICE_OBJECT DeviceObject,
 	      IN PVOID Context);
 
@@ -1633,7 +1656,7 @@ CdromTimerRoutine(IN PDEVICE_OBJECT DeviceObject,
 }
 
 
-VOID
+VOID STDCALL
 CdromWorkItem(IN PDEVICE_OBJECT DeviceObject,
 	      IN PVOID Context)
 {

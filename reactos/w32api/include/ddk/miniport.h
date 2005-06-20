@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#include "ntddk.h"
-
 #define EMULATOR_READ_ACCESS              0x01
 #define EMULATOR_WRITE_ACCESS             0x02
 

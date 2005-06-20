@@ -2,7 +2,9 @@
 	<bootstrap base="reactos/system32" nameoncd="smss.exe" />
 	<include base="usetup">.</include>
 	<include base="zlib">.</include>
+	<define name="__USE_W32API" />
 	<define name="_DISABLE_TIDENTS" />
+	<define name="_WIN32_WINNT">0x0502</define>
 	<linkerflag>-lgcc</linkerflag>
 	<library>zlib</library>
 	<library>vfatlib</library>

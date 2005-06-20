@@ -13,6 +13,8 @@
 #define PF_PAE_ENABLED                      9
 #define PF_XMMI64_INSTRUCTIONS_AVAILABLE   10
 
+#ifndef __USE_W32API
+
 #ifndef __ASM__
 
 typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE
@@ -71,6 +73,7 @@ typedef struct _KUSER_SHARED_DATA {
     };
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 
+#endif
 #endif
 
 /* Values for DosDeviceDriveType */

@@ -27,13 +27,11 @@
 #pragma GCC system_header
 #endif
 
+#include "video.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "ntddk.h"
-#include "video.h"
-
 
 #define VIDEO_AGP_RATE_1X                 0x00000001
 #define VIDEO_AGP_RATE_2X                 0x00000002
@@ -41,67 +39,67 @@ extern "C" {
 #define VIDEO_AGP_RATE_8X                 0x00000008
 
 typedef enum _VIDEO_PORT_CACHE_TYPE {
-	VpNonCached = 0,
-	VpWriteCombined,
-	VpCached
+  VpNonCached = 0,
+  VpWriteCombined,
+  VpCached
 } VIDEO_PORT_CACHE_TYPE;
 
-typedef BOOLEAN DDKAPI
-(*PAGP_COMMIT_PHYSICAL)(
-  IN  PVOID  HwDeviceExtension,
-  IN  PVOID  PhysicalReserveContext,
-  IN  ULONG  Pages,
-  IN  ULONG  Offset);
+typedef BOOLEAN
+(DDKAPI *PAGP_COMMIT_PHYSICAL)(
+  IN PVOID  HwDeviceExtension,
+  IN PVOID  PhysicalReserveContext,
+  IN ULONG  Pages,
+  IN ULONG  Offset);
 
-typedef PVOID DDKAPI
-(*PAGP_COMMIT_VIRTUAL)(
-	IN  PVOID  HwDeviceExtension,
-	IN  PVOID  VirtualReserveContext,
-	IN  ULONG  Pages,
-	IN  ULONG  Offset);
+typedef PVOID
+(DDKAPI *PAGP_COMMIT_VIRTUAL)(
+  IN PVOID  HwDeviceExtension,
+  IN PVOID  VirtualReserveContext,
+  IN ULONG  Pages,
+  IN ULONG  Offset);
 
-typedef VOID DDKAPI
-(*PAGP_FREE_PHYSICAL)(
-	IN  PVOID  HwDeviceExtension,
-	IN  PVOID  PhysicalReserveContext,
-	IN  ULONG  Pages,
-	IN  ULONG  Offset);
+typedef VOID
+(DDKAPI *PAGP_FREE_PHYSICAL)(
+  IN PVOID  HwDeviceExtension,
+  IN PVOID  PhysicalReserveContext,
+  IN ULONG  Pages,
+  IN ULONG  Offset);
 
-typedef VOID DDKAPI
-(*PAGP_FREE_VIRTUAL)(
-  IN  PVOID  HwDeviceExtension,
-  IN  PVOID  VirtualReserveContext,
-  IN  ULONG  Pages,
-  IN  ULONG  Offset);
+typedef VOID
+(DDKAPI *PAGP_FREE_VIRTUAL)(
+  IN PVOID  HwDeviceExtension,
+  IN PVOID  VirtualReserveContext,
+  IN ULONG  Pages,
+  IN ULONG  Offset);
 
-typedef VOID DDKAPI
-(*PAGP_RELEASE_PHYSICAL)(
-  IN  PVOID  HwDeviceExtension,
-  IN  PVOID  PhysicalReserveContext);
+typedef VOID
+(DDKAPI *PAGP_RELEASE_PHYSICAL)(
+  IN PVOID  HwDeviceExtension,
+  IN PVOID  PhysicalReserveContext);
 
-typedef VOID DDKAPI
-(*PAGP_RELEASE_VIRTUAL)(
-	IN  PVOID  HwDeviceExtension,
-	IN  PVOID  VirtualReserveContext);
+typedef VOID
+(DDKAPI *PAGP_RELEASE_VIRTUAL)(
+  IN PVOID  HwDeviceExtension,
+  IN PVOID  VirtualReserveContext);
 
-typedef PHYSICAL_ADDRESS DDKAPI
-(*PAGP_RESERVE_PHYSICAL)(
-  IN  PVOID  HwDeviceExtension,
-  IN  ULONG  Pages,
-  IN  VIDEO_PORT_CACHE_TYPE  Caching,
+typedef PHYSICAL_ADDRESS
+(DDKAPI *PAGP_RESERVE_PHYSICAL)(
+  IN PVOID  HwDeviceExtension,
+  IN ULONG  Pages,
+  IN VIDEO_PORT_CACHE_TYPE  Caching,
   OUT PVOID  *PhysicalReserveContext);
 
-typedef PVOID DDKAPI
-(*PAGP_RESERVE_VIRTUAL)(
-  IN  PVOID  HwDeviceExtension,
-  IN  HANDLE  ProcessHandle,
-  IN  PVOID  PhysicalReserveContext,
+typedef PVOID
+(DDKAPI *PAGP_RESERVE_VIRTUAL)(
+  IN PVOID  HwDeviceExtension,
+  IN HANDLE  ProcessHandle,
+  IN PVOID  PhysicalReserveContext,
   OUT PVOID  *VirtualReserveContext);
 
-typedef BOOLEAN DDKAPI
-(*PAGP_SET_RATE)(
-	IN  PVOID  HwDeviceExtension,
-	IN  ULONG  AgpRate);
+typedef BOOLEAN
+(DDKAPI *PAGP_SET_RATE)(
+  IN PVOID  HwDeviceExtension,
+  IN ULONG  AgpRate);
 
 typedef struct _VIDEO_PORT_AGP_SERVICES {
   PAGP_RESERVE_PHYSICAL  AgpReservePhysical;
@@ -119,8 +117,8 @@ VPAPI
 BOOLEAN
 DDKAPI
 VideoPortGetAgpServices(
-	IN  PVOID  HwDeviceExtension,
-	IN  PVIDEO_PORT_AGP_SERVICES  AgpServices);
+  IN PVOID  HwDeviceExtension,
+  IN PVIDEO_PORT_AGP_SERVICES  AgpServices);
 
 #ifdef __cplusplus
 }

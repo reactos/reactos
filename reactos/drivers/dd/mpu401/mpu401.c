@@ -13,7 +13,6 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <rosrtl/string.h>
 //#include <ddk/ntddbeep.h>
 
 //#define NDEBUG
@@ -36,8 +35,8 @@ NTSTATUS InitDevice(
 //    PDEVICE_INSTANCE Instance = Context;
     PDEVICE_OBJECT DeviceObject; // = Context;
     PDEVICE_EXTENSION Parameters; // = DeviceObject->DeviceExtension;
-    UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Device\\MidiOut0");
-    UNICODE_STRING SymlinkName = ROS_STRING_INITIALIZER(L"\\??\\MidiOut0");
+    UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\MidiOut0");
+    UNICODE_STRING SymlinkName = RTL_CONSTANT_STRING(L"\\??\\MidiOut0");
 //    CONFIG Config;
     RTL_QUERY_REGISTRY_TABLE Table[2];
     NTSTATUS s;

@@ -10,7 +10,6 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
-
 #include <ddk/ntddkbd.h>
 #include <ddk/ntdd8042.h>
 

@@ -29,7 +29,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -250,7 +249,7 @@ DriverEntry(PDRIVER_OBJECT _DriverObject,
 {
   PDEVICE_OBJECT DeviceObject;
   NTSTATUS Status;
-  UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Device\\BareFsd");
+  UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\BareFsd");
 
   DbgPrint("Bare FSD Template 0.0.1\n");
 

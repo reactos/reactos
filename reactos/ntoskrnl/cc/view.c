@@ -46,9 +46,6 @@
  */
 //#define CACHE_BITMAP
 
-#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
-#define ROUND_DOWN(N, S) (((N) % (S)) ? ROUND_UP(N, S) - S : N)
-
 static LIST_ENTRY DirtySegmentListHead;
 static LIST_ENTRY CacheSegmentListHead;
 static LIST_ENTRY CacheSegmentLRUListHead;

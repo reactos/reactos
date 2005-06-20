@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <ddk/ntddk.h>
 #include <ddk/ntddmou.h>
+#include <ddk/kbdmou.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -76,6 +77,8 @@
 /* Microsoft byte mask for middle button */
 #define MOUSE_BUTTON_MIDDLE		0x04
 
+#define MOUSE_BUFFER_SIZE 100
+
 /*
  * Structures
  */
@@ -86,7 +89,7 @@ typedef struct _DEVICE_EXTENSION
 	ULONG ActiveQueue;
 	ULONG InputDataCount[2];
 	MOUSE_INPUT_DATA MouseInputData[2][MOUSE_BUFFER_SIZE];
-	CLASS_INFORMATION ClassInformation;
+	CONNECT_DATA ClassInformation;
 	PKINTERRUPT MouseInterrupt;
 	KDPC IsrDpc;
 	ULONG MousePort;
@@ -293,7 +296,7 @@ SerialMouseInternalDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 	{
 		case IOCTL_INTERNAL_MOUSE_CONNECT:
 			DeviceExtension->ClassInformation =
-				*((PCLASS_INFORMATION)Stack->Parameters.DeviceIoControl.Type3InputBuffer);
+				*((PCONNECT_DATA)Stack->Parameters.DeviceIoControl.Type3InputBuffer);
 
 			/* Reinitialize the port input data queue synchronously */
 			KeSynchronizeExecution(DeviceExtension->MouseInterrupt,
@@ -376,8 +379,8 @@ VOID SerialMouseIsrDpc(PKDPC Dpc, PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID C
 
 	Queue = DeviceExtension->ActiveQueue % 2;
 	InterlockedIncrement((PLONG)&DeviceExtension->ActiveQueue);
-	(*(PSERVICE_CALLBACK_ROUTINE)DeviceExtension->ClassInformation.CallBack)(
-		DeviceExtension->ClassInformation.DeviceObject,
+	(*(PSERVICE_CALLBACK_ROUTINE)DeviceExtension->ClassInformation.ClassService)(
+		DeviceExtension->ClassInformation.ClassDeviceObject,
 		DeviceExtension->MouseInputData[Queue],
 		NULL,
 		&DeviceExtension->InputDataCount[Queue]);

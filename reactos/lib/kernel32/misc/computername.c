@@ -29,6 +29,9 @@
 
 #include <k32.h>
 
+/* FIXME */
+#include <rosrtl/registry.h> 
+
 #define NDEBUG
 #include "../include/debug.h"
 
@@ -144,7 +147,9 @@ GetComputerNameExW (
 
     case ComputerNameDnsFullyQualified:
 	RtlInitUnicodeString(&Dot,L".");
-	RosInitializeString(&ResultString,0,*nSize * sizeof(WCHAR),lpBuffer);
+	RtlInitUnicodeString(&ResultString, NULL);
+    ResultString.Length = *nSize * sizeof(WCHAR);
+    ResultString.MaximumLength = *nSize * sizeof(WCHAR);
 	RtlInitUnicodeString(&RegKey,
 			     L"\\Registry\\Machine\\System"
 			     L"\\CurrentControlSet\\Services\\Tcpip"
