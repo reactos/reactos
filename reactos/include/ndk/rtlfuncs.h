@@ -631,6 +631,30 @@ RtlAreBitsSet(
   IN ULONG  StartingIndex,
   IN ULONG  Length); 
 
+VOID
+STDCALL
+RtlClearBits (
+	IN	PRTL_BITMAP	BitMapHeader,
+	IN	ULONG		StartingIndex,
+	IN	ULONG		NumberToClear
+	);
+
+ULONG
+STDCALL
+RtlFindClearBits (
+	PRTL_BITMAP	BitMapHeader,
+	ULONG		NumberToFind,
+	ULONG		HintIndex
+	);
+
+ULONG
+STDCALL
+RtlFindClearBitsAndSet (
+	PRTL_BITMAP	BitMapHeader,
+	ULONG		NumberToFind,
+	ULONG		HintIndex
+	);
+    
 NTSTATUS
 STDCALL
 RtlMultiByteToUnicodeN (

@@ -102,6 +102,12 @@ typedef struct _CURDIR
     PVOID Handle;
 } CURDIR, *PCURDIR;
 
+typedef struct _DESCRIPTOR_TABLE_ENTRY
+{
+    ULONG Selector;
+    LDT_ENTRY Descriptor;
+} DESCRIPTOR_TABLE_ENTRY, *PDESCRIPTOR_TABLE_ENTRY;
+
 typedef struct _PEB_FREE_BLOCK 
 {
     struct _PEB_FREE_BLOCK* Next;
