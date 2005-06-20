@@ -3,12 +3,11 @@
  * PROJECT:     ReactOS VFAT filesystem library
  * FILE:        vfatlib.h
  */
-#define NDEBUG
-#include <debug.h>
+
+#include <windows.h>
+#include <fmifs.h>
 #define NTOS_MODE_USER
-#include <ntos.h>
-#include <fslib/vfatlib.h>
-#include <ddk/ntdddisk.h>
+#include <ndk/ntndk.h>
 
 #define SECTORSIZE 512
 

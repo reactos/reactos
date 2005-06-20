@@ -7,15 +7,10 @@
  * REVISIONS:
  *   CSH 05/04-2003 Created
  */
-#define NTOS_MODE_USER
-#include <ntos.h>
-#include <ddk/ntddscsi.h>
-#include <fslib/vfatlib.h>
 #include "vfatlib.h"
 
 #define NDEBUG
 #include <debug.h>
-
 
 NTSTATUS
 VfatInitialize(VOID)
