@@ -14,7 +14,7 @@
 /* EXPORTED DATA *************************************************************/
 
 /* CONSTANTS *****************************************************************/
-#define LPC_MESSAGE_BASE_SIZE 4
+#define LPC_MESSAGE_BASE_SIZE 24
 #define MAX_MESSAGE_DATA      (0x130)
 
 /* ENUMERATIONS **************************************************************/
