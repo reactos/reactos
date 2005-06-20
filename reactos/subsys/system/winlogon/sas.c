@@ -9,18 +9,7 @@
  *                  Created 28/03/2004
  */
 
-#define NTOS_MODE_USER
-#include <ntos.h>
-#include <windows.h>
-#include <stdio.h>
-#include <ntsecapi.h>
-#include <wchar.h>
-#include <userenv.h>
-#include <reactos/winlogon.h>
-
-#include "setup.h"
 #include "winlogon.h"
-#include "resource.h"
 
 #define NDEBUG
 #include <debug.h>
