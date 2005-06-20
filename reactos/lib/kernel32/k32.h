@@ -28,14 +28,6 @@
 #include <ntdll/csr.h>
 #include <ntdll/ldr.h>
 
-/* Toolhelp & CSRSS Header */
-#include <tlhelp32.h>
-#include <csrss/csrss.h>
-
-/* FIXME: KILL ROSRTL */
-#include <rosrtl/thread.h>
-#include <rosrtl/registry.h>
-
 /* Internal Kernel32 Header */
 #include "include/kernel32.h"
 
@@ -44,5 +36,5 @@
 
 /* Helper Header */
 #include <reactos/helper.h>
-#include <reactos/buildno.h>
 
+/* EOF */

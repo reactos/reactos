@@ -29,6 +29,9 @@
 
 #include <k32.h>
 
+/* FIXME */
+#include <rosrtl/registry.h> 
+
 #define NDEBUG
 #include "../include/debug.h"
 

@@ -12,7 +12,9 @@
 /* INCLUDES ****************************************************************/
 
 #include <k32.h>
-#include <pseh/framebased.h>
+
+/* FIXME */
+#include <rosrtl/thread.h>
 
 #define NDEBUG
 #include "../include/debug.h"

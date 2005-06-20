@@ -10,6 +10,7 @@
  */
 
 #include <k32.h>
+#include <reactos/buildno.h>
 
 #define NDEBUG
 #include "../include/debug.h"
