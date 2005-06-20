@@ -1124,6 +1124,15 @@ typedef struct _FILE_PIPE_EVENT_BUFFER {
     ULONG NumberRequests;
 } FILE_PIPE_EVENT_BUFFER, *PFILE_PIPE_EVENT_BUFFER;
 
+typedef struct _FILE_PIPE_PEEK_BUFFER
+{
+    ULONG NamedPipeState;
+    ULONG ReadDataAvailable;
+    ULONG NumberOfMessages;
+    ULONG MessageLength;
+    CHAR Data[1];
+} FILE_PIPE_PEEK_BUFFER, *PFILE_PIPE_PEEK_BUFFER;
+
 typedef struct _FILE_PIPE_INFORMATION {
     ULONG ReadMode;
     ULONG CompletionMode;

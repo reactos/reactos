@@ -243,7 +243,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
    BOOL r;
    NTSTATUS Status;
    OBJECT_ATTRIBUTES ObjectAttributes;
-   NPFS_WAIT_PIPE WaitPipe;
+   FILE_PIPE_WAIT_FOR_BUFFER WaitPipe;
    HANDLE FileHandle;
    IO_STATUS_BLOCK Iosb;
 
@@ -371,111 +371,92 @@ ConnectNamedPipe(IN HANDLE hNamedPipe,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL 
+STDCALL
 SetNamedPipeHandleState(HANDLE hNamedPipe,
-			LPDWORD lpMode,
-			LPDWORD lpMaxCollectionCount,
-			LPDWORD lpCollectDataTimeout)
+                        LPDWORD lpMode,
+                        LPDWORD lpMaxCollectionCount,
+                        LPDWORD lpCollectDataTimeout)
 {
-   NPFS_GET_STATE GetState;
-   NPFS_SET_STATE SetState;
-   IO_STATUS_BLOCK Iosb;
-   NTSTATUS Status;
+    IO_STATUS_BLOCK Iosb;
+    NTSTATUS Status;
 
-   Status = NtFsControlFile(hNamedPipe,
-			    NULL,
-			    NULL,
-			    NULL,
-			    &Iosb,
-			    FSCTL_PIPE_GET_STATE,
-			    NULL,
-			    0,
-			    &GetState,
-			    sizeof(NPFS_GET_STATE));
-   if (Status == STATUS_PENDING)
-     {
-	Status = NtWaitForSingleObject(hNamedPipe,
-				       FALSE,
-				       NULL);
-	if (!NT_SUCCESS(Status))
-	  {
-	     SetLastErrorByStatus(Status);
-	     return(FALSE);
-	  }
-     }
+    /* Check if the Mode is being changed */
+    if (lpMode)
+    {
+        FILE_PIPE_INFORMATION Settings;
 
-   if (lpMode != NULL)
-     {
-	if ((*lpMode) & PIPE_READMODE_MESSAGE)
-	  {
-	     SetState.ReadModeMessage = TRUE;
-	  }
-	else
-	  {
-	     SetState.ReadModeMessage = FALSE;
-	  }
-	if ((*lpMode) & PIPE_NOWAIT)
-	  {
-	     SetState.NonBlocking = TRUE;
-	  }
-	else
-	  {
-	     SetState.NonBlocking = FALSE;
-	  }
-	SetState.WriteModeMessage = GetState.WriteModeMessage;
-     }
-   else
-     {
-	SetState.ReadModeMessage = GetState.ReadModeMessage;
-	SetState.WriteModeMessage = GetState.WriteModeMessage;
-	SetState.NonBlocking = SetState.NonBlocking;
-     }
+        /* Set the Completion Mode */
+        Settings.CompletionMode = (*lpMode & PIPE_NOWAIT) ?
+                                  FILE_PIPE_COMPLETE_OPERATION : FILE_PIPE_QUEUE_OPERATION;
 
-   if (lpMaxCollectionCount != NULL)
-     {
-	SetState.InBufferSize = *lpMaxCollectionCount;
-     }
-   else
-     {
-	SetState.InBufferSize = GetState.InBufferSize;
-     }
+        /* Set the Read Mode */
+        Settings.ReadMode = (*lpMode & PIPE_READMODE_MESSAGE) ?
+                            FILE_PIPE_MESSAGE_MODE: FILE_PIPE_BYTE_STREAM_MODE;
 
-   SetState.OutBufferSize = GetState.OutBufferSize;
+        /* Send the changes to the Driver */ 
+        Status = NtSetInformationFile(hNamedPipe,
+                                      &Iosb,
+                                      &Settings,
+                                      sizeof(FILE_PIPE_INFORMATION),
+                                      FilePipeInformation);
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastErrorByStatus(Status);
+            return(FALSE);
+        }
+    }
+    
+    /* Check if the Collection count or Timeout are being changed */
+    if (lpMaxCollectionCount || lpCollectDataTimeout)
+    {
+        FILE_PIPE_REMOTE_INFORMATION RemoteSettings;
 
-   if (lpCollectDataTimeout != NULL)
-     {
-	SetState.Timeout.QuadPart = (*lpCollectDataTimeout) * -10000LL;
-     }
-   else
-     {
-	SetState.Timeout = GetState.Timeout;
-     }
+        /* Setting one without the other would delete it, so we read old one */
+        if (!lpMaxCollectionCount || !lpCollectDataTimeout)
+        {
+            Status = NtQueryInformationFile(hNamedPipe,
+                                            &Iosb,
+                                            &RemoteSettings,
+                                            sizeof(FILE_PIPE_REMOTE_INFORMATION),
+                                            FilePipeRemoteInformation);
 
-   Status = NtFsControlFile(hNamedPipe,
-			    NULL,
-			    NULL,
-			    NULL,
-			    &Iosb,
-			    FSCTL_PIPE_SET_STATE,
-			    &SetState,
-			    sizeof(NPFS_SET_STATE),
-			    NULL,
-			    0);
-   if (Status == STATUS_PENDING)
-     {
-	Status = NtWaitForSingleObject(hNamedPipe,
-				       FALSE,
-				       NULL);
-	if (!NT_SUCCESS(Status))
-	  {
-	     SetLastErrorByStatus(Status);
-	     return(FALSE);
-	  }
-     }
+            if (!NT_SUCCESS(Status))
+            {
+                SetLastErrorByStatus(Status);
+                return(FALSE);
+            }
+        }
 
-  return(TRUE);
+        /* Now set the new settings */    
+        RemoteSettings.MaximumCollectionCount = (lpMaxCollectionCount) ? 
+                                                *lpMaxCollectionCount : 
+                                                RemoteSettings.MaximumCollectionCount;
+        if (lpCollectDataTimeout)
+        {
+            /* Convert it to Quad */
+            RemoteSettings.CollectDataTime.QuadPart = -(LONGLONG)
+                                                       UInt32x32To64(10000,
+                                                                     *lpCollectDataTimeout);
+        }
+
+        /* Tell the driver to change them */
+        Status = NtSetInformationFile(hNamedPipe,
+                                      &Iosb,
+                                      &RemoteSettings,
+                                      sizeof(FILE_PIPE_REMOTE_INFORMATION),
+                                      FilePipeRemoteInformation);
+
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastErrorByStatus(Status);
+            return(FALSE);
+        }
+    }
+
+    /* All done */
+    return TRUE;
 }
-
 
 /*
  * @implemented

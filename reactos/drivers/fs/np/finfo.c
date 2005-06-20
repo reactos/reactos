@@ -17,26 +17,100 @@
 
 /* FUNCTIONS *****************************************************************/
 
-static NTSTATUS
-NpfsQueryPipeInformation(PDEVICE_OBJECT DeviceObject,
-			 PNPFS_FCB Fcb,
-			 PFILE_PIPE_INFORMATION Info,
-			 PULONG BufferLength)
+static
+NTSTATUS
+NpfsSetPipeInformation(PDEVICE_OBJECT DeviceObject,
+                       PNPFS_FCB Fcb,
+                       PFILE_PIPE_INFORMATION Info,
+                       PULONG BufferLength)
 {
-  PNPFS_PIPE Pipe;
+    PNPFS_PIPE Pipe;
+    PFILE_PIPE_INFORMATION Request;
+    DPRINT("NpfsSetPipeInformation()\n");
 
-  DPRINT("NpfsQueryPipeInformation()\n");
+    /* Get the Pipe and data */
+    Pipe = Fcb->Pipe;
+    Request = (PFILE_PIPE_INFORMATION)Info;
+    
+    /* Set Pipe Data */
+    Pipe->ReadMode = Request->ReadMode;
+    Pipe->CompletionMode =  Request->CompletionMode;
 
-  Pipe = Fcb->Pipe;
+    /* Return Success */
+    return STATUS_SUCCESS;  
+}
 
-  RtlZeroMemory(Info,
-		sizeof(FILE_PIPE_INFORMATION));
+static
+NTSTATUS
+NpfsSetPipeRemoteInformation(PDEVICE_OBJECT DeviceObject,
+                             PNPFS_FCB Fcb,
+                             PFILE_PIPE_INFORMATION Info,
+                             PULONG BufferLength)
+{
+    PNPFS_PIPE Pipe;
+    PFILE_PIPE_REMOTE_INFORMATION Request;
+    DPRINT("NpfsSetPipeRemoteInformation()\n");
 
-//  Info->PipeMode =
-//  Info->CompletionMode =
+    /* Get the Pipe and data */
+    Pipe = Fcb->Pipe;
+    Request = (PFILE_PIPE_REMOTE_INFORMATION)Info;
+    
+    /* Set the Settings */
+    Pipe->TimeOut = Request->CollectDataTime;
+    Pipe->InboundQuota = Request->MaximumCollectionCount;
+    
+    /* Return Success */
+    return STATUS_SUCCESS;
+}
+      
+static 
+NTSTATUS
+NpfsQueryPipeInformation(PDEVICE_OBJECT DeviceObject,
+                         PNPFS_FCB Fcb,
+                         PFILE_PIPE_INFORMATION Info,
+                         PULONG BufferLength)
+{
+    PNPFS_PIPE Pipe;
+    DPRINT("NpfsQueryPipeInformation()\n");
 
-  *BufferLength -= sizeof(FILE_PIPE_INFORMATION);
-  return STATUS_SUCCESS;
+    /* Get the Pipe */
+    Pipe = Fcb->Pipe;
+    
+    /* Clear Info */
+    RtlZeroMemory(Info, sizeof(FILE_PIPE_INFORMATION));
+
+    /* Return Info */
+    Info->CompletionMode = Pipe->CompletionMode;
+    Info->ReadMode = Pipe->ReadMode;
+     
+    /* Return success */
+    *BufferLength -= sizeof(FILE_PIPE_INFORMATION);
+    return STATUS_SUCCESS;
+}
+
+static 
+NTSTATUS
+NpfsQueryPipeRemoteInformation(PDEVICE_OBJECT DeviceObject,
+                               PNPFS_FCB Fcb,
+                               PFILE_PIPE_REMOTE_INFORMATION Info,
+                               PULONG BufferLength)
+{
+    PNPFS_PIPE Pipe;
+    DPRINT("NpfsQueryPipeRemoteInformation()\n");
+
+    /* Get the Pipe */
+    Pipe = Fcb->Pipe;
+    
+    /* Clear Info */
+    RtlZeroMemory(Info, sizeof(FILE_PIPE_REMOTE_INFORMATION));
+
+    /* Return Info */
+    Info->MaximumCollectionCount = Pipe->InboundQuota;
+    Info->CollectDataTime = Pipe->TimeOut;
+     
+    /* Return success */
+    *BufferLength -= sizeof(FILE_PIPE_REMOTE_INFORMATION);
+    return STATUS_SUCCESS;
 }
 
 
@@ -128,7 +202,10 @@ NpfsQueryInformation(PDEVICE_OBJECT DeviceObject,
 	break;
 
       case FilePipeRemoteInformation:
-	Status = STATUS_NOT_IMPLEMENTED;
+	Status = NpfsQueryPipeRemoteInformation(DeviceObject,
+					       Fcb,
+					       SystemBuffer,
+					       &BufferLength);
 	break;
 
       default:
@@ -176,27 +253,35 @@ NpfsSetInformation(PDEVICE_OBJECT DeviceObject,
   DPRINT("SystemBuffer %p\n", SystemBuffer);
   DPRINT("BufferLength %lu\n", BufferLength);
 
-  switch (FileInformationClass)
+    switch (FileInformationClass)
     {
-      case FilePipeInformation:
-	Status = STATUS_NOT_IMPLEMENTED;
-	break;
-      case FilePipeLocalInformation:
-	Status = STATUS_NOT_IMPLEMENTED;
-	break;
-      case FilePipeRemoteInformation:
-	Status = STATUS_NOT_IMPLEMENTED;
-	break;
-      default:
-	Status = STATUS_NOT_SUPPORTED;
+        case FilePipeInformation:
+            /* Call the handler */
+            Status = NpfsSetPipeInformation(DeviceObject,
+                                            Fcb,
+                                            SystemBuffer,
+                                            &BufferLength);
+        break;
+      
+        case FilePipeLocalInformation:
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+            
+        case FilePipeRemoteInformation:
+            /* Call the handler */
+            Status = NpfsSetPipeRemoteInformation(DeviceObject,
+                                                  Fcb,
+                                                  SystemBuffer,
+                                                  &BufferLength);
+        break;
+            default:
+            Status = STATUS_NOT_SUPPORTED;
     }
 
-  Irp->IoStatus.Status = Status;
-  Irp->IoStatus.Information = 0;
-  IoCompleteRequest(Irp,
-		    IO_NO_INCREMENT);
-
-  return Status;
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
 }
 
 /* EOF */

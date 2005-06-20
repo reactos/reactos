@@ -272,12 +272,12 @@ NpfsWaitPipe(PIRP Irp,
   PNPFS_PIPE Pipe;
   PLIST_ENTRY current_entry;
   PNPFS_FCB ServerFcb;
-  PNPFS_WAIT_PIPE WaitPipe;
+  PFILE_PIPE_WAIT_FOR_BUFFER WaitPipe;
   NTSTATUS Status;
 
   DPRINT("NpfsWaitPipe\n");
 
-  WaitPipe = (PNPFS_WAIT_PIPE)Irp->AssociatedIrp.SystemBuffer;
+  WaitPipe = (PFILE_PIPE_WAIT_FOR_BUFFER)Irp->AssociatedIrp.SystemBuffer;
   Pipe = Fcb->Pipe;
 
   if (Fcb->PipeState != 0)
@@ -326,82 +326,6 @@ NpfsWaitPipe(PIRP Irp,
  * RETURNS:
  *     Status of operation
  */
-static NTSTATUS
-NpfsGetState(PIRP Irp,
-	     PIO_STACK_LOCATION IrpSp)
-{
-  PNPFS_GET_STATE Reply;
-  PNPFS_PIPE Pipe;
-  PNPFS_FCB Fcb;
-
-  /* Validate parameters */
-  if (IrpSp->Parameters.DeviceIoControl.OutputBufferLength < sizeof(NPFS_GET_STATE))
-    {
-      DPRINT("Status (0x%X).\n", STATUS_INVALID_PARAMETER);
-      return STATUS_INVALID_PARAMETER;
-    }
-
-  Fcb = IrpSp->FileObject->FsContext;
-  Reply = (PNPFS_GET_STATE)Irp->AssociatedIrp.SystemBuffer;
-  Pipe = Fcb->Pipe;
-
-  Reply->WriteModeMessage = (Pipe->WriteMode == FILE_PIPE_MESSAGE_MODE);
-  Reply->ReadModeMessage = (Pipe->ReadMode == FILE_PIPE_MESSAGE_MODE);
-  Reply->NonBlocking = (Pipe->CompletionMode == FILE_PIPE_QUEUE_OPERATION);
-  Reply->InBufferSize = Pipe->InboundQuota;
-  Reply->OutBufferSize = Pipe->OutboundQuota;
-  Reply->Timeout = Pipe->TimeOut;
-
-  Irp->IoStatus.Information = sizeof(NPFS_GET_STATE);
-
-  DPRINT("Status (0x%X).\n", STATUS_SUCCESS);
-
-  return STATUS_SUCCESS;
-}
-
-
-/*
- * FUNCTION: Set state of a pipe
- * ARGUMENTS:
- *     Irp   = Pointer to I/O request packet
- *     IrpSp = Pointer to current stack location of Irp
- * RETURNS:
- *     Status of operation
- */
-static NTSTATUS
-NpfsSetState(PIRP Irp,
-	     PIO_STACK_LOCATION IrpSp)
-{
-  PNPFS_SET_STATE Request;
-  PNPFS_PIPE Pipe;
-  PNPFS_FCB Fcb;
-
-  /* Validate parameters */
-  if (IrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof(NPFS_SET_STATE))
-    {
-      DPRINT("Status (0x%X).\n", STATUS_INVALID_PARAMETER);
-      return STATUS_INVALID_PARAMETER;
-    }
-
-  Fcb = IrpSp->FileObject->FsContext;
-  Request = (PNPFS_SET_STATE)Irp->AssociatedIrp.SystemBuffer;
-  Pipe = Fcb->Pipe;
-
-  Pipe->WriteMode =
-    Request->WriteModeMessage ? FILE_PIPE_MESSAGE_MODE : FILE_PIPE_BYTE_STREAM_MODE;
-  Pipe->ReadMode =
-    Request->WriteModeMessage ? FILE_PIPE_MESSAGE_MODE : FILE_PIPE_BYTE_STREAM_MODE;
-  Pipe->CompletionMode =
-    Request->NonBlocking ? FILE_PIPE_QUEUE_OPERATION : FILE_PIPE_COMPLETE_OPERATION;
-  Pipe->InboundQuota = Request->InBufferSize;
-  Pipe->OutboundQuota = Request->OutBufferSize;
-  Pipe->TimeOut = Request->Timeout;
-
-  DPRINT("Status (0x%X).\n", STATUS_SUCCESS);
-
-  return STATUS_SUCCESS;
-}
-
 
 /*
  * FUNCTION: Peek at a pipe (get information about messages)
@@ -518,16 +442,6 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
       case FSCTL_PIPE_QUERY_CLIENT_PROCESS:
 	DPRINT("Query client process\n");
 	Status = STATUS_NOT_IMPLEMENTED;
-	break;
-
-      case FSCTL_PIPE_GET_STATE:
-	DPRINT("Get state\n");
-	Status = NpfsGetState(Irp, (PIO_STACK_LOCATION)IoStack);
-	break;
-
-      case FSCTL_PIPE_SET_STATE:
-	DPRINT("Set state\n");
-	Status = NpfsSetState(Irp, (PIO_STACK_LOCATION)IoStack);
 	break;
 
       case FSCTL_PIPE_INTERNAL_READ:
