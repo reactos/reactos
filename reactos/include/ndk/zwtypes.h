@@ -871,7 +871,7 @@ typedef struct _SYSTEM_CACHE_INFORMATION
     ULONG CurrentSizeIncludingTransitionInPages;
     ULONG PeakSizeIncludingTransitionInPages;
     ULONG Unused[2];
-} SYSTEM_CACHE_INFORMATION;
+} SYSTEM_CACHE_INFORMATION, *PSYSTEM_CACHE_INFORMATION;
 
 /* Class 22 */
 typedef struct _SYSTEM_POOLTAG 
