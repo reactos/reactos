@@ -4,11 +4,6 @@
 
 /* INCLUDES ****************************************************************/
 
-#define NTOS_MODE_USER
-#include <ntos.h>
-#include <stdio.h>
-#include <windows.h>
-
 #include "services.h"
 #include "svcctl_s.h"
 

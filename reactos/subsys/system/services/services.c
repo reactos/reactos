@@ -29,12 +29,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_MODE_USER
-#include <ntos.h>
-#include <stdio.h>
-#include <tchar.h>
-#include <windows.h>
-
 #include "services.h"
 
 #define NDEBUG
@@ -74,14 +68,14 @@ ScmCreateStartEvent(PHANDLE StartEvent)
   hEvent = CreateEvent(NULL,
                        TRUE,
                        FALSE,
-                       _T("SvcctrlStartEvent_A3725DX"));
+                       TEXT("SvcctrlStartEvent_A3725DX"));
   if (hEvent == NULL)
   {
     if (GetLastError() == ERROR_ALREADY_EXISTS)
     {
       hEvent = OpenEvent(EVENT_ALL_ACCESS,
                          FALSE,
-                         _T("SvcctrlStartEvent_A3725DX"));
+                         TEXT("SvcctrlStartEvent_A3725DX"));
       if (hEvent == NULL)
       {
         return FALSE;
@@ -166,7 +160,7 @@ ScmCreateNamedPipe(VOID)
 
     DPRINT("ScmCreateNamedPipe() - CreateNamedPipe(\"\\\\.\\pipe\\Ntsvcs\")\n");
 
-    hPipe = CreateNamedPipe(_T("\\\\.\\pipe\\Ntsvcs"),
+    hPipe = CreateNamedPipe(TEXT("\\\\.\\pipe\\Ntsvcs"),
               PIPE_ACCESS_DUPLEX,
               PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
               PIPE_UNLIMITED_INSTANCES,
