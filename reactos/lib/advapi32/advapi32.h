@@ -15,5 +15,4 @@
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
-/* FIXME: ROSRTL */
-#include <rosrtl/string.h>
+/* EOF */

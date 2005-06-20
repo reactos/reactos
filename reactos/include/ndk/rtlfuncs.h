@@ -15,7 +15,7 @@
 
 /* PROTOTYPES ****************************************************************/
 
-/* FIXME: FILE NEEDS TO BE CLEANED UP AT THE END WHEN ALL THE FUNCTIONS HAVE BEEN ADDED */
+/* FIXME: FILE NEEDS SOME ALPHABETIZING AND REGROUP */
 
 /* List Macros */
 static __inline 
@@ -191,6 +191,16 @@ RemoveTailList(
   }\
 \
   InsertTailList(current, &((NewEntry)->ListEntryField));\
+}
+
+/*
+ * Constant String Macro
+ */
+#define RTL_CONSTANT_STRING(__SOURCE_STRING__) \
+{ \
+ sizeof(__SOURCE_STRING__) - sizeof((__SOURCE_STRING__)[0]), \
+ sizeof(__SOURCE_STRING__), \
+ (__SOURCE_STRING__) \
 }
 
 /*
