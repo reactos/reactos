@@ -20,45 +20,26 @@
 
 
 /* FUNCTIONS *****************************************************************/
-
-/* FIXME: please put this in some header */
-static EXCEPTION_DISPOSITION __cdecl
-_except_handler(EXCEPTION_RECORD *ExceptionRecord,
-		void * EstablisherFrame,
-		CONTEXT *ContextRecord,
-		void * DispatcherContext)
+_SEH_FILTER(BaseThreadExceptionFilter)
 {
-   EXCEPTION_POINTERS ExceptionInfo;
-   EXCEPTION_DISPOSITION ExceptionDisposition = EXCEPTION_EXECUTE_HANDLER;
-
-   ExceptionInfo.ExceptionRecord = ExceptionRecord;
-   ExceptionInfo.ContextRecord = ContextRecord;
+   EXCEPTION_POINTERS * ExceptionInfo = _SEH_GetExceptionPointers();
+   LONG ExceptionDisposition = EXCEPTION_EXECUTE_HANDLER;
 
    if (GlobalTopLevelExceptionFilter != NULL)
    {
       _SEH_TRY
       {
-         ExceptionDisposition = GlobalTopLevelExceptionFilter(&ExceptionInfo);
+         ExceptionDisposition = GlobalTopLevelExceptionFilter(ExceptionInfo);
       }
       _SEH_HANDLE
       {
-         ExceptionDisposition = UnhandledExceptionFilter(&ExceptionInfo);
+         ExceptionDisposition = UnhandledExceptionFilter(ExceptionInfo);
       }
       _SEH_END;
    }
 
-   if (ExceptionDisposition == EXCEPTION_EXECUTE_HANDLER)
-      ExitThread(ExceptionRecord->ExceptionCode);
-
-   /* translate EXCEPTION_XXX defines into EXCEPTION_DISPOSITION enum values */
-   if (ExceptionDisposition == EXCEPTION_CONTINUE_EXECUTION)
-     return ExceptionContinueExecution;
-   else if (ExceptionDisposition == EXCEPTION_CONTINUE_SEARCH)
-     return ExceptionContinueSearch;
-
-   return -1; /* unknown return from UnhandledExceptionFilter */
+   return ExceptionDisposition;
 }
-
 
 __declspec(noreturn) void STDCALL
 ThreadStartup
@@ -69,13 +50,16 @@ ThreadStartup
 {
   volatile UINT uExitCode = 0;
 
-  __try1(_except_handler)
-  {
-    /* FIXME: notify csrss of thread creation ?? */
-    uExitCode = (lpStartAddress)(lpParameter);
-  }
-  __except1
-
+     _SEH_TRY
+   {
+      uExitCode = (lpStartAddress)((PVOID)lpParameter);
+   }
+   _SEH_EXCEPT(BaseThreadExceptionFilter)
+   {
+      uExitCode = _SEH_GetExceptionCode();
+   }
+   _SEH_END;
+   
   ExitThread(uExitCode);
 }
 
