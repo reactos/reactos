@@ -3,15 +3,6 @@
 #include <ntos/ntdef.h>
 #endif
 
-#ifdef NDEBUG
-#if defined(__GNUC__)
-#define TRACE_LDR(args...) if (RtlGetNtGlobalFlags() & FLG_SHOW_LDR_SNAPS) { DbgPrint("(LDR:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); }
-#else
-#endif	/* __GNUC__ */
-#else
-#define TRACE_LDR(args...) do { DbgPrint("(LDR:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0)
-#endif
-
 /* Macros expanding to the appropriate inline assembly to raise a breakpoint */
 #if defined(_M_IX86)
 #define ASM_BREAKPOINT "\nint $3\n"

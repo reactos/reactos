@@ -27,6 +27,15 @@
 
 /* GLOBALS *******************************************************************/
 
+#ifdef NDEBUG
+#if defined(__GNUC__)
+#define TRACE_LDR(args...) if (RtlGetNtGlobalFlags() & FLG_SHOW_LDR_SNAPS) { DbgPrint("(LDR:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); }
+#else
+#endif	/* __GNUC__ */
+#else
+#define TRACE_LDR(args...) do { DbgPrint("(LDR:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0)
+#endif
+
 typedef struct _TLS_DATA
 {
    PVOID StartAddressOfRawData;
