@@ -328,7 +328,69 @@ RtlAddAccessAllowedAce(
     ACCESS_MASK AccessMask,
     PSID Sid
 );
-            
+
+NTSTATUS 
+STDCALL 
+RtlAddAccessAllowedAceEx(
+    IN OUT PACL pAcl,
+    IN DWORD dwAceRevision,
+    IN DWORD AceFlags,
+    IN DWORD AccessMask,
+    IN PSID pSid
+);
+
+NTSTATUS 
+STDCALL
+RtlAddAccessDeniedAce(
+    PACL Acl,
+    ULONG Revision,
+    ACCESS_MASK AccessMask,
+    PSID Sid
+);
+
+NTSTATUS 
+STDCALL
+RtlAddAccessDeniedAceEx(
+    IN OUT PACL Acl,
+    IN ULONG Revision,
+    IN ULONG Flags,
+    IN ACCESS_MASK AccessMask,
+    IN PSID Sid
+);
+
+NTSTATUS 
+STDCALL
+RtlAddAuditAccessAceEx(
+    IN OUT PACL Acl,
+    IN ULONG Revision,
+    IN ULONG Flags,
+    IN ACCESS_MASK AccessMask,
+    IN PSID Sid,
+    IN BOOLEAN Success,
+    IN BOOLEAN Failure
+);
+
+NTSTATUS 
+STDCALL
+RtlAddAce(
+    PACL Acl,
+    ULONG Revision,
+    ULONG StartingIndex,
+    PACE AceList,
+    ULONG AceListLength
+);
+
+NTSTATUS 
+STDCALL
+RtlAddAuditAccessAce(
+    PACL Acl,
+    ULONG Revision,
+    ACCESS_MASK AccessMask,
+    PSID Sid,
+    BOOLEAN Success,
+    BOOLEAN Failure
+);
+          
 NTSTATUS
 STDCALL
 RtlAllocateAndInitializeSid(
@@ -343,6 +405,20 @@ RtlAllocateAndInitializeSid(
     IN ULONG SubAuthority6,
     IN ULONG SubAuthority7,
     OUT PSID *Sid
+);
+
+BOOLEAN 
+STDCALL
+RtlAreAllAccessesGranted(
+    ACCESS_MASK GrantedAccess,
+    ACCESS_MASK DesiredAccess
+);
+
+BOOLEAN 
+STDCALL
+RtlAreAnyAccessesGranted(
+    ACCESS_MASK GrantedAccess,
+    ACCESS_MASK DesiredAccess
 );
 
 VOID
@@ -410,11 +486,32 @@ RtlCreateSecurityDescriptorRelative(
     ULONG Revision
 );
 
+NTSTATUS 
+STDCALL
+RtlDeleteAce(
+    PACL Acl,
+    ULONG AceIndex
+);
+
+BOOLEAN 
+STDCALL
+RtlEqualPrefixSid(
+    PSID Sid1,
+    PSID Sid2
+);
+         
 BOOLEAN
 STDCALL
 RtlEqualSid (
     IN PSID Sid1,
     IN PSID Sid2
+);
+
+BOOLEAN 
+STDCALL
+RtlFirstFreeAce(
+    PACL Acl,
+    PACE* Ace
 );
 
 PVOID
@@ -423,6 +520,22 @@ RtlFreeSid (
     IN PSID Sid
 );
 
+NTSTATUS 
+STDCALL
+RtlGetAce(
+    PACL Acl,
+    ULONG AceIndex,
+    PACE *Ace
+);
+
+NTSTATUS 
+STDCALL
+RtlGetControlSecurityDescriptor(
+    PSECURITY_DESCRIPTOR SecurityDescriptor,
+    PSECURITY_DESCRIPTOR_CONTROL Control,
+    PULONG Revision
+);
+                 
 NTSTATUS
 STDCALL
 RtlGetDaclSecurityDescriptor(
@@ -457,6 +570,21 @@ RtlGetOwnerSecurityDescriptor(
     OUT PBOOLEAN OwnerDefaulted
 );
 
+BOOLEAN 
+STDCALL
+RtlGetSecurityDescriptorRMControl(
+    PSECURITY_DESCRIPTOR SecurityDescriptor,
+    PUCHAR RMControl
+);
+                  
+PSID_IDENTIFIER_AUTHORITY 
+STDCALL
+RtlIdentifierAuthoritySid(PSID Sid);
+
+NTSTATUS
+STDCALL
+RtlImpersonateSelf(IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel);
+
 NTSTATUS
 STDCALL
 RtlInitializeSid(
@@ -473,12 +601,19 @@ ULONG
 STDCALL
 RtlLengthSid(IN PSID Sid);
 
-#if (VER_PRODUCTBUILD >= 2195)
+NTSTATUS 
+STDCALL
+RtlQueryInformationAcl(
+    PACL Acl,
+    PVOID Information,
+    ULONG InformationLength,
+    ACL_INFORMATION_CLASS InformationClass
+);
 
 NTSTATUS
 STDCALL
 RtlSelfRelativeToAbsoluteSD(
-    IN PSECURITY_DESCRIPTOR SelfRelativeSD,
+    IN PSECURITY_DESCRIPTOR_RELATIVE SelfRelativeSD,
     OUT PSECURITY_DESCRIPTOR AbsoluteSD,
     IN PULONG AbsoluteSDSize,
     IN PACL Dacl,
@@ -491,7 +626,13 @@ RtlSelfRelativeToAbsoluteSD(
     IN PULONG PrimaryGroupSize
 );
 
-#endif /* (VER_PRODUCTBUILD >= 2195) */
+NTSTATUS 
+STDCALL
+RtlSetControlSecurityDescriptor(
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN SECURITY_DESCRIPTOR_CONTROL ControlBitsOfInterest,
+    IN SECURITY_DESCRIPTOR_CONTROL ControlBitsToSet
+);
 
 NTSTATUS
 STDCALL
@@ -508,6 +649,15 @@ RtlSetGroupSecurityDescriptor(
     IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
     IN PSID Group,
     IN BOOLEAN GroupDefaulted
+);
+
+NTSTATUS 
+STDCALL
+RtlSetInformationAcl(
+    PACL Acl,
+    PVOID Information,
+    ULONG InformationLength,
+    ACL_INFORMATION_CLASS InformationClass
 );
 
 NTSTATUS
@@ -527,6 +677,13 @@ RtlSetSaclSecurityDescriptor(
     IN BOOLEAN SaclDefaulted
 );
 
+VOID 
+STDCALL
+RtlSetSecurityDescriptorRMControl(
+    PSECURITY_DESCRIPTOR SecurityDescriptor,
+    PUCHAR RMControl
+);
+
 PUCHAR
 STDCALL
 RtlSubAuthorityCountSid(
@@ -539,6 +696,18 @@ RtlSubAuthoritySid(
     IN PSID Sid,
     IN ULONG SubAuthority
 );
+
+BOOLEAN
+STDCALL
+RtlValidRelativeSecurityDescriptor(
+    IN PSECURITY_DESCRIPTOR_RELATIVE SecurityDescriptorInput,
+    IN ULONG SecurityDescriptorLength,
+    IN SECURITY_INFORMATION RequiredInformation
+);
+
+BOOLEAN 
+STDCALL
+RtlValidSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor);
 
 BOOLEAN
 STDCALL
@@ -1229,7 +1398,16 @@ RtlResetRtlTranslations(IN PNLSTABLEINFO NlsTable);
 
 /*
  * Misc String Functions
- */                   
+ */     
+BOOLEAN
+STDCALL
+RtlDosPathNameToNtPathName_U(
+    PWSTR DosName,
+    PUNICODE_STRING NtName,
+    PWSTR *ShortName,
+    PCURDIR CurrentDirectory
+);
+                 
 BOOLEAN
 STDCALL
 RtlIsNameLegalDOS8Dot3(

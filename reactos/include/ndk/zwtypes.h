@@ -406,6 +406,13 @@ typedef struct _KERNEL_USER_TIMES
     LARGE_INTEGER UserTime;
 } KERNEL_USER_TIMES, *PKERNEL_USER_TIMES;
 
+/* Class 9 */
+typedef struct _PROCESS_ACCESS_TOKEN
+{
+    HANDLE Token;
+    HANDLE Thread;
+} PROCESS_ACCESS_TOKEN, *PPROCESS_ACCESS_TOKEN;
+
 /* Class 16 */
 typedef struct _PROCESS_PRIORITY_CLASS
 {

@@ -568,6 +568,7 @@ struct _EVENT_TRACE_HEADER; /* <--- We might want to declare this one */
 typedef ULONG EXECUTION_STATE;
 
 /* Basic NT Types */
+#if !defined(_NTSECAPI_H) && !defined(_SUBAUTH_H)
 typedef struct _UNICODE_STRING 
 {
     USHORT Length;
@@ -582,10 +583,6 @@ typedef struct _STRING
     USHORT MaximumLength;
     PCHAR  Buffer;
 } STRING, *PSTRING;
-typedef STRING ANSI_STRING;
-typedef PSTRING PANSI_STRING;
-typedef STRING OEM_STRING;
-typedef PSTRING POEM_STRING;
 
 typedef struct _OBJECT_ATTRIBUTES 
 {
@@ -596,6 +593,12 @@ typedef struct _OBJECT_ATTRIBUTES
     PVOID SecurityDescriptor;              
     PVOID SecurityQualityOfService;
 } OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
+#endif
+
+typedef STRING ANSI_STRING;
+typedef PSTRING PANSI_STRING;
+typedef STRING OEM_STRING;
+typedef PSTRING POEM_STRING;
 
 typedef struct _IO_STATUS_BLOCK 
 {
@@ -702,8 +705,33 @@ typedef struct _KEY_WRITE_TIME_INFORMATION
 /* Class 1 */
 typedef struct _KEY_USER_FLAGS_INFORMATION 
 {
-    ULONG   UserFlags;
+    ULONG UserFlags;
 } KEY_USER_FLAGS_INFORMATION, *PKEY_USER_FLAGS_INFORMATION;
+
+typedef struct _KEY_FULL_INFORMATION
+{
+    LARGE_INTEGER LastWriteTime;
+    ULONG TitleIndex;
+    ULONG ClassOffset;
+    ULONG ClassLength;
+    ULONG SubKeys;
+    ULONG MaxNameLen;
+    ULONG MaxClassLen;
+    ULONG Values;
+    ULONG MaxValueNameLen;
+    ULONG MaxValueDataLen;
+    WCHAR Class[1];
+} KEY_FULL_INFORMATION, *PKEY_FULL_INFORMATION;
+
+typedef struct _KEY_NODE_INFORMATION 
+{
+    LARGE_INTEGER LastWriteTime;
+    ULONG TitleIndex;
+    ULONG ClassOffset;
+    ULONG ClassLength;
+    ULONG NameLength;
+    WCHAR Name[1];
+} KEY_NODE_INFORMATION, *PKEY_NODE_INFORMATION;
 
 /* 
  * File
