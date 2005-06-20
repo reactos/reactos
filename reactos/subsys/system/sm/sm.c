@@ -29,8 +29,10 @@
 #include <tchar.h>
 #include "resource.h"
 
+#include <windows.h>
 #define NTOS_MODE_USER
-#include <ntos.h>
+#include <ndk/ntndk.h>
+
 #include <sm/helper.h>
 
 #define SM_CMD(n) cmd_##n
