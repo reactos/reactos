@@ -2,6 +2,8 @@
 
 /* FIXME: Belongs to some header. */
 WINBOOL STDCALL GdiDllInitialize(HANDLE, DWORD, LPVOID);
+void InitStockObjects(void);
+VOID DeleteFrameBrushes(VOID);
 
 #ifdef DBG
 
@@ -13,7 +15,6 @@ DWORD DebugTraceLevel = MIN_TRACE;
 extern CRITICAL_SECTION gcsMPH;
 static ULONG User32TlsIndex;
 HINSTANCE User32Instance;
-
 HWINSTA ProcessWindowStation;
 
 PUSER32_THREAD_DATA

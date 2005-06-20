@@ -17,6 +17,7 @@
 
 #include <win32k/win32k.h>
 #include <win32k/callback.h>
+#include <win32k/caret.h>
 #include <csrss/csrss.h>
 
 #include <internal/ntoskrnl.h>

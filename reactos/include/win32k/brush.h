@@ -74,13 +74,6 @@ typedef struct
 #define  BRUSHOBJ_UnlockBrush(pBrush) GDIOBJ_UnlockObjByPtr(pBrush)
 BOOL INTERNAL_CALL BRUSH_Cleanup(PVOID ObjectBody);
 
-#ifdef __USE_W32API
-typedef struct _PATRECT {
-	RECT r;
-	HBRUSH hBrush;
-} PATRECT, * PPATRECT;
-#endif
-
 HBRUSH STDCALL
 NtGdiCreateBrushIndirect(
    CONST LOGBRUSH *LogBrush);
@@ -108,32 +101,6 @@ NtGdiCreateSolidBrush(
 BOOL STDCALL
 NtGdiFixBrushOrgEx(
    VOID);
-
-BOOL STDCALL
-NtGdiPatBlt(
-   HDC hDC,
-   INT XLeft,
-   INT YLeft,
-   INT Width,
-   INT Height,
-   DWORD ROP);
-
-BOOL STDCALL
-NtGdiPolyPatBlt(
-   HDC hDC,
-   DWORD dwRop,
-   PPATRECT pRects,
-   INT cRects,
-   ULONG Reserved);
-
-BOOL STDCALL
-NtGdiPatBlt(
-   HDC hDC,
-   INT XLeft,
-   INT YLeft,
-   INT Width,
-   INT Height,
-   DWORD ROP);
 
 BOOL STDCALL
 NtGdiSetBrushOrgEx(

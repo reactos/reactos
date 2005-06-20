@@ -1891,7 +1891,7 @@ GetDlgItemInt(
         if (!endptr || (endptr == str))  /* Conversion was unsuccessful */
             return 0;
 		/* FIXME: errno? */
-        if (((result == LONG_MIN) || (result == LONG_MAX))/* && (errno == ERANGE) */)
+        if (((result == 0) || (result == 0xFFFFFFFF))/* && (errno == ERANGE) */)
             return 0;
     }
     else
@@ -1900,7 +1900,7 @@ GetDlgItemInt(
         if (!endptr || (endptr == str))  /* Conversion was unsuccessful */
             return 0;
 		/* FIXME: errno? */
-        if ((result == LONG_MAX)/* && (errno == ERANGE) */) return 0;
+        if ((result == 0xFFFFFFFF)/* && (errno == ERANGE) */) return 0;
     }
     if (lpTranslated) *lpTranslated = TRUE;
     return (UINT)result;

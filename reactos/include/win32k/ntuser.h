@@ -1,7 +1,9 @@
 #ifndef __WIN32K_NTUSER_H
 #define __WIN32K_NTUSER_H
 
+#ifndef _NTNDK_
 #include <ddk/ntapi.h>
+#endif
 
 #define WM_SYSTIMER 280
 
