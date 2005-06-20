@@ -24,6 +24,15 @@
 
 #define EVENT_PAIR_ALL_ACCESS    (0x1F0000L)
 
+/* For ProcessDeviceMap */
+#define DOSDEVICE_DRIVE_UNKNOWN    0
+#define DOSDEVICE_DRIVE_CALCULATE  1
+#define DOSDEVICE_DRIVE_REMOVABLE  2
+#define DOSDEVICE_DRIVE_FIXED      3
+#define DOSDEVICE_DRIVE_REMOTE     4
+#define DOSDEVICE_DRIVE_CDROM      5
+#define DOSDEVICE_DRIVE_RAMDISK    6
+
 /* ENUMERATIONS **************************************************************/
 
 
