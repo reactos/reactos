@@ -2889,13 +2889,6 @@ HalSetRealTimeClock (
     IN PTIME_FIELDS TimeFields
 );
 
-#define InitializeMessageHeader(m, l, t) {                  \
-    (m)->Length = (USHORT)(l);                              \
-    (m)->DataLength = (USHORT)(l - sizeof( LPC_MESSAGE ));  \
-    (m)->MessageType = (USHORT)(t);                         \
-    (m)->DataInfoOffset = 0;                                \
-}
-
 NTKERNELAPI
 NTSTATUS
 NTAPI
