@@ -15,8 +15,12 @@
 #ifdef _M_IA64
 #define ROSDATA static __declspec(allocate(".data"))
 #else
+#ifdef _MSC_VER
 #pragma data_seg(".data")
 #define ROSDATA static
+#else
+#define ROSDATA static __attribute__((section(".data")))
+#endif
 #endif
 
 #define VK_EMPTY 0xff   /* The non-existent VK */
@@ -31,47 +35,6 @@
 #define KMEXT    0x300  /* Multi + ext */
 
 #define SHFT_INVALID 0x0F
-
-/* Thanks to http://asp.flaaten.dk/pforum/keycode/keycode.htm */
-#ifndef VK_OEM_1
-#define VK_OEM_1  0xba
-#endif
-#ifndef VK_OEM_PLUS
-#define VK_OEM_PLUS 0xbb /* actually this is ¨ ! ] on the Swiss German Keyboard */
-#endif
-#ifndef VK_OEM_COMMA
-#define VK_OEM_COMMA 0xbc
-#endif
-#ifndef VK_OEM_MINUS
-#define VK_OEM_MINUS 0xbd
-#endif
-#ifndef VK_OEM_PERIOD
-#define VK_OEM_PERIOD 0xbe
-#endif
-#ifndef VK_OEM_2
-#define VK_OEM_2 0xbf
-#endif
-#ifndef VK_OEM_3
-#define VK_OEM_3 0xc0
-#endif
-#ifndef VK_OEM_4
-#define VK_OEM_4 0xdb
-#endif
-#ifndef VK_OEM_5
-#define VK_OEM_5 0xdc
-#endif
-#ifndef VK_OEM_6
-#define VK_OEM_6 0xdd
-#endif
-#ifndef VK_OEM_7
-#define VK_OEM_7 0xde
-#endif
-#ifndef VK_OEM_8
-#define VK_OEM_8 0xdf
-#endif
-#ifndef VK_OEM_102
-#define VK_OEM_102 0xe1
-#endif
 
 ROSDATA USHORT scancode_to_vk[] = {
   /* Numbers Row */
@@ -201,13 +164,7 @@ ROSDATA VK_TO_BIT modifier_keys[] = {
   { 0,          0 }
 };
 
-typedef struct _mymod {
-  PVOID mod_keys;
-  WORD maxmod;
-  BYTE mod_max[7];
-} INTERNAL_KBD_MODIFIERS;
-
-ROSDATA INTERNAL_KBD_MODIFIERS modifier_bits[] = {
+ROSDATA MODIFIERS modifier_bits = {
   modifier_keys,
   6,
   { 0, 1, 3, 4, SHFT_INVALID, SHFT_INVALID, 2 } /* Modifier bit order, NONE, SHIFT, CTRL, ALT, MENU, SHIFT + MENU, CTRL + MENU */
@@ -224,111 +181,111 @@ ROSDATA INTERNAL_KBD_MODIFIERS modifier_bits[] = {
 #define CAPS   KSHIFT /* Caps -> shift */
 
 ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
-  { VK_OEM_5, NOCAPS, 0xa7, 0xb0}, /* § ° */
+  { VK_OEM_5, NOCAPS, {0xa7, 0xb0} }, /* § ° */
 
   /* Normal vs Shifted */
   /* The numbers */
   /* Ctrl-2 generates NUL */
-  { 0xff,        NOCAPS, 0xa7, 0x9B }, /* what is this for? */
-  { '4',         NOCAPS, '4',  0xE7 },
-  { '5',         NOCAPS, '5',  '%' },
-  { '9',         NOCAPS, '9',  ')' },
-  { '0',         NOCAPS, '0',  '=' },
+  { 0xff,        NOCAPS, {0xa7, 0x9B} }, /* what is this for? */
+  { '4',         NOCAPS, {'4',  0xE7} },
+  { '5',         NOCAPS, {'5',  '%'} },
+  { '9',         NOCAPS, {'9',  ')'} },
+  { '0',         NOCAPS, {'0',  '='} },
   
   /* First letter row */
-  { 'W',         CAPS,   'w', 'W' },
-  { 'R',         CAPS,   'r', 'R' },
-  { 'T',         CAPS,   't', 'T' },
-  { 'Z',         CAPS,   'z', 'Z' },
-  { 'U',         CAPS,   'u', 'U' },
-  { 'I',         CAPS,   'i', 'I' },
-  { 'O',         CAPS,   'o', 'O' },
-  { 'P',         CAPS,   'p', 'P' },
+  { 'W',         CAPS,   {'w', 'W'} },
+  { 'R',         CAPS,   {'r', 'R'} },
+  { 'T',         CAPS,   {'t', 'T'} },
+  { 'Z',         CAPS,   {'z', 'Z'} },
+  { 'U',         CAPS,   {'u', 'U'} },
+  { 'I',         CAPS,   {'i', 'I'} },
+  { 'O',         CAPS,   {'o', 'O'} },
+  { 'P',         CAPS,   {'p', 'P'} },
   /* Second letter row */
-  { 'A',         CAPS,   'a', 'A' },
-  { 'S',         CAPS,   's', 'S' },
-  { 'D',         CAPS,   'd', 'D' },
-  { 'F',         CAPS,   'f', 'F' },
-  { 'G',         CAPS,   'g', 'G' },
-  { 'H',         CAPS,   'h', 'H' },
-  { 'J',         CAPS,   'j', 'J' },
-  { 'K',         CAPS,   'k', 'K' },
-  { 'L',         CAPS,   'l', 'L' },
+  { 'A',         CAPS,   {'a', 'A'} },
+  { 'S',         CAPS,   {'s', 'S'} },
+  { 'D',         CAPS,   {'d', 'D'} },
+  { 'F',         CAPS,   {'f', 'F'} },
+  { 'G',         CAPS,   {'g', 'G'} },
+  { 'H',         CAPS,   {'h', 'H'} },
+  { 'J',         CAPS,   {'j', 'J'} },
+  { 'K',         CAPS,   {'k', 'K'} },
+  { 'L',         CAPS,   {'l', 'L'} },
   /* Third letter row */
-  { 'Y',         CAPS,   'y', 'Y' },
-  { 'X',         CAPS,   'x', 'X' },
-  { 'V',         CAPS,   'v', 'V' },
-  { 'B',         CAPS,   'b', 'B' },
-  { 'N',         CAPS,   'n', 'N' },
+  { 'Y',         CAPS,   {'y', 'Y'} },
+  { 'X',         CAPS,   {'x', 'X'} },
+  { 'V',         CAPS,   {'v', 'V'} },
+  { 'B',         CAPS,   {'b', 'B'} },
+  { 'N',         CAPS,   {'n', 'N'} },
 
   /* Specials */
-  { VK_OEM_COMMA,  NOCAPS, ',', ';' },
-  { VK_OEM_PERIOD, NOCAPS, '.', ':' },
-  { VK_OEM_MINUS,  NOCAPS, '-', '_' },
-  { VK_DECIMAL,    NOCAPS, '.', '.' },
-  { VK_TAB,        NOCAPS, '\t', '\t' },
-  { VK_ADD,        NOCAPS, '+', '+' },
-  { VK_DIVIDE,     NOCAPS, 0x2f, 0x2f }, /* '/' */
-  { VK_MULTIPLY,   NOCAPS, '*', '*' },
-  { VK_SUBTRACT,   NOCAPS, '-', '-' },
+  { VK_OEM_COMMA,  NOCAPS, {',', ';'} },
+  { VK_OEM_PERIOD, NOCAPS, {'.', ':'} },
+  { VK_OEM_MINUS,  NOCAPS, {'-', '_'} },
+  { VK_DECIMAL,    NOCAPS, {'.', '.'} },
+  { VK_TAB,        NOCAPS, {'\t', '\t'} },
+  { VK_ADD,        NOCAPS, {'+', '+'} },
+  { VK_DIVIDE,     NOCAPS, {0x2f, 0x2f} }, /* '/' */
+  { VK_MULTIPLY,   NOCAPS, {'*', '*'} },
+  { VK_SUBTRACT,   NOCAPS, {'-', '-'} },
   { 0, 0 }
 };
 
 ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
   /* Normal, Shifted, Alt Gr */
   /* Legacy (telnet-style) ascii escapes */
-  { VK_OEM_4, NOCAPS, '\''     , '?'     , WCH_DEAD },          /* ' ? ´ */
-      { 0xff, NOCAPS,  WCH_NONE, WCH_NONE, 0xb4 },
-  { 'Q', CAPS, 'q', 'Q', '@' },
-  { 'C', CAPS, 'c', 'C', 0xa9},    /* c C Copyright-Sign */ 
-  { 'E', CAPS, 'e', 'E', 0x20ac }, /* e E € */
-  { 'M', CAPS, 'm', 'M', 0xb5 },   /* m M mu-Sign */
-  { VK_OEM_102, NOCAPS, '<', '>', '\\' },
+  { VK_OEM_4, NOCAPS, {'\''     , '?'     , WCH_DEAD} },          /* ' ? ´ */
+      { 0xff, NOCAPS,  {WCH_NONE, WCH_NONE, 0xb4} },
+  { 'Q', CAPS, {'q', 'Q', '@'} },
+  { 'C', CAPS, {'c', 'C', 0xa9} },    /* c C Copyright-Sign */ 
+  { 'E', CAPS, {'e', 'E', 0x20ac} }, /* e E € */
+  { 'M', CAPS, {'m', 'M', 0xb5} },   /* m M mu-Sign */
+  { VK_OEM_102, NOCAPS, {'<', '>', '\\'} },
   { 0,0 }
 };
 
 ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
   /* Normal, Shifted, Alt Gr, C-S-x */
   /* Legacy Ascii generators */
-  { VK_BACK, NOCAPS, '\b', '\b', WCH_NONE, 0x7f },
-  { VK_ESCAPE, NOCAPS, 0x1b, 0x1b, WCH_NONE, 0x1b },
-  { VK_RETURN, NOCAPS, '\r', '\r', WCH_NONE, '\n' },
-  { VK_SPACE, NOCAPS, ' ', ' ', WCH_NONE, ' ' },
-  { VK_CANCEL, NOCAPS, 0x03, 0x03, WCH_NONE, 0x03 },
+  { VK_BACK, NOCAPS, {'\b', '\b', WCH_NONE, 0x7f} },
+  { VK_ESCAPE, NOCAPS, {0x1b, 0x1b, WCH_NONE, 0x1b} },
+  { VK_RETURN, NOCAPS, {'\r', '\r', WCH_NONE, '\n'} },
+  { VK_SPACE, NOCAPS, {' ', ' ', WCH_NONE, ' '} },
+  { VK_CANCEL, NOCAPS, {0x03, 0x03, WCH_NONE, 0x03} },
   { 0, 0 }
 };
 
 ROSDATA VK_TO_WCHARS5 key_to_chars_5mod[] = {
   /* Normal, Shifted, Alt Gr, Ctrl */
-  { '1', NOCAPS, '1', '+',  '|',  WCH_NONE, 0x00 },
-  { '2', NOCAPS, '2', '\"', '@',  WCH_NONE, 0x00 },
-  { '3', NOCAPS, '3', '*',  '#',  WCH_NONE, 0x00 },
-  { '6', NOCAPS, '6', '&',  0xac, WCH_NONE, 0x00 },
-  { '7', NOCAPS, '7', '/',  0xa6, WCH_NONE, 0x00 },
-  { '8', NOCAPS, '8', '(',  0xa2, WCH_NONE, 0x00 },
-  { VK_OEM_1, KCTRL, 0xfc, 0xe8, 0x5b, 0Xdc, 0xc8 },                    /*    ü è [ Ü È   */
-  { VK_OEM_2, NOCAPS, 0x24, 0xa3, 0x7d, WCH_NONE, 0x00 },                    /*    $ £ }    */
-  { VK_OEM_3, KCTRL, 0xf6, 0xe9, WCH_NONE, 0xd6, 0xc9 },                     /* ö é Ö É*/
-  { VK_OEM_6, NOCAPS, WCH_DEAD, WCH_DEAD, WCH_DEAD,  WCH_NONE, 0x00 },       /*    ^ ` ~    */
-      { 0xff, NOCAPS, 0x5e    , 0x27    , 0x7e     , WCH_NONE, 0x00 },
-  { VK_OEM_7, KCTRL, 0xe4, 0xe0, 0x7b, 0xc4, 0xc0 },   /* ä à { Ä À */
-  { VK_OEM_PLUS, NOCAPS, WCH_DEAD, 0x21    , 0x5D    , WCH_NONE, 0x00 },    /*    ¨ ! ]    */ 
-         { 0xff, NOCAPS, 0xa8    , WCH_NONE, WCH_NONE, WCH_NONE, 0x00 },
+  { '1', NOCAPS, {'1', '+',  '|',  WCH_NONE, 0x00} },
+  { '2', NOCAPS, {'2', '\"', '@',  WCH_NONE, 0x00} },
+  { '3', NOCAPS, {'3', '*',  '#',  WCH_NONE, 0x00} },
+  { '6', NOCAPS, {'6', '&',  0xac, WCH_NONE, 0x00} },
+  { '7', NOCAPS, {'7', '/',  0xa6, WCH_NONE, 0x00} },
+  { '8', NOCAPS, {'8', '(',  0xa2, WCH_NONE, 0x00} },
+  { VK_OEM_1, KCTRL, {0xfc, 0xe8, 0x5b, 0Xdc, 0xc8} },                    /*    ü è [ Ü È   */
+  { VK_OEM_2, NOCAPS, {0x24, 0xa3, 0x7d, WCH_NONE, 0x00} },                    /*    $ £ }    */
+  { VK_OEM_3, KCTRL, {0xf6, 0xe9, WCH_NONE, 0xd6, 0xc9} },                     /* ö é Ö É*/
+  { VK_OEM_6, NOCAPS, {WCH_DEAD, WCH_DEAD, WCH_DEAD,  WCH_NONE, 0x00} },       /*    ^ ` ~    */
+      { 0xff, NOCAPS, {0x5e    , 0x27    , 0x7e     , WCH_NONE, 0x00} },
+  { VK_OEM_7, KCTRL, {0xe4, 0xe0, 0x7b, 0xc4, 0xc0} },   /* ä à { Ä À */
+  { VK_OEM_PLUS, NOCAPS, {WCH_DEAD, 0x21    , 0x5D    , WCH_NONE, 0x00} },    /*    ¨ ! ]    */ 
+         { 0xff, NOCAPS, {0xa8    , WCH_NONE, WCH_NONE, WCH_NONE, 0x00} },
   { 0, 0 }
 };
 
 ROSDATA VK_TO_WCHARS1 keypad_numbers[] = {
-  { VK_DECIMAL, 0, '.' }, /* I have no idea why this has to be like this. Shouldn't it be a "."? */
-  { VK_NUMPAD0, 0, '0' },
-  { VK_NUMPAD1, 0, '1' },
-  { VK_NUMPAD2, 0, '2' },
-  { VK_NUMPAD3, 0, '3' },
-  { VK_NUMPAD4, 0, '4' },
-  { VK_NUMPAD5, 0, '5' },
-  { VK_NUMPAD6, 0, '6' },
-  { VK_NUMPAD7, 0, '7' },
-  { VK_NUMPAD8, 0, '8' },
-  { VK_NUMPAD9, 0, '9' },
+  { VK_DECIMAL, 0, {'.'} }, /* I have no idea why this has to be like this. Shouldn't it be a "."? */
+  { VK_NUMPAD0, 0, {'0'} },
+  { VK_NUMPAD1, 0, {'1'} },
+  { VK_NUMPAD2, 0, {'2'} },
+  { VK_NUMPAD3, 0, {'3'} },
+  { VK_NUMPAD4, 0, {'4'} },
+  { VK_NUMPAD5, 0, {'5'} },
+  { VK_NUMPAD6, 0, {'6'} },
+  { VK_NUMPAD7, 0, {'7'} },
+  { VK_NUMPAD8, 0, {'8'} },
+  { VK_NUMPAD9, 0, {'9'} },
 //  { VK_BACK,    0, '\010' },
   { 0,0 }
 };
@@ -496,7 +453,7 @@ ROSDATA DEADKEY dead_key[] = {
 /* Finally, the master table */
 ROSDATA KBDTABLES keyboard_layout_table = {
   /* modifier assignments */
-  (PMODIFIERS)&modifier_bits,
+  &modifier_bits,
   
   /* character from vk tables */
   vk_to_wchar_master_table,
