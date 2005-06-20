@@ -1,5 +1,4 @@
-#define NTOS_MODE_USER
-#include <ntos.h>
+#include <ddk/ntddk.h>
 #include <rosrtl/recmutex.h>
 
 VOID RecursiveMutexInit( PRECURSIVE_MUTEX RecMutex ) {

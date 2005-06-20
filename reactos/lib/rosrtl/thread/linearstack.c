@@ -3,9 +3,9 @@
 /*
 */
 
+#include <windows.h>
 #define NTOS_MODE_USER
-#include <ntos.h>
-
+#include <ndk/ntndk.h>
 #include <rosrtl/thread.h>
 
 NTSTATUS NTAPI RtlpRosValidateLinearUserStack
