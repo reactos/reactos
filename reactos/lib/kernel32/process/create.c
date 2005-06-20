@@ -276,45 +276,25 @@ BOOL STDCALL CreateProcessA(LPCSTR lpApplicationName,
 }
 
 
-static EXCEPTION_DISPOSITION __cdecl
-_except_handler(EXCEPTION_RECORD *ExceptionRecord,
-		void * EstablisherFrame,
-		CONTEXT *ContextRecord,
-		void * DispatcherContext)
+_SEH_FILTER(BaseExceptionFilter)
 {
-   EXCEPTION_POINTERS ExceptionInfo;
-   EXCEPTION_DISPOSITION ExceptionDisposition = EXCEPTION_EXECUTE_HANDLER;
-
-   ExceptionInfo.ExceptionRecord = ExceptionRecord;
-   ExceptionInfo.ContextRecord = ContextRecord;
+   EXCEPTION_POINTERS * ExceptionInfo = _SEH_GetExceptionPointers();
+   LONG ExceptionDisposition = EXCEPTION_EXECUTE_HANDLER;
 
    if (GlobalTopLevelExceptionFilter != NULL)
    {
       _SEH_TRY
       {
-         ExceptionDisposition = GlobalTopLevelExceptionFilter(&ExceptionInfo);
+         ExceptionDisposition = GlobalTopLevelExceptionFilter(ExceptionInfo);
       }
       _SEH_HANDLE
       {
-         ExceptionDisposition = UnhandledExceptionFilter(&ExceptionInfo);
+         ExceptionDisposition = UnhandledExceptionFilter(ExceptionInfo);
       }
       _SEH_END;
    }
 
-   if (ExceptionDisposition == EXCEPTION_EXECUTE_HANDLER)
-      ExitProcess(ExceptionRecord->ExceptionCode);
-
-   /* translate EXCEPTION_XXX defines into EXCEPTION_DISPOSITION enum values */
-   if (ExceptionDisposition == EXCEPTION_CONTINUE_EXECUTION)
-   {
-      return ExceptionContinueExecution;
-   }
-   else if (ExceptionDisposition == EXCEPTION_CONTINUE_SEARCH)
-   {
-      return ExceptionContinueSearch;
-   }
-
-   return -1; /* unknown return from UnhandledExceptionFilter */
+   return ExceptionDisposition;
 }
 
 
@@ -326,10 +306,15 @@ BaseProcessStart(LPTHREAD_START_ROUTINE lpStartAddress,
 
    DPRINT("BaseProcessStart(..) - setting up exception frame.\n");
 
-   __try1(_except_handler)
+   _SEH_TRY
    {
       uExitCode = (lpStartAddress)((PVOID)lpParameter);
-   } __except1
+   }
+   _SEH_EXCEPT(BaseExceptionFilter)
+   {
+      uExitCode = _SEH_GetExceptionCode();
+   }
+   _SEH_END;
 
    ExitProcess(uExitCode);
 }
