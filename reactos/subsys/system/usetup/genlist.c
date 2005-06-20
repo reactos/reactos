@@ -26,17 +26,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include "precomp.h"
-#include <ntdll/rtl.h>
-#include <ntos/minmax.h>
-
 #include "usetup.h"
-#include "console.h"
-#include "genlist.h"
 
 #define NDEBUG
 #include <debug.h>
-
 
 /* FUNCTIONS ****************************************************************/
 

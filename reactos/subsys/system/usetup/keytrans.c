@@ -25,13 +25,10 @@
  *
  * NB: Hardcoded to US keyboard
  */
+#include "usetup.h"
+
 #define NDEBUG
 #include <debug.h>
-
-#include "precomp.h"
-#include <ddk/ntddblue.h>
-#include <ddk/ntddkbd.h>
-#include <windows.h>
 
 static WORD KeyTable[] = {
 /* 0x00 */

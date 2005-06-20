@@ -27,12 +27,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include "precomp.h"
-#include <ntdll/rtl.h>
-
 #include "usetup.h"
-#include "filesup.h"
-#include "cabinet.h"
 
 #define NDEBUG
 #include <debug.h>

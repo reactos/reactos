@@ -24,14 +24,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#include "precomp.h"
-#include <ntdll/rtl.h>
-#include <ddk/ntdddisk.h> /* FIXME: NDK */
-
 #include "usetup.h"
-#include "inicache.h"
-#include "filesup.h"
-#include "bootsup.h"
 
 #define NDEBUG
 #include <debug.h>

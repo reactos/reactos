@@ -26,13 +26,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "precomp.h"
-#include <ddk/ntddblue.h>
-#include <ddk/ntddkbd.h>
-
 #include "usetup.h"
-#include "console.h"
-#include "keytrans.h"
 
 #define NDEBUG
 #include <debug.h>

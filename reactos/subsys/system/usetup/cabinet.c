@@ -8,12 +8,8 @@
  *   CSH 15/08-2003 Created
  */
 
-#include <ntos.h>
-#include <stdio.h>
-#include <string.h>
-#include <zlib.h>
-#include "cabinet.h"
 #include "usetup.h"
+#include <zlib.h>
 
 #define NDEBUG
 #include <debug.h>

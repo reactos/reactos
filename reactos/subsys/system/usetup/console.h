@@ -27,8 +27,6 @@
 #ifndef __CONSOLE_H__
 #define __CONSOLE_H__
 
-#include <ntos/keyboard.h>
-
 #define AllocConsole ConAllocConsole
 #define FreeConsole ConFreeConsole
 #define ReadConsoleOutputCharacters ConReadConsoleOutputCharacters

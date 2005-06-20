@@ -25,35 +25,10 @@
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
-
-#include "precomp.h"
-#include <ntdll/rtl.h>
-#include <ddk/ntdddisk.h> /* FIXME: NDK */
-
-#include <ntos/minmax.h>
-#include <reactos/resource.h>
-#include <rosrtl/string.h>
-
 #include "usetup.h"
-#include "console.h"
-#include "partlist.h"
-#include "inicache.h"
-#include "infcache.h"
-#include "filequeue.h"
-#include "progress.h"
-#include "bootsup.h"
-#include "registry.h"
-#include "format.h"
-#include "fslist.h"
-#include "cabinet.h"
-#include "filesup.h"
-#include "drivesup.h"
-#include "genlist.h"
-#include "settings.h"
 
 #define NDEBUG
 #include <debug.h>
-
 
 typedef enum _PAGE_NUMBER
 {
@@ -1549,7 +1524,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 
 	  return SELECT_FILE_SYSTEM_PAGE;
 	}
-      else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_C) /* C */
+      else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'c') /* C */
 	{
 	  if (PartitionList->CurrentPartition->Unpartitioned == FALSE)
 	    {
@@ -1565,7 +1540,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 
 	  return CREATE_PARTITION_PAGE;
 	}
-      else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_D) /* D */
+      else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'd') /* D */
 	{
 	  if (PartitionList->CurrentPartition->Unpartitioned == TRUE)
 	    {
@@ -2075,7 +2050,7 @@ DeletePartitionPage (PINPUT_RECORD Ir)
 	{
 	  return SELECT_PARTITION_PAGE;
 	}
-      else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_D) /* D */
+      else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'd') /* D */
 	{
 	  DeleteCurrentPartition (PartitionList);
 
