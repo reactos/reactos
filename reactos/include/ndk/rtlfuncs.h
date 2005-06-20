@@ -12,8 +12,7 @@
 #include <ndk/rtltypes.h>
 #include <ndk/pstypes.h>
 
-/*FIXME: REORGANIZE THIS */
-/* FIXME: SOME FUNCTIONS MUST BE PROTECTED AGAINST DDK/IFS. */
+/* FIXME: FILE NEEDS TO BE CLEANED UP AT THE END WHEN ALL THE FUNCTIONS HAVE BEEN ADDED */
 
 /*
  * VOID
@@ -675,6 +674,12 @@ RtlAnsiStringToUnicodeString (
 	BOOLEAN		AllocateDestinationString
 	);
     
+ULONG
+STDCALL
+RtlAnsiStringToUnicodeSize (
+	PANSI_STRING	AnsiString
+	);
+
 NTSTATUS
 STDCALL
 RtlUnicodeToMultiByteN (
@@ -905,7 +910,53 @@ RtlImageRvaToSection (
     PVOID BaseAddress,
     ULONG Rva
 );
+
+NTSTATUS
+STDCALL
+RtlIntegerToChar (
+	IN	ULONG	Value,
+	IN	ULONG	Base,
+	IN	ULONG	Length,
+	IN OUT	PCHAR	String
+	);
+
+NTSTATUS 
+STDCALL
+RtlIntegerToUnicode(
+	IN ULONG Value,
+	IN ULONG Base  OPTIONAL,
+	IN ULONG Length OPTIONAL,
+	IN OUT LPWSTR String
+	);
+
+NTSTATUS
+STDCALL
+RtlIntegerToUnicodeString (
+	IN	ULONG		Value,
+	IN	ULONG		Base,
+	IN OUT	PUNICODE_STRING	String
+	);
+
+    NTSTATUS
+STDCALL
+RtlCharToInteger (
+	PCSZ	String,
+	ULONG	Base,
+	PULONG	Value
+	);
+
     
+USHORT FASTCALL
+RtlUshortByteSwap (IN USHORT Source);
+
+ULONG
+STDCALL
+RtlIsTextUnicode (
+	PVOID	Buffer,
+	ULONG	Length,
+	ULONG	*Flags
+	);
+        
 NTSTATUS
 STDCALL
 RtlInitializeSid (
@@ -922,6 +973,13 @@ RtlInitNlsTables (
     IN  PUSHORT CaseTableBase,
     OUT PNLSTABLEINFO NlsTable
 );
+
+VOID
+STDCALL
+RtlInitCodePageTable (
+	IN	PUSHORT		TableBase,
+	OUT	PCPTABLEINFO	CodePageTable
+	);
     
 NTSTATUS
 STDCALL
@@ -1110,6 +1168,17 @@ RtlUpcaseUnicodeStringToCountedOemString (
 	IN	PUNICODE_STRING	SourceString,
 	IN	BOOLEAN		AllocateDestinationString
 	);
+    
+NTSTATUS STDCALL
+RtlSetTimeZoneInformation (IN OUT LPTIME_ZONE_INFORMATION TimeZoneInformation);
+
+NTSTATUS
+STDCALL
+RtlUpcaseUnicodeString (
+	IN OUT	PUNICODE_STRING	DestinationString,
+	IN	PCUNICODE_STRING	SourceString,
+	IN	BOOLEAN		AllocateDestinationString
+	);
 
 NTSTATUS
 STDCALL
@@ -1137,6 +1206,19 @@ RtlLargeIntegerToChar (
 	IN	ULONG		Length,
 	IN OUT	PCHAR		String
 	);
+    
+    NTSTATUS
+STDCALL
+RtlVerifyVersionInfo(
+	IN PRTL_OSVERSIONINFOEXW VersionInfo,
+	IN ULONG TypeMask,
+	IN ULONGLONG  ConditionMask
+	);
+    
+NTSTATUS
+STDCALL
+RtlGetVersion(
+  IN OUT PRTL_OSVERSIONINFOW  lpVersionInformation);
 	
 BOOLEAN 
 STDCALL
@@ -1187,7 +1269,37 @@ RtlUnwind (
   PEXCEPTION_RECORD ExceptionRecord,
   DWORD EaxValue
 );
-	
+
+HANDLE STDCALL
+RtlDestroyHeap (HANDLE hheap);
+
+PVOID STDCALL
+RtlReAllocateHeap (
+	HANDLE Heap,
+	ULONG Flags,
+	PVOID Ptr,
+	ULONG Size
+	);
+BOOLEAN STDCALL
+RtlLockHeap (IN HANDLE Heap);
+
+BOOLEAN STDCALL
+RtlUnlockHeap (IN HANDLE Heap);
+
+ULONG STDCALL
+RtlSizeHeap(
+	IN PVOID HeapHandle, 
+	IN ULONG Flags, 
+	IN PVOID MemoryPointer
+	); 
+    
+BOOLEAN STDCALL
+RtlValidateHeap (
+	HANDLE Heap,
+	ULONG	Flags,
+	PVOID	pmem
+	);
+    
 BOOLEAN
 STDCALL
 RtlValidSid (

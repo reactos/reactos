@@ -17,6 +17,9 @@
 /* CONSTANTS *****************************************************************/
 #define MAX_BUS_NAME 24
 
+#define EVENT_READ_ACCESS             1
+#define EVENT_WRITE_ACCESS            2
+
 #define EVENT_PAIR_ALL_ACCESS    (0x1F0000L)
 
 /* ENUMERATIONS **************************************************************/
@@ -381,6 +384,35 @@ typedef struct _EVENT_BASIC_INFORMATION
 /*
  * Process
  */
+
+/* Class 0 */
+typedef struct _PROCESS_BASIC_INFORMATION
+{
+    NTSTATUS ExitStatus;
+    PPEB PebBaseAddress;
+    KAFFINITY AffinityMask;
+    KPRIORITY BasePriority;
+    ULONG UniqueProcessId;
+    ULONG InheritedFromUniqueProcessId;
+} PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION;
+
+
+/* Class 4 */
+typedef struct _KERNEL_USER_TIMES
+{
+    LARGE_INTEGER CreateTime;
+    LARGE_INTEGER ExitTime;
+    LARGE_INTEGER KernelTime;
+    LARGE_INTEGER UserTime;
+} KERNEL_USER_TIMES, *PKERNEL_USER_TIMES;
+
+/* Class 16 */
+typedef struct _PROCESS_PRIORITY_CLASS
+{
+    BOOLEAN Foreground;
+    UCHAR   PriorityClass;
+} PROCESS_PRIORITY_CLASS, *PPROCESS_PRIORITY_CLASS;
+
 /* Class 23 */
 typedef struct _PROCESS_DEVICEMAP_INFORMATION
 {
@@ -397,6 +429,12 @@ typedef struct _PROCESS_DEVICEMAP_INFORMATION
         } Query;
     };
 } PROCESS_DEVICEMAP_INFORMATION, *PPROCESS_DEVICEMAP_INFORMATION;
+
+/* Class 24 */
+typedef struct _PROCESS_SESSION_INFORMATION
+{
+    ULONG SessionId;
+} PROCESS_SESSION_INFORMATION, *PPROCESS_SESSION_INFORMATION;
 
 /*
  * System

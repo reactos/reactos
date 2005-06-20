@@ -61,34 +61,6 @@
 #define FSCTL_MAILSLOT_PEEK             \
     CTL_CODE(FILE_DEVICE_MAILSLOT, 0, METHOD_NEITHER, FILE_READ_DATA)
 
-/* I/O Control Codes for communicating with Network Drivers */
-#define IOCTL_REDIR_QUERY_PATH                  \
-    CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 99, METHOD_NEITHER, FILE_ANY_ACCESS)
-    
-#define FSCTL_NETWORK_SET_CONFIGURATION_INFO    \
-    CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 102, METHOD_IN_DIRECT, FILE_ANY_ACCESS)
-    
-#define FSCTL_NETWORK_GET_CONFIGURATION_INFO    \
-    CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 103, METHOD_OUT_DIRECT, FILE_ANY_ACCESS)
-    
-#define FSCTL_NETWORK_GET_CONNECTION_INFO       \
-    CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 104, METHOD_NEITHER, FILE_ANY_ACCESS)
-    
-#define FSCTL_NETWORK_ENUMERATE_CONNECTIONS     \
-    CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 105, METHOD_NEITHER, FILE_ANY_ACCESS)
-    
-#define FSCTL_NETWORK_DELETE_CONNECTION         \
-    CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 107, METHOD_BUFFERED, FILE_ANY_ACCESS)
-    
-#define FSCTL_NETWORK_GET_STATISTICS            \
-    CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 116, METHOD_BUFFERED, FILE_ANY_ACCESS)
-    
-#define FSCTL_NETWORK_SET_DOMAIN_NAME           \
-    CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 120, METHOD_BUFFERED, FILE_ANY_ACCESS)
-    
-#define FSCTL_NETWORK_REMOTE_BOOT_INIT_SCRT     \
-    CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 250, METHOD_BUFFERED, FILE_ANY_ACCESS)
-
 /* I/O Control Codes for communicating with Pipes */
 #define FSCTL_PIPE_ASSIGN_EVENT         \
     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 0, METHOD_BUFFERED, FILE_ANY_ACCESS)
@@ -186,6 +158,7 @@
 
 /* Device Charactertics */
 #define FILE_REMOVABLE_MEDIA            0x00000001
+#define FILE_REMOTE_DEVICE              0x00000010
 
 /* SID Constants */
 #define SID_MAX_SUB_AUTHORITIES     15
@@ -282,6 +255,12 @@ typedef enum _TIMER_TYPE
     NotificationTimer,
     SynchronizationTimer
 } TIMER_TYPE;
+
+typedef enum _WAIT_TYPE 
+{
+    WaitAll,
+    WaitAny
+} WAIT_TYPE;
 
 typedef enum _INTERFACE_TYPE 
 {
@@ -582,12 +561,12 @@ typedef LONG NTSTATUS, *PNTSTATUS;
 typedef UCHAR KIRQL, *PKIRQL;
 typedef ULONG KAFFINITY, *PKAFFINITY;
 typedef ULONG_PTR KSPIN_LOCK, *PKSPIN_LOCK;
-typedef ULONG WAIT_TYPE;
 typedef struct _PEB *PPEB;
 typedef ULONG KPROCESSOR_MODE;
 typedef struct _OBJECT_TYPE *POBJECT_TYPE;
 struct _ETHREAD;
 struct _EVENT_TRACE_HEADER; /* <--- We might want to declare this one */
+typedef ULONG EXECUTION_STATE;
 
 /* Basic NT Types */
 typedef struct _UNICODE_STRING 
@@ -925,13 +904,35 @@ typedef struct _FILE_FS_DEVICE_INFORMATION
     ULONG Characteristics;
 } FILE_FS_DEVICE_INFORMATION, *PFILE_FS_DEVICE_INFORMATION;
 
+typedef struct _FILE_FS_ATTRIBUTE_INFORMATION
+{
+    ULONG FileSystemAttributes;
+    ULONG MaximumComponentNameLength;
+    ULONG FileSystemNameLength;
+    WCHAR FileSystemName[1];
+} FILE_FS_ATTRIBUTE_INFORMATION, *PFILE_FS_ATTRIBUTE_INFORMATION;
+
+typedef struct _FILE_FS_SIZE_INFORMATION
+{
+    LARGE_INTEGER TotalAllocationUnits;
+    LARGE_INTEGER AvailableAllocationUnits;
+    ULONG SectorsPerAllocationUnit;
+    ULONG BytesPerSector;
+} FILE_FS_SIZE_INFORMATION, *PFILE_FS_SIZE_INFORMATION;
+
+typedef struct _FILE_FS_LABEL_INFORMATION
+{
+    ULONG VolumeLabelLength;
+    WCHAR VolumeLabel[1];
+} FILE_FS_LABEL_INFORMATION, *PFILE_FS_LABEL_INFORMATION;
+
 typedef struct _FILE_FS_VOLUME_INFORMATION
 {
-    LARGE_INTEGER   VolumeCreationTime;
-    ULONG           VolumeSerialNumber;
-    ULONG           VolumeLabelLength;
-    BOOLEAN         SupportsObjects;
-    WCHAR           VolumeLabel[1];
+    LARGE_INTEGER VolumeCreationTime;
+    ULONG VolumeSerialNumber;
+    ULONG VolumeLabelLength;
+    BOOLEAN SupportsObjects;
+    WCHAR VolumeLabel[1];
 } FILE_FS_VOLUME_INFORMATION, *PFILE_FS_VOLUME_INFORMATION;
 
 /*
@@ -941,19 +942,19 @@ typedef struct _FILE_FS_VOLUME_INFORMATION
 /* Class 0 */
 typedef struct _KEY_VALUE_ENTRY 
 {
-    PUNICODE_STRING  ValueName;
-    ULONG  DataLength;
-    ULONG  DataOffset;
-    ULONG  Type;
+    PUNICODE_STRING ValueName;
+    ULONG DataLength;
+    ULONG DataOffset;
+    ULONG Type;
 } KEY_VALUE_ENTRY, *PKEY_VALUE_ENTRY;
 
 /* Class 1 */
 typedef struct _KEY_VALUE_PARTIAL_INFORMATION 
 {
-    ULONG  TitleIndex;
-    ULONG  Type;
-    ULONG  DataLength;
-    UCHAR  Data[1];
+    ULONG TitleIndex;
+    ULONG Type;
+    ULONG DataLength;
+    UCHAR Data[1];
 } KEY_VALUE_PARTIAL_INFORMATION, *PKEY_VALUE_PARTIAL_INFORMATION;
 
 /* Class 2 */
@@ -988,21 +989,6 @@ typedef struct _KEY_BASIC_INFORMATION
     ULONG NameLength;
     WCHAR Name[1];
 } KEY_BASIC_INFORMATION, *PKEY_BASIC_INFORMATION;
-
-/*
- * Process
- */
-
-/* Class 0 */
-typedef struct _PROCESS_BASIC_INFORMATION
-{
-    NTSTATUS ExitStatus;
-    PPEB PebBaseAddress;
-    KAFFINITY AffinityMask;
-    KPRIORITY BasePriority;
-    ULONG UniqueProcessId;
-    ULONG InheritedFromUniqueProcessId;
-} PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION;
 
 /* File Pipe Structures for the FSCTLs */
 typedef struct _FILE_PIPE_WAIT_FOR_BUFFER
