@@ -407,38 +407,38 @@ GlobalMemoryStatusEx(LPMEMORYSTATUSEX lpBuffer)
  */
    lpBuffer->dwMemoryLoad = (SysBasicInfo.NumberOfPhysicalPages -
   			     SysPerfInfo.AvailablePages) * 100 /
-    			     SysBasicInfo.NumberOfPhysicalPages;
+    			     SysBasicInfo.PageSize;
 
 	DPRINT1("Memory Load: %d\n",lpBuffer->dwMemoryLoad );
 
    lpBuffer->ullTotalPhys = SysBasicInfo.NumberOfPhysicalPages *
-   					SysBasicInfo.PhysicalPageSize;
+   					SysBasicInfo.PageSize;
    lpBuffer->ullAvailPhys = SysPerfInfo.AvailablePages *
-    					SysBasicInfo.PhysicalPageSize;
+    					SysBasicInfo.PageSize;
 
 	DPRINT("%d\n",SysPerfInfo.AvailablePages );
 	DPRINT("%d\n",lpBuffer->ullAvailPhys );
 
-   lpBuffer->ullTotalPageFile = SysPerfInfo.TotalCommitLimit *
-    					SysBasicInfo.PhysicalPageSize;
+   lpBuffer->ullTotalPageFile = SysPerfInfo.CommitLimit *
+    					SysBasicInfo.PageSize;
 
 	DPRINT("%d\n",lpBuffer->ullTotalPageFile );
 
-   lpBuffer->ullAvailPageFile = ((SysPerfInfo.TotalCommitLimit -
-    					SysPerfInfo.TotalCommittedPages) *
-    					SysBasicInfo.PhysicalPageSize);
+   lpBuffer->ullAvailPageFile = ((SysPerfInfo.CommitLimit -
+    					SysPerfInfo.CommittedPages) *
+    					SysBasicInfo.PageSize);
 
 /* VM available to the calling processes, User Mem? */
-   lpBuffer->ullTotalVirtual = SysBasicInfo.HighestUserAddress -
-    					SysBasicInfo.LowestUserAddress;
+   lpBuffer->ullTotalVirtual = SysBasicInfo.MaximumUserModeAddress -
+    					SysBasicInfo.MinimumUserModeAddress;
 
    lpBuffer->ullAvailVirtual = (lpBuffer->ullTotalVirtual -
     					(UserMemory *
-    					 SysBasicInfo.PhysicalPageSize));
+    					 SysBasicInfo.PageSize));
 
 	DPRINT("%d\n",lpBuffer->ullAvailVirtual );
 	DPRINT("%d\n",UserMemory);
-	DPRINT("%d\n",SysBasicInfo.PhysicalPageSize);
+	DPRINT("%d\n",SysBasicInfo.PageSize);
 
 /* lol! Memory from beyond! */
    lpBuffer->ullAvailExtendedVirtual = 0;

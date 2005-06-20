@@ -58,11 +58,11 @@ GetSystemInfo (
 	Si->wProcessorArchitecture	= Spi.ProcessorArchitecture;
 	/* For future use: always zero */
 	Si->wReserved			= 0;
-	Si->dwPageSize			= Sbi.PhysicalPageSize;
-	Si->lpMinimumApplicationAddress	= (PVOID)Sbi.LowestUserAddress;
-	Si->lpMaximumApplicationAddress	= (PVOID)Sbi.HighestUserAddress;
-	Si->dwActiveProcessorMask	= Sbi.ActiveProcessors;
-	Si->dwNumberOfProcessors	= Sbi.NumberProcessors;
+	Si->dwPageSize			= Sbi.PageSize;
+	Si->lpMinimumApplicationAddress	= (PVOID)Sbi.MinimumUserModeAddress;
+	Si->lpMaximumApplicationAddress	= (PVOID)Sbi.MaximumUserModeAddress;
+	Si->dwActiveProcessorMask	= Sbi.ActiveProcessorsAffinityMask;
+	Si->dwNumberOfProcessors	= Sbi.NumberOfProcessors;
 	/*
 	 * Compatibility (no longer relevant):
 	 *	PROCESSOR_INTEL_386	386

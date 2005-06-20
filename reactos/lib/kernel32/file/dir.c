@@ -578,7 +578,7 @@ GetShortPathNameW (
         DWORD   shortlen
         )
 {
-    WCHAR               tmpshortpath[PATH_MAX];
+    WCHAR               tmpshortpath[MAX_PATH];
     LPCWSTR             p;
     DWORD               sp = 0, lp = 0;
     DWORD               tmplen;

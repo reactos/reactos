@@ -177,7 +177,7 @@ CreateNamedPipeW(LPCWSTR lpName,
 
    if (nMaxInstances >= PIPE_UNLIMITED_INSTANCES)
      {
-	nMaxInstances = ULONG_MAX;
+	nMaxInstances = 0xFFFFFFFF;
      }
 
    DefaultTimeOut.QuadPart = nDefaultTimeOut * -10000LL;

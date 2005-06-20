@@ -366,7 +366,7 @@ SetTimeZoneInformation(CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation)
 
    DPRINT("SetTimeZoneInformation()\n");
 
-   Status = RtlSetTimeZoneInformation((PTIME_ZONE_INFORMATION)lpTimeZoneInformation);
+   Status = RtlSetTimeZoneInformation((LPTIME_ZONE_INFORMATION)lpTimeZoneInformation);
    if (!NT_SUCCESS(Status))
      {
 	DPRINT1("RtlSetTimeZoneInformation() failed (Status %lx)\n", Status);
@@ -442,12 +442,12 @@ GetSystemTimeAdjustment(PDWORD lpTimeAdjustment,
 			PDWORD lpTimeIncrement,
 			PBOOL lpTimeAdjustmentDisabled)
 {
-   SYSTEM_QUERY_TIME_ADJUSTMENT Buffer;
+   SYSTEM_QUERY_TIME_ADJUST_INFORMATION Buffer;
    NTSTATUS Status;
 
    Status = NtQuerySystemInformation(SystemTimeAdjustmentInformation,
 				     &Buffer,
-				     sizeof(SYSTEM_QUERY_TIME_ADJUSTMENT),
+				     sizeof(SYSTEM_QUERY_TIME_ADJUST_INFORMATION),
 				     NULL);
    if (!NT_SUCCESS(Status))
      {
@@ -456,8 +456,8 @@ GetSystemTimeAdjustment(PDWORD lpTimeAdjustment,
      }
 
    *lpTimeAdjustment = (DWORD)Buffer.TimeAdjustment;
-   *lpTimeIncrement = (DWORD)Buffer.MaximumIncrement;
-   *lpTimeAdjustmentDisabled = (BOOL)Buffer.TimeSynchronization;
+   *lpTimeIncrement = (DWORD)Buffer.TimeIncrement;
+   *lpTimeAdjustmentDisabled = (BOOL)Buffer.Enable;
 
    return TRUE;
 }
@@ -471,14 +471,14 @@ SetSystemTimeAdjustment(DWORD dwTimeAdjustment,
 			BOOL bTimeAdjustmentDisabled)
 {
    NTSTATUS Status;
-   SYSTEM_SET_TIME_ADJUSTMENT Buffer;
+   SYSTEM_SET_TIME_ADJUST_INFORMATION Buffer;
 
    Buffer.TimeAdjustment = (ULONG)dwTimeAdjustment;
-   Buffer.TimeSynchronization = (BOOLEAN)bTimeAdjustmentDisabled;
+   Buffer.Enable = (BOOLEAN)bTimeAdjustmentDisabled;
 
    Status = NtSetSystemInformation(SystemTimeAdjustmentInformation,
 				   &Buffer,
-				   sizeof(SYSTEM_SET_TIME_ADJUSTMENT));
+				   sizeof(SYSTEM_SET_TIME_ADJUST_INFORMATION));
    if (!NT_SUCCESS(Status))
      {
 	SetLastErrorByStatus(Status);

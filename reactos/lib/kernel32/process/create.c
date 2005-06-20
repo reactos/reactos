@@ -139,11 +139,11 @@ BOOL STDCALL CreateProcessA(LPCSTR lpApplicationName,
    BOOL bRetVal;
    STARTUPINFOW wsiStartupInfo;
 
-   NTSTATUS STDCALL_FUNC (*pTrue)(UNICODE_STRING *,
+   NTSTATUS (STDCALL *pTrue)(UNICODE_STRING *,
                                   ANSI_STRING *,
 				  BOOLEAN);
 
-   ULONG STDCALL_FUNC (*pRtlMbStringToUnicodeSize)(ANSI_STRING *);
+   ULONG (STDCALL *pRtlMbStringToUnicodeSize)(ANSI_STRING *);
 
    DPRINT("dwCreationFlags %x, lpEnvironment %x, lpCurrentDirectory %x, "
           "lpStartupInfo %x, lpProcessInformation %x\n",
@@ -1156,7 +1156,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
     */
    CsrRequest.Type = CSRSS_CREATE_PROCESS;
    CsrRequest.Data.CreateProcessRequest.NewProcessId =
-      ProcessBasicInfo.UniqueProcessId;
+      (HANDLE)ProcessBasicInfo.UniqueProcessId;
    if (Sii.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI)
    {
       /* Do not create a console for GUI applications */
@@ -1306,7 +1306,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
       if (IsConsoleHandle(Ppb->hStdError))
       {
          CsrRequest.Type = CSRSS_DUPLICATE_HANDLE;
-         CsrRequest.Data.DuplicateHandleRequest.ProcessId = ProcessBasicInfo.UniqueProcessId;
+         CsrRequest.Data.DuplicateHandleRequest.ProcessId = (HANDLE)ProcessBasicInfo.UniqueProcessId;
          CsrRequest.Data.DuplicateHandleRequest.Handle = CsrReply.Data.CreateProcessReply.OutputHandle;
          Status = CsrClientCallServer(&CsrRequest,
                                       &CsrReply,
