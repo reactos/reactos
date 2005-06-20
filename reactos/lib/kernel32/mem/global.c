@@ -407,9 +407,9 @@ GlobalMemoryStatusEx(LPMEMORYSTATUSEX lpBuffer)
  */
    lpBuffer->dwMemoryLoad = (SysBasicInfo.NumberOfPhysicalPages -
   			     SysPerfInfo.AvailablePages) * 100 /
-    			     SysBasicInfo.PageSize;
+    			     SysBasicInfo.NumberOfPhysicalPages;
 
-	DPRINT1("Memory Load: %d\n",lpBuffer->dwMemoryLoad );
+   DPRINT1("Memory Load: %d\n",lpBuffer->dwMemoryLoad );
 
    lpBuffer->ullTotalPhys = SysBasicInfo.NumberOfPhysicalPages *
    					SysBasicInfo.PageSize;
