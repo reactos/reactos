@@ -36,9 +36,11 @@
  * - We don't support IPv6 addresses here yet -- I moved the upper edge
  *   functions into iphlpv6.c (arty)
  */
-
 #include "iphlpapi_private.h"
 #include "ifenum.h"
+
+#define NDEBUG
+#include <debug.h>
 
 /* Globals */
 const PWCHAR TcpFileName = L"\\Device\\Tcp";

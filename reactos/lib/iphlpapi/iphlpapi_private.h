@@ -21,9 +21,10 @@
 
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x500
-#include <ddk/ntddk.h>
+#include <windows.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 #include <rosrtl/string.h>
-#include <ddk/miniport.h>
 #include <tcpmisc.h>
 #include <winsock2.h>
 #include <nspapi.h>
