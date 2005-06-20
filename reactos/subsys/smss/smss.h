@@ -1,8 +1,13 @@
 #ifndef _SMSS_H_INCLUDED_
 #define _SMSS_H_INCLUDED_
 
+#include <windows.h>
 #define NTOS_MODE_USER
-#include <ntos.h>
+#include <ndk/ntndk.h>
+
+#include <rosrtl/string.h>
+#include <wchar.h>
+
 #include <sm/api.h>
 #include <sm/helper.h>
 

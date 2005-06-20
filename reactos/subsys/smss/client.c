@@ -23,8 +23,6 @@
  *
  * --------------------------------------------------------------------
  */
-#define NTOS_MODE_USER
-#include <ntos.h>
 #include "smss.h"
 #include <sm/helper.h>
 

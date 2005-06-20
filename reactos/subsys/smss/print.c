@@ -23,8 +23,8 @@
  *
  * --------------------------------------------------------------------
  */
-#define NTOS_MODE_USER
-#include <ntos.h>
+#include "smss.h"
+
 
 VOID STDCALL DisplayString(LPCWSTR lpwString)
 {

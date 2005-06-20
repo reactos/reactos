@@ -611,6 +611,13 @@ ULONG
 STDCALL
 RtlLengthSid(IN PSID Sid);
 
+VOID 
+STDCALL
+RtlMapGenericMask(
+    PACCESS_MASK AccessMask,
+    PGENERIC_MAPPING GenericMapping
+);
+           
 NTSTATUS 
 STDCALL
 RtlQueryInformationAcl(
@@ -1136,6 +1143,40 @@ VOID
 STDCALL
 RtlAcquirePebLock(VOID);
 
+NTSTATUS
+STDCALL
+RtlCreateProcessParameters (
+    OUT PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
+    IN PUNICODE_STRING ImagePathName OPTIONAL,
+    IN PUNICODE_STRING DllPath OPTIONAL,
+    IN PUNICODE_STRING CurrentDirectory OPTIONAL,
+    IN PUNICODE_STRING CommandLine OPTIONAL,
+    IN PWSTR Environment OPTIONAL,
+    IN PUNICODE_STRING WindowTitle OPTIONAL,
+    IN PUNICODE_STRING DesktopInfo OPTIONAL,
+    IN PUNICODE_STRING ShellInfo OPTIONAL,
+    IN PUNICODE_STRING RuntimeInfo OPTIONAL
+);
+    
+NTSTATUS
+STDCALL
+RtlCreateUserProcess(
+    IN PUNICODE_STRING ImageFileName,
+    IN ULONG Attributes,
+    IN PRTL_USER_PROCESS_PARAMETERS ProcessParameters,
+    IN PSECURITY_DESCRIPTOR ProcessSecutityDescriptor OPTIONAL,
+    IN PSECURITY_DESCRIPTOR ThreadSecurityDescriptor OPTIONAL,
+    IN HANDLE ParentProcess OPTIONAL,
+    IN BOOLEAN CurrentDirectory,
+    IN HANDLE DebugPort OPTIONAL,
+    IN HANDLE ExceptionPort OPTIONAL,
+    OUT PRTL_PROCESS_INFO ProcessInfo
+);
+
+NTSTATUS
+STDCALL
+RtlDestroyProcessParameters(IN PRTL_USER_PROCESS_PARAMETERS ProcessParameters);
+
 VOID
 STDCALL
 RtlReleasePebLock(VOID);
@@ -1328,7 +1369,26 @@ RtlSetBits (
 
 /*
  * PE Functions
- */ 
+ */
+NTSTATUS 
+STDCALL
+LdrVerifyImageMatchesChecksum(
+    IN HANDLE FileHandle,
+    ULONG Unknown1,
+    ULONG Unknown2,
+    ULONG Unknown3
+);
+
+NTSTATUS
+STDCALL
+RtlFindMessage(
+    IN PVOID BaseAddress,
+    IN ULONG Type,
+    IN ULONG Language,
+    IN ULONG MessageId,
+    OUT PRTL_MESSAGE_RESOURCE_ENTRY *MessageResourceEntry
+);
+              
 PVOID
 STDCALL
 RtlImageDirectoryEntryToData(
@@ -1362,10 +1422,26 @@ RtlImageRvaToSection(
 /*
  * Registry Functions
  */
+NTSTATUS
+STDCALL
+RtlCheckRegistryKey(
+    ULONG RelativeTo,
+    PWSTR Path
+);
+    
 NTSTATUS 
 STDCALL
 RtlFormatCurrentUserKeyPath(IN OUT PUNICODE_STRING KeyPath);
     
+NTSTATUS 
+STDCALL
+RtlpNtOpenKey(
+    OUT HANDLE KeyHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    IN ULONG Unused
+);
+          
 NTSTATUS
 STDCALL
 RtlOpenCurrentUser(
@@ -1393,16 +1469,6 @@ RtlWriteRegistryValue(
     PVOID ValueData,
     ULONG ValueLength
 );
-
-NTSTATUS
-STDCALL
-RtlFindMessage (
-    IN    PVOID                BaseAddress,
-    IN    ULONG                Type,
-    IN    ULONG                Language,
-    IN    ULONG                MessageId,
-    OUT    PRTL_MESSAGE_RESOURCE_ENTRY    *MessageResourceEntry
-    );
   
 /*
  * NLS Functions

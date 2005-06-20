@@ -20,6 +20,8 @@
 #define EVENT_READ_ACCESS             1
 #define EVENT_WRITE_ACCESS            2
 
+#define PORT_ALL_ACCESS               (0x1)
+
 #define EVENT_PAIR_ALL_ACCESS    (0x1F0000L)
 
 /* ENUMERATIONS **************************************************************/

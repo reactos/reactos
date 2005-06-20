@@ -24,7 +24,6 @@
  * --------------------------------------------------------------------
  */
 #include "smss.h"
-#include <rosrtl/string.h>
 #include <reactos/buildno.h>
 
 #define NDEBUG
