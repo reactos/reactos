@@ -34,10 +34,6 @@
 #include "msvcrt.h"
 */
 
-//#include <ntdll/ntdll.h>
-#include <ntdll/rtl.h>
-//#include <ddk/ntddk.h>
-//#include <ntos/heap.h>
 #include <stdarg.h>
 #include <wchar.h>
 #include <stdio.h>
@@ -45,20 +41,12 @@
 #include <ctype.h>
 #include <internal/file.h>
 
-//#include <ntos/heap.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
-
-/*
-This is so ugly. I tried including anything/everything, but no matter
-what i did i got complaints about RtlGetProcessHeap etc. being undefined.
--Gunnar (i hate headers)
-*/
-#define RtlFreeHeap HeapFree
-#define RtlAllocateHeap HeapAlloc
-#define RtlGetProcessHeap GetProcessHeap
 //#include "wine/debug.h"
 
 #define WARN DPRINT1
