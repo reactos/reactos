@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS System Libraries
- * FILE:            lib/ntdll/inc/ntdll.h
- * PURPOSE:         Native Libary Header
+ * FILE:            lib/kernel32/k32.h
+ * PURPOSE:         Win32 Kernel Libary Header
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 

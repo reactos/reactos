@@ -28,7 +28,6 @@
 #define NDEBUG
 #include "../include/debug.h"
 #include "lzexpand.h"
-#include <ctype.h>
 
 #define HFILE_ERROR ((HFILE)-1)
 
