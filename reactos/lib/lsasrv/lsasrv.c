@@ -1,7 +1,7 @@
 
-#define NTOS_MODE_USER
-#include <ntos.h>
 #include <windows.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 
 #include <lsass/lsasrv.h>
 
