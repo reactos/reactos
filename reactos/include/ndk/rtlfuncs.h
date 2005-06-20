@@ -1484,6 +1484,10 @@ RtlEnlargedUnsignedMultiply(
     ULONG Multiplier
 );
     
+ULONG 
+STDCALL
+RtlUniform(PULONG Seed);
+
 /*
  * Time Functions
  */
