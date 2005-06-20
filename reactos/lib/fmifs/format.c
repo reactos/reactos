@@ -12,7 +12,8 @@
 #define UNICODE
 #define _UNICODE
 #include <windows.h>
-#include <ntddk.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 #include <fmifs.h>
 #include <fslib/vfatlib.h>
 #include <string.h>
