@@ -10,12 +10,12 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <csrss/csrss.h>
-#include <ddk/ntddk.h>
+#include <windows.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 #include <ntdll/csr.h>
 #include <ntdll/rtl.h>
 #include <ntdll/ldr.h>
-#include <win32k/win32k.h>
 #include <rosrtl/string.h>
 #include <sm/helper.h>
 
@@ -423,15 +423,15 @@ CsrpLoadKernelModeDriver (ULONG argc, PWSTR* argv)
 	if((STATUS_SUCCESS == Status) && (DataLength > sizeof Data[0]))
 	{
 		WCHAR                      ImagePath [MAX_PATH + 1] = {0};
-		SYSTEM_LOAD_AND_CALL_IMAGE ImageInfo;
+		UNICODE_STRING             ModuleName;
 
 		wcscpy (ImagePath, L"\\??\\");
 		wcscat (ImagePath, Data);
-		RtlZeroMemory (& ImageInfo, sizeof ImageInfo);
-		RtlInitUnicodeString (& ImageInfo.ModuleName, ImagePath);
-		Status = NtSetSystemInformation(SystemLoadAndCallImage,
-						& ImageInfo,
-						sizeof ImageInfo);
+		RtlInitUnicodeString (& ModuleName, ImagePath);
+		Status = NtSetSystemInformation(/* FIXME: SystemLoadAndCallImage */
+		                                SystemExtendServiceTableInformation,
+						& ModuleName,
+						sizeof ModuleName);
 		if(!NT_SUCCESS(Status))
 		{
 			DPRINT("WIN: %s: loading Kmode failed (Status=0x%08lx)\n",

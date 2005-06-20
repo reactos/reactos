@@ -9,9 +9,10 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <csrss/csrss.h>
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
+#include <windows.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
+
 #include "api.h"
 
 #define NDEBUG

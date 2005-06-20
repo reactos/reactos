@@ -9,7 +9,10 @@
 /* INCLUDES ******************************************************************/
 
 #include <windows.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 #include <reactos/winlogon.h>
+
 #include "api.h"
 #include "win32csr.h"
 

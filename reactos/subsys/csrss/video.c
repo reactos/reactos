@@ -4,8 +4,8 @@
  */
 
 #include <windows.h>
-#include <ddk/ntddk.h>
-#include <ddk/ntapi.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 #include <rosrtl/string.h>
 
 ULONG

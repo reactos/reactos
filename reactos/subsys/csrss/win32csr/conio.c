@@ -8,15 +8,15 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <string.h>
 #include <windows.h>
-
-#include <csrss/csrss.h>
-#include <ntdll/rtl.h>
-#include <ntdll/ldr.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 #include <ddk/ntddblue.h>
 #include <rosrtl/string.h>
 #include <rosrtl/minmax.h>
+
+#include <string.h>
+
 #include "api.h"
 #include "conio.h"
 #include "desktopbg.h"
