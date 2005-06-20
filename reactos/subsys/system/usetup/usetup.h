@@ -42,9 +42,6 @@
 /* FIXME: Put outside of DDK */
 #include <ddk/ntddblue.h>
 
-/* FIXME: KILL ROSRTL */
-#include <rosrtl/string.h>
-
 /* Helper Header */
 #include <reactos/helper.h>
 

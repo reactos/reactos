@@ -3705,10 +3705,9 @@ SignalInitEvent()
 {
   NTSTATUS Status;
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING UnicodeString;
+  UNICODE_STRING UnicodeString = RTL_CONSTANT_STRING(L"\\ReactOSInitDone");
   HANDLE ReactOSInitEvent;
 
-  RtlRosInitUnicodeStringFromLiteral(&UnicodeString, L"\\ReactOSInitDone");
   InitializeObjectAttributes(&ObjectAttributes,
     &UnicodeString,
     EVENT_ALL_ACCESS,

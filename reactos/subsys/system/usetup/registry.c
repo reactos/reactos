@@ -604,14 +604,12 @@ BOOLEAN
 SetInstallPathValue(PUNICODE_STRING InstallPath)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyName;
-  UNICODE_STRING ValueName;
+  UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\HARDWARE");
+  UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"InstallPath");
   HANDLE KeyHandle;
   NTSTATUS Status;
 
-  /* Create the 'secret' InstallPath key */
-  RtlRosInitUnicodeStringFromLiteral (&KeyName,
-				   L"\\Registry\\Machine\\HARDWARE");
+  /* Create the 'secret' InstallPath key */			   
   InitializeObjectAttributes (&ObjectAttributes,
 			      &KeyName,
 			      OBJ_CASE_INSENSITIVE,
@@ -626,8 +624,6 @@ SetInstallPathValue(PUNICODE_STRING InstallPath)
       return FALSE;
     }
 
-  RtlRosInitUnicodeStringFromLiteral (&ValueName,
-				   L"InstallPath");
   Status = NtSetValueKey (KeyHandle,
 			  &ValueName,
 			  0,
