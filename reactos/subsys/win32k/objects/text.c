@@ -1482,7 +1482,7 @@ NtGdiExtTextOut(
 
    DC *dc;
    SURFOBJ *SurfObj;
-   BITMAPOBJ *BitmapObj;
+   BITMAPOBJ *BitmapObj = NULL;
    int error, glyph_index, n, i;
    FT_Face face;
    FT_GlyphSlot glyph;
@@ -1628,7 +1628,7 @@ NtGdiExtTextOut(
       DestRect.right  = SpecifiedDestRect.right  + dc->w.DCOrgX;
       DestRect.bottom = SpecifiedDestRect.bottom + dc->w.DCOrgY;
       IntEngBitBlt(
-         BitmapObj,
+         &BitmapObj->SurfObj,
          NULL,
          NULL,
          dc->CombinedClip,
@@ -1846,7 +1846,7 @@ NtGdiExtTextOut(
          DestRect.top = TextTop + yoff - ((face->size->metrics.ascender + 32) >> 6);
          DestRect.bottom = TextTop + yoff + ((32 - face->size->metrics.descender) >> 6);
          IntEngBitBlt(
-            BitmapObj,
+            &BitmapObj->SurfObj,
             NULL,
             NULL,
             dc->CombinedClip,

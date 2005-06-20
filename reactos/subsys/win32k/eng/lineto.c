@@ -485,7 +485,7 @@ EngLineTo(SURFOBJ *DestObj,
 }
 
 BOOL STDCALL
-IntEngLineTo(BITMAPOBJ *DestObj,
+IntEngLineTo(SURFOBJ *DestSurf,
 	     CLIPOBJ *ClipObj,
 	     BRUSHOBJ *Brush,
 	     LONG x1,
@@ -496,13 +496,13 @@ IntEngLineTo(BITMAPOBJ *DestObj,
 	     MIX Mix)
 {
   BOOLEAN ret;
-  SURFOBJ *DestSurf;
+  BITMAPOBJ *DestObj;
   PGDIBRUSHINST GdiBrush;
   RECTL b;
 
-  ASSERT(DestObj);
-  DestSurf = &DestObj->SurfObj;
   ASSERT(DestSurf);
+  DestObj = CONTAINING_RECORD(DestSurf, BITMAPOBJ, SurfObj);
+  ASSERT(DestObj);
 
   GdiBrush = CONTAINING_RECORD(
      Brush,
@@ -543,6 +543,8 @@ IntEngLineTo(BITMAPOBJ *DestObj,
   b.bottom = max(y1, y2);
   if (b.left == b.right) b.right++;
   if (b.top == b.bottom) b.bottom++;
+
+  BITMAPOBJ_LockBitmapBits(DestObj);
   MouseSafetyOnDrawStart(DestSurf, x1, y1, x2, y2);
 
   if (DestObj->flHooks & HOOK_LINETO)
@@ -565,12 +567,13 @@ IntEngLineTo(BITMAPOBJ *DestObj,
     }
 
   MouseSafetyOnDrawEnd(DestSurf);
+  BITMAPOBJ_UnlockBitmapBits(DestObj);
 
   return ret;
 }
 
 BOOL STDCALL
-IntEngPolyline(BITMAPOBJ *DestObj,
+IntEngPolyline(SURFOBJ *DestSurf,
 	       CLIPOBJ *Clip,
 	       BRUSHOBJ *Brush,
 	       CONST LPPOINT  pt,
@@ -588,7 +591,7 @@ IntEngPolyline(BITMAPOBJ *DestObj,
       rect.top = min(pt[i-1].y, pt[i].y);
       rect.right = max(pt[i-1].x, pt[i].x);
       rect.bottom = max(pt[i-1].y, pt[i].y);
-      ret = IntEngLineTo(DestObj,
+      ret = IntEngLineTo(DestSurf,
 	                 Clip,
 	                 Brush,
                          pt[i-1].x,

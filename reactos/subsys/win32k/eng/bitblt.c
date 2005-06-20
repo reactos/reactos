@@ -526,30 +526,30 @@ EngBitBlt(SURFOBJ *DestObj,
 }
 
 BOOL STDCALL
-IntEngBitBlt(BITMAPOBJ *DestObj,
-             BITMAPOBJ *SourceObj,
-             BITMAPOBJ *MaskObj,
-             CLIPOBJ *ClipRegion,
-             XLATEOBJ *ColorTranslation,
-             RECTL *DestRect,
-             POINTL *SourcePoint,
-             POINTL *MaskOrigin,
-             BRUSHOBJ *Brush,
-             POINTL *BrushOrigin,
-             ROP4 Rop4)
+IntEngBitBltEx(SURFOBJ *DestSurf,
+               SURFOBJ *SourceSurf,
+               SURFOBJ *MaskSurf,
+               CLIPOBJ *ClipRegion,
+               XLATEOBJ *ColorTranslation,
+               RECTL *DestRect,
+               POINTL *SourcePoint,
+               POINTL *MaskOrigin,
+               BRUSHOBJ *Brush,
+               POINTL *BrushOrigin,
+               ROP4 Rop4,
+               BOOL RemoveMouse)
 {
   BOOLEAN ret;
   RECTL InputClippedRect;
   RECTL OutputRect;
   POINTL InputPoint;
   BOOLEAN UsesSource;
-  SURFOBJ *DestSurf;
-  SURFOBJ *SourceSurf = SourceObj ? &SourceObj->SurfObj : NULL;
-  SURFOBJ *MaskSurf = MaskObj ? &MaskObj->SurfObj : NULL;
+  BITMAPOBJ *DestObj;
+  BITMAPOBJ *SourceObj = NULL;
 
-  ASSERT(DestObj);
-  DestSurf = &DestObj->SurfObj;
   ASSERT(DestSurf);
+  DestObj = CONTAINING_RECORD(DestSurf, BITMAPOBJ, SurfObj);
+  ASSERT(DestObj);
 
   InputClippedRect = *DestRect;
   if (InputClippedRect.right < InputClippedRect.left)
@@ -623,17 +623,27 @@ IntEngBitBlt(BITMAPOBJ *DestObj,
       OutputRect = InputClippedRect;
     }
 
-  if (UsesSource)
+  if (RemoveMouse)
     {
-    MouseSafetyOnDrawStart(SourceSurf, InputPoint.x, InputPoint.y,
-                           (InputPoint.x + abs(DestRect->right - DestRect->left)),
-			   (InputPoint.y + abs(DestRect->bottom - DestRect->top)));
+    BITMAPOBJ_LockBitmapBits(DestObj);
+
+    if (UsesSource)
+      {
+      if (SourceSurf != DestSurf)
+        {
+        SourceObj = CONTAINING_RECORD(SourceSurf, BITMAPOBJ, SurfObj);
+        BITMAPOBJ_LockBitmapBits(SourceObj);
+        }
+      MouseSafetyOnDrawStart(SourceSurf, InputPoint.x, InputPoint.y,
+                             (InputPoint.x + abs(DestRect->right - DestRect->left)),
+  			   (InputPoint.y + abs(DestRect->bottom - DestRect->top)));
+      }
+    MouseSafetyOnDrawStart(DestSurf, OutputRect.left, OutputRect.top,
+                           OutputRect.right, OutputRect.bottom);
     }
 
   /* No success yet */
   ret = FALSE;
-  MouseSafetyOnDrawStart(DestSurf, OutputRect.left, OutputRect.top,
-                         OutputRect.right, OutputRect.bottom);
 
   /* Call the driver's DrvBitBlt if available */
   if (DestObj->flHooks & HOOK_BITBLT)
@@ -651,10 +661,19 @@ IntEngBitBlt(BITMAPOBJ *DestObj,
                       Rop4);
     }
 
-  MouseSafetyOnDrawEnd(DestSurf);
-  if (UsesSource)
+  if (RemoveMouse)
     {
-    MouseSafetyOnDrawEnd(SourceSurf);
+    MouseSafetyOnDrawEnd(DestSurf);
+    if (UsesSource)
+      {
+      MouseSafetyOnDrawEnd(SourceSurf);
+      if (SourceSurf != DestSurf)
+        {
+        BITMAPOBJ_UnlockBitmapBits(SourceObj);
+        }
+      }
+
+    BITMAPOBJ_UnlockBitmapBits(DestObj);
     }
 
   return ret;
@@ -786,9 +805,9 @@ EngStretchBlt(
 }
 
 BOOL STDCALL
-IntEngStretchBlt(BITMAPOBJ *DestObj,
-                 BITMAPOBJ *SourceObj,
-                 BITMAPOBJ *MaskObj,
+IntEngStretchBlt(SURFOBJ *DestSurf,
+                 SURFOBJ *SourceSurf,
+                 SURFOBJ *MaskSurf,
                  CLIPOBJ *ClipRegion,
                  XLATEOBJ *ColorTranslation,
                  RECTL *DestRect,
@@ -801,31 +820,36 @@ IntEngStretchBlt(BITMAPOBJ *DestObj,
   BOOLEAN ret;
   COLORADJUSTMENT ca;
   POINT MaskOrigin;
-  SURFOBJ *DestSurf;
-  SURFOBJ *SourceSurf = SourceObj ? &SourceObj->SurfObj : NULL;
-  SURFOBJ *MaskSurf = MaskObj ? &MaskObj->SurfObj : NULL;
+  BITMAPOBJ *DestObj;
+  BITMAPOBJ *SourceObj = NULL;
 
-  ASSERT(DestObj);
-  DestSurf = &DestObj->SurfObj;
   ASSERT(DestSurf);
+  DestObj = CONTAINING_RECORD(DestSurf, BITMAPOBJ, SurfObj);
+  ASSERT(DestObj);
 
   if (pMaskOrigin != NULL)
     {
       MaskOrigin.x = pMaskOrigin->x; MaskOrigin.y = pMaskOrigin->y;
     }
 
-  if (NULL != SourceSurf)
-    {
-    ASSERT(SourceRect);
-    MouseSafetyOnDrawStart(SourceSurf, SourceRect->left, SourceRect->top,
-                           SourceRect->right, SourceRect->bottom);
-    }
-
   /* No success yet */
   ret = FALSE;
   ASSERT(DestRect);
+  BITMAPOBJ_LockBitmapBits(DestObj);
   MouseSafetyOnDrawStart(DestSurf, DestRect->left, DestRect->top,
                          DestRect->right, DestRect->bottom);
+
+  if (NULL != SourceSurf)
+    {
+    SourceObj = CONTAINING_RECORD(SourceSurf, BITMAPOBJ, SurfObj);
+    ASSERT(SourceRect);
+    if (SourceSurf != DestSurf)
+      {
+      BITMAPOBJ_LockBitmapBits(SourceObj);
+      }
+    MouseSafetyOnDrawStart(SourceSurf, SourceRect->left, SourceRect->top,
+                           SourceRect->right, SourceRect->bottom);
+    }
 
   /* Prepare color adjustment */
 
@@ -847,11 +871,16 @@ IntEngStretchBlt(BITMAPOBJ *DestObj,
                           &ca, BrushOrigin, DestRect, SourceRect, NULL, Mode);
     }
 
-  MouseSafetyOnDrawEnd(DestSurf);
   if (NULL != SourceSurf)
     {
     MouseSafetyOnDrawEnd(SourceSurf);
+    if (SourceSurf != DestSurf)
+      {
+      BITMAPOBJ_UnlockBitmapBits(SourceObj);
+      }
     }
+  MouseSafetyOnDrawEnd(DestSurf);
+  BITMAPOBJ_UnlockBitmapBits(DestObj);
 
   return ret;
 }
@@ -1147,7 +1176,7 @@ EngMaskBitBlt(SURFOBJ *DestObj,
 }
 
 BOOL STDCALL
-IntEngMaskBlt(SURFOBJ *DestObj,
+IntEngMaskBlt(SURFOBJ *DestSurf,
               SURFOBJ *Mask,
               CLIPOBJ *ClipRegion,
               XLATEOBJ *DestColorTranslation,
@@ -1161,6 +1190,7 @@ IntEngMaskBlt(SURFOBJ *DestObj,
   BOOLEAN ret;
   RECTL OutputRect;
   POINTL InputPoint;
+  BITMAPOBJ *DestObj;
 
   ASSERT(Mask);
 
@@ -1187,26 +1217,30 @@ IntEngMaskBlt(SURFOBJ *DestObj,
 
   /* No success yet */
   ret = FALSE;
-  ASSERT(DestObj);
-  MouseSafetyOnDrawStart(DestObj, OutputRect.left, OutputRect.top,
+  ASSERT(DestSurf);
+  DestObj = CONTAINING_RECORD(DestSurf, BITMAPOBJ, SurfObj);
+
+  BITMAPOBJ_LockBitmapBits(DestObj);
+  MouseSafetyOnDrawStart(DestSurf, OutputRect.left, OutputRect.top,
                          OutputRect.right, OutputRect.bottom);
 
   /* Dummy BitBlt to let driver know that it should flush its changes.
      This should really be done using a call to DrvSynchronizeSurface,
      but the VMware driver doesn't hook that call. */
-  /* FIXME: Remove the typecast! */
-  IntEngBitBlt((BITMAPOBJ*)DestObj, NULL, (BITMAPOBJ*)Mask, ClipRegion, DestColorTranslation,
-               DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin, R4_NOOP);
+  IntEngBitBltEx(DestSurf, NULL, Mask, ClipRegion, DestColorTranslation,
+                 DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin,
+                 R4_NOOP, FALSE);
 
-  ret = EngMaskBitBlt(DestObj, Mask, ClipRegion, DestColorTranslation, SourceColorTranslation,
+  ret = EngMaskBitBlt(DestSurf, Mask, ClipRegion, DestColorTranslation, SourceColorTranslation,
                       &OutputRect, &InputPoint, MaskOrigin, Brush, BrushOrigin);
 
   /* Dummy BitBlt to let driver know that something has changed. */
-  /* FIXME: Remove the typecast! */
-  IntEngBitBlt((BITMAPOBJ*)DestObj, NULL, (BITMAPOBJ*)Mask, ClipRegion, DestColorTranslation,
-               DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin, R4_NOOP);
+  IntEngBitBltEx(DestSurf, NULL, Mask, ClipRegion, DestColorTranslation,
+                 DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin,
+                 R4_NOOP, FALSE);
 
-  MouseSafetyOnDrawEnd(DestObj);
+  MouseSafetyOnDrawEnd(DestSurf);
+  BITMAPOBJ_UnlockBitmapBits(DestObj);
 
   return ret;
 }

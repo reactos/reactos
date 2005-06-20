@@ -422,15 +422,15 @@ POLYGONFILL_FillScanLineAlternate(
       BoundRect.right = x2;
 
       //DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
-      IntEngLineTo( BitmapObj,
-			  dc->CombinedClip,
-			  BrushObj,
-			  x1,
-			  ScanLine,
-			  x2,
-			  ScanLine,
-			  &BoundRect, // Bounding rectangle
-			  RopMode); // MIX
+      IntEngLineTo(&BitmapObj->SurfObj,
+                   dc->CombinedClip,
+                   BrushObj,
+                   x1,
+                   ScanLine,
+                   x2,
+                   ScanLine,
+                   &BoundRect, // Bounding rectangle
+                   RopMode); // MIX
     }
     pLeft = pRight->pNext;
     pRight = pLeft ? pLeft->pNext : NULL;
@@ -495,15 +495,15 @@ POLYGONFILL_FillScanLineWinding(
 	BoundRect.right = x2;
 
 	//DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
-	IntEngLineTo( BitmapObj,
-		      dc->CombinedClip,
-		      BrushObj,
-		      x1,
-		      ScanLine,
-		      x2,
-		      ScanLine,
-		      &BoundRect, // Bounding rectangle
-		      RopMode); // MIX
+	IntEngLineTo(&BitmapObj->SurfObj,
+                     dc->CombinedClip,
+                     BrushObj,
+                     x1,
+                     ScanLine,
+                     x2,
+                     ScanLine,
+                     &BoundRect, // Bounding rectangle
+                     RopMode); // MIX
 
 	x1 = newx1;
 	x2 = newx2;
@@ -518,15 +518,15 @@ POLYGONFILL_FillScanLineWinding(
   BoundRect.right = x2;
 
   //DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
-  IntEngLineTo( BitmapObj,
-		dc->CombinedClip,
-		BrushObj,
-		x1,
-		ScanLine,
-		x2,
-		ScanLine,
-		&BoundRect, // Bounding rectangle
-		RopMode); // MIX
+  IntEngLineTo(&BitmapObj->SurfObj,
+               dc->CombinedClip,
+               BrushObj,
+               x1,
+               ScanLine,
+               x2,
+               ScanLine,
+               &BoundRect, // Bounding rectangle
+               RopMode); // MIX
 }
 
 //When the fill mode is ALTERNATE, GDI fills the area between odd-numbered and

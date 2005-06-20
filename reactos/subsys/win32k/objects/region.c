@@ -2501,7 +2501,7 @@ NtGdiPaintRgn(HDC  hDC,
   BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
   /* FIXME - Handle BitmapObj == NULL !!!! */
 
-  bRet = IntEngPaint(BitmapObj,
+  bRet = IntEngPaint(&BitmapObj->SurfObj,
 	 ClipRegion,
 	 &BrushInst.BrushObject,
 	 &BrushOrigin,

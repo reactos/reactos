@@ -213,8 +213,10 @@ NtGdiBitBlt(
 	}
 
 	/* Perform the bitblt operation */
-	Status = IntEngBitBlt(BitmapDest, BitmapSrc, NULL, DCDest->CombinedClip, XlateObj,
-	                      &DestRect, &SourcePoint, NULL, BrushObj ? &BrushInst.BrushObject : NULL,
+	Status = IntEngBitBlt(&BitmapDest->SurfObj, &BitmapSrc->SurfObj, NULL,
+                              DCDest->CombinedClip, XlateObj, &DestRect,
+                              &SourcePoint, NULL,
+                              BrushObj ? &BrushInst.BrushObject : NULL,
 	                      &BrushOrigin, ROP3_TO_ROP4(ROP));
 
 	if (UsesSource && XlateObj != NULL)
@@ -371,7 +373,8 @@ NtGdiTransparentBlt(
     goto done;
   }
 
-  Ret = IntEngTransparentBlt(BitmapDest, BitmapSrc, DCDest->CombinedClip, XlateObj, &rcDest, &rcSrc,
+  Ret = IntEngTransparentBlt(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
+                             DCDest->CombinedClip, XlateObj, &rcDest, &rcSrc,
                              TransparentColor, 0);
 
 done:
@@ -467,6 +470,12 @@ BITMAP_Cleanup(PVOID ObjectBody)
 		{
 			NtGdiDeleteObject(pBmp->hDIBPalette);
 		}
+	}
+
+	if (NULL != pBmp->BitsLock)
+	{
+		ExFreePoolWithTag(pBmp->BitsLock, TAG_BITMAPOBJ);
+		pBmp->BitsLock = NULL;
 	}
 
 	return TRUE;
@@ -1246,8 +1255,10 @@ NtGdiStretchBlt(
 	}
 
 	/* Perform the bitblt operation */
-	Status = IntEngStretchBlt(BitmapDest, BitmapSrc, NULL, DCDest->CombinedClip,
-		XlateObj, &DestRect, &SourceRect, NULL, NULL, NULL, COLORONCOLOR);
+	Status = IntEngStretchBlt(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
+                                  NULL, DCDest->CombinedClip, XlateObj,
+                                  &DestRect, &SourceRect, NULL, NULL, NULL,
+                                  COLORONCOLOR);
 
 	if (UsesSource)
 		EngDeleteXlate(XlateObj);

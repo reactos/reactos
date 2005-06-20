@@ -482,7 +482,7 @@ IntPatBlt(
       IntGdiInitBrushInstance(&BrushInst, BrushObj, dc->XlateBrush);
 
       ret = IntEngBitBlt(
-         BitmapObj,
+         &BitmapObj->SurfObj,
          NULL,
          NULL,
          dc->CombinedClip,
