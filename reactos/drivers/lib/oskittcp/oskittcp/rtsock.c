@@ -206,8 +206,8 @@ route_output(m, so)
 	case RTM_LOCK:
 		if ((rnh = rt_tables[dst->sa_family]) == 0) {
 			senderr(EAFNOSUPPORT);
-		} else if (rt = (struct rtentry *)
-				rnh->rnh_lookup(dst, netmask, rnh))
+		} else if ((rt = (struct rtentry *)
+				rnh->rnh_lookup(dst, netmask, rnh)))
 			rt->rt_refcnt++;
 		else
 			senderr(ESRCH);

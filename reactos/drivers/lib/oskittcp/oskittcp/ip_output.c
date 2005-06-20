@@ -63,8 +63,10 @@
 u_short ip_id;
 
 static struct mbuf *ip_insertoptions __P((struct mbuf *, struct mbuf *, int *));
+#ifndef __REACTOS__
 static void ip_mloopback
 	__P((struct ifnet *, struct mbuf *, struct sockaddr_in *));
+#endif
 
 /*
  * IP output.  The packet in mbuf chain m contains a skeletal IP
@@ -81,7 +83,9 @@ ip_output(m0, opt, ro, flags, imo)
 	struct ip_moptions *imo;
 {
 	register struct ip *ip, *mhip;
+#ifndef __REACTOS__
 	register struct ifnet *ifp;
+#endif
 	register struct mbuf *m = m0;
 	register int hlen = sizeof (struct ip);
 	int len, off, error = 0;
@@ -340,8 +344,8 @@ ip_output(m0, opt, ro, flags, imo)
 		m->m_flags &= ~M_BCAST;
 #endif
 
-sendit:
 #ifndef __REACTOS__
+sendit:
 	/*
 	 * Check with the firewall...
 	 */
@@ -382,6 +386,7 @@ sendit:
 	 */
 	if (ip->ip_off & IP_DF) {
 		error = EMSGSIZE;
+#ifndef __REACTOS__
 #if 1
 		/*
 		 * This case can happen if the user changed the MTU
@@ -395,6 +400,7 @@ sendit:
 		    && (ro->ro_rt->rt_rmx.rmx_mtu > ifp->if_mtu)) {
 			ro->ro_rt->rt_rmx.rmx_mtu = ifp->if_mtu;
 		}
+#endif
 #endif
 		ipstat.ips_cantfrag++;
 		goto bad;
@@ -509,8 +515,9 @@ sendorfree:
 		ipstat.ips_fragmented++;
     }
 done:
-	if (ro == &iproute && (flags & IP_ROUTETOIF) == 0 && ro->ro_rt)
+	if (ro == &iproute && (flags & IP_ROUTETOIF) == 0 && ro->ro_rt) {
 		RTFREE(ro->ro_rt);
+	}
 
 	return (error);
 bad:
@@ -773,7 +780,7 @@ ip_pcbopts(pcbopt, m)
 	struct mbuf **pcbopt;
 	register struct mbuf *m;
 {
-	register cnt, optlen;
+	register int cnt, optlen;
 	register u_char *cp;
 	u_char opt;
 
@@ -875,15 +882,19 @@ ip_setmoptions(optname, imop, m)
 	struct mbuf *m;
 {
 	register int error = 0;
+#ifndef __REACTOS__
 	u_char loop;
 	register int i;
 	struct in_addr addr;
 	register struct ip_mreq *mreq;
 	register struct ifnet *ifp;
+#endif
 	register struct ip_moptions *imo = *imop;
+#ifndef __REACTOS__
 	struct route ro;
 	register struct sockaddr_in *dst;
 	int s;
+#endif
 
 	if (imo == NULL) {
 		/*
@@ -1149,10 +1160,12 @@ ip_getmoptions(optname, imo, mp)
 	register struct ip_moptions *imo;
 	register struct mbuf **mp;
 {
+#ifndef __REACTOS__
 	u_char *ttl;
 	u_char *loop;
 	struct in_addr *addr;
 	struct in_ifaddr *ia;
+#endif
 
 	*mp = m_get(M_WAIT, MT_SOOPTS);
 

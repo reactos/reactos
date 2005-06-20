@@ -71,7 +71,9 @@ socreate(dom, aso, type, proto)
 	register int type;
 	int proto;
 {
+#ifndef __REACTOS__
 	struct proc *p = curproc;		/* XXX */
+#endif
 	register struct protosw *prp;
 	register struct socket *so;
 	register int error;
@@ -335,7 +337,9 @@ sosend(so, addr, uio, top, control, flags)
 	struct mbuf *control;
 	int flags;
 {
+#ifndef __REACTOS__
 	struct proc *p = curproc;		/* XXX */
+#endif
 	struct mbuf **mp;
 	register struct mbuf *m;
 	register long space, len, resid;

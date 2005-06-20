@@ -156,7 +156,9 @@ rip_output(m, so, dst)
 {
 	register struct ip *ip;
 	register struct inpcb *inp = sotoinpcb(so);
+#ifndef __REACTOS__
 	struct mbuf *opts;
+#endif
 	int flags = (so->so_options & SO_DONTROUTE) | IP_ALLOWBROADCAST;
 
 	/*
