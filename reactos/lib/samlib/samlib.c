@@ -28,10 +28,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <windows.h>
-#include <ntos.h>
-#include <ntdll/rtl.h>
 #include <winerror.h>
-#include <string.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 
 #include <samlib.h>
 

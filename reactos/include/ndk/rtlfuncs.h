@@ -1142,6 +1142,13 @@ RtlReleasePebLock(VOID);
 
 NTSTATUS
 STDCALL
+RtlCreateEnvironment(
+    BOOLEAN Inherit,
+    PWSTR *Environment
+);
+
+NTSTATUS
+STDCALL
 RtlCreateUserThread(
     IN HANDLE ProcessHandle,
     IN PSECURITY_DESCRIPTOR SecurityDescriptor,
@@ -1161,6 +1168,12 @@ RtlDeNormalizeProcessParams(
     IN PRTL_USER_PROCESS_PARAMETERS ProcessParameters
 );
 
+VOID
+STDCALL
+RtlDestroyEnvironment(
+    PWSTR Environment
+);
+    
 NTSTATUS
 STDCALL
 RtlExpandEnvironmentStrings_U(
@@ -1180,6 +1193,14 @@ NTSTATUS
 STDCALL
 RtlQueryEnvironmentVariable_U(
     PWSTR Environment,
+    PUNICODE_STRING Name,
+    PUNICODE_STRING Value
+);
+
+NTSTATUS
+STDCALL
+RtlSetEnvironmentVariable(
+    PWSTR *Environment,
     PUNICODE_STRING Name,
     PUNICODE_STRING Value
 );
