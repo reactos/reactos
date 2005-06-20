@@ -149,7 +149,6 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   /* First letter row */
   { 'Q',         CAPS,   {'q', 'Q'} },
   { 'W',         CAPS,   {'w', 'W'} },
-  { 'E',         CAPS,   {'e', 'E'} },
   { 'R',         CAPS,   {'r', 'R'} },
   { 'T',         CAPS,   {'t', 'T'} },
   { 'Y',         CAPS,   {'y', 'Y'} },
