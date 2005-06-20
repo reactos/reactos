@@ -1,8 +1,6 @@
 #ifndef __WIN32K_COORD_H
 #define __WIN32K_COORD_H
 
-#include "dc.h"
-
 BOOL
 STDCALL
 NtGdiCombineTransform (

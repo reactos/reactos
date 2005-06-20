@@ -2,9 +2,6 @@
 #ifndef __WIN32K_BITMAPS_H
 #define __WIN32K_BITMAPS_H
 
-#include <win32k/dc.h>
-#include <win32k/gdiobj.h>
-
 /* GDI logical bitmap object */
 typedef struct _BITMAPOBJ
 {
@@ -15,8 +12,12 @@ typedef struct _BITMAPOBJ
                                to get width/height of bitmap, use
                                bitmap.bmWidth/bitmap.bmHeight for
                                that */
+#ifdef NTOS_MODE_USER
+  PVOID BitsLock;
+#else
   PFAST_MUTEX BitsLock;     /* You need to hold this lock before you touch
                                the actual bits in the bitmap */
+#endif
 
   /* For device-independent bitmaps: */
   DIBSECTION *dib;

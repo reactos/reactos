@@ -404,10 +404,10 @@ GetCharacterPlacementW(
     /* Treat the case where no special handling was requested in a fastpath way */
     /* copy will do if the GCP_REORDER flag is not set */
     if(lpResults->lpOutString)
-      strncpyW( lpResults->lpOutString, lpString, nSet );
+      lstrcpynW( lpResults->lpOutString, lpString, nSet );
 
     if(lpResults->lpGlyphs)
-      strncpyW( lpResults->lpGlyphs, lpString, nSet );
+      lstrcpynW( lpResults->lpGlyphs, lpString, nSet );
 
     if(lpResults->lpOrder)
     {

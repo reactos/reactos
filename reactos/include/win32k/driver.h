@@ -2,7 +2,6 @@
 #ifndef __WIN32K_DRIVER_H
 #define __WIN32K_DRIVER_H
 
-#include <ddk/ntddk.h>
 #include <ddk/winddi.h>
 
 typedef BOOL (STDCALL *PGD_ENABLEDRIVER)(ULONG, ULONG, PDRVENABLEDATA);
@@ -176,6 +175,8 @@ typedef struct _DRIVER_FUNCTIONS
   PGD_ALPHABLEND AlphaBlend;
 } DRIVER_FUNCTIONS, *PDRIVER_FUNCTIONS;
 
+#ifndef NTOS_MODE_USER
+
 BOOL  DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver);
 PGD_ENABLEDRIVER  DRIVER_FindDDIDriver(LPCWSTR  Name);
 PFILE_OBJECT DRIVER_FindMPDriver(ULONG  DisplayNumber);
@@ -184,6 +185,8 @@ BOOL  DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
 BOOL  DRIVER_UnregisterDriver(LPCWSTR  Name);
 INT  DRIVER_ReferenceDriver (LPCWSTR  Name);
 INT  DRIVER_UnreferenceDriver (LPCWSTR  Name);
+
+#endif
 
 #endif
 

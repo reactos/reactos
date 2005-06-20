@@ -11,6 +11,7 @@
 
 #include <ddk/ntddk.h>
 #include <win32k/ntddraw.h>
+#include <ddk/winddi.h>
 #include <win32k/win32k.h>
 #include <include/intddraw.h>
 #include <win32k/gdiobj.h>

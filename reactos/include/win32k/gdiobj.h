@@ -6,8 +6,6 @@
 #ifndef __WIN32K_GDIOBJ_H
 #define __WIN32K_GDIOBJ_H
 
-#include <ddk/ntddk.h>
-
 /* base address where the handle table is mapped to */
 #define GDI_HANDLE_TABLE_BASE_ADDRESS (0x400000)
 
@@ -67,7 +65,11 @@ typedef BOOL (INTERNAL_CALL *GDICLEANUPPROC)(PVOID ObjectBody);
 */
 typedef struct _GDIOBJHDR
 {
+#ifdef NTOS_MODE_USER
+  PVOID LockingThread;
+#else
   PETHREAD LockingThread; /* only assigned if a thread is holding the lock! */
+#endif
   ULONG Locks;
 #ifdef GDI_DEBUG
   const char* createdfile;
@@ -76,6 +78,8 @@ typedef struct _GDIOBJHDR
   int lockline;
 #endif
 } GDIOBJHDR, *PGDIOBJHDR;
+
+#ifndef NTOS_MODE_USER
 
 BOOL    INTERNAL_CALL GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle);
 void    INTERNAL_CALL GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS Owner);
@@ -108,10 +112,12 @@ PGDIOBJ INTERNAL_CALL GDIOBJ_ShareLockObj (HGDIOBJ hObj, DWORD ObjectType);
 
 #endif /* GDI_DEBUG */
 
+PVOID   INTERNAL_CALL GDI_MapHandleTable(PEPROCESS Process);
+
+#endif
+
 #define GDIOBJFLAG_DEFAULT	(0x0)
 #define GDIOBJFLAG_IGNOREPID 	(0x1)
 #define GDIOBJFLAG_IGNORELOCK 	(0x2)
-
-PVOID   INTERNAL_CALL GDI_MapHandleTable(PEPROCESS Process);
 
 #endif
