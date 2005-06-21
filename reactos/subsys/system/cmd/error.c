@@ -136,6 +136,7 @@ VOID error_sfile_not_found (LPTSTR f)
 
 	LoadString(CMD_ModuleHandle, STRING_ERROR_FILE_NOT_FOUND, szMsg, RC_STRING_MAX_SIZE);
 	ConErrPrintf(_T("%s - %s\n"), szMsg, f);
+  nErrorLevel = 1;
 }
 
 
