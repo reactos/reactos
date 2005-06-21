@@ -21,7 +21,7 @@ ULONG
 LdrpGetResidentSize(PIMAGE_NT_HEADERS NTHeaders);
 PEPFUNC LdrPEStartup (PVOID  ImageBase,
 		      HANDLE SectionHandle,
-		      PLDR_MODULE* Module,
+		      PLDR_DATA_TABLE_ENTRY* Module,
 		      PWSTR FullDosName);
 #if 0
 typedef BOOL 
@@ -36,7 +36,7 @@ RtlpInitDeferedCriticalSection(
 );
 #if defined(KDBG) || defined(DBG)
 VOID
-LdrpLoadUserModuleSymbols(PLDR_MODULE LdrModule);
+LdrpLoadUserModuleSymbols(PLDR_DATA_TABLE_ENTRY LdrModule);
 #endif
 extern HANDLE WindowsApiPort;
 

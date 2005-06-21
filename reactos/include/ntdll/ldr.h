@@ -54,29 +54,32 @@ LdrQueryProcessModuleInformation(IN PMODULE_INFORMATION ModuleInformation OPTION
 #define PROCESS_ATTACH_CALLED	0x00080000
 #define IMAGE_NOT_AT_BASE	0x00200000
 
-typedef struct _LDR_MODULE
+typedef struct _LDR_DATA_TABLE_ENTRY
 {
-   LIST_ENTRY     InLoadOrderModuleList;
-   LIST_ENTRY     InMemoryOrderModuleList;		/* not used */
-   LIST_ENTRY     InInitializationOrderModuleList;	/* not used */
-   PVOID          BaseAddress;
-   ULONG          EntryPoint;
-   ULONG          ResidentSize;
-   UNICODE_STRING FullDllName;
-   UNICODE_STRING BaseDllName;
-   ULONG          Flags;
-   SHORT          LoadCount;
-   SHORT          TlsIndex;
-   HANDLE         SectionHandle;
-   ULONG          CheckSum;
-   ULONG          TimeDateStamp;
+    LIST_ENTRY InLoadOrderModuleList;
+    LIST_ENTRY InMemoryOrderModuleList;
+    LIST_ENTRY InInitializationOrderModuleList;
+    PVOID DllBase;
+    PVOID EntryPoint;
+    ULONG SizeOfImage;
+    UNICODE_STRING FullDllName;
+    UNICODE_STRING BaseDllName;
+    ULONG Flags;
+    SHORT LoadCount; /* FIXME: HACK!!! FIX ASAP */
+    SHORT TlsIndex;  /* FIXME: HACK!!! FIX ASAP */
+    LIST_ENTRY HashLinks;
+    PVOID SectionPointer;
+    ULONG CheckSum;
+    ULONG TimeDateStamp;
+    PVOID LoadedImports;
+    PVOID EntryPointActivationContext;
 #if defined(DBG) || defined(KDBG)
-   PROSSYM_INFO   RosSymInfo;
+    PROSSYM_INFO   RosSymInfo; /* FIXME: THIS _REALLY_ NEEDS TO GO (TLS?)!!! */
 #endif /* KDBG */
-} LDR_MODULE, *PLDR_MODULE;
+} LDR_DATA_TABLE_ENTRY, *PLDR_DATA_TABLE_ENTRY;
 
 typedef struct _LDR_SYMBOL_INFO {
-  PLDR_MODULE ModuleObject;
+  PLDR_DATA_TABLE_ENTRY ModuleObject;
   ULONG_PTR ImageBase;
   PVOID SymbolsBuffer;
   ULONG SymbolsBufferLength;
@@ -90,7 +93,7 @@ typedef struct _LDR_SYMBOL_INFO {
 #if defined(KDBG) || defined(DBG)
 
 VOID
-LdrpLoadUserModuleSymbols(PLDR_MODULE LdrModule);
+LdrpLoadUserModuleSymbols(PLDR_DATA_TABLE_ENTRY LdrModule);
 
 #endif
 
@@ -99,7 +102,7 @@ LdrpGetResidentSize(PIMAGE_NT_HEADERS NTHeaders);
 
 PEPFUNC LdrPEStartup (PVOID  ImageBase,
 		      HANDLE SectionHandle,
-		      PLDR_MODULE* Module,
+		      PLDR_DATA_TABLE_ENTRY* Module,
 		      PWSTR FullDosName);
 NTSTATUS LdrMapSections(HANDLE ProcessHandle,
 			PVOID ImageBase,
@@ -120,7 +123,7 @@ LdrGetDllHandle(IN PWCHAR Path OPTIONAL,
 
 NTSTATUS STDCALL
 LdrFindEntryForAddress(IN PVOID Address,
-		       OUT PLDR_MODULE *Module);
+		       OUT PLDR_DATA_TABLE_ENTRY *Module);
 
 NTSTATUS STDCALL
 LdrGetProcedureAddress(IN PVOID BaseAddress,

@@ -42,7 +42,7 @@ typedef struct _TLS_DATA
    DWORD TlsDataSize;
    DWORD TlsZeroSize;
    PIMAGE_TLS_CALLBACK TlsAddressOfCallBacks;
-   PLDR_MODULE Module;
+   PLDR_DATA_TABLE_ENTRY Module;
 } TLS_DATA, *PTLS_DATA;
 
 static PTLS_DATA LdrpTlsArray = NULL;
@@ -50,18 +50,18 @@ static ULONG LdrpTlsCount = 0;
 static ULONG LdrpTlsSize = 0;
 static HANDLE LdrpKnownDllsDirHandle = NULL;
 static UNICODE_STRING LdrpKnownDllPath = {0, 0, NULL};
-static PLDR_MODULE LdrpLastModule = NULL;
-extern PLDR_MODULE ExeModule;
+static PLDR_DATA_TABLE_ENTRY LdrpLastModule = NULL;
+extern PLDR_DATA_TABLE_ENTRY ExeModule;
 
 /* PROTOTYPES ****************************************************************/
 
-static NTSTATUS LdrFindEntryForName(PUNICODE_STRING Name, PLDR_MODULE *Module, BOOLEAN Ref);
+static NTSTATUS LdrFindEntryForName(PUNICODE_STRING Name, PLDR_DATA_TABLE_ENTRY *Module, BOOLEAN Ref);
 static PVOID LdrFixupForward(PCHAR ForwardName);
 static PVOID LdrGetExportByName(PVOID BaseAddress, PUCHAR SymbolName, USHORT Hint);
 static NTSTATUS LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
                                IN ULONG LoadFlags,
                                IN PUNICODE_STRING Name,
-                               OUT PLDR_MODULE *Module,
+                               OUT PLDR_DATA_TABLE_ENTRY *Module,
                                OUT PVOID *BaseAddress OPTIONAL);
 static NTSTATUS LdrpAttachProcess(VOID);
 static VOID LdrpDetachProcess(BOOLEAN UnloadAll);
@@ -71,7 +71,7 @@ static VOID LdrpDetachProcess(BOOLEAN UnloadAll);
 #if defined(DBG) || defined(KDBG)
 
 VOID
-LdrpLoadUserModuleSymbols(PLDR_MODULE LdrModule)
+LdrpLoadUserModuleSymbols(PLDR_DATA_TABLE_ENTRY LdrModule)
 {
   NtSystemDebugControl(
     DebugDbgLoadSymbols,
@@ -96,7 +96,7 @@ LdrMappedAsDataFile(PVOID *BaseAddress)
    return FALSE;
 }
 
-static inline LONG LdrpDecrementLoadCount(PLDR_MODULE Module, BOOLEAN Locked)
+static inline LONG LdrpDecrementLoadCount(PLDR_DATA_TABLE_ENTRY Module, BOOLEAN Locked)
 {
    LONG LoadCount;
    if (!Locked)
@@ -115,7 +115,7 @@ static inline LONG LdrpDecrementLoadCount(PLDR_MODULE Module, BOOLEAN Locked)
    return LoadCount;
 }
 
-static inline LONG LdrpIncrementLoadCount(PLDR_MODULE Module, BOOLEAN Locked)
+static inline LONG LdrpIncrementLoadCount(PLDR_DATA_TABLE_ENTRY Module, BOOLEAN Locked)
 {
    LONG LoadCount;
    if (!Locked)
@@ -134,7 +134,7 @@ static inline LONG LdrpIncrementLoadCount(PLDR_MODULE Module, BOOLEAN Locked)
    return LoadCount;
 }
 
-static inline VOID LdrpAcquireTlsSlot(PLDR_MODULE Module, ULONG Size, BOOLEAN Locked)
+static inline VOID LdrpAcquireTlsSlot(PLDR_DATA_TABLE_ENTRY Module, ULONG Size, BOOLEAN Locked)
 {
    if (!Locked)
      {
@@ -149,7 +149,7 @@ static inline VOID LdrpAcquireTlsSlot(PLDR_MODULE Module, ULONG Size, BOOLEAN Lo
      }
 }
 
-static inline VOID LdrpTlsCallback(PLDR_MODULE Module, ULONG dwReason)
+static inline VOID LdrpTlsCallback(PLDR_DATA_TABLE_ENTRY Module, ULONG dwReason)
 {
    PIMAGE_TLS_CALLBACK TlsCallback;
    if (Module->TlsIndex >= 0 && Module->LoadCount == -1)
@@ -161,14 +161,14 @@ static inline VOID LdrpTlsCallback(PLDR_MODULE Module, ULONG dwReason)
              {
                TRACE_LDR("%wZ - Calling tls callback at %x\n",
                          &Module->BaseDllName, TlsCallback);
-               TlsCallback(Module->BaseAddress, dwReason, NULL);
+               TlsCallback(Module->DllBase, dwReason, NULL);
                TlsCallback++;
              }
          }
      }
 }
 
-static BOOLEAN LdrpCallDllEntry(PLDR_MODULE Module, DWORD dwReason, PVOID lpReserved)
+static BOOLEAN LdrpCallDllEntry(PLDR_DATA_TABLE_ENTRY Module, DWORD dwReason, PVOID lpReserved)
 {
    if (!(Module->Flags & IMAGE_DLL) ||
        Module->EntryPoint == 0)
@@ -176,7 +176,7 @@ static BOOLEAN LdrpCallDllEntry(PLDR_MODULE Module, DWORD dwReason, PVOID lpRese
        return TRUE;
      }
    LdrpTlsCallback(Module, dwReason);
-   return  ((PDLLMAIN_FUNC)Module->EntryPoint)(Module->BaseAddress, dwReason, lpReserved);
+   return  ((PDLLMAIN_FUNC)Module->EntryPoint)(Module->DllBase, dwReason, lpReserved);
 }
 
 static NTSTATUS
@@ -234,7 +234,7 @@ LdrpInitializeTlsForProccess(VOID)
 {
    PLIST_ENTRY ModuleListHead;
    PLIST_ENTRY Entry;
-   PLDR_MODULE Module;
+   PLDR_DATA_TABLE_ENTRY Module;
    PIMAGE_TLS_DIRECTORY TlsDirectory;
    PTLS_DATA TlsData;
 
@@ -255,12 +255,12 @@ LdrpInitializeTlsForProccess(VOID)
        Entry = ModuleListHead->Flink;
        while (Entry != ModuleListHead)
          {
-           Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
+           Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
            if (Module->LoadCount == -1 &&
                Module->TlsIndex >= 0)
              {
                TlsDirectory = (PIMAGE_TLS_DIRECTORY)
-                                 RtlImageDirectoryEntryToData(Module->BaseAddress,
+                                 RtlImageDirectoryEntryToData(Module->DllBase,
                                                               TRUE,
                                                               IMAGE_DIRECTORY_ENTRY_TLS,
                                                               NULL);
@@ -458,21 +458,21 @@ LdrAdjustDllName (PUNICODE_STRING FullDllName,
    RtlCreateUnicodeString(FullDllName, Buffer);
 }
 
-PLDR_MODULE
+PLDR_DATA_TABLE_ENTRY
 LdrAddModuleEntry(PVOID ImageBase,
                   PIMAGE_NT_HEADERS NTHeaders,
                   PWSTR FullDosName)
 {
-  PLDR_MODULE Module;
+  PLDR_DATA_TABLE_ENTRY Module;
 
-  Module = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof (LDR_MODULE));
+  Module = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof (LDR_DATA_TABLE_ENTRY));
   ASSERT(Module);
-  memset(Module, 0, sizeof(LDR_MODULE));
-  Module->BaseAddress = (PVOID)ImageBase;
-  Module->EntryPoint = NTHeaders->OptionalHeader.AddressOfEntryPoint;
+  memset(Module, 0, sizeof(LDR_DATA_TABLE_ENTRY));
+  Module->DllBase = (PVOID)ImageBase;
+  Module->EntryPoint = (PVOID)NTHeaders->OptionalHeader.AddressOfEntryPoint;
   if (Module->EntryPoint != 0)
-    Module->EntryPoint += (ULONG)Module->BaseAddress;
-  Module->ResidentSize = LdrpGetResidentSize(NTHeaders);
+    Module->EntryPoint += (ULONG)Module->DllBase;
+  Module->SizeOfImage = LdrpGetResidentSize(NTHeaders);
   if (NtCurrentPeb()->Ldr->Initialized == TRUE)
     {
       /* loading while app is running */
@@ -728,7 +728,7 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
             OUT PVOID *BaseAddress OPTIONAL)
 {
   NTSTATUS              Status;
-  PLDR_MODULE           Module;
+  PLDR_DATA_TABLE_ENTRY           Module;
 
   TRACE_LDR("LdrLoadDll, loading %wZ%s%S\n",
             Name,
@@ -751,7 +751,7 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
       RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);
       if (NT_SUCCESS(Status))
         {
-          *BaseAddress = Module->BaseAddress;
+          *BaseAddress = Module->DllBase;
         }
    }
   return Status;
@@ -776,11 +776,11 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
  */
 NTSTATUS STDCALL
 LdrFindEntryForAddress(PVOID Address,
-                       PLDR_MODULE *Module)
+                       PLDR_DATA_TABLE_ENTRY *Module)
 {
   PLIST_ENTRY ModuleListHead;
   PLIST_ENTRY Entry;
-  PLDR_MODULE ModulePtr;
+  PLDR_DATA_TABLE_ENTRY ModulePtr;
 
   DPRINT("LdrFindEntryForAddress(Address %p)\n", Address);
 
@@ -798,12 +798,12 @@ LdrFindEntryForAddress(PVOID Address,
 
   while (Entry != ModuleListHead)
     {
-      ModulePtr = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
+      ModulePtr = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
 
-      DPRINT("Scanning %wZ at %p\n", &ModulePtr->BaseDllName, ModulePtr->BaseAddress);
+      DPRINT("Scanning %wZ at %p\n", &ModulePtr->BaseDllName, ModulePtr->DllBase);
 
-      if ((Address >= ModulePtr->BaseAddress) &&
-          (Address <= (ModulePtr->BaseAddress + ModulePtr->ResidentSize)))
+      if ((Address >= ModulePtr->DllBase) &&
+          (Address <= (ModulePtr->DllBase + ModulePtr->SizeOfImage)))
         {
           *Module = ModulePtr;
           RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);
@@ -837,12 +837,12 @@ LdrFindEntryForAddress(PVOID Address,
  */
 static NTSTATUS
 LdrFindEntryForName(PUNICODE_STRING Name,
-                    PLDR_MODULE *Module,
+                    PLDR_DATA_TABLE_ENTRY *Module,
                     BOOLEAN Ref)
 {
   PLIST_ENTRY ModuleListHead;
   PLIST_ENTRY Entry;
-  PLDR_MODULE ModulePtr;
+  PLDR_DATA_TABLE_ENTRY ModulePtr;
   BOOLEAN ContainsPath;
   UNICODE_STRING AdjustedName;
   unsigned i;
@@ -897,7 +897,7 @@ LdrFindEntryForName(PUNICODE_STRING Name,
     }
   while (Entry != ModuleListHead)
     {
-      ModulePtr = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
+      ModulePtr = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
 
       DPRINT("Scanning %wZ %wZ\n", &ModulePtr->BaseDllName, &AdjustedName);
 
@@ -947,7 +947,7 @@ LdrFixupForward(PCHAR ForwardName)
    UNICODE_STRING DllName;
    NTSTATUS Status;
    PCHAR p;
-   PLDR_MODULE Module;
+   PLDR_DATA_TABLE_ENTRY Module;
    PVOID BaseAddress;
 
    strcpy(NameBuffer, ForwardName);
@@ -982,9 +982,9 @@ LdrFixupForward(PCHAR ForwardName)
             return NULL;
           }
 
-        DPRINT("BaseAddress: %p\n", Module->BaseAddress);
+        DPRINT("BaseAddress: %p\n", Module->DllBase);
 
-        return LdrGetExportByName(Module->BaseAddress, (PUCHAR)(p+1), -1);
+        return LdrGetExportByName(Module->DllBase, (PUCHAR)(p+1), -1);
      }
 
    return NULL;
@@ -1341,7 +1341,7 @@ LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
 static NTSTATUS
 LdrpGetOrLoadModule(PWCHAR SerachPath,
                     PCHAR Name,
-                    PLDR_MODULE* Module,
+                    PLDR_DATA_TABLE_ENTRY* Module,
                     BOOLEAN Load)
 {
    UNICODE_STRING DllName;
@@ -1373,8 +1373,8 @@ LdrpGetOrLoadModule(PWCHAR SerachPath,
 }
 
 static NTSTATUS
-LdrpProcessImportDirectoryEntry(PLDR_MODULE Module,
-                                PLDR_MODULE ImportedModule,
+LdrpProcessImportDirectoryEntry(PLDR_DATA_TABLE_ENTRY Module,
+                                PLDR_DATA_TABLE_ENTRY ImportedModule,
                                 PIMAGE_IMPORT_DESCRIPTOR ImportModuleDirectory)
 {
    NTSTATUS Status;
@@ -1391,16 +1391,16 @@ LdrpProcessImportDirectoryEntry(PLDR_MODULE Module,
      }
 
    /* Get the import address list. */
-   ImportAddressList = (PVOID *)(Module->BaseAddress + (ULONG_PTR)ImportModuleDirectory->FirstThunk);
+   ImportAddressList = (PVOID *)(Module->DllBase + (ULONG_PTR)ImportModuleDirectory->FirstThunk);
 
    /* Get the list of functions to import. */
    if (ImportModuleDirectory->OriginalFirstThunk != 0)
      {
-       FunctionNameList = (PULONG) (Module->BaseAddress + (ULONG_PTR)ImportModuleDirectory->OriginalFirstThunk);
+       FunctionNameList = (PULONG) (Module->DllBase + (ULONG_PTR)ImportModuleDirectory->OriginalFirstThunk);
      }
    else
      {
-       FunctionNameList = (PULONG)(Module->BaseAddress + (ULONG_PTR)ImportModuleDirectory->FirstThunk);
+       FunctionNameList = (PULONG)(Module->DllBase + (ULONG_PTR)ImportModuleDirectory->FirstThunk);
      }
 
    /* Get the size of IAT. */
@@ -1430,7 +1430,7 @@ LdrpProcessImportDirectoryEntry(PLDR_MODULE Module,
        if ((*FunctionNameList) & 0x80000000)
          {
            Ordinal = (*FunctionNameList) & 0x7fffffff;
-           *ImportAddressList = LdrGetExportByOrdinal(ImportedModule->BaseAddress, Ordinal);
+           *ImportAddressList = LdrGetExportByOrdinal(ImportedModule->DllBase, Ordinal);
            if ((*ImportAddressList) == NULL)
              {
                DPRINT1("Failed to import #%ld from %wZ\n", Ordinal, &ImportedModule->FullDllName);
@@ -1440,8 +1440,8 @@ LdrpProcessImportDirectoryEntry(PLDR_MODULE Module,
        else
          {
            IMAGE_IMPORT_BY_NAME *pe_name;
-           pe_name = RVA(Module->BaseAddress, *FunctionNameList);
-           *ImportAddressList = LdrGetExportByName(ImportedModule->BaseAddress, pe_name->Name, pe_name->Hint);
+           pe_name = RVA(Module->DllBase, *FunctionNameList);
+           *ImportAddressList = LdrGetExportByName(ImportedModule->DllBase, pe_name->Name, pe_name->Hint);
            if ((*ImportAddressList) == NULL)
              {
                DPRINT1("Failed to import %s from %wZ\n", pe_name->Name, &ImportedModule->FullDllName);
@@ -1469,8 +1469,8 @@ LdrpProcessImportDirectoryEntry(PLDR_MODULE Module,
 
 static NTSTATUS
 LdrpProcessImportDirectory(
-   PLDR_MODULE Module,
-   PLDR_MODULE ImportedModule,
+   PLDR_DATA_TABLE_ENTRY Module,
+   PLDR_DATA_TABLE_ENTRY ImportedModule,
    PCHAR ImportedName)
 {
    NTSTATUS Status;
@@ -1482,7 +1482,7 @@ LdrpProcessImportDirectory(
 
 
    ImportModuleDirectory = (PIMAGE_IMPORT_DESCRIPTOR)
-                             RtlImageDirectoryEntryToData(Module->BaseAddress,
+                             RtlImageDirectoryEntryToData(Module->DllBase,
                                                           TRUE,
                                                           IMAGE_DIRECTORY_ENTRY_IMPORT,
                                                           NULL);
@@ -1493,7 +1493,7 @@ LdrpProcessImportDirectory(
 
    while (ImportModuleDirectory->Name)
      {
-       Name = (PCHAR)Module->BaseAddress + ImportModuleDirectory->Name;
+       Name = (PCHAR)Module->DllBase + ImportModuleDirectory->Name;
        if (0 == _stricmp(Name, ImportedName))
          {
            Status = LdrpProcessImportDirectoryEntry(Module,
@@ -1513,8 +1513,8 @@ LdrpProcessImportDirectory(
 
 
 static NTSTATUS
-LdrpAdjustImportDirectory(PLDR_MODULE Module,
-                          PLDR_MODULE ImportedModule,
+LdrpAdjustImportDirectory(PLDR_DATA_TABLE_ENTRY Module,
+                          PLDR_DATA_TABLE_ENTRY ImportedModule,
                           PCHAR ImportedName)
 {
    PIMAGE_IMPORT_DESCRIPTOR ImportModuleDirectory;
@@ -1534,7 +1534,7 @@ LdrpAdjustImportDirectory(PLDR_MODULE Module,
           Module, &Module->BaseDllName, ImportedModule, &ImportedModule->BaseDllName, ImportedName);
 
    ImportModuleDirectory = (PIMAGE_IMPORT_DESCRIPTOR)
-                              RtlImageDirectoryEntryToData(Module->BaseAddress,
+                              RtlImageDirectoryEntryToData(Module->DllBase,
                                                            TRUE,
                                                            IMAGE_DIRECTORY_ENTRY_IMPORT,
                                                            NULL);
@@ -1545,21 +1545,21 @@ LdrpAdjustImportDirectory(PLDR_MODULE Module,
 
    while (ImportModuleDirectory->Name)
      {
-       Name = (PCHAR)Module->BaseAddress + ImportModuleDirectory->Name;
+       Name = (PCHAR)Module->DllBase + ImportModuleDirectory->Name;
        if (0 == _stricmp(Name, (PCHAR)ImportedName))
          {
 
            /* Get the import address list. */
-           ImportAddressList = (PVOID *)(Module->BaseAddress + (ULONG_PTR)ImportModuleDirectory->FirstThunk);
+           ImportAddressList = (PVOID *)(Module->DllBase + (ULONG_PTR)ImportModuleDirectory->FirstThunk);
 
            /* Get the list of functions to import. */
            if (ImportModuleDirectory->OriginalFirstThunk != 0)
              {
-               FunctionNameList = (PULONG) (Module->BaseAddress + (ULONG_PTR)ImportModuleDirectory->OriginalFirstThunk);
+               FunctionNameList = (PULONG) (Module->DllBase + (ULONG_PTR)ImportModuleDirectory->OriginalFirstThunk);
              }
            else
              {
-               FunctionNameList = (PULONG)(Module->BaseAddress + (ULONG_PTR)ImportModuleDirectory->FirstThunk);
+               FunctionNameList = (PULONG)(Module->DllBase + (ULONG_PTR)ImportModuleDirectory->FirstThunk);
              }
 
            /* Get the size of IAT. */
@@ -1583,10 +1583,10 @@ LdrpAdjustImportDirectory(PLDR_MODULE Module,
                return(Status);
              }
 
-           NTHeaders = RtlImageNtHeader (ImportedModule->BaseAddress);
+           NTHeaders = RtlImageNtHeader (ImportedModule->DllBase);
            Start = (PVOID)NTHeaders->OptionalHeader.ImageBase;
-           End = Start + ImportedModule->ResidentSize;
-           Offset = ImportedModule->BaseAddress - Start;
+           End = Start + ImportedModule->SizeOfImage;
+           Offset = ImportedModule->DllBase - Start;
 
            /* Walk through function list and fixup addresses. */
            while (*FunctionNameList != 0L)
@@ -1636,7 +1636,7 @@ LdrpAdjustImportDirectory(PLDR_MODULE Module,
  */
 static NTSTATUS
 LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
-                IN PLDR_MODULE Module)
+                IN PLDR_DATA_TABLE_ENTRY Module)
 {
    PIMAGE_IMPORT_DESCRIPTOR ImportModuleDirectory;
    PIMAGE_IMPORT_DESCRIPTOR ImportModuleDirectoryCurrent;
@@ -1645,14 +1645,14 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
    PIMAGE_TLS_DIRECTORY TlsDirectory;
    ULONG TlsSize = 0;
    NTSTATUS Status;
-   PLDR_MODULE ImportedModule;
+   PLDR_DATA_TABLE_ENTRY ImportedModule;
    PCHAR ImportedName;
 
    DPRINT("LdrFixupImports(SearchPath %x, Module %x)\n", SearchPath, Module);
 
    /* Check for tls data */
    TlsDirectory = (PIMAGE_TLS_DIRECTORY)
-                     RtlImageDirectoryEntryToData(Module->BaseAddress,
+                     RtlImageDirectoryEntryToData(Module->DllBase,
                                                   TRUE,
                                                   IMAGE_DIRECTORY_ENTRY_TLS,
                                                   NULL);
@@ -1673,13 +1673,13 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
     * Process each import module.
     */
    ImportModuleDirectory = (PIMAGE_IMPORT_DESCRIPTOR)
-                              RtlImageDirectoryEntryToData(Module->BaseAddress,
+                              RtlImageDirectoryEntryToData(Module->DllBase,
                                                            TRUE,
                                                            IMAGE_DIRECTORY_ENTRY_IMPORT,
                                                            NULL);
 
    BoundImportDescriptor = (PIMAGE_BOUND_IMPORT_DESCRIPTOR)
-                              RtlImageDirectoryEntryToData(Module->BaseAddress,
+                              RtlImageDirectoryEntryToData(Module->DllBase,
                                                            TRUE,
                                                            IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT,
                                                            NULL);
@@ -1737,7 +1737,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
                  {
                    PIMAGE_BOUND_FORWARDER_REF BoundForwarderRef;
                    ULONG i;
-                   PLDR_MODULE ForwarderModule;
+                   PLDR_DATA_TABLE_ENTRY ForwarderModule;
                    PCHAR ForwarderName;
 
                    BoundForwarderRef = (PIMAGE_BOUND_FORWARDER_REF)(BoundImportDescriptorCurrent + 1);
@@ -1821,7 +1821,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
        ImportModuleDirectoryCurrent = ImportModuleDirectory;
        while (ImportModuleDirectoryCurrent->Name)
          {
-           ImportedName = (PCHAR)Module->BaseAddress + ImportModuleDirectoryCurrent->Name;
+           ImportedName = (PCHAR)Module->DllBase + ImportModuleDirectoryCurrent->Name;
            TRACE_LDR("%wZ imports functions from %s\n", &Module->BaseDllName, ImportedName);
 
            Status = LdrpGetOrLoadModule(SearchPath, ImportedName, &ImportedModule, TRUE);
@@ -1886,14 +1886,14 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
  */
 PEPFUNC LdrPEStartup (PVOID  ImageBase,
                       HANDLE SectionHandle,
-                      PLDR_MODULE* Module,
+                      PLDR_DATA_TABLE_ENTRY* Module,
                       PWSTR FullDosName)
 {
    NTSTATUS             Status;
    PEPFUNC              EntryPoint = NULL;
    PIMAGE_DOS_HEADER    DosHeader;
    PIMAGE_NT_HEADERS    NTHeaders;
-   PLDR_MODULE tmpModule;
+   PLDR_DATA_TABLE_ENTRY tmpModule;
 
    DPRINT("LdrPEStartup(ImageBase %x SectionHandle %x)\n",
            ImageBase, (ULONG)SectionHandle);
@@ -1924,7 +1924,7 @@ PEPFUNC LdrPEStartup (PVOID  ImageBase,
    if (Module != NULL)
      {
        *Module = LdrAddModuleEntry(ImageBase, NTHeaders, FullDosName);
-       (*Module)->SectionHandle = SectionHandle;
+       (*Module)->SectionPointer = SectionHandle;
      }
    else
      {
@@ -1989,13 +1989,13 @@ static NTSTATUS
 LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
                IN ULONG LoadFlags,
                IN PUNICODE_STRING Name,
-               PLDR_MODULE *Module,
+               PLDR_DATA_TABLE_ENTRY *Module,
                PVOID *BaseAddress OPTIONAL)
 {
     UNICODE_STRING AdjustedName;
     UNICODE_STRING FullDosName;
     NTSTATUS Status;
-    PLDR_MODULE tmpModule;
+    PLDR_DATA_TABLE_ENTRY tmpModule;
     HANDLE SectionHandle;
     ULONG ViewSize;
     PVOID ImageBase;
@@ -2019,7 +2019,7 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
         RtlFreeUnicodeString(&AdjustedName);
         if (NULL != BaseAddress)
           {
-            *BaseAddress = (*Module)->BaseAddress;
+            *BaseAddress = (*Module)->DllBase;
           }
       }
     else
@@ -2104,7 +2104,7 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
               }
           }
         *Module = LdrAddModuleEntry(ImageBase, NtHeaders, FullDosName.Buffer);
-        (*Module)->SectionHandle = SectionHandle;
+        (*Module)->SectionPointer = SectionHandle;
         if (ImageBase != (PVOID) NtHeaders->OptionalHeader.ImageBase)
           {
             (*Module)->Flags |= IMAGE_NOT_AT_BASE;
@@ -2132,14 +2132,14 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
 }
 
 static NTSTATUS
-LdrpUnloadModule(PLDR_MODULE Module,
+LdrpUnloadModule(PLDR_DATA_TABLE_ENTRY Module,
                  BOOLEAN Unload)
 {
    PIMAGE_IMPORT_DESCRIPTOR ImportModuleDirectory;
    PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundImportDescriptor;
    PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundImportDescriptorCurrent;
    PCHAR ImportedName;
-   PLDR_MODULE ImportedModule;
+   PLDR_DATA_TABLE_ENTRY ImportedModule;
    NTSTATUS Status;
    LONG LoadCount;
 
@@ -2160,7 +2160,7 @@ LdrpUnloadModule(PLDR_MODULE Module,
    else if (LoadCount == 1)
      {
        BoundImportDescriptor = (PIMAGE_BOUND_IMPORT_DESCRIPTOR)
-                                 RtlImageDirectoryEntryToData(Module->BaseAddress,
+                                 RtlImageDirectoryEntryToData(Module->DllBase,
                                                               TRUE,
                                                               IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT,
                                                               NULL);
@@ -2194,7 +2194,7 @@ LdrpUnloadModule(PLDR_MODULE Module,
        else
          {
            ImportModuleDirectory = (PIMAGE_IMPORT_DESCRIPTOR)
-                                      RtlImageDirectoryEntryToData(Module->BaseAddress,
+                                      RtlImageDirectoryEntryToData(Module->DllBase,
                                                                    TRUE,
                                                                    IMAGE_DIRECTORY_ENTRY_IMPORT,
                                                                    NULL);
@@ -2203,7 +2203,7 @@ LdrpUnloadModule(PLDR_MODULE Module,
                /* dereferencing all imported modules, use the import descriptor */
                while (ImportModuleDirectory->Name)
                  {
-                   ImportedName = (PCHAR)Module->BaseAddress + ImportModuleDirectory->Name;
+                   ImportedName = (PCHAR)Module->DllBase + ImportModuleDirectory->Name;
                    TRACE_LDR("%wZ trys to unload %s\n", &Module->BaseDllName, ImportedName);
                    Status = LdrpGetOrLoadModule(NULL, ImportedName, &ImportedModule, FALSE);
                    if (!NT_SUCCESS(Status))
@@ -2242,7 +2242,7 @@ LdrpUnloadModule(PLDR_MODULE Module,
 NTSTATUS STDCALL
 LdrUnloadDll (IN PVOID BaseAddress)
 {
-   PLDR_MODULE Module;
+   PLDR_DATA_TABLE_ENTRY Module;
    NTSTATUS Status;
 
    if (BaseAddress == NULL)
@@ -2273,7 +2273,7 @@ LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
 {
     PLIST_ENTRY ModuleListHead;
     PLIST_ENTRY Entry;
-    PLDR_MODULE Module;
+    PLDR_DATA_TABLE_ENTRY Module;
     NTSTATUS Status;
 
     DPRINT("LdrDisableThreadCalloutsForDll (BaseAddress %x)\n", BaseAddress);
@@ -2284,11 +2284,11 @@ LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
     Entry = ModuleListHead->Flink;
     while (Entry != ModuleListHead)
       {
-        Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
+        Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
 
-        DPRINT("BaseDllName %wZ BaseAddress %x\n", &Module->BaseDllName, Module->BaseAddress);
+        DPRINT("BaseDllName %wZ BaseAddress %x\n", &Module->BaseDllName, Module->DllBase);
 
-        if (Module->BaseAddress == BaseAddress)
+        if (Module->DllBase == BaseAddress)
           {
             if (Module->TlsIndex == -1)
               {
@@ -2312,7 +2312,7 @@ LdrGetDllHandle(IN PWCHAR Path OPTIONAL,
                 IN PUNICODE_STRING DllName,
                 OUT PVOID* BaseAddress)
 {
-    PLDR_MODULE Module;
+    PLDR_DATA_TABLE_ENTRY Module;
     NTSTATUS Status;
 
     TRACE_LDR("LdrGetDllHandle, searching for %wZ from %S\n", DllName, Path ? Path : L"");
@@ -2320,7 +2320,7 @@ LdrGetDllHandle(IN PWCHAR Path OPTIONAL,
     /* NULL is the current executable */
     if (DllName == NULL)
       {
-        *BaseAddress = ExeModule->BaseAddress;
+        *BaseAddress = ExeModule->DllBase;
         DPRINT("BaseAddress %x\n", *BaseAddress);
         return STATUS_SUCCESS;
       }
@@ -2328,7 +2328,7 @@ LdrGetDllHandle(IN PWCHAR Path OPTIONAL,
     Status = LdrFindEntryForName(DllName, &Module, FALSE);
     if (NT_SUCCESS(Status))
       {
-        *BaseAddress = Module->BaseAddress;
+        *BaseAddress = Module->DllBase;
         return STATUS_SUCCESS;
       }
 
@@ -2406,7 +2406,7 @@ LdrpDetachProcess(BOOLEAN UnloadAll)
 {
    PLIST_ENTRY ModuleListHead;
    PLIST_ENTRY Entry;
-   PLDR_MODULE Module;
+   PLDR_DATA_TABLE_ENTRY Module;
    static ULONG CallingCount = 0;
 
    DPRINT("LdrpDetachProcess() called for %wZ\n",
@@ -2418,7 +2418,7 @@ LdrpDetachProcess(BOOLEAN UnloadAll)
    Entry = ModuleListHead->Blink;
    while (Entry != ModuleListHead)
      {
-       Module = CONTAINING_RECORD(Entry, LDR_MODULE, InInitializationOrderModuleList);
+       Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
        if (((UnloadAll && Module->LoadCount <= 0) || Module->LoadCount == 0) &&
            Module->Flags & ENTRY_PROCESSED &&
            !(Module->Flags & UNLOAD_IN_PROGRESS))
@@ -2451,7 +2451,7 @@ LdrpDetachProcess(BOOLEAN UnloadAll)
        Entry = ModuleListHead->Blink;
        while (Entry != ModuleListHead)
          {
-           Module = CONTAINING_RECORD(Entry, LDR_MODULE, InInitializationOrderModuleList);
+           Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
            Entry = Entry->Blink;
            if (Module->Flags & UNLOAD_IN_PROGRESS &&
                ((UnloadAll && Module->LoadCount >= 0) || Module->LoadCount == 0))
@@ -2460,8 +2460,8 @@ LdrpDetachProcess(BOOLEAN UnloadAll)
                RemoveEntryList (&Module->InLoadOrderModuleList);
                RemoveEntryList (&Module->InInitializationOrderModuleList);
 
-               NtUnmapViewOfSection (NtCurrentProcess (), Module->BaseAddress);
-               NtClose (Module->SectionHandle);
+               NtUnmapViewOfSection (NtCurrentProcess (), Module->DllBase);
+               NtClose (Module->SectionPointer);
 
                TRACE_LDR("%wZ unloaded\n", &Module->BaseDllName);
 
@@ -2500,7 +2500,7 @@ LdrpAttachProcess(VOID)
 {
    PLIST_ENTRY ModuleListHead;
    PLIST_ENTRY Entry;
-   PLDR_MODULE Module;
+   PLDR_DATA_TABLE_ENTRY Module;
    BOOLEAN Result;
    NTSTATUS Status = STATUS_SUCCESS;
 
@@ -2511,7 +2511,7 @@ LdrpAttachProcess(VOID)
    Entry = ModuleListHead->Flink;
    while (Entry != ModuleListHead)
      {
-       Module = CONTAINING_RECORD(Entry, LDR_MODULE, InInitializationOrderModuleList);
+       Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
        if (!(Module->Flags & (LOAD_IN_PROGRESS|UNLOAD_IN_PROGRESS|ENTRY_PROCESSED)))
          {
            Module->Flags |= LOAD_IN_PROGRESS;
@@ -2560,7 +2560,7 @@ LdrpAttachThread (VOID)
 {
   PLIST_ENTRY ModuleListHead;
   PLIST_ENTRY Entry;
-  PLDR_MODULE Module;
+  PLDR_DATA_TABLE_ENTRY Module;
   NTSTATUS Status;
 
   DPRINT("LdrpAttachThread() called for %wZ\n",
@@ -2577,7 +2577,7 @@ LdrpAttachThread (VOID)
 
       while (Entry != ModuleListHead)
         {
-          Module = CONTAINING_RECORD(Entry, LDR_MODULE, InInitializationOrderModuleList);
+          Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
           if (Module->Flags & PROCESS_ATTACH_CALLED &&
               !(Module->Flags & DONT_CALL_FOR_THREAD) &&
               !(Module->Flags & UNLOAD_IN_PROGRESS))
@@ -2590,7 +2590,7 @@ LdrpAttachThread (VOID)
         }
 
       Entry = NtCurrentPeb()->Ldr->InLoadOrderModuleList.Flink;
-      Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
+      Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
       LdrpTlsCallback(Module, DLL_THREAD_ATTACH);
     }
 
@@ -2610,7 +2610,7 @@ LdrShutdownThread (VOID)
 {
    PLIST_ENTRY ModuleListHead;
    PLIST_ENTRY Entry;
-   PLDR_MODULE Module;
+   PLDR_DATA_TABLE_ENTRY Module;
 
    DPRINT("LdrShutdownThread() called for %wZ\n",
           &ExeModule->BaseDllName);
@@ -2621,7 +2621,7 @@ LdrShutdownThread (VOID)
    Entry = ModuleListHead->Blink;
    while (Entry != ModuleListHead)
      {
-       Module = CONTAINING_RECORD(Entry, LDR_MODULE, InInitializationOrderModuleList);
+       Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
 
        if (Module->Flags & PROCESS_ATTACH_CALLED &&
            !(Module->Flags & DONT_CALL_FOR_THREAD) &&
@@ -2670,7 +2670,7 @@ LdrQueryProcessModuleInformation(IN PMODULE_INFORMATION ModuleInformation OPTION
 {
   PLIST_ENTRY ModuleListHead;
   PLIST_ENTRY Entry;
-  PLDR_MODULE Module;
+  PLDR_DATA_TABLE_ENTRY Module;
   PDEBUG_MODULE_INFORMATION ModulePtr = NULL;
   NTSTATUS Status = STATUS_SUCCESS;
   ULONG UsedSize = sizeof(ULONG);
@@ -2697,7 +2697,7 @@ LdrQueryProcessModuleInformation(IN PMODULE_INFORMATION ModuleInformation OPTION
 
   while (Entry != ModuleListHead)
     {
-      Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
+      Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
 
       DPRINT("  Module %wZ\n",
              &Module->FullDllName);
@@ -2709,8 +2709,8 @@ LdrQueryProcessModuleInformation(IN PMODULE_INFORMATION ModuleInformation OPTION
       else if (ModuleInformation != NULL)
         {
           ModulePtr->Reserved[0] = ModulePtr->Reserved[1] = 0;      // FIXME: ??
-          ModulePtr->Base = Module->BaseAddress;
-          ModulePtr->Size = Module->ResidentSize;
+          ModulePtr->Base = Module->DllBase;
+          ModulePtr->Size = Module->SizeOfImage;
           ModulePtr->Flags = Module->Flags;
           ModulePtr->Index = 0;      // FIXME: index ??
           ModulePtr->Unknown = 0;      // FIXME: ??

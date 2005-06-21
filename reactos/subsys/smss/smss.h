@@ -3,6 +3,7 @@
 
 #include <windows.h>
 #define NTOS_MODE_USER
+#define READY_FOR_NEW_NTDLL
 #include <ndk/ntndk.h>
 
 #include <rosrtl/string.h>

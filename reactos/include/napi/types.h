@@ -6,7 +6,7 @@
 /*
  * General type for status information
  */
-
+#ifndef __USE_W32API
 typedef enum _NT_PRODUCT_TYPE
 {
    NtProductWinNt = 1,

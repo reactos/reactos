@@ -101,7 +101,7 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
 {
   PROCESS_BASIC_INFORMATION pbiInfo;
   PPEB_LDR_DATA ppldLdrData;
-  LDR_MODULE lmModule;
+  LDR_DATA_TABLE_ENTRY lmModule;
   PLIST_ENTRY pleListHead;
   PLIST_ENTRY pleCurEntry;
 
@@ -178,9 +178,9 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
 
    /* read the current module */
    Status = NtReadVirtualMemory ( ProcessHandle,
-            CONTAINING_RECORD(pleCurEntry, LDR_MODULE, InLoadOrderModuleList),
+            CONTAINING_RECORD(pleCurEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList),
                                  &lmModule,
-                                 sizeof(LDR_MODULE),
+                                 sizeof(LDR_DATA_TABLE_ENTRY),
                                  NULL );
 
    /* Import module name from remote Process user space. */
@@ -210,8 +210,8 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
       else if (ModuleInformation != NULL)
         {
           ModulePtr->Reserved[0] = ModulePtr->Reserved[1] = 0;      // FIXME: ??
-          ModulePtr->Base        = lmModule.BaseAddress;
-          ModulePtr->Size        = lmModule.ResidentSize;
+          ModulePtr->Base        = lmModule.DllBase;
+          ModulePtr->Size        = lmModule.SizeOfImage;
           ModulePtr->Flags       = lmModule.Flags;
           ModulePtr->Index       = 0;      // FIXME:  ??
           ModulePtr->Unknown     = 0;      // FIXME: ??

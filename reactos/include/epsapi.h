@@ -25,10 +25,8 @@
 #ifndef __EPSAPI_H_INCLUDED__
 #define __EPSAPI_H_INCLUDED__
 
-/* INCLUDES */
-#include <ntdll/ldr.h> /* FIXME: USE LDR_DATA_TABLE_ENTRY */
-
-/* OBJECTS */
+/* Remove soon */
+#include <ntdll/ldr.h>
 
 /* TYPES */
 typedef NTSTATUS (NTAPI *PPROC_ENUM_ROUTINE)(IN PSYSTEM_PROCESS_INFORMATION CurrentProcess,
@@ -41,7 +39,7 @@ typedef NTSTATUS (NTAPI *PSYSMOD_ENUM_ROUTINE)(IN PSYSTEM_MODULE_INFORMATION_ENT
                                                IN OUT PVOID CallbackContext);
 
 typedef NTSTATUS (NTAPI *PPROCMOD_ENUM_ROUTINE)(IN HANDLE ProcessHandle,
-                                                IN PLDR_MODULE CurrentModule,
+                                                IN PLDR_DATA_TABLE_ENTRY CurrentModule,
                                                 IN OUT PVOID CallbackContext);
 
 /* CONSTANTS */

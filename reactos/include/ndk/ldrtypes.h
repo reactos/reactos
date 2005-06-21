@@ -43,6 +43,7 @@ typedef struct _PEB_LDR_DATA
     PVOID               EntryInProgress;
 } PEB_LDR_DATA, *PPEB_LDR_DATA;
 
+#if 0
 typedef struct _LDR_DATA_TABLE_ENTRY
 {
     LIST_ENTRY InLoadOrderModuleList;
@@ -63,6 +64,7 @@ typedef struct _LDR_DATA_TABLE_ENTRY
     PVOID LoadedImports;
     PVOID EntryPointActivationContext;
 } LDR_DATA_TABLE_ENTRY, *PLDR_DATA_TABLE_ENTRY;
+#endif
 
 typedef struct _LDR_RESOURCE_INFO 
 {

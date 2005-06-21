@@ -49,7 +49,7 @@ PsaEnumerateProcessModules(IN HANDLE ProcessHandle,
  
       while(Current != ListHead)
       {
-        PLDR_MODULE LoaderModule = CONTAINING_RECORD(Current, LDR_MODULE, InLoadOrderModuleList);
+        PLDR_DATA_TABLE_ENTRY LoaderModule = CONTAINING_RECORD(Current, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
    
         /* return the current module to the callback */
         Status = Callback(ProcessHandle, LoaderModule, CallbackContext);
@@ -73,7 +73,7 @@ PsaEnumerateProcessModules(IN HANDLE ProcessHandle,
   {
     PROCESS_BASIC_INFORMATION BasicInformation;
     PPEB_LDR_DATA LoaderData;
-    LDR_MODULE LoaderModule;
+    LDR_DATA_TABLE_ENTRY LoaderModule;
     PLIST_ENTRY ListHead, Current;
  
     /* query the process basic information (includes the PEB address) */
@@ -116,7 +116,7 @@ PsaEnumerateProcessModules(IN HANDLE ProcessHandle,
     {
       /* read the current module */
       Status = NtReadVirtualMemory(ProcessHandle,
-                                   CONTAINING_RECORD(Current, LDR_MODULE, InLoadOrderModuleList),
+                                   CONTAINING_RECORD(Current, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList),
                                    &LoaderModule,
                                    sizeof(LoaderModule),
                                    NULL);

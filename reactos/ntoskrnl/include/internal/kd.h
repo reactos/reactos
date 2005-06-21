@@ -18,7 +18,7 @@ struct _KD_DISPATCH_TABLE;
 #if defined(KDBG) || defined(DBG)
 
 VOID
-KdbSymLoadUserModuleSymbols(IN PLDR_MODULE LdrModule);
+KdbSymLoadUserModuleSymbols(IN PLDR_DATA_TABLE_ENTRY LdrModule);
 
 VOID
 KdbSymFreeProcessSymbols(IN PEPROCESS Process);
