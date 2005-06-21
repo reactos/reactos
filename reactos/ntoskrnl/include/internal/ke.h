@@ -224,13 +224,13 @@ struct _KEXCEPTION_FRAME;
 
 /* MACROS *************************************************************************/
 
-#define KeEnterCriticalRegion(X) \
+#define KeEnterCriticalRegion() \
 { \
     PKTHREAD _Thread = KeGetCurrentThread(); \
     if (_Thread) _Thread->KernelApcDisable--; \
 }
 
-#define KeLeaveCriticalRegion(X) \
+#define KeLeaveCriticalRegion() \
 { \
     PKTHREAD _Thread = KeGetCurrentThread(); \
     if((_Thread) && (++_Thread->KernelApcDisable == 0)) \
@@ -354,8 +354,8 @@ extern PLOADER_MODULE CachedModules[MaximumCachedModuleType];
 VOID STDCALL
 DbgBreakPointNoBugCheck(VOID);
 
-STDCALL
 VOID
+STDCALL
 KeInitializeProfile(struct _KPROFILE* Profile,
                     struct _KPROCESS* Process,
                     PVOID ImageBase,
@@ -364,21 +364,21 @@ KeInitializeProfile(struct _KPROFILE* Profile,
                     KPROFILE_SOURCE ProfileSource,
                     KAFFINITY Affinity);
 
-STDCALL
 VOID
+STDCALL
 KeStartProfile(struct _KPROFILE* Profile,
                PVOID Buffer);
 
-STDCALL
 VOID
+STDCALL
 KeStopProfile(struct _KPROFILE* Profile);
 
-STDCALL
 ULONG
+STDCALL
 KeQueryIntervalProfile(KPROFILE_SOURCE ProfileSource);
 
-STDCALL
 VOID
+STDCALL
 KeSetIntervalProfile(KPROFILE_SOURCE ProfileSource,
                      ULONG Interval);
 

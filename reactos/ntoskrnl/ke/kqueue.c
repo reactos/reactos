@@ -245,8 +245,8 @@ KeRemoveByKeyDeviceQueue (IN PKDEVICE_QUEUE DeviceQueue,
 /*
  * @unimplemented
  */
-STDCALL
 PKDEVICE_QUEUE_ENTRY
+STDCALL
 KeRemoveByKeyDeviceQueueIfBusy(IN PKDEVICE_QUEUE DeviceQueue,
                                IN ULONG SortKey)
 {

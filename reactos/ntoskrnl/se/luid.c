@@ -39,7 +39,7 @@ ExpAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
   /* atomically increment the luid */
   do
   {
-    PrevLuid = (volatile LARGE_INTEGER)LuidValue;
+    PrevLuid = LuidValue;
     NewLuid = RtlLargeIntegerAdd(PrevLuid,
                                  LuidIncrement);
   } while(ExfInterlockedCompareExchange64(&LuidValue.QuadPart,

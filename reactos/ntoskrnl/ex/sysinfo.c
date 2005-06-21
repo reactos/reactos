@@ -835,6 +835,10 @@ ObpGetNextHandleByProcessCount(PSYSTEM_HANDLE_TABLE_ENTRY_INFO pshi,
 /* Class 16 - Handle Information */
 QSI_DEF(SystemHandleInformation)
 {
+	PEPROCESS pr, syspr;
+	int curSize, i = 0;
+	ULONG hCount = 0;
+
         PSYSTEM_HANDLE_INFORMATION Shi =
         	(PSYSTEM_HANDLE_INFORMATION) Buffer;
 
@@ -847,10 +851,6 @@ QSI_DEF(SystemHandleInformation)
 	}
 
 	DPRINT("SystemHandleInformation 1\n");
-
-	PEPROCESS pr, syspr;
-	int curSize, i = 0;
-	ULONG hCount = 0;
 
         /* First Calc Size from Count. */
         syspr = PsGetNextProcess(NULL);
@@ -937,6 +937,7 @@ QSI_DEF(SystemObjectInformation)
 /* Class 18 -  Information */
 QSI_DEF(SystemPageFileInformation)
 {
+	UNICODE_STRING FileName; /* FIXME */
 	SYSTEM_PAGEFILE_INFORMATION *Spfi = (SYSTEM_PAGEFILE_INFORMATION *) Buffer;
 
 	if (Size < sizeof (SYSTEM_PAGEFILE_INFORMATION))
@@ -945,7 +946,6 @@ QSI_DEF(SystemPageFileInformation)
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 
-	UNICODE_STRING FileName; /* FIXME */
 	RtlInitUnicodeString(&FileName, NULL); /* FIXME */
 
 	/* FIXME */

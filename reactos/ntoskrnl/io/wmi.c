@@ -19,8 +19,8 @@
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoWMIRegistrationControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN ULONG Action
@@ -33,8 +33,8 @@ IoWMIRegistrationControl(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoWMIAllocateInstanceIds(
     IN GUID *Guid,
     IN ULONG InstanceCount,
@@ -48,8 +48,8 @@ IoWMIAllocateInstanceIds(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoWMISuggestInstanceName(
     IN PDEVICE_OBJECT PhysicalDeviceObject OPTIONAL,
     IN PUNICODE_STRING SymbolicLinkName OPTIONAL,
@@ -64,8 +64,8 @@ IoWMISuggestInstanceName(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoWMIWriteEvent(
     IN PVOID WnodeEventItem
     )
@@ -77,8 +77,8 @@ IoWMIWriteEvent(
 /*
  * @unimplemented
  */
-STDCALL
-NTSTATUS IoWMIOpenBlock(
+NTSTATUS
+STDCALL IoWMIOpenBlock(
     IN GUID *DataBlockGuid,
     IN ULONG DesiredAccess,
     OUT PVOID *DataBlockObject
@@ -91,8 +91,8 @@ NTSTATUS IoWMIOpenBlock(
 /*
  * @unimplemented
  */
-STDCALL
-NTSTATUS IoWMIQueryAllData(
+NTSTATUS
+STDCALL IoWMIQueryAllData(
     IN PVOID DataBlockObject,
     IN OUT ULONG *InOutBufferSize,
     OUT PVOID OutBuffer
@@ -105,8 +105,8 @@ NTSTATUS IoWMIQueryAllData(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoWMIQueryAllDataMultiple(
     IN PVOID *DataBlockObjectList,
     IN ULONG ObjectCount,
@@ -121,8 +121,8 @@ IoWMIQueryAllDataMultiple(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoWMIQuerySingleInstance(
     IN PVOID DataBlockObject,
     IN PUNICODE_STRING InstanceName,
@@ -137,8 +137,8 @@ IoWMIQuerySingleInstance(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoWMIQuerySingleInstanceMultiple(
     IN PVOID *DataBlockObjectList,
     IN PUNICODE_STRING InstanceNames,
@@ -154,8 +154,8 @@ IoWMIQuerySingleInstanceMultiple(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoWMISetSingleInstance(
     IN PVOID DataBlockObject,
     IN PUNICODE_STRING InstanceName,
@@ -171,8 +171,8 @@ IoWMISetSingleInstance(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoWMISetSingleItem(
     IN PVOID DataBlockObject,
     IN PUNICODE_STRING InstanceName,
@@ -189,8 +189,8 @@ IoWMISetSingleItem(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoWMIExecuteMethod(
     IN PVOID DataBlockObject,
     IN PUNICODE_STRING InstanceName,
@@ -207,8 +207,8 @@ IoWMIExecuteMethod(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoWMISetNotificationCallback(
     IN PVOID Object,
     IN WMI_NOTIFICATION_CALLBACK Callback,
@@ -222,8 +222,8 @@ IoWMISetNotificationCallback(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoWMIHandleToInstanceName(
     IN PVOID DataBlockObject,
     IN HANDLE FileHandle,
@@ -237,8 +237,8 @@ IoWMIHandleToInstanceName(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoWMIDeviceObjectToInstanceName(
     IN PVOID DataBlockObject,
     IN PDEVICE_OBJECT DeviceObject,

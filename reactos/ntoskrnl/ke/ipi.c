@@ -89,7 +89,7 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
 #endif
          }
       }
-      ((VOID STDCALL(*)(PVOID))(Prcb->SignalDone->WorkerRoutine))(Prcb->SignalDone->CurrentPacket[0]);
+      ((VOID (STDCALL*)(PVOID))(Prcb->SignalDone->WorkerRoutine))(Prcb->SignalDone->CurrentPacket[0]);
       Ke386TestAndClearBit(KeGetCurrentProcessorNumber(), &Prcb->SignalDone->TargetSet);
       if (InterlockedCompareExchangeUL(&Prcb->SignalDone->CurrentPacket[2], 0, 0))
       {
@@ -116,7 +116,7 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
 
 VOID
 STDCALL
-KiIpiSendPacket(ULONG TargetSet, VOID STDCALL (*WorkerRoutine)(PVOID), PVOID Argument, ULONG Count, BOOLEAN Synchronize)
+KiIpiSendPacket(ULONG TargetSet, VOID (STDCALL*WorkerRoutine)(PVOID), PVOID Argument, ULONG Count, BOOLEAN Synchronize)
 {
     ULONG i, Processor, CurrentProcessor;
     PKPRCB Prcb, CurrentPrcb;

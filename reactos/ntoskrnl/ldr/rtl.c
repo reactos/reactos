@@ -17,8 +17,6 @@
 
 /* FUNCTIONS ****************************************************************/
 
-#define RVA(m, b) ((ULONG)b + m)
-
 NTSTATUS STDCALL
 LdrGetProcedureAddress (IN PVOID BaseAddress,
                         IN PANSI_STRING Name,

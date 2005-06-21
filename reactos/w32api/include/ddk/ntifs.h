@@ -585,7 +585,7 @@ typedef struct _KAPC_STATE {
     BOOLEAN     KernelApcInProgress;
     BOOLEAN     KernelApcPending;
     BOOLEAN     UserApcPending;
-} KAPC_STATE, *PKAPC_STATE, *__restrict PRKAPC_STATE;
+} KAPC_STATE, *PKAPC_STATE, *RESTRICTED_POINTER PRKAPC_STATE;
 
 #if (VER_PRODUCTBUILD >= 2600)
 
@@ -2291,15 +2291,15 @@ FsRtlCheckLockForWriteAccess (
 );
 
 typedef
-VOID NTAPI
-(*POPLOCK_WAIT_COMPLETE_ROUTINE) (
+VOID
+(NTAPI*POPLOCK_WAIT_COMPLETE_ROUTINE) (
     IN PVOID    Context,
     IN PIRP     Irp
 );
 
 typedef
-VOID NTAPI
-(*POPLOCK_FS_PREPOST_IRP) (
+VOID
+(NTAPI*POPLOCK_FS_PREPOST_IRP) (
     IN PVOID    Context,
     IN PIRP     Irp
 );

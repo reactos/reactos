@@ -15,16 +15,16 @@
 
 /* DATA ********************************************************************/
 
-POBJECT_TYPE EXPORTED IoDeviceObjectType = NULL;
-POBJECT_TYPE EXPORTED IoFileObjectType = NULL;
+POBJECT_TYPE IoDeviceObjectType = NULL;
+POBJECT_TYPE IoFileObjectType = NULL;
 extern POBJECT_TYPE IoControllerObjectType;
-ULONG         EXPORTED IoReadOperationCount = 0;
-LARGE_INTEGER EXPORTED IoReadTransferCount = {{0, 0}};
-ULONG         EXPORTED IoWriteOperationCount = 0;
-LARGE_INTEGER EXPORTED IoWriteTransferCount = {{0, 0}};
-ULONG                  IoOtherOperationCount = 0;
-LARGE_INTEGER          IoOtherTransferCount = {{0, 0}};
-KSPIN_LOCK    EXPORTED IoStatisticsLock = 0;
+ULONG IoReadOperationCount = 0;
+LARGE_INTEGER IoReadTransferCount = {{0, 0}};
+ULONG IoWriteOperationCount = 0;
+LARGE_INTEGER IoWriteTransferCount = {{0, 0}};
+ULONG IoOtherOperationCount = 0;
+LARGE_INTEGER IoOtherTransferCount = {{0, 0}};
+KSPIN_LOCK IoStatisticsLock = 0;
 
 GENERIC_MAPPING IopFileMapping = {
     FILE_GENERIC_READ,

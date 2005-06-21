@@ -910,7 +910,7 @@ LdrPEProcessModule(
             Protect = PAGE_EXECUTE_READWRITE;
         }
 #endif
-        if (PageAddress < DriverBase + DriverSize)
+        if (PageAddress < RVA(DriverBase, DriverSize))
         {
             MmSetPageProtect(NULL, PageAddress, Protect);
         }
@@ -937,14 +937,14 @@ LdrPEProcessModule(
         PageAddress = (PVOID)((ULONG_PTR)PageAddress + PAGE_SIZE);
         while ((ULONG_PTR)PageAddress + PAGE_SIZE < (ULONG_PTR)BaseAddress + Length)
         {
-            if (PageAddress < DriverBase + DriverSize)
+            if (PageAddress < RVA(DriverBase, DriverSize))
             {
                 MmSetPageProtect(NULL, PageAddress, Protect);
             }
             PageAddress = (PVOID)((ULONG_PTR)PageAddress + PAGE_SIZE);
         }
         if (PageAddress < (PVOID)((ULONG_PTR)BaseAddress + Length) &&
-            PageAddress < DriverBase + DriverSize)
+            PageAddress < RVA(DriverBase, DriverSize))
         {
             Protect = LdrLookupPageProtection(PageAddress, DriverBase, &PENtHeaders->FileHeader, PESectionHeaders);
             MmSetPageProtect(NULL, PageAddress, Protect);
@@ -1214,20 +1214,20 @@ LdrPEPerformRelocations (
     Delta = (ULONG_PTR)DriverBase - NtHeaders->OptionalHeader.ImageBase;
     RelocationDir = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)DriverBase + RelocationDDir->VirtualAddress);
     RelocationEnd = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)RelocationDir + RelocationDDir->Size);
-    MaxAddress = DriverBase + DriverSize;
+    MaxAddress = RVA(DriverBase, DriverSize);
 
     while (RelocationDir < RelocationEnd &&
         RelocationDir->SizeOfBlock > 0)
     {
         Count = (RelocationDir->SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) / sizeof(USHORT);
-        Address = DriverBase + RelocationDir->VirtualAddress;
+        Address = RVA(DriverBase, RelocationDir->VirtualAddress);
         TypeOffset = (PUSHORT)(RelocationDir + 1);
 
         for (i = 0; i < Count; i++)
         {
             Offset = *TypeOffset & 0xFFF;
             Type = *TypeOffset >> 12;
-            ShortPtr = (PUSHORT)(Address + Offset);
+            ShortPtr = (PUSHORT)(RVA(Address, Offset));
 
             /* Don't relocate after the end of the loaded driver */
             if ((PVOID)ShortPtr >= MaxAddress)
@@ -1276,6 +1276,9 @@ LdrPEPerformRelocations (
 
     return STATUS_SUCCESS;
 }
+#ifndef PATH_MAX
+#define PATH_MAX 260
+#endif
 
 static NTSTATUS
 LdrPEGetOrLoadModule (
@@ -1552,16 +1555,16 @@ LdrPEProcessImportDirectoryEntry(
     }
 
     /* Get the import address list. */
-    ImportAddressList = (PVOID*)(DriverBase + (ULONG_PTR)ImportModuleDirectory->FirstThunk);
+    ImportAddressList = (PVOID*)RVA(DriverBase, ImportModuleDirectory->FirstThunk);
 
     /* Get the list of functions to import. */
     if (ImportModuleDirectory->OriginalFirstThunk != 0)
     {
-        FunctionNameList = (PULONG) (DriverBase + (ULONG_PTR)ImportModuleDirectory->OriginalFirstThunk);
+        FunctionNameList = (PULONG)RVA(DriverBase, ImportModuleDirectory->OriginalFirstThunk);
     }
     else
     {
-        FunctionNameList = (PULONG)(DriverBase + (ULONG_PTR)ImportModuleDirectory->FirstThunk);
+        FunctionNameList = (PULONG)RVA(DriverBase, ImportModuleDirectory->FirstThunk);
     }
 
     /* Walk through function list and fixup addresses. */

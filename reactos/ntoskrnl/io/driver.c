@@ -337,8 +337,8 @@ INIT_FUNCTION
 IopDisplayLoadingMessage(PVOID ServiceName, 
                          BOOLEAN Unicode)
 {
-    if (SetupMode) return;
     CHAR TextBuffer[256];
+    if (SetupMode) return;
     if (Unicode) 
     {
         sprintf(TextBuffer, "Loading %S...\n", (PWCHAR)ServiceName);

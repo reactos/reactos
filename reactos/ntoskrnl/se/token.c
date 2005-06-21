@@ -1820,17 +1820,19 @@ SepCreateSystemProcessToken(VOID)
   NTSTATUS Status;
   ULONG uSize;
   ULONG i;
+  ULONG uLocalSystemLength;
+  ULONG uWorldLength;
+  ULONG uAuthUserLength;
+  ULONG uAdminsLength;
+  PTOKEN AccessToken;
+  PVOID SidArea;
 
   PAGED_CODE();
 
-  ULONG uLocalSystemLength = RtlLengthSid(SeLocalSystemSid);
-  ULONG uWorldLength       = RtlLengthSid(SeWorldSid);
-  ULONG uAuthUserLength    = RtlLengthSid(SeAuthenticatedUserSid);
-  ULONG uAdminsLength      = RtlLengthSid(SeAliasAdminsSid);
-
-  PTOKEN AccessToken;
-
-  PVOID SidArea;
+  uLocalSystemLength = RtlLengthSid(SeLocalSystemSid);
+  uWorldLength       = RtlLengthSid(SeWorldSid);
+  uAuthUserLength    = RtlLengthSid(SeAuthenticatedUserSid);
+  uAdminsLength      = RtlLengthSid(SeAliasAdminsSid);
 
  /*
   * Initialize the token

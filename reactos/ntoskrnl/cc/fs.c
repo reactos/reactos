@@ -39,9 +39,8 @@ CcGetDirtyPages (
 	IN	PVOID			Context2
 	)
 {
-	UNIMPLEMENTED;
-
 	LARGE_INTEGER i;
+	UNIMPLEMENTED;
 	i.QuadPart = 0;
 	return i;
 }
@@ -69,9 +68,8 @@ CcGetLsnForFileObject (
 	OUT	PLARGE_INTEGER	OldestLsn OPTIONAL
 	)
 {
-	UNIMPLEMENTED;
-
 	LARGE_INTEGER i;
+	UNIMPLEMENTED;
 	i.QuadPart = 0;
 	return i;
 }

@@ -619,13 +619,6 @@ IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
             }
 
             /* Probe and Lock */
-            _SEH_FILTER(FreeAndGoOn)
-            {
-                /* Free the IRP and its MDL */
-                IoFreeMdl(Irp->MdlAddress);
-                IoFreeIrp(Irp);
-                return EXCEPTION_CONTINUE_SEARCH;
-             }
             _SEH_TRY
             {
                 /* Do the probe */

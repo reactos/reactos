@@ -3,6 +3,9 @@
 #if __GNUC__ >=3
 #pragma GCC system_header
 #endif
+ 
+/* TODO: some compilers support this */
+#define RESTRICTED_POINTER
 
 #define NTAPI __stdcall
 #define OBJ_INHERIT          0x00000002

@@ -16,7 +16,7 @@
 
 /* GLOBALS ******************************************************************/
 
-PSE_EXPORTS EXPORTED SeExports = NULL;
+PSE_EXPORTS SeExports = NULL;
 SE_EXPORTS SepExports;
 
 static ERESOURCE SepSubjectContextLock;

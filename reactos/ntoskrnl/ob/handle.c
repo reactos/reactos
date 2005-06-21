@@ -60,8 +60,8 @@ static VOID
 ObpDecrementHandleCount(PVOID ObjectBody)
 {
   POBJECT_HEADER ObjectHeader = BODY_TO_HEADER(ObjectBody);
-  DPRINT("Header: %x\n", ObjectHeader);
   LONG NewHandleCount = InterlockedDecrement(&ObjectHeader->HandleCount);
+  DPRINT("Header: %x\n", ObjectHeader);
   DPRINT("NewHandleCount: %x\n", NewHandleCount);
   DPRINT("HEADER_TO_OBJECT_NAME: %x\n", HEADER_TO_OBJECT_NAME(ObjectHeader));
 
@@ -1008,14 +1008,14 @@ ObInsertObject(IN PVOID Object,
     if (FoundHeader && FoundHeader->Type == ObDirectoryType &&
         RemainingPath.Buffer)
     {
-        ObpAddEntryDirectory(FoundObject, Header, NULL);
-        ObjectAttached = TRUE;
-        
         /* The name was changed so let's update it */
         /* FIXME: TEMPORARY HACK This will go in ObFindObject in the next commit */
         PVOID NewName;
         PWSTR BufferPos = RemainingPath.Buffer;
         ULONG Delta = 0;
+        
+        ObpAddEntryDirectory(FoundObject, Header, NULL);
+        ObjectAttached = TRUE;
         
         ObjectNameInfo = HEADER_TO_OBJECT_NAME(Header);
         

@@ -189,8 +189,7 @@ KeCreateApplicationProcessorIdleThread(ULONG Id);
 
 typedef
 VOID
-STDCALL
-(*PKSYSTEM_ROUTINE)(PKSTART_ROUTINE StartRoutine,
+(STDCALL*PKSYSTEM_ROUTINE)(PKSTART_ROUTINE StartRoutine,
                     PVOID StartContext);
 
 VOID
@@ -215,7 +214,7 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
 #define LOCK "lock ; "
 #else
 #define LOCK ""
-#define KeGetCurrentIrql(X) (((PKPCR)KPCR_BASE)->Irql)
+#define KeGetCurrentIrql() (((PKPCR)KPCR_BASE)->Irql)
 #endif
 
 #if defined(__GNUC__)

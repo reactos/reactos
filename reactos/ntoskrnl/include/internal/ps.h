@@ -160,7 +160,7 @@ typedef struct _ETHREAD
            ULONG                   OwnsSessionWorkingSetShared:1;
            ULONG                   ApcNeeded:1;
         };
-        ULONG                      SameThreadPassiveFlags;      /* 248 */
+        ULONG                      SameThreadApcFlags;          /* 248 */
     };
     UCHAR                          ForwardClusterOnly;          /* 24C */
     UCHAR                          DisablePageFaultClustering;  /* 24D */
