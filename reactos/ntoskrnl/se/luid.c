@@ -34,8 +34,7 @@ SepInitLuid(VOID)
 NTSTATUS
 ExpAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
 {
-  LARGE_INTEGER NewLuid;
-  volatile LARGE_INTEGER PrevLuid;
+  LARGE_INTEGER NewLuid, PrevLuid;
 
   /* atomically increment the luid */
   do

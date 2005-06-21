@@ -173,7 +173,7 @@ PsInitProcessManagment(VOID)
 				ProcessObject,
 				sizeof(EPROCESS),
 				FALSE);
-   PsIdleProcess->Pcb.DirectoryTableBase.QuadPart = MmGetPageDirectory();
+   PsIdleProcess->Pcb.DirectoryTableBase.QuadPart = (ULONG_PTR)MmGetPageDirectory();
    strcpy(PsIdleProcess->ImageFileName, "Idle");
 
    /*

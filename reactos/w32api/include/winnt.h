@@ -2039,7 +2039,10 @@ typedef union _ULARGE_INTEGER {
 #endif /* NONAMELESSUNION */
   ULONGLONG QuadPart;
 } ULARGE_INTEGER, *PULARGE_INTEGER;
-typedef LARGE_INTEGER LUID,*PLUID;
+typedef struct _LUID {
+    DWORD LowPart;
+    LONG HighPart;
+} LUID, *PLUID;
 #pragma pack(push,4)
 typedef struct _LUID_AND_ATTRIBUTES {
 	LUID   Luid;
