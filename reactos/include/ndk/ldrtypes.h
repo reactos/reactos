@@ -19,6 +19,15 @@
 #define RESOURCE_LANGUAGE_LEVEL  2
 #define RESOURCE_DATA_LEVEL      3
 
+/* FIXME: USE CORRRECT LDR_ FLAGS */
+#define IMAGE_DLL		0x00000004
+#define LOAD_IN_PROGRESS	0x00001000
+#define UNLOAD_IN_PROGRESS	0x00002000
+#define ENTRY_PROCESSED		0x00004000
+#define DONT_CALL_FOR_THREAD	0x00040000
+#define PROCESS_ATTACH_CALLED	0x00080000
+#define IMAGE_NOT_AT_BASE	0x00200000
+
 /* ENUMERATIONS **************************************************************/
 
 /* TYPES *********************************************************************/             
@@ -34,8 +43,26 @@ typedef struct _PEB_LDR_DATA
     PVOID               EntryInProgress;
 } PEB_LDR_DATA, *PPEB_LDR_DATA;
 
-/* FIXME: Update with _LDR_DATA_TABLE_ENTRY and LDR_ flags */
-//typedef struct _LDR_MODULE
+typedef struct _LDR_DATA_TABLE_ENTRY
+{
+    LIST_ENTRY InLoadOrderModuleList;
+    LIST_ENTRY InMemoryOrderModuleList;
+    LIST_ENTRY InInitializationOrderModuleList;
+    PVOID DllBase;
+    PVOID EntryPoint;
+    ULONG SizeOfImage;
+    UNICODE_STRING FullDllName;
+    UNICODE_STRING BaseDllName;
+    ULONG Flags;
+    SHORT LoadCount; /* FIXME: HACK!!! FIX ASAP */
+    SHORT TlsIndex;  /* FIXME: HACK!!! FIX ASAP */
+    LIST_ENTRY HashLinks;
+    PVOID SectionPointer;
+    ULONG CheckSum;
+    ULONG TimeDateStamp;
+    PVOID LoadedImports;
+    PVOID EntryPointActivationContext;
+} LDR_DATA_TABLE_ENTRY, *PLDR_DATA_TABLE_ENTRY;
 
 typedef struct _LDR_RESOURCE_INFO 
 {

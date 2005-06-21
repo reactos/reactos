@@ -34,6 +34,9 @@
 #else
     /* User-Mode NDK */
     #include "umtypes.h"    /* Native Types in DDK/IFS but not in PSDK */
+    #ifdef READY_FOR_NEW_NTDLL /* This hack will be removed in the next commit */
+    #include "umfuncs.h"    /* User-Mode NT Library Functions */
+    #endif
 #endif
 
 /* Shared NDK */

@@ -204,19 +204,14 @@ RemoveTailList(
 }
 
 /*
- * Debug Functions 
+ * Error and Exception Functions
  */
-
-ULONG
-CDECL
-DbgPrint(
-    IN PCH  Format,
-    IN ...
-);
-
-VOID
+PVOID
 STDCALL
-DbgBreakPoint(VOID);
+RtlAddVectoredExceptionHandler(
+    IN ULONG FirstHandler,
+    IN PRTL_VECTORED_EXCEPTION_HANDLER VectoredHandler
+);
 
 VOID
 STDCALL
@@ -226,6 +221,14 @@ RtlAssert(
     ULONG LineNumber,
     PCHAR Message
 );
+
+PVOID
+STDCALL
+RtlEncodePointer(IN PVOID Pointer);
+
+PVOID
+STDCALL
+RtlDecodePointer(IN PVOID Pointer);
 
 ULONG
 STDCALL
@@ -271,6 +274,13 @@ RtlCreateHeap(
     IN PRTL_HEAP_DEFINITION Definition OPTIONAL
 );
 
+DWORD
+STDCALL
+RtlCompactHeap(
+    HANDLE heap,
+    DWORD flags
+);
+    
 HANDLE 
 STDCALL
 RtlDestroyHeap(HANDLE hheap);
@@ -283,6 +293,13 @@ RtlFreeHeap(
     IN PVOID P
 );
 
+ULONG
+STDCALL
+RtlGetProcessHeaps(
+    ULONG HeapCount,
+    HANDLE *HeapArray
+);
+    
 PVOID 
 STDCALL
 RtlReAllocateHeap(
@@ -1138,7 +1155,9 @@ RtlFillMemoryUlong(
                  
 /*
  * Process Management Functions
- */      
+ */
+/* FIXME: Some of these will be split up into enviro/path functions */
+
 VOID
 STDCALL
 RtlAcquirePebLock(VOID);
@@ -1224,6 +1243,41 @@ RtlExpandEnvironmentStrings_U(
     PULONG Length
 );
 
+BOOLEAN
+STDCALL
+RtlDoesFileExists_U(PWSTR FileName);
+
+ULONG
+STDCALL
+RtlDetermineDosPathNameType_U(PCWSTR Path);
+    
+ULONG
+STDCALL
+RtlDosSearchPath_U(
+    WCHAR *sp,
+    WCHAR *name,
+    WCHAR *ext,
+    ULONG buf_sz,
+    WCHAR *buffer,
+    WCHAR **shortname
+);
+    
+ULONG
+STDCALL
+RtlGetCurrentDirectory_U(
+    ULONG MaximumLength,
+    PWSTR Buffer
+);
+
+ULONG
+STDCALL
+RtlGetFullPathName_U(
+    const WCHAR *dosname,
+    ULONG size,
+    WCHAR *buf,
+    WCHAR **shortname
+);
+
 PRTL_USER_PROCESS_PARAMETERS
 STDCALL
 RtlNormalizeProcessParams(
@@ -1238,6 +1292,10 @@ RtlQueryEnvironmentVariable_U(
     PUNICODE_STRING Value
 );
 
+NTSTATUS
+STDCALL
+RtlSetCurrentDirectory_U(PUNICODE_STRING name);
+    
 NTSTATUS
 STDCALL
 RtlSetEnvironmentVariable(
@@ -1265,6 +1323,13 @@ NTSTATUS
 STDCALL
 RtlInitializeCriticalSection(
      PRTL_CRITICAL_SECTION CriticalSection
+);
+
+NTSTATUS 
+STDCALL
+RtlInitializeCriticalSectionAndSpinCount(
+    PRTL_CRITICAL_SECTION CriticalSection,
+    ULONG SpinCount
 );
 
 NTSTATUS
@@ -1308,6 +1373,28 @@ RtlGetCompressionWorkSpaceSize(
     OUT PULONG CompressFragmentWorkSpaceSize
 );
 
+/*
+ * Debug Info Functions
+ */
+PDEBUG_BUFFER 
+STDCALL
+RtlCreateQueryDebugBuffer(
+    IN ULONG Size,
+    IN BOOLEAN EventPair
+);
+
+NTSTATUS
+STDCALL
+RtlDestroyQueryDebugBuffer(IN PDEBUG_BUFFER DebugBuffer);
+
+NTSTATUS 
+STDCALL
+RtlQueryProcessDebugInformation(
+    IN ULONG ProcessId,
+    IN ULONG DebugInfoClassMask,
+    IN OUT PDEBUG_BUFFER DebugBuffer
+);
+                
 /*
  * Bitmap Functions
  */
@@ -1368,17 +1455,113 @@ RtlSetBits (
 );
 
 /*
- * PE Functions
+ * Timer Functions
  */
-NTSTATUS 
+NTSTATUS
 STDCALL
-LdrVerifyImageMatchesChecksum(
-    IN HANDLE FileHandle,
-    ULONG Unknown1,
-    ULONG Unknown2,
-    ULONG Unknown3
+RtlCreateTimer(
+    HANDLE TimerQueue,
+    PHANDLE phNewTimer, 
+    WAITORTIMERCALLBACKFUNC Callback,
+    PVOID Parameter,
+    DWORD DueTime,
+    DWORD Period,
+    ULONG Flags
 );
 
+NTSTATUS
+STDCALL
+RtlCreateTimerQueue(PHANDLE TimerQueue);
+
+NTSTATUS
+STDCALL
+RtlDeleteTimer(
+    HANDLE TimerQueue,
+    HANDLE Timer,
+    HANDLE CompletionEvent
+);
+
+NTSTATUS
+STDCALL
+RtlUpdateTimer(
+    HANDLE TimerQueue,
+    HANDLE Timer,
+    ULONG DueTime,
+    ULONG Period
+);
+
+NTSTATUS
+STDCALL
+RtlDeleteTimerQueueEx(
+    HANDLE TimerQueue,
+    HANDLE CompletionEvent
+);
+
+NTSTATUS
+STDCALL
+RtlDeleteTimerQueue(HANDLE TimerQueue);
+
+/*
+ * Debug Functions 
+ */
+ULONG
+CDECL
+DbgPrint(
+    IN PCH  Format,
+    IN ...
+);
+
+VOID
+STDCALL
+DbgBreakPoint(VOID);
+
+/*
+ * Handle Table Functions
+ */
+PRTL_HANDLE
+STDCALL
+RtlAllocateHandle (
+    IN	PRTL_HANDLE_TABLE	HandleTable,
+    IN OUT	PULONG			Index
+);
+
+VOID
+STDCALL
+RtlDestroyHandleTable (IN	PRTL_HANDLE_TABLE	HandleTable);
+
+BOOLEAN
+STDCALL
+RtlFreeHandle (
+    IN	PRTL_HANDLE_TABLE	HandleTable,
+    IN	PRTL_HANDLE		Handle
+);
+
+VOID
+STDCALL
+RtlInitializeHandleTable (
+    IN	ULONG			TableSize,
+    IN	ULONG			HandleSize,
+    IN	PRTL_HANDLE_TABLE	HandleTable
+);
+
+BOOLEAN
+STDCALL
+RtlIsValidHandle (
+    IN	PRTL_HANDLE_TABLE	HandleTable,
+    IN	PRTL_HANDLE		Handle
+);
+
+BOOLEAN
+STDCALL
+RtlIsValidIndexHandle (
+    IN	PRTL_HANDLE_TABLE	HandleTable,
+    IN OUT	PRTL_HANDLE		*Handle,
+    IN	ULONG			Index
+);
+    
+/*
+ * PE Functions
+ */
 NTSTATUS
 STDCALL
 RtlFindMessage(
@@ -1388,6 +1571,10 @@ RtlFindMessage(
     IN ULONG MessageId,
     OUT PRTL_MESSAGE_RESOURCE_ENTRY *MessageResourceEntry
 );
+
+ULONG 
+STDCALL
+RtlGetNtGlobalFlags(VOID);
               
 PVOID
 STDCALL

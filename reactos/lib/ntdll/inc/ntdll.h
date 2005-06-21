@@ -13,13 +13,18 @@
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
+/* NTDLL Headers FIXME: These will be gone imminently */
+#include <ntdll/ntdll.h>
+#include <ntdll/ldr.h>
+#include <ntdll/csr.h>
+
+/* Internal NTDLL */
+#include "ntdllp.h"
+
+/* CSRSS Header */
+#include <csrss/csrss.h>
+
 /* Helper Macros */
 #include <reactos/helper.h>
-
-/* NTDLL Public Headers. FIXME: Combine/clean these after NDK */
-#include <ntdll/csr.h>
-#include <ntdll/rtl.h>
-#include <ntdll/ldr.h>
-#include <ntdll/ntdll.h>
 
 /* EOF */

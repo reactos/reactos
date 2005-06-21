@@ -23,7 +23,6 @@
 
 /* FIXME: Clean this sh*t up */
 #include <ntdll/base.h>
-#include <ntdll/rtl.h>
 #include <ntdll/dbg.h>
 #include <ntdll/csr.h>
 #include <ntdll/ldr.h>
