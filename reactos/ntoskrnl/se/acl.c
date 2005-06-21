@@ -15,8 +15,8 @@
 
 /* GLOBALS ******************************************************************/
 
-PACL EXPORTED SePublicDefaultDacl = NULL;
-PACL EXPORTED SeSystemDefaultDacl = NULL;
+PACL SePublicDefaultDacl = NULL;
+PACL SeSystemDefaultDacl = NULL;
 
 PACL SePublicDefaultUnrestrictedDacl = NULL;
 PACL SePublicOpenDacl = NULL;

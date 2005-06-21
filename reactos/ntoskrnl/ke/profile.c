@@ -22,8 +22,8 @@ ULONG KiProfileTimeInterval = 78125; /* Default resolution 7.8ms (sysinternals) 
 
 /* FUNCTIONS *****************************************************************/
 
-STDCALL
 VOID
+STDCALL
 KeInitializeProfile(PKPROFILE Profile,
                     PKPROCESS Process,
                     PVOID ImageBase,
@@ -40,14 +40,14 @@ KeInitializeProfile(PKPROFILE Profile,
     Profile->Process = Process;
     Profile->RegionStart = ImageBase;
     Profile->BucketShift = BucketSize - 2; /* See ntinternals.net -- Alex */
-    Profile->RegionEnd = (PVOID)(ULONG_PTR)ImageBase + ImageSize;
+    Profile->RegionEnd = (PVOID)((ULONG_PTR)ImageBase + ImageSize);
     Profile->Active = FALSE;
     Profile->Source = ProfileSource;
     Profile->Affinity = Affinity;
 }
 
-STDCALL
 VOID
+STDCALL
 KeStartProfile(PKPROFILE Profile,
                PVOID Buffer)
 {
@@ -133,8 +133,8 @@ KeStartProfile(PKPROFILE Profile,
     if (!FreeBuffer) ExFreePool(SourceBuffer);
 }
 
-STDCALL
 VOID
+STDCALL
 KeStopProfile(PKPROFILE Profile)
 {
     KIRQL OldIrql;
@@ -178,8 +178,8 @@ KeStopProfile(PKPROFILE Profile)
     if (CurrentSource) ExFreePool(CurrentSource);
 }
 
-STDCALL
 ULONG
+STDCALL
 KeQueryIntervalProfile(KPROFILE_SOURCE ProfileSource)
 {
     /* Check if this is the timer profile */
@@ -200,8 +200,8 @@ KeQueryIntervalProfile(KPROFILE_SOURCE ProfileSource)
     }
 }
 
-STDCALL
 VOID
+STDCALL
 KeSetIntervalProfile(KPROFILE_SOURCE ProfileSource,
                      ULONG Interval)
 {
@@ -224,8 +224,8 @@ KeSetIntervalProfile(KPROFILE_SOURCE ProfileSource,
 /*
  * @implemented
  */
-STDCALL
 VOID
+STDCALL
 KeProfileInterrupt(PKTRAP_FRAME TrapFrame)
 {
     /* Called from HAL for Timer Profiling */
@@ -257,7 +257,7 @@ KiParseProfileList(IN PKTRAP_FRAME TrapFrame,
         }
 
         /* Get the Pointer to the Bucket Value representing this EIP */
-        BucketValue = (PULONG)(((ULONG_PTR)(Profile->Buffer +
+        BucketValue = (PULONG)((((ULONG_PTR)Profile->Buffer +
                                (TrapFrame->Eip - (ULONG_PTR)Profile->RegionStart))
                                 >> Profile->BucketShift) &~ 0x3);
 
@@ -276,8 +276,8 @@ KiParseProfileList(IN PKTRAP_FRAME TrapFrame,
  *         from the trap frame into the buffer, while using buckets and
  *         shifting like we specified. -- Alex
  */
-STDCALL
 VOID
+STDCALL
 KeProfileInterruptWithSource(IN PKTRAP_FRAME TrapFrame,
                              IN KPROFILE_SOURCE Source)
 {
@@ -291,8 +291,8 @@ KeProfileInterruptWithSource(IN PKTRAP_FRAME TrapFrame,
 /*
  * @implemented
  */
-STDCALL
 VOID
+STDCALL
 KeSetProfileIrql(IN KIRQL ProfileIrql)
 {
     /* Set the IRQL at which Profiling will run */

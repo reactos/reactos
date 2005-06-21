@@ -34,9 +34,9 @@ extern "C" {
 /*
 ** Definitions specific to this Device Driver Kit
 */
-#define DDKAPI __attribute__((stdcall))
-#define DDKFASTAPI __attribute__((fastcall))
-#define DDKCDECLAPI __attribute__((cdecl))
+#define DDKAPI __stdcall
+#define DDKFASTAPI __fastcall
+#define DDKCDECLAPI __cdecl
 
 #if defined(_NTOSKRNL_)
 #ifndef NTOSAPI
@@ -128,11 +128,15 @@ static __inline struct _KPCR * KeGetCurrentKPCR(
   VOID)
 {
   ULONG Value;
-
+#if defined(__GNUC__)
   __asm__ __volatile__ ("movl %%fs:0x1C, %0\n\t"
 	  : "=r" (Value)
     : /* no inputs */
   );
+#elif defined(_MSC_VER)
+  __asm mov eax, fs:[1Ch]
+  __asm mov [Value], eax
+#endif
   return (struct _KPCR *) Value;
 }
 
@@ -140,11 +144,15 @@ static __inline struct _KPRCB * KeGetCurrentPrcb(
   VOID)
 {
   ULONG Value;
-
+#if defined(__GNUC__)
   __asm__ __volatile__ ("movl %%fs:0x20, %0\n\t"
 	  : "=r" (Value)
     : /* no inputs */
   );
+#elif defined(_MSC_VER)
+  __asm mov eax, fs:[20h]
+  __asm mov [Value], eax
+#endif
   return (struct _KPRCB *) Value;
 }
 
@@ -4331,8 +4339,8 @@ typedef struct _DISK_SIGNATURE {
   } DUMMYUNIONNAME;
 } DISK_SIGNATURE, *PDISK_SIGNATURE;
 
-typedef VOID DDKFASTAPI
-(*PTIME_UPDATE_NOTIFY_ROUTINE)(
+typedef VOID
+(DDKFASTAPI*PTIME_UPDATE_NOTIFY_ROUTINE)(
   IN HANDLE  ThreadId,
   IN KPROCESSOR_MODE  Mode);
 
@@ -8088,7 +8096,11 @@ KeMemoryBarrier(
   VOID)
 {
   volatile LONG Barrier;
+#if defined(__GNUC__)
   __asm__ __volatile__ ("xchg %%eax, %0" : : "m" (Barrier) : "%eax");
+#elif defined(_MSC_VER)
+  __asm xchg [Barrier], eax
+#endif
 }
 
 NTOSAPI

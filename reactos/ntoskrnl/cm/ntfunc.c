@@ -121,8 +121,8 @@ CmpFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 	DPRINT("current %S\n",current);
 	CurrentHeader = BODY_TO_HEADER(CurrentObject);
 
-	DPRINT("Current ObjectType %wZ\n",
-	       &CurrentHeader->Type->TypeName);
+	/*DPRINT("Current ObjectType %wZ\n",
+	       &CurrentHeader->Type->TypeName);*/ /* ROX-U */
 
 	if (CurrentHeader->Type->TypeInfo.ParseProcedure == NULL)
 	  {

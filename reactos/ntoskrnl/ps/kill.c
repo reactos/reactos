@@ -24,8 +24,8 @@ extern FAST_MUTEX PspActiveProcessMutex;
 
 /* FUNCTIONS *****************************************************************/
 
-STDCALL
 VOID
+STDCALL
 PspReapRoutine(PVOID Context)
 {
     KIRQL OldIrql;

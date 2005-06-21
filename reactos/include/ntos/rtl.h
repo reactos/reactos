@@ -2182,7 +2182,7 @@ RtlQueryInformationAcl (PACL Acl,
 			ACL_INFORMATION_CLASS InformationClass);
 
 NTSTATUS STDCALL
-RtlQueryTimeZoneInformation (IN OUT PTIME_ZONE_INFORMATION TimeZoneInformation);
+RtlQueryTimeZoneInformation (IN OUT TIME_ZONE_INFORMATION * TimeZoneInformation);
 
 VOID STDCALL
 RtlRaiseException (IN PEXCEPTION_RECORD ExceptionRecord);
@@ -2375,7 +2375,7 @@ RtlSetSecurityDescriptorRMControl(PSECURITY_DESCRIPTOR SecurityDescriptor,
 				  PUCHAR RMControl);
 
 NTSTATUS STDCALL
-RtlSetTimeZoneInformation (IN OUT PTIME_ZONE_INFORMATION TimeZoneInformation);
+RtlSetTimeZoneInformation (IN OUT TIME_ZONE_INFORMATION * TimeZoneInformation);
 
 ULONG STDCALL
 RtlSizeHeap(

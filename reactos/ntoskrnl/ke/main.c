@@ -82,7 +82,9 @@ KeGetRecommendedSharedDataAlignment(VOID)
 }
 
 VOID
+#ifdef __GNUC__
 __attribute((noinline))
+#endif
 KiSystemStartup(BOOLEAN BootProcessor)
 {
     DPRINT("KiSystemStartup(%d)\n", BootProcessor);

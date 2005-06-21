@@ -203,7 +203,9 @@ KiSwapProcess(PKPROCESS NewProcess,
 {
     /* FIXME: Write this in ASM. Much easier */
     DPRINT("Switching CR3 to: %x\n", NewProcess->DirectoryTableBase.u.LowPart);
+#if 0 /* ROX-U */
     Ke386SetPageTableDirectory(NewProcess->DirectoryTableBase.u.LowPart);
+#endif
 }
 
 /*

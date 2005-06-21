@@ -860,12 +860,12 @@ ObReferenceObjectByPointer(IN PVOID Object,
 
    if (ObjectType != NULL && Header->Type != ObjectType)
      {
-	DPRINT("Failed %p (type was %x %wZ) should be %x %wZ\n",
+	/* ROX-U */ /*DPRINT("Failed %p (type was %x %wZ) should be %x %wZ\n",
 		Header,
 		Header->Type,
 		&BODY_TO_HEADER(Header->Type)->NameInfo,
 		ObjectType,
-		&BODY_TO_HEADER(ObjectType)->NameInfo);
+		&BODY_TO_HEADER(ObjectType)->NameInfo);*/
 	return(STATUS_UNSUCCESSFUL);
      }
    if (Header->Type == PsProcessType)

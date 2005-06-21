@@ -239,6 +239,7 @@ typedef struct _TEB
    PVOID WineDebugInfo;                /* Needed for WINE DLL's  */
 } TEB, *PTEB;
 
+#if 0 /* ROX-U */
 #if (!defined(__USE_W32API) || __W32API_MAJOR_VERSION < 2 || __W32API_MINOR_VERSION < 5)
 
 /* FIXME: at least NtCurrentTeb should be defined in winnt.h */
@@ -329,6 +330,8 @@ static inline struct _PEB * NtCurrentPeb(void)
 #else
 /* generic NtCurrentPeb() */
 #define NtCurrentPeb() (NtCurrentTeb()->Peb)
+#endif
+
 #endif
 
 #endif /* __INCLUDE_INTERNAL_TEB */

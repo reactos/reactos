@@ -81,8 +81,8 @@
 
 #else /* DBG */
 
-#define CPRINT(args...)
-#define DPRINT1(args...)
+/*#define CPRINT(args...)
+#define DPRINT1(args...)*/ /* ROX-U */
 #ifndef __USE_W32API
 #define assert(x)
 #define ASSERT(x)

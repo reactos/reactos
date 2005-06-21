@@ -136,7 +136,7 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 	  while (current2 != NULL && !current2->Valid && current_size < MAX_RW_LENGTH)
 	    {
 	      PVOID address = current2->BaseAddress;
-	      for (i = 0; i < (Bcb->CacheSegmentSize / PAGE_SIZE); i++, address += PAGE_SIZE)
+	      for (i = 0; i < (Bcb->CacheSegmentSize / PAGE_SIZE); i++, address = RVA(address, PAGE_SIZE))
 		{
 		  *MdlPages++ = MmGetPfnForProcess(NULL, address);
 		}

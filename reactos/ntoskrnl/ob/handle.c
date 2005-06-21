@@ -60,8 +60,8 @@ static VOID
 ObpDecrementHandleCount(PVOID ObjectBody)
 {
   POBJECT_HEADER ObjectHeader = BODY_TO_HEADER(ObjectBody);
-  DPRINT("Header: %x\n", ObjectHeader);
   LONG NewHandleCount = InterlockedDecrement(&ObjectHeader->HandleCount);
+  DPRINT("Header: %x\n", ObjectHeader);
   DPRINT("NewHandleCount: %x\n", NewHandleCount);
   DPRINT("HEADER_TO_OBJECT_NAME: %x\n", HEADER_TO_OBJECT_NAME(ObjectHeader));
 
@@ -833,7 +833,7 @@ ObReferenceObjectByHandle(HANDLE Handle,
 
    if (ObjectType != NULL && ObjectType != ObjectHeader->Type)
      {
-        DPRINT("ObjectType mismatch: %wZ vs %wZ (handle 0x%x)\n", &ObjectType->TypeName, ObjectHeader->Type ? &ObjectHeader->Type->TypeName : NULL, Handle);
+        /* ROX-U */ /*DPRINT("ObjectType mismatch: %wZ vs %wZ (handle 0x%x)\n", &ObjectType->TypeName, ObjectHeader->Type ? &ObjectHeader->Type->TypeName : NULL, Handle);*/
 
         ExUnlockHandleTableEntry(HandleTable,
                                  HandleEntry);
@@ -1008,14 +1008,14 @@ ObInsertObject(IN PVOID Object,
     if (FoundHeader && FoundHeader->Type == ObDirectoryType &&
         RemainingPath.Buffer)
     {
-        ObpAddEntryDirectory(FoundObject, Header, NULL);
-        ObjectAttached = TRUE;
-        
         /* The name was changed so let's update it */
         /* FIXME: TEMPORARY HACK This will go in ObFindObject in the next commit */
         PVOID NewName;
         PWSTR BufferPos = RemainingPath.Buffer;
         ULONG Delta = 0;
+
+        ObpAddEntryDirectory(FoundObject, Header, NULL);
+        ObjectAttached = TRUE;
         
         ObjectNameInfo = HEADER_TO_OBJECT_NAME(Header);
         
@@ -1141,8 +1141,8 @@ ObInsertObject(IN PVOID Object,
                                  DesiredAccess,
                                  ObjectCreateInfo->Attributes & OBJ_INHERIT,
                                  Handle);
-        DPRINT("handle Created: %d. refcount. handlecount %d %d\n",
-                 *Handle, Header->RefCount, Header->HandleCount);
+        /* ROX-U */ /*DPRINT("handle Created: %d. refcount. handlecount %d %d\n",
+                 *Handle, Header->RefCount, Header->HandleCount);*/
     }
     
     /* We can delete the Create Info now */

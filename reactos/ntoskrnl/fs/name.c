@@ -149,7 +149,7 @@ static UCHAR LegalAnsiCharacterArray[] =
   FSRTL_FAT_LEGAL | FSRTL_HPFS_LEGAL | FSRTL_NTFS_LEGAL     /*         0x7f */
 };
 
-PUCHAR EXPORTED FsRtlLegalAnsiCharacterArray = LegalAnsiCharacterArray;
+PUCHAR FsRtlLegalAnsiCharacterArray = LegalAnsiCharacterArray;
 
 /* FUNCTIONS *****************************************************************/
 

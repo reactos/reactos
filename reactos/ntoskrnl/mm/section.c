@@ -1952,7 +1952,7 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
    if (Section->AllocationAttributes & SEC_IMAGE)
    {
       Segment = MemoryArea->Data.SectionData.Segment;
-      Info->AllocationBase = MemoryArea->StartingAddress - Segment->VirtualAddress;
+      Info->AllocationBase = (PBYTE)MemoryArea->StartingAddress - Segment->VirtualAddress;
       Info->Type = MEM_IMAGE;
    }
    else

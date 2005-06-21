@@ -311,7 +311,11 @@ IopSaveBootLogToFile(VOID)
       return;
     }
 
-  Status = IopWriteLogFile(L"ReactOS "KERNEL_VERSION_STR);
+#if 0 /* ROX-U */
+  Status = IopWriteLogFile(L"ReactOS " KERNEL_VERSION_WSTR);
+#else
+  Status = IopWriteLogFile(L"ReactOS");
+#endif
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("IopWriteLogFile() failed (Status %lx)\n", Status);

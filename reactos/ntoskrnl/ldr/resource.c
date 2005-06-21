@@ -195,8 +195,8 @@ found:;
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 LdrFindResourceDirectory_U(
 	IN PVOID   	BaseAddress,
 	IN PLDR_RESOURCE_INFO			ResourceInfo,
@@ -211,8 +211,8 @@ LdrFindResourceDirectory_U(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 LdrEnumResources(
 	IN PVOID   	BaseAddress,
 	IN PLDR_RESOURCE_INFO			ResourceInfo,

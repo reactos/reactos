@@ -18,7 +18,7 @@
 
 /* GLOBALS *******************************************************************/
 
-POBJECT_TYPE EXPORTED ExEventPairObjectType = NULL;
+POBJECT_TYPE ExEventPairObjectType = NULL;
 
 static GENERIC_MAPPING ExEventPairMapping = {
     STANDARD_RIGHTS_READ,

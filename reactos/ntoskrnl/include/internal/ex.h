@@ -185,7 +185,7 @@ ExfpInterlockedExchange64(LONGLONG volatile * Destination,
                           PLONGLONG Exchange);
 
 NTSTATUS
-ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation);
+ExpSetTimeZoneInformation(TIME_ZONE_INFORMATION * TimeZoneInformation);
 
 NTSTATUS
 ExpAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId);

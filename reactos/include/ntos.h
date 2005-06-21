@@ -75,7 +75,6 @@
 #include "ntos/registry.h"
 #include "ntos/security.h"
 #include "ntos/synch.h"
-#include "ntos/time.h"
 #include "napi/i386/segment.h"
 #include "napi/types.h"
 #include "napi/dbg.h"

@@ -14,7 +14,7 @@
 #undef IO_TYPE_FILE
 #define IO_TYPE_FILE                    0x0F5L /* Temp Hack */
 
-#include <roscfg.h>
+/*#include <roscfg.h>*/ /* ROX-U */
 #include <reactos/version.h>
 #include <reactos/resource.h>
 #include <reactos/bugcodes.h>
@@ -77,5 +77,19 @@
 #ifndef TAG
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 #endif
+
+NTSTATUS STDCALL
+CcRosInitializeFileCache (PFILE_OBJECT	FileObject,
+		          ULONG		CacheSegmentSize);
+NTSTATUS STDCALL
+CcRosReleaseFileCache (PFILE_OBJECT	FileObject);
+
+#define FSCTL_ROS_QUERY_LCN_MAPPING \
+        CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 63, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+typedef struct _ROS_QUERY_LCN_MAPPING
+{
+  LARGE_INTEGER LcnDiskOffset;
+} ROS_QUERY_LCN_MAPPING, *PROS_QUERY_LCN_MAPPING;
 
 #endif /* INCLUDE_NTOSKRNL_H */

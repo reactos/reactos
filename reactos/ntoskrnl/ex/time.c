@@ -76,7 +76,7 @@ ExpInitTimeZoneInfo(VOID)
 
 
 NTSTATUS
-ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
+ExpSetTimeZoneInformation(TIME_ZONE_INFORMATION * TimeZoneInformation)
 {
   LARGE_INTEGER LocalTime;
   LARGE_INTEGER SystemTime;

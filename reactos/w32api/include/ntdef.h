@@ -4,6 +4,9 @@
 #pragma GCC system_header
 #endif
 
+/* TODO: some compilers support this */
+#define RESTRICTED_POINTER
+
 #define NTAPI __stdcall
 #define OBJ_INHERIT          0x00000002
 #define OBJ_PERMANENT        0x00000010

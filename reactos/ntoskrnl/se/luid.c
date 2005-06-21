@@ -34,12 +34,13 @@ SepInitLuid(VOID)
 NTSTATUS
 ExpAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
 {
-  LARGE_INTEGER NewLuid, PrevLuid;
+  LARGE_INTEGER NewLuid;
+  volatile LARGE_INTEGER PrevLuid;
 
   /* atomically increment the luid */
   do
   {
-    PrevLuid = (volatile LARGE_INTEGER)LuidValue;
+    PrevLuid = LuidValue;
     NewLuid = RtlLargeIntegerAdd(PrevLuid,
                                  LuidIncrement);
   } while(ExfInterlockedCompareExchange64(&LuidValue.QuadPart,

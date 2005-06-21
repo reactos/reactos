@@ -71,10 +71,10 @@ IopCreateFile(PVOID ObjectBody,
   if (ParentObjectType != IoDeviceObjectType &&
       ParentObjectType != IoFileObjectType)
     {
-      DPRINT("Parent [%wZ] is a %S which is neither a file type nor a device type ; remaining path = %S\n",
+      /* ROX-U */ /*DPRINT("Parent [%wZ] is a %S which is neither a file type nor a device type ; remaining path = %S\n",
              &BODY_TO_HEADER(Parent)->NameInfo->Name,
              BODY_TO_HEADER(Parent)->Type->Name.Buffer,
-             RemainingPath);
+             RemainingPath);*/
       return(STATUS_UNSUCCESSFUL);
     }
 
@@ -427,7 +427,7 @@ IopQueryNameFile(PVOID ObjectBody,
         ExFreePool (LocalInfo);
         return Status;
     }
-    DPRINT ("Device path: %wZ\n", &LocalInfo->Name);
+    /*DPRINT ("Device path: %wZ\n", &LocalInfo->Name);*/
     
     /* Write Device Path */
     Status = RtlAppendUnicodeStringToString(&ObjectNameInfo->Name,

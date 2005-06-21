@@ -50,11 +50,11 @@ typedef CONST char *PCSZ;
 #endif
 
 #ifndef DECL_IMPORT
-#define DECL_IMPORT __attribute__((dllimport))
+#define DECL_IMPORT __declspec(dllimport)
 #endif
 
 #ifndef DECL_EXPORT
-#define DECL_EXPORT __attribute__((dllexport))
+#define DECL_EXPORT __declspec(dllexport)
 #endif
 
 /* Windows NT status codes */

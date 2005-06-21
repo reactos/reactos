@@ -1358,7 +1358,7 @@ typedef struct _GUID {
 	unsigned short Data3;
 	unsigned char  Data4[8];
 } GUID, *REFGUID, *LPGUID;
-#define SYSTEM_LUID { QuadPart:999 }
+#define SYSTEM_LUID { 0x3E7, 0x0 }
 #endif /* GUID_DEFINED */
 
 /* ACE Access Types, also in ntifs.h */
@@ -3413,17 +3413,6 @@ static __inline__ PVOID GetCurrentFiber(void)
     return ret;
 }
 
-static __inline__ PVOID GetFiberData(void)
-{
-    void* ret;
-    __asm__ __volatile__ (
-	"movl	%%fs:0x10,%0\n"
-	"movl	(%0),%0"
-	: "=r" (ret) /* allow use of reg eax,ebx,ecx,edx,esi,edi */
-	);
-    return ret;
-}
-
 static __inline__ struct _TEB * NtCurrentTeb(void)
 {
     struct _TEB *ret;
@@ -3437,7 +3426,7 @@ static __inline__ struct _TEB * NtCurrentTeb(void)
     return ret;
 }
 
-#else
+#elif defined(__WATCOMC__)
 
 extern PVOID GetCurrentFiber(void);
 #pragma aux GetCurrentFiber = \
@@ -3445,14 +3434,36 @@ extern PVOID GetCurrentFiber(void);
         value [eax] \
         modify [eax];
 
-extern PVOID GetFiberData(void);
-#pragma aux GetFiberData = \
-	"mov	eax, dword ptr fs:0x10" \
-	"mov	eax, [eax]" \
+extern struct _TEB * NtCurrentTeb(void);
+#pragma aux NtCurrentTeb = \
+        "mov	eax, dword ptr fs:0x18" \
         value [eax] \
         modify [eax];
 
-#endif /* __GNUC__ */
+#elif defined(_MSC_VER)
+
+static __inline PVOID GetCurrentFiber(void)
+{
+    PVOID p;
+	__asm mov eax, fs:[10h]
+	__asm mov [p], eax
+    return p;
+}
+
+static __inline struct _TEB * NtCurrentTeb(void)
+{
+    struct _TEB *p;
+	__asm mov eax, fs:[18h]
+	__asm mov [p], eax
+    return p;
+}
+
+#endif /* __GNUC__/__WATCOMC__/_MSC_VER */
+
+static __inline PVOID GetFiberData(void)
+{
+	return *((PVOID *)GetCurrentFiber());
+}
 
 #endif /* RC_INVOKED */
 

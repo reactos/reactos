@@ -1,7 +1,7 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_LDR_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_LDR_H
 
-#include <roscfg.h>
+/*#include <roscfg.h>*/
 #ifndef _NTNDK_
 #include <napi/teb.h>
 #endif
@@ -85,7 +85,7 @@ typedef struct _LDR_SYMBOL_INFO {
 } LDR_SYMBOL_INFO, *PLDR_SYMBOL_INFO;
 
 
-#define RVA(m, b) ((ULONG)b + m)
+#define RVA(m, b) ((PVOID)((ULONG)b + (PBYTE)m))
 
 #if defined(KDBG) || defined(DBG)
 
