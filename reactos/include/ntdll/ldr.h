@@ -65,14 +65,15 @@ typedef struct _LDR_DATA_TABLE_ENTRY
     UNICODE_STRING FullDllName;
     UNICODE_STRING BaseDllName;
     ULONG Flags;
-    SHORT LoadCount; /* FIXME: HACK!!! FIX ASAP */
-    SHORT TlsIndex;  /* FIXME: HACK!!! FIX ASAP */
+    USHORT LoadCount;
+    USHORT TlsIndex;
     LIST_ENTRY HashLinks;
     PVOID SectionPointer;
     ULONG CheckSum;
     ULONG TimeDateStamp;
     PVOID LoadedImports;
     PVOID EntryPointActivationContext;
+    PVOID PatchInformation;
 #if defined(DBG) || defined(KDBG)
     PROSSYM_INFO   RosSymInfo; /* FIXME: THIS _REALLY_ NEEDS TO GO (TLS?)!!! */
 #endif /* KDBG */

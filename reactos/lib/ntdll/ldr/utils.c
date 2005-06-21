@@ -123,7 +123,7 @@ static inline LONG LdrpIncrementLoadCount(PLDR_DATA_TABLE_ENTRY Module, BOOLEAN 
        RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
      }
    LoadCount = Module->LoadCount;
-   if (Module->LoadCount >= 0)
+   if (Module->LoadCount != 0xFFFF)
      {
        Module->LoadCount++;
      }
@@ -152,7 +152,7 @@ static inline VOID LdrpAcquireTlsSlot(PLDR_DATA_TABLE_ENTRY Module, ULONG Size, 
 static inline VOID LdrpTlsCallback(PLDR_DATA_TABLE_ENTRY Module, ULONG dwReason)
 {
    PIMAGE_TLS_CALLBACK TlsCallback;
-   if (Module->TlsIndex >= 0 && Module->LoadCount == -1)
+   if (Module->TlsIndex != 0xFFFF && Module->LoadCount == 0xFFFF)
      {
        TlsCallback = LdrpTlsArray[Module->TlsIndex].TlsAddressOfCallBacks;
        if (TlsCallback)
@@ -256,8 +256,8 @@ LdrpInitializeTlsForProccess(VOID)
        while (Entry != ModuleListHead)
          {
            Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
-           if (Module->LoadCount == -1 &&
-               Module->TlsIndex >= 0)
+           if (Module->LoadCount == 0xFFFF &&
+               Module->TlsIndex != 0xFFFF)
              {
                TlsDirectory = (PIMAGE_TLS_DIRECTORY)
                                  RtlImageDirectoryEntryToData(Module->DllBase,
@@ -482,7 +482,7 @@ LdrAddModuleEntry(PVOID ImageBase,
        * loading while app is initializing
        * dll must not be unloaded
        */
-      Module->LoadCount = -1;
+      Module->LoadCount = 0xFFFF;
     }
 
   Module->Flags = 0;
@@ -886,7 +886,7 @@ LdrFindEntryForName(PUNICODE_STRING Name,
            0 == RtlCompareUnicodeString(&LdrpLastModule->FullDllName, &AdjustedName, TRUE)))
         {
           *Module = LdrpLastModule;
-          if (Ref && (*Module)->LoadCount != -1)
+          if (Ref && (*Module)->LoadCount != 0xFFFF)
             {
               (*Module)->LoadCount++;
             }
@@ -907,7 +907,7 @@ LdrFindEntryForName(PUNICODE_STRING Name,
            0 == RtlCompareUnicodeString(&ModulePtr->FullDllName, &AdjustedName, TRUE)))
         {
           *Module = LdrpLastModule = ModulePtr;
-          if (Ref && ModulePtr->LoadCount != -1)
+          if (Ref && ModulePtr->LoadCount != 0xFFFF)
             {
               ModulePtr->LoadCount++;
             }
@@ -2290,7 +2290,7 @@ LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
 
         if (Module->DllBase == BaseAddress)
           {
-            if (Module->TlsIndex == -1)
+            if (Module->TlsIndex == 0xFFFF)
               {
                 Module->Flags |= DONT_CALL_FOR_THREAD;
                 Status = STATUS_SUCCESS;
@@ -2432,7 +2432,7 @@ LdrpDetachProcess(BOOLEAN UnloadAll)
              {
                TRACE_LDR("Unload %wZ - Calling entry point at %x\n",
                          &Module->BaseDllName, Module->EntryPoint);
-               LdrpCallDllEntry(Module, DLL_PROCESS_DETACH, (PVOID)(Module->LoadCount == -1 ? 1 : 0));
+               LdrpCallDllEntry(Module, DLL_PROCESS_DETACH, (PVOID)(Module->LoadCount == 0xFFFF ? 1 : 0));
              }
            else
              {
@@ -2454,7 +2454,7 @@ LdrpDetachProcess(BOOLEAN UnloadAll)
            Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
            Entry = Entry->Blink;
            if (Module->Flags & UNLOAD_IN_PROGRESS &&
-               ((UnloadAll && Module->LoadCount >= 0) || Module->LoadCount == 0))
+               ((UnloadAll && Module->LoadCount != 0xFFFF) || Module->LoadCount == 0))
              {
                /* remove the module entry from the list */
                RemoveEntryList (&Module->InLoadOrderModuleList);
@@ -2517,7 +2517,7 @@ LdrpAttachProcess(VOID)
            Module->Flags |= LOAD_IN_PROGRESS;
            TRACE_LDR("%wZ loaded - Calling init routine at %x for process attaching\n",
                      &Module->BaseDllName, Module->EntryPoint);
-           Result = LdrpCallDllEntry(Module, DLL_PROCESS_ATTACH, (PVOID)(Module->LoadCount == -1 ? 1 : 0));
+           Result = LdrpCallDllEntry(Module, DLL_PROCESS_ATTACH, (PVOID)(Module->LoadCount == 0xFFFF ? 1 : 0));
            if (!Result)
              {
                Status = STATUS_DLL_INIT_FAILED;
