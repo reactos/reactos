@@ -10,6 +10,7 @@
 /* DEPENDENCIES **************************************************************/
 #include "ldrtypes.h"
 #include "lpctypes.h"
+#include "rtltypes.h"
 #include <csrss/csrss.h> /* FIXME: Temporary */
 
 /* PROTOTYPES ****************************************************************/
@@ -191,6 +192,14 @@ LdrQueryImageFileExecutionOptions(
     OUT PVOID Buffer,
     IN ULONG BufferSize,
     OUT PULONG RetunedLength OPTIONAL
+);
+
+NTSTATUS 
+STDCALL
+LdrQueryProcessModuleInformation(
+    IN PMODULE_INFORMATION ModuleInformation OPTIONAL,
+    IN ULONG Size OPTIONAL,
+    OUT PULONG ReturnedSize
 );
 
 NTSTATUS 

@@ -43,7 +43,6 @@ typedef struct _PEB_LDR_DATA
     PVOID               EntryInProgress;
 } PEB_LDR_DATA, *PPEB_LDR_DATA;
 
-#if 0
 typedef struct _LDR_DATA_TABLE_ENTRY
 {
     LIST_ENTRY InLoadOrderModuleList;
@@ -55,16 +54,20 @@ typedef struct _LDR_DATA_TABLE_ENTRY
     UNICODE_STRING FullDllName;
     UNICODE_STRING BaseDllName;
     ULONG Flags;
-    SHORT LoadCount; /* FIXME: HACK!!! FIX ASAP */
-    SHORT TlsIndex;  /* FIXME: HACK!!! FIX ASAP */
+    USHORT LoadCount; /* FIXME: HACK!!! FIX ASAP */
+    USHORT TlsIndex;  /* FIXME: HACK!!! FIX ASAP */
     LIST_ENTRY HashLinks;
     PVOID SectionPointer;
     ULONG CheckSum;
     ULONG TimeDateStamp;
     PVOID LoadedImports;
     PVOID EntryPointActivationContext;
+    PVOID PatchInformation;
+#if defined(DBG) || defined(KDBG)
+    /* FIXME: THIS _REALLY_ NEEDS TO GO SOMEWHERE ELSE */
+    PVOID RosSymInfo;
+#endif /* KDBG */
 } LDR_DATA_TABLE_ENTRY, *PLDR_DATA_TABLE_ENTRY;
-#endif
 
 typedef struct _LDR_RESOURCE_INFO 
 {

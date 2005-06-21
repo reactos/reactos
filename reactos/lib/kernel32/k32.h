@@ -11,6 +11,7 @@
 /* PSDK/NDK Headers */
 #include <windows.h>
 #define NTOS_MODE_USER
+#define READY_FOR_NEW_NTDLL
 #include <ndk/ntndk.h>
 
 /* C Headers */
@@ -20,12 +21,6 @@
 #include <ddk/ntddbeep.h>
 #include <ddk/ntddser.h>
 #include <ddk/ntddtape.h>
-
-/* FIXME: Clean this sh*t up */
-#include <ntdll/base.h>
-#include <ntdll/dbg.h>
-#include <ntdll/csr.h>
-#include <ntdll/ldr.h>
 
 /* Internal Kernel32 Header */
 #include "include/kernel32.h"

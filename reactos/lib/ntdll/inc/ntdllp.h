@@ -9,7 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 /* FIXME: Cleanup this mess */
-//typedef NTSTATUS (STDCALL *PEPFUNC)(PPEB);
+typedef NTSTATUS (STDCALL *PEPFUNC)(PPEB);
 NTSTATUS LdrMapSections(HANDLE ProcessHandle,
 			PVOID ImageBase,
 			HANDLE SectionHandle,
@@ -23,12 +23,10 @@ PEPFUNC LdrPEStartup (PVOID  ImageBase,
 		      HANDLE SectionHandle,
 		      PLDR_DATA_TABLE_ENTRY* Module,
 		      PWSTR FullDosName);
-#if 0
 typedef BOOL 
 (STDCALL *PDLLMAIN_FUNC)(HANDLE hInst,
                          ULONG ul_reason_for_call,
                          LPVOID lpReserved);
-#endif 
 VOID
 STDCALL
 RtlpInitDeferedCriticalSection(

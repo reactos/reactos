@@ -11,12 +11,8 @@
 /* SDK/DDK/NDK Headers. */
 #include <windows.h>
 #define NTOS_MODE_USER
+#define READY_FOR_NEW_NTDLL
 #include <ndk/ntndk.h>
-
-/* NTDLL Headers FIXME: These will be gone imminently */
-#include <ntdll/ntdll.h>
-#include <ntdll/ldr.h>
-#include <ntdll/csr.h>
 
 /* Internal NTDLL */
 #include "ntdllp.h"

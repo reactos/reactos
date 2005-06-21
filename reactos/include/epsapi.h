@@ -25,9 +25,6 @@
 #ifndef __EPSAPI_H_INCLUDED__
 #define __EPSAPI_H_INCLUDED__
 
-/* Remove soon */
-#include <ntdll/ldr.h>
-
 /* TYPES */
 typedef NTSTATUS (NTAPI *PPROC_ENUM_ROUTINE)(IN PSYSTEM_PROCESS_INFORMATION CurrentProcess,
                                              IN OUT PVOID CallbackContext);
