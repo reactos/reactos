@@ -26,7 +26,6 @@
 #define __EPSAPI_H_INCLUDED__
 
 /* INCLUDES */
-#include <ntdll/rtl.h>
 #include <ntdll/ldr.h> /* FIXME: USE LDR_DATA_TABLE_ENTRY */
 
 /* OBJECTS */
