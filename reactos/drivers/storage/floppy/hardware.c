@@ -48,6 +48,8 @@
  * TODO: Figure out the right delays in Send_Byte and Get_Byte
  */
 
+#define NDEBUG
+#include <debug.h>
 #include <ntddk.h>
 
 #include "floppy.h"
@@ -181,7 +183,7 @@ static NTSTATUS NTAPI Send_Byte(PCONTROLLER_INFO ControllerInfo,
       return STATUS_SUCCESS;
     }
 
-  KdPrint(("floppy: Send_Byte: timed out trying to write\n"));
+  DPRINT(("floppy: Send_Byte: timed out trying to write\n"));
   HwDumpRegisters(ControllerInfo);
   return STATUS_UNSUCCESSFUL;
 }
@@ -250,7 +252,7 @@ static NTSTATUS NTAPI Get_Byte(PCONTROLLER_INFO ControllerInfo,
       return STATUS_SUCCESS;
     }
 
-  KdPrint(("floppy: Get_Byte: timed out trying to read\n"));
+  DPRINT(("floppy: Get_Byte: timed out trying to read\n"));
   HwDumpRegisters(ControllerInfo);
   return STATUS_UNSUCCESSFUL;
 }
@@ -267,7 +269,7 @@ NTSTATUS NTAPI HwSetDataRate(PCONTROLLER_INFO ControllerInfo,
  *     STATUS_SUCCESS
  */
 {
-  KdPrint(("floppy: HwSetDataRate called; writing rate code 0x%x to offset 0x%x\n", DataRate, DATA_RATE_SELECT_REGISTER));
+  DPRINT(("floppy: HwSetDataRate called; writing rate code 0x%x to offset 0x%x\n", DataRate, DATA_RATE_SELECT_REGISTER));
 
   WRITE_PORT_UCHAR(ControllerInfo->BaseAddress + DATA_RATE_SELECT_REGISTER, DataRate);
 
@@ -288,7 +290,7 @@ NTSTATUS NTAPI HwTurnOffMotor(PCONTROLLER_INFO ControllerInfo)
  *     - Called at DISPATCH_LEVEL
  */
 {
-  KdPrint(("floppy: HwTurnOffMotor: writing byte 0x%x to offset 0x%x\n", DOR_FDC_ENABLE|DOR_DMA_IO_INTERFACE_ENABLE, DIGITAL_OUTPUT_REGISTER));
+  DPRINT(("floppy: HwTurnOffMotor: writing byte 0x%x to offset 0x%x\n", DOR_FDC_ENABLE|DOR_DMA_IO_INTERFACE_ENABLE, DIGITAL_OUTPUT_REGISTER));
 
   WRITE_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_OUTPUT_REGISTER, DOR_FDC_ENABLE|DOR_DMA_IO_INTERFACE_ENABLE);
 
@@ -330,7 +332,7 @@ NTSTATUS NTAPI HwTurnOnMotor(PDRIVE_INFO DriveInfo)
   else if (Unit == 3)
     Buffer |= DOR_FLOPPY_MOTOR_ON_D;
 
-  KdPrint(("floppy: HwTurnOnMotor: writing byte 0x%x to offset 0x%x\n", Buffer, DIGITAL_OUTPUT_REGISTER));
+  DPRINT(("floppy: HwTurnOnMotor: writing byte 0x%x to offset 0x%x\n", Buffer, DIGITAL_OUTPUT_REGISTER));
   WRITE_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_OUTPUT_REGISTER, Buffer);
 
   return STATUS_SUCCESS;
@@ -355,7 +357,7 @@ NTSTATUS NTAPI HwSenseDriveStatus(PDRIVE_INFO DriveInfo)
 
   PAGED_CODE();
 
-  KdPrint(("floppy: HwSenseDriveStatus called\n"));
+  DPRINT(("floppy: HwSenseDriveStatus called\n"));
 
   Buffer[0] = COMMAND_SENSE_DRIVE_STATUS;
   Buffer[1] = DriveInfo->UnitNumber; /* hard-wired to head 0 for now */
@@ -363,7 +365,7 @@ NTSTATUS NTAPI HwSenseDriveStatus(PDRIVE_INFO DriveInfo)
   for(i = 0; i < 2; i++)
     if(Send_Byte(DriveInfo->ControllerInfo, Buffer[i]) != STATUS_SUCCESS)
       {
-	KdPrint(("floppy: HwSenseDriveStatus: failed to write FIFO\n"));
+	DPRINT(("floppy: HwSenseDriveStatus: failed to write FIFO\n"));
         return STATUS_UNSUCCESSFUL;
       }
 
@@ -429,11 +431,11 @@ NTSTATUS NTAPI HwReadWriteData(PCONTROLLER_INFO ControllerInfo,
   /* Send the command */
   for(i = 0; i < 9; i++)
     {
-        KdPrint(("floppy: HwReadWriteData: Sending a command byte to the FIFO: 0x%x\n", Buffer[i]));
+        DPRINT(("floppy: HwReadWriteData: Sending a command byte to the FIFO: 0x%x\n", Buffer[i]));
 
 	if(Send_Byte(ControllerInfo, Buffer[i]) != STATUS_SUCCESS)
 	  {
-	    KdPrint(("HwReadWriteData: Unable to write to the FIFO\n"));
+	    DPRINT(("HwReadWriteData: Unable to write to the FIFO\n"));
 	    return STATUS_UNSUCCESSFUL;
 	  }
     }
@@ -465,19 +467,19 @@ NTSTATUS NTAPI HwRecalibrateResult(PCONTROLLER_INFO ControllerInfo)
 
   if(Send_Byte(ControllerInfo, COMMAND_SENSE_INTERRUPT_STATUS) != STATUS_SUCCESS)
     {
-      KdPrint(("floppy: HwRecalibrateResult: Unable to write the controller\n"));
+      DPRINT(("floppy: HwRecalibrateResult: Unable to write the controller\n"));
       return STATUS_UNSUCCESSFUL;
     }
 
   for(i = 0; i < 2; i++)
     if(Get_Byte(ControllerInfo, &Buffer[i]) != STATUS_SUCCESS)
       {
-	KdPrint(("floppy: HwRecalibrateResult: unable to read FIFO\n"));
+	DPRINT(("floppy: HwRecalibrateResult: unable to read FIFO\n"));
         return STATUS_UNSUCCESSFUL;
       }
 
   /* Validate  that it did what we told it to */
-  KdPrint(("floppy: HwRecalibrateResult results: ST0: 0x%x PCN: 0x%x\n", Buffer[0], Buffer[1]));
+  DPRINT(("floppy: HwRecalibrateResult results: ST0: 0x%x PCN: 0x%x\n", Buffer[0], Buffer[1]));
 
   /*
    * Buffer[0] = ST0
@@ -487,20 +489,20 @@ NTSTATUS NTAPI HwRecalibrateResult(PCONTROLLER_INFO ControllerInfo)
   /* Is the PCN 0? */
   if(Buffer[1] != 0)
     {
-      KdPrint(("floppy: HwRecalibrateResult: PCN not 0\n"));
+      DPRINT(("floppy: HwRecalibrateResult: PCN not 0\n"));
       return STATUS_UNSUCCESSFUL;
     }
 
   /* test seek complete */
   if((Buffer[0] & SR0_SEEK_COMPLETE) != SR0_SEEK_COMPLETE)
     {
-      KdPrint(("floppy: HwRecalibrateResult: Failed to complete the seek\n"));
+      DPRINT(("floppy: HwRecalibrateResult: Failed to complete the seek\n"));
       return STATUS_UNSUCCESSFUL;
     }
 
   /* Is the equipment check flag set?  Could be no disk in drive... */
   if((Buffer[0] & SR0_EQUIPMENT_CHECK) == SR0_EQUIPMENT_CHECK)
-      KdPrint(("floppy: HwRecalibrateResult: Seeked to track 0 successfully, but EC is set; returning STATUS_SUCCESS anyway\n"));
+      DPRINT(("floppy: HwRecalibrateResult: Seeked to track 0 successfully, but EC is set; returning STATUS_SUCCESS anyway\n"));
 
   return STATUS_SUCCESS;
 }
@@ -530,12 +532,12 @@ NTSTATUS NTAPI HwReadWriteResult(PCONTROLLER_INFO ControllerInfo)
   for(i = 0; i < 7; i++)
     if(Get_Byte(ControllerInfo, &Buffer[i]) != STATUS_SUCCESS)
       {
-	KdPrint(("floppy: HwReadWriteResult: unable to read fifo\n"));
+	DPRINT(("floppy: HwReadWriteResult: unable to read fifo\n"));
         return STATUS_UNSUCCESSFUL;
       }
 
   /* Validate  that it did what we told it to */
-  KdPrint(("floppy: HwReadWriteResult results: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\n", Buffer[0], Buffer[1], Buffer[2], Buffer[3],
+  DPRINT(("floppy: HwReadWriteResult results: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\n", Buffer[0], Buffer[1], Buffer[2], Buffer[3],
 	   Buffer[4], Buffer[5], Buffer[6]));
 
   /* Last command successful? */
@@ -563,7 +565,7 @@ NTSTATUS NTAPI HwRecalibrate(PDRIVE_INFO DriveInfo)
   UCHAR Buffer[2];
   int i;
 
-  KdPrint(("floppy: HwRecalibrate called\n"));
+  DPRINT(("floppy: HwRecalibrate called\n"));
 
   PAGED_CODE();
 
@@ -573,7 +575,7 @@ NTSTATUS NTAPI HwRecalibrate(PDRIVE_INFO DriveInfo)
   for(i = 0; i < 2; i++)
     if(Send_Byte(ControllerInfo, Buffer[i]) != STATUS_SUCCESS)
       {
-	KdPrint(("floppy: HwRecalibrate: unable to write FIFO\n"));
+	DPRINT(("floppy: HwRecalibrate: unable to write FIFO\n"));
         return STATUS_UNSUCCESSFUL;
       }
 
@@ -598,7 +600,7 @@ NTSTATUS NTAPI HwSenseInterruptStatus(PCONTROLLER_INFO ControllerInfo)
 
   if(Send_Byte(ControllerInfo, COMMAND_SENSE_INTERRUPT_STATUS) != STATUS_SUCCESS)
     {
-      KdPrint(("floppy: HwSenseInterruptStatus: failed to write controller\n"));
+      DPRINT(("floppy: HwSenseInterruptStatus: failed to write controller\n"));
       return STATUS_UNSUCCESSFUL;
     }
 
@@ -606,12 +608,12 @@ NTSTATUS NTAPI HwSenseInterruptStatus(PCONTROLLER_INFO ControllerInfo)
     {
       if(Get_Byte(ControllerInfo, &Buffer[i]) != STATUS_SUCCESS)
 	{
-	  KdPrint(("floppy: HwSenseInterruptStatus: failed to read controller\n"));
+	  DPRINT(("floppy: HwSenseInterruptStatus: failed to read controller\n"));
 	  return STATUS_UNSUCCESSFUL;
 	}
     }
 
-  KdPrint(("floppy: HwSenseInterruptStatus returned 0x%x 0x%x\n", Buffer[0], Buffer[1]));
+  DPRINT(("floppy: HwSenseInterruptStatus returned 0x%x 0x%x\n", Buffer[0], Buffer[1]));
 
   return STATUS_SUCCESS;
 }
@@ -633,7 +635,7 @@ NTSTATUS NTAPI HwReadId(PDRIVE_INFO DriveInfo, UCHAR Head)
   UCHAR Buffer[2];
   int i;
 
-  KdPrint(("floppy: HwReadId called\n"));
+  DPRINT(("floppy: HwReadId called\n"));
 
   PAGED_CODE();
 
@@ -643,7 +645,7 @@ NTSTATUS NTAPI HwReadId(PDRIVE_INFO DriveInfo, UCHAR Head)
   for(i = 0; i < 2; i++)
     if(Send_Byte(DriveInfo->ControllerInfo, Buffer[i]) != STATUS_SUCCESS)
       {
-	KdPrint(("floppy: HwReadId: unable to send bytes to fifo\n"));
+	DPRINT(("floppy: HwReadId: unable to send bytes to fifo\n"));
         return STATUS_UNSUCCESSFUL;
       }
 
@@ -676,7 +678,7 @@ NTSTATUS NTAPI HwFormatTrack(PCONTROLLER_INFO ControllerInfo,
   UCHAR Buffer[6];
   int i;
 
-  KdPrint(("floppy: HwFormatTrack called\n"));
+  DPRINT(("floppy: HwFormatTrack called\n"));
 
   PAGED_CODE();
 
@@ -690,7 +692,7 @@ NTSTATUS NTAPI HwFormatTrack(PCONTROLLER_INFO ControllerInfo,
   for(i = 0; i < 6; i++)
     if(Send_Byte(ControllerInfo, Buffer[i]) != STATUS_SUCCESS)
       {
-	KdPrint(("floppy: HwFormatTrack: unable to send bytes to floppy\n"));
+	DPRINT(("floppy: HwFormatTrack: unable to send bytes to floppy\n"));
         return STATUS_UNSUCCESSFUL;
       }
 
@@ -716,7 +718,7 @@ NTSTATUS NTAPI HwSeek(PDRIVE_INFO DriveInfo,
   UCHAR Buffer[3];
   int i;
 
-  KdPrint(("floppy: HwSeek called for cyl 0x%x\n", Cylinder));
+  DPRINT(("floppy: HwSeek called for cyl 0x%x\n", Cylinder));
 
   PAGED_CODE();
 
@@ -727,7 +729,7 @@ NTSTATUS NTAPI HwSeek(PDRIVE_INFO DriveInfo,
   for(i = 0; i < 3; i++)
     if(Send_Byte(DriveInfo->ControllerInfo, Buffer[i]) != STATUS_SUCCESS)
       {
-	KdPrint(("floppy: HwSeek: failed to write fifo\n"));
+	DPRINT(("floppy: HwSeek: failed to write fifo\n"));
         return STATUS_UNSUCCESSFUL;
       }
 
@@ -767,7 +769,7 @@ NTSTATUS NTAPI HwConfigure(PCONTROLLER_INFO ControllerInfo,
   UCHAR Buffer[4];
   int i;
 
-  KdPrint(("floppy: HwConfigure called\n"));
+  DPRINT(("floppy: HwConfigure called\n"));
 
   PAGED_CODE();
 
@@ -779,7 +781,7 @@ NTSTATUS NTAPI HwConfigure(PCONTROLLER_INFO ControllerInfo,
   for(i = 0; i < 4; i++)
     if(Send_Byte(ControllerInfo, Buffer[i]) != STATUS_SUCCESS)
       {
-	KdPrint(("floppy: HwConfigure: failed to write the fifo\n"));
+	DPRINT(("floppy: HwConfigure: failed to write the fifo\n"));
         return STATUS_UNSUCCESSFUL;
       }
 
@@ -807,17 +809,17 @@ NTSTATUS NTAPI HwGetVersion(PCONTROLLER_INFO ControllerInfo)
 
   if(Send_Byte(ControllerInfo, COMMAND_VERSION) != STATUS_SUCCESS)
     {
-      KdPrint(("floppy: HwGetVersion: unable to write fifo\n"));
+      DPRINT(("floppy: HwGetVersion: unable to write fifo\n"));
       return STATUS_UNSUCCESSFUL;
     }
 
   if(Get_Byte(ControllerInfo, &Buffer) != STATUS_SUCCESS)
     {
-      KdPrint(("floppy: HwGetVersion: unable to write fifo\n"));
+      DPRINT(("floppy: HwGetVersion: unable to write fifo\n"));
       return STATUS_UNSUCCESSFUL;
     }
 
-  KdPrint(("floppy: HwGetVersion returning version 0x%x\n", Buffer));
+  DPRINT(("floppy: HwGetVersion returning version 0x%x\n", Buffer));
 
   return Buffer;
 }
@@ -841,18 +843,18 @@ NTSTATUS NTAPI HwDiskChanged(PDRIVE_INFO DriveInfo,
 
   Buffer = READ_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_INPUT_REGISTER);
 
-  KdPrint(("floppy: HwDiskChanged: read 0x%x from DIR\n", Buffer));
+  DPRINT(("floppy: HwDiskChanged: read 0x%x from DIR\n", Buffer));
 
   if(ControllerInfo->Model30)
     {
       if(!(Buffer & DIR_DISKETTE_CHANGE))
 	{
-	  KdPrint(("floppy: HdDiskChanged - Model30 - returning TRUE\n"));
+	  DPRINT(("floppy: HdDiskChanged - Model30 - returning TRUE\n"));
 	  *DiskChanged = TRUE;
 	}
       else
 	{
-	  KdPrint(("floppy: HdDiskChanged - Model30 - returning FALSE\n"));
+	  DPRINT(("floppy: HdDiskChanged - Model30 - returning FALSE\n"));
 	  *DiskChanged = FALSE;
 	}
     }
@@ -860,12 +862,12 @@ NTSTATUS NTAPI HwDiskChanged(PDRIVE_INFO DriveInfo,
     {
       if(Buffer & DIR_DISKETTE_CHANGE)
 	{
-	  KdPrint(("floppy: HdDiskChanged - PS2 - returning TRUE\n"));
+	  DPRINT(("floppy: HdDiskChanged - PS2 - returning TRUE\n"));
 	  *DiskChanged = TRUE;
 	}
       else
 	{
-	  KdPrint(("floppy: HdDiskChanged - PS2 - returning FALSE\n"));
+	  DPRINT(("floppy: HdDiskChanged - PS2 - returning FALSE\n"));
 	  *DiskChanged = FALSE;
 	}
     }
@@ -891,11 +893,11 @@ NTSTATUS NTAPI HwSenseDriveStatusResult(PCONTROLLER_INFO ControllerInfo,
 
   if(Get_Byte(ControllerInfo, Status) != STATUS_SUCCESS)
     {
-      KdPrint(("floppy: HwSenseDriveStatus: unable to read fifo\n"));
+      DPRINT(("floppy: HwSenseDriveStatus: unable to read fifo\n"));
       return STATUS_UNSUCCESSFUL;
     }
 
-  KdPrint(("floppy: HwSenseDriveStatusResult: ST3: 0x%x\n", *Status));
+  DPRINT(("floppy: HwSenseDriveStatusResult: ST3: 0x%x\n", *Status));
 
   return STATUS_SUCCESS;
 }
@@ -929,25 +931,25 @@ NTSTATUS NTAPI HwReadIdResult(PCONTROLLER_INFO ControllerInfo,
   for(i = 0; i < 7; i++)
     if(Get_Byte(ControllerInfo, &Buffer[i]) != STATUS_SUCCESS)
       {
-	KdPrint(("floppy: ReadIdResult(): can't read from the controller\n"));
+	DPRINT(("floppy: ReadIdResult(): can't read from the controller\n"));
         return STATUS_UNSUCCESSFUL;
       }
 
   /* Validate  that it did what we told it to */
-  KdPrint(("floppy: ReadId results: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\n", Buffer[0], Buffer[1], Buffer[2], Buffer[3],
+  DPRINT(("floppy: ReadId results: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\n", Buffer[0], Buffer[1], Buffer[2], Buffer[3],
 	   Buffer[4], Buffer[5], Buffer[6]));
 
   /* Last command successful? */
   if((Buffer[0] & SR0_LAST_COMMAND_STATUS) != SR0_LCS_SUCCESS)
     {
-      KdPrint(("floppy: ReadId didn't return last command success\n"));
+      DPRINT(("floppy: ReadId didn't return last command success\n"));
       return STATUS_UNSUCCESSFUL;
     }
 
   /* ID mark found? */
   if(Buffer[1] & SR1_CANNOT_FIND_ID_ADDRESS)
     {
-      KdPrint(("floppy: ReadId didn't find an address mark\n"));
+      DPRINT(("floppy: ReadId didn't find an address mark\n"));
       return STATUS_UNSUCCESSFUL;
     }
 
@@ -994,13 +996,13 @@ NTSTATUS NTAPI HwSpecify(PCONTROLLER_INFO ControllerInfo,
   Buffer[1] = 0xdf;
   Buffer[2] = 0x2;
 
-  //KdPrint(("HwSpecify: sending 0x%x 0x%x 0x%x to FIFO\n", Buffer[0], Buffer[1], Buffer[2]));
-  KdPrint(("FLOPPY: HWSPECIFY: FIXME - sending 0x3 0xd1 0x2 to FIFO\n"));
+  //DPRINT(("HwSpecify: sending 0x%x 0x%x 0x%x to FIFO\n", Buffer[0], Buffer[1], Buffer[2]));
+  DPRINT(("FLOPPY: HWSPECIFY: FIXME - sending 0x3 0xd1 0x2 to FIFO\n"));
 
   for(i = 0; i < 3; i++)
     if(Send_Byte(ControllerInfo, Buffer[i]) != STATUS_SUCCESS)
       {
-	KdPrint(("floppy: HwSpecify: unable to write to controller\n"));
+	DPRINT(("floppy: HwSpecify: unable to write to controller\n"));
         return STATUS_UNSUCCESSFUL;
       }
 
@@ -1019,7 +1021,7 @@ NTSTATUS NTAPI HwReset(PCONTROLLER_INFO ControllerInfo)
  *     - Generates an interrupt that must be serviced four times (one per drive)
  */
 {
-  KdPrint(("floppy: HwReset called\n"));
+  DPRINT(("floppy: HwReset called\n"));
 
   /* Write the reset bit in the DRSR */
   WRITE_PORT_UCHAR(ControllerInfo->BaseAddress + DATA_RATE_SELECT_REGISTER, DRSR_SW_RESET);
@@ -1028,13 +1030,13 @@ NTSTATUS NTAPI HwReset(PCONTROLLER_INFO ControllerInfo)
   if(!(READ_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_OUTPUT_REGISTER) & DOR_RESET))
     {
       HwDumpRegisters(ControllerInfo);
-      KdPrint(("floppy: HwReset: Setting Enable bit\n"));
+      DPRINT(("floppy: HwReset: Setting Enable bit\n"));
       WRITE_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_OUTPUT_REGISTER, DOR_DMA_IO_INTERFACE_ENABLE|DOR_RESET);
       HwDumpRegisters(ControllerInfo);
 
       if(!(READ_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_OUTPUT_REGISTER) & DOR_RESET))
 	{
-	  KdPrint(("floppy: HwReset: failed to set the DOR enable bit!\n"));
+	  DPRINT(("floppy: HwReset: failed to set the DOR enable bit!\n"));
           HwDumpRegisters(ControllerInfo);
 	  return STATUS_UNSUCCESSFUL;
 	}
@@ -1055,7 +1057,7 @@ NTSTATUS NTAPI HwPowerOff(PCONTROLLER_INFO ControllerInfo)
  *     - Wake up with a hardware reset
  */
 {
-  KdPrint(("floppy: HwPowerOff called on controller 0x%x\n", ControllerInfo));
+  DPRINT(("floppy: HwPowerOff called on controller 0x%x\n", ControllerInfo));
 
   WRITE_PORT_UCHAR(ControllerInfo->BaseAddress + DATA_RATE_SELECT_REGISTER, DRSR_POWER_DOWN);
 
@@ -1071,11 +1073,11 @@ VOID NTAPI HwDumpRegisters(PCONTROLLER_INFO ControllerInfo)
 {
   UNREFERENCED_PARAMETER(ControllerInfo);
 
-  KdPrint(("floppy: STATUS: "));
-  KdPrint(("STATUS_REGISTER_A = 0x%x ", READ_PORT_UCHAR(ControllerInfo->BaseAddress + STATUS_REGISTER_A)));
-  KdPrint(("STATUS_REGISTER_B = 0x%x ", READ_PORT_UCHAR(ControllerInfo->BaseAddress + STATUS_REGISTER_B)));
-  KdPrint(("DIGITAL_OUTPUT_REGISTER = 0x%x ", READ_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_OUTPUT_REGISTER)));
-  KdPrint(("MAIN_STATUS_REGISTER =0x%x ", READ_PORT_UCHAR(ControllerInfo->BaseAddress + MAIN_STATUS_REGISTER)));
-  KdPrint(("DIGITAL_INPUT_REGISTER = 0x%x\n", READ_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_INPUT_REGISTER)));
+  DPRINT(("floppy: STATUS: "));
+  DPRINT(("STATUS_REGISTER_A = 0x%x ", READ_PORT_UCHAR(ControllerInfo->BaseAddress + STATUS_REGISTER_A)));
+  DPRINT(("STATUS_REGISTER_B = 0x%x ", READ_PORT_UCHAR(ControllerInfo->BaseAddress + STATUS_REGISTER_B)));
+  DPRINT(("DIGITAL_OUTPUT_REGISTER = 0x%x ", READ_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_OUTPUT_REGISTER)));
+  DPRINT(("MAIN_STATUS_REGISTER =0x%x ", READ_PORT_UCHAR(ControllerInfo->BaseAddress + MAIN_STATUS_REGISTER)));
+  DPRINT(("DIGITAL_INPUT_REGISTER = 0x%x\n", READ_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_INPUT_REGISTER)));
 }
 
