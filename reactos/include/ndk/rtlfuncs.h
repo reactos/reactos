@@ -210,7 +210,7 @@ PVOID
 STDCALL
 RtlAddVectoredExceptionHandler(
     IN ULONG FirstHandler,
-    IN PRTL_VECTORED_EXCEPTION_HANDLER VectoredHandler
+    IN PVECTORED_EXCEPTION_HANDLER VectoredHandler
 );
 
 VOID
