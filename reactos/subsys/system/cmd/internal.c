@@ -482,15 +482,25 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 INT CommandExit (LPTSTR cmd, LPTSTR param)
 {
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{
 		ConOutResPuts(STRING_EXIT_HELP);
-		return 0;
+
+	if (bc != NULL && _tcsnicmp(param,_T("/b"),2) == 0)
+	{
+		param += 2;
+		while (_istspace (*param))
+			param++;
+		if (_istdigit(*param))
+			nErrorLevel = _ttoi(param);
+		ExitBatch (NULL);
 	}
+		
+	else
+		bExit = TRUE;
 
-	bExit = TRUE;
+	
 	return 0;
-}
 
+}
 
 #ifdef INCLUDE_CMD_REM
 /*
