@@ -670,6 +670,7 @@ typedef enum
 	GuaranteedService
 } GUARANTEE;
 
+#include <qos.h>
 typedef struct _QualityOfService
 {
 	FLOWSPEC	SendingFlowspec;
