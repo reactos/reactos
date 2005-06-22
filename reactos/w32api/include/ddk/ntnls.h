@@ -1,5 +1,5 @@
 /*
- * ntddmou.h
+ * ntnls.h
  *
  * Structures and definitions for NLS data types.
  *
