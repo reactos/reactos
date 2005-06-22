@@ -13,6 +13,7 @@
 #include "lpctypes.h"
 #include "zwtypes.h"
 #include "kdtypes.h"
+#include <evntrace.h>
 
 /* FUNCTION TYPES ************************************************************/
 

@@ -40,7 +40,7 @@
 #include "ntddndis.h"
 #include "netpnp.h"
 #include "netevent.h"
-#include <winsock2.h>
+#include <qos.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -729,17 +729,6 @@ typedef struct {
   ULONG  MinorVersion;
 } CO_ADDRESS_FAMILY, *PCO_ADDRESS_FAMILY;
 
-typedef struct _CO_FLOW_PARAMETERS {
-  ULONG  TokenRate;
-  ULONG  TokenBucketSize;
-  ULONG  PeakBandwidth;
-  ULONG  Latency;
-  ULONG  DelayVariation;
-  SERVICETYPE  ServiceType;
-  ULONG  MaxSduSize;
-  ULONG  MinimumPolicedSize;
-} CO_FLOW_PARAMETERS, *PCO_FLOW_PARAMETERS;
-
 typedef struct _CO_SPECIFIC_PARAMETERS {
   ULONG  ParamType;
   ULONG  Length;
@@ -747,8 +736,8 @@ typedef struct _CO_SPECIFIC_PARAMETERS {
 } CO_SPECIFIC_PARAMETERS, *PCO_SPECIFIC_PARAMETERS;
 
 typedef struct _CO_CALL_MANAGER_PARAMETERS {
-  CO_FLOW_PARAMETERS  Transmit;
-  CO_FLOW_PARAMETERS  Receive;
+  FLOWSPEC  Transmit;
+  FLOWSPEC  Receive;
   CO_SPECIFIC_PARAMETERS  CallMgrSpecific;
 } CO_CALL_MANAGER_PARAMETERS, *PCO_CALL_MANAGER_PARAMETERS;
 
