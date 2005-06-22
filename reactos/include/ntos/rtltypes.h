@@ -40,6 +40,7 @@
 #define VER_NT_SERVER					0x0000003
 */
 
+  
 typedef struct _CONTROLLER_OBJECT
 {
   CSHORT Type;
@@ -439,5 +440,45 @@ typedef RTL_GENERIC_TABLE *PRTL_GENERIC_TABLE;
 typedef NTSTATUS
 (*PHEAP_ENUMERATION_ROUTINE)(IN PVOID HeapHandle,
                              IN PVOID UserParam);
+
+                             
+#define RTL_RANGE_LIST_ADD_IF_CONFLICT    0x00000001
+#define RTL_RANGE_LIST_ADD_SHARED         0x00000002
+
+#define RTL_RANGE_LIST_SHARED_OK          0x00000001
+#define RTL_RANGE_LIST_NULL_CONFLICT_OK   0x00000002
+
+#define RTL_RANGE_LIST_MERGE_IF_CONFLICT  RTL_RANGE_LIST_ADD_IF_CONFLICT
+
+typedef struct _RTL_RANGE {
+  ULONGLONG  Start;
+  ULONGLONG  End;
+  PVOID  UserData;
+  PVOID  Owner;
+  UCHAR  Attributes;
+  UCHAR  Flags;
+} RTL_RANGE, *PRTL_RANGE;
+
+#define RTL_RANGE_SHARED                  0x01
+#define RTL_RANGE_CONFLICT                0x02
+
+typedef struct _RTL_RANGE_LIST {
+  LIST_ENTRY  ListHead;
+  ULONG  Flags;
+  ULONG  Count;
+  ULONG  Stamp;
+} RTL_RANGE_LIST, *PRTL_RANGE_LIST;
+
+typedef struct _RANGE_LIST_ITERATOR {
+  PLIST_ENTRY  RangeListHead;
+  PLIST_ENTRY  MergedHead;
+  PVOID  Current;
+  ULONG  Stamp;
+} RTL_RANGE_LIST_ITERATOR, *PRTL_RANGE_LIST_ITERATOR;
+
+typedef BOOLEAN
+(STDCALL *PRTL_CONFLICT_RANGE_CALLBACK)(
+  IN PVOID  Context,
+  IN PRTL_RANGE  Range);
 
 #endif /* __DDK_RTLTYPES_H */

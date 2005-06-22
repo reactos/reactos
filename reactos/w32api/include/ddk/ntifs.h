@@ -1163,16 +1163,6 @@ typedef struct _FILE_PIPE_WAIT_FOR_BUFFER {
     WCHAR           Name[1];
 } FILE_PIPE_WAIT_FOR_BUFFER, *PFILE_PIPE_WAIT_FOR_BUFFER;
 
-typedef struct _FILE_QUOTA_INFORMATION {
-    ULONG           NextEntryOffset;
-    ULONG           SidLength;
-    LARGE_INTEGER   ChangeTime;
-    LARGE_INTEGER   QuotaUsed;
-    LARGE_INTEGER   QuotaThreshold;
-    LARGE_INTEGER   QuotaLimit;
-    SID             Sid;
-} FILE_QUOTA_INFORMATION, *PFILE_QUOTA_INFORMATION;
-
 typedef struct _FILE_RENAME_INFORMATION {
     BOOLEAN ReplaceIfExists;
     HANDLE  RootDirectory;

@@ -11,6 +11,7 @@
 
 /* DEPENDENCIES **************************************************************/
 #include "rtltypes.h"
+#include <ddk/cfg.h>
 
 /* EXPORTED DATA *************************************************************/
 
@@ -92,6 +93,8 @@ typedef enum _SYSTEM_DOCK_STATE
 /*
  * Process (extra ones not defined in DDK)
  */
+/* FIXME: Temporary hack until all KMODE stuf are NDK */
+#ifndef __WINDDK_H
 typedef enum _PROCESS_INFORMATION_FLAGS
 {    
     ProcessUnknown33 = 33,
@@ -99,6 +102,7 @@ typedef enum _PROCESS_INFORMATION_FLAGS
     ProcessUnknown35,
     ProcessCookie
 } PROCESS_INFORMATION_FLAGS;
+#endif
 
 /*
  * System

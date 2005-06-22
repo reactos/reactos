@@ -1,12 +1,10 @@
 #ifndef __INCLUDE_NAPI_CORE_H
 #define __INCLUDE_NAPI_CORE_H
 
-#include "../ntoskrnl/include/internal/ke.h"
-#include <ddk/ntddscsi.h>
-
 #define MM_CORE_DUMP_HEADER_MAGIC         (0xdeafbead)
 #define MM_CORE_DUMP_HEADER_VERSION       (0x1)
 
+#include <ddk/ntddscsi.h>
 typedef struct _MM_CORE_DUMP_HEADER
 {
   ULONG Magic;

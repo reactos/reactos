@@ -184,6 +184,192 @@
 #define VER_CONDITION_MASK              7
 #define VER_NUM_BITS_PER_CONDITION_MASK 3
 
+/* List Macros */
+static __inline 
+VOID
+InitializeListHead(
+    IN PLIST_ENTRY  ListHead)
+{
+    ListHead->Flink = ListHead->Blink = ListHead;
+}
+
+static __inline 
+VOID
+InsertHeadList(
+    IN PLIST_ENTRY  ListHead,
+    IN PLIST_ENTRY  Entry)
+{
+    PLIST_ENTRY OldFlink;
+    OldFlink = ListHead->Flink;
+    Entry->Flink = OldFlink;
+    Entry->Blink = ListHead;
+    OldFlink->Blink = Entry;
+    ListHead->Flink = Entry;
+}
+
+static __inline 
+VOID
+InsertTailList(
+    IN PLIST_ENTRY  ListHead,
+    IN PLIST_ENTRY  Entry)
+{
+    PLIST_ENTRY OldBlink;
+    OldBlink = ListHead->Blink;
+    Entry->Flink = ListHead;
+    Entry->Blink = OldBlink;
+    OldBlink->Flink = Entry;
+    ListHead->Blink = Entry;
+}
+
+#define IsListEmpty(ListHead) \
+    ((ListHead)->Flink == (ListHead))
+
+#define PopEntryList(ListHead) \
+    (ListHead)->Next; \
+    { \
+        PSINGLE_LIST_ENTRY _FirstEntry; \
+        _FirstEntry = (ListHead)->Next; \
+        if (_FirstEntry != NULL) \
+            (ListHead)->Next = _FirstEntry->Next; \
+    }
+
+#define PushEntryList(_ListHead, _Entry) \
+    (_Entry)->Next = (_ListHead)->Next; \
+    (_ListHead)->Next = (_Entry); \
+
+static __inline 
+BOOLEAN
+RemoveEntryList(
+    IN PLIST_ENTRY  Entry)
+{
+    PLIST_ENTRY OldFlink;
+    PLIST_ENTRY OldBlink;
+
+    OldFlink = Entry->Flink;
+    OldBlink = Entry->Blink;
+    OldFlink->Blink = OldBlink;
+    OldBlink->Flink = OldFlink;
+    return (OldFlink == OldBlink);
+}
+
+static __inline 
+PLIST_ENTRY 
+RemoveHeadList(
+    IN PLIST_ENTRY  ListHead)
+{
+    PLIST_ENTRY Flink;
+    PLIST_ENTRY Entry;
+
+    Entry = ListHead->Flink;
+    Flink = Entry->Flink;
+    ListHead->Flink = Flink;
+    Flink->Blink = ListHead;
+    return Entry;
+}
+
+static __inline 
+PLIST_ENTRY
+RemoveTailList(
+    IN PLIST_ENTRY  ListHead)
+{
+    PLIST_ENTRY Blink;
+    PLIST_ENTRY Entry;
+
+    Entry = ListHead->Blink;
+    Blink = Entry->Blink;
+    ListHead->Blink = Blink;
+    Blink->Flink = ListHead;
+    return Entry;
+}
+
+#define IsFirstEntry(ListHead, Entry) \
+    ((ListHead)->Flink == Entry)
+  
+#define IsLastEntry(ListHead, Entry) \
+    ((ListHead)->Blink == Entry)
+    
+#define InsertAscendingListFIFO(ListHead, Type, ListEntryField, NewEntry, SortField)\
+{\
+  PLIST_ENTRY current;\
+\
+  current = (ListHead)->Flink;\
+  while (current != (ListHead))\
+  {\
+    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField >\
+        (NewEntry)->SortField)\
+    {\
+      break;\
+    }\
+    current = current->Flink;\
+  }\
+\
+  InsertTailList(current, &((NewEntry)->ListEntryField));\
+}
+
+#define InsertDescendingListFIFO(ListHead, Type, ListEntryField, NewEntry, SortField)\
+{\
+  PLIST_ENTRY current;\
+\
+  current = (ListHead)->Flink;\
+  while (current != (ListHead))\
+  {\
+    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField <\
+        (NewEntry)->SortField)\
+    {\
+      break;\
+    }\
+    current = current->Flink;\
+  }\
+\
+  InsertTailList(current, &((NewEntry)->ListEntryField));\
+}
+
+#define InsertAscendingList(ListHead, Type, ListEntryField, NewEntry, SortField)\
+{\
+  PLIST_ENTRY current;\
+\
+  current = (ListHead)->Flink;\
+  while (current != (ListHead))\
+  {\
+    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField >=\
+        (NewEntry)->SortField)\
+    {\
+      break;\
+    }\
+    current = current->Flink;\
+  }\
+\
+  InsertTailList(current, &((NewEntry)->ListEntryField));\
+}
+
+#define InsertDescendingList(ListHead, Type, ListEntryField, NewEntry, SortField)\
+{\
+  PLIST_ENTRY current;\
+\
+  current = (ListHead)->Flink;\
+  while (current != (ListHead))\
+  {\
+    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField <=\
+        (NewEntry)->SortField)\
+    {\
+      break;\
+    }\
+    current = current->Flink;\
+  }\
+\
+  InsertTailList(current, &((NewEntry)->ListEntryField));\
+}
+
+/*
+ * Constant String Macro
+ */
+#define RTL_CONSTANT_STRING(__SOURCE_STRING__) \
+{ \
+ sizeof(__SOURCE_STRING__) - sizeof((__SOURCE_STRING__)[0]), \
+ sizeof(__SOURCE_STRING__), \
+ (__SOURCE_STRING__) \
+}
+
 /* ENUMERATIONS **************************************************************/
 
 /* Kernel Shared Data Values */
@@ -282,23 +468,6 @@ typedef enum _INTERFACE_TYPE
     PNPBus,
     MaximumInterfaceType
 }INTERFACE_TYPE, *PINTERFACE_TYPE;
-
-typedef enum _PNP_VETO_TYPE
-{
-    PNP_VetoTypeUnknown,
-    PNP_VetoLegacyDevice,
-    PNP_VetoPendingClose,
-    PNP_VetoWindowsApp,
-    PNP_VetoWindowsService,
-    PNP_VetoOutstandingOpen,
-    PNP_VetoDevice,
-    PNP_VetoDriver,
-    PNP_VetoIllegalDeviceRequest,
-    PNP_VetoInsufficientPower,
-    PNP_VetoNonDisableable,
-    PNP_VetoLegacyDriver,
-    PNP_VetoInsufficientRights
-} PNP_VETO_TYPE, *PPNP_VETO_TYPE;
 
 typedef enum _MODE 
 {

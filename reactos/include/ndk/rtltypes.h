@@ -381,6 +381,12 @@ typedef struct _RTL_ATOM_TABLE
         SYSTEMTIME DaylightDate;
         LONG DaylightBias;
     } TIME_ZONE_INFORMATION, *PTIME_ZONE_INFORMATION, *LPTIME_ZONE_INFORMATION;
+    
+    typedef enum _ACL_INFORMATION_CLASS 
+    {
+        AclRevisionInformation = 1,
+        AclSizeInformation
+    } ACL_INFORMATION_CLASS;
 #endif
 
 #endif

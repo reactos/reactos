@@ -186,6 +186,7 @@ typedef struct _HAL_DISPATCH_TABLE *PHAL_DISPATCH_TABLE;
 typedef struct _HAL_PRIVATE_DISPATCH_TABLE *PHAL_PRIVATE_DISPATCH_TABLE;
 typedef struct _DEVICE_HANDLER_OBJECT *PDEVICE_HANDLER_OBJECT;
 typedef struct _BUS_HANDLER *PBUS_HANDLER;
+typedef struct _PEB *PPEB;
 typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 
 /* Constants */
@@ -2513,6 +2514,16 @@ typedef struct _FILE_DISPOSITION_INFORMATION {
   BOOLEAN  DeleteFile;
 } FILE_DISPOSITION_INFORMATION, *PFILE_DISPOSITION_INFORMATION;
 
+typedef struct _FILE_QUOTA_INFORMATION {
+    ULONG NextEntryOffset;
+    ULONG SidLength;
+    LARGE_INTEGER ChangeTime;
+    LARGE_INTEGER QuotaUsed;
+    LARGE_INTEGER QuotaThreshold;
+    LARGE_INTEGER QuotaLimit;
+    SID Sid;
+} FILE_QUOTA_INFORMATION, *PFILE_QUOTA_INFORMATION;
+
 typedef struct _FILE_END_OF_FILE_INFORMATION {
   LARGE_INTEGER  EndOfFile;
 } FILE_END_OF_FILE_INFORMATION, *PFILE_END_OF_FILE_INFORMATION;
@@ -4372,45 +4383,6 @@ typedef struct _DRIVER_VERIFIER_THUNK_PAIRS {
 #define DRIVER_VERIFIER_TRACK_POOL_ALLOCATIONS      0x0008
 #define DRIVER_VERIFIER_IO_CHECKING                 0x0010
 
-#define RTL_RANGE_LIST_ADD_IF_CONFLICT    0x00000001
-#define RTL_RANGE_LIST_ADD_SHARED         0x00000002
-
-#define RTL_RANGE_LIST_SHARED_OK          0x00000001
-#define RTL_RANGE_LIST_NULL_CONFLICT_OK   0x00000002
-
-#define RTL_RANGE_LIST_MERGE_IF_CONFLICT  RTL_RANGE_LIST_ADD_IF_CONFLICT
-
-typedef struct _RTL_RANGE {
-  ULONGLONG  Start;
-  ULONGLONG  End;
-  PVOID  UserData;
-  PVOID  Owner;
-  UCHAR  Attributes;
-  UCHAR  Flags;
-} RTL_RANGE, *PRTL_RANGE;
-
-#define RTL_RANGE_SHARED                  0x01
-#define RTL_RANGE_CONFLICT                0x02
-
-typedef struct _RTL_RANGE_LIST {
-  LIST_ENTRY  ListHead;
-  ULONG  Flags;
-  ULONG  Count;
-  ULONG  Stamp;
-} RTL_RANGE_LIST, *PRTL_RANGE_LIST;
-
-typedef struct _RANGE_LIST_ITERATOR {
-  PLIST_ENTRY  RangeListHead;
-  PLIST_ENTRY  MergedHead;
-  PVOID  Current;
-  ULONG  Stamp;
-} RTL_RANGE_LIST_ITERATOR, *PRTL_RANGE_LIST_ITERATOR;
-
-typedef BOOLEAN
-(DDKAPI *PRTL_CONFLICT_RANGE_CALLBACK)(
-  IN PVOID  Context,
-  IN PRTL_RANGE  Range);
-
 #define HASH_STRING_ALGORITHM_DEFAULT     0
 #define HASH_STRING_ALGORITHM_X65599      1
 #define HASH_STRING_ALGORITHM_INVALID     0xffffffff
@@ -4915,18 +4887,6 @@ RtlAnsiStringToUnicodeSize(
 NTOSAPI
 NTSTATUS
 DDKAPI
-RtlAddRange(
-  IN OUT PRTL_RANGE_LIST  RangeList,
-  IN ULONGLONG  Start,
-  IN ULONGLONG  End,
-  IN UCHAR  Attributes,
-  IN ULONG  Flags,
-  IN PVOID  UserData  OPTIONAL,
-  IN PVOID  Owner  OPTIONAL);
-
-NTOSAPI
-NTSTATUS
-DDKAPI
 RtlAnsiStringToUnicodeString(
   IN OUT PUNICODE_STRING  DestinationString,
   IN PANSI_STRING  SourceString,
@@ -5078,13 +5038,6 @@ RtlCopyMemory32(
   IN ULONG  Length);
 
 NTOSAPI
-NTSTATUS
-DDKAPI
-RtlCopyRangeList(
-  OUT PRTL_RANGE_LIST  CopyRangeList,
-  IN PRTL_RANGE_LIST  RangeList);
-
-NTOSAPI
 VOID
 DDKAPI
 RtlCopyString(
@@ -5111,22 +5064,6 @@ DDKAPI
 RtlCreateSecurityDescriptor(
   IN OUT PSECURITY_DESCRIPTOR  SecurityDescriptor,
   IN ULONG  Revision);
-
-NTOSAPI
-NTSTATUS
-DDKAPI
-RtlDeleteOwnersRanges(
-  IN OUT PRTL_RANGE_LIST  RangeList,
-  IN PVOID  Owner);
-
-NTOSAPI
-NTSTATUS
-DDKAPI
-RtlDeleteRange(
-  IN OUT PRTL_RANGE_LIST  RangeList,
-  IN ULONGLONG  Start,
-  IN ULONGLONG  End,
-  IN PVOID  Owner);
 
 NTOSAPI
 NTSTATUS
@@ -5255,21 +5192,6 @@ RtlFindNextForwardRunClear(
   OUT PULONG  StartingRunIndex);
 
 NTOSAPI
-NTSTATUS
-DDKAPI
-RtlFindRange(
-  IN PRTL_RANGE_LIST  RangeList,
-  IN ULONGLONG  Minimum,
-  IN ULONGLONG  Maximum,
-  IN ULONG  Length,
-  IN ULONG  Alignment,
-  IN ULONG  Flags,
-  IN UCHAR  AttributeAvailableMask,
-  IN PVOID  Context  OPTIONAL,
-  IN PRTL_CONFLICT_RANGE_CALLBACK  Callback  OPTIONAL,
-  OUT PULONGLONG  Start);
-
-NTOSAPI
 ULONG
 DDKAPI
 RtlFindSetBits(
@@ -5294,12 +5216,6 @@ RtlFreeAnsiString(
 NTOSAPI
 VOID
 DDKAPI
-RtlFreeRangeList(
-  IN PRTL_RANGE_LIST  RangeList);
-
-NTOSAPI
-VOID
-DDKAPI
 RtlFreeUnicodeString(
   IN PUNICODE_STRING  UnicodeString);
 
@@ -5315,32 +5231,6 @@ NTSTATUS
 DDKAPI
 RtlGetVersion(
   IN OUT PRTL_OSVERSIONINFOW  lpVersionInformation);
-
-NTOSAPI
-NTSTATUS
-DDKAPI
-RtlGetFirstRange(
-  IN PRTL_RANGE_LIST  RangeList,
-  OUT PRTL_RANGE_LIST_ITERATOR  Iterator,
-  OUT PRTL_RANGE  *Range);
-
-NTOSAPI
-NTSTATUS
-DDKAPI
-RtlGetNextRange(
-  IN OUT  PRTL_RANGE_LIST_ITERATOR  Iterator,
-  OUT PRTL_RANGE  *Range,
-  IN BOOLEAN  MoveForwards);
-
-#define FOR_ALL_RANGES(RangeList, Iterator, Current)          \
-  for (RtlGetFirstRange((RangeList), (Iterator), &(Current)); \
-    (Current) != NULL;                                        \
-    RtlGetNextRange((Iterator), &(Current), TRUE))
-
-#define FOR_ALL_RANGES_BACKWARDS(RangeList, Iterator, Current) \
-  for (RtlGetLastRange((RangeList), (Iterator), &(Current));   \
-    (Current) != NULL;                                         \
-    RtlGetNextRange((Iterator), &(Current), FALSE))
 
 NTOSAPI
 NTSTATUS
@@ -5372,12 +5262,6 @@ RtlInitializeBitMap(
   IN PRTL_BITMAP  BitMapHeader,
   IN PULONG  BitMapBuffer,
   IN ULONG  SizeOfBitMap);
-
-NTOSAPI
-VOID
-DDKAPI
-RtlInitializeRangeList(
-  IN OUT PRTL_RANGE_LIST  RangeList);
 
 NTOSAPI
 VOID
@@ -5417,26 +5301,6 @@ RtlIntPtrToUnicodeString(
   ULONG  Base  OPTIONAL,
   PUNICODE_STRING  String);
 
-NTOSAPI
-NTSTATUS
-DDKAPI
-RtlInvertRangeList(
-  OUT PRTL_RANGE_LIST  InvertedRangeList,
-  IN PRTL_RANGE_LIST  RangeList);
-
-NTOSAPI
-NTSTATUS
-DDKAPI
-RtlIsRangeAvailable(
-  IN PRTL_RANGE_LIST  RangeList,
-  IN ULONGLONG  Start,
-  IN ULONGLONG  End,
-  IN ULONG  Flags,
-  IN UCHAR  AttributeAvailableMask,
-  IN PVOID  Context  OPTIONAL,
-  IN PRTL_CONFLICT_RANGE_CALLBACK  Callback  OPTIONAL,
-  OUT PBOOLEAN  Available);
-
 /*
  * BOOLEAN
  * RtlIsZeroLuid(
@@ -5457,15 +5321,6 @@ DDKAPI
 RtlMapGenericMask(
   IN OUT PACCESS_MASK  AccessMask,
   IN PGENERIC_MAPPING  GenericMapping);
-
-NTOSAPI
-NTSTATUS
-DDKAPI
-RtlMergeRangeLists(
-  OUT PRTL_RANGE_LIST  MergedRangeList,
-  IN PRTL_RANGE_LIST  RangeList1,
-  IN PRTL_RANGE_LIST  RangeList2,
-  IN ULONG  Flags);
 
 /*
  * VOID

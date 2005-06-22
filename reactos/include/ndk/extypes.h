@@ -11,6 +11,7 @@
 #define _EXTYPES_H
 
 /* DEPENDENCIES **************************************************************/
+#include "ketypes.h"
 
 /* EXPORTED DATA *************************************************************/
 extern POBJECT_TYPE NTOSAPI ExIoCompletionType;
@@ -24,6 +25,8 @@ extern NTOSAPI POBJECT_TYPE ExTimerType;
 
 /* TYPES *********************************************************************/
 
+/* You'll need the IFS for these, so let's not force everyone to have it */
+#ifdef _NTIFS_
 typedef struct _EX_QUEUE_WORKER_INFO 
 {
     UCHAR QueueDisabled:1;
@@ -41,6 +44,7 @@ typedef struct _EX_WORK_QUEUE
     ULONG QueueDepthLastPass;
     EX_QUEUE_WORKER_INFO Info;    
 } EX_WORK_QUEUE, *PEX_WORK_QUEUE;
+#endif
 
 typedef struct _HANDLE_TABLE_ENTRY_INFO 
 {
