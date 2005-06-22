@@ -571,7 +571,7 @@ NtUserManualGuiCheck                    1
 # DirectDraw system calls
 NtGdiD3dContextCreate                   4
 NtGdiD3dContextDestroy                  1
-NtGdiD3dContextDestroyAll               1
+NtGdiD3dContextDestroyAll               0
 NtGdiD3dDrawPrimitives2                 7
 NtGdiD3dValidateTextureStageState       1
 NtGdiDdAddAttachedSurface               3
