@@ -112,6 +112,10 @@
 
 #endif /* i386 */
 
+/* AF_INET and other things Arty likes to use ;) */
+#define AF_INET 2
+#define SOCK_STREAM 1
+
 typedef TDI_STATUS (*InfoRequest_f)( UINT InfoClass,
 				     UINT InfoType,
 				     UINT InfoId,

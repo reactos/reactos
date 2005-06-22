@@ -35,5 +35,5 @@
 #include <interface.h>
 #include <ports.h>
 #include <ipifcons.h>
-#define NTOS_MODE_USER
-#include <ntos.h>
+#include <ndk/ntndk.h>
+
