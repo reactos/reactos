@@ -17,9 +17,7 @@
 
 #include "trace.h"
 
-
-VOID WINSNMPAPI SnmpSvcInitUptime();
-DWORD WINSNMPAPI SnmpSvcGetUptime();
+VOID WINAPI SnmpSvcInitUptime();
 
 ////////////////////////////////////////////////////////////////////////////////
 
