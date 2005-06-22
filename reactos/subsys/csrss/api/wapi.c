@@ -113,13 +113,15 @@ STDCALL
 ClientConnectionThread(HANDLE ServerPort)
 {
     NTSTATUS Status;
-    LPC_MAX_MESSAGE LpcReply;
     LPC_MAX_MESSAGE LpcRequest;
     PCSR_API_MESSAGE Request;
     PCSR_API_MESSAGE Reply;
     PCSRSS_PROCESS_DATA ProcessData;
   
     DPRINT("CSR: %s called", __FUNCTION__);
+
+    /* Reply must be NULL at the first call to NtReplyWaitReceivePort */
+    Reply = NULL; 
 
     /* Loop and reply/wait for a new message */
     for (;;)
@@ -144,7 +146,6 @@ ClientConnectionThread(HANDLE ServerPort)
         
         /* Get the CSR Message */
         Request = (PCSR_API_MESSAGE)&LpcRequest;
-        Reply = (PCSR_API_MESSAGE)&LpcReply;
       
         DPRINT("CSR: Got CSR API: %x [Message Origin: %x]\n", 
                 Request->Type, 
