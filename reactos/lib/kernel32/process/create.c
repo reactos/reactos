@@ -740,8 +740,8 @@ CreateProcessW(LPCWSTR lpApplicationName,
    ULONG retlen;
    PRTL_USER_PROCESS_PARAMETERS Ppb;
    UNICODE_STRING CommandLine_U;
-   CSRSS_API_REQUEST CsrRequest;
-   CSRSS_API_REPLY CsrReply;
+   CSR_API_MESSAGE CsrRequest;
+   ULONG Request;
    PWCHAR s, e;
    ULONG i;
    UNICODE_STRING CurrentDirectory_U;
@@ -1156,7 +1156,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
    /*
     * Tell the csrss server we are creating a new process
     */
-   CsrRequest.Type = CSRSS_CREATE_PROCESS;
+   Request = CREATE_PROCESS;
    CsrRequest.Data.CreateProcessRequest.NewProcessId =
       (HANDLE)ProcessBasicInfo.UniqueProcessId;
    if (Sii.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI)
@@ -1175,15 +1175,15 @@ CreateProcessW(LPCWSTR lpApplicationName,
    CsrRequest.Data.CreateProcessRequest.Flags = dwCreationFlags;
    CsrRequest.Data.CreateProcessRequest.CtrlDispatcher = ConsoleControlDispatcher;
    Status = CsrClientCallServer(&CsrRequest,
-				&CsrReply,
-				sizeof(CSRSS_API_REQUEST),
-				sizeof(CSRSS_API_REPLY));
-   if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrReply.Status))
+				NULL,
+                MAKE_CSR_API(Request, CSR_NATIVE),
+				sizeof(CSR_API_MESSAGE));
+   if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
    {
       DbgPrint("Failed to tell csrss about new process. Expect trouble.\n");
    }
 
-   Ppb->hConsole = CsrReply.Data.CreateProcessReply.Console;
+   Ppb->hConsole = CsrRequest.Data.CreateProcessRequest.Console;
 
    InputSet = FALSE;
    OutputSet = FALSE;
@@ -1217,23 +1217,23 @@ CreateProcessW(LPCWSTR lpApplicationName,
    /* Check if new console was created, use it for input and output if
       not overridden */
    if (0 != (dwCreationFlags & CREATE_NEW_CONSOLE)
-       && NT_SUCCESS(Status) && NT_SUCCESS(CsrReply.Status))
+       && NT_SUCCESS(Status) && NT_SUCCESS(CsrRequest.Status))
    {
       if (! InputSet)
       {
-         Ppb->hStdInput = CsrReply.Data.CreateProcessReply.InputHandle;
+         Ppb->hStdInput = CsrRequest.Data.CreateProcessRequest.InputHandle;
          InputSet = TRUE;
          InputDup = FALSE;
       }
       if (! OutputSet)
       {
-         Ppb->hStdOutput = CsrReply.Data.CreateProcessReply.OutputHandle;
+         Ppb->hStdOutput = CsrRequest.Data.CreateProcessRequest.OutputHandle;
          OutputSet = TRUE;
          OutputDup = FALSE;
       }
       if (! ErrorSet)
       {
-         Ppb->hStdError = CsrReply.Data.CreateProcessReply.OutputHandle;
+         Ppb->hStdError = CsrRequest.Data.CreateProcessRequest.OutputHandle;
          ErrorSet = TRUE;
          ErrorDup = FALSE;
       }
@@ -1261,7 +1261,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
    {
       if (IsConsoleHandle(Ppb->hStdInput))
       {
-         Ppb->hStdInput = CsrReply.Data.CreateProcessReply.InputHandle;
+         Ppb->hStdInput = CsrRequest.Data.CreateProcessRequest.InputHandle;
       }
       else
       {
@@ -1284,7 +1284,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
    {
       if (IsConsoleHandle(Ppb->hStdOutput))
       {
-         Ppb->hStdOutput = CsrReply.Data.CreateProcessReply.OutputHandle;
+         Ppb->hStdOutput = CsrRequest.Data.CreateProcessRequest.OutputHandle;
       }
       else
       {
@@ -1307,20 +1307,20 @@ CreateProcessW(LPCWSTR lpApplicationName,
    {
       if (IsConsoleHandle(Ppb->hStdError))
       {
-         CsrRequest.Type = CSRSS_DUPLICATE_HANDLE;
+         Request = DUPLICATE_HANDLE;
          CsrRequest.Data.DuplicateHandleRequest.ProcessId = (HANDLE)ProcessBasicInfo.UniqueProcessId;
-         CsrRequest.Data.DuplicateHandleRequest.Handle = CsrReply.Data.CreateProcessReply.OutputHandle;
+         CsrRequest.Data.DuplicateHandleRequest.Handle = CsrRequest.Data.CreateProcessRequest.OutputHandle;
          Status = CsrClientCallServer(&CsrRequest,
-                                      &CsrReply,
-                                      sizeof(CSRSS_API_REQUEST),
-                                      sizeof(CSRSS_API_REPLY));
-         if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrReply.Status))
+                                      NULL,
+                                      MAKE_CSR_API(Request, CSR_NATIVE),
+                                      sizeof(CSR_API_MESSAGE));
+         if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
          {
             Ppb->hStdError = INVALID_HANDLE_VALUE;
          }
          else
          {
-            Ppb->hStdError = CsrReply.Data.DuplicateHandleReply.Handle;
+            Ppb->hStdError = CsrRequest.Data.DuplicateHandleRequest.Handle;
          }
       }
       else

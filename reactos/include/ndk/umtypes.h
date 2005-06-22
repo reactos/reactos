@@ -564,6 +564,7 @@ typedef struct _PEB *PPEB;
 typedef ULONG KPROCESSOR_MODE;
 typedef struct _OBJECT_TYPE *POBJECT_TYPE;
 struct _ETHREAD;
+struct _CSR_API_MESSAGE;
 struct _EVENT_TRACE_HEADER; /* <--- We might want to declare this one */
 typedef ULONG EXECUTION_STATE;
 

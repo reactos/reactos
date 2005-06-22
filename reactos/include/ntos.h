@@ -45,7 +45,7 @@
 #include "ntos/zw.h"
 #include "ntos/dbgfuncs.h"
 #include "ntos/service.h"
-#include "ntdll/csr.h"
+//#include "ntdll/csr.h"
 #include "ntdll/dbg.h"
 #include "ntdll/ldr.h"
 #include "ntdll/rtl.h"

@@ -14,7 +14,7 @@ CsrCaptureMessageBuffer@16
 CsrCaptureMessageString@20
 CsrCaptureTimeout@8
 CsrClientCallServer@16
-CsrClientConnectToServer@0
+CsrClientConnectToServer@24
 CsrFreeCaptureBuffer@4
 CsrIdentifyAlertableThread@0
 CsrNewThread@0

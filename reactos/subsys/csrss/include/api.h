@@ -59,19 +59,17 @@ typedef struct tagCSRSS_OBJECT_DEFINITION
 } CSRSS_OBJECT_DEFINITION, *PCSRSS_OBJECT_DEFINITION;
 
 typedef NTSTATUS (STDCALL *CSRSS_API_PROC)(PCSRSS_PROCESS_DATA ProcessData,
-                                           PCSRSS_API_REQUEST Request,
-                                           PCSRSS_API_REPLY Reply);
+                                           PCSR_API_MESSAGE Request);
 
 typedef struct _CSRSS_API_DEFINITION
 {
   ULONG Type;
   ULONG MinRequestSize;
-  ULONG MinReplySize;
   CSRSS_API_PROC Handler;
 } CSRSS_API_DEFINITION, *PCSRSS_API_DEFINITION;
 
 #define CSRSS_DEFINE_API(Func, Handler) \
-  { Func, sizeof(Func##_REQUEST), sizeof(Func##_REPLY), Handler }
+  { Func, sizeof(CSRSS_##Func), Handler }
 
 typedef struct _CSRSS_LISTEN_DATA
 {
@@ -82,8 +80,7 @@ typedef struct _CSRSS_LISTEN_DATA
 
 #define CSR_API(n) NTSTATUS STDCALL n (\
 PCSRSS_PROCESS_DATA ProcessData,\
-PCSRSS_API_REQUEST Request,\
-PCSRSS_API_REPLY Reply)
+PCSR_API_MESSAGE Request)
 
 /* init.c */
 extern HANDLE hBootstrapOk;
@@ -100,8 +97,7 @@ VOID STDCALL PrintString (char* fmt, ...);
 /* api/wapi.c */
 NTSTATUS FASTCALL CsrApiRegisterDefinitions(PCSRSS_API_DEFINITION NewDefinitions);
 VOID FASTCALL CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
-                                PCSRSS_API_REQUEST Request,
-                                PCSRSS_API_REPLY Reply);
+                                PCSR_API_MESSAGE Request);
 DWORD STDCALL ServerApiPortThread (PVOID PortHandle);
 DWORD STDCALL ServerSbApiPortThread (PVOID PortHandle);
 DWORD STDCALL Console_Api( PVOID unused );

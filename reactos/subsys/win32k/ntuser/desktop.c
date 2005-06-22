@@ -506,15 +506,14 @@ BOOL FASTCALL IntDesktopUpdatePerUserSettings(BOOL bEnable)
 NTSTATUS FASTCALL
 IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height)
 {
-  CSRSS_API_REQUEST Request;
-  CSRSS_API_REPLY Reply;
+  CSR_API_MESSAGE Request;
 
-  Request.Type = CSRSS_SHOW_DESKTOP;
+  Request.Type = MAKE_CSR_API(SHOW_DESKTOP, CSR_GUI);
   Request.Data.ShowDesktopRequest.DesktopWindow = Desktop->DesktopWindow;
   Request.Data.ShowDesktopRequest.Width = Width;
   Request.Data.ShowDesktopRequest.Height = Height;
 
-  return CsrNotify(&Request, &Reply);
+  return CsrNotify(&Request);
 }
 
 NTSTATUS FASTCALL
@@ -729,8 +728,7 @@ NtUserCreateDesktop(
   UNICODE_STRING DesktopName;
   NTSTATUS Status;
   HDESK Desktop;
-  CSRSS_API_REQUEST Request;
-  CSRSS_API_REPLY Reply;
+  CSR_API_MESSAGE Request;
 
   DPRINT("CreateDesktop: %wZ\n", lpszDesktopName);
 
@@ -842,7 +840,7 @@ NtUserCreateDesktop(
   /*
    * Create a handle for CSRSS and notify CSRSS
    */
-  Request.Type = CSRSS_CREATE_DESKTOP;
+  Request.Type = MAKE_CSR_API(CREATE_DESKTOP, CSR_GUI);
   Status = CsrInsertObject(Desktop,
                            GENERIC_ALL,
                            (HANDLE*)&Request.Data.CreateDesktopRequest.DesktopHandle);
@@ -854,7 +852,7 @@ NtUserCreateDesktop(
     return NULL;
   }
 
-  Status = CsrNotify(&Request, &Reply);
+  Status = CsrNotify(&Request);
   if (! NT_SUCCESS(Status))
     {
       CsrCloseHandle(Request.Data.CreateDesktopRequest.DesktopHandle);

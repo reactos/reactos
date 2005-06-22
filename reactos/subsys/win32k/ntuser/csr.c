@@ -41,7 +41,7 @@ CsrInit(void)
 
 
 NTSTATUS FASTCALL
-CsrNotify(PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply)
+CsrNotify(PCSR_API_MESSAGE Request)
 {
   NTSTATUS Status;
   PEPROCESS OldProcess;
@@ -51,8 +51,8 @@ CsrNotify(PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply)
       return STATUS_INVALID_PORT_HANDLE;
     }
 
-  Request->Header.DataSize = sizeof(CSRSS_API_REQUEST) - LPC_MESSAGE_BASE_SIZE;
-  Request->Header.MessageSize = sizeof(CSRSS_API_REQUEST);
+  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
 
   /* Switch to the process in which the WindowsApiPort handle is valid */
   OldProcess = PsGetCurrentProcess();
@@ -62,7 +62,7 @@ CsrNotify(PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply)
     }
   Status = ZwRequestWaitReplyPort(WindowsApiPort,
                                   &Request->Header,
-                                  &Reply->Header);
+                                  &Request->Header);
   if (CsrProcess != OldProcess)
     {
       KeDetachProcess();
@@ -70,7 +70,7 @@ CsrNotify(PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply)
 
   if (NT_SUCCESS(Status))
     {
-      Status = Reply->Status;
+      Status = Request->Status;
     }
 
   return Status;

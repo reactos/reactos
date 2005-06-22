@@ -98,7 +98,12 @@ DllMain(HANDLE hDll,
 	/*
 	 * Connect to the csrss server
 	 */
-	Status = CsrClientConnectToServer();
+	Status = CsrClientConnectToServer(NULL,
+                                      0,
+                                      NULL,
+                                      NULL,
+                                      0,
+                                      NULL);
 	if (!NT_SUCCESS(Status))
 	  {
 	    DbgPrint("Failed to connect to csrss.exe (Status %lx)\n",

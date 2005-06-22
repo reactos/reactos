@@ -13,7 +13,7 @@
 extern PEPROCESS CsrProcess;
 
 extern NTSTATUS FASTCALL CsrInit(void);
-extern NTSTATUS FASTCALL CsrNotify(PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply);
+extern NTSTATUS FASTCALL CsrNotify(PCSR_API_MESSAGE Request);
 extern NTSTATUS FASTCALL CsrCloseHandle(HANDLE Handle);
 NTSTATUS
 STDCALL

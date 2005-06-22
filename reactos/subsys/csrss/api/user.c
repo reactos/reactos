@@ -31,8 +31,8 @@ CSR_API(CsrRegisterServicesProcess)
 {
   NTSTATUS Status;
 
-  Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
+  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   if (ServicesProcessIdValid == TRUE)
     {
@@ -46,7 +46,7 @@ CSR_API(CsrRegisterServicesProcess)
       Status = STATUS_SUCCESS;
     }
 
-  Reply->Status = Status;
+  Request->Status = Status;
 
   return(Status);
 }

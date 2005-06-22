@@ -12,9 +12,7 @@
 
 #include <windows.h>
 #define NTOS_MODE_USER
-#define READY_FOR_NEW_NTDLL
 #include <ndk/ntndk.h>
-#include <rosrtl/string.h>
 #include <sm/helper.h>
 
 #include "api.h"
@@ -150,7 +148,7 @@ static NTSTATUS
 CsrpInitVideo (ULONG argc, PWSTR* argv)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING DeviceName;
+  UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\??\\DISPLAY1");
   IO_STATUS_BLOCK Iosb;
   HANDLE VideoHandle = (HANDLE) 0;
   NTSTATUS Status = STATUS_SUCCESS;
@@ -159,7 +157,6 @@ CsrpInitVideo (ULONG argc, PWSTR* argv)
 
   InitializeVideoAddressSpace();
 
-  RtlRosInitUnicodeStringFromLiteral(&DeviceName, L"\\??\\DISPLAY1");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &DeviceName,
 			     0,
@@ -246,19 +243,19 @@ CsrpInitWin32Csr (ULONG argc, PWSTR* argv)
 
 CSRSS_API_DEFINITION NativeDefinitions[] =
   {
-    CSRSS_DEFINE_API(CSRSS_CREATE_PROCESS,               CsrCreateProcess),
-    CSRSS_DEFINE_API(CSRSS_TERMINATE_PROCESS,            CsrTerminateProcess),
-    CSRSS_DEFINE_API(CSRSS_CONNECT_PROCESS,              CsrConnectProcess),
-    CSRSS_DEFINE_API(CSRSS_REGISTER_SERVICES_PROCESS,    CsrRegisterServicesProcess),
-    CSRSS_DEFINE_API(CSRSS_GET_SHUTDOWN_PARAMETERS,      CsrGetShutdownParameters),
-    CSRSS_DEFINE_API(CSRSS_SET_SHUTDOWN_PARAMETERS,      CsrSetShutdownParameters),
-    CSRSS_DEFINE_API(CSRSS_GET_INPUT_HANDLE,             CsrGetInputHandle),
-    CSRSS_DEFINE_API(CSRSS_GET_OUTPUT_HANDLE,            CsrGetOutputHandle),
-    CSRSS_DEFINE_API(CSRSS_CLOSE_HANDLE,                 CsrCloseHandle),
-    CSRSS_DEFINE_API(CSRSS_VERIFY_HANDLE,                CsrVerifyHandle),
-    CSRSS_DEFINE_API(CSRSS_DUPLICATE_HANDLE,             CsrDuplicateHandle),
-    CSRSS_DEFINE_API(CSRSS_GET_INPUT_WAIT_HANDLE,        CsrGetInputWaitHandle),
-    { 0, 0, 0, NULL }
+    CSRSS_DEFINE_API(CREATE_PROCESS,               CsrCreateProcess),
+    CSRSS_DEFINE_API(TERMINATE_PROCESS,            CsrTerminateProcess),
+    CSRSS_DEFINE_API(CONNECT_PROCESS,              CsrConnectProcess),
+    CSRSS_DEFINE_API(REGISTER_SERVICES_PROCESS,    CsrRegisterServicesProcess),
+    CSRSS_DEFINE_API(GET_SHUTDOWN_PARAMETERS,      CsrGetShutdownParameters),
+    CSRSS_DEFINE_API(SET_SHUTDOWN_PARAMETERS,      CsrSetShutdownParameters),
+    CSRSS_DEFINE_API(GET_INPUT_HANDLE,             CsrGetInputHandle),
+    CSRSS_DEFINE_API(GET_OUTPUT_HANDLE,            CsrGetOutputHandle),
+    CSRSS_DEFINE_API(CLOSE_HANDLE,                 CsrCloseHandle),
+    CSRSS_DEFINE_API(VERIFY_HANDLE,                CsrVerifyHandle),
+    CSRSS_DEFINE_API(DUPLICATE_HANDLE,             CsrDuplicateHandle),
+    CSRSS_DEFINE_API(GET_INPUT_WAIT_HANDLE,        CsrGetInputWaitHandle),
+    { 0, 0, NULL }
   };
 
 static NTSTATUS STDCALL
@@ -467,7 +464,7 @@ CsrpApiRegisterDef (ULONG argc, PWSTR* argv)
 static NTSTATUS
 CsrpCCTS (ULONG argc, PWSTR* argv)
 {
-	return CsrClientConnectToServer();
+	return CsrClientConnectToServer(NULL, 0, NULL, NULL, 0, NULL);
 }
 
 /**********************************************************************

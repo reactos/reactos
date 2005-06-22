@@ -11,24 +11,30 @@
 #include "ldrtypes.h"
 #include "lpctypes.h"
 #include "rtltypes.h"
-#include <csrss/csrss.h> /* FIXME: Temporary */
 
 /* PROTOTYPES ****************************************************************/
 
 /*
  * CSR Functions
  */
-NTSTATUS 
-STDCALL 
-CsrClientConnectToServer(VOID);
+NTSTATUS
+STDCALL
+CsrClientConnectToServer(
+    PWSTR ObjectDirectory,
+    ULONG ServerId,
+    PVOID Unknown,
+    PVOID Context,
+    ULONG ContextLength,
+    PULONG Unknown2
+);
 
 NTSTATUS 
-STDCALL 
+STDCALL
 CsrClientCallServer(
-    PCSRSS_API_REQUEST Request,
-    PCSRSS_API_REPLY Reply OPTIONAL,
-    ULONG Length,
-    ULONG ReplyLength
+    struct _CSR_API_MESSAGE *Request,
+    PVOID CapturedBuffer OPTIONAL,
+    ULONG ApiNumber,
+    ULONG RequestLength
 );
 
 NTSTATUS 

@@ -8,7 +8,6 @@
  */
 
 #include <user32.h>
-#include <ntdll/csr.h>
 
 /*
  * Sequence of events:
@@ -71,19 +70,19 @@ BOOL STDCALL
 ExitWindowsEx(UINT uFlags,
 	      DWORD dwReserved)
 {
-  CSRSS_API_REQUEST Request;
-  CSRSS_API_REPLY Reply;
+  CSR_API_MESSAGE Request;
+  ULONG CsrRequest;
   NTSTATUS Status;
 
-  Request.Type = CSRSS_EXIT_REACTOS;
+  CsrRequest = MAKE_CSR_API(EXIT_REACTOS, CSR_GUI);
   Request.Data.ExitReactosRequest.Flags = uFlags;
   Request.Data.ExitReactosRequest.Reserved = dwReserved;
 
   Status = CsrClientCallServer(&Request,
-			       &Reply,
-			       sizeof(CSRSS_API_REQUEST),
-			       sizeof(CSRSS_API_REPLY));
-  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+			       NULL,
+                   CsrRequest,
+			       sizeof(CSR_API_MESSAGE));
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
       SetLastError(RtlNtStatusToDosError(Status));
       return(FALSE);
@@ -99,18 +98,18 @@ ExitWindowsEx(UINT uFlags,
 BOOL STDCALL
 RegisterServicesProcess(DWORD ServicesProcessId)
 {
-  CSRSS_API_REQUEST Request;
-  CSRSS_API_REPLY Reply;
+  CSR_API_MESSAGE Request;
+  ULONG CsrRequest;
   NTSTATUS Status;
 
-  Request.Type = CSRSS_REGISTER_SERVICES_PROCESS;
+  CsrRequest = MAKE_CSR_API(REGISTER_SERVICES_PROCESS, CSR_GUI);
   Request.Data.RegisterServicesProcessRequest.ProcessId = (HANDLE)ServicesProcessId;
 
   Status = CsrClientCallServer(&Request,
-			       &Reply,
-			       sizeof(CSRSS_API_REQUEST),
-			       sizeof(CSRSS_API_REPLY));
-  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+                   NULL,
+			       CsrRequest,
+			       sizeof(CSR_API_MESSAGE));
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
       SetLastError(RtlNtStatusToDosError(Status));
       return(FALSE);

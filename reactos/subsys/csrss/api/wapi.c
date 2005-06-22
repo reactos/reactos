@@ -66,29 +66,34 @@ CsrApiRegisterDefinitions(PCSRSS_API_DEFINITION NewDefinitions)
   return STATUS_SUCCESS;
 }
 
-VOID FASTCALL
+VOID 
+FASTCALL
 CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
-                  PCSRSS_API_REQUEST Request,
-                  PCSRSS_API_REPLY Reply)
+                  PCSR_API_MESSAGE Request)
 {
-  BOOL Found;
+  BOOL Found = FALSE;
   unsigned DefIndex;
+  ULONG Type;
+  
+  DPRINT("CSR: Calling handler for type: %x.\n", Request->Type);
+  Type = Request->Type & 0xFFFF; /* FIXME: USE MACRO */
+  DPRINT("CSR: API Number: %x ServerID: %x\n",Type, Request->Type >> 16);
 
-  Found = FALSE;
+  /* FIXME: Extract DefIndex instead of looping */
   for (DefIndex = 0; ! Found && DefIndex < ApiDefinitionsCount; DefIndex++)
     {
-      if (ApiDefinitions[DefIndex].Type == Request->Type)
+      if (ApiDefinitions[DefIndex].Type == Type)
         {
           if (Request->Header.DataSize < ApiDefinitions[DefIndex].MinRequestSize)
             {
               DPRINT1("Request type %d min request size %d actual %d\n",
-                      Request->Type, ApiDefinitions[DefIndex].MinRequestSize,
+                      Type, ApiDefinitions[DefIndex].MinRequestSize,
                       Request->Header.DataSize);
-              Reply->Status = STATUS_INVALID_PARAMETER;
+              Request->Status = STATUS_INVALID_PARAMETER;
             }
           else
             {
-              (ApiDefinitions[DefIndex].Handler)(ProcessData, Request, Reply);
+              (ApiDefinitions[DefIndex].Handler)(ProcessData, Request);
               Found = TRUE;
             }
         }
@@ -96,60 +101,75 @@ CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
   if (! Found)
     {
       DPRINT1("CSR: Unknown request type 0x%x\n", Request->Type);
-      Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-      Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
-      Reply->Status = STATUS_INVALID_SYSTEM_SERVICE;
+      Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
+      Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+      Request->Status = STATUS_INVALID_SYSTEM_SERVICE;
     }
 }
 
-static void STDCALL
+STATIC
+VOID
+STDCALL
 ClientConnectionThread(HANDLE ServerPort)
 {
-  NTSTATUS Status;
-  LPC_MAX_MESSAGE LpcReply;
-  LPC_MAX_MESSAGE LpcRequest;
-  PCSRSS_API_REQUEST Request;
-  PCSRSS_PROCESS_DATA ProcessData;
-  PCSRSS_API_REPLY Reply;
+    NTSTATUS Status;
+    LPC_MAX_MESSAGE LpcReply;
+    LPC_MAX_MESSAGE LpcRequest;
+    PCSR_API_MESSAGE Request;
+    PCSR_API_MESSAGE Reply;
+    PCSRSS_PROCESS_DATA ProcessData;
+  
+    DPRINT("CSR: %s called", __FUNCTION__);
 
-	DPRINT("CSR: %s called", __FUNCTION__);
-
-  Reply = NULL;
-
-  for (;;)
+    /* Loop and reply/wait for a new message */
+    for (;;)
     {
-      Status = NtReplyWaitReceivePort(ServerPort,
-                                      0,
-                                      &Reply->Header,
-                                      &LpcRequest.Header);
-      if (! NT_SUCCESS(Status))
+        /* Send the reply and wait for a new request */
+        Status = NtReplyWaitReceivePort(ServerPort,
+                                        0,
+                                        &Reply->Header,
+                                        &LpcRequest.Header);
+        if (!NT_SUCCESS(Status))
         {
-          DPRINT1("CSR: NtReplyWaitReceivePort failed\n");
-          break;
+            DPRINT1("CSR: NtReplyWaitReceivePort failed\n");
+            break;
+        }
+        
+        /* If the connection was closed, handle that */
+        if (LpcRequest.Header.MessageType == LPC_PORT_CLOSED)
+        {
+            CsrFreeProcessData( LpcRequest.Header.ClientId.UniqueProcess );
+            break;
+        }
+        
+        /* Get the CSR Message */
+        Request = (PCSR_API_MESSAGE)&LpcRequest;
+        Reply = (PCSR_API_MESSAGE)&LpcReply;
+      
+        DPRINT("CSR: Got CSR API: %x [Message Origin: %x]\n", 
+                Request->Type, 
+                Request->Header.ClientId.UniqueProcess);
+
+        /* Get the Process Data */
+        ProcessData = CsrGetProcessData(LpcRequest.Header.ClientId.UniqueProcess);
+        if (ProcessData == NULL)
+        {
+            DPRINT1("CSR: Message %d: Unable to find data for process 0x%x\n",
+                    LpcRequest.Header.MessageType,
+                    LpcRequest.Header.ClientId.UniqueProcess);
+            break;
         }
 
-      if (LpcRequest.Header.MessageType == LPC_PORT_CLOSED)
-        {
-          CsrFreeProcessData( LpcRequest.Header.ClientId.UniqueProcess );
-          break;
-        }
-
-      Request = (PCSRSS_API_REQUEST)&LpcRequest;
-      Reply = (PCSRSS_API_REPLY)&LpcReply;
-
-      ProcessData = CsrGetProcessData(LpcRequest.Header.ClientId.UniqueProcess);
-      if (ProcessData == NULL)
-        {
-          DPRINT1("CSR: Message %d: Unable to find data for process 0x%x\n",
-	          LpcRequest.Header.MessageType, LpcRequest.Header.ClientId.UniqueProcess);
-	  break;
-        }
-
-
-      CsrApiCallHandler(ProcessData, Request, Reply);
+        /* Call the Handler */
+        CsrApiCallHandler(ProcessData, Request);
+        
+        /* Send back the reply */
+        Reply = Request;
     }
-  NtClose(ServerPort);
-  RtlRosExitUserThread(STATUS_SUCCESS);
+    
+    /* Close the port and exit the thread */
+    NtClose(ServerPort);
+    RtlRosExitUserThread(STATUS_SUCCESS);
 }
 
 /**********************************************************************

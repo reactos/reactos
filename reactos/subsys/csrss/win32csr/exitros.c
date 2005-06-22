@@ -24,15 +24,15 @@ static HANDLE LogonProcess = NULL;
 
 CSR_API(CsrRegisterLogonProcess)
 {
-  Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
+  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   if (Request->Data.RegisterLogonProcessRequest.Register)
     {
       if (0 != LogonProcess)
         {
-          Reply->Status = STATUS_LOGON_SESSION_EXISTS;
-          return Reply->Status;
+          Request->Status = STATUS_LOGON_SESSION_EXISTS;
+          return Request->Status;
         }
       LogonProcess = Request->Data.RegisterLogonProcessRequest.ProcessId;
     }
@@ -42,74 +42,74 @@ CSR_API(CsrRegisterLogonProcess)
         {
           DPRINT1("Current logon process 0x%x, can't deregister from process 0x%x\n",
                   LogonProcess, Request->Header.ClientId.UniqueProcess);
-          Reply->Status = STATUS_NOT_LOGON_PROCESS;
-          return Reply->Status;
+          Request->Status = STATUS_NOT_LOGON_PROCESS;
+          return Request->Status;
         }
       LogonProcess = 0;
     }
 
-  Reply->Status = STATUS_SUCCESS;
+  Request->Status = STATUS_SUCCESS;
 
-  return Reply->Status;
+  return Request->Status;
 }
 
 CSR_API(CsrSetLogonNotifyWindow)
 {
   DWORD WindowCreator;
 
-  Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
+  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   if (0 == GetWindowThreadProcessId(Request->Data.SetLogonNotifyWindowRequest.LogonNotifyWindow,
                                     &WindowCreator))
     {
       DPRINT1("Can't get window creator\n");
-      Reply->Status = STATUS_INVALID_HANDLE;
-      return Reply->Status;
+      Request->Status = STATUS_INVALID_HANDLE;
+      return Request->Status;
     }
   if (WindowCreator != (DWORD)LogonProcess)
     {
       DPRINT1("Trying to register window not created by winlogon as notify window\n");
-      Reply->Status = STATUS_ACCESS_DENIED;
-      return Reply->Status;
+      Request->Status = STATUS_ACCESS_DENIED;
+      return Request->Status;
     }
 
   LogonNotifyWindow = Request->Data.SetLogonNotifyWindowRequest.LogonNotifyWindow;
 
-  Reply->Status = STATUS_SUCCESS;
+  Request->Status = STATUS_SUCCESS;
 
-  return Reply->Status;
+  return Request->Status;
 }
 
 CSR_API(CsrExitReactos)
 {
-  Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
+  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   if (NULL == LogonNotifyWindow)
     {
       DPRINT1("No LogonNotifyWindow registered\n");
-      Reply->Status = STATUS_NOT_FOUND;
-      return Reply->Status;
+      Request->Status = STATUS_NOT_FOUND;
+      return Request->Status;
     }
 
   /* FIXME Inside 2000 says we should impersonate the caller here */
-  Reply->Status = SendMessageW(LogonNotifyWindow, PM_WINLOGON_EXITWINDOWS,
+  Request->Status = SendMessageW(LogonNotifyWindow, PM_WINLOGON_EXITWINDOWS,
                                (WPARAM) Request->Header.ClientId.UniqueProcess,
                                (LPARAM) Request->Data.ExitReactosRequest.Flags);
   /* If the message isn't handled, the return value is 0, so 0 doesn't indicate success.
      Success is indicated by a 1 return value, if anything besides 0 or 1 it's a
      NTSTATUS value */
-  if (1 == Reply->Status)
+  if (1 == Request->Status)
     {
-      Reply->Status = STATUS_SUCCESS;
+      Request->Status = STATUS_SUCCESS;
     }
-  else if (0 == Reply->Status)
+  else if (0 == Request->Status)
     {
-      Reply->Status = STATUS_NOT_IMPLEMENTED;
+      Request->Status = STATUS_NOT_IMPLEMENTED;
     }
 
-  return Reply->Status;
+  return Request->Status;
 }
 
 /* EOF */

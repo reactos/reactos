@@ -187,7 +187,6 @@ typedef struct _RTL_HANDLE_TABLE
      PRTL_HANDLE FirstFree;	/* pointer to first free handle */
      PRTL_HANDLE LastUsed;	/* pointer to last allocated handle */
 } RTL_HANDLE_TABLE, *PRTL_HANDLE_TABLE;
-#ifdef READY_FOR_NEW_NTDLL
 typedef struct _LOCK_INFORMATION
 {
     ULONG LockCount;
@@ -204,7 +203,6 @@ typedef struct _MODULE_INFORMATION
     DEBUG_MODULE_INFORMATION ModuleEntry[1];
 } MODULE_INFORMATION, *PMODULE_INFORMATION;
 /* END REVIEW AREA */
-#endif
 
 typedef struct _EXCEPTION_REGISTRATION 
 {

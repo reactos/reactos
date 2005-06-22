@@ -28,29 +28,7 @@ static HANDLE CsrCommHeap = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
-/* Possible CsrClientCallServer (the NT one):
-
-#define CSR_CCS_NATIVE	0x0000
-#define CSR_CCS_CSR	0x0001
-#define CSR_CCS_GUI	0x0002
-
-typedef union _CSR_CCS_API
-{
-	WORD	Index;		// CSRSS API number
-	WORD	Subsystem;	// 0=NTDLL;1=KERNEL32;2=KERNEL32
-
-} CSR_CCS_API, * PCSR_CCS_API;
-
-NTSTATUS STDCALL
-CsrClientCallServer(PVOID Request,
-		    PVOID Unknown OPTIONAL,
-		    CSR_CCS_API CsrApi,
-		    ULONG SizeOfData);
-
-Request is the family of PCSRSS_XXX_REQUEST objects.
-XXX_REQUEST depend on the CsrApiNumber.Index.
-
-*/
+/* Possible CsrClientCallServer (the NT one): */
 
 NTSTATUS STDCALL
 CsrCaptureParameterBuffer(PVOID ParameterBuffer,
@@ -84,41 +62,57 @@ CsrReleaseParameterBuffer(PVOID ClientAddress)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
-CsrClientCallServer(PCSRSS_API_REQUEST Request,
-		    PCSRSS_API_REPLY Reply OPTIONAL,
-		    ULONG Length,
-		    ULONG ReplyLength)
+NTSTATUS 
+STDCALL
+CsrClientCallServer(PCSR_API_MESSAGE Request,
+                    PVOID CapturedBuffer OPTIONAL,
+                    CSR_API_NUMBER ApiNumber,
+                    ULONG RequestLength)
 {
-  NTSTATUS Status;
-
-  if (INVALID_HANDLE_VALUE == WindowsApiPort)
+    NTSTATUS Status;
+    DPRINT("CSR: CsrClientCallServer!\n");
+  
+    /* Make sure it's valid */
+    if (INVALID_HANDLE_VALUE == WindowsApiPort)
     {
-      DbgPrint ("NTDLL.%s: client not connected to CSRSS!\n", __FUNCTION__);
-      return (STATUS_UNSUCCESSFUL);
+        DPRINT1("NTDLL.%s: client not connected to CSRSS!\n", __FUNCTION__);
+        return (STATUS_UNSUCCESSFUL);
     }
 
-   Request->Header.DataSize = Length - LPC_MESSAGE_BASE_SIZE;
-   Request->Header.MessageSize = Length;
-
-   Status = NtRequestWaitReplyPort(WindowsApiPort,
-				   &Request->Header,
-				   (Reply?&Reply->Header:&Request->Header));
-
-   return(Status);
+    /* Fill out the header */
+    Request->Type = ApiNumber;
+    Request->Header.DataSize = RequestLength - LPC_MESSAGE_BASE_SIZE;
+    Request->Header.MessageSize = RequestLength;
+    DPRINT("CSR: API: %x, DataSize: %x, MessageSize: %x\n", 
+            ApiNumber,
+            Request->Header.DataSize,
+            Request->Header.MessageSize);
+                
+    /* Send the LPC Message */
+    Status = NtRequestWaitReplyPort(WindowsApiPort,
+                                    &Request->Header,
+                                    &Request->Header);
+        
+    DPRINT("Got back: %x\n", Status);
+    return(Status);
 }
 
 /*
  * @implemented
  */
-NTSTATUS STDCALL
-CsrClientConnectToServer(VOID)
+NTSTATUS
+STDCALL
+CsrClientConnectToServer(PWSTR ObjectDirectory,
+                         ULONG ServerId,
+                         PVOID Unknown,
+                         PVOID Context,
+                         ULONG ContextLength,
+                         PULONG Unknown2)
 {
    NTSTATUS Status;
    UNICODE_STRING PortName = RTL_CONSTANT_STRING(L"\\Windows\\ApiPort");
    ULONG ConnectInfoLength;
-   CSRSS_API_REQUEST Request;
-   CSRSS_API_REPLY Reply;
+   CSR_API_MESSAGE Request;
    LPC_SECTION_WRITE LpcWrite;
    HANDLE CsrSectionHandle;
    LARGE_INTEGER CsrSectionViewSize;
@@ -175,18 +169,17 @@ CsrClientConnectToServer(VOID)
        return(STATUS_NO_MEMORY);
      }
 
-   Request.Type = CSRSS_CONNECT_PROCESS;
    Status = CsrClientCallServer(&Request,
-				&Reply,
-				sizeof(CSRSS_API_REQUEST),
-				sizeof(CSRSS_API_REPLY));
+				NULL,
+				MAKE_CSR_API(CONNECT_PROCESS, CSR_NATIVE),
+				sizeof(CSR_API_MESSAGE));
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
-   if (!NT_SUCCESS(Reply.Status))
+   if (!NT_SUCCESS(Request.Status))
      {
-	return(Reply.Status);
+	return(Request.Status);
      }
    return(STATUS_SUCCESS);
 }

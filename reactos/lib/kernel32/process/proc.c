@@ -98,23 +98,23 @@ BOOL STDCALL
 GetProcessShutdownParameters (LPDWORD lpdwLevel,
 			      LPDWORD lpdwFlags)
 {
-  CSRSS_API_REQUEST CsrRequest;
-  CSRSS_API_REPLY CsrReply;
+  CSR_API_MESSAGE CsrRequest;
+  ULONG Request;
   NTSTATUS Status;
 
-  CsrRequest.Type = CSRSS_GET_SHUTDOWN_PARAMETERS;
+  Request = GET_SHUTDOWN_PARAMETERS;
   Status = CsrClientCallServer(&CsrRequest,
-			       &CsrReply,
-			       sizeof(CSRSS_API_REQUEST),
-			       sizeof(CSRSS_API_REPLY));
-  if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrReply.Status))
+			       NULL,
+                   MAKE_CSR_API(Request, CSR_NATIVE),
+			       sizeof(CSR_API_MESSAGE));
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
     {
       SetLastErrorByStatus (Status);
       return(FALSE);
     }
 
-  *lpdwLevel = CsrReply.Data.GetShutdownParametersReply.Level;
-  *lpdwFlags = CsrReply.Data.GetShutdownParametersReply.Flags;
+  *lpdwLevel = CsrRequest.Data.GetShutdownParametersRequest.Level;
+  *lpdwFlags = CsrRequest.Data.GetShutdownParametersRequest.Flags;
 
   return(TRUE);
 }
@@ -127,19 +127,19 @@ BOOL STDCALL
 SetProcessShutdownParameters (DWORD dwLevel,
 			      DWORD dwFlags)
 {
-  CSRSS_API_REQUEST CsrRequest;
-  CSRSS_API_REPLY CsrReply;
+  CSR_API_MESSAGE CsrRequest;
+  ULONG Request;
   NTSTATUS Status;
 
   CsrRequest.Data.SetShutdownParametersRequest.Level = dwLevel;
   CsrRequest.Data.SetShutdownParametersRequest.Flags = dwFlags;
 
-  CsrRequest.Type = CSRSS_SET_SHUTDOWN_PARAMETERS;
+  Request = SET_SHUTDOWN_PARAMETERS;
   Status = CsrClientCallServer(&CsrRequest,
-			       &CsrReply,
-			       sizeof(CSRSS_API_REQUEST),
-			       sizeof(CSRSS_API_REPLY));
-  if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrReply.Status))
+			       NULL,
+			       MAKE_CSR_API(Request, CSR_NATIVE),
+			       sizeof(CSR_API_MESSAGE));
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
     {
       SetLastErrorByStatus (Status);
       return(FALSE);
@@ -571,20 +571,20 @@ FlushInstructionCache (HANDLE	hProcess,
 VOID STDCALL
 ExitProcess(UINT uExitCode)
 {
-  CSRSS_API_REQUEST CsrRequest;
-  CSRSS_API_REPLY CsrReply;
+  CSR_API_MESSAGE CsrRequest;
+  ULONG Request;
   NTSTATUS Status;
 
   /* unload all dll's */
   LdrShutdownProcess ();
 
   /* notify csrss of process termination */
-  CsrRequest.Type = CSRSS_TERMINATE_PROCESS;
+  Request = TERMINATE_PROCESS;
   Status = CsrClientCallServer(&CsrRequest,
-			       &CsrReply,
-			       sizeof(CSRSS_API_REQUEST),
-			       sizeof(CSRSS_API_REPLY));
-  if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrReply.Status))
+			       NULL,
+                   MAKE_CSR_API(Request, CSR_NATIVE),
+			       sizeof(CSR_API_MESSAGE));
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
     {
       DPRINT("Failed to tell csrss about terminating process\n");
     }
