@@ -116,6 +116,40 @@
 #define AF_INET 2
 #define SOCK_STREAM 1
 
+/* Should use TDI structure, but Arty wants to keep BSD style */
+typedef unsigned char u_char;
+typedef unsigned short u_short;
+typedef unsigned int u_int;
+typedef unsigned long u_long;
+struct in_addr 
+{
+    union 
+    {
+        struct { u_char s_b1,s_b2,s_b3,s_b4; } S_un_b;
+        struct { u_short s_w1,s_w2; } S_un_w;
+        u_long S_addr;
+    } S_un;
+#define s_addr  S_un.S_addr
+#define s_host  S_un.S_un_b.s_b2
+#define s_net   S_un.S_un_b.s_b1
+#define s_imp   S_un.S_un_w.s_w2
+#define s_impno S_un.S_un_b.s_b4
+#define s_lh    S_un.S_un_b.s_b3
+};
+struct sockaddr_in 
+{
+    short sin_family;
+    u_short sin_port;
+    struct in_addr sin_addr;
+    char sin_zero[8];
+};
+typedef struct sockaddr_in SOCKADDR_IN;
+struct sockaddr
+{
+    u_short sa_family;
+    char sa_data[14];
+};
+
 typedef TDI_STATUS (*InfoRequest_f)( UINT InfoClass,
 				     UINT InfoType,
 				     UINT InfoId,
