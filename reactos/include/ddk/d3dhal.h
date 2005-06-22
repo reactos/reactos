@@ -26,7 +26,7 @@
 extern "C" {
 #endif
 
-#include <ddk/ddrawi.h>
+#include <ddrawi.h>
 #include <d3d.h>
 
 /*****************************************************************************

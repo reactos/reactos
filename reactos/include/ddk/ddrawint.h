@@ -6,22 +6,17 @@
 #define __DD_INCLUDED__
 
 #include <ddraw.h>
+#include <ddrawi.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* pointer to video memory */
-typedef ULONG_PTR FLATPTR;
-
 // FIXME: These should have been defined in other header files!
-typedef struct _DDVIDEOPORTCAPS      *LPDDVIDEOPORTCAPS; /* should be in dvp.h */
 typedef struct _DDVIDEOPORTDESC      *LPDDVIDEOPORTDESC; /* should be in dvp.h */
 typedef struct _DDVIDEOPORTBANDWIDTH *LPDDVIDEOPORTBANDWIDTH; /* should be in dvp.h */
 typedef struct _DDVIDEOPORTCONNECT   *LPDDVIDEOPORTCONNECT; /* should be in dvp.h */
 typedef struct _DDVIDEOPORTINFO      *LPDDVIDEOPORTINFO; /* should be in dvp.h */
-typedef struct _DDKERNELCAPS         *LPDDKERNELCAPS; /* should be in ddkernel.h */
-typedef struct _VMEMHEAP             *LPVMEMHEAP; /* should be in dmemmgr.h */
 typedef struct _DD_VIDEOPORT_LOCAL   *PDD_VIDEOPORT_LOCAL; /* should be defined here once we have dvp.h */
 
 /************************************************************************/
@@ -45,13 +40,6 @@ typedef struct
 		DWORD      dwHeight;
 	};
 } VIDEOMEMORY, *PVIDEOMEMORY;
-
-#define VIDMEM_ISLINEAR      (1<<0)
-#define VIDMEM_ISRECTANGULAR (1<<1)
-#define VIDMEM_ISHEAP        (1<<2)
-#define VIDMEM_ISNONLOCAL    (1<<3)
-#define VIDMEM_ISWC          (1<<4)
-#define VIDMEM_ISDISABLED    (1<<5)
 
 typedef struct
 {
@@ -154,14 +142,6 @@ typedef struct
 	PDD_ATTACHLIST     lpAttachListFrom;
 	RECT               rcOverlaySrc;
 } DD_SURFACE_LOCAL, *PDD_SURFACE_LOCAL;
-
-#define DDRAWISURF_HASCKEYSRCBLT  0x00000800L
-#define DDRAWISURF_HASPIXELFORMAT 0x00002000L
-#define DDRAWISURF_HASOVERLAYDATA 0x00004000L
-#define DDRAWISURF_FRONTBUFFER    0x04000000L
-#define DDRAWISURF_BACKBUFFER     0x08000000L
-#define DDRAWISURF_INVALID        0x10000000L
-#define DDRAWISURF_DRIVERMANAGED  0x40000000L
 
 typedef struct _DD_ATTACHLIST
 {
