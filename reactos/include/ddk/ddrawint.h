@@ -6,7 +6,7 @@
 #define __DD_INCLUDED__
 
 #include <ddraw.h>
-#include <ddrawi.h>
+#include <ddk/ddrawi.h>
 
 #ifdef __cplusplus
 extern "C" {
