@@ -43,4 +43,8 @@ typedef struct _flowspec
     ULONG MinimumPolicedSize;
 } FLOWSPEC, *PFLOWSPEC, *LPFLOWSPEC;
 
+#ifdef __cplusplus
+}
+#endif
+
 #endif
