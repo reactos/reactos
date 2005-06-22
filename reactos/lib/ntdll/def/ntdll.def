@@ -475,6 +475,7 @@ RtlGetSaclSecurityDescriptor@16
 RtlGetSecurityDescriptorRMControl@8
 ;RtlGetUserInfoHeap
 RtlGetVersion@4
+RtlHashUnicodeString@16
 RtlIdentifierAuthoritySid@4
 RtlImageDirectoryEntryToData@16
 RtlImageNtHeader@4

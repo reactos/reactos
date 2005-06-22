@@ -184,6 +184,11 @@
 #define VER_CONDITION_MASK              7
 #define VER_NUM_BITS_PER_CONDITION_MASK 3
 
+/* RTL String Hash Algorithms */
+#define HASH_STRING_ALGORITHM_DEFAULT   0
+#define HASH_STRING_ALGORITHM_X65599    1
+#define HASH_STRING_ALGORITHM_INVALID   0xffffffff
+
 /* List Macros */
 static __inline 
 VOID
