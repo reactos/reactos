@@ -14,23 +14,16 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+/* TYPES ********************************************************************/
+typedef struct _IO_INTERRUPT
+{
+    KINTERRUPT FirstInterrupt;
+    PKINTERRUPT Interrupt[MAXIMUM_PROCESSORS];
+    KSPIN_LOCK SpinLock;
+} IO_INTERRUPT, *PIO_INTERRUPT;
+
 /* FUNCTIONS *****************************************************************/
 
-/*
- * @implemented
- */
-NTSTATUS STDCALL
-IoConnectInterrupt(PKINTERRUPT* InterruptObject,
-		   PKSERVICE_ROUTINE ServiceRoutine,
-		   PVOID ServiceContext,
-		   PKSPIN_LOCK SpinLock,
-		   ULONG Vector,
-		   KIRQL Irql,
-		   KIRQL SynchronizeIrql,
-		   KINTERRUPT_MODE InterruptMode,
-		   BOOLEAN ShareVector,
-		   KAFFINITY ProcessorEnableMask,
-		   BOOLEAN FloatingSave)
 /*
  * FUNCTION: Registers a driver's isr to be called when its device interrupts
  * ARGUMENTS:
@@ -57,106 +50,163 @@ IoConnectInterrupt(PKINTERRUPT* InterruptObject,
  *                       the isr runs. Must be false for x86 drivers
  * RETURNS: Status
  * IRQL: PASSIVE_LEVEL
- */
-{
-   PKINTERRUPT Interrupt;
-   ULONG i, count;
-
-   ASSERT_IRQL(PASSIVE_LEVEL);
-
-   DPRINT("IoConnectInterrupt(Vector %x)\n",Vector);
-
-   ProcessorEnableMask &= ((1 << KeNumberProcessors) - 1);
-
-   if (ProcessorEnableMask == 0)
-     {
-       return STATUS_INVALID_PARAMETER;
-     }
-
-   for (i = 0, count = 0; i < KeNumberProcessors; i++)
-     {
-       if (ProcessorEnableMask & (1 << i))
-         {
-	   count++;
-	 }
-     }
-   /*
-    * Initialize interrupt object
-    */
-   Interrupt=ExAllocatePoolWithTag(NonPagedPool,count*sizeof(KINTERRUPT),
-				   TAG_KINTERRUPT);
-   if (Interrupt==NULL)
-     {
-	return(STATUS_INSUFFICIENT_RESOURCES);
-     }
-
-   if (SpinLock == NULL)
-     {
-       SpinLock = &Interrupt[0].SpinLock;
-       KeInitializeSpinLock(SpinLock);
-     }
-
-   Interrupt[0].ProcessorEnableMask = ProcessorEnableMask;
-
-   for (i = 0, count = 0; i < KeNumberProcessors; i++)
-     {
-       if (ProcessorEnableMask & (1 << i))
-         {
-           KeInitializeInterrupt(&Interrupt[count],
-				 ServiceRoutine,
-				 ServiceContext,
-				 SpinLock,
-				 Vector,
-				 Irql,
-				 SynchronizeIrql,
-				 InterruptMode,
-				 ShareVector,
-				 i,
-				 FloatingSave);
-           if (!KeConnectInterrupt(&Interrupt[count]))
-             {
-	       for (i = 0; i < count; i++)
-	         {
-		   if (ProcessorEnableMask & (1 << i))
-		     {
-		       KeDisconnectInterrupt(&Interrupt[i]);
-		     }
-		 }
-	       ExFreePool(Interrupt);
-	       return STATUS_INVALID_PARAMETER;
-	     }
-	   count++;
-	 }
-     }
-
-   *InterruptObject = Interrupt;
-
-   return(STATUS_SUCCESS);
-}
-
-
-/*
+ *
  * @implemented
  */
-VOID STDCALL
-IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
+NTSTATUS 
+STDCALL
+IoConnectInterrupt(PKINTERRUPT* InterruptObject,
+                   PKSERVICE_ROUTINE ServiceRoutine,
+                   PVOID ServiceContext,
+                   PKSPIN_LOCK SpinLock,
+                   ULONG Vector,
+                   KIRQL Irql,
+                   KIRQL SynchronizeIrql,
+                   KINTERRUPT_MODE InterruptMode,
+                   BOOLEAN ShareVector,
+                   KAFFINITY ProcessorEnableMask,
+                   BOOLEAN FloatingSave)
+{
+    PKINTERRUPT Interrupt;
+    PKINTERRUPT InterruptUsed;
+    PIO_INTERRUPT IoInterrupt;
+    PKSPIN_LOCK SpinLockUsed;
+    BOOLEAN FirstRun = TRUE;
+    ULONG i, count;
+    
+    PAGED_CODE();
+
+    DPRINT1("IoConnectInterrupt(Vector %x)\n",Vector);
+
+    /* Convert the Mask */
+    ProcessorEnableMask &= ((1 << KeNumberProcessors) - 1);
+
+    /* Make sure at least one CPU is on it */
+    if (!ProcessorEnableMask) return STATUS_INVALID_PARAMETER;
+
+    /* Determine the allocation */
+    for (i = 0, count = 0; i < KeNumberProcessors; i++)
+    {
+        if (ProcessorEnableMask & (1 << i)) count++;
+    }
+    
+    /* Allocate the array of I/O Interrupts */
+    IoInterrupt = ExAllocatePoolWithTag(NonPagedPool,
+                                        (count - 1)* sizeof(KINTERRUPT) +
+                                        sizeof(IO_INTERRUPT),
+                                        TAG_KINTERRUPT);
+    if (!Interrupt) return(STATUS_INSUFFICIENT_RESOURCES);
+
+    /* Select which Spinlock to use */
+    if (SpinLock)
+    {
+        SpinLockUsed = SpinLock;
+    }
+    else
+    {
+        SpinLockUsed = &IoInterrupt->SpinLock;
+    }
+    
+    /* We first start with a built-in Interrupt inside the I/O Structure */
+    *InterruptObject = &IoInterrupt->FirstInterrupt;
+    Interrupt = (PKINTERRUPT)(IoInterrupt + 1);
+    FirstRun = TRUE;
+    
+    /* Start with a fresh structure */
+    RtlZeroMemory(IoInterrupt, sizeof(IO_INTERRUPT));
+    
+    /* Now create all the interrupts */
+    for (i = 0; i < KeNumberProcessors; i++)
+    {
+        /* Check if it's enabled for this CPU */
+        if (ProcessorEnableMask & (1 << i))
+        {
+            /* Check which one we will use */
+            InterruptUsed = FirstRun ? &IoInterrupt->FirstInterrupt : Interrupt;
+            
+            /* Initialize it */
+            KeInitializeInterrupt(InterruptUsed,
+                                  ServiceRoutine,
+                                  ServiceContext,
+                                  SpinLockUsed,
+                                  Vector,
+                                  Irql,
+                                  SynchronizeIrql,
+                                  InterruptMode,
+                                  ShareVector,
+                                  i,
+                                  FloatingSave);
+                                  
+            /* Connect it */
+            if (!KeConnectInterrupt(InterruptUsed))
+            {
+                /* Check how far we got */
+                if (FirstRun)
+                {
+                    /* We failed early so just free this */
+                    ExFreePool(IoInterrupt);
+                }
+                else
+                {
+                    /* Far enough, so disconnect everything */
+                    IoDisconnectInterrupt(&IoInterrupt->FirstInterrupt);
+                }
+                return STATUS_INVALID_PARAMETER;
+            }
+            
+            /* Now we've used up our First Run */
+            if (FirstRun)
+            {
+                FirstRun = FALSE;
+            }
+            else
+            {
+                /* Move on to the next one */
+                IoInterrupt->Interrupt[i] = Interrupt++;
+            }
+        }
+    }
+
+    /* Return Success */
+    return STATUS_SUCCESS;
+}
+
 /*
  * FUNCTION: Releases a drivers isr
  * ARGUMENTS:
  *        InterruptObject = isr to release
+ *
+ * @implemented
  */
-{
-  ULONG i, count;
+VOID 
+STDCALL
+IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
 
-  for (i = 0, count = 0; i < KeNumberProcessors; i++)
+{
+    ULONG i;
+    PIO_INTERRUPT IoInterrupt;
+    
+    PAGED_CODE();
+    
+    /* Get the I/O Interrupt */
+    IoInterrupt = CONTAINING_RECORD(InterruptObject, 
+                                    IO_INTERRUPT, 
+                                    FirstInterrupt);
+                                    
+    /* Disconnect the first one */
+    KeDisconnectInterrupt(&IoInterrupt->FirstInterrupt);
+
+    /* Now disconnect the others */
+    for (i = 0; i < KeNumberProcessors; i++)
     {
-      if (InterruptObject[0].ProcessorEnableMask & (1 << i))
+        if (IoInterrupt->Interrupt[i])
         {
-          KeDisconnectInterrupt(&InterruptObject[count]);
-	  count++;
-	}
+            KeDisconnectInterrupt(&InterruptObject[i]);
+        }
     }
-  ExFreePool(InterruptObject);
+    
+    /* Free the I/O Interrupt */
+    ExFreePool(IoInterrupt);
 }
 
 /* EOF */

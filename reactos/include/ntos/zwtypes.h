@@ -1781,22 +1781,48 @@ typedef struct _LPC_PORT_BASIC_INFORMATION
 } LPC_PORT_BASIC_INFORMATION, * PLPC_PORT_BASIC_INFORMATION;
 
 
+#if 0
 typedef struct _KINTERRUPT
 {
-   ULONG Vector;
-   KAFFINITY ProcessorEnableMask;
-   KSPIN_LOCK SpinLock;
-   PKSPIN_LOCK ActualLock;
-   BOOLEAN Shareable;
-   BOOLEAN FloatingSave;
-   CHAR ProcessorNumber;
-   PKSERVICE_ROUTINE ServiceRoutine;
-   PVOID ServiceContext;
-   LIST_ENTRY Entry;
-   KIRQL Irql;
-   KIRQL SynchLevel;
-   KINTERRUPT_MODE InterruptMode;
+   ULONG Vector; // Idem
+   KAFFINITY ProcessorEnableMask; // not needed
+   KSPIN_LOCK SpinLock; // Idem
+   PKSPIN_LOCK ActualLock; // Idem
+   BOOLEAN Shareable; // ShareVector
+   BOOLEAN FloatingSave; // Idem
+   CHAR ProcessorNumber; // Number
+   PKSERVICE_ROUTINE ServiceRoutine; // Idem
+   PVOID ServiceContext; // Idem
+   LIST_ENTRY Entry; // InteruptListEntry
+   KIRQL Irql; // Irql
+   KIRQL SynchLevel; // SynchronizeIrql
+   KINTERRUPT_MODE InterruptMode; // Mode
 } KINTERRUPT;
+#endif
+
+typedef struct _KINTERRUPT 
+{
+    CSHORT              Type;
+    CSHORT              Size;
+    LIST_ENTRY          InterruptListEntry;
+    PKSERVICE_ROUTINE   ServiceRoutine;
+    PVOID               ServiceContext;
+    KSPIN_LOCK          SpinLock;
+    ULONG               TickCount;
+    PKSPIN_LOCK         ActualLock;
+    PVOID               DispatchAddress;
+    ULONG               Vector;
+    KIRQL               Irql;
+    KIRQL               SynchronizeIrql;
+    BOOLEAN             FloatingSave;
+    BOOLEAN             Connected;
+    CHAR                Number;
+    UCHAR               ShareVector;
+    KINTERRUPT_MODE     Mode;
+    ULONG               ServiceCount;
+    ULONG               DispatchCount;
+    ULONG               DispatchCode[106];
+} KINTERRUPT, *PKINTERRUPT;
 
 #ifndef __USE_W32API
 

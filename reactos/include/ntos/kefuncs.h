@@ -62,7 +62,7 @@ BOOLEAN STDCALL
 KeConnectInterrupt(
   PKINTERRUPT  InterruptObject);
 
-VOID STDCALL
+BOOLEAN STDCALL
 KeDisconnectInterrupt(
   PKINTERRUPT  InterruptObject);
 
