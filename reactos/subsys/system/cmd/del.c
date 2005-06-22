@@ -32,6 +32,9 @@
  *
  *    28-Jan-2004 (Michael Fritscher <michael@fritscher.net>)
  *        Added prompt ("/P"), yes ("/Y") and wipe("/W") option.
+ *
+ *    22-Jun-2005 (Brandon Turner <turnerb7@msu.edu>)
+ *        Added exclusive deletion "del * -abc.txt -text*.txt"
  */
 
 #include "precomp.h"
@@ -60,6 +63,10 @@ enum
 static BOOL
 RemoveFile (LPTSTR lpFileName, DWORD dwFlags)
 {
+	/*This function is called by CommandDelete and
+	  does the actual process of deleting the single 
+        file*/
+
 	if (dwFlags & DEL_WIPE)
 	{
 
@@ -92,26 +99,38 @@ RemoveFile (LPTSTR lpFileName, DWORD dwFlags)
 		ConOutPrintf (_T("100%% %s\n"),szMsg);
 		CloseHandle (file);
 	}
-
 	return DeleteFile (lpFileName);
 }
 
 
 INT CommandDelete (LPTSTR cmd, LPTSTR param)
 {
+	/*cmd is the command that was given, in this case it will always be "del" or "delete"
+	  param is whatever is given after the command*/
+
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR szFullPath[MAX_PATH];
 	LPTSTR pFilePart;
 	LPTSTR *arg = NULL;
+	TCHAR exfileName[MAX_PATH];
+	TCHAR * szFileName;
 	INT args;
 	INT i;
+	INT ii;
 	INT res;
 	INT   nEvalArgs = 0; /* nunber of evaluated arguments */
 	DWORD dwFlags = 0;
 	DWORD dwFiles = 0;
 	HANDLE hFile;
+	HANDLE hFileExcl;
 	WIN32_FIND_DATA f;
+	WIN32_FIND_DATA f2;
 	LONG ch;
+	BOOL bExclusion;
+	
+	/*checks the first two chars of param to see if it is /?
+	  this however allows the following command to not show help
+	  "del frog.txt /?" */
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
@@ -128,6 +147,7 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 		{
 			if (*arg[i] == _T('/'))
 			{
+				/*found a command, but check to make sure it has something after it*/
 				if (_tcslen (arg[i]) >= 2)
 				{
 					ch = _totupper (arg[i][1]);
@@ -169,7 +189,8 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 			}
 		}
 
-		/* there are only options on the command line --> error!!! */
+		/* there are only options on the command line --> error!!!
+		   there is the same number of args as there is flags, so none of the args were filenames*/
 		if (args == nEvalArgs)
 		{
 			error_req_param_missing ();
@@ -187,6 +208,9 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 			if (!_tcscmp (arg[i], _T("*")) ||
 			    !_tcscmp (arg[i], _T("*.*")))
 			{
+				/*well, the user wants to delete everything but if they didnt yes DEL_YES, DEL_QUIET, or DEL_PROMPT
+				  then we are going to want to make sure that in fact they want to do that.  */
+
 				if (!((dwFlags & DEL_YES) || (dwFlags & DEL_QUIET) || (dwFlags & DEL_PROMPT)))
 				{
 					LoadString( CMD_ModuleHandle, STRING_DEL_HELP2, szMsg, RC_STRING_MAX_SIZE);
@@ -196,8 +220,9 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 						break;
 				}
 			}
-
-			if (*arg[i] != _T('/'))
+			
+			/*this checks to see if it isnt a flag, if it isnt, we assume it is a file name*/
+			if ((*arg[i] != _T('/')) && (*arg[i] != _T('-')))
 			{
 #ifdef _DEBUG
 				ConErrPrintf (_T("File: %s\n"), arg[i]);
@@ -209,7 +234,7 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 #ifdef _DEBUG
 					ConErrPrintf(_T("Wildcards!\n\n"));
 #endif
-
+					
 					GetFullPathName (arg[i],
 					                 MAX_PATH,
 					                 szFullPath,
@@ -230,12 +255,44 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 
 					do
 					{
+
+
+						/*bExclusion is the check varible to see if it has a match
+						  and it needs to be set to false before each loop, as it hasnt been matched yet*/						
+						bExclusion = 0;
+
+						/*loop through each of the arguments*/
+						for (ii = 0; ii < args; ii++)
+						{
+							/*check to see if it is a exclusion tag*/
+							if(_tcschr (arg[ii], _T('-')))
+							{
+								/*remove the - from the front to get the real name*/
+								_tcscpy (exfileName , arg[ii]);								
+								szFileName = strtok (exfileName,"-");								
+								GetFullPathName (szFileName,
+					                 			 MAX_PATH,
+					                 			 szFullPath,
+					                 			 &pFilePart);
+								hFileExcl = FindFirstFile (szFullPath, &f2);								
+								do
+								{
+									/*check to see if the filenames match*/
+									if(!_tcscmp (f.cFileName, f2.cFileName))
+											bExclusion = 1;	
+								}
+								while (FindNextFile (hFileExcl, &f2));
+							}
+						}
+				
+						if(!bExclusion)
+						{
 						/* ignore ".", ".." and directories */
 						if (!_tcscmp (f.cFileName, _T(".")) ||
 						    !_tcscmp (f.cFileName, _T("..")) ||
 						    f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 							continue;
-
+						
 						_tcscpy (pFilePart, f.cFileName);
 
 #ifdef _DEBUG
@@ -256,13 +313,14 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 								continue;  //FIXME: Errorcode?
 							}
 						}
-
+						
+						/*user cant ask it to be quiet and tell you what it did*/
 						if (!(dwFlags & DEL_QUIET) && !(dwFlags & DEL_TOTAL))
 						{
 							LoadString(CMD_ModuleHandle, STRING_DEL_ERROR7, szMsg, RC_STRING_MAX_SIZE);
 							ConErrPrintf(szMsg, szFullPath);
 						}
-
+						
 						/* delete the file */
 						if (!(dwFlags & DEL_NOTHING))
 						{
@@ -296,12 +354,14 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 								}
 							}
 						}
+						}
 					}
 					while (FindNextFile (hFile, &f));
 					FindClose (hFile);
 				}
 				else
 				{
+					
 					/* no wildcards in filespec */
 #ifdef _DEBUG
 					ConErrPrintf(_T("No Wildcards!\n"));
@@ -395,7 +455,6 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 
 		ConOutPrintf(szMsg, dwFiles);
 	}
-
 	return 0;
 }
 
