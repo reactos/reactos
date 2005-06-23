@@ -25,6 +25,9 @@
 
 #define EVENT_PAIR_ALL_ACCESS    (0x1F0000L)
 
+#define OBJECT_TYPE_CREATE 0x0001
+#define OBJECT_TYPE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x1)
+
 /* For ProcessDeviceMap */
 #define DOSDEVICE_DRIVE_UNKNOWN    0
 #define DOSDEVICE_DRIVE_CALCULATE  1
@@ -35,7 +38,6 @@
 #define DOSDEVICE_DRIVE_RAMDISK    6
 
 /* ENUMERATIONS **************************************************************/
-
 
 typedef enum _HARDERROR_RESPONSE_OPTION 
 {
@@ -250,6 +252,7 @@ typedef enum _IO_COMPLETION_INFORMATION_CLASS
 
 typedef unsigned short LANGID;
 typedef LANGID *PLANGID;
+struct _PLUGPLAY_EVENT_BLOCK; /* FIXME: Ask Filip if it's OK to define it */
 
 /**** Information Structures ****/
 /*

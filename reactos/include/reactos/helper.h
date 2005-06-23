@@ -41,4 +41,77 @@
 #define SECONDS_TO_100NS(seconds) (((LONGLONG)(seconds)) * MILLIS_TO_100NS(1000))
 #define MINUTES_TO_100NS(minutes) (((LONGLONG)(minutes)) * SECONDS_TO_100NS(60))
 #define HOURS_TO_100NS(hours) (((LONGLONG)(hours)) * MINUTES_TO_100NS(60))
+#define TYPE_ALIGNMENT(t) FIELD_OFFSET(struct { char x; t test; }, test)
+#define InsertAscendingListFIFO(ListHead, Type, ListEntryField, NewEntry, SortField)\
+{\
+  PLIST_ENTRY current;\
+\
+  current = (ListHead)->Flink;\
+  while (current != (ListHead))\
+  {\
+    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField >\
+        (NewEntry)->SortField)\
+    {\
+      break;\
+    }\
+    current = current->Flink;\
+  }\
+\
+  InsertTailList(current, &((NewEntry)->ListEntryField));\
+}
+
+#define InsertDescendingListFIFO(ListHead, Type, ListEntryField, NewEntry, SortField)\
+{\
+  PLIST_ENTRY current;\
+\
+  current = (ListHead)->Flink;\
+  while (current != (ListHead))\
+  {\
+    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField <\
+        (NewEntry)->SortField)\
+    {\
+      break;\
+    }\
+    current = current->Flink;\
+  }\
+\
+  InsertTailList(current, &((NewEntry)->ListEntryField));\
+}
+
+#define InsertAscendingList(ListHead, Type, ListEntryField, NewEntry, SortField)\
+{\
+  PLIST_ENTRY current;\
+\
+  current = (ListHead)->Flink;\
+  while (current != (ListHead))\
+  {\
+    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField >=\
+        (NewEntry)->SortField)\
+    {\
+      break;\
+    }\
+    current = current->Flink;\
+  }\
+\
+  InsertTailList(current, &((NewEntry)->ListEntryField));\
+}
+
+#define InsertDescendingList(ListHead, Type, ListEntryField, NewEntry, SortField)\
+{\
+  PLIST_ENTRY current;\
+\
+  current = (ListHead)->Flink;\
+  while (current != (ListHead))\
+  {\
+    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField <=\
+        (NewEntry)->SortField)\
+    {\
+      break;\
+    }\
+    current = current->Flink;\
+  }\
+\
+  InsertTailList(current, &((NewEntry)->ListEntryField));\
+}
+
 #endif

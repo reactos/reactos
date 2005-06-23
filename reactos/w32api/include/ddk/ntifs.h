@@ -29,7 +29,7 @@
 #endif
 
 #include "ntddk.h"
-#include "ntapi.h"
+//#include "ntapi.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -329,9 +329,6 @@ extern LARGE_INTEGER                IoOtherTransferCount;
 #define PIN_NO_READ                     (4)
 #define PIN_IF_BCB                      (8)
 
-#define PORT_CONNECT                    0x0001
-#define PORT_ALL_ACCESS                 (STANDARD_RIGHTS_ALL |\
-                                         PORT_CONNECT)
 /* also in winnt.h */
 #define SEC_BASED	0x00200000
 #define SEC_NO_CHANGE	0x00400000
@@ -538,6 +535,12 @@ typedef struct _SECTION_OBJECT                  *PSECTION_OBJECT;
 typedef struct _SHARED_CACHE_MAP                *PSHARED_CACHE_MAP;
 typedef struct _VACB                            *PVACB;
 typedef struct _VAD_HEADER                      *PVAD_HEADER;
+
+typedef ULONG LBN;
+typedef LBN *PLBN;
+
+typedef ULONG VBN;
+typedef VBN *PVBN;
 
 typedef struct _NOTIFY_SYNC
 {
@@ -1238,6 +1241,28 @@ typedef struct _FSRTL_PER_STREAM_CONTEXT {
 } FSRTL_PER_STREAM_CONTEXT, *PFSRTL_PER_STREAM_CONTEXT;
 
 #endif /* (VER_PRODUCTBUILD >= 2600) */
+
+typedef struct _BASE_MCB
+{
+    ULONG MaximumPairCount;
+    ULONG PairCount;
+    POOL_TYPE PoolType;
+    PVOID Mapping;
+} BASE_MCB;
+typedef BASE_MCB *PBASE_MCB;
+
+typedef struct _LARGE_MCB
+{
+    PFAST_MUTEX FastMutex;
+    BASE_MCB BaseMcb;
+} LARGE_MCB;
+typedef LARGE_MCB *PLARGE_MCB;
+
+typedef struct _MCB 
+{
+    LARGE_MCB DummyFieldThatSizesThisStructureCorrectly;
+} MCB;
+typedef MCB *PMCB;
 
 typedef struct _GENERATE_NAME_CONTEXT {
     USHORT  Checksum;
@@ -2555,6 +2580,15 @@ NTAPI
 FsRtlIsNtstatusExpected (
     IN NTSTATUS Ntstatus
 );
+
+#define NLS_MB_CODE_PAGE_TAG NlsMbCodePageTag
+#define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
+#define NLS_MB_CODE_PAGE_TAG NlsMbOemCodePageTag
+#define NLS_OEM_LEAD_BYTE_INFO NlsOemLeadByteInfo
+
+extern BOOLEAN NlsMbCodePageTag;
+extern BOOLEAN NlsMbOemCodePageTag;
+extern PUSHORT NlsOemLeadByteInfo;
 
 #define FsRtlIsLeadDbcsCharacter(DBCS_CHAR) (                               \
     (BOOLEAN)((UCHAR)(DBCS_CHAR) < 0x80 ? FALSE :                           \

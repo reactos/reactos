@@ -387,6 +387,11 @@ typedef struct _RTL_ATOM_TABLE
         AclRevisionInformation = 1,
         AclSizeInformation
     } ACL_INFORMATION_CLASS;
+    
+    #define TIME_ZONE_ID_UNKNOWN 0
+    #define TIME_ZONE_ID_STANDARD 1
+    #define TIME_ZONE_ID_DAYLIGHT 2
+    #define TIME_ZONE_ID_INVALID 0xFFFFFFFF
 #endif
 
 #endif

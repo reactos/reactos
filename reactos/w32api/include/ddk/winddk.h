@@ -5368,12 +5368,29 @@ RtlQueryRegistryValues(
   IN PVOID  Context,
   IN PVOID  Environment  OPTIONAL);
 
-NTOSAPI
-VOID
-DDKAPI
-RtlRetrieveUlong(
-  IN OUT PULONG  DestinationAddress,
-  IN PULONG  SourceAddress);
+  
+#define LONG_SIZE (sizeof(LONG))
+#define LONG_MASK (LONG_SIZE - 1)
+
+/*
+ * VOID
+ * RtlRetrieveUlong (
+ *	PULONG	DestinationAddress,
+ *	PULONG	SourceAddress
+ *	);
+ */
+#define RtlRetrieveUlong(DestAddress,SrcAddress) \
+    if ((ULONG_PTR)(SrcAddress) & LONG_MASK) \
+    { \
+        ((PUCHAR)(DestAddress))[0]=((PUCHAR)(SrcAddress))[0]; \
+        ((PUCHAR)(DestAddress))[1]=((PUCHAR)(SrcAddress))[1]; \
+        ((PUCHAR)(DestAddress))[2]=((PUCHAR)(SrcAddress))[2]; \
+        ((PUCHAR)(DestAddress))[3]=((PUCHAR)(SrcAddress))[3]; \
+    } \
+    else \
+    { \
+        *((PULONG)(DestAddress))=*((PULONG)(SrcAddress)); \
+    }
 
 NTOSAPI
 VOID

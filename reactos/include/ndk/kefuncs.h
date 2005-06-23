@@ -277,5 +277,9 @@ STDCALL
 KeRaiseUserException(
     IN NTSTATUS ExceptionCode
     );
+
+VOID 
+STDCALL
+KeFlushWriteBuffer(VOID);
     
 #endif

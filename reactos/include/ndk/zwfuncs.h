@@ -954,6 +954,15 @@ ZwGetContextThread(
 
 NTSTATUS 
 STDCALL
+NtGetPlugPlayEvent(
+    ULONG Reserved1,
+    ULONG Reserved2,
+    struct _PLUGPLAY_EVENT_BLOCK *Buffer,
+    ULONG BufferSize
+);
+
+NTSTATUS 
+STDCALL
 NtImpersonateClientOfPort(
     HANDLE PortHandle,
     PLPC_MESSAGE ClientMessage
@@ -1497,6 +1506,14 @@ ZwOpenTimer(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSTATUS 
+STDCALL
+NtPlugPlayControl(
+    ULONG ControlCode,
+    PVOID Buffer,
+    ULONG BufferSize
+);
+   
 NTSTATUS 
 STDCALL 
 NtPowerInformation(
@@ -2049,7 +2066,7 @@ NTSTATUS
 STDCALL
 NtQuerySystemEnvironmentValue(
     IN PUNICODE_STRING Name,
-    OUT PVOID Value,
+    OUT PWSTR Value,
     ULONG Length,
     PULONG ReturnLength
 );
@@ -3307,23 +3324,6 @@ ZwYieldExecution(
     VOID
 );
 
-NTSTATUS
-STDCALL
-NtPlugPlayControl(
-    DWORD Unknown1,
-    DWORD Unknown2,
-    DWORD Unknown3
-);
-
-NTSTATUS
-STDCALL
-NtGetPlugPlayEvent(
-    ULONG Reserved1,
-    ULONG Reserved2,
-    PVOID Buffer,
-    ULONG BufferLength
-);
-
 NTSTATUS 
 STDCALL 
 NtSetSystemPowerState(
@@ -3608,7 +3608,7 @@ NTSTATUS
 STDCALL
 NtQuerySection(
     IN HANDLE SectionHandle,
-    IN CINT SectionInformationClass,
+    IN SECTION_INFORMATION_CLASS SectionInformationClass,
     OUT PVOID SectionInformation,
     IN ULONG Length,
     OUT PULONG ResultLength

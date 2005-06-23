@@ -10,7 +10,6 @@
 #define _HALTYPES_H
 
 /* DEPENDENCIES **************************************************************/
-//#include <ddk/ntdddisk.h>
 
 /* EXPORTED DATA *************************************************************/
 extern ULONG NTOSAPI KdComPortInUse;
@@ -30,6 +29,7 @@ extern ULONG NTOSAPI KdComPortInUse;
 #define MB_FLAGS_BOOT_LOADER_NAME (0x200)
 #define MB_FLAGS_APM_TABLE        (0x400)
 #define MB_FLAGS_GRAPHICS_TABLE   (0x800)
+#define MB_FLAGS_ACPI_TABLE       (0x1000)
 
 /* ENUMERATIONS **************************************************************/
 typedef enum _FIRMWARE_ENTRY
@@ -43,6 +43,19 @@ typedef enum _FIRMWARE_ENTRY
 } FIRMWARE_REENTRY, *PFIRMWARE_REENTRY;
 
 /* TYPES *********************************************************************/
+
+typedef struct _HAL_PRIVATE_DISPATCH
+{
+    ULONG Version;
+} HAL_PRIVATE_DISPATCH, *PHAL_PRIVATE_DISPATCH;
+
+#ifdef __NTOSKRNL__
+extern NTOSAPI HAL_PRIVATE_DISPATCH HalPrivateDispatchTable;
+#else
+extern NTOSAPI PHAL_PRIVATE_DISPATCH HalPrivateDispatchTable;
+#endif
+
+#define HAL_PRIVATE_DISPATCH_VERSION	1
 
 typedef struct _LOADER_MODULE 
 {

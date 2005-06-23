@@ -71,24 +71,6 @@ typedef enum _PLUGPLAY_EVENT_CATEGORY {
    MaxPlugEventCategory
 } PLUGPLAY_EVENT_CATEGORY;
 
-#ifndef __USE_W32API
-typedef enum _PNP_VETO_TYPE {
-   PNP_VetoTypeUnknown,
-   PNP_VetoLegacyDevice,
-   PNP_VetoPendingClose,
-   PNP_VetoWindowsApp,
-   PNP_VetoWindowsService,
-   PNP_VetoOutstandingOpen,
-   PNP_VetoDevice,
-   PNP_VetoDriver,
-   PNP_VetoIllegalDeviceRequest,
-   PNP_VetoInsufficientPower,
-   PNP_VetoNonDisableable,
-   PNP_VetoLegacyDriver,
-   PNP_VetoInsufficientRights,
-} PNP_VETO_TYPE;
-#endif
-
 /*
  * Plug and Play event structure used by NtGetPlugPlayEvent.
  *
@@ -184,14 +166,13 @@ typedef struct _PLUGPLAY_EVENT_BLOCK {
  *
  * Remarks
  *    This function isn't multi-thread safe!
- */
-
 NTSTATUS STDCALL
 NtGetPlugPlayEvent(
    ULONG Reserved1,
    ULONG Reserved2,
    PPLUGPLAY_EVENT_BLOCK Buffer,
    ULONG BufferSize);
+ */
 
 /*
  * NtPlugPlayControl
@@ -293,13 +274,6 @@ typedef struct _PLUGPLAY_DEVICE_STATUS_DATA
   ULONG Problem;  /* CM_PROB_  see cfg.h */
   ULONG Flags;    /* DN_       see cfg.h */
 } PLUGPLAY_DEVICE_STATUS_DATA, *PPLUGPLAY_DEVICE_STATUS_DATA;
-
-
-NTSTATUS STDCALL
-NtPlugPlayControl(
-   ULONG ControlCode,
-   PVOID Buffer,
-   ULONG BufferSize);
 
 #endif /* __GUIDS_ONLY__ */
 

@@ -16,6 +16,8 @@
 /* CONSTANTS *****************************************************************/
 #define LPC_MESSAGE_BASE_SIZE 24
 #define MAX_MESSAGE_DATA      (0x130)
+#define PORT_MAX_DATA_LENGTH 0x104
+#define PORT_MAX_MESSAGE_LENGTH 0x148
 
 /* ENUMERATIONS **************************************************************/
 

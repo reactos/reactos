@@ -20,6 +20,11 @@ extern POBJECT_TYPE NTOSAPI IoDriverObjectType;
 extern POBJECT_TYPE NTOSAPI IoFileObjectType;
 
 /* CONSTANTS *****************************************************************/
+#define DOE_UNLOAD_PENDING    0x1
+#define DOE_DELETE_PENDING    0x2
+#define DOE_REMOVE_PENDING    0x4
+#define DOE_REMOVE_PROCESSED  0x8
+#define DOE_START_PENDING     0x10
 
 /* ENUMERATIONS **************************************************************/
 

@@ -13,7 +13,7 @@
 
 /* EXPORTED DATA *************************************************************/
 extern NTOSAPI POBJECT_TYPE ObDirectoryType;
-extern NTOSAPI struct DEVICE_MAP* ObSystemDeviceMap;
+extern NTOSAPI PDEVICE_MAP ObSystemDeviceMap;
 
 /* CONSTANTS *****************************************************************/
 
