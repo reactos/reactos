@@ -1,11 +1,10 @@
-/* $Id:
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         Serial port driver
  * FILE:            drivers/bus/serial/legacy.c
  * PURPOSE:         Legacy serial port enumeration
  *
- * PROGRAMMERS:     Hervé Poussineau (poussine@freesurf.fr)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
  *                  Mark Junker (mjscod@gmx.de)
  */
 

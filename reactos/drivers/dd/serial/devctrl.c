@@ -1,11 +1,10 @@
-/* $Id:
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         Serial port driver
  * FILE:            drivers/dd/serial/devctrl.c
  * PURPOSE:         Serial IRP_MJ_DEVICE_CONTROL operations
  *
- * PROGRAMMERS:     Hervé Poussineau (poussine@freesurf.fr)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
  */
 
 #define NDEBUG
@@ -196,12 +195,13 @@ SerialGetCommProp(
 
 	RtlZeroMemory(pCommProp, sizeof(SERIAL_COMMPROP));
 
-	pCommProp->PacketLength = sizeof(SERIAL_COMMPROP);
+	if (!(pCommProp->ProvSpec1 & COMMPROP_INITIALIZED))
+		pCommProp->PacketLength = sizeof(SERIAL_COMMPROP);
 	pCommProp->PacketVersion = 2;
 	pCommProp->ServiceMask = SERIAL_SP_SERIALCOMM;
 	pCommProp->MaxTxQueue = pCommProp->CurrentTxQueue = DeviceExtension->OutputBuffer.Length - 1;
 	pCommProp->MaxRxQueue = pCommProp->CurrentRxQueue = DeviceExtension->InputBuffer.Length - 1;
-	pCommProp->ProvSubType = 1; // PST_RS232;
+	pCommProp->ProvSubType = PST_RS232;
 	pCommProp->ProvCapabilities = SERIAL_PCF_DTRDSR | SERIAL_PCF_INTTIMEOUTS | SERIAL_PCF_PARITY_CHECK
 		| SERIAL_PCF_RTSCTS | SERIAL_PCF_SETXCHAR | SERIAL_PCF_SPECIALCHARS | SERIAL_PCF_TOTALTIMEOUTS
 		| SERIAL_PCF_XONXOFF;
@@ -226,6 +226,8 @@ SerialGetCommProp(
 	pCommProp->SettableData = SERIAL_DATABITS_5 | SERIAL_DATABITS_6 | SERIAL_DATABITS_7 | SERIAL_DATABITS_8;
 	pCommProp->SettableStopParity = SERIAL_STOPBITS_10 | SERIAL_STOPBITS_15 | SERIAL_STOPBITS_20
 		| SERIAL_PARITY_NONE | SERIAL_PARITY_ODD | SERIAL_PARITY_EVEN | SERIAL_PARITY_MARK | SERIAL_PARITY_SPACE;
+
+	pCommProp->ProvSpec2 = 0; /* Size of provider-specific data */
 
 	return STATUS_SUCCESS;
 }
