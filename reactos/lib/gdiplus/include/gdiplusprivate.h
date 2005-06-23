@@ -7,12 +7,12 @@
 #ifndef __GDIPLUSPRIVATE_H
 #define __GDIPLUSPRIVATE_H
 
-#include <GdiPlusEnums.h>
-#include <GdiPlusPixelFormats.h>
+#include <gdiplusenums.h>
+#include <gdipluspixelformats.h>
 
 typedef float REAL;
 typedef ARGB Color;
-#include <GdiPlusColorMatrix.h>
+#include <gdipluscolormatrix.h>
 
 #define WINGDIPAPI __stdcall
 #define GDIPCONST const
