@@ -1610,7 +1610,7 @@ NTSTATUS FASTCALL
 IoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 		     ULONG SectorSize,
 		     BOOLEAN ReturnRecognizedPartitions,
-		     PDRIVE_LAYOUT_INFORMATION *PartitionBuffer)
+		     PVOID PartitionBuffer)
 {
   return(HalIoReadPartitionTable(DeviceObject,
 				 SectorSize,
@@ -1637,7 +1637,7 @@ IoWritePartitionTable(PDEVICE_OBJECT DeviceObject,
 		      ULONG SectorSize,
 		      ULONG SectorsPerTrack,
 		      ULONG NumberOfHeads,
-		      PDRIVE_LAYOUT_INFORMATION PartitionBuffer)
+		      PVOID PartitionBuffer)
 {
   return(HalIoWritePartitionTable(DeviceObject,
 				  SectorSize,
