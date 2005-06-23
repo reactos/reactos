@@ -95,7 +95,7 @@ IoConnectInterrupt(PKINTERRUPT* InterruptObject,
                                         (count - 1)* sizeof(KINTERRUPT) +
                                         sizeof(IO_INTERRUPT),
                                         TAG_KINTERRUPT);
-    if (!Interrupt) return(STATUS_INSUFFICIENT_RESOURCES);
+    if (!IoInterrupt) return(STATUS_INSUFFICIENT_RESOURCES);
 
     /* Select which Spinlock to use */
     if (SpinLock)
