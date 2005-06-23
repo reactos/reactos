@@ -248,20 +248,6 @@ typedef struct _SYSTEM_TIME_OF_DAY_INFORMATION {
 	ULONG  CurrentTimeZoneId;
 } SYSTEM_TIME_OF_DAY_INFORMATION, *PSYSTEM_TIME_OF_DAY_INFORMATION;
 
-typedef struct _VM_COUNTERS {
-	ULONG  PeakVirtualSize;
-	ULONG  VirtualSize;
-	ULONG  PageFaultCount;
-	ULONG  PeakWorkingSetSize;
-	ULONG  WorkingSetSize;
-	ULONG  QuotaPeakPagedPoolUsage;
-	ULONG  QuotaPagedPoolUsage;
-	ULONG  QuotaPeakNonPagedPoolUsage;
-	ULONG  QuotaNonPagedPoolUsage;
-	ULONG  PagefileUsage;
-	ULONG  PeakPagefileUsage;
-} VM_COUNTERS, *PVM_COUNTERS;
-
 typedef enum _THREAD_STATE {
 	Initialized,
 	Ready,
@@ -1486,22 +1472,6 @@ typedef struct _PROCESS_ACCESS_TOKEN {
 #define SEM_NOALIGNMENTFAULTEXCEPT        0x0004
 #define SEM_NOOPENFILEERRORBOX            0x8000
 /* end winbase.h */
-typedef struct _POOLED_USAGE_AND_LIMITS {
-	ULONG  PeakPagedPoolUsage;
-	ULONG  PagedPoolUsage;
-	ULONG  PagedPoolLimit;
-	ULONG  PeakNonPagedPoolUsage;
-	ULONG  NonPagedPoolUsage;
-	ULONG  NonPagedPoolLimit;
-	ULONG  PeakPagefileUsage;
-	ULONG  PagefileUsage;
-	ULONG  PagefileLimit;
-} POOLED_USAGE_AND_LIMITS, *PPOOLED_USAGE_AND_LIMITS;
-
-typedef struct _PROCESS_WS_WATCH_INFORMATION {
-  PVOID  FaultingPc;
-  PVOID  FaultingVa;
-} PROCESS_WS_WATCH_INFORMATION, *PPROCESS_WS_WATCH_INFORMATION;
 
 /* PROCESS_PRIORITY_CLASS.PriorityClass constants */
 #define PC_IDLE                           1

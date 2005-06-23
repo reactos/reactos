@@ -45,7 +45,7 @@ FsRtlAddMcbEntry (IN PMCB     Mcb,
 		  IN LBN      Lbn,
 		  IN ULONG    SectorCount)
 {
-  return FsRtlAddLargeMcbEntry(& Mcb->LargeMcb,
+  return FsRtlAddLargeMcbEntry(& Mcb->DummyFieldThatSizesThisStructureCorrectly,
 			       (LONGLONG) Vbn,
 			       (LONGLONG) Lbn,
 			       (LONGLONG) SectorCount);
@@ -82,7 +82,7 @@ FsRtlGetNextMcbEntry (IN PMCB     Mcb,
   LONGLONG llSectorCount;
 
   /* Call the Large version */
-  Return = FsRtlGetNextLargeMcbEntry(&Mcb->LargeMcb,
+  Return = FsRtlGetNextLargeMcbEntry(&Mcb->DummyFieldThatSizesThisStructureCorrectly,
                                      RunIndex,
                                      &llVbn,
                                      &llLbn,
@@ -106,7 +106,7 @@ FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
 			IN POOL_TYPE PoolType)
 {
   UNIMPLEMENTED;
-  Mcb->PoolType = PoolType;
+  Mcb->BaseMcb.PoolType = PoolType;
 }
 
 /*
@@ -117,7 +117,7 @@ VOID STDCALL
 FsRtlInitializeMcb (IN PMCB         Mcb,
 		    IN POOL_TYPE    PoolType)
 {
-  FsRtlInitializeLargeMcb(& Mcb->LargeMcb, PoolType);
+  FsRtlInitializeLargeMcb(& Mcb->DummyFieldThatSizesThisStructureCorrectly, PoolType);
 }
 
 
@@ -209,7 +209,7 @@ FsRtlLookupLastMcbEntry(IN PMCB Mcb,
   LONGLONG llLbn;
 
   /* Call the Large version */
-  Return = FsRtlLookupLastLargeMcbEntry(&Mcb->LargeMcb,
+  Return = FsRtlLookupLastLargeMcbEntry(&Mcb->DummyFieldThatSizesThisStructureCorrectly,
                                         &llVbn,
                                         &llLbn);
 
@@ -237,7 +237,7 @@ FsRtlLookupMcbEntry(IN PMCB Mcb,
   LONGLONG llSectorCount;
 
   /* Call the Large version */
-  Return = FsRtlLookupLargeMcbEntry(&Mcb->LargeMcb,
+  Return = FsRtlLookupLargeMcbEntry(&Mcb->DummyFieldThatSizesThisStructureCorrectly,
                                     (LONGLONG)Vbn,
                                     &llLbn,
                                     &llSectorCount,
@@ -262,7 +262,7 @@ FsRtlNumberOfRunsInLargeMcb(IN PLARGE_MCB Mcb)
 {
   ULONG NumberOfRuns;
   ExAcquireFastMutex (Mcb->FastMutex);
-  NumberOfRuns=Mcb->PairCount;
+  NumberOfRuns=Mcb->BaseMcb.MaximumPairCount;
   ExReleaseFastMutex (Mcb->FastMutex);
   return(NumberOfRuns);
 }
@@ -276,7 +276,7 @@ FsRtlNumberOfRunsInLargeMcb(IN PLARGE_MCB Mcb)
 ULONG STDCALL
 FsRtlNumberOfRunsInMcb (IN PMCB Mcb)
 {
-  return FsRtlNumberOfRunsInLargeMcb(& Mcb->LargeMcb);
+  return FsRtlNumberOfRunsInLargeMcb(& Mcb->DummyFieldThatSizesThisStructureCorrectly);
 }
 
 
@@ -301,7 +301,7 @@ FsRtlRemoveMcbEntry (IN PMCB     Mcb,
 		     IN ULONG    SectorCount)
 {
     /* Call the large function */
-      return FsRtlRemoveLargeMcbEntry(&Mcb->LargeMcb,
+      return FsRtlRemoveLargeMcbEntry(&Mcb->DummyFieldThatSizesThisStructureCorrectly,
                                       (LONGLONG)Vbn,
                                       (LONGLONG)SectorCount);
 }
@@ -353,7 +353,7 @@ VOID STDCALL
 FsRtlTruncateMcb (IN PMCB Mcb,
 		  IN VBN  Vbn)
 {
-  FsRtlTruncateLargeMcb (& Mcb->LargeMcb, (LONGLONG) Vbn);
+  FsRtlTruncateLargeMcb (& Mcb->DummyFieldThatSizesThisStructureCorrectly, (LONGLONG) Vbn);
 }
 
 
@@ -374,7 +374,7 @@ FsRtlUninitializeLargeMcb(IN PLARGE_MCB Mcb)
 VOID STDCALL
 FsRtlUninitializeMcb (IN PMCB Mcb)
 {
-  FsRtlUninitializeLargeMcb(& Mcb->LargeMcb);
+  FsRtlUninitializeLargeMcb(& Mcb->DummyFieldThatSizesThisStructureCorrectly);
 }
 
 

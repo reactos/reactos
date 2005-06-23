@@ -6464,6 +6464,24 @@ typedef struct _SECTION_IMAGE_INFORMATION
 
 #endif /* !__USE_W32API */
 
+struct _PLUGPLAY_EVENT_BLOCK;
+NTSTATUS 
+STDCALL
+NtGetPlugPlayEvent(
+    ULONG Reserved1,
+    ULONG Reserved2,
+    struct _PLUGPLAY_EVENT_BLOCK *Buffer,
+    ULONG BufferSize
+);
+
+NTSTATUS 
+STDCALL
+NtPlugPlayControl(
+    ULONG ControlCode,
+    PVOID Buffer,
+    ULONG BufferSize
+);
+
 /*
  * FUNCTION: Loads a registry key.
  * ARGUMENTS:

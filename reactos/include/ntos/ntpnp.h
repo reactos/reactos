@@ -173,7 +173,7 @@ NtGetPlugPlayEvent(
    PPLUGPLAY_EVENT_BLOCK Buffer,
    ULONG BufferSize);
  */
-
+ 
 /*
  * NtPlugPlayControl
  *
