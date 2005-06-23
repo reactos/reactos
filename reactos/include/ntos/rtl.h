@@ -481,8 +481,6 @@ RtlZeroMemory (PVOID Destination, ULONG Length);
 
 #define SHORT_SIZE	(sizeof(USHORT))
 #define SHORT_MASK	(SHORT_SIZE-1)
-#define LONG_SIZE	(sizeof(ULONG))
-#define LONG_MASK	(LONG_SIZE-1)
 #define LOWBYTE_MASK	0x00FF
 
 #define FIRSTBYTE(Value)	((Value) & LOWBYTE_MASK)
@@ -502,7 +500,6 @@ RtlZeroMemory (PVOID Destination, ULONG Length);
 
 #define NLS_ANSI_CODE_PAGE       NlsAnsiCodePage
 #define NLS_LEAD_BYTE_INFO       NlsLeadByteInfo
-#define NLS_MB_CODE_PAGE_TAG     NlsMbCodePageTag
 #define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
 #define NLS_OEM_LEAD_BYTE_INFO   NlsOemLeadByteInfo
 

@@ -10,7 +10,7 @@ typedef LBN *PLBN;
 typedef ULONG VBN;
 typedef VBN *PVBN;
 
-
+#ifndef __USE_W32API
 typedef struct _LARGE_MCB
 {
   PFAST_MUTEX FastMutex;
@@ -23,7 +23,7 @@ typedef struct _LARGE_MCB
 typedef struct _MCB {
     LARGE_MCB LargeMcb;
 } MCB, *PMCB;
-
+#endif
 
 typedef struct _MAILSLOT_CREATE_PARAMETERS 
 {
