@@ -1623,7 +1623,7 @@ NTSTATUS FASTCALL
 IoSetPartitionInformation(PDEVICE_OBJECT DeviceObject,
 			  ULONG SectorSize,
 			  ULONG PartitionNumber,
-			  ULONG PartitionType)
+			  PDRIVE_LAYOUT_INFORMATION *PartitionType)
 {
   return(HalIoSetPartitionInformation(DeviceObject,
 				      SectorSize,
@@ -1637,7 +1637,7 @@ IoWritePartitionTable(PDEVICE_OBJECT DeviceObject,
 		      ULONG SectorSize,
 		      ULONG SectorsPerTrack,
 		      ULONG NumberOfHeads,
-		      PVOID PartitionBuffer)
+		      PDRIVE_LAYOUT_INFORMATION PartitionBuffer)
 {
   return(HalIoWritePartitionTable(DeviceObject,
 				  SectorSize,
