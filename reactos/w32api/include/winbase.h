@@ -11,6 +11,7 @@
 extern "C" {
 #endif
 
+#define COMMPROP_INITIALIZED 0xE73CF52E
 #define SP_SERIALCOMM 1
 #define PST_UNSPECIFIED	0
 #define PST_RS232	1
