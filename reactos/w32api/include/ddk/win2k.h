@@ -64,7 +64,7 @@ IoReadPartitionTable(
   IN PDEVICE_OBJECT  DeviceObject,
   IN ULONG  SectorSize,
   IN BOOLEAN  ReturnRecognizedPartitions,
-  OUT struct _DRIVE_LAYOUT_INFORMATION  **PartitionBuffer);
+  OUT PVOID PartitionBuffer);
 
 NTOSAPI
 NTSTATUS
@@ -83,7 +83,7 @@ IoWritePartitionTable(
   IN ULONG  SectorSize,
   IN ULONG  SectorsPerTrack,
   IN ULONG  NumberOfHeads,
-  IN struct _DRIVE_LAYOUT_INFORMATION  *PartitionBuffer);
+  IN PVOID   PartitionBuffer);
 
 /*
  * PVOID MmGetSystemAddressForMdl(

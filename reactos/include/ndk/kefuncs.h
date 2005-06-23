@@ -112,6 +112,10 @@ KeTerminateThread(
 
 BOOLEAN
 STDCALL
+KeIsAttachedProcess(VOID);
+
+BOOLEAN
+STDCALL
 KeIsExecutingDpc(
     VOID
 );

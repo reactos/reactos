@@ -15,6 +15,24 @@
 
 /* PROTOTYPES ****************************************************************/
 
+NTSTATUS
+STDCALL
+SeCaptureSecurityDescriptor(
+    IN PSECURITY_DESCRIPTOR OriginalSecurityDescriptor,
+    IN KPROCESSOR_MODE CurrentMode,
+    IN POOL_TYPE PoolType,
+    IN BOOLEAN CaptureIfKernel,
+    OUT PSECURITY_DESCRIPTOR *CapturedSecurityDescriptor
+);
+
+NTSTATUS
+STDCALL
+SeReleaseSecurityDescriptor(
+    IN PSECURITY_DESCRIPTOR CapturedSecurityDescriptor,
+    IN KPROCESSOR_MODE CurrentMode,
+    IN BOOLEAN CaptureIfKernelMode
+);
+    
 SECURITY_IMPERSONATION_LEVEL
 STDCALL
 SeTokenImpersonationLevel(

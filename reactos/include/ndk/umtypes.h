@@ -104,12 +104,6 @@
 #define FSCTL_PIPE_INTERNAL_READ_OVFLOW \
     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 2048, METHOD_BUFFERED, FILE_READ_DATA)
 
-/* Macros for getting the current Process or Thread */
-#define NtCurrentProcess() ( (HANDLE)(LONG_PTR) -1 )  
-#define ZwCurrentProcess() NtCurrentProcess()         
-#define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )   
-#define ZwCurrentThread() NtCurrentThread()      
-
 /* Kernel Shared Data Constants */
 #define PROCESSOR_FEATURE_MAX 64
 #define SharedUserData ((KUSER_SHARED_DATA * CONST) USER_SHARED_DATA)

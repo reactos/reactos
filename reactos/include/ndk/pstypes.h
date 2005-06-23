@@ -95,6 +95,8 @@ typedef NTSTATUS
 /* TYPES *********************************************************************/
 
 struct _ETHREAD;
+typedef struct _W32PROCESS *PW32PROCESS;
+typedef struct _W32THREAD *PW32THREAD;
 
 typedef struct _CURDIR 
 {
