@@ -418,16 +418,18 @@ EngLineTo(SURFOBJ *DestObj,
 	  EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
 	  for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top + Translate.y <= y1; i++)
 	    {
-	      if (y1 < RectEnum.arcl[i].bottom + Translate.y &&
-	          RectEnum.arcl[i].left + Translate.x <= hx + deltax &&
-	          hx < RectEnum.arcl[i].right + Translate.x)
-		{
-		  DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_HLine(
+              if (y1 < RectEnum.arcl[i].bottom + Translate.y &&
+                  RectEnum.arcl[i].left + Translate.x <= hx + deltax &&
+                  hx < RectEnum.arcl[i].right + Translate.x &&
+                  max(hx, RectEnum.arcl[i].left + Translate.x) <
+                  min(hx + deltax, RectEnum.arcl[i].right + Translate.x))
+                {
+                  DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_HLine(
                                        OutputObj,
-		                       max(hx, RectEnum.arcl[i].left + Translate.x),
-		                       min(hx + deltax, RectEnum.arcl[i].right + Translate.x),
-		                       y1, Pixel);
-		}
+                                       max(hx, RectEnum.arcl[i].left + Translate.x),
+                                       min(hx + deltax, RectEnum.arcl[i].right + Translate.x),
+                                       y1, Pixel);
+               	}
 	    }
 	}
       while (EnumMore);
