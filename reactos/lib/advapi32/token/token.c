@@ -401,6 +401,10 @@ ByeBye:
   return Result;
 }
 
+
+/*
+ * @implemented
+ */
 BOOL STDCALL
 IsTokenRestricted(HANDLE TokenHandle)
 {
