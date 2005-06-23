@@ -12,14 +12,10 @@
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
-#include <roscfg.h>
+#include <ndk/ntndk.h>
 
-#include <internal/debug.h>
 #define NDEBUG
 #include <debug.h>
-
-typedef struct _LOADER_PARAMETER_BLOCK *PLOADER_PARAMETER_BLOCK;
-typedef struct _KD_PORT_INFORMATION *PKD_PORT_INFORMATION;
 
 /* DATA **********************************************************************/
 
@@ -439,7 +435,7 @@ HalRequestSoftwareInterrupt(
 VOID
 STDCALL
 HalReturnToFirmware(
-  ULONG Action)
+  FIRMWARE_REENTRY Action)
 {
   UNIMPLEMENTED;
 }
