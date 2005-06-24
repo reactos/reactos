@@ -953,7 +953,7 @@ GetCommConfig(HANDLE hCommDev, LPCOMMCONFIG lpCC, LPDWORD lpdwSize)
 	if( (NULL == lpdwSize) 
 		|| (NULL == lpCC) ) {
 			DPRINT("GetCommConfig() - invalid parameter\n");
-			SetLastError(STATUS_INVALID_PARAMETER);
+			SetLastError(ERROR_INVALID_PARAMETER);
 			ReturnValue = FALSE;
 	}
 	else
@@ -975,8 +975,8 @@ GetCommConfig(HANDLE hCommDev, LPCOMMCONFIG lpCC, LPDWORD lpdwSize)
 				lpCC->dwProviderOffset = (ULONG_PTR)&lpCC->wcProviderData[0] - (ULONG_PTR)lpCC;
 			}
 			if( (lpCC->dwProviderSize+lpCC->dwSize) > *lpdwSize ) {
-				DPRINT("GetCommConfig() - STATUS_BUFFER_TOO_SMALL\n");
-				SetLastError(STATUS_BUFFER_TOO_SMALL);
+				DPRINT("GetCommConfig() - ERROR_INSUFFICIENT_BUFFER\n");
+				SetLastError(ERROR_INSUFFICIENT_BUFFER);
 				ReturnValue = FALSE;
 			} else {
 				RtlCopyMemory(lpCC->wcProviderData, lpComPort->wcProvChar, lpCC->dwProviderSize);
@@ -1225,7 +1225,7 @@ SetCommConfig(HANDLE hCommDev, LPCOMMCONFIG lpCC, DWORD dwSize)
 	if(NULL == lpCC)
 	{
 		DPRINT("SetCommConfig() - invalid parameter\n");
-		SetLastError(STATUS_INVALID_PARAMETER);
+		SetLastError(ERROR_INVALID_PARAMETER);
 		ReturnValue = FALSE;
 	}
 	else
