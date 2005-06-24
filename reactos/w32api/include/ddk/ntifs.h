@@ -703,14 +703,6 @@ typedef struct _COMPRESSED_DATA_INFO {
     ULONG   CompressedChunkSizes[ANYSIZE_ARRAY];
 } COMPRESSED_DATA_INFO, *PCOMPRESSED_DATA_INFO;
 
-typedef struct _DEVICE_MAP {
-    POBJECT_DIRECTORY   DosDevicesDirectory;
-    POBJECT_DIRECTORY   GlobalDosDevicesDirectory;
-    ULONG               ReferenceCount;
-    ULONG               DriveMap;
-    UCHAR               DriveType[32];
-} DEVICE_MAP, *PDEVICE_MAP;
-
 #if (VER_PRODUCTBUILD >= 2600)
 
 typedef struct _EX_FAST_REF {
