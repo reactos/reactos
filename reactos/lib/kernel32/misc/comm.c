@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/misc/comm.c
@@ -8,6 +7,7 @@
  *                  modified from WINE [ Onno Hovers, (onno@stack.urc.tue.nl) ]
  *					Robert Dickenson (robd@mok.lvcom.com)
  *					Saveliy Tretiakov (saveliyt@mail.ru)
+ *					Dmitry Philippov (shedon@mail.ru)
  * UPDATE HISTORY:
  *                  Created 01/11/98
  *                  RDD (30/09/2002) implemented many function bodies to call serial driver.
@@ -15,6 +15,8 @@
  *                  ST  (21/03/2005) implemented GetCommProperties
  *                  ST  (24/03/2005) implemented ClearCommError. Corrected many functions.
  *                  ST  (05/04/2005) implemented CommConfigDialog
+ *                  DP  (11/06/2005) implemented GetCommConfig
+ *                  DP  (12/06/2005) implemented SetCommConfig
  *
  */
 
@@ -927,14 +929,64 @@ EscapeCommFunction(HANDLE hFile, DWORD dwFunc)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 GetCommConfig(HANDLE hCommDev, LPCOMMCONFIG lpCC, LPDWORD lpdwSize)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+	BOOL ReturnValue = FALSE;
+
+	DPRINT("GetCommConfig(%d, %p, %p)\n", hCommDev, lpCC, lpdwSize);
+
+	hProcessHeap = GetProcessHeap();
+
+	LPCOMMPROP lpComPort = RtlAllocateHeap( hProcessHeap,
+											HEAP_ZERO_MEMORY,
+											sizeof(COMMPROP) + 0x100 );
+	if(NULL == lpComPort) {
+		DPRINT("GetCommConfig() - ERROR_NOT_ENOUGH_MEMORY\n");
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+		return FALSE;
+	}
+
+	if( (NULL == lpdwSize) 
+		|| (NULL == lpCC) ) {
+			DPRINT("GetCommConfig() - invalid parameter\n");
+			SetLastError(STATUS_INVALID_PARAMETER);
+			ReturnValue = FALSE;
+	}
+	else
+	{
+		lpComPort->wPacketLength = sizeof(COMMPROP) + 0x100;
+		lpComPort->dwProvSpec1 = COMMPROP_INITIALIZED;
+		ReturnValue = GetCommProperties(hCommDev, lpComPort);
+		if( ReturnValue )
+		{
+			lpCC->dwSize = sizeof(COMMCONFIG);
+			lpCC->wVersion = 1;
+			lpCC->wReserved = 0;
+			lpCC->dwProviderSubType = lpComPort->dwProvSubType;
+			lpCC->dwProviderSize = lpComPort->dwProvSpec2;
+			*lpdwSize = lpCC->dwSize+lpCC->dwProviderSize;
+			if( 0 == lpComPort->dwProvSpec2 ) {
+				lpCC->dwProviderOffset = 0;
+			} else {
+				lpCC->dwProviderOffset = (ULONG_PTR)&lpCC->wcProviderData[0] - (ULONG_PTR)lpCC;
+			}
+			if( (lpCC->dwProviderSize+lpCC->dwSize) > *lpdwSize ) {
+				DPRINT("GetCommConfig() - STATUS_BUFFER_TOO_SMALL\n");
+				SetLastError(STATUS_BUFFER_TOO_SMALL);
+				ReturnValue = FALSE;
+			} else {
+				RtlCopyMemory(lpCC->wcProviderData, lpComPort->wcProvChar, lpCC->dwProviderSize);
+				ReturnValue = GetCommState(hCommDev, &lpCC->dcb);
+			}
+		}
+	}
+
+	RtlFreeHeap(hProcessHeap, 0, lpComPort);
+	return (ReturnValue);
 }
 
 
@@ -1160,14 +1212,28 @@ SetCommBreak(HANDLE hFile)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 SetCommConfig(HANDLE hCommDev, LPCOMMCONFIG lpCC, DWORD dwSize)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+	BOOL ReturnValue = FALSE;
+
+	DPRINT("SetCommConfig(%d, %p, %d)\n", hCommDev, lpCC, dwSize);
+
+	if(NULL == lpCC)
+	{
+		DPRINT("SetCommConfig() - invalid parameter\n");
+		SetLastError(STATUS_INVALID_PARAMETER);
+		ReturnValue = FALSE;
+	}
+	else
+	{
+		ReturnValue = SetCommState(hCommDev, &lpCC->dcb);
+	}
+
+	return ReturnValue;
 }
 
 
