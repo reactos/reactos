@@ -106,7 +106,7 @@ typedef struct _PLUGPLAY_EVENT_BLOCK {
    PULONG Result;
    ULONG Flags;
    ULONG TotalSize;
-   PDEVICE_OBJECT DeviceObject;
+   PVOID DeviceObject;
    union {
       struct {
          GUID ClassGuid;

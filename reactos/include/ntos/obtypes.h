@@ -144,6 +144,8 @@ typedef struct _OBJECT_DIRECTORY {
     ULONG SessionId;
 } OBJECT_DIRECTORY, *POBJECT_DIRECTORY;
 
+#endif /* __USE_W32API */
+
 typedef struct _DEVICE_MAP {
     POBJECT_DIRECTORY   DosDevicesDirectory;
     POBJECT_DIRECTORY   GlobalDosDevicesDirectory;
@@ -151,8 +153,6 @@ typedef struct _DEVICE_MAP {
     ULONG               DriveMap;
     UCHAR               DriveType[32];
 } DEVICE_MAP, *PDEVICE_MAP; 
-
-#endif /* __USE_W32API */
 
 extern POBJECT_TYPE ObDirectoryType;
 extern PDEVICE_MAP ObSystemDeviceMap;

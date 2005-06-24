@@ -26,10 +26,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_MODE_USER
-#include <ntos.h>
 #include <windows.h>
-#include <string.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 
 #include "eventlog.h"
 

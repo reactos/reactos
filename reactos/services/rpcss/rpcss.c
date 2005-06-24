@@ -29,10 +29,9 @@
 
 #define UNICODE
 
-#define NTOS_MODE_USER
-#include <ntos.h>
 #include <windows.h>
-#include <stdio.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 #include "rpcss.h"
 
 //#include "services.h"
