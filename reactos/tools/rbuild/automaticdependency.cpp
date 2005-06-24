@@ -85,6 +85,7 @@ SourceFile::SkipWhitespace ()
 
 bool
 SourceFile::ReadInclude ( string& filename,
+                          bool& searchCurrentDirectory,
                           bool& includeNext)
 {
 	while ( p < end )
@@ -117,6 +118,7 @@ SourceFile::ReadInclude ( string& filename,
 						register char ch = *p;
 						if ( ch == '<' || ch == '"' )
 						{
+							searchCurrentDirectory = (ch == '"');
 							p++;
 							filename.resize ( MAX_PATH );
 							int i = 0;
@@ -138,6 +140,7 @@ SourceFile::ReadInclude ( string& filename,
 		p++;
 	}
 	filename = "";
+	searchCurrentDirectory = false;
 	includeNext = false;
 	return false;
 }
@@ -230,14 +233,17 @@ SourceFile::Parse ()
 	{
 		string includedFilename ( "" );
 		
+		bool searchCurrentDirectory;
 		bool includeNext;
 		while ( ReadInclude ( includedFilename,
+		                      searchCurrentDirectory,
 		                      includeNext ) )
 		{
 			string resolvedFilename ( "" );
 			bool locatedFile = automaticDependency->LocateIncludedFile ( this,
 			                                                             module,
 			                                                             includedFilename,
+			                                                             searchCurrentDirectory,
 			                                                             includeNext,
 			                                                             resolvedFilename );
 			if ( locatedFile )
@@ -321,8 +327,8 @@ AutomaticDependency::ParseFile ( Module& module,
 
 bool
 AutomaticDependency::LocateIncludedFile ( const string& directory,
-	                                      const string& includedFilename,
-	                                      string& resolvedFilename )
+                                          const string& includedFilename,
+                                          string& resolvedFilename )
 {
 	string normalizedFilename = NormalizeFilename ( directory + SSEP + includedFilename );
 	FILE* f = fopen ( normalizedFilename.c_str (), "rb" );
@@ -347,37 +353,44 @@ AutomaticDependency::GetFilename ( const string& filename )
 		                         filename.length () - index - 1);
 }
 
+void
+AutomaticDependency::GetIncludeDirectories ( vector<Include*>& includes,
+                                             Module& module,
+                                             Include& currentDirectory,
+                                             bool searchCurrentDirectory )
+{
+	if ( searchCurrentDirectory )
+		includes.push_back( &currentDirectory );
+	for ( size_t i = 0; i < module.non_if_data.includes.size (); i++ )
+		includes.push_back( module.non_if_data.includes[i] );
+	for ( size_t i = 0; i < module.project.non_if_data.includes.size (); i++ )
+		includes.push_back( module.project.non_if_data.includes[i] );
+}
+
 bool
 AutomaticDependency::LocateIncludedFile ( SourceFile* sourceFile,
-	                                      Module& module,
-	                                      const string& includedFilename,
-	                                      bool includeNext,
-	                                      string& resolvedFilename )
+                                          Module& module,
+                                          const string& includedFilename,
+                                          bool searchCurrentDirectory,
+                                          bool includeNext,
+                                          string& resolvedFilename )
 {
-	size_t i, j;
-	const vector<Include*>* pincludes;
-	for ( i = 0; i < 2; i++ )
+	vector<Include*> includes;
+	Include currentDirectory ( module.project, ".", sourceFile->directoryPart );
+	GetIncludeDirectories ( includes, module, currentDirectory, searchCurrentDirectory );
+	for ( size_t j = 0; j < includes.size (); j++ )
 	{
-		if ( !i )
-			pincludes = &module.non_if_data.includes;
-		else
-			pincludes = &module.project.non_if_data.includes;
-		const vector<Include*>& includes = *pincludes;
-		for ( j = 0; j < includes.size (); j++ )
+		Include& include = *includes[j];
+		if ( LocateIncludedFile ( include.directory,
+		                          includedFilename,
+		                          resolvedFilename ) )
 		{
-			Include& include = *includes[j];
-			if ( LocateIncludedFile ( include.directory,
-									  includedFilename,
-									  resolvedFilename ) )
-			{
-				if ( includeNext && stricmp ( resolvedFilename.c_str (),
-											  sourceFile->filename.c_str () ) == 0 )
-					continue;
-				return true;
-			}
+			if ( includeNext && stricmp ( resolvedFilename.c_str (),
+			                              sourceFile->filename.c_str () ) == 0 )
+				continue;
+			return true;
 		}
 	}
-
 	resolvedFilename = "";
 	return false;
 }
@@ -422,15 +435,15 @@ AutomaticDependency::CheckAutomaticDependencies ( bool verbose )
 
 void
 AutomaticDependency::CheckAutomaticDependencies ( Module& module,
-	                                              bool verbose )
+                                                  bool verbose )
 {
 	CheckAutomaticDependencies ( module, verbose, true );
 }
 
 void
 AutomaticDependency::CheckAutomaticDependencies ( Module& module,
-	                                              bool verbose,
-	                                              bool parseFiles )
+                                                  bool verbose,
+                                                  bool parseFiles )
 {
 	if ( parseFiles )
 		ParseFiles ( module );

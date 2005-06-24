@@ -290,7 +290,7 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	else if ( e.name == "include" )
 	{
-		Include* include = new Include ( *this, e );
+		Include* include = new Include ( *this, &e );
 		if ( pIf )
 			pIf->data.includes.push_back ( include );
 		else

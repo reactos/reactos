@@ -253,19 +253,21 @@ class Include
 public:
 	const Project& project;
 	const Module* module;
-	const XMLElement& node;
+	const XMLElement* node;
 	std::string directory;
 	std::string basePath;
 
 	Include ( const Project& project,
-	          const XMLElement& includeNode );
+	          const XMLElement* includeNode );
 	Include ( const Project& project,
 	          const Module* module,
-	          const XMLElement& includeNode );
+	          const XMLElement* includeNode );
+	Include ( const Project& project,
+	          std::string directory,
+	          std::string basePath );
 	~Include ();
 	void ProcessXML();
 private:
-	void Initialize();
 };
 
 
@@ -556,6 +558,7 @@ private:
 	void Open ();
 	void SkipWhitespace ();
 	bool ReadInclude ( std::string& filename,
+	                   bool& searchCurrentDirectory,
 	                   bool& includeNext );
 	bool IsIncludedFrom ( const std::string& normalizedFilename );
 	SourceFile* GetParentSourceFile ();
@@ -583,6 +586,7 @@ public:
 	bool LocateIncludedFile ( SourceFile* sourceFile,
 	                          Module& module,
 	                          const std::string& includedFilename,
+	                          bool searchCurrentDirectory,
 	                          bool includeNext,
 	                          std::string& resolvedFilename );
 	SourceFile* RetrieveFromCacheOrParse ( Module& module,
@@ -597,6 +601,10 @@ public:
 	                                  bool parseFiles );
 	void CheckAutomaticDependenciesForFile ( SourceFile* sourceFile );
 private:
+	void GetIncludeDirectories ( std::vector<Include*>& includes,
+	                             Module& module,
+                                     Include& currentDirectory,
+                                     bool searchCurrentDirectory );
 	void GetModuleFiles ( Module& module,
                               std::vector<File*>& files ) const;
 	void ParseFiles ();
