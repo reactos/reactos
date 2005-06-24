@@ -54,7 +54,7 @@ HalReboot (VOID)
 
 VOID STDCALL
 HalReturnToFirmware (
-	ULONG	Action
+	FIRMWARE_REENTRY	Action
 	)
 {
     if (Action == HalHaltRoutine)
