@@ -86,7 +86,7 @@ typedef struct _HANDLE_TABLE
     ERESOURCE HandleTableLock;
     LIST_ENTRY HandleTableList;
     KEVENT HandleContentionEvent;
-} HANDLE_TABLE;
+} HANDLE_TABLE, *PHANDLE_TABLE;
 
 #endif
 

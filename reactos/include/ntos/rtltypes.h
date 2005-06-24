@@ -227,16 +227,49 @@ typedef struct _RTL_HEAP_DEFINITION
   ULONG Unknown[11];
 } RTL_HEAP_DEFINITION, *PRTL_HEAP_DEFINITION;
 
+typedef struct _RTL_HANDLE_TABLE_ENTRY
+{
+     ULONG Flags;
+     struct _RTL_HANDLE_TABLE_ENTRY *NextFree;
+} RTL_HANDLE_TABLE_ENTRY, *PRTL_HANDLE_TABLE_ENTRY;
+typedef struct _RTL_HANDLE_TABLE
+{
+     ULONG MaximumNumberOfHandles;
+     ULONG SizeOfHandleTableEntry;
+     ULONG Reserved[2];
+     PRTL_HANDLE_TABLE_ENTRY FreeHandles;
+     PRTL_HANDLE_TABLE_ENTRY CommittedHandles;
+     PRTL_HANDLE_TABLE_ENTRY UnCommittedHandles;
+     PRTL_HANDLE_TABLE_ENTRY MaxReservedHandles;
+} RTL_HANDLE_TABLE, *PRTL_HANDLE_TABLE;
+
+typedef struct _RTL_ATOM_TABLE_ENTRY
+{
+    struct _RTL_ATOM_TABLE_ENTRY *HashLink;
+    USHORT HandleIndex;
+    USHORT Atom;
+    USHORT ReferenceCount;
+    UCHAR Flags;
+    UCHAR NameLength;
+    WCHAR Name[1];
+} RTL_ATOM_TABLE_ENTRY, *PRTL_ATOM_TABLE_ENTRY;
+
 typedef struct _RTL_ATOM_TABLE
 {
-  ULONG TableSize;
-  ULONG NumberOfAtoms;
-  PVOID Lock;		/* fast mutex (kernel mode)/ critical section (user mode) */
-  PVOID HandleTable;
-  LIST_ENTRY Slot[0];
+    ULONG Signature;
+    union
+    {
+        RTL_CRITICAL_SECTION CriticalSection;
+        FAST_MUTEX FastMutex;
+    };
+    union
+    {
+        RTL_HANDLE_TABLE RtlHandleTable;
+        PHANDLE_TABLE ExHandleTable;
+    };
+    ULONG NumberOfBuckets;
+    PRTL_ATOM_TABLE_ENTRY Buckets[1];
 } RTL_ATOM_TABLE, *PRTL_ATOM_TABLE;
-
-
 
 
 #include <pshpack1.h>

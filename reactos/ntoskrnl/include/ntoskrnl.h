@@ -43,7 +43,6 @@
 #include <internal/i386/mm.h>
 #include <internal/i386/fpu.h>
 #include <internal/module.h>
-#include <internal/handle.h>
 #include <internal/pool.h>
 #include <internal/ob.h>
 #include <internal/mm.h>

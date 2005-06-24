@@ -859,6 +859,14 @@ RtlUnicodeStringToInteger(
     PULONG Value
 );
 
+NTSTATUS
+STDCALL
+RtlHashUnicodeString(
+    IN CONST UNICODE_STRING *String,
+    IN BOOLEAN CaseInSensitive,
+    IN ULONG HashAlgorithm,
+    OUT PULONG HashValue);
+
 /*
  * Ansi String Functions
  */
@@ -1333,7 +1341,7 @@ DbgBreakPoint(VOID);
 /*
  * Handle Table Functions
  */
-PRTL_HANDLE
+PRTL_HANDLE_TABLE_ENTRY
 STDCALL
 RtlAllocateHandle (
     IN	PRTL_HANDLE_TABLE	HandleTable,
@@ -1348,7 +1356,7 @@ BOOLEAN
 STDCALL
 RtlFreeHandle (
     IN	PRTL_HANDLE_TABLE	HandleTable,
-    IN	PRTL_HANDLE		Handle
+    IN	PRTL_HANDLE_TABLE_ENTRY	Handle
 );
 
 VOID
@@ -1363,15 +1371,15 @@ BOOLEAN
 STDCALL
 RtlIsValidHandle (
     IN	PRTL_HANDLE_TABLE	HandleTable,
-    IN	PRTL_HANDLE		Handle
+    IN	PRTL_HANDLE_TABLE_ENTRY	Handle
 );
 
 BOOLEAN
 STDCALL
 RtlIsValidIndexHandle (
-    IN	PRTL_HANDLE_TABLE	HandleTable,
-    IN OUT	PRTL_HANDLE		*Handle,
-    IN	ULONG			Index
+    IN	PRTL_HANDLE_TABLE		HandleTable,
+    IN OUT	PRTL_HANDLE_TABLE_ENTRY	*Handle,
+    IN	ULONG				Index
 );
     
 /*

@@ -24,8 +24,8 @@ RtlInitializeHandleTable(ULONG TableSize,
    memset(HandleTable,
 	  0,
 	  sizeof(RTL_HANDLE_TABLE));
-   HandleTable->TableSize = TableSize;
-   HandleTable->HandleSize = HandleSize;
+   HandleTable->MaximumNumberOfHandles = TableSize;
+   HandleTable->SizeOfHandleTableEntry = HandleSize;
 }
 
 
@@ -39,38 +39,43 @@ RtlDestroyHandleTable(PRTL_HANDLE_TABLE HandleTable)
    ULONG ArraySize;
 
    /* free handle array */
-   ArrayPointer = (PVOID)HandleTable->Handles;
-   ArraySize = (ULONG)HandleTable->Limit - (ULONG)HandleTable->Handles;
-   NtFreeVirtualMemory(NtCurrentProcess(),
-		       &ArrayPointer,
-		       &ArraySize,
-		       MEM_RELEASE);
+   if (HandleTable->CommittedHandles)
+     {
+        ArrayPointer = (PVOID)HandleTable->CommittedHandles;
+        ArraySize = HandleTable->SizeOfHandleTableEntry * HandleTable->MaximumNumberOfHandles;
+        NtFreeVirtualMemory(NtCurrentProcess(),
+		            &ArrayPointer,
+		            &ArraySize,
+		            MEM_RELEASE);
+     }
 }
 
 
 /*
  * @implemented
  */
-PRTL_HANDLE STDCALL
+PRTL_HANDLE_TABLE_ENTRY STDCALL
 RtlAllocateHandle(PRTL_HANDLE_TABLE HandleTable,
 		  PULONG Index)
 {
-   RTL_HANDLE **pp_new,**pph,*ph;
+   PRTL_HANDLE_TABLE_ENTRY *pp_new, *pph, ph;
    NTSTATUS Status;
-   PRTL_HANDLE retval;
+   PRTL_HANDLE_TABLE_ENTRY retval;
    PVOID ArrayPointer;
    ULONG ArraySize;
 
-   pp_new = &HandleTable->FirstFree;
+   pp_new = &HandleTable->FreeHandles;
 
-   if (HandleTable->FirstFree == NULL)
+   if (HandleTable->FreeHandles == NULL)
      {
 	/* no free handle available */
-	if (HandleTable->LastUsed == NULL)
+	if (HandleTable->UnCommittedHandles == NULL)
 	  {
 	     /* allocate handle array */
-	     ArraySize = HandleTable->HandleSize * HandleTable->TableSize;
+	     ArraySize = HandleTable->SizeOfHandleTableEntry * HandleTable->MaximumNumberOfHandles;
 	     ArrayPointer = NULL;
+	     
+	     /* FIXME - only reserve handles here! */
 	     Status = NtAllocateVirtualMemory(NtCurrentProcess(),
 					      (PVOID*)&ArrayPointer,
 					      0,
@@ -81,30 +86,34 @@ RtlAllocateHandle(PRTL_HANDLE_TABLE HandleTable,
 	       return NULL;
 
 	     /* update handle array pointers */
-	     HandleTable->Handles = (PRTL_HANDLE)ArrayPointer;
-	     HandleTable->Limit = (PRTL_HANDLE)(ArrayPointer + ArraySize);
-	     HandleTable->LastUsed = (PRTL_HANDLE)ArrayPointer;
+	     HandleTable->FreeHandles = (PRTL_HANDLE_TABLE_ENTRY)ArrayPointer;
+	     HandleTable->MaxReservedHandles = (PRTL_HANDLE_TABLE_ENTRY)((ULONG_PTR)ArrayPointer + ArraySize);
+	     HandleTable->CommittedHandles = (PRTL_HANDLE_TABLE_ENTRY)ArrayPointer;
+	     HandleTable->UnCommittedHandles = (PRTL_HANDLE_TABLE_ENTRY)ArrayPointer;
 	  }
 
+        /* FIXME - should check if handles need to be committed */
+
 	/* build free list in handle array */
-	ph = HandleTable->LastUsed;
+	ph = HandleTable->FreeHandles;
 	pph = pp_new;
-	while (ph < HandleTable->Limit)
+	while (ph < HandleTable->MaxReservedHandles)
 	  {
 	     *pph = ph;
-	     pph = &ph->Next;
-	     ph = (PRTL_HANDLE)((ULONG)ph + HandleTable->HandleSize);
+	     pph = &ph->NextFree;
+	     ph = (PRTL_HANDLE_TABLE_ENTRY)((ULONG_PTR)ph + HandleTable->SizeOfHandleTableEntry);
 	  }
 	*pph = 0;
      }
 
    /* remove handle from free list */
    retval = *pp_new;
-   *pp_new = retval->Next;
-   retval->Next = NULL;
+   *pp_new = retval->NextFree;
+   retval->NextFree = NULL;
 
    if (Index)
-     *Index = ((ULONG)retval - (ULONG)HandleTable->Handles) / HandleTable->HandleSize;
+     *Index = ((ULONG)((ULONG_PTR)retval - (ULONG_PTR)HandleTable->CommittedHandles) /
+               HandleTable->SizeOfHandleTableEntry);
 
    return retval;
 }
@@ -115,18 +124,18 @@ RtlAllocateHandle(PRTL_HANDLE_TABLE HandleTable,
  */
 BOOLEAN STDCALL
 RtlFreeHandle(PRTL_HANDLE_TABLE HandleTable,
-	      PRTL_HANDLE Handle)
+	      PRTL_HANDLE_TABLE_ENTRY Handle)
 {
    /* check if handle is valid */
    if (RtlIsValidHandle(HandleTable, Handle))
      return FALSE;
 
    /* clear handle */
-   memset(Handle, 0, HandleTable->HandleSize);
+   memset(Handle, 0, HandleTable->SizeOfHandleTableEntry);
 
    /* add handle to free list */
-   Handle->Next = HandleTable->FirstFree;
-   HandleTable->FirstFree = Handle;
+   Handle->NextFree = HandleTable->FreeHandles;
+   HandleTable->FreeHandles = Handle;
 
    return TRUE;
 }
@@ -137,12 +146,12 @@ RtlFreeHandle(PRTL_HANDLE_TABLE HandleTable,
  */
 BOOLEAN STDCALL
 RtlIsValidHandle(PRTL_HANDLE_TABLE HandleTable,
-		 PRTL_HANDLE Handle)
+		 PRTL_HANDLE_TABLE_ENTRY Handle)
 {
    if ((HandleTable != NULL)
-       && (Handle != NULL)
-       && (Handle >= HandleTable->Handles)
-       && (Handle < HandleTable->Limit))
+       && (Handle >= HandleTable->CommittedHandles)
+       && (Handle < HandleTable->MaxReservedHandles)
+       && (Handle->Flags & RTL_HANDLE_VALID))
      return TRUE;
    return FALSE;
 }
@@ -153,10 +162,10 @@ RtlIsValidHandle(PRTL_HANDLE_TABLE HandleTable,
  */
 BOOLEAN STDCALL
 RtlIsValidIndexHandle(PRTL_HANDLE_TABLE HandleTable,
-		      PRTL_HANDLE *Handle,
+		      PRTL_HANDLE_TABLE_ENTRY *Handle,
 		      ULONG Index)
 {
-   PRTL_HANDLE InternalHandle;
+   PRTL_HANDLE_TABLE_ENTRY InternalHandle;
 
    DPRINT("RtlIsValidIndexHandle(HandleTable %p Handle %p Index %x)\n", HandleTable, Handle, Index);
 
@@ -164,10 +173,11 @@ RtlIsValidIndexHandle(PRTL_HANDLE_TABLE HandleTable,
      return FALSE;
 
    DPRINT("Handles %p HandleSize %x\n",
-	  HandleTable->Handles, HandleTable->HandleSize);
+	  HandleTable->CommittedHandles, HandleTable->SizeOfHandleTableEntry);
 
-   InternalHandle = (PRTL_HANDLE)((ULONG)HandleTable->Handles + (HandleTable->HandleSize * Index));
-   if (RtlIsValidHandle(HandleTable, InternalHandle) == FALSE)
+   InternalHandle = (PRTL_HANDLE_TABLE_ENTRY)((ULONG_PTR)HandleTable->CommittedHandles +
+                                              (HandleTable->SizeOfHandleTableEntry * Index));
+   if (!RtlIsValidHandle(HandleTable, InternalHandle))
      return FALSE;
 
    DPRINT("InternalHandle %p\n", InternalHandle);

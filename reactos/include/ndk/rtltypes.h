@@ -50,6 +50,13 @@
 #define PDI_HEAP_TAGS   0x08	/* The heap tags */
 #define PDI_HEAP_BLOCKS 0x10	/* The heap blocks */
 #define PDI_LOCKS       0x20	/* The locks created by the process */
+
+/* RTL Handle Flags */
+#define RTL_HANDLE_VALID        0x1
+
+/* RTL Atom Flags */
+#define RTL_ATOM_IS_PINNED      0x1
+
 /* ENUMERATIONS **************************************************************/
 
 typedef enum 
@@ -173,20 +180,23 @@ typedef struct _DEBUG_LOCK_INFORMATION
     ULONG NumberOfSharedWaiters;
     ULONG NumberOfExclusiveWaiters;
 } DEBUG_LOCK_INFORMATION, *PDEBUG_LOCK_INFORMATION;
-typedef struct _RTL_HANDLE
-{
-     struct _RTL_HANDLE *Next;	/* pointer to next free handle */
-} RTL_HANDLE, *PRTL_HANDLE;
 
+typedef struct _RTL_HANDLE_TABLE_ENTRY
+{
+     ULONG Flags;
+     struct _RTL_HANDLE_TABLE_ENTRY *NextFree;
+} RTL_HANDLE_TABLE_ENTRY, *PRTL_HANDLE_TABLE_ENTRY;
 typedef struct _RTL_HANDLE_TABLE
 {
-     ULONG TableSize;		/* maximum number of handles */
-     ULONG HandleSize;		/* size of handle in bytes */
-     PRTL_HANDLE Handles;		/* pointer to handle array */
-     PRTL_HANDLE Limit;		/* limit of pointers */
-     PRTL_HANDLE FirstFree;	/* pointer to first free handle */
-     PRTL_HANDLE LastUsed;	/* pointer to last allocated handle */
+     ULONG MaximumNumberOfHandles;
+     ULONG SizeOfHandleTableEntry;
+     ULONG Reserved[2];
+     PRTL_HANDLE_TABLE_ENTRY FreeHandles;
+     PRTL_HANDLE_TABLE_ENTRY CommittedHandles;
+     PRTL_HANDLE_TABLE_ENTRY UnCommittedHandles;
+     PRTL_HANDLE_TABLE_ENTRY MaxReservedHandles;
 } RTL_HANDLE_TABLE, *PRTL_HANDLE_TABLE;
+
 typedef struct _LOCK_INFORMATION
 {
     ULONG LockCount;
@@ -346,15 +356,32 @@ typedef struct _RTL_PROCESS_INFO
    SECTION_IMAGE_INFORMATION ImageInfo;
 } RTL_PROCESS_INFO, *PRTL_PROCESS_INFO;
 
-/* FIXME: This is a Windows Type which which we are not implementing properly
-      The type below however is our own implementation. We will eventually use Windows' */
-typedef struct _RTL_ATOM_TABLE 
+typedef struct _RTL_ATOM_TABLE_ENTRY
 {
-    ULONG TableSize;
-    ULONG NumberOfAtoms;
-    PVOID Lock;        /* fast mutex (kernel mode)/ critical section (user mode) */
-    PVOID HandleTable;
-    LIST_ENTRY Slot[0];
+    struct _RTL_ATOM_TABLE_ENTRY *HashLink;
+    USHORT HandleIndex;
+    USHORT Atom;
+    USHORT ReferenceCount;
+    UCHAR Flags;
+    UCHAR NameLength;
+    WCHAR Name[1];
+} RTL_ATOM_TABLE_ENTRY, *PRTL_ATOM_TABLE_ENTRY;
+
+typedef struct _RTL_ATOM_TABLE
+{
+    ULONG Signature;
+    union
+    {
+        RTL_CRITICAL_SECTION CriticalSection;
+        FAST_MUTEX FastMutex;
+    };
+    union
+    {
+        RTL_HANDLE_TABLE RtlHandleTable;
+        PHANDLE_TABLE ExHandleTable;
+    };
+    ULONG NumberOfBuckets;
+    PRTL_ATOM_TABLE_ENTRY Buckets[1];
 } RTL_ATOM_TABLE, *PRTL_ATOM_TABLE;
 
 /* Let Kernel Drivers use this */

@@ -36,7 +36,6 @@
 			<file>ftol.c</file>
 		</directory>
 		<file>apc.c</file>
-		<file>atom.c</file>
 		<file>callback.c</file>
 		<file>crc32.c</file>
 		<file>critical.c</file>
