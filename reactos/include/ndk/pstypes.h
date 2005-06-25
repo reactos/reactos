@@ -262,6 +262,11 @@ typedef struct _TEB
 #include "extypes.h"
 #include "setypes.h"
 
+/* FIXME: see note in mmtypes.h */
+#ifdef _NTOSKRNL_
+#include <internal/mm.h>
+#endif
+
 typedef struct _EPROCESS_QUOTA_ENTRY
 {
     ULONG Usage;

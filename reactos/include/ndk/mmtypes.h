@@ -31,6 +31,7 @@ typedef enum _PP_NPAGED_LOOKASIDE_NUMBER
 /* TYPES *********************************************************************/
 
 /* FIXME: Forced to do this for now, because of EPROCESS, will go away before 0.3.0 */
+#ifndef __NTOSKRNL__
 typedef struct _MADDRESS_SPACE
 {
     PVOID MemoryAreaRoot;
@@ -40,6 +41,7 @@ typedef struct _MADDRESS_SPACE
     PUSHORT PageTableRefCountTable;
     ULONG PageTableRefCountTableSize;
 } MADDRESS_SPACE, *PMADDRESS_SPACE;
+#endif
 
 typedef struct _PP_LOOKASIDE_LIST 
 {
