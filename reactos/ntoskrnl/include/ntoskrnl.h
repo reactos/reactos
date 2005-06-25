@@ -1,6 +1,14 @@
-#ifndef __INCLUDE_NTOSKRNL_H
-#define __INCLUDE_NTOSKRNL_H
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel
+ * FILE:            ntoskrnl/include/ntoskrnl.h
+ * PURPOSE:         Main Kernel Header
+ * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
+ */
 
+/* INCLUDES ******************************************************************/
+
+/* We are the Kernel */
 #define NTKERNELAPI
 
 /* include the ntoskrnl config.h file */
@@ -37,5 +45,3 @@
 
 /* Internal Headers */
 #include "internal/ntoskrnl.h"
-
-#endif /* INCLUDE_NTOSKRNL_H */

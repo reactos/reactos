@@ -3,7 +3,6 @@
 
 #include "../eng/misc.h"
 #include <include/winsta.h>
-//#include <ddk/ntddmou.h>
 
 INT  INTERNAL_CALL MouseSafetyOnDrawStart(SURFOBJ *SurfObj, LONG HazardX1, LONG HazardY1, LONG HazardX2, LONG HazardY2);
 INT  INTERNAL_CALL MouseSafetyOnDrawEnd(SURFOBJ *SurfObj);

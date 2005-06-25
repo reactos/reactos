@@ -30,19 +30,6 @@
 /* INCLUDES ******************************************************************/
 #include <w32k.h>
 
-#if 0
-/* not yet defined in w32api... */
-NTSTATUS STDCALL
-ObFindHandleForObject(IN PEPROCESS Process,
-                      IN PVOID Object,
-                      IN POBJECT_TYPE ObjectType,
-                      IN POBJECT_HANDLE_INFORMATION HandleInformation,
-                      OUT PHANDLE Handle);
-#else
-#define ObFindHandleForObject(Process, Object, ObjectType, HandleInformation, Handle) \
-  (STATUS_UNSUCCESSFUL)
-#endif
-
 /* GLOBALS *******************************************************************/
 
 /* Currently active desktop */
@@ -1359,7 +1346,7 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
      may be a bit safer (e.g. when the desktop is being destroyed */
   /* switch into the context of the thread we're trying to get the desktop from,
      so we can use the handle */
-  KeAttachProcess(EPROCESS_TO_KPROCESS(Thread->ThreadsProcess));
+  KeAttachProcess(&Thread->ThreadsProcess->Pcb);
   Status = ObReferenceObjectByHandle(hThreadDesktop,
                                      GENERIC_ALL,
 				     ExDesktopObjectType,

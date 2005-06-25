@@ -8,9 +8,11 @@
  * REVISION HISTORY:
  *       25-10-2003  PB  Created
  */
+/* FIXME: FOR THE LOVE OF GOD SOMEONE PLEASE FIX THIS FUCKFEST */
 #include <ddk/ntddk.h>
 #include <win32k/ntddraw.h>
 #include <ddk/winddi.h>
+#include <w32k.h>
 #include <win32k/win32k.h>
 
 #define NDEBUG

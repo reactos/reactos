@@ -1,12 +1,32 @@
 #ifndef _WIN32K_DESKTOP_H
 #define _WIN32K_DESKTOP_H
 
-#include <windows.h>
-#include <ddk/ntddk.h>
-#include <internal/ex.h>
-#include <internal/ps.h>
 #include "msgqueue.h"
 #include "window.h"
+
+typedef struct _DESKTOP_OBJECT
+{
+    PVOID DesktopHeap; /* points to kmode memory! */
+
+    CSHORT Type;
+    CSHORT Size;
+    LIST_ENTRY ListEntry;
+    KSPIN_LOCK Lock;
+    UNICODE_STRING Name;
+    /* Pointer to the associated window station. */
+    struct _WINSTATION_OBJECT *WindowStation;
+    /* Pointer to the active queue. */
+    PVOID ActiveMessageQueue;
+    /* Rectangle of the work area */
+    RECT WorkArea;
+    /* Handle of the desktop window. */
+    HANDLE DesktopWindow;
+    HANDLE PrevActiveWindow;
+    /* Thread blocking input */
+    PVOID BlockInputThread;
+
+    LIST_ENTRY ShellHookWindows;
+} DESKTOP_OBJECT, *PDESKTOP_OBJECT;
 
 extern PDESKTOP_OBJECT InputDesktop;
 extern HDESK InputDesktopHandle;

@@ -527,7 +527,7 @@ int main(int argc, char* argv[])
     WriteFileHeader(Files[NtosKernelStubs], 
                     "System Call Stubs for Native API", 
                     argv[NtosKernelStubs + 1]);
-    fputs("#include <internal/i386/segment.h>\n\n", Files[NtosKernelStubs]);
+    fputs("#include <ndk/i386/segment.h>\n\n", Files[NtosKernelStubs]);
     
     WriteFileHeader(Files[Win32kGdiStubs], 
                     "System Call Stubs for Native API", 

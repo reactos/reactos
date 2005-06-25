@@ -11,7 +11,6 @@
 #ifndef _WIN32K_VIS_H
 #define _WIN32K_VIS_H
 
-#include <internal/ex.h>
 #include <include/window.h>
 
 HRGN FASTCALL

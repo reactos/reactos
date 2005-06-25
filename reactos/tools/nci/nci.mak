@@ -43,7 +43,7 @@ clean: nci_clean
 
 # WIN32K.SYS
 WIN32K_SVC_DB = $(NCI_BASE_)w32ksvc.db
-WIN32K_SERVICE_TABLE = subsys$(SEP)win32k$(SEP)main$(SEP)svctab.c
+WIN32K_SERVICE_TABLE = subsys$(SEP)win32k$(SEP)include$(SEP)napi.h
 WIN32K_GDI_STUBS = lib$(SEP)gdi32$(SEP)misc$(SEP)win32k.S
 WIN32K_USER_STUBS = lib$(SEP)user32$(SEP)misc$(SEP)win32k.S
 

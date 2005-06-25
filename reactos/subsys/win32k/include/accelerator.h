@@ -1,8 +1,6 @@
 #ifndef _WIN32K_ACCELERATOR_H
 #define _WIN32K_ACCELERATOR_H
 
-#include <windows.h>
-#include <ddk/ntddk.h>
 #include <include/winsta.h>
 #include <include/window.h>
 

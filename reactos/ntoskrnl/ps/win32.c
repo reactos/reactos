@@ -45,16 +45,18 @@ typedef struct _NTW32CALL_SAVED_STATE
 
 /* FUNCTIONS ***************************************************************/
 
-PW32THREAD STDCALL
+struct _W32THREAD*
+STDCALL
 PsGetWin32Thread(VOID)
 {
   return(PsGetCurrentThread()->Tcb.Win32Thread);
 }
 
-PW32PROCESS STDCALL
+struct _W32PROCESS*
+STDCALL
 PsGetWin32Process(VOID)
 {
-  return (PW32PROCESS)PsGetCurrentProcess()->Win32Process;
+  return (struct _W32PROCESS*)PsGetCurrentProcess()->Win32Process;
 }
 
 NTSTATUS STDCALL

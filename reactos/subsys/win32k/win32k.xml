@@ -50,7 +50,6 @@
 	</directory>
 	<directory name="main">
 		<file>dllmain.c</file>
-		<file>svctabm.c</file>
 	</directory>
 	<directory name="misc">
 		<file>driver.c</file>

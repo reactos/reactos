@@ -22,26 +22,9 @@
  * $Id$
  */
 #include <w32k.h>
-#include <ddk/ntddk.h>
 
 #define NDEBUG
 #include <debug.h>
-
-#include <pseh.h>
-
-#ifdef __USE_W32API
-/* F*(&#$ header mess!!!! */
-HANDLE
-STDCALL PsGetProcessId(
-   	PEPROCESS	Process
-	);
-/* ditto */
-ULONG STDCALL
-KeRosGetStackFrames ( PULONG Frames, ULONG FrameCount );
-#endif /* __USE_W32API */
-
-
-
 
 #define GDI_ENTRY_TO_INDEX(ht, e)                                              \
   (((ULONG_PTR)(e) - (ULONG_PTR)&((ht)->Entries[0])) / sizeof(GDI_TABLE_ENTRY))
@@ -656,7 +639,7 @@ GDI_CleanupForProcess (struct _EPROCESS *Process)
   CurrentProcess = PsGetCurrentProcess();
   if (CurrentProcess != Process)
     {
-      KeAttachProcess(EPROCESS_TO_KPROCESS(Process));
+      KeAttachProcess(&Process->Pcb);
     }
   W32Process = (PW32PROCESS)Process->Win32Process;
   ASSERT(W32Process);

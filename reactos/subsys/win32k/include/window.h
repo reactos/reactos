@@ -5,8 +5,6 @@ struct _PROPERTY;
 struct _WINDOW_OBJECT;
 typedef struct _WINDOW_OBJECT *PWINDOW_OBJECT;
 
-#include <windows.h>
-#include <ddk/ntddk.h>
 #include <include/object.h>
 #include <include/class.h>
 #include <include/msgqueue.h>

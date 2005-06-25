@@ -845,11 +845,8 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
 
 NTSTATUS MmInitSectionImplementation(VOID);
 
-NTSTATUS STDCALL
-MmUnmapViewOfSection(struct _EPROCESS* Process, PVOID BaseAddress);
-
-/* FIXME: it should be in ddk/mmfuncs.h */
-NTSTATUS STDCALL
+NTSTATUS 
+STDCALL
 MmCreateSection (OUT	PSECTION_OBJECT		* SectionObject,
 		 IN	ACCESS_MASK		DesiredAccess,
 		 IN	POBJECT_ATTRIBUTES	ObjectAttributes	OPTIONAL,

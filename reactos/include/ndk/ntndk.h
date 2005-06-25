@@ -26,6 +26,7 @@
     #include "ldrfuncs.h"   /* Loader Functions */
     #include "lpctypes.h"   /* Local Procedure Call Types */
     #include "mmtypes.h"    /* Memory Manager Types */
+    #include "mmfuncs.h"    /* Memory Manager Functions */
     #include "obtypes.h"    /* Object Manager Types */
     #include "obfuncs.h"    /* Object Manager Functions */
     #include "potypes.h"    /* Power Manager Types */

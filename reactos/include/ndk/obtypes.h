@@ -115,6 +115,17 @@ typedef NTSTATUS
 
 /* TYPES *********************************************************************/
 
+/* FIXME: Does this match NT's? */
+typedef struct _W32_OBJECT_CALLBACK 
+{
+    OB_OPEN_METHOD WinStaCreate;
+    OB_PARSE_METHOD WinStaParse;
+    OB_DELETE_METHOD WinStaDelete;
+    OB_FIND_METHOD WinStaFind;
+    OB_CREATE_METHOD DesktopCreate;
+    OB_DELETE_METHOD DesktopDelete;
+} W32_OBJECT_CALLBACK, *PW32_OBJECT_CALLBACK;
+
 typedef struct _OBJECT_BASIC_INFORMATION 
 {
     ULONG Attributes;

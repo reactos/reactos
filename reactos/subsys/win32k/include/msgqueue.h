@@ -1,8 +1,6 @@
 #ifndef _WIN32K_MSGQUEUE_H
 #define _WIN32K_MSGQUEUE_H
 
-#include <internal/ex.h>
-#include <windows.h>
 #include "caret.h"
 #include "hook.h"
 
