@@ -10,13 +10,9 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#include <ddk/wdmguid.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
-/* FIXME: Header mess */
-#undef DeviceCapabilities
 
 /* GLOBALS *******************************************************************/
 

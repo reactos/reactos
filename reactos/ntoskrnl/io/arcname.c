@@ -311,7 +311,7 @@ IoCreateSystemRootLink(PCHAR ParameterLine)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   IO_STATUS_BLOCK IoStatusBlock;
-  UNICODE_STRING LinkName;
+  UNICODE_STRING LinkName = RTL_CONSTANT_STRING(L"\\SystemRoot");
   UNICODE_STRING DeviceName;
   UNICODE_STRING ArcName;
   UNICODE_STRING BootPath;
@@ -445,9 +445,6 @@ IoCreateSystemRootLink(PCHAR ParameterLine)
   DPRINT("DeviceName: %wZ\n", &DeviceName);
 
   /* create the '\SystemRoot' link */
-  RtlRosInitUnicodeStringFromLiteral(&LinkName,
-		       L"\\SystemRoot");
-
   Status = IoCreateSymbolicLink(&LinkName,
 				&DeviceName);
   ExFreePool(DeviceName.Buffer);

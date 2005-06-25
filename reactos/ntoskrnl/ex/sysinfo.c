@@ -97,7 +97,7 @@ ExIsProcessorFeaturePresent(IN ULONG ProcessorFeature)
 
 NTSTATUS STDCALL
 NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
-			       OUT	PWCHAR		ValueBuffer,
+			       OUT	PWSTR		ValueBuffer,
 			       IN	ULONG		ValueBufferLength,
 			       IN OUT	PULONG		ReturnLength  OPTIONAL)
 {
@@ -353,17 +353,17 @@ QSI_DEF(SystemBasicInformation)
 	{
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
-	Sbi->Unknown = 0;
-	Sbi->MaximumIncrement = KeMaximumIncrement;
-	Sbi->PhysicalPageSize = PAGE_SIZE;
+	Sbi->Reserved = 0;
+	Sbi->TimerResolution = KeMaximumIncrement;
+	Sbi->PageSize = PAGE_SIZE;
 	Sbi->NumberOfPhysicalPages = MmStats.NrTotalPages;
-	Sbi->LowestPhysicalPage = 0; /* FIXME */
-	Sbi->HighestPhysicalPage = MmStats.NrTotalPages; /* FIXME */
+	Sbi->LowestPhysicalPageNumber = 0; /* FIXME */
+	Sbi->HighestPhysicalPageNumber = MmStats.NrTotalPages; /* FIXME */
 	Sbi->AllocationGranularity = MM_VIRTMEM_GRANULARITY; /* hard coded on Intel? */
-	Sbi->LowestUserAddress = 0x10000; /* Top of 64k */
-	Sbi->HighestUserAddress = (ULONG_PTR)MmHighestUserAddress;
-	Sbi->ActiveProcessors = KeActiveProcessors;
-	Sbi->NumberProcessors = KeNumberProcessors;
+	Sbi->MinimumUserModeAddress = 0x10000; /* Top of 64k */
+	Sbi->MaximumUserModeAddress = (ULONG_PTR)MmHighestUserAddress;
+	Sbi->ActiveProcessorsAffinityMask = KeActiveProcessors;
+	Sbi->NumberOfProcessors = KeNumberProcessors;
 	return (STATUS_SUCCESS);
 }
 
@@ -385,8 +385,8 @@ QSI_DEF(SystemProcessorInformation)
 	Spi->ProcessorArchitecture = 0; /* Intel Processor */
 	Spi->ProcessorLevel	   = Prcb->CpuType;
 	Spi->ProcessorRevision	   = Prcb->CpuStep;
-	Spi->Unknown 		   = 0;
-	Spi->FeatureBits	   = Prcb->FeatureBits;
+	Spi->Reserved 		   = 0;
+	Spi->ProcessorFeatureBits	   = Prcb->FeatureBits;
 
 	DPRINT("Arch %d Level %d Rev 0x%x\n", Spi->ProcessorArchitecture,
 		Spi->ProcessorLevel, Spi->ProcessorRevision);
@@ -413,21 +413,21 @@ QSI_DEF(SystemPerformanceInformation)
 
 	TheIdleProcess = PsIdleProcess;
 
-	Spi->IdleTime.QuadPart = TheIdleProcess->Pcb.KernelTime * 100000LL;
+	Spi->IdleProcessTime.QuadPart = TheIdleProcess->Pcb.KernelTime * 100000LL;
 
-	Spi->ReadTransferCount = IoReadTransferCount;
-	Spi->WriteTransferCount = IoWriteTransferCount;
-	Spi->OtherTransferCount = IoOtherTransferCount;
-	Spi->ReadOperationCount = IoReadOperationCount;
-	Spi->WriteOperationCount = IoWriteOperationCount;
-	Spi->OtherOperationCount = IoOtherOperationCount;
+	Spi->IoReadTransferCount = IoReadTransferCount;
+	Spi->IoWriteTransferCount = IoWriteTransferCount;
+	Spi->IoOtherTransferCount = IoOtherTransferCount;
+	Spi->IoReadOperationCount = IoReadOperationCount;
+	Spi->IoWriteOperationCount = IoWriteOperationCount;
+	Spi->IoOtherOperationCount = IoOtherOperationCount;
 
 	Spi->AvailablePages = MmStats.NrFreePages;
 /*
         Add up all the used "Commitied" memory + pagefile.
         Not sure this is right. 8^\
  */
-	Spi->TotalCommittedPages = MiMemoryConsumers[MC_PPOOL].PagesUsed +
+	Spi->CommittedPages = MiMemoryConsumers[MC_PPOOL].PagesUsed +
 				   MiMemoryConsumers[MC_NPPOOL].PagesUsed+
                                    MiMemoryConsumers[MC_CACHE].PagesUsed+
 		                   MiMemoryConsumers[MC_USER].PagesUsed+
@@ -437,79 +437,79 @@ QSI_DEF(SystemPerformanceInformation)
 	All this make Taskmgr happy but not sure it is the right numbers.
 	This too, fixes some of GlobalMemoryStatusEx numbers.
 */
-        Spi->TotalCommitLimit = MmStats.NrTotalPages + MiFreeSwapPages +
+        Spi->CommitLimit = MmStats.NrTotalPages + MiFreeSwapPages +
                                 MiUsedSwapPages;
 
 	Spi->PeakCommitment = 0; /* FIXME */
-	Spi->PageFaults = 0; /* FIXME */
-	Spi->WriteCopyFaults = 0; /* FIXME */
-	Spi->TransitionFaults = 0; /* FIXME */
-	Spi->CacheTransitionFaults = 0; /* FIXME */
-	Spi->DemandZeroFaults = 0; /* FIXME */
-	Spi->PagesRead = 0; /* FIXME */
-	Spi->PageReadIos = 0; /* FIXME */
-	Spi->CacheReads = 0; /* FIXME */
-	Spi->CacheIos = 0; /* FIXME */
-	Spi->PagefilePagesWritten = 0; /* FIXME */
-	Spi->PagefilePageWriteIos = 0; /* FIXME */
-	Spi->MappedFilePagesWritten = 0; /* FIXME */
-	Spi->MappedFilePageWriteIos = 0; /* FIXME */
+	Spi->PageFaultCount = 0; /* FIXME */
+	Spi->CopyOnWriteCount = 0; /* FIXME */
+	Spi->TransitionCount = 0; /* FIXME */
+	Spi->CacheTransitionCount = 0; /* FIXME */
+	Spi->DemandZeroCount = 0; /* FIXME */
+	Spi->PageReadCount = 0; /* FIXME */
+	Spi->PageReadIoCount = 0; /* FIXME */
+	Spi->CacheReadCount = 0; /* FIXME */
+	Spi->CacheIoCount = 0; /* FIXME */
+    Spi->DirtyPagesWriteCount = 0; /* FIXME */
+	Spi->DirtyWriteIoCount = 0; /* FIXME */
+	Spi->MappedPagesWriteCount = 0; /* FIXME */
+	Spi->MappedWriteIoCount = 0; /* FIXME */
 
-	Spi->PagedPoolUsage = MiMemoryConsumers[MC_PPOOL].PagesUsed;
+	Spi->PagedPoolPages = MiMemoryConsumers[MC_PPOOL].PagesUsed;
 	Spi->PagedPoolAllocs = 0; /* FIXME */
 	Spi->PagedPoolFrees = 0; /* FIXME */
-	Spi->NonPagedPoolUsage = MiMemoryConsumers[MC_NPPOOL].PagesUsed;
+	Spi->NonPagedPoolPages = MiMemoryConsumers[MC_NPPOOL].PagesUsed;
 	Spi->NonPagedPoolAllocs = 0; /* FIXME */
 	Spi->NonPagedPoolFrees = 0; /* FIXME */
 
-	Spi->TotalFreeSystemPtes = 0; /* FIXME */
+	Spi->FreeSystemPtes = 0; /* FIXME */
 
-	Spi->SystemCodePage = MmStats.NrSystemPages; /* FIXME */
+	Spi->ResidentSystemCodePage = MmStats.NrSystemPages; /* FIXME */
 
 	Spi->TotalSystemDriverPages = 0; /* FIXME */
 	Spi->TotalSystemCodePages = 0; /* FIXME */
-	Spi->SmallNonPagedLookasideListAllocateHits = 0; /* FIXME */
-	Spi->SmallPagedLookasideListAllocateHits = 0; /* FIXME */
-	Spi->Reserved3 = 0; /* FIXME */
+	Spi->NonPagedPoolLookasideHits = 0; /* FIXME */
+	Spi->PagedPoolLookasideHits = 0; /* FIXME */
+	Spi->Spare3Count = 0; /* FIXME */
 
-	Spi->MmSystemCachePage = MiMemoryConsumers[MC_CACHE].PagesUsed;
-	Spi->PagedPoolPage = MmPagedPoolSize; /* FIXME */
+	Spi->ResidentSystemCachePage = MiMemoryConsumers[MC_CACHE].PagesUsed;
+	Spi->ResidentPagedPoolPage = MmPagedPoolSize; /* FIXME */
 
-	Spi->SystemDriverPage = 0; /* FIXME */
-	Spi->FastReadNoWait = 0; /* FIXME */
-	Spi->FastReadWait = 0; /* FIXME */
-	Spi->FastReadResourceMiss = 0; /* FIXME */
-	Spi->FastReadNotPossible = 0; /* FIXME */
+	Spi->ResidentSystemDriverPage = 0; /* FIXME */
+	Spi->CcFastReadNoWait = 0; /* FIXME */
+	Spi->CcFastReadWait = 0; /* FIXME */
+	Spi->CcFastReadResourceMiss = 0; /* FIXME */
+	Spi->CcFastReadNotPossible = 0; /* FIXME */
 
-	Spi->FastMdlReadNoWait = 0; /* FIXME */
-	Spi->FastMdlReadWait = 0; /* FIXME */
-	Spi->FastMdlReadResourceMiss = 0; /* FIXME */
-	Spi->FastMdlReadNotPossible = 0; /* FIXME */
+	Spi->CcFastMdlReadNoWait = 0; /* FIXME */
+	Spi->CcFastMdlReadWait = 0; /* FIXME */
+	Spi->CcFastMdlReadResourceMiss = 0; /* FIXME */
+	Spi->CcFastMdlReadNotPossible = 0; /* FIXME */
 
-	Spi->MapDataNoWait = 0; /* FIXME */
-	Spi->MapDataWait = 0; /* FIXME */
-	Spi->MapDataNoWaitMiss = 0; /* FIXME */
-	Spi->MapDataWaitMiss = 0; /* FIXME */
+	Spi->CcMapDataNoWait = 0; /* FIXME */
+	Spi->CcMapDataWait = 0; /* FIXME */
+	Spi->CcMapDataNoWaitMiss = 0; /* FIXME */
+	Spi->CcMapDataWaitMiss = 0; /* FIXME */
 
-	Spi->PinMappedDataCount = 0; /* FIXME */
-	Spi->PinReadNoWait = 0; /* FIXME */
-	Spi->PinReadWait = 0; /* FIXME */
-	Spi->PinReadNoWaitMiss = 0; /* FIXME */
-	Spi->PinReadWaitMiss = 0; /* FIXME */
-	Spi->CopyReadNoWait = 0; /* FIXME */
-	Spi->CopyReadWait = 0; /* FIXME */
-	Spi->CopyReadNoWaitMiss = 0; /* FIXME */
-	Spi->CopyReadWaitMiss = 0; /* FIXME */
+	Spi->CcPinMappedDataCount = 0; /* FIXME */
+	Spi->CcPinReadNoWait = 0; /* FIXME */
+	Spi->CcPinReadWait = 0; /* FIXME */
+	Spi->CcPinReadNoWaitMiss = 0; /* FIXME */
+	Spi->CcPinReadWaitMiss = 0; /* FIXME */
+	Spi->CcCopyReadNoWait = 0; /* FIXME */
+	Spi->CcCopyReadWait = 0; /* FIXME */
+	Spi->CcCopyReadNoWaitMiss = 0; /* FIXME */
+	Spi->CcCopyReadWaitMiss = 0; /* FIXME */
 
-	Spi->MdlReadNoWait = 0; /* FIXME */
-	Spi->MdlReadWait = 0; /* FIXME */
-	Spi->MdlReadNoWaitMiss = 0; /* FIXME */
-	Spi->MdlReadWaitMiss = 0; /* FIXME */
-	Spi->ReadAheadIos = 0; /* FIXME */
-	Spi->LazyWriteIos = 0; /* FIXME */
-	Spi->LazyWritePages = 0; /* FIXME */
-	Spi->DataFlushes = 0; /* FIXME */
-	Spi->DataPages = 0; /* FIXME */
+	Spi->CcMdlReadNoWait = 0; /* FIXME */
+	Spi->CcMdlReadWait = 0; /* FIXME */
+	Spi->CcMdlReadNoWaitMiss = 0; /* FIXME */
+	Spi->CcMdlReadWaitMiss = 0; /* FIXME */
+	Spi->CcReadAheadIos = 0; /* FIXME */
+	Spi->CcLazyWriteIos = 0; /* FIXME */
+	Spi->CcLazyWritePages = 0; /* FIXME */
+	Spi->CcDataFlushes = 0; /* FIXME */
+	Spi->CcDataPages = 0; /* FIXME */
 	Spi->ContextSwitches = 0; /* FIXME */
 	Spi->FirstLevelTbFills = 0; /* FIXME */
 	Spi->SecondLevelTbFills = 0; /* FIXME */
@@ -1100,39 +1100,39 @@ QSI_DEF(SystemFullMemoryInformation)
 /* Class 26 - Load Image */
 SSI_DEF(SystemLoadImage)
 {
-  PSYSTEM_LOAD_IMAGE Sli = (PSYSTEM_LOAD_IMAGE)Buffer;
+  PSYSTEM_GDI_DRIVER_INFORMATION Sli = (PSYSTEM_GDI_DRIVER_INFORMATION)Buffer;
 
-  if (sizeof(SYSTEM_LOAD_IMAGE) != Size)
+  if (sizeof(SYSTEM_GDI_DRIVER_INFORMATION) != Size)
     {
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
 
-  return(LdrpLoadImage(&Sli->ModuleName,
-		       &Sli->ModuleBase,
+  return(LdrpLoadImage(&Sli->DriverName,
+		       &Sli->ImageAddress,
 		       &Sli->SectionPointer,
 		       &Sli->EntryPoint,
-		       &Sli->ExportDirectory));
+		       (PVOID)&Sli->ExportSectionPointer));
 }
 
 /* Class 27 - Unload Image */
 SSI_DEF(SystemUnloadImage)
 {
-  PSYSTEM_UNLOAD_IMAGE Sui = (PSYSTEM_UNLOAD_IMAGE)Buffer;
+  PVOID Sui = (PVOID)Buffer;
 
-  if (sizeof(SYSTEM_UNLOAD_IMAGE) != Size)
+  if (sizeof(PVOID) != Size)
     {
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
 
-  return(LdrpUnloadImage(Sui->ModuleBase));
+  return(LdrpUnloadImage(Sui));
 }
 
 /* Class 28 - Time Adjustment Information */
 QSI_DEF(SystemTimeAdjustmentInformation)
 {
-	if (sizeof (SYSTEM_SET_TIME_ADJUSTMENT) > Size)
+	if (sizeof (SYSTEM_SET_TIME_ADJUST_INFORMATION) > Size)
 	{
-		* ReqSize = sizeof (SYSTEM_SET_TIME_ADJUSTMENT);
+		* ReqSize = sizeof (SYSTEM_SET_TIME_ADJUST_INFORMATION);
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 	/* FIXME: */
@@ -1142,7 +1142,7 @@ QSI_DEF(SystemTimeAdjustmentInformation)
 
 SSI_DEF(SystemTimeAdjustmentInformation)
 {
-	if (sizeof (SYSTEM_SET_TIME_ADJUSTMENT) > Size)
+	if (sizeof (SYSTEM_SET_TIME_ADJUST_INFORMATION) > Size)
 	{
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
@@ -1229,7 +1229,7 @@ QSI_DEF(SystemRegistryQuotaInformation)
   DPRINT1("Faking max registry size of 32 MB\n");
   srqi->RegistryQuotaAllowed = 0x2000000;
   srqi->RegistryQuotaUsed = 0x200000;
-  srqi->Reserved1 = (void*)0x200000;
+  srqi->PagedPoolSize = 0x200000;
 
   return STATUS_SUCCESS;
 }
@@ -1244,14 +1244,14 @@ SSI_DEF(SystemRegistryQuotaInformation)
 /* Class 38 - Load And Call Image */
 SSI_DEF(SystemLoadAndCallImage)
 {
-  PSYSTEM_LOAD_AND_CALL_IMAGE Slci = (PSYSTEM_LOAD_AND_CALL_IMAGE)Buffer;
+  PUNICODE_STRING Slci = (PUNICODE_STRING)Buffer;
 
-  if (sizeof(SYSTEM_LOAD_AND_CALL_IMAGE) != Size)
+  if (sizeof(UNICODE_STRING) != Size)
     {
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
 
-  return(LdrpLoadAndCallImage(&Slci->ModuleName));
+  return(LdrpLoadAndCallImage(Slci));
 }
 
 /* Class 39 - Priority Separation */
@@ -1532,7 +1532,7 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
   /*
    * Check the request is valid.
    */
-  if ((SystemInformationClass >= SystemInformationClassMin) &&
+  if ((SystemInformationClass >= SystemBasicInformation) &&
       (SystemInformationClass < SystemInformationClassMax))
     {
       if (NULL != CallQS [SystemInformationClass].Query)
@@ -1609,7 +1609,7 @@ NtSetSystemInformation (
 	/*
 	 * Check the request is valid.
 	 */
-	if (	(SystemInformationClass >= SystemInformationClassMin)
+	if (	(SystemInformationClass >= SystemBasicInformation)
 		&& (SystemInformationClass < SystemInformationClassMax)
 		)
 	{

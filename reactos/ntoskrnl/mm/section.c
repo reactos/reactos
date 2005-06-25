@@ -2093,7 +2093,7 @@ MmCreatePhysicalMemorySection(VOID)
    PSECTION_OBJECT PhysSection;
    NTSTATUS Status;
    OBJECT_ATTRIBUTES Obj;
-   UNICODE_STRING Name = ROS_STRING_INITIALIZER(L"\\Device\\PhysicalMemory");
+   UNICODE_STRING Name = RTL_CONSTANT_STRING(L"\\Device\\PhysicalMemory");
    LARGE_INTEGER SectionSize;
 
    /*

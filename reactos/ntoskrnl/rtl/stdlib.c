@@ -73,7 +73,7 @@ long atol(const char *str)
    * Set any if any `digits' consumed; make it negative to indicate
    * overflow.
    */
-  cutoff = neg ? -(unsigned long)LONG_MIN : LONG_MAX;
+  cutoff = neg ? -(unsigned long)MINLONG : MAXLONG;
   cutlim = cutoff % (unsigned long)10;
   cutoff /= (unsigned long)10;
   for (acc = 0, any = 0;; c = *s++)
@@ -95,7 +95,7 @@ long atol(const char *str)
   }
   if (any < 0)
   {
-    acc = neg ? LONG_MIN : LONG_MAX;
+    acc = neg ? MINLONG : MAXLONG;
   }
   else if (neg)
     acc = -acc;

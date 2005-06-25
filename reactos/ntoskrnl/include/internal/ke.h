@@ -576,6 +576,18 @@ VOID
 STDCALL
 KeFlushCurrentTb(VOID);
 
+/* REACTOS SPECIFIC */
+
+VOID STDCALL
+KeRosDumpStackFrames(
+  PULONG  Frame,
+  ULONG  FrameCount);
+
+ULONG STDCALL
+KeRosGetStackFrames(
+  PULONG  Frames,
+  ULONG  FrameCount);
+  
 VOID
 KiSetSystemTime(PLARGE_INTEGER NewSystemTime);
 

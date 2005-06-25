@@ -11,12 +11,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#include <internal/ps.h>
 #define NDEBUG
 #include <internal/debug.h>
-
-//FIXME: sort this out somehow. IAI: Sorted in new header branch
-#define PRTL_CRITICAL_SECTION PVOID
 
 /* FUNCTIONS *****************************************************************/
 

@@ -648,7 +648,7 @@ MmInitializeCrashDump(HANDLE PageFileHandle, ULONG PageFileNum)
    PIRP Irp;
    KEVENT Event;
    IO_STATUS_BLOCK Iosb;
-   UNICODE_STRING DiskDumpName;
+   UNICODE_STRING DiskDumpName = RTL_CONSTANT_STRING(L"DiskDump");
    ANSI_STRING ProcName;
    PIO_STACK_LOCATION StackPtr;
    PMODULE_OBJECT ModuleObject;
@@ -724,7 +724,6 @@ MmInitializeCrashDump(HANDLE PageFileHandle, ULONG PageFileNum)
    }
 
    /* Load the diskdump driver. */
-   RtlRosInitUnicodeStringFromLiteral(&DiskDumpName, L"DiskDump");
    ModuleObject = LdrGetModuleObject(&DiskDumpName);
    if (ModuleObject == NULL)
    {

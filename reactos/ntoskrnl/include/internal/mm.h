@@ -85,6 +85,8 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 #define MM_LOWEST_USER_ADDRESS (PVOID)0x10000
 #endif
 
+#define TEB_BASE        (0x7FFDE000)
+
 #define MM_VIRTMEM_GRANULARITY (64 * 1024) /* Although Microsoft says this isn't hardcoded anymore,
                                               they won't be able to change it. Stuff depends on it */
 

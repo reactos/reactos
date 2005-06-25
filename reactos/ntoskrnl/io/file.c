@@ -14,9 +14,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* FIXME: Header mess */
-#undef CreateMailslot
-
 /* GLOBALS *******************************************************************/
 
 extern GENERIC_MAPPING IopFileMapping;
@@ -3004,7 +3001,7 @@ NTSTATUS
 STDCALL
 NtSetQuotaInformationFile(HANDLE FileHandle,
                           PIO_STATUS_BLOCK IoStatusBlock,
-                          PFILE_USER_QUOTA_INFORMATION Buffer,
+                          PFILE_QUOTA_INFORMATION Buffer,
                           ULONG BufferLength)
 {
     UNIMPLEMENTED;

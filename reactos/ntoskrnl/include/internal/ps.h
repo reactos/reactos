@@ -542,7 +542,7 @@ typedef struct _EJOB
   UINT PeakJobMemoryUsed;
   UINT CurrentJobMemoryUsed;
   FAST_MUTEX MemoryLimitsLock;
-} EJOB;
+} EJOB, *PEJOB;
 #include <poppack.h>
 
 VOID INIT_FUNCTION PsInitJobManagment(VOID);

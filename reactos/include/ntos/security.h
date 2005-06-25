@@ -4,6 +4,7 @@
 #include <ntos/ntdef.h>
 #include <ntos/types.h>
 
+#ifndef __USE_W32API
 /* Privileges */
 #define SE_MIN_WELL_KNOWN_PRIVILEGE		(2L)
 #define SE_CREATE_TOKEN_PRIVILEGE		(2L)
@@ -31,7 +32,7 @@
 #define SE_CHANGE_NOTIFY_PRIVILEGE		(23L)
 #define SE_REMOTE_SHUTDOWN_PRIVILEGE		(24L)
 #define SE_MAX_WELL_KNOWN_PRIVILEGE		SE_REMOTE_SHUTDOWN_PRIVILEGE
-
+#endif
 /* TOKEN_GROUPS structure */
 #ifndef SE_GROUP_MANDATORY
 #define SE_GROUP_MANDATORY                (0x1L)

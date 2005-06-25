@@ -15,6 +15,40 @@
 #define PAGE_LOCKED_FUNCTION	PLACE_IN_SECTION("pagelk")
 #define PAGE_UNLOCKED_FUNCTION	PLACE_IN_SECTION("pagepo")
 
+#ifdef _NTOSKRNL_
+
+#include "ke.h"
+#include "i386/segment.h"
+#include "i386/mm.h"
+#include "i386/fpu.h"
+#include "module.h"
+#include "pool.h"
+#include "ob.h"
+#include "mm.h"
+#include "ps.h"
+#include "cc.h"
+#include "io.h"
+#include "po.h"
+#include "se.h"
+#include "ldr.h"
+#include "kd.h"
+#include "ex.h"
+#include "xhal.h"
+#include "v86m.h"
+#include "ifs.h"
+#include "port.h"
+#include "nls.h"
+#ifdef KDBG
+#include "kdb.h"
+#endif
+#include "dbgk.h"
+#include "trap.h"
+#include "safe.h"
+#include "tag.h"
+#include "test.h"
+#include "inbv.h"
+
+
 #include <pshpack1.h>
 /*
  * Defines a descriptor as it appears in the processor tables
@@ -62,6 +96,7 @@ RtlpCreateUnicodeString(
    IN PCWSTR  Source,
    IN POOL_TYPE PoolType);
    
+#endif
 #endif /* __ASM__ */
 
 /*

@@ -44,7 +44,7 @@ VOID INIT_FUNCTION
 PiInitDefaultLocale(VOID)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
-   UNICODE_STRING KeyName;
+   UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Nls\\Language");
    UNICODE_STRING ValueName;
    HANDLE KeyHandle;
    ULONG ValueLength;
@@ -55,9 +55,6 @@ PiInitDefaultLocale(VOID)
    NTSTATUS Status;
 
    ValueInfo = (PKEY_VALUE_PARTIAL_INFORMATION)ValueBuffer;
-
-   RtlRosInitUnicodeStringFromLiteral(&KeyName,
-			L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Nls\\Language");
 
    InitializeObjectAttributes(&ObjectAttributes,
 			      &KeyName,
@@ -70,7 +67,7 @@ PiInitDefaultLocale(VOID)
    if (NT_SUCCESS(Status))
      {
 	/* Read system locale */
-	RtlRosInitUnicodeStringFromLiteral(&ValueName,
+	RtlInitUnicodeString(&ValueName,
 					   L"Default");
 	Status = ZwQueryValueKey(KeyHandle,
 				 &ValueName,
@@ -95,7 +92,7 @@ PiInitDefaultLocale(VOID)
 	  }
 
 	/* Read install language id */
-	RtlRosInitUnicodeStringFromLiteral(&ValueName,
+	RtlInitUnicodeString(&ValueName,
 					   L"InstallLanguage");
 	Status = ZwQueryValueKey(KeyHandle,
 				 &ValueName,
@@ -137,8 +134,8 @@ VOID STDCALL
 PiInitThreadLocale(VOID)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
-   UNICODE_STRING KeyName;
-   UNICODE_STRING ValueName;
+   UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\User\\.Default\\Control Panel\\International");
+   UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"Locale");
    HANDLE KeyHandle;
    ULONG ValueLength;
    UCHAR ValueBuffer[VALUE_BUFFER_SIZE];
@@ -150,11 +147,6 @@ PiInitThreadLocale(VOID)
    ValueInfo = (PKEY_VALUE_PARTIAL_INFORMATION)ValueBuffer;
 
    /* read default thread locale */
-   RtlRosInitUnicodeStringFromLiteral(&KeyName,
-			L"\\Registry\\User\\.Default\\Control Panel\\International");
-   RtlRosInitUnicodeStringFromLiteral(&ValueName,
-			L"Locale");
-
    InitializeObjectAttributes(&ObjectAttributes,
 			      &KeyName,
 			      OBJ_CASE_INSENSITIVE,
@@ -264,17 +256,17 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
 				    &UserKey);
 	if (!NT_SUCCESS(Status))
 	  return(Status);
-	RtlRosInitUnicodeStringFromLiteral(&KeyName,
+	RtlInitUnicodeString(&KeyName,
 			     L"Control Panel\\International");
-	RtlRosInitUnicodeStringFromLiteral(&ValueName,
+	RtlInitUnicodeString(&ValueName,
 			     L"Locale");
      }
    else
      {
 	/* system locale */
-	RtlRosInitUnicodeStringFromLiteral(&KeyName,
+	RtlInitUnicodeString(&KeyName,
 			     L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Nls\\Language");
-	RtlRosInitUnicodeStringFromLiteral(&ValueName,
+	RtlInitUnicodeString(&ValueName,
 			     L"Default");
      }
 
@@ -354,8 +346,8 @@ NtQueryDefaultUILanguage(OUT PLANGID LanguageId)
   UCHAR ValueBuffer[VALUE_BUFFER_SIZE];
   PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyName;
-  UNICODE_STRING ValueName;
+  UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"Control Panel\\International");
+  UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"MultiUILanguageId");
   UNICODE_STRING ValueString;
   ULONG ValueLength;
   ULONG Value;
@@ -372,11 +364,6 @@ NtQueryDefaultUILanguage(OUT PLANGID LanguageId)
       *LanguageId = PsInstallUILanguageId;
       return STATUS_SUCCESS;
     }
-
-  RtlRosInitUnicodeStringFromLiteral(&KeyName,
-				     L"Control Panel\\International");
-  RtlRosInitUnicodeStringFromLiteral(&ValueName,
-				     L"MultiUILanguageId");
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
@@ -452,8 +439,8 @@ NTSTATUS STDCALL
 NtSetDefaultUILanguage(IN LANGID LanguageId)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyName;
-  UNICODE_STRING ValueName;
+  UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"Control Panel\\Desktop");
+  UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"MultiUILanguageId");
   WCHAR ValueBuffer[8];
   ULONG ValueLength;
   HANDLE UserHandle;
@@ -468,11 +455,6 @@ NtSetDefaultUILanguage(IN LANGID LanguageId)
     {
       return Status;
     }
-
-  RtlRosInitUnicodeStringFromLiteral(&KeyName,
-				     L"Control Panel\\Desktop");
-  RtlRosInitUnicodeStringFromLiteral(&ValueName,
-				     L"MultiUILanguageId");
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,

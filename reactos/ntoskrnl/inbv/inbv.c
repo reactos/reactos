@@ -37,9 +37,8 @@ InbvCheckBootVid(VOID)
     {
       NTSTATUS Status;
       OBJECT_ATTRIBUTES ObjectAttributes;
-      UNICODE_STRING BootVidName;
+      UNICODE_STRING BootVidName = RTL_CONSTANT_STRING(L"\\Device\\BootVid");
 
-      RtlRosInitUnicodeStringFromLiteral(&BootVidName, L"\\Device\\BootVid");
       InitializeObjectAttributes(&ObjectAttributes,
 				 &BootVidName,
 				 0,

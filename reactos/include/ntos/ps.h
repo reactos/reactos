@@ -136,7 +136,7 @@ typedef NTSTATUS
 (STDCALL *PW32_THREAD_CALLBACK)(struct _ETHREAD *Thread,
 			        BOOLEAN Create);
 
-typedef struct _EJOB *PEJOB;
+struct _EJOB;
 
 NTSTATUS STDCALL
 PsCreateSystemProcess (PHANDLE ProcessHandle,
@@ -189,19 +189,19 @@ STDCALL PsGetCurrentThreadStackLimit (
 
 PVOID
 STDCALL PsGetJobLock(
-    PEJOB	Job
+    struct _EJOB*	Job
 	);
 
 
 PVOID
 STDCALL PsGetJobSessionId(
-    PEJOB	Job
+    struct _EJOB*	Job
 	);
 
 
 ULONG
 STDCALL PsGetJobUIRestrictionsClass(
-   	PEJOB	Job
+   	struct _EJOB*	Job
 	);
 
 
@@ -247,7 +247,7 @@ STDCALL PsGetProcessInheritedFromUniqueProcessId(
 	);
 
 
-PEJOB
+struct _EJOB*
 STDCALL PsGetProcessJob(
 	PEPROCESS Process
 	);
@@ -378,7 +378,7 @@ PsRevertThreadToSelf(
 
 VOID
 STDCALL PsSetJobUIRestrictionsClass(
-    PEJOB	Job,
+    struct _EJOB*	Job,
     ULONG	UIRestrictionsClass	
 	);
 
