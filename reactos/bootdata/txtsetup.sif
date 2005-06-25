@@ -96,23 +96,6 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00000809 = kbduk.dll
 00000807 = kbdsg.dll
 
-[Mouse]
-;<id> = <user friendly name>,<spare>,<service key name>
-i8042ps2 = "PS2 Mouse",,i8042prt
-;msps2 = "Microsoft PS2 Mouse",,psaux
-msser = "Microsoft Serial Mouse",,sermouse
-mswhs = "Microsoft Serial Wheel Mouse",,sermouse
-none  = "No Mouse"
-
-[Map.Mouse]
-;<id> = <pnp id string>
-i8042ps2 = "MICROSOFT PS2 MOUSE"
-;msps2 = "MICROSOFT PS2 MOUSE"
-msser = "MICROSOFT SERIAL MOUSE"
-mswhs = "MICROSOFT MOUSE WITH WHEEL"
-none  = "NO MOUSE"
-
-
 [HiveInfs.Install]
 AddReg=hivecls.inf,AddReg
 AddReg=hivedef.inf,AddReg

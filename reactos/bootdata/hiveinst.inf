@@ -17,15 +17,3 @@ HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSe
 
 ; VGA miniport driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Start",0x00010001,0x00000001
-
-
-;
-; Mouse driver section
-;
-
-; PS/2 mouse port driver
-HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt","Start",0x00010001,0x00000001
-
-
-; Serial mouse driver
-;HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","Start",0x00010001,0x00000001

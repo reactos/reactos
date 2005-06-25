@@ -45,7 +45,6 @@ typedef enum _PAGE_NUMBER
   DISPLAY_SETTINGS_PAGE,
   KEYBOARD_SETTINGS_PAGE,
   LAYOUT_SETTINGS_PAGE,
-  POINTER_SETTINGS_PAGE,
 
   SELECT_PARTITION_PAGE,
   CREATE_PARTITION_PAGE,
@@ -117,7 +116,6 @@ static PGENERIC_LIST ComputerList = NULL;
 static PGENERIC_LIST DisplayList = NULL;
 static PGENERIC_LIST KeyboardList = NULL;
 static PGENERIC_LIST LayoutList = NULL;
-static PGENERIC_LIST PointerList = NULL;
 
 
 /* FUNCTIONS ****************************************************************/
@@ -938,7 +936,7 @@ ScsiControllerPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 DeviceSettingsPage(PINPUT_RECORD Ir)
 {
-  static ULONG Line = 17;
+  static ULONG Line = 16;
 
   /* Initialize the computer settings list */
   if (ComputerList == NULL)
@@ -992,42 +990,30 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
 	}
     }
 
-  /* Initialize the pointer settings list */
-  if (PointerList == NULL)
-    {
-      PointerList = CreateMouseDriverList(SetupInf);
-      if (PointerList == NULL)
-	{
-	  /* FIXME: report error */
-	}
-    }
-
   SetTextXY(6, 8, "The list below shows the current device settings.");
 
   SetTextXY(8, 11, "       Computer:");
   SetTextXY(8, 12, "        Display:");
   SetTextXY(8, 13, "       Keyboard:");
   SetTextXY(8, 14, "Keyboard layout:");
-  SetTextXY(8, 15, " Pointer device:");
 
-  SetTextXY(8, 17, "         Accept:");
+  SetTextXY(8, 16, "         Accept:");
 
   SetTextXY(25, 11, GetGenericListEntry(ComputerList)->Text);
   SetTextXY(25, 12, GetGenericListEntry(DisplayList)->Text);
   SetTextXY(25, 13, GetGenericListEntry(KeyboardList)->Text);
   SetTextXY(25, 14, GetGenericListEntry(LayoutList)->Text);
-  SetTextXY(25, 15, GetGenericListEntry(PointerList)->Text);
 
-  SetTextXY(25, 17, "Accept these device settings");
+  SetTextXY(25, 16, "Accept these device settings");
   InvertTextXY (24, Line, 48, 1);
 
 
-  SetTextXY(6, 20, "You can change the hardware settings by pressing the UP or DOWN keys");
-  SetTextXY(6, 21, "to select an entry. Then press the ENTER key to select alternative");
-  SetTextXY(6, 22, "settings.");
+  SetTextXY(6, 19, "You can change the hardware settings by pressing the UP or DOWN keys");
+  SetTextXY(6, 20, "to select an entry. Then press the ENTER key to select alternative");
+  SetTextXY(6, 21, "settings.");
 
-  SetTextXY(6, 24, "When all settings are correct, select \"Accept these device settings\"");
-  SetTextXY(6, 25, "and press ENTER.");
+  SetTextXY(6, 23, "When all settings are correct, select \"Accept these device settings\"");
+  SetTextXY(6, 24, "and press ENTER.");
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
 
@@ -1039,9 +1025,9 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
 	{
 	  NormalTextXY (24, Line, 48, 1);
-	  if (Line == 15)
-	    Line = 17;
-	  else if (Line == 17)
+	  if (Line == 14)
+	    Line = 16;
+	  else if (Line == 16)
 	    Line = 11;
 	  else
 	    Line++;
@@ -1052,9 +1038,9 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
 	{
 	  NormalTextXY (24, Line, 48, 1);
 	  if (Line == 11)
-	    Line = 17;
-	  else if (Line == 17)
-	    Line = 15;
+	    Line = 16;
+	  else if (Line == 16)
+	    Line = 14;
 	  else
 	    Line--;
 	  InvertTextXY (24, Line, 48, 1);
@@ -1076,9 +1062,7 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
 	    return KEYBOARD_SETTINGS_PAGE;
 	  else if (Line == 14)
 	    return LAYOUT_SETTINGS_PAGE;
-	  else if (Line == 15)
-	    return POINTER_SETTINGS_PAGE;
-	  else if (Line == 17)
+	  else if (Line == 16)
 	    return SELECT_PARTITION_PAGE;
 	}
     }
@@ -1329,69 +1313,6 @@ LayoutSettingsPage(PINPUT_RECORD Ir)
 	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)) /* ESC */
 	{
 	  RestoreGenericListState(LayoutList);
-	  return DEVICE_SETTINGS_PAGE;
-	}
-      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
-	{
-	  return DEVICE_SETTINGS_PAGE;
-	}
-    }
-
-  return DISPLAY_SETTINGS_PAGE;
-}
-
-
-static PAGE_NUMBER
-PointerSettingsPage(PINPUT_RECORD Ir)
-{
-  SHORT xScreen;
-  SHORT yScreen;
-
-  SetTextXY(6, 8, "You want to change the pointing device to be installed.");
-
-  SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired pointing");
-  SetTextXY(8, 11, "    device. Then press ENTER.");
-
-  SetTextXY(8, 13, "\x07  Press the ESC key to return to the previous page without changing");
-  SetTextXY(8, 14, "   the pointing device.");
-
-  GetScreenSize(&xScreen, &yScreen);
-
-  DrawGenericList(PointerList,
-		  2,
-		  18,
-		  xScreen - 3,
-		  yScreen - 3);
-
-  SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
-
-  SaveGenericListState(PointerList);
-
-  while(TRUE)
-    {
-      ConInKey(Ir);
-
-      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
-	{
-	  ScrollDownGenericList(PointerList);
-	}
-      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP)) /* UP */
-	{
-	  ScrollUpGenericList(PointerList);
-	}
-      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
-	{
-	  if (ConfirmQuit(Ir) == TRUE)
-	    return QUIT_PAGE;
-	  break;
-	}
-      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)) /* ESC */
-	{
-	  RestoreGenericListState(PointerList);
 	  return DEVICE_SETTINGS_PAGE;
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
@@ -3320,24 +3241,6 @@ RegistryPage(PINPUT_RECORD Ir)
 	}
     }
 
-  /* Update mouse registry settings */
-  SetStatusText("   Updating mouse registry settings...");
-  if (!ProcessMouseRegistry(SetupInf, PointerList))
-    {
-      PopupError("Setup failed to update mouse registry settings.",
-		 "ENTER = Reboot computer");
-
-      while(TRUE)
-	{
-	  ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	}
-    }
-
   SetStatusText("   Done...");
 
   return BOOT_LOADER_PAGE;
@@ -3636,13 +3539,6 @@ QuitPage(PINPUT_RECORD Ir)
       LayoutList = NULL;
     }
 
-  /* Destroy pointer device list */
-  if (PointerList != NULL)
-    {
-      DestroyGenericList(PointerList, TRUE);
-      PointerList = NULL;
-    }
-
   SetStatusText("   ENTER = Reboot computer");
 
   while(TRUE)
@@ -3836,10 +3732,6 @@ NtProcessStartup(PPEB Peb)
 
 	  case LAYOUT_SETTINGS_PAGE:
 	    Page = LayoutSettingsPage(&Ir);
-	    break;
-
-	  case POINTER_SETTINGS_PAGE:
-	    Page = PointerSettingsPage(&Ir);
 	    break;
 
 	  case SELECT_PARTITION_PAGE:

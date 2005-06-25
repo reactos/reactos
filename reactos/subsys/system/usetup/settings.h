@@ -54,12 +54,6 @@ ProcessKeyboardLayoutRegistry(PGENERIC_LIST List);
 BOOLEAN
 ProcessKeyboardLayoutFiles(PGENERIC_LIST List);
 
-PGENERIC_LIST
-CreateMouseDriverList(HINF InfFile);
-
-BOOLEAN
-ProcessMouseRegistry(HINF InfFile, PGENERIC_LIST List);
-
 #endif /* __SETTINGS_H__ */
 
 /* EOF */
