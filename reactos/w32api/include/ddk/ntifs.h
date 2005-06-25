@@ -521,16 +521,12 @@ extern LARGE_INTEGER                IoOtherTransferCount;
 typedef PVOID OPLOCK, *POPLOCK;
 
 typedef struct _CACHE_MANAGER_CALLBACKS         *PCACHE_MANAGER_CALLBACKS;
-typedef struct _EPROCESS_QUOTA_BLOCK            *PEPROCESS_QUOTA_BLOCK;
 typedef struct _FILE_GET_QUOTA_INFORMATION      *PFILE_GET_QUOTA_INFORMATION;
 typedef struct _HANDLE_TABLE                    *PHANDLE_TABLE;
 typedef struct _KPROCESS                        *PKPROCESS;
 typedef struct _KQUEUE                          *PKQUEUE;
 typedef struct _KTRAP_FRAME                     *PKTRAP_FRAME;
-typedef struct _MMWSL                           *PMMWSL;
 typedef struct _OBJECT_DIRECTORY                *POBJECT_DIRECTORY;
-typedef struct _PAGEFAULT_HISTORY               *PPAGEFAULT_HISTORY;
-typedef struct _PS_IMPERSONATION_INFORMATION    *PPS_IMPERSONATION_INFORMATION;
 typedef struct _SECTION_OBJECT                  *PSECTION_OBJECT;
 typedef struct _SHARED_CACHE_MAP                *PSHARED_CACHE_MAP;
 typedef struct _VACB                            *PVACB;
@@ -590,89 +586,6 @@ typedef struct _KAPC_STATE {
     BOOLEAN     UserApcPending;
 } KAPC_STATE, *PKAPC_STATE, *RESTRICTED_POINTER PRKAPC_STATE;
 
-#if (VER_PRODUCTBUILD >= 2600)
-
-typedef struct _MMSUPPORT_FLAGS {
-    ULONG SessionSpace              : 1;
-    ULONG BeingTrimmed              : 1;
-    ULONG SessionLeader             : 1;
-    ULONG TrimHard                  : 1;
-    ULONG WorkingSetHard            : 1;
-    ULONG AddressSpaceBeingDeleted  : 1;
-    ULONG Available                 : 10;
-    ULONG AllowWorkingSetAdjustment : 8;
-    ULONG MemoryPriority            : 8;
-} MMSUPPORT_FLAGS, *PMMSUPPORT_FLAGS;
-
-#else
-
-typedef struct _MMSUPPORT_FLAGS {
-    ULONG SessionSpace      : 1;
-    ULONG BeingTrimmed      : 1;
-    ULONG ProcessInSession  : 1;
-    ULONG SessionLeader     : 1;
-    ULONG TrimHard          : 1;
-    ULONG WorkingSetHard    : 1;
-    ULONG WriteWatch        : 1;
-    ULONG Filler            : 25;
-} MMSUPPORT_FLAGS, *PMMSUPPORT_FLAGS;
-
-#endif
-
-#if (VER_PRODUCTBUILD >= 2600)
-
-typedef struct _MMSUPPORT {
-    LARGE_INTEGER   LastTrimTime;
-    MMSUPPORT_FLAGS Flags;
-    ULONG           PageFaultCount;
-    ULONG           PeakWorkingSetSize;
-    ULONG           WorkingSetSize;
-    ULONG           MinimumWorkingSetSize;
-    ULONG           MaximumWorkingSetSize;
-    PMMWSL          VmWorkingSetList;
-    LIST_ENTRY      WorkingSetExpansionLinks;
-    ULONG           Claim;
-    ULONG           NextEstimationSlot;
-    ULONG           NextAgingSlot;
-    ULONG           EstimatedAvailable;
-    ULONG           GrowthSinceLastEstimate;
-} MMSUPPORT, *PMMSUPPORT;
-
-#else
-
-typedef struct _MMSUPPORT {
-    LARGE_INTEGER   LastTrimTime;
-    ULONG           LastTrimFaultCount;
-    ULONG           PageFaultCount;
-    ULONG           PeakWorkingSetSize;
-    ULONG           WorkingSetSize;
-    ULONG           MinimumWorkingSetSize;
-    ULONG           MaximumWorkingSetSize;
-    PMMWSL          VmWorkingSetList;
-    LIST_ENTRY      WorkingSetExpansionLinks;
-    BOOLEAN         AllowWorkingSetAdjustment;
-    BOOLEAN         AddressSpaceBeingDeleted;
-    UCHAR           ForegroundSwitchCount;
-    UCHAR           MemoryPriority;
-#if (VER_PRODUCTBUILD >= 2195)
-    union {
-        ULONG           LongFlags;
-        MMSUPPORT_FLAGS Flags;
-    } u;
-    ULONG           Claim;
-    ULONG           NextEstimationSlot;
-    ULONG           NextAgingSlot;
-    ULONG           EstimatedAvailable;
-    ULONG           GrowthSinceLastEstimate;
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-} MMSUPPORT, *PMMSUPPORT;
-
-#endif
-
-typedef struct _SE_AUDIT_PROCESS_CREATION_INFO {
-    POBJECT_NAME_INFORMATION ImageFileName;
-} SE_AUDIT_PROCESS_CREATION_INFO, *PSE_AUDIT_PROCESS_CREATION_INFO;
-
 typedef struct _BITMAP_RANGE {
     LIST_ENTRY      Links;
     LARGE_INTEGER   BasePage;
@@ -703,28 +616,6 @@ typedef struct _COMPRESSED_DATA_INFO {
     ULONG   CompressedChunkSizes[ANYSIZE_ARRAY];
 } COMPRESSED_DATA_INFO, *PCOMPRESSED_DATA_INFO;
 
-#if (VER_PRODUCTBUILD >= 2600)
-
-typedef struct _EX_FAST_REF {
-    _ANONYMOUS_UNION union {
-        PVOID Object;
-        ULONG RefCnt : 3;
-        ULONG Value;
-    } DUMMYUNIONNAME;
-} EX_FAST_REF, *PEX_FAST_REF;
-
-typedef struct _EX_PUSH_LOCK {
-    _ANONYMOUS_UNION union {
-        _ANONYMOUS_STRUCT struct {
-            ULONG   Waiting     : 1;
-            ULONG   Exclusive   : 1;
-            ULONG   Shared      : 30;
-        } DUMMYSTRUCTNAME;
-        ULONG   Value;
-        PVOID   Ptr;
-    } DUMMYUNIONNAME;
-} EX_PUSH_LOCK, *PEX_PUSH_LOCK;
-
 #define EX_RUNDOWN_ACTIVE               0x1
 #define EX_RUNDOWN_COUNT_SHIFT          0x1
 #define EX_RUNDOWN_COUNT_INC            (1 << EX_RUNDOWN_COUNT_SHIFT)
@@ -735,22 +626,6 @@ typedef struct _EX_RUNDOWN_REF {
         PVOID Ptr;
     } DUMMYUNIONNAME;
 } EX_RUNDOWN_REF, *PEX_RUNDOWN_REF;
-
-#endif
-
-typedef struct _EPROCESS_QUOTA_ENTRY {
-    ULONG Usage;
-    ULONG Limit;
-    ULONG Peak;
-    ULONG Return;
-} EPROCESS_QUOTA_ENTRY, *PEPROCESS_QUOTA_ENTRY;
-
-typedef struct _EPROCESS_QUOTA_BLOCK {
-    EPROCESS_QUOTA_ENTRY    QuotaEntry[3];
-    LIST_ENTRY              QuotaList;
-    ULONG                   ReferenceCount;
-    ULONG                   ProcessCount;
-} EPROCESS_QUOTA_BLOCK, *PEPROCESS_QUOTA_BLOCK;
 
 typedef struct _FILE_ACCESS_INFORMATION {
     ACCESS_MASK AccessFlags;
@@ -1391,13 +1266,6 @@ typedef struct _PRIVATE_CACHE_MAP {
 
 #endif
 
-typedef struct _PS_IMPERSONATION_INFORMATION {
-    PACCESS_TOKEN                   Token;
-    BOOLEAN                         CopyOnOpen;
-    BOOLEAN                         EffectiveOnly;
-    SECURITY_IMPERSONATION_LEVEL    ImpersonationLevel;
-} PS_IMPERSONATION_INFORMATION, *PPS_IMPERSONATION_INFORMATION;
-
 typedef struct _PUBLIC_BCB {
     CSHORT          NodeTypeCode;
     CSHORT          NodeByteSize;
@@ -1489,54 +1357,6 @@ typedef struct _SE_EXPORTS {
     LUID    SeEnableDelegationPrivilege;
 
 } SE_EXPORTS, *PSE_EXPORTS;
-
-#if (VER_PRODUCTBUILD >= 2600)
-
-typedef struct _SHARED_CACHE_MAP {
-    CSHORT                      NodeTypeCode;
-    CSHORT                      NodeByteSize;
-    ULONG                       OpenCount;
-    LARGE_INTEGER               FileSize;
-    LIST_ENTRY                  BcbList;
-    LARGE_INTEGER               SectionSize;
-    LARGE_INTEGER               ValidDataLength;
-    LARGE_INTEGER               ValidDataGoal;
-    PVACB                       InitialVacbs[4];
-    PVACB                       *Vacbs;
-    PFILE_OBJECT                FileObject;
-    PVACB                       ActiveVacb;
-    PVOID                       NeedToZero;
-    ULONG                       ActivePage;
-    ULONG                       NeedToZeroPage;
-    KSPIN_LOCK                  ActiveVacbSpinLock;
-    ULONG                       VacbActiveCount;
-    ULONG                       DirtyPages;
-    LIST_ENTRY                  SharedCacheMapLinks;
-    ULONG                       Flags;
-    NTSTATUS                    Status;
-    PMBCB                       Mbcb;
-    PVOID                       Section;
-    PKEVENT                     CreateEvent;
-    PKEVENT                     WaitOnActiveCount;
-    ULONG                       PagesToWrite;
-    LONGLONG                    BeyondLastFlush;
-    PCACHE_MANAGER_CALLBACKS    Callbacks;
-    PVOID                       LazyWriteContext;
-    LIST_ENTRY                  PrivateList;
-    PVOID                       LogHandle;
-    PVOID                       FlushToLsnRoutine;
-    ULONG                       DirtyPageThreshold;
-    ULONG                       LazyWritePassCount;
-    PCACHE_UNINITIALIZE_EVENT   UninitializeEvent;
-    PVACB                       NeedToZeroVacb;
-    KSPIN_LOCK                  BcbSpinLock;
-    PVOID                       Reserved;
-    KEVENT                      Event;
-    EX_PUSH_LOCK                VacbPushLock;
-    PRIVATE_CACHE_MAP           PrivateCacheMap;
-} SHARED_CACHE_MAP, *PSHARED_CACHE_MAP;
-
-#endif
 
 typedef struct _STARTING_VCN_INPUT_BUFFER {
     LARGE_INTEGER StartingVcn;

@@ -95,8 +95,6 @@ typedef NTSTATUS
 /* TYPES *********************************************************************/
 
 struct _ETHREAD;
-typedef struct _W32PROCESS *PW32PROCESS;
-typedef struct _W32THREAD *PW32THREAD;
 
 typedef struct _CURDIR 
 {
@@ -261,7 +259,42 @@ typedef struct _TEB
 #ifndef NTOS_MODE_USER
 
 #include "mmtypes.h"
-#include <internal/mm.h> /* FIXME: Forced to do this for now */
+#include "extypes.h"
+#include "setypes.h"
+
+typedef struct _EPROCESS_QUOTA_ENTRY
+{
+    ULONG Usage;
+    ULONG Limit;
+    ULONG Peak;
+    ULONG Return;
+} EPROCESS_QUOTA_ENTRY, *PEPROCESS_QUOTA_ENTRY;
+
+typedef struct _EPROCESS_QUOTA_BLOCK
+{
+    EPROCESS_QUOTA_ENTRY QuotaEntry[3];
+    LIST_ENTRY QuotaList;
+    ULONG ReferenceCount;
+    ULONG ProcessCount;
+} EPROCESS_QUOTA_BLOCK, *PEPROCESS_QUOTA_BLOCK;
+
+typedef struct _PAGEFAULT_HISTORY
+{
+    ULONG CurrentIndex;
+    ULONG MapIndex;
+    KSPIN_LOCK SpinLock;
+    PVOID Reserved;
+    PROCESS_WS_WATCH_INFORMATION WatchInfo[1];
+} PAGEFAULT_HISTORY, *PPAGEFAULT_HISTORY;
+
+typedef struct _PS_IMPERSONATION_INFORMATION
+{
+    PACCESS_TOKEN                   Token;
+    BOOLEAN                         CopyOnOpen;
+    BOOLEAN                         EffectiveOnly;
+    SECURITY_IMPERSONATION_LEVEL    ImpersonationLevel;
+} PS_IMPERSONATION_INFORMATION, *PPS_IMPERSONATION_INFORMATION;
+
 #include <pshpack4.h>
 /*
  * NAME:           ETHREAD

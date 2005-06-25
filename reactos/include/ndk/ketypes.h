@@ -63,6 +63,18 @@ typedef struct _KDPC_DATA
     ULONG  DpcCount;
 } KDPC_DATA, *PKDPC_DATA;
 
+/* We don't want to force NTIFS usage only for a single structure */
+#ifndef _NTIFS_
+typedef struct _KAPC_STATE
+{
+    LIST_ENTRY  ApcListHead[2];
+    PKPROCESS   Process;
+    BOOLEAN     KernelApcInProgress;
+    BOOLEAN     KernelApcPending;
+    BOOLEAN     UserApcPending;
+} KAPC_STATE, *PKAPC_STATE, *RESTRICTED_POINTER PRKAPC_STATE;
+#endif
+
 /* FIXME: Most of these should go to i386 directory */
 typedef struct _FNSAVE_FORMAT 
 {
@@ -153,6 +165,8 @@ typedef struct _KTRAP_FRAME
     USHORT Reserved9;
 } KTRAP_FRAME, *PKTRAP_FRAME;
 
+/* FIXME: Win32k uses windows.h! */
+#ifndef __WIN32K__
 typedef struct _LDT_ENTRY {
   WORD LimitLow;
   WORD BaseLow;
@@ -177,6 +191,7 @@ typedef struct _LDT_ENTRY {
     } Bits;
   } HighWord;
 } LDT_ENTRY, *PLDT_ENTRY, *LPLDT_ENTRY;
+#endif
 
 typedef struct _KGDTENTRY
 {
@@ -661,7 +676,7 @@ typedef struct _KTHREAD
    UCHAR             NpxIrql;             /* DA */
    UCHAR             Pad[1];              /* DB */
    PVOID             ServiceTable;        /* DC */
-   PKQUEUE           Queue;               /* E0 */
+   struct _KQUEUE    *Queue;              /* E0 */
    KSPIN_LOCK        ApcQueueLock;        /* E4 */
    KTIMER            Timer;               /* E8 */
    LIST_ENTRY        QueueListEntry;      /* 110 */
