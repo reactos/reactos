@@ -68,4 +68,18 @@ typedef struct _PROCESSOR_POWER_STATE
     ULONG Spare1[1];
 } PROCESSOR_POWER_STATE, *PPROCESSOR_POWER_STATE;
 
+typedef struct _PO_DEVICE_NOTIFY
+{
+    LIST_ENTRY Link;
+    PDEVICE_OBJECT TargetDevice;
+    UCHAR WakeNeeded;
+    UCHAR OrderLevel;
+    PDEVICE_OBJECT DeviceObject;
+    PVOID Node;
+    PUSHORT DeviceName;
+    PUSHORT DriverName;
+    ULONG ChildCount;
+    ULONG ActiveChild;
+} PO_DEVICE_NOTIFY, *PPO_DEVICE_NOTIFY;
+
 #endif

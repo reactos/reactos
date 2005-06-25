@@ -1,17 +1,8 @@
-/* $Id$
- *
- * kernel debugger prototypes
- */
-
 #ifndef __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H
 #define __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H
 
 struct _KD_DISPATCH_TABLE;
-
-#ifdef DBG
-#include "kdgdb.h"
-#include "kdbochs.h"
-#endif
+extern KD_PORT_INFORMATION GdbPortInfo;
 
 /* SYMBOL ROUTINES **********************************************************/
 
@@ -24,8 +15,10 @@ VOID
 KdbSymFreeProcessSymbols(IN PEPROCESS Process);
 
 VOID
-KdbSymLoadDriverSymbols(IN PUNICODE_STRING Filename,
-                        IN PMODULE_OBJECT Module);
+KdbSymLoadDriverSymbols(
+    IN PUNICODE_STRING Filename,
+    IN PMODULE_OBJECT Module
+);
 
 VOID
 KdbSymUnloadDriverSymbols(IN PMODULE_OBJECT ModuleObject);
@@ -34,8 +27,10 @@ VOID
 KdbSymProcessBootSymbols(IN PCHAR FileName);
 
 VOID
-KdbSymInit(IN PMODULE_TEXT_SECTION NtoskrnlTextSection,
-           IN PMODULE_TEXT_SECTION LdrHalTextSection);
+KdbSymInit(
+    IN PMODULE_TEXT_SECTION NtoskrnlTextSection,
+    IN PMODULE_TEXT_SECTION LdrHalTextSection
+);
 
 BOOLEAN
 KdbSymPrintAddress(IN PVOID Address);
@@ -44,11 +39,13 @@ VOID
 KdbDeleteProcessHook(IN PEPROCESS Process);
 
 NTSTATUS
-KdbSymGetAddressInformation(IN PROSSYM_INFO  RosSymInfo,
-                            IN ULONG_PTR  RelativeAddress,
-                            OUT PULONG LineNumber  OPTIONAL,
-                            OUT PCH FileName  OPTIONAL,
-                            OUT PCH FunctionName  OPTIONAL);
+KdbSymGetAddressInformation(
+    IN PROSSYM_INFO  RosSymInfo,
+    IN ULONG_PTR  RelativeAddress,
+    OUT PULONG LineNumber  OPTIONAL,
+    OUT PCH FileName  OPTIONAL,
+    OUT PCH FunctionName  OPTIONAL
+);
 
 typedef struct _KDB_MODULE_INFO
 {
@@ -103,8 +100,10 @@ typedef enum _KD_CONTINUE_TYPE
 
 typedef
 VOID
-(STDCALL*PKDP_INIT_ROUTINE)(struct _KD_DISPATCH_TABLE *DispatchTable,
-                     ULONG BootPhase);
+(STDCALL*PKDP_INIT_ROUTINE)(
+    struct _KD_DISPATCH_TABLE *DispatchTable,
+    ULONG BootPhase
+);
 
 typedef
 VOID
@@ -116,37 +115,60 @@ VOID
 
 typedef
 KD_CONTINUE_TYPE
-(STDCALL*PKDP_EXCEPTION_ROUTINE)(PEXCEPTION_RECORD ExceptionRecord,
-                          PCONTEXT Context,
-                          PKTRAP_FRAME TrapFrame);
+(STDCALL*PKDP_EXCEPTION_ROUTINE)(
+    PEXCEPTION_RECORD ExceptionRecord,
+    PCONTEXT Context,
+    PKTRAP_FRAME TrapFrame
+);
 
 /* INIT ROUTINES *************************************************************/
 
 VOID
 STDCALL
-KdpScreenInit(struct _KD_DISPATCH_TABLE *DispatchTable,
-              ULONG BootPhase);
+KdpScreenInit(
+    struct _KD_DISPATCH_TABLE *DispatchTable,
+    ULONG BootPhase
+);
 
 VOID
 STDCALL
-KdpSerialInit(struct _KD_DISPATCH_TABLE *DispatchTable,
-              ULONG BootPhase);
+KdpSerialInit(
+    struct _KD_DISPATCH_TABLE *DispatchTable,
+    ULONG BootPhase
+);
 
 VOID
 STDCALL
-KdpInitDebugLog(struct _KD_DISPATCH_TABLE *DispatchTable,
-                ULONG BootPhase);
+KdpInitDebugLog(
+    struct _KD_DISPATCH_TABLE *DispatchTable,
+    ULONG BootPhase
+);
+
+VOID
+STDCALL
+KdpBochsInit(
+    struct _KD_DISPATCH_TABLE *DispatchTable,
+    ULONG BootPhase
+);
+
+VOID
+STDCALL
+KdpGdbStubInit(
+    struct _KD_DISPATCH_TABLE *DispatchTable,
+    ULONG BootPhase);
 
 /* KD ROUTINES ***************************************************************/
 
 KD_CONTINUE_TYPE
 STDCALL
-KdpEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
-                          KPROCESSOR_MODE PreviousMode,
-                          PCONTEXT Context,
-                          PKTRAP_FRAME TrapFrame,
-                          BOOLEAN FirstChance,
-                          BOOLEAN Gdb);
+KdpEnterDebuggerException(
+    PEXCEPTION_RECORD ExceptionRecord,
+    KPROCESSOR_MODE PreviousMode,
+    PCONTEXT Context,
+    PKTRAP_FRAME TrapFrame,
+    BOOLEAN FirstChance,
+    BOOLEAN Gdb
+);
 
 ULONG
 STDCALL
@@ -155,6 +177,10 @@ KdpPrintString(PANSI_STRING String);
 BOOLEAN
 STDCALL
 KdpDetectConflicts(PCM_RESOURCE_LIST DriverList);
+
+VOID
+STDCALL
+KdpBochsDebugPrint(IN PCH Message);
 
 /* KD GLOBALS  ***************************************************************/
 
@@ -173,8 +199,10 @@ KdpDetectConflicts(PCM_RESOURCE_LIST DriverList);
 /* KD Private Debug Modes */
 typedef struct _KDP_DEBUG_MODE
 {
-    union {
-        struct {
+    union
+    {
+        struct
+        {
             /* Native Modes */
             UCHAR Screen :1;
             UCHAR Serial :1;
@@ -194,17 +222,17 @@ typedef struct _KDP_DEBUG_MODE
 /* KD Internal Debug Services */
 typedef enum _KDP_DEBUG_SERVICE
 {
-    DumpNonPagedPool		= 0x1e, /* a */
-    ManualBugCheck		= 0x30, /* b */
-    DumpNonPagedPoolStats	= 0x2e, /* c */
-    DumpNewNonPagedPool		= 0x20, /* d */
-    DumpNewNonPagedPoolStats	= 0x12, /* e */
-    DumpAllThreads		= 0x21, /* f */
-    DumpUserThreads		= 0x22, /* g */
-    KdSpare1			= 0x23, /* h */
-    KdSpare2			= 0x17, /* i */
-    KdSpare3			= 0x24, /* j */
-    EnterDebugger		= 0x25  /* k */
+    DumpNonPagedPool = 0x1e, /* a */
+    ManualBugCheck = 0x30, /* b */
+    DumpNonPagedPoolStats = 0x2e, /* c */
+    DumpNewNonPagedPool = 0x20, /* d */
+    DumpNewNonPagedPoolStats = 0x12, /* e */
+    DumpAllThreads = 0x21, /* f */
+    DumpUserThreads = 0x22, /* g */
+    KdSpare1 = 0x23, /* h */
+    KdSpare2 = 0x17, /* i */
+    KdSpare3 = 0x24, /* j */
+    EnterDebugger = 0x25  /* k */
 } KDP_DEBUG_SERVICE;
 
 /* Dispatch Table for Wrapper Functions */

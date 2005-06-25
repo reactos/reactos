@@ -21,6 +21,12 @@ extern NTOSAPI POBJECT_TYPE ExTimerType;
 /* CONSTANTS *****************************************************************/
 #define INVALID_HANDLE_VALUE (HANDLE)-1
 
+/* Callback Object Access Rights */
+#define CALLBACK_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0x0001)
+#define CALLBACK_EXECUTE    (STANDARD_RIGHTS_EXECUTE|SYNCHRONIZE|0x0001)
+#define CALLBACK_WRITE      (STANDARD_RIGHTS_WRITE|SYNCHRONIZE|0x0001)
+#define CALLBACK_READ       (STANDARD_RIGHTS_READ|SYNCHRONIZE|0x0001)
+
 /* ENUMERATIONS **************************************************************/
 
 /* TYPES *********************************************************************/
@@ -56,6 +62,14 @@ typedef struct _RUNDOWN_DESCRIPTOR
     ULONG_PTR References;
     KEVENT RundownEvent;
 } RUNDOWN_DESCRIPTOR, *PRUNDOWN_DESCRIPTOR;
+
+typedef struct _CALLBACK_OBJECT
+{
+    ULONG Name;
+    KSPIN_LOCK Lock;
+    LIST_ENTRY RegisteredCallbacks;
+    ULONG AllowMultipleCallbacks;
+} CALLBACK_OBJECT , *PCALLBACK_OBJECT;
 
 typedef struct _HANDLE_TABLE_ENTRY 
 {

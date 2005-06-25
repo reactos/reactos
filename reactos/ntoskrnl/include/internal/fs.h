@@ -1,9 +1,6 @@
 #ifndef __INCLUDE_INTERNAL_IFS_H
 #define __INCLUDE_INTERNAL_IFS_H
 
-/* Look for "FSrt" in mem view */
-#define IFS_POOL_TAG 0x74725346
-
 typedef struct _FILE_LOCK_GRANTED {
 	LIST_ENTRY			ListEntry;
 	FILE_LOCK_INFO			Lock;

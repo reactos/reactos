@@ -14,6 +14,7 @@
     #include "kdtypes.h"    /* Kernel Debugger Types */
     #include "kdfuncs.h"    /* Kernel Debugger Functions */
     #include "cctypes.h"    /* Cache Manager Types */
+    #include "dbgktypes.h"  /* User-Mode Kernel Debugging Types */
     #include "extypes.h"    /* Executive Types */
     #include "haltypes.h"   /* Hardware Abstraction Layer Types */
     #include "halfuncs.h"   /* Hardware Abstraction Layer Functions */

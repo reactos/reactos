@@ -1,5 +1,4 @@
-
-#include <internal/i386/segment.h>
+#include <ndk/i386/segment.h>
 #include <../hal/halx86/include/halirq.h>
 
 .global _irq_handler_0

@@ -92,6 +92,7 @@ HAL_PRIVATE_DISPATCH EXPORTED HalPrivateDispatchTable =
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
+FASTCALL
 xHalQueryDriveLayout(IN PUNICODE_STRING DeviceName,
 		     OUT PDRIVE_LAYOUT_INFORMATION *LayoutInfo)
 {

@@ -1,21 +1,11 @@
 #ifndef NTOSKRNL_KDB_H
 #define NTOSKRNL_KDB_H
 
-/* INCLUDES ******************************************************************/
-
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-
-#include <internal/ke.h>
-
 /* DEFINES *******************************************************************/
-
-#define TAG_KDBG        (('K' << 24) | ('D' << 16) | ('B' << 8) | 'G')
 
 #ifndef RTL_NUMBER_OF
 # define RTL_NUMBER_OF(x) (sizeof(x) / sizeof((x)[0]))
 #endif
-
 
 /* TYPES *********************************************************************/
 
@@ -75,16 +65,12 @@ typedef enum _KDB_ENTER_CONDITION
    KdbEnterFromUmode
 } KDB_ENTER_CONDITION;
 
-
-/* from kdb_symbols.c */
-typedef struct _KDB_MODULE_INFO
+/* These values MUST be nonzero.  They're used as bit masks. */
+typedef enum _KDB_OUTPUT_SETTINGS
 {
-    WCHAR        Name[256];
-    ULONG_PTR    Base;
-    ULONG        Size;
-    PROSSYM_INFO RosSymInfo;
-} KDB_MODULE_INFO, *PKDB_MODULE_INFO;
-
+   KD_DEBUG_KDSERIAL = 1,
+   KD_DEBUG_KDNOECHO = 2
+} KDB_OUTPUT_SETTINGS;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -167,16 +153,6 @@ BOOLEAN
 KdbpSymFindModuleByIndex(IN INT Index,
                          OUT PKDB_MODULE_INFO pInfo);
 
-BOOLEAN
-KdbSymPrintAddress(IN PVOID Address);
-
-NTSTATUS
-KdbSymGetAddressInformation(IN PROSSYM_INFO  RosSymInfo,
-                            IN ULONG_PTR  RelativeAddress,
-                            OUT PULONG LineNumber  OPTIONAL,
-                            OUT PCH FileName  OPTIONAL,
-                            OUT PCH FunctionName  OPTIONAL);
-
 /* from kdb.c */
 
 extern PEPROCESS KdbCurrentProcess;
@@ -185,13 +161,7 @@ extern LONG KdbLastBreakPointNr;
 extern ULONG KdbNumSingleSteps;
 extern BOOLEAN KdbSingleStepOver;
 extern PKDB_KTRAP_FRAME KdbCurrentTrapFrame;
-
-VOID
-KdbInit();
-
-VOID
-KdbModuleLoaded(
-   IN PUNICODE_STRING Name);
+extern ULONG KdbDebugState;
 
 LONG
 KdbpGetNextBreakPointNr(
@@ -255,6 +225,16 @@ BOOLEAN
 KdbpAttachToProcess(
    PVOID ProcessId);
 
+VOID
+STDCALL
+KdbpGetCommandLineSettings(PCHAR p1);
+
+KD_CONTINUE_TYPE
+KdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
+                           KPROCESSOR_MODE PreviousMode,
+                           PCONTEXT Context,
+                           PKTRAP_FRAME TrapFrame,
+                           BOOLEAN FirstChance);
 /* other functions */
 
 #define KdbpSafeReadMemory(dst, src, size)   MmSafeCopyFromUser(dst, src, size)
@@ -278,7 +258,10 @@ VOID
 DbgEnableFile(PCH Filename);
 VOID
 DbgDisableFile(PCH Filename);
-
+VOID
+KbdDisableMouse();
+VOID
+KbdEnableMouse();
 
 #endif /* NTOSKRNL_KDB_H */
 

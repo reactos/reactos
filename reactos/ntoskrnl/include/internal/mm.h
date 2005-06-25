@@ -1,42 +1,3 @@
-/* $Id$
- *
- * Copyright (C) 1998-2005 ReactOS Team (and the authors from the programmers section)
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
- *
- *
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/include/internal/mm.h
- * PURPOSE:         level memory managment definitions
- * 
- * PROGRAMMERS:     David Welch
- *                  Casper Hornstrup
- *                  Hartmut Birr
- *                  Ge van Geldorp
- *                  Eric Kohl
- *                  Andrew Greenwood
- *                  James Tabor
- *                  Alex Ionescu
- *                  Mike Nordell
- *                  Thomas Weidenmueller
- *                  Filip Navara
- *                  KJK::Hyperion
- *                  Gregor Anich
- *                  Steven Edwards
- */
-
 #ifndef __INCLUDE_INTERNAL_MM_H
 #define __INCLUDE_INTERNAL_MM_H
 
@@ -51,11 +12,10 @@ extern ULONG MmTotalPagedPoolQuota;
 extern ULONG MmTotalNonPagedPoolQuota;
 
 struct _EPROCESS;
-
 struct _MM_RMAP_ENTRY;
-struct _MM_PAGEOP;
+struct _MM_PAGEOP
+;
 typedef ULONG SWAPENTRY;
-
 typedef ULONG PFN_TYPE, *PPFN_TYPE;
 
 #define MEMORY_AREA_INVALID              (0)
@@ -81,14 +41,12 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 #define NR_SECTION_PAGE_TABLES           (1024)
 #define NR_SECTION_PAGE_ENTRIES          (1024)
 
-#ifndef __USE_W32API
-#define MM_LOWEST_USER_ADDRESS (PVOID)0x10000
-#endif
-
 #define TEB_BASE        (0x7FFDE000)
+#define KPCR_BASE                 0xFF000000
 
-#define MM_VIRTMEM_GRANULARITY (64 * 1024) /* Although Microsoft says this isn't hardcoded anymore,
-                                              they won't be able to change it. Stuff depends on it */
+/* Although Microsoft says this isn't hardcoded anymore,
+   they won't be able to change it. Stuff depends on it */
+#define MM_VIRTMEM_GRANULARITY (64 * 1024) 
 
 #define STATUS_MM_RESTART_OPERATION       ((NTSTATUS)0xD0000001)
 
@@ -189,61 +147,6 @@ typedef struct _SECTION_OBJECT
   };
 } SECTION_OBJECT;
 
-#ifndef __USE_W32API
-
-typedef struct _SECTION_OBJECT *PSECTION_OBJECT;
-
-typedef struct _EPROCESS_QUOTA_ENTRY {
-    ULONG Usage;
-    ULONG Limit;
-    ULONG Peak;
-    ULONG Return;
-} EPROCESS_QUOTA_ENTRY, *PEPROCESS_QUOTA_ENTRY;
-
-typedef struct _EPROCESS_QUOTA_BLOCK {
-    EPROCESS_QUOTA_ENTRY    QuotaEntry[3];
-    LIST_ENTRY              QuotaList;
-    ULONG                   ReferenceCount;
-    ULONG                   ProcessCount;
-} EPROCESS_QUOTA_BLOCK, *PEPROCESS_QUOTA_BLOCK;
-
-/*
- * header mess....
- */
-
-typedef struct _PAGEFAULT_HISTORY
-{
-    ULONG                                 CurrentIndex;
-    ULONG                                 MaxIndex;
-    KSPIN_LOCK                            SpinLock;
-    PVOID                                 Reserved;
-    struct _PROCESS_WS_WATCH_INFORMATION  WatchInfo[1];
-} PAGEFAULT_HISTORY, *PPAGEFAULT_HISTORY;
-
-#endif /* __USE_W32API */
-
-typedef struct _MMADDRESS_NODE
-{
-   union {
-       ULONG Balance:2;
-       struct _MMADDRESS_NODE *Parent;
-   } u1;
-   struct _MMADDRESS_NODE *LeftChild;
-   struct _MMADDRESS_NODE *RightChild;
-   ULONG StartingVpn;
-   ULONG EndingVpn;
-} MMADDRESS_NODE, *PMMADDRESS_NODE;
-
-typedef struct _MM_AVL_TABLE
-{
-    MMADDRESS_NODE BalancedRoot;
-    ULONG DepthOfTree:5;
-    ULONG Unused:3;
-    ULONG NumberGenericTableElements:24;
-    PVOID NodeHint;
-    PVOID NodeFreeHint;
-} MM_AVL_TABLE, *PMM_AVL_TABLE;
-
 typedef struct _MEMORY_AREA
 {
   PVOID StartingAddress;
@@ -282,30 +185,6 @@ typedef struct _MADDRESS_SPACE
   PUSHORT PageTableRefCountTable;
   ULONG PageTableRefCountTableSize;
 } MADDRESS_SPACE, *PMADDRESS_SPACE;
-
-typedef struct _KNODE {
-   ULONG ProcessorMask;
-   ULONG Color;
-   ULONG MmShiftedColor;
-   ULONG FreeCount[2];
-   SLIST_HEADER DeadStackList;
-   SLIST_HEADER PfnDereferenceSListHead;
-   struct _SINGLE_LIST_ENTRY *PfnDeferredList;
-   UCHAR Seed;
-   UCHAR NodeNumber;
-   ULONG Flags;
-} KNODE, *PKNODE;
-
-#ifndef __USE_W32API
-/* VARIABLES */
-
-#ifdef __NTOSKRNL__
-extern PVOID EXPORTED MmSystemRangeStart;
-#else
-extern PVOID IMPORTED MmSystemRangeStart;
-#endif
-
-#endif /* __USE_W32API */
 
 typedef struct
 {
@@ -401,6 +280,53 @@ typedef VOID (*PMM_FREE_PAGE_FUNC)(PVOID Context, PMEMORY_AREA MemoryArea,
                                    PVOID Address, PFN_TYPE Page,
                                    SWAPENTRY SwapEntry, BOOLEAN Dirty);
 
+PVOID STDCALL ExAllocateNonPagedPoolWithTag (POOL_TYPE	type,
+					     ULONG		size,
+					     ULONG		Tag,
+					     PVOID		Caller);
+
+PVOID STDCALL ExAllocatePagedPoolWithTag (POOL_TYPE	Type,
+					  ULONG		size,
+					  ULONG		Tag);
+VOID STDCALL ExFreeNonPagedPool (PVOID block);
+
+VOID STDCALL
+ExFreePagedPool(IN PVOID Block);
+VOID MmInitializePagedPool(VOID);
+
+PVOID
+STDCALL
+MiAllocateSpecialPool  (IN POOL_TYPE PoolType,
+                        IN SIZE_T NumberOfBytes,
+                        IN ULONG Tag,
+                        IN ULONG Underrun
+                        );
+
+extern PVOID MmPagedPoolBase;
+extern ULONG MmPagedPoolSize;
+
+#define MM_PAGED_POOL_SIZE	(100*1024*1024)
+#define MM_NONPAGED_POOL_SIZE	(100*1024*1024)
+
+/*
+ * Paged and non-paged pools are 8-byte aligned
+ */
+#define MM_POOL_ALIGNMENT	8
+
+/*
+ * Maximum size of the kmalloc area (this is totally arbitary)
+ */
+#define MM_KERNEL_MAP_SIZE	(16*1024*1024)
+#define MM_KERNEL_MAP_BASE	(0xf0c00000)
+
+/*
+ * FIXME - different architectures have different cache line sizes...
+ */
+#define MM_CACHE_LINE_SIZE  32
+
+#define MM_ROUND_UP(x,s)    ((PVOID)(((ULONG_PTR)(x)+(s)-1) & ~((ULONG_PTR)(s)-1)))
+#define MM_ROUND_DOWN(x,s)  ((PVOID)(((ULONG_PTR)(x)) & ~((ULONG_PTR)(s)-1)))
+
 /* FUNCTIONS */
 
 /* aspace.c ******************************************************************/
@@ -422,7 +348,7 @@ NTSTATUS MmDestroyAddressSpace(PMADDRESS_SPACE AddressSpace);
 
 /* marea.c *******************************************************************/
 
-NTSTATUS INIT_FUNCTION
+NTSTATUS
 MmInitMemoryAreas(VOID);
 
 NTSTATUS STDCALL
@@ -838,6 +764,14 @@ MmCopyMmInfo(struct _EPROCESS* Src,
 NTSTATUS MmReleaseMmInfo(struct _EPROCESS* Process);
 
 NTSTATUS Mmi386ReleaseMmInfo(struct _EPROCESS* Process);
+
+NTSTATUS MmSafeCopyFromUser(PVOID Dest, const VOID *Src, ULONG NumberOfBytes);
+NTSTATUS MmSafeCopyToUser(PVOID Dest, const VOID *Src, ULONG NumberOfBytes);
+
+NTSTATUS STDCALL
+MmCopyFromCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes);
+NTSTATUS STDCALL
+MmCopyToCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes);
 
 VOID MmDeleteVirtualMapping(struct _EPROCESS* Process,
 			    PVOID Address,

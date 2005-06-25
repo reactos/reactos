@@ -83,10 +83,6 @@ LpcSendTerminationPort (PEPORT	Port,
 
 /* Pool Tags */
 
-#define TAG_LPC_MESSAGE   TAG('L', 'p', 'c', 'M')
-#define TAG_LPC_ZONE      TAG('L', 'p', 'c', 'Z')
-
-
 typedef struct _QUEUEDMESSAGE
 {
   PEPORT		Sender;

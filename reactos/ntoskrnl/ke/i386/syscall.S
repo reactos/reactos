@@ -11,10 +11,9 @@
  */
 
 #include <roscfg.h>
-#include <internal/i386/segment.h>
-#include <internal/ps.h>
 #include <internal/i386/ke.h>
-#include <ntos/tss.h>
+#include <internal/asm.h>
+#include <ndk/i386/segment.h>
 #include <napi/shared_data.h>
 
 #define UserMode  (1)

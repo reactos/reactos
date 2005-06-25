@@ -1,11 +1,5 @@
-/*
- * Various useful prototypes
- */
-
 #ifndef __INCLUDE_INTERNAL_NTOSKRNL_H
 #define __INCLUDE_INTERNAL_NTOSKRNL_H
-
-#ifndef __ASM__
 
 /*
  * Use these to place a function in a specific section of the executable
@@ -17,12 +11,11 @@
 
 #ifdef _NTOSKRNL_
 
+#include "asm.h"
 #include "ke.h"
-#include "i386/segment.h"
 #include "i386/mm.h"
 #include "i386/fpu.h"
 #include "module.h"
-#include "pool.h"
 #include "ob.h"
 #include "mm.h"
 #include "ps.h"
@@ -35,19 +28,16 @@
 #include "ex.h"
 #include "xhal.h"
 #include "v86m.h"
-#include "ifs.h"
+#include "fs.h"
 #include "port.h"
 #include "nls.h"
 #ifdef KDBG
 #include "kdb.h"
 #endif
 #include "dbgk.h"
-#include "trap.h"
-#include "safe.h"
 #include "tag.h"
 #include "test.h"
 #include "inbv.h"
-
 
 #include <pshpack1.h>
 /*
@@ -64,14 +54,6 @@ typedef struct _DESCRIPTOR
 extern IDT_DESCRIPTOR KiIdt[256];
 //extern GDT_DESCRIPTOR KiGdt[256];
 
-
-VOID ExpInitializeEventImplementation(VOID);
-VOID ExpInitializeEventImplementation(VOID);
-VOID ExpInitializeEventPairImplementation(VOID);
-VOID ExpInitializeSemaphoreImplementation(VOID);
-VOID ExpInitializeMutantImplementation(VOID);
-VOID ExpInitializeTimerImplementation(VOID);
-VOID ExpInitializeProfileImplementation(VOID);
 /*
  * Initalization functions (called once by main())
  */
@@ -96,8 +78,23 @@ RtlpCreateUnicodeString(
    IN PCWSTR  Source,
    IN POOL_TYPE PoolType);
    
+NTSTATUS
+RtlCaptureUnicodeString(
+    OUT PUNICODE_STRING Dest,
+    IN KPROCESSOR_MODE CurrentMode,
+    IN POOL_TYPE PoolType,
+    IN BOOLEAN CaptureIfKernel,
+    IN PUNICODE_STRING UnsafeSrc
+);
+
+VOID
+RtlReleaseCapturedUnicodeString(
+    IN PUNICODE_STRING CapturedString,
+    IN KPROCESSOR_MODE CurrentMode,
+    IN BOOLEAN CaptureIfKernel
+);
+
 #endif
-#endif /* __ASM__ */
 
 /*
  *

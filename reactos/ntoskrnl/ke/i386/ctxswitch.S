@@ -10,12 +10,9 @@
 /* INCLUDES ******************************************************************/
 
 #include <roscfg.h>
-#include <internal/i386/segment.h>
 #include <internal/i386/ke.h>
-#include <internal/i386/fpu.h>
-#include <internal/ps.h>
-#include <ntos/tss.h>
-#include <internal/ntoskrnl.h>
+#include <internal/asm.h>
+#include <ndk/i386/segment.h>
 .intel_syntax noprefix
 
 #define Running 2 
