@@ -36,6 +36,7 @@ extern KAFFINITY NTOSAPI KeActiveProcessors;
 extern ULONG NTOSAPI KiDmaIoCoherency; /* RISC Architectures only */
 extern ULONG NTOSAPI KeMaximumIncrement;
 extern ULONG NTOSAPI KeMinimumIncrement;
+extern ULONG NTOSAPI NtBuildNumber;
 extern SSDT_ENTRY NTOSAPI KeServiceDescriptorTable[SSDT_MAX_ENTRIES];
 extern SSDT_ENTRY NTOSAPI KeServiceDescriptorTableShadow[SSDT_MAX_ENTRIES];
 

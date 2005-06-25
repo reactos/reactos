@@ -235,7 +235,7 @@ KeConnectInterrupt(
     PKINTERRUPT InterruptObject
 );
 
-VOID 
+BOOLEAN
 STDCALL 
 KeDisconnectInterrupt(
     PKINTERRUPT InterruptObject
