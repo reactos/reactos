@@ -320,7 +320,7 @@ NdisOpenFile(
     NULL, // PLARGE_INTEGER AllocationSize
     0, // ULONG FileAttributes
     FILE_SHARE_READ, // ULONG ShareAccess
-    CREATE_NEW, // ULONG CreateDisposition
+    FILE_CREATE, // ULONG CreateDisposition
     FILE_SYNCHRONOUS_IO_NONALERT, // ULONG CreateOptions
     0, // PVOID EaBuffer
     0 ); // ULONG EaLength
