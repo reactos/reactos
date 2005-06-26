@@ -32,7 +32,7 @@
 #include "port.h"
 #include "nls.h"
 #ifdef KDBG
-#include "kdb.h"
+#include "../kdbg/kdb.h"
 #endif
 #include "dbgk.h"
 #include "tag.h"

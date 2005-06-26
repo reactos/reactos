@@ -14,7 +14,6 @@
 #include <ntdll.h>
 #define NDEBUG
 #include <debug.h>
-#include <ddk/ldrfuncs.h>
 
 /* FUNCTIONS *****************************************************************/
 

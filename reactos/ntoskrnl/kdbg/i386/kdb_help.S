@@ -1,5 +1,5 @@
-#include <internal/ke.h>
-#include <internal/i386/segment.h>
+#include <internal/asm.h>
+#include <ndk/i386/segment.h>
 
 .text
 

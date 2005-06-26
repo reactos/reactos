@@ -29,7 +29,7 @@
 #endif
 
 #include "ntddk.h"
-//#include "ntapi.h"
+#include "csq.h"
 
 #ifdef __cplusplus
 extern "C" {

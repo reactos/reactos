@@ -1,3 +1,5 @@
+
+/* FIXME: Bootvid will eventually become a DLL and this will be deprecated */
 #define FILE_DEVICE_BOOTVID 53335
 
 #define IOCTL_BOOTVID_INITIALIZE \

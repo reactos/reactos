@@ -24,9 +24,9 @@
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
-#include <ddk/ntbootvid.h>
 #include <ndk/ldrfuncs.h>
 #include "bootvid.h"
+#include "ntbootvid.h"
 #include "resource.h"
 
 #define NDEBUG

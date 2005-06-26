@@ -23,7 +23,6 @@
     #include "iofuncs.h"    /* Input/Output Manager Functions */
     #include "ketypes.h"    /* Kernel Types */
     #include "kefuncs.h"    /* Kernel Functions */
-    #include "ldrfuncs.h"   /* Loader Functions */
     #include "lpctypes.h"   /* Local Procedure Call Types */
     #include "mmtypes.h"    /* Memory Manager Types */
     #include "mmfuncs.h"    /* Memory Manager Functions */
@@ -40,6 +39,7 @@
 #endif
 
 /* Shared NDK */
+#include "ldrfuncs.h"       /* Loader Functions */
 #include "ldrtypes.h"       /* Loader Types */
 #include "pstypes.h"        /* Process Manager Types */
 #include "rtltypes.h"       /* Runtime Library Types */

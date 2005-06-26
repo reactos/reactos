@@ -27,7 +27,7 @@
 
 #define __NTDRIVER__
 #include <ddk/ntddk.h>
-#include <ddk/csq.h>
+#include <ddk/ntifs.h>
 
 
 static VOID NTAPI IopCsqCancelRoutine(PDEVICE_OBJECT DeviceObject,
