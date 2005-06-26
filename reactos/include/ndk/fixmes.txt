@@ -12,9 +12,9 @@ Format:
 List:
 	Priority 1:
 	- LDR_DATA_TABLE_ENTRY has a ROSSYM Hack (GvG) [ldrtypes.h]
-	- LDR_FLAGS are not correct (Alex) [ldrtypes.h]
-	- Remove extra Process Info classes from ddk [zwtypes.h]
-	- PsEstablishWin32Callouts + Parameters don't match NT (Alex) [obtypes.h]
+	- FIXED: LDR_FLAGS are not correct (Alex) [ldrtypes.h]
+	- FIXED: Remove extra Process Info classes from ddk [zwtypes.h]
+	- FIXED: PsEstablishWin32Callouts + Parameters don't match NT (Alex) [obtypes.h]
 	- PROCESS_SET_PORT was removed, ThomasW did a patch about this? (Thomas) [pstypes.h]
 	- Some files need cleanup (Alex + Eric) [zwfuncs.h, rtlfuncs.h, rtltypes.h]
 
