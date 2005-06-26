@@ -256,6 +256,7 @@ typedef struct _TEB
 #ifndef NTOS_MODE_USER
 
 #include "mmtypes.h"
+#include "obtypes.h"
 #include "extypes.h"
 #include "setypes.h"
 
