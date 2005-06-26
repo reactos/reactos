@@ -11,7 +11,6 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntifs.h>
-#include <napi/npipe.h>
 #include "npfs.h"
 
 #define NDEBUG

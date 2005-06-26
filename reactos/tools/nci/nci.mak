@@ -49,7 +49,7 @@ WIN32K_USER_STUBS = lib$(SEP)user32$(SEP)misc$(SEP)win32k.S
 
 # NTOSKRNL.EXE
 KERNEL_SVC_DB = $(NCI_BASE_)sysfuncs.lst
-KERNEL_SERVICE_TABLE = include$(SEP)ntdll$(SEP)napi.h
+KERNEL_SERVICE_TABLE = ntoskrnl$(SEP)include$(SEP)internal$(SEP)napi.h
 NTDLL_STUBS = lib$(SEP)ntdll$(SEP)napi.S
 KERNEL_STUBS = ntoskrnl$(SEP)ex$(SEP)zw.S
 

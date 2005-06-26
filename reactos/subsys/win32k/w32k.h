@@ -22,7 +22,6 @@
 #include <windows.h>    /* FIXME ? */
 #include <windowsx.h>   /* FIXME ? */
 #include <ndk/ntndk.h>
-#include <napi/win32.h> /* FIXME */
 
 /* FIXME: ReactOS will be R-Rated if I really write what I'm about to */
 NTSTATUS 
@@ -46,6 +45,7 @@ MmCopyToCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes);
 
 /* External Win32K Header */
 #include <win32k/win32k.h>
+#include <win32k/win32.h>
 
 /* Internal Win32K Header */
 #include "include/win32k.h"

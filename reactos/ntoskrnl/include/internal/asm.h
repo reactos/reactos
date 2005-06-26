@@ -116,3 +116,7 @@
 #define KTRAP_FRAME_V86_GS         (0x88)
 #define KTRAP_FRAME_RESERVED9      (0x8A)
 #define KTRAP_FRAME_SIZE           (0x8C)
+
+/* User Shared Data */
+#define KUSER_SHARED_SYSCALL       0x7FFE0300
+#define KUSER_SHARED_SYSCALL_RET   0x7FFE0304

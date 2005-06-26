@@ -14,7 +14,6 @@
 #include <internal/i386/ke.h>
 #include <internal/asm.h>
 #include <ndk/i386/segment.h>
-#include <napi/shared_data.h>
 
 #define UserMode  (1)
 
