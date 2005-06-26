@@ -36,13 +36,32 @@ extern ULONG Win32kNumberOfSysCalls;
 
 PSHARED_SECTION_POOL SessionSharedSectionPool = NULL;
 
-NTSTATUS STDCALL
-Win32kProcessCallback (struct _EPROCESS *Process,
-		     BOOLEAN Create)
+NTSTATUS 
+STDCALL
+Win32kProcessCallback(struct _EPROCESS *Process,
+                      BOOLEAN Create)
 {
-  PW32PROCESS Win32Process;
+    PW32PROCESS Win32Process;
+    
+    /* Get the Win32 Process */
+    Win32Process = PsGetProcessWin32Process(Process);
+    
+    /* Allocate one if needed */
+    if (!Win32Process)
+    {
+        /* FIXME - lock the process */
+        Win32Process = ExAllocatePoolWithTag(NonPagedPool,
+                                             sizeof(W32PROCESS),
+                                             TAG('W', '3', '2', 'p'));
 
-  Win32Process = (PW32PROCESS)Process->Win32Process;
+        if (Win32Process == NULL) return STATUS_NO_MEMORY;
+
+        RtlZeroMemory(Win32Process, sizeof(W32PROCESS));
+        
+        PsSetProcessWin32Process(Process, Win32Process);
+        /* FIXME - unlock the process */
+    }
+
   if (Create)
     {
       DPRINT("Creating W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());
@@ -97,15 +116,34 @@ Win32kProcessCallback (struct _EPROCESS *Process,
 }
 
 
-NTSTATUS STDCALL
-Win32kThreadCallback (struct _ETHREAD *Thread,
-		    BOOLEAN Create)
+NTSTATUS 
+STDCALL
+Win32kThreadCallback(struct _ETHREAD *Thread,
+                     BOOLEAN Create)
 {
-  struct _EPROCESS *Process;
-  PW32THREAD Win32Thread;
+    struct _EPROCESS *Process;
+    PW32THREAD Win32Thread;
 
-  Process = Thread->ThreadsProcess;
-  Win32Thread = Thread->Tcb.Win32Thread;
+    Process = Thread->ThreadsProcess;
+    
+    /* Get the Win32 Thread */
+    Win32Thread = PsGetThreadWin32Thread(Thread);
+    
+    /* Allocate one if needed */
+    if (!Win32Thread)
+    {
+        /* FIXME - lock the process */
+        Win32Thread = ExAllocatePoolWithTag(NonPagedPool,
+                                            sizeof(W32THREAD),
+                                            TAG('W', '3', '2', 't'));
+
+        if (Win32Thread == NULL) return STATUS_NO_MEMORY;
+
+        RtlZeroMemory(Win32Thread, sizeof(W32THREAD));
+        
+        PsSetThreadWin32Thread(Thread, Win32Thread);
+        /* FIXME - unlock the process */
+    }
   if (Create)
     {
       HWINSTA hWinSta = NULL;
@@ -237,7 +275,7 @@ DriverEntry (
 {
   NTSTATUS Status;
   BOOLEAN Result;
-  W32_OBJECT_CALLBACK Win32kObjectCallbacks;
+  W32_CALLOUT_DATA CalloutData;
 
   /*
    * Register user mode call interface
@@ -254,24 +292,22 @@ DriverEntry (
       return STATUS_UNSUCCESSFUL;
     }
 
-  /*
-   * Register Object Manager Callbacks
-   */
-    Win32kObjectCallbacks.WinStaCreate = IntWinStaObjectOpen;
-    Win32kObjectCallbacks.WinStaParse = IntWinStaObjectParse;
-    Win32kObjectCallbacks.WinStaDelete = IntWinStaObjectDelete;
-    Win32kObjectCallbacks.WinStaFind = IntWinStaObjectFind;
-    Win32kObjectCallbacks.DesktopCreate = IntDesktopObjectCreate;
-    Win32kObjectCallbacks.DesktopDelete = IntDesktopObjectDelete;
-  /*
-   * Register our per-process and per-thread structures.
-   */
-  PsEstablishWin32Callouts (Win32kProcessCallback,
-			    Win32kThreadCallback,
-			    &Win32kObjectCallbacks,
-			    0,
-			    sizeof(W32THREAD),
-			    sizeof(W32PROCESS));
+    /*
+     * Register Object Manager Callbacks
+     */
+    CalloutData.WinStaCreate = IntWinStaObjectOpen;
+    CalloutData.WinStaParse = IntWinStaObjectParse;
+    CalloutData.WinStaDelete = IntWinStaObjectDelete;
+    CalloutData.WinStaFind = IntWinStaObjectFind;
+    CalloutData.DesktopCreate = IntDesktopObjectCreate;
+    CalloutData.DesktopDelete = IntDesktopObjectDelete;
+    CalloutData.W32ProcessCallout = Win32kProcessCallback;
+    CalloutData.W32ThreadCallout = Win32kThreadCallback;
+    
+    /*
+     * Register our per-process and per-thread structures.
+     */
+    PsEstablishWin32Callouts(&CalloutData);
 
   Status = IntUserCreateSharedSectionPool(48 * 1024 * 1024, /* 48 MB by default */
                                           &SessionSharedSectionPool);
