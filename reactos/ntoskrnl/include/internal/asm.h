@@ -60,7 +60,7 @@
 #define KPCR_GDT                  0x3C
 #define KPCR_TSS                  0x40
 #define KPCR_CURRENT_THREAD       0x124
-#define KPCR_NPX_THREAD           0x2A4
+#define KPCR_NPX_THREAD           0x2F4
 
 /* FPU Save Area Offsets */
 #define FN_CONTROL_WORD        0x0
