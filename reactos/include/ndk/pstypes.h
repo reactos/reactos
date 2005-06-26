@@ -31,9 +31,6 @@ extern NTOSAPI POBJECT_TYPE PsThreadType;
     #define JOB_OBJECT_ALL_ACCESS    (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|31)
 #endif
 
-/* FIXME: This was changed in XP... Ask ThomasW about it */
-#define PROCESS_SET_PORT 0x800
-
 #define THREAD_ALERT 0x4
 
 #define USER_SHARED_DATA (0x7FFE0000)
