@@ -40,7 +40,7 @@ extern SSDT_ENTRY NTOSAPI KeServiceDescriptorTableShadow[SSDT_MAX_ENTRIES];
 
 /* TYPES *********************************************************************/
 
-typedef struct _CONFIGURATION_COMPONENT_DATA 
+typedef struct _CONFIGURATION_COMPONENT_DATA
 {
     struct _CONFIGURATION_COMPONENT_DATA *Parent;
     struct _CONFIGURATION_COMPONENT_DATA *Child;
@@ -48,14 +48,14 @@ typedef struct _CONFIGURATION_COMPONENT_DATA
     CONFIGURATION_COMPONENT Component;
 } CONFIGURATION_COMPONENT_DATA, *PCONFIGURATION_COMPONENT_DATA;
 
-typedef enum _KAPC_ENVIRONMENT 
+typedef enum _KAPC_ENVIRONMENT
 {
     OriginalApcEnvironment,
     AttachedApcEnvironment,
     CurrentApcEnvironment
 } KAPC_ENVIRONMENT;
 
-typedef struct _KDPC_DATA 
+typedef struct _KDPC_DATA
 {
     LIST_ENTRY  DpcListHead;
     ULONG  DpcLock;
@@ -76,7 +76,7 @@ typedef struct _KAPC_STATE
 #endif
 
 /* FIXME: Most of these should go to i386 directory */
-typedef struct _FNSAVE_FORMAT 
+typedef struct _FNSAVE_FORMAT
 {
     ULONG ControlWord;
     ULONG StatusWord;
@@ -117,7 +117,7 @@ typedef struct _FX_SAVE_AREA
     ULONG Cr0NpxState;
 } FX_SAVE_AREA, *PFX_SAVE_AREA;
 
-typedef struct _KTRAP_FRAME 
+typedef struct _KTRAP_FRAME
 {
     PVOID DebugEbp;
     PVOID DebugEip;
@@ -167,29 +167,33 @@ typedef struct _KTRAP_FRAME
 
 /* FIXME: Win32k uses windows.h! */
 #ifndef __WIN32K__
-typedef struct _LDT_ENTRY {
-  WORD LimitLow;
-  WORD BaseLow;
-  union {
-    struct {
-      BYTE BaseMid;
-      BYTE Flags1;
-      BYTE Flags2;
-      BYTE BaseHi;
-    } Bytes;
-    struct {
-      DWORD BaseMid : 8;
-      DWORD Type : 5;
-      DWORD Dpl : 2;
-      DWORD Pres : 1;
-      DWORD LimitHi : 4;
-      DWORD Sys : 1;
-      DWORD Reserved_0 : 1;
-      DWORD Default_Big : 1;
-      DWORD Granularity : 1;
-      DWORD BaseHi : 8;
-    } Bits;
-  } HighWord;
+typedef struct _LDT_ENTRY
+{
+    WORD LimitLow;
+    WORD BaseLow;
+    union
+    {
+        struct
+        {
+            BYTE BaseMid;
+            BYTE Flags1;
+            BYTE Flags2;
+            BYTE BaseHi;
+        } Bytes;
+        struct
+        {
+            DWORD BaseMid : 8;
+            DWORD Type : 5;
+            DWORD Dpl : 2;
+            DWORD Pres : 1;
+            DWORD LimitHi : 4;
+            DWORD Sys : 1;
+            DWORD Reserved_0 : 1;
+            DWORD Default_Big : 1;
+            DWORD Granularity : 1;
+            DWORD BaseHi : 8;
+        } Bits;
+    } HighWord;
 } LDT_ENTRY, *PLDT_ENTRY, *LPLDT_ENTRY;
 #endif
 
@@ -197,14 +201,17 @@ typedef struct _KGDTENTRY
 {
     USHORT LimitLow;
     USHORT BaseLow;
-    union {
-        struct {
+    union
+    {
+        struct
+        {
             UCHAR BaseMid;
             UCHAR Flags1;
             UCHAR Flags2;
             UCHAR BaseHi;
         } Bytes;
-        struct {
+        struct
+        {
             ULONG BaseMid       : 8;
             ULONG Type          : 5;
             ULONG Dpl           : 2;
@@ -249,14 +256,14 @@ typedef struct _HARDWARE_PTE_X86
 /* Fixme: Use correct types? */
 typedef struct _KPROCESSOR_STATE
 {
-   PCONTEXT ContextFrame;
-   PVOID SpecialRegisters;
+    PCONTEXT ContextFrame;
+    PVOID SpecialRegisters;
 } KPROCESSOR_STATE;
 
 /* Processor Control Block */
 typedef struct _KPRCB
 {
-	USHORT MinorVersion;
+    USHORT MinorVersion;
     USHORT MajorVersion;
     struct _KTHREAD *CurrentThread;
     struct _KTHREAD *NextThread;
@@ -387,33 +394,34 @@ typedef struct _KPRCB
 /*
  * This is the complete, internal KPCR structure
  */
-typedef struct _KIPCR {
-  KPCR_TIB  Tib;                /* 00 */
-  struct _KPCR  *Self;          /* 1C */
-  struct _KPRCB  *Prcb;         /* 20 */
-  KIRQL  Irql;                  /* 24 */
-  ULONG  IRR;                   /* 28 */
-  ULONG  IrrActive;             /* 2C */
-  ULONG  IDR;                   /* 30 */
-  PVOID  KdVersionBlock;        /* 34 */
-  PUSHORT  IDT;                 /* 38 */
-  PUSHORT  GDT;                 /* 3C */
-  struct _KTSS  *TSS;           /* 40 */
-  USHORT  MajorVersion;         /* 44 */
-  USHORT  MinorVersion;         /* 46 */
-  KAFFINITY  SetMember;         /* 48 */
-  ULONG  StallScaleFactor;      /* 4C */
-  UCHAR  SparedUnused;          /* 50 */
-  UCHAR  Number;                /* 51 */
-  UCHAR  Reserved;              /* 52 */
-  UCHAR  L2CacheAssociativity;  /* 53 */
-  ULONG  VdmAlert;              /* 54 */
-  ULONG  KernelReserved[14];    /* 58 */
-  ULONG  L2CacheSize;           /* 90 */
-  ULONG  HalReserved[16];       /* 94 */
-  ULONG  InterruptMode;         /* D4 */
-  UCHAR  KernelReserved2[0x48]; /* D8 */
-  KPRCB  PrcbData;              /* 120 */
+typedef struct _KIPCR
+{
+    KPCR_TIB  Tib;                /* 00 */
+    struct _KPCR  *Self;          /* 1C */
+    struct _KPRCB  *Prcb;         /* 20 */
+    KIRQL  Irql;                  /* 24 */
+    ULONG  IRR;                   /* 28 */
+    ULONG  IrrActive;             /* 2C */
+    ULONG  IDR;                   /* 30 */
+    PVOID  KdVersionBlock;        /* 34 */
+    PUSHORT  IDT;                 /* 38 */
+    PUSHORT  GDT;                 /* 3C */
+    struct _KTSS  *TSS;           /* 40 */
+    USHORT  MajorVersion;         /* 44 */
+    USHORT  MinorVersion;         /* 46 */
+    KAFFINITY  SetMember;         /* 48 */
+    ULONG  StallScaleFactor;      /* 4C */
+    UCHAR  SparedUnused;          /* 50 */
+    UCHAR  Number;                /* 51 */
+    UCHAR  Reserved;              /* 52 */
+    UCHAR  L2CacheAssociativity;  /* 53 */
+    ULONG  VdmAlert;              /* 54 */
+    ULONG  KernelReserved[14];    /* 58 */
+    ULONG  L2CacheSize;           /* 90 */
+    ULONG  HalReserved[16];       /* 94 */
+    ULONG  InterruptMode;         /* D4 */
+    UCHAR  KernelReserved2[0x48]; /* D8 */
+    KPRCB  PrcbData;              /* 120 */
 } KIPCR, *PKIPCR;
 
 #pragma pack(pop)
@@ -511,7 +519,8 @@ typedef struct _KTSS
 #include <poppack.h>
 
 /* i386 Doesn't have Exception Frames */
-typedef struct _KEXCEPTION_FRAME {
+typedef struct _KEXCEPTION_FRAME
+{
 
 } KEXCEPTION_FRAME, *PKEXCEPTION_FRAME;
 
@@ -544,7 +553,7 @@ typedef struct _KPROFILE
     struct _KPROCESS *Process;
 } KPROFILE, *PKPROFILE;
 
-typedef struct _KINTERRUPT 
+typedef struct _KINTERRUPT
 {
     CSHORT              Type;
     CSHORT              Size;
@@ -621,94 +630,97 @@ typedef enum _KOBJECTS
 
 typedef struct _KTHREAD
 {
-   /* For waiting on thread exit */
-   DISPATCHER_HEADER DispatcherHeader;    /* 00 */
+    /* For waiting on thread exit */
+    DISPATCHER_HEADER DispatcherHeader;    /* 00 */
 
-   /* List of mutants owned by the thread */
-   LIST_ENTRY        MutantListHead;      /* 10 */
-   PVOID             InitialStack;        /* 18 */
-   ULONG_PTR         StackLimit;          /* 1C */
+    /* List of mutants owned by the thread */
+    LIST_ENTRY        MutantListHead;      /* 10 */
+    PVOID             InitialStack;        /* 18 */
+    ULONG_PTR         StackLimit;          /* 1C */
 
-   /* Pointer to the thread's environment block in user memory */
-   struct _TEB       *Teb;                /* 20 */
+    /* Pointer to the thread's environment block in user memory */
+    struct _TEB       *Teb;                /* 20 */
 
-   /* Pointer to the thread's TLS array */
-   PVOID             TlsArray;            /* 24 */
-   PVOID             KernelStack;         /* 28 */
-   UCHAR             DebugActive;         /* 2C */
+    /* Pointer to the thread's TLS array */
+    PVOID             TlsArray;            /* 24 */
+    PVOID             KernelStack;         /* 28 */
+    UCHAR             DebugActive;         /* 2C */
 
-   /* Thread state (one of THREAD_STATE_xxx constants below) */
-   UCHAR             State;               /* 2D */
-   BOOLEAN           Alerted[2];          /* 2E */
-   UCHAR             Iopl;                /* 30 */
-   UCHAR             NpxState;            /* 31 */
-   CHAR              Saturation;          /* 32 */
-   CHAR              Priority;            /* 33 */
-   KAPC_STATE        ApcState;            /* 34 */
-   ULONG             ContextSwitches;     /* 4C */
-   LONG              WaitStatus;          /* 50 */
-   KIRQL             WaitIrql;            /* 54 */
-   CHAR              WaitMode;            /* 55 */
-   UCHAR             WaitNext;            /* 56 */
-   UCHAR             WaitReason;          /* 57 */
-   union {                                /* 58 */
-      PKWAIT_BLOCK   WaitBlockList;       /* 58 */
-      PKGATE         GateObject;          /* 58 */
-   };                                     /* 58 */
-   LIST_ENTRY        WaitListEntry;       /* 5C */
-   ULONG             WaitTime;            /* 64 */
-   CHAR              BasePriority;        /* 68 */
-   UCHAR             DecrementCount;      /* 69 */
-   UCHAR             PriorityDecrement;   /* 6A */
-   CHAR              Quantum;             /* 6B */
-   KWAIT_BLOCK       WaitBlock[4];        /* 6C */
-   PVOID             LegoData;            /* CC */
-   union {
-          struct {
-              USHORT KernelApcDisable;
-              USHORT SpecialApcDisable;
-          };
-          ULONG      CombinedApcDisable;  /* D0 */
-   };
-   KAFFINITY         UserAffinity;        /* D4 */
-   UCHAR             SystemAffinityActive;/* D8 */
-   UCHAR             PowerState;          /* D9 */
-   UCHAR             NpxIrql;             /* DA */
-   UCHAR             Pad[1];              /* DB */
-   PVOID             ServiceTable;        /* DC */
-   struct _KQUEUE    *Queue;              /* E0 */
-   KSPIN_LOCK        ApcQueueLock;        /* E4 */
-   KTIMER            Timer;               /* E8 */
-   LIST_ENTRY        QueueListEntry;      /* 110 */
-   KAFFINITY         Affinity;            /* 118 */
-   UCHAR             Preempted;           /* 11C */
-   UCHAR             ProcessReadyQueue;   /* 11D */
-   UCHAR             KernelStackResident; /* 11E */
-   UCHAR             NextProcessor;       /* 11F */
-   PVOID             CallbackStack;       /* 120 */
-   struct _W32THREAD *Win32Thread;        /* 124 */
-   struct _KTRAP_FRAME *TrapFrame;        /* 128 */
-   PKAPC_STATE       ApcStatePointer[2];  /* 12C */
-   UCHAR             EnableStackSwap;     /* 134 */
-   UCHAR             LargeStack;          /* 135 */
-   UCHAR             ResourceIndex;       /* 136 */
-   UCHAR             PreviousMode;        /* 137 */
-   ULONG             KernelTime;          /* 138 */
-   ULONG             UserTime;            /* 13C */
-   KAPC_STATE        SavedApcState;       /* 140 */
-   UCHAR             Alertable;           /* 158 */
-   UCHAR             ApcStateIndex;       /* 159 */
-   UCHAR             ApcQueueable;        /* 15A */
-   UCHAR             AutoAlignment;       /* 15B */
-   PVOID             StackBase;           /* 15C */
-   KAPC              SuspendApc;          /* 160 */
-   KSEMAPHORE        SuspendSemaphore;    /* 190 */
-   LIST_ENTRY        ThreadListEntry;     /* 1A4 */
-   CHAR              FreezeCount;         /* 1AC */
-   UCHAR             SuspendCount;        /* 1AD */
-   UCHAR             IdealProcessor;      /* 1AE */
-   UCHAR             DisableBoost;        /* 1AF */
-   UCHAR             QuantumReset;        /* 1B0 */
+    /* Thread state (one of THREAD_STATE_xxx constants below) */
+    UCHAR             State;               /* 2D */
+    BOOLEAN           Alerted[2];          /* 2E */
+    UCHAR             Iopl;                /* 30 */
+    UCHAR             NpxState;            /* 31 */
+    CHAR              Saturation;          /* 32 */
+    CHAR              Priority;            /* 33 */
+    KAPC_STATE        ApcState;            /* 34 */
+    ULONG             ContextSwitches;     /* 4C */
+    LONG              WaitStatus;          /* 50 */
+    KIRQL             WaitIrql;            /* 54 */
+    CHAR              WaitMode;            /* 55 */
+    UCHAR             WaitNext;            /* 56 */
+    UCHAR             WaitReason;          /* 57 */
+    union                                  /* 58 */
+    {
+        PKWAIT_BLOCK  WaitBlockList;      /* 58 */
+        PKGATE        GateObject;         /* 58 */
+    };                                     /* 58 */
+    LIST_ENTRY        WaitListEntry;       /* 5C */
+    ULONG             WaitTime;            /* 64 */
+    CHAR              BasePriority;        /* 68 */
+    UCHAR             DecrementCount;      /* 69 */
+    UCHAR             PriorityDecrement;   /* 6A */
+    CHAR              Quantum;             /* 6B */
+    KWAIT_BLOCK       WaitBlock[4];        /* 6C */
+    PVOID             LegoData;            /* CC */
+    union
+    {
+        struct
+        {
+            USHORT KernelApcDisable;
+            USHORT SpecialApcDisable;
+        };
+        ULONG      CombinedApcDisable;     /* D0 */
+    };
+    KAFFINITY         UserAffinity;        /* D4 */
+    UCHAR             SystemAffinityActive;/* D8 */
+    UCHAR             PowerState;          /* D9 */
+    UCHAR             NpxIrql;             /* DA */
+    UCHAR             Pad[1];              /* DB */
+    PVOID             ServiceTable;        /* DC */
+    struct _KQUEUE    *Queue;              /* E0 */
+    KSPIN_LOCK        ApcQueueLock;        /* E4 */
+    KTIMER            Timer;               /* E8 */
+    LIST_ENTRY        QueueListEntry;      /* 110 */
+    KAFFINITY         Affinity;            /* 118 */
+    UCHAR             Preempted;           /* 11C */
+    UCHAR             ProcessReadyQueue;   /* 11D */
+    UCHAR             KernelStackResident; /* 11E */
+    UCHAR             NextProcessor;       /* 11F */
+    PVOID             CallbackStack;       /* 120 */
+    struct _W32THREAD *Win32Thread;        /* 124 */
+    struct _KTRAP_FRAME *TrapFrame;        /* 128 */
+    PKAPC_STATE       ApcStatePointer[2];  /* 12C */
+    UCHAR             EnableStackSwap;     /* 134 */
+    UCHAR             LargeStack;          /* 135 */
+    UCHAR             ResourceIndex;       /* 136 */
+    UCHAR             PreviousMode;        /* 137 */
+    ULONG             KernelTime;          /* 138 */
+    ULONG             UserTime;            /* 13C */
+    KAPC_STATE        SavedApcState;       /* 140 */
+    UCHAR             Alertable;           /* 158 */
+    UCHAR             ApcStateIndex;       /* 159 */
+    UCHAR             ApcQueueable;        /* 15A */
+    UCHAR             AutoAlignment;       /* 15B */
+    PVOID             StackBase;           /* 15C */
+    KAPC              SuspendApc;          /* 160 */
+    KSEMAPHORE        SuspendSemaphore;    /* 190 */
+    LIST_ENTRY        ThreadListEntry;     /* 1A4 */
+    CHAR              FreezeCount;         /* 1AC */
+    UCHAR             SuspendCount;        /* 1AD */
+    UCHAR             IdealProcessor;      /* 1AE */
+    UCHAR             DisableBoost;        /* 1AF */
+    UCHAR             QuantumReset;        /* 1B0 */
 } KTHREAD;
 
 #include <poppack.h>
@@ -739,8 +751,10 @@ typedef struct _KPROCESS
     LIST_ENTRY            ThreadListHead;            /* 050 */
     KSPIN_LOCK            ProcessLock;               /* 058 */
     KAFFINITY             Affinity;                  /* 05C */
-    union {
-        struct {
+    union
+    {
+        struct
+        {
             ULONG         AutoAlignment:1;           /* 060.0 */
             ULONG         DisableBoost:1;            /* 060.1 */
             ULONG         DisableQuantum:1;          /* 060.2 */

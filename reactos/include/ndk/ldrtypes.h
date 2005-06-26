@@ -20,17 +20,17 @@
 #define RESOURCE_DATA_LEVEL      3
 
 /* FIXME: USE CORRRECT LDR_ FLAGS */
-#define IMAGE_DLL		0x00000004
-#define LOAD_IN_PROGRESS	0x00001000
-#define UNLOAD_IN_PROGRESS	0x00002000
-#define ENTRY_PROCESSED		0x00004000
-#define DONT_CALL_FOR_THREAD	0x00040000
-#define PROCESS_ATTACH_CALLED	0x00080000
-#define IMAGE_NOT_AT_BASE	0x00200000
+#define IMAGE_DLL               0x00000004
+#define LOAD_IN_PROGRESS        0x00001000
+#define UNLOAD_IN_PROGRESS      0x00002000
+#define ENTRY_PROCESSED         0x00004000
+#define DONT_CALL_FOR_THREAD    0x00040000
+#define PROCESS_ATTACH_CALLED   0x00080000
+#define IMAGE_NOT_AT_BASE       0x00200000
 
 /* ENUMERATIONS **************************************************************/
 
-/* TYPES *********************************************************************/             
+/* TYPES *********************************************************************/
 /* FIXME: Update with _LDR_DATA_TABLE_ENTRY and LDR_ flags */
 typedef struct _PEB_LDR_DATA
 {
@@ -69,7 +69,7 @@ typedef struct _LDR_DATA_TABLE_ENTRY
 #endif /* KDBG */
 } LDR_DATA_TABLE_ENTRY, *PLDR_DATA_TABLE_ENTRY;
 
-typedef struct _LDR_RESOURCE_INFO 
+typedef struct _LDR_RESOURCE_INFO
 {
     ULONG Type;
     ULONG Name;

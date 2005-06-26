@@ -80,7 +80,7 @@ extern NTOSAPI POBJECT_TYPE PsThreadType;
 /* FUNCTION TYPES ************************************************************/
 typedef VOID (STDCALL *PPEBLOCKROUTINE)(PVOID);
 
-typedef NTSTATUS 
+typedef NTSTATUS
 (STDCALL *PW32_PROCESS_CALLBACK)(
     struct _EPROCESS *Process,
     BOOLEAN Create
@@ -96,7 +96,7 @@ typedef NTSTATUS
 
 struct _ETHREAD;
 
-typedef struct _CURDIR 
+typedef struct _CURDIR
 {
     UNICODE_STRING DosPath;
     PVOID Handle;
@@ -108,7 +108,7 @@ typedef struct _DESCRIPTOR_TABLE_ENTRY
     LDT_ENTRY Descriptor;
 } DESCRIPTOR_TABLE_ENTRY, *PDESCRIPTOR_TABLE_ENTRY;
 
-typedef struct _PEB_FREE_BLOCK 
+typedef struct _PEB_FREE_BLOCK
 {
     struct _PEB_FREE_BLOCK* Next;
     ULONG Size;
@@ -175,7 +175,7 @@ typedef struct _PEB
     UNICODE_STRING CSDVersion;                       /* 1DCh */
 } PEB;
 
-typedef struct _GDI_TEB_BATCH 
+typedef struct _GDI_TEB_BATCH
 {
     ULONG Offset;
     ULONG HDC;
@@ -184,14 +184,14 @@ typedef struct _GDI_TEB_BATCH
 
 typedef struct _INITIAL_TEB
 {
-  PVOID StackBase;
-  PVOID StackLimit;
-  PVOID StackCommit;
-  PVOID StackCommitMax;
-  PVOID StackReserved;
+    PVOID StackBase;
+    PVOID StackLimit;
+    PVOID StackCommit;
+    PVOID StackCommitMax;
+    PVOID StackReserved;
 } INITIAL_TEB, *PINITIAL_TEB;
 
-typedef struct _TEB 
+typedef struct _TEB
 {
     NT_TIB Tib;                         /* 00h */
     PVOID EnvironmentPointer;           /* 1Ch */
@@ -313,16 +313,19 @@ typedef struct _ETHREAD
     KTHREAD                        Tcb;                         /* 1C0 */
     LARGE_INTEGER                  CreateTime;                  /* 1C0 */
     LARGE_INTEGER                  ExitTime;                    /* 1C0 */
-    union {
+    union
+    {
         LIST_ENTRY                 LpcReplyChain;               /* 1C0 */
         LIST_ENTRY                 KeyedWaitChain;              /* 1C0 */
     };
-    union {
+    union
+    {
         NTSTATUS                   ExitStatus;                  /* 1C8 */
         PVOID                      OfsChain;                    /* 1C8 */
     };
     LIST_ENTRY                     PostBlockList;               /* 1CC */
-    union {
+    union
+    {
         struct _TERMINATION_PORT   *TerminationPort;            /* 1D4 */
         struct _ETHREAD            *ReaperLink;                 /* 1D4 */
         PVOID                      KeyedWaitValue;              /* 1D4 */
@@ -330,11 +333,13 @@ typedef struct _ETHREAD
     KSPIN_LOCK                     ActiveTimerListLock;         /* 1D8 */
     LIST_ENTRY                     ActiveTimerListHead;         /* 1D8 */
     CLIENT_ID                      Cid;                         /* 1E0 */
-    union {
+    union
+    {
         KSEMAPHORE                 LpcReplySemaphore;           /* 1E4 */
         KSEMAPHORE                 KeyedReplySemaphore;         /* 1E4 */
     };
-    union {
+    union
+    {
         PVOID                      LpcReplyMessage;             /* 200 */
         PVOID                      LpcWaitingOnPort;            /* 200 */
     };
@@ -344,7 +349,8 @@ typedef struct _ETHREAD
     PDEVICE_OBJECT                 DeviceToVerify;              /* 214 */
     struct _EPROCESS               *ThreadsProcess;             /* 218 */
     PKSTART_ROUTINE                StartAddress;                /* 21C */
-    union {
+    union
+    {
         PTHREAD_START_ROUTINE      Win32StartAddress;           /* 220 */
         ULONG                      LpcReceivedMessageId;        /* 220 */
     };
@@ -354,8 +360,10 @@ typedef struct _ETHREAD
     ULONG                          LpcReplyMessageId;           /* 234 */
     ULONG                          ReadClusterSize;             /* 238 */
     ACCESS_MASK                    GrantedAccess;               /* 23C */
-    union {
-        struct {
+    union
+    {
+        struct
+        {
            ULONG                   Terminated:1;
            ULONG                   DeadThread:1;
            ULONG                   HideFromDebugger:1;
@@ -368,8 +376,10 @@ typedef struct _ETHREAD
         };
         ULONG                      CrossThreadFlags;            /* 240 */
     };
-    union {
-        struct {
+    union
+    {
+        struct
+        {
            ULONG                   ActiveExWorker:1;
            ULONG                   ExWorkerCanWaitUser:1;
            ULONG                   MemoryMaker:1;
@@ -377,8 +387,10 @@ typedef struct _ETHREAD
         };
         ULONG                      SameThreadPassiveFlags;      /* 244 */
     };
-    union {
-        struct {
+    union
+    {
+        struct
+        {
            ULONG                   LpcReceivedMsgIdValid:1;
            ULONG                   LpcExitThreadCalled:1;
            ULONG                   AddressSpaceOwner:1;
@@ -445,7 +457,8 @@ typedef struct _EPROCESS
     PVOID                 VdmObjects;                   /* 144 */
     PVOID                 DeviceMap;                    /* 148 */
     PVOID                 Spare0[3];                    /* 14C */
-    union {
+    union
+    {
         HARDWARE_PTE_X86  PagedirectoryPte;             /* 158 */
         ULONGLONG         Filler;                       /* 158 */
     };
@@ -476,8 +489,10 @@ typedef struct _EPROCESS
     LIST_ENTRY            MmProcessLinks;               /* 230 */
     ULONG                 ModifiedPageCount;            /* 238 */
     ULONG                 JobStatus;                    /* 23C */
-    union {
-        struct {
+    union
+    {
+        struct
+        {
             ULONG         CreateReported:1;
             ULONG         NoDebugInherit:1;
             ULONG         ProcessExiting:1;
@@ -513,8 +528,10 @@ typedef struct _EPROCESS
 
     NTSTATUS              ExitStatus;                   /* 244 */
     USHORT                NextPageColor;                /* 248 */
-    union {
-        struct {
+    union
+    {
+        struct
+        {
             UCHAR         SubSystemMinorVersion;        /* 24A */
             UCHAR         SubSystemMajorVersion;        /* 24B */
         };

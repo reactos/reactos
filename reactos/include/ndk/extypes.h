@@ -42,7 +42,7 @@ typedef PVOID EX_RUNDOWN_REF;
 
 /* You'll need the IFS for these, so let's not force everyone to have it */
 #ifdef _NTIFS_
-typedef struct _EX_QUEUE_WORKER_INFO 
+typedef struct _EX_QUEUE_WORKER_INFO
 {
     UCHAR QueueDisabled:1;
     UCHAR MakeThreadsAsNecessary:1;
@@ -50,14 +50,14 @@ typedef struct _EX_QUEUE_WORKER_INFO
     ULONG WorkerCount:29;
 } EX_QUEUE_WORKER_INFO, *PEX_QUEUE_WORKER_INFO;
 
-typedef struct _EX_WORK_QUEUE 
+typedef struct _EX_WORK_QUEUE
 {
     KQUEUE WorkerQueue;
     ULONG DynamicThreadCount;
     ULONG WorkItemsProcessed;
     ULONG WorkItemsProcessedLastPass;
     ULONG QueueDepthLastPass;
-    EX_QUEUE_WORKER_INFO Info;    
+    EX_QUEUE_WORKER_INFO Info;
 } EX_WORK_QUEUE, *PEX_WORK_QUEUE;
 #endif
 
@@ -71,11 +71,11 @@ typedef struct _EX_FAST_REF
     };
 } EX_FAST_REF, *PEX_FAST_REF;
 
-typedef struct _EX_PUSH_LOCK 
+typedef struct _EX_PUSH_LOCK
 {
-    union 
+    union
     {
-        struct 
+        struct
         {
             ULONG Waiting:1;
             ULONG Exclusive:1;
@@ -86,12 +86,12 @@ typedef struct _EX_PUSH_LOCK
     };
 } EX_PUSH_LOCK, *PEX_PUSH_LOCK;
 
-typedef struct _HANDLE_TABLE_ENTRY_INFO 
+typedef struct _HANDLE_TABLE_ENTRY_INFO
 {
     ULONG AuditMask;
 } HANDLE_TABLE_ENTRY_INFO, *PHANDLE_TABLE_ENTRY_INFO;
 
-typedef struct _RUNDOWN_DESCRIPTOR 
+typedef struct _RUNDOWN_DESCRIPTOR
 {
     ULONG_PTR References;
     KEVENT RundownEvent;
@@ -105,16 +105,16 @@ typedef struct _CALLBACK_OBJECT
     ULONG AllowMultipleCallbacks;
 } CALLBACK_OBJECT , *PCALLBACK_OBJECT;
 
-typedef struct _HANDLE_TABLE_ENTRY 
+typedef struct _HANDLE_TABLE_ENTRY
 {
-    union 
+    union
     {
         PVOID Object;
         ULONG_PTR ObAttributes;
         PHANDLE_TABLE_ENTRY_INFO InfoTable;
         ULONG_PTR Value;
     } u1;
-    union 
+    union
     {
         ULONG GrantedAccess;
         USHORT GrantedAccessIndex;

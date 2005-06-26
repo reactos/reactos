@@ -34,7 +34,7 @@
 /* ENUMERATIONS **************************************************************/
 
 typedef enum _OB_OPEN_REASON
-{    
+{
     ObCreateHandle,
     ObOpenHandle,
     ObDuplicateHandle,
@@ -54,7 +54,7 @@ typedef NTSTATUS
     ACCESS_MASK  GrantedAccess
 );
 
-typedef NTSTATUS 
+typedef NTSTATUS
 (STDCALL *OB_PARSE_METHOD)(
     PVOID  Object,
     PVOID  *NextObject,
@@ -62,13 +62,13 @@ typedef NTSTATUS
     PWSTR  *Path,
     ULONG  Attributes
 );
-                        
-typedef VOID 
+
+typedef VOID
 (STDCALL *OB_DELETE_METHOD)(
     PVOID  DeletedObject
 );
 
-typedef VOID 
+typedef VOID
 (STDCALL *OB_CLOSE_METHOD)(
     PVOID  ClosedObject,
     ULONG  HandleCount
@@ -77,10 +77,10 @@ typedef VOID
 typedef VOID
 (STDCALL *OB_DUMP_METHOD)(VOID);
 
-typedef NTSTATUS 
+typedef NTSTATUS
 (STDCALL *OB_OKAYTOCLOSE_METHOD)(VOID);
 
-typedef NTSTATUS 
+typedef NTSTATUS
 (STDCALL *OB_QUERYNAME_METHOD)(
     PVOID  ObjectBody,
     POBJECT_NAME_INFORMATION  ObjectNameInfo,
@@ -88,14 +88,14 @@ typedef NTSTATUS
     PULONG  ReturnLength
 );
 
-typedef PVOID 
+typedef PVOID
 (STDCALL *OB_FIND_METHOD)(
     PVOID  WinStaObject,
     PWSTR  Name,
     ULONG  Attributes
 );
 
-typedef NTSTATUS 
+typedef NTSTATUS
 (STDCALL *OB_SECURITY_METHOD)(
     PVOID  ObjectBody,
     SECURITY_OPERATION_CODE  OperationCode,
@@ -116,7 +116,7 @@ typedef NTSTATUS
 /* TYPES *********************************************************************/
 
 /* FIXME: Does this match NT's? */
-typedef struct _W32_OBJECT_CALLBACK 
+typedef struct _W32_OBJECT_CALLBACK
 {
     OB_OPEN_METHOD WinStaCreate;
     OB_PARSE_METHOD WinStaParse;
@@ -126,7 +126,7 @@ typedef struct _W32_OBJECT_CALLBACK
     OB_DELETE_METHOD DesktopDelete;
 } W32_OBJECT_CALLBACK, *PW32_OBJECT_CALLBACK;
 
-typedef struct _OBJECT_BASIC_INFORMATION 
+typedef struct _OBJECT_BASIC_INFORMATION
 {
     ULONG Attributes;
     ACCESS_MASK GrantedAccess;
@@ -140,7 +140,7 @@ typedef struct _OBJECT_BASIC_INFORMATION
     ULONG SecurityDescriptorLength;
     LARGE_INTEGER CreateTime;
 } OBJECT_BASIC_INFORMATION, *POBJECT_BASIC_INFORMATION;
-    
+
 typedef struct _OBJECT_HEADER_NAME_INFO
 {
     struct _DIRECTORY_OBJECT *Directory;
@@ -150,7 +150,7 @@ typedef struct _OBJECT_HEADER_NAME_INFO
     ULONG DbgReferenceCount;
 } OBJECT_HEADER_NAME_INFO, *POBJECT_HEADER_NAME_INFO;
 
-typedef struct _OBJECT_CREATE_INFORMATION 
+typedef struct _OBJECT_CREATE_INFORMATION
 {
     ULONG Attributes;
     HANDLE RootDirectory;
@@ -209,13 +209,13 @@ typedef struct _OBJECT_HANDLE_COUNT_ENTRY
     struct _EPROCESS *Process;
     ULONG HandleCount;
 } OBJECT_HANDLE_COUNT_ENTRY, *POBJECT_HANDLE_COUNT_ENTRY;
-                        
+
 typedef struct _OBJECT_HANDLE_COUNT_DATABASE
 {
     ULONG CountEntries;
     POBJECT_HANDLE_COUNT_ENTRY HandleCountEntries[1];
 } OBJECT_HANDLE_COUNT_DATABASE, *POBJECT_HANDLE_COUNT_DATABASE;
-                        
+
 typedef struct _OBJECT_HEADER_HANDLE_INFO
 {
     union
@@ -224,7 +224,7 @@ typedef struct _OBJECT_HEADER_HANDLE_INFO
         OBJECT_HANDLE_COUNT_ENTRY SingleEntry;
     };
 } OBJECT_HEADER_HANDLE_INFO, *POBJECT_HEADER_HANDLE_INFO;
-                        
+
 typedef struct _OBJECT_HEADER_CREATOR_INFO
 {
     LIST_ENTRY TypeList;
@@ -246,7 +246,8 @@ typedef struct _OBJECT_HEADER
 {
     LIST_ENTRY Entry; /* FIXME: REMOVE THIS SOON */
     LONG PointerCount;
-    union {
+    union
+    {
         LONG HandleCount;
         PVOID NextToFree;
     };
@@ -255,7 +256,8 @@ typedef struct _OBJECT_HEADER
     UCHAR HandleInfoOffset;
     UCHAR QuotaInfoOffset;
     UCHAR Flags;
-    union {
+    union
+    {
         POBJECT_CREATE_INFORMATION ObjectCreateInfo;
         PVOID QuotaBlockCharged;
     };
@@ -291,7 +293,7 @@ typedef struct _DEVICE_MAP
     ULONG               ReferenceCount;
     ULONG               DriveMap;
     UCHAR               DriveType[32];
-} DEVICE_MAP, *PDEVICE_MAP; 
+} DEVICE_MAP, *PDEVICE_MAP;
 
 /* EXPORTED DATA *************************************************************/
 

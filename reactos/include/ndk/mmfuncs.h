@@ -13,10 +13,10 @@
 
 
 /* PROTOTYPES ****************************************************************/
-NTSTATUS 
+NTSTATUS
 STDCALL
 MmUnmapViewOfSection(
-    struct _EPROCESS* Process, 
+    struct _EPROCESS* Process,
     PVOID BaseAddress
 );
 

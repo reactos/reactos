@@ -20,7 +20,7 @@
 
 /* TYPES *********************************************************************/
 
-typedef struct _PROCESSOR_POWER_STATE 
+typedef struct _PROCESSOR_POWER_STATE
 {
     PVOID IdleFunction;
     ULONG Idle0KernelTimeLimit;

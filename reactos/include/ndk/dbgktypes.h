@@ -23,15 +23,15 @@
 
 typedef enum _DEBUGOBJECTINFOCLASS
 {
-       DebugObjectUnusedInformation,
-       DebugObjectKillProcessOnExitInformation
-} DEBUGOBJECTINFOCLASS, * PDEBUGOBJECTINFOCLASS;
+    DebugObjectUnusedInformation,
+    DebugObjectKillProcessOnExitInformation
+} DEBUGOBJECTINFOCLASS, *PDEBUGOBJECTINFOCLASS;
 
 /* TYPES *********************************************************************/
 
 typedef struct _DEBUG_OBJECT_KILL_PROCESS_ON_EXIT_INFORMATION
 {
-       ULONG KillProcessOnExit;
+    ULONG KillProcessOnExit;
 } DEBUG_OBJECT_KILL_PROCESS_ON_EXIT_INFORMATION, *
 PDEBUG_OBJECT_KILL_PROCESS_ON_EXIT_INFORMATION;
 
@@ -134,6 +134,6 @@ typedef struct _DBGUI_WAIT_STATE_CHANGE
         DBGKM_LOAD_DLL LoadDll;
         DBGKM_UNLOAD_DLL UnloadDll;
     } StateInfo;
-} DBGUI_WAIT_STATE_CHANGE, * PDBGUI_WAIT_STATE_CHANGE;
+} DBGUI_WAIT_STATE_CHANGE, *PDBGUI_WAIT_STATE_CHANGE;
 
 #endif

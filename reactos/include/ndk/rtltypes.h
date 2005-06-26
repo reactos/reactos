@@ -59,7 +59,7 @@
 
 /* ENUMERATIONS **************************************************************/
 
-typedef enum 
+typedef enum
 {
     ExceptionContinueExecution,
     ExceptionContinueSearch,
@@ -86,11 +86,11 @@ typedef NTSTATUS
     IN PVOID UserParam
 );
 
-typedef EXCEPTION_DISPOSITION 
+typedef EXCEPTION_DISPOSITION
 (*PEXCEPTION_HANDLER)(
-    struct _EXCEPTION_RECORD*, 
-    PVOID, 
-    struct _CONTEXT*, 
+    struct _EXCEPTION_RECORD*,
+    PVOID,
+    struct _CONTEXT*,
     PVOID
 );
 
@@ -107,7 +107,7 @@ typedef VOID
     PTHREAD_START_ROUTINE StartAddress,
     PVOID Parameter
 );
-                        
+
 /* TYPES *********************************************************************/
 
 typedef unsigned short RTL_ATOM;
@@ -141,6 +141,7 @@ typedef struct _DEBUG_BUFFER
     PVOID LockInformation;
     PVOID Reserved[8];
 } DEBUG_BUFFER, *PDEBUG_BUFFER;
+
 typedef struct _DEBUG_MODULE_INFORMATION
 {
     ULONG Reserved[2];
@@ -153,6 +154,7 @@ typedef struct _DEBUG_MODULE_INFORMATION
     USHORT ModuleNameOffset;
     CHAR ImageName[256];
 } DEBUG_MODULE_INFORMATION, *PDEBUG_MODULE_INFORMATION;
+
 typedef struct _DEBUG_HEAP_INFORMATION
 {
     PVOID Base;
@@ -167,7 +169,8 @@ typedef struct _DEBUG_HEAP_INFORMATION
     PVOID Tags;
     PVOID Blocks;
 } DEBUG_HEAP_INFORMATION, *PDEBUG_HEAP_INFORMATION;
-typedef struct _DEBUG_LOCK_INFORMATION 
+
+typedef struct _DEBUG_LOCK_INFORMATION
 {
     PVOID Address;
     USHORT Type;
@@ -186,6 +189,7 @@ typedef struct _RTL_HANDLE_TABLE_ENTRY
      ULONG Flags;
      struct _RTL_HANDLE_TABLE_ENTRY *NextFree;
 } RTL_HANDLE_TABLE_ENTRY, *PRTL_HANDLE_TABLE_ENTRY;
+
 typedef struct _RTL_HANDLE_TABLE
 {
      ULONG MaximumNumberOfHandles;
@@ -202,11 +206,13 @@ typedef struct _LOCK_INFORMATION
     ULONG LockCount;
     DEBUG_LOCK_INFORMATION LockEntry[1];
 } LOCK_INFORMATION, *PLOCK_INFORMATION;
+
 typedef struct _HEAP_INFORMATION
 {
     ULONG HeapCount;
     DEBUG_HEAP_INFORMATION HeapEntry[1];
 } HEAP_INFORMATION, *PHEAP_INFORMATION;
+
 typedef struct _MODULE_INFORMATION
 {
     ULONG ModuleCount;
@@ -214,7 +220,7 @@ typedef struct _MODULE_INFORMATION
 } MODULE_INFORMATION, *PMODULE_INFORMATION;
 /* END REVIEW AREA */
 
-typedef struct _EXCEPTION_REGISTRATION 
+typedef struct _EXCEPTION_REGISTRATION
 {
     struct _EXCEPTION_REGISTRATION*    prev;
     PEXCEPTION_HANDLER        handler;
@@ -223,15 +229,15 @@ typedef struct _EXCEPTION_REGISTRATION
 typedef EXCEPTION_REGISTRATION EXCEPTION_REGISTRATION_RECORD;
 typedef PEXCEPTION_REGISTRATION PEXCEPTION_REGISTRATION_RECORD;
 
-typedef struct RTL_DRIVE_LETTER_CURDIR 
+typedef struct RTL_DRIVE_LETTER_CURDIR
 {
     USHORT Flags;
     USHORT Length;
     ULONG TimeStamp;
     UNICODE_STRING DosPath;
 } RTL_DRIVE_LETTER_CURDIR, *PRTL_DRIVE_LETTER_CURDIR;
-     
-typedef struct _RTL_HEAP_DEFINITION 
+
+typedef struct _RTL_HEAP_DEFINITION
 {
     ULONG Length;
     ULONG Unknown[11];
@@ -270,7 +276,7 @@ typedef struct _RTL_RESOURCE
     ULONG ExclusiveWaiters;
     LONG NumberActive;
     HANDLE OwningThread;
-    ULONG TimeoutBoost; /* ?? */    
+    ULONG TimeoutBoost; /* ?? */
     PVOID DebugInfo; /* ?? */
 } RTL_RESOURCE, *PRTL_RESOURCE;
 
@@ -282,27 +288,27 @@ typedef struct _RANGE_LIST_ITERATOR
   ULONG Stamp;
 } RTL_RANGE_LIST_ITERATOR, *PRTL_RANGE_LIST_ITERATOR;
 
-typedef struct _RTL_MESSAGE_RESOURCE_ENTRY 
+typedef struct _RTL_MESSAGE_RESOURCE_ENTRY
 {
     USHORT Length;
     USHORT Flags;
     CHAR Text[1];
 } RTL_MESSAGE_RESOURCE_ENTRY, *PRTL_MESSAGE_RESOURCE_ENTRY;
 
-typedef struct _RTL_MESSAGE_RESOURCE_BLOCK 
+typedef struct _RTL_MESSAGE_RESOURCE_BLOCK
 {
     ULONG LowId;
     ULONG HighId;
     ULONG OffsetToEntries;
 } RTL_MESSAGE_RESOURCE_BLOCK, *PRTL_MESSAGE_RESOURCE_BLOCK;
 
-typedef struct _RTL_MESSAGE_RESOURCE_DATA 
+typedef struct _RTL_MESSAGE_RESOURCE_DATA
 {
     ULONG NumberOfBlocks;
     RTL_MESSAGE_RESOURCE_BLOCK Blocks[1];
 } RTL_MESSAGE_RESOURCE_DATA, *PRTL_MESSAGE_RESOURCE_DATA;
 
-typedef struct _NLS_FILE_HEADER 
+typedef struct _NLS_FILE_HEADER
 {
     USHORT  HeaderSize;
     USHORT  CodePage;
@@ -315,7 +321,7 @@ typedef struct _NLS_FILE_HEADER
     UCHAR   LeadByte[MAXIMUM_LEADBYTES];
 } NLS_FILE_HEADER, *PNLS_FILE_HEADER;
 
-typedef struct _RTL_USER_PROCESS_PARAMETERS 
+typedef struct _RTL_USER_PROCESS_PARAMETERS
 {
     ULONG  AllocationSize;
     ULONG  Size;
@@ -346,7 +352,7 @@ typedef struct _RTL_USER_PROCESS_PARAMETERS
     UNICODE_STRING  ShellInfo;
     UNICODE_STRING  RuntimeInfo;
 } RTL_USER_PROCESS_PARAMETERS, *PRTL_USER_PROCESS_PARAMETERS;
-        
+
 typedef struct _RTL_PROCESS_INFO
 {
    ULONG Size;
@@ -386,7 +392,7 @@ typedef struct _RTL_ATOM_TABLE
 
 /* Let Kernel Drivers use this */
 #ifndef _WINBASE_H
-    typedef struct _SYSTEMTIME 
+    typedef struct _SYSTEMTIME
     {
         WORD wYear;
         WORD wMonth;
@@ -398,7 +404,7 @@ typedef struct _RTL_ATOM_TABLE
         WORD wMilliseconds;
     } SYSTEMTIME, *PSYSTEMTIME, *LPSYSTEMTIME;
 
-    typedef struct _TIME_ZONE_INFORMATION 
+    typedef struct _TIME_ZONE_INFORMATION
     {
         LONG Bias;
         WCHAR StandardName[32];
@@ -408,13 +414,13 @@ typedef struct _RTL_ATOM_TABLE
         SYSTEMTIME DaylightDate;
         LONG DaylightBias;
     } TIME_ZONE_INFORMATION, *PTIME_ZONE_INFORMATION, *LPTIME_ZONE_INFORMATION;
-    
-    typedef enum _ACL_INFORMATION_CLASS 
+
+    typedef enum _ACL_INFORMATION_CLASS
     {
         AclRevisionInformation = 1,
         AclSizeInformation
     } ACL_INFORMATION_CLASS;
-    
+
     #define TIME_ZONE_ID_UNKNOWN 0
     #define TIME_ZONE_ID_STANDARD 1
     #define TIME_ZONE_ID_DAYLIGHT 2

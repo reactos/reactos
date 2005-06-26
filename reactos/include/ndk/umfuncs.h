@@ -28,7 +28,7 @@ CsrClientConnectToServer(
     PULONG Unknown2
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 CsrClientCallServer(
     struct _CSR_API_MESSAGE *Request,
@@ -37,38 +37,38 @@ CsrClientCallServer(
     ULONG RequestLength
 );
 
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 CsrIdentifyAlertableThread(VOID);
 
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 CsrNewThread(VOID);
 
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 CsrSetPriorityClass(
     HANDLE Process,
     PULONG PriorityClass
 );
 
-VOID 
-STDCALL 
+VOID
+STDCALL
 CsrProbeForRead(
     IN CONST PVOID Address,
     IN ULONG Length,
     IN ULONG Alignment
 );
 
-VOID 
-STDCALL 
+VOID
+STDCALL
 CsrProbeForWrite(
     IN CONST PVOID Address,
     IN ULONG Length,
     IN ULONG Alignment
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 CsrCaptureParameterBuffer(
     PVOID ParameterBuffer,
@@ -77,12 +77,12 @@ CsrCaptureParameterBuffer(
     PVOID* ServerAddress
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 CsrReleaseParameterBuffer(PVOID ClientAddress);
 
 /*
- * Debug Functions 
+ * Debug Functions
  */
 ULONG
 CDECL
@@ -122,22 +122,22 @@ DbgUiWaitStateChange(
     ULONG Unknown2
 );
 
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 DbgUiRemoteBreakin(VOID);
 
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 DbgUiIssueRemoteBreakin(HANDLE Process);
 
 /*
  * Loader Functions
  */
-NTSTATUS 
+NTSTATUS
 STDCALL
 LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress);
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 LdrGetDllHandle(
     IN PWCHAR Path OPTIONAL,
@@ -146,14 +146,14 @@ LdrGetDllHandle(
     OUT PVOID *BaseAddress
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 LdrFindEntryForAddress(
     IN PVOID Address,
     OUT PLDR_DATA_TABLE_ENTRY *Module
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 LdrGetProcedureAddress(
     IN PVOID BaseAddress,
@@ -162,7 +162,7 @@ LdrGetProcedureAddress(
     OUT PVOID *ProcedureAddress
 );
 
-VOID 
+VOID
 STDCALL
 LdrInitializeThunk(
     ULONG Unknown1,
@@ -171,7 +171,7 @@ LdrInitializeThunk(
     ULONG Unknown4
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 LdrLoadDll(
     IN PWSTR SearchPath OPTIONAL,
@@ -180,7 +180,7 @@ LdrLoadDll(
     OUT PVOID *BaseAddress OPTIONAL
 );
 
-PIMAGE_BASE_RELOCATION 
+PIMAGE_BASE_RELOCATION
 STDCALL
 LdrProcessRelocationBlock(
     IN PVOID Address,
@@ -189,7 +189,7 @@ LdrProcessRelocationBlock(
     IN ULONG_PTR Delta
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 LdrQueryImageFileExecutionOptions(
     IN PUNICODE_STRING SubKey,
@@ -200,7 +200,7 @@ LdrQueryImageFileExecutionOptions(
     OUT PULONG RetunedLength OPTIONAL
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 LdrQueryProcessModuleInformation(
     IN PMODULE_INFORMATION ModuleInformation OPTIONAL,
@@ -208,19 +208,19 @@ LdrQueryProcessModuleInformation(
     OUT PULONG ReturnedSize
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 LdrShutdownProcess(VOID);
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 LdrShutdownThread(VOID);
-        
-NTSTATUS 
+
+NTSTATUS
 STDCALL
 LdrUnloadDll(IN PVOID BaseAddress);
-           
-NTSTATUS 
+
+NTSTATUS
 STDCALL
 LdrVerifyImageMatchesChecksum(
     IN HANDLE FileHandle,

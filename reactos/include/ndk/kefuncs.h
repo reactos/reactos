@@ -16,7 +16,7 @@
 
 /* PROTOTYPES ****************************************************************/
 
-VOID 
+VOID
 STDCALL
 KeInitializeApc(
     IN PKAPC  Apc,
@@ -27,7 +27,7 @@ KeInitializeApc(
     IN PKNORMAL_ROUTINE  NormalRoutine,
     IN KPROCESSOR_MODE  Mode,
     IN PVOID  Context
-);    
+);
 
 VOID
 STDCALL
@@ -48,9 +48,9 @@ KiReleaseSpinLock(
 VOID
 STDCALL
 KiDeliverApc(
-    IN KPROCESSOR_MODE  PreviousMode,
-    IN PVOID  Reserved,
-    IN PKTRAP_FRAME  TrapFrame
+    IN KPROCESSOR_MODE PreviousMode,
+    IN PVOID Reserved,
+    IN PKTRAP_FRAME TrapFrame
 );
 
 VOID
@@ -81,7 +81,7 @@ STDCALL
 KeQueryRuntimeThread(
     IN PKTHREAD Thread,
     OUT PULONG UserTime
-    );    
+    );
 
 BOOLEAN
 STDCALL
@@ -104,10 +104,10 @@ KeRegisterBugCheckReasonCallback(
     IN PUCHAR Component
     );
 
-VOID 
+VOID
 STDCALL
 KeTerminateThread(
-    IN KPRIORITY        Increment       
+    IN KPRIORITY        Increment
 );
 
 BOOLEAN
@@ -127,7 +127,7 @@ KeSetEventBoostPriority(
     IN PKTHREAD *Thread OPTIONAL
 );
 
-PCONFIGURATION_COMPONENT_DATA 
+PCONFIGURATION_COMPONENT_DATA
 STDCALL
 KeFindConfigurationNextEntry(
     IN PCONFIGURATION_COMPONENT_DATA Child,
@@ -136,8 +136,8 @@ KeFindConfigurationNextEntry(
     IN PULONG ComponentKey OPTIONAL,
     IN PCONFIGURATION_COMPONENT_DATA *NextLink
 );
-                             
-PCONFIGURATION_COMPONENT_DATA 
+
+PCONFIGURATION_COMPONENT_DATA
 STDCALL
 KeFindConfigurationEntry(
     IN PCONFIGURATION_COMPONENT_DATA Child,
@@ -189,7 +189,7 @@ KeSetAffinityThread(
     PKTHREAD Thread,
     KAFFINITY Affinity
 );
-            
+
 VOID
 STDCALL
 KeSetSystemAffinityThread(
@@ -199,11 +199,11 @@ KeSetSystemAffinityThread(
 NTSTATUS
 STDCALL
 KeUserModeCallback(
-    IN ULONG    FunctionID,
-    IN PVOID    InputBuffer,
-    IN ULONG    InputLength,
-    OUT PVOID    *OutputBuffer,
-    OUT PULONG    OutputLength
+    IN ULONG FunctionID,
+    IN PVOID InputBuffer,
+    IN ULONG InputLength,
+    OUT PVOID *OutputBuffer,
+    OUT PULONG OutputLength
 );
 
 VOID
@@ -228,15 +228,15 @@ KeInitializeInterrupt(
     CHAR ProcessorNumber,
     BOOLEAN FloatingSave
 );
-    
+
 BOOLEAN
-STDCALL 
+STDCALL
 KeConnectInterrupt(
     PKINTERRUPT InterruptObject
 );
 
 BOOLEAN
-STDCALL 
+STDCALL
 KeDisconnectInterrupt(
     PKINTERRUPT InterruptObject
 );
@@ -266,7 +266,7 @@ KeInitializeMutant(
     IN PKMUTANT Mutant,
     IN BOOLEAN InitialOwner
 );
-                
+
 LONG
 STDCALL
 KeReleaseMutant(
@@ -282,8 +282,8 @@ KeRaiseUserException(
     IN NTSTATUS ExceptionCode
     );
 
-VOID 
+VOID
 STDCALL
 KeFlushWriteBuffer(VOID);
-    
+
 #endif

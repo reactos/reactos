@@ -64,51 +64,51 @@
 /* I/O Control Codes for communicating with Pipes */
 #define FSCTL_PIPE_ASSIGN_EVENT         \
     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 0, METHOD_BUFFERED, FILE_ANY_ACCESS)
-    
+
 #define FSCTL_PIPE_DISCONNECT           \
     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 1, METHOD_BUFFERED, FILE_ANY_ACCESS)
-    
+
 #define FSCTL_PIPE_LISTEN               \
     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 2, METHOD_BUFFERED, FILE_ANY_ACCESS)
-    
+
 #define FSCTL_PIPE_PEEK                 \
     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 3, METHOD_BUFFERED, FILE_READ_DATA)
-    
+
 #define FSCTL_PIPE_QUERY_EVENT          \
     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 4, METHOD_BUFFERED, FILE_ANY_ACCESS)
-    
+
 #define FSCTL_PIPE_TRANSCEIVE           \
     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 5, METHOD_NEITHER,  FILE_READ_DATA | FILE_WRITE_DATA)
-    
+
 #define FSCTL_PIPE_WAIT                 \
     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 6, METHOD_BUFFERED, FILE_ANY_ACCESS)
-    
+
 #define FSCTL_PIPE_IMPERSONATE          \
     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 7, METHOD_BUFFERED, FILE_ANY_ACCESS)
-    
+
 #define FSCTL_PIPE_SET_CLIENT_PROCESS   \
     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 8, METHOD_BUFFERED, FILE_ANY_ACCESS)
-    
+
 #define FSCTL_PIPE_QUERY_CLIENT_PROCESS \
     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 9, METHOD_BUFFERED, FILE_ANY_ACCESS)
-    
+
 #define FSCTL_PIPE_INTERNAL_READ        \
     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 2045, METHOD_BUFFERED, FILE_READ_DATA)
-    
+
 #define FSCTL_PIPE_INTERNAL_WRITE       \
     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 2046, METHOD_BUFFERED, FILE_WRITE_DATA)
-    
+
 #define FSCTL_PIPE_INTERNAL_TRANSCEIVE  \
     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 2047, METHOD_NEITHER, FILE_READ_DATA | FILE_WRITE_DATA)
-    
+
 #define FSCTL_PIPE_INTERNAL_READ_OVFLOW \
     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 2048, METHOD_BUFFERED, FILE_READ_DATA)
 
 /* Macros for current Process/Thread built-in 'special' ID */
-#define NtCurrentProcess() ( (HANDLE)(LONG_PTR) -1 )  
-#define ZwCurrentProcess() NtCurrentProcess()         
-#define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )   
-#define ZwCurrentThread() NtCurrentThread()      
+#define NtCurrentProcess() ( (HANDLE)(LONG_PTR) -1 )
+#define ZwCurrentProcess() NtCurrentProcess()
+#define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )
+#define ZwCurrentThread() NtCurrentThread()
 
 /* Kernel Shared Data Constants */
 #define PROCESSOR_FEATURE_MAX 64
@@ -190,7 +190,7 @@
 #define HASH_STRING_ALGORITHM_INVALID   0xffffffff
 
 /* List Macros */
-static __inline 
+static __inline
 VOID
 InitializeListHead(
     IN PLIST_ENTRY  ListHead)
@@ -198,7 +198,7 @@ InitializeListHead(
     ListHead->Flink = ListHead->Blink = ListHead;
 }
 
-static __inline 
+static __inline
 VOID
 InsertHeadList(
     IN PLIST_ENTRY  ListHead,
@@ -212,7 +212,7 @@ InsertHeadList(
     ListHead->Flink = Entry;
 }
 
-static __inline 
+static __inline
 VOID
 InsertTailList(
     IN PLIST_ENTRY  ListHead,
@@ -242,7 +242,7 @@ InsertTailList(
     (_Entry)->Next = (_ListHead)->Next; \
     (_ListHead)->Next = (_Entry); \
 
-static __inline 
+static __inline
 BOOLEAN
 RemoveEntryList(
     IN PLIST_ENTRY  Entry)
@@ -257,8 +257,8 @@ RemoveEntryList(
     return (OldFlink == OldBlink);
 }
 
-static __inline 
-PLIST_ENTRY 
+static __inline
+PLIST_ENTRY
 RemoveHeadList(
     IN PLIST_ENTRY  ListHead)
 {
@@ -272,7 +272,7 @@ RemoveHeadList(
     return Entry;
 }
 
-static __inline 
+static __inline
 PLIST_ENTRY
 RemoveTailList(
     IN PLIST_ENTRY  ListHead)
@@ -289,7 +289,7 @@ RemoveTailList(
 
 #define IsFirstEntry(ListHead, Entry) \
     ((ListHead)->Flink == Entry)
-  
+
 #define IsLastEntry(ListHead, Entry) \
     ((ListHead)->Blink == Entry)
 
@@ -306,14 +306,14 @@ RemoveTailList(
 /* ENUMERATIONS **************************************************************/
 
 /* Kernel Shared Data Values */
-typedef enum _NT_PRODUCT_TYPE 
+typedef enum _NT_PRODUCT_TYPE
 {
     NtProductWinNt = 1,
     NtProductLanManNt,
     NtProductServer
 } NT_PRODUCT_TYPE, *PNT_PRODUCT_TYPE;
 
-typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE 
+typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE
 {
     StandardDesign,
     NEC98x86,
@@ -329,7 +329,7 @@ typedef enum _TABLE_SEARCH_RESULT
     TableInsertAsRight
 } TABLE_SEARCH_RESULT;
 
-typedef enum _RTL_GENERIC_COMPARE_RESULTS 
+typedef enum _RTL_GENERIC_COMPARE_RESULTS
 {
     GenericLessThan,
     GenericGreaterThan,
@@ -337,13 +337,13 @@ typedef enum _RTL_GENERIC_COMPARE_RESULTS
 } RTL_GENERIC_COMPARE_RESULTS;
 
 /* Kernel or Native Enumerations used by Native API */
-typedef enum _SECTION_INHERIT 
+typedef enum _SECTION_INHERIT
 {
     ViewShare = 1,
     ViewUnmap = 2
 } SECTION_INHERIT;
 
-typedef enum _POOL_TYPE 
+typedef enum _POOL_TYPE
 {
     NonPagedPool,
     PagedPool,
@@ -362,25 +362,25 @@ typedef enum _POOL_TYPE
     NonPagedPoolCacheAlignedMustSSession
 } POOL_TYPE;
 
-typedef enum _EVENT_TYPE 
+typedef enum _EVENT_TYPE
 {
     NotificationEvent,
     SynchronizationEvent
 } EVENT_TYPE;
 
-typedef enum _TIMER_TYPE 
+typedef enum _TIMER_TYPE
 {
     NotificationTimer,
     SynchronizationTimer
 } TIMER_TYPE;
 
-typedef enum _WAIT_TYPE 
+typedef enum _WAIT_TYPE
 {
     WaitAll,
     WaitAny
 } WAIT_TYPE;
 
-typedef enum _INTERFACE_TYPE 
+typedef enum _INTERFACE_TYPE
 {
     InterfaceTypeUndefined = -1,
     Internal,
@@ -402,7 +402,7 @@ typedef enum _INTERFACE_TYPE
     MaximumInterfaceType
 }INTERFACE_TYPE, *PINTERFACE_TYPE;
 
-typedef enum _MODE 
+typedef enum _MODE
 {
     KernelMode,
     UserMode,
@@ -448,7 +448,7 @@ typedef enum _KWAIT_REASON
     MaximumWaitReason
 } KWAIT_REASON;
 
-typedef enum _KPROFILE_SOURCE 
+typedef enum _KPROFILE_SOURCE
 {
     ProfileTime,
     ProfileAlignmentFixup,
@@ -482,7 +482,7 @@ typedef enum _KPROFILE_SOURCE
 /*
  * File
  */
-typedef enum _FILE_INFORMATION_CLASS 
+typedef enum _FILE_INFORMATION_CLASS
 {
     FileDirectoryInformation = 1,
     FileFullDirectoryInformation,
@@ -547,7 +547,7 @@ typedef enum _FSINFOCLASS
 /*
  * Registry Key
  */
-typedef enum _KEY_INFORMATION_CLASS 
+typedef enum _KEY_INFORMATION_CLASS
 {
     KeyBasicInformation,
     KeyNodeInformation,
@@ -560,7 +560,7 @@ typedef enum _KEY_INFORMATION_CLASS
 /*
  * Registry Key Value
  */
-typedef enum _KEY_VALUE_INFORMATION_CLASS 
+typedef enum _KEY_VALUE_INFORMATION_CLASS
 {
     KeyValueBasicInformation,
     KeyValueFullInformation,
@@ -572,7 +572,7 @@ typedef enum _KEY_VALUE_INFORMATION_CLASS
 /*
  * Registry Key Set
  */
-typedef enum _KEY_SET_INFORMATION_CLASS 
+typedef enum _KEY_SET_INFORMATION_CLASS
 {
     KeyWriteTimeInformation,
     KeyUserFlagsInformation,
@@ -582,7 +582,7 @@ typedef enum _KEY_SET_INFORMATION_CLASS
 /*
  * Process
  */
-typedef enum _PROCESSINFOCLASS 
+typedef enum _PROCESSINFOCLASS
 {
     ProcessBasicInformation,
     ProcessQuotaLimits,
@@ -623,7 +623,7 @@ typedef enum _PROCESSINFOCLASS
 /*
  * Thread
  */
-typedef enum _THREADINFOCLASS 
+typedef enum _THREADINFOCLASS
 {
     ThreadBasicInformation,
     ThreadTimes,
@@ -671,7 +671,7 @@ typedef ULONG EXECUTION_STATE;
 
 /* Basic NT Types */
 #if !defined(_NTSECAPI_H) && !defined(_SUBAUTH_H)
-typedef struct _UNICODE_STRING 
+typedef struct _UNICODE_STRING
 {
     USHORT Length;
     USHORT MaximumLength;
@@ -679,20 +679,20 @@ typedef struct _UNICODE_STRING
 } UNICODE_STRING, *PUNICODE_STRING;
 typedef const UNICODE_STRING* PCUNICODE_STRING;
 
-typedef struct _STRING 
+typedef struct _STRING
 {
     USHORT Length;
     USHORT MaximumLength;
     PCHAR  Buffer;
 } STRING, *PSTRING;
 
-typedef struct _OBJECT_ATTRIBUTES 
+typedef struct _OBJECT_ATTRIBUTES
 {
     ULONG Length;
     HANDLE RootDirectory;
     PUNICODE_STRING ObjectName;
-    ULONG Attributes;                      
-    PVOID SecurityDescriptor;              
+    ULONG Attributes;
+    PVOID SecurityDescriptor;
     PVOID SecurityQualityOfService;
 } OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 #endif
@@ -702,9 +702,9 @@ typedef PSTRING PANSI_STRING;
 typedef STRING OEM_STRING;
 typedef PSTRING POEM_STRING;
 
-typedef struct _IO_STATUS_BLOCK 
+typedef struct _IO_STATUS_BLOCK
 {
-    union 
+    union
     {
         NTSTATUS  Status;
         PVOID  Pointer;
@@ -717,13 +717,13 @@ typedef VOID NTAPI
     IN PVOID ApcContext,
     IN PIO_STATUS_BLOCK IoStatusBlock,
     IN ULONG Reserved);
-  
+
 typedef VOID NTAPI
 (*PKNORMAL_ROUTINE)(
     IN PVOID  NormalContext,
     IN PVOID  SystemArgument1,
     IN PVOID  SystemArgument2);
-  
+
 typedef VOID NTAPI
 (*PTIMER_APC_ROUTINE)(
     IN PVOID  TimerContext,
@@ -733,7 +733,7 @@ typedef VOID NTAPI
 /* Kernel Types which are returned or used by Native API */
 typedef struct _OBJECT_NAME_INFORMATION
 {
-    UNICODE_STRING Name;                                
+    UNICODE_STRING Name;
 } OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;
 
 typedef struct _IO_ERROR_LOG_PACKET
@@ -763,13 +763,13 @@ typedef struct _IO_ERROR_LOG_MESSAGE
     IO_ERROR_LOG_PACKET EntryData;
 } IO_ERROR_LOG_MESSAGE, *PIO_ERROR_LOG_MESSAGE;
 
-typedef struct _CLIENT_ID 
+typedef struct _CLIENT_ID
 {
     HANDLE  UniqueProcess;
     HANDLE  UniqueThread;
-} CLIENT_ID, *PCLIENT_ID; 
+} CLIENT_ID, *PCLIENT_ID;
 
-typedef struct _KSYSTEM_TIME 
+typedef struct _KSYSTEM_TIME
 {
     ULONG LowPart;
     LONG High1Time;
@@ -788,7 +788,7 @@ typedef struct _TIME_FIELDS
     CSHORT Weekday;
 } TIME_FIELDS, *PTIME_FIELDS;
 
-typedef struct _VM_COUNTERS 
+typedef struct _VM_COUNTERS
 {
     SIZE_T PeakVirtualSize;
     SIZE_T VirtualSize;
@@ -803,7 +803,7 @@ typedef struct _VM_COUNTERS
     SIZE_T PeakPagefileUsage;
 } VM_COUNTERS, *PVM_COUNTERS;
 
-typedef struct _VM_COUNTERS_EX 
+typedef struct _VM_COUNTERS_EX
 {
     SIZE_T PeakVirtualSize;
     SIZE_T VirtualSize;
@@ -824,7 +824,7 @@ typedef struct _VM_COUNTERS_EX
 /*
  * Registry Key Set
  */
- 
+
 /* Class 0 */
 typedef struct _KEY_WRITE_TIME_INFORMATION
 {
@@ -832,7 +832,7 @@ typedef struct _KEY_WRITE_TIME_INFORMATION
 } KEY_WRITE_TIME_INFORMATION, *PKEY_WRITE_TIME_INFORMATION;
 
 /* Class 1 */
-typedef struct _KEY_USER_FLAGS_INFORMATION 
+typedef struct _KEY_USER_FLAGS_INFORMATION
 {
     ULONG UserFlags;
 } KEY_USER_FLAGS_INFORMATION, *PKEY_USER_FLAGS_INFORMATION;
@@ -852,7 +852,7 @@ typedef struct _KEY_FULL_INFORMATION
     WCHAR Class[1];
 } KEY_FULL_INFORMATION, *PKEY_FULL_INFORMATION;
 
-typedef struct _KEY_NODE_INFORMATION 
+typedef struct _KEY_NODE_INFORMATION
 {
     LARGE_INTEGER LastWriteTime;
     ULONG TitleIndex;
@@ -862,12 +862,12 @@ typedef struct _KEY_NODE_INFORMATION
     WCHAR Name[1];
 } KEY_NODE_INFORMATION, *PKEY_NODE_INFORMATION;
 
-/* 
+/*
  * File
  */
- 
+
 /* Class 1 */
-typedef struct _FILE_BASIC_INFORMATION 
+typedef struct _FILE_BASIC_INFORMATION
 {
     LARGE_INTEGER CreationTime;
     LARGE_INTEGER LastAccessTime;
@@ -886,29 +886,29 @@ typedef struct _FILE_STANDARD_INFORMATION
     BOOLEAN Directory;
 } FILE_STANDARD_INFORMATION, *PFILE_STANDARD_INFORMATION;
 
-typedef struct _FILE_NETWORK_OPEN_INFORMATION 
+typedef struct _FILE_NETWORK_OPEN_INFORMATION
 {
-    LARGE_INTEGER CreationTime;                                 
-    LARGE_INTEGER LastAccessTime;                               
-    LARGE_INTEGER LastWriteTime;                                
-    LARGE_INTEGER ChangeTime;                                   
-    LARGE_INTEGER AllocationSize;                               
-    LARGE_INTEGER EndOfFile;                                    
-    ULONG FileAttributes;                                       
-} FILE_NETWORK_OPEN_INFORMATION, *PFILE_NETWORK_OPEN_INFORMATION;   
+    LARGE_INTEGER CreationTime;
+    LARGE_INTEGER LastAccessTime;
+    LARGE_INTEGER LastWriteTime;
+    LARGE_INTEGER ChangeTime;
+    LARGE_INTEGER AllocationSize;
+    LARGE_INTEGER EndOfFile;
+    ULONG FileAttributes;
+} FILE_NETWORK_OPEN_INFORMATION, *PFILE_NETWORK_OPEN_INFORMATION;
 
-typedef struct _FILE_ZERO_DATA_INFORMATION 
+typedef struct _FILE_ZERO_DATA_INFORMATION
 {
     LARGE_INTEGER FileOffset;
     LARGE_INTEGER BeyondFinalZero;
 } FILE_ZERO_DATA_INFORMATION, *PFILE_ZERO_DATA_INFORMATION;
 
-typedef struct _FILE_EA_INFORMATION 
+typedef struct _FILE_EA_INFORMATION
 {
     ULONG EaSize;
 } FILE_EA_INFORMATION, *PFILE_EA_INFORMATION;
 
-typedef struct _FILE_COMPRESSION_INFORMATION 
+typedef struct _FILE_COMPRESSION_INFORMATION
 {
     LARGE_INTEGER   CompressedFileSize;
     USHORT          CompressionFormat;
@@ -923,12 +923,12 @@ typedef struct _FILE_POSITION_INFORMATION
   LARGE_INTEGER  CurrentByteOffset;
 } FILE_POSITION_INFORMATION, *PFILE_POSITION_INFORMATION;
 
-typedef struct _FILE_DISPOSITION_INFORMATION 
+typedef struct _FILE_DISPOSITION_INFORMATION
 {
     BOOLEAN  DeleteFile;
 } FILE_DISPOSITION_INFORMATION, *PFILE_DISPOSITION_INFORMATION;
 
-typedef struct FILE_ALLOCATED_RANGE_BUFFER 
+typedef struct FILE_ALLOCATED_RANGE_BUFFER
 {
     LARGE_INTEGER FileOffset;
     LARGE_INTEGER Length;
@@ -953,7 +953,7 @@ typedef struct _FILE_QUOTA_INFORMATION
     LARGE_INTEGER QuotaLimit;
     SID Sid;
 } FILE_QUOTA_INFORMATION, *PFILE_QUOTA_INFORMATION;
-  
+
 typedef struct _FILE_INTERNAL_INFORMATION
 {
     LARGE_INTEGER IndexNumber;
@@ -1007,7 +1007,7 @@ typedef struct _FILE_MAILSLOT_SET_INFORMATION
     LARGE_INTEGER ReadTimeout;
 } FILE_MAILSLOT_SET_INFORMATION, *PFILE_MAILSLOT_SET_INFORMATION;
 
-typedef struct _FILE_BOTH_DIR_INFORMATION 
+typedef struct _FILE_BOTH_DIR_INFORMATION
 {
     ULONG NextEntryOffset;
     ULONG FileIndex;
@@ -1025,7 +1025,7 @@ typedef struct _FILE_BOTH_DIR_INFORMATION
     WCHAR FileName[1];
 } FILE_BOTH_DIR_INFORMATION, *PFILE_BOTH_DIR_INFORMATION;
 
-typedef struct _FILE_COMPLETION_INFORMATION 
+typedef struct _FILE_COMPLETION_INFORMATION
 {
     HANDLE Port;
     PVOID Key;
@@ -1039,7 +1039,7 @@ typedef struct _FILE_LINK_INFORMATION
     WCHAR FileName[1];
 } FILE_LINK_INFORMATION, *PFILE_LINK_INFORMATION;
 
-typedef struct _FILE_NAME_INFORMATION 
+typedef struct _FILE_NAME_INFORMATION
 {
     ULONG FileNameLength;
     WCHAR FileName[1];
@@ -1063,7 +1063,7 @@ typedef struct _FILE_VALID_DATA_LENGTH_INFORMATION
 /*
  * File System
  */
-typedef struct _FILE_FS_DEVICE_INFORMATION 
+typedef struct _FILE_FS_DEVICE_INFORMATION
 {
     DEVICE_TYPE DeviceType;
     ULONG Characteristics;
@@ -1105,7 +1105,7 @@ typedef struct _FILE_FS_VOLUME_INFORMATION
  */
 
 /* Class 0 */
-typedef struct _KEY_VALUE_ENTRY 
+typedef struct _KEY_VALUE_ENTRY
 {
     PUNICODE_STRING ValueName;
     ULONG DataLength;
@@ -1114,7 +1114,7 @@ typedef struct _KEY_VALUE_ENTRY
 } KEY_VALUE_ENTRY, *PKEY_VALUE_ENTRY;
 
 /* Class 1 */
-typedef struct _KEY_VALUE_PARTIAL_INFORMATION 
+typedef struct _KEY_VALUE_PARTIAL_INFORMATION
 {
     ULONG TitleIndex;
     ULONG Type;
@@ -1123,7 +1123,7 @@ typedef struct _KEY_VALUE_PARTIAL_INFORMATION
 } KEY_VALUE_PARTIAL_INFORMATION, *PKEY_VALUE_PARTIAL_INFORMATION;
 
 /* Class 2 */
-typedef struct _KEY_VALUE_BASIC_INFORMATION 
+typedef struct _KEY_VALUE_BASIC_INFORMATION
 {
     ULONG TitleIndex;
     ULONG Type;
@@ -1132,7 +1132,7 @@ typedef struct _KEY_VALUE_BASIC_INFORMATION
 } KEY_VALUE_BASIC_INFORMATION, *PKEY_VALUE_BASIC_INFORMATION;
 
 /* Class 3 */
-typedef struct _KEY_VALUE_FULL_INFORMATION 
+typedef struct _KEY_VALUE_FULL_INFORMATION
 {
     ULONG TitleIndex;
     ULONG Type;
@@ -1147,7 +1147,7 @@ typedef struct _KEY_VALUE_FULL_INFORMATION
  */
 
 /* Class 0 */
-typedef struct _KEY_BASIC_INFORMATION 
+typedef struct _KEY_BASIC_INFORMATION
 {
     LARGE_INTEGER LastWriteTime;
     ULONG TitleIndex;
@@ -1174,7 +1174,7 @@ typedef struct _FILE_PIPE_PEEK_BUFFER
 } FILE_PIPE_PEEK_BUFFER, *PFILE_PIPE_PEEK_BUFFER;
 
 /* The Kerner/User Shared Data Structure */
-typedef struct _KUSER_SHARED_DATA 
+typedef struct _KUSER_SHARED_DATA
 {
     ULONG TickCountLowDeprecated;
     ULONG TickCountMultiplier;
@@ -1229,7 +1229,7 @@ typedef struct _RTL_BITMAP_RUN
     ULONG NumberOfBits;
 } RTL_BITMAP_RUN, *PRTL_BITMAP_RUN;
 
-typedef struct _COMPRESSED_DATA_INFO 
+typedef struct _COMPRESSED_DATA_INFO
 {
     USHORT  CompressionFormatAndEngine;
     UCHAR   CompressionUnitShift;
@@ -1240,7 +1240,7 @@ typedef struct _COMPRESSED_DATA_INFO
     ULONG   CompressedChunkSizes[ANYSIZE_ARRAY];
 } COMPRESSED_DATA_INFO, *PCOMPRESSED_DATA_INFO;
 
-typedef struct _GENERATE_NAME_CONTEXT 
+typedef struct _GENERATE_NAME_CONTEXT
 {
     USHORT  Checksum;
     BOOLEAN CheckSumInserted;
@@ -1251,7 +1251,7 @@ typedef struct _GENERATE_NAME_CONTEXT
     ULONG   LastIndexValue;
 } GENERATE_NAME_CONTEXT, *PGENERATE_NAME_CONTEXT;
 
-typedef struct _RTL_SPLAY_LINKS 
+typedef struct _RTL_SPLAY_LINKS
 {
     struct _RTL_SPLAY_LINKS *Parent;
     struct _RTL_SPLAY_LINKS *LeftChild;
@@ -1261,7 +1261,7 @@ typedef struct _RTL_SPLAY_LINKS
 struct _RTL_AVL_TABLE;
 struct _RTL_GENERIC_TABLE;
 
-typedef NTSTATUS STDCALL 
+typedef NTSTATUS STDCALL
 (*PRTL_AVL_MATCH_FUNCTION)(
     struct _RTL_AVL_TABLE *Table,
     PVOID UserData,
@@ -1293,7 +1293,7 @@ typedef VOID STDCALL
     struct _RTL_GENERIC_TABLE *Table,
     PVOID Buffer
 );
-    
+
 typedef VOID STDCALL
 (*PRTL_AVL_ALLOCATE_ROUTINE) (
     struct _RTL_AVL_TABLE *Table,
@@ -1306,7 +1306,7 @@ typedef VOID STDCALL
     PVOID Buffer
 );
 
-typedef struct _RTL_GENERIC_TABLE 
+typedef struct _RTL_GENERIC_TABLE
 {
     PRTL_SPLAY_LINKS TableRoot;
     LIST_ENTRY InsertOrderList;
@@ -1319,7 +1319,7 @@ typedef struct _RTL_GENERIC_TABLE
     PVOID TableContext;
 } RTL_GENERIC_TABLE, *PRTL_GENERIC_TABLE;
 
-typedef struct _RTL_BALANCED_LINKS 
+typedef struct _RTL_BALANCED_LINKS
 {
     struct _RTL_BALANCED_LINKS *Parent;
     struct _RTL_BALANCED_LINKS *LeftChild;
@@ -1327,8 +1327,8 @@ typedef struct _RTL_BALANCED_LINKS
     CHAR Balance;
     UCHAR Reserved[3];
 } RTL_BALANCED_LINKS, *PRTL_BALANCED_LINKS;
-   
-typedef struct _RTL_AVL_TABLE 
+
+typedef struct _RTL_AVL_TABLE
 {
     RTL_BALANCED_LINKS BalancedRoot;
     PVOID OrderedPointer;
@@ -1353,7 +1353,7 @@ typedef NTSTATUS STDCALL
     IN PVOID EntryContext
 );
 
-typedef struct _RTL_QUERY_REGISTRY_TABLE 
+typedef struct _RTL_QUERY_REGISTRY_TABLE
 {
     PRTL_QUERY_REGISTRY_ROUTINE QueryRoutine;
     ULONG Flags;
@@ -1364,7 +1364,7 @@ typedef struct _RTL_QUERY_REGISTRY_TABLE
     ULONG DefaultLength;
 } RTL_QUERY_REGISTRY_TABLE, *PRTL_QUERY_REGISTRY_TABLE;
 
-typedef struct _UNICODE_PREFIX_TABLE_ENTRY 
+typedef struct _UNICODE_PREFIX_TABLE_ENTRY
 {
     CSHORT NodeTypeCode;
     CSHORT NameLength;
@@ -1374,7 +1374,7 @@ typedef struct _UNICODE_PREFIX_TABLE_ENTRY
     PUNICODE_STRING Prefix;
 } UNICODE_PREFIX_TABLE_ENTRY, *PUNICODE_PREFIX_TABLE_ENTRY;
 
-typedef struct _UNICODE_PREFIX_TABLE 
+typedef struct _UNICODE_PREFIX_TABLE
 {
     CSHORT NodeTypeCode;
     CSHORT NameLength;

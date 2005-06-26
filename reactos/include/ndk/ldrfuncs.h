@@ -42,5 +42,5 @@ LdrGetProcedureAddress(
     IN ULONG Ordinal,
     OUT PVOID *ProcedureAddress
 );
-                  
+
 #endif

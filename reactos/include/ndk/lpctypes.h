@@ -21,7 +21,7 @@
 
 /* ENUMERATIONS **************************************************************/
 
-typedef enum _LPC_TYPE 
+typedef enum _LPC_TYPE
 {
     LPC_NEW_MESSAGE,
     LPC_REQUEST,
@@ -41,7 +41,8 @@ typedef enum _LPC_TYPE
 /* TYPES *********************************************************************/
 
 /* FIXME: USE REAL DEFINITION */
-typedef struct _LPC_MESSAGE {
+typedef struct _LPC_MESSAGE
+{
     USHORT  DataSize;
     USHORT  MessageSize;
     USHORT  MessageType;
@@ -52,7 +53,7 @@ typedef struct _LPC_MESSAGE {
 } LPC_MESSAGE, *PLPC_MESSAGE;
 
 /* FIXME: USE REAL DEFINITION */
-typedef struct _LPC_SECTION_WRITE 
+typedef struct _LPC_SECTION_WRITE
 {
     ULONG  Length;
     HANDLE  SectionHandle;
@@ -63,15 +64,15 @@ typedef struct _LPC_SECTION_WRITE
 } LPC_SECTION_WRITE, *PLPC_SECTION_WRITE;
 
 /* FIXME: USE REAL DEFINITION */
-typedef struct _LPC_SECTION_READ 
+typedef struct _LPC_SECTION_READ
 {
     ULONG  Length;
     ULONG  ViewSize;
     PVOID  ViewBase;
-} LPC_SECTION_READ, *PLPC_SECTION_READ; 
+} LPC_SECTION_READ, *PLPC_SECTION_READ;
 
 /* FIXME: USE REAL DEFINITION */
-typedef struct _LPC_MAX_MESSAGE 
+typedef struct _LPC_MAX_MESSAGE
 {
     LPC_MESSAGE Header;
     BYTE Data[MAX_MESSAGE_DATA];

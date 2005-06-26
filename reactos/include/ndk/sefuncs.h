@@ -32,7 +32,7 @@ SeReleaseSecurityDescriptor(
     IN KPROCESSOR_MODE CurrentMode,
     IN BOOLEAN CaptureIfKernelMode
 );
-    
+
 SECURITY_IMPERSONATION_LEVEL
 STDCALL
 SeTokenImpersonationLevel(
