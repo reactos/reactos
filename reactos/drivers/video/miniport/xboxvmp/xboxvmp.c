@@ -366,7 +366,7 @@ XboxVmpMapVideoMemory(
                                           sizeof(SYSTEM_BASIC_INFORMATION),
                                           &Length)))
     {
-      FrameBuffer.u.LowPart = BasicInfo.HighestPhysicalPage * PAGE_SIZE;
+      FrameBuffer.u.LowPart = BasicInfo.HighestPhysicalPageNumber * PAGE_SIZE;
     }
   else
     {

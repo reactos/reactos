@@ -19,20 +19,10 @@
 /* $Id$
  *
  */
-
-#include <ddk/ntddk.h>
-#include <ddk/winddi.h>
-#include <ddk/ntapi.h>
+#include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>
-
-#ifdef __USE_W32API
-PIMAGE_NT_HEADERS STDCALL
-RtlImageNtHeader(PVOID);
-PVOID STDCALL
-RtlImageDirectoryEntryToData(PVOID,BOOLEAN,ULONG,PULONG);
-#endif
 
 /*
  * Blatantly stolen from ldr/utils.c in ntdll.  I can't link ntdll from
@@ -198,14 +188,14 @@ HANDLE
 STDCALL
 EngLoadImage (LPWSTR DriverName)
 {
-  SYSTEM_LOAD_IMAGE GdiDriverInfo;
+  SYSTEM_GDI_DRIVER_INFORMATION GdiDriverInfo;
   NTSTATUS Status;
 
-  RtlInitUnicodeString(&GdiDriverInfo.ModuleName, DriverName);
-  Status = ZwSetSystemInformation(SystemLoadImage, &GdiDriverInfo, sizeof(SYSTEM_LOAD_IMAGE));
+  RtlInitUnicodeString(&GdiDriverInfo.DriverName, DriverName);
+  Status = ZwSetSystemInformation(SystemLoadGdiDriverInformation, &GdiDriverInfo, sizeof(SYSTEM_GDI_DRIVER_INFORMATION));
   if (!NT_SUCCESS(Status)) return NULL;
 
-  return (HANDLE)GdiDriverInfo.ModuleBase;
+  return (HANDLE)GdiDriverInfo.ImageAddress;
 }
 
 
@@ -216,16 +206,16 @@ HANDLE
 STDCALL
 EngLoadModule(LPWSTR ModuleName)
 {
-  SYSTEM_LOAD_IMAGE GdiDriverInfo;
+  SYSTEM_GDI_DRIVER_INFORMATION GdiDriverInfo;
   NTSTATUS Status;
 
   // FIXME: should load as readonly
 
-  RtlInitUnicodeString (&GdiDriverInfo.ModuleName, ModuleName);
-  Status = ZwSetSystemInformation (SystemLoadImage, &GdiDriverInfo, sizeof(SYSTEM_LOAD_IMAGE));
+  RtlInitUnicodeString (&GdiDriverInfo.DriverName, ModuleName);
+  Status = ZwSetSystemInformation (SystemLoadGdiDriverInformation, &GdiDriverInfo, sizeof(SYSTEM_GDI_DRIVER_INFORMATION));
   if (!NT_SUCCESS(Status)) return NULL;
 
-  return (HANDLE)GdiDriverInfo.ModuleBase;
+  return (HANDLE)GdiDriverInfo.ImageAddress;
 }
 
 /* EOF */

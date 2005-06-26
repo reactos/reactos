@@ -27,7 +27,6 @@
 #include <ddk/miniport.h>
 #include <ddk/video.h>
 #include <ddk/ntddvdeo.h>
-#include <ddk/ntapi.h>
 
 /*
  * Compile-time define to get VBE 1.2 support. The implementation

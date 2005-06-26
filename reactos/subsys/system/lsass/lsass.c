@@ -26,9 +26,9 @@
  * 	19990704 (Emanuele Aliberti)
  * 		Compiled successfully with egcs 1.1.2
  */
-#include <ddk/ntddk.h>
 #include <windows.h>
-#include <ddk/ntapi.h>
+#include NTOS_MODE_USER
+#include <ndk/ntndk.h>
 #include <lsass/lsasrv.h>
 
 #define NDEBUG
