@@ -47,6 +47,16 @@ PWINSTATION_OBJECT InputWindowStation = NULL;
 
 /* INITALIZATION FUNCTIONS ****************************************************/
 
+static GENERIC_MAPPING IntWindowStationMapping =
+{
+   STANDARD_RIGHTS_READ     | WINSTA_ENUMDESKTOPS      | WINSTA_ENUMERATE         | WINSTA_READATTRIBUTES | WINSTA_READSCREEN,
+   STANDARD_RIGHTS_WRITE    | WINSTA_ACCESSCLIPBOARD   | WINSTA_CREATEDESKTOP     | WINSTA_WRITEATTRIBUTES,
+   STANDARD_RIGHTS_EXECUTE  | WINSTA_ACCESSGLOBALATOMS | WINSTA_EXITWINDOWS,
+   STANDARD_RIGHTS_REQUIRED | WINSTA_ACCESSCLIPBOARD   | WINSTA_ACCESSGLOBALATOMS | WINSTA_CREATEDESKTOP  |
+                              WINSTA_ENUMDESKTOPS      | WINSTA_ENUMERATE         | WINSTA_EXITWINDOWS    |
+                              WINSTA_READATTRIBUTES    | WINSTA_READSCREEN        | WINSTA_WRITEATTRIBUTES
+};
+
 NTSTATUS FASTCALL
 InitWindowStationImpl(VOID)
 {
@@ -72,8 +82,8 @@ InitWindowStationImpl(VOID)
    }
    
    /* Set Winsta Object Attributes */
-   ExWindowStationObjectType->TypeInfo.DefaultNonPagedPoolCharge =   sizeof(WINSTATION_OBJECT);
-   /* FIXME: Set Generic Mapping correctly */
+   ExWindowStationObjectType->TypeInfo.DefaultNonPagedPoolCharge = sizeof(WINSTATION_OBJECT);
+   ExWindowStationObjectType->TypeInfo.GenericMapping = IntWindowStationMapping;
    
    return STATUS_SUCCESS;
 }

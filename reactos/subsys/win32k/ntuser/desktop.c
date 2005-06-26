@@ -41,12 +41,23 @@ BOOL g_PaintDesktopVersion = FALSE;
 
 /* INITALIZATION FUNCTIONS ****************************************************/
 
+static GENERIC_MAPPING IntDesktopMapping =
+{
+   STANDARD_RIGHTS_READ     | DESKTOP_ENUMERATE       | DESKTOP_READOBJECTS,
+   STANDARD_RIGHTS_WRITE    | DESKTOP_CREATEMENU      | DESKTOP_CREATEWINDOW    | DESKTOP_HOOKCONTROL   |
+                              DESKTOP_JOURNALPLAYBACK | DESKTOP_JOURNALRECORD   | DESKTOP_WRITEOBJECTS,
+   STANDARD_RIGHTS_EXECUTE  | DESKTOP_SWITCHDESKTOP,
+   STANDARD_RIGHTS_REQUIRED | DESKTOP_CREATEMENU      | DESKTOP_CREATEWINDOW    | DESKTOP_ENUMERATE     |
+                              DESKTOP_HOOKCONTROL     | DESKTOP_JOURNALPLAYBACK | DESKTOP_JOURNALRECORD |
+                              DESKTOP_READOBJECTS     | DESKTOP_SWITCHDESKTOP   | DESKTOP_WRITEOBJECTS
+};
+
 NTSTATUS FASTCALL
 InitDesktopImpl(VOID)
 {
    /* Set Desktop Object Attributes */
    ExDesktopObjectType->TypeInfo.DefaultNonPagedPoolCharge = sizeof(DESKTOP_OBJECT);
-   /* FIXME: Set Generic Mapping correctly */
+   ExDesktopObjectType->TypeInfo.GenericMapping = IntDesktopMapping;
    
   return STATUS_SUCCESS;
 }

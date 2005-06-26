@@ -1206,7 +1206,7 @@ ObFindHandleForObject(IN PEPROCESS Process,
                       IN POBJECT_HANDLE_INFORMATION HandleInformation,
                       OUT PHANDLE HandleReturn)
 {
-  UNIMPLEMENTED;
+  DPRINT("ObFindHandleForObject is unimplemented!\n");
   return STATUS_UNSUCCESSFUL;
 }
 
