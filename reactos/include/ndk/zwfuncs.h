@@ -19,7 +19,6 @@
 
 /* PROTOTYPES ****************************************************************/
 
-/* FIXME: FILE NEEDS CLEANUP */
 NTSTATUS
 STDCALL
 NtAcceptConnectPort(

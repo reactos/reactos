@@ -16,8 +16,6 @@
 
 /* PROTOTYPES ****************************************************************/
 
-/* FIXME: FILE NEEDS SOME ALPHABETIZING AND REGROUP */
-
 /*
  * Error and Exception Functions
  */
@@ -60,10 +58,10 @@ RtlRaiseStatus(NTSTATUS Status);
 VOID
 STDCALL
 RtlUnwind(
-  PEXCEPTION_REGISTRATION RegistrationFrame,
-  PVOID ReturnAddress,
-  PEXCEPTION_RECORD ExceptionRecord,
-  DWORD EaxValue
+    PEXCEPTION_REGISTRATION RegistrationFrame,
+    PVOID ReturnAddress,
+    PEXCEPTION_RECORD ExceptionRecord,
+    DWORD EaxValue
 );
 
 /*
@@ -759,10 +757,6 @@ RtlOemToUnicodeN(
 );
 
 /*
- * Ansi->Multibyte String Functions
- */
-
-/*
  * Ansi->Unicode String Functions
  */
 NTSTATUS
@@ -842,6 +836,14 @@ STDCALL
 RtlInitUnicodeString(
   IN OUT PUNICODE_STRING  DestinationString,
   IN PCWSTR  SourceString);
+
+ULONG
+STDCALL
+RtlIsTextUnicode(
+    PVOID Buffer,
+    ULONG Length,
+    ULONG *Flags
+);
 
 BOOLEAN
 STDCALL
@@ -979,8 +981,6 @@ RtlFillMemoryUlong(
 /*
  * Process Management Functions
  */
-/* FIXME: Some of these will be split up into enviro/path functions */
-
 VOID
 STDCALL
 RtlAcquirePebLock(VOID);
@@ -1017,21 +1017,6 @@ RtlCreateUserProcess(
 
 NTSTATUS
 STDCALL
-RtlDestroyProcessParameters(IN PRTL_USER_PROCESS_PARAMETERS ProcessParameters);
-
-VOID
-STDCALL
-RtlReleasePebLock(VOID);
-
-NTSTATUS
-STDCALL
-RtlCreateEnvironment(
-    BOOLEAN Inherit,
-    PWSTR *Environment
-);
-
-NTSTATUS
-STDCALL
 RtlCreateUserThread(
     IN HANDLE ProcessHandle,
     IN PSECURITY_DESCRIPTOR SecurityDescriptor,
@@ -1047,24 +1032,33 @@ RtlCreateUserThread(
 
 PRTL_USER_PROCESS_PARAMETERS
 STDCALL
-RtlDeNormalizeProcessParams(
-    IN PRTL_USER_PROCESS_PARAMETERS ProcessParameters
+RtlDeNormalizeProcessParams(IN PRTL_USER_PROCESS_PARAMETERS ProcessParameters);
+
+NTSTATUS
+STDCALL
+RtlDestroyProcessParameters(IN PRTL_USER_PROCESS_PARAMETERS ProcessParameters);
+
+PRTL_USER_PROCESS_PARAMETERS
+STDCALL
+RtlNormalizeProcessParams(IN PRTL_USER_PROCESS_PARAMETERS ProcessParameters);
+
+VOID
+STDCALL
+RtlReleasePebLock(VOID);
+
+/*
+ * Environment/Path Functions
+ */
+NTSTATUS
+STDCALL
+RtlCreateEnvironment(
+    BOOLEAN Inherit,
+    PWSTR *Environment
 );
 
 VOID
 STDCALL
-RtlDestroyEnvironment(
-    PWSTR Environment
-);
-
-NTSTATUS
-STDCALL
-RtlExpandEnvironmentStrings_U(
-    PWSTR Environment,
-    PUNICODE_STRING Source,
-    PUNICODE_STRING Destination,
-    PULONG Length
-);
+RtlDestroyEnvironment(PWSTR Environment);
 
 BOOLEAN
 STDCALL
@@ -1085,6 +1079,24 @@ RtlDosSearchPath_U(
     WCHAR **shortname
 );
 
+BOOLEAN
+STDCALL
+RtlDosPathNameToNtPathName_U(
+    PWSTR DosName,
+    PUNICODE_STRING NtName,
+    PWSTR *ShortName,
+    PCURDIR CurrentDirectory
+);
+
+NTSTATUS
+STDCALL
+RtlExpandEnvironmentStrings_U(
+    PWSTR Environment,
+    PUNICODE_STRING Source,
+    PUNICODE_STRING Destination,
+    PULONG Length
+);
+
 ULONG
 STDCALL
 RtlGetCurrentDirectory_U(
@@ -1101,10 +1113,12 @@ RtlGetFullPathName_U(
     WCHAR **shortname
 );
 
-PRTL_USER_PROCESS_PARAMETERS
+BOOLEAN
 STDCALL
-RtlNormalizeProcessParams(
-    IN PRTL_USER_PROCESS_PARAMETERS ProcessParameters
+RtlIsNameLegalDOS8Dot3(
+    IN PUNICODE_STRING UnicodeName,
+    IN PANSI_STRING AnsiName,
+    PBOOLEAN Unknown
 );
 
 NTSTATUS
@@ -1210,7 +1224,6 @@ STDCALL
 RtlReleaseResource(
     IN PRTL_RESOURCE Resource
 );
-
 
 /*
  * Compression Functions
@@ -1394,43 +1407,43 @@ DbgBreakPoint(VOID);
  */
 PRTL_HANDLE_TABLE_ENTRY
 STDCALL
-RtlAllocateHandle (
-    IN	PRTL_HANDLE_TABLE	HandleTable,
-    IN OUT	PULONG			Index
+RtlAllocateHandle(
+    IN PRTL_HANDLE_TABLE HandleTable,
+    IN OUT PULONG Index
 );
 
 VOID
 STDCALL
-RtlDestroyHandleTable (IN	PRTL_HANDLE_TABLE	HandleTable);
+RtlDestroyHandleTable(IN PRTL_HANDLE_TABLE HandleTable);
 
 BOOLEAN
 STDCALL
-RtlFreeHandle (
-    IN	PRTL_HANDLE_TABLE	HandleTable,
-    IN	PRTL_HANDLE_TABLE_ENTRY	Handle
+RtlFreeHandle(
+    IN PRTL_HANDLE_TABLE HandleTable,
+    IN PRTL_HANDLE_TABLE_ENTRY Handle
 );
 
 VOID
 STDCALL
-RtlInitializeHandleTable (
-    IN	ULONG			TableSize,
-    IN	ULONG			HandleSize,
-    IN	PRTL_HANDLE_TABLE	HandleTable
+RtlInitializeHandleTable(
+    IN ULONG TableSize,
+    IN ULONG HandleSize,
+    IN PRTL_HANDLE_TABLE HandleTable
 );
 
 BOOLEAN
 STDCALL
-RtlIsValidHandle (
-    IN	PRTL_HANDLE_TABLE	HandleTable,
-    IN	PRTL_HANDLE_TABLE_ENTRY	Handle
+RtlIsValidHandle(
+    IN PRTL_HANDLE_TABLE HandleTable,
+    IN PRTL_HANDLE_TABLE_ENTRY Handle
 );
 
 BOOLEAN
 STDCALL
-RtlIsValidIndexHandle (
-    IN	PRTL_HANDLE_TABLE		HandleTable,
-    IN OUT	PRTL_HANDLE_TABLE_ENTRY	*Handle,
-    IN	ULONG				Index
+RtlIsValidIndexHandle(
+    IN PRTL_HANDLE_TABLE HandleTable,
+    IN OUT PRTL_HANDLE_TABLE_ENTRY *Handle,
+    IN ULONG Index
 );
 
 /*
@@ -1553,34 +1566,6 @@ RtlInitCodePageTable(
 VOID
 STDCALL
 RtlResetRtlTranslations(IN PNLSTABLEINFO NlsTable);
-
-/*
- * Misc String Functions
- */
-BOOLEAN
-STDCALL
-RtlDosPathNameToNtPathName_U(
-    PWSTR DosName,
-    PUNICODE_STRING NtName,
-    PWSTR *ShortName,
-    PCURDIR CurrentDirectory
-);
-
-BOOLEAN
-STDCALL
-RtlIsNameLegalDOS8Dot3(
-    IN PUNICODE_STRING UnicodeName,
-    IN PANSI_STRING AnsiName,
-    PBOOLEAN Unknown
-);
-
-ULONG
-STDCALL
-RtlIsTextUnicode(
-    PVOID Buffer,
-    ULONG Length,
-    ULONG *Flags
-);
 
 /*
  * Misc conversion functions

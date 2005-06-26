@@ -13,10 +13,10 @@ List:
 	Priority 1:
 	- LDR_DATA_TABLE_ENTRY has a ROSSYM Hack (GvG) [ldrtypes.h]
 	- FIXED: LDR_FLAGS are not correct (Alex) [ldrtypes.h]
-	- FIXED: Remove extra Process Info classes from ddk [zwtypes.h]
+	- FIXED: Remove extra Process Info classes from ddk (Alex) [zwtypes.h]
 	- FIXED: PsEstablishWin32Callouts + Parameters don't match NT (Alex) [obtypes.h]
-	- PROCESS_SET_PORT was removed, ThomasW did a patch about this? (Thomas) [pstypes.h]
-	- Some files need cleanup (Alex + Eric) [zwfuncs.h, rtlfuncs.h, rtltypes.h]
+	- FIXED: PROCESS_SET_PORT was removed, ThomasW did a patch about this? (Thomas) [pstypes.h]
+	- FIXED: Some files need cleanup (Alex + Eric) [zwfuncs.h, rtlfuncs.h, rtltypes.h]
 
 	Priority 2:
 	- DEVICE_NODE has 2 fields not part of NT's defintion [iotypes.h]
