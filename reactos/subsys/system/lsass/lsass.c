@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * reactos/subsys/system/lsass/lsass.c
  *
  * ReactOS Operating System
@@ -27,9 +26,13 @@
  * 		Compiled successfully with egcs 1.1.2
  */
 #include <windows.h>
-#include NTOS_MODE_USER
+#include <ntsecapi.h>
+#define NTOS_MODE_USER
 #include <ndk/ntndk.h>
+
 #include <lsass/lsasrv.h>
+//#include <samsrv.h>
+#include <lsass/lsass.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -46,6 +49,7 @@ WinMain(HINSTANCE hInstance,
   DPRINT("Local Security Authority Subsystem\n");
   DPRINT("  Initializing...\n");
 
+  /* Initialize the LSA server DLL. */
   Status = LsapInitLsa();
   if (!NT_SUCCESS(Status))
   {
@@ -53,7 +57,19 @@ WinMain(HINSTANCE hInstance,
     goto ByeBye;
   }
 
+#if 0
+  /* Initialize the SAM server DLL. */
+  Status = SamIInitialize();
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT1("SamIInitialize() failed (Status 0x%08lX)\n", Status);
+    goto ByeBye;
+  }
+#endif
+
   /* FIXME: More initialization */
+
+  DPRINT("  Done...\n");
 
 ByeBye:
   NtTerminateThread(NtCurrentThread(), Status);
