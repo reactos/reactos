@@ -4024,49 +4024,6 @@ ZwYieldExecution(
 );
 
 
-NTSTATUS
-STDCALL
-NtCreateChannel(
-    VOID
-);
-
-NTSTATUS
-STDCALL
-NtListenChannel(
-    VOID
-);
-
-NTSTATUS
-STDCALL
-NtOpenChannel(
-    VOID
-);
-
-NTSTATUS
-STDCALL
-NtReplyWaitSendChannel(
-    VOID
-);
-
-NTSTATUS
-STDCALL
-NtSendWaitReplyChannel(
-    VOID
-);
-
-NTSTATUS
-STDCALL
-NtSetContextChannel(
-    VOID
-);
-
-NTSTATUS
-STDCALL
-NtQueryOleDirectoryFile(
-    VOID
-);
-
-
 static inline struct _PEB * NtCurrentPeb(void)
 {
     struct _PEB * pPeb;
