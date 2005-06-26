@@ -936,14 +936,14 @@ STDCALL
 GetCommConfig(HANDLE hCommDev, LPCOMMCONFIG lpCC, LPDWORD lpdwSize)
 {
 	BOOL ReturnValue = FALSE;
+	LPCOMMPROP lpComPort;
 
 	DPRINT("GetCommConfig(%d, %p, %p)\n", hCommDev, lpCC, lpdwSize);
 
-	hProcessHeap = GetProcessHeap();
+	lpComPort = RtlAllocateHeap( hProcessHeap,
+		HEAP_ZERO_MEMORY,
+		sizeof(COMMPROP) + 0x100 );
 
-	LPCOMMPROP lpComPort = RtlAllocateHeap( hProcessHeap,
-											HEAP_ZERO_MEMORY,
-											sizeof(COMMPROP) + 0x100 );
 	if(NULL == lpComPort) {
 		DPRINT("GetCommConfig() - ERROR_NOT_ENOUGH_MEMORY\n");
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
