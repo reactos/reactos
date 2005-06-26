@@ -133,6 +133,9 @@
 <directory name="libwine">
 	<xi:include href="libwine/libwine.xml" />
 </directory>
+<directory name="lsasrv">
+	<xi:include href="lsasrv/lsasrv.xml" />
+</directory>
 <directory name="lzexpand">
 	<xi:include href="lzexpand/lz32.xml" />
 </directory>
