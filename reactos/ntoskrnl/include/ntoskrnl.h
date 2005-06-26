@@ -19,13 +19,10 @@
 #include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
 #include <ddk/wdmguid.h>
+#include <ddk/ntpnp.h>
 #include <ndk/ntndk.h>
 #undef IO_TYPE_FILE
 #define IO_TYPE_FILE                    0x0F5L /* Temp Hack */
-  
-/* FIXME: Add to ndk, or at least move somewhere else */
-#include <ntos/ntpnp.h>
-#include <napi/core.h>
 
 /* ReactOS Headers */
 #include <reactos/version.h>

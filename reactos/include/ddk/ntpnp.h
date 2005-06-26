@@ -20,6 +20,8 @@
 #ifndef __NTPNP_H
 #define __NTPNP_H
 
+#include <ddk/cfg.h>
+
 /*
  * TODO:
  *    - Describe the undocumented GUIDs.

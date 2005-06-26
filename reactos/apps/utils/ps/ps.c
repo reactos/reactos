@@ -23,8 +23,8 @@
 */
 
 #include <windows.h>
-/* NOTE: W32API ddk/ntapi.h header has wrong definition of SYSTEM_PROCESSES. */
-#include <ntos/types.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 
 typedef struct _SYSTEM_THREADS 	 
  { 	 

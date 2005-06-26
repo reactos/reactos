@@ -28,6 +28,8 @@ extern "C" {
 #define ENABLE_MOUSE_INPUT 16
 #define ENABLE_PROCESSED_OUTPUT 1
 #define ENABLE_WRAP_AT_EOL_OUTPUT 2
+#define CONSOLE_INPUT_MODE_VALID  (0x0f)
+#define CONSOLE_OUTPUT_MODE_VALID (0x03)
 #define KEY_EVENT 1
 #define MOUSE_EVENT 2
 #define WINDOW_BUFFER_SIZE_EVENT 4
@@ -72,6 +74,11 @@ typedef struct _COORD {
 	SHORT X;
 	SHORT Y;
 } COORD;
+typedef struct _CONSOLE_SELECTION_INFO {
+  DWORD dwFlags;
+  COORD dwSelectionAnchor;
+  SMALL_RECT srSelection;
+} CONSOLE_SELECTION_INFO, *PCONSOLE_SELECTION_INFO;
 typedef struct _CONSOLE_FONT_INFO {
 	DWORD nFont;
 	COORD dwFontSize;

@@ -39,7 +39,6 @@
 #include <ddk/ntdddisk.h>
 #include <ddk/ntddcdrm.h>
 #include <ddk/class2.h>
-#include <ntos/minmax.h>
 #include <stdio.h>
 
 #define NDEBUG

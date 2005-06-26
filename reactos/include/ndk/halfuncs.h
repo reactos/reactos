@@ -24,6 +24,10 @@ HalAcquireDisplayOwnership(
 
 BOOLEAN
 STDCALL
+HalQueryDisplayOwnership(VOID);
+
+BOOLEAN
+STDCALL
 HalAllProcessorsStarted(VOID);
 
 NTSTATUS

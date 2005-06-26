@@ -25,8 +25,7 @@
 
 #include <ddk/ntddk.h>
 #include <ddk/ntbootvid.h>
-#include <ntos/ldrtypes.h>
-#include <ddk/ldrfuncs.h>
+#include <ndk/ldrfuncs.h>
 #include "bootvid.h"
 #include "resource.h"
 

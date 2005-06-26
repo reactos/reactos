@@ -11,7 +11,6 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#include <ntos/bootvid.h>
 #include <ddk/ntbootvid.h>
 #define NDEBUG
 #include <internal/debug.h>

@@ -32,7 +32,6 @@
 #include <ddk/srb.h>
 #include <ddk/scsi.h>
 #include <ddk/ntddscsi.h>
-#include <ntos/minmax.h>
 #include <stdio.h>
 
 #define NDEBUG

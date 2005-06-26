@@ -31,10 +31,10 @@
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 #include <ddk/wdmguid.h>
+#include <ddk/ntpnp.h>
 
 #include <rpc.h>
 #include <rpcdce.h>
-#include <ntos/ntpnp.h>
 
 #include "pnp_c.h"
 
