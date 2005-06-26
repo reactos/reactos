@@ -1,0 +1,39 @@
+NDK FIXMES
+-----------
+
+Order:
+	* Priority 1 = Easiest to fix.
+	* Priority 5 = Hardest to fix.
+
+Format:
+	<Priority Level>
+	- FIXME Description (Assigned Fixer) [FIXME location(s)]
+
+List:
+	Priority 1:
+	- LDR_DATA_TABLE_ENTRY has a ROSSYM Hack (GvG) [ldrtypes.h]
+	- LDR_FLAGS are not correct (Alex) [ldrtypes.h]
+	- Remove extra Process Info classes from ddk [zwtypes.h]
+	- PsEstablishWin32Callouts + Parameters don't match NT (Alex) [obtypes.h]
+	- PROCESS_SET_PORT was removed, ThomasW did a patch about this? (Thomas) [pstypes.h]
+	- Some files need cleanup (Alex + Eric) [zwfuncs.h, rtlfuncs.h, rtltypes.h]
+
+	Priority 2:
+	- DEVICE_NODE has 2 fields not part of NT's defintion [iotypes.h]
+	- Object Callbacks don't match NT's (Alex) [obtypes.h]
+	- Remove Create Callback Hack (Alex) [obtypes.h]
+	- Object header doesn't match NT (Alex) [obtypes.h] blocks on ->
+		- Object Directory + implementation doesn't match NT (Alex) [obtypes.h]
+
+	Priority 3:
+	- Pushlock support is needed to fix EPROCESS (Alex) [pstypes.h]
+	- MADDRESS_SPACE must be converted into the NT Type (Alex) [pstypes.h, mmtypes.h]
+
+	Priority 4:
+	- Kernel and Memory Types are not architecture-specific [ketypes.h, mmtypes.h]
+	- Win32K Builds with windows.h [extypes.h, ketypes.h]
+
+	Priority 5:
+	- LPC Types are totally wrong. [lpctypes.h]
+	- Missing System Info Classes [zwtypes.h]
+	- Process Priority Classes are messed up [pstypes.h]
