@@ -65,7 +65,7 @@ IntVideoPortGetProcAddress(
    IN PVOID HwDeviceExtension,
    IN PUCHAR FunctionName)
 {
-   SYSTEM_LOAD_IMAGE GdiDriverInfo;
+   SYSTEM_GDI_DRIVER_INFORMATION GdiDriverInfo;
    PVOID BaseAddress;
    PIMAGE_EXPORT_DIRECTORY ExportDir;
    PUSHORT OrdinalPtr;
@@ -76,18 +76,18 @@ IntVideoPortGetProcAddress(
 
    DPRINT("VideoPortGetProcAddress(%s)\n", FunctionName);
 
-   RtlInitUnicodeString(&GdiDriverInfo.ModuleName, L"videoprt");
+   RtlInitUnicodeString(&GdiDriverInfo.DriverName, L"videoprt");
    Status = ZwSetSystemInformation(
-      SystemLoadImage,
+      SystemLoadGdiDriverInformation,
       &GdiDriverInfo,
-      sizeof(SYSTEM_LOAD_IMAGE));
+      sizeof(SYSTEM_GDI_DRIVER_INFORMATION));
    if (!NT_SUCCESS(Status))
    {
       DPRINT("Couldn't get our own module handle?\n");
       return NULL;
    }
 
-   BaseAddress = GdiDriverInfo.ModuleBase;
+   BaseAddress = GdiDriverInfo.ImageAddress;
 
    /* Get the pointer to the export directory */
    ExportDir = (PIMAGE_EXPORT_DIRECTORY)IntVideoPortImageDirectoryEntryToData(
@@ -359,7 +359,7 @@ IntVideoPortFindAdapter(
    {
       ConfigInfo.SystemMemorySize =
          SystemBasicInfo.NumberOfPhysicalPages *
-         SystemBasicInfo.PhysicalPageSize;
+         SystemBasicInfo.PageSize;
    }
 
    /*
