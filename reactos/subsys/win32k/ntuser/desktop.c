@@ -44,6 +44,10 @@ BOOL g_PaintDesktopVersion = FALSE;
 NTSTATUS FASTCALL
 InitDesktopImpl(VOID)
 {
+   /* Set Desktop Object Attributes */
+   ExDesktopObjectType->TypeInfo.DefaultNonPagedPoolCharge = sizeof(DESKTOP_OBJECT);
+   /* FIXME: Set Generic Mapping correctly */
+   
   return STATUS_SUCCESS;
 }
 

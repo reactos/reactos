@@ -69,7 +69,7 @@ ExpWinStaObjectDelete(PVOID DeletedObject)
 
 PVOID
 STDCALL
-ExpWinStaObjectFind(PWINSTATION_OBJECT WinStaObject,
+ExpWinStaObjectFind(PVOID WinStaObject,
                     PWSTR Name,
                     ULONG Attributes)
 {
@@ -130,7 +130,6 @@ ExpWin32kInit(VOID)
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
     RtlInitUnicodeString(&Name, L"WindowStation");
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(WINSTATION_OBJECT);
     ObjectTypeInitializer.GenericMapping = ExpWindowStationMapping;
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.UseDefaultObject = TRUE;
@@ -141,7 +140,6 @@ ExpWin32kInit(VOID)
 
     /* Create desktop object type */
     RtlInitUnicodeString(&Name, L"Desktop");
-    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(DESKTOP_OBJECT);
     ObjectTypeInitializer.GenericMapping = ExpDesktopMapping;
     ObjectTypeInitializer.OpenProcedure = NULL;
     ObjectTypeInitializer.DeleteProcedure = ExpDesktopDelete;

@@ -70,7 +70,11 @@ InitWindowStationImpl(VOID)
 	     "(Status 0x%X)\n", Status);
       return Status;
    }
-
+   
+   /* Set Winsta Object Attributes */
+   ExWindowStationObjectType->TypeInfo.DefaultNonPagedPoolCharge =   sizeof(WINSTATION_OBJECT);
+   /* FIXME: Set Generic Mapping correctly */
+   
    return STATUS_SUCCESS;
 }
 
