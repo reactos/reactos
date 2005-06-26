@@ -1161,6 +1161,57 @@ RtlLeaveCriticalSection(
      PRTL_CRITICAL_SECTION CriticalSection
 );
 
+BOOLEAN
+STDCALL
+RtlAcquireResourceExclusive(
+    IN PRTL_RESOURCE Resource,
+    IN BOOLEAN Wait
+);
+
+BOOLEAN
+STDCALL
+RtlAcquireResourceShared(
+    IN PRTL_RESOURCE Resource,
+    IN BOOLEAN Wait
+);
+
+VOID
+STDCALL
+RtlConvertExclusiveToShared(
+    IN PRTL_RESOURCE Resource
+);
+
+VOID
+STDCALL
+RtlConvertSharedToExclusive(
+    IN PRTL_RESOURCE Resource
+);
+
+VOID
+STDCALL
+RtlDeleteResource(
+    IN PRTL_RESOURCE Resource
+);
+
+VOID
+STDCALL
+RtlDumpResource(
+    IN PRTL_RESOURCE Resource
+);
+
+VOID
+STDCALL
+RtlInitializeResource(
+    IN PRTL_RESOURCE Resource
+);
+
+VOID
+STDCALL
+RtlReleaseResource(
+    IN PRTL_RESOURCE Resource
+);
+
+
 /*
  * Compression Functions
  */
@@ -1248,17 +1299,17 @@ RtlClearBits(
 ULONG
 STDCALL
 RtlFindClearBits(
-    PRTL_BITMAP BitMapHeader,
-    ULONG NumberToFind,
-    ULONG HintIndex
+    IN PRTL_BITMAP BitMapHeader,
+    IN ULONG NumberToFind,
+    IN ULONG HintIndex
 );
 
 ULONG
 STDCALL
 RtlFindClearBitsAndSet(
-    PRTL_BITMAP BitMapHeader,
-    ULONG NumberToFind,
-    ULONG HintIndex
+    IN PRTL_BITMAP BitMapHeader,
+    IN ULONG NumberToFind,
+    IN ULONG HintIndex
 );
 
 VOID
@@ -1272,9 +1323,9 @@ RtlInitializeBitMap(
 VOID
 STDCALL
 RtlSetBits (
-    PRTL_BITMAP BitMapHeader,
-    ULONG StartingIndex,
-    ULONG NumberToSet
+    IN PRTL_BITMAP BitMapHeader,
+    IN ULONG StartingIndex,
+    IN ULONG NumberToSet
 );
 
 /*
