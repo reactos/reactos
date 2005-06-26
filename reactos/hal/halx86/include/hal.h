@@ -16,17 +16,17 @@
 /* Internal Kernel Headers */
 //#include <internal/mm.h>
 #include <internal/ke.h>
-#include <internal/i386/ps.h>
+
+#define KPCR_BASE 0xFF000000 // HACK!
 
 //Temporary hack below until ntoskrnl is on NDK
 PVOID STDCALL
 MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
-					  IN PHYSICAL_ADDRESS LowestAcceptableAddress,
-			          IN PHYSICAL_ADDRESS HighestAcceptableAddress,
-			          IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
-			          IN MEMORY_CACHING_TYPE CacheType OPTIONAL,
-					  IN ULONG Alignment);
-                      
+				  IN PHYSICAL_ADDRESS LowestAcceptableAddress,
+				  IN PHYSICAL_ADDRESS HighestAcceptableAddress,
+				  IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
+				  IN MEMORY_CACHING_TYPE CacheType OPTIONAL,
+				  IN ULONG Alignment);
 /* Internal HAL Headers */
 #include "apic.h"
 #include "bus.h"
