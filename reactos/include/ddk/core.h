@@ -5,6 +5,7 @@
 #define MM_CORE_DUMP_HEADER_VERSION       (0x1)
 
 #include <ddk/ntddscsi.h>
+#include <ndk/ketypes.h>
 typedef struct _MM_CORE_DUMP_HEADER
 {
   ULONG Magic;
