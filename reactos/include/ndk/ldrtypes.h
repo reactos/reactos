@@ -19,19 +19,24 @@
 #define RESOURCE_LANGUAGE_LEVEL  2
 #define RESOURCE_DATA_LEVEL      3
 
-/* FIXME: USE CORRRECT LDR_ FLAGS */
-#define IMAGE_DLL               0x00000004
-#define LOAD_IN_PROGRESS        0x00001000
-#define UNLOAD_IN_PROGRESS      0x00002000
-#define ENTRY_PROCESSED         0x00004000
-#define DONT_CALL_FOR_THREAD    0x00040000
-#define PROCESS_ATTACH_CALLED   0x00080000
-#define IMAGE_NOT_AT_BASE       0x00200000
+/* LDR_DATA_TABLE_ENTRY Flags */
+#define LDRP_STATIC_LINK                  0x00000002
+#define LDRP_IMAGE_DLL                    0x00000004
+#define LDRP_LOAD_IN_PROGRESS             0x00001000
+#define LDRP_UNLOAD_IN_PROGRESS           0x00002000
+#define LDRP_ENTRY_PROCESSED              0x00004000
+#define LDRP_ENTRY_INSERTED               0x00008000
+#define LDRP_CURRENT_LOAD                 0x00010000
+#define LDRP_FAILED_BUILTIN_LOAD          0x00020000
+#define LDRP_DONT_CALL_FOR_THREADS        0x00040000
+#define LDRP_PROCESS_ATTACH_CALLED        0x00080000
+#define LDRP_DEBUG_SYMBOLS_LOADED         0x00100000
+#define LDRP_IMAGE_NOT_AT_BASE            0x00200000
+#define LDRP_WX86_IGNORE_MACHINETYPE      0x00400000
 
 /* ENUMERATIONS **************************************************************/
 
 /* TYPES *********************************************************************/
-/* FIXME: Update with _LDR_DATA_TABLE_ENTRY and LDR_ flags */
 typedef struct _PEB_LDR_DATA
 {
     ULONG               Length;
@@ -54,8 +59,8 @@ typedef struct _LDR_DATA_TABLE_ENTRY
     UNICODE_STRING FullDllName;
     UNICODE_STRING BaseDllName;
     ULONG Flags;
-    USHORT LoadCount; /* FIXME: HACK!!! FIX ASAP */
-    USHORT TlsIndex;  /* FIXME: HACK!!! FIX ASAP */
+    USHORT LoadCount;
+    USHORT TlsIndex;
     LIST_ENTRY HashLinks;
     PVOID SectionPointer;
     ULONG CheckSum;

@@ -95,16 +95,14 @@ typedef enum _SYSTEM_DOCK_STATE
 /*
  * Process (extra ones not defined in DDK)
  */
-/* FIXME: Temporary hack until all KMODE stuf are NDK */
-#ifndef __WINDDK_H
 typedef enum _PROCESS_INFORMATION_FLAGS
 {
     ProcessUnknown33 = 33,
     ProcessUnknown34,
     ProcessUnknown35,
-    ProcessCookie
+    ProcessCookie,
+    MaximumProcessInformationClass
 } PROCESS_INFORMATION_FLAGS;
-#endif
 
 /*
  * System

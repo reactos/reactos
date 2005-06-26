@@ -18,8 +18,6 @@
 
 static PW32_PROCESS_CALLBACK PspWin32ProcessCallback = NULL;
 static PW32_THREAD_CALLBACK PspWin32ThreadCallback = NULL;
-static ULONG PspWin32ProcessSize = 0;
-static ULONG PspWin32ThreadSize = 0;
 
 extern OB_OPEN_METHOD ExpWindowStationObjectOpen;
 extern OB_PARSE_METHOD ExpWindowStationObjectParse;
@@ -45,106 +43,48 @@ typedef struct _NTW32CALL_SAVED_STATE
 
 /* FUNCTIONS ***************************************************************/
 
-struct _W32THREAD*
-STDCALL
-PsGetWin32Thread(VOID)
-{
-  return(PsGetCurrentThread()->Tcb.Win32Thread);
-}
-
-struct _W32PROCESS*
-STDCALL
-PsGetWin32Process(VOID)
-{
-  return (struct _W32PROCESS*)PsGetCurrentProcess()->Win32Process;
-}
-
-NTSTATUS STDCALL
-PsCreateWin32Process(PEPROCESS Process)
-{
-  if (Process->Win32Process != NULL)
-    return(STATUS_SUCCESS);
-
-  Process->Win32Process = ExAllocatePool(NonPagedPool,
-					 PspWin32ProcessSize);
-  if (Process->Win32Process == NULL)
-    return(STATUS_NO_MEMORY);
-
-  RtlZeroMemory(Process->Win32Process,
-		PspWin32ProcessSize);
-
-  return(STATUS_SUCCESS);
-}
-
-
 /*
  * @implemented
  */
-VOID STDCALL
-PsEstablishWin32Callouts (PW32_PROCESS_CALLBACK W32ProcessCallback,
-			  PW32_THREAD_CALLBACK W32ThreadCallback,
-			  PW32_OBJECT_CALLBACK W32ObjectCallback,
-			  PVOID Param4,
-			  ULONG W32ThreadSize,
-			  ULONG W32ProcessSize)
+VOID 
+STDCALL
+PsEstablishWin32Callouts(PW32_CALLOUT_DATA CalloutData)
 {
-  PspWin32ProcessCallback = W32ProcessCallback;
-  PspWin32ThreadCallback = W32ThreadCallback;
-
-  PspWin32ProcessSize = W32ProcessSize;
-  PspWin32ThreadSize = W32ThreadSize;
-
-  ExpWindowStationObjectOpen = W32ObjectCallback->WinStaCreate;
-  ExpWindowStationObjectParse = W32ObjectCallback->WinStaParse;
-  ExpWindowStationObjectDelete = W32ObjectCallback->WinStaDelete;
-  ExpWindowStationObjectFind = W32ObjectCallback->WinStaFind;
-  ExpDesktopObjectCreate = W32ObjectCallback->DesktopCreate;
-  ExpDesktopObjectDelete = W32ObjectCallback->DesktopDelete;
+    PspWin32ProcessCallback = CalloutData->W32ProcessCallout;
+    PspWin32ThreadCallback = CalloutData->W32ThreadCallout;
+    ExpWindowStationObjectOpen = CalloutData->WinStaCreate;
+    ExpWindowStationObjectParse = CalloutData->WinStaParse;
+    ExpWindowStationObjectDelete = CalloutData->WinStaDelete;
+    ExpWindowStationObjectFind = CalloutData->WinStaFind;
+    ExpDesktopObjectCreate = CalloutData->DesktopCreate;
+    ExpDesktopObjectDelete = CalloutData->DesktopDelete;
 }
 
 NTSTATUS
 PsInitWin32Thread (PETHREAD Thread)
 {
-  PEPROCESS Process;
+    PEPROCESS Process;
+    NTSTATUS Status;
 
-  Process = Thread->ThreadsProcess;
+    Process = Thread->ThreadsProcess;
 
-  if (Process->Win32Process == NULL)
+    if (Process->Win32Process == NULL)
     {
-      /* FIXME - lock the process */
-      Process->Win32Process = ExAllocatePool (NonPagedPool,
-					      PspWin32ProcessSize);
-
-      if (Process->Win32Process == NULL)
-	return STATUS_NO_MEMORY;
-
-      RtlZeroMemory (Process->Win32Process,
-		     PspWin32ProcessSize);
-      /* FIXME - unlock the process */
-
-      if (PspWin32ProcessCallback != NULL)
-	{
-          PspWin32ProcessCallback (Process, TRUE);
-	}
+        if (PspWin32ProcessCallback != NULL)
+        {
+            Status = PspWin32ProcessCallback(Process, TRUE);
+        }
     }
 
-  if (Thread->Tcb.Win32Thread == NULL)
+    if (Thread->Tcb.Win32Thread == NULL)
     {
-      Thread->Tcb.Win32Thread = ExAllocatePool (NonPagedPool,
-						PspWin32ThreadSize);
-      if (Thread->Tcb.Win32Thread == NULL)
-	return STATUS_NO_MEMORY;
-
-      RtlZeroMemory (Thread->Tcb.Win32Thread,
-		     PspWin32ThreadSize);
-
-      if (PspWin32ThreadCallback != NULL)
-	{
-	  PspWin32ThreadCallback (Thread, TRUE);
-	}
+        if (PspWin32ThreadCallback != NULL)
+        {
+            Status = PspWin32ThreadCallback(Thread, TRUE);
+        }
     }
 
-  return(STATUS_SUCCESS);
+    return Status;
 }
 
 

@@ -366,7 +366,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
                                FullNtDllPath);
        RtlCreateUnicodeString (&NtModule->BaseDllName,
                                L"ntdll.dll");
-       NtModule->Flags = IMAGE_DLL|ENTRY_PROCESSED;
+       NtModule->Flags = LDRP_IMAGE_DLL|LDRP_ENTRY_PROCESSED;
 
        NtModule->LoadCount = -1; /* don't unload */
        NtModule->TlsIndex = -1;
@@ -415,7 +415,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
               &ExeModule->BaseDllName,
               &ExeModule->FullDllName);
 
-       ExeModule->Flags = ENTRY_PROCESSED;
+       ExeModule->Flags = LDRP_ENTRY_PROCESSED;
        ExeModule->LoadCount = -1; /* don't unload */
        ExeModule->TlsIndex = -1;
        ExeModule->SectionPointer = NULL;

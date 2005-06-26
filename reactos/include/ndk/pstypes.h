@@ -617,6 +617,29 @@ typedef struct _EJOB
 } EJOB, *PEJOB;
 #include <poppack.h>
 
+typedef struct _W32_CALLOUT_DATA
+{
+    PW32_PROCESS_CALLBACK W32ProcessCallout;
+    PW32_THREAD_CALLBACK W32ThreadCallout;
+    PVOID UserGlobalAtomTableCallout;
+    PVOID UserPowerEventCallout;
+    PVOID UserPowerStateCallout;
+    PVOID UserJobCallout;
+    PVOID NtGdiUserFlushUserBatch;
+    OB_OPEN_METHOD DesktopOpen;
+    PVOID DesktopUnmap;
+    OB_DELETE_METHOD DesktopDelete;
+    OB_OKAYTOCLOSE_METHOD WinstaOkayToClose;
+    OB_DELETE_METHOD WinStaDelete;
+    OB_PARSE_METHOD WinStaParse;
+    OB_OPEN_METHOD WinStaOpen;
+    
+    /* FIXME: These are ROS-ONLY and are fixed in a future local patch */
+    OB_FIND_METHOD WinStaFind;
+    OB_OPEN_METHOD WinStaCreate;
+    OB_CREATE_METHOD DesktopCreate;
+} W32_CALLOUT_DATA, *PW32_CALLOUT_DATA;
+
 #endif
 
 #endif

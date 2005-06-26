@@ -669,6 +669,20 @@ PsGetProcessSessionId(PEPROCESS Process)
     return (HANDLE)Process->Session;
 }
 
+struct _W32THREAD*
+STDCALL
+PsGetWin32Thread(VOID)
+{
+    return(PsGetCurrentThread()->Tcb.Win32Thread);
+}
+
+struct _W32PROCESS*
+STDCALL
+PsGetWin32Process(VOID)
+{
+    return (struct _W32PROCESS*)PsGetCurrentProcess()->Win32Process;
+}
+
 /*
  * @implemented
  */

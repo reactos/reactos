@@ -4330,10 +4330,6 @@ typedef enum _PROCESSINFOCLASS {
   ProcessDebugObjectHandle,
   ProcessDebugFlags,
   ProcessHandleTracing,
-  ProcessUnknown33,
-  ProcessUnknown34,
-  ProcessUnknown35,
-  ProcessCookie,
   MaxProcessInfoClass
 } PROCESSINFOCLASS;
 

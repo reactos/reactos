@@ -871,11 +871,10 @@ PsChargeProcessPagedPoolQuota@8
 PsChargeProcessPoolQuota@12
 PsCreateSystemProcess@12
 PsCreateSystemThread@28
-PsCreateWin32Process@4
 PsDereferenceImpersonationToken@4=PsDereferencePrimaryToken@4
 PsDereferencePrimaryToken@4
 PsDisableImpersonation@8
-PsEstablishWin32Callouts@24
+PsEstablishWin32Callouts@4
 PsGetCurrentProcessId@0
 PsGetCurrentProcessSessionId@0
 PsGetCurrentThreadId@0

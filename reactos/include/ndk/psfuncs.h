@@ -14,6 +14,28 @@
 
 /* PROTOTYPES ****************************************************************/
 
+PVOID
+STDCALL
+PsGetProcessWin32Process(PEPROCESS Process);
+
+VOID
+STDCALL
+PsSetProcessWin32Process(
+    PEPROCESS Process,
+    PVOID Win32Process
+);
+
+VOID
+STDCALL
+PsSetThreadWin32Thread(
+    PETHREAD Thread,
+    PVOID Win32Thread
+);
+
+PVOID
+STDCALL
+PsGetThreadWin32Thread(PETHREAD Thread);
+                       
 VOID
 STDCALL
 PsRevertThreadToSelf(
@@ -34,14 +56,7 @@ PsGetWin32Process(
 
 VOID 
 STDCALL
-PsEstablishWin32Callouts(
-    PW32_PROCESS_CALLBACK W32ProcessCallback,
-    PW32_THREAD_CALLBACK W32ThreadCallback,
-    PW32_OBJECT_CALLBACK W32ObjectCallback,
-    PVOID Param4,
-    ULONG W32ThreadSize,
-    ULONG W32ProcessSize
-);
+PsEstablishWin32Callouts(PW32_CALLOUT_DATA CalloutData);
 
 HANDLE
 STDCALL

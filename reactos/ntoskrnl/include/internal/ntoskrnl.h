@@ -43,7 +43,7 @@
 /*
  * Defines a descriptor as it appears in the processor tables
  */
-typedef struct _DESCRIPTOR
+typedef struct __DESCRIPTOR
 {
   ULONG a;
   ULONG b;

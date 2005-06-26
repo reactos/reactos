@@ -251,13 +251,38 @@ typedef struct _HARDWARE_PTE_X86
     ULONG PageFrameNumber   : 20;
 } HARDWARE_PTE_X86, *PHARDWARE_PTE_X86;
 
+typedef struct _DESCRIPTOR
+{
+    WORD Pad;
+    WORD Limit;
+    DWORD Base;
+} KDESCRIPTOR, *PKDESCRIPTOR;
+
+typedef struct _KSPECIAL_REGISTERS
+{
+    DWORD Cr0;
+    DWORD Cr2;
+    DWORD Cr3;
+    DWORD Cr4;
+    DWORD KernelDr0;
+    DWORD KernelDr1;
+    DWORD KernelDr2;
+    DWORD KernelDr3;
+    DWORD KernelDr6;
+    DWORD KernelDr7;
+    KDESCRIPTOR Gdtr;
+    KDESCRIPTOR Idtr;
+    WORD Tr;
+    WORD Ldtr;
+    DWORD Reserved[6];
+} KSPECIAL_REGISTERS, *PKSPECIAL_REGISTERS;
+
 #pragma pack(push,4)
 
-/* Fixme: Use correct types? */
 typedef struct _KPROCESSOR_STATE
 {
     PCONTEXT ContextFrame;
-    PVOID SpecialRegisters;
+    KSPECIAL_REGISTERS SpecialRegisters;
 } KPROCESSOR_STATE;
 
 /* Processor Control Block */
