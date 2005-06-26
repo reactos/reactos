@@ -19,6 +19,9 @@
 <directory name="cards">
 	<xi:include href="cards/cards.xml" />
 </directory>
+<directory name="cfgmgr32">
+	<xi:include href="cfgmgr32/cfgmgr32.xml" />
+</directory>
 <directory name="comctl32">
 	<xi:include href="comctl32/comctl32.xml" />
 </directory>
