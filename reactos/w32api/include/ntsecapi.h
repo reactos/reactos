@@ -122,7 +122,7 @@ extern "C" {
 #define TRUST_TYPE_UPLEVEL 2
 #define TRUST_TYPE_MIT 3
 #define TRUST_TYPE_DCE 4
-#if !defined(_NTDEF_H) && !defined(_SUBAUTH_H) && !defined(_NTNDK_)
+#if !defined(_NTDEF_H) && !defined(_SUBAUTH_H)
 typedef LONG NTSTATUS, *PNTSTATUS;
 typedef struct _UNICODE_STRING {
   USHORT Length;
@@ -293,7 +293,7 @@ typedef struct _LSA_ENUMERATION_INFORMATION {
   PSID Sid;
 } LSA_ENUMERATION_INFORMATION, *PLSA_ENUMERATION_INFORMATION;
 typedef ULONG LSA_OPERATIONAL_MODE, *PLSA_OPERATIONAL_MODE;
-#if !defined(_NTDEF_H) && !defined(_NTNDK_)
+#if !defined(_NTDEF_H)
 typedef struct _LSA_OBJECT_ATTRIBUTES {
   ULONG Length;
   HANDLE RootDirectory;
