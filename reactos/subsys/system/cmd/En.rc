@@ -137,17 +137,24 @@ Type DATE without parameters to display the current date setting and\n\
 a prompt for a new one.  Press ENTER to keep the same date."
 				
 STRING_DEL_HELP1,  "Deletes one or more files.\n\n\
-DEL [/N /P /T /Q /W /Y /Z] file ...\n\
-DELETE [/N /P /T /Q /W /Y /Z] file ...\n\
-ERASE [/N /P /T /Q /W /Y /Z] file ...\n\n\
-  file  Specifies the file(s) to delete.\n\n\
+DEL [/N /P /T /Q /W /Y /Z /A[[:]attributes]] file ...\n\
+DELETE [/N /P /T /Q /W /Y /Z /A[[:]attributes]] file ...\n\
+ERASE [/N /P /T /Q /W /Y /Z /A[[:]attributes]] file ...\n\n\
+      file  Specifies the file(s) to delete.\n\n\  
   /N    Nothing.\n\
   /P    Prompt. Ask before deleting each file.\n\
   /T    Total. Display total number of deleted files and freed disk space.\n\
   /Q    Quiet.\n\
   /W    Wipe. Overwrite the file with random numbers before deleting it.\n\
   /Y    Yes. Kill even *.* without asking.\n\
-  /Z    Zap. Delete hidden, read-only and system files.\n"
+  /Z    Zap. Delete hidden, read-only and system files.\n\
+  /A    Select files to be deleted based on attributes.\n\
+        attributes\n\
+        R     Read Only files\n\
+        S     System files\n\
+        A     Archiveable files\n\
+        H     Hidden Files\n\
+        -     prefix meaning not\n"
 
 STRING_DEL_HELP2, "All files in the directory will be deleted!\nAre you sure (Y/N)?"
 STRING_DEL_HELP3, "    %lu file deleted\n"
