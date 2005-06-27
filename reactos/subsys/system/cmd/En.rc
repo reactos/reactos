@@ -140,7 +140,7 @@ STRING_DEL_HELP1,  "Deletes one or more files.\n\n\
 DEL [/N /P /T /Q /W /Y /Z /A[[:]attributes]] file ...\n\
 DELETE [/N /P /T /Q /W /Y /Z /A[[:]attributes]] file ...\n\
 ERASE [/N /P /T /Q /W /Y /Z /A[[:]attributes]] file ...\n\n\
-      file  Specifies the file(s) to delete.\n\n\  
+      file  Specifies the file(s) to delete.\n\n\
   /N    Nothing.\n\
   /P    Prompt. Ask before deleting each file.\n\
   /T    Total. Display total number of deleted files and freed disk space.\n\
