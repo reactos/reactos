@@ -98,7 +98,7 @@ ConvertSidToStringSidW@8
 ;ConvertToAutoInheritPrivateObjectSecurity@24
 CopySid@12
 ;CreateCodeAuthzLevel@20
-;CreatePrivateObjectSecurity@24
+CreatePrivateObjectSecurity@24
 ;CreatePrivateObjectSecurityEx@32
 ;CreatePrivateObjectSecurityWithMultipleInheritance@36
 CreateProcessAsUserA@44
@@ -183,7 +183,7 @@ CryptVerifySignatureW@24
 DeleteAce@8
 DeleteService@4
 DeregisterEventSource@4
-;DestroyPrivateObjectSecurity@4
+DestroyPrivateObjectSecurity@4
 ;DuplicateEncryptionInfoFile
 DuplicateToken@12
 DuplicateTokenEx@24
@@ -267,7 +267,7 @@ GetNamedSecurityInfoW@32
 GetNumberOfEventLogRecords@8
 GetOldestEventLogRecord@8
 ;GetOverlappedAccessResults
-;GetPrivateObjectSecurity@20
+GetPrivateObjectSecurity@20
 GetSecurityDescriptorControl@12
 GetSecurityDescriptorDacl@16
 GetSecurityDescriptorGroup@12
@@ -563,7 +563,7 @@ SetNamedSecurityInfoA@28
 ;SetNamedSecurityInfoExA
 ;SetNamedSecurityInfoExW
 SetNamedSecurityInfoW@28
-;SetPrivateObjectSecurity@20
+SetPrivateObjectSecurity@20
 ;SetPrivateObjectSecurityEx
 SetSecurityDescriptorControl@12
 SetSecurityDescriptorDacl@16

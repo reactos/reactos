@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/advapi32/sec/misc.c
@@ -1262,6 +1261,108 @@ ImpersonateNamedPipeClient(HANDLE hNamedPipe)
   }
 
   return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+CreatePrivateObjectSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
+                            PSECURITY_DESCRIPTOR CreatorDescriptor,
+                            PSECURITY_DESCRIPTOR *NewDescriptor,
+                            BOOL IsDirectoryObject,
+                            HANDLE Token,
+                            PGENERIC_MAPPING GenericMapping)
+{
+    NTSTATUS Status;
+
+    Status = RtlNewSecurityObject(ParentDescriptor,
+                                  CreatorDescriptor,
+                                  NewDescriptor,
+                                  IsDirectoryObject,
+                                  Token,
+                                  GenericMapping);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+DestroyPrivateObjectSecurity(PSECURITY_DESCRIPTOR *ObjectDescriptor)
+{
+    NTSTATUS Status;
+
+    Status = RtlDeleteSecurityObject(ObjectDescriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+GetPrivateObjectSecurity(PSECURITY_DESCRIPTOR ObjectDescriptor,
+                         SECURITY_INFORMATION SecurityInformation,
+                         PSECURITY_DESCRIPTOR ResultantDescriptor,
+                         DWORD DescriptorLength,
+                         PDWORD ReturnLength)
+{
+    NTSTATUS Status;
+
+    Status = RtlQuerySecurityObject(ObjectDescriptor,
+                                    SecurityInformation,
+                                    ResultantDescriptor,
+                                    DescriptorLength,
+                                    ReturnLength);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+SetPrivateObjectSecurity(SECURITY_INFORMATION SecurityInformation,
+                         PSECURITY_DESCRIPTOR ModificationDescriptor,
+                         PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
+                         PGENERIC_MAPPING GenericMapping,
+                         HANDLE Token)
+{
+    NTSTATUS Status;
+
+    Status = RtlSetSecurityObject(SecurityInformation,
+                                  ModificationDescriptor,
+                                  ObjectsSecurityDescriptor,
+                                  GenericMapping,
+                                  Token);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /* EOF */
