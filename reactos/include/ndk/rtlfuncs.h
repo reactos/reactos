@@ -564,6 +564,43 @@ BOOLEAN
 STDCALL
 RtlValidAcl(PACL Acl);
 
+NTSTATUS
+STDCALL
+RtlDeleteSecurityObject(
+    IN PSECURITY_DESCRIPTOR *ObjectDescriptor
+);
+
+NTSTATUS
+STDCALL
+RtlNewSecurityObject(
+    IN PSECURITY_DESCRIPTOR ParentDescriptor,
+    IN PSECURITY_DESCRIPTOR CreatorDescriptor,
+    OUT PSECURITY_DESCRIPTOR *NewDescriptor,
+    IN BOOLEAN IsDirectoryObject,
+    IN HANDLE Token,
+    IN PGENERIC_MAPPING GenericMapping
+);
+
+NTSTATUS
+STDCALL
+RtlQuerySecurityObject(
+    IN PSECURITY_DESCRIPTOR ObjectDescriptor,
+    IN SECURITY_INFORMATION SecurityInformation,
+    OUT PSECURITY_DESCRIPTOR ResultantDescriptor,
+    IN ULONG DescriptorLength,
+    OUT PULONG ReturnLength
+);
+
+NTSTATUS
+STDCALL
+RtlSetSecurityObject(
+    IN SECURITY_INFORMATION SecurityInformation,
+    IN PSECURITY_DESCRIPTOR ModificationDescriptor,
+    OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
+    IN PGENERIC_MAPPING GenericMapping,
+    IN HANDLE Token
+);
+
 /*
  * Single-Character Functions
  */
@@ -1147,32 +1184,44 @@ RtlSetEnvironmentVariable(
 NTSTATUS
 STDCALL
 RtlDeleteCriticalSection (
-     PRTL_CRITICAL_SECTION CriticalSection
+    IN PRTL_CRITICAL_SECTION CriticalSection
 );
 
 NTSTATUS
 STDCALL
 RtlEnterCriticalSection(
-     PRTL_CRITICAL_SECTION CriticalSection
+    IN PRTL_CRITICAL_SECTION CriticalSection
 );
 
 NTSTATUS
 STDCALL
 RtlInitializeCriticalSection(
-     PRTL_CRITICAL_SECTION CriticalSection
+    IN PRTL_CRITICAL_SECTION CriticalSection
 );
 
 NTSTATUS
 STDCALL
 RtlInitializeCriticalSectionAndSpinCount(
-    PRTL_CRITICAL_SECTION CriticalSection,
-    ULONG SpinCount
+    IN PRTL_CRITICAL_SECTION CriticalSection,
+    IN ULONG SpinCount
 );
 
 NTSTATUS
 STDCALL
 RtlLeaveCriticalSection(
-     PRTL_CRITICAL_SECTION CriticalSection
+    IN PRTL_CRITICAL_SECTION CriticalSection
+);
+
+VOID
+STDCALL
+RtlpUnWaitCriticalSection(
+    IN PRTL_CRITICAL_SECTION CriticalSection
+);
+
+NTSTATUS
+STDCALL
+RtlpWaitForCriticalSection(
+    IN PRTL_CRITICAL_SECTION CriticalSection
 );
 
 BOOLEAN

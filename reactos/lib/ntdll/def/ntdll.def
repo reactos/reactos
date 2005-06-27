@@ -379,7 +379,7 @@ RtlDeleteOwnersRanges@8
 RtlDeleteRange@24
 RtlDeleteRegistryValue@12
 RtlDeleteResource@4
-;RtlDeleteSecurityObject
+RtlDeleteSecurityObject@4
 RtlDeleteTimer@12
 RtlDeleteTimerQueue@4
 RtlDeleteTimerQueueEx@8
@@ -559,7 +559,7 @@ RtlMultiByteToUnicodeN@20
 RtlMultiByteToUnicodeSize@12
 ;RtlNewInstanceSecurityObject
 ;RtlNewSecurityGrantedAccess
-;RtlNewSecurityObject
+RtlNewSecurityObject@24
 RtlNormalizeProcessParams@4
 RtlNtPathNameToDosPathName@16
 RtlNtStatusToDosError@4
@@ -584,7 +584,7 @@ RtlQueryProcessDebugInformation@12
 ;RtlQueryProcessHeapInformation
 ;RtlQueryProcessLockInformation
 RtlQueryRegistryValues@20
-;RtlQuerySecurityObject
+RtlQuerySecurityObject@20
 ;RtlQueryTagHeap
 RtlQueryTimeZoneInformation@4
 RtlRaiseException@4
@@ -621,7 +621,7 @@ RtlSetLastWin32ErrorAndNtStatusFromNtStatus@4
 RtlSetOwnerSecurityDescriptor@12
 RtlSetSaclSecurityDescriptor@16
 RtlSetSecurityDescriptorRMControl@8
-;RtlSetSecurityObject
+RtlSetSecurityObject@20
 RtlSetTimeZoneInformation@4
 ;RtlSetUnicodeCallouts
 ;RtlSetUserFlagsHeap
@@ -687,8 +687,8 @@ RtlpNtMakeTemporaryKey@4
 RtlpNtOpenKey@16
 RtlpNtQueryValueKey@20
 RtlpNtSetValueKey@16
-;RtlpUnWaitCriticalSection
-;RtlpWaitForCriticalSection
+RtlpUnWaitCriticalSection@4
+RtlpWaitForCriticalSection@4
 RtlxAnsiStringToUnicodeSize@4
 RtlxOemStringToUnicodeSize@4
 RtlxUnicodeStringToAnsiSize@4

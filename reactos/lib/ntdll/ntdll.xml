@@ -51,6 +51,7 @@
 		<file>propvar.c</file>
 		<file>rangelist.c</file>
 		<file>resource.c</file>
+		<file>secobj.c</file>
 		<file>teb.c</file>
 		<file>timerqueue.c</file>
 	</directory>
