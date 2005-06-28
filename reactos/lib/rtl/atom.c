@@ -352,7 +352,7 @@ RtlAddAtomToAtomTable(IN PRTL_ATOM_TABLE AtomTable,
              if (Entry != NULL)
                {
                   Entry->HashLink = NULL;
-                  Entry->ReferenceCount = 0;
+                  Entry->ReferenceCount = 1;
                   Entry->Flags = 0x0;
 
                   Entry->NameLength = AtomNameLen;
