@@ -15,9 +15,6 @@
 #include "config.h"
 #include <roscfg.h>
 
-/* basic types */
-#include <basetsd.h>
-  
 /* DDK/IFS/NDK Headers */
 #include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
