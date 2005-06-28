@@ -14,6 +14,9 @@
 /* include the ntoskrnl config.h file */
 #include "config.h"
 #include <roscfg.h>
+
+/* basic types */
+#include <basetsd.h>
   
 /* DDK/IFS/NDK Headers */
 #include <ddk/ntddk.h>
