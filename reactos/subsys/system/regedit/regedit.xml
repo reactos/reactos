@@ -24,5 +24,5 @@
 	<file>regproc.c</file>
 	<file>security.c</file>
 	<file>treeview.c</file>
-	<file>rsrc.rc</file>
+	<file>regedit.rc</file>
 </module>
