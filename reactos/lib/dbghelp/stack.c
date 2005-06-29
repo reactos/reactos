@@ -39,6 +39,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
 enum st_mode {stm_start, stm_32bit, stm_16bit, stm_done};
 
+#if 0
 static const char* wine_dbgstr_addr(const ADDRESS* addr)
 {
     if (!addr) return "(null)";
@@ -56,6 +57,7 @@ static const char* wine_dbgstr_addr(const ADDRESS* addr)
         return "unknown";
     }
 }
+#endif
 
 /* indexes in Reserved array */
 #define __CurrentMode     0

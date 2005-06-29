@@ -69,6 +69,11 @@ typedef struct _STACK16FRAME
 
 #include <poppack.h>
 
+static inline int MapSL(int size)
+{
+return -1;
+}
+
 #define CURRENT_STACK16      ((STACK16FRAME*)MapSL(NtCurrentTeb()->cur_stack))
 #define CURRENT_DS           (CURRENT_STACK16->ds)
 
