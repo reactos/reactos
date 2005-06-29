@@ -905,11 +905,11 @@ APICCalibrateTimer(ULONG CPU)
 VOID 
 SetInterruptGate(ULONG index, ULONG address)
 {
-  IDT_DESCRIPTOR *idt;
+  KDESCRIPTOR *idt;
 
-  idt = (IDT_DESCRIPTOR*)((ULONG)KeGetCurrentKPCR()->IDT + index * sizeof(IDT_DESCRIPTOR));
-  idt->a = (((ULONG)address)&0xffff) + (KERNEL_CS << 16);
-  idt->b = 0x8e00 + (((ULONG)address)&0xffff0000);
+  idt = (KDESCRIPTOR*)((ULONG)KeGetCurrentKPCR()->IDT + index * sizeof(KDESCRIPTOR));
+  idt->Limit = ((address)&0xffff) + (KERNEL_CS << 16);
+  idt->Base = 0x8e00 + ((address)&0xffff0000);
 }
 
 VOID HaliInitBSP(VOID)
