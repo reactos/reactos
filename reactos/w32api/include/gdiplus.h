@@ -38,37 +38,37 @@ namespace Gdiplus
 {
   namespace DllExports
   {
-    #include "GdiplusMem.h"
+    #include "gdiplusmem.h"
   };
 
-  #include "GdiplusBase.h"
+  #include "gdiplusbase.h"
 
-  #include "GdiplusEnums.h"
-  #include "GdiplusTypes.h"
-  #include "GdiplusInit.h"
-  #include "GdiplusPixelFormats.h"
-  #include "GdiplusColor.h"
-  #include "GdiplusMetaHeader.h"
-  #include "GdiplusImaging.h"
-  #include "GdiplusColorMatrix.h"
-  #include "GdiplusGpStubs.h"
-  #include "GdiplusHeaders.h"
+  #include "gdiplusenums.h"
+  #include "gdiplustypes.h"
+  #include "gdiplusinit.h"
+  #include "gdipluspixelformats.h"
+  #include "gdiplusColor.h"
+  #include "gdiplusmetaheader.h"
+  #include "gdiplusimaging.h"
+  #include "gdipluscolormatrix.h"
+  #include "gdiplusgpstubs.h"
+  #include "gdiplusheaders.h"
 
   namespace DllExports
   {
-    #include "GdiPlusFlat.h"
+    #include "gdiplusflat.h"
   };
 
-  #include "GdiplusImageAttributes.h"
-  #include "GdiplusMatrix.h"
-  #include "GdiplusBrush.h"
-  #include "GdiplusPen.h"
-  #include "GdiplusStringFormat.h"
-  #include "GdiplusPath.h"
-  #include "GdiplusLineCaps.h"
-  #include "GdiplusMetaFile.h"
-  #include "GdiplusGraphics.h"
-  #include "GdiplusEffects.h"
+  #include "gdiplusimageattributes.h"
+  #include "gdiplusmatrix.h"
+  #include "gdiplusbrush.h"
+  #include "gdipluspen.h"
+  #include "gdiplusstringformat.h"
+  #include "gdipluspath.h"
+  #include "gdipluslinecaps.h"
+  #include "gdiplusmetafile.h"
+  #include "gdiplusgraphics.h"
+  #include "gdipluseffects.h"
 }
 
 #include <poppack.h>
