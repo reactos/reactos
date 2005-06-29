@@ -19,6 +19,7 @@
 /* $Id$
  *
  */
+
 #include <w32k.h>
 
 #define NDEBUG

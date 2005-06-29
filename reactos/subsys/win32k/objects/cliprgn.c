@@ -17,7 +17,11 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 /* $Id$ */
+
 #include <w32k.h>
+
+#define NDEBUG
+#include <debug.h>
 
 int FASTCALL
 CLIPPING_UpdateGCRegion(DC* Dc)

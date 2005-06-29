@@ -26,7 +26,11 @@
  * REVISION HISTORY:
  *                 11/7/1999: Created
  */
+
 #include <w32k.h>
+
+#define NDEBUG
+#include <debug.h>
 
 /*
  * @implemented

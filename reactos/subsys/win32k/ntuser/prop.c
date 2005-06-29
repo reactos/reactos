@@ -30,7 +30,7 @@
 
 #include <w32k.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 typedef struct _PROPLISTITEM

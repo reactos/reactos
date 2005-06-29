@@ -20,12 +20,12 @@
  *
  *  Entry Point for win32k.sys
  */
-#include <win32k/ntddraw.h> /* FIXME: FIX THIS! */
+
 #include <w32k.h>
+#include <win32k/ntddraw.h>
 #include <include/napi.h>
 
 #define NDEBUG
-#include <win32k/debug1.h>
 #include <debug.h>
 
 BOOL INTERNAL_CALL GDI_CleanupForProcess (struct _EPROCESS *Process);

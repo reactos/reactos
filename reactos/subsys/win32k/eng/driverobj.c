@@ -25,8 +25,11 @@
  * REVISION HISTORY:
  *                 04/01/2005: Created
  */
+
 #include <w32k.h>
 
+#define NDEBUG
+#include <debug.h>
 
 /*!\brief Called when the process is terminated.
  *

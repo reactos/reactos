@@ -26,7 +26,11 @@
  * REVISION HISTORY:
  *                 21/2/2003: Created
  */
+
 #include <w32k.h>
+
+#define NDEBUG
+#include <debug.h>
 
 INT abs(INT nm);
 

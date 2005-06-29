@@ -25,7 +25,11 @@
  * PROGRAMER:         Jason Filby
  * REVISION HISTORY:
  */
+
 #include <w32k.h>
+
+#define NDEBUG
+#include <debug.h>
 
 BOOL
 STDCALL

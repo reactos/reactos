@@ -17,7 +17,11 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 /* $Id$ */
+
 #include <w32k.h>
+
+#define NDEBUG
+#include <debug.h>
 
 BOOL STDCALL
 IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,

@@ -32,7 +32,7 @@
 
 #include <w32k.h>
 
-#undef NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/

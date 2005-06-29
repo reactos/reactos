@@ -17,8 +17,12 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 /* $Id$ */
+
 #include <w32k.h>
 #include <win32k/float.h>
+
+#define NDEBUG
+#include <debug.h>
 
 #define NUM_ENTRIES_INITIAL 16  /* Initial size of points / flags arrays  */
 #define GROW_FACTOR_NUMER    2  /* Numerator of grow factor for the array */

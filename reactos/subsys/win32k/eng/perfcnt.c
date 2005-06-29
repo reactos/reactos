@@ -24,7 +24,11 @@
  * FILE:              subsys/win32k/eng/perfcnt.c
  * PROGRAMER:         Ge van Geldorp
  */
+
 #include <w32k.h>
+
+#define NDEBUG
+#include <debug.h>
 
 /*
  * @implemented

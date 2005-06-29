@@ -29,6 +29,9 @@
 
 #include <w32k.h>
 
+#define NDEBUG
+#include <debug.h>
+
 typedef struct _USERMEMHEADER
   {
   ULONG Tag;

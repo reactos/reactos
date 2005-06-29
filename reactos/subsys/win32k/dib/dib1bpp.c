@@ -19,6 +19,9 @@
 /* $Id$ */
 #include <w32k.h>
 
+#define NDEBUG
+#include <debug.h>
+
 VOID
 DIB_1BPP_PutPixel(SURFOBJ *SurfObj, LONG x, LONG y, ULONG c)
 {

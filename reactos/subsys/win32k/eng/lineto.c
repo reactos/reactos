@@ -18,7 +18,11 @@
  *
  * $Id$
  */
+
 #include <w32k.h>
+
+#define NDEBUG
+#include <debug.h>
 
 static void FASTCALL
 TranslateRects(RECT_ENUM *RectEnum, POINTL* Translate)

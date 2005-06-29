@@ -26,8 +26,11 @@
  * REVISION HISTORY:
  *        4/6/2004: Created
  */
+
 #include <w32k.h>
 
+#define NDEBUG
+#include <debug.h>
 
 BOOL STDCALL
 EngTransparentBlt(SURFOBJ *Dest,

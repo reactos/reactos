@@ -29,6 +29,9 @@
 
 #include <w32k.h>
 
+#define NDEBUG
+#include <debug.h>
+
 static inline ULONG
 ShiftAndMask(XLATEGDI *XlateGDI, ULONG Color)
 {

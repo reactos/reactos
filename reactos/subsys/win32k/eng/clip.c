@@ -26,7 +26,11 @@
  * REVISION HISTORY:
  *                 21/8/1999: Created
  */
+
 #include <w32k.h>
+
+#define NDEBUG
+#include <debug.h>
 
 static inline int
 CompareRightDown(const PRECT r1, const PRECT r2)

@@ -31,6 +31,7 @@
 #include <include/input.h>
 #include <include/inteng.h>
 #include <include/intgdi.h>
+#include <include/intddraw.h>
 #include <include/menu.h>
 #include <include/monitor.h>
 #include <include/mouse.h>

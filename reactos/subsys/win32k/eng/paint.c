@@ -29,6 +29,9 @@
 
 #include <w32k.h>
 
+#define NDEBUG
+#include <debug.h>
+
 BOOL STDCALL FillSolid(SURFOBJ *Surface, PRECTL pRect, ULONG iColor)
 {
   LONG y;

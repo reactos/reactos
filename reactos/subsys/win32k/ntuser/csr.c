@@ -9,6 +9,9 @@
 
 #include <w32k.h>
 
+#define NDEBUG
+#include <debug.h>
+
 static HANDLE WindowsApiPort = NULL;
 PEPROCESS CsrProcess = NULL;
            

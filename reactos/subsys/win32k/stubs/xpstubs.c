@@ -6,6 +6,7 @@
 #include <w32k.h>
 
 #define STUB(x) void x(void) { DbgPrint("WIN32K: Stub for %s\n", #x); }
+#define UNIMPLEMENTED DbgPrint("(%s:%i) WIN32K: %s UNIMPLEMENTED\n", __FILE__, __LINE__, __FUNCTION__ )
 
 BOOL
 STDCALL

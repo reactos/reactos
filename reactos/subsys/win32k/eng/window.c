@@ -31,6 +31,9 @@
  
 #include <w32k.h>
 
+#define NDEBUG
+#include <debug.h>
+
 /*
  * Calls the WNDOBJCHANGEPROC of the given WNDOBJ
  */

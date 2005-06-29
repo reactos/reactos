@@ -30,8 +30,10 @@
 /* INCLUDES ******************************************************************/
 
 #include <w32k.h>
-#include <rosrtl/string.h>
 #include <ddk/ntddkbd.h>
+
+#define NDEBUG
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 

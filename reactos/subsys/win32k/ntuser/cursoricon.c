@@ -38,6 +38,9 @@
 
 #include <w32k.h>
 
+#define NDEBUG
+#include <debug.h>
+
 static PAGED_LOOKASIDE_LIST ProcessLookasideList;
 static LIST_ENTRY CurIconList;
 static FAST_MUTEX CurIconListLock;

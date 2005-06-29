@@ -30,7 +30,11 @@
  * - Create a GDI bitmap with all formats, perform all drawing operations on them, render to VGA surface
  *   refer to \test\microwin\src\engine\devdraw.c for info on correct pixel plotting for various formats
  */
+
 #include <w32k.h>
+
+#define NDEBUG
+#include <debug.h>
 
 enum Rle_EscapeCodes
 {

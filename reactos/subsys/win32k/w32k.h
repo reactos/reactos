@@ -17,6 +17,8 @@
 /* DDK/NDK/SDK Headers */
 #include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
+#include <ddk/ddrawint.h>
+#include <ddk/d3dnthal.h>
 #include <ddk/winddi.h>
 #include <ddk/ntddmou.h>
 #include <windows.h>    /* FIXME ? */
@@ -49,8 +51,4 @@ MmCopyToCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes);
 
 /* Internal Win32K Header */
 #include "include/win32k.h"
-
-/* FIXME: This is totally wrong, why was it like this?? */
-#define NDEBUG
-#include <debug.h>
 
