@@ -906,11 +906,19 @@ VOID
 SetInterruptGate(ULONG index, ULONG address)
 {
   KIDTENTRY *idt;
+  KIDT_ACCESS Access;
 
+  /* Set the IDT Access Bits */
+  Access.Reserved = 0;
+  Access.Present = 1;
+  Access.Dpl = 0; /* Kernel-Mode */
+  Access.SystemSegmentFlag = 0;
+  Access.SegmentType = I386_INTERRUPT_GATE;
+  
   idt = (KIDTENTRY*)((ULONG)KeGetCurrentKPCR()->IDT + index * sizeof(KIDTENTRY));
   idt->Offset = address & 0xffff;
   idt->Selector = KERNEL_CS;
-  idt->Access = 0x8e00;
+  idt->Access = Access.Value;
   idt->ExtendedOffset = address >> 16;
 }
 

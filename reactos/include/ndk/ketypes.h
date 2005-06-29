@@ -23,6 +23,13 @@
 
 #define THREAD_WAIT_OBJECTS 4
 
+/* X86 80386 Segment Types */
+#define I386_TSS               0x9
+#define I386_ACTIVE_TSS        0xB
+#define I386_CALL_GATE         0xC
+#define I386_INTERRUPT_GATE    0xE
+#define I386_TRAP_GATE         0xF
+
 /* EXPORTED DATA *************************************************************/
 extern CHAR NTOSAPI KeNumberProcessors;
 extern LOADER_PARAMETER_BLOCK NTOSAPI KeLoaderBlock;
@@ -225,6 +232,22 @@ typedef struct _KGDTENTRY
         } Bits;
     } HighWord;
 } KGDTENTRY, *PKGDTENTRY;
+
+typedef struct _KIDT_ACCESS
+{
+    union
+    {
+        struct
+        {
+            UCHAR Reserved;
+            UCHAR SegmentType:4;
+            UCHAR SystemSegmentFlag:1;
+            UCHAR Dpl:2;
+            UCHAR Present:1;
+        };
+        USHORT Value;
+    };
+} KIDT_ACCESS, *PKIDT_ACCESS;
 
 typedef struct _KIDTENTRY
 {
