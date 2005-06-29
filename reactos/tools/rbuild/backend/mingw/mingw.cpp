@@ -799,6 +799,11 @@ MingwBackend::DetectNetwideAssembler ()
 		detectedNasm = TryToDetectThisNetwideAssembler ( nasmCommand );
 	}
 #endif
+	if ( !detectedNasm )
+	{
+		nasmCommand = "yasm";
+		detectedNasm = TryToDetectThisNetwideAssembler ( nasmCommand );
+	}
 	if ( detectedNasm )
 		printf ( "detected (%s)\n", nasmCommand.c_str () );
 	else
