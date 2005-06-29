@@ -908,8 +908,9 @@ SetInterruptGate(ULONG index, ULONG address)
   KDESCRIPTOR *idt;
 
   idt = (KDESCRIPTOR*)((ULONG)KeGetCurrentKPCR()->IDT + index * sizeof(KDESCRIPTOR));
-  idt->Limit = address & 0xffff;
-  idt->Base = 0x8e00 + (address &0xffff0000);
+  idt->Pad = address & 0xffff;
+  idt->Limit = KERNEL_CS;
+  idt->Base = 0x8e00 + (address & 0xffff0000);
 }
 
 VOID HaliInitBSP(VOID)
