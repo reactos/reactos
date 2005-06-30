@@ -37,11 +37,11 @@ void Font_DrawText(HDC hDC, LPCTSTR lpszText, int x, int y)
         if ((lpszText[i] >= '0') && (lpszText[i] <= '9')) {
             BitBlt(hDC, x + (i * 8), y, 8, 11, hFontDC, (lpszText[i] - '0') * 8, 0, SRCCOPY);
         }
-        else if (lpszText[i] == '%')
+        else if (lpszText[i] == 'K')
         {
             BitBlt(hDC, x + (i * 8), y, 8, 11, hFontDC, 80, 0, SRCCOPY);
         }
-        else if (lpszText[i] == 'K')
+        else if (lpszText[i] == '%')
         {
             BitBlt(hDC, x + (i * 8), y, 8, 11, hFontDC, 88, 0, SRCCOPY);
         }
