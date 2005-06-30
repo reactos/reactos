@@ -39,9 +39,6 @@ MmCopyToCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes);
 /* CSRSS Header */
 #include <csrss/csrss.h>
 
-/* FIXME: ROSRTL */
-#include <rosrtl/string.h>
-
 /* Helper Header */
 #include <reactos/helper.h>
 

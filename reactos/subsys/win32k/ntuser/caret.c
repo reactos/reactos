@@ -72,7 +72,8 @@ IntSetCaretBlinkTime(UINT uMSeconds)
 UINT FASTCALL
 IntQueryCaretBlinkRate(VOID)
 {
-  UNICODE_STRING KeyName, ValueName;
+  UNICODE_STRING KeyName = RTL_CONSTANT_STRING(CARET_REGKEY);
+  UNICODE_STRING ValueName = RTL_CONSTANT_STRING(CARET_VALUENAME);
   NTSTATUS Status;
   HANDLE KeyHandle = NULL;
   OBJECT_ATTRIBUTES KeyAttributes;
@@ -80,9 +81,6 @@ IntQueryCaretBlinkRate(VOID)
   ULONG Length = 0;
   ULONG ResLength = 0;
   ULONG Val = 0;
-
-  RtlRosInitUnicodeStringFromLiteral(&KeyName, CARET_REGKEY);
-  RtlRosInitUnicodeStringFromLiteral(&ValueName, CARET_VALUENAME);
 
   InitializeObjectAttributes(&KeyAttributes, &KeyName, OBJ_CASE_INSENSITIVE,
                              NULL, NULL);

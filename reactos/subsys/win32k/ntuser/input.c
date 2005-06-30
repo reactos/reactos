@@ -149,12 +149,11 @@ ProcessMouseInputData(PMOUSE_INPUT_DATA Data, ULONG InputCount)
 VOID STDCALL
 MouseThreadMain(PVOID StartContext)
 {
-  UNICODE_STRING MouseDeviceName;
+  UNICODE_STRING MouseDeviceName = RTL_CONSTANT_STRING(L"\\??\\Mouse");
   OBJECT_ATTRIBUTES MouseObjectAttributes;
   IO_STATUS_BLOCK Iosb;
   NTSTATUS Status;
 
-  RtlRosInitUnicodeStringFromLiteral(&MouseDeviceName, L"\\??\\Mouse"); /* FIXME - does win use the same? */
   InitializeObjectAttributes(&MouseObjectAttributes,
                              &MouseDeviceName,
                              0,
@@ -404,7 +403,7 @@ IntKeyboardSendAltKeyMsg()
 STATIC VOID STDCALL
 KeyboardThreadMain(PVOID StartContext)
 {
-  UNICODE_STRING KeyboardDeviceName;
+  UNICODE_STRING KeyboardDeviceName = RTL_CONSTANT_STRING(L"\\??\\Keyboard");
   OBJECT_ATTRIBUTES KeyboardObjectAttributes;
   IO_STATUS_BLOCK Iosb;
   NTSTATUS Status;
@@ -420,7 +419,6 @@ KeyboardThreadMain(PVOID StartContext)
   USHORT LastFlags = 0;
   UINT RepeatCount = 0;
 
-  RtlRosInitUnicodeStringFromLiteral(&KeyboardDeviceName, L"\\??\\Keyboard");
   InitializeObjectAttributes(&KeyboardObjectAttributes,
 			     &KeyboardDeviceName,
 			     0,
