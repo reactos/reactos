@@ -13,12 +13,6 @@
 <directory name="expand">
 	<xi:include href="expand/expand.xml" />
 </directory>
-<directory name="explorer">
-	<xi:include href="explorer/explorer.xml" />
-</directory>
-<directory name="ibrowser">
-	<xi:include href="ibrowser/ibrowser.xml" />
-</directory>
 <directory name="format">
 	<xi:include href="format/format.xml" />
 </directory>
