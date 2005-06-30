@@ -1087,14 +1087,13 @@ GetDllDirectoryA(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 NeedCurrentDirectoryForExePathW(LPCWSTR ExeName)
 {
-  DPRINT1("NeedCurrentDirectoryForExePathW(0x%x) not implemented!\n", ExeName);
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
+  return (wcschr(ExeName,
+                 L'\\') != NULL);
 }
 
 
@@ -1104,12 +1103,8 @@ NeedCurrentDirectoryForExePathW(LPCWSTR ExeName)
 BOOL STDCALL
 NeedCurrentDirectoryForExePathA(LPCSTR ExeName)
 {
-  PWCHAR ExeNameW;
-
-  if (!(ExeNameW = FilenameA2W(ExeName, FALSE)))
-    return FALSE;
-
-  return NeedCurrentDirectoryForExePathW(ExeNameW);
+  return (strchr(ExeName,
+                 '\\') != NULL);
 }
 
 
