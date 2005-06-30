@@ -11,8 +11,6 @@
 #ifndef WIN32K_FONT_H_INCLUDED
 #define WIN32K_FONT_H_INCLUDED
 
-#include <windows.h>
-
 typedef struct tagFONTFAMILYINFO
 {
   ENUMLOGFONTEXW EnumLogFontEx;

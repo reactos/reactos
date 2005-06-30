@@ -2,10 +2,6 @@
 #ifndef __WIN32K_NTDDRAW_H
 #define __WIN32K_NTDDRAW_H
 
-#include <windows.h>
-#include <ddk/ddrawint.h>
-#include <ddk/d3dnthal.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
