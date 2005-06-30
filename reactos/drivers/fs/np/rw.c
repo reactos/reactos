@@ -10,7 +10,6 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntifs.h>
-#include <rosrtl/minmax.h>
 #include "npfs.h"
 
 #define NDEBUG
@@ -450,7 +449,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 	   /* Byte stream mode */
 	   while (Length > 0 && Fcb->ReadDataAvailable > 0)
 	   {
-	      CopyLength = RtlRosMin(Fcb->ReadDataAvailable, Length);
+	      CopyLength = min(Fcb->ReadDataAvailable, Length);
 	      if (Fcb->ReadPtr + CopyLength <= Fcb->Data + Fcb->MaxDataLength)
 	      {
 	         memcpy(Buffer, Fcb->ReadPtr, CopyLength);
@@ -494,7 +493,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 	   if (Fcb->ReadDataAvailable)
 	   {
 	      /* Truncate the message if the receive buffer is too small */
-	      CopyLength = RtlRosMin(Fcb->ReadDataAvailable, Length);
+	      CopyLength = min(Fcb->ReadDataAvailable, Length);
 	      memcpy(Buffer, Fcb->Data, CopyLength);
 
 #ifndef NDEBUG
@@ -694,7 +693,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 	  DPRINT("Byte stream mode\n");
 	  while (Length > 0 && ReaderFcb->WriteQuotaAvailable > 0)
 	    {
-	      CopyLength = RtlRosMin(Length, ReaderFcb->WriteQuotaAvailable);
+	      CopyLength = min(Length, ReaderFcb->WriteQuotaAvailable);
 	      if (ReaderFcb->WritePtr + CopyLength <= ReaderFcb->Data + ReaderFcb->MaxDataLength)
 		{
 		  memcpy(ReaderFcb->WritePtr, Buffer, CopyLength);
@@ -732,7 +731,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 	  DPRINT("Message mode\n");
 	  if (Length > 0)
 	    {
-	      CopyLength = RtlRosMin(Length, ReaderFcb->WriteQuotaAvailable);
+	      CopyLength = min(Length, ReaderFcb->WriteQuotaAvailable);
 	      memcpy(ReaderFcb->Data, Buffer, CopyLength);
 
 	      Information = CopyLength;
