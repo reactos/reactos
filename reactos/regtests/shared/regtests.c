@@ -9,7 +9,7 @@
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
-#include <pseh.h>
+#include <pseh/pseh.h>
 #include "regtests.h"
 
 #define NDEBUG

@@ -24,7 +24,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#include <pseh.h>
+#include <pseh/pseh.h>
 #include <pseh/framebased/internal.h>
 #include <pseh/excpt.h>
 #include <pseh/framebased.h>

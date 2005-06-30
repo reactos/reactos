@@ -10,7 +10,7 @@
  */
 
 #include "precomp.h"
-#include <pseh.h>
+#include <pseh/pseh.h>
 
 NTSTATUS DispPrepareIrpForCancel(
     PTRANSPORT_CONTEXT Context,

@@ -34,7 +34,7 @@
 #include <wchar.h>
 
 /* SEH support with PSEH */
-#include <pseh.h>
+#include <pseh/pseh.h>
 
 /* Helper Header */
 #include <reactos/helper.h>

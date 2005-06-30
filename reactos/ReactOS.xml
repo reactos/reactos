@@ -30,8 +30,9 @@
 	</if>
 
 	<include>include</include>
+    <include>include/reactos</include>
 	<include>w32api/include</include>
-	<include>w32api/include/ddk</include>
+    <include>w32api/include/ddk</include>
 
 	<directory name="apps">
 		<xi:include href="apps/directory.xml" />

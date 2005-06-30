@@ -28,7 +28,7 @@ STDCALL
 MmCopyToCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes);
 
 /* SEH Support with PSEH */
-#include <pseh.h>
+#include <pseh/pseh.h>
 
 /* CSRSS Header */
 #include <csrss/csrss.h>

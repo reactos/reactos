@@ -15,7 +15,7 @@
 #define MAXULONG ((ULONG)(~1))
 #endif
 
-#include <elf.h>
+#include <elf/elf.h>
 
 /* TODO: Intsafe should be made into a library, as it's generally useful */
 static __inline BOOLEAN Intsafe_CanAddULongPtr
