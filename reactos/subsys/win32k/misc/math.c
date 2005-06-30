@@ -18,8 +18,7 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
-#include <windows.h>
-#include <stdlib.h>
+#include <w32k.h>
 
 double atan (double __x);
 double atan2 (double __y, double __x);
