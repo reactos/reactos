@@ -11,14 +11,12 @@
 /* We are Win32K */
 #define __WIN32K__
 
-/* ReactOS Config */
-#include <roscfg.h>
-
 /* DDK/NDK/SDK Headers */
 #include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
 #include <ddk/winddi.h>
 #include <ddk/ntddmou.h>
+#include <windows.h>
 #include <ndk/ntndk.h>
 
 /* FIXME: ReactOS will be R-Rated if I really write what I'm about to */
@@ -44,4 +42,3 @@ MmCopyToCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes);
 
 /* Internal Win32K Header */
 #include "include/win32k.h"
-
