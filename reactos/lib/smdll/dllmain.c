@@ -8,7 +8,7 @@
 
 #include <windows.h>
 
-BOOL STDCALL DllMain(HANDLE hinstDll, DWORD fdwReason, LPVOID fImpLoad)
+BOOL STDCALL DllMainCRTStartup(HANDLE hinstDll, DWORD fdwReason, LPVOID fImpLoad)
 {
   return TRUE;
 }
