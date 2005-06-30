@@ -25,7 +25,6 @@
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 #include <rosrtl/string.h>
-#include <tcpmisc.h>
 #include <winsock2.h>
 #include <nspapi.h>
 #include <iptypes.h>
@@ -58,6 +57,26 @@
 
 #define TCP_REQUEST_QUERY_INFORMATION_INIT { { { 0 } } }
 #define TCP_REQUEST_SET_INFORMATION_INIT { { 0 } }
+
+#define IP_MIB_ROUTETABLE_ENTRY_ID   0x101
+
+// As in the mib from RFC 1213
+
+typedef struct _IPRouteEntry {
+    ULONG ire_dest;
+    ULONG ire_index;            //matches if_index in IFEntry and iae_index in IPAddrEntry
+    ULONG ire_metric1;
+    ULONG ire_metric2;
+    ULONG ire_metric3;
+    ULONG ire_metric4;
+    ULONG ire_gw;
+    ULONG ire_type; 
+    ULONG ire_proto;
+    ULONG ire_age; 
+    ULONG ire_mask;
+    ULONG ire_metric5;
+    ULONG ire_info;
+} IPRouteEntry;
 
 /* No caddr_t in reactos headers */
 typedef char *caddr_t;

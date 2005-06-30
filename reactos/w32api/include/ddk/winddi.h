@@ -31,41 +31,11 @@
 #error video.h cannot be included with winddi.h
 #else
 
-#include <wingdi.h>
+#include <ddrawint.h>
+#include <d3dnthal.h>
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-#ifndef __DD_INCLUDED__
-/* FIXME: Some DirectDraw structures not added yet */
-typedef ULONG_PTR FLATPTR;
-typedef struct _DD_SURFACECALLBACKS {
-} DD_SURFACECALLBACKS, *PDD_SURFACECALLBACKS;
-typedef struct _DD_PALETTECALLBACKS {
-} DD_PALETTECALLBACKS, *PDD_PALETTECALLBACKS;
-typedef struct _DD_CALLBACKS {
-} DD_CALLBACKS, *PDD_CALLBACKS;
-typedef struct _DD_HALINFO {
-} DD_HALINFO, *PDD_HALINFO;
-typedef struct _VIDEOMEMORY {
-} VIDEOMEMORY, *LPVIDEOMEMORY;
-typedef struct _DD_DIRECTDRAW_GLOBAL {
-} DD_DIRECTDRAW_GLOBAL, *LPDD_DIRECTDRAW_GLOBAL;
-typedef struct _DD_SURFACE_LOCAL {
-} DD_SURFACE_LOCAL, *PDD_SURFACE_LOCAL, *LPDD_SURFACE_LOCAL;
-#endif
-
-#ifndef __DDRAWI_INCLUDED__
-typedef PVOID LPVIDMEM;
-#endif
-
-#if !defined(__DD_INCLUDED__) && !defined(__DDRAWI_INCLUDED__)
-typedef struct _DDSCAPS {
-} DDSCAPS, *PDDSCAPS;
-typedef struct _DDSCAPSEX {
-} DDSCAPSEX, *PDDSCAPSEX;
-typedef PVOID LPVMEMHEAP;
 #endif
 
 #ifndef DECL_IMPORT
@@ -119,9 +89,6 @@ DECLARE_HANDLE(HSURF);
 DECLARE_HANDLE(DHSURF);
 DECLARE_HANDLE(DHPDEV);
 DECLARE_HANDLE(HDRVOBJ);
-
-
-#define GDI_DRIVER_VERSION                0x4000
 
 typedef struct _ENG_EVENT *PEVENT;
 
