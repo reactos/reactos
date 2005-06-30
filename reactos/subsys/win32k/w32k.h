@@ -17,12 +17,10 @@
 /* DDK/NDK/SDK Headers */
 #include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
-#include <ddk/ddrawint.h>
-#include <ddk/d3dnthal.h>
 #include <ddk/winddi.h>
 #include <ddk/ntddmou.h>
 #include <windows.h>    /* FIXME ? */
-#include <windowsx.h>   /* FIXME ? */
+//#include <windowsx.h>   /* FIXME ? */
 #include <ndk/ntndk.h>
 
 /* FIXME: ReactOS will be R-Rated if I really write what I'm about to */
