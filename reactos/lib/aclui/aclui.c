@@ -30,32 +30,6 @@
 
 HINSTANCE hDllInstance;
 
-static LPARAM
-ListViewGetSelectedItemData(IN HWND hwnd)
-{
-    int Index;
-    
-    Index = ListView_GetNextItem(hwnd,
-                                 -1,
-                                 LVNI_SELECTED);
-    if (Index != -1)
-    {
-        LVITEM li;
-        
-        li.mask = LVIF_PARAM;
-        li.iItem = Index;
-        li.iSubItem = 0;
-        
-        if (ListView_GetItem(hwnd,
-                             &li))
-        {
-            return li.lParam;
-        }
-    }
-    
-    return 0;
-}
-
 static VOID
 DestroySecurityPage(IN PSECURITY_PAGE sp)
 {
@@ -363,6 +337,38 @@ ReloadUsersGroupsList(IN PSECURITY_PAGE sp)
     }
 }
 
+static INT
+AddAceListEntry(IN PSECURITY_PAGE sp,
+                IN PACE_LISTITEM AceListItem,
+                IN INT Index,
+                IN BOOL Selected)
+{
+    LVITEM li;
+
+    li.mask = LVIF_IMAGE | LVIF_PARAM | LVIF_STATE | LVIF_TEXT;
+    li.iItem = Index;
+    li.iSubItem = 0;
+    li.state = (Selected ? LVIS_SELECTED : 0);
+    li.stateMask = LVIS_SELECTED;
+    li.pszText = (AceListItem->DisplayString != NULL ? AceListItem->DisplayString : AceListItem->AccountName);
+    switch (AceListItem->SidNameUse)
+    {
+        case SidTypeUser:
+            li.iImage = 0;
+            break;
+        case SidTypeGroup:
+            li.iImage = 1;
+            break;
+        default:
+            li.iImage = -1;
+            break;
+    }
+    li.lParam = (LPARAM)AceListItem;
+
+    return ListView_InsertItem(sp->hWndAceList,
+                               &li);
+}
+
 static VOID
 FillUsersGroupsList(IN PSECURITY_PAGE sp)
 {
@@ -382,30 +388,10 @@ FillUsersGroupsList(IN PSECURITY_PAGE sp)
          CurItem != NULL;
          CurItem = CurItem->Next)
     {
-        LVITEM li;
-
-        li.mask = LVIF_IMAGE | LVIF_PARAM | LVIF_STATE | LVIF_TEXT;
-        li.iItem = -1;
-        li.iSubItem = 0;
-        li.state = (CurItem == (PACE_LISTITEM)SelLParam ? LVIS_SELECTED : 0);
-        li.stateMask = LVIS_SELECTED;
-        li.pszText = (CurItem->DisplayString != NULL ? CurItem->DisplayString : CurItem->AccountName);
-        switch (CurItem->SidNameUse)
-        {
-            case SidTypeUser:
-                li.iImage = 0;
-                break;
-            case SidTypeGroup:
-                li.iImage = 1;
-                break;
-            default:
-                li.iImage = -1;
-                break;
-        }
-        li.lParam = (LPARAM)CurItem;
-
-        ListView_InsertItem(sp->hWndAceList,
-                            &li);
+        AddAceListEntry(sp,
+                        CurItem,
+                        -1,
+                        (SelLParam == (LPARAM)CurItem));
     }
     
     EnableRedrawWindow(sp->hWndAceList);
@@ -417,6 +403,15 @@ FillUsersGroupsList(IN PSECURITY_PAGE sp)
                             rcLvClient.right);
 }
 
+static VOID
+UpdateControlStates(IN PSECURITY_PAGE sp)
+{
+    BOOL UserOrGroupSelected;
+    
+    UserOrGroupSelected = (ListViewGetSelectedItemData(sp->hWndAceList) != 0);
+
+    EnableWindow(sp->hBtnRemove, UserOrGroupSelected);
+}
 
 static UINT CALLBACK
 SecurityPageCallback(IN HWND hwnd,
@@ -434,11 +429,35 @@ SecurityPageCallback(IN HWND hwnd,
         case PSPCB_RELEASE:
         {
             DestroySecurityPage(sp);
+            UnregisterCheckListControl();
             return FALSE;
         }
     }
 
     return FALSE;
+}
+
+static VOID
+SetAceCheckListColumns(IN HWND hAceCheckList,
+                       IN UINT Button,
+                       IN HWND hLabel)
+{
+    POINT pt;
+    RECT rcLabel;
+
+    GetWindowRect(hLabel,
+                  &rcLabel);
+    pt.y = 0;
+    pt.x = (rcLabel.right - rcLabel.left) / 2;
+    MapWindowPoints(hLabel,
+                    hAceCheckList,
+                    &pt,
+                    1);
+
+    SendMessage(hAceCheckList,
+                CLM_SETCHECKBOXCOLUMN,
+                Button,
+                pt.x);
 }
 
 
@@ -452,6 +471,28 @@ SecurityPageProc(IN HWND hwndDlg,
 
     switch(uMsg)
     {
+        case WM_NOTIFY:
+        {
+            NMHDR *pnmh = (NMHDR*)lParam;
+            if (pnmh->idFrom == IDC_ACELIST)
+            {
+                sp = (PSECURITY_PAGE)GetWindowLongPtr(hwndDlg,
+                                                      DWL_USER);
+                if (sp != NULL)
+                {
+                    switch(pnmh->code)
+                    {
+                        case LVN_ITEMCHANGED:
+                        {
+                            UpdateControlStates(sp);
+                            break;
+                        }
+                    }
+                }
+            }
+            break;
+        }
+        
         case WM_INITDIALOG:
         {
             sp = (PSECURITY_PAGE)((LPPROPSHEETPAGE)lParam)->lParam;
@@ -462,6 +503,8 @@ SecurityPageProc(IN HWND hwndDlg,
                 
                 sp->hWnd = hwndDlg;
                 sp->hWndAceList = GetDlgItem(hwndDlg, IDC_ACELIST);
+                sp->hBtnRemove = GetDlgItem(hwndDlg, IDC_ACELIST_REMOVE);
+                sp->hAceCheckList = GetDlgItem(hwndDlg, IDC_ACE_CHECKLIST);
 
                 /* save the pointer to the structure */
                 SetWindowLongPtr(hwndDlg,
@@ -491,6 +534,17 @@ SecurityPageProc(IN HWND hwndDlg,
                 ListView_InsertColumn(sp->hWndAceList, 0, &lvc);
 
                 FillUsersGroupsList(sp);
+                
+                ListViewSelectItem(sp->hWndAceList,
+                                   0);
+
+                /* calculate the columns of the allow/deny checkboxes */
+                SetAceCheckListColumns(sp->hAceCheckList,
+                                       CLB_ALLOW,
+                                       GetDlgItem(hwndDlg, IDC_LABEL_ALLOW));
+                SetAceCheckListColumns(sp->hAceCheckList,
+                                       CLB_DENY,
+                                       GetDlgItem(hwndDlg, IDC_LABEL_DENY));
 
                 /* FIXME - hide controls in case the flags aren't present */
             }
@@ -530,7 +584,13 @@ CreateSecurityPage(IN LPSECURITYINFO psi)
     {
         SetLastError(hRet);
 
-        DPRINT("CreateSecurityPage() failed!\n");
+        DPRINT("CreateSecurityPage() failed! Failed to query the object information!\n");
+        return NULL;
+    }
+    
+    if (!RegisterCheckListControl(hDllInstance))
+    {
+        DPRINT("Registering the CHECKLIST_ACLUI class failed!\n");
         return NULL;
     }
     
@@ -555,7 +615,7 @@ CreateSecurityPage(IN LPSECURITYINFO psi)
     psp.lParam = (LPARAM)sPage;
     psp.pfnCallback = SecurityPageCallback;
 
-    if((ObjectInfo.dwFlags & SI_PAGE_TITLE) != 0 &&
+    if((ObjectInfo.dwFlags & SI_PAGE_TITLE) &&
        ObjectInfo.pszPageTitle != NULL && ObjectInfo.pszPageTitle[0] != L'\0')
     {
         /* Set the page title if the flag is present and the string isn't empty */
@@ -618,7 +678,7 @@ EditSecurity(IN HWND hwndOwner,
     psh.dwFlags = PSH_DEFAULT;
     psh.hwndParent = hwndOwner;
     psh.hInstance = hDllInstance;
-    if((ObjectInfo.dwFlags & SI_PAGE_TITLE) != 0 &&
+    if((ObjectInfo.dwFlags & SI_PAGE_TITLE) &&
        ObjectInfo.pszPageTitle != NULL && ObjectInfo.pszPageTitle[0] != L'\0')
     {
         /* Set the page title if the flag is present and the string isn't empty */

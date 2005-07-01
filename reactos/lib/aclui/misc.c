@@ -161,3 +161,46 @@ OpenLSAPolicyHandle(IN WCHAR *SystemName,
 
     return TRUE;
 }
+
+LPARAM
+ListViewGetSelectedItemData(IN HWND hwnd)
+{
+    int Index;
+
+    Index = ListView_GetNextItem(hwnd,
+                                 -1,
+                                 LVNI_SELECTED);
+    if (Index != -1)
+    {
+        LVITEM li;
+
+        li.mask = LVIF_PARAM;
+        li.iItem = Index;
+        li.iSubItem = 0;
+
+        if (ListView_GetItem(hwnd,
+                             &li))
+        {
+            return li.lParam;
+        }
+    }
+
+    return 0;
+}
+
+BOOL
+ListViewSelectItem(IN HWND hwnd,
+                   IN INT Index)
+{
+    LVITEM li;
+
+    li.mask = LVIF_STATE;
+    li.iItem = Index;
+    li.iSubItem = 0;
+    li.state = LVIS_SELECTED;
+    li.stateMask = LVIS_SELECTED;
+
+    return ListView_SetItem(hwnd,
+                            &li);
+}
+
