@@ -14,7 +14,6 @@
  *      07/09/2004  Created
  */
 #include <windows.h>
-#include <acledit.h>
 #include "acleditint.h"
 
 ULONG DbgPrint(PCH Format,...);
