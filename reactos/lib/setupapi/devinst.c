@@ -1182,12 +1182,13 @@ static HKEY CreateClassKey(HINF hInf)
     DWORD RequiredSize;
     HKEY hClassKey;
 
+    Buffer[0] = '\\';
     if (!SetupGetLineTextW(NULL,
 			   hInf,
 			   Version,
 			   ClassGUID,
-			   Buffer,
-			   MAX_PATH,
+			   &Buffer[1],
+			   MAX_PATH - 1,
 			   &RequiredSize))
     {
 	return INVALID_HANDLE_VALUE;
@@ -1433,7 +1434,7 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
     if (UuidToStringW((UUID*)ClassGuid, &lpGuidString) != RPC_S_OK)
     {
 	RegCloseKey(hClassesKey);
-	return FALSE;
+	return INVALID_HANDLE_VALUE;
     }
 
     if (RegOpenKeyExW(hClassesKey,
@@ -1444,7 +1445,7 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
     {
 	RpcStringFreeW(&lpGuidString);
 	RegCloseKey(hClassesKey);
-	return FALSE;
+	return INVALID_HANDLE_VALUE;
     }
 
     RpcStringFreeW(&lpGuidString);
