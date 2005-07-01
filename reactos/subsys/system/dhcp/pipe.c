@@ -31,10 +31,10 @@ DWORD WINAPI PipeThreadProc( LPVOID Parameter ) {
     DWORD BytesRead, BytesWritten;
     COMM_DHCP_REQ Req;
     BOOL Result;
-    HANDLE Connection;
+    BOOLEAN Connection;
 
     while( (Connection = ConnectNamedPipe( CommPipe, NULL )) ) {
-        Result = ReadFile( Connection, &Req, sizeof(Req), &BytesRead, NULL );
+        Result = ReadFile( CommPipe, &Req, sizeof(Req), &BytesRead, NULL );
         if( Result ) {
             switch( Req.Type ) {
             case DhcpReqQueryHWInfo:
@@ -54,8 +54,10 @@ DWORD WINAPI PipeThreadProc( LPVOID Parameter ) {
                 break;
             }
         }
-        CloseHandle( Connection );
+        CloseHandle( CommPipe );
     }
+    
+    return TRUE;
 }
 
 HANDLE PipeInit() {

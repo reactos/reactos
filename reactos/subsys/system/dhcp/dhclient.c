@@ -124,11 +124,7 @@ int check_arp( struct interface_info *ip, struct client_lease *lp ) {
 int
 main(int argc, char *argv[])
 {
-	extern char		*__progname;
-	int			 ch, fd, quiet = 0, i = 0;
-	int			 pipe_fd[2];
-	struct passwd		*pw;
-
+    int i = 0;
         ApiInit();
         AdapterInit();
         PipeInit();
@@ -503,7 +499,7 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
               &Adapter->NteInstance );
 
         if( !NT_SUCCESS(Status) )
-            warning("AddIPAddress: %x\n", Status);
+            warning("AddIPAddress: %lx\n", Status);
     }
 
     if( new_lease->options[DHO_ROUTERS].len ) {
@@ -526,7 +522,7 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
         Status = CreateIpForwardEntry( &RouterMib );
 
         if( !NT_SUCCESS(Status) )
-            warning("CreateIpForwardEntry: %x\n", Status);
+            warning("CreateIpForwardEntry: %lx\n", Status);
         else
             old_default_route = RouterMib.dwForwardNextHop;
     }
@@ -551,7 +547,7 @@ bind_lease(struct interface_info *ip)
     if( ip->client->active->renewal - cur_time )
         add_timeout(ip->client->active->renewal, state_bound, ip);
 
-    note("bound to %s -- renewal in %d seconds.",
+    note("bound to %s -- renewal in %ld seconds.",
          piaddr(ip->client->active->address),
          ip->client->active->renewal - cur_time);
 
@@ -917,7 +913,7 @@ send_discover(void *ipp)
 	if (!ip->client->offered_leases &&
 	    ip->client->config->media) {
 		int fail = 0;
-again:
+
 		if (ip->client->medium) {
 			ip->client->medium = ip->client->medium->next;
 			increase = 0;
@@ -976,7 +972,7 @@ again:
 		ip->client->packet.secs = htons(65535);
 	ip->client->secs = ip->client->packet.secs;
 
-	note("DHCPDISCOVER on %s to %s port %d interval %d",
+	note("DHCPDISCOVER on %s to %s port %d interval %ld",
 	    ip->name, inet_ntoa(sockaddr_broadcast.sin_addr),
 	    ntohs(sockaddr_broadcast.sin_port), ip->client->interval);
 
@@ -1030,7 +1026,7 @@ state_panic(void *ipp)
                         if (cur_time <
                             ip->client->active->renewal) {
                             ip->client->state = S_BOUND;
-                            note("bound: renewal in %d seconds.",
+                            note("bound: renewal in %ld seconds.",
                                  ip->client->active->renewal -
                                  cur_time);
                             add_timeout(
@@ -1106,7 +1102,6 @@ send_request(void *ipp)
 	if ((ip->client->state == S_REBOOTING ||
 	    ip->client->state == S_REQUESTING) &&
 	    interval > ip->client->config->reboot_timeout) {
-cancel:
 		ip->client->state = S_INIT;
 		cancel_timeout(send_request, ip);
 		state_init(ip);
@@ -1632,7 +1627,6 @@ priv_script_write_params(char *prefix, struct client_lease *lease)
 	struct interface_info *ip = ifi;
 	u_int8_t dbuf[1500];
 	int i, len = 0;
-	char tbuf[128];
 
 #if 0
 	script_set_env(ip->client, prefix, "ip_address",
