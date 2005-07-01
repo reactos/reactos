@@ -8,11 +8,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
-#include "csrplugin.h"
-#include "conio.h"
-#include "desktopbg.h"
-#include "guiconsole.h"
+#include "w32csr.h"
 
 #define NDEBUG
 #include <debug.h>

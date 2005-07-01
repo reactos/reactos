@@ -1,0 +1,21 @@
+/* PSDK/NDK Headers */
+#include <windows.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
+
+/* Our own BLUE.SYS Driver for Console Output */
+#include <ddk/ntddblue.h>
+
+/* External Winlogon Header */
+#include <winlogon.h>
+
+/* Internal CSRSS Headers */
+#include <api.h>
+#include <conio.h>
+#include <csrplugin.h>
+#include <desktopbg.h>
+#include "guiconsole.h"
+#include "tuiconsole.h"
+#include <win32csr.h>
+
+/* EOF */

@@ -8,20 +8,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
-#include <ddk/ntddblue.h>
-#include <rosrtl/string.h>
-
-#include <string.h>
-
-#include "api.h"
-#include "conio.h"
-#include "desktopbg.h"
-#include "guiconsole.h"
-#include "tuiconsole.h"
-#include "win32csr.h"
+#include "w32csr.h"
 
 #define NDEBUG
 #include <debug.h>

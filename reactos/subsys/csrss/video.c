@@ -3,16 +3,16 @@
  * ReactOS Project
  */
 
-#include <windows.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
-#include <rosrtl/string.h>
+#include "csrss.h"
+
+#define NDEBUG
+#include <debug.h>
 
 ULONG
 InitializeVideoAddressSpace(VOID)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
-   UNICODE_STRING PhysMemName;
+   UNICODE_STRING PhysMemName = RTL_CONSTANT_STRING(L"\\Device\\PhysicalMemory");
    NTSTATUS Status;
    HANDLE PhysMemHandle;
    PVOID BaseAddress;
@@ -25,7 +25,6 @@ InitializeVideoAddressSpace(VOID)
    /*
     * Open the physical memory section
     */
-   RtlRosInitUnicodeStringFromLiteral(&PhysMemName, L"\\Device\\PhysicalMemory");
    InitializeObjectAttributes(&ObjectAttributes,
 			      &PhysMemName,
 			      0,

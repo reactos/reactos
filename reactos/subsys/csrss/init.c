@@ -10,13 +10,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
-#include <sm/helper.h>
-
-#include "api.h"
-#include "csrplugin.h"
+#include "csrss.h"
 
 #define NDEBUG
 #include <debug.h>

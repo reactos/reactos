@@ -27,10 +27,10 @@
  * 		Compiled successfully with egcs 1.1.2
  */
 
-#include <windows.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
-#include <csrss/csrss.h>
+#include "csrss.h"
+
+#define NDEBUG
+#include <debug.h>
 
 VOID STDCALL DisplayString(LPCWSTR lpwString)
 {

@@ -10,12 +10,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
-#include <rosrtl/thread.h>
-
-#include "api.h"
+#include "csrss.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -170,7 +165,7 @@ ClientConnectionThread(HANDLE ServerPort)
     
     /* Close the port and exit the thread */
     NtClose(ServerPort);
-    RtlRosExitUserThread(STATUS_SUCCESS);
+    NtTerminateThread(NtCurrentThread(), STATUS_SUCCESS);
 }
 
 /**********************************************************************
