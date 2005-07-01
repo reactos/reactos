@@ -20,10 +20,6 @@
 /* Win32K External Headers */
 #include <win32k/kapi.h>
 
-/* FIXME: ROSRTL */
-#include <rosrtl/logfont.h>
-#include <rosrtl/devmode.h>
-
 #define NtUserGetDCBrushColor(hbr) \
   (COLORREF)NtUserCallTwoParam((DWORD)(hbr), OBJ_BRUSH, TWOPARAM_ROUTINE_GETDCCOLOR)
 
@@ -73,4 +69,16 @@ BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, PVOID *UserData);
 BOOL STDCALL CalculateColorTableSize(CONST BITMAPINFOHEADER *BitmapInfoHeader, UINT *ColorSpec, UINT *ColorTableSize);
 LPBITMAPINFO STDCALL ConvertBitmapInfo(CONST BITMAPINFO *BitmapInfo, UINT ColorSpec, UINT *BitmapInfoSize, BOOL FollowedByData);
 
+/* == CONVERSION FUNCTIONS ================================================== */
+DEVMODEW *
+STDCALL
+GdiConvertToDevmodeW(DEVMODEA *dm);
+
+VOID
+STDCALL
+LogFontA2W(LPLOGFONTW pW, CONST LOGFONTA *pA);
+
+VOID
+STDCALL
+LogFontW2A(LPLOGFONTA pA, CONST LOGFONTW *pW);
 /* EOF */

@@ -13,7 +13,6 @@
 #include <ndk/ntndk.h>
 #include <ddk/ntddblue.h>
 #include <rosrtl/string.h>
-#include <rosrtl/minmax.h>
 
 #include <string.h>
 
@@ -420,8 +419,8 @@ ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff,
                     }
                   Offset = 2 * ((Buff->CurrentY * Buff->MaxX) + Buff->CurrentX);
                   SET_CELL_BUFFER(Buff, Offset, ' ', Buff->DefaultAttrib);
-                  UpdateRect.left = RtlRosMin(UpdateRect.left, Buff->CurrentX);
-                  UpdateRect.right = RtlRosMax(UpdateRect.right, (LONG) Buff->CurrentX);
+                  UpdateRect.left = min(UpdateRect.left, Buff->CurrentX);
+                  UpdateRect.right = max(UpdateRect.right, (LONG) Buff->CurrentX);
                 }
                 continue;
             }
@@ -429,8 +428,8 @@ ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff,
           else if (Buffer[i] == '\r')
             {
               Buff->CurrentX = 0;
-              UpdateRect.left = RtlRosMin(UpdateRect.left, Buff->CurrentX);
-              UpdateRect.right = RtlRosMax(UpdateRect.right, (LONG) Buff->CurrentX);
+              UpdateRect.left = min(UpdateRect.left, Buff->CurrentX);
+              UpdateRect.right = max(UpdateRect.right, (LONG) Buff->CurrentX);
               continue;
             }
           /* --- TAB --- */
@@ -438,7 +437,7 @@ ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff,
             {
               UINT EndX;
 
-              UpdateRect.left = RtlRosMin(UpdateRect.left, Buff->CurrentX);
+              UpdateRect.left = min(UpdateRect.left, Buff->CurrentX);
               EndX = (Buff->CurrentX + 8) & ~7;
               if (EndX > Buff->MaxX)
                 {
@@ -451,7 +450,7 @@ ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff,
                   Offset += 2;
                   Buff->CurrentX++;
                 }
-              UpdateRect.right = RtlRosMax(UpdateRect.right, (LONG) Buff->CurrentX - 1);
+              UpdateRect.right = max(UpdateRect.right, (LONG) Buff->CurrentX - 1);
               if (Buff->CurrentX == Buff->MaxX)
                 {
                   if (Buff->Mode & ENABLE_WRAP_AT_EOL_OUTPUT)
@@ -467,8 +466,8 @@ ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff,
               continue;
             }
         }
-      UpdateRect.left = RtlRosMin(UpdateRect.left, Buff->CurrentX);
-      UpdateRect.right = RtlRosMax(UpdateRect.right, (LONG) Buff->CurrentX);
+      UpdateRect.left = min(UpdateRect.left, Buff->CurrentX);
+      UpdateRect.right = max(UpdateRect.right, (LONG) Buff->CurrentX);
       Offset = 2 * (((Buff->CurrentY * Buff->MaxX)) + Buff->CurrentX);
       Buff->Buffer[Offset++] = Buffer[i];
       if (Attrib)
@@ -679,10 +678,10 @@ inline BOOLEAN ConioGetIntersection(
   }
 
   ConioInitRect(Intersection,
-               RtlRosMax(Rect1->top, Rect2->top),
-               RtlRosMax(Rect1->left, Rect2->left),
-               RtlRosMin(Rect1->bottom, Rect2->bottom),
-               RtlRosMin(Rect1->right, Rect2->right));
+               max(Rect1->top, Rect2->top),
+               max(Rect1->left, Rect2->left),
+               min(Rect1->bottom, Rect2->bottom),
+               min(Rect1->right, Rect2->right));
 
   return TRUE;
 }
@@ -711,10 +710,10 @@ inline BOOLEAN ConioGetUnion(
   else
     {
       ConioInitRect(Union,
-                   RtlRosMin(Rect1->top, Rect2->top),
-                   RtlRosMin(Rect1->left, Rect2->left),
-                   RtlRosMax(Rect1->bottom, Rect2->bottom),
-                   RtlRosMax(Rect1->right, Rect2->right));
+                   min(Rect1->top, Rect2->top),
+                   min(Rect1->left, Rect2->left),
+                   max(Rect1->bottom, Rect2->bottom),
+                   max(Rect1->right, Rect2->right));
     }
 
   return TRUE;
@@ -2299,8 +2298,8 @@ CSR_API(CsrWriteConsoleOutput)
   WriteRegion.right = Request->Data.WriteConsoleOutputRequest.WriteRegion.Right;
   WriteRegion.bottom = Request->Data.WriteConsoleOutputRequest.WriteRegion.Bottom;
 
-  SizeY = RtlRosMin(BufferSize.Y - BufferCoord.Y, ConioRectHeight(&WriteRegion));
-  SizeX = RtlRosMin(BufferSize.X - BufferCoord.X, ConioRectWidth(&WriteRegion));
+  SizeY = min(BufferSize.Y - BufferCoord.Y, ConioRectHeight(&WriteRegion));
+  SizeX = min(BufferSize.X - BufferCoord.X, ConioRectWidth(&WriteRegion));
   WriteRegion.bottom = WriteRegion.top + SizeY - 1;
   WriteRegion.right = WriteRegion.left + SizeX - 1;
 
@@ -2797,8 +2796,8 @@ CSR_API(CsrReadConsoleOutput)
       return Request->Status ;
     }
 
-  SizeY = RtlRosMin(BufferSize.Y - BufferCoord.Y, ConioRectHeight(&ReadRegion));
-  SizeX = RtlRosMin(BufferSize.X - BufferCoord.X, ConioRectWidth(&ReadRegion));
+  SizeY = min(BufferSize.Y - BufferCoord.Y, ConioRectHeight(&ReadRegion));
+  SizeX = min(BufferSize.X - BufferCoord.X, ConioRectWidth(&ReadRegion));
   ReadRegion.bottom = ReadRegion.top + SizeY;
   ReadRegion.right = ReadRegion.left + SizeX;
 

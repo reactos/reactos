@@ -31,7 +31,6 @@
 #include <commctrl.h>
 #include <prsht.h>
 #include <aclui.h>
-#include <rosrtl/resstr.h>
 #include "internal.h"
 #include "resource.h"
 
@@ -184,7 +183,7 @@ EditSecurity(HWND hwndOwner, LPSECURITYINFO psi)
   SI_OBJECT_INFO ObjectInfo;
   PROPSHEETHEADER psh;
   HPROPSHEETPAGE hPages[1];
-  LPWSTR lpCaption;
+  LPVOID lpCaption;
   BOOL Ret;
   
   if(psi == NULL)
@@ -229,8 +228,15 @@ EditSecurity(HWND hwndOwner, LPSECURITYINFO psi)
   {
     /* Set the page title to the object name, make sure the format string
        has "%1" NOT "%s" because it uses FormatMessage() to automatically
-       allocate the right amount of memory. */
-    RosLoadAndFormatStr(hDllInstance, IDS_PSP_TITLE, &lpCaption, ObjectInfo.pszObjectName);
+       allocate the right amount of memory. */       
+    FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+                   FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_ARGUMENT_ARRAY,
+                   hDllInstance, 
+                   IDS_PSP_TITLE, 
+                   0,
+                   (LPSTR)lpCaption,
+                   0,
+                   (va_list*)&ObjectInfo.pszObjectName); /* Acc. to MSDN, should work */
     psh.pszCaption = lpCaption;
   }
   psh.nPages = sizeof(hPages) / sizeof(HPROPSHEETPAGE);

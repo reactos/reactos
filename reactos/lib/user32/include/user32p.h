@@ -124,5 +124,9 @@ typedef struct _USER32_THREAD_DATA
 
 PUSER32_THREAD_DATA User32GetThreadData();
   
+DEVMODEW *
+STDCALL
+GdiConvertToDevmodeW(DEVMODEA *dm);
+
 #endif
 /* EOF */

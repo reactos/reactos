@@ -1,3 +1,4 @@
+#if 0
 #include <windows.h>
 #include <rosrtl/priv.h>
 
@@ -117,4 +118,5 @@ RosResetThreadPrivileges(HANDLE hToken)
   }
   return FALSE;
 }
+#endif
 

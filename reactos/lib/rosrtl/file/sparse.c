@@ -1,3 +1,4 @@
+#if 0
 #include <windows.h>
 #include <ddk/ntifs.h>
 #include <string.h>
@@ -113,3 +114,4 @@ QueryAllocatedFileRanges(HANDLE hFile,
   return 0;
 }
 
+#endif
