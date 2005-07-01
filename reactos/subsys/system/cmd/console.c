@@ -9,6 +9,9 @@
  *
  *    03-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
  *        Remove all hardcode string to En.rc
+ *
+ *    01-Jul-2005 (Brandon Turner) <turnerb7@msu.edu>)
+ *        Added ConPrintfPaging and ConOutPrintfPaging
  */
 
 
@@ -222,6 +225,92 @@ VOID ConPrintf(LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 #endif
 }
 
+VOID ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
+{
+	INT len;
+	PCHAR pBuf;
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	TCHAR szOut[OUTPUT_BUFFER_SIZE];
+	DWORD dwWritten;
+	static int LineCount = 0; //used to count number of lines since last pause
+	int ScreenLines = 0;  //used to see how big the screen is
+	int ScreenCol = 0;  //the number of chars in a roow
+	int CharEL = 0; //chars since end of line
+	int i = 0;
+
+	if(NewPage == TRUE)
+		LineCount = 0;
+
+	//get the size of the visual screen that can be printed too
+	GetConsoleScreenBufferInfo(hConsole, &csbi);
+	//subtract 2 to account for "press any key..." and for the blank line at the end of PagePrompt()
+	ScreenLines = csbi.srWindow.Bottom  - csbi.srWindow.Top - 2;
+	ScreenCol = csbi.srWindow.Right + 1;
+
+	//make sure they didnt make the screen to small
+	if(ScreenLines<2)
+	   ConPrintf(szFormat, arg_ptr, nStdHandle);
+	//if more lines have been printed then screen size it is time to stop
+	if(LineCount >= ScreenLines)
+	{
+		if(PagePrompt() != PROMPT_YES)
+		{
+			return;
+		}
+		//reset the number of lines being printed
+		LineCount = 0;
+	}
+
+	len = _vstprintf (szOut, szFormat, arg_ptr);
+#ifdef _UNICODE
+	pBuf = malloc(len + 1);
+	len = WideCharToMultiByte( OutputCodePage, 0, szOut, len + 1, pBuf, len + 1, NULL, NULL) - 1;
+#else
+	pBuf = szOut;
+#endif
+	WriteFile (GetStdHandle (nStdHandle),
+		pBuf,
+		len,
+		&dwWritten,
+		NULL);
+
+
+
+	if(len < ScreenCol)
+	{
+		//if it is smaller then a row then just check for \n
+		for(i = 0; i < len; i++)
+			if(szOut[i] == '\n')
+				LineCount++;
+
+	}
+	else
+	{
+		//if it is bigger then a row check for \n and a string longer then a row can handle
+		for(i = 0; i < len; i++)
+		{
+			if(szOut[i] == '\n')
+			{
+				CharEL = 0;
+				LineCount++;
+			}
+			else
+			{
+				CharEL++;
+				if(CharEL > ScreenCol)
+				{
+					CharEL = 0;
+					LineCount++;
+				}
+			}
+		}
+	}
+
+#ifdef UNICODE
+	free(pBuf);
+#endif
+}
+
 VOID ConOutFormatMessage (DWORD MessageId, ...)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
@@ -257,6 +346,15 @@ VOID ConOutPrintf (LPTSTR szFormat, ...)
 
 	va_start (arg_ptr, szFormat);
 	ConPrintf(szFormat, arg_ptr, STD_OUTPUT_HANDLE);
+	va_end (arg_ptr);
+}
+
+VOID ConOutPrintfPaging (BOOL NewPage, LPTSTR szFormat, ...)
+{
+	va_list arg_ptr;
+
+	va_start (arg_ptr, szFormat);
+	ConPrintfPaging(NewPage, szFormat, arg_ptr, STD_OUTPUT_HANDLE);
 	va_end (arg_ptr);
 }
 

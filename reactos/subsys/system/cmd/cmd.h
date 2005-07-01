@@ -147,6 +147,7 @@ VOID ConInString (LPTSTR, DWORD);
 VOID ConOutChar (TCHAR);
 VOID ConOutPuts (LPTSTR);
 VOID ConOutPrintf (LPTSTR, ...);
+VOID ConOutPrintfPaging (BOOL NewPage, LPTSTR, ...);
 VOID ConErrChar (TCHAR);
 VOID ConErrPuts (LPTSTR);
 VOID ConErrPrintf (LPTSTR, ...);

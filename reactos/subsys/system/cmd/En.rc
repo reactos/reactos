@@ -199,8 +199,8 @@ STRING_DIR_HELP1, "DIR [drive:][path][filename] [/A[[:]attributes]] [/B] [/C] [/
 Switches may be preset in the DIRCMD environment variable.  Override\n\
 preset switches by prefixing any switch with - (hyphen)--for example, /-W.\n"
 
-STRING_DIR_HELP2, " Volume in drive %c is %s"
-STRING_DIR_HELP3, " Volume in drive %c has no label"
+STRING_DIR_HELP2, " Volume in drive %c is %s\n"
+STRING_DIR_HELP3, " Volume in drive %c has no label.\n"
 STRING_DIR_HELP4, " Volume Serial Number is %04X-%04X\n"
 STRING_DIR_HELP5, "\n     Total Files Listed:\n%16i File(s)% 14s bytes\n"
 STRING_DIR_HELP6, "%16i Dir(s)% 15s bytes\n"

@@ -125,6 +125,8 @@
  *        the code is rewritten. /p is removed, to be rewriten in
  *        the main cmd code.
  *
+ *    1-Jul-2004 (Brandon Turner <turnerb7@msu.edu>)
+ *        Added /p back in using ConOutPrintfPaging
  */
 
 #include "precomp.h"
@@ -847,19 +849,34 @@ PrintDirectoryHeader(LPTSTR szPath, LPINT pLine, LPDIRSWITCHFLAGS lpFlags)
   if (szVolName[0] != _T('\0'))
     {
       LoadString(CMD_ModuleHandle, STRING_DIR_HELP2, szMsg, RC_STRING_MAX_SIZE);
-      ConOutPrintf(szMsg, szRootName[0], szVolName);
+      //needs to have first paramter as TRUE because
+	  //this is the first output and need to clear the static
+	  if(lpFlags->bPause)
+		 ConOutPrintfPaging(TRUE,szMsg, szRootName[0], szVolName);
+	  else
+		 ConOutPrintf(szMsg, szRootName[0], szVolName);
+		 
     }
   else
     {
       LoadString(CMD_ModuleHandle, STRING_DIR_HELP3, szMsg, RC_STRING_MAX_SIZE);
-      ConOutPrintf(szMsg, szRootName[0]);
+	if(lpFlags->bPause)
+		 ConOutPrintfPaging(TRUE,szMsg, szRootName[0]);
+	else
+		 ConOutPrintf(szMsg, szRootName[0]);
     }
 
   /* print the volume serial number if the return was successful */
   LoadString(CMD_ModuleHandle, STRING_DIR_HELP4, (LPTSTR) szMsg, RC_STRING_MAX_SIZE);
-  ConOutPrintf(szMsg,
+  if(lpFlags->bPause)
+	 ConOutPrintfPaging(FALSE,szMsg,
                HIWORD(dwSerialNr),
                LOWORD(dwSerialNr));
+  else
+	 ConOutPrintf(szMsg,
+               HIWORD(dwSerialNr),
+               LOWORD(dwSerialNr));
+
 
   return TRUE;
 }
@@ -1094,7 +1111,10 @@ PrintSummary(LPTSTR szPath,
 		ConvertULargeInteger(u64Bytes, szBuffer, sizeof(szBuffer), lpFlags->bTSeperator);
 
 		LoadString(CMD_ModuleHandle, STRING_DIR_HELP5, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPrintf(szMsg,ulFiles, szBuffer);
+		if(lpFlags->bPause)
+		   ConOutPrintfPaging(FALSE,szMsg,ulFiles, szBuffer);
+		else
+		   ConOutPrintf(szMsg,ulFiles, szBuffer);
 	}
 
 	/* Print total  directories and freespace */
@@ -1102,7 +1122,10 @@ PrintSummary(LPTSTR szPath,
 	GetUserDiskFreeSpace(szRoot, &uliFree);
 	ConvertULargeInteger(uliFree, szBuffer, sizeof(szBuffer), lpFlags->bTSeperator);
 	LoadString(CMD_ModuleHandle, STRING_DIR_HELP6, (LPTSTR) szMsg, RC_STRING_MAX_SIZE);
-	ConOutPrintf(szMsg,ulDirs, szBuffer);
+	if(lpFlags->bPause)
+	   ConOutPrintfPaging(FALSE,szMsg,ulDirs, szBuffer);
+	else
+	   ConOutPrintf(szMsg,ulDirs, szBuffer);
 
 	return 0;
 }
@@ -1197,13 +1220,22 @@ DirPrintNewList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN]Files' Info */
     DirPrintFileDateTime(szDate, szTime, ptrFiles[i], lpFlags);
 
     /* Print the line */
-    ConOutPrintf(_T("%10s  %-8s    %*s%s %s\n"),
-		 szDate,
-		 szTime,
-		 iSizeFormat,
-		 szSize,
-		 szShortName,
-		 ptrFiles[i]->cFileName);
+    if(lpFlags->bPause)
+		ConOutPrintfPaging(FALSE,_T("%10s  %-8s    %*s%s %s\n"),
+							szDate,
+							szTime,
+							iSizeFormat,
+							szSize,
+							szShortName,
+							ptrFiles[i]->cFileName);
+	else
+		ConOutPrintf(_T("%10s  %-8s    %*s%s %s\n"),
+							szDate,
+							szTime,
+							iSizeFormat,
+							szSize,
+							szShortName,
+							ptrFiles[i]->cFileName);
   }
 }
 
@@ -1277,10 +1309,16 @@ DirPrintWideList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
         else
           _stprintf(szTempFname, _T("%s"), ptrFiles[temp]->cFileName);
 
-        ConOutPrintf(_T("%-*s"), iLongestName + 1 , szTempFname);
+        if(lpFlags->bPause)
+		   ConOutPrintfPaging(FALSE,_T("%-*s"), iLongestName + 1 , szTempFname);
+		else
+		   ConOutPrintf(_T("%-*s"), iLongestName + 1 , szTempFname);
       }
 
-      ConOutPrintf(_T("\n"));
+      if(lpFlags->bPause)
+		 ConOutPrintfPaging(FALSE,_T("\n"));
+	  else
+		 ConOutPrintf(_T("\n"));
     }
   }
   else
@@ -1293,18 +1331,29 @@ DirPrintWideList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
       else
         _stprintf(szTempFname, _T("%s"), ptrFiles[i]->cFileName);
 
-      ConOutPrintf(_T("%-*s"), iLongestName + 1, szTempFname );
+      if(lpFlags->bPause)
+		 ConOutPrintfPaging(FALSE,_T("%-*s"), iLongestName + 1, szTempFname );
+	  else
+		 ConOutPrintf(_T("%-*s"), iLongestName + 1, szTempFname );
 
       /*
        * We print a new line at the end of each column
        * except for the case that it is the last item.
        */
-      if (!((i + 1) % iColumns) && (i < (dwCount - 1)))
-        ConOutPrintf(_T("\n"));
+	  if (!((i + 1) % iColumns) && (i < (dwCount - 1)))
+	  {
+		  if(lpFlags->bPause)
+			 ConOutPrintfPaging(FALSE,_T("\n"));
+		  else
+		     ConOutPrintf(_T("\n"));
+	  }
     }
 
     /* Add a new line after the last item */
-    ConOutPrintf(_T("\n"));
+    if(lpFlags->bPause)
+	   ConOutPrintfPaging(FALSE,_T("\n"));
+	else
+	   ConOutPrintf(_T("\n"));
   }
 }
 
@@ -1364,13 +1413,22 @@ ULARGE_INTEGER u64FileSize;		/* The file size */
 		DirPrintFileDateTime(szDate,szTime,ptrFiles[i],lpFlags);
 
 		/* Print the line */
-		ConOutPrintf(_T("%-8s %-3s  %*s %s  %s\n"),
-			szName,			/* The file's 8.3 name */
-			szExt,			/* The file's 8.3 extension */
-			iSizeFormat,	/* print format for size column */
-			szSize,			/* The size of file or "<DIR>" for dirs */
-			szDate,			/* The date of file/dir */
-			szTime);		/* The time of file/dir */
+		if(lpFlags->bPause)
+		   ConOutPrintfPaging(FALSE,_T("%-8s %-3s  %*s %s  %s\n"),
+								szName,			/* The file's 8.3 name */
+								szExt,			/* The file's 8.3 extension */
+								iSizeFormat,	/* print format for size column */
+								szSize,			/* The size of file or "<DIR>" for dirs */
+								szDate,			/* The date of file/dir */
+								szTime);		/* The time of file/dir */
+		else
+		   ConOutPrintf(_T("%-8s %-3s  %*s %s  %s\n"),
+								szName,			/* The file's 8.3 name */
+								szExt,			/* The file's 8.3 extension */
+								iSizeFormat,	/* print format for size column */
+								szSize,			/* The size of file or "<DIR>" for dirs */
+								szDate,			/* The date of file/dir */
+								szTime);		/* The time of file/dir */
 	}
 }
 
@@ -1401,12 +1459,18 @@ DirPrintBareList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
 			/* at recursive mode we print full path of file */
 			_tcscpy(szFullName, lpCurPath);
 			_tcscat(szFullName, ptrFiles[i]->cFileName);
-			ConOutPrintf(_T("%s\n"), szFullName);
+			if(lpFlags->bPause)
+			   ConOutPrintfPaging(FALSE,_T("%s\n"), szFullName);
+			else
+			   ConOutPrintf(_T("%s\n"), szFullName);
 		}
 		else
 		{
 			/* if we are not in recursive mode we print the file names */
-			ConOutPrintf(_T("%s\n"),ptrFiles[i]->cFileName);
+			if(lpFlags->bPause)
+			   ConOutPrintfPaging(FALSE,_T("%s\n"),ptrFiles[i]->cFileName);
+			else
+			   ConOutPrintf(_T("%s\n"),ptrFiles[i]->cFileName);
 		}
 	}
 }
@@ -1438,7 +1502,10 @@ DirPrintFiles(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
 	if (!(lpFlags->bBareFormat ) && !((lpFlags->bRecursive) && (dwCount <= 0)))
 	{
 		LoadString(CMD_ModuleHandle, STRING_DIR_HELP7, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPrintf(szMsg, szTemp);
+		if(lpFlags->bPause)
+		   ConOutPrintfPaging(FALSE,szMsg, szTemp);
+		else
+		   ConOutPrintf(szMsg, szTemp);
 	}
 
 	if (lpFlags->bBareFormat)
@@ -1790,7 +1857,11 @@ TCHAR szMsg[RC_STRING_MAX_SIZE];
 	{
 		ConvertULargeInteger(u64CountBytes, szBytes, 20, lpFlags->bTSeperator);
 		LoadString(CMD_ModuleHandle, STRING_DIR_HELP8, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPrintf(szMsg,dwCountFiles, szBytes);
+		if(lpFlags->bPause)
+		   ConOutPrintfPaging(FALSE,szMsg,dwCountFiles, szBytes);
+		else
+		   ConOutPrintf(szMsg,dwCountFiles, szBytes);
+
 	}
 
 	/* Add statistics to recursive statistics*/
@@ -1899,7 +1970,7 @@ INT CommandDir(LPTSTR first, LPTSTR rest)
 
 /* <Debug :>
    Uncomment this to show the final state of switch flags*/
-/*
+#ifdef _DEBUG
 	ConOutPrintf("Attributes mask/value %x/%x\n",stFlags.stAttribs.dwAttribMask,stFlags.stAttribs.dwAttribVal  );
 	ConOutPrintf("(B) Bare format : %i\n", stFlags.bBareFormat );
 	ConOutPrintf("(C) Thousand : %i\n", stFlags.bTSeperator );
@@ -1917,7 +1988,7 @@ INT CommandDir(LPTSTR first, LPTSTR rest)
 	ConOutPrintf("(T) Time field : %i\n", stFlags.stTimeField.eTimeField );
 	ConOutPrintf("(X) Short names : %i\n", stFlags.bShortName );
 	ConOutPrintf("Parameter : %s\n", param );
-*/
+#endif
 
 	/* print the header  */
 	if (!stFlags.bBareFormat)
