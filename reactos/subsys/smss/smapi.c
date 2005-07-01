@@ -357,11 +357,9 @@ NTSTATUS
 SmCreateApiPort(VOID)
 {
   OBJECT_ATTRIBUTES  ObjectAttributes = {0};
-  UNICODE_STRING     UnicodeString = {0};
+  UNICODE_STRING     UnicodeString = RTL_CONSTANT_STRING(L"\\SmApiPort");
   NTSTATUS           Status = STATUS_SUCCESS;
 
-  RtlRosInitUnicodeStringFromLiteral(&UnicodeString,
-		       L"\\SmApiPort");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &UnicodeString,
 			     PORT_ALL_ACCESS,

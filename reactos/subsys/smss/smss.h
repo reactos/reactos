@@ -3,11 +3,7 @@
 
 #include <windows.h>
 #define NTOS_MODE_USER
-#define READY_FOR_NEW_NTDLL
 #include <ndk/ntndk.h>
-
-#include <rosrtl/string.h>
-#include <wchar.h>
 
 #include <sm/api.h>
 #include <sm/helper.h>
