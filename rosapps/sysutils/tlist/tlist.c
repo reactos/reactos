@@ -6,15 +6,16 @@
  * Copyright (c) 2000,2001 Emanuele Aliberti
  */
 #include <reactos/buildno.h>
+#include <windows.h>
 #define NTOS_MODE_USER
-#include <ntos.h>
+#include <ndk/ntndk.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
-#include <epsapi.h>
+#include <epsapi/epsapi.h>
 #include <getopt.h>
 
 #ifndef PAGE_SIZE
