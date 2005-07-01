@@ -38,7 +38,7 @@
 
 #ifndef _XMLSTORAGE_H
 
-#include "expat.h"
+#include <expat/expat.h>
 
 #ifdef _MSC_VER
 #pragma comment(lib, "libexpat.lib")
