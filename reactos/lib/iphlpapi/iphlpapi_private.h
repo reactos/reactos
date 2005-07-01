@@ -24,7 +24,6 @@
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
-#include <rosrtl/string.h>
 #include <winsock2.h>
 #include <nspapi.h>
 #include <iptypes.h>

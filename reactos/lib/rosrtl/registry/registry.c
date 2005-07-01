@@ -1,3 +1,4 @@
+#if 0
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
@@ -74,4 +75,5 @@ NTSTATUS NTAPI RosReadRegistryValue( PUNICODE_STRING KeyName,
     
     return Status;
 }
+#endif
 

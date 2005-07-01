@@ -21,7 +21,6 @@
  */
 #define __NTDRIVER__
 #include "rtl.h"
-#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -972,29 +971,6 @@ RtlUnicodeStringToOemSize(
    return Size+1; //NB: incl. nullterm
 }
 
-
-/*
- * @implemented
- *
-
- * NOTES
- *  See RtlpUnicodeStringToAnsiString
- */
-NTSTATUS
-STDCALL
-RtlUnicodeStringToAnsiString(
-   IN OUT PANSI_STRING AnsiDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN AllocateDestinationString)
-{
-   return RtlpUnicodeStringToAnsiString(
-             AnsiDest,
-             UniSource,
-             AllocateDestinationString,
-             PagedPool);
-}
-
-
 /*
  * private
  *
@@ -1056,27 +1032,26 @@ RtlpUnicodeStringToAnsiString(
    return Status;
 }
 
-
 /*
  * @implemented
  *
+
  * NOTES
- *  See RtlpOemStringToUnicodeString
+ *  See RtlpUnicodeStringToAnsiString
  */
 NTSTATUS
 STDCALL
-RtlOemStringToUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN POEM_STRING OemSource,
+RtlUnicodeStringToAnsiString(
+   IN OUT PANSI_STRING AnsiDest,
+   IN PUNICODE_STRING UniSource,
    IN BOOLEAN AllocateDestinationString)
 {
-   return RtlpOemStringToUnicodeString(
-             UniDest,
-             OemSource,
+   return RtlpUnicodeStringToAnsiString(
+             AnsiDest,
+             UniSource,
              AllocateDestinationString,
              PagedPool);
 }
-
 
 /*
  * private
@@ -1145,23 +1120,21 @@ RtlpOemStringToUnicodeString(
  * @implemented
  *
  * NOTES
- *  See RtlpUnicodeStringToOemString.
+ *  See RtlpOemStringToUnicodeString
  */
 NTSTATUS
 STDCALL
-RtlUnicodeStringToOemString(
-   IN OUT POEM_STRING OemDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN  AllocateDestinationString)
+RtlOemStringToUnicodeString(
+   IN OUT PUNICODE_STRING UniDest,
+   IN POEM_STRING OemSource,
+   IN BOOLEAN AllocateDestinationString)
 {
-   return RtlpUnicodeStringToOemString(
-             OemDest,
-             UniSource,
+   return RtlpOemStringToUnicodeString(
+             UniDest,
+             OemSource,
              AllocateDestinationString,
              PagedPool);
 }
-
-
 
 /*
  * private
@@ -1224,7 +1197,25 @@ RtlpUnicodeStringToOemString(
    return Status;
 }
 
-
+/*
+ * @implemented
+ *
+ * NOTES
+ *  See RtlpUnicodeStringToOemString.
+ */
+NTSTATUS
+STDCALL
+RtlUnicodeStringToOemString(
+   IN OUT POEM_STRING OemDest,
+   IN PUNICODE_STRING UniSource,
+   IN BOOLEAN  AllocateDestinationString)
+{
+   return RtlpUnicodeStringToOemString(
+             OemDest,
+             UniSource,
+             AllocateDestinationString,
+             PagedPool);
+}
 
 #define ITU_IMPLEMENTED_TESTS (IS_TEXT_UNICODE_ODD_LENGTH|IS_TEXT_UNICODE_SIGNATURE)
 
@@ -1287,28 +1278,6 @@ done:
    return Length;
 }
 
-
-/*
- * @implemented
- *
- * NOTES
- *  See RtlpOemStringToCountedUnicodeString
- */
-NTSTATUS
-STDCALL
-RtlOemStringToCountedUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN POEM_STRING OemSource,
-   IN BOOLEAN AllocateDestinationString)
-{
-   return RtlpOemStringToCountedUnicodeString(
-             UniDest,
-             OemSource,
-             AllocateDestinationString,
-             PagedPool);
-}
-
-
 /*
  * private
  *
@@ -1365,6 +1334,25 @@ RtlpOemStringToCountedUnicodeString(
    return Status;
 }
 
+/*
+ * @implemented
+ *
+ * NOTES
+ *  See RtlpOemStringToCountedUnicodeString
+ */
+NTSTATUS
+STDCALL
+RtlOemStringToCountedUnicodeString(
+   IN OUT PUNICODE_STRING UniDest,
+   IN POEM_STRING OemSource,
+   IN BOOLEAN AllocateDestinationString)
+{
+   return RtlpOemStringToCountedUnicodeString(
+             UniDest,
+             OemSource,
+             AllocateDestinationString,
+             PagedPool);
+}
 
 /*
  * @implemented
@@ -1655,26 +1643,6 @@ RtlHashUnicodeString(
 }
 
 /*
- * @implemented
- *
- * NOTES
- *  See RtlpUnicodeStringToCountedOemString.
- */
-NTSTATUS
-STDCALL
-RtlUnicodeStringToCountedOemString(
-   IN OUT POEM_STRING OemDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN AllocateDestinationString)
-{
-   return RtlpUnicodeStringToCountedOemString(
-             OemDest,
-             UniSource,
-             AllocateDestinationString,
-             PagedPool);
-}
-
-/*
  * private
  *
  * NOTES
@@ -1733,6 +1701,25 @@ RtlpUnicodeStringToCountedOemString(
    return Status;
 }
 
+/*
+ * @implemented
+ *
+ * NOTES
+ *  See RtlpUnicodeStringToCountedOemString.
+ */
+NTSTATUS
+STDCALL
+RtlUnicodeStringToCountedOemString(
+   IN OUT POEM_STRING OemDest,
+   IN PUNICODE_STRING UniSource,
+   IN BOOLEAN AllocateDestinationString)
+{
+   return RtlpUnicodeStringToCountedOemString(
+             OemDest,
+             UniSource,
+             AllocateDestinationString,
+             PagedPool);
+}
 
 /*
  * @implemented
@@ -1783,30 +1770,6 @@ RtlLargeIntegerToChar(
    return STATUS_SUCCESS;
 }
 
-
-
-/*
- * @implemented
- *
- * NOTES
- *  See RtlpUpcaseUnicodeString
- */
-NTSTATUS
-STDCALL
-RtlUpcaseUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN PCUNICODE_STRING UniSource,
-   IN BOOLEAN  AllocateDestinationString)
-{
-
-   return RtlpUpcaseUnicodeString(
-             UniDest,
-             UniSource,
-             AllocateDestinationString,
-             PagedPool);
-}
-
-
 /*
  * private
  *
@@ -1851,23 +1814,22 @@ RtlpUpcaseUnicodeString(
    return STATUS_SUCCESS;
 }
 
-
-
 /*
  * @implemented
  *
  * NOTES
- *  See RtlpUpcaseUnicodeStringToAnsiString
+ *  See RtlpUpcaseUnicodeString
  */
 NTSTATUS
 STDCALL
-RtlUpcaseUnicodeStringToAnsiString(
-   IN OUT PANSI_STRING AnsiDest,
-   IN PUNICODE_STRING UniSource,
+RtlUpcaseUnicodeString(
+   IN OUT PUNICODE_STRING UniDest,
+   IN PCUNICODE_STRING UniSource,
    IN BOOLEAN  AllocateDestinationString)
 {
-   return RtlpUpcaseUnicodeStringToAnsiString(
-             AnsiDest,
+
+   return RtlpUpcaseUnicodeString(
+             UniDest,
              UniSource,
              AllocateDestinationString,
              PagedPool);
@@ -1939,29 +1901,25 @@ RtlpUpcaseUnicodeStringToAnsiString(
    return Status;
 }
 
-
-
 /*
  * @implemented
  *
  * NOTES
- *  See RtlpUpcaseUnicodeStringToCountedOemString
+ *  See RtlpUpcaseUnicodeStringToAnsiString
  */
 NTSTATUS
 STDCALL
-RtlUpcaseUnicodeStringToCountedOemString(
-   IN OUT POEM_STRING OemDest,
+RtlUpcaseUnicodeStringToAnsiString(
+   IN OUT PANSI_STRING AnsiDest,
    IN PUNICODE_STRING UniSource,
-   IN BOOLEAN AllocateDestinationString)
+   IN BOOLEAN  AllocateDestinationString)
 {
-   return RtlpUpcaseUnicodeStringToCountedOemString(
-             OemDest,
+   return RtlpUpcaseUnicodeStringToAnsiString(
+             AnsiDest,
              UniSource,
              AllocateDestinationString,
              PagedPool);
 }
-
-
 
 /*
  * private
@@ -2026,27 +1984,25 @@ RtlpUpcaseUnicodeStringToCountedOemString(
    return Status;
 }
 
-
 /*
  * @implemented
+ *
  * NOTES
- *  See RtlpUpcaseUnicodeStringToOemString
+ *  See RtlpUpcaseUnicodeStringToCountedOemString
  */
 NTSTATUS
 STDCALL
-RtlUpcaseUnicodeStringToOemString (
+RtlUpcaseUnicodeStringToCountedOemString(
    IN OUT POEM_STRING OemDest,
    IN PUNICODE_STRING UniSource,
-   IN BOOLEAN  AllocateDestinationString
-)
+   IN BOOLEAN AllocateDestinationString)
 {
-   return RtlpUpcaseUnicodeStringToOemString(
+   return RtlpUpcaseUnicodeStringToCountedOemString(
              OemDest,
              UniSource,
              AllocateDestinationString,
              PagedPool);
 }
-
 
 /*
  * private
@@ -2114,6 +2070,25 @@ RtlpUpcaseUnicodeStringToOemString (
    return Status;
 }
 
+/*
+ * @implemented
+ * NOTES
+ *  See RtlpUpcaseUnicodeStringToOemString
+ */
+NTSTATUS
+STDCALL
+RtlUpcaseUnicodeStringToOemString (
+   IN OUT POEM_STRING OemDest,
+   IN PUNICODE_STRING UniSource,
+   IN BOOLEAN  AllocateDestinationString
+)
+{
+   return RtlpUpcaseUnicodeStringToOemString(
+             OemDest,
+             UniSource,
+             AllocateDestinationString,
+             PagedPool);
+}
 
 /*
  * @implemented
@@ -2309,25 +2284,6 @@ RtlCopyUnicodeString(
    DestinationString->Length = copylen;
 }
 
-
-/*
- * @implemented
- *
- * NOTES
- *  See RtlpCreateUnicodeString
- */
-BOOLEAN
-STDCALL
-RtlCreateUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN PCWSTR  Source)
-{
-
-   DPRINT("RtlCreateUnicodeString\n");
-   return RtlpCreateUnicodeString(UniDest, Source, PagedPool);
-}
-
-
 /*
  * private
  *
@@ -2358,7 +2314,22 @@ RtlpCreateUnicodeString(
    return TRUE;
 }
 
+/*
+ * @implemented
+ *
+ * NOTES
+ *  See RtlpCreateUnicodeString
+ */
+BOOLEAN
+STDCALL
+RtlCreateUnicodeString(
+   IN OUT PUNICODE_STRING UniDest,
+   IN PCWSTR  Source)
+{
 
+   DPRINT("RtlCreateUnicodeString\n");
+   return RtlpCreateUnicodeString(UniDest, Source, PagedPool);
+}
 
 /*
  * @implemented
@@ -2381,28 +2352,6 @@ RtlCreateUnicodeStringFromAsciiz(
 
    return NT_SUCCESS(Status);
 }
-
-
-
-/*
- * @implemented
- *
- * NOTES
- *  See RtlpDowncaseUnicodeString
- */
-NTSTATUS STDCALL
-RtlDowncaseUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN AllocateDestinationString)
-{
-   return RtlpDowncaseUnicodeString(
-             UniDest,
-             UniSource,
-             AllocateDestinationString,
-             PagedPool);
-}
-
 
 /*
  * private
@@ -2462,7 +2411,24 @@ RtlpDowncaseUnicodeString(
    return STATUS_SUCCESS;
 }
 
-
+/*
+ * @implemented
+ *
+ * NOTES
+ *  See RtlpDowncaseUnicodeString
+ */
+NTSTATUS STDCALL
+RtlDowncaseUnicodeString(
+   IN OUT PUNICODE_STRING UniDest,
+   IN PUNICODE_STRING UniSource,
+   IN BOOLEAN AllocateDestinationString)
+{
+   return RtlpDowncaseUnicodeString(
+             UniDest,
+             UniSource,
+             AllocateDestinationString,
+             PagedPool);
+}
 
 /*
  * @implemented
@@ -2491,29 +2457,6 @@ RtlAppendUnicodeToString(IN OUT PUNICODE_STRING Destination,
 
    return(STATUS_SUCCESS);
 }
-
-
-/*
- * @implemented
- *
- * NOTES
- *  See RtlpAnsiStringToUnicodeString
- */
-NTSTATUS
-STDCALL
-RtlAnsiStringToUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN PANSI_STRING AnsiSource,
-   IN BOOLEAN AllocateDestinationString)
-{
-   return RtlpAnsiStringToUnicodeString(
-             UniDest,
-             AnsiSource,
-             AllocateDestinationString,
-             PagedPool);
-}
-
-
 
 /*
  * private
@@ -2577,7 +2520,25 @@ RtlpAnsiStringToUnicodeString(
    return Status;
 }
 
-
+/*
+ * @implemented
+ *
+ * NOTES
+ *  See RtlpAnsiStringToUnicodeString
+ */
+NTSTATUS
+STDCALL
+RtlAnsiStringToUnicodeString(
+   IN OUT PUNICODE_STRING UniDest,
+   IN PANSI_STRING AnsiSource,
+   IN BOOLEAN AllocateDestinationString)
+{
+   return RtlpAnsiStringToUnicodeString(
+             UniDest,
+             AnsiSource,
+             AllocateDestinationString,
+             PagedPool);
+}
 
 /*
  * @implemented
@@ -2684,27 +2645,6 @@ RtlxUnicodeStringToOemSize(IN PUNICODE_STRING UnicodeString)
    return RtlUnicodeStringToOemSize(UnicodeString);
 }
 
-
-/*
- * @implemented
- *
- * NOTES
- *  See RtlpDuplicateUnicodeString
- */
-NTSTATUS STDCALL
-RtlDuplicateUnicodeString(
-   INT AddNull,
-   IN PUNICODE_STRING SourceString,
-   PUNICODE_STRING DestinationString)
-{
-   return RtlpDuplicateUnicodeString(
-            AddNull,
-            SourceString,
-            DestinationString,
-            PagedPool);
-}
-
-
 /*
  * @implemented
  */
@@ -2747,6 +2687,24 @@ RtlpDuplicateUnicodeString(
    return STATUS_SUCCESS;
 }
 
+/*
+ * @implemented
+ *
+ * NOTES
+ *  See RtlpDuplicateUnicodeString
+ */
+NTSTATUS STDCALL
+RtlDuplicateUnicodeString(
+   INT AddNull,
+   IN PUNICODE_STRING SourceString,
+   PUNICODE_STRING DestinationString)
+{
+   return RtlpDuplicateUnicodeString(
+            AddNull,
+            SourceString,
+            DestinationString,
+            PagedPool);
+}
 
 /*
  * @implemented
