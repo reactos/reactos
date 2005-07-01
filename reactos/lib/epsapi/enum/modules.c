@@ -25,7 +25,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#include <epsapi.h>
+#include <epsapi/epsapi.h>
 
 NTSTATUS NTAPI
 PsaEnumerateProcessModules(IN HANDLE ProcessHandle,

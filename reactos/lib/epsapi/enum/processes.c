@@ -35,7 +35,7 @@
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
-#include <epsapi.h>
+#include <epsapi/epsapi.h>
 
 #define NDEBUG
 #include <debug.h>

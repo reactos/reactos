@@ -7,7 +7,7 @@
 #ifndef __VFATXLIB_H
 #define __VFATXLIB_H
 
-#include <fmifs.h>
+#include <fmifs/fmifs.h>
 
 NTSTATUS
 VfatxInitialize (VOID);

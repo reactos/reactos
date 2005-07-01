@@ -36,7 +36,7 @@
 #include <tchar.h>
 #include <stdlib.h>
 
-#include <samlib.h>
+#include <samlib/samlib.h>
 #include <syssetup.h>
 #include <userenv.h>
 #include <setupapi.h>
