@@ -206,7 +206,7 @@
 @ stub GetCurrentDriverSigningPolicy
 @ stub GetNewInfName
 @ stdcall GetSetFileTimestamp(wstr ptr ptr ptr long)
-@ stub GetVersionInfoFromImage
+@ stdcall GetVersionInfoFromImage(wstr ptr ptr)
 @ stub InfIsFromOemLocation
 @ stub InstallCatalog
 @ stdcall InstallHinfSection(long long str long) InstallHinfSectionA

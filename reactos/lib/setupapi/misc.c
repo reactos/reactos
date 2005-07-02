@@ -25,6 +25,7 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "winreg.h"
+#include "winver.h"
 #include "setupapi.h"
 
 #include "wine/unicode.h"
@@ -1089,4 +1090,74 @@ CenterWindowRelativeToParent(HWND hwnd)
     posY = ((nOwnerHeight - nWindowHeight) / 2) + ptOrigin.y;
 
     MoveWindow(hwnd, posX, posY, nWindowHeight, nWindowWidth, 0);
+}
+
+
+/**************************************************************************
+ * GetVersionInfoFromImage [SETUPAPI.@]
+ *
+ * Retrieves version information for a given file.
+ *
+ * PARAMS
+ *     lpFileName       [I] File name
+ *     lpFileVersion    [O] Pointer to the full file version
+ *     lpVersionVarSize [O] Pointer to the size of the variable version
+ *                          information
+ *
+ * RETURNS
+ *     Success: TRUE
+ *     Failure: FALSE
+ */
+BOOL WINAPI
+GetVersionInfoFromImage(LPWSTR lpFileName,
+                        PULARGE_INTEGER lpFileVersion,
+                        LPWORD lpVersionVarSize)
+{
+    DWORD dwHandle;
+    DWORD dwSize;
+    LPVOID lpInfo;
+    UINT uSize;
+    VS_FIXEDFILEINFO *lpFixedInfo;
+    LPWORD lpVarSize;
+
+    dwSize = GetFileVersionInfoSizeW(lpFileName, &dwHandle);
+    if (dwSize == 0)
+        return FALSE;
+
+    lpInfo = MyMalloc(dwSize);
+    if (lpInfo == NULL)
+        return FALSE;
+
+    if (!GetFileVersionInfoW(lpFileName, 0, dwSize, lpInfo))
+    {
+        MyFree(lpInfo);
+        return FALSE;
+    }
+
+    if (!VerQueryValueW(lpInfo, L"\\",
+                        (LPVOID*)&lpFixedInfo, &uSize))
+    {
+        MyFree(lpInfo);
+        return FALSE;
+    }
+
+    lpFileVersion->LowPart = lpFixedInfo->dwFileVersionLS;
+    lpFileVersion->HighPart = lpFixedInfo->dwFileVersionMS;
+
+    *lpVersionVarSize = 0;
+    if (!VerQueryValueW(lpInfo, L"\\VerFileInfo\\Translation",
+                        (LPVOID*)&lpVarSize, &uSize))
+    {
+        MyFree(lpInfo);
+        return TRUE;
+    }
+
+    if (uSize >= 4)
+    {
+        *lpVersionVarSize = *lpVarSize;
+    }
+
+    MyFree(lpInfo);
+
+    return TRUE;
 }

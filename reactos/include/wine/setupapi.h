@@ -683,6 +683,7 @@ PWSTR    WINAPI DuplicateString(PCWSTR lpSrc);
 BOOL     WINAPI EnablePrivilege(PCWSTR lpPrivilegeName, BOOL bEnable);
 BOOL     WINAPI FileExists(PCWSTR lpFileName, PWIN32_FIND_DATAW lpFileFindData);
 DWORD    WINAPI GetSetFileTimestamp(PCWSTR, PFILETIME, PFILETIME, PFILETIME, BOOLEAN);
+BOOL     WINAPI GetVersionInfoFromImage(LPWSTR, PULARGE_INTEGER, LPWORD);
 void     WINAPI InstallHinfSectionA( HWND hwnd, HINSTANCE handle, PCSTR cmdline, INT show );
 void     WINAPI InstallHinfSectionW( HWND hwnd, HINSTANCE handle, PCWSTR cmdline, INT show );
 #define         InstallHinfSection WINELIB_NAME_AW(InstallHinfSection)
