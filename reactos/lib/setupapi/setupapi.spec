@@ -192,7 +192,7 @@
 @ stub CM_Unregister_Device_Interface_ExW
 @ stdcall CaptureAndConvertAnsiArg(str ptr)
 @ stdcall CaptureStringArg(wstr ptr)
-@ stub CenterWindowRelativeToParent
+@ stdcall CenterWindowRelativeToParent(long)
 @ stdcall ConcatenatePaths(wstr wstr long ptr)
 @ stdcall DelayedMove(wstr wstr)
 @ stub DelimStringToMultiSz

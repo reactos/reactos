@@ -675,6 +675,7 @@ LONG     WINAPI AddTagToGroupOrderList(PCWSTR, DWORD, DWORD);
 VOID     WINAPI AssertFail(LPSTR, UINT, LPSTR);
 DWORD    WINAPI CaptureAndConvertAnsiArg(PCSTR lpSrc, PWSTR *lpDst);
 DWORD    WINAPI CaptureStringArg(PCWSTR lpSrc, PWSTR *lpDst);
+VOID     WINAPI CenterWindowRelativeToParent(HWND);
 BOOL     WINAPI ConcatenatePaths(LPWSTR, LPCWSTR, DWORD, LPDWORD);
 BOOL     WINAPI DelayedMove(PCWSTR lpExistingFileName, PCWSTR lpNewFileName);
 BOOL     WINAPI DoesUserHavePrivilege(PCWSTR lpPrivilegeName);

@@ -860,7 +860,7 @@ VOID WINAPI AssertFail(LPSTR lpFile, UINT uLine, LPSTR lpMessage)
     CHAR szModule[MAX_PATH];
     CHAR szBuffer[2048];
     LPSTR lpName;
-    LPSTR lpBuffer;
+//    LPSTR lpBuffer;
 
     TRACE("%s %u %s\n", lpFile, uLine, lpMessage);
 
@@ -1043,4 +1043,50 @@ ConcatenatePaths(LPWSTR lpPath,
         lpPath[dwTotalSize - 1] = 0;
 
     return (dwBufferSize >= dwTotalSize);
+}
+
+
+/**************************************************************************
+ * CenterWindowRelativeToParent [SETUPAPI.@]
+ *
+ * Centers a window relative to its parent.
+ *
+ * PARAMS
+ *     hwnd [I] Window to center.
+ *
+ * RETURNS
+ *     None
+ */
+VOID WINAPI
+CenterWindowRelativeToParent(HWND hwnd)
+{
+    HWND hwndOwner;
+    POINT ptOrigin;
+    RECT rcWindow;
+    RECT rcOwner;
+    INT nWindowWidth, nWindowHeight;
+    INT nOwnerWidth, nOwnerHeight;
+    INT posX, posY;
+
+    hwndOwner = GetWindow(hwnd, GW_OWNER);
+    if (hwndOwner == NULL)
+        return;
+
+    ptOrigin.x = 0;
+    ptOrigin.y = 0;
+    ClientToScreen(hwndOwner, &ptOrigin);
+
+    GetWindowRect(hwnd, &rcWindow);
+    GetClientRect(hwndOwner, &rcOwner);
+
+    nWindowWidth = rcWindow.right - rcWindow.left;
+    nWindowHeight = rcWindow.bottom - rcWindow.top;
+
+    nOwnerWidth = rcOwner.right - rcOwner.left;
+    nOwnerHeight = rcOwner.bottom - rcOwner.top;
+
+    posX = ((nOwnerWidth - nWindowWidth) / 2) + ptOrigin.x;
+    posY = ((nOwnerHeight - nWindowHeight) / 2) + ptOrigin.y;
+
+    MoveWindow(hwnd, posX, posY, nWindowHeight, nWindowWidth, 0);
 }
