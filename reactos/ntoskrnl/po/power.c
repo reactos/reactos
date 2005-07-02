@@ -6,11 +6,19 @@
  * PURPOSE:         Power Manager
  *
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                  Hervé Poussineau (hpoussin@reactos.com)
  */
 
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
+
+typedef struct _REQUEST_POWER_ITEM
+{
+  PREQUEST_POWER_COMPLETE CompletionRoutine;
+  POWER_STATE PowerState;
+  PVOID Context;
+} REQUEST_POWER_ITEM, *PREQUEST_POWER_ITEM;
 
 PDEVICE_NODE PopSystemPowerDeviceNode = NULL;
 BOOLEAN PopAcpiPresent = FALSE;
@@ -57,8 +65,33 @@ PoRegisterSystemState(
   return NULL;
 }
 
+static
+NTSTATUS STDCALL
+PopRequestPowerIrpCompletion(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PIRP Irp,
+  IN PVOID Context)
+{
+  PIO_STACK_LOCATION Stack;
+  PREQUEST_POWER_ITEM RequestPowerItem;
+  
+  Stack = IoGetNextIrpStackLocation(Irp);
+  RequestPowerItem = (PREQUEST_POWER_ITEM)Context;
+  
+  RequestPowerItem->CompletionRoutine(
+    DeviceObject,
+    Stack->MinorFunction,
+    RequestPowerItem->PowerState,
+    RequestPowerItem->Context,
+    &Irp->IoStatus);
+  
+  ExFreePool(&Irp->IoStatus);
+  ExFreePool(Context);
+  return STATUS_SUCCESS;
+}
+
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 STDCALL
@@ -68,9 +101,74 @@ PoRequestPowerIrp(
   IN POWER_STATE PowerState,
   IN PREQUEST_POWER_COMPLETE CompletionFunction,
   IN PVOID Context,
-  OUT PIRP *Irp   OPTIONAL)
+  OUT PIRP *pIrp OPTIONAL)
 {
-  return STATUS_NOT_IMPLEMENTED;
+  PDEVICE_OBJECT TopDeviceObject;
+  PIO_STACK_LOCATION Stack;
+  PIRP Irp;
+  PIO_STATUS_BLOCK IoStatusBlock;
+  PREQUEST_POWER_ITEM RequestPowerItem;
+  NTSTATUS Status;
+  
+  if (MinorFunction != IRP_MN_QUERY_POWER
+    && MinorFunction != IRP_MN_SET_POWER
+    && MinorFunction != IRP_MN_WAIT_WAKE)
+    return STATUS_INVALID_PARAMETER_2;
+  
+  RequestPowerItem = ExAllocatePool(NonPagedPool, sizeof(REQUEST_POWER_ITEM));
+  if (!RequestPowerItem)
+    return STATUS_INSUFFICIENT_RESOURCES;
+  IoStatusBlock = ExAllocatePool(NonPagedPool, sizeof(IO_STATUS_BLOCK));
+  if (!IoStatusBlock)
+  {
+    ExFreePool(RequestPowerItem);
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
+  
+  /* Always call the top of the device stack */
+  TopDeviceObject = IoGetAttachedDeviceReference(DeviceObject);
+  
+  Irp = IoBuildSynchronousFsdRequest(
+    IRP_MJ_PNP,
+    TopDeviceObject,
+    NULL,
+    0,
+    NULL,
+    NULL,
+    IoStatusBlock);
+  if (!Irp)
+  {
+    ExFreePool(RequestPowerItem);
+    ExFreePool(IoStatusBlock);
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
+  
+  /* POWER IRPs are always initialized with a status code of
+     STATUS_NOT_IMPLEMENTED */
+  Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+  Irp->IoStatus.Information = 0;
+  
+  Stack = IoGetNextIrpStackLocation(Irp);
+  Stack->MinorFunction = MinorFunction;
+  if (MinorFunction == IRP_MN_WAIT_WAKE)
+    Stack->Parameters.WaitWake.PowerState = PowerState.SystemState;
+  else
+    Stack->Parameters.WaitWake.PowerState = PowerState.DeviceState;
+  
+  RequestPowerItem->CompletionRoutine = CompletionFunction;
+  RequestPowerItem->PowerState = PowerState;
+  RequestPowerItem->Context = Context;
+  
+  if (pIrp != NULL)
+    *pIrp = Irp;
+  
+  IoSetCompletionRoutine(Irp, PopRequestPowerIrpCompletion, RequestPowerItem, TRUE, TRUE, TRUE);
+  Status = IoCallDriver(TopDeviceObject, Irp);
+  
+  /* Always return STATUS_PENDING. The completion routine
+   * will call CompletionFunction and complete the Irp.
+   */
+  return STATUS_PENDING;
 }
 
 VOID
