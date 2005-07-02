@@ -165,7 +165,7 @@ ClientConnectionThread(HANDLE ServerPort)
     
     /* Close the port and exit the thread */
     NtClose(ServerPort);
-    NtTerminateThread(NtCurrentThread(), STATUS_SUCCESS);
+    RtlExitUserThread(STATUS_SUCCESS);
 }
 
 /**********************************************************************
