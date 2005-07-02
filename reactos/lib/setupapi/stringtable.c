@@ -36,9 +36,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 
 typedef struct _STRING_TABLE
 {
-    LPWSTR *pSlots;     /* 0x00 */
-    DWORD dwUsedSlots;  /* 0x04 */
-    DWORD dwMaxSlots;   /* 0x08 */
+    LPWSTR *pSlots;
+    DWORD dwUsedSlots;
+    DWORD dwMaxSlots;
 } STRING_TABLE, *PSTRING_TABLE;
 
 
@@ -218,6 +218,77 @@ StringTableAddString(HSTRING_TABLE hStringTable,
     TRACE("Couldn't find an empty slot!\n");
 
     return (DWORD)-1;
+}
+
+
+/**************************************************************************
+ * StringTableDuplicate [SETUPAPI.@]
+ *
+ * Duplicates a given string table.
+ *
+ * PARAMS
+ *     hStringTable [I] Handle to the string table
+ *
+ * RETURNS
+ *     Success: Handle to the duplicated string table
+ *     Failure: NULL
+ *
+ */
+HSTRING_TABLE WINAPI
+StringTableDuplicate(HSTRING_TABLE hStringTable)
+{
+    PSTRING_TABLE pSourceTable;
+    PSTRING_TABLE pDestinationTable;
+    DWORD i;
+    DWORD length;
+
+    TRACE("%p\n", (PVOID)hStringTable);
+
+    pSourceTable = (PSTRING_TABLE)hStringTable;
+    if (pSourceTable == NULL)
+    {
+        ERR("Invalid hStringTable!\n");
+        return (HSTRING_TABLE)NULL;
+    }
+
+    pDestinationTable = MyMalloc(sizeof(STRING_TABLE));
+    if (pDestinationTable == NULL)
+    {
+        ERR("Cound not allocate a new string table!\n");
+        return (HSTRING_TABLE)NULL;
+    }
+
+    memset(pDestinationTable, 0, sizeof(STRING_TABLE));
+
+    pDestinationTable->pSlots = MyMalloc(sizeof(LPWSTR) * pSourceTable->dwMaxSlots);
+    if (pDestinationTable->pSlots == NULL)
+    {
+        MyFree(pDestinationTable);
+        return (HSTRING_TABLE)NULL;
+    }
+
+    memset(pDestinationTable->pSlots, 0, sizeof(LPWSTR) * pSourceTable->dwMaxSlots);
+
+    pDestinationTable->dwUsedSlots = 0;
+    pDestinationTable->dwMaxSlots = pSourceTable->dwMaxSlots;
+
+    for (i = 0; i < pSourceTable->dwMaxSlots; i++)
+    {
+        if (pSourceTable->pSlots[i] != NULL)
+        {
+            length = lstrlenW(pSourceTable->pSlots[i]) + sizeof(WCHAR);
+            pDestinationTable->pSlots[i] = MyMalloc(length);
+            if (pDestinationTable->pSlots[i] != NULL)
+            {
+                memcpy(pDestinationTable->pSlots[i],
+                       pSourceTable->pSlots[i],
+                       length);
+                pDestinationTable->dwUsedSlots++;
+            }
+        }
+    }
+
+    return (HSTRING_TABLE)pDestinationTable;
 }
 
 

@@ -516,7 +516,7 @@
 @ stdcall StringTableAddString(ptr wstr long)
 @ stub StringTableAddStringEx
 @ stdcall StringTableDestroy(ptr)
-@ stub StringTableDuplicate
+@ stdcall StringTableDuplicate(ptr)
 @ stub StringTableEnum
 @ stub StringTableGetExtraData
 @ stdcall StringTableInitialize()
