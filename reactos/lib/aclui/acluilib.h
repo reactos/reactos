@@ -44,6 +44,8 @@ typedef struct _SECURITY_PAGE
 
     LPSECURITYINFO psi;
     SI_OBJECT_INFO ObjectInfo;
+    
+    SI_ACCESS DefaultAccess;
 } SECURITY_PAGE, *PSECURITY_PAGE;
 
 /* MISC ***********************************************************************/
@@ -68,10 +70,11 @@ ListViewSelectItem(IN HWND hwnd,
 
 /* CHECKLIST CONTROL **********************************************************/
 
-#define CIS_DISABLED    (0x2)
+#define CIS_DISABLED    (0x4)
 #define CIS_ENABLED     (0x0)
-#define CIS_ALLOW       (0x1)
-#define CIS_DENY        (0x0)
+#define CIS_ALLOW       (0x2)
+#define CIS_DENY        (0x1)
+#define CIS_NONE        (0x0)
 
 #define CLB_ALLOW       (0x1)
 #define CLB_DENY        (0x0)

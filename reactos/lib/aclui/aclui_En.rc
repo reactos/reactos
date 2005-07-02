@@ -17,5 +17,6 @@ END
 STRINGTABLE DISCARDABLE
 {
   IDS_PSP_TITLE "Permissions for %1"
+  IDS_UNKNOWN "Unknown"
 }
 

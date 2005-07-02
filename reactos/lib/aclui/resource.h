@@ -13,6 +13,7 @@
 #define IDI_DEVMGR	100
 
 #define IDS_PSP_TITLE	1001
+#define IDS_UNKNOWN     1002
 
 #define IDB_USRGRPIMAGES	1001
 

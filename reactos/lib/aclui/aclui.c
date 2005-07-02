@@ -460,6 +460,77 @@ SetAceCheckListColumns(IN HWND hAceCheckList,
                 pt.x);
 }
 
+static VOID
+LoadPermissionsList(IN PSECURITY_PAGE sp,
+                    IN GUID *GuidObjectType,
+                    IN DWORD dwFlags,
+                    OUT SI_ACCESS *DefaultAccess)
+{
+    HRESULT hRet;
+    PSI_ACCESS AccessList;
+    ULONG nAccessList, DefaultAccessIndex;
+    
+    /* clear the permissions list */
+    
+    SendMessage(sp->hAceCheckList,
+                CLM_CLEAR,
+                0,
+                0);
+    
+    /* query the access rights from the server */
+    hRet = sp->psi->lpVtbl->GetAccessRights(sp->psi,
+                                            GuidObjectType,
+                                            dwFlags,
+                                            &AccessList,
+                                            &nAccessList,
+                                            &DefaultAccessIndex);
+    if (SUCCEEDED(hRet) && nAccessList != 0)
+    {
+        LPCWSTR NameStr;
+        PSI_ACCESS CurAccess, LastAccess;
+        WCHAR NameBuffer[MAX_PATH];
+        
+        /* save the default access rights to be used when adding ACEs later */
+        if (DefaultAccess != NULL)
+        {
+            *DefaultAccess = AccessList[DefaultAccessIndex];
+        }
+        
+        LastAccess = AccessList + nAccessList;
+        for (CurAccess = &AccessList[0];
+             CurAccess != LastAccess;
+             CurAccess++)
+        {
+            if (CurAccess->dwFlags & dwFlags)
+            {
+                /* get the permission name, load it from a string table if necessary */
+                if (IS_INTRESOURCE(CurAccess->pszName))
+                {
+                    if (!LoadString(sp->ObjectInfo.hInstance,
+                                    (UINT)((ULONG_PTR)CurAccess->pszName),
+                                    NameBuffer,
+                                    sizeof(NameBuffer) / sizeof(NameBuffer[0])))
+                    {
+                        LoadString(hDllInstance,
+                                   IDS_UNKNOWN,
+                                   NameBuffer,
+                                   sizeof(NameBuffer) / sizeof(NameBuffer[0]));
+                    }
+                    NameStr = NameBuffer;
+                }
+                else
+                {
+                    NameStr = CurAccess->pszName;
+                }
+
+                SendMessage(sp->hAceCheckList,
+                            CLM_ADDITEM,
+                            CIS_DISABLED | CIS_NONE,
+                            (LPARAM)NameStr);
+            }
+        }
+    }
+}
 
 static INT_PTR CALLBACK
 SecurityPageProc(IN HWND hwndDlg,
@@ -547,6 +618,12 @@ SecurityPageProc(IN HWND hwndDlg,
                                        GetDlgItem(hwndDlg, IDC_LABEL_DENY));
 
                 /* FIXME - hide controls in case the flags aren't present */
+
+                LoadPermissionsList(sp,
+                                    NULL,
+                                    SI_ACCESS_GENERAL |
+                                    ((sp->ObjectInfo.dwFlags & SI_CONTAINER) ? SI_ACCESS_CONTAINER : 0),
+                                    &sp->DefaultAccess);
             }
             break;
         }
@@ -606,6 +683,8 @@ CreateSecurityPage(IN LPSECURITYINFO psi)
     }
     sPage->psi = psi;
     sPage->ObjectInfo = ObjectInfo;
+
+    ZeroMemory(&psp, sizeof(psp));
 
     psp.dwSize = sizeof(PROPSHEETPAGE);
     psp.dwFlags = PSP_USECALLBACK;
@@ -683,6 +762,7 @@ EditSecurity(IN HWND hwndOwner,
     {
         /* Set the page title if the flag is present and the string isn't empty */
         psh.pszCaption = ObjectInfo.pszPageTitle;
+        psh.dwFlags |= PSH_PROPTITLE;
         lpCaption = NULL;
     }
     else

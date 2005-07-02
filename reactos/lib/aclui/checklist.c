@@ -281,12 +281,11 @@ PaintControl(IN PCHECKLISTWND infoPtr,
                                      ScrollPos + VisibleFirstIndex);
     if (FirstItem != NULL)
     {
-        RECT TextRect, ItemRect;
+        RECT TextRect, ItemRect, CheckBox;
         HFONT hOldFont;
         DWORD CurrentIndex;
         COLORREF OldTextColor;
         BOOL Enabled, PrevEnabled;
-        POINT ptOld;
         
         Enabled = IsWindowEnabled(infoPtr->hSelf);
         PrevEnabled = Enabled;
@@ -298,11 +297,6 @@ PaintControl(IN PCHECKLISTWND infoPtr,
         TextRect.left = ItemRect.left + 6;
         TextRect.right = ItemRect.right - 6;
         TextRect.top = ItemRect.top + 2;
-        
-        MoveToEx(hDC,
-                 infoPtr->CheckBoxLeft[CLB_ALLOW],
-                 ItemRect.top,
-                 &ptOld);
         
         OldTextColor = SetTextColor(hDC,
                                     infoPtr->TextColor[Enabled]);
@@ -324,26 +318,34 @@ PaintControl(IN PCHECKLISTWND infoPtr,
                              infoPtr->TextColor[PrevEnabled]);
             }
             
+            /* draw the text */
             DrawText(hDC,
                      Item->Name,
                      -1,
                      &TextRect,
                      DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
             
-            MoveToEx(hDC,
-                     infoPtr->CheckBoxLeft[CLB_ALLOW],
-                     TextRect.top - 6,
-                     NULL);
-            LineTo(hDC,
-                   infoPtr->CheckBoxLeft[CLB_ALLOW],
-                   TextRect.bottom - 6);
-            MoveToEx(hDC,
-                     infoPtr->CheckBoxLeft[CLB_DENY],
-                     TextRect.top - 6,
-                     NULL);
-            LineTo(hDC,
-                   infoPtr->CheckBoxLeft[CLB_DENY],
-                   TextRect.bottom - 6);
+            /* draw the Allow checkbox */
+            CheckBox.left = infoPtr->CheckBoxLeft[CLB_ALLOW] - ((TextRect.bottom - TextRect.top) / 2);
+            CheckBox.right = CheckBox.left + (TextRect.bottom - TextRect.top) - 4;
+            CheckBox.top = TextRect.top;
+            CheckBox.bottom = CheckBox.top + (TextRect.bottom - TextRect.top) - 4;
+            DrawFrameControl(hDC,
+                             &CheckBox,
+                             DFC_BUTTON,
+                             DFCS_BUTTONCHECK | DFCS_FLAT |
+                             ((Item->State & CIS_DISABLED) && Enabled ? DFCS_INACTIVE : 0) |
+                             ((Item->State & CIS_ALLOW) ? DFCS_CHECKED : 0));
+
+            /* draw the Deny checkbox */
+            CheckBox.left = infoPtr->CheckBoxLeft[CLB_DENY] - ((TextRect.bottom - TextRect.top) / 2);
+            CheckBox.right = CheckBox.left + (TextRect.bottom - TextRect.top) - 4;
+            DrawFrameControl(hDC,
+                             &CheckBox,
+                             DFC_BUTTON,
+                             DFCS_BUTTONCHECK | DFCS_FLAT |
+                             ((Item->State & CIS_DISABLED) && Enabled ? DFCS_INACTIVE : 0) |
+                             ((Item->State & CIS_DENY) ? DFCS_CHECKED : 0));
 
             TextRect.top += infoPtr->ItemHeight;
         }
@@ -353,11 +355,6 @@ PaintControl(IN PCHECKLISTWND infoPtr,
 
         SetTextColor(hDC,
                      OldTextColor);
-
-        MoveToEx(hDC,
-                 ptOld.x,
-                 ptOld.y,
-                 NULL);
     }
 }
 

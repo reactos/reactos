@@ -35,5 +35,6 @@ END
 STRINGTABLE DISCARDABLE
 {
   IDS_PSP_TITLE "Behörigheter för %1"
+  IDS_UNKNOWN "Unknown"
 }
 
