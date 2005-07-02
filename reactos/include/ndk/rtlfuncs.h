@@ -1075,6 +1075,20 @@ NTSTATUS
 STDCALL
 RtlDestroyProcessParameters(IN PRTL_USER_PROCESS_PARAMETERS ProcessParameters);
 
+NTSTATUS
+STDCALL
+RtlExitUserThread(NTSTATUS Status);
+
+NTSTATUS
+STDCALL
+RtlInitializeContext(
+    IN HANDLE ProcessHandle,
+    OUT PCONTEXT ThreadContext,
+    IN PVOID ThreadStartParam  OPTIONAL,
+    IN PTHREAD_START_ROUTINE ThreadStartAddress,
+    IN PINITIAL_TEB InitialTeb
+);
+
 PRTL_USER_PROCESS_PARAMETERS
 STDCALL
 RtlNormalizeProcessParams(IN PRTL_USER_PROCESS_PARAMETERS ProcessParameters);
