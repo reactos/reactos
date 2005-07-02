@@ -123,20 +123,23 @@ DeleteCheckItem(IN PCHECKLISTWND infoPtr,
 static PCHECKITEM
 AddCheckItem(IN PCHECKLISTWND infoPtr,
              IN LPWSTR Name,
-             IN DWORD State)
+             IN DWORD State,
+             OUT INT *Index)
 {
     PCHECKITEM CurItem;
+    INT i;
     PCHECKITEM *PrevPtr = &infoPtr->CheckItemListHead;
     PCHECKITEM Item = HeapAlloc(GetProcessHeap(),
                                 0,
                                 sizeof(CHECKITEM) + (wcslen(Name) * sizeof(WCHAR)));
     if (Item != NULL)
     {
-        for (CurItem = infoPtr->CheckItemListHead;
+        for (CurItem = infoPtr->CheckItemListHead, i = 0;
              CurItem != NULL;
              CurItem = CurItem->Next)
         {
             PrevPtr = &CurItem->Next;
+            i++;
         }
         
         Item->Next = NULL;
@@ -146,9 +149,34 @@ AddCheckItem(IN PCHECKLISTWND infoPtr,
         
         *PrevPtr = Item;
         infoPtr->CheckItemCount++;
+        
+        if (Index != NULL)
+        {
+            *Index = i;
+        }
     }
     
     return Item;
+}
+
+static UINT
+ClearCheckBoxes(IN PCHECKLISTWND infoPtr)
+{
+    PCHECKITEM CurItem;
+    UINT nUpdated = 0;
+    
+    for (CurItem = infoPtr->CheckItemListHead;
+         CurItem != NULL;
+         CurItem = CurItem->Next)
+    {
+        if (CurItem->State & (CIS_ALLOW | CIS_DENY))
+        {
+            CurItem->State &= ~(CIS_ALLOW | CIS_DENY);
+            nUpdated++;
+        }
+    }
+    
+    return nUpdated;
 }
 
 static VOID
@@ -511,13 +539,20 @@ CheckListWndProc(IN HWND hwnd,
         
         case CLM_ADDITEM:
         {
-            Ret = (AddCheckItem(infoPtr,
-                                (LPWSTR)lParam,
-                                (DWORD)wParam) != NULL);
-            if (Ret)
+            INT Index = -1;
+            PCHECKITEM Item = AddCheckItem(infoPtr,
+                                           (LPWSTR)lParam,
+                                           (DWORD)wParam,
+                                           &Index);
+            if (Item != NULL)
             {
                 UpdateControl(infoPtr,
                               TRUE);
+                Ret = (LRESULT)Index;
+            }
+            else
+            {
+                Ret = (LRESULT)-1;
             }
             break;
         }
@@ -535,6 +570,29 @@ CheckListWndProc(IN HWND hwnd,
                     UpdateControl(infoPtr,
                                   TRUE);
                 }
+            }
+            else
+            {
+                Ret = FALSE;
+            }
+            break;
+        }
+        
+        case CLM_SETITEMSTATE:
+        {
+            PCHECKITEM Item = FindCheckItemByIndex(infoPtr,
+                                                   wParam);
+            if (Item != NULL)
+            {
+                DWORD OldState = Item->State;
+                Item->State = (DWORD)lParam & CIS_MASK;
+                
+                if (Item->State != OldState)
+                {
+                    UpdateControl(infoPtr,
+                                  TRUE);
+                }
+                Ret = TRUE;
             }
             else
             {
@@ -567,6 +625,17 @@ CheckListWndProc(IN HWND hwnd,
         case CLM_GETCHECKBOXCOLUMN:
         {
             Ret = (LRESULT)infoPtr->CheckBoxLeft[wParam != CLB_DENY];
+            break;
+        }
+        
+        case CLM_CLEARCHECKBOXES:
+        {
+            Ret = (LRESULT)ClearCheckBoxes(infoPtr);
+            if (Ret)
+            {
+                UpdateControl(infoPtr,
+                              TRUE);
+            }
             break;
         }
         
@@ -674,7 +743,6 @@ CheckListWndProc(IN HWND hwnd,
         case WM_LBUTTONDOWN:
         case WM_MBUTTONDOWN:
         case WM_RBUTTONDOWN:
-        case WM_XBUTTONDOWN:
         {
             if (!infoPtr->HasFocus && IsWindowEnabled(hwnd))
             {

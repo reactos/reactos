@@ -34,11 +34,15 @@ typedef struct _SECURITY_PAGE
 {
     HWND hWnd;
     HWND hBtnRemove;
+    HWND hBtnAdvanced;
     HWND hAceCheckList;
+    HWND hPermissionsForLabel;
 
     /* Main ACE List */
     HWND hWndAceList;
     PACE_LISTITEM AceListHead;
+    
+    INT SpecialPermCheckIndex;
 
     HIMAGELIST hiUsrs;
 
@@ -46,12 +50,14 @@ typedef struct _SECURITY_PAGE
     SI_OBJECT_INFO ObjectInfo;
     
     SI_ACCESS DefaultAccess;
+    
+    LPWSTR ServerName;
 } SECURITY_PAGE, *PSECURITY_PAGE;
 
 /* MISC ***********************************************************************/
 
 BOOL
-OpenLSAPolicyHandle(IN WCHAR *SystemName,
+OpenLSAPolicyHandle(IN LPWSTR SystemName,
                     IN ACCESS_MASK DesiredAccess,
                     OUT PLSA_HANDLE PolicyHandle);
 
@@ -87,6 +93,8 @@ ListViewSelectItem(IN HWND hwnd,
 #define CLM_CLEAR       (WM_USER + 4)
 #define CLM_SETCHECKBOXCOLUMN   (WM_USER + 5)
 #define CLM_GETCHECKBOXCOLUMN   (WM_USER + 6)
+#define CLM_CLEARCHECKBOXES     (WM_USER + 7)
+#define CLM_SETITEMSTATE        (WM_USER + 8)
 
 BOOL
 RegisterCheckListControl(HINSTANCE hInstance);

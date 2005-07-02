@@ -140,7 +140,7 @@ ReloadUsersGroupsList(IN PSECURITY_PAGE sp)
                     DomainNameSize = 0;
 
                     /* calculate the size of the buffer we need to calculate */
-                    LookupAccountSid(NULL, /* FIXME */
+                    LookupAccountSid(sp->ServerName,
                                      Sid,
                                      NULL,
                                      &AccountNameSize,
@@ -164,7 +164,7 @@ ReloadUsersGroupsList(IN PSECURITY_PAGE sp)
                                 Sid);
 
                         LookupResult = ERROR_SUCCESS;
-                        if (!LookupAccountSid(NULL, /* FIXME */
+                        if (!LookupAccountSid(sp->ServerName,
                                               Sid,
                                               AceListItem->AccountName,
                                               &AccountNameSize,
@@ -208,7 +208,7 @@ ReloadUsersGroupsList(IN PSECURITY_PAGE sp)
                             AceListItem->DisplayString = NULL;
                             
                             /* read the domain of the SID */
-                            if (OpenLSAPolicyHandle(NULL, /* FIXME */
+                            if (OpenLSAPolicyHandle(sp->ServerName,
                                                     POLICY_LOOKUP_NAMES | POLICY_VIEW_LOCAL_INFORMATION,
                                                     &LsaHandle))
                             {
@@ -310,6 +310,7 @@ ReloadUsersGroupsList(IN PSECURITY_PAGE sp)
                                         
                                         default:
                                         {
+                                            DPRINT("Unhandled SID type: 0x%x\n", Names->Use);
                                             break;
                                         }
                                     }
@@ -406,11 +407,37 @@ FillUsersGroupsList(IN PSECURITY_PAGE sp)
 static VOID
 UpdateControlStates(IN PSECURITY_PAGE sp)
 {
-    BOOL UserOrGroupSelected;
-    
-    UserOrGroupSelected = (ListViewGetSelectedItemData(sp->hWndAceList) != 0);
+    PACE_LISTITEM Selected = (PACE_LISTITEM)ListViewGetSelectedItemData(sp->hWndAceList);
 
-    EnableWindow(sp->hBtnRemove, UserOrGroupSelected);
+    EnableWindow(sp->hBtnRemove, Selected != NULL);
+    EnableWindow(sp->hAceCheckList, Selected != NULL);
+    
+    if (Selected != NULL)
+    {
+        LPWSTR szLabel;
+
+        LoadAndFormatString(hDllInstance,
+                            IDS_PERMISSIONS_FOR,
+                            &szLabel,
+                            Selected->AccountName);
+
+        SetWindowText(sp->hPermissionsForLabel,
+                      szLabel);
+
+        LocalFree((HLOCAL)szLabel);
+
+        /* FIXME - update the checkboxes */
+    }
+    else
+    {
+        SetWindowText(sp->hPermissionsForLabel,
+                      NULL);
+
+        SendMessage(sp->hAceCheckList,
+                    CLM_CLEARCHECKBOXES,
+                    0,
+                    0);
+    }
 }
 
 static UINT CALLBACK
@@ -555,7 +582,14 @@ SecurityPageProc(IN HWND hwndDlg,
                     {
                         case LVN_ITEMCHANGED:
                         {
-                            UpdateControlStates(sp);
+                            LPNMLISTVIEW pnmv = (LPNMLISTVIEW)lParam;
+                            
+                            if ((pnmv->uChanged & LVIF_STATE) &&
+                                ((pnmv->uOldState & (LVIS_FOCUSED | LVIS_SELECTED)) ||
+                                 (pnmv->uNewState & (LVIS_FOCUSED | LVIS_SELECTED))))
+                            {
+                                UpdateControlStates(sp);
+                            }
                             break;
                         }
                     }
@@ -575,7 +609,18 @@ SecurityPageProc(IN HWND hwndDlg,
                 sp->hWnd = hwndDlg;
                 sp->hWndAceList = GetDlgItem(hwndDlg, IDC_ACELIST);
                 sp->hBtnRemove = GetDlgItem(hwndDlg, IDC_ACELIST_REMOVE);
+                sp->hBtnAdvanced = GetDlgItem(hwndDlg, IDC_ADVANCED);
                 sp->hAceCheckList = GetDlgItem(hwndDlg, IDC_ACE_CHECKLIST);
+                sp->hPermissionsForLabel = GetDlgItem(hwndDlg, IDC_LABEL_PERMISSIONS_FOR);
+                
+                sp->SpecialPermCheckIndex = -1;
+                
+                if ((sp->ObjectInfo.dwFlags & SI_SERVER_IS_DC) &&
+                    sp->ObjectInfo.pszServerName != NULL &&
+                    sp->ObjectInfo.pszServerName[0] != L'\0')
+                {
+                    sp->ServerName = sp->ObjectInfo.pszServerName;
+                }
 
                 /* save the pointer to the structure */
                 SetWindowLongPtr(hwndDlg,
@@ -617,13 +662,40 @@ SecurityPageProc(IN HWND hwndDlg,
                                        CLB_DENY,
                                        GetDlgItem(hwndDlg, IDC_LABEL_DENY));
 
-                /* FIXME - hide controls in case the flags aren't present */
-
                 LoadPermissionsList(sp,
                                     NULL,
                                     SI_ACCESS_GENERAL |
                                     ((sp->ObjectInfo.dwFlags & SI_CONTAINER) ? SI_ACCESS_CONTAINER : 0),
                                     &sp->DefaultAccess);
+
+                /* hide controls in case the flags aren't present */
+                if (sp->ObjectInfo.dwFlags & SI_ADVANCED)
+                {
+                    WCHAR szSpecialPermissions[255];
+                    
+                    /* editing the permissions is least the user can do when
+                       the advanced button is showed */
+                    sp->ObjectInfo.dwFlags |= SI_EDIT_PERMS;
+                    
+                    if (LoadString(hDllInstance,
+                                   IDS_SPECIAL_PERMISSIONS,
+                                   szSpecialPermissions,
+                                   sizeof(szSpecialPermissions) / sizeof(szSpecialPermissions[0])))
+                    {
+                        /* add the special permissions check item */
+                        sp->SpecialPermCheckIndex = (INT)SendMessage(sp->hAceCheckList,
+                                                                     CLM_ADDITEM,
+                                                                     CIS_DISABLED | CIS_NONE,
+                                                                     (LPARAM)szSpecialPermissions);
+                    }
+                }
+                else
+                {
+                    ShowWindow(sp->hBtnAdvanced,
+                               SW_HIDE);
+                    ShowWindow(GetDlgItem(hwndDlg, IDC_LABEL_ADVANCED),
+                               SW_HIDE);
+                }
             }
             break;
         }
@@ -654,7 +726,10 @@ CreateSecurityPage(IN LPSECURITYINFO psi)
         return NULL;
     }
 
-    /* get the object information from the server interface */
+    /* get the object information from the server. Zero the structure before
+       because some applications seem to return SUCCESS but only seem to set the
+       fields they care about. */
+    ZeroMemory(&ObjectInfo, sizeof(ObjectInfo));
     hRet = psi->lpVtbl->GetObjectInformation(psi, &ObjectInfo);
 
     if(FAILED(hRet))
@@ -694,12 +769,18 @@ CreateSecurityPage(IN LPSECURITYINFO psi)
     psp.lParam = (LPARAM)sPage;
     psp.pfnCallback = SecurityPageCallback;
 
-    if((ObjectInfo.dwFlags & SI_PAGE_TITLE) &&
-       ObjectInfo.pszPageTitle != NULL && ObjectInfo.pszPageTitle[0] != L'\0')
+    if(ObjectInfo.dwFlags & SI_PAGE_TITLE)
     {
-        /* Set the page title if the flag is present and the string isn't empty */
         psp.pszTitle = ObjectInfo.pszPageTitle;
-        psp.dwFlags |= PSP_USETITLE;
+
+        if (psp.pszTitle != NULL)
+        {
+            psp.dwFlags |= PSP_USETITLE;
+        }
+    }
+    else
+    {
+        psp.pszTitle = NULL;
     }
     
     /* NOTE: the SECURITY_PAGE structure will be freed by the property page
@@ -734,7 +815,10 @@ EditSecurity(IN HWND hwndOwner,
         return FALSE;
     }
 
-    /* get the object information from the server interface */
+    /* get the object information from the server. Zero the structure before
+       because some applications seem to return SUCCESS but only seem to set the
+       fields they care about. */
+    ZeroMemory(&ObjectInfo, sizeof(ObjectInfo));
     hRet = psi->lpVtbl->GetObjectInformation(psi, &ObjectInfo);
 
     if(FAILED(hRet))
@@ -757,25 +841,15 @@ EditSecurity(IN HWND hwndOwner,
     psh.dwFlags = PSH_DEFAULT;
     psh.hwndParent = hwndOwner;
     psh.hInstance = hDllInstance;
-    if((ObjectInfo.dwFlags & SI_PAGE_TITLE) &&
-       ObjectInfo.pszPageTitle != NULL && ObjectInfo.pszPageTitle[0] != L'\0')
-    {
-        /* Set the page title if the flag is present and the string isn't empty */
-        psh.pszCaption = ObjectInfo.pszPageTitle;
-        psh.dwFlags |= PSH_PROPTITLE;
-        lpCaption = NULL;
-    }
-    else
-    {
-        /* Set the page title to the object name, make sure the format string
-           has "%1" NOT "%s" because it uses FormatMessage() to automatically
-           allocate the right amount of memory. */
-        LoadAndFormatString(hDllInstance,
-                            IDS_PSP_TITLE,
-                            &lpCaption,
-                            ObjectInfo.pszObjectName);
-        psh.pszCaption = lpCaption;
-    }
+
+    /* Set the page title to the object name, make sure the format string
+       has "%1" NOT "%s" because it uses FormatMessage() to automatically
+       allocate the right amount of memory. */
+    LoadAndFormatString(hDllInstance,
+                        IDS_PSP_TITLE,
+                        &lpCaption,
+                        ObjectInfo.pszObjectName);
+    psh.pszCaption = lpCaption;
 
     psh.nPages = sizeof(hPages) / sizeof(HPROPSHEETPAGE);
     psh.nStartPage = 0;

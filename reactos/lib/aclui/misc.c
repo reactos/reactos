@@ -127,7 +127,7 @@ LoadAndFormatString(IN HINSTANCE hInstance,
 }
 
 BOOL
-OpenLSAPolicyHandle(IN WCHAR *SystemName,
+OpenLSAPolicyHandle(IN LPWSTR SystemName,
                     IN ACCESS_MASK DesiredAccess,
                     OUT PLSA_HANDLE PolicyHandle)
 {
