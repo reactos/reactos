@@ -104,13 +104,40 @@ IopRemovePlugPlayEvent(VOID)
 
 
 /*
+ * NtGetPlugPlayEvent
+ *
+ * Returns one Plug & Play event from a global queue.
+ *
+ * Parameters
+ *    Reserved1
+ *    Reserved2
+ *       Always set to zero.
+ *
+ *    Buffer
+ *       The buffer that will be filled with the event information on
+ *       successful return from the function.
+ *
+ *    BufferSize
+ *       Size of the buffer pointed by the Buffer parameter. If the
+ *       buffer size is not large enough to hold the whole event
+ *       information, error STATUS_BUFFER_TOO_SMALL is returned and
+ *       the buffer remains untouched.
+ *
+ * Return Values
+ *    STATUS_PRIVILEGE_NOT_HELD
+ *    STATUS_BUFFER_TOO_SMALL
+ *    STATUS_SUCCESS
+ *
+ * Remarks
+ *    This function isn't multi-thread safe!
+ *
  * @implemented
  */
 NTSTATUS STDCALL
 NtGetPlugPlayEvent(IN ULONG Reserved1,
                    IN ULONG Reserved2,
                    OUT PPLUGPLAY_EVENT_BLOCK Buffer,
-                   IN ULONG BufferLength)
+                   IN ULONG BufferSize)
 {
   PPNP_EVENT_ENTRY Entry;
   NTSTATUS Status;
@@ -151,7 +178,7 @@ NtGetPlugPlayEvent(IN ULONG Reserved1,
                             ListEntry);
 
   /* Check the buffer size */
-  if (BufferLength < Entry->Event.TotalSize)
+  if (BufferSize < Entry->Event.TotalSize)
   {
     DPRINT1("Buffer is too small for the pnp-event\n");
     return STATUS_BUFFER_TOO_SMALL;
@@ -419,6 +446,59 @@ IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
 
 
 /*
+ * NtPlugPlayControl
+ *
+ * A function for doing various Plug & Play operations from user mode.
+ *
+ * Parameters
+ *    PlugPlayControlClass
+ *       0x00   Reenumerate device tree
+ *
+ *              Buffer points to UNICODE_STRING decribing the instance
+ *              path (like "HTREE\ROOT\0" or "Root\ACPI_HAL\0000"). For
+ *              more information about instance paths see !devnode command
+ *              in kernel debugger or look at "Inside Windows 2000" book,
+ *              chapter "Driver Loading, Initialization, and Installation".
+ *
+ *       0x01   Register new device
+ *       0x02   Deregister device
+ *       0x03   Initialize device
+ *       0x04   Start device
+ *       0x06   Query and remove device
+ *       0x07   User response
+ *
+ *              Called after processing the message from NtGetPlugPlayEvent.
+ *
+ *       0x08   Generate legacy device
+ *       0x09   Get interface device list
+ *       0x0A   Get property data
+ *       0x0B   Device class association (Registration)
+ *       0x0C   Get related device
+ *       0x0D   Get device interface alias
+ *       0x0E   Get/set/clear device status
+ *       0x0F   Get device depth
+ *       0x10   Query device relations
+ *       0x11   Query target device relation
+ *       0x12   Query conflict list
+ *       0x13   Retrieve dock data
+ *       0x14   Reset device
+ *       0x15   Halt device
+ *       0x16   Get blocked driver data
+ *
+ *    Buffer
+ *       The buffer contains information that is specific to each control
+ *       code. The buffer is read-only.
+ *
+ *    BufferSize
+ *       Size of the buffer pointed by the Buffer parameter. If the
+ *       buffer size specifies incorrect value for specified control
+ *       code, error ??? is returned.
+ *
+ * Return Values
+ *    STATUS_PRIVILEGE_NOT_HELD
+ *    STATUS_SUCCESS
+ *    ...
+ *
  * @unimplemented
  */
 NTSTATUS STDCALL

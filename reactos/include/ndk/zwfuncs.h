@@ -1220,10 +1220,10 @@ ZwGetContextThread(
 NTSTATUS
 STDCALL
 NtGetPlugPlayEvent(
-    ULONG Reserved1,
-    ULONG Reserved2,
-    struct _PLUGPLAY_EVENT_BLOCK *Buffer,
-    ULONG BufferSize
+    IN ULONG Reserved1,
+    IN ULONG Reserved2,
+    OUT PPLUGPLAY_EVENT_BLOCK Buffer,
+    IN ULONG BufferSize
 );
 
 ULONG

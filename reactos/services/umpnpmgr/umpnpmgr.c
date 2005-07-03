@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             services/umpnpmgr/umpnpmgr.c
@@ -31,7 +30,6 @@
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 #include <ddk/wdmguid.h>
-#include <ddk/ntpnp.h>
 
 #include <rpc.h>
 #include <rpcdce.h>

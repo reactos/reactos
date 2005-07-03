@@ -18,7 +18,6 @@
 #include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
 #include <ddk/wdmguid.h>
-#include <ddk/ntpnp.h>
 #include <ndk/ntndk.h>
 #undef IO_TYPE_FILE
 #define IO_TYPE_FILE                    0x0F5L /* Temp Hack */

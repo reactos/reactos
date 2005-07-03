@@ -37,6 +37,16 @@
 #define DOSDEVICE_DRIVE_CDROM      5
 #define DOSDEVICE_DRIVE_RAMDISK    6
 
+/* PLUGPLAY_CONTROL_RELATED_DEVICE_DATA.Relation values */
+#define PNP_GET_PARENT_DEVICE  1
+#define PNP_GET_CHILD_DEVICE   2
+#define PNP_GET_SIBLING_DEVICE 3
+
+/* PLUGPLAY_CONTROL_STATUS_DATA.Operation values */
+#define PNP_GET_DEVICE_STATUS    0
+#define PNP_SET_DEVICE_STATUS    1
+#define PNP_CLEAR_DEVICE_STATUS  2
+
 /* ENUMERATIONS **************************************************************/
 
 typedef enum _HARDERROR_RESPONSE_OPTION
@@ -63,7 +73,7 @@ typedef enum _HARDERROR_RESPONSE
     ResponseYes
 } HARDERROR_RESPONSE, *PHARDERROR_RESPONSE;
 
-typedef enum SHUTDOWN_ACTION_TAG
+typedef enum _SHUTDOWN_ACTION
 {
     ShutdownNoReboot,
     ShutdownReboot,
@@ -89,6 +99,20 @@ typedef enum _SYSTEM_DOCK_STATE
     SystemUndocked,
     SystemDocked
 } SYSTEM_DOCK_STATE, *PSYSTEM_DOCK_STATE;
+
+typedef enum _PLUGPLAY_EVENT_CATEGORY
+{
+    HardwareProfileChangeEvent,
+    TargetDeviceChangeEvent,
+    DeviceClassChangeEvent,
+    CustomDeviceEvent,
+    DeviceInstallEvent,
+    DeviceArrivalEvent,
+    PowerEvent,
+    VetoEvent,
+    BlockedDriverEvent,
+    MaxPlugEventCategory
+} PLUGPLAY_EVENT_CATEGORY;
 
 /**** Information Classes ****/
 
@@ -218,7 +242,8 @@ typedef enum _SECTION_INFORMATION_CLASS
 /*
  * Timer
  */
-typedef enum _TIMER_INFORMATION_CLASS {
+typedef enum _TIMER_INFORMATION_CLASS
+{
     TimerBasicInformation
 } TIMER_INFORMATION_CLASS;
 
@@ -261,7 +286,83 @@ typedef enum _PLUGPLAY_CONTROL_CLASS
 
 typedef unsigned short LANGID;
 typedef LANGID *PLANGID;
-struct _PLUGPLAY_EVENT_BLOCK; /* FIXME: Ask Filip if it's OK to define it */
+
+/*
+ * Plug and Play event structure used by NtGetPlugPlayEvent.
+ *
+ * EventGuid
+ *    Can be one of the following values:
+ *       GUID_HWPROFILE_QUERY_CHANGE
+ *       GUID_HWPROFILE_CHANGE_CANCELLED
+ *       GUID_HWPROFILE_CHANGE_COMPLETE
+ *       GUID_TARGET_DEVICE_QUERY_REMOVE
+ *       GUID_TARGET_DEVICE_REMOVE_CANCELLED
+ *       GUID_TARGET_DEVICE_REMOVE_COMPLETE
+ *       GUID_PNP_CUSTOM_NOTIFICATION
+ *       GUID_PNP_POWER_NOTIFICATION
+ *       GUID_DEVICE_* (see above)
+ *
+ * EventCategory
+ *    Type of the event that happened.
+ *
+ * Result
+ *    ?
+ *
+ * Flags
+ *    ?
+ *
+ * TotalSize
+ *    Size of the event block including the device IDs and other
+ *    per category specific fields.
+ */
+typedef struct _PLUGPLAY_EVENT_BLOCK
+{
+    GUID EventGuid;
+    PLUGPLAY_EVENT_CATEGORY EventCategory;
+    PULONG Result;
+    ULONG Flags;
+    ULONG TotalSize;
+    PVOID DeviceObject;
+    union
+    {
+        struct
+        {
+            GUID ClassGuid;
+            WCHAR SymbolicLinkName[ANYSIZE_ARRAY];
+        } DeviceClass;
+        struct
+        {
+            WCHAR DeviceIds[ANYSIZE_ARRAY];
+        } TargetDevice;
+        struct
+        {
+            WCHAR DeviceId[ANYSIZE_ARRAY];
+        } InstallDevice;
+        struct
+        {
+            PVOID NotificationStructure;
+            WCHAR DeviceIds[ANYSIZE_ARRAY];
+        } CustomNotification;
+        struct
+        {
+            PVOID Notification;
+        } ProfileNotification;
+        struct
+        {
+            ULONG NotificationCode;
+            ULONG NotificationData;
+        } PowerNotification;
+        struct
+        {
+            PNP_VETO_TYPE VetoType;
+            WCHAR DeviceIdVetoNameBuffer[ANYSIZE_ARRAY];
+        } VetoNotification;
+        struct
+        {
+            GUID BlockedDriverGuid;
+        } BlockedDriverNotification;
+    };
+} PLUGPLAY_EVENT_BLOCK, *PPLUGPLAY_EVENT_BLOCK;
 
 /**** Information Structures ****/
 /*
@@ -296,7 +397,8 @@ typedef struct _THREAD_BASIC_INFORMATION
  */
 
 /* Class 0 */
-typedef struct _ATOM_BASIC_INFORMATION {
+typedef struct _ATOM_BASIC_INFORMATION
+{
     USHORT UsageCount;
     USHORT Flags;
     USHORT NameLength;
@@ -1017,7 +1119,8 @@ typedef struct _SYSTEM_KERNEL_DEBUGGER_INFORMATION
 } SYSTEM_KERNEL_DEBUGGER_INFORMATION, *PSYSTEM_KERNEL_DEBUGGER_INFORMATION;
 
 /* Class 36 */
-typedef struct _SYSTEM_CONTEXT_SWITCH_INFORMATION {
+typedef struct _SYSTEM_CONTEXT_SWITCH_INFORMATION
+{
     ULONG ContextSwitches;
     ULONG FindAny;
     ULONG FindLast;
@@ -1152,5 +1255,34 @@ typedef struct _SYSTEM_SESSION_PROCESSES_INFORMATION
 /* Class 54-81 */
 /* FIXME */
 
+/*
+ * PlugPlay
+ */
+
+/* Class 0x0A */
+typedef struct _PLUGPLAY_CONTROL_PROPERTY_DATA
+{
+    UNICODE_STRING DeviceInstance;
+    ULONG Property;
+    PVOID Buffer;
+    ULONG BufferSize;
+} PLUGPLAY_CONTROL_PROPERTY_DATA, *PPLUGPLAY_CONTROL_PROPERTY_DATA;
+
+/* Class 0x0C */
+typedef struct _PLUGPLAY_CONTROL_RELATED_DEVICE_DATA
+{
+    UNICODE_STRING TargetDeviceInstance;
+    ULONG Relation; /* 1: Parent  2: Child  3: Sibling */
+    UNICODE_STRING RelatedDeviceInstance;
+} PLUGPLAY_CONTROL_RELATED_DEVICE_DATA, *PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA;
+
+/* Class 0x0E */
+typedef struct _PLUGPLAY_CONTOL_STATUS_DATA
+{
+    UNICODE_STRING DeviceInstance;
+    ULONG Operation;       /* 0: Get  1: Set  2: Clear */
+    ULONG DeviceStatus;    /* DN_       see cfg.h */
+    ULONG DeviceProblem;   /* CM_PROB_  see cfg.h */
+} PLUGPLAY_CONTROL_STATUS_DATA, *PPLUGPLAY_CONTROL_STATUS_DATA;
 
 #endif
