@@ -7,7 +7,6 @@
 	<define name="_WIN32_IE">0x0500</define>
 	<define name="_WIN32_WINNT">0x501</define>
 	<define name="WINVER">0x0600</define>
-	<define name="SUPPORT_UXTHEME" />
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>user32</library>
