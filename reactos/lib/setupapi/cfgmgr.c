@@ -117,6 +117,84 @@ CONFIGRET WINAPI CM_Disconnect_Machine(HMACHINE hMachine)
 
 
 /***********************************************************************
+ * CM_Enumerate_Classes [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Enumerate_Classes(
+    ULONG ulClassIndex, LPGUID ClassGuid, ULONG ulFlags)
+{
+    TRACE("%lx %p %lx\n", ulClassIndex, ClassGuid, ulFlags);
+
+    return CM_Enumerate_Classes_Ex(ulClassIndex, ClassGuid, ulFlags, NULL);
+}
+
+
+static CONFIGRET GetCmCodeFromErrorCode(DWORD ErrorCode)
+{
+	switch (ErrorCode)
+	{
+		case ERROR_SUCCESS:             return CR_SUCCESS;
+		case ERROR_ACCESS_DENIED:       return CR_ACCESS_DENIED;
+		case ERROR_INSUFFICIENT_BUFFER: return CR_BUFFER_SMALL;
+		case ERROR_INVALID_DATA:        return CR_INVALID_DATA;
+		case ERROR_INVALID_PARAMETER:   return CR_INVALID_DATA;
+		case ERROR_NO_MORE_ITEMS:       return CR_NO_SUCH_VALUE;
+		case ERROR_NO_SYSTEM_RESOURCES: return CR_OUT_OF_MEMORY;
+		default:                        return CR_FAILURE;
+	}
+}
+
+
+/***********************************************************************
+ * CM_Enumerate_Classes_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Enumerate_Classes_Ex(
+    ULONG ulClassIndex, LPGUID ClassGuid, ULONG ulFlags, HMACHINE hMachine)
+{
+    HKEY hRelativeKey, hKey;
+    DWORD rc;
+    WCHAR Buffer[39];
+
+    TRACE("%lx %p %lx %p\n", ulClassIndex, ClassGuid, ulFlags, hMachine);
+
+    if (hMachine != NULL)
+    {
+        FIXME("hMachine argument ignored\n");
+        hRelativeKey = HKEY_LOCAL_MACHINE; /* FIXME: use here a field in hMachine */
+    }
+    else
+        hRelativeKey = HKEY_LOCAL_MACHINE;
+
+    rc = RegOpenKeyExW(
+        hRelativeKey,
+        L"System\\CurrentControlSet\\Control\\Class",
+        0, /* options */
+        KEY_ENUMERATE_SUB_KEYS,
+        &hKey);
+    if (rc != ERROR_SUCCESS)
+        return GetCmCodeFromErrorCode(rc);
+
+    rc = RegEnumKeyW(
+        hKey,
+        ulClassIndex,
+        Buffer,
+        sizeof(Buffer) / sizeof(WCHAR));
+
+    RegCloseKey(hKey);
+
+    if (rc == ERROR_SUCCESS)
+    {
+        /* Remove the {} */
+        Buffer[37] = UNICODE_NULL;
+        /* Convert the buffer to a GUID */
+        if (UuidFromStringW(&Buffer[1], ClassGuid) != RPC_S_OK)
+        return CR_FAILURE;
+    }
+
+    return GetCmCodeFromErrorCode(rc);
+}
+
+
+/***********************************************************************
  * CM_Get_Child [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Get_Child(
