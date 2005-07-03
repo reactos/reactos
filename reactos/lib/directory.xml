@@ -271,6 +271,9 @@
 <directory name="uuid">
 	<xi:include href="uuid/uuid.xml" />
 </directory>
+<directory name="uxtheme">
+	<xi:include href="uxtheme/uxtheme.xml" />
+</directory>
 <directory name="version">
 	<xi:include href="version/version.xml" />
 </directory>
