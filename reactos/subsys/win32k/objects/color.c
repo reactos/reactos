@@ -591,7 +591,32 @@ NtGdiSetSystemPaletteUse(HDC hDC, UINT Usage)
 BOOL STDCALL
 NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
 {
+
+   GDIOBJHDR * ptr;
+   DWORD objectType;
+
    UNIMPLEMENTED;
+      
+   ptr = GDIOBJ_LockObj(hgdiobj, GDI_OBJECT_TYPE_DONTCARE);
+   if (ptr == 0)
+     {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return FALSE;
+     }
+   objectType = GDIOBJ_GetObjectType(hgdiobj);
+   switch(objectType)
+     {
+         case GDI_OBJECT_TYPE_PALETTE:
+           {
+           /* Make sure this is a Palette object!*/
+              break;
+           }
+         default:
+           DPRINT1("Magic 0x%08x not implemented\n", objectType);
+           break;
+     }
+
+   GDIOBJ_UnlockObjByPtr(ptr);
    return FALSE;
 }
 
