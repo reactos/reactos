@@ -63,17 +63,20 @@ FindCheckItemByIndex(IN PCHECKLISTWND infoPtr,
 {
     PCHECKITEM Item, Found = NULL;
     
-    for (Item = infoPtr->CheckItemListHead;
-         Item != NULL;
-         Item = Item->Next)
+    if (Index >= 0)
     {
-        if (Index == 0)
+        for (Item = infoPtr->CheckItemListHead;
+             Item != NULL;
+             Item = Item->Next)
         {
-            Found = Item;
-            break;
+            if (Index == 0)
+            {
+                Found = Item;
+                break;
+            }
+
+            Index--;
         }
-        
-        Index--;
     }
     
     return Found;
@@ -1281,11 +1284,6 @@ CheckListWndProc(IN HWND hwnd,
                 pt.x = (LONG)LOWORD(lParam);
                 pt.y = (LONG)HIWORD(lParam);
                 
-                if (!infoPtr->HasFocus)
-                {
-                    SetFocus(hwnd);
-                }
-                
                 NewFocus = PtToCheckItemBox(infoPtr,
                                             &pt,
                                             &NewFocusBox,
@@ -1320,6 +1318,11 @@ CheckListWndProc(IN HWND hwnd,
                     ChangeCheckItemFocus(infoPtr,
                                          NewFocus,
                                          NewFocusBox);
+                }
+                
+                if (!infoPtr->HasFocus)
+                {
+                    SetFocus(hwnd);
                 }
             }
             break;
