@@ -720,6 +720,9 @@ BOOL     WINAPI SetupDiClassNameFromGuidW(const GUID*, PWSTR, DWORD, PDWORD);
 BOOL     WINAPI SetupDiClassNameFromGuidExA(const GUID*, PSTR, DWORD, PDWORD, PCSTR, PVOID);
 BOOL     WINAPI SetupDiClassNameFromGuidExW(const GUID*, PWSTR, DWORD, PDWORD, PCWSTR, PVOID);
 #define         SetupDiClassNameFromGuidEx WINELIB_NAME_AW(SetupDiClassNameFromGuidEx)
+BOOL     WINAPI SetupDiCreateDeviceInfoA(HDEVINFO,PCSTR,LPGUID,PCSTR,HWND,DWORD,PSP_DEVINFO_DATA);
+BOOL     WINAPI SetupDiCreateDeviceInfoW(HDEVINFO,PCWSTR,LPGUID,PCWSTR,HWND,DWORD,PSP_DEVINFO_DATA);
+#define         SetupDiCreateDeviceInfo WINELIB_NAME_AW(SetupDiCreateDeviceInfo)
 HDEVINFO WINAPI SetupDiCreateDeviceInfoList(const GUID *, HWND);
 HDEVINFO WINAPI SetupDiCreateDeviceInfoListExA(const GUID *, HWND, PCSTR, PVOID);
 HDEVINFO WINAPI SetupDiCreateDeviceInfoListExW(const GUID *, HWND, PCWSTR, PVOID);
