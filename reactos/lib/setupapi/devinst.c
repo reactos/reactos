@@ -1181,11 +1181,85 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyA(
         DWORD   PropertyBufferSize,
         PDWORD  RequiredSize)
 {
+    BOOL bResult;
+    BOOL bIsStringProperty;
+    DWORD RegType;
+    DWORD RequiredSizeA, RequiredSizeW;
+    DWORD PropertyBufferSizeW;
+    PBYTE PropertyBufferW;
+
+    TRACE("%04lx %p %ld %p %p %ld %p\n", (DWORD)devinfo, DeviceInfoData,
+        Property, PropertyRegDataType, PropertyBuffer, PropertyBufferSize,
+        RequiredSize);
+
+    PropertyBufferSizeW = PropertyBufferSize * 2;
+    PropertyBufferW = HeapAlloc(GetProcessHeap(), 0, PropertyBufferSizeW);
+
+    bResult = SetupDiGetDeviceRegistryPropertyW(
+        devinfo,
+        DeviceInfoData,
+        Property,
+        &RegType,
+        PropertyBufferW,
+        PropertyBufferSizeW,
+        &RequiredSizeW);
+
+    HeapFree(GetProcessHeap(), 0, PropertyBufferW);
+
+    if (!bResult)
+        return bResult;
+
+    bIsStringProperty = (RegType == REG_SZ || RegType == REG_MULTI_SZ);
+
+    if (bIsStringProperty)
+        RequiredSizeA = RequiredSizeW / sizeof(WCHAR);
+    else
+        RequiredSizeA = RequiredSizeW;
+
+    if (RequiredSizeA <= PropertyBufferSize)
+    {
+        if (bIsStringProperty && PropertyBufferSize > 0)
+        {
+            if (WideCharToMultiByte(CP_ACP, 0, (LPWSTR)PropertyBufferW, RequiredSizeW / sizeof(WCHAR), PropertyBuffer, PropertyBufferSize, NULL, NULL) == 0)
+            {
+                /* Last error is already set by WideCharToMultiByte */
+                bResult = FALSE;
+            }
+        }
+        else
+            memcpy(PropertyBuffer, PropertyBufferW, RequiredSizeA);
+    }
+    else
+    {
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        bResult = FALSE;
+    }
+
+    if (PropertyRegDataType)
+        *PropertyRegDataType = RegType;
+    if (RequiredSize)
+        *RequiredSize = RequiredSizeA;
+    return bResult;
+}
+
+/***********************************************************************
+ *		SetupDiGetDeviceRegistryPropertyW (SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiGetDeviceRegistryPropertyW(
+        HDEVINFO  devinfo,
+        PSP_DEVINFO_DATA  DeviceInfoData,
+        DWORD   Property,
+        PDWORD  PropertyRegDataType,
+        PBYTE   PropertyBuffer,
+        DWORD   PropertyBufferSize,
+        PDWORD  RequiredSize)
+{
     FIXME("%04lx %p %ld %p %p %ld %p\n", (DWORD)devinfo, DeviceInfoData,
         Property, PropertyRegDataType, PropertyBuffer, PropertyBufferSize,
         RequiredSize);
     return FALSE;
 }
+
 
 /***********************************************************************
  *		SetupDiInstallClassA (SETUPAPI.@)
