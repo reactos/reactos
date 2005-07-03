@@ -25,16 +25,16 @@
 .globl _KiDebugService
 
 _KiFastCallEntry:
-    
+
     /* Set FS to PCR */
     movl $PCR_SELECTOR, %ecx
     movw %cx, %fs
-       
+
     /* Set the current stack to Kernel Stack */
     movl %fs:KPCR_TSS, %ecx
     movl %ss:KTSS_ESP0(%ecx), %ecx
     movl %ecx, %esp
-    
+
     /* Set up a fake INT Stack. */
     pushl $USER_DS
     pushl %edx                  /* Ring 3 SS:ESP */
@@ -42,13 +42,13 @@ _KiFastCallEntry:
     orl $X86_EFLAGS_IF, (%esp)  /* Re-enable IRQs in EFLAGS, to fake INT */
     pushl $USER_CS
     pushl $KUSER_SHARED_SYSCALL_RET
-    
+
     /* User Parameter List */
     add $8, %edx
-    
+
 _KiSystemService:
 
-    /* 
+    /*
      * Construct a trap frame on the stack.
      * The following are already on the stack.
      */
@@ -63,11 +63,11 @@ _KiSystemService:
     pushl %esi                                                          // + 0x20
     pushl %edi                                                          // + 0x24
     pushl %fs                                                           // + 0x28
-    
+
     /* Load PCR Selector into fs */
     movw $PCR_SELECTOR, %bx
     movw %bx, %fs
-    
+
     /* Save the previous exception list */
     pushl %fs:KPCR_EXCEPTION_LIST                                      // + 0x2C
 
@@ -79,7 +79,7 @@ _KiSystemService:
 
     /* Save the old previous mode */
     pushl %ss:KTHREAD_PREVIOUS_MODE(%esi)                              // + 0x30
-    
+
     /* Set the new previous mode based on the saved CS selector */
     movl 0x24(%esp), %ebx
     andl $1, %ebx
@@ -120,7 +120,7 @@ _KiSystemService:
     movl %ebp, KTHREAD_TRAP_FRAME(%esi)
 
 CheckValidCall:
-    
+
 #ifdef DBG
     /*
      * GDB thinks the function starts here and
@@ -139,29 +139,29 @@ CheckValidCall:
     shrl $8, %edi
     andl $0x10, %edi
     movl %edi, %ecx
-       
+
     /* Now add the thread's base system table to the offset */
     addl KTHREAD_SERVICE_TABLE(%esi), %edi
-    
+
     /* Get the true syscall ID and check it */
     movl %eax, %ebx
     andl $0x0FFF, %eax
     cmpl 8(%edi), %eax
-    
+
     /* Invalid ID, try to load Win32K Table */
     jnb KiBBTUnexpectedRange
 
     /* Users's current stack frame pointer is source */
     movl %edx, %esi
-   
+
     /* Allocate room for argument list from kernel stack */
     movl 12(%edi), %ecx
     movb (%ecx, %eax), %cl
     movzx %cl, %ecx
-    
+
     /* Allocate space on our stack */
     subl %ecx, %esp
-    
+
     /* Get pointer to function */
     movl (%edi), %edi
     movl (%edi, %eax, 4), %eax
@@ -193,25 +193,25 @@ _KiServiceExit:
     /* Get the Current Thread */
     cli
     movl %fs:KPCR_CURRENT_THREAD, %esi
-    
+
     /* Deliver APCs only if we were called from user mode */
     testb $1, KTRAP_FRAME_CS(%esp)
     je KiRosTrapReturn
-    
+
     /* And only if any are actually pending */
     cmpb $0, KTHREAD_PENDING_USER_APC(%esi)
     je KiRosTrapReturn
-    
+
     /* Save pointer to Trap Frame */
     movl %esp, %ebx
-    
+
     /* Raise IRQL to APC_LEVEL */
     movl $1, %ecx
     call @KfRaiseIrql@4
-    
+
     /* Save old IRQL */
     pushl %eax
-    
+
     /* Deliver APCs */
     sti
     pushl %ebx
@@ -219,13 +219,13 @@ _KiServiceExit:
     pushl $UserMode
     call _KiDeliverApc@12
     cli
-    
+
     /* Return to old IRQL */
     popl %ecx
     call @KfLowerIrql@4
-    
+
 KiRosTrapReturn:
-    
+
     /* Skip debug information and unsaved registers */
     addl $0x30, %esp                                                   // + 0x48
     popl %gs                                                           // + 0x44
@@ -252,11 +252,11 @@ KiRosTrapReturn:
 
     /* Check if previous CS is from user-mode */
     testl $1, 4(%esp)
-    
+
     /* It is, so use Fast Exit */
     jnz FastRet
-    
-    /* 
+
+    /*
      * Restore what the stub pushed, and return back to it.
      * Note that we were CALLed, so the first thing on our stack is the ret EIP!
      */
@@ -264,9 +264,9 @@ KiRosTrapReturn:
     pop %ecx                                                           // + 0x08
     popf                                                               // + 0x04
     jmp *%edx
-          
+
 IntRet:
-    
+
     iret
 
 FastRet:
@@ -278,15 +278,15 @@ FastRet:
     /* Restore FS to TIB */
     mov $TEB_SELECTOR, %ecx
     mov %ecx, %fs
-    
+
     /* We will be cleaning up the stack ourselves */
     popl %edx                         /* New Ring 3 EIP */
     add $0x4, %esp                    /* Skip Ring 3 DS */
     andl $~X86_EFLAGS_IF, (%esp)      /* Remove IRQ hack from EFLAGS */
     popfl                             /* Restore old EFLAGS */
-    popl %ecx                         /* Old Ring 3 SS:ESP */   
-       
-    /* 
+    popl %ecx                         /* Old Ring 3 SS:ESP */
+
+    /*
      * At this point:
      *     ECX points to the old User Stack.
      *     EDX points to the instruction to execute in usermode after the sysenter
@@ -306,41 +306,41 @@ KiBBTUnexpectedRange:
     call _KiServiceCheck
     popl %eax
     popl %edx
-    
+
     /* Try the Call again */
     jmp CheckValidCall
-    
+
 InvalidCall:
 
     /* Invalid System Call */
     movl $0xC000001C, %eax /* STATUS_INVALID_SYSTEM_SERVICE */
     movl %eax, KTRAP_FRAME_EAX(%ebp)
     jmp _KiServiceExit
-    
+
 _KiServiceExit2:
 
     /* Get the Current Thread */
     cli
     movl %fs:KPCR_CURRENT_THREAD, %esi
-    
+
     /* Deliver APCs only if we were called from user mode */
     testb $1, KTRAP_FRAME_CS(%esp)
     je KiRosTrapReturn
-    
+
     /* And only if any are actually pending */
     cmpb $0, KTHREAD_PENDING_USER_APC(%esi)
     je KiRosTrapReturn
-    
+
     /* Save pointer to Trap Frame */
     movl %esp, %ebx
-    
+
     /* Raise IRQL to APC_LEVEL */
     movl $1, %ecx
     call @KfRaiseIrql@4
-    
+
     /* Save old IRQL */
     pushl %eax
-    
+
     /* Deliver APCs */
     sti
     pushl %ebx
@@ -348,14 +348,14 @@ _KiServiceExit2:
     pushl $UserMode
     call _KiDeliverApc@12
     cli
-    
+
     /* Return to old IRQL */
     popl %ecx
     call @KfLowerIrql@4
-    
+
     /* Skip useless Debug Data */
     addl $0x18, %esp                                                   // + 0x74
-    
+
     /* Restore Debug Registers */
     popl %eax                                                          // + 0x5C
     movl %eax, %dr0
@@ -369,7 +369,7 @@ _KiServiceExit2:
     movl %eax, %dr6
     popl %eax                                                          // + 0x48
     movl %eax, %dr7
-    
+
     /* Restore Registers */
     popl %gs                                                           // + 0x44
     popl %es                                                           // + 0x40
@@ -393,12 +393,12 @@ _KiServiceExit2:
     popl %ebp                                                          // + 0x14
     add $4, %esp                                                       // + 0x10
 
-   /* Return to user-mode */
+    /* Return to user-mode */
     iret
-    
+
 .intel_syntax noprefix
 _KiDebugService:
-    
+
     /* Create the Trap Frame */
     push 0
     push ebp
@@ -406,18 +406,18 @@ _KiDebugService:
     push esi
     push edi
     push fs
-    
+
     /* Switch to correct FS */
     mov bx, PCR_SELECTOR
     mov fs, bx
-    
+
     /* Save Exception List */
     push fs:[KPCR_EXCEPTION_LIST]
-    
+
     /* Use Old Previous Mode */
     mov ebx, fs:[KPCR_CURRENT_THREAD]
     push [ebx+KTHREAD_PREVIOUS_MODE]
-    
+
     /* Continue building the Trap Frame */
     push eax
     push ecx
@@ -425,28 +425,28 @@ _KiDebugService:
     push ds
     push es
     push gs
-    
+
     /* Switch Segments to Kernel */
     mov bx, KERNEL_DS
     mov ds, bx
     mov es, bx
-    
+
     /* Save Debug Registers */
     mov ebx, eax
-    mov eax, dr7 
+    mov eax, dr7
     push eax
-    mov eax, dr6 
+    mov eax, dr6
     push eax
-    mov eax, dr3 
+    mov eax, dr3
     push eax
-    mov eax, dr2 
+    mov eax, dr2
     push eax
-    mov eax, dr1 
+    mov eax, dr1
     push eax
-    mov eax, dr0 
+    mov eax, dr0
     push eax
     mov eax, ebx
-    
+
     /* Skip useless debug data */
     sub esp, 0x18
 
@@ -455,6 +455,6 @@ _KiDebugService:
     push ecx
     push eax
     call _KdpServiceDispatcher@12
-    
+
     /* Exit through common routine */
     jmp _KiServiceExit2
