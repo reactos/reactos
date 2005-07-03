@@ -41,5 +41,6 @@ STRINGTABLE DISCARDABLE
   IDS_UNKNOWN "Unknown"
   IDS_SPECIAL_PERMISSIONS "Special Permissions"
   IDS_PERMISSIONS_FOR "Permissions for %1"
+  IDS_PERMISSIONS "Permissions"
 }
 

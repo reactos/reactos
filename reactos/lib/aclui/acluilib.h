@@ -76,11 +76,14 @@ ListViewSelectItem(IN HWND hwnd,
 
 /* CHECKLIST CONTROL **********************************************************/
 
-#define CIS_DISABLED    (0x4)
-#define CIS_ENABLED     (0x0)
+#define CIS_DENYDISABLED        (0x8)
+#define CIS_DENYENABLED (0x0)
+#define CIS_ALLOWDISABLED       (0x4)
+#define CIS_ALLOWENABLED        (0x0)
 #define CIS_ALLOW       (0x2)
 #define CIS_DENY        (0x1)
 #define CIS_NONE        (0x0)
+#define CIS_DISABLED    (CIS_ALLOWDISABLED | CIS_DENYDISABLED)
 
 #define CLB_ALLOW       (0x1)
 #define CLB_DENY        (0x0)

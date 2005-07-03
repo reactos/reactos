@@ -416,22 +416,31 @@ UpdateControlStates(IN PSECURITY_PAGE sp)
     {
         LPWSTR szLabel;
 
-        LoadAndFormatString(hDllInstance,
-                            IDS_PERMISSIONS_FOR,
-                            &szLabel,
-                            Selected->AccountName);
+        if (LoadAndFormatString(hDllInstance,
+                                IDS_PERMISSIONS_FOR,
+                                &szLabel,
+                                Selected->AccountName))
+        {
+            SetWindowText(sp->hPermissionsForLabel,
+                          szLabel);
 
-        SetWindowText(sp->hPermissionsForLabel,
-                      szLabel);
-
-        LocalFree((HLOCAL)szLabel);
-
+            LocalFree((HLOCAL)szLabel);
+        }
+        
         /* FIXME - update the checkboxes */
     }
     else
     {
-        SetWindowText(sp->hPermissionsForLabel,
-                      NULL);
+        WCHAR szPermissions[255];
+        
+        if (LoadString(hDllInstance,
+                       IDS_PERMISSIONS,
+                       szPermissions,
+                       sizeof(szPermissions) / sizeof(szPermissions[0])))
+        {
+            SetWindowText(sp->hPermissionsForLabel,
+                          szPermissions);
+        }
 
         SendMessage(sp->hAceCheckList,
                     CLM_CLEARCHECKBOXES,
@@ -552,7 +561,7 @@ LoadPermissionsList(IN PSECURITY_PAGE sp,
 
                 SendMessage(sp->hAceCheckList,
                             CLM_ADDITEM,
-                            CIS_DISABLED | CIS_NONE,
+                            CIS_NONE,
                             (LPARAM)NameStr);
             }
         }
@@ -685,7 +694,7 @@ SecurityPageProc(IN HWND hwndDlg,
                         /* add the special permissions check item */
                         sp->SpecialPermCheckIndex = (INT)SendMessage(sp->hAceCheckList,
                                                                      CLM_ADDITEM,
-                                                                     CIS_DISABLED | CIS_NONE,
+                                                                     CIS_ALLOWDISABLED | CIS_DENYDISABLED | CIS_NONE,
                                                                      (LPARAM)szSpecialPermissions);
                     }
                 }
