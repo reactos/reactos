@@ -4,6 +4,10 @@
 #include <aclui.h>
 #include <sddl.h>
 #include <ntsecapi.h>
+#if SUPPORT_UXTHEME
+#include <uxtheme.h>
+#include <tmschema.h>
+#endif
 #include "resource.h"
 
 ULONG DbgPrint(PCH Format,...);

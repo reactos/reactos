@@ -52,6 +52,14 @@ typedef struct _CHECKLISTWND
    
    COLORREF TextColor[2];
    UINT CheckBoxLeft[2];
+
+#if SUPPORT_UXTHEME
+   PCHECKITEM HoveredCheckItem;
+   UINT HoveredCheckItemBox;
+   UINT HoverTime;
+   
+   HTHEME ThemeHandle;
+#endif
 } CHECKLISTWND, *PCHECKLISTWND;
 
 #define CI_TEXT_MARGIN_WIDTH    (6)
@@ -512,7 +520,7 @@ UpdateCheckItem(IN PCHECKLISTWND infoPtr,
 
             VisibleItems = ((rcClient.bottom - rcClient.top) + infoPtr->ItemHeight - 1) / infoPtr->ItemHeight;
             
-            if (Index < VisibleFirst + VisibleItems)
+            if (Index <= VisibleFirst + VisibleItems)
             {
                 RECT rcUpdate;
                 
@@ -653,6 +661,27 @@ RetChangeControlFont(IN PCHECKLISTWND infoPtr,
     return hOldFont;
 }
 
+#if SUPPORT_UXTHEME
+static INT
+CalculateChkBoxStyle(IN BOOL Checked,
+                     IN BOOL Enabled,
+                     IN BOOL HotTrack)
+{
+    INT BtnState;
+
+    if (Checked)
+    {
+        BtnState = (Enabled ? (HotTrack ? CBS_CHECKEDHOT : CBS_CHECKEDNORMAL) : CBS_CHECKEDDISABLED);
+    }
+    else
+    {
+        BtnState = (Enabled ? (HotTrack ? CBS_UNCHECKEDHOT : CBS_UNCHECKEDNORMAL) : CBS_UNCHECKEDDISABLED);
+    }
+
+    return BtnState;
+}
+#endif
+
 static VOID
 PaintControl(IN PCHECKLISTWND infoPtr,
              IN HDC hDC,
@@ -694,6 +723,10 @@ PaintControl(IN PCHECKLISTWND infoPtr,
         COLORREF OldTextColor;
         BOOL Enabled, PrevEnabled;
         POINT hOldBrushOrg;
+#if SUPPORT_UXTHEME
+        HRESULT hDrawResult;
+        BOOL ItemHovered;
+#endif
         
         Enabled = IsWindowEnabled(infoPtr->hSelf);
         PrevEnabled = Enabled;
@@ -736,6 +769,10 @@ PaintControl(IN PCHECKLISTWND infoPtr,
                 SetTextColor(hDC,
                              infoPtr->TextColor[PrevEnabled]);
             }
+
+#if SUPPORT_UXTHEME
+            ItemHovered = (Enabled && infoPtr->HoveredCheckItem == Item);
+#endif
             
             /* draw the text */
             DrawText(hDC,
@@ -749,12 +786,39 @@ PaintControl(IN PCHECKLISTWND infoPtr,
             CheckBox.right = CheckBox.left + (TextRect.bottom - TextRect.top) - (2 * CI_TEXT_MARGIN_HEIGHT);
             CheckBox.top = TextRect.top;
             CheckBox.bottom = CheckBox.top + (TextRect.bottom - TextRect.top) - (2 * CI_TEXT_MARGIN_HEIGHT);
-            DrawFrameControl(hDC,
-                             &CheckBox,
-                             DFC_BUTTON,
-                             DFCS_BUTTONCHECK | DFCS_FLAT |
-                             ((Item->State & CIS_ALLOWDISABLED) || !Enabled ? DFCS_INACTIVE : 0) |
-                             ((Item->State & CIS_ALLOW) ? DFCS_CHECKED : 0));
+#if SUPPORT_UXTHEME
+            if (infoPtr->ThemeHandle != NULL)
+            {
+                INT BtnState = CalculateChkBoxStyle(Item->State & CIS_ALLOW,
+                                                    Enabled && !(Item->State & CIS_ALLOWDISABLED),
+                                                    (ItemHovered && infoPtr->HoveredCheckItemBox != CLB_DENY));
+                
+
+                hDrawResult = DrawThemeBackground(infoPtr->ThemeHandle,
+                                                  hDC,
+                                                  BP_CHECKBOX,
+                                                  BtnState,
+                                                  &CheckBox,
+                                                  NULL);
+                                                  
+            }
+            else
+            {
+                hDrawResult = E_FAIL;
+            }
+
+            /* draw the standard checkbox if no themes are enabled or drawing the
+               themeed control failed */
+            if (FAILED(hDrawResult))
+#endif
+            {
+                DrawFrameControl(hDC,
+                                 &CheckBox,
+                                 DFC_BUTTON,
+                                 DFCS_BUTTONCHECK | DFCS_FLAT |
+                                 ((Item->State & CIS_ALLOWDISABLED) || !Enabled ? DFCS_INACTIVE : 0) |
+                                 ((Item->State & CIS_ALLOW) ? DFCS_CHECKED : 0));
+            }
             if (infoPtr->HasFocus &&
                 Item == infoPtr->FocusedCheckItem &&
                 infoPtr->FocusedCheckItemBox != CLB_DENY)
@@ -772,12 +836,38 @@ PaintControl(IN PCHECKLISTWND infoPtr,
             /* draw the Deny checkbox */
             CheckBox.left = infoPtr->CheckBoxLeft[CLB_DENY] - ((TextRect.bottom - TextRect.top) / 2);
             CheckBox.right = CheckBox.left + (TextRect.bottom - TextRect.top) - (2 * CI_TEXT_MARGIN_HEIGHT);
-            DrawFrameControl(hDC,
-                             &CheckBox,
-                             DFC_BUTTON,
-                             DFCS_BUTTONCHECK | DFCS_FLAT |
-                             ((Item->State & CIS_DENYDISABLED) || !Enabled ? DFCS_INACTIVE : 0) |
-                             ((Item->State & CIS_DENY) ? DFCS_CHECKED : 0));
+#if SUPPORT_UXTHEME
+            if (infoPtr->ThemeHandle != NULL)
+            {
+                INT BtnState = CalculateChkBoxStyle(Item->State & CIS_DENY,
+                                                    Enabled && !(Item->State & CIS_DENYDISABLED),
+                                                    (ItemHovered && infoPtr->HoveredCheckItemBox == CLB_DENY));
+
+                hDrawResult = DrawThemeBackground(infoPtr->ThemeHandle,
+                                                  hDC,
+                                                  BP_CHECKBOX,
+                                                  BtnState,
+                                                  &CheckBox,
+                                                  NULL);
+
+            }
+            else
+            {
+                hDrawResult = E_FAIL;
+            }
+
+            /* draw the standard checkbox if no themes are enabled or drawing the
+               themeed control failed */
+            if (FAILED(hDrawResult))
+#endif
+            {
+                DrawFrameControl(hDC,
+                                 &CheckBox,
+                                 DFC_BUTTON,
+                                 DFCS_BUTTONCHECK | DFCS_FLAT |
+                                 ((Item->State & CIS_DENYDISABLED) || !Enabled ? DFCS_INACTIVE : 0) |
+                                 ((Item->State & CIS_DENY) ? DFCS_CHECKED : 0));
+            }
             if (infoPtr->HasFocus &&
                 Item == infoPtr->FocusedCheckItem &&
                 infoPtr->FocusedCheckItemBox == CLB_DENY)
@@ -812,7 +902,7 @@ PaintControl(IN PCHECKLISTWND infoPtr,
 static VOID
 ChangeCheckItemFocus(IN PCHECKLISTWND infoPtr,
                      IN PCHECKITEM NewFocus,
-                     IN INT NewFocusBox)
+                     IN UINT NewFocusBox)
 {
     if (NewFocus != infoPtr->FocusedCheckItem)
     {
@@ -839,6 +929,92 @@ ChangeCheckItemFocus(IN PCHECKLISTWND infoPtr,
                         NewFocus);
     }
 }
+
+#if SUPPORT_UXTHEME
+static VOID
+UpdateCheckItemBox(IN PCHECKLISTWND infoPtr,
+                   IN PCHECKITEM Item,
+                   IN UINT ItemBox)
+{
+    LONG Style;
+    RECT rcClient;
+    INT VisibleFirst, VisibleItems;
+    INT Index = CheckItemToIndex(infoPtr,
+                                 Item);
+    if (Index != -1)
+    {
+        Style = GetWindowLong(infoPtr->hSelf,
+                              GWL_STYLE);
+
+        if (Style & WS_VSCROLL)
+        {
+            VisibleFirst = GetScrollPos(infoPtr->hSelf,
+                                        SB_VERT);
+        }
+        else
+        {
+            VisibleFirst = 0;
+        }
+
+        if (Index >= VisibleFirst)
+        {
+            GetClientRect(infoPtr->hSelf,
+                          &rcClient);
+
+            VisibleItems = ((rcClient.bottom - rcClient.top) + infoPtr->ItemHeight - 1) / infoPtr->ItemHeight;
+
+            if (Index <= VisibleFirst + VisibleItems)
+            {
+                RECT rcUpdate;
+
+                rcUpdate.left = rcClient.left + infoPtr->CheckBoxLeft[ItemBox] - (infoPtr->ItemHeight / 2);
+                rcUpdate.right = rcUpdate.left + infoPtr->ItemHeight;
+                rcUpdate.top = ((Index - VisibleFirst) * infoPtr->ItemHeight) + CI_TEXT_MARGIN_HEIGHT;
+                rcUpdate.bottom = rcUpdate.top + infoPtr->ItemHeight - (2 * CI_TEXT_MARGIN_HEIGHT);
+                DbgPrint("Repaint hot item\n");
+
+                RedrawWindow(infoPtr->hSelf,
+                             &rcUpdate,
+                             NULL,
+                             RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW | RDW_NOCHILDREN);
+            }
+        }
+    }
+}
+
+static VOID
+ChangeCheckItemHotTrack(IN PCHECKLISTWND infoPtr,
+                        IN PCHECKITEM NewHotTrack,
+                        IN UINT NewHotTrackBox)
+{
+    if (NewHotTrack != infoPtr->HoveredCheckItem)
+    {
+        PCHECKITEM OldHotTrack = infoPtr->HoveredCheckItem;
+        UINT OldHotTrackBox = infoPtr->HoveredCheckItemBox;
+        
+        infoPtr->HoveredCheckItem = NewHotTrack;
+        infoPtr->HoveredCheckItemBox = NewHotTrackBox;
+
+        if (OldHotTrack != NULL)
+        {
+            UpdateCheckItemBox(infoPtr,
+                               OldHotTrack,
+                               OldHotTrackBox);
+        }
+    }
+    else
+    {
+        infoPtr->HoveredCheckItemBox = NewHotTrackBox;
+    }
+
+    if (NewHotTrack != NULL)
+    {
+        UpdateCheckItemBox(infoPtr,
+                           NewHotTrack,
+                           NewHotTrackBox);
+    }
+}
+#endif
 
 static LRESULT CALLBACK
 CheckListWndProc(IN HWND hwnd,
@@ -886,6 +1062,55 @@ CheckListWndProc(IN HWND hwnd,
                              &ps);
                 }
             }
+            break;
+        }
+        
+        case WM_MOUSEMOVE:
+        {
+#if SUPPORT_UXTHEME
+            HWND hWndCapture = GetCapture();
+            
+            /* handle hovering checkboxes */
+            if (hWndCapture == NULL)
+            {
+                TRACKMOUSEEVENT tme;
+                PCHECKITEM HotTrackItem;
+                UINT HotTrackItemBox;
+                BOOL InCheckBox;
+                POINT pt;
+                
+                pt.x = (LONG)LOWORD(lParam);
+                pt.y = (LONG)HIWORD(lParam);
+
+                HotTrackItem = PtToCheckItemBox(infoPtr,
+                                                &pt,
+                                                &HotTrackItemBox,
+                                                &InCheckBox);
+                if (HotTrackItem != NULL && InCheckBox)
+                {
+                    if (infoPtr->HoveredCheckItem != HotTrackItem ||
+                        infoPtr->HoveredCheckItemBox != HotTrackItemBox)
+                    {
+                        ChangeCheckItemHotTrack(infoPtr,
+                                                HotTrackItem,
+                                                HotTrackItemBox);
+                    }
+                }
+                else
+                {
+                    ChangeCheckItemHotTrack(infoPtr,
+                                            NULL,
+                                            0);
+                }
+                
+                tme.cbSize = sizeof(tme);
+                tme.dwFlags = TME_LEAVE;
+                tme.hwndTrack = hwnd;
+                tme.dwHoverTime = infoPtr->HoverTime;
+                
+                TrackMouseEvent(&tme);
+            }
+#endif
             break;
         }
         
@@ -1403,6 +1628,51 @@ CheckListWndProc(IN HWND hwnd,
             break;
         }
         
+#if SUPPORT_UXTHEME
+        case WM_MOUSELEAVE:
+        {
+            DbgPrint("WM_MOUSELEAVE\n");
+            if (infoPtr->HoveredCheckItem != NULL)
+            {
+                /* reset and repaint the hovered check item box */
+                ChangeCheckItemHotTrack(infoPtr,
+                                        NULL,
+                                        0);
+            }
+            break;
+        }
+        
+        case WM_THEMECHANGED:
+        {
+            if (infoPtr->ThemeHandle != NULL)
+            {
+                CloseThemeData(infoPtr->ThemeHandle);
+                infoPtr->ThemeHandle = NULL;
+            }
+            if (IsThemeActive())
+            {
+                infoPtr->ThemeHandle = OpenThemeData(infoPtr->hSelf,
+                                                     L"BUTTON");
+            }
+            break;
+        }
+#endif
+        
+        case WM_SETTINGCHANGE:
+        {
+#if SUPPORT_UXTHEME
+            /* update the hover time */
+            if (!SystemParametersInfo(SPI_GETMOUSEHOVERTIME,
+                                      0,
+                                      &infoPtr->HoverTime,
+                                      0))
+            {
+                infoPtr->HoverTime = HOVER_DEFAULT;
+            }
+#endif
+            break;
+        }
+
         case WM_CREATE:
         {
             infoPtr = HeapAlloc(GetProcessHeap(),
@@ -1435,6 +1705,28 @@ CheckListWndProc(IN HWND hwnd,
                 
                 infoPtr->CheckBoxLeft[0] = rcClient.right - 30;
                 infoPtr->CheckBoxLeft[1] = rcClient.right - 15;
+
+#if SUPPORT_UXTHEME
+                infoPtr->HoveredCheckItem = NULL;
+                infoPtr->HoveredCheckItemBox = 0;
+                if (!SystemParametersInfo(SPI_GETMOUSEHOVERTIME,
+                                          0,
+                                          &infoPtr->HoverTime,
+                                          0))
+                {
+                    infoPtr->HoverTime = HOVER_DEFAULT;
+                }
+
+                if (IsThemeActive())
+                {
+                    infoPtr->ThemeHandle = OpenThemeData(infoPtr->hSelf,
+                                                         L"BUTTON");
+                }
+                else
+                {
+                    infoPtr->ThemeHandle = NULL;
+                }
+#endif
             }
             else
             {
@@ -1446,6 +1738,13 @@ CheckListWndProc(IN HWND hwnd,
         case WM_DESTROY:
         {
             ClearCheckItems(infoPtr);
+            
+#if SUPPORT_UXTHEME
+            if (infoPtr->ThemeHandle != NULL)
+            {
+                CloseThemeData(infoPtr->ThemeHandle);
+            }
+#endif
             
             HeapFree(GetProcessHeap(),
                      0,
