@@ -292,7 +292,7 @@ BOOL WINAPI SetupDiClassGuidsFromNameExA(
     LPWSTR MachineNameW = NULL;
     BOOL bResult;
 
-    FIXME("\n");
+    TRACE("\n");
 
     ClassNameW = MultiByteToUnicode(ClassName, CP_ACP);
     if (ClassNameW == NULL)
@@ -630,8 +630,45 @@ BOOL WINAPI SetupDiGetActualSectionToInstallA(
         PDWORD RequiredSize,
         PSTR *Extension)
 {
-    FIXME("\n");
-    return FALSE;
+    LPWSTR InfSectionNameW = NULL;
+    PWSTR InfSectionWithExtW = NULL;
+    PWSTR ExtensionW;
+    BOOL bResult;
+
+    TRACE("\n");
+
+    if (InfSectionName)
+    {
+        InfSectionNameW = MultiByteToUnicode(InfSectionName, CP_ACP);
+        if (InfSectionNameW == NULL) goto end;
+    }
+    if (InfSectionWithExt)
+    {
+        InfSectionWithExtW = HeapAlloc(GetProcessHeap(), 0, InfSectionWithExtSize * sizeof(WCHAR));
+        if (InfSectionWithExtW == NULL) goto end;
+    }
+
+    bResult = SetupDiGetActualSectionToInstallW(InfHandle, InfSectionNameW,
+                                                InfSectionWithExt ? InfSectionNameW : NULL,
+                                                InfSectionWithExtSize, RequiredSize,
+                                                Extension ? &ExtensionW : NULL);
+
+    if (InfSectionWithExt)
+    {
+    }
+    if (Extension)
+    {
+        if (ExtensionW == NULL)
+            *Extension = NULL;
+         else
+            *Extension = &InfSectionWithExt[ExtensionW - InfSectionWithExtW];
+    }
+
+end:
+    if (InfSectionNameW) MyFree(InfSectionNameW);
+    if (InfSectionWithExtW) HeapFree(GetProcessHeap(), 0, InfSectionWithExtW);
+
+    return bResult;
 }
 
 /***********************************************************************
@@ -1394,6 +1431,8 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
         PVOID Reserved)
 {
     LPWSTR lpGuidString;
+    LPWSTR lpFullGuidString;
+    DWORD dwLength;
     HKEY hClassesKey;
     HKEY hClassKey;
     LPCWSTR lpKeyName;
@@ -1437,18 +1476,31 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
 	return INVALID_HANDLE_VALUE;
     }
 
+    dwLength = lstrlenW(lpGuidString);
+    lpFullGuidString = HeapAlloc(GetProcessHeap(), 0, (dwLength + 3) * sizeof(WCHAR));
+    if (!lpFullGuidString)
+    {
+        RpcStringFreeW(&lpGuidString);
+        return INVALID_HANDLE_VALUE;
+    }
+    lpFullGuidString[0] = '{';
+    memcpy(&lpFullGuidString[1], lpGuidString, dwLength * sizeof(WCHAR));
+    lpFullGuidString[dwLength + 1] = '}';
+    lpFullGuidString[dwLength + 2] = UNICODE_NULL;
+    RpcStringFreeW(&lpGuidString);
+
     if (RegOpenKeyExW(hClassesKey,
-		      lpGuidString,
+		      lpFullGuidString,
 		      0,
 		      KEY_ALL_ACCESS,
 		      &hClassKey))
     {
-	RpcStringFreeW(&lpGuidString);
+	HeapFree(GetProcessHeap(), 0, lpFullGuidString);
 	RegCloseKey(hClassesKey);
 	return INVALID_HANDLE_VALUE;
     }
 
-    RpcStringFreeW(&lpGuidString);
+    HeapFree(GetProcessHeap(), 0, lpFullGuidString);
     RegCloseKey(hClassesKey);
 
     return hClassKey;
@@ -1534,4 +1586,66 @@ HKEY WINAPI SetupDiOpenDevRegKey(
     FIXME("%p %p %ld %ld %ld %lx\n", DeviceInfoSet, DeviceInfoData,
           Scope, HwProfile, KeyType, samDesired);
     return INVALID_HANDLE_VALUE;
+}
+
+/***********************************************************************
+ *		SetupDiCreateDeviceInfoA (SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiCreateDeviceInfoA(
+       HDEVINFO DeviceInfoSet,
+       PCSTR DeviceName,
+       LPGUID ClassGuid,
+       PCSTR DeviceDescription,
+       HWND hwndParent,
+       DWORD CreationFlags,
+       PSP_DEVINFO_DATA DeviceInfoData)
+{
+    LPWSTR DeviceNameW = NULL;
+    LPWSTR DeviceDescriptionW = NULL;
+    BOOL bResult;
+
+    TRACE("\n");
+
+    if (DeviceName)
+    {
+        DeviceNameW = MultiByteToUnicode(DeviceName, CP_ACP);
+        if (DeviceNameW == NULL) return FALSE;
+    }
+    if (DeviceDescription)
+    {
+        DeviceDescriptionW = MultiByteToUnicode(DeviceDescription, CP_ACP);
+        if (DeviceDescriptionW == NULL)
+        {
+            if (DeviceNameW) MyFree(DeviceNameW);
+            return FALSE;
+        }
+    }
+
+    bResult = SetupDiCreateDeviceInfoW(DeviceInfoSet, DeviceNameW,
+                                       ClassGuid, DeviceDescriptionW,
+                                       hwndParent, CreationFlags,
+                                       DeviceInfoData);
+
+    if (DeviceNameW) MyFree(DeviceNameW);
+    if (DeviceDescriptionW) MyFree(DeviceDescriptionW);
+
+    return bResult;
+}
+
+/***********************************************************************
+ *		SetupDiCreateDeviceInfoW (SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiCreateDeviceInfoW(
+       HDEVINFO DeviceInfoSet,
+       PCWSTR DeviceName,
+       LPGUID ClassGuid,
+       PCWSTR DeviceDescription,
+       HWND hwndParent,
+       DWORD CreationFlags,
+       PSP_DEVINFO_DATA DeviceInfoData)
+{
+    FIXME("%p %S %p %S %p %lx %p\n", DeviceInfoSet, debugstr_w(DeviceName),
+          ClassGuid, debugstr_w(DeviceDescription), hwndParent,
+          CreationFlags, DeviceInfoData);
+    return FALSE;
 }

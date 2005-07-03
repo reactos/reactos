@@ -39,6 +39,13 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 
+/* Registry key and value names */
+static const WCHAR ControlClass[] = {'S','y','s','t','e','m','\\',
+                                  'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
+                                  'C','o','n','t','r','o','l','\\',
+                                  'C','l','a','s','s',0};
+
+
 typedef struct _MACHINE_INFO
 {
   RPC_BINDING_HANDLE BindingHandle;
@@ -166,7 +173,7 @@ CONFIGRET WINAPI CM_Enumerate_Classes_Ex(
 
     rc = RegOpenKeyExW(
         hRelativeKey,
-        L"System\\CurrentControlSet\\Control\\Class",
+        ControlClass,
         0, /* options */
         KEY_ENUMERATE_SUB_KEYS,
         &hKey);

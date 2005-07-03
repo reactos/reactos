@@ -38,8 +38,8 @@
 @ stub CM_Dup_Range_List
 @ stub CM_Enable_DevNode
 @ stub CM_Enable_DevNode_Ex
-@ stub CM_Enumerate_Classes
-@ stub CM_Enumerate_Classes_Ex
+@ stdcall CM_Enumerate_Classes(long ptr long)
+@ stdcall CM_Enumerate_Classes_Ex(long ptr long ptr)
 @ stub CM_Enumerate_EnumeratorsA
 @ stub CM_Enumerate_EnumeratorsW
 @ stub CM_Enumerate_Enumerators_ExA
@@ -282,11 +282,11 @@
 @ stdcall SetupDiClassNameFromGuidW(ptr wstr long ptr)
 @ stub SetupDiCreateDevRegKeyA
 @ stub SetupDiCreateDevRegKeyW
-@ stub SetupDiCreateDeviceInfoA
+@ stdcall SetupDiCreateDeviceInfoA(ptr str ptr str ptr long ptr)
+@ stdcall SetupDiCreateDeviceInfoW(ptr wstr ptr wstr ptr long ptr)
 @ stdcall SetupDiCreateDeviceInfoList(ptr ptr)
 @ stdcall SetupDiCreateDeviceInfoListExA(ptr long str ptr)
-@ stdcall SetupDiCreateDeviceInfoListExW(ptr long str ptr)
-@ stub SetupDiCreateDeviceInfoW
+@ stdcall SetupDiCreateDeviceInfoListExW(ptr long wstr ptr)
 @ stub SetupDiDeleteDevRegKey
 @ stub SetupDiDeleteDeviceInfo
 @ stub SetupDiDeleteDeviceInterfaceData
