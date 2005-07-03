@@ -656,21 +656,19 @@ static Entry* read_tree_unix(Root* root, LPCTSTR path, SORT_ORDER sortOrder, HWN
 #endif
 
 
+static void free_strret(STRRET* str)
+{
+	if (str->uType == STRRET_WSTR)
+		(*Globals.iMalloc->lpVtbl->Free)(Globals.iMalloc, str->UNION_MEMBER(pOleStr));
+}
+
+
+#ifndef UNICODE
+
 static LPSTR strcpyn(LPSTR dest, LPCSTR source, size_t count)
 {
  LPCSTR s;
  LPSTR d = dest;
-
- for(s=source; count&&(*d++=*s++); )
-  count--;
-
- return dest;
-}
-
-static LPWSTR wcscpyn(LPWSTR dest, LPCWSTR source, size_t count)
-{
- LPCWSTR s;
- LPWSTR d = dest;
 
  for(s=source; count&&(*d++=*s++); )
   count--;
