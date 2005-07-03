@@ -279,7 +279,8 @@ typedef enum _PLUGPLAY_CONTROL_CLASS
     PlugPlayControlUserResponse = 0x07,
     PlugPlayControlProperty = 0x0A,
     PlugPlayControlGetRelatedDevice = 0x0C,
-    PlugPlayControlDeviceStatus = 0x0E
+    PlugPlayControlDeviceStatus = 0x0E,
+    PlugPlayControlGetDeviceDepth
 } PLUGPLAY_CONTROL_CLASS;
 
 /* TYPES *********************************************************************/
@@ -287,34 +288,6 @@ typedef enum _PLUGPLAY_CONTROL_CLASS
 typedef unsigned short LANGID;
 typedef LANGID *PLANGID;
 
-/*
- * Plug and Play event structure used by NtGetPlugPlayEvent.
- *
- * EventGuid
- *    Can be one of the following values:
- *       GUID_HWPROFILE_QUERY_CHANGE
- *       GUID_HWPROFILE_CHANGE_CANCELLED
- *       GUID_HWPROFILE_CHANGE_COMPLETE
- *       GUID_TARGET_DEVICE_QUERY_REMOVE
- *       GUID_TARGET_DEVICE_REMOVE_CANCELLED
- *       GUID_TARGET_DEVICE_REMOVE_COMPLETE
- *       GUID_PNP_CUSTOM_NOTIFICATION
- *       GUID_PNP_POWER_NOTIFICATION
- *       GUID_DEVICE_* (see above)
- *
- * EventCategory
- *    Type of the event that happened.
- *
- * Result
- *    ?
- *
- * Flags
- *    ?
- *
- * TotalSize
- *    Size of the event block including the device IDs and other
- *    per category specific fields.
- */
 typedef struct _PLUGPLAY_EVENT_BLOCK
 {
     GUID EventGuid;
@@ -1284,5 +1257,12 @@ typedef struct _PLUGPLAY_CONTOL_STATUS_DATA
     ULONG DeviceStatus;    /* DN_       see cfg.h */
     ULONG DeviceProblem;   /* CM_PROB_  see cfg.h */
 } PLUGPLAY_CONTROL_STATUS_DATA, *PPLUGPLAY_CONTROL_STATUS_DATA;
+
+/* Class 0x0F */
+typedef struct _PLUGPLAY_CONTOL_DEPTH_DATA
+{
+    UNICODE_STRING DeviceInstance;
+    ULONG Depth;
+} PLUGPLAY_CONTROL_DEPTH_DATA, *PPLUGPLAY_CONTROL_DEPTH_DATA;
 
 #endif
