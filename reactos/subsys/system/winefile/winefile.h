@@ -36,17 +36,20 @@
 
 #ifdef UNICODE
 #define _UNICODE
-#include <wchar.h>
 #endif
-#include <tchar.h>
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <locale.h>
+#include <time.h>
 
 #ifndef __WINE__
 #include <malloc.h> /* for alloca() */
+
+ // ugly hack to use alloca() while keeping Wine's developers happy
+#define HeapAlloc(h,f,s) alloca(s)
+#define HeapFree(h,f,p)
 #endif
 
 #include <shellapi.h>   /* for ShellExecute() */
@@ -145,12 +148,38 @@ typedef struct
 extern WINEFILE_GLOBALS Globals;
 
 #ifdef __WINE__
+
 extern void WineLicense(HWND hwnd);
 extern void WineWarranty(HWND hwnd);
 
+
 #ifdef UNICODE
 extern void _wsplitpath(const WCHAR* path, WCHAR* drv, WCHAR* dir, WCHAR* name, WCHAR* ext);
+#define _tsplitpath _wsplitpath
+#define _stprintf msvcrt_swprintf
 #else
 extern void _splitpath(const CHAR* path, CHAR* drv, CHAR* dir, CHAR* name, CHAR* ext);
+#define _tsplitpath _splitpath
+#define _stprintf sprintf
 #endif
+
+
+/* functions in unixcalls.c */
+
+extern void call_getcwd(char* buffer, size_t len);
+extern void* call_opendir(const char* path);
+extern int call_readdir(void* pdir, char* name, unsigned* pinode);
+extern void call_closedir(void* pdir);
+
+extern int call_stat(
+        const char* path, int* pis_dir,
+        unsigned long* psize_low, unsigned long* psize_high,
+        time_t* patime, time_t* pmtime,
+        unsigned long* plinks
+);
+
+#else
+
+#include <tchar.h>	/* for _tsplitpath() */
+
 #endif

@@ -155,52 +155,6 @@ typedef struct {
 
 
 
-#ifdef __WINE__
-
-/* functions in unixcalls.c */
-
-extern void call_getcwd(char* buffer, size_t len);
-extern void* call_opendir(const char* path);
-extern int call_readdir(void* pdir, char* name, unsigned* pinode);
-extern void call_closedir(void* pdir);
-
-extern int call_stat(
-	const char* path, int* pis_dir,
-	unsigned long* psize_low, unsigned long* psize_high,
-	time_t* patime, time_t* pmtime,
-	unsigned long* plinks
-);
-
-/* call vswprintf() in msvcrt.dll */
-int swprintf(wchar_t* buffer, const wchar_t* fmt, ...)
-{
-	static int (__cdecl *vswprintf)(wchar_t*, const wchar_t*, va_list);
-
-	va_list ap;
-	int ret;
-
-	if (!vswprintf) {
-		HMODULE hmod = LoadLibraryA("msvcrt");
-		vswprintf = (int(__cdecl*)(wchar_t*,const wchar_t*,va_list)) GetProcAddress(hmod, "vswprintf");
-	}
-
-	va_start(ap, fmt);
-	ret = vswprintf(buffer, fmt, ap);
-	va_end(ap);
-
-	return 0;
-}
-
-
-#else
-
- // ugly hack to use alloca() while keeping Wine's developers happy
-#define HeapAlloc(h,f,s) alloca(s)
-#define HeapFree(h,f,p)
-
-#endif
-
-
 static void read_directory(Entry* dir, LPCTSTR path, SORT_ORDER sortOrder, HWND hwnd);
 static void set_curdir(ChildWnd* child, Entry* entry, int idx, HWND hwnd);
 static void refresh_child(ChildWnd* child);
@@ -276,6 +230,53 @@ static void display_network_error(HWND hwnd)
 	if (WNetGetLastError(&error, msg, BUFFER_LEN, provider, BUFFER_LEN) == NO_ERROR)
 		MessageBox(hwnd, msg, RS(b2,IDS_WINEFILE), MB_OK);
 }
+
+
+#ifdef __WINE__
+
+#ifdef UNICODE
+
+/* call vswprintf() in msvcrt.dll */
+/*TODO: fix swprintf() in non-msvcrt mode, so that this dynamic linking function can be removed */
+static int msvcrt_swprintf(WCHAR* buffer, const WCHAR* fmt, ...)
+{
+	static int (__cdecl *pvswprintf)(WCHAR*, const WCHAR*, va_list) = NULL;
+	va_list ap;
+	int ret;
+
+	if (!pvswprintf) {
+		HMODULE hModMsvcrt = LoadLibraryA("msvcrt");
+		pvswprintf = (int(__cdecl*)(WCHAR*,const WCHAR*,va_list)) GetProcAddress(hModMsvcrt, "vswprintf");
+	}
+
+	va_start(ap, fmt);
+	ret = (*pvswprintf)(buffer, fmt, ap);
+	va_end(ap);
+
+	return ret;
+}
+
+static LPCWSTR my_wcsrchr(LPCWSTR str, WCHAR c)
+{
+	LPCWSTR p = str;
+
+	while(*p)
+		++p;
+
+	do {
+		if (--p < str)
+			return NULL;
+	} while(*p != c);
+
+	return p;
+}
+
+#define _tcsrchr my_wcsrchr
+#else	/* UNICODE */
+#define _tcsrchr strrchr
+#endif	/* UNICODE */
+
+#endif	/* __WINE__ */
 
 
 /* allocate and initialise a directory entry */
@@ -677,7 +678,6 @@ static LPWSTR wcscpyn(LPWSTR dest, LPCWSTR source, size_t count)
  return dest;
 }
 
-
 static void get_strretA(STRRET* str, const SHITEMID* shiid, LPSTR buffer, int len)
 {
  switch(str->uType) {
@@ -692,6 +692,35 @@ static void get_strretA(STRRET* str, const SHITEMID* shiid, LPSTR buffer, int le
   case STRRET_CSTR:
 	strcpyn(buffer, str->UNION_MEMBER(cStr), len);
  }
+}
+
+static HRESULT path_from_pidlA(IShellFolder* folder, LPITEMIDLIST pidl, LPSTR buffer, int len)
+{
+	STRRET str;
+
+	 /* SHGDN_FORPARSING: get full path of id list */
+	HRESULT hr = (*folder->lpVtbl->GetDisplayNameOf)(folder, pidl, SHGDN_FORPARSING, &str);
+
+	if (SUCCEEDED(hr)) {
+		get_strretA(&str, &pidl->mkid, buffer, len);
+		free_strret(&str);
+	} else
+		buffer[0] = '\0';
+
+	return hr;
+}
+
+#endif
+
+static LPWSTR wcscpyn(LPWSTR dest, LPCWSTR source, size_t count)
+{
+ LPCWSTR s;
+ LPWSTR d = dest;
+
+ for(s=source; count&&(*d++=*s++); )
+  count--;
+
+ return dest;
 }
 
 static void get_strretW(STRRET* str, const SHITEMID* shiid, LPWSTR buffer, int len)
@@ -711,13 +740,6 @@ static void get_strretW(STRRET* str, const SHITEMID* shiid, LPWSTR buffer, int l
 }
 
 
-static void free_strret(STRRET* str)
-{
-	if (str->uType == STRRET_WSTR)
-		(*Globals.iMalloc->lpVtbl->Free)(Globals.iMalloc, str->UNION_MEMBER(pOleStr));
-}
-
-
 static HRESULT name_from_pidl(IShellFolder* folder, LPITEMIDLIST pidl, LPTSTR buffer, int len, SHGDNF flags)
 {
 	STRRET str;
@@ -733,22 +755,6 @@ static HRESULT name_from_pidl(IShellFolder* folder, LPITEMIDLIST pidl, LPTSTR bu
 	return hr;
 }
 
-
-static HRESULT path_from_pidlA(IShellFolder* folder, LPITEMIDLIST pidl, LPSTR buffer, int len)
-{
-	STRRET str;
-
-	 /* SHGDN_FORPARSING: get full path of id list */
-	HRESULT hr = (*folder->lpVtbl->GetDisplayNameOf)(folder, pidl, SHGDN_FORPARSING, &str);
-
-	if (SUCCEEDED(hr)) {
-		get_strretA(&str, &pidl->mkid, buffer, len);
-		free_strret(&str);
-	} else
-		buffer[0] = '\0';
-
-	return hr;
-}
 
 static HRESULT path_from_pidlW(IShellFolder* folder, LPITEMIDLIST pidl, LPWSTR buffer, int len)
 {
@@ -2697,12 +2703,12 @@ static BOOL pattern_match(LPCTSTR str, LPCTSTR pattern)
 				return TRUE;
 
 			for(; *str; str++)
-				if (_totupper(*str)==_totupper(*pattern) && pattern_match(str, pattern))
+				if (*str==*pattern && pattern_match(str, pattern))
 					return TRUE;
 
 			return FALSE;
 		}
-		else if (_totupper(*str)!=_totupper(*pattern) && *pattern!='?')
+		else if (*str!=*pattern && *pattern!='?')
 			return FALSE;
 	}
 
@@ -2711,6 +2717,18 @@ static BOOL pattern_match(LPCTSTR str, LPCTSTR pattern)
 			return FALSE;
 
 	return TRUE;
+}
+
+static BOOL pattern_match_ncase(LPCTSTR str, LPCTSTR pattern)
+{
+	TCHAR b1[BUFFER_LEN], b2[BUFFER_LEN];
+
+	lstrcpy(b1, str);
+	lstrcpy(b2, pattern);
+	CharUpper(b1);
+	CharUpper(b2);
+
+	return pattern_match(b1, b2);
 }
 
 
@@ -2757,7 +2775,7 @@ static int insert_entries(Pane* pane, Entry* dir, LPCTSTR pattern, int filter_fl
 
 		/* filter using the file name pattern */
 		if (pattern)
-			if (!pattern_match(entry->data.cFileName, pattern))
+			if (!pattern_match_ncase(entry->data.cFileName, pattern))
 				continue;
 
 		/* filter system and hidden files */
@@ -3825,20 +3843,6 @@ static BOOL launch_file(HWND hwnd, LPCTSTR cmd, UINT nCmdShow)
 
 	return TRUE;
 }
-
-#ifdef UNICODE
-static BOOL launch_fileA(HWND hwnd, LPSTR cmd, UINT nCmdShow)
-{
-	HINSTANCE hinst = ShellExecuteA(hwnd, NULL/*operation*/, cmd, NULL/*parameters*/, NULL/*dir*/, nCmdShow);
-
-	if ((int)hinst <= 32) {
-		display_error(hwnd, GetLastError());
-		return FALSE;
-	}
-
-	return TRUE;
-}
-#endif
 
 
 static BOOL launch_entry(Entry* entry, HWND hwnd, UINT nCmdShow)
