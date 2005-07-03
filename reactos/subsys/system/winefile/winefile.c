@@ -647,11 +647,9 @@ static Entry* read_tree_unix(Root* root, LPCTSTR path, SORT_ORDER sortOrder, HWN
 #ifdef _SHELL_FOLDERS
 
 #ifdef UNICODE
-#define	tcscpyn strcpyn
 #define	get_strret get_strretW
 #define	path_from_pidl path_from_pidlW
 #else
-#define	tcscpyn wcscpyn
 #define	get_strret get_strretA
 #define	path_from_pidl path_from_pidlA
 #endif
@@ -1433,7 +1431,7 @@ static ChildWnd* alloc_child_window(LPCTSTR path, LPITEMIDLIST pidl, HWND hwnd)
 		_tsplitpath(path, drv, dir, name, ext);
 	}
 
-	_tcscpy(child->filter_pattern, sAsterics);
+	lstrcpy(child->filter_pattern, sAsterics);
 	child->filter_flags = TF_ALL;
 
 	root->entry.level = 0;
@@ -1901,7 +1899,7 @@ static INT_PTR CALLBACK PropertiesDialogDlgProc(HWND hwnd, UINT nmsg, WPARAM wpa
 			SetWindowText(GetDlgItem(hwnd, IDC_STATIC_PROP_LASTCHANGE), b1);
 
 			size = ((ULONGLONG)pWFD->nFileSizeHigh << 32) | pWFD->nFileSizeLow;
-			wsprintf(b1, sLongNumFmt, size);
+			_stprintf(b1, sLongNumFmt, size);
 			wsprintf(b2, sByteFmt, b1);
 			SetWindowText(GetDlgItem(hwnd, IDC_STATIC_PROP_SIZE), b2);
 
@@ -2808,11 +2806,11 @@ static void format_bytes(LPTSTR buffer, LONGLONG bytes)
 	float fBytes = (float)bytes;
 
 	if (bytes >= 1073741824)	/* 1 GB */
-		_stprintf(buffer, sFmtGB, fBytes/1073741824.f+.5f);
+		wsprintf(buffer, sFmtGB, fBytes/1073741824.f+.5f);
 	else if (bytes >= 1048576)	/* 1 MB */
-		_stprintf(buffer, sFmtMB, fBytes/1048576.f+.5f);
+		wsprintf(buffer, sFmtMB, fBytes/1048576.f+.5f);
 	else if (bytes >= 1024)		/* 1 kB */
-		_stprintf(buffer, sFmtkB, fBytes/1024.f+.5f);
+		wsprintf(buffer, sFmtkB, fBytes/1024.f+.5f);
 	else
 		_stprintf(buffer, sLongNumFmt, bytes);
 }
@@ -2825,9 +2823,9 @@ static void set_space_status(void)
 	if (GetDiskFreeSpaceEx(NULL, &ulFreeBytesToCaller, &ulTotalBytes, &ulFreeBytes)) {
 		format_bytes(b1, ulFreeBytesToCaller.QuadPart);
 		format_bytes(b2, ulTotalBytes.QuadPart);
-		_stprintf(buffer, RS(fmt,IDS_FREE_SPACE_FMT), b1, b2);
+		wsprintf(buffer, RS(fmt,IDS_FREE_SPACE_FMT), b1, b2);
 	} else
-		_tcscpy(buffer, sQMarks);
+		lstrcpy(buffer, sQMarks);
 
 	SendMessage(Globals.hstatusbar, SB_SETTEXT, 0, (LPARAM)buffer);
 }
@@ -2888,7 +2886,7 @@ static void format_date(const FILETIME* ft, TCHAR* buffer, int visible_cols)
 		return;
 
 	if (!FileTimeToLocalFileTime(ft, &lft))
-		{err: _tcscpy(buffer,sQMarks); return;}
+		{err: lstrcpy(buffer,sQMarks); return;}
 
 	if (!FileTimeToSystemTime(&lft, &systime))
 		goto err;
@@ -3021,7 +3019,7 @@ static BOOL is_exe_file(LPCTSTR ext)
 		d++;
 
 	for(p=executable_extensions; (*p)[0]; p++)
-		if (!_tcsicmp(ext_buffer, *p))
+		if (!lstrcmpi(ext_buffer, *p))
 			return TRUE;
 
 	return FALSE;
@@ -3325,10 +3323,10 @@ static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWi
 	if (visible_cols & COL_ATTRIBUTES) {
 #ifdef _NO_EXTENSIONS
 		const static TCHAR s4Tabs[] = {' ','\t',' ','\t',' ','\t',' ','\t',' ','\0'};
-		_tcscpy(buffer, s4Tabs);
+		lstrcpy(buffer, s4Tabs);
 #else
 		const static TCHAR s11Tabs[] = {' ','\t',' ','\t',' ','\t',' ','\t',' ','\t',' ','\t',' ','\t',' ','\t',' ','\t',' ','\t',' ','\t',' ','\0'};
-		_tcscpy(buffer, s11Tabs);
+		lstrcpy(buffer, s11Tabs);
 #endif
 
 		if (attrs & FILE_ATTRIBUTE_NORMAL)					buffer[ 0] = 'N';
@@ -3370,7 +3368,7 @@ static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWi
 
 		DWORD rights = get_access_mask();
 
-		tcscpy(buffer, sSecTabs);
+		lstrcpy(buffer, sSecTabs);
 
 		if (rights & FILE_READ_DATA)			buffer[ 0] = 'R';
 		if (rights & FILE_WRITE_DATA)			buffer[ 2] = 'W';
@@ -4396,11 +4394,11 @@ static LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM
 					struct FilterDialog dlg;
 
 					memset(&dlg, 0, sizeof(struct FilterDialog));
-					_tcscpy(dlg.pattern, child->filter_pattern);
+					lstrcpy(dlg.pattern, child->filter_pattern);
 					dlg.flags = child->filter_flags;
 
 					if (DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_DIALOG_VIEW_TYPE), hwnd, FilterDialogDlgProc, (LPARAM)&dlg) == IDOK) {
-						_tcscpy(child->filter_pattern, dlg.pattern);
+						lstrcpy(child->filter_pattern, dlg.pattern);
 						child->filter_flags = dlg.flags;
 						refresh_right_pane(child);
 					}
