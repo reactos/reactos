@@ -60,17 +60,18 @@ DEFINE_GUID(GUID_DEVICE_EVENT_RBC, 0xD0744792, 0xA98E, 0x11D2, 0x91, 0x7A, 0x00,
 
 #ifndef __GUIDS_ONLY__ /* This is defined to build libwdmguid.a */
 
-typedef enum _PLUGPLAY_EVENT_CATEGORY {
-   HardwareProfileChangeEvent,
-   TargetDeviceChangeEvent,
-   DeviceClassChangeEvent,
-   CustomDeviceEvent,
-   DeviceInstallEvent,
-   DeviceArrivalEvent,
-   PowerEvent,
-   VetoEvent,
-   BlockedDriverEvent,
-   MaxPlugEventCategory
+typedef enum _PLUGPLAY_EVENT_CATEGORY
+{
+    HardwareProfileChangeEvent,
+    TargetDeviceChangeEvent,
+    DeviceClassChangeEvent,
+    CustomDeviceEvent,
+    DeviceInstallEvent,
+    DeviceArrivalEvent,
+    PowerEvent,
+    VetoEvent,
+    BlockedDriverEvent,
+    MaxPlugEventCategory
 } PLUGPLAY_EVENT_CATEGORY;
 
 /*
@@ -175,7 +176,7 @@ NtGetPlugPlayEvent(
    PPLUGPLAY_EVENT_BLOCK Buffer,
    ULONG BufferSize);
  */
- 
+
 /*
  * NtPlugPlayControl
  *
@@ -231,19 +232,13 @@ NtGetPlugPlayEvent(
  *    ...
  */
 
-#define PLUGPLAY_USER_RESPONSE      0x07
-#define PLUGPLAY_GET_PROPERTY       0x0A
-#define PLUGPLAY_GET_RELATED_DEVICE 0x0C
-#define PLUGPLAY_DEVICE_STATUS      0x0E
-
-
-typedef struct _PLUGPLAY_PROPERTY_DATA
+typedef struct _PLUGPLAY_CONTROL_PROPERTY_DATA
 {
-  UNICODE_STRING DeviceInstance;
-  ULONG Property;
-  PVOID Buffer;
-  ULONG BufferSize;
-} PLUGPLAY_PROPERTY_DATA, *PPLUGPLAY_PROPERTY_DATA;
+    UNICODE_STRING DeviceInstance;
+    ULONG Property;
+    PVOID Buffer;
+    ULONG BufferSize;
+} PLUGPLAY_CONTROL_PROPERTY_DATA, *PPLUGPLAY_CONTROL_PROPERTY_DATA;
 
 
 /* PLUGPLAY_GET_RELATED_DEVICE (Code 0x0C) */
@@ -253,29 +248,29 @@ typedef struct _PLUGPLAY_PROPERTY_DATA
 #define PNP_GET_CHILD_DEVICE   2
 #define PNP_GET_SIBLING_DEVICE 3
 
-typedef struct _PLUGPLAY_RELATED_DEVICE_DATA
+typedef struct _PLUGPLAY_CONTROL_RELATED_DEVICE_DATA
 {
-  UNICODE_STRING DeviceInstance;
-  UNICODE_STRING RelatedDeviceInstance;
-  ULONG Relation; /* 1: Parent  2: Child  3: Sibling */
-} PLUGPLAY_RELATED_DEVICE_DATA, *PPLUGPLAY_RELATED_DEVICE_DATA;
+    UNICODE_STRING TargetDeviceInstance;
+    ULONG Relation; /* 1: Parent  2: Child  3: Sibling */
+    UNICODE_STRING RelatedDeviceInstance;
+} PLUGPLAY_CONTROL_RELATED_DEVICE_DATA, *PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA;
 
 
 /* PLUGPLAY_DEVICE_STATUS (Code 0x0E) */
 
-/* Action values */
+/* Operation values */
 #define PNP_GET_DEVICE_STATUS    0
 #define PNP_SET_DEVICE_STATUS    1
 #define PNP_CLEAR_DEVICE_STATUS  2
 
 
-typedef struct _PLUGPLAY_DEVICE_STATUS_DATA
+typedef struct _PLUGPLAY_CONTOL_STATUS_DATA
 {
-  UNICODE_STRING DeviceInstance;
-  ULONG Action;   /* 0: Get  1: Set  2: Clear */
-  ULONG Problem;  /* CM_PROB_  see cfg.h */
-  ULONG Flags;    /* DN_       see cfg.h */
-} PLUGPLAY_DEVICE_STATUS_DATA, *PPLUGPLAY_DEVICE_STATUS_DATA;
+    UNICODE_STRING DeviceInstance;
+    ULONG Operation;       /* 0: Get  1: Set  2: Clear */
+    ULONG DeviceStatus;    /* DN_       see cfg.h */
+    ULONG DeviceProblem;   /* CM_PROB_  see cfg.h */
+} PLUGPLAY_CONTROL_STATUS_DATA, *PPLUGPLAY_CONTROL_STATUS_DATA;
 
 #endif /* __GUIDS_ONLY__ */
 

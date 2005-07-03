@@ -285,7 +285,7 @@ IopGetDeviceObjectFromDeviceInstance(PUNICODE_STRING DeviceInstance)
 
 
 static NTSTATUS
-IopGetRelatedDevice(PPLUGPLAY_RELATED_DEVICE_DATA RelatedDeviceData)
+IopGetRelatedDevice(PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA RelatedDeviceData)
 {
     UNICODE_STRING RootDeviceName;
     PDEVICE_OBJECT DeviceObject = NULL;
@@ -294,11 +294,11 @@ IopGetRelatedDevice(PPLUGPLAY_RELATED_DEVICE_DATA RelatedDeviceData)
 
     DPRINT("IopGetRelatedDevice() called\n");
 
-    DPRINT("Device name: %wZ\n", &RelatedDeviceData->DeviceInstance);
+    DPRINT("Device name: %wZ\n", &RelatedDeviceData->TargetDeviceInstance);
 
     RtlInitUnicodeString(&RootDeviceName,
                          L"HTREE\\ROOT\\0");
-    if (RtlEqualUnicodeString(&RelatedDeviceData->DeviceInstance,
+    if (RtlEqualUnicodeString(&RelatedDeviceData->TargetDeviceInstance,
                               &RootDeviceName,
                               TRUE))
     {
@@ -307,7 +307,7 @@ IopGetRelatedDevice(PPLUGPLAY_RELATED_DEVICE_DATA RelatedDeviceData)
     else
     {
         /* Get the device object */
-        DeviceObject = IopGetDeviceObjectFromDeviceInstance(&RelatedDeviceData->DeviceInstance);
+        DeviceObject = IopGetDeviceObjectFromDeviceInstance(&RelatedDeviceData->TargetDeviceInstance);
         if (DeviceObject == NULL)
             return STATUS_NO_SUCH_DEVICE;
 
@@ -377,34 +377,34 @@ IopGetRelatedDevice(PPLUGPLAY_RELATED_DEVICE_DATA RelatedDeviceData)
 
 
 static NTSTATUS
-IopDeviceStatus(PPLUGPLAY_DEVICE_STATUS_DATA DeviceStatusData)
+IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
 {
     PDEVICE_OBJECT DeviceObject;
     PDEVICE_NODE DeviceNode;
 
     DPRINT("IopDeviceStatus() called\n");
 
-    DPRINT("Device name: %wZ\n", &DeviceStatusData->DeviceInstance);
+    DPRINT("Device name: %wZ\n", &StatusData->DeviceInstance);
 
     /* Get the device object */
-    DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceStatusData->DeviceInstance);
+    DeviceObject = IopGetDeviceObjectFromDeviceInstance(&StatusData->DeviceInstance);
     if (DeviceObject == NULL)
         return STATUS_NO_SUCH_DEVICE;
 
     DeviceNode = DeviceObject->DeviceObjectExtension->DeviceNode;
 
-    switch (DeviceStatusData->Action)
+    switch (StatusData->Operation)
     {
         case PNP_GET_DEVICE_STATUS:
             DPRINT("Get status data\n");
-            DeviceStatusData->Problem = DeviceNode->Problem;
-            DeviceStatusData->Flags = DeviceNode->Flags;
+            StatusData->DeviceStatus = DeviceNode->Flags;
+            StatusData->DeviceProblem = DeviceNode->Problem;
             break;
 
         case PNP_SET_DEVICE_STATUS:
             DPRINT("Set status data\n");
-            DeviceNode->Problem = DeviceStatusData->Problem;
-            DeviceNode->Flags = DeviceStatusData->Flags;
+            DeviceNode->Flags = StatusData->DeviceStatus;
+            DeviceNode->Problem = StatusData->DeviceProblem;
             break;
 
         case PNP_CLEAR_DEVICE_STATUS:
@@ -422,14 +422,14 @@ IopDeviceStatus(PPLUGPLAY_DEVICE_STATUS_DATA DeviceStatusData)
  * @unimplemented
  */
 NTSTATUS STDCALL
-NtPlugPlayControl(IN ULONG ControlCode,
+NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
                   IN OUT PVOID Buffer,
                   IN ULONG BufferLength)
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
     DPRINT("NtPlugPlayControl(%lu %p %lu) called\n",
-           ControlCode, Buffer, BufferLength);
+           PlugPlayControlClass, Buffer, BufferLength);
 
     /* Function can only be called from user-mode */
     if (KeGetPreviousMode() != UserMode)
@@ -464,22 +464,25 @@ NtPlugPlayControl(IN ULONG ControlCode,
         return Status;
     }
 
-    switch (ControlCode)
+    switch (PlugPlayControlClass)
     {
-        case PLUGPLAY_USER_RESPONSE:
+        case PlugPlayControlUserResponse:
             if (Buffer || BufferLength != 0)
                 return STATUS_INVALID_PARAMETER;
             return IopRemovePlugPlayEvent();
 
-        case PLUGPLAY_GET_RELATED_DEVICE:
-            if (!Buffer || BufferLength < sizeof(PLUGPLAY_RELATED_DEVICE_DATA))
+        case PlugPlayControlGetRelatedDevice:
+            if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_RELATED_DEVICE_DATA))
                 return STATUS_INVALID_PARAMETER;
-            return IopGetRelatedDevice((PPLUGPLAY_RELATED_DEVICE_DATA)Buffer);
+            return IopGetRelatedDevice((PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA)Buffer);
 
-        case PLUGPLAY_DEVICE_STATUS:
-            if (!Buffer || BufferLength < sizeof(PLUGPLAY_DEVICE_STATUS_DATA))
+        case PlugPlayControlDeviceStatus:
+            if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_STATUS_DATA))
                 return STATUS_INVALID_PARAMETER;
-            return IopDeviceStatus((PPLUGPLAY_DEVICE_STATUS_DATA)Buffer);
+            return IopDeviceStatus((PPLUGPLAY_CONTROL_STATUS_DATA)Buffer);
+
+        default:
+            return STATUS_NOT_IMPLEMENTED;
     }
 
     return STATUS_NOT_IMPLEMENTED;

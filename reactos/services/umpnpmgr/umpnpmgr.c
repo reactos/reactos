@@ -109,9 +109,11 @@ void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
 
 
 //WORD PNP_GetVersion(RPC_BINDING_HANDLE BindingHandle)
-WORD PNP_GetVersion(handle_t BindingHandle)
+unsigned long PNP_GetVersion(handle_t BindingHandle,
+                             unsigned short *Version)
 {
-  return 0x0400;
+  *Version = 0x0400;
+  return 0;
 }
 
 
@@ -162,7 +164,7 @@ PnpEventThread(LPVOID lpParameter)
     /* FIXME: Process the pnp event */
 
     /* Dequeue the current pnp event and signal the next one */
-    NtPlugPlayControl(PLUGPLAY_USER_RESPONSE, NULL, 0);
+    NtPlugPlayControl(PlugPlayControlUserResponse, NULL, 0);
   }
 
   HeapFree(GetProcessHeap(), 0, PnpEvent);

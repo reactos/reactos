@@ -1868,9 +1868,9 @@ ZwOpenTimer(
 NTSTATUS
 STDCALL
 NtPlugPlayControl(
-    ULONG ControlCode,
-    PVOID Buffer,
-    ULONG BufferSize
+    IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
+    IN OUT PVOID Buffer,
+    IN ULONG BufferSize
 );
 
 NTSTATUS

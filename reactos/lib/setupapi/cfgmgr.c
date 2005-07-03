@@ -376,6 +376,7 @@ WORD WINAPI CM_Get_Version_Ex(HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     RPC_STATUS Status;
+    WORD Version = 0;
 
     FIXME("%lx\n", hMachine);
 
@@ -392,7 +393,10 @@ WORD WINAPI CM_Get_Version_Ex(HMACHINE hMachine)
             return 0;
     }
 
-    return PNP_GetVersion(BindingHandle);
+    if (PNP_GetVersion(BindingHandle, &Version) != CR_SUCCESS)
+        return 0;
+
+    return Version;
 }
 
 

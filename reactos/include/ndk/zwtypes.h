@@ -246,6 +246,17 @@ typedef enum _IO_COMPLETION_INFORMATION_CLASS
     IoCompletionBasicInformation
 } IO_COMPLETION_INFORMATION_CLASS;
 
+/*
+ *  PlugPlay
+ */
+typedef enum _PLUGPLAY_CONTROL_CLASS
+{
+    PlugPlayControlUserResponse = 0x07,
+    PlugPlayControlProperty = 0x0A,
+    PlugPlayControlGetRelatedDevice = 0x0C,
+    PlugPlayControlDeviceStatus = 0x0E
+} PLUGPLAY_CONTROL_CLASS;
+
 /* TYPES *********************************************************************/
 
 typedef unsigned short LANGID;
