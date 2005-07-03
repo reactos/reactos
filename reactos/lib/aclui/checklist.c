@@ -49,6 +49,7 @@ typedef struct _CHECKLISTWND
    BOOL HasFocus;
    PCHECKITEM FocusedCheckItem;
    UINT FocusedCheckItemBox;
+   BOOL FocusedPushed;
    
    COLORREF TextColor[2];
    UINT CheckBoxLeft[2];
@@ -124,11 +125,11 @@ FindFirstEnabledCheckBox(IN PCHECKLISTWND infoPtr,
         {
             /* return the Allow checkbox in case both check boxes are enabled! */
             *CheckBox = ((!(CurItem->State & CIS_ALLOWDISABLED)) ? CLB_ALLOW : CLB_DENY);
-            return CurItem;
+            break;
         }
     }
     
-    return NULL;
+    return CurItem;
 }
 
 static PCHECKITEM
@@ -312,13 +313,15 @@ PtToCheckItemBox(IN PCHECKLISTWND infoPtr,
             INT y = ppt->y % infoPtr->ItemHeight;
             
             if ((y >= CI_TEXT_MARGIN_HEIGHT &&
-                 y <= infoPtr->ItemHeight - CI_TEXT_MARGIN_HEIGHT) &&
+                 y < infoPtr->ItemHeight - CI_TEXT_MARGIN_HEIGHT) &&
 
                 (((ppt->x >= (infoPtr->CheckBoxLeft[CLB_ALLOW] - (infoPtr->ItemHeight / 2))) &&
-                  (ppt->x <= (infoPtr->CheckBoxLeft[CLB_ALLOW] - (infoPtr->ItemHeight / 2) + infoPtr->ItemHeight)))
+                  (ppt->x < (infoPtr->CheckBoxLeft[CLB_ALLOW] - (infoPtr->ItemHeight / 2) +
+                             infoPtr->ItemHeight - (2 * CI_TEXT_MARGIN_HEIGHT))))
                  ||
                  ((ppt->x >= (infoPtr->CheckBoxLeft[CLB_DENY] - (infoPtr->ItemHeight / 2))) &&
-                  (ppt->x <= (infoPtr->CheckBoxLeft[CLB_DENY] - (infoPtr->ItemHeight / 2) + infoPtr->ItemHeight)))))
+                  (ppt->x < (infoPtr->CheckBoxLeft[CLB_DENY] - (infoPtr->ItemHeight / 2) +
+                             infoPtr->ItemHeight - (2 * CI_TEXT_MARGIN_HEIGHT))))))
             {
                 *DirectlyInCheckBox = TRUE;
             }
@@ -663,19 +666,24 @@ RetChangeControlFont(IN PCHECKLISTWND infoPtr,
 
 #if SUPPORT_UXTHEME
 static INT
-CalculateChkBoxStyle(IN BOOL Checked,
-                     IN BOOL Enabled,
-                     IN BOOL HotTrack)
+CalculateCheckBoxStyle(IN BOOL Checked,
+                       IN BOOL Enabled,
+                       IN BOOL HotTrack,
+                       IN BOOL Pushed)
 {
     INT BtnState;
 
     if (Checked)
     {
-        BtnState = (Enabled ? (HotTrack ? CBS_CHECKEDHOT : CBS_CHECKEDNORMAL) : CBS_CHECKEDDISABLED);
+        BtnState = (Enabled ?
+                    (Pushed ? CBS_CHECKEDPRESSED : (HotTrack ? CBS_CHECKEDHOT : CBS_CHECKEDNORMAL)) :
+                    CBS_CHECKEDDISABLED);
     }
     else
     {
-        BtnState = (Enabled ? (HotTrack ? CBS_UNCHECKEDHOT : CBS_UNCHECKEDNORMAL) : CBS_UNCHECKEDDISABLED);
+        BtnState = (Enabled ?
+                    (Pushed ? CBS_UNCHECKEDPRESSED : (HotTrack ? CBS_UNCHECKEDHOT : CBS_UNCHECKEDNORMAL)) :
+                    CBS_UNCHECKEDDISABLED);
     }
 
     return BtnState;
@@ -721,7 +729,7 @@ PaintControl(IN PCHECKLISTWND infoPtr,
         HFONT hOldFont;
         DWORD CurrentIndex;
         COLORREF OldTextColor;
-        BOOL Enabled, PrevEnabled;
+        BOOL Enabled, PrevEnabled, IsPushed;
         POINT hOldBrushOrg;
 #if SUPPORT_UXTHEME
         HRESULT hDrawResult;
@@ -780,8 +788,12 @@ PaintControl(IN PCHECKLISTWND infoPtr,
                      -1,
                      &TextRect,
                      DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
-            
+
             /* draw the Allow checkbox */
+            IsPushed = (Enabled && Item == infoPtr->FocusedCheckItem && infoPtr->HasFocus &&
+                        !(Item->State & CIS_ALLOWDISABLED) && infoPtr->FocusedCheckItemBox != CLB_DENY &&
+                        infoPtr->FocusedPushed);
+
             CheckBox.left = infoPtr->CheckBoxLeft[CLB_ALLOW] - ((TextRect.bottom - TextRect.top) / 2);
             CheckBox.right = CheckBox.left + (TextRect.bottom - TextRect.top) - (2 * CI_TEXT_MARGIN_HEIGHT);
             CheckBox.top = TextRect.top;
@@ -789,9 +801,10 @@ PaintControl(IN PCHECKLISTWND infoPtr,
 #if SUPPORT_UXTHEME
             if (infoPtr->ThemeHandle != NULL)
             {
-                INT BtnState = CalculateChkBoxStyle(Item->State & CIS_ALLOW,
-                                                    Enabled && !(Item->State & CIS_ALLOWDISABLED),
-                                                    (ItemHovered && infoPtr->HoveredCheckItemBox != CLB_DENY));
+                INT BtnState = CalculateCheckBoxStyle(Item->State & CIS_ALLOW,
+                                                      Enabled && !(Item->State & CIS_ALLOWDISABLED),
+                                                      (ItemHovered && infoPtr->HoveredCheckItemBox != CLB_DENY),
+                                                      IsPushed);
                 
 
                 hDrawResult = DrawThemeBackground(infoPtr->ThemeHandle,
@@ -817,10 +830,11 @@ PaintControl(IN PCHECKLISTWND infoPtr,
                                  DFC_BUTTON,
                                  DFCS_BUTTONCHECK | DFCS_FLAT |
                                  ((Item->State & CIS_ALLOWDISABLED) || !Enabled ? DFCS_INACTIVE : 0) |
-                                 ((Item->State & CIS_ALLOW) ? DFCS_CHECKED : 0));
+                                 ((Item->State & CIS_ALLOW) ? DFCS_CHECKED : 0) |
+                                 (IsPushed ? DFCS_PUSHED : 0));
             }
-            if (infoPtr->HasFocus &&
-                Item == infoPtr->FocusedCheckItem &&
+            if (Item == infoPtr->FocusedCheckItem &&
+                infoPtr->HasFocus &&
                 infoPtr->FocusedCheckItemBox != CLB_DENY)
             {
                 RECT rcFocus = CheckBox;
@@ -834,14 +848,19 @@ PaintControl(IN PCHECKLISTWND infoPtr,
             }
 
             /* draw the Deny checkbox */
+            IsPushed = (Enabled && Item == infoPtr->FocusedCheckItem && infoPtr->HasFocus &&
+                        !(Item->State & CIS_DENYDISABLED) && infoPtr->FocusedCheckItemBox == CLB_DENY &&
+                        infoPtr->FocusedPushed);
+
             CheckBox.left = infoPtr->CheckBoxLeft[CLB_DENY] - ((TextRect.bottom - TextRect.top) / 2);
             CheckBox.right = CheckBox.left + (TextRect.bottom - TextRect.top) - (2 * CI_TEXT_MARGIN_HEIGHT);
 #if SUPPORT_UXTHEME
             if (infoPtr->ThemeHandle != NULL)
             {
-                INT BtnState = CalculateChkBoxStyle(Item->State & CIS_DENY,
-                                                    Enabled && !(Item->State & CIS_DENYDISABLED),
-                                                    (ItemHovered && infoPtr->HoveredCheckItemBox == CLB_DENY));
+                INT BtnState = CalculateCheckBoxStyle(Item->State & CIS_DENY,
+                                                      Enabled && !(Item->State & CIS_DENYDISABLED),
+                                                      (ItemHovered && infoPtr->HoveredCheckItemBox == CLB_DENY),
+                                                      IsPushed);
 
                 hDrawResult = DrawThemeBackground(infoPtr->ThemeHandle,
                                                   hDC,
@@ -866,7 +885,8 @@ PaintControl(IN PCHECKLISTWND infoPtr,
                                  DFC_BUTTON,
                                  DFCS_BUTTONCHECK | DFCS_FLAT |
                                  ((Item->State & CIS_DENYDISABLED) || !Enabled ? DFCS_INACTIVE : 0) |
-                                 ((Item->State & CIS_DENY) ? DFCS_CHECKED : 0));
+                                 ((Item->State & CIS_DENY) ? DFCS_CHECKED : 0) |
+                                 (IsPushed ? DFCS_PUSHED : 0));
             }
             if (infoPtr->HasFocus &&
                 Item == infoPtr->FocusedCheckItem &&
@@ -930,7 +950,6 @@ ChangeCheckItemFocus(IN PCHECKLISTWND infoPtr,
     }
 }
 
-#if SUPPORT_UXTHEME
 static VOID
 UpdateCheckItemBox(IN PCHECKLISTWND infoPtr,
                    IN PCHECKITEM Item,
@@ -971,7 +990,6 @@ UpdateCheckItemBox(IN PCHECKLISTWND infoPtr,
                 rcUpdate.right = rcUpdate.left + infoPtr->ItemHeight;
                 rcUpdate.top = ((Index - VisibleFirst) * infoPtr->ItemHeight) + CI_TEXT_MARGIN_HEIGHT;
                 rcUpdate.bottom = rcUpdate.top + infoPtr->ItemHeight - (2 * CI_TEXT_MARGIN_HEIGHT);
-                DbgPrint("Repaint hot item\n");
 
                 RedrawWindow(infoPtr->hSelf,
                              &rcUpdate,
@@ -982,6 +1000,7 @@ UpdateCheckItemBox(IN PCHECKLISTWND infoPtr,
     }
 }
 
+#if SUPPORT_UXTHEME
 static VOID
 ChangeCheckItemHotTrack(IN PCHECKLISTWND infoPtr,
                         IN PCHECKITEM NewHotTrack,
@@ -1015,6 +1034,22 @@ ChangeCheckItemHotTrack(IN PCHECKLISTWND infoPtr,
     }
 }
 #endif
+
+static VOID
+ChangeCheckBox(IN PCHECKLISTWND infoPtr,
+               IN PCHECKITEM CheckItem,
+               IN UINT CheckItemBox)
+{
+    DWORD NewState, OldState = CheckItem->State;
+    DWORD CheckedBit = ((infoPtr->FocusedCheckItemBox == CLB_DENY) ? CIS_DENY : CIS_ALLOW);
+    BOOL Checked = (CheckItem->State & CheckedBit) != 0;
+
+    NewState = (Checked ? OldState & ~CheckedBit : OldState | CheckedBit);
+
+    /* FIXME - send a notification message */
+
+    CheckItem->State = NewState;
+}
 
 static LRESULT CALLBACK
 CheckListWndProc(IN HWND hwnd,
@@ -1067,20 +1102,20 @@ CheckListWndProc(IN HWND hwnd,
         
         case WM_MOUSEMOVE:
         {
-#if SUPPORT_UXTHEME
+            POINT pt;
+            BOOL InCheckBox;
             HWND hWndCapture = GetCapture();
             
+            pt.x = (LONG)LOWORD(lParam);
+            pt.y = (LONG)HIWORD(lParam);
+            
+#if SUPPORT_UXTHEME
             /* handle hovering checkboxes */
             if (hWndCapture == NULL)
             {
                 TRACKMOUSEEVENT tme;
                 PCHECKITEM HotTrackItem;
                 UINT HotTrackItemBox;
-                BOOL InCheckBox;
-                POINT pt;
-                
-                pt.x = (LONG)LOWORD(lParam);
-                pt.y = (LONG)HIWORD(lParam);
 
                 HotTrackItem = PtToCheckItemBox(infoPtr,
                                                 &pt,
@@ -1111,6 +1146,30 @@ CheckListWndProc(IN HWND hwnd,
                 TrackMouseEvent(&tme);
             }
 #endif
+
+            if (hWndCapture == hwnd && infoPtr->FocusedCheckItem != NULL)
+            {
+                PCHECKITEM PtItem;
+                UINT PtItemBox;
+                BOOL OldPushed;
+                
+                PtItem = PtToCheckItemBox(infoPtr,
+                                          &pt,
+                                          &PtItemBox,
+                                          &InCheckBox);
+
+                OldPushed = infoPtr->FocusedPushed;
+                infoPtr->FocusedPushed = InCheckBox && infoPtr->FocusedCheckItem == PtItem &&
+                                         infoPtr->FocusedCheckItemBox == PtItemBox;
+
+                if (OldPushed != infoPtr->FocusedPushed)
+                {
+                    UpdateCheckItemBox(infoPtr,
+                                       infoPtr->FocusedCheckItem,
+                                       infoPtr->FocusedCheckItemBox);
+                }
+            }
+            
             break;
         }
         
@@ -1494,6 +1553,7 @@ CheckListWndProc(IN HWND hwnd,
             break;
         }
         
+        case WM_LBUTTONDBLCLK:
         case WM_LBUTTONDOWN:
         case WM_MBUTTONDOWN:
         case WM_RBUTTONDOWN:
@@ -1504,7 +1564,7 @@ CheckListWndProc(IN HWND hwnd,
                 INT NewFocusBox = 0;
                 BOOL InCheckBox;
                 POINT pt;
-                BOOL ChangeFocus;
+                BOOL ChangeFocus, Capture = FALSE;
                 
                 pt.x = (LONG)LOWORD(lParam);
                 pt.y = (LONG)HIWORD(lParam);
@@ -1540,6 +1600,14 @@ CheckListWndProc(IN HWND hwnd,
                 
                 if (ChangeFocus)
                 {
+                    if (uMsg == WM_LBUTTONDOWN &&
+                        InCheckBox && GetCapture() != hwnd)
+                    {
+                        infoPtr->FocusedPushed = TRUE;
+
+                        Capture = TRUE;
+                    }
+                    
                     ChangeCheckItemFocus(infoPtr,
                                          NewFocus,
                                          NewFocusBox);
@@ -1549,6 +1617,47 @@ CheckListWndProc(IN HWND hwnd,
                 {
                     SetFocus(hwnd);
                 }
+                
+                if (Capture)
+                {
+                    SetCapture(hwnd);
+                }
+            }
+            break;
+        }
+        
+        case WM_LBUTTONUP:
+        {
+            if (GetCapture() == hwnd)
+            {
+                if (infoPtr->FocusedCheckItem != NULL && infoPtr->FocusedPushed)
+                {
+                    PCHECKITEM PtItem;
+                    UINT PtItemBox;
+                    BOOL InCheckBox;
+                    POINT pt;
+                    
+                    infoPtr->FocusedPushed = FALSE;
+
+                    PtItem = PtToCheckItemBox(infoPtr,
+                                              &pt,
+                                              &PtItemBox,
+                                              &InCheckBox);
+
+                    if (InCheckBox && PtItem == infoPtr->FocusedCheckItem &&
+                        PtItemBox == infoPtr->FocusedCheckItemBox)
+                    {
+                        ChangeCheckBox(infoPtr,
+                                       PtItem,
+                                       PtItemBox);
+                    }
+                    
+                    UpdateCheckItemBox(infoPtr,
+                                       infoPtr->FocusedCheckItem,
+                                       infoPtr->FocusedCheckItemBox);
+                }
+                
+                ReleaseCapture();
             }
             break;
         }
@@ -1557,25 +1666,60 @@ CheckListWndProc(IN HWND hwnd,
         {
             switch (wParam)
             {
+                case VK_SPACE:
+                {
+                    if (infoPtr->FocusedCheckItem != NULL && GetCapture() == NULL)
+                    {
+                        BOOL OldPushed = infoPtr->FocusedPushed;
+                        infoPtr->FocusedPushed = TRUE;
+
+                        if (infoPtr->FocusedPushed != OldPushed)
+                        {
+                            MakeCheckItemVisible(infoPtr,
+                                                 infoPtr->FocusedCheckItem);
+
+                            UpdateCheckItemBox(infoPtr,
+                                               infoPtr->FocusedCheckItem,
+                                               infoPtr->FocusedCheckItemBox);
+                        }
+                    }
+                    break;
+                }
+                
                 case VK_RETURN:
                 {
-                    /* FIXME */
+                    if (infoPtr->FocusedCheckItem != NULL && GetCapture() == NULL)
+                    {
+                        MakeCheckItemVisible(infoPtr,
+                                             infoPtr->FocusedCheckItem);
+
+                        ChangeCheckBox(infoPtr,
+                                       infoPtr->FocusedCheckItem,
+                                       infoPtr->FocusedCheckItemBox);
+
+                        UpdateCheckItemBox(infoPtr,
+                                           infoPtr->FocusedCheckItem,
+                                           infoPtr->FocusedCheckItemBox);
+                    }
                     break;
                 }
                 
                 case VK_TAB:
                 {
-                    PCHECKITEM NewFocus;
-                    UINT NewFocusBox = 0;
-                    BOOL Shift = GetKeyState(VK_SHIFT) & 0x8000;
-                    
-                    NewFocus = FindEnabledCheckBox(infoPtr,
-                                                   Shift,
-                                                   &NewFocusBox);
+                    if (GetCapture() == NULL)
+                    {
+                        PCHECKITEM NewFocus;
+                        UINT NewFocusBox = 0;
+                        BOOL Shift = GetKeyState(VK_SHIFT) & 0x8000;
 
-                    ChangeCheckItemFocus(infoPtr,
-                                         NewFocus,
-                                         NewFocusBox);
+                        NewFocus = FindEnabledCheckBox(infoPtr,
+                                                       Shift,
+                                                       &NewFocusBox);
+
+                        ChangeCheckItemFocus(infoPtr,
+                                             NewFocus,
+                                             NewFocusBox);
+                    }
                     break;
                 }
                 
@@ -1587,6 +1731,25 @@ CheckListWndProc(IN HWND hwnd,
                                         lParam);
                     break;
                 }
+            }
+            break;
+        }
+        
+        case WM_KEYUP:
+        {
+            if (wParam == VK_SPACE && IsWindowEnabled(hwnd) &&
+                infoPtr->FocusedCheckItem != NULL &&
+                infoPtr->FocusedPushed)
+            {
+                infoPtr->FocusedPushed = FALSE;
+
+                ChangeCheckBox(infoPtr,
+                               infoPtr->FocusedCheckItem,
+                               infoPtr->FocusedCheckItemBox);
+
+                UpdateCheckItemBox(infoPtr,
+                                   infoPtr->FocusedCheckItem,
+                                   infoPtr->FocusedCheckItemBox);
             }
             break;
         }
@@ -1631,7 +1794,6 @@ CheckListWndProc(IN HWND hwnd,
 #if SUPPORT_UXTHEME
         case WM_MOUSELEAVE:
         {
-            DbgPrint("WM_MOUSELEAVE\n");
             if (infoPtr->HoveredCheckItem != NULL)
             {
                 /* reset and repaint the hovered check item box */
@@ -1649,7 +1811,7 @@ CheckListWndProc(IN HWND hwnd,
                 CloseThemeData(infoPtr->ThemeHandle);
                 infoPtr->ThemeHandle = NULL;
             }
-            if (IsThemeActive())
+            if (IsAppThemed())
             {
                 infoPtr->ThemeHandle = OpenThemeData(infoPtr->hSelf,
                                                      L"BUTTON");
@@ -1697,6 +1859,7 @@ CheckListWndProc(IN HWND hwnd,
                 infoPtr->HasFocus = FALSE;
                 infoPtr->FocusedCheckItem = NULL;
                 infoPtr->FocusedCheckItemBox = 0;
+                infoPtr->FocusedPushed = FALSE;
                 
                 infoPtr->TextColor[0] = GetSysColor(COLOR_GRAYTEXT);
                 infoPtr->TextColor[1] = GetSysColor(COLOR_WINDOWTEXT);
@@ -1717,7 +1880,7 @@ CheckListWndProc(IN HWND hwnd,
                     infoPtr->HoverTime = HOVER_DEFAULT;
                 }
 
-                if (IsThemeActive())
+                if (IsAppThemed())
                 {
                     infoPtr->ThemeHandle = OpenThemeData(infoPtr->hSelf,
                                                          L"BUTTON");
