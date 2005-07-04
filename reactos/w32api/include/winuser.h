@@ -1316,7 +1316,24 @@ extern "C" {
 #define WM_CANCELMODE 31
 #define WM_CAPTURECHANGED 533
 #define WM_CHANGECBCHAIN 781
+
+#if (WINVER >= 0x0500)
 #define WM_CHANGEUISTATE 295
+#define WM_UPDATEUISTATE 296
+#define WM_QUERYUISTATE 297
+
+#define UIS_SET 1
+#define UIS_CLEAR 2
+#define UIS_INITIALIZE 3
+
+#define UISF_HIDEFOCUS 0x1
+#define UISF_HIDEACCEL 0x2
+#if (WINVER >= 0x0501)
+#define UISF_ACTIVE 0x4
+#endif
+
+#endif
+
 #define WM_CHAR 258
 #define WM_CHARTOITEM 47
 #define WM_CHILDACTIVATE 34

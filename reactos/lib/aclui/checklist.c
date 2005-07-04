@@ -50,6 +50,7 @@ typedef struct _CHECKLISTWND
    PCHECKITEM FocusedCheckItem;
    UINT FocusedCheckItemBox;
    BOOL FocusedPushed;
+   BOOL FocusVisible;
    
    COLORREF TextColor[2];
    UINT CheckBoxLeft[2];
@@ -840,7 +841,7 @@ PaintControl(IN PCHECKLISTWND infoPtr,
                                  ((Item->State & CIS_ALLOW) ? DFCS_CHECKED : 0) |
                                  (IsPushed ? DFCS_PUSHED : 0));
             }
-            if (Item == infoPtr->FocusedCheckItem &&
+            if (Item == infoPtr->FocusedCheckItem && infoPtr->FocusVisible &&
                 infoPtr->HasFocus &&
                 infoPtr->FocusedCheckItemBox != CLB_DENY)
             {
@@ -895,7 +896,7 @@ PaintControl(IN PCHECKLISTWND infoPtr,
                                  ((Item->State & CIS_DENY) ? DFCS_CHECKED : 0) |
                                  (IsPushed ? DFCS_PUSHED : 0));
             }
-            if (infoPtr->HasFocus &&
+            if (infoPtr->HasFocus && infoPtr->FocusVisible &&
                 Item == infoPtr->FocusedCheckItem &&
                 infoPtr->FocusedCheckItemBox == CLB_DENY)
             {
@@ -995,8 +996,8 @@ UpdateCheckItemBox(IN PCHECKLISTWND infoPtr,
 
                 rcUpdate.left = rcClient.left + infoPtr->CheckBoxLeft[ItemBox] - (infoPtr->ItemHeight / 2);
                 rcUpdate.right = rcUpdate.left + infoPtr->ItemHeight;
-                rcUpdate.top = ((Index - VisibleFirst) * infoPtr->ItemHeight) + CI_TEXT_MARGIN_HEIGHT;
-                rcUpdate.bottom = rcUpdate.top + infoPtr->ItemHeight - (2 * CI_TEXT_MARGIN_HEIGHT);
+                rcUpdate.top = ((Index - VisibleFirst) * infoPtr->ItemHeight);
+                rcUpdate.bottom = rcUpdate.top + infoPtr->ItemHeight;
 
                 RedrawWindow(infoPtr->hSelf,
                              &rcUpdate,
@@ -1727,6 +1728,15 @@ CheckListWndProc(IN HWND hwnd,
                                                        Shift,
                                                        &NewFocusBox);
 
+                        if (!infoPtr->FocusVisible)
+                        {
+                            /* change the UI status */
+                            SendMessage(GetAncestor(hwnd, GA_ROOT),
+                                        WM_CHANGEUISTATE,
+                                        MAKEWPARAM(UIS_INITIALIZE, UISF_HIDEFOCUS),
+                                        0);
+                        }
+
                         ChangeCheckItemFocus(infoPtr,
                                              NewFocus,
                                              NewFocusBox);
@@ -1852,6 +1862,35 @@ CheckListWndProc(IN HWND hwnd,
                           TRUE);
             break;
         }
+        
+        case WM_UPDATEUISTATE:
+        {
+            BOOL OldFocusVisible = infoPtr->FocusVisible;
+            
+            switch(LOWORD(wParam))
+            {
+                case UIS_CLEAR:
+                {
+                    infoPtr->FocusVisible = (HIWORD(wParam) & UISF_HIDEFOCUS);
+                    break;
+                }
+                case UIS_SET:
+                case UIS_INITIALIZE:
+                {
+                    infoPtr->FocusVisible = !(HIWORD(wParam) & UISF_HIDEFOCUS);
+                    break;
+                }
+            }
+            
+            if (infoPtr->FocusVisible != OldFocusVisible &&
+                infoPtr->FocusedCheckItem != NULL)
+            {
+                UpdateCheckItemBox(infoPtr,
+                                   infoPtr->FocusedCheckItem,
+                                   infoPtr->FocusedCheckItemBox);
+            }
+            break;
+        }
 
         case WM_CREATE:
         {
@@ -1908,6 +1947,11 @@ CheckListWndProc(IN HWND hwnd,
                     infoPtr->ThemeHandle = NULL;
                 }
 #endif
+
+                infoPtr->FocusVisible = !(SendMessage(hwnd,
+                                                      WM_QUERYUISTATE,
+                                                      0,
+                                                      0) & UISF_HIDEFOCUS);
             }
             else
             {
