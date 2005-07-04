@@ -11,15 +11,9 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Class\{36FC9E60-C465-11CF-8056-4445535400
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E965-E325-11CE-BFC1-08002BE10318}",,0x00000000,"DVD/CD-ROM drives"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E965-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"CDROM"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}","EnumPropPages32",0x00000000,"MmSys.Cpl,MediaPropPageProvider"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E965-E325-11CE-BFC1-08002BE10318}","EnumPropPages32",0x00000000,"MmSys.Cpl,MediaPropPageProvider"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E965-E325-11CE-BFC1-08002BE10318}","Icon",0x00000000,"-20"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E965-E325-11CE-BFC1-08002BE10318}","NoInstallClass",0x00000000,"1"
-
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Adapters"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"Net"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}","EnumPropPages32",0x00000000,"NetCfgx.dll,NetPropPageProvider"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}","Icon",0x00000000,"-5"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}","Installer32",0x00000000,"NetCfgx.dll,NetClassInstaller"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E973-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Client"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E973-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"NetClient"
@@ -80,7 +74,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000807","Layout Text",0
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Adapters"
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"Net"
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E973-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Client"
-HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E973-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"Net"
+HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E973-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"NetClient"
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E974-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Service"
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E974-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"NetService"
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Protocol"
@@ -594,6 +588,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","Group",0x00000000,"Keyboard C
 HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","ImagePath",0x00020000,"system32\drivers\kbdclass.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BFC1-08002BE10318}","UpperFilters",0x00010000,"kbdclass"
 
 ; Serial port enumerator
 HKLM,"SYSTEM\CurrentControlSet\Services\serenum","ErrorControl",0x00010001,0x00000001
@@ -651,12 +646,16 @@ HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","ImagePath",0x00020000,"system32\drivers\mpu401.sys"
 
-; Mouse driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Mouse","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Mouse","Group",0x00000000,"Pointer Class"
-HKLM,"SYSTEM\CurrentControlSet\Services\Mouse","ImagePath",0x00020000,"system32\drivers\mouclass.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Mouse","Start",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Mouse","Type",0x00010001,0x00000001
+; Mouse class driver
+HKLM,"SYSTEM\CurrentControlSet\Services\mouclass","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\mouclass","Group",0x00000000,"Pointer Class"
+HKLM,"SYSTEM\CurrentControlSet\Services\mouclass","ImagePath",0x00020000,"system32\drivers\mouclass.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\mouclass","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\mouclass","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\mouclass\Parameters","ConnectMultiplePorts",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\mouclass\Parameters","MouseDataQueueSize",0x00010001,0x00000064
+HKLM,"SYSTEM\CurrentControlSet\Services\mouclass\Parameters","PointerDeviceBaseName",0x00000000,"PointerClass"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96F-E325-11CE-BFC1-08002BE10318}","UpperFilters",0x00010000,"mouclass"
 
 ; Mailslot filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","ErrorControl",0x00010001,0x00000000
@@ -883,12 +882,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","ImagePath",0x00020000,"system
 HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","Type",0x00010001,0x00000001
 ;hard coded values for some serial mice
-HKLM,"SYSTEM\CurrentControlSet\Enum\*PNP0F01","Service",0x0000000,"sermouse"
-HKLM,"SYSTEM\CurrentControlSet\Enum\*PNP0F01","ClassGUID",0x0000000,"{4D36E96F-E325-11CE-BFC1-08002BE10318}"
-HKLM,"SYSTEM\CurrentControlSet\Enum\*PNP0F08","Service",0x0000000,"sermouse"
-HKLM,"SYSTEM\CurrentControlSet\Enum\*PNP0F08","ClassGUID",0x0000000,"{4D36E96F-E325-11CE-BFC1-08002BE10318}"
-HKLM,"SYSTEM\CurrentControlSet\Enum\*PNP0F09","Service",0x0000000,"sermouse"
-HKLM,"SYSTEM\CurrentControlSet\Enum\*PNP0F09","ClassGUID",0x0000000,"{4D36E96F-E325-11CE-BFC1-08002BE10318}"
+HKLM,"SYSTEM\CurrentControlSet\Enum\Serenum\Mouse\0000","Service",0x0000000,"sermouse"
+HKLM,"SYSTEM\CurrentControlSet\Enum\Serenum\Mouse\0000","ClassGUID",0x0000000,"{4D36E96F-E325-11CE-BFC1-08002BE10318}"
 
 ; TCP/IP driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","ErrorControl",0x00010001,0x00000001
