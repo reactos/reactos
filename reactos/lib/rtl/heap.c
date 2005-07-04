@@ -937,7 +937,7 @@ void DumpStackFrames ( PULONG Frame, ULONG FrameCount )
 	}
 	while ( Frame != 0 && (ULONG)Frame != 0xDEADBEEF && (ULONG)Frame != 0xcdcdcdcd && (ULONG)Frame != 0xcccccccc && i++ < FrameCount )
 	{
-		DbgPrint("<%X>", (PVOID)Frame[1]);
+		DbgPrint("<%p>", (PVOID)Frame[1]);
 		if (Frame[1] == 0xdeadbeef)
 		    break;
 		Frame = (PULONG)Frame[0];

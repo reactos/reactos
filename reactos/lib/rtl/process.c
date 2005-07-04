@@ -35,7 +35,7 @@ RtlpMapFile(PUNICODE_STRING ImageFileName,
 
    RtlDeNormalizeProcessParams (Ppb);
 
-//   DbgPrint("ImagePathName %x\n", Ppb->ImagePathName.Buffer);
+/*   DbgPrint("ImagePathName 0x%p\n", Ppb->ImagePathName.Buffer); */
 
    InitializeObjectAttributes(&ObjectAttributes,
 			      ImageFileName,

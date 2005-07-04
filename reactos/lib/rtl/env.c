@@ -251,7 +251,7 @@ RtlSetCurrentEnvironment(PWSTR NewEnvironment,
 {
    PVOID EnvPtr;
 
-   DPRINT("NewEnvironment %x OldEnvironment %x\n",
+   DPRINT("NewEnvironment 0x%p OldEnvironment 0x%p\n",
           NewEnvironment, OldEnvironment);
 
    RtlAcquirePebLock();

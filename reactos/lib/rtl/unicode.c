@@ -516,7 +516,7 @@ RtlInitUnicodeString(IN OUT PUNICODE_STRING DestinationString,
 {
    ULONG DestSize;
 
-   DPRINT("RtlInitUnicodeString(DestinationString %x, SourceString %x)\n",
+   DPRINT("RtlInitUnicodeString(DestinationString 0x%p, SourceString 0x%p)\n",
           DestinationString,
           SourceString);
 
