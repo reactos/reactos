@@ -20,7 +20,7 @@
 
 #include "config.h"
 #include "wine/port.h"
- 
+
 #include <stdarg.h>
 
 #include "windef.h"
@@ -1302,30 +1302,26 @@ static HKEY CreateClassKey(HINF hInf)
 			   MAX_PATH - 1,
 			   &RequiredSize))
     {
-	return INVALID_HANDLE_VALUE;
+        return INVALID_HANDLE_VALUE;
     }
 
     lstrcpyW(FullBuffer, ControlClass);
     lstrcatW(FullBuffer, Buffer);
 
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-		      FullBuffer,
-		      0,
-		      KEY_ALL_ACCESS,
-		      &hClassKey))
-    {
-	if (!SetupGetLineTextW(NULL,
+
+    if (!SetupGetLineTextW(NULL,
 			       hInf,
 			       Version,
 			       Class,
 			       Buffer,
 			       MAX_PATH,
 			       &RequiredSize))
-	{
-	    return INVALID_HANDLE_VALUE;
-	}
+    {
+        RegDeleteKeyW(HKEY_LOCAL_MACHINE, FullBuffer);
+        return INVALID_HANDLE_VALUE;
+    }
 
-	if (RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+    if (ERROR_SUCCESS != RegCreateKeyExW(HKEY_LOCAL_MACHINE,
 			    FullBuffer,
 			    0,
 			    NULL,
@@ -1333,24 +1329,22 @@ static HKEY CreateClassKey(HINF hInf)
 			    KEY_ALL_ACCESS,
 			    NULL,
 			    &hClassKey,
-			    NULL))
-	{
-	    return INVALID_HANDLE_VALUE;
-	}
-
+             NULL))
+    {
+        RegDeleteKeyW(HKEY_LOCAL_MACHINE, FullBuffer);
+        return INVALID_HANDLE_VALUE;
     }
 
-    if (RegSetValueExW(hClassKey,
+    if (ERROR_SUCCESS != RegSetValueExW(hClassKey,
 		       Class,
 		       0,
 		       REG_SZ,
 		       (LPBYTE)Buffer,
-		       RequiredSize * sizeof(WCHAR)))
+             RequiredSize * sizeof(WCHAR)))
     {
-	RegCloseKey(hClassKey);
-	RegDeleteKeyW(HKEY_LOCAL_MACHINE,
-		      FullBuffer);
-	return INVALID_HANDLE_VALUE;
+        RegCloseKey(hClassKey);
+        RegDeleteKeyW(HKEY_LOCAL_MACHINE, FullBuffer);
+        return INVALID_HANDLE_VALUE;
     }
 
     return hClassKey;
@@ -1397,6 +1391,7 @@ BOOL WINAPI SetupDiInstallClassW(
 	SetupCloseInfFile(hInf);
 	return FALSE;
     }
+    RegCloseKey(hClassKey);
 
 
     /* Try to append a layout file */
