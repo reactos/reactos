@@ -213,7 +213,7 @@ FrLdrSetupPae(ULONG Magic)
     Ke386SetCr0(Ke386GetCr0() | X86_CR0_PG | X86_CR0_WP);
 
     /* Jump to Kernel */
-    PagedJump = (ASMCODE)KernelEntryPoint;
+    PagedJump = (ASMCODE)(PVOID)(KernelEntryPoint);
     PagedJump(Magic, &LoaderBlock);
 }
 

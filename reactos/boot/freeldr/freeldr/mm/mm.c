@@ -72,7 +72,7 @@ PVOID MmAllocateMemory(ULONG MemorySize)
 	MemorySize = ROUND_UP(MemorySize, 4);
 	if (MemorySize <= SubAllocationRest)
 	{
-		MemPointer = SubAllocationPage + MM_PAGE_SIZE - SubAllocationRest;
+		MemPointer = (PVOID)((ULONG_PTR)SubAllocationPage + MM_PAGE_SIZE - SubAllocationRest);
 		SubAllocationRest -= MemorySize;
 		return MemPointer;
 	}

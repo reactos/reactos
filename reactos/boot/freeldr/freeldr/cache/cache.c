@@ -164,14 +164,14 @@ BOOL CacheReadDiskSectors(ULONG DiskNumber, ULONG StartSector, ULONG SectorCount
 		// Copy the portion requested into the buffer
 		//
 		RtlCopyMemory(Buffer,
-			(CacheBlock->BlockData + (SectorOffsetInStartBlock * CacheManagerDrive.BytesPerSector)),
+			(PVOID)((ULONG_PTR)CacheBlock->BlockData + (SectorOffsetInStartBlock * CacheManagerDrive.BytesPerSector)),
 			(CopyLengthInStartBlock * CacheManagerDrive.BytesPerSector));
 		DbgPrint((DPRINT_CACHE, "1 - RtlCopyMemory(0x%x, 0x%x, %d)\n", Buffer, (CacheBlock->BlockData + (SectorOffsetInStartBlock * CacheManagerDrive.BytesPerSector)), (CopyLengthInStartBlock * CacheManagerDrive.BytesPerSector)));
 
 		//
 		// Update the buffer address
 		//
-		Buffer += (CopyLengthInStartBlock * CacheManagerDrive.BytesPerSector);
+		Buffer = (PVOID)((ULONG_PTR)Buffer + (CopyLengthInStartBlock * CacheManagerDrive.BytesPerSector));
 
 		//
 		// Update the block count
@@ -204,7 +204,7 @@ BOOL CacheReadDiskSectors(ULONG DiskNumber, ULONG StartSector, ULONG SectorCount
 		//
 		// Update the buffer address
 		//
-		Buffer += CacheManagerDrive.BlockSize * CacheManagerDrive.BytesPerSector;
+		Buffer = (PVOID)((ULONG_PTR)Buffer + (CacheManagerDrive.BlockSize * CacheManagerDrive.BytesPerSector));
 
 		//
 		// Update the block count
@@ -237,7 +237,7 @@ BOOL CacheReadDiskSectors(ULONG DiskNumber, ULONG StartSector, ULONG SectorCount
 		//
 		// Update the buffer address
 		//
-		Buffer += SectorOffsetInEndBlock * CacheManagerDrive.BytesPerSector;
+		Buffer = (PVOID)((ULONG_PTR)Buffer + (SectorOffsetInEndBlock * CacheManagerDrive.BytesPerSector));
 
 		//
 		// Update the block count

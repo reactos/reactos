@@ -298,7 +298,7 @@ BOOL Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize
 
 	for (CurrentOffset=0; CurrentOffset<DirectorySize; )
 	{
-		CurrentDirectoryEntry = (PEXT2_DIR_ENTRY)(DirectoryBuffer + CurrentOffset);
+		CurrentDirectoryEntry = (PEXT2_DIR_ENTRY)((ULONG_PTR)DirectoryBuffer + CurrentOffset);
 
 		if (CurrentDirectoryEntry->rec_len == 0)
 		{
@@ -401,7 +401,7 @@ BOOL Ext2ReadFile(FILE *FileHandle, ULONGLONG BytesToRead, ULONGLONG* BytesRead,
 		DbgPrint((DPRINT_FILESYSTEM, "Reading fast symbolic link data\n"));
 
 		// Copy the data from the link
-		RtlCopyMemory(Buffer, (PVOID)(Ext2FileInfo->Inode.i_block) + Ext2FileInfo->FilePointer, BytesToRead);
+		RtlCopyMemory(Buffer, (PVOID)((ULONG_PTR)Ext2FileInfo->FilePointer + Ext2FileInfo->Inode.i_block), BytesToRead);
 
 		if (BytesRead != NULL)
 		{
@@ -466,7 +466,7 @@ BOOL Ext2ReadFile(FILE *FileHandle, ULONGLONG BytesToRead, ULONGLONG* BytesRead,
 		}
 		BytesToRead -= LengthInBlock;
 		Ext2FileInfo->FilePointer += LengthInBlock;
-		Buffer += LengthInBlock;
+		Buffer = (PVOID)((ULONG_PTR)Buffer + LengthInBlock);
 	}
 
 	//
@@ -497,7 +497,7 @@ BOOL Ext2ReadFile(FILE *FileHandle, ULONGLONG BytesToRead, ULONGLONG* BytesRead,
 			}
 			BytesToRead -= Ext2BlockSizeInBytes;
 			Ext2FileInfo->FilePointer += Ext2BlockSizeInBytes;
-			Buffer += Ext2BlockSizeInBytes;
+			Buffer = (PVOID)((ULONG_PTR)Buffer + Ext2BlockSizeInBytes);
 			NumberOfBlocks--;
 		}
 	}
@@ -523,7 +523,7 @@ BOOL Ext2ReadFile(FILE *FileHandle, ULONGLONG BytesToRead, ULONGLONG* BytesRead,
 		}
 		Ext2FileInfo->FilePointer += BytesToRead;
 		BytesToRead -= BytesToRead;
-		Buffer += BytesToRead;
+		Buffer = (PVOID)((ULONG_PTR)Buffer + (ULONG_PTR)BytesToRead);
 	}
 
 	return TRUE;
@@ -878,7 +878,7 @@ BOOL Ext2ReadPartialBlock(ULONG BlockNumber, ULONG StartingOffset, ULONG Length,
 		return FALSE;
 	}
 
-	memcpy(Buffer, ((PVOID)FILESYSBUFFER + StartingOffset), Length);
+	memcpy(Buffer, (PVOID)((ULONG_PTR)FILESYSBUFFER + StartingOffset), Length);
 
 	return TRUE;
 }

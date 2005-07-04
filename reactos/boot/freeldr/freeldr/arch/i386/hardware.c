@@ -363,7 +363,7 @@ DetectPnpBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
   FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].ShareDisposition =
     CmResourceShareUndetermined;
 
-  Ptr = (char *)(((PVOID)&FullResourceDescriptor->PartialResourceList.PartialDescriptors[0]) +
+  Ptr = (char *)(((ULONG_PTR)&FullResourceDescriptor->PartialResourceList.PartialDescriptors[0]) +
 		 sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
 
   /* Set instalation check data */
@@ -460,7 +460,7 @@ SetHarddiskConfigurationData(FRLDRHKEY DiskKey,
     sizeof(CM_DISK_GEOMETRY_DEVICE_DATA);
 
   /* Get pointer to geometry data */
-  DiskGeometry = ((PVOID)FullResourceDescriptor) + sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
+  DiskGeometry = (PVOID)(((ULONG_PTR)FullResourceDescriptor) + sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
 
   /* Get the disk geometry */
   ExtGeometry.Size = sizeof(EXTENDED_GEOMETRY);
@@ -648,7 +648,7 @@ DetectBiosDisks(FRLDRHKEY SystemKey,
     sizeof(CM_INT13_DRIVE_PARAMETER) * DiskCount;
 
   /* Get harddisk Int13 geometry data */
-  Int13Drives = ((PVOID)FullResourceDescriptor) + sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
+  Int13Drives = (PVOID)(((ULONG_PTR)FullResourceDescriptor) + sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
   for (i = 0; i < DiskCount; i++)
     {
       if (MachDiskGetDriveGeometry(0x80 + i, &Geometry))
@@ -744,7 +744,7 @@ GetInt1eTable(VOID)
   PUSHORT SegPtr = (PUSHORT)0x7A;
   PUSHORT OfsPtr = (PUSHORT)0x78;
 
-  return (PVOID)(((ULONG)(*SegPtr)) << 4) + (ULONG)(*OfsPtr);
+  return (PVOID)((ULONG_PTR)(((ULONG)(*SegPtr)) << 4) + (ULONG)(*OfsPtr));
 }
 
 
@@ -814,7 +814,7 @@ DetectBiosFloppyPeripheral(FRLDRHKEY ControllerKey)
     PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
     PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(CM_FLOPPY_DEVICE_DATA);
 
-    FloppyData = ((PVOID)FullResourceDescriptor) + sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
+    FloppyData = (PVOID)(((ULONG_PTR)FullResourceDescriptor) + sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
     FloppyData->Version = 2;
     FloppyData->Revision = 0;
     FloppyData->MaxDensity = MaxDensity[FloppyType];
@@ -1691,7 +1691,7 @@ DetectKeyboardPeripheral(FRLDRHKEY ControllerKey)
     PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
     PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(CM_KEYBOARD_DEVICE_DATA);
 
-    KeyboardData = ((PVOID)FullResourceDescriptor) + sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
+    KeyboardData = (PVOID)(((ULONG_PTR)FullResourceDescriptor) + sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
     KeyboardData->Version = 0;
     KeyboardData->Revision = 0;
     KeyboardData->Type = 4;

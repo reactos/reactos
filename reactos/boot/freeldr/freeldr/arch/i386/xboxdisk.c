@@ -387,7 +387,7 @@ XboxDiskPolledRead(ULONG CommandPort,
       if (Junk == FALSE)
 	{
 	  IDEReadBlock(CommandPort, Buffer, IDE_SECTOR_BUF_SZ);
-	  Buffer += IDE_SECTOR_BUF_SZ;
+	  Buffer = (PVOID)((ULONG_PTR)Buffer + IDE_SECTOR_BUF_SZ);
 	}
       else
 	{

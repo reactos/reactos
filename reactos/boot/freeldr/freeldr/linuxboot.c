@@ -346,7 +346,7 @@ BOOL LinuxReadSetupSector(PFILE LinuxKernelFile)
 
 	// Read in the rest of the linux setup sectors
 	FsSetFilePointer(LinuxKernelFile, 1024);
-	if (!FsReadFile(LinuxKernelFile, SetupSectorSize - 512, NULL, ((PVOID)LinuxSetupSector) + 512))
+	if (!FsReadFile(LinuxKernelFile, SetupSectorSize - 512, NULL, (PVOID)((ULONG_PTR)LinuxSetupSector + 512)))
 	{
 		return FALSE;
 	}
@@ -400,7 +400,7 @@ BOOL LinuxReadKernel(PFILE LinuxKernelFile)
 		}
 
 		BytesLoaded += LINUX_READ_CHUNK_SIZE;
-		LoadAddress += LINUX_READ_CHUNK_SIZE;
+		LoadAddress = (PVOID)((ULONG_PTR)LoadAddress + LINUX_READ_CHUNK_SIZE);
 
 		UiDrawProgressBarCenter(BytesLoaded, LinuxKernelSize + LinuxInitrdSize, LinuxBootDescription);
 	}
@@ -491,7 +491,7 @@ BOOL LinuxReadInitrd(PFILE LinuxInitrdFile)
 		}
 
 		BytesLoaded += LINUX_READ_CHUNK_SIZE;
-		LinuxInitrdLoadAddress += LINUX_READ_CHUNK_SIZE;
+		LinuxInitrdLoadAddress = (PVOID)((ULONG_PTR)LinuxInitrdLoadAddress + LINUX_READ_CHUNK_SIZE);
 
 		UiDrawProgressBarCenter(BytesLoaded + LinuxKernelSize, LinuxInitrdSize + LinuxKernelSize, LinuxBootDescription);
 	}

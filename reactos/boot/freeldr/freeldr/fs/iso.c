@@ -81,12 +81,12 @@ static BOOL IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Directo
 	while (TRUE)
 	{
 		Offset = Offset + Record->RecordLength;
-		Record = (PDIR_RECORD)(DirectoryBuffer + Offset);
+		Record = (PDIR_RECORD)((ULONG_PTR)DirectoryBuffer + Offset);
 
 		if (Record->RecordLength == 0)
 		{
 			Offset = ROUND_UP(Offset, SECTORSIZE);
-			Record = (PDIR_RECORD)(DirectoryBuffer + Offset);
+			Record = (PDIR_RECORD)((ULONG_PTR)DirectoryBuffer + Offset);
 		}
 
 		if (Offset >= DirectoryLength)
@@ -159,7 +159,7 @@ static PVOID IsoBufferDirectory(ULONG DirectoryStartSector, ULONG DirectoryLengt
 	//
 	// Now read directory contents into DirectoryBuffer
 	//
-	for (i = 0, Ptr = DirectoryBuffer; i < SectorCount; i++, Ptr += SECTORSIZE)
+	for (i = 0, Ptr = DirectoryBuffer; i < SectorCount; i++, Ptr = (PVOID)((ULONG_PTR)Ptr + SECTORSIZE))
 	{
 		if (!MachDiskReadLogicalSectors(IsoDriveNumber, DirectoryStartSector + i, 1, (PVOID)DISKREADBUFFER))
 		{
@@ -377,14 +377,14 @@ BOOL IsoReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Bu
 		{
 			return FALSE;
 		}
-		RtlCopyMemory(Buffer, ((PVOID)DISKREADBUFFER + OffsetInSector), LengthInSector);
+		RtlCopyMemory(Buffer, (PVOID)((ULONG_PTR)DISKREADBUFFER + OffsetInSector), LengthInSector);
 		if (BytesRead != NULL)
 		{
 			*BytesRead += LengthInSector;
 		}
 		BytesToRead -= LengthInSector;
 		IsoFileInfo->FilePointer += LengthInSector;
-		Buffer += LengthInSector;
+		Buffer = (PVOID)((ULONG_PTR)Buffer + LengthInSector);
 	}
 
 	//
@@ -417,7 +417,7 @@ BOOL IsoReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Bu
 			}
 			BytesToRead -= SECTORSIZE;
 			IsoFileInfo->FilePointer += SECTORSIZE;
-			Buffer += SECTORSIZE;
+			Buffer = (PVOID)((ULONG_PTR)Buffer + SECTORSIZE);
 		}
 	}
 
@@ -442,7 +442,7 @@ BOOL IsoReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Bu
 		}
 		IsoFileInfo->FilePointer += BytesToRead;
 		BytesToRead -= BytesToRead;
-		Buffer += BytesToRead;
+		Buffer = (PVOID)((ULONG_PTR)Buffer + BytesToRead);
 	}
 
 	DbgPrint((DPRINT_FILESYSTEM, "IsoReadFile() done\n"));
