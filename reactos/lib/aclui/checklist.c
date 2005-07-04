@@ -310,17 +310,16 @@ PtToCheckItemBox(IN PCHECKLISTWND infoPtr,
         if (DirectlyInCheckBox != NULL)
         {
             INT y = ppt->y % infoPtr->ItemHeight;
+            INT cxBox = infoPtr->ItemHeight - (2 * CI_TEXT_MARGIN_HEIGHT);
             
             if ((y >= CI_TEXT_MARGIN_HEIGHT &&
                  y < infoPtr->ItemHeight - CI_TEXT_MARGIN_HEIGHT) &&
 
-                (((ppt->x >= (infoPtr->CheckBoxLeft[CLB_ALLOW] - (infoPtr->ItemHeight / 2))) &&
-                  (ppt->x < (infoPtr->CheckBoxLeft[CLB_ALLOW] - (infoPtr->ItemHeight / 2) +
-                             infoPtr->ItemHeight - (2 * CI_TEXT_MARGIN_HEIGHT))))
+                (((ppt->x >= (infoPtr->CheckBoxLeft[CLB_ALLOW] - (cxBox / 2))) &&
+                  (ppt->x < (infoPtr->CheckBoxLeft[CLB_ALLOW] - (cxBox / 2) + cxBox)))
                  ||
-                 ((ppt->x >= (infoPtr->CheckBoxLeft[CLB_DENY] - (infoPtr->ItemHeight / 2))) &&
-                  (ppt->x < (infoPtr->CheckBoxLeft[CLB_DENY] - (infoPtr->ItemHeight / 2) +
-                             infoPtr->ItemHeight - (2 * CI_TEXT_MARGIN_HEIGHT))))))
+                 ((ppt->x >= (infoPtr->CheckBoxLeft[CLB_DENY] - (cxBox / 2))) &&
+                  (ppt->x < (infoPtr->CheckBoxLeft[CLB_DENY] - (cxBox / 2) + cxBox)))))
             {
                 *DirectlyInCheckBox = TRUE;
             }
@@ -446,6 +445,7 @@ UpdateControl(IN PCHECKLISTWND infoPtr,
     RECT rcClient;
     SCROLLINFO ScrollInfo;
     LONG Style;
+    INT VisibleItems;
     
     GetClientRect(infoPtr->hSelf,
                   &rcClient);
@@ -457,6 +457,18 @@ UpdateControl(IN PCHECKLISTWND infoPtr,
     ScrollInfo.nPage = ((rcClient.bottom - rcClient.top) + infoPtr->ItemHeight - 1) / infoPtr->ItemHeight;
     ScrollInfo.nPos = 0;
     ScrollInfo.nTrackPos = 0;
+    
+    VisibleItems = (rcClient.bottom - rcClient.top) / infoPtr->ItemHeight;
+    
+    if (ScrollInfo.nPage == VisibleItems && ScrollInfo.nMax > 0)
+    {
+        ScrollInfo.nMax--;
+    }
+
+    SetScrollInfo(infoPtr->hSelf,
+                  SB_VERT,
+                  &ScrollInfo,
+                  TRUE);
 
     if (AllowChangeStyle)
     {
@@ -464,26 +476,21 @@ UpdateControl(IN PCHECKLISTWND infoPtr,
                               GWL_STYLE);
 
         /* determine whether the vertical scrollbar has to be visible or not */
-        if (ScrollInfo.nMax > ScrollInfo.nPage &&
+        if (ScrollInfo.nMax > VisibleItems &&
             !(Style & WS_VSCROLL))
         {
             SetWindowLong(infoPtr->hSelf,
                           GWL_STYLE,
                           Style | WS_VSCROLL);
         }
-        else if (ScrollInfo.nMax < ScrollInfo.nPage &&
-                 Style & WS_VSCROLL)
+        else if (ScrollInfo.nMax <= VisibleItems &&
+                 (Style & WS_VSCROLL))
         {
             SetWindowLong(infoPtr->hSelf,
                           GWL_STYLE,
                           Style & ~WS_VSCROLL);
         }
     }
-    
-    SetScrollInfo(infoPtr->hSelf,
-                  SB_VERT,
-                  &ScrollInfo,
-                  TRUE);
 
     RedrawWindow(infoPtr->hSelf,
                  NULL,
