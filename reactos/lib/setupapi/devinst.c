@@ -1391,7 +1391,7 @@ BOOL WINAPI SetupDiInstallClassW(
 	SetupCloseInfFile(hInf);
 	return FALSE;
     }
-    RegCloseKey(hClassKey);
+
 
 
     /* Try to append a layout file */
@@ -1414,6 +1414,7 @@ BOOL WINAPI SetupDiInstallClassW(
 	if (FileQueue == INVALID_HANDLE_VALUE)
 	{
 	    SetupCloseInfFile(hInf);
+       RegCloseKey(hClassKey);
 	    return FALSE;
 	}
 
@@ -1441,6 +1442,7 @@ BOOL WINAPI SetupDiInstallClassW(
 
     SetupCloseInfFile(hInf);
 
+    RegCloseKey(hClassKey);
     return TRUE;
 }
 
