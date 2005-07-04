@@ -1865,29 +1865,19 @@ CheckListWndProc(IN HWND hwnd,
         
         case WM_UPDATEUISTATE:
         {
-            BOOL OldFocusVisible = infoPtr->FocusVisible;
-            
-            switch(LOWORD(wParam))
+            if (HIWORD(wParam) & UISF_HIDEFOCUS)
             {
-                case UIS_CLEAR:
+                BOOL OldFocusVisible = infoPtr->FocusVisible;
+                
+                infoPtr->FocusVisible = (LOWORD(wParam) == UIS_CLEAR);
+
+                if (infoPtr->FocusVisible != OldFocusVisible &&
+                    infoPtr->FocusedCheckItem != NULL)
                 {
-                    infoPtr->FocusVisible = (HIWORD(wParam) & UISF_HIDEFOCUS);
-                    break;
+                    UpdateCheckItemBox(infoPtr,
+                                       infoPtr->FocusedCheckItem,
+                                       infoPtr->FocusedCheckItemBox);
                 }
-                case UIS_SET:
-                case UIS_INITIALIZE:
-                {
-                    infoPtr->FocusVisible = !(HIWORD(wParam) & UISF_HIDEFOCUS);
-                    break;
-                }
-            }
-            
-            if (infoPtr->FocusVisible != OldFocusVisible &&
-                infoPtr->FocusedCheckItem != NULL)
-            {
-                UpdateCheckItemBox(infoPtr,
-                                   infoPtr->FocusedCheckItem,
-                                   infoPtr->FocusedCheckItemBox);
             }
             break;
         }
