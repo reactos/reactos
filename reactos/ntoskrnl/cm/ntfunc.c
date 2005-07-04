@@ -122,7 +122,7 @@ CmpFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 	CurrentHeader = BODY_TO_HEADER(CurrentObject);
 
 	DPRINT("Current ObjectType %wZ\n",
-	       &CurrentHeader->Type->TypeName);
+	       &CurrentHeader->Type->Name);
 
 	if (CurrentHeader->Type->TypeInfo.ParseProcedure == NULL)
 	  {

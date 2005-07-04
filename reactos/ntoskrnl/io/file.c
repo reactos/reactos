@@ -69,7 +69,7 @@ IopCreateFile(PVOID ObjectBody,
       ParentObjectType != IoFileObjectType)
     {
       DPRINT("Parent [%wZ] is a %S which is neither a file type nor a device type ; remaining path = %S\n",
-             &BODY_TO_HEADER(Parent)->NameInfo->Name,
+             &HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(Parent))->Name,
              BODY_TO_HEADER(Parent)->Type->Name.Buffer,
              RemainingPath);
       return(STATUS_UNSUCCESSFUL);
@@ -399,7 +399,7 @@ IopQueryNameFile(PVOID ObjectBody,
                  ULONG Length,
                  PULONG ReturnLength)
 {
-    PVOID LocalInfo;
+    POBJECT_NAME_INFORMATION LocalInfo;
     PFILE_OBJECT FileObject;
     ULONG LocalReturnLength;
     NTSTATUS Status;
@@ -428,7 +428,7 @@ IopQueryNameFile(PVOID ObjectBody,
     
     /* Write Device Path */
     Status = RtlAppendUnicodeStringToString(&ObjectNameInfo->Name,
-                                            &((POBJECT_NAME_INFORMATION)LocalInfo)->Name);
+                                            &(LocalInfo)->Name);
 
     /* Query the File name */
     Status = IoQueryFileInformation(FileObject,
