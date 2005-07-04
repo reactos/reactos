@@ -1593,7 +1593,7 @@ CheckListWndProc(IN HWND hwnd,
                         ChangeFocus = TRUE;
                     }
                     
-                    if (ChangeFocus && GetCapture() == NULL &&
+                    if (InCheckBox && ChangeFocus && GetCapture() == NULL &&
                         (uMsg == WM_LBUTTONDOWN || uMsg == WM_LBUTTONDBLCLK))
                     {
                         infoPtr->FocusedPushed = TRUE;
