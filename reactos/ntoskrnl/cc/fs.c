@@ -134,7 +134,7 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
   LIST_ENTRY FreeListHead;
   NTSTATUS Status;
 
-  DPRINT("CcSetFileSizes(FileObject %x, FileSizes %x)\n",
+  DPRINT("CcSetFileSizes(FileObject 0x%p, FileSizes 0x%p)\n",
 	 FileObject, FileSizes);
   DPRINT("AllocationSize %d, FileSize %d, ValidDataLength %d\n",
          (ULONG)FileSizes->AllocationSize.QuadPart,
@@ -196,7 +196,7 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
         Status = CcRosInternalFreeCacheSegment(current);
         if (!NT_SUCCESS(Status))
         {
-           DPRINT1("CcRosInternalFreeCacheSegment failed, status = %x\n");
+           DPRINT1("CcRosInternalFreeCacheSegment failed, status = %x\n", Status);
 	   KEBUGCHECK(0);
         }
      }

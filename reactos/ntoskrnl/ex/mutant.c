@@ -40,7 +40,7 @@ STDCALL
 ExpDeleteMutant(PVOID ObjectBody)
 {
 
-    DPRINT("ExpDeleteMutant(ObjectBody %x)\n", ObjectBody);
+    DPRINT("ExpDeleteMutant(ObjectBody 0x%p)\n", ObjectBody);
 
     /* Make sure to release the Mutant */
     KeReleaseMutant((PKMUTANT)ObjectBody,
@@ -87,7 +87,7 @@ NtCreateMutant(OUT PHANDLE MutantHandle,
     NTSTATUS Status = STATUS_SUCCESS;
 
     PAGED_CODE();
-    DPRINT("NtCreateMutant(0x%x, 0x%x, 0x%x)\n", MutantHandle, DesiredAccess, ObjectAttributes);
+    DPRINT("NtCreateMutant(0x%p, 0x%x, 0x%p)\n", MutantHandle, DesiredAccess, ObjectAttributes);
 
     /* Check Output Safety */
     if(PreviousMode == UserMode) {
@@ -166,7 +166,7 @@ NtOpenMutant(OUT PHANDLE MutantHandle,
     NTSTATUS Status = STATUS_SUCCESS;
 
     PAGED_CODE();
-    DPRINT("NtOpenMutant(0x%x, 0x%x, 0x%x)\n", MutantHandle, DesiredAccess, ObjectAttributes);
+    DPRINT("NtOpenMutant(0x%p, 0x%x, 0x%p)\n", MutantHandle, DesiredAccess, ObjectAttributes);
 
     /* Check Output Safety */
     if(PreviousMode == UserMode) {
@@ -296,7 +296,7 @@ NtReleaseMutant(IN HANDLE MutantHandle,
 
     PreviousMode = ExGetPreviousMode();
 
-    DPRINT("NtReleaseMutant(MutantHandle 0%x PreviousCount 0%x)\n",
+    DPRINT("NtReleaseMutant(MutantHandle 0x%p PreviousCount 0x%p)\n",
             MutantHandle,
             PreviousCount);
 

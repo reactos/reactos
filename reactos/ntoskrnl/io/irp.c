@@ -142,12 +142,12 @@ IopCompleteRequest(PKAPC Apc,
     PKEVENT UserEvent;
     BOOLEAN SyncIrp;
 
-    if (Apc) DPRINT("IoSecondStageCompletition with APC: %x\n", Apc);
+    if (Apc) DPRINT("IoSecondStageCompletition with APC: 0x%p\n", Apc);
 
     /* Get data from the APC */
     FileObject = (PFILE_OBJECT)(*SystemArgument1);
     Irp = CONTAINING_RECORD(Apc, IRP, Tail.Apc);
-    DPRINT("IoSecondStageCompletition, %x\n", Irp);
+    DPRINT("IoSecondStageCompletition, 0x%p\n", Irp);
 
     /* Save the User Event */
     UserEvent = Irp->UserEvent;
@@ -560,9 +560,9 @@ IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
     PIO_STACK_LOCATION StackPtr;
     LOCK_OPERATION AccessType;
 
-    DPRINT("IoBuildAsynchronousFsdRequest(MajorFunction %x, DeviceObject %x, "
-            "Buffer %x, Length %x, StartingOffset %x, "
-            "IoStatusBlock %x\n",MajorFunction,DeviceObject,Buffer,Length,
+    DPRINT("IoBuildAsynchronousFsdRequest(MajorFunction %x, DeviceObject 0x%p, "
+            "Buffer 0x%p, Length %x, StartingOffset 0x%p, "
+            "IoStatusBlock 0x%p\n",MajorFunction,DeviceObject,Buffer,Length,
             StartingOffset,IoStatusBlock);
 
     /* Allocate IRP */
@@ -701,10 +701,10 @@ IoBuildDeviceIoControlRequest (ULONG IoControlCode,
     ULONG BufferLength;
     LOCK_OPERATION AccessType;
 
-    DPRINT("IoBuildDeviceIoRequest(IoControlCode %x, DeviceObject %x, "
-           "InputBuffer %x, InputBufferLength %x, OutputBuffer %x, "
+    DPRINT("IoBuildDeviceIoRequest(IoControlCode %x, DeviceObject 0x%p, "
+           "InputBuffer 0x%p, InputBufferLength %x, OutputBuffer 0x%p, "
            "OutputBufferLength %x, InternalDeviceIoControl %x "
-           "Event %x, IoStatusBlock %x\n",IoControlCode,DeviceObject,
+           "Event 0x%p, IoStatusBlock 0x%p\n",IoControlCode,DeviceObject,
            InputBuffer,InputBufferLength,OutputBuffer,OutputBufferLength,
            InternalDeviceIoControl,Event,IoStatusBlock);
 
@@ -901,9 +901,9 @@ IoBuildSynchronousFsdRequest(ULONG MajorFunction,
 {
     PIRP Irp;
 
-    DPRINT("IoBuildSynchronousFsdRequest(MajorFunction %x, DeviceObject %x, "
-           "Buffer %x, Length %x, StartingOffset %x, Event %x, "
-           "IoStatusBlock %x\n",MajorFunction,DeviceObject,Buffer,Length,
+    DPRINT("IoBuildSynchronousFsdRequest(MajorFunction %x, DeviceObject 0x%p, "
+           "Buffer 0x%p, Length %x, StartingOffset 0x%p, Event 0x%p, "
+           "IoStatusBlock 0x%p\n",MajorFunction,DeviceObject,Buffer,Length,
             StartingOffset,Event,IoStatusBlock);
 
     /* Do the big work to set up the IRP */
@@ -932,7 +932,7 @@ IoCancelIrp(PIRP Irp)
    KIRQL oldlvl;
    PDRIVER_CANCEL CancelRoutine;
 
-   DPRINT("IoCancelIrp(Irp %x)\n",Irp);
+   DPRINT("IoCancelIrp(Irp 0x%p)\n",Irp);
 
    IoAcquireCancelSpinLock(&oldlvl);
 
@@ -1060,7 +1060,7 @@ IofCallDriver(PDEVICE_OBJECT DeviceObject,
     PDRIVER_OBJECT DriverObject;
     PIO_STACK_LOCATION Param;
 
-    DPRINT("IofCallDriver(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
+    DPRINT("IofCallDriver(DeviceObject 0x%p, Irp 0x%p)\n",DeviceObject,Irp);
 
     /* Get the Driver Object */
     DriverObject = DeviceObject->DriverObject;
@@ -1071,7 +1071,7 @@ IofCallDriver(PDEVICE_OBJECT DeviceObject,
     /* Get the current one */
     Param = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT("IrpSp 0x%X\n", Param);
+    DPRINT("IrpSp 0x0x%p\n", Param);
 
     /* Get the Device Object */
     Param->DeviceObject = DeviceObject;
@@ -1105,7 +1105,7 @@ IofCompleteRequest(PIRP Irp,
     NTSTATUS Status;
     PMDL Mdl;
 
-    DPRINT("IofCompleteRequest(Irp %x, PriorityBoost %d) Event %x THread %x\n",
+    DPRINT("IofCompleteRequest(Irp 0x%p, PriorityBoost %d) Event 0x%p THread 0x%p\n",
             Irp,PriorityBoost, Irp->UserEvent, PsGetCurrentThread());
 
     ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
@@ -1244,7 +1244,7 @@ IofCompleteRequest(PIRP Irp,
     Mdl = Irp->MdlAddress;
     while (Mdl)
     {
-        DPRINT("Unlocking MDL: %x\n", Mdl);
+        DPRINT("Unlocking MDL: 0x%p\n", Mdl);
         MmUnlockPages(Mdl);
 	Mdl = Mdl->Next;
     }
@@ -1442,7 +1442,7 @@ IoInitializeIrp(PIRP Irp,
 {
     ASSERT(Irp != NULL);
 
-    DPRINT("IoInitializeIrp(StackSize %x, Irp %x)\n",StackSize, Irp);
+    DPRINT("IoInitializeIrp(StackSize %x, Irp 0x%p)\n",StackSize, Irp);
 
     /* Clear it */
     RtlZeroMemory(Irp, PacketSize);
@@ -1458,7 +1458,7 @@ IoInitializeIrp(PIRP Irp,
     /* Initialize the Thread List */
     InitializeListHead(&Irp->ThreadListEntry);
 
-    DPRINT("Irp->Tail.Overlay.CurrentStackLocation %x\n", Irp->Tail.Overlay.CurrentStackLocation);
+    DPRINT("Irp->Tail.Overlay.CurrentStackLocation 0x%p\n", Irp->Tail.Overlay.CurrentStackLocation);
 }
 
 /*
@@ -1556,7 +1556,7 @@ IoPageRead(PFILE_OBJECT FileObject,
     PIO_STACK_LOCATION StackPtr;
     PDEVICE_OBJECT DeviceObject;
 
-    DPRINT("IoPageRead(FileObject %x, Mdl %x)\n",
+    DPRINT("IoPageRead(FileObject 0x%p, Mdl 0x%p)\n",
            FileObject, Mdl);
 
     /* Get the Device Object */
@@ -1658,7 +1658,7 @@ IoSynchronousPageWrite(PFILE_OBJECT FileObject,
     PIO_STACK_LOCATION StackPtr;
     PDEVICE_OBJECT DeviceObject;
 
-    DPRINT("IoSynchronousPageWrite(FileObject %x, Mdl %x)\n",
+    DPRINT("IoSynchronousPageWrite(FileObject 0x%p, Mdl 0x%p)\n",
             FileObject, Mdl);
 
     /* Get the Device Object */

@@ -196,7 +196,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
             if (Value != ExceptionContinueExecution ||
                 0 != (ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE))
             {
-                DPRINT("ExceptionRecord->ExceptionAddress = 0x%x\n", ExceptionRecord->ExceptionAddress);
+                DPRINT("ExceptionRecord->ExceptionAddress = 0x%p\n", ExceptionRecord->ExceptionAddress);
 
                 /* Enter KDB if available */
                 Action = KdpEnterDebuggerException(ExceptionRecord,

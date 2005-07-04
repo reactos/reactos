@@ -78,7 +78,7 @@ ExTimerRundown(VOID)
         ASSERT (Timer->ApcAssociated);
 	Timer->ApcAssociated = FALSE;
 
-        DPRINT("Timer, ThreadList: %x, %x\n", Timer, Thread);
+        DPRINT("Timer, ThreadList: 0x%p, 0x%p\n", Timer, Thread);
 
         /* Unlock the list */
         KeReleaseSpinLockFromDpcLevel(&Thread->ActiveTimerListLock);
@@ -113,7 +113,7 @@ ExpDeleteTimer(PVOID ObjectBody)
     KIRQL OldIrql;
     PETIMER Timer = ObjectBody;
 
-    DPRINT("ExpDeleteTimer(Timer: %x)\n", Timer);
+    DPRINT("ExpDeleteTimer(Timer: 0x%p)\n", Timer);
 
     /* Lock the Wake List */
     KeAcquireSpinLock(&ExpWakeListLock, &OldIrql);
@@ -145,7 +145,7 @@ ExpTimerDpcRoutine(PKDPC Dpc,
     PETIMER Timer;
     KIRQL OldIrql;
 
-    DPRINT("ExpTimerDpcRoutine(Dpc: %x)\n", Dpc);
+    DPRINT("ExpTimerDpcRoutine(Dpc: 0x%p)\n", Dpc);
 
     /* Get the Timer Object */
     Timer = (PETIMER)DeferredContext;
@@ -182,7 +182,7 @@ ExpTimerApcKernelRoutine(PKAPC Apc,
 
     /* We need to find out which Timer we are */
     Timer = CONTAINING_RECORD(Apc, ETIMER, TimerApc);
-    DPRINT("ExpTimerApcKernelRoutine(Apc: %x. Timer: %x)\n", Apc, Timer);
+    DPRINT("ExpTimerApcKernelRoutine(Apc: 0x%p. Timer: 0x%p)\n", Apc, Timer);
 
     /* Lock the Timer */
     KeAcquireSpinLock(&Timer->Lock, &OldIrql);
@@ -259,7 +259,7 @@ NtCancelTimer(IN HANDLE TimerHandle,
     NTSTATUS Status = STATUS_SUCCESS;
 
     PAGED_CODE();
-    DPRINT("NtCancelTimer(0x%x, 0x%x)\n", TimerHandle, CurrentState);
+    DPRINT("NtCancelTimer(0x%p, 0x%x)\n", TimerHandle, CurrentState);
 
     /* Check Parameter Validity */
     if(CurrentState != NULL && PreviousMode != KernelMode) {
@@ -287,7 +287,7 @@ NtCancelTimer(IN HANDLE TimerHandle,
     /* Check for success */
     if(NT_SUCCESS(Status)) {
 
-        DPRINT("Timer Referencced: %x\n", Timer);
+        DPRINT("Timer Referenced: 0x%p\n", Timer);
 
         /* Lock the Timer */
         KeAcquireSpinLock(&Timer->Lock, &OldIrql);
@@ -300,7 +300,7 @@ NtCancelTimer(IN HANDLE TimerHandle,
              * Get the Thread.
              */
             TimerThread = CONTAINING_RECORD(Timer->TimerApc.Thread, ETHREAD, Tcb);
-            DPRINT("Removing from Thread: %x\n", TimerThread);
+            DPRINT("Removing from Thread: 0x%p\n", TimerThread);
 
             /* Lock its active list */
             KeAcquireSpinLockAtDpcLevel(&TimerThread->ActiveTimerListLock);
@@ -371,7 +371,7 @@ NtCreateTimer(OUT PHANDLE TimerHandle,
     NTSTATUS Status = STATUS_SUCCESS;
 
     PAGED_CODE();
-    DPRINT("NtCreateTimer(Handle: %x, Type: %d)\n", TimerHandle, TimerType);
+    DPRINT("NtCreateTimer(Handle: 0x%p, Type: %d)\n", TimerHandle, TimerType);
 
     /* Check Parameter Validity */
     if (PreviousMode != KernelMode) {
@@ -405,7 +405,7 @@ NtCreateTimer(OUT PHANDLE TimerHandle,
     if(NT_SUCCESS(Status)) {
 
         /* Initialize the Kernel Timer */
-        DPRINT("Initializing Timer: %x\n", Timer);
+        DPRINT("Initializing Timer: 0x%p\n", Timer);
         KeInitializeTimerEx(&Timer->KeTimer, TimerType);
 
         /* Initialize the Timer Lock */
@@ -456,7 +456,7 @@ NtOpenTimer(OUT PHANDLE TimerHandle,
     NTSTATUS Status = STATUS_SUCCESS;
 
     PAGED_CODE();
-    DPRINT("NtOpenTimer(TimerHandle: %x)\n", TimerHandle);
+    DPRINT("NtOpenTimer(TimerHandle: 0x%p)\n", TimerHandle);
 
     /* Check Parameter Validity */
     if (PreviousMode != KernelMode) {
@@ -519,7 +519,7 @@ NtQueryTimer(IN HANDLE TimerHandle,
     PTIMER_BASIC_INFORMATION BasicInfo = (PTIMER_BASIC_INFORMATION)TimerInformation;
 
     PAGED_CODE();
-    DPRINT("NtQueryTimer(TimerHandle: %x, Class: %d)\n", TimerHandle, TimerInformationClass);
+    DPRINT("NtQueryTimer(TimerHandle: 0x%p, Class: %d)\n", TimerHandle, TimerInformationClass);
 
     /* Check Validity */
     DefaultQueryInfoBufferCheck(TimerInformationClass,
@@ -550,7 +550,7 @@ NtQueryTimer(IN HANDLE TimerHandle,
         _SEH_TRY {
 
             /* FIXME: Interrupt correction based on Interrupt Time */
-            DPRINT("Returning Information for Timer: %x. Time Remaining: %d\n", Timer, Timer->KeTimer.DueTime.QuadPart);
+            DPRINT("Returning Information for Timer: 0x%p. Time Remaining: %I64x\n", Timer, Timer->KeTimer.DueTime.QuadPart);
             BasicInfo->TimeRemaining.QuadPart = Timer->KeTimer.DueTime.QuadPart;
             BasicInfo->SignalState = KeReadStateTimer(&Timer->KeTimer);
 
@@ -591,7 +591,7 @@ NtSetTimer(IN HANDLE TimerHandle,
     NTSTATUS Status = STATUS_SUCCESS;
 
     PAGED_CODE();
-    DPRINT("NtSetTimer(TimerHandle: %x, DueTime: %d, Apc: %x, Period: %d)\n", TimerHandle, DueTime->QuadPart, TimerApcRoutine, Period);
+    DPRINT("NtSetTimer(TimerHandle: 0x%p, DueTime: %I64x, Apc: 0x%p, Period: %d)\n", TimerHandle, DueTime->QuadPart, TimerApcRoutine, Period);
 
     /* Check Parameter Validity */
     if (PreviousMode != KernelMode) {
@@ -631,7 +631,7 @@ NtSetTimer(IN HANDLE TimerHandle,
     if (NT_SUCCESS(Status)) {
 
         /* Lock the Timer */
-        DPRINT("Timer Referencced: %x\n", Timer);
+        DPRINT("Timer Referencced: 0x%p\n", Timer);
         KeAcquireSpinLock(&Timer->Lock, &OldIrql);
 
         /* Cancel Running Timer */
@@ -642,7 +642,7 @@ NtSetTimer(IN HANDLE TimerHandle,
              * Get the Thread.
              */
             TimerThread = CONTAINING_RECORD(Timer->TimerApc.Thread, ETHREAD, Tcb);
-            DPRINT("Thread already running. Removing from Thread: %x\n", TimerThread);
+            DPRINT("Thread already running. Removing from Thread: 0x%p\n", TimerThread);
 
             /* Lock its active list */
             KeAcquireSpinLockAtDpcLevel(&TimerThread->ActiveTimerListLock);
@@ -690,7 +690,7 @@ NtSetTimer(IN HANDLE TimerHandle,
         if (TimerApcRoutine) {
 
             /* Initialize the APC */
-            DPRINT("Initializing APC: %x\n", Timer->TimerApc);
+            DPRINT("Initializing APC: 0x%p\n", Timer->TimerApc);
             KeInitializeApc(&Timer->TimerApc,
                             &CurrentThread->Tcb,
                             CurrentApcEnvironment,

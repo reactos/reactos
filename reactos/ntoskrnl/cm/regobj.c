@@ -196,7 +196,7 @@ CmiObjectParse(PVOID ParsedObject,
       RtlpCreateUnicodeString(&FoundObject->Name,
               KeyName.Buffer, NonPagedPool);
       CmiAddKeyToList(ParsedKey, FoundObject);
-      DPRINT("Created object 0x%x\n", FoundObject);
+      DPRINT("Created object 0x%p\n", FoundObject);
     }
   else
     {
@@ -578,7 +578,7 @@ CmiAddKeyToList(PKEY_OBJECT ParentKey,
   /*      to allow a dichotomic search */
   ParentKey->SubKeys[ParentKey->NumberOfSubKeys++] = NewKey;
 
-  DPRINT("Reference parent key: 0x%x\n", ParentKey);
+  DPRINT("Reference parent key: 0x%p\n", ParentKey);
 
   ObReferenceObjectByPointer(ParentKey,
 		STANDARD_RIGHTS_REQUIRED,

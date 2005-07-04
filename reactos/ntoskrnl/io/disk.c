@@ -115,7 +115,7 @@ xHalQueryDriveLayout(IN PUNICODE_STRING DeviceName,
 				    &DeviceObject);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("Status %x\n",Status);
+      DPRINT("Status %x\n", Status);
       return(Status);
     }
 

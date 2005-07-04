@@ -129,7 +129,7 @@ IopMountFileSystem(PDEVICE_OBJECT DeviceObject,
   PIRP Irp;
   NTSTATUS Status;
 
-  DPRINT("IopMountFileSystem(DeviceObject %x, DeviceToMount %x)\n",
+  DPRINT("IopMountFileSystem(DeviceObject 0x%p, DeviceToMount 0x%p)\n",
 	 DeviceObject,DeviceToMount);
 
   ASSERT_IRQL(PASSIVE_LEVEL);
@@ -142,7 +142,7 @@ IopMountFileSystem(PDEVICE_OBJECT DeviceObject,
     }
 
   Irp->UserIosb = &IoStatusBlock;
-  DPRINT("Irp->UserIosb %x\n", Irp->UserIosb);
+  DPRINT("Irp->UserIosb 0x%p\n", Irp->UserIosb);
   Irp->UserEvent = &Event;
   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
 
@@ -178,7 +178,7 @@ IopLoadFileSystem(IN PDEVICE_OBJECT DeviceObject)
   PIRP Irp;
   NTSTATUS Status;
 
-  DPRINT("IopLoadFileSystem(DeviceObject %x)\n", DeviceObject);
+  DPRINT("IopLoadFileSystem(DeviceObject 0x%p)\n", DeviceObject);
 
   ASSERT_IRQL(PASSIVE_LEVEL);
 
@@ -190,7 +190,7 @@ IopLoadFileSystem(IN PDEVICE_OBJECT DeviceObject)
     }
 
   Irp->UserIosb = &IoStatusBlock;
-  DPRINT("Irp->UserIosb %x\n", Irp->UserIosb);
+  DPRINT("Irp->UserIosb 0x%p\n", Irp->UserIosb);
   Irp->UserEvent = &Event;
   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
 
@@ -232,7 +232,7 @@ IoMountVolume(IN PDEVICE_OBJECT DeviceObject,
 
   ASSERT_IRQL(PASSIVE_LEVEL);
 
-  DPRINT("IoMountVolume(DeviceObject %x  AllowRawMount %x)\n",
+  DPRINT("IoMountVolume(DeviceObject 0x%p  AllowRawMount %x)\n",
 	 DeviceObject, AllowRawMount);
 
   switch (DeviceObject->DeviceType)
@@ -347,7 +347,7 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
   NTSTATUS Status;
   PDEVICE_OBJECT DevObject;
 
-  DPRINT("IoVerifyVolume(DeviceObject %x  AllowRawMount %x)\n",
+  DPRINT("IoVerifyVolume(DeviceObject 0x%p  AllowRawMount %x)\n",
 	 DeviceObject, AllowRawMount);
 
   Status = STATUS_SUCCESS;
@@ -471,7 +471,7 @@ IoRegisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
 {
   PFILE_SYSTEM_OBJECT Fs;
 
-  DPRINT("IoRegisterFileSystem(DeviceObject %x)\n",DeviceObject);
+  DPRINT("IoRegisterFileSystem(DeviceObject 0x%p)\n", DeviceObject);
 
   Fs = ExAllocatePoolWithTag(NonPagedPool,
 			     sizeof(FILE_SYSTEM_OBJECT),
@@ -507,7 +507,7 @@ IoUnregisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
   PLIST_ENTRY current_entry;
   PFILE_SYSTEM_OBJECT current;
 
-  DPRINT("IoUnregisterFileSystem(DeviceObject %x)\n",DeviceObject);
+  DPRINT("IoUnregisterFileSystem(DeviceObject 0x%p)\n", DeviceObject);
 
   KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&FileSystemListLock, TRUE);

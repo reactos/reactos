@@ -166,7 +166,7 @@ ExLockHandleTableEntryNoDestructionCheck(IN PHANDLE_TABLE HandleTable,
 
   PAGED_CODE();
 
-  DPRINT("Entering handle table entry 0x%x lock...\n", Entry);
+  DPRINT("Entering handle table entry 0x%p lock...\n", Entry);
 
   ASSERT(HandleTable);
   ASSERT(Entry);
@@ -177,7 +177,7 @@ ExLockHandleTableEntryNoDestructionCheck(IN PHANDLE_TABLE HandleTable,
 
     if(!Current)
     {
-      DPRINT("Attempted to lock empty handle table entry 0x%x or handle table shut down\n", Entry);
+      DPRINT("Attempted to lock empty handle table entry 0x%p or handle table shut down\n", Entry);
       break;
     }
 
@@ -188,7 +188,7 @@ ExLockHandleTableEntryNoDestructionCheck(IN PHANDLE_TABLE HandleTable,
                                            (PVOID)New,
                                            (PVOID)Current) == (PVOID)Current)
       {
-        DPRINT("SUCCESS handle table 0x%x entry 0x%x lock\n", HandleTable, Entry);
+        DPRINT("SUCCESS handle table 0x%p entry 0x%p lock\n", HandleTable, Entry);
         /* we acquired the lock */
         return TRUE;
       }
@@ -399,7 +399,7 @@ ExDupHandleTable(IN PEPROCESS QuotaProcess  OPTIONAL,
         else
         {
 freehandletable:
-          DPRINT1("Failed to duplicate handle table 0x%x\n", SourceHandleTable);
+          DPRINT1("Failed to duplicate handle table 0x%p\n", SourceHandleTable);
 
           ExReleaseHandleTableLock(SourceHandleTable);
 
@@ -501,7 +501,7 @@ ExpAllocateHandleTableEntry(IN PHANDLE_TABLE HandleTable,
   ASSERT(Handle);
   ASSERT(KeGetCurrentThread() != NULL);
 
-  DPRINT("HT[0x%x]: HandleCount: %d\n", HandleTable, HandleTable->HandleCount);
+  DPRINT("HT[0x%p]: HandleCount: %d\n", HandleTable, HandleTable->HandleCount);
 
   if(HandleTable->HandleCount < EX_MAX_HANDLES)
   {
@@ -549,7 +549,7 @@ ExpAllocateHandleTableEntry(IN PHANDLE_TABLE HandleTable,
 
       ASSERT(ELI_FROM_HANDLE(HandleTable->NextIndexNeedingPool) == 0);
 
-      DPRINT("HandleTable->Table[%d] == 0x%x\n", tli, HandleTable->Table[tli]);
+      DPRINT("HandleTable->Table[%d] == 0x%p\n", tli, HandleTable->Table[tli]);
 
       /* allocate a middle level entry list if required */
       nmtbl = HandleTable->Table[tli];
@@ -592,7 +592,7 @@ ExpAllocateHandleTableEntry(IN PHANDLE_TABLE HandleTable,
         ASSERT(nmtbl[mli] == NULL);
       }
 
-      DPRINT("HandleTable->Table[%d][%d] == 0x%x\n", tli, mli, nmtbl[mli]);
+      DPRINT("HandleTable->Table[%d][%d] == 0x%p\n", tli, mli, nmtbl[mli]);
 
       if(HandleTable->QuotaProcess != NULL)
       {
@@ -660,7 +660,7 @@ ExpAllocateHandleTableEntry(IN PHANDLE_TABLE HandleTable,
   }
   else
   {
-    DPRINT1("Can't allocate any more handles in handle table 0x%x!\n", HandleTable);
+    DPRINT1("Can't allocate any more handles in handle table 0x%p!\n", HandleTable);
   }
 
   return Entry;
@@ -677,7 +677,7 @@ ExpFreeHandleTableEntry(IN PHANDLE_TABLE HandleTable,
   ASSERT(Entry);
   ASSERT(IS_VALID_EX_HANDLE(Handle));
 
-  DPRINT("ExpFreeHandleTableEntry HT:0x%x Entry:0x%x\n", HandleTable, Entry);
+  DPRINT("ExpFreeHandleTableEntry HT:0x%p Entry:0x%p\n", HandleTable, Entry);
 
   /* automatically unlock the entry if currently locked. We however don't notify
      anyone who waited on the handle because we're holding an exclusive lock after
@@ -713,7 +713,7 @@ ExpLookupHandleTableEntry(IN PHANDLE_TABLE HandleTable,
        mlp != NULL && mlp[mli] != NULL && mlp[mli][eli].u1.Object != NULL)
     {
       Entry = &mlp[mli][eli];
-      DPRINT("handle lookup 0x%x -> entry 0x%x [HT:0x%x] ptr: 0x%x\n", Handle, Entry, HandleTable, mlp[mli][eli].u1.Object);
+      DPRINT("handle lookup 0x%x -> entry 0x%p [HT:0x%p] ptr: 0x%p\n", Handle, Entry, HandleTable, mlp[mli][eli].u1.Object);
     }
   }
   else
@@ -732,7 +732,7 @@ ExLockHandleTableEntry(IN PHANDLE_TABLE HandleTable,
 
   PAGED_CODE();
 
-  DPRINT("Entering handle table entry 0x%x lock...\n", Entry);
+  DPRINT("Entering handle table entry 0x%p lock...\n", Entry);
 
   ASSERT(HandleTable);
   ASSERT(Entry);
@@ -743,7 +743,7 @@ ExLockHandleTableEntry(IN PHANDLE_TABLE HandleTable,
 
     if(!Current || (HandleTable->Flags & EX_HANDLE_TABLE_CLOSING))
     {
-      DPRINT("Attempted to lock empty handle table entry 0x%x or handle table shut down\n", Entry);
+      DPRINT("Attempted to lock empty handle table entry 0x%p or handle table shut down\n", Entry);
       break;
     }
 
@@ -754,7 +754,7 @@ ExLockHandleTableEntry(IN PHANDLE_TABLE HandleTable,
                                            (PVOID)New,
                                            (PVOID)Current) == (PVOID)Current)
       {
-        DPRINT("SUCCESS handle table 0x%x entry 0x%x lock\n", HandleTable, Entry);
+        DPRINT("SUCCESS handle table 0x%p entry 0x%p lock\n", HandleTable, Entry);
         /* we acquired the lock */
         return TRUE;
       }
@@ -785,7 +785,7 @@ ExUnlockHandleTableEntry(IN PHANDLE_TABLE HandleTable,
   ASSERT(HandleTable);
   ASSERT(Entry);
 
-  DPRINT("ExUnlockHandleTableEntry HT:0x%x Entry:0x%x\n", HandleTable, Entry);
+  DPRINT("ExUnlockHandleTableEntry HT:0x%p Entry:0x%p\n", HandleTable, Entry);
 
   Current = (volatile ULONG_PTR)Entry->u1.Object;
 
@@ -885,7 +885,7 @@ ExDestroyHandleByEntry(IN PHANDLE_TABLE HandleTable,
   /* This routine requires the entry to be locked */
   ASSERT((ULONG_PTR)Entry->u1.Object & EX_HANDLE_ENTRY_LOCKED);
 
-  DPRINT("DestroyHandleByEntry HT:0x%x Entry:0x%x\n", HandleTable, Entry);
+  DPRINT("DestroyHandleByEntry HT:0x%p Entry:0x%p\n", HandleTable, Entry);
 
   KeEnterCriticalRegion();
   ExAcquireHandleTableLockExclusive(HandleTable);
@@ -914,7 +914,7 @@ ExMapHandleToPointer(IN PHANDLE_TABLE HandleTable,
                                                Handle);
   if (HandleTableEntry != NULL && ExLockHandleTableEntry(HandleTable, HandleTableEntry))
   {
-    DPRINT("ExMapHandleToPointer HT:0x%x Entry:0x%x locked\n", HandleTable, HandleTableEntry);
+    DPRINT("ExMapHandleToPointer HT:0x%p Entry:0x%p locked\n", HandleTable, HandleTableEntry);
     return HandleTableEntry;
   }
 

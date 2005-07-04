@@ -61,7 +61,7 @@ IoGetDeviceProperty(
   PVOID Data = NULL;
   PWSTR Ptr;
 
-  DPRINT("IoGetDeviceProperty(%x %d)\n", DeviceObject, DeviceProperty);
+  DPRINT("IoGetDeviceProperty(0x%p %d)\n", DeviceObject, DeviceProperty);
 
   if (DeviceNode == NULL)
     return STATUS_INVALID_DEVICE_REQUEST;
@@ -158,7 +158,7 @@ IoGetDeviceProperty(
         KeyNameBuffer = ExAllocatePool(PagedPool,
           (49 * sizeof(WCHAR)) + DeviceNode->InstancePath.Length);
 
-	DPRINT("KeyNameBuffer: %x, value %S\n",
+	DPRINT("KeyNameBuffer: 0x%p, value %S\n",
 		KeyNameBuffer, RegistryPropertyName);
 
         if (KeyNameBuffer == NULL)
@@ -508,7 +508,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
   NTSTATUS Status;
   KIRQL OldIrql;
 
-  DPRINT("ParentNode %x PhysicalDeviceObject %x\n",
+  DPRINT("ParentNode 0x%p PhysicalDeviceObject 0x%p\n",
     ParentNode, PhysicalDeviceObject);
 
   Node = (PDEVICE_NODE)ExAllocatePool(NonPagedPool, sizeof(DEVICE_NODE));
@@ -726,9 +726,9 @@ IopTraverseDeviceTree(
 {
   NTSTATUS Status;
 
-  DPRINT("Context %x\n", Context);
+  DPRINT("Context 0x%p\n", Context);
 
-  DPRINT("IopTraverseDeviceTree(DeviceNode %x  FirstDeviceNode %x  Action %x  Context %x)\n",
+  DPRINT("IopTraverseDeviceTree(DeviceNode 0x%p  FirstDeviceNode 0x%p  Action %x  Context 0x%p)\n",
     Context->DeviceNode, Context->FirstDeviceNode, Context->Action, Context->Context);
 
   /* Start from the specified device node */
@@ -1164,7 +1164,7 @@ IopActionInterrogateDeviceStack(
    DEVICE_CAPABILITIES DeviceCapabilities;
 
    DPRINT("IopActionInterrogateDeviceStack(%p, %p)\n", DeviceNode, Context);
-   DPRINT("PDO %x\n", DeviceNode->PhysicalDeviceObject);
+   DPRINT("PDO 0x%p\n", DeviceNode->PhysicalDeviceObject);
 
    ParentDeviceNode = (PDEVICE_NODE)Context;
 
@@ -1882,7 +1882,7 @@ IopInvalidateDeviceRelations(
    NTSTATUS Status;
    ULONG i;
 
-   DPRINT("DeviceNode %x\n", DeviceNode);
+   DPRINT("DeviceNode 0x%p\n", DeviceNode);
 
    DPRINT("Sending IRP_MN_QUERY_DEVICE_RELATIONS to device stack\n");
 

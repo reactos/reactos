@@ -62,7 +62,7 @@ NtCreateEventPair(OUT PHANDLE EventPairHandle,
     NTSTATUS Status = STATUS_SUCCESS;
 
     PAGED_CODE();
-    DPRINT("NtCreateEventPair: %x\n", EventPairHandle);
+    DPRINT("NtCreateEventPair: 0x%p\n", EventPairHandle);
 
     /* Check Output Safety */
     if(PreviousMode == UserMode) {
@@ -194,7 +194,7 @@ NtSetHighEventPair(IN HANDLE EventPairHandle)
     NTSTATUS Status;
 
     PAGED_CODE();
-    DPRINT("NtSetHighEventPair(EventPairHandle %x)\n", EventPairHandle);
+    DPRINT("NtSetHighEventPair(EventPairHandle 0x%p)\n", EventPairHandle);
 
     /* Open the Object */
     Status = ObReferenceObjectByHandle(EventPairHandle,
@@ -227,7 +227,7 @@ NtSetHighWaitLowEventPair(IN HANDLE EventPairHandle)
     NTSTATUS Status;
 
     PAGED_CODE();
-    DPRINT("NtSetHighWaitLowEventPair(EventPairHandle %x)\n", EventPairHandle);
+    DPRINT("NtSetHighWaitLowEventPair(EventPairHandle 0x%p)\n", EventPairHandle);
 
     /* Open the Object */
     Status = ObReferenceObjectByHandle(EventPairHandle,
@@ -270,7 +270,7 @@ NtSetLowEventPair(IN HANDLE EventPairHandle)
 
     PreviousMode = ExGetPreviousMode();
 
-    DPRINT1("NtSetHighEventPair(EventPairHandle %x)\n", EventPairHandle);
+    DPRINT1("NtSetHighEventPair(EventPairHandle 0x%p)\n", EventPairHandle);
 
     /* Open the Object */
     Status = ObReferenceObjectByHandle(EventPairHandle,
@@ -303,7 +303,7 @@ NtSetLowWaitHighEventPair(IN HANDLE EventPairHandle)
     NTSTATUS Status;
 
     PAGED_CODE();
-    DPRINT("NtSetHighWaitLowEventPair(EventPairHandle %x)\n", EventPairHandle);
+    DPRINT("NtSetHighWaitLowEventPair(EventPairHandle 0x%p)\n", EventPairHandle);
 
     /* Open the Object */
     Status = ObReferenceObjectByHandle(EventPairHandle,
@@ -344,7 +344,7 @@ NtWaitLowEventPair(IN HANDLE EventPairHandle)
     NTSTATUS Status;
 
     PAGED_CODE();
-    DPRINT("NtSetHighWaitLowEventPair(EventPairHandle %x)\n", EventPairHandle);
+    DPRINT("NtSetHighWaitLowEventPair(EventPairHandle 0x%p)\n", EventPairHandle);
 
     /* Open the Object */
     Status = ObReferenceObjectByHandle(EventPairHandle,
@@ -381,7 +381,7 @@ NtWaitHighEventPair(IN HANDLE EventPairHandle)
     NTSTATUS Status;
 
     PAGED_CODE();
-    DPRINT("NtSetHighWaitLowEventPair(EventPairHandle %x)\n", EventPairHandle);
+    DPRINT("NtSetHighWaitLowEventPair(EventPairHandle 0x%p)\n", EventPairHandle);
 
     /* Open the Object */
     Status = ObReferenceObjectByHandle(EventPairHandle,

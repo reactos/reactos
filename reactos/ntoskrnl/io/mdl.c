@@ -89,7 +89,7 @@ IoBuildPartialMdl(PMDL SourceMdl,
    ULONG Count;
    ULONG Delta;
 
-   DPRINT("VirtualAddress %x, SourceMdl->StartVa %x, SourceMdl->MappedSystemVa %x\n",
+   DPRINT("VirtualAddress 0x%p, SourceMdl->StartVa 0x%p, SourceMdl->MappedSystemVa 0x%p\n",
           VirtualAddress, SourceMdl->StartVa, SourceMdl->MappedSystemVa);
 
    TargetMdl->StartVa = (PVOID)PAGE_ROUND_DOWN(VirtualAddress);

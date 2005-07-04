@@ -575,7 +575,7 @@ KdbpCmdBackTrace(ULONG Argc, PCHAR Argv[])
          break;
       if (!NT_SUCCESS(KdbpSafeReadMemory(&Address, (PVOID)(Frame + sizeof(ULONG_PTR)), sizeof (ULONG_PTR))))
       {
-         KdbpPrint("Couldn't access memory at 0x%x!\n", Frame + sizeof(ULONG_PTR));
+         KdbpPrint("Couldn't access memory at 0x%p!\n", Frame + sizeof(ULONG_PTR));
          break;
       }
       if (!KdbSymPrintAddress((PVOID)Address))
@@ -586,7 +586,7 @@ KdbpCmdBackTrace(ULONG Argc, PCHAR Argv[])
          break;
       if (!NT_SUCCESS(KdbpSafeReadMemory(&Frame, (PVOID)Frame, sizeof (ULONG_PTR))))
       {
-         KdbpPrint("Couldn't access memory at 0x%x!\n", Frame);
+         KdbpPrint("Couldn't access memory at 0x%p!\n", Frame);
          break;
       }
    }
@@ -1185,7 +1185,7 @@ KdbpCmdMod(ULONG Argc, PCHAR Argv[])
 
       if (!KdbpSymFindModuleByAddress((PVOID)Address, &Info))
       {
-         KdbpPrint("No module containing address 0x%x found!\n", Address);
+         KdbpPrint("No module containing address 0x%p found!\n", Address);
          return TRUE;
       }
       DisplayOnlyOneModule = TRUE;

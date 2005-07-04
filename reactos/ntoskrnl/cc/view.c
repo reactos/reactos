@@ -295,7 +295,7 @@ CcRosReleaseCacheSegment(PBCB Bcb,
 
   ASSERT(Bcb);
 
-  DPRINT("CcReleaseCacheSegment(Bcb %x, CacheSeg %x, Valid %d)\n",
+  DPRINT("CcReleaseCacheSegment(Bcb 0x%p, CacheSeg 0x%p, Valid %d)\n",
 	 Bcb, CacheSeg, Valid);
 
   CacheSeg->Valid = Valid;
@@ -340,7 +340,7 @@ CcRosLookupCacheSegment(PBCB Bcb, ULONG FileOffset)
 
   ASSERT(Bcb);
 
-  DPRINT("CcRosLookupCacheSegment(Bcb %x, FileOffset %d)\n", Bcb, FileOffset);
+  DPRINT("CcRosLookupCacheSegment(Bcb -x%p, FileOffset %d)\n", Bcb, FileOffset);
 
   KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
   current_entry = Bcb->BcbSegmentListHead.Flink;
@@ -370,7 +370,7 @@ CcRosMarkDirtyCacheSegment(PBCB Bcb, ULONG FileOffset)
 
   ASSERT(Bcb);
 
-  DPRINT("CcRosMarkDirtyCacheSegment(Bcb %x, FileOffset %d)\n", Bcb, FileOffset);
+  DPRINT("CcRosMarkDirtyCacheSegment(Bcb 0x%p, FileOffset %d)\n", Bcb, FileOffset);
 
   CacheSeg = CcRosLookupCacheSegment(Bcb, FileOffset);
   if (CacheSeg == NULL)
@@ -407,7 +407,7 @@ CcRosUnmapCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty)
 
   ASSERT(Bcb);
 
-  DPRINT("CcRosUnmapCacheSegment(Bcb %x, FileOffset %d, NowDirty %d)\n",
+  DPRINT("CcRosUnmapCacheSegment(Bcb 0x%p, FileOffset %d, NowDirty %d)\n",
           Bcb, FileOffset, NowDirty);
 
   CacheSeg = CcRosLookupCacheSegment(Bcb, FileOffset);
@@ -760,7 +760,7 @@ CcRosInternalFreeCacheSegment(PCACHE_SEGMENT CacheSeg)
   PFN_TYPE Page;
   KIRQL oldIrql;
 #endif
-  DPRINT("Freeing cache segment %x\n", CacheSeg);
+  DPRINT("Freeing cache segment 0x%p\n", CacheSeg);
 #ifdef CACHE_BITMAP
   RegionSize = CacheSeg->Bcb->CacheSegmentSize / PAGE_SIZE;
 
@@ -804,7 +804,7 @@ CcRosFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg)
 
   ASSERT(Bcb);
 
-  DPRINT("CcRosFreeCacheSegment(Bcb %x, CacheSeg %x)\n",
+  DPRINT("CcRosFreeCacheSegment(Bcb 0x%p, CacheSeg 0x%p)\n",
          Bcb, CacheSeg);
 
   ExAcquireFastMutex(&ViewLock);
@@ -840,7 +840,7 @@ CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointers,
    NTSTATUS Status;
    KIRQL oldIrql;
 
-   DPRINT("CcFlushCache(SectionObjectPointers %x, FileOffset %x, Length %d, IoStatus %x)\n",
+   DPRINT("CcFlushCache(SectionObjectPointers 0x%p, FileOffset 0x%p, Length %d, IoStatus 0x%p)\n",
            SectionObjectPointers, FileOffset, Length, IoStatus);
 
    if (SectionObjectPointers && SectionObjectPointers->SharedCacheMap)
@@ -1118,7 +1118,7 @@ CcRosInitializeFileCache(PFILE_OBJECT FileObject,
    PBCB Bcb;
 
    Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
-   DPRINT("CcRosInitializeFileCache(FileObject %x, *Bcb %x, CacheSegmentSize %d)\n",
+   DPRINT("CcRosInitializeFileCache(FileObject 0x%p, Bcb 0x%p, CacheSegmentSize %d)\n",
            FileObject, Bcb, CacheSegmentSize);
 
    ExAcquireFastMutex(&ViewLock);

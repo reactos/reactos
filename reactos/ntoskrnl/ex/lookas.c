@@ -139,7 +139,7 @@ ExInitializeNPagedLookasideList(PNPAGED_LOOKASIDE_LIST Lookaside,
                                 ULONG Tag,
                                 USHORT Depth)
 {
-    DPRINT("Initializing nonpaged lookaside list at 0x%X\n", Lookaside);
+    DPRINT("Initializing nonpaged lookaside list at 0x%p\n", Lookaside);
 
     /* Initialize the Header */
     ExInitializeSListHead(&Lookaside->L.ListHead);
@@ -194,7 +194,7 @@ ExInitializePagedLookasideList (PPAGED_LOOKASIDE_LIST Lookaside,
                                 ULONG Tag,
                                 USHORT Depth)
 {
-    DPRINT("Initializing paged lookaside list at 0x%X\n", Lookaside);
+    DPRINT("Initializing paged lookaside list at 0x%p\n", Lookaside);
 
     /* Initialize the Header */
     ExInitializeSListHead(&Lookaside->L.ListHead);

@@ -315,9 +315,9 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
   PLIST_ENTRY current_entry;
   PCACHE_SEGMENT current;
 
-  DPRINT("CcCopyRead(FileObject %x, FileOffset %x, "
-	 "Length %d, Wait %d, Buffer %x, IoStatus %x)\n",
-	 FileObject, (ULONG)FileOffset->QuadPart, Length, Wait,
+  DPRINT("CcCopyRead(FileObject 0x%p, FileOffset %I64x, "
+	 "Length %d, Wait %d, Buffer 0x%p, IoStatus 0x%p)\n",
+	 FileObject, FileOffset->QuadPart, Length, Wait,
 	 Buffer, IoStatus);
 
   Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
@@ -429,9 +429,9 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
    PVOID BaseAddress;
    BOOLEAN Valid;
 
-   DPRINT("CcCopyWrite(FileObject %x, FileOffset %x, "
-	  "Length %d, Wait %d, Buffer %x)\n",
-          FileObject, (ULONG)FileOffset->QuadPart, Length, Wait, Buffer);
+   DPRINT("CcCopyWrite(FileObject 0x%p, FileOffset %I64x, "
+	  "Length %d, Wait %d, Buffer 0x%p)\n",
+          FileObject, FileOffset->QuadPart, Length, Wait, Buffer);
 
    Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
    WriteOffset = (ULONG)FileOffset->QuadPart;
@@ -611,7 +611,7 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
   IO_STATUS_BLOCK Iosb;
   KEVENT Event;
 
-  DPRINT("CcZeroData(FileObject %x, StartOffset %I64x, EndOffset %I64x, "
+  DPRINT("CcZeroData(FileObject 0x%p, StartOffset %I64x, EndOffset %I64x, "
 	 "Wait %d)\n", FileObject, StartOffset->QuadPart, EndOffset->QuadPart,
 	 Wait);
 

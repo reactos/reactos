@@ -49,8 +49,8 @@ CmpFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 
   PAGED_CODE();
 
-  DPRINT("CmpFindObject(ObjectAttributes %x, ReturnedObject %x, "
-	 "RemainingPath %x)\n",ObjectAttributes,ReturnedObject,RemainingPath);
+  DPRINT("CmpFindObject(ObjectAttributes 0x%p, ReturnedObject 0x%p, "
+	 "RemainingPath 0x%p)\n",ObjectAttributes,ReturnedObject,RemainingPath);
   DPRINT("ObjectAttributes->ObjectName %wZ\n",
 	 ObjectAttributes->ObjectName);
 
@@ -326,7 +326,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
   PAGED_CODE();
 
-  DPRINT("NtCreateKey (Name %wZ  KeyHandle %x  Root %x)\n",
+  DPRINT("NtCreateKey (Name %wZ  KeyHandle 0x%p  Root 0x%p)\n",
 	 ObjectAttributes->ObjectName,
 	 KeyHandle,
 	 ObjectAttributes->RootDirectory);
@@ -386,7 +386,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
         }
     }
 
-  DPRINT("RemainingPath %S  ParentObject %x\n", RemainingPath.Buffer, Object);
+  DPRINT("RemainingPath %S  ParentObject 0x%p\n", RemainingPath.Buffer, Object);
 
   Status = ObCreateObject(ExGetPreviousMode(),
 			  CmiKeyType,
@@ -511,7 +511,7 @@ NtDeleteKey(IN HANDLE KeyHandle)
 
   PAGED_CODE();
 
-  DPRINT("NtDeleteKey(KeyHandle %x) called\n", KeyHandle);
+  DPRINT("NtDeleteKey(KeyHandle 0x%p) called\n", KeyHandle);
 
   PreviousMode = ExGetPreviousMode();
 
@@ -599,7 +599,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 
   PreviousMode = ExGetPreviousMode();
 
-  DPRINT("KH %x  I %d  KIC %x KI %x  L %d  RL %x\n",
+  DPRINT("KH 0x%p  I %d  KIC %x KI 0x%p  L %d  RL 0x%p\n",
 	 KeyHandle,
 	 Index,
 	 KeyInformationClass,
@@ -947,7 +947,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
 
   PAGED_CODE();
 
-  DPRINT("KH %x  I %d  KVIC %x  KVI %x  L %d  RL %x\n",
+  DPRINT("KH 0x%p  I %d  KVIC %x  KVI 0x%p  L %d  RL 0x%p\n",
 	 KeyHandle,
 	 Index,
 	 KeyValueInformationClass,
@@ -1241,7 +1241,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 
   PAGED_CODE();
 
-  DPRINT("NtOpenKey(KH %x  DA %x  OA %x  OA->ON '%wZ'\n",
+  DPRINT("NtOpenKey(KH 0x%p  DA %x  OA 0x%p  OA->ON '%wZ'\n",
 	 KeyHandle,
 	 DesiredAccess,
 	 ObjectAttributes,
@@ -1358,7 +1358,7 @@ NtQueryKey(IN HANDLE KeyHandle,
 
   PAGED_CODE();
 
-  DPRINT("NtQueryKey(KH %x  KIC %x  KI %x  L %d  RL %x)\n",
+  DPRINT("NtQueryKey(KH 0x%p  KIC %x  KI 0x%p  L %d  RL 0x%p)\n",
 	 KeyHandle,
 	 KeyInformationClass,
 	 KeyInformation,
@@ -1568,7 +1568,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
 
   PAGED_CODE();
 
-  DPRINT("NtQueryValueKey(KeyHandle %x  ValueName %S  Length %x)\n",
+  DPRINT("NtQueryValueKey(KeyHandle 0x%p  ValueName %S  Length %x)\n",
     KeyHandle, ValueName->Buffer, Length);
 
   /* Verify that the handle is valid and is a registry key */
@@ -1810,7 +1810,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
 
   PAGED_CODE();
 
-  DPRINT("NtSetValueKey(KeyHandle %x  ValueName '%wZ'  Type %d)\n",
+  DPRINT("NtSetValueKey(KeyHandle 0x%p  ValueName '%wZ'  Type %d)\n",
 	 KeyHandle, ValueName, Type);
 
   DesiredAccess = KEY_SET_VALUE;

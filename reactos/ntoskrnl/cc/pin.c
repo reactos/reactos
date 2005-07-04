@@ -39,17 +39,17 @@ CcMapData (IN PFILE_OBJECT FileObject,
   PINTERNAL_BCB iBcb;
   ULONG ROffset;
 
-  DPRINT("CcMapData(FileObject %x, FileOffset %d, Length %d, Wait %d,"
-	 " pBcb %x, pBuffer %x)\n", FileObject, (ULONG)FileOffset->QuadPart,
+  DPRINT("CcMapData(FileObject 0x%p, FileOffset %I64x, Length %d, Wait %d,"
+	 " pBcb 0x%p, pBuffer 0x%p)\n", FileObject, FileOffset->QuadPart,
 	 Length, Wait, pBcb, pBuffer);
 
   ReadOffset = (ULONG)FileOffset->QuadPart;
   Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
   ASSERT(Bcb);
 
-  DPRINT("AllocationSize %d, FileSize %d\n",
-         (ULONG)Bcb->AllocationSize.QuadPart,
-         (ULONG)Bcb->FileSize.QuadPart);
+  DPRINT("AllocationSize %I64x, FileSize %I64x\n",
+         Bcb->AllocationSize.QuadPart,
+         Bcb->FileSize.QuadPart);
 
   if (ReadOffset % Bcb->CacheSegmentSize + Length > Bcb->CacheSegmentSize)
     {

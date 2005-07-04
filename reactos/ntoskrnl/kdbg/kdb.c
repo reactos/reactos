@@ -264,7 +264,7 @@ KdbpShouldStepOverInstruction(ULONG_PTR Eip)
 
    if (!NT_SUCCESS(KdbpSafeReadMemory(Mem, (PVOID)Eip, sizeof (Mem))))
    {
-      KdbpPrint("Couldn't access memory at 0x%x\n", (UINT)Eip);
+      KdbpPrint("Couldn't access memory at 0x%p\n", Eip);
       return FALSE;
    }
 
@@ -332,7 +332,7 @@ KdbpStepIntoInstruction(ULONG_PTR Eip)
    /* Read memory */
    if (!NT_SUCCESS(KdbpSafeReadMemory(Mem, (PVOID)Eip, sizeof (Mem))))
    {
-      /*KdbpPrint("Couldn't access memory at 0x%x\n", (UINT)Eip);*/
+      /*KdbpPrint("Couldn't access memory at 0x%p\n", Eip);*/
       return FALSE;
    }
 
@@ -363,7 +363,7 @@ KdbpStepIntoInstruction(ULONG_PTR Eip)
    /* Get the interrupt descriptor */
    if (!NT_SUCCESS(KdbpSafeReadMemory(IntDesc, (PVOID)(Idtr.Base + (IntVect * 8)), sizeof (IntDesc))))
    {
-      /*KdbpPrint("Couldn't access memory at 0x%x\n", (UINT)Idtr.Base + (IntVect * 8));*/
+      /*KdbpPrint("Couldn't access memory at 0x%p\n", (ULONG_PTR)Idtr.Base + (IntVect * 8));*/
       return FALSE;
    }
 
@@ -510,7 +510,7 @@ KdbpInsertBreakPoint(
    {
       if ((Address % Size) != 0)
       {
-         KdbpPrint("Address (0x%x) must be aligned to a multiple of the size (%d)\n", Address, Size);
+         KdbpPrint("Address (0x%p) must be aligned to a multiple of the size (%d)\n", Address, Size);
          return STATUS_UNSUCCESSFUL;
       }
       if (AccessType == KdbAccessExec && Size != 1)
@@ -752,7 +752,7 @@ KdbpEnableBreakPoint(
                                         0xCC, &BreakPoint->Data.SavedInstruction);
       if (!NT_SUCCESS(Status))
       {
-         KdbpPrint("Couldn't access memory at 0x%x\n", BreakPoint->Address);
+         KdbpPrint("Couldn't access memory at 0x%p\n", BreakPoint->Address);
          return FALSE;
       }
       KdbSwBreakPoints[KdbSwBreakPointCount++] = BreakPoint;
@@ -1423,10 +1423,11 @@ KdbEnterDebuggerException(
       if (ExpNr == 14)
       {
          /* FIXME: Add noexec memory stuff */
-         ULONG Cr2, Err;
+         ULONG_PTR Cr2;
+         ULONG Err;
          asm volatile("movl %%cr2, %0" : "=r"(Cr2));
          Err = TrapFrame->ErrorCode;
-         DbgPrint("Memory at 0x%x could not be %s: ", Cr2, (Err & (1 << 1)) ? "written" : "read");
+         DbgPrint("Memory at 0x%p could not be %s: ", Cr2, (Err & (1 << 1)) ? "written" : "read");
          if ((Err & (1 << 0)) == 0)
             DbgPrint("Page not present.\n");
          else
