@@ -63,8 +63,8 @@ typedef struct _CHECKLISTWND
 #endif
 } CHECKLISTWND, *PCHECKLISTWND;
 
-#define CI_TEXT_MARGIN_WIDTH    (6)
-#define CI_TEXT_MARGIN_HEIGHT   (2)
+#define CI_TEXT_MARGIN_WIDTH    (8)
+#define CI_TEXT_MARGIN_HEIGHT   (3)
 
 static PCHECKITEM
 FindCheckItemByIndex(IN PCHECKLISTWND infoPtr,
@@ -153,10 +153,9 @@ FindLastEnabledCheckBox(IN PCHECKLISTWND infoPtr,
     {
         /* return the Deny checkbox in case both check boxes are enabled! */
         *CheckBox = ((!(LastEnabledItem->State & CIS_DENYDISABLED)) ? CLB_DENY : CLB_ALLOW);
-        return LastEnabledItem;
     }
 
-    return NULL;
+    return LastEnabledItem;
 }
 
 static PCHECKITEM
@@ -631,7 +630,7 @@ GetIdealItemHeight(IN PCHECKLISTWND infoPtr)
         }
         else
         {
-            height = 0;
+            height = 2;
         }
 
         SelectObject(hdc,
@@ -655,7 +654,7 @@ RetChangeControlFont(IN PCHECKLISTWND infoPtr,
     
     if (hOldFont != hFont)
     {
-        infoPtr->ItemHeight = 4 + GetIdealItemHeight(infoPtr);
+        infoPtr->ItemHeight = (2 * CI_TEXT_MARGIN_HEIGHT) + GetIdealItemHeight(infoPtr);
     }
 
     UpdateControl(infoPtr,
@@ -762,7 +761,7 @@ PaintControl(IN PCHECKLISTWND infoPtr,
              Item != NULL && CurrentIndex <= LastTouchedIndex;
              Item = Item->Next, CurrentIndex++)
         {
-            TextRect.bottom = TextRect.top + infoPtr->ItemHeight;
+            TextRect.bottom = TextRect.top + infoPtr->ItemHeight - (2 * CI_TEXT_MARGIN_HEIGHT);
             ItemRect.bottom = ItemRect.top + infoPtr->ItemHeight;
             
             SetBrushOrgEx(hDC,
@@ -789,15 +788,16 @@ PaintControl(IN PCHECKLISTWND infoPtr,
                      &TextRect,
                      DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 
+            CheckBox.top = TextRect.top;
+            CheckBox.bottom = TextRect.bottom;
+
             /* draw the Allow checkbox */
             IsPushed = (Enabled && Item == infoPtr->FocusedCheckItem && infoPtr->HasFocus &&
                         !(Item->State & CIS_ALLOWDISABLED) && infoPtr->FocusedCheckItemBox != CLB_DENY &&
                         infoPtr->FocusedPushed);
 
             CheckBox.left = infoPtr->CheckBoxLeft[CLB_ALLOW] - ((TextRect.bottom - TextRect.top) / 2);
-            CheckBox.right = CheckBox.left + (TextRect.bottom - TextRect.top) - (2 * CI_TEXT_MARGIN_HEIGHT);
-            CheckBox.top = TextRect.top;
-            CheckBox.bottom = CheckBox.top + (TextRect.bottom - TextRect.top) - (2 * CI_TEXT_MARGIN_HEIGHT);
+            CheckBox.right = CheckBox.left + (TextRect.bottom - TextRect.top);
 #if SUPPORT_UXTHEME
             if (infoPtr->ThemeHandle != NULL)
             {
@@ -853,7 +853,7 @@ PaintControl(IN PCHECKLISTWND infoPtr,
                         infoPtr->FocusedPushed);
 
             CheckBox.left = infoPtr->CheckBoxLeft[CLB_DENY] - ((TextRect.bottom - TextRect.top) / 2);
-            CheckBox.right = CheckBox.left + (TextRect.bottom - TextRect.top) - (2 * CI_TEXT_MARGIN_HEIGHT);
+            CheckBox.right = CheckBox.left + (TextRect.bottom - TextRect.top);
 #if SUPPORT_UXTHEME
             if (infoPtr->ThemeHandle != NULL)
             {
@@ -1111,7 +1111,7 @@ CheckListWndProc(IN HWND hwnd,
             
 #if SUPPORT_UXTHEME
             /* handle hovering checkboxes */
-            if (hWndCapture == NULL)
+            if (hWndCapture == NULL && infoPtr->ThemeHandle != NULL)
             {
                 TRACKMOUSEEVENT tme;
                 PCHECKITEM HotTrackItem;
@@ -1547,6 +1547,8 @@ CheckListWndProc(IN HWND hwnd,
             infoPtr->HasFocus = FALSE;
             if (infoPtr->FocusedCheckItem != NULL)
             {
+                infoPtr->FocusedPushed = FALSE;
+                
                 UpdateCheckItem(infoPtr,
                                 infoPtr->FocusedCheckItem);
             }
@@ -1834,6 +1836,13 @@ CheckListWndProc(IN HWND hwnd,
                 infoPtr->HoverTime = HOVER_DEFAULT;
             }
 #endif
+            break;
+        }
+        
+        case WM_SIZE:
+        {
+            UpdateControl(infoPtr,
+                          TRUE);
             break;
         }
 
