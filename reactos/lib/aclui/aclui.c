@@ -705,6 +705,12 @@ SecurityPageProc(IN HWND hwndDlg,
                     ShowWindow(GetDlgItem(hwndDlg, IDC_LABEL_ADVANCED),
                                SW_HIDE);
                 }
+                
+                /* enable quicksearch for the permissions checklist control */
+                SendMessage(sp->hAceCheckList,
+                            CLM_ENABLEQUICKSEARCH,
+                            TRUE,
+                            0);
             }
             break;
         }

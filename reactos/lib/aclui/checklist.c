@@ -28,6 +28,16 @@
  */
 #include "acluilib.h"
 
+#define CI_TEXT_MARGIN_WIDTH    (8)
+#define CI_TEXT_MARGIN_HEIGHT   (3)
+#define CI_TEXT_SELECTIONMARGIN (1)
+
+#define TIMER_ID_SETHITFOCUS    (1)
+#define TIMER_ID_RESETQUICKSEARCH       (2)
+
+#define DEFAULT_QUICKSEARCH_SETFOCUS_DELAY      (2000)
+#define DEFAULT_QUICKSEARCH_RESET_DELAY (3000)
+
 typedef struct _CHECKITEM
 {
     struct _CHECKITEM *Next;
@@ -54,6 +64,15 @@ typedef struct _CHECKLISTWND
    
    COLORREF TextColor[2];
    UINT CheckBoxLeft[2];
+   
+   BOOL QuickSearchEnabled;
+   PCHECKITEM QuickSearchHitItem;
+   WCHAR QuickSearchText[65];
+   UINT QuickSearchSetFocusDelay;
+   UINT QuickSearchResetDelay;
+   
+   DWORD CaretWidth;
+   BOOL ShowingCaret;
 
 #if SUPPORT_UXTHEME
    PCHECKITEM HoveredCheckItem;
@@ -64,8 +83,17 @@ typedef struct _CHECKLISTWND
 #endif
 } CHECKLISTWND, *PCHECKLISTWND;
 
-#define CI_TEXT_MARGIN_WIDTH    (8)
-#define CI_TEXT_MARGIN_HEIGHT   (3)
+static VOID EscapeQuickSearch(IN PCHECKLISTWND infoPtr);
+#if SUPPORT_UXTHEME
+static VOID ChangeCheckItemHotTrack(IN PCHECKLISTWND infoPtr,
+                                    IN PCHECKITEM NewHotTrack,
+                                    IN UINT NewHotTrackBox);
+#endif
+static VOID ChangeCheckItemFocus(IN PCHECKLISTWND infoPtr,
+                                 IN PCHECKITEM NewFocus,
+                                 IN UINT NewFocusBox);
+
+/******************************************************************************/
 
 static PCHECKITEM
 FindCheckItemByIndex(IN PCHECKLISTWND infoPtr,
@@ -110,6 +138,27 @@ CheckItemToIndex(IN PCHECKLISTWND infoPtr,
     }
     
     return -1;
+}
+
+static PCHECKITEM
+FindCheckItem(IN PCHECKLISTWND infoPtr,
+              IN LPWSTR SearchText)
+{
+    PCHECKITEM CurItem;
+    SIZE_T Count = wcslen(SearchText);
+    
+    for (CurItem = infoPtr->CheckItemListHead;
+         CurItem != NULL;
+         CurItem = CurItem->Next)
+    {
+        if ((CurItem->State & CIS_DISABLED) != CIS_DISABLED &&
+            !wcsnicmp(CurItem->Name, SearchText, Count))
+        {
+            break;
+        }
+    }
+    
+    return CurItem;
 }
 
 static PCHECKITEM
@@ -366,6 +415,27 @@ DeleteCheckItem(IN PCHECKLISTWND infoPtr,
     {
         if (CurItem == Item)
         {
+            if (Item == infoPtr->QuickSearchHitItem && infoPtr->QuickSearchEnabled)
+            {
+                EscapeQuickSearch(infoPtr);
+            }
+            
+#if SUPPORT_UXTHEME
+            if (Item == infoPtr->HoveredCheckItem)
+            {
+                ChangeCheckItemHotTrack(infoPtr,
+                                        NULL,
+                                        0);
+            }
+#endif
+            
+            if (Item == infoPtr->FocusedCheckItem)
+            {
+                ChangeCheckItemFocus(infoPtr,
+                                     NULL,
+                                     0);
+            }
+            
             *PrevPtr = CurItem->Next;
             HeapFree(GetProcessHeap(),
                      0,
@@ -608,7 +678,7 @@ MakeCheckItemVisible(IN PCHECKLISTWND infoPtr,
                                    NULL,
                                    NULL,
                                    NULL,
-                                   SW_INVALIDATE);
+                                   SW_INVALIDATE | SW_SCROLLCHILDREN);
 
                     RedrawWindow(infoPtr->hSelf,
                                  NULL,
@@ -664,7 +734,16 @@ RetChangeControlFont(IN PCHECKLISTWND infoPtr,
     {
         infoPtr->ItemHeight = (2 * CI_TEXT_MARGIN_HEIGHT) + GetIdealItemHeight(infoPtr);
     }
-
+    
+    if (infoPtr->ShowingCaret)
+    {
+        DestroyCaret();
+        CreateCaret(infoPtr->hSelf,
+                    NULL,
+                    0,
+                    infoPtr->ItemHeight - (2 * CI_TEXT_MARGIN_HEIGHT));
+    }
+    
     UpdateControl(infoPtr,
                   TRUE);
 
@@ -788,14 +867,73 @@ PaintControl(IN PCHECKLISTWND infoPtr,
 #if SUPPORT_UXTHEME
             ItemHovered = (Enabled && infoPtr->HoveredCheckItem == Item);
 #endif
-            
-            /* draw the text */
-            DrawText(hDC,
-                     Item->Name,
-                     -1,
-                     &TextRect,
-                     DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 
+            if (infoPtr->QuickSearchHitItem == Item)
+            {
+                COLORREF OldBkColor, OldFgColor;
+                SIZE TextSize;
+                SIZE_T TextLen, HighlightLen = wcslen(infoPtr->QuickSearchText);
+
+                /* highlight the quicksearch text */
+                if (GetTextExtentPoint32(hDC,
+                                         Item->Name,
+                                         HighlightLen,
+                                         &TextSize))
+                {
+                    COLORREF HighlightTextColor, HighlightBackground;
+                    RECT rcHighlight = TextRect;
+                    
+                    HighlightTextColor = GetSysColor(COLOR_HIGHLIGHTTEXT);
+                    HighlightBackground = GetSysColor(COLOR_HIGHLIGHT);
+
+                    rcHighlight.right = rcHighlight.left + TextSize.cx;
+                    
+                    InflateRect(&rcHighlight,
+                                0,
+                                CI_TEXT_SELECTIONMARGIN);
+                    
+                    OldBkColor = SetBkColor(hDC,
+                                            HighlightBackground);
+                    OldFgColor = SetTextColor(hDC,
+                                              HighlightTextColor);
+
+                    /* draw the highlighted text */
+                    DrawText(hDC,
+                             Item->Name,
+                             HighlightLen,
+                             &rcHighlight,
+                             DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+
+                    SetBkColor(hDC,
+                               OldBkColor);
+                    SetTextColor(hDC,
+                                 OldFgColor);
+
+                    /* draw the remaining part of the text */
+                    TextLen = wcslen(Item->Name);
+                    if (HighlightLen < TextLen)
+                    {
+                        rcHighlight.left = rcHighlight.right;
+                        rcHighlight.right = TextRect.right;
+                        
+                        DrawText(hDC,
+                                 Item->Name + HighlightLen,
+                                 -1,
+                                 &rcHighlight,
+                                 DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+                    }
+                }
+            }
+            else
+            {
+                /* draw the text */
+                DrawText(hDC,
+                         Item->Name,
+                         -1,
+                         &TextRect,
+                         DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+            }
+            
             CheckBox.top = TextRect.top;
             CheckBox.bottom = TextRect.bottom;
 
@@ -1059,6 +1197,295 @@ ChangeCheckBox(IN PCHECKLISTWND infoPtr,
     CheckItem->State = NewState;
 }
 
+static VOID
+DisplayCaret(IN PCHECKLISTWND infoPtr)
+{
+    if (IsWindowEnabled(infoPtr->hSelf) && !infoPtr->ShowingCaret)
+    {
+        infoPtr->ShowingCaret = TRUE;
+        
+        CreateCaret(infoPtr->hSelf,
+                    NULL,
+                    infoPtr->CaretWidth,
+                    infoPtr->ItemHeight - (2 * CI_TEXT_MARGIN_HEIGHT));
+
+        ShowCaret(infoPtr->hSelf);
+    }
+}
+
+static VOID
+RemoveCaret(IN PCHECKLISTWND infoPtr)
+{
+    if (IsWindowEnabled(infoPtr->hSelf) && infoPtr->ShowingCaret)
+    {
+        infoPtr->ShowingCaret = FALSE;
+        
+        HideCaret(infoPtr->hSelf);
+        DestroyCaret();
+    }
+}
+
+static VOID
+KillQuickSearchTimers(IN PCHECKLISTWND infoPtr)
+{
+    KillTimer(infoPtr->hSelf,
+              TIMER_ID_SETHITFOCUS);
+    KillTimer(infoPtr->hSelf,
+              TIMER_ID_RESETQUICKSEARCH);
+}
+
+static VOID
+MapItemToRect(IN PCHECKLISTWND infoPtr,
+              IN PCHECKITEM CheckItem,
+              OUT RECT *prcItem)
+{
+    INT Index = CheckItemToIndex(infoPtr,
+                                 CheckItem);
+    if (Index != -1)
+    {
+        RECT rcClient;
+        LONG Style;
+        INT VisibleFirst;
+        
+        GetClientRect(infoPtr->hSelf, &rcClient);
+        
+        Style = GetWindowLong(infoPtr->hSelf,
+                              GWL_STYLE);
+
+        if (Style & WS_VSCROLL)
+        {
+            VisibleFirst = GetScrollPos(infoPtr->hSelf,
+                                        SB_VERT);
+        }
+        else
+        {
+            VisibleFirst = 0;
+        }
+        
+        prcItem->left = rcClient.left;
+        prcItem->right = rcClient.right;
+        prcItem->top = (Index - VisibleFirst) * infoPtr->ItemHeight;
+        prcItem->bottom = prcItem->top + infoPtr->ItemHeight;
+    }
+    else
+    {
+        prcItem->left = 0;
+        prcItem->top = 0;
+        prcItem->right = 0;
+        prcItem->bottom = 0;
+    }
+}
+
+static VOID
+UpdateCaretPos(IN PCHECKLISTWND infoPtr)
+{
+    if (infoPtr->ShowingCaret && infoPtr->QuickSearchHitItem != NULL)
+    {
+        HDC hDC = GetDC(infoPtr->hSelf);
+        if (hDC != NULL)
+        {
+            SIZE TextSize;
+            HGDIOBJ hOldFont = SelectObject(hDC,
+                                            infoPtr->hFont);
+
+            TextSize.cx = 0;
+            TextSize.cy = 0;
+            
+            if (infoPtr->QuickSearchText[0] == L'\0' ||
+                GetTextExtentPoint32(hDC,
+                                     infoPtr->QuickSearchHitItem->Name,
+                                     wcslen(infoPtr->QuickSearchText),
+                                     &TextSize))
+            {
+                RECT rcItem;
+                
+                MapItemToRect(infoPtr,
+                              infoPtr->QuickSearchHitItem,
+                              &rcItem);
+
+                /* actually change the caret position */
+                SetCaretPos(rcItem.left + CI_TEXT_MARGIN_WIDTH + TextSize.cx,
+                            rcItem.top + CI_TEXT_MARGIN_HEIGHT);
+            }
+
+            SelectObject(hDC,
+                         hOldFont);
+
+            ReleaseDC(infoPtr->hSelf,
+                      hDC);
+        }
+    }
+}
+
+static VOID
+EscapeQuickSearch(IN PCHECKLISTWND infoPtr)
+{
+    if (infoPtr->QuickSearchEnabled && infoPtr->QuickSearchHitItem != NULL)
+    {
+        PCHECKITEM OldHit = infoPtr->QuickSearchHitItem;
+        
+        infoPtr->QuickSearchHitItem = NULL;
+        infoPtr->QuickSearchText[0] = L'\0';
+        
+        /* scroll back to the focused item */
+        if (infoPtr->FocusedCheckItem != NULL)
+        {
+            MakeCheckItemVisible(infoPtr,
+                                 infoPtr->FocusedCheckItem);
+        }
+        
+        /* repaint the old search hit item if it's still visible */
+        UpdateCheckItem(infoPtr,
+                        OldHit);
+
+        KillQuickSearchTimers(infoPtr);
+        
+        RemoveCaret(infoPtr);
+    }
+}
+
+static VOID
+ChangeSearchHit(IN PCHECKLISTWND infoPtr,
+                IN PCHECKITEM NewHit)
+{
+    PCHECKITEM OldHit = infoPtr->QuickSearchHitItem;
+    
+    infoPtr->QuickSearchHitItem = NewHit;
+    
+    if (OldHit != NewHit)
+    {
+        /* scroll to the new search hit */
+        MakeCheckItemVisible(infoPtr,
+                             NewHit);
+        
+        /* repaint the old hit if present and visible */
+        if (OldHit != NULL)
+        {
+            UpdateCheckItem(infoPtr,
+                            OldHit);
+        }
+        else
+        {
+            /* show the caret the first time we find an item */
+             DisplayCaret(infoPtr);
+        }
+    }
+    
+    UpdateCaretPos(infoPtr);
+    
+    UpdateCheckItem(infoPtr,
+                    NewHit);
+    
+    /* kill the reset timer and restart the set hit focus timer */
+    KillTimer(infoPtr->hSelf,
+              TIMER_ID_RESETQUICKSEARCH);
+    if (infoPtr->QuickSearchSetFocusDelay != 0)
+    {
+        SetTimer(infoPtr->hSelf,
+                 TIMER_ID_SETHITFOCUS,
+                 infoPtr->QuickSearchSetFocusDelay,
+                 NULL);
+    }
+}
+
+static BOOL
+QuickSearchFindHit(IN PCHECKLISTWND infoPtr,
+                   IN WCHAR c)
+{
+    if (infoPtr->QuickSearchEnabled)
+    {
+        BOOL Ret = FALSE;
+        PCHECKITEM NewHit;
+        
+        switch (c)
+        {
+            case '\r':
+            case '\n':
+            {
+                Ret = infoPtr->QuickSearchHitItem != NULL;
+                if (Ret)
+                {
+                    /* NOTE: QuickSearchHitItem definitely has at least one
+                             enabled check box, the user can't search for disabled
+                             check items */
+
+                    ChangeCheckItemFocus(infoPtr,
+                                         infoPtr->QuickSearchHitItem,
+                                         ((!(infoPtr->QuickSearchHitItem->State & CIS_ALLOWDISABLED)) ? CLB_ALLOW : CLB_DENY));
+
+                    EscapeQuickSearch(infoPtr);
+                }
+                break;
+            }
+            
+            case VK_BACK:
+            {
+                if (infoPtr->QuickSearchHitItem != NULL)
+                {
+                    INT SearchLen = wcslen(infoPtr->QuickSearchText);
+                    if (SearchLen > 0)
+                    {
+                        /* delete the last character */
+                        infoPtr->QuickSearchText[--SearchLen] = L'\0';
+                        
+                        if (SearchLen > 0)
+                        {
+                            /* search again */
+                            NewHit = FindCheckItem(infoPtr,
+                                                   infoPtr->QuickSearchText);
+
+                            if (NewHit != NULL)
+                            {
+                                /* change the search hit */
+                                ChangeSearchHit(infoPtr,
+                                                NewHit);
+
+                                Ret = TRUE;
+                            }
+                        }
+                    }
+
+                    if (!Ret)
+                    {
+                        EscapeQuickSearch(infoPtr);
+                    }
+                }
+                break;
+            }
+            
+            default:
+            {
+                INT SearchLen = wcslen(infoPtr->QuickSearchText);
+                if (SearchLen < (sizeof(infoPtr->QuickSearchText) / sizeof(infoPtr->QuickSearchText[0])) - 1)
+                {
+                    infoPtr->QuickSearchText[SearchLen++] = c;
+                    infoPtr->QuickSearchText[SearchLen] = L'\0';
+                    
+                    NewHit = FindCheckItem(infoPtr,
+                                           infoPtr->QuickSearchText);
+                    if (NewHit != NULL)
+                    {
+                        /* change the search hit */
+                        ChangeSearchHit(infoPtr,
+                                        NewHit);
+                        
+                        Ret = TRUE;
+                    }
+                    else
+                    {
+                        /* reset the input */
+                        infoPtr->QuickSearchText[--SearchLen] = L'\0';
+                    }
+                }
+                break;
+            }
+        }
+        return Ret;
+    }
+    
+    return FALSE;
+}
+
 static LRESULT CALLBACK
 CheckListWndProc(IN HWND hwnd,
                  IN UINT uMsg,
@@ -1292,7 +1719,7 @@ CheckListWndProc(IN HWND hwnd,
                                        NULL,
                                        NULL,
                                        NULL,
-                                       SW_INVALIDATE);
+                                       SW_INVALIDATE | SW_SCROLLCHILDREN);
 
                         RedrawWindow(hwnd,
                                      NULL,
@@ -1427,6 +1854,28 @@ CheckListWndProc(IN HWND hwnd,
             break;
         }
         
+        case CLM_ENABLEQUICKSEARCH:
+        {
+            if (wParam == 0)
+            {
+                EscapeQuickSearch(infoPtr);
+            }
+            infoPtr->QuickSearchEnabled = (wParam != 0);
+            break;
+        }
+        
+        case CLM_SETQUICKSEARCH_TIMEOUT_RESET:
+        {
+            infoPtr->QuickSearchResetDelay = (UINT)wParam;
+            break;
+        }
+        
+        case CLM_SETQUICKSEARCH_TIMEOUT_SETFOCUS:
+        {
+            infoPtr->QuickSearchSetFocusDelay = (UINT)wParam;
+            break;
+        }
+        
         case WM_SETFONT:
         {
             Ret = (LRESULT)RetChangeControlFont(infoPtr,
@@ -1461,6 +1910,8 @@ CheckListWndProc(IN HWND hwnd,
         
         case WM_ENABLE:
         {
+            EscapeQuickSearch(infoPtr);
+            
             UpdateControl(infoPtr,
                           TRUE);
             break;
@@ -1515,7 +1966,7 @@ CheckListWndProc(IN HWND hwnd,
                                            NULL,
                                            NULL,
                                            NULL,
-                                           SW_INVALIDATE);
+                                           SW_INVALIDATE | SW_SCROLLCHILDREN);
 
                             RedrawWindow(hwnd,
                                          NULL,
@@ -1552,6 +2003,8 @@ CheckListWndProc(IN HWND hwnd,
         
         case WM_KILLFOCUS:
         {
+            EscapeQuickSearch(infoPtr);
+            
             infoPtr->HasFocus = FALSE;
             if (infoPtr->FocusedCheckItem != NULL)
             {
@@ -1617,6 +2070,12 @@ CheckListWndProc(IN HWND hwnd,
                 
                 if (ChangeFocus)
                 {
+                    if (infoPtr->QuickSearchEnabled && infoPtr->QuickSearchHitItem != NULL &&
+                        infoPtr->QuickSearchHitItem != NewFocus)
+                    {
+                        EscapeQuickSearch(infoPtr);
+                    }
+                    
                     ChangeCheckItemFocus(infoPtr,
                                          NewFocus,
                                          NewFocusBox);
@@ -1680,19 +2139,26 @@ CheckListWndProc(IN HWND hwnd,
             {
                 case VK_SPACE:
                 {
-                    if (infoPtr->FocusedCheckItem != NULL && GetCapture() == NULL)
+                    if (GetCapture() == NULL &&
+                        !QuickSearchFindHit(infoPtr,
+                                            L' '))
                     {
-                        BOOL OldPushed = infoPtr->FocusedPushed;
-                        infoPtr->FocusedPushed = TRUE;
-
-                        if (infoPtr->FocusedPushed != OldPushed)
+                        if (infoPtr->FocusedCheckItem != NULL &&
+                            (infoPtr->QuickSearchHitItem == NULL ||
+                             infoPtr->QuickSearchHitItem == infoPtr->FocusedCheckItem))
                         {
-                            MakeCheckItemVisible(infoPtr,
-                                                 infoPtr->FocusedCheckItem);
+                            BOOL OldPushed = infoPtr->FocusedPushed;
+                            infoPtr->FocusedPushed = TRUE;
 
-                            UpdateCheckItemBox(infoPtr,
-                                               infoPtr->FocusedCheckItem,
-                                               infoPtr->FocusedCheckItemBox);
+                            if (infoPtr->FocusedPushed != OldPushed)
+                            {
+                                MakeCheckItemVisible(infoPtr,
+                                                     infoPtr->FocusedCheckItem);
+
+                                UpdateCheckItemBox(infoPtr,
+                                                   infoPtr->FocusedCheckItem,
+                                                   infoPtr->FocusedCheckItemBox);
+                            }
                         }
                     }
                     break;
@@ -1700,18 +2166,24 @@ CheckListWndProc(IN HWND hwnd,
                 
                 case VK_RETURN:
                 {
-                    if (infoPtr->FocusedCheckItem != NULL && GetCapture() == NULL)
+                    if (GetCapture() == NULL &&
+                        !QuickSearchFindHit(infoPtr,
+                                            L'\n'))
                     {
-                        MakeCheckItemVisible(infoPtr,
-                                             infoPtr->FocusedCheckItem);
+                        if (infoPtr->FocusedCheckItem != NULL &&
+                            infoPtr->QuickSearchHitItem == NULL)
+                        {
+                            MakeCheckItemVisible(infoPtr,
+                                                 infoPtr->FocusedCheckItem);
 
-                        ChangeCheckBox(infoPtr,
-                                       infoPtr->FocusedCheckItem,
-                                       infoPtr->FocusedCheckItemBox);
-
-                        UpdateCheckItemBox(infoPtr,
+                            ChangeCheckBox(infoPtr,
                                            infoPtr->FocusedCheckItem,
                                            infoPtr->FocusedCheckItemBox);
+
+                            UpdateCheckItemBox(infoPtr,
+                                               infoPtr->FocusedCheckItem,
+                                               infoPtr->FocusedCheckItemBox);
+                        }
                     }
                     break;
                 }
@@ -1723,6 +2195,8 @@ CheckListWndProc(IN HWND hwnd,
                         PCHECKITEM NewFocus;
                         UINT NewFocusBox = 0;
                         BOOL Shift = GetKeyState(VK_SHIFT) & 0x8000;
+                        
+                        EscapeQuickSearch(infoPtr);
 
                         NewFocus = FindEnabledCheckBox(infoPtr,
                                                        Shift,
@@ -1779,16 +2253,23 @@ CheckListWndProc(IN HWND hwnd,
         {
             INT virtKey;
             
-            Ret = DLGC_HASSETSEL;
+            Ret = 0;
             virtKey = (lParam != 0 ? (INT)((LPMSG)lParam)->wParam : 0);
             switch (virtKey)
             {
                 case VK_RETURN:
                 {
-                    Ret |= DLGC_WANTMESSAGE;
+                    if (infoPtr->QuickSearchEnabled && infoPtr->QuickSearchHitItem != NULL)
+                    {
+                        Ret |= DLGC_WANTCHARS | DLGC_WANTMESSAGE;
+                    }
+                    else
+                    {
+                        Ret |= DLGC_WANTMESSAGE;
+                    }
                     break;
                 }
-                
+
                 case VK_TAB:
                 {
                     INT CheckBox;
@@ -1801,7 +2282,23 @@ CheckListWndProc(IN HWND hwnd,
                     Ret |= (EnabledBox ? DLGC_WANTTAB : DLGC_WANTCHARS);
                     break;
                 }
+                
+                default:
+                {
+                    if (infoPtr->QuickSearchEnabled)
+                    {
+                        Ret |= DLGC_WANTCHARS;
+                    }
+                    break;
+                }
             }
+            break;
+        }
+        
+        case WM_CHAR:
+        {
+            QuickSearchFindHit(infoPtr,
+                               (WCHAR)wParam);
             break;
         }
         
@@ -1843,6 +2340,8 @@ CheckListWndProc(IN HWND hwnd,
         
         case WM_SETTINGCHANGE:
         {
+            DWORD OldCaretWidth = infoPtr->CaretWidth;
+            
 #if SUPPORT_UXTHEME
             /* update the hover time */
             if (!SystemParametersInfo(SPI_GETMOUSEHOVERTIME,
@@ -1853,6 +2352,23 @@ CheckListWndProc(IN HWND hwnd,
                 infoPtr->HoverTime = HOVER_DEFAULT;
             }
 #endif
+
+            /* update the caret */
+            if (!SystemParametersInfo(SPI_GETCARETWIDTH,
+                                      0,
+                                      &infoPtr->CaretWidth,
+                                      0))
+            {
+                infoPtr->CaretWidth = 2;
+            }
+            if (OldCaretWidth != infoPtr->CaretWidth && infoPtr->ShowingCaret)
+            {
+                DestroyCaret();
+                CreateCaret(hwnd,
+                            NULL,
+                            infoPtr->CaretWidth,
+                            infoPtr->ItemHeight - (2 * CI_TEXT_MARGIN_HEIGHT));
+            }
             break;
         }
         
@@ -1881,6 +2397,49 @@ CheckListWndProc(IN HWND hwnd,
             }
             break;
         }
+        
+        case WM_TIMER:
+        {
+            switch (wParam)
+            {
+                case TIMER_ID_SETHITFOCUS:
+                {
+                    /* kill the timer */
+                    KillTimer(hwnd,
+                              wParam);
+
+                    if (infoPtr->QuickSearchEnabled && infoPtr->QuickSearchHitItem != NULL)
+                    {
+                        /* change the focus to the hit item, this item has to have
+                           at least one enabled checkbox! */
+                        ChangeCheckItemFocus(infoPtr,
+                                             infoPtr->QuickSearchHitItem,
+                                             ((!(infoPtr->QuickSearchHitItem->State & CIS_ALLOWDISABLED)) ? CLB_ALLOW : CLB_DENY));
+
+                        /* start the timer to reset quicksearch */
+                        if (infoPtr->QuickSearchResetDelay != 0)
+                        {
+                            SetTimer(hwnd,
+                                     TIMER_ID_RESETQUICKSEARCH,
+                                     infoPtr->QuickSearchResetDelay,
+                                     NULL);
+                        }
+                    }
+                    break;
+                }
+                case TIMER_ID_RESETQUICKSEARCH:
+                {
+                    /* kill the timer */
+                    KillTimer(hwnd,
+                              wParam);
+
+                    /* escape quick search */
+                    EscapeQuickSearch(infoPtr);
+                    break;
+                }
+            }
+            break;
+        }
 
         case WM_CREATE:
         {
@@ -1901,7 +2460,15 @@ CheckListWndProc(IN HWND hwnd,
                 infoPtr->CheckItemListHead = NULL;
                 infoPtr->CheckItemCount = 0;
                 
+                if (!SystemParametersInfo(SPI_GETCARETWIDTH,
+                                          0,
+                                          &infoPtr->CaretWidth,
+                                          0))
+                {
+                    infoPtr->CaretWidth = 2;
+                }
                 infoPtr->ItemHeight = 10;
+                infoPtr->ShowingCaret = FALSE;
                 
                 infoPtr->HasFocus = FALSE;
                 infoPtr->FocusedCheckItem = NULL;
@@ -1915,6 +2482,12 @@ CheckListWndProc(IN HWND hwnd,
                 
                 infoPtr->CheckBoxLeft[0] = rcClient.right - 30;
                 infoPtr->CheckBoxLeft[1] = rcClient.right - 15;
+                
+                infoPtr->QuickSearchEnabled = FALSE;
+                infoPtr->QuickSearchText[0] = L'\0';
+
+                infoPtr->QuickSearchSetFocusDelay = DEFAULT_QUICKSEARCH_SETFOCUS_DELAY;
+                infoPtr->QuickSearchResetDelay = DEFAULT_QUICKSEARCH_RESET_DELAY;
 
 #if SUPPORT_UXTHEME
                 infoPtr->HoveredCheckItem = NULL;
@@ -1952,6 +2525,11 @@ CheckListWndProc(IN HWND hwnd,
         
         case WM_DESTROY:
         {
+            if (infoPtr->ShowingCaret)
+            {
+                DestroyCaret();
+            }
+
             ClearCheckItems(infoPtr);
             
 #if SUPPORT_UXTHEME
