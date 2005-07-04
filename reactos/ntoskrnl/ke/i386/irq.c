@@ -473,7 +473,7 @@ KeConnectInterrupt(PKINTERRUPT InterruptObject)
    if (Result)
    {
       InsertTailList(&CurrentIsr->ListHead,&InterruptObject->InterruptListEntry);
-      DPRINT("%x %x\n",InterruptObject->InterruptListEntry.Flink, InterruptObject->Entry.Blink);
+      DPRINT("%x %x\n",InterruptObject->InterruptListEntry.Flink, InterruptObject->InterruptListEntry.Blink);
    }
 
    InterruptObject->Connected = TRUE;
