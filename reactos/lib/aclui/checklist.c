@@ -1592,6 +1592,13 @@ CheckListWndProc(IN HWND hwnd,
                     {
                         ChangeFocus = TRUE;
                     }
+                    
+                    if (ChangeFocus && GetCapture() == NULL &&
+                        (uMsg == WM_LBUTTONDOWN || uMsg == WM_LBUTTONDBLCLK))
+                    {
+                        infoPtr->FocusedPushed = TRUE;
+                        Capture = TRUE;
+                    }
                 }
                 else
                 {
@@ -1600,14 +1607,6 @@ CheckListWndProc(IN HWND hwnd,
                 
                 if (ChangeFocus)
                 {
-                    if (uMsg == WM_LBUTTONDOWN &&
-                        InCheckBox && GetCapture() != hwnd)
-                    {
-                        infoPtr->FocusedPushed = TRUE;
-
-                        Capture = TRUE;
-                    }
-                    
                     ChangeCheckItemFocus(infoPtr,
                                          NewFocus,
                                          NewFocusBox);
@@ -1637,6 +1636,9 @@ CheckListWndProc(IN HWND hwnd,
                     BOOL InCheckBox;
                     POINT pt;
                     
+                    pt.x = (LONG)LOWORD(lParam);
+                    pt.y = (LONG)HIWORD(lParam);
+                    
                     infoPtr->FocusedPushed = FALSE;
 
                     PtItem = PtToCheckItemBox(infoPtr,
@@ -1644,7 +1646,7 @@ CheckListWndProc(IN HWND hwnd,
                                               &PtItemBox,
                                               &InCheckBox);
 
-                    if (InCheckBox && PtItem == infoPtr->FocusedCheckItem &&
+                    if (PtItem == infoPtr->FocusedCheckItem && InCheckBox &&
                         PtItemBox == infoPtr->FocusedCheckItemBox)
                     {
                         ChangeCheckBox(infoPtr,
@@ -1938,7 +1940,7 @@ RegisterCheckListControl(HINSTANCE hInstance)
     
     ZeroMemory(&wc, sizeof(WNDCLASS));
     
-    wc.style = 0;
+    wc.style = CS_DBLCLKS;
     wc.lpfnWndProc = CheckListWndProc;
     wc.cbClsExtra = 0;
     wc.cbWndExtra = sizeof(PCHECKLISTWND);
