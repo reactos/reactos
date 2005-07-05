@@ -95,7 +95,7 @@ struct {
 NTSTATUS
 InitSessionManager(VOID)
 {
-  INT i = 0;
+  UINT i = 0;
   NTSTATUS Status = STATUS_SUCCESS;
 
   for (i=0; i < (sizeof InitRoutine / sizeof InitRoutine[0]); i++)

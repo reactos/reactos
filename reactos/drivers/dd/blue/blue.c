@@ -165,7 +165,8 @@ ScrWrite(PDEVICE_OBJECT DeviceObject,
     NTSTATUS Status;
     char *pch = Irp->UserBuffer;
     PBYTE vidmem;
-    int i, j, offset;
+    unsigned int i;
+    int j, offset;
     int cursorx, cursory;
     int rows, columns;
     int processed = DeviceExtension->Mode & ENABLE_PROCESSED_OUTPUT;

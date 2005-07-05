@@ -53,7 +53,8 @@ VOID Usage(VOID);
 /* FIXME: allow user to specify an interface address, via pszIfAddr */
 INT DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
 {
-    INT i, k, iRet;
+    INT iRet;
+    UINT i, k;
     PMIB_IPNETTABLE pIpNetTable;
     PMIB_IPADDRTABLE pIpAddrTable;
     ULONG ulSize = 0;

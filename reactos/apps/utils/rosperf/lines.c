@@ -60,7 +60,7 @@ void
 LinesHorizontalProc(void *Context, PPERF_INFO PerfInfo, unsigned Reps)
 {
   unsigned Rep;
-  unsigned y;
+  int y;
   HDC Dc;
 
   for (Rep = 0; Rep < Reps; )
@@ -79,7 +79,7 @@ void
 LinesVerticalProc(void *Context, PPERF_INFO PerfInfo, unsigned Reps)
 {
   unsigned Rep;
-  unsigned x;
+  int x;
   HDC Dc;
 
   for (Rep = 0; Rep < Reps; )

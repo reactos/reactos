@@ -691,7 +691,7 @@ MmAllocatePagesForMdl ( IN PHYSICAL_ADDRESS LowAddress,
                         HighAddress,
                         NumberOfPagesWanted,
                         Pages + NumberOfPagesAllocated);
-      if (Ret == -1)
+      if (Ret == (ULONG)-1)
          break;
 
       NumberOfPagesAllocated += Ret;

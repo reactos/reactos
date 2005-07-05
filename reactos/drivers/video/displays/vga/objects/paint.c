@@ -7,10 +7,10 @@
 
 BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)
 {
-  int x, y, x2, y2, w, h;
-  ULONG offset, j, pre1;
+  int x, y, x2, y2, w, h, j;
+  ULONG offset, pre1;
   ULONG orgpre1, orgx, midpre1, tmppre1;
-  ULONG ileftpix, imidpix, irightpix;
+  int ileftpix, imidpix, irightpix;
 /*  double leftpix, midpix, rightpix;*/
   UCHAR a;
 
@@ -150,7 +150,7 @@ BOOL VGADDIPaintRgn(SURFOBJ *Surface, CLIPOBJ *ClipRegion, ULONG iColor, MIX Mix
          CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, CD_ANY, 0);
 
          do {
-			int i;
+			UINT i;
             EnumMore = CLIPOBJ_bEnum(ClipRegion, sizeof(RectEnum), (PVOID) &RectEnum);
 			DPRINT("EnumMore: %d, count: %d\n", EnumMore, RectEnum.c);
 			for( i=0; i<RectEnum.c; i++){

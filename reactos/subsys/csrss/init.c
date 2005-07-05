@@ -554,7 +554,7 @@ CsrServerInitialization (
 	PWSTR *ArgumentArray
 	)
 {
-	INT       i = 0;
+	UINT       i = 0;
 	NTSTATUS  Status = STATUS_SUCCESS;
 
 	DPRINT("CSR: %s called\n", __FUNCTION__);

@@ -240,7 +240,7 @@ VOID RunLoader(VOID)
   ULONG Size;
   char *SourcePath;
   char *LoadOptions;
-  int i;
+  UINT i;
 
   HINF InfHandle;
   ULONG ErrorLine;

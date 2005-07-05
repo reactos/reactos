@@ -192,7 +192,7 @@ FILE* Ext2OpenFile(PCHAR FileName)
  */
 BOOL Ext2LookupFile(PCHAR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer)
 {
-	int				i;
+	UINT				i;
 	ULONG				NumberOfPathParts;
 	CHAR			PathPart[261];
 	PVOID			DirectoryBuffer;

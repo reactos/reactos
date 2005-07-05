@@ -517,9 +517,10 @@ VOID TuiMessageBox(PCHAR MessageText)
 VOID TuiMessageBoxCritical(PCHAR MessageText)
 {
 	int		width = 8;
-	int		height = 1;
+	unsigned int	height = 1;
 	int		curline = 0;
-	int		i , j, k;
+	int		k;
+	size_t		i , j;
 	int		x1, x2, y1, y2;
 	char	temp[260];
 	char	key;
@@ -768,16 +769,17 @@ VOID TuiFadeOut(VOID)
 BOOL TuiEditBox(PCHAR MessageText, PCHAR EditTextBuffer, ULONG Length)
 {
 	int		width = 8;
-	int		height = 1;
+	unsigned int	height = 1;
 	int		curline = 0;
-	int		i , j, k;
+	int		k;
+	size_t		i , j;
 	int		x1, x2, y1, y2;
 	char	temp[260];
 	char	key;
 	int		EditBoxLine;
-	int		EditBoxStartX, EditBoxEndX;
+	ULONG		EditBoxStartX, EditBoxEndX;
 	int		EditBoxCursorX;
-	int		EditBoxTextCount;
+	unsigned int	EditBoxTextCount;
 	int		EditBoxTextDisplayIndex;
 	BOOL	ReturnCode;
 	PVOID	ScreenBuffer;

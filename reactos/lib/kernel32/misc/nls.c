@@ -314,7 +314,7 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
    LPCSTR MbsEnd;
    UCHAR Char, Length;
    WCHAR WideChar;
-   ULONG Count;
+   LONG Count;
 
    if (Flags != 0)
    {

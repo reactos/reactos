@@ -235,7 +235,7 @@ size_t wcsftime(wchar_t* s, size_t maxsize, const wchar_t* format, const struct 
 {
   char *x;
   char *f;
-  int i,j;
+  size_t i,j;
   x = malloc(maxsize);
   j = wcslen(format);
   f = malloc(j+1);

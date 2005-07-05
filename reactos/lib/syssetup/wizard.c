@@ -240,8 +240,7 @@ AckPageDlgProc(HWND hwndDlg,
   LPNMHDR lpnm;
   PWCHAR Projects;
   PWCHAR End, CurrentProject;
-  UINT ProjectsSize;
-  int ProjectsCount;
+  INT ProjectsSize, ProjectsCount;
 
   switch (uMsg)
     {

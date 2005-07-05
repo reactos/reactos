@@ -311,7 +311,7 @@ static int tzload(const char* name, struct state* CPP_CONST sp)
   else
   {
     i = _read(fid, buf, sizeof buf);
-    if (_close(fid) != 0 || i < sizeof *tzhp)
+    if (_close(fid) != 0 || i < (int)sizeof *tzhp)
       return -1;
   }
 
@@ -327,12 +327,12 @@ static int tzload(const char* name, struct state* CPP_CONST sp)
       sp->charcnt < 0 || sp->charcnt > TZ_MAX_CHARS ||
       (ttisstdcnt != sp->typecnt && ttisstdcnt != 0))
     return -1;
-  if (i < sizeof *tzhp +
-      sp->timecnt * (4 + sizeof (char)) +
-      sp->typecnt * (4 + 2 * sizeof (char)) +
-      sp->charcnt * sizeof (char) +
+  if (i < (int)sizeof *tzhp +
+      sp->timecnt * (4 + (int)sizeof (char)) +
+      sp->typecnt * (4 + 2 * (int)sizeof (char)) +
+      sp->charcnt * (int)sizeof (char) +
       sp->leapcnt * 2 * 4 +
-      ttisstdcnt * sizeof (char))
+      ttisstdcnt * (int)sizeof (char))
     return -1;
   p = buf + sizeof *tzhp;
   for (i = 0; i < sp->timecnt; ++i)
@@ -692,8 +692,8 @@ tzparse(const char *name, struct state * CPP_CONST sp, const int lastditch)
   {
     stdlen = strlen(name);  /* length of standard zone name */
     name += stdlen;
-    if (stdlen >= sizeof sp->chars)
-      stdlen = (sizeof sp->chars) - 1;
+    if (stdlen >= (int)sizeof sp->chars)
+      stdlen = (int)(sizeof sp->chars) - 1;
   }
   else
   {
@@ -883,7 +883,7 @@ tzparse(const char *name, struct state * CPP_CONST sp, const int lastditch)
   sp->charcnt = stdlen + 1;
   if (dstlen != 0)
     sp->charcnt += dstlen + 1;
-  if (sp->charcnt > sizeof sp->chars)
+  if (sp->charcnt > (int)sizeof sp->chars)
     return -1;
   cp = sp->chars;
   (void) strncpy(cp, stdname, stdlen);

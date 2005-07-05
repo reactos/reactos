@@ -128,7 +128,7 @@ FindAttribute (PFILE_RECORD_HEADER FileRecord,
 
   Attribute = (PATTRIBUTE)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
   while (Attribute < (PATTRIBUTE)((ULONG_PTR)FileRecord + FileRecord->BytesInUse) &&
-         Attribute->AttributeType != -1)
+         Attribute->AttributeType != (ATTRIBUTE_TYPE)-1)
     {
       if (Attribute->AttributeType == Type)
 	{

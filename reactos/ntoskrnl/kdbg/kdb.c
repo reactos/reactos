@@ -260,7 +260,7 @@ BOOLEAN
 KdbpShouldStepOverInstruction(ULONG_PTR Eip)
 {
    UCHAR Mem[3];
-   INT i = 0;
+   UINT i = 0;
 
    if (!NT_SUCCESS(KdbpSafeReadMemory(Mem, (PVOID)Eip, sizeof (Mem))))
    {
@@ -557,13 +557,13 @@ KdbpInsertBreakPoint(
    }
    else
    {
-      for (i = 0; i < RTL_NUMBER_OF(KdbBreakPoints); i++)
+      for (i = 0; i < (LONG)RTL_NUMBER_OF(KdbBreakPoints); i++)
       {
          if (KdbBreakPoints[i].Type == KdbBreakPointNone)
             break;
       }
    }
-   ASSERT(i < RTL_NUMBER_OF(KdbBreakPoints));
+   ASSERT(i < (LONG)RTL_NUMBER_OF(KdbBreakPoints));
 
    /* Set the breakpoint */
    ASSERT(KdbCurrentProcess != NULL);
@@ -655,7 +655,7 @@ KdbpIsBreakPointOurs(
    IN ULONG ExpNr,
    IN PKTRAP_FRAME TrapFrame)
 {
-   INT i;
+   UINT i;
    ASSERT(ExpNr == 1 || ExpNr == 3);
 
    if (ExpNr == 3) /* Software interrupt */
@@ -861,7 +861,7 @@ KdbpDisableBreakPoint(
    IN LONG BreakPointNr  OPTIONAL,
    IN OUT PKDB_BREAKPOINT BreakPoint  OPTIONAL)
 {
-   INT i;
+   UINT i;
    NTSTATUS Status;
 
    if (BreakPointNr < 0)
@@ -911,7 +911,7 @@ KdbpDisableBreakPoint(
             break;
          }
       }
-      if (i != -1) /* not found */
+      if (i != (UINT)-1) /* not found */
          ASSERT(0);
    }
    else
@@ -937,7 +937,7 @@ KdbpDisableBreakPoint(
             break;
          }
       }
-      if (i != -1) /* not found */
+      if (i != (UINT)-1) /* not found */
          ASSERT(0);
    }
 
@@ -962,7 +962,7 @@ KdbpGetEnterCondition(
    IN BOOLEAN FirstChance,
    OUT KDB_ENTER_CONDITION *Condition)
 {
-   if (ExceptionNr >= RTL_NUMBER_OF(KdbEnterConditions))
+   if (ExceptionNr >= (LONG)RTL_NUMBER_OF(KdbEnterConditions))
       return FALSE;
 
    *Condition = KdbEnterConditions[ExceptionNr][FirstChance ? 0 : 1];
@@ -986,7 +986,7 @@ KdbpSetEnterCondition(
 {
    if (ExceptionNr < 0)
    {
-      for (ExceptionNr = 0; ExceptionNr < RTL_NUMBER_OF(KdbEnterConditions); ExceptionNr++)
+      for (ExceptionNr = 0; ExceptionNr < (LONG)RTL_NUMBER_OF(KdbEnterConditions); ExceptionNr++)
       {
          if (ExceptionNr == 1 || ExceptionNr == 8 ||
              ExceptionNr == 9 || ExceptionNr == 15) /* Reserved exceptions */
@@ -998,7 +998,7 @@ KdbpSetEnterCondition(
    }
    else
    {
-      if (ExceptionNr >= RTL_NUMBER_OF(KdbEnterConditions) ||
+      if (ExceptionNr >= (LONG)RTL_NUMBER_OF(KdbEnterConditions) ||
           ExceptionNr == 1 || ExceptionNr == 8 || /* Do not allow changing of the debug */
           ExceptionNr == 9 || ExceptionNr == 15)  /* trap or reserved exceptions */
       {

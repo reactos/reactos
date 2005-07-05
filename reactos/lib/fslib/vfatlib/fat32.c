@@ -358,17 +358,17 @@ Fat32Format (HANDLE FileHandle,
   /* Calculate cluster size */
   if (ClusterSize == 0)
     {
-      if (PartitionInfo->PartitionLength.QuadPart < 8ULL * 1024ULL * 1024ULL * 1024ULL)
+      if (PartitionInfo->PartitionLength.QuadPart < 8LL * 1024LL * 1024LL * 1024LL)
 	{
 	  /* Partition < 8GB ==> 4KB Cluster */
 	  ClusterSize = 4096;
 	}
-      else if (PartitionInfo->PartitionLength.QuadPart < 16ULL * 1024ULL * 1024ULL * 1024ULL)
+      else if (PartitionInfo->PartitionLength.QuadPart < 16LL * 1024LL * 1024LL * 1024LL)
 	{
 	  /* Partition 8GB - 16GB ==> 8KB Cluster */
 	  ClusterSize = 8192;
 	}
-      else if (PartitionInfo->PartitionLength.QuadPart < 32ULL * 1024ULL * 1024ULL * 1024ULL)
+      else if (PartitionInfo->PartitionLength.QuadPart < 32LL * 1024LL * 1024LL * 1024LL)
 	{
 	  /* Partition 16GB - 32GB ==> 16KB Cluster */
 	  ClusterSize = 16384;

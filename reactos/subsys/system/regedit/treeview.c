@@ -96,7 +96,7 @@ LPCTSTR GetItemPath(HWND hwndTV, HTREEITEM hItem, HKEY* phRootKey)
     if (!pathBuffer) return NULL;
     *pathBuffer = 0;
     maxLen = HeapSize(GetProcessHeap(), 0, pathBuffer);
-    if (maxLen == (SIZE_T) - 1) return NULL;
+    if (maxLen == -1) return NULL;
     if (!hItem) hItem = TreeView_GetSelection(hwndTV);
     if (!hItem) return NULL;
     if (!get_item_path(hwndTV, hItem, phRootKey, &pathBuffer, &pathLen, &maxLen)) return NULL;

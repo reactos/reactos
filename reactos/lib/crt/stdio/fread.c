@@ -45,7 +45,7 @@ size_t fread(void *vptr, size_t size, size_t count, FILE *iop)
 
   if (iop->_cnt > 0 && to_read > 0)
   {
-     copy = min(iop->_cnt, to_read);
+     copy = min((size_t)iop->_cnt, to_read);
      memcpy(ptr, iop->_ptr, copy);
      ptr += copy;
      iop->_ptr += copy;
@@ -58,7 +58,7 @@ size_t fread(void *vptr, size_t size, size_t count, FILE *iop)
   if (to_read > 0)
   {
 
-    if (to_read >= iop->_bufsiz)
+    if (to_read >= (size_t)iop->_bufsiz)
     {
        n_read = _read(_fileno(iop), ptr, to_read);
 	   if (n_read < 0)
@@ -78,7 +78,7 @@ size_t fread(void *vptr, size_t size, size_t count, FILE *iop)
        {
 	      *ptr++ = c;
 	      to_read--;
-          copy = min(iop->_cnt, to_read);
+          copy = min((size_t)iop->_cnt, to_read);
           memcpy(ptr, iop->_ptr, copy);
           iop->_ptr += copy;
           iop->_cnt -= copy;

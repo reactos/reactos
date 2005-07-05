@@ -808,14 +808,14 @@ PrintPartitionData (PPARTLIST List,
 	}
 
 #if 0
-      if (PartEntry->PartInfo[0].PartitionLength.QuadPart >= 0x280000000ULL) /* 10 GB */
+      if (PartEntry->PartInfo[0].PartitionLength.QuadPart >= 0x280000000LL) /* 10 GB */
 	{
 	  PartSize = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 29)) >> 30;
 	  Unit = "GB";
 	}
       else
 #endif
-      if (PartEntry->PartInfo[0].PartitionLength.QuadPart >= 0xA00000ULL) /* 10 MB */
+      if (PartEntry->PartInfo[0].PartitionLength.QuadPart >= 0xA00000LL) /* 10 MB */
 	{
 	  PartSize = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 19)) >> 20;
 	  Unit = "MB";
@@ -1535,7 +1535,7 @@ CreateNewPartition (PPARTLIST List,
 
 	  if ((PartEntry->PartInfo[1].StartingOffset.QuadPart +
 	       PartEntry->PartInfo[1].PartitionLength.QuadPart) <
-	       (1024ULL * 255ULL * 63ULL * 512ULL))
+	       (1024LL * 255LL * 63LL * 512LL))
 	    {
 	      PrevPartEntry->PartInfo[1].PartitionType = PARTITION_EXTENDED;
 	    }
@@ -1645,7 +1645,7 @@ CreateNewPartition (PPARTLIST List,
 
 	  if ((PartEntry->PartInfo[1].StartingOffset.QuadPart +
 	       PartEntry->PartInfo[1].PartitionLength.QuadPart) <
-	       (1024ULL * 255ULL * 63ULL * 512ULL))
+	       (1024LL * 255LL * 63LL * 512LL))
 	    {
 	      PrevPartEntry->PartInfo[1].PartitionType = PARTITION_EXTENDED;
 	    }

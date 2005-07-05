@@ -34,7 +34,7 @@ __inline ULONG SkipToOffset(
     for (;;) {
 
         if (!Buffer)
-            return -1;
+            return 0xFFFFFFFF;
 
         NdisQueryBuffer(Buffer, (PVOID)Data, Size);
 
@@ -77,7 +77,7 @@ UINT CopyBufferToBufferChain(
     NDIS_DbgPrint(MAX_TRACE, ("DstBuffer (0x%X)  DstOffset (0x%X)  SrcData (0x%X)  Length (%d)\n", DstBuffer, DstOffset, SrcData, Length));
 
     /* Skip DstOffset bytes in the destination buffer chain */
-    if (SkipToOffset(DstBuffer, DstOffset, &DstData, &DstSize) == -1)
+    if (SkipToOffset(DstBuffer, DstOffset, &DstData, &DstSize) == 0xFFFFFFFF)
         return 0;
 
     /* Start copying the data */
@@ -134,7 +134,7 @@ UINT CopyBufferChainToBuffer(
     NDIS_DbgPrint(MAX_TRACE, ("DstData 0x%X  SrcBuffer 0x%X  SrcOffset 0x%X  Length %d\n",DstData,SrcBuffer, SrcOffset, Length));
 
     /* Skip SrcOffset bytes in the source buffer chain */
-    if (SkipToOffset(SrcBuffer, SrcOffset, &SrcData, &SrcSize) == -1)
+    if (SkipToOffset(SrcBuffer, SrcOffset, &SrcData, &SrcSize) == 0xFFFFFFFF)
         return 0;
 
     /* Start copying the data */
@@ -234,11 +234,11 @@ UINT CopyPacketToBufferChain(
 
     /* Skip DstOffset bytes in the destination buffer chain */
     NdisQueryBuffer(DstBuffer, (PVOID)&DstData, &DstSize);
-    if (SkipToOffset(DstBuffer, DstOffset, &DstData, &DstSize) == -1)
+    if (SkipToOffset(DstBuffer, DstOffset, &DstData, &DstSize) == 0xFFFFFFFF)
         return 0;
     /* Skip SrcOffset bytes in the source packet */
     NdisGetFirstBufferFromPacket(SrcPacket, &SrcBuffer, (PVOID)&SrcData, &SrcSize, &Total);
-    if (SkipToOffset(SrcBuffer, SrcOffset, &SrcData, &SrcSize) == -1)
+    if (SkipToOffset(SrcBuffer, SrcOffset, &SrcData, &SrcSize) == 0xFFFFFFFF)
         return 0;
     /* Copy the data */
     for (Total = 0;;) {
@@ -669,12 +669,12 @@ NdisCopyFromPacketToPacket(
 
     /* Skip DestinationOffset bytes in the destination packet */
     NdisGetFirstBufferFromPacket(Destination, &DstBuffer, (PVOID)&DstData, &DstSize, &Total);
-    if (SkipToOffset(DstBuffer, DestinationOffset, &DstData, &DstSize) == -1)
+    if (SkipToOffset(DstBuffer, DestinationOffset, &DstData, &DstSize) == 0xFFFFFFFF)
         return;
 
     /* Skip SourceOffset bytes in the source packet */
     NdisGetFirstBufferFromPacket(Source, &SrcBuffer, (PVOID)&SrcData, &SrcSize, &Total);
-    if (SkipToOffset(SrcBuffer, SourceOffset, &SrcData, &SrcSize) == -1)
+    if (SkipToOffset(SrcBuffer, SourceOffset, &SrcData, &SrcSize) == 0xFFFFFFFF)
         return;
 
     /* Copy the data */

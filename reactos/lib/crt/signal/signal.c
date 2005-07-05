@@ -42,7 +42,7 @@ static sig_element signal_list[] =
 __p_sig_fn_t signal(int sig, __p_sig_fn_t func)
 {
    __p_sig_fn_t temp;
-   int i;
+   unsigned int i;
 
    switch (sig)
    {
@@ -90,7 +90,7 @@ int
 raise(int sig)
 {
    __p_sig_fn_t temp = 0;
-   int i;
+   unsigned int i;
 
    switch (sig)
    {

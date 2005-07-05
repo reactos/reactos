@@ -182,7 +182,7 @@ static PVOID IsoBufferDirectory(ULONG DirectoryStartSector, ULONG DirectoryLengt
  */
 static BOOL IsoLookupFile(PCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 {
-	int		i;
+	UINT		i;
 	ULONG			NumberOfPathParts;
 	CHAR		PathPart[261];
 	PVOID		DirectoryBuffer;

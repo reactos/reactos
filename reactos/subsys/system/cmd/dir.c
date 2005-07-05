@@ -1254,7 +1254,7 @@ DirPrintWideList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
   SHORT iScreenWidth;
   USHORT iColumns;
   USHORT iLines;
-  INT iLongestName;
+  UINT iLongestName;
   TCHAR szTempFname[MAX_PATH];
   DWORD i;
   DWORD j;
@@ -1282,7 +1282,7 @@ DirPrintWideList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
   iColumns = iScreenWidth / iLongestName;
 
   /* Check if there is enough space for spaces between names */
-  if (((iLongestName * iColumns) + iColumns) >= iScreenWidth)
+  if (((iLongestName * iColumns) + iColumns) >= (UINT)iScreenWidth)
     iColumns --;
 
   /* A last check at iColumns to avoid division by zero */

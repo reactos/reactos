@@ -323,7 +323,7 @@ STATIC VOID FASTCALL
 ConioNextLine(PCSRSS_SCREEN_BUFFER Buff, RECT *UpdateRect, UINT *ScrolledLines)
 {
   /* slide the viewable screen */
-  if (((Buff->CurrentY - Buff->ShowY + Buff->MaxY) % Buff->MaxY) == Buff->MaxY - 1)
+  if (((Buff->CurrentY - Buff->ShowY + Buff->MaxY) % Buff->MaxY) == (ULONG)Buff->MaxY - 1)
     {
       if (++Buff->ShowY == Buff->MaxY)
         {
@@ -338,7 +338,7 @@ ConioNextLine(PCSRSS_SCREEN_BUFFER Buff, RECT *UpdateRect, UINT *ScrolledLines)
   ClearLineBuffer(Buff);
   UpdateRect->left = 0;
   UpdateRect->right = Buff->MaxX - 1;
-  if (UpdateRect->top == Buff->CurrentY)
+  if (UpdateRect->top == (LONG)Buff->CurrentY)
     {
       if (++UpdateRect->top == Buff->MaxY)
         {
@@ -352,7 +352,7 @@ STATIC NTSTATUS FASTCALL
 ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff,
                   CHAR *Buffer, DWORD Length, BOOL Attrib)
 {
-  int i;
+  UINT i;
   DWORD Offset;
   RECT UpdateRect;
   LONG CursorStartX, CursorStartY;
@@ -394,8 +394,8 @@ ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff,
                         {
                           Buff->CurrentY--;
                         }
-                      if ((0 == UpdateRect.top && UpdateRect.bottom < Buff->CurrentY)
-                          || (0 != UpdateRect.top && Buff->CurrentY < UpdateRect.top))
+                      if ((0 == UpdateRect.top && UpdateRect.bottom < (LONG)Buff->CurrentY)
+                          || (0 != UpdateRect.top && (LONG)Buff->CurrentY < UpdateRect.top))
                         {
                           UpdateRect.top = Buff->CurrentY;
                         }
@@ -406,7 +406,7 @@ ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff,
                     }
                   Offset = 2 * ((Buff->CurrentY * Buff->MaxX) + Buff->CurrentX);
                   SET_CELL_BUFFER(Buff, Offset, ' ', Buff->DefaultAttrib);
-                  UpdateRect.left = min(UpdateRect.left, Buff->CurrentX);
+                  UpdateRect.left = min(UpdateRect.left, (LONG) Buff->CurrentX);
                   UpdateRect.right = max(UpdateRect.right, (LONG) Buff->CurrentX);
                 }
                 continue;
@@ -415,7 +415,7 @@ ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff,
           else if (Buffer[i] == '\r')
             {
               Buff->CurrentX = 0;
-              UpdateRect.left = min(UpdateRect.left, Buff->CurrentX);
+              UpdateRect.left = min(UpdateRect.left, (LONG) Buff->CurrentX);
               UpdateRect.right = max(UpdateRect.right, (LONG) Buff->CurrentX);
               continue;
             }
@@ -424,7 +424,7 @@ ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff,
             {
               UINT EndX;
 
-              UpdateRect.left = min(UpdateRect.left, Buff->CurrentX);
+              UpdateRect.left = min(UpdateRect.left, (LONG)Buff->CurrentX);
               EndX = (Buff->CurrentX + 8) & ~7;
               if (EndX > Buff->MaxX)
                 {
@@ -453,7 +453,7 @@ ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff,
               continue;
             }
         }
-      UpdateRect.left = min(UpdateRect.left, Buff->CurrentX);
+      UpdateRect.left = min(UpdateRect.left, (LONG)Buff->CurrentX);
       UpdateRect.right = max(UpdateRect.right, (LONG) Buff->CurrentX);
       Offset = 2 * (((Buff->CurrentY * Buff->MaxX)) + Buff->CurrentX);
       Buff->Buffer[Offset++] = Buffer[i];
@@ -495,7 +495,7 @@ CSR_API(CsrReadConsole)
   ConsoleInput *Input;
   PUCHAR Buffer;
   PWCHAR UnicodeBuffer;
-  int i;
+  ULONG i;
   ULONG nNumberOfCharsToRead, CharSize;
   PCSRSS_CONSOLE Console;
   NTSTATUS Status;
@@ -762,7 +762,7 @@ ConioCopyRegion(PCSRSS_SCREEN_BUFFER ScreenBuffer,
   DWORD SrcOffset;
   DWORD DstOffset;
   DWORD BytesPerLine;
-  ULONG i;
+  LONG i;
 
   DstY = DstRegion->top;
   BytesPerLine = ConioRectWidth(DstRegion) * 2;
@@ -811,7 +811,7 @@ ConioFillRegion(PCSRSS_CONSOLE Console,
   SHORT X, Y;
   DWORD Offset;
   DWORD Delta;
-  ULONG i;
+  LONG i;
   CHAR Char;
 
   if(bUnicode)
@@ -2748,7 +2748,8 @@ CSR_API(CsrReadConsoleOutput)
   COORD BufferCoord;
   RECT ReadRegion;
   RECT ScreenRect;
-  DWORD i, Y, X, Offset;
+  DWORD i, Offset;
+  LONG X, Y;
   UINT CodePage;
 
   DPRINT("CsrReadConsoleOutput\n");

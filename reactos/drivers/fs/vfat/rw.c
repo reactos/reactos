@@ -831,7 +831,7 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
 
    ByteOffset = IrpContext->Stack->Parameters.Write.ByteOffset;
    if (ByteOffset.u.LowPart == FILE_WRITE_TO_END_OF_FILE &&
-       ByteOffset.u.HighPart == 0xffffffff)
+       ByteOffset.u.HighPart == -1)
    {
       ByteOffset.QuadPart = Fcb->RFCB.FileSize.QuadPart;
    }

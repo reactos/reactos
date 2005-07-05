@@ -119,7 +119,7 @@ char *hookup(char *host, int port)
 
 	bzero((char *)&hisctladdr, sizeof (hisctladdr));
 	hisctladdr.sin_addr.s_addr = inet_addr(host);
-	if (hisctladdr.sin_addr.s_addr != -1) {
+	if (hisctladdr.sin_addr.s_addr != (unsigned long)-1) {
 		hisctladdr.sin_family = AF_INET;
 		(void) strncpy(hostnamebuf, host, sizeof(hostnamebuf));
 	} else {

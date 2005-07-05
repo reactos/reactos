@@ -62,7 +62,7 @@ INIT_FUNCTION
 IopInitLookasideLists(VOID)
 {
     ULONG LargeIrpSize, SmallIrpSize;
-    ULONG i;
+    LONG i;
     PKPRCB Prcb;
     PNPAGED_LOOKASIDE_LIST CurrentList = NULL;
 

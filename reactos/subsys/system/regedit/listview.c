@@ -66,7 +66,7 @@ LPCTSTR GetValueName(HWND hwndLV, int iStartAt)
     if (!g_valueName) return NULL;
     *g_valueName = 0;
     maxLen = HeapSize(GetProcessHeap(), 0, g_valueName);
-    if (maxLen == (SIZE_T) - 1) return NULL;
+    if (maxLen == -1) return NULL;
 
     item = ListView_GetNextItem(hwndLV, iStartAt, LVNI_SELECTED);
     if (item == -1) return NULL;
@@ -383,7 +383,7 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
             OnGetDispInfo((NMLVDISPINFO*)lParam);
             return TRUE;
         case LVN_COLUMNCLICK:
-            if (g_columnToSort == ((LPNMLISTVIEW)lParam)->iSubItem)
+            if (g_columnToSort == (DWORD)((LPNMLISTVIEW)lParam)->iSubItem)
                 g_invertSort = !g_invertSort;
             else {
                 g_columnToSort = ((LPNMLISTVIEW)lParam)->iSubItem;

@@ -223,7 +223,7 @@ RtlCharToInteger(
 	} else {
 	    digit = -1;
 	} /* if */
-	if (digit < 0 || digit >= base) {
+	if (digit < 0 || digit >= (int)base) {
 	    *value = bMinus ? -RunningTotal : RunningTotal;
 	    return STATUS_SUCCESS;
 	} /* if */
@@ -608,7 +608,7 @@ RtlIntegerToChar(
       tp++;
    }
 
-   if (tp - temp >= Length)
+   if ((ULONG)((ULONG_PTR)tp - (ULONG_PTR)temp) >= Length)
    {
       return STATUS_BUFFER_TOO_SMALL;
    }
@@ -663,7 +663,7 @@ RtlIntegerToUnicode(
       tp++;
    }
 
-   if (tp - temp >= Length)
+   if ((ULONG)((ULONG_PTR)tp - (ULONG_PTR)temp) >= Length)
    {
       return STATUS_BUFFER_TOO_SMALL;
    }
@@ -936,7 +936,7 @@ RtlUnicodeStringToInteger(
 	} else {
 	    digit = -1;
 	} /* if */
-	if (digit < 0 || digit >= base) {
+	if (digit < 0 || digit >= (int)base) {
 	    *value = bMinus ? -RunningTotal : RunningTotal;
 	    return STATUS_SUCCESS;
 	} /* if */
@@ -1759,7 +1759,7 @@ RtlLargeIntegerToChar(
       tp++;
    }
 
-   if (tp - temp >= Length)
+   if ((ULONG)((ULONG_PTR)tp - (ULONG_PTR)temp) >= Length)
       return STATUS_BUFFER_TOO_SMALL;
 
    sp = String;

@@ -133,7 +133,7 @@ SM_CMD_DECL(boot)
 
 SM_CMD_DECL(help)
 {
-	int i = 0;
+	unsigned int i = 0;
 	PSM_CMD_DESCRIPTOR cmd = NULL;
 	int rc = EXIT_SUCCESS;
 

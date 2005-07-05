@@ -558,7 +558,7 @@ LoadAndBootReactOS(PCHAR OperatingSystemName)
 	CHAR  szHalName[1024];
 	CHAR  szFileName[1024];
 	CHAR  szBootPath[256];
-	INT   i;
+	UINT   i;
 	CHAR  MsgBuffer[256];
 	ULONG SectionId;
 

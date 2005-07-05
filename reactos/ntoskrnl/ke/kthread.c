@@ -260,7 +260,7 @@ KiUnblockThread(PKTHREAD Thread,
 
     } else {
 
-        ULONG Processor;
+        LONG Processor;
         KAFFINITY Affinity;
 
         /* FIXME: This propably isn't the right way to do it... */
@@ -292,7 +292,7 @@ KiUnblockThread(PKTHREAD Thread,
         if (!(IdleProcessorMask & (1 << Processor) & Affinity) &&
              (IdleProcessorMask & ~(1 << Processor) & Affinity)) {
 
-            ULONG i;
+            LONG i;
 
             for (i = 0; i < KeNumberProcessors - 1; i++) {
 
@@ -1076,7 +1076,7 @@ KeSetAffinityThread(PKTHREAD Thread,
                     KAFFINITY Affinity)
 {
     KIRQL OldIrql;
-    ULONG i;
+    LONG i;
     PKPCR Pcr;
     KAFFINITY ProcessorMask;
 

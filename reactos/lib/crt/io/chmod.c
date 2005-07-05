@@ -23,7 +23,7 @@ int _tchmod(const _TCHAR* filename, mode_t mode)
     DPRINT(#_tchmod"('%"sT"', %x)\n", filename, mode);
 
     FileAttributes = GetFileAttributes(filename);
-    if ( FileAttributes == -1 ) {
+    if ( FileAttributes == (DWORD)-1 ) {
     	_dosmaperr(GetLastError());
         return -1;
     }

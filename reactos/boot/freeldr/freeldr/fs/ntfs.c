@@ -168,7 +168,7 @@ BOOL NtfsDiskRead(ULONGLONG Offset, ULONGLONG Length, PCHAR Buffer)
     }
 
     /* II. Read all complete 64-sector blocks. */
-    while (Length >= 64 * NtfsBootSector->BytesPerSector)
+    while (Length >= (ULONGLONG)64 * (ULONGLONG)NtfsBootSector->BytesPerSector)
     {
         if (!MachDiskReadLogicalSectors(NtfsDriveNumber, NtfsSectorOfClusterZero + (Offset / NtfsBootSector->BytesPerSector), 64, (PCHAR)DISKREADBUFFER))
             return FALSE;

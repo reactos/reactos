@@ -344,7 +344,7 @@ PopupError(PCHAR Text,
       coPos.Y++;
       coPos.X = xLeft + 2;
       WriteConsoleOutputCharacters(Status,
-				   min(strlen(Status), Width - 4),
+				   min(strlen(Status), (SIZE_T)Width - 4),
 				   coPos);
     }
 }
@@ -1869,14 +1869,14 @@ DeletePartitionPage (PINPUT_RECORD Ir)
     }
 
 #if 0
-  if (PartEntry->PartInfo[0].PartitionLength.QuadPart >= 0x280000000ULL) /* 10 GB */
+  if (PartEntry->PartInfo[0].PartitionLength.QuadPart >= 0x280000000LL) /* 10 GB */
     {
       PartSize = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 29)) >> 30;
       Unit = "GB";
     }
   else
 #endif
-  if (PartEntry->PartInfo[0].PartitionLength.QuadPart >= 0xA00000ULL) /* 10 MB */
+  if (PartEntry->PartInfo[0].PartitionLength.QuadPart >= 0xA00000LL) /* 10 MB */
     {
       PartSize = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 19)) >> 20;
       Unit = "MB";
@@ -2018,7 +2018,7 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
     }
 
   /* adjust partition size */
-  if (PartEntry->PartInfo[0].PartitionLength.QuadPart >= 0x280000000ULL) /* 10 GB */
+  if (PartEntry->PartInfo[0].PartitionLength.QuadPart >= 0x280000000LL) /* 10 GB */
     {
       PartSize = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 29)) >> 30;
       PartUnit = "GB";
@@ -2248,21 +2248,21 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 	      switch (FileSystemList->CurrentFileSystem)
 	        {
 		  case FsFat:
-		    if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (4200ULL * 1024ULL))
+		    if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (4200LL * 1024LL))
 		      {
 			/* FAT12 CHS partition (disk is smaller than 4.1MB) */
 			PartEntry->PartInfo[0].PartitionType = PARTITION_FAT_12;
 		      }
-		    else if (PartEntry->PartInfo[0].StartingOffset.QuadPart < (1024ULL * 255ULL * 63ULL * 512ULL))
+		    else if (PartEntry->PartInfo[0].StartingOffset.QuadPart < (1024LL * 255LL * 63LL * 512LL))
 		      {
 			/* Partition starts below the 8.4GB boundary ==> CHS partition */
 
-			if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (32ULL * 1024ULL * 1024ULL))
+			if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (32LL * 1024LL * 1024LL))
 			  {
 			    /* FAT16 CHS partition (partiton size < 32MB) */
 			    PartEntry->PartInfo[0].PartitionType = PARTITION_FAT_16;
 			  }
-			else if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (512ULL * 1024ULL * 1024ULL))
+			else if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (512LL * 1024LL * 1024LL))
 			  {
 			    /* FAT16 CHS partition (partition size < 512MB) */
 			    PartEntry->PartInfo[0].PartitionType = PARTITION_HUGE;
@@ -2277,7 +2277,7 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 		      {
 			/* Partition starts above the 8.4GB boundary ==> LBA partition */
 
-			if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (512ULL * 1024ULL * 1024ULL))
+			if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (512LL * 1024LL * 1024LL))
 			  {
 			    /* FAT16 LBA partition (partition size < 512MB) */
 			    PartEntry->PartInfo[0].PartitionType = PARTITION_XINT13;

@@ -118,7 +118,7 @@ PCSRSS_PROCESS_DATA STDCALL CsrCreateProcessData(HANDLE ProcessId)
 NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
 {
   ULONG hash;
-  int c;
+  UINT c;
   PCSRSS_PROCESS_DATA pProcessData, pPrevProcessData = NULL;
 
   hash = (ULONG_PTR)Pid % (sizeof(ProcessData) / sizeof(*ProcessData));

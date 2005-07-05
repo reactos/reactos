@@ -54,7 +54,8 @@ TuiInitScreenBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buffer)
 static void FASTCALL
 TuiCopyRect(char *Dest, PCSRSS_SCREEN_BUFFER Buff, RECT *Region)
 {
-  UINT SrcDelta, DestDelta, i;
+  UINT SrcDelta, DestDelta;
+  LONG i;
   PBYTE Src, SrcEnd;
 
   Src = Buff->Buffer + (((Region->top + Buff->ShowY) % Buff->MaxY) * Buff->MaxX
@@ -118,7 +119,7 @@ TuiDrawRegion(PCSRSS_CONSOLE Console, RECT *Region)
 }
 
 static VOID STDCALL
-TuiWriteStream(PCSRSS_CONSOLE Console, RECT *Region, UINT CursorStartX, UINT CursorStartY,
+TuiWriteStream(PCSRSS_CONSOLE Console, RECT *Region, LONG CursorStartX, LONG CursorStartY,
                UINT ScrolledLines, CHAR *Buffer, UINT Length)
 {
   DWORD BytesWritten;

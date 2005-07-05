@@ -163,7 +163,7 @@ static void ccf_sortlist(adns_state ads, const char *fn, int lno, const char *bu
       return;
     }
 
-    if (l >= sizeof(tbuf)) {
+    if (l >= (int)sizeof(tbuf)) {
       configparseerr(ads,fn,lno,"sortlist entry `%.*s' too long",l,word);
       continue;
     }

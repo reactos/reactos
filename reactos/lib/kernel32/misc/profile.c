@@ -123,7 +123,7 @@ static void PROFILE_CopyEntry( LPWSTR buffer, LPCWSTR value, int len,
     }
 
     wcsncpy( buffer, value, len );
-    if (quote && (len >= wcslen(value)))
+    if (quote && ((size_t)len >= wcslen(value)))
         buffer[wcslen(buffer) - 1] = '\0';
 }
 
@@ -304,7 +304,7 @@ static inline ENCODING PROFILE_DetectTextEncoding(const void * buffer, int * len
     DWORD flags = IS_TEXT_UNICODE_SIGNATURE |
                   IS_TEXT_UNICODE_REVERSE_SIGNATURE |
                   IS_TEXT_UNICODE_ODD_LENGTH;
-    if (*len >= sizeof(bom_utf8) && !memcmp(buffer, bom_utf8, sizeof(bom_utf8)))
+    if (*len >= (int)sizeof(bom_utf8) && !memcmp(buffer, bom_utf8, sizeof(bom_utf8)))
     {
         *len = sizeof(bom_utf8);
         return ENCODING_UTF8;

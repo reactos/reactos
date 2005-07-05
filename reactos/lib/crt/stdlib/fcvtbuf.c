@@ -29,7 +29,7 @@ fcvtbuf (double value, int ndigits, int *decpt, int *sign, char *buf)
 
   /* Where's the decimal point?  */
   dot = strchr (s, decimal);
-  *decpt = dot ? dot - s : strlen (s);
+  *decpt = dot ? dot - s : (int)strlen (s);
 
   /* SunOS docs says if NDIGITS is 8 or more, produce "Infinity"
      instead of "Inf".  */

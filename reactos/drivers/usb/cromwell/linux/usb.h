@@ -327,7 +327,7 @@ static inline int usb_make_path (struct usb_device *dev, char *buf, size_t size)
 {
 	int actual;
 	actual = snprintf (buf, size, "usb-%s-%s", dev->bus->bus_name, dev->devpath);
-	return (actual >= size) ? -1 : actual;
+	return (actual >= (int)size) ? -1 : actual;
 }
 
 /*-------------------------------------------------------------------------*/

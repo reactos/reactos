@@ -254,7 +254,7 @@ GetObjectA(HGDIOBJ Handle, int Size, LPVOID Buffer)
 
   if (OBJ_FONT == Type)
     {
-      if (Size < sizeof(LOGFONTA))
+      if (Size < (int)sizeof(LOGFONTA))
         {
           SetLastError(ERROR_BUFFER_OVERFLOW);
           return 0;

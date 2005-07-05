@@ -303,9 +303,9 @@ VGADDI_ComputePointerRect(PPDEV ppdev, LONG X, LONG Y, PRECTL Rect)
 {
   ULONG SizeX, SizeY;
 
-  SizeX = min(((X + ppdev->pPointerAttributes->Width) + 7) & ~0x7, ppdev->sizeSurf.cx);
+  SizeX = min(((X + (LONG)ppdev->pPointerAttributes->Width) + 7) & ~0x7, ppdev->sizeSurf.cx);
   SizeX -= (X & ~0x7);
-  SizeY = min(ppdev->pPointerAttributes->Height, ppdev->sizeSurf.cy - Y);
+  SizeY = min((LONG)ppdev->pPointerAttributes->Height, ppdev->sizeSurf.cy - Y);
 
   Rect->left = max(X, 0) & ~0x7;
   Rect->top = max(Y, 0);
@@ -365,8 +365,8 @@ VGADDI_ShowCursor(PPDEV ppdev, PRECTL prcl)
                               Rect.bottom - Rect.top);
 
   /* Display the cursor. */
-  SizeX = min(ppdev->pPointerAttributes->Width, ppdev->sizeSurf.cx - cx);
-  SizeY = min(ppdev->pPointerAttributes->Height, ppdev->sizeSurf.cy - cy);
+  SizeX = min((LONG)ppdev->pPointerAttributes->Width, ppdev->sizeSurf.cx - cx);
+  SizeY = min((LONG)ppdev->pPointerAttributes->Height, ppdev->sizeSurf.cy - cy);
   AndMask = ppdev->pPointerAttributes->Pixels +
             (ppdev->pPointerAttributes->Height - SizeY) * ppdev->pPointerAttributes->WidthInBytes;
   VGADDI_BltPointerToVGA(cx,

@@ -343,7 +343,7 @@ static void
 RiBadBlock ( PR_USED pUsed, char* Addr, const char* violation, const char* file, int line, int printzone )
 {
 	char tag[5];
-	int i;
+	unsigned int i;
 
 	R_DEBUG("%s(%i): %s detected for paged pool address 0x%x\n",
 		file, line, violation, Addr );
@@ -913,7 +913,7 @@ RPoolFree ( PR_POOL pool, void* Addr )
 	if ( que >= 0 )
 	{
 		int queBytes = 16 << que;
-		ASSERT( queBytes >= UserSize );
+		ASSERT( (rulong)queBytes >= UserSize );
 		if ( que >= 0 )
 		{
 			int align = 0;

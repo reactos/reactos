@@ -126,7 +126,7 @@ static inline BOOL CRYPT_ANSIToUnicode(LPCSTR str, LPWSTR* wstr, int wstrsize)
 		return TRUE;
 	}
 	wcount = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
-	wcount = wcount < wstrsize/sizeof(WCHAR) ? wcount : wstrsize/sizeof(WCHAR);
+	wcount = wcount < wstrsize/(int)sizeof(WCHAR) ? wcount : wstrsize/(int)sizeof(WCHAR);
 	if (wstrsize == -1)
 		*wstr = CRYPT_Alloc(wcount * sizeof(WCHAR));
 	if (*wstr)

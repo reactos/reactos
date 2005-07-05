@@ -118,7 +118,7 @@ DNS_STATUS WINAPI DnsQuery_W
   PIP4_ARRAY Servers,
   PDNS_RECORD *QueryResultSet,
   PVOID *Reserved ) {
-  int i;
+  UINT i;
   PCHAR Buffer;
   DNS_STATUS Status;
   PDNS_RECORD QueryResultWide;
@@ -301,7 +301,7 @@ DNS_STATUS WINAPI DnsQuery_UTF8
 }
 
 void DnsIntFreeRecordList( PDNS_RECORD ToDelete ) {
-  int i;
+  UINT i;
   PDNS_RECORD next = 0;
 
   while( ToDelete ) {

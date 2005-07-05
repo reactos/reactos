@@ -382,7 +382,7 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
 INT_PTR CALLBACK modify_binary_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     HWND hwndValue;
-    int len;
+    UINT len;
 
     switch(uMsg) {
     case WM_INITDIALOG:

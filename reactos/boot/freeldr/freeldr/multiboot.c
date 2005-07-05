@@ -528,7 +528,7 @@ FrLdrMapKernel(FILE *KernelImage)
     ULONG_PTR SourceSection;
     ULONG_PTR TargetSection;
     ULONG SectionSize;
-    LONG i;
+    INT i;
     PIMAGE_DATA_DIRECTORY RelocationDDir;
     PIMAGE_BASE_RELOCATION RelocationDir, RelocationEnd;
     ULONG Count;
@@ -588,7 +588,7 @@ FrLdrMapKernel(FILE *KernelImage)
     Section += SectionCount;
 
     /* Walk each section backwards */
-    for (i=SectionCount; i >= 0; i--, Section--) {
+    for (i=(INT)SectionCount; i >= 0; i--, Section--) {
 
         /* Get the disk location and the memory location, and the size */
         SourceSection = RaToPa(Section->PointerToRawData);
@@ -636,7 +636,7 @@ FrLdrMapKernel(FILE *KernelImage)
         /* Calculate the Offset of the Type */
         TypeOffset = (PUSHORT)(RelocationDir + 1);
 
-        for (i = 0; i < Count; i++) {
+        for (i = 0; i < (INT)Count; i++) {
 
             ShortPtr = (PUSHORT)(Address + (*TypeOffset & 0xFFF));
 
@@ -765,7 +765,7 @@ FrLdrCloseModule(ULONG_PTR ModuleBase,
     if (ModuleData) {
 
         /* Make sure this is the right module and that it hasn't been closed */
-        if ((ModuleBase == ModuleData->ModuleStart) && (ModuleData->ModuleEnd == -1)) {
+        if ((ModuleBase == ModuleData->ModuleStart) && (ModuleData->ModuleEnd == (ULONG_PTR)-1)) {
 
             /* Close the Module */
             ModuleData->ModuleEnd = ModuleData->ModuleStart + ModuleSize;

@@ -385,7 +385,7 @@ WSAStringToAddressW(
 	/* Report size */
 	if (AddressFamily == AF_INET)
 	{
-		if (*lpAddressLength < sizeof(SOCKADDR_IN))
+		if (*lpAddressLength < (INT)sizeof(SOCKADDR_IN))
 		{
 			*lpAddressLength = sizeof(SOCKADDR_IN);
 		    res = WSAEFAULT;
@@ -407,7 +407,7 @@ WSAStringToAddressW(
 
 		  /* Get port number */
 		  pos = wcscspn(AddressString,L":") + 1;
-		  if (pos < wcslen(AddressString))	    	      
+		  if (pos < (int)wcslen(AddressString))
 	          sockaddr->sin_port = wcstol(&AddressString[pos],bp,10); 		   		   
 
 		   else
@@ -417,7 +417,7 @@ WSAStringToAddressW(
 		  pos=0;
 		  inetaddr=0;
 
-          while (pos < wcslen(AddressString))
+          while (pos < (int)wcslen(AddressString))
           {	      
 	       inetaddr = (inetaddr<<8) + ((UCHAR)wcstol(&AddressString[pos],bp,10));	 	           
 	       pos += wcscspn( &AddressString[pos],L".") +1 ;	 	       		   

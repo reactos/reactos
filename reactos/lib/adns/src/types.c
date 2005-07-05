@@ -749,7 +749,7 @@ static adns_status pa_ptr(const parseinfo *pai, int dmstart, int max, void *data
       if (lablen>1 && pai->qu->query_dgram[labstart]=='0')
 	return adns_s_querydomainwrong;
     }
-    for (i=0; i<sizeof(expectdomain)/sizeof(*expectdomain); i++) {
+    for (i=0; i<(int)sizeof(expectdomain)/(int)sizeof(*expectdomain); i++) {
       st= adns__findlabel_next(&fls,&lablen,&labstart); assert(!st);
       l= strlen(expectdomain[i]);
       if (lablen != l || memcmp(pai->qu->query_dgram + labstart, expectdomain[i], (size_t)l))

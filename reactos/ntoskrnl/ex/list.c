@@ -461,7 +461,7 @@ InterlockedPopEntrySList(IN PSLIST_HEADER ListHead)
     newslh.Next.Next = MmSafeReadPtr(&le->Next);
   } while(ExfInterlockedCompareExchange64((PLONGLONG)&ListHead->Alignment,
                                           (PLONGLONG)&newslh.Alignment,
-                                          (PLONGLONG)&oldslh.Alignment) != oldslh.Alignment);
+                                          (PLONGLONG)&oldslh.Alignment) != (LONGLONG)oldslh.Alignment);
 
   return le;
 }
@@ -487,7 +487,7 @@ InterlockedPushEntrySList(IN PSLIST_HEADER ListHead,
     ListEntry->Next = oldslh.Next.Next;
   } while(ExfInterlockedCompareExchange64((PLONGLONG)&ListHead->Alignment,
                                           (PLONGLONG)&newslh.Alignment,
-                                          (PLONGLONG)&oldslh.Alignment) != oldslh.Alignment);
+                                          (PLONGLONG)&oldslh.Alignment) != (LONGLONG)oldslh.Alignment);
 
   return oldslh.Next.Next;
 }

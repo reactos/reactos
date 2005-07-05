@@ -2063,7 +2063,7 @@ PVOID
 MmCreateHyperspaceMapping(PFN_TYPE Page)
 {
    PVOID Address;
-   LONG i;
+   ULONG i;
 
    if (Ke386Pae)
    {

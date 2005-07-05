@@ -59,7 +59,7 @@ netfinger(char *name)
 		return;
 
 	*host++ = '\0';
-	if (isdigit(*host) && (defaddr.s_addr = inet_addr(host)) != -1) {
+	if (isdigit(*host) && (defaddr.s_addr = inet_addr(host)) != (unsigned long)-1) {
 		def.h_name = host;
 		def.h_addr_list = alist;
 		def.h_addr = (char *)&defaddr;

@@ -384,7 +384,7 @@ DiskClassCheckReadWrite(IN PDEVICE_OBJECT DeviceObject,
   PDEVICE_EXTENSION DeviceExtension;
   PDISK_DATA DiskData;
   PIO_STACK_LOCATION IrpStack;
-  ULARGE_INTEGER EndingOffset;
+  LARGE_INTEGER EndingOffset;
 
   DPRINT("DiskClassCheckReadWrite() called\n");
 

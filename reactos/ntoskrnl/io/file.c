@@ -2627,7 +2627,7 @@ NtReadFile(IN HANDLE FileHandle,
     /* Check the Byte Offset */
     if (!ByteOffset ||
         (ByteOffset->u.LowPart == FILE_USE_FILE_POINTER_POSITION &&
-         ByteOffset->u.HighPart == 0xffffffff))
+         ByteOffset->u.HighPart == -1))
     {
         /* a valid ByteOffset is required if asynch. op. */
         if (!(FileObject->Flags & FO_SYNCHRONOUS_IO))
@@ -3226,7 +3226,7 @@ NtWriteFile (IN HANDLE FileHandle,
         /* Check the Byte Offset */
         if (!ByteOffset ||
             (ByteOffset->u.LowPart == FILE_USE_FILE_POINTER_POSITION &&
-             ByteOffset->u.HighPart == 0xffffffff))
+             ByteOffset->u.HighPart == -1))
         {
             /* a valid ByteOffset is required if asynch. op. */
             if (!(FileObject->Flags & FO_SYNCHRONOUS_IO))

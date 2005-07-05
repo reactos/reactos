@@ -437,7 +437,7 @@ NDIS_STATUS STDCALL NPF_tap (IN NDIS_HANDLE ProtocolBindingContext,IN NDIS_HANDL
 		return NDIS_STATUS_NOT_ACCEPTED;
 
 	//if the filter returns -1 the whole packet must be accepted
-	if(fres==-1 || fres > PacketSize+HeaderBufferSize)fres=PacketSize+HeaderBufferSize;
+	if(fres==(UINT)-1 || fres > PacketSize+HeaderBufferSize)fres=PacketSize+HeaderBufferSize;
 
 	if(Open->mode & MODE_STAT){
 	// we are in statistics mode

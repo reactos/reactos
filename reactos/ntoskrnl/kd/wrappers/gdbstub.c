@@ -515,7 +515,7 @@ GspGetEspFromTrapFrame(PKTRAP_FRAME TrapFrame)
 {
 
   return KeGetPreviousMode() == KernelMode
-         ? (LONG) &TrapFrame->Esp : TrapFrame->Esp;
+         ? (LONG) &TrapFrame->Esp : (LONG)TrapFrame->Esp;
 }
 
 

@@ -146,7 +146,7 @@ GetSystemTimeAsFileTime (PFILETIME lpFileTime)
       lpFileTime->dwHighDateTime = SharedUserData->SystemTime.High1Time;
       lpFileTime->dwLowDateTime = SharedUserData->SystemTime.LowPart;
     }
-  while (lpFileTime->dwHighDateTime != SharedUserData->SystemTime.High2Time);
+  while (lpFileTime->dwHighDateTime != (DWORD)SharedUserData->SystemTime.High2Time);
 }
 
 

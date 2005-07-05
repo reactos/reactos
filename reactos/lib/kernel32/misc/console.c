@@ -3469,7 +3469,7 @@ SetConsoleInputExeNameW(LPCWSTR lpInputExeName)
   int lenName = lstrlenW(lpInputExeName);
 
   if(lenName < 1 ||
-     lenName > (sizeof(InputExeName) / sizeof(InputExeName[0])) - 1)
+     lenName > (int)(sizeof(InputExeName) / sizeof(InputExeName[0])) - 1)
   {
     /* Fail if string is empty or too long */
     SetLastError(ERROR_INVALID_PARAMETER);
@@ -3551,7 +3551,7 @@ GetConsoleInputExeNameW(DWORD nBufferLength, LPWSTR lpBuffer)
   RtlEnterCriticalSection(&ConsoleLock);
 
   lenName = lstrlenW(InputExeName);
-  if(lenName >= nBufferLength)
+  if(lenName >= (int)nBufferLength)
   {
     /* buffer is not large enough, return the required size */
     RtlLeaveCriticalSection(&ConsoleLock);

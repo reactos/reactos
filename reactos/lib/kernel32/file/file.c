@@ -77,7 +77,7 @@ FilenameU2A_FitOrFail(
    ret = bIsFileApiAnsi? RtlUnicodeStringToAnsiSize(SourceU) : RtlUnicodeStringToOemSize(SourceU);
    /* ret incl. nullchar */
 
-   if (DestA && ret <= destLen)
+   if (DestA && (INT)ret <= destLen)
    {
       ANSI_STRING str;
 

@@ -191,7 +191,7 @@ BOOL STDCALL CreateProcessA(LPCSTR lpApplicationName,
       nEnvLen = (ULONG_PTR)pcScan - (ULONG_PTR)lpEnvironment + 1;
 
       /* environment too large */
-      if(nEnvLen > ~((USHORT)0))
+      if(nEnvLen > (SIZE_T)((USHORT)~0))
       {
          SetLastError(ERROR_OUTOFMEMORY);
          return FALSE;

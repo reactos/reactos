@@ -36,7 +36,7 @@ int print_routes() {
     DWORD Error;
     ULONG Size = 0;
     char Destination[IPBUF], Gateway[IPBUF], Netmask[IPBUF];
-    int i;
+    unsigned int i;
 
     if( (Error = GetIpForwardTable( NULL, &Size, TRUE )) ==
     	ERROR_INSUFFICIENT_BUFFER ) {

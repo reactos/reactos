@@ -179,7 +179,7 @@ MmGetContinuousPages(ULONG NumberOfBytes,
    {
       if (MmPageArray[i].Flags.Type ==  MM_PHYSICAL_PAGE_FREE)
       {
-         if (start == -1)
+         if (start == (ULONG)-1)
          {
             start = i;
             length = 1;
@@ -203,7 +203,7 @@ MmGetContinuousPages(ULONG NumberOfBytes,
          i = ROUND_UP((i + 1), (Alignment / PAGE_SIZE));
       }
    }
-   if (start == -1 || length != NrPages)
+   if (start == (ULONG)-1 || length != NrPages)
    {
       KeReleaseSpinLock(&PageListLock, oldIrql);
       return 0;

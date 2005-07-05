@@ -174,11 +174,11 @@ VGADDI_BltBrush(SURFOBJ* Dest, SURFOBJ* Source, SURFOBJ* MaskSurf,
 		BRUSHOBJ* Brush, POINTL* BrushPoint, ROP4 Rop4)
 {
   UCHAR SolidColor = 0;
-  ULONG Left;
-  ULONG Length;
+  LONG Left;
+  LONG Length;
   PUCHAR Video;
   UCHAR Mask;
-  ULONG i, j;
+  INT i, j;
   ULONG RasterOp = VGA_NORMAL;
 
   /* Punt brush blts to non-device surfaces. */

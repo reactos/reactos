@@ -344,7 +344,7 @@ KeDumpIrqList(VOID)
 {
    PKINTERRUPT current;
    PLIST_ENTRY current_entry;
-   ULONG i, j;
+   LONG i, j;
    KIRQL oldlvl;
    BOOLEAN printed;
 
@@ -559,7 +559,7 @@ KeInitializeInterrupt(PKINTERRUPT Interrupt,
 
 VOID KePrintInterruptStatistic(VOID)
 {
-   ULONG i, j;
+   LONG i, j;
 
    for (j = 0; j < KeNumberProcessors; j++)
    {

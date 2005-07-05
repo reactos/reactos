@@ -146,7 +146,7 @@ VfatFormat (PUNICODE_STRING DriveRoot,
       Callback (PROGRESS, 0, (PVOID)&Context.Percent);
     }
 
-  if (PartitionInfo.PartitionLength.QuadPart < (4200ULL * 1024ULL))
+  if (PartitionInfo.PartitionLength.QuadPart < (4200LL * 1024LL))
     {
       /* FAT12 (volume is smaller than 4.1MB) */
       Status = Fat12Format (FileHandle,
@@ -157,7 +157,7 @@ VfatFormat (PUNICODE_STRING DriveRoot,
 			    ClusterSize,
 			    &Context);
     }
-  else if (PartitionInfo.PartitionLength.QuadPart < (512ULL * 1024ULL * 1024ULL))
+  else if (PartitionInfo.PartitionLength.QuadPart < (512LL * 1024LL * 1024LL))
     {
       /* FAT16 (volume is smaller than 512MB) */
       Status = Fat16Format (FileHandle,

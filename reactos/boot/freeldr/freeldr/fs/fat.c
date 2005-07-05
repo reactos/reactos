@@ -689,7 +689,7 @@ BOOL FatXSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize
  */
 BOOL FatLookupFile(PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer)
 {
-	int		i;
+	UINT		i;
 	ULONG		NumberOfPathParts;
 	CHAR		PathPart[261];
 	PVOID		DirectoryBuffer;
@@ -827,9 +827,9 @@ void FatParseShortFileName(PCHAR Buffer, PDIRENTRY DirEntry)
 BOOL FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer)
 {
 	ULONG		fat = 0;
-	int		FatOffset;
-	int		ThisFatSecNum;
-	int		ThisFatEntOffset;
+	UINT		FatOffset;
+	UINT		ThisFatSecNum;
+	UINT		ThisFatEntOffset;
 
 	DbgPrint((DPRINT_FILESYSTEM, "FatGetFatEntry() Retrieving FAT entry for cluster %d.\n", Cluster));
 

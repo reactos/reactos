@@ -113,11 +113,11 @@ void PerfDataRefresh(void)
 
         status = NtQuerySystemInformation(SystemHandleInformation, SysHandleInfoData, BufferSize, &ulSize);
 
-        if (status == 0xC0000004 /*STATUS_INFO_LENGTH_MISMATCH*/) {
+        if (status == STATUS_INFO_LENGTH_MISMATCH) {
             HeapFree(GetProcessHeap(), 0, SysHandleInfoData);
         }
 
-    } while (status == 0xC0000004 /*STATUS_INFO_LENGTH_MISMATCH*/);
+    } while (status == STATUS_INFO_LENGTH_MISMATCH);
 
     /* Get process information
      * We don't know how much data there is so just keep
@@ -131,11 +131,11 @@ void PerfDataRefresh(void)
 
         status = NtQuerySystemInformation(SystemProcessInformation, pBuffer, BufferSize, &ulSize);
 
-        if (status == 0xC0000004 /*STATUS_INFO_LENGTH_MISMATCH*/) {
+        if (status == STATUS_INFO_LENGTH_MISMATCH) {
             HeapFree(GetProcessHeap(), 0, pBuffer);
         }
 
-    } while (status == 0xC0000004 /*STATUS_INFO_LENGTH_MISMATCH*/);
+    } while (status == STATUS_INFO_LENGTH_MISMATCH);
 
     EnterCriticalSection(&PerfDataCriticalSection);
 
@@ -163,7 +163,7 @@ void PerfDataRefresh(void)
     memcpy(&SystemHandleInfo, SysHandleInfoData, sizeof(SYSTEM_HANDLE_INFORMATION));
     HeapFree(GetProcessHeap(), 0, SysHandleInfoData);
 
-    for (CurrentKernelTime=0, Idx=0; Idx<SystemBasicInfo.NumberOfProcessors; Idx++) {
+    for (CurrentKernelTime=0, Idx=0; Idx<(ULONG)SystemBasicInfo.NumberOfProcessors; Idx++) {
         CurrentKernelTime += Li2Double(SystemProcessorTimeInfo[Idx].KernelTime);
         CurrentKernelTime += Li2Double(SystemProcessorTimeInfo[Idx].DpcTime);
         CurrentKernelTime += Li2Double(SystemProcessorTimeInfo[Idx].InterruptTime);

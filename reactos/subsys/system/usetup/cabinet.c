@@ -1002,7 +1002,7 @@ ULONG CabinetExtractFile( PCAB_SEARCH Search )
 	{
 	  // compute remaining uncomp bytes to start of file, bounded by sizeof junk
 	  OutputLength = Search->File->FileOffset - CurrentOffset;
-	  if( OutputLength > sizeof( Junk ) )
+	  if( OutputLength > (LONG)sizeof( Junk ) )
 		OutputLength = sizeof( Junk );
 	  OutputLength = -OutputLength;     // negate to signal NOT end of block
 	  CodecUncompress( Junk,

@@ -56,7 +56,7 @@ typedef struct _INFCACHELINE
   struct _INFCACHELINE *Next;
   struct _INFCACHELINE *Prev;
 
-  LONG FieldCount;
+  ULONG FieldCount;
 
   PCHAR Key;
 
@@ -437,7 +437,7 @@ inline static int is_eol( struct parser *parser, const CHAR *ptr )
 /* push data from current token start up to pos into the current token */
 static int push_token( struct parser *parser, const CHAR *pos )
 {
-  int len = pos - parser->start;
+  unsigned int len = pos - parser->start;
   const CHAR *src = parser->start;
   CHAR *dst = parser->token + parser->token_len;
 

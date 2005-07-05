@@ -384,8 +384,8 @@ ULONG MmFindAvailablePagesBeforePage(PVOID PageLookupTable, ULONG TotalPageCount
 
 VOID MmFixupSystemMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG* MapCount)
 {
-	int		Index;
-	int		Index2;
+	UINT		Index;
+	UINT		Index2;
 
 	// Loop through each entry in the array
 	for (Index=0; Index<*MapCount; Index++)

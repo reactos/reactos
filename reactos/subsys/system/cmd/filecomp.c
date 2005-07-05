@@ -223,11 +223,11 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
 	BOOL  found_dot = FALSE;
 	INT   curplace = 0;
 	INT   start;
-	INT   count;
+	UINT   count;
 	TCHAR path[MAX_PATH];
 	TCHAR fname[MAX_PATH];
 	TCHAR directory[MAX_PATH];
-	INT   longestfname = 0;
+	UINT   longestfname = 0;
 	SHORT screenwidth;
 
 	/* expand current file name */
@@ -341,7 +341,7 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
 			{
 				/* print the new line only if we aren't on the
 				 * last column, in this case it wraps anyway */
-				if (count * longestfname != screenwidth)
+				if (count * longestfname != (UINT)screenwidth)
 					ConOutPrintf (_T("\n"));
 				count = 0;
 			}

@@ -63,7 +63,7 @@ typedef struct _CHECKLISTWND
    BOOL FocusVisible;
    
    COLORREF TextColor[2];
-   UINT CheckBoxLeft[2];
+   INT CheckBoxLeft[2];
    
    BOOL QuickSearchEnabled;
    PCHECKITEM QuickSearchHitItem;
@@ -531,7 +531,7 @@ UpdateControl(IN PCHECKLISTWND infoPtr,
     
     VisibleItems = (rcClient.bottom - rcClient.top) / infoPtr->ItemHeight;
     
-    if (ScrollInfo.nPage == VisibleItems && ScrollInfo.nMax > 0)
+    if (ScrollInfo.nPage == (UINT)VisibleItems && ScrollInfo.nMax > 0)
     {
         ScrollInfo.nMax--;
     }
@@ -1456,7 +1456,7 @@ QuickSearchFindHit(IN PCHECKLISTWND infoPtr,
             default:
             {
                 INT SearchLen = wcslen(infoPtr->QuickSearchText);
-                if (SearchLen < (sizeof(infoPtr->QuickSearchText) / sizeof(infoPtr->QuickSearchText[0])) - 1)
+                if (SearchLen < (INT)(sizeof(infoPtr->QuickSearchText) / sizeof(infoPtr->QuickSearchText[0])) - 1)
                 {
                     infoPtr->QuickSearchText[SearchLen++] = c;
                     infoPtr->QuickSearchText[SearchLen] = L'\0';
@@ -1832,7 +1832,7 @@ CheckListWndProc(IN HWND hwnd,
         
         case CLM_SETCHECKBOXCOLUMN:
         {
-            infoPtr->CheckBoxLeft[wParam != CLB_DENY] = (UINT)lParam;
+            infoPtr->CheckBoxLeft[wParam != CLB_DENY] = (INT)lParam;
             Ret = 1;
             break;
         }
@@ -1894,7 +1894,7 @@ CheckListWndProc(IN HWND hwnd,
         {
             LPSTYLESTRUCT Style = (LPSTYLESTRUCT)lParam;
             
-            if (wParam == GWL_STYLE)
+            if (wParam == (WPARAM)GWL_STYLE)
             {
                 BOOL AllowChangeStyle;
 

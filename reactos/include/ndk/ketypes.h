@@ -98,7 +98,7 @@ typedef struct _KPROFILE
     PVOID RegionEnd;
     ULONG BucketShift;
     PVOID Buffer;
-    CSHORT Source;
+    KPROFILE_SOURCE Source;
     ULONG Affinity;
     BOOLEAN Active;
     struct _KPROCESS *Process;

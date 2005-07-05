@@ -681,7 +681,7 @@ INT
 EXPORT
 __WSAFDIsSet(SOCKET s, LPFD_SET set)
 {
-    int i;
+    unsigned int i;
 
     for( i = 0; i < set->fd_count; i++ )
 	if( set->fd_array[i] == s ) return TRUE;

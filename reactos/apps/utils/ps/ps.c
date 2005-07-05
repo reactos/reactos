@@ -213,7 +213,7 @@ int main()
         unsigned char minute, minute1, tmin, tmin1;
         unsigned char  seconds, seconds1, tsec, tsec1;
 
-	int ti;
+	unsigned int ti;
 	LARGE_INTEGER ptime;
 
 	ptime.QuadPart = CurrentProcess->KernelTime.QuadPart;

@@ -69,7 +69,7 @@ typedef NTSTATUS (NTAPI * PEXEFMT_LOADER)
  * as opposed to STATUS_INVALID_IMAGE_FORMAT meaning the format is supported,
  * but the particular file is malformed
  */
-#define STATUS_ROS_EXEFMT_UNKNOWN_FORMAT (0xA0100001)
+#define STATUS_ROS_EXEFMT_UNKNOWN_FORMAT ((NTSTATUS)0xA0100001)
 
 /*
  * Returned by MmCreateSection to signal successful loading of an executable
@@ -78,7 +78,7 @@ typedef NTSTATUS (NTAPI * PEXEFMT_LOADER)
  * STATUS_ROS_EXEFMT_LOADED_FORMAT and the appropriate EXEFMT_LOADED_XXX
  */
 #define FACILITY_ROS_EXEFMT_FORMAT      (0x11)
-#define STATUS_ROS_EXEFMT_LOADED_FORMAT (0x60110000)
+#define STATUS_ROS_EXEFMT_LOADED_FORMAT ((NTSTATUS)0x60110000)
 
 /* non-standard format, ZwQuerySection required to retrieve the format tag */
 #define EXEFMT_LOADED_EXTENDED (0x0000FFFF)

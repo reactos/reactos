@@ -101,7 +101,7 @@ RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
 
   DPRINT("RegistrationFrame is 0x%X\n", RegistrationFrame);
 
-  while ((ULONG_PTR)RegistrationFrame != -1)
+  while ((ULONG_PTR)RegistrationFrame != (ULONG_PTR)-1)
   {
     EXCEPTION_RECORD ExceptionRecord2;
     //PVOID RegistrationFrameEnd = (PVOID)RegistrationFrame + 8;
@@ -304,7 +304,7 @@ RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
   Context.Eax = EaxValue;
 
   // Begin traversing the list of EXCEPTION_REGISTRATION
-  while ((ULONG_PTR)ERHead != -1 && ERHead != RegistrationFrame)
+  while ((ULONG_PTR)ERHead != (ULONG_PTR)-1 && ERHead != RegistrationFrame)
   {
     EXCEPTION_RECORD er2;
 

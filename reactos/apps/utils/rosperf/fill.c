@@ -36,7 +36,7 @@ FillSmallProc(void *Context, PPERF_INFO PerfInfo, unsigned Reps)
 {
 #define SMALL_SIZE 16
   unsigned Rep;
-  unsigned x, y;
+  int x, y;
 
   x = 0;
   y = 0;

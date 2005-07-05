@@ -272,7 +272,7 @@ IsNTAdmin( DWORD Reserved,
            PDWORD PReserved )
 {
   HANDLE Process, Token;
-  INT i;
+  UINT i;
   BOOL Good = FALSE;
   DWORD Buffer[4096];
   DWORD Size;
