@@ -63,14 +63,14 @@ ShutdownThreadMain(PVOID Context)
         HalReturnToFirmware (FIRMWARE_OFF);
 #else
 #ifdef CONFIG_SMP
-        ULONG i;
+        LONG i;
 	KIRQL OldIrql;
 
 	OldIrql = KeRaiseIrqlToDpcLevel();
         /* Halt all other processors */
 	for (i = 0; i < KeNumberProcessors; i++)
 	  {
-	    if (i != KeGetCurrentProcessorNumber())
+	    if (i != (LONG)KeGetCurrentProcessorNumber())
 	      {
 	        PKDPC Dpc = ExAllocatePool(NonPagedPool, sizeof(KDPC));
 		if (Dpc == NULL)

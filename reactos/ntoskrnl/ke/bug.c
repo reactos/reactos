@@ -420,11 +420,11 @@ KeBugCheckWithTf(ULONG BugCheckCode,
     if (!InterlockedDecrement((PLONG)&KeBugCheckCount)) 
     {
 #ifdef CONFIG_SMP
-        ULONG i;
+        LONG i;
         /* Freeze the other CPUs */
         for (i = 0; i < KeNumberProcessors; i++) 
         {
-            if (i != KeGetCurrentProcessorNumber()) 
+            if (i != (LONG)KeGetCurrentProcessorNumber())
             {
                 /* Send the IPI and give them one second to catch up */
                 KiIpiSendRequest(1 << i, IPI_REQUEST_FREEZE);
