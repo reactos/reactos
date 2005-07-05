@@ -26,7 +26,7 @@
 			<directory name="i386">
 				<file first="true">main.S</file>
 				<file>bios.c</file>
-				<file>brkpoint.c</file>
+				<file>brkpoint.S</file>
 				<file>ctxswitch.S</file>
 				<file>exp.c</file>
 				<file>fpu.c</file>
@@ -119,7 +119,7 @@
 	<directory name="ex">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
-				<file>interlck.c</file>
+				<file>interlck.S</file>
 			</directory>
 		</if>
 		<file>callback.c</file>

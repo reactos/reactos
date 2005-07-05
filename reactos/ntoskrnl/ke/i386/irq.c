@@ -26,73 +26,28 @@
 
 /* GLOBALS *****************************************************************/
 
+/* Interrupt handler list */
+
 #ifdef CONFIG_SMP
 
-#define __STR(x) #x
-#define STR(x) __STR(x)
-
-#define INT_NAME(intnum) _KiUnexpectedInterrupt##intnum
 #define INT_NAME2(intnum) KiUnexpectedInterrupt##intnum
 
-#define BUILD_COMMON_INTERRUPT_HANDLER() \
-__asm__( \
-  "_KiCommonInterrupt:\n\t" \
-  "cld\n\t" \
-  "pushl %ds\n\t" \
-  "pushl %es\n\t" \
-  "pushl %fs\n\t" \
-  "pushl %gs\n\t" \
-  "movl	$0xceafbeef,%eax\n\t" \
-  "pushl %eax\n\t" \
-  "movl	$" STR(KERNEL_DS) ",%eax\n\t" \
-  "movl	%eax,%ds\n\t" \
-  "movl	%eax,%es\n\t" \
-  "movl %eax,%gs\n\t" \
-  "movl	$" STR(PCR_SELECTOR) ",%eax\n\t" \
-  "movl	%eax,%fs\n\t" \
-  "pushl %esp\n\t" \
-  "pushl %ebx\n\t" \
-  "call	_KiInterruptDispatch\n\t" \
-  "addl	$0xC, %esp\n\t" \
-  "popl	%gs\n\t" \
-  "popl	%fs\n\t" \
-  "popl	%es\n\t" \
-  "popl	%ds\n\t" \
-  "popa\n\t" \
-  "iret\n\t");
-
 #define BUILD_INTERRUPT_HANDLER(intnum) \
-VOID INT_NAME2(intnum)(VOID); \
-__asm__( \
-  STR(INT_NAME(intnum)) ":\n\t" \
-  "pusha\n\t" \
-  "movl $0x" STR(intnum) ",%ebx\n\t" \
-  "jmp _KiCommonInterrupt");
+VOID INT_NAME2(intnum)(VOID);
 
-
-/* Interrupt handlers and declarations */
-
-#define B(x,y) \
+#define D(x,y) \
   BUILD_INTERRUPT_HANDLER(x##y)
 
-#define B16(x) \
-  B(x,0) B(x,1) B(x,2) B(x,3) \
-  B(x,4) B(x,5) B(x,6) B(x,7) \
-  B(x,8) B(x,9) B(x,A) B(x,B) \
-  B(x,C) B(x,D) B(x,E) B(x,F)
+#define D16(x) \
+  D(x,0) D(x,1) D(x,2) D(x,3) \
+  D(x,4) D(x,5) D(x,6) D(x,7) \
+  D(x,8) D(x,9) D(x,A) D(x,B) \
+  D(x,C) D(x,D) D(x,E) D(x,F)
 
-
-BUILD_COMMON_INTERRUPT_HANDLER()
-B16(3) B16(4) B16(5) B16(6)
-B16(7) B16(8) B16(9) B16(A)
-B16(B) B16(C) B16(D) B16(E)
-B16(F)
-
-#undef B
-#undef B16
-
-
-/* Interrupt handler list */
+D16(3) D16(4) D16(5) D16(6)
+D16(7) D16(8) D16(9) D16(A)
+D16(B) D16(C) D16(D) D16(E)
+D16(F)
 
 #define L(x,y) \
   (ULONG)& INT_NAME2(x##y)
@@ -111,45 +66,47 @@ static ULONG irq_handler[ROUND_UP(NR_IRQS, 16)] = {
 
 #undef L
 #undef L16
+#undef D
+#undef D16
 
 #else /* CONFIG_SMP */
 
- void irq_handler_0(void);
- void irq_handler_1(void);
- void irq_handler_2(void);
- void irq_handler_3(void);
- void irq_handler_4(void);
- void irq_handler_5(void);
- void irq_handler_6(void);
- void irq_handler_7(void);
- void irq_handler_8(void);
- void irq_handler_9(void);
- void irq_handler_10(void);
- void irq_handler_11(void);
- void irq_handler_12(void);
- void irq_handler_13(void);
- void irq_handler_14(void);
- void irq_handler_15(void);
+void irq_handler_0(void);
+void irq_handler_1(void);
+void irq_handler_2(void);
+void irq_handler_3(void);
+void irq_handler_4(void);
+void irq_handler_5(void);
+void irq_handler_6(void);
+void irq_handler_7(void);
+void irq_handler_8(void);
+void irq_handler_9(void);
+void irq_handler_10(void);
+void irq_handler_11(void);
+void irq_handler_12(void);
+void irq_handler_13(void);
+void irq_handler_14(void);
+void irq_handler_15(void);
 
 static unsigned int irq_handler[NR_IRQS]=
-        {
-                (int)&irq_handler_0,
-                (int)&irq_handler_1,
-                (int)&irq_handler_2,
-                (int)&irq_handler_3,
-                (int)&irq_handler_4,
-                (int)&irq_handler_5,
-                (int)&irq_handler_6,
-                (int)&irq_handler_7,
-                (int)&irq_handler_8,
-                (int)&irq_handler_9,
-                (int)&irq_handler_10,
-                (int)&irq_handler_11,
-                (int)&irq_handler_12,
-                (int)&irq_handler_13,
-                (int)&irq_handler_14,
-                (int)&irq_handler_15,
-        };
+{
+   (int)&irq_handler_0,
+   (int)&irq_handler_1,
+   (int)&irq_handler_2,
+   (int)&irq_handler_3,
+   (int)&irq_handler_4,
+   (int)&irq_handler_5,
+   (int)&irq_handler_6,
+   (int)&irq_handler_7,
+   (int)&irq_handler_8,
+   (int)&irq_handler_9,
+   (int)&irq_handler_10,
+   (int)&irq_handler_11,
+   (int)&irq_handler_12,
+   (int)&irq_handler_13,
+   (int)&irq_handler_14,
+   (int)&irq_handler_15,
+};
 
 #endif /* CONFIG_SMP */
 
