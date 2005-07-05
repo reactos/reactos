@@ -411,10 +411,7 @@ KdbpCmdRegs(ULONG Argc, PCHAR Argv[])
    else if (Argv[0][0] == 'c') /* cregs */
    {
       ULONG Cr0, Cr2, Cr3, Cr4;
-      struct __attribute__((packed)) {
-         USHORT Limit;
-         ULONG Base;
-      } Gdtr, Ldtr, Idtr;
+      KDESCRIPTOR Gdtr, Ldtr, Idtr;
       ULONG Tr;
       STATIC CONST PCHAR Cr0Bits[32] = { " PE", " MP", " EM", " TS", " ET", " NE", NULL, NULL,
                                          NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
@@ -431,9 +428,9 @@ KdbpCmdRegs(ULONG Argc, PCHAR Argv[])
       Cr4 = KdbCurrentTrapFrame->Cr4;
 
       /* Get descriptor table regs */
-      asm volatile("sgdt %0" : : "m"(Gdtr));
-      asm volatile("sldt %0" : : "m"(Ldtr));
-      asm volatile("sidt %0" : : "m"(Idtr));
+      asm volatile("sgdt %0" : : "m"(Gdtr.Limit));
+      asm volatile("sldt %0" : : "m"(Ldtr.Limit));
+      asm volatile("sidt %0" : : "m"(Idtr.Limit));
 
       /* Get the task register */
       asm volatile("str %0" : "=g"(Tr));

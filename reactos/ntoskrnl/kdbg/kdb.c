@@ -320,10 +320,7 @@ KdbpStepOverInstruction(ULONG_PTR Eip)
 BOOLEAN
 KdbpStepIntoInstruction(ULONG_PTR Eip)
 {
-   struct __attribute__((packed)) {
-      USHORT Limit;
-      ULONG Base;
-   } Idtr;
+   KDESCRIPTOR Idtr;
    UCHAR Mem[2];
    INT IntVect;
    ULONG IntDesc[2];
@@ -353,7 +350,7 @@ KdbpStepIntoInstruction(ULONG_PTR Eip)
    }
 
    /* Read the interrupt descriptor table register  */
-   asm volatile("sidt %0" : : "m"(Idtr));
+   asm volatile("sidt %0" : : "m"(Idtr.Limit));
    if (IntVect >= (Idtr.Limit + 1) / 8)
    {
       /*KdbpPrint("IDT does not contain interrupt vector %d\n.", IntVect);*/
