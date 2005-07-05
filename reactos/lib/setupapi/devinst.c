@@ -990,7 +990,7 @@ HDEVINFO WINAPI SetupDiGetClassDevsA(
        DWORD flags)
 {
     return SetupDiGetClassDevsExA(class, enumstr, parent,
-                                  flags, NULL, NULL);
+                                  flags, NULL, NULL, NULL);
 }
 
 /***********************************************************************
@@ -1003,7 +1003,7 @@ HDEVINFO WINAPI SetupDiGetClassDevsW(
        DWORD flags)
 {
     return SetupDiGetClassDevsExW(class, enumstr, parent,
-                                  flags, NULL, NULL);
+                                  flags, NULL, NULL, NULL);
 }
 
 /***********************************************************************
@@ -1014,6 +1014,7 @@ HDEVINFO WINAPI SetupDiGetClassDevsExA(
        LPCSTR enumstr,
        HWND parent,
        DWORD flags,
+       HDEVINFO deviceset,
        LPCSTR machine,
        PVOID reserved)
 {
@@ -1043,7 +1044,7 @@ HDEVINFO WINAPI SetupDiGetClassDevsExA(
         }
         MultiByteToWideChar(CP_ACP, 0, machine, -1, machineW, len);
     }
-    ret = SetupDiGetClassDevsExW(class, enumstrW, parent, flags, machineW, reserved);
+    ret = SetupDiGetClassDevsExW(class, enumstrW, parent, flags, deviceset, machineW, reserved);
 
 end:
     HeapFree(GetProcessHeap(), 0, enumstrW);
@@ -1195,18 +1196,21 @@ HDEVINFO WINAPI SetupDiGetClassDevsExW(
        LPCWSTR enumstr,
        HWND parent,
        DWORD flags,
+       HDEVINFO deviceset,
        LPCWSTR machine,
        PVOID reserved)
 {
     HDEVINFO ret = (HDEVINFO)INVALID_HANDLE_VALUE;
 
-    TRACE("%s %s %p 0x%08lx\n", debugstr_guid(class), debugstr_w(enumstr),
-     parent, flags);
+    TRACE("%s %s %p 0x%08lx %p %s %p\n", debugstr_guid(class), debugstr_w(enumstr),
+     parent, flags, deviceset, debugstr_w(machine), reserved);
 
     if (flags & DIGCF_PRESENT)
         FIXME(": flag DIGCF_PRESENT ignored\n");
     if (flags & DIGCF_PROFILE)
         FIXME(": flag DIGCF_PROFILE ignored\n");
+    if (deviceset)
+       FIXME(": deviceset ignored\n");
 
     if (enumstr)
         FIXME(": unimplemented for enumerator strings (%s)\n",
