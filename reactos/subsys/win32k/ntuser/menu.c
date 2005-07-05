@@ -968,7 +968,7 @@ IntBuildMenuItemList(PMENU_OBJECT MenuObject, PVOID Buffer, ULONG nMax)
               SetLastNtError(Status);
               return 0;
             }
-          Buf += sizeof(ROSMENUITEMINFO);
+          Buf = (PVOID)((ULONG_PTR)Buf + sizeof(ROSMENUITEMINFO));
 
           if (0 != CurItem->Text.Length
               && (nMax >= CurItem->Text.Length + sizeof(WCHAR)))

@@ -1033,7 +1033,7 @@ ULONG CabinetExtractFile( PCAB_SEARCH Search )
 		  Status = CAB_STATUS_INVALID_CAB;
 		  goto UnmapDestFile;
 		}
-	  CurrentDestBuffer += OutputLength;  // advance dest buffer by bytes produced
+	  CurrentDestBuffer = (PVOID)((ULONG_PTR)CurrentDestBuffer + OutputLength);  // advance dest buffer by bytes produced
 	  CurrentBuffer += InputLength;       // advance src buffer by bytes consumed
 	  Size -= OutputLength;               // reduce remaining file bytes by bytes produced
 	  RemainingBlock -= InputLength;      // reduce remaining block size by bytes consumed

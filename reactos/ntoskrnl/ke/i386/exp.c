@@ -729,7 +729,7 @@ KeDumpStackFrames(PULONG Frame)
 		}
 
 		StackBase = Frame;
-		StackEnd = mbi.BaseAddress + mbi.RegionSize;
+		StackEnd = (PULONG)((ULONG_PTR)mbi.BaseAddress + mbi.RegionSize);
 
 		while ( Frame >= StackBase && Frame < StackEnd )
 		{
@@ -786,7 +786,7 @@ KeRosDumpStackFrames ( PULONG Frame, ULONG FrameCount )
 		}
 
 		StackBase = Frame;
-		StackEnd = mbi.BaseAddress + mbi.RegionSize;
+		StackEnd = (PULONG)((ULONG_PTR)mbi.BaseAddress + mbi.RegionSize);
 
 		while ( Frame >= StackBase && Frame < StackEnd && i++ < FrameCount )
 		{
@@ -838,7 +838,7 @@ KeRosGetStackFrames ( PULONG Frames, ULONG FrameCount )
 		}
 
 		StackBase = Frame;
-		StackEnd = mbi.BaseAddress + mbi.RegionSize;
+		StackEnd = (PULONG)((ULONG_PTR)mbi.BaseAddress + mbi.RegionSize);
 
 		while ( Count < FrameCount && Frame >= StackBase && Frame < StackEnd )
 		{

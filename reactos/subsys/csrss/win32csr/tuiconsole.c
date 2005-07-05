@@ -293,7 +293,7 @@ TuiSwapConsole(int Next)
                                0,
                                sizeof(COORD) + Title.MaximumLength);
       pos = (COORD *)Buffer;
-      Title.Buffer = Buffer + sizeof( COORD );
+      Title.Buffer = (PVOID)((ULONG_PTR)Buffer + sizeof( COORD ));
 
       RtlUnicodeStringToAnsiString(&Title, &SwapConsole->Title, FALSE);
       pos->Y = PhysicalConsoleSize.Y / 2;

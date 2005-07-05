@@ -170,16 +170,8 @@ MmAlterRegion(PMADDRESS_SPACE AddressSpace, PVOID BaseAddress,
                    CurrentRegion->Type, CurrentRegion->Protect,
                    NewType, NewProtect);
       }
-#if defined(__GNUC__)
-      CurrentBaseAddress += CurrentRegion->Length;
-#else
 
-      {
-         char* pTemp = CurrentBaseAddress;
-         pTemp += CurrentRegion->Length;
-         CurrentBaseAddress = pTemp;
-      }
-#endif
+      CurrentBaseAddress = (PVOID)((ULONG_PTR)CurrentBaseAddress + CurrentRegion->Length);
       NewRegion->Length += CurrentRegion->Length;
       RemainingLength -= CurrentRegion->Length;
       CurrentEntry = CurrentEntry->Flink;
@@ -283,17 +275,8 @@ MmFindRegion(PVOID BaseAddress, PLIST_ENTRY RegionListHead, PVOID Address,
       }
 
       current_entry = current_entry->Flink;
-#if defined(__GNUC__)
 
-      StartAddress += current->Length;
-#else
-
-      {
-         char* pTemp = StartAddress;
-         pTemp += current->Length;
-         StartAddress = pTemp;
-      }
-#endif
+      StartAddress = (PVOID)((ULONG_PTR)StartAddress + current->Length);
 
    }
    return(NULL);

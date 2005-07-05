@@ -89,15 +89,9 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 	{
 	  TempLength = min(Bcb->CacheSegmentSize, Length);
 	  memcpy(Buffer, current->BaseAddress, TempLength);
-#if defined(__GNUC__)
-	  Buffer += TempLength;
-#else
-	  {
-	    char* pTemp = Buffer;
-		pTemp += TempLength;
-		Buffer = pTemp;
-	  }
-#endif
+
+	  Buffer = (PVOID)((ULONG_PTR)Buffer + TempLength);
+
 	  Length = Length - TempLength;
 	  previous = current;
 	  current = current->NextInChain;
@@ -180,15 +174,9 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 	      current = current->NextInChain;
 	      TempLength = min(Bcb->CacheSegmentSize, Length);
 	      memcpy(Buffer, previous->BaseAddress, TempLength);
-#if defined(__GNUC__)
-	      Buffer += TempLength;
-#else
-		  {
-			char* pTemp = Buffer;
-			pTemp += TempLength;
-			Buffer = pTemp;
-		  }
-#endif
+
+	      Buffer = (PVOID)((ULONG_PTR)Buffer + TempLength);
+
 	      Length = Length - TempLength;
 	      CcRosReleaseCacheSegment(Bcb, previous, TRUE, FALSE, FALSE);
 	      current_size += Bcb->CacheSegmentSize;
@@ -393,15 +381,8 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
       ReadLength += TempLength;
       Length -= TempLength;
       ReadOffset += TempLength;
-#if defined(__GNUC__)
-      Buffer += TempLength;
-#else
-	  {
-		char* pTemp = Buffer;
-		pTemp += TempLength;
-		Buffer = pTemp;
-	  }
-#endif
+
+      Buffer = (PVOID)((ULONG_PTR)Buffer + TempLength);
     }
   IoStatus->Status = STATUS_SUCCESS;
   IoStatus->Information = ReadLength;
@@ -488,15 +469,8 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
 
        Length -= TempLength;
        WriteOffset += TempLength;
-#if defined(__GNUC__)
-       Buffer += TempLength;
-#else
-	  {
-		char* pTemp = Buffer;
-		pTemp += TempLength;
-		Buffer = pTemp;
-	  }
-#endif
+
+       Buffer = (PVOID)((ULONG_PTR)Buffer + TempLength);
      }
 
    while (Length > 0)
@@ -520,15 +494,8 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
        CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, TRUE, FALSE);
        Length -= TempLength;
        WriteOffset += TempLength;
-#if defined(__GNUC__)
-       Buffer += TempLength;
-#else
-	  {
-		char* pTemp = Buffer;
-		pTemp += TempLength;
-		Buffer = pTemp;
-	  }
-#endif
+
+       Buffer = (PVOID)((ULONG_PTR)Buffer + TempLength);
      }
    return(TRUE);
 }

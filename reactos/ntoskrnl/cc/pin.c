@@ -78,15 +78,8 @@ CcMapData (IN PFILE_OBJECT FileObject,
 	  return(FALSE);
 	}
     }
-#if defined(__GNUC__)
-  *pBuffer += ReadOffset % Bcb->CacheSegmentSize;
-#else
-  {
-    char* pTemp = *pBuffer;
-    pTemp += ReadOffset % Bcb->CacheSegmentSize;
-    *pBuffer = pTemp;
-  }
-#endif
+
+  *pBuffer = (PVOID)((ULONG_PTR)(*pBuffer) + (ReadOffset % Bcb->CacheSegmentSize));
   iBcb = ExAllocateFromNPagedLookasideList(&iBcbLookasideList);
   if (iBcb == NULL)
     {

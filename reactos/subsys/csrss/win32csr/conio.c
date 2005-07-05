@@ -2273,8 +2273,8 @@ CSR_API(CsrWriteConsoleOutput)
   BufferCoord = Request->Data.WriteConsoleOutputRequest.BufferCoord;
   CharInfo = Request->Data.WriteConsoleOutputRequest.CharInfo;
   if (((PVOID)CharInfo < ProcessData->CsrSectionViewBase) ||
-      (((PVOID)CharInfo + PSize) >
-       (ProcessData->CsrSectionViewBase + ProcessData->CsrSectionViewSize)))
+      (((ULONG_PTR)CharInfo + PSize) >
+       ((ULONG_PTR)ProcessData->CsrSectionViewBase + ProcessData->CsrSectionViewSize)))
     {
       ConioUnlockScreenBuffer(Buff);
       ConioUnlockConsole(Console);
@@ -2690,7 +2690,7 @@ CSR_API(CsrPeekConsoleInput)
   Size = Length * sizeof(INPUT_RECORD);
 
   if (((PVOID)InputRecord < ProcessData->CsrSectionViewBase)
-      || (((PVOID)InputRecord + Size) > (ProcessData->CsrSectionViewBase + ProcessData->CsrSectionViewSize)))
+      || (((ULONG_PTR)InputRecord + Size) > ((ULONG_PTR)ProcessData->CsrSectionViewBase + ProcessData->CsrSectionViewSize)))
     {
       ConioUnlockConsole(Console);
       Request->Status = STATUS_ACCESS_VIOLATION;
@@ -2776,7 +2776,7 @@ CSR_API(CsrReadConsoleOutput)
   CodePage = ProcessData->Console->OutputCodePage;
 
   if (((PVOID)CharInfo < ProcessData->CsrSectionViewBase)
-      || (((PVOID)CharInfo + Size) > (ProcessData->CsrSectionViewBase + ProcessData->CsrSectionViewSize)))
+      || (((ULONG_PTR)CharInfo + Size) > ((ULONG_PTR)ProcessData->CsrSectionViewBase + ProcessData->CsrSectionViewSize)))
     {
       ConioUnlockScreenBuffer(Buff);
       Request->Status = STATUS_ACCESS_VIOLATION;
@@ -2856,7 +2856,7 @@ CSR_API(CsrWriteConsoleInput)
   Size = Length * sizeof(INPUT_RECORD);
 
   if (((PVOID)InputRecord < ProcessData->CsrSectionViewBase)
-      || (((PVOID)InputRecord + Size) > (ProcessData->CsrSectionViewBase + ProcessData->CsrSectionViewSize)))
+      || (((ULONG_PTR)InputRecord + Size) > ((ULONG_PTR)ProcessData->CsrSectionViewBase + ProcessData->CsrSectionViewSize)))
     {
       ConioUnlockConsole(Console);
       Request->Status = STATUS_ACCESS_VIOLATION;
