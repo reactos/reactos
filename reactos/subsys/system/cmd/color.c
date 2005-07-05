@@ -32,7 +32,7 @@ static VOID ColorHelp (VOID)
 }
 
 
-VOID SetScreenColor (WORD wColor, BOOL bFill)
+VOID SetScreenColor (WORD wColor, BOOL bNoFill)
 {
 	DWORD dwWritten;
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
@@ -45,7 +45,7 @@ VOID SetScreenColor (WORD wColor, BOOL bFill)
 	}
 	else
 	{
-		if (bFill == TRUE)
+		if (bNoFill != TRUE)
 		{
 			GetConsoleScreenBufferInfo (hConsole, &csbi);
 
@@ -81,7 +81,7 @@ INT CommandColor (LPTSTR first, LPTSTR rest)
 	{
 		/* set default color */
 		wColor = wDefColor;
-		SetScreenColor (wColor, TRUE);
+		SetScreenColor (wColor, FALSE);
 		return 0;
 	}
     
@@ -125,7 +125,7 @@ INT CommandColor (LPTSTR first, LPTSTR rest)
 
 	/* set color */
 	SetScreenColor(wColor,
-	               (_tcsstr (rest,_T("/F")) || _tcsstr (rest,_T("/f"))));
+	               (_tcsstr (rest,_T("/-F")) || _tcsstr (rest,_T("/-f"))));
 
 	return 0;
 }

@@ -89,9 +89,9 @@ CMD [/[C|K] command][/P][/Q][/T:bf]\n\n\
   /T:bf       Sets the background/foreground color (see COLOR command)."
 
 STRING_COLOR_HELP1, "Sets the default foreground and background colors.\n\n\
-COLOR [attr [/F]] \n\n\
+COLOR [attr [/-F]] \n\n\
   attr        Specifies color attribute of console output\n\
-  /F          fill the console with color attribute\n\n\
+  /-F         Does not fill the console blank space with color attribute\n\n\
 There are three ways to specify the colors:\n\
 1) [bright] name on [bright] name  (only the first three letters are required)\n\
 2) decimal on decimal\n\
