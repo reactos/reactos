@@ -147,7 +147,7 @@ CreateICA(
   NTSTATUS Status;
   LPWSTR lpszDriverW, lpszDeviceW, lpszOutputW;
   UNICODE_STRING Driver, Device, Output;
-  LPDEVMODEW dvmInitW;
+  LPDEVMODEW dvmInitW = NULL;
   HDC rc = 0;
 
   Status = HEAP_strdupA2W ( &lpszDriverW, lpszDriver );
