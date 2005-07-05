@@ -319,7 +319,7 @@ IOAPICSetupIrqs(VOID)
          entry.dest.logical.logical_dest = 0;
 
 	 idx = IOAPICGetIrqEntry(apic,pin,INT_VECTORED);
-	 if (idx == -1) 
+	 if (idx == (ULONG)-1)
 	 {
 	    if (first_notcon) 
 	    {

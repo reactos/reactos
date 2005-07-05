@@ -302,7 +302,7 @@ HaliReadMPConfigTable(PMP_CONFIGURATION_TABLE Table)
    DPRINT("APIC at: %08x\n", Table->LocalAPICAddress);
 
 
-   Entry = (PUCHAR)((PVOID)Table + sizeof(MP_CONFIGURATION_TABLE));
+   Entry = (PUCHAR)((ULONG_PTR)Table + sizeof(MP_CONFIGURATION_TABLE));
    Count = 0;
    while (Count < (Table->Length - sizeof(MP_CONFIGURATION_TABLE)))
    {
