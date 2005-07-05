@@ -30,7 +30,7 @@ List:
 	- MADDRESS_SPACE must be converted into the NT Type (Alex) [pstypes.h, mmtypes.h]
 
 	Priority 4:
-	- Kernel and Memory Types are not architecture-specific [ketypes.h, mmtypes.h]
+	- FIXED: Kernel and Memory Types are not architecture-specific (Eric) [ketypes.h, mmtypes.h]
 	- Win32K Builds with windows.h [extypes.h, ketypes.h]
 
 	Priority 5:

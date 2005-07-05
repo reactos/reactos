@@ -11,6 +11,8 @@
 
 /* DEPENDENCIES **************************************************************/
 
+#include "arch/mmtypes.h"
+
 /* EXPORTED DATA *************************************************************/
 
 /* CONSTANTS *****************************************************************/
@@ -43,7 +45,7 @@ typedef struct _MADDRESS_SPACE
 } MADDRESS_SPACE, *PMADDRESS_SPACE;
 #endif
 
-typedef struct _PP_LOOKASIDE_LIST 
+typedef struct _PP_LOOKASIDE_LIST
 {
     struct _GENERAL_LOOKASIDE *P;
     struct _GENERAL_LOOKASIDE *L;
