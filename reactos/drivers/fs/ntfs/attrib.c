@@ -125,7 +125,7 @@ NtfsDumpFileNameAttribute(PATTRIBUTE Attribute)
   ResAttr = (PRESIDENT_ATTRIBUTE)Attribute;
 //  DbgPrint(" Length %lu  Offset %hu ", ResAttr->ValueLength, ResAttr->ValueOffset);
 
-  FileNameAttr = (PFILENAME_ATTRIBUTE)((PVOID)ResAttr + ResAttr->ValueOffset);
+  FileNameAttr = (PFILENAME_ATTRIBUTE)((ULONG_PTR)ResAttr + ResAttr->ValueOffset);
   DbgPrint(" '%.*S' ", FileNameAttr->NameLength, FileNameAttr->Name);
 }
 
@@ -141,7 +141,7 @@ NtfsDumpVolumeNameAttribute(PATTRIBUTE Attribute)
   ResAttr = (PRESIDENT_ATTRIBUTE)Attribute;
 //  DbgPrint(" Length %lu  Offset %hu ", ResAttr->ValueLength, ResAttr->ValueOffset);
 
-  VolumeName = (PWCHAR)((PVOID)ResAttr + ResAttr->ValueOffset);
+  VolumeName = (PWCHAR)((ULONG_PTR)ResAttr + ResAttr->ValueOffset);
   DbgPrint(" '%.*S' ", ResAttr->ValueLength / sizeof(WCHAR), VolumeName);
 }
 
@@ -157,7 +157,7 @@ NtfsDumpVolumeInformationAttribute(PATTRIBUTE Attribute)
   ResAttr = (PRESIDENT_ATTRIBUTE)Attribute;
 //  DbgPrint(" Length %lu  Offset %hu ", ResAttr->ValueLength, ResAttr->ValueOffset);
 
-  VolInfoAttr = (PVOLINFO_ATTRIBUTE)((PVOID)ResAttr + ResAttr->ValueOffset);
+  VolInfoAttr = (PVOLINFO_ATTRIBUTE)((ULONG_PTR)ResAttr + ResAttr->ValueOffset);
   DbgPrint(" NTFS Version %u.%u  Flags 0x%04hx ",
 	   VolInfoAttr->MajorVersion,
 	   VolInfoAttr->MinorVersion,

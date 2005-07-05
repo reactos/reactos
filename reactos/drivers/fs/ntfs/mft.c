@@ -208,7 +208,7 @@ ReadFileRecord (PDEVICE_EXTENSION Vcb,
 
   ULONG n = m > 0 ? (index & m) : 0;
 
-  memcpy(file, p + n * BytesPerFileRecord, BytesPerFileRecord);
+  memcpy(file, (PVOID)((ULONG_PTR)p + n * BytesPerFileRecord), BytesPerFileRecord);
 
   ExFreePool(p);
 
@@ -290,7 +290,7 @@ BOOL bitset(PUCHAR bitmap, ULONG i)
 
 VOID FixupUpdateSequenceArray(PFILE_RECORD_HEADER file)
 {
-	PUSHORT usa = (PUSHORT)((PVOID)file + file->Ntfs.UsaOffset);
+	PUSHORT usa = (PUSHORT)((ULONG_PTR)file + file->Ntfs.UsaOffset);
 	PUSHORT sector = (PUSHORT)file;
     ULONG i;
 

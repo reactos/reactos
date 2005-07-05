@@ -787,7 +787,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		      !(QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND))
 		    {
 		      DPRINT("Expand REG_MULTI_SZ type\n");
-		      StringPtr = (PWSTR)((PVOID)FullValueInfo + FullValueInfo->DataOffset);
+		      StringPtr = (PWSTR)((ULONG_PTR)FullValueInfo + FullValueInfo->DataOffset);
 		      while (*StringPtr != 0)
 			{
 			  StringLen = (wcslen(StringPtr) + 1) * sizeof(WCHAR);
@@ -807,7 +807,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		    {
 		      DPRINT("Expand REG_EXPAND_SZ type\n");
 
-		      StringPtr = (PWSTR)((PVOID)FullValueInfo + FullValueInfo->DataOffset);
+		      StringPtr = (PWSTR)((ULONG_PTR)FullValueInfo + FullValueInfo->DataOffset);
 		      ExpandBuffer = ExAllocatePool(PagedPool, FullValueInfo->DataLength * 2);
 		      if (ExpandBuffer == NULL)
 			{
@@ -841,7 +841,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		    {
 		      Status = QueryEntry->QueryRoutine(ValueName,
 							FullValueInfo->Type,
-							(PVOID)FullValueInfo + FullValueInfo->DataOffset,
+							(PVOID)((ULONG_PTR)FullValueInfo + FullValueInfo->DataOffset),
 							FullValueInfo->DataLength,
 							Context,
 							QueryEntry->EntryContext);

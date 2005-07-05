@@ -162,7 +162,7 @@ static inline VOID LdrpTlsCallback(PLDR_DATA_TABLE_ENTRY Module, ULONG dwReason)
                TRACE_LDR("%wZ - Calling tls callback at %x\n",
                          &Module->BaseDllName, TlsCallback);
                TlsCallback(Module->DllBase, dwReason, NULL);
-               TlsCallback++;
+               TlsCallback = (PIMAGE_TLS_CALLBACK)((ULONG_PTR)TlsCallback + sizeof(PVOID));
              }
          }
      }
@@ -205,7 +205,7 @@ LdrpInitializeTlsForThread(VOID)
            return STATUS_NO_MEMORY;
          }
 
-       TlsData = (PVOID)TlsPointers + LdrpTlsCount * sizeof(PVOID);
+       TlsData = (PVOID)((ULONG_PTR)TlsPointers + LdrpTlsCount * sizeof(PVOID));
        Teb->ThreadLocalStoragePointer = TlsPointers;
 
        TlsInfo = LdrpTlsArray;
@@ -216,12 +216,12 @@ LdrpInitializeTlsForThread(VOID)
            if (TlsInfo->TlsDataSize)
              {
                memcpy(TlsData, TlsInfo->StartAddressOfRawData, TlsInfo->TlsDataSize);
-               TlsData += TlsInfo->TlsDataSize;
+               TlsData = (PVOID)((ULONG_PTR)TlsData + TlsInfo->TlsDataSize);
              }
            if (TlsInfo->TlsZeroSize)
              {
                memset(TlsData, 0, TlsInfo->TlsZeroSize);
-               TlsData += TlsInfo->TlsZeroSize;
+               TlsData = (PVOID)((ULONG_PTR)TlsData + TlsInfo->TlsZeroSize);
              }
          }
      }
@@ -471,7 +471,7 @@ LdrAddModuleEntry(PVOID ImageBase,
   Module->DllBase = (PVOID)ImageBase;
   Module->EntryPoint = (PVOID)NTHeaders->OptionalHeader.AddressOfEntryPoint;
   if (Module->EntryPoint != 0)
-    Module->EntryPoint += (ULONG)Module->DllBase;
+    Module->EntryPoint = (PVOID)((ULONG_PTR)Module->EntryPoint + (ULONG_PTR)Module->DllBase);
   Module->SizeOfImage = LdrpGetResidentSize(NTHeaders);
   if (NtCurrentPeb()->Ldr->Initialized == TRUE)
     {
@@ -803,7 +803,7 @@ LdrFindEntryForAddress(PVOID Address,
       DPRINT("Scanning %wZ at %p\n", &ModulePtr->BaseDllName, ModulePtr->DllBase);
 
       if ((Address >= ModulePtr->DllBase) &&
-          (Address <= (ModulePtr->DllBase + ModulePtr->SizeOfImage)))
+          ((ULONG_PTR)Address <= ((ULONG_PTR)ModulePtr->DllBase + ModulePtr->SizeOfImage)))
         {
           *Module = ModulePtr;
           RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);
@@ -1030,7 +1030,7 @@ LdrGetExportByOrdinal (
                         ExportDir->AddressOfFunctions
                         );
         DPRINT(
-                "LdrGetExportByOrdinal(Ordinal %d) = %x\n",
+                "LdrGetExportByOrdinal(Ordinal %d) = %p\n",
                 Ordinal,
                 RVA(BaseAddress, ExFunctions[Ordinal - ExportDir->Base] )
                 );
@@ -1270,7 +1270,7 @@ LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
     {
       Count = (RelocationDir->SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) /
               sizeof(USHORT);
-      Page = ImageBase + RelocationDir->VirtualAddress;
+      Page = (PVOID)((ULONG_PTR)ImageBase + (ULONG_PTR)RelocationDir->VirtualAddress);
       TypeOffset = (PUSHORT)(RelocationDir + 1);
 
       /* Unprotect the page(s) we're about to relocate. */
@@ -1289,7 +1289,7 @@ LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
       if (RelocationDir->VirtualAddress + PAGE_SIZE <
           NTHeaders->OptionalHeader.SizeOfImage)
         {
-          ProtectPage2 = ProtectPage + PAGE_SIZE;
+          ProtectPage2 = (PVOID)((ULONG_PTR)ProtectPage + PAGE_SIZE);
           Status = NtProtectVirtualMemory(NtCurrentProcess(),
                                           &ProtectPage2,
                                           &ProtectSize,
@@ -1391,16 +1391,16 @@ LdrpProcessImportDirectoryEntry(PLDR_DATA_TABLE_ENTRY Module,
      }
 
    /* Get the import address list. */
-   ImportAddressList = (PVOID *)(Module->DllBase + (ULONG_PTR)ImportModuleDirectory->FirstThunk);
+   ImportAddressList = (PVOID *)((ULONG_PTR)Module->DllBase + (ULONG_PTR)ImportModuleDirectory->FirstThunk);
 
    /* Get the list of functions to import. */
    if (ImportModuleDirectory->OriginalFirstThunk != 0)
      {
-       FunctionNameList = (PULONG) (Module->DllBase + (ULONG_PTR)ImportModuleDirectory->OriginalFirstThunk);
+       FunctionNameList = (PULONG) ((ULONG_PTR)Module->DllBase + (ULONG_PTR)ImportModuleDirectory->OriginalFirstThunk);
      }
    else
      {
-       FunctionNameList = (PULONG)(Module->DllBase + (ULONG_PTR)ImportModuleDirectory->FirstThunk);
+       FunctionNameList = (PULONG)((ULONG_PTR)Module->DllBase + (ULONG_PTR)ImportModuleDirectory->FirstThunk);
      }
 
    /* Get the size of IAT. */
@@ -1550,16 +1550,16 @@ LdrpAdjustImportDirectory(PLDR_DATA_TABLE_ENTRY Module,
          {
 
            /* Get the import address list. */
-           ImportAddressList = (PVOID *)(Module->DllBase + (ULONG_PTR)ImportModuleDirectory->FirstThunk);
+           ImportAddressList = (PVOID *)((ULONG_PTR)Module->DllBase + (ULONG_PTR)ImportModuleDirectory->FirstThunk);
 
            /* Get the list of functions to import. */
            if (ImportModuleDirectory->OriginalFirstThunk != 0)
              {
-               FunctionNameList = (PULONG) (Module->DllBase + (ULONG_PTR)ImportModuleDirectory->OriginalFirstThunk);
+               FunctionNameList = (PULONG) ((ULONG_PTR)Module->DllBase + (ULONG_PTR)ImportModuleDirectory->OriginalFirstThunk);
              }
            else
              {
-               FunctionNameList = (PULONG)(Module->DllBase + (ULONG_PTR)ImportModuleDirectory->FirstThunk);
+               FunctionNameList = (PULONG)((ULONG_PTR)Module->DllBase + (ULONG_PTR)ImportModuleDirectory->FirstThunk);
              }
 
            /* Get the size of IAT. */
@@ -1585,15 +1585,15 @@ LdrpAdjustImportDirectory(PLDR_DATA_TABLE_ENTRY Module,
 
            NTHeaders = RtlImageNtHeader (ImportedModule->DllBase);
            Start = (PVOID)NTHeaders->OptionalHeader.ImageBase;
-           End = Start + ImportedModule->SizeOfImage;
-           Offset = ImportedModule->DllBase - Start;
+           End = (PVOID)((ULONG_PTR)Start + ImportedModule->SizeOfImage);
+           Offset = (ULONG)((ULONG_PTR)ImportedModule->DllBase - (ULONG_PTR)Start);
 
            /* Walk through function list and fixup addresses. */
            while (*FunctionNameList != 0L)
              {
                if (*ImportAddressList >= Start && *ImportAddressList < End)
                  {
-                   (*ImportAddressList) += Offset;
+                   (*ImportAddressList) = (PVOID)((ULONG_PTR)(*ImportAddressList) + Offset);
                  }
                ImportAddressList++;
                FunctionNameList++;
@@ -1903,7 +1903,7 @@ PEPFUNC LdrPEStartup (PVOID  ImageBase,
     * to the DLL's image.
     */
    DosHeader = (PIMAGE_DOS_HEADER) ImageBase;
-   NTHeaders = (PIMAGE_NT_HEADERS) (ImageBase + DosHeader->e_lfanew);
+   NTHeaders = (PIMAGE_NT_HEADERS) ((ULONG_PTR)ImageBase + DosHeader->e_lfanew);
 
    /*
     * If the base address is different from the
@@ -1978,7 +1978,7 @@ PEPFUNC LdrPEStartup (PVOID  ImageBase,
    DPRINT("AddressOfEntryPoint = %x\n",(ULONG)NTHeaders->OptionalHeader.AddressOfEntryPoint);
    if (NTHeaders->OptionalHeader.AddressOfEntryPoint != 0)
      {
-        EntryPoint = (PEPFUNC) (ImageBase
+        EntryPoint = (PEPFUNC) ((ULONG_PTR)ImageBase
                            + NTHeaders->OptionalHeader.AddressOfEntryPoint);
      }
    DPRINT("LdrPEStartup() = %x\n",EntryPoint);
@@ -3108,17 +3108,17 @@ LdrProcessRelocationBlock(IN PVOID Address,
             break;
 
           case IMAGE_REL_BASED_HIGH:
-            ShortPtr = (PUSHORT)(Address + Offset);
+            ShortPtr = (PUSHORT)((ULONG_PTR)Address + Offset);
             *ShortPtr += HIWORD(Delta);
             break;
 
           case IMAGE_REL_BASED_LOW:
-            ShortPtr = (PUSHORT)(Address + Offset);
+            ShortPtr = (PUSHORT)((ULONG_PTR)Address + Offset);
             *ShortPtr += LOWORD(Delta);
             break;
 
           case IMAGE_REL_BASED_HIGHLOW:
-            LongPtr = (PULONG)(Address + Offset);
+            LongPtr = (PULONG)((ULONG_PTR)Address + Offset);
             *LongPtr += Delta;
             break;
 

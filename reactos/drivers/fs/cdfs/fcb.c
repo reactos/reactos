@@ -580,7 +580,7 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
 
       Offset += Record->RecordLength;
       BlockOffset += Record->RecordLength;
-      Record = (PDIR_RECORD)(Block + BlockOffset);
+      Record = (PDIR_RECORD)((ULONG_PTR)Block + BlockOffset);
       if (BlockOffset >= BLOCKSIZE || Record->RecordLength == 0)
 	{
 	  DPRINT("Map next sector\n");
@@ -597,7 +597,7 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
 	      DPRINT("CcMapData() failed\n");
 	      return(STATUS_UNSUCCESSFUL);
 	    }
-	  Record = (PDIR_RECORD)(Block + BlockOffset);
+	  Record = (PDIR_RECORD)((ULONG_PTR)Block + BlockOffset);
 	}
 
       if (Offset >= DirSize)

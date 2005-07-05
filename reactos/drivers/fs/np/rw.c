@@ -390,7 +390,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
      Information = Irp->IoStatus.Information;
      Length = IoGetCurrentIrpStackLocation(Irp)->Parameters.Read.Length;
      ASSERT (Information <= Length);
-     Buffer += Information;
+     Buffer = (PVOID)((ULONG_PTR)Buffer + Information);
      Length -= Information;
      Status = STATUS_SUCCESS;
 
@@ -450,24 +450,24 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 	   while (Length > 0 && Fcb->ReadDataAvailable > 0)
 	   {
 	      CopyLength = min(Fcb->ReadDataAvailable, Length);
-	      if (Fcb->ReadPtr + CopyLength <= Fcb->Data + Fcb->MaxDataLength)
+	      if ((ULONG_PTR)Fcb->ReadPtr + CopyLength <= (ULONG_PTR)Fcb->Data + Fcb->MaxDataLength)
 	      {
 	         memcpy(Buffer, Fcb->ReadPtr, CopyLength);
-	         Fcb->ReadPtr += CopyLength;
-	         if (Fcb->ReadPtr == Fcb->Data + Fcb->MaxDataLength)
+	         Fcb->ReadPtr = (PVOID)((ULONG_PTR)Fcb->ReadPtr + CopyLength);
+	         if (Fcb->ReadPtr == (PVOID)((ULONG_PTR)Fcb->Data + Fcb->MaxDataLength))
 	         {
 		    Fcb->ReadPtr = Fcb->Data;
 	         }
 	      }
               else
 	      {
-	         TempLength = Fcb->Data + Fcb->MaxDataLength - Fcb->ReadPtr;
+	         TempLength = (ULONG)((ULONG_PTR)Fcb->Data + Fcb->MaxDataLength - (ULONG_PTR)Fcb->ReadPtr);
 	         memcpy(Buffer, Fcb->ReadPtr, TempLength);
-	         memcpy(Buffer + TempLength, Fcb->Data, CopyLength - TempLength);
-	         Fcb->ReadPtr = Fcb->Data + CopyLength - TempLength;
+	         memcpy((PVOID)((ULONG_PTR)Buffer + TempLength), Fcb->Data, CopyLength - TempLength);
+	         Fcb->ReadPtr = (PVOID)((ULONG_PTR)Fcb->Data + CopyLength - TempLength);
 	      }
 
-	      Buffer += CopyLength;
+	      Buffer = (PVOID)((ULONG_PTR)Buffer + CopyLength);
 	      Length -= CopyLength;
 	      Information += CopyLength;
 
@@ -505,7 +505,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 
 	      if (Fcb->ReadDataAvailable > Length)
 	      {
-	         memmove(Fcb->Data, Fcb->Data + Length,
+	         memmove(Fcb->Data, (PVOID)((ULONG_PTR)Fcb->Data + Length),
 	                 Fcb->ReadDataAvailable - Length);
 	         Fcb->ReadDataAvailable -= Length;
 	         Status = STATUS_MORE_ENTRIES;
@@ -694,21 +694,21 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 	  while (Length > 0 && ReaderFcb->WriteQuotaAvailable > 0)
 	    {
 	      CopyLength = min(Length, ReaderFcb->WriteQuotaAvailable);
-	      if (ReaderFcb->WritePtr + CopyLength <= ReaderFcb->Data + ReaderFcb->MaxDataLength)
+	      if ((ULONG_PTR)ReaderFcb->WritePtr + CopyLength <= (ULONG_PTR)ReaderFcb->Data + ReaderFcb->MaxDataLength)
 		{
 		  memcpy(ReaderFcb->WritePtr, Buffer, CopyLength);
-		  ReaderFcb->WritePtr += CopyLength;
-		  if (ReaderFcb->WritePtr == ReaderFcb->Data + ReaderFcb->MaxDataLength)
+		  ReaderFcb->WritePtr = (PVOID)((ULONG_PTR)ReaderFcb->WritePtr + CopyLength);
+		  if ((ULONG_PTR)ReaderFcb->WritePtr == (ULONG_PTR)ReaderFcb->Data + ReaderFcb->MaxDataLength)
 		    {
 		      ReaderFcb->WritePtr = ReaderFcb->Data;
 		    }
 		}
 	      else
 		{
-		  TempLength = ReaderFcb->Data + ReaderFcb->MaxDataLength - ReaderFcb->WritePtr;
+		  TempLength = (ULONG)((ULONG_PTR)ReaderFcb->Data + ReaderFcb->MaxDataLength - (ULONG_PTR)ReaderFcb->WritePtr);
 		  memcpy(ReaderFcb->WritePtr, Buffer, TempLength);
 		  memcpy(ReaderFcb->Data, Buffer + TempLength, CopyLength - TempLength);
-		  ReaderFcb->WritePtr = ReaderFcb->Data + CopyLength - TempLength;
+		  ReaderFcb->WritePtr = (PVOID)((ULONG_PTR)ReaderFcb->Data + CopyLength - TempLength);
 		}
 
 	      Buffer += CopyLength;

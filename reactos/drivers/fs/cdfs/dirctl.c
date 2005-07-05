@@ -69,10 +69,10 @@ CdfsGetEntryName(PDEVICE_EXTENSION DeviceExt,
      Record = (PDIR_RECORD)*Block;
      while (Index < *pIndex)
      {
-       (*Ptr) += Record->RecordLength;
+       (*Ptr) = (PVOID)((ULONG_PTR)(*Ptr) + Record->RecordLength);
        (*CurrentOffset) += Record->RecordLength;
        Record = *Ptr;
-       if (*Ptr - *Block >= BLOCKSIZE || Record->RecordLength == 0)
+       if ((ULONG_PTR)(*Ptr) - (ULONG_PTR)(*Block) >= BLOCKSIZE || Record->RecordLength == 0)
        {
 	  DPRINT("Map next sector\n");
 	  CcUnpinData(*Context);
@@ -96,7 +96,7 @@ CdfsGetEntryName(PDEVICE_EXTENSION DeviceExt,
      }
   }
 
-  if (*Ptr - *Block >= BLOCKSIZE || Record->RecordLength == 0)
+  if ((ULONG_PTR)(*Ptr) - (ULONG_PTR)(*Block) >= BLOCKSIZE || Record->RecordLength == 0)
   {
      DPRINT("Map next sector\n");
      CcUnpinData(*Context);
@@ -259,11 +259,11 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
       return STATUS_UNSUCCESSFUL;
     }
 
-  Record = (PDIR_RECORD) (Block + Offset % BLOCKSIZE);
+  Record = (PDIR_RECORD) ((ULONG_PTR)Block + Offset % BLOCKSIZE);
   if (Offset)
     {
       Offset += Record->RecordLength;
-      Record = (PVOID)Record + Record->RecordLength;
+      Record = (PDIR_RECORD)((ULONG_PTR)Record + Record->RecordLength);
     }
 
   while(TRUE)
@@ -356,7 +356,7 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
 	}
 
       Offset += Record->RecordLength;
-      Record = (PVOID)Record + Record->RecordLength;
+      Record = (PDIR_RECORD)((ULONG_PTR)Record + Record->RecordLength);
       DirIndex++;
     }
 

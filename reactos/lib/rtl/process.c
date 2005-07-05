@@ -161,7 +161,7 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
    /* write pointer to environment */
    Offset = FIELD_OFFSET(RTL_USER_PROCESS_PARAMETERS, Environment);
    ZwWriteVirtualMemory(ProcessHandle,
-			(PVOID)(PpbBase + Offset),
+			(PVOID)((ULONG_PTR)PpbBase + Offset),
 			&EnvPtr,
 			sizeof(EnvPtr),
 			&BytesWritten);
@@ -291,7 +291,7 @@ RtlCreateUserProcess(
       0,
       &Sii.StackReserve,
       &Sii.StackCommit,
-      ImageBaseAddress + (ULONG)Sii.EntryPoint,
+      (PVOID)((ULONG_PTR)ImageBaseAddress + (ULONG_PTR)Sii.EntryPoint),
       (PVOID)PEB_BASE,
       &ProcessInfo->ThreadHandle,
       &ProcessInfo->ClientId

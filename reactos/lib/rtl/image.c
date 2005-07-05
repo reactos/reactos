@@ -72,7 +72,7 @@ RtlImageDirectoryEntryToData (
 		*Size = NtHeader->OptionalHeader.DataDirectory[Directory].Size;
 
 	if (bFlag)
-		return (PVOID)(BaseAddress + Va);
+		return (PVOID)((ULONG_PTR)BaseAddress + Va);
 
 	/* image mapped as ordinary file, we must find raw pointer */
 	return (PVOID)RtlImageRvaToVa (NtHeader, BaseAddress, Va, NULL);
@@ -138,10 +138,10 @@ RtlImageRvaToVa (
 			*SectionHeader = Section;
 	}
 
-	return (ULONG)(BaseAddress +
+	return (ULONG)((ULONG_PTR)BaseAddress +
 	               Rva +
 	               Section->PointerToRawData -
-	               Section->VirtualAddress);
+	               (ULONG_PTR)Section->VirtualAddress);
 }
 
 /* EOF */

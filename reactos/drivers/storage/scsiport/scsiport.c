@@ -478,7 +478,7 @@ ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
     }
   if (Srb == NULL)
     {
-      EndAddress = DeviceExtension->VirtualAddress + DeviceExtension->CommonBufferLength;
+      EndAddress = (PVOID)((ULONG_PTR)DeviceExtension->VirtualAddress + DeviceExtension->CommonBufferLength);
       if (VirtualAddress >= DeviceExtension->VirtualAddress && VirtualAddress < EndAddress)
         {
 	  Offset = (ULONG_PTR)VirtualAddress - (ULONG_PTR)DeviceExtension->VirtualAddress;
@@ -506,14 +506,14 @@ ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
     }
   else
     {
-      EndAddress = Srb->DataBuffer + Srb->DataTransferLength;
+      EndAddress = (PVOID)((ULONG_PTR)Srb->DataBuffer + Srb->DataTransferLength);
       if (VirtualAddress == NULL)
 	{
 	  VirtualAddress = Srb->DataBuffer;
 	}
       else if (VirtualAddress < Srb->DataBuffer || VirtualAddress >= EndAddress)
 	{
-	  EndAddress = Srb->SenseInfoBuffer + Srb->SenseInfoBufferLength;
+	  EndAddress = (PVOID)((ULONG_PTR)Srb->SenseInfoBuffer + Srb->SenseInfoBufferLength);
 	  if (VirtualAddress < Srb->SenseInfoBuffer || VirtualAddress >= EndAddress)
 	    {
 	      PhysicalAddress.QuadPart = 0LL;
@@ -530,18 +530,18 @@ ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
 	}
 
       BufferLength = PAGE_SIZE - (ULONG_PTR)VirtualAddress % PAGE_SIZE;
-      while (VirtualAddress + BufferLength < EndAddress)
+      while ((ULONG_PTR)VirtualAddress + BufferLength < (ULONG_PTR)EndAddress)
 	{
-	  NextPhysicalAddress = MmGetPhysicalAddress(VirtualAddress + BufferLength);
+	  NextPhysicalAddress = MmGetPhysicalAddress((PVOID)((ULONG_PTR)VirtualAddress + BufferLength));
 	  if (PhysicalAddress.QuadPart + BufferLength != NextPhysicalAddress.QuadPart)
 	    {
 	      break;
 	    }
 	  BufferLength += PAGE_SIZE;
 	}
-      if (VirtualAddress + BufferLength >= EndAddress)
+      if ((ULONG_PTR)VirtualAddress + BufferLength >= (ULONG_PTR)EndAddress)
 	{
-	  BufferLength = EndAddress - VirtualAddress;
+	  BufferLength = (ULONG)((ULONG_PTR)EndAddress - (ULONG_PTR)VirtualAddress);
 	}
     }
   if (Length != NULL)
@@ -1786,7 +1786,7 @@ SpiAllocateSrbExtension(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
       if (index != 0xffffffff)
         {
 	  DeviceExtension->CurrentSrbExtensions++;
-          Srb->SrbExtension = DeviceExtension->VirtualAddress + index * DeviceExtension->SrbExtensionSize;
+          Srb->SrbExtension = (PVOID)((ULONG_PTR)DeviceExtension->VirtualAddress + index * DeviceExtension->SrbExtensionSize);
 	}
     }
   DPRINT("%x\n", Srb->SrbExtension);

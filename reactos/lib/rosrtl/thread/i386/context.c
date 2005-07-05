@@ -44,7 +44,7 @@ RtlRosInitializeContext
  if(!NT_SUCCESS(nErrCode)) return nErrCode;
 
  /* too many parameters */
- if((nParamsSize + sizeof(ULONG_PTR)) > (SIZE_T)(pStackBase - pStackLimit))
+ if((nParamsSize + sizeof(ULONG_PTR)) > (SIZE_T)((ULONG_PTR)pStackBase - (ULONG_PTR)pStackLimit))
   return STATUS_STACK_OVERFLOW;
 
  memset(Context, 0, sizeof(CONTEXT));

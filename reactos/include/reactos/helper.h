@@ -25,7 +25,7 @@
 			 sizeof (IMAGE_NT_SIGNATURE)		     +	\
 			 sizeof (IMAGE_FILE_HEADER)))
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-#define RVA(m, b) ((ULONG)b + m)
+#define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
 #define NTSTAT_SEVERITY_SHIFT 30
 #define NTSTAT_SEVERITY_MASK  0x00000003
 #define NTSTAT_FACILITY_SHIFT 16

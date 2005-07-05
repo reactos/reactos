@@ -505,7 +505,7 @@ static NTSTATUS KlInitPeb(HANDLE ProcessHandle,
          while(*ptr++);
       }
       ptr++;
-      EnvSize = (PVOID)ptr - ParentEnv;
+      EnvSize = (ULONG)((ULONG_PTR)ptr - (ULONG_PTR)ParentEnv);
    }
    else if (NtCurrentPeb()->ProcessParameters->Environment != NULL)
    {
@@ -572,7 +572,7 @@ static NTSTATUS KlInitPeb(HANDLE ProcessHandle,
    /* write pointer to environment */
    Offset = FIELD_OFFSET(RTL_USER_PROCESS_PARAMETERS, Environment);
    NtWriteVirtualMemory(ProcessHandle,
-			(PVOID)(PpbBase + Offset),
+			(PVOID)((ULONG_PTR)PpbBase + Offset),
 			&EnvPtr,
 			sizeof(EnvPtr),
 			&BytesWritten);

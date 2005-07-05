@@ -57,7 +57,7 @@ IntVideoPortImageDirectoryEntryToData(
    if (Va == 0)
       return NULL;
 
-   return (PVOID)(BaseAddress + Va);
+   return (PVOID)((ULONG_PTR)BaseAddress + Va);
 }
 
 PVOID STDCALL
@@ -103,7 +103,7 @@ IntVideoPortGetProcAddress(
       ((ULONG_PTR)BaseAddress + (ULONG_PTR)ExportDir->AddressOfNames);
    for (i = 0; i < ExportDir->NumberOfNames; i++, NamePtr++, OrdinalPtr++)
    {
-      if (!_strnicmp((PCHAR)FunctionName, (PCHAR)(BaseAddress + *NamePtr),
+      if (!_strnicmp((PCHAR)FunctionName, (PCHAR)((ULONG_PTR)BaseAddress + *NamePtr),
                      strlen((PCHAR)FunctionName)))
       {
          return (PVOID)((ULONG_PTR)BaseAddress +

@@ -225,7 +225,7 @@ PIP_PACKET ReassembleDatagram(
   /* Copy the header into the buffer */
   RtlCopyMemory(IPPacket->Header, &IPDR->IPv4Header, IPDR->HeaderSize);
 
-  Data = IPPacket->Header + IPDR->HeaderSize;
+  Data = (PVOID)((ULONG_PTR)IPPacket->Header + IPDR->HeaderSize);
   IPPacket->Data = Data;
 
   /* Copy data from all fragments into buffer */

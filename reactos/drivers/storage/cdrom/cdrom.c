@@ -1485,10 +1485,10 @@ CdromDeviceControlCompletion (IN PDEVICE_OBJECT DeviceObject,
       if (Retry == TRUE &&
 	  (ULONG)OrigNextIrpStack->Parameters.Others.Argument1 > 0)
 	{
-	  DPRINT1 ("Try again (Retry count %lu)\n",
+	  DPRINT1 ("Try again (Retry count 0x%p)\n",
 		   (ULONG)OrigNextIrpStack->Parameters.Others.Argument1);
 
-	  (ULONG)OrigNextIrpStack->Parameters.Others.Argument1--;
+	  OrigNextIrpStack->Parameters.Others.Argument1 = (PVOID)((ULONG_PTR)OrigNextIrpStack->Parameters.Others.Argument1 - 1);
 
 	  /* Release 'old' buffers */
 	  ExFreePool (Srb->SenseInfoBuffer);

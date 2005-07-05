@@ -409,7 +409,7 @@ void DIB_BltFromVGA(int x, int y, int w, int h, void *b, int Dest_lDelta)
   /* Reset the destination. */
   for (j = 0; j < h; j++)
     {
-      memset(b + (j * Dest_lDelta), 0, abs(Dest_lDelta));
+      memset((PVOID)((ULONG_PTR)b + (j * Dest_lDelta)), 0, abs(Dest_lDelta));
     }
 
   for (plane = 0; plane < 4; plane++)
@@ -986,7 +986,7 @@ void DFB_BltToDIB(int x, int y, int w, int h, void *b, int bw, void *bdib, int d
   int i, j, dib_shift;
 
   bpX = b;
-  dib = bdib + y * dibw + (x / 2);
+  dib = (unsigned char *)bdib + y * dibw + (x / 2);
 
   for (i=w; i>0; i--) {
 
@@ -1015,7 +1015,7 @@ void DIB_BltToDFB(int x, int y, int w, int h, void *b, int bw, void *bdib, int d
   int i, j, dib_shift, dib_and;
 
   bpX = b;
-  dib = bdib + y * dibw + (x / 2);
+  dib = (unsigned char *)bdib + y * dibw + (x / 2);
 
   for (i=w; i>0; i--) {
 
