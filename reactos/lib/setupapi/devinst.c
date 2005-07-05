@@ -949,8 +949,37 @@ HDEVINFO WINAPI SetupDiGetClassDevsA(
        HWND parent,
        DWORD flags)
 {
+    return SetupDiGetClassDevsExA(class, enumstr, parent,
+                                  flags, NULL, NULL);
+}
+
+/***********************************************************************
+ *		SetupDiGetClassDevsW (SETUPAPI.@)
+ */
+HDEVINFO WINAPI SetupDiGetClassDevsW(
+       CONST GUID *class,
+       LPCWSTR enumstr,
+       HWND parent,
+       DWORD flags)
+{
+    return SetupDiGetClassDevsExW(class, enumstr, parent,
+                                  flags, NULL, NULL);
+}
+
+/***********************************************************************
+ *		SetupDiGetClassDevsExA (SETUPAPI.@)
+ */
+HDEVINFO WINAPI SetupDiGetClassDevsExA(
+       CONST GUID *class,
+       LPCSTR enumstr,
+       HWND parent,
+       DWORD flags,
+       LPCSTR machine,
+       PVOID reserved)
+{
     HDEVINFO ret;
     LPWSTR enumstrW = NULL;
+    LPWSTR machineW = NULL;
 
     if (enumstr)
     {
@@ -963,10 +992,22 @@ HDEVINFO WINAPI SetupDiGetClassDevsA(
         }
         MultiByteToWideChar(CP_ACP, 0, enumstr, -1, enumstrW, len);
     }
-    ret = SetupDiGetClassDevsW(class, enumstrW, parent, flags);
-    HeapFree(GetProcessHeap(), 0, enumstrW);
+    if (machine)
+    {
+        int len = MultiByteToWideChar(CP_ACP, 0, machine, -1, NULL, 0);
+        machineW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!machineW)
+        {
+            ret = (HDEVINFO)INVALID_HANDLE_VALUE;
+            goto end;
+        }
+        MultiByteToWideChar(CP_ACP, 0, machine, -1, machineW, len);
+    }
+    ret = SetupDiGetClassDevsExW(class, enumstrW, parent, flags, machineW, reserved);
 
 end:
+    HeapFree(GetProcessHeap(), 0, enumstrW);
+    HeapFree(GetProcessHeap(), 0, machineW);
     return ret;
 }
 
@@ -1079,7 +1120,6 @@ static HDEVINFO SETUP_CreateDevListFromClass(
         return INVALID_HANDLE_VALUE;
     }
 
-    FIXME("subKeys %ld, maxSubKey %ld\n", subKeys, maxSubKey);
     for (i = 0; i < subKeys; i++)
     {
         deviceInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(DeviceInfo) + maxSubKey * sizeof(WCHAR));
@@ -1108,13 +1148,15 @@ static HDEVINFO SETUP_CreateDevListFromClass(
 }
 
 /***********************************************************************
- *		SetupDiGetClassDevsW (SETUPAPI.@)
+ *		SetupDiGetClassDevsExW (SETUPAPI.@)
  */
-HDEVINFO WINAPI SetupDiGetClassDevsW(
+HDEVINFO WINAPI SetupDiGetClassDevsExW(
        CONST GUID *class,
        LPCWSTR enumstr,
        HWND parent,
-       DWORD flags)
+       DWORD flags,
+       LPCWSTR machine,
+       PVOID reserved)
 {
     HDEVINFO ret = (HDEVINFO)INVALID_HANDLE_VALUE;
 
@@ -1141,7 +1183,7 @@ HDEVINFO WINAPI SetupDiGetClassDevsW(
         else
 #else
         {
-            ret = SETUP_CreateDevListFromClass(NULL, (LPGUID)class);
+            ret = SETUP_CreateDevListFromClass(machine, (LPGUID)class);
         }
 #endif
     }
