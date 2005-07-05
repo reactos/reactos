@@ -24,6 +24,7 @@
 #undef strdup
 #endif
 
+#include <assert.h>
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -342,81 +343,70 @@ const char *make_c_identifier( const char *str )
  *
  *
  *  Parameters:
- *                alignBoundary  --  the number of bytes to align to.
- *                                   If we're on an architecture where
- *                                   the assembler requires a 'number
- *                                   of low-order zero bits' as a
- *                                   .align argument, then this number
- *                                   must be a power of 2.
- *
+ *    align  --  the number of bytes to align to. Must be a power of 2.
  */
-int get_alignment(int alignBoundary)
+unsigned int get_alignment(unsigned int align)
 {
-#if defined(__powerpc__) || defined(__ALPHA__)
+    unsigned int n;
 
-    int n = 0;
+    assert( !(align & (align - 1)) );
 
-    switch(alignBoundary)
+    switch(target_cpu)
     {
-    case 2:
-        n = 1;
-        break;
-    case 4:
-        n = 2;
-        break;
-    case 8:
-        n = 3;
-        break;
-    case 16:
-        n = 4;
-        break;
-    case 32:
-        n = 5;
-        break;
-    case 64:
-        n = 6;
-        break;
-    case 128:
-        n = 7;
-        break;
-    case 256:
-        n = 8;
-        break;
-    case 512:
-        n = 9;
-        break;
-    case 1024:
-        n = 10;
-        break;
-    case 2048:
-        n = 11;
-        break;
-    case 4096:
-        n = 12;
-        break;
-    case 8192:
-        n = 13;
-        break;
-    case 16384:
-        n = 14;
-        break;
-    case 32768:
-        n = 15;
-        break;
-    case 65536:
-        n = 16;
-        break;
-    default:
-        fatal_error("Alignment to %d-byte boundary not supported on this architecture.\n",
-                    alignBoundary);
+    case CPU_x86:
+    case CPU_SPARC:
+        if (target_platform != PLATFORM_APPLE) return align;
+        /* fall through */
+    case CPU_POWERPC:
+    case CPU_ALPHA:
+        n = 0;
+        while ((1 << n) != align) n++;
+        return n;
     }
-    return n;
+    /* unreached */
+    assert(0);
+    return 0;
+}
 
-#elif defined(__i386__) || defined(__sparc__)
+/* return the page size for the target CPU */
+unsigned int get_page_size(void)
+{
+    switch(target_cpu)
+    {
+    case CPU_x86:     return 4096;
+    case CPU_POWERPC: return 4096;
+    case CPU_SPARC:   return 8192;
+    case CPU_ALPHA:   return 8192;
+    }
+    /* unreached */
+    assert(0);
+    return 0;
+}
 
-    return alignBoundary;
+/* return the assembly name for a C symbol */
+const char *asm_name( const char *sym )
+{
+    static char buffer[256];
+    sprintf( buffer, __ASM_NAME("%s"), sym );
+    return buffer;
+}
 
+/* return an assembly function declaration for a C function name */
+const char *func_declaration( const char *func )
+{
+    static char buffer[256];
+    sprintf( buffer, __ASM_FUNC("%s"), func );
+    return buffer;
+}
+
+/* return a size declaration for an assembly function */
+const char *func_size( const char *func )
+{
+#ifdef HAVE_ASM_DOT_SIZE
+    static char buffer[256];
+    sprintf( buffer, ".size " __ASM_NAME("%s") ", .-" __ASM_NAME("%s"), func, func );
+    return buffer;
 #else
-#error "How does the '.align' assembler directive work on your architecture?"
+    return "";
 #endif
 }
