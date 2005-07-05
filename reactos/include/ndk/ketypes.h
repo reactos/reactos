@@ -15,6 +15,12 @@
 #include "mmtypes.h"
 #include <arc/arc.h>
 
+/* 
+ * Architecture-specific types 
+ * NB: Although KPROCESS is Arch-Specific,
+ * only some members are different and we will use #ifdef
+ * directly in the structure to avoid dependency-hell
+ */
 #include "arch/ketypes.h"
 
 /* CONSTANTS *****************************************************************/
@@ -57,23 +63,15 @@ typedef enum _KAPC_ENVIRONMENT
     CurrentApcEnvironment
 } KAPC_ENVIRONMENT;
 
-typedef struct _KDPC_DATA
-{
-    LIST_ENTRY  DpcListHead;
-    ULONG  DpcLock;
-    ULONG  DpcQueueDepth;
-    ULONG  DpcCount;
-} KDPC_DATA, *PKDPC_DATA;
-
 /* We don't want to force NTIFS usage only for a single structure */
 #ifndef _NTIFS_
 typedef struct _KAPC_STATE
 {
-    LIST_ENTRY  ApcListHead[2];
-    PKPROCESS   Process;
-    BOOLEAN     KernelApcInProgress;
-    BOOLEAN     KernelApcPending;
-    BOOLEAN     UserApcPending;
+    LIST_ENTRY ApcListHead[2];
+    PKPROCESS Process;
+    BOOLEAN KernelApcInProgress;
+    BOOLEAN KernelApcPending;
+    BOOLEAN UserApcPending;
 } KAPC_STATE, *PKAPC_STATE, *RESTRICTED_POINTER PRKAPC_STATE;
 #endif
 
@@ -108,26 +106,26 @@ typedef struct _KPROFILE
 
 typedef struct _KINTERRUPT
 {
-    CSHORT              Type;
-    CSHORT              Size;
-    LIST_ENTRY          InterruptListEntry;
-    PKSERVICE_ROUTINE   ServiceRoutine;
-    PVOID               ServiceContext;
-    KSPIN_LOCK          SpinLock;
-    ULONG               TickCount;
-    PKSPIN_LOCK         ActualLock;
-    PVOID               DispatchAddress;
-    ULONG               Vector;
-    KIRQL               Irql;
-    KIRQL               SynchronizeIrql;
-    BOOLEAN             FloatingSave;
-    BOOLEAN             Connected;
-    CHAR                Number;
-    UCHAR               ShareVector;
-    KINTERRUPT_MODE     Mode;
-    ULONG               ServiceCount;
-    ULONG               DispatchCount;
-    ULONG               DispatchCode[106];
+    CSHORT Type;
+    CSHORT Size;
+    LIST_ENTRY InterruptListEntry;
+    PKSERVICE_ROUTINE ServiceRoutine;
+    PVOID ServiceContext;
+    KSPIN_LOCK SpinLock;
+    ULONG TickCount;
+    PKSPIN_LOCK ActualLock;
+    PVOID DispatchAddress;
+    ULONG Vector;
+    KIRQL Irql;
+    KIRQL SynchronizeIrql;
+    BOOLEAN FloatingSave;
+    BOOLEAN Connected;
+    CHAR Number;
+    UCHAR ShareVector;
+    KINTERRUPT_MODE Mode;
+    ULONG ServiceCount;
+    ULONG DispatchCount;
+    ULONG DispatchCode[106];
 } KINTERRUPT, *PKINTERRUPT;
 
 typedef struct _KEVENT_PAIR
@@ -183,23 +181,14 @@ typedef enum _KOBJECTS
 
 typedef struct _KTHREAD
 {
-    /* For waiting on thread exit */
     DISPATCHER_HEADER DispatcherHeader;    /* 00 */
-
-    /* List of mutants owned by the thread */
     LIST_ENTRY        MutantListHead;      /* 10 */
     PVOID             InitialStack;        /* 18 */
     ULONG_PTR         StackLimit;          /* 1C */
-
-    /* Pointer to the thread's environment block in user memory */
     struct _TEB       *Teb;                /* 20 */
-
-    /* Pointer to the thread's TLS array */
     PVOID             TlsArray;            /* 24 */
     PVOID             KernelStack;         /* 28 */
     UCHAR             DebugActive;         /* 2C */
-
-    /* Thread state (one of THREAD_STATE_xxx constants below) */
     UCHAR             State;               /* 2D */
     BOOLEAN           Alerted[2];          /* 2E */
     UCHAR             Iopl;                /* 30 */
@@ -215,8 +204,8 @@ typedef struct _KTHREAD
     UCHAR             WaitReason;          /* 57 */
     union                                  /* 58 */
     {
-        PKWAIT_BLOCK  WaitBlockList;      /* 58 */
-        PKGATE        GateObject;         /* 58 */
+        PKWAIT_BLOCK  WaitBlockList;       /* 58 */
+        PKGATE        GateObject;          /* 58 */
     };                                     /* 58 */
     LIST_ENTRY        WaitListEntry;       /* 5C */
     ULONG             WaitTime;            /* 64 */
@@ -230,10 +219,10 @@ typedef struct _KTHREAD
     {
         struct
         {
-            USHORT KernelApcDisable;
-            USHORT SpecialApcDisable;
+            USHORT    KernelApcDisable;
+            USHORT    SpecialApcDisable;
         };
-        ULONG      CombinedApcDisable;     /* D0 */
+        ULONG         CombinedApcDisable;  /* D0 */
     };
     KAFFINITY         UserAffinity;        /* D4 */
     UCHAR             SystemAffinityActive;/* D8 */
@@ -278,23 +267,18 @@ typedef struct _KTHREAD
 
 #include <poppack.h>
 
-/*
- * NAME:           KPROCESS
- * DESCRIPTION:    Internal Kernel Process Structure.
- * PORTABILITY:    Architecture Dependent.
- * KERNEL VERSION: 5.2
- * DOCUMENTATION:  http://reactos.com/wiki/index.php/KPROCESS
- */
 typedef struct _KPROCESS
 {
     DISPATCHER_HEADER     Header;                    /* 000 */
     LIST_ENTRY            ProfileListHead;           /* 010 */
     PHYSICAL_ADDRESS      DirectoryTableBase;        /* 018 */
+#if defined(_M_IX86)
     KGDTENTRY             LdtDescriptor;             /* 020 */
     KIDTENTRY             Int21Descriptor;           /* 028 */
     USHORT                IopmOffset;                /* 030 */
     UCHAR                 Iopl;                      /* 032 */
     UCHAR                 Unused;                    /* 033 */
+#endif
     ULONG                 ActiveProcessors;          /* 034 */
     ULONG                 KernelTime;                /* 038 */
     ULONG                 UserTime;                  /* 03C */
