@@ -156,7 +156,7 @@ static const union cptable * const cptables[60] =
 
 static int cmp_codepage( const void *codepage, const void *entry )
 {
-    return (unsigned int)codepage - (*(const union cptable **)entry)->info.codepage;
+    return (unsigned int)codepage - (*(const union cptable *const *)entry)->info.codepage;
 }
 
 
