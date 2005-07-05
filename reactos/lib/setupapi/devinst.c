@@ -877,8 +877,48 @@ BOOL WINAPI SetupDiGetClassDescriptionExA(
         PCSTR MachineName,
         PVOID Reserved)
 {
-  FIXME("\n");
-  return FALSE;
+    PWCHAR ClassDescriptionW;
+    LPWSTR MachineNameW = NULL;
+    BOOL ret;
+
+    TRACE("\n");
+    if (ClassDescriptionSize > 0)
+    {
+        ClassDescriptionW = HeapAlloc(GetProcessHeap(), 0, ClassDescriptionSize * sizeof(WCHAR));
+        if (!ClassDescriptionW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            ret = FALSE;
+            goto end;
+        }
+    }
+
+    if (MachineName)
+    {
+        MachineNameW = MultiByteToUnicode(MachineName, CP_ACP);
+        if (!MachineNameW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            ret = FALSE;
+            goto end;
+        }
+    }
+
+    ret = SetupDiGetClassDescriptionExW(ClassGuid, ClassDescriptionW, ClassDescriptionSize * sizeof(WCHAR),
+     NULL, MachineNameW, Reserved);
+    if (ret)
+    {
+        int len = WideCharToMultiByte(CP_ACP, 0, ClassDescriptionW, -1, ClassDescription,
+         ClassDescriptionSize, NULL, NULL);
+
+        if (!ClassDescriptionSize && RequiredSize)
+            *RequiredSize = len;
+    }
+
+end:
+    HeapFree(GetProcessHeap(), 0, ClassDescriptionW);
+    MyFree(MachineNameW);
+    return ret;
 }
 
 /***********************************************************************
