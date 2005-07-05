@@ -15,6 +15,7 @@
 		<file>dib4bpp.c</file>
 		<file>dib8bpp.c</file>
 		<file>dib16bpp.c</file>
+		<file>dib16gen.c</file>
 		<file>dib24bpp.c</file>
 		<file>dib32bpp.c</file>
 		<file>dib.c</file>

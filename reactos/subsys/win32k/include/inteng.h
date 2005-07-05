@@ -24,6 +24,8 @@ typedef struct tagSPAN
 #define R4_MASK ((R3_OPINDEX_NOOP << 8) | R3_OPINDEX_SRCCOPY)
 
 #define ROP2_TO_MIX(Rop2) (((Rop2) << 8) | (Rop2))
+#define ROP3_USES_DEST(Rop3)   ((((Rop3) & 0xAA0000) >> 1) != ((Rop3) & 0x550000))
+#define ROP4_USES_DEST(Rop4)   (((((Rop4) & 0xAA) >> 1) != ((Rop4) & 0x55)) || ((((Rop4) & 0xAA00) >> 1) != ((Rop4) & 0x5500)))
 #define ROP3_USES_SOURCE(Rop3) ((((Rop3) & 0xCC0000) >> 2) != ((Rop3) & 0x330000))
 #define ROP4_USES_SOURCE(Rop4) (((((Rop4) & 0xCC) >> 2) != ((Rop4) & 0x33)) || ((((Rop4) & 0xCC00) >> 2) != ((Rop4) & 0x3300)))
 #define ROP3_USES_PATTERN(Rop3) ((((Rop3) & 0xF00000) >> 4) != ((Rop3) & 0x0F0000))
