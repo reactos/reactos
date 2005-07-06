@@ -148,13 +148,18 @@ unsigned short get_type_vt(type_t *t)
   case RPC_FC_ENUM16:        
   case RPC_FC_STRUCT:
   case RPC_FC_PSTRUCT:
+  case RPC_FC_CSTRUCT:
+  case RPC_FC_CPSTRUCT:
+  case RPC_FC_CVSTRUCT:
+  case RPC_FC_BOGUS_STRUCT:
+
     return VT_USERDEFINED;
   case 0:
     if(t->attrs)
         return VT_USERDEFINED;
     return 0;
   default:
-    error("get_type_vt: unknown-type: %d\n", t->type);
+    error("get_type_vt: unknown type: 0x%02x\n", t->type);
   }
   return 0;
 }

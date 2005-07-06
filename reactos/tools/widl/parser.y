@@ -545,6 +545,7 @@ t_ident:					{ $$ = NULL; }
 ident:	  aIDENTIFIER				{ $$ = make_var($1); }
 /* some "reserved words" used in attributes are also used as field names in some MS IDL files */
 	| aKNOWNTYPE				{ $$ = make_var($<str>1); }
+	| tASYNC				{ $$ = make_var($<str>1); }
 	| tID					{ $$ = make_var($<str>1); }
 	| tRETVAL				{ $$ = make_var($<str>1); }
 	| tVERSION				{ $$ = make_var($<str>1); }
