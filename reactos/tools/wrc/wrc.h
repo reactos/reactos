@@ -66,4 +66,7 @@ extern int char_number;
 extern resource_t *resource_top;
 extern language_t *currentlanguage;
 
+void verify_translations(resource_t *top);
+void write_resfile(char *outname, resource_t *top);
+
 #endif
