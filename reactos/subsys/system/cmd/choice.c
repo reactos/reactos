@@ -105,7 +105,7 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR lpOptions;
-	TCHAR Options[2];
+	TCHAR Options[4];
 	LPTSTR lpText    = NULL;
 	BOOL   bNoPrompt = FALSE;
 	BOOL   bCaseSensitive = FALSE;
@@ -123,7 +123,7 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 	TCHAR Ch;
 	DWORD amount,clk;
 
-	LoadString(CMD_ModuleHandle, STRING_CHOICE_OPTION, Options, 2);
+	LoadString(CMD_ModuleHandle, STRING_CHOICE_OPTION, Options, 4);
 	lpOptions = Options;
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
@@ -228,7 +228,7 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 
 		for (i = 1; (unsigned)i < _tcslen (lpOptions); i++)
 			ConOutPrintf (_T(",%c"), lpOptions[i]);
-
+     
 		ConOutPrintf (_T("]?"));
 	}
 
@@ -239,7 +239,7 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 		while (TRUE)
 		{
 			ConInKey (&ir);
-
+      
 			val = IsKeyInString (lpOptions,
 #ifdef _UNICODE
 			                     ir.Event.KeyEvent.uChar.UnicodeChar,
