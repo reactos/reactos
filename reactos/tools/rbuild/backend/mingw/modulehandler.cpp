@@ -1341,39 +1341,16 @@ MingwModuleHandler::GenerateLinkerCommand (
 
 	if ( module.IsDLL () )
 	{
-		string base_tmp = ros_temp + module.name + ".base.tmp";
-		CLEAN_FILE ( base_tmp );
-		string junk_tmp = ros_temp + module.name + ".junk.tmp";
-		CLEAN_FILE ( junk_tmp );
 		string temp_exp = ros_temp + module.name + ".temp.exp";
 		CLEAN_FILE ( temp_exp );
 	
-		fprintf ( fMakefile,
-		          "\t%s %s -Wl,--base-file,%s -o %s %s %s %s\n",
-		          linker.c_str (),
-		          linkerParameters.c_str (),
-		          base_tmp.c_str (),
-		          junk_tmp.c_str (),
-		          objectsMacro.c_str (),
-		          libsMacro.c_str (),
-		          GetLinkerMacro ().c_str () );
-	
-		fprintf ( fMakefile,
-		          "\t-@${rm} %s 2>$(NUL)\n",
-		          junk_tmp.c_str () );
-	
 		string killAt = module.mangledSymbols ? "" : "--kill-at";
 		fprintf ( fMakefile,
-		          "\t${dlltool} --dllname %s --base-file %s --def %s --output-exp %s %s\n",
+		          "\t${dlltool} --dllname %s --def %s --output-exp %s %s\n",
 		          targetName.c_str (),
-		          base_tmp.c_str (),
 		          def_file.c_str (),
 		          temp_exp.c_str (),
 		          killAt.c_str () );
-	
-		fprintf ( fMakefile,
-		          "\t-@${rm} %s 2>$(NUL)\n",
-		          base_tmp.c_str () );
 	
 		fprintf ( fMakefile,
 		          "\t%s %s %s -o %s %s %s %s\n",
