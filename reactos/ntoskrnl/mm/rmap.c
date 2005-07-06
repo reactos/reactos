@@ -74,7 +74,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
    {
       KEBUGCHECK(0);
    }
-   if (Address < (PVOID)KERNEL_BASE)
+   if (Address < MmSystemRangeStart)
    {
       Status = ObReferenceObjectByPointer(Process, PROCESS_ALL_ACCESS, NULL, KernelMode);
       ExReleaseFastMutex(&RmapListLock);
@@ -100,7 +100,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
    if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
    {
       MmUnlockAddressSpace(AddressSpace);
-      if (Address < (PVOID)KERNEL_BASE)
+      if (Address < MmSystemRangeStart)
       {
          ObDereferenceObject(Process);
       }
@@ -122,7 +122,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
       if (PageOp == NULL)
       {
          MmUnlockAddressSpace(AddressSpace);
-         if (Address < (PVOID)KERNEL_BASE)
+         if (Address < MmSystemRangeStart)
          {
             ObDereferenceObject(Process);
          }
@@ -142,13 +142,13 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
    }
    else if ((Type == MEMORY_AREA_VIRTUAL_MEMORY) || (Type == MEMORY_AREA_PEB_OR_TEB))
    {
-      PageOp = MmGetPageOp(MemoryArea, Address < (PVOID)KERNEL_BASE ? Process->UniqueProcessId : NULL,
+      PageOp = MmGetPageOp(MemoryArea, Address < MmSystemRangeStart ? Process->UniqueProcessId : NULL,
                            Address, NULL, 0, MM_PAGEOP_PAGEOUT, TRUE);
 
       if (PageOp == NULL)
       {
          MmUnlockAddressSpace(AddressSpace);
-         if (Address < (PVOID)KERNEL_BASE)
+         if (Address < MmSystemRangeStart)
          {
             ObDereferenceObject(Process);
          }
@@ -170,7 +170,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
    {
       KEBUGCHECK(0);
    }
-   if (Address < (PVOID)KERNEL_BASE)
+   if (Address < MmSystemRangeStart)
    {
       ObDereferenceObject(Process);
    }
@@ -204,7 +204,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
       KEBUGCHECK(0);
    }
 
-   if (Address < (PVOID)KERNEL_BASE)
+   if (Address < MmSystemRangeStart)
    {
       Status = ObReferenceObjectByPointer(Process, PROCESS_ALL_ACCESS, NULL, KernelMode);
       ExReleaseFastMutex(&RmapListLock);
@@ -225,7 +225,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
    if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
    {
       MmUnlockAddressSpace(AddressSpace);
-      if (Address < (PVOID)KERNEL_BASE)
+      if (Address < MmSystemRangeStart)
       {
          ObDereferenceObject(Process);
       }
@@ -245,7 +245,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
       if (PageOp == NULL)
       {
          MmUnlockAddressSpace(AddressSpace);
-         if (Address < (PVOID)KERNEL_BASE)
+         if (Address < MmSystemRangeStart)
          {
             ObDereferenceObject(Process);
          }
@@ -265,12 +265,12 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
    }
    else if ((Type == MEMORY_AREA_VIRTUAL_MEMORY) || (Type == MEMORY_AREA_PEB_OR_TEB))
    {
-      PageOp = MmGetPageOp(MemoryArea, Address < (PVOID)KERNEL_BASE ? Process->UniqueProcessId : NULL,
+      PageOp = MmGetPageOp(MemoryArea, Address < MmSystemRangeStart ? Process->UniqueProcessId : NULL,
                            Address, NULL, 0, MM_PAGEOP_PAGEOUT, TRUE);
       if (PageOp == NULL)
       {
          MmUnlockAddressSpace(AddressSpace);
-         if (Address < (PVOID)KERNEL_BASE)
+         if (Address < MmSystemRangeStart)
          {
             ObDereferenceObject(Process);
          }
@@ -292,7 +292,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
    {
       KEBUGCHECK(0);
    }
-   if (Address < (PVOID)KERNEL_BASE)
+   if (Address < MmSystemRangeStart)
    {
       ObDereferenceObject(Process);
    }

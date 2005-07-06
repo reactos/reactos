@@ -469,8 +469,8 @@ MmFindGapBottomUp(
    ULONG_PTR Length,
    ULONG_PTR Granularity)
 {
-   PVOID HighestAddress = AddressSpace->LowestAddress < (PVOID)KERNEL_BASE ?
-                          (PVOID)(KERNEL_BASE - 1) : (PVOID)MAXULONG_PTR;
+   PVOID HighestAddress = AddressSpace->LowestAddress < MmSystemRangeStart ?
+                          (PVOID)((ULONG_PTR)MmSystemRangeStart - 1) : (PVOID)MAXULONG_PTR;
    PVOID AlignedAddress;
    PMEMORY_AREA Node;
    PMEMORY_AREA FirstNode;
@@ -546,8 +546,8 @@ MmFindGapTopDown(
    ULONG_PTR Length,
    ULONG_PTR Granularity)
 {
-   PVOID HighestAddress = AddressSpace->LowestAddress < (PVOID)KERNEL_BASE ?
-                          (PVOID)(KERNEL_BASE - 1) : (PVOID)MAXULONG_PTR;
+   PVOID HighestAddress = AddressSpace->LowestAddress < MmSystemRangeStart ?
+                          (PVOID)((ULONG_PTR)MmSystemRangeStart - 1) : (PVOID)MAXULONG_PTR;
    PVOID AlignedAddress;
    PMEMORY_AREA Node;
    PMEMORY_AREA PreviousNode;
@@ -645,16 +645,16 @@ MmFindGapAtAddress(
 {
    PMEMORY_AREA Node = AddressSpace->MemoryAreaRoot;
    PMEMORY_AREA RightNeighbour = NULL;
-   PVOID HighestAddress = AddressSpace->LowestAddress < (PVOID)KERNEL_BASE ?
-                          (PVOID)(KERNEL_BASE - 1) : (PVOID)MAXULONG_PTR;
+   PVOID HighestAddress = AddressSpace->LowestAddress < MmSystemRangeStart ?
+                          (PVOID)((ULONG_PTR)MmSystemRangeStart - 1) : (PVOID)MAXULONG_PTR;
 
    MmVerifyMemoryAreas(AddressSpace);
 
    Address = MM_ROUND_DOWN(Address, PAGE_SIZE);
 
-   if (AddressSpace->LowestAddress < (PVOID)KERNEL_BASE)
+   if (AddressSpace->LowestAddress < MmSystemRangeStart)
    {
-      if (Address >= (PVOID)KERNEL_BASE)
+      if (Address >= MmSystemRangeStart)
       {
          return 0;
       }
@@ -970,15 +970,15 @@ MmCreateMemoryArea(PEPROCESS Process,
                          - (ULONG_PTR) MM_ROUND_DOWN(*BaseAddress, Granularity));
       *BaseAddress = MM_ROUND_DOWN(*BaseAddress, Granularity);
 
-      if (AddressSpace->LowestAddress == (PVOID)KERNEL_BASE &&
+      if (AddressSpace->LowestAddress == MmSystemRangeStart &&
           *BaseAddress < (PVOID)KERNEL_BASE)
       {
          CHECKPOINT;
          return STATUS_ACCESS_VIOLATION;
       }
 
-      if (AddressSpace->LowestAddress < (PVOID)KERNEL_BASE &&
-          (ULONG_PTR)(*BaseAddress) + tmpLength > KERNEL_BASE)
+      if (AddressSpace->LowestAddress < MmSystemRangeStart &&
+          (ULONG_PTR)(*BaseAddress) + tmpLength > (ULONG_PTR)MmSystemRangeStart)
       {
          CHECKPOINT;
          return STATUS_ACCESS_VIOLATION;

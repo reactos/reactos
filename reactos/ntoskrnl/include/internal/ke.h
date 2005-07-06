@@ -308,6 +308,8 @@ extern LARGE_INTEGER SystemBootTime;
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 
+extern ULONG_PTR KERNEL_BASE;
+
 VOID KeInitExceptions(VOID);
 VOID KeInitInterrupts(VOID);
 VOID KeInitTimer(VOID);

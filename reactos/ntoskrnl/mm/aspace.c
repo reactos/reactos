@@ -73,7 +73,7 @@ MmInitializeAddressSpace(PEPROCESS Process,
    }
    else
    {
-      AddressSpace->LowestAddress = (PVOID)KERNEL_BASE;
+      AddressSpace->LowestAddress = MmSystemRangeStart;
    }
    AddressSpace->Process = Process;
    if (Process != NULL)

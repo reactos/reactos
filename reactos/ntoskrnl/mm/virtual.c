@@ -123,7 +123,7 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
    MEMORY_AREA* MemoryArea;
    PMADDRESS_SPACE AddressSpace;
 
-   if (Address < (PVOID)KERNEL_BASE)
+   if (Address < MmSystemRangeStart)
    {
       Status = ObReferenceObjectByHandle(ProcessHandle,
                                          PROCESS_QUERY_INFORMATION,
@@ -248,7 +248,7 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
    }
 
    MmUnlockAddressSpace(AddressSpace);
-   if (Address < (PVOID)KERNEL_BASE)
+   if (Address < MmSystemRangeStart)
    {
       ObDereferenceObject(Process);
    }
@@ -286,7 +286,7 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
 
    PrevMode =  ExGetPreviousMode();
 
-   if (Address >= (PVOID)KERNEL_BASE)
+   if (Address >= MmSystemRangeStart)
    {
       DPRINT1("Invalid parameter\n");
       return STATUS_INVALID_PARAMETER;

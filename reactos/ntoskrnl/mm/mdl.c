@@ -217,7 +217,7 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
     * so there is no need to free it
     */
    if ((Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) &&
-         ((ULONG_PTR)BaseAddress >= KERNEL_BASE))
+         (BaseAddress >= MmSystemRangeStart))
    {
       return;
    }
@@ -242,7 +242,7 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
                              NULL);
    }
 
-   if ((ULONG_PTR)BaseAddress >= KERNEL_BASE)
+   if (BaseAddress >= MmSystemRangeStart)
    {
       ASSERT(Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA);
 
@@ -377,7 +377,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
    ASSERT(NrPages <= (Mdl->Size - sizeof(MDL))/sizeof(PFN_TYPE));
 
 
-   if (Mdl->StartVa >= (PVOID)KERNEL_BASE &&
+   if (Mdl->StartVa >= MmSystemRangeStart &&
        MmGetPfnForProcess(NULL, Mdl->StartVa) >= MmPageArraySize)
    {
        /* phys addr is not phys memory so this must be io memory */
@@ -392,7 +392,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
    }
 
 
-   if (Mdl->StartVa >= (PVOID)KERNEL_BASE)
+   if (Mdl->StartVa >= MmSystemRangeStart)
    {
       /* FIXME: why isn't AccessMode used? */
       Mode = KernelMode;
@@ -556,7 +556,7 @@ MmBuildMdlForNonPagedPool (PMDL Mdl)
     * mdl buffer must (at least) be in kernel space, thou this doesn't
     * necesarely mean that the buffer in within _nonpaged_ kernel space...
     */
-   ASSERT((ULONG_PTR)Mdl->StartVa >= KERNEL_BASE);
+   ASSERT(Mdl->StartVa >= MmSystemRangeStart);
 
    PageCount = PAGE_ROUND_UP(Mdl->ByteOffset + Mdl->ByteCount) / PAGE_SIZE;
    MdlPages = (PPFN_TYPE)(Mdl + 1);
