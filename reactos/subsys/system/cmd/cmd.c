@@ -134,6 +134,9 @@
  *
  *    06-May-2005 (Klemens Friedl <frik85@gmail.com>)
  *        Add 'help' command (list all commands plus description)
+ *
+ *    06-jul-2005 (Magnus Olsen <magnus@greatlord.com>)
+ *        translate '%errorlevel%' to the internal value.
  */
 
 #include "precomp.h"
@@ -982,22 +985,35 @@ ProcessInput (BOOL bFlag)
 						{
 							TCHAR evar[512];
 							*tp = _T('\0');
-
+            
 							/* FIXME: This is just a quick hack!! */
-							/* Do a proper memory allocation!! */
-							if (GetEnvironmentVariable (ip, evar, 512))
-								cp = _stpcpy (cp, evar);
-
+							/* Do a proper memory allocation!! */                                 
+                          
+              if (_tcsicmp(ip,_T("errorlevel")) ==0)
+              {       
+                memset(evar,0,512 * sizeof(TCHAR));
+                _itot(nErrorLevel,evar,10);        
+                cp = _stpcpy (cp, evar);
+              } 
+							else if (GetEnvironmentVariable (ip, evar, 512))
+              {
+								 cp = _stpcpy (cp, evar);
+              }
+              
 							ip = tp + 1;
 						}
 						else
 						{
 							*cp++ = _T('%');
-						}
+						}              
+             
 						break;
 				}
 				continue;
 			}
+
+
+     
 
 			if (_istcntrl (*ip))
 				*ip = _T(' ');
@@ -1007,10 +1023,10 @@ ProcessInput (BOOL bFlag)
 		*cp = _T('\0');
 
 		/* strip trailing spaces */
-		while ((--cp >= commandline) && _istspace (*cp));
+		while ((--cp >= commandline) && _istspace (*cp));     
 
 		*(cp + 1) = _T('\0');
-
+   
 		/* JPP 19980807 */
 		/* Echo batch file line */
 		if (bEchoThisLine)
