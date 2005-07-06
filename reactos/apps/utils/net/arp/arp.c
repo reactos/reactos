@@ -326,6 +326,7 @@ INT Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
         }
     } else {
         Usage();
+        return -1;
     }
  
  
