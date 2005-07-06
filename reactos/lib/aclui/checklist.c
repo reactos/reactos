@@ -47,39 +47,39 @@ typedef struct _CHECKITEM
 
 typedef struct _CHECKLISTWND
 {
-   HWND hSelf;
-   HWND hNotify;
-   HFONT hFont;
-   
-   PCHECKITEM CheckItemListHead;
-   UINT CheckItemCount;
-   
-   INT ItemHeight;
-   
-   BOOL HasFocus;
-   PCHECKITEM FocusedCheckItem;
-   UINT FocusedCheckItemBox;
-   BOOL FocusedPushed;
-   BOOL FocusVisible;
-   
-   COLORREF TextColor[2];
-   INT CheckBoxLeft[2];
-   
-   BOOL QuickSearchEnabled;
-   PCHECKITEM QuickSearchHitItem;
-   WCHAR QuickSearchText[65];
-   UINT QuickSearchSetFocusDelay;
-   UINT QuickSearchResetDelay;
-   
-   DWORD CaretWidth;
-   BOOL ShowingCaret;
+    HWND hSelf;
+    HWND hNotify;
+    HFONT hFont;
+
+    PCHECKITEM CheckItemListHead;
+    UINT CheckItemCount;
+
+    INT ItemHeight;
+
+    BOOL HasFocus;
+    PCHECKITEM FocusedCheckItem;
+    UINT FocusedCheckItemBox;
+    BOOL FocusedPushed;
+    BOOL FocusVisible;
+
+    COLORREF TextColor[2];
+    INT CheckBoxLeft[2];
+
+    BOOL QuickSearchEnabled;
+    PCHECKITEM QuickSearchHitItem;
+    WCHAR QuickSearchText[65];
+    UINT QuickSearchSetFocusDelay;
+    UINT QuickSearchResetDelay;
+
+    DWORD CaretWidth;
+    BOOL ShowingCaret;
 
 #if SUPPORT_UXTHEME
-   PCHECKITEM HoveredCheckItem;
-   UINT HoveredCheckItemBox;
-   UINT HoverTime;
-   
-   HTHEME ThemeHandle;
+    PCHECKITEM HoveredCheckItem;
+    UINT HoveredCheckItemBox;
+    UINT HoverTime;
+
+    HTHEME ThemeHandle;
 #endif
 } CHECKLISTWND, *PCHECKLISTWND;
 
@@ -2024,7 +2024,7 @@ CheckListWndProc(IN HWND hwnd,
             if (IsWindowEnabled(hwnd))
             {
                 PCHECKITEM NewFocus;
-                INT NewFocusBox = 0;
+                UINT NewFocusBox = 0;
                 BOOL InCheckBox;
                 POINT pt;
                 BOOL ChangeFocus, Capture = FALSE;
@@ -2272,7 +2272,7 @@ CheckListWndProc(IN HWND hwnd,
 
                 case VK_TAB:
                 {
-                    INT CheckBox;
+                    UINT CheckBox;
                     BOOL EnabledBox;
                     BOOL Shift = GetKeyState(VK_SHIFT) & 0x8000;
                     
