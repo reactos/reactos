@@ -105,7 +105,7 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR lpOptions;
-	TCHAR Options[4];
+	TCHAR Options[6];
 	LPTSTR lpText    = NULL;
 	BOOL   bNoPrompt = FALSE;
 	BOOL   bCaseSensitive = FALSE;
@@ -240,16 +240,26 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 		{
 			ConInKey (&ir);
       
+      if (bNoPrompt != FALSE)
+      {
 			val = IsKeyInString (lpOptions,
 #ifdef _UNICODE
 			                     ir.Event.KeyEvent.uChar.UnicodeChar,
 #else
 			                     ir.Event.KeyEvent.uChar.AsciiChar,
-#endif /* _UNICODE */
+#endif 
 			                     bCaseSensitive);
+      }
+      else
+      {
+
+      val = IsKeyInString (lpOptions,
+			                     ir.Event.KeyEvent.uChar.UnicodeChar,
+			                     bCaseSensitive);
+      }
 
 			if (val >= 0)
-			{
+			{        
 				ConOutPrintf (_T("%c\n"), lpOptions[val]);
 
 				nErrorLevel = val + 1;
