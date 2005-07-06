@@ -240,6 +240,9 @@ FrLdrGetKernelBase(VOID)
 {
     PCHAR p;
 
+    /* Set KernelBase */
+    LoaderBlock.KernelBase = KernelBase;
+
     /* Read Command Line */
     p = (PCHAR)LoaderBlock.CommandLine;
     while ((p = strchr(p, '/')) != NULL) {
@@ -252,14 +255,12 @@ FrLdrGetKernelBase(VOID)
 
                 /* Use 3GB */
                 KernelBase = 0xE0000000;
+                LoaderBlock.KernelBase = 0xC0000000;
             }
         }
 
         p++;
     }
-
-    /* Set KernelBase */
-    LoaderBlock.KernelBase = KernelBase;
 }
 
 /*++
