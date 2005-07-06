@@ -161,6 +161,5 @@ BOOL IsPidlFolder (LPSHELLFOLDER psf, LPCITEMIDLIST pidl);
 
 /* Functions used by the EDIT box */
 void FILEDLG95_FILENAME_FillFromSelection (HWND hwnd);
-int FILEDLG95_FILENAME_GetFileNames (HWND hwnd, LPWSTR * lpstrFileList, UINT * sizeUsed, char separator);
 
 #endif /*SHBROWSER_H*/

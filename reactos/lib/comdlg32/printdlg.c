@@ -1945,11 +1945,6 @@ static BOOL PRINTDLG_CreateDCW(LPPRINTDLGW lppd)
  *  PrintDlg:
  *  * The Collate Icons do not display, even though they are in the code.
  *  * The Properties Button(s) should call DocumentPropertiesA().
- *  PrintSetupDlg:
- *  * The Paper Orientation Icons are not implemented yet.
- *  * The Properties Button(s) should call DocumentPropertiesA().
- *  * Settings are not yet taken from a provided DevMode or
- *    default printer settings.
  */
 
 BOOL WINAPI PrintDlgA(
@@ -2266,6 +2261,7 @@ BOOL WINAPI PrintDlgW(
  *          PageSetupDlg
  * rad1 - portrait
  * rad2 - landscape
+ * cmb1 - printer select (not in standart dialog template)
  * cmb2 - paper size
  * cmb3 - source (tray?)
  * edt4 - border left
@@ -2609,24 +2605,153 @@ PRINTDLG_PS_WMCommandW(
 }
 
 
-static LRESULT CALLBACK
-PagePaintProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+/***********************************************************************
+ *           DefaultPagePaintHook
+ * Default hook paint procedure that receives WM_PSD_* messages from the dialog box 
+ * whenever the sample page is redrawn.
+*/
+
+static UINT_PTR
+PRINTDLG_DefaultPagePaintHook(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, PageSetupDataA *pda)
 {
-    if (uMsg == WM_PAINT)
+    LPRECT lprc = (LPRECT) lParam;
+    HDC hdc = (HDC) wParam;
+    HPEN hpen, holdpen;
+    LOGFONTW lf;
+    HFONT hfont, holdfont;
+    INT oldbkmode;
+    TRACE("uMsg: WM_USER+%d\n",uMsg-WM_USER);
+
+    /* Call user paint hook if enable */
+    if (pda->dlga->Flags & PSD_ENABLEPAGEPAINTHOOK)
+        if (pda->dlga->lpfnPagePaintHook(hwndDlg, uMsg, wParam, lParam))
+            return TRUE;
+
+    switch (uMsg) {
+       /* LPPAGESETUPDLG in lParam */
+       case WM_PSD_PAGESETUPDLG:
+       /* Inform about the sample page rectangle */
+       case WM_PSD_FULLPAGERECT:
+       /* Inform about the margin rectangle */
+       case WM_PSD_MINMARGINRECT:
+            return FALSE;
+
+        /* Draw dashed rectangle showing margins */
+        case WM_PSD_MARGINRECT:
+            hpen = CreatePen(PS_DASH, 1, GetSysColor(COLOR_3DSHADOW));
+            holdpen = SelectObject(hdc, hpen);
+            Rectangle(hdc, lprc->left, lprc->top, lprc->right, lprc->bottom);
+            DeleteObject(SelectObject(hdc, holdpen));
+            return TRUE;
+
+
+        /* Draw the fake document */
+        case WM_PSD_GREEKTEXTRECT:
+            /* select a nice scalable font, because we want the text really small */
+            SystemParametersInfoW(SPI_GETICONTITLELOGFONT, sizeof(lf), &lf, 0);
+            lf.lfHeight = 6; /* value chosen based on visual effect */
+            hfont = CreateFontIndirectW(&lf);
+            holdfont = SelectObject(hdc, hfont);
+
+            /* if text not loaded, then do so now */
+            if (wszFakeDocumentText[0] == '\0')
+                 LoadStringW(COMDLG32_hInstance,
+                        IDS_FAKEDOCTEXT,
+                        wszFakeDocumentText,
+                        sizeof(wszFakeDocumentText)/sizeof(wszFakeDocumentText[0]));
+
+            oldbkmode = SetBkMode(hdc, TRANSPARENT);
+            DrawTextW(hdc, wszFakeDocumentText, -1, lprc, DT_TOP|DT_LEFT|DT_NOPREFIX|DT_WORDBREAK);
+            SetBkMode(hdc, oldbkmode);
+
+            DeleteObject(SelectObject(hdc, holdfont));
+            return TRUE;
+
+        /* Envelope stamp */
+        case WM_PSD_ENVSTAMPRECT:
+        /* Return address */
+        case WM_PSD_YAFULLPAGERECT:
+            FIXME("envelope/stamp is not implemented\n");
+            return FALSE;
+        default:
+            FIXME("Unknown message %x\n",uMsg);
+            return FALSE;
+    }
+    return TRUE;
+}
+
+/***********************************************************************
+ *           PagePaintProc
+ * The main paint procedure for the PageSetupDlg function.
+ * The Page Setup dialog box includes an image of a sample page that shows how
+ * the user's selections affect the appearance of the printed output.
+ * The image consists of a rectangle that represents the selected paper
+ * or envelope type, with a dotted-line rectangle representing
+ * the current margins, and partial (Greek text) characters
+ * to show how text looks on the printed page. 
+ *
+ * The following messages in the order sends to user hook procedure:
+ *   WM_PSD_PAGESETUPDLG    Draw the contents of the sample page
+ *   WM_PSD_FULLPAGERECT    Inform about the bounding rectangle
+ *   WM_PSD_MINMARGINRECT   Inform about the margin rectangle (min margin?)
+ *   WM_PSD_MARGINRECT      Draw the margin rectangle
+ *   WM_PSD_GREEKTEXTRECT   Draw the Greek text inside the margin rectangle
+ * If any of first three messages returns TRUE, painting done.
+ *
+ * PARAMS:
+ *   hWnd   [in] Handle to the Page Setup dialog box
+ *   uMsg   [in] Received message
+ *
+ * TODO:
+ *   WM_PSD_ENVSTAMPRECT    Draw in the envelope-stamp rectangle (for envelopes only)
+ *   WM_PSD_YAFULLPAGERECT  Draw the return address portion (for envelopes and other paper sizes)
+ *
+ * RETURNS:
+ *   FALSE if all done correctly
+ *
+ */
+static LRESULT CALLBACK
+PRINTDLG_PagePaintProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    PAINTSTRUCT ps;
+    RECT rcClient, rcMargin;
+    HPEN hpen, holdpen;
+    HDC hdc;
+    HBRUSH hbrush, holdbrush;
+    PageSetupDataA *pda;
+    int papersize=0, orientation=0; /* FIXME: set this values */
+
+#define CALLPAINTHOOK(msg,lprc) PRINTDLG_DefaultPagePaintHook( hWnd, msg, (WPARAM)hdc, (LPARAM)lprc, pda)
+
+    if (uMsg != WM_PAINT)
+        return CallWindowProcA(lpfnStaticWndProc, hWnd, uMsg, wParam, lParam);
+
+    /* Processing WM_PAINT message */
+    pda = (PageSetupDataA*)GetPropA(hWnd, "__WINE_PAGESETUPDLGDATA");
+    if (!pda) {
+        WARN("__WINE_PAGESETUPDLGDATA prop not set?\n");
+        return FALSE;
+    }
+    if (PRINTDLG_DefaultPagePaintHook(hWnd, WM_PSD_PAGESETUPDLG, MAKELONG(papersize, orientation), (LPARAM)pda->dlga, pda))
+        return FALSE;
+
+    hdc = BeginPaint(hWnd, &ps);
+    GetClientRect(hWnd, &rcClient);
+
+    /* FIXME: use real margin values */
+    rcMargin = rcClient;
+    rcMargin.left += 5;
+    rcMargin.top += 5;
+    rcMargin.right -= 5;
+    rcMargin.bottom -= 5;
+
+    /* if the space is too small then we make sure to not draw anything */
+    rcMargin.left = min(rcMargin.left, rcMargin.right);
+    rcMargin.top = min(rcMargin.top, rcMargin.bottom);
+
+    if (!CALLPAINTHOOK(WM_PSD_FULLPAGERECT, &rcClient) &&
+        !CALLPAINTHOOK(WM_PSD_MINMARGINRECT, &rcMargin) )
     {
-        PAINTSTRUCT ps;
-        RECT rcClient;
-        HPEN hpen, holdpen;
-        HDC hdc;
-        HFONT hfont, holdfont;
-        LOGFONTW lf;
-        HBRUSH hbrush, holdbrush;
-        INT oldbkmode;
-
-        hdc = BeginPaint(hWnd, &ps);
-
-        GetClientRect(hWnd, &rcClient);
-
         /* fill background */
         hbrush = GetSysColorBrush(COLOR_3DHIGHLIGHT);
         FillRect(hdc, &rcClient, hbrush);
@@ -2635,6 +2760,7 @@ PagePaintProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         hpen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_3DSHADOW));
         holdpen = SelectObject(hdc, hpen);
 
+        
         /* paint left edge */
         MoveToEx(hdc, rcClient.left, rcClient.top, NULL);
         LineTo(hdc, rcClient.left, rcClient.bottom-1);
@@ -2654,79 +2780,51 @@ PagePaintProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         MoveToEx(hdc, rcClient.left, rcClient.bottom-1, NULL);
         LineTo(hdc, rcClient.right, rcClient.bottom-1);
 
-        hpen = CreatePen(PS_DASH, 1, GetSysColor(COLOR_3DSHADOW));
-        DeleteObject(SelectObject(hdc, hpen));
-
-        /* draw dashed rectangle showing margins */
-
-        /* FIXME: use real margin values */
-        rcClient.left += 5;
-        rcClient.top += 5;
-        rcClient.right -= 5;
-        rcClient.bottom -= 5;
-
-        /* if the space is too small then we make sure to not draw anything */
-        rcClient.left = min(rcClient.left,rcClient.right);
-        rcClient.top = min(rcClient.top,rcClient.bottom);
-
-        Rectangle(hdc, rcClient.left, rcClient.top, rcClient.right, rcClient.bottom);
-
         DeleteObject(SelectObject(hdc, holdpen));
+        DeleteObject(SelectObject(hdc, holdbrush));
 
-        /* draw the fake document */
+
+        CALLPAINTHOOK(WM_PSD_MARGINRECT, &rcMargin);
+
 
         /* give text a bit of a space from the frame */
-        rcClient.left += 2;
-        rcClient.top += 2;
-        rcClient.right -= 2;
-        rcClient.bottom -= 2;
-
+        rcMargin.left += 2;
+        rcMargin.top += 2;
+        rcMargin.right -= 2;
+        rcMargin.bottom -= 2;
+        
         /* if the space is too small then we make sure to not draw anything */
-        rcClient.left = min(rcClient.left,rcClient.right);
-        rcClient.top = min(rcClient.top,rcClient.bottom);
+        rcMargin.left = min(rcMargin.left, rcMargin.right);
+        rcMargin.top = min(rcMargin.top, rcMargin.bottom);
 
-        /* select a nice scalable font, because we want the text really small */
-        SystemParametersInfoW(SPI_GETICONTITLELOGFONT, sizeof(lf), &lf, 0);
-        lf.lfHeight = 6; /* value chosen based on visual effect */
-        hfont = CreateFontIndirectW(&lf);
-        holdfont = SelectObject(hdc, hfont);
-
-        /* if text not loaded, then do so now */
-        if (wszFakeDocumentText[0] == '\0')
-            LoadStringW(COMDLG32_hInstance,
-                        IDS_FAKEDOCTEXT,
-                        wszFakeDocumentText,
-                        sizeof(wszFakeDocumentText)/sizeof(wszFakeDocumentText[0]));
-
-        oldbkmode = SetBkMode(hdc, TRANSPARENT);
-        DrawTextW(hdc, wszFakeDocumentText, -1, &rcClient, DT_TOP|DT_LEFT|DT_NOPREFIX|DT_WORDBREAK);
-        SetBkMode(hdc, oldbkmode);
-
-        DeleteObject(SelectObject(hdc, holdfont));
-
-        SelectObject(hdc, holdbrush);
-
-        EndPaint(hWnd, &ps);
-        return 0;
+        CALLPAINTHOOK(WM_PSD_GREEKTEXTRECT, &rcMargin);
     }
-    else
-        return CallWindowProcW(lpfnStaticWndProc, hWnd, uMsg, wParam, lParam);
+
+    EndPaint(hWnd, &ps);
+    return FALSE;
+#undef CALLPAINTHOOK
 }
 
+/***********************************************************************
+ *           PRINTDLG_PageDlgProcA
+ * Message handler 
+ */
 static INT_PTR CALLBACK
-PageDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+PRINTDLG_PageDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     PageSetupDataA	*pda;
     INT_PTR		res = FALSE;
 
-    if (uMsg==WM_INITDIALOG) {
+    if (uMsg == WM_INITDIALOG) {
+        pda = (PageSetupDataA*)lParam;
+        TRACE("set property to %p", pda);
+        SetPropA(hDlg, "__WINE_PAGESETUPDLGDATA", pda);
+        SetPropA(GetDlgItem(hDlg, rct1), "__WINE_PAGESETUPDLGDATA", pda);
         lpfnStaticWndProc = (WNDPROC)SetWindowLongPtrW(
             GetDlgItem(hDlg, rct1),
             GWLP_WNDPROC,
-            (ULONG_PTR)PagePaintProc);
+            (ULONG_PTR)PRINTDLG_PagePaintProc);
 	res = TRUE;
-        pda = (PageSetupDataA*)lParam;
-	SetPropA(hDlg,"__WINE_PAGESETUPDLGDATA",pda);
 	if (pda->dlga->Flags & PSD_ENABLEPAGESETUPHOOK) {
 	    res = pda->dlga->lpfnPageSetupHook(hDlg,uMsg,wParam,(LPARAM)pda->dlga);
 	    if (!res) {
@@ -2734,9 +2832,7 @@ PageDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		res = TRUE;
 	    }
 	}
-	if (pda->dlga->Flags & PSD_ENABLEPAGEPAINTHOOK) {
-	    FIXME("PagePaintHook not yet implemented!\n");
-	}
+
 	if (pda->dlga->Flags & PSD_DISABLEPRINTER)
             EnableWindow(GetDlgItem(hDlg, psh3), FALSE);
 	if (pda->dlga->Flags & PSD_DISABLEMARGINS) {
@@ -2886,7 +2982,29 @@ PageDlgProcW(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 /***********************************************************************
  *            PageSetupDlgA  (COMDLG32.@)
+ *
+ *  Displays the the PAGE SETUP dialog box, which enables the user to specify
+ *  specific properties of a printed page such as
+ *  size, source, orientation and the width of the page margins.
+ *
+ * PARAMS
+ *  setupdlg [in] PAGESETUPDLGA struct
+ *
+ * RETURNS
+ *  TRUE    if the user pressed the OK button
+ *  FALSE   if the user cancelled the window or an error occurred
+ *
+ * NOTES
+ *    The values of hDevMode and hDevNames are filled on output and can be
+ *    changed in PAGESETUPDLG when they are passed in PageSetupDlg.
+ * BUGS
+ *  PrintSetupDlg:
+ *  * The Paper Orientation Icons are not implemented yet.
+ *  * The Properties Button(s) should call DocumentPropertiesA().
+ *  * Settings are not yet taken from a provided DevMode or
+ *    default printer settings.
  */
+
 BOOL WINAPI PageSetupDlgA(LPPAGESETUPDLGA setupdlg) {
     HGLOBAL		hDlgTmpl;
     LPVOID		ptr;
@@ -2909,6 +3027,11 @@ BOOL WINAPI PageSetupDlgA(LPPAGESETUPDLGA setupdlg) {
 	      setupdlg->hDevNames,
 	      setupdlg->hInstance, setupdlg->Flags, flagstr);
     }
+    if (setupdlg->Flags & PSD_ENABLEPAGEPAINTHOOK)
+        if (setupdlg->lpfnPagePaintHook == NULL) {
+            COMDLG32_SetCommDlgExtendedError(CDERR_NOHOOK);
+            return FALSE;
+        }
 
     /* First get default printer data, we need it right after that. */
     memset(&pdlg,0,sizeof(pdlg));
@@ -2945,7 +3068,7 @@ BOOL WINAPI PageSetupDlgA(LPPAGESETUPDLGA setupdlg) {
 		setupdlg->hInstance,
 		ptr,
 		setupdlg->hwndOwner,
-		PageDlgProcA,
+		PRINTDLG_PageDlgProcA,
 		(LPARAM)pda)
     );
     return bRet;
@@ -2959,7 +3082,7 @@ BOOL WINAPI PageSetupDlgW(LPPAGESETUPDLGW setupdlg) {
     BOOL		bRet;
     PageSetupDataW	*pdw;
     PRINTDLGW		pdlg;
-
+    FIXME("Unicode implementation is not done yet\n");
     if(TRACE_ON(commdlg)) {
         char flagstr[1000] = "";
 	struct pd_flags *pflag = psd_flags;
