@@ -5,5 +5,6 @@
 #include "initguid.h"
 
 #include <ddk/wdmguid.h>
+#include <ndk/sysguid.h>
 
 /* EOF */

@@ -29,6 +29,7 @@
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
+#include <ndk/sysguid.h>
 #include <ddk/wdmguid.h>
 
 #include <rpc.h>
