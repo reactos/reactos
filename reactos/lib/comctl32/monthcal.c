@@ -134,7 +134,7 @@ static const int DayOfWeekTable[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
 /* january is 1, december is 12 */
 int MONTHCAL_MonthLength(int month, int year)
 {
-const int mdays[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 0};
+  const int mdays[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 0};
   /*Wrap around, this eases handling*/
   if(month == 0)
     month = 12;
@@ -170,19 +170,6 @@ static int MONTHCAL_ValidateTime(SYSTEMTIME time)
 }
 
 
-void MONTHCAL_CopyTime(const SYSTEMTIME *from, SYSTEMTIME *to)
-{
-  to->wYear = from->wYear;
-  to->wMonth = from->wMonth;
-  to->wDayOfWeek = from->wDayOfWeek;
-  to->wDay = from->wDay;
-  to->wHour = from->wHour;
-  to->wMinute = from->wMinute;
-  to->wSecond = from->wSecond;
-  to->wMilliseconds = from->wMilliseconds;
-}
-
-
 /* Note:Depending on DST, this may be offset by a day.
    Need to find out if we're on a DST place & adjust the clock accordingly.
    Above function assumes we have a valid data.
@@ -212,7 +199,7 @@ static int MONTHCAL_CalcDayFromPos(MONTHCAL_INFO *infoPtr, int x, int y,
   GetClientRect(infoPtr->hwndSelf, &rcClient);
 
   /* if the point is outside the x bounds of the window put
-  it at the boundry */
+  it at the boundary */
   if (x > rcClient.right)
     x = rcClient.right;
 

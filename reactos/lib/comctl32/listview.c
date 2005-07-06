@@ -277,7 +277,8 @@ typedef struct tagLISTVIEW_INFO
   HFONT hDefaultFont;
   HFONT hFont;
   INT ntmHeight;		/* Some cached metrics of the font used */
-  INT ntmAveCharWidth;		/* by the listview to draw items */
+  INT ntmMaxCharWidth;		/* by the listview to draw items */
+  INT nEllipsisWidth;
   BOOL bRedraw;  		/* Turns on/off repaints & invalidations */
   BOOL bAutoarrange;		/* Autoarrange flag when NOT in LVS_AUTOARRANGE */
   BOOL bFocus;
@@ -307,6 +308,7 @@ typedef struct tagLISTVIEW_INFO
   INT nSearchParamLength;
   WCHAR szSearchParam[ MAX_PATH ];
   BOOL bIsDrawing;
+  INT nMeasureItemHeight;
 } LISTVIEW_INFO;
 
 /*
@@ -548,7 +550,7 @@ static inline LPCSTR debugtext_tn(LPCWSTR text, BOOL isW, INT n)
     return isW ? debugstr_wn(text, n) : debugstr_an((LPCSTR)text, n);
 }
 
-static char* debug_getbuf()
+static char* debug_getbuf(void)
 {
     static int index = 0;
     static char buffers[DEBUG_BUFFERS][DEBUG_BUFFER_SIZE];
@@ -2454,6 +2456,8 @@ static INT LISTVIEW_CalculateItemHeight(LISTVIEW_INFO *infoPtr)
 	    nItemHeight = max(nItemHeight, infoPtr->iconSize.cy);
 	if (infoPtr->himlState || infoPtr->himlSmall)
 	    nItemHeight += HEIGHT_PADDING;
+    if (infoPtr->nMeasureItemHeight > 0)
+        nItemHeight = infoPtr->nMeasureItemHeight;
     }
 
     return max(nItemHeight, 1);
@@ -2491,12 +2495,17 @@ static void LISTVIEW_SaveTextMetrics(LISTVIEW_INFO *infoPtr)
     HFONT hFont = infoPtr->hFont ? infoPtr->hFont : infoPtr->hDefaultFont;
     HFONT hOldFont = SelectObject(hdc, hFont);
     TEXTMETRICW tm;
+    SIZE sz;
 
     if (GetTextMetricsW(hdc, &tm))
     {
 	infoPtr->ntmHeight = tm.tmHeight;
-	infoPtr->ntmAveCharWidth = tm.tmAveCharWidth;
+	infoPtr->ntmMaxCharWidth = tm.tmMaxCharWidth;
     }
+
+    if (GetTextExtentPoint32A(hdc, "...", 3, &sz))
+	infoPtr->nEllipsisWidth = sz.cx;
+	
     SelectObject(hdc, hOldFont);
     ReleaseDC(infoPtr->hwndSelf, hdc);
     
@@ -4268,6 +4277,7 @@ static void LISTVIEW_ScrollColumns(LISTVIEW_INFO *infoPtr, INT nColumn, INT dx)
 {
     COLUMN_INFO *lpColumnInfo;
     RECT rcOld, rcCol;
+    POINT ptOrigin;
     INT nCol;
    
     if (nColumn < 0 || DPA_GetPtrCount(infoPtr->hdpaColumns) < 1) return;
@@ -4294,10 +4304,11 @@ static void LISTVIEW_ScrollColumns(LISTVIEW_INFO *infoPtr, INT nColumn, INT dx)
     infoPtr->nItemWidth += dx;
 
     LISTVIEW_UpdateScroll(infoPtr);
+    LISTVIEW_GetOrigin(infoPtr, &ptOrigin);
 
     /* scroll to cover the deleted column, and invalidate for redraw */
     rcOld = infoPtr->rcList;
-    rcOld.left = rcCol.left;
+    rcOld.left = ptOrigin.x + rcCol.left + dx;
     ScrollWindowEx(infoPtr->hwndSelf, dx, 0, &rcOld, &rcOld, 0, 0, SW_ERASE | SW_INVALIDATE);
     
     /* we can restore focus now */
@@ -4561,6 +4572,17 @@ static BOOL LISTVIEW_EndEditLabelT(LISTVIEW_INFO *infoPtr, LPWSTR pszText, BOOL 
     /* Do we need to update the Item Text */
     if (!notify_dispinfoT(infoPtr, LVN_ENDLABELEDITW, &dispInfo, isW)) return FALSE;
     if (!pszText) return TRUE;
+
+    if (!(infoPtr->dwStyle & LVS_OWNERDATA))
+    {
+        HDPA hdpaSubItems = (HDPA)DPA_GetPtr(infoPtr->hdpaItems, infoPtr->nEditLabelItem);
+        ITEM_INFO* lpItem = (ITEM_INFO *)DPA_GetPtr(hdpaSubItems, 0);
+        if (lpItem && lpItem->hdr.pszText == LPSTR_TEXTCALLBACKW)
+        {
+            LISTVIEW_InvalidateItem(infoPtr, infoPtr->nEditLabelItem);
+            return TRUE;
+        }
+    }
 
     ZeroMemory(&dispInfo, sizeof(dispInfo));
     dispInfo.item.mask = LVIF_TEXT;
@@ -5738,7 +5760,7 @@ static INT LISTVIEW_GetNextItem(LISTVIEW_INFO *infoPtr, INT nItem, UINT uFlags)
      * so it's worth optimizing */
     if (uFlags & LVNI_FOCUSED)
     {
-	if (!(LISTVIEW_GetItemState(infoPtr, infoPtr->nFocusedItem, uMask) & uMask) == uMask) return -1;
+	if ((LISTVIEW_GetItemState(infoPtr, infoPtr->nFocusedItem, uMask) & uMask) != uMask) return -1;
 	return (infoPtr->nFocusedItem == nItem) ? -1 : infoPtr->nFocusedItem;
     }
     
@@ -6906,7 +6928,7 @@ static DWORD LISTVIEW_SetIconSpacing(LISTVIEW_INFO *infoPtr, INT cx, INT cy)
     return oldspacing;
 }
 
-inline void set_icon_size(SIZE *size, HIMAGELIST himl, BOOL small)
+static inline void set_icon_size(SIZE *size, HIMAGELIST himl, BOOL small)
 {
     INT cx, cy;
     
@@ -7500,6 +7522,7 @@ static LRESULT LISTVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
   infoPtr->iconSpacing.cy = GetSystemMetrics(SM_CYICONSPACING);
   infoPtr->nEditLabelItem = -1;
   infoPtr->dwHoverTime = -1; /* default system hover time */
+  infoPtr->nMeasureItemHeight = 0;
 
   /* get default font (icon title) */
   SystemParametersInfoW(SPI_GETICONTITLELOGFONT, 0, &logFont, 0);
@@ -8275,21 +8298,27 @@ static LRESULT LISTVIEW_HeaderNotification(LISTVIEW_INFO *infoPtr, const NMHEADE
 	    dx = cxy - (lpColumnInfo->rcHeader.right - lpColumnInfo->rcHeader.left);
 	    if (dx != 0)
 	    {
-		RECT rcCol = lpColumnInfo->rcHeader;
-
 		lpColumnInfo->rcHeader.right += dx;
 		LISTVIEW_ScrollColumns(infoPtr, lpnmh->iItem + 1, dx);
 		LISTVIEW_UpdateItemSize(infoPtr);
 		if (uView == LVS_REPORT && is_redrawing(infoPtr))
 		{
-		    /* this trick works for left aligned columns only */
-		    if ((lpColumnInfo->fmt & LVCFMT_JUSTIFYMASK) == LVCFMT_LEFT)
-		    {
-			rcCol.right = min (rcCol.right, lpColumnInfo->rcHeader.right);
-			rcCol.left = max (rcCol.left, rcCol.right - 3 * infoPtr->ntmAveCharWidth);
-		    }
+		    POINT ptOrigin;
+		    RECT rcCol = lpColumnInfo->rcHeader;
+		    
+		    LISTVIEW_GetOrigin(infoPtr, &ptOrigin);
+		    OffsetRect(&rcCol, ptOrigin.x, 0);
+		    
 		    rcCol.top = infoPtr->rcList.top;
 		    rcCol.bottom = infoPtr->rcList.bottom;
+
+		    /* resizing left-aligned columns leaves most of the left side untouched */
+		    if ((lpColumnInfo->fmt & LVCFMT_JUSTIFYMASK) == LVCFMT_LEFT)
+		    {
+			INT nMaxDirty = infoPtr->nEllipsisWidth + infoPtr->ntmMaxCharWidth + dx;
+			rcCol.left = max (rcCol.left, rcCol.right - nMaxDirty);
+		    }
+		    
 		    LISTVIEW_InvalidateRect(infoPtr, &rcCol);
 		}
 	    }
@@ -9314,8 +9343,24 @@ LISTVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   case WM_WINDOWPOSCHANGED:
       if (!(((WINDOWPOS *)lParam)->flags & SWP_NOSIZE)) 
       {
+      UINT uView = infoPtr->dwStyle & LVS_TYPEMASK;
 	  SetWindowPos(infoPtr->hwndSelf, 0, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOACTIVATE |
 		       SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE);
+
+      if ((infoPtr->dwStyle & LVS_OWNERDRAWFIXED) && (uView == LVS_REPORT))
+      {
+          MEASUREITEMSTRUCT mis;
+          mis.CtlType = ODT_LISTVIEW;
+          mis.CtlID = GetWindowLongPtrW(infoPtr->hwndSelf, GWLP_ID);
+          mis.itemID = -1;
+          mis.itemWidth = 0;
+          mis.itemData = 0;
+          mis.itemHeight= infoPtr->nItemHeight;
+          SendMessageW(infoPtr->hwndNotify, WM_MEASUREITEM, mis.CtlID, (LPARAM)&mis);
+          if (infoPtr->nItemHeight != max(mis.itemHeight, 1))
+              infoPtr->nMeasureItemHeight = infoPtr->nItemHeight = max(mis.itemHeight, 1);
+      }
+
 	  LISTVIEW_UpdateSize(infoPtr);
 	  LISTVIEW_UpdateScroll(infoPtr);
       }
@@ -9433,7 +9478,7 @@ static LRESULT LISTVIEW_Command(LISTVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lP
             if(hFont != 0)
                 SelectObject(hdc, hOldFont);
 
-	    ReleaseDC(infoPtr->hwndSelf, hdc);
+	    ReleaseDC(infoPtr->hwndEdit, hdc);
 
 	    break;
 	}

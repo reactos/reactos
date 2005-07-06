@@ -20,16 +20,46 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * NOTES
+ *
+ * This code was audited for completeness against the documented features
+ * of Comctl32.dll version 6.0 on May. 20, 2005, by James Hawkins.
+ *
+ * Unless otherwise noted, we believe this code to be complete, as per
+ * the specification mentioned above.
+ * If you discover missing features, or bugs, please note them below.
+ *
  * TODO:
  *
  *  Styles:
+ *   TCS_MULTISELECT
+ *   TCS_RIGHT
+ *   TCS_RIGHTJUSTIFY
+ *   TCS_SCROLLOPPOSITE
+ *   TCS_SINGLELINE
  *   TCIF_RTLREADING
+ *
+ *  Extended Styles:
+ *   TCS_EX_FLATSEPARATORS
+ *   TCS_EX_REGISTERDROP
+ *
+ *  States:
+ *   TCIS_BUTTONPRESSED
+ *
+ *  Notifications:
+ *   NM_RELEASEDCAPTURE
+ *   TCN_FOCUSCHANGE
+ *   TCN_GETOBJECT
+ *   TCN_KEYDOWN
  *
  *  Messages:
  *   TCM_REMOVEIMAGE
  *   TCM_DESELECTALL
  *   TCM_GETEXTENDEDSTYLE
  *   TCM_SETEXTENDEDSTYLE
+ *
+ *  Macros:
+ *   TabCtrl_AdjustRect
  *
  */
 
@@ -1727,13 +1757,19 @@ TAB_DrawItemInterior
       else
         drawRect->bottom-=center_offset_h;
 
-      center_offset_v = ((drawRect->right - drawRect->left) - (rcText.bottom - rcText.top) + infoPtr->uVItemPadding) / 2;
+      center_offset_v = ((drawRect->right - drawRect->left) - (rcText.bottom - rcText.top)) / 2;
     }
     else
     {
       drawRect->left += center_offset_h;
-      center_offset_v = ((drawRect->bottom - drawRect->top) - (rcText.bottom - rcText.top) + infoPtr->uVItemPadding) / 2;
+      center_offset_v = ((drawRect->bottom - drawRect->top) - (rcText.bottom - rcText.top)) / 2;
     }
+
+    /* if an item is selected, the text is shifted up instead of down */
+    if (iItem == infoPtr->iSelected)
+        center_offset_v -= infoPtr->uVItemPadding / 2;
+    else
+        center_offset_v += infoPtr->uVItemPadding / 2;
 
     if (center_offset_v < 0)
       center_offset_v = 0;
