@@ -2,6 +2,7 @@
  * SetupAPI device installer
  *
  * Copyright 2000 Andreas Mohr for CodeWeavers
+ *           2005 Hervé Poussineau (hpoussin@reactos.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -645,6 +646,7 @@ SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
 			       PVOID Reserved)
 {
   DeviceInfoList* list;
+  DWORD rc;
 
   TRACE("%p %p %p %p\n", ClassGuid, hwndParent, MachineName, Reserved);
 
@@ -658,10 +660,13 @@ SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
   list->magic = SETUP_DEV_INFO_LIST_MAGIC;
   list->hWnd = hwndParent;
   list->numberOfEntries = 0;
-  /* FIXME: open distant registry */
-  //if (RegConnectRegistryW(MachineName, HKEY_LOCAL_MACHINE, &list->HKLM) != ERROR_SUCCESS)
-  if (RegOpenKey(HKEY_LOCAL_MACHINE, NULL, &list->HKLM) != ERROR_SUCCESS)
+  if (MachineName)
+    rc = RegConnectRegistryW(MachineName, HKEY_LOCAL_MACHINE, &list->HKLM);
+  else
+    rc = RegOpenKey(HKEY_LOCAL_MACHINE, NULL, &list->HKLM);
+  if (rc != ERROR_SUCCESS)
   {
+    SetLastError(rc);
     HeapFree(GetProcessHeap(), 0, list);
     return (HDEVINFO)INVALID_HANDLE_VALUE;
   }
@@ -2042,15 +2047,11 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
     LPWSTR lpGuidString;
     LPWSTR lpFullGuidString;
     DWORD dwLength;
+    HKEY HKLM;
     HKEY hClassesKey;
     HKEY hClassKey;
+    DWORD rc;
     LPCWSTR lpKeyName;
-
-    if (MachineName != NULL)
-    {
-        FIXME("Remote access not supported yet!\n");
-        return INVALID_HANDLE_VALUE;
-    }
 
     if (Flags == DIOCR_INSTALLER)
     {
@@ -2067,12 +2068,27 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
         return INVALID_HANDLE_VALUE;
     }
 
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+    if (MachineName != NULL)
+    {
+        rc = RegConnectRegistryW(MachineName, HKEY_LOCAL_MACHINE, &HKLM);
+        if (rc != ERROR_SUCCESS)
+        {
+            SetLastError(rc);
+            return INVALID_HANDLE_VALUE;
+        }
+    }
+    else
+        HKLM = HKEY_LOCAL_MACHINE;
+
+    rc = RegOpenKeyExW(HKLM,
 		      lpKeyName,
 		      0,
 		      KEY_ALL_ACCESS,
-		      &hClassesKey))
+		      &hClassesKey);
+    if (MachineName != NULL) RegCloseKey(HKLM);
+    if (rc != ERROR_SUCCESS)
     {
+	SetLastError(rc);
 	return INVALID_HANDLE_VALUE;
     }
 
@@ -2081,6 +2097,7 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
 
     if (UuidToStringW((UUID*)ClassGuid, &lpGuidString) != RPC_S_OK)
     {
+	SetLastError(ERROR_GEN_FAILURE);
 	RegCloseKey(hClassesKey);
 	return INVALID_HANDLE_VALUE;
     }
@@ -2089,6 +2106,7 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
     lpFullGuidString = HeapAlloc(GetProcessHeap(), 0, (dwLength + 3) * sizeof(WCHAR));
     if (!lpFullGuidString)
     {
+        SetLastError(ERROR_NO_SYSTEM_RESOURCES);
         RpcStringFreeW(&lpGuidString);
         return INVALID_HANDLE_VALUE;
     }
@@ -2098,12 +2116,14 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
     lpFullGuidString[dwLength + 2] = UNICODE_NULL;
     RpcStringFreeW(&lpGuidString);
 
-    if (RegOpenKeyExW(hClassesKey,
+    rc = RegOpenKeyExW(hClassesKey,
 		      lpFullGuidString,
 		      0,
 		      KEY_ALL_ACCESS,
-		      &hClassKey))
+		      &hClassKey);
+    if (rc != ERROR_SUCCESS)
     {
+	SetLastError(rc);
 	HeapFree(GetProcessHeap(), 0, lpFullGuidString);
 	RegCloseKey(hClassesKey);
 	return INVALID_HANDLE_VALUE;
