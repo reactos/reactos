@@ -195,6 +195,8 @@ INT cmd_date (LPTSTR cmd, LPTSTR param)
 		ConOutResPuts(STRING_DATE_HELP4);
 		return 0;
 	}
+  
+  nErrorLevel = 0;
 
 	/* build parameter array */
 	arg = split (param, &argc, FALSE);
