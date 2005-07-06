@@ -214,6 +214,7 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
         }
     } else {
         Usage();
+        return -1;
     }
  
     /* check MAC address */
@@ -255,6 +256,8 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
         }
         printf("printing pIpAddrTable->table[0].dwIndex = %lx\n", pIpAddrTable->table[0].dwIndex);
         pAddHost->dwIndex = 4;
+
+        free(pIpAddrTable);
     }
  
     /* Set MAC address to 6 bytes (typical) */
@@ -290,7 +293,6 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
         return -1;
     }
  
-    free(pIpAddrTable);
     free(pAddHost);
  
     return 0;
