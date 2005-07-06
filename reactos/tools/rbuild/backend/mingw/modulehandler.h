@@ -124,6 +124,7 @@ private:
 	std::string GenerateGccIncludeParameters () const;
 	std::string GenerateGccParameters () const;
 	std::string GenerateNasmParameters () const;
+	std::string MingwModuleHandler::GetPrecompiledHeaderFilename () const;
 	void GenerateGccCommand ( const std::string& sourceFilename,
 	                          const std::string& cc,
 	                          const std::string& cflagsMacro );

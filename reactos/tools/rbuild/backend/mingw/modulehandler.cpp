@@ -633,13 +633,24 @@ MingwModuleHandler::GenerateMacro (
 	const IfableData& data )
 {
 	size_t i;
+	bool generateAssignment;
 
-	fprintf (
-		fMakefile,
-		"%s %s",
-		macro.c_str(),
-		assignmentOperation );
-	
+	generateAssignment = (use_pch && module.pch != NULL ) || data.includes.size () > 0 || data.defines.size () > 0 || data.compilerFlags.size () > 0;
+	if ( generateAssignment )
+	{
+		fprintf ( fMakefile,
+		          "%s %s",
+		          macro.c_str(),
+		          assignmentOperation );
+	}
+
+	if ( use_pch && module.pch != NULL )
+	{
+		fprintf ( fMakefile,
+		          " -I %s",
+		          GetDirectory ( GetPrecompiledHeaderFilename () ).c_str () );
+	}
+
 	string compilerParameters = GenerateCompilerParametersFromVector ( data.compilerFlags );
 	if ( compilerParameters.size () > 0 )
 	{
@@ -669,7 +680,10 @@ MingwModuleHandler::GenerateMacro (
 				"=%s",
 				d.value.c_str() );
 	}
-	fprintf ( fMakefile, "\n" );
+	if ( generateAssignment )
+	{
+		fprintf ( fMakefile, "\n" );
+	}
 }
 
 void
@@ -680,15 +694,12 @@ MingwModuleHandler::GenerateMacros (
 {
 	size_t i;
 
-	if ( data.includes.size () > 0 || data.defines.size () > 0 || data.compilerFlags.size () > 0 )
-	{
-		GenerateMacro ( assignmentOperation,
-		                cflagsMacro,
-		                data );
-		GenerateMacro ( assignmentOperation,
-		                windresflagsMacro,
-		                data );
-	}
+	GenerateMacro ( assignmentOperation,
+	                cflagsMacro,
+	                data );
+	GenerateMacro ( assignmentOperation,
+	                windresflagsMacro,
+	                data );
 	
 	if ( linkerFlags != NULL )
 	{
@@ -844,6 +855,14 @@ MingwModuleHandler::GenerateObjectMacros (
 	CleanupFileVector ( sourceFiles );
 }
 
+string
+MingwModuleHandler::GetPrecompiledHeaderFilename () const
+{
+	const string& basePchFilename = module.pch->file.name + ".gch";
+	return PassThruCacheDirectory ( NormalizeFilename ( basePchFilename ),
+	                                backend->intermediateDirectory );
+}
+
 void
 MingwModuleHandler::GenerateGccCommand (
 	const string& sourceFilename,
@@ -852,7 +871,7 @@ MingwModuleHandler::GenerateGccCommand (
 {
 	string dependencies = sourceFilename;
 	if ( module.pch && use_pch )
-		dependencies += " " + module.pch->file.name + ".gch";
+		dependencies += " " + GetPrecompiledHeaderFilename ();
 	
 	/* WIDL generated headers may be used */
 	dependencies += " " + GetLinkingDependenciesMacro ();
@@ -1458,27 +1477,22 @@ MingwModuleHandler::GenerateObjectFileTargets (
 	const string& windresflagsMacro,
 	const string& widlflagsMacro )
 {
-	if ( module.pch )
+	if ( module.pch && use_pch )
 	{
-		const string& pch_file = module.pch->file.name;
-		string gch_file = pch_file + ".gch";
-		CLEAN_FILE(gch_file);
-		if ( use_pch )
-		{
-			fprintf (
-				fMakefile,
-				"%s: %s\n",
-				gch_file.c_str(),
-				pch_file.c_str() );
-			fprintf ( fMakefile, "\t$(ECHO_PCH)\n" );
-			fprintf (
-				fMakefile,
-				"\t%s -o %s %s -g %s\n\n",
-				( module.cplusplus ? cppc.c_str() : cc.c_str() ),
-				gch_file.c_str(),
-				cflagsMacro.c_str(),
-				pch_file.c_str() );
-		}
+		const string& baseHeaderFilename = module.pch->file.name;
+		const string& pchFilename = GetPrecompiledHeaderFilename ();
+		CLEAN_FILE(pchFilename);
+		fprintf ( fMakefile,
+		          "%s: %s\n",
+		          pchFilename.c_str(),
+		          baseHeaderFilename.c_str() );
+		fprintf ( fMakefile, "\t$(ECHO_PCH)\n" );
+		fprintf ( fMakefile,
+		          "\t%s -o %s %s -g %s\n\n",
+		          module.cplusplus ? cppc.c_str() : cc.c_str(),
+		          pchFilename.c_str(),
+		          cflagsMacro.c_str(),
+		          baseHeaderFilename.c_str() );
 	}
 
 	GenerateObjectFileTargets ( module.non_if_data,
