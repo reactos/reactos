@@ -37,7 +37,7 @@ void print(char *str)
  * printf() - prints formatted text to stdout
  * originally from GRUB
  */
-void printf(char *format, ... )
+int printf(const char *format, ... )
 {
 	va_list ap;
 	va_start(ap,format);
@@ -102,9 +102,11 @@ void printf(char *format, ... )
 	}
 
 	va_end(ap);
+
+	return 0;
 }
 
-void sprintf(char *buffer, char *format, ... )
+int sprintf(char *buffer, const char *format, ... )
 {
 	va_list ap;
 	char c, *ptr, str[16];
@@ -178,4 +180,6 @@ void sprintf(char *buffer, char *format, ... )
 	}
 	va_end(ap);
 	*p=0;
+
+	return 0;
 }

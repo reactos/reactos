@@ -42,7 +42,7 @@ void *	memset(void *src, int val, size_t count);
 // Standard Library Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-int		atoi(char *string);
+int		atoi(const char *string);
 char *	itoa(int value, char *string, int radix);
 int		toupper(int c);
 int		tolower(int c);
@@ -75,8 +75,8 @@ void	sound(int freq);
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 void	print(char *str);
-void	printf(char *fmt, ...);
-void	sprintf(char *buffer, char *format, ...);
+int		printf(const char *fmt, ...);
+int		sprintf(char *buffer, const char *format, ...);
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //

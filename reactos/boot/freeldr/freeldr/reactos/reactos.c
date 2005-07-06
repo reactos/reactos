@@ -1,9 +1,22 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         Freeloader
- * FILE:            boot/freeldr/freeldr/reactos/rosboot.c
- * PURPOSE:         ReactOS Loader
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *  FreeLoader
+ *
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 2005       Alex Ionescu  <alex@relsoft.net>
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
 #include <freeldr.h>
@@ -13,6 +26,13 @@
 
 #define NDEBUG
 #include <debug.h>
+
+LOADER_PARAMETER_BLOCK LoaderBlock;
+char					reactos_kernel_cmdline[255];	// Command line passed to kernel
+LOADER_MODULE			reactos_modules[64];		// Array to hold boot module info loaded for the kernel
+char					reactos_module_strings[64][256];	// Array to hold module names
+unsigned long			reactos_memory_map_descriptor_size;
+memory_map_t			reactos_memory_map[32];		// Memory map
 
 BOOL
 STDCALL
@@ -583,42 +603,42 @@ LoadAndBootReactOS(PCHAR OperatingSystemName)
 	/*
 	 * Setup multiboot information structure
 	 */
-	LoaderBlock.Flags = MB_INFO_FLAG_MEM_SIZE | MB_INFO_FLAG_BOOT_DEVICE | MB_INFO_FLAG_COMMAND_LINE | MB_INFO_FLAG_MODULES;
+	LoaderBlock.Flags = MB_FLAGS_BOOT_DEVICE | MB_FLAGS_COMMAND_LINE | MB_FLAGS_MODULE_INFO;
 	LoaderBlock.PageDirectoryStart = (ULONG)&PageDirectoryStart;
 	LoaderBlock.PageDirectoryEnd = (ULONG)&PageDirectoryEnd;
 	LoaderBlock.BootDevice = 0xffffffff;
-	LoaderBlock.CommandLine = (unsigned long)multiboot_kernel_cmdline;
+	LoaderBlock.CommandLine = (unsigned long)reactos_kernel_cmdline;
 	LoaderBlock.ModsCount = 0;
-	LoaderBlock.ModsAddr = (unsigned long)multiboot_modules;
-	LoaderBlock.MmapLength = (unsigned long)MachGetMemoryMap((PBIOS_MEMORY_MAP)(PVOID)&multiboot_memory_map, 32) * sizeof(memory_map_t);
+	LoaderBlock.ModsAddr = (unsigned long)reactos_modules;
+	LoaderBlock.MmapLength = (unsigned long)MachGetMemoryMap((PBIOS_MEMORY_MAP)(PVOID)&reactos_memory_map, 32) * sizeof(memory_map_t);
 	if (LoaderBlock.MmapLength)
 	{
-		LoaderBlock.MmapAddr = (unsigned long)&multiboot_memory_map;
-		LoaderBlock.Flags |= MB_INFO_FLAG_MEM_SIZE | MB_INFO_FLAG_MEMORY_MAP;
-		multiboot_memory_map_descriptor_size = sizeof(memory_map_t); // GetBiosMemoryMap uses a fixed value of 24
+		LoaderBlock.MmapAddr = (unsigned long)&reactos_memory_map;
+		LoaderBlock.Flags |= MB_FLAGS_MEM_INFO | MB_FLAGS_MMAP_INFO;
+		reactos_memory_map_descriptor_size = sizeof(memory_map_t); // GetBiosMemoryMap uses a fixed value of 24
 		DbgPrint((DPRINT_REACTOS, "memory map length: %d\n", LoaderBlock.MmapLength));
 		DbgPrint((DPRINT_REACTOS, "dumping memory map:\n"));
 		for (i=0; i<(LoaderBlock.MmapLength/sizeof(memory_map_t)); i++)
 		{
-			if (MEMTYPE_USABLE == multiboot_memory_map[i].type &&
-			    0 == multiboot_memory_map[i].base_addr_low)
+			if (MEMTYPE_USABLE == reactos_memory_map[i].type &&
+			    0 == reactos_memory_map[i].base_addr_low)
 			{
-				LoaderBlock.MemLower = (multiboot_memory_map[i].base_addr_low + multiboot_memory_map[i].length_low) / 1024;
+				LoaderBlock.MemLower = (reactos_memory_map[i].base_addr_low + reactos_memory_map[i].length_low) / 1024;
 				if (640 < LoaderBlock.MemLower)
 				{
 					LoaderBlock.MemLower = 640;
 				}
 			}
-			if (MEMTYPE_USABLE == multiboot_memory_map[i].type &&
-			    multiboot_memory_map[i].base_addr_low <= 1024 * 1024 &&
-			    1024 * 1024 <= multiboot_memory_map[i].base_addr_low + multiboot_memory_map[i].length_low)
+			if (MEMTYPE_USABLE == reactos_memory_map[i].type &&
+			    reactos_memory_map[i].base_addr_low <= 1024 * 1024 &&
+			    1024 * 1024 <= reactos_memory_map[i].base_addr_low + reactos_memory_map[i].length_low)
 			{
-				LoaderBlock.MemHigher = (multiboot_memory_map[i].base_addr_low + multiboot_memory_map[i].length_low) / 1024 - 1024;
+				LoaderBlock.MemHigher = (reactos_memory_map[i].base_addr_low + reactos_memory_map[i].length_low) / 1024 - 1024;
 			}
 			DbgPrint((DPRINT_REACTOS, "start: %x\t size: %x\t type %d\n",
-			          multiboot_memory_map[i].base_addr_low,
-				  multiboot_memory_map[i].length_low,
-				  multiboot_memory_map[i].type));
+			          reactos_memory_map[i].base_addr_low,
+				  reactos_memory_map[i].length_low,
+				  reactos_memory_map[i].type));
 		}
 	}
 	DbgPrint((DPRINT_REACTOS, "low_mem = %d\n", LoaderBlock.MemLower));
@@ -646,13 +666,13 @@ LoadAndBootReactOS(PCHAR OperatingSystemName)
 		/* Normalize */
 		MachDiskGetBootPath(SystemPath, sizeof(SystemPath));
 		strcat(SystemPath, "\\reactos");
-		strcat(strcpy(multiboot_kernel_cmdline, SystemPath),
+		strcat(strcpy(reactos_kernel_cmdline, SystemPath),
 		       " /MININT");
 	}
 	else
 	{
 		/* copy system path into kernel command line */
-		strcpy(multiboot_kernel_cmdline, SystemPath);
+		strcpy(reactos_kernel_cmdline, SystemPath);
 	}
 
 	/*
@@ -660,8 +680,8 @@ LoadAndBootReactOS(PCHAR OperatingSystemName)
 	 */
 	if (IniReadSettingByName(SectionId, "Options", value, 1024))
 	{
-		strcat(multiboot_kernel_cmdline, " ");
-		strcat(multiboot_kernel_cmdline, value);
+		strcat(reactos_kernel_cmdline, " ");
+		strcat(reactos_kernel_cmdline, value);
 	}
 
 
@@ -673,7 +693,7 @@ LoadAndBootReactOS(PCHAR OperatingSystemName)
 	 */
 	MachHwDetect();
 
-	if (AcpiPresent) LoaderBlock.Flags |= MB_INFO_FLAG_ACPI_TABLE;
+	if (AcpiPresent) LoaderBlock.Flags |= MB_FLAGS_ACPI_TABLE;
 
 	UiDrawStatusText("Loading...");
 	UiDrawProgressBarCenter(0, 100, "Loading ReactOS...");

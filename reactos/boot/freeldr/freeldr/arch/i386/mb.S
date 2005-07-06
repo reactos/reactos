@@ -52,10 +52,10 @@
 	// Boot information structure
 	//
 
-EXTERN(_multiboot_memory_map_descriptor_size)
+EXTERN(_reactos_memory_map_descriptor_size)
 	.long	0
 
-EXTERN(_multiboot_memory_map)
+EXTERN(_reactos_memory_map)
 	.rept	(32 * /*sizeof(memory_map_t)*/24)
 	.byte	0
 	.endr

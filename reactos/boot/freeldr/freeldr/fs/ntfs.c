@@ -1,6 +1,6 @@
 /*
  *  FreeLoader NTFS support
- *  Copyright (C) 2004       Filip Navara  <xnavara@volny.cz>
+ *  Copyright (C) 2004  Filip Navara  <xnavara@volny.cz>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

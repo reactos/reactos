@@ -28,10 +28,6 @@
 #define RMODE_CS	0x18	/* RMode code selector, base 0 limit 64k */
 #define RMODE_DS	0x20	/* RMode data selector, base 0 limit 64k */
 
-#define	KERNEL_BASE	0xC0000000
-#define	KERNEL_CS	0x08
-#define	KERNEL_DS	0x10
-
 #define CR0_PE_SET	0x00000001	/* OR this value with CR0 to enable pmode */
 #define CR0_PE_CLR	0xFFFFFFFE	/* AND this value with CR0 to disable pmode */
 

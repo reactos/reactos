@@ -33,6 +33,12 @@
 
 #include "registry.h"
 
+LOADER_PARAMETER_BLOCK LoaderBlock;
+char					reactos_kernel_cmdline[255];	// Command line passed to kernel
+LOADER_MODULE			reactos_modules[64];		// Array to hold boot module info loaded for the kernel
+char					reactos_module_strings[64][256];	// Array to hold module names
+unsigned long			reactos_memory_map_descriptor_size;
+memory_map_t			reactos_memory_map[32];		// Memory map
 
 #define USE_UI
 
@@ -250,41 +256,41 @@ VOID RunLoader(VOID)
   extern ULONG PageDirectoryEnd;
 
   /* Setup multiboot information structure */
-  LoaderBlock.Flags = MB_INFO_FLAG_BOOT_DEVICE | MB_INFO_FLAG_COMMAND_LINE | MB_INFO_FLAG_MODULES;
+  LoaderBlock.Flags = MB_FLAGS_BOOT_DEVICE | MB_FLAGS_COMMAND_LINE | MB_FLAGS_MODULE_INFO;
   LoaderBlock.PageDirectoryStart = (ULONG)&PageDirectoryStart;
   LoaderBlock.PageDirectoryEnd = (ULONG)&PageDirectoryEnd;
   LoaderBlock.BootDevice = 0xffffffff;
-  LoaderBlock.CommandLine = (unsigned long)multiboot_kernel_cmdline;
+  LoaderBlock.CommandLine = (unsigned long)reactos_kernel_cmdline;
   LoaderBlock.ModsCount = 0;
-  LoaderBlock.ModsAddr = (unsigned long)multiboot_modules;
-  LoaderBlock.MmapLength = (unsigned long)MachGetMemoryMap((PBIOS_MEMORY_MAP)(PVOID)&multiboot_memory_map, 32) * sizeof(memory_map_t);
+  LoaderBlock.ModsAddr = (unsigned long)reactos_modules;
+  LoaderBlock.MmapLength = (unsigned long)MachGetMemoryMap((PBIOS_MEMORY_MAP)(PVOID)&reactos_memory_map, 32) * sizeof(memory_map_t);
   if (LoaderBlock.MmapLength)
     {
-      LoaderBlock.MmapAddr = (unsigned long)&multiboot_memory_map;
-      LoaderBlock.Flags |= MB_INFO_FLAG_MEM_SIZE | MB_INFO_FLAG_MEMORY_MAP;
-      multiboot_memory_map_descriptor_size = sizeof(memory_map_t); // GetBiosMemoryMap uses a fixed value of 24
+      LoaderBlock.MmapAddr = (unsigned long)&reactos_memory_map;
+      LoaderBlock.Flags |= MB_FLAGS_MEM_INFO | MB_FLAGS_MMAP_INFO;
+      reactos_memory_map_descriptor_size = sizeof(memory_map_t); // GetBiosMemoryMap uses a fixed value of 24
       for (i = 0; i < (LoaderBlock.MmapLength / sizeof(memory_map_t)); i++)
         {
-          if (MEMTYPE_USABLE == multiboot_memory_map[i].type &&
-              0 == multiboot_memory_map[i].base_addr_low)
+          if (MEMTYPE_USABLE == reactos_memory_map[i].type &&
+              0 == reactos_memory_map[i].base_addr_low)
             {
-              LoaderBlock.MemLower = (multiboot_memory_map[i].base_addr_low + multiboot_memory_map[i].length_low) / 1024;
+              LoaderBlock.MemLower = (reactos_memory_map[i].base_addr_low + reactos_memory_map[i].length_low) / 1024;
               if (640 < LoaderBlock.MemLower)
                 {
                   LoaderBlock.MemLower = 640;
                 }
             }
-          if (MEMTYPE_USABLE == multiboot_memory_map[i].type &&
-              multiboot_memory_map[i].base_addr_low <= 1024 * 1024 &&
-              1024 * 1024 <= multiboot_memory_map[i].base_addr_low + multiboot_memory_map[i].length_low)
+          if (MEMTYPE_USABLE == reactos_memory_map[i].type &&
+              reactos_memory_map[i].base_addr_low <= 1024 * 1024 &&
+              1024 * 1024 <= reactos_memory_map[i].base_addr_low + reactos_memory_map[i].length_low)
             {
-              LoaderBlock.MemHigher = (multiboot_memory_map[i].base_addr_low + multiboot_memory_map[i].length_low) / 1024 - 1024;
+              LoaderBlock.MemHigher = (reactos_memory_map[i].base_addr_low + reactos_memory_map[i].length_low) / 1024 - 1024;
             }
 #if 0
 	    printf("start: %x\t size: %x\t type %d\n",
-		   multiboot_memory_map[i].base_addr_low,
-		   multiboot_memory_map[i].length_low,
-		   multiboot_memory_map[i].type);
+		   reactos_memory_map[i].base_addr_low,
+		   reactos_memory_map[i].length_low,
+		   reactos_memory_map[i].type);
 #endif
         }
     }
@@ -369,8 +375,8 @@ VOID RunLoader(VOID)
     }
 
   /* Set kernel command line */
-  MachDiskGetBootPath(multiboot_kernel_cmdline, sizeof(multiboot_kernel_cmdline));
-  strcat(strcat(strcat(multiboot_kernel_cmdline, SourcePath), " "),
+  MachDiskGetBootPath(reactos_kernel_cmdline, sizeof(reactos_kernel_cmdline));
+  strcat(strcat(strcat(reactos_kernel_cmdline, SourcePath), " "),
          LoadOptions);
 
   /* Load ntoskrnl.exe */

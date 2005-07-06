@@ -21,9 +21,6 @@
 #ifndef __REGISTRY_H
 #define __REGISTRY_H
 
-
-#define INVALID_HANDLE_VALUE  NULL
-
 typedef struct _REG_KEY
 {
   LIST_ENTRY KeyList;

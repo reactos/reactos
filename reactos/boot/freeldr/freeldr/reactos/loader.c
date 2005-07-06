@@ -1,10 +1,22 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         Freeloader
- * FILE:            boot/freeldr/freeldr/multiboot.c
- * PURPOSE:         ReactOS Loader
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
- *                  Hartmut Birr - SMP/PAE Code
+ *  FreeLoader
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 2005       Alex Ionescu  <alex@relsoft.net>
+ *  Copyright (C) 2005       Hartmut Birr  <hartmut.birr@gmx.de>
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
 #include <freeldr.h>
@@ -20,7 +32,7 @@
 #define PFN_SHIFT 12
 
 /* Bits to shift to convert a Virtual Address into an Offset in the Page Directory */
-#define PDE_SHIFT 20
+#define PDE_SHIFT 22
 #define PDE_SHIFT_PAE 18
 
 
@@ -61,7 +73,7 @@
 ULONG_PTR NextModuleBase = 0;
 
 /* Currently Opened Module */
-PFRLDR_MODULE CurrentModule = NULL;
+PLOADER_MODULE CurrentModule = NULL;
 
 /* Unrelocated Kernel Base in Virtual Memory */
 ULONG_PTR KernelBase;
@@ -71,22 +83,6 @@ BOOLEAN PaeModeEnabled;
 
 /* Kernel Entrypoint in Physical Memory */
 ULONG_PTR KernelEntry;
-
-typedef struct _HARDWARE_PTE_X86 {
-    ULONG Valid             : 1;
-    ULONG Write             : 1;
-    ULONG Owner             : 1;
-    ULONG WriteThrough      : 1;
-    ULONG CacheDisable      : 1;
-    ULONG Accessed          : 1;
-    ULONG Dirty             : 1;
-    ULONG LargePage         : 1;
-    ULONG Global            : 1;
-    ULONG CopyOnWrite       : 1;
-    ULONG Prototype         : 1;
-    ULONG reserved          : 1;
-    ULONG PageFrameNumber   : 20;
-} HARDWARE_PTE_X86, *PHARDWARE_PTE_X86;
 
 typedef struct _HARDWARE_PTE_X64 {
     ULONG Valid             : 1;
@@ -422,7 +418,7 @@ FrLdrSetupPageDirectory(VOID)
     } else {
 
         /* Get the Kernel Table Index */
-        KernelPageTableIndex = (KernelBase >> PDE_SHIFT) / sizeof(HARDWARE_PTE_X86);
+        KernelPageTableIndex = KernelBase >> PDE_SHIFT;
 
         /* Get the Startup Page Directory */
         PageDir = (PPAGE_DIRECTORY_X86)&startup_pagedirectory;
@@ -685,12 +681,12 @@ FrLdrLoadModule(FILE *ModuleImage,
                 PULONG ModuleSize)
 {
     ULONG LocalModuleSize;
-    PFRLDR_MODULE ModuleData;
+    PLOADER_MODULE ModuleData;
     LPSTR NameBuffer;
     LPSTR TempName;
 
     /* Get current module data structure and module name string array */
-    ModuleData = &multiboot_modules[LoaderBlock.ModsCount];
+    ModuleData = &reactos_modules[LoaderBlock.ModsCount];
 
     /* Get only the Module Name */
     do {
@@ -702,24 +698,24 @@ FrLdrLoadModule(FILE *ModuleImage,
         }
 
     } while(TempName);
-    NameBuffer = multiboot_module_strings[LoaderBlock.ModsCount];
+    NameBuffer = reactos_module_strings[LoaderBlock.ModsCount];
 
     /* Get Module Size */
     LocalModuleSize = FsGetFileSize(ModuleImage);
 
     /* Fill out Module Data Structure */
-    ModuleData->ModuleStart = NextModuleBase;
-    ModuleData->ModuleEnd = NextModuleBase + LocalModuleSize;
+    ModuleData->ModStart = NextModuleBase;
+    ModuleData->ModEnd = NextModuleBase + LocalModuleSize;
 
     /* Save name */
     strcpy(NameBuffer, ModuleName);
-    ModuleData->ModuleName = NameBuffer;
+    ModuleData->String = (ULONG_PTR)NameBuffer;
 
     /* Load the file image */
     FsReadFile(ModuleImage, LocalModuleSize, NULL, (PVOID)NextModuleBase);
 
     /* Move to next memory block and increase Module Count */
-    NextModuleBase = ROUND_UP(ModuleData->ModuleEnd, PAGE_SIZE);
+    NextModuleBase = ROUND_UP(ModuleData->ModEnd, PAGE_SIZE);
     LoaderBlock.ModsCount++;
 
     /* Return Module Size if required */
@@ -727,33 +723,33 @@ FrLdrLoadModule(FILE *ModuleImage,
         *ModuleSize = LocalModuleSize;
     }
 
-    return(ModuleData->ModuleStart);
+    return(ModuleData->ModStart);
 }
 
 ULONG_PTR
 STDCALL
 FrLdrCreateModule(LPSTR ModuleName)
 {
-    PFRLDR_MODULE ModuleData;
+    PLOADER_MODULE ModuleData;
     LPSTR NameBuffer;
 
     /* Get current module data structure and module name string array */
-    ModuleData = &multiboot_modules[LoaderBlock.ModsCount];
-    NameBuffer = multiboot_module_strings[LoaderBlock.ModsCount];
+    ModuleData = &reactos_modules[LoaderBlock.ModsCount];
+    NameBuffer = reactos_module_strings[LoaderBlock.ModsCount];
 
     /* Set up the structure */
-    ModuleData->ModuleStart = NextModuleBase;
-    ModuleData->ModuleEnd = -1;
+    ModuleData->ModStart = NextModuleBase;
+    ModuleData->ModEnd = -1;
 
     /* Copy the name */
     strcpy(NameBuffer, ModuleName);
-    ModuleData->ModuleName = NameBuffer;
+    ModuleData->String = (ULONG_PTR)NameBuffer;
 
     /* Set the current Module */
     CurrentModule = ModuleData;
 
     /* Return Module Base Address */
-    return(ModuleData->ModuleStart);
+    return(ModuleData->ModStart);
 }
 
 BOOL
@@ -761,19 +757,19 @@ STDCALL
 FrLdrCloseModule(ULONG_PTR ModuleBase,
                  ULONG ModuleSize)
 {
-    PFRLDR_MODULE ModuleData = CurrentModule;
+    PLOADER_MODULE ModuleData = CurrentModule;
 
     /* Make sure a module is opened */
     if (ModuleData) {
 
         /* Make sure this is the right module and that it hasn't been closed */
-        if ((ModuleBase == ModuleData->ModuleStart) && (ModuleData->ModuleEnd == (ULONG_PTR)-1)) {
+        if ((ModuleBase == ModuleData->ModStart) && (ModuleData->ModEnd == (ULONG_PTR)-1)) {
 
             /* Close the Module */
-            ModuleData->ModuleEnd = ModuleData->ModuleStart + ModuleSize;
+            ModuleData->ModEnd = ModuleData->ModStart + ModuleSize;
 
             /* Set the next Module Base and increase the number of modules */
-            NextModuleBase = ROUND_UP(ModuleData->ModuleEnd, PAGE_SIZE);
+            NextModuleBase = ROUND_UP(ModuleData->ModEnd, PAGE_SIZE);
             LoaderBlock.ModsCount++;
 
             /* Close the currently opened module */
