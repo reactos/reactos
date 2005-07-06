@@ -34,13 +34,13 @@
 #define PA_ACCESSED  (1 << PA_BIT_ACCESSED)
 #define PA_GLOBAL    (1 << PA_BIT_GLOBAL)
 
-#define PAGETABLE_MAP		(0xf0000000)
-#define PAGEDIRECTORY_MAP	(0xf0000000 + (PAGETABLE_MAP / (1024)))
+#define PAGETABLE_MAP		(0xc0000000)
+#define PAGEDIRECTORY_MAP	(0xc0000000 + (PAGETABLE_MAP / (1024)))
 
-#define PAE_PAGEDIRECTORY_MAP	(0xf0000000 + (PAGETABLE_MAP / (512)))
+#define PAE_PAGEDIRECTORY_MAP	(0xc0000000 + (PAGETABLE_MAP / (512)))
 
-#define HYPERSPACE		(0xf0800000)
-#define IS_HYPERSPACE(v)	(((ULONG)(v) >= 0xF0800000 && (ULONG)(v) < 0xF0C00000))
+#define HYPERSPACE		(Ke386Pae ? 0xc0800000 : 0xc0400000)
+#define IS_HYPERSPACE(v)	(((ULONG)(v) >= HYPERSPACE && (ULONG)(v) < 0xc0c00000))
 
 ULONG MmGlobalKernelPageDirectory[1024];
 ULONGLONG MmGlobalKernelPageDirectoryForPAE[2048];
@@ -2390,7 +2390,7 @@ MiInitPageDirectoryMap(VOID)
                       MmGetKernelAddressSpace(),
                       MEMORY_AREA_SYSTEM,
                       &BaseAddress,
-		      0x400000,
+		      Ke386Pae ? 0x400000 : 0x800000,
                       0,
                       &hyperspace_desc,
                       TRUE,

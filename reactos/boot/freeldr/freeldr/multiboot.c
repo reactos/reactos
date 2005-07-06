@@ -36,20 +36,21 @@
 #define PaToPfn(p) \
     ((p) >> PFN_SHIFT)
 
-#define STARTUP_BASE                0xF0000000
-#define HYPERSPACE_BASE             0xF0800000
+#define STARTUP_BASE                0xC0000000
+#define HYPERSPACE_BASE             0xC0400000
+#define HYPERSPACE_PAE_BASE         0xC0800000
 #define APIC_BASE                   0xFEC00000
 #define KPCR_BASE                   0xFF000000
 
 #define LowMemPageTableIndex        0
-#define StartupPageTableIndex       (STARTUP_BASE >> 20)    / sizeof(HARDWARE_PTE_X86)
-#define HyperspacePageTableIndex    (HYPERSPACE_BASE >> 20) / sizeof(HARDWARE_PTE_X86)
-#define KpcrPageTableIndex          (KPCR_BASE >> 20)       / sizeof(HARDWARE_PTE_X86)
-#define ApicPageTableIndex          (APIC_BASE >> 20)       / sizeof(HARDWARE_PTE_X86)
+#define StartupPageTableIndex       (STARTUP_BASE >> 22)
+#define HyperspacePageTableIndex    (HYPERSPACE_BASE >> 22)
+#define KpcrPageTableIndex          (KPCR_BASE >> 22)
+#define ApicPageTableIndex          (APIC_BASE >> 22)
 
 #define LowMemPageTableIndexPae     0
 #define StartupPageTableIndexPae    (STARTUP_BASE >> 21)
-#define HyperspacePageTableIndexPae (HYPERSPACE_BASE >> 21)
+#define HyperspacePageTableIndexPae (HYPERSPACE_PAE_BASE >> 21)
 #define KpcrPageTableIndexPae       (KPCR_BASE >> 21)
 #define ApicPageTableIndexPae       (APIC_BASE >> 21)
 
@@ -250,7 +251,7 @@ FrLdrGetKernelBase(VOID)
             if (p[4] == ' ' || p[4] == 0) {
 
                 /* Use 3GB */
-                KernelBase = 0xC0000000;
+                KernelBase = 0xE0000000;
             }
         }
 
@@ -447,6 +448,9 @@ FrLdrSetupPageDirectory(VOID)
         PageDir->Pde[HyperspacePageTableIndex].Valid = 1;
         PageDir->Pde[HyperspacePageTableIndex].Write = 1;
         PageDir->Pde[HyperspacePageTableIndex].PageFrameNumber = PaPtrToPfn(hyperspace_pagetable);
+        PageDir->Pde[HyperspacePageTableIndex + 1].Valid = 1;
+        PageDir->Pde[HyperspacePageTableIndex + 1].Write = 1;
+        PageDir->Pde[HyperspacePageTableIndex + 1].PageFrameNumber = PaPtrToPfn(hyperspace_pagetable + 4096);
 
         /* Set up the Apic PDE */
         PageDir->Pde[ApicPageTableIndex].Valid = 1;
@@ -639,9 +643,6 @@ FrLdrMapKernel(FILE *KernelImage)
         for (i = 0; i < (INT)Count; i++) {
 
             ShortPtr = (PUSHORT)(Address + (*TypeOffset & 0xFFF));
-
-            /* Don't relocate after the end of the loaded driver */
-            if ((ULONG_PTR)ShortPtr >= MaxAddress) break;
 
             switch (*TypeOffset >> 12) {
 
