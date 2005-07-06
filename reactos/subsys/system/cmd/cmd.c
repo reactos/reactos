@@ -137,6 +137,8 @@
  *
  *    06-jul-2005 (Magnus Olsen <magnus@greatlord.com>)
  *        translate '%errorlevel%' to the internal value.
+ *        Add proper memmory alloc ProcessInput, the error 
+ *        handling for memmory handling need to be improve
  */
 
 #include "precomp.h"
@@ -983,30 +985,51 @@ ProcessInput (BOOL bFlag)
 						if ((tp != NULL) &&
 						    (tp <= _tcschr(ip, _T(' ')) - 1))
 						{
-							TCHAR evar[512];
+              INT size = 512;
+							TCHAR *evar;
 							*tp = _T('\0');
-            
-							/* FIXME: This is just a quick hack!! */
-							/* Do a proper memory allocation!! */                                 
-                          
+
+              /* FIXME: Correct error handling when it can not alloc memmory */
+              evar = malloc ( size * sizeof(TCHAR));
+              if (evar==NULL) 
+                  return 1; 
+            							            
               if (_tcsicmp(ip,_T("errorlevel")) ==0)
               {       
                 memset(evar,0,512 * sizeof(TCHAR));
                 _itot(nErrorLevel,evar,10);        
                 cp = _stpcpy (cp, evar);
-              } 
-							else if (GetEnvironmentVariable (ip, evar, 512))
+              }               
+							else 
               {
+                size = GetEnvironmentVariable (ip, evar, size);
+                if (size!=0)
+                {
+                    evar = realloc(evar,size * sizeof(TCHAR) );
+                    if (evar!=NULL)
+                    {
+                      size = GetEnvironmentVariable (ip, evar, size);
+                    }
+                }
+
+                if (size)
+                {
 								 cp = _stpcpy (cp, evar);
+                }
               }
-              
+
+              if (evar!=NULL)
+              {
+                free(evar);
+              } 
 							ip = tp + 1;
+
 						}
 						else
 						{
 							*cp++ = _T('%');
 						}              
-             
+           
 						break;
 				}
 				continue;
