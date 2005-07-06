@@ -31,6 +31,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -2523,12 +2524,7 @@ exit_handler:
  * print_fileinfo (internal)
  */
 void print_fileinfo(struct cab_file *fi) {
-  int d;
-  int t; 
   char *fname = NULL;
-
-  d = fi->date;
-  t = fi->time;
 
   if (fi->attribs & cffile_A_NAME_IS_UTF) {
     fname = malloc(strlen(fi->filename) + 1);
@@ -2540,8 +2536,8 @@ void print_fileinfo(struct cab_file *fi) {
 
   TRACE("%9u | %02d.%02d.%04d %02d:%02d:%02d | %s\n",
     fi->length, 
-    d & 0x1f, (d>>5) & 0xf, (d>>9) + 1980,
-    t >> 11, (t>>5) & 0x3f, (t << 1) & 0x3e,
+    fi->date & 0x1f, (fi->date>>5) & 0xf, (fi->date>>9) + 1980,
+    fi->time >> 11, (fi->time>>5) & 0x3f, (fi->time << 1) & 0x3e,
     fname ? fname : fi->filename
   );
 
