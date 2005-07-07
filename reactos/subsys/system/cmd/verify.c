@@ -38,6 +38,8 @@ INT cmd_verify (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
+  nErrorLevel = 0;
+
 	if (!*param)
 	{
 		LoadString(CMD_ModuleHandle, STRING_VERIFY_HELP2, szMsg, RC_STRING_MAX_SIZE);

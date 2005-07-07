@@ -20,7 +20,7 @@ ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
   /S  Processes matching files in the current directory\n\
       and all subdirectories\n\
   /D  Processes directories as well\n\n\
-Type ATTRIB without a parameter to display the attributes of all files."
+Type ATTRIB without a parameter to display the attributes of all files.\n"
 
 STRING_ALIAS_HELP,  "Sets, removes or shows aliases.\n\n\
 ALIAS [alias=[command]]\n\n\
@@ -33,7 +33,7 @@ To set a new or replace an existing alias:\n\
 To remove an alias from the alias list:\n\
   ALIAS da="
 
-STRING_BEEP_HELP, "Beep the speaker.\n\nBEEP"
+STRING_BEEP_HELP, "Beep the speaker.\n\nBEEP\n"
 
 STRING_CALL_HELP, "Calls one batch program from another.\n\n\
 CALL [drive:][path]filename [batch-parameter]\n\n\
@@ -48,12 +48,12 @@ CD[..|.]\n\n\
   ..   parent directory\n\
   .    previous directory\n\n\
 Type CD drive: to display the current directory on the specified drive.\n\
-Type CD without a parameter to display the current drive and directory."
+Type CD without a parameter to display the current drive and directory.\n"
 
 STRING_CHCP_HELP,   "Displays or sets the active code page number.\n\n\
 CHCP [nnn]\n\n\
   nnn   Specifies the active code page number.\n\n\
-Type CHCP without a parameter to display the active code page number."
+Type CHCP without a parameter to display the active code page number.\n"
 
 STRING_CHOICE_HELP, "Waits for the user to choose one of a set of choices.\n\n\
 CHOICE  [/C[:]choices][/N][/S][/T[:]c,nn][text]\n\n\
@@ -62,9 +62,9 @@ CHOICE  [/C[:]choices][/N][/S][/T[:]c,nn][text]\n\n\
   /S            Treat choice keys as case sensitive.\n\
   /T[:]c,nn     Default choice to c after nn seconds.\n\
   text          Prompt string to display.\n\n\
-ERRORLEVEL is set to offset of key user presses in choices."
+ERRORLEVEL is set to offset of key user presses in choices.\n"
 
-STRING_CLS_HELP, "Clears the screen.\n\nCLS"
+STRING_CLS_HELP, "Clears the screen.\n\nCLS\n"
 
 STRING_CMD_HELP1, "\nInternal commands available:\n"
 
@@ -86,7 +86,7 @@ CMD [/[C|K] command][/P][/Q][/T:bf]\n\n\
   /K command  Runs the specified command and remains.\n\
   /P          CMD becomes permanent and runs autoexec.bat\n\
               (cannot be terminated).\n\
-  /T:bf       Sets the background/foreground color (see COLOR command)."
+  /T:bf       Sets the background/foreground color (see COLOR command).\n"
 
 STRING_COLOR_HELP1, "Sets the default foreground and background colors.\n\n\
 COLOR [attr [/-F]] \n\n\
@@ -105,7 +105,7 @@ dec  hex  name       dec  hex  name\n\
 4    4    Red        12   C    Bright Red\n\
 5    5    Magenta    13   D    Bright Magenta\n\
 6    6    Yellow     14   E    Bright Yellow\n\
-7    7    White      15   F    Bright White"
+7    7    White      15   F    Bright White\n"
 
 STRING_COPY_HELP1,  "Overwrite %s (Yes/No/All)? "
 
@@ -122,7 +122,7 @@ COPY [/V][/Y|/-Y][/A|/B] source [/A|/B]\n\
   /-Y          Causes prompting to confirm you want to overwrite an\n\
                existing destination file.\n\n\
 The switch /Y may be present in the COPYCMD environment variable.\n\
-..."
+...\n"
 
 STRING_DATE_HELP1, "\nEnter new date (mm%cdd%cyyyy): "
 
@@ -134,7 +134,7 @@ STRING_DATE_HELP4, "Displays or sets the date.\n\n\
 DATE [/T][date]\n\n\
   /T    display only\n\n\
 Type DATE without parameters to display the current date setting and\n\
-a prompt for a new one.  Press ENTER to keep the same date."
+a prompt for a new one.  Press ENTER to keep the same date.\n"
 				
 STRING_DEL_HELP1,  "Deletes one or more files.\n\n\
 DEL [/N /P /T /Q /W /Y /Z /A[[:]attributes]] file ...\n\
@@ -163,7 +163,7 @@ STRING_DEL_HELP4, "    %lu files deleted\n"
 STRING_DELAY_HELP, "pause for n seconds or milliseconds\n\
 DELAY [/m]n\n\n\
   /m          specifiy than n are milliseconds\n\
-              otherwise n are seconds"
+              otherwise n are seconds\n"
 
 STRING_DIR_HELP1, "DIR [drive:][path][filename] [/A[[:]attributes]] [/B] [/C] [/D] [/L] [/N]\n\
   [/O[[:]sortorder]] [/P] [/Q] [/S] [/T[[:]timefield]] [/W] [/X] [/4]\n\n\
@@ -210,7 +210,7 @@ STRING_DIR_HELP8, "%16i File(s)% 14s bytes\n"
 STRING_DIRSTACK_HELP1, "Stores the current directory for use by the POPD command, then\n\
 changes to the specified directory.\n\n\
 PUSHD [path | ..]\n\n\
-  path        Specifies the directory to make the current directory"
+  path        Specifies the directory to make the current directory\n"
 
 STRING_DIRSTACK_HELP2, "Changes to the directory stored by the PUSHD command.\n\nPOPD"
 
@@ -236,7 +236,7 @@ Type ECHO without a parameter to display the current ECHO setting."
 
 STRING_ECHO_HELP5, "ECHO is %s\n"
 
-STRING_EXIT_HELP, "Exits the command line interpreter.\n\nEXIT"
+STRING_EXIT_HELP, "Exits the command line interpreter.\n\nEXIT\n"
 
 STRING_FOR_HELP1, "Runs a specified command for each file in a set of files\n\n\
 FOR %variable IN (set) DO command [parameters]\n\n\
@@ -245,7 +245,7 @@ FOR %variable IN (set) DO command [parameters]\n\n\
   command    Specifies the command to carry out for each file.\n\
   parameters Specifies parameters or switches for the specified command.\n\n\
 To use the FOR command in a batch program, specify %%variable instead of\n\
-%variable."
+%variable.\n"
 
 STRING_FREE_HELP1, "\nVolume in drive %s is %-11s\n\
  Serial number is %s\n\
@@ -253,7 +253,7 @@ STRING_FREE_HELP1, "\nVolume in drive %s is %-11s\n\
   %16s bytes used\n\
   %16s bytes free\n"
 
-STRING_FREE_HELP2, "Displays drive information.\n\nFREE [drive: ...]"
+STRING_FREE_HELP2, "Displays drive information.\n\nFREE [drive: ...]\n"
 
 STRING_IF_HELP1, "Performs conditional processing in batch programs.\n\n\
   IF [NOT] ERRORLEVEL number command\n\
@@ -269,7 +269,7 @@ string1==string2  Specifies a true condition if the specified text strings\n\
                   match.\n\
 EXIST filename    Specifies a true condition if the specified filename exists.\n\
 DEFINED variable  Specifies a true condition if the specified variable is\n\
-                  defined."
+                  defined.\n"
 
 STRING_GOTO_HELP1,  "Directs CMD to a labeled line in a batch script.\n\n\
 GOTO label\n\n\
@@ -349,7 +349,7 @@ Prompt can be made up of normal characters and the following special codes:\n\n\
   $T   Current time\n\
   $V   OS version number\n\
   $_   Carriage return and linefeed\n\
-  $$   $ (dollar sign)"
+  $$   $ (dollar sign)\n"
 
 STRING_PAUSE_HELP1, "Stops the execution of a batch file and shows the following message:\n\
 'Press any key to continue...' or a user defined message.\n\n\
@@ -375,7 +375,7 @@ REN [/E /N /P /Q /S /T] old_name ... new_name\n\n\
   /S    Rename subdirectories.\n\
   /T    Display total number of renamed files.\n\n\
 Note that you cannot specify a new drive or path for your destination. Use\n\
-the MOVE command for that purpose."
+the MOVE command for that purpose.\n"
 
 STRING_REN_HELP2, "    %lu file renamed\n"
 
@@ -402,13 +402,13 @@ At the moment all commands are started asynchronously.\n"
 
 STRING_TITLE_HELP, "Sets the window title for the command prompt window.\n\n\
 TITLE [string]\n\n\
-string       Specifies the title for the command prompt window."
+string       Specifies the title for the command prompt window.\n"
 
 STRING_TIME_HELP1, "Displays or sets the system time.\n\n\
 TIME [/T][time]\n\n\
   /T    display only\n\n\
 Type TIME with no parameters to display the current time setting and a prompt\n\
-for a new one.  Press ENTER to keep the same time."
+for a new one.  Press ENTER to keep the same time.\n"
 
 STRING_TIME_HELP2, "Enter new time: "
 
@@ -438,7 +438,7 @@ STRING_VERIFY_HELP1, "This command is just a dummy!!\n\
 Sets whether to verify that your files are written correctly to a\n\
 disk.\n\n\
 VERIFY [ON | OFF]\n\n\
-Type VERIFY without a parameter to display the current VERIFY setting."
+Type VERIFY without a parameter to display the current VERIFY setting.\n"
 
 STRING_VERIFY_HELP2, "VERIFY is %s.\n"
 
@@ -463,7 +463,7 @@ STRING_VERSION_HELP3, "\n This program is distributed in the hope that it will b
 STRING_VERSION_HELP4, "\n This program is free software; you can redistribute it and/or modify\n\
  it under the terms of the GNU General Public License as published by\n\
  the Free Software Foundation; either version 2 of the License, or\n\
- (at your option) any later version."
+ (at your option) any later version.\n"
 
 STRING_VERSION_HELP5, "\nSend bug reports to <ros-dev@reactos.com>.\n\
 Updates are available at: http://www.reactos.com"
@@ -493,7 +493,7 @@ window        tile of window on wich perform actions\n\
 MIN           minimize the window\n\
 MAX           maximize the window\n\
 RESTORE       restore the window\n\
-title         new title"
+title         new title\n"
 
 
 STRING_HELP1, "List of all available commands (+ description)\n\n\

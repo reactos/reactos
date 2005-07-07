@@ -144,6 +144,8 @@ INT cmd_time (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
+  nErrorLevel = 0;
+
 	/* build parameter array */
 	arg = split (param, &argc, FALSE);
 
@@ -202,6 +204,7 @@ INT cmd_time (LPTSTR cmd, LPTSTR param)
 		}
 
 		ConErrResPuts(STRING_TIME_ERROR1);
+    nErrorLevel = 1;
 	}
 
 	freep (arg);
