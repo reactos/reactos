@@ -2102,14 +2102,14 @@ MmCreateHyperspaceMapping(PFN_TYPE Page)
       }
       else
       {
-         for (i = Page %1024; i >= 0; i--, Pte--)
+         for (i = Page %1024; (LONG)i >= 0; i--, Pte--)
          {
             if (0LL == ExfInterlockedCompareExchange64UL(Pte, &Entry, &ZeroEntry))
 	    {
 	       break;
 	    }
          }
-         if (i < 0)
+         if ((LONG)i < 0)
          {
             Pte = PAE_ADDR_TO_PTE(HYPERSPACE) + 1023;
 	    for (i = 1023; i > Page % 1024; i--, Pte--)
@@ -2159,14 +2159,14 @@ MmCreateHyperspaceMapping(PFN_TYPE Page)
       }
       else
       {
-         for (i = Page % 1024; i >= 0; i--, Pte--)
+         for (i = Page % 1024; (LONG)i >= 0; i--, Pte--)
          {
             if (0 == InterlockedCompareExchange((PLONG)Pte, (LONG)Entry, 0))
             {
                break;
             }
          }
-         if (i < 0)
+         if ((LONG)i < 0)
          {
             Pte = ADDR_TO_PTE(HYPERSPACE) + 1023;
             for (i = 1023; i > Page % 1024; i--, Pte--)
