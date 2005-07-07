@@ -551,7 +551,7 @@ TYPE     Displays the contents of a text file.\n\
 VER      Displays the Windows version.\n\
 VERIFY   Tells Windows whether to verify that your files are written\n\
          correctly to a disk.\n\
-VOL      Displays a disk volume label and serial number."
+VOL      Displays a disk volume label and serial number.\n"
 
 
 STRING_CHOICE_OPTION,         "YN"
