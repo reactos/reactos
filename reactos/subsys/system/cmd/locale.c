@@ -58,11 +58,13 @@ VOID InitLocale (VOID)
 
 VOID PrintDate (VOID)
 {
+  TCHAR szDateDay[32];
 	TCHAR szDate[32];
 
-	GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, NULL, NULL,
-	              szDate, sizeof (szDate));
-	ConOutPrintf(_T("%s"), szDate);
+  GetDateFormat(LOCALE_USER_DEFAULT, 0, NULL, _T("ddd"), szDateDay, sizeof (szDateDay));
+               
+	GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, NULL, NULL,szDate, sizeof (szDate));
+	ConOutPrintf(_T("%s %s"),szDateDay, szDate);
 }
 
 

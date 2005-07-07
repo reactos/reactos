@@ -990,10 +990,8 @@ ProcessInput (BOOL bFlag)
 							*tp = _T('\0');
 
               /* FIXME: Correct error handling when it can not alloc memmory */
-              evar = malloc ( size * sizeof(TCHAR));
-              if (evar==NULL) 
-                  return 1; 
-            	
+                          	
+              /* %CD% */
               if (_tcsicmp(ip,_T("cd")) ==0)
               {
                 TCHAR szPath[MAX_PATH];
@@ -1001,21 +999,47 @@ ProcessInput (BOOL bFlag)
                 cp = _stpcpy (cp, szPath);                 
               }
 
+              /* %TIME% */
               else if (_tcsicmp(ip,_T("time")) ==0)
               {
                 TCHAR szTime[40];                                                               
                 GetTimeFormat(LOCALE_USER_DEFAULT, 0, NULL, NULL, szTime, sizeof(szTime));              
                 cp = _stpcpy (cp, szTime);                 	              
               }
+
+              else if (_tcsicmp(ip,_T("date")) ==0)
+              {
+              TCHAR szDate[40];
+
+	            GetDateFormat(LOCALE_USER_DEFAULT, 0, NULL, _T("ddd"), szDate, sizeof (szDate));
+              cp = _stpcpy (cp, szDate);        
+              cp = _stpcpy (cp, _T(" "));        
+              GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, NULL, NULL, szDate, sizeof (szDate));
+
+              cp = _stpcpy (cp, szDate);        
+
+              }
+               
          
+              /* %ERRORLEVEL% */
               else if (_tcsicmp(ip,_T("errorlevel")) ==0)
-              {       
+              {
+                evar = malloc ( size * sizeof(TCHAR));
+                if (evar==NULL) 
+                    return 1; 
+
                 memset(evar,0,512 * sizeof(TCHAR));
                 _itot(nErrorLevel,evar,10);        
                 cp = _stpcpy (cp, evar);
+
+                free(evar);
               }               
 							else 
               {
+                evar = malloc ( size * sizeof(TCHAR));
+                if (evar==NULL) 
+                    return 1; 
+
                 size = GetEnvironmentVariable (ip, evar, size);
                 if (size!=0)
                 {
@@ -1030,12 +1054,10 @@ ProcessInput (BOOL bFlag)
                 {
 								 cp = _stpcpy (cp, evar);
                 }
-              }
 
-              if (evar!=NULL)
-              {
                 free(evar);
-              } 
+              }
+               
 							ip = tp + 1;
 
 						}
