@@ -276,7 +276,7 @@ GOTO label\n\n\
   label  Specifies a text string used in a batch script as a label.\n\n\
 You type a label on a line by itself, beginning with a colon."
 
-STRING_LABEL_HELP1, "Displays or changes drive label.\n\nLABEL [drive:][label]"
+STRING_LABEL_HELP1, "Displays or changes drive label.\n\nLABEL [drive:][label]\n"
 
 STRING_LABEL_HELP2, "Volume in drive %c: is %s\n"
 STRING_LABEL_HELP3, "Volume in drive %c: has no label\n"

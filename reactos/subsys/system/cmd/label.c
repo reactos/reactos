@@ -43,6 +43,8 @@ INT cmd_label (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
+  nErrorLevel = 0;
+
 	/* get parameters */
 	arg = split (param, &args, FALSE);
 
@@ -51,6 +53,7 @@ INT cmd_label (LPTSTR cmd, LPTSTR param)
 		/* too many parameters */
 		error_too_many_parameters (arg[args - 1]);
 		freep (arg);
+    nErrorLevel = 1;
 		return 1;
 	}
 
@@ -83,6 +86,7 @@ INT cmd_label (LPTSTR cmd, LPTSTR param)
 	{
 		error_invalid_drive ();
 		freep (arg);
+    nErrorLevel = 1;
 		return 1;
 	}
 
