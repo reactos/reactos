@@ -1,5 +1,4 @@
-/* $Id:
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Serial enumerator driver
  * FILE:            drivers/bus/serenum/detect.c
@@ -285,7 +284,7 @@ SerenumDetectPnpDevice(
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_MODEMSTATUS,
 		NULL, 0, &Msr, &Size);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
-	if ((Msr & SR_MSR_DSR) == 0) goto SerenumDisconnectIdle;
+	if ((Msr & SERIAL_DSR_STATE) == 0) goto SerenumDisconnectIdle;
 
 	/* 2. COM port setup, 1st phase */
 	CHECKPOINT;
@@ -356,7 +355,7 @@ SerenumDetectPnpDevice(
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_MODEMSTATUS,
 		NULL, 0, &Msr, &Size);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
-	if ((Msr & SR_MSR_DSR) == 0) goto SerenumVerifyDisconnect; else goto SerenumConnectIdle;
+	if ((Msr & SERIAL_DSR_STATE) == 0) goto SerenumVerifyDisconnect; else goto SerenumConnectIdle;
 
 	/* 6. Collect PnP COM device ID */
 SerenumCollectPnpComDeviceId:
@@ -395,7 +394,7 @@ SerenumCollectPnpComDeviceId:
 	Status = SerenumDeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_MODEMSTATUS,
 		NULL, 0, &Msr, &Size);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
-	if ((Msr & SR_MSR_DSR) == 0) goto SerenumVerifyDisconnect;
+	if ((Msr & SERIAL_DSR_STATE) == 0) goto SerenumVerifyDisconnect;
 
 	/* 7. Verify disconnect */
 SerenumVerifyDisconnect:

@@ -1,5 +1,4 @@
-/* $Id:
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Serial enumerator driver
  * FILE:            drivers/bus/serenum/pdo.c
@@ -283,11 +282,11 @@ SerenumPdoPnp(
 				Status = STATUS_INSUFFICIENT_RESOURCES;
 			else
 			{
-				BusInfo->BusTypeGuid = GUID_BUS_TYPE_SERENUM;
-				/* FIXME: real value should be PNPBus, but PNPBus seems to be
-				 * the only value in INTERFACE_TYPE enum that doesn't work...
-				 */
-				BusInfo->LegacyBusType = PNPISABus;
+				memcpy(
+					&BusInfo->BusTypeGuid,
+					&GUID_DEVINTERFACE_SERENUM_BUS_ENUMERATOR,
+					sizeof(BusInfo->BusTypeGuid));
+				BusInfo->LegacyBusType = PNPBus;
 				/* We're the only serial bus enumerator on the computer */
 				BusInfo->BusNumber = 0;
 				Information = (ULONG_PTR)BusInfo;

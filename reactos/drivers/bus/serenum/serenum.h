@@ -1,46 +1,37 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Serial enumerator driver
+ * FILE:            drivers/bus/serenum/serenum.h
+ * PURPOSE:         Serial enumerator driver header
+ *
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
+ */
+
+#include <ntddk.h>
+#include <ntddser.h>
+#include <stdio.h>
+
 #if defined(__GNUC__)
-  #include <ddk/ntddk.h>
-  #include <ddk/ntddser.h>
-  #include <ddk/wdmguid.h>
-  #include <stdio.h>
-
   #include <debug.h>
-
-  #define SR_MSR_DSR 0x20
-
-  /* FIXME: these prototypes MUST NOT be here! */
-  NTSTATUS STDCALL
-  IoAttachDeviceToDeviceStackSafe(
-    IN PDEVICE_OBJECT SourceDevice,
-    IN PDEVICE_OBJECT TargetDevice,
-    OUT PDEVICE_OBJECT *AttachedToDeviceObject);
-
 #elif defined(_MSC_VER)
-  #include <ntddk.h>
-  #include <ntddser.h>
-  #include <c:/progra~1/winddk/inc/ddk/wdm/wxp/wdmguid.h>
-  #include <stdio.h>
-
   #define STDCALL
 
   #define DPRINT1 DbgPrint("(%s:%d) ", __FILE__, __LINE__), DbgPrint
   #define CHECKPOINT1 DbgPrint("(%s:%d)\n")
-
-  NTSTATUS STDCALL
-  IoAttachDeviceToDeviceStackSafe(
-    IN PDEVICE_OBJECT SourceDevice,
-    IN PDEVICE_OBJECT TargetDevice,
-    OUT PDEVICE_OBJECT *AttachedToDeviceObject);
-
   #define DPRINT DPRINT1
   #define CHECKPOINT CHECKPOINT1
-
-  #define SR_MSR_DSR 0x20
 #else
   #error Unknown compiler!
 #endif
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+
+/* FIXME: I don't know why it is not defined anywhere... */
+NTSTATUS STDCALL
+IoAttachDeviceToDeviceStackSafe(
+  IN PDEVICE_OBJECT SourceDevice,
+  IN PDEVICE_OBJECT TargetDevice,
+  OUT PDEVICE_OBJECT *AttachedToDeviceObject);
 
 typedef enum
 {
