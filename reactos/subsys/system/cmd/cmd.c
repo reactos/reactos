@@ -1028,6 +1028,15 @@ ProcessInput (BOOL bFlag)
                cp = _stpcpy (cp, szRand); 
               }
                
+              /* %CMDCMDLINE% */
+              else if (_tcsicmp(ip,_T("cmdcmdline")) ==0)
+              {                      
+               TCHAR *pargv;               
+               /* Get random number */        
+               pargv = GetCommandLine();
+               cp = _stpcpy (cp, pargv); 
+              }
+
          
               /* %ERRORLEVEL% */
               else if (_tcsicmp(ip,_T("errorlevel")) ==0)
@@ -1493,6 +1502,7 @@ int main (int argc, char *argv[])
   argv = CommandLineToArgvW(GetCommandLineW(), &argc);
 #endif
 #endif
+     
 
   SetFileApisToOEM();
   InputCodePage= 0;
@@ -1512,16 +1522,18 @@ int main (int argc, char *argv[])
   InputCodePage= GetConsoleCP();
   OutputCodePage = GetConsoleOutputCP();
   CMD_ModuleHandle = GetModuleHandle(NULL);
-
+  
   /* check switches on command-line */
   Initialize(argc, argv);
 
   /* call prompt routine */
   nExitCode = ProcessInput(FALSE);
 
+  
   /* do the cleanup */
   Cleanup(argc, argv);
 
+  
   return(nExitCode);
 }
 
