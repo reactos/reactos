@@ -25,7 +25,7 @@
  *        simple check to fix > and | bug with 'rem'
  */
 
-#include "precomp.h"
+#include <precomp.h>
 
 #ifdef FEATURE_REDIRECTION
 

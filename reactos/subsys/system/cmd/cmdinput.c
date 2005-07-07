@@ -97,7 +97,7 @@
  *        Fixed problems when the screen was scrolled away.
  */
 
-#include "precomp.h"
+#include <precomp.h>
 
 
 SHORT maxx;

@@ -20,7 +20,7 @@
  *       Now expands lfn even when trailing " is omitted.
  */
 
-#include "precomp.h"
+#include <precomp.h>
 
 
 #ifdef FEATURE_UNIX_FILENAME_COMPLETION

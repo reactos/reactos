@@ -30,7 +30,7 @@
  */
 
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 #ifdef FEATURE_ALIASES

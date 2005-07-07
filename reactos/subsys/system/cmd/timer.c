@@ -7,7 +7,7 @@
  *     started - Paolo Pantaleo <paolopan@freemail.it>
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 #ifdef INCLUDE_CMD_TIMER

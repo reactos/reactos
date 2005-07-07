@@ -37,7 +37,7 @@
  *
  */
 
-#include "precomp.h"
+#include <precomp.h>
 
 #ifdef FEATURE_HISTORY
 

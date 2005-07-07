@@ -21,7 +21,7 @@
  *        New version info and some output changes.
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 #include <reactos/resource.h>
 

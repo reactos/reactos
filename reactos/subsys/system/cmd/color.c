@@ -20,7 +20,7 @@
  *        Move all hardcoded strings to En.rc.
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 #ifdef INCLUDE_CMD_COLOR
