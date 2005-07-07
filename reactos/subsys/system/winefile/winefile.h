@@ -163,21 +163,6 @@ extern void _splitpath(const CHAR* path, CHAR* drv, CHAR* dir, CHAR* name, CHAR*
 #define _stprintf sprintf
 #endif
 
-
-/* functions in unixcalls.c */
-
-extern void call_getcwd(char* buffer, size_t len);
-extern void* call_opendir(const char* path);
-extern int call_readdir(void* pdir, char* name, unsigned* pinode);
-extern void call_closedir(void* pdir);
-
-extern int call_stat(
-        const char* path, int* pis_dir,
-        unsigned long* psize_low, unsigned long* psize_high,
-        time_t* patime, time_t* pmtime,
-        unsigned long* plinks
-);
-
 #else
 
 #include <tchar.h>	/* for _tsplitpath() */

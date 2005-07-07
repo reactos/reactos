@@ -21,6 +21,11 @@
 #ifdef __WINE__
 #include "config.h"
 #include "wine/port.h"
+
+/* for unix filesystem function calls */
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <dirent.h>
 #endif
 
 #include "winefile.h"
@@ -501,8 +506,9 @@ static void read_directory_unix(Entry* dir, LPCTSTR path)
 	Entry* first_entry = NULL;
 	Entry* last = NULL;
 	Entry* entry;
-	void* pdir;
+	DIR* pdir;
 
+	int level = dir->level + 1;
 #ifdef UNICODE
 	char cpath[MAX_PATH];
 
@@ -511,17 +517,13 @@ static void read_directory_unix(Entry* dir, LPCTSTR path)
 	const char* cpath = path;
 #endif
 
-	pdir = call_opendir(cpath);
-
-	int level = dir->level + 1;
+	pdir = opendir(cpath);
 
 	if (pdir) {
-		char buffer[MAX_PATH];
-		time_t atime, mtime;
-		unsigned inode;
-		int is_dir;
+		struct stat st;
+		struct dirent* ent;
+		char buffer[MAX_PATH], *p;
 		const char* s;
-		char* p;
 
 		for(p=buffer,s=cpath; *s; )
 			*p++ = *s++;
@@ -529,7 +531,7 @@ static void read_directory_unix(Entry* dir, LPCTSTR path)
 		if (p==buffer || p[-1]!='/')
 			*p++ = '/';
 
-		while(call_readdir(pdir, p, &inode)) {
+		while((ent=readdir(pdir))) {
 			entry = alloc_entry();
 
 			if (!first_entry)
@@ -540,27 +542,30 @@ static void read_directory_unix(Entry* dir, LPCTSTR path)
 
 			entry->etype = ET_UNIX;
 
+			strcpy(p, ent->d_name);
 #ifdef UNICODE
 			MultiByteToWideChar(CP_UNIXCP, 0, p, -1, entry->data.cFileName, MAX_PATH);
 #else
 			lstrcpy(entry->data.cFileName, p);
 #endif
 
-			entry->data.dwFileAttributes = p[0]=='.'? FILE_ATTRIBUTE_HIDDEN: 0;
+			if (!stat(buffer, &st)) {
+				entry->data.dwFileAttributes = p[0]=='.'? FILE_ATTRIBUTE_HIDDEN: 0;
 
-			if (!call_stat(buffer, &is_dir,
-				&entry->data.nFileSizeLow, &entry->data.nFileSizeHigh,
-				&atime, &mtime, &entry->bhfi.nNumberOfLinks))
-			{
-				if (is_dir)
+				if (S_ISDIR(st.st_mode))
 					entry->data.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
 
-				memset(&entry->data.ftCreationTime, 0, sizeof(FILETIME));
-				time_to_filetime(&atime, &entry->data.ftLastAccessTime);
-				time_to_filetime(&mtime, &entry->data.ftLastWriteTime);
+				entry->data.nFileSizeLow = st.st_size & 0xFFFFFFFF;
+				entry->data.nFileSizeHigh = st.st_size >> 32;
 
-				entry->bhfi.nFileIndexLow = inode;
+				memset(&entry->data.ftCreationTime, 0, sizeof(FILETIME));
+				time_to_filetime(&st.st_atime, &entry->data.ftLastAccessTime);
+				time_to_filetime(&st.st_mtime, &entry->data.ftLastWriteTime);
+
+				entry->bhfi.nFileIndexLow = ent->d_ino;
 				entry->bhfi.nFileIndexHigh = 0;
+
+				entry->bhfi.nNumberOfLinks = st.st_nlink;
 
 				entry->bhfi_valid = TRUE;
 			} else {
@@ -581,7 +586,7 @@ static void read_directory_unix(Entry* dir, LPCTSTR path)
 		if (last)
 			last->next = NULL;
 
-		call_closedir(pdir);
+		closedir(pdir);
 	}
 
 	dir->down = first_entry;
@@ -2348,10 +2353,10 @@ static LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM
 
 
 #ifdef UNICODE
-					call_getcwd(cpath, MAX_PATH);
+					getcwd(cpath, MAX_PATH);
 					MultiByteToWideChar(CP_UNIXCP, 0, cpath, -1, path, MAX_PATH);
 #else
-					call_getcwd(path, MAX_PATH);
+					getcwd(path, MAX_PATH);
 #endif
 					child = alloc_child_window(path, NULL, hwnd);
 
@@ -2717,7 +2722,7 @@ static BOOL pattern_match(LPCTSTR str, LPCTSTR pattern)
 	return TRUE;
 }
 
-static BOOL pattern_match_ncase(LPCTSTR str, LPCTSTR pattern)
+static BOOL pattern_imatch(LPCTSTR str, LPCTSTR pattern)
 {
 	TCHAR b1[BUFFER_LEN], b2[BUFFER_LEN];
 
@@ -2773,7 +2778,7 @@ static int insert_entries(Pane* pane, Entry* dir, LPCTSTR pattern, int filter_fl
 
 		/* filter using the file name pattern */
 		if (pattern)
-			if (!pattern_match_ncase(entry->data.cFileName, pattern))
+			if (!pattern_imatch(entry->data.cFileName, pattern))
 				continue;
 
 		/* filter system and hidden files */
@@ -3690,6 +3695,9 @@ static void refresh_right_pane(ChildWnd* child)
 static void set_curdir(ChildWnd* child, Entry* entry, int idx, HWND hwnd)
 {
 	TCHAR path[MAX_PATH];
+
+	if (!entry)
+		return;
 
 	path[0] = '\0';
 
