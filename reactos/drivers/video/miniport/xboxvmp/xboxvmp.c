@@ -1,11 +1,9 @@
 /*
  * ReactOS Xbox miniport video driver
+ * Copyright (C) 2004 G‚ van Geldorp
  *
  * Based on VBE miniport video driver
  * Copyright (C) 2004 Filip Navara
- *
- * Power Management and VBE 1.2 support
- * Copyright (C) 2004 Magnus Olsen
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
