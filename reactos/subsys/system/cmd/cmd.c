@@ -1037,7 +1037,15 @@ ProcessInput (BOOL bFlag)
                cp = _stpcpy (cp, pargv); 
               }
 
-         
+              /* %CMDEXTVERSION% */
+              else if (_tcsicmp(ip,_T("cmdextversion")) ==0)
+              {
+               TCHAR szVER[40];               
+               /* Set version number to 2 */
+               _itot(2,szVER,10);
+               cp = _stpcpy (cp, szVER); 
+              }
+                       
               /* %ERRORLEVEL% */
               else if (_tcsicmp(ip,_T("errorlevel")) ==0)
               {
