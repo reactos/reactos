@@ -993,8 +993,22 @@ ProcessInput (BOOL bFlag)
               evar = malloc ( size * sizeof(TCHAR));
               if (evar==NULL) 
                   return 1; 
-            							            
-              if (_tcsicmp(ip,_T("errorlevel")) ==0)
+            	
+              if (_tcsicmp(ip,_T("cd")) ==0)
+              {
+                TCHAR szPath[MAX_PATH];
+		            GetCurrentDirectory (MAX_PATH, szPath);
+                cp = _stpcpy (cp, szPath);                 
+              }
+
+              else if (_tcsicmp(ip,_T("time")) ==0)
+              {
+                TCHAR szTime[40];                                                               
+                GetTimeFormat(LOCALE_USER_DEFAULT, 0, NULL, NULL, szTime, sizeof(szTime));              
+                cp = _stpcpy (cp, szTime);                 	              
+              }
+         
+              else if (_tcsicmp(ip,_T("errorlevel")) ==0)
               {       
                 memset(evar,0,512 * sizeof(TCHAR));
                 _itot(nErrorLevel,evar,10);        
