@@ -1,6 +1,6 @@
 /*
  * ReactOS Xbox miniport video driver
- * Copyright (C) 2004 G‚ van Geldorp
+ * Copyright (C) 2004 Gé van Geldorp
  *
  * Based on VBE miniport video driver
  * Copyright (C) 2004 Filip Navara
