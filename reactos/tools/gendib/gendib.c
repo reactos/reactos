@@ -483,7 +483,7 @@ CreateBitCase(FILE *Out, unsigned Bpp, PROPINFO RopInfo, int Flags,
     }
   if (RopInfo->UsesPattern && 0 != (Flags & FLAG_PATTERNSURFACE))
     {
-      Output(Out, "PatternX = (BltInfo->DestRect.left + BltInfo->BrushOrigin.x) %%\n");
+      Output(Out, "BasePatternX = (BltInfo->DestRect.left + BltInfo->BrushOrigin.x) %%\n");
       Output(Out, "           BltInfo->PatternSurface->sizlBitmap.cx;\n");
     }
 
@@ -503,6 +503,11 @@ CreateBitCase(FILE *Out, unsigned Bpp, PROPINFO RopInfo, int Flags,
         }
       Output(Out, "DestPtr = (PULONG) DestBase;\n");
     }
+
+  if (RopInfo->UsesPattern && 0 != (Flags & FLAG_PATTERNSURFACE))
+   {
+    Output(Out, "PatternX = BasePatternX;\n");
+   }
   
   if (ROPCODE_SRCCOPY == RopInfo->RopCode &&
       0 != (Flags & FLAG_TRIVIALXLATE) && Bpp == SourceBpp)
@@ -744,7 +749,7 @@ CreatePrimitive(FILE *Out, unsigned Bpp, PROPINFO RopInfo)
 #endif
       if (RopInfo->UsesPattern)
         {
-          Output(Out, "ULONG PatternX, PatternY = 0;\n");
+          Output(Out, "ULONG PatternX =0, PatternY = 0, BasePatternX = 0;\n");
         }
       First = 1;
       if (RopInfo->UsesSource)
