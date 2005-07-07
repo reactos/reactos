@@ -67,7 +67,7 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 
 	if (_tcsstr (param, _T("/?")) != NULL)
 	{
-		ConOutResPuts(STRING_VERSION_HELP1);
+		ConOutResPaging(TRUE,STRING_VERSION_HELP1);
 		return 0;
 	}
 

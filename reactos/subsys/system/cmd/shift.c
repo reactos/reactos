@@ -46,7 +46,7 @@ INT cmd_shift (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_SHIFT_HELP);
+		ConOutResPaging(TRUE,STRING_SHIFT_HELP);
 		return 0;
 	}
 

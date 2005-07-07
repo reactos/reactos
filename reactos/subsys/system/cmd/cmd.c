@@ -1186,7 +1186,7 @@ Initialize (int argc, TCHAR* argv[])
 
 	if (argc >= 2 && !_tcsncmp (argv[1], _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_CMD_HELP8);
+		ConOutResPaging(TRUE,STRING_CMD_HELP8);
 		ExitProcess(0);
 	}
 	SetConsoleMode (hIn, ENABLE_PROCESSED_INPUT);

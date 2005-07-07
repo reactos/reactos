@@ -128,7 +128,7 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		ConOutResPuts(STRING_CHOICE_HELP);
+		ConOutResPaging(TRUE,STRING_CHOICE_HELP);
 		return 0;
 	}
 

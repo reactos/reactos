@@ -50,7 +50,7 @@ INT cmd_call (LPTSTR cmd, LPTSTR param)
 #endif
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_CALL_HELP);
+		ConOutResPaging(TRUE,STRING_CALL_HELP);
 		return 0;
 	}
 

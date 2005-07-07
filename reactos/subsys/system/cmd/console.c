@@ -187,6 +187,13 @@ VOID ConPuts(LPTSTR szText, DWORD nStdHandle)
 #endif
 }
 
+VOID ConOutResPaging(BOOL NewPage, UINT resID)
+{
+  TCHAR szMsg[RC_STRING_MAX_SIZE];
+  LoadString(CMD_ModuleHandle, resID, szMsg, RC_STRING_MAX_SIZE);
+  ConOutPrintfPaging(NewPage, szMsg);
+}
+
 VOID ConOutResPuts (UINT resID)
 {
   TCHAR szMsg[RC_STRING_MAX_SIZE];

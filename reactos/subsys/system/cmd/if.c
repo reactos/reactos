@@ -48,7 +48,7 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_IF_HELP1);
+		ConOutResPaging(TRUE,STRING_IF_HELP1);
 		return 0;
 	}
 

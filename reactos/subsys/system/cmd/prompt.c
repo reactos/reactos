@@ -184,12 +184,12 @@ INT cmd_prompt (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_PROMPT_HELP1);
+		ConOutResPaging(TRUE,STRING_PROMPT_HELP1);
 
 #ifdef FEATURE_DIRECTORY_STACK
-		ConOutResPuts(STRING_PROMPT_HELP2);
+		ConOutResPaging(FALSE,STRING_PROMPT_HELP2);
 #endif
-		ConOutResPuts(STRING_PROMPT_HELP3);
+		ConOutResPaging(FALSE,STRING_PROMPT_HELP3);
 		return 0;
 	}
 

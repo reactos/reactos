@@ -262,8 +262,8 @@ VOID PrintCommandList (VOID)
 
 VOID PrintCommandListDetail (VOID)
 {
-	ConOutResPuts(STRING_HELP1);
-	ConOutResPuts(STRING_HELP2);
+  ConOutResPaging(TRUE,STRING_HELP1);
+	ConOutResPaging(FALSE,STRING_HELP2);
 }
 
 /* EOF */

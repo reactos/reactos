@@ -86,7 +86,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 			"  /-Y\n"
 			"..."));
 #else
-		ConOutResPuts(STRING_MOVE_HELP2);
+		ConOutResPaging(TRUE,STRING_MOVE_HELP2);
 #endif
 		return 0;
 	}

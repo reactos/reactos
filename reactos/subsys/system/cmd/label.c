@@ -39,7 +39,7 @@ INT cmd_label (LPTSTR cmd, LPTSTR param)
 	/* print help */
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_LABEL_HELP1);
+		ConOutResPaging(TRUE,STRING_LABEL_HELP1);
 		return 0;
 	}
 

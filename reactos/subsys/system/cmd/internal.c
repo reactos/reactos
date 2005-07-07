@@ -168,7 +168,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_CD_HELP);
+		ConOutResPaging(TRUE,STRING_CD_HELP);
 		return 0;
 	}
 
@@ -351,7 +351,7 @@ INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_MKDIR_HELP);
+		ConOutResPaging(TRUE,STRING_MKDIR_HELP);
 		return 0;
 	}
 
@@ -424,7 +424,7 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_RMDIR_HELP);
+		ConOutResPaging(TRUE,STRING_RMDIR_HELP);
 		return 0;
 	}
 
@@ -488,7 +488,7 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 INT CommandExit (LPTSTR cmd, LPTSTR param)
 {
 	if (!_tcsncmp (param, _T("/?"), 2))
-		ConOutResPuts(STRING_EXIT_HELP);
+		ConOutResPaging(TRUE,STRING_EXIT_HELP);
 
 	if (bc != NULL && _tcsnicmp(param,_T("/b"),2) == 0)
 	{
@@ -517,7 +517,7 @@ INT CommandRem (LPTSTR cmd, LPTSTR param)
 {
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_REM_HELP);
+		ConOutResPaging(TRUE,STRING_REM_HELP);
 	}
 
 	return 0;

@@ -205,7 +205,7 @@ INT CommandAttrib (LPTSTR cmd, LPTSTR param)
 	/* print help */
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_ATTRIB_HELP);
+		ConOutResPaging(TRUE,STRING_ATTRIB_HELP);
 		return 0;
 	}
 

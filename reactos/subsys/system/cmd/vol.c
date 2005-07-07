@@ -73,7 +73,7 @@ INT cmd_vol (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_VOL_HELP4);
+		ConOutResPaging(TRUE,STRING_VOL_HELP4);
 		return 0;
 	}
 

@@ -163,6 +163,7 @@ VOID SetCursorType (BOOL, BOOL);
 
 VOID ConOutResPuts (UINT resID);
 VOID ConErrResPuts (UINT resID);
+VOID ConOutResPaging(BOOL NewPage, UINT resID);
 
 /* Prototypes for COPY.C */
 INT cmd_copy (LPTSTR, LPTSTR);

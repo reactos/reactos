@@ -24,7 +24,7 @@ INT CommandScreen (LPTSTR cmd, LPTSTR param)
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		ConOutResPuts(STRING_SCREEN_HELP);
+		ConOutResPaging(TRUE,STRING_SCREEN_HELP);
 		return 0;
 	}
 

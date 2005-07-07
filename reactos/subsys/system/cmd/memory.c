@@ -68,7 +68,7 @@ INT CommandMemory (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_MEMMORY_HELP1);
+		ConOutResPaging(TRUE,STRING_MEMMORY_HELP1);
 		return 0;
 	}
 

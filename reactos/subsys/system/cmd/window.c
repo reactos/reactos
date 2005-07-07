@@ -183,7 +183,7 @@ INT CommandWindow (LPTSTR cmd, LPTSTR param)
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		ConOutResPuts(STRING_WINDOW_HELP1);
+    ConOutResPaging(TRUE,STRING_WINDOW_HELP1);
 		return 0;
 	}
 
@@ -200,7 +200,7 @@ INT CommandActivate (LPTSTR cmd, LPTSTR param)
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		ConOutResPuts(STRING_WINDOW_HELP2);
+		ConOutResPaging(TRUE,STRING_WINDOW_HELP2);
 		return 0;
 	}
 

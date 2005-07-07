@@ -48,9 +48,8 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{
-		LoadString(CMD_ModuleHandle, STRING_GOTO_HELP1, szMsg, RC_STRING_MAX_SIZE);
-		ConOutResPuts(STRING_GOTO_HELP1);
+	{		
+		ConOutResPaging(TRUE,STRING_GOTO_HELP1);
 		return 0;
 	}
 

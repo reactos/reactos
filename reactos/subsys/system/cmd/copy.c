@@ -647,7 +647,7 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 
 	if (!_tcsncmp (rest, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_COPY_HELP2);
+		ConOutResPaging(TRUE,STRING_COPY_HELP2);
 		return 1;
 	}
 

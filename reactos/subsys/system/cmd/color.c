@@ -26,10 +26,7 @@
 #ifdef INCLUDE_CMD_COLOR
 
 
-static VOID ColorHelp (VOID)
-{
-	ConOutResPuts(STRING_COLOR_HELP1);
-}
+
 
 
 VOID SetScreenColor (WORD wColor, BOOL bNoFill)
@@ -73,7 +70,7 @@ INT CommandColor (LPTSTR first, LPTSTR rest)
 
 	if (_tcsncmp (rest, _T("/?"), 2) == 0)
 	{
-		ColorHelp ();
+		ConOutResPaging(TRUE,STRING_COLOR_HELP1);
 		return 0;
 	}
 
