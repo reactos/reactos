@@ -481,6 +481,12 @@ CreateBitCase(FILE *Out, unsigned Bpp, PROPINFO RopInfo, int Flags,
       Output(Out, "CenterCount = 2 * (BltInfo->DestRect.right -\n");
       Output(Out, "                   BltInfo->DestRect.left);\n");
     }
+  if (RopInfo->UsesPattern && 0 != (Flags & FLAG_PATTERNSURFACE))
+    {
+      Output(Out, "PatternX = (BltInfo->DestRect.left + BltInfo->BrushOrigin.x) %%\n");
+      Output(Out, "           BltInfo->PatternSurface->sizlBitmap.cx;\n");
+    }
+
   Output(Out, "for (LineIndex = 0; LineIndex < LineCount; LineIndex++)\n");
   Output(Out, "{\n");
   if (ROPCODE_SRCCOPY != RopInfo->RopCode ||
@@ -497,11 +503,7 @@ CreateBitCase(FILE *Out, unsigned Bpp, PROPINFO RopInfo, int Flags,
         }
       Output(Out, "DestPtr = (PULONG) DestBase;\n");
     }
-  if (RopInfo->UsesPattern && 0 != (Flags & FLAG_PATTERNSURFACE))
-    {
-      Output(Out, "PatternX = (BltInfo->DestRect.left + BltInfo->BrushOrigin.x) %%\n");
-      Output(Out, "           BltInfo->PatternSurface->sizlBitmap.cx;\n");
-    }
+  
   if (ROPCODE_SRCCOPY == RopInfo->RopCode &&
       0 != (Flags & FLAG_TRIVIALXLATE) && Bpp == SourceBpp)
     {
