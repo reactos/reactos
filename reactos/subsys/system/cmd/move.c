@@ -182,9 +182,10 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 					/*build the dest string(accounts for *)*/
 					TCHAR szFullDestPath[MAX_PATH];
 					_tcscpy (szFullDestPath, szDestPath);
-					/*this line causes a one to many slashes, GetFullPathName must
-					be adding on a \ when it sees that is a dir*/
-					//_tcscat (szFullDestPath, _T("\\"));
+					/*check to see if there is an ending slash, if not add one*/
+					if(szFullDestPath[_tcslen(szFullDestPath) -  1] != _T('\\'))
+					   _tcscat (szFullDestPath, _T("\\"));
+
 					_tcscat (szFullDestPath, findBuffer.cFileName);
 
 					/*checks to make sure user wanted/wants the override*/
