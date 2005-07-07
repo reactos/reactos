@@ -222,11 +222,14 @@ VOID ConPrintf(LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 #else
 	pBuf = szOut;
 #endif
+
 	WriteFile (GetStdHandle (nStdHandle),
 	           pBuf,
 	           len,
 	           &dwWritten,
 	           NULL);
+
+
 #ifdef UNICODE
 	free(pBuf);
 #endif
@@ -239,35 +242,42 @@ VOID ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdH
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	TCHAR szOut[OUTPUT_BUFFER_SIZE];
 	DWORD dwWritten;
-	static int LineCount = 0; //used to count number of lines since last pause
-	int ScreenLines = 0;  //used to see how big the screen is
-	int ScreenCol = 0;  //the number of chars in a roow
-	int CharEL = 0; //chars since end of line
+  
+  /* used to count number of lines since last pause */
+	static int LineCount = 0;
+
+  /* used to see how big the screen is */
+	int ScreenLines = 0;  
+
+  /* the number of chars in a roow */
+	int ScreenCol = 0;  
+
+  /* chars since end of line */
+	int CharEL = 0; 
+  
 	int i = 0;
 
 	if(NewPage == TRUE)
 		LineCount = 0;
 
+  /* rest LineCount and return if no string have been given */
+  if (szFormat == NULL)
+     return;
+
+
 	//get the size of the visual screen that can be printed too
 	GetConsoleScreenBufferInfo(hConsole, &csbi);
 	//subtract 2 to account for "press any key..." and for the blank line at the end of PagePrompt()
-	ScreenLines = csbi.srWindow.Bottom  - csbi.srWindow.Top - 2;
-	ScreenCol = csbi.srWindow.Right + 1;
+	ScreenLines = (csbi.srWindow.Bottom  - csbi.srWindow.Top) - 4;
+	ScreenCol = (csbi.srWindow.Right - csbi.srWindow.Left) + 1;
 
 	//make sure they didnt make the screen to small
-	if(ScreenLines<2)
+	if(ScreenLines<4)
+  {
 	   ConPrintf(szFormat, arg_ptr, nStdHandle);
-	//if more lines have been printed then screen size it is time to stop
-	if(LineCount >= ScreenLines)
-	{
-		if(PagePrompt() != PROMPT_YES)
-		{
-			return;
-		}
-		//reset the number of lines being printed
-		LineCount = 0;
-	}
-
+     return ;
+  }
+	   
 	len = _vstprintf (szOut, szFormat, arg_ptr);
 #ifdef _UNICODE
 	pBuf = malloc(len + 1);
@@ -275,43 +285,45 @@ VOID ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdH
 #else
 	pBuf = szOut;
 #endif
-	WriteFile (GetStdHandle (nStdHandle),
-		pBuf,
-		len,
-		&dwWritten,
-		NULL);
-
-
-
-	if(len < ScreenCol)
-	{
-		//if it is smaller then a row then just check for \n
+	      
 		for(i = 0; i < len; i++)
-			if(szOut[i] == '\n')
-				LineCount++;
+		{ 
+      
+      if(szOut[i] == _T('\n'))
+			{			        
+				LineCount++; 
+        CharEL=0;
+			}      
+      else
+      {      
+        CharEL++;           
+        if (CharEL>=ScreenCol)
+        {        
+          if (i+1<len)
+          {
+             if(szOut[i+1] != _T('\n')) LineCount++;          
+          }
+          CharEL=0;
+        }
+       }
 
-	}
-	else
-	{
-		//if it is bigger then a row check for \n and a string longer then a row can handle
-		for(i = 0; i < len; i++)
-		{
-			if(szOut[i] == '\n')
-			{
-				CharEL = 0;
-				LineCount++;
-			}
-			else
-			{
-				CharEL++;
-				if(CharEL > ScreenCol)
-				{
-					CharEL = 0;
-					LineCount++;
-				}
-			}
+      /* FIXME : write more that one char at time */
+      WriteFile (GetStdHandle (nStdHandle),&pBuf[i],sizeof(TCHAR),&dwWritten,NULL);
+	    if(LineCount >= ScreenLines)
+	      {
+         if(_tcsncicmp(&szOut[i],_T("\n"),2)!=0)
+           WriteFile (GetStdHandle (nStdHandle),_T("\n"),sizeof(TCHAR),&dwWritten,NULL); 
+
+		     if(PagePrompt() != PROMPT_YES)
+		     {
+			    return;
+		     }
+		     //reset the number of lines being printed         
+		     LineCount = 0;
+         CharEL=0;
+	       }
+      
 		}
-	}
 
 #ifdef UNICODE
 	free(pBuf);
