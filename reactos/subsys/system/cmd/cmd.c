@@ -1006,7 +1006,8 @@ ProcessInput (BOOL bFlag)
                 GetTimeFormat(LOCALE_USER_DEFAULT, 0, NULL, NULL, szTime, sizeof(szTime));              
                 cp = _stpcpy (cp, szTime);                 	              
               }
-
+              
+              /* %DATE% */
               else if (_tcsicmp(ip,_T("date")) ==0)
               {
               TCHAR szDate[40];
@@ -1015,9 +1016,16 @@ ProcessInput (BOOL bFlag)
               cp = _stpcpy (cp, szDate);        
               cp = _stpcpy (cp, _T(" "));        
               GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, NULL, NULL, szDate, sizeof (szDate));
-
               cp = _stpcpy (cp, szDate);        
+              }
 
+              /* %RANDOM% */
+              else if (_tcsicmp(ip,_T("random")) ==0)
+              {
+               TCHAR szRand[40];               
+               /* Get random number */
+               _itot(rand(),szRand,10);
+               cp = _stpcpy (cp, szRand); 
               }
                
          
