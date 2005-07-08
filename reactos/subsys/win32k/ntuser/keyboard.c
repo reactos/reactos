@@ -331,6 +331,24 @@ NtUserGetKeyState(
   return ret;
 }
 
+DWORD
+STDCALL
+NtUserGetAsyncKeyState(
+  DWORD key)
+{
+  DWORD ret = 0;
+
+  IntLockQueueState;
+  if( key < 0x100 ) {
+    ret = ((DWORD)(QueueKeyStateTable[key] & KS_DOWN_BIT) << 8 ) |
+      (QueueKeyStateTable[key] & KS_LOCK_BIT);
+  }
+  IntUnLockQueueState;
+  return ret;
+}
+
+
+
 int STDCALL ToUnicodeEx( UINT wVirtKey,
 			 UINT wScanCode,
 			 PBYTE lpKeyState,
