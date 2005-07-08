@@ -3039,7 +3039,7 @@ ExeFmtpCreateImageSection(HANDLE FileHandle,
     */
    if (Status == STATUS_ROS_EXEFMT_UNKNOWN_FORMAT)
    {
-      Status = STATUS_INVALID_IMAGE_FORMAT;
+      Status = STATUS_INVALID_IMAGE_NOT_MZ;
       ASSERT(!NT_SUCCESS(Status));
    }
 

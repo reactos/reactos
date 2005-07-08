@@ -216,7 +216,7 @@ NTSTATUS NTAPI PeFmtCreateSection
 
  ASSERT(Intsafe_CanOffsetPointer(FileHeader, FileHeaderSize));
 
- ASSERT(FileHeaderSize >= sizeof(IMAGE_DOS_HEADER));
+ ASSERT(EXEFMT_LOAD_HEADER_SIZE >= sizeof(IMAGE_DOS_HEADER));
  ASSERT(((UINT_PTR)FileHeader % TYPE_ALIGNMENT(IMAGE_DOS_HEADER)) == 0);
 
 #define DIE(ARGS_) { DPRINT ARGS_; goto l_Return; }
@@ -226,6 +226,10 @@ NTSTATUS NTAPI PeFmtCreateSection
 
  /* DOS HEADER */
  nStatus = STATUS_ROS_EXEFMT_UNKNOWN_FORMAT;
+
+ /* image too small to be an MZ executable */
+ if(FileHeaderSize < sizeof(IMAGE_DOS_HEADER))
+  DIE(("Too small to be an MZ executable, size is %lu\n", FileHeaderSize));
 
  /* no MZ signature */
  if(pidhDosHeader->e_magic != IMAGE_DOS_SIGNATURE)
@@ -310,13 +314,15 @@ l_ReadHeaderFromFile:
   }
 
   /* invalid NT header */
+  nStatus = STATUS_INVALID_IMAGE_PROTECT;
+
   if(pinhNtHeader->Signature != IMAGE_NT_SIGNATURE)
    DIE(("The file isn't a PE executable, Signature is %X\n", pinhNtHeader->Signature));
 
+  nStatus = STATUS_INVALID_IMAGE_FORMAT;
+
   if(!Intsafe_AddULong32(&cbNtHeaderSize, pinhNtHeader->FileHeader.SizeOfOptionalHeader, FIELD_OFFSET(IMAGE_NT_HEADERS32, OptionalHeader)))
    DIE(("The full NT header is too large\n"));
-
-  nStatus = STATUS_UNSUCCESSFUL;
 
   /* the buffer doesn't contain the whole NT header */
   if(cbReadSize < cbNtHeaderSize)
@@ -721,7 +727,7 @@ l_ReadHeaderFromFile:
   *Flags |= EXEFMT_LOAD_ASSUME_SEGMENTS_PAGE_ALIGNED;
 
  /* Success */
- nStatus = STATUS_ROS_EXEFMT_LOADED_FORMAT & EXEFMT_LOADED_PE32;
+ nStatus = STATUS_ROS_EXEFMT_LOADED_FORMAT | EXEFMT_LOADED_PE32;
 
 l_Return:
  if(pBuffer)
