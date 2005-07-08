@@ -200,7 +200,7 @@ StringTableAddString(HSTRING_TABLE hStringTable,
     {
         if (pStringTable->pSlots[i] == NULL)
         {
-            pStringTable->pSlots[i] = MyMalloc(lstrlenW(lpString) + sizeof(WCHAR));
+            pStringTable->pSlots[i] = MyMalloc((lstrlenW(lpString) + 1) * sizeof(WCHAR));
             if (pStringTable->pSlots[i] == NULL)
             {
                 TRACE("Couldn't allocate memory for a new string!\n");
@@ -276,7 +276,7 @@ StringTableDuplicate(HSTRING_TABLE hStringTable)
     {
         if (pSourceTable->pSlots[i] != NULL)
         {
-            length = lstrlenW(pSourceTable->pSlots[i]) + sizeof(WCHAR);
+            length = lstrlenW((pSourceTable->pSlots[i]) + 1) * sizeof(WCHAR);
             pDestinationTable->pSlots[i] = MyMalloc(length);
             if (pDestinationTable->pSlots[i] != NULL)
             {
@@ -429,7 +429,7 @@ StringTableStringFromIdEx(HSTRING_TABLE hStringTable,
         return FALSE;
     }
 
-    dwLength = lstrlenW(pStringTable->pSlots[dwId]) + sizeof(WCHAR);
+    dwLength = (lstrlenW(pStringTable->pSlots[dwId]) + 1) * sizeof(WCHAR);
     if (dwLength <= *lpBufferLength)
     {
         lstrcpyW(lpBuffer, pStringTable->pSlots[dwId]);
