@@ -33,6 +33,7 @@
 #include "It.rc"
 #include "Ja.rc"
 #include "Nl.rc"
+#include "Pl.rc"
 #include "Pt.rc"
 #include "Ru.rc"
 #include "Sv.rc"
