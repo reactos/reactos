@@ -325,8 +325,8 @@ MingwBackend::CheckAutomaticDependenciesForModuleOnly ()
 		printf ( "Checking automatic dependencies for module '%s'...",
 		         module->name.c_str () );
 		AutomaticDependency automaticDependency ( ProjectNode );
-		automaticDependency.CheckAutomaticDependencies ( *module,
-		                                                 configuration.Verbose );
+		automaticDependency.CheckAutomaticDependenciesForModule ( *module,
+		                                                          configuration.Verbose );
 		printf ( "done\n" );
 	}
 }

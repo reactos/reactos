@@ -817,14 +817,14 @@ Library::Library ( const XMLElement& _node,
 	: node(_node),
 	  module(_module),
 	  name(_name),
-	  imported_module(_module.project.LocateModule(_name))
+	  importedModule(_module.project.LocateModule(_name))
 {
 	if ( module.name == name )
 		throw InvalidBuildFileException (
 			node.location,
 			"module '%s' cannot link against itself",
 			name.c_str() );
-	if ( !imported_module )
+	if ( !importedModule )
 		throw InvalidBuildFileException (
 			node.location,
 			"module '%s' trying to import non-existant module '%s'",

@@ -615,7 +615,7 @@ MingwModuleHandler::GenerateImportLibraryDependenciesFromVector (
 			dependencies += " \\\n\t\t", wrap_count = 0;
 		else if ( dependencies.size () > 0 )
 			dependencies += " ";
-		dependencies += GetImportLibraryDependency ( *libraries[i]->imported_module );
+		dependencies += GetImportLibraryDependency ( *libraries[i]->importedModule );
 	}
 	return dependencies;
 }
@@ -1274,7 +1274,7 @@ MingwModuleHandler::GenerateBuildNonSymbolStrippedCode ()
 
 void
 MergeStringVector ( const vector<string>& input,
-	                vector<string>& output )
+                    vector<string>& output )
 {
 	int wrap_at = 25;
 	string s;
@@ -1603,20 +1603,20 @@ MingwModuleHandler::GetRpcHeaderDependencies (
 	for ( size_t i = 0; i < module.non_if_data.libraries.size (); i++ )
 	{
 		Library& library = *module.non_if_data.libraries[i];
-		if ( library.imported_module->type == RpcServer ||
-		     library.imported_module->type == RpcClient )
+		if ( library.importedModule->type == RpcServer ||
+		     library.importedModule->type == RpcClient )
 		{
 
-			for ( size_t j = 0; j < library.imported_module->non_if_data.files.size (); j++ )
+			for ( size_t j = 0; j < library.importedModule->non_if_data.files.size (); j++ )
 			{
-				File& file = *library.imported_module->non_if_data.files[j];
+				File& file = *library.importedModule->non_if_data.files[j];
 				string extension = GetExtension ( file.name );
 				if ( extension == ".idl" || extension == ".IDL" )
 				{
 					string basename = GetBasename ( file.name );
-					if ( library.imported_module->type == RpcServer )
+					if ( library.importedModule->type == RpcServer )
 						dependencies.push_back ( GetRpcServerHeaderFilename ( basename ) );
-					if ( library.imported_module->type == RpcClient )
+					if ( library.importedModule->type == RpcClient )
 						dependencies.push_back ( GetRpcClientHeaderFilename ( basename ) );
 				}
 			}

@@ -11,7 +11,7 @@ using std::vector;
 using std::map;
 
 SourceFile::SourceFile ( AutomaticDependency* automaticDependency,
-                         Module& module,
+                         const Module& module,
                          const string& filename,
                          SourceFile* parent,
                          bool isNonAutomaticDependency )
@@ -294,7 +294,7 @@ AutomaticDependency::ParseFiles ()
 }
 
 void
-AutomaticDependency::GetModuleFiles ( Module& module,
+AutomaticDependency::GetModuleFiles ( const Module& module,
                                       vector<File*>& files ) const
 {
 	for ( size_t i = 0; i < module.non_if_data.files.size (); i++ )
@@ -307,7 +307,7 @@ AutomaticDependency::GetModuleFiles ( Module& module,
 }
 
 void
-AutomaticDependency::ParseFiles ( Module& module )
+AutomaticDependency::ParseFiles ( const Module& module )
 {
 	vector<File*> files;
 	GetModuleFiles ( module, files );
@@ -316,7 +316,7 @@ AutomaticDependency::ParseFiles ( Module& module )
 }
 
 void
-AutomaticDependency::ParseFile ( Module& module,
+AutomaticDependency::ParseFile ( const Module& module,
                                  const File& file )
 {
 	string normalizedFilename = NormalizeFilename ( file.name );
@@ -355,7 +355,7 @@ AutomaticDependency::GetFilename ( const string& filename )
 
 void
 AutomaticDependency::GetIncludeDirectories ( vector<Include*>& includes,
-                                             Module& module,
+                                             const Module& module,
                                              Include& currentDirectory,
                                              bool searchCurrentDirectory )
 {
@@ -369,7 +369,7 @@ AutomaticDependency::GetIncludeDirectories ( vector<Include*>& includes,
 
 bool
 AutomaticDependency::LocateIncludedFile ( SourceFile* sourceFile,
-                                          Module& module,
+                                          const Module& module,
                                           const string& includedFilename,
                                           bool searchCurrentDirectory,
                                           bool includeNext,
@@ -396,9 +396,9 @@ AutomaticDependency::LocateIncludedFile ( SourceFile* sourceFile,
 }
 
 SourceFile*
-AutomaticDependency::RetrieveFromCacheOrParse ( Module& module,
-	                                            const string& filename,
-	                                            SourceFile* parentSourceFile )
+AutomaticDependency::RetrieveFromCacheOrParse ( const Module& module,
+                                                const string& filename,
+                                                SourceFile* parentSourceFile )
 {
 	SourceFile* sourceFile = sourcefile_map[filename];
 	if ( sourceFile == NULL )
@@ -429,25 +429,41 @@ AutomaticDependency::CheckAutomaticDependencies ( bool verbose )
 	for ( size_t mi = 0; mi < project.modules.size (); mi++ )
 	{
 		Module& module = *project.modules[mi];
-		CheckAutomaticDependencies ( module, verbose, false );
+		CheckAutomaticDependencies ( module, verbose );
 	}
 }
 
 void
-AutomaticDependency::CheckAutomaticDependencies ( Module& module,
-                                                  bool verbose )
+AutomaticDependency::GetModulesToCheck ( Module& module, vector<const Module*>& modules )
 {
-	CheckAutomaticDependencies ( module, verbose, true );
+	modules.push_back ( &module );
+	for ( size_t i = 0; i < module.non_if_data.libraries.size (); i++ )
+	{
+		Library& library = *module.non_if_data.libraries[i];
+		if ( library.importedModule->type != ObjectLibrary )
+			break;
+		modules.push_back ( library.importedModule );
+	}
+
+	/* FIXME: Collect libraries in IFs here */
 }
 
 void
-AutomaticDependency::CheckAutomaticDependencies ( Module& module,
-                                                  bool verbose,
-                                                  bool parseFiles )
+AutomaticDependency::CheckAutomaticDependenciesForModule ( Module& module,
+                                                           bool verbose )
 {
-	if ( parseFiles )
-		ParseFiles ( module );
+	vector<const Module*> modules;
+	GetModulesToCheck ( module, modules );
+	for ( size_t mi = 0; mi < modules.size (); mi++ )
+		ParseFiles ( *modules[mi] );
+	for ( size_t mi = 0; mi < modules.size (); mi++ )
+		CheckAutomaticDependencies ( *modules[mi], verbose );
+}
 
+void
+AutomaticDependency::CheckAutomaticDependencies ( const Module& module,
+                                                  bool verbose )
+{
 	struct utimbuf timebuf;
 	vector<File*> files;
 	GetModuleFiles ( module, files );
