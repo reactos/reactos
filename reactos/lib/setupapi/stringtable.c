@@ -276,7 +276,7 @@ StringTableDuplicate(HSTRING_TABLE hStringTable)
     {
         if (pSourceTable->pSlots[i] != NULL)
         {
-            length = lstrlenW((pSourceTable->pSlots[i]) + 1) * sizeof(WCHAR);
+            length = (lstrlenW(pSourceTable->pSlots[i]) + 1) * sizeof(WCHAR);
             pDestinationTable->pSlots[i] = MyMalloc(length);
             if (pDestinationTable->pSlots[i] != NULL)
             {
