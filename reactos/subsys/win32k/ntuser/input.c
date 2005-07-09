@@ -1059,14 +1059,14 @@ IntMouseInput(MOUSEINPUT *mi)
     Msg.message = WM_XBUTTONUP;
     if(mi->mouseData & XBUTTON1)
     {
-      QueueKeyStateTable[VK_XBUTTON1] &= 0x80;
+      QueueKeyStateTable[VK_XBUTTON1] &= ~0x80;
       Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON1);
       CurInfo->ButtonsDown &= ~XBUTTON1;
       MsqInsertSystemMessage(&Msg);
     }
     if(mi->mouseData & XBUTTON2)
     {
-      QueueKeyStateTable[VK_XBUTTON2] &= 0x80;
+      QueueKeyStateTable[VK_XBUTTON2] &= ~0x80;
       Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON2);
       CurInfo->ButtonsDown &= ~XBUTTON2;
       MsqInsertSystemMessage(&Msg);
