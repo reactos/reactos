@@ -3850,7 +3850,7 @@ GetMenuState(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
@@ -3861,13 +3861,22 @@ GetMenuStringA(
   int nMaxCount,
   UINT uFlag)
 {
+  MENUITEMINFOA mii;
+  mii.dwTypeData = lpString;
+  mii.fMask = MIIM_STRING;
+  mii.cbSize = sizeof(MENUITEMINFOA);
+  mii.cch = nMaxCount;
+
   UNIMPLEMENTED;
-  return 0;
+  if(!(GetMenuItemInfoA( hMenu, uIDItem, (BOOL)!(MF_BYPOSITION & uFlag),&mii)))
+     return 0;
+  else
+     return mii.cch;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
@@ -3878,8 +3887,17 @@ GetMenuStringW(
   int nMaxCount,
   UINT uFlag)
 {
+  MENUITEMINFOW miiW;
+  miiW.dwTypeData = lpString;
+  miiW.fMask = MIIM_STRING;
+  miiW.cbSize = sizeof(MENUITEMINFOW);
+  miiW.cch = nMaxCount;
+
   UNIMPLEMENTED;
-  return 0;
+  if(!(GetMenuItemInfoW( hMenu, uIDItem, (BOOL)!(MF_BYPOSITION & uFlag),&miiW)))
+     return 0;
+  else  
+     return miiW.cch;
 }
 
 
