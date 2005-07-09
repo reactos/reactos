@@ -143,6 +143,47 @@ static void MDI_SwapMenuItems(HWND, UINT, UINT);
 static LRESULT WINAPI MDIClientWndProcA( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT WINAPI MDIClientWndProcW( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
+
+static
+HWND* WIN_ListChildren (HWND hWndparent)
+{
+
+  DWORD dwCount = 0;
+  HWND* pHwnd = NULL;
+  HANDLE hHeap;
+
+  SetLastError(0);
+
+  dwCount = NtUserBuildHwndList ( NULL, hWndparent, FALSE, 0, 0, NULL, 0 );
+
+  if ( !dwCount || GetLastError() )
+    return FALSE;
+
+  /* allocate buffer to receive HWND handles */
+  hHeap = GetProcessHeap();
+
+  pHwnd = HeapAlloc ( hHeap, 0, sizeof(HWND)*(dwCount+1) );
+  if ( !pHwnd )
+    {
+      SetLastError ( ERROR_NOT_ENOUGH_MEMORY );
+      return FALSE;
+    }
+
+  /* now call kernel again to fill the buffer this time */
+  dwCount = NtUserBuildHwndList (NULL, hWndparent, FALSE, 0, 0, pHwnd, dwCount );
+
+  if ( !dwCount || GetLastError() )
+    {
+      if ( pHwnd )
+	HeapFree ( hHeap, 0, pHwnd );
+      return FALSE;
+    }
+
+  return pHwnd;
+}
+
+
+
 #ifdef __REACTOS__
 void WINAPI ScrollChildren(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 void WINAPI CalcChildScroll(HWND hwnd, INT scroll);
@@ -912,18 +953,19 @@ static HBITMAP CreateMDIMenuBitmap(void)
  return hbCopy;
 }
 
+                    
+
+
 /**********************************************************************
  *				MDICascade
  */
 static LONG MDICascade( HWND client, MDICLIENTINFO *ci )
 {
-#ifdef __REACTOS__
-    /* FIXME */
-    return 0;
-#else
     HWND *win_array;
     BOOL has_icons = FALSE;
     int i, total;
+
+DbgPrint("MDICascade\n");
 
     if (ci->hwndChildMaximized)
         SendMessageA( client, WM_MDIRESTORE,
@@ -968,7 +1010,6 @@ static LONG MDICascade( HWND client, MDICLIENTINFO *ci )
 
     if (has_icons) ArrangeIconicWindows( client );
     return 0;
-#endif
 }
 
 /**********************************************************************
@@ -976,13 +1017,11 @@ static LONG MDICascade( HWND client, MDICLIENTINFO *ci )
  */
 static void MDITile( HWND client, MDICLIENTINFO *ci, WPARAM wParam )
 {
-#ifdef __REACTOS__
-    /* FIXME */
-    return;
-#else
     HWND *win_array;
     int i, total;
     BOOL has_icons = FALSE;
+
+DbgPrint("MDITile\n");
 
     if (ci->hwndChildMaximized)
         SendMessageA( client, WM_MDIRESTORE, (WPARAM)ci->hwndChildMaximized, 0);
@@ -1056,7 +1095,6 @@ static void MDITile( HWND client, MDICLIENTINFO *ci, WPARAM wParam )
     }
     HeapFree( GetProcessHeap(), 0, win_array );
     if (has_icons) ArrangeIconicWindows( client );
-#endif
 }
 
 /* ----------------------- Frame window ---------------------------- */
