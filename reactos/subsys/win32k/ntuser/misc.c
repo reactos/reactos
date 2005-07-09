@@ -653,7 +653,7 @@ NtUserCallHwndLock(
       case HWNDLOCK_ROUTINE_DRAWMENUBAR:
            {
               PMENU_OBJECT MenuObject;
-              DPRINT1("HWNDLOCK_ROUTINE_DRAWMENUBAR\n");
+              DPRINT("HWNDLOCK_ROUTINE_DRAWMENUBAR\n");
               Ret = FALSE;
               if (!((Window->Style & (WS_CHILD | WS_POPUP)) != WS_CHILD)) break;
               MenuObject = IntGetMenuObject((HMENU) Window->IDMenu);
