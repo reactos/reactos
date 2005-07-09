@@ -3534,14 +3534,12 @@ DestroyMenu(HMENU hMenu)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 DrawMenuBar(HWND hWnd)
 {
-  UNIMPLEMENTED
-  /* FIXME - return NtUserCallHwndLock(hWnd, 0x55); */
-  return FALSE;
+  return (BOOL)NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_DRAWMENUBAR);
 }
 
 
