@@ -255,15 +255,15 @@ ExpungeConsoleCommandHistoryA (DWORD	Unknown0)
  * @unimplemented
  */
 DWORD STDCALL
-GetConsoleAliasW (DWORD	Unknown0,
-		  DWORD	Unknown1,
-		  DWORD	Unknown2,
-		  DWORD	Unknown3)
+GetConsoleAliasW (LPWSTR	lpSource,
+		  LPWSTR	lpTargetBuffer,
+		  DWORD		TargetBufferLength,
+		  LPWSTR	lpExeName)
      /*
       * Undocumented
       */
 {
-  DPRINT1("GetConsoleAliasW(0x%x, 0x%x, 0x%x, 0x%x) UNIMPLEMENTED!\n", Unknown0, Unknown1, Unknown2, Unknown3);
+  DPRINT1("GetConsoleAliasW(0x%p, 0x%p, 0x%x, 0x%p) UNIMPLEMENTED!\n", lpSource, lpTargetBuffer, TargetBufferLength, lpExeName);
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 }
@@ -273,15 +273,15 @@ GetConsoleAliasW (DWORD	Unknown0,
  * @unimplemented
  */
 DWORD STDCALL
-GetConsoleAliasA (DWORD	Unknown0,
-		  DWORD	Unknown1,
-		  DWORD	Unknown2,
-		  DWORD	Unknown3)
+GetConsoleAliasA (LPSTR	lpSource,
+		  LPSTR	lpTargetBuffer,
+		  DWORD	TargetBufferLength,
+		  LPSTR	lpExeName)
      /*
       * Undocumented
       */
 {
-  DPRINT1("GetConsoleAliasA(0x%x, 0x%x, 0x%x, 0x%x) UNIMPLEMENTED!\n", Unknown0, Unknown1, Unknown2, Unknown3);
+  DPRINT1("GetConsoleAliasA(0x%p, 0x%p, 0x%x, 0x%p) UNIMPLEMENTED!\n", lpSource, lpTargetBuffer, TargetBufferLength, lpExeName);
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 }
@@ -291,13 +291,13 @@ GetConsoleAliasA (DWORD	Unknown0,
  * @unimplemented
  */
 DWORD STDCALL
-GetConsoleAliasExesW (DWORD	Unknown0,
-		      DWORD	Unknown1)
+GetConsoleAliasExesW (LPWSTR	lpExeNameBuffer,
+		      DWORD	ExeNameBufferLength)
      /*
       * Undocumented
       */
 {
-  DPRINT1("GetConsoleAliasExesW(0x%x, 0x%x) UNIMPLEMENTED!\n", Unknown0, Unknown1);
+  DPRINT1("GetConsoleAliasExesW(0x%p, 0x%x) UNIMPLEMENTED!\n", lpExeNameBuffer, ExeNameBufferLength);
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 }
@@ -307,13 +307,13 @@ GetConsoleAliasExesW (DWORD	Unknown0,
  * @unimplemented
  */
 DWORD STDCALL
-GetConsoleAliasExesA (DWORD	Unknown0,
-		      DWORD	Unknown1)
+GetConsoleAliasExesA (LPSTR	lpExeNameBuffer,
+		      DWORD	ExeNameBufferLength)
      /*
       * Undocumented
       */
 {
-  DPRINT1("GetConsoleAliasExesA(0x%x, 0x%x) UNIMPLEMENTED!\n", Unknown0, Unknown1);
+  DPRINT1("GetConsoleAliasExesA(0x%p, 0x%x) UNIMPLEMENTED!\n", lpExeNameBuffer, ExeNameBufferLength);
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 }
@@ -387,12 +387,12 @@ GetConsoleAliasesA (DWORD	Unknown0,
  * @unimplemented
  */
 DWORD STDCALL
-GetConsoleAliasesLengthW (DWORD Unknown0)
+GetConsoleAliasesLengthW (LPWSTR lpExeName)
      /*
       * Undocumented
       */
 {
-  DPRINT1("GetConsoleAliasesLengthW(0x%x) UNIMPLEMENTED!\n", Unknown0);
+  DPRINT1("GetConsoleAliasesLengthW(0x%p) UNIMPLEMENTED!\n", lpExeName);
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 }
@@ -402,12 +402,12 @@ GetConsoleAliasesLengthW (DWORD Unknown0)
  * @unimplemented
  */
 DWORD STDCALL
-GetConsoleAliasesLengthA (DWORD Unknown0)
+GetConsoleAliasesLengthA (LPSTR lpExeName)
      /*
       * Undocumented
       */
 {
-  DPRINT1("GetConsoleAliasesLengthA(0x%x) UNIMPLEMENTED!\n", Unknown0);
+  DPRINT1("GetConsoleAliasesLengthA(0x%p) UNIMPLEMENTED!\n", lpExeName);
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 }
