@@ -874,7 +874,9 @@ MingwModuleHandler::GenerateGccCommand (
 		dependencies += " " + GetPrecompiledHeaderFilename ();
 	
 	/* WIDL generated headers may be used */
-	dependencies += " " + GetLinkingDependenciesMacro ();
+	vector<string> rpcDependencies;
+	GetRpcHeaderDependencies ( rpcDependencies );
+	dependencies += " " + v2s ( rpcDependencies, 5 );
 	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
 	string objectFilename = GetObjectFilename (
@@ -1598,7 +1600,7 @@ MingwModuleHandler::GenerateTargetMacro ()
 
 void
 MingwModuleHandler::GetRpcHeaderDependencies (
-	string_list& dependencies ) const
+	vector<string>& dependencies ) const
 {
 	for ( size_t i = 0; i < module.non_if_data.libraries.size (); i++ )
 	{
@@ -1640,7 +1642,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 		module.non_if_data,
 		&module.linkerFlags );
 
-	string_list s;
+	vector<string> s;
 	if ( module.importLibrary )
 	{
 		const vector<File*>& files = module.non_if_data.files;
@@ -1652,7 +1654,6 @@ MingwModuleHandler::GenerateOtherMacros ()
 				GetSpecObjectDependencies ( s, file.name );
 		}
 	}
-	GetRpcHeaderDependencies ( s );
 	if ( s.size () > 0 )
 	{
 		fprintf (

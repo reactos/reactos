@@ -179,7 +179,7 @@ private:
 	void GenerateBuildMapCode ();
 	void GenerateBuildNonSymbolStrippedCode ();
 	void CleanupFileVector ( std::vector<File*>& sourceFiles );
-	void GetRpcHeaderDependencies ( string_list& dependencies ) const;
+	void GetRpcHeaderDependencies ( std::vector<std::string>& dependencies ) const;
 	std::string GetRpcServerHeaderFilename ( std::string basename ) const;
 	std::string GetRpcClientHeaderFilename ( std::string basename ) const;
 public:
