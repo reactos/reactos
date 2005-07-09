@@ -3475,7 +3475,7 @@ CheckMenuItem(HMENU hmenu,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 CheckMenuRadioItem(HMENU hmenu,
@@ -3484,8 +3484,43 @@ CheckMenuRadioItem(HMENU hmenu,
 		   UINT idCheck,
 		   UINT uFlags)
 {
+  ROSMENUINFO mi;
+  PROSMENUITEMINFO Items;
+  int i;
+  BOOL ret = FALSE;
+
+  mi.cbSize = sizeof(MENUINFO);
+
   UNIMPLEMENTED;
-  return FALSE;
+
+  if(idFirst > idLast) return ret;
+
+  if(!NtUserMenuInfo(hmenu, &mi, FALSE)) return ret;
+
+  if(MenuGetAllRosMenuItemInfo(mi.Self, &Items) <= 0) return ret;
+
+  for (i = 0 ; i < mi.MenuItemCount; i++)
+    {
+      if (0 != (Items[i].fType & MF_MENUBARBREAK)) break;
+      if ( i >= idFirst && i <= idLast )
+      {
+         if ( i == idCheck)
+         {
+             Items[i].fType |= MFT_RADIOCHECK;
+             Items[i].fState |= MFS_CHECKED;
+         }
+         else
+         {
+             Items[i].fType &= ~MFT_RADIOCHECK;
+             Items[i].fState &= ~MFS_CHECKED;
+         }
+         if(!MenuSetRosMenuItemInfo(mi.Self, i ,&Items[i]))
+             break;
+      }
+   if ( i == mi.MenuItemCount) ret = TRUE;
+    }
+  MenuCleanupRosMenuItemInfo(Items);
+  return ret;
 }
 
 
