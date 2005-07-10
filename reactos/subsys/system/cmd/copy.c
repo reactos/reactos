@@ -232,7 +232,6 @@ ParseCommand (LPFILES f, int argc, TCHAR **arg, LPDWORD lpdwFlags)
 	source = 0;
 	count = 0;
 
-  ConOutPrintf(_T("here\n"));
 
 
   /* hack geting pipe 1>null working */
@@ -659,8 +658,7 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 	BOOL bWildcards;
 	BOOL bDestFound;
 	DWORD dwFlags = 0;
-
-  ConOutPrintf(_T("string : %s\n"),rest);
+  
 	if (!_tcsncmp (rest, _T("/?"), 2))
 	{
 		ConOutResPaging(TRUE,STRING_COPY_HELP2);
