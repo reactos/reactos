@@ -232,8 +232,23 @@ ParseCommand (LPFILES f, int argc, TCHAR **arg, LPDWORD lpdwFlags)
 	source = 0;
 	count = 0;
 
-	for (i = 0; i < argc; i++)
+  ConOutPrintf(_T("here\n"));
+
+
+  /* hack geting pipe 1>null working */
+  for (i = 0; i < argc; i++)
 	{
+    if (arg[i][0] != _T('/')) 
+        count++;
+  }
+  if (count==3) argc=2;
+  /* end hack */
+
+  
+
+	for (i = 0; i < argc; i++)
+	{     
+
 		if (arg[i][0] == _T('/'))
 		{
 			if (!DoSwitches (arg[i], lpdwFlags))
@@ -645,6 +660,7 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 	BOOL bDestFound;
 	DWORD dwFlags = 0;
 
+  ConOutPrintf(_T("string : %s\n"),rest);
 	if (!_tcsncmp (rest, _T("/?"), 2))
 	{
 		ConOutResPaging(TRUE,STRING_COPY_HELP2);
