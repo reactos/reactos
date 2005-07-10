@@ -99,8 +99,8 @@
 @ stub CM_Get_Device_Interface_List_Size_ExW
 @ stub CM_Get_First_Log_Conf
 @ stub CM_Get_First_Log_Conf_Ex
-@ stub CM_Get_Global_State
-@ stub CM_Get_Global_State_Ex
+@ stdcall CM_Get_Global_State(ptr long)
+@ stdcall CM_Get_Global_State_Ex(ptr long long)
 @ stub CM_Get_HW_Prof_FlagsA
 @ stub CM_Get_HW_Prof_FlagsW
 @ stub CM_Get_HW_Prof_Flags_ExA

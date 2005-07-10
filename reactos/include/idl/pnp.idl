@@ -1,8 +1,9 @@
 /*
- * Plug and Play Manager interface definition
+ * Plug and Play Manager RPC interface definition
  */
 
 #define WORD unsigned short
+#define DWORD unsigned long
 #define CONFIGRET unsigned long
 
 [
@@ -13,9 +14,14 @@
 ]
 interface pnp
 {
-//  unsigned long PNP_GetRootDeviceInstance(handle_t BindingHandle,
-//					  [out, string, size_is(Length)] wchar_t *DeviceInstance,
-//					  [in] unsigned long Length);
   CONFIGRET PNP_GetVersion(handle_t BindingHandle,
                            [out] WORD *Version);
+
+  CONFIGRET PNP_GetGlobalState(handle_t BindingHandle,
+                               [out] unsigned long *State,
+                               [in] unsigned long Flags);
+
+//  CONFIGRET PNP_GetRootDeviceInstance(handle_t BindingHandle,
+//                                      [out, string, size_is(Length)] wchar_t *DeviceInstance,
+//                                      [in] DWORD Length);
 }

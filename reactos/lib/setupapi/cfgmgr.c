@@ -32,6 +32,7 @@
 #include "setupapi_private.h"
 
 #include "rpc.h"
+#include "rpc_private.h"
 
 #include "pnp_c.h"
 
@@ -41,9 +42,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 
 /* Registry key and value names */
 static const WCHAR ControlClass[] = {'S','y','s','t','e','m','\\',
-                                  'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
-                                  'C','o','n','t','r','o','l','\\',
-                                  'C','l','a','s','s',0};
+                                     'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
+                                     'C','o','n','t','r','o','l','\\',
+                                     'C','l','a','s','s',0};
 
 
 typedef struct _MACHINE_INFO
@@ -137,17 +138,32 @@ CONFIGRET WINAPI CM_Enumerate_Classes(
 
 static CONFIGRET GetCmCodeFromErrorCode(DWORD ErrorCode)
 {
-	switch (ErrorCode)
-	{
-		case ERROR_SUCCESS:             return CR_SUCCESS;
-		case ERROR_ACCESS_DENIED:       return CR_ACCESS_DENIED;
-		case ERROR_INSUFFICIENT_BUFFER: return CR_BUFFER_SMALL;
-		case ERROR_INVALID_DATA:        return CR_INVALID_DATA;
-		case ERROR_INVALID_PARAMETER:   return CR_INVALID_DATA;
-		case ERROR_NO_MORE_ITEMS:       return CR_NO_SUCH_VALUE;
-		case ERROR_NO_SYSTEM_RESOURCES: return CR_OUT_OF_MEMORY;
-		default:                        return CR_FAILURE;
-	}
+    switch (ErrorCode)
+    {
+        case ERROR_SUCCESS:
+            return CR_SUCCESS;
+
+        case ERROR_ACCESS_DENIED:
+            return CR_ACCESS_DENIED;
+
+        case ERROR_INSUFFICIENT_BUFFER:
+            return CR_BUFFER_SMALL;
+
+        case ERROR_INVALID_DATA:
+            return CR_INVALID_DATA;
+
+        case ERROR_INVALID_PARAMETER:
+            return CR_INVALID_DATA;
+
+        case ERROR_NO_MORE_ITEMS:
+            return CR_NO_SUCH_VALUE;
+
+        case ERROR_NO_SYSTEM_RESOURCES:
+            return CR_OUT_OF_MEMORY;
+
+        default:
+            return CR_FAILURE;
+    }
 }
 
 
@@ -194,7 +210,7 @@ CONFIGRET WINAPI CM_Enumerate_Classes_Ex(
         Buffer[37] = UNICODE_NULL;
         /* Convert the buffer to a GUID */
         if (UuidFromStringW(&Buffer[1], ClassGuid) != RPC_S_OK)
-        return CR_FAILURE;
+            return CR_FAILURE;
     }
 
     return GetCmCodeFromErrorCode(rc);
@@ -218,7 +234,7 @@ CONFIGRET WINAPI CM_Get_Child(
 CONFIGRET WINAPI CM_Get_Child_Ex(
     PDEVINST pdnDevInst, DEVINST dnDevInst, ULONG ulFlags, HMACHINE hMachine)
 {
-    TRACE("%p %lx %lx %lx\n", pdnDevInst, dnDevInst, ulFlags, hMachine);
+    FIXME("%p %lx %lx %lx\n", pdnDevInst, dnDevInst, ulFlags, hMachine);
     return CR_SUCCESS;
 }
 
@@ -229,9 +245,9 @@ CONFIGRET WINAPI CM_Get_Child_Ex(
 CONFIGRET WINAPI CM_Get_Device_ID_ListA(
     PCSTR pszFilter, PCHAR Buffer, ULONG BufferLen, ULONG ulFlags )
 {
-    FIXME("%p %p %ld %ld\n", pszFilter, Buffer, BufferLen, ulFlags);
-    memset(Buffer,0,2);
-    return CR_SUCCESS;
+    TRACE("%p %p %ld %ld\n", pszFilter, Buffer, BufferLen, ulFlags);
+    return CM_Get_Device_ID_List_ExA(pszFilter, Buffer, BufferLen,
+                                     ulFlags, NULL);
 }
 
 
@@ -281,9 +297,8 @@ CONFIGRET WINAPI CM_Get_Device_ID_List_ExW(
 CONFIGRET WINAPI CM_Get_Device_ID_List_SizeA(
     PULONG pulLen, PCSTR pszFilter, ULONG ulFlags)
 {
-    FIXME("%p %s %ld\n", pulLen, pszFilter, ulFlags);
-    *pulLen = 2;
-    return CR_SUCCESS;
+    TRACE("%p %s %ld\n", pulLen, pszFilter, ulFlags);
+    return CM_Get_Device_ID_List_Size_ExA(pulLen, pszFilter, ulFlags, NULL);
 }
 
 
@@ -323,6 +338,51 @@ CONFIGRET WINAPI CM_Get_Device_ID_List_Size_ExW(
 
 
 /***********************************************************************
+ * CM_Get_Global_State [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Global_State(
+    PULONG pulState, ULONG ulFlags)
+{
+    TRACE("%p %lx\n", pulState, ulFlags);
+    return CM_Get_Global_State_Ex(pulState, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Get_Global_State_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Global_State_Ex(
+    PULONG pulState, ULONG ulFlags, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    RPC_STATUS Status;
+
+    TRACE("%p %lx %lx\n", pulState, ulFlags, hMachine);
+
+    if (pulState == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        Status = PnpGetLocalBindingHandle(&BindingHandle);
+        if (Status != RPC_S_OK)
+            return CR_FAILURE;
+    }
+
+    return PNP_GetGlobalState(BindingHandle, pulState, ulFlags);
+}
+
+
+/***********************************************************************
  * CM_Get_Parent [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Get_Parent(
@@ -339,7 +399,7 @@ CONFIGRET WINAPI CM_Get_Parent(
 CONFIGRET WINAPI CM_Get_Parent_Ex(
     PDEVINST pdnDevInst, DEVINST dnDevInst, ULONG ulFlags, HMACHINE hMachine)
 {
-    TRACE("%p %lx %lx %lx\n", pdnDevInst, dnDevInst, ulFlags, hMachine);
+    FIXME("%p %lx %lx %lx\n", pdnDevInst, dnDevInst, ulFlags, hMachine);
     return CR_SUCCESS;
 }
 
@@ -361,7 +421,7 @@ CONFIGRET WINAPI CM_Get_Sibling(
 CONFIGRET WINAPI CM_Get_Sibling_Ex(
     PDEVINST pdnDevInst, DEVINST dnDevInst, ULONG ulFlags, HMACHINE hMachine)
 {
-    TRACE("%p %lx %lx %lx\n", pdnDevInst, dnDevInst, ulFlags, hMachine);
+    FIXME("%p %lx %lx %lx\n", pdnDevInst, dnDevInst, ulFlags, hMachine);
     return CR_SUCCESS;
 }
 
@@ -385,7 +445,7 @@ WORD WINAPI CM_Get_Version_Ex(HMACHINE hMachine)
     RPC_STATUS Status;
     WORD Version = 0;
 
-    FIXME("%lx\n", hMachine);
+    TRACE("%lx\n", hMachine);
 
     if (hMachine != NULL)
     {
@@ -413,8 +473,8 @@ WORD WINAPI CM_Get_Version_Ex(HMACHINE hMachine)
 CONFIGRET WINAPI CM_Locate_DevNodeA(
     PDEVINST pdnDevInst, DEVINSTID_A pDeviceID, ULONG ulFlags)
 {
-  FIXME("%p %p %lu\n", pdnDevInst, pDeviceID, ulFlags);
-  return CR_SUCCESS;
+    TRACE("%p %s %lu\n", pdnDevInst, pDeviceID, ulFlags);
+    return CM_Locate_DevNode_ExA(pdnDevInst, pDeviceID, ulFlags, NULL);
 }
 
 
@@ -424,8 +484,8 @@ CONFIGRET WINAPI CM_Locate_DevNodeA(
 CONFIGRET WINAPI CM_Locate_DevNodeW(
     PDEVINST pdnDevInst, DEVINSTID_W pDeviceID, ULONG ulFlags)
 {
-  TRACE("%p %p %lu\n", pdnDevInst, pDeviceID, ulFlags);
-  return CM_Locate_DevNode_ExW(pdnDevInst, pDeviceID, ulFlags, NULL);
+    TRACE("%p %s %lu\n", pdnDevInst, debugstr_w(pDeviceID), ulFlags);
+    return CM_Locate_DevNode_ExW(pdnDevInst, pDeviceID, ulFlags, NULL);
 }
 
 
@@ -435,8 +495,23 @@ CONFIGRET WINAPI CM_Locate_DevNodeW(
 CONFIGRET WINAPI CM_Locate_DevNode_ExA(
     PDEVINST pdnDevInst, DEVINSTID_A pDeviceID, ULONG ulFlags, HMACHINE hMachine)
 {
-  FIXME("%p %p %lu %lx\n", pdnDevInst, pDeviceID, ulFlags, hMachine);
-  return CR_SUCCESS;
+    DEVINSTID_W pDevIdW = NULL;
+    CONFIGRET rc = CR_SUCCESS;
+
+    TRACE("%p %s %lu %lx\n", pdnDevInst, pDeviceID, ulFlags, hMachine);
+
+    if (pDeviceID != NULL)
+    {
+       if (CaptureAndConvertAnsiArg(pDeviceID, &pDevIdW))
+         return CR_INVALID_DEVICE_ID;
+    }
+
+    rc = CM_Locate_DevNode_ExW(pdnDevInst, pDevIdW, ulFlags, hMachine);
+
+    if (pDevIdW != NULL)
+        MyFree(pDevIdW);
+
+    return rc;
 }
 
 
@@ -446,6 +521,6 @@ CONFIGRET WINAPI CM_Locate_DevNode_ExA(
 CONFIGRET WINAPI CM_Locate_DevNode_ExW(
     PDEVINST pdnDevInst, DEVINSTID_W pDeviceID, ULONG ulFlags, HMACHINE hMachine)
 {
-  FIXME("%p %p %lu %lx\n", pdnDevInst, pDeviceID, ulFlags, hMachine);
-  return CR_SUCCESS;
+    FIXME("%p %s %lu %lx\n", pdnDevInst, debugstr_w(pDeviceID), ulFlags, hMachine);
+    return CR_SUCCESS;
 }

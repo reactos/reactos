@@ -107,12 +107,22 @@ void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
 }
 
 
-//WORD PNP_GetVersion(RPC_BINDING_HANDLE BindingHandle)
+//CONFIRET PNP_GetVersion(RPC_BINDING_HANDLE BindingHandle,
+//                        WORD *Version)
 unsigned long PNP_GetVersion(handle_t BindingHandle,
                              unsigned short *Version)
 {
   *Version = 0x0400;
-  return 0;
+  return 0; /* CR_SUCCESS */
+}
+
+
+unsigned long PNP_GetGlobalState(handle_t BindingHandle,
+                                 unsigned long *State,
+                                 unsigned long Flags)
+{
+    *State = 5;
+    return 0; /* CR_SUCCESS */
 }
 
 
