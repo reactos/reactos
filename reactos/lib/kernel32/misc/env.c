@@ -70,7 +70,7 @@ GetEnvironmentVariableA (
 		SetLastErrorByStatus (Status);
 		if (Status == STATUS_BUFFER_TOO_SMALL)
 		{
-			return VarValueU.Length / sizeof(WCHAR) + sizeof(WCHAR);
+			return VarValueU.Length / sizeof(WCHAR) + 1;
 		}
 		else
 		{
@@ -91,7 +91,7 @@ GetEnvironmentVariableA (
 	/* free unicode variable name string */
 	RtlFreeUnicodeString (&VarNameU);
 
-	return (VarValueU.Length / sizeof(WCHAR) + sizeof(WCHAR));
+	return (VarValueU.Length / sizeof(WCHAR) + 1);
 }
 
 
@@ -125,7 +125,7 @@ GetEnvironmentVariableW (
 		SetLastErrorByStatus (Status);
 		if (Status == STATUS_BUFFER_TOO_SMALL)
 		{
-			return (VarValue.Length / sizeof(WCHAR)) +  sizeof(WCHAR);
+			return (VarValue.Length / sizeof(WCHAR)) +  1;
 		}
 		else
 		{
@@ -133,7 +133,7 @@ GetEnvironmentVariableW (
 		}
 	}
 
-	return (VarValue.Length / sizeof(WCHAR) + sizeof(WCHAR));
+	return (VarValue.Length / sizeof(WCHAR) + 1);
 }
 
 
