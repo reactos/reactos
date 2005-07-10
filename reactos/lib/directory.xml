@@ -124,6 +124,9 @@
 <directory name="kbdus">
 	<xi:include href="kbdus/kbdus.xml" />
 </directory>
+<directory name="kbdbe">
+	<xi:include href="kbdbe/kbdbe.xml" />
+</directory>
 <directory name="kernel32">
 	<xi:include href="kernel32/kernel32.xml" />
 </directory>

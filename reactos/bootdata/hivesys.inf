@@ -69,6 +69,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000809","Layout File",0
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000809","Layout Text",0x00000000,"UK"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000807","Layout File",0x00000000,"kbdsg.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000807","Layout Text",0x00000000,"SG"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000813","Layout File",0x00000000,"kbdbe.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000813","Layout Text",0x00000000,"BE (point)"
 
 ; Network
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Adapters"
@@ -171,10 +173,11 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0419",0x00000000,"l_intl.n
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","041d",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0809",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0807",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0813",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","Default",0x00000000,"0409"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","InstallLanguage",0x00000000,"0409"
 
-; Suported and installed locales
+; Supported and installed locales
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale",,0x00000012
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","00000402",0x00010001,"5"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","00000403",0x00010001,"1"

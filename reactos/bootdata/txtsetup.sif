@@ -73,6 +73,7 @@ vbe = "VBE Display"
 Default = "XT-, AT- or extended keyboard (83-105 keys)"
 
 [KeyboardLayout]
+00000813 = "Belgian (point)"
 00000406 = "Danish (Denmark)"
 00000809 = "English (United Kingdom)"
 00000409 = "English (USA)"
@@ -83,6 +84,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000040A = "Spanish (traditional short)"
 0000041D = "Swedish (Sweden)"
 00000807 = "German (Swiss)"
+
 
 [Files.KeyboardLayout]
 00000406 = kbdda.dll
@@ -95,6 +97,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000041D = kbdse.dll
 00000809 = kbduk.dll
 00000807 = kbdsg.dll
+00000813 = kbdbe.dll
 
 [HiveInfs.Install]
 AddReg=hivecls.inf,AddReg
