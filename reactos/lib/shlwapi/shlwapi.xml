@@ -37,5 +37,6 @@
 	<file>thread.c</file>
 	<file>url.c</file>
 	<file>wsprintf.c</file>
+	<file>shlwapi.rc</file>
 	<file>shlwapi.spec</file>
 </module>

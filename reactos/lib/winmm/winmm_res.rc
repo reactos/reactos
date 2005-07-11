@@ -36,6 +36,7 @@
 #include "winmm_It.rc"
 /* #include "winmm_Ja.rc" */ /* Gives error during ReactOS build */
 #include "winmm_Nl.rc"
+#include "winmm_Pl.rc"
 #include "winmm_Pt.rc"
 #include "winmm_Ru.rc"
 #include "winmm_Si.rc"
