@@ -1,10 +1,30 @@
+/* $Id: ipconfig.c
+ *
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Ipconfig utility
+ * FILE:            apps/utils/net/ipconfig/ipconfig.c
+ * PURPOSE:         Show and set network interface IP parameters
+ */ 
 /*
- * ipconfig - display IP stack parameters.
+ *  History:
  *
- * This source code is in the PUBLIC DOMAIN and has NO WARRANTY.
+ *      15/8/2002 (Robert Dickenson <robd@reactos.org>)
+ *          Original version (PUBLIC DOMAIN and NO WARRANTY)
  *
- * Robert Dickenson <robd@reactos.org>, August 15, 2002.
- */
+ *      26/6/2005 (Tim Jobling <tjob800@yahoo.co.uk>)
+ *          Relicense to GPL. 
+ *          Display NodeType with meaningfull Human readable names.
+ *          Exclusively use TCHAR strings.
+ *          Display Physical Address, DHCP enabled state, IP Addresses/Netmasks,
+ *          Default Gateway, DHCP server and DHCP Lease times.
+ *          Parse command line options.
+ *          Default to only showing the IP/SM/DG is no options specified
+ *          Handel option: /All and /?
+ *          Display message about all unimplemented options.
+ *          Changed C++ style commenting to C style
+ *   
+*/ 
+ 
 #include <stdio.h>
 #include <windows.h>
 #include <tchar.h>
@@ -18,8 +38,6 @@
 #include "trace.h"
 #endif
 
-////////////////////////////////////////////////////////////////////////////////
-
 /* imported from iphlpapi.dll
 
 GetAdapterOrderMap
@@ -30,16 +48,41 @@ NhpAllocateAndGetInterfaceInfoFromStack
 
  */
 
-static TCHAR* GetNodeTypeName(int nNodeType)
+static TCHAR* GetNodeTypeName(UINT nNodeType)
 {
     switch (nNodeType) {
-    case 0:  return _T("zero");
-    case 1:  return _T("one");
-    case 2:  return _T("two");
-    case 3:  return _T("three");
-    case 4:  return _T("mixed");
+    case 1:  return _T("Broadcast");
+    case 2:  return _T("Peer To Peer");
+    case 4:  return _T("Mixed");
+    case 8:  return _T("Hybrid");
     default: return _T("unknown");
     }
+}
+
+static TCHAR* GetInterfaceTypeName(UINT nInterfaceType)
+{
+    switch (nInterfaceType) {
+    case MIB_IF_TYPE_OTHER:     return _T("Other");
+    case MIB_IF_TYPE_ETHERNET:  return _T("Ethernet");
+    case MIB_IF_TYPE_TOKENRING: return _T("Token Ring");
+    case MIB_IF_TYPE_FDDI:      return _T("FDDI");
+    case MIB_IF_TYPE_PPP:       return _T("PPP");
+    case MIB_IF_TYPE_LOOPBACK:  return _T("Loopback");
+    case MIB_IF_TYPE_SLIP:      return _T("SLIP");
+    default: return _T("unknown");
+    }
+}
+
+void PrintPhysicalAddr(PBYTE Addr, UINT len)
+{
+    UINT i=0;
+    for (i=0; i<len; i++)
+    {
+        _tprintf(_T("%02X"), Addr[i]);
+        if ((i+1)<len)
+            _tprintf(_T("-"));
+    }
+    _tprintf(_T("\n"));
 }
 
 static void ShowNetworkFixedInfo()
@@ -64,27 +107,28 @@ static void ShowNetworkFixedInfo()
     if (result == ERROR_SUCCESS) {
         IP_ADDR_STRING* pIPAddr;
 
-             printf("\tHostName. . . . . . . . . . . : %s\n",  pFixedInfo->HostName);
-             printf("\tDomainName. . . . . . . . . . : %s\n",  pFixedInfo->DomainName);
-//
-             printf("\tDNS Servers . . . . . . . . . : %s\n",  pFixedInfo->DnsServerList.IpAddress.String);
+             _tprintf(_T("\tHostName. . . . . . . . . . . : %s\n"),  pFixedInfo->HostName);
+             _tprintf(_T("\tDomainName. . . . . . . . . . : %s\n"),  pFixedInfo->DomainName);
+
+             _tprintf(_T("\tDNS Servers . . . . . . . . . : %s\n"),  pFixedInfo->DnsServerList.IpAddress.String);
              pIPAddr = pFixedInfo->DnsServerList.Next;
              while (pIPAddr) {
-                 printf("\t\t\t\t      : %s\n",  pIPAddr->IpAddress.String);
+                 _tprintf(_T("\t\t\t\t      : %s\n"),  pIPAddr->IpAddress.String);
                  pIPAddr = pIPAddr->Next;
              }
-//
+
         _tprintf(_T("\tNodeType. . . . . . . . . . . : %d (%s)\n"), pFixedInfo->NodeType, GetNodeTypeName(pFixedInfo->NodeType));
-             printf("\tScopeId . . . . . . . . . . . : %s\n",  pFixedInfo->ScopeId);
+        _tprintf(_T("\tScopeId . . . . . . . . . . . : %s\n"),  pFixedInfo->ScopeId);
         _tprintf(_T("\tEnableRouting . . . . . . . . : %s\n"), pFixedInfo->EnableRouting ? _T("yes") : _T("no"));
         _tprintf(_T("\tEnableProxy . . . . . . . . . : %s\n"), pFixedInfo->EnableProxy ? _T("yes") : _T("no"));
         _tprintf(_T("\tEnableDns . . . . . . . . . . : %s\n"), pFixedInfo->EnableDns ? _T("yes") : _T("no"));
         _tprintf(_T("\n"));
-        //_tprintf(_T("\n"),);
-        //_tprintf(_T("GetNetworkParams() returned with %d\n"), pIfTable->NumAdapters);
+/*        
+        _tprintf(_T("\n"),);
+        _tprintf(_T("GetNetworkParams() returned with %d\n"), pIfTable->NumAdapters);
 
-//      _tprintf(_T("\tConnection specific DNS suffix: %s\n"), pFixedInfo->EnableDns ? _T("yes") : _T("no"));
-
+      _tprintf(_T("\tConnection specific DNS suffix: %s\n"), pFixedInfo->EnableDns ? _T("yes") : _T("no"));
+*/
     } else {
         switch (result) {
         case ERROR_BUFFER_OVERFLOW:
@@ -121,10 +165,11 @@ static void ShowNetworkInterfaces()
     }
 
     result = GetInterfaceInfo(pIfTable, &dwOutBufLen);
-//    dwOutBufLen = sizeof(IP_INTERFACE_INFO) + dwNumIf * sizeof(IP_ADAPTER_INDEX_MAP);
-//    _tprintf(_T("GetNumberOfInterfaces() returned %d, dwOutBufLen %d\n"), dwNumIf, dwOutBufLen);
-//    _tprintf(_T("sizeof(IP_INTERFACE_INFO) %d, sizeof(IP_ADAPTER_INDEX_MAP) %d\n"), sizeof(IP_INTERFACE_INFO), sizeof(IP_ADAPTER_INDEX_MAP));
-
+/*
+    dwOutBufLen = sizeof(IP_INTERFACE_INFO) + dwNumIf * sizeof(IP_ADAPTER_INDEX_MAP);
+    _tprintf(_T("GetNumberOfInterfaces() returned %d, dwOutBufLen %d\n"), dwNumIf, dwOutBufLen);
+    _tprintf(_T("sizeof(IP_INTERFACE_INFO) %d, sizeof(IP_ADAPTER_INDEX_MAP) %d\n"), sizeof(IP_INTERFACE_INFO), sizeof(IP_ADAPTER_INDEX_MAP));
+*/
     pIfTable = (IP_INTERFACE_INFO*)malloc(dwOutBufLen);
     if (!pIfTable) {
         _tprintf(_T("ERROR: failed to allocate 0x%08lX bytes of memory\n"), dwOutBufLen);
@@ -143,17 +188,13 @@ typedef struct _IP_INTERFACE_INFO {
  */
     result = GetInterfaceInfo(pIfTable, &dwOutBufLen);
     if (result == NO_ERROR) {
-        int i;
+        UINT i;
         _tprintf(_T("GetInterfaceInfo() returned with %ld adaptor entries\n"), pIfTable->NumAdapters);
         for (i = 0; i < pIfTable->NumAdapters; i++) {
            wprintf(L"[%d] %s\n", i + 1, pIfTable->Adapter[i].Name);
-           //wprintf(L"[%d] %s\n", pIfTable->Adapter[i].Index, pIfTable->Adapter[i].Name);
+           /*wprintf(L"[%d] %s\n", pIfTable->Adapter[i].Index, pIfTable->Adapter[i].Name);*/
 
-//  \DEVICE\TCPIP_{DB0E61C1-3498-4C5F-B599-59CDE8A1E357}
-//  \DEVICE\TCPIP_{BD445697-0945-4591-AE7F-2AB0F383CA87}
-//  \DEVICE\TCPIP_{6D87DC08-6BC5-4E78-AB5F-18CAB785CFFE}
-
-//HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\NetBT\Parameters\Interfaces\Tcpip_{DB0E61C1-3498-4C5F-B599-59CDE8A1E357}
+/*HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\NetBT\Parameters\Interfaces\Tcpip_{DB0E61C1-3498-4C5F-B599-59CDE8A1E357}*/
         }
     } else {
         switch (result) {
@@ -213,13 +254,20 @@ Ethernet adapter VMware Virtual Ethernet Adapter (Network Address Translation (N
 a        Lease Obtained. . . . . . . . . . : Monday, 30 December 2002 5:56:53 PM
 b        Lease Expires . . . . . . . . . . : Monday, 30 December 2002 6:26:53 PM
  */
-static void ShowAdapterInfo()
+static void ShowAdapterInfo(BOOL ShowAll)
 {
     IP_ADAPTER_INFO* pAdaptorInfo;
     ULONG ulOutBufLen;
     DWORD dwRetVal;
+    PIP_ADDR_STRING pIpAddrString;
+    struct tm *LeaseTime;
 
-    _tprintf(_T("\nAdaptor Information\t\n"));
+
+    if (ShowAll)
+    {
+        _tprintf(_T("\nAdaptor Information\t\n"));
+    }
+
     pAdaptorInfo = (IP_ADAPTER_INFO*)GlobalAlloc(GPTR, sizeof(IP_ADAPTER_INFO));
     ulOutBufLen = sizeof(IP_ADAPTER_INFO);
 
@@ -231,14 +279,57 @@ static void ShowAdapterInfo()
         _tprintf(_T("Call to GetAdaptersInfo failed. Return Value: 0x%08lx\n"), dwRetVal);
     } else {
         while (pAdaptorInfo) {
-            printf("  AdapterName: %s\n", pAdaptorInfo->AdapterName);
-            printf("  Description: %s\n", pAdaptorInfo->Description);
+
+            /* print the type of interface before the Name of it */
+            _tprintf(_T("\n%s Adapter %s:\n\n"), GetInterfaceTypeName(pAdaptorInfo->Type), pAdaptorInfo->AdapterName);
+
+            if (ShowAll)
+            {
+                _tprintf(_T("\tDescription. . . . . . : %s\n"), pAdaptorInfo->Description);
+
+                /* print the Physical address to the screen*/
+                _tprintf(_T("\tPhysical Address . . . : "));
+                PrintPhysicalAddr(pAdaptorInfo->Address, pAdaptorInfo->AddressLength);
+
+                /* Now the DHCP state */
+                _tprintf(_T("\tDHCP Enabled . . . . . : %s\n"), pAdaptorInfo->DhcpEnabled ? _T("Yes") : _T("No"));
+            }
+            
+            /* IP Addresses/Netmasks, there may be more than one */
+            pIpAddrString = &pAdaptorInfo->IpAddressList;
+
+            do{
+                _tprintf(_T("\tIP Address . . . . . . : %s\n"), pIpAddrString->IpAddress.String);
+                _tprintf(_T("\tSubnet Mask. . . . . . : %s\n"), pIpAddrString->IpMask.String);
+                pIpAddrString = pIpAddrString->Next;
+            }while (pIpAddrString!=NULL);
+
+            /* Default Gateway */
+            pIpAddrString = &pAdaptorInfo->GatewayList;
+            _tprintf(_T("\tDefault Gateway. . . . : %s\n"), pIpAddrString->IpAddress.String);
+
+            /* Print some stuff that is only relevant it dhcp is enabled */
+            if((pAdaptorInfo->DhcpEnabled)&&(ShowAll))
+            {
+                /* Display the DHCP server address */
+                pIpAddrString = &pAdaptorInfo->DhcpServer;
+                _tprintf(_T("\tDHCP Server. . . . . . : %s\n"), pIpAddrString->IpAddress.String);
+
+                /* Display the Lease times*/
+                LeaseTime = localtime(&pAdaptorInfo->LeaseObtained);
+                _tprintf(_T("\tLease Obtained . . . . : %s"), asctime(LeaseTime));
+
+                LeaseTime = localtime(&pAdaptorInfo->LeaseExpires);
+                _tprintf(_T("\tLease Expieres . . . . : %s"), asctime(LeaseTime));
+
+            }
+
             pAdaptorInfo = pAdaptorInfo->Next;
         }
     }
 }
 
-const char szUsage[] = { "USAGE:\n" \
+const TCHAR szUsage[] = { _T("USAGE:\n" \
     "   ipconfig [/? | /all | /release [adapter] | /renew [adapter]\n" \
     "            | /flushdns | /registerdns\n" \
     "            | /showclassid adapter\n" \
@@ -259,7 +350,7 @@ const char szUsage[] = { "USAGE:\n" \
     "       /setclassid  Modifies the dhcp class id.\n" \
     "\n" \
     "The default is to display only the IP address, subnet mask and\n" \
-    "default gateway for each adapter bound to TCP/IP.\n"
+    "default gateway for each adapter bound to TCP/IP.\n")
 };
 /*
     "\n" \
@@ -279,21 +370,114 @@ const char szUsage[] = { "USAGE:\n" \
 
 static void usage(void)
 {
-	fputs(szUsage, stderr);
+    _fputts(szUsage, stderr);
 }
 
 
-int main(int argc, char *argv[])
+int _tmain(int argc, TCHAR *argv[])
 {
-    // 10.0.0.100    // As of build 0.0.20 this is hardcoded in the ip stack
+    BOOL DoUsage=FALSE;
+    BOOL DoAll=FALSE;
+    BOOL DoRelease=FALSE;
+    BOOL DoRenew=FALSE;
+    BOOL DoFlushdns=FALSE;
+    BOOL DoRegisterdns=FALSE;
+    BOOL DoDisplaydns=FALSE;
+    BOOL DoShowclassid=FALSE;
+    BOOL DoSetclassid=FALSE;  
 
-    if (argc > 1) {
-        usage();
-        return 1;
+    _tprintf(_T("\nReactOS IP Configuration\n\n"));
+
+    /* 
+       Parse command line for options we have been given. 
+    */
+    if ( ((argc > 1))&&((argv[1][0]=='/')||(argv[1][0]=='-')) )
+    {
+        if( !_tcsicmp( &argv[1][1], _T("?") ))
+        {
+            DoUsage = TRUE;
+        }
+        else if( !_tcsnicmp( &argv[1][1], _T("ALL"), _tcslen(&argv[1][1]) ))
+        {
+           DoAll = TRUE;
+        } 
+        else if( !_tcsnicmp( &argv[1][1], _T("RELEASE"), _tcslen(&argv[1][1]) ))
+        {
+            DoRelease = TRUE; 
+        } 
+        else if( ! _tcsnicmp( &argv[1][1], _T("RENEW"), _tcslen(&argv[1][1]) ))
+        {
+            DoRenew = TRUE;
+        }
+        else if( ! _tcsnicmp( &argv[1][1], _T("FLUSHDNS"), _tcslen(&argv[1][1]) ))
+        {
+            DoFlushdns = TRUE;
+        }
+        else if( ! _tcsnicmp( &argv[1][1], _T("REGISTERDNS"), _tcslen(&argv[1][1]) ))
+        {
+            DoRegisterdns = TRUE;
+        }
+        else if( ! _tcsnicmp( &argv[1][1], _T("DISPLAYDNS"), _tcslen(&argv[1][1]) ))
+        {
+            DoDisplaydns = TRUE;
+        }
+        else if( ! _tcsnicmp( &argv[1][1], _T("SHOWCLASSID"), _tcslen(&argv[1][1]) ))
+        {
+            DoShowclassid = TRUE;
+        }
+        else if( ! _tcsnicmp( &argv[1][1], _T("SETCLASSID"), _tcslen(&argv[1][1]) ))
+        {
+            DoSetclassid = TRUE;
+        }
     }
-    _tprintf(_T("ReactOS IP Configuration\n"));
-    ShowNetworkFixedInfo();
-    ShowNetworkInterfaces();
-    ShowAdapterInfo();
-	return 0;
+
+
+    switch (argc) 
+    {
+        case 1:  /* Default behaviour if options are given specified*/
+            ShowAdapterInfo(FALSE);
+            break;
+        case 2:  /* Process all the options that take no paramiters */
+            if ( DoUsage)
+                usage();
+            else if ( DoAll)
+            {
+                ShowNetworkFixedInfo();
+                ShowNetworkInterfaces();
+                ShowAdapterInfo(TRUE);
+            }
+            else if ( DoRelease)
+                printf("\nSorry /Release is not implemented yet\n");
+            else if ( DoRenew)
+                printf("\nSorry /Renew is not implemented yet\n");
+            else if ( DoFlushdns)
+                printf("\nSorry /Flushdns is not implemented yet\n");
+            else if ( DoRegisterdns)
+                printf("\nSorry /Registerdns is not implemented yet\n");
+            else if ( DoDisplaydns)
+                printf("\nSorry /Displaydns is not implemented yet\n");
+            else
+                usage();
+            break;
+        case 3: /* Process all the options that can have 1 paramiters */
+            if ( DoRelease)
+                printf("\nSorry /Release is not implemented yet\n");
+            else if ( DoRenew)
+                printf("\nSorry /Renew is not implemented yet\n");
+            else if ( DoShowclassid)
+                printf("\nSorry /Showclassid is not implemented yet\n");
+            else
+                usage();
+            break;
+        case 4:  /* Process all the options that can have 2 paramiters */
+            if ( DoSetclassid)
+                printf("\nSorry /Setclassid is not implemented yet\n");
+            else
+                usage();
+            break;
+        default:
+            usage();
+    }
+
+    return 0;
 }
