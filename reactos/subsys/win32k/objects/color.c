@@ -609,6 +609,12 @@ NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
          case GDI_OBJECT_TYPE_PALETTE:
            {
            /* Make sure this is a Palette object!*/
+              DPRINT1("GDI_OBJECT_TYPE_PALETTE\n");
+              break;
+           }
+         case GDI_OBJECT_TYPE_BRUSH:
+           {
+              DPRINT1("GDI_OBJECT_TYPE_BRUSH\n");
               break;
            }
          default:

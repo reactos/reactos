@@ -1116,8 +1116,7 @@ UnrealizeObject(
 	)
 {
 	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+	return NtGdiUnrealizeObject(a0);
 }
 
 
