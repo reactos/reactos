@@ -157,7 +157,7 @@ HWND* WIN_ListChildren (HWND hWndparent)
   dwCount = NtUserBuildHwndList ( NULL, hWndparent, FALSE, 0, 0, NULL, 0 );
 
   if ( !dwCount || GetLastError() )
-    return FALSE;
+    return 0;
 
   /* allocate buffer to receive HWND handles */
   hHeap = GetProcessHeap();
@@ -166,7 +166,7 @@ HWND* WIN_ListChildren (HWND hWndparent)
   if ( !pHwnd )
     {
       SetLastError ( ERROR_NOT_ENOUGH_MEMORY );
-      return FALSE;
+      return 0;
     }
 
   /* now call kernel again to fill the buffer this time */
@@ -176,7 +176,7 @@ HWND* WIN_ListChildren (HWND hWndparent)
     {
       if ( pHwnd )
 	HeapFree ( hHeap, 0, pHwnd );
-      return FALSE;
+      return 0;
     }
 
   return pHwnd;
