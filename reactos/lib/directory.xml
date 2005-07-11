@@ -91,6 +91,9 @@
 <directory name="imm32">
 	<xi:include href="imm32/imm32.xml" />
 </directory>
+<directory name="intrlck">
+	<xi:include href="intrlck/intrlck.xml" />
+</directory>
 <directory name="iphlpapi">
 	<xi:include href="iphlpapi/iphlpapi.xml" />
 </directory>
