@@ -2605,6 +2605,14 @@ SetConsoleMode(
   
   NTSTATUS Status;
 
+  if (!IsConsoleHandle (hConsoleHandle))
+  {
+    DPRINT("SetConsoleMode was called with a non console handle\n");
+    SetLastError (ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+
+
   CsrRequest = MAKE_CSR_API(SET_CONSOLE_MODE, CSR_CONSOLE);
   Request.Data.SetConsoleModeRequest.ConsoleHandle = hConsoleHandle;
   Request.Data.SetConsoleModeRequest.Mode = dwMode;
