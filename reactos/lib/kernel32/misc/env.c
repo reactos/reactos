@@ -91,7 +91,7 @@ GetEnvironmentVariableA (
 	/* free unicode variable name string */
 	RtlFreeUnicodeString (&VarNameU);
 
-	return (VarValueU.Length / sizeof(WCHAR) + 1);
+	return (VarValueU.Length / sizeof(WCHAR));
 }
 
 
@@ -133,7 +133,7 @@ GetEnvironmentVariableW (
 		}
 	}
 
-	return (VarValue.Length / sizeof(WCHAR) + 1);
+	return (VarValue.Length / sizeof(WCHAR));
 }
 
 
