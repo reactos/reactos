@@ -26,6 +26,13 @@
 #define IsConsoleHandle(h) \
   ((((ULONG)h) & 0x10000003) == 0x3) ? TRUE : FALSE
 
+#define HANDLE_DETACHED_PROCESS    (HANDLE)-1
+#define HANDLE_CREATE_NEW_CONSOLE  (HANDLE)-2
+#define HANDLE_CREATE_NO_WINDOW    (HANDLE)-3
+
+/* Undocumented CreateProcess flag */
+#define STARTF_SHELLPRIVATE         0x400
+  
 #define SetLastErrorByStatus(__S__) \
  ((void)SetLastError(RtlNtStatusToDosError(__S__)))
 
@@ -68,6 +75,87 @@ DWORD FilenameU2A_FitOrFail(LPSTR  DestA, INT destLen, PUNICODE_STRING SourceU);
 
 #define HeapAlloc RtlAllocateHeap
 #define HeapFree RtlFreeHeap
+
+POBJECT_ATTRIBUTES
+STDCALL
+BasepConvertObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,
+                             IN PSECURITY_ATTRIBUTES SecurityAttributes OPTIONAL,
+                             IN PUNICODE_STRING ObjectName);
+                             
+NTSTATUS
+STDCALL
+BasepCreateStack(HANDLE hProcess,
+                 ULONG StackReserve,
+                 ULONG StackCommit,
+                 PINITIAL_TEB InitialTeb);
+                 
+VOID
+STDCALL
+BasepInitializeContext(IN PCONTEXT Context,
+                       IN PVOID Parameter,
+                       IN PVOID StartAddress,
+                       IN PVOID StackAddress,
+                       IN ULONG ContextType);
+                
+VOID
+STDCALL
+BaseThreadStartupThunk();
+
+VOID
+STDCALL
+BaseProcessStartThunk();
+        
+__declspec(noreturn)
+VOID
+STDCALL
+BaseThreadStartup(LPTHREAD_START_ROUTINE lpStartAddress,
+                  LPVOID lpParameter);
+                  
+VOID
+STDCALL
+BasepFreeStack(HANDLE hProcess,
+               PINITIAL_TEB InitialTeb);
+
+__declspec(noreturn)
+VOID
+WINAPI
+BaseFiberStartup(VOID);
+
+typedef UINT (STDCALL *PPROCESS_START_ROUTINE)(VOID);
+
+VOID
+STDCALL
+BaseProcessStartup(PPROCESS_START_ROUTINE lpStartAddress);
+                  
+BOOLEAN
+STDCALL
+BasepCheckRealTimePrivilege(VOID);
+
+VOID
+STDCALL
+BasepAnsiStringToHeapUnicodeString(IN LPCSTR AnsiString,
+                                   IN PVOID UnicodeString);
+                                   
+PUNICODE_STRING
+STDCALL
+Basep8BitStringToCachedUnicodeString(IN LPCSTR String);
+
+NTSTATUS
+STDCALL
+Basep8BitStringToLiveUnicodeString(OUT PUNICODE_STRING UnicodeString,
+                                   IN LPCSTR String);
+
+typedef NTSTATUS (STDCALL *PRTL_CONVERT_STRING)(IN PUNICODE_STRING UnicodeString,
+                                                IN PANSI_STRING AnsiString,
+                                                IN BOOLEAN AllocateMemory);
+                                                
+PRTL_CONVERT_STRING Basep8BitStringToUnicodeString;
+
+NTSTATUS
+STDCALL
+BasepMapFile(IN LPCWSTR lpApplicationName,
+             OUT PHANDLE hSection,
+             IN PUNICODE_STRING ApplicationName);
 
 #endif /* ndef _KERNEL32_INCLUDE_KERNEL32_H */
 

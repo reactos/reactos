@@ -76,6 +76,7 @@
 		<file>time.c</file>
 		<file>timerqueue.c</file>
 		<file>toolhelp.c</file>
+        <file>utils.c</file>
 		<file>version.c</file>
 	</directory>
 	<directory name="process">
@@ -99,6 +100,7 @@
 	<directory name="thread">
 		<directory name="i386">
 			<file>fiber.S</file>
+            <file>thread.S</file>
 		</directory>
 		<file>fiber.c</file>
 		<file>fls.c</file>

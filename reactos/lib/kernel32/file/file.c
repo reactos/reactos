@@ -22,7 +22,6 @@
 
 BOOL bIsFileApiAnsi = TRUE; // set the file api to ansi or oem
 
-
 /* FUNCTIONS ****************************************************************/
 
 
@@ -178,20 +177,30 @@ FilenameW2A_N(
 /*
  * @implemented
  */
-VOID STDCALL
+VOID
+STDCALL
 SetFileApisToOEM(VOID)
 {
-   bIsFileApiAnsi = FALSE;
+    /* Set the correct Base Api */
+    Basep8BitStringToUnicodeString = RtlOemStringToUnicodeString;
+
+    /* FIXME: Old, deprecated way */
+    bIsFileApiAnsi = FALSE;
 }
 
 
 /*
  * @implemented
  */
-VOID STDCALL
+VOID
+STDCALL
 SetFileApisToANSI(VOID)
 {
-   bIsFileApiAnsi = TRUE;
+    /* Set the correct Base Api */
+    Basep8BitStringToUnicodeString = RtlAnsiStringToUnicodeString;
+
+    /* FIXME: Old, deprecated way */
+    bIsFileApiAnsi = TRUE;
 }
 
 
