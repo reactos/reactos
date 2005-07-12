@@ -1049,7 +1049,7 @@ RtlCreateUserProcess(
     IN BOOLEAN CurrentDirectory,
     IN HANDLE DebugPort OPTIONAL,
     IN HANDLE ExceptionPort OPTIONAL,
-    OUT PRTL_PROCESS_INFO ProcessInfo
+    OUT PRTL_USER_PROCESS_INFORMATION ProcessInfo
 );
 
 NTSTATUS
@@ -1059,8 +1059,8 @@ RtlCreateUserThread(
     IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     IN BOOLEAN CreateSuspended,
     IN LONG StackZeroBits,
-    IN OUT PULONG StackReserve,
-    IN OUT PULONG StackCommit,
+    IN ULONG StackReserve,
+    IN ULONG StackCommit,
     IN PTHREAD_START_ROUTINE StartAddress,
     IN PVOID Parameter,
     IN OUT PHANDLE ThreadHandle,
@@ -1075,11 +1075,11 @@ NTSTATUS
 STDCALL
 RtlDestroyProcessParameters(IN PRTL_USER_PROCESS_PARAMETERS ProcessParameters);
 
-NTSTATUS
+VOID
 STDCALL
 RtlExitUserThread(NTSTATUS Status);
 
-NTSTATUS
+VOID
 STDCALL
 RtlInitializeContext(
     IN HANDLE ProcessHandle,

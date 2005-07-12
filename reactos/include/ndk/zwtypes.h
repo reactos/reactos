@@ -427,19 +427,22 @@ typedef struct _SECTION_BASIC_INFORMATION
 /* Class 1 */
 typedef struct _SECTION_IMAGE_INFORMATION
 {
-    ULONG     EntryPoint;
-    ULONG     Unknown1;
-    ULONG_PTR StackReserve;
-    ULONG_PTR StackCommit;
-    ULONG     Subsystem;
-    USHORT    MinorSubsystemVersion;
-    USHORT    MajorSubsystemVersion;
-    ULONG     Unknown2;
-    ULONG     Characteristics;
-    USHORT    ImageNumber;
-    BOOLEAN   Executable;
-    UCHAR     Unknown3;
-    ULONG     Unknown4[3];
+    PVOID TransferAddress;
+    ULONG ZeroBits;
+    ULONG MaximumStackSize;
+    ULONG CommittedStackSize;
+    ULONG SubsystemType;
+    USHORT SubSystemMinorVersion;
+    USHORT SubSystemMajorVersion;
+    ULONG GpValue;
+    USHORT ImageCharacteristics;
+    USHORT DllChracteristics;
+    USHORT Machine;
+    UCHAR ImageContainsCode;
+    UCHAR Spare1;
+    ULONG LoaderFlags;
+    ULONG ImageFileSIze;
+    ULONG Reserved[1];
 } SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
 
 /*

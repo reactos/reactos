@@ -35,8 +35,8 @@ NTSTATUS STDCALL RtlCreateUserThread
  PSECURITY_DESCRIPTOR SecurityDescriptor,
  BOOLEAN CreateSuspended,
  LONG StackZeroBits,
- PULONG StackReserve,
- PULONG StackCommit,
+ ULONG StackReserve,
+ ULONG StackCommit,
  PTHREAD_START_ROUTINE StartAddress,
  PVOID Parameter,
  PHANDLE ThreadHandle,
@@ -60,8 +60,8 @@ NTSTATUS STDCALL RtlCreateUserThread
   &oaThreadAttribs,
   CreateSuspended,
   StackZeroBits,
-  StackReserve,
-  StackCommit,
+  &StackReserve,
+  &StackCommit,
   StartAddress,
   ThreadHandle,
   ClientId,
@@ -73,7 +73,7 @@ NTSTATUS STDCALL RtlCreateUserThread
 /*
  @implemented
 */
-NTSTATUS STDCALL
+VOID STDCALL
 RtlInitializeContext(
   IN HANDLE ProcessHandle,
   OUT PCONTEXT ThreadContext,
@@ -81,7 +81,7 @@ RtlInitializeContext(
   IN PTHREAD_START_ROUTINE ThreadStartAddress,
   IN PINITIAL_TEB InitialTeb)
 {
- return RtlRosInitializeContext
+ RtlRosInitializeContext
  (
   ProcessHandle,
   ThreadContext,
@@ -107,7 +107,7 @@ NTSTATUS STDCALL RtlFreeUserThreadStack
 /*
  @implemented
 */
-NTSTATUS STDCALL RtlExitUserThread(NTSTATUS Status)
+VOID STDCALL RtlExitUserThread(NTSTATUS Status)
 {
  RtlRosExitUserThread(Status);
 }

@@ -4071,15 +4071,15 @@ NtQuerySection(IN HANDLE SectionHandle,
                   PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
                   ImageSectionObject = Section->ImageSection;
 
-                  Sii->EntryPoint = ImageSectionObject->EntryPoint;
-                  Sii->StackReserve = ImageSectionObject->StackReserve;
-                  Sii->StackCommit = ImageSectionObject->StackCommit;
-                  Sii->Subsystem = ImageSectionObject->Subsystem;
-                  Sii->MinorSubsystemVersion = ImageSectionObject->MinorSubsystemVersion;
-                  Sii->MajorSubsystemVersion = ImageSectionObject->MajorSubsystemVersion;
-                  Sii->Characteristics = ImageSectionObject->ImageCharacteristics;
-                  Sii->ImageNumber = ImageSectionObject->Machine;
-                  Sii->Executable = ImageSectionObject->Executable;
+                  Sii->TransferAddress = (PVOID)ImageSectionObject->EntryPoint;
+                  Sii->MaximumStackSize = ImageSectionObject->StackReserve;
+                  Sii->CommittedStackSize = ImageSectionObject->StackCommit;
+                  Sii->SubsystemType = ImageSectionObject->Subsystem;
+                  Sii->SubSystemMinorVersion = ImageSectionObject->MinorSubsystemVersion;
+                  Sii->SubSystemMajorVersion = ImageSectionObject->MajorSubsystemVersion;
+                  Sii->ImageCharacteristics = ImageSectionObject->ImageCharacteristics;
+                  Sii->Machine = ImageSectionObject->Machine;
+                  Sii->ImageContainsCode = ImageSectionObject->Executable;
                }
 
                if (ResultLength != NULL)

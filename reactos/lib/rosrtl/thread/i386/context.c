@@ -3,13 +3,12 @@
 /*
 */
 
-#include <string.h>
-
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
 #include <rosrtl/thread.h>
+#include <debug.h>
 
 NTSTATUS NTAPI
 RtlRosInitializeContext
@@ -39,7 +38,7 @@ RtlRosInitializeContext
 
  /* validate the stack */
  nErrCode = RtlpRosValidateTopDownUserStack(pStackBase, pStackLimit);
-
+ 
  /* failure */
  if(!NT_SUCCESS(nErrCode)) return nErrCode;
 

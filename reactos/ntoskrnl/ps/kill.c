@@ -288,8 +288,18 @@ PspExitThread(NTSTATUS ExitStatus)
     //CmNotifyRunDown(CurrentThread);
 
     /* Free the TEB */
-    if((Teb = CurrentThread->Tcb.Teb)) {
-
+    if((Teb = CurrentThread->Tcb.Teb))
+    {
+        /* Clean up the stack first, if requested */
+        if (Teb->FreeStackOnTermination)
+        {
+            ULONG Dummy = 0;
+            ZwFreeVirtualMemory(NtCurrentProcess(),
+                                &Teb->DeallocationStack,
+                                &Dummy,
+                                MEM_RELEASE);
+        }
+        
         DPRINT("Decommit teb at %p\n", Teb);
         MmDeleteTeb(CurrentProcess, Teb);
         CurrentThread->Tcb.Teb = NULL;
@@ -518,6 +528,23 @@ NtTerminateThread(IN HANDLE ThreadHandle,
     NTSTATUS Status;
 
     PAGED_CODE();
+    
+    /* Handle the special NULL case */
+    if (!ThreadHandle)
+    {
+        /* Check if we're the only thread left */
+        if (IsListEmpty(&PsGetCurrentProcess()->Pcb.ThreadListHead))
+        {
+            /* This is invalid */
+            DPRINT1("Can't terminate self\n");
+            return STATUS_CANT_TERMINATE_SELF;
+        }
+        else
+        {
+            /* Use current handle */
+            ThreadHandle = NtCurrentThread();
+        }
+    }
 
     /* Get the Thread Object */
     Status = ObReferenceObjectByHandle(ThreadHandle,

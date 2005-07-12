@@ -23,6 +23,9 @@
 #define FIELD_OFFSET(type,fld)	((LONG)&(((type *)0)->fld))
 #endif
 
+#define IsConsoleHandle(h) \
+  ((((ULONG)h) & 0x10000003) == 0x3) ? TRUE : FALSE
+
 #define SetLastErrorByStatus(__S__) \
  ((void)SetLastError(RtlNtStatusToDosError(__S__)))
 
@@ -46,8 +49,6 @@ extern UNICODE_STRING DllDirectory;
 extern LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter;
 
 /* FUNCTION PROTOTYPES *******************************************************/
-
-BOOL STDCALL IsConsoleHandle(HANDLE Handle);
 
 BOOL STDCALL VerifyConsoleIoHandle(HANDLE Handle);
 

@@ -508,6 +508,7 @@ extern "C" {
 #define FIBER_FLAG_FLOAT_SWITCH 0x1
 #endif
 #define FLS_OUT_OF_INDEXES 0xFFFFFFFF
+#define STACK_SIZE_PARAM_IS_A_RESERVATION 0x00010000
 
 #ifndef RC_INVOKED
 typedef struct _FILETIME {

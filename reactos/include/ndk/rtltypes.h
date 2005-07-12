@@ -17,9 +17,17 @@
 /* CONSTANTS *****************************************************************/
 #define MAXIMUM_LEADBYTES 12
 
-#define PPF_NORMALIZED (1)
+#define PPF_NORMALIZED             0x01
+#define PPF_PROFILE_USER           0x02
+#define PPF_PROFILE_SERVER         0x04
+#define PPF_PROFILE_KERNEL         0x08
 
-#define PEB_BASE        (0x7FFDF000)
+#define PPF_RESERVE_1MB            0x20
+#define PPF_DISABLE_HEAP_CHECKS    0x100
+#define PPF_PROCESS_OR_1           0x200
+#define PPF_PROCESS_OR_2           0x400
+
+#define PEB_BASE                   (0x7FFDF000)
 
 #define EXCEPTION_CONTINUE_SEARCH     0
 #define EXCEPTION_EXECUTE_HANDLER     1
@@ -218,6 +226,12 @@ typedef struct _MODULE_INFORMATION
     ULONG ModuleCount;
     DEBUG_MODULE_INFORMATION ModuleEntry[1];
 } MODULE_INFORMATION, *PMODULE_INFORMATION;
+
+typedef struct _RTL_HEAP_DEFINITION
+{
+    ULONG Length;
+    ULONG Unknown[11];
+} RTL_HEAP_DEFINITION, *PRTL_HEAP_DEFINITION;
 /* END REVIEW AREA */
 
 typedef struct _EXCEPTION_REGISTRATION
@@ -229,6 +243,12 @@ typedef struct _EXCEPTION_REGISTRATION
 typedef EXCEPTION_REGISTRATION EXCEPTION_REGISTRATION_RECORD;
 typedef PEXCEPTION_REGISTRATION PEXCEPTION_REGISTRATION_RECORD;
 
+typedef struct _CURDIR
+{
+    UNICODE_STRING DosPath;
+    HANDLE Handle;
+} CURDIR, *PCURDIR;
+
 typedef struct RTL_DRIVE_LETTER_CURDIR
 {
     USHORT Flags;
@@ -236,12 +256,6 @@ typedef struct RTL_DRIVE_LETTER_CURDIR
     ULONG TimeStamp;
     UNICODE_STRING DosPath;
 } RTL_DRIVE_LETTER_CURDIR, *PRTL_DRIVE_LETTER_CURDIR;
-
-typedef struct _RTL_HEAP_DEFINITION
-{
-    ULONG Length;
-    ULONG Unknown[11];
-} RTL_HEAP_DEFINITION, *PRTL_HEAP_DEFINITION;
 
 typedef struct _RTL_RANGE_LIST
 {
@@ -323,44 +337,44 @@ typedef struct _NLS_FILE_HEADER
 
 typedef struct _RTL_USER_PROCESS_PARAMETERS
 {
-    ULONG  AllocationSize;
-    ULONG  Size;
-    ULONG  Flags;
-    ULONG  DebugFlags;
-    HANDLE  hConsole;
-    ULONG  ProcessGroup;
-    HANDLE  hStdInput;
-    HANDLE  hStdOutput;
-    HANDLE  hStdError;
-    UNICODE_STRING  CurrentDirectoryName;
-    HANDLE  CurrentDirectoryHandle;
-    UNICODE_STRING  DllPath;
-    UNICODE_STRING  ImagePathName;
-    UNICODE_STRING  CommandLine;
-    PWSTR  Environment;
-    ULONG  dwX;
-    ULONG  dwY;
-    ULONG  dwXSize;
-    ULONG  dwYSize;
-    ULONG  dwXCountChars;
-    ULONG  dwYCountChars;
-    ULONG  dwFillAttribute;
-    ULONG  dwFlags;
-    ULONG  wShowWindow;
-    UNICODE_STRING  WindowTitle;
-    UNICODE_STRING  DesktopInfo;
-    UNICODE_STRING  ShellInfo;
-    UNICODE_STRING  RuntimeInfo;
+    ULONG MaximumLength;
+    ULONG Length;
+    ULONG Flags;
+    ULONG DebugFlags;
+    HANDLE ConsoleHandle;
+    ULONG ConsoleFlags;
+    HANDLE StandardInput;
+    HANDLE StandardOutput;
+    HANDLE StandardError;
+    CURDIR CurrentDirectory;
+    UNICODE_STRING DllPath;
+    UNICODE_STRING ImagePathName;
+    UNICODE_STRING CommandLine;
+    PWSTR Environment;
+    ULONG StartingX;
+    ULONG StartingY;
+    ULONG CountX;
+    ULONG CountY;
+    ULONG CountCharsX;
+    ULONG CountCharsY;
+    ULONG FillAttribute;;
+    ULONG WindowFlags;
+    ULONG ShowWindowFlags;
+    UNICODE_STRING WindowTitle;
+    UNICODE_STRING DesktopInfo;
+    UNICODE_STRING ShellInfo;
+    UNICODE_STRING RuntimeData;
+    RTL_DRIVE_LETTER_CURDIR CurrentDirectories[32];
 } RTL_USER_PROCESS_PARAMETERS, *PRTL_USER_PROCESS_PARAMETERS;
 
-typedef struct _RTL_PROCESS_INFO
+typedef struct _RTL_USER_PROCESS_INFORMATION
 {
-   ULONG Size;
-   HANDLE ProcessHandle;
-   HANDLE ThreadHandle;
-   CLIENT_ID ClientId;
-   SECTION_IMAGE_INFORMATION ImageInfo;
-} RTL_PROCESS_INFO, *PRTL_PROCESS_INFO;
+    ULONG Size;
+    HANDLE ProcessHandle;
+    HANDLE ThreadHandle;
+    CLIENT_ID ClientId;
+    SECTION_IMAGE_INFORMATION ImageInformation;
+} RTL_USER_PROCESS_INFORMATION, *PRTL_USER_PROCESS_INFORMATION;
 
 typedef struct _RTL_ATOM_TABLE_ENTRY
 {

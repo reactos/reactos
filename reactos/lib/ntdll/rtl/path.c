@@ -200,7 +200,7 @@ RtlGetCurrentDirectory_U(ULONG MaximumLength,
 
 	RtlAcquirePebLock();
 
-	cd = (PCURDIR)&(NtCurrentPeb ()->ProcessParameters->CurrentDirectoryName);
+	cd = (PCURDIR)&(NtCurrentPeb ()->ProcessParameters->CurrentDirectory.DosPath);
 	Length = cd->DosPath.Length / sizeof(WCHAR);
 	if (cd->DosPath.Buffer[Length - 1] == L'\\' &&
 	    cd->DosPath.Buffer[Length - 2] != L':')
@@ -251,7 +251,7 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
 
    RtlAcquirePebLock ();
 
-   cd = (PCURDIR)&NtCurrentPeb ()->ProcessParameters->CurrentDirectoryName;
+   cd = (PCURDIR)&NtCurrentPeb ()->ProcessParameters->CurrentDirectory.DosPath;
 
    if (!RtlDosPathNameToNtPathName_U (dir->Buffer, &full, 0, 0))
    {
@@ -511,7 +511,7 @@ static ULONG get_full_path_helper(
 
     RtlAcquirePebLock();
 
-    cd = &((PCURDIR)&NtCurrentTeb()->Peb->ProcessParameters->CurrentDirectoryName)->DosPath;
+    cd = &((PCURDIR)&NtCurrentTeb()->ProcessEnvironmentBlock->ProcessParameters->CurrentDirectory.DosPath)->DosPath;
 
     switch (type = RtlDetermineDosPathNameType_U(name))
     {
@@ -835,7 +835,7 @@ RtlDosPathNameToNtPathName_U(PWSTR dosname,
 	if (nah)
 	{
 		memset (nah, 0, sizeof(CURDIR));
-		cd = (PCURDIR)&(NtCurrentPeb ()->ProcessParameters->CurrentDirectoryName);
+		cd = (PCURDIR)&(NtCurrentPeb ()->ProcessParameters->CurrentDirectory.DosPath);
 		if (Type == 5 && cd->Handle)
 		{
 		    RtlInitUnicodeString(&us, fullname);

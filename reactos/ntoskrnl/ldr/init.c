@@ -28,7 +28,7 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
    HANDLE SystemProcessHandle;
    NTSTATUS Status;
    PRTL_USER_PROCESS_PARAMETERS Params=NULL;
-   RTL_PROCESS_INFO Info;
+   RTL_USER_PROCESS_INFORMATION Info;
 
    Status = ObpCreateHandle(
       PsGetCurrentProcess(),

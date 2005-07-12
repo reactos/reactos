@@ -516,13 +516,16 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
    }
 
    if (Environment == NULL)
+   {
       return(STATUS_VARIABLE_NOT_FOUND);
+   }
 
    Value->Length = 0;
    if (SysEnvUsed == TRUE)
       RtlAcquirePebLock();
 
    wcs = Environment;
+   DPRINT("Starting search at :%p\n", wcs);
    while (*wcs)
    {
       var.Buffer = wcs++;
@@ -530,12 +533,14 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
       if (wcs == NULL)
       {
          wcs = var.Buffer + wcslen(var.Buffer);
+         DPRINT("Search at :%S\n", wcs);
       }
       if (*wcs)
       {
          var.Length = var.MaximumLength = (wcs - var.Buffer) * sizeof(WCHAR);
          val = ++wcs;
          wcs += wcslen(wcs);
+         DPRINT("Search at :%S\n", wcs);
 
          if (RtlEqualUnicodeString(&var, Name, TRUE))
          {
@@ -566,7 +571,7 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
    if (SysEnvUsed == TRUE)
       RtlReleasePebLock();
 
-   DPRINT("Return STATUS_VARIABLE_NOT_FOUND\n");
+   DPRINT1("Return STATUS_VARIABLE_NOT_FOUND: %wZ\n", Name);
    return(STATUS_VARIABLE_NOT_FOUND);
 }
 

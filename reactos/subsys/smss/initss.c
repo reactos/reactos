@@ -51,7 +51,7 @@ static NTSTATUS
 SmpRegisterSmss(VOID)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
-	RTL_PROCESS_INFO ProcessInfo;
+	RTL_USER_PROCESS_INFORMATION ProcessInfo;
 
 	
 	DPRINT("SM: %s called\n",__FUNCTION__);

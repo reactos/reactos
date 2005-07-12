@@ -452,22 +452,21 @@ GetStartupInfoW(LPSTARTUPINFOW lpStartupInfo)
   lpStartupInfo->cb = sizeof(STARTUPINFOW);
   lpStartupInfo->lpDesktop = Params->DesktopInfo.Buffer;
   lpStartupInfo->lpTitle = Params->WindowTitle.Buffer;
-  lpStartupInfo->dwX = Params->dwX;
-  lpStartupInfo->dwY = Params->dwY;
-  lpStartupInfo->dwXSize = Params->dwXSize;
-  lpStartupInfo->dwYSize = Params->dwYSize;
-  lpStartupInfo->dwXCountChars = Params->dwXCountChars;
-  lpStartupInfo->dwYCountChars = Params->dwYCountChars;
-  lpStartupInfo->dwFillAttribute = Params->dwFillAttribute;
-  lpStartupInfo->dwFlags = Params->dwFlags;
-  lpStartupInfo->wShowWindow = Params->wShowWindow;
-  lpStartupInfo->lpReserved = Params->ShellInfo.Buffer;
-  lpStartupInfo->cbReserved2 = Params->RuntimeInfo.Length;
-  lpStartupInfo->lpReserved2 = (LPBYTE)Params->RuntimeInfo.Buffer;
-
-  lpStartupInfo->hStdInput = Params->hStdInput;
-  lpStartupInfo->hStdOutput = Params->hStdOutput;
-  lpStartupInfo->hStdError = Params->hStdError;
+  lpStartupInfo->dwX = Params->StartingX;
+  lpStartupInfo->dwY = Params->StartingY;
+  lpStartupInfo->dwXSize = Params->CountX;
+  lpStartupInfo->dwYSize = Params->CountY;
+  lpStartupInfo->dwXCountChars = Params->CountCharsX;
+  lpStartupInfo->dwYCountChars = Params->CountCharsY;
+  lpStartupInfo->dwFillAttribute = Params->FillAttribute;
+  lpStartupInfo->dwFlags = Params->WindowFlags;
+  lpStartupInfo->wShowWindow = Params->ShowWindowFlags;
+  lpStartupInfo->cbReserved2 = Params->RuntimeData.Length;
+  lpStartupInfo->lpReserved2 = (LPBYTE)Params->RuntimeData.Buffer;
+  
+  lpStartupInfo->hStdInput = Params->StandardInput;
+  lpStartupInfo->hStdOutput = Params->StandardOutput;
+  lpStartupInfo->hStdError = Params->StandardError;
 }
 
 
@@ -517,21 +516,21 @@ GetStartupInfoA(LPSTARTUPINFOA lpStartupInfo)
 	                              TRUE);
 	lpLocalStartupInfo->lpReserved = AnsiString.Buffer;
 
-	lpLocalStartupInfo->dwX = Params->dwX;
-	lpLocalStartupInfo->dwY = Params->dwY;
-	lpLocalStartupInfo->dwXSize = Params->dwXSize;
-	lpLocalStartupInfo->dwYSize = Params->dwYSize;
-	lpLocalStartupInfo->dwXCountChars = Params->dwXCountChars;
-	lpLocalStartupInfo->dwYCountChars = Params->dwYCountChars;
-	lpLocalStartupInfo->dwFillAttribute = Params->dwFillAttribute;
-	lpLocalStartupInfo->dwFlags = Params->dwFlags;
-	lpLocalStartupInfo->wShowWindow = Params->wShowWindow;
-	lpLocalStartupInfo->cbReserved2 = Params->RuntimeInfo.Length;
-	lpLocalStartupInfo->lpReserved2 = (LPBYTE)Params->RuntimeInfo.Buffer;
+	lpLocalStartupInfo->dwX = Params->StartingX;
+	lpLocalStartupInfo->dwY = Params->StartingY;
+	lpLocalStartupInfo->dwXSize = Params->CountX;
+	lpLocalStartupInfo->dwYSize = Params->CountY;
+	lpLocalStartupInfo->dwXCountChars = Params->CountCharsX;
+	lpLocalStartupInfo->dwYCountChars = Params->CountCharsY;
+	lpLocalStartupInfo->dwFillAttribute = Params->FillAttribute;
+	lpLocalStartupInfo->dwFlags = Params->WindowFlags;
+	lpLocalStartupInfo->wShowWindow = Params->ShowWindowFlags;
+	lpLocalStartupInfo->cbReserved2 = Params->RuntimeData.Length;
+	lpLocalStartupInfo->lpReserved2 = (LPBYTE)Params->RuntimeData.Buffer;
 
-	lpLocalStartupInfo->hStdInput = Params->hStdInput;
-	lpLocalStartupInfo->hStdOutput = Params->hStdOutput;
-	lpLocalStartupInfo->hStdError = Params->hStdError;
+	lpLocalStartupInfo->hStdInput = Params->StandardInput;
+	lpLocalStartupInfo->hStdOutput = Params->StandardOutput;
+	lpLocalStartupInfo->hStdError = Params->StandardError;
      }
 
    RtlReleasePebLock ();

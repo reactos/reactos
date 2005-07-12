@@ -534,15 +534,15 @@ GetFileType(HANDLE hFile)
   switch ((ULONG)hFile)
     {
       case STD_INPUT_HANDLE:
-	hFile = NtCurrentPeb()->ProcessParameters->hStdInput;
+	hFile = NtCurrentPeb()->ProcessParameters->StandardInput;
 	break;
 
       case STD_OUTPUT_HANDLE:
-	hFile = NtCurrentPeb()->ProcessParameters->hStdOutput;
+	hFile = NtCurrentPeb()->ProcessParameters->StandardOutput;
 	break;
 
       case STD_ERROR_HANDLE:
-	hFile = NtCurrentPeb()->ProcessParameters->hStdError;
+	hFile = NtCurrentPeb()->ProcessParameters->StandardError;
 	break;
     }
 

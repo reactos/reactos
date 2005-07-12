@@ -284,8 +284,8 @@ CsrpCreateListenPort (IN     LPWSTR  Name,
                                NULL,
                                FALSE,
                                0,
-                               NULL,
-                               NULL,
+                               0,
+                               0,
                                (PTHREAD_START_ROUTINE) ListenThread,
                                Port,
                                NULL,
@@ -476,7 +476,7 @@ CsrpRunWinlogon (ULONG argc, PWSTR* argv)
 	UNICODE_STRING                ImagePath;
 	UNICODE_STRING                CommandLine;
 	PRTL_USER_PROCESS_PARAMETERS  ProcessParameters = NULL;
-	RTL_PROCESS_INFO              ProcessInfo;
+	RTL_USER_PROCESS_INFORMATION  ProcessInfo;
 
 
 	DPRINT("CSR: %s called\n", __FUNCTION__);

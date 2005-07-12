@@ -16,7 +16,7 @@
 /* FIXME */
 #include <rosrtl/thread.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include "../include/debug.h"
 
 /* FUNCTIONS ****************************************************************/
@@ -339,7 +339,7 @@ HANDLE STDCALL KlCreateFirstThread(HANDLE ProcessHandle,
    RtlRosR32AttribsToNativeAttribs(&oaThreadAttribs, lpThreadAttributes);
 
    /* native image */
-   if(Sii->Subsystem != IMAGE_SUBSYSTEM_NATIVE)
+   if(Sii->SubsystemType != IMAGE_SUBSYSTEM_NATIVE)
    {
       pTrueStartAddress = (PVOID)BaseProcessStart;
    }
@@ -368,8 +368,8 @@ HANDLE STDCALL KlCreateFirstThread(HANDLE ProcessHandle,
 	  &oaThreadAttribs,
 	  dwCreationFlags & CREATE_SUSPENDED,
 	  0,
-	  Sii->StackReserve,
-	  Sii->StackCommit,
+	  Sii->MaximumStackSize,
+	  Sii->CommittedStackSize,
 	  pTrueStartAddress,
 	  &hThread,
 	  &cidClientId,
@@ -382,8 +382,8 @@ HANDLE STDCALL KlCreateFirstThread(HANDLE ProcessHandle,
                                        &oaThreadAttribs,
 				       dwCreationFlags & CREATE_SUSPENDED,
 				       0,
-				       &(Sii->StackReserve),
-				       &(Sii->StackCommit),
+				       &(Sii->MaximumStackSize),
+				       &(Sii->CommittedStackSize),
 				       pTrueStartAddress,
 				       &hThread,
 				       &cidClientId,
@@ -401,8 +401,8 @@ HANDLE STDCALL KlCreateFirstThread(HANDLE ProcessHandle,
           "StackCommit           %p\n"
 	  "ThreadHandle          %p\n"
 	  "ClientId.UniqueThread %p\n",
-	  Sii->StackReserve,
-	  Sii->StackCommit,
+	  Sii->MaximumStackSize,
+	  Sii->CommittedStackSize,
 	  hThread,
 	  cidClientId.UniqueThread);
 
@@ -550,7 +550,7 @@ static NTSTATUS KlInitPeb(HANDLE ProcessHandle,
 
    /* create the PPB */
    PpbBase = NULL;
-   PpbSize = Ppb->AllocationSize;
+   PpbSize = Ppb->MaximumLength;
    Status = NtAllocateVirtualMemory(ProcessHandle,
 				    &PpbBase,
 				    0,
@@ -566,7 +566,7 @@ static NTSTATUS KlInitPeb(HANDLE ProcessHandle,
    NtWriteVirtualMemory(ProcessHandle,
 			PpbBase,
 			Ppb,
-			Ppb->AllocationSize,
+			Ppb->MaximumLength,
 			&BytesWritten);
 
    /* write pointer to environment */
@@ -996,7 +996,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
       return FALSE;
    }
 
-   if (0 != (Sii.Characteristics & IMAGE_FILE_DLL))
+   if (0 != (Sii.ImageCharacteristics & IMAGE_FILE_DLL))
    {
       NtClose(hSection);
       DPRINT("Can't execute a DLL\n");
@@ -1004,11 +1004,11 @@ CreateProcessW(LPCWSTR lpApplicationName,
       return FALSE;
    }
 
-   if (IMAGE_SUBSYSTEM_WINDOWS_GUI != Sii.Subsystem
-       && IMAGE_SUBSYSTEM_WINDOWS_CUI != Sii.Subsystem)
+   if (IMAGE_SUBSYSTEM_WINDOWS_GUI != Sii.SubsystemType
+       && IMAGE_SUBSYSTEM_WINDOWS_CUI != Sii.SubsystemType)
    {
       NtClose(hSection);
-      DPRINT("Invalid subsystem %d\n", Sii.Subsystem);
+      DPRINT("Invalid subsystem %d\n", Sii.SubsystemType);
       SetLastError(ERROR_CHILD_NOT_COMPLETE);
       return FALSE;
    }
@@ -1124,12 +1124,12 @@ CreateProcessW(LPCWSTR lpApplicationName,
    /*
     * Translate some handles for the new process
     */
-   if (Ppb->CurrentDirectoryHandle)
+   if (Ppb->CurrentDirectory.Handle)
    {
       Status = NtDuplicateObject (NtCurrentProcess(),
-	                          Ppb->CurrentDirectoryHandle,
+	                          Ppb->CurrentDirectory.Handle,
 				  hProcess,
-				  &Ppb->CurrentDirectoryHandle,
+				  &Ppb->CurrentDirectory.Handle,
 				  0,
 				  TRUE,
 				  DUPLICATE_SAME_ACCESS);
@@ -1159,15 +1159,15 @@ CreateProcessW(LPCWSTR lpApplicationName,
    Request = CREATE_PROCESS;
    CsrRequest.Data.CreateProcessRequest.NewProcessId =
       (HANDLE)ProcessBasicInfo.UniqueProcessId;
-   if (Sii.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI)
+   if (Sii.SubsystemType == IMAGE_SUBSYSTEM_WINDOWS_GUI)
    {
       /* Do not create a console for GUI applications */
       dwCreationFlags &= ~CREATE_NEW_CONSOLE;
       dwCreationFlags |= DETACHED_PROCESS;
    }
-   else if (Sii.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_CUI)
+   else if (Sii.SubsystemType == IMAGE_SUBSYSTEM_WINDOWS_CUI)
    {
-      if (NULL == Ppb->hConsole)
+      if (NULL == Ppb->ConsoleHandle)
       {
          dwCreationFlags |= CREATE_NEW_CONSOLE;
       }
@@ -1183,7 +1183,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
       DbgPrint("Failed to tell csrss about new process. Expect trouble.\n");
    }
 
-   Ppb->hConsole = CsrRequest.Data.CreateProcessRequest.Console;
+   Ppb->ConsoleHandle = CsrRequest.Data.CreateProcessRequest.Console;
 
    InputSet = FALSE;
    OutputSet = FALSE;
@@ -1196,19 +1196,19 @@ CreateProcessW(LPCWSTR lpApplicationName,
    {
       if (lpStartupInfo->hStdInput)
       {
-	 Ppb->hStdInput = lpStartupInfo->hStdInput;
+	 Ppb->StandardInput = lpStartupInfo->hStdInput;
          InputSet = TRUE;
          InputDup = TRUE;
       }
       if (lpStartupInfo->hStdOutput)
       {
-	 Ppb->hStdOutput = lpStartupInfo->hStdOutput;
+	 Ppb->StandardOutput = lpStartupInfo->hStdOutput;
          OutputSet = TRUE;
          OutputDup = TRUE;
       }
       if (lpStartupInfo->hStdError)
       {
-	 Ppb->hStdError = lpStartupInfo->hStdError;
+	 Ppb->StandardError = lpStartupInfo->hStdError;
          ErrorSet = TRUE;
          ErrorDup = TRUE;
       }
@@ -1221,19 +1221,19 @@ CreateProcessW(LPCWSTR lpApplicationName,
    {
       if (! InputSet)
       {
-         Ppb->hStdInput = CsrRequest.Data.CreateProcessRequest.InputHandle;
+         Ppb->StandardInput = CsrRequest.Data.CreateProcessRequest.InputHandle;
          InputSet = TRUE;
          InputDup = FALSE;
       }
       if (! OutputSet)
       {
-         Ppb->hStdOutput = CsrRequest.Data.CreateProcessRequest.OutputHandle;
+         Ppb->StandardOutput = CsrRequest.Data.CreateProcessRequest.OutputHandle;
          OutputSet = TRUE;
          OutputDup = FALSE;
       }
       if (! ErrorSet)
       {
-         Ppb->hStdError = CsrRequest.Data.CreateProcessRequest.OutputHandle;
+         Ppb->StandardError = CsrRequest.Data.CreateProcessRequest.OutputHandle;
          ErrorSet = TRUE;
          ErrorDup = FALSE;
       }
@@ -1242,34 +1242,34 @@ CreateProcessW(LPCWSTR lpApplicationName,
    /* Use existing handles otherwise */
    if (! InputSet)
    {
-      Ppb->hStdInput = NtCurrentPeb()->ProcessParameters->hStdInput;
+      Ppb->StandardInput = NtCurrentPeb()->ProcessParameters->StandardInput;
       InputDup = TRUE;
    }
    if (! OutputSet)
    {
-      Ppb->hStdOutput = NtCurrentPeb()->ProcessParameters->hStdOutput;
+      Ppb->StandardOutput = NtCurrentPeb()->ProcessParameters->StandardOutput;
       OutputDup = TRUE;
    }
    if (! ErrorSet)
    {
-      Ppb->hStdError = NtCurrentPeb()->ProcessParameters->hStdError;
+      Ppb->StandardError = NtCurrentPeb()->ProcessParameters->StandardError;
       ErrorDup = TRUE;
    }
 
    /* Now duplicate handles if required */
-   if (InputDup && Ppb->hStdInput != NULL)
+   if (InputDup && Ppb->StandardInput != NULL)
    {
-      if (IsConsoleHandle(Ppb->hStdInput))
+      if (IsConsoleHandle(Ppb->StandardInput))
       {
-         Ppb->hStdInput = CsrRequest.Data.CreateProcessRequest.InputHandle;
+         Ppb->StandardInput = CsrRequest.Data.CreateProcessRequest.InputHandle;
       }
       else
       {
          DPRINT("Duplicate input handle\n");
          Status = NtDuplicateObject (NtCurrentProcess(),
-                                     Ppb->hStdInput,
+                                     Ppb->StandardInput,
                                      hProcess,
-                                     &Ppb->hStdInput,
+                                     &Ppb->StandardInput,
                                      0,
                                      TRUE,
                                      DUPLICATE_SAME_ACCESS);
@@ -1280,19 +1280,19 @@ CreateProcessW(LPCWSTR lpApplicationName,
       }
    }
 
-   if (OutputDup && Ppb->hStdOutput != NULL)
+   if (OutputDup && Ppb->StandardOutput != NULL)
    {
-      if (IsConsoleHandle(Ppb->hStdOutput))
+      if (IsConsoleHandle(Ppb->StandardOutput))
       {
-         Ppb->hStdOutput = CsrRequest.Data.CreateProcessRequest.OutputHandle;
+         Ppb->StandardOutput = CsrRequest.Data.CreateProcessRequest.OutputHandle;
       }
       else
       {
          DPRINT("Duplicate output handle\n");
          Status = NtDuplicateObject (NtCurrentProcess(),
-                                     Ppb->hStdOutput,
+                                     Ppb->StandardOutput,
                                      hProcess,
-                                     &Ppb->hStdOutput,
+                                     &Ppb->StandardOutput,
                                      0,
                                      TRUE,
                                      DUPLICATE_SAME_ACCESS);
@@ -1303,9 +1303,9 @@ CreateProcessW(LPCWSTR lpApplicationName,
       }
    }
 
-   if (ErrorDup && Ppb->hStdError != NULL)
+   if (ErrorDup && Ppb->StandardError != NULL)
    {
-      if (IsConsoleHandle(Ppb->hStdError))
+      if (IsConsoleHandle(Ppb->StandardError))
       {
          Request = DUPLICATE_HANDLE;
          CsrRequest.Data.DuplicateHandleRequest.ProcessId = (HANDLE)ProcessBasicInfo.UniqueProcessId;
@@ -1316,20 +1316,20 @@ CreateProcessW(LPCWSTR lpApplicationName,
                                       sizeof(CSR_API_MESSAGE));
          if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
          {
-            Ppb->hStdError = INVALID_HANDLE_VALUE;
+            Ppb->StandardError = INVALID_HANDLE_VALUE;
          }
          else
          {
-            Ppb->hStdError = CsrRequest.Data.DuplicateHandleRequest.Handle;
+            Ppb->StandardError = CsrRequest.Data.DuplicateHandleRequest.Handle;
          }
       }
       else
       {
          DPRINT("Duplicate error handle\n");
          Status = NtDuplicateObject (NtCurrentProcess(),
-                                     Ppb->hStdError,
+                                     Ppb->StandardError,
                                      hProcess,
-                                     &Ppb->hStdError,
+                                     &Ppb->StandardError,
                                      0,
                                      TRUE,
                                      DUPLICATE_SAME_ACCESS);
@@ -1345,20 +1345,20 @@ CreateProcessW(LPCWSTR lpApplicationName,
     */
    if (lpStartupInfo)
    {
-      Ppb->dwFlags = lpStartupInfo->dwFlags;
-      if (Ppb->dwFlags & STARTF_USESHOWWINDOW)
+      Ppb->Flags = lpStartupInfo->dwFlags;
+      if (Ppb->Flags & STARTF_USESHOWWINDOW)
       {
-         Ppb->wShowWindow = lpStartupInfo->wShowWindow;
+         Ppb->ShowWindowFlags = lpStartupInfo->wShowWindow;
       }
       else
       {
-         Ppb->wShowWindow = SW_SHOWDEFAULT;
+         Ppb->ShowWindowFlags = SW_SHOWDEFAULT;
       }
-      Ppb->dwX = lpStartupInfo->dwX;
-      Ppb->dwY = lpStartupInfo->dwY;
-      Ppb->dwXSize = lpStartupInfo->dwXSize;
-      Ppb->dwYSize = lpStartupInfo->dwYSize;
-      Ppb->dwFillAttribute = lpStartupInfo->dwFillAttribute;
+      Ppb->StartingX = lpStartupInfo->dwX;
+      Ppb->StartingY = lpStartupInfo->dwY;
+      Ppb->CountX = lpStartupInfo->dwXSize;
+      Ppb->CountY = lpStartupInfo->dwYSize;
+      Ppb->FillAttribute = lpStartupInfo->dwFillAttribute;
    }
    else
    {
@@ -1370,7 +1370,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
     */
    DPRINT("Creating peb\n");
 
-   KlInitPeb(hProcess, Ppb, &ImageBaseAddress, Sii.Subsystem);
+   KlInitPeb(hProcess, Ppb, &ImageBaseAddress, Sii.SubsystemType);
 
    RtlDestroyProcessParameters (Ppb);
 
@@ -1378,11 +1378,11 @@ CreateProcessW(LPCWSTR lpApplicationName,
     * Create the thread for the kernel
     */
    DPRINT("Creating thread for process (EntryPoint = 0x%.08x)\n",
-          (PVOID)((ULONG_PTR)ImageBaseAddress + Sii.EntryPoint));
+          (PVOID)((ULONG_PTR)ImageBaseAddress + (ULONG_PTR)Sii.TransferAddress));
    hThread =  KlCreateFirstThread(hProcess,
 				  lpThreadAttributes,
 				  &Sii,
-				  (PVOID)((ULONG_PTR)ImageBaseAddress + Sii.EntryPoint),
+				  (PVOID)((ULONG_PTR)ImageBaseAddress + (ULONG_PTR)Sii.TransferAddress),
 				  dwCreationFlags,
 				  &lpProcessInformation->dwThreadId);
    if (hThread == NULL)

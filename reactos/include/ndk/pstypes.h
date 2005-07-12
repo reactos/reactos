@@ -93,12 +93,6 @@ typedef NTSTATUS
 
 struct _ETHREAD;
 
-typedef struct _CURDIR
-{
-    UNICODE_STRING DosPath;
-    PVOID Handle;
-} CURDIR, *PCURDIR;
-
 typedef struct _DESCRIPTOR_TABLE_ENTRY
 {
     ULONG Selector;
@@ -181,75 +175,101 @@ typedef struct _GDI_TEB_BATCH
 
 typedef struct _INITIAL_TEB
 {
+    PVOID PreviousStackBase;
+    PVOID PreviousStackLimit;
     PVOID StackBase;
     PVOID StackLimit;
-    PVOID StackCommit;
-    PVOID StackCommitMax;
-    PVOID StackReserved;
+    PVOID AllocatedStackBase;
 } INITIAL_TEB, *PINITIAL_TEB;
+
+typedef struct _TEB_ACTIVE_FRAME_CONTEXT 
+{
+    ULONG Flags;
+    LPSTR FrameName;
+} TEB_ACTIVE_FRAME_CONTEXT, *PTEB_ACTIVE_FRAME_CONTEXT;
+
+typedef struct _TEB_ACTIVE_FRAME
+{
+    ULONG Flags;
+    struct _TEB_ACTIVE_FRAME *Previous;
+    PTEB_ACTIVE_FRAME_CONTEXT Context;
+} TEB_ACTIVE_FRAME, *PTEB_ACTIVE_FRAME;
 
 typedef struct _TEB
 {
-    NT_TIB Tib;                         /* 00h */
-    PVOID EnvironmentPointer;           /* 1Ch */
-    CLIENT_ID Cid;                      /* 20h */
-    PVOID ActiveRpcInfo;                /* 28h */
-    PVOID ThreadLocalStoragePointer;    /* 2Ch */
-    struct _PEB *Peb;                   /* 30h */
-    ULONG LastErrorValue;               /* 34h */
-    ULONG CountOfOwnedCriticalSections; /* 38h */
-    PVOID CsrClientThread;              /* 3Ch */
-    struct _W32THREAD* Win32ThreadInfo; /* 40h */
-    ULONG Win32ClientInfo[0x1F];        /* 44h */
-    PVOID WOW32Reserved;                /* C0h */
-    LCID CurrentLocale;                 /* C4h */
-    ULONG FpSoftwareStatusRegister;     /* C8h */
-    PVOID SystemReserved1[0x36];        /* CCh */
-    PVOID Spare1;                       /* 1A4h */
-    LONG ExceptionCode;                 /* 1A8h */
-    UCHAR SpareBytes1[0x28];            /* 1ACh */
-    PVOID SystemReserved2[0xA];         /* 1D4h */
-    GDI_TEB_BATCH GdiTebBatch;          /* 1FCh */
-    ULONG gdiRgn;                       /* 6DCh */
-    ULONG gdiPen;                       /* 6E0h */
-    ULONG gdiBrush;                     /* 6E4h */
-    CLIENT_ID RealClientId;             /* 6E8h */
-    PVOID GdiCachedProcessHandle;       /* 6F0h */
-    ULONG GdiClientPID;                 /* 6F4h */
-    ULONG GdiClientTID;                 /* 6F8h */
-    PVOID GdiThreadLocaleInfo;          /* 6FCh */
-    PVOID UserReserved[5];              /* 700h */
-    PVOID glDispatchTable[0x118];       /* 714h */
-    ULONG glReserved1[0x1A];            /* B74h */
-    PVOID glReserved2;                  /* BDCh */
-    PVOID glSectionInfo;                /* BE0h */
-    PVOID glSection;                    /* BE4h */
-    PVOID glTable;                      /* BE8h */
-    PVOID glCurrentRC;                  /* BECh */
-    PVOID glContext;                    /* BF0h */
-    NTSTATUS LastStatusValue;           /* BF4h */
-    UNICODE_STRING StaticUnicodeString; /* BF8h */
-    WCHAR StaticUnicodeBuffer[0x105];   /* C00h */
-    PVOID DeallocationStack;            /* E0Ch */
-    PVOID TlsSlots[0x40];               /* E10h */
-    LIST_ENTRY TlsLinks;                /* F10h */
-    PVOID Vdm;                          /* F18h */
-    PVOID ReservedForNtRpc;             /* F1Ch */
-    PVOID DbgSsReserved[0x2];           /* F20h */
-    ULONG HardErrorDisabled;            /* F28h */
-    PVOID Instrumentation[0x10];        /* F2Ch */
-    PVOID WinSockData;                  /* F6Ch */
-    ULONG GdiBatchCount;                /* F70h */
-    USHORT _Spare2;                     /* F74h */
-    BOOLEAN IsFiber;                    /* F76h */
-    UCHAR Spare3;                       /* F77h */
-    ULONG _Spare4;                      /* F78h */
-    ULONG _Spare5;                      /* F7Ch */
-    PVOID ReservedForOle;               /* F80h */
-    ULONG WaitingOnLoaderLock;          /* F84h */
-    ULONG _Unknown[11];                 /* F88h */
-    PVOID FlsSlots;                     /* FB4h */
-    PVOID WineDebugInfo;                /* Needed for WINE DLL's  */
+    NT_TIB Tib;                             /* 00h */
+    PVOID EnvironmentPointer;               /* 1Ch */
+    CLIENT_ID Cid;                          /* 20h */
+    PVOID ActiveRpcHandle;                  /* 28h */
+    PVOID ThreadLocalStoragePointer;        /* 2Ch */
+    struct _PEB *ProcessEnvironmentBlock;   /* 30h */
+    ULONG LastErrorValue;                   /* 34h */
+    ULONG CountOfOwnedCriticalSections;     /* 38h */
+    PVOID CsrClientThread;                  /* 3Ch */
+    struct _W32THREAD* Win32ThreadInfo;     /* 40h */
+    ULONG User32Reserved[0x1A];             /* 44h */
+    ULONG UserReserved[5];                  /* ACh */
+    PVOID WOW32Reserved;                    /* C0h */
+    LCID CurrentLocale;                     /* C4h */
+    ULONG FpSoftwareStatusRegister;         /* C8h */
+    PVOID SystemReserved1[0x36];            /* CCh */
+    LONG ExceptionCode;                     /* 1A4h */
+    struct _ACTIVATION_CONTEXT_STACK *ActivationContextStackPointer; /* 1A8h */
+    UCHAR SpareBytes1[0x28];                /* 1ACh */
+    GDI_TEB_BATCH GdiTebBatch;              /* 1D4h */
+    CLIENT_ID RealClientId;                 /* 6B4h */
+    PVOID GdiCachedProcessHandle;           /* 6BCh */
+    ULONG GdiClientPID;                     /* 6C0h */
+    ULONG GdiClientTID;                     /* 6C4h */
+    PVOID GdiThreadLocalInfo;               /* 6C8h */
+    ULONG Win32ClientInfo[62];              /* 6CCh */
+    PVOID glDispatchTable[0xE9];            /* 7C4h */
+    ULONG glReserved1[0x1D];                /* B68h */
+    PVOID glReserved2;                      /* BDCh */
+    PVOID glSectionInfo;                    /* BE0h */
+    PVOID glSection;                        /* BE4h */
+    PVOID glTable;                          /* BE8h */
+    PVOID glCurrentRC;                      /* BECh */
+    PVOID glContext;                        /* BF0h */
+    NTSTATUS LastStatusValue;               /* BF4h */
+    UNICODE_STRING StaticUnicodeString;     /* BF8h */
+    WCHAR StaticUnicodeBuffer[0x105];       /* C00h */
+    PVOID DeallocationStack;                /* E0Ch */
+    PVOID TlsSlots[0x40];                   /* E10h */
+    LIST_ENTRY TlsLinks;                    /* F10h */
+    PVOID Vdm;                              /* F18h */
+    PVOID ReservedForNtRpc;                 /* F1Ch */
+    PVOID DbgSsReserved[0x2];               /* F20h */
+    ULONG HardErrorDisabled;                /* F28h */
+    PVOID Instrumentation[14];              /* F2Ch */
+    PVOID SubProcessTag;                    /* F64h */
+    PVOID EtwTraceData;                     /* F68h */
+    PVOID WinSockData;                      /* F6Ch */
+    ULONG GdiBatchCount;                    /* F70h */
+    BOOLEAN InDbgPrint;                     /* F74h */
+    BOOLEAN FreeStackOnTermination;         /* F75h */
+    BOOLEAN HasFiberData;                   /* F76h */
+    UCHAR IdealProcessor;                   /* F77h */
+    ULONG GuaranteedStackBytes;             /* F78h */
+    PVOID ReservedForPerf;                  /* F7Ch */
+    PVOID ReservedForOle;                   /* F80h */
+    ULONG WaitingOnLoaderLock;              /* F84h */
+    ULONG SparePointer1;                    /* F88h */
+    ULONG SoftPatchPtr1;                    /* F8Ch */
+    ULONG SoftPatchPtr2;                    /* F90h */
+    PVOID *TlsExpansionSlots;               /* F94h */
+    ULONG ImpersionationLocale;             /* F98h */
+    ULONG IsImpersonating;                  /* F9Ch */
+    PVOID NlsCache;                         /* FA0h */
+    PVOID pShimData;                        /* FA4h */
+    ULONG HeapVirualAffinity;               /* FA8h */
+    PVOID CurrentTransactionHandle;         /* FACh */
+    PTEB_ACTIVE_FRAME ActiveFrame;          /* FB0h */
+    PVOID FlsData;                          /* FB4h */
+    UCHAR SafeThunkCall;                    /* FB8h */
+    UCHAR BooleanSpare[3];                  /* FB9h */
+    /* FIXME: Needed for WINE DLL's */
+    PVOID WineDebugInfo;                    /* FBCh */    
 } TEB, *PTEB;
 
 /* KERNEL MODE ONLY **********************************************************/

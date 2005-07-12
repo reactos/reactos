@@ -133,7 +133,7 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
 
    /* create the PPB */
    PpbBase = NULL;
-   PpbSize = Ppb->AllocationSize;
+   PpbSize = Ppb->MaximumLength;
 
    Status = ZwAllocateVirtualMemory(ProcessHandle,
 				    &PpbBase,
@@ -146,14 +146,14 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
 	return(Status);
      }
 
-   DPRINT("Ppb->MaximumLength %x\n", Ppb->AllocationSize);
+   DPRINT("Ppb->MaximumLength %x\n", Ppb->MaximumLength);
 
    /* write process parameters block*/
    RtlDeNormalizeProcessParams (Ppb);
    ZwWriteVirtualMemory(ProcessHandle,
 			PpbBase,
 			Ppb,
-			Ppb->AllocationSize,
+			Ppb->MaximumLength,
 
 			&BytesWritten);
    RtlNormalizeProcessParams (Ppb);
@@ -211,7 +211,7 @@ RtlCreateUserProcess(
    IN BOOLEAN InheritHandles,
    IN HANDLE DebugPort  OPTIONAL,
    IN HANDLE ExceptionPort  OPTIONAL,
-   OUT PRTL_PROCESS_INFO ProcessInfo
+   OUT PRTL_USER_PROCESS_INFORMATION ProcessInfo
    )
 {
    HANDLE hSection;
@@ -289,9 +289,9 @@ RtlCreateUserProcess(
       NULL,
       TRUE, /* CreateSuspended? */
       0,
-      &Sii.StackReserve,
-      &Sii.StackCommit,
-      (PVOID)((ULONG_PTR)ImageBaseAddress + (ULONG_PTR)Sii.EntryPoint),
+      Sii.MaximumStackSize,
+      Sii.CommittedStackSize,
+      (PVOID)((ULONG_PTR)ImageBaseAddress + (ULONG_PTR)Sii.TransferAddress),
       (PVOID)PEB_BASE,
       &ProcessInfo->ThreadHandle,
       &ProcessInfo->ClientId

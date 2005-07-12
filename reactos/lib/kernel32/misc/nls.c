@@ -101,7 +101,7 @@ NlsInit()
    /* Setup ANSI code page. */
    AnsiCodePage.CodePage = CP_ACP;
    AnsiCodePage.SectionHandle = NULL;
-   AnsiCodePage.SectionMapping = NtCurrentTeb()->Peb->AnsiCodePageData;
+   AnsiCodePage.SectionMapping = NtCurrentTeb()->ProcessEnvironmentBlock->AnsiCodePageData;
    RtlInitCodePageTable((PUSHORT)AnsiCodePage.SectionMapping,
                         &AnsiCodePage.CodePageTable);
    InsertTailList(&CodePageListHead, &AnsiCodePage.Entry);
@@ -109,7 +109,7 @@ NlsInit()
    /* Setup OEM code page. */
    OemCodePage.CodePage = CP_OEMCP;
    OemCodePage.SectionHandle = NULL;
-   OemCodePage.SectionMapping = NtCurrentTeb()->Peb->OemCodePageData;
+   OemCodePage.SectionMapping = NtCurrentTeb()->ProcessEnvironmentBlock->OemCodePageData;
    RtlInitCodePageTable((PUSHORT)OemCodePage.SectionMapping,
                         &OemCodePage.CodePageTable);
    InsertTailList(&CodePageListHead, &OemCodePage.Entry);

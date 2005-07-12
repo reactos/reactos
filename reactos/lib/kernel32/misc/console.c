@@ -91,7 +91,7 @@ SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 		RtlEnterCriticalSection(&ConsoleLock);
 
 		if(!(nCode == CTRL_C_EVENT &&
-			NtCurrentPeb()->ProcessParameters->ProcessGroup & 1))
+			NtCurrentPeb()->ProcessParameters->ConsoleFlags & 1))
 		{
 			for(i = NrCtrlHandlers; i > 0; -- i)
 				if(CtrlHandlers[i - 1](nCode)) break;
@@ -110,7 +110,7 @@ SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 	RtlEnterCriticalSection(&ConsoleLock);
 
 	if(!(nCode == CTRL_C_EVENT &&
-		NtCurrentPeb()->ProcessParameters->ProcessGroup & 1))
+		NtCurrentPeb()->ProcessParameters->ConsoleFlags & 1))
 	{
 	i = NrCtrlHandlers;
 	while(i > 0)
@@ -1012,21 +1012,6 @@ CloseConsoleHandle(HANDLE Handle)
   return TRUE;
 }
 
-
-/*
- * internal function
- */
-BOOL STDCALL
-IsConsoleHandle(HANDLE Handle)
-{
-  if ((((ULONG)Handle) & 0x10000003) == 0x3)
-    {
-      return(TRUE);
-    }
-  return(FALSE);
-}
-
-
 /*
  * @implemented
  */
@@ -1047,13 +1032,13 @@ GetStdHandle(DWORD nStdHandle)
   switch (nStdHandle)
     {
       case STD_INPUT_HANDLE:
-	return Ppb->hStdInput;
+	return Ppb->StandardInput;
 
       case STD_OUTPUT_HANDLE:
-	return Ppb->hStdOutput;
+	return Ppb->StandardOutput;
 
       case STD_ERROR_HANDLE:
-	return Ppb->hStdError;
+	return Ppb->StandardError;
     }
 
   SetLastError (ERROR_INVALID_PARAMETER);
@@ -1085,15 +1070,15 @@ SetStdHandle(DWORD nStdHandle,
   switch (nStdHandle)
     {
       case STD_INPUT_HANDLE:
-	Ppb->hStdInput = hHandle;
+	Ppb->StandardInput = hHandle;
 	return TRUE;
 
       case STD_OUTPUT_HANDLE:
-	Ppb->hStdOutput = hHandle;
+	Ppb->StandardOutput = hHandle;
 	return TRUE;
 
       case STD_ERROR_HANDLE:
-	Ppb->hStdError = hHandle;
+	Ppb->StandardError = hHandle;
 	return TRUE;
     }
 
@@ -1347,7 +1332,7 @@ BOOL STDCALL AllocConsole(VOID)
    NTSTATUS Status;
    HANDLE hStdError;
 
-   if(NtCurrentPeb()->ProcessParameters->hConsole)
+   if(NtCurrentPeb()->ProcessParameters->ConsoleHandle)
    {
 	DPRINT("AllocConsole: Allocate duplicate console to the same Process\n");
 	SetLastErrorByStatus (STATUS_OBJECT_NAME_EXISTS);
@@ -1363,7 +1348,7 @@ BOOL STDCALL AllocConsole(VOID)
 	 SetLastErrorByStatus ( Status );
 	 return FALSE;
       }
-   NtCurrentPeb()->ProcessParameters->hConsole = Request.Data.AllocConsoleRequest.Console;
+   NtCurrentPeb()->ProcessParameters->ConsoleHandle = Request.Data.AllocConsoleRequest.Console;
    SetStdHandle( STD_INPUT_HANDLE, Request.Data.AllocConsoleRequest.InputHandle );
    SetStdHandle( STD_OUTPUT_HANDLE, Request.Data.AllocConsoleRequest.OutputHandle );
    hStdError = DuplicateConsoleHandle(Request.Data.AllocConsoleRequest.OutputHandle,

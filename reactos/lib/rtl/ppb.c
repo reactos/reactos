@@ -59,7 +59,7 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
 			   PUNICODE_STRING WindowTitle,
 			   PUNICODE_STRING DesktopInfo,
 			   PUNICODE_STRING ShellInfo,
-			   PUNICODE_STRING RuntimeInfo)
+			   PUNICODE_STRING RuntimeData)
 {
    NTSTATUS Status = STATUS_SUCCESS;
    PRTL_USER_PROCESS_PARAMETERS Param = NULL;
@@ -86,10 +86,10 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
 	if (Environment == NULL)
 	  Environment  = NtCurrentPeb()->ProcessParameters->Environment;
 	if (CurrentDirectory == NULL)
-	  CurrentDirectory = &NtCurrentPeb()->ProcessParameters->CurrentDirectoryName;
-	CurrentDirectoryHandle = NtCurrentPeb()->ProcessParameters->CurrentDirectoryHandle;
-	ConsoleHandle = NtCurrentPeb()->ProcessParameters->hConsole;
-	ConsoleFlags = NtCurrentPeb()->ProcessParameters->ProcessGroup;
+	  CurrentDirectory = &NtCurrentPeb()->ProcessParameters->CurrentDirectory.DosPath;
+	CurrentDirectoryHandle = NtCurrentPeb()->ProcessParameters->CurrentDirectory.Handle;
+	ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+	ConsoleFlags = NtCurrentPeb()->ProcessParameters->ConsoleFlags;
      }
    else
      {
@@ -110,8 +110,8 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
      DesktopInfo = &EmptyString;
    if (ShellInfo == NULL)
      ShellInfo = &EmptyString;
-   if (RuntimeInfo == NULL)
-     RuntimeInfo = &EmptyString;
+   if (RuntimeData == NULL)
+     RuntimeData = &EmptyString;
 
    /* size of process parameter block */
    Length = sizeof(RTL_USER_PROCESS_PARAMETERS);
@@ -126,7 +126,7 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
    Length += ALIGN(WindowTitle->MaximumLength, sizeof(ULONG));
    Length += ALIGN(DesktopInfo->MaximumLength, sizeof(ULONG));
    Length += ALIGN(ShellInfo->MaximumLength, sizeof(ULONG));
-   Length += ALIGN(RuntimeInfo->MaximumLength, sizeof(ULONG));
+   Length += ALIGN(RuntimeData->MaximumLength, sizeof(ULONG));
 
    /* Calculate the required block size */
    RegionSize = ROUNDUP(Length, PAGE_SIZE);
@@ -145,33 +145,33 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
 
    DPRINT ("Process parameters allocated\n");
 
-   Param->AllocationSize = RegionSize;
-   Param->Size = Length;
+   Param->MaximumLength = RegionSize;
+   Param->Length = Length;
    Param->Flags = PPF_NORMALIZED;
    Param->Environment = Environment;
-   Param->CurrentDirectoryHandle = CurrentDirectoryHandle;
-   Param->hConsole = ConsoleHandle;
-   Param->ProcessGroup = ConsoleFlags;
+   Param->CurrentDirectory.Handle = CurrentDirectoryHandle;
+   Param->ConsoleHandle = ConsoleHandle;
+   Param->ConsoleFlags = ConsoleFlags;
 
    Dest = (PWCHAR)(((PBYTE)Param) + sizeof(RTL_USER_PROCESS_PARAMETERS));
 
    /* copy current directory */
    RtlpCopyParameterString(&Dest,
-			   &Param->CurrentDirectoryName,
+			   &Param->CurrentDirectory.DosPath,
 			   CurrentDirectory,
 			   MAX_PATH * sizeof(WCHAR));
 
    /* make sure the current directory has a trailing backslash */
-   if (Param->CurrentDirectoryName.Length > 0)
+   if (Param->CurrentDirectory.DosPath.Length > 0)
      {
 	ULONG Length;
 
-	Length = Param->CurrentDirectoryName.Length / sizeof(WCHAR);
-	if (Param->CurrentDirectoryName.Buffer[Length-1] != L'\\')
+	Length = Param->CurrentDirectory.DosPath.Length / sizeof(WCHAR);
+	if (Param->CurrentDirectory.DosPath.Buffer[Length-1] != L'\\')
 	  {
-	     Param->CurrentDirectoryName.Buffer[Length] = L'\\';
-	     Param->CurrentDirectoryName.Buffer[Length + 1] = 0;
-	     Param->CurrentDirectoryName.Length += sizeof(WCHAR);
+	     Param->CurrentDirectory.DosPath.Buffer[Length] = L'\\';
+	     Param->CurrentDirectory.DosPath.Buffer[Length + 1] = 0;
+	     Param->CurrentDirectory.DosPath.Length += sizeof(WCHAR);
 	  }
      }
 
@@ -213,8 +213,8 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
 
    /* copy runtime info */
    RtlpCopyParameterString(&Dest,
-			   &Param->RuntimeInfo,
-			   RuntimeInfo,
+			   &Param->RuntimeData,
+			   RuntimeData,
 			   0);
 
    RtlDeNormalizeProcessParams(Param);
@@ -248,14 +248,14 @@ RtlDeNormalizeProcessParams(PRTL_USER_PROCESS_PARAMETERS Params)
 {
    if (Params && (Params->Flags & PPF_NORMALIZED))
      {
-	DENORMALIZE(Params->CurrentDirectoryName.Buffer, Params);
+	DENORMALIZE(Params->CurrentDirectory.DosPath.Buffer, Params);
 	DENORMALIZE(Params->DllPath.Buffer, Params);
 	DENORMALIZE(Params->ImagePathName.Buffer, Params);
 	DENORMALIZE(Params->CommandLine.Buffer, Params);
 	DENORMALIZE(Params->WindowTitle.Buffer, Params);
 	DENORMALIZE(Params->DesktopInfo.Buffer, Params);
 	DENORMALIZE(Params->ShellInfo.Buffer, Params);
-	DENORMALIZE(Params->RuntimeInfo.Buffer, Params);
+	DENORMALIZE(Params->RuntimeData.Buffer, Params);
 
 	Params->Flags &= ~PPF_NORMALIZED;
      }
@@ -273,14 +273,14 @@ RtlNormalizeProcessParams(PRTL_USER_PROCESS_PARAMETERS Params)
 {
    if (Params && !(Params->Flags & PPF_NORMALIZED))
      {
-	NORMALIZE(Params->CurrentDirectoryName.Buffer, Params);
+	NORMALIZE(Params->CurrentDirectory.DosPath.Buffer, Params);
 	NORMALIZE(Params->DllPath.Buffer, Params);
 	NORMALIZE(Params->ImagePathName.Buffer, Params);
 	NORMALIZE(Params->CommandLine.Buffer, Params);
 	NORMALIZE(Params->WindowTitle.Buffer, Params);
 	NORMALIZE(Params->DesktopInfo.Buffer, Params);
 	NORMALIZE(Params->ShellInfo.Buffer, Params);
-	NORMALIZE(Params->RuntimeInfo.Buffer, Params);
+	NORMALIZE(Params->RuntimeData.Buffer, Params);
 
 	Params->Flags |= PPF_NORMALIZED;
      }

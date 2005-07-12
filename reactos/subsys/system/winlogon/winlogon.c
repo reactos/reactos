@@ -90,6 +90,7 @@ StartServices (VOID)
    STARTUPINFO StartupInfo;
    PROCESS_INFORMATION ProcessInformation;
    DWORD Count;
+   WCHAR ServiceString[] = L"services.exe";
 
    /* Start the service control manager (services.exe) */
 
@@ -105,8 +106,8 @@ StartServices (VOID)
    PrintString(L"WL: Creating new process - \"services.exe\".\n");
 #endif
 
-   Result = CreateProcess(L"services.exe",
-                          NULL,
+   Result = CreateProcess(NULL,
+                          ServiceString,
                           NULL,
                           NULL,
                           FALSE,
@@ -472,8 +473,8 @@ DoLogonUser (PWCHAR Name,
 				 NULL,
 				 NULL,
 				 FALSE,
-				 CREATE_NEW_CONSOLE,// | CREATE_UNICODE_ENVIRONMENT,
-				 lpEnvironment, // NULL,
+				 CREATE_UNICODE_ENVIRONMENT,
+				 lpEnvironment,
 				 CurrentDirectory,
 				 &StartupInfo,
 				 &ProcessInformation);

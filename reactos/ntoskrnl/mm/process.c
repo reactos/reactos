@@ -307,25 +307,25 @@ MmCreateTeb(PEPROCESS Process,
     /* Set TEB Data */
     Teb->Cid = *ClientId;
     Teb->RealClientId = *ClientId;
-    Teb->Peb = Process->Peb;
+    Teb->ProcessEnvironmentBlock = Process->Peb;
     Teb->CurrentLocale = PsDefaultThreadLocaleId;
 
     /* Store stack information from InitialTeb */
     if(InitialTeb != NULL)
     {
         /* fixed-size stack */
-        if(InitialTeb->StackBase && InitialTeb->StackLimit)
+        if(InitialTeb->PreviousStackBase && InitialTeb->PreviousStackLimit)
         {
-            Teb->Tib.StackBase = InitialTeb->StackBase;
-            Teb->Tib.StackLimit = InitialTeb->StackLimit;
-            Teb->DeallocationStack = InitialTeb->StackLimit;
+            Teb->Tib.StackBase = InitialTeb->PreviousStackBase;
+            Teb->Tib.StackLimit = InitialTeb->PreviousStackLimit;
+            Teb->DeallocationStack = InitialTeb->PreviousStackLimit;
         }
         /* expandable stack */
         else
         {
-            Teb->Tib.StackBase = InitialTeb->StackCommit;
-            Teb->Tib.StackLimit = InitialTeb->StackCommitMax;
-            Teb->DeallocationStack = InitialTeb->StackReserved;
+            Teb->Tib.StackBase = InitialTeb->StackBase;
+            Teb->Tib.StackLimit = InitialTeb->StackLimit;
+            Teb->DeallocationStack = InitialTeb->AllocatedStackBase;
         }
     }
 

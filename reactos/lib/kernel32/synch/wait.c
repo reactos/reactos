@@ -51,15 +51,15 @@ WaitForSingleObjectEx(HANDLE hHandle,
   switch ((ULONG)hHandle)
     {
       case STD_INPUT_HANDLE:
-	hHandle = NtCurrentPeb()->ProcessParameters->hStdInput;
+	hHandle = NtCurrentPeb()->ProcessParameters->StandardInput;
 	break;
 
       case STD_OUTPUT_HANDLE:
-	hHandle = NtCurrentPeb()->ProcessParameters->hStdOutput;
+	hHandle = NtCurrentPeb()->ProcessParameters->StandardOutput;
 	break;
 
       case STD_ERROR_HANDLE:
-	hHandle = NtCurrentPeb()->ProcessParameters->hStdError;
+	hHandle = NtCurrentPeb()->ProcessParameters->StandardError;
 	break;
     }
 
@@ -159,15 +159,15 @@ WaitForMultipleObjectsEx(DWORD nCount,
       switch ((DWORD)lpHandles[i])
 	{
 	  case STD_INPUT_HANDLE:
-	    HandleBuffer[i] = NtCurrentPeb()->ProcessParameters->hStdInput;
+	    HandleBuffer[i] = NtCurrentPeb()->ProcessParameters->StandardInput;
 	    break;
 
 	  case STD_OUTPUT_HANDLE:
-	    HandleBuffer[i] = NtCurrentPeb()->ProcessParameters->hStdOutput;
+	    HandleBuffer[i] = NtCurrentPeb()->ProcessParameters->StandardOutput;
 	    break;
 
 	  case STD_ERROR_HANDLE:
-	    HandleBuffer[i] = NtCurrentPeb()->ProcessParameters->hStdError;
+	    HandleBuffer[i] = NtCurrentPeb()->ProcessParameters->StandardError;
 	    break;
 
 	  default:
@@ -247,15 +247,15 @@ SignalObjectAndWait(HANDLE hObjectToSignal,
   switch ((ULONG)hObjectToWaitOn)
     {
       case STD_INPUT_HANDLE:
-	hObjectToWaitOn = NtCurrentPeb()->ProcessParameters->hStdInput;
+	hObjectToWaitOn = NtCurrentPeb()->ProcessParameters->StandardInput;
 	break;
 
       case STD_OUTPUT_HANDLE:
-	hObjectToWaitOn = NtCurrentPeb()->ProcessParameters->hStdOutput;
+	hObjectToWaitOn = NtCurrentPeb()->ProcessParameters->StandardOutput;
 	break;
 
       case STD_ERROR_HANDLE:
-	hObjectToWaitOn = NtCurrentPeb()->ProcessParameters->hStdError;
+	hObjectToWaitOn = NtCurrentPeb()->ProcessParameters->StandardError;
 	break;
     }
 

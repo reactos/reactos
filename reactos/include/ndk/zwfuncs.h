@@ -3693,6 +3693,7 @@ NtTerminateThread(
     IN HANDLE ThreadHandle,
     IN NTSTATUS ExitStatus
 );
+
 NTSTATUS
 STDCALL
 ZwTerminateThread(

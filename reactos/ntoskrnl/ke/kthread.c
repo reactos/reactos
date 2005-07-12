@@ -436,7 +436,8 @@ KeResumeThread(PKTHREAD Thread)
     ULONG PreviousCount;
     KIRQL OldIrql;
 
-    DPRINT("KeResumeThread (Thread %p called). %x, %x\n", Thread, Thread->SuspendCount, Thread->FreezeCount);
+    DPRINT("KeResumeThread (Thread %p called). %x, %x\n", Thread,
+            Thread->SuspendCount, Thread->FreezeCount);
 
     /* Lock the Dispatcher */
     OldIrql = KeAcquireDispatcherDatabaseLock();
