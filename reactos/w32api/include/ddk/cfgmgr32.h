@@ -256,21 +256,21 @@ typedef struct DevPrivate_Resource_s {
 } DEVPRIVATE_RESOURCE, *PDEVPRIVATE_RESOURCE;
 
 /* DMA_DES.DD_Flags constants and masks */
-#define mDD_Width         								0x3
-#define fDD_BYTE          								0x0
-#define fDD_WORD          								0x1
-#define fDD_DWORD         								0x2
-#define fDD_BYTE_AND_WORD 								0x3
+#define mDD_Width                         0x3
+#define fDD_BYTE                          0x0
+#define fDD_WORD                          0x1
+#define fDD_DWORD                         0x2
+#define fDD_BYTE_AND_WORD                 0x3
 
-#define mDD_BusMaster     								0x4
-#define fDD_NoBusMaster   								0x0
-#define fDD_BusMaster     								0x4
+#define mDD_BusMaster                     0x4
+#define fDD_NoBusMaster                   0x0
+#define fDD_BusMaster                     0x4
 
-#define mDD_Type         									0x18
-#define fDD_TypeStandard 									0x00
-#define fDD_TypeA        									0x08
-#define fDD_TypeB        									0x10
-#define fDD_TypeF        									0x18
+#define mDD_Type                          0x18
+#define fDD_TypeStandard                  0x00
+#define fDD_TypeA                         0x08
+#define fDD_TypeB                         0x10
+#define fDD_TypeF                         0x18
 
 typedef struct DMA_Des_s {
   DWORD  DD_Count;
@@ -440,8 +440,8 @@ typedef struct Mem_Resource_s {
 } MEM_RESOURCE, *PMEM_RESOURCE;
 
 /* MFCARD_DES.PMF_Flags constants */
-#define fPMF_AUDIO_ENABLE   							0x8
-#define mPMF_AUDIO_ENABLE   							fPMF_AUDIO_ENABLE
+#define fPMF_AUDIO_ENABLE                 0x8
+#define mPMF_AUDIO_ENABLE                 fPMF_AUDIO_ENABLE
 
 typedef struct MfCard_Des_s {
   DWORD  PMF_Count;
@@ -585,7 +585,7 @@ CM_Add_Empty_Log_Conf_Ex(
   IN HMACHINE  hMachine);
 
 /* CM_Add_ID.ulFlags constants */
-#define CM_ADD_ID_HARDWARE              	0x00000000
+#define CM_ADD_ID_HARDWARE                0x00000000
 #define CM_ADD_ID_COMPATIBLE              0x00000001
 #define CM_ADD_ID_BITS                    0x00000001
 
@@ -1068,8 +1068,21 @@ CM_Get_First_Log_Conf_Ex(
   IN ULONG  ulFlags,
   IN HMACHINE  hMachine);
 
-/* FIXME: Obsolete CM_Get_Global_State */
-/* FIXME: Obsolete CM_Get_Global_State_Ex */
+CMAPI
+CONFIGRET
+WINAPI
+CM_Get_Global_State(
+  OUT PULONG  pulState,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Get_Global_State_Ex(
+  OUT PULONG  pulState,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
 /* FIXME: Obsolete CM_Get_Hardware_Profile_Info */
 /* FIXME: Obsolete CM_Get_Hardware_Profile_Info_Ex */
 /* FIXME: Obsolete CM_Get_HW_Prof_Flags */
