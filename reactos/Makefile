@@ -290,9 +290,11 @@ ERRCODES_RC = lib$(SEP)kernel32$(SEP)errcodes.rc
 
 include lib/lib.mak
 include tools/tools.mak
+include boot/freeldr/bootsect/bootsect.mak
 -include makefile.auto
 
 PREAUTO := \
+	$(BIN2C_TARGET) \
 	$(BIN2RES_TARGET) \
 	$(BUILDNO_H) \
 	$(BUGCODES_H) \
