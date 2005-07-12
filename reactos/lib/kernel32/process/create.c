@@ -16,7 +16,7 @@
 /* FIXME */
 #include <rosrtl/thread.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include "../include/debug.h"
 
 /* FUNCTIONS ****************************************************************/
@@ -1378,11 +1378,11 @@ CreateProcessW(LPCWSTR lpApplicationName,
     * Create the thread for the kernel
     */
    DPRINT("Creating thread for process (EntryPoint = 0x%.08x)\n",
-          (PVOID)((ULONG_PTR)ImageBaseAddress + (ULONG_PTR)Sii.TransferAddress));
+          Sii.TransferAddress);
    hThread =  KlCreateFirstThread(hProcess,
 				  lpThreadAttributes,
 				  &Sii,
-				  (PVOID)((ULONG_PTR)ImageBaseAddress + (ULONG_PTR)Sii.TransferAddress),
+				  Sii.TransferAddress,
 				  dwCreationFlags,
 				  &lpProcessInformation->dwThreadId);
    if (hThread == NULL)

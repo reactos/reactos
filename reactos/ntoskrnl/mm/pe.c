@@ -483,7 +483,10 @@ l_ReadHeaderFromFile:
  ASSERT(PEFMT_FIELDS_EQUAL(IMAGE_OPTIONAL_HEADER32, IMAGE_OPTIONAL_HEADER64, AddressOfEntryPoint));
 
  if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, AddressOfEntryPoint))
-  ImageSectionObject->EntryPoint = piohOptHeader->AddressOfEntryPoint;
+ {
+  ImageSectionObject->EntryPoint = piohOptHeader->ImageBase + 
+                                   piohOptHeader->AddressOfEntryPoint;
+ }
 
  ASSERT(PEFMT_FIELDS_EQUAL(IMAGE_OPTIONAL_HEADER32, IMAGE_OPTIONAL_HEADER64, SizeOfCode));
 

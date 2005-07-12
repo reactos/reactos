@@ -16,175 +16,160 @@
 #define NDEBUG
 #include <debug.h>
 
+/* INTERNAL FUNCTIONS *******************************************************/
+
+NTSTATUS
+STDCALL
+RtlpMapFile(PUNICODE_STRING ImageFileName,
+            ULONG Attributes,
+            PHANDLE Section)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS Status;
+    HANDLE hFile = NULL;
+    IO_STATUS_BLOCK IoStatusBlock;
+
+    /* Open the Image File */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               ImageFileName,
+                               Attributes & (OBJ_CASE_INSENSITIVE | OBJ_INHERIT),
+                               NULL,
+                               NULL);
+    Status = ZwOpenFile(&hFile,
+                        SYNCHRONIZE | FILE_EXECUTE | FILE_READ_DATA,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_DELETE | FILE_SHARE_READ,
+                        FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to read image file from disk\n");
+        return(Status);
+    }
+    
+    /* Now create a section for this image */    
+    Status = ZwCreateSection(Section,
+                             SECTION_ALL_ACCESS,
+                             NULL,
+                             NULL,
+                             PAGE_EXECUTE,
+                             SEC_IMAGE,
+                             hFile);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create section for image file\n");
+    }
+
+    ZwClose(hFile);
+    return Status;
+}
+
 /* FUNCTIONS ****************************************************************/
 
-
-static NTSTATUS
-RtlpMapFile(PUNICODE_STRING ImageFileName,
-            PRTL_USER_PROCESS_PARAMETERS Ppb,
-	    ULONG Attributes,
-	    PHANDLE Section)
+NTSTATUS
+STDCALL
+RtlpInitEnvironment(HANDLE ProcessHandle,
+                    PPEB Peb,
+                    PRTL_USER_PROCESS_PARAMETERS ProcessParameters)
 {
-   HANDLE hFile;
-   IO_STATUS_BLOCK IoStatusBlock;
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
-   NTSTATUS Status;
+    NTSTATUS Status;
+    PVOID BaseAddress = NULL;
+    ULONG EnviroSize;
+    ULONG Size;
+    PWCHAR Environment = 0;
+    
+    DPRINT("RtlpInitEnvironment (hProcess: %lx, Peb: %p Params: %p)\n",
+            ProcessHandle, Peb, ProcessParameters);
+            
+    /* Give the caller 1MB if he requested it */
+    if (ProcessParameters->Flags & PPF_RESERVE_1MB)
+    {
+        /* Give 1MB starting at 0x4 */
+        BaseAddress = (PVOID)4;
+        EnviroSize = 1024 * 1024;
+        Status = ZwAllocateVirtualMemory(ProcessHandle,
+                                         &BaseAddress,
+                                         0,
+                                         &EnviroSize,
+                                         MEM_RESERVE,
+                                         PAGE_READWRITE);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to reserve 1MB of space \n");
+            return(Status);
+        }
+    }
+    
+    /* Find the end of the Enviroment Block */
+    if ((Environment = (PWCHAR)ProcessParameters->Environment))
+    {
+        while (*Environment++) while (*Environment++);
 
-   hFile = NULL;
+        /* Calculate the size of the block */
+        EnviroSize = (ULONG)((ULONG_PTR)Environment -
+                             (ULONG_PTR)ProcessParameters->Environment);
+        DPRINT("EnvironmentSize %ld\n", EnviroSize);
 
-   RtlDeNormalizeProcessParams (Ppb);
+        /* Allocate and Initialize new Environment Block */
+        Size = EnviroSize;
+        Status = ZwAllocateVirtualMemory(ProcessHandle,
+                                         &BaseAddress,
+                                         0,
+                                         &Size,
+                                         MEM_RESERVE | MEM_COMMIT,
+                                         PAGE_READWRITE);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to allocate Environment Block\n");
+            return(Status);
+        }
+        
+        /* Write the Environment Block */
+        ZwWriteVirtualMemory(ProcessHandle,
+                             BaseAddress,
+                             ProcessParameters->Environment,
+                             EnviroSize,
+                             NULL);
+                             
+        /* Save pointer */
+        ProcessParameters->Environment = BaseAddress;
+    }
+    
+    DPRINT("EnvironmentPointer %p\n", BaseAddress);
+    DPRINT("Ppb->MaximumLength %x\n", ProcessParameters->MaximumLength);
 
-/*   DbgPrint("ImagePathName 0x%p\n", Ppb->ImagePathName.Buffer); */
+    /* Now allocate space for the Parameter Block */
+    BaseAddress = NULL;
+    Size = ProcessParameters->MaximumLength;    
+    Status = ZwAllocateVirtualMemory(ProcessHandle,
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_COMMIT,
+                                     PAGE_READWRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to allocate Parameter Block\n");
+        return(Status);
+    }
+    
+    /* Write the Parameter Block */
+    ZwWriteVirtualMemory(ProcessHandle,
+                         BaseAddress,
+                         ProcessParameters,
+                         ProcessParameters->Length,
+                         NULL);
+  
+    /* Write pointer to Parameter Block */
+    ZwWriteVirtualMemory(ProcessHandle,
+                         &Peb->ProcessParameters,
+                         &BaseAddress,
+                         sizeof(BaseAddress),
+                         NULL);
 
-   InitializeObjectAttributes(&ObjectAttributes,
-			      ImageFileName,
-			      Attributes & (OBJ_CASE_INSENSITIVE | OBJ_INHERIT),
-			      NULL,
-			      SecurityDescriptor);
-
-   RtlNormalizeProcessParams (Ppb);
-
-   /*
-    * Try to open the executable
-    */
-
-   Status = ZwOpenFile(&hFile,
-			SYNCHRONIZE|FILE_EXECUTE|FILE_READ_DATA,
-			&ObjectAttributes,
-			&IoStatusBlock,
-			FILE_SHARE_DELETE|FILE_SHARE_READ,
-			FILE_SYNCHRONOUS_IO_NONALERT|FILE_NON_DIRECTORY_FILE);
-
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
-
-   Status = ZwCreateSection(Section,
-			    SECTION_ALL_ACCESS,
-			    NULL,
-			    NULL,
-			    PAGE_EXECUTE,
-			    SEC_IMAGE,
-			    hFile);
-   ZwClose(hFile);
-
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
-
-   return(STATUS_SUCCESS);
+    /* Return */
+    return STATUS_SUCCESS;
 }
-
-static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
-			   PRTL_USER_PROCESS_PARAMETERS	Ppb,
-			   PVOID* ImageBaseAddress)
-{
-   NTSTATUS Status;
-   PVOID PpbBase;
-   ULONG PpbSize;
-   ULONG BytesWritten;
-   ULONG Offset;
-   PVOID EnvPtr = NULL;
-   ULONG EnvSize = 0;
-
-   /* create the Environment */
-   if (Ppb->Environment != NULL)
-     {
-	MEMORY_BASIC_INFORMATION MemInfo;
-
-   Status = ZwQueryVirtualMemory (NtCurrentProcess (),
-	                               Ppb->Environment,
-	                               MemoryBasicInformation,
-	                               &MemInfo,
-	                               sizeof(MEMORY_BASIC_INFORMATION),
-	                               NULL);
-	if (!NT_SUCCESS(Status))
-	  {
-	     return Status;
-	  }
-	EnvSize = MemInfo.RegionSize;
-     }
-   DPRINT("EnvironmentSize %ld\n", EnvSize);
-
-   /* allocate and initialize new environment block */
-   if (EnvSize != 0)
-     {
-   Status = ZwAllocateVirtualMemory(ProcessHandle,
-					 &EnvPtr,
-					 0,
-					 &EnvSize,
-					 MEM_RESERVE | MEM_COMMIT,
-					 PAGE_READWRITE);
-	if (!NT_SUCCESS(Status))
-	  {
-	     return(Status);
-	  }
-
-   ZwWriteVirtualMemory(ProcessHandle,
-			     EnvPtr,
-			     Ppb->Environment,
-			     EnvSize,
-			     &BytesWritten);
-     }
-   DPRINT("EnvironmentPointer %p\n", EnvPtr);
-
-   /* create the PPB */
-   PpbBase = NULL;
-   PpbSize = Ppb->MaximumLength;
-
-   Status = ZwAllocateVirtualMemory(ProcessHandle,
-				    &PpbBase,
-				    0,
-				    &PpbSize,
-				    MEM_RESERVE | MEM_COMMIT,
-				    PAGE_READWRITE);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
-
-   DPRINT("Ppb->MaximumLength %x\n", Ppb->MaximumLength);
-
-   /* write process parameters block*/
-   RtlDeNormalizeProcessParams (Ppb);
-   ZwWriteVirtualMemory(ProcessHandle,
-			PpbBase,
-			Ppb,
-			Ppb->MaximumLength,
-
-			&BytesWritten);
-   RtlNormalizeProcessParams (Ppb);
-
-   /* write pointer to environment */
-   Offset = FIELD_OFFSET(RTL_USER_PROCESS_PARAMETERS, Environment);
-   ZwWriteVirtualMemory(ProcessHandle,
-			(PVOID)((ULONG_PTR)PpbBase + Offset),
-			&EnvPtr,
-			sizeof(EnvPtr),
-			&BytesWritten);
-
-   /* write pointer to process parameter block */
-   Offset = FIELD_OFFSET(PEB, ProcessParameters);
-   ZwWriteVirtualMemory(ProcessHandle,
-			(PVOID)(PEB_BASE + Offset),
-			&PpbBase,
-			sizeof(PpbBase),
-			&BytesWritten);
-
-   /* Read image base address. */
-   Offset = FIELD_OFFSET(PEB, ImageBaseAddress);
-   ZwReadVirtualMemory(ProcessHandle,
-		       (PVOID)(PEB_BASE + Offset),
-		       ImageBaseAddress,
-		       sizeof(PVOID),
-		       &BytesWritten);
-
-   return(STATUS_SUCCESS);
-}
-
 
 /*
  * @implemented
@@ -200,114 +185,136 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
  *
  * -Gunnar
  */
-NTSTATUS STDCALL
-RtlCreateUserProcess(
-   IN PUNICODE_STRING ImageFileName,
-   IN ULONG Attributes,
-   IN OUT PRTL_USER_PROCESS_PARAMETERS ProcessParameters,
-   IN PSECURITY_DESCRIPTOR ProcessSecurityDescriptor  OPTIONAL,
-   IN PSECURITY_DESCRIPTOR ThreadSecurityDescriptor  OPTIONAL,
-   IN HANDLE ParentProcess  OPTIONAL,
-   IN BOOLEAN InheritHandles,
-   IN HANDLE DebugPort  OPTIONAL,
-   IN HANDLE ExceptionPort  OPTIONAL,
-   OUT PRTL_USER_PROCESS_INFORMATION ProcessInfo
-   )
+NTSTATUS
+STDCALL
+RtlCreateUserProcess(IN PUNICODE_STRING ImageFileName,
+                     IN ULONG Attributes,
+                     IN OUT PRTL_USER_PROCESS_PARAMETERS ProcessParameters,
+                     IN PSECURITY_DESCRIPTOR ProcessSecurityDescriptor OPTIONAL,
+                     IN PSECURITY_DESCRIPTOR ThreadSecurityDescriptor OPTIONAL,
+                     IN HANDLE ParentProcess OPTIONAL,
+                     IN BOOLEAN InheritHandles,
+                     IN HANDLE DebugPort OPTIONAL,
+                     IN HANDLE ExceptionPort OPTIONAL,
+                     OUT PRTL_USER_PROCESS_INFORMATION ProcessInfo)
 {
-   HANDLE hSection;
-   NTSTATUS Status;
-   PROCESS_BASIC_INFORMATION ProcessBasicInfo;
-   ULONG retlen;
-   SECTION_IMAGE_INFORMATION Sii;
-   ULONG ResultLength;
-   PVOID ImageBaseAddress;
+    NTSTATUS Status;
+    HANDLE hSection;
+    PROCESS_BASIC_INFORMATION ProcessBasicInfo;
+    OBJECT_ATTRIBUTES ObjectAttributes;
 
-   DPRINT("RtlCreateUserProcess\n");
+    DPRINT("RtlCreateUserProcess: %wZ\n", ImageFileName);
 
-   Status = RtlpMapFile(ImageFileName,
-                        ProcessParameters,
-			Attributes,
-			&hSection);
-   if( !NT_SUCCESS( Status ) )
-     return Status;
+    /* Map and Load the File */
+    Status = RtlpMapFile(ImageFileName,
+                         Attributes,
+                         &hSection);
+    if(!NT_SUCCESS(Status))
+    {
+        DPRINT1("Could not map process image\n");
+        return Status;
+    }
+    
+    /* Clean out the CurDir Handle if we won't use it */
+    if (!InheritHandles) ProcessParameters->CurrentDirectory.Handle = NULL;
+    
+    /* Use us as parent if none other specified */
+    if (!ParentProcess) ParentProcess = NtCurrentProcess();
+    
+    /* Initialize the Object Attributes */
+    InitializeObjectAttributes(&ObjectAttributes, 
+                               NULL, 
+                               0, 
+                               NULL,
+                               ProcessSecurityDescriptor);
 
-   /*
-    * Create a new process
-    */
-   if (ParentProcess == NULL)
-     ParentProcess = NtCurrentProcess();
+    /*
+     * If FLG_ENABLE_CSRDEBUG is used, then CSRSS is created under the
+     * watch of WindowsSS
+     */
+    if ((RtlGetNtGlobalFlags() & FLG_ENABLE_CSRDEBUG) &&
+        (wcsstr(ImageFileName->Buffer, L"csrss")))
+    {
+        UNICODE_STRING DebugString = RTL_CONSTANT_STRING(L"\\WindowsSS");
+        InitializeObjectAttributes(&ObjectAttributes, 
+                                   &DebugString, 
+                                   0, 
+                                   NULL,
+                                   ProcessSecurityDescriptor);
+    }
+    
+                               
+    /* Create Kernel Process Object */
+    Status = ZwCreateProcess(&ProcessInfo->ProcessHandle,
+                             PROCESS_ALL_ACCESS,
+                             &ObjectAttributes,
+                             ParentProcess,
+                             InheritHandles,
+                             hSection,
+                             DebugPort,
+                             ExceptionPort);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Could not create Kernel Process Object\n");
+        ZwClose(hSection);
+        return(Status);
+    }
+    
+    /* Get some information on the image */
+    Status = ZwQuerySection(hSection,
+                            SectionImageInformation,
+                            &ProcessInfo->ImageInformation,
+                            sizeof(SECTION_IMAGE_INFORMATION),
+                            NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Could not query Section Info\n");
+        ZwClose(ProcessInfo->ProcessHandle);
+        ZwClose(hSection);
+        return(Status);
+    }
 
-   Status = ZwCreateProcess(&(ProcessInfo->ProcessHandle),
-			    PROCESS_ALL_ACCESS,
-			    NULL,
-			    ParentProcess,
-             InheritHandles,
-			    hSection,
-			    DebugPort,
-			    ExceptionPort);
-   if (!NT_SUCCESS(Status))
-     {
-   ZwClose(hSection);
-	return(Status);
-     }
+    /* Get some information about the process */
+    ZwQueryInformationProcess(ProcessInfo->ProcessHandle,
+                              ProcessBasicInformation,
+                              &ProcessBasicInfo,
+                              sizeof(ProcessBasicInfo),
+                              NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Could not query Process Info\n");
+        ZwClose(ProcessInfo->ProcessHandle);
+        ZwClose(hSection);
+        return(Status);
+    }  
 
-   /*
-    * Get some information about the process
-    */
-   ZwQueryInformationProcess(ProcessInfo->ProcessHandle,
-			     ProcessBasicInformation,
-			     &ProcessBasicInfo,
-			     sizeof(ProcessBasicInfo),
-			     &retlen);
-   DPRINT("ProcessBasicInfo.UniqueProcessId %d\n",
-	  ProcessBasicInfo.UniqueProcessId);
-   ProcessInfo->ClientId.UniqueProcess = (HANDLE)ProcessBasicInfo.UniqueProcessId;
+    /* Create Process Environment */
+    RtlpInitEnvironment(ProcessInfo->ProcessHandle,
+                        ProcessBasicInfo.PebBaseAddress,
+                        ProcessParameters);
 
-   /*
-    * Create Process Environment Block
-    */
-   DPRINT("Creating peb\n");
-   KlInitPeb(ProcessInfo->ProcessHandle,
-	     ProcessParameters,
-	     &ImageBaseAddress);
-
-   Status = ZwQuerySection(hSection,
-			   SectionImageInformation,
-			   &Sii,
-			   sizeof(Sii),
-			   &ResultLength);
-   if (!NT_SUCCESS(Status) || ResultLength != sizeof(Sii))
-     {
-       DPRINT("Failed to get section image information.\n");
-       ZwClose(hSection);
-       return(Status);
-     }
-
-   DPRINT("Creating thread for process\n");
-   Status = RtlCreateUserThread(
-      ProcessInfo->ProcessHandle,
-      NULL,
-      TRUE, /* CreateSuspended? */
-      0,
-      Sii.MaximumStackSize,
-      Sii.CommittedStackSize,
-      (PVOID)((ULONG_PTR)ImageBaseAddress + (ULONG_PTR)Sii.TransferAddress),
-      (PVOID)PEB_BASE,
-      &ProcessInfo->ThreadHandle,
-      &ProcessInfo->ClientId
-      );
-
-   ZwClose(hSection);
-
-   if (!NT_SUCCESS(Status))
-   {
-	DPRINT("Failed to create thread\n");
-	return(Status);
-   }
-
-   return(STATUS_SUCCESS);
+    /* Create the first Thread */
+    Status = RtlCreateUserThread(ProcessInfo->ProcessHandle,
+                                 ThreadSecurityDescriptor,
+                                 TRUE,
+                                 ProcessInfo->ImageInformation.ZeroBits,
+                                 ProcessInfo->ImageInformation.MaximumStackSize,
+                                 ProcessInfo->ImageInformation.CommittedStackSize,
+                                 ProcessInfo->ImageInformation.TransferAddress,
+                                 ProcessBasicInfo.PebBaseAddress,
+                                 &ProcessInfo->ThreadHandle,
+                                 &ProcessInfo->ClientId);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Could not Create Thread\n");
+        ZwClose(ProcessInfo->ProcessHandle);
+        ZwClose(hSection); /* Don't try to optimize this on top! */
+        return Status;
+    }
+    
+    /* Close the Section Handle and return */
+    ZwClose(hSection);
+    return STATUS_SUCCESS;
 }
-
-
 
 /* EOF */
