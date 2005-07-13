@@ -20,7 +20,7 @@ unsigned long DbgPrint(char *Format,...);
 #endif
 
 #if !defined(DBG) || !defined(YDEBUG)
-#define DPRINT(...) do { DbgPrint(__VA_ARGS__); } while(0)
+#define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
 #else
 #define DPRINT DbgPrint("(%s:%d:%s) ",__FILE__,__LINE__,__FUNCTION__), DbgPrint
 #endif
