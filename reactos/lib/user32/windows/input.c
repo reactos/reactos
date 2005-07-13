@@ -162,24 +162,22 @@ GetDoubleClickTime(VOID)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HKL STDCALL
 GetKeyboardLayout(DWORD idThread)
 {
-  UNIMPLEMENTED;
-  return (HKL)0;
+  return (HKL)NtUserCallOneParam((DWORD) idThread,  ONEPARAM_ROUTINE_GETKEYBOARDLAYOUT);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT STDCALL
 GetKBCodePage(VOID)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return GetOEMCP();
 }
 
 
@@ -246,12 +244,15 @@ GetKeyboardLayoutList(int nBuff,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 GetKeyboardLayoutNameA(LPSTR pwszKLID)
 {
-  UNIMPLEMENTED;
+  WCHAR buf[KL_NAMELENGTH];
+    
+  if (GetKeyboardLayoutNameW(buf))
+    return WideCharToMultiByte( CP_ACP, 0, buf, -1, pwszKLID, KL_NAMELENGTH, NULL, NULL ) != 0;
   return FALSE;
 }
 
@@ -268,7 +269,7 @@ GetKeyboardLayoutNameW(LPWSTR pwszKLID)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 GetKeyboardState(PBYTE lpKeyState)
@@ -279,13 +280,12 @@ GetKeyboardState(PBYTE lpKeyState)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int STDCALL
 GetKeyboardType(int nTypeFlag)
 {
-  UNIMPLEMENTED;
-  return 0;
+return (int)NtUserCallOneParam((DWORD) nTypeFlag,  ONEPARAM_ROUTINE_GETKEYBOARDTYPE);
 }
 
 
@@ -301,14 +301,22 @@ GetLastInputInfo(PLASTINPUTINFO plii)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HKL STDCALL
 LoadKeyboardLayoutA(LPCSTR pwszKLID,
 		    UINT Flags)
 {
-  UNIMPLEMENTED;
-  return (HKL)0;
+  HKL ret;
+  UNICODE_STRING pwszKLIDW;
+        
+  if (pwszKLID) RtlCreateUnicodeStringFromAsciiz(&pwszKLIDW, pwszKLID);
+  else pwszKLIDW.Buffer = NULL;
+                
+  ret = LoadKeyboardLayoutW(pwszKLIDW.Buffer, Flags);
+  RtlFreeUnicodeString(&pwszKLIDW);
+  return ret;
+
 }
 
 
@@ -371,13 +379,24 @@ MapVirtualKeyW(UINT uCode,
 
 
 /*
- * @unimplemented
- */
+ * @implemented
+ */ 
 DWORD STDCALL
 OemKeyScan(WORD wOemChar)
 {
-  UNIMPLEMENTED;
-  return 0;
+  WCHAR p;
+  SHORT Vk;
+  UINT Scan;
+
+  MultiByteToWideChar(CP_OEMCP, 0, (PCSTR)&wOemChar, 1, &p, 1);
+  Vk = VkKeyScanW(p);
+  Scan = MapVirtualKeyW((Vk & 0x00ff), 0);
+  if(!Scan) return -1;
+  /* 
+     Page 450-1, MS W2k SuperBible by SAMS. Return, low word has the
+     scan code and high word has the shift state.
+   */
+  return ((Vk & 0xff00) << 8) | Scan;
 }
 
 
@@ -411,7 +430,7 @@ SetDoubleClickTime(UINT uInterval)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HWND STDCALL
 SetFocus(HWND hWnd)
@@ -421,7 +440,7 @@ SetFocus(HWND hWnd)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 SetKeyboardState(LPBYTE lpKeyState)
@@ -495,7 +514,7 @@ ToUnicode(UINT wVirtKey,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int STDCALL
 ToUnicodeEx(UINT wVirtKey,
@@ -565,14 +584,13 @@ VkKeyScanExA(CHAR ch,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 SHORT STDCALL
 VkKeyScanExW(WCHAR ch,
 	     HKL dwhkl)
 {
-  UNIMPLEMENTED;
-  return -1;
+  return (SHORT) NtUserVkKeyScanEx((DWORD) ch,(DWORD) dwhkl,(DWORD)NULL);
 }
 
 
@@ -850,7 +868,8 @@ TrackMouseEvent(
     pos.y = 0;
     SetRectEmpty(&client);
 
-    DPRINT("%lx, %lx, %p, %lx\n", ptme->cbSize, ptme->dwFlags, ptme->hwndTrack, ptme->dwHoverTime);
+    DbgPrint("%lx, %lx, %p, %lx\n", ptme->cbSize, ptme->dwFlags, ptme->hwndTrack, ptme->dwHoverTime);
+  UNIMPLEMENTED;
 
     if (ptme->cbSize != sizeof(TRACKMOUSEEVENT)) {
         DPRINT("wrong TRACKMOUSEEVENT size from app\n");
