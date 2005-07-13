@@ -24,7 +24,7 @@
 #endif
 
 #define IsConsoleHandle(h) \
-  ((((ULONG)h) & 0x10000003) == 0x3) ? TRUE : FALSE
+  (((((ULONG)h) & 0x10000003) == 0x3) ? TRUE : FALSE)
 
 #define HANDLE_DETACHED_PROCESS    (HANDLE)-1
 #define HANDLE_CREATE_NEW_CONSOLE  (HANDLE)-2
