@@ -3,6 +3,7 @@
 
 #include "../roscfg.h"
 #include <stdarg.h>
+#include <windows.h>
 #include <wchar.h>
 
 #ifndef __GNUC__
@@ -19,11 +20,7 @@ unsigned long DbgPrint(char *Format,...);
 #endif
 
 #if !defined(DBG) || !defined(YDEBUG)
-#ifdef __GNUC__
-#define DPRINT(args...)
-#else
-#define DPRINT
-#endif
+#define DPRINT(...) do { DbgPrint(__VA_ARGS__); } while(0)
 #else
 #define DPRINT DbgPrint("(%s:%d:%s) ",__FILE__,__LINE__,__FUNCTION__), DbgPrint
 #endif
@@ -51,6 +48,24 @@ inline static const char *debugstr_a( const char *s )  { return wine_dbgstr_an( 
 inline static const char *debugstr_w( const wchar_t *s ) { return wine_dbgstr_wn( s, 80 ); }
 inline static const char *debugres_a( const char *s )  { return wine_dbgstr_an( s, 80 ); }
 inline static const char *debugres_w( const wchar_t *s ) { return wine_dbgstr_wn( s, 80 ); }
+
+static inline const char *wine_dbgstr_point( const POINT *pt )
+{
+    if (!pt) return "(null)";
+    return wine_dbg_sprintf( "(%ld,%ld)", pt->x, pt->y );
+}
+
+static inline const char *wine_dbgstr_size( const SIZE *size )
+{
+    if (!size) return "(null)";
+    return wine_dbg_sprintf( "(%ld,%ld)", size->cx, size->cy );
+}
+
+static inline const char *wine_dbgstr_rect( const RECT *rect )
+{
+    if (!rect) return "(null)";
+    return wine_dbg_sprintf( "(%ld,%ld)-(%ld,%ld)", rect->left, rect->top, rect->right, rect->bottom );
+}
 
 #define TRACE        DPRINT
 #define TRACE_(ch)   DPRINT

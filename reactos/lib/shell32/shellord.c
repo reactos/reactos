@@ -965,8 +965,8 @@ HRESULT WINAPI SHCreateShellFolderViewEx(
 	IShellView * psf;
 	HRESULT hRes;
 
-	TRACE("sf=%p pidl=%p cb=%p mode=0x%08x parm=%p\n",
-	  psvcbi->pshf, psvcbi->pidl, psvcbi->pfnCallback,
+	TRACE("sf=%p cb=%p mode=0x%08x parm=%p\n",
+	  psvcbi->pshf, psvcbi->pfnCallback,
 	  psvcbi->fvm, psvcbi->psvOuter);
 
 	psf = IShellView_Constructor(psvcbi->pshf);

@@ -433,7 +433,7 @@ static LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 	EDITSTATE *es = (EDITSTATE *)GetWindowLongW( hwnd, 0 );
 	LRESULT result = 0;
 
-        TRACE("hwnd=%p msg=%x (%s) wparam=%x lparam=%lx\n", hwnd, msg, SPY_GetMsgName(msg, hwnd), wParam, lParam);
+        //TRACE("hwnd=%p msg=%x (%s) wparam=%x lparam=%lx\n", hwnd, msg, SPY_GetMsgName(msg, hwnd), wParam, lParam);
 
 	if (!es && msg != WM_NCCREATE)
 		return DefWindowProcT(hwnd, msg, wParam, lParam, unicode);

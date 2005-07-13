@@ -2565,8 +2565,8 @@ static LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
                          DefWindowProcA( hwnd, msg, wParam, lParam );
     }
 
-    TRACE("[%p]: msg %s wp %08x lp %08lx\n",
-          hwnd, SPY_GetMsgName(msg, hwnd), wParam, lParam );
+    //TRACE("[%p]: msg %s wp %08x lp %08lx\n",
+      //    hwnd, SPY_GetMsgName(msg, hwnd), wParam, lParam );
     switch(msg)
     {
 #ifndef __REACTOS__
@@ -3206,8 +3206,8 @@ static LRESULT WINAPI ComboLBWndProc_common( HWND hwnd, UINT msg,
                          DefWindowProcA( hwnd, msg, wParam, lParam );
     }
 
-    TRACE_(combo)("[%p]: msg %s wp %08x lp %08lx\n",
-                  hwnd, SPY_GetMsgName(msg, hwnd), wParam, lParam );
+    //TRACE_(combo)("[%p]: msg %s wp %08x lp %08lx\n",
+      //            hwnd, SPY_GetMsgName(msg, hwnd), wParam, lParam );
 
     if ((lphc = descr->lphc) != NULL)
     {
