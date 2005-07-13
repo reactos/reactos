@@ -48,17 +48,33 @@ GetEnvironmentVariableA (
 
 	/* initialize unicode variable value string and allocate buffer */
 	VarValueU.Length = 0;
-	VarValueU.MaximumLength = nSize * sizeof(WCHAR);
-	VarValueU.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
-	                                    0,
-	                                    VarValueU.MaximumLength);
-
-	/* get unicode environment variable */
-	Status = RtlQueryEnvironmentVariable_U (NULL,
-	                                        &VarNameU,
-	                                        &VarValueU);
-	if (!NT_SUCCESS(Status))
+	if (nSize != 0)
 	{
+	    VarValueU.MaximumLength = (nSize - 1) * sizeof(WCHAR);
+	    VarValueU.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
+	                                        0,
+	                                        nSize * sizeof(WCHAR));
+            if (VarValueU.Buffer != NULL)
+            {
+                /* NULL-terminate the buffer in any case! RtlQueryEnvironmentVariable_U
+                   only terminates it if MaximumLength < Length! */
+                VarValueU.Buffer[nSize - 1] = L'\0';
+            }
+        }
+	else
+	{
+            VarValueU.MaximumLength = 0;
+            VarValueU.Buffer = NULL;
+	}
+
+        if (VarValueU.Buffer != NULL || nSize == 0)
+        {
+            /* get unicode environment variable */
+	    Status = RtlQueryEnvironmentVariable_U (NULL,
+	                                            &VarNameU,
+	                                            &VarValueU);
+	    if (!NT_SUCCESS(Status))
+	    {
 		/* free unicode buffer */
 		RtlFreeHeap (RtlGetProcessHeap (),
 		             0,
@@ -70,28 +86,37 @@ GetEnvironmentVariableA (
 		SetLastErrorByStatus (Status);
 		if (Status == STATUS_BUFFER_TOO_SMALL)
 		{
-			return VarValueU.Length / sizeof(WCHAR) + 1;
+			return (VarValueU.Length / sizeof(WCHAR)) + 1;
 		}
 		else
 		{
 			return 0;
 		}
-	}
+	    }
 
-	/* convert unicode value string to ansi */
-	RtlUnicodeStringToAnsiString (&VarValue,
-	                              &VarValueU,
-	                              FALSE);
+	    /* convert unicode value string to ansi */
+	    RtlUnicodeStringToAnsiString (&VarValue,
+	                                  &VarValueU,
+	                                  FALSE);
 
-	/* free unicode buffer */
-	RtlFreeHeap (RtlGetProcessHeap (),
-	             0,
-	             VarValueU.Buffer);
+            if (VarValueU.Buffer != NULL)
+            {
+                /* free unicode buffer */
+	        RtlFreeHeap (RtlGetProcessHeap (),
+	                     0,
+	                     VarValueU.Buffer);
+            }
 
-	/* free unicode variable name string */
-	RtlFreeUnicodeString (&VarNameU);
+	    /* free unicode variable name string */
+	    RtlFreeUnicodeString (&VarNameU);
 
-	return (VarValueU.Length / sizeof(WCHAR));
+	    return (VarValueU.Length / sizeof(WCHAR));
+        }
+        else
+        {
+            SetLastError (ERROR_NOT_ENOUGH_MEMORY);
+            return 0;
+        }
 }
 
 
@@ -114,7 +139,7 @@ GetEnvironmentVariableW (
 	                      lpName);
 
 	VarValue.Length = 0;
-	VarValue.MaximumLength = nSize * sizeof(WCHAR);
+	VarValue.MaximumLength = (nSize != 0 ? (nSize - 1) * sizeof(WCHAR) : 0);
 	VarValue.Buffer = lpBuffer;
 
 	Status = RtlQueryEnvironmentVariable_U (NULL,
@@ -125,13 +150,17 @@ GetEnvironmentVariableW (
 		SetLastErrorByStatus (Status);
 		if (Status == STATUS_BUFFER_TOO_SMALL)
 		{
-			return (VarValue.Length / sizeof(WCHAR)) +  1;
+			return (VarValue.Length / sizeof(WCHAR)) + 1;
 		}
 		else
 		{
 			return 0;
 		}
 	}
+	
+	/* make sure the string is NULL-terminated! RtlQueryEnvironmentVariable_U
+           only terminates it if MaximumLength < Length */
+	VarValue.Buffer[VarValue.Length / sizeof(WCHAR)] = L'\0';
 
 	return (VarValue.Length / sizeof(WCHAR));
 }
