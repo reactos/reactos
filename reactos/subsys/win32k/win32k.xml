@@ -58,6 +58,7 @@
 		<file>math.c</file>
 		<file>object.c</file>
 		<file>ssec.c</file>
+		<file>copy.c</file>
 	</directory>
 	<directory name="ntddraw">
 		<file>ddraw.c</file>

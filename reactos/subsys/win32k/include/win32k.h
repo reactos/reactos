@@ -54,8 +54,8 @@
 #include <include/window.h>
 #include <include/winpos.h>
 #include <include/winsta.h>
+#include <include/mmcopy.h>
 #include <eng/objects.h>
 #include <eng/misc.h>
 #include <dib/dib.h>
-
 /* EOF */
