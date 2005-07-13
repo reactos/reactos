@@ -158,9 +158,12 @@ GetEnvironmentVariableW (
 		}
 	}
 	
-	/* make sure the string is NULL-terminated! RtlQueryEnvironmentVariable_U
-           only terminates it if MaximumLength < Length */
-	VarValue.Buffer[VarValue.Length / sizeof(WCHAR)] = L'\0';
+        if (nSize != 0)
+        {
+            /* make sure the string is NULL-terminated! RtlQueryEnvironmentVariable_U
+               only terminates it if MaximumLength < Length */
+	    VarValue.Buffer[VarValue.Length / sizeof(WCHAR)] = L'\0';
+	}
 
 	return (VarValue.Length / sizeof(WCHAR));
 }
