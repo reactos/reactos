@@ -1345,8 +1345,8 @@ CreateProcessW(LPCWSTR lpApplicationName,
     */
    if (lpStartupInfo)
    {
-      Ppb->Flags = lpStartupInfo->dwFlags;
-      if (Ppb->Flags & STARTF_USESHOWWINDOW)
+      Ppb->WindowFlags = lpStartupInfo->dwFlags;
+      if (Ppb->WindowFlags & STARTF_USESHOWWINDOW)
       {
          Ppb->ShowWindowFlags = lpStartupInfo->wShowWindow;
       }
