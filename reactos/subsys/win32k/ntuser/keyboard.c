@@ -1050,4 +1050,126 @@ VOID FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyboardLayout) {
 
   IntUnLockQueueState;
 }
+
+DWORD
+STDCALL
+NtUserGetKeyboardLayoutList(
+  DWORD Items,
+  DWORD pHklBuff)
+{
+  UNIMPLEMENTED
+
+  return 0;
+}
+
+DWORD
+STDCALL
+NtUserGetKeyboardLayoutName(
+  DWORD lpszName)
+{
+  UNIMPLEMENTED
+
+  return 0;
+}
+
+HKL
+STDCALL
+NtUserGetKeyboardLayout(
+  DWORD dwThreadId)
+{
+  NTSTATUS Status;
+  PETHREAD Thread;
+  PW32THREAD W32Thread;
+  PKBDTABLES layout;
+
+  if (!dwThreadId)
+     W32Thread = PsGetWin32Thread();
+  else 
+  {
+     Status = PsLookupThreadByThreadId((HANDLE)dwThreadId, &Thread);
+     if(!NT_SUCCESS(Status))
+       {
+         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         return 0;
+       }
+     W32Thread = Thread->Tcb.Win32Thread;
+  }
+  layout = W32Thread->KeyboardLayout;
+  if(!layout) return 0;
+  return (HKL)layout;
+}
+    
+  
+DWORD
+STDCALL
+NtUserGetKeyboardType(
+  DWORD TypeFlag)
+{
+  switch(TypeFlag)
+  {
+    case 0:        /* Keyboard type */
+      return 4;    /* AT-101 */
+    case 1:        /* Keyboard Subtype */
+      return 0;    /* There are no defined subtypes */
+    case 2:        /* Number of F-keys */
+      return 12;   /* We're doing an 101 for now, so return 12 F-keys */
+    default:
+    DPRINT1("Unknown type!\n");
+      return 0;    /* The book says 0 here, so 0 */
+  }
+}
+
+
+/*
+    Based on TryToTranslateChar, instead of processing VirtualKey match,
+    look for wChar match.
+ */
+DWORD
+STDCALL
+NtUserVkKeyScanEx(
+  DWORD wChar,
+  DWORD KeyboardLayout,
+  DWORD Unknown2)
+{
+  PKBDTABLES KeyLayout;
+  PVK_TO_WCHAR_TABLE vtwTbl;
+  PVK_TO_WCHARS10 vkPtr;
+  size_t size_this_entry;
+  int nMod;
+  DWORD CapsMod = 0, CapsState = 0;
+
+  if(!KeyboardLayout) return -1;
+  KeyLayout = (PKBDTABLES) KeyboardLayout;
+  
+  for (nMod = 0; KeyLayout->pVkToWcharTable[nMod].nModifications; nMod++)
+  {
+    vtwTbl = &KeyLayout->pVkToWcharTable[nMod];
+    size_this_entry = vtwTbl->cbSize;
+    vkPtr = (PVK_TO_WCHARS10)((BYTE *)vtwTbl->pVkToWchars);
+
+    while(vkPtr->VirtualKey)
+    {
+     /*
+        0x01 Shift key
+        0x02 Ctrl key
+        0x04 Alt key
+        Should have only 7 valid possibilities.
+      */
+      for(CapsState = 0; CapsState < vtwTbl->nModifications; CapsState++)
+      {
+        if(vkPtr->wch[CapsState] == wChar)
+        {
+          CapsMod = KeyLayout->pCharModifiers->ModNumber[CapsState];
+          DPRINT("nMod %d Vk %04x: CapsMod %08x CapsState %08x MaxModBits %08x\n",
+	       nMod, wVirtKey, CapsMod, CapsState, KeyLayout->pCharModifiers->wMaxModBits);
+          return ((CapsMod << 8)|(vkPtr->VirtualKey & 0xff));
+        }
+      }
+      vkPtr = (PVK_TO_WCHARS10)(((BYTE *)vkPtr) + size_this_entry);
+    }
+  }
+  return -1;
+}
+
+    
 /* EOF */

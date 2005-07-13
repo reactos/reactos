@@ -344,26 +344,6 @@ NtUserGetImeHotKey(
   return 0;
 }
 
-DWORD
-STDCALL
-NtUserGetKeyboardLayoutList(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetKeyboardLayoutName(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
 
 DWORD
 STDCALL
@@ -695,18 +675,6 @@ DWORD
 STDCALL
 NtUserValidateHandleSecure(
   DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserVkKeyScanEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
 {
   UNIMPLEMENTED
 

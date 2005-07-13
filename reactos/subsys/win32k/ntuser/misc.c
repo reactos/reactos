@@ -341,6 +341,12 @@ NtUserCallOneParam(
 
     case ONEPARAM_ROUTINE_MSQSETWAKEMASK:
       return (DWORD)IntMsqSetWakeMask(Param);
+
+    case ONEPARAM_ROUTINE_GETKEYBOARDTYPE:
+      return NtUserGetKeyboardType(Param);
+      
+    case ONEPARAM_ROUTINE_GETKEYBOARDLAYOUT:
+      return (DWORD)NtUserGetKeyboardLayout(Param);
   }
   DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n",
           Routine, Param);
