@@ -723,8 +723,6 @@ BOOL	MMDRV_Init(void)
     char	driver_buffer[256];
     char	mapper_buffer[256];
     char	midi_buffer[256];
-    char*	p1;
-    char*	p2;
     DWORD	type, size;
     BOOL	ret = FALSE;
     TRACE("()\n");
@@ -751,6 +749,9 @@ BOOL	MMDRV_Init(void)
     }
 
 #ifndef __REACTOS__
+    char*	p1;
+    char*	p2;
+
     p1 = driver_buffer;
     while (p1) {
         p2 = strchr(p1, ';');

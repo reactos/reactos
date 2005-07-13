@@ -320,7 +320,6 @@ FdoQueryBusRelations(
   PFDO_DEVICE_EXTENSION DeviceExtension;
   PDEVICE_RELATIONS Relations;
   PLIST_ENTRY CurrentEntry;
-  ANSI_STRING AnsiString;
   ACPI_STATUS AcpiStatus;
   PACPI_DEVICE Device;
   NTSTATUS Status = STATUS_SUCCESS;

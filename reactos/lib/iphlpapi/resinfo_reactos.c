@@ -92,12 +92,10 @@ typedef VOID (*EnumInterfacesFunc)( HKEY ChildKeyHandle,
  */
 
 static void EnumInterfaces( PVOID Data, EnumInterfacesFunc cb ) {
-  HKEY RegHandle, TcpipHandle;
+  HKEY RegHandle;
   HKEY ChildKeyHandle = 0;
   PWCHAR RegKeyToEnumerate = 
       L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces";
-  PWCHAR RegKeyForTcpip = 
-      L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters";
   PWCHAR ChildKeyName = 0;
   DWORD CurrentInterface;
 
@@ -202,7 +200,7 @@ static void MakeNameServerList( PNAME_SERVER_LIST_PRIVATE PrivateData ) {
 }
 
 PIPHLP_RES_INFO getResInfo() {
-    DWORD result = ERROR_SUCCESS, dwSize, i, ServerCount, ExtraServer;
+    DWORD i, ServerCount, ExtraServer;
     HKEY hKey;
     LONG errCode;
     PWCHAR Str;

@@ -712,8 +712,6 @@ void getmousesvalue(LPDIRECTINPUTDEVICE8A iface);
 int filp=0;
 void getmousesvalue(LPDIRECTINPUTDEVICE8A iface)
 {
-	static long last_event = 0;
-
     POINT point;
 	SysMouseImpl *This = (SysMouseImpl *)iface;        
 
@@ -761,7 +759,6 @@ static HRESULT WINAPI SysMouseAImpl_Poll(LPDIRECTINPUTDEVICE8A iface)
 {
  int retValue = DI_OK;
  
-SysMouseImpl *This = (SysMouseImpl *)iface;           
  if (poll_mouse==0) {
 	                 retValue=SysMouseAImpl_Acquire(iface);	
                      poll_mouse=1; 
@@ -783,7 +780,6 @@ static HRESULT WINAPI SysMouseAImpl_GetDeviceState(
 	LPDIRECTINPUTDEVICE8A iface,DWORD len,LPVOID ptr
 ) {
     SysMouseImpl *This = (SysMouseImpl *)iface;        
-    POINT point;    	 
 
 #ifndef __REACTOS__
     EnterCriticalSection(&(This->crit));

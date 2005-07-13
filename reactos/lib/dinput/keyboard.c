@@ -99,10 +99,7 @@ void reactos_input_keyboard();
 
 void reactos_input_keyboard()
 {
-  MSG msg;
-  BOOL fDone;
   int disk_code = -1;
-  BOOL down;
   BYTE oldDInputKeyState[256];
   int t;
   
