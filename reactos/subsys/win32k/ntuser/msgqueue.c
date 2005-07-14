@@ -1117,6 +1117,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 		Message->CompletionEvent = NULL;
                 Message->Result = NULL;
                 RemoveEntryList(&Message->DispatchingListEntry);
+                Message->DispatchingListEntry.Flink = NULL;
                 break;
               }
             Entry = Entry->Flink;
@@ -1174,6 +1175,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 		    Message->CompletionEvent = NULL;
                     Message->Result = NULL;
                     RemoveEntryList(&Message->DispatchingListEntry);
+                    Message->DispatchingListEntry.Flink = NULL;
                     break;
                   }
                 Entry = Entry->Flink;
