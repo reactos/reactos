@@ -641,17 +641,21 @@ VOID ParseCommandLine (LPTSTR cmd)
 		HANDLE hFile;
 		SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
 
+    /* we need make sure the LastError msg is zero before calling CreateFile */
+		SetLastError(0); 
+
+    /* Set up pipe for the standard input handler */
 		hFile = CreateFile (in, GENERIC_READ, FILE_SHARE_READ, &sa, OPEN_EXISTING,
 		                    FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile == INVALID_HANDLE_VALUE)
-		{
+		{      
 			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, in);
 			return;
 		}
 
 		if (!SetStdHandle (STD_INPUT_HANDLE, hFile))
-		{
+		{      
 			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, in);
 			return;
@@ -668,9 +672,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 	while (num-- > 1)
 	{
 		SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
-
     
-
     /* Create unique temporary file name */
 		GetTempFileName (szTempPath, _T("CMD"), 0, szFileName[1]);
 
@@ -682,7 +684,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 				       TRUNCATE_EXISTING, FILE_ATTRIBUTE_TEMPORARY, NULL);
 		
     if (hFile[1] == INVALID_HANDLE_VALUE)
-		{      
+		{            
 			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR2, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg);
 			return;
@@ -715,6 +717,9 @@ VOID ParseCommandLine (LPTSTR cmd)
 		_tcscpy (szFileName[0], szFileName[1]);
 		*szFileName[1] = _T('\0');
 
+    /* we need make sure the LastError msg is zero before calling CreateFile */
+		SetLastError(0); 
+
 		/* open new stdin file */
 		hFile[0] = CreateFile (szFileName[0], GENERIC_READ, 0, &sa,
 		                       OPEN_EXISTING, FILE_ATTRIBUTE_TEMPORARY, NULL);
@@ -730,15 +735,37 @@ VOID ParseCommandLine (LPTSTR cmd)
 		/* Final output to here */
 		HANDLE hFile;
 		SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
+		
+    /* we need make sure the LastError msg is zero before calling CreateFile */
+		SetLastError(0); 
 
-		hFile = CreateFile (out, GENERIC_WRITE, FILE_SHARE_READ, &sa,
+    hFile = CreateFile (out, GENERIC_WRITE, FILE_SHARE_READ, &sa,
 		                    (nRedirFlags & OUTPUT_APPEND) ? OPEN_ALWAYS : CREATE_ALWAYS,
 		                    FILE_ATTRIBUTE_NORMAL, NULL);
-		if (hFile == INVALID_HANDLE_VALUE)
+		
+    if (hFile == INVALID_HANDLE_VALUE)
 		{
-			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
-			ConErrPrintf(szMsg, out);
-			return;
+      INT size = _tcslen(out)-1;
+      
+      if (out[size] != _T(':'))
+      {
+			   LoadString(CMD_ModuleHandle, STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
+			   ConErrPrintf(szMsg, out);
+			   return;
+      }
+      
+      out[size]=_T('\0');
+      hFile = CreateFile (out, GENERIC_WRITE, FILE_SHARE_READ, &sa,
+		                    (nRedirFlags & OUTPUT_APPEND) ? OPEN_ALWAYS : CREATE_ALWAYS,
+		                    FILE_ATTRIBUTE_NORMAL, NULL);
+
+     if (hFile == INVALID_HANDLE_VALUE)
+     {
+			   LoadString(CMD_ModuleHandle, STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
+			   ConErrPrintf(szMsg, out);
+			   return;
+      }
+      
 		}
 
 		if (!SetStdHandle (STD_OUTPUT_HANDLE, hFile))
