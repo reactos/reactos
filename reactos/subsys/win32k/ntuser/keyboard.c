@@ -1153,7 +1153,7 @@ NtUserVkKeyScanEx(
         0x01 Shift key
         0x02 Ctrl key
         0x04 Alt key
-        Should have only 7 valid possibilities.
+        Should have only 8 valid possibilities. Including zero.
       */
       for(CapsState = 0; CapsState < vtwTbl->nModifications; CapsState++)
       {
