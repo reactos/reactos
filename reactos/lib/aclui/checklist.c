@@ -95,6 +95,31 @@ static VOID ChangeCheckItemFocus(IN PCHECKLISTWND infoPtr,
 
 /******************************************************************************/
 
+static LRESULT
+NotifyControlParent(IN PCHECKLISTWND infoPtr,
+                    IN UINT code,
+                    IN OUT PVOID data)
+{
+    LRESULT Ret = 0;
+    
+    if (infoPtr->hNotify != NULL)
+    {
+        LPNMHDR pnmh = (LPNMHDR)data;
+        
+        pnmh->hwndFrom = infoPtr->hSelf;
+        pnmh->idFrom = GetWindowLongPtr(infoPtr->hSelf,
+                                        GWLP_ID);
+        pnmh->code = code;
+        
+        Ret = SendMessage(infoPtr->hNotify,
+                          WM_NOTIFY,
+                          (WPARAM)pnmh->idFrom,
+                          (LPARAM)pnmh);
+    }
+    
+    return Ret;
+}
+
 static PCHECKITEM
 FindCheckItemByIndex(IN PCHECKLISTWND infoPtr,
                      IN UINT Index)
@@ -1181,20 +1206,29 @@ ChangeCheckItemHotTrack(IN PCHECKLISTWND infoPtr,
 }
 #endif
 
-static VOID
+static BOOL
 ChangeCheckBox(IN PCHECKLISTWND infoPtr,
                IN PCHECKITEM CheckItem,
                IN UINT CheckItemBox)
 {
-    DWORD NewState, OldState = CheckItem->State;
+    NMCHANGEITEMCHECKBOX CheckData;
+    DWORD OldState = CheckItem->State;
     DWORD CheckedBit = ((infoPtr->FocusedCheckItemBox == CLB_DENY) ? CIS_DENY : CIS_ALLOW);
     BOOL Checked = (CheckItem->State & CheckedBit) != 0;
 
-    NewState = (Checked ? OldState & ~CheckedBit : OldState | CheckedBit);
+    CheckData.OldState = OldState;
+    CheckData.NewState = (Checked ? OldState & ~CheckedBit : OldState | CheckedBit);
+    CheckData.CheckBox = infoPtr->FocusedCheckItemBox;
+    CheckData.Checked = !Checked;
 
-    /* FIXME - send a notification message */
-
-    CheckItem->State = NewState;
+    if (NotifyControlParent(infoPtr,
+                            CLN_CHANGINGITEMCHECKBOX,
+                            &CheckData) != (LRESULT)-1)
+    {
+        CheckItem->State = CheckData.NewState;
+    }
+    
+    return (CheckItem->State != OldState);
 }
 
 static VOID
@@ -2118,9 +2152,20 @@ CheckListWndProc(IN HWND hwnd,
                     if (PtItem == infoPtr->FocusedCheckItem && InCheckBox &&
                         PtItemBox == infoPtr->FocusedCheckItemBox)
                     {
-                        ChangeCheckBox(infoPtr,
-                                       PtItem,
-                                       PtItemBox);
+                        UINT OtherBox = ((PtItemBox == CLB_ALLOW) ? CLB_DENY : CLB_ALLOW);
+                        DWORD OtherStateMask = ((OtherBox == CLB_ALLOW) ?
+                                                (CIS_ALLOW | CIS_ALLOWDISABLED) :
+                                                (CIS_DENY | CIS_DENYDISABLED));
+                        DWORD OtherStateOld = PtItem->State & OtherStateMask;
+                        if (ChangeCheckBox(infoPtr,
+                                           PtItem,
+                                           PtItemBox) &&
+                            ((PtItem->State & OtherStateMask) != OtherStateOld))
+                        {
+                            UpdateCheckItemBox(infoPtr,
+                                               infoPtr->FocusedCheckItem,
+                                               OtherBox);
+                        }
                     }
                     
                     UpdateCheckItemBox(infoPtr,
@@ -2173,16 +2218,32 @@ CheckListWndProc(IN HWND hwnd,
                         if (infoPtr->FocusedCheckItem != NULL &&
                             infoPtr->QuickSearchHitItem == NULL)
                         {
+                            UINT OtherBox;
+                            DWORD OtherStateMask;
+                            DWORD OtherStateOld;
+
                             MakeCheckItemVisible(infoPtr,
                                                  infoPtr->FocusedCheckItem);
 
-                            ChangeCheckBox(infoPtr,
-                                           infoPtr->FocusedCheckItem,
-                                           infoPtr->FocusedCheckItemBox);
-
-                            UpdateCheckItemBox(infoPtr,
+                            OtherBox =  ((infoPtr->FocusedCheckItemBox == CLB_ALLOW) ? CLB_DENY : CLB_ALLOW);
+                            OtherStateMask = ((OtherBox == CLB_ALLOW) ?
+                                              (CIS_ALLOW | CIS_ALLOWDISABLED) :
+                                              (CIS_DENY | CIS_DENYDISABLED));
+                            OtherStateOld = infoPtr->FocusedCheckItem->State & OtherStateMask;
+                            if (ChangeCheckBox(infoPtr,
                                                infoPtr->FocusedCheckItem,
-                                               infoPtr->FocusedCheckItemBox);
+                                               infoPtr->FocusedCheckItemBox))
+                            {
+                                UpdateCheckItemBox(infoPtr,
+                                                   infoPtr->FocusedCheckItem,
+                                                   infoPtr->FocusedCheckItemBox);
+                                if ((infoPtr->FocusedCheckItem->State & OtherStateMask) != OtherStateOld)
+                                {
+                                    UpdateCheckItemBox(infoPtr,
+                                                       infoPtr->FocusedCheckItem,
+                                                       OtherBox);
+                                }
+                            }
                         }
                     }
                     break;
@@ -2236,15 +2297,29 @@ CheckListWndProc(IN HWND hwnd,
                 infoPtr->FocusedCheckItem != NULL &&
                 infoPtr->FocusedPushed)
             {
+                UINT OtherBox = ((infoPtr->FocusedCheckItemBox == CLB_ALLOW) ? CLB_DENY : CLB_ALLOW);
+                DWORD OtherStateMask = ((OtherBox == CLB_ALLOW) ?
+                                        (CIS_ALLOW | CIS_ALLOWDISABLED) :
+                                        (CIS_DENY | CIS_DENYDISABLED));
+                DWORD OtherStateOld = infoPtr->FocusedCheckItem->State & OtherStateMask;
+
                 infoPtr->FocusedPushed = FALSE;
 
-                ChangeCheckBox(infoPtr,
-                               infoPtr->FocusedCheckItem,
-                               infoPtr->FocusedCheckItemBox);
-
-                UpdateCheckItemBox(infoPtr,
+                if (ChangeCheckBox(infoPtr,
                                    infoPtr->FocusedCheckItem,
-                                   infoPtr->FocusedCheckItemBox);
+                                   infoPtr->FocusedCheckItemBox))
+                {
+                    UpdateCheckItemBox(infoPtr,
+                                       infoPtr->FocusedCheckItem,
+                                       infoPtr->FocusedCheckItemBox);
+
+                    if ((infoPtr->FocusedCheckItem->State & OtherStateMask) != OtherStateOld)
+                    {
+                        UpdateCheckItemBox(infoPtr,
+                                           infoPtr->FocusedCheckItem,
+                                           OtherBox);
+                    }
+                }
             }
             break;
         }
@@ -2566,15 +2641,15 @@ RegisterCheckListControl(HINSTANCE hInstance)
 {
     WNDCLASS wc;
     
-    ZeroMemory(&wc, sizeof(WNDCLASS));
-    
     wc.style = CS_DBLCLKS;
     wc.lpfnWndProc = CheckListWndProc;
     wc.cbClsExtra = 0;
     wc.cbWndExtra = sizeof(PCHECKLISTWND);
     wc.hInstance = hInstance;
+    wc.hIcon = NULL;
     wc.hCursor = LoadCursor(0, (LPWSTR)IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wc.lpszMenuName = NULL;
     wc.lpszClassName = L"CHECKLIST_ACLUI";
     
     return RegisterClass(&wc) != 0;

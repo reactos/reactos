@@ -581,11 +581,11 @@ SecurityPageProc(IN HWND hwndDlg,
         case WM_NOTIFY:
         {
             NMHDR *pnmh = (NMHDR*)lParam;
-            if (pnmh->idFrom == IDC_ACELIST)
+            sp = (PSECURITY_PAGE)GetWindowLongPtr(hwndDlg,
+                                                  DWL_USER);
+            if (sp != NULL)
             {
-                sp = (PSECURITY_PAGE)GetWindowLongPtr(hwndDlg,
-                                                      DWL_USER);
-                if (sp != NULL)
+                if (pnmh->hwndFrom == sp->hWndAceList)
                 {
                     switch(pnmh->code)
                     {
@@ -598,6 +598,24 @@ SecurityPageProc(IN HWND hwndDlg,
                                  (pnmv->uNewState & (LVIS_FOCUSED | LVIS_SELECTED))))
                             {
                                 UpdateControlStates(sp);
+                            }
+                            break;
+                        }
+                    }
+                }
+                else if (pnmh->hwndFrom == sp->hAceCheckList)
+                {
+                    switch(pnmh->code)
+                    {
+                        case CLN_CHANGINGITEMCHECKBOX:
+                        {
+                            PNMCHANGEITEMCHECKBOX pcicb = (PNMCHANGEITEMCHECKBOX)lParam;
+                            
+                            /* make sure only one of both checkboxes is only checked
+                               at the same time */
+                            if (pcicb->Checked)
+                            {
+                                pcicb->NewState &= ~((pcicb->CheckBox != CLB_DENY) ? CIS_DENY : CIS_ALLOW);
                             }
                             break;
                         }

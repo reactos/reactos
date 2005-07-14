@@ -106,6 +106,17 @@ ListViewSelectItem(IN HWND hwnd,
 #define CLM_SETQUICKSEARCH_TIMEOUT_RESET        (WM_USER + 10)
 #define CLM_SETQUICKSEARCH_TIMEOUT_SETFOCUS     (WM_USER + 11)
 
+#define CLN_CHANGINGITEMCHECKBOX        (101)
+
+typedef struct _NMCHANGEITEMCHECKBOX
+{
+    NMHDR nmhdr;
+    DWORD OldState;
+    DWORD NewState;
+    DWORD CheckBox;
+    BOOL Checked;
+} NMCHANGEITEMCHECKBOX, *PNMCHANGEITEMCHECKBOX;
+
 BOOL
 RegisterCheckListControl(HINSTANCE hInstance);
 
