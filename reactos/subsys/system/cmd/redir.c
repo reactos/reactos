@@ -90,7 +90,7 @@ INT GetRedirection (LPTSTR s, LPTSTR ifn, LPTSTR ofn, LPTSTR efn, LPINT lpnFlags
 			*dp++ = *sp++;
 		}
 		else if ((*sp == _T('<')) || (*sp == _T('>')) ||
-				 (*sp == _T('2')) || (*sp == _T('&')))
+				 (*sp == _T('1')) || (*sp == _T('2')) || (*sp == _T('&')))
 		{
 			/* MS-DOS ignores multiple redirection symbols and uses the last */
 			/* redirection, so we'll emulate that and not check */
@@ -128,7 +128,7 @@ INT GetRedirection (LPTSTR s, LPTSTR ifn, LPTSTR ofn, LPTSTR efn, LPINT lpnFlags
 					*ofn++ = *sp++;
 				*ofn = _T('\0');
 			}
-			else if (*sp == _T('2'))
+			else if ((*sp == _T('1')) || (*sp == _T('2')))
 			{
 				/* error redirection */
 				sp++;
@@ -147,7 +147,7 @@ INT GetRedirection (LPTSTR s, LPTSTR ifn, LPTSTR ofn, LPTSTR efn, LPINT lpnFlags
 				}
 				else
 				{
-					/* no redirection!! copy the '2' character! */
+					/* no redirection!! copy the '1' or '2'  character! */
 					sp--;
 					*dp++ = *sp++;
 					continue;
@@ -198,6 +198,7 @@ INT GetRedirection (LPTSTR s, LPTSTR ifn, LPTSTR ofn, LPTSTR efn, LPINT lpnFlags
 		else
 			*dp++ = *sp++;
 	}
+
 	*dp++ = _T('\0');
 	*dp = _T('\0');
 
