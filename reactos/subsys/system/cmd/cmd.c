@@ -669,14 +669,20 @@ VOID ParseCommandLine (LPTSTR cmd)
 	{
 		SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
 
-		/* Create unique temporary file name */
+    
+
+    /* Create unique temporary file name */
 		GetTempFileName (szTempPath, _T("CMD"), 0, szFileName[1]);
+
+    /* we need make sure the LastError msg is zero before calling CreateFile */
+		 SetLastError(0); 
 
 		/* Set current stdout to temporary file */
 		hFile[1] = CreateFile (szFileName[1], GENERIC_WRITE, 0, &sa,
 				       TRUNCATE_EXISTING, FILE_ATTRIBUTE_TEMPORARY, NULL);
-		if (hFile[1] == INVALID_HANDLE_VALUE)
-		{
+		
+    if (hFile[1] == INVALID_HANDLE_VALUE)
+		{      
 			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR2, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg);
 			return;
