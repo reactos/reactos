@@ -22,321 +22,32 @@
  *
  *    03-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
  *        Remove all hardcode string to En.rc
+ *
+ *    13-Jul-2005 (Brandon Turner) <turnerb7@msu.edu>)
+ *        Rewrite to clean up copy and support wildcard.
  */
-
+ 
 #include <precomp.h>
 #include "resource.h"
-
+ 
 #ifdef INCLUDE_CMD_COPY
-
-
-#define VERIFY  1               /* VERIFY Switch */
-#define BINARY  2               /* File is to be copied as BINARY */
-#define ASCII   4               /* File is to be copied as ASCII */
-#define PROMPT  8               /* Prompt before overwriting files */
-#define NPROMPT 16              /* Do not prompt before overwriting files */
-#define HELP    32              /* Help was asked for */
-#define SOURCE  128             /* File is a source */
-
-
-typedef struct tagFILES
+ 
+enum
 {
-	struct tagFILES *next;
-	TCHAR szFile[MAX_PATH];
-	DWORD dwFlag;			/* BINARY -xor- ASCII */
-} FILES, *LPFILES;
-
-
-static BOOL DoSwitches (LPTSTR, LPDWORD);
-static BOOL AddFile (LPFILES, TCHAR *, int *, int *, LPDWORD);
-static BOOL AddFiles (LPFILES, TCHAR *, int *, int *, int *, LPDWORD);
-static BOOL GetDestination (LPFILES, LPFILES);
-static INT  ParseCommand (LPFILES, int, TCHAR **, LPDWORD);
-static VOID DeleteFileList (LPFILES);
-static INT  Overwrite (LPTSTR);
-
-
-static BOOL
-DoSwitches (LPTSTR arg, LPDWORD lpdwFlags)
-{
-	if (!_tcsicmp (arg, _T("/-Y")))
-	{
-		*lpdwFlags |= PROMPT;
-		*lpdwFlags &= ~NPROMPT;
-		return TRUE;
-	}
-	else if (_tcslen (arg) > 2)
-	{
-		error_too_many_parameters (_T(""));
-		return FALSE;
-	}
-
-	switch (_totupper (arg[1]))
-	{
-		case _T('V'):
-			*lpdwFlags |= VERIFY;
-			break;
-
-		case _T('A'):
-			*lpdwFlags |= ASCII;
-			*lpdwFlags &= ~BINARY;
-			break;
-
-		case _T('B'):
-			*lpdwFlags |= BINARY;
-			*lpdwFlags &= ~ASCII;
-			break;
-
-		case _T('Y'):
-			*lpdwFlags &= ~PROMPT;
-			*lpdwFlags |= NPROMPT;
-			break;
-
-		default:
-			error_invalid_switch (arg[1]);
-			return FALSE;
-	}
-	return TRUE;
-}
-
-
-static BOOL
-AddFile (LPFILES f, TCHAR *arg, int *source, int *dest, LPDWORD flags)
-{
-	if (*dest)
-	{
-		error_too_many_parameters (_T(""));
-		return FALSE;
-	}
-	if (*source)
-	{
-		*dest = 1;
-		f->dwFlag = 0;
-	}
-	else
-	{
-		*source = 1;
-		f->dwFlag = SOURCE;
-	}
-	_tcscpy(f->szFile, arg);
-	f->dwFlag |= *flags & ASCII ? ASCII : BINARY;
-	if ((f->next = (LPFILES)malloc (sizeof (FILES))) == NULL)
-	{
-		error_out_of_memory ();
-		return FALSE;
-	}
-	f = f->next;
-	f->dwFlag = 0;
-	f->next = NULL;
-	return TRUE;
-}
-
-
-static BOOL
-AddFiles (LPFILES f, TCHAR *arg, int *source, int *dest,
-		  int *count, LPDWORD flags)
-{
-	TCHAR t[128];
-	int j;
-	int k;
-
-	if (*dest)
-	{
-		error_too_many_parameters (_T(""));
-		return FALSE;
-	}
-
-	j = 0;
-	k = 0;
-
-	while (arg[j] == _T('+'))
-		j++;
-
-	while (arg[j] != _T('\0'))
-	{
-		t[k] = arg[j++];
-		if (t[k] == '+' || arg[j] == _T('\0'))
-		{
-			if (!k)
-				continue;
-			if (arg[j] == _T('\0') && t[k] != _T('+'))
-				k++;
-			t[k] = _T('\0');
-			*count += 1;
-			_tcscpy (f->szFile, t);
-			*source = 1;
-			if (*flags & ASCII)
-				f->dwFlag |= *flags | SOURCE | ASCII;
-			else
-				f->dwFlag |= *flags | BINARY | SOURCE;
-
-			if ((f->next = (LPFILES)malloc (sizeof (FILES))) == NULL)
-			{
-				error_out_of_memory ();
-				return FALSE;
-			}
-			f = f->next;
-			f->next = NULL;
-			k = 0;
-			f->dwFlag = 0;
-			continue;
-		}
-		k++;
-	}
-
-	if (arg[--j] == _T('+'))
-		*source = 0;
-
-	return 1;
-}
-
-
-static BOOL
-GetDestination (LPFILES f, LPFILES dest)
-{
-	LPFILES p = NULL;
-	LPFILES start = f;
-
-	while (f->next != NULL)
-	{
-		p = f;
-		f = f->next;
-	}
-
-	f = p;
-
-	if ((f->dwFlag & SOURCE) == 0)
-	{
-		free (p->next);
-		p->next = NULL;
-		_tcscpy (dest->szFile, f->szFile);
-		dest->dwFlag = f->dwFlag;
-		dest->next = NULL;
-		f = start;
-		return TRUE;
-	}
-
-	return FALSE;
-}
-
-
-static INT
-ParseCommand (LPFILES f, int argc, TCHAR **arg, LPDWORD lpdwFlags)
-{
-	INT i;
-	INT dest;
-	INT source;
-	INT count;
-	TCHAR temp[128];
-	dest = 0;
-	source = 0;
-	count = 0;
-
-
-
-  /* hack geting pipe 1>null working */
-  for (i = 0; i < argc; i++)
-	{
-    if (arg[i][0] != _T('/')) 
-        count++;
-  }
-  if (count==3) argc=2;
-  /* end hack */
-
-  
-
-	for (i = 0; i < argc; i++)
-	{     
-
-		if (arg[i][0] == _T('/'))
-		{
-			if (!DoSwitches (arg[i], lpdwFlags))
-				return -1;
-		}
-		else
-		{
-			if (!_tcscmp(arg[i], _T("+")))
-				source = 0;
-			else if (!_tcschr(arg[i], _T('+')) && source)
-			{
-
-//				Make sure we have a clean workable path
-
-				GetFullPathName( arg[i], 128, (LPTSTR) &temp, NULL);
-//				printf("A Input %s, Output %s\n", arg[i], temp);
-
-				if (!AddFile(f, (TCHAR *) &temp, &source, &dest, lpdwFlags))
-					return -1;
-				f = f->next;
-				count++;
-			}
-			else
-			{
-
-				GetFullPathName( arg[i], 128, (LPTSTR) &temp, NULL);
-//				printf("B Input %s, Output %s\n", arg[i], temp);
-
-				if (!AddFiles(f, (TCHAR *) &temp, &source, &dest, &count, lpdwFlags))
-					return -1;
-				while (f->next != NULL)
-					f = f->next;
-			}
-		}
-	}
-
-#ifdef _DEBUG
-	DebugPrintf (_T("ParseCommand: flags has %s\n"),
-				 *lpdwFlags & ASCII ? _T("ASCII") : _T("BINARY"));
-#endif
-	return count;
-}
-
-
-static VOID
-DeleteFileList (LPFILES f)
-{
-	LPFILES temp;
-
-	while (f != NULL)
-	{
-		temp = f;
-		f = f->next;
-		free (temp);
-	}
-}
-
-
-static INT
-Overwrite (LPTSTR fn)
-{
-	TCHAR inp[10];
-	LPTSTR p;
-	TCHAR szOptions[4];
-
-	LoadString( CMD_ModuleHandle, STRING_COPY_OPTION, szOptions, sizeof(szOptions) / sizeof(szOptions[0]) );
-
-	ConOutResPuts(STRING_COPY_HELP1);
-
-	ConInString(inp, 10);
-	ConOutPuts(_T(""));
-
-	_tcsupr (inp);
-	for (p = inp; _istspace (*p); p++)
-		;
-
-	if (*p != szOptions[0] && *p != szOptions[2])
-		return 0;
-	if (*p == szOptions[2])
-		return 2;
-
-	return 1;
-}
-
-
+	COPY_ASCII   = 0x001,   /* /A  */
+	COPY_DECRYPT     = 0x004,   /* /D  : Not Impleneted */
+	COPY_VERIFY      = 0x008,   /* /V  : Dummy, Never will be Impleneted */
+	COPY_SHORTNAME   = 0x010,   /* /N  : Not Impleneted */
+	COPY_NO_PROMPT   = 0x020,   /* /Y  */
+	COPY_PROMPT      = 0x040,   /* /-Y */
+	COPY_RESTART     = 0x080,   /* /Z  : Not Impleneted */
+	COPY_BINARY     = 0x100,    /* /B  */
+};
+ 
 #define BUFF_SIZE 16384         /* 16k = max buffer size */
-
-
-int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
+ 
+ 
+int copy (LPTSTR source, LPTSTR dest, int append, DWORD lpdwFlags)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	FILETIME srctime;
@@ -348,33 +59,33 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 	DWORD  dwWritten;
 	DWORD  i;
 	BOOL   bEof = FALSE;
-
+ 
 #ifdef _DEBUG
 	DebugPrintf (_T("checking mode\n"));
 #endif
-
+ 
 	dwAttrib = GetFileAttributes (source);
-
+ 
 	hFileSrc = CreateFile (source, GENERIC_READ, FILE_SHARE_READ,
-						   NULL, OPEN_EXISTING, 0, NULL);
+		NULL, OPEN_EXISTING, 0, NULL);
 	if (hFileSrc == INVALID_HANDLE_VALUE)
 	{
 		LoadString(CMD_ModuleHandle, STRING_COPY_ERROR1, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPrintf(szMsg, source);
+		ConOutPrintf(szMsg, source);
 		return 0;
 	}
-
+ 
 #ifdef _DEBUG
 	DebugPrintf (_T("getting time\n"));
 #endif
-
+ 
 	GetFileTime (hFileSrc, &srctime, NULL, NULL);
-
+ 
 #ifdef _DEBUG
 	DebugPrintf (_T("copy: flags has %s\n"),
-				 *lpdwFlags & ASCII ? "ASCII" : "BINARY");
+		*lpdwFlags & ASCII ? "ASCII" : "BINARY");
 #endif
-
+ 
 	if (!IsExistingFile (dest))
 	{
 #ifdef _DEBUG
@@ -388,50 +99,53 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 		if (!_tcscmp (dest, source))
 		{
 			LoadString(CMD_ModuleHandle, STRING_COPY_ERROR2, szMsg, RC_STRING_MAX_SIZE);
-			ConErrPrintf(szMsg, source);
-
+			ConOutPrintf(szMsg, source);
+ 
 			CloseHandle (hFileSrc);
 			return 0;
 		}
-
+ 
 #ifdef _DEBUG
 		DebugPrintf (_T("SetFileAttributes (%s, FILE_ATTRIBUTE_NORMAL);\n"), dest);
 #endif
 		SetFileAttributes (dest, FILE_ATTRIBUTE_NORMAL);
-
+ 
 #ifdef _DEBUG
 		DebugPrintf (_T("DeleteFile (%s);\n"), dest);
 #endif
 		DeleteFile (dest);
-
-		hFileDest =
-			CreateFile (dest, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
+ 
+		hFileDest =	CreateFile (dest, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
 	}
 	else
 	{
 		LONG lFilePosHigh = 0;
-
+ 
 		if (!_tcscmp (dest, source))
 		{
 			CloseHandle (hFileSrc);
 			return 0;
 		}
-
+ 
 #ifdef _DEBUG
 		DebugPrintf (_T("opening/appending\n"));
 #endif
+		SetFileAttributes (dest, FILE_ATTRIBUTE_NORMAL);
+ 
 		hFileDest =
 			CreateFile (dest, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+ 
+		/* Move to end of file to start writing */
 		SetFilePointer (hFileDest, 0, &lFilePosHigh,FILE_END);
 	}
-
-	if (hFileDest == INVALID_HANDLE_VALUE)
+ 
+ 
+		if (hFileDest == INVALID_HANDLE_VALUE)
 	{
 		CloseHandle (hFileSrc);
 		error_path_not_found ();
 		return 0;
 	}
-
 	buffer = (LPBYTE)malloc (BUFF_SIZE);
 	if (buffer == NULL)
 	{
@@ -440,11 +154,11 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 		error_out_of_memory ();
 		return 0;
 	}
-
+ 
 	do
 	{
 		ReadFile (hFileSrc, buffer, BUFF_SIZE, &dwRead, NULL);
-		if (*lpdwFlags & ASCII)
+		if (lpdwFlags & COPY_ASCII)
 		{
 			for (i = 0; i < dwRead; i++)
 			{
@@ -456,15 +170,15 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 			}
 			dwRead = i;
 		}
-
+ 
 		if (dwRead == 0)
 			break;
-
+ 
 		WriteFile (hFileDest, buffer, dwRead, &dwWritten, NULL);
 		if (dwWritten != dwRead)
 		{
-			ConErrResPuts(STRING_COPY_ERROR3);
-
+			ConOutResPuts(STRING_COPY_ERROR3);
+ 
 			free (buffer);
 			CloseHandle (hFileDest);
 			CloseHandle (hFileSrc);
@@ -472,13 +186,13 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 		}
 	}
 	while (dwRead && !bEof);
-
+ 
 #ifdef _DEBUG
 	DebugPrintf (_T("setting time\n"));
 #endif
 	SetFileTime (hFileDest, &srctime, NULL, NULL);
-
-	if (*lpdwFlags & ASCII)
+ 
+	if (lpdwFlags & COPY_ASCII)
 	{
 		((LPTSTR)buffer)[0] = 0x1A;
 		((LPTSTR)buffer)[1] = _T('\0');
@@ -487,298 +201,448 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 #endif
 		WriteFile (hFileDest, buffer, sizeof(TCHAR), &dwWritten, NULL);
 	}
-
+ 
 	free (buffer);
 	CloseHandle (hFileDest);
 	CloseHandle (hFileSrc);
-
+ 
 #ifdef _DEBUG
 	DebugPrintf (_T("setting mode\n"));
 #endif
 	SetFileAttributes (dest, dwAttrib);
-
+ 
 	return 1;
 }
-
-
-static INT
-SetupCopy (LPFILES sources, TCHAR **p, BOOL bMultiple,
-           TCHAR *drive_d, TCHAR *dir_d, TCHAR *file_d,
-           TCHAR *ext_d, int *append, LPDWORD lpdwFlags)
+ 
+ 
+static INT Overwrite (LPTSTR fn)
 {
-	WIN32_FIND_DATA find;
-	TCHAR drive_s[_MAX_DRIVE];
-	TCHAR dir_s[_MAX_DIR];
-	TCHAR file_s[_MAX_FNAME];
-	TCHAR ext_s[_MAX_EXT];
-	TCHAR from_merge[_MAX_PATH];
-
-	LPTSTR real_source;
-	LPTSTR real_dest;
-
-	INT  nCopied = 0;
-	BOOL bAll = FALSE;
-	BOOL bDone;
-	HANDLE hFind;
-	TCHAR temp[128];
-
-#ifdef _DEBUG
-	DebugPrintf (_T("SetupCopy\n"));
-#endif
-
-	real_source = (LPTSTR)malloc (MAX_PATH * sizeof(TCHAR));
-	real_dest = (LPTSTR)malloc (MAX_PATH * sizeof(TCHAR));
-
-	if (!real_source || !real_dest)
+	/*ask the user if they want to override*/
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	INT res;
+	LoadString(CMD_ModuleHandle, STRING_COPY_HELP1, szMsg, RC_STRING_MAX_SIZE);
+	ConOutPrintf(szMsg,fn);
+	res = FilePromptYNA ("");
+	return res;
+}
+ 
+ 
+INT cmd_copy (LPTSTR cmd, LPTSTR param)
+{
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	LPTSTR *arg;
+	INT argc, i, nFiles, nOverwrite = 0, nSrc = -1, nDes = -1;
+	/* this is the path up to the folder of the src and dest ie C:\windows\ */
+	TCHAR szDestPath[MAX_PATH];
+	TCHAR szSrcPath[MAX_PATH];
+	DWORD dwFlags = 0;
+	/* If this is the type of copy where we are adding files */
+	BOOL bAppend = FALSE;
+	WIN32_FIND_DATA findBuffer;
+	HANDLE hFile;
+	/* Used when something like "copy c*.exe d*.exe" during the process of
+	   figuring out the new name */
+	TCHAR tmpName[MAX_PATH] = _T("");
+	/* Pointer to keep track of how far through the append input(file1+file2+file3) we are */
+	TCHAR  * appendPointer = _T("\0");
+	/* The full path to src and dest.  This has drive letter, folders, and filename */
+	TCHAR tmpDestPath[MAX_PATH];
+	TCHAR tmpSrcPath[MAX_PATH];
+	/* A bool on weather or not the destination name will be taking from the input */
+	BOOL bSrcName = FALSE;
+	/* Seems like a waste but it is a pointer used to copy from input to PreserveName */
+	TCHAR * UseThisName;
+	/* Stores the name( i.e. blah.txt or blah*.txt) which later we might need */
+	TCHAR PreserveName[MAX_PATH];
+ 
+	/*Show help/usage info*/
+	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		error_out_of_memory ();
-		DeleteFileList (sources);
-		free (real_source);
-		free (real_dest);
-		freep (p);
+		ConOutResPaging(TRUE, STRING_COPY_HELP2);
 		return 0;
 	}
-
-	while (sources->next != NULL)
+ 
+	/*Split the user input into array*/
+	arg = split (param, &argc, FALSE);
+	nFiles = argc;
+ 
+	/*Read switches and count files*/
+	for (i = 0; i < argc; i++)
 	{
-
-/*		Force a clean full path
-*/
-		GetFullPathName( sources->szFile, 128, (LPTSTR) &temp, NULL);
-		if (IsExistingDirectory(temp))
+		if (*arg[i] == _T('/'))
 		{
-			_tcscat(temp, _T("\\*"));
+			if (_tcslen(arg[i]) >= 2)
+			{
+				switch (_totupper(arg[i][1]))
+				{
+ 
+				case _T('A'):
+					dwFlags |= COPY_ASCII;
+					break;
+ 
+				case _T('B'):
+					dwFlags |= COPY_DECRYPT;
+					break;
+ 
+				case _T('D'):
+					dwFlags |= COPY_DECRYPT;
+					break;
+ 
+				case _T('V'):
+					dwFlags |= COPY_VERIFY;
+					break;
+ 
+				case _T('N'):
+					dwFlags |= COPY_SHORTNAME;
+					break;
+ 
+				case _T('Y'):
+					dwFlags |= COPY_NO_PROMPT;
+					dwFlags &= ~COPY_PROMPT;
+					break;
+ 
+				case _T('-'):
+					if(_tcslen(arg[i]) >= 3)
+						if(_totupper(arg[i][2]) == _T('Y'))
+						{
+							dwFlags &= ~COPY_NO_PROMPT;
+							dwFlags |= COPY_PROMPT;
+						}
+ 
+						break;
+ 
+				case _T('Z'):
+					dwFlags |= COPY_RESTART;
+					break;
+ 
+				default:
+					/* invaild switch */
+					error_invalid_switch(_totupper(arg[i][1]));
+					return 1;
+					break;
+				}
+			}
+			/*If it was a switch, subtract from total arguments*/
+			nFiles--;
 		}
-
-		_tsplitpath (temp, drive_s, dir_s, file_s, ext_s);
-
-		hFind = FindFirstFile ((TCHAR*)&temp, &find);
-		if (hFind == INVALID_HANDLE_VALUE)
+		else
 		{
-			error_file_not_found();
-			freep(p);
-			free(real_source);
-			free(real_dest);
-			return 0;
+			/*if it isnt a switch then it is the source or destination*/
+			if(nSrc == -1)
+				nSrc = i;
+			else if(nDes == -1)
+				nDes = i;
+ 
 		}
-
+	}
+ 
+	if(nFiles < 1)
+	{
+		/* There is not enough files, there has to be at least 1 */
+		error_req_param_missing();
+		return 1;
+	}
+ 
+	if(nFiles > 2)
+	{
+		/* there is too many file names in command */
+		error_too_many_parameters("");
+		return 1;
+	}
+ 
+	if((nDes != -1) &&
+		((_tcschr (arg[nSrc], _T('+')) != NULL) ||
+		(_tcschr (arg[nSrc], _T('*')) != NULL && _tcschr (arg[nDes], _T('*')) == NULL) ||
+		(IsExistingDirectory (arg[nSrc]) && (_tcschr (arg[nDes], _T('*')) == NULL && !IsExistingDirectory (arg[nDes])))
+		))
+	{
+		/* There is a + in the source filename, this means
+		that there is more then one file being put into
+		one file. */
+		bAppend = TRUE;
+		if(_tcschr (arg[nSrc], _T('+')) != NULL)
+		   appendPointer = arg[nSrc];
+	}
+ 
+	/* Reusing the number of files variable */
+	nFiles = 0;
+ 
+	do
+	{
+ 
+	/* Set up the string that is the path to the destination */
+	if(nDes != -1)
+	{
+		/* Check to make sure if they entered c:, if they do then GFPN 
+		return current directory even though msdn says it will return c:\ */
+		if(_tcslen(arg[nDes]) == 2)
+		{
+			if(arg[nDes][1] == _T(':'))
+			{
+				_tcscpy (szDestPath, arg[nDes]);
+				_tcscat (szDestPath, _T("\\"));
+			}
+		}
+		else
+		/* If the user entered two file names then form the full string path*/
+		GetFullPathName (arg[nDes], MAX_PATH, szDestPath, NULL);
+ 
+	}
+	else
+	{
+		/* If no destination was entered then just use 
+		the current directory as the destination */
+		GetCurrentDirectory (MAX_PATH, szDestPath);
+	}
+ 
+ 
+	/* Get the full string of the path to the source file*/
+	if(_tcschr (arg[nSrc], _T('+')) != NULL)
+	{
+ 
+		_tcscpy(tmpName,_T("\0"));
+		/* Loop through the source file name and copy all
+		the chars one at a time until it gets too + */
+		while(TRUE)
+		{
+ 
+			if(!_tcsncmp (appendPointer,_T("+"),1) || !_tcsncmp (appendPointer,_T("\0"),1))
+			{
+				/* Now that the pointer is on the + we 
+				   need to go to the start of the next filename */
+				if(!_tcsncmp (appendPointer,_T("+"),1))
+				   appendPointer++;
+				break;
+			}
+			_tcsncat(tmpName,appendPointer,1);
+			appendPointer++;
+		}
+		/* Finish the string off with a null char */
+		_tcsncat(tmpName,_T("\0"),1);
+		/* Check to make sure if they entered c:, if they do then GFPN 
+		return current directory even though msdn says it will return c:\ */
+		if(_tcslen(tmpName) == 2)
+		{
+			if(tmpName[1] == _T(':'))
+			{
+				_tcscpy (szSrcPath, tmpName);
+				_tcscat (szSrcPath, _T("\\"));
+			}
+		}
+		else
+		/* Get the full path to first file in the string of file names */
+		GetFullPathName (tmpName, MAX_PATH, szSrcPath, NULL);	
+	}
+	else
+	{
+		/* Check to make sure if they entered c:, if they do then GFPN 
+		return current directory even though msdn says it will return c:\ */
+		if(_tcslen(arg[nSrc]) == 2)
+		{
+			if(arg[nSrc][1] == _T(':'))
+			{
+				_tcscpy (szSrcPath, arg[nSrc]);
+				_tcscat (szSrcPath, _T("\\"));
+			}
+		}
+		else
+		/* Get the full path of the source file */
+		GetFullPathName (arg[nSrc], MAX_PATH, szSrcPath, NULL);
+ 
+	}
+ 
+	/* From this point on, we can assume that the shortest path is 3 letters long
+	and that would be [DriveLetter]:\ */
+ 
+	/* If there is no * in the path name and it is a folder
+	then we will need to add a wildcard to the pathname
+	so FindFirstFile comes up with all the files in that
+	folder */
+	if(_tcschr (szSrcPath, _T('*')) == NULL && 
+		IsExistingDirectory (szSrcPath))
+	{
+		/* If it doesnt have a \ at the end already then on needs to be added */
+		if(szSrcPath[_tcslen(szSrcPath) -  1] != _T('\\'))
+			_tcscat (szSrcPath, _T("\\"));
+		/* Add a wildcard after the \ */
+		_tcscat (szSrcPath, _T("*"));
+	}
+	/* Make sure there is an ending slash to the path if the dest is a folder */
+	if(_tcschr (szDestPath, _T('*')) == NULL && 
+		IsExistingDirectory(szDestPath))
+	{
+		if(szDestPath[_tcslen(szDestPath) -  1] != _T('\\'))
+			_tcscat (szDestPath, _T("\\"));
+	}
+ 
+ 
+	/* Get a list of all the files */
+	hFile = FindFirstFile (szSrcPath, &findBuffer);
+ 
+ 
+	/* We need to figure out what the name of the file in the is going to be */
+	if((szDestPath[_tcslen(szDestPath) -  1] == _T('*') && szDestPath[_tcslen(szDestPath) -  2] == _T('\\')) ||
+		szDestPath[_tcslen(szDestPath) -  1] == _T('\\'))
+	{
+		/* In this case we will be using the same name as the source file
+		for the destination file because destination is a folder */
+		bSrcName = TRUE;
+	}
+	else
+	{
+		/* Save the name the user entered */
+		UseThisName = _tcsrchr(szDestPath,_T('\\'));
+		UseThisName++;
+		_tcscpy(PreserveName,UseThisName);
+	}
+ 
+	/* Strip the paths back to the folder they are in */
+	for(i = (_tcslen(szSrcPath) -  1); i > -1; i--)
+		if(szSrcPath[i] != _T('\\'))
+			szSrcPath[i] = _T('\0');
+		else
+			break;
+ 
+	for(i = (_tcslen(szDestPath) -  1); i > -1; i--)
+		if(szDestPath[i] != _T('\\'))
+			szDestPath[i] = _T('\0');
+		else
+			break;
+ 
+ 
 		do
 		{
-			if (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-				goto next;
-
-			_tmakepath(from_merge, drive_d, dir_d, file_d, ext_d);
-
-			if (from_merge[_tcslen(from_merge) - 1] == _T('\\'))
-				from_merge[_tcslen(from_merge) - 1] = 0;
-
-//			printf("Merge %s, filename %s\n", from_merge, find.cFileName);
-
-			if (IsExistingDirectory (from_merge))
-			{
-
-//			printf("Merge DIR\n");
-
-				bMultiple = FALSE;
-				_tcscat (from_merge, _T("\\"));
-				_tcscat (from_merge, find.cFileName);
+			/* Set the override to yes each new file */
+			nOverwrite = 1;
+ 
+			/* If it couldnt open the file handle, print out the error */
+			if(hFile == INVALID_HANDLE_VALUE)
+			{			
+				ConOutFormatMessage (GetLastError(), szSrcPath);			
+				freep (arg);
+				return 1;
 			}
-			else
-				bMultiple = TRUE;
-
-			_tcscpy (real_dest, from_merge);
-			_tmakepath (real_source, drive_s, dir_s, find.cFileName, NULL);
-
-#ifdef _DEBUG
-			DebugPrintf(_T("copying %S -> %S (%Sappending%S)\n"),
-						 real_source, real_dest,
-						 *append ? _T("") : _T("not "),
-						 sources->dwFlag & ASCII ? _T(", ASCII") : _T(", BINARY"));
-#endif
-
-			if (IsExistingFile (real_dest) && !bAll)
+ 
+			/* Ignore the . and .. files */
+			if(!_tcscmp (findBuffer.cFileName, _T("."))  ||
+				!_tcscmp (findBuffer.cFileName, _T(".."))||
+				findBuffer.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+				continue;
+ 
+			/* Copy the base folder over to a tmp string */
+			_tcscpy(tmpDestPath,szDestPath);
+ 
+			/* Can't put a file into a folder that isnt there */
+			if(!IsExistingDirectory(szDestPath))
 			{
-				/* Don't prompt in a batch file */
-				if (bc != NULL)
+				ConOutFormatMessage (GetLastError (), szSrcPath);			
+				freep (arg);
+				return 1;
+			}
+			/* Copy over the destination path name */
+			if(bSrcName)
+				_tcscat (tmpDestPath, findBuffer.cFileName);
+			else
+			{
+				/* If there is no wildcard you can use the name the user entered */
+				if(_tcschr (PreserveName, _T('*')) == NULL)
 				{
-					bAll = TRUE;
+					_tcscat (tmpDestPath, PreserveName);
 				}
 				else
 				{
-					int over;
-
-					over = Overwrite (real_dest);
-					if (over == 2)
-						bAll = TRUE;
-					else if (over == 0)
-						goto next;
-					else if (bMultiple)
-						bAll = TRUE;
+					/* The following lines of copy were written by someone else
+					(most likely Eric Khoul) and it was taken from ren.c */
+					LPTSTR p,q,r;
+					TCHAR DoneFile[MAX_PATH];
+					/* build destination file name */
+					p = findBuffer.cFileName;
+					q = PreserveName;
+					r = DoneFile;
+					while(*q != 0)
+					{
+						if (*q == '*')
+						{
+							q++;
+							while (*p != 0 && *p != *q)
+							{
+								*r = *p;
+								p++;
+								r++;
+							}
+						}
+						else if (*q == '?')
+						{
+							q++;
+							if (*p != 0)
+							{
+								*r = *p;
+								p++;
+								r++;
+							}
+						}
+						else
+						{
+							*r = *q;
+							if (*p != 0)
+								p++;
+							q++;
+							r++;
+						}
+					}
+					*r = 0;
+					/* Add the filename to the tmp string path */
+					_tcscat (tmpDestPath, DoneFile);
+ 
 				}
 			}
-			if (copy (real_source, real_dest, *append, lpdwFlags))
-				nCopied++;
-		next:
-			bDone = FindNextFile (hFind, &find);
-
-			if (bMultiple)
-				*append = 1;
-		}
-		while (bDone);
-
-		FindClose (hFind);
-		sources = sources->next;
-
-	}
-	free (real_source);
-	free (real_dest);
-
-	return nCopied;
+ 
+ 
+			/* Build the string path to the source file */
+			_tcscpy(tmpSrcPath,szSrcPath);
+			_tcscat (tmpSrcPath, findBuffer.cFileName);
+ 
+			/* Check to see if the file is the same file */
+			if(!_tcscmp (tmpSrcPath, tmpDestPath))
+				continue;
+ 
+			/* Handle any overriding / prompting that needs to be done */
+			if((!(dwFlags & COPY_NO_PROMPT) && IsExistingFile (tmpDestPath)) || dwFlags & COPY_PROMPT)
+				nOverwrite = Overwrite(tmpDestPath);
+			if(nOverwrite == PROMPT_NO || nOverwrite == PROMPT_BREAK)
+				continue;
+			if(nOverwrite == PROMPT_ALL || (nOverwrite == PROMPT_YES && bAppend))
+				dwFlags |= COPY_NO_PROMPT;
+ 
+			/* Tell weather the copy was successful or not */
+			if(copy(tmpSrcPath,tmpDestPath, bAppend, dwFlags))
+			{
+				nFiles++;
+				/* only print source name when more then one file */
+				if(_tcschr (arg[nSrc], _T('+')) != NULL || _tcschr (arg[nSrc], _T('*')) != NULL)
+					ConOutPrintf("%s\n",findBuffer.cFileName);
+				//LoadString(CMD_ModuleHandle, STRING_MOVE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+			}
+			else
+			{
+				/* print out the error message */
+				LoadString(CMD_ModuleHandle, STRING_COPY_ERROR3, szMsg, RC_STRING_MAX_SIZE);
+				ConOutPrintf(szMsg);
+			}
+ 
+		/* Loop through all wildcard files */
+		}while(FindNextFile (hFile, &findBuffer));
+	/* Loop through all files in src string with a + */
+	}while(_tcsncmp (appendPointer,_T("\0"),1));
+ 
+	/* print out the number of files copied */
+	LoadString(CMD_ModuleHandle, STRING_COPY_FILE, szMsg, RC_STRING_MAX_SIZE);
+	ConOutPrintf(szMsg, nFiles);
+ 
+	CloseHandle(hFile);
+	freep (arg);
+	return 0;
 }
-
-
-INT cmd_copy (LPTSTR first, LPTSTR rest)
-{
-	TCHAR **p;
-	TCHAR drive_d[_MAX_DRIVE];
-	TCHAR dir_d[_MAX_DIR];
-	TCHAR file_d[_MAX_FNAME];
-	TCHAR ext_d[_MAX_EXT];
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-
-	int argc;
-	int append;
-	int files;
-	int copied;
-
-	LPFILES sources = NULL;
-	LPFILES start = NULL;
-	FILES dest;
-	BOOL bMultiple;
-	BOOL bWildcards;
-	BOOL bDestFound;
-	DWORD dwFlags = 0;
-  
-	if (!_tcsncmp (rest, _T("/?"), 2))
-	{
-		ConOutResPaging(TRUE,STRING_COPY_HELP2);
-		return 1;
-	}
-
-	p = split (rest, &argc, FALSE);
-
-	if (argc == 0)
-	{
-		error_req_param_missing ();
-		return 0;
-	}
-
-	sources = (LPFILES)malloc (sizeof (FILES));
-	if (!sources)
-	{
-		error_out_of_memory ();
-		return 0;
-	}
-	sources->next = NULL;
-	sources->dwFlag = 0;
-
-	if ((files = ParseCommand (sources, argc, p, &dwFlags)) == -1)
-	{
-		DeleteFileList (sources);
-		freep (p);
-		return 0;
-	}
-	else if (files == 0)
-	{
-		error_req_param_missing();
-		DeleteFileList (sources);
-		freep (p);
-		return 0;
-	}
-	start = sources;
-
-	bDestFound = GetDestination (sources, &dest);
-	if (bDestFound)
-	{
-		_tsplitpath (dest.szFile, drive_d, dir_d, file_d, ext_d);
-		if (IsExistingDirectory (dest.szFile))
-		{
-//		printf("A szFile= %s, Dir = %s, File = %s, Ext = %s\n", dest.szFile, dir_d, file_d, ext_d);
-			_tcscat (dir_d, file_d);
-			_tcscat (dir_d, ext_d);
-			file_d[0] = _T('\0');
-			ext_d[0] = _T('\0');
-		}
-	}
-
-	if (_tcschr (dest.szFile, _T('*')) || _tcschr (dest.szFile, _T('?')))
-		bWildcards = TRUE;
-	else
-		bWildcards = FALSE;
-
-	if (_tcschr(rest, _T('+')))
-		bMultiple = TRUE;
-	else
-		bMultiple = FALSE;
-
-	append = 0;
-	copied = 0;
-
-	if (bDestFound && !bWildcards)
-	{
-
-//		_tcscpy(sources->szFile, dest.szFile);
-
-		copied = SetupCopy (sources, p, bMultiple, drive_d, dir_d, file_d, ext_d, &append, &dwFlags);
-	}
-	else if (bDestFound && bWildcards)
-	{
-		ConErrResPuts(STRING_COPY_ERROR4);
-
-		DeleteFileList (sources);
-		freep (p);
-		return 0;
-	}
-	else if (!bDestFound && !bMultiple)
-	{
-		_tsplitpath (sources->szFile, drive_d, dir_d, file_d, ext_d);
-		if (IsExistingDirectory (sources->szFile))
-		{
-//		printf("B File = %s, Ext = %s\n", file_d, ext_d);
-
-			_tcscat (dir_d, file_d);
-			_tcscat (dir_d, ext_d);
-			file_d[0] = _T('\0');
-			ext_d[0] = _T('\0');
-		}
-		copied = SetupCopy (sources, p, FALSE, _T(""), _T(""), file_d, ext_d, &append, &dwFlags);
-	}
-	else
-	{
-		_tsplitpath(sources->szFile, drive_d, dir_d, file_d, ext_d);
-		if (IsExistingDirectory (sources->szFile))
-		{
-//		printf("C File = %s, Ext = %s\n", file_d, ext_d);
-
-			_tcscat (dir_d, file_d);
-			_tcscat (dir_d, ext_d);
-			file_d[0] = _T('\0');
-			ext_d[0] = _T('\0');
-		}
-
-		ConOutPuts (sources->szFile);
-		append = 1;
-		copied = SetupCopy (sources->next, p, bMultiple, drive_d, dir_d, file_d, ext_d, &append, &dwFlags) + 1;
-	}
-
-	DeleteFileList (sources);
-	freep ((VOID*)p);
-	
-	LoadString( CMD_ModuleHandle, STRING_COPY_FILE, szMsg, RC_STRING_MAX_SIZE);
-    ConOutPrintf (szMsg, copied);
-
-	return 1;
-}
+ 
+ 
 #endif /* INCLUDE_CMD_COPY */
-
-/* EOF */
