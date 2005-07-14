@@ -49,14 +49,14 @@ VOID ErrorMessage (DWORD dwErrorCode, LPTSTR szFormat, ...)
 					   NULL, dwErrorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 					   (LPTSTR)&szError, 0, NULL))
 	{
-		ConErrPrintf (_T("%s %s\n"), szError, szMessage);
+		ConOutPrintf (_T("%s %s\n"), szError, szMessage);
 		LocalFree (szError);
 		return;
 	}
 	else
 	{
 		LoadString(CMD_ModuleHandle, STRING_ERROR_ERROR1, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPrintf(szMsg, dwErrorCode);
+		ConOutPrintf(szMsg, dwErrorCode);
 		return;
 	}
 
@@ -78,14 +78,14 @@ VOID ErrorMessage (DWORD dwErrorCode, LPTSTR szFormat, ...)
 
 		default:
 			LoadString(CMD_ModuleHandle, STRING_ERROR_ERROR1, szMsg, RC_STRING_MAX_SIZE);
-			ConErrPrintf(szMsg);
+			ConOutPrintf(szMsg);
 			return;
 	}
 
 	if (szFormat)
-		ConErrPrintf (_T("%s -- %s\n"), szMsg, szMessage);
+		ConOutPrintf (_T("%s -- %s\n"), szMsg, szMessage);
 	else
-		ConErrPrintf (_T("%s\n"), szMsg);
+		ConOutPrintf (_T("%s\n"), szMsg);
 #endif
 }
 
@@ -94,7 +94,7 @@ VOID error_parameter_format(TCHAR ch)
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	LoadString(CMD_ModuleHandle, STRING_ERROR_PARAMETERF_ERROR, szMsg, RC_STRING_MAX_SIZE);
-	ConErrPrintf(szMsg, ch);
+	ConOutPrintf(szMsg, ch);
 }
 
 
@@ -103,7 +103,7 @@ VOID error_invalid_switch (TCHAR ch)
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	LoadString(CMD_ModuleHandle, STRING_ERROR_INVALID_SWITCH, szMsg, RC_STRING_MAX_SIZE);
-	ConErrPrintf(szMsg, ch);
+	ConOutPrintf(szMsg, ch);
 }
 
 
@@ -112,20 +112,20 @@ VOID error_too_many_parameters (LPTSTR s)
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	LoadString(CMD_ModuleHandle, STRING_ERROR_TOO_MANY_PARAMETERS, szMsg, RC_STRING_MAX_SIZE);
-	ConErrPrintf(szMsg, s);
+	ConOutPrintf(szMsg, s);
 }
 
 
 VOID error_path_not_found (VOID)
 {
-	ConErrResPuts(STRING_ERROR_PATH_NOT_FOUND);
+	ConOutResPuts(STRING_ERROR_PATH_NOT_FOUND);
 	nErrorLevel = 1;
 }
 
 
 VOID error_file_not_found (VOID)
 {
-	ConErrResPuts(STRING_ERROR_FILE_NOT_FOUND);
+	ConOutResPuts(STRING_ERROR_FILE_NOT_FOUND);
 	nErrorLevel = 1;
 }
 
@@ -135,20 +135,20 @@ VOID error_sfile_not_found (LPTSTR f)
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	LoadString(CMD_ModuleHandle, STRING_ERROR_FILE_NOT_FOUND, szMsg, RC_STRING_MAX_SIZE);
-	ConErrPrintf(_T("%s - %s\n"), szMsg, f);
+	ConOutPrintf(_T("%s - %s\n"), szMsg, f);
   nErrorLevel = 1;
 }
 
 
 VOID error_req_param_missing (VOID)
 {
-	ConErrResPuts(STRING_ERROR_REQ_PARAM_MISSING);
+	ConOutResPuts(STRING_ERROR_REQ_PARAM_MISSING);
 }
 
 
 VOID error_invalid_drive (VOID)
 {
-	ConErrResPuts(STRING_ERROR_INVALID_DRIVE);
+	ConOutResPuts(STRING_ERROR_INVALID_DRIVE);
 }
 
 
@@ -173,7 +173,7 @@ VOID error_out_of_memory (VOID)
 
 VOID error_invalid_parameter_format (LPTSTR s)
 {
-	ConErrResPuts(STRING_ERROR_INVALID_PARAM_FORMAT);
+	ConOutResPuts(STRING_ERROR_INVALID_PARAM_FORMAT);
 }
 
 
