@@ -275,15 +275,22 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 
   /* Get the envor value if it exists */
   evar = malloc(512);
-  size = GetEnvironmentVariable (_T("COPYCMD"), evar, 512);
-  if (size > 512)
+  if (evar==NULL) size = 0;
+
+  size = GetEnvironmentVariable (_T("COPYCMD"), evar, 512);  
+  if ((size > 1) && (size > 512))
   {
     evar = realloc(evar,size * sizeof(TCHAR) );
     if (evar!=NULL)
     {             
       size = GetEnvironmentVariable (_T("COPYCMD"), evar, size);
       }
+    else 
+    {
+      size=0;
+    }
   }
+
   /* check see if we did get any env variable */
   if (size !=0)
   {
