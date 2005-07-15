@@ -1795,14 +1795,14 @@ void StartMenuRoot::Paint(PaintCanvas& canvas)
 	ClientRect clnt(_hwnd);
 	int h = min(_logo_size.cy, clnt.bottom);
 
-	RECT rect = {0,  clnt.bottom-h, _logo_size.cx, clnt.bottom};
+	RECT rect = {0, 0, _logo_size.cx, clnt.bottom-h};
 	HBRUSH hbr = CreateSolidBrush(GetPixel(mem_dc, 0, 0));
 	FillRect(canvas, &rect, hbr);
 	DeleteObject(hbr);
 
 	PatBlt(canvas, _logo_size.cx, 0, 1, clnt.bottom, WHITENESS);
 
-	BitBlt(canvas, 0, clnt.bottom, _logo_size.cx, h, mem_dc, 0, clnt.bottom-h, SRCCOPY);
+	BitBlt(canvas, 0, clnt.bottom-h, _logo_size.cx, h, mem_dc, 0, 0, SRCCOPY);
 
 	super::Paint(canvas);
 }
