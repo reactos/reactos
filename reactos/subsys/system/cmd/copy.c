@@ -254,17 +254,99 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 	TCHAR * UseThisName;
 	/* Stores the name( i.e. blah.txt or blah*.txt) which later we might need */
 	TCHAR PreserveName[MAX_PATH];
+  /* for CMDCOPY env */
+  TCHAR *evar;
+  int size;
  
-	/*Show help/usage info*/
+	
+  /*Show help/usage info*/
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		ConOutResPaging(TRUE, STRING_COPY_HELP2);
 		return 0;
 	}
  
-	/*Split the user input into array*/
+  /* Get the envor value if it exists */
+  evar = malloc(512);
+  size = GetEnvironmentVariable (_T("COPYCMD"), evar, 512);
+  if (size > 512)
+  {
+    evar = realloc(evar,size * sizeof(TCHAR) );
+    if (evar!=NULL)
+    {             
+      size = GetEnvironmentVariable (_T("COPYCMD"), evar, size);
+      }
+  }
+  /* check see if we did get any env variable */
+  if (size !=0)
+  {
+    int t=0;
+    /* scan and set the flags */
+    for (t=0;t<size;t++)
+    {
+      if (_tcsncicmp(_T("/A"),&evar[t],2)==0) 
+      {
+        evar[t]=_T(' ');
+        evar[t+1]=_T(' ');
+      }
+
+      else if (_tcsncicmp(_T("/B"),&evar[t],2)==0) 
+      {
+        dwFlags |= COPY_BINARY;
+        evar[t]=_T(' ');
+        evar[t+1]=_T(' ');
+      }
+      else if (_tcsncicmp(_T("/D"),&evar[t],2)==0) 
+      {
+        dwFlags |= COPY_DECRYPT;
+        evar[t]=_T(' ');
+        evar[t+1]=_T(' ');
+      }
+
+			else if (_tcsncicmp(_T("/V"),&evar[t],2)==0) 
+      {
+        dwFlags |= COPY_VERIFY;
+        evar[t]=_T(' ');
+        evar[t+1]=_T(' ');
+      }
+
+			else if (_tcsncicmp(_T("/V"),&evar[t],2)==0) 
+      {
+        dwFlags |= COPY_SHORTNAME;
+        evar[t]=_T(' ');
+        evar[t+1]=_T(' ');
+      }
+ 
+      else if (_tcsncicmp(_T("/Y"),&evar[t],2)==0) 
+      {
+        dwFlags |= COPY_NO_PROMPT;
+        evar[t]=_T(' ');
+        evar[t+1]=_T(' ');
+      }
+
+      else if (_tcsncicmp(_T("/-Y"),&evar[t],3)==0) 
+      {
+        dwFlags |= COPY_PROMPT;
+        evar[t]=_T(' ');
+        evar[t+1]=_T(' ');
+        evar[t+2]=_T(' ');
+      }
+
+      else if (_tcsncicmp(_T("/Z"),&evar[t],2)==0) 
+      {
+        dwFlags |= COPY_PROMPT;
+        evar[t]=_T(' ');
+        evar[t+1]=_T(' ');
+      }
+    }
+  }
+  free(evar);
+
+
+  /*Split the user input into array*/
 	arg = split (param, &argc, FALSE);
 	nFiles = argc;
+ 
  
 	/*Read switches and count files*/
 	for (i = 0; i < argc; i++)
@@ -281,7 +363,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 					break;
  
 				case _T('B'):
-					dwFlags |= COPY_DECRYPT;
+					dwFlags |= COPY_BINARY;
 					break;
  
 				case _T('D'):
