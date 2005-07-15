@@ -146,6 +146,7 @@ int copy (LPTSTR source, LPTSTR dest, int append, DWORD lpdwFlags)
 	{
 		CloseHandle (hFileSrc);
 		error_path_not_found ();
+    nErrorLevel = 1;
 		return 0;
 	}
 	buffer = (LPBYTE)malloc (BUFF_SIZE);
@@ -154,6 +155,7 @@ int copy (LPTSTR source, LPTSTR dest, int append, DWORD lpdwFlags)
 		CloseHandle (hFileDest);
 		CloseHandle (hFileSrc);
 		error_out_of_memory ();
+    nErrorLevel = 1;
 		return 0;
 	}
  
@@ -434,6 +436,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 	{
 		/* there is too many file names in command */
 		error_too_many_parameters("");
+    nErrorLevel = 1;
 		return 1;
 	}
  
@@ -607,6 +610,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 			{			
 				ConOutFormatMessage (GetLastError(), szSrcPath);			
 				freep (arg);
+        nErrorLevel = 1;
 				return 1;
 			}
  
@@ -624,6 +628,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 			{
 				ConOutFormatMessage (GetLastError (), szSrcPath);			
 				freep (arg);
+        nErrorLevel = 1;
 				return 1;
 			}
 			/* Copy over the destination path name */

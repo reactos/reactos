@@ -349,13 +349,13 @@ VOID ConOutFormatMessage (DWORD MessageId, ...)
 	va_end (arg_ptr);
 	if(ret > 0)
 	{
-		ConErrPuts (text);
+		ConOutPuts (text);
 		LocalFree(text);
 	}
 	else
 	{
 		LoadString(CMD_ModuleHandle, STRING_CONSOLE_ERROR, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPrintf(szMsg);
+		ConOutPrintf(szMsg);
 	}
 }
 
