@@ -315,7 +315,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
         evar[t+1]=_T(' ');
       }
 
-			else if (_tcsncicmp(_T("/V"),&evar[t],2)==0) 
+			else if (_tcsncicmp(_T("/N"),&evar[t],2)==0) 
       {
         dwFlags |= COPY_SHORTNAME;
         evar[t]=_T(' ');
