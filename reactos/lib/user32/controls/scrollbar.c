@@ -1263,18 +1263,25 @@ ScrollBarWndProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         IntScrollCreateScrollBar(Wnd, (LPCREATESTRUCTW) lParam);
         break;
 
-#if 0 /* FIXME */
+//#if 0 /* FIXME */
       case WM_ENABLE:
         {
-          SCROLLBAR_INFO *infoPtr;
-          if ((infoPtr = SCROLL_GetScrollBarInfo( hwnd, SB_CTL )))
-            {
-              infoPtr->flags = wParam ? ESB_ENABLE_BOTH : ESB_DISABLE_BOTH;
-              SCROLL_RefreshScrollBar(hwnd, SB_CTL, TRUE, TRUE);
-            }
+//          SCROLLBAR_INFO *infoPtr;
+//          if ((infoPtr = SCROLL_GetScrollBarInfo( hwnd, SB_CTL )))
+//            {
+//              infoPtr->flags = wParam ? ESB_ENABLE_BOTH : ESB_DISABLE_BOTH;
+//              SCROLL_RefreshScrollBar(hwnd, SB_CTL, TRUE, TRUE);
+//            }
+          DbgPrint("ScrollBarWndProc WM_ENABLE\n");
+          NtUserEnableScrollBar(Wnd,SB_CTL,wParam);
+          /* Refresh Scrollbars. */          
+          HDC hdc = GetDCEx( Wnd, 0, DCX_CACHE | SB_CTL );
+          if (!hdc) return 1;
+          IntDrawScrollBar( Wnd, hdc, SB_CTL);
+          ReleaseDC( Wnd, hdc );
 	}
 	return 0;
-#endif
+//#endif
 
       case WM_LBUTTONDBLCLK:
       case WM_LBUTTONDOWN:

@@ -642,8 +642,12 @@ NtUserEnableScrollBar(
   if(wSBflags == SB_CTL)
   {
     /* FIXME */
+    DPRINT1("Enable Scrollbar SB_CTL\n");
+    InfoV = IntGetScrollbarInfoFromWindow(Window, SB_VERT);
+    Chg = IntEnableScrollBar(FALSE, InfoV ,wArrows);
+    /* Chg? Scrollbar is Refresh in user32/controls/scrollbar.c. */
     IntReleaseWindowObject(Window);
-    return FALSE;
+    return TRUE;
   }
 
   if(wSBflags != SB_BOTH && !SBID_IS_VALID(wSBflags))
