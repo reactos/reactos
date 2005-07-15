@@ -170,7 +170,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 #endif
 				if (!(dwFlags & MOVE_NOTHING))
 					continue;
-				MoveFile (szSrcPath, szDestPath);
+				MoveFileEx (szSrcPath, szDestPath, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH | MOVEFILE_COPY_ALLOWED);
 			}
 			else
 			{
@@ -208,7 +208,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 					/*delete the file that might be there first*/
 					DeleteFile(szFullDestPath);
 					/*move the file*/
-					if (MoveFile (szSrcPath, szFullDestPath))
+					if (MoveFileEx (szSrcPath, szFullDestPath, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH | MOVEFILE_COPY_ALLOWED))
 						LoadString(CMD_ModuleHandle, STRING_MOVE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 					else
 						LoadString(CMD_ModuleHandle, STRING_MOVE_ERROR2, szMsg, RC_STRING_MAX_SIZE);
@@ -246,7 +246,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 					if it was already there*/
 					DeleteFile(szDestPath);
 					/*do the moving*/
-					if (MoveFile (szSrcPath, szDestPath))
+					if (MoveFileEx (szSrcPath, szDestPath, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH | MOVEFILE_COPY_ALLOWED))
 						LoadString(CMD_ModuleHandle, STRING_MOVE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 					else
 						LoadString(CMD_ModuleHandle, STRING_MOVE_ERROR2, szMsg, RC_STRING_MAX_SIZE);
