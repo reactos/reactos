@@ -280,7 +280,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
   {
    size = GetEnvironmentVariable (_T("COPYCMD"), evar, 512);  
   }
-  if ((size > 1) && (size > 512))
+  if (size > 512)
   {
     evar = realloc(evar,size * sizeof(TCHAR) );
     if (evar!=NULL)
