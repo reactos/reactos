@@ -302,57 +302,49 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
     {
       if (_tcsncicmp(_T("/A"),&evar[t],2)==0) 
       {
-        evar[t]=_T(' ');
-        evar[t+1]=_T(' ');
+        dwFlags |=COPY_ASCII;
+        t++;
       }
 
       else if (_tcsncicmp(_T("/B"),&evar[t],2)==0) 
       {
         dwFlags |= COPY_BINARY;
-        evar[t]=_T(' ');
-        evar[t+1]=_T(' ');
+        t++;
       }
       else if (_tcsncicmp(_T("/D"),&evar[t],2)==0) 
       {
         dwFlags |= COPY_DECRYPT;
-        evar[t]=_T(' ');
-        evar[t+1]=_T(' ');
+        t++;
       }
 
 			else if (_tcsncicmp(_T("/V"),&evar[t],2)==0) 
       {
         dwFlags |= COPY_VERIFY;
-        evar[t]=_T(' ');
-        evar[t+1]=_T(' ');
+        t++;
       }
 
 			else if (_tcsncicmp(_T("/N"),&evar[t],2)==0) 
       {
         dwFlags |= COPY_SHORTNAME;
-        evar[t]=_T(' ');
-        evar[t+1]=_T(' ');
+        t++;
       }
  
       else if (_tcsncicmp(_T("/Y"),&evar[t],2)==0) 
       {
         dwFlags |= COPY_NO_PROMPT;
-        evar[t]=_T(' ');
-        evar[t+1]=_T(' ');
+        t++;
       }
 
       else if (_tcsncicmp(_T("/-Y"),&evar[t],3)==0) 
       {
         dwFlags |= COPY_PROMPT;
-        evar[t]=_T(' ');
-        evar[t+1]=_T(' ');
-        evar[t+2]=_T(' ');
+        t+=2;
       }
 
       else if (_tcsncicmp(_T("/Z"),&evar[t],2)==0) 
       {
         dwFlags |= COPY_PROMPT;
-        evar[t]=_T(' ');
-        evar[t+1]=_T(' ');
+        t++;
       }
     }
   }
