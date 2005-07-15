@@ -887,7 +887,7 @@ IntWaitMessage(HWND Wnd,
       /* Nothing found. Wait for new messages. */
       Status = MsqWaitForNewMessages(ThreadQueue, Wnd, MsgFilterMin, MsgFilterMax);
     }
-  while ((STATUS_WAIT_0 >= Status && Status <= STATUS_WAIT_63) || STATUS_TIMEOUT == Status);
+  while ((STATUS_WAIT_0 <= Status && Status <= STATUS_WAIT_63) || STATUS_TIMEOUT == Status);
 
   SetLastNtError(Status);
 
