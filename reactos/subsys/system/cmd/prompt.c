@@ -105,6 +105,8 @@ VOID PrintPrompt(VOID)
 
 				case _T('H'):
 					ConOutChar (_T('\x08'));
+          ConOutChar (_T(' '));
+          ConOutChar (_T('\x08'));
 					break;
 
 				case _T('L'):
@@ -132,9 +134,14 @@ VOID PrintPrompt(VOID)
 					break;
 
 				case _T('T'):
-					PrintTime ();
+					//PrintTime ();
+          {
+          TCHAR szTime[32];          
+	        GetTimeFormat(LOCALE_USER_DEFAULT, 0, NULL, NULL,szTime, sizeof(szTime));
+          ConOutPrintf("%s",szTime);
+          }
 					break;
-
+          
 				case _T('V'):
 					switch (osvi.dwPlatformId)
 					{
@@ -145,6 +152,7 @@ VOID PrintPrompt(VOID)
 							else
 								ConOutPrintf (_T("Windows 95"));
 							break;
+
 
 						case VER_PLATFORM_WIN32_NT:
 							ConOutPrintf (_T("Windows NT Version %lu.%lu"),
