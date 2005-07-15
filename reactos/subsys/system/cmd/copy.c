@@ -72,6 +72,7 @@ int copy (LPTSTR source, LPTSTR dest, int append, DWORD lpdwFlags)
 	{
 		LoadString(CMD_ModuleHandle, STRING_COPY_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 		ConOutPrintf(szMsg, source);
+    nErrorLevel = 1;
 		return 0;
 	}
  
@@ -102,6 +103,7 @@ int copy (LPTSTR source, LPTSTR dest, int append, DWORD lpdwFlags)
 			ConOutPrintf(szMsg, source);
  
 			CloseHandle (hFileSrc);
+      nErrorLevel = 1;
 			return 0;
 		}
  
@@ -182,6 +184,7 @@ int copy (LPTSTR source, LPTSTR dest, int append, DWORD lpdwFlags)
 			free (buffer);
 			CloseHandle (hFileDest);
 			CloseHandle (hFileSrc);
+      nErrorLevel = 1;
 			return 0;
 		}
 	}
@@ -266,6 +269,8 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
  
+  nErrorLevel = 0;
+
   /* Get the envor value if it exists */
   evar = malloc(512);
   size = GetEnvironmentVariable (_T("COPYCMD"), evar, 512);
@@ -710,6 +715,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 				/* print out the error message */
 				LoadString(CMD_ModuleHandle, STRING_COPY_ERROR3, szMsg, RC_STRING_MAX_SIZE);
 				ConOutPrintf(szMsg);
+        nErrorLevel = 1;
 			}
  
 		/* Loop through all wildcard files */
