@@ -279,11 +279,32 @@ VOID
 FASTCALL
 FrLdrGetPaeMode(VOID)
 {
-    /* FIXME: Read command line */
+    PCHAR p;
+
     PaeModeEnabled = FALSE;
 
+    /* Read Command Line */
+    p = (PCHAR)LoaderBlock.CommandLine;
+    while ((p = strchr(p, '/')) != NULL) {
+
+        p++;
+        /* Find "PAE" */
+        if (!strnicmp(p, "PAE", 3)) {
+
+            /* Make sure there's nothing following it */
+            if (p[3] == ' ' || p[3] == 0) {
+
+                /* Use Pae */
+                PaeModeEnabled = TRUE;
+                break;
+            }
+        }
+    }
     if (PaeModeEnabled)
     {
+       /* FIXME:
+        *   Check if the cpu is pae capable
+        */
     }
 }
 
@@ -445,9 +466,6 @@ FrLdrSetupPageDirectory(VOID)
         PageDir->Pde[HyperspacePageTableIndex].Valid = 1;
         PageDir->Pde[HyperspacePageTableIndex].Write = 1;
         PageDir->Pde[HyperspacePageTableIndex].PageFrameNumber = PaPtrToPfn(hyperspace_pagetable);
-        PageDir->Pde[HyperspacePageTableIndex + 1].Valid = 1;
-        PageDir->Pde[HyperspacePageTableIndex + 1].Write = 1;
-        PageDir->Pde[HyperspacePageTableIndex + 1].PageFrameNumber = PaPtrToPfn(hyperspace_pagetable + 4096);
 
         /* Set up the Apic PDE */
         PageDir->Pde[ApicPageTableIndex].Valid = 1;

@@ -72,7 +72,7 @@ _kernel_pagetable:
 	.fill 2*4096, 1, 0
 
 _hyperspace_pagetable:
-	.fill 2*4096, 1, 0
+	.fill 4096, 1, 0
 	
 _apic_pagetable:
 	.fill 4096, 1, 0
