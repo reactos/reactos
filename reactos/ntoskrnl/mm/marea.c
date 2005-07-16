@@ -971,7 +971,7 @@ MmCreateMemoryArea(PEPROCESS Process,
       *BaseAddress = MM_ROUND_DOWN(*BaseAddress, Granularity);
 
       if (AddressSpace->LowestAddress == MmSystemRangeStart &&
-          *BaseAddress < (PVOID)KERNEL_BASE)
+          *BaseAddress < MmSystemRangeStart)
       {
          CHECKPOINT;
          return STATUS_ACCESS_VIOLATION;
