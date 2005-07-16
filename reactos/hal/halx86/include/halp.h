@@ -38,7 +38,7 @@ VOID HalpInitDma (VOID);
 PVOID HalpMapPhysMemory(ULONG PhysAddr, ULONG Size);
 
 /* Non-generic initialization */
-VOID HalpInitPhase0 (VOID);
+VOID HalpInitPhase0 (PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 /* DMA Page Register Structure  
  080     DMA        RESERVED

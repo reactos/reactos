@@ -18,10 +18,11 @@
 /* FUNCTIONS ***************************************************************/
 
 extern BOOLEAN HaliFindSmpConfig(VOID);
+ULONG_PTR KernelBase;
 
 /***************************************************************************/
 VOID
-HalpInitPhase0(VOID)
+HalpInitPhase0(PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 {
    static BOOLEAN MPSInitialized = FALSE;
@@ -29,7 +30,7 @@ HalpInitPhase0(VOID)
 
    /* Only initialize MP system once. Once called the first time,
       each subsequent call is part of the initialization sequence
-			for an application processor. */
+      for an application processor. */
 
    DPRINT("HalpInitPhase0()\n");
 
@@ -45,6 +46,10 @@ HalpInitPhase0(VOID)
    {
       KEBUGCHECK(0);
    }
+
+   /* store the kernel base for later use */
+   KernelBase = ((PLOADER_MODULE)LoaderBlock->ModsAddr)[0].ModStart;
+
 }
 
 /* EOF */

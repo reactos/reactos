@@ -83,6 +83,8 @@ CHAR *APstart, *APend;
    WRITE_PORT_UCHAR((PUCHAR)0x71, value); \
 })
 
+extern ULONG_PTR KernelBase;
+
 /* FUNCTIONS *********************************************************************/
 
 extern ULONG Read8254Timer(VOID);
@@ -1035,7 +1037,7 @@ HaliStartApplicationProcessor(ULONG Cpu, ULONG Stack)
    /* Write the page directory page */
    Ke386GetPageTableDirectory(Common->PageDirectory);
    /* Write the kernel entry point */
-   Common->NtProcessStartup = (ULONG_PTR)RtlImageNtHeader(MmSystemRangeStart)->OptionalHeader.AddressOfEntryPoint + (ULONG_PTR)MmSystemRangeStart;
+   Common->NtProcessStartup = (ULONG_PTR)RtlImageNtHeader((PVOID)KernelBase)->OptionalHeader.AddressOfEntryPoint + KernelBase;
    /* Write the state of the mae mode */
    Common->PaeModeEnabled = Ke386GetCr4() & X86_CR4_PAE ? 1 : 0;
 
