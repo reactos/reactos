@@ -1,4 +1,3 @@
-
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 /* String Tables */
@@ -15,9 +14,9 @@ BEGIN
   ERR_CALL         "Error durante la ejecución del Script.\nNo se pudo encontrar la función."
   ERR_PARAMETER    "Error durante la ejecución del Script.\nParametro(s) erróneo."
 
-  ERR_DEP1	   "To install this package you have to install the following package(s) as well:\n\n"
-  ERR_DEP2	   "\nDo you want this ?"
-  ERR_READY	   "You choosen to install %d package(s). To install them you have to read and agree with each of thier licences.\n\n Do you want still want to ?"
+  ERR_DEP1	   "Para instalar este paquete debes instalar también los siguientes paquetes:\n\n"
+  ERR_DEP2	   "\n¿Seguro que quieres ahcer eso?"
+  ERR_READY	   "Has seleccionado instalar %d paquete(s). Para instalarlos debes leer y estar deacuerdo con cada uno de sus licencias.\n\n ¿Sigues queriendo hacerlo?"
 END
 
 123               RCDATA 	"options.xml"
