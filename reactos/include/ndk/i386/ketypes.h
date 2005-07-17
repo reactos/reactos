@@ -262,7 +262,7 @@ typedef struct _KPRCB
     UCHAR Number;
     UCHAR Reserved;
     USHORT BuildType;
-    ULONG SetMember;
+    KAFFINITY SetMember;
     UCHAR CpuType;
     UCHAR CpuID;
     USHORT CpuStep;
