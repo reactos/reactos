@@ -1528,9 +1528,9 @@ PWCHAR * _CommandLineToArgvW(PWCHAR lpCmdLine, int *pNumArgs)
  * main function
  */
 #ifdef _UNICODE
-int main(void)
+int _main(void)
 #else
-int main (int argc, char *argv[])
+int _main (int argc, char *argv[])
 #endif
 {
   CONSOLE_SCREEN_BUFFER_INFO Info;

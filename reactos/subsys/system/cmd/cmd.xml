@@ -1,10 +1,9 @@
-<module name="cmd" type="win32cui" installbase="system32" installname="cmd.exe" usewrc="false">
+<module name="cmd_base" type="objectlibrary">
 	<include base="ReactOS">include/wine</include>
-	<include base="cmd">.</include>
+	<include base="cmd_base">.</include>
 	<define name="__USE_W32API" />
 	<define name="ANONYMOUSUNIONS" />
 	<define name="_WIN32_WINNT">0x0501</define>
-	<library>kernel32</library>
 	<pch>precomp.h</pch>
 	<file>alias.c</file>
 	<file>attrib.c</file>
@@ -59,5 +58,18 @@
 	<file>vol.c</file>
 	<file>where.c</file>
 	<file>window.c</file>
+</module>
+<module name="cmd" type="win32cui" installbase="system32" installname="cmd.exe" usewrc="false">
+	<include base="ReactOS">include/wine</include>
+	<include base="cmd">.</include>
+	<define name="__USE_W32API" />
+	<define name="ANONYMOUSUNIONS" />
+	<define name="_WIN32_WINNT">0x0501</define>
+	<library>kernel32</library>
+	<library>cmd_base</library>
+	<file>main.c</file>
 	<file>cmd.rc</file>
 </module>
+<directory name="tests">
+	<xi:include href="tests/cmd_test.xml" />
+</directory>
