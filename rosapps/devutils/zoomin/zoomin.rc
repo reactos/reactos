@@ -1,6 +1,6 @@
-/* $Id: zoomin.rc,v 1.2 2004/10/16 22:30:17 gvg Exp $ */
+/* $Id$ */
 
-#include <defines.h>
+#include <windows.h>
 #include "resource.h"
 
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Zoomin by Robert Dickenson\0"
