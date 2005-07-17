@@ -84,6 +84,8 @@ PspKillMostProcesses(VOID)
     PLIST_ENTRY current_entry;
     PEPROCESS current;
 
+    ASSERT(PsGetCurrentProcessId() == PsInitialSystemProcess->UniqueProcessId);
+
     /* Acquire the Active Process Lock */
     ExAcquireFastMutex(&PspActiveProcessMutex);
 
@@ -94,8 +96,7 @@ PspKillMostProcesses(VOID)
         current = CONTAINING_RECORD(current_entry, EPROCESS, ActiveProcessLinks);
         current_entry = current_entry->Flink;
 
-        if (current->UniqueProcessId != PsInitialSystemProcess->UniqueProcessId &&
-            current->UniqueProcessId != PsGetCurrentProcessId())
+        if (current->UniqueProcessId != PsInitialSystemProcess->UniqueProcessId)
         {
             /* Terminate all the Threads in this Process */
             PspTerminateProcessThreads(current, STATUS_SUCCESS);
@@ -211,6 +212,7 @@ PspExitThread(NTSTATUS ExitStatus)
     PEPROCESS CurrentProcess;
     PTERMINATION_PORT TerminationPort;
     PTEB Teb;
+    KIRQL oldIrql;
 
     DPRINT("PspExitThread(ExitStatus %x), Current: 0x%x\n", ExitStatus, PsGetCurrentThread());
 
@@ -321,9 +323,11 @@ PspExitThread(NTSTATUS ExitStatus)
     /* If the Processor Control Block's NpxThread points to the current thread
      * unset it.
      */
+    KeRaiseIrql(DISPATCH_LEVEL, &oldIrql);
     InterlockedCompareExchangePointer(&KeGetCurrentPrcb()->NpxThread,
                                       NULL,
                                       (PKPROCESS)CurrentThread);
+    KeLowerIrql(oldIrql);
 
     /* Rundown Mutexes */
     KeRundownThread();
@@ -398,14 +402,14 @@ PspTerminateThreadByPointer(PETHREAD Thread,
     /* Allocate the APC */
     Apc = ExAllocatePoolWithTag(NonPagedPool, sizeof(KAPC), TAG_TERMINATE_APC);
 
-    /* Initialize a Kernel Mode APC to Kill the Thread */
+    /* Initialize a User Mode APC to Kill the Thread */
     KeInitializeApc(Apc,
                     &Thread->Tcb,
                     OriginalApcEnvironment,
                     PsExitSpecialApc,
                     NULL,
                     PspExitNormalApc,
-                    KernelMode,
+                    UserMode,
                     (PVOID)ExitStatus);
 
     /* Insert it into the APC Queue */
