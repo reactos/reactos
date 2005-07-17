@@ -20,6 +20,7 @@
 #define _INC_SETUPAPI
 
 #include <commctrl.h>
+#include <pshpack1.h>
 
 /* setupapi doesn't use the normal convention, it adds an underscore before A/W */
 #ifdef __WINESRC__
@@ -859,4 +860,5 @@ BOOL     WINAPI UnmapAndCloseFile(HANDLE, HANDLE, PVOID);
 
 #undef DECL_WINELIB_SETUPAPI_TYPE_AW
 
+#include <poppack.h>
 #endif /* _INC_SETUPAPI */

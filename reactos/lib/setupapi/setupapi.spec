@@ -327,7 +327,7 @@
 @ stub SetupDiGetDeviceInstanceIdA
 @ stub SetupDiGetDeviceInstanceIdW
 @ stdcall SetupDiGetDeviceRegistryPropertyA(long ptr long ptr ptr long ptr)
-@ stub SetupDiGetDeviceRegistryPropertyW
+@ stdcall SetupDiGetDeviceRegistryPropertyW(long ptr long ptr ptr long ptr)
 @ stub SetupDiGetDriverInfoDetailA
 @ stub SetupDiGetDriverInfoDetailW
 @ stub SetupDiGetDriverInstallParamsA
