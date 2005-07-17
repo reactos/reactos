@@ -559,7 +559,7 @@ unsigned int GetKeyPressed(int events)
 }
 
 
-int main(int *argc, char **argv)
+int main(int argc, char **argv)
 {
 	int i;
 	TCHAR lpStr[80];
