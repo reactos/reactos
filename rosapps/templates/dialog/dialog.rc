@@ -78,7 +78,7 @@ END
 
 2 TEXTINCLUDE DISCARDABLE 
 BEGIN
-    "#include ""defines.h""\r\n"
+    "#include ""windows.h""\r\n"
     "#include ""reactos\\resource.h""\r\n"
     "#include ""resource.h""\r\n"
     "\0"
