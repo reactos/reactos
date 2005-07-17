@@ -31,8 +31,9 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 
-//#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows //headers
-//#include <windows.h>
+#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows //headers
+#include <windows.h>
+
 #include <stdlib.h>
 #include <malloc.h>
 #include <memory.h>
@@ -40,8 +41,9 @@
 #include <process.h>
 #include <stdio.h>
 
-#include <ddk/ntddk.h>
+#define NTOS_MODE_USER
 #include <ndk/ntndk.h>
+
 #include <epsapi/epsapi.h>
 
 #include "ctm.h"
@@ -372,8 +374,8 @@ void PerfDataRefresh()
 		return;
 #endif
 	// Get processor information
-	SysProcessorTimeInfo = (PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)malloc(sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * SystemBasicInfo.NumberProcessors);
-	status = NtQuerySystemInformation(SystemProcessorPerformanceInformation, SysProcessorTimeInfo, sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * SystemBasicInfo.NumberProcessors, &ulSize);
+	SysProcessorTimeInfo = (PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)malloc(sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * SystemBasicInfo.NumberOfProcessors);
+	status = NtQuerySystemInformation(SystemProcessorPerformanceInformation, SysProcessorTimeInfo, sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * SystemBasicInfo.NumberOfProcessors, &ulSize);
 
 
 	// Get process information
@@ -382,7 +384,7 @@ void PerfDataRefresh()
 #ifdef TIMES
 	liCurrentKernelTime.QuadPart = 0;
 	liCurrentIdleTime.QuadPart = 0;
-	for (Idx=0; Idx<SystemBasicInfo.NumberProcessors; Idx++) {
+	for (Idx=0; Idx<SystemBasicInfo.NumberOfProcessors; Idx++) {
 		liCurrentKernelTime.QuadPart += SysProcessorTimeInfo[Idx].KernelTime.QuadPart;
 		liCurrentKernelTime.QuadPart += SysProcessorTimeInfo[Idx].DpcTime.QuadPart;
 		liCurrentKernelTime.QuadPart += SysProcessorTimeInfo[Idx].InterruptTime.QuadPart;
@@ -404,8 +406,8 @@ void PerfDataRefresh()
 		dbKernelTime = dbKernelTime / dbSystemTime;
 
 		// CurrentCpuUsage% = 100 - (CurrentCpuIdle * 100) / NumberOfProcessors
-		dbIdleTime = 100.0 - dbIdleTime * 100.0 / (double)SystemBasicInfo.NumberProcessors;// + 0.5;
-		dbKernelTime = 100.0 - dbKernelTime * 100.0 / (double)SystemBasicInfo.NumberProcessors;// + 0.5;
+		dbIdleTime = 100.0 - dbIdleTime * 100.0 / (double)SystemBasicInfo.NumberOfProcessors;// + 0.5;
+		dbKernelTime = 100.0 - dbKernelTime * 100.0 / (double)SystemBasicInfo.NumberOfProcessors;// + 0.5;
 	}
 
 	// Store new CPU's idle and system time
@@ -470,7 +472,7 @@ void PerfDataRefresh()
 			double	CurTime = Li2Double(pSPI->KernelTime) + Li2Double(pSPI->UserTime);
 			double	OldTime = Li2Double(pPDOld->KernelTime) + Li2Double(pPDOld->UserTime);
 			double	CpuTime = (CurTime - OldTime) / dbSystemTime;
-			CpuTime = CpuTime * 100.0 / (double)SystemBasicInfo.NumberProcessors; // + 0.5;
+			CpuTime = CpuTime * 100.0 / (double)SystemBasicInfo.NumberOfProcessors; // + 0.5;
 
 			pPerfData[Idx].CPUUsage = (ULONG)CpuTime;
 #else
