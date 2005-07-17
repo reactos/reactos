@@ -306,12 +306,12 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
     */
    Ke386DisableInterrupts();
 
-   HalEndSystemInterrupt (old_level, 0);
-
    if (old_level==PASSIVE_LEVEL && Trapframe->Cs != KERNEL_CS)
      {
+       HalEndSystemInterrupt (APC_LEVEL, 0);
+
        CurrentThread = KeGetCurrentThread();
-       if (CurrentThread!=NULL && CurrentThread->Alerted[1])
+       if (CurrentThread!=NULL && CurrentThread->ApcState.UserApcPending)
          {
            DPRINT("PID: %d, TID: %d CS %04x/%04x\n",
 	          ((PETHREAD)CurrentThread)->ThreadsProcess->UniqueProcessId,
@@ -325,8 +325,8 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
 	       CurrentThread->TrapFrame = &KernelTrapFrame;
 	     }
 
-	   Ke386EnableInterrupts();
-           KiDeliverApc(KernelMode, NULL, NULL);
+           Ke386EnableInterrupts();
+           KiDeliverApc(UserMode, NULL, NULL);
            Ke386DisableInterrupts();
 
 	   ASSERT(KeGetCurrentThread() == CurrentThread);
@@ -336,7 +336,13 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
 	       CurrentThread->TrapFrame = OldTrapFrame;
 	     }
 	 }
+       KeLowerIrql(PASSIVE_LEVEL);
      }
+   else
+     {
+       HalEndSystemInterrupt (old_level, 0);
+     }
+
 }
 
 static VOID
