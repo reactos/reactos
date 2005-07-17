@@ -34,20 +34,20 @@
  
 enum
 {
-	COPY_ASCII   = 0x001,   /* /A  */
-	COPY_DECRYPT     = 0x004,   /* /D  : Not Impleneted */
+	COPY_ASCII       = 0x001,   /* /A  */
+	COPY_DECRYPT     = 0x004,   /* /D  */
 	COPY_VERIFY      = 0x008,   /* /V  : Dummy, Never will be Impleneted */
 	COPY_SHORTNAME   = 0x010,   /* /N  : Not Impleneted */
 	COPY_NO_PROMPT   = 0x020,   /* /Y  */
 	COPY_PROMPT      = 0x040,   /* /-Y */
-	COPY_RESTART     = 0x080,   /* /Z  : Not Impleneted */
-	COPY_BINARY     = 0x100,    /* /B  */
+	COPY_RESTART     = 0x080,   /* /Z  */
+	COPY_BINARY      = 0x100,   /* /B  */
 };
  
 #define BUFF_SIZE 16384         /* 16k = max buffer size */
  
  
-int copy (LPTSTR source, LPTSTR dest, int append, DWORD lpdwFlags)
+int copy (TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], int append, DWORD lpdwFlags)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	FILETIME srctime;
@@ -59,6 +59,9 @@ int copy (LPTSTR source, LPTSTR dest, int append, DWORD lpdwFlags)
 	DWORD  dwWritten;
 	DWORD  i;
 	BOOL   bEof = FALSE;
+	TCHAR TrueDest[MAX_PATH];
+	TCHAR TempSrc[MAX_PATH];
+	TCHAR * FileName;
  
 #ifdef _DEBUG
 	DebugPrintf (_T("checking mode\n"));
@@ -84,9 +87,46 @@ int copy (LPTSTR source, LPTSTR dest, int append, DWORD lpdwFlags)
  
 #ifdef _DEBUG
 	DebugPrintf (_T("copy: flags has %s\n"),
-		*lpdwFlags & ASCII ? "ASCII" : "BINARY");
+		*lpdwFlags & COPY_ASCII ? "ASCII" : "BINARY");
 #endif
  
+	/* Check to see if /D or /Z are true, if so we need a middle
+	   man to copy the file too to allow us to use CopyFileEx later */
+	if(lpdwFlags & COPY_DECRYPT)
+	{
+		GetEnvironmentVariable(_T("TEMP"),TempSrc,MAX_PATH);
+		_tcscat(TempSrc,_T("\\"));
+		FileName = _tcsrchr(source,_T('\\'));
+		FileName++;
+		_tcscat(TempSrc,FileName);
+		/* This is needed to be on the end to prevent an error
+		   if the user did "copy /D /Z foo bar then it would be copied
+		   too %TEMP%\foo here and when %TEMP%\foo when it sets it up
+		   for COPY_RESTART, this would mean it is copying to itself
+		   which would error when it tried to open the handles for ReadFile
+		   and WriteFile */
+		_tcscat(TempSrc,_T(".decrypt"));
+		if(!CopyFileEx(source, TempSrc, NULL, NULL, FALSE, COPY_FILE_ALLOW_DECRYPTED_DESTINATION))
+		{
+		   nErrorLevel = 1;
+		   return 0;
+		}
+		_tcscpy(source, TempSrc);
+	}
+
+
+	if(lpdwFlags & COPY_RESTART)
+	{
+		_tcscpy(TrueDest, dest);
+		GetEnvironmentVariable(_T("TEMP"),dest,MAX_PATH);
+		_tcscat(dest,_T("\\"));
+		FileName = _tcsrchr(TrueDest,_T('\\'));
+		FileName++;
+		_tcscat(dest,FileName);
+	}
+
+
+
 	if (!IsExistingFile (dest))
 	{
 #ifdef _DEBUG
@@ -216,6 +256,25 @@ int copy (LPTSTR source, LPTSTR dest, int append, DWORD lpdwFlags)
 #endif
 	SetFileAttributes (dest, dwAttrib);
  
+	/* Now finish off the copy if needed with CopyFileEx */
+	if(lpdwFlags & COPY_RESTART)
+	{
+		if(!CopyFileEx(dest, TrueDest, NULL, NULL, FALSE, COPY_FILE_RESTARTABLE))
+		{
+		   nErrorLevel = 1;
+		   DeleteFile(dest);
+           return 0;			
+		}
+		/* Take care of file in the temp folder */
+		DeleteFile(dest);
+
+	}
+
+	if(lpdwFlags & COPY_DECRYPT)
+	   DeleteFile(TempSrc);
+
+
+
 	return 1;
 }
  
