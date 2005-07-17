@@ -129,31 +129,23 @@ INT GetRedirection (LPTSTR s, LPTSTR ifn, LPTSTR ofn, LPTSTR efn, LPINT lpnFlags
 				*ofn = _T('\0');
 			}
 
-      else if (*sp == _T('1'))
+                        else if (*sp == _T('1'))
 			{
-				/* error redirection */
+				/* output redirection */
 				sp++;
 
 				if (*sp == _T('>'))
 				{
 					/* output redirection */
-				*lpnFlags |= OUTPUT_REDIRECTION;
-				sp++;
+				        *lpnFlags |= OUTPUT_REDIRECTION;
+				        sp++;
 
-				/* append request ? */
-				if (*sp == _T('>'))
-				{
-					*lpnFlags |= OUTPUT_APPEND;
-					sp++;
-				}
-
-				while (_istspace (*sp))
-					sp++;
-
-				/* copy file name */
-				while (*sp && !IsRedirection (*sp) && !_istspace (*sp))
-					*ofn++ = *sp++;
-				*ofn = _T('\0');
+				        /* append request ? */
+				        if (*sp == _T('>'))
+				        {
+					        *lpnFlags |= OUTPUT_APPEND;
+					        sp++;
+				        }
 				}
 				else
 				{
@@ -168,8 +160,8 @@ INT GetRedirection (LPTSTR s, LPTSTR ifn, LPTSTR ofn, LPTSTR efn, LPINT lpnFlags
 
 				/* copy file name */
 				while (*sp && !IsRedirection (*sp) && !_istspace (*sp))
-					*efn++ = *sp++;
-				*efn = _T('\0');
+					*ofn++ = *sp++;
+				*ofn = _T('\0');
 			}
 
 			else if (*sp == _T('2'))
