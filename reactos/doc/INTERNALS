@@ -33,7 +33,7 @@ DPCs
 
 It is a design goal not to spend too much time in ISRs, for this reason
 ISRs should postpone most processing till it can run at a lower IRQL. The
-mechanism for this is a Delayed Procedure Call (DPC). When a DPC object is
+mechanism for this is a Deferred Procedure Call (DPC). When a DPC object is
 created, it is associated with a function. The DPC object can then be inserted
 in the DPC queue from an ISR. If the IRQL on return from the ISR is less than
 DISPATCH_LEVEL the DPC queue will be drained, otherwise this will happen when
