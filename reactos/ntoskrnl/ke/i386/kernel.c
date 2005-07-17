@@ -182,11 +182,13 @@ KePrepareForApplicationProcessorInit(ULONG Id)
    */
   memset(Pcr, 0, PAGE_SIZE);
   Pcr->Number = Id;
+  Pcr->SetMember = 1 << Id;
   Pcr->Tib.Self = &Pcr->Tib;
   Pcr->Self = (PKPCR)Pcr;
   Pcr->Prcb = &Pcr->PrcbData;
   Pcr->Irql = SYNCH_LEVEL;
 
+  Pcr->PrcbData.SetMember = 1 << Id;
   Pcr->PrcbData.MHz = BootPcr->PrcbData.MHz;
   Pcr->StallScaleFactor = BootPcr->StallScaleFactor;
 
@@ -284,6 +286,8 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    KPCR->IDT = (PUSHORT)KiIdt;
    KPCR->TSS = &KiBootTss;
    KPCR->Number = 0;
+   KPCR->SetMember = 1 << 0;
+   KPCR->PrcbData.SetMember = 1 << 0;
    KiPcrInitDone = 1;
    PcrsAllocated++;
 
