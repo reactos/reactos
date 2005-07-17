@@ -23,14 +23,21 @@
 </directory>
 
 
+<module name="win32err" type="objectlibrary">
+	<define name="__USE_W32API" />
+	<define name="_WIN32_IE">0x0501</define>
+	<define name="_WIN32_WINNT">0x0501</define>
+	<file>win32err.c</file>
+</module>
+
 <module name="chklib" type="win32cui" installbase="system32" installname="chklib.exe" warnings="true">
 	<linkerflag>--numeric-sort</linkerflag>
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x0501</define>
 	<define name="_WIN32_WINNT">0x0501</define>
 	<library>kernel32</library>
+	<library>win32err</library>
 	<file>chklib.c</file>
-	<file>win32err.c</file>
 	<file>chklib.rc</file>
 </module>
 
@@ -41,8 +48,8 @@
 	<define name="_WIN32_WINNT">0x0501</define>
 	<library>kernel32</library>
 	<library>user32</library>
+	<library>win32err</library>
 	<file>shutdown.c</file>
-	<file>win32err.c</file>
 	<file>shutdown.rc</file>
 </module>
 
@@ -62,7 +69,7 @@
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x0501</define>
 	<define name="_WIN32_WINNT">0x0501</define>
+	<library>win32err</library>
 	<file>ldd.c</file>
-	<file>win32err.c</file>
 	<file>ldd.rc</file>
 </module>
