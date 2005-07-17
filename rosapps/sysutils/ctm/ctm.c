@@ -32,7 +32,7 @@
 
 
 //#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows //headers
-#include <windows.h>
+//#include <windows.h>
 #include <stdlib.h>
 #include <malloc.h>
 #include <memory.h>
@@ -41,8 +41,8 @@
 #include <stdio.h>
 
 #include <ddk/ntddk.h>
-#include <epsapi.h>
-#include <ntos/zwtypes.h>
+#include <ndk/ntndk.h>
+#include <epsapi/epsapi.h>
 
 #include "ctm.h"
 #include "resource.h"
