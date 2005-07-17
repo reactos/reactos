@@ -138,6 +138,16 @@
 	<symbol>IoDeviceObjectType</symbol>
 	<symbol>@KfReleaseSpinLock@8</symbol>
 	<symbol>@KfAcquireSpinLock@4</symbol>
+	<symbol>KeEnterCriticalRegion@0</symbol>
+	<symbol>KeLeaveCriticalRegion@0</symbol>
+	<symbol>KeGetCurrentIrql@0</symbol>
+	<symbol>ExFreePoolWithTag@8</symbol>
+	<symbol>PsGetProcessWin32Process@4</symbol>
+	<symbol>ObFindHandleForObject@20</symbol>
+	<symbol>PsSetProcessWin32Process@8</symbol>
+	<symbol>PsGetThreadWin32Thread@4</symbol>
+	<symbol>PsEstablishWin32Callouts@4</symbol>
+	<symbol>PsSetThreadWin32Thread@8</symbol>
 </component>
 <component name="freetype.dll">
 	<symbol>FT_Init_FreeType</symbol>
