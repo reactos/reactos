@@ -199,6 +199,8 @@ private:
 	void GetRpcHeaderDependencies ( std::vector<std::string>& dependencies ) const;
 	std::string GetRpcServerHeaderFilename ( std::string basename ) const;
 	std::string GetRpcClientHeaderFilename ( std::string basename ) const;
+	std::string GetModuleCleanTarget ( const Module& module ) const;
+	void GetReferencedObjectLibraryModuleCleanTargets ( std::vector<std::string>& moduleNames ) const;
 public:
 	const Module& module;
 	string_list clean_files;

@@ -452,13 +452,35 @@ MingwModuleHandler::GetObjectFilename (
 	return obj_file;
 }
 
+string
+MingwModuleHandler::GetModuleCleanTarget ( const Module& module ) const
+{
+	return module.name + "_clean";
+}
+
+void
+MingwModuleHandler::GetReferencedObjectLibraryModuleCleanTargets ( vector<string>& moduleNames ) const
+{
+	for ( size_t i = 0; i < module.non_if_data.libraries.size (); i++ )
+ 	{
+ 		Library& library = *module.non_if_data.libraries[i];
+		if ( library.importedModule->type == ObjectLibrary )
+ 			moduleNames.push_back ( GetModuleCleanTarget ( *library.importedModule ) );
+	}
+}
+
 void
 MingwModuleHandler::GenerateCleanTarget () const
 {
-	if ( 0 == clean_files.size() )
-		return;
-	fprintf ( fMakefile, ".PHONY: %s_clean\n", module.name.c_str() );
-	fprintf ( fMakefile, "%s_clean:\n\t-@${rm}", module.name.c_str() );
+	fprintf ( fMakefile,
+	          ".PHONY: %s_clean\n",
+                  module.name.c_str() );
+	vector<string> referencedModuleNames;
+	GetReferencedObjectLibraryModuleCleanTargets ( referencedModuleNames );
+	fprintf ( fMakefile,
+	          "%s: %s\n\t-@${rm}",
+	          GetModuleCleanTarget ( module ).c_str(),
+	          v2s ( referencedModuleNames, 10 ).c_str () );
 	for ( size_t i = 0; i < clean_files.size(); i++ )
 	{
 		if ( 9==((i+1)%10) )
