@@ -3792,7 +3792,7 @@ GetMenuItemInfoW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 GetMenuItemRect(HWND hWnd,
@@ -3800,8 +3800,7 @@ GetMenuItemRect(HWND hWnd,
 		UINT uItem,
 		LPRECT lprcItem)
 {
-  UNIMPLEMENTED;
-  return(FALSE);
+  return NtUserGetMenuItemRect( hWnd, hMenu, uItem, lprcItem);
 }
 
 
