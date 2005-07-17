@@ -110,7 +110,7 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
 		    IN struct _KEXCEPTION_FRAME* ExceptionFrame);
 
 VOID
-KiIpiSendRequest(ULONG TargetSet,
+KiIpiSendRequest(KAFFINITY TargetSet,
 		 ULONG IpiRequest);
 
 VOID

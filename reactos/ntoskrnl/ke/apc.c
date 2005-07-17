@@ -315,9 +315,39 @@ KiInsertQueueApc(PKAPC Apc,
         /* Check the Thread State */
         if (Thread->State == Running) {
 
-            /* FIXME: Use IPI */
+#ifdef CONFIG_SMP
+            PKPRCB Prcb, CurrentPrcb;
+            LONG i;
+            KIRQL oldIrql;
+#endif
+
             DPRINT ("Requesting APC Interrupt for Running Thread \n");
+
+#ifdef CONFIG_SMP
+            oldIrql = KeRaiseIrqlToDpcLevel();
+            CurrentPrcb = KeGetCurrentPrcb();
+            if (CurrentPrcb->CurrentThread == Thread)
+            {
+               HalRequestSoftwareInterrupt(APC_LEVEL);
+            }
+            else
+            {
+               for (i = 0; i < KeNumberProcessors; i++)
+               {
+                  Prcb = ((PKPCR)(KPCR_BASE + i * PAGE_SIZE))->Prcb;
+                  if (Prcb->CurrentThread == Thread)
+                  {
+                     ASSERT (CurrentPrcb != Prcb);
+                     KiIpiSendRequest(Prcb->SetMember, IPI_REQUEST_APC);
+                     break;
+                  }
+               }
+               ASSERT (i < KeNumberProcessors);
+            }
+            KeLowerIrql(oldIrql);
+#else
             HalRequestSoftwareInterrupt(APC_LEVEL);
+#endif
 
         } else if ((Thread->State == Waiting) && (Thread->WaitIrql == PASSIVE_LEVEL) &&
                    ((Apc->NormalRoutine == NULL) ||
