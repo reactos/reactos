@@ -241,7 +241,7 @@ CONFIGRET WINAPI CM_Get_Child(
     PDEVINST pdnDevInst, DEVINST dnDevInst, ULONG ulFlags)
 {
     TRACE("%p %p %lx\n", pdnDevInst, dnDevInst, ulFlags);
-    return CM_Get_Sibling_Ex(pdnDevInst, dnDevInst, ulFlags, NULL);
+    return CM_Get_Child_Ex(pdnDevInst, dnDevInst, ulFlags, NULL);
 }
 
 
@@ -252,7 +252,7 @@ CONFIGRET WINAPI CM_Get_Child_Ex(
     PDEVINST pdnDevInst, DEVINST dnDevInst, ULONG ulFlags, HMACHINE hMachine)
 {
     FIXME("%p %lx %lx %lx\n", pdnDevInst, dnDevInst, ulFlags, hMachine);
-    return CR_SUCCESS;
+    return CR_FAILURE;
 }
 
 
@@ -290,7 +290,7 @@ CONFIGRET WINAPI CM_Get_Device_ID_ExA(
     FIXME("%lx %p %ld %ld %lx\n",
           dnDevInst, Buffer, BufferLen, ulFlags, hMachine);
 
-    return CR_SUCCESS;
+    return CR_FAILURE;
 }
 
 
@@ -525,7 +525,7 @@ CONFIGRET WINAPI CM_Get_Parent(
     PDEVINST pdnDevInst, DEVINST dnDevInst, ULONG ulFlags)
 {
     TRACE("%p %p %lx\n", pdnDevInst, dnDevInst, ulFlags);
-    return CM_Get_Sibling_Ex(pdnDevInst, dnDevInst, ulFlags, NULL);
+    return CM_Get_Parent_Ex(pdnDevInst, dnDevInst, ulFlags, NULL);
 }
 
 
@@ -536,7 +536,7 @@ CONFIGRET WINAPI CM_Get_Parent_Ex(
     PDEVINST pdnDevInst, DEVINST dnDevInst, ULONG ulFlags, HMACHINE hMachine)
 {
     FIXME("%p %lx %lx %lx\n", pdnDevInst, dnDevInst, ulFlags, hMachine);
-    return CR_SUCCESS;
+    return CR_FAILURE;
 }
 
 
@@ -558,7 +558,7 @@ CONFIGRET WINAPI CM_Get_Sibling_Ex(
     PDEVINST pdnDevInst, DEVINST dnDevInst, ULONG ulFlags, HMACHINE hMachine)
 {
     FIXME("%p %lx %lx %lx\n", pdnDevInst, dnDevInst, ulFlags, hMachine);
-    return CR_SUCCESS;
+    return CR_FAILURE;
 }
 
 
