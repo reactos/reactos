@@ -31,6 +31,7 @@
 #include <ndk/ntndk.h>
 #include <ndk/sysguid.h>
 #include <ddk/wdmguid.h>
+#include <ddk/cfgmgr32.h>
 
 #include <rpc.h>
 #include <rpcdce.h>
@@ -107,22 +108,71 @@ void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
 }
 
 
-//CONFIRET PNP_GetVersion(RPC_BINDING_HANDLE BindingHandle,
-//                        WORD *Version)
-unsigned long PNP_GetVersion(handle_t BindingHandle,
-                             unsigned short *Version)
+CONFIGRET
+PNP_GetVersion(handle_t BindingHandle,
+               unsigned short *Version)
 {
-  *Version = 0x0400;
-  return 0; /* CR_SUCCESS */
+    *Version = 0x0400;
+    return CR_SUCCESS;
 }
 
 
-unsigned long PNP_GetGlobalState(handle_t BindingHandle,
-                                 unsigned long *State,
-                                 unsigned long Flags)
+CONFIGRET
+PNP_GetGlobalState(handle_t BindingHandle,
+                   unsigned long *State,
+                   unsigned long Flags)
 {
-    *State = 5;
-    return 0; /* CR_SUCCESS */
+    *State = CM_GLOBAL_STATE_CAN_DO_UI | CM_GLOBAL_STATE_SERVICES_AVAILABLE;
+    return CR_SUCCESS;
+}
+
+
+CONFIGRET
+PNP_ValidateDeviceInstance(handle_t BindingHandle,
+                           wchar_t *DeviceInstance,
+                           unsigned long Flags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+    HKEY hEnumKey = NULL;
+    HKEY hDeviceKey = NULL;
+
+    DPRINT("PNP_ValidateDeviceInstance(%S %lx) called\n",
+           DeviceInstance, Flags);
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      L"System\\CurrentControlSet\\Enum",
+                      0,
+                      KEY_ALL_ACCESS,
+                      &hEnumKey))
+    {
+        DPRINT("Could not open the Enum Key!\n");
+        ret = CR_FAILURE;
+        goto Done;
+    }
+
+    if (RegOpenKeyExW(hEnumKey,
+                      DeviceInstance,
+                      0,
+                      KEY_READ,
+                      &hDeviceKey))
+    {
+        DPRINT("Could not open the Device Key!\n");
+        ret = CR_NO_SUCH_DEVNODE;
+        goto Done;
+    }
+
+    /* FIXME: add more tests */
+
+Done:
+    if (hDeviceKey != NULL)
+        RegCloseKey(hDeviceKey);
+
+    if (hEnumKey != NULL)
+        RegCloseKey(hEnumKey);
+
+    DPRINT("PNP_ValidateDeviceInstance() done (returns %lx)\n", ret);
+
+    return ret;
 }
 
 

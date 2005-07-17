@@ -71,10 +71,10 @@
 @ stub CM_Get_DevNode_Registry_Property_ExW
 @ stub CM_Get_DevNode_Status
 @ stub CM_Get_DevNode_Status_Ex
-@ stub CM_Get_Device_IDA
-@ stub CM_Get_Device_IDW
-@ stub CM_Get_Device_ID_ExA
-@ stub CM_Get_Device_ID_ExW
+@ stdcall CM_Get_Device_IDA(long str long long)
+@ stdcall CM_Get_Device_IDW(long wstr long long)
+@ stdcall CM_Get_Device_ID_ExA(long str long long long)
+@ stdcall CM_Get_Device_ID_ExW(long wstr long long long)
 @ stdcall CM_Get_Device_ID_ListA(str str long long)
 @ stdcall CM_Get_Device_ID_ListW(wstr wstr long long)
 @ stdcall CM_Get_Device_ID_List_ExA(str str long long long)
@@ -83,8 +83,8 @@
 @ stdcall CM_Get_Device_ID_List_SizeW(ptr wstr long)
 @ stdcall CM_Get_Device_ID_List_Size_ExA(ptr str long long)
 @ stdcall CM_Get_Device_ID_List_Size_ExW(ptr wstr long long)
-@ stub CM_Get_Device_ID_Size
-@ stub CM_Get_Device_ID_Size_Ex
+@ stdcall CM_Get_Device_ID_Size(ptr long long)
+@ stdcall CM_Get_Device_ID_Size_Ex(ptr long long long)
 @ stub CM_Get_Device_Interface_AliasA
 @ stub CM_Get_Device_Interface_AliasW
 @ stub CM_Get_Device_Interface_Alias_ExA
@@ -128,6 +128,7 @@
 @ stub CM_Intersect_Range_List
 @ stub CM_Invert_Range_List
 @ stub CM_Is_Dock_Station_Present
+@ stub CM_Is_Dock_Station_Present_Ex
 @ stdcall CM_Locate_DevNodeA(ptr str long)
 @ stdcall CM_Locate_DevNodeW(ptr wstr long)
 @ stdcall CM_Locate_DevNode_ExA(ptr str long long)

@@ -23,7 +23,9 @@ RPC_STATUS PnpBindRpc(LPCWSTR pszMachine,
                       RPC_BINDING_HANDLE* BindingHandle);
 RPC_STATUS PnpUnbindRpc(RPC_BINDING_HANDLE *BindingHandle);
 
-RPC_STATUS PnpGetLocalBindingHandle(RPC_BINDING_HANDLE *BindingHandle);
+BOOL
+PnpGetLocalHandles(RPC_BINDING_HANDLE *BindingHandle,
+                   HSTRING_TABLE *StringTable);
 RPC_STATUS PnpUnbindLocalHandles(VOID);
 
 #endif /* __RPC_PRIVATE_H */

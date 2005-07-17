@@ -21,7 +21,7 @@ interface pnp
                                [out] unsigned long *State,
                                [in] unsigned long Flags);
 
-//  CONFIGRET PNP_GetRootDeviceInstance(handle_t BindingHandle,
-//                                      [out, string, size_is(Length)] wchar_t *DeviceInstance,
-//                                      [in] DWORD Length);
+  CONFIGRET PNP_ValidateDeviceInstance(handle_t BindingHandle,
+                                       [in, string] wchar_t *DeviceInstance,
+                                       [in] DWORD Flags);
 }

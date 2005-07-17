@@ -243,9 +243,9 @@ typedef struct DevPrivate_Des_s {
 } DEVPRIVATE_DES, *PDEVPRIVATE_DES;
 
 typedef struct DevPrivate_Range_s {
-	DWORD  PR_Data1;
-	DWORD  PR_Data2;
-	DWORD  PR_Data3;
+  DWORD  PR_Data1;
+  DWORD  PR_Data2;
+  DWORD  PR_Data3;
 } DEVPRIVATE_RANGE, *PDEVPRIVATE_RANGE;
 
 #define PType_Range sizeof(DEVPRIVATE_RANGE)
@@ -293,16 +293,16 @@ typedef struct DMA_Resource_s {
 } DMA_RESOURCE, *PDMA_RESOURCE;
 
 /* IO_DES.Type constants and masks */
-#define fIOD_PortType   									0x1
-#define fIOD_Memory     									0x0
-#define fIOD_IO         									0x1
-#define fIOD_DECODE     									0x00fc
-#define fIOD_10_BIT_DECODE    						0x0004
-#define fIOD_12_BIT_DECODE    						0x0008
-#define fIOD_16_BIT_DECODE    						0x0010
-#define fIOD_POSITIVE_DECODE  						0x0020
-#define fIOD_PASSIVE_DECODE   						0x0040
-#define fIOD_WINDOW_DECODE    						0x0080
+#define fIOD_PortType                     0x1
+#define fIOD_Memory                       0x0
+#define fIOD_IO                           0x1
+#define fIOD_DECODE                       0x00fc
+#define fIOD_10_BIT_DECODE                0x0004
+#define fIOD_12_BIT_DECODE                0x0008
+#define fIOD_16_BIT_DECODE                0x0010
+#define fIOD_POSITIVE_DECODE              0x0020
+#define fIOD_PASSIVE_DECODE               0x0040
+#define fIOD_WINDOW_DECODE                0x0080
 
 typedef struct IO_Des_s {
   DWORD  IOD_Count;
@@ -313,10 +313,10 @@ typedef struct IO_Des_s {
 } IO_DES, *PIO_DES;
 
 /* IO_RANGE.IOR_Alias constants */
-#define IO_ALIAS_10_BIT_DECODE      			0x00000004
-#define IO_ALIAS_12_BIT_DECODE      			0x00000010
-#define IO_ALIAS_16_BIT_DECODE      			0x00000000
-#define IO_ALIAS_POSITIVE_DECODE    			0x000000FF
+#define IO_ALIAS_10_BIT_DECODE            0x00000004
+#define IO_ALIAS_12_BIT_DECODE            0x00000010
+#define IO_ALIAS_16_BIT_DECODE            0x00000000
+#define IO_ALIAS_POSITIVE_DECODE          0x000000FF
 
 typedef struct IO_Range_s {
   DWORDLONG  IOR_Align;
@@ -335,16 +335,16 @@ typedef struct IO_Resource_s {
 } IO_RESOURCE, *PIO_RESOURCE;
 
 /* IRQ_DES.IRQD_flags constants */
-#define mIRQD_Share        								0x1
-#define fIRQD_Exclusive    								0x0
-#define fIRQD_Share        								0x1
+#define mIRQD_Share                       0x1
+#define fIRQD_Exclusive                   0x0
+#define fIRQD_Share                       0x1
 
-#define fIRQD_Share_Bit    								0
-#define fIRQD_Level_Bit    							  1
+#define fIRQD_Share_Bit                   0
+#define fIRQD_Level_Bit                   1
 
-#define mIRQD_Edge_Level   								0x2
-#define fIRQD_Level        								0x0
-#define fIRQD_Edge         								0x2
+#define mIRQD_Edge_Level                  0x2
+#define fIRQD_Level                       0x0
+#define fIRQD_Edge                        0x2
 
 typedef struct IRQ_Des_32_s {
   DWORD  IRQD_Count;
@@ -469,51 +469,51 @@ typedef struct PcCard_Des_s {
   DWORD  PCD_MemoryCardBase2;
 } PCCARD_DES, *PPCCARD_DES;
 
-#define mPCD_IO_8_16        							0x1
-#define fPCD_IO_8           							0x0
-#define fPCD_IO_16          							0x1
-#define mPCD_MEM_8_16       							0x2
-#define fPCD_MEM_8          							0x0
-#define fPCD_MEM_16         							0x2
-#define mPCD_MEM_A_C        							0xC
-#define fPCD_MEM1_A         							0x4
-#define fPCD_MEM2_A         							0x8
-#define fPCD_IO_ZW_8        							0x10
-#define fPCD_IO_SRC_16      							0x20
-#define fPCD_IO_WS_16       							0x40
-#define mPCD_MEM_WS         							0x300
-#define fPCD_MEM_WS_ONE     							0x100
-#define fPCD_MEM_WS_TWO     							0x200
-#define fPCD_MEM_WS_THREE   							0x300
+#define mPCD_IO_8_16                      0x1
+#define fPCD_IO_8                         0x0
+#define fPCD_IO_16                        0x1
+#define mPCD_MEM_8_16                     0x2
+#define fPCD_MEM_8                        0x0
+#define fPCD_MEM_16                       0x2
+#define mPCD_MEM_A_C                      0xC
+#define fPCD_MEM1_A                       0x4
+#define fPCD_MEM2_A                       0x8
+#define fPCD_IO_ZW_8                      0x10
+#define fPCD_IO_SRC_16                    0x20
+#define fPCD_IO_WS_16                     0x40
+#define mPCD_MEM_WS                       0x300
+#define fPCD_MEM_WS_ONE                   0x100
+#define fPCD_MEM_WS_TWO                   0x200
+#define fPCD_MEM_WS_THREE                 0x300
 
-#define fPCD_MEM_A          							0x4
+#define fPCD_MEM_A                        0x4
 
-#define fPCD_ATTRIBUTES_PER_WINDOW 				0x8000
+#define fPCD_ATTRIBUTES_PER_WINDOW        0x8000
 
-#define fPCD_IO1_16         							0x00010000
-#define fPCD_IO1_ZW_8       							0x00020000
-#define fPCD_IO1_SRC_16     							0x00040000
-#define fPCD_IO1_WS_16      							0x00080000
+#define fPCD_IO1_16                       0x00010000
+#define fPCD_IO1_ZW_8                     0x00020000
+#define fPCD_IO1_SRC_16                   0x00040000
+#define fPCD_IO1_WS_16                    0x00080000
 
-#define fPCD_IO2_16         							0x00100000
-#define fPCD_IO2_ZW_8       							0x00200000
-#define fPCD_IO2_SRC_16     							0x00400000
-#define fPCD_IO2_WS_16      							0x00800000
+#define fPCD_IO2_16                       0x00100000
+#define fPCD_IO2_ZW_8                     0x00200000
+#define fPCD_IO2_SRC_16                   0x00400000
+#define fPCD_IO2_WS_16                    0x00800000
 
-#define mPCD_MEM1_WS        							0x03000000
-#define fPCD_MEM1_WS_ONE    							0x01000000
-#define fPCD_MEM1_WS_TWO    							0x02000000
-#define fPCD_MEM1_WS_THREE  							0x03000000
-#define fPCD_MEM1_16        							0x04000000
+#define mPCD_MEM1_WS                      0x03000000
+#define fPCD_MEM1_WS_ONE                  0x01000000
+#define fPCD_MEM1_WS_TWO                  0x02000000
+#define fPCD_MEM1_WS_THREE                0x03000000
+#define fPCD_MEM1_16                      0x04000000
 
-#define mPCD_MEM2_WS        							0x30000000
-#define fPCD_MEM2_WS_ONE    							0x10000000
-#define fPCD_MEM2_WS_TWO    							0x20000000
-#define fPCD_MEM2_WS_THREE  							0x30000000
-#define fPCD_MEM2_16        							0x40000000
+#define mPCD_MEM2_WS                      0x30000000
+#define fPCD_MEM2_WS_ONE                  0x10000000
+#define fPCD_MEM2_WS_TWO                  0x20000000
+#define fPCD_MEM2_WS_THREE                0x30000000
+#define fPCD_MEM2_16                      0x40000000
 
-#define PCD_MAX_MEMORY   									2
-#define PCD_MAX_IO       									2
+#define PCD_MAX_MEMORY                    2
+#define PCD_MAX_IO                        2
 
 typedef struct PcCard_Resource_s {
   PCCARD_DES  PcCard_Header;
@@ -521,16 +521,16 @@ typedef struct PcCard_Resource_s {
 
 
 /* CONFLICT_DETAILS.CD.ulMask constants */
-#define CM_CDMASK_DEVINST      						0x00000001
-#define CM_CDMASK_RESDES       						0x00000002
-#define CM_CDMASK_FLAGS        						0x00000004
-#define CM_CDMASK_DESCRIPTION  						0x00000008
-#define CM_CDMASK_VALID        					  0x0000000F
+#define CM_CDMASK_DEVINST                 0x00000001
+#define CM_CDMASK_RESDES                  0x00000002
+#define CM_CDMASK_FLAGS                   0x00000004
+#define CM_CDMASK_DESCRIPTION             0x00000008
+#define CM_CDMASK_VALID                   0x0000000F
 
 /* CONFLICT_DETAILS.CD.ulFlags constants */
-#define CM_CDFLAGS_DRIVER      						0x00000001
-#define CM_CDFLAGS_ROOT_OWNED  						0x00000002
-#define CM_CDFLAGS_RESERVED    						0x00000004
+#define CM_CDFLAGS_DRIVER                 0x00000001
+#define CM_CDFLAGS_ROOT_OWNED             0x00000002
+#define CM_CDFLAGS_RESERVED               0x00000004
 
 typedef struct _CONFLICT_DETAILS_A {
   ULONG  CD_ulSize;
@@ -561,9 +561,9 @@ typedef PCONFLICT_DETAILS_A PCONFLICT_DETAILS;
 
 
 /* CM_Add_Empty_Log_Conf.ulFlags constants */
-#define PRIORITY_EQUAL_FIRST  						0x00000008
-#define PRIORITY_EQUAL_LAST   						0x00000000
-#define PRIORITY_BIT          						0x00000008
+#define PRIORITY_EQUAL_FIRST              0x00000008
+#define PRIORITY_EQUAL_LAST               0x00000000
+#define PRIORITY_BIT                      0x00000008
 
 CMAPI
 CONFIGRET
