@@ -436,6 +436,11 @@ SOURCE=".\explorer-pt.rc"
 # End Source File
 # Begin Source File
 
+SOURCE=".\explorer-ro.rc"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
 SOURCE=".\explorer-ru.rc"
 # PROP Exclude_From_Build 1
 # End Source File
