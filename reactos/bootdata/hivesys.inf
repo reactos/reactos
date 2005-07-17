@@ -368,6 +368,9 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Posix",0x000
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Required",0x00010000,"Debug","Windows"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Windows",0x00020000,"%SystemRoot%\system32\csrss.exe"
 
+; PNP Root device
+HKLM,"SYSTEM\CurrentControlSet\Enum\HTREE\ROOT\0","",0x00000000,""
+
 ; 3Com 3c905 Driver
 HKLM,"SYSTEM\CurrentControlSet\Services\3c90x","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\3c90x","Group",0x00000000,"NDIS"
