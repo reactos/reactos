@@ -1269,14 +1269,15 @@ User32DefWindowProc(HWND hWnd,
             if (!lParam)
                 return 0;
             Style = GetWindowLongW(hWnd, GWL_STYLE);
-            if (!(Style & WS_POPUP))
-                return 0;
+//            if (!(Style & WS_POPUP))
+//                return 0;
             if ((Style & WS_VISIBLE) && wParam)
                 return 0;
             if (!(Style & WS_VISIBLE) && !wParam)
                 return 0;
             if (!GetWindow(hWnd, GW_OWNER))
                 return 0;
+            NtUserCallTwoParam((DWORD) hWnd, (DWORD) wParam, TWOPARAM_ROUTINE_ROS_SHOWWINDOW);
             ShowWindow(hWnd, wParam ? SW_SHOWNA : SW_HIDE);
             break;
         }

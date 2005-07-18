@@ -51,17 +51,6 @@ AllowSetForegroundWindow(DWORD dwProcessId)
 /*
  * @unimplemented
  */
-UINT STDCALL
-ArrangeIconicWindows(HWND hWnd)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
 HDWP STDCALL
 BeginDeferWindowPos(int nNumWindows)
 {
@@ -1084,15 +1073,15 @@ AnimateWindow(HWND hwnd,
 
   BOOL visible;
   visible = IsWindowVisible(hwnd);
-//  if(!IsWindow(hwnd) ||
-//    (visible && !(dwFlags & AW_HIDE)) ||
-//    (!visible && (dwFlags & AW_HIDE)))
+  if(!IsWindow(hwnd) ||
+    (visible && !(dwFlags & AW_HIDE)) ||
+    (!visible && (dwFlags & AW_HIDE)))
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
 
-//  ShowWindow(hwnd, (dwFlags & AW_HIDE) ? SW_HIDE : ((dwFlags & AW_ACTIVATE) ? SW_SHOW : SW_SHOWNA));
+  ShowWindow(hwnd, (dwFlags & AW_HIDE) ? SW_HIDE : ((dwFlags & AW_ACTIVATE) ? SW_SHOW : SW_SHOWNA));
 
   return TRUE;
 }
@@ -1273,14 +1262,13 @@ SetWindowTextW(HWND hWnd,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 ShowOwnedPopups(HWND hWnd,
 		BOOL fShow)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return (BOOL)NtUserCallTwoParam((DWORD)hWnd, fShow, TWOPARAM_ROUTINE_SHOWOWNEDPOPUPS);
 }
 
 
