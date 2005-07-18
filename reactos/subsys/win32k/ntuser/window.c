@@ -4314,4 +4314,65 @@ IntRemoveProcessWndProcHandles(HANDLE ProcessID)
 	return TRUE;
 }
 
+#define WIN_NEEDS_SHOW_OWNEDPOPUP (0x00000040)
+
+BOOL
+FASTCALL
+IntShowOwnedPopups( HWND owner, BOOL fShow )
+{
+  int count = 0;
+  PWINDOW_OBJECT Window, pWnd;
+  HWND *win_array;
+
+  if(!(Window = IntGetWindowObject(owner)))
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return FALSE;
+  }
+
+  win_array = IntWinListChildren( Window);
+  IntReleaseWindowObject(Window);
+
+  if (!win_array) return TRUE;
+
+  while (win_array[count]) count++;
+  while (--count >= 0)
+    {
+        if (NtUserGetWindow( win_array[count], GW_OWNER ) != owner) continue;
+        if (!(pWnd = IntGetWindowObject( win_array[count] ))) continue;
+//        if (pWnd == WND_OTHER_PROCESS) continue;
+
+        if (fShow)
+        {
+            if (pWnd->Flags & WIN_NEEDS_SHOW_OWNEDPOPUP)
+             {
+                IntReleaseWindowObject( pWnd );
+                /* In Windows, ShowOwnedPopups(TRUE) generates
+                 * WM_SHOWWINDOW messages with SW_PARENTOPENING,
+                 * regardless of the state of the owner
+                 */
+                IntSendMessage(win_array[count], WM_SHOWWINDOW, SW_SHOWNORMAL, SW_PARENTOPENING);
+                continue;
+            }
+        }
+        else
+        {
+            if (pWnd->Style & WS_VISIBLE)
+            {
+                IntReleaseWindowObject( pWnd );
+                /* In Windows, ShowOwnedPopups(FALSE) generates
+                 * WM_SHOWWINDOW messages with SW_PARENTCLOSING,
+                 * regardless of the state of the owner
+                 */
+                IntSendMessage(win_array[count], WM_SHOWWINDOW, SW_HIDE, SW_PARENTCLOSING);
+                continue;
+            }
+        }
+        IntReleaseWindowObject( pWnd );
+    }
+    ExFreePool( win_array );
+    return TRUE;
+}
+
+
 /* EOF */

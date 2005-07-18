@@ -11,7 +11,7 @@
 
 #include <w32k.h>
 
-#define NDEBUG
+#define DEBUG
 #include <debug.h>
 
 /* registered Logon process */
@@ -453,9 +453,32 @@ NtUserCallTwoParam(
 	  return 0;
 
     case TWOPARAM_ROUTINE_SHOWOWNEDPOPUPS:
-	  UNIMPLEMENTED
-	  return 0;
+	  return (DWORD)IntShowOwnedPopups((HWND) Param1, (BOOL) Param2);
 
+    case TWOPARAM_ROUTINE_ROS_SHOWWINDOW:
+    {
+#define WIN_NEEDS_SHOW_OWNEDPOPUP (0x00000040)
+          PWINDOW_OBJECT Window = IntGetWindowObject((HWND)Param1);
+	  DPRINT1("ROS_SHOWWINDOW\n");
+          if (Window == 0)
+           {
+                 SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+                 return FALSE;
+           }
+          if (Param2)
+           {
+               if (!(Window->Flags & WIN_NEEDS_SHOW_OWNEDPOPUP))
+                {
+                    IntReleaseWindowObject(Window);
+                    return TRUE;
+                }
+                Window->Flags &= ~WIN_NEEDS_SHOW_OWNEDPOPUP;
+           }
+          else Window->Flags |= WIN_NEEDS_SHOW_OWNEDPOPUP;
+          DPRINT1("ROS_SHOWWINDOW ---> 0x%x\n",Window->Flags);
+          IntReleaseWindowObject(Window);
+          return TRUE;
+    }
     case TWOPARAM_ROUTINE_SWITCHTOTHISWINDOW:
 	  UNIMPLEMENTED
 	  return 0;
@@ -570,6 +593,8 @@ NtUserCallTwoParam(
 
         ExFreePool(Buffer);
       }
+
+
       return Ret;
     }
 
@@ -619,7 +644,6 @@ NtUserCallTwoParam(
 
         ExFreePool(Buffer.Pointer);
       }
-
       return Ret;
     }
 
@@ -629,6 +653,7 @@ NtUserCallTwoParam(
   SetLastWin32Error(ERROR_INVALID_PARAMETER);
   return 0;
 }
+
 
 /*
  * @unimplemented
@@ -653,7 +678,7 @@ NtUserCallHwndLock(
    switch (Routine)
    {
       case HWNDLOCK_ROUTINE_ARRANGEICONICWINDOWS:
-         /* FIXME */
+         WinPosArrangeIconicWindows(Window);
          break;
 
       case HWNDLOCK_ROUTINE_DRAWMENUBAR:

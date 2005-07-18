@@ -165,6 +165,47 @@ WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
   IntReleaseWindowObject(Wnd);
 }
 
+
+UINT
+FASTCALL
+WinPosArrangeIconicWindows(PWINDOW_OBJECT parent)
+{
+    RECT rectParent;
+    HWND hwndChild;
+    INT i, x, y, xspacing, yspacing;
+    HWND *List = IntWinListChildren(parent);
+    
+    IntGetClientRect( parent, &rectParent );
+    x = rectParent.left;
+    y = rectParent.bottom;
+    
+    xspacing = NtUserGetSystemMetrics(SM_CXMINSPACING);
+    yspacing = NtUserGetSystemMetrics(SM_CYMINSPACING);
+
+    DPRINT("X:%d Y:%d XS:%d YS:%d\n",x,y,xspacing,yspacing);
+
+    for( i = 0; List[i]; i++)
+    {
+       hwndChild = List[i];
+        
+      if((NtUserGetWindowLong( hwndChild, GWL_STYLE, FALSE) & WS_MINIMIZE) != 0 )
+      {
+         WinPosSetWindowPos( hwndChild, 0, x + NtUserGetSystemMetrics(SM_CXBORDER),
+                      y - yspacing - NtUserGetSystemMetrics(SM_CYBORDER)
+                     , 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE );
+         if (x <= rectParent.right - xspacing) x += xspacing;
+         else
+         {
+            x = rectParent.left;
+            y -= yspacing;
+         }
+      }
+    }
+    ExFreePool(List);
+    return yspacing;
+}
+
+
 VOID STATIC FASTCALL
 WinPosFindIconPos(PWINDOW_OBJECT Window, POINT *Pos)
 {
@@ -1210,8 +1251,9 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
 	    ObmDereferenceObject(Window);
 	    return(FALSE);
 	  }
-	Swp |= SWP_HIDEWINDOW | SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE |
-	  SWP_NOZORDER;
+	Swp |= SWP_HIDEWINDOW | SWP_NOSIZE | SWP_NOMOVE;
+	if (Window->Self != NtUserGetActiveWindow())
+	    Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
 	break;
       }
 

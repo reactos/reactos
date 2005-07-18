@@ -14,6 +14,8 @@
     NtGdiPtInRegion((WndObject)->WindowRegion, (INT)((x) - (WndObject)->WindowRect.left), \
                     (INT)((y) - (WndObject)->WindowRect.top))))
 
+UINT
+FASTCALL WinPosArrangeIconicWindows(PWINDOW_OBJECT parent);
 BOOL FASTCALL
 IntGetClientOrigin(HWND hWnd, LPPOINT Point);
 LRESULT FASTCALL
