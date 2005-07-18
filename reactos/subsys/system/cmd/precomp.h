@@ -4,6 +4,8 @@
 #include <shellapi.h>
 
 #include <tchar.h>
+#include <direct.h>
+
 #include <ctype.h>
 #include <string.h>
 #include <stdio.h>
@@ -15,3 +17,4 @@
 #include "cmd.h"
 #include "config.h"
 #include "batch.h"
+

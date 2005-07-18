@@ -148,6 +148,46 @@ VOID FreeLastPath (VOID)
 		free (lpLastPath);
 }
 
+/* help functions for getting current path from driver 
+   without changing driver. Return code 0 = ok, 1 = fail.
+   INT GetRootPath("C:",outbuffer,chater size of outbuffer);
+   the frist param can have any size, if the the two frist
+   letter are not a drive with : it will get Currentpath on
+   current drive exacly as GetCurrentDirectory does.
+   */
+
+INT GetRootPath(TCHAR *InPath,TCHAR *OutPath,INT size)
+{
+  INT retcode = 1;
+  INT t;
+
+  for (t=0;t<32;t++) 
+  {    
+    if (_tgetdcwd(t,OutPath,size) != NULL) 
+    {
+      if (_tcsncicmp(InPath,OutPath,2))
+      {
+       retcode = 0;      
+       return retcode;
+      }
+    }    
+  }
+   
+  /* fail to getting path devic did not exists */
+  if (_tcslen(InPath)>1)
+  {
+    if (InPath[1]==_T(':'))
+       return 1;  
+  }
+
+  retcode = GetCurrentDirectory(size,OutPath);     
+  if (retcode==0) 
+      return 1;
+
+  return 0;
+}
+  
+
 /*
  * CD / CHDIR
  *

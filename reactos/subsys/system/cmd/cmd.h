@@ -291,6 +291,7 @@ INT CommandMemory (LPTSTR, LPTSTR);
 
 
 /* Prototypes for MISC.C */
+INT GetRootPath(TCHAR *InPath,TCHAR *OutPath,INT size);
 TCHAR  cgetchar (VOID);
 BOOL   CheckCtrlBreak (INT);
 LPTSTR *split (LPTSTR, LPINT, BOOL);
