@@ -25,8 +25,8 @@ EXPORTS
 ;CMP_UnregisterNotification
 ;CMP_WaitNoPendingInstallEvents
 ;CMP_WaitServices
-;CM_Add_Empty_Log_Conf
-;CM_Add_Empty_Log_Conf_Ex
+;CM_Add_Empty_Log_Conf@16=SETUPAPI.CM_Add_Empty_Log_Conf
+;CM_Add_Empty_Log_Conf_Ex@20=SETUPAPI.CM_Add_Empty_Log_Conf_Ex
 ;CM_Add_IDA
 ;CM_Add_IDW
 ;CM_Add_ID_ExA
@@ -54,8 +54,8 @@ CM_Disconnect_Machine@4=SETUPAPI.CM_Disconnect_Machine
 ;CM_Dup_Range_List
 ;CM_Enable_DevNode
 ;CM_Enable_DevNode_Ex
-;CM_Enumerate_Classes
-;CM_Enumerate_Classes_Ex
+CM_Enumerate_Classes@12=SETUPAPI.CM_Enumerate_Classes
+CM_Enumerate_Classes_Ex@16=SETUPAPI.CM_Enumerate_Classes_Ex
 ;CM_Enumerate_EnumeratorsA
 ;CM_Enumerate_EnumeratorsW
 ;CM_Enumerate_Enumerators_ExA
@@ -81,10 +81,10 @@ CM_Get_Child_Ex@16=SETUPAPI.CM_Get_ChildEx
 ;CM_Get_Class_Name_ExW
 ;CM_Get_Depth
 ;CM_Get_Depth_Ex
-;CM_Get_DevNode_Registry_PropertyA
-;CM_Get_DevNode_Registry_PropertyW
-;CM_Get_DevNode_Registry_Property_ExA
-;CM_Get_DevNode_Registry_Property_ExW
+CM_Get_DevNode_Registry_PropertyA@24=SETUPAPI.CM_Get_DevNode_Registry_PropertyA
+CM_Get_DevNode_Registry_PropertyW@24=SETUPAPI.CM_Get_DevNode_Registry_PropertyW
+CM_Get_DevNode_Registry_Property_ExA@28=SETUPAPI.CM_Get_DevNode_Registry_Property_ExA
+CM_Get_DevNode_Registry_Property_ExW@28=SETUPAPI.CM_Get_DevNode_Registry_Property_ExW
 ;CM_Get_DevNode_Status
 ;CM_Get_DevNode_Status_Ex
 ;CM_Get_Device_IDA
