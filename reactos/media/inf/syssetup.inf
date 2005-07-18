@@ -14,5 +14,7 @@ ClassGUID={00000000-0000-0000-0000-000000000000}
 [DeviceInfsToInstall]
 ; MS uses netnovel.inf as class-installer INF for NICs
 ; we use a separate one to keep things clean
+mouse.inf
 NET_NIC.inf
+ports.inf
 scsi.inf
