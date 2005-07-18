@@ -567,9 +567,9 @@ KiDeliverApc(KPROCESSOR_MODE DeliveryMode,
         Apc = CONTAINING_RECORD(ApcListEntry, KAPC, ApcListEntry);
 
         /* Save Parameters so that it's safe to free the Object in Kernel Routine*/
-        NormalRoutine   = Apc->NormalRoutine;
-        KernelRoutine   = Apc->KernelRoutine;
-        NormalContext   = Apc->NormalContext;
+        NormalRoutine = Apc->NormalRoutine;
+        KernelRoutine = Apc->KernelRoutine;
+        NormalContext = Apc->NormalContext;
         SystemArgument1 = Apc->SystemArgument1;
         SystemArgument2 = Apc->SystemArgument2;
 
@@ -577,8 +577,8 @@ KiDeliverApc(KPROCESSOR_MODE DeliveryMode,
        if (NormalRoutine == NULL) {
 
             /* Remove the APC from the list */
-            Apc->Inserted = FALSE;
             RemoveEntryList(ApcListEntry);
+            Apc->Inserted = FALSE;
 
             /* Go back to APC_LEVEL */
             KeReleaseSpinLock(&Thread->ApcQueueLock, OldIrql);
@@ -586,10 +586,10 @@ KiDeliverApc(KPROCESSOR_MODE DeliveryMode,
             /* Call the Special APC */
             DPRINT("Delivering a Special APC: %x\n", Apc);
             KernelRoutine(Apc,
-                      &NormalRoutine,
-                      &NormalContext,
-                      &SystemArgument1,
-                      &SystemArgument2);
+                          &NormalRoutine,
+                          &NormalContext,
+                          &SystemArgument1,
+                          &SystemArgument2);
 
             /* Raise IRQL and Lock again */
             KeAcquireSpinLock(&Thread->ApcQueueLock, &OldIrql);
@@ -612,8 +612,8 @@ KiDeliverApc(KPROCESSOR_MODE DeliveryMode,
             }
 
             /* Dequeue the APC */
-            RemoveEntryList(ApcListEntry);
             Apc->Inserted = FALSE;
+            RemoveEntryList(ApcListEntry);
 
             /* Go back to APC_LEVEL */
             KeReleaseSpinLock(&Thread->ApcQueueLock, OldIrql);
@@ -621,10 +621,10 @@ KiDeliverApc(KPROCESSOR_MODE DeliveryMode,
             /* Call the Kernel APC */
             DPRINT("Delivering a Normal APC: %x\n", Apc);
             KernelRoutine(Apc,
-                      &NormalRoutine,
-                      &NormalContext,
-                      &SystemArgument1,
-                      &SystemArgument2);
+                          &NormalRoutine,
+                          &NormalContext,
+                          &SystemArgument1,
+                          &SystemArgument2);
 
             /* If There still is a Normal Routine, then we need to call this at PASSIVE_LEVEL */
             if (NormalRoutine != NULL) {
@@ -635,7 +635,7 @@ KiDeliverApc(KPROCESSOR_MODE DeliveryMode,
 
                 /* Call and Raise IRQ back to APC_LEVEL */
                 DPRINT("Calling the Normal Routine for a Normal APC: %x\n", Apc);
-                NormalRoutine(&NormalContext, &SystemArgument1, &SystemArgument2);
+                NormalRoutine(NormalContext, SystemArgument1, SystemArgument2);
                 KeRaiseIrql(APC_LEVEL, &OldIrql);
             }
 
@@ -657,23 +657,23 @@ KiDeliverApc(KPROCESSOR_MODE DeliveryMode,
         Apc = CONTAINING_RECORD(ApcListEntry, KAPC, ApcListEntry);
 
         /* Save Parameters so that it's safe to free the Object in Kernel Routine*/
-        NormalRoutine   = Apc->NormalRoutine;
-        KernelRoutine   = Apc->KernelRoutine;
-        NormalContext   = Apc->NormalContext;
+        NormalRoutine = Apc->NormalRoutine;
+        KernelRoutine = Apc->KernelRoutine;
+        NormalContext = Apc->NormalContext;
         SystemArgument1 = Apc->SystemArgument1;
         SystemArgument2 = Apc->SystemArgument2;
 
         /* Remove the APC from Queue, restore IRQL and call the APC */
         RemoveEntryList(ApcListEntry);
         Apc->Inserted = FALSE;
-
         KeReleaseSpinLock(&Thread->ApcQueueLock, OldIrql);
+
         DPRINT("Calling the Kernel Routine for for a User APC: %x\n", Apc);
         KernelRoutine(Apc,
-                  &NormalRoutine,
-                  &NormalContext,
-                  &SystemArgument1,
-                  &SystemArgument2);
+                      &NormalRoutine,
+                      &NormalContext,
+                      &SystemArgument1,
+                      &SystemArgument2);
 
         if (NormalRoutine == NULL) {
 
@@ -685,11 +685,11 @@ KiDeliverApc(KPROCESSOR_MODE DeliveryMode,
             /* Set up the Trap Frame and prepare for Execution in NTDLL.DLL */
             DPRINT("Delivering a User APC: %x\n", Apc);
             KiInitializeUserApc(Reserved,
-                        TrapFrame,
-                        NormalRoutine,
-                        NormalContext,
-                        SystemArgument1,
-                        SystemArgument2);
+                                TrapFrame,
+                                NormalRoutine,
+                                NormalContext,
+                                SystemArgument1,
+                                SystemArgument2);
         }
 
     } else {

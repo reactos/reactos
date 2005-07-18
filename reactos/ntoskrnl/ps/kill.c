@@ -346,18 +346,23 @@ PsExitSpecialApc(PKAPC Apc,
                  PVOID* SystemArgument1,
                  PVOID* SystemArguemnt2)
 {
-    NTSTATUS ExitStatus = (NTSTATUS)Apc->NormalContext;
+    DPRINT1("PsExitSpecialApc called: 0x%x (proc: 0x%x)\n", 
+            PsGetCurrentThread(), PsGetCurrentProcess());
 
-    DPRINT("PsExitSpecialApc called: 0x%x (proc: 0x%x)\n", PsGetCurrentThread(), PsGetCurrentProcess());
+    /* Don't do anything unless we are in User-Mode */
+    if (Apc->SystemArgument2)
+    {
+        NTSTATUS ExitStatus = (NTSTATUS)Apc->NormalContext;
 
-    /* Free the APC */
-    ExFreePool(Apc);
+        /* Free the APC */
+        ExFreePool(Apc);
 
-    /* Terminate the Thread */
-    PspExitThread(ExitStatus);
+        /* Terminate the Thread */
+        PspExitThread(ExitStatus);
 
-    /* we should never reach this point! */
-    KEBUGCHECK(0);
+        /* we should never reach this point! */
+        KEBUGCHECK(0);
+    }
 }
 
 VOID
@@ -366,14 +371,46 @@ PspExitNormalApc(PVOID NormalContext,
                  PVOID SystemArgument1,
                  PVOID SystemArgument2)
 {
-    /* Not fully supported yet... must work out some issues that
-     * I don't understand yet -- Alex
-     */
-    DPRINT1("APC2\n");
-    PspExitThread((NTSTATUS)NormalContext);
+    PKAPC Apc = (PKAPC)SystemArgument1;
+    PETHREAD Thread = PsGetCurrentThread();
+    NTSTATUS ExitStatus;
+        
+    DPRINT1("PspExitNormalApc called: 0x%x (proc: 0x%x)\n", 
+            PsGetCurrentThread(), PsGetCurrentProcess());
 
-    /* we should never reach this point! */
-    KEBUGCHECK(0);
+    /* This should never happen */
+    ASSERT(!SystemArgument2);
+
+    /* If this is a system thread, we can safely kill it from Kernel-Mode */
+    if (PsIsSystemThread(Thread))
+    {
+        /* Get the Exit Status */
+        DPRINT1("Killing System Thread\n");
+        ExitStatus = (NTSTATUS)Apc->NormalContext;
+
+        /* Free the APC */
+        ExFreePool(Apc);
+
+        /* Exit the Thread */
+        PspExitThread(ExitStatus);
+    }
+
+    /* If we're here, this is not a System Thread, so kill it from User-Mode */
+    DPRINT1("Initializing User-Mode APC\n");
+    KeInitializeApc(Apc,
+                    &Thread->Tcb,
+                    OriginalApcEnvironment,
+                    PsExitSpecialApc,
+                    NULL,
+                    PspExitNormalApc,
+                    UserMode,
+                    NormalContext);
+
+    /* Now insert the APC with the User-Mode Flag */
+    KeInsertQueueApc(Apc, Apc, (PVOID)UserMode, 2);
+
+    /* Forcefully resume the thread */
+    KeForceResumeThread(&Thread->Tcb);
 }
 
 /*
@@ -402,14 +439,14 @@ PspTerminateThreadByPointer(PETHREAD Thread,
     /* Allocate the APC */
     Apc = ExAllocatePoolWithTag(NonPagedPool, sizeof(KAPC), TAG_TERMINATE_APC);
 
-    /* Initialize a User Mode APC to Kill the Thread */
+    /* Initialize a Kernel Mode APC to Kill the Thread */
     KeInitializeApc(Apc,
                     &Thread->Tcb,
                     OriginalApcEnvironment,
                     PsExitSpecialApc,
                     NULL,
                     PspExitNormalApc,
-                    UserMode,
+                    KernelMode,
                     (PVOID)ExitStatus);
 
     /* Insert it into the APC Queue */
