@@ -271,7 +271,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	if (!dir || !dir[0])
 	{
 		TCHAR szPath[MAX_PATH];
-
+    
 		GetCurrentDirectory (MAX_PATH, szPath);
 		ConOutPuts (szPath);
 		return 0;
@@ -290,7 +290,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 		TCHAR szPath[MAX_PATH];
 
 		szRoot[0] = _totupper (dir[0]);
-		GetFullPathName (szRoot, MAX_PATH, szPath, NULL);
+		GetRootPath (szRoot, szPath,MAX_PATH);
 
 		/* PathRemoveBackslash */
 		if (_tcslen (szPath) > 3)
@@ -314,6 +314,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	lpOldPath = (LPTSTR)malloc (MAX_PATH * sizeof(TCHAR));
 	GetCurrentDirectory (MAX_PATH, lpOldPath);
 
+  chdir(dir);
 	if (!SetCurrentDirectory (dir))
 	{
 
@@ -338,6 +339,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
             {
 			  FindClose(hSearch);		     
 	          // change folder
+        chdir(dir);
 			 if (!SetCurrentDirectory (FileData.cFileName))
 			 {
 				 ConOutFormatMessage(GetLastError());
@@ -377,6 +379,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 		GetCurrentDirectory(MAX_PATH, dir);
 		if (dir[0]!=lpOldPath[0])
 		{
+      chdir(lpOldPath);
 			SetCurrentDirectory(lpOldPath);
 			free(lpOldPath);
 		}
