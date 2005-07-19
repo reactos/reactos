@@ -364,7 +364,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	{
 		if(hFile == INVALID_HANDLE_VALUE)
 		{		
-			ConOutFormatMessage (GetLastError(), szFinalPath);			
+			ConErrFormatMessage (GetLastError(), szFinalPath);			
 			nErrorLevel = 1;
 			return 1;
 		}

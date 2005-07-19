@@ -330,6 +330,35 @@ VOID ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdH
 #endif
 }
 
+VOID ConErrFormatMessage (DWORD MessageId, ...)
+{
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	DWORD ret;
+	LPTSTR text;
+	va_list arg_ptr;
+
+	va_start (arg_ptr, MessageId);
+	ret = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+	       NULL,
+	       MessageId,
+	       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+	       (LPTSTR) &text,
+	       0,
+	       &arg_ptr);
+
+	va_end (arg_ptr);
+	if(ret > 0)
+	{
+		ConErrPuts (text);
+		LocalFree(text);
+	}
+	else
+	{
+		LoadString(CMD_ModuleHandle, STRING_CONSOLE_ERROR, szMsg, RC_STRING_MAX_SIZE);
+		ConErrPrintf(szMsg);
+	}
+}
+
 VOID ConOutFormatMessage (DWORD MessageId, ...)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
@@ -349,13 +378,13 @@ VOID ConOutFormatMessage (DWORD MessageId, ...)
 	va_end (arg_ptr);
 	if(ret > 0)
 	{
-		ConOutPuts (text);
+		ConErrPuts (text);
 		LocalFree(text);
 	}
 	else
 	{
 		LoadString(CMD_ModuleHandle, STRING_CONSOLE_ERROR, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPrintf(szMsg);
+		ConErrPrintf(szMsg);
 	}
 }
 

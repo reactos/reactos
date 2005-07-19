@@ -152,6 +152,7 @@ VOID ConErrChar (TCHAR);
 VOID ConErrPuts (LPTSTR);
 VOID ConErrPrintf (LPTSTR, ...);
 VOID ConOutFormatMessage (DWORD MessageId, ...);
+VOID ConErrFormatMessage (DWORD MessageId, ...);
 
 SHORT GetCursorX  (VOID);
 SHORT GetCursorY  (VOID);
