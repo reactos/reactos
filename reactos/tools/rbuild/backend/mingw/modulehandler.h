@@ -85,6 +85,7 @@ protected:
 	std::string GetWorkingDirectory () const;
 	std::string GetBasename ( const std::string& filename ) const;
 	std::string GetActualSourceFilename ( const std::string& filename ) const;
+	std::string GetExtraDependencies ( const std::string& filename ) const;
 	std::string GetModuleArchiveFilename () const;
 	bool IsGeneratedFile ( const File& file ) const;
 	std::string GetImportLibraryDependency ( const Module& importedModule );
@@ -143,6 +144,7 @@ private:
 	std::string GenerateNasmParameters () const;
 	std::string MingwModuleHandler::GetPrecompiledHeaderFilename () const;
 	void GenerateGccCommand ( const std::string& sourceFilename,
+	                          const std::string& extraDependencies,
 	                          const std::string& cc,
 	                          const std::string& cflagsMacro );
 	void GenerateGccAssemblerCommand ( const std::string& sourceFilename,

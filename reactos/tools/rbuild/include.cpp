@@ -27,7 +27,8 @@ Include::Include ( const Project& project,
                    const XMLElement* includeNode )
 	: project ( project ),
 	  module ( NULL ),
-	  node ( includeNode )
+	  node ( includeNode ),
+	  baseModule ( NULL )
 {
 }
 
@@ -36,7 +37,8 @@ Include::Include ( const Project& project,
                    const XMLElement* includeNode )
 	: project ( project ),
 	  module ( module ),
-	  node ( includeNode )
+	  node ( includeNode ),
+	  baseModule ( NULL )
 {
 }
 
@@ -45,7 +47,8 @@ Include::Include ( const Project& project,
                    string basePath )
 	: project ( project ),
 	  module ( NULL ),
-	  node ( NULL )
+	  node ( NULL ),
+	  baseModule ( NULL )
 {
 	this->directory = NormalizeFilename ( basePath + SSEP + directory );
 	this->basePath = NormalizeFilename ( basePath );
@@ -78,6 +81,7 @@ Include::ProcessXML()
 			const Module* base = project.LocateModule ( att->value );
 			if ( base != NULL )
 			{
+				baseModule = base;
 				basePath = base->GetBasePath ();
 				referenceResolved = true;
 			}

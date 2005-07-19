@@ -271,6 +271,7 @@ public:
 	const Project& project;
 	const Module* module;
 	const XMLElement* node;
+	const Module* baseModule;
 	std::string directory;
 	std::string basePath;
 

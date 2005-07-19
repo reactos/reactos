@@ -288,6 +288,20 @@ MingwModuleHandler::GetActualSourceFilename (
 }
 
 string
+MingwModuleHandler::GetExtraDependencies (
+	const string& filename ) const
+{
+	string extension = GetExtension ( filename );
+	if ( extension == ".idl" || extension == ".IDL" )
+	{
+		string basename = GetBasename ( filename );
+		return GetRpcServerHeaderFilename ( basename ) + " " + GetRpcClientHeaderFilename ( basename );
+	}
+	else
+		return "";
+}
+
+string
 MingwModuleHandler::GetModuleArchiveFilename () const
 {
 	if ( module.type == StaticLibrary )
@@ -701,10 +715,19 @@ MingwModuleHandler::GenerateMacro (
 
 	for ( i = 0; i < data.includes.size(); i++ )
 	{
+		const Include& include = *data.includes[i];
+		string includeDirectory;
+		if ( include.baseModule != NULL &&
+		     ( include.baseModule->type == RpcServer ||
+		       include.baseModule->type == RpcClient ) )
+			includeDirectory = PassThruCacheDirectory ( NormalizeFilename ( include.directory ),
+	                                                            backend->intermediateDirectory );
+		else
+			includeDirectory = include.directory;
 		fprintf (
 			fMakefile,
 			" -I%s",
-			data.includes[i]->directory.c_str() );
+			includeDirectory.c_str() );
 	}
 	for ( i = 0; i < data.defines.size(); i++ )
 	{
@@ -905,10 +928,13 @@ MingwModuleHandler::GetPrecompiledHeaderFilename () const
 void
 MingwModuleHandler::GenerateGccCommand (
 	const string& sourceFilename,
+	const string& extraDependencies,
 	const string& cc,
 	const string& cflagsMacro )
 {
 	string dependencies = sourceFilename;
+	if ( extraDependencies != "" )
+		dependencies += " " + extraDependencies;
 	if ( module.pch && use_pch )
 		dependencies += " " + GetPrecompiledHeaderFilename ();
 	
@@ -1079,7 +1105,8 @@ MingwModuleHandler::GetWidlFlags ( const File& file )
 string
 MingwModuleHandler::GetRpcServerHeaderFilename ( string basename ) const
 {
-	return basename + "_s.h";
+	return PassThruCacheDirectory ( basename + "_s.h",
+	                                backend->intermediateDirectory );
 }
 		
 void
@@ -1092,11 +1119,6 @@ MingwModuleHandler::GenerateWidlCommandsServer (
 
 	string basename = GetBasename ( file.name );
 
-	/*string generatedHeaderFilename = PassThruCacheDirectory (
-		basename + ".h",
-		backend->intermediateDirectory );
-	CLEAN_FILE(generatedHeaderFilename);
-	*/
 	string generatedHeaderFilename = GetRpcServerHeaderFilename ( basename );
 	CLEAN_FILE(generatedHeaderFilename);
 
@@ -1125,7 +1147,8 @@ MingwModuleHandler::GenerateWidlCommandsServer (
 string
 MingwModuleHandler::GetRpcClientHeaderFilename ( string basename ) const
 {
-	return basename + "_c.h";
+	return PassThruCacheDirectory ( basename + "_c.h",
+	                                backend->intermediateDirectory );
 }
 
 void
@@ -1138,11 +1161,6 @@ MingwModuleHandler::GenerateWidlCommandsClient (
 
 	string basename = GetBasename ( file.name );
 
-	/*string generatedHeaderFilename = PassThruCacheDirectory (
-		basename + ".h",
-		backend->intermediateDirectory );
-	CLEAN_FILE(generatedHeaderFilename);
-	*/
 	string generatedHeaderFilename = GetRpcClientHeaderFilename ( basename );
 	CLEAN_FILE(generatedHeaderFilename);
 
@@ -1195,6 +1213,7 @@ MingwModuleHandler::GenerateCommands (
 	if ( extension == ".c" || extension == ".C" )
 	{
 		GenerateGccCommand ( file.name,
+		                     "",
 		                     cc,
 		                     cflagsMacro );
 		return;
@@ -1204,6 +1223,7 @@ MingwModuleHandler::GenerateCommands (
 	          extension == ".cxx" || extension == ".CXX" )
 	{
 		GenerateGccCommand ( file.name,
+		                     "",
 		                     cppc,
 		                     cflagsMacro );
 		return;
@@ -1231,6 +1251,7 @@ MingwModuleHandler::GenerateCommands (
 	{
 		GenerateWinebuildCommands ( file.name );
 		GenerateGccCommand ( GetActualSourceFilename ( file.name ),
+		                     "",
 		                     cc,
 		                     cflagsMacro );
 		return;
@@ -1240,6 +1261,7 @@ MingwModuleHandler::GenerateCommands (
 		GenerateWidlCommands ( file,
 		                       widlflagsMacro );
 		GenerateGccCommand ( GetActualSourceFilename ( file.name ),
+		                     GetExtraDependencies ( file.name ),
 		                     cc,
 		                     cflagsMacro );
 		return;
@@ -1647,7 +1669,6 @@ MingwModuleHandler::GetRpcHeaderDependencies (
 		if ( library.importedModule->type == RpcServer ||
 		     library.importedModule->type == RpcClient )
 		{
-
 			for ( size_t j = 0; j < library.importedModule->non_if_data.files.size (); j++ )
 			{
 				File& file = *library.importedModule->non_if_data.files[j];
@@ -2026,10 +2047,11 @@ MingwModuleHandler::GetWidlObjectDependencies (
 	const string& filename ) const
 {
 	string basename = GetBasename ( filename );
-	string serverDependency = PassThruCacheDirectory (
+	string serverSourceDependency = PassThruCacheDirectory (
 		NormalizeFilename ( basename + "_s.c" ),
 		backend->intermediateDirectory );
-	dependencies.push_back ( serverDependency );
+	dependencies.push_back ( serverSourceDependency );
+	dependencies.push_back ( GetRpcServerHeaderFilename ( basename ) );
 }
 
 void
