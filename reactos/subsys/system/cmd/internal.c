@@ -126,6 +126,12 @@
  *    02-Apr-2004 (Magnus Olsen <magnus@greatlord.com>)
  *        Remove all hard code string so they can be
  *		  translate to other langues.
+ *
+ *    19-jul-2005 (Brandon Turner <turnerb7@msu.edu)
+ *        Rewrite the CD, it working as Windows 2000 CMD
+ *		
+ *    19-jul-2005 (Magnus Olsen <magnus@greatlord.com)
+ *        Add SetRootPath and GetRootPath         
  */
 
 #include <precomp.h>
@@ -160,8 +166,7 @@ INT GetRootPath(TCHAR *InPath,TCHAR *OutPath,INT size)
 {
   INT retcode = 1;
   
-
-   if (_tcslen(InPath)>1)
+  if (_tcslen(InPath)>1)
   {
     if (InPath[1]==_T(':'))    
     {   
@@ -183,7 +188,7 @@ INT GetRootPath(TCHAR *InPath,TCHAR *OutPath,INT size)
       }
                 
       if (_tgetdcwd(t,OutPath,size) != NULL) 
-      {               
+      {                 
         return 0;          
       }    
      } 
@@ -205,195 +210,193 @@ INT GetRootPath(TCHAR *InPath,TCHAR *OutPath,INT size)
 }
   
 
+BOOL SetRootPath(TCHAR *InPath)
+{
+  TCHAR oldpath[MAX_PATH];
+  TCHAR OutPath[MAX_PATH];
+  BOOL fail;
+  
+  /* Get The current directory path and save it */
+  fail = GetCurrentDirectory(MAX_PATH,oldpath);
+  if (!fail)   
+      return 1;
+  
+  /* Get current drive directory path if C: was only pass down*/
+  
+  if (_tcsncicmp(&InPath[1],_T(":\\"),2)!=0)
+  {
+      if (!GetRootPath(InPath,OutPath,MAX_PATH))
+         _tcscpy(OutPath,InPath);
+  }
+  else 
+  {
+    _tcscpy(OutPath,InPath);
+  }
+  
+  fail = SetCurrentDirectory(OutPath);
+  if (!fail) 
+      return 1;
+  
+  SetCurrentDirectory(OutPath);
+  GetCurrentDirectory(MAX_PATH,OutPath);
+  _tchdir(OutPath);
+
+  if (_tcsncicmp(OutPath,oldpath,2)!=0)      
+      SetCurrentDirectory(oldpath);   
+
+ return 0;
+} 
+
+
 /*
  * CD / CHDIR
  *
  */
 INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 {
-	LPTSTR dir;		/* pointer to the directory to change to */
-	LPTSTR lpOldPath;
-	size_t size, str_len;
-	WIN32_FIND_DATA FileData; 
-    HANDLE hSearch; 
-    DWORD dwAttrs;  
-    BOOL fFinished = FALSE; 
  
-
-	/*Should we better declare a variable containing _tsclen(dir) ? It's used a few times,
-	  but on the other hand paths are generally not very long*/
-
-	if (!_tcsncmp (param, _T("/?"), 2))
+	WIN32_FIND_DATA f; 
+	HANDLE hFile;
+	BOOL bChangeDrive = FALSE;
+	TCHAR szPath[MAX_PATH];
+	TCHAR szFinalPath[MAX_PATH];
+	TCHAR * tmpPath;
+	TCHAR szCurrent[MAX_PATH];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	INT i;
+ 
+ 
+	/* Filter out special cases first */
+ 
+	/* Print Help */
+	if (!_tcsncmp(param, _T("/?"), 2))
 	{
 		ConOutResPaging(TRUE,STRING_CD_HELP);
 		return 0;
 	}
+ 
+  /* Set Error Level to Success */
+	nErrorLevel = 0;
 
-   nErrorLevel = 0;
-
-
-	/* The whole param string is our parameter these days. The only thing we do is eliminating every quotation mark */
-	/* Is it safe to change the characters param is pointing to? I presume it is, as there doesn't seem to be any
-	post-processing of it after the function call (what would that accomplish?) */
-	
-    size = _tcscspn(param,  _T("\"") );
-	str_len = _tcslen(param)-1;
-
-	if ((param[size] == _T('"')) && (str_len >1))
+	/* Input String Contains /D Switch */
+	if (!_tcsncicmp(param, _T("/D"), 2))
 	{
-	 
-	 if (size==0)
-	 {
-	  _tcsncpy(param,&param[size+1],str_len);
-	  param[str_len] = _T('\0');	 
-	 }
-
-	 size = _tcscspn(param,  _T("\"") );	
-     if (param[size] == _T('"'))
-	 {
-	  param[size] = _T('\0');
-	 }
-
-	}
-
-	str_len = _tcslen(param);
-	if (str_len==1) 
-	{
-	    if (param[0] == _T('*')) 
-	    {
-		    param[0] = _T('.');
-		}
-	}
-	
-	dir=param;
-	
-	/* if doing a CD and no parameters given, print out current directory */
-	if (!dir || !dir[0])
-	{
-		TCHAR szPath[MAX_PATH];
-    
-		GetCurrentDirectory (MAX_PATH, szPath);
-		ConOutPuts (szPath);
-		return 0;
-	}
-
-	if (dir && _tcslen (dir) == 1 && *dir == _T('-'))
-	{
-		if (lpLastPath)
-			dir = lpLastPath;
-		else
-			return 0;
-	}
-	else if (dir && _tcslen (dir)==2 && dir[1] == _T(':'))
-	{
-		TCHAR szRoot[3] = _T("A:");
-		TCHAR szPath[MAX_PATH];
-
-		szRoot[0] = _totupper (dir[0]);
-		GetRootPath (szRoot, szPath,MAX_PATH);
-
-		/* PathRemoveBackslash */
-		if (_tcslen (szPath) > 3)
-		{
-			LPTSTR p = _tcsrchr (szPath, _T('\\'));
-			*p = _T('\0');
-		}
-
-		ConOutPuts (szPath);
-
-
-		return 0;
-	}
-
-	/* remove trailing \ if any, but ONLY if dir is not the root dir */
-	if (_tcslen (dir) > 3 && dir[_tcslen (dir) - 1] == _T('\\'))
-		dir[_tcslen(dir) - 1] = _T('\0');
-
-
-	/* store current directory */
-	lpOldPath = (LPTSTR)malloc (MAX_PATH * sizeof(TCHAR));
-	GetCurrentDirectory (MAX_PATH, lpOldPath);
-
-  chdir(dir);
-	if (!SetCurrentDirectory (dir))
-	{
-
-	    hSearch = FindFirstFile(dir, &FileData); 
-      if (hSearch == INVALID_HANDLE_VALUE) 
-      { 
-	        ConOutFormatMessage(GetLastError());
-          free (lpOldPath);
-          lpOldPath = NULL;
-          nErrorLevel = 1;
-          return 1;
-      }
-
-		
-        while (!fFinished) 
-        { 
-            dwAttrs = GetFileAttributes(FileData.cFileName); 
-#ifdef _DEBUG
-			DebugPrintf(_T("Search found folder :%s\n"),FileData.cFileName);
-#endif
-            if ((dwAttrs & FILE_ATTRIBUTE_DIRECTORY)) 
-            {
-			  FindClose(hSearch);		     
-	          // change folder
-        chdir(dir);
-			 if (!SetCurrentDirectory (FileData.cFileName))
-			 {
-				 ConOutFormatMessage(GetLastError());
-			     free (lpOldPath);
-		         lpOldPath = NULL;
-         nErrorLevel = 1;
-				 return 1;
-			 }
-				
-             
-			 return 0;
-             }
-        
-             else if (!FindNextFile(hSearch, &FileData)) 
-            {             
-		     FindClose(hSearch);
-			 ConOutFormatMessage(GetLastError());
-       nErrorLevel = 1;
-			 free (lpOldPath);
-		     lpOldPath = NULL;
-			 return 1;
-             }
-        }  
-
-		//ErrorMessage (GetLastError(), _T("CD"));
-		ConOutFormatMessage(GetLastError());
-    nErrorLevel = 1;
-
-		/* throw away current directory */
-		free (lpOldPath);
-		lpOldPath = NULL;
-
-		return 1;
+		bChangeDrive = TRUE;
+		tmpPath = _tcsstr(param,_T(" "));
+		tmpPath++;
+		_tcscpy(szPath,tmpPath);
+ 
 	}
 	else
 	{
-		GetCurrentDirectory(MAX_PATH, dir);
-		if (dir[0]!=lpOldPath[0])
-		{
-      chdir(lpOldPath);
-			SetCurrentDirectory(lpOldPath);
-			free(lpOldPath);
-		}
-		else
-		{
-			if (lpLastPath)
-				free (lpLastPath);
-			lpLastPath = lpOldPath;
-		}
+		_tcscpy(szPath,param);
 	}
-
-
-	return 0;
+ 
+	/* Print Current Directory on a disk */
+	if (_tcslen(szPath) == 2 && szPath[1] == _T(':'))
+	{		
+		if(GetRootPath(szPath,szCurrent,MAX_PATH))
+		{
+			nErrorLevel = 1;
+			return 1;
+		}
+		ConOutPuts(szCurrent);
+		return 0;
+ 
+	}
+ 
+	/* Get Current Directory */
+	GetRootPath(_T("."),szCurrent,MAX_PATH);
+ 
+	/* Remove " */
+	if(szPath[0] == _T('\"'))
+	{
+		tmpPath = _tcsstr(szPath,_T("\""));
+		tmpPath++;
+		_tcscpy(szPath,tmpPath);
+	}
+ 
+	if(szPath[_tcslen(szPath) - 1] == _T('\"'))
+	{
+		szPath[_tcslen(szPath) - 1] = _T('\0');
+	}
+ 
+	tmpPath = szPath;
+	while (_istspace (*tmpPath))
+			tmpPath++;
+	_tcscpy(szPath,tmpPath);
+ 
+	if (szPath[0] == _T('\0')) 
+	{
+		ConOutPuts(szCurrent);
+		return 0;
+	}
+	 
+ 
+	/* change to full path if relative path was given */
+	GetFullPathName(szPath,MAX_PATH,szFinalPath,NULL);
+ 
+	if(szFinalPath[_tcslen(szFinalPath) - 1] == _T('\\') && _tcslen(szFinalPath) > 3)
+		szFinalPath[_tcslen(szFinalPath) - 1] = _T('\0');
+ 
+	/* Handle Root Directory Alone*/
+	if (_tcslen(szPath) == 3 && szPath[1] == _T(':'))
+	{		
+		if(!SetRootPath(szFinalPath))
+		{
+			/* Change prompt if it is one the same drive or /D */
+			if(bChangeDrive || !_tcsncicmp(szFinalPath,szCurrent,1))
+				SetCurrentDirectory(szFinalPath);
+			return 0;
+		}
+		/* Didnt find an directories */
+		LoadString(CMD_ModuleHandle, STRING_ERROR_PATH_NOT_FOUND, szMsg, RC_STRING_MAX_SIZE);
+		ConErrPrintf(szMsg);
+		nErrorLevel = 1;
+		return 1;
+ 
+	}
+ 
+	/* Get a list of all the files */
+	hFile = FindFirstFile (szFinalPath, &f);
+ 
+	do
+	{
+		if(hFile == INVALID_HANDLE_VALUE)
+		{		
+			ConOutFormatMessage (GetLastError(), szFinalPath);			
+			nErrorLevel = 1;
+			return 1;
+		}
+ 
+		/* Strip the paths back to the folder they are in */
+		for(i = (_tcslen(szFinalPath) -  1); i > -1; i--)
+			if(szFinalPath[i] != _T('\\'))
+				szFinalPath[i] = _T('\0');
+			else
+				break;
+ 
+		_tcscat(szFinalPath,f.cFileName);
+ 
+		if(IsExistingDirectory(szFinalPath))
+		{
+			if(!SetRootPath(szFinalPath))
+			{
+				/* Change for /D */
+				if(bChangeDrive)
+					SetCurrentDirectory(szFinalPath);
+				return 0;
+			}
+		}
+	}while(FindNextFile (hFile, &f));
+ 
+	/* Didnt find an directories */
+	LoadString(CMD_ModuleHandle, STRING_ERROR_PATH_NOT_FOUND, szMsg, RC_STRING_MAX_SIZE);
+	ConErrPrintf(szMsg);
+	nErrorLevel = 1;
+	return 1;
 }
+
 #endif
 
 

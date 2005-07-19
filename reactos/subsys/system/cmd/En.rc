@@ -41,12 +41,13 @@ CALL [drive:][path]filename [batch-parameter]\n\n\
                    batch program."
 
 STRING_CD_HELP,      "Changes the current directory or displays it's name\n\n\
-CHDIR [drive:][path]\n\
+CHDIR [/D][drive:][path]\n\
 CHDIR[..|.]\n\
-CD [drive:][path]\n\
+CD [/D][drive:][path]\n\
 CD[..|.]\n\n\
   ..   parent directory\n\
-  .    previous directory\n\n\
+  .    previous directory\n\
+  /D   Will change current drive and current directory.\n\n\
 Type CD drive: to display the current directory on the specified drive.\n\
 Type CD without a parameter to display the current drive and directory.\n"
 
