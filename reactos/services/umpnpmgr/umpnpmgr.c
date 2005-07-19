@@ -52,6 +52,7 @@ static SERVICE_TABLE_ENTRY ServiceTable[2] =
   {NULL, NULL}
 };
 
+static WCHAR szRootDeviceId[] = L"HTREE\\ROOT\\0";
 
 /* FUNCTIONS *****************************************************************/
 
@@ -98,13 +99,13 @@ RpcServerThread(LPVOID lpParameter)
 
 void __RPC_FAR * __RPC_USER midl_user_allocate(size_t len)
 {
-  return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
+    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
 }
 
 
 void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
 {
-  HeapFree(GetProcessHeap(), 0, ptr);
+    HeapFree(GetProcessHeap(), 0, ptr);
 }
 
 
@@ -171,6 +172,126 @@ Done:
         RegCloseKey(hEnumKey);
 
     DPRINT("PNP_ValidateDeviceInstance() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
+CONFIGRET
+PNP_GetRootDeviceInstance(handle_t BindingHandle,
+                          wchar_t *DeviceInstance,
+                          unsigned long Length)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT("PNP_GetRootDeviceInstance() called\n");
+
+    if (Length < lstrlenW(szRootDeviceId) + 1)
+    {
+        ret = CR_BUFFER_SMALL;
+        goto Done;
+    }
+
+    lstrcpyW(DeviceInstance,
+             szRootDeviceId);
+
+Done:
+    DPRINT("PNP_GetRootDeviceInstance() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
+#if 0
+CONFIGRET
+PNP_GetRelatedDeviceInstance(handle_t BindingHandle,
+                             unsigned long Relationship,
+                             wchar_t *DeviceId,
+                             wchar_t *RelatedDeviceId,
+                             unsigned long Length,
+                             unsigned long Flags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT1("PNP_GetRelatedDeviceInstance() called\n");
+    DPRINT1("  Relationship %ld\n", Relationship);
+    DPRINT1("  DeviceId %S\n", DeviceId);
+
+    lstrcpyW(RelatedDeviceId,
+             szRootDeviceId);
+
+//Done:
+    DPRINT1("PNP_GetRelatedDeviceInstance() done (returns %lx)\n", ret);
+
+    return ret;
+}
+#endif
+
+
+CONFIGRET
+PNP_GetDepth(handle_t BindingHandle,
+             wchar_t *DeviceInstance,
+             unsigned long *Depth,
+             DWORD Flags)
+{
+    PLUGPLAY_CONTROL_DEPTH_DATA PlugPlayData;
+    CONFIGRET ret = CR_SUCCESS;
+    NTSTATUS Status;
+
+    DPRINT1("PNP_GetDepth() called\n");
+
+    RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
+                         DeviceInstance);
+
+    Status = NtPlugPlayControl(PlugPlayControlGetDeviceDepth,
+                               (PVOID)&PlugPlayData,
+                               sizeof(PLUGPLAY_CONTROL_DEPTH_DATA));
+    if (NT_SUCCESS(Status))
+    {
+        *Depth = PlugPlayData.Depth;
+    }
+    else
+    {
+        ret = CR_FAILURE; /* FIXME */
+    }
+
+    DPRINT1("PNP_GetDepth() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
+CONFIGRET
+PNP_GetDeviceStatus(handle_t BindingHandle,
+                    wchar_t *DeviceInstance,
+                    unsigned long *pStatus,
+                    unsigned long *pProblem,
+                    DWORD Flags)
+{
+    PLUGPLAY_CONTROL_STATUS_DATA PlugPlayData;
+    CONFIGRET ret = CR_SUCCESS;
+    NTSTATUS Status;
+
+    DPRINT1("PNP_GetDeviceStatus() called\n");
+
+    RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
+                         DeviceInstance);
+    PlugPlayData.Operation = 0; /* Get status */
+
+    Status = NtPlugPlayControl(PlugPlayControlDeviceStatus,
+                               (PVOID)&PlugPlayData,
+                               sizeof(PLUGPLAY_CONTROL_STATUS_DATA));
+    if (NT_SUCCESS(Status))
+    {
+        *pStatus = PlugPlayData.DeviceStatus;
+        *pProblem = PlugPlayData.DeviceProblem;
+    }
+    else
+    {
+        ret = CR_FAILURE; /* FIXME */
+    }
+
+    DPRINT1("PNP_GetDeviceStatus() done (returns %lx)\n", ret);
 
     return ret;
 }

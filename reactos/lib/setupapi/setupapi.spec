@@ -63,14 +63,14 @@
 @ stub CM_Get_Class_NameW
 @ stub CM_Get_Class_Name_ExA
 @ stub CM_Get_Class_Name_ExW
-@ stub CM_Get_Depth
-@ stub CM_Get_Depth_Ex
+@ stdcall CM_Get_Depth(ptr long long)
+@ stdcall CM_Get_Depth_Ex(ptr long long long)
 @ stub CM_Get_DevNode_Registry_PropertyA
 @ stub CM_Get_DevNode_Registry_PropertyW
 @ stub CM_Get_DevNode_Registry_Property_ExA
 @ stub CM_Get_DevNode_Registry_Property_ExW
-@ stub CM_Get_DevNode_Status
-@ stub CM_Get_DevNode_Status_Ex
+@ stdcall CM_Get_DevNode_Status(ptr ptr long long)
+@ stdcall CM_Get_DevNode_Status_Ex(ptr ptr long long long)
 @ stdcall CM_Get_Device_IDA(long str long long)
 @ stdcall CM_Get_Device_IDW(long wstr long long)
 @ stdcall CM_Get_Device_ID_ExA(long str long long long)
