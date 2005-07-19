@@ -37,7 +37,7 @@ enum
 	COPY_ASCII       = 0x001,   /* /A  */
 	COPY_DECRYPT     = 0x004,   /* /D  */
 	COPY_VERIFY      = 0x008,   /* /V  : Dummy, Never will be Impleneted */
-	COPY_SHORTNAME   = 0x010,   /* /N  : Not Impleneted */
+	COPY_SHORTNAME   = 0x010,   /* /N  : Dummy, Never will be Impleneted */
 	COPY_NO_PROMPT   = 0x020,   /* /Y  */
 	COPY_PROMPT      = 0x040,   /* /-Y */
 	COPY_RESTART     = 0x080,   /* /Z  */
@@ -526,15 +526,9 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 	/* Set up the string that is the path to the destination */
 	if(nDes != -1)
 	{
-		/* Check to make sure if they entered c:, if they do then GFPN 
-		return current directory even though msdn says it will return c:\ */
-		if(_tcslen(arg[nDes]) == 2)
+		if(_tcslen(arg[nDes]) == 2 && arg[nDes][1] == _T(':'))
 		{
-			if(arg[nDes][1] == _T(':'))
-			{
-				_tcscpy (szDestPath, arg[nDes]);
-				_tcscat (szDestPath, _T("\\"));
-			}
+			GetRootPath(arg[nDes],szDestPath,MAX_PATH);
 		}
 		else
 		/* If the user entered two file names then form the full string path*/
@@ -552,7 +546,6 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 	/* Get the full string of the path to the source file*/
 	if(_tcschr (arg[nSrc], _T('+')) != NULL)
 	{
- 
 		_tcscpy(tmpName,_T("\0"));
 		/* Loop through the source file name and copy all
 		the chars one at a time until it gets too + */
@@ -572,14 +565,13 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 		}
 		/* Finish the string off with a null char */
 		_tcsncat(tmpName,_T("\0"),1);
-		/* Check to make sure if they entered c:, if they do then GFPN 
-		return current directory even though msdn says it will return c:\ */
+
 		if(_tcslen(tmpName) == 2)
 		{
 			if(tmpName[1] == _T(':'))
 			{
-				_tcscpy (szSrcPath, tmpName);
-				_tcscat (szSrcPath, _T("\\"));
+
+				GetRootPath(tmpName,szSrcPath,MAX_PATH);
 			}
 		}
 		else
@@ -588,15 +580,9 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 	}
 	else
 	{
-		/* Check to make sure if they entered c:, if they do then GFPN 
-		return current directory even though msdn says it will return c:\ */
-		if(_tcslen(arg[nSrc]) == 2)
+		if(_tcslen(arg[nSrc]) == 2 && arg[nSrc][1] == _T(':'))
 		{
-			if(arg[nSrc][1] == _T(':'))
-			{
-				_tcscpy (szSrcPath, arg[nSrc]);
-				_tcscat (szSrcPath, _T("\\"));
-			}
+			GetRootPath(arg[nSrc],szSrcPath,MAX_PATH);
 		}
 		else
 		/* Get the full path of the source file */
