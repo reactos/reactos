@@ -159,33 +159,44 @@ VOID FreeLastPath (VOID)
 INT GetRootPath(TCHAR *InPath,TCHAR *OutPath,INT size)
 {
   INT retcode = 1;
-  INT t;
+  
 
    if (_tcslen(InPath)>1)
   {
-    if (InPath[1]==_T(':'))
+    if (InPath[1]==_T(':'))    
     {   
-      for (t=0;t<32;t++) 
-      {    
-        if (_tgetdcwd(t,OutPath,size) != NULL) 
-        {
-          if (_tcsncicmp(InPath,OutPath,2))
-          {
-            retcode = 0;      
-            return retcode;
-          }
-         }    
-        }
-       }
-   }
+      TCHAR num[2];
+      INT t=0;
+
+      num[1] = _T('\0');
+      num[0] = InPath[0];
+      _tcslwr(num);
+
+      if ((InPath[0] >= _T('0')) && (InPath[0] <= _T('9')))
+      {
+          t = (InPath[0] - _T('0')) +28;
+      }
+      
+      if ((InPath[0] >= _T('a')) && (InPath[0] <= _T('z')))
+      {
+          t = (InPath[0] - _T('a')) +1;
+      }
+                
+      if (_tgetdcwd(t,OutPath,size) != NULL) 
+      {               
+        return 0;          
+      }    
+     } 
+    }
    
-  /* fail to getting path devic did not exists */
+  /* fail */
   if (_tcslen(InPath)>1)
   {
     if (InPath[1]==_T(':'))
        return 1;  
   }
 
+  /* Get current directory */
   retcode = GetCurrentDirectory(size,OutPath);     
   if (retcode==0) 
       return 1;
@@ -219,6 +230,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	}
 
    nErrorLevel = 0;
+
 
 	/* The whole param string is our parameter these days. The only thing we do is eliminating every quotation mark */
 	/* Is it safe to change the characters param is pointing to? I presume it is, as there doesn't seem to be any
