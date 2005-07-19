@@ -594,14 +594,14 @@ NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
 
    GDIOBJHDR * ptr;
    DWORD objectType;
-
+   BOOL Ret = FALSE;
    UNIMPLEMENTED;
       
    ptr = GDIOBJ_LockObj(hgdiobj, GDI_OBJECT_TYPE_DONTCARE);
    if (ptr == 0)
      {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
-        return FALSE;
+        return Ret;
      }
    objectType = GDIOBJ_GetObjectType(hgdiobj);
    switch(objectType)
@@ -612,9 +612,16 @@ NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
               DPRINT1("GDI_OBJECT_TYPE_PALETTE\n");
               break;
            }
+/*
+    msdn.microsoft.com,
+    "Windows 2000/XP: If hgdiobj is a brush, UnrealizeObject does nothing,
+    and the function returns TRUE. Use SetBrushOrgEx to set the origin of
+    a brush."
+ */
          case GDI_OBJECT_TYPE_BRUSH:
            {
               DPRINT1("GDI_OBJECT_TYPE_BRUSH\n");
+              Ret = TRUE;
               break;
            }
          default:
@@ -623,7 +630,7 @@ NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
      }
 
    GDIOBJ_UnlockObjByPtr(ptr);
-   return FALSE;
+   return Ret;
 }
 
 BOOL STDCALL
