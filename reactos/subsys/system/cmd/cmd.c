@@ -1533,6 +1533,7 @@ int _main(void)
 int _main (int argc, char *argv[])
 #endif
 {
+  TCHAR startPath[MAX_PATH];
   CONSOLE_SCREEN_BUFFER_INFO Info;
   INT nExitCode;
 #ifdef _UNICODE
@@ -1544,7 +1545,9 @@ int _main (int argc, char *argv[])
   argv = CommandLineToArgvW(GetCommandLineW(), &argc);
 #endif
 #endif
-     
+      
+  GetCurrentDirectory(MAX_PATH,startPath);
+  _tchdir(startPath);
 
   SetFileApisToOEM();
   InputCodePage= 0;
