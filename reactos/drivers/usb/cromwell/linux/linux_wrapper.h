@@ -34,7 +34,7 @@ typedef short s16;
 
 typedef u32 dma_addr_t;
 
-typedef  int spinlock_t;
+typedef int spinlock_t;
 typedef int atomic_t;
 #ifndef STANDALONE
 #ifndef _MODE_T_
@@ -123,6 +123,8 @@ struct device {
 	struct device *parent;
 	struct list_head driver_list;
 	void    (*release)(struct device * dev);
+
+	void *dev_ext; // ReactOS-specific: pointer to windows device extension
 };
 struct class_device{int a;};
 struct semaphore{int a;};
@@ -165,8 +167,20 @@ struct dma_pool
 	int dummy;
 };
 
-/* from mod_devicetable.h */
+/* These definitions mirror those in pci.h, so they can be used
+ * interchangeably with their PCI_ counterparts */
+enum dma_data_direction {
+	DMA_BIDIRECTIONAL = 0,
+	DMA_TO_DEVICE = 1,
+	DMA_FROM_DEVICE = 2,
+	DMA_NONE = 3,
+};
 
+/* compatibility */
+#define PCI_DMA_TODEVICE DMA_TO_DEVICE
+#define PCI_DMA_FROMDEVICE DMA_FROM_DEVICE
+
+/* from mod_devicetable.h */
 struct usb_device_id {
         /* which fields to match against? */
         __u16           match_flags;
@@ -409,43 +423,49 @@ struct usbdevfs_hub_portinfo
 
 
 /* PCI */
+#define MAX_POOL_PAGES 2
+#define BITS_PER_LONG 32
+
+struct pci_page
+{
+	PHYSICAL_ADDRESS dmaAddress;
+	PVOID	virtualAddress;
+
+	unsigned long bitmap[128]; // 128 == 32bits*4096 blocks
+};
+
+struct pci_pool
+{
+	char name[32];
+	size_t size;
+	size_t allocation;
+	size_t blocks_per_page;
+	struct pci_dev *pdev;
+
+	// internal stuff
+	int pages_allocated;
+	int blocks_allocated;
+
+	struct pci_page pages[MAX_POOL_PAGES];
+};
+
 #define	to_pci_dev(n) container_of(n, struct pci_dev, dev)
 
-#define pci_pool_create(a,b,c,d,e) (void*)1
+#define pci_pool_create(a,b,c,d,e) my_pci_pool_create(a,b,c,d,e)
+struct pci_pool *my_pci_pool_create(const char * name, struct pci_dev * pdev, size_t size, size_t align, size_t allocation);
 
-#define pci_pool_alloc(a,b,c)  my_pci_pool_alloc(a,b,c) 
+#define pci_pool_alloc(a,b,c)  my_pci_pool_alloc(a,b,c)
+void *my_pci_pool_alloc(struct pci_pool * pool, int mem_flags, dma_addr_t *dma_handle);
 
-static void __inline__ *my_pci_pool_alloc(void* pool, size_t size,
-						dma_addr_t *dma_handle)
-{
-	void* a;
-	a=kmalloc(size,0); //FIXME
-#ifdef MODULE
-	*dma_handle=((u32)a)&0xfffffff;
-#else
-	*dma_handle=(u32)a;
-#endif
-	return a;
-}
+#define pci_pool_free(a,b,c)    my_pci_pool_free(a,b,c)
+void my_pci_pool_free(struct pci_pool * pool, void * vaddr, dma_addr_t dma);
 
-
-#define pci_pool_free(a,b,c)    kfree(b)
 #define pci_alloc_consistent(a,b,c) my_pci_alloc_consistent(a,b,c)
-
-static void  __inline__ *my_pci_alloc_consistent(struct pci_dev *hwdev, size_t size,
-						dma_addr_t *dma_handle)
-{
-	void* a;
-
-	a=kmalloc(size+256,0); //FIXME
-	a=(void*)(((int)a+255)&~255); // 256 alignment
-	*dma_handle=((u32)a)&0xfffffff;
-
-	return a;
-}
+void  *my_pci_alloc_consistent(struct pci_dev *hwdev, size_t size, dma_addr_t *dma_handle);
 
 #define pci_free_consistent(a,b,c,d)  kfree(c)
-#define pci_pool_destroy(a)           do {} while(0)
+#define pci_pool_destroy(a)           my_pci_pool_destroy(a)
+void my_pci_pool_destroy (struct pci_pool * pool);
 
 #define pci_module_init(x) my_pci_module_init(x)
 int my_pci_module_init(struct pci_driver *x);
@@ -464,16 +484,28 @@ int my_pci_module_init(struct pci_driver *x);
 #define dma_pool_free(a,b,c) pci_pool_free(a,b,c)
 #define dma_pool_destroy(a) pci_pool_destroy(a)
 
-#define dma_alloc_coherent(a,b,c,d) NULL
-#define dma_free_coherent(a,b,c,d) do {} while(0)
+//#define dma_alloc_coherent(a,b,c,d) NULL
+//#define dma_free_coherent(a,b,c,d) do {} while(0)
+#define dma_map_single(a,b,c,d)		my_dma_map_single(a,b,c,d)
+dma_addr_t my_dma_map_single(struct device *hwdev, void *ptr, size_t size, enum dma_data_direction direction);
 
-#define dma_map_single(a,b,c,d) ((u32)(b)&0xfffffff)
-#define dma_unmap_single(a,b,c,d)     do {} while(0)
-#define pci_unmap_single(a,b,c,d)     do {} while(0)
-#define dma_sync_single(a,b,c,d)      do {} while(0)
-#define dma_sync_sg(a,b,c,d)          do {} while(0)
-#define dma_map_sg(a,b,c,d)           0
-#define dma_unmap_sg(a,b,c,d)         do {} while(0)
+#define dma_unmap_single(a,b,c,d)	my_dma_unmap_single(a,b,c,d)
+void my_dma_unmap_single(struct device *dev, dma_addr_t dma_addr, size_t size, enum dma_data_direction direction);
+
+#define pci_unmap_single(a,b,c,d)	my_pci_unmap_single(a,b,c,d)
+void my_pci_unmap_single(struct pci_dev *hwdev, dma_addr_t dma_addr, size_t size, int direction);
+
+#define dma_sync_single(a,b,c,d)	my_dma_sync_single(a,b,c,d)
+void my_dma_sync_single(struct device *hwdev, dma_addr_t dma_handle, size_t size, int direction);
+
+#define dma_sync_sg(a,b,c,d)		my_dma_sync_sg(a,b,c,d)
+void my_dma_sync_sg(struct device *hwdev,  struct scatterlist *sg, int nelems, int direction);
+
+#define dma_map_sg(a,b,c,d)			my_dma_map_sg(a,b,c,d)
+int my_dma_map_sg(struct device *hwdev, struct scatterlist *sg, int nents, enum dma_data_direction direction);
+
+#define dma_unmap_sg(a,b,c,d)		my_dma_unmap_sg(a,b,c,d)
+void my_dma_unmap_sg(struct device *hwdev, struct scatterlist *sg, int nents, enum dma_data_direction direction);
 
 #define usb_create_driverfs_dev_files(a) do {} while(0)
 #define usb_create_driverfs_intf_files(a) do {} while(0)
@@ -481,12 +513,6 @@ int my_pci_module_init(struct pci_driver *x);
 #define sg_dma_len(x) ((x)->length) 
 
 #define page_address(x) ((void*)(x/4096))
-
-#define DMA_TO_DEVICE 0
-#define DMA_FROM_DEVICE 0
-#define PCI_DMA_TODEVICE
-#define PCI_DMA_FROMDEVICE
-#define PCI_DMA_TODEVICE
 
 #define PCI_ROM_RESOURCE 1
 #define IORESOURCE_IO CM_RESOURCE_PORT_IO

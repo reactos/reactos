@@ -40,7 +40,10 @@ void* thread_parm;
 
 #define MAX_DRVS 8
 static struct device_driver *m_drivers[MAX_DRVS];
-static int drvs_num;
+static int drvs_num=0;
+unsigned int LAST_USB_EVENT_TICK;
+
+NTSTATUS init_dma(POHCI_DEVICE_EXTENSION pDevExt);
 
 /*------------------------------------------------------------------------*/ 
 /* 
@@ -69,6 +72,8 @@ void init_wrapper(struct pci_dev *probe_dev)
 	need_wakeup=0;
 	for(n=0;n<MAX_DRVS;n++)
 		m_drivers[n]=NULL;
+		
+	init_dma(probe_dev->dev_ext);
 }
 /*------------------------------------------------------------------------*/ 
 void handle_irqs(int irq)
@@ -92,17 +97,20 @@ void do_all_timers(void)
 	int n;
 	for(n=0;n<MAX_TIMERS;n++)
 	{
-		if (main_timer_list[n] &&
-		    main_timer_list[n]->function && main_timer_list[n]->expires) 
+		if (main_timer_list[n] && main_timer_list[n]->function) 
 		{
 			void (*function)(unsigned long)=main_timer_list[n]->function;
 			unsigned long data=main_timer_list[n]->data;
-			main_timer_list[n]->expires=0;
-
-			main_timer_list[n]=NULL; // remove timer
-			//printk("do timer %i fn %p\n",n,function);
-
-			function(data);
+			
+			if (main_timer_list[n]->expires>1) {
+				main_timer_list[n]->expires--;
+			} else {
+				
+				main_timer_list[n]->expires=0;
+				main_timer_list[n]=0; // remove timer
+				// Call Timer Function Data
+				function(data);
+			}
 		}
 	}
 }
@@ -118,13 +126,13 @@ int my_kernel_thread(int STDCALL (*handler)(void*), void* parm, int flags)
 	
 	ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
 
-	/*PsCreateSystemThread(&hThread,
+	PsCreateSystemThread(&hThread,
 			     THREAD_ALL_ACCESS,
 			     NULL,
 			     NULL,
 			     NULL,
 			     (PKSTART_ROUTINE)handler,
-				 parm);*/
+				 parm);
 
 	DPRINT1("usbcore: Created system thread %d\n", (int)hThread);
 
@@ -229,24 +237,42 @@ void my_init_waitqueue_head(PKEVENT evnt)
 }
 /*------------------------------------------------------------------------*/ 
 /* wait until woken up (only one wait allowed!) */
+extern unsigned int LAST_USB_IRQ;
+
 int my_schedule_timeout(int x)
 {
-	int wait=1;
-	x+=10; // safety
-	printk("schedule_timeout %i\n",x);
+	LONGLONG HH;
+	LONGLONG temp;
+	LONGLONG delay;
+	extern unsigned int LAST_USB_EVENT_TICK;
+
+	printk("schedule_timeout: %d ms\n", x);
+
+	x+=5; // safety
+	x = x*1000;	// to us format
 
 	while(x>0)
 	{
-		do_all_timers();
-#ifndef HAVE_IRQS
-		handle_irqs(-1);
+		KeQueryTickCount((LARGE_INTEGER *)&HH);//IoInputDword(0x8008);
+    	temp = HH - LAST_USB_EVENT_TICK;
+    	
+		//if (temp>(3579)) { //3579 = 1ms!
+		if (temp>1000) {
+			do_all_timers();
+			LAST_USB_EVENT_TICK = HH;
+		}
 
-#endif
+       		//if (LAST_USB_IRQ != OHCI_1_INTERRUPT ) {
+       	//		LAST_USB_IRQ = OHCI_1_INTERRUPT;
+			handle_irqs(-1);
+		//}
+		
 		if (need_wakeup)
 			break;
-		wait_ms(wait);
-		inc_jiffies(wait);
-		x-=wait;
+
+		delay = 10;
+		KeDelayExecutionThread(KernelMode, FALSE, (LARGE_INTEGER *)&delay); //wait_us(1);
+		x-=1;
 	}
 	need_wakeup=0;
 	printk("schedule DONE!!!!!!\n");
@@ -256,17 +282,34 @@ int my_schedule_timeout(int x)
 /*------------------------------------------------------------------------*/ 
 void my_wait_for_completion(struct completion *x)
 {
-	int n=100;
+	LONGLONG HH;
+	LONGLONG temp;
+	LONGLONG delay;
+	extern unsigned int LAST_USB_EVENT_TICK;
+
 	printk("wait for completion\n");
 
+	int n=10;
+	n = n*1000;	// to us format
+	
 	while(!x->done && (n>0))
 	{
-		do_all_timers();	
-#ifndef HAVE_IRQS
-		handle_irqs(-1);
+		KeQueryTickCount((LARGE_INTEGER *)&HH);//IoInputDword(0x8008);
+		temp = HH - LAST_USB_EVENT_TICK;
 
-#endif
-		wait_ms(10);	
+		//if (temp>(3579)) {
+		if (temp>(1000)) {
+			do_all_timers();
+			LAST_USB_EVENT_TICK = HH;
+		}
+
+		//if (LAST_USB_IRQ != OHCI_1_INTERRUPT ) {
+		//	LAST_USB_IRQ = OHCI_1_INTERRUPT;
+			handle_irqs(-1);
+		//}
+
+		delay = 10;
+		KeDelayExecutionThread(KernelMode, FALSE, (LARGE_INTEGER *)&delay); //wait_us(1);
 		n--;
 	}
 	printk("wait for completion done %i\n",x->done);
@@ -374,11 +417,468 @@ void my_kmem_cache_free(kmem_cache_t *co, void *ptr)
 	ExFreeToNPagedLookasideList((PNPAGED_LOOKASIDE_LIST)co, ptr);
 }
 /*------------------------------------------------------------------------*/ 
-// DMA, not used now
+// DMA support routines
 /*------------------------------------------------------------------------*/ 
+#ifdef USB_DMA_SINGLE_SUPPORT
+static IO_ALLOCATION_ACTION NTAPI MapRegisterCallback(PDEVICE_OBJECT DeviceObject,
+                                                      PIRP Irp,
+                                                      PVOID MapRegisterBase,
+                                                      PVOID Context);
+#endif
+
+NTSTATUS
+init_dma(POHCI_DEVICE_EXTENSION pDevExt)
+{
+	// Prepare device descriptor structure
+	DEVICE_DESCRIPTION dd;
+#ifdef USB_DMA_SINGLE_SUPPORT
+	KEVENT DMAEvent;
+	KIRQL OldIrql;
+	NTSTATUS Status;
+#endif
+
+	RtlZeroMemory( &dd, sizeof(dd) );
+	dd.Version = DEVICE_DESCRIPTION_VERSION;
+	dd.Master = TRUE;
+	dd.ScatterGather = TRUE;
+	dd.DemandMode = FALSE;
+	dd.AutoInitialize = FALSE;
+	dd.Dma32BitAddresses = TRUE;
+	dd.InterfaceType = PCIBus;
+	dd.DmaChannel = 0;//pDevExt->dmaChannel;
+	dd.MaximumLength = 128;//MAX_DMA_LENGTH;
+	dd.DmaWidth = Width32Bits;
+	dd.DmaSpeed = MaximumDmaSpeed;
+
+	// The following taken from Win2k DDB:
+	// "Compute the maximum number of mapping regs
+	// this device could possibly need. Since the
+	// transfer may not be paged aligned, add one
+	// to allow the max xfer size to span a page."
+	//pDevExt->mapRegisterCount = (MAX_DMA_LENGTH / PAGE_SIZE) + 1;
+
+    // TODO: Free it somewhere (PutDmaAdapter)
+	pDevExt->pDmaAdapter =
+		IoGetDmaAdapter( pDevExt->PhysicalDeviceObject,
+		&dd,
+		&pDevExt->mapRegisterCount);
+		
+	DPRINT1("IoGetDmaAdapter done 0x%X, mapRegisterCount=%d\n", pDevExt->pDmaAdapter, pDevExt->mapRegisterCount);
+
+	// Fail if failed
+	if (pDevExt->pDmaAdapter == NULL)
+		return STATUS_INSUFFICIENT_RESOURCES;
+
+#ifdef USB_DMA_SINGLE_SUPPORT
+	/* Allocate buffer now */
+    pDevExt->BufferSize = pDevExt->mapRegisterCount * PAGE_SIZE;
+    DPRINT1("Bufsize = %u\n", pDevExt->BufferSize);
+    pDevExt->VirtualBuffer = pDevExt->pDmaAdapter->DmaOperations->AllocateCommonBuffer(
+									pDevExt->pDmaAdapter, pDevExt->BufferSize, &pDevExt->Buffer, FALSE);
+    DPRINT1("Bufsize = %u, Buffer = 0x%x", pDevExt->BufferSize, pDevExt->Buffer.LowPart);
+
+	if (!pDevExt->VirtualBuffer)
+    {
+        DPRINT1("Could not allocate buffer\n");
+        // should try again with smaller buffer...
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    DPRINT1("Calling IoAllocateMdl()\n");
+    pDevExt->Mdl = IoAllocateMdl(pDevExt->VirtualBuffer, pDevExt->BufferSize, FALSE, FALSE, NULL);
+    DPRINT1("Bufsize == %u\n", pDevExt->BufferSize);
+
+    if (!pDevExt->Mdl)
+    {
+        DPRINT1("IoAllocateMdl() FAILED\n");
+        //TODO: Free the HAL buffer
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    DPRINT1("VBuffer == 0x%x Mdl == %u Bufsize == %u\n", pDevExt->VirtualBuffer, pDevExt->Mdl, pDevExt->BufferSize);
+
+    DPRINT1("Calling MmBuildMdlForNonPagedPool\n");
+    MmBuildMdlForNonPagedPool(pDevExt->Mdl);
+
+
+	/* Get map registers for DMA */
+	KeInitializeEvent(&DMAEvent, SynchronizationEvent, FALSE);
+
+	KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+	// TODO: Free adapter channel somewhere
+	Status = pDevExt->pDmaAdapter->DmaOperations->AllocateAdapterChannel(pDevExt->pDmaAdapter,
+				pDevExt->PhysicalDeviceObject, pDevExt->mapRegisterCount, MapRegisterCallback, &DMAEvent);
+	KeLowerIrql(OldIrql);
+
+    DPRINT1("VBuffer == 0x%x Bufsize == %u\n", pDevExt->VirtualBuffer, pDevExt->BufferSize);
+    KeWaitForSingleObject(&DMAEvent, Executive, KernelMode, FALSE, NULL);
+
+	if(Status != STATUS_SUCCESS)
+	{
+		DPRINT("init_dma(): unable to allocate adapter channels\n");
+		return STATUS_INSUFFICIENT_RESOURCES;
+	}
+#endif
+	return STATUS_SUCCESS;
+}
+
+/*
+ * FUNCTION: Acquire map registers in prep for DMA
+ * ARGUMENTS:
+ *     DeviceObject: unused
+ *     Irp: unused
+ *     MapRegisterBase: returned to blocked thread via a member var
+ *     Context: contains a pointer to the right ControllerInfo
+ *     struct
+ * RETURNS:
+ *     KeepObject, because that's what the DDK says to do
+ */
+#ifdef USB_DMA_SINGLE_SUPPORT
+static IO_ALLOCATION_ACTION NTAPI MapRegisterCallback(PDEVICE_OBJECT DeviceObject,
+                                                      PIRP Irp,
+                                                      PVOID MapRegisterBase,
+                                                      PVOID Context)
+{
+	POHCI_DEVICE_EXTENSION pDevExt = (POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+	UNREFERENCED_PARAMETER(Irp);
+
+	DPRINT("usb_linuxwrapper: MapRegisterCallback Called, base=0x%08x\n", MapRegisterBase);
+
+	pDevExt->MapRegisterBase = MapRegisterBase;
+
+	// signal that we are finished
+    KeSetEvent(Context, 0, FALSE);
+
+	return KeepObject;//DeallocateObjectKeepRegisters;
+}
+#endif
+
 void *my_dma_pool_alloc(struct dma_pool *pool, int gfp_flags, dma_addr_t *dma_handle)
 {
 	// HalAllocCommonBuffer
 	// But ideally IoGetDmaAdapter
+
+	DPRINT1("dma_pool_alloc() called\n");
 	return NULL;
+}
+
+/*
+pci_pool_create --  Creates a pool of pci consistent memory blocks, for dma. 
+
+struct pci_pool * pci_pool_create (const char * name, struct pci_dev * pdev, size_t size, size_t align, size_t allocation, int flags);
+
+Arguments:
+name - name of pool, for diagnostics 
+pdev - pci device that will be doing the DMA 
+size - size of the blocks in this pool. 
+align - alignment requirement for blocks; must be a power of two 
+allocation - returned blocks won't cross this boundary (or zero) 
+flags - SLAB_* flags (not all are supported). 
+
+Description:
+Returns a pci allocation pool with the requested characteristics, or null if one can't be created.
+Given one of these pools, pci_pool_alloc may be used to allocate memory. Such memory will all have
+"consistent" DMA mappings, accessible by the device and its driver without using cache flushing
+primitives. The actual size of blocks allocated may be larger than requested because of alignment. 
+If allocation is nonzero, objects returned from pci_pool_alloc won't cross that size boundary.
+This is useful for devices which have addressing restrictions on individual DMA transfers, such
+as not crossing boundaries of 4KBytes. 
+*/
+struct pci_pool *my_pci_pool_create(const char * name, struct pci_dev * pdev, size_t size, size_t align, size_t allocation)
+{
+	struct pci_pool		*retval;
+
+	if (align == 0)
+		align = 1;
+	if (size == 0)
+		return 0;
+	else if (size < align)
+		size = align;
+	else if ((size % align) != 0) {
+		size += align + 1;
+		size &= ~(align - 1);
+	}
+
+	if (allocation == 0) {
+		if (PAGE_SIZE < size)
+			allocation = size;
+		else
+			allocation = PAGE_SIZE;
+		// FIXME: round up for less fragmentation
+	} else if (allocation < size)
+		return 0;
+		
+	retval = ExAllocatePool(NonPagedPool, sizeof(retval)); //FIXME: Should it be non-paged?
+														// pci_pool is rather big struct
+	
+	// fill retval structure
+	strncpy (retval->name, name, sizeof retval->name);
+	retval->name[sizeof retval->name - 1] = 0;
+	
+	retval->allocation = allocation;
+	retval->size = size;
+	retval->blocks_per_page = allocation / size;
+	retval->pdev = pdev;
+
+	retval->pages_allocated = 0;
+	retval->blocks_allocated = 0;
+	
+	DPRINT1("pci_pool_create(): %s/%s size %d, %d/page (%d alloc)\n",
+		pdev ? pdev->slot_name : NULL, retval->name, size,
+		retval->blocks_per_page, allocation);
+
+	return retval;
+}
+
+/*
+Name:
+pci_pool_alloc --  get a block of consistent memory 
+
+Synopsis:
+void * pci_pool_alloc (struct pci_pool * pool, int mem_flags, dma_addr_t * handle);
+
+Arguments:
+pool - pci pool that will produce the block 
+
+mem_flags - SLAB_KERNEL or SLAB_ATOMIC 
+
+handle - pointer to dma address of block 
+
+Description:
+This returns the kernel virtual address of a currently unused block, and reports its dma
+address through the handle. If such a memory block can't be allocated, null is returned. 
+*/
+void * my_pci_pool_alloc(struct pci_pool * pool, int mem_flags, dma_addr_t *dma_handle)
+{
+	PVOID result;
+	POHCI_DEVICE_EXTENSION devExt = (POHCI_DEVICE_EXTENSION)pool->pdev->dev_ext;
+	//PHYSICAL_ADDRESS logicalAddr;
+	DPRINT1("pci_pool_alloc() called, blocks already allocated=%d\n", pool->blocks_allocated);
+	//size_t current_block_in_page;
+	int page,map,i,block,offset;
+
+	if (pool->pages_allocated == 0)
+	{
+		// we need to allocate at least one page
+		pool->pages[pool->pages_allocated].virtualAddress =
+			devExt->pDmaAdapter->DmaOperations->AllocateCommonBuffer(devExt->pDmaAdapter,
+				PAGE_SIZE, &pool->pages[pool->pages_allocated].dmaAddress, FALSE); //FIXME: Cache-enabled?
+
+		// mark all blocks as free (bit=set)
+		memset(pool->pages[pool->pages_allocated].bitmap, 0xFF, 128*sizeof(long));
+
+		/* FIXME: the next line replaces physical address by virtual address:
+		* this change is needed to boot VMWare, but I'm really not sure this
+		* change is correct!
+		*/
+		//pool->pages[pool->pages_allocated].dmaAddress.QuadPart = (ULONG_PTR)pool->pages[pool->pages_allocated].virtualAddress;
+		pool->pages_allocated++;
+	}
+
+	// search for a free block in all pages
+	for (page=0; page<pool->pages_allocated; page++)
+	{
+		for (map=0,i=0; i < pool->blocks_per_page; i+= BITS_PER_LONG, map++)
+		{
+			if (pool->pages[page].bitmap[map] == 0)
+				continue;
+            
+			block = ffz(~ pool->pages[page].bitmap[map]);
+
+			if ((i + block) < pool->blocks_per_page)
+			{
+				clear_bit(block, &pool->pages[page].bitmap[map]);
+				offset = (BITS_PER_LONG * map) + block;
+				offset *= pool->size;
+				goto ready;
+			}
+		}
+	}
+
+	//TODO: alloc page here then
+	DPRINT1("Panic!! We need one more page to be allocated, and Fireball doesn't want to alloc it!\n");
+	offset = 0;
+	return 0;
+
+ready:
+	*dma_handle = pool->pages[page].dmaAddress.QuadPart + offset;
+	result = (char *)pool->pages[page].virtualAddress + offset;
+	pool->blocks_allocated++;
+
+#if 0
+	// check do we have enough free blocks on the current page
+	if (pool->pages_allocated*pool->blocks_per_page < pool->blocks_allocated+1)
+	{
+		DPRINT1("Panic!! We need one more page to be allocated, and Fireball doesn't want to alloc it!\n");
+		*dma_handle = 0;
+		return NULL;
+	}
+
+	// Alloc one block now
+	pool->blocks_allocated++;
+	current_block_in_page = pool->blocks_allocated - (pool->blocks_allocated / pool->blocks_per_page) * pool->blocks_per_page;
+	*dma_handle = pool->pages[pool->pages_allocated-1].dmaAddress.QuadPart + pool->size*(current_block_in_page - 1);
+	result = pool->pages[pool->pages_allocated-1].virtualAddress + pool->size*(current_block_in_page - 1);
+#endif
+
+	return result;
+}
+
+/*
+Name
+pci_pool_free --  put block back into pci pool 
+Synopsis
+
+void pci_pool_free (struct pci_pool * pool, void * vaddr, dma_addr_t dma);
+
+Arguments
+
+pool - the pci pool holding the block 
+
+vaddr - virtual address of block 
+
+dma - dma address of block 
+
+Description:
+Caller promises neither device nor driver will again touch this block unless it is first re-allocated.
+*/
+void my_pci_pool_free (struct pci_pool * pool, void * vaddr, dma_addr_t dma)
+{
+	int page, block, map;
+
+	// Find page
+	for (page=0; page<pool->pages_allocated; page++)
+	{
+		if (dma < pool->pages[page].dmaAddress.QuadPart)
+			continue;
+		if (dma < (pool->pages[page].dmaAddress.QuadPart + pool->allocation))
+			break;
+	}
+
+	block = dma - pool->pages[page].dmaAddress.QuadPart;
+	block /= pool->size;
+	map = block / BITS_PER_LONG;
+	block %= BITS_PER_LONG;
+
+	// mark as free
+	set_bit (block, &pool->pages[page].bitmap[map]);
+
+	pool->blocks_allocated--;
+
+	DPRINT1("pci_pool_free(): alloc'd: %d\n", pool->blocks_allocated);
+}
+
+/*
+pci_pool_destroy --  destroys a pool of pci memory blocks. 
+Synopsis
+
+void pci_pool_destroy (struct pci_pool * pool);
+
+
+Arguments:
+pool - pci pool that will be destroyed 
+
+Description
+Caller guarantees that no more memory from the pool is in use, and that nothing will try to
+use the pool after this call. 
+*/
+void __inline__ my_pci_pool_destroy (struct pci_pool * pool)
+{
+	DPRINT1("pci_pool_destroy(): alloc'd: %d, UNIMPLEMENTED\n", pool->blocks_allocated);
+
+	ExFreePool(pool);
+}
+
+void  *my_pci_alloc_consistent(struct pci_dev *hwdev, size_t size, dma_addr_t *dma_handle)
+{
+    POHCI_DEVICE_EXTENSION devExt = (POHCI_DEVICE_EXTENSION)hwdev->dev_ext;
+	DPRINT1("pci_alloc_consistent() size=%d\n", size);
+
+    return devExt->pDmaAdapter->DmaOperations->AllocateCommonBuffer(devExt->pDmaAdapter, size, (PPHYSICAL_ADDRESS)dma_handle, FALSE); //FIXME: Cache-enabled?
+}
+
+dma_addr_t my_dma_map_single(struct device *hwdev, void *ptr, size_t size, enum dma_data_direction direction)
+{
+    //PHYSICAL_ADDRESS BaseAddress;
+    //POHCI_DEVICE_EXTENSION pDevExt = (POHCI_DEVICE_EXTENSION)hwdev->dev_ext;
+    //PUCHAR VirtualAddress = (PUCHAR) MmGetMdlVirtualAddress(pDevExt->Mdl);
+	//ULONG transferSize = size;
+	//BOOLEAN WriteToDevice;
+
+	//DPRINT1("dma_map_single() ptr=0x%lx, size=0x%x, dir=%d\n", ptr, size, direction);
+	/*ASSERT(pDevExt->BufferSize > size);
+
+	// FIXME: It must be an error if DMA_BIDIRECTIONAL trasnfer happens, since MSDN says
+	//        the buffer is locked
+	if (direction == DMA_BIDIRECTIONAL || direction == DMA_TO_DEVICE)
+        WriteToDevice = TRUE;
+	else
+		WriteToDevice = FALSE;
+
+    DPRINT1("IoMapTransfer\n");
+    BaseAddress = pDevExt->pDmaAdapter->DmaOperations->MapTransfer(pDevExt->pDmaAdapter,
+                    pDevExt->Mdl,
+                    pDevExt->MapRegisterBase,
+                    (PUCHAR) MmGetMdlVirtualAddress(pDevExt->Mdl),
+                    &transferSize,
+                    WriteToDevice);
+
+	if (WriteToDevice)
+	{
+		DPRINT1("Writing to the device...\n");
+		memcpy(VirtualAddress, ptr, size);
+	}
+	else
+	{
+		DPRINT1("Reading from the device...\n");
+		memcpy(ptr, VirtualAddress, size);
+	}*/
+
+	//DPRINT1("VBuffer == 0x%x (really 0x%x?) transf_size == %u\n", pDevExt->VirtualBuffer, MmGetPhysicalAddress(pDevExt->VirtualBuffer).LowPart, transferSize);
+	//DPRINT1("VBuffer == 0x%x (really 0x%x?) transf_size == %u\n", ptr, MmGetPhysicalAddress(ptr).LowPart, transferSize);
+	
+	return MmGetPhysicalAddress(ptr).QuadPart;//BaseAddress.QuadPart; /* BIG HACK */
+}
+
+// 2.6 version of pci_unmap_single
+//void my_dma_unmap_single(struct device *dev, dma_addr_t dma_addr, size_t size, enum dma_data_direction direction)
+void my_dma_unmap_single(struct device *dev, dma_addr_t dma_addr, size_t size, enum dma_data_direction direction)
+{
+	//DPRINT1("dma_unmap_single() called, nothing to do\n");
+	/* nothing yet */
+}
+
+void my_dma_sync_single(struct device *hwdev,
+				       dma_addr_t dma_handle,
+				       size_t size, int direction)
+{
+	DPRINT1("dma_sync_single() called, UNIMPLEMENTED\n");
+	/* nothing yet */
+}
+
+void my_dma_sync_sg(struct device *hwdev,
+				   struct scatterlist *sg,
+				   int nelems, int direction)
+{
+	DPRINT1("dma_sync_sg() called, UNIMPLEMENTED\n");
+	/* nothing yet */
+}
+
+
+int my_dma_map_sg(struct device *hwdev, struct scatterlist *sg, int nents, enum dma_data_direction direction)
+{
+	DPRINT1("dma_map_sg() called, UNIMPLEMENTED\n");
+	return 0;
+}
+
+void my_dma_unmap_sg(struct device *hwdev, struct scatterlist *sg, int nents, enum dma_data_direction direction)
+{
+	DPRINT1("dma_unmap_sg() called, UNIMPLEMENTED\n");
+	/* nothing yet */
+}
+
+/* forwarder ro dma_ equivalent */
+void my_pci_unmap_single(struct pci_dev *hwdev, dma_addr_t dma_addr, size_t size, int direction)
+{
+	my_dma_unmap_single(&hwdev->dev, dma_addr, size, direction);
 }
