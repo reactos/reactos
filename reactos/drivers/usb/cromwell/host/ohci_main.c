@@ -131,13 +131,15 @@ InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 	NTSTATUS Status;
 	POHCI_DEVICE_EXTENSION DeviceExtension = (POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-	// Fill generic linux structs
+	// Allocate and fill generic linux structs
 	dev = ExAllocatePoolWithTag(PagedPool, sizeof(struct pci_dev), USB_OHCI_TAG);
-	
-	init_wrapper(dev);
 	dev->irq = DeviceExtension->InterruptVector;
 	dev->dev_ext = (PVOID)DeviceExtension;
+	dev->dev.dev_ext = (PVOID)DeviceExtension;
 	dev->slot_name = ExAllocatePoolWithTag(NonPagedPool, 128, USB_OHCI_TAG); // 128 max len for slot name
+
+	// Init wrapper
+	init_wrapper(dev);
 
 	strcpy(dev->dev.name, "OpenHCI PCI-USB Controller");
 	strcpy(dev->slot_name, "OHCD PCI Slot");
