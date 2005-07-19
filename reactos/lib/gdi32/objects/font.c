@@ -782,3 +782,49 @@ RemoveFontResourceA(
 
   return rc;
 }
+
+/***********************************************************************
+ *           GdiGetCharDimensions
+ *
+ * Gets the average width of the characters in the English alphabet.
+ *
+ * PARAMS
+ *  hdc    [I] Handle to the device context to measure on.
+ *  lptm   [O] Pointer to memory to store the text metrics into.
+ *  height [O] On exit, the maximum height of characters in the English alphabet.
+ *
+ * RETURNS
+ *  The average width of characters in the English alphabet.
+ *
+ * NOTES
+ *  This function is used by the dialog manager to get the size of a dialog
+ *  unit. It should also be used by other pieces of code that need to know
+ *  the size of a dialog unit in logical units without having access to the
+ *  window handle of the dialog.
+ *  Windows caches the font metrics from this function, but we don't and
+ *  there doesn't appear to be an immediate advantage to do so.
+ *
+ * SEE ALSO
+ *  GetTextExtentPointW, GetTextMetricsW, MapDialogRect.
+ */
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GdiGetCharDimensions(HDC hdc, LPTEXTMETRICW lptm, DWORD *height)
+{
+    SIZE sz;
+    static const WCHAR alphabet[] = {
+        'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q',
+        'r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H',
+        'I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',0};
+
+    if(lptm && !GetTextMetricsW(hdc, lptm)) return 0;
+
+    if(!GetTextExtentPointW(hdc, alphabet, 52, &sz)) return 0;
+
+    if (height) *height = sz.cy;
+    return (sz.cx / 26 + 1) / 2;
+}
+
