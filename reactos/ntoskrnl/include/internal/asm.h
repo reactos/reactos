@@ -1,4 +1,8 @@
 /*
+ * FIXME: Will be moved to main include directory soon
+ */
+
+/*
  * Definitions for the offsets of members in the KV86M_REGISTERS
  */
 #define	KV86M_REGISTERS_EBP	(0x0)
@@ -118,5 +122,61 @@
 #define KTRAP_FRAME_SIZE           (0x8C)
 
 /* User Shared Data */
-#define KUSER_SHARED_SYSCALL       0x7FFE0300
-#define KUSER_SHARED_SYSCALL_RET   0x7FFE0304
+#define KUSER_SHARED_DATA               0x7FFE0000
+#define KUSER_SHARED_PROCESSOR_FEATURES KUSER_SHARED_DATA + 0x274
+#define KUSER_SHARED_SYSCALL            KUSER_SHARED_DATA + 0x300
+#define KUSER_SHARED_SYSCALL_RET        KUSER_SHARED_DATA + 0x304
+#define PROCESSOR_FEATURE_FXSR          KUSER_SHARED_PROCESSOR_FEATURES + 0x4
+
+/* CONTEXT CONSTANTS */
+#define CONTEXT_FULL                    0x10007
+#define CONTEXT_FLOATING_POINT          0xF
+#define CONTEXT_FLAGS                   0x0
+#define CONTEXT_DR6                     0x14
+#define CONTEXT_FLOAT_SAVE              0x1C
+#define CONTEXT_EDI                     0x9C
+#define CONTEXT_ESI                     0xA0
+#define CONTEXT_EBX                     0xA4
+#define CONTEXT_EDX                     0xA8
+#define CONTEXT_ECX                     0xAC
+#define CONTEXT_EAX                     0xB0
+#define CONTEXT_EBP                     0xB4
+#define CONTEXT_EIP                     0xB8
+#define CONTEXT_ESP                     0xC4
+#define CONTEXT_FLOAT_SAVE_CONTROL_WORD CONTEXT_FLOAT_SAVE + FN_CONTROL_WORD
+#define CONTEXT_FLOAT_SAVE_STATUS_WORD  CONTEXT_FLOAT_SAVE + FN_STATUS_WORD
+#define CONTEXT_FLOAT_SAVE_TAG_WORD     CONTEXT_FLOAT_SAVE + FN_TAG_WORD
+
+/* TEB CONSTANTS */
+#define TEB_EXCEPTION_LIST              0x0
+#define TEB_STACK_BASE                  0x4
+#define TEB_STACK_LIMIT                 0x8
+#define TEB_FIBER_DATA                  0x10
+#define TEB_ACTIVATION_CONTEXT_STACK_POINTER 0x1A8
+#define TEB_DEALLOCATION_STACK          0xE0C
+#define TEB_GUARANTEED_STACK_BYTES      0xF78
+#define TEB_FLS_DATA                    0xFB4
+
+/* FIBER CONSTANTS */
+#define FIBER_PARAMETER                 0x0
+#define FIBER_EXCEPTION_LIST            0x4
+#define FIBER_STACK_BASE                0x8
+#define FIBER_STACK_LIMIT               0xC
+#define FIBER_DEALLOCATION_STACK        0x10
+#define FIBER_CONTEXT                   0x14
+#define FIBER_GUARANTEED_STACK_BYTES    0x2E0
+#define FIBER_FLS_DATA                  0x2E4
+#define FIBER_ACTIVATION_CONTEXT_STACK  0x2E8
+#define FIBER_CONTEXT_FLAGS             FIBER_CONTEXT + CONTEXT_FLAGS
+#define FIBER_CONTEXT_EAX               FIBER_CONTEXT + CONTEXT_EAX
+#define FIBER_CONTEXT_EBX               FIBER_CONTEXT + CONTEXT_EBX
+#define FIBER_CONTEXT_ECX               FIBER_CONTEXT + CONTEXT_ECX
+#define FIBER_CONTEXT_EDX               FIBER_CONTEXT + CONTEXT_EDX
+#define FIBER_CONTEXT_ESI               FIBER_CONTEXT + CONTEXT_ESI
+#define FIBER_CONTEXT_EDI               FIBER_CONTEXT + CONTEXT_EDI
+#define FIBER_CONTEXT_EBP               FIBER_CONTEXT + CONTEXT_EBP
+#define FIBER_CONTEXT_ESP               FIBER_CONTEXT + CONTEXT_ESP
+#define FIBER_CONTEXT_DR6               FIBER_CONTEXT + CONTEXT_DR6
+#define FIBER_CONTEXT_FLOAT_SAVE_STATUS_WORD    FIBER_CONTEXT + CONTEXT_FLOAT_SAVE_STATUS_WORD 
+#define FIBER_CONTEXT_FLOAT_SAVE_CONTROL_WORD   FIBER_CONTEXT + CONTEXT_FLOAT_SAVE_CONTROL_WORD
+#define FIBER_CONTEXT_FLOAT_SAVE_TAG_WORD       FIBER_CONTEXT + CONTEXT_FLOAT_SAVE_TAG_WORD
