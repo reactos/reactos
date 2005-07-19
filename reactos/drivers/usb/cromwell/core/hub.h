@@ -183,7 +183,7 @@ struct usb_hub {
 
 	int			error;		/* last reported error */
 	int			nerrors;	/* track consecutive errors */
-
+	int			RestCounter;
 	struct list_head	hub_list;	/* all hubs */
 	struct list_head	event_list;	/* hubs w/data or errs ready */
 
