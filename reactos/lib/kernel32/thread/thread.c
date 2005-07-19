@@ -44,26 +44,28 @@ _SEH_FILTER(BaseThreadExceptionFilter)
    return ExceptionDisposition;
 }
 
-__declspec(noreturn) void STDCALL
-ThreadStartup
-(
- LPTHREAD_START_ROUTINE lpStartAddress,
- LPVOID lpParameter
-)
+__declspec(noreturn)
+VOID
+STDCALL
+BaseThreadStartup(LPTHREAD_START_ROUTINE lpStartAddress,
+                  LPVOID lpParameter)
 {
-  volatile UINT uExitCode = 0;
+    volatile UINT uExitCode = 0;
 
-     _SEH_TRY
-   {
-      uExitCode = (lpStartAddress)((PVOID)lpParameter);
-   }
-   _SEH_EXCEPT(BaseThreadExceptionFilter)
-   {
-      uExitCode = _SEH_GetExceptionCode();
-   }
-   _SEH_END;
+    /* Attempt to call the Thread Start Address */
+    _SEH_TRY
+    {
+        /* Get the exit code from the Thread Start */
+        uExitCode = (lpStartAddress)((PVOID)lpParameter);
+    }
+    _SEH_EXCEPT(BaseThreadExceptionFilter)
+    {
+        /* Get the Exit code from the SEH Handler */
+        uExitCode = _SEH_GetExceptionCode();
+    } _SEH_END;
    
-  ExitThread(uExitCode);
+    /* Exit the Thread */
+    ExitThread(uExitCode);
 }
 
 
@@ -209,7 +211,7 @@ CreateRemoteThread
   0,
   nStackReserve,
   nStackCommit,
-  ThreadStartup,
+  BaseThreadStartup,
   &hThread,
   &cidClientId,
   2,
@@ -226,7 +228,7 @@ CreateRemoteThread
   0,
   &nStackReserve,
   &nStackCommit,
-  (PTHREAD_START_ROUTINE)ThreadStartup,
+  (PTHREAD_START_ROUTINE)BaseThreadStartup,
   &hThread,
   &cidClientId,
   2,

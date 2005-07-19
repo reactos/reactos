@@ -1,94 +1,128 @@
-/* $Id$
- *
- * COPYRIGHT:  See COPYING in the top level directory
- * PROJECT:    ReactOS system libraries
- * FILE:       lib/kernel32/thread/i386/fiber.S
- * PURPOSE:    Fiber context switch code for the x86 architecture
- * PROGRAMMER: KJK::Hyperion <noog@libero.it>
- *
- * UPDATE HISTORY:
- *             28/05/2003 - created
- *
+/*
+ * COPYRIGHT:   See COPYING in the top level directory
+ * PROJECT:     ReactOS system libraries
+ * FILE:        lib/kernel32/thread/i386/fiber.S
+ * PURPOSE:     Fiber context switch code for the x86 architecture
+ * PROGRAMMERS: Alex Ionescu (alex@relsoft.net)
+ *              KJK::Hyperion <noog@libero.it>
  */
 
-.extern _DbgPrint
+#include <ndk/i386/segment.h>
+
+/* 
+ * FIXME: When ntoskrnl header changes are complete, move asm.h out of ntoskrnl
+ * so that we can use it here as well
+ */
+//#include <ndk/asm.h>
+#include <../ntoskrnl/include/internal/asm.h>
 
 .globl _SwitchToFiber@4
-
-ErrStr:
- .ascii \
-"(KERNEL32:" __FILE__ ") Saving and restoring the floating point context \
-currently unimplemented\n\0"
+.intel_syntax noprefix
 
 _SwitchToFiber@4:
+    /* Get the TEB */
+    mov edx, fs:[TEB_SELECTOR]
+    
+    /* Get the Fiber */
+    mov eax, [edx+TEB_FIBER_DATA]
+    
+    /* Save the non-volatile registers */
+    mov [eax+FIBER_CONTEXT_EBX], ebx
+    mov [eax+FIBER_CONTEXT_ESI], esi
+    mov [eax+FIBER_CONTEXT_EDI], edi
+    mov [eax+FIBER_CONTEXT_EBP], ebp
+    
+    /* Check if we're to save FPU State */
+    cmp dword ptr [eax+FIBER_CONTEXT_FLAGS], CONTEXT_FULL + CONTEXT_FLOATING_POINT
+    jnz NoFpuStateSave
+    
+    /* Save the FPU State (Status and Control)*/
+    fstsw [eax+FIBER_CONTEXT_FLOAT_SAVE_STATUS_WORD]
+    fstcw [eax+FIBER_CONTEXT_FLOAT_SAVE_CONTROL_WORD]
+    
+    /* Check if the CPU supports SIMD MXCSR State Save */
+    cmp byte ptr [PROCESSOR_FEATURE_FXSR], 0
+    jnz NoFpuStateSave
+    stmxcsr [eax+FIBER_CONTEXT_DR6]
+    
+NoFpuStateSave:
 
- movl %fs:0x18, %ecx           /* Teb = NtCurrentTeb() */
+    /* Save stack since we're not touching it anymore */
+    mov [eax+FIBER_CONTEXT_ESP], esp
+    
+    /* Transfer some data from the TEB */
+    mov ecx, [edx+TEB_FLS_DATA]
+    mov [eax+FIBER_FLS_DATA], ecx
+    mov ecx, [edx+TEB_ACTIVATION_CONTEXT_STACK_POINTER]
+    mov [eax+FIBER_ACTIVATION_CONTEXT_STACK], ecx
+    
+    /* Transfer some data related to the Stack */
+    mov ecx, [edx+TEB_EXCEPTION_LIST]
+    mov [eax+FIBER_EXCEPTION_LIST], ecx
+    mov ecx, [edx+TEB_STACK_LIMIT]
+    mov [eax+FIBER_STACK_LIMIT], ecx
+    mov ecx, [edx+TEB_GUARANTEED_STACK_BYTES]
+    mov [eax+FIBER_GUARANTEED_STACK_BYTES], ecx
+    
+    /* Switch to the new fiber */
+    mov ecx, [esp+4]
+    mov [edx+TEB_FIBER_DATA], ecx
+    
+    /* Switch Fiber Data */
+    mov esi, [ecx+FIBER_EXCEPTION_LIST]
+    mov [edx+TEB_EXCEPTION_LIST], esi
+    mov esi, [ecx+FIBER_STACK_BASE]
+    mov [edx+TEB_STACK_BASE], esi
+    mov esi, [ecx+FIBER_STACK_LIMIT]
+    mov [edx+TEB_STACK_LIMIT], esi
+    mov esi, [ecx+FIBER_DEALLOCATION_STACK]
+    mov [edx+TEB_DEALLOCATION_STACK], esi
+    mov esi, [ecx+FIBER_GUARANTEED_STACK_BYTES]
+    mov [edx+TEB_GUARANTEED_STACK_BYTES], esi
+    mov esi, [ecx+FIBER_ACTIVATION_CONTEXT_STACK]
+    mov [edx+TEB_ACTIVATION_CONTEXT_STACK_POINTER], esi
+    
+    /* Restore FPU State */
+    cmp dword ptr [eax+FIBER_CONTEXT_FLAGS], CONTEXT_FULL + CONTEXT_FLOATING_POINT
+    jnz NoFpuStateRestore
+    
+    /* Check if the Status Word Changed */
+    mov esi, [eax+FIBER_CONTEXT_FLOAT_SAVE_STATUS_WORD]
+    cmp si, word ptr [ecx+FIBER_CONTEXT_FLOAT_SAVE_STATUS_WORD]
+    jnz StatusWordChanged
+    
+    /* Check if the Control Word Changed */
+    mov esi, [eax+FIBER_CONTEXT_FLOAT_SAVE_CONTROL_WORD]
+    cmp si, word ptr [ecx+FIBER_CONTEXT_FLOAT_SAVE_CONTROL_WORD]
+    jz ControlWordEqual
+    
+StatusWordChanged:
 
- /* get the current fiber */
- movl 0x10(%ecx), %eax         /* Fiber = Teb->Tib.FiberData */
+    /* Load the new one */
+    mov word ptr [ecx+FIBER_CONTEXT_FLOAT_SAVE_TAG_WORD], 0xFFFF
+    fldenv [ecx+FIBER_CONTEXT_FLOAT_SAVE_CONTROL_WORD]
+    
+ControlWordEqual:
 
- /* store the volatile context of the current fiber */
- movl 0x0(%ecx),   %edx
- movl %edx,        0x4(%eax)   /* Fiber->ExceptionList = Teb->ExceptionList */
- movl 0x4(%ecx),   %edx
- movl %edx,        0x8(%eax)   /* Fiber->StackBase = Teb->StackBase */
- movl 0x8(%ecx),   %edx
- movl %edx,        0xC(%eax)   /* Fiber->StackLimit = Teb->StackLimit */
- movl 0xE0C(%ecx), %edx
- movl %edx,        0x10(%eax)  /* Fiber->StackBottom = Teb->DeallocationStack */
- movl 0x0(%esp),   %edx
- movl %edx,        0x18(%eax)  /* Fiber->Eip = [esp + 0] */
- movl %esp,        %edx
- addl $0x8,        %edx        
- movl %edx,        0x1C(%eax)  /* Fiber->Esp = esp + 8 */
- movl %ebp,        0x20(%eax)  /* Fiber->Ebp = ebp */
- movl %ebx,        0x24(%eax)  /* Fiber->Ebx = ebx */
- movl %esi,        0x28(%eax)  /* Fiber->Esi = edi */
- movl %edi,        0x2C(%eax)  /* Fiber->Edi = esi */
+    /* Load the new one */
+    cmp byte ptr [PROCESSOR_FEATURE_FXSR], 0
+    jnz NoFpuStateRestore
+    ldmxcsr [ecx+FIBER_CONTEXT_DR6]
+    
+NoFpuStateRestore:
 
- testl $1, 0x14(%eax)
- jz l_NoFloatSave
- 
- /* save the floating point context */
- /* TODO */
- pushl ErrStr
- call _DbgPrint
- popl %ecx
- 
-l_NoFloatSave:
+    /* Restore non-volatile registers */
+    mov esi, [ecx+FIBER_CONTEXT_ESI]
+    mov edi, [ecx+FIBER_CONTEXT_EDI]
+    mov ebx, [ecx+FIBER_CONTEXT_EBX]
+    mov ebp, [ecx+FIBER_CONTEXT_EBP]
+    mov esp, [ecx+FIBER_CONTEXT_ESP]
+    
+    /* Restore FLS Data */
+    mov eax, [ecx+FIBER_FLS_DATA]
+    mov [edx+TEB_FLS_DATA], eax
 
- /* switch to the specified fiber */
- movl 0x4(%esp), %eax          /* Fiber = lpFiber */
- movl %eax, 0x10(%ecx)         /* Teb->Tib.FiberData = Fiber */
-
- /* restore the volatile context of the specified fiber */
- movl 0x4(%eax),   %edx
- movl %edx,        0x0(%ecx)   /* Teb->ExceptionList = Fiber->ExceptionList */
- movl 0x8(%eax),   %edx
- movl %edx,        0x4(%ecx)   /* Teb->StackBase = Fiber->StackBase */
- movl 0xC(%eax),   %edx
- movl %edx,        0x8(%ecx)   /* Teb->StackLimit = Fiber->StackLimit */
- movl 0x10(%eax),  %edx
- movl %edx,        0xE0C(%ecx) /* Teb->StackBottom = Fiber->DeallocationStack */
- movl 0x18(%eax),  %edx        /* edx = Fiber->Eip */
- movl 0x1C(%eax),  %esp        /* esp = Fiber->Esp */
- movl 0x20(%eax),  %ebp        /* ebp = Fiber->Ebp */
- movl 0x24(%eax),  %ebx        /* ebx = Fiber->Ebx */
- movl 0x28(%eax),  %esi        /* esi = Fiber->Esi */
- movl 0x2C(%eax),  %edi        /* edi = Fiber->Edi */
-
- testb $1, 0x14(%eax)
- jz l_NoFloatRestore
- 
- /* restore the floating point context */
- /* TODO */
- pushl ErrStr
- call _DbgPrint
- popl %ecx
- 
-l_NoFloatRestore:
-
- /* jump to the saved program counter */
- jmp *%edx
-
+    /* Return */
+    ret 4
+    
 /* EOF */
