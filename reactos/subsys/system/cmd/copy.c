@@ -185,7 +185,7 @@ int copy (TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], int append, DWORD lpdwFl
 		if (hFileDest == INVALID_HANDLE_VALUE)
 	{
 		CloseHandle (hFileSrc);
-		error_path_not_found ();
+		ConOutResPuts(STRING_ERROR_PATH_NOT_FOUND);
     nErrorLevel = 1;
 		return 0;
 	}
@@ -194,7 +194,7 @@ int copy (TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], int append, DWORD lpdwFl
 	{
 		CloseHandle (hFileDest);
 		CloseHandle (hFileSrc);
-		error_out_of_memory ();
+		ConOutResPuts(STRING_ERROR_OUT_OF_MEMORY);
     nErrorLevel = 1;
 		return 0;
 	}
@@ -466,7 +466,9 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
  
 				default:
 					/* invaild switch */
-					error_invalid_switch(_totupper(arg[i][1]));
+          LoadString(CMD_ModuleHandle, STRING_ERROR_INVALID_SWITCH, szMsg, RC_STRING_MAX_SIZE);
+	        ConOutPrintf(szMsg, _totupper(arg[i][1]));
+					
 					return 1;
 					break;
 				}
@@ -488,14 +490,15 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 	if(nFiles < 1)
 	{
 		/* There is not enough files, there has to be at least 1 */
-		error_req_param_missing();
+		ConOutResPuts(STRING_ERROR_REQ_PARAM_MISSING);
 		return 1;
 	}
  
 	if(nFiles > 2)
 	{
 		/* there is too many file names in command */
-		error_too_many_parameters("");
+    LoadString(CMD_ModuleHandle, STRING_ERROR_TOO_MANY_PARAMETERS, szMsg, RC_STRING_MAX_SIZE);
+	  ConErrPrintf(szMsg,_T(""));		
     nErrorLevel = 1;
 		return 1;
 	}

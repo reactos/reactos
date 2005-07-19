@@ -1555,7 +1555,7 @@ int _main (int argc, char *argv[])
 			OPEN_EXISTING, 0, NULL);
   if (GetConsoleScreenBufferInfo(hConsole, &Info) == FALSE)
     {
-      ConOutFormatMessage(GetLastError());
+      ConErrFormatMessage(GetLastError());
       return(1);
     }
   wColor = Info.wAttributes;
