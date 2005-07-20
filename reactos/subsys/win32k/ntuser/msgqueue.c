@@ -1423,6 +1423,13 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
       CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE,
                                              ListEntry);
 
+      IntLockMessageQueue(CurrentSentMessage->SenderQueue);
+      /* remove the message from the dispatching list */
+      if(CurrentSentMessage->DispatchingListEntry.Flink != NULL)
+      {
+        RemoveEntryList(&CurrentSentMessage->DispatchingListEntry);
+      }
+
       DPRINT("Notify the sender, the thread has been terminated while dispatching a message!\n");
 
       /* wake the sender's thread */
@@ -1430,7 +1437,8 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
       {
         KeSetEvent(CurrentSentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
       }
-
+      IntUnLockMessageQueue(CurrentSentMessage->SenderQueue);
+      
       /* dereference our and the sender's message queue */
       IntDereferenceMessageQueue(MessageQueue);
       IntDereferenceMessageQueue(CurrentSentMessage->SenderQueue);
