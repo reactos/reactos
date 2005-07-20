@@ -16,9 +16,6 @@
 /* Helper Header */
 #include <reactos/helper.h>
 
-/* LIBSUPP Header */
-#include "libsupp.h"
-
 /* FIXME: Move this somewhere else, maybe */
 #ifdef DBG
 extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
@@ -26,5 +23,15 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 #else
 #define PAGED_CODE_RTL()
 #endif
+
+extern PVOID RtlpAllocateMemory(UINT Bytes, ULONG Tag);
+extern VOID RtlpFreeMemory(PVOID Mem, ULONG Tag);
+
+#define RtlpAllocateStringMemory RtlpAllocateMemory
+#define RtlpFreeStringMemory RtlpFreeMemory
+
+#define TAG_USTR        TAG('U', 'S', 'T', 'R')
+#define TAG_ASTR        TAG('A', 'S', 'T', 'R')
+#define TAG_OSTR        TAG('O', 'S', 'T', 'R')
 
 /* EOF */

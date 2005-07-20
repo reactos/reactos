@@ -27,11 +27,6 @@
 
 /* GLOBALS *******************************************************************/
 
-#define TAG_USTR  TAG('U', 'S', 'T', 'R')
-#define TAG_ASTR  TAG('A', 'S', 'T', 'R')
-#define TAG_OSTR  TAG('O', 'S', 'T', 'R')
-
-
 extern BOOLEAN NlsMbCodePageTag;
 extern BOOLEAN NlsMbOemCodePageTag;
 
@@ -386,14 +381,14 @@ VOID
 STDCALL
 RtlFreeAnsiString(IN PANSI_STRING AnsiString)
 {
-   if (AnsiString->Buffer == NULL)
-      return;
+   if (AnsiString->Buffer != NULL)
+   {
+      RtlpFreeStringMemory(AnsiString->Buffer, TAG_ASTR);
 
-   ExFreePoolWithTag(AnsiString->Buffer, TAG_ASTR);
-
-   AnsiString->Buffer = NULL;
-   AnsiString->Length = 0;
-   AnsiString->MaximumLength = 0;
+      AnsiString->Buffer = NULL;
+      AnsiString->Length = 0;
+      AnsiString->MaximumLength = 0;
+   }
 }
 
 
@@ -404,14 +399,14 @@ VOID
 STDCALL
 RtlFreeOemString(IN POEM_STRING OemString)
 {
-   if (OemString->Buffer == NULL)
-      return;
+   if (OemString->Buffer != NULL)
+   {
+      RtlpFreeStringMemory(OemString->Buffer, TAG_OSTR);
 
-   ExFreePoolWithTag(OemString->Buffer, TAG_OSTR);
-
-   OemString->Buffer = NULL;
-   OemString->Length = 0;
-   OemString->MaximumLength = 0;
+      OemString->Buffer = NULL;
+      OemString->Length = 0;
+      OemString->MaximumLength = 0;
+   }
 }
 
 
@@ -422,14 +417,14 @@ VOID
 STDCALL
 RtlFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
 {
-   if (UnicodeString->Buffer == NULL)
-      return;
+   if (UnicodeString->Buffer != NULL)
+   {
+      RtlpFreeStringMemory(UnicodeString->Buffer, TAG_USTR);
 
-   ExFreePoolWithTag(UnicodeString->Buffer, TAG_USTR);
-
-   UnicodeString->Buffer = NULL;
-   UnicodeString->Length = 0;
-   UnicodeString->MaximumLength = 0;
+      UnicodeString->Buffer = NULL;
+      UnicodeString->Length = 0;
+      UnicodeString->MaximumLength = 0;
+   }
 }
 
 /*
@@ -696,16 +691,16 @@ RtlIntegerToUnicodeString(
                               Base,
                               sizeof(Buffer),
                               Buffer);
-   if (!NT_SUCCESS(Status))
-      return Status;
+   if (NT_SUCCESS(Status))
+   {
+      AnsiString.Buffer = Buffer;
+      AnsiString.Length = strlen (Buffer);
+      AnsiString.MaximumLength = sizeof(Buffer);
 
-   AnsiString.Buffer = Buffer;
-   AnsiString.Length = strlen (Buffer);
-   AnsiString.MaximumLength = sizeof(Buffer);
-
-   Status = RtlAnsiStringToUnicodeString (String,
-                                          &AnsiString,
-                                          FALSE);
+      Status = RtlAnsiStringToUnicodeString (String,
+                                             &AnsiString,
+                                             FALSE);
+   }
 
    return Status;
 }
@@ -733,16 +728,16 @@ RtlInt64ToUnicodeString (
                                    Base,
                                    sizeof(Buffer),
                                    Buffer);
-   if (!NT_SUCCESS(Status))
-      return Status;
+   if (NT_SUCCESS(Status))
+   {
+      AnsiString.Buffer = Buffer;
+      AnsiString.Length = strlen (Buffer);
+      AnsiString.MaximumLength = sizeof(Buffer);
 
-   AnsiString.Buffer = Buffer;
-   AnsiString.Length = strlen (Buffer);
-   AnsiString.MaximumLength = sizeof(Buffer);
-
-   Status = RtlAnsiStringToUnicodeString (String,
-                                          &AnsiString,
-                                          FALSE);
+      Status = RtlAnsiStringToUnicodeString (String,
+                                             &AnsiString,
+                                             FALSE);
+   }
 
    return Status;
 }
@@ -972,22 +967,22 @@ RtlUnicodeStringToOemSize(
 }
 
 /*
- * private
+ * @implemented
  *
+
  * NOTES
  *  This function always writes a terminating '\0'.
  *  It performs a partial copy if ansi is too small.
  */
 NTSTATUS
-FASTCALL
-RtlpUnicodeStringToAnsiString(
+STDCALL
+RtlUnicodeStringToAnsiString(
    IN OUT PANSI_STRING AnsiDest,
    IN PUNICODE_STRING UniSource,
-   IN BOOLEAN AllocateDestinationString,
-   IN POOL_TYPE PoolType)
+   IN BOOLEAN AllocateDestinationString)
 {
    NTSTATUS Status = STATUS_SUCCESS;
-   ULONG Length; //including nullterm
+   ULONG Length; /* including nullterm */
 
    if (NlsMbCodePageTag == TRUE)
    {
@@ -1000,7 +995,7 @@ RtlpUnicodeStringToAnsiString(
 
    if (AllocateDestinationString)
    {
-      AnsiDest->Buffer = ExAllocatePoolWithTag(PoolType, Length, TAG_ASTR);
+      AnsiDest->Buffer = RtlpAllocateStringMemory(Length, TAG_ASTR);
       if (AnsiDest->Buffer == NULL)
          return STATUS_NO_MEMORY;
 
@@ -1012,7 +1007,7 @@ RtlpUnicodeStringToAnsiString(
    }
    else if (Length > AnsiDest->MaximumLength)
    {
-      //make room for nullterm
+      /* make room for nullterm */
       AnsiDest->Length = AnsiDest->MaximumLength - sizeof(CHAR);
    }
 
@@ -1024,7 +1019,7 @@ RtlpUnicodeStringToAnsiString(
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePoolWithTag(AnsiDest->Buffer, TAG_ASTR);
+      RtlpFreeStringMemory(AnsiDest->Buffer, TAG_ASTR);
       return Status;
    }
 
@@ -1032,44 +1027,23 @@ RtlpUnicodeStringToAnsiString(
    return Status;
 }
 
+
 /*
  * @implemented
- *
-
- * NOTES
- *  See RtlpUnicodeStringToAnsiString
- */
-NTSTATUS
-STDCALL
-RtlUnicodeStringToAnsiString(
-   IN OUT PANSI_STRING AnsiDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN AllocateDestinationString)
-{
-   return RtlpUnicodeStringToAnsiString(
-             AnsiDest,
-             UniSource,
-             AllocateDestinationString,
-             PagedPool);
-}
-
-/*
- * private
  *
  * NOTES
  *  This function always writes a terminating '\0'.
  *  Does NOT perform a partial copy if unicode is too small!
  */
 NTSTATUS
-FASTCALL
-RtlpOemStringToUnicodeString(
+STDCALL
+RtlOemStringToUnicodeString(
    IN OUT PUNICODE_STRING UniDest,
    IN POEM_STRING OemSource,
-   IN BOOLEAN AllocateDestinationString,
-   IN POOL_TYPE PoolType)
+   IN BOOLEAN AllocateDestinationString)
 {
    NTSTATUS Status;
-   ULONG Length; //including nullterm
+   ULONG Length; /* including nullterm */
 
    if (NlsMbOemCodePageTag == TRUE)
       Length = RtlOemStringToUnicodeSize(OemSource);
@@ -1083,7 +1057,7 @@ RtlpOemStringToUnicodeString(
 
    if (AllocateDestinationString)
    {
-      UniDest->Buffer = ExAllocatePoolWithTag(PoolType, Length, TAG_USTR);
+      UniDest->Buffer = RtlpAllocateStringMemory(Length, TAG_USTR);
       if (UniDest->Buffer == NULL)
          return STATUS_NO_MEMORY;
 
@@ -1095,7 +1069,7 @@ RtlpOemStringToUnicodeString(
       return STATUS_BUFFER_TOO_SMALL;
    }
 
-   //FIXME: Do we need this????? -Gunnar
+   /* FIXME: Do we need this????? -Gunnar */
    RtlZeroMemory (UniDest->Buffer,
                   UniDest->Length);
 
@@ -1107,7 +1081,7 @@ RtlpOemStringToUnicodeString(
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePoolWithTag(UniDest->Buffer, TAG_USTR);
+      RtlpFreeStringMemory(UniDest->Buffer, TAG_USTR);
       return Status;
    }
 
@@ -1120,35 +1094,14 @@ RtlpOemStringToUnicodeString(
  * @implemented
  *
  * NOTES
- *  See RtlpOemStringToUnicodeString
- */
-NTSTATUS
-STDCALL
-RtlOemStringToUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN POEM_STRING OemSource,
-   IN BOOLEAN AllocateDestinationString)
-{
-   return RtlpOemStringToUnicodeString(
-             UniDest,
-             OemSource,
-             AllocateDestinationString,
-             PagedPool);
-}
-
-/*
- * private
- *
- * NOTES
  *   This function always '\0' terminates the string returned.
  */
 NTSTATUS
-FASTCALL
-RtlpUnicodeStringToOemString(
+STDCALL
+RtlUnicodeStringToOemString(
    IN OUT POEM_STRING OemDest,
    IN PUNICODE_STRING UniSource,
-   IN BOOLEAN  AllocateDestinationString,
-   IN POOL_TYPE PoolType)
+   IN BOOLEAN  AllocateDestinationString)
 {
    NTSTATUS Status = STATUS_SUCCESS;
    ULONG Length; //including nullterm
@@ -1165,7 +1118,7 @@ RtlpUnicodeStringToOemString(
 
    if (AllocateDestinationString)
    {
-      OemDest->Buffer = ExAllocatePoolWithTag(PoolType, Length, TAG_OSTR);
+      OemDest->Buffer = RtlpAllocateStringMemory(Length, TAG_OSTR);
       if (OemDest->Buffer == NULL)
          return STATUS_NO_MEMORY;
 
@@ -1189,32 +1142,12 @@ RtlpUnicodeStringToOemString(
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePoolWithTag(OemDest->Buffer, TAG_OSTR);
+      RtlpFreeStringMemory(OemDest->Buffer, TAG_OSTR);
       return Status;
    }
 
    OemDest->Buffer[OemDest->Length] = 0;
    return Status;
-}
-
-/*
- * @implemented
- *
- * NOTES
- *  See RtlpUnicodeStringToOemString.
- */
-NTSTATUS
-STDCALL
-RtlUnicodeStringToOemString(
-   IN OUT POEM_STRING OemDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN  AllocateDestinationString)
-{
-   return RtlpUnicodeStringToOemString(
-             OemDest,
-             UniSource,
-             AllocateDestinationString,
-             PagedPool);
 }
 
 #define ITU_IMPLEMENTED_TESTS (IS_TEXT_UNICODE_ODD_LENGTH|IS_TEXT_UNICODE_SIGNATURE)
@@ -1278,23 +1211,23 @@ done:
    return Length;
 }
 
+
 /*
- * private
+ * @implemented
  *
  * NOTES
  *  Same as RtlOemStringToUnicodeString but doesn't write terminating null
  *  A partial copy is NOT performed if the dest buffer is too small!
  */
 NTSTATUS
-FASTCALL
-RtlpOemStringToCountedUnicodeString(
+STDCALL
+RtlOemStringToCountedUnicodeString(
    IN OUT PUNICODE_STRING UniDest,
    IN POEM_STRING OemSource,
-   IN BOOLEAN AllocateDestinationString,
-   IN POOL_TYPE PoolType)
+   IN BOOLEAN AllocateDestinationString)
 {
    NTSTATUS Status;
-   ULONG Length; //excluding nullterm
+   ULONG Length; /* excluding nullterm */
 
    if (NlsMbCodePageTag == TRUE)
       Length = RtlOemStringToUnicodeSize(OemSource) - sizeof(WCHAR);
@@ -1306,7 +1239,7 @@ RtlpOemStringToCountedUnicodeString(
 
    if (AllocateDestinationString == TRUE)
    {
-      UniDest->Buffer = ExAllocatePoolWithTag (PoolType, Length, TAG_USTR);
+      UniDest->Buffer = RtlpAllocateStringMemory (Length, TAG_USTR);
       if (UniDest->Buffer == NULL)
          return STATUS_NO_MEMORY;
 
@@ -1327,31 +1260,11 @@ RtlpOemStringToCountedUnicodeString(
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePoolWithTag(UniDest->Buffer, TAG_USTR);
+      RtlpFreeStringMemory(UniDest->Buffer, TAG_USTR);
       return Status;
    }
 
    return Status;
-}
-
-/*
- * @implemented
- *
- * NOTES
- *  See RtlpOemStringToCountedUnicodeString
- */
-NTSTATUS
-STDCALL
-RtlOemStringToCountedUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN POEM_STRING OemSource,
-   IN BOOLEAN AllocateDestinationString)
-{
-   return RtlpOemStringToCountedUnicodeString(
-             UniDest,
-             OemSource,
-             AllocateDestinationString,
-             PagedPool);
 }
 
 /*
@@ -1577,17 +1490,14 @@ STDCALL
 RtlEraseUnicodeString(
    IN PUNICODE_STRING String)
 {
-   if (String->Buffer == NULL)
-      return;
+   if (String->Buffer != NULL &&
+       String->MaximumLength != 0)
+   {
+      RtlZeroMemory (String->Buffer,
+                     String->MaximumLength);
 
-   if (String->MaximumLength == 0)
-      return;
-
-   memset (String->Buffer,
-           0,
-           String->MaximumLength);
-
-   String->Length = 0;
+      String->Length = 0;
+   }
 }
 
 /*
@@ -1643,19 +1553,18 @@ RtlHashUnicodeString(
 }
 
 /*
- * private
+ * @implemented
  *
  * NOTES
  *  Same as RtlUnicodeStringToOemString but doesn't write terminating null
  *  Does a partial copy if the dest buffer is too small
  */
 NTSTATUS
-FASTCALL
-RtlpUnicodeStringToCountedOemString(
+STDCALL
+RtlUnicodeStringToCountedOemString(
    IN OUT POEM_STRING OemDest,
    IN PUNICODE_STRING UniSource,
-   IN BOOLEAN AllocateDestinationString,
-   IN POOL_TYPE PoolType)
+   IN BOOLEAN AllocateDestinationString)
 {
    NTSTATUS Status;
    ULONG Length; //excluding nullterm
@@ -1672,7 +1581,7 @@ RtlpUnicodeStringToCountedOemString(
 
    if (AllocateDestinationString)
    {
-      OemDest->Buffer = ExAllocatePoolWithTag(PoolType, Length, TAG_OSTR);
+      OemDest->Buffer = RtlpAllocateStringMemory(Length, TAG_OSTR);
       if (OemDest->Buffer == NULL)
          return STATUS_NO_MEMORY;
 
@@ -1695,30 +1604,10 @@ RtlpUnicodeStringToCountedOemString(
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePoolWithTag(OemDest->Buffer, TAG_OSTR);
+      RtlpFreeStringMemory(OemDest->Buffer, TAG_OSTR);
    }
 
    return Status;
-}
-
-/*
- * @implemented
- *
- * NOTES
- *  See RtlpUnicodeStringToCountedOemString.
- */
-NTSTATUS
-STDCALL
-RtlUnicodeStringToCountedOemString(
-   IN OUT POEM_STRING OemDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN AllocateDestinationString)
-{
-   return RtlpUnicodeStringToCountedOemString(
-             OemDest,
-             UniSource,
-             AllocateDestinationString,
-             PagedPool);
 }
 
 /*
@@ -1771,19 +1660,18 @@ RtlLargeIntegerToChar(
 }
 
 /*
- * private
+ * @implemented
  *
  * NOTES
  *  dest is never '\0' terminated because it may be equal to src, and src
  *  might not be '\0' terminated. dest->Length is only set upon success.
  */
 NTSTATUS
-FASTCALL
-RtlpUpcaseUnicodeString(
+STDCALL
+RtlUpcaseUnicodeString(
    IN OUT PUNICODE_STRING UniDest,
    IN PCUNICODE_STRING UniSource,
-   IN BOOLEAN  AllocateDestinationString,
-   IN POOL_TYPE PoolType)
+   IN BOOLEAN  AllocateDestinationString)
 {
    ULONG i;
    PWCHAR Src, Dest;
@@ -1791,7 +1679,7 @@ RtlpUpcaseUnicodeString(
    if (AllocateDestinationString == TRUE)
    {
       UniDest->MaximumLength = UniSource->Length;
-      UniDest->Buffer = ExAllocatePoolWithTag(PoolType, UniDest->MaximumLength, TAG_USTR);
+      UniDest->Buffer = RtlpAllocateStringMemory(UniDest->MaximumLength, TAG_USTR);
       if (UniDest->Buffer == NULL)
          return STATUS_NO_MEMORY;
    }
@@ -1818,40 +1706,18 @@ RtlpUpcaseUnicodeString(
  * @implemented
  *
  * NOTES
- *  See RtlpUpcaseUnicodeString
- */
-NTSTATUS
-STDCALL
-RtlUpcaseUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN PCUNICODE_STRING UniSource,
-   IN BOOLEAN  AllocateDestinationString)
-{
-
-   return RtlpUpcaseUnicodeString(
-             UniDest,
-             UniSource,
-             AllocateDestinationString,
-             PagedPool);
-}
-
-/*
- * private
- *
- * NOTES
  *  This function always writes a terminating '\0'.
  *  It performs a partial copy if ansi is too small.
  */
 NTSTATUS
-FASTCALL
-RtlpUpcaseUnicodeStringToAnsiString(
+STDCALL
+RtlUpcaseUnicodeStringToAnsiString(
    IN OUT PANSI_STRING AnsiDest,
    IN PUNICODE_STRING UniSource,
-   IN BOOLEAN  AllocateDestinationString,
-   IN POOL_TYPE PoolType)
+   IN BOOLEAN  AllocateDestinationString)
 {
    NTSTATUS Status;
-   ULONG Length; //including nullterm
+   ULONG Length; /* including nullterm */
 
    if (NlsMbCodePageTag == TRUE)
       Length = RtlUnicodeStringToAnsiSize(UniSource);
@@ -1865,7 +1731,7 @@ RtlpUpcaseUnicodeStringToAnsiString(
 
    if (AllocateDestinationString)
    {
-      AnsiDest->Buffer = ExAllocatePoolWithTag(PoolType, Length, TAG_ASTR);
+      AnsiDest->Buffer = RtlpAllocateStringMemory(Length, TAG_ASTR);
       if (AnsiDest->Buffer == NULL)
          return STATUS_NO_MEMORY;
 
@@ -1877,11 +1743,11 @@ RtlpUpcaseUnicodeStringToAnsiString(
    }
    else if (Length > AnsiDest->MaximumLength)
    {
-      //make room for nullterm
+      /* make room for nullterm */
       AnsiDest->Length = AnsiDest->MaximumLength - sizeof(CHAR);
    }
 
-   //FIXME: do we need this??????? -Gunnar
+   /* FIXME: do we need this??????? -Gunnar */
    RtlZeroMemory (AnsiDest->Buffer,
                   AnsiDest->Length);
 
@@ -1893,7 +1759,7 @@ RtlpUpcaseUnicodeStringToAnsiString(
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePoolWithTag(AnsiDest->Buffer, TAG_ASTR);
+      RtlpFreeStringMemory(AnsiDest->Buffer, TAG_ASTR);
       return Status;
    }
 
@@ -1905,39 +1771,18 @@ RtlpUpcaseUnicodeStringToAnsiString(
  * @implemented
  *
  * NOTES
- *  See RtlpUpcaseUnicodeStringToAnsiString
+ *  This function always writes a terminating '\0'.
+ *  It performs a partial copy if ansi is too small.
  */
 NTSTATUS
 STDCALL
-RtlUpcaseUnicodeStringToAnsiString(
-   IN OUT PANSI_STRING AnsiDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN  AllocateDestinationString)
-{
-   return RtlpUpcaseUnicodeStringToAnsiString(
-             AnsiDest,
-             UniSource,
-             AllocateDestinationString,
-             PagedPool);
-}
-
-/*
- * private
- *
- * NOTES
- *  Same as RtlUpcaseUnicodeStringToOemString but doesn't write terminating null
- *  It performs a partial copy if oem is too small.
- */
-NTSTATUS
-FASTCALL
-RtlpUpcaseUnicodeStringToCountedOemString(
+RtlUpcaseUnicodeStringToCountedOemString(
    IN OUT POEM_STRING OemDest,
    IN PUNICODE_STRING UniSource,
-   IN BOOLEAN AllocateDestinationString,
-   IN POOL_TYPE PoolType)
+   IN BOOLEAN AllocateDestinationString)
 {
    NTSTATUS Status;
-   ULONG Length; //excluding nullterm
+   ULONG Length; /* excluding nullterm */
 
    if (NlsMbCodePageTag == TRUE)
       Length = RtlUnicodeStringToAnsiSize(UniSource) - sizeof(CHAR);
@@ -1951,11 +1796,11 @@ RtlpUpcaseUnicodeStringToCountedOemString(
 
    if (AllocateDestinationString)
    {
-      OemDest->Buffer = ExAllocatePoolWithTag(PoolType, Length, TAG_OSTR);
+      OemDest->Buffer = RtlpAllocateStringMemory(Length, TAG_OSTR);
       if (OemDest->Buffer == NULL)
          return(STATUS_NO_MEMORY);
 
-      //FIXME: Do we need this?????
+      /* FIXME: Do we need this????? */
       RtlZeroMemory (OemDest->Buffer, Length);
 
       OemDest->MaximumLength = (WORD)Length;
@@ -1977,7 +1822,7 @@ RtlpUpcaseUnicodeStringToCountedOemString(
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePoolWithTag(OemDest->Buffer, TAG_OSTR);
+      RtlpFreeStringMemory(OemDest->Buffer, TAG_OSTR);
       return Status;
    }
 
@@ -1986,42 +1831,20 @@ RtlpUpcaseUnicodeStringToCountedOemString(
 
 /*
  * @implemented
- *
- * NOTES
- *  See RtlpUpcaseUnicodeStringToCountedOemString
- */
-NTSTATUS
-STDCALL
-RtlUpcaseUnicodeStringToCountedOemString(
-   IN OUT POEM_STRING OemDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN AllocateDestinationString)
-{
-   return RtlpUpcaseUnicodeStringToCountedOemString(
-             OemDest,
-             UniSource,
-             AllocateDestinationString,
-             PagedPool);
-}
-
-/*
- * private
- *
  * NOTES
  *  Oem string is allways nullterminated
  *  It performs a partial copy if oem is too small.
  */
 NTSTATUS
-FASTCALL
-RtlpUpcaseUnicodeStringToOemString (
+STDCALL
+RtlUpcaseUnicodeStringToOemString (
    IN OUT POEM_STRING OemDest,
    IN PUNICODE_STRING UniSource,
-   IN BOOLEAN  AllocateDestinationString,
-   IN POOL_TYPE PoolType
+   IN BOOLEAN  AllocateDestinationString
 )
 {
    NTSTATUS Status;
-   ULONG Length; //including nullterm
+   ULONG Length; /* including nullterm */
 
    if (NlsMbOemCodePageTag == TRUE)
       Length = RtlUnicodeStringToAnsiSize(UniSource);
@@ -2035,11 +1858,11 @@ RtlpUpcaseUnicodeStringToOemString (
 
    if (AllocateDestinationString)
    {
-      OemDest->Buffer = ExAllocatePoolWithTag(PoolType, Length, TAG_OSTR);
+      OemDest->Buffer = RtlpAllocateStringMemory(Length, TAG_OSTR);
       if (OemDest->Buffer == NULL)
          return STATUS_NO_MEMORY;
 
-      //FIXME: Do we need this????
+      /* FIXME: Do we need this???? */
       RtlZeroMemory (OemDest->Buffer, Length);
 
       OemDest->MaximumLength = (WORD)Length;
@@ -2050,7 +1873,7 @@ RtlpUpcaseUnicodeStringToOemString (
    }
    else if (Length > OemDest->MaximumLength)
    {
-      //make room for nullterm
+      /* make room for nullterm */
       OemDest->Length = OemDest->MaximumLength - sizeof(CHAR);
    }
 
@@ -2062,32 +1885,12 @@ RtlpUpcaseUnicodeStringToOemString (
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePoolWithTag(OemDest->Buffer, TAG_OSTR);
+      RtlpFreeStringMemory(OemDest->Buffer, TAG_OSTR);
       return Status;
    }
 
    OemDest->Buffer[OemDest->Length] = 0;
    return Status;
-}
-
-/*
- * @implemented
- * NOTES
- *  See RtlpUpcaseUnicodeStringToOemString
- */
-NTSTATUS
-STDCALL
-RtlUpcaseUnicodeStringToOemString (
-   IN OUT POEM_STRING OemDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN  AllocateDestinationString
-)
-{
-   return RtlpUpcaseUnicodeStringToOemString(
-             OemDest,
-             UniSource,
-             AllocateDestinationString,
-             PagedPool);
 }
 
 /*
@@ -2285,40 +2088,10 @@ RtlCopyUnicodeString(
 }
 
 /*
- * private
- *
- * Creates a nullterminated UNICODE_STRING
- */
-BOOLEAN
-FASTCALL
-RtlpCreateUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN PCWSTR  Source,
-   IN POOL_TYPE PoolType)
-{
-   ULONG Length;
-
-   Length = (wcslen (Source) + 1) * sizeof(WCHAR);
-   PoolType = PagedPool;
-   UniDest->Buffer = ExAllocatePoolWithTag(PoolType, Length, TAG_USTR);
-   if (UniDest->Buffer == NULL)
-      return FALSE;
-
-   memmove (UniDest->Buffer,
-            Source,
-            Length);
-
-   UniDest->MaximumLength = Length;
-   UniDest->Length = Length - sizeof (WCHAR);
-
-   return TRUE;
-}
-
-/*
  * @implemented
  *
  * NOTES
- *  See RtlpCreateUnicodeString
+ * Creates a nullterminated UNICODE_STRING
  */
 BOOLEAN
 STDCALL
@@ -2326,9 +2099,21 @@ RtlCreateUnicodeString(
    IN OUT PUNICODE_STRING UniDest,
    IN PCWSTR  Source)
 {
+   ULONG Length;
 
-   DPRINT("RtlCreateUnicodeString\n");
-   return RtlpCreateUnicodeString(UniDest, Source, PagedPool);
+   Length = (wcslen (Source) + 1) * sizeof(WCHAR);
+   UniDest->Buffer = RtlpAllocateStringMemory(Length, TAG_USTR);
+   if (UniDest->Buffer == NULL)
+      return FALSE;
+
+   RtlCopyMemory (UniDest->Buffer,
+                  Source,
+                  Length);
+
+   UniDest->MaximumLength = Length;
+   UniDest->Length = Length - sizeof (WCHAR);
+
+   return TRUE;
 }
 
 /*
@@ -2354,27 +2139,25 @@ RtlCreateUnicodeStringFromAsciiz(
 }
 
 /*
- * private
+ * @implemented
  *
  * NOTES
  *  Dest is never '\0' terminated because it may be equal to src, and src
  *  might not be '\0' terminated.
  *  Dest->Length is only set upon success.
  */
-NTSTATUS
-FASTCALL
-RtlpDowncaseUnicodeString(
+NTSTATUS STDCALL
+RtlDowncaseUnicodeString(
    IN OUT PUNICODE_STRING UniDest,
    IN PUNICODE_STRING UniSource,
-   IN BOOLEAN AllocateDestinationString,
-   IN POOL_TYPE PoolType)
+   IN BOOLEAN AllocateDestinationString)
 {
    ULONG i;
    PWCHAR Src, Dest;
 
    if (AllocateDestinationString)
    {
-      UniDest->Buffer = ExAllocatePoolWithTag(PoolType, UniSource->Length, TAG_USTR);
+      UniDest->Buffer = RtlpAllocateStringMemory(UniSource->Length, TAG_USTR);
       if (UniDest->Buffer == NULL)
          return STATUS_NO_MEMORY;
 
@@ -2415,25 +2198,6 @@ RtlpDowncaseUnicodeString(
  * @implemented
  *
  * NOTES
- *  See RtlpDowncaseUnicodeString
- */
-NTSTATUS STDCALL
-RtlDowncaseUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN PUNICODE_STRING UniSource,
-   IN BOOLEAN AllocateDestinationString)
-{
-   return RtlpDowncaseUnicodeString(
-             UniDest,
-             UniSource,
-             AllocateDestinationString,
-             PagedPool);
-}
-
-/*
- * @implemented
- *
- * NOTES
  *  if src is NULL dest is unchanged.
  *  dest is '\0' terminated when the MaximumLength allowes it.
  *  When dest fits exactly in MaximumLength characters the '\0' is ommitted.
@@ -2459,19 +2223,18 @@ RtlAppendUnicodeToString(IN OUT PUNICODE_STRING Destination,
 }
 
 /*
- * private
+ * @implemented
  *
  * NOTES
  *  This function always writes a terminating '\0'.
  *  If the dest buffer is too small a partial copy is NOT performed!
  */
 NTSTATUS
-FASTCALL
-RtlpAnsiStringToUnicodeString(
+STDCALL
+RtlAnsiStringToUnicodeString(
    IN OUT PUNICODE_STRING UniDest,
    IN PANSI_STRING AnsiSource,
-   IN BOOLEAN AllocateDestinationString,
-   IN POOL_TYPE PoolType)
+   IN BOOLEAN AllocateDestinationString)
 {
    NTSTATUS Status;
    ULONG Length; //including nullterm
@@ -2486,7 +2249,7 @@ RtlpAnsiStringToUnicodeString(
 
    if (AllocateDestinationString == TRUE)
    {
-      UniDest->Buffer = ExAllocatePoolWithTag(PoolType, Length, TAG_USTR);
+      UniDest->Buffer = RtlpAllocateStringMemory(Length, TAG_USTR);
       if (UniDest->Buffer == NULL)
          return STATUS_NO_MEMORY;
 
@@ -2512,32 +2275,12 @@ RtlpAnsiStringToUnicodeString(
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePoolWithTag(UniDest->Buffer, TAG_USTR);
+      RtlpFreeStringMemory(UniDest->Buffer, TAG_USTR);
       return Status;
    }
 
    UniDest->Buffer[UniDest->Length / sizeof(WCHAR)] = 0;
    return Status;
-}
-
-/*
- * @implemented
- *
- * NOTES
- *  See RtlpAnsiStringToUnicodeString
- */
-NTSTATUS
-STDCALL
-RtlAnsiStringToUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN PANSI_STRING AnsiSource,
-   IN BOOLEAN AllocateDestinationString)
-{
-   return RtlpAnsiStringToUnicodeString(
-             UniDest,
-             AnsiSource,
-             AllocateDestinationString,
-             PagedPool);
 }
 
 /*
@@ -2621,7 +2364,7 @@ RtlxAnsiStringToUnicodeSize(IN PANSI_STRING AnsiString)
 ULONG STDCALL
 RtlxOemStringToUnicodeSize(IN POEM_STRING OemString)
 {
-   return RtlOemStringToUnicodeSize((PANSI_STRING)OemString);
+   return RtlOemStringToUnicodeSize(OemString);
 }
 
 
@@ -2647,13 +2390,15 @@ RtlxUnicodeStringToOemSize(IN PUNICODE_STRING UnicodeString)
 
 /*
  * @implemented
+ *
+ * NOTES
+ *  See RtlpDuplicateUnicodeString
  */
 NTSTATUS STDCALL
-RtlpDuplicateUnicodeString(
+RtlDuplicateUnicodeString(
    INT AddNull,
    IN PUNICODE_STRING SourceString,
-   PUNICODE_STRING DestinationString,
-   POOL_TYPE PoolType)
+   PUNICODE_STRING DestinationString)
 {
    if (SourceString == NULL || DestinationString == NULL)
       return STATUS_INVALID_PARAMETER;
@@ -2667,12 +2412,12 @@ RtlpDuplicateUnicodeString(
    }
    else
    {
-      unsigned int DestMaxLength = SourceString->Length;
+      UINT DestMaxLength = SourceString->Length;
 
       if (AddNull)
          DestMaxLength += sizeof(UNICODE_NULL);
 
-      DestinationString->Buffer = ExAllocatePool(PoolType, DestMaxLength);
+      DestinationString->Buffer = RtlpAllocateStringMemory(DestMaxLength, TAG_USTR);
       if (DestinationString->Buffer == NULL)
          return STATUS_NO_MEMORY;
 
@@ -2685,25 +2430,6 @@ RtlpDuplicateUnicodeString(
    }
 
    return STATUS_SUCCESS;
-}
-
-/*
- * @implemented
- *
- * NOTES
- *  See RtlpDuplicateUnicodeString
- */
-NTSTATUS STDCALL
-RtlDuplicateUnicodeString(
-   INT AddNull,
-   IN PUNICODE_STRING SourceString,
-   PUNICODE_STRING DestinationString)
-{
-   return RtlpDuplicateUnicodeString(
-            AddNull,
-            SourceString,
-            DestinationString,
-            PagedPool);
 }
 
 /*

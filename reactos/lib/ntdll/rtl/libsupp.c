@@ -23,50 +23,26 @@ RtlpGetMode()
 
 
 PVOID
-STDCALL
-ExAllocatePool(
-   IN POOL_TYPE   PoolType,
-   IN SIZE_T      Bytes
-)
+RtlpAllocateMemory(UINT Bytes,
+                   ULONG Tag)
 {
-   return RtlAllocateHeap (
-      RtlGetProcessHeap (),
-      0,
-      Bytes);
+    UNREFERENCED_PARAMETER(Tag);
+    
+    return RtlAllocateHeap(RtlGetProcessHeap(),
+                           0,
+                           Bytes);
 }
 
-PVOID
-STDCALL
-ExAllocatePoolWithTag(
-   IN POOL_TYPE   PoolType,
-   IN SIZE_T      Bytes,
-   IN ULONG       Tag
-)
-{
-   return RtlAllocateHeap (
-      RtlGetProcessHeap (),
-      0,
-      Bytes);
-}
 
 VOID
-STDCALL
-ExFreePool(IN PVOID Mem)
+RtlpFreeMemory(PVOID Mem,
+               ULONG Tag)
 {
-   RtlFreeHeap (
-      RtlGetProcessHeap (),
-      0,
-      Mem);
-}
-
-VOID
-STDCALL
-ExFreePoolWithTag(IN PVOID Mem, IN ULONG Tag)
-{
-   RtlFreeHeap (
-      RtlGetProcessHeap (),
-      0,
-      Mem);
+    UNREFERENCED_PARAMETER(Tag);
+    
+    RtlFreeHeap(RtlGetProcessHeap(),
+                0,
+                Mem);
 }
 
 

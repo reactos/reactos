@@ -70,8 +70,8 @@ BOOLEAN CmImportSystemHive(PCHAR ChunkBase, ULONG ChunkSize);
 BOOLEAN CmImportHardwareHive(PCHAR ChunkBase, ULONG ChunkSize);
 VOID KdInitSystem(ULONG Reserved, PLOADER_PARAMETER_BLOCK LoaderBlock);
 
-BOOLEAN
-FASTCALL
+/* FIXME - RtlpCreateUnicodeString is obsolete and should be removed ASAP! */
+BOOLEAN FASTCALL
 RtlpCreateUnicodeString(
    IN OUT PUNICODE_STRING UniDest,
    IN PCWSTR  Source,
