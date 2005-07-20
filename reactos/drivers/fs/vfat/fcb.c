@@ -22,8 +22,6 @@
 
 #define TAG_FCB TAG('V', 'F', 'C', 'B')
 
-#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
-
 /*  --------------------------------------------------------  PUBLICS  */
 
 ULONG vfatNameHash(ULONG hash, PUNICODE_STRING NameU)

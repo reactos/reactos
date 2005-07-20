@@ -38,7 +38,7 @@
 #include <ddk/ntddscsi.h>
 #include <ddk/ntdddisk.h>
 #include <ddk/ntddcdrm.h>
-#include <ddk/class2.h>
+#include <include/class2.h>
 #include <stdio.h>
 
 #define NDEBUG

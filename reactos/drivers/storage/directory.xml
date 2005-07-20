@@ -10,9 +10,6 @@
 <directory name="disk">
 	<xi:include href="disk/disk.xml" />
 </directory>
-<directory name="diskdump">
-	<xi:include href="diskdump/diskdump.xml" />
-</directory>
 <directory name="floppy">
 	<xi:include href="floppy/floppy.xml" />
 </directory>

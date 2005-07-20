@@ -17,8 +17,6 @@
 
 /* GLOBALS ******************************************************************/
 
-#define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
-
 #define  CACHEPAGESIZE(pDeviceExt) ((pDeviceExt)->FatInfo.BytesPerCluster > PAGE_SIZE ? \
 		   (pDeviceExt)->FatInfo.BytesPerCluster : PAGE_SIZE)
 

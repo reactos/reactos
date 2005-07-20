@@ -28,13 +28,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include "cdfs.h"
 
 #define NDEBUG
 #include <debug.h>
-
-#include "cdfs.h"
-
 
 /* FUNCTIONS ****************************************************************/
 

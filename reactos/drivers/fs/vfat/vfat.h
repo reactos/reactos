@@ -2,31 +2,13 @@
 
 #include <ddk/ntifs.h>
 #include <ddk/ntdddisk.h>
+#include <ndk/ntndk.h>
+#include <reactos/helper.h>
+#include <ccros.h>
 #include <limits.h>
 #include <debug.h>
 
 #define USE_ROS_CC_AND_FS
-
-/* FIXME */
-#ifdef __USE_W32API
-NTSTATUS NTAPI RtlOemStringToUnicodeString(PUNICODE_STRING, CONST STRING *, BOOLEAN);
-NTSTATUS NTAPI RtlDowncaseUnicodeString(PUNICODE_STRING, PCUNICODE_STRING, BOOLEAN);
-NTSTATUS NTAPI RtlUnicodeStringToOemString(POEM_STRING, PCUNICODE_STRING, BOOLEAN);
-#undef DeleteFile /* FIXME */
-#define VOLUME_IS_DIRTY 0x00000001 /* FIXME */
-#endif
-
-#ifdef USE_ROS_CC_AND_FS
-#ifndef __INCLUDE_DDK_NTIFS_H
-NTSTATUS STDCALL CcRosInitializeFileCache(PFILE_OBJECT, ULONG);
-NTSTATUS STDCALL CcRosReleaseFileCache(PFILE_OBJECT);
-#define FSCTL_ROS_QUERY_LCN_MAPPING CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 63, METHOD_BUFFERED, FILE_ANY_ACCESS)
-typedef struct _ROS_QUERY_LCN_MAPPING { LARGE_INTEGER LcnDiskOffset; } ROS_QUERY_LCN_MAPPING, *PROS_QUERY_LCN_MAPPING;
-#endif
-#endif
-
-#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
-#define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
 
 #include <pshpack1.h>
 struct _BootSector

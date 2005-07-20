@@ -699,14 +699,6 @@ RtlUpcaseUnicodeStringToCountedOemString(
 
 NTSTATUS
 STDCALL
-RtlUpcaseUnicodeString(
-    PUNICODE_STRING DestinationString,
-    PCUNICODE_STRING SourceString,
-    BOOLEAN AllocateDestinationString
-);
-
-NTSTATUS
-STDCALL
 RtlUnicodeStringToOemString(
     POEM_STRING DestinationString,
     PUNICODE_STRING SourceString,
@@ -856,6 +848,14 @@ RtlCreateUnicodeString(
     PCWSTR SourceString
 );
 
+NTSTATUS
+STDCALL
+RtlDowncaseUnicodeString(
+    IN OUT PUNICODE_STRING UniDest,
+    IN PUNICODE_STRING UniSource,
+    IN BOOLEAN AllocateDestinationString
+);
+
 BOOLEAN
 STDCALL
 RtlEqualUnicodeString(
@@ -868,11 +868,20 @@ VOID
 STDCALL
 RtlFreeUnicodeString(IN PUNICODE_STRING UnicodeString);
 
+NTSTATUS
+STDCALL
+RtlHashUnicodeString(
+    IN CONST UNICODE_STRING *String,
+    IN BOOLEAN CaseInSensitive,
+    IN ULONG HashAlgorithm,
+    OUT PULONG HashValue
+);
+
 VOID
 STDCALL
 RtlInitUnicodeString(
-  IN OUT PUNICODE_STRING  DestinationString,
-  IN PCWSTR  SourceString);
+  IN OUT PUNICODE_STRING DestinationString,
+  IN PCWSTR SourceString);
 
 ULONG
 STDCALL
@@ -892,19 +901,19 @@ RtlPrefixUnicodeString(
 
 NTSTATUS
 STDCALL
+RtlUpcaseUnicodeString(
+    PUNICODE_STRING DestinationString,
+    PCUNICODE_STRING SourceString,
+    BOOLEAN AllocateDestinationString
+);
+
+NTSTATUS
+STDCALL
 RtlUnicodeStringToInteger(
     PUNICODE_STRING String,
     ULONG Base,
     PULONG Value
 );
-
-NTSTATUS
-STDCALL
-RtlHashUnicodeString(
-    IN CONST UNICODE_STRING *String,
-    IN BOOLEAN CaseInSensitive,
-    IN ULONG HashAlgorithm,
-    OUT PULONG HashValue);
 
 /*
  * Ansi String Functions

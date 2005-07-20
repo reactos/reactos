@@ -34,6 +34,7 @@
 #define  CACHEPAGESIZE(pDeviceExt) ((pDeviceExt)->FatInfo.BytesPerCluster > PAGE_SIZE ? \
 		   (pDeviceExt)->FatInfo.BytesPerCluster : PAGE_SIZE)
 
+#define VOLUME_IS_DIRTY 0x00000001
 
 static NTSTATUS
 VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,

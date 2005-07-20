@@ -1,7 +1,10 @@
 #ifndef CDFS_H
 #define CDFS_H
 
+#include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
+#include <ntddcdrm.h>
+#include <ccros.h>
 
 #define USE_ROS_CC_AND_FS
 

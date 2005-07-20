@@ -17,4 +17,5 @@
 	<file>rw.c</file>
 	<file>volinfo.c</file>
 	<file>cdfs.rc</file>
+	<pch>cdfs.h</pch>
 </module>
