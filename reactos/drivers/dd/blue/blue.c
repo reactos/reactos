@@ -13,7 +13,7 @@
 
 #include <ddk/ntddk.h>
 #include <wincon.h>
-#include <ddk/ntddblue.h>
+#include <blue/ntddblue.h>
 #include <ndk/halfuncs.h>
 
 #define NDEBUG
