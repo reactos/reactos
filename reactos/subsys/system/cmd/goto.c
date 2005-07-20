@@ -67,17 +67,16 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
 	}
 
 	/* terminate label at first space char */
-	tmp = param;
-	while (*tmp && !_istspace (*tmp))
-		tmp++;
-	*tmp = _T('\0');
- 
-
+	tmp = param+1;
+  while (!_istcntrl (*tmp) && !_istspace (*tmp) &&  (*tmp != _T(':')))  
+  tmp++;
+	*(tmp) = _T('\0');
+     
 	/* set file pointer to the beginning of the batch file */
 	lNewPosHigh = 0;
 	   
   /* jump to end of the file */
-  if ( _tcsicmp( param, _T(":eof"))==0)
+  if ( _tcsicmp( param, _T(":eof"))==0) 
   {      
     SetFilePointer (bc->hBatchFile, 0, &lNewPosHigh, FILE_END);
     return 0;
@@ -95,7 +94,7 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
 		tmp = textline + _tcslen (textline) - 1;
 		
     
-    while (_istcntrl (*tmp) || _istspace (*tmp))
+    while (_istcntrl (*tmp) || _istspace (*tmp) ||  (*tmp == _T(':')))
 			tmp--;
 		*(tmp + 1) = _T('\0');
                 
@@ -112,9 +111,8 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
      if (_istspace(tmp[pos])) 
          tmp[pos]=_T('\0');
      pos++;
-    }      
-        
-    
+    }          
+           
 		/* use whole label name */
 		if ((*tmp == _T(':')) && (_tcsicmp (++tmp, param) == 0))
 			return 0;
