@@ -26,7 +26,7 @@
 
 #include <windows.h>
 #include <tchar.h>
-#include <syssetup.h>
+#include <syssetup/syssetup.h>
 #include <userenv.h>
 
 #define NDEBUG
