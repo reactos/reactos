@@ -130,7 +130,7 @@ WriteFileHeader(FILE * StubFile,
             " * PROGRAMMER:      Computer Generated File. See tools/nci/ncitool.c\n"
             " * REMARK:          DO NOT EDIT OR COMMIT MODIFICATIONS TO THIS FILE\n"
             " */\n\n\n"
-            "#define KUSER_SHARED_SYSCALL 0x7FFE0300\n\n",
+            "#include <ndk/asm.h>\n\n",
             FileDescription,
             FileLocation);
 }

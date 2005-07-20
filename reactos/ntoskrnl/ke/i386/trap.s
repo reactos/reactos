@@ -9,7 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <roscfg.h>
-#include <internal/asm.h>
+#include <ndk/asm.h>
 #include <ndk/i386/segment.h>
 
 #define KernelMode 0

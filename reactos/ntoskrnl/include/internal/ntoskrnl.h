@@ -11,7 +11,6 @@
 
 #ifdef _NTOSKRNL_
 
-#include "asm.h"
 #include "ke.h"
 #include "i386/mm.h"
 #include "i386/fpu.h"

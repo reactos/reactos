@@ -8,13 +8,10 @@
  */
 
 #include <ndk/i386/segment.h>
+#include <ndk/asm.h>
 
-/* 
- * FIXME: When ntoskrnl header changes are complete, move asm.h out of ntoskrnl
- * so that we can use it here as well
- */
-//#include <ndk/asm.h>
-#include <../ntoskrnl/include/internal/asm.h>
+#define CONTEXT_FULL                    0x10007
+#define CONTEXT_FLOATING_POINT          0xF
 
 .globl _SwitchToFiber@4
 .intel_syntax noprefix

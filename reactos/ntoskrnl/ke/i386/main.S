@@ -1,5 +1,5 @@
 #include <roscfg.h>
-#include <internal/asm.h>
+#include <ndk/asm.h>
 #include <ndk/i386/segment.h>
 
 #define AP_MAGIC (0x12481020)
