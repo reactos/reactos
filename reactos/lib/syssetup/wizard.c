@@ -33,7 +33,7 @@
 #include <string.h>
 #include <setupapi.h>
 
-#include <syssetup.h>
+#include <syssetup/syssetup.h>
 
 #include "globals.h"
 #include "resource.h"
