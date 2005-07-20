@@ -37,7 +37,7 @@
 #include <stdlib.h>
 
 #include <samlib/samlib.h>
-#include <syssetup.h>
+#include <syssetup/syssetup.h>
 #include <userenv.h>
 #include <setupapi.h>
 

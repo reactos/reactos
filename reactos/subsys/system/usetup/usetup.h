@@ -39,8 +39,8 @@
 /* DDK Disk Headers */
 #include <ddk/ntddscsi.h>
 
-/* FIXME: Put outside of DDK */
-#include <ddk/ntddblue.h>
+/* Blue Driver Header */
+#include <blue/ntddblue.h>
 
 /* Helper Header */
 #include <reactos/helper.h>

@@ -31,8 +31,8 @@
 #include <ddk/scsi.h>
 #include <ddk/ntdddisk.h>
 #include <ddk/ntddscsi.h>
-#include <ddk/class2.h>
-#include <ddk/core.h>
+#include <include/class2.h>
+#include <diskdump/diskdump.h>
 
 #include <ndk/extypes.h>
 #include <ndk/rtlfuncs.h>

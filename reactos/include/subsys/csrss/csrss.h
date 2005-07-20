@@ -2,7 +2,7 @@
 #define __INCLUDE_CSRSS_CSRSS_H
 
 #include <windows.h>
-#include <ddk/ntddblue.h>
+#include <blue/ntddblue.h>
 
 #define CSR_NATIVE     0x0000
 #define CSR_CONSOLE    0x0001

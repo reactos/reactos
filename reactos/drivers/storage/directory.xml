@@ -16,3 +16,6 @@
 <directory name="scsiport">
 	<xi:include href="scsiport/scsiport.xml" />
 </directory>
+<directory name="diskdump">
+	<xi:include href="diskdump/diskdump.xml" />
+</directory>

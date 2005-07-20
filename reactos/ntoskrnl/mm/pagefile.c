@@ -29,7 +29,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#include <ddk/core.h>
 #define NDEBUG
 #include <internal/debug.h>
 

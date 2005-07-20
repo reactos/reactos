@@ -24,11 +24,17 @@
 #undef IO_TYPE_FILE
 #define IO_TYPE_FILE                    0x0F5L /* Temp Hack */
 
+/* FIXME: Temporary until CC Ros is gone */
+#include <ccros.h>        
+
 /* ReactOS Headers */
 #include <reactos/version.h>
 #include <reactos/resource.h>
 #include <reactos/bugcodes.h>
 #include <reactos/rossym.h>
+
+/* Disk Dump Driver Header */
+#include <diskdump/diskdump.h>
 
 /* C Headers */
 #include <malloc.h>
