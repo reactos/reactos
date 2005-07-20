@@ -75,7 +75,16 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
 
 	/* set file pointer to the beginning of the batch file */
 	lNewPosHigh = 0;
-	SetFilePointer (bc->hBatchFile, 0, &lNewPosHigh, FILE_BEGIN);
+	   
+  /* jump to end of the file */
+  if ( _tcsicmp( param, _T(":eof"))==0)
+  {      
+    SetFilePointer (bc->hBatchFile, 0, &lNewPosHigh, FILE_END);
+    return 0;
+  } 
+
+  /* jump to begin of the file */
+  SetFilePointer (bc->hBatchFile, 0, &lNewPosHigh, FILE_BEGIN);
 
 	while (FileGetString (bc->hBatchFile, textline, sizeof(textline)))
 	{
@@ -105,11 +114,12 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
      pos++;
     }      
         
+    
 		/* use whole label name */
 		if ((*tmp == _T(':')) && (_tcsicmp (++tmp, param) == 0))
 			return 0;
 	}
-
+  
 	LoadString(CMD_ModuleHandle, STRING_GOTO_ERROR2, szMsg, RC_STRING_MAX_SIZE);
 	ConErrPrintf(szMsg, param);
 	ExitBatch(NULL);
