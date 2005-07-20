@@ -342,7 +342,7 @@ KdbpSymAddCachedFile(IN PUNICODE_STRING FileName,
   RtlZeroMemory(CacheEntry, sizeof (IMAGE_SYMBOL_INFO_CACHE));
 
   /* fill entry */
-  RtlpCreateUnicodeString(&CacheEntry->FileName, FileName->Buffer, PagedPool);
+  RtlCreateUnicodeString(&CacheEntry->FileName, FileName->Buffer);
   ASSERT(CacheEntry->FileName.Buffer);
   CacheEntry->RefCount = 1;
   CacheEntry->RosSymInfo = RosSymInfo;
