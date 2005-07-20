@@ -800,8 +800,8 @@ IntSystemParametersInfo(
 
   if (!bInitialized)
   {
-    ZeroMemory(&IconFont, sizeof(LOGFONTW));
-    ZeroMemory(&pMetrics, sizeof(NONCLIENTMETRICSW));
+    RtlZeroMemory(&IconFont, sizeof(LOGFONTW));
+    RtlZeroMemory(&pMetrics, sizeof(NONCLIENTMETRICSW));
 
     IntGetFontMetricSetting(L"CaptionFont", &pMetrics.lfCaptionFont);
     IntGetFontMetricSetting(L"SmCaptionFont", &pMetrics.lfSmCaptionFont);

@@ -8,16 +8,25 @@
 
 /* INCLUDES ******************************************************************/
 
-/* We are Win32K */
-#define __WIN32K__
-
 /* DDK/NDK/SDK Headers */
 #include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
-#include <ddk/winddi.h>
 #include <ddk/ntddmou.h>
-#include <windows.h>
+#include <ddk/ntifs.h>
 #include <ndk/ntndk.h>
+
+/* Win32 Headers */
+/* FIXME: Defines in winbase.h that we need... */
+typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
+#define WINBASEAPI
+#define STARTF_USESIZE 2
+#define STARTF_USEPOSITION 4
+#include <stdarg.h>
+#include <windef.h>
+#include <wingdi.h>
+#include <winddi.h>
+#include <winuser.h>
+#include <dde.h>
+#include <wincon.h>
 
 /* SEH Support with PSEH */
 #include <pseh/pseh.h>

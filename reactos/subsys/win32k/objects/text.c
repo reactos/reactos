@@ -114,7 +114,7 @@ static CHARSETINFO FontTci[MAXTCIINDEX] = {
   { DEFAULT_CHARSET, 0, FS(0)},
   /* reserved for system */
   { DEFAULT_CHARSET, 0, FS(0)},
-  { SYMBOL_CHARSET, CP_SYMBOL, FS(31)},
+  { SYMBOL_CHARSET, 42 /* CP_SYMBOL */, FS(31)},
 };
 
 VOID FASTCALL
@@ -1044,7 +1044,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
   TEXTMETRICW *TM;
   NEWTEXTMETRICW *Ntm;
 
-  ZeroMemory(Info, sizeof(FONTFAMILYINFO));
+  RtlZeroMemory(Info, sizeof(FONTFAMILYINFO));
   Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
   Otm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
   if (NULL == Otm)

@@ -616,14 +616,13 @@ typedef struct _DDHAL_GETDRIVERINFODATA {
 /*****************************************************************************
  * high-level ddraw implementation structures
  */
-#ifndef __USE_W32API
-typedef DWORD IUnknown; /* FIXME: implement proper definition */
-#endif
+#ifndef _NO_COM
 typedef struct _IUNKNOWN_LIST {
     struct _IUNKNOWN_LIST *	lpLink;
     LPGUID			lpGuid;
     IUnknown *			lpIUnknown;
 } IUNKNOWN_LIST,*LPIUNKNOWN_LIST;
+#endif /* _NO_COM */
 
 typedef struct _PROCESS_LIST {
     struct _PROCESS_LIST *	lpLink;
@@ -669,6 +668,7 @@ typedef struct _DDRAWI_DIRECTDRAW_INT {
     DWORD			dwIntRefCnt;
 } DDRAWI_DIRECTDRAW_INT;
 
+#ifndef _NO_COM
 typedef struct _DDRAWI_DIRECTDRAW_LCL {
     DWORD			lpDDMore;
     LPDDRAWI_DIRECTDRAW_GBL	lpGbl;
@@ -701,6 +701,7 @@ typedef struct _DDRAWI_DIRECTDRAW_LCL {
     ULONG_PTR			hGammaCalibrator;
     LPDDGAMMACALIBRATORPROC	lpGammaCalibrator;
 } DDRAWI_DIRECTDRAW_LCL;
+#endif /* _NO_COM */
 
 #define DDRAWILCL_HASEXCLUSIVEMODE	0x00000001
 #define DDRAWILCL_ISFULLSCREEN		0x00000002
@@ -896,6 +897,7 @@ typedef struct _DDRAWI_DDRAWSURFACE_GBL_MORE {
 #define GET_LPDDRAWSURFACE_GBL_MORE(psurf_gbl) \
     (*(((LPDDRAWI_DDRAWSURFACE_GBL_MORE *)(psurf_gbl)) - 1))
 
+#ifndef _NO_COM
 typedef struct _DDRAWI_DDRAWSURFACE_MORE {
     DWORD			dwSize;
     IUNKNOWN_LIST *		lpIUnknowns;
@@ -930,6 +932,7 @@ typedef struct _DDRAWI_DDRAWSURFACE_MORE {
     DWORD			dwFVF;
     LPVOID			lpVB;
 } DDRAWI_DDRAWSURFACE_MORE;
+#endif /* _NO_COM */
 
 typedef struct _DDRAWI_DDRAWSURFACE_LCL {
     LPDDRAWI_DDRAWSURFACE_MORE	lpSurfMore;
@@ -1031,6 +1034,7 @@ typedef struct _DDRAWI_DDRAWPALETTE_GBL {
 #define DDRAWIPAL_STORED_8INDEX	0x00001000
 #define DDRAWIPAL_ALPHA		0x00002000
 
+#ifndef _NO_COM
 typedef struct _DDRAWI_DDRAWPALETTE_LCL {
     DWORD			lpPalMore;
     LPDDRAWI_DDRAWPALETTE_GBL	lpGbl;
@@ -1044,6 +1048,7 @@ typedef struct _DDRAWI_DDRAWPALETTE_LCL {
     ULONG_PTR			dwDDRAWReserved2;
     ULONG_PTR			dwDDRAWReserved3;
 } DDRAWI_DDRAWPALETTE_LCL;
+#endif /* _NO_COM */
 
 typedef struct _DDHAL_GETMOCOMPGUIDSDATA FAR *LPDDHAL_GETMOCOMPGUIDSDATA;
 typedef struct _DDHAL_GETMOCOMPFORMATSDATA FAR *LPDDHAL_GETMOCOMPFORMATSDATA;

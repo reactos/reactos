@@ -20,10 +20,7 @@ extern NTOSAPI POBJECT_TYPE ExTimerType;
 
 /* CONSTANTS *****************************************************************/
 
-/* FIXME: Win32k uses windows.h! */
-#ifndef __WIN32K__
 #define INVALID_HANDLE_VALUE (HANDLE)-1
-#endif
 
 /* Callback Object Access Rights */
 #define CALLBACK_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0x0001)
