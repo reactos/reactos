@@ -18,7 +18,7 @@
 #include <tdiinfo.h>
 #include <string.h>
 #include <winsock2.h>
-#include <shared.h>
+#include <afd/shared.h>
 
 #ifndef MIN
 #define MIN(x,y) (((x)<(y))?(x):(y))
