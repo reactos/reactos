@@ -933,6 +933,7 @@ RPoolFree ( PR_POOL pool, void* Addr )
 	R_RELEASE_MUTEX(pool);
 }
 
+#if 0
 static void
 RPoolDumpByTag ( PR_POOL pool, rulong Tag )
 {
@@ -963,6 +964,7 @@ RPoolDumpByTag ( PR_POOL pool, rulong Tag )
 
 	R_DEBUG ( "Entries found for tag '%s': %i\n", tag, count );
 }
+#endif
 
 rulong
 RPoolQueryTag ( void* Addr )

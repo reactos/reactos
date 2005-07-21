@@ -98,19 +98,6 @@ ExFreePagedPool(IN PVOID Block)
 	RPoolFree ( MmPagedPool, Block );
 }
 
-VOID STDCALL
-ExRosDumpPagedPoolByTag ( ULONG Tag )
-{
-	// TODO FIXME - should we ASSERT_IRQL?
-	RPoolDumpByTag ( MmPagedPool, Tag );
-}
-
-ULONG STDCALL
-ExRosQueryPagedPoolTag ( PVOID Addr )
-{
-	// TODO FIXME - should we ASSERT_IRQL?
-	return RPoolQueryTag ( Addr );
-}
 
 #ifdef PPOOL_UMODE_TEST
 

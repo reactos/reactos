@@ -20,11 +20,6 @@ extern ULONG MmTotalPagedPoolQuota;
 extern ULONG MmTotalNonPagedPoolQuota;
 extern MM_STATS MmStats;
 
-/* GLOBALS *****************************************************************/
-
-ULONG STDCALL
-ExRosQueryPagedPoolTag ( PVOID Block );
-
 /* FUNCTIONS ***************************************************************/
 
 STATIC PVOID STDCALL
@@ -335,22 +330,6 @@ MiRaisePoolQuota(
         *NewMaxQuota = CurrentMaxQuota + 65536;
         return TRUE;
     }
-}
-
-ULONG STDCALL
-ExRosQueryPoolTag ( PVOID Block )
-{
-   ASSERT_IRQL(DISPATCH_LEVEL);
-
-   if (Block >= MmPagedPoolBase && (char*)Block < ((char*)MmPagedPoolBase + MmPagedPoolSize))
-   {
-      return ExRosQueryPagedPoolTag(Block);
-   }
-   else
-   {
-      UNIMPLEMENTED;
-      return 0;
-   }
 }
 
 /* EOF */

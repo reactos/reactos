@@ -138,8 +138,6 @@ ExReleaseResourceForThreadLite@8
 @ExReleaseResourceLite@4
 @ExReleaseRundownProtection@4
 @ExReleaseRundownProtectionEx@8
-ExRosDumpPagedPoolByTag@4
-ExRosQueryPoolTag@4
 @ExRundownCompleted@4
 ExSemaphoreObjectType DATA
 ExSetResourceOwnerPointer@8
