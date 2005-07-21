@@ -1035,8 +1035,11 @@ ProcessInput (BOOL bFlag)
               /* %TIME% */
               else if (_tcsicmp(ip,_T("time")) ==0)
               {
-                TCHAR szTime[40];                                                               
-                GetTimeFormat(LOCALE_USER_DEFAULT, 0, NULL, NULL, szTime, sizeof(szTime));              
+                TCHAR szTime[40];                                                                               
+                SYSTEMTIME t;
+                GetSystemTime(&t); 
+
+                _sntprintf(szTime ,40,_T("%02d%c%02d%c%02d%c%02d"), t.wHour, cTimeSeparator,t.wMinute , cTimeSeparator,t.wSecond , cDecimalSeparator, t.wMilliseconds );
                 cp = _stpcpy (cp, szTime);                 	              
               }
               
