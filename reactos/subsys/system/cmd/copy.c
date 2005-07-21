@@ -518,9 +518,21 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 		{
 			/*if it isnt a switch then it is the source or destination*/
 			if(nSrc == -1)
+			{
 				nSrc = i;
+			}
+			else if(*arg[i] == _T('+') || *arg[i] == _T(','))
+			{
+				/* Add these onto the source string
+				   this way we can do all checks
+					directly on source string later on */
+				_tcscat(arg[nSrc],arg[i]);
+				nFiles--;
+			}				
 			else if(nDes == -1)
+			{
 				nDes = i;
+			}
  
 		}
 	}
@@ -842,8 +854,10 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 	LoadString(CMD_ModuleHandle, STRING_COPY_FILE, szMsg, RC_STRING_MAX_SIZE);
 	ConOutPrintf(szMsg, nFiles);
 	
-	CloseHandle(hFile);
-	freep (arg);
+	CloseHandle(hFile);		
+  if (arg!=NULL) 
+      free(arg);
+
 	return 0;
 }
  
