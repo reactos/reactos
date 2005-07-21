@@ -341,6 +341,15 @@ CONFIGRET WINAPI CM_Get_Depth_Ex(
     TRACE("%p %lx %lx %lx\n",
           pulDepth, dnDevInst, ulFlags, hMachine);
 
+    if (pulDepth == NULL)
+        return CR_INVALID_POINTER;
+
+    if (dnDevInst == 0)
+        return CR_INVALID_DEVINST;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
     if (hMachine != NULL)
     {
         BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
@@ -417,6 +426,15 @@ CONFIGRET WINAPI CM_Get_Device_ID_ExW(
 
     TRACE("%lx %p %ld %ld %lx\n",
           dnDevInst, Buffer, BufferLen, ulFlags, hMachine);
+
+    if (dnDevInst == 0)
+        return CR_INVALID_DEVINST;
+
+    if (Buffer == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
 
     if (hMachine != NULL)
     {
@@ -560,6 +578,15 @@ CONFIGRET WINAPI CM_Get_Device_ID_Size_Ex(
 
     TRACE("%p %lx %lx %lx\n", pulLen, dnDevInst, ulFlags, hMachine);
 
+    if (pulLen == NULL)
+        return CR_INVALID_POINTER;
+
+    if (dnDevInst == 0)
+        return CR_INVALID_DEVINST;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
     if (hMachine != NULL)
     {
         StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
@@ -613,6 +640,15 @@ CM_Get_DevNode_Status_Ex(
 
     TRACE("%p %p %lx %lx %lx\n",
           pulStatus, pulProblemNumber, dnDevInst, ulFlags, hMachine);
+
+    if (pulStatus == NULL || pulProblemNumber == NULL)
+        return CR_INVALID_POINTER;
+
+    if (dnDevInst == 0)
+        return CR_INVALID_DEVINST;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
 
     if (hMachine != NULL)
     {
@@ -948,6 +984,12 @@ CONFIGRET WINAPI CM_Locate_DevNode_ExW(
     CONFIGRET rc = CR_SUCCESS;
 
     TRACE("%p %s %lu %lx\n", pdnDevInst, debugstr_w(pDeviceID), ulFlags, hMachine);
+
+    if (pdnDevInst == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags & ~CM_LOCATE_DEVNODE_BITS)
+        return CR_INVALID_FLAG;
 
     if (hMachine != NULL)
     {
