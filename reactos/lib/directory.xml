@@ -37,6 +37,9 @@
 <directory name="crtdll">
 	<xi:include href="crtdll/crtdll.xml" />
 </directory>
+<directory name="d3d8thk">
+	<xi:include href="d3d8thk/d3d8thk.xml" />
+</directory>
 <directory name="dbghelp">
 	<xi:include href="dbghelp/dbghelp.xml" />
 </directory>
