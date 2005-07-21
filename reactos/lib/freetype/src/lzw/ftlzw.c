@@ -8,7 +8,7 @@
 /*  be used to parse compressed PCF fonts, as found with many X11 server   */
 /*  distributions.                                                         */
 /*                                                                         */
-/*  Copyright 2004 by                                                      */
+/*  Copyright 2004, 2005 by                                                */
 /*  Albert Chin-A-Young.                                                   */
 /*                                                                         */
 /*  Based on code in src/gzip/ftgzip.c, Copyright 2004 by                  */
@@ -414,6 +414,17 @@
     FT_Memory   memory = source->memory;
     FT_LZWFile  zip;
 
+
+    /*
+     *  Check the header right now; this prevents allocation a huge
+     *  LZWFile object (400 KByte of heap memory) if not necessary.
+     *
+     *  Did I mention that you should never use .Z compressed font
+     *  file?
+     */
+    error = ft_lzw_check_header( source );
+    if ( error )
+      goto Exit;
 
     FT_ZERO( stream );
     stream->memory = memory;

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType utility file for memory and list management (body).         */
 /*                                                                         */
-/*  Copyright 2002, 2004 by                                                */
+/*  Copyright 2002, 2004, 2005 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -19,6 +19,7 @@
 #include <ft2build.h>
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_MEMORY_H
+#include FT_INTERNAL_OBJECTS_H
 #include FT_LIST_H
 
 
@@ -76,6 +77,8 @@
     return FT_Err_Ok;
   }
 
+
+  /* documentation is in ftmemory.h */
 
   FT_BASE_DEF( FT_Error )
   FT_QAlloc( FT_Memory  memory,
@@ -148,6 +151,8 @@
     return FT_Err_Out_Of_Memory;
   }
 
+
+  /* documentation is in ftmemory.h */
 
   FT_BASE_DEF( FT_Error )
   FT_QRealloc( FT_Memory  memory,
@@ -391,6 +396,28 @@
 
     list->head = 0;
     list->tail = 0;
+  }
+
+
+  FT_BASE( FT_UInt32 )
+  ft_highpow2( FT_UInt32  value )
+  {
+    FT_UInt32  value2;
+
+
+    /*
+     *  We simply clear the lowest bit in each iteration.  When
+     *  we reach 0, we know that the previous value was our result.
+     */
+    for ( ;; )
+    {
+      value2 = value & (value - 1);  /* clear lowest bit */
+      if ( value2 == 0 )
+        break;
+
+      value = value2;
+    }
+    return value;
   }
 
 

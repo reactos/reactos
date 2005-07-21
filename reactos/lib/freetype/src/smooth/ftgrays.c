@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    A new `perfect' anti-aliasing renderer (body).                       */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003 by                                     */
+/*  Copyright 2000-2001, 2002, 2003, 2005 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -235,8 +235,8 @@
   typedef long  TPos;     /* sub-pixel coordinate              */
 
   /* determine the type used to store cell areas.  This normally takes at */
-  /* least PIXEL_BYTES*2 + 1.  On 16-bit systems, we need to use `long'   */
-  /* instead of `int', otherwise bad things happen                        */
+  /* least PIXEL_BITS*2 + 1 bits.  On 16-bit systems, we need to use      */
+  /* `long' instead of `int', otherwise bad things happen                 */
 
 #if PIXEL_BITS <= 7
 
@@ -457,7 +457,7 @@
     }
 
     /* record the previous cell if needed (i.e., if we changed the cell */
-    /* position, of changed the `invalid' flag)                         */
+    /* position, or changed the `invalid' flag)                         */
     if ( ras.invalid != invalid || record )
       gray_record_cell( RAS_VAR );
 
@@ -782,8 +782,8 @@
 
 
   static void
-  gray_render_conic( RAS_ARG_ FT_Vector*  control,
-                              FT_Vector*  to )
+  gray_render_conic( RAS_ARG_ const FT_Vector*  control,
+                              const FT_Vector*  to )
   {
     TPos        dx, dy;
     int         top, level;
@@ -917,9 +917,9 @@
 
 
   static void
-  gray_render_cubic( RAS_ARG_ FT_Vector*  control1,
-                              FT_Vector*  control2,
-                              FT_Vector*  to )
+  gray_render_cubic( RAS_ARG_ const FT_Vector*  control1,
+                              const FT_Vector*  control2,
+                              const FT_Vector*  to )
   {
     TPos        dx, dy, da, db;
     int         top, level;
@@ -1229,8 +1229,8 @@
 
 
   static int
-  gray_move_to( FT_Vector*  to,
-                FT_Raster   raster )
+  gray_move_to( const FT_Vector*  to,
+                FT_Raster         raster )
   {
     TPos  x, y;
 
@@ -1251,8 +1251,8 @@
 
 
   static int
-  gray_line_to( FT_Vector*  to,
-                FT_Raster   raster )
+  gray_line_to( const FT_Vector*  to,
+                FT_Raster         raster )
   {
     gray_render_line( (PRaster)raster,
                       UPSCALE( to->x ), UPSCALE( to->y ) );
@@ -1261,9 +1261,9 @@
 
 
   static int
-  gray_conic_to( FT_Vector*  control,
-                 FT_Vector*  to,
-                 FT_Raster   raster )
+  gray_conic_to( const FT_Vector*  control,
+                 const FT_Vector*  to,
+                 FT_Raster         raster )
   {
     gray_render_conic( (PRaster)raster, control, to );
     return 0;
@@ -1271,10 +1271,10 @@
 
 
   static int
-  gray_cubic_to( FT_Vector*  control1,
-                 FT_Vector*  control2,
-                 FT_Vector*  to,
-                 FT_Raster   raster )
+  gray_cubic_to( const FT_Vector*  control1,
+                 const FT_Vector*  control2,
+                 const FT_Vector*  to,
+                 FT_Raster         raster )
   {
     gray_render_cubic( (PRaster)raster, control1, control2, to );
     return 0;
@@ -1282,10 +1282,10 @@
 
 
   static void
-  gray_render_span( int       y,
-                    int       count,
-                    FT_Span*  spans,
-                    PRaster   raster )
+  gray_render_span( int             y,
+                    int             count,
+                    const FT_Span*  spans,
+                    PRaster         raster )
   {
     unsigned char*  p;
     FT_Bitmap*      map = &raster->target;
@@ -1447,7 +1447,7 @@
 
 
   static void
-  gray_sweep( RAS_ARG_ FT_Bitmap*  target )
+  gray_sweep( RAS_ARG_ const FT_Bitmap*  target )
   {
     TCoord  x, y, cover;
     TArea   area;
@@ -1578,7 +1578,7 @@
   /*    Error code.  0 means sucess.                                       */
   /*                                                                       */
   static
-  int  FT_Outline_Decompose( FT_Outline*              outline,
+  int  FT_Outline_Decompose( const FT_Outline*        outline,
                              const FT_Outline_Funcs*  func_interface,
                              void*                    user )
   {
@@ -1960,11 +1960,11 @@
 
 
   extern int
-  gray_raster_render( PRaster            raster,
-                      FT_Raster_Params*  params )
+  gray_raster_render( PRaster                  raster,
+                      const FT_Raster_Params*  params )
   {
-    FT_Outline*  outline = (FT_Outline*)params->source;
-    FT_Bitmap*   target_map = params->target;
+    const FT_Outline*  outline    = (const FT_Outline*)params->source;
+    const FT_Bitmap*   target_map = params->target;
 
 
     if ( !raster || !raster->cells || !raster->max_cells )
@@ -2131,7 +2131,7 @@
 
   static void
   gray_raster_reset( FT_Raster    raster,
-                     const char*  pool_base,
+                     char*        pool_base,
                      long         pool_size )
   {
     PRaster  rast = (PRaster)raster;

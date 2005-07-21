@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType utility file for X11 support (body).                        */
 /*                                                                         */
-/*  Copyright 2002, 2003 by                                                */
+/*  Copyright 2002, 2003, 2004 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -20,6 +20,9 @@
 #include FT_XFREE86_H
 #include FT_INTERNAL_OBJECTS_H
 #include FT_SERVICE_XFREE86_NAME_H
+
+
+  /* documentation is in ftxf86.h */
 
   FT_EXPORT_DEF( const char* )
   FT_Get_X11_Font_Format( FT_Face  face )

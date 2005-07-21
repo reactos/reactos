@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 42 objects manager (body).                                      */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004 by Roberto Alameda.                         */
+/*  Copyright 2002, 2003, 2004, 2005 by Roberto Alameda.                   */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -515,21 +515,7 @@
   FT_LOCAL_DEF( void )
   T42_GlyphSlot_Done( T42_GlyphSlot slot )
   {
-    FT_Face       face    = slot->root.face;
-    T42_Face      t42face = (T42_Face)face;
-    FT_GlyphSlot  cur     = t42face->ttf_face->glyph;
-
-
-    while ( cur )
-    {
-      if ( cur == slot->ttslot )
-      {
-        FT_Done_GlyphSlot( slot->ttslot );
-        break;
-      }
-
-      cur = cur->next;
-    }
+    FT_Done_GlyphSlot( slot->ttslot );
   }
 
 

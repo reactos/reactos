@@ -86,14 +86,6 @@ FT_BEGIN_HEADER
   /*   FTC_CMapCache_New                                                   */
   /*   FTC_CMapCache_Lookup                                                */
   /*                                                                       */
-  /*                                                                       */
-  /*   FTC_Image_Desc                                                      */
-  /*   FTC_Image_Cache                                                     */
-  /*   FTC_Image_Cache_Lookup                                              */
-  /*                                                                       */
-  /*   FTC_SBit_Cache                                                      */
-  /*   FTC_SBit_Cache_Lookup                                               */
-  /*                                                                       */
   /*************************************************************************/
 
 

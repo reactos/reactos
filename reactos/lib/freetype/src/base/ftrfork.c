@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Embedded resource forks accessor (body).                             */
 /*                                                                         */
-/*  Copyright 2004 by                                                      */
+/*  Copyright 2004, 2005 by                                                */
 /*  Masatake YAMATO and Redhat K.K.                                        */
 /*                                                                         */
 /*  FT_Raccess_Get_HeaderInfo() and raccess_guess_darwin_hfsplus() are     */
@@ -569,19 +569,21 @@
   {
     FT_Int32   magic_from_stream;
     FT_Error   error;
-    FT_Int32   version_number;
+    FT_Int32   version_number = 0;
     FT_UShort  n_of_entries;
 
     int        i;
-    FT_UInt32  entry_id, entry_offset, entry_length;
+    FT_UInt32  entry_id, entry_offset, entry_length = 0;
 
     const FT_UInt32  resource_fork_entry_id = 0x2;
 
     FT_UNUSED( library );
     FT_UNUSED( base_file_name );
+    FT_UNUSED( version_number );
+    FT_UNUSED( entry_length   );
 
 
-    if ( FT_READ_LONG ( magic_from_stream ) )
+    if ( FT_READ_LONG( magic_from_stream ) )
       return error;
     if ( magic_from_stream != magic )
       return FT_Err_Unknown_File_Format;
@@ -625,14 +627,11 @@
                                              char *      file_name,
                                              FT_Long    *result_offset )
   {
-    FT_Memory     memory;
     FT_Open_Args  args2;
     FT_Stream     stream2;
     char *        nouse = NULL;
     FT_Error      error;
 
-
-    memory = library->memory;
 
     args2.flags    = FT_OPEN_PATHNAME;
     args2.pathname = file_name;
@@ -658,7 +657,10 @@
     char*        tmp;
     const char*  slash;
     unsigned     new_length;
-    FT_ULong     error;
+    FT_ULong     error = FT_Err_Ok;
+
+    FT_UNUSED( error );
+
 
     new_length = ft_strlen( original_name ) + ft_strlen( insertion );
     if ( FT_ALLOC( new_name, new_length + 1 ) )
@@ -700,6 +702,10 @@
                     FT_Error   *errors )
   {
     int  i;
+
+    FT_UNUSED( library );
+    FT_UNUSED( stream );
+    FT_UNUSED( base_name );
 
 
     for ( i = 0; i < FT_RACCESS_N_RULES; i++ )

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType internal cache interface (specification).                   */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 2000-2001, 2002, 2003, 2004, 2005 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -248,7 +248,8 @@ FT_BEGIN_HEADER
     error = FTC_Cache_NewNode( _cache, _hash, query, &_node );           \
                                                                          \
   _Ok:                                                                   \
-    *(FTC_Node*)&(node) = _node;                                         \
+    _pnode = (FTC_Node*)(void*)&(node);                                  \
+    *_pnode = _node;                                                     \
   FT_END_STMNT
 
 #else /* !FTC_INLINE */
@@ -260,6 +261,52 @@ FT_BEGIN_HEADER
   FT_END_STMNT
 
 #endif /* !FTC_INLINE */
+
+
+  /*
+   * This macro, together with FTC_CACHE_TRYLOOP_END, defines a retry
+   * loop to flush the cache repeatedly in case of memory overflows.
+   *
+   * It is used when creating a new cache node, or within a lookup
+   * that needs to allocate data (e.g., the sbit cache lookup).
+   * 
+   * Example:
+   *
+   *   {
+   *     FTC_CACHE_TRYLOOP( cache )
+   *       error = load_data( ... );
+   *     FTC_CACHE_TRYLOOP_END()
+   *   }
+   *
+   */
+#define FTC_CACHE_TRYLOOP( cache )                           \
+  {                                                          \
+    FTC_Manager  _try_manager = FTC_CACHE( cache )->manager; \
+    FT_UInt      _try_count   = 4;                           \
+                                                             \
+                                                             \
+    for (;;)                                                 \
+    {                                                        \
+      FT_UInt  _try_done;
+
+
+#define FTC_CACHE_TRYLOOP_END()                                   \
+      if ( !error || error != FT_Err_Out_Of_Memory )              \
+        break;                                                    \
+                                                                  \
+      _try_done = FTC_Manager_FlushN( _try_manager, _try_count ); \
+      if ( _try_done == 0 )                                       \
+        break;                                                    \
+                                                                  \
+      if ( _try_done == _try_count )                              \
+      {                                                           \
+        _try_count *= 2;                                          \
+        if ( _try_count < _try_done              ||               \
+            _try_count > _try_manager->num_nodes )                \
+          _try_count = _try_manager->num_nodes;                   \
+      }                                                           \
+    }                                                             \
+  }
 
  /* */
 

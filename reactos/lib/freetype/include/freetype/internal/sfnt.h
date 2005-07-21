@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    High-level `sfnt' driver interface (specification).                  */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -478,6 +478,27 @@ FT_BEGIN_HEADER
   (*TT_Free_Table_Func)( TT_Face  face );
 
 
+  /*
+   * @functype:
+   *    TT_Face_GetKerningFunc
+   *
+   * @description:
+   *    Return the horizontal kerning value between two glyphs.
+   *
+   * @input:
+   *    face        :: A handle to the source face object.
+   *    left_glyph  :: The left glyph index.
+   *    right_glyph :: The right glyph index.
+   *
+   * @return:
+   *    The kerning value in font units.
+   */
+  typedef FT_Int
+  (*TT_Face_GetKerningFunc)( TT_Face  face,
+                             FT_UInt  left_glyph,
+                             FT_UInt  right_glyph );
+
+
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
@@ -534,6 +555,9 @@ FT_BEGIN_HEADER
     TT_Load_SBit_Image_Func      load_sbit_image;
     TT_Free_Table_Func           free_sbits;
 
+    /* see `ttkern.h' */
+    TT_Face_GetKerningFunc       get_kerning;
+    
     /* see `ttpost.h' */
     TT_Get_PS_Name_Func          get_psname;
     TT_Free_Table_Func           free_psnames;

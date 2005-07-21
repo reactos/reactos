@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR object methods (body).                                  */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004 by                                          */
+/*  Copyright 2002, 2003, 2004, 2005 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -48,7 +48,7 @@
     /* we don't want dangling pointers */
     pfrface->family_name = NULL;
     pfrface->style_name  = NULL;
-    
+
     /* finalize the physical font record */
     pfr_phy_font_done( &face->phy_font, FT_FACE_MEMORY( face ) );
 
@@ -174,11 +174,11 @@
         FT_Bitmap_Size*  size;
         PFR_Strike       strike;
         FT_Memory        memory = pfrface->stream->memory;
-         
-         
+
+
         if ( FT_NEW_ARRAY( pfrface->available_sizes, count ) )
           goto Exit;
-         
+
         size   = pfrface->available_sizes;
         strike = phy_font->strikes;
         for ( n = 0; n < count; n++, size++, strike++ )
@@ -361,6 +361,8 @@
       metrics->vertBearingX = 0;
       metrics->vertBearingY = 0;
 
+#if 0 /* some fonts seem to be broken here! */
+
       /* Apply the font matrix, if any.                 */
       /* TODO: Test existing fonts with unusual matrix  */
       /* whether we have to adjust Units per EM.        */
@@ -375,6 +377,7 @@
 
         FT_Outline_Transform( outline, &font_matrix );
       }
+#endif
 
       /* scale when needed */
       if ( scaling )
@@ -419,6 +422,132 @@
   /*************************************************************************/
   /*************************************************************************/
 
+#ifdef FT_OPTIMIZE_MEMORY
+
+  FT_LOCAL_DEF( FT_Error )
+  pfr_face_get_kerning( FT_Face     pfrface,        /* PFR_Face */
+                        FT_UInt     glyph1,
+                        FT_UInt     glyph2,
+                        FT_Vector*  kerning )
+  {
+    PFR_Face     face     = (PFR_Face)pfrface;
+    FT_Error     error    = PFR_Err_Ok;
+    PFR_PhyFont  phy_font = &face->phy_font;
+    FT_UInt32    code1, code2, pair;
+
+
+    kerning->x = 0;
+    kerning->y = 0;
+
+    if ( glyph1 > 0 )
+      glyph1--;
+
+    if ( glyph2 > 0 )
+      glyph2--;
+
+    /* convert glyph indices to character codes */
+    if ( glyph1 > phy_font->num_chars ||
+         glyph2 > phy_font->num_chars )
+      goto Exit;
+
+    code1 = phy_font->chars[glyph1].char_code;
+    code2 = phy_font->chars[glyph2].char_code;
+    pair  = PFR_KERN_INDEX( code1, code2 );
+
+    /* now search the list of kerning items */
+    {
+      PFR_KernItem  item   = phy_font->kern_items;
+      FT_Stream     stream = pfrface->stream;
+
+
+      for ( ; item; item = item->next )
+      {
+        if ( pair >= item->pair1 && pair <= item->pair2 )
+          goto FoundPair;
+      }
+      goto Exit;
+
+    FoundPair: /* we found an item, now parse it and find the value if any */
+      if ( FT_STREAM_SEEK( item->offset )                       ||
+           FT_FRAME_ENTER( item->pair_count * item->pair_size ) )
+        goto Exit;
+
+      {
+        FT_UInt    count    = item->pair_count;
+        FT_UInt    size     = item->pair_size;
+        FT_UInt    power    = (FT_UInt)ft_highpow2( (FT_UInt32)count );
+        FT_UInt    probe    = power * size;
+        FT_UInt    extra    = count - power;
+        FT_Byte*   base     = stream->cursor;
+        FT_Bool    twobytes = item->flags & 1;
+        FT_Byte*   p;
+        FT_UInt32  cpair;
+
+
+        if ( extra > 0 )
+        {
+          p = base + extra * size;
+
+          if ( twobytes )
+            cpair = FT_NEXT_ULONG( p );
+          else
+            cpair = PFR_NEXT_KPAIR( p );
+
+          if ( cpair == pair )
+            goto Found;
+
+          if ( cpair < pair )
+            base = p;
+        }
+
+        while ( probe > size )
+        {
+          probe >>= 1;
+          p       = base + probe;
+
+          if ( twobytes )
+            cpair = FT_NEXT_ULONG( p );
+          else
+            cpair = PFR_NEXT_KPAIR( p );
+
+          if ( cpair == pair )
+            goto Found;
+
+          if ( cpair < pair )
+            base += probe;
+        }
+
+        p = base;
+
+        if ( twobytes )
+          cpair = FT_NEXT_ULONG( p );
+        else
+          cpair = PFR_NEXT_KPAIR( p );
+
+        if ( cpair == pair )
+        {
+          FT_Int  value;
+
+
+        Found:
+          if ( item->flags & 2 )
+            value = FT_PEEK_SHORT( p );
+          else
+            value = p[0];
+
+          kerning->x = item->base_adj + value;
+        }
+      }
+
+      FT_FRAME_EXIT();
+    }
+
+  Exit:
+    return error;
+  }
+
+#else /* !FT_OPTIMIZE_MEMORY */
+
   FT_LOCAL_DEF( FT_Error )
   pfr_face_get_kerning( FT_Face     pfrface,        /* PFR_Face */
                         FT_UInt     glyph1,
@@ -438,20 +567,20 @@
 
     min = 0;
     max = phy_font->num_kern_pairs;
-    
+
     while ( min < max )
     {
       FT_UInt       mid  = ( min + max ) >> 1;
       PFR_KernPair  pair = pairs + mid;
       FT_UInt32     pidx = PFR_KERN_PAIR_INDEX( pair );
-      
+
 
       if ( pidx == idx )
       {
         kerning->x = pair->kerning;
         break;
       }
-      
+
       if ( pidx < idx )
         min = mid + 1;
       else
@@ -460,6 +589,8 @@
 
     return error;
   }
+
+#endif /* !FT_OPTIMIZE_MEMORY */
 
 
 /* END */

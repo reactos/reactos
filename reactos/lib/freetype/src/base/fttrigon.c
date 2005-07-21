@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType trigonometric functions (body).                             */
 /*                                                                         */
-/*  Copyright 2001, 2002, 2003 by                                          */
+/*  Copyright 2001, 2002, 2003, 2004 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -274,7 +274,7 @@
     if ( theta >= 0 )
       theta = FT_PAD_ROUND( theta, 32 );
     else
-      theta = - FT_PAD_ROUND( -theta, 32 );
+      theta = -FT_PAD_ROUND( -theta, 32 );
 
     vec->x = x;
     vec->y = theta;
@@ -484,6 +484,7 @@
                  FT_Angle  angle2 )
   {
     FT_Angle  delta = angle2 - angle1;
+
 
     delta %= FT_ANGLE_2PI;
     if ( delta < 0 )

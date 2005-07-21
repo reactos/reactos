@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PostScript hinting algorithm (body).                                 */
 /*                                                                         */
-/*  Copyright 2001, 2002, 2003, 2004 by                                    */
+/*  Copyright 2001, 2002, 2003, 2004, 2005 by                              */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used        */
@@ -2031,7 +2031,8 @@
       scaled = FT_MulFix( globals->blues.normal_top.zones->org_ref, y_scale );
       fitted = FT_PIX_ROUND( scaled );
 
-      if (scaled != fitted ) {
+      if ( fitted != 0 && scaled != fitted )
+      {
         y_scale = FT_MulDiv( y_scale, fitted, scaled );
 
         if ( fitted < scaled )

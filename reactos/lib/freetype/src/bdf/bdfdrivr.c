@@ -2,7 +2,7 @@
 
     FreeType font driver for bdf files
 
-    Copyright (C) 2001, 2002, 2003, 2004 by
+    Copyright (C) 2001, 2002, 2003, 2004, 2005 by
     Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -416,13 +416,13 @@ THE SOFTWARE.
 
         FT_MEM_ZERO( bsize, sizeof ( FT_Bitmap_Size ) );
 
-        bsize->height = font->font_ascent + font->font_descent;
+        bsize->height = (FT_Short)( font->font_ascent + font->font_descent );
 
         prop = bdf_get_font_property( font, "AVERAGE_WIDTH" );
         if ( prop )
           bsize->width = (FT_Short)( ( prop->value.int32 + 5 ) / 10 );
         else
-          bsize->width = bsize->height * 2/3;
+          bsize->width = (FT_Short)( bsize->height * 2/3 );
 
         prop = bdf_get_font_property( font, "POINT_SIZE" );
         if ( prop )
@@ -586,13 +586,9 @@ THE SOFTWARE.
     FT_Face   root = FT_FACE( face );
 
     FT_UNUSED( char_width );
-    FT_UNUSED( char_height );
 
 
-    FT_TRACE4(( "rec %d - pres %d\n",
-                size->metrics.y_ppem, root->available_sizes->y_ppem ));
-
-    if ( size->metrics.y_ppem == root->available_sizes->y_ppem >> 6 )
+    if ( char_height == (FT_UInt)root->available_sizes->height )
     {
       size->metrics.ascender    = face->bdffont->font_ascent << 6;
       size->metrics.descender   = -face->bdffont->font_descent << 6;
@@ -614,12 +610,30 @@ THE SOFTWARE.
                       FT_UInt     horz_resolution,
                       FT_UInt     vert_resolution )
   {
+    BDF_Face  face = (BDF_Face)FT_SIZE_FACE( size );
+    FT_Face   root = FT_FACE( face );
+
     FT_UNUSED( char_width );
     FT_UNUSED( char_height );
     FT_UNUSED( horz_resolution );
     FT_UNUSED( vert_resolution );
 
-    return BDF_Set_Pixel_Size( size, 0, 0 );
+
+    FT_TRACE4(( "rec %d - pres %d\n",
+                size->metrics.y_ppem, root->available_sizes->y_ppem ));
+
+    if ( size->metrics.y_ppem == root->available_sizes->y_ppem >> 6 )
+    {
+      size->metrics.ascender    = face->bdffont->font_ascent << 6;
+      size->metrics.descender   = -face->bdffont->font_descent << 6;
+      size->metrics.height      = ( face->bdffont->font_ascent +
+                                    face->bdffont->font_descent ) << 6;
+      size->metrics.max_advance = face->bdffont->bbx.width << 6;
+
+      return BDF_Err_Ok;
+    }
+    else
+      return BDF_Err_Invalid_Pixel_Size;
   }
 
 
@@ -629,13 +643,11 @@ THE SOFTWARE.
                   FT_UInt       glyph_index,
                   FT_Int32      load_flags )
   {
-    BDF_Face        face   = (BDF_Face)FT_SIZE_FACE( size );
-    FT_Error        error  = BDF_Err_Ok;
-    FT_Bitmap*      bitmap = &slot->bitmap;
-    bdf_glyph_t     glyph;
-    int             bpp    = face->bdffont->bpp;
-    int             i, j, count;
-    unsigned char   *p, *pp;
+    BDF_Face     face   = (BDF_Face)FT_SIZE_FACE( size );
+    FT_Error     error  = BDF_Err_Ok;
+    FT_Bitmap*   bitmap = &slot->bitmap;
+    bdf_glyph_t  glyph;
+    int          bpp    = face->bdffont->bpp;
 
     FT_UNUSED( load_flags );
 
@@ -657,109 +669,27 @@ THE SOFTWARE.
 
     bitmap->rows  = glyph.bbx.height;
     bitmap->width = glyph.bbx.width;
+    bitmap->pitch = glyph.bpr;
 
-    if ( bpp == 1 )
+    /* note: we don't allocate a new array to hold the bitmap; */
+    /*       we can simply point to it                         */
+    ft_glyphslot_set_bitmap( slot, glyph.bitmap );
+
+    switch ( bpp )
     {
+    case 1:
       bitmap->pixel_mode = FT_PIXEL_MODE_MONO;
-      bitmap->pitch      = glyph.bpr;
-
-     /* note: we don't allocate a new array to hold the bitmap, we */
-     /*       can simply point to it                               */
-      ft_glyphslot_set_bitmap( slot, glyph.bitmap );
-    }
-    else
-    {
-      /* blow up pixmap to have 8 bits per pixel */
+      break;
+    case 2:
+      bitmap->pixel_mode = FT_PIXEL_MODE_GRAY2;
+      break;
+    case 4:
+      bitmap->pixel_mode = FT_PIXEL_MODE_GRAY4;
+      break;
+    case 8:
       bitmap->pixel_mode = FT_PIXEL_MODE_GRAY;
-      bitmap->pitch      = bitmap->width;
-
-      error = ft_glyphslot_alloc_bitmap( slot, bitmap->rows * bitmap->pitch );
-      if ( error )
-        goto Exit;
-
-      switch ( bpp )
-      {
-      case 2:
-        bitmap->num_grays = 4;
-
-        count = 0;
-        p     = glyph.bitmap;
-
-        for ( i = 0; i < bitmap->rows; i++ )
-        {
-          pp = p;
-
-          /* get the full bytes */
-          for ( j = 0; j < ( bitmap->width >> 2 ); j++ )
-          {
-            bitmap->buffer[count++] = (FT_Byte)( ( *pp & 0xC0 ) >> 6 );
-            bitmap->buffer[count++] = (FT_Byte)( ( *pp & 0x30 ) >> 4 );
-            bitmap->buffer[count++] = (FT_Byte)( ( *pp & 0x0C ) >> 2 );
-            bitmap->buffer[count++] = (FT_Byte)(   *pp & 0x03 );
-
-            pp++;
-          }
-
-          /* get remaining pixels (if any) */
-          switch ( bitmap->width & 3 )
-          {
-          case 3:
-            bitmap->buffer[count++] = (FT_Byte)( ( *pp & 0xC0 ) >> 6 );
-            /* fall through */
-          case 2:
-            bitmap->buffer[count++] = (FT_Byte)( ( *pp & 0x30 ) >> 4 );
-            /* fall through */
-          case 1:
-            bitmap->buffer[count++] = (FT_Byte)( ( *pp & 0x0C ) >> 2 );
-            /* fall through */
-          case 0:
-            break;
-          }
-
-          p += glyph.bpr;
-        }
-        break;
-
-      case 4:
-        bitmap->num_grays = 16;
-
-        count = 0;
-        p     = glyph.bitmap;
-
-        for ( i = 0; i < bitmap->rows; i++ )
-        {
-          pp = p;
-
-          /* get the full bytes */
-          for ( j = 0; j < ( bitmap->width >> 1 ); j++ )
-          {
-            bitmap->buffer[count++] = (FT_Byte)( ( *pp & 0xF0 ) >> 4 );
-            bitmap->buffer[count++] = (FT_Byte)(   *pp & 0x0F );
-
-            pp++;
-          }
-
-          /* get remaining pixel (if any) */
-          switch ( bitmap->width & 1 )
-          {
-          case 1:
-            bitmap->buffer[count++] = (FT_Byte)( ( *pp & 0xF0 ) >> 4 );
-            /* fall through */
-          case 0:
-            break;
-          }
-
-          p += glyph.bpr;
-        }
-        break;
-
-      case 8:
-        bitmap->num_grays = 256;
-
-        FT_MEM_COPY( bitmap->buffer, glyph.bitmap,
-                     bitmap->rows * bitmap->pitch );
-        break;
-      }
+      bitmap->num_grays  = 256;
+      break;
     }
 
     slot->bitmap_left = glyph.bbx.x_offset;

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType utility file for PS names support (body).                   */
 /*                                                                         */
-/*  Copyright 2002, 2003 by                                                */
+/*  Copyright 2002, 2003, 2004 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -64,6 +64,30 @@
     }
 
     return result;
+  }
+
+
+  /* documentation is in t1tables.h */
+
+  FT_EXPORT_DEF( FT_Error )
+  FT_Get_PS_Font_Private( FT_Face         face,
+                          PS_PrivateRec*  afont_private )
+  {
+    FT_Error  error = FT_Err_Invalid_Argument;
+
+
+    if ( face )
+    {
+      FT_Service_PsInfo  service = NULL;
+
+
+      FT_FACE_FIND_SERVICE( face, service, POSTSCRIPT_INFO );
+
+      if ( service && service->ps_get_font_private )
+        error = service->ps_get_font_private( face, afont_private );
+    }
+
+    return error;
   }
 
 

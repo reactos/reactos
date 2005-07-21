@@ -5,7 +5,7 @@
 /*    FreeType glyph image formats and default raster interface            */
 /*    (specification).                                                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -264,24 +264,18 @@ FT_BEGIN_HEADER
   /*    pixel_mode   :: The pixel mode, i.e., how pixel bits are stored.   */
   /*                    See @FT_Pixel_Mode for possible values.            */
   /*                                                                       */
-  /*    palette_mode :: This field is only used with paletted pixel modes; */
-  /*                    it indicates how the palette is stored.            */
+  /*    palette_mode :: This field is intended for paletted pixel modes;   */
+  /*                    it indicates how the palette is stored.  Not       */
+  /*                    used currently.                                    */
   /*                                                                       */
-  /*    palette      :: A typeless pointer to the bitmap palette; only     */
-  /*                    used for paletted pixel modes.                     */
+  /*    palette      :: A typeless pointer to the bitmap palette; this     */
+  /*                    field is intended for paletted pixel modes.  Not   */
+  /*                    used currently.                                    */
   /*                                                                       */
   /* <Note>                                                                */
-  /*   For now, the only pixel mode supported by FreeType are mono and     */
+  /*   For now, the only pixel modes supported by FreeType are mono and    */
   /*   grays.  However, drivers might be added in the future to support    */
   /*   more `colorful' options.                                            */
-  /*                                                                       */
-  /*   When using pixel modes pal2, pal4 and pal8 with a void `palette'    */
-  /*   field, a gray pixmap with respectively 4, 16, and 256 levels of     */
-  /*   gray is assumed.  This, in order to be compatible with some         */
-  /*   embedded bitmap formats defined in the TrueType specification.      */
-  /*                                                                       */
-  /*   Note that no font was found presenting such embedded bitmaps, so    */
-  /*   this is currently completely unhandled by the library.              */
   /*                                                                       */
   typedef struct  FT_Bitmap_
   {
@@ -772,7 +766,7 @@ FT_BEGIN_HEADER
   /*    raster                                                             */
   /*                                                                       */
   /* <Title>                                                               */
-  /*    Scanline converter                                                 */
+  /*    Scanline Converter                                                 */
   /*                                                                       */
   /* <Abstract>                                                            */
   /*    How vectorial outlines are converted into bitmaps and pixmaps.     */
@@ -1036,8 +1030,8 @@ FT_BEGIN_HEADER
   /*                                                                       */
   typedef struct  FT_Raster_Params_
   {
-    FT_Bitmap*              target;
-    void*                   source;
+    const FT_Bitmap*        target;
+    const void*             source;
     int                     flags;
     FT_SpanFunc             gray_spans;
     FT_SpanFunc             black_spans;

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType font driver implementation (body).                          */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -67,7 +67,7 @@
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
-  /*    Get_Kerning                                                        */
+  /*    cff_get_kerning                                                    */
   /*                                                                       */
   /* <Description>                                                         */
   /*    A driver method used to return the kerning vector between two      */
@@ -97,56 +97,22 @@
   /*    They can be implemented by format-specific interfaces.             */
   /*                                                                       */
   FT_CALLBACK_DEF( FT_Error )
-  Get_Kerning( FT_Face     ttface,          /* TT_Face */
-               FT_UInt     left_glyph,
-               FT_UInt     right_glyph,
-               FT_Vector*  kerning )
+  cff_get_kerning( FT_Face     ttface,          /* TT_Face */
+                   FT_UInt     left_glyph,
+                   FT_UInt     right_glyph,
+                   FT_Vector*  kerning )
   {
-    TT_Face        face = (TT_Face)ttface;
-    TT_Kern0_Pair  pair;
+    TT_Face       face = (TT_Face)ttface;
+    SFNT_Service  sfnt = (SFNT_Service)face->sfnt;
 
-
-    if ( !face )
-      return CFF_Err_Invalid_Face_Handle;
 
     kerning->x = 0;
     kerning->y = 0;
 
-    if ( face->kern_pairs )
-    {
-      /* there are some kerning pairs in this font file! */
-      FT_ULong  search_tag = PAIR_TAG( left_glyph, right_glyph );
-      FT_Long   left, right;
+    if ( sfnt )
+      kerning->x = sfnt->get_kerning( face, left_glyph, right_glyph );
 
-
-      left  = 0;
-      right = face->num_kern_pairs - 1;
-
-      while ( left <= right )
-      {
-        FT_Long   middle = left + ( ( right - left ) >> 1 );
-        FT_ULong  cur_pair;
-
-
-        pair     = face->kern_pairs + middle;
-        cur_pair = PAIR_TAG( pair->left, pair->right );
-
-        if ( cur_pair == search_tag )
-          goto Found;
-
-        if ( cur_pair < search_tag )
-          left = middle + 1;
-        else
-          right = middle - 1;
-      }
-    }
-
-  Exit:
     return CFF_Err_Ok;
-
-  Found:
-    kerning->x = pair->value;
-    goto Exit;
   }
 
 
@@ -338,8 +304,9 @@
 
   static const FT_Service_PsInfoRec  cff_service_ps_info =
   {
-    (PS_GetFontInfoFunc)  NULL,         /* unsupported with CFF fonts */
-    (PS_HasGlyphNamesFunc)cff_ps_has_glyph_names
+    (PS_GetFontInfoFunc)   NULL,        /* unsupported with CFF fonts */
+    (PS_HasGlyphNamesFunc) cff_ps_has_glyph_names,
+    (PS_GetFontPrivateFunc)NULL         /* unsupported with CFF fonts */
   };
 
 
@@ -471,7 +438,7 @@
 
     Load_Glyph,
 
-    Get_Kerning,
+    cff_get_kerning,
     0,                      /* FT_Face_AttachFunc      */
     0                       /* FT_Face_GetAdvancesFunc */
   };

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType GX Font Variation loader                                    */
 /*                                                                         */
-/*  Copyright 2004 by                                                      */
+/*  Copyright 2004, 2005 by                                                */
 /*  David Turner, Robert Wilhelm, Werner Lemberg, and George Williams.     */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -92,7 +92,7 @@
   /* indicates that there is a delta for every point without needing to    */
   /* enumerate all of them.                                                */
   /*                                                                       */
-#define ALL_POINTS  (FT_UShort*)(-1)
+#define ALL_POINTS  (FT_UShort*)( -1 )
 
 
   enum
@@ -134,7 +134,9 @@
     FT_Int     j;
     FT_Int     first;
     FT_Memory  memory = stream->memory;
-    FT_Error   error;
+    FT_Error   error = TT_Err_Ok;
+
+    FT_UNUSED( error );
 
 
     *point_cnt = n = FT_GET_BYTE();
@@ -154,18 +156,18 @@
       if ( runcnt & GX_PT_POINTS_ARE_WORDS )
       {
         runcnt = runcnt & GX_PT_POINT_RUN_COUNT_MASK;
-        points[i++] = first = FT_GET_USHORT();
+        first  = points[i++] = FT_GET_USHORT();
 
         /* first point not included in runcount */
         for ( j = 0; j < runcnt; ++j )
-          points[i++] = ( first += FT_GET_USHORT() );
+          points[i++] = (FT_UShort)( first += FT_GET_USHORT() );
       }
       else
       {
-        points[i++] = first = FT_GET_BYTE();
+        first = points[i++] = FT_GET_BYTE();
 
         for ( j = 0; j < runcnt; ++j )
-          points[i++] = ( first += FT_GET_BYTE() );
+          points[i++] = (FT_UShort)( first += FT_GET_BYTE() );
       }
     }
 
@@ -210,7 +212,9 @@
     FT_Int     i;
     FT_Int     j;
     FT_Memory  memory = stream->memory;
-    FT_Error   error;
+    FT_Error   error = TT_Err_Ok;
+
+    FT_UNUSED( error );
 
 
     if ( FT_NEW_ARRAY( deltas, delta_cnt ) )
@@ -276,16 +280,19 @@
     FT_Memory       memory = stream->memory;
     GX_Blend        blend  = face->blend;
     GX_AVarSegment  segment;
-    FT_Error        error;
+    FT_Error        error = TT_Err_Ok;
     FT_ULong        version;
     FT_Long         axisCount;
     FT_Int          i, j;
     FT_ULong        table_len;
 
+    FT_UNUSED( error );
+
 
     blend->avar_checked = TRUE;
-    if ( ( error = face->goto_table( face, TTAG_avar, stream, &table_len ) ) )
+    if ( (error = face->goto_table( face, TTAG_avar, stream, &table_len )) != 0 )
       return;
+
     if ( FT_FRAME_ENTER( table_len ) )
       return;
 
@@ -387,7 +394,7 @@
       FT_FRAME_END
     };
 
-    if ( ( error = face->goto_table( face, TTAG_gvar, stream, &table_len ) ) )
+    if ( (error = face->goto_table( face, TTAG_gvar, stream, &table_len )) != 0 )
       goto Exit;
 
     gvar_start = FT_STREAM_POS( );
@@ -398,8 +405,8 @@
     blend->gv_glyphcnt = gvar_head.glyphCount;
     offsetToData       = gvar_start + gvar_head.offsetToData;
 
-    if ( gvar_head.version != 0x00010000L              ||
-         gvar_head.axisCount != blend->mmvar->num_axis )
+    if ( gvar_head.version   != (FT_Long)0x00010000L              ||
+         gvar_head.axisCount != (FT_UShort)blend->mmvar->num_axis )
     {
       error = TT_Err_Invalid_Table;
       goto Exit;
@@ -443,7 +450,7 @@
         goto Exit;
 
       for ( i = 0; i < blend->tuplecount; ++i )
-        for ( j = 0 ; j < gvar_head.axisCount; ++j )
+        for ( j = 0 ; j < (FT_UInt)gvar_head.axisCount; ++j )
           blend->tuplecoords[i * gvar_head.axisCount + j] =
             FT_GET_SHORT() << 2;                /* convert to FT_Fixed */
 
@@ -653,11 +660,12 @@
     if ( face->blend == NULL )
     {
       /* both `fvar' and `gvar' must be present */
-      if ( ( error = face->goto_table( face, TTAG_gvar,
-                                       stream, &table_len ) ) )
+      if ( (error = face->goto_table( face, TTAG_gvar,
+                                      stream, &table_len )) != 0 )
         goto Exit;
-      if ( ( error = face->goto_table( face, TTAG_fvar,
-                                       stream, &table_len ) ) )
+
+      if ( (error = face->goto_table( face, TTAG_fvar,
+                                      stream, &table_len )) != 0 )
         goto Exit;
 
       fvar_start = FT_STREAM_POS( );
@@ -665,7 +673,7 @@
       if ( FT_STREAM_READ_FIELDS( fvar_fields, &fvar_head ) )
         goto Exit;
 
-      if ( fvar_head.version != 0x00010000UL                              ||
+      if ( fvar_head.version != (FT_Long)0x00010000L                      ||
            fvar_head.countSizePairs != 2                                  ||
            fvar_head.axisSize != 20                                       ||
            fvar_head.instanceSize != 4 + 4 * fvar_head.axisCount          ||
@@ -734,10 +742,10 @@
         a->maximum = axis_rec.maxValue;     /* A Fixed */
         a->strid   = axis_rec.nameID;
 
-        a->name[0] =   a->tag >> 24;
-        a->name[1] = ( a->tag >> 16 ) & 0xFF;
-        a->name[2] = ( a->tag >>  8 ) & 0xFF;
-        a->name[3] = ( a->tag       ) & 0xFF;
+        a->name[0] = (FT_String)(   a->tag >> 24 );
+        a->name[1] = (FT_String)( ( a->tag >> 16 ) & 0xFF );
+        a->name[2] = (FT_String)( ( a->tag >>  8 ) & 0xFF );
+        a->name[3] = (FT_String)( ( a->tag       ) & 0xFF );
         a->name[4] = 0;
 
         ++a;
@@ -855,7 +863,7 @@
 
     if ( face->blend == NULL )
     {
-      if ( ( error = TT_Get_MM_Var( face, NULL) ) )
+      if ( (error = TT_Get_MM_Var( face, NULL)) != 0 )
         goto Exit;
     }
 
@@ -876,7 +884,7 @@
       }
 
     if ( blend->glyphoffsets == NULL )
-      if ( ( error = ft_var_load_gvar( face ) ) )
+      if ( (error = ft_var_load_gvar( face )) != 0 )
         goto Exit;
 
     if ( blend->normalizedcoords == NULL )
@@ -982,7 +990,7 @@
 
     if ( face->blend == NULL )
     {
-      if ( ( error = TT_Get_MM_Var( face, NULL ) ) )
+      if ( (error = TT_Get_MM_Var( face, NULL )) != 0 )
         goto Exit;
     }
 
@@ -1035,7 +1043,7 @@
       av = blend->avar_segment;
       for ( i = 0; i < mmvar->num_axis; ++i, ++av )
       {
-        for ( j = 1; j < av->pairCount; ++j )
+        for ( j = 1; j < (FT_UInt)av->pairCount; ++j )
           if ( normalized[i] < av->correspondence[j].fromCoord )
           {
             normalized[i] =
@@ -1207,7 +1215,7 @@
       }
 
       apply = ft_var_apply_tuple( blend,
-                                  tupleIndex,
+                                  (FT_UShort)tupleIndex,
                                   tuple_coords,
                                   im_start_coords,
                                   im_end_coords );
@@ -1236,13 +1244,19 @@
       {
         /* this means that there are deltas for every entry in cvt */
         for ( j = 0; j < face->cvt_size; ++j )
-          face->cvt[j] += FT_MulFix( deltas[j], apply );
+          face->cvt[j] = (FT_Short)( face->cvt[j] +
+                                     FT_MulFix( deltas[j], apply ) );
       }
 
       else
       {
         for ( j = 0; j < point_count; ++j )
-          face->cvt[localpoints[j]] += FT_MulFix( deltas[j], apply );
+        {
+          int  pindex = localpoints[j];
+          
+          face->cvt[pindex] = (FT_Short)( face->cvt[pindex] +
+                                          FT_MulFix( deltas[j], apply ) );
+        }
       }
 
       if ( localpoints != ALL_POINTS )
@@ -1310,7 +1324,7 @@
     FT_Fixed*   im_end_coords   = NULL;
     FT_UInt     point_count, spoint_count = 0;
     FT_UShort*  sharedpoints = NULL;
-    FT_UShort*  localpoints;
+    FT_UShort*  localpoints  = NULL;
     FT_UShort*  points;
     FT_Short    *deltas_x, *deltas_y;
 
@@ -1319,7 +1333,7 @@
       return TT_Err_Invalid_Argument;
 
     /* to be freed by the caller */
-    if ( ( error = FT_NEW_ARRAY( delta_xy, n_points ) ) )
+    if ( FT_NEW_ARRAY( delta_xy, n_points ) )
       goto Exit;
     *deltas = delta_xy;
 
@@ -1396,7 +1410,7 @@
       }
 
       apply = ft_var_apply_tuple( blend,
-                                  tupleIndex,
+                                  (FT_UShort)tupleIndex,
                                   tuple_coords,
                                   im_start_coords,
                                   im_end_coords );

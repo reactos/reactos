@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType and CFF data/program tables loader (body).                  */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -1687,7 +1687,7 @@
       FT_MEM_ZERO( charset->cids, sizeof ( FT_UShort ) * max_cid );
 
       for ( i = 0; i < num_glyphs; i++ )
-        charset->cids[charset->sids[i]] = i;
+        charset->cids[charset->sids[i]] = (FT_UShort)i;
     }
 
   Exit:
@@ -2100,6 +2100,7 @@
     FT_ULong         base_offset;
     CFF_FontRecDict  dict;
 
+
     FT_ZERO( font );
 
     font->stream = stream;
@@ -2239,11 +2240,9 @@
     /* read the Charset and Encoding tables if available */
     if ( font->num_glyphs > 0 )
     {
-      FT_Bool  invert;
+      FT_Bool  invert = FT_BOOL( dict->cid_registry != 0xFFFFU );
 
 
-      invert = dict->cid_registry != 0xFFFFU &&
-               font->charstrings_index.count != dict->cid_count;
       error = cff_charset_load( &font->charset, font->num_glyphs, stream,
                                 base_offset, dict->charset_offset, invert );
       if ( error )

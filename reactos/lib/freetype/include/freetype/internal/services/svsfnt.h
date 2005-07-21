@@ -2,9 +2,9 @@
 /*                                                                         */
 /*  svsfnt.h                                                               */
 /*                                                                         */
-/*    The FreeType PostScript name services (specification).               */
+/*    The FreeType SFNT table loading service (specification).             */
 /*                                                                         */
-/*  Copyright 2003 by                                                      */
+/*  Copyright 2003, 2004 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -50,11 +50,22 @@ FT_BEGIN_HEADER
   (*FT_SFNT_TableGetFunc)( FT_Face      face,
                            FT_Sfnt_Tag  tag );
 
- 
+
+  /*
+   * Used to implement FT_Sfnt_Table_Info().
+   */
+  typedef FT_Error
+  (*FT_SFNT_TableInfoFunc)( FT_Face    face,
+                            FT_UInt    idx,
+                            FT_ULong  *tag,
+                            FT_ULong  *length );
+
+
   FT_DEFINE_SERVICE( SFNT_Table )
   {
     FT_SFNT_TableLoadFunc  load_table;
     FT_SFNT_TableGetFunc   get_table;
+    FT_SFNT_TableInfoFunc  table_info;
   };
 
   /* */

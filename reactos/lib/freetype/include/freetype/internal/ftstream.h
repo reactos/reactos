@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Stream handling (specification).                                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2004 by                                     */
+/*  Copyright 1996-2001, 2002, 2004, 2005 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -343,7 +343,7 @@ FT_BEGIN_HEADER
 
   /* free a stream */
   FT_BASE( void )
-  FT_Stream_Free( FT_Stream  stream,                    
+  FT_Stream_Free( FT_Stream  stream,
                   FT_Int     external );
 
   /* initialize a stream for reading in-memory data */
@@ -384,6 +384,13 @@ FT_BEGIN_HEADER
                     FT_ULong   pos,
                     FT_Byte*   buffer,
                     FT_ULong   count );
+
+  /* try to read bytes at the end of a stream; return number of bytes */
+  /* really available                                                 */
+  FT_BASE( FT_ULong )
+  FT_Stream_TryRead( FT_Stream  stream,
+                     FT_Byte*   buffer,
+                     FT_ULong   count );
 
   /* Enter a frame of `count' consecutive bytes in a stream.  Returns an */
   /* error if the frame could not be read/accessed.  The caller can use  */

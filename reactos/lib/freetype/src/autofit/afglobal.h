@@ -1,24 +1,45 @@
+/***************************************************************************/
+/*                                                                         */
+/*  afglobal.h                                                             */
+/*                                                                         */
+/*    Auto-fitter routines to compute global hinting values                */
+/*    (specification).                                                     */
+/*                                                                         */
+/*  Copyright 2003, 2004, 2005 by                                          */
+/*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
+/*                                                                         */
+/*  This file is part of the FreeType project, and may only be used,       */
+/*  modified, and distributed under the terms of the FreeType project      */
+/*  license, LICENSE.TXT.  By continuing to use, modify, or distribute     */
+/*  this file you indicate that you have read the license and              */
+/*  understand and accept it fully.                                        */
+/*                                                                         */
+/***************************************************************************/
+
+
 #ifndef __AF_GLOBAL_H__
 #define __AF_GLOBAL_H__
 
+
 #include "aftypes.h"
+
 
 FT_BEGIN_HEADER
 
- /**************************************************************************/
- /**************************************************************************/
- /*****                                                                *****/
- /*****                F A C E   G L O B A L S                         *****/
- /*****                                                                *****/
- /**************************************************************************/
- /**************************************************************************/
+
+  /************************************************************************/
+  /************************************************************************/
+  /*****                                                              *****/
+  /*****                  F A C E   G L O B A L S                     *****/
+  /*****                                                              *****/
+  /************************************************************************/
+  /************************************************************************/
 
 
- /*
-  *  models the global hints data for a given face, decomposed into
-  *  script-specific items..
-  *
-  */
+  /*
+   *  model the global hints data for a given face, decomposed into
+   *  script-specific items
+   */
   typedef struct AF_FaceGlobalsRec_*   AF_FaceGlobals;
 
 
@@ -36,6 +57,10 @@ FT_BEGIN_HEADER
 
  /* */
 
+
 FT_END_HEADER
 
 #endif /* __AF_GLOBALS_H__ */
+
+
+/* END */

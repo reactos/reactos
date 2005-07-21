@@ -793,6 +793,8 @@
     /* initialize glyph loader */
     FT_GlyphLoader_Rewind( glyph->loader );
 
+    glyph->num_subs = 0;
+
     /* load the glyph, recursively when needed */
     return pfr_glyph_load_rec( glyph, stream, gps_offset, offset, size );
   }

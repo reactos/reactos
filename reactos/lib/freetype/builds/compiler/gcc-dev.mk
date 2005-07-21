@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2003 by
+# Copyright 1996-2000, 2003, 2004, 2005 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -63,8 +63,11 @@ T := -o$(space)
 #   ANSI compliance.
 #
 ifndef CFLAGS
+  ifeq ($(findstring g++,$(CC)),)
+    nested_externs := -Wnested-externs
+  endif
+
   CFLAGS := -c -g -O0 \
-            -fno-strict-aliasing \
             -Wall \
             -W \
             -Wundef \
@@ -73,8 +76,8 @@ ifndef CFLAGS
             -Wwrite-strings \
             -Wstrict-prototypes \
             -Wredundant-decls \
-            -Wnested-externs \
-            -Wno-long-long
+            -Wno-long-long \
+            $(nested_externs)
 endif
 
 # ANSIFLAGS: Put there the flags used to make your compiler ANSI-compliant.

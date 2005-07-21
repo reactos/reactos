@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType API for accessing BDF-specific strings (body).              */
 /*                                                                         */
-/*  Copyright 2002, 2003 by                                                */
+/*  Copyright 2002, 2003, 2004 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -20,6 +20,8 @@
 #include FT_INTERNAL_OBJECTS_H
 #include FT_SERVICE_BDF_H
 
+
+  /* documentation is in ftbdf.h */
 
   FT_EXPORT_DEF( FT_Error )
   FT_Get_BDF_Charset_ID( FT_Face       face,
@@ -53,6 +55,8 @@
     return error;
   }
 
+
+  /* documentation is in ftbdf.h */
 
   FT_EXPORT( FT_Error )
   FT_Get_BDF_Property( FT_Face           face,

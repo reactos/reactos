@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType path stroker (body).                                        */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004 by                                          */
+/*  Copyright 2002, 2003, 2004, 2005 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -24,6 +24,9 @@
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_OBJECTS_H
 
+
+  /* documentation is in ftstroke.h */
+
   FT_EXPORT_DEF( FT_StrokerBorder )
   FT_Outline_GetInsideBorder( FT_Outline*  outline )
   {
@@ -34,6 +37,8 @@
                                         : FT_STROKER_BORDER_LEFT ;
   }
 
+
+  /* documentation is in ftstroke.h */
 
   FT_EXPORT_DEF( FT_StrokerBorder )
   FT_Outline_GetOutsideBorder( FT_Outline*  outline )
@@ -234,6 +239,7 @@
 
   } FT_StrokeTags;
 
+#define  FT_STROKE_TAG_BEGIN_END  (FT_STROKE_TAG_BEGIN|FT_STROKE_TAG_END)
 
   typedef struct  FT_StrokeBorderRec_
   {
@@ -279,15 +285,64 @@
 
 
   static void
-  ft_stroke_border_close( FT_StrokeBorder  border )
+  ft_stroke_border_close( FT_StrokeBorder  border,
+                          FT_Bool          reverse )
   {
+    FT_UInt  start = border->start;
+    FT_UInt  count = border->num_points;
+
+
     FT_ASSERT( border->start >= 0 );
 
     /* don't record empty paths! */
-    if ( border->num_points > (FT_UInt)border->start )
+    if ( count <= start + 1U )
+      border->num_points = start;
+    else
     {
-      border->tags[border->start         ] |= FT_STROKE_TAG_BEGIN;
-      border->tags[border->num_points - 1] |= FT_STROKE_TAG_END;
+      /* copy the last point to the start of this sub-path, since */
+      /* it contains the `adjusted' starting coordinates          */
+      border->num_points    = --count;
+      border->points[start] = border->points[count];
+
+      if ( reverse )
+      {
+        /* reverse the points */
+        {
+          FT_Vector*  vec1 = border->points + start + 1;
+          FT_Vector*  vec2 = border->points + count - 1;
+
+
+          for ( ; vec1 < vec2; vec1++, vec2-- )
+          {
+            FT_Vector  tmp;
+
+
+            tmp   = *vec1;
+            *vec1 = *vec2;
+            *vec2 = tmp;
+          }
+        }
+
+        /* then the tags */
+        {
+          FT_Byte*  tag1 = border->tags + start + 1;
+          FT_Byte*  tag2 = border->tags + count - 1;
+
+
+          for ( ; tag1 < tag2; tag1++, tag2-- )
+          {
+            FT_Byte  tmp;
+
+
+            tmp   = *tag1;
+            *tag1 = *tag2;
+            *tag2 = tmp;
+          }
+        }
+      }
+
+      border->tags[start    ] |= FT_STROKE_TAG_BEGIN;
+      border->tags[count - 1] |= FT_STROKE_TAG_END;
     }
 
     border->start   = -1;
@@ -472,7 +527,7 @@
   {
     /* close current open path if any ? */
     if ( border->start >= 0 )
-      ft_stroke_border_close( border );
+      ft_stroke_border_close( border, 0 );
 
     border->start   = border->num_points;
     border->movable = 0;
@@ -658,6 +713,8 @@
   } FT_StrokerRec;
 
 
+  /* documentation is in ftstroke.h */
+
   FT_EXPORT_DEF( FT_Error )
   FT_Stroker_New( FT_Memory    memory,
                   FT_Stroker  *astroker )
@@ -678,6 +735,8 @@
   }
 
 
+  /* documentation is in ftstroke.h */
+
   FT_EXPORT_DEF( void )
   FT_Stroker_Set( FT_Stroker           stroker,
                   FT_Fixed             radius,
@@ -694,6 +753,8 @@
   }
 
 
+  /* documentation is in ftstroke.h */
+
   FT_EXPORT_DEF( void )
   FT_Stroker_Rewind( FT_Stroker  stroker )
   {
@@ -704,6 +765,8 @@
     }
   }
 
+
+  /* documentation is in ftstroke.h */
 
   FT_EXPORT_DEF( void )
   FT_Stroker_Done( FT_Stroker  stroker )
@@ -821,9 +884,10 @@
 
     phi = stroker->angle_in + theta;
 
-    thcos  = FT_Cos( theta );
-    sigma  = FT_MulFix( stroker->miter_limit, thcos );
+    thcos = FT_Cos( theta );
+    sigma = FT_MulFix( stroker->miter_limit, thcos );
 
+    /* TODO: find better criterion to switch off the optimization */
     if ( sigma < 0x10000L )
     {
       FT_Vector_From_Polar( &delta, stroker->radius,
@@ -1036,6 +1100,8 @@
   }
 
 
+  /* documentation is in ftstroke.h */
+
   FT_EXPORT_DEF( FT_Error )
   FT_Stroker_LineTo( FT_Stroker  stroker,
                      FT_Vector*  to )
@@ -1096,6 +1162,8 @@
     return error;
   }
 
+
+  /* documentation is in ftstroke.h */
 
   FT_EXPORT_DEF( FT_Error )
   FT_Stroker_ConicTo( FT_Stroker  stroker,
@@ -1192,6 +1260,8 @@
     return error;
   }
 
+
+  /* documentation is in ftstroke.h */
 
   FT_EXPORT_DEF( FT_Error )
   FT_Stroker_CubicTo( FT_Stroker  stroker,
@@ -1301,6 +1371,8 @@
   }
 
 
+  /* documentation is in ftstroke.h */
+
   FT_EXPORT_DEF( FT_Error )
   FT_Stroker_BeginSubPath( FT_Stroker  stroker,
                            FT_Vector*  to,
@@ -1351,12 +1423,17 @@
           *dst_tag   = *src_tag;
 
           if ( open )
-            dst_tag[0] &= ~( FT_STROKE_TAG_BEGIN | FT_STROKE_TAG_END );
+            dst_tag[0] &= ~FT_STROKE_TAG_BEGIN_END;
           else
           {
-            /* switch begin/end tags if necessary.. */
-            if ( dst_tag[0] & ( FT_STROKE_TAG_BEGIN | FT_STROKE_TAG_END ) )
-              dst_tag[0] ^= ( FT_STROKE_TAG_BEGIN | FT_STROKE_TAG_END );
+            FT_Byte  ttag = (FT_Byte)( dst_tag[0] & FT_STROKE_TAG_BEGIN_END );
+
+
+            /* switch begin/end tags if necessary */
+            if ( ttag == FT_STROKE_TAG_BEGIN ||
+                 ttag == FT_STROKE_TAG_END   )
+              dst_tag[0] ^= FT_STROKE_TAG_BEGIN_END;
+
           }
 
           src_point--;
@@ -1377,6 +1454,8 @@
     return error;
   }
 
+
+  /* documentation is in ftstroke.h */
 
   /* there's a lot of magic in this function! */
   FT_EXPORT_DEF( FT_Error )
@@ -1409,7 +1488,7 @@
 
       /* Now end the right subpath accordingly.  The left one is */
       /* rewind and doesn't need further processing.             */
-      ft_stroke_border_close( right );
+      ft_stroke_border_close( right, 0 );
     }
     else
     {
@@ -1440,11 +1519,9 @@
         if ( turn < 0 )
           inside_side = 1;
 
-        /* IMPORTANT: WE DO NOT PROCESS THE INSIDE BORDER HERE! */
-        /* process the inside side                              */
-        /* error = ft_stroker_inside( stroker, inside_side );   */
-        /* if ( error )                                         */
-        /*   goto Exit;                                         */
+        error = ft_stroker_inside( stroker, inside_side );
+        if ( error )
+          goto Exit;
 
         /* process the outside side */
         error = ft_stroker_outside( stroker, 1 - inside_side );
@@ -1453,14 +1530,16 @@
       }
 
       /* then end our two subpaths */
-      ft_stroke_border_close( stroker->borders + 0 );
-      ft_stroke_border_close( stroker->borders + 1 );
+      ft_stroke_border_close( stroker->borders + 0, 1 );
+      ft_stroke_border_close( stroker->borders + 1, 0 );
     }
 
   Exit:
     return error;
   }
 
+
+  /* documentation is in ftstroke.h */
 
   FT_EXPORT_DEF( FT_Error )
   FT_Stroker_GetBorderCounts( FT_Stroker        stroker,
@@ -1490,6 +1569,8 @@
     return error;
   }
 
+
+  /* documentation is in ftstroke.h */
 
   FT_EXPORT_DEF( FT_Error )
   FT_Stroker_GetCounts( FT_Stroker  stroker,
@@ -1521,6 +1602,8 @@
   }
 
 
+  /* documentation is in ftstroke.h */
+
   FT_EXPORT_DEF( void )
   FT_Stroker_ExportBorder( FT_Stroker        stroker,
                            FT_StrokerBorder  border,
@@ -1538,6 +1621,8 @@
   }
 
 
+  /* documentation is in ftstroke.h */
+
   FT_EXPORT_DEF( void )
   FT_Stroker_Export( FT_Stroker   stroker,
                      FT_Outline*  outline )
@@ -1546,6 +1631,8 @@
     FT_Stroker_ExportBorder( stroker, FT_STROKER_BORDER_RIGHT, outline );
   }
 
+
+  /* documentation is in ftstroke.h */
 
   /*
    *  The following is very similar to FT_Outline_Decompose, except
@@ -1580,11 +1667,18 @@
 
     for ( n = 0; n < outline->n_contours; n++ )
     {
-      FT_Int  last;  /* index of last point in contour */
+      FT_UInt  last;  /* index of last point in contour */
 
 
       last  = outline->contours[n];
       limit = outline->points + last;
+
+      /* skip empty points; we don't stroke these */
+      if ( last <= first )
+      {
+        first = last + 1;
+        continue;
+      }
 
       v_start = outline->points[first];
       v_last  = outline->points[last];
@@ -1749,6 +1843,8 @@
   extern const FT_Glyph_Class  ft_outline_glyph_class;
 
 
+  /* documentation is in ftstroke.h */
+
   FT_EXPORT_DEF( FT_Error )
   FT_Glyph_Stroke( FT_Glyph    *pglyph,
                    FT_Stroker   stroker,
@@ -1818,6 +1914,8 @@
     return error;
   }
 
+
+  /* documentation is in ftstroke.h */
 
   FT_EXPORT_DEF( FT_Error )
   FT_Glyph_StrokeBorder( FT_Glyph    *pglyph,

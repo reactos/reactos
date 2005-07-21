@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType PostScript info service (specification).                */
 /*                                                                         */
-/*  Copyright 2003 by                                                      */
+/*  Copyright 2003, 2004 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -36,11 +36,16 @@ FT_BEGIN_HEADER
   typedef FT_Int
   (*PS_HasGlyphNamesFunc)( FT_Face   face );
 
+  typedef FT_Error
+  (*PS_GetFontPrivateFunc)( FT_Face         face,
+                            PS_PrivateRec*  afont_private );
+
 
   FT_DEFINE_SERVICE( PsInfo )
   {
-    PS_GetFontInfoFunc    ps_get_font_info;
-    PS_HasGlyphNamesFunc  ps_has_glyph_names;
+    PS_GetFontInfoFunc     ps_get_font_info;
+    PS_HasGlyphNamesFunc   ps_has_glyph_names;
+    PS_GetFontPrivateFunc  ps_get_font_private;
   };
 
   /* */

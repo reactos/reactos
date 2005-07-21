@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType and OpenType embedded bitmap support (specification).       */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -41,6 +41,7 @@ FT_BEGIN_HEADER
                            FT_UInt    y_ppem,
                            FT_ULong  *astrike_index );
 
+#ifndef FT_OPTIMIZE_MEMORY
   FT_LOCAL( FT_Error )
   tt_find_sbit_image( TT_Face          face,
                       FT_UInt          glyph_index,
@@ -53,6 +54,7 @@ FT_BEGIN_HEADER
   tt_load_sbit_metrics( FT_Stream        stream,
                         TT_SBit_Range    range,
                         TT_SBit_Metrics  metrics );
+#endif /* !FT_OPTIMIZE_MEMORY */
 
   FT_LOCAL( FT_Error )
   tt_face_load_sbit_image( TT_Face              face,

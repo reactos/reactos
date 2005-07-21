@@ -2,7 +2,7 @@
 
     FreeType font driver for pcf fonts
 
-  Copyright 2000, 2001, 2002, 2003, 2004 by
+  Copyright 2000, 2001, 2002, 2003, 2004, 2005 by
   Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -101,7 +101,8 @@ THE SOFTWARE.
          FT_STREAM_READ_FIELDS ( pcf_toc_header, toc ) )
       return PCF_Err_Cannot_Open_Resource;
 
-    if ( toc->version != PCF_FILE_VERSION )
+    if ( toc->version != PCF_FILE_VERSION                 ||
+         toc->count   >  FT_ARRAY_MAX( face->toc.tables ) )
       return PCF_Err_Invalid_File_Format;
 
     if ( FT_NEW_ARRAY( face->toc.tables, toc->count ) )
@@ -945,7 +946,12 @@ THE SOFTWARE.
     }
 
     if ( !parts || !len )
-      face->style_name = (char *)"Regular";
+    {
+      if ( FT_ALLOC( face->style_name, 8 ) )
+        return error;
+      ft_strcpy( face->style_name, "Regular" );
+      face->style_name[7] = '\0';
+    }
     else
     {
       char          *style, *s;
@@ -1097,13 +1103,14 @@ THE SOFTWARE.
 
         FT_MEM_ZERO( bsize, sizeof ( FT_Bitmap_Size ) );
 
-        bsize->height = face->accel.fontAscent + face->accel.fontDescent;
+        bsize->height = (FT_Short)( face->accel.fontAscent +
+                                    face->accel.fontDescent );
 
         prop = pcf_find_property( face, "AVERAGE_WIDTH" );
         if ( prop )
           bsize->width = (FT_Short)( ( prop->value.integer + 5 ) / 10 );
         else
-          bsize->width = bsize->height * 2/3;
+          bsize->width = (FT_Short)( bsize->height * 2/3 );
 
         prop = pcf_find_property( face, "POINT_SIZE" );
         if ( prop )

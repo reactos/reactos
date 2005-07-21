@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    High-level SFNT driver interface (body).                             */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -34,7 +34,8 @@
 #include "ttpost.h"
 #endif
 
-#include "ttcmap0.h"
+#include "ttcmap.h"
+#include "ttkern.h"
 
 #include FT_SERVICE_GLYPH_DICT_H
 #include FT_SERVICE_POSTSCRIPT_NAME_H
@@ -92,10 +93,30 @@
   }
 
 
+  static FT_Error
+  sfnt_table_info( TT_Face    face,
+                   FT_UInt    idx,
+                   FT_ULong  *tag,
+                   FT_ULong  *length )
+  {
+    if ( !tag || !length )
+      return SFNT_Err_Invalid_Argument;
+
+    if ( idx >= face->num_tables )
+      return SFNT_Err_Table_Missing;
+
+    *tag    = face->dir_tables[idx].Tag;
+    *length = face->dir_tables[idx].Length;
+
+    return SFNT_Err_Ok;
+  }
+
+
   static const FT_Service_SFNT_TableRec  sfnt_service_sfnt_table =
   {
     (FT_SFNT_TableLoadFunc)tt_face_load_any,
-    (FT_SFNT_TableGetFunc) get_sfnt_table
+    (FT_SFNT_TableGetFunc) get_sfnt_table,
+    (FT_SFNT_TableInfoFunc)sfnt_table_info
   };
 
 
@@ -346,8 +367,8 @@
     /* see `ttsbit.h' and `sfnt.h' */
     tt_face_set_sbit_strike,
     tt_face_load_sbit_strikes,
-    tt_find_sbit_image,
-    tt_load_sbit_metrics,
+    0 /* tt_find_sbit_image */,
+    0 /* tt_load_sbit_metrics */,
     tt_face_load_sbit_image,
     tt_face_free_sbit_strikes,
 
@@ -356,14 +377,17 @@
     0,
     0,
     0,
-    0, 
-    0, 
+    0,
+    0,
     0,
     0,
 
 #endif /* TT_CONFIG_OPTION_EMBEDDED_BITMAPS */
 
 #ifdef TT_CONFIG_OPTION_POSTSCRIPT_NAMES
+
+    /* see `ttkern.h' */
+    tt_face_get_kerning,
 
     /* see `ttpost.h' */
     tt_face_get_ps_name,

@@ -5,7 +5,7 @@
 /*    Basic SFNT/TrueType type definitions and interface (specification    */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2004 by                                     */
+/*  Copyright 1996-2001, 2002, 2004, 2005 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -311,6 +311,8 @@ FT_BEGIN_HEADER
   } TT_GaspRec;
 
 
+#ifndef FT_OPTIMIZE_MEMORY
+
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
@@ -386,6 +388,8 @@ FT_BEGIN_HEADER
     FT_FWord   value;  /* kerning value                */
 
   } TT_Kern0_PairRec, *TT_Kern0_Pair;
+
+#endif /* !OPTIMIZE_MEMORY */
 
 
   /*************************************************************************/
@@ -1132,6 +1136,9 @@ FT_BEGIN_HEADER
   /*                            glyph data within the `glyf' table.        */
   /*                            Ignored for Type 2 font faces.             */
   /*                                                                       */
+  /*    glyf_len             :: The length of the `glyf' table.  Needed    */
+  /*                            for malformed `loca' tables.               */
+  /*                                                                       */
   /*    font_program_size    :: Size in bytecodes of the face's font       */
   /*                            program.  0 if none defined.  Ignored for  */
   /*                            Type 2 fonts.                              */
@@ -1198,12 +1205,20 @@ FT_BEGIN_HEADER
 
     TT_Header             header;       /* TrueType header table          */
     TT_HoriHeader         horizontal;   /* TrueType horizontal header     */
+#ifdef FT_OPTIMIZE_MEMORY
+    FT_Byte*              horz_metrics;
+    FT_ULong              horz_metrics_size;
+#endif
 
     TT_MaxProfile         max_profile;
     FT_ULong              max_components;
 
     FT_Bool               vertical_info;
     TT_VertHeader         vertical;     /* TT Vertical header, if present */
+#ifdef FT_OPTIMIZE_MEMORY
+    FT_Byte*              vert_metrics;
+    FT_ULong              vert_metrics_size;
+#endif
 
     FT_UShort             num_names;    /* number of name records  */
     TT_NameTableRec       name_table;   /* name table              */
@@ -1238,7 +1253,15 @@ FT_BEGIN_HEADER
     /***********************************************************************/
 
     /* horizontal device metrics */
+#ifdef FT_OPTIMIZE_MEMORY
+    FT_Byte*              hdmx_table;
+    FT_ULong              hdmx_table_size;
+    FT_UInt               hdmx_record_count;
+    FT_ULong              hdmx_record_size;
+    FT_Byte*              hdmx_record_sizes;
+#else
     TT_HdmxRec            hdmx;
+#endif
 
     /* grid-fitting and scaling table */
     TT_GaspRec            gasp;                 /* the `gasp' table */
@@ -1247,8 +1270,14 @@ FT_BEGIN_HEADER
     TT_PCLT               pclt;
 
     /* embedded bitmaps support */
+#ifdef FT_OPTIMIZE_MEMORY
+    FT_Byte*              sbit_table;
+    FT_ULong              sbit_table_size;
+    FT_UInt               sbit_num_strikes;
+#else
     FT_ULong              num_sbit_strikes;
     TT_SBit_Strike        sbit_strikes;
+#endif
 
     FT_ULong              num_sbit_scales;
     TT_SBit_Scale         sbit_scales;
@@ -1264,8 +1293,15 @@ FT_BEGIN_HEADER
     /***********************************************************************/
 
     /* the glyph locations */
+#ifdef FT_OPTIMIZE_MEMORY
+    FT_UInt               num_locations;
+    FT_Byte*              glyph_locations;
+#else
     FT_UShort             num_locations;
     FT_Long*              glyph_locations;
+#endif
+
+    FT_ULong              glyf_len;
 
     /* the font program, if any */
     FT_ULong              font_program_size;
@@ -1279,10 +1315,18 @@ FT_BEGIN_HEADER
     FT_ULong              cvt_size;
     FT_Short*             cvt;
 
+#ifdef FT_OPTIMIZE_MEMORY
+    FT_Byte*              kern_table;
+    FT_ULong              kern_table_size;
+    FT_UInt               num_kern_tables;
+    FT_UInt32             kern_avail_bits;
+    FT_UInt32             kern_order_bits;
+#else
     /* the format 0 kerning table, if any */
     FT_Int                num_kern_pairs;
     FT_Int                kern_table_index;
     TT_Kern0_Pair         kern_pairs;
+#endif
 
     /* A pointer to the bytecode interpreter to use.  This is also */
     /* used to hook the debugger for the `ttdebug' utility.        */
@@ -1297,7 +1341,7 @@ FT_BEGIN_HEADER
     FT_Bool               doblend;
     GX_Blend              blend;
 #endif
-    
+
     /***********************************************************************/
     /*                                                                     */
     /* Other tables or fields. This is used by derivative formats like     */

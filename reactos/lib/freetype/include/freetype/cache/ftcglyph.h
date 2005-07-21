@@ -238,7 +238,7 @@ FT_BEGIN_HEADER
 #define FTC_CACHE__GCACHE_CLASS( x ) \
           FTC_GCACHE_CLASS( FTC_CACHE(x)->org_class )
 #define FTC_CACHE__FAMILY_CLASS( x ) \
-          ((FTC_MruListClass) FTC_CACHE__GCACHE_CLASS(x)->family_class)
+          ( (FTC_MruListClass)FTC_CACHE__GCACHE_CLASS( x )->family_class )
 
 
   /* convenience function; use it instead of FTC_Manager_Register_Cache */
@@ -253,6 +253,14 @@ FT_BEGIN_HEADER
                      FT_UInt      gindex,
                      FTC_GQuery   query,
                      FTC_Node    *anode );
+
+
+  /* */
+
+
+#define FTC_FAMILY_FREE( family, cache )                      \
+          FTC_MruList_Remove( &FTC_GCACHE((cache))->families, \
+                              (FTC_MruNode)(family) )
 
 
 #ifdef FTC_INLINE
@@ -270,7 +278,17 @@ FT_BEGIN_HEADER
     FTC_MRULIST_LOOKUP_CMP( &_gcache->families, _gquery, _fcompare,         \
                             _gquery->family, error );                       \
     if ( !error )                                                           \
+    {                                                                       \
+      FTC_Family  _gqfamily = _gquery->family;                              \
+                                                                            \
+                                                                            \
+      _gqfamily->num_nodes++;                                               \
+                                                                            \
       FTC_CACHE_LOOKUP_CMP( cache, nodecmp, hash, query, node, error );     \
+                                                                            \
+      if ( --_gqfamily->num_nodes == 0 )                                    \
+        FTC_FAMILY_FREE( _gqfamily, _gcache );                              \
+    }                                                                       \
   FT_END_STMNT
   /* */
 

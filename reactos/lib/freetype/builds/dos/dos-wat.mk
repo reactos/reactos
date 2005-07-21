@@ -3,6 +3,9 @@
 #
 
 
+# Copyright 2003 by
+# David Turner, Robert Wilhelm, and Werner Lemberg.
+#
 # This file is part of the FreeType project, and may only be used, modified,
 # and distributed under the terms of the FreeType project license,
 # LICENSE.TXT.  By continuing to use, modify, or distribute this file you

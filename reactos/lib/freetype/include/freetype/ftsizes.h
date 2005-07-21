@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType size objects management (specification).                    */
 /*                                                                         */
-/*  Copyright 1996-2001, 2003 by                                           */
+/*  Copyright 1996-2001, 2003, 2004 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -48,10 +48,10 @@ FT_BEGIN_HEADER
   /*    sizes_management                                                   */
   /*                                                                       */
   /* <Title>                                                               */
-  /*    Size management                                                    */
+  /*    Size Management                                                    */
   /*                                                                       */
   /* <Abstract>                                                            */
-  /*    Managing multiple sizes per face                                   */
+  /*    Managing multiple sizes per face.                                  */
   /*                                                                       */
   /* <Description>                                                         */
   /*    When creating a new face object (e.g. with @FT_New_Face), an       */

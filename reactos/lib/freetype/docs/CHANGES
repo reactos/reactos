@@ -1,3 +1,122 @@
+LATEST CHANGES BETWEEN 2.1.10 and 2.1.9
+
+  I. IMPORTANT BUG FIXES
+
+    - The size comparison for BDF and PCF files could fail sometimes.
+
+    - Some  CFF files  were still not  loaded  correctly.   Patch from
+      Derek Noonburg.
+
+    - The stroker still had some serious bugs.
+
+    - Boris  Letocha  fixed a  bug in  the  TrueType interpreter:  The
+      NPUSHW instruction wasn't skipped correctly in IF clauses.  Some
+      fonts like `Helvetica 75 Bold' failed.
+
+    - Another  serious  bug  in  handling  TrueType hints  caused many
+      distortions.  It has been introduced in version 2.1.8, and it is
+      highly recommended to upgrade.
+
+    - FreeType didn't properly parse empty Type 1 glyphs.
+    
+    - An unbound dynamic buffer growth was fixed in the PFR loader.
+    
+    - Several bugs have been fixed in the cache sub-system.
+
+    - FreeType behaved incorrectly when resizing two distinct but very
+      close character pixel sizes through `FT_Set_Char_Size' (Savannah
+      bug #12263).
+      
+    - The auto-hinter didn't work properly for fonts without a Unicode
+      charmap -- it even refused to load the glyphs.
+
+
+  II. IMPORTANT CHANGES
+
+    - Many fixes have been applied to drastically reduce the amount of
+      heap   memory   used   by   FreeType,   especially   when  using
+      memory-mapped font files  (which is the default on Unix  systems
+      which support them).
+
+    - The auto-hinter  has been replaced with a new module, called the
+      `auto-fitter'.  It consumes  less memory  than its  predecessor,
+      and it is  prepared to support non-latin scripts  better in next
+      releases.
+
+    - George Williams  contributed code to read  kerning data from PFM
+      files.
+
+    - FreeType   now   uses    the   TT_NAME_ID_PREFERRED_FAMILY   and
+      TT_NAME_ID_PREFERRED_SUBFAMILY   strings   (if   available)  for
+      setting  family  and  style in SFNT  fonts  (patch from Kornfeld
+      Eliyahu Peter).
+
+    - A  new  API `FT_Sfnt_Table_Info'  (in FT_TRUETYPE_TABLES_H)  has
+      been added to retrieve name and size information of SFNT tables.
+
+    - A new API `FT_OpenType_Validate' (in FT_OPENTYPE_VALIDATE_H) has
+      been added to validate OpenType tables  (BASE, GDEF, GPOS, GSUB,
+      JSTF).   After validation  it is  no longer  necessary to  check
+      for errors in those tables while accessing them.
+
+      Note that  this module might  be moved to another library in the
+      future  to avoid  a tight  dependency between  FreeType and  the
+      OpenType specification.
+
+    - A new API in FT_BITMAP_H  (`FT_Bitmap_New', `FT_Bitmap_Convert',
+      `FT_Bitmap_Copy',  `FT_Bitmap_Embolden',  `FT_Bitmap_Done')  has
+      been added.   Its  use is  to convert an  FT_Bitmap structure in
+      1bpp, 2bpp,  4bpp, or 8bpp  format into  another 8bpp FT_Bitmap,
+      probably using a different pitch, and to further manipulate it.
+
+    - A new  API `FT_Outline_Embolden'  (in FT_OUTLINE_H) gives  finer
+      control how  outlines are embolded.
+
+    - `FT_GlyphSlot_Embolden' (in FT_SYNTHESIS_H)  now handles bitmaps
+      also (code contributed  by Chia I Wu).  Note that this  function
+      is still experimental and may be replaced with a better API.
+
+    - The method  how BDF and PCF  bitmap fonts  are accessed has been
+      refined.   Formerly,   FT_Set_Pixel_Sizes  and  FT_Set_Char_Size
+      were  synonyms in  FreeType's  BDF and PCF interface.  This  has
+      changed now.  FT_Set_Pixel_Sizes  should be  used to  select the
+      actual  font dimensions  (the `strike',  which is the sum of the
+      `FONT_ASCENT'    and    `FONT_DESCENT'    properties),     while
+      FT_Set_Char_Size  selects  the  `nominal' size  (the `PIXELSIZE'
+      property).  In both functions, the width parameter is ignored.
+
+
+  III. MISCELLANEOUS
+
+    - The BDF driver  no longer converts  all returned bitmaps  with a
+      depth of 2bpp or 4bpp to a depth of 8bpp.  The documentation has
+      not  mentioned  this  explicitly,  but  implementors  might have
+      relied on this after looking into the source files.
+
+    - A new option `--ftversion' has been  added to freetype-config to
+      return the FreeType version.
+
+    - The  memory  debugger  has  been  updated   to  dump  allocation
+      statistics on  all allocation  sources in the library.   This is
+      useful to  spot greedy  allocations when  loading and processing
+      fonts.
+
+    - We removed a huge array of constant pointers to constant strings
+      in the `psnames' module.   The problem was that  compilations in
+      PIC mode (i.e.,  when generating a  Unix shared object/dll)  put
+      the array  into the non-shared  writable section of  the library
+      since absolute pointers are not relocatable by nature.
+      
+      This reduces the memory consumption by approximately 16KByte per
+      process linked  to FreeType.   We now also store  the array in a
+      compressed form (as a trie) which saves about 20KByte of code as
+      well.
+
+    - Kirill  Smelkov provided  patches to make  src/raster/ftraster.c
+      compile stand-alone again.
+
+
+======================================================================
 
 LATEST CHANGES BETWEEN 2.1.9 and 2.1.8
 
@@ -22,6 +141,8 @@ LATEST CHANGES BETWEEN 2.1.9 and 2.1.8
     - The BDF driver now uses the DEFAULT_CHAR property (if available)
       to select a glyph shape for the undefined glyph.
 
+    - The stroker failed for closed outlines and single points.
+
 
   II. IMPORTANT CHANGES
 
@@ -36,6 +157,11 @@ LATEST CHANGES BETWEEN 2.1.9 and 2.1.8
       active.  Using those values can improve the inter-letter spacing
       considerably.   See the documentation of  `FT_GlyphSlotRec'  and
       the `ftstring' demo program how to use it.
+
+    - Loading TrueType and Type 1 fonts has been made much faster.
+
+    - The stroker is  no longer experimental (but the  cache subsystem
+      still is).
 
 
   III. MISCELLANEOUS
@@ -777,7 +903,7 @@ LATEST CHANGES BETWEEN 2.1.0 and 2.0.9
 
   III. MISCELLANEOUS
 
-    - The  FreeType  License in  `docs/FTL.txt'  has  been updated  to
+    - The  FreeType  License in  `docs/FTL.TXT'  has  been updated  to
       include  a  proposed preferred  disclaimer.   If  you are  using
       FreeType in your products, you are encouraged (but not mandated)
       to use the following text in your documentation:
@@ -2473,5 +2599,17 @@ Extensions support:
 
      return ext_interface->do_it(ext);
    }
+
+------------------------------------------------------------------------
+
+Copyright 2000, 2001, 2002, 2003, 2004, 2005 by
+David Turner, Robert Wilhelm, and Werner Lemberg.
+
+This  file  is  part  of the  FreeType  project, and may  only be  used,
+modified,  and  distributed  under  the  terms of  the FreeType  project
+license, LICENSE.TXT.   By continuing to use, modify, or distribute this
+file you  indicate that  you have  read the  license and understand  and
+accept it fully.
+
 
 --- end of CHANGES ---

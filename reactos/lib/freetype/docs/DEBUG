@@ -20,7 +20,7 @@ located in the file "ftoptions.h".  The macros are:
 
     #define this macro  if you want to compile  both macros FT_ERROR and
     FT_TRACE.   This also  includes the  variants  FT_TRACE0, FT_TRACE1,
-    FT_TRACE2, ..., FT_TRACE6.
+    FT_TRACE2, ..., FT_TRACE7.
 
     The  trace  macros are  used  to  send  debugging messages  when  an
     appropriate  "debug  level" is  configured  at  runtime through  the
@@ -94,7 +94,7 @@ its code:
     internal file <freetype/internal/fttrace.h>.
 
     Each  such component  is assigned  a "debug  level", ranging  from 0
-    to 6,  through  the  use   of  the  FT2_DEBUG  environment  variable
+    to 7,  through  the  use   of  the  FT2_DEBUG  environment  variable
     (described below) when a program linked with FreeType starts.
 
     When FT_TRACE  is called, its  level is compared  to the one  of the
@@ -110,7 +110,7 @@ its code:
 
       FT_TRACE( 2, ( "your %s is not %s\n", "foo", "bar" ) )
 
-    The shortcut macros  FT_TRACE0, FT_TRACE1, FT_TRACE2_, ... FT_TRACE6
+    The shortcut macros  FT_TRACE0, FT_TRACE1, FT_TRACE2_, ... FT_TRACE7
     can be  used with  constant level indices,  and are much  cleaner to
     use, as in
 
@@ -178,6 +178,17 @@ behaviour of FreeType at runtime:
     
     If it is  undefined, or if its value is  not strictly positive, then
     no allocation bounsd are checked at runtime.
+
+------------------------------------------------------------------------
+
+Copyright 2002, 2003, 2004 by
+David Turner, Robert Wilhelm, and Werner Lemberg.
+
+This  file  is  part  of the  FreeType  project, and may  only be  used,
+modified,  and  distributed  under  the  terms of  the FreeType  project
+license, LICENSE.TXT.   By continuing to use, modify, or distribute this
+file you  indicate that  you have  read the  license and understand  and
+accept it fully.
 
 
 --- end of DEBUG ---

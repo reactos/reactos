@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    User-selectable configuration macros (specification only).           */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -436,7 +436,7 @@ FT_BEGIN_HEADER
   /*   Do not #undef this macro here, since the build system might         */
   /*   define it for certain configurations only.                          */
   /*                                                                       */
-/* #define  TT_CONFIG_OPTION_BYTECODE_INTERPRETER */
+#define TT_CONFIG_OPTION_BYTECODE_INTERPRETER
 
 
   /*************************************************************************/
@@ -446,9 +446,9 @@ FT_BEGIN_HEADER
   /* work-around hinting system.  Note that for the moment, the algorithm  */
   /* is only used when selected at runtime through the parameter tag       */
   /* FT_PARAM_TAG_UNPATENTED_HINTING; or when the debug hook               */
-  /* FT_DEBUG_HOOK_UNPATENTED_HINTING is globally actived                  */
+  /* FT_DEBUG_HOOK_UNPATENTED_HINTING is globally activated.               */
   /*                                                                       */
-#define TT_CONFIG_OPTION_UNPATENTED_HINTING
+//#define TT_CONFIG_OPTION_UNPATENTED_HINTING
 
 
   /*************************************************************************/
@@ -550,23 +550,11 @@ FT_BEGIN_HEADER
  /* */
 
 /*
- * The FT_CONFIG_OPTION_CHESTER_XXXX macros are used to toggle some recent
- * improvements to the auto-hinter contributed by David Chester.  They will
- * most likely disappear completely in the next release.  For now, you
- * should always keep them defined.
+ * This temporary macro is used to control various optimizations for
+ * reducing the heap footprint of memory-mapped TrueType files.
  *
  */
-#define  FT_CONFIG_OPTION_CHESTER_HINTS
-
-#ifdef   FT_CONFIG_OPTION_CHESTER_HINTS
-
-#define  FT_CONFIG_CHESTER_SMALL_F
-#define  FT_CONFIG_CHESTER_ASCENDER
-#define  FT_CONFIG_CHESTER_SERIF
-#define  FT_CONFIG_CHESTER_STEM
-#define  FT_CONFIG_CHESTER_BLUE_SCALE
-
-#endif /* FT_CONFIG_OPTION_CHESTER_HINTS */
+/* #define  FT_OPTIMIZE_MEMORY */
 
 FT_END_HEADER
 

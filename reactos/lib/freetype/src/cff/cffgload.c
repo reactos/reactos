@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType Glyph Loader (body).                                        */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -2466,8 +2466,19 @@
 
 #endif /* FT_CONFIG_OPTION_INCREMENTAL */
 
-    font_matrix = cff->top_font.font_dict.font_matrix;
-    font_offset = cff->top_font.font_dict.font_offset;
+    if ( cff->num_subfonts >= 1 )
+    {
+      FT_Byte  fd_index = cff_fd_select_get( &cff->fd_select, glyph_index );
+
+
+      font_matrix = cff->subfonts[fd_index]->font_dict.font_matrix;
+      font_offset = cff->subfonts[fd_index]->font_dict.font_offset;
+    }
+    else
+    {
+      font_matrix = cff->top_font.font_dict.font_matrix;
+      font_offset = cff->top_font.font_dict.font_offset;
+    }
 
     /* Now, set the metrics -- this is rather simple, as   */
     /* the left side bearing is the xMin, and the top side */

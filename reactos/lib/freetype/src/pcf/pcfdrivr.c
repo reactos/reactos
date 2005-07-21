@@ -221,6 +221,7 @@ THE SOFTWARE.
 
     FT_FREE( face->toc.tables );
     FT_FREE( pcfface->family_name );
+    FT_FREE( pcfface->style_name );
     FT_FREE( pcfface->available_sizes );
     FT_FREE( face->charset_encoding );
     FT_FREE( face->charset_registry );
@@ -369,11 +370,48 @@ THE SOFTWARE.
     PCF_Face  face = (PCF_Face)FT_SIZE_FACE( size );
 
     FT_UNUSED( pixel_width );
-    FT_UNUSED( pixel_height );
 
 
-    FT_TRACE4(( "rec %d - pres %d\n", size->metrics.y_ppem,
-                                      face->root.available_sizes->y_ppem >> 6 ));
+    if ( pixel_height == (FT_UInt)face->root.available_sizes->height )
+    {
+      size->metrics.ascender    = face->accel.fontAscent << 6;
+      size->metrics.descender   = face->accel.fontDescent * (-64);
+#if 0
+      size->metrics.height      = face->accel.maxbounds.ascent << 6;
+#endif
+      size->metrics.height      = size->metrics.ascender -
+                                  size->metrics.descender;
+
+      size->metrics.max_advance = face->accel.maxbounds.characterWidth << 6;
+
+      return PCF_Err_Ok;
+    }
+    else
+    {
+      FT_TRACE4(( "pixel size WRONG\n" ));
+      return PCF_Err_Invalid_Pixel_Size;
+    }
+  }
+
+
+  FT_CALLBACK_DEF( FT_Error )
+  PCF_Set_Point_Size( FT_Size     size,
+                      FT_F26Dot6  char_width,
+                      FT_F26Dot6  char_height,
+                      FT_UInt     horz_resolution,
+                      FT_UInt     vert_resolution )
+  {
+    PCF_Face  face = (PCF_Face)FT_SIZE_FACE( size );
+
+    FT_UNUSED( char_width );
+    FT_UNUSED( char_height );
+    FT_UNUSED( horz_resolution );
+    FT_UNUSED( vert_resolution );
+
+
+    FT_TRACE4(( "rec %d - pres %d\n",
+                size->metrics.y_ppem,
+                face->root.available_sizes->y_ppem >> 6 ));
 
     if ( size->metrics.y_ppem == face->root.available_sizes->y_ppem >> 6 )
     {
@@ -394,22 +432,6 @@ THE SOFTWARE.
       FT_TRACE4(( "size WRONG\n" ));
       return PCF_Err_Invalid_Pixel_Size;
     }
-  }
-
-
-  FT_CALLBACK_DEF( FT_Error )
-  PCF_Set_Point_Size( FT_Size     size,
-                      FT_F26Dot6  char_width,
-                      FT_F26Dot6  char_height,
-                      FT_UInt     horz_resolution,
-                      FT_UInt     vert_resolution )
-  {
-    FT_UNUSED( char_width );
-    FT_UNUSED( char_height );
-    FT_UNUSED( horz_resolution );
-    FT_UNUSED( vert_resolution );
-
-    return PCF_Set_Pixel_Size( size, 0, 0 );
   }
 
 

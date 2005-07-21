@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2003 by
+# Copyright 1996-2000, 2003, 2004 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -19,36 +19,71 @@
 ifeq ($(PLATFORM),ansi)
 
   # Detecting Windows NT is easy, as the OS variable must be defined and
-  # contains `Windows_NT'.  Untested with Windows 2K, but I guess it should
-  # work...
+  # contains `Windows_NT'.  This also works with Windows 2000 and XP.
   #
   ifeq ($(OS),Windows_NT)
 
-    is_windows := 1
-
-    # We test for the COMSPEC environment variable, then run the `ver'
-    # command-line program to see if its output contains the word `Windows'.
-    #
-    # If this is true, we are running a win32 platform (or an emulation).
-    #
-  else
-    ifdef COMSPEC
-      is_windows := $(findstring Windows,$(strip $(shell ver)))
-    endif
-  endif  # test NT
-
-  ifdef is_windows
-
     PLATFORM := win32
 
-  endif
+  else
+
+    # Detecting Windows 9X
+
+    # We used to run the `ver' command to see if its output contains the
+    # word `Windows'.  If this is true, we are running Windows 95 or later:
+    #
+    #   ifdef COMSPEC
+    #     # First, check if we have the COMSPEC environment variable, which
+    #     # indicates we can use COMMAND.COM's internal commands
+    #     is_windows := $(findstring Windows,$(strip $(shell ver)))
+    #   endif
+    #
+    # Unfortunately, this also detects the case when one is running
+    # DOS 7.x (the MS-DOS version that lies below Windows) without actually
+    # launching the GUI.
+    #
+    # A better test is to check whether there are both the environment
+    # variables `winbootdir' and `windir'.  The first indicates an
+    # underlying DOS 7.x, while the second is set only if win32 is available.
+    #
+    # Note that on Windows NT, such an environment variable will not be seen
+    # from DOS-based tools like DJGPP's make; this is not actually a problem
+    # since NT is detected independantly above.  But do not try to be clever!
+    #
+    ifdef winbootdir
+      ifdef windir
+
+        PLATFORM := win32
+
+      endif
+    endif
+
+  endif  # test NT
+
 endif # test PLATFORM ansi
 
 ifeq ($(PLATFORM),win32)
 
   DELETE := del
-  COPY   := copy
   SEP    := $(BACKSLASH)
+
+  # Setting COPY is a bit trickier.  Plain COPY on NT will not work
+  # correctly, because it will uppercase 8.3 filenames, creating a
+  # `CONFIG.MK' file which isn't found later on by `make'.
+  # Since we do not want that, we need to force execution of CMD.EXE.
+  # Unfortunately, CMD.EXE is not available on Windows 9X.
+  # So we need to hack.
+  #
+  # Kudos to Eli Zaretskii (DJGPP guru) that helped debug it.
+  # Details are available in threads of the freetype mailing list 
+  # (2004-11-11), and then in the devel mailing list (2004-11-20 to -23).
+  #
+  ifeq ($(OS),Windows_NT)
+    COPY := cmd.exe /c copy
+  else
+    COPY := copy
+  endif  # test NT
+
 
   # gcc Makefile by default
   CONFIG_FILE := w32-gcc.mk

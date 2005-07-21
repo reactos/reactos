@@ -42,7 +42,7 @@ FT_BEGIN_HEADER
   /*    TrueType Tables                                                    */
   /*                                                                       */
   /* <Abstract>                                                            */
-  /*    TrueType-specific table types and functions.                       */
+  /*    TrueType specific table types and functions.                       */
   /*                                                                       */
   /* <Description>                                                         */
   /*    This section contains the definition of TrueType-specific tables   */
@@ -651,7 +651,7 @@ FT_BEGIN_HEADER
   *     buffer = malloc( length );
   *     if ( buffer == NULL ) { ... not enough memory ... }
   *
-  *     error = FT_Load_Sfnt_Table( face,tag, 0, buffer, &length );
+  *     error = FT_Load_Sfnt_Table( face, tag, 0, buffer, &length );
   *     if ( error ) { ... could not load table ... }
   *   }
   */
@@ -661,6 +661,43 @@ FT_BEGIN_HEADER
                       FT_Long    offset,
                       FT_Byte*   buffer,
                       FT_ULong*  length );
+
+
+ /**************************************************************************
+  *
+  * <Function>
+  *    FT_Sfnt_Table_Info
+  *
+  * <Description>
+  *   Returns information on an SFNT table.
+  *
+  * <Input>
+  *   face ::
+  *     A handle to the source face.
+  *
+  *   table_index ::
+  *     The index of an SFNT table.  The function returns
+  *     FT_Err_Table_Missing for an invalid value.
+  *
+  * <Output>
+  *   tag ::
+  *     The name tag of the SFNT table.
+  *
+  *   length ::
+  *     The length of the SFNT table.
+  *
+  * <Return>
+  *   FreeType error code.  0 means success.
+  *
+  * <Note>
+  *   SFNT tables with length zero are treated as missing by Windows.
+  *
+  */
+  FT_EXPORT( FT_Error )
+  FT_Sfnt_Table_Info( FT_Face    face,
+                      FT_UInt    table_index,
+                      FT_ULong  *tag,
+                      FT_ULong  *length );
 
 
   /*************************************************************************/

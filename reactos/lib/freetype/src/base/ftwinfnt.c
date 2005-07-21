@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType API for accessing Windows FNT specific info (body).         */
 /*                                                                         */
-/*  Copyright 2003 by                                                      */
+/*  Copyright 2003, 2004 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -21,6 +21,8 @@
 #include FT_INTERNAL_OBJECTS_H
 #include FT_SERVICE_WINFNT_H
 
+
+  /* documentation is in ftwinfnt.h */
 
   FT_EXPORT_DEF( FT_Error )
   FT_Get_WinFNT_Header( FT_Face               face,

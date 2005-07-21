@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 font loader (body).                                           */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -1008,7 +1008,7 @@
       *base = parser->root.cursor + 1;
 
       parser->root.cursor += *size + 1;
-      return 1;
+      return !parser->root.error;
     }
 
     FT_ERROR(( "read_binary_data: invalid size field\n" ));
@@ -1202,6 +1202,8 @@
 
             parser->root.cursor = cur;
             T1_Skip_PS_Token( parser );
+            if ( parser->root.error )
+              return;
 
             len = parser->root.cursor - cur;
 
@@ -1277,7 +1279,9 @@
 
     /* position the parser right before the `dup' of the first subr */
     T1_Skip_PS_Token( parser );         /* `array' */
-    T1_Skip_Spaces  ( parser );
+    if ( parser->root.error )
+      return;
+    T1_Skip_Spaces( parser );
 
     /* initialize subrs array -- with synthetic fonts it is possible */
     /* we get here twice                                             */
@@ -1315,6 +1319,8 @@
       /* `noaccess' & `put'.  We position the parser right     */
       /* before the next `dup', if any.                        */
       T1_Skip_PS_Token( parser );   /* `NP' or `|' or `noaccess' */
+      if ( parser->root.error )
+        return;
       T1_Skip_Spaces  ( parser );
 
       if ( ft_strncmp( (char*)parser->root.cursor, "put", 3 ) == 0 )
@@ -1442,7 +1448,20 @@
         if ( cur[0] == 'd' &&
              cur[1] == 'e' &&
              cur[2] == 'f' )
-          break;
+        {
+          /* There are fonts which have this: */
+          /*                                  */
+          /*   /CharStrings 118 dict def      */
+          /*   Private begin                  */
+          /*   CharStrings begin              */
+          /*   ...                            */
+          /*                                  */
+          /* To catch this we ignore `def' if */
+          /* no charstring has actually been  */
+          /* seen.                            */
+          if ( n )
+            break;
+        }
 
         if ( cur[0] == 'e' &&
              cur[1] == 'n' &&
@@ -1451,6 +1470,8 @@
       }
 
       T1_Skip_PS_Token( parser );
+      if ( parser->root.error )
+        return;
 
       if ( *cur == '/' )
       {
@@ -1723,7 +1744,9 @@
             break;
 
           T1_Skip_PS_Token( parser );
-          T1_Skip_Spaces  ( parser );
+          if ( parser->root.error )
+            goto Exit;
+          T1_Skip_Spaces( parser );
           cur = parser->root.cursor;
         }
 
@@ -1759,6 +1782,8 @@
       {
         start_binary = cur;
         T1_Skip_PS_Token( parser );
+        if ( parser->root.error )
+          goto Exit;
         have_integer = 1;
       }
 
@@ -1801,6 +1826,8 @@
 
         parser->root.cursor = cur;
         T1_Skip_PS_Token( parser );
+        if ( parser->root.error )
+          goto Exit;
 
         len = parser->root.cursor - cur;
 
@@ -1820,9 +1847,9 @@
             if ( !name )
               break;
 
-            if ( cur[0] == name[0]                      &&
-                 len == ft_strlen( (const char *)name ) &&
-                 ft_memcmp( cur, name, len ) == 0       )
+            if ( cur[0] == name[0]                                  &&
+                 len == (FT_PtrDist)ft_strlen( (const char *)name ) &&
+                 ft_memcmp( cur, name, len ) == 0                   )
             {
               /* We found it -- run the parsing callback! */
               /* We only record the first instance of any */

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR loader (body).                                          */
 /*                                                                         */
-/*  Copyright 2002, 2003 by                                                */
+/*  Copyright 2002, 2003, 2004, 2005 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -609,11 +609,13 @@
   }
 
 
- /*
-  *  The kerning data embedded in a PFR font are (charcode,charcode)
-  *  pairs; we need to translate them to (gindex,gindex) and sort
-  *  the resulting array.
-  */
+#ifndef FT_OPTIMIZE_MEMORY
+
+  /*
+   *  The kerning data embedded in a PFR font are (charcode,charcode)
+   *  pairs; we need to translate them to (gindex,gindex) and sort
+   *  the resulting array.
+   */
   static FT_UInt
   pfr_get_gindex( PFR_Char  chars,
                   FT_UInt   count,
@@ -670,14 +672,14 @@
     FT_UInt       count;
 
 
-   /* create kerning pairs array
-    */
+    /* create kerning pairs array */
     if ( FT_NEW_ARRAY( phy_font->kern_pairs, phy_font->num_kern_pairs ) )
       goto Exit;
 
-   /* load all kerning items into the array,
-    * converting character codes into glyph indices
-    */
+    /*
+     *  load all kerning items into the array,
+     *  converting character codes into glyph indices
+     */
     pairs = phy_font->kern_pairs;
     item  = phy_font->kern_items;
     count = 0;
@@ -721,7 +723,7 @@
         if ( item->flags & PFR_KERN_2BYTE_ADJ )
           kerning = item->base_adj + FT_NEXT_SHORT( p );
         else
-          kerning = item->base_adj + FT_NEXT_CHAR( p );
+          kerning = item->base_adj + FT_NEXT_BYTE( p );
 
         pair->glyph1  = pfr_get_gindex( chars, num_chars, char1 );
         pair->glyph2  = pfr_get_gindex( chars, num_chars, char2 );
@@ -731,8 +733,7 @@
       FT_FRAME_EXIT();
     }
 
-   /* sort the resulting array
-    */
+    /* sort the resulting array */
     ft_qsort( pairs, count,
               sizeof ( PFR_KernPairRec ),
               pfr_compare_kern_pairs );
@@ -747,6 +748,8 @@
 
     return error;
   }
+
+#endif /* !FT_OPTIMIZE_MEMORY */
 
 
   static const PFR_ExtraItemRec  pfr_phy_font_extra_items[] =
@@ -826,7 +829,10 @@
     FT_FREE( phy_font->blue_values );
     phy_font->num_blue_values = 0;
 
+#ifndef FT_OPTIMIZE_MEMORY
     FT_FREE( phy_font->kern_pairs );
+#endif
+
     {
       PFR_KernItem  item, next;
 
@@ -1065,8 +1071,10 @@
     phy_font->bct_offset = FT_STREAM_POS();
     phy_font->cursor     = NULL;
 
+#ifndef FT_OPTIMIZE_MEMORY
     /* now sort kerning pairs */
     error = pfr_sort_kerning_pairs( stream, phy_font );
+#endif
 
   Exit:
     return error;

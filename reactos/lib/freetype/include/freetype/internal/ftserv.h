@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType services (specification only).                          */
 /*                                                                         */
-/*  Copyright 2003 by                                                      */
+/*  Copyright 2003, 2004, 2005 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -34,6 +34,13 @@
 
 FT_BEGIN_HEADER
 
+#if defined( _MSC_VER )      /* Visual C++ (and Intel C++) */
+
+  /* we disable the warning `conditional expression is constant' here */
+  /* in order to compile cleanly with the maximum level of warnings   */
+#pragma warning( disable : 4127 )
+
+#endif /* _MSC_VER */
 
   /*
    * @macro:
@@ -57,18 +64,33 @@ FT_BEGIN_HEADER
    *     A variable that receives the service pointer.  Will be NULL
    *     if not found.
    */
+#ifdef __cplusplus
+
 #define FT_FACE_FIND_SERVICE( face, ptr, id )                               \
   FT_BEGIN_STMNT                                                            \
-    FT_Module    module = FT_MODULE( FT_FACE(face)->driver );               \
-    /* the strange cast is to allow C++ compilation */                      \
-    FT_Pointer*  Pptr   = (FT_Pointer*) &(ptr);                             \
+    FT_Module    module = FT_MODULE( FT_FACE( face )->driver );             \
+    FT_Pointer   _tmp_  = NULL;                                             \
+    FT_Pointer*  _pptr_ = (FT_Pointer*)&(ptr);                              \
                                                                             \
                                                                             \
-    *Pptr = NULL;                                                           \
     if ( module->clazz->get_interface )                                     \
-      *Pptr = module->clazz->get_interface( module, FT_SERVICE_ID_ ## id ); \
+      _tmp_ = module->clazz->get_interface( module, FT_SERVICE_ID_ ## id ); \
+    *_pptr_ = _tmp_;                                                        \
   FT_END_STMNT
 
+#else /* !C++ */
+
+#define FT_FACE_FIND_SERVICE( face, ptr, id )                               \
+  FT_BEGIN_STMNT                                                            \
+    FT_Module   module = FT_MODULE( FT_FACE( face )->driver );              \
+    FT_Pointer  _tmp_  = NULL;                                              \
+                                                                            \
+    if ( module->clazz->get_interface )                                     \
+      _tmp_ = module->clazz->get_interface( module, FT_SERVICE_ID_ ## id ); \
+    ptr = _tmp_;                                                            \
+  FT_END_STMNT
+
+#endif /* !C++ */
 
   /*
    * @macro:
@@ -92,15 +114,32 @@ FT_BEGIN_HEADER
    *     A variable that receives the service pointer.  Will be NULL
    *     if not found.
    */
+#ifdef __cplusplus
+
 #define FT_FACE_FIND_GLOBAL_SERVICE( face, ptr, id )               \
   FT_BEGIN_STMNT                                                   \
-    FT_Module    module = FT_MODULE( FT_FACE(face)->driver );      \
-    /* the strange cast is to allow C++ compilation */             \
-    FT_Pointer*  Pptr   = (FT_Pointer*) &(ptr);                    \
+    FT_Module    module = FT_MODULE( FT_FACE( face )->driver );    \
+    FT_Pointer   _tmp_;                                            \
+    FT_Pointer*  _pptr_ = (FT_Pointer*)&(ptr);                     \
                                                                    \
                                                                    \
-    *Pptr = ft_module_get_service( module, FT_SERVICE_ID_ ## id ); \
+    _tmp_ = ft_module_get_service( module, FT_SERVICE_ID_ ## id ); \
+    *_pptr_ = _tmp_;                                               \
   FT_END_STMNT
+
+#else /* !C++ */
+
+#define FT_FACE_FIND_GLOBAL_SERVICE( face, ptr, id )               \
+  FT_BEGIN_STMNT                                                   \
+    FT_Module   module = FT_MODULE( FT_FACE( face )->driver );     \
+    FT_Pointer  _tmp_;                                             \
+                                                                   \
+                                                                   \
+    _tmp_ = ft_module_get_service( module, FT_SERVICE_ID_ ## id ); \
+    ptr   = _tmp_;                                                 \
+  FT_END_STMNT
+
+#endif /* !C++ */
 
 
   /*************************************************************************/
@@ -199,27 +238,50 @@ FT_BEGIN_HEADER
    *   ptr ::
    *     A variable receiving the service data.  NULL if not available.
    */
-#define FT_FACE_LOOKUP_SERVICE( face, ptr, id )                  \
-  FT_BEGIN_STMNT                                                 \
-    /* the strange cast is to allow C++ compilation */           \
-    FT_Pointer*  pptr = (FT_Pointer*)&(ptr);                     \
-    FT_Pointer   svc;                                            \
-                                                                 \
-                                                                 \
-    svc = FT_FACE(face)->internal->services. service_ ## id ;    \
-    if ( svc == FT_SERVICE_UNAVAILABLE )                         \
-      svc = NULL;                                                \
-    else if ( svc == NULL )                                      \
-    {                                                            \
-      FT_FACE_FIND_SERVICE( face, svc, id );                     \
-                                                                 \
-      FT_FACE(face)->internal->services. service_ ## id =        \
-        (FT_Pointer)( svc != NULL ? svc                          \
-                                  : FT_SERVICE_UNAVAILABLE );    \
-    }                                                            \
-    *pptr = svc;                                                 \
+#ifdef __cplusplus
+
+#define FT_FACE_LOOKUP_SERVICE( face, ptr, id )                \
+  FT_BEGIN_STMNT                                               \
+    FT_Pointer   svc;                                          \
+    FT_Pointer*  Pptr = (FT_Pointer*)&(ptr);                   \
+                                                               \
+                                                               \
+    svc = FT_FACE( face )->internal->services. service_ ## id; \
+    if ( svc == FT_SERVICE_UNAVAILABLE )                       \
+      svc = NULL;                                              \
+    else if ( svc == NULL )                                    \
+    {                                                          \
+      FT_FACE_FIND_SERVICE( face, svc, id );                   \
+                                                               \
+      FT_FACE( face )->internal->services. service_ ## id =    \
+        (FT_Pointer)( svc != NULL ? svc                        \
+                                  : FT_SERVICE_UNAVAILABLE );  \
+    }                                                          \
+    *Pptr = svc;                                               \
   FT_END_STMNT
 
+#else /* !C++ */
+
+#define FT_FACE_LOOKUP_SERVICE( face, ptr, id )                \
+  FT_BEGIN_STMNT                                               \
+    FT_Pointer  svc;                                           \
+                                                               \
+                                                               \
+    svc = FT_FACE( face )->internal->services. service_ ## id; \
+    if ( svc == FT_SERVICE_UNAVAILABLE )                       \
+      svc = NULL;                                              \
+    else if ( svc == NULL )                                    \
+    {                                                          \
+      FT_FACE_FIND_SERVICE( face, svc, id );                   \
+                                                               \
+      FT_FACE( face )->internal->services. service_ ## id =    \
+        (FT_Pointer)( svc != NULL ? svc                        \
+                                  : FT_SERVICE_UNAVAILABLE );  \
+    }                                                          \
+    ptr = svc;                                                 \
+  FT_END_STMNT
+
+#endif /* !C++ */
 
   /*
    *  A macro used to define new service structure types.
@@ -238,17 +300,18 @@ FT_BEGIN_HEADER
    *  The header files containing the services.
    */
 
-#define FT_SERVICE_MULTIPLE_MASTERS_H  <freetype/internal/services/svmm.h>
-#define FT_SERVICE_POSTSCRIPT_NAME_H   <freetype/internal/services/svpostnm.h>
-#define FT_SERVICE_POSTSCRIPT_CMAPS_H  <freetype/internal/services/svpscmap.h>
-#define FT_SERVICE_POSTSCRIPT_INFO_H   <freetype/internal/services/svpsinfo.h>
-#define FT_SERVICE_GLYPH_DICT_H        <freetype/internal/services/svgldict.h>
-#define FT_SERVICE_BDF_H               <freetype/internal/services/svbdf.h>
-#define FT_SERVICE_XFREE86_NAME_H      <freetype/internal/services/svxf86nm.h>
-#define FT_SERVICE_SFNT_H              <freetype/internal/services/svsfnt.h>
-#define FT_SERVICE_PFR_H               <freetype/internal/services/svpfr.h>
-#define FT_SERVICE_WINFNT_H            <freetype/internal/services/svwinfnt.h>
-#define FT_SERVICE_TT_CMAP_H           <freetype/internal/services/svttcmap.h>
+#define FT_SERVICE_BDF_H                <freetype/internal/services/svbdf.h>
+#define FT_SERVICE_GLYPH_DICT_H         <freetype/internal/services/svgldict.h>
+#define FT_SERVICE_MULTIPLE_MASTERS_H   <freetype/internal/services/svmm.h>
+#define FT_SERVICE_OPENTYPE_VALIDATE_H  <freetype/internal/services/svotval.h>
+#define FT_SERVICE_PFR_H                <freetype/internal/services/svpfr.h>
+#define FT_SERVICE_POSTSCRIPT_CMAPS_H   <freetype/internal/services/svpscmap.h>
+#define FT_SERVICE_POSTSCRIPT_INFO_H    <freetype/internal/services/svpsinfo.h>
+#define FT_SERVICE_POSTSCRIPT_NAME_H    <freetype/internal/services/svpostnm.h>
+#define FT_SERVICE_SFNT_H               <freetype/internal/services/svsfnt.h>
+#define FT_SERVICE_TT_CMAP_H            <freetype/internal/services/svttcmap.h>
+#define FT_SERVICE_WINFNT_H             <freetype/internal/services/svwinfnt.h>
+#define FT_SERVICE_XFREE86_NAME_H       <freetype/internal/services/svxf86nm.h>
 
  /* */
 

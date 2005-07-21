@@ -41,7 +41,7 @@ FT_BEGIN_HEADER
   /*    mac_specific                                                       */
   /*                                                                       */
   /* <Title>                                                               */
-  /*    Mac-Specific Interface                                             */
+  /*    Mac Specific Interface                                             */
   /*                                                                       */
   /* <Abstract>                                                            */
   /*    Only available on the Macintosh.                                   */

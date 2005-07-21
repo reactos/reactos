@@ -1,5 +1,14 @@
-# FreeType 2 top Jamfile (c) 2001, 2002, 2003, 2004 David Turner
+# FreeType 2 top Jamfile.
 #
+# Copyright 2001, 2002, 2003, 2004 by
+# David Turner, Robert Wilhelm, and Werner Lemberg.
+#
+# This file is part of the FreeType project, and may only be used, modified,
+# and distributed under the terms of the FreeType project license,
+# LICENSE.TXT.  By continuing to use, modify, or distribute this file you
+# indicate that you have read the license and understand and accept it
+# fully.
+
 
 # The HDRMACRO is already defined in FTJam and is used to add
 # the content of certain macros to the list of included header
@@ -62,7 +71,6 @@ FT2_BUILD_INCLUDE ?= ;
 #            if you modify this list or provide your own.
 #
 FT2_COMPONENTS ?= autofit    # auto-fitter
-                  autohint   # auto-hinter
                   base       # base component (public APIs)
                   bdf        # BDF font driver
                   cache      # cache sub-system
@@ -70,6 +78,7 @@ FT2_COMPONENTS ?= autofit    # auto-fitter
                   cid        # PostScript CID-keyed font driver
                   gzip       # support for gzip-compressed files
                   lzw        # support for LZW-compressed files
+                  #otvalid    # validation of OpenType tables
                   pcf        # PCF font driver
                   pfr        # PFR/TrueDoc font driver
                   psaux      # common PostScript routines module
@@ -148,7 +157,7 @@ if $(DEBUG_HINTER)
 
 actions RefDoc
 {
-  python $(FT2_SRC)/tools/docmaker/docmaker.py --prefix=ft2 --title=FreeType-2.1.9 --output=$(DOC_DIR)  $(FT2_INCLUDE)/freetype/*.h  $(FT2_INCLUDE)/freetype/config/*.h  $(FT2_INCLUDE)/freetype/cache/*.h
+  python $(FT2_SRC)/tools/docmaker/docmaker.py --prefix=ft2 --title=FreeType-2.1.10 --output=$(DOC_DIR)  $(FT2_INCLUDE)/freetype/*.h  $(FT2_INCLUDE)/freetype/config/*.h  $(FT2_INCLUDE)/freetype/cache/*.h
 }
 
 RefDoc  refdoc ;

@@ -25,4 +25,4 @@ Window System.   It is  compatible to the  above two licenses  (see file
 src/pcf/readme).
 
 
---- end of licence.txt ---
+--- end of LICENSE.TXT ---

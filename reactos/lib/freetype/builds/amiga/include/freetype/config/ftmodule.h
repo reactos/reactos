@@ -1,24 +1,46 @@
-// TetiSoft: To specify which modules you need,
-// insert the following in your source file and uncomment as needed:
+/***************************************************************************/
+/*                                                                         */
+/*  ftmodule.h                                                             */
+/*                                                                         */
+/*    Amiga-specific FreeType module selection.                            */
+/*                                                                         */
+/*  Copyright 2005 by                                                      */
+/*  Werner Lemberg and Detlef Würkner.                                     */
+/*                                                                         */
+/*  This file is part of the FreeType project, and may only be used,       */
+/*  modified, and distributed under the terms of the FreeType project      */
+/*  license, LICENSE.TXT.  By continuing to use, modify, or distribute     */
+/*  this file you indicate that you have read the license and              */
+/*  understand and accept it fully.                                        */
+/*                                                                         */
+/***************************************************************************/
 
 /*
-//#define FT_USE_AUTOHINT       // autohinter
-//#define FT_USE_RASTER         // monochrome rasterizer
-//#define FT_USE_SMOOTH         // anti-aliasing rasterizer
-//#define FT_USE_TT             // truetype font driver
-//#define FT_USE_T1             // type1 font driver
-//#define FT_USE_T42            // type42 font driver
-//#define FT_USE_T1CID          // cid-keyed type1 font driver  // no cmap support
-//#define FT_USE_CFF            // opentype font driver
-//#define FT_USE_BDF            // bdf bitmap font driver
-//#define FT_USE_PCF            // pcf bitmap font driver
-//#define FT_USE_PFR            // pfr font driver
-//#define FT_USE_WINFNT         // windows .fnt|.fon bitmap font driver
+ * To avoid that all your programs include all FreeType modules,
+ * you copy the following piece of source code into your own
+ * source file and specify which modules you really need in your
+ * application by uncommenting the appropriate lines.
+ */
+/*
+//#define FT_USE_AUTOFIT // autofitter
+//#define FT_USE_RASTER  // monochrome rasterizer
+//#define FT_USE_SMOOTH  // anti-aliasing rasterizer
+//#define FT_USE_TT      // truetype font driver
+//#define FT_USE_T1      // type1 font driver
+//#define FT_USE_T42     // type42 font driver
+//#define FT_USE_T1CID   // cid-keyed type1 font driver  // no cmap support
+//#define FT_USE_CFF     // opentype font driver
+//#define FT_USE_BDF     // bdf bitmap font driver
+//#define FT_USE_PCF     // pcf bitmap font driver
+//#define FT_USE_PFR     // pfr font driver
+//#define FT_USE_WINFNT  // windows .fnt|.fon bitmap font driver
+//#define FT_USE_OTV     // opentype validator
 #include "FT:src/base/ftinit.c"
 */
 
-// TetiSoft: make sure that needed support modules are built in.
-// Dependencies can be found by searching for FT_Get_Module.
+/* Make sure that the needed support modules are built in.
+ * Dependencies can be found by searching for FT_Get_Module.
+ */
 
 #ifdef FT_USE_T42
 #define FT_USE_TT
@@ -54,14 +76,18 @@
 #define FT_USE_PSNAMES
 #endif
 
-// TetiSoft: Now include the modules
+/* Now include the modules */
 
-#ifdef FT_USE_AUTOHINT
-FT_USE_MODULE(autohint_module_class)
+#ifdef FT_USE_AUTOFIT
+FT_USE_MODULE(autofit_module_class)
 #endif
 
-#ifdef FT_USE_PSHINT
-FT_USE_MODULE(pshinter_module_class)
+#ifdef FT_USE_TT
+FT_USE_MODULE(tt_driver_class)
+#endif
+
+#ifdef FT_USE_T1
+FT_USE_MODULE(t1_driver_class)
 #endif
 
 #ifdef FT_USE_CFF
@@ -72,16 +98,20 @@ FT_USE_MODULE(cff_driver_class)
 FT_USE_MODULE(t1cid_driver_class)
 #endif
 
-#ifdef FT_USE_BDF
-FT_USE_MODULE(bdf_driver_class)
+#ifdef FT_USE_PFR
+FT_USE_MODULE(pfr_driver_class)
+#endif
+
+#ifdef FT_USE_T42
+FT_USE_MODULE(t42_driver_class)
+#endif
+
+#ifdef FT_USE_WINFNT
+FT_USE_MODULE(winfnt_driver_class)
 #endif
 
 #ifdef FT_USE_PCF
 FT_USE_MODULE(pcf_driver_class)
-#endif
-
-#ifdef FT_USE_PFR
-FT_USE_MODULE(pfr_driver_class)
 #endif
 
 #ifdef FT_USE_PSAUX
@@ -90,6 +120,10 @@ FT_USE_MODULE(psaux_module_class)
 
 #ifdef FT_USE_PSNAMES
 FT_USE_MODULE(psnames_module_class)
+#endif
+
+#ifdef FT_USE_PSHINT
+FT_USE_MODULE(pshinter_module_class)
 #endif
 
 #ifdef FT_USE_RASTER
@@ -106,18 +140,16 @@ FT_USE_MODULE(ft_smooth_lcd_renderer_class)
 FT_USE_MODULE(ft_smooth_lcdv_renderer_class)
 #endif
 
-#ifdef FT_USE_TT
-FT_USE_MODULE(tt_driver_class)
+#ifdef FT_USE_OTV
+FT_USE_MODULE(otv_module_class)
 #endif
 
-#ifdef FT_USE_T1
-FT_USE_MODULE(t1_driver_class)
+#ifdef FT_USE_BDF
+FT_USE_MODULE(bdf_driver_class)
 #endif
 
-#ifdef FT_USE_T42
-FT_USE_MODULE(t42_driver_class)
-#endif
-
-#ifdef FT_USE_WINFNT
-FT_USE_MODULE(winfnt_driver_class)
-#endif
+/*
+Local Variables:
+coding: latin-1
+End:
+*/

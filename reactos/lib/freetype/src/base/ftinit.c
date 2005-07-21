@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType initialization layer (body).                                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2005 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -55,9 +55,9 @@
 
 #undef  FT_USE_MODULE
 #ifdef __cplusplus
-#define FT_USE_MODULE( x )  extern "C" const FT_Module_Class*  x;
+#define FT_USE_MODULE( x )  extern "C" const FT_Module_Class  x;
 #else
-#define FT_USE_MODULE( x )  extern const FT_Module_Class*  x;
+#define FT_USE_MODULE( x )  extern const FT_Module_Class  x;
 #endif
 
 
@@ -65,7 +65,7 @@
 
 
 #undef  FT_USE_MODULE
-#define FT_USE_MODULE( x )  (const FT_Module_Class*)&x,
+#define FT_USE_MODULE( x )  (const FT_Module_Class*)&(x),
 
   static
   const FT_Module_Class*  const ft_default_modules[] =

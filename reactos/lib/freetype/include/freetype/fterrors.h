@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType error code handling (specification).                        */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2004 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -25,17 +25,12 @@
   /* I - Error Formats                                                     */
   /* -----------------                                                     */
   /*                                                                       */
-  /*   Since release 2.1, the error constants have changed.  The lower     */
-  /*   byte of the error value gives the "generic" error code, while the   */
-  /*   higher byte indicates in which module the error occurred.           */
-  /*                                                                       */
-  /*   You can use the macro FT_ERROR_BASE(x) macro to extract the generic */
-  /*   error code from an FT_Error value.                                  */
-  /*                                                                       */
   /*   The configuration macro FT_CONFIG_OPTION_USE_MODULE_ERRORS can be   */
-  /*   undefined in ftoption.h in order to make the higher byte always     */
-  /*   zero, in case you need to be compatible with previous versions of   */
-  /*   FreeType 2.                                                         */
+  /*   defined in ftoption.h in order to make the higher byte indicate     */
+  /*   the module where the error has happened (this is not compatible     */
+  /*   with standard builds of FreeType 2).  You can then use the macro    */
+  /*   FT_ERROR_BASE macro to extract the generic error code from an       */
+  /*   FT_Error value.                                                     */
   /*                                                                       */
   /*                                                                       */
   /* II - Error Message strings                                            */
@@ -158,7 +153,7 @@
 #define FT_ERRORDEF_( e, v, s )   \
           FT_ERRORDEF( FT_ERR_CAT( FT_ERR_PREFIX, e ), v + FT_ERR_BASE, s )
 
-  /* this is only used for FT_Err_Ok, which must be 0! */
+  /* this is only used for <module>_Err_Ok, which must be 0! */
 #define FT_NOERRORDEF_( e, v, s ) \
           FT_ERRORDEF( FT_ERR_CAT( FT_ERR_PREFIX, e ), v, s )
 
@@ -168,7 +163,7 @@
 #endif
 
 
-  /* no include the error codes */
+  /* now include the error codes */
 #include FT_ERROR_DEFINITIONS_H
 
 
@@ -197,9 +192,13 @@
 #undef FT_NOERRORDEF_
 
 #undef FT_NEED_EXTERN_C
-#undef FT_ERR_PREFIX
-#undef FT_ERR_BASE
 #undef FT_ERR_CONCAT
+#undef FT_ERR_BASE
+
+  /* FT_KEEP_ERR_PREFIX is needed for ftvalid.h */
+#ifndef FT_KEEP_ERR_PREFIX
+#undef FT_ERR_PREFIX
+#endif
 
 #endif /* __FTERRORS_H__ */
 

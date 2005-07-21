@@ -1,14 +1,11 @@
-// TetiSoft: replaced vprintf() with KVPrintF() and commented out exit()
-extern void __stdargs KVPrintF( const char *formatString, const void *values );
-
 /***************************************************************************/
 /*                                                                         */
 /*  ftdebug.c                                                              */
 /*                                                                         */
 /*    Debugging and logging component (body).                              */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
-/*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
+/*  Copyright 1996-2001, 2002, 2004, 2005 by                               */
+/*  David Turner, Robert Wilhelm, Werner Lemberg and Detlef Würkner.       */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -44,21 +41,38 @@ extern void __stdargs KVPrintF( const char *formatString, const void *values );
   /*************************************************************************/
 
 
-#include <ft2build.h>
-#include FT_INTERNAL_DEBUG_H
+/*
+ * Based on the default ftdebug.c,
+ * replaced vprintf() with KVPrintF(),
+ * commented out exit(),
+ * replaced getenv() with GetVar().
+ */
 
+#include <exec/types.h>
+#include <utility/tagitem.h>
+#include <dos/exall.h>
+#include <dos/var.h>
+#define __NOLIBBASE__
+#define __NOLOBALIFACE__
+#define __USE_INLINE__
+#include <proto/dos.h>
+#include <clib/debug_protos.h>
 
-#ifdef FT_DEBUG_LEVEL_TRACE
-  char  ft_trace_levels[trace_max];
+#ifndef __amigaos4__
+extern struct Library *DOSBase;
+#else
+extern struct DOSIFace *IDOS;
 #endif
 
 
-#if defined( FT_DEBUG_LEVEL_ERROR ) || defined( FT_DEBUG_LEVEL_TRACE )
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_INTERNAL_DEBUG_H
 
 
-#include <stdarg.h>
-#include <stdlib.h>
+#if defined( FT_DEBUG_LEVEL_ERROR )
 
+  /* documentation is in ftdebug.h */
 
   FT_EXPORT_DEF( void )
   FT_Message( const char*  fmt, ... )
@@ -67,11 +81,13 @@ extern void __stdargs KVPrintF( const char *formatString, const void *values );
 
 
     va_start( ap, fmt );
-//  vprintf( fmt, ap );
+/*  vprintf( fmt, ap ); */
     KVPrintF( fmt, ap );
     va_end( ap );
   }
 
+
+  /* documentation is in ftdebug.h */
 
   FT_EXPORT_DEF( void )
   FT_Panic( const char*  fmt, ... )
@@ -80,29 +96,87 @@ extern void __stdargs KVPrintF( const char *formatString, const void *values );
 
 
     va_start( ap, fmt );
-//  vprintf( fmt, ap );
+/*  vprintf( fmt, ap ); */
     KVPrintF( fmt, ap );
     va_end( ap );
 
-//  exit( EXIT_FAILURE );
+/*  exit( EXIT_FAILURE ); */
+  }
+
+#endif /* FT_DEBUG_LEVEL_ERROR */
+
+
+
+#ifdef FT_DEBUG_LEVEL_TRACE
+
+  /* array of trace levels, initialized to 0 */
+  int  ft_trace_levels[trace_count];
+
+
+  /* define array of trace toggle names */
+#define FT_TRACE_DEF( x )  #x ,
+
+  static const char*  ft_trace_toggles[trace_count + 1] =
+  {
+#include FT_INTERNAL_TRACE_H
+    NULL
+  };
+
+#undef FT_TRACE_DEF
+
+
+  /* documentation is in ftdebug.h */
+
+  FT_EXPORT_DEF( FT_Int )
+  FT_Trace_Get_Count( void )
+  {
+    return trace_count;
   }
 
 
+  /* documentation is in ftdebug.h */
 
-  /* since I don't know wether "getenv" is available on the Amiga */
-  /* I prefer to simply disable this code for now in all builds   */
-  /*                                                              */
+  FT_EXPORT_DEF( const char * )
+  FT_Trace_Get_Name( FT_Int  idx )
+  {
+    int  max = FT_Trace_Get_Count();
 
-/* #ifdef FT_DEBUG_LEVEL_TRACE */
-#if 0
 
+    if ( idx < max )
+      return ft_trace_toggles[idx];
+    else
+      return NULL;
+  }
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* Initialize the tracing sub-system.  This is done by retrieving the    */
+  /* value of the `FT2_DEBUG' environment variable.  It must be a list of  */
+  /* toggles, separated by spaces, `;', or `,'.  Example:                  */
+  /*                                                                       */
+  /*    export FT2_DEBUG="any:3 memory:7 stream:5"                         */
+  /*                                                                       */
+  /* This requests that all levels be set to 3, except the trace level for */
+  /* the memory and stream components which are set to 7 and 5,            */
+  /* respectively.                                                         */
+  /*                                                                       */
+  /* See the file <include/freetype/internal/fttrace.h> for details of the */
+  /* available toggle names.                                               */
+  /*                                                                       */
+  /* The level must be between 0 and 7; 0 means quiet (except for serious  */
+  /* runtime errors), and 7 means _very_ verbose.                          */
+  /*                                                                       */
   FT_BASE_DEF( void )
   ft_debug_init( void )
   {
-    const char*  ft2_debug = getenv( "FT2_DEBUG" );
+/*  const char*  ft2_debug = getenv( "FT2_DEBUG" ); */
+    char         buf[256];
+    const char*  ft2_debug = &buf[0];
 
 
-    if ( ft2_debug )
+/*  if ( ft2_debug ) */
+    if ( GetVar( "FT2_DEBUG", (STRPTR)ft2_debug, 256, LV_VAR ) > 0 )
     {
       const char*  p = ft2_debug;
       const char*  q;
@@ -114,15 +188,15 @@ extern void __stdargs KVPrintF( const char *formatString, const void *values );
         if ( *p == ' ' || *p == '\t' || *p == ',' || *p == ';' || *p == '=' )
           continue;
 
-        /* read toggle name, followed by '=' */
+        /* read toggle name, followed by ':' */
         q = p;
         while ( *p && *p != ':' )
           p++;
 
         if ( *p == ':' && p > q )
         {
-          int  n, i, len = p - q;
-          int  level = -1, found = -1;
+          FT_Int  n, i, len = (FT_Int)( p - q );
+          FT_Int  level = -1, found = -1;
 
 
           for ( n = 0; n < trace_count; n++ )
@@ -148,7 +222,7 @@ extern void __stdargs KVPrintF( const char *formatString, const void *values );
           if ( *p )
           {
             level = *p++ - '0';
-            if ( level < 0 || level > 6 )
+            if ( level < 0 || level > 7 )
               level = -1;
           }
 
@@ -156,7 +230,7 @@ extern void __stdargs KVPrintF( const char *formatString, const void *values );
           {
             if ( found == trace_any )
             {
-              /* special case for "any" */
+              /* special case for `any' */
               for ( n = 0; n < trace_count; n++ )
                 ft_trace_levels[n] = level;
             }
@@ -179,7 +253,27 @@ extern void __stdargs KVPrintF( const char *formatString, const void *values );
   }
 
 
+  FT_EXPORT_DEF( FT_Int )
+  FT_Trace_Get_Count( void )
+  {
+    return 0;
+  }
+
+
+  FT_EXPORT_DEF( const char * )
+  FT_Trace_Get_Name( FT_Int  idx )
+  {
+    FT_UNUSED( idx );
+
+    return NULL;
+  }
+
+
 #endif /* !FT_DEBUG_LEVEL_TRACE */
 
-
+/*
+Local Variables:
+coding: latin-1
+End:
+*/
 /* END */
