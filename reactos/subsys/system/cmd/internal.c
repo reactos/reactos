@@ -340,7 +340,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 		szFinalPath[_tcslen(szFinalPath) - 1] = _T('\0');
  
 	/* Handle Root Directory Alone*/
-	if (_tcslen(szPath) == 3 && szPath[1] == _T(':'))
+	if (_tcslen(szFinalPath) == 3 && szFinalPath[1] == _T(':'))
 	{		
 		if(!SetRootPath(szFinalPath))
 		{
@@ -377,7 +377,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 				break;
  
 		_tcscat(szFinalPath,f.cFileName);
- 
+		
 		if(IsExistingDirectory(szFinalPath))
 		{
 			if(!SetRootPath(szFinalPath))
