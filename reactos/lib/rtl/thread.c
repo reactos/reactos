@@ -88,6 +88,8 @@ RtlpCreateUserStack(HANDLE hProcess,
     }
     
     /* Now set up some basic Initial TEB Parameters */
+    InitialTeb->PreviousStackBase = NULL;
+    InitialTeb->PreviousStackLimit = NULL;
     InitialTeb->AllocatedStackBase = (PVOID)Stack;
     InitialTeb->StackBase = (PVOID)(Stack + StackReserve);
     
