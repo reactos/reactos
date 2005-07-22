@@ -1107,7 +1107,7 @@ ScaleWindowExtEx(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -1115,7 +1115,6 @@ UnrealizeObject(
 	HGDIOBJ	a0
 	)
 {
-	UNIMPLEMENTED;
 	return NtGdiUnrealizeObject(a0);
 }
 
