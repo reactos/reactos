@@ -856,6 +856,14 @@ RtlDowncaseUnicodeString(
     IN BOOLEAN AllocateDestinationString
 );
 
+NTSTATUS
+STDCALL
+RtlDuplicateUnicodeString(
+    IN INT AddNull,
+    IN PUNICODE_STRING SourceString,
+    OUT PUNICODE_STRING DestinationString
+);
+
 BOOLEAN
 STDCALL
 RtlEqualUnicodeString(
