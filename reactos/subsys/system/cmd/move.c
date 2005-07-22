@@ -64,13 +64,13 @@ static INT Overwrite (LPTSTR fn)
 	return res;
 }
 
-void GetDirectory (LPTSTR wholepath, LPTSTR directory)
+void GetDirectory (LPTSTR wholepath, LPTSTR directory, BOOL CheckExisting)
 {
 	/* returns only directory part of path with backslash */
 	/* TODO: make code unc aware */
 	/* Is there a better alternative to this? */
 	LPTSTR last;
-	if (IsExistingDirectory(wholepath))
+	if (CheckExisting && IsExistingDirectory(wholepath))
 	{
 		_tcscpy(directory, wholepath);
 	}
@@ -196,7 +196,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 #endif
 	
 	/* get source folder */
-	GetDirectory(arg[argc - 2], szSrcDirPath);
+	GetDirectory(arg[argc - 2], szSrcDirPath, 1);
 	GetFullPathName(szSrcDirPath, MAX_PATH, szSrcPath, &pszFile);
 	_tcscpy(szSrcDirPath,szSrcPath);
 	/* we need following check to see if source happens to be directly given directory
@@ -464,6 +464,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 							(pszSrcDirPointer)--;
 							(pszDestDirPointer)--;
 							_tcscpy(pszSrcDirPointer,_T(""));
+							_tcscpy(pszDestDirPointer,_T(""));
 							if (nDirLevel > 0)
 							{
 								TCHAR szTempPath[MAX_PATH];
@@ -472,10 +473,12 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 								FoundFile = TRUE; /* we need to continue our seek for files */
 								nDirLevel--;
 								RemoveDirectory(szMoveSrc);
-								GetDirectory(szMoveSrc,szTempPath);
+								GetDirectory(szMoveSrc,szTempPath,0);
 								nDiff = _tcslen(szMoveSrc) - _tcslen(szTempPath);
 								pszSrcDirPointer = pszSrcDirPointer - nDiff;
 								_tcscpy(pszSrcDirPointer,_T(""));
+								GetDirectory(szMoveDest,szTempPath,0);
+								nDiff = _tcslen(szMoveDest) - _tcslen(szTempPath);
 								pszDestDirPointer = pszDestDirPointer - nDiff;
 								_tcscpy(pszDestDirPointer,_T(""));
 								if(szMoveSrc[_tcslen(szMoveSrc) -  1] != _T('\\'))
@@ -485,7 +488,6 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 								pszDestDirPointer = szMoveDest + _tcslen(szMoveDest);
 								pszSrcDirPointer = szMoveSrc + _tcslen(szMoveSrc);
 								_tcscpy(pszSrcDirPointer,_T("*.*"));
-								_tcscpy(pszDestDirPointer,_T("*.*"));
 								hDestFile = FindFirstFile(szMoveSrc, &findDestBuffer);
 								if (hDestFile == INVALID_HANDLE_VALUE)
 									continue;
@@ -522,7 +524,6 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 							pszDestDirPointer = szMoveDest + _tcslen(szMoveDest);
 							pszSrcDirPointer = szMoveSrc + _tcslen(szMoveSrc);
 							_tcscpy(pszSrcDirPointer,_T("*.*"));
-							_tcscpy(pszDestDirPointer,_T("*.*"));
 							hDestFile = FindFirstFile(szMoveSrc, &findDestBuffer);
 							if (hDestFile == INVALID_HANDLE_VALUE)
 							{
