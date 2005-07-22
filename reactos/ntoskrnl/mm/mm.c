@@ -28,50 +28,6 @@ MM_STATS MmStats;
 /* FUNCTIONS ****************************************************************/
 
 
-NTSTATUS STDCALL
-MmCopyToCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes)
-{
-  NTSTATUS Status;
-
-  if (ExGetPreviousMode() == UserMode)
-    {
-      if (Dest >= MmSystemRangeStart)
-   {
-     return(STATUS_ACCESS_VIOLATION);
-   }
-      Status = MmSafeCopyToUser(Dest, Src, NumberOfBytes);
-      return(Status);
-    }
-  else
-    {
-      memcpy(Dest, Src, NumberOfBytes);
-      return(STATUS_SUCCESS);
-    }
-}
-
-NTSTATUS STDCALL
-MmCopyFromCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes)
-{
-  NTSTATUS Status;
-
-  if (ExGetPreviousMode() == UserMode)
-    {
-      if (Src >= MmSystemRangeStart)
-   {
-     return(STATUS_ACCESS_VIOLATION);
-   }
-      Status = MmSafeCopyFromUser(Dest, Src, NumberOfBytes);
-      return(Status);
-    }
-  else
-    {
-      memcpy(Dest, Src, NumberOfBytes);
-      return(STATUS_SUCCESS);
-    }
-}
-
-
-
 NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
 {
    NTSTATUS Status;

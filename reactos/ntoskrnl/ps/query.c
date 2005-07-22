@@ -1135,7 +1135,6 @@ NtSetInformationThread (IN HANDLE ThreadHandle,
 			IN ULONG ThreadInformationLength)
 {
   PETHREAD Thread;
-  NTSTATUS Status;
   union
   {
      KPRIORITY Priority;
@@ -1144,8 +1143,12 @@ NtSetInformationThread (IN HANDLE ThreadHandle,
      HANDLE Handle;
      PVOID Address;
   }u;
+  KPROCESSOR_MODE PreviousMode;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   PAGED_CODE();
+  
+  PreviousMode = ExGetPreviousMode();
 
   if (ThreadInformationClass <= MaxThreadInfoClass &&
       !SetInformationData[ThreadInformationClass].Implemented)
@@ -1162,20 +1165,41 @@ NtSetInformationThread (IN HANDLE ThreadHandle,
       return STATUS_INFO_LENGTH_MISMATCH;
     }
 
+  if (PreviousMode != KernelMode)
+    {
+      _SEH_TRY
+        {
+          ProbeForRead(ThreadInformation,
+                       SetInformationData[ThreadInformationClass].Size,
+                       1);
+          RtlCopyMemory(&u.Priority,
+                        ThreadInformation,
+                        SetInformationData[ThreadInformationClass].Size);
+        }
+      _SEH_HANDLE
+        {
+          Status = _SEH_GetExceptionCode();
+        }
+      _SEH_END;
+      
+      if (!NT_SUCCESS(Status))
+        {
+          return Status;
+        }
+    }
+  else
+    {
+      RtlCopyMemory(&u.Priority,
+                    ThreadInformation,
+                    SetInformationData[ThreadInformationClass].Size);
+    }
+
   Status = ObReferenceObjectByHandle (ThreadHandle,
 				      THREAD_SET_INFORMATION,
 				      PsThreadType,
 				      ExGetPreviousMode (),
 				      (PVOID*)&Thread,
 				      NULL);
-   if (!NT_SUCCESS(Status))
-     {
-	return Status;
-     }
-
-   Status = MmCopyFromCaller(&u.Priority,
-			     ThreadInformation,
-			     SetInformationData[ThreadInformationClass].Size);
    if (NT_SUCCESS(Status))
      {
        switch (ThreadInformationClass)
@@ -1226,7 +1250,6 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
 			  OUT	PULONG		ReturnLength  OPTIONAL)
 {
    PETHREAD Thread;
-   NTSTATUS Status;
    union
    {
       THREAD_BASIC_INFORMATION TBI;
@@ -1235,8 +1258,12 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
       LARGE_INTEGER Count;
       BOOLEAN Last;
    }u;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
 
    PAGED_CODE();
+   
+   PreviousMode = ExGetPreviousMode();
 
    if (ThreadInformationClass <= MaxThreadInfoClass &&
        !QueryInformationData[ThreadInformationClass].Implemented)
@@ -1251,6 +1278,32 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
    if (ThreadInformationLength != QueryInformationData[ThreadInformationClass].Size)
      {
        return STATUS_INFO_LENGTH_MISMATCH;
+     }
+
+   if (PreviousMode != KernelMode)
+     {
+       _SEH_TRY
+         {
+           ProbeForWrite(ThreadInformation,
+                         QueryInformationData[ThreadInformationClass].Size,
+                         1);
+           if (ReturnLength != NULL)
+             {
+               ProbeForWrite(ReturnLength,
+                             sizeof(ULONG),
+                             sizeof(ULONG));
+             }
+         }
+       _SEH_HANDLE
+         {
+           Status = _SEH_GetExceptionCode();
+         }
+       _SEH_END;
+       
+       if (!NT_SUCCESS(Status))
+         {
+           return Status;
+         }
      }
 
    Status = ObReferenceObjectByHandle(ThreadHandle,
@@ -1311,23 +1364,41 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
 	 /* Shoult never occure if the data table is correct */
 	 KEBUGCHECK(0);
      }
-   if (QueryInformationData[ThreadInformationClass].Size)
+
+   if (PreviousMode != KernelMode)
      {
-       Status = MmCopyToCaller(ThreadInformation,
-                               &u.TBI,
-			       QueryInformationData[ThreadInformationClass].Size);
-     }
-   if (ReturnLength)
-     {
-       NTSTATUS Status2;
-       static ULONG Null = 0;
-       Status2 = MmCopyToCaller(ReturnLength,
-	                        NT_SUCCESS(Status) ? &QueryInformationData[ThreadInformationClass].Size : &Null,
-				sizeof(ULONG));
-       if (NT_SUCCESS(Status))
+       _SEH_TRY
          {
-	   Status = Status2;
-	 }
+           if (QueryInformationData[ThreadInformationClass].Size)
+             {
+               RtlCopyMemory(ThreadInformation,
+                             &u.TBI,
+                             QueryInformationData[ThreadInformationClass].Size);
+             }
+           if (ReturnLength != NULL)
+             {
+               *ReturnLength = QueryInformationData[ThreadInformationClass].Size;
+             }
+         }
+       _SEH_HANDLE
+         {
+           Status = _SEH_GetExceptionCode();
+         }
+       _SEH_END;
+     }
+   else
+     {
+       if (QueryInformationData[ThreadInformationClass].Size)
+         {
+           RtlCopyMemory(ThreadInformation,
+                         &u.TBI,
+                         QueryInformationData[ThreadInformationClass].Size);
+         }
+
+       if (ReturnLength != NULL)
+         {
+           *ReturnLength = QueryInformationData[ThreadInformationClass].Size;
+         }
      }
 
    ObDereferenceObject(Thread);

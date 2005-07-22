@@ -16,10 +16,6 @@
 
 /* EXTERNS *******************************************************************/
 
-extern VOID MmSafeCopyFromUserUnsafeStart(VOID);
-extern VOID MmSafeCopyFromUserRestart(VOID);
-extern VOID MmSafeCopyToUserUnsafeStart(VOID);
-extern VOID MmSafeCopyToUserRestart(VOID);
 extern VOID MmSafeReadPtrStart(VOID);
 extern VOID MmSafeReadPtrEnd(VOID);
 
@@ -76,22 +72,7 @@ NTSTATUS MmPageFault(ULONG Cs,
       KiDeliverApc(KernelMode, NULL, NULL);
       KeLowerIrql(oldIrql);
    }
-   if (!NT_SUCCESS(Status) && (Mode == KernelMode) &&
-         ((*Eip) >= (ULONG_PTR)MmSafeCopyFromUserUnsafeStart) &&
-         ((*Eip) <= (ULONG_PTR)MmSafeCopyFromUserRestart))
-   {
-      (*Eip) = (ULONG_PTR)MmSafeCopyFromUserRestart;
-      (*Eax) = STATUS_ACCESS_VIOLATION;
-      return(STATUS_SUCCESS);
-   }
-   if (!NT_SUCCESS(Status) && (Mode == KernelMode) &&
-         ((*Eip) >= (ULONG_PTR)MmSafeCopyToUserUnsafeStart) &&
-         ((*Eip) <= (ULONG_PTR)MmSafeCopyToUserRestart))
-   {
-      (*Eip) = (ULONG_PTR)MmSafeCopyToUserRestart;
-      (*Eax) = STATUS_ACCESS_VIOLATION;
-      return(STATUS_SUCCESS);
-   }
+
    if (!NT_SUCCESS(Status) && (Mode == KernelMode) &&
          ((*Eip) >= (ULONG_PTR)MmSafeReadPtrStart) &&
          ((*Eip) <= (ULONG_PTR)MmSafeReadPtrEnd))

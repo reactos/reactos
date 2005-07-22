@@ -141,15 +141,38 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
 			 OUT PLPC_MESSAGE	LpcMessage,
 			 IN  PLARGE_INTEGER	Timeout)
 {
-   NTSTATUS Status;
    PEPORT Port;
    KIRQL oldIrql;
    PQUEUEDMESSAGE Request;
    BOOLEAN Disconnected;
    LARGE_INTEGER to;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
+   
+   PreviousMode = ExGetPreviousMode();
 
    DPRINT("NtReplyWaitReceivePortEx(PortHandle %x, LpcReply %x, "
 	  "LpcMessage %x)\n", PortHandle, LpcReply, LpcMessage);
+
+   if (PreviousMode != KernelMode)
+     {
+       _SEH_TRY
+         {
+           ProbeForWrite(LpcMessage,
+                         sizeof(LPC_MESSAGE),
+                         1);
+         }
+       _SEH_HANDLE
+         {
+           Status = _SEH_GetExceptionCode();
+         }
+       _SEH_END;
+       
+       if (!NT_SUCCESS(Status))
+         {
+           return Status;
+         }
+     }
 
    Status = ObReferenceObjectByHandle(PortHandle,
 				      PORT_ALL_ACCESS,
@@ -238,18 +261,64 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
        memcpy(&Header, &Request->Message, sizeof(LPC_MESSAGE));
        Header.DataSize = CRequest->ConnectDataLength;
        Header.MessageSize = Header.DataSize + sizeof(LPC_MESSAGE);
-       Status = MmCopyToCaller(LpcMessage, &Header, sizeof(LPC_MESSAGE));
-       if (NT_SUCCESS(Status))
-	 {
-	   Status = MmCopyToCaller((PVOID)(LpcMessage + 1),
-				   CRequest->ConnectData,
-				   CRequest->ConnectDataLength);
-	 }
+       
+       if (PreviousMode != KernelMode)
+         {
+           _SEH_TRY
+             {
+               ProbeForWrite((PVOID)(LpcMessage + 1),
+                             CRequest->ConnectDataLength,
+                             1);
+
+               RtlCopyMemory(LpcMessage,
+                             &Header,
+                             sizeof(LPC_MESSAGE));
+               RtlCopyMemory((PVOID)(LpcMessage + 1),
+                             CRequest->ConnectData,
+                             CRequest->ConnectDataLength);
+             }
+           _SEH_HANDLE
+             {
+               Status = _SEH_GetExceptionCode();
+             }
+           _SEH_END;
+         }
+       else
+         {
+           RtlCopyMemory(LpcMessage,
+                         &Header,
+                         sizeof(LPC_MESSAGE));
+           RtlCopyMemory((PVOID)(LpcMessage + 1),
+                         CRequest->ConnectData,
+                         CRequest->ConnectDataLength);
+         }
      }
    else
      {
-       Status = MmCopyToCaller(LpcMessage, &Request->Message,
-			       Request->Message.MessageSize);
+       if (PreviousMode != KernelMode)
+         {
+           _SEH_TRY
+             {
+               ProbeForWrite(LpcMessage,
+                             Request->Message.MessageSize,
+                             1);
+
+               RtlCopyMemory(LpcMessage,
+                             &Request->Message,
+                             Request->Message.MessageSize);
+             }
+           _SEH_HANDLE
+             {
+               Status = _SEH_GetExceptionCode();
+             }
+           _SEH_END;
+         }
+       else
+         {
+           RtlCopyMemory(LpcMessage,
+                         &Request->Message,
+                         Request->Message.MessageSize);
+         }
      }
    if (!NT_SUCCESS(Status))
      {

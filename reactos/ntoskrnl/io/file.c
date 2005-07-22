@@ -2809,12 +2809,44 @@ NtSetInformationFile(HANDLE FileHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     BOOLEAN Failed = FALSE;
 
-    ASSERT(IoStatusBlock != NULL);
-    ASSERT(FileInformation != NULL);
-
     DPRINT("NtSetInformationFile(Handle 0x%p StatBlk 0x%p FileInfo 0x%p Length %d "
            "Class %d)\n", FileHandle, IoStatusBlock, FileInformation,
             Length, FileInformationClass);
+
+    if (PreviousMode != KernelMode)
+    {
+        _SEH_TRY
+        {
+            if (IoStatusBlock != NULL)
+            {
+                ProbeForWrite(IoStatusBlock,
+                              sizeof(IO_STATUS_BLOCK),
+                              sizeof(ULONG));
+            }
+            
+            if (Length != 0)
+            {
+                ProbeForRead(FileInformation,
+                             Length,
+                             1);
+            }
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+        
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+    }
+    else
+    {
+        ASSERT(IoStatusBlock != NULL);
+        ASSERT(FileInformation != NULL);
+    }
 
     /* Get the file object from the file handle */
     Status = ObReferenceObjectByHandle(FileHandle,
@@ -2940,13 +2972,43 @@ NtSetInformationFile(HANDLE FileHandle,
                                                                   Length,
                                                                   TAG_SYSB)))
     {
-        IoFreeIrp(Irp);
-        ObDereferenceObject(FileObject);
-        return STATUS_INSUFFICIENT_RESOURCES;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto failfreeirp;
     }
 
     /* Copy the data inside */
-    MmSafeCopyFromUser(Irp->AssociatedIrp.SystemBuffer, FileInformation, Length);
+    if (PreviousMode != KernelMode)
+    {
+        _SEH_TRY
+        {
+            /* no need to probe again */
+            RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+                          FileInformation,
+                          Length);
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+        
+        if (!NT_SUCCESS(Status))
+        {
+            ExFreePoolWithTag(Irp->AssociatedIrp.SystemBuffer,
+                              TAG_SYSB);
+            Irp->AssociatedIrp.SystemBuffer = NULL;
+failfreeirp:
+            IoFreeIrp(Irp);
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
+    }
+    else
+    {
+        RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+                      FileInformation,
+                      Length);
+    }
 
     /* Set up the IRP */
     Irp->Tail.Overlay.OriginalFileObject = FileObject;

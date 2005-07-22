@@ -566,10 +566,6 @@ NTSTATUS MiZeroPage(PFN_TYPE Page);
 
 /* memsafe.s *****************************************************************/
 
-NTSTATUS MmSafeCopyFromUser(PVOID Dest, const VOID *Src, ULONG Count);
-
-NTSTATUS MmSafeCopyToUser(PVOID Dest, const VOID *Src, ULONG Count);
-
 PVOID FASTCALL MmSafeReadPtr(PVOID Source);
 
 /* pageop.c ******************************************************************/
@@ -764,14 +760,6 @@ MmCopyMmInfo(struct _EPROCESS* Src,
 NTSTATUS MmReleaseMmInfo(struct _EPROCESS* Process);
 
 NTSTATUS Mmi386ReleaseMmInfo(struct _EPROCESS* Process);
-
-NTSTATUS MmSafeCopyFromUser(PVOID Dest, const VOID *Src, ULONG NumberOfBytes);
-NTSTATUS MmSafeCopyToUser(PVOID Dest, const VOID *Src, ULONG NumberOfBytes);
-
-NTSTATUS STDCALL
-MmCopyFromCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes);
-NTSTATUS STDCALL
-MmCopyToCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes);
 
 VOID MmDeleteVirtualMapping(struct _EPROCESS* Process,
 			    PVOID Address,

@@ -688,8 +688,6 @@ MmAllocateNonCachedMemory@4
 MmAllocatePagesForMdl@28
 MmBuildMdlForNonPagedPool@4
 MmCanFileBeTruncated@8
-;MmCopyFromCaller@12
-;MmCopyToCaller@12
 MmCreateMdl@12
 MmCreateSection@32
 MmDbgTranslatePhysicalAddress@8

@@ -255,21 +255,72 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
   PSECTION_OBJECT SectionObject;
   LARGE_INTEGER SectionOffset;
   PEPORT ConnectedPort;
-  NTSTATUS Status;
+  KPROCESSOR_MODE PreviousMode;
+  NTSTATUS Status = STATUS_SUCCESS;
   PEPORT NamedPort;
+  
+  PreviousMode = ExGetPreviousMode();
+  
+  if (PreviousMode != KernelMode)
+    {
+      _SEH_TRY
+        {
+          ProbeForWrite(UnsafeConnectedPortHandle,
+                        sizeof(HANDLE),
+                        sizeof(ULONG));
+          if (UnsafeMaximumMessageSize != NULL)
+            {
+              ProbeForWrite(UnsafeMaximumMessageSize,
+                            sizeof(ULONG),
+                            sizeof(ULONG));
+            }
+        }
+      _SEH_HANDLE
+        {
+          Status = _SEH_GetExceptionCode();
+        }
+      _SEH_END;
+      
+      if (!NT_SUCCESS(Status))
+        {
+          return Status;
+        }
+    }
 
   /*
    * Copy in write map and partially validate.
    */
   if (UnsafeWriteMap != NULL)
     {
-      Status = MmCopyFromCaller(&WriteMap,
-				UnsafeWriteMap,
-				sizeof(LPC_SECTION_WRITE));
-      if (!NT_SUCCESS(Status))
-	{
-	  return(Status);
-	}
+      if (PreviousMode != KernelMode)
+        {
+          _SEH_TRY
+            {
+              ProbeForWrite(UnsafeWriteMap,
+                            sizeof(LPC_SECTION_WRITE),
+                            1);
+              RtlCopyMemory(&WriteMap,
+                            UnsafeWriteMap,
+                            sizeof(LPC_SECTION_WRITE));
+            }
+          _SEH_HANDLE
+            {
+              Status = _SEH_GetExceptionCode();
+            }
+          _SEH_END;
+
+          if (!NT_SUCCESS(Status))
+            {
+              return Status;
+            }
+        }
+      else
+        {
+          RtlCopyMemory(&WriteMap,
+                        UnsafeWriteMap,
+                        sizeof(LPC_SECTION_WRITE));
+        }
+
       if (WriteMap.Length != sizeof(LPC_SECTION_WRITE))
 	{
 	  return(STATUS_INVALID_PARAMETER_4);
@@ -291,34 +342,69 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
     }
   else
     {
-      if (ExGetPreviousMode() == KernelMode)
-	{
-	  ConnectDataLength = *UnsafeConnectDataLength;
-	  ConnectData = UnsafeConnectData;
-	}
+      if (PreviousMode != KernelMode)
+        {
+          _SEH_TRY
+            {
+              ProbeForRead(UnsafeConnectDataLength,
+                           sizeof(ULONG),
+                           1);
+              ConnectDataLength = *UnsafeConnectDataLength;
+            }
+          _SEH_HANDLE
+            {
+              Status = _SEH_GetExceptionCode();
+            }
+          _SEH_END;
+
+          if (!NT_SUCCESS(Status))
+            {
+              return Status;
+            }
+        }
       else
-	{
-	  Status = MmCopyFromCaller(&ConnectDataLength,
-				    UnsafeConnectDataLength,
-				    sizeof(ULONG));
-	  if (!NT_SUCCESS(Status))
-	    {
-	      return(Status);
-	    }
-	  ConnectData = ExAllocatePool(NonPagedPool, ConnectDataLength);
-	  if (ConnectData == NULL && ConnectDataLength != 0)
-	    {
-	      return(STATUS_NO_MEMORY);
-	    }
-	  Status = MmCopyFromCaller(ConnectData,
-				    UnsafeConnectData,
-				    ConnectDataLength);
-	  if (!NT_SUCCESS(Status))
-	    {
-	      ExFreePool(ConnectData);
-	      return(Status);
-	    }
-	}
+        {
+          ConnectDataLength = *UnsafeConnectDataLength;
+        }
+
+      if (ConnectDataLength != 0)
+        {
+          ConnectData = ExAllocatePool(NonPagedPool, ConnectDataLength);
+          if (ConnectData == NULL)
+            {
+              return(STATUS_NO_MEMORY);
+            }
+
+          if (PreviousMode != KernelMode)
+            {
+              _SEH_TRY
+                {
+                  ProbeForWrite(UnsafeConnectData,
+                                ConnectDataLength,
+                                1);
+                  RtlCopyMemory(ConnectData,
+                                UnsafeConnectData,
+                                ConnectDataLength);
+                }
+              _SEH_HANDLE
+                {
+                  Status = _SEH_GetExceptionCode();
+                }
+              _SEH_END;
+
+              if (!NT_SUCCESS(Status))
+                {
+                  ExFreePool(ConnectData);
+                  return Status;
+                }
+            }
+          else
+            {
+              RtlCopyMemory(ConnectData,
+                            UnsafeConnectData,
+                            ConnectDataLength);
+            }
+        }
     }
 
   /*
@@ -387,16 +473,30 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
       /* FIXME: Again, check what NT does here. */
       if (UnsafeConnectDataLength != NULL)
 	{
-	  if (ExGetPreviousMode() != KernelMode)
+	  if (PreviousMode != KernelMode)
 	    {
-	      MmCopyToCaller(UnsafeConnectData,
-			     ConnectData,
-			     ConnectDataLength);
-	      ExFreePool(ConnectData);
+              _SEH_TRY
+                {
+                  RtlCopyMemory(UnsafeConnectData,
+                                ConnectData,
+                                ConnectDataLength);
+                  *UnsafeConnectDataLength = ConnectDataLength;
+                }
+              _SEH_HANDLE
+                {
+                  Status = _SEH_GetExceptionCode();
+                }
+              _SEH_END;
 	    }
-	  MmCopyToCaller(UnsafeConnectDataLength,
-			 &ConnectDataLength,
-			 sizeof(ULONG));
+	  else
+	    {
+               RtlCopyMemory(UnsafeConnectData,
+                             ConnectData,
+                             ConnectDataLength);
+               *UnsafeConnectDataLength = ConnectDataLength;
+	    }
+
+          ExFreePool(ConnectData);
 	}
       return(Status);
     }
@@ -415,28 +515,52 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
   /*
    * Copy the data back to the caller.
    */
-  if (ExGetPreviousMode() != KernelMode)
+
+  if (UnsafeConnectDataLength != NULL)
     {
-      if (UnsafeConnectDataLength != NULL)
+      if (PreviousMode != KernelMode)
 	{
-	  Status = MmCopyToCaller(UnsafeConnectDataLength,
-				  &ConnectDataLength,
-				  sizeof(ULONG));
+          _SEH_TRY
+            {
+              *UnsafeConnectDataLength = ConnectDataLength;
+              
+              if (ConnectData != NULL)
+                {
+                  RtlCopyMemory(UnsafeConnectData,
+                                ConnectData,
+                                ConnectDataLength);
+                }
+            }
+          _SEH_HANDLE
+            {
+              Status = _SEH_GetExceptionCode();
+            }
+          _SEH_END;
+
 	  if (!NT_SUCCESS(Status))
 	    {
-	      return(Status);
+              if (ConnectData != NULL)
+                {
+                  ExFreePool(ConnectData);
+                }
+              return(Status);
 	    }
 	}
-      if (UnsafeConnectData != NULL && ConnectData != NULL)
+      else
+        {
+          *UnsafeConnectDataLength = ConnectDataLength;
+          
+          if (ConnectData != NULL)
+            {
+              RtlCopyMemory(UnsafeConnectData,
+                            ConnectData,
+                            ConnectDataLength);
+            }
+        }
+
+      if (ConnectData != NULL)
 	{
-	  Status = MmCopyToCaller(UnsafeConnectData,
-				      ConnectData,
-				      ConnectDataLength);
 	  ExFreePool(ConnectData);
-	  if (!NT_SUCCESS(Status))
-	    {
-	      return(Status);
-	    }
 	}
     }
   Status = ObInsertObject(ConnectedPort,
@@ -449,42 +573,65 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
     {
       return(Status);
     }
-  Status = MmCopyToCaller(UnsafeConnectedPortHandle,
-			  &ConnectedPortHandle,
-			  sizeof(HANDLE));
-  if (!NT_SUCCESS(Status))
+
+  if (PreviousMode != KernelMode)
     {
-      return(Status);
-    }
-  if (UnsafeWriteMap != NULL)
-    {
-      Status = MmCopyToCaller(UnsafeWriteMap,
-			      &WriteMap,
-			      sizeof(LPC_SECTION_WRITE));
+      _SEH_TRY
+        {
+          *UnsafeConnectedPortHandle = ConnectedPortHandle;
+          
+          if (UnsafeWriteMap != NULL)
+            {
+              RtlCopyMemory(UnsafeWriteMap,
+                            &WriteMap,
+                            sizeof(LPC_SECTION_WRITE));
+            }
+
+          if (UnsafeReadMap != NULL)
+            {
+              RtlCopyMemory(UnsafeReadMap,
+                            &ReadMap,
+                            sizeof(LPC_SECTION_READ));
+            }
+
+          if (UnsafeMaximumMessageSize != NULL)
+            {
+              *UnsafeMaximumMessageSize = MaximumMessageSize;
+            }
+        }
+      _SEH_HANDLE
+        {
+          Status = _SEH_GetExceptionCode();
+        }
+      _SEH_END;
+      
       if (!NT_SUCCESS(Status))
-	{
-	  return(Status);
-	}
+        {
+          return Status;
+        }
     }
-  if (UnsafeReadMap != NULL)
+  else
     {
-      Status = MmCopyToCaller(UnsafeReadMap,
-			      &ReadMap,
-			      sizeof(LPC_SECTION_READ));
-      if (!NT_SUCCESS(Status))
-	{
-	  return(Status);
-	}
-    }
-  if (UnsafeMaximumMessageSize != NULL)
-    {
-      Status = MmCopyToCaller(UnsafeMaximumMessageSize,
-			      &MaximumMessageSize,
-			      sizeof(ULONG));
-      if (!NT_SUCCESS(Status))
-	{
-	  return(Status);
-	}
+      *UnsafeConnectedPortHandle = ConnectedPortHandle;
+      
+      if (UnsafeWriteMap != NULL)
+        {
+          RtlCopyMemory(UnsafeWriteMap,
+                        &WriteMap,
+                        sizeof(LPC_SECTION_WRITE));
+        }
+
+      if (UnsafeReadMap != NULL)
+        {
+          RtlCopyMemory(UnsafeReadMap,
+                        &ReadMap,
+                        sizeof(LPC_SECTION_READ));
+        }
+
+      if (UnsafeMaximumMessageSize != NULL)
+        {
+          *UnsafeMaximumMessageSize = MaximumMessageSize;
+        }
     }
 
   /*

@@ -100,7 +100,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
                 ULONG CDest;
                 char temp_space[12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT)]; /* FIXME: HACKHACK */
                 PULONG pNewUserStack = (PULONG)(Tf->Esp - (12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT)));
-                NTSTATUS StatusOfCopy;
+                NTSTATUS Status = STATUS_SUCCESS;
 
                 /* Enter Debugger if available */
                 Action = KdpEnterDebuggerException(ExceptionRecord,
@@ -130,12 +130,23 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
                 memcpy(&Stack[CDest], Context, sizeof(CONTEXT));
 
                 /* Copy Stack */
-                StatusOfCopy = MmCopyToCaller(pNewUserStack,
-                                              temp_space,
-                                              (12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT)));
+                _SEH_TRY
+                {
+                    ProbeForWrite(pNewUserStack,
+                                  12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT),
+                                  1);
+                    RtlCopyMemory(pNewUserStack,
+                                  temp_space,
+                                  12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT));
+                }
+                _SEH_HANDLE
+                {
+                    Status = _SEH_GetExceptionCode();
+                }
+                _SEH_END;
 
                 /* Check for success */
-                if (NT_SUCCESS(StatusOfCopy))
+                if (NT_SUCCESS(Status))
                 {
                     /* Set new Stack Pointer */
                     Tf->Esp = (ULONG)pNewUserStack;

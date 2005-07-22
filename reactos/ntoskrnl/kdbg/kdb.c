@@ -1549,3 +1549,53 @@ KdbpGetCommandLineSettings(PCHAR p1)
         p1 = p2;
     }
 }
+
+NTSTATUS
+KdbpSafeReadMemory(OUT PVOID Dest,
+                   IN PVOID Src,
+                   IN ULONG Bytes)
+{
+   NTSTATUS Status = STATUS_SUCCESS;
+
+   _SEH_TRY
+   {
+      ProbeForRead(Src,
+                   Bytes,
+                   1);
+      RtlCopyMemory(Dest,
+                    Src,
+                    Bytes);
+   }
+   _SEH_HANDLE
+   {
+      Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END;
+   
+   return Status;
+}
+
+NTSTATUS
+KdbpSafeWriteMemory(OUT PVOID Dest,
+                    IN PVOID Src,
+                    IN ULONG Bytes)
+{
+   NTSTATUS Status = STATUS_SUCCESS;
+
+   _SEH_TRY
+   {
+      ProbeForWrite(Dest,
+                    Bytes,
+                    1);
+      RtlCopyMemory(Dest,
+                    Src,
+                    Bytes);
+   }
+   _SEH_HANDLE
+   {
+      Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END;
+
+   return Status;
+}

@@ -219,12 +219,43 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
 {
    PETHREAD CurrentThread;
    struct _KPROCESS *AttachedProcess;
-   NTSTATUS Status;
    PEPORT Port;
    PQUEUEDMESSAGE Message;
    KIRQL oldIrql;
    PLPC_MESSAGE LpcRequest;
-   USHORT LpcRequestMessageSize;
+   USHORT LpcRequestMessageSize = 0, LpcRequestDataSize = 0;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
+   
+   PreviousMode = ExGetPreviousMode();
+   
+   if (PreviousMode != KernelMode)
+     {
+       _SEH_TRY
+         {
+           ProbeForRead(UnsafeLpcRequest,
+                        sizeof(LPC_MESSAGE),
+                        1);
+           ProbeForWrite(UnsafeLpcReply,
+                         sizeof(LPC_MESSAGE),
+                         1);
+           LpcRequestMessageSize = UnsafeLpcRequest->MessageSize;
+         }
+       _SEH_HANDLE
+         {
+           Status = _SEH_GetExceptionCode();
+         }
+       _SEH_END;
+       
+       if (!NT_SUCCESS(Status))
+         {
+           return Status;
+         }
+     }
+   else
+     {
+       LpcRequestMessageSize = UnsafeLpcRequest->MessageSize;
+     }
 
    DPRINT("NtRequestWaitReplyPort(PortHandle %x, LpcRequest %x, "
 	  "LpcReply %x)\n", PortHandle, UnsafeLpcRequest, UnsafeLpcReply);
@@ -261,18 +292,6 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
        KeDetachProcess();
      }
 
-   Status = MmCopyFromCaller(&LpcRequestMessageSize,
-			     &UnsafeLpcRequest->MessageSize,
-			     sizeof(USHORT));
-   if (!NT_SUCCESS(Status))
-     {
-       if (NULL != AttachedProcess)
-         {
-           KeAttachProcess(AttachedProcess);
-         }
-       ObDereferenceObject(Port);
-       return(Status);
-     }
    if (LpcRequestMessageSize > (sizeof(LPC_MESSAGE) + MAX_MESSAGE_DATA))
      {
        if (NULL != AttachedProcess)
@@ -292,19 +311,42 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
        ObDereferenceObject(Port);
        return(STATUS_NO_MEMORY);
      }
-   Status = MmCopyFromCaller(LpcRequest, UnsafeLpcRequest,
-			     LpcRequestMessageSize);
-   if (!NT_SUCCESS(Status))
+   if (PreviousMode != KernelMode)
      {
-       ExFreePool(LpcRequest);
-       if (NULL != AttachedProcess)
+       _SEH_TRY
          {
-           KeAttachProcess(AttachedProcess);
+           RtlCopyMemory(LpcRequest,
+                         UnsafeLpcRequest,
+                         LpcRequestMessageSize);
+           LpcRequestMessageSize = LpcRequest->MessageSize;
+           LpcRequestDataSize = LpcRequest->DataSize;
          }
-       ObDereferenceObject(Port);
-       return(Status);
+       _SEH_HANDLE
+         {
+           Status = _SEH_GetExceptionCode();
+         }
+       _SEH_END;
+       
+       if (!NT_SUCCESS(Status))
+         {
+           ExFreePool(LpcRequest);
+           if (NULL != AttachedProcess)
+             {
+               KeAttachProcess(AttachedProcess);
+             }
+           ObDereferenceObject(Port);
+           return(Status);
+         }
      }
-   LpcRequestMessageSize = LpcRequest->MessageSize;
+   else
+     {
+       RtlCopyMemory(LpcRequest,
+                     UnsafeLpcRequest,
+                     LpcRequestMessageSize);
+       LpcRequestMessageSize = LpcRequest->MessageSize;
+       LpcRequestDataSize = LpcRequest->DataSize;
+     }
+
    if (LpcRequestMessageSize > (sizeof(LPC_MESSAGE) + MAX_MESSAGE_DATA))
      {
        ExFreePool(LpcRequest);
@@ -315,7 +357,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
        ObDereferenceObject(Port);
        return(STATUS_PORT_MESSAGE_TOO_LONG);
      }
-   if (LpcRequest->DataSize != (LpcRequest->MessageSize - sizeof(LPC_MESSAGE)))
+   if (LpcRequestDataSize != (LpcRequestMessageSize - sizeof(LPC_MESSAGE)))
      {
        ExFreePool(LpcRequest);
        if (NULL != AttachedProcess)
@@ -366,8 +408,26 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
          {
            DPRINT("Message->Message.MessageSize %d\n",
 	          Message->Message.MessageSize);
-           Status = MmCopyToCaller(UnsafeLpcReply, &Message->Message,
-			           Message->Message.MessageSize);
+           if (PreviousMode != KernelMode)
+             {
+               _SEH_TRY
+                 {
+                   RtlCopyMemory(UnsafeLpcReply,
+                                 &Message->Message,
+                                 Message->Message.MessageSize);
+                 }
+               _SEH_HANDLE
+                 {
+                   Status = _SEH_GetExceptionCode();
+                 }
+               _SEH_END;
+             }
+           else
+             {
+               RtlCopyMemory(UnsafeLpcReply,
+                             &Message->Message,
+                             Message->Message.MessageSize);
+             }
            ExFreePool(Message);
          }
        else

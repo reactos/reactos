@@ -1503,12 +1503,15 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
 			  IN ULONG Length,
 			  OUT PULONG UnsafeResultLength)
 {
+  KPROCESSOR_MODE PreviousMode;
   ULONG ResultLength;
   PVOID SystemInformation;
-  NTSTATUS Status;
   NTSTATUS FStatus;
 
   PAGED_CODE();
+  
+  PreviousMode = ExGetPreviousMode();
+  
 
 /*	DPRINT("NtQuerySystemInformation Start. Class:%d\n",
 					SystemInformationClass );
@@ -1554,22 +1557,28 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
 		  return(Status);
 		}
 	    }*/
-	  if (UnsafeResultLength != NULL)
+	  if (NT_SUCCESS(FStatus) && UnsafeResultLength != NULL)
 	    {
-	      /*if (ExGetPreviousMode() == KernelMode)
-		{
-		  *UnsafeResultLength = ResultLength;
-		}
-	      else
-		{*/
-		  Status = MmCopyToCaller(UnsafeResultLength,
-					  &ResultLength,
-					  sizeof(ULONG));
-		  if (!NT_SUCCESS(Status))
-		    {
-		      return(Status);
-		    }
-		/*}*/
+              if (PreviousMode != KernelMode)
+                {
+                  FStatus = STATUS_SUCCESS;
+                  _SEH_TRY
+                    {
+                      ProbeForWrite(UnsafeResultLength,
+                                    sizeof(ULONG),
+                                    sizeof(ULONG));
+                      *UnsafeResultLength = ResultLength;
+                    }
+                  _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+                    {
+                      FStatus = _SEH_GetExceptionCode();
+                    }
+                  _SEH_END;
+                }
+              else
+                {
+                  *UnsafeResultLength = ResultLength;
+                }
 	    }
 	  return(FStatus);
 	}
