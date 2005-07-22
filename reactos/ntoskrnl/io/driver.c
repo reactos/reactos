@@ -170,13 +170,16 @@ IopGetDriverObject(
       /* We don't know which DriverObject we have to open */
       return STATUS_INVALID_PARAMETER_2;
 
-   if (FileSystem == TRUE)
-      wcscpy(NameBuffer, FILESYSTEM_ROOT_NAME);
-   else
-      wcscpy(NameBuffer, DRIVER_ROOT_NAME);
-   wcscat(NameBuffer, ServiceName->Buffer);
+   DriverName.Buffer = NameBuffer;
+   DriverName.Length = 0;
+   DriverName.MaximumLength = sizeof(NameBuffer);
 
-   RtlInitUnicodeString(&DriverName, NameBuffer);
+   if (FileSystem == TRUE)
+      RtlAppendUnicodeToString(&DriverName, FILESYSTEM_ROOT_NAME);
+   else
+      RtlAppendUnicodeToString(&DriverName, DRIVER_ROOT_NAME);
+   RtlAppendUnicodeStringToString(&DriverName, ServiceName);
+
    DPRINT("Driver name: '%wZ'\n", &DriverName);
 
    /* Initialize ObjectAttributes for driver object */
@@ -240,7 +243,7 @@ IopCreateDriverObject(
       RtlInitUnicodeString(&DriverName, NameBuffer);
       DPRINT("Driver name: '%wZ'\n", &DriverName);
 
-      Buffer = (PWSTR)ExAllocatePool(NonPagedPool, DriverName.Length);
+      Buffer = (PWSTR)ExAllocatePool(PagedPool, DriverName.Length + sizeof(WCHAR));
       /* If we don't success, it is not a problem. Our driver
        * object will not have associated driver name... */
    }
@@ -313,8 +316,10 @@ IopCreateDriverObject(
       if (!Object->DriverName.Buffer)
       {
          Object->DriverName.Buffer = Buffer;
-         Object->DriverName.Length = Object->DriverName.MaximumLength = DriverName.Length;
+         Object->DriverName.Length = DriverName.Length;
+         Object->DriverName.MaximumLength = DriverName.Length + sizeof(WCHAR);
          RtlCopyMemory(Object->DriverName.Buffer, DriverName.Buffer, DriverName.Length);
+         Object->DriverName.Buffer[Object->DriverName.Length / sizeof(WCHAR)] = L'\0';
       }
       else
          ExFreePool(Buffer);
@@ -882,7 +887,7 @@ IopCreateGroupListEntry(PWSTR ValueName,
 
       RtlZeroMemory(Group, sizeof(SERVICE_GROUP));
 
-      if (!RtlpCreateUnicodeString(&Group->GroupName, (PWSTR)ValueData, NonPagedPool))
+      if (!RtlCreateUnicodeString(&Group->GroupName, (PWSTR)ValueData))
 	{
 	  ExFreePool(Group);
 	  return(STATUS_INSUFFICIENT_RESOURCES);
@@ -1988,7 +1993,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
     * Set a service name for the device node
     */
 
-   RtlpCreateUnicodeString(&DeviceNode->ServiceName, ServiceName.Buffer, NonPagedPool);
+   RtlCreateUnicodeString(&DeviceNode->ServiceName, ServiceName.Buffer);
 
    /*
     * Initialize the driver module

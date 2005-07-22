@@ -436,38 +436,6 @@ IoRequestDeviceEject(
 }
 
 
-BOOLEAN
-IopCreateUnicodeString(
-  PUNICODE_STRING Destination,
-  PWSTR Source,
-  POOL_TYPE PoolType)
-{
-  ULONG Length;
-
-  if (!Source)
-  {
-    RtlInitUnicodeString(Destination, NULL);
-    return TRUE;
-  }
-
-  Length = (wcslen(Source) + 1) * sizeof(WCHAR);
-
-  Destination->Buffer = ExAllocatePool(PoolType, Length);
-
-  if (Destination->Buffer == NULL)
-  {
-    return FALSE;
-  }
-
-  RtlCopyMemory(Destination->Buffer, Source, Length);
-
-  Destination->MaximumLength = Length;
-
-  Destination->Length = Length - sizeof(WCHAR);
-
-  return TRUE;
-}
-
 NTSTATUS
 IopGetSystemPowerDeviceObject(PDEVICE_OBJECT *DeviceObject)
 {
@@ -1272,7 +1240,7 @@ IopActionInterrogateDeviceStack(
       /* FIXME: Add information from parent bus driver to InstancePath */
    }
 
-   if (!IopCreateUnicodeString(&DeviceNode->InstancePath, InstancePath, PagedPool))
+   if (!RtlCreateUnicodeString(&DeviceNode->InstancePath, InstancePath))
    {
       DPRINT("No resources\n");
       /* FIXME: Cleanup and disable device */
@@ -2091,9 +2059,8 @@ PnpInit(VOID)
       KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
    }
 
-   if (!IopCreateUnicodeString(&IopRootDeviceNode->InstancePath,
-       L"HTREE\\ROOT\\0",
-       PagedPool))
+   if (!RtlCreateUnicodeString(&IopRootDeviceNode->InstancePath,
+       L"HTREE\\ROOT\\0"))
    {
      CPRINT("Failed to create the instance path!\n");
      KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, STATUS_UNSUCCESSFUL, 0, 0, 0);

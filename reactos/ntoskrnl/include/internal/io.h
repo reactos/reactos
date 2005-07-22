@@ -245,13 +245,6 @@ IopInitiatePnpIrp(
     PIO_STACK_LOCATION Stack
 );
 
-BOOLEAN
-IopCreateUnicodeString(
-    PUNICODE_STRING	Destination,
-    PWSTR Source,
-    POOL_TYPE PoolType
-);
-
 NTSTATUS
 IoCreateDriverList(VOID);
 
