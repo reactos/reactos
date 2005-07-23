@@ -108,7 +108,7 @@ static unsigned int
 get_var_type_offset(var_t *var)
 {
     unsigned int toffset = 0;
-    void *size_is_attr;
+    void *sizeis_attr;
     int string_attr;
 
     if (var->ptr_level == 0)
@@ -133,10 +133,10 @@ get_var_type_offset(var_t *var)
     }
     else if (var->ptr_level == 1)
     {
-        size_is_attr = get_attrp(var->attrs, ATTR_SIZEIS);
+        sizeis_attr = get_attrp(var->attrs, ATTR_SIZEIS);
         string_attr = is_attr(var->attrs, ATTR_STRING);
 
-        if (size_is_attr)
+        if (sizeis_attr)
         {
             if (string_attr)
             {
@@ -337,9 +337,6 @@ static void write_procformatstring(type_t *iface)
                     }
                     else if (var->type->type == RPC_FC_RP)
                     {
-                        var_t *field = var->type->ref->ref->fields;
-                        int size;
-
                         if (in_attr & !out_attr)
                             print_client("0x4d,    /* FC_IN_PARAM */\n");
                         else if (!in_attr & out_attr)
@@ -352,17 +349,6 @@ static void write_procformatstring(type_t *iface)
                         print_client("0x02,\n");
                         fprintf(client, "#endif\n");
                         print_client("NdrFcShort(0x%x),\n", type_offset);
-
-                        size = 9;
-                        while (NEXT_LINK(field)) field = NEXT_LINK(field);
-                        while (field)
-                        {
-                            size++;
-                            field = PREV_LINK(field);
-                        }
-                        if (size % 2)
-                            size++;
-                        type_offset += size;
                     }
                     else
                     {
@@ -389,7 +375,6 @@ static void write_procformatstring(type_t *iface)
                         print_client("0x02,\n");
                         fprintf(client, "#endif\n");
                         print_client("NdrFcShort(0x%x),\n", type_offset);
-                        type_offset += 4;
 //                    }
 //                    else
 //                    {
@@ -404,6 +389,8 @@ static void write_procformatstring(type_t *iface)
                           __FUNCTION__,__LINE__, var->ptr_level);
                     return;
                 }
+
+                type_offset += get_var_type_offset(var);
 
                 var = PREV_LINK(var);
             }
@@ -552,7 +539,7 @@ static void write_typeformatstring(type_t *iface)
                             print_client("0x%02x,\n", 0x20 + type_type);
                             print_client("0x00,\n");
 
-                            fprintf(client, "#ifndef _APLHA_\n");
+                            fprintf(client, "#ifndef _ALPHA_\n");
                             print_client("NdrFcShort(0x%02X),\n",
                                          get_var_stack_offset_32(func, ((expr_t *)sizeis_attr)->u.sval));
                             fprintf(client, "#else\n");
@@ -568,7 +555,7 @@ static void write_typeformatstring(type_t *iface)
                             print_client("0x%02x,\n", 0x20 + type_type);
                             print_client("0x00,\n");
 
-                            fprintf(client, "#ifndef _APLHA_\n");
+                            fprintf(client, "#ifndef _ALPHA_\n");
                             print_client("NdrFcShort(0x04),\n");
                             fprintf(client, "#else\n");
                             print_client("NdrFcShort(0x08),\n");
@@ -967,7 +954,8 @@ static void marshall_in_arguments(func_t *func, unsigned int *type_offset)
                         indent++;
                         print_client("(PMIDL_STUB_MESSAGE)&_StubMsg,\n");
                         print_client("(unsigned char __RPC_FAR *)%s,\n", var->name);
-                        print_client("(PFORMAT_STRING)&__MIDL_TypeFormatString.Format[%u]);\n", *type_offset + 2);
+                        print_client("(PFORMAT_STRING)&__MIDL_TypeFormatString.Format[%u]);\n",
+                                     local_type_offset + 2);
                         indent--;
                         fprintf(client, "\n");
                         print_client("_StubMsg.Buffer = (unsigned char __RPC_FAR *)(((long)_StubMsg.Buffer + 3) & ~0x3);\n");
@@ -1045,7 +1033,8 @@ static void marshall_in_arguments(func_t *func, unsigned int *type_offset)
                     indent++;
                     print_client("(PMIDL_STUB_MESSAGE)&_StubMsg,\n");
                     print_client("(unsigned char __RPC_FAR *)%s,\n", var->name);
-                    print_client("(PFORMAT_STRING)&__MIDL_TypeFormatString.Format[%u]);\n", *type_offset);
+                    print_client("(PFORMAT_STRING)&__MIDL_TypeFormatString.Format[%u]);\n",
+                                 local_type_offset);
                     indent--;
                     fprintf(client, "\n");
                 }
@@ -1126,7 +1115,7 @@ static void marshall_in_arguments(func_t *func, unsigned int *type_offset)
                         print_client("(PMIDL_STUB_MESSAGE)&_StubMsg,\n");
                         print_client("(unsigned char __RPC_FAR *)%s,\n", var->name);
                         print_client("(PFORMAT_STRING)&__MIDL_TypeFormatString.Format[%u]);\n",
-                                     *type_offset + 4);
+                                     local_type_offset + 4);
                         indent--;
                         fprintf(client, "\n");
                     }
@@ -1184,7 +1173,7 @@ static void unmarshall_out_arguments(func_t *func, unsigned int *type_offset)
                         print_client("(PMIDL_STUB_MESSAGE)&_StubMsg,\n");
                         print_client("(unsigned char __RPC_FAR * __RPC_FAR *)&%s,\n", var->name);
                         print_client("(PFORMAT_STRING)&__MIDL_TypeFormatString.Format[%u],\n",
-                                     *type_offset + 4);
+                                     local_type_offset + 4);
                         print_client("(unsigned char)0);\n");
                         indent--;
                         fprintf(client, "\n");
@@ -1199,7 +1188,7 @@ static void unmarshall_out_arguments(func_t *func, unsigned int *type_offset)
                         print_client("(PMIDL_STUB_MESSAGE)&_StubMsg,\n");
                         print_client("(unsigned char __RPC_FAR * __RPC_FAR *)&%s,\n", var->name);
                         print_client("(PFORMAT_STRING)&__MIDL_TypeFormatString.Format[%u],\n",
-                                     *type_offset + 4);
+                                     local_type_offset + 4);
                         print_client("(unsigned char)0);\n");
                         indent--;
                         fprintf(client, "\n");
@@ -1282,7 +1271,7 @@ static void unmarshall_out_arguments(func_t *func, unsigned int *type_offset)
                         print_client("(PMIDL_STUB_MESSAGE)&_StubMsg,\n");
                         print_client("(unsigned char __RPC_FAR * __RPC_FAR *)&%s,\n", var->name);
                         print_client("(PFORMAT_STRING)&__MIDL_TypeFormatString.Format[%u],\n",
-                                     *type_offset + 4);
+                                     local_type_offset + 4);
                         print_client("(unsigned char)0);\n");
                         indent--;
                         fprintf(client, "\n");

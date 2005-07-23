@@ -1,5 +1,15 @@
 ChangeLog
 
+2005-07-23 ekohl
+
+   tools/widl/client.c
+   tools/widl/server.c
+
+- Fix offset calculation bug in the ProcFormatString.
+- Fix offset calculation bug in the marshalling and unmarshalling code.
+- Fix typos in the TypeFormatString.
+This makes the [string, out, size_is()] parameters work properly.
+
 2005-07-17 ekohl
 
    tools/widl/client.c

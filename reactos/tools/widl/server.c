@@ -342,9 +342,6 @@ static void write_procformatstring(type_t *iface)
                     }
                     else if (var->type->type == RPC_FC_RP)
                     {
-                        var_t *field = var->type->ref->ref->fields;
-                        int size;
-
                         if (in_attr & !out_attr)
                             print_server("0x4d,    /* FC_IN_PARAM */\n");
                         else if (!in_attr & out_attr)
@@ -357,17 +354,6 @@ static void write_procformatstring(type_t *iface)
                         print_server("0x02,\n");
                         fprintf(server, "#endif\n");
                         print_server("NdrFcShort(0x%x),\n", type_offset);
-
-                        size = 9;
-                        while (NEXT_LINK(field)) field = NEXT_LINK(field);
-                        while (field)
-                        {
-                            size++;
-                            field = PREV_LINK(field);
-                        }
-                        if (size % 2)
-                            size++;
-                        type_offset += size;
                     }
                     else
                     {
@@ -392,7 +378,6 @@ static void write_procformatstring(type_t *iface)
                         print_server("0x02,\n");
                         fprintf(server, "#endif\n");
                         print_server("NdrFcShort(0x%x),\n", type_offset);
-                        type_offset += 4;
 //                    }
 //                    else
 //                    {
@@ -401,6 +386,8 @@ static void write_procformatstring(type_t *iface)
 //                        return;
 //                    }
                 }
+
+                type_offset += get_var_type_offset(var);
 
                 var = PREV_LINK(var);
             }
@@ -549,7 +536,7 @@ static void write_typeformatstring(type_t *iface)
                             print_server("0x%02x,\n", 0x20 + type_type);
                             print_server("0x00,\n");
 
-                            fprintf(server, "#ifndef _APLHA_\n");
+                            fprintf(server, "#ifndef _ALPHA_\n");
                             print_server("NdrFcShort(0x%02X),\n",
                                          get_var_stack_offset_32(func, ((expr_t *)sizeis_attr)->u.sval));
                             fprintf(server, "#else\n");
@@ -565,7 +552,7 @@ static void write_typeformatstring(type_t *iface)
                             print_server("0x%02x,\n", 0x20 + type_type);
                             print_server("0x00,\n");
 
-                            fprintf(server, "#ifndef _APLHA_\n");
+                            fprintf(server, "#ifndef _ALPHA_\n");
                             print_server("NdrFcShort(0x04),\n");
                             fprintf(server, "#else\n");
                             print_server("NdrFcShort(0x08),\n");
@@ -840,10 +827,10 @@ static void print_message_buffer_size(func_t *func, unsigned int *type_offset)
 
                     empty_line = 1;
                 }
-
-                /* calculate the next type offset */
-                local_type_offset += get_var_type_offset(var);
             }
+
+            /* calculate the next type offset */
+            local_type_offset += get_var_type_offset(var);
         }
 
         if (empty_line)
