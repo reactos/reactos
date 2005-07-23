@@ -62,14 +62,12 @@ NTSTATUS MmPageFault(ULONG Cs,
       Status = MmNotPresentFault(Mode, Cr2, FALSE);
    }
 
-   if (KeGetCurrentThread() != NULL &&
-      KeGetCurrentThread()->Alerted[UserMode] != 0 &&
-      Cs != KERNEL_CS)
+   if (Mode == UserMode && KeGetCurrentThread()->ApcState.UserApcPending)
    {
       KIRQL oldIrql;
 
       KeRaiseIrql(APC_LEVEL, &oldIrql);
-      KiDeliverApc(KernelMode, NULL, NULL);
+      KiDeliverApc(UserMode, NULL, NULL);
       KeLowerIrql(oldIrql);
    }
 
