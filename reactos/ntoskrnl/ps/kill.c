@@ -213,6 +213,8 @@ PspExitThread(NTSTATUS ExitStatus)
     PTERMINATION_PORT TerminationPort;
     PTEB Teb;
     KIRQL oldIrql;
+    PLIST_ENTRY ApcEntry, CurrentApc;
+    PKAPC Apc;
 
     DPRINT("PspExitThread(ExitStatus %x), Current: 0x%x\n", ExitStatus, PsGetCurrentThread());
 
@@ -331,6 +333,50 @@ PspExitThread(NTSTATUS ExitStatus)
 
     /* Rundown Mutexes */
     KeRundownThread();
+
+    /* Disable new APC Queuing, this is as far as we'll let them go */
+    KeDisableThreadApcQueueing(&CurrentThread->Tcb);
+
+    /* Flush the User APCs */
+    if ((ApcEntry = KeFlushQueueApc(&CurrentThread->Tcb, UserMode)))
+    {
+        CurrentApc = ApcEntry;
+        do
+        {
+            /* Get the APC */
+            Apc = CONTAINING_RECORD(CurrentApc, KAPC, ApcListEntry);
+
+            /* Move to the next one */
+            CurrentApc = CurrentApc->Flink;
+
+            /* Rundown the APC or de-allocate it */
+            if (Apc->RundownRoutine)
+            {
+                /* Call its own routine */
+                (Apc->RundownRoutine)(Apc);
+            }
+            else
+            {
+                /* Do it ourselves */
+                ExFreePool(Apc);
+            }
+        }
+        while (CurrentApc != ApcEntry);
+    }
+
+    /* Call the Lego routine */
+    if (CurrentThread->Tcb.LegoData) PspRunLegoRoutine(&CurrentThread->Tcb);
+
+    /* Flush the APC queue, which should be empty */
+    if ((ApcEntry = KeFlushQueueApc(&CurrentThread->Tcb, KernelMode)))
+    {
+        /* Bugcheck time */
+        KEBUGCHECKEX(KERNEL_APC_PENDING_DURING_EXIT,
+                     (ULONG_PTR)ApcEntry,
+                     CurrentThread->Tcb.KernelApcDisable,
+                     oldIrql,
+                     0);
+    }
 
     /* Terminate the Thread from the Scheduler */
     KeTerminateThread(0);

@@ -270,14 +270,14 @@ KiInsertQueueApc(PKAPC Apc,
     */
     if ((Apc->ApcMode != KernelMode) && (Apc->KernelRoutine == (PKKERNEL_ROUTINE)PsExitSpecialApc)) {
 
-        DPRINT ("Inserting the Process Exit APC into the Queue\n");
+        DPRINT1("Inserting the Process Exit APC into the Queue\n");
         Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->UserApcPending = TRUE;
         InsertHeadList(&Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->ApcListHead[(int)Apc->ApcMode],
                        &Apc->ApcListEntry);
 
     } else if (Apc->NormalRoutine == NULL) {
 
-        DPRINT ("Inserting Special APC %x into the Queue\n", Apc);
+        DPRINT("Inserting Special APC %x into the Queue\n", Apc);
 
         for (ApcListEntry = Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->ApcListHead[(int)Apc->ApcMode].Flink;
              ApcListEntry != &Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->ApcListHead[(int)Apc->ApcMode];
@@ -293,7 +293,7 @@ KiInsertQueueApc(PKAPC Apc,
 
     } else {
 
-        DPRINT ("Inserting Normal APC %x into the %x Queue\n", Apc, Apc->ApcMode);
+        DPRINT("Inserting Normal APC %x into the %x Queue\n", Apc, Apc->ApcMode);
         InsertTailList(&Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->ApcListHead[(int)Apc->ApcMode],
                        &Apc->ApcListEntry);
     }
@@ -438,6 +438,73 @@ KeInsertQueueApc(PKAPC Apc,
     /* Return Sucess if we are here */
     KeReleaseDispatcherDatabaseLock(OldIrql);
     return Inserted;
+}
+
+/*++
+ * KeFlushQueueApc
+ *
+ *     The KeFlushQueueApc routine flushes all APCs of the given processor mode
+ *     from the specified Thread's APC queue.
+ *
+ * Params:
+ *     Thread - Pointer to the thread whose APC queue will be flushed.
+ *
+ *     PreviousMode - Specifies which APC Queue to flush.
+ *
+ * Returns:
+ *     A pointer to the first entry in the flushed APC queue.
+ *
+ * Remarks:
+ *     If the routine returns NULL, it means that no APCs were to be flushed.
+ *
+ *     Callers of KeFlushQueueApc must be running at DISPATCH_LEVEL or lower.
+ *
+ *--*/
+PLIST_ENTRY
+STDCALL
+KeFlushQueueApc(IN PKTHREAD Thread,
+                IN KPROCESSOR_MODE PreviousMode)
+{
+    KIRQL OldIrql;
+    PKAPC Apc;
+    PLIST_ENTRY ApcEntry, CurrentEntry;
+
+    /* Lock the Dispatcher Database and APC Queue */
+    OldIrql = KeAcquireDispatcherDatabaseLock();
+    KeAcquireSpinLock(&Thread->ApcQueueLock, &OldIrql);
+
+    /* Check if the list is empty */
+    if (IsListEmpty(&Thread->ApcState.ApcListHead[PreviousMode]))
+    {
+        /* We'll return NULL */
+        ApcEntry = NULL;
+    }
+    else
+    {
+        /* Remove this one */
+        RemoveEntryList(&Thread->ApcState.ApcListHead[PreviousMode]);
+        CurrentEntry = ApcEntry;
+
+        /* Remove all the other ones too, if present */
+        do
+        {
+            /* Get the APC */
+            Apc = CONTAINING_RECORD(CurrentEntry, KAPC, ApcListEntry);
+
+            /* Move to the next one */
+            CurrentEntry = CurrentEntry->Flink;
+
+            /* Mark it as not inserted */
+            Apc->Inserted = FALSE;
+        } while (ApcEntry != CurrentEntry);
+    }
+
+    /* Release the locks */
+    KeReleaseSpinLock(&Thread->ApcQueueLock, OldIrql);
+    KeReleaseDispatcherDatabaseLock(OldIrql);
+
+    /* Return the first entry */
+    return ApcEntry;
 }
 
 /*++

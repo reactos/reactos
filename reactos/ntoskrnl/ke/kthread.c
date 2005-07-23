@@ -387,6 +387,29 @@ KeGetPreviousMode(VOID)
     return (ULONG)PsGetCurrentThread()->Tcb.PreviousMode;
 }
 
+BOOLEAN
+STDCALL
+KeDisableThreadApcQueueing(IN PKTHREAD Thread)
+{
+    KIRQL OldIrql;
+    BOOLEAN PreviousState;
+
+    /* Lock the Dispatcher Database */
+    OldIrql = KeAcquireDispatcherDatabaseLock();
+
+    /* Save old state */
+    PreviousState = Thread->ApcQueueable;
+
+    /* Disable it now */
+    Thread->ApcQueueable = FALSE;
+
+    /* Release the Lock */
+    KeReleaseDispatcherDatabaseLock(OldIrql);
+
+    /* Return old state */
+    return PreviousState;
+}
+
 VOID
 STDCALL
 KeRundownThread(VOID)

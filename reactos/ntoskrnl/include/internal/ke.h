@@ -253,6 +253,10 @@ ULONG
 STDCALL
 KeForceResumeThread(IN PKTHREAD Thread);
 
+BOOLEAN
+STDCALL
+KeDisableThreadApcQueueing(IN PKTHREAD Thread);
+
 BOOLEAN STDCALL KiInsertTimer(PKTIMER Timer, LARGE_INTEGER DueTime);
 
 VOID inline FASTCALL KiSatisfyObjectWait(PDISPATCHER_HEADER Object, PKTHREAD Thread);
@@ -291,6 +295,12 @@ VOID STDCALL KiInitializeUserApc(IN PVOID Reserved,
 			 IN PVOID NormalContext,
 			 IN PVOID SystemArgument1,
 			 IN PVOID SystemArgument2);
+
+PLIST_ENTRY
+STDCALL
+KeFlushQueueApc(IN PKTHREAD Thread,
+                IN KPROCESSOR_MODE PreviousMode);
+
 
 VOID STDCALL KiAttachProcess(struct _KTHREAD *Thread, struct _KPROCESS *Process, KIRQL ApcLock, struct _KAPC_STATE *SavedApcState);
 

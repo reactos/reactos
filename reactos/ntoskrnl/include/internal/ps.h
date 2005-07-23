@@ -184,6 +184,10 @@ VOID
 STDCALL
 PspRunCreateProcessNotifyRoutines(PEPROCESS, BOOLEAN);
 
+VOID
+STDCALL
+PspRunLegoRoutine(IN PKTHREAD Thread);
+
 VOID INIT_FUNCTION PsInitJobManagment(VOID);
 
 /* CLIENT ID */
