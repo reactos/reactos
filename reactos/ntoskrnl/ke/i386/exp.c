@@ -473,6 +473,8 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    NTSTATUS Status;
    ULONG Esp0;
 
+   ASSERT(ExceptionNr != 14);
+
    /* Store the exception number in an unused field in the trap frame. */
    Tf->DebugArgMark = (PVOID)ExceptionNr;
 
@@ -482,11 +484,6 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    /* Get CR2 */
    cr2 = Ke386GetCr2();
    Tf->DebugPointer = (PVOID)cr2;
-
-   if (ExceptionNr == 14 && Tf->Eflags & FLAG_IF)
-   {
-     Ke386EnableInterrupts();
-   }
 
    /*
     * If this was a V86 mode exception then handle it specially
@@ -521,26 +518,6 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
         */
        DPRINT1("Ignoring P6 Local APIC Spurious Interrupt Bug...\n");
        return(0);
-     }
-
-   /*
-    * Maybe handle the page fault and return
-    */
-   if (ExceptionNr == 14)
-     {
-        if (Ke386NoExecute && Tf->ErrorCode & 0x10 && cr2 >= (ULONG_PTR)MmSystemRangeStart)
-	{
-           KEBUGCHECKWITHTF(ATTEMPTED_EXECUTE_OF_NOEXECUTE_MEMORY, 0, 0, 0, 0, Tf);
-	}
-	Status = MmPageFault(Tf->Cs&0xffff,
-			     &Tf->Eip,
-			     &Tf->Eax,
-			     cr2,
-			     Tf->ErrorCode);
-	if (NT_SUCCESS(Status))
-	  {
-	     return(0);
-	  }
      }
 
    /*

@@ -307,7 +307,7 @@ _KiTrap14:
 	pushl	%ebx
 	pushl	%esi
 	movl	$14, %esi
-	movl	$_KiTrapHandler, %ebx
+	movl	$_KiPageFaultHandler, %ebx
 	jmp	_KiTrapProlog2
 
 .globl _KiTrap15
