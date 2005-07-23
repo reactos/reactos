@@ -250,8 +250,8 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
   LPC_SECTION_WRITE WriteMap;
   LPC_SECTION_READ ReadMap;
   ULONG MaximumMessageSize;
-  PVOID ConnectData;
-  ULONG ConnectDataLength;
+  PVOID ConnectData = NULL;
+  ULONG ConnectDataLength = 0;
   PSECTION_OBJECT SectionObject;
   LARGE_INTEGER SectionOffset;
   PEPORT ConnectedPort;
@@ -335,12 +335,7 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
   /*
    * Handle connection data.
    */
-  if (UnsafeConnectData == NULL)
-    {
-      ConnectDataLength = 0;
-      ConnectData = NULL;
-    }
-  else
+  if (UnsafeConnectData)
     {
       if (PreviousMode != KernelMode)
         {
