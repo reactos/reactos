@@ -48,8 +48,8 @@ ServiceMain(DWORD argc, LPTSTR *argv);
 
 static SERVICE_TABLE_ENTRY ServiceTable[2] =
 {
-  {TEXT("PlugPlay"), ServiceMain},
-  {NULL, NULL}
+    {TEXT("PlugPlay"), ServiceMain},
+    {NULL, NULL}
 };
 
 static WCHAR szRootDeviceId[] = L"HTREE\\ROOT\\0";
@@ -59,41 +59,41 @@ static WCHAR szRootDeviceId[] = L"HTREE\\ROOT\\0";
 static DWORD WINAPI
 RpcServerThread(LPVOID lpParameter)
 {
-  RPC_STATUS Status;
+    RPC_STATUS Status;
 
-  DPRINT("RpcServerThread() called\n");
+    DPRINT("RpcServerThread() called\n");
 
-  Status = RpcServerUseProtseqEpW(L"ncacn_np",
-                                  20,
-                                  L"\\pipe\\umpnpmgr",
-                                  NULL);  // Security descriptor
-  if (Status != RPC_S_OK)
-  {
-    DPRINT1("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
+    Status = RpcServerUseProtseqEpW(L"ncacn_np",
+                                    20,
+                                    L"\\pipe\\umpnpmgr",
+                                    NULL);  // Security descriptor
+    if (Status != RPC_S_OK)
+    {
+        DPRINT1("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
+        return 0;
+    }
+
+    Status = RpcServerRegisterIf(pnp_v1_0_s_ifspec,
+                                 NULL,
+                                 NULL);
+    if (Status != RPC_S_OK)
+    {
+        DPRINT1("RpcServerRegisterIf() failed (Status %lx)\n", Status);
+        return 0;
+    }
+
+    Status = RpcServerListen(1,
+                             20,
+                             FALSE);
+    if (Status != RPC_S_OK)
+    {
+        DPRINT1("RpcServerListen() failed (Status %lx)\n", Status);
+        return 0;
+    }
+
+    DPRINT("RpcServerThread() done\n");
+
     return 0;
-  }
-
-  Status = RpcServerRegisterIf(pnp_v1_0_s_ifspec,
-                               NULL,
-                               NULL);
-  if (Status != RPC_S_OK)
-  {
-    DPRINT1("RpcServerRegisterIf() failed (Status %lx)\n", Status);
-    return 0;
-  }
-
-  Status = RpcServerListen(1,
-                           20,
-                           FALSE);
-  if (Status != RPC_S_OK)
-  {
-    DPRINT1("RpcServerListen() failed (Status %lx)\n", Status);
-    return 0;
-  }
-
-  DPRINT("RpcServerThread() done\n");
-
-  return 0;
 }
 
 
@@ -202,7 +202,6 @@ Done:
 }
 
 
-#if 0
 CONFIGRET
 PNP_GetRelatedDeviceInstance(handle_t BindingHandle,
                              unsigned long Relationship,
@@ -211,21 +210,40 @@ PNP_GetRelatedDeviceInstance(handle_t BindingHandle,
                              unsigned long Length,
                              unsigned long Flags)
 {
+    PLUGPLAY_CONTROL_RELATED_DEVICE_DATA PlugPlayData;
     CONFIGRET ret = CR_SUCCESS;
+    NTSTATUS Status;
 
-    DPRINT1("PNP_GetRelatedDeviceInstance() called\n");
-    DPRINT1("  Relationship %ld\n", Relationship);
-    DPRINT1("  DeviceId %S\n", DeviceId);
+    DPRINT("PNP_GetRelatedDeviceInstance() called\n");
+    DPRINT("  Relationship %ld\n", Relationship);
+    DPRINT("  DeviceId %S\n", DeviceId);
 
-    lstrcpyW(RelatedDeviceId,
-             szRootDeviceId);
+    RtlInitUnicodeString(&PlugPlayData.TargetDeviceInstance,
+                         DeviceId);
 
-//Done:
-    DPRINT1("PNP_GetRelatedDeviceInstance() done (returns %lx)\n", ret);
+    PlugPlayData.Relation = Relationship;
+
+    PlugPlayData.RelatedDeviceInstance.Length = 0;
+    PlugPlayData.RelatedDeviceInstance.MaximumLength = Length;
+    PlugPlayData.RelatedDeviceInstance.Buffer = RelatedDeviceId;
+
+    Status = NtPlugPlayControl(PlugPlayControlGetRelatedDevice,
+                               (PVOID)&PlugPlayData,
+                               sizeof(PLUGPLAY_CONTROL_RELATED_DEVICE_DATA));
+    if (!NT_SUCCESS(Status))
+    {
+        /* FIXME: Map Status to ret */
+        ret = CR_FAILURE;
+    }
+
+    DPRINT("PNP_GetRelatedDeviceInstance() done (returns %lx)\n", ret);
+    if (ret == 0)
+    {
+        DPRINT("RelatedDevice: %wZ\n", &PlugPlayData.RelatedDeviceInstance);
+    }
 
     return ret;
 }
-#endif
 
 
 CONFIGRET
@@ -297,104 +315,124 @@ PNP_GetDeviceStatus(handle_t BindingHandle,
 }
 
 
+CONFIGRET
+PNP_SetDeviceProblem(handle_t BindingHandle,
+                     wchar_t *DeviceInstance,
+                     unsigned long Problem,
+                     DWORD Flags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT1("PNP_SetDeviceProblem() called\n");
+
+    /* FIXME */
+
+    DPRINT1("PNP_SetDeviceProblem() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
 static DWORD WINAPI
 PnpEventThread(LPVOID lpParameter)
 {
-  PPLUGPLAY_EVENT_BLOCK PnpEvent;
-  ULONG PnpEventSize;
-  NTSTATUS Status;
-  RPC_STATUS RpcStatus;
+    PPLUGPLAY_EVENT_BLOCK PnpEvent;
+    ULONG PnpEventSize;
+    NTSTATUS Status;
+    RPC_STATUS RpcStatus;
 
-  PnpEventSize = 0x1000;
-  PnpEvent = HeapAlloc(GetProcessHeap(), 0, PnpEventSize);
-  if (PnpEvent == NULL)
-    return ERROR_OUTOFMEMORY;
-
-  for (;;)
-  {
-    DPRINT("Calling NtGetPlugPlayEvent()\n");
-
-    /* Wait for the next pnp event */
-    Status = NtGetPlugPlayEvent(0, 0, PnpEvent, PnpEventSize);
-    /* Resize the buffer for the PnP event if it's too small. */
-    if (Status == STATUS_BUFFER_TOO_SMALL)
-    {
-      PnpEventSize += 0x400;
-      PnpEvent = HeapReAlloc(GetProcessHeap(), 0, PnpEvent, PnpEventSize);
-      if (PnpEvent == NULL)
+    PnpEventSize = 0x1000;
+    PnpEvent = HeapAlloc(GetProcessHeap(), 0, PnpEventSize);
+    if (PnpEvent == NULL)
         return ERROR_OUTOFMEMORY;
-      continue;
-    }
-    if (!NT_SUCCESS(Status))
+
+    for (;;)
     {
-      DPRINT("NtPlugPlayEvent() failed (Status %lx)\n", Status);
-      break;
+        DPRINT("Calling NtGetPlugPlayEvent()\n");
+
+        /* Wait for the next pnp event */
+        Status = NtGetPlugPlayEvent(0, 0, PnpEvent, PnpEventSize);
+
+        /* Resize the buffer for the PnP event if it's too small. */
+        if (Status == STATUS_BUFFER_TOO_SMALL)
+        {
+            PnpEventSize += 0x400;
+            PnpEvent = HeapReAlloc(GetProcessHeap(), 0, PnpEvent, PnpEventSize);
+            if (PnpEvent == NULL)
+                return ERROR_OUTOFMEMORY;
+            continue;
+        }
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("NtPlugPlayEvent() failed (Status %lx)\n", Status);
+            break;
+        }
+
+        DPRINT("Received PnP Event\n");
+        if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ARRIVAL, &RpcStatus))
+        {
+            DPRINT1("Device arrival event: %S\n", PnpEvent->TargetDevice.DeviceIds);
+        }
+        else
+        {
+            DPRINT1("Unknown event\n");
+        }
+
+        /* FIXME: Process the pnp event */
+
+        /* Dequeue the current pnp event and signal the next one */
+        NtPlugPlayControl(PlugPlayControlUserResponse, NULL, 0);
     }
 
-    DPRINT("Received PnP Event\n");
-    if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ARRIVAL, &RpcStatus))
-    {
-      DPRINT1("Device arrival event: %S\n", PnpEvent->TargetDevice.DeviceIds);
-    }
-    else
-    {
-      DPRINT1("Unknown event\n");
-    }
+    HeapFree(GetProcessHeap(), 0, PnpEvent);
 
-    /* FIXME: Process the pnp event */
-
-    /* Dequeue the current pnp event and signal the next one */
-    NtPlugPlayControl(PlugPlayControlUserResponse, NULL, 0);
-  }
-
-  HeapFree(GetProcessHeap(), 0, PnpEvent);
-
-  return ERROR_SUCCESS;
+    return ERROR_SUCCESS;
 }
 
 
 static VOID CALLBACK
 ServiceMain(DWORD argc, LPTSTR *argv)
 {
-  HANDLE hThread;
-  DWORD dwThreadId;
+    HANDLE hThread;
+    DWORD dwThreadId;
 
-  DPRINT("ServiceMain() called\n");
+    DPRINT("ServiceMain() called\n");
 
-  hThread = CreateThread(NULL,
-			 0,
-			 PnpEventThread,
-			 NULL,
-			 0,
-			 &dwThreadId);
-  if (hThread != NULL)
-    CloseHandle(hThread);
+    hThread = CreateThread(NULL,
+                           0,
+                           PnpEventThread,
+                           NULL,
+                           0,
+                           &dwThreadId);
+    if (hThread != NULL)
+        CloseHandle(hThread);
 
-  hThread = CreateThread(NULL,
-			 0,
-			 RpcServerThread,
-			 NULL,
-			 0,
-			 &dwThreadId);
-  if (hThread != NULL)
-    CloseHandle(hThread);
+    hThread = CreateThread(NULL,
+                           0,
+                           RpcServerThread,
+                           NULL,
+                           0,
+                           &dwThreadId);
+    if (hThread != NULL)
+        CloseHandle(hThread);
 
-  DPRINT("ServiceMain() done\n");
+    DPRINT("ServiceMain() done\n");
 }
 
 
 int
 main(int argc, char *argv[])
 {
-  DPRINT("Umpnpmgr: main() started\n");
+    DPRINT("Umpnpmgr: main() started\n");
 
-  StartServiceCtrlDispatcher(ServiceTable);
+    StartServiceCtrlDispatcher(ServiceTable);
 
-  DPRINT("Umpnpmgr: main() done\n");
+    DPRINT("Umpnpmgr: main() done\n");
 
-  ExitThread(0);
+    ExitThread(0);
 
-  return 0;
+    return 0;
 }
 
 /* EOF */

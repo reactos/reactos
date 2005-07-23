@@ -29,15 +29,15 @@ interface pnp
                                       [out, string, size_is(Length)] wchar_t *DeviceInstance,
                                       [in] DWORD Length);
 
-//  cpp_quote("#define PNP_DEVICE_PARENT  1")
-//  cpp_quote("#define PNP_DEVICE_CHILD   2")
-//  cpp_quote("#define PNP_DEVICE_SIBLING 3")
-//  CONFIGRET PNP_GetRelatedDeviceInstance(handle_t BindingHandle,
-//                                         [in] DWORD Relationship,
-//                                         [in, string] wchar_t *DeviceId,
-//                                         [out, string, size_is(Length)] wchar_t *RelatedDeviceId,
-//                                         [in] DWORD Length,
-//                                         [in] DWORD Flags);
+  cpp_quote("#define PNP_DEVICE_PARENT  1")
+  cpp_quote("#define PNP_DEVICE_CHILD   2")
+  cpp_quote("#define PNP_DEVICE_SIBLING 3")
+  CONFIGRET PNP_GetRelatedDeviceInstance(handle_t BindingHandle,
+                                         [in] DWORD Relationship,
+                                         [in, string] wchar_t *DeviceId,
+                                         [out, string, size_is(Length)] wchar_t *RelatedDeviceId,
+                                         [in] DWORD Length,
+                                         [in] DWORD Flags);
 
   CONFIGRET PNP_GetDepth(handle_t BindingHandle,
                          [in, string] wchar_t *DeviceInstance,
@@ -49,4 +49,9 @@ interface pnp
                                 [out] unsigned long *Status,
                                 [out] unsigned long *Problem,
                                 [in] DWORD Flags);
+
+  CONFIGRET PNP_SetDeviceProblem(handle_t BindingHandle,
+                                 [in, string] wchar_t *DeviceInstance,
+                                 [in] unsigned long Problem,
+                                 [in] DWORD Flags);
 }

@@ -108,7 +108,7 @@ extern "C" {
 
 
 typedef DWORD RETURN_TYPE;
-typedef RETURN_TYPE	CONFIGRET;
+typedef RETURN_TYPE CONFIGRET;
 
 typedef HANDLE HMACHINE;
 typedef HMACHINE *PHMACHINE;

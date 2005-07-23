@@ -170,8 +170,8 @@
 @ stub CM_Reset_Children_Marks_Ex
 @ stub CM_Run_Detection
 @ stub CM_Run_Detection_Ex
-@ stub CM_Set_DevNode_Problem
-@ stub CM_Set_DevNode_Problem_Ex
+@ stdcall CM_Set_DevNode_Problem(long long long)
+@ stdcall CM_Set_DevNode_Problem_Ex(long long long long)
 @ stub CM_Set_DevNode_Registry_PropertyA
 @ stub CM_Set_DevNode_Registry_PropertyW
 @ stub CM_Set_DevNode_Registry_Property_ExA
