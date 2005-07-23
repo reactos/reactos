@@ -320,6 +320,7 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
    
    if (PreviousMode != KernelMode)
    {
+      Status = STATUS_SUCCESS;
       _SEH_TRY
       {
          if (IoStatusBlock != NULL)
