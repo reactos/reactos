@@ -373,7 +373,7 @@ LsaGetUserName@8
 ;LsaLookupPrivilegeDisplayName@16
 ;LsaLookupPrivilegeName@12
 ;LsaLookupPrivilegeValue@12
-;LsaLookupSids@20
+LsaLookupSids@20
 LsaNtStatusToWinError@4
 ;LsaOpenAccount@16
 LsaOpenPolicy@16
