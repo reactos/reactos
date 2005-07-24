@@ -3039,7 +3039,15 @@ failfreeirp:
                                   PreviousMode,
                                   FileObject->Flags & FO_ALERTABLE_IO,
                                   NULL);
-            Status = IoStatusBlock->Status;
+            _SEH_TRY
+            {
+                Status = IoStatusBlock->Status;
+            }
+            _SEH_HANDLE
+            {
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
         }
         else
         {
@@ -3048,7 +3056,15 @@ failfreeirp:
                                   PreviousMode,
                                   FileObject->Flags & FO_ALERTABLE_IO,
                                   NULL);
-            Status = FileObject->FinalStatus;
+            _SEH_TRY
+            {
+                Status = FileObject->FinalStatus;
+            }
+            _SEH_HANDLE
+            {
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
         }
     }
 
