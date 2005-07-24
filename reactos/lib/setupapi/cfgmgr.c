@@ -373,6 +373,72 @@ CONFIGRET WINAPI CM_Get_Depth_Ex(
 
 
 /***********************************************************************
+ * CM_Get_DevNode_Status [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_DevNode_Status(
+    PULONG pulStatus, PULONG pulProblemNumber, DEVINST dnDevInst,
+    ULONG ulFlags)
+{
+    TRACE("%p %p %lx %lx\n",
+          pulStatus, pulProblemNumber, dnDevInst, ulFlags);
+    return CM_Get_DevNode_Status_Ex(pulStatus, pulProblemNumber, dnDevInst,
+                                    ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Get_DevNode_Status_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI
+CM_Get_DevNode_Status_Ex(
+    PULONG pulStatus, PULONG pulProblemNumber, DEVINST dnDevInst,
+    ULONG ulFlags, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    LPWSTR lpDevInst;
+
+    TRACE("%p %p %lx %lx %lx\n",
+          pulStatus, pulProblemNumber, dnDevInst, ulFlags, hMachine);
+
+    if (pulStatus == NULL || pulProblemNumber == NULL)
+        return CR_INVALID_POINTER;
+
+    if (dnDevInst == 0)
+        return CR_INVALID_DEVINST;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    if (lpDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    return PNP_GetDeviceStatus(BindingHandle,
+                               lpDevInst,
+                               pulStatus,
+                               pulProblemNumber,
+                               ulFlags);
+}
+
+
+/***********************************************************************
  * CM_Get_Device_IDA [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Get_Device_IDA(
@@ -403,10 +469,34 @@ CONFIGRET WINAPI CM_Get_Device_ID_ExA(
     DEVINST dnDevInst, PCHAR Buffer, ULONG BufferLen, ULONG ulFlags,
     HMACHINE hMachine)
 {
+    WCHAR szBufferW[MAX_DEVICE_ID_LEN];
+    CONFIGRET ret = CR_SUCCESS;
+
     FIXME("%lx %p %ld %ld %lx\n",
           dnDevInst, Buffer, BufferLen, ulFlags, hMachine);
 
-    return CR_FAILURE;
+    if (Buffer == NULL)
+        return CR_INVALID_POINTER;
+
+    ret = CM_Get_Device_ID_ExW(dnDevInst,
+                               szBufferW,
+                               MAX_DEVICE_ID_LEN,
+                               ulFlags,
+                               hMachine);
+    if (ret == CR_SUCCESS)
+    {
+        if (WideCharToMultiByte(CP_ACP,
+                                0,
+                                szBufferW,
+                                lstrlenW(szBufferW) + 1,
+                                Buffer,
+                                BufferLen,
+                                NULL,
+                                NULL) == 0)
+            ret = CR_FAILURE;
+    }
+
+    return ret;
 }
 
 
@@ -484,10 +574,56 @@ CONFIGRET WINAPI CM_Get_Device_ID_List_ExA(
     PCSTR pszFilter, PCHAR Buffer, ULONG BufferLen, ULONG ulFlags,
     HMACHINE hMachine)
 {
+    LPWSTR BufferW = NULL;
+    LPWSTR pszFilterW = NULL;
+    CONFIGRET ret = CR_SUCCESS;
+
     FIXME("%p %p %ld %ld %lx\n",
           pszFilter, Buffer, BufferLen, ulFlags, hMachine);
-    memset(Buffer,0,2);
-    return CR_SUCCESS;
+
+    BufferW = MyMalloc(BufferLen * sizeof(WCHAR));
+    if (BufferW == NULL)
+        return CR_OUT_OF_MEMORY;
+
+    if (pszFilter == NULL)
+    {
+        ret = CM_Get_Device_ID_List_ExW(NULL,
+                                        BufferW,
+                                        BufferLen,
+                                        ulFlags,
+                                        hMachine);
+    }
+    else
+    {
+        if (CaptureAndConvertAnsiArg(pszFilter, &pszFilterW))
+        {
+            ret = CR_INVALID_DEVICE_ID;
+            goto Done;
+        }
+
+        ret = CM_Get_Device_ID_List_ExW(pszFilterW,
+                                        BufferW,
+                                        BufferLen,
+                                        ulFlags,
+                                        hMachine);
+
+        MyFree(pszFilterW);
+    }
+
+    if (WideCharToMultiByte(CP_ACP,
+                            0,
+                            BufferW,
+                            lstrlenW(BufferW) + 1,
+                            Buffer,
+                            BufferLen,
+                            NULL,
+                            NULL) == 0)
+        ret = CR_FAILURE;
+
+Done:
+    MyFree(BufferW);
+
+    return ret;
 }
 
 
@@ -533,9 +669,32 @@ CONFIGRET WINAPI CM_Get_Device_ID_List_SizeW(
 CONFIGRET WINAPI CM_Get_Device_ID_List_Size_ExA(
     PULONG pulLen, PCSTR pszFilter, ULONG ulFlags, HMACHINE hMachine)
 {
-    FIXME("%p %s %ld %lx\n", pulLen, pszFilter, ulFlags, hMachine);
-    *pulLen = 2;
-    return CR_SUCCESS;
+    LPWSTR pszFilterW = NULL;
+    CONFIGRET ret = CR_SUCCESS;
+
+    FIXME("%p %s %lx %lx\n", pulLen, pszFilter, ulFlags, hMachine);
+
+    if (pszFilter == NULL)
+    {
+        ret = CM_Get_Device_ID_List_Size_ExW(pulLen,
+                                             NULL,
+                                             ulFlags,
+                                             hMachine);
+    }
+    else
+    {
+        if (CaptureAndConvertAnsiArg(pszFilter, &pszFilterW))
+            return CR_INVALID_DEVICE_ID;
+
+        ret = CM_Get_Device_ID_List_Size_ExW(pulLen,
+                                             pszFilterW,
+                                             ulFlags,
+                                             hMachine);
+
+        MyFree(pszFilterW);
+    }
+
+    return ret;
 }
 
 
@@ -604,72 +763,6 @@ CONFIGRET WINAPI CM_Get_Device_ID_Size_Ex(
     *pulLen = lstrlenW(DeviceId);
 
     return CR_SUCCESS;
-}
-
-
-/***********************************************************************
- * CM_Get_DevNode_Status [SETUPAPI.@]
- */
-CONFIGRET WINAPI CM_Get_DevNode_Status(
-    PULONG pulStatus, PULONG pulProblemNumber, DEVINST dnDevInst,
-    ULONG ulFlags)
-{
-    TRACE("%p %p %lx %lx\n",
-          pulStatus, pulProblemNumber, dnDevInst, ulFlags);
-    return CM_Get_DevNode_Status_Ex(pulStatus, pulProblemNumber, dnDevInst,
-                                    ulFlags, NULL);
-}
-
-
-/***********************************************************************
- * CM_Get_DevNode_Status_Ex [SETUPAPI.@]
- */
-CONFIGRET WINAPI
-CM_Get_DevNode_Status_Ex(
-    PULONG pulStatus, PULONG pulProblemNumber, DEVINST dnDevInst,
-    ULONG ulFlags, HMACHINE hMachine)
-{
-    RPC_BINDING_HANDLE BindingHandle = NULL;
-    HSTRING_TABLE StringTable = NULL;
-    LPWSTR lpDevInst;
-
-    TRACE("%p %p %lx %lx %lx\n",
-          pulStatus, pulProblemNumber, dnDevInst, ulFlags, hMachine);
-
-    if (pulStatus == NULL || pulProblemNumber == NULL)
-        return CR_INVALID_POINTER;
-
-    if (dnDevInst == 0)
-        return CR_INVALID_DEVINST;
-
-    if (ulFlags != 0)
-        return CR_INVALID_FLAG;
-
-    if (hMachine != NULL)
-    {
-        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
-        if (BindingHandle == NULL)
-            return CR_FAILURE;
-
-        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
-        if (StringTable == 0)
-            return CR_FAILURE;
-    }
-    else
-    {
-        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
-            return CR_FAILURE;
-    }
-
-    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
-    if (lpDevInst == NULL)
-        return CR_INVALID_DEVNODE;
-
-    return PNP_GetDeviceStatus(BindingHandle,
-                               lpDevInst,
-                               pulStatus,
-                               pulProblemNumber,
-                               ulFlags);
 }
 
 
@@ -940,7 +1033,7 @@ CONFIGRET WINAPI CM_Locate_DevNode_ExA(
     PDEVINST pdnDevInst, DEVINSTID_A pDeviceID, ULONG ulFlags, HMACHINE hMachine)
 {
     DEVINSTID_W pDevIdW = NULL;
-    CONFIGRET rc = CR_SUCCESS;
+    CONFIGRET ret = CR_SUCCESS;
 
     TRACE("%p %s %lu %lx\n", pdnDevInst, pDeviceID, ulFlags, hMachine);
 
@@ -950,12 +1043,12 @@ CONFIGRET WINAPI CM_Locate_DevNode_ExA(
          return CR_INVALID_DEVICE_ID;
     }
 
-    rc = CM_Locate_DevNode_ExW(pdnDevInst, pDevIdW, ulFlags, hMachine);
+    ret = CM_Locate_DevNode_ExW(pdnDevInst, pDevIdW, ulFlags, hMachine);
 
     if (pDevIdW != NULL)
         MyFree(pDevIdW);
 
-    return rc;
+    return ret;
 }
 
 
@@ -968,7 +1061,7 @@ CONFIGRET WINAPI CM_Locate_DevNode_ExW(
     WCHAR DeviceIdBuffer[MAX_DEVICE_ID_LEN];
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
-    CONFIGRET rc = CR_SUCCESS;
+    CONFIGRET ret = CR_SUCCESS;
 
     TRACE("%p %s %lu %lx\n", pdnDevInst, debugstr_w(pDeviceID), ulFlags, hMachine);
 
@@ -1001,26 +1094,26 @@ CONFIGRET WINAPI CM_Locate_DevNode_ExW(
     else
     {
         /* Get the root device ID */
-        rc = PNP_GetRootDeviceInstance(BindingHandle,
-                                       DeviceIdBuffer,
-                                       MAX_DEVICE_ID_LEN);
-        if (rc != CR_SUCCESS)
+        ret = PNP_GetRootDeviceInstance(BindingHandle,
+                                        DeviceIdBuffer,
+                                        MAX_DEVICE_ID_LEN);
+        if (ret != CR_SUCCESS)
             return CR_FAILURE;
     }
     TRACE("DeviceIdBuffer: %s\n", debugstr_w(DeviceIdBuffer));
 
     /* Validate the device ID */
-    rc = PNP_ValidateDeviceInstance(BindingHandle,
-                                    DeviceIdBuffer,
-                                    ulFlags);
-    if (rc == CR_SUCCESS)
+    ret = PNP_ValidateDeviceInstance(BindingHandle,
+                                     DeviceIdBuffer,
+                                     ulFlags);
+    if (ret == CR_SUCCESS)
     {
         *pdnDevInst = StringTableAddString(StringTable, DeviceIdBuffer, 1);
         if (*pdnDevInst == -1)
-            rc = CR_FAILURE;
+            ret = CR_FAILURE;
     }
 
-    return rc;
+    return ret;
 }
 
 
@@ -1044,7 +1137,6 @@ CONFIGRET WINAPI CM_Set_DevNode_Problem_Ex(
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
     LPWSTR lpDevInst;
-    CONFIGRET rc = CR_SUCCESS;
 
     TRACE("%lx %lx %lx %lx\n", dnDevInst, ulProblem, ulFlags, hMachine);
 
