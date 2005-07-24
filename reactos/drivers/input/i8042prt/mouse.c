@@ -489,7 +489,7 @@ VOID STDCALL I8042MouseHandle(PDEVICE_EXTENSION DevExt,
 
 		if (Scroll) {
 			MouseInput->RawButtons |= MOUSE_WHEEL;
-			MouseInput->ButtonData = (USHORT) Scroll;
+			MouseInput->ButtonData = (USHORT)(Scroll * -WHEEL_DELTA);
 		}
 
 		if (DevExt->MouseType == IntellimouseExplorer) {
