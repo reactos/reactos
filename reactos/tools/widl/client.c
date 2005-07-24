@@ -522,7 +522,7 @@ static void write_typeformatstring(type_t *iface)
                     {
                         unsigned char type_type = 0;
 
-                        type = get_type_by_name(func, ((expr_t *)sizeis_attr)->u.sval);
+                        type = get_type_by_name(func, ((var_t *)sizeis_attr)->name);
                         if (type != NULL)
                             type_type = type->type;
 
@@ -541,10 +541,10 @@ static void write_typeformatstring(type_t *iface)
 
                             fprintf(client, "#ifndef _ALPHA_\n");
                             print_client("NdrFcShort(0x%02X),\n",
-                                         get_var_stack_offset_32(func, ((expr_t *)sizeis_attr)->u.sval));
+                                         get_var_stack_offset_32(func, ((var_t *)sizeis_attr)->name));
                             fprintf(client, "#else\n");
                             print_client("NdrFcShort(0x%02X),\n",
-                                         get_var_stack_offset_64(func, ((expr_t *)sizeis_attr)->u.sval));
+                                         get_var_stack_offset_64(func, ((var_t *)sizeis_attr)->name));
                             fprintf(client, "#endif\n");
                         }
                         else

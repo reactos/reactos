@@ -1,5 +1,17 @@
 ChangeLog
 
+2005-07-25 ekohl
+
+   tools/widl/client.c
+   tools/widl/lex.yy.c
+   tools/widl/parser.y
+   tools/widl/proxy.c
+   tools/widl/server.c
+   tools/widl/y.tab.c
+   tools/widl/y.tab.h
+
+- Fix grammar of the size_is attribute so that size_is(*Length) gets accepted.
+
 2005-07-23 ekohl
 
    tools/widl/client.c

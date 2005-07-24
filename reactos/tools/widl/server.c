@@ -113,7 +113,7 @@ static unsigned int
 get_var_type_offset(var_t *var)
 {
     unsigned int toffset = 0;
-    void *size_is_attr;
+    void *sizeis_attr;
     int string_attr;
 
     if (var->ptr_level == 0)
@@ -138,10 +138,10 @@ get_var_type_offset(var_t *var)
     }
     else if (var->ptr_level == 1)
     {
-        size_is_attr = get_attrp(var->attrs, ATTR_SIZEIS);
+        sizeis_attr = get_attrp(var->attrs, ATTR_SIZEIS);
         string_attr = is_attr(var->attrs, ATTR_STRING);
 
-        if (size_is_attr)
+        if (sizeis_attr)
         {
             if (string_attr)
             {
@@ -519,7 +519,7 @@ static void write_typeformatstring(type_t *iface)
                     {
                         unsigned char type_type = 0;
 
-                        type = get_type_by_name(func, ((expr_t *)sizeis_attr)->u.sval);
+                        type = get_type_by_name(func, ((var_t *)sizeis_attr)->name);
                         if (type != NULL)
                             type_type = type->type;
 
@@ -538,10 +538,10 @@ static void write_typeformatstring(type_t *iface)
 
                             fprintf(server, "#ifndef _ALPHA_\n");
                             print_server("NdrFcShort(0x%02X),\n",
-                                         get_var_stack_offset_32(func, ((expr_t *)sizeis_attr)->u.sval));
+                                         get_var_stack_offset_32(func, ((var_t *)sizeis_attr)->name));
                             fprintf(server, "#else\n");
                             print_server("NdrFcShort(0x%02X),\n",
-                                         get_var_stack_offset_64(func, ((expr_t *)sizeis_attr)->u.sval));
+                                         get_var_stack_offset_64(func, ((var_t *)sizeis_attr)->name));
                             fprintf(server, "#endif\n");
                         }
                         else
@@ -815,7 +815,7 @@ static void print_message_buffer_size(func_t *func, unsigned int *type_offset)
                      var->type->type == RPC_FC_CHAR ||
                      var->type->type == RPC_FC_WCHAR))
                 {
-                    print_server("_StubMsg.MaxCount = %s;\n", ((expr_t *)sizeis_attr)->u.sval);
+                    print_server("_StubMsg.MaxCount = %s;\n", ((var_t *)sizeis_attr)->name);
                     fprintf(server, "\n");
                     print_server("NdrConformantStringBufferSize(\n");
                     indent++;
@@ -1160,7 +1160,7 @@ static void marshall_out_arguments(func_t *func, unsigned int *type_offset)
                     if (string_attr)
                     {
                         fprintf(server, "\n");
-                        print_server("_StubMsg.MaxCount = %s;\n", ((expr_t *)sizeis_attr)->u.sval);
+                        print_server("_StubMsg.MaxCount = %s;\n", ((var_t *)sizeis_attr)->name);
                         fprintf(server, "\n");
                         print_server("NdrConformantStringMarshall(\n");
                         indent++;
@@ -1360,7 +1360,7 @@ static void cleanup_return_buffer(func_t *func, unsigned int *type_offset)
                 indent++;
                 if (string_attr)
                 {
-                    print_server("_StubMsg.MaxCount = %s;\n", ((expr_t *)sizeis_attr)->u.sval);
+                    print_server("_StubMsg.MaxCount = %s;\n", ((var_t *)sizeis_attr)->name);
                     fprintf(server, "\n");
                     print_server("NdrPointerFree(\n");
                     indent++;
@@ -1406,7 +1406,7 @@ static void write_function_stubs(type_t *iface)
     unsigned int i, sep;
     int in_attr;
     int out_attr;
-    void *size_is_attr;
+    void *sizeis_attr;
 
     while (NEXT_LINK(func)) func = NEXT_LINK(func);
     while (func)
@@ -1462,11 +1462,11 @@ static void write_function_stubs(type_t *iface)
             {
                 in_attr = is_attr(var->attrs, ATTR_IN);
                 out_attr = is_attr(var->attrs, ATTR_OUT);
-                size_is_attr = get_attrp(var->attrs, ATTR_SIZEIS);
+                sizeis_attr = get_attrp(var->attrs, ATTR_SIZEIS);
 
                 if (!out_attr && !in_attr)
                     in_attr = 1;
-                if (!in_attr && !size_is_attr)
+                if (!in_attr && !sizeis_attr)
                 {
                     if (var->type->type == RPC_FC_RP)
                     {
@@ -1567,16 +1567,16 @@ static void write_function_stubs(type_t *iface)
                 if (!out_attr && !in_attr)
                     in_attr = 1;
 
-                size_is_attr = get_attrp(var->attrs, ATTR_SIZEIS);
+                sizeis_attr = get_attrp(var->attrs, ATTR_SIZEIS);
 
                 if (!in_attr)
                 {
-                    if (size_is_attr != NULL)
+                    if (sizeis_attr != NULL)
                     {
                         print_server("");
                         write_name(server, var);
                         fprintf(server, " = NdrAllocate(&_StubMsg, %s * %d);\n",
-                                ((expr_t *)size_is_attr)->u.sval, get_type_size(var->type, 1));
+                                ((var_t *)sizeis_attr)->name, get_type_size(var->type, 1));
                         sep = 1;
                     }
                     else
