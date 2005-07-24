@@ -50,7 +50,13 @@ typedef unsigned long rulong;
 
 #ifndef R_STACK
 // R_STACK is the number of stack entries to store in blocks for debug purposes
-#define R_STACK 3
+#define R_STACK 6
+#else // R_STACK
+#if R_STACK > 0 && R_STACK < 6
+/* Increase the frame depth to get a reasonable back trace */
+#undef R_STACK
+#define R_STACK 6
+#endif // R_STACK > 0 && R_STACK < 6
 #endif//R_STACK
 
 #ifndef R_TAG
@@ -257,10 +263,10 @@ static void
 RFreeFillStack ( PR_FREE free )
 {
 	int i;
-	ULONG stack[R_EXTRA_STACK_UP+3]; // need to skip 3 known levels of stack trace
+	ULONG stack[R_STACK+3]; // need to skip 3 known levels of stack trace
 	memset ( stack, 0xCD, sizeof(stack) );
-	R_GET_STACK_FRAMES ( stack, R_EXTRA_STACK_UP+3 );
-	for ( i = 0; i < R_EXTRA_STACK_UP; i++ )
+	R_GET_STACK_FRAMES ( stack, R_STACK+3 );
+	for ( i = 0; i < R_STACK; i++ )
 		free->LastOwnerStack[i] = stack[i+3];
 }
 
@@ -268,10 +274,10 @@ static void
 RUsedFillStack ( PR_USED used )
 {
 	int i;
-	ULONG stack[R_EXTRA_STACK_UP+2]; // need to skip 2 known levels of stack trace
+	ULONG stack[R_STACK+2]; // need to skip 2 known levels of stack trace
 	memset ( stack, 0xCD, sizeof(stack) );
-	R_GET_STACK_FRAMES ( stack, R_EXTRA_STACK_UP+2 );
-	for ( i = 0; i < R_EXTRA_STACK_UP; i++ )
+	R_GET_STACK_FRAMES ( stack, R_STACK+2 );
+	for ( i = 0; i < R_STACK; i++ )
 		used->LastOwnerStack[i] = stack[i+2];
 }
 #endif
@@ -719,9 +725,9 @@ RPoolAlloc ( PR_POOL pool, rulong NumberOfBytes, rulong Tag, rulong align )
 	{
 		if ( (NewBlock = RQueRemove ( &pool->Que[que][align] )) )
 		{
-			R_RELEASE_MUTEX(pool);
 			RiUsedInit ( NewBlock, Tag );
 			RiUsedInitRedZone ( NewBlock, NumberOfBytes );
+			R_RELEASE_MUTEX(pool);
 			return RHdrToBody(NewBlock);
 		}
 		queBytes = 16 << que;
@@ -865,11 +871,10 @@ try_again:
 	NewBlock = (PR_USED)BestBlock;
 	RiUsedInit ( NewBlock, Tag );
 
-	R_RELEASE_MUTEX(pool);
-
 	/*  RtlZeroMemory(RHdrToBody(NewBlock), NumberOfBytes);*/
 
 	RiUsedInitRedZone ( NewBlock, NumberOfBytes );
+	R_RELEASE_MUTEX(pool);
 
 	return RHdrToBody(NewBlock);
 }
