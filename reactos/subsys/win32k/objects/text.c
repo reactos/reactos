@@ -282,7 +282,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
 
    /* Get the size of the file */
 
-   Status = NtQueryInformationFile(
+   Status = ZwQueryInformationFile(
       FileHandle,
       &Iosb,
       &FileStdInfo,
