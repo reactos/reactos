@@ -362,10 +362,6 @@ static BOOL MDI_MenuDeleteItem( HWND client, HWND hWndChild )
 static HWND MDI_GetWindow(MDICLIENTINFO *clientInfo, HWND hWnd, BOOL bNext,
                             DWORD dwStyleMask )
 {
-#ifdef __REACTOS__
-    /* FIXME */
-    return 0;
-#else
     int i;
     HWND *list;
     HWND last = 0;
@@ -397,7 +393,6 @@ static HWND MDI_GetWindow(MDICLIENTINFO *clientInfo, HWND hWnd, BOOL bNext,
  found:
     HeapFree( GetProcessHeap(), 0, list );
     return last;
-#endif
 }
 
 /**********************************************************************
@@ -1777,10 +1772,10 @@ LRESULT WINAPI DefMDIChildProcA( HWND hwnd, UINT message,
     case WM_SETFOCUS:
     case WM_CHILDACTIVATE:
     case WM_SYSCOMMAND:
-/* FIXME */
 #ifndef __REACTOS__
     case WM_SETVISIBLE:
 #endif
+    case WM_SHOWWINDOW:
     case WM_SIZE:
     case WM_NEXTMENU:
     case WM_SYSCHAR:
@@ -1858,13 +1853,13 @@ LRESULT WINAPI DefMDIChildProcW( HWND hwnd, UINT message,
         }
         break;
 
-/* FIXME */
 #ifndef __REACTOS__
     case WM_SETVISIBLE:
+#endif
+    case WM_SHOWWINDOW:
         if( ci->hwndChildMaximized) ci->mdiFlags &= ~MDIF_NEEDUPDATE;
         else MDI_PostUpdate(client, ci, SB_BOTH+1);
         break;
-#endif
 
     case WM_SIZE:
         if( ci->hwndActiveChild == hwnd && wParam != SIZE_MAXIMIZED )
@@ -2304,10 +2299,6 @@ static INT_PTR WINAPI MDI_MoreWindowsDlgProc (HWND hDlg, UINT iMsg, WPARAM wPara
     {
        case WM_INITDIALOG:
        {
-#ifdef __REACTOS__
-           /* FIXME */
-           return FALSE;
-#else
            UINT widest       = 0;
            UINT length;
            UINT i;
@@ -2349,7 +2340,6 @@ static INT_PTR WINAPI MDI_MoreWindowsDlgProc (HWND hDlg, UINT iMsg, WPARAM wPara
            /* Set the current selection */
            SendMessageW(hListBox, LB_SETCURSEL, MDI_MOREWINDOWSLIMIT, 0);
            return TRUE;
-#endif
        }
 
        case WM_COMMAND:
@@ -2427,8 +2417,6 @@ static HWND MDI_MoreWindowsDialog(HWND hwnd)
 
 static void MDI_SwapMenuItems(HWND parent, UINT pos1, UINT pos2)
 {
-/* FIXME */
-#ifndef __REACTOS__
     HWND *list;
     int i;
 
@@ -2440,5 +2428,4 @@ static void MDI_SwapMenuItems(HWND parent, UINT pos1, UINT pos2)
         else if (id == pos2) SetWindowLongW( list[i], GWL_ID, pos1 );
     }
     HeapFree( GetProcessHeap(), 0, list );
-#endif
 }
