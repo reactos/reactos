@@ -1577,6 +1577,7 @@ IntCreateWindowEx(DWORD dwExStyle,
       IntSetMenu(WindowObject, hMenu, &MenuChanged);
     }
   WindowObject->MessageQueue = PsGetWin32Thread()->MessageQueue;
+  IntReferenceMessageQueue(WindowObject->MessageQueue);
   WindowObject->Parent = (ParentWindow ? ParentWindow->Self : NULL);
   if((OwnerWindow = IntGetWindowObject(OwnerWindowHandle)))
   {
@@ -2180,7 +2181,7 @@ NtUserDestroyWindow(HWND Wnd)
   if (Window->MessageQueue->CaptureWindow == Window->Self)
     Window->MessageQueue->CaptureWindow = NULL;
   IntUnLockMessageQueue(Window->MessageQueue);
-
+  IntDereferenceMessageQueue(Window->MessageQueue);
   /* Call hooks */
 #if 0 /* FIXME */
   if (HOOK_CallHooks(WH_CBT, HCBT_DESTROYWND, (WPARAM) hwnd, 0, TRUE))
