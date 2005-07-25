@@ -33,5 +33,6 @@
 
 /* FIXME: FILIP */
 HGDIOBJ STDCALL  NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj);
+DWORD STDCALL GdiGetCharDimensions(HDC, LPTEXTMETRICW, DWORD *);
 
 #endif /* USER32_H */

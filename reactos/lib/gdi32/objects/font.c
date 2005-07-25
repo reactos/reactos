@@ -806,6 +806,12 @@ RemoveFontResourceA(
  *
  * SEE ALSO
  *  GetTextExtentPointW, GetTextMetricsW, MapDialogRect.
+ *
+ * Despite most of MSDN insisting that the horizontal base unit is
+ * tmAveCharWidth it isn't.  Knowledge base article Q145994
+ * "HOWTO: Calculate Dialog Units When Not Using the System Font",
+ * says that we should take the average of the 52 English upper and lower
+ * case characters.
  */
 /*
  * @implemented
