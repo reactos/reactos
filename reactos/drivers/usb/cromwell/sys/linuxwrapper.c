@@ -608,8 +608,8 @@ struct pci_pool *my_pci_pool_create(const char * name, struct pci_dev * pdev, si
 	} else if (allocation < size)
 		return 0;
 		
-	retval = ExAllocatePool(NonPagedPool, sizeof(retval)); //FIXME: Should it be non-paged?
-														// pci_pool is rather big struct
+	retval = ExAllocatePool(NonPagedPool, sizeof(struct pci_pool)); // Non-paged because could be
+									// pci_pool is rather big struct
 	
 	// fill retval structure
 	strncpy (retval->name, name, sizeof retval->name);
