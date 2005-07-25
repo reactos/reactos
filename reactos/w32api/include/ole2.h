@@ -4,11 +4,12 @@
 #pragma GCC system_header
 #endif
 
-#pragma pack(push,8)
 #include <winerror.h>
 #include <objbase.h>
 #include <olectlid.h>
 #include <oleauto.h>
+
+#pragma pack(push,8)
 
 #ifdef __cplusplus
 extern "C" {

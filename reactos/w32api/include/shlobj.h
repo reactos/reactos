@@ -12,8 +12,9 @@ extern "C" {
 #include <shlguid.h>
 #include <shellapi.h>
 #include <shtypes.h>
-#pragma pack(push,1)
 #include <commctrl.h>
+
+#pragma pack(push,1)
 
 #define BIF_RETURNONLYFSDIRS 1
 #define BIF_DONTGOBELOWDOMAIN 2
