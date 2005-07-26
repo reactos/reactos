@@ -2308,11 +2308,11 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
     * (as in case of the EXT2FS driver by Manoj Paul Joseph where the
     * standard file information is filled on first request).
     */
-   Status = ZwQueryInformationFile(FileHandle,
-                                   &Iosb,
-                                   &FileInfo,
+   Status = IoQueryFileInformation(FileObject,
+                                   FileStandardInformation,
                                    sizeof(FILE_STANDARD_INFORMATION),
-                                   FileStandardInformation);
+                                   &FileInfo,
+                                   &Iosb.Information);
    if (!NT_SUCCESS(Status))
    {
       ObDereferenceObject(Section);
@@ -2342,11 +2342,10 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
 
    if (MaximumSize.QuadPart > FileInfo.EndOfFile.QuadPart)
    {
-      Status = ZwSetInformationFile(FileHandle,
-                                    &Iosb,
-                                    &MaximumSize,
-                                    sizeof(LARGE_INTEGER),
-                                    FileAllocationInformation);
+      Status = IoSetInformation(FileObject,
+                                FileAllocationInformation,
+                                sizeof(LARGE_INTEGER),
+                                &MaximumSize);
       if (!NT_SUCCESS(Status))
       {
          ObDereferenceObject(Section);
