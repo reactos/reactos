@@ -114,6 +114,8 @@ WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
     IntSetFocusMessageQueue(NULL);
     return;
   }
+
+  /* If this is popup window, try to activate the owner first. */
   if ((Window->Style & WS_POPUP) && (Wnd = IntGetOwner(Window)))
   {
     for(;;)
@@ -135,50 +137,21 @@ WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 
     IntReleaseWindowObject(Wnd);
   }
+
+  /* Pick a next top-level window. */
+  /* FIXME: Search for non-tooltip windows first. */
   Wnd = Window;
-  for(;;)
+  while (Wnd != NULL)
   {
-    HWND *List, *phWnd;
-
     Old = Wnd;
-    Wnd = IntGetParentObject(Wnd);
-    if(Old != Window)
-    {
+    IntLockRelatives(Old);
+    Wnd = IntGetWindowObject(Old->NextSibling->Self);
+    IntUnLockRelatives(Old);
+    if (Old != Window)
       IntReleaseWindowObject(Old);
-    }
-    if(!Wnd)
-    {
-      IntSetFocusMessageQueue(NULL);
-      return;
-    }
-
-    if((List = IntWinListChildren(Wnd)))
-    {
-      /* FIXME: We should scan for non-tooltip windows first. */
-      for(phWnd = List; *phWnd; phWnd++)
-      {
-        PWINDOW_OBJECT Child;
-
-        if((*phWnd) == Window->Self)
-        {
-          continue;
-        }
-
-        if((Child = IntGetWindowObject(*phWnd)))
-        {
-          if ((Child->Style & (WS_DISABLED | WS_VISIBLE)) == WS_VISIBLE &&
-              (Child->Style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
-          {
-            ExFreePool(List);
-            IntReleaseWindowObject(Wnd);
-            Wnd = Child;
-            goto done;
-          }
-          IntReleaseWindowObject(Child);
-        }
-      }
-      ExFreePool(List);
-    }
+    if ((Wnd->Style & (WS_DISABLED | WS_VISIBLE)) == WS_VISIBLE &&
+        (Wnd->Style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
+      break;
   }
 
 done:
@@ -193,7 +166,8 @@ done:
   }
   if (!IntSetActiveWindow(Wnd))
     IntSetActiveWindow(0);
-  IntReleaseWindowObject(Wnd);
+  if (Wnd)
+    IntReleaseWindowObject(Wnd);
 }
 
 
