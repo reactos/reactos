@@ -114,6 +114,7 @@ lib\msvideo\msvfw32.dll                 1
 lib\mswsock\mswsock.dll                 1
 lib\netapi32\netapi32.dll               1
 lib\ntdll\ntdll.dll                     1
+lib\objsel\objsel.dll                   1
 lib\ole32\ole32.dll                     1
 lib\oleaut32\oleaut32.dll               1
 lib\olepro32\olepro32.dll               1
@@ -135,6 +136,7 @@ lib\twain\twain_32.dll                  1
 lib\urlmon\urlmon.dll                   1
 lib\user32\user32.dll                   1
 lib\userenv\userenv.dll                 1
+lib\uxtheme\uxtheme.dll                 1
 lib\version\version.dll                 1
 lib\winspool\winspool.drv               1
 lib\wininet\wininet.dll                 1
