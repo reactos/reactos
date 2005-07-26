@@ -138,9 +138,9 @@ Type DATE without parameters to display the current date setting and\n\
 a prompt for a new one.  Press ENTER to keep the same date.\n"
 				
 STRING_DEL_HELP1,  "Deletes one or more files.\n\n\
-DEL [/N /P /T /Q /W /Y /Z /A[[:]attributes]] file ...\n\
-DELETE [/N /P /T /Q /W /Y /Z /A[[:]attributes]] file ...\n\
-ERASE [/N /P /T /Q /W /Y /Z /A[[:]attributes]] file ...\n\n\
+DEL [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\
+DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\
+ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\n\
       file  Specifies the file(s) to delete.\n\n\
   /N    Nothing.\n\
   /P    Prompt. Ask before deleting each file.\n\
@@ -148,7 +148,8 @@ ERASE [/N /P /T /Q /W /Y /Z /A[[:]attributes]] file ...\n\n\
   /Q    Quiet.\n\
   /W    Wipe. Overwrite the file with random numbers before deleting it.\n\
   /Y    Yes. Kill even *.* without asking.\n\
-  /Z    Zap. Delete hidden, read-only and system files.\n\
+  /F    Force Delete hidden, read-only and system files.\n\
+  /S    Delete file from all sub directory\n\
   /A    Select files to be deleted based on attributes.\n\
         attributes\n\
         R     Read Only files\n\
