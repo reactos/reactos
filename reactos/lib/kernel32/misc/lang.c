@@ -769,7 +769,7 @@ GetLocaleInfoW (
  *
  * Retrieve the ANSI codepage for a given locale.
  */
-inline static UINT get_lcid_codepage( LCID lcid )
+__inline static UINT get_lcid_codepage( LCID lcid )
 {
     UINT ret;
     if (!GetLocaleInfoW( lcid, LOCALE_IDEFAULTANSICODEPAGE|LOCALE_RETURN_NUMBER, (WCHAR *)&ret,

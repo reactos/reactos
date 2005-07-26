@@ -8,6 +8,9 @@
 
 /* INCLUDES ******************************************************************/
 
+/* C Headers */
+#include <stdio.h>
+
 /* PSDK/NDK Headers */
 #include <windows.h>
 #define NTOS_MODE_USER

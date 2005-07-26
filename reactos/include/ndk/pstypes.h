@@ -22,13 +22,13 @@ extern NTOSAPI POBJECT_TYPE PsThreadType;
 /* CONSTANTS *****************************************************************/
 
 /* These are not exposed to drivers normally */
-#ifndef _NTOS_MODE_USER
-    #define JOB_OBJECT_ASSIGN_PROCESS    (1)
-    #define JOB_OBJECT_SET_ATTRIBUTES    (2)
-    #define JOB_OBJECT_QUERY    (4)
-    #define JOB_OBJECT_TERMINATE    (8)
-    #define JOB_OBJECT_SET_SECURITY_ATTRIBUTES    (16)
-    #define JOB_OBJECT_ALL_ACCESS    (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|31)
+#ifndef NTOS_MODE_USER
+    #define JOB_OBJECT_ASSIGN_PROCESS           1
+    #define JOB_OBJECT_SET_ATTRIBUTES           2
+    #define JOB_OBJECT_QUERY                    4
+    #define JOB_OBJECT_TERMINATE                8
+    #define JOB_OBJECT_SET_SECURITY_ATTRIBUTES  16
+    #define JOB_OBJECT_ALL_ACCESS               (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|31)
 #endif
 
 #define THREAD_ALERT 0x4
@@ -36,12 +36,12 @@ extern NTOSAPI POBJECT_TYPE PsThreadType;
 #define USER_SHARED_DATA (0x7FFE0000)
 
 /* Process priority classes */
-#define PROCESS_PRIORITY_CLASS_HIGH	(4) /* FIXME */
-#define PROCESS_PRIORITY_CLASS_IDLE	(0) /* FIXME */
-#define PROCESS_PRIORITY_CLASS_NORMAL	(2) /* FIXME */
-#define PROCESS_PRIORITY_CLASS_REALTIME	(5) /* FIXME */
-#define PROCESS_PRIORITY_CLASS_BELOW_NORMAL (1) /* FIXME */
-#define PROCESS_PRIORITY_CLASS_ABOVE_NORMAL (3) /* FIXME */
+#define PROCESS_PRIORITY_CLASS_IDLE	            0
+#define PROCESS_PRIORITY_CLASS_BELOW_NORMAL     1
+#define PROCESS_PRIORITY_CLASS_NORMAL	        2
+#define PROCESS_PRIORITY_CLASS_ABOVE_NORMAL     3
+#define PROCESS_PRIORITY_CLASS_HIGH	            4
+#define PROCESS_PRIORITY_CLASS_REALTIME	        5
 
 /* Global Flags */
 #define FLG_STOP_ON_EXCEPTION          0x00000001
@@ -75,16 +75,16 @@ extern NTOSAPI POBJECT_TYPE PsThreadType;
 /* ENUMERATIONS **************************************************************/
 
 /* FUNCTION TYPES ************************************************************/
-typedef VOID (STDCALL *PPEBLOCKROUTINE)(PVOID);
+typedef VOID (NTAPI *PPEBLOCKROUTINE)(PVOID);
 
 typedef NTSTATUS
-(STDCALL *PW32_PROCESS_CALLBACK)(
+(NTAPI *PW32_PROCESS_CALLBACK)(
     struct _EPROCESS *Process,
     BOOLEAN Create
 );
 
 typedef NTSTATUS
-(STDCALL *PW32_THREAD_CALLBACK)(
+(NTAPI *PW32_THREAD_CALLBACK)(
     struct _ETHREAD *Thread,
     BOOLEAN Create
 );

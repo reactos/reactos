@@ -43,7 +43,6 @@ GetVersion(VOID)
   return nVersion;
 }
 
-
 /*
  * @implemented
  */
@@ -83,7 +82,7 @@ GetVersionExW(
       PWCHAR szVer = lpVersionInformation->szCSDVersion + ln;
       RtlZeroMemory(szVer, (maxlen - ln + 1) * sizeof(WCHAR));
       wcsncpy(szVer,
-              L"ReactOS " KERNEL_VERSION_STR L" (Build " KERNEL_VERSION_BUILD_STR L")",
+              L"ReactOS " UNICODIZE(KERNEL_VERSION_STR) L" (Build " UNICODIZE(KERNEL_VERSION_BUILD_STR) L")",
               maxlen - ln);
     }
 

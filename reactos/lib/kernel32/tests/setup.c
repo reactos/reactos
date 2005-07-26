@@ -1,5 +1,4 @@
-#include <windows.h>
-#include "regtests.h"
+#include <k32.h>
 
 int
 mainCRTStartup(int argc, char *argv[])

@@ -1,12 +1,15 @@
-#ifndef _WINBASE_H
-#define _WINBASE_H
+#ifndef _WINBASE_
+#define _WINBASE_
 #if __GNUC__ >= 3
 #pragma GCC system_header
 #endif
 
-#ifndef WINBASEAPI
+#if !defined(_KERNEL32_)
 #define WINBASEAPI DECLSPEC_IMPORT
+#else
+#define WINBASEAPI
 #endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

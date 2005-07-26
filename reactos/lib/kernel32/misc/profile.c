@@ -22,7 +22,7 @@
 #include <k32.h>
 
 #define NDEBUG
-#include "debug.h"
+#include "../include/debug.h"
 
 
 static const char bom_utf8[] = {0xEF,0xBB,0xBF};
@@ -84,7 +84,7 @@ static RTL_CRITICAL_SECTION PROFILE_CritSect = { &critsect_debug, -1, 0, 0, 0, 0
 static const char hex[16] = "0123456789ABCDEF";
 
 
-static inline WCHAR *memchrW( const WCHAR *ptr, WCHAR ch, size_t n )
+static __inline WCHAR *memchrW( const WCHAR *ptr, WCHAR ch, size_t n )
 {
     const WCHAR *end;
     for (end = ptr + n; ptr < end; ptr++)
@@ -93,7 +93,7 @@ static inline WCHAR *memchrW( const WCHAR *ptr, WCHAR ch, size_t n )
     return NULL;
 }
 
-static inline WCHAR *memrchrW( const WCHAR *ptr, WCHAR ch, size_t n )
+static __inline WCHAR *memrchrW( const WCHAR *ptr, WCHAR ch, size_t n )
 {
     const WCHAR *end, *ret = NULL;
     for (end = ptr + n; ptr < end; ptr++)
@@ -129,7 +129,7 @@ static void PROFILE_CopyEntry( LPWSTR buffer, LPCWSTR value, int len,
 
 
 /* byte-swaps shorts in-place in a buffer. len is in WCHARs */
-static inline void PROFILE_ByteSwapShortBuffer(WCHAR * buffer, int len)
+static __inline void PROFILE_ByteSwapShortBuffer(WCHAR * buffer, int len)
 {
     int i;
     USHORT * shortbuffer = (USHORT *)buffer;
@@ -139,7 +139,7 @@ static inline void PROFILE_ByteSwapShortBuffer(WCHAR * buffer, int len)
 
 
 /* writes any necessary encoding marker to the file */
-static inline void PROFILE_WriteMarker(HANDLE hFile, ENCODING encoding)
+static __inline void PROFILE_WriteMarker(HANDLE hFile, ENCODING encoding)
 {
     DWORD dwBytesWritten;
     DWORD bom;
@@ -288,7 +288,7 @@ static void PROFILE_Free( PROFILESECTION *section )
 
 
 /* returns 1 if a character white space else 0 */
-static inline int PROFILE_isspaceW(WCHAR c)
+static __inline int PROFILE_isspaceW(WCHAR c)
 {
    if (iswspace(c))
        return 1;
@@ -299,7 +299,7 @@ static inline int PROFILE_isspaceW(WCHAR c)
 }
 
 
-static inline ENCODING PROFILE_DetectTextEncoding(const void * buffer, int * len)
+static __inline ENCODING PROFILE_DetectTextEncoding(const void * buffer, int * len)
 {
     DWORD flags = IS_TEXT_UNICODE_SIGNATURE |
                   IS_TEXT_UNICODE_REVERSE_SIGNATURE |

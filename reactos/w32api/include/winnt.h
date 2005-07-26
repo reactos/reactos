@@ -399,6 +399,7 @@ typedef DWORD FLONG;
  * a  SID_IDENTIFIER_AUTHORITY, eg.
  * SID_IDENTIFIER_AUTHORITY aNullSidAuthority = {SECURITY_NULL_SID_AUTHORITY};
  */
+#define SID_MAX_SUB_AUTHORITIES     15
 #define SECURITY_NULL_SID_AUTHORITY	{0,0,0,0,0,0}
 #define SECURITY_WORLD_SID_AUTHORITY	{0,0,0,0,0,1}
 #define SECURITY_LOCAL_SID_AUTHORITY	{0,0,0,0,0,2}
@@ -2170,14 +2171,14 @@ typedef struct _SECURITY_DESCRIPTOR {
 	PACL Dacl;
 } SECURITY_DESCRIPTOR, *PSECURITY_DESCRIPTOR, *PISECURITY_DESCRIPTOR;
 typedef struct _SECURITY_DESCRIPTOR_RELATIVE {
-	UCHAR  Revision;
-	UCHAR  Sbz1;
-	SECURITY_DESCRIPTOR_CONTROL Control;
-	ULONG Owner;
-	ULONG Group;
-	ULONG Sacl;
-	ULONG Dacl;
-} SECURITY_DESCRIPTOR_RELATIVE, *PSECURITY_DESCRIPTOR_RELATIVE, *PISECURITY_DESCRIPTOR_RELATIVE;
+    BYTE Revision;
+    BYTE Sbz1;
+    SECURITY_DESCRIPTOR_CONTROL Control;
+    DWORD Owner;
+    DWORD Group;
+    DWORD Sacl;
+    DWORD Dacl;
+} SECURITY_DESCRIPTOR_RELATIVE, *PISECURITY_DESCRIPTOR_RELATIVE;
 typedef enum _TOKEN_INFORMATION_CLASS {
 	TokenUser=1,TokenGroups,TokenPrivileges,TokenOwner,
 	TokenPrimaryGroup,TokenDefaultDacl,TokenSource,TokenType,
@@ -3021,6 +3022,13 @@ typedef union _FILE_SEGMENT_ELEMENT {
 #define JOB_OBJECT_MSG_PROCESS_MEMORY_LIMIT   9
 #define JOB_OBJECT_MSG_JOB_MEMORY_LIMIT       10
 
+#define JOB_OBJECT_ASSIGN_PROCESS           1
+#define JOB_OBJECT_SET_ATTRIBUTES           2
+#define JOB_OBJECT_QUERY                    4
+#define JOB_OBJECT_TERMINATE                8
+#define JOB_OBJECT_SET_SECURITY_ATTRIBUTES  16
+#define JOB_OBJECT_ALL_ACCESS               (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|31)
+
 typedef enum _JOBOBJECTINFOCLASS {
 	JobObjectBasicAccountingInformation = 1,
 	JobObjectBasicLimitInformation,
@@ -3095,7 +3103,6 @@ typedef struct _JOBOBJECT_JOBSET_INFORMATION {
 
 /* Fixme: Making these defines conditional on WINVER will break ddk includes */
 #if 1 /* (WINVER >= 0x0500) */
-#include <pshpack4.h>
 
 #define ES_SYSTEM_REQUIRED                0x00000001
 #define ES_DISPLAY_REQUIRED               0x00000002
@@ -3387,7 +3394,6 @@ typedef struct _ADMINISTRATOR_POWER_POLICY {
 	ULONG  MinSpindownTimeout;
 	ULONG  MaxSpindownTimeout;
 } ADMINISTRATOR_POWER_POLICY, *PADMINISTRATOR_POWER_POLICY;
-#include <poppack.h>
 #endif /* WINVER >= 0x0500 */
 
 typedef VOID (NTAPI *WAITORTIMERCALLBACKFUNC)(PVOID,BOOLEAN);
@@ -3403,6 +3409,14 @@ typedef OSVERSIONINFOEXA OSVERSIONINFOEX,*POSVERSIONINFOEX,*LPOSVERSIONINFOEX;
 #if (WIN32_WINNT >= 0x0500)
 ULONGLONG WINAPI VerSetConditionMask(ULONGLONG,DWORD,BYTE);
 #endif
+
+SIZE_T
+STDCALL
+RtlCompareMemory (
+    const VOID *Source1,
+    const VOID *Source2,
+    SIZE_T Length
+    );
 
 #if defined(__GNUC__)
 

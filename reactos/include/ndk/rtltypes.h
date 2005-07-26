@@ -11,6 +11,7 @@
 
 /* DEPENDENCIES **************************************************************/
 #include "zwtypes.h"
+#include "excpt.h"
 
 /* EXPORTED DATA *************************************************************/
 
@@ -69,14 +70,6 @@
 
 typedef enum
 {
-    ExceptionContinueExecution,
-    ExceptionContinueSearch,
-    ExceptionNestedException,
-    ExceptionCollidedUnwind
-} EXCEPTION_DISPOSITION;
-
-typedef enum
-{
     INVALID_PATH = 0,
     UNC_PATH,              /* "//foo" */
     ABSOLUTE_DRIVE_PATH,   /* "c:/foo" */
@@ -102,16 +95,16 @@ typedef EXCEPTION_DISPOSITION
     PVOID
 );
 
-typedef LONG (STDCALL *PVECTORED_EXCEPTION_HANDLER)(
+typedef LONG (NTAPI *PVECTORED_EXCEPTION_HANDLER)(
     PEXCEPTION_POINTERS ExceptionPointers
 );
 
-typedef DWORD (STDCALL *PTHREAD_START_ROUTINE)(
+typedef DWORD (NTAPI *PTHREAD_START_ROUTINE)(
     LPVOID Parameter
 );
 
 typedef VOID
-(STDCALL *PRTL_BASE_PROCESS_START_ROUTINE)(
+(NTAPI *PRTL_BASE_PROCESS_START_ROUTINE)(
     PTHREAD_START_ROUTINE StartAddress,
     PVOID Parameter
 );
@@ -234,11 +227,13 @@ typedef struct _RTL_HEAP_DEFINITION
 } RTL_HEAP_DEFINITION, *PRTL_HEAP_DEFINITION;
 /* END REVIEW AREA */
 
+#ifdef _INC_EXCPT
 typedef struct _EXCEPTION_REGISTRATION
 {
     struct _EXCEPTION_REGISTRATION*    prev;
     PEXCEPTION_HANDLER        handler;
 } EXCEPTION_REGISTRATION, *PEXCEPTION_REGISTRATION;
+#endif
 
 typedef EXCEPTION_REGISTRATION EXCEPTION_REGISTRATION_RECORD;
 typedef PEXCEPTION_REGISTRATION PEXCEPTION_REGISTRATION_RECORD;
@@ -276,7 +271,7 @@ typedef struct _RTL_RANGE
 } RTL_RANGE, *PRTL_RANGE;
 
 typedef BOOLEAN
-(STDCALL *PRTL_CONFLICT_RANGE_CALLBACK) (
+(NTAPI *PRTL_CONFLICT_RANGE_CALLBACK) (
     PVOID Context,
     PRTL_RANGE Range
 );
@@ -357,7 +352,7 @@ typedef struct _RTL_USER_PROCESS_PARAMETERS
     ULONG CountY;
     ULONG CountCharsX;
     ULONG CountCharsY;
-    ULONG FillAttribute;;
+    ULONG FillAttribute;
     ULONG WindowFlags;
     ULONG ShowWindowFlags;
     UNICODE_STRING WindowTitle;
@@ -405,7 +400,7 @@ typedef struct _RTL_ATOM_TABLE
 } RTL_ATOM_TABLE, *PRTL_ATOM_TABLE;
 
 /* Let Kernel Drivers use this */
-#ifndef _WINBASE_H
+#ifndef _WINBASE_
     typedef struct _SYSTEMTIME
     {
         WORD wYear;

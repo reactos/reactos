@@ -516,13 +516,14 @@ GetConsoleFontInfo (DWORD	Unknown0,
 /*
  * @unimplemented
  */
-DWORD STDCALL
+COORD STDCALL
 GetConsoleFontSize(HANDLE hConsoleOutput,
 		   DWORD nFont)
 {
+  COORD Empty = {0, 0};
   DPRINT1("GetConsoleFontSize(0x%x, 0x%x) UNIMPLEMENTED!\n", hConsoleOutput, nFont);
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
+  return Empty ;
 }
 
 

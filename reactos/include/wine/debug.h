@@ -16,7 +16,7 @@ unsigned long DbgPrint(char *Format,...);
 #ifdef DBG
 #define DPRINT1 DbgPrint("(%s:%d:%s) ",__FILE__,__LINE__,__FUNCTION__), DbgPrint
 #else
-#define DPRINT1(args...)
+#define DPRINT1(...)
 #endif
 
 #if !defined(DBG) || !defined(YDEBUG)

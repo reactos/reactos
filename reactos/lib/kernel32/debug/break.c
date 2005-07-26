@@ -16,7 +16,7 @@
 /*
  * @implemented
  */
-BOOL WINAPI DebugBreakProcess(HANDLE Process)
+WINBASEAPI BOOL WINAPI DebugBreakProcess(HANDLE Process)
 {
  NTSTATUS nErrCode = DbgUiIssueRemoteBreakin(Process);
 

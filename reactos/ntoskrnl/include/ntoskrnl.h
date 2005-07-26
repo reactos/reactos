@@ -11,9 +11,6 @@
 /* We are the Kernel */
 #define NTKERNELAPI
 
-/* include the ntoskrnl config.h file */
-#include "config.h"
-
 /* DDK/IFS/NDK Headers */
 #include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
@@ -37,6 +34,8 @@
 #include <diskdump/diskdump.h>
 
 /* C Headers */
+#include <stdio.h>
+#include <ctype.h>
 #include <malloc.h>
 #include <wchar.h>
 
@@ -48,3 +47,4 @@
 
 /* Internal Headers */
 #include "internal/ntoskrnl.h"
+#include "config.h"

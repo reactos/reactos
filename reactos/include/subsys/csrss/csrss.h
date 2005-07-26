@@ -22,10 +22,11 @@ typedef ULONG CSR_API_NUMBER;
 
 #define CSR_CSRSS_SECTION_SIZE          (65536)
 
-typedef __declspec(noreturn) VOID CALLBACK(*PCONTROLDISPATCHER)(DWORD);
+typedef VOID (CALLBACK *PCONTROLDISPATCHER)(DWORD);
 
 typedef struct
 {
+    ULONG Dummy;
 } CSRSS_CONNECT_PROCESS, *PCSRSS_CONNECT_PROCESS;
 
 typedef struct
@@ -40,6 +41,7 @@ typedef struct
 
 typedef struct
 {
+    ULONG Dummy;
 } CSRSS_TERMINATE_PROCESS, *PCSRSS_TERMINATE_PROCESS;
 
 typedef struct
@@ -80,6 +82,7 @@ typedef struct
 
 typedef struct
 {
+    ULONG Dummy;
 } CSRSS_FREE_CONSOLE, *PCSRSS_FREE_CONSOLE;
 
 typedef struct

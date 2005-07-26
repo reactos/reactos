@@ -879,7 +879,7 @@ GetOEMCP (VOID)
     return OemCodePage.CodePageTable.CodePage;
 }
 
-static inline BOOL
+static __inline BOOL
 IntIsLeadByte(PCPTABLEINFO TableInfo, UCHAR Ch)
 {
   if(TableInfo->MaximumCharacterSize == 2)

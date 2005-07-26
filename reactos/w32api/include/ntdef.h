@@ -72,4 +72,5 @@ typedef struct _OBJECT_ATTRIBUTES {
 #endif
 #define NOTHING
 #define RTL_CONSTANT_STRING(s) { sizeof(s)-sizeof((s)[0]), sizeof(s), s }
+#define TYPE_ALIGNMENT( t ) FIELD_OFFSET( struct { char x; t test; }, test )
 #endif /* _NTDEF_H */

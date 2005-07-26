@@ -4025,7 +4025,7 @@ ZwYieldExecution(
 );
 
 
-static inline struct _PEB * NtCurrentPeb(void)
+static __inline struct _PEB* NtCurrentPeb (void) 
 {
     struct _PEB * pPeb;
 

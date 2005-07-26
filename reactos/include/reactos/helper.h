@@ -41,7 +41,8 @@
 #define SECONDS_TO_100NS(seconds) (((LONGLONG)(seconds)) * MILLIS_TO_100NS(1000))
 #define MINUTES_TO_100NS(minutes) (((LONGLONG)(minutes)) * SECONDS_TO_100NS(60))
 #define HOURS_TO_100NS(hours) (((LONGLONG)(hours)) * MINUTES_TO_100NS(60))
-#define TYPE_ALIGNMENT(t) FIELD_OFFSET(struct { char x; t test; }, test)
+#define UNICODIZE1(x) L##x
+#define UNICODIZE(x) UNICODIZE1(x)
 #define InsertAscendingListFIFO(ListHead, Type, ListEntryField, NewEntry, SortField)\
 {\
   PLIST_ENTRY current;\

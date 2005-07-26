@@ -44,6 +44,7 @@
 #include <winresrc.h>
 #else
 
+#include <excpt.h>
 #include <stdarg.h>
 #include <windef.h>
 #include <wincon.h>

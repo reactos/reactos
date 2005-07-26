@@ -3442,7 +3442,7 @@ NTSTATUS
 NTAPI
 RtlAbsoluteToSelfRelativeSD (
     IN PSECURITY_DESCRIPTOR              AbsoluteSecurityDescriptor,
-    IN OUT PSECURITY_DESCRIPTOR_RELATIVE SelfRelativeSecurityDescriptor,
+    IN OUT PISECURITY_DESCRIPTOR_RELATIVE SelfRelativeSecurityDescriptor,
     IN PULONG                            BufferLength
 );
 

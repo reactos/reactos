@@ -176,6 +176,7 @@ typedef struct _MEMORY_AREA
   } Data;
 } MEMORY_AREA, *PMEMORY_AREA;
 
+#ifndef _MMTYPES_H
 typedef struct _MADDRESS_SPACE
 {
   PMEMORY_AREA MemoryAreaRoot;
@@ -185,6 +186,7 @@ typedef struct _MADDRESS_SPACE
   PUSHORT PageTableRefCountTable;
   ULONG PageTableRefCountTableSize;
 } MADDRESS_SPACE, *PMADDRESS_SPACE;
+#endif
 
 typedef struct
 {

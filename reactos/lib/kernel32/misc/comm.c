@@ -574,7 +574,7 @@ COMMDCB_PARAM_HANDLER(xon)
 /* FUNCTIONS */
 #define COMMDCB_PARAM(__P__) \
  { \
-  RTL_CONSTANT_STRING( L""#__P__ ), \
+  RTL_CONSTANT_STRING(L""#__P__ ), \
   (ULONG_PTR)&COMMDCB_ ## __P__ ## Param \
  }
 

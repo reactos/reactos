@@ -33,7 +33,7 @@
 
 /* strdup macros */
 /* DO NOT USE IT!!  it will go away soon */
-inline static LPSTR HEAP_strdupWtoA( HANDLE heap, DWORD flags, LPCWSTR str )
+__inline static LPSTR HEAP_strdupWtoA( HANDLE heap, DWORD flags, LPCWSTR str )
 {
     LPSTR ret;
     INT len;
