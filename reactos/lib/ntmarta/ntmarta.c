@@ -69,6 +69,42 @@ AccRewriteSetHandleRights(HANDLE handle,
 }
 
 
+/**********************************************************************
+ * AccRewriteGetNamedRights				EXPORTED
+ *
+ * @unimplemented
+ */
+DWORD STDCALL
+AccRewriteGetNamedRights(LPWSTR pObjectName,
+                         SE_OBJECT_TYPE ObjectType,
+                         SECURITY_INFORMATION SecurityInfo,
+                         PSID* ppsidOwner,
+                         PSID* ppsidGroup,
+                         PACL* ppDacl,
+                         PACL* ppSacl,
+                         PSECURITY_DESCRIPTOR* ppSecurityDescriptor)
+{
+    UNIMPLEMENTED;
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/**********************************************************************
+ * AccRewriteSetNamedRights				EXPORTED
+ *
+ * @unimplemented
+ */
+DWORD STDCALL
+AccRewriteSetNamedRights(LPWSTR pObjectName,
+                         SE_OBJECT_TYPE ObjectType,
+                         SECURITY_INFORMATION SecurityInfo,
+                         PSECURITY_DESCRIPTOR pSecurityDescriptor)
+{
+    UNIMPLEMENTED;
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
 BOOL STDCALL
 DllMain(IN HINSTANCE hinstDLL,
         IN DWORD dwReason,
