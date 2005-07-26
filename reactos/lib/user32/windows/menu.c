@@ -3771,8 +3771,11 @@ GetMenuItemInfoA(
    }
 
    RtlCopyMemory(mii, &miiW, miiW.cbSize);
-   mii->dwTypeData = AnsiBuffer;
-   mii->cch = strlen(AnsiBuffer);
+   if (AnsiBuffer)
+   {
+        mii->dwTypeData = AnsiBuffer;
+        mii->cch = strlen(AnsiBuffer);
+   }
    return TRUE;
 }
 
