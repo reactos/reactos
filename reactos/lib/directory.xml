@@ -190,6 +190,9 @@
 <directory name="ntdll">
 	<xi:include href="ntdll/ntdll.xml" />
 </directory>
+<directory name="ntmarta">
+	<xi:include href="ntmarta/ntmarta.xml" />
+</directory>
 <directory name="objsel">
 	<xi:include href="objsel/objsel.xml" />
 </directory>

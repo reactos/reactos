@@ -114,6 +114,7 @@ lib\msvideo\msvfw32.dll                 1
 lib\mswsock\mswsock.dll                 1
 lib\netapi32\netapi32.dll               1
 lib\ntdll\ntdll.dll                     1
+lib\ntmarta\ntmarta.dll                 1
 lib\objsel\objsel.dll                   1
 lib\ole32\ole32.dll                     1
 lib\oleaut32\oleaut32.dll               1
