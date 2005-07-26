@@ -962,10 +962,17 @@ NtGdiDeleteDC(HDC  DCHandle)
 {
   PDC  DCToDelete;
 
+  if (!GDIOBJ_OwnedByCurrentProcess(DCHandle))
+    {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+    }
+  
   DCToDelete = DC_LockDc(DCHandle);
   if (DCToDelete == NULL)
     {
-      return  FALSE;
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
     }
 
   /*  First delete all saved DCs  */
