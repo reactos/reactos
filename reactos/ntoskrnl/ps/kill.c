@@ -213,7 +213,7 @@ PspExitThread(NTSTATUS ExitStatus)
     PTERMINATION_PORT TerminationPort;
     PTEB Teb;
     KIRQL oldIrql;
-    PLIST_ENTRY ApcEntry, CurrentApc;
+    PLIST_ENTRY ApcEntry;
     PKAPC Apc;
 
     DPRINT("PspExitThread(ExitStatus %x), Current: 0x%x\n", ExitStatus, PsGetCurrentThread());
@@ -338,30 +338,26 @@ PspExitThread(NTSTATUS ExitStatus)
     KeDisableThreadApcQueueing(&CurrentThread->Tcb);
 
     /* Flush the User APCs */
-    if ((ApcEntry = KeFlushQueueApc(&CurrentThread->Tcb, UserMode)))
+    ApcEntry = KeFlushQueueApc(&CurrentThread->Tcb, UserMode);
+    while(ApcEntry)
     {
-        CurrentApc = ApcEntry;
-        do
-        {
-            /* Get the APC */
-            Apc = CONTAINING_RECORD(CurrentApc, KAPC, ApcListEntry);
+       /* Get the APC */
+       Apc = CONTAINING_RECORD(ApcEntry, KAPC, ApcListEntry);
 
-            /* Move to the next one */
-            CurrentApc = CurrentApc->Flink;
+       /* Move to the next one */
+       ApcEntry = ApcEntry->Flink;
 
-            /* Rundown the APC or de-allocate it */
-            if (Apc->RundownRoutine)
-            {
-                /* Call its own routine */
-                (Apc->RundownRoutine)(Apc);
-            }
-            else
-            {
-                /* Do it ourselves */
-                ExFreePool(Apc);
-            }
-        }
-        while (CurrentApc != ApcEntry);
+       /* Rundown the APC or de-allocate it */
+       if (Apc->RundownRoutine)
+       {
+          /* Call its own routine */
+          (Apc->RundownRoutine)(Apc);
+       }
+       else
+       {
+          /* Do it ourselves */
+          ExFreePool(Apc);
+       }
     }
 
     /* Call the Lego routine */
@@ -392,8 +388,8 @@ PsExitSpecialApc(PKAPC Apc,
                  PVOID* SystemArgument1,
                  PVOID* SystemArguemnt2)
 {
-    DPRINT1("PsExitSpecialApc called: 0x%x (proc: 0x%x)\n", 
-            PsGetCurrentThread(), PsGetCurrentProcess());
+    DPRINT1("PsExitSpecialApc called: 0x%x (proc: 0x%x, '%.16s')\n", 
+            PsGetCurrentThread(), PsGetCurrentProcess(), PsGetCurrentProcess()->ImageFileName);
 
     /* Don't do anything unless we are in User-Mode */
     if (Apc->SystemArgument2)
@@ -421,8 +417,8 @@ PspExitNormalApc(PVOID NormalContext,
     PETHREAD Thread = PsGetCurrentThread();
     NTSTATUS ExitStatus;
         
-    DPRINT1("PspExitNormalApc called: 0x%x (proc: 0x%x)\n", 
-            PsGetCurrentThread(), PsGetCurrentProcess());
+    DPRINT1("PspExitNormalApc called: 0x%x (proc: 0x%x, '%.16s')\n", 
+            PsGetCurrentThread(), PsGetCurrentProcess(), PsGetCurrentProcess()->ImageFileName);
 
     /* This should never happen */
     ASSERT(!SystemArgument2);

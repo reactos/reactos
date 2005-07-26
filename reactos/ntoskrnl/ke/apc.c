@@ -270,14 +270,14 @@ KiInsertQueueApc(PKAPC Apc,
     */
     if ((Apc->ApcMode != KernelMode) && (Apc->KernelRoutine == (PKKERNEL_ROUTINE)PsExitSpecialApc)) {
 
-        DPRINT1("Inserting the Process Exit APC into the Queue\n");
+        DPRINT1("Inserting the Thread Exit APC for '%.16s' into the Queue\n", ((PETHREAD)Thread)->ThreadsProcess->ImageFileName);
         Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->UserApcPending = TRUE;
         InsertHeadList(&Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->ApcListHead[(int)Apc->ApcMode],
                        &Apc->ApcListEntry);
 
     } else if (Apc->NormalRoutine == NULL) {
 
-        DPRINT("Inserting Special APC %x into the Queue\n", Apc);
+        DPRINT("Inserting Special APC %x for '%.16s' into the Queue\n", Apc, ((PETHREAD)Thread)->ThreadsProcess->ImageFileName);
 
         for (ApcListEntry = Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->ApcListHead[(int)Apc->ApcMode].Flink;
              ApcListEntry != &Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->ApcListHead[(int)Apc->ApcMode];
@@ -293,7 +293,7 @@ KiInsertQueueApc(PKAPC Apc,
 
     } else {
 
-        DPRINT("Inserting Normal APC %x into the %x Queue\n", Apc, Apc->ApcMode);
+        DPRINT("Inserting Normal APC %x for '%.16s' into the %x Queue\n", Apc, ((PETHREAD)Thread)->ThreadsProcess->ImageFileName, Apc->ApcMode);
         InsertTailList(&Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->ApcListHead[(int)Apc->ApcMode],
                        &Apc->ApcListEntry);
     }
@@ -473,34 +473,27 @@ KeFlushQueueApc(IN PKTHREAD Thread,
     OldIrql = KeAcquireDispatcherDatabaseLock();
     KeAcquireSpinLock(&Thread->ApcQueueLock, &OldIrql);
 
-    /* Check if the list is empty */
-    if (IsListEmpty(&Thread->ApcState.ApcListHead[PreviousMode]))
+    ApcEntry = CurrentEntry = NULL;
+    while (!IsListEmpty(&Thread->ApcState.ApcListHead[PreviousMode]))
     {
-        /* We'll return NULL */
-        ApcEntry = NULL;
-    }
-    else
-    {
-        /* Remove this one */
-        RemoveEntryList(&Thread->ApcState.ApcListHead[PreviousMode]);
-        CurrentEntry = ApcEntry;
+       if (ApcEntry == NULL)
+       {
+          ApcEntry = CurrentEntry = RemoveHeadList(&Thread->ApcState.ApcListHead[PreviousMode]);
+       }
+       else
+       {
+          CurrentEntry->Flink = RemoveHeadList(&Thread->ApcState.ApcListHead[PreviousMode]);
+          CurrentEntry = CurrentEntry->Flink;
+       }
+       CurrentEntry->Flink = NULL;
 
-        /* Remove all the other ones too, if present */
-        do
-        {
-            /* Get the APC */
-            Apc = CONTAINING_RECORD(CurrentEntry, KAPC, ApcListEntry);
-
-            /* Move to the next one */
-            CurrentEntry = CurrentEntry->Flink;
-
-            /* Mark it as not inserted */
-            Apc->Inserted = FALSE;
-        } while (ApcEntry != CurrentEntry);
+       /* Get the APC */
+       Apc = CONTAINING_RECORD(CurrentEntry, KAPC, ApcListEntry);
+       Apc->Inserted = FALSE;
     }
 
     /* Release the locks */
-    KeReleaseSpinLock(&Thread->ApcQueueLock, OldIrql);
+    KeReleaseSpinLockFromDpcLevel(&Thread->ApcQueueLock);
     KeReleaseDispatcherDatabaseLock(OldIrql);
 
     /* Return the first entry */
@@ -539,7 +532,7 @@ KeRemoveQueueApc(PKAPC Apc)
     DPRINT("KeRemoveQueueApc called for APC: %x \n", Apc);
 
     OldIrql = KeAcquireDispatcherDatabaseLock();
-    KeAcquireSpinLock(&Thread->ApcQueueLock, &OldIrql);
+    KeAcquireSpinLockAtDpcLevel(&Thread->ApcQueueLock);
 
     /* Check if it's inserted */
     if (Apc->Inserted) {
@@ -565,13 +558,13 @@ KeRemoveQueueApc(PKAPC Apc)
     } else {
 
         /* It's not inserted, fail */
-        KeReleaseSpinLock(&Thread->ApcQueueLock, OldIrql);
+        KeReleaseSpinLockFromDpcLevel(&Thread->ApcQueueLock);
         KeReleaseDispatcherDatabaseLock(OldIrql);
         return(FALSE);
     }
 
     /* Restore IRQL and Return */
-    KeReleaseSpinLock(&Thread->ApcQueueLock, OldIrql);
+    KeReleaseSpinLockFromDpcLevel(&Thread->ApcQueueLock);
     KeReleaseDispatcherDatabaseLock(OldIrql);
     return(TRUE);
 }
