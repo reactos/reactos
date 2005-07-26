@@ -471,7 +471,7 @@ KeFlushQueueApc(IN PKTHREAD Thread,
 
     /* Lock the Dispatcher Database and APC Queue */
     OldIrql = KeAcquireDispatcherDatabaseLock();
-    KeAcquireSpinLock(&Thread->ApcQueueLock, &OldIrql);
+    KeAcquireSpinLockAtDpcLevel(&Thread->ApcQueueLock);
 
     ApcEntry = CurrentEntry = NULL;
     while (!IsListEmpty(&Thread->ApcState.ApcListHead[PreviousMode]))
