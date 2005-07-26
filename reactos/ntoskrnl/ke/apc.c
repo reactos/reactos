@@ -245,7 +245,7 @@ KeInitializeApc(IN PKAPC Apc,
  *     The APC will execute at APC_LEVEL for the KernelRoutine registered, and
  *     at PASSIVE_LEVEL for the NormalRoutine registered.
  *
- *     Callers of this routine must be running at IRQL = PASSIVE_LEVEL.
+ *     Callers of this routine must have locked the dipatcher database.
  *
  *--*/
 BOOLEAN
@@ -257,9 +257,12 @@ KiInsertQueueApc(PKAPC Apc,
     PLIST_ENTRY ApcListEntry;
     PKAPC QueuedApc;
 
+    KeAcquireSpinLockAtDpcLevel(&Thread->ApcQueueLock);
+
     /* Don't do anything if the APC is already inserted */
     if (Apc->Inserted) {
-
+    
+        KeReleaseSpinLockFromDpcLevel(&Thread->ApcQueueLock);
         return FALSE;
     }
 
@@ -301,6 +304,8 @@ KiInsertQueueApc(PKAPC Apc,
     /* Confirm Insertion */
     Apc->Inserted = TRUE;
 
+    KeReleaseSpinLockFromDpcLevel(&Thread->ApcQueueLock);
+
     /*
      * Three possibilites here again:
      *  1) Kernel APC, The thread is Running: Request an Interrupt
@@ -318,13 +323,11 @@ KiInsertQueueApc(PKAPC Apc,
 #ifdef CONFIG_SMP
             PKPRCB Prcb, CurrentPrcb;
             LONG i;
-            KIRQL oldIrql;
 #endif
 
             DPRINT ("Requesting APC Interrupt for Running Thread \n");
 
 #ifdef CONFIG_SMP
-            oldIrql = KeRaiseIrqlToDpcLevel();
             CurrentPrcb = KeGetCurrentPrcb();
             if (CurrentPrcb->CurrentThread == Thread)
             {
@@ -344,7 +347,6 @@ KiInsertQueueApc(PKAPC Apc,
                }
                ASSERT (i < KeNumberProcessors);
             }
-            KeLowerIrql(oldIrql);
 #else
             HalRequestSoftwareInterrupt(APC_LEVEL);
 #endif
