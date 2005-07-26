@@ -1,5 +1,5 @@
 #include <ddk/ntddk.h>
-#include <rosrtl/recmutex.h>
+#include "recmutex.h"
 
 VOID RecursiveMutexInit( PRECURSIVE_MUTEX RecMutex ) {
     RtlZeroMemory( RecMutex, sizeof(*RecMutex) );

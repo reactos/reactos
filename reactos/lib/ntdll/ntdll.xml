@@ -8,7 +8,6 @@
 	<define name="_WIN32_WINNT">0x0502</define>
 	<define name="_NTOSKRNL_" />
 	<library>rtl</library>
-	<library>rosrtl</library>
 	<library>intrlck</library>
 	<library>string</library>
 	<linkerflag>-lgcc</linkerflag>

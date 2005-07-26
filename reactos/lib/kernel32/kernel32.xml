@@ -118,7 +118,6 @@
 	<define name="WINVER">0x0500</define>
 	<library>kernel32_base</library>
 	<library>pseh</library>
-	<library>rosrtl</library>
 	<library>intrlck</library>
 	<library>ntdll</library>
 	<linkerflag>-lgcc</linkerflag>

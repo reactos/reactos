@@ -10,7 +10,6 @@
 	<library>regtests</library>
 	<library>kernel32_base</library>
 	<library>pseh</library>
-	<library>rosrtl</library>
 	<library>ntdll</library>
 	<library>msvcrt</library>
 	<linkerflag>-lgcc</linkerflag>

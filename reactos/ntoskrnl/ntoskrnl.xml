@@ -14,7 +14,6 @@
 	<library>kjs</library>
 	<library>pseh</library>
 	<library>rtl</library>
-	<library>rosrtl</library>
 	<library>rossym</library>
 	<library>string</library>
 	<library>wdmguid</library>

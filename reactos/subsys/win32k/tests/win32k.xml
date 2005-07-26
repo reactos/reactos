@@ -14,7 +14,6 @@
 	<library>regtests</library>
 	<library>win32k_base</library>
 	<library>pseh</library>
-	<library>rosrtl</library>
 	<directory name="tests">
 		<file>DIB_24BPP_ColorFill-performance.c</file>
 	</directory>

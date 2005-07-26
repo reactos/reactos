@@ -214,9 +214,6 @@
 <directory name="riched20">
 	<xi:include href="riched20/riched20.xml" />
 </directory>
-<directory name="rosrtl">
-	<xi:include href="rosrtl/rosrtl.xml" />
-</directory>
 <directory name="rossym">
 	<xi:include href="rossym/rossym.xml" />
 </directory>
