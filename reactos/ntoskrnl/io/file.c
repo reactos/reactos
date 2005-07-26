@@ -845,6 +845,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
      DPRINT1("FIXME: IO_CHECK_CREATE_PARAMETERS not yet supported!\n");
    }
 
+   /* First try to open an existing named object */
    Status = ObOpenObjectByName(ObjectAttributes,
                                NULL,
                                NULL,
@@ -910,6 +911,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
    if (!NT_SUCCESS(Status))
      {
        DPRINT("ObInsertObject() failed! (Status %lx)\n", Status);
+       ObMakeTemporaryObject(FileObject);
        ObDereferenceObject (FileObject);
        return Status;
      }
@@ -2429,11 +2431,6 @@ NtQueryInformationFile(HANDLE FileHandle,
                 Failed = TRUE;
             break;
 
-        case FileAlignmentInformation:
-            if (!(FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING))
-                Failed = TRUE;
-            break;
-
         default:
             break;
     }
@@ -2443,6 +2440,30 @@ NtQueryInformationFile(HANDLE FileHandle,
         DPRINT1("NtQueryInformationFile() returns STATUS_ACCESS_DENIED!\n");
         ObDereferenceObject(FileObject);
         return STATUS_ACCESS_DENIED;
+    }
+
+    if (FileInformationClass == FilePositionInformation)
+    {
+       if (Length < sizeof(FILE_POSITION_INFORMATION))
+       {
+          Status = STATUS_BUFFER_OVERFLOW;
+       }
+       else
+       {
+          _SEH_TRY
+          {
+             ((PFILE_POSITION_INFORMATION)FileInformation)->CurrentByteOffset = FileObject->CurrentByteOffset;
+             IoStatusBlock->Information = sizeof(FILE_POSITION_INFORMATION);
+             Status = IoStatusBlock->Status = STATUS_SUCCESS;
+          }
+          _SEH_HANDLE
+          {
+             Status = _SEH_GetExceptionCode();
+          }
+          _SEH_END;
+       }
+       ObDereferenceObject(FileObject);
+       return Status;
     }
 
     DPRINT("FileObject 0x%p\n", FileObject);
@@ -2455,6 +2476,30 @@ NtQueryInformationFile(HANDLE FileHandle,
     else
     {
         DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    }
+
+    if (FileInformationClass == FileAlignmentInformation)
+    {
+       if (Length < sizeof(FILE_ALIGNMENT_INFORMATION))
+       {
+          Status = STATUS_BUFFER_OVERFLOW;
+       }
+       else
+       {
+          _SEH_TRY
+          {
+             ((PFILE_ALIGNMENT_INFORMATION)FileInformation)->AlignmentRequirement = DeviceObject->AlignmentRequirement;
+             IoStatusBlock->Information = sizeof(FILE_ALIGNMENT_INFORMATION);
+             Status = IoStatusBlock->Status = STATUS_SUCCESS;
+          }
+          _SEH_HANDLE
+          {
+             Status = _SEH_GetExceptionCode();
+          }
+          _SEH_END;
+       }
+       ObDereferenceObject(FileObject);
+       return Status;
     }
 
     /* Check if we should use Sync IO or not */
@@ -2894,6 +2939,30 @@ NtSetInformationFile(HANDLE FileHandle,
     }
 
     DPRINT("FileObject 0x%p\n", FileObject);
+
+    if (FileInformationClass == FilePositionInformation)
+    {
+       if (Length < sizeof(FILE_POSITION_INFORMATION))
+       {
+          Status = STATUS_BUFFER_OVERFLOW;
+       }
+       else
+       {
+          _SEH_TRY
+          {
+             FileObject->CurrentByteOffset = ((PFILE_POSITION_INFORMATION)FileInformation)->CurrentByteOffset;
+             IoStatusBlock->Information = 0;
+             Status = IoStatusBlock->Status = STATUS_SUCCESS;
+          }
+          _SEH_HANDLE
+          {
+             Status = _SEH_GetExceptionCode();
+          }
+          _SEH_END;
+       }
+       ObDereferenceObject(FileObject);
+       return Status;
+    }
 
     /* FIXME: Later, we can implement a lot of stuff here and avoid a driver call */
     /* Handle IO Completion Port quickly */
