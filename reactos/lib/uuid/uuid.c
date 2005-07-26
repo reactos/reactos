@@ -51,6 +51,7 @@ DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 #include "shldisp.h"
 #include "comcat.h"
 #include "urlmon.h"
+#include "objsel.h"
 
 /* FIXME: cguids declares GUIDs but does not define their values */
 

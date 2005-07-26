@@ -190,6 +190,9 @@
 <directory name="ntdll">
 	<xi:include href="ntdll/ntdll.xml" />
 </directory>
+<directory name="objsel">
+	<xi:include href="objsel/objsel.xml" />
+</directory>
 <directory name="ole32">
 	<xi:include href="ole32/ole32.xml" />
 </directory>

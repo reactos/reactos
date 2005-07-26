@@ -51,6 +51,7 @@ reactos/lib/msimg32		# Synced to Wine-20050419
 reactos/lib/msi			# Synced to Wine-20050419
 reactos/lib/msvideo		# Out of sync
 reactos/lib/netapi32		# Out of sync
+reactos/lib/objsel		# Synced to Wine-20050726
 reactos/lib/odbc32		# In sync. Depends on port of Linux ODBC.
 reactos/lib/ole32               # Synced to Wine-20050419
 reactos/lib/oleaut32		# Synced to Wine-20050419

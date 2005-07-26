@@ -2,6 +2,7 @@
 <property name="BASEADDRESS_NOTIFYHOOK" value="0x08000000" />
 <property name="BASEADDRESS_DEVENUM" value="0x35680000" />
 <property name="BASEADDRESS_UXTHEME" value="0x5AD70000" />
+<property name="BASEADDRESS_OBJSEL" value="0x5B400000" />
 <property name="BASEADDRESS_DINPUT" value="0x5F580000" />
 <property name="BASEADDRESS_TIMEDATE" value="0x64DA0000" />
 <property name="BASEADDRESS_SYSDM" value="0x64DD0000" />

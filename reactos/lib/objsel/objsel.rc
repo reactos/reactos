@@ -1,7 +1,7 @@
 /*
- * Declarations for OLE2
+ * Object Picker Dialog
  *
- * Copyright (C) the Wine project
+ * Copyright 2005 Thomas Weidenmueller <w3seek@reactos.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,20 +18,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include_next <ole2.h>
-#include <unknwn.h>  /* for LPUNKNOWN  */
+#include "windef.h"
+#include "winbase.h"
 
-#ifndef __WINE_OLE2_H
-#define __WINE_OLE2_H
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* defined(__cplusplus) */
+#define WINE_FILENAME_STR "objsel.dll"
 
-BOOL        WINAPI IsValidInterface(LPUNKNOWN punk);
-
-#ifdef __cplusplus
-} /* extern "C" */
-#endif /* defined(__cplusplus) */
-
-#endif  /* __WINE_OLE2_H */
+#include "wine/wine_common_ver.rc"
