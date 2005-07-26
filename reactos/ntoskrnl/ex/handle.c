@@ -910,14 +910,16 @@ ExMapHandleToPointer(IN PHANDLE_TABLE HandleTable,
 
   ASSERT(HandleTable);
 
+  ExAcquireHandleTableLockShared(HandleTable);
   HandleTableEntry = ExpLookupHandleTableEntry(HandleTable,
                                                Handle);
   if (HandleTableEntry != NULL && ExLockHandleTableEntry(HandleTable, HandleTableEntry))
   {
     DPRINT("ExMapHandleToPointer HT:0x%p Entry:0x%p locked\n", HandleTable, HandleTableEntry);
+    ExReleaseHandleTableLock(HandleTable);
     return HandleTableEntry;
   }
-
+  ExReleaseHandleTableLock(HandleTable);
   return NULL;
 }
 
@@ -936,12 +938,14 @@ ExChangeHandle(IN PHANDLE_TABLE HandleTable,
   ASSERT(ChangeHandleCallback);
 
   KeEnterCriticalRegion();
+  ExAcquireHandleTableLockShared(HandleTable);
 
   HandleTableEntry = ExpLookupHandleTableEntry(HandleTable,
                                                Handle);
 
   if(HandleTableEntry != NULL && ExLockHandleTableEntry(HandleTable, HandleTableEntry))
   {
+    ExReleaseHandleTableLock(HandleTable);
     Ret = ChangeHandleCallback(HandleTable,
                                HandleTableEntry,
                                NULL);
@@ -949,7 +953,10 @@ ExChangeHandle(IN PHANDLE_TABLE HandleTable,
     ExUnlockHandleTableEntry(HandleTable,
                              HandleTableEntry);
   }
-
+  else
+  {
+    ExReleaseHandleTableLock(HandleTable);
+  }
   KeLeaveCriticalRegion();
 
   return Ret;
