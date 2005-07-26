@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <commctrl.h>
+#include <objsel.h>
 #include <prsht.h>
 #include <aclui.h>
 #include <sddl.h>

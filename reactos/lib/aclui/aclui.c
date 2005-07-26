@@ -41,6 +41,8 @@ DestroySecurityPage(IN PSECURITY_PAGE sp)
     HeapFree(GetProcessHeap(),
              0,
              sp);
+
+    CoUninitialize();
 }
 
 static VOID
@@ -456,7 +458,7 @@ SecurityPageCallback(IN HWND hwnd,
 {
     PSECURITY_PAGE sp = (PSECURITY_PAGE)ppsp->lParam;
     
-    switch(uMsg)
+    switch (uMsg)
     {
         case PSPCB_CREATE:
         {
@@ -568,6 +570,82 @@ LoadPermissionsList(IN PSECURITY_PAGE sp,
     }
 }
 
+static HRESULT
+InitializeObjectPicker(IN PSECURITY_PAGE sp,
+                       OUT IDsObjectPicker **pDsObjectPicker)
+{
+    HRESULT hRet;
+    
+    *pDsObjectPicker = NULL;
+
+    hRet = CoCreateInstance(&CLSID_DsObjectPicker,
+                            NULL,
+                            CLSCTX_INPROC_SERVER,
+                            &IID_IDsObjectPicker,
+                            (LPVOID*)pDsObjectPicker);
+    if (SUCCEEDED(hRet))
+    {
+        DSOP_INIT_INFO InitInfo;
+        UINT i;
+        PCWSTR Attributes[] =
+        {
+            L"ObjectSid",
+        };
+        DSOP_SCOPE_INIT_INFO Scopes[] =
+        {
+            {
+                sizeof(DSOP_SCOPE_INIT_INFO),
+                DSOP_SCOPE_TYPE_TARGET_COMPUTER,
+                DSOP_SCOPE_FLAG_DEFAULT_FILTER_USERS | DSOP_SCOPE_FLAG_DEFAULT_FILTER_GROUPS |
+                DSOP_SCOPE_FLAG_STARTING_SCOPE,
+                {
+                    {
+                        0,
+                        0,
+                        0
+                    },
+                    DSOP_DOWNLEVEL_FILTER_USERS | DSOP_DOWNLEVEL_FILTER_LOCAL_GROUPS |
+                    DSOP_DOWNLEVEL_FILTER_GLOBAL_GROUPS | DSOP_DOWNLEVEL_FILTER_ALL_WELLKNOWN_SIDS
+                },
+                NULL,
+                NULL,
+                S_OK
+            },
+        };
+
+        InitInfo.cbSize = sizeof(InitInfo);
+        InitInfo.pwzTargetComputer = (PCWSTR)sp->ServerName;
+        InitInfo.cDsScopeInfos = sizeof(Scopes) / sizeof(Scopes[0]);
+        InitInfo.aDsScopeInfos = Scopes;
+        InitInfo.flOptions = DSOP_FLAG_MULTISELECT | DSOP_SCOPE_TYPE_TARGET_COMPUTER;
+        InitInfo.cAttributesToFetch = sizeof(Attributes) / sizeof(Attributes[0]);
+        InitInfo.apwzAttributeNames = Attributes;
+        
+        for (i = 0; i < InitInfo.cDsScopeInfos; i++)
+        {
+            if ((sp->ObjectInfo.dwFlags & SI_SERVER_IS_DC) &&
+                (InitInfo.aDsScopeInfos[i].flType & DSOP_SCOPE_TYPE_UPLEVEL_JOINED_DOMAIN))
+            {
+                /* only set the domain controller string if we know the target
+                   computer is a domain controller and the scope type is an
+                   up-level domain to which the target computer is joined */
+                InitInfo.aDsScopeInfos[i].pwzDcName = InitInfo.pwzTargetComputer;
+            }
+        }
+
+        hRet = (*pDsObjectPicker)->lpVtbl->Initialize(*pDsObjectPicker,
+                                                      &InitInfo);
+
+        if (FAILED(hRet))
+        {
+            /* delete the object picker in case initialization failed! */
+            (*pDsObjectPicker)->lpVtbl->Release(*pDsObjectPicker);
+        }
+    }
+    
+    return hRet;
+}
+
 static INT_PTR CALLBACK
 SecurityPageProc(IN HWND hwndDlg,
                  IN UINT uMsg,
@@ -576,7 +654,7 @@ SecurityPageProc(IN HWND hwndDlg,
 {
     PSECURITY_PAGE sp;
 
-    switch(uMsg)
+    switch (uMsg)
     {
         case WM_NOTIFY:
         {
@@ -587,7 +665,7 @@ SecurityPageProc(IN HWND hwndDlg,
             {
                 if (pnmh->hwndFrom == sp->hWndAceList)
                 {
-                    switch(pnmh->code)
+                    switch (pnmh->code)
                     {
                         case LVN_ITEMCHANGED:
                         {
@@ -605,7 +683,7 @@ SecurityPageProc(IN HWND hwndDlg,
                 }
                 else if (pnmh->hwndFrom == sp->hAceCheckList)
                 {
-                    switch(pnmh->code)
+                    switch (pnmh->code)
                     {
                         case CLN_CHANGINGITEMCHECKBOX:
                         {
@@ -620,6 +698,40 @@ SecurityPageProc(IN HWND hwndDlg,
                             break;
                         }
                     }
+                }
+            }
+            break;
+        }
+        
+        case WM_COMMAND:
+        {
+            switch (LOWORD(wParam))
+            {
+                case IDC_ACELIST_ADD:
+                {
+                    HRESULT hRet;
+                    IDsObjectPicker *pDsObjectPicker = NULL;
+                    IDataObject *Selections = NULL;
+                    
+                    sp = (PSECURITY_PAGE)GetWindowLongPtr(hwndDlg,
+                                                          DWL_USER);
+                    
+                    hRet = InitializeObjectPicker(sp,
+                                                  &pDsObjectPicker);
+                    if (SUCCEEDED(hRet))
+                    {
+                        hRet = pDsObjectPicker->lpVtbl->InvokeDialog(pDsObjectPicker,
+                                                                     hwndDlg,
+                                                                     &Selections);
+                        if (FAILED(hRet))
+                        {
+                            MessageBox(hwndDlg, L"InvokeDialog failed!\n", NULL, 0);
+                        }
+                        
+                        /* delete the instance */
+                        pDsObjectPicker->lpVtbl->Release(pDsObjectPicker);
+                    }
+                    break;
                 }
             }
             break;
@@ -751,7 +863,7 @@ CreateSecurityPage(IN LPSECURITYINFO psi)
     SI_OBJECT_INFO ObjectInfo;
     HRESULT hRet;
 
-    if(psi == NULL)
+    if (psi == NULL)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
 
@@ -765,11 +877,18 @@ CreateSecurityPage(IN LPSECURITYINFO psi)
     ZeroMemory(&ObjectInfo, sizeof(ObjectInfo));
     hRet = psi->lpVtbl->GetObjectInformation(psi, &ObjectInfo);
 
-    if(FAILED(hRet))
+    if (FAILED(hRet))
     {
         SetLastError(hRet);
 
         DPRINT("CreateSecurityPage() failed! Failed to query the object information!\n");
+        return NULL;
+    }
+    
+    hRet = CoInitialize(NULL);
+    if (FAILED(hRet))
+    {
+        DPRINT("CoInitialize failed!\n");
         return NULL;
     }
     
@@ -802,7 +921,7 @@ CreateSecurityPage(IN LPSECURITYINFO psi)
     psp.lParam = (LPARAM)sPage;
     psp.pfnCallback = SecurityPageCallback;
 
-    if(ObjectInfo.dwFlags & SI_PAGE_TITLE)
+    if (ObjectInfo.dwFlags & SI_PAGE_TITLE)
     {
         psp.pszTitle = ObjectInfo.pszPageTitle;
 
@@ -840,7 +959,7 @@ EditSecurity(IN HWND hwndOwner,
     LPWSTR lpCaption;
     BOOL Ret;
 
-    if(psi == NULL)
+    if (psi == NULL)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
 
@@ -854,7 +973,7 @@ EditSecurity(IN HWND hwndOwner,
     ZeroMemory(&ObjectInfo, sizeof(ObjectInfo));
     hRet = psi->lpVtbl->GetObjectInformation(psi, &ObjectInfo);
 
-    if(FAILED(hRet))
+    if (FAILED(hRet))
     {
         SetLastError(hRet);
 
@@ -864,7 +983,7 @@ EditSecurity(IN HWND hwndOwner,
 
     /* create the page */
     hPages[0] = CreateSecurityPage(psi);
-    if(hPages[0] == NULL)
+    if (hPages[0] == NULL)
     {
         DPRINT("CreateSecurityPage(), couldn't create property sheet!\n");
         return FALSE;
@@ -890,7 +1009,7 @@ EditSecurity(IN HWND hwndOwner,
 
     Ret = (PropertySheet(&psh) != -1);
 
-    if(lpCaption != NULL)
+    if (lpCaption != NULL)
     {
         LocalFree((HLOCAL)lpCaption);
     }
