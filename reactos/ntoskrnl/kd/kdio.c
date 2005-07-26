@@ -71,9 +71,17 @@ KdpPrintToLog(PCH String)
     /* Make sure we are initialized and can queue */
     if (!KdpLogInitialized || (ItemQueued)) return;
 
-    /* Queue the work item */
-    ExQueueWorkItem(&KdpDebugLogQueue, HyperCriticalWorkQueue);
-    ItemQueued = TRUE;
+    /* 
+     * Queue the work item 
+     * Note that we don't want to queue if we are > DISPATCH_LEVEL...
+     * The message is in the buffer and will simply be taken care of at
+     * the next time we are at <= DISPATCH, so it won't be lost.
+     */
+    if (KeGetCurrentIrql() <= DISPATCH_LEVEL)
+    {
+        ExQueueWorkItem(&KdpDebugLogQueue, HyperCriticalWorkQueue);
+        ItemQueued = TRUE;
+    }
 }
 
 VOID
