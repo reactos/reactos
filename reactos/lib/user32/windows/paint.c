@@ -227,7 +227,7 @@ UpdateWindow(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -235,8 +235,7 @@ ValidateRect(
   HWND hWnd,
   CONST RECT *lpRect)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return RedrawWindow(hWnd, lpRect, 0, RDW_VALIDATE);
 }
 
 
