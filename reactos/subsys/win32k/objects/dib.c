@@ -175,7 +175,7 @@ IntSetDIBits(
   RECTL       DestRect;
   XLATEOBJ   *XlateObj;
   PPALGDI     hDCPalette;
-  //RGBQUAD  *lpRGB;
+  //RGBQUAD    *lpRGB;
   HPALETTE    DDB_Palette, DIB_Palette;
   ULONG       DDB_Palette_Type, DIB_Palette_Type;
   INT         DIBWidth;
@@ -190,7 +190,7 @@ IntSetDIBits(
   //if (ColorUse == DIB_PAL_COLORS)
   //  lpRGB = DIB_MapPaletteColors(hDC, bmi);
   //else
-  //  lpRGB = &bmi->bmiColors[0];
+  //  lpRGB = &bmi->bmiColors;
 
   DestSurf = &bitmap->SurfObj;
 
@@ -810,6 +810,7 @@ DIB_CreateDIBSection(
   UINT Entries = 0;
   BITMAP bm;
   SIZEL Size;
+  RGBQUAD *lpRGB;
 
   DPRINT("format (%ld,%ld), planes %d, bpp %d, size %ld, colors %ld (%s)\n",
 	bi->biWidth, bi->biHeight, bi->biPlanes, bi->biBitCount,
@@ -846,7 +847,9 @@ DIB_CreateDIBSection(
   }
 
   if(usage == DIB_PAL_COLORS)
-    memcpy(bmi->bmiColors, (UINT *)DIB_MapPaletteColors(dc, bmi), sizeof(UINT *));
+    lpRGB = DIB_MapPaletteColors(dc, bmi);
+  else
+    lpRGB = bmi->bmiColors;
 
   // Allocate Memory for DIB and fill structure
   if (bm.bmBits)
@@ -869,9 +872,9 @@ DIB_CreateDIBSection(
     else switch(bi->biBitCount)
     {
       case 16:
-        dib->dsBitfields[0] = (bi->biCompression == BI_BITFIELDS) ? *(DWORD *)bmi->bmiColors : 0x7c00;
-        dib->dsBitfields[1] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)bmi->bmiColors + 1) : 0x03e0;
-        dib->dsBitfields[2] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)bmi->bmiColors + 2) : 0x001f;        break;
+        dib->dsBitfields[0] = (bi->biCompression == BI_BITFIELDS) ? *(DWORD *)lpRGB : 0x7c00;
+        dib->dsBitfields[1] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)lpRGB + 1) : 0x03e0;
+        dib->dsBitfields[2] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)lpRGB + 2) : 0x001f;        break;
 
       case 24:
         dib->dsBitfields[0] = 0xff0000;
@@ -880,9 +883,9 @@ DIB_CreateDIBSection(
         break;
 
       case 32:
-        dib->dsBitfields[0] = (bi->biCompression == BI_BITFIELDS) ? *(DWORD *)bmi->bmiColors : 0xff0000;
-        dib->dsBitfields[1] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)bmi->bmiColors + 1) : 0x00ff00;
-        dib->dsBitfields[2] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)bmi->bmiColors + 2) : 0x0000ff;
+        dib->dsBitfields[0] = (bi->biCompression == BI_BITFIELDS) ? *(DWORD *)lpRGB : 0xff0000;
+        dib->dsBitfields[1] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)lpRGB + 1) : 0x00ff00;
+        dib->dsBitfields[2] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)lpRGB + 2) : 0x0000ff;
         break;
     }
     dib->dshSection = section;
@@ -901,12 +904,20 @@ DIB_CreateDIBSection(
                           bm.bmBits);
     if (! res)
       {
+        if (lpRGB != bmi->bmiColors)
+          {
+            ExFreePool(lpRGB);
+          }
         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
 	return NULL;
       }
     bmp = BITMAPOBJ_LockBitmap(res);
     if (NULL == bmp)
       {
+        if (lpRGB != bmi->bmiColors)
+          {
+            ExFreePool(lpRGB);
+          }
 	SetLastWin32Error(ERROR_INVALID_HANDLE);
 	NtGdiDeleteObject(bmp);
 	return NULL;
@@ -921,7 +932,7 @@ DIB_CreateDIBSection(
     if(bi->biBitCount == 8) { Entries = 256; }
 
     if (Entries)
-      bmp->hDIBPalette = PALETTE_AllocPaletteIndexedRGB(Entries, bmi->bmiColors);
+      bmp->hDIBPalette = PALETTE_AllocPaletteIndexedRGB(Entries, lpRGB);
     else
       bmp->hDIBPalette = PALETTE_AllocPalette(PAL_BITFIELDS, 0, NULL,
                                               dib->dsBitfields[0],
@@ -945,6 +956,11 @@ DIB_CreateDIBSection(
     if (bmp) { bmp = NULL; }
     if (res) { BITMAPOBJ_FreeBitmap(res); res = 0; }
   }
+
+  if (lpRGB != bmi->bmiColors)
+    {
+      ExFreePool(lpRGB);
+    }
 
   if (bmp)
     {
@@ -1094,6 +1110,12 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
   if (NULL == palGDI)
     {
 //      RELEASEDCINFO(hDC);
+      return NULL;
+    }
+
+  if (palGDI->Mode != PAL_INDEXED)
+    {
+      PALETTE_UnlockPalette(palGDI);
       return NULL;
     }
 
