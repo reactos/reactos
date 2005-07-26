@@ -24,7 +24,7 @@
  * FILE:              lib/rtl/splaytree.c
  */
 
-#include "rtl.h"
+#include <rtl.h>
 
 #define NDEBUG
 #include <debug.h>

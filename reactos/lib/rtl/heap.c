@@ -12,7 +12,7 @@
  * require it.
  */
 
-#include "rtl.h"
+#include <rtl.h>
 
 #define NDEBUG
 #include <debug.h>
