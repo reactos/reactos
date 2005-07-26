@@ -164,7 +164,7 @@ WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 
 done:
   Fg = NtUserGetForegroundWindow();
-  if (!Fg || Window->Self == Fg)
+  if (Wnd && (!Fg || Window->Self == Fg))
   {
     if (IntSetForegroundWindow(Wnd))
     {
