@@ -114,6 +114,29 @@ WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
     IntSetFocusMessageQueue(NULL);
     return;
   }
+  if ((Window->Style & WS_POPUP) && (Wnd = IntGetOwner(Window)))
+  {
+    for(;;)
+    {
+      Old = Wnd;
+      Wnd = IntGetParentObject(Wnd);
+      if(IntIsDesktopWindow(Wnd))
+      {
+        IntReleaseWindowObject(Wnd);
+        Wnd = Old;
+        break;
+      }
+      IntReleaseWindowObject(Old);
+    }
+
+    if (IntSetForegroundWindow(Wnd))
+    {
+      IntReleaseWindowObject(Wnd);
+      return;
+    }
+
+    IntReleaseWindowObject(Wnd);
+  }
   Wnd = Window;
   for(;;)
   {
