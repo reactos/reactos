@@ -27,7 +27,7 @@
  * 		Compiled successfully with egcs 1.1.2
  */
 
-#include "csrss.h"
+#include <csrss.h>
 
 #define NDEBUG
 #include <debug.h>
