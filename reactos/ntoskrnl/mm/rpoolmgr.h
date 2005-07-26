@@ -328,6 +328,7 @@ RPoolInit ( void* PoolBase, rulong PoolSize, int align1, int align2, int align3 
 	return pool;
 }
 
+#if R_RZ
 static const char*
 RFormatTag ( rulong Tag, char* buf )
 {
@@ -341,6 +342,7 @@ RFormatTag ( rulong Tag, char* buf )
 	}
 	return buf;
 }
+#endif
 
 #if !R_RZ
 #define RUsedRedZoneCheck(pUsed,Addr,file,line, printzone)
