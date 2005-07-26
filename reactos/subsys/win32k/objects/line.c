@@ -503,7 +503,7 @@ NtGdiMoveToEx(HDC      hDC,
 {
   DC *dc;
   POINT SafePoint;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
   BOOL Ret;
 
   dc = DC_LockDc(hDC);
@@ -521,7 +521,19 @@ NtGdiMoveToEx(HDC      hDC,
 
   if(Point)
   {
-    Status = MmCopyFromCaller(&SafePoint, Point, sizeof(POINT));
+    _SEH_TRY
+    {
+      ProbeForRead(Point,
+                   sizeof(POINT),
+                   1);
+      SafePoint = *Point;
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
     if(!NT_SUCCESS(Status))
     {
       DC_UnlockDc(dc);
@@ -544,7 +556,7 @@ NtGdiPolyBezier(HDC           hDC,
 {
   DC *dc;
   LPPOINT Safept;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
   BOOL Ret;
 
   dc = DC_LockDc(hDC);
@@ -562,6 +574,25 @@ NtGdiPolyBezier(HDC           hDC,
 
   if(Count > 0)
   {
+    _SEH_TRY
+    {
+      ProbeForRead(pt,
+                   Count * sizeof(POINT),
+                   1);
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    
+    if (!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(dc);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+    
     Safept = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * Count, TAG_BEZIER);
     if(!Safept)
     {
@@ -570,7 +601,19 @@ NtGdiPolyBezier(HDC           hDC,
       return FALSE;
     }
 
-    Status = MmCopyFromCaller(Safept, pt, sizeof(POINT) * Count);
+    _SEH_TRY
+    {
+      /* pointers were already probed */
+      RtlCopyMemory(Safept,
+                    pt,
+                    Count * sizeof(POINT));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
     if(!NT_SUCCESS(Status))
     {
       DC_UnlockDc(dc);
@@ -601,7 +644,7 @@ NtGdiPolyBezierTo(HDC  hDC,
 {
   DC *dc;
   LPPOINT Safept;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
   BOOL Ret;
 
   dc = DC_LockDc(hDC);
@@ -619,6 +662,25 @@ NtGdiPolyBezierTo(HDC  hDC,
 
   if(Count > 0)
   {
+    _SEH_TRY
+    {
+      ProbeForRead(pt,
+                   Count * sizeof(POINT),
+                   1);
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(dc);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+    
     Safept = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * Count, TAG_BEZIER);
     if(!Safept)
     {
@@ -627,7 +689,19 @@ NtGdiPolyBezierTo(HDC  hDC,
       return FALSE;
     }
 
-    Status = MmCopyFromCaller(Safept, pt, sizeof(POINT) * Count);
+    _SEH_TRY
+    {
+      /* pointers were already probed */
+      RtlCopyMemory(Safept,
+                    pt,
+                    Count * sizeof(POINT));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
     if(!NT_SUCCESS(Status))
     {
       DC_UnlockDc(dc);
@@ -669,7 +743,7 @@ NtGdiPolyline(HDC            hDC,
 {
   DC *dc;
   LPPOINT Safept;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
   BOOL Ret;
 
   dc = DC_LockDc(hDC);
@@ -687,6 +761,25 @@ NtGdiPolyline(HDC            hDC,
 
   if(Count >= 2)
   {
+    _SEH_TRY
+    {
+      ProbeForRead(pt,
+                   Count * sizeof(POINT),
+                   1);
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(dc);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+    
     Safept = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * Count, TAG_SHAPE);
     if(!Safept)
     {
@@ -695,7 +788,19 @@ NtGdiPolyline(HDC            hDC,
       return FALSE;
     }
 
-    Status = MmCopyFromCaller(Safept, pt, sizeof(POINT) * Count);
+    _SEH_TRY
+    {
+      /* pointers were already probed */
+      RtlCopyMemory(Safept,
+                    pt,
+                    Count * sizeof(POINT));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
     if(!NT_SUCCESS(Status))
     {
       DC_UnlockDc(dc);
@@ -726,7 +831,7 @@ NtGdiPolylineTo(HDC            hDC,
 {
   DC *dc;
   LPPOINT Safept;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
   BOOL Ret;
 
   dc = DC_LockDc(hDC);
@@ -744,6 +849,25 @@ NtGdiPolylineTo(HDC            hDC,
 
   if(Count > 0)
   {
+    _SEH_TRY
+    {
+      ProbeForRead(pt,
+                   Count * sizeof(POINT),
+                   1);
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(dc);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+    
     Safept = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * Count, TAG_SHAPE);
     if(!Safept)
     {
@@ -752,7 +876,19 @@ NtGdiPolylineTo(HDC            hDC,
       return FALSE;
     }
 
-    Status = MmCopyFromCaller(Safept, pt, sizeof(POINT) * Count);
+    _SEH_TRY
+    {
+      /* pointers were already probed */
+      RtlCopyMemory(Safept,
+                    pt,
+                    Count * sizeof(POINT));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
     if(!NT_SUCCESS(Status))
     {
       DC_UnlockDc(dc);
@@ -785,7 +921,7 @@ NtGdiPolyPolyline(HDC            hDC,
   DC *dc;
   LPPOINT Safept;
   LPDWORD SafePolyPoints;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
   BOOL Ret;
 
   dc = DC_LockDc(hDC);
@@ -803,6 +939,28 @@ NtGdiPolyPolyline(HDC            hDC,
 
   if(Count > 0)
   {
+    _SEH_TRY
+    {
+      ProbeForRead(pt,
+                   Count * sizeof(POINT),
+                   1);
+      ProbeForRead(PolyPoints,
+                   Count * sizeof(DWORD),
+                   1);
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(dc);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+    
     Safept = ExAllocatePoolWithTag(PagedPool, (sizeof(POINT) + sizeof(DWORD)) * Count, TAG_SHAPE);
     if(!Safept)
     {
@@ -812,16 +970,23 @@ NtGdiPolyPolyline(HDC            hDC,
     }
 
     SafePolyPoints = (LPDWORD)&Safept[Count];
-
-    Status = MmCopyFromCaller(Safept, pt, sizeof(POINT) * Count);
-    if(!NT_SUCCESS(Status))
+    
+    _SEH_TRY
     {
-      DC_UnlockDc(dc);
-      ExFreePool(Safept);
-      SetLastNtError(Status);
-      return FALSE;
+      /* pointers were already probed */
+      RtlCopyMemory(Safept,
+                    pt,
+                    Count * sizeof(POINT));
+      RtlCopyMemory(SafePolyPoints,
+                    PolyPoints,
+                    Count * sizeof(DWORD));
     }
-    Status = MmCopyFromCaller(SafePolyPoints, PolyPoints, sizeof(DWORD) * Count);
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
     if(!NT_SUCCESS(Status))
     {
       DC_UnlockDc(dc);

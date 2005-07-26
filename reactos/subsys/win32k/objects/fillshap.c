@@ -845,12 +845,30 @@ NtGdiPolygon(HDC          hDC,
 {
   DC *dc;
   LPPOINT Safept;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
   BOOL Ret = FALSE;
 
   if ( Count < 2 )
   {
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  _SEH_TRY
+  {
+    ProbeForRead(UnsafePoints,
+                 Count * sizeof(POINT),
+                 1);
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+  
+  if (!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
     return FALSE;
   }
 
@@ -870,7 +888,19 @@ NtGdiPolygon(HDC          hDC,
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
     else
     {
-      Status = MmCopyFromCaller(Safept, UnsafePoints, sizeof(POINT) * Count);
+      _SEH_TRY
+      {
+        /* pointer was already probed! */
+        RtlCopyMemory(Safept,
+                      UnsafePoints,
+                      Count * sizeof(POINT));
+      }
+      _SEH_HANDLE
+      {
+        Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
+
       if(!NT_SUCCESS(Status))
         SetLastNtError(Status);
       else
@@ -913,6 +943,28 @@ NtGdiPolyPolygon(HDC           hDC,
 
   if(Count > 0)
   {
+    _SEH_TRY
+    {
+      ProbeForRead(Points,
+                   Count * sizeof(POINT),
+                   1);
+      ProbeForRead(PolyCounts,
+                   Count * sizeof(INT),
+                   1);
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(dc);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+  
     Safept = ExAllocatePoolWithTag(PagedPool, (sizeof(POINT) + sizeof(INT)) * Count, TAG_SHAPE);
     if(!Safept)
     {
@@ -922,16 +974,23 @@ NtGdiPolyPolygon(HDC           hDC,
     }
 
     SafePolyPoints = (LPINT)&Safept[Count];
-
-    Status = MmCopyFromCaller(Safept, Points, sizeof(POINT) * Count);
-    if(!NT_SUCCESS(Status))
+    
+    _SEH_TRY
     {
-      DC_UnlockDc(dc);
-      ExFreePool(Safept);
-      SetLastNtError(Status);
-      return FALSE;
+      /* pointers already probed! */
+      RtlCopyMemory(Safept,
+                    Points,
+                    Count * sizeof(POINT));
+      RtlCopyMemory(SafePolyPoints,
+                    PolyCounts,
+                    Count * sizeof(INT));
     }
-    Status = MmCopyFromCaller(SafePolyPoints, PolyCounts, sizeof(INT) * Count);
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
     if(!NT_SUCCESS(Status))
     {
       DC_UnlockDc(dc);
@@ -1520,7 +1579,7 @@ NtGdiGradientFill(
   PTRIVERTEX SafeVertex;
   PVOID SafeMesh;
   ULONG SizeMesh;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   dc = DC_LockDc(hdc);
   if(!dc)
@@ -1555,6 +1614,28 @@ NtGdiGradientFill(
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return FALSE;
   }
+  
+  _SEH_TRY
+  {
+    ProbeForRead(pVertex,
+                 uVertex * sizeof(TRIVERTEX),
+                 1);
+    ProbeForRead(pMesh,
+                 SizeMesh,
+                 1);
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+  
+  if (!NT_SUCCESS(Status))
+  {
+    DC_UnlockDc(dc);
+    SetLastWin32Error(Status);
+    return FALSE;
+  }
 
   if(!(SafeVertex = ExAllocatePoolWithTag(PagedPool, (uVertex * sizeof(TRIVERTEX)) + SizeMesh, TAG_SHAPE)))
   {
@@ -1562,16 +1643,25 @@ NtGdiGradientFill(
     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
     return FALSE;
   }
-  Status = MmCopyFromCaller(SafeVertex, pVertex, uVertex * sizeof(TRIVERTEX));
-  if(!NT_SUCCESS(Status))
-  {
-    DC_UnlockDc(dc);
-    ExFreePool(SafeVertex);
-    SetLastNtError(Status);
-    return FALSE;
-  }
+  
   SafeMesh = (PTRIVERTEX)(SafeVertex + uVertex);
-  Status = MmCopyFromCaller(SafeMesh, pMesh, SizeMesh);
+
+  _SEH_TRY
+  {
+    /* pointers were already probed! */
+    RtlCopyMemory(SafeVertex,
+                  pVertex,
+                  uVertex * sizeof(TRIVERTEX));
+    RtlCopyMemory(SafeMesh,
+                  pMesh,
+                  SizeMesh);
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+  
   if(!NT_SUCCESS(Status))
   {
     DC_UnlockDc(dc);

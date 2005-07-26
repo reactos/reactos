@@ -69,7 +69,7 @@ VOID FASTCALL Int##FuncName ( PDC dc, LP##type pt) \
 } \
 BOOL STDCALL NtGdi##FuncName ( HDC hdc, LP##type pt ) \
 { \
-  NTSTATUS Status; \
+  NTSTATUS Status = STATUS_SUCCESS; \
   type Safept; \
   PDC dc; \
   if(!pt) \
@@ -84,7 +84,18 @@ BOOL STDCALL NtGdi##FuncName ( HDC hdc, LP##type pt ) \
   } \
   Int##FuncName( dc, &Safept); \
   DC_UnlockDc(dc); \
-  Status = MmCopyToCaller(pt, &Safept, sizeof( type )); \
+  _SEH_TRY \
+  { \
+    ProbeForWrite(pt, \
+                  sizeof( type ), \
+                  1); \
+    *pt = Safept; \
+  } \
+  _SEH_HANDLE \
+  { \
+    Status = _SEH_GetExceptionCode(); \
+  } \
+  _SEH_END; \
   if(!NT_SUCCESS(Status)) \
   { \
     SetLastNtError(Status); \
@@ -830,11 +841,25 @@ NtGdiCreateDC(PUNICODE_STRING Driver,
   UNICODE_STRING SafeDriver, SafeDevice;
   DEVMODEW SafeInitData;
   HDC Ret;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   if(InitData)
   {
-    Status = MmCopyFromCaller(&SafeInitData, InitData, sizeof(DEVMODEW));
+    _SEH_TRY
+    {
+      ProbeForRead(InitData,
+                   sizeof(DEVMODEW),
+                   1);
+      RtlCopyMemory(&SafeInitData,
+                    InitData,
+                    sizeof(DEVMODEW));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
     if(!NT_SUCCESS(Status))
     {
       SetLastNtError(Status);
@@ -878,11 +903,24 @@ NtGdiCreateIC(PUNICODE_STRING Driver,
   UNICODE_STRING SafeDriver, SafeDevice;
   DEVMODEW SafeInitData;
   HDC Ret;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   if(InitData)
   {
-    Status = MmCopyFromCaller(&SafeInitData, InitData, sizeof(DEVMODEW));
+    _SEH_TRY
+    {
+      ProbeForRead(InitData,
+                   sizeof(DEVMODEW),
+                   1);
+      RtlCopyMemory(&SafeInitData,
+                    InitData,
+                    sizeof(DEVMODEW));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
     if(!NT_SUCCESS(Status))
     {
       SetLastNtError(Status);
@@ -1076,7 +1114,7 @@ NtGdiGetDCOrgEx(HDC  hDC, LPPOINT  Point)
   BOOL Ret;
   DC *dc;
   POINT SafePoint;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   if(!Point)
   {
@@ -1093,7 +1131,19 @@ NtGdiGetDCOrgEx(HDC  hDC, LPPOINT  Point)
 
   Ret = IntGdiGetDCOrgEx(dc, &SafePoint);
 
-  Status = MmCopyToCaller(Point, &SafePoint, sizeof(POINT));
+  _SEH_TRY
+  {
+    ProbeForWrite(Point,
+                  sizeof(POINT),
+                  1);
+    *Point = SafePoint;
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+
   if(!NT_SUCCESS(Status))
   {
     SetLastNtError(Status);
@@ -1621,10 +1671,28 @@ NtGdiGetObject(HANDLE handle, INT count, LPVOID buffer)
 {
   INT Ret;
   LPVOID SafeBuf;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   if (count <= 0)
   {
+    return 0;
+  }
+  
+  _SEH_TRY
+  {
+    ProbeForWrite(buffer,
+                  count,
+                  1);
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+  
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
     return 0;
   }
 
@@ -1637,7 +1705,19 @@ NtGdiGetObject(HANDLE handle, INT count, LPVOID buffer)
 
   Ret = IntGdiGetObject(handle, count, SafeBuf);
 
-  Status = MmCopyToCaller(buffer, SafeBuf, count);
+  _SEH_TRY
+  {
+    /* pointer already probed! */
+    RtlCopyMemory(buffer,
+                  SafeBuf,
+                  count);
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+
   ExFreePool(SafeBuf);
   if(!NT_SUCCESS(Status))
   {

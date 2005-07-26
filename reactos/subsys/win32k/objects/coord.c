@@ -63,17 +63,29 @@ BOOL STDCALL NtGdiCombineTransform(LPXFORM  UnsafeXFormResult,
 {
   XFORM  xformTemp;
   XFORM  xform1, xform2;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
   BOOL Ret;
 
-
-  Status = MmCopyFromCaller( &xform1, Unsafexform1, sizeof(XFORM) );
-  if(!NT_SUCCESS(Status))
+  _SEH_TRY
   {
-    SetLastNtError(Status);
-    return FALSE;
+    ProbeForWrite(UnsafeXFormResult,
+                  sizeof(XFORM),
+                  1);
+    ProbeForRead(Unsafexform1,
+                 sizeof(XFORM),
+                 1);
+    ProbeForRead(Unsafexform2,
+                 sizeof(XFORM),
+                 1);
+    xform1 = *Unsafexform1;
+    xform2 = *Unsafexform2;
   }
-  Status = MmCopyFromCaller( &xform2, Unsafexform2, sizeof(XFORM) );
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+
   if(!NT_SUCCESS(Status))
   {
     SetLastNtError(Status);
@@ -83,7 +95,17 @@ BOOL STDCALL NtGdiCombineTransform(LPXFORM  UnsafeXFormResult,
   Ret = IntGdiCombineTransform(&xformTemp, &xform1, &xform2);
 
   /* Copy the result to xformResult */
-  Status = MmCopyToCaller(  UnsafeXFormResult, &xformTemp, sizeof(XFORM) );
+  _SEH_TRY
+  {
+    /* pointer was already probed! */
+    *UnsafeXFormResult = xformTemp;
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+
   if(!NT_SUCCESS(Status))
   {
     SetLastNtError(Status);
@@ -131,7 +153,7 @@ NtGdiDPtoLP(HDC  hDC,
 	   int  Count)
 {
    PDC dc;
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
    LPPOINT Points;
    ULONG Size;
 
@@ -159,7 +181,21 @@ NtGdiDPtoLP(HDC  hDC,
      return FALSE;
    }
 
-   Status = MmCopyFromCaller(Points, UnsafePoints, Size);
+   _SEH_TRY
+   {
+      ProbeForWrite(UnsafePoints,
+                    Size,
+                    1);
+      RtlCopyMemory(Points,
+                    UnsafePoints,
+                    Size);
+   }
+   _SEH_HANDLE
+   {
+      Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END;
+   
    if(!NT_SUCCESS(Status))
    {
      DC_UnlockDc(dc);
@@ -170,7 +206,19 @@ NtGdiDPtoLP(HDC  hDC,
 
    IntDPtoLP(dc, Points, Count);
 
-   Status = MmCopyToCaller(UnsafePoints, Points, Size);
+   _SEH_TRY
+   {
+      /* pointer was already probed! */
+      RtlCopyMemory(UnsafePoints,
+                    Points,
+                    Size);
+   }
+   _SEH_HANDLE
+   {
+      Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END;
+
    if(!NT_SUCCESS(Status))
    {
      DC_UnlockDc(dc);
@@ -218,7 +266,7 @@ NtGdiGetWorldTransform(HDC  hDC,
                       LPXFORM  XForm)
 {
   PDC  dc;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   dc = DC_LockDc ( hDC );
   if (!dc)
@@ -233,7 +281,18 @@ NtGdiGetWorldTransform(HDC  hDC,
     return FALSE;
   }
 
-  Status = MmCopyToCaller(XForm, &dc->w.xformWorld2Wnd, sizeof(XFORM));
+  _SEH_TRY
+  {
+    ProbeForWrite(XForm,
+                  sizeof(XFORM),
+                  1);
+    *XForm = dc->w.xformWorld2Wnd;
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
 
   DC_UnlockDc(dc);
   return NT_SUCCESS(Status);
@@ -280,7 +339,7 @@ BOOL STDCALL
 NtGdiLPtoDP ( HDC hDC, LPPOINT UnsafePoints, INT Count )
 {
    PDC dc;
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
    LPPOINT Points;
    ULONG Size;
 
@@ -308,7 +367,21 @@ NtGdiLPtoDP ( HDC hDC, LPPOINT UnsafePoints, INT Count )
      return FALSE;
    }
 
-   Status = MmCopyFromCaller(Points, UnsafePoints, Size);
+   _SEH_TRY
+   {
+      ProbeForWrite(UnsafePoints,
+                    Size,
+                    1);
+      RtlCopyMemory(Points,
+                    UnsafePoints,
+                    Size);
+   }
+   _SEH_HANDLE
+   {
+      Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END;
+
    if(!NT_SUCCESS(Status))
    {
      DC_UnlockDc(dc);
@@ -319,7 +392,19 @@ NtGdiLPtoDP ( HDC hDC, LPPOINT UnsafePoints, INT Count )
 
    IntLPtoDP(dc, Points, Count);
 
-   Status = MmCopyToCaller(UnsafePoints, Points, Size);
+   _SEH_TRY
+   {
+      /* pointer was already probed! */
+      RtlCopyMemory(UnsafePoints,
+                    Points,
+                    Size);
+   }
+   _SEH_HANDLE
+   {
+      Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END;
+
    if(!NT_SUCCESS(Status))
    {
      DC_UnlockDc(dc);
@@ -341,7 +426,7 @@ NtGdiModifyWorldTransform(HDC            hDC,
 {
    PDC dc;
    XFORM SafeXForm;
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
 
    dc = DC_LockDc(hDC);
    if (!dc)
@@ -357,7 +442,19 @@ NtGdiModifyWorldTransform(HDC            hDC,
      return FALSE;
    }
 
-   Status = MmCopyFromCaller(&SafeXForm, UnsafeXForm, sizeof(XFORM));
+   _SEH_TRY
+   {
+      ProbeForRead(UnsafeXForm,
+                   sizeof(XFORM),
+                   1);
+      SafeXForm = *UnsafeXForm;
+   }
+   _SEH_HANDLE
+   {
+      Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END;
+
    if(!NT_SUCCESS(Status))
    {
      DC_UnlockDc(dc);
@@ -403,8 +500,7 @@ NtGdiOffsetViewportOrgEx(HDC hDC,
                         LPPOINT UnsafePoint)
 {
   PDC      dc;
-  POINT    Point;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   dc = DC_LockDc ( hDC );
   if(!dc)
@@ -415,9 +511,20 @@ NtGdiOffsetViewportOrgEx(HDC hDC,
 
   if (UnsafePoint)
     {
-	Point.x = dc->vportOrgX;
-	Point.y = dc->vportOrgY;
-	Status = MmCopyToCaller(UnsafePoint, &Point, sizeof(POINT));
+        _SEH_TRY
+        {
+            ProbeForWrite(UnsafePoint,
+                          sizeof(POINT),
+                          1);
+            UnsafePoint->x = dc->vportOrgX;
+            UnsafePoint->y = dc->vportOrgY;
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
 	if ( !NT_SUCCESS(Status) )
 	  {
 	    SetLastNtError(Status);
@@ -452,13 +559,22 @@ NtGdiOffsetWindowOrgEx(HDC  hDC,
 
   if (Point)
     {
-      POINT SafePoint;
-      NTSTATUS Status;
+      NTSTATUS Status = STATUS_SUCCESS;
+      
+      _SEH_TRY
+      {
+         ProbeForWrite(Point,
+                       sizeof(POINT),
+                       1);
+         Point->x = dc->wndOrgX;
+         Point->y = dc->wndOrgY;
+      }
+      _SEH_HANDLE
+      {
+         Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
 
-      SafePoint.x = dc->wndOrgX;
-      SafePoint.y = dc->wndOrgY;
-
-      Status = MmCopyToCaller(Point, &SafePoint, sizeof(POINT));
       if(!NT_SUCCESS(Status))
       {
         SetLastNtError(Status);
@@ -594,13 +710,22 @@ NtGdiSetViewportExtEx(HDC  hDC,
 
   if (Size)
     {
-      SIZE SafeSize;
-      NTSTATUS Status;
+      NTSTATUS Status = STATUS_SUCCESS;
 
-      SafeSize.cx = dc->vportExtX;
-      SafeSize.cy = dc->vportExtY;
+      _SEH_TRY
+      {
+         ProbeForWrite(Size,
+                       sizeof(SIZE),
+                       1);
+         Size->cx = dc->vportExtX;
+         Size->cy = dc->vportExtY;
+      }
+      _SEH_HANDLE
+      {
+         Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
 
-      Status = MmCopyToCaller(Size, &SafeSize, sizeof(SIZE));
       if(!NT_SUCCESS(Status))
       {
         SetLastNtError(Status);
@@ -636,13 +761,22 @@ NtGdiSetViewportOrgEx(HDC  hDC,
 
   if (Point)
     {
-      POINT SafePoint;
-      NTSTATUS Status;
+      NTSTATUS Status = STATUS_SUCCESS;
+      
+      _SEH_TRY
+      {
+         ProbeForWrite(Point,
+                       sizeof(POINT),
+                       1);
+         Point->x = dc->vportOrgX;
+         Point->y = dc->vportOrgY;
+      }
+      _SEH_HANDLE
+      {
+         Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
 
-      SafePoint.x = dc->vportOrgX;
-      SafePoint.y = dc->vportOrgY;
-
-      Status = MmCopyToCaller(Point, &SafePoint, sizeof(POINT));
       if(!NT_SUCCESS(Status))
       {
         SetLastNtError(Status);
@@ -690,13 +824,22 @@ NtGdiSetWindowExtEx(HDC  hDC,
 
   if (Size)
     {
-      SIZE SafeSize;
-      NTSTATUS Status;
+      NTSTATUS Status = STATUS_SUCCESS;
+      
+      _SEH_TRY
+      {
+         ProbeForWrite(Size,
+                       sizeof(SIZE),
+                       1);
+         Size->cx = dc->wndExtX;
+         Size->cy = dc->wndExtY;
+      }
+      _SEH_HANDLE
+      {
+         Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
 
-      SafeSize.cx = dc->wndExtX;
-      SafeSize.cy = dc->wndExtY;
-
-      Status = MmCopyToCaller(Size, &SafeSize, sizeof(SIZE));
       if(!NT_SUCCESS(Status))
       {
         SetLastNtError(Status);
@@ -732,13 +875,22 @@ NtGdiSetWindowOrgEx(HDC  hDC,
 
   if (Point)
     {
-      POINT SafePoint;
-      NTSTATUS Status;
+      NTSTATUS Status = STATUS_SUCCESS;
+      
+      _SEH_TRY
+      {
+         ProbeForWrite(Point,
+                       sizeof(POINT),
+                       1);
+         Point->x = dc->wndOrgX;
+         Point->y = dc->wndOrgY;
+      }
+      _SEH_HANDLE
+      {
+         Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
 
-      SafePoint.x = dc->wndOrgX;
-      SafePoint.y = dc->wndOrgY;
-
-      Status = MmCopyToCaller(Point, &SafePoint, sizeof(POINT));
       if(!NT_SUCCESS(Status))
       {
         SetLastNtError(Status);
@@ -762,7 +914,7 @@ NtGdiSetWorldTransform(HDC  hDC,
                       CONST LPXFORM  XForm)
 {
   PDC  dc;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   dc = DC_LockDc (hDC);
   if ( !dc )
@@ -785,7 +937,19 @@ NtGdiSetWorldTransform(HDC  hDC,
     return  FALSE;
   }
 
-  Status = MmCopyFromCaller(&dc->w.xformWorld2Wnd, XForm, sizeof(XFORM));
+  _SEH_TRY
+  {
+    ProbeForRead(XForm,
+                 sizeof(XFORM),
+                 1);
+    dc->w.xformWorld2Wnd = *XForm;
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+
   if(!NT_SUCCESS(Status))
   {
     DC_UnlockDc(dc);
