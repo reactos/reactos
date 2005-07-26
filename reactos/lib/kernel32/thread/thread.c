@@ -1,13 +1,10 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/thread/thread.c
  * PURPOSE:         Thread functions
- * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
- *			Tls functions are modified from WINE
- * UPDATE HISTORY:
- *                  Created 01/11/98
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  Ariadne ( ariadne@xs4all.nl)
  *
  */
 
@@ -15,12 +12,8 @@
 
 #include <k32.h>
 
-/* FIXME */
-#include <rosrtl/thread.h>
-
 #define NDEBUG
 #include "../include/debug.h"
-
 
 /* FUNCTIONS *****************************************************************/
 _SEH_FILTER(BaseThreadExceptionFilter)
@@ -68,198 +61,195 @@ BaseThreadStartup(LPTHREAD_START_ROUTINE lpStartAddress,
     ExitThread(uExitCode);
 }
 
+/*
+ * @implemented
+ */
+HANDLE
+STDCALL
+CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes,
+             DWORD dwStackSize,
+             LPTHREAD_START_ROUTINE lpStartAddress,
+             LPVOID lpParameter,
+             DWORD dwCreationFlags,
+             LPDWORD lpThreadId)
+{
+    /* Act as if we're going to create a remote thread in ourselves */
+    return CreateRemoteThread(NtCurrentProcess(),
+                              lpThreadAttributes,
+                              dwStackSize,
+                              lpStartAddress,
+                              lpParameter,
+                              dwCreationFlags,
+                              lpThreadId);
+}
 
 /*
  * @implemented
  */
-HANDLE STDCALL
-CreateThread
-(
- LPSECURITY_ATTRIBUTES lpThreadAttributes,
- DWORD dwStackSize,
- LPTHREAD_START_ROUTINE lpStartAddress,
- LPVOID lpParameter,
- DWORD dwCreationFlags,
- LPDWORD lpThreadId
-)
+HANDLE
+STDCALL
+CreateRemoteThread(HANDLE hProcess,
+                   LPSECURITY_ATTRIBUTES lpThreadAttributes,
+                   DWORD dwStackSize,
+                   LPTHREAD_START_ROUTINE lpStartAddress,
+                   LPVOID lpParameter,
+                   DWORD dwCreationFlags,
+                   LPDWORD lpThreadId)
 {
- return CreateRemoteThread
- (
-  NtCurrentProcess(),
-  lpThreadAttributes,
-  dwStackSize,
-  lpStartAddress,
-  lpParameter,
-  dwCreationFlags,
-  lpThreadId
- );
-}
+    NTSTATUS Status;
+    INITIAL_TEB InitialTeb;
+    CONTEXT Context;
+    CLIENT_ID ClientId;
+    OBJECT_ATTRIBUTES LocalObjectAttributes;
+    POBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE hThread;
+    ULONG Dummy;
+    
+    DPRINT("CreateRemoteThread: hProcess: %ld dwStackSize: %ld lpStartAddress"
+            ": %p lpParameter: %lx, dwCreationFlags: %lx\n", hProcess, 
+            dwStackSize, lpStartAddress, lpParameter, dwCreationFlags);
+    
+    /* Clear the Context */
+    RtlZeroMemory(&Context, sizeof(CONTEXT));
+    
+    /* Write PID */
+    ClientId.UniqueProcess = hProcess;
+    
+    /* Create the Stack */
+    Status = BasepCreateStack(hProcess,
+                              dwStackSize,
+                              dwCreationFlags & STACK_SIZE_PARAM_IS_A_RESERVATION ?
+                              dwStackSize : 0,
+                              &InitialTeb);    
+    if(!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return NULL;
+    }
+    
+    /* Create Initial Context */
+    BasepInitializeContext(&Context,
+                           lpParameter,
+                           lpStartAddress,
+                           InitialTeb.StackBase,
+                           1);
+    
+    /* initialize the attributes for the thread object */
+    ObjectAttributes = BasepConvertObjectAttributes(&LocalObjectAttributes,
+                                                    lpThreadAttributes,
+                                                    NULL);
+    
+    /* Create the Kernel Thread Object */
+    Status = NtCreateThread(&hThread,
+                            THREAD_ALL_ACCESS,
+                            ObjectAttributes,
+                            hProcess,
+                            &ClientId,
+                            &Context,
+                            &InitialTeb,
+                            TRUE);
+    if(!NT_SUCCESS(Status))
+    {
+        BasepFreeStack(hProcess, &InitialTeb);
+        SetLastErrorByStatus(Status);
+        return NULL;
+    }
+    
+    #ifdef SXS_SUPPORT_ENABLED
+    /* Are we in the same process? */
+    if (Process = NtCurrentProcess())
+    {
+        PTEB Teb;
+        PVOID ActivationContextStack;
+        PTHREAD_BASIC_INFORMATION ThreadBasicInfo;
+        PACTIVATION_CONTEXT_BASIC_INFORMATION ActivationCtxInfo;
+        ULONG_PTR Cookie;
+        
+        /* Get the TEB */
+        Status = NtQueryInformationThread(hThread,
+                                          ThreadBasicIformation,
+                                          &ThreadBasicInfo,
+                                          sizeof(ThreadBasicInfo),
+                                          NULL);
+                                          
+        /* Allocate the Activation Context Stack */
+        Status = RtlAllocateActivationContextStack(&ActivationContextStack);
+        Teb = ThreadBasicInfo.TebBaseAddress;
+        
+        /* Save it */
+        Teb->ActivationContextStackPointer = ActivationContextStack;
+        
+        /* Query the Context */
+        Status = RtlQueryInformationActivationContext(1,
+                                                      0,
+                                                      NULL,
+                                                      ActivationContextBasicInformation,
+                                                      &ActivationCtxInfo,
+                                                      sizeof(ActivationCtxInfo),
+                                                      NULL);
+                                                      
+        /* Does it need to be activated? */
+        if (!ActivationCtxInfo.hActCtx)
+        {
+            /* Activate it */
+            Status = RtlActivateActivationContextEx(1,
+                                                    Teb,
+                                                    ActivationCtxInfo.hActCtx,
+                                                    &Cookie);
+        }
+    }
+    #endif
+    
+    /* FIXME: Notify CSR */
 
+    /* Success */
+    if(lpThreadId) *lpThreadId = (DWORD)ClientId.UniqueThread;
+    
+    /* Resume it if asked */
+    if (!(dwCreationFlags & CREATE_SUSPENDED))
+    {
+        NtResumeThread(hThread, &Dummy);
+    }
+    
+    /* Return handle to thread */
+    return hThread;
+}
 
 /*
  * @implemented
  */
-HANDLE STDCALL
-CreateRemoteThread
-(
- HANDLE hProcess,
- LPSECURITY_ATTRIBUTES lpThreadAttributes,
- DWORD dwStackSize,
- LPTHREAD_START_ROUTINE lpStartAddress,
- LPVOID lpParameter,
- DWORD dwCreationFlags,
- LPDWORD lpThreadId
-)
+VOID
+STDCALL
+ExitThread(DWORD uExitCode)
 {
- HANDLE hThread;
- CLIENT_ID cidClientId;
- NTSTATUS nErrCode;
- ULONG_PTR nStackReserve;
- ULONG_PTR nStackCommit;
- OBJECT_ATTRIBUTES oaThreadAttribs;
- PIMAGE_NT_HEADERS pinhHeader =
-  RtlImageNtHeader(NtCurrentPeb()->ImageBaseAddress);
+    NTSTATUS Status;
+    BOOLEAN LastThread;
+    
+    /*
+     * Terminate process if this is the last thread
+     * of the current process
+     */
+    Status = NtQueryInformationThread(NtCurrentThread(),
+                                      ThreadAmILastThread,
+                                      &LastThread,
+                                      sizeof(BOOLEAN),
+                                      NULL);
+    if (NT_SUCCESS(Status) && LastThread)
+    {
+        /* Exit the Process */
+        ExitProcess(uExitCode);
+    }
 
- DPRINT
- (
-  "hProcess           %08X\n"
-  "lpThreadAttributes %08X\n"
-  "dwStackSize        %08X\n"
-  "lpStartAddress     %08X\n"
-  "lpParameter        %08X\n"
-  "dwCreationFlags    %08X\n"
-  "lpThreadId         %08X\n",
-  hProcess,
-  lpThreadAttributes,
-  dwStackSize,
-  lpStartAddress,
-  lpParameter,
-  dwCreationFlags,
-  lpThreadId
- );
-
- /* FIXME: do more checks - e.g. the image may not have an optional header */
- if(pinhHeader == NULL)
- {
-  nStackReserve = 0x100000;
-  nStackCommit = PAGE_SIZE;
- }
- else
- {
-  nStackReserve = pinhHeader->OptionalHeader.SizeOfStackReserve;
-  nStackCommit = pinhHeader->OptionalHeader.SizeOfStackCommit;
- }
-
- /* FIXME: this should be defined in winbase.h */
-#ifndef STACK_SIZE_PARAM_IS_A_RESERVATION
-#define STACK_SIZE_PARAM_IS_A_RESERVATION 0x00010000
-#endif
-
- /* use defaults */
- if(dwStackSize == 0);
- /* dwStackSize specifies the size to reserve */
- else if(dwCreationFlags & STACK_SIZE_PARAM_IS_A_RESERVATION)
-  nStackReserve = dwStackSize;
- /* dwStackSize specifies the size to commit */
- else
-  nStackCommit = dwStackSize;
-
- /* fix the stack reserve size */
- if(nStackCommit > nStackReserve)
-  nStackReserve = ROUNDUP(nStackCommit, 0x100000);
-
- /* initialize the attributes for the thread object */
- InitializeObjectAttributes
- (
-  &oaThreadAttribs,
-  NULL,
-  0,
-  NULL,
-  NULL
- );
-
- if(lpThreadAttributes)
- {
-  /* make the handle inheritable */
-  if(lpThreadAttributes->bInheritHandle)
-   oaThreadAttribs.Attributes |= OBJ_INHERIT;
-
-  /* user-defined security descriptor */
-  oaThreadAttribs.SecurityDescriptor = lpThreadAttributes->lpSecurityDescriptor;
- }
-
- DPRINT
- (
-  "RtlRosCreateUserThreadVa\n"
-  "(\n"
-  " ProcessHandle    %p,\n"
-  " ObjectAttributes %p,\n"
-  " CreateSuspended  %d,\n"
-  " StackZeroBits    %d,\n"
-  " StackReserve     %lu,\n"
-  " StackCommit      %lu,\n"
-  " StartAddress     %p,\n"
-  " ThreadHandle     %p,\n"
-  " ClientId         %p,\n"
-  " ParameterCount   %u,\n"
-  " Parameters[0]    %p,\n"
-  " Parameters[1]    %p\n"
-  ")\n",
-  hProcess,
-  &oaThreadAttribs,
-  dwCreationFlags & CREATE_SUSPENDED,
-  0,
-  nStackReserve,
-  nStackCommit,
-  BaseThreadStartup,
-  &hThread,
-  &cidClientId,
-  2,
-  lpStartAddress,
-  lpParameter
- );
-
- /* create the thread */
- nErrCode = RtlRosCreateUserThreadVa
- (
-  hProcess,
-  &oaThreadAttribs,
-  dwCreationFlags & CREATE_SUSPENDED,
-  0,
-  &nStackReserve,
-  &nStackCommit,
-  (PTHREAD_START_ROUTINE)BaseThreadStartup,
-  &hThread,
-  &cidClientId,
-  2,
-  lpStartAddress,
-  lpParameter
- );
-
- /* failure */
- if(!NT_SUCCESS(nErrCode))
- {
-  SetLastErrorByStatus(nErrCode);
-  return NULL;
- }
-
- DPRINT
- (
-  "StackReserve          %p\n"
-  "StackCommit           %p\n"
-  "ThreadHandle          %p\n"
-  "ClientId.UniqueThread %p\n",
-  nStackReserve,
-  nStackCommit,
-  hThread,
-  cidClientId.UniqueThread
- );
-
- /* success */
- if(lpThreadId) *lpThreadId = (DWORD)cidClientId.UniqueThread;
- return hThread;
+    /* Notify DLLs and TLS Callbacks of termination */
+    LdrShutdownThread();
+    
+    /* Tell the Kernel to free the Stack */
+    NtCurrentTeb()->FreeStackOnTermination = TRUE;
+    NtTerminateThread(NULL, uExitCode);
+    
+    /* We will never reach this place. This silences the compiler */
+    ExitThread(uExitCode);
 }
-
 
 /*
  * @implemented
@@ -329,37 +319,6 @@ GetCurrentThreadId(VOID)
 {
   return((DWORD)(NtCurrentTeb()->Cid).UniqueThread);
 }
-
-/*
- * @implemented
- */
-VOID STDCALL
-ExitThread(DWORD uExitCode)
-{
-  NTSTATUS Status;
-  BOOLEAN LastThread;
-
-  /*
-   * Terminate process if this is the last thread
-   * of the current process
-   */
-  Status = NtQueryInformationThread(NtCurrentThread(),
-				    ThreadAmILastThread,
-				    &LastThread,
-				    sizeof(BOOLEAN),
-				    NULL);
-  if (NT_SUCCESS(Status) && LastThread == TRUE)
-    {
-      ExitProcess(uExitCode);
-    }
-
-  /* FIXME: notify csrss of thread termination */
-
-  LdrShutdownThread();
-
-  RtlRosExitUserThread(uExitCode);
-}
-
 
 /*
  * @implemented

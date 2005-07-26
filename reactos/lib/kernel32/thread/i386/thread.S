@@ -18,7 +18,7 @@ _BaseThreadStartupThunk@0:
     push ebx                  /* lpParameter */
     push eax                  /* lpStartAddress */
     push 0                    /* Return EIP */
-    //jmp _BaseThreadStartup@8
+    jmp _BaseThreadStartup@8
 
 _BaseProcessStartThunk@0:
 
@@ -27,6 +27,6 @@ _BaseProcessStartThunk@0:
     
     push eax                  /* lpStartAddress */
     push 0                    /* Return EIP */
-    //jmp _BaseProcessStartup@4
+    jmp _BaseProcessStartup@4
 
 /* EOF */

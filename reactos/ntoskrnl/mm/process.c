@@ -313,20 +313,9 @@ MmCreateTeb(PEPROCESS Process,
     /* Store stack information from InitialTeb */
     if(InitialTeb != NULL)
     {
-        /* fixed-size stack */
-        if(InitialTeb->PreviousStackBase && InitialTeb->PreviousStackLimit)
-        {
-            Teb->Tib.StackBase = InitialTeb->PreviousStackBase;
-            Teb->Tib.StackLimit = InitialTeb->PreviousStackLimit;
-            Teb->DeallocationStack = InitialTeb->PreviousStackLimit;
-        }
-        /* expandable stack */
-        else
-        {
-            Teb->Tib.StackBase = InitialTeb->StackBase;
-            Teb->Tib.StackLimit = InitialTeb->StackLimit;
-            Teb->DeallocationStack = InitialTeb->AllocatedStackBase;
-        }
+        Teb->Tib.StackBase = InitialTeb->StackBase;
+        Teb->Tib.StackLimit = InitialTeb->StackLimit;
+        Teb->DeallocationStack = InitialTeb->AllocatedStackBase;
     }
 
     /* Return TEB Address */
