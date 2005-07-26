@@ -145,6 +145,14 @@ WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
   {
     Old = Wnd;
     IntLockRelatives(Old);
+    if (Old->NextSibling == NULL)
+    {
+      Wnd = NULL;
+      IntUnLockRelatives(Old);
+      if (Old != Window)
+        IntReleaseWindowObject(Old);
+      break;
+    }
     Wnd = IntGetWindowObject(Old->NextSibling->Self);
     IntUnLockRelatives(Old);
     if (Old != Window)
