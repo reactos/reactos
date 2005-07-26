@@ -13,6 +13,167 @@
 #define NDEBUG
 #include <debug.h>
 
+/* Interface to ntmarta.dll ***************************************************/
+
+typedef struct _NTMARTA
+{
+    HINSTANCE hDllInstance;
+
+    PVOID LookupAccountTrustee;
+    PVOID LookupAccountName;
+    PVOID LookupAccountSid;
+    PVOID SetEntriesInAList;
+    PVOID ConvertAccessToSecurityDescriptor;
+    PVOID ConvertSDToAccess;
+    PVOID ConvertAclToAccess;
+    PVOID GetAccessForTrustee;
+    PVOID GetExplicitEntries;
+    PVOID RewriteGetNamedRights;
+    PVOID RewriteSetNamedRights;
+
+    DWORD (STDCALL *RewriteGetHandleRights)(HANDLE handle,
+                                            SE_OBJECT_TYPE ObjectType,
+                                            SECURITY_INFORMATION SecurityInfo,
+                                            PSID* ppsidOwner,
+                                            PSID* ppsidGroup,
+                                            PACL* ppDacl,
+                                            PACL* ppSacl,
+                                            PSECURITY_DESCRIPTOR* ppSecurityDescriptor);
+
+    DWORD (STDCALL *RewriteSetHandleRights)(HANDLE handle,
+                                            SE_OBJECT_TYPE ObjectType,
+                                            SECURITY_INFORMATION SecurityInfo,
+                                            PSECURITY_DESCRIPTOR pSecurityDescriptor);
+
+    PVOID RewriteSetEntriesInAcl;
+    PVOID RewriteGetExplicitEntriesFromAcl;
+    PVOID TreeResetNamedSecurityInfo;
+    PVOID GetInheritanceSource;
+    PVOID FreeIndexArray;
+} NTMARTA, *PNTMARTA;
+
+static NTMARTA NtMartaStatic = { 0 };
+static PNTMARTA NtMarta = NULL;
+
+#define AccLookupAccountTrustee NtMartaStatic.LookupAccountTrustee
+#define AccLookupAccountName NtMartaStatic.LookupAccountName
+#define AccLookupAccountSid NtMartaStatic.LookupAccountSid
+#define AccSetEntriesInAList NtMartaStatic.SetEntriesInAList
+#define AccConvertAccessToSecurityDescriptor NtMartaStatic.ConvertAccessToSecurityDescriptor
+#define AccConvertSDToAccess NtMartaStatic.ConvertSDToAccess
+#define AccConvertAclToAccess NtMartaStatic.ConvertAclToAccess
+#define AccGetAccessForTrustee NtMartaStatic.GetAccessForTrustee
+#define AccGetExplicitEntries NtMartaStatic.GetExplicitEntries
+#define AccRewriteGetNamedRights NtMartaStatic.RewriteGetNamedRights
+#define AccRewriteSetNamedRights NtMartaStatic.RewriteSetNamedRights
+#define AccRewriteGetHandleRights NtMartaStatic.RewriteGetHandleRights
+#define AccRewriteSetHandleRights NtMartaStatic.RewriteSetHandleRights
+#define AccRewriteSetEntriesInAcl NtMartaStatic.RewriteSetEntriesInAcl
+#define AccRewriteGetExplicitEntriesFromAcl NtMartaStatic.RewriteGetExplicitEntriesFromAcl
+#define AccTreeResetNamedSecurityInfo NtMartaStatic.TreeResetNamedSecurityInfo
+#define AccGetInheritanceSource NtMartaStatic.GetInheritanceSource
+#define AccFreeIndexArray NtMartaStatic.FreeIndexArray
+
+#define FindNtMartaProc(Name)                                                  \
+    NtMartaStatic.Name = (PVOID)GetProcAddress(NtMartaStatic.hDllInstance,     \
+                                               "Acc" # Name );                 \
+    if (NtMartaStatic.Name == NULL)                                            \
+    {                                                                          \
+        return GetLastError();                                                 \
+    }
+
+static DWORD
+LoadAndInitializeNtMarta(VOID)
+{
+    /* this code may be executed simultaneously by multiple threads in case they're
+       trying to initialize the interface at the same time, but that's no problem
+       because the pointers returned by GetProcAddress will be the same. However,
+       only one of the threads will change the NtMarta pointer to the NtMartaStatic
+       structure, the others threads will detect that there were other threads
+       initializing the structure faster and will release the reference to the
+       DLL */
+
+    NtMartaStatic.hDllInstance = LoadLibraryW(L"ntmarta.dll");
+    if (NtMartaStatic.hDllInstance == NULL)
+    {
+        return GetLastError();
+    }
+
+#if 0
+    FindNtMartaProc(LookupAccountTrustee);
+    FindNtMartaProc(LookupAccountName);
+    FindNtMartaProc(LookupAccountSid);
+    FindNtMartaProc(SetEntriesInAList);
+    FindNtMartaProc(ConvertAccessToSecurityDescriptor);
+    FindNtMartaProc(ConvertSDToAccess);
+    FindNtMartaProc(ConvertAclToAccess);
+    FindNtMartaProc(GetAccessForTrustee);
+    FindNtMartaProc(GetExplicitEntries);
+    FindNtMartaProc(RewriteGetNamedRights);
+    FindNtMartaProc(RewriteSetNamedRights);
+#endif
+    FindNtMartaProc(RewriteGetHandleRights);
+    FindNtMartaProc(RewriteSetHandleRights);
+#if 0
+    FindNtMartaProc(RewriteSetEntriesInAcl);
+    FindNtMartaProc(RewriteGetExplicitEntriesFromAcl);
+    FindNtMartaProc(TreeResetNamedSecurityInfo);
+    FindNtMartaProc(GetInheritanceSource);
+    FindNtMartaProc(FreeIndexArray);
+#endif
+    
+    return ERROR_SUCCESS;
+}
+
+static DWORD
+CheckNtMartaPresent(VOID)
+{
+    DWORD ErrorCode;
+    
+    if (NtMarta == NULL)
+    {
+        /* we're the first one trying to use ntmarta, initialize it and change
+           the pointer after initialization */
+        ErrorCode = LoadAndInitializeNtMarta();
+        
+        if (ErrorCode == ERROR_SUCCESS)
+        {
+            /* try change the NtMarta pointer */
+            if (InterlockedCompareExchangePointer(&NtMarta,
+                                                  &NtMartaStatic,
+                                                  NULL) != NULL)
+            {
+                /* another thread initialized ntmarta in the meanwhile, release
+                   the reference of the dll loaded. */
+                FreeLibrary(NtMartaStatic.hDllInstance);
+            }
+        }
+#if DBG
+        else
+        {
+            DPRINT1("Failed to initialize ntmarta.dll! Error: 0x%x", ErrorCode);
+        }
+#endif
+    }
+    else
+    {
+        /* ntmarta was already initialized */
+        ErrorCode = ERROR_SUCCESS;
+    }
+    
+    return ErrorCode;
+}
+
+VOID UnloadNtMarta(VOID)
+{
+    if (InterlockedExchangePointer(&NtMarta,
+                                   NULL) != NULL)
+    {
+        FreeLibrary(NtMartaStatic.hDllInstance);
+    }
+}
+
+/******************************************************************************/
 
 /*
  * @implemented
@@ -1166,8 +1327,62 @@ GetSecurityInfo(HANDLE handle,
                 PACL* ppSacl,
                 PSECURITY_DESCRIPTOR* ppSecurityDescriptor)
 {
-  DPRINT1("GetSecurityInfo: stub\n");
-  return ERROR_CALL_NOT_IMPLEMENTED;
+    DWORD ErrorCode;
+    
+    if (handle != NULL)
+    {
+        ErrorCode = CheckNtMartaPresent();
+        if (ErrorCode == ERROR_SUCCESS)
+        {
+            if ((SecurityInfo & (OWNER_SECURITY_INFORMATION |
+                                 GROUP_SECURITY_INFORMATION |
+                                 DACL_SECURITY_INFORMATION |
+                                 SACL_SECURITY_INFORMATION)) &&
+                ppSecurityDescriptor == NULL)
+            {
+                /* if one of the SIDs or ACLs are present, the security descriptor
+                   most not be NULL */
+                ErrorCode = ERROR_INVALID_PARAMETER;
+            }
+            else
+            {
+                /* reset the pointers unless they're ignored */
+                if ((SecurityInfo & OWNER_SECURITY_INFORMATION) &&
+                    ppsidOwner != NULL)
+                {
+                    ppsidOwner = NULL;
+                }
+                if ((SecurityInfo & GROUP_SECURITY_INFORMATION) &&
+                    *ppsidGroup != NULL)
+                {
+                    *ppsidGroup = NULL;
+                }
+                if ((SecurityInfo & DACL_SECURITY_INFORMATION) &&
+                    ppDacl != NULL)
+                {
+                    *ppDacl = NULL;
+                }
+                if ((SecurityInfo & SACL_SECURITY_INFORMATION) &&
+                    ppSacl != NULL)
+                {
+                    *ppSacl = NULL;
+                }
+                
+                ErrorCode = AccRewriteGetHandleRights(handle,
+                                                      ObjectType,
+                                                      SecurityInfo,
+                                                      ppsidOwner,
+                                                      ppsidGroup,
+                                                      ppDacl,
+                                                      ppSacl,
+                                                      ppSecurityDescriptor);
+            }
+        }
+    }
+    else
+        ErrorCode = ERROR_INVALID_HANDLE;
+
+    return ErrorCode;
 }
 
 
@@ -1186,8 +1401,131 @@ SetSecurityInfo(HANDLE handle,
                 PACL pDacl,
                 PACL pSacl)
 {
-  DPRINT1("SetSecurityInfo: stub\n");
-  return ERROR_CALL_NOT_IMPLEMENTED;
+    DWORD ErrorCode;
+
+    if (handle != NULL)
+    {
+        ErrorCode = CheckNtMartaPresent();
+        if (ErrorCode == ERROR_SUCCESS)
+        {
+            SECURITY_DESCRIPTOR SecurityDescriptor;
+            
+            /* initialize a security descriptor on the stack */
+            InitializeSecurityDescriptor(&SecurityDescriptor,
+                                         SECURITY_DESCRIPTOR_REVISION);
+
+            if (SecurityInfo & OWNER_SECURITY_INFORMATION)
+            {
+                if (RtlValidSid(psidOwner))
+                {
+                    if (!SetSecurityDescriptorOwner(&SecurityDescriptor,
+                                                    psidOwner,
+                                                    FALSE))
+                    {
+                        return GetLastError();
+                    }
+                }
+                else
+                {
+                    return ERROR_INVALID_PARAMETER;
+                }
+            }
+            
+            if (SecurityInfo & GROUP_SECURITY_INFORMATION)
+            {
+                if (RtlValidSid(psidGroup))
+                {
+                    if (!SetSecurityDescriptorGroup(&SecurityDescriptor,
+                                                    psidGroup,
+                                                    FALSE))
+                    {
+                        return GetLastError();
+                    }
+                }
+                else
+                {
+                    return ERROR_INVALID_PARAMETER;
+                }
+            }
+            
+            if (SecurityInfo & DACL_SECURITY_INFORMATION)
+            {
+                if (pDacl != NULL)
+                {
+                    if (SetSecurityDescriptorDacl(&SecurityDescriptor,
+                                                  TRUE,
+                                                  pDacl,
+                                                  FALSE))
+                    {
+                        /* check if the DACL needs to be protected from being
+                           modified by inheritable ACEs */
+                        if (SecurityInfo & PROTECTED_DACL_SECURITY_INFORMATION)
+                        {
+                            goto ProtectDacl;
+                        }
+                    }
+                    else
+                    {
+                        return GetLastError();
+                    }
+                }
+                else
+                {
+ProtectDacl:
+                    /* protect the DACL from being modified by inheritable ACEs */
+                    if (!SetSecurityDescriptorControl(&SecurityDescriptor,
+                                                      SE_DACL_PROTECTED,
+                                                      SE_DACL_PROTECTED))
+                    {
+                        return GetLastError();
+                    }
+                }
+            }
+            
+            if (SecurityInfo & SACL_SECURITY_INFORMATION)
+            {
+                if (pSacl != NULL)
+                {
+                    if (SetSecurityDescriptorSacl(&SecurityDescriptor,
+                                                  TRUE,
+                                                  pSacl,
+                                                  FALSE))
+                    {
+                        /* check if the SACL needs to be protected from being
+                           modified by inheritable ACEs */
+                        if (SecurityInfo & PROTECTED_SACL_SECURITY_INFORMATION)
+                        {
+                            goto ProtectSacl;
+                        }
+                    }
+                    else
+                    {
+                        return GetLastError();
+                    }
+                }
+                else
+                {
+ProtectSacl:
+                    /* protect the SACL from being modified by inheritable ACEs */
+                    if (!SetSecurityDescriptorControl(&SecurityDescriptor,
+                                                      SE_SACL_PROTECTED,
+                                                      SE_SACL_PROTECTED))
+                    {
+                        return GetLastError();
+                    }
+                }
+            }
+
+            ErrorCode = AccRewriteSetHandleRights(handle,
+                                                  ObjectType,
+                                                  SecurityInfo,
+                                                  &SecurityDescriptor);
+        }
+    }
+    else
+        ErrorCode = ERROR_INVALID_HANDLE;
+
+    return ErrorCode;
 }
 
 

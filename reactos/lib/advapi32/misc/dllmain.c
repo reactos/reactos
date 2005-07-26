@@ -15,6 +15,7 @@
 
 extern BOOL RegInitialize(VOID);
 extern BOOL RegCleanup(VOID);
+extern VOID UnloadNtMarta(VOID);
 
 INT STDCALL
 DllMain(PVOID hinstDll,
@@ -30,6 +31,7 @@ DllMain(PVOID hinstDll,
 
      case DLL_PROCESS_DETACH:
 	RegCleanup();
+	UnloadNtMarta();
 	break;
      }
 
