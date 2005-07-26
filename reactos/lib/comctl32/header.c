@@ -290,8 +290,8 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
 	if (iw || bw) {
 	    HDC hClipDC = GetDC(hwnd);
 	    HRGN hClipRgn = CreateRectRgn(r.left, r.top, r.right, r.bottom);
-	    SelectClipRgn(hClipDC, hClipRgn);
 	    
+	    SelectClipRgn(hClipDC, hClipRgn);
 	    if (bw) {
 	        HDC hdcBitmap = CreateCompatibleDC (hClipDC);
 	        SelectObject (hdcBitmap, phdi->hbm);
@@ -307,7 +307,7 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
 	    }
 
 	    DeleteObject(hClipRgn);
-	    DeleteDC(hClipDC);
+	    ReleaseDC(hwnd, hClipDC);
 	}
         
 	if (((phdi->fmt & HDF_STRING)
