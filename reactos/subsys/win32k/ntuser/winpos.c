@@ -107,7 +107,7 @@ VOID FASTCALL
 WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 {
   PWINDOW_OBJECT Wnd, Old;
-  int TryTopmost;
+  HWND Fg;
 
   if (!Window || IntIsDesktopWindow(Window))
   {
@@ -129,11 +129,9 @@ WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
       IntReleaseWindowObject(Old);
     }
 
-    if (IntSetForegroundWindow(Wnd))
-    {
-      IntReleaseWindowObject(Wnd);
-      return;
-    }
+    if ((Wnd->Style & (WS_DISABLED | WS_VISIBLE)) == WS_VISIBLE &&
+        (Wnd->Style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
+      goto done;
 
     IntReleaseWindowObject(Wnd);
   }
@@ -156,35 +154,45 @@ WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 
     if((List = IntWinListChildren(Wnd)))
     {
-      for(TryTopmost = 0; TryTopmost <= 1; TryTopmost++)
+      /* FIXME: We should scan for non-tooltip windows first. */
+      for(phWnd = List; *phWnd; phWnd++)
       {
-        for(phWnd = List; *phWnd; phWnd++)
+        PWINDOW_OBJECT Child;
+
+        if((*phWnd) == Window->Self)
         {
-          PWINDOW_OBJECT Child;
+          continue;
+        }
 
-          if((*phWnd) == Window->Self)
+        if((Child = IntGetWindowObject(*phWnd)))
+        {
+          if ((Child->Style & (WS_DISABLED | WS_VISIBLE)) == WS_VISIBLE &&
+              (Child->Style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
           {
-            continue;
+            ExFreePool(List);
+            IntReleaseWindowObject(Wnd);
+            Wnd = Child;
+            goto done;
           }
-
-          if((Child = IntGetWindowObject(*phWnd)))
-          {
-            if(((! TryTopmost && (0 == (Child->ExStyle & WS_EX_TOPMOST)))
-                || (TryTopmost && (0 != (Child->ExStyle & WS_EX_TOPMOST))))
-               && IntSetForegroundWindow(Child))
-            {
-              ExFreePool(List);
-              IntReleaseWindowObject(Wnd);
-              IntReleaseWindowObject(Child);
-              return;
-            }
-            IntReleaseWindowObject(Child);
-          }
+          IntReleaseWindowObject(Child);
         }
       }
       ExFreePool(List);
     }
   }
+
+done:
+  Fg = NtUserGetForegroundWindow();
+  if (!Fg || Window->Self == Fg)
+  {
+    if (IntSetForegroundWindow(Wnd))
+    {
+      IntReleaseWindowObject(Wnd);
+      return;
+    }
+  }
+  if (!IntSetActiveWindow(Wnd))
+    IntSetActiveWindow(0);
   IntReleaseWindowObject(Wnd);
 }
 
