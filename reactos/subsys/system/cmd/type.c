@@ -78,6 +78,8 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 			continue;
 		}
 
+    	nErrorLevel = 0;
+
 		hFile = CreateFile(argv[i],
 			GENERIC_READ,
 			FILE_SHARE_READ,NULL,
@@ -97,6 +99,7 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 			               NULL);
 			ConErrPrintf (_T("%s - %s"), argv[i], errmsg);
 			LocalFree (errmsg);
+      nErrorLevel = 1;
 			continue;
 		}
 		
