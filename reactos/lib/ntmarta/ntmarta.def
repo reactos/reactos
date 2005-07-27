@@ -1,8 +1,8 @@
 LIBRARY ntmarta.dll
 
 EXPORTS
-;AccFreeIndexArray
-;AccGetInheritanceSource
+AccFreeIndexArray@12
+AccGetInheritanceSource@40
 ;AccProvHandleGrantAccessRights;
 ;AccRewriteGetExplicitEntriesFromAcl
 AccRewriteGetHandleRights@32

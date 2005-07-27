@@ -69,8 +69,21 @@ typedef struct _NTMARTA
 
     PVOID RewriteGetExplicitEntriesFromAcl;
     PVOID TreeResetNamedSecurityInfo;
-    PVOID GetInheritanceSource;
-    PVOID FreeIndexArray;
+
+    DWORD (STDCALL *GetInheritanceSource)(LPWSTR pObjectName,
+                                          SE_OBJECT_TYPE ObjectType,
+                                          SECURITY_INFORMATION SecurityInfo,
+                                          BOOL Container,
+                                          GUID** pObjectClassGuids,
+                                          DWORD GuidCount,
+                                          PACL pAcl,
+                                          PFN_OBJECT_MGR_FUNCTS pfnArray,
+                                          PGENERIC_MAPPING pGenericMapping,
+                                          PINHERITED_FROMW pInheritArray);
+
+    DWORD (STDCALL *FreeIndexArray)(PINHERITED_FROMW pInheritArray,
+                                    USHORT AceCnt,
+                                    PFN_OBJECT_MGR_FUNCTS pfnArray  OPTIONAL);
 } NTMARTA, *PNTMARTA;
 
 #define AccLookupAccountTrustee NtMartaStatic.LookupAccountTrustee

@@ -62,9 +62,9 @@ LoadAndInitializeNtMarta(VOID)
 #if 0
     FindNtMartaProc(RewriteGetExplicitEntriesFromAcl);
     FindNtMartaProc(TreeResetNamedSecurityInfo);
+#endif
     FindNtMartaProc(GetInheritanceSource);
     FindNtMartaProc(FreeIndexArray);
-#endif
     
     return ERROR_SUCCESS;
 }

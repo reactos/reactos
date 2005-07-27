@@ -121,6 +121,43 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
 }
 
 
+/**********************************************************************
+ * AccRewriteSetEntriesInAcl				EXPORTED
+ *
+ * @unimplemented
+ */
+DWORD STDCALL
+AccGetInheritanceSource(LPWSTR pObjectName,
+                        SE_OBJECT_TYPE ObjectType,
+                        SECURITY_INFORMATION SecurityInfo,
+                        BOOL Container,
+                        GUID** pObjectClassGuids,
+                        DWORD GuidCount,
+                        PACL pAcl,
+                        PFN_OBJECT_MGR_FUNCTS pfnArray,
+                        PGENERIC_MAPPING pGenericMapping,
+                        PINHERITED_FROMW pInheritArray)
+{
+    UNIMPLEMENTED;
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/**********************************************************************
+ * AccFreeIndexArray					EXPORTED
+ *
+ * @unimplemented
+ */
+DWORD STDCALL
+AccFreeIndexArray(PINHERITED_FROMW pInheritArray,
+                  USHORT AceCnt,
+                  PFN_OBJECT_MGR_FUNCTS pfnArray  OPTIONAL)
+{
+    UNIMPLEMENTED;
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
 BOOL STDCALL
 DllMain(IN HINSTANCE hinstDLL,
         IN DWORD dwReason,

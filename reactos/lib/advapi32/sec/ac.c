@@ -435,7 +435,7 @@ GetAce (
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 STDCALL
@@ -452,8 +452,25 @@ GetInheritanceSourceW (
 	PINHERITED_FROMW	pInheritArray
 	)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+    DWORD ErrorCode;
+
+    ErrorCode = CheckNtMartaPresent();
+    if (ErrorCode == ERROR_SUCCESS)
+    {
+        /* call the MARTA provider */
+        ErrorCode = AccGetInheritanceSource(pObjectName,
+                                            ObjectType,
+                                            SecurityInfo,
+                                            Container,
+                                            pObjectClassGuids,
+                                            GuidCount,
+                                            pAcl,
+                                            pfnArray,
+                                            pGenericMapping,
+                                            pInheritArray);
+    }
+
+    return ErrorCode;
 }
 
 
@@ -475,24 +492,38 @@ GetInheritanceSourceA (
 	PINHERITED_FROM		pInheritArray
 	)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+    /* That's all this function does, at least up to w2k3... Even MS was too
+       lazy to implement it... */
+    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 STDCALL
 FreeInheritedFromArray (
-	PINHERITED_FROM		pInheritArray,
+	PINHERITED_FROMW	pInheritArray,
 	USHORT			AceCnt,
 	PFN_OBJECT_MGR_FUNCTS	pfnArray  OPTIONAL
 	)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+    DWORD ErrorCode;
+    
+    /* pfnArray is not yet used */
+    UNREFERENCED_PARAMETER(pfnArray);
+
+    ErrorCode = CheckNtMartaPresent();
+    if (ErrorCode == ERROR_SUCCESS)
+    {
+        /* call the MARTA provider */
+        ErrorCode = AccFreeIndexArray(pInheritArray,
+                                      AceCnt,
+                                      NULL);
+    }
+
+    return ErrorCode;
 }
 
 
