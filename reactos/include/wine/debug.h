@@ -35,6 +35,7 @@ struct _GUID;
 /* These function return a printable version of a string, including
    quotes.  The string will be valid for some time, but not indefinitely
    as strings are re-used.  */
+extern const char *wine_dbgstr_w( const WCHAR *s );
 extern const char *wine_dbgstr_an( const char * s, int n );
 extern const char *wine_dbgstr_wn( const wchar_t *s, int n );
 extern const char *wine_dbgstr_guid( const struct _GUID *id );
