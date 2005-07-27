@@ -89,7 +89,7 @@ DdResetVisrgn(
     HWND hWnd
 );
 
-BOOL 
+HDC 
 STDCALL 
 DdGetDC( 
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
