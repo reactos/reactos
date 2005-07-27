@@ -918,14 +918,14 @@ PrintDiskData (PPARTLIST List,
   if (DiskEntry->DriverName.Length > 0)
     {
       sprintf (LineBuffer,
-	       "%6I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ",
+	       "%6I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S",
 	       DiskSize,
 	       Unit,
 	       DiskEntry->DiskNumber,
 	       DiskEntry->Port,
 	       DiskEntry->Bus,
 	       DiskEntry->Id,
-	       &DiskEntry->DriverName);
+	       DiskEntry->DriverName.Buffer);
     }
   else
     {
