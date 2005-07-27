@@ -1800,6 +1800,43 @@ CreatePrivateObjectSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
 
 
 /*
+ * @unimplemented
+ */
+BOOL STDCALL
+CreatePrivateObjectSecurityEx(PSECURITY_DESCRIPTOR ParentDescriptor,
+                              PSECURITY_DESCRIPTOR CreatorDescriptor,
+                              PSECURITY_DESCRIPTOR* NewDescriptor,
+                              GUID* ObjectType,
+                              BOOL IsContainerObject,
+                              ULONG AutoInheritFlags,
+                              HANDLE Token,
+                              PGENERIC_MAPPING GenericMapping)
+{
+    DPRINT1("%s() not implemented!\n", __FUNCTION__);
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+CreatePrivateObjectSecurityWithMultipleInheritance(PSECURITY_DESCRIPTOR ParentDescriptor,
+                                                   PSECURITY_DESCRIPTOR CreatorDescriptor,
+                                                   PSECURITY_DESCRIPTOR* NewDescriptor,
+                                                   GUID** ObjectTypes,
+                                                   ULONG GuidCount,
+                                                   BOOL IsContainerObject,
+                                                   ULONG AutoInheritFlags,
+                                                   HANDLE Token,
+                                                   PGENERIC_MAPPING GenericMapping)
+{
+    DPRINT1("%s() not implemented!\n", __FUNCTION__);
+    return FALSE;
+}
+
+
+/*
  * @implemented
  */
 BOOL STDCALL

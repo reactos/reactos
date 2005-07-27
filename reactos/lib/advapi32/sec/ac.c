@@ -166,6 +166,25 @@ AddAccessAllowedAceEx(PACL pAcl,
 
 
 /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+AddAccessAllowedObjectAce(
+	PACL	pAcl,
+	DWORD	dwAceRevision,
+	DWORD	AceFlags,
+	DWORD	AccessMask,
+	GUID*	ObjectTypeGuid,
+	GUID*	InheritedObjectTypeGuid,
+	PSID	pSid)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/*
  * @implemented
  */
 BOOL
@@ -217,6 +236,22 @@ AddAccessDeniedAceEx(PACL pAcl,
   }
 
   return TRUE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+AddAccessDeniedObjectAce(
+	PACL	pAcl,
+	DWORD	dwAceRevision,
+	DWORD	AccessMask,
+	PSID	pSid)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
@@ -310,6 +345,27 @@ AddAuditAccessAceEx(PACL pAcl,
   }
 
   return TRUE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+AddAuditAccessObjectAce(
+	PACL	pAcl,
+	DWORD	dwAceRevision,
+	DWORD	AceFlags,
+	DWORD	AccessMask,
+	GUID*	ObjectTypeGuid,
+	GUID*	InheritedObjectTypeGuid,
+	PSID	pSid,
+	BOOL	bAuditSuccess,
+	BOOL	bAuditFailure)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 

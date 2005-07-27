@@ -440,4 +440,21 @@ SetSecurityDescriptorSacl (
 	return TRUE;
 }
 
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+ConvertToAutoInheritPrivateObjectSecurity(IN PSECURITY_DESCRIPTOR ParentDescriptor,
+                                          IN PSECURITY_DESCRIPTOR CurrentSecurityDescriptor,
+                                          OUT PSECURITY_DESCRIPTOR* NewSecurityDescriptor,
+                                          IN GUID* ObjectType,
+                                          IN BOOLEAN IsDirectoryObject,
+                                          IN PGENERIC_MAPPING GenericMapping)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
 /* EOF */
