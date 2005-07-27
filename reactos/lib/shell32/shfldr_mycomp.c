@@ -26,7 +26,6 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include <ctype.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION

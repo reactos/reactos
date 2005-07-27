@@ -21,7 +21,6 @@
 #include "config.h"
 
 #include <stdarg.h>
-#include <ctype.h>
 
 #include "windef.h"
 #include "winbase.h"

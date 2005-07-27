@@ -25,7 +25,6 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
-#include <ctype.h>
 
 #include "wine/unicode.h"
 #include "windef.h"
