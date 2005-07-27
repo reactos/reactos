@@ -103,8 +103,10 @@ static	void WINMM_DeleteIData(void)
  *             WINMM_LoadMMSystem
  *
  */
+#ifndef __REACTOS__
 static HANDLE (WINAPI *pGetModuleHandle16)(LPCSTR);
 static DWORD (WINAPI *pLoadLibrary16)(LPCSTR);
+#endif
 
 BOOL WINMM_CheckForMMSystem(void)
 {

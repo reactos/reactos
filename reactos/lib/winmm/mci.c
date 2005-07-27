@@ -456,15 +456,15 @@ static DWORD MCI_UnmapMsgAtoW(UINT msg, DWORD_PTR dwParam1, DWORD_PTR dwParam2,
             if (dwParam1 & MCI_OPEN_TYPE)
             {
                 if (!(dwParam1 & MCI_OPEN_TYPE_ID))
-                    HeapFree(GetProcessHeap(), 0, mci_openW->lpstrDeviceType);
+                    HeapFree(GetProcessHeap(), 0, (PVOID)mci_openW->lpstrDeviceType);
             }
             if (dwParam1 & MCI_OPEN_ELEMENT)
             {
                 if (!(dwParam1 & MCI_OPEN_ELEMENT_ID))
-                    HeapFree(GetProcessHeap(), 0, mci_openW->lpstrElementName);
+                    HeapFree(GetProcessHeap(), 0, (PVOID)mci_openW->lpstrElementName);
             }
             if (dwParam1 & MCI_OPEN_ALIAS)
-                HeapFree(GetProcessHeap(), 0, mci_openW->lpstrAlias);
+                HeapFree(GetProcessHeap(), 0, (PVOID)mci_openW->lpstrAlias);
             HeapFree(GetProcessHeap(), 0, ptr);
         }
         break;
