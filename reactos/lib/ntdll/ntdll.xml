@@ -18,7 +18,6 @@
 		<file>thread.c</file>
 	</directory>
 	<directory name="dbg">
-		<file>brkpoint.c</file>
 		<file>debug.c</file>
 		<file>print.c</file>
 	</directory>
@@ -32,9 +31,6 @@
 		<file>dllmain.c</file>
 	</directory>
 	<directory name="rtl">
-		<directory name="i386">
-			<file>ftol.c</file>
-		</directory>
 		<file>apc.c</file>
 		<file>callback.c</file>
 		<file>crc32.c</file>

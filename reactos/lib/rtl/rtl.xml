@@ -2,19 +2,17 @@
 	<define name="__USE_W32API" />
 	<define name="_NTOSKRNL_" />
 	<include base="rtl">.</include>
-	<directory name="i386">
-		<file>allshl.s</file>
-		<file>aulldiv.s</file>
-		<file>aullrem.s</file>
-		<file>allshr.s</file>
-		<file>allmul.s</file>
-		<file>aullshr.s</file>
-		<file>alldiv.s</file>
-		<file>allrem.s</file>
-		<file>chkstk.s</file>
-		<file>except.s</file>
-		<file>exception.c</file>
-	</directory>
+	<if property="ARCH" value="i386">
+		<directory name="i386">
+			<file>debug.S</file>
+			<file>chkstk.s</file>
+			<file>except.s</file>
+			<file>exception.c</file>
+			<file>math.S</file>
+			<file>mem.S</file>
+			<file>random.S</file>
+		</directory>
+	</if>
 	<file>access.c</file>
 	<file>acl.c</file>
 	<file>atom.c</file>
@@ -30,9 +28,9 @@
 	<file>generictable.c</file>
 	<file>heap.c</file>
 	<file>image.c</file>
+	<file>mem.c</file>
 	<file>largeint.c</file>
 	<file>luid.c</file>
-	<file>mem.c</file>
 	<file>network.c</file>
 	<file>nls.c</file>
 	<file>ppb.c</file>

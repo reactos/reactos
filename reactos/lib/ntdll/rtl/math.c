@@ -33,6 +33,7 @@ double sin (double __x);
 double sqrt (double __x);
 double tan (double __x);
 
+int _fltused = 0x9875;
 
 double atan (double __x)
 {
