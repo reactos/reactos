@@ -2927,15 +2927,15 @@ void calc_buffer_display(CALC *calc) {
     switch (calc->numBase) {
     case NBASE_HEX:
         real = calc_atof(calc->buffer, calc->numBase);
-        sprintf(calc->display, "%x", (long)real);
+        sprintf(calc->display, "%lx", (long)real);
         break;
 
     case NBASE_OCTAL:
-        sprintf(calc->display, "%o", calc->buffer);
+        sprintf(calc->display, "%lo", (long)calc->buffer);
         break;
 
     case NBASE_BINARY:
-        sprintf(calc->display, "%x", calc->buffer);
+        sprintf(calc->display, "%lx", (long)calc->buffer);
         break;
 
     case NBASE_DECIMAL:
@@ -3060,7 +3060,7 @@ char *calc_sep(char *s)
 
     // commify the integer part now
 
-    while (c = *(s + --n)) {
+    while ((c = *(s + --n))) {
         r[i++] = c;
         if (x++ % 3 == 0)
             r[i++] = ',';
@@ -3258,7 +3258,7 @@ int parse(int wParam, int lParam)
     case 'F':
         {
             char s22[CALC_BUF_SIZE];
-            char w = (char)LOWORD(wParam);
+            UCHAR w = (UCHAR)LOWORD(wParam);
 
             if (!keys[calc.numBase][w]) {
                MessageBeep(0);
