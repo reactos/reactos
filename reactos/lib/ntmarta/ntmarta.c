@@ -173,6 +173,29 @@ AccRewriteGetExplicitEntriesFromAcl(PACL pacl,
 }
 
 
+/**********************************************************************
+ * AccTreeResetNamedSecurityInfo			EXPORTED
+ *
+ * @unimplemented
+ */
+DWORD STDCALL
+AccTreeResetNamedSecurityInfo(LPWSTR pObjectName,
+                              SE_OBJECT_TYPE ObjectType,
+                              SECURITY_INFORMATION SecurityInfo,
+                              PSID pOwner,
+                              PSID pGroup,
+                              PACL pDacl,
+                              PACL pSacl,
+                              BOOL KeepExplicit,
+                              FN_PROGRESSW fnProgress,
+                              PROG_INVOKE_SETTING ProgressInvokeSetting,
+                              PVOID Args)
+{
+    UNIMPLEMENTED;
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
 BOOL STDCALL
 DllMain(IN HINSTANCE hinstDLL,
         IN DWORD dwReason,

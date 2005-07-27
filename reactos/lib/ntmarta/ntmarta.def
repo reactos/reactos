@@ -3,14 +3,14 @@ LIBRARY ntmarta.dll
 EXPORTS
 AccFreeIndexArray@12
 AccGetInheritanceSource@40
-;AccProvHandleGrantAccessRights;
+;AccProvHandleGrantAccessRights
 AccRewriteGetExplicitEntriesFromAcl@12
 AccRewriteGetHandleRights@32
 AccRewriteGetNamedRights@32
 AccRewriteSetEntriesInAcl@16
 AccRewriteSetHandleRights@16
 AccRewriteSetNamedRights@16
-;AccTreeResetNamedSecurityInfo
+AccTreeResetNamedSecurityInfo@44
 ;AccConvertAccessMaskToActrlAccess
 ;AccConvertAccessToSD
 ;AccConvertAccessToSecurityDescriptor

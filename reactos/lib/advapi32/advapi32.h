@@ -18,6 +18,13 @@
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
+#ifndef HAS_FN_PROGRESSW
+#define FN_PROGRESSW FN_PROGRESS
+#endif
+#ifndef HAS_FN_PROGRESSA
+#define FN_PROGRESSA FN_PROGRESS
+#endif
+
 /* Interface to ntmarta.dll **************************************************/
 
 typedef struct _NTMARTA
@@ -71,7 +78,17 @@ typedef struct _NTMARTA
                                                       PULONG pcCountOfExplicitEntries,
                                                       PEXPLICIT_ACCESS_W* pListOfExplicitEntries);
 
-    PVOID TreeResetNamedSecurityInfo;
+    DWORD (STDCALL *TreeResetNamedSecurityInfo)(LPWSTR pObjectName,
+                                                SE_OBJECT_TYPE ObjectType,
+                                                SECURITY_INFORMATION SecurityInfo,
+                                                PSID pOwner,
+                                                PSID pGroup,
+                                                PACL pDacl,
+                                                PACL pSacl,
+                                                BOOL KeepExplicit,
+                                                FN_PROGRESSW fnProgress,
+                                                PROG_INVOKE_SETTING ProgressInvokeSetting,
+                                                PVOID Args);
 
     DWORD (STDCALL *GetInheritanceSource)(LPWSTR pObjectName,
                                           SE_OBJECT_TYPE ObjectType,

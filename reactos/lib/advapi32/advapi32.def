@@ -632,8 +632,8 @@ SystemFunction041@12
 ;TraceEventInstance
 ;TraceMessage
 ;TraceMessageVa
-;TreeResetNamedSecurityInfoA
-;TreeResetNamedSecurityInfoW
+TreeResetNamedSecurityInfoA@44
+TreeResetNamedSecurityInfoW@44
 ;TrusteeAccessToObjectA
 ;TrusteeAccessToObjectW
 ;UninstallApplication

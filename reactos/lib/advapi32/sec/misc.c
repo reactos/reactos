@@ -60,9 +60,7 @@ LoadAndInitializeNtMarta(VOID)
     FindNtMartaProc(RewriteSetHandleRights);
     FindNtMartaProc(RewriteSetEntriesInAcl);
     FindNtMartaProc(RewriteGetExplicitEntriesFromAcl);
-#if 0
     FindNtMartaProc(TreeResetNamedSecurityInfo);
-#endif
     FindNtMartaProc(GetInheritanceSource);
     FindNtMartaProc(FreeIndexArray);
     
@@ -1838,6 +1836,101 @@ SetPrivateObjectSecurity(SECURITY_INFORMATION SecurityInformation,
     }
 
     return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+DWORD STDCALL
+TreeResetNamedSecurityInfoW(LPWSTR pObjectName,
+                            SE_OBJECT_TYPE ObjectType,
+                            SECURITY_INFORMATION SecurityInfo,
+                            PSID pOwner,
+                            PSID pGroup,
+                            PACL pDacl,
+                            PACL pSacl,
+                            BOOL KeepExplicit,
+                            FN_PROGRESSW fnProgress,
+                            PROG_INVOKE_SETTING ProgressInvokeSetting,
+                            PVOID Args)
+{
+    DWORD ErrorCode;
+
+    if (pObjectName != NULL)
+    {
+        ErrorCode = CheckNtMartaPresent();
+        if (ErrorCode == ERROR_SUCCESS)
+        {
+            switch (ObjectType)
+            {
+                case SE_FILE_OBJECT:
+                case SE_REGISTRY_KEY:
+                {
+                    /* check the SecurityInfo flags for sanity (both, the protected
+                       and unprotected dacl/sacl flag must not be passed together */
+                    if (((SecurityInfo & DACL_SECURITY_INFORMATION) &&
+                         (SecurityInfo & (PROTECTED_DACL_SECURITY_INFORMATION | UNPROTECTED_DACL_SECURITY_INFORMATION)) ==
+                             (PROTECTED_DACL_SECURITY_INFORMATION | UNPROTECTED_DACL_SECURITY_INFORMATION))
+
+                        ||
+
+                        ((SecurityInfo & SACL_SECURITY_INFORMATION) &&
+                         (SecurityInfo & (PROTECTED_SACL_SECURITY_INFORMATION | UNPROTECTED_SACL_SECURITY_INFORMATION)) ==
+                             (PROTECTED_SACL_SECURITY_INFORMATION | UNPROTECTED_SACL_SECURITY_INFORMATION)))
+                    {
+                        ErrorCode = ERROR_INVALID_PARAMETER;
+                        break;
+                    }
+
+                    /* call the MARTA provider */
+                    ErrorCode = AccTreeResetNamedSecurityInfo(pObjectName,
+                                                              ObjectType,
+                                                              SecurityInfo,
+                                                              pOwner,
+                                                              pGroup,
+                                                              pDacl,
+                                                              pSacl,
+                                                              KeepExplicit,
+                                                              fnProgress,
+                                                              ProgressInvokeSetting,
+                                                              Args);
+                    break;
+                }
+
+                default:
+                    /* object type not supported */
+                    ErrorCode = ERROR_INVALID_PARAMETER;
+                    break;
+            }
+        }
+    }
+    else
+        ErrorCode = ERROR_INVALID_PARAMETER;
+
+    return ErrorCode;
+}
+
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL
+TreeResetNamedSecurityInfoA(LPSTR pObjectName,
+                            SE_OBJECT_TYPE ObjectType,
+                            SECURITY_INFORMATION SecurityInfo,
+                            PSID pOwner,
+                            PSID pGroup,
+                            PACL pDacl,
+                            PACL pSacl,
+                            BOOL KeepExplicit,
+                            FN_PROGRESSA fnProgress,
+                            PROG_INVOKE_SETTING ProgressInvokeSetting,
+                            PVOID Args)
+{
+    /* That's all this function does, at least up to w2k3... Even MS was too
+       lazy to implement it... */
+    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 /* EOF */

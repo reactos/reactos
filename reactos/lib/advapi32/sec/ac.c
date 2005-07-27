@@ -609,7 +609,7 @@ SetEntriesInAclA(
 
                         ErrorCode = GetLastError();
 
-                        while (i != 0)
+                        do
                         {
                             if (ListOfExplicitEntriesW[i].Trustee.TrusteeForm == TRUSTEE_IS_NAME &&
                                 ListOfExplicitEntriesW[i].Trustee.ptstrName != NULL)
@@ -618,9 +618,7 @@ SetEntriesInAclA(
                                          0,
                                          ListOfExplicitEntriesW[i].Trustee.ptstrName);
                             }
-
-                            i--;
-                        }
+                        } while (i-- != 0);
 
                         /* free the allocated array */
                         HeapFree(GetProcessHeap(),
