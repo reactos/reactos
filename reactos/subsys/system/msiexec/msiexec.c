@@ -162,7 +162,7 @@ static LPWSTR build_properties(struct string_list *property_list)
 	}
 	*p = 0;
 
-	WINE_TRACE("properties -> %s\n", wine_dbgstr_w(ret) );
+	WINE_TRACE("properties -> %S\n", ret);
 
 	return ret;
 }
@@ -258,14 +258,14 @@ static VOID *LoadProc(LPCWSTR DllName, LPCSTR ProcName, HMODULE* DllHandle)
 	*DllHandle = LoadLibraryExW(DllName, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
 	if(!*DllHandle)
 	{
-		fprintf(stderr, "Unable to load dll %s\n", wine_dbgstr_w(DllName));
+		fprintf(stderr, "Unable to load dll %S\n", DllName);
 		ExitProcess(1);
 	}
 	proc = (VOID *) GetProcAddress(*DllHandle, ProcName);
 	if(!proc)
 	{
-		fprintf(stderr, "Dll %s does not implement function %s\n",
-			wine_dbgstr_w(DllName), ProcName);
+		fprintf(stderr, "Dll %S does not implement function %s\n",
+			DllName, ProcName);
 		FreeLibrary(*DllHandle);
 		ExitProcess(1);
 	}
@@ -284,10 +284,10 @@ static DWORD DoDllRegisterServer(LPCWSTR DllName)
 	hr = pfDllRegisterServer();
 	if(FAILED(hr))
 	{
-		fprintf(stderr, "Failed to register dll %s\n", wine_dbgstr_w(DllName));
+		fprintf(stderr, "Failed to register dll %S\n", DllName);
 		return 1;
 	}
-	printf("Successfully registered dll %s\n", wine_dbgstr_w(DllName));
+	printf("Successfully registered dll %S\n", DllName);
 	if(DllHandle)
 		FreeLibrary(DllHandle);
 	return 0;
@@ -304,10 +304,10 @@ static DWORD DoDllUnregisterServer(LPCWSTR DllName)
 	hr = pfDllUnregisterServer();
 	if(FAILED(hr))
 	{
-		fprintf(stderr, "Failed to unregister dll %s\n", wine_dbgstr_w(DllName));
+		fprintf(stderr, "Failed to unregister dll %S\n", DllName);
 		return 1;
 	}
-	printf("Successfully unregistered dll %s\n", wine_dbgstr_w(DllName));
+	printf("Successfully unregistered dll %S\n", DllName);
 	if(DllHandle)
 		FreeLibrary(DllHandle);
 	return 0;
@@ -485,7 +485,7 @@ int main(int argc, char **argv)
 
 	for(i = 1; i < argc; i++)
 	{
-		WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+		WINE_TRACE("argvW[%d] = %S\n", i, argvW[i]);
 
 		if (!msi_strequal(argvW[i], "/regserver"))
 		{
@@ -506,7 +506,7 @@ int main(int argc, char **argv)
 				i++;
 				if(i >= argc)
 					ShowUsage(1);
-				WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+				WINE_TRACE("argvW[%d] = %S\n", i, argvW[i]);
 				argvWi = argvW[i];
 			}
 			PackageName = argvWi;
@@ -519,7 +519,7 @@ int main(int argc, char **argv)
 			i++;
 			if(i >= argc)
 				ShowUsage(1);
-			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+			WINE_TRACE("argvW[%d] = %S\n", i, argvW[i]);
 			PackageName = argvW[i];
 			StringListAppend(&property_list, ActionAdmin);
 		}
@@ -588,7 +588,7 @@ int main(int argc, char **argv)
 			i++;
 			if(i >= argc)
 				ShowUsage(1);
-			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+			WINE_TRACE("argvW[%d] = %S\n", i, argvW[i]);
 			PackageName = argvW[i];
 		}
 		else if(!msi_strequal(argvW[i], "/x"))
@@ -597,7 +597,7 @@ int main(int argc, char **argv)
 			i++;
 			if(i >= argc)
 				ShowUsage(1);
-			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+			WINE_TRACE("argvW[%d] = %S\n", i, argvW[i]);
 			PackageName = argvW[i];
 			StringListAppend(&property_list, RemoveAll);
 		}
@@ -626,7 +626,7 @@ int main(int argc, char **argv)
 			i++;
 			if(i >= argc)
 				ShowUsage(1);
-			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+			WINE_TRACE("argvW[%d] = %S\n", i, argvW[i]);
 			PackageName = argvW[i];
 		}
 		else if(!msi_strequal(argvW[i], "u"))
@@ -636,7 +636,7 @@ int main(int argc, char **argv)
 			i++;
 			if(i >= argc)
 				ShowUsage(1);
-			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+			WINE_TRACE("argvW[%d] = %S\n", i, argvW[i]);
 			PackageName = argvW[i];
 		}
 		else if(!msi_strequal(argvW[i], "m"))
@@ -646,7 +646,7 @@ int main(int argc, char **argv)
 			i++;
 			if(i >= argc)
 				ShowUsage(1);
-			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+			WINE_TRACE("argvW[%d] = %S\n", i, argvW[i]);
 			PackageName = argvW[i];
 		}
 		else if(!msi_strequal(argvW[i], "/t"))
@@ -654,7 +654,7 @@ int main(int argc, char **argv)
 			i++;
 			if(i >= argc)
 				ShowUsage(1);
-			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+			WINE_TRACE("argvW[%d] = %S\n", i, argvW[i]);
 			StringListAppend(&transform_list, argvW[i]);
 		}
 		else if(!msi_strprefix(argvW[i], "TRANSFORMS="))
@@ -666,7 +666,7 @@ int main(int argc, char **argv)
 			i++;
 			if(i >= argc)
 				ShowUsage(1);
-			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+			WINE_TRACE("argvW[%d] = %S\n", i, argvW[i]);
 			Language = msi_atou(argvW[i]);
 		}
 		else if(!msi_strprefix(argvW[i], "/l"))
@@ -751,12 +751,12 @@ int main(int argc, char **argv)
 			i++;
 			if(i >= argc)
 				ShowUsage(1);
-			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+			WINE_TRACE("argvW[%d] = %S\n", i, argvW[i]);
 			LogFileName = argvW[i];
 			if(MsiEnableLogW(LogMode, LogFileName, LogAttributes) != ERROR_SUCCESS)
 			{
-				fprintf(stderr, "Logging in %s (0x%08lx, %lu) failed\n",
-					 wine_dbgstr_w(LogFileName), LogMode, LogAttributes);
+				fprintf(stderr, "Logging in %S (0x%08lx, %lu) failed\n",
+					 LogFileName, LogMode, LogAttributes);
 				ExitProcess(1);
 			}
 		}
@@ -766,7 +766,7 @@ int main(int argc, char **argv)
 			i++;
 			if(i >= argc)
 				ShowUsage(1);
-			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+			WINE_TRACE("argvW[%d] = %S\n", i, argvW[i]);
 			PatchFileName = argvW[i];
 		}
 		else if(!msi_strprefix(argvW[i], "/q"))
@@ -806,8 +806,8 @@ int main(int argc, char **argv)
 			}
 			else
 			{
-				fprintf(stderr, "Unknown option \"%s\" for UI level\n",
-					 wine_dbgstr_w(argvW[i]+2));
+				fprintf(stderr, "Unknown option \"%S\" for UI level\n",
+					 argvW[i]+2);
 			}
 		}
 		else if(!msi_strequal(argvW[i], "/y"))
@@ -816,7 +816,7 @@ int main(int argc, char **argv)
 			i++;
 			if(i >= argc)
 				ShowUsage(1);
-			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+			WINE_TRACE("argvW[%d] = %S\n", i, argvW[i]);
 			DllName = argvW[i];
 		}
 		else if(!msi_strequal(argvW[i], "/z"))
@@ -825,7 +825,7 @@ int main(int argc, char **argv)
 			i++;
 			if(i >= argc)
 				ShowUsage(1);
-			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+			WINE_TRACE("argvW[%d] = %S\n", i, argvW[i]);
 			DllName = argvW[i];
 		}
 		else if(!msi_strequal(argvW[i], "/h") || !msi_strequal(argvW[i], "/?"))

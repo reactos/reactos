@@ -63,7 +63,7 @@ static VOID PrintWin32Error( LPTSTR Message, DWORD ErrorCode )
 					MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 					(LPTSTR)&lpMsgBuf, 0, NULL );
 
-	_tprintf(_T("%S: %S\n"), Message, lpMsgBuf );
+	_tprintf(_T("%S: %S\n"), (LPWSTR)Message, (LPWSTR)lpMsgBuf );
 	LocalFree( lpMsgBuf );
 }
 
