@@ -31,7 +31,9 @@
 /* INCLUDES *******************************************************************/
 
 #include <user32.h>
-#include <oleacc.h>
+#define NDEBUG
+#include <debug.h>
+
 
 /* GLOBAL VARIABLES ***********************************************************/
 
@@ -70,7 +72,7 @@ HBRUSH DefWndControlColor(HDC hDC, UINT ctlType);
 static LRESULT WINAPI ScrollBarWndProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
 UINT STDCALL SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
-WINBOOL STDCALL KillSystemTimer(HWND,UINT_PTR);
+BOOL STDCALL KillSystemTimer(HWND,UINT_PTR);
 
 /*********************************************************************
  * scrollbar class descriptor
@@ -1272,10 +1274,11 @@ ScrollBarWndProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 //              infoPtr->flags = wParam ? ESB_ENABLE_BOTH : ESB_DISABLE_BOTH;
 //              SCROLL_RefreshScrollBar(hwnd, SB_CTL, TRUE, TRUE);
 //            }
+          HDC hdc;
           DbgPrint("ScrollBarWndProc WM_ENABLE\n");
           NtUserEnableScrollBar(Wnd,SB_CTL,(wParam ? ESB_ENABLE_BOTH : ESB_DISABLE_BOTH));
           /* Refresh Scrollbars. */          
-          HDC hdc = GetDCEx( Wnd, 0, DCX_CACHE );
+          hdc = GetDCEx( Wnd, 0, DCX_CACHE );
           if (!hdc) return 1;
           IntDrawScrollBar( Wnd, hdc, SB_CTL);
           ReleaseDC( Wnd, hdc );

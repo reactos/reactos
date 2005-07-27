@@ -239,7 +239,7 @@ extern	void		WDML_BroadcastDDEWindows(const char* clsName, UINT uMsg,
 						 WPARAM wParam, LPARAM lParam);
 extern	void		WDML_NotifyThreadExit(DWORD tid);
 
-static inline void WDML_ExtractAck(WORD status, DDEACK* da)
+static __inline void WDML_ExtractAck(WORD status, DDEACK* da)
 {
     *da = *((DDEACK*)&status);
 }

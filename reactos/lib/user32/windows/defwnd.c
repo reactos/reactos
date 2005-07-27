@@ -12,6 +12,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <user32.h>
+#define NDEBUG
+#include <debug.h>
 
 #ifndef WM_SETVISIBLE
 #define WM_SETVISIBLE 9
@@ -369,6 +371,7 @@ UserDrawWindowFrame(HDC hdc, const RECT *rect,
 		    ULONG width, ULONG height)
 {
   static HBRUSH hDraggingRectBrush = NULL;
+  HBRUSH hbrush;
 
   if(!hDraggingRectBrush)
   {
@@ -379,7 +382,7 @@ UserDrawWindowFrame(HDC hdc, const RECT *rect,
     hDraggingRectBrush = CreatePatternBrush(hDraggingPattern);
   }
 
-  HBRUSH hbrush = SelectObject( hdc, hDraggingRectBrush );
+  hbrush = SelectObject( hdc, hDraggingRectBrush );
   PatBlt( hdc, rect->left, rect->top,
 	  rect->right - rect->left - width, height, PATINVERT );
   PatBlt( hdc, rect->left, rect->top + height, width,

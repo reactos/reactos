@@ -32,6 +32,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <user32.h>
+#define NDEBUG
+#include <debug.h>
 
 /* MACROS/DEFINITIONS ********************************************************/
 
@@ -1864,7 +1866,7 @@ GetDlgItem(
     GETDLGITEMINFO info;
     info.nIDDlgItem = nIDDlgItem;
     info.control = 0;
-    if(hDlg && !EnumChildWindows(hDlg, (ENUMWINDOWSPROC)&GetDlgItemEnumProc, (LPARAM)&info))
+    if(hDlg && !EnumChildWindows(hDlg, (WNDENUMPROC)&GetDlgItemEnumProc, (LPARAM)&info))
         return info.control;
     else
         return 0;

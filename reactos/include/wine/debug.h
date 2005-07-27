@@ -6,27 +6,17 @@
 #include <windows.h>
 #include <wchar.h>
 
+/* Add ROS Master debug functions if not added yet */
+#ifndef __INTERNAL_DEBUG
+#include <reactos/debug.h>
+#endif
+
 #ifndef __GNUC__
 #define	__FUNCTION__ ""
 #define	inline __inline
 #endif
 
 unsigned long DbgPrint(char *Format,...);
-
-#ifdef DBG
-#define DPRINT1 DbgPrint("(%s:%d:%s) ",__FILE__,__LINE__,__FUNCTION__), DbgPrint
-#else
-#define DPRINT1(...)
-#endif
-
-#if !defined(DBG) || !defined(YDEBUG)
-#define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
-#else
-#define DPRINT DbgPrint("(%s:%d:%s) ",__FILE__,__LINE__,__FUNCTION__), DbgPrint
-#endif
-
-#define UNIMPLEMENTED   DbgPrint("WARNING:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__);
-
 
 struct _GUID;
 

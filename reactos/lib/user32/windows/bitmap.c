@@ -667,6 +667,9 @@ LoadBitmapW(HINSTANCE hInstance, LPCWSTR lpBitmapName)
 HANDLE WINAPI
 CopyImage(HANDLE hnd, UINT type, INT desiredx, INT desiredy, UINT flags)
 {
+    HBITMAP res;
+    BITMAP bm;
+
 	switch (type)
 	{
         case IMAGE_BITMAP:
@@ -675,8 +678,6 @@ CopyImage(HANDLE hnd, UINT type, INT desiredx, INT desiredy, UINT flags)
         		/* FIXME:  support flags LR_COPYDELETEORG, LR_COPYFROMRESOURCE,
      	   							 LR_COPYRETURNORG, LR_CREATEDIBSECTION,
      	   							 and LR_MONOCHROME; */
-				HBITMAP res;
-				BITMAP bm;
 
 				if (!GetObjectW(hnd, sizeof(bm), &bm)) return 0;
 				bm.bmBits = NULL;

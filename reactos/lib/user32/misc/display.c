@@ -29,6 +29,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <user32.h>
+#define NDEBUG
+#include <debug.h>
 
 #define SIZEOF_DEVMODEA_300 124
 #define SIZEOF_DEVMODEA_400 148

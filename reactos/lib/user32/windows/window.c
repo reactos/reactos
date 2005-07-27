@@ -12,6 +12,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <user32.h>
+#define NDEBUG
+#include <debug.h>
 
 BOOL ControlsInitialized = FALSE;
 
@@ -383,7 +385,7 @@ STATIC
 User32EnumWindows (
 	HDESK hDesktop,
 	HWND hWndparent,
-	ENUMWINDOWSPROC lpfn,
+	WNDENUMPROC lpfn,
 	LPARAM lParam,
 	DWORD dwThreadId,
 	BOOL bChildren )
@@ -457,7 +459,7 @@ BOOL
 STDCALL
 EnumChildWindows(
 	HWND hWndParent,
-	ENUMWINDOWSPROC lpEnumFunc,
+	WNDENUMPROC lpEnumFunc,
 	LPARAM lParam)
 {
   if ( !hWndParent )
@@ -472,7 +474,7 @@ EnumChildWindows(
 BOOL
 STDCALL
 EnumThreadWindows(DWORD dwThreadId,
-		  ENUMWINDOWSPROC lpfn,
+		  WNDENUMPROC lpfn,
 		  LPARAM lParam)
 {
   if ( !dwThreadId )
@@ -485,7 +487,7 @@ EnumThreadWindows(DWORD dwThreadId,
  * @implemented
  */
 BOOL STDCALL
-EnumWindows(ENUMWINDOWSPROC lpEnumFunc,
+EnumWindows(WNDENUMPROC lpEnumFunc,
 	    LPARAM lParam)
 {
   return User32EnumWindows ( NULL, NULL, lpEnumFunc, lParam, 0, FALSE );
@@ -499,7 +501,7 @@ BOOL
 STDCALL
 EnumDesktopWindows(
 	HDESK hDesktop,
-	ENUMWINDOWSPROC lpfn,
+	WNDENUMPROC lpfn,
 	LPARAM lParam)
 {
   return User32EnumWindows ( hDesktop, NULL, lpfn, lParam, 0, FALSE );

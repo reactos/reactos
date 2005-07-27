@@ -34,7 +34,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <user32.h>
-#include "../controls/controls.h"
+#define NDEBUG
+#include <debug.h>
 
 /* internal popup menu window messages */
 #define MM_SETMENUHANDLE (WM_USER + 0)

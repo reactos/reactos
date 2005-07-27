@@ -1,16 +1,11 @@
 #include <user32.h>
+#define NDEBUG
+#include <debug.h>
 
 /* FIXME: Belongs to some header. */
-WINBOOL STDCALL GdiDllInitialize(HANDLE, DWORD, LPVOID);
+BOOL STDCALL GdiDllInitialize(HANDLE, DWORD, LPVOID);
 void InitStockObjects(void);
 VOID DeleteFrameBrushes(VOID);
-
-#ifdef DBG
-
-/* See debug.h for debug/trace constants */
-DWORD DebugTraceLevel = MIN_TRACE;
-
-#endif /* DBG */
 
 extern CRITICAL_SECTION gcsMPH;
 static ULONG User32TlsIndex;

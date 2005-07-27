@@ -63,7 +63,7 @@
 #endif
 
 #ifndef NDEBUG
-#define DPRINT(...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(__VA_ARGS__); } while(0);
+#define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
 #define CHECKPOINT do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0);
 #else
 #ifdef __GNUC__

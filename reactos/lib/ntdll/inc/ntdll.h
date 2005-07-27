@@ -20,6 +20,9 @@
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
+/* ELF Support */
+#include <elf/elf.h>
+
 /* Internal NTDLL */
 #include "ntdllp.h"
 

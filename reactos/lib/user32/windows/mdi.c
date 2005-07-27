@@ -80,23 +80,10 @@
  *
  */
 
-#define __WINE__
+#include <user32.h>
+#define NDEBUG
+#include <debug.h>
 
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "wine/unicode.h"
-#include "user32.h"
-#include <winnls.h>
-#include "wine/debug.h"
-#include "dlgs.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mdi);
 
@@ -208,7 +195,7 @@ static HWND MDI_GetChildByID(HWND hwnd, UINT id)
 {
 #ifdef __REACTOS__
     DWORD Control = id;
-    if (hwnd && !EnumChildWindows(hwnd, (ENUMWINDOWSPROC)&MDI_GetChildByID_EnumProc, (LPARAM)&Control))
+    if (hwnd && !EnumChildWindows(hwnd, (WNDENUMPROC)&MDI_GetChildByID_EnumProc, (LPARAM)&Control))
     {
         return (HWND)Control;
     }

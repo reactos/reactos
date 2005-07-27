@@ -18,15 +18,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define __WINE__
 #include <user32.h>
-#include <string.h>
-#include <stdlib.h>
-#include "controls.h"
-#include "wine/debug.h"
+#define NDEBUG
+#include <debug.h>
 
-#ifdef __REACTOS__
-#include "wine/unicode.h"
 /* Start of hack section -------------------------------- */
 
 typedef short *LPINT16;
@@ -42,10 +37,9 @@ BOOL is_old_app(HWND hwnd)
 #define WM_SYSTIMER         280
 
 UINT STDCALL SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
-WINBOOL STDCALL KillSystemTimer(HWND,UINT_PTR);
+BOOL STDCALL KillSystemTimer(HWND,UINT_PTR);
 
 /* End of hack section -------------------------------- */
-#endif
 
 /* Unimplemented yet:
  * - LBS_USETABSTOPS
