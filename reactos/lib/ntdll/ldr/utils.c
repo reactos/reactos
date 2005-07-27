@@ -96,7 +96,7 @@ LdrMappedAsDataFile(PVOID *BaseAddress)
    return FALSE;
 }
 
-static inline LONG LdrpDecrementLoadCount(PLDR_DATA_TABLE_ENTRY Module, BOOLEAN Locked)
+static __inline LONG LdrpDecrementLoadCount(PLDR_DATA_TABLE_ENTRY Module, BOOLEAN Locked)
 {
    LONG LoadCount;
    if (!Locked)
@@ -115,7 +115,7 @@ static inline LONG LdrpDecrementLoadCount(PLDR_DATA_TABLE_ENTRY Module, BOOLEAN 
    return LoadCount;
 }
 
-static inline LONG LdrpIncrementLoadCount(PLDR_DATA_TABLE_ENTRY Module, BOOLEAN Locked)
+static __inline LONG LdrpIncrementLoadCount(PLDR_DATA_TABLE_ENTRY Module, BOOLEAN Locked)
 {
    LONG LoadCount;
    if (!Locked)
@@ -134,7 +134,7 @@ static inline LONG LdrpIncrementLoadCount(PLDR_DATA_TABLE_ENTRY Module, BOOLEAN 
    return LoadCount;
 }
 
-static inline VOID LdrpAcquireTlsSlot(PLDR_DATA_TABLE_ENTRY Module, ULONG Size, BOOLEAN Locked)
+static __inline VOID LdrpAcquireTlsSlot(PLDR_DATA_TABLE_ENTRY Module, ULONG Size, BOOLEAN Locked)
 {
    if (!Locked)
      {
@@ -149,7 +149,7 @@ static inline VOID LdrpAcquireTlsSlot(PLDR_DATA_TABLE_ENTRY Module, ULONG Size, 
      }
 }
 
-static inline VOID LdrpTlsCallback(PLDR_DATA_TABLE_ENTRY Module, ULONG dwReason)
+static __inline VOID LdrpTlsCallback(PLDR_DATA_TABLE_ENTRY Module, ULONG dwReason)
 {
    PIMAGE_TLS_CALLBACK TlsCallback;
    if (Module->TlsIndex != 0xFFFF && Module->LoadCount == 0xFFFF)

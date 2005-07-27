@@ -9,6 +9,9 @@
 /* INCLUDES ******************************************************************/
 
 /* C Headers */
+#define _CTYPE_DISABLE_MACROS
+#define _INC_SWPRINTF_INL_
+#include <limits.h>
 #include <stdio.h>
 #include <ctype.h>
 

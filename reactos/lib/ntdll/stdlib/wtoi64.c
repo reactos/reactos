@@ -6,8 +6,7 @@
  * PURPOSE:         converts a unicode string to 64 bit integer
  */
 
-#include <stdlib.h>
-#include <ctype.h>
+#include <ntdll.h>
 
 /*
  * @implemented

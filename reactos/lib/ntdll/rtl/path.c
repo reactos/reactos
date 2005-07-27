@@ -406,7 +406,7 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
  * 2) Get rid of duplicate backslashes
  * 3) Get rid of . and .. components in the path.
  */
-static inline void collapse_path( WCHAR *path, UINT mark )
+static __inline void collapse_path( WCHAR *path, UINT mark )
 {
     WCHAR *p, *next;
 

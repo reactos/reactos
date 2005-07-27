@@ -1,5 +1,4 @@
-#include <search.h>
-#include <stdlib.h>
+#include <ntdll.h>
 
 
 /*

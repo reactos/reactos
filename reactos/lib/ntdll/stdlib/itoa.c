@@ -15,8 +15,7 @@
  * Copyright 2003 Thomas Mertes
  */
 
-#include <stdlib.h>
-#include <string.h>
+#include <ntdll.h>
 
 /*
  * @implemented

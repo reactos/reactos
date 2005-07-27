@@ -9,7 +9,7 @@
  *              1998: Added ltoa Boudewijn Dekker
  */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <stdlib.h>
+#include <ntdll.h>
 
 /*
  * @implemented
