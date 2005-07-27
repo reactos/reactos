@@ -1821,12 +1821,12 @@ static void CheckForFileInfo(struct PropertiesDialog* dlg, HWND hwnd, LPCTSTR st
 	static TCHAR sTranslation[] = {'\\','V','a','r','F','i','l','e','I','n','f','o','\\','T','r','a','n','s','l','a','t','i','o','n','\0'};
 	static TCHAR sStringFileInfo[] = {'\\','S','t','r','i','n','g','F','i','l','e','I','n','f','o','\\',
 										'%','0','4','x','%','0','4','x','\\','%','s','\0'};
-	DWORD dwVersionDataLen = GetFileVersionInfoSize(strFilename, NULL);
+	DWORD dwVersionDataLen = GetFileVersionInfoSize((LPWSTR)strFilename, NULL);
 
 	if (dwVersionDataLen) {
 		dlg->pVersionData = malloc(dwVersionDataLen);
 
-		if (GetFileVersionInfo(strFilename, 0, dwVersionDataLen, dlg->pVersionData)) {
+		if (GetFileVersionInfo((LPWSTR)strFilename, 0, dwVersionDataLen, dlg->pVersionData)) {
 			LPVOID pVal;
 			UINT nValLen;
 
