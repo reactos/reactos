@@ -279,7 +279,7 @@ bm_extract_package_data (
 	}
 
 	head = buffer->pointer;
-	tail = buffer->pointer + tail_offset;
+	tail = head + tail_offset;
 
 	/*
 	 * Extract package data:

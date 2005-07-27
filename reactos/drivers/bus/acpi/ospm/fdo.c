@@ -162,6 +162,10 @@ AcpiCreateResourceList(PCM_RESOURCE_LIST* pResourceList,
         Done = TRUE;
         break;
       }
+      default:
+      {
+        break;
+      }
     }
     resource = (RESOURCE *) ((NATIVE_UINT) resource + (NATIVE_UINT) resource->length);
   }
@@ -299,6 +303,10 @@ AcpiCreateResourceList(PCM_RESOURCE_LIST* pResourceList,
       case end_tag:
       {
         Done = TRUE;
+        break;
+      }
+      default:
+      {
         break;
       }
     }
@@ -471,7 +479,7 @@ FdoQueryBusRelations(
   return Status;
 }
 
-
+#ifndef NDEBUG
 static VOID
 ACPIPrintInfo(
   PFDO_DEVICE_EXTENSION DeviceExtension)
@@ -491,7 +499,7 @@ ACPIPrintInfo(
            (DeviceExtension->SystemStates[5]?'+':'-'));
   DbgPrint("+------------------------------------------------------------\n");
 }
-
+#endif
 
 static NTSTATUS
 ACPIInitializeInternalDriver(
