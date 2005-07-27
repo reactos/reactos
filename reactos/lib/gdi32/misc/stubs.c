@@ -1200,7 +1200,7 @@ CheckColorsInGamut(
 /*
  * @unimplemented
  */
-HANDLE
+HCOLORSPACE
 STDCALL
 GetColorSpace(
 	HDC	hDc
@@ -1215,7 +1215,7 @@ GetColorSpace(
 /*
  * @unimplemented
  */
-BOOL
+HCOLORSPACE
 STDCALL
 SetColorSpace(
 	HDC		a0,
@@ -3950,7 +3950,7 @@ HWND hWnd
 /*
  * @unimplemented
  */
-BOOL STDCALL DdGetDC( 
+HDC STDCALL DdGetDC( 
 LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
 LPPALETTEENTRY pColorTable
 )

@@ -16,7 +16,6 @@
 #include <win32k/dc.h>
 #include <win32k/coord.h>
 #include <win32k/bitmaps.h>
-#include <win32k/debug.h>
 #include <win32k/fillshap.h>
 #include <win32k/font.h>
 #include <win32k/icm.h>

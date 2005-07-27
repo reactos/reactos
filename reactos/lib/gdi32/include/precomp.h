@@ -9,12 +9,14 @@
 /* INCLUDES ******************************************************************/
 
 /* SDK/DDK/NDK Headers. */
+#define NTOS_MODE_USER
+#define __GDI32__
 #include <windows.h>
 #include <ddraw.h>
-#include <ddk/winddi.h>
-#include <ddk/prntfont.h>
+#include <ddrawi.h>
+#include <winddi.h>
+#include <prntfont.h>
 #include <ddrawgdi.h>
-#define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
 /* Win32K External Headers */

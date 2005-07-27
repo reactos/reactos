@@ -2,7 +2,7 @@
 #ifndef __WIN32K_DRIVER_H
 #define __WIN32K_DRIVER_H
 
-#include <ddk/winddi.h>
+#include <winddi.h>
 
 typedef BOOL (STDCALL *PGD_ENABLEDRIVER)(ULONG, ULONG, PDRVENABLEDATA);
 typedef DHPDEV (STDCALL *PGD_ENABLEPDEV)(DEVMODEW  *,
