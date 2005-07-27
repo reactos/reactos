@@ -1457,57 +1457,6 @@ static HRESULT _SHGetAllUsersProfilePath(DWORD dwFlags, BYTE folder,
     return hr;
 }
 
-static HRESULT _SHOpenProfilesKey(PHKEY pKey)
-{
-    LONG lRet;
-    DWORD disp;
-
-    lRet = RegCreateKeyExW(HKEY_LOCAL_MACHINE, ProfileListW, 0, NULL, 0,
-     KEY_ALL_ACCESS, NULL, pKey, &disp);
-    return HRESULT_FROM_WIN32(lRet);
-}
-
-/* Reads the value named szValueName from the key profilesKey (assumed to be
- * opened by _SHOpenProfilesKey) into szValue, which is assumed to be MAX_PATH
- * WCHARs in length.  If it doesn't exist, returns szDefault (and saves
- * szDefault to the registry).
- */
-static HRESULT _SHGetProfilesValue(HKEY profilesKey, LPCWSTR szValueName,
- LPWSTR szValue, LPCWSTR szDefault)
-{
-    HRESULT hr;
-    DWORD type, dwPathLen = MAX_PATH * sizeof(WCHAR);
-    LONG lRet;
-
-    TRACE("%p,%s,%p,%s\n", profilesKey, debugstr_w(szValueName), szValue,
-     debugstr_w(szDefault));
-    lRet = RegQueryValueExW(profilesKey, szValueName, NULL, &type,
-     (LPBYTE)szValue, &dwPathLen);
-    if (!lRet && (type == REG_SZ || type == REG_EXPAND_SZ) && dwPathLen
-     && *szValue)
-    {
-        dwPathLen /= sizeof(WCHAR);
-        szValue[dwPathLen] = '\0';
-        hr = S_OK;
-    }
-    else
-    {
-        /* Missing or invalid value, set a default */
-        lstrcpynW(szValue, szDefault, MAX_PATH);
-        TRACE("Setting missing value %s to %s\n", debugstr_w(szValueName),
-                                                  debugstr_w(szValue));
-        lRet = RegSetValueExW(profilesKey, szValueName, 0, REG_EXPAND_SZ,
-                              (LPBYTE)szValue,
-                              (strlenW(szValue) + 1) * sizeof(WCHAR));
-        if (lRet)
-            hr = HRESULT_FROM_WIN32(lRet);
-        else
-            hr = S_OK;
-    }
-    TRACE("returning 0x%08lx (output value is %s)\n", hr, debugstr_w(szValue));
-    return hr;
-}
-
 /* From the original Wine source:
  *
  * Attempts to expand environment variables from szSrc into szDest, which is
