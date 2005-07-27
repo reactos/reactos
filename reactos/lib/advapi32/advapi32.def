@@ -550,8 +550,8 @@ RevertToSelf@0
 SetAclInformation@16
 ;SetEntriesInAccessListA
 ;SetEntriesInAccessListW
-;SetEntriesInAclA@16
-;SetEntriesInAclW@16
+SetEntriesInAclA@16
+SetEntriesInAclW@16
 ;SetEntriesInAuditListA
 ;SetEntriesInAuditListW
 SetFileSecurityA@12

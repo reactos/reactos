@@ -15,76 +15,8 @@
 
 /* Interface to ntmarta.dll ***************************************************/
 
-typedef struct _NTMARTA
-{
-    HINSTANCE hDllInstance;
-
-    PVOID LookupAccountTrustee;
-    PVOID LookupAccountName;
-    PVOID LookupAccountSid;
-    PVOID SetEntriesInAList;
-    PVOID ConvertAccessToSecurityDescriptor;
-    PVOID ConvertSDToAccess;
-    PVOID ConvertAclToAccess;
-    PVOID GetAccessForTrustee;
-    PVOID GetExplicitEntries;
-
-    DWORD (STDCALL *RewriteGetNamedRights)(LPWSTR pObjectName,
-                                           SE_OBJECT_TYPE ObjectType,
-                                           SECURITY_INFORMATION SecurityInfo,
-                                           PSID* ppsidOwner,
-                                           PSID* ppsidGroup,
-                                           PACL* ppDacl,
-                                           PACL* ppSacl,
-                                           PSECURITY_DESCRIPTOR* ppSecurityDescriptor);
-
-    DWORD (STDCALL *RewriteSetNamedRights)(LPWSTR pObjectName,
-                                           SE_OBJECT_TYPE ObjectType,
-                                           SECURITY_INFORMATION SecurityInfo,
-                                           PSECURITY_DESCRIPTOR pSecurityDescriptor);
-
-    DWORD (STDCALL *RewriteGetHandleRights)(HANDLE handle,
-                                            SE_OBJECT_TYPE ObjectType,
-                                            SECURITY_INFORMATION SecurityInfo,
-                                            PSID* ppsidOwner,
-                                            PSID* ppsidGroup,
-                                            PACL* ppDacl,
-                                            PACL* ppSacl,
-                                            PSECURITY_DESCRIPTOR* ppSecurityDescriptor);
-
-    DWORD (STDCALL *RewriteSetHandleRights)(HANDLE handle,
-                                            SE_OBJECT_TYPE ObjectType,
-                                            SECURITY_INFORMATION SecurityInfo,
-                                            PSECURITY_DESCRIPTOR pSecurityDescriptor);
-
-    PVOID RewriteSetEntriesInAcl;
-    PVOID RewriteGetExplicitEntriesFromAcl;
-    PVOID TreeResetNamedSecurityInfo;
-    PVOID GetInheritanceSource;
-    PVOID FreeIndexArray;
-} NTMARTA, *PNTMARTA;
-
-static NTMARTA NtMartaStatic = { 0 };
+NTMARTA NtMartaStatic = { 0 };
 static PNTMARTA NtMarta = NULL;
-
-#define AccLookupAccountTrustee NtMartaStatic.LookupAccountTrustee
-#define AccLookupAccountName NtMartaStatic.LookupAccountName
-#define AccLookupAccountSid NtMartaStatic.LookupAccountSid
-#define AccSetEntriesInAList NtMartaStatic.SetEntriesInAList
-#define AccConvertAccessToSecurityDescriptor NtMartaStatic.ConvertAccessToSecurityDescriptor
-#define AccConvertSDToAccess NtMartaStatic.ConvertSDToAccess
-#define AccConvertAclToAccess NtMartaStatic.ConvertAclToAccess
-#define AccGetAccessForTrustee NtMartaStatic.GetAccessForTrustee
-#define AccGetExplicitEntries NtMartaStatic.GetExplicitEntries
-#define AccRewriteGetNamedRights NtMartaStatic.RewriteGetNamedRights
-#define AccRewriteSetNamedRights NtMartaStatic.RewriteSetNamedRights
-#define AccRewriteGetHandleRights NtMartaStatic.RewriteGetHandleRights
-#define AccRewriteSetHandleRights NtMartaStatic.RewriteSetHandleRights
-#define AccRewriteSetEntriesInAcl NtMartaStatic.RewriteSetEntriesInAcl
-#define AccRewriteGetExplicitEntriesFromAcl NtMartaStatic.RewriteGetExplicitEntriesFromAcl
-#define AccTreeResetNamedSecurityInfo NtMartaStatic.TreeResetNamedSecurityInfo
-#define AccGetInheritanceSource NtMartaStatic.GetInheritanceSource
-#define AccFreeIndexArray NtMartaStatic.FreeIndexArray
 
 #define FindNtMartaProc(Name)                                                  \
     NtMartaStatic.Name = (PVOID)GetProcAddress(NtMartaStatic.hDllInstance,     \
@@ -126,8 +58,8 @@ LoadAndInitializeNtMarta(VOID)
     FindNtMartaProc(RewriteSetNamedRights);
     FindNtMartaProc(RewriteGetHandleRights);
     FindNtMartaProc(RewriteSetHandleRights);
-#if 0
     FindNtMartaProc(RewriteSetEntriesInAcl);
+#if 0
     FindNtMartaProc(RewriteGetExplicitEntriesFromAcl);
     FindNtMartaProc(TreeResetNamedSecurityInfo);
     FindNtMartaProc(GetInheritanceSource);
@@ -137,7 +69,7 @@ LoadAndInitializeNtMarta(VOID)
     return ERROR_SUCCESS;
 }
 
-static DWORD
+DWORD
 CheckNtMartaPresent(VOID)
 {
     DWORD ErrorCode;

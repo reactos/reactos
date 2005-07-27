@@ -7,7 +7,7 @@ EXPORTS
 ;AccRewriteGetExplicitEntriesFromAcl
 AccRewriteGetHandleRights@32
 AccRewriteGetNamedRights@32
-;AccRewriteSetEntriesInAcl
+AccRewriteSetEntriesInAcl@16
 AccRewriteSetHandleRights@16
 AccRewriteSetNamedRights@16
 ;AccTreeResetNamedSecurityInfo

@@ -105,6 +105,22 @@ AccRewriteSetNamedRights(LPWSTR pObjectName,
 }
 
 
+/**********************************************************************
+ * AccRewriteSetEntriesInAcl				EXPORTED
+ *
+ * @unimplemented
+ */
+DWORD STDCALL
+AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
+                          PEXPLICIT_ACCESS_W pListOfExplicitEntries,
+                          PACL OldAcl,
+                          PACL* NewAcl)
+{
+    UNIMPLEMENTED;
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
 BOOL STDCALL
 DllMain(IN HINSTANCE hinstDLL,
         IN DWORD dwReason,
