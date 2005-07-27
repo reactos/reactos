@@ -125,6 +125,27 @@ VOID STDCALL DriverUnload(PDRIVER_OBJECT DriverObject)
 	ohci_hcd_pci_cleanup();
 }
 
+void RegisterISR(PDEVICE_OBJECT DeviceObject)
+{
+#if 0
+	NTSTATUS Status;
+	POHCI_DEVICE_EXTENSION DeviceExtension = (POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+	/* Connect interrupt and enable them */
+	Status = IoConnectInterrupt(
+		&DeviceExtension->InterruptObject, SerialInterruptService,
+		DeviceObject, NULL,
+		Vector, Dirql, Dirql,
+		InterruptMode, ShareInterrupt,
+		Affinity, FALSE);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT("hci: IoConnectInterrupt() failed with status 0x%08x\n", Status);
+		return 1;
+	}
+#endif
+}
+
 NTSTATUS
 InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 {
@@ -154,6 +175,9 @@ InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 	// Probe device with real id now
 	ohci_pci_driver.probe(dev, pci_ids);
 
+	// Register interrupt here
+	RegisterISR(DeviceObject);
+
 	DPRINT1("InitLinuxWrapper() done\n");
 
 	return STATUS_SUCCESS;
@@ -168,6 +192,9 @@ OHCD_PnPStartDevice(IN PDEVICE_OBJECT DeviceObject,
 	POHCI_DRIVER_EXTENSION DriverExtension;
 	POHCI_DEVICE_EXTENSION DeviceExtension;
 	PCM_RESOURCE_LIST AllocatedResources;
+
+	NTSTATUS Status; // debug
+	LONGLONG delay; // debug
 
 	/*
 	* Get the initialization data we saved in VideoPortInitialize.
@@ -236,7 +263,13 @@ OHCD_PnPStartDevice(IN PDEVICE_OBJECT DeviceObject,
 	/*
 	* Init wrapper with this object
 	*/
-	return InitLinuxWrapper(DeviceObject);
+	//return InitLinuxWrapper(DeviceObject);
+	Status = InitLinuxWrapper(DeviceObject);
+
+	delay = -10000000*60*2; // wait 2 minutes
+	KeDelayExecutionThread(KernelMode, FALSE, (LARGE_INTEGER *)&delay); //wait_us(1);
+
+	return Status;
 }
 
 // Dispatch PNP

@@ -54,6 +54,7 @@
 #include "hcd.h"
 #endif
 
+#define DEBUG
 
 extern int  usb_hub_init(void);
 extern void usb_hub_cleanup(void);
@@ -94,6 +95,9 @@ int usb_device_probe(struct device *dev)
 	dev_dbg(dev, "%s\n", __FUNCTION__);
 
 	if (!driver->probe)
+		return error;
+	/* driver claim() doesn't yet affect dev->driver... */
+	if (intf->driver)
 		return error;
 
 	id = usb_match_id (intf, driver->id_table);
@@ -396,6 +400,14 @@ usb_match_id(struct usb_interface *interface, const struct usb_device_id *id)
 {
 	struct usb_host_interface *intf;
 	struct usb_device *dev;
+	struct usb_device_id *save_id;
+	int firsttime;
+	
+	firsttime = 1;
+	
+	save_id = (struct usb_device_id*)id;
+retry_id:	
+	id = (struct usb_device_id*)save_id;
 
 	/* proc_connectinfo in devio.c may call us with id == NULL. */
 	if (id == NULL)
@@ -967,6 +979,35 @@ void STDCALL usb_connect(struct usb_device *dev)
 	}
 }
 
+/**
+ * usb_choose_address - pick device address (usbcore-internal)
+ * @dev: newly detected device (in DEFAULT state)
+ *
+ * Picks a device address.  It's up to the hub (or root hub) driver
+ * to handle and manage enumeration, starting from the DEFAULT state.
+ * Only hub drivers (but not virtual root hub drivers for host
+ * controllers) should ever call this.
+ */
+void usb_choose_address(struct usb_device *dev)
+{
+	int devnum;
+	// FIXME needs locking for SMP!!
+	/* why? this is called only from the hub thread, 
+	 * which hopefully doesn't run on multiple CPU's simultaneously 8-)
+	 */
+
+	/* Try to allocate the next devnum beginning at bus->devnum_next. */
+	devnum = find_next_zero_bit(dev->bus->devmap.devicemap, 128, dev->bus->devnum_next);
+	if (devnum >= 128)
+		devnum = find_next_zero_bit(dev->bus->devmap.devicemap, 128, 1);
+
+	dev->bus->devnum_next = ( devnum >= 127 ? 1 : devnum + 1);
+
+	if (devnum < 128) {
+		set_bit(devnum, dev->bus->devmap.devicemap);
+		dev->devnum = devnum;
+	}
+}
 
 // hub-only!! ... and only exported for reset/reinit path.
 // otherwise used internally, for usb_new_device()
@@ -1062,10 +1103,10 @@ static void set_device_description (struct usb_device *dev)
  * controllers) should ever call this.
  */
 #define NEW_DEVICE_RETRYS	2
-#define SET_ADDRESS_RETRYS	2
+#define SET_ADDRESS_RETRYS	20
 int usb_new_device(struct usb_device *dev, struct device *parent)
 {
-	int err = 0;
+	int err = -EINVAL;
 	int i;
 	int j;
 
@@ -1108,7 +1149,7 @@ int usb_new_device(struct usb_device *dev, struct device *parent)
 		i = 8;
 		break;
 	default:
-		return -EINVAL;
+		goto fail;
 	}
 	dev->epmaxpacketin [0] = i;
 	dev->epmaxpacketout[0] = i;
@@ -1119,15 +1160,12 @@ int usb_new_device(struct usb_device *dev, struct device *parent)
 			err = usb_set_address(dev);
 			if (err >= 0)
 				break;
-			wait_ms(200);
+			wait_ms(5);
 		}
 		if (err < 0) {
 			dev_err(&dev->dev, "USB device not accepting new address=%d (error=%d)\n",
 				dev->devnum, err);
-			dev->state = USB_STATE_DEFAULT;
-			clear_bit(dev->devnum, dev->bus->devmap.devicemap);
-			dev->devnum = -1;
-			return 1;
+			goto fail;
 		}
 
 		wait_ms(10);	/* Let the SET_ADDRESS settle */
@@ -1140,17 +1178,13 @@ int usb_new_device(struct usb_device *dev, struct device *parent)
 	}
 
 	if (err < 8) {
-                if (err < 0) {
-			dev_err(&dev->dev, "USB device not responding, giving up (error=%d)\n", err);
-                }
-                else {
-			dev_err(&dev->dev, "USB device descriptor short read (expected %i, got %i)\n", 8, err);
-                }
-		clear_bit(dev->devnum, dev->bus->devmap.devicemap);
-		dev->devnum = -1;
-		return 1;
+		dev_err(&dev->dev, "device descriptor read/8, error %d\n", err);
+		goto fail;
 	}
 	if (dev->speed == USB_SPEED_FULL) {
+		//usb_disable_endpoint(dev, 0);
+		usb_endpoint_running(dev, 0, 1);
+		usb_endpoint_running(dev, 0, 0);
 		dev->epmaxpacketin [0] = dev->descriptor.bMaxPacketSize0;
 		dev->epmaxpacketout[0] = dev->descriptor.bMaxPacketSize0;
 	}
@@ -1159,26 +1193,15 @@ int usb_new_device(struct usb_device *dev, struct device *parent)
 
 	err = usb_get_device_descriptor(dev);
 	if (err < (signed)sizeof(dev->descriptor)) {
-                if (err < 0) {
-			dev_err(&dev->dev, "unable to get device descriptor (error=%d)\n", err);
-                }
-                else {
-			dev_err(&dev->dev, "USB device descriptor short read (expected %Zi, got %i)\n",
-				sizeof(dev->descriptor), err);
-                }
-	
-		clear_bit(dev->devnum, dev->bus->devmap.devicemap);
-		dev->devnum = -1;
-		return 1;
+		dev_err(&dev->dev, "device descriptor read/all, error %d\n", err);
+		goto fail;
 	}
 
 	err = usb_get_configuration(dev);
 	if (err < 0) {
-		dev_err(&dev->dev, "unable to get device %d configuration (error=%d)\n",
-			dev->devnum, err);
-		clear_bit(dev->devnum, dev->bus->devmap.devicemap);
-		dev->devnum = -1;
-		return 1;
+		dev_err(&dev->dev, "can't read configurations, error %d\n",
+			err);
+		goto fail;
 	}
 
 	/* we set the default configuration here */
@@ -1186,9 +1209,7 @@ int usb_new_device(struct usb_device *dev, struct device *parent)
 	if (err) {
 		dev_err(&dev->dev, "failed to set device %d default configuration (error=%d)\n",
 			dev->devnum, err);
-		clear_bit(dev->devnum, dev->bus->devmap.devicemap);
-		dev->devnum = -1;
-		return 1;
+		goto fail;
 	}
 
 	/* USB device state == configured ... tell the world! */
@@ -1234,7 +1255,7 @@ int usb_new_device(struct usb_device *dev, struct device *parent)
 				"usb-%s-%s interface %d",
 				dev->bus->bus_name, dev->devpath,
 				desc->bInterfaceNumber);
-			DPRINT1("usb_new_device: %s\n", interface->dev.name);
+			DPRINT1(".........................usb_new_device: %s\n", interface->dev.name);
 		}
 		dev_dbg (&dev->dev, "%s - registering interface %s\n", __FUNCTION__, interface->dev.bus_id);
 		device_add (&interface->dev);
@@ -1244,6 +1265,11 @@ int usb_new_device(struct usb_device *dev, struct device *parent)
 	usbfs_add_device(dev);
 
 	return 0;
+fail:
+	dev->state = USB_STATE_DEFAULT;
+	clear_bit(dev->devnum, dev->bus->devmap.devicemap);
+	dev->devnum = -1;
+	return err;
 }
 
 /**

@@ -40,6 +40,8 @@ static int usb_start_wait_urb(struct urb *urb, int timeout, int* actual_length)
 	struct usb_api_data awd;
 	int status;
 
+	printk("usb_start_wait_urb(): urb devnum=%d, timeout=%d, urb->actual_length=%d\n", urb->dev->devnum, timeout, urb->actual_length);
+
 	init_waitqueue_head((PKEVENT)&awd.wqh); 	
 	awd.done = 0;
 
@@ -48,6 +50,7 @@ static int usb_start_wait_urb(struct urb *urb, int timeout, int* actual_length)
 
 	urb->context = &awd;
 	status = usb_submit_urb(urb, GFP_ATOMIC);
+
 	if (status) {
 		// something went wrong
 		usb_free_urb(urb);
@@ -55,7 +58,7 @@ static int usb_start_wait_urb(struct urb *urb, int timeout, int* actual_length)
 		remove_wait_queue(&awd.wqh, &wait);
 		return status;
 	}
-	
+	printk("TRACE 3.1, timeout=%d, awd.done=%d\n", timeout, awd.done);
 	while (timeout && !awd.done)
 	{		
 		timeout = schedule_timeout(timeout);
@@ -84,6 +87,7 @@ static int usb_start_wait_urb(struct urb *urb, int timeout, int* actual_length)
 		*actual_length = urb->actual_length;
 
 	usb_free_urb(urb);
+
   	return status;
 }
 
@@ -152,12 +156,10 @@ int usb_control_msg(struct usb_device *dev, unsigned int pipe, __u8 request, __u
 	dr->wIndex = cpu_to_le16p(&index);
 	dr->wLength = cpu_to_le16p(&size);
 
-	//dbg("usb_control_msg");	
+	printk("usb_control_msg: devnum=%d, size=%d, timeout=%d\n", dev->devnum, size, timeout);
 
 	ret = usb_internal_control_msg(dev, pipe, dr, data, size, timeout);
-
 	kfree(dr);
-
 	return ret;
 }
 

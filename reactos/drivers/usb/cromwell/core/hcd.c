@@ -100,7 +100,7 @@ DECLARE_MUTEX (usb_bus_list_lock);	/* exported only for usbfs */
 EXPORT_SYMBOL_GPL (usb_bus_list_lock);
 
 /* used when updating hcd data */
-static spinlock_t hcd_data_lock = SPIN_LOCK_UNLOCKED;
+static spinlock_t hcd_data_lock;// = SPIN_LOCK_UNLOCKED;
 
 /*-------------------------------------------------------------------------*/
 
@@ -476,7 +476,7 @@ static int rh_status_urb (struct usb_hcd *hcd, struct urb *urb)
 	hcd->rh_timer.function = rh_report_status;
 	hcd->rh_timer.data = (unsigned long) urb;
 	/* USB 2.0 spec says 256msec; this is close enough */
-	hcd->rh_timer.expires = jiffies + HZ/4;
+	hcd->rh_timer.expires = HZ/4;
 	add_timer (&hcd->rh_timer);
 	urb->hcpriv = hcd;	/* nonzero to indicate it's queued */
 	return 0;
@@ -515,7 +515,7 @@ static void rh_report_status (unsigned long ptr)
 		urb->status = 0;
 		urb->hcpriv = 0;
 	} else
-		mod_timer (&hcd->rh_timer, jiffies + HZ/4);
+		mod_timer (&hcd->rh_timer, HZ/4);
 	spin_unlock (&hcd_data_lock);
 	spin_unlock (&urb->lock);
 
@@ -982,7 +982,7 @@ static int hcd_submit_urb (struct urb *urb, int mem_flags)
 
 	if (!hcd || !dev)
 		return -ENODEV;
-//	printk("submit_urb %p, # %i, t %i\n",urb,urb->dev->devnum,usb_pipetype(urb->pipe));
+	printk("submit_urb %p, # %i, t %i\n",urb,urb->dev->devnum,usb_pipetype(urb->pipe));
 	/*
 	 * FIXME:  make urb timeouts be generic, keeping the HCD cores
 	 * as simple as possible.
@@ -1053,10 +1053,12 @@ static int hcd_submit_urb (struct urb *urb, int mem_flags)
 
 	status = hcd->driver->urb_enqueue (hcd, urb, mem_flags);
 done:
+
 	if (status) {
 		usb_put_urb (urb);
 		urb_unlink (urb);
 	}
+
 	return status;
 }
 

@@ -34,7 +34,12 @@ typedef short s16;
 
 typedef u32 dma_addr_t;
 
-typedef int spinlock_t;
+typedef struct
+{
+	KSPIN_LOCK SpinLock;
+	KIRQL  OldIrql;
+} spinlock_t;
+
 typedef int atomic_t;
 #ifndef STANDALONE
 #ifndef _MODE_T_
@@ -156,7 +161,8 @@ struct pt_regs
 };
 struct completion {
         unsigned int done;
-        wait_queue_head_t wait;
+		KEVENT wait;
+        //wait_queue_head_t wait;
 };
 
 // windows lookaside list head
@@ -383,12 +389,19 @@ struct usbdevfs_hub_portinfo
 #define init_MUTEX(x)
 
 #define SPIN_LOCK_UNLOCKED 0
-#define spin_lock_init(a)  do {} while(0)
-#define spin_lock(a) *(int*)a=1
-#define spin_unlock(a) do {} while(0)
 
-#define spin_lock_irqsave(a,b) b=0
-#define spin_unlock_irqrestore(a,b)
+#define spin_lock_init(a)  my_spin_lock_init(a)
+void my_spin_lock_init(spinlock_t *sl);
+
+#define spin_lock(a) my_spin_lock(a)
+void my_spin_lock(spinlock_t *sl);
+
+#define spin_unlock(a) my_spin_unlock(a)
+void my_spin_unlock(spinlock_t *sl);
+
+#define spin_lock_irqsave(a,b) my_spin_lock_irqsave(a,b)
+void my_spin_lock_irqsave(spinlock_t *sl, int flags);
+#define spin_unlock_irqrestore(a,b) my_spin_unlock(a)
 
 #if 0
 #define local_irq_save(x) __asm__ __volatile__("pushfl ; popl %0 ; cli":"=g" (x): /* no input */ :"memory")
@@ -526,12 +539,15 @@ void my_init_waitqueue_head(PKEVENT a);
 VOID KeMemoryBarrier(VOID);
 
 #define mb() KeMemoryBarrier()
-#define wmb() __asm__ __volatile__ ("": : :"memory")
-#define rmb() __asm__ __volatile__ ("lock; addl $0,0(%%esp)": : :"memory")
+#define wmb() do {} while (0)
+#define rmb() do {} while (0)
+/*#define wmb() __asm__ __volatile__ ("": : :"memory")
+#define rmb() __asm__ __volatile__ ("lock; addl $0,0(%%esp)": : :"memory")*/
 
 #define in_interrupt() 0
 
-#define init_completion(x) (x)->done=0
+#define init_completion(x) my_init_completion(x)
+void my_init_completion(struct completion *);
 #define wait_for_completion(x) my_wait_for_completion(x)
 void my_wait_for_completion(struct completion*);
 
@@ -790,9 +806,10 @@ void my_wake_up(PKEVENT);
 // cannot be mapped via macro due to collision with urb->complete
 static void __inline__ complete(struct completion *p)
 {
+	printk("completing event 0x%08x\n", (ULONG)p);
 	/* Wake up x->wait */
 	p->done++;
-	wake_up((PKEVENT)&p->wait);
+	wake_up((PKEVENT)&p->wait); 
 }
 
 #define kernel_thread(a,b,c) my_kernel_thread(a,b,c)
@@ -831,8 +848,6 @@ void handle_irqs(int irq);
 void inc_jiffies(int);
 void init_wrapper(struct pci_dev *pci_dev);
 void do_all_timers(void);
-
-#define __KERNEL_DS   0x18
 
 int my_pci_write_config_word(struct pci_dev *, int, u16);
 

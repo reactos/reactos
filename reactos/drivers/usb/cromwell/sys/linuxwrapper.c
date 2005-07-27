@@ -242,56 +242,65 @@ extern unsigned int LAST_USB_IRQ;
 int my_schedule_timeout(int x)
 {
 	LONGLONG HH;
-	LONGLONG temp;
-	LONGLONG delay;
-	extern unsigned int LAST_USB_EVENT_TICK;
+	//LONGLONG temp;
+	LARGE_INTEGER delay;
+	//PULONG tmp_debug=NULL;
+	//extern unsigned int LAST_USB_EVENT_TICK;
+
+	//*tmp_debug = 0xFFAAFFAA;
 
 	printk("schedule_timeout: %d ms\n", x);
 
+		//delay.QuadPart = -x*10000; // convert to 100ns units
+		//KeDelayExecutionThread(KernelMode, FALSE, &delay); //wait_us(1);
+
+	/*
 	x+=5; // safety
 	x = x*1000;	// to us format
+	*/
+	x = 300; // it's enough for most purposes
 
 	while(x>0)
 	{
 		KeQueryTickCount((LARGE_INTEGER *)&HH);//IoInputDword(0x8008);
-    	temp = HH - LAST_USB_EVENT_TICK;
+    	//temp = HH - LAST_USB_EVENT_TICK;
     	
 		//if (temp>(3579)) { //3579 = 1ms!
-		if (temp>1000) {
+		//if (temp>1000) {
 			do_all_timers();
-			LAST_USB_EVENT_TICK = HH;
-		}
-
-       		//if (LAST_USB_IRQ != OHCI_1_INTERRUPT ) {
-       	//		LAST_USB_IRQ = OHCI_1_INTERRUPT;
-			handle_irqs(-1);
+		//	LAST_USB_EVENT_TICK = HH;
 		//}
+
+		handle_irqs(-1);
 		
 		if (need_wakeup)
 			break;
 
-		delay = 10;
-		KeDelayExecutionThread(KernelMode, FALSE, (LARGE_INTEGER *)&delay); //wait_us(1);
+		delay.QuadPart = -10;
+		KeDelayExecutionThread(KernelMode, FALSE, &delay); //wait_us(1);
 		x-=1;
+		//DPRINT("schedule_timeout(): time left: %d\n", x);
 	}
 	need_wakeup=0;
+
 	printk("schedule DONE!!!!!!\n");
 
-	return x;
+	return 0;//x;
 }
 /*------------------------------------------------------------------------*/ 
 void my_wait_for_completion(struct completion *x)
 {
 	LONGLONG HH;
 	LONGLONG temp;
-	LONGLONG delay;
+	LARGE_INTEGER delay;
+
 	extern unsigned int LAST_USB_EVENT_TICK;
 
-	printk("wait for completion\n");
+	printk("wait for completion11, x=0x%08x\n", (DWORD)x);
 
 	int n=10;
 	n = n*1000;	// to us format
-	
+
 	while(!x->done && (n>0))
 	{
 		KeQueryTickCount((LARGE_INTEGER *)&HH);//IoInputDword(0x8008);
@@ -299,21 +308,24 @@ void my_wait_for_completion(struct completion *x)
 
 		//if (temp>(3579)) {
 		if (temp>(1000)) {
-			do_all_timers();
+		//	do_all_timers();
 			LAST_USB_EVENT_TICK = HH;
 		}
 
-		//if (LAST_USB_IRQ != OHCI_1_INTERRUPT ) {
-		//	LAST_USB_IRQ = OHCI_1_INTERRUPT;
-			handle_irqs(-1);
-		//}
+		//	handle_irqs(-1);
 
-		delay = 10;
-		KeDelayExecutionThread(KernelMode, FALSE, (LARGE_INTEGER *)&delay); //wait_us(1);
+		delay.QuadPart = -10;
+		KeDelayExecutionThread(KernelMode, FALSE, &delay); //wait_us(1);
 		n--;
 	}
 	printk("wait for completion done %i\n",x->done);
 
+}
+/*------------------------------------------------------------------------*/ 
+void my_init_completion(struct completion *x)
+{
+	x->done=0;
+	KeInitializeEvent(&x->wait, NotificationEvent, FALSE);
 }
 /*------------------------------------------------------------------------*/ 
 void my_interruptible_sleep_on(PKEVENT evnt)
@@ -364,6 +376,7 @@ int my_request_irq(unsigned int irq,
 		num_irqs++;
 		return 0;
 	}
+	
 	return 1;
 }
 /*------------------------------------------------------------------------*/ 
@@ -609,8 +622,8 @@ struct pci_pool *my_pci_pool_create(const char * name, struct pci_dev * pdev, si
 		return 0;
 		
 	retval = ExAllocatePool(NonPagedPool, sizeof(struct pci_pool)); // Non-paged because could be
-									// pci_pool is rather big struct
-	
+																	// accesses at IRQL < PASSIVE
+
 	// fill retval structure
 	strncpy (retval->name, name, sizeof retval->name);
 	retval->name[sizeof retval->name - 1] = 0;
@@ -623,7 +636,7 @@ struct pci_pool *my_pci_pool_create(const char * name, struct pci_dev * pdev, si
 	retval->pages_allocated = 0;
 	retval->blocks_allocated = 0;
 	
-	DPRINT1("pci_pool_create(): %s/%s size %d, %d/page (%d alloc)\n",
+	DPRINT("pci_pool_create(): %s/%s size %d, %d/page (%d alloc)\n",
 		pdev ? pdev->slot_name : NULL, retval->name, size,
 		retval->blocks_per_page, allocation);
 
@@ -652,10 +665,11 @@ void * my_pci_pool_alloc(struct pci_pool * pool, int mem_flags, dma_addr_t *dma_
 {
 	PVOID result;
 	POHCI_DEVICE_EXTENSION devExt = (POHCI_DEVICE_EXTENSION)pool->pdev->dev_ext;
-	//PHYSICAL_ADDRESS logicalAddr;
-	DPRINT1("pci_pool_alloc() called, blocks already allocated=%d\n", pool->blocks_allocated);
-	//size_t current_block_in_page;
-	int page,map,i,block,offset;
+	int page=0, offset;
+	int map, i, block;
+
+	//DPRINT1("pci_pool_alloc() called, blocks already allocated=%d, dma_handle=%p\n", pool->blocks_allocated, dma_handle);
+	//ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
 
 	if (pool->pages_allocated == 0)
 	{
@@ -665,7 +679,7 @@ void * my_pci_pool_alloc(struct pci_pool * pool, int mem_flags, dma_addr_t *dma_
 				PAGE_SIZE, &pool->pages[pool->pages_allocated].dmaAddress, FALSE); //FIXME: Cache-enabled?
 
 		// mark all blocks as free (bit=set)
-		memset(pool->pages[pool->pages_allocated].bitmap, 0xFF, 128*sizeof(long));
+		memset(pool->pages[pool->pages_allocated].bitmap, 0xFF, 128*sizeof(unsigned long));
 
 		/* FIXME: the next line replaces physical address by virtual address:
 		* this change is needed to boot VMWare, but I'm really not sure this
@@ -687,6 +701,7 @@ void * my_pci_pool_alloc(struct pci_pool * pool, int mem_flags, dma_addr_t *dma_
 
 			if ((i + block) < pool->blocks_per_page)
 			{
+				DPRINT("pci_pool_alloc(): Allocating block %p:%d:%d:%d\n", pool, page, map, block);
 				clear_bit(block, &pool->pages[page].bitmap[map]);
 				offset = (BITS_PER_LONG * map) + block;
 				offset *= pool->size;
@@ -704,22 +719,6 @@ ready:
 	*dma_handle = pool->pages[page].dmaAddress.QuadPart + offset;
 	result = (char *)pool->pages[page].virtualAddress + offset;
 	pool->blocks_allocated++;
-
-#if 0
-	// check do we have enough free blocks on the current page
-	if (pool->pages_allocated*pool->blocks_per_page < pool->blocks_allocated+1)
-	{
-		DPRINT1("Panic!! We need one more page to be allocated, and Fireball doesn't want to alloc it!\n");
-		*dma_handle = 0;
-		return NULL;
-	}
-
-	// Alloc one block now
-	pool->blocks_allocated++;
-	current_block_in_page = pool->blocks_allocated - (pool->blocks_allocated / pool->blocks_per_page) * pool->blocks_per_page;
-	*dma_handle = pool->pages[pool->pages_allocated-1].dmaAddress.QuadPart + pool->size*(current_block_in_page - 1);
-	result = pool->pages[pool->pages_allocated-1].virtualAddress + pool->size*(current_block_in_page - 1);
-#endif
 
 	return result;
 }
@@ -764,8 +763,7 @@ void my_pci_pool_free (struct pci_pool * pool, void * vaddr, dma_addr_t dma)
 	set_bit (block, &pool->pages[page].bitmap[map]);
 
 	pool->blocks_allocated--;
-
-	DPRINT1("pci_pool_free(): alloc'd: %d\n", pool->blocks_allocated);
+	DPRINT("pci_pool_free(): alloc'd: %d\n", pool->blocks_allocated);
 }
 
 /*
@@ -881,4 +879,28 @@ void my_dma_unmap_sg(struct device *hwdev, struct scatterlist *sg, int nents, en
 void my_pci_unmap_single(struct pci_dev *hwdev, dma_addr_t dma_addr, size_t size, int direction)
 {
 	my_dma_unmap_single(&hwdev->dev, dma_addr, size, direction);
+}
+
+
+/*------------------------------------------------------------------------*/ 
+/* SPINLOCK routines                                                      */
+/*------------------------------------------------------------------------*/ 
+void my_spin_lock_init(spinlock_t *sl)
+{
+	KeInitializeSpinLock(&sl->SpinLock);
+}
+
+void my_spin_lock(spinlock_t *sl)
+{
+	//KeAcquireSpinLock(&sl->SpinLock, &sl->OldIrql);
+}
+
+void my_spin_unlock(spinlock_t *sl)
+{
+	//KeReleaseSpinLock(&sl->SpinLock, sl->OldIrql);
+}
+
+void my_spin_lock_irqsave(spinlock_t *sl, int flags)
+{
+	my_spin_lock(sl);
 }
