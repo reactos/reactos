@@ -68,7 +68,7 @@ void __stdcall _SEHLocalUnwind
  }
 }
 
-__declspec(noreturn) void __cdecl _SEHCallHandler
+void __cdecl _SEHCallHandler
 (
  _SEHPortableFrame_t * frame,
  _SEHPortableTryLevel_t * trylevel

@@ -59,6 +59,9 @@
 #define SYMBOLIC_LINK_QUERY 0x0001
 #define SYMBOLIC_LINK_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x1)
 
+/* Duplication Flags */
+#define DUPLICATE_SAME_ATTRIBUTES	0x00000004
+
 /* I/O Control Codes for communicating with Mailslots */
 #define FSCTL_MAILSLOT_PEEK             \
     CTL_CODE(FILE_DEVICE_MAILSLOT, 0, METHOD_NEITHER, FILE_READ_DATA)

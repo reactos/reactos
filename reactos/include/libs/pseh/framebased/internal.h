@@ -51,7 +51,7 @@ typedef long (__stdcall * _SEHFilter_t)
  struct __SEHPortableFrame *
 );
 
-typedef __declspec(noreturn) void (__stdcall * _SEHHandler_t)
+typedef void (__stdcall * _SEHHandler_t)
 (
  struct __SEHPortableTryLevel *
 );

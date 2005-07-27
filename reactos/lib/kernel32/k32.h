@@ -11,7 +11,6 @@
 /* PSDK/NDK Headers */
 #define NTOS_MODE_USER
 #define _KERNEL32_
-#define _WMIKM_
 #include <windows.h>
 #include <ndk/ntndk.h>
 

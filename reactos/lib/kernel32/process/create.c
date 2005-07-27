@@ -12,7 +12,7 @@
 #include <k32.h>
 
 #define NDEBUG
-#include <debug.h>
+#include "../include/debug.h"
 
 #define CMD_STRING L"cmd /c "
 
@@ -648,9 +648,7 @@ CreateProcessA(LPCSTR lpApplicationName,
             lpStartupInfo, lpProcessInformation);
     
     /* Copy Startup Info */
-    DPRINT("Foo\n");
     RtlMoveMemory(&StartupInfo, lpStartupInfo, sizeof(*lpStartupInfo));
-    DPRINT("Foo\n");
     
     /* Initialize all strings to nothing */
     LiveCommandLine.Buffer = NULL;
@@ -664,26 +662,22 @@ CreateProcessA(LPCSTR lpApplicationName,
     /* Convert the Command line */
     if (lpCommandLine)
     {
-        DPRINT("Foo\n");
         /* If it's too long, then we'll have a problem */
         if ((strlen(lpCommandLine) + 1) * sizeof(WCHAR) <
             NtCurrentTeb()->StaticUnicodeString.MaximumLength)
         {
             /* Cache it in the TEB */
-            DPRINT("Foo\n");
             CommandLine = Basep8BitStringToCachedUnicodeString(lpCommandLine);
         }
         else
         {
             /* Use a dynamic version */
-            DPRINT("Foo\n");
             Basep8BitStringToLiveUnicodeString(&LiveCommandLine, 
                                                lpCommandLine);
         }
     }
     else
     {
-        DPRINT("Foo\n");
         /* The logic below will use CommandLine, so we must make it valid */
         CommandLine = &DummyString;
     }
@@ -691,13 +685,11 @@ CreateProcessA(LPCSTR lpApplicationName,
     /* Convert the Name and Directory */
     if (lpApplicationName)
     {
-        DPRINT("Foo\n");
         Basep8BitStringToLiveUnicodeString(&ApplicationName, 
                                            lpApplicationName);
     }
     if (lpCurrentDirectory)
     {
-        DPRINT("Foo\n");
         Basep8BitStringToLiveUnicodeString(&CurrentDirectory, 
                                            lpCurrentDirectory);
     }
@@ -705,19 +697,16 @@ CreateProcessA(LPCSTR lpApplicationName,
     /* Now convert Startup Strings */
     if (lpStartupInfo->lpReserved)
     {
-        DPRINT("Foo\n");
         BasepAnsiStringToHeapUnicodeString(lpStartupInfo->lpReserved,
                                            &StartupInfo.lpReserved);
     }
     if (lpStartupInfo->lpDesktop)
     {
-        DPRINT("Foo\n");
         BasepAnsiStringToHeapUnicodeString(lpStartupInfo->lpDesktop,
                                            &StartupInfo.lpDesktop);
     }
     if (lpStartupInfo->lpTitle)
     {
-        DPRINT("Foo\n");
         BasepAnsiStringToHeapUnicodeString(lpStartupInfo->lpTitle,
                                            &StartupInfo.lpTitle);
     }
@@ -778,6 +767,11 @@ CreateProcessW(LPCWSTR lpApplicationName,
     PROCESS_BASIC_INFORMATION ProcessBasicInfo;
     STARTUPINFOW StartupInfo;
     ULONG Dummy;
+    LPWSTR BatchCommandLine;
+    ULONG CmdLineLength;
+    UNICODE_STRING CommandLineString;
+    LPWSTR TempBuffer;
+    PWCHAR Extension;
     LPWSTR QuotedCmdLine = NULL;
     LPWSTR ScanString;
     LPWSTR NullBuffer;
@@ -811,7 +805,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
     }
     
     /* Fail on this flag, it's only valid with the WithLogonW function */
-    if (dwCreationFlags & CREATE_WITH_USERPROFILE)
+    if (dwCreationFlags & CREATE_PRESERVE_CODE_AUTHZ_LEVEL)
     {
         DPRINT1("Invalid flag used\n");
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -835,13 +829,13 @@ CreateProcessW(LPCWSTR lpApplicationName,
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-    DPRINT("Foo\n");
+
     /* 
      * We're going to modify and mask out flags and stuff in lpStartupInfo,
      * so we'll use our own local copy for that.
      */
     StartupInfo = *lpStartupInfo;
-    DPRINT("Foo\n");    
+ 
     /* FIXME: Use default Separate/Shared VDM Flag */
     
     /* If we are inside a Job, use Separate VDM so it won't escape the Job */
@@ -854,7 +848,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
                                                   CREATE_SEPARATE_WOW_VDM;
         }
     }
-    DPRINT("Foo\n");
+
     /* 
      * According to some sites, ShellExecuteEx uses an undocumented flag to
      * send private handle data (such as HMONITOR or HICON). See:
@@ -866,21 +860,21 @@ CreateProcessW(LPCWSTR lpApplicationName,
     {
         StartupInfo.dwFlags &= ~STARTF_USESTDHANDLES;
     }
-    DPRINT("Foo\n");
+
     /* Start by zeroing out the fields */
     RtlZeroMemory(lpProcessInformation, sizeof(PROCESS_INFORMATION));
-    DPRINT("Foo\n");
+
     /* Easy stuff first, convert the process priority class */
     PriorityClass.Foreground = FALSE;
     PriorityClass.PriorityClass = BasepConvertPriorityClass(dwCreationFlags);
-      DPRINT("Foo\n");
+
     /* Convert the environment */
     if(lpEnvironment && !(dwCreationFlags & CREATE_UNICODE_ENVIRONMENT))
     {
         lpEnvironment = BasepConvertUnicodeEnvironment(lpEnvironment);
         if (!lpEnvironment) return FALSE;
     }
-DPRINT("Foo\n");
+
     /* Get the application name and do all the proper formating necessary */
 GetAppName:
     /* See if we have an application name (oh please let us have one!) */
@@ -907,7 +901,7 @@ GetAppName:
              /* Advance past quote */
              ScanString++;
              lpApplicationName = ScanString;             
-             DPRINT("Foo\n");
+
              /* Find the closing quote */
              while (*ScanString)
              {
@@ -918,7 +912,7 @@ GetAppName:
                      FoundQuotes = TRUE;
                      break;
                  }
-                 DPRINT("Foo\n");
+
                  /* Keep looking */
                  ScanString++;
                  NullBuffer = ScanString;
@@ -930,7 +924,7 @@ GetAppName:
         WhiteScan:   
             /* Reset the pointer */
             lpApplicationName = lpCommandLine;
-            DPRINT("Foo\n");
+
             /* Find whitespace of Tab */
             while (*ScanString)
             {
@@ -940,7 +934,7 @@ GetAppName:
                     NullBuffer = ScanString;
                     break;
                 }
-                    DPRINT("Foo\n");
+
                 /* Keep looking */
                 ScanString++;
                 NullBuffer = ScanString;
@@ -1078,8 +1072,8 @@ GetAppName:
             case STATUS_INVALID_IMAGE_PROTECT:
             case STATUS_INVALID_IMAGE_NOT_MZ:
             
-            /* If it's a DOS app, use VDM */
-            //if ((BasepCheckDosApp(&ApplicationName)))
+            /* If it's a DOS app, use VDM
+            if ((BasepCheckDosApp(&ApplicationName))) */
             {
                 DPRINT1("Launching VDM...\n");
                 RtlFreeHeap(GetProcessHeap(), 0, NameBuffer);
@@ -1097,12 +1091,8 @@ GetAppName:
             }
             
             /* It's a batch file */
-            LPWSTR BatchCommandLine;
-            ULONG CmdLineLength;
-            UNICODE_STRING CommandLineString;
-            LPWSTR TempBuffer;
-            PWCHAR Extension = 
-            &ApplicationName.Buffer[ApplicationName.Length / sizeof(WCHAR) - 4];
+            Extension = &ApplicationName.Buffer[ApplicationName.Length / 
+                                                sizeof(WCHAR) - 4];
             
             /* Make sure the extensions are correct */
             if (_wcsnicmp(Extension, L".bat", 4) && _wcsnicmp(Extension, L".cmd", 4))

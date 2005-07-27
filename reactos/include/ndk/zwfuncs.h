@@ -13,6 +13,7 @@
 #include "lpctypes.h"
 #include "zwtypes.h"
 #include "kdtypes.h"
+#define _WMIKM_
 #include <evntrace.h>
 
 /* FUNCTION TYPES ************************************************************/

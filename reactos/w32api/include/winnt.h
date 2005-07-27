@@ -355,7 +355,6 @@ typedef DWORD FLONG;
 /* also in ddk/winddk.h */
 #define DUPLICATE_CLOSE_SOURCE		0x00000001
 #define DUPLICATE_SAME_ACCESS		0x00000002
-#define DUPLICATE_SAME_ATTRIBUTES	0x00000004
 /* end winddk.k */
 
 #define MAILSLOT_NO_MESSAGE	((DWORD)-1)
