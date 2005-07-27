@@ -20,14 +20,7 @@
  * Wirzenius wrote this portably, Torvalds fucked it up :-)
  */
 
-#define __NO_CTYPE_INLINES
-#include <ctype.h>
-#include <limits.h>
-
 #include <ntdll.h>
-#define NDEBUG
-#include <debug.h>
-
 
 #define ZEROPAD	1		/* pad with zero */
 #define SIGN	2		/* unsigned/signed long */
@@ -38,11 +31,16 @@
 #define LARGE	64		/* use 'ABCDEF' instead of 'abcdef' */
 
 
-#define do_div(n,base) ({ \
-int __res; \
-__res = ((unsigned long long) n) % (unsigned) base; \
-n = ((unsigned long long) n) / (unsigned) base; \
-__res; })
+static
+__inline
+int
+do_div(long long *n, int base)
+{
+    int a;
+    a = ((unsigned long long) *n) % (unsigned) base;
+    *n = ((unsigned long long) *n) / (unsigned) base;
+    return a;
+}
 
 
 static int skip_atoi(const char **s)
@@ -94,7 +92,7 @@ number(char * buf, char * end, long long num, int base, int size, int precision,
 	if (num == 0)
 		tmp[i++]='0';
 	else while (num != 0)
-		tmp[i++] = digits[do_div(num,base)];
+		tmp[i++] = digits[do_div(&num,base)];
 	if (i > precision)
 		precision = i;
 	size -= precision;
