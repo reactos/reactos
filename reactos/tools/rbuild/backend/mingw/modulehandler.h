@@ -442,4 +442,12 @@ public:
 	virtual void Process ();
 };
 
+class MingwAliasModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwAliasModuleHandler ( const Module& module );
+	virtual HostType DefaultHost() { return HostFalse; }
+	virtual void Process ();
+};
+
 #endif /* MINGW_MODULEHANDLER_H */

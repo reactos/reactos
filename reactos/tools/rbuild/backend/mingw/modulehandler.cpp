@@ -237,6 +237,9 @@ MingwModuleHandler::InstanciateHandler (
 		case RpcClient:
 			handler = new MingwRpcClientModuleHandler ( module );
 			break;
+		case Alias:
+			handler = new MingwAliasModuleHandler ( module );
+			break;
 		default:
 			throw UnknownModuleTypeException (
 				module.node.location,
@@ -2877,12 +2880,13 @@ MingwLiveIsoModuleHandler::OutputModuleCopyCommands ( string& livecdDirectory,
 			continue;
 		if ( m.installName.length () > 0 )
 		{
+			const Module& aliasedModule = backend->GetAliasedModuleOrModule ( m  );
 			string sourceFilename = MingwModuleHandler::PassThruCacheDirectory (
-				NormalizeFilename ( m.GetPath () ),
+				NormalizeFilename ( aliasedModule.GetPath () ),
 				backend->outputDirectory );
 			OutputCopyCommand ( sourceFilename,
-		                        m.installName,
-		                        livecdDirectory + SSEP + reactosDirectory + SSEP + m.installBase );
+			                    m.installName,
+			                    livecdDirectory + SSEP + reactosDirectory + SSEP + m.installBase );
 		}
 	}
 }
@@ -3057,6 +3061,7 @@ MingwRpcServerModuleHandler::Process ()
 	GenerateRules ();
 }
 
+
 MingwRpcClientModuleHandler::MingwRpcClientModuleHandler (
 	const Module& module_ )
 
@@ -3068,4 +3073,17 @@ void
 MingwRpcClientModuleHandler::Process ()
 {
 	GenerateRules ();
+}
+
+
+MingwAliasModuleHandler::MingwAliasModuleHandler (
+	const Module& module_ )
+
+	: MingwModuleHandler ( module_ )
+{
+}
+
+void
+MingwAliasModuleHandler::Process ()
+{
 }

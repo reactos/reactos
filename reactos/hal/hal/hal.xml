@@ -7,3 +7,9 @@
 	<file>hal.c</file>
 	<file>hal.rc</file>
 </module>
+
+<module ifnot="${MP}" name="halupalias" type="alias" installbase="system32" installname="hal.dll" aliasof="halup">
+</module>
+
+<module if="${MP}" name="halmpalias" type="alias" installbase="system32" installname="hal.dll" aliasof="halmp">
+</module>

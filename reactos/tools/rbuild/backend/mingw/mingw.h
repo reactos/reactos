@@ -68,6 +68,7 @@ public:
 	virtual void Process ();
 	std::string AddDirectoryTarget ( const std::string& directory,
 	                                 Directory* directoryTree );
+	const Module& GetAliasedModuleOrModule ( const Module& module ) const;
 	std::string compilerPrefix;
 	std::string compilerCommand;
 	std::string nasmCommand;

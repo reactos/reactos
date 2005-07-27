@@ -193,7 +193,8 @@ enum ModuleType
 	LiveIso = 14,
 	Test = 15,
 	RpcServer = 16,
-	RpcClient = 17
+	RpcClient = 17,
+	Alias = 18
 };
 
 enum HostType
@@ -230,6 +231,7 @@ public:
 	HostType host;
 	std::string installBase;
 	std::string installName;
+	std::string aliasedModuleName;
 	bool useWRC;
 	bool enableWarnings;
 	bool enabled;
@@ -736,6 +738,7 @@ public:
 private:
 	std::string StripSymbol ( std::string symbol );
 };
+
 
 extern std::string
 FixSeparator ( const std::string& s );

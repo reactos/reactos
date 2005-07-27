@@ -107,7 +107,7 @@ Module element
 There can be zero or more modules per xml build file.
 
 Syntax:
-	<module if="${MP}" ifnot="${MP}" name="msvcrt" type="win32dll" extension=".dll" entrypoint="_DllMain@12" baseaddress="0x70000000" mangledsymbols="true" installbase="system32" installname="msvcrt.dll" usewrc="false" warnings="true">
+	<module if="${MP}" ifnot="${MP}" name="msvcrt" type="win32dll" extension=".dll" entrypoint="_DllMain@12" baseaddress="0x70000000" mangledsymbols="true" installbase="system32" installname="msvcrt.dll" usewrc="false" warnings="true" aliasof="module1">
 		...
 	</module>
 
@@ -124,7 +124,7 @@ Attributes:
 	installname - Name of generated file in the installation directory. This attribute is optional, but if not specified, the generated file is not copied to the installation directory.
 	usewrc - Use WRC to compile resources if true. If false, windres is used. This attribute is optional. If not specified, WRC will be used.
 	warnings - Error out if false and at least one warning is emitted during building of this module. This attribute is optional. If not specified, it is assumed to be false.
-
+	aliasof - Name of module that is aliased.
 Value:
 	None.
 
@@ -151,6 +151,7 @@ The module type determines the actions that is to be carried out to process the 
 	test - Builds a testsuite. Default extension is .exe. Default entrypoint is _mainCRTStartup. The baseaddress module attribute is not applicable for this module type.
 	rpcserver - Generates and builds server code for an RPC interface. Default extension is .o. The entrypoint, baseaddress, and mangledsymbols module attributes are not applicable for this module type.
 	rpcclient - Generates and builds client code for an RPC interface. Default extension is .o. The entrypoint, baseaddress, and mangledsymbols module attributes are not applicable for this module type.
+	alias - Module is an alias for another module. This module type is the only module type for which the aliasof attribute is applicable. Only the module install functionality is aliased.
 
 
 Bootstrap element
