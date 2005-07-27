@@ -1197,7 +1197,7 @@ DWORD WINAPI SHSetValueA(HKEY hKey, LPCSTR lpszSubKey, LPCSTR lpszValue,
           debugstr_a(lpszValue), dwType, pvData, cbData);
 
   if (lpszSubKey && *lpszSubKey)
-    dwRet = RegCreateKeyExA(hKey, lpszSubKey, 0, szEmpty,
+    dwRet = RegCreateKeyExA(hKey, lpszSubKey, 0, (LPSTR)szEmpty,
                             0, KEY_SET_VALUE, NULL, &hSubKey, &dwDummy);
   else
     hSubKey = hKey;
@@ -1226,7 +1226,7 @@ DWORD WINAPI SHSetValueW(HKEY hKey, LPCWSTR lpszSubKey, LPCWSTR lpszValue,
         debugstr_w(lpszValue), dwType, pvData, cbData);
 
   if (lpszSubKey && *lpszSubKey)
-    dwRet = RegCreateKeyExW(hKey, lpszSubKey, 0, szEmpty,
+    dwRet = RegCreateKeyExW(hKey, lpszSubKey, 0, (LPWSTR)szEmpty,
                             0, KEY_SET_VALUE, NULL, &hSubKey, &dwDummy);
   else
     hSubKey = hKey;
