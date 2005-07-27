@@ -11,6 +11,10 @@
 #ifndef USER32_H
 #define USER32_H
 
+/* C Headers */
+#include <stdio.h>
+#include <ctype.h>
+
 /* SDK/NDK Headers */
 #include <windows.h>
 #include <windowsx.h>
