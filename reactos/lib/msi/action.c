@@ -2635,7 +2635,7 @@ static UINT ACTION_CostFinalize(MSIPACKAGE *package)
                     version = HeapAlloc(GetProcessHeap(),0,versize);
                     GetFileVersionInfoW(file->TargetPath, 0, versize, version);
 
-                    VerQueryValueW(version, name, (LPVOID*)&lpVer, &sz);
+                    VerQueryValueW(version, (LPWSTR)name, (LPVOID*)&lpVer, &sz);
 
                     sprintfW(filever,name_fmt,
                         HIWORD(lpVer->dwFileVersionMS),

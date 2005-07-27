@@ -1195,7 +1195,7 @@ UINT WINAPI MsiGetFileVersionW(LPCWSTR szFilePath, LPWSTR lpVersionBuf,
           lpVersionBuf, pcchVersionBuf?*pcchVersionBuf:0,
           lpLangBuf, pcchLangBuf?*pcchLangBuf:0);
 
-    dwVerLen = GetFileVersionInfoSizeW(szFilePath, NULL);
+    dwVerLen = GetFileVersionInfoSizeW((LPWSTR)szFilePath, NULL);
     if( !dwVerLen )
         return GetLastError();
 
@@ -1206,14 +1206,14 @@ UINT WINAPI MsiGetFileVersionW(LPCWSTR szFilePath, LPWSTR lpVersionBuf,
         goto end;
     }
 
-    if( !GetFileVersionInfoW(szFilePath, 0, dwVerLen, lpVer) )
+    if( !GetFileVersionInfoW((LPWSTR)szFilePath, 0, dwVerLen, lpVer) )
     {
         ret = GetLastError();
         goto end;
     }
     if( lpVersionBuf && pcchVersionBuf && *pcchVersionBuf )
     {
-        if( VerQueryValueW(lpVer, szVersionResource, (LPVOID*)&ffi, &puLen) &&
+        if( VerQueryValueW(lpVer, (LPWSTR)szVersionResource, (LPVOID*)&ffi, &puLen) &&
             (puLen > 0) )
         {
             wsprintfW(tmp, szVersionFormat,

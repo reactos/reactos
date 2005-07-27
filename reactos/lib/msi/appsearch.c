@@ -538,7 +538,7 @@ static UINT ACTION_FileVersionMatches(MSISIGNATURE *sig, LPCWSTR filePath,
     }
     else
     {
-        DWORD zero, size = GetFileVersionInfoSizeW(filePath, &zero);
+        DWORD zero, size = GetFileVersionInfoSizeW((LPWSTR)filePath, &zero);
 
         if (size)
         {
@@ -550,8 +550,8 @@ static UINT ACTION_FileVersionMatches(MSISIGNATURE *sig, LPCWSTR filePath,
                 UINT versionLen;
                 LPVOID subBlock = NULL;
 
-                if (GetFileVersionInfoW(filePath, 0, size, buf))
-                    VerQueryValueW(buf, rootW, &subBlock, &versionLen);
+                if (GetFileVersionInfoW((LPWSTR)filePath, 0, size, buf))
+                    VerQueryValueW(buf, (LPWSTR)rootW, &subBlock, &versionLen);
                 if (subBlock)
                 {
                     VS_FIXEDFILEINFO *info =
