@@ -592,7 +592,7 @@ static void MRU_SaveChanged ( LPWINEMRULIST mp )
 	    err);
 	if ((err = RegCreateKeyExW( mp->extview.hKey, mp->extview.lpszSubKey,
 				    0,
-				    emptyW,
+				    (LPWSTR)emptyW,
 				    REG_OPTION_NON_VOLATILE,
 				    KEY_READ | KEY_WRITE,
 				    0,
@@ -973,7 +973,7 @@ static HANDLE CreateMRUListLazy_common(LPWINEMRULIST mp)
     /* open the sub key */
     if ((err = RegCreateKeyExW( mp->extview.hKey, mp->extview.lpszSubKey,
 			        0,
-				emptyW,
+				(LPWSTR)emptyW,
 				REG_OPTION_NON_VOLATILE,
 				KEY_READ | KEY_WRITE,
                                 0,
