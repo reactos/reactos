@@ -144,6 +144,8 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
     /* Get the Win32 Thread */
     Win32Thread = PsGetThreadWin32Thread(Thread);
     
+    //FIXME: imo, its an error if it already exist. Gunnar
+    
     /* Allocate one if needed */
     if (!Win32Thread)
     {
@@ -178,6 +180,9 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
                                    DesktopPath,
                                    &hWinSta,
                                    &hDesk);
+
+/*----      this code i dont get ------*/
+/* imo, a thread REQUIRE a desktop!!! */
       if(NT_SUCCESS(Status))
       {
         if(hWinSta != NULL)
@@ -213,6 +218,8 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
           }
         }
       }
+/*----      this code i dont get ------*/
+
       Win32Thread->IsExiting = FALSE;
       UserDestroyCaret(Win32Thread);
       Win32Thread->MessageQueue = MsqCreateMessageQueue(Thread);

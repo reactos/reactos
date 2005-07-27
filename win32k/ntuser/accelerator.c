@@ -115,16 +115,10 @@ CLEANUP:
 }
 
 
-PACCELERATOR_TABLE UserCreateAcceleratorTableObject(HACCEL* h)
+PACCELERATOR_TABLE FASTCALL UserCreateAccelObject(HACCEL* h)
 {
    PVOID mem;
-   PWINSTATION_OBJECT WinSta;
-   
-   /*
-   Get process winsta? Or thread->desk->winsta? 
-   can a process threads be assigned to different winstas (via desktops?)   
-   */
-   WinSta = IntGetWinStaObj();
+   PWINSTATION_OBJECT WinSta = UserGetCurrentWinSta();
    
    mem = ExAllocatePool(PagedPool, sizeof(ACCELERATOR_TABLE));
    if (!mem) return NULL;
@@ -161,7 +155,7 @@ NtUserCreateAcceleratorTable(
       RETURN(FALSE);
    }
 
-   AcceleratorTable = UserCreateAcceleratorTableObject(&Handle);
+   AcceleratorTable = UserCreateAccelObject(&Handle);
    if (AcceleratorTable == NULL)
    {
 
@@ -227,7 +221,6 @@ NtUserDestroyAcceleratorTable(HACCEL Table)
    if (!AcceleratorTable)
    {
       SetLastWin32Error(ERROR_INVALID_ACCEL_HANDLE);
-//      ObDereferenceObject(WindowStation);
       DPRINT1("E2\n");
       RETURN(FALSE);
    }
@@ -437,8 +430,8 @@ found:
 
 inline PACCELERATOR_TABLE FASTCALL UserGetAccelObject(HACCEL hCursor)
 {
-   PWINSTATION_OBJECT WinSta;
-   WinSta = PsGetWin32Thread()->Desktop->WindowStation;
+   PWINSTATION_OBJECT WinSta = UserGetCurrentWinSta();
+
    return (PACCELERATOR_TABLE)UserGetObject(&WinSta->HandleTable, hCursor, USER_CURSOR_ICON );   
 }
 

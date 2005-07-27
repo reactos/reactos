@@ -107,6 +107,7 @@ PWINDOW_OBJECT FASTCALL IntGetWindowObject(HWND hWnd)
 {
    PWINSTATION_OBJECT WinSta;
    WinSta = UserGetCurrentWinSta();
+   ASSERT(WinSta);
    return (PWINDOW_OBJECT)UserGetObject(&WinSta->HandleTable, hWnd, USER_WINDOW );
 }
 
@@ -1497,7 +1498,7 @@ IntCreateWindowEx(DWORD dwExStyle,
       DPRINT("Thread is not attached to a desktop! Cannot create window!\n");
       return (HWND)0;
     }
-  WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
+  WinStaObject = UserGetCurrentWinSta();
   ObReferenceObjectByPointer(WinStaObject, KernelMode, ExWindowStationObjectType, 0);
 
   /* Create the window object. */
@@ -2461,7 +2462,7 @@ NtUserFindWindowEx(HWND hwndParent,
           goto Cleanup;
         }
 
-      WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
+      WinStaObject = UserGetCurrentWinSta();
 
       Status = RtlLookupAtomInAtomTable(
          WinStaObject->AtomTable,

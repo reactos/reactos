@@ -1272,8 +1272,7 @@ UserPostMessage(HWND Wnd,
          SetLastWin32Error(ERROR_INVALID_PARAMETER);
          return(FALSE);
       }
-      UserGetCursorLocation(PsGetWin32Thread()->Desktop->WindowStation,
-                            &KernelModeMsg.pt);
+      UserGetCursorLocation(UserGetCurrentWinSta(), &KernelModeMsg.pt);
       KeQueryTickCount(&LargeTickCount);
       KernelModeMsg.time = LargeTickCount.u.LowPart;
       MsqPostMessage(Window->MessageQueue, &KernelModeMsg,

@@ -116,7 +116,7 @@ ClassReferenceClassByName(
    if (!ClassName || !PsGetWin32Thread()->Desktop)
       return FALSE;
 
-   WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
+   WinStaObject = UserGetCurrentWinSta();
 
    Status = RtlLookupAtomInAtomTable(
                WinStaObject->AtomTable,
@@ -225,7 +225,7 @@ IntGetClassName(struct _WINDOW_OBJECT *WindowObject, LPWSTR lpClassName,
       return 0;
    }
 
-   WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
+   WinStaObject = UserGetCurrentWinSta();
 
    Length = 0;
    Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,
@@ -457,7 +457,7 @@ NtUserRegisterClassExWOW(
       RETURN((RTL_ATOM)0);
    }
 
-   WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
+   WinStaObject = UserGetCurrentWinSta();
 
    if (ClassName->Length > 0)
    {
@@ -729,7 +729,7 @@ NtUserUnregisterClass(
       RETURN(FALSE);
    }
 
-   WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
+   WinStaObject = UserGetCurrentWinSta();
 
    if (!ClassReferenceClassByNameOrAtom(&Class, ClassNameOrAtom, hInstance))
    {

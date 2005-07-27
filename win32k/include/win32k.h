@@ -59,5 +59,6 @@
 #include <eng/misc.h>
 #include <dib/dib.h>
 #include <include/ntuser.h>
+#include <include/userfuncs.h>
 
 /* EOF */

@@ -113,8 +113,11 @@ UnregisterWindowHotKeys(PWINDOW_OBJECT Window)
   PHOT_KEY_ITEM HotKeyItem;
   PWINSTATION_OBJECT WinStaObject = NULL;
 
-  if(Window->OwnerThread && Window->OwnerThread->ThreadsProcess)
+  if(Window->OwnerThread && Window->OwnerThread->ThreadsProcess){
+     
+     //FIXME: hmm...this winsta path look fishy
     WinStaObject = Window->OwnerThread->Tcb.Win32Thread->Desktop->WindowStation;
+ }
 
   if(!WinStaObject)
     return;

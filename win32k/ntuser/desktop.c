@@ -1188,7 +1188,7 @@ NtUserPaintDesktop(HDC hDC)
    BOOL doPatBlt = TRUE;
    int len;
 
-   PWINSTATION_OBJECT WinSta = PsGetWin32Thread()->Desktop->WindowStation;
+   PWINSTATION_OBJECT WinSta = UserGetCurrentWinSta();
 
    IntGdiGetClipBox(hDC, &Rect);
 

@@ -406,7 +406,7 @@ PHOOK FASTCALL HookCreate(HHOOK* hHook)
    mem = ExAllocatePool(PagedPool, sizeof(HOOK));
    if (!mem) return NULL;
 
-   WinSta = PsGetWin32Thread()->Desktop->WindowStation;
+   WinSta = UserGetCurrentWinSta();
    *hHook = UserAllocHandle(&WinSta->HandleTable, mem, USER_HOOK_PROC);
    if (!*hHook){
       ExFreePool(mem);
@@ -419,7 +419,7 @@ PHOOK FASTCALL HookCreate(HHOOK* hHook)
 PHOOK FASTCALL HookGet(HHOOK hHook)
 {
    PWINSTATION_OBJECT WinSta;
-   WinSta = PsGetWin32Thread()->Desktop->WindowStation;
+   WinSta = UserGetCurrentWinSta();
    return (PHOOK)UserGetObject(&WinSta->HandleTable, hHook, USER_HOOK_PROC );
 }
 

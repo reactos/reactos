@@ -55,7 +55,7 @@ BOOL FASTCALL
 UserSetCaretBlinkTime(UINT uMSeconds)
 {
    /* Don't save the new value to the registry! */
-   PWINSTATION_OBJECT WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
+   PWINSTATION_OBJECT WinStaObject = UserGetCurrentWinSta();
 
    /* windows doesn't do this check */
    if((uMSeconds < MIN_CARETBLINKRATE) || (uMSeconds > MAX_CARETBLINKRATE))
@@ -141,7 +141,7 @@ UserGetCaretBlinkTime(VOID)
    PWINSTATION_OBJECT WinStaObject;
    UINT Ret;
 
-   WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
+   WinStaObject = UserGetCurrentWinSta();
 
    Ret = WinStaObject->CaretBlinkRate;
    if(!Ret)

@@ -118,6 +118,8 @@ PVOID UserGetObject(PUSER_HANDLE_TABLE ht, HANDLE handle, USER_OBJECT_TYPE type 
 {
     PUSER_HANDLE_ENTRY entry;
 
+    ASSERT(ht);
+
     if (!(entry = handle_to_entry(ht, handle )) || entry->type != type) return NULL;
     return entry->ptr;
 }

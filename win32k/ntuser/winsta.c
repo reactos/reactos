@@ -976,8 +976,23 @@ NtUserGetProcessWindowStation(VOID)
 
 inline PWINSTATION_OBJECT FASTCALL UserGetCurrentWinSta()
 {
+   //ASSERT(PsGetWin32Thread());
+   //ASSERT(PsGetWin32Thread()->Desktop);
+   //ASSERT(PsGetWin32Thread()->Desktop->WindowStation);
+
+#if 0
+   if (!PsGetWin32Thread()->Desktop)
+   {
+      DPRINT1("FIXME: PsGetWin32Thread()->Desktop is NULL!!!\n");
+      return NULL;
+   }
+   
    return PsGetWin32Thread()->Desktop->WindowStation;
+#endif
+
+   return IntGetWinStaObj();
 }
+
 
 PWINSTATION_OBJECT FASTCALL
 IntGetWinStaObj(VOID)
@@ -985,12 +1000,14 @@ IntGetWinStaObj(VOID)
   PWINSTATION_OBJECT WinStaObj;
 
   /*
-   * just a temporary hack, this will be gone soon
+   * just a temporary hack, this will be gone soon. I HOPE SO!
    */
 
   if(PsGetWin32Thread() != NULL && PsGetWin32Thread()->Desktop != NULL)
   {
+     
     WinStaObj = PsGetWin32Thread()->Desktop->WindowStation;
+    ASSERT(WinStaObj);
     ObReferenceObjectByPointer(WinStaObj, KernelMode, ExWindowStationObjectType, 0);
   }
   else if(PsGetCurrentProcess() != CsrProcess)
@@ -1002,11 +1019,14 @@ IntGetWinStaObj(VOID)
     if(!NT_SUCCESS(Status))
     {
       SetLastNtError(Status);
+      ASSERT(FALSE);
       return NULL;
     }
   }
   else
   {
+     /* surely, this must be FATAL! Gunnar. */
+    ASSERT(FALSE);
     WinStaObj = NULL;
   }
 

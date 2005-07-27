@@ -90,7 +90,7 @@ UserSetCursor(PCURICON_OBJECT NewCursor, BOOL ForceChange)
    XLATEOBJ *XlateObj = NULL;
    HDC Screen;
 
-   CurInfo = UserGetSysCursorInfo(PsGetWin32Thread()->Desktop->WindowStation);
+   CurInfo = UserGetSysCursorInfo(UserGetCurrentWinSta());
    
    OldCursor = CurInfo->CurrentCursorObject;
    if (OldCursor)
@@ -401,38 +401,7 @@ VOID FASTCALL CursorDereference(PCURICON_OBJECT Cursor)
    //FIXME
 }
 
-PCURICON_OBJECT FASTCALL
-UserCreateCurIconHandle(PWINSTATION_OBJECT WinStaObject)
-{
-   PCURICON_OBJECT Cursor;
-   HCURSOR hCursor;
 
-   Cursor = UserCreateCursorObject(&hCursor, 0);
-   if(!Cursor)
-   {
-      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-      return FALSE;
-   }
-
-   Cursor->Self = hCursor;
-
-   InitializeListHead(&Cursor->ProcessList);
-
-   if (! UserReferenceCurIconByProcess(Cursor))
-   {
-      DPRINT1("Failed to add process\n");
-//      ObmCloseHandle(WinStaObject->HandleTable, Handle);
-      //ObmDereferenceObject(Object);
-      UserReferenceCurIcon(Cursor);
-      return NULL;
-   }
-
-   InsertHeadList(&CurIconList, &Cursor->ListEntry);
-
-   CursorDereference(Cursor);
-
-   return Cursor;
-}
 
 BOOLEAN FASTCALL
 UserDestroyCurIconObject(PCURICON_OBJECT Cursor, BOOL ProcessCleanup)
@@ -488,7 +457,7 @@ UserDestroyCurIconObject(PCURICON_OBJECT Cursor, BOOL ProcessCleanup)
       RemoveEntryList(&Cursor->ListEntry);
    }
 
-   CurInfo = UserGetSysCursorInfo(PsGetWin32Thread()->Desktop->WindowStation);
+   CurInfo = UserGetSysCursorInfo(UserGetCurrentWinSta());
 
    if (CurInfo->CurrentCursorObject == Cursor)
    {
@@ -555,6 +524,8 @@ UserCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process)
 }
 
 
+
+
 PCURICON_OBJECT FASTCALL UserCreateCursorObject(HCURSOR* hCursor, ULONG extraBytes)
 {
    PVOID mem;
@@ -562,10 +533,10 @@ PCURICON_OBJECT FASTCALL UserCreateCursorObject(HCURSOR* hCursor, ULONG extraByt
    
    mem = ExAllocatePool(PagedPool, sizeof(CURICON_OBJECT)+extraBytes);
    if (!mem) return NULL;
+   
    RtlZeroMemory(mem, sizeof(CURICON_OBJECT)+extraBytes);
    
-   /* FIX: kan desk->winsta være forskjellig fra proc->winsta? */
-   WinSta = PsGetWin32Thread()->Desktop->WindowStation;
+   WinSta = UserGetCurrentWinSta();
    
    *hCursor = UserAllocHandle(&WinSta->HandleTable, mem, USER_CURSOR_ICON);
    if (!*hCursor){
@@ -596,6 +567,19 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo, BOOL Indirect)
       RETURN(NULL);
       
    Cursor->Self = hCursor;
+   InitializeListHead(&Cursor->ProcessList);
+
+   if (! UserReferenceCurIconByProcess(Cursor))
+   {
+      DPRINT1("Failed to add process\n");
+//      ObmCloseHandle(WinStaObject->HandleTable, Handle);
+      UserReferenceCurIcon(Cursor);
+      RETURN( NULL);
+   }
+
+   InsertHeadList(&CurIconList, &Cursor->ListEntry);
+
+
 
    if(IconInfo)
    {
@@ -643,10 +627,10 @@ CLEANUP:
 
 inline PCURICON_OBJECT FASTCALL UserGetCursorObject(HCURSOR hCursor)
 {
-   PWINSTATION_OBJECT WinSta;
-   WinSta = PsGetWin32Thread()->Desktop->WindowStation;
+   PWINSTATION_OBJECT WinSta = UserGetCurrentWinSta();
    return (PCURICON_OBJECT)UserGetObject(&WinSta->HandleTable, hCursor, USER_CURSOR_ICON );   
 }
+
 
 /*
  * @implemented
@@ -819,13 +803,13 @@ NtUserGetCursorInfo(PCURSORINFO pci)
       RETURN( FALSE);
    }
 
-   CurInfo = UserGetSysCursorInfo(PsGetWin32Thread()->Desktop->WindowStation);
+   CurInfo = UserGetSysCursorInfo(UserGetCurrentWinSta());
    CursorObject = (PCURICON_OBJECT)CurInfo->CurrentCursorObject;
 
    SafeCi.flags = ((CurInfo->ShowingCursor && CursorObject) ? CURSOR_SHOWING : 0);
    SafeCi.hCursor = (CursorObject ? (HCURSOR)CursorObject->Self : (HCURSOR)0);
 
-   UserGetCursorLocation(PsGetWin32Thread()->Desktop->WindowStation, &SafeCi.ptScreenPos);
+   UserGetCursorLocation(UserGetCurrentWinSta(), &SafeCi.ptScreenPos);
 
    Status = MmCopyToCaller(pci, &SafeCi, sizeof(CURSORINFO));
    if(!NT_SUCCESS(Status))
@@ -867,8 +851,8 @@ NtUserClipCursor(RECT *UnsafeRect)
       RETURN( FALSE);
    }
 
-   CurInfo = UserGetSysCursorInfo(PsGetWin32Thread()->Desktop->WindowStation);
-   UserGetCursorLocation(PsGetWin32Thread()->Desktop->WindowStation, &MousePos);
+   CurInfo = UserGetSysCursorInfo(UserGetCurrentWinSta());
+   UserGetCursorLocation(UserGetCurrentWinSta(), &MousePos);
 
 //   if(WinStaObject->ActiveDesktop)
 //      DesktopWindow = IntGetWindowObject(WinStaObject->ActiveDesktop->DesktopWindow);
@@ -911,11 +895,6 @@ CLEANUP:
 }
 
 
-inline PCURICON_OBJECT FASTCALL UserGetCursorIconObject(HCURSOR hCursor)
-{
-   PWINSTATION_OBJECT WinSta = PsGetWin32Thread()->Desktop->WindowStation;
-   return (PCURICON_OBJECT)UserGetObject(&WinSta->HandleTable, hCursor, USER_CURSOR_ICON);
-}
 
 
 /*
@@ -937,7 +916,7 @@ NtUserDestroyCursorIcon(
    DPRINT("Enter NtUserDestroyCursorIcon\n");
    UserEnterExclusive();
 
-   Cursor = UserGetCursorIconObject(hCursor);
+   Cursor = UserGetCursorObject(hCursor);
    if(!Cursor)
    {
       RETURN(FALSE);
@@ -1027,7 +1006,7 @@ NtUserGetClipCursor(
    if(!lpRect)
       RETURN( FALSE);
 
-   CurInfo = UserGetSysCursorInfo(PsGetWin32Thread()->Desktop->WindowStation);
+   CurInfo = UserGetSysCursorInfo(UserGetCurrentWinSta());
    if(CurInfo->CursorClipInfo.IsClipped)
    {
       Rect.left = CurInfo->CursorClipInfo.Left;

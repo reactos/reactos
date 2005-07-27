@@ -234,8 +234,8 @@ MsqIsDblClk(LPMSG Msg, BOOL Remove)
    {
       return FALSE;
    }
-   //FIXME: UserGetCurrentWinSta()
-   WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
+
+   WinStaObject = UserGetCurrentWinSta();
 
    CurInfo = UserGetSysCursorInfo(WinStaObject);
    Res = (Msg->hwnd == (HWND)CurInfo->LastClkWnd) &&
