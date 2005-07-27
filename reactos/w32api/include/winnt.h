@@ -34,6 +34,7 @@
 extern "C" {
 #endif
 
+#include <ctype.h>
 #include <winerror.h>
 
 #ifndef RC_INVOKED
