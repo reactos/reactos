@@ -29,6 +29,7 @@
 #include "winnt.h"
 #include "variant.h"
 #include "resource.h"
+#include <ctype.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(variant);
 
