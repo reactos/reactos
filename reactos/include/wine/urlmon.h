@@ -2043,6 +2043,13 @@ struct IInternetZoneManagerVtbl {
         DWORD cbPolicy,
         URLZONEREG urlZoneReg);
 
+    HRESULT (STDMETHODCALLTYPE *PromptAction)(
+        IInternetZoneManager* This,
+        DWORD dwAction,
+        LPCWSTR pwszUrl,
+        LPCWSTR pwszText,
+        DWORD dwPromptFlags);
+
     HRESULT (STDMETHODCALLTYPE *LogAction)(
         IInternetZoneManager* This,
         DWORD dwAction,
