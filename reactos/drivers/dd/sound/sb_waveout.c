@@ -1,3 +1,0 @@
-void write_wave()
-{
-}
