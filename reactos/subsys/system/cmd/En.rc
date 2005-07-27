@@ -434,7 +434,8 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
 if none of ON, OFF or /S is specified the command\n\
 will toggle stopwach state\n\n"
 
-STRING_TYPE_HELP1, "Displays the contents of text files.\n\nTYPE [drive:][path]filename"
+STRING_TYPE_HELP1, "Displays the contents of text files.\n\nTYPE [drive:][path]filename \n\
+  /P 		  Shows one screen of output at a time.\n"
 
 STRING_VERIFY_HELP1, "This command is just a dummy!!\n\
 Sets whether to verify that your files are written correctly to a\n\
