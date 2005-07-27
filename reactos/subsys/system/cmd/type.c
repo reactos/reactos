@@ -38,11 +38,12 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 	TCHAR  buff[256];
 	HANDLE hFile, hConsoleOut;
 	DWORD  dwRead;
-	DWORD  dwWritten;
 	BOOL   bRet;
 	INT    argc,i;
 	LPTSTR *argv;
 	LPTSTR errmsg;
+	BOOL bPaging = FALSE;
+	BOOL bFirstTime = TRUE;
 
 	hConsoleOut=GetStdHandle (STD_OUTPUT_HANDLE);
 
@@ -60,9 +61,17 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 
 	argv = split (param, &argc, TRUE);
 
+	for(i = 0; i < argc; i++)
+	{
+		if(*argv[i] == _T('/') && _tcslen(argv[i]) >= 2 && _totupper(argv[i][1]) == _T('P'))
+		{
+			bPaging = TRUE;
+		}
+	}
+
 	for (i = 0; i < argc; i++)
 	{
-		if (_T('/') == argv[i][0])
+		if (_T('/') == argv[i][0] && _totupper(argv[i][1]) != _T('P'))
 		{
 			LoadString(CMD_ModuleHandle, STRING_TYPE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, argv[i] + 1);
@@ -90,13 +99,22 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 			LocalFree (errmsg);
 			continue;
 		}
-
+		
 		do
 		{
 			bRet = ReadFile(hFile,buff,sizeof(buff),&dwRead,NULL);
 
-			if (dwRead>0 && bRet)
-				WriteFile(hConsoleOut,buff,dwRead,&dwWritten,NULL);
+			if(bPaging)
+			{
+				if(dwRead>0 && bRet)
+					ConOutPrintfPaging(bFirstTime, buff);
+			}
+			else
+			{				
+				if(dwRead>0 && bRet)
+					ConOutPrintf(buff);
+			}
+			bFirstTime = FALSE;
 
 		} while(dwRead>0 && bRet);
 
