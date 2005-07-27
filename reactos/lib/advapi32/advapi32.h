@@ -67,7 +67,10 @@ typedef struct _NTMARTA
                                             PACL OldAcl,
                                             PACL* NewAcl);
 
-    PVOID RewriteGetExplicitEntriesFromAcl;
+    DWORD (STDCALL *RewriteGetExplicitEntriesFromAcl)(PACL pacl,
+                                                      PULONG pcCountOfExplicitEntries,
+                                                      PEXPLICIT_ACCESS_W* pListOfExplicitEntries);
+
     PVOID TreeResetNamedSecurityInfo;
 
     DWORD (STDCALL *GetInheritanceSource)(LPWSTR pObjectName,

@@ -4,7 +4,7 @@ EXPORTS
 AccFreeIndexArray@12
 AccGetInheritanceSource@40
 ;AccProvHandleGrantAccessRights;
-;AccRewriteGetExplicitEntriesFromAcl
+AccRewriteGetExplicitEntriesFromAcl@12
 AccRewriteGetHandleRights@32
 AccRewriteGetNamedRights@32
 AccRewriteSetEntriesInAcl@16

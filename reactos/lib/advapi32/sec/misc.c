@@ -59,8 +59,8 @@ LoadAndInitializeNtMarta(VOID)
     FindNtMartaProc(RewriteGetHandleRights);
     FindNtMartaProc(RewriteSetHandleRights);
     FindNtMartaProc(RewriteSetEntriesInAcl);
-#if 0
     FindNtMartaProc(RewriteGetExplicitEntriesFromAcl);
+#if 0
     FindNtMartaProc(TreeResetNamedSecurityInfo);
 #endif
     FindNtMartaProc(GetInheritanceSource);

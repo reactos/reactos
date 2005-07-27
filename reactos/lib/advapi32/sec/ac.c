@@ -669,4 +669,30 @@ SetEntriesInAclA(
 }
 
 
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetExplicitEntriesFromAclW(
+	PACL			pacl,
+	PULONG			pcCountOfExplicitEntries,
+	PEXPLICIT_ACCESS_W*	pListOfExplicitEntries
+	)
+{
+    DWORD ErrorCode;
+
+    ErrorCode = CheckNtMartaPresent();
+    if (ErrorCode == ERROR_SUCCESS)
+    {
+        /* call the MARTA provider */
+        ErrorCode = AccRewriteGetExplicitEntriesFromAcl(pacl,
+                                                        pcCountOfExplicitEntries,
+                                                        pListOfExplicitEntries);
+    }
+
+    return ErrorCode;
+}
+
+
 /* EOF */

@@ -242,8 +242,8 @@ GetCurrentHwProfileW@4
 ;GetEffectiveRightsFromAclA@12
 ;GetEffectiveRightsFromAclW@12
 ;GetEventLogInformation
-;GetExplicitEntriesFromAclA@12
-;GetExplicitEntriesFromAclW@12
+GetExplicitEntriesFromAclA@12=ADVAPI32.GetExplicitEntriesFromAclW
+GetExplicitEntriesFromAclW@12
 GetFileSecurityA@20
 GetFileSecurityW@20
 ;GetInformationCodeAuthzLevelW

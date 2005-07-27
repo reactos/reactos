@@ -158,6 +158,21 @@ AccFreeIndexArray(PINHERITED_FROMW pInheritArray,
 }
 
 
+/**********************************************************************
+ * AccRewriteGetExplicitEntriesFromAcl			EXPORTED
+ *
+ * @unimplemented
+ */
+DWORD STDCALL
+AccRewriteGetExplicitEntriesFromAcl(PACL pacl,
+                                    PULONG pcCountOfExplicitEntries,
+                                    PEXPLICIT_ACCESS_W* pListOfExplicitEntries)
+{
+    UNIMPLEMENTED;
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
 BOOL STDCALL
 DllMain(IN HINSTANCE hinstDLL,
         IN DWORD dwReason,
