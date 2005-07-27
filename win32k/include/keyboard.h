@@ -20,7 +20,9 @@ inline PDESKTOP_OBJECT FASTCALL UserGetCurrentDesktop();
 
 
 
-/* accelerator.c */
+/************************* ACCELERATOR.C ***********************/
+
+inline PACCELERATOR_TABLE FASTCALL UserGetAccelObject(HACCEL hCursor);
 
 PACCELERATOR_TABLE UserGetAcceleratorTable(HACCEL hAccel);
 PACCELERATOR_TABLE UserAllocAcceleratorTable(HACCEL* h);
@@ -56,7 +58,10 @@ UserGetUpdateRgn(PWINDOW_OBJECT Window, HRGN hRgn, BOOL bErase);
 BOOL FASTCALL 
 UserPostMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 
-/* window.c */
+/************************ WINDOW.C *****************************/
+
+inline VOID FASTCALL UserFreeWindowObject(PWINDOW_OBJECT Wnd);
+
 PWINDOW_OBJECT FASTCALL IntGetWindowObject(HWND hWnd);
 
 PWINDOW_OBJECT FASTCALL UserCreateWindowObject(HWND* h, ULONG bytes);

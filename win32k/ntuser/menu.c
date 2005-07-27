@@ -150,7 +150,7 @@ IntFreeMenuItem(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem,
   if(bRecurse && MenuItem->hSubMenu)
   {
     PMENU_OBJECT SubMenuObject;
-    SubMenuObject = IntGetMenuObject(MenuItem->hSubMenu );
+    SubMenuObject = UserGetMenuObject(MenuItem->hSubMenu );
     if(SubMenuObject)
     {
       IntDestroyMenuObject(SubMenuObject, bRecurse, TRUE);
@@ -465,7 +465,7 @@ IntIsMenu(HMENU hMenu)
 {
   PMENU_OBJECT Menu;
 
-  if((Menu = IntGetMenuObject(hMenu)))
+  if((Menu = UserGetMenuObject(hMenu)))
   {
 //    IntReleaseMenuObject(Menu);
     return TRUE;
@@ -550,7 +550,7 @@ UserGetMenuItemByFlag(PMENU_OBJECT MenuObject, UINT uSearchBy, UINT fFlag,
       }
       else if (0 != (CurItem->fType & MF_POPUP))
       {
-        MenuObject = IntGetMenuObject(CurItem->hSubMenu);
+        MenuObject = UserGetMenuObject(CurItem->hSubMenu);
         if (NULL != MenuObject)
         {
           ret = UserGetMenuItemByFlag(MenuObject, uSearchBy, fFlag,
@@ -756,7 +756,7 @@ UserSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMIN
     /* Make sure the submenu is marked as a popup menu */
     if (MenuItem->hSubMenu)
     {
-      SubMenuObject = IntGetMenuObject(MenuItem->hSubMenu);
+      SubMenuObject = UserGetMenuObject(MenuItem->hSubMenu);
       if (SubMenuObject != NULL)
       {
         SubMenuObject->MenuInfo.Flags |= MF_POPUP;
@@ -1159,7 +1159,7 @@ IntGetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT fByPos, UINT gmdiFlags,
          MenuItem->hSubMenu)
       {
 
-        SubMenuObject = IntGetMenuObject(MenuItem->hSubMenu);
+        SubMenuObject = UserGetMenuObject(MenuItem->hSubMenu);
         if(!SubMenuObject || (SubMenuObject == MenuObject))
           break;
 
@@ -1301,7 +1301,7 @@ NtUserBuildMenuItemList(
   DPRINT("Enter NtUserBuildMenuItemList\n");
   UserEnterExclusive();
   
-  MenuObject = IntGetMenuObject(hMenu);
+  MenuObject = UserGetMenuObject(hMenu);
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
@@ -1342,7 +1342,7 @@ NtUserCheckMenuItem(
   DPRINT("Enter NtUserCheckMenuItem\n");
   UserEnterExclusive();
   
-  MenuObject = IntGetMenuObject(hmenu);
+  MenuObject = UserGetMenuObject(hmenu);
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
@@ -1422,7 +1422,7 @@ NtUserDeleteMenu(
   DPRINT("Enter NtUserDeleteMenu\n");
   UserEnterExclusive();
   
-  MenuObject = IntGetMenuObject(hMenu);
+  MenuObject = UserGetMenuObject(hMenu);
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
@@ -1451,7 +1451,7 @@ NtUserDestroyMenu(
   DPRINT("Enter NtUserDestroyMenu\n");
   UserEnterExclusive();
   
-  MenuObject = IntGetMenuObject(hMenu);
+  MenuObject = UserGetMenuObject(hMenu);
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
@@ -1487,7 +1487,7 @@ NtUserEnableMenuItem(
   DPRINT("Enter NtUserEnableMenuItem\n");
   UserEnterExclusive();
   
-  MenuObject = IntGetMenuObject(hMenu);
+  MenuObject = UserGetMenuObject(hMenu);
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
@@ -1521,7 +1521,7 @@ NtUserInsertMenuItem(
   DPRINT("Enter NtUserInsertMenuItem\n");
   UserEnterExclusive();
   
-  MenuObject = IntGetMenuObject(hMenu);
+  MenuObject = UserGetMenuObject(hMenu);
   if(!MenuObject)
     {
       SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
@@ -1577,7 +1577,7 @@ NtUserGetMenuDefaultItem(
   DPRINT("Enter NtUserGetMenuDefaultItem\n");
   UserEnterExclusive();
   
-  MenuObject = IntGetMenuObject(hMenu);
+  MenuObject = UserGetMenuObject(hMenu);
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
@@ -1648,7 +1648,7 @@ NtUserGetMenuItemRect(
      DPRINT("Enter NtUserGetMenuItemRect\n");
      UserEnterExclusive();
   
-     Menu = IntGetMenuObject(hMenu);
+     Menu = UserGetMenuObject(hMenu);
      if(!Menu)
      {
        SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
@@ -1722,7 +1722,7 @@ NtUserHiliteMenuItem(
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     RETURN(FALSE);
   }
-  MenuObject = IntGetMenuObject(hmenu);
+  MenuObject = UserGetMenuObject(hmenu);
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
@@ -1779,7 +1779,7 @@ NtUserMenuInfo(
       RETURN(FALSE);
     }
 
-  MenuObject = IntGetMenuObject(Menu);
+  MenuObject = UserGetMenuObject(Menu);
   if (NULL == MenuObject)
     {
       SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
@@ -1834,7 +1834,7 @@ NtUserMenuItemFromPoint(
   DPRINT("Enter NtUserMenuItemFromPoint\n");
   UserEnterExclusive();
   
-  MenuObject = IntGetMenuObject(Menu);
+  MenuObject = UserGetMenuObject(Menu);
   if (NULL == MenuObject)
     {
       SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
@@ -1892,7 +1892,7 @@ NtUserMenuItemInfo(
   DPRINT("Enter NtUserMenuItemInfo\n");
   UserEnterExclusive();
   
-  MenuObject = IntGetMenuObject(Menu);
+  MenuObject = UserGetMenuObject(Menu);
   if (NULL == MenuObject)
     {
       SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
@@ -1996,7 +1996,7 @@ NtUserRemoveMenu(
   DPRINT("Enter NtUserRemoveMenu\n");
   UserEnterExclusive();
   
-  MenuObject = IntGetMenuObject(hMenu);
+  MenuObject = UserGetMenuObject(hMenu);
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
@@ -2026,7 +2026,7 @@ NtUserSetMenuContextHelpId(
   DPRINT("Enter NtUserSetMenuContextHelpId\n");
   UserEnterExclusive();
   
-  MenuObject = IntGetMenuObject(hmenu);
+  MenuObject = UserGetMenuObject(hmenu);
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
@@ -2057,7 +2057,7 @@ NtUserSetMenuDefaultItem(
   DPRINT("Enter NtUserSetMenuDefaultItem\n");
   UserEnterExclusive();
   
-  MenuObject = IntGetMenuObject(hMenu);
+  MenuObject = UserGetMenuObject(hMenu);
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
@@ -2086,7 +2086,7 @@ NtUserSetMenuFlagRtoL(
   DPRINT("Enter NtUserSetMenuFlagRtoL\n");
   UserEnterExclusive();
   
-  MenuObject = IntGetMenuObject(hMenu);
+  MenuObject = UserGetMenuObject(hMenu);
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
@@ -2159,7 +2159,7 @@ NtUserTrackPopupMenuEx(
   DPRINT("Enter NtUserTrackPopupMenuEx\n");
   UserEnterExclusive();
   
-  MenuObject = IntGetMenuObject(hmenu);
+  MenuObject = UserGetMenuObject(hmenu);
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);

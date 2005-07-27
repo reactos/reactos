@@ -81,11 +81,13 @@ CleanupMonitorImpl()
 PMONITOR_OBJECT FASTCALL UserCreateMonitorObject(HANDLE* h)
 {
    PVOID mem;
+   PWINSTATION_OBJECT WinSta;
    
    mem = ExAllocatePool(PagedPool, sizeof(MONITOR_OBJECT));
    if (!mem) return NULL;
-
-   *h = UserAllocHandle(mem, USER_MONITOR);
+   WinSta = UserGetCurrentWinSta();
+   
+   *h = UserAllocHandle(&WinSta->HandleTable, mem, USER_MONITOR);
    if (!*h){
       ExFreePool(mem);
       return NULL;
@@ -143,7 +145,10 @@ IntDestroyMonitorObject(IN PMONITOR_OBJECT pMonitor)
 
 PMONITOR_OBJECT UserGetMonitorObject(HANDLE hCursor)
 {
-   return (PMONITOR_OBJECT)UserGetObject(hCursor, USER_MONITOR );
+   PWINSTATION_OBJECT WinSta;
+   WinSta = UserGetCurrentWinSta();
+
+   return (PMONITOR_OBJECT)UserGetObject(&WinSta->HandleTable, hCursor, USER_MONITOR );
 }
 
 

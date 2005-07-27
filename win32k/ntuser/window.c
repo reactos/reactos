@@ -105,7 +105,9 @@ IntIsWindow(HWND hWnd)
 
 PWINDOW_OBJECT FASTCALL IntGetWindowObject(HWND hWnd)
 {
-   return (PWINDOW_OBJECT)UserGetObject(hWnd, USER_WINDOW );
+   PWINSTATION_OBJECT WinSta;
+   WinSta = UserGetCurrentWinSta();
+   return (PWINDOW_OBJECT)UserGetObject(&WinSta->HandleTable, hWnd, USER_WINDOW );
 }
 
 
@@ -398,14 +400,14 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
 #endif
 
   if (!(Window->Style & WS_CHILD) && Window->IDMenu
-      && (Menu = IntGetMenuObject((HMENU)Window->IDMenu)))
+      && (Menu = UserGetMenuObject((HMENU)Window->IDMenu)))
     {
 	IntDestroyMenuObject(Menu, TRUE, TRUE);
 	Window->IDMenu = 0;
     }
 
   if(Window->SystemMenu
-     && (Menu = IntGetMenuObject(Window->SystemMenu)))
+     && (Menu = UserGetMenuObject(Window->SystemMenu)))
   {
     IntDestroyMenuObject(Menu, TRUE, TRUE);
     Window->SystemMenu = (HMENU)0;
@@ -418,9 +420,6 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
 #endif
 
   IntUnlinkWindow(Window);
-
-  //'FIXME IntReferenceWindowObject(Window);
-  
 
   IntDestroyScrollBars(Window);
 
@@ -445,14 +444,17 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   
   MsqRemoveWindowMessagesFromQueue(Window);
 
-  //ObmCloseHandle(ThreadData->Desktop->WindowStation->HandleTable, Window->Self);
-  UserFreeHandle(Window->Self);
+  UserFreeWindowObject(Window);
   
-//  memset(Window, 0x
-//memset( void *dest, int c, size_t count );
-   RtlZeroMemory(Window, sizeof(WINDOW_OBJECT));
-
   return 0;
+}
+
+inline VOID FASTCALL UserFreeWindowObject(PWINDOW_OBJECT Wnd)
+{
+   PWINSTATION_OBJECT WinSta = UserGetCurrentWinSta();
+   UserFreeHandle(&WinSta->HandleTable, Wnd->Self);  
+   RtlZeroMemory(Wnd, sizeof(WINDOW_OBJECT) + Wnd->ExtraDataSize);
+   ExFreePool(Wnd);
 }
 
 VOID FASTCALL
@@ -515,7 +517,7 @@ IntSetMenu(
 
   if (0 != WindowObject->IDMenu)
     {
-      OldMenuObject = IntGetMenuObject((HMENU) WindowObject->IDMenu);
+      OldMenuObject = UserGetMenuObject((HMENU) WindowObject->IDMenu);
       ASSERT(NULL == OldMenuObject || OldMenuObject->MenuInfo.Wnd == WindowObject->Self);
     }
   else
@@ -525,7 +527,7 @@ IntSetMenu(
 
   if (NULL != Menu)
     {
-      NewMenuObject = IntGetMenuObject(Menu);
+      NewMenuObject = UserGetMenuObject(Menu);
       if (NULL == NewMenuObject)
         {
 //          if (NULL != OldMenuObject)
@@ -670,7 +672,7 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
 
     if(WindowObject->SystemMenu)
     {
-      MenuObject = IntGetMenuObject(WindowObject->SystemMenu);
+      MenuObject = UserGetMenuObject(WindowObject->SystemMenu);
       if(MenuObject)
       {
         IntDestroyMenuObject(MenuObject, FALSE, TRUE);
@@ -681,7 +683,7 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
     if(W32Thread->Desktop->WindowStation->SystemMenuTemplate)
     {
       /* clone system menu */
-      MenuObject = IntGetMenuObject(W32Thread->Desktop->WindowStation->SystemMenuTemplate);
+      MenuObject = UserGetMenuObject(W32Thread->Desktop->WindowStation->SystemMenuTemplate);
       if(!MenuObject)
         return NULL;
 
@@ -702,7 +704,7 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
       {
         return NULL;
       }
-      SysMenuObject = IntGetMenuObject(SysMenu);
+      SysMenuObject = UserGetMenuObject(SysMenu);
       if (NULL == SysMenuObject)
       {
         NtUserDestroyMenu(SysMenu);
@@ -716,7 +718,7 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
         NtUserDestroyMenu(SysMenu);
         return NULL;
       }
-      MenuObject = IntGetMenuObject(NewMenu);
+      MenuObject = UserGetMenuObject(NewMenu);
       if(!MenuObject)
       {
         NtUserDestroyMenu(SysMenu);
@@ -752,7 +754,7 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
   else
   {
     if(WindowObject->SystemMenu)
-      return IntGetMenuObject((HMENU)WindowObject->SystemMenu);
+      return UserGetMenuObject((HMENU)WindowObject->SystemMenu);
     else
       return NULL;
   }
@@ -1015,7 +1017,7 @@ IntSetSystemMenu(PWINDOW_OBJECT WindowObject, PMENU_OBJECT MenuObject)
   PMENU_OBJECT OldMenuObject;
   if(WindowObject->SystemMenu)
   {
-    OldMenuObject = IntGetMenuObject(WindowObject->SystemMenu);
+    OldMenuObject = UserGetMenuObject(WindowObject->SystemMenu);
     if(OldMenuObject)
     {
       OldMenuObject->MenuInfo.Flags &= ~ MF_SYSMENU;
@@ -1383,11 +1385,11 @@ IntCalcDefPosSize(PWINDOW_OBJECT Parent, PWINDOW_OBJECT WindowObject, RECT *rc, 
 PWINDOW_OBJECT FASTCALL UserCreateWindowObject(HWND* h, ULONG bytes)
 {
    PVOID mem;
-   
+   PWINSTATION_OBJECT WinSta = UserGetCurrentWinSta();
    mem = ExAllocatePool(PagedPool, bytes);
    if (!mem) return NULL;
    RtlZeroMemory(mem, bytes);
-   *h = UserAllocHandle(mem, USER_WINDOW);
+   *h = UserAllocHandle(&WinSta->HandleTable, mem, USER_WINDOW);
    if (!*h){
       ExFreePool(mem);
       return NULL;
@@ -3098,7 +3100,7 @@ NtUserSetSystemMenu(HWND hWnd, HMENU hMenu)
       /*
        * Assign new menu handle.
        */
-      MenuObject = IntGetMenuObject(hMenu);
+      MenuObject = UserGetMenuObject(hMenu);
       if (!MenuObject)
       {
          SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);

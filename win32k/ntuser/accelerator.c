@@ -82,9 +82,8 @@ NtUserCopyAcceleratorTable(
 
    DPRINT("Enter NtUserCopyAcceleratorTable\n");
    UserEnterExclusive();
-
                                            
-   AcceleratorTable = UserGetAcceleratorTable(Table);
+   AcceleratorTable = UserGetAccelObject(Table);
    
    if (!AcceleratorTable)
    {
@@ -98,8 +97,6 @@ NtUserCopyAcceleratorTable(
       Status = MmCopyToCaller(Entries, AcceleratorTable->Table, Ret * sizeof(ACCEL));
       if (!NT_SUCCESS(Status))
       {
-//         ObmDereferenceObject(AcceleratorTable);
-//         ObDereferenceObject(WindowStation);
          SetLastNtError(Status);
          RETURN(0);
       }
@@ -108,9 +105,6 @@ NtUserCopyAcceleratorTable(
    {
       Ret = AcceleratorTable->Count;
    }
-
-//   ObmDereferenceObject(AcceleratorTable);
-//   ObDereferenceObject(WindowStation);
 
    RETURN(Ret);
 
@@ -170,7 +164,7 @@ NtUserCreateAcceleratorTable(
    AcceleratorTable = UserCreateAcceleratorTableObject(&Handle);
    if (AcceleratorTable == NULL)
    {
-//      ObDereferenceObject(WindowStation);
+
       SetLastNtError(STATUS_NO_MEMORY);
       DPRINT1("E2\n");
       RETURN( (HACCEL) 0);
@@ -184,7 +178,6 @@ NtUserCreateAcceleratorTable(
       if (AcceleratorTable->Table == NULL)
       {
 //         ObmCloseHandle(WindowStation->HandleTable, Handle);
-//         ObDereferenceObject(WindowStation);
          SetLastNtError(Status);
          DPRINT1("E3\n");
          RETURN( (HACCEL) 0);
@@ -195,14 +188,12 @@ NtUserCreateAcceleratorTable(
       {
          ExFreePool(AcceleratorTable->Table);
 //         ObmCloseHandle(WindowStation->HandleTable, Handle);
-//         ObDereferenceObject(WindowStation);
          SetLastNtError(Status);
          DPRINT1("E4\n");
          RETURN((HACCEL) 0);
       }
    }
 
-//   ObDereferenceObject(WindowStation);
 
    /* FIXME: Save HandleTable in a list somewhere so we can clean it up again */
    RETURN( (HACCEL) Handle);
@@ -231,7 +222,7 @@ NtUserDestroyAcceleratorTable(HACCEL Table)
    UserEnterExclusive();
 
    //FIXME
-   AcceleratorTable = UserGetAcceleratorTable/*Object*/(Table);
+   AcceleratorTable = UserGetAccelObject(Table);
 
    if (!AcceleratorTable)
    {
@@ -444,6 +435,14 @@ found:
    return TRUE;
 }
 
+inline PACCELERATOR_TABLE FASTCALL UserGetAccelObject(HACCEL hCursor)
+{
+   PWINSTATION_OBJECT WinSta;
+   WinSta = PsGetWin32Thread()->Desktop->WindowStation;
+   return (PACCELERATOR_TABLE)UserGetObject(&WinSta->HandleTable, hCursor, USER_CURSOR_ICON );   
+}
+
+
 int
 STDCALL
 NtUserTranslateAccelerator(
@@ -483,11 +482,10 @@ NtUserTranslateAccelerator(
       RETURN(0);
    }
 
-   AcceleratorTable = UserGetAcceleratorTable(Table);
+   AcceleratorTable = UserGetAccelObject(Table);
    if (!AcceleratorTable)
    {
       SetLastWin32Error(ERROR_INVALID_ACCEL_HANDLE);
-//      ObDereferenceObject(WindowStation);
       RETURN(0);
    }
 
@@ -509,8 +507,6 @@ NtUserTranslateAccelerator(
          break;
       }
    }
-
-   ObDereferenceObject(WindowStation);
 
    RETURN(0);
 

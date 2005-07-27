@@ -38,8 +38,6 @@ typedef struct _MENU_OBJECT
   BOOL RtoL;
 } MENU_OBJECT, *PMENU_OBJECT;
 
-PMENU_OBJECT FASTCALL
-IntGetMenuObject(HMENU hMenu);
 
 BOOL FASTCALL
 IntFreeMenuItem(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem,

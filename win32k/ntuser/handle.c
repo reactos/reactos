@@ -155,10 +155,6 @@ PVOID UserFreeHandle(PUSER_HANDLE_TABLE ht,  HANDLE handle )
         return NULL;
     }
     
-//    if (entry->ptr){
-//       ExFreePool(entry->ptr);
-//    }
-    
     return free_user_entry(ht, entry );
 }
 

@@ -427,7 +427,7 @@ NtUserCallTwoParam(
     case TWOPARAM_ROUTINE_SETMENUBARHEIGHT:
     {
       DWORD Ret;
-      PMENU_OBJECT MenuObject = IntGetMenuObject((HMENU)Param1);
+      PMENU_OBJECT MenuObject = UserGetMenuObject((HMENU)Param1);
       if(!MenuObject)
         RETURN( 0);
 
@@ -445,7 +445,7 @@ NtUserCallTwoParam(
     {
       BOOL Ret;
       SETMENUITEMRECT smir;
-      PMENU_OBJECT MenuObject = IntGetMenuObject((HMENU)Param1);
+      PMENU_OBJECT MenuObject = UserGetMenuObject((HMENU)Param1);
       if(!MenuObject)
         RETURN( 0);
 
@@ -722,7 +722,7 @@ NtUserCallHwndLock(
               DPRINT("HWNDLOCK_ROUTINE_DRAWMENUBAR\n");
               Ret = FALSE;
               if (!((Window->Style & (WS_CHILD | WS_POPUP)) != WS_CHILD)) break;
-              MenuObject = IntGetMenuObject((HMENU) Window->IDMenu);
+              MenuObject = UserGetMenuObject((HMENU) Window->IDMenu);
               if(MenuObject == NULL) break;
               MenuObject->MenuInfo.WndOwner = hWnd;
               MenuObject->MenuInfo.Height = 0;
