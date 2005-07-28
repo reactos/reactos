@@ -3862,18 +3862,6 @@ XLATEOBJ_piVector(XLATEOBJ *XlateObj)
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-BOOL STDCALL DdCreateDirectDrawObject( 
-LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
-HDC hdc
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 /*
  * @unimplemented

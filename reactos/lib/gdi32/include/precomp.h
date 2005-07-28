@@ -18,9 +18,14 @@
 #include <prntfont.h>
 #include <ddrawgdi.h>
 #include <ndk/ntndk.h>
+#include <tchar.h>
 
 /* Win32K External Headers */
 #include <win32k/kapi.h>
+
+/* directdraw syscall */
+#include <ddentry.h>
+
 
 #define NtUserGetDCBrushColor(hbr) \
   (COLORREF)NtUserCallTwoParam((DWORD)(hbr), OBJ_BRUSH, TWOPARAM_ROUTINE_GETDCCOLOR)

@@ -17,6 +17,7 @@
 	</directory>
 	<directory name="misc">
 		<file>heap.c</file>
+            <file>gdientry.c</file>
 		<file>misc.c</file>
 		<file>stubs.c</file>
 		<file>stubsa.c</file>
