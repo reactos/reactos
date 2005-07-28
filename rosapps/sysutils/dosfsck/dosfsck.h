@@ -18,9 +18,14 @@ typedef unsigned short __u16;
 typedef unsigned int __u32;
 typedef unsigned __int64 __u64;
 typedef unsigned short __le16;
-typedef unsigned long  __le32;
+typedef unsigned int  __le32;
 typedef __int64 loff_t;
 typedef __int64 ll_t;
+
+#define CF_LE_W(v) (v)
+#define CF_LE_L(v) (v)
+#define CT_LE_W(v) (v)
+#define CT_LE_L(v) (v)
 
 #endif
 
@@ -34,17 +39,21 @@ typedef __int64 ll_t;
 
 #include "msdos_fs.h"
 
+#if 0
 #undef CF_LE_W
 #undef CF_LE_L
 #undef CT_LE_W
 #undef CT_LE_L
+#endif
 
 #if __BYTE_ORDER == __BIG_ENDIAN
 #include "byteswap.h"
+#if 0
 #define CF_LE_W(v) bswap_16(v)
 #define CF_LE_L(v) bswap_32(v)
 #define CT_LE_W(v) CF_LE_W(v)
 #define CT_LE_L(v) CF_LE_L(v)
+#endif
 #else
 #define CF_LE_W(v) (v)
 #define CF_LE_L(v) (v)
