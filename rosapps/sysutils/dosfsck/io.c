@@ -53,21 +53,43 @@ static int fd,did_change = 0;
 
 unsigned device_no;
 
+static int WIN32open(const char *path, int oflag, ...);
+#define open	WIN32open
+static int WIN32close(int fd);
+#define close	WIN32close
+static int WIN32read(int fd, void *buf, unsigned int len);
+#define read	WIN32read
+static int WIN32write(int fd, void *buf, unsigned int len);
+#define write	WIN32write
+static loff_t WIN32llseek(int fd, loff_t offset, int whence);
+#define llseek	WIN32llseek
+
+static int is_device = 0;
+
 void fs_open(char *path,int rw)
 {
-//#ifdef _WIN32
-//  static char dev_buf[] = "\\\\.\\X:";
-//#else
+#ifdef _WIN32
+  static char dev_buf[] = "\\\\.\\X:";
+#else
     struct stat stbuf;
-//#endif
+#endif
+
+  if (path[1] == ':' && path[2] == '\0') {
+	  dev_buf[4] = path[0];
+	  path = dev_buf;
+//	  is_device = 1;
+  }
+
     if ((fd = open(path,rw ? O_RDWR : O_RDONLY)) < 0)
 	pdie("open %s",path);
     changes = last = NULL;
     did_change = 0;
 
+#if 0
     if (fstat(fd,&stbuf) < 0)
 	pdie("fstat %s",path);
     device_no = S_ISBLK(stbuf.st_mode) ? (stbuf.st_rdev >> 8) & 0xff : 0;
+#endif
 }
 
 
@@ -176,12 +198,6 @@ int fs_changed(void)
 /* tab-width: 8     */
 /* End:             */
 
-
-#define open	WIN32open
-#define close	WIN32close
-#define read	WIN32read
-#define write	WIN32write
-#define llseek	WIN32llseek
 
 #define O_SHORT_LIVED   _O_SHORT_LIVED
 #define O_ACCMODE       3
