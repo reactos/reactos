@@ -3902,18 +3902,6 @@ BOOL bPrimarySurface
 
 
 
-/*
- * @unimplemented
- */
-HDC STDCALL DdGetDC( 
-LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
-LPPALETTEENTRY pColorTable
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 /*
  * @unimplemented

@@ -144,3 +144,15 @@ DdResetVisrgn(LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
  return NtGdiDdResetVisrgn((HANDLE) pSurfaceLocal->hDDSurface, hWnd);
 }
 
+/*
+ * @implemented
+ *
+ * GDIEntry 7
+ */
+HDC STDCALL DdGetDC( 
+LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
+LPPALETTEENTRY pColorTable
+)
+{
+	return NtGdiDdGetDC(pColorTable, (HANDLE) pSurfaceLocal->hDDSurface);
+}
