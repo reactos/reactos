@@ -33,10 +33,6 @@ typedef struct
 {
    HANDLE NewProcessId;
    ULONG Flags;
-   PCONTROLDISPATCHER CtrlDispatcher;
-   HANDLE Console;
-   HANDLE InputHandle;
-   HANDLE OutputHandle;
 } CSRSS_CREATE_PROCESS, *PCSRSS_CREATE_PROCESS;
 
 typedef struct
@@ -75,6 +71,7 @@ typedef struct
 typedef struct
 {
    PCONTROLDISPATCHER CtrlDispatcher;
+   BOOL ConsoleNeeded;
    HANDLE Console;
    HANDLE InputHandle;
    HANDLE OutputHandle;

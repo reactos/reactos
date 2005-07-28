@@ -42,42 +42,11 @@ extern unsigned long debug_trace_level;
 
 #endif /* _MSC_VER */
 
-#define ASSERT_IRQL(x) ASSERT(KeGetCurrentIrql() <= (x))
-
 #else /* DBG */
 
 #define DH_DbgPrint(_t_, _x_)
 
 #endif /* DBG */
-
-
-#define assert(x) ASSERT(x)
-#define assert_irql(x) ASSERT_IRQL(x)
-
-
-#ifdef _MSC_VER
-
-#define UNIMPLEMENTED \
-    TI_DbgPrint(MIN_TRACE, ("The function at %s:%d is unimplemented, \
-        but come back another day.\n", __FILE__, __LINE__));
-
-#else /* _MSC_VER */
-
-#define UNIMPLEMENTED \
-    TI_DbgPrint(MIN_TRACE, ("(%s:%d)(%s) is unimplemented, \
-        but come back another day.\n", __FILE__, __LINE__, __FUNCTION__));
-
-#endif /* _MSC_VER */
-
-
-#define CHECKPOINT \
-    do { TI_DbgPrint(DEBUG_CHECK, ("(%s:%d)\n", __FILE__, __LINE__)); } while(0);
-
-#define CP CHECKPOINT
-
-#define ASSERT_KM_POINTER(_x) \
-   ASSERT(((PVOID)_x) != (PVOID)0xcccccccc); \
-   ASSERT(((PVOID)_x) >= (PVOID)0x80000000);
 
 #endif /* __DEBUG_H */
 

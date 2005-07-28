@@ -1,4 +1,5 @@
 #include <stdarg.h>
+#include <reactos/debug.h>
 #include "rosdhcp.h"
 
 char *piaddr( struct iaddr addr ) {
@@ -15,7 +16,7 @@ int note( char *format, ... ) {
 
     ret = vsnprintf( buf, sizeof(buf), format, arg_begin );
 
-    DbgPrint("NOTE: %s\n", buf);
+    DPRINT("NOTE: %s\n", buf);
 
     return ret;
 }
@@ -28,7 +29,7 @@ int debug( char *format, ... ) {
 
     ret = vsnprintf( buf, sizeof(buf), format, arg_begin );
 
-    DbgPrint("DEBUG: %s\n", buf);
+    DPRINT("DEBUG: %s\n", buf);
 
     return ret;
 }
@@ -41,7 +42,7 @@ int warn( char *format, ... ) {
 
     ret = vsnprintf( buf, sizeof(buf), format, arg_begin );
 
-    DbgPrint("WARN: %s\n", buf);
+    DPRINT("WARN: %s\n", buf);
 
     return ret;
 }
@@ -54,7 +55,7 @@ int warning( char *format, ... ) {
 
     ret = vsnprintf( buf, sizeof(buf), format, arg_begin );
 
-    DbgPrint("WARNING: %s\n", buf);
+    DPRINT("WARNING: %s\n", buf);
 
     return ret;
 }
@@ -66,7 +67,7 @@ void error( char *format, ... ) {
 
     vsnprintf( buf, sizeof(buf), format, arg_begin );
 
-    DbgPrint("ERROR: %s\n", buf);
+    DPRINT1("ERROR: %s\n", buf);
 }
 
 int16_t getShort( unsigned char *data ) {

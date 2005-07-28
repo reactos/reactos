@@ -1341,6 +1341,7 @@ BOOL STDCALL AllocConsole(VOID)
    }
 
    Request.Data.AllocConsoleRequest.CtrlDispatcher = ConsoleControlDispatcher;
+   Request.Data.AllocConsoleRequest.ConsoleNeeded = TRUE;
 
    CsrRequest = MAKE_CSR_API(ALLOC_CONSOLE, CSR_CONSOLE);
    Status = CsrClientCallServer( &Request, NULL, CsrRequest, sizeof( CSR_API_MESSAGE ) );

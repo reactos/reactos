@@ -80,36 +80,18 @@ BaseProcessStartup(PPROCESS_START_ROUTINE lpStartAddress)
 NTSTATUS
 STDCALL
 BasepNotifyCsrOfCreation(ULONG dwCreationFlags,
-                         IN HANDLE ProcessId,
-                         IN ULONG SubsystemType,
-                         OUT PHANDLE ConsoleHandle,
-                         OUT PHANDLE InputHandle,
-                         OUT PHANDLE OutputHandle)
+                         IN HANDLE ProcessId)
 {
     ULONG Request = CREATE_PROCESS;
     CSR_API_MESSAGE CsrRequest;
     NTSTATUS Status;
     
-    DPRINT("BasepNotifyCsrOfCreation\n");
-     
-    /* Some hacks (heck, this whole API is a hack) */
-    if (SubsystemType == IMAGE_SUBSYSTEM_WINDOWS_GUI)
-    {
-        dwCreationFlags = (dwCreationFlags &~ CREATE_NEW_CONSOLE) |
-                           DETACHED_PROCESS;
-    }
-    else if (SubsystemType == IMAGE_SUBSYSTEM_WINDOWS_CUI)
-    {
-        dwCreationFlags |= CREATE_NEW_CONSOLE;
-    }
-    
+    DPRINT1("BasepNotifyCsrOfCreation: Process: %lx, Flags %lx\n", 
+            ProcessId, dwCreationFlags);
+         
     /* Fill out the request */
     CsrRequest.Data.CreateProcessRequest.NewProcessId = ProcessId;
     CsrRequest.Data.CreateProcessRequest.Flags = dwCreationFlags;
-    CsrRequest.Data.CreateProcessRequest.CtrlDispatcher = ConsoleControlDispatcher;
-    CsrRequest.Data.CreateProcessRequest.InputHandle = 0;
-    CsrRequest.Data.CreateProcessRequest.OutputHandle = 0;
-    CsrRequest.Data.CreateProcessRequest.Console = 0;
     
     /* Call CSR */
     Status = CsrClientCallServer(&CsrRequest,
@@ -121,11 +103,6 @@ BasepNotifyCsrOfCreation(ULONG dwCreationFlags,
         DPRINT1("Failed to tell csrss about new process\n");
         return CsrRequest.Status;
     }
-    /* Return Handles */
-    *ConsoleHandle = CsrRequest.Data.CreateProcessRequest.Console;
-    *InputHandle = CsrRequest.Data.CreateProcessRequest.InputHandle;
-    *OutputHandle = CsrRequest.Data.CreateProcessRequest.OutputHandle;
-    DPRINT("CSR Created: %lx %lx\n", *InputHandle, *OutputHandle);
     
     /* REturn Success */
     return STATUS_SUCCESS;
@@ -356,9 +333,7 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
                            LPVOID Environment,
                            LPSTARTUPINFOW StartupInfo,
                            DWORD CreationFlags,
-                           BOOL InheritHandles,
-                           HANDLE hInput,
-                           HANDLE hOutput)
+                           BOOL InheritHandles)
 {
     WCHAR FullPath[MAX_PATH];
     LPWSTR Remaining;
@@ -570,14 +545,6 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
                                  PPF_PROFILE_SERVER : 0;
     ProcessParameters->Flags |= (NtCurrentPeb()->ProcessParameters->Flags &
                                  PPF_DISABLE_HEAP_CHECKS);
-                                 
-    /* 
-     * FIXME: Our console init stuff is messy. See my comment in kernel32's
-     * DllMain.
-     */
-    if (!ProcessParameters->StandardInput) ProcessParameters->StandardInput = hInput;
-    if (!ProcessParameters->StandardOutput) ProcessParameters->StandardOutput = hOutput;
-    if (!ProcessParameters->StandardError) ProcessParameters->StandardError = hOutput;
     
     /* Write the Parameter Block */
     Status = NtWriteVirtualMemory(ProcessHandle,
@@ -780,7 +747,6 @@ CreateProcessW(LPCWSTR lpApplicationName,
     ULONG RetVal;
     UINT Error;
     BOOLEAN SearchDone = FALSE;
-    HANDLE hConsole, hInput, hOutput;
     CLIENT_ID ClientId;
     PPEB OurPeb = NtCurrentPeb();
     PPEB RemotePeb;
@@ -1316,21 +1282,6 @@ GetAppName:
                                        &ProcessBasicInfo,
                                        sizeof(ProcessBasicInfo),
                                        NULL);
-
-    /* Notify CSRSS */
-    Status = BasepNotifyCsrOfCreation(dwCreationFlags,
-                                      (HANDLE)ProcessBasicInfo.UniqueProcessId,
-                                      SectionImageInfo.SubsystemType,
-                                      &hConsole,
-                                      &hInput,
-                                      &hOutput);
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CSR Notification Failed");
-        SetLastErrorByStatus(Status);
-        return FALSE;
-    }
     
     /* Create Process Environment */
     RemotePeb = ProcessBasicInfo.PebBaseAddress;
@@ -1343,9 +1294,7 @@ GetAppName:
                                         lpEnvironment,
                                         lpStartupInfo,
                                         dwCreationFlags,
-                                        bInheritHandles,
-                                        hInput,
-                                        hOutput);
+                                        bInheritHandles);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Could not initialize Process Environment\n");
@@ -1398,6 +1347,18 @@ GetAppName:
     if (hThread == NULL)
     {
         DPRINT1("Could not create Initial Thread\n");
+        return FALSE;
+    }
+
+    
+    /* Notify CSRSS */
+    Status = BasepNotifyCsrOfCreation(dwCreationFlags,
+                                      (HANDLE)ProcessBasicInfo.UniqueProcessId);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSR Notification Failed");
+        SetLastErrorByStatus(Status);
         return FALSE;
     }
     

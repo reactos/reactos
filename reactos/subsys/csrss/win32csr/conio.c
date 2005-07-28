@@ -223,75 +223,124 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
 
 CSR_API(CsrAllocConsole)
 {
-  PCSRSS_CONSOLE Console;
-  NTSTATUS Status;
+    PCSRSS_CONSOLE Console;
+    NTSTATUS Status;
 
-  DPRINT("CsrAllocConsole\n");
+    DPRINT1("CsrAllocConsole\n");
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+    Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
+    Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
-  if (ProcessData == NULL)
+    if (ProcessData == NULL)
     {
-      return Request->Status = STATUS_INVALID_PARAMETER;
+        DPRINT1("No process data\n");
+        return Request->Status = STATUS_INVALID_PARAMETER;
     }
 
-  if (ProcessData->Console)
+    if (ProcessData->Console)
     {
-      Request->Status = STATUS_INVALID_PARAMETER;
-      return STATUS_INVALID_PARAMETER;
+        DPRINT1("Process already has a console\n");
+        Request->Status = STATUS_INVALID_PARAMETER;
+        return STATUS_INVALID_PARAMETER;
     }
 
-  Request->Status = STATUS_SUCCESS;
-  Console = HeapAlloc(Win32CsrApiHeap, 0, sizeof(CSRSS_CONSOLE));
-  if (NULL == Console)
-    {
-      Request->Status = STATUS_NO_MEMORY;
-      return STATUS_NO_MEMORY;
-    }
-  Request->Status = CsrInitConsole(Console);
-  if (! NT_SUCCESS(Request->Status))
-    {
-      HeapFree(Win32CsrApiHeap, 0, Console);
-      return Request->Status;
-    }
-  ProcessData->Console = Console;
-  Request->Data.AllocConsoleRequest.Console = Console;
+    /* Assume success */
+    Request->Status = STATUS_SUCCESS;
 
-  /* add a reference count because the process is tied to the console */
-  Console->Header.ReferenceCount++;
-  Status = Win32CsrInsertObject(ProcessData, &Request->Data.AllocConsoleRequest.InputHandle, &Console->Header);
-  if (! NT_SUCCESS(Status))
+    /* If we don't need a console, then get out of here */
+    if (!Request->Data.AllocConsoleRequest.ConsoleNotNeeded)
     {
-      ConioDeleteConsole((Object_t *) Console);
-      ProcessData->Console = 0;
-      return Request->Status = Status;
-    }
-  Status = Win32CsrInsertObject(ProcessData, &Request->Data.AllocConsoleRequest.OutputHandle, &Console->ActiveBuffer->Header);
-  if (!NT_SUCCESS(Status))
-    {
-      Console->Header.ReferenceCount--;
-      Win32CsrReleaseObject(ProcessData, Request->Data.AllocConsoleRequest.InputHandle);
-      ProcessData->Console = 0;
-      return Request->Status = Status;
+        DPRINT1("No console needed\n");
+        return STATUS_SUCCESS;
     }
 
-  if (! DuplicateHandle(GetCurrentProcess(), ProcessData->Console->ActiveEvent,
-                        ProcessData->Process, &ProcessData->ConsoleEvent, EVENT_ALL_ACCESS, FALSE, 0))
+    /* If we already have one, then don't create a new one... */
+    if (!Request->Data.AllocConsoleRequest.Console)
     {
-      DPRINT1("DuplicateHandle() failed: %d\n", GetLastError);
-      Console->Header.ReferenceCount--;
-      Win32CsrReleaseObject(ProcessData, Request->Data.AllocConsoleRequest.OutputHandle);
-      Win32CsrReleaseObject(ProcessData, Request->Data.AllocConsoleRequest.InputHandle);
-      ProcessData->Console = 0;
-      Request->Status = Status;
-      return Status;
-    }
-  ProcessData->CtrlDispatcher = Request->Data.AllocConsoleRequest.CtrlDispatcher;
-  DPRINT("CSRSS:CtrlDispatcher address: %x\n", ProcessData->CtrlDispatcher);
-  InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ProcessEntry);
+        /* Allocate a console structure */
+        Console = HeapAlloc(Win32CsrApiHeap, 0, sizeof(CSRSS_CONSOLE));
+        if (NULL == Console)
+        {
+            DPRINT1("Not enough memory for console\n");
+            Request->Status = STATUS_NO_MEMORY;
+            return STATUS_NO_MEMORY;
+        }
 
-  return STATUS_SUCCESS;
+        /* Initialize the Console */
+        Request->Status = CsrInitConsole(Console);
+        if (!NT_SUCCESS(Request->Status))
+        {
+            DPRINT1("Console init failed\n");
+            HeapFree(Win32CsrApiHeap, 0, Console);
+            return Request->Status;
+        }
+    }
+    else
+    {
+        /* Reuse our current console */
+        Console = Request->Data.AllocConsoleRequest.Console;
+    }
+
+    /* Set the Process Console */
+    ProcessData->Console = Console;
+
+    /* Return it to the caller */
+    Request->Data.AllocConsoleRequest.Console = Console;
+
+    /* Add a reference count because the process is tied to the console */
+    Console->Header.ReferenceCount++;
+
+    /* Insert the Objects */
+    Status = Win32CsrInsertObject(ProcessData, 
+                                  &Request->Data.AllocConsoleRequest.InputHandle, 
+                                  &Console->Header);
+    if (! NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to insert object\n");
+        ConioDeleteConsole((Object_t *) Console);
+        ProcessData->Console = 0;
+        return Request->Status = Status;
+    }
+    Status = Win32CsrInsertObject(ProcessData, 
+                                  &Request->Data.AllocConsoleRequest.OutputHandle, 
+                                  &Console->ActiveBuffer->Header);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to insert object\n");
+        Console->Header.ReferenceCount--;
+        Win32CsrReleaseObject(ProcessData, 
+                              Request->Data.AllocConsoleRequest.InputHandle);
+        ProcessData->Console = 0;
+        return Request->Status = Status;
+    }
+
+    /* Duplicate the Event */
+    if (!DuplicateHandle(GetCurrentProcess(), 
+                         ProcessData->Console->ActiveEvent,
+                         ProcessData->Process, 
+                         &ProcessData->ConsoleEvent, 
+                         EVENT_ALL_ACCESS, 
+                         FALSE, 
+                         0))
+    {
+        DPRINT1("DuplicateHandle() failed: %d\n", GetLastError);
+        Console->Header.ReferenceCount--;
+        Win32CsrReleaseObject(ProcessData,
+                              Request->Data.AllocConsoleRequest.OutputHandle);
+        Win32CsrReleaseObject(ProcessData,
+                              Request->Data.AllocConsoleRequest.InputHandle);
+        ProcessData->Console = 0;
+        Request->Status = Status;
+        return Status;
+    }
+
+    /* Set the Ctrl Dispatcher */
+    ProcessData->CtrlDispatcher = Request->Data.AllocConsoleRequest.CtrlDispatcher;
+    DPRINT1("CSRSS:CtrlDispatcher address: %x\n", ProcessData->CtrlDispatcher);
+
+    /* Insert into the list */
+    InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ProcessEntry);
+    return STATUS_SUCCESS;
 }
 
 CSR_API(CsrFreeConsole)

@@ -68,7 +68,7 @@ BOOLEAN NICCheck(
     /* first try the supplied value */
     if(ProbeAddressForNIC(Adapter->IoBaseAddress))
     {
-        NDIS_DbgPrint(MIN_TRACE, ("Found adapter at 0x%x\n", Adapter->IoBaseAddress));
+        NDIS_DbgPrint(MID_TRACE, ("Found adapter at 0x%x\n", Adapter->IoBaseAddress));
         return TRUE;
     }
 
@@ -77,7 +77,7 @@ BOOLEAN NICCheck(
     {
         if(ProbeAddressForNIC(ProbeAddressList[i]))
         {
-            NDIS_DbgPrint(MIN_TRACE, ("Found adapter at address 0x%x\n", ProbeAddressList[i]));
+            NDIS_DbgPrint(MID_TRACE, ("Found adapter at address 0x%x\n", ProbeAddressList[i]));
             Adapter->IoBaseAddress = ProbeAddressList[i];
             return TRUE;
         }
@@ -905,7 +905,7 @@ VOID NICIndicatePacket(
                 IndicateLength + DRIVER_HEADER_SIZE);
 
     NDIS_DbgPrint(MID_TRACE, ("Indicating (%d) bytes.\n", IndicateLength));
-    DbgPrint("ne2000!NICIndicatePacket: Indicating (%d) bytes.\n", IndicateLength);
+    NDIS_DbgPrint(MID_TRACE, ("ne2000!NICIndicatePacket: Indicating (%d) bytes.\n", IndicateLength));
 
 #if 0
     NDIS_DbgPrint(MAX_TRACE, ("FRAME:\n"));

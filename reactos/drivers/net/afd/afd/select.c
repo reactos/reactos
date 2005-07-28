@@ -13,6 +13,7 @@
 #include "debug.h"
 
 VOID PrintEvents( ULONG Events ) {
+#if DBG
     char *events_list[] = { "AFD_EVENT_RECEIVE",
                             "AFD_EVENT_OOB_RECEIVE",
                             "AFD_EVENT_SEND",
@@ -28,7 +29,8 @@ VOID PrintEvents( ULONG Events ) {
     int i;
 
     for( i = 0; events_list[i]; i++ )
-        if( Events & (1 << i) ) DbgPrint("%s ", events_list[i] );
+        if( Events & (1 << i) ) AFD_DbgPrint(MID_TRACE,("%s ", events_list[i] ));
+#endif
 }
 
 VOID CopyBackStatus( PAFD_HANDLE HandleArray,
@@ -224,11 +226,9 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		PollReq->Handles[i].Status = AFD_EVENT_CLOSE;
 		Signalled++;
 	    } else {
-#ifdef DBG
-                DbgPrint("AFD: Select Events: ");
+                AFD_DbgPrint(MID_TRACE, ("AFD: Select Events: "));
                 PrintEvents( PollReq->Handles[i].Events );
-                DbgPrint("\n");
-#endif
+                AFD_DbgPrint(MID_TRACE,("\n"));
 
 		PollReq->Handles[i].Status =
 		    PollReq->Handles[i].Events & FCB->PollState;

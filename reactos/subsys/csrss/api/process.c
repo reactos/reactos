@@ -192,8 +192,6 @@ NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
 CSR_API(CsrCreateProcess)
 {
    PCSRSS_PROCESS_DATA NewProcessData;
-   NTSTATUS Status;
-   CSR_API_MESSAGE ApiRequest;
 
    Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
    Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
@@ -208,57 +206,6 @@ CSR_API(CsrCreateProcess)
    /* Set default shutdown parameters */
    NewProcessData->ShutdownLevel = 0x280;
    NewProcessData->ShutdownFlags = 0;
-
-   if (Request->Data.CreateProcessRequest.Flags & DETACHED_PROCESS)
-     {
-	NewProcessData->Console = NULL;
-     }
-   else if (Request->Data.CreateProcessRequest.Flags & CREATE_NEW_CONSOLE)
-     {
-        ApiRequest.Type = ALLOC_CONSOLE;
-        ApiRequest.Header.DataSize = sizeof(CSRSS_ALLOC_CONSOLE);
-        ApiRequest.Header.MessageSize = LPC_MESSAGE_BASE_SIZE + sizeof(CSRSS_ALLOC_CONSOLE);
-        ApiRequest.Data.AllocConsoleRequest.CtrlDispatcher = Request->Data.CreateProcessRequest.CtrlDispatcher;
-
-        CsrApiCallHandler(NewProcessData, &ApiRequest);
-
-        Request->Status = ApiRequest.Status;
-        if (! NT_SUCCESS(Request->Status))
-          {
-            CsrFreeProcessData(Request->Data.CreateProcessRequest.NewProcessId);
-            return Request->Status;
-          }
-        Request->Data.CreateProcessRequest.InputHandle = ApiRequest.Data.AllocConsoleRequest.InputHandle;
-        Request->Data.CreateProcessRequest.OutputHandle = ApiRequest.Data.AllocConsoleRequest.OutputHandle;
-     }
-   else
-     {
-       NewProcessData->Console = ProcessData->Console;
-       InterlockedIncrement( &(ProcessData->Console->Header.ReferenceCount) );
-       CsrInsertObject(NewProcessData,
-		       &Request->Data.CreateProcessRequest.InputHandle,
-		       (Object_t *)NewProcessData->Console);
-       RtlEnterCriticalSection(&ProcessDataLock );
-       CsrInsertObject( NewProcessData,
-          &Request->Data.CreateProcessRequest.OutputHandle,
-          &(NewProcessData->Console->ActiveBuffer->Header) );
-
-       RtlLeaveCriticalSection(&ProcessDataLock);
-       Status = NtDuplicateObject( NtCurrentProcess(), NewProcessData->Console->ActiveEvent, NewProcessData->Process, &NewProcessData->ConsoleEvent, SYNCHRONIZE, FALSE, 0 );
-       if( !NT_SUCCESS( Status ) )
-	 {
-	   DbgPrint( "CSR: NtDuplicateObject() failed: %x\n", Status );
-	   CsrFreeProcessData( NewProcessData->ProcessId );
-	   Request->Status = Status;
-	   return Status;
-	 }
-       NewProcessData->CtrlDispatcher = Request->Data.CreateProcessRequest.CtrlDispatcher;
-       RtlEnterCriticalSection(&ProcessDataLock );
-       InsertHeadList(&NewProcessData->Console->ProcessList, &NewProcessData->ProcessEntry);
-       RtlLeaveCriticalSection(&ProcessDataLock);
-     }
-
-   Request->Data.CreateProcessRequest.Console = NewProcessData->Console;
 
    Request->Status = STATUS_SUCCESS;
    return(STATUS_SUCCESS);
