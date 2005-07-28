@@ -918,7 +918,7 @@ TrayNotifyDlg::TrayNotifyDlg(HWND hwnd)
 	ImageList_AddAlphaIcon(_himl, SmallIcon(IDI_DOT_RED), hbkgnd, canvas);
 	}
 
-	TreeView_SetImageList(_tree_ctrl, _himl, TVSIL_NORMAL);
+	(void)TreeView_SetImageList(_tree_ctrl, _himl, TVSIL_NORMAL);
 
 	_resize_mgr.Add(IDC_NOTIFY_ICONS,	RESIZE);
 	_resize_mgr.Add(IDC_LABEL1,			MOVE_Y);
@@ -1077,7 +1077,7 @@ void TrayNotifyDlg::InsertItem(HTREEITEM hparent, HTREEITEM after, const NotifyI
 	tv.lParam = (LPARAM)idx;
 	tv.pszText = (LPTSTR)txt.c_str();
 	tv.iSelectedImage = tv.iImage = ImageList_AddAlphaIcon(_himl, hicon, GetStockBrush(WHITE_BRUSH), hdc);
-	TreeView_InsertItem(_tree_ctrl, &tvi);
+	(void)TreeView_InsertItem(_tree_ctrl, &tvi);
 }
 
 LRESULT TrayNotifyDlg::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)

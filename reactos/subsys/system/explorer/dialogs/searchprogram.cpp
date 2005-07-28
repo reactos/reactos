@@ -103,7 +103,7 @@ FindProgramDlg::FindProgramDlg(HWND hwnd)
 
 	_haccel = LoadAccelerators(g_Globals._hInstance, MAKEINTRESOURCE(IDA_SEARCH_PROGRAM));
 
-	ListView_SetImageList(_list_ctrl, g_Globals._icon_cache.get_sys_imagelist(), LVSIL_SMALL);
+	(void)ListView_SetImageList(_list_ctrl, g_Globals._icon_cache.get_sys_imagelist(), LVSIL_SMALL);
 
 	LV_COLUMN column = {LVCF_FMT|LVCF_WIDTH|LVCF_TEXT, LVCFMT_LEFT, 250};
 
@@ -263,7 +263,7 @@ LRESULT FindProgramDlg::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
 	  case WM_CLOSE:
-		ListView_SetImageList(_list_ctrl, 0, LVSIL_SMALL);	// detach system image list
+		(void)ListView_SetImageList(_list_ctrl, 0, LVSIL_SMALL);	// detach system image list
 		goto def;
 
 	  case PM_TRANSLATE_MSG: {

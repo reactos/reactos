@@ -215,7 +215,7 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 					WS_CHILD|WS_TABSTOP|WS_BORDER|/*WS_VISIBLE|*/WS_CHILD|TVS_HASLINES|TVS_HASBUTTONS|TVS_SHOWSELALWAYS|TVS_INFOTIP,
 					-1, -1, 200, 0, _hwnd, (HMENU)IDW_SIDEBAR, g_Globals._hInstance, 0);
 
-	TreeView_SetImageList(_hsidebar, _himl, TVSIL_NORMAL);
+	(void)TreeView_SetImageList(_hsidebar, _himl, TVSIL_NORMAL);
 
 	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_SIDE_BAR, MF_BYCOMMAND|MF_UNCHECKED/*MF_CHECKED*/);
 

@@ -50,7 +50,7 @@ ShellBrowser::ShellBrowser(HWND hwnd, HWND left_hwnd, WindowHandle& right_hwnd, 
 
 ShellBrowser::~ShellBrowser()
 {
-	TreeView_SetImageList(_left_hwnd, 0, TVSIL_NORMAL);
+	(void)TreeView_SetImageList(_left_hwnd, 0, TVSIL_NORMAL);
 
 	if (_pShellView)
 		_pShellView->Release();
@@ -137,7 +137,7 @@ void ShellBrowser::InitializeTree(HIMAGELIST himl)
 {
 	CONTEXT("ShellBrowserChild::InitializeTree()");
 
-	TreeView_SetImageList(_left_hwnd, himl, TVSIL_NORMAL);
+	(void)TreeView_SetImageList(_left_hwnd, himl, TVSIL_NORMAL);
 	TreeView_SetScrollTime(_left_hwnd, 100);
 
 	TV_INSERTSTRUCT tvInsert;
@@ -199,7 +199,7 @@ void ShellBrowser::OnTreeItemRClick(int idCtrl, LPNMHDR pnmh)
 	ScreenToClient(_left_hwnd, &tvhti.pt);
 
 	tvhti.flags = LVHT_NOWHERE;
-	TreeView_HitTest(_left_hwnd, &tvhti);
+	(void)TreeView_HitTest(_left_hwnd, &tvhti);
 
 	if (TVHT_ONITEM & tvhti.flags) {
 		LPARAM itemData = TreeView_GetItemData(_left_hwnd, tvhti.hItem);
@@ -318,7 +318,7 @@ int ShellBrowser::InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFold
 			tvInsert.hInsertAfter = TVI_LAST;
 			tvInsert.hParent = hParentItem;
 
-			TreeView_InsertItem(_left_hwnd, &tvInsert);
+			(void)TreeView_InsertItem(_left_hwnd, &tvInsert);
 		}
 
 		++cnt;

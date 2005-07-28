@@ -519,10 +519,10 @@ ResIconEx::ResIconEx(UINT nid, int w, int h)
 void SetWindowIcon(HWND hwnd, UINT nid)
 {
 	HICON hIcon = ResIcon(nid);
-	Window_SetIcon(hwnd, ICON_BIG, hIcon);
+	(void)Window_SetIcon(hwnd, ICON_BIG, hIcon);
 
 	HICON hIconSmall = SmallIcon(nid);
-	Window_SetIcon(hwnd, ICON_SMALL, hIconSmall);
+	(void)Window_SetIcon(hwnd, ICON_SMALL, hIconSmall);
 }
 
 
