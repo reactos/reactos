@@ -3900,17 +3900,7 @@ BOOL bPrimarySurface
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-BOOL STDCALL DdDeleteSurfaceObject( 
-LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
 
 /*
  * @unimplemented

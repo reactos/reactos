@@ -35,9 +35,10 @@ static LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobalInternal;
  *
  * GDIEntry 1 
  */
-BOOL STDCALL DdCreateDirectDrawObject( 
-LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
-HDC hdc)
+BOOL 
+STDCALL 
+DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
+                         HDC hdc)
 {  
   HDC newHdc;
   /* check see if HDC is NULL or not  
@@ -93,9 +94,9 @@ HDC hdc)
  *
  * GDIEntry 3
  */
-BOOL STDCALL DdDeleteDirectDrawObject( 
-LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal
-)
+BOOL 
+STDCALL 
+DdDeleteDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal)
 {
   /* if pDirectDrawGlobal->hDD == NULL and pDirectDrawGlobalInternal->hDD == NULL
      return false */
@@ -111,3 +112,23 @@ LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal
 
   return NtGdiDdDeleteDirectDrawObject((HANDLE)pDirectDrawGlobal->hDD); 	
 }
+
+
+/*
+ * @implemented
+ *
+ * GDIEntry 5
+ */
+BOOL 
+STDCALL 
+DdDeleteSurfaceObject(LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal)
+{
+  if (!pSurfaceLocal->hDDSurface)
+  {
+    return FALSE;
+  }
+
+  return NtGdiDdDeleteSurfaceObject((HANDLE)pSurfaceLocal->hDDSurface);
+}
+
+

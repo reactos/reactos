@@ -24,7 +24,7 @@
 #include <win32k/kapi.h>
 
 /* directdraw syscall */
-#include <ddentry.h>
+#include <win32k/ntddraw.h>
 
 
 #define NtUserGetDCBrushColor(hbr) \
