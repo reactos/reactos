@@ -3905,19 +3905,6 @@ BOOL bPrimarySurface
 /*
  * @unimplemented
  */
-BOOL STDCALL DdResetVisrgn( 
-LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
-HWND hWnd
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
 HDC STDCALL DdGetDC( 
 LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
 LPPALETTEENTRY pColorTable

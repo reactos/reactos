@@ -131,4 +131,16 @@ DdDeleteSurfaceObject(LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal)
   return NtGdiDdDeleteSurfaceObject((HANDLE)pSurfaceLocal->hDDSurface);
 }
 
+/*
+ * @implemented
+ *
+ * GDIEntry 6
+ */
+BOOL 
+STDCALL 
+DdResetVisrgn(LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal, 
+              HWND hWnd)
+{
+ return NtGdiDdResetVisrgn((HANDLE) pSurfaceLocal->hDDSurface, hWnd);
+}
 
