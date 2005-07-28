@@ -1380,7 +1380,7 @@ GetAppName:
     lpProcessInformation->hThread = hThread;
     DPRINT("hThread[%lx]: %lx inside hProcess[%lx]: %lx\n", hThread,
             ClientId.UniqueThread, ClientId.UniqueProcess, hProcess);
-    hProcess =  hThread = NULL;
+    hProcess = hThread = NULL;
             
     /* De-allocate heap strings */
     if (NameBuffer) RtlFreeHeap(GetProcessHeap(), 0, NameBuffer);

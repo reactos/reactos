@@ -16,6 +16,7 @@
 extern ULONG NtMajorVersion;
 extern ULONG NtMinorVersion;
 extern ULONG NtOSCSDVersion;
+extern ULONG NtGlobalFlag;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -220,7 +221,10 @@ MmCreatePeb(PEPROCESS Process)
     LARGE_INTEGER SectionOffset;
     ULONG ViewSize = 0;
     PVOID TableBase = NULL;
+    PIMAGE_NT_HEADERS NtHeaders;
+    PIMAGE_LOAD_CONFIG_DIRECTORY ImageConfigData;
     NTSTATUS Status;
+    KAFFINITY ProcessAffinityMask = 0;
     SectionOffset.QuadPart = (ULONGLONG)0;
 
     DPRINT("MmCreatePeb\n");
@@ -257,18 +261,88 @@ MmCreatePeb(PEPROCESS Process)
     /* Set up data */
     DPRINT("Setting up PEB\n");
     Peb->ImageBaseAddress = Process->SectionBaseAddress;
-    Peb->OSMajorVersion = NtMajorVersion;
-    Peb->OSMinorVersion = NtMinorVersion;
-    Peb->OSBuildNumber = 2195;
-    Peb->OSPlatformId = 2; //VER_PLATFORM_WIN32_NT;
-    Peb->OSCSDVersion = NtOSCSDVersion;
+    Peb->InheritedAddressSpace = 0;
+    Peb->Mutant = NULL;
+
+    /* NLS */
     Peb->AnsiCodePageData = (char*)TableBase + NlsAnsiTableOffset;
     Peb->OemCodePageData = (char*)TableBase + NlsOemTableOffset;
     Peb->UnicodeCaseTableData = (char*)TableBase + NlsUnicodeTableOffset;
+
+    /* Default Version Data (could get changed below) */
+    Peb->OSMajorVersion = NtMajorVersion;
+    Peb->OSMinorVersion = NtMinorVersion;
+    Peb->OSBuildNumber = 2195;
+    Peb->OSPlatformId = 2; /* VER_PLATFORM_WIN32_NT */
+    Peb->OSCSDVersion = NtOSCSDVersion;
+
+    /* Heap and Debug Data */
     Peb->NumberOfProcessors = KeNumberProcessors;
     Peb->BeingDebugged = (BOOLEAN)(Process->DebugPort != NULL ? TRUE : FALSE);
+    Peb->NtGlobalFlag = NtGlobalFlag;
+    /*Peb->HeapSegmentReserve = MmHeapSegmentReserve;
+    Peb->HeapSegmentCommit = MmHeapSegmentCommit;
+    Peb->HeapDeCommitTotalFreeThreshold = MmHeapDeCommitTotalFreeThreshold;
+    Peb->HeapDeCommitFreeBlockThreshold = MmHeapDeCommitFreeBlockThreshold;*/
+    Peb->NumberOfHeaps = 0;
+    Peb->MaximumNumberOfHeaps = (PAGE_SIZE - sizeof(PEB)) / sizeof(PVOID);
+    Peb->ProcessHeaps = (PVOID*)Peb + 1;
 
+    /* Image Data */
+    if ((NtHeaders = RtlImageNtHeader(Peb->ImageBaseAddress)))
+    {
+        /* Get the Image Config Data too */
+        ImageConfigData = RtlImageDirectoryEntryToData(Peb->ImageBaseAddress,
+                                                       TRUE,
+                                                       IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG,
+                                                       &ViewSize);
+
+        /* Write subsystem data */
+        Peb->ImageSubSystem = NtHeaders->OptionalHeader.Subsystem;
+        Peb->ImageSubSystemMajorVersion = NtHeaders->OptionalHeader.MajorSubsystemVersion;
+        Peb->ImageSubSystemMinorVersion = NtHeaders->OptionalHeader.MinorSubsystemVersion;
+
+        /* Write Version Data */
+        if (NtHeaders->OptionalHeader.Win32VersionValue)
+        {
+            Peb->OSMajorVersion = NtHeaders->OptionalHeader.Win32VersionValue & 0xFF;
+            Peb->OSMinorVersion = (NtHeaders->OptionalHeader.Win32VersionValue >> 8) & 0xFF;
+            Peb->OSBuildNumber = (NtHeaders->OptionalHeader.Win32VersionValue >> 16) & 0x3FFF;
+
+            /* Lie about the version if requested */
+            if (ImageConfigData && ImageConfigData->CSDVersion)
+            {
+                Peb->OSCSDVersion = ImageConfigData->CSDVersion;
+            }
+
+            /* Set the Platform ID */
+            Peb->OSPlatformId = (NtHeaders->OptionalHeader.Win32VersionValue >> 30) ^ 2;
+        }
+
+        /* Check for affinity override */
+        if (ImageConfigData && ImageConfigData->ProcessAffinityMask)
+        {
+            ProcessAffinityMask = ImageConfigData->ProcessAffinityMask;
+        }
+
+        /* Check if the image is not safe for SMP */
+        if (NtHeaders->FileHeader.Characteristics & IMAGE_FILE_UP_SYSTEM_ONLY)
+        {
+            /* FIXME: Choose one randomly */
+            Peb->ImageProcessAffinityMask = 1;
+        }
+        else
+        {
+            /* Use affinity from Image Header */
+            Peb->ImageProcessAffinityMask = ProcessAffinityMask;
+        }
+    }
+
+    /* Misc data */
+    Peb->SessionId = Process->Session;
     Process->Peb = Peb;
+
+    /* Detach from the Process */
     KeDetachProcess();
 
     DPRINT("MmCreatePeb: Peb created at %p\n", Peb);
