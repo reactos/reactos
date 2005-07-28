@@ -3938,17 +3938,6 @@ LPDDRAWI_DDRAWSURFACE_LCL pSurfaceTo
 }
 
 
-
-/*
- * @unimplemented
- */
-ULONG STDCALL DdQueryDisplaySettingsUniqueness(VOID)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
 /*
  * @unimplemented
  */
@@ -3963,33 +3952,9 @@ BOOL bRelease
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-BOOL STDCALL DdSetGammaRamp( 
-LPDDRAWI_DIRECTDRAW_LCL pDDraw,
-HDC hdc,
-LPVOID lpGammaRamp
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
-/*
- * @unimplemented
- */
-DWORD STDCALL DdSwapTextureHandles( 
-LPDDRAWI_DIRECTDRAW_LCL pDDraw,
-LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl1,
-LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl2
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
+
 
 /*
  * @unimplemented

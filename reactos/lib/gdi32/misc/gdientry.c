@@ -28,6 +28,7 @@
 
 #include "precomp.h"
 static LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobalInternal;
+static ULONG RemberDdQueryDisplaySettingsUniquenessID = 0;
 
 
 /*
@@ -197,10 +198,61 @@ DdReenableDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
  *
  * GDIEntry 12
  */
-VOID STDCALL DdUnattachSurface( 
-LPDDRAWI_DDRAWSURFACE_LCL pSurface,
-LPDDRAWI_DDRAWSURFACE_LCL pSurfaceAttached
-)
+VOID 
+STDCALL 
+DdUnattachSurface(LPDDRAWI_DDRAWSURFACE_LCL pSurface,
+                  LPDDRAWI_DDRAWSURFACE_LCL pSurfaceAttached)
 {
   NtGdiDdUnattachSurface((HANDLE) pSurface->hDDSurface, (HANDLE) pSurfaceAttached->hDDSurface);	
 }
+
+/*
+ * @implemented
+ *
+ * GDIEntry 13
+ */
+ULONG
+STDCALL 
+DdQueryDisplaySettingsUniqueness()
+{
+ return RemberDdQueryDisplaySettingsUniquenessID;
+}
+
+
+/*
+ * @implemented
+ *
+ * GDIEntry 15
+ */
+BOOL STDCALL DdSetGammaRamp( 
+LPDDRAWI_DIRECTDRAW_LCL pDDraw,
+HDC hdc,
+LPVOID lpGammaRamp
+)
+{
+	if (!pDDraw->lpGbl->hDD)
+  {
+     if (!pDirectDrawGlobalInternal->hDD)
+     {
+       return FALSE;
+     }
+    return NtGdiDdSetGammaRamp((HANDLE)pDirectDrawGlobalInternal->hDD,hdc,lpGammaRamp);
+  }
+
+  return NtGdiDdSetGammaRamp((HANDLE)pDDraw->lpGbl->hDD,hdc,lpGammaRamp);
+}
+
+/*
+ * @implemented
+ *
+ * GDIEntry 16
+ */
+DWORD STDCALL DdSwapTextureHandles( 
+LPDDRAWI_DIRECTDRAW_LCL pDDraw,
+LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl1,
+LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl2
+)
+{  
+	return TRUE;
+}
+
