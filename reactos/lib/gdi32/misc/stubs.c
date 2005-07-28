@@ -3903,17 +3903,7 @@ BOOL bPrimarySurface
 
 
 
-/*
- * @unimplemented
- */
-BOOL STDCALL DdReleaseDC( 
-LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
 
 /*
  * @unimplemented
@@ -3932,18 +3922,7 @@ DWORD dwOffset
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-BOOL STDCALL DdReenableDirectDrawObject( 
-LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
-BOOL *pbNewMode
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
 
 /*
  * @unimplemented

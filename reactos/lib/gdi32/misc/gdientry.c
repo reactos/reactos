@@ -64,7 +64,7 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
   {
     /* we have create a directdraw handler already */
 
-    pDirectDrawGlobal->hDD = pDirectDrawGlobalInternal->hDD;
+    pDirectDrawGlobal->hDD = pDirectDrawGlobalInternal->hDD;    
     return TRUE;
   }
 
@@ -78,7 +78,8 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     NtGdiDeleteDC(newHdc);
   }
 
-   pDirectDrawGlobal->hDD = pDirectDrawGlobalInternal->hDD;
+   /* pDirectDrawGlobal->hDD = pDirectDrawGlobalInternal->hDD; ? */
+   pDirectDrawGlobal->hDD = 0; /* ? */
 
   /* test see if we got a handler */
   if (!pDirectDrawGlobalInternal->hDD)
@@ -156,3 +157,37 @@ LPPALETTEENTRY pColorTable
 {
 	return NtGdiDdGetDC(pColorTable, (HANDLE) pSurfaceLocal->hDDSurface);
 }
+
+/*
+ * @implemented
+ *
+ * GDIEntry 8
+ */
+BOOL STDCALL DdReleaseDC( 
+LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal
+)
+{
+ return NtGdiDdReleaseDC((HANDLE) pSurfaceLocal->hDDSurface);
+}
+
+/*
+ * @implemented
+ *
+ * GDIEntry 10
+ */
+BOOL 
+STDCALL 
+DdReenableDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
+                           BOOL *pbNewMode)
+{
+ if (!pDirectDrawGlobal->hDD)
+  {
+     if (!pDirectDrawGlobalInternal->hDD)
+     {
+       return FALSE;
+     }
+    return NtGdiDdReenableDirectDrawObject((HANDLE)pDirectDrawGlobalInternal->hDD, pbNewMode); 
+  }
+
+  return NtGdiDdReenableDirectDrawObject((HANDLE)pDirectDrawGlobal->hDD, pbNewMode); 	
+} 
