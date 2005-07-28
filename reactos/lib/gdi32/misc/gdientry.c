@@ -191,3 +191,16 @@ DdReenableDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
 
   return NtGdiDdReenableDirectDrawObject((HANDLE)pDirectDrawGlobal->hDD, pbNewMode); 	
 } 
+
+/*
+ * @implemented
+ *
+ * GDIEntry 12
+ */
+VOID STDCALL DdUnattachSurface( 
+LPDDRAWI_DDRAWSURFACE_LCL pSurface,
+LPDDRAWI_DDRAWSURFACE_LCL pSurfaceAttached
+)
+{
+  NtGdiDdUnattachSurface((HANDLE) pSurface->hDDSurface, (HANDLE) pSurfaceAttached->hDDSurface);	
+}

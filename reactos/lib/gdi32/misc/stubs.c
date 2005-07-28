@@ -3937,17 +3937,7 @@ LPDDRAWI_DDRAWSURFACE_LCL pSurfaceTo
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-VOID STDCALL DdUnattachSurface( 
-LPDDRAWI_DDRAWSURFACE_LCL pSurface,
-LPDDRAWI_DDRAWSURFACE_LCL pSurfaceAttached
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-}
+
 
 /*
  * @unimplemented
