@@ -213,6 +213,20 @@ typedef struct _DEVICE_NODE
     ULONG Address;
 } DEVICE_NODE, *PDEVICE_NODE;
 
+typedef struct _PI_RESOURCE_ARBITER_ENTRY
+{
+    LIST_ENTRY DeviceArbiterList;
+    UCHAR ResourceType;
+    PARBITER_INTERFACE ArbiterInterface;
+    ULONG Level;
+    LIST_ENTRY ResourceList;
+    LIST_ENTRY BestResourceList;
+    LIST_ENTRY BestConfig;
+    LIST_ENTRY ActiveArbiterList;
+    UCHAR State;
+    UCHAR ResourcesChanged;
+} PI_RESOURCE_ARBITER_ENTRY, *PPI_RESOURCE_ARBITER_ENTRY;
+  
 typedef struct _DEVOBJ_EXTENSION
 {
     CSHORT Type;
