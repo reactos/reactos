@@ -37,7 +37,7 @@ PCSRSS_PROCESS_DATA STDCALL CsrGetProcessData(HANDLE ProcessId)
    ULONG hash;
    PCSRSS_PROCESS_DATA pProcessData;
 
-   hash = (ULONG_PTR)ProcessId % (sizeof(ProcessData) / sizeof(*ProcessData));
+   hash = ((ULONG_PTR)ProcessId & ~0x3) % (sizeof(ProcessData) / sizeof(*ProcessData));
 
    LOCK;
 
@@ -59,7 +59,7 @@ PCSRSS_PROCESS_DATA STDCALL CsrCreateProcessData(HANDLE ProcessId)
    CLIENT_ID ClientId;
    NTSTATUS Status;
 
-   hash = (ULONG_PTR)ProcessId % (sizeof(ProcessData) / sizeof(*ProcessData));
+   hash = ((ULONG_PTR)ProcessId & ~0x3) % (sizeof(ProcessData) / sizeof(*ProcessData));
 
    LOCK;
 
@@ -121,7 +121,7 @@ NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
   UINT c;
   PCSRSS_PROCESS_DATA pProcessData, pPrevProcessData = NULL;
 
-  hash = (ULONG_PTR)Pid % (sizeof(ProcessData) / sizeof(*ProcessData));
+  hash = ((ULONG_PTR)Pid & ~0x3) % (sizeof(ProcessData) / sizeof(*ProcessData));
 
   LOCK;
 
