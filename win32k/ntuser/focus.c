@@ -91,7 +91,7 @@ IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
 
       /* FIXME: IntIsWindow */
 
-      IntPostOrSendMessage(hWnd, WM_NCACTIVATE, (WPARAM)(Window == IntGetForegroundWindow()), 0);
+      IntPostOrSendMessage(hWnd, WM_NCACTIVATE, (WPARAM)(Window == UserGetForegroundWindow()), 0);
       /* FIXME: WA_CLICKACTIVE */
       IntPostOrSendMessage(hWnd, WM_ACTIVATE,
                            MAKEWPARAM(MouseActivate ? WA_CLICKACTIVE : WA_ACTIVE,
@@ -340,8 +340,9 @@ NtUserGetForegroundWindow(VOID)
    DPRINT("Enter NtUserGetForegroundWindow\n");
    UserEnterExclusive();
 
-   PUSER_MESSAGE_QUEUE ForegroundQueue = UserGetFocusMessageQueue();
-   RETURN(ForegroundQueue != NULL ? ForegroundQueue->ActiveWindow : 0);
+   //PUSER_MESSAGE_QUEUE ForegroundQueue = UserGetFocusMessageQueue();
+   //RETURN(ForegroundQueue != NULL ? ForegroundQueue->ActiveWindow : 0);
+   RETURN(GetHwnd(UserGetForegroundWindow()));
 
 CLEANUP:
    DPRINT("Leave NtUserGetForegroundWindow, ret=%i\n",_ret_);
@@ -352,7 +353,7 @@ CLEANUP:
 
 
 PWINDOW_OBJECT FASTCALL
-IntGetForegroundWindow(VOID)
+UserGetForegroundWindow(VOID)
 {
    PUSER_MESSAGE_QUEUE ForegroundQueue = UserGetFocusMessageQueue();
 

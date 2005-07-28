@@ -54,7 +54,7 @@ ClassReferenceClass(PWNDCLASS_OBJECT Class)
 }
 
 VOID FASTCALL
-ClassDereferenceClass(PWNDCLASS_OBJECT Class)
+UserDereferenceClass(PWNDCLASS_OBJECT Class)
 {
    //if (--Class->RefCount == 0)
    //{
@@ -319,7 +319,7 @@ IntCreateClass(
          if (ClassObject->hInstance == lpwcx->hInstance)
          {
             SetLastWin32Error(ERROR_CLASS_ALREADY_EXISTS);
-            ClassDereferenceClass(ClassObject);
+            UserDereferenceClass(ClassObject);
             return(NULL);
          }
       }
@@ -739,7 +739,7 @@ NtUserUnregisterClass(
 
    if (Class->hInstance && Class->hInstance != hInstance)
    {
-      ClassDereferenceClass(Class);
+      UserDereferenceClass(Class);
       SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
       RETURN(FALSE);
    }
@@ -747,20 +747,20 @@ NtUserUnregisterClass(
    if (!IsListEmpty(&Class->ClassWindowsListHead))
    {
       /* Dereference the ClassReferenceClassByNameOrAtom() call */
-      ClassDereferenceClass(Class);
+      UserDereferenceClass(Class);
       SetLastWin32Error(ERROR_CLASS_HAS_WINDOWS);
       RETURN(FALSE);
    }
 
    /* Dereference the ClassReferenceClassByNameOrAtom() call */
-   ClassDereferenceClass(Class);
+   UserDereferenceClass(Class);
 
    RemoveEntryList(&Class->ListEntry);
 
    RtlDeleteAtomFromAtomTable(WinStaObject->AtomTable, Class->Atom);
 
    /* Free the object */
-   ClassDereferenceClass(Class);
+   UserDereferenceClass(Class);
 
    RETURN(TRUE);
 

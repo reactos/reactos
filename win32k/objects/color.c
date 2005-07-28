@@ -588,6 +588,13 @@ NtGdiSetSystemPaletteUse(HDC hDC, UINT Usage)
  return old;
 }
 
+/*
+   Win 2k Graphics API, Black Book. by coriolis.com
+   Page 62, Note that Steps 3, 5, and 6 are not required for Windows NT(tm)
+   and Windows 2000(tm).
+
+   Step 5. UnrealizeObject(hTrackBrush);
+ */
 BOOL STDCALL
 NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
 {
@@ -595,7 +602,6 @@ NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
    GDIOBJHDR * ptr;
    DWORD objectType;
    BOOL Ret = FALSE;
-   UNIMPLEMENTED;
       
    ptr = GDIOBJ_LockObj(hgdiobj, GDI_OBJECT_TYPE_DONTCARE);
    if (ptr == 0)
@@ -606,12 +612,6 @@ NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
    objectType = GDIOBJ_GetObjectType(hgdiobj);
    switch(objectType)
      {
-         case GDI_OBJECT_TYPE_PALETTE:
-           {
-           /* Make sure this is a Palette object!*/
-              DPRINT1("GDI_OBJECT_TYPE_PALETTE\n");
-              break;
-           }
 /*
     msdn.microsoft.com,
     "Windows 2000/XP: If hgdiobj is a brush, UnrealizeObject does nothing,
@@ -620,7 +620,7 @@ NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
  */
          case GDI_OBJECT_TYPE_BRUSH:
            {
-              DPRINT1("GDI_OBJECT_TYPE_BRUSH\n");
+              DPRINT("GDI_OBJECT_TYPE_BRUSH\n");
               Ret = TRUE;
               break;
            }

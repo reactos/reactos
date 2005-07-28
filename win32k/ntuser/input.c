@@ -379,13 +379,11 @@ IntKeyboardSendWinKeyMsg()
   MSG Mesg;
   NTSTATUS Status;
 
-//  Status = ObmReferenceObjectByHandle(InputWindowStation->HandleTable,
-//                                      InputWindowStation->ShellWindow,
-//				      otWindow,
-//				      (PVOID *)&Window);
-
-  Window = IntGetWindowObject( InputWindowStation->ShellWindow);
-
+  Window = UserGetObject(
+      &InputWindowStation->HandleTable, 
+      InputWindowStation->ShellWindow, 
+      USER_WINDOW);
+      
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("Couldn't find window to send Windows key message!\n");
@@ -399,8 +397,6 @@ IntKeyboardSendWinKeyMsg()
 
   /* The QS_HOTKEY is just a guess */
   MsqPostMessage(Window->MessageQueue, &Mesg, FALSE, QS_HOTKEY);
-
-//  ObmDereferenceObject(Window);
 }
 
 STATIC VOID STDCALL
@@ -930,7 +926,6 @@ IntMouseInput(MOUSEINPUT *mi)
   SwapButtons = CurInfo->SwapButtons;
   DoMove = FALSE;
 
-//  ExAcquireFastMutex(&CurInfo->CursorMutex);
   UserGetCursorLocation(WinSta, &MousePos);
   OrgPos.x = MousePos.x;
   OrgPos.y = MousePos.y;
@@ -948,17 +943,18 @@ IntMouseInput(MOUSEINPUT *mi)
       MousePos.y += mi->dy;
     }
 
-//    Status = ObmReferenceObjectByHandle(WinSta->HandleTable,
-//      WinSta->ActiveDesktop->DesktopWindow, otWindow, (PVOID*)&DesktopWindow);
-
-   DesktopWindow = UserGetDesktopWindow();
+   //FIXME: make typename like HACCEL, HWND -> USER_WND, USER_ACCEL
+   DesktopWindow = UserGetObject(
+      &WinSta->HandleTable, 
+      WinSta->ActiveDesktop->DesktopWindow, 
+      USER_WINDOW);
+   
     if (DesktopWindow)
     {
       if(MousePos.x >= DesktopWindow->ClientRect.right)
         MousePos.x = DesktopWindow->ClientRect.right - 1;
       if(MousePos.y >= DesktopWindow->ClientRect.bottom)
         MousePos.y = DesktopWindow->ClientRect.bottom - 1;
-//      ObmDereferenceObject(DesktopWindow);
     }
 
     if(MousePos.x < 0)
@@ -983,7 +979,6 @@ IntMouseInput(MOUSEINPUT *mi)
     DoMove = (MousePos.x != OrgPos.x || MousePos.y != OrgPos.y);
   }
 
-//  ExReleaseFastMutex(&CurInfo->CursorMutex);
 
   if (DoMove)
   {
@@ -1000,9 +995,9 @@ IntMouseInput(MOUSEINPUT *mi)
 
         IntEngMovePointer(SurfObj, MousePos.x, MousePos.y, &(GDIDEV(SurfObj)->Pointer.Exclude));
         /* Only now, update the info in the GDIDEVICE, so EngMovePointer can
-	 * use the old values to move the pointer image */
-	GDIDEV(SurfObj)->Pointer.Pos.x = MousePos.x;
-	GDIDEV(SurfObj)->Pointer.Pos.y = MousePos.y;
+         * use the old values to move the pointer image */
+        GDIDEV(SurfObj)->Pointer.Pos.x = MousePos.x;
+        GDIDEV(SurfObj)->Pointer.Pos.y = MousePos.y;
 
         BITMAPOBJ_UnlockBitmap(BitmapObj);
       }
@@ -1019,7 +1014,7 @@ IntMouseInput(MOUSEINPUT *mi)
   if(DoMove)
   {
     Msg.message = WM_MOUSEMOVE;
-    //FIXME: uhm... Msg is built on stack...
+    /* Msg is built on stack but MsqInsertSystemMessage copies it, so its ok */
     MsqInsertSystemMessage(&Msg);
   }
 

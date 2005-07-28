@@ -114,56 +114,71 @@ VOID FASTCALL
 WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 {
   PWINDOW_OBJECT Wnd, Old;
-  int TryTopmost;
+  HWND Fg;
 
   if (!Window || IntIsDesktopWindow(Window))
   {
     IntSetFocusMessageQueue(NULL);
     return;
   }
-  Wnd = Window;
-  for(;;)
+
+  /* If this is popup window, try to activate the owner first. */
+  if ((Window->Style & WS_POPUP) && (Wnd = IntGetOwner(Window)))
   {
-    HWND *List, *phWnd;
-
-    Old = Wnd;
-    Wnd = Wnd->ParentWnd;
-    if(!Wnd)
+    for(;;)
     {
-      IntSetFocusMessageQueue(NULL);
-      return;
-    }
-
-    if((List = IntWinListChildren(Wnd)))
-    {
-      for(TryTopmost = 0; TryTopmost <= 1; TryTopmost++)
+      Old = Wnd;
+      Wnd = Wnd->ParentWnd;//IntGetParentObject(Wnd);
+      if(IntIsDesktopWindow(Wnd))
       {
-        for(phWnd = List; *phWnd; phWnd++)
-        {
-          PWINDOW_OBJECT Child;
-
-          if((*phWnd) == Window->Self)
-          {
-            continue;
-          }
-
-          if((Child = IntGetWindowObject(*phWnd)))
-//          Child =   *phWnd;
-          {
-            if(((! TryTopmost && (0 == (Child->ExStyle & WS_EX_TOPMOST)))
-                || (TryTopmost && (0 != (Child->ExStyle & WS_EX_TOPMOST))))
-               && IntSetForegroundWindow(Child))
-            {
-              ExFreePool(List);
-              return;
-            }
-          }
-        }
+        Wnd = Old;
+        break;
       }
-      ExFreePool(List);
     }
+
+    if ((Wnd->Style & (WS_DISABLED | WS_VISIBLE)) == WS_VISIBLE &&
+        (Wnd->Style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
+      goto done;
+
   }
 
+  /* Pick a next top-level window. */
+  /* FIXME: Search for non-tooltip windows first. */
+  Wnd = Window;
+  while (Wnd != NULL)
+  {
+    Old = Wnd;
+    if (Old->NextSibling == NULL)
+    {
+      Wnd = NULL;
+//((      if (Old != Window)
+//((        IntReleaseWindowObject(Old);
+      break;
+    }
+    Wnd = IntGetWindowObject(Old->NextSibling->Self);
+//    IntUnLockRelatives(Old);
+//    if (Old != Window)
+//      IntReleaseWindowObject(Old);
+    if ((Wnd->Style & (WS_DISABLED | WS_VISIBLE)) == WS_VISIBLE &&
+        (Wnd->Style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
+      break;
+  }
+
+done:
+//  Fg = NtUserGetForegroundWindow();
+  Fg = GetHwnd(UserGetForegroundWindow());
+  if (Wnd && (!Fg || Window->Self == Fg))
+  {
+    if (IntSetForegroundWindow(Wnd))
+    {
+//      IntReleaseWindowObject(Wnd);
+      return;
+    }
+  }
+  if (!IntSetActiveWindow(Wnd))
+    IntSetActiveWindow(0);
+//  if (Wnd)
+//    IntReleaseWindowObject(Wnd);
 }
 
 
@@ -733,7 +748,7 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
 
 
    //FIXME
-   tmp = IntGetForegroundWindow();
+   tmp = UserGetForegroundWindow();
    if (WinPos->hwnd == (tmp ? tmp->Self : 0))
    {
       WinPos->flags |= SWP_NOACTIVATE;   /* Already active */

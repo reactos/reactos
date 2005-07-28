@@ -108,7 +108,6 @@
 		<file>dc.c</file>
 		<file>dib.c</file>
 		<file>fillshap.c</file>
-		<file>font.c</file>
 		<file>gdiobj.c</file>
 		<file>icm.c</file>
 		<file>line.c</file>
@@ -134,7 +133,6 @@
 	<importlibrary definition="win32k.def" />
 	<library>win32k_base</library>
 	<library>pseh</library>
-	<library>rosrtl</library>
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<library>freetype</library>

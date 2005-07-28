@@ -1,0 +1,26 @@
+References:
+-----------
+
+window -> desktop
+window -> class
+
+window -> queue/thread_input ?????????
+thread -> queue/thread_input ?????????
+
+thread -> process
+process -> winsta
+thread -> desktop
+desktop -> winsta
+winsta -> session
+
+
+Above references create following dependencies:
+-----------------------------------------------
+
+window -> desktop -> winsta -> session
+window -> class
+
+thread -> process -> winsta -> session
+thread -> desktop -> winsta -> session
+
+process -> winsta -> session

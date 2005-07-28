@@ -97,9 +97,21 @@ HPEN STDCALL
 NtGdiCreatePenIndirect(CONST PLOGPEN LogPen)
 {
    LOGPEN SafeLogPen;
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
 
-   Status = MmCopyFromCaller(&SafeLogPen, LogPen, sizeof(LOGPEN));
+   _SEH_TRY
+   {
+     ProbeForRead(LogPen,
+                  sizeof(LOGPEN),
+                  1);
+     SafeLogPen = *LogPen;
+   }
+   _SEH_HANDLE
+   {
+     Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END;
+
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);

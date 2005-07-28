@@ -111,7 +111,6 @@ IntCreateMonitorObject()
   HANDLE Handle;
   PMONITOR_OBJECT Monitor;
 
-//  Monitor = ObmCreateObject(PsGetWin32Thread()->Desktop->WindowStation->HandleTable, &Handle, otMonitor, sizeof (MONITOR_OBJECT));
   Monitor = UserCreateMonitorObject(&Handle); 
   if (Monitor == NULL)
     {
@@ -174,9 +173,6 @@ PMONITOR_OBJECT
 IntGetMonitorObject(IN HMONITOR hMonitor)
 {
   PMONITOR_OBJECT Monitor;
-//  NTSTATUS Status;
-
-//  Status = ObmReferenceObjectByHandle(PsGetWin32Thread()->Desktop->WindowStation->HandleTable, hMonitor, otMonitor, (PVOID *)&Monitor);
 
   Monitor = UserGetMonitorObject(hMonitor); 
   if (!Monitor)

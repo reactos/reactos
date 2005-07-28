@@ -428,7 +428,7 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   RemoveEntryList(&Window->ClassListEntry);
 
   /* dereference the class */
-  ClassDereferenceClass(Window->Class);
+  UserDereferenceClass(Window->Class);
   Window->Class = NULL;
 
   if(Window->WindowRegion)
@@ -495,7 +495,7 @@ IntGetWindowInfo(PWINDOW_OBJECT WindowObject, PWINDOWINFO pwi)
   pwi->rcClient = WindowObject->ClientRect;
   pwi->dwStyle = WindowObject->Style;
   pwi->dwExStyle = WindowObject->ExStyle;
-  pwi->dwWindowStatus = (IntGetForegroundWindow() == WindowObject); /* WS_ACTIVECAPTION */
+  pwi->dwWindowStatus = (UserGetForegroundWindow() == WindowObject); /* WS_ACTIVECAPTION */
   IntGetWindowBorderMeasures(WindowObject, &pwi->cxWindowBorders, &pwi->cyWindowBorders);
   pwi->atomWindowType = (WindowObject->Class ? WindowObject->Class->Atom : 0);
   pwi->wCreatorVersion = 0x400; /* FIXME - return a real version number */
@@ -510,13 +510,19 @@ IntSetMenu(
 {
   PMENU_OBJECT OldMenuObject, NewMenuObject = NULL;
 
+  if ((WindowObject->Style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
+    {
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      return FALSE;
+    }
+
   *Changed = (WindowObject->IDMenu != (UINT) Menu);
   if (! *Changed)
     {
       return TRUE;
     }
 
-  if (0 != WindowObject->IDMenu)
+  if (WindowObject->IDMenu)
     {
       OldMenuObject = UserGetMenuObject((HMENU) WindowObject->IDMenu);
       ASSERT(NULL == OldMenuObject || OldMenuObject->MenuInfo.Wnd == WindowObject->Self);
@@ -574,12 +580,24 @@ VOID FASTCALL
 DestroyThreadWindows(struct _ETHREAD *Thread)
 {
   PLIST_ENTRY Current;
-  PW32PROCESS Win32Process;
+//  PW32PROCESS Win32Process;
   PW32THREAD Win32Thread;
-  PWINDOW_OBJECT *List, *pWnd;
-  ULONG Cnt = 0;
+//  PWINDOW_OBJECT *List, *pWnd, Wnd;
+   PWINDOW_OBJECT Wnd;
+//  ULONG Cnt = 0;
 
   Win32Thread = Thread->Tcb.Win32Thread;
+  
+  while (!IsListEmpty(&Win32Thread->WindowListHead))
+  {
+     Current = RemoveHeadList(&Win32Thread->WindowListHead);
+     Wnd = CONTAINING_RECORD(Current, WINDOW_OBJECT, ThreadListEntry);
+     /* window removes itself from the list */
+     UserDestroyWindow(Wnd);
+  }
+
+#if 0
+
   Win32Process = (PW32PROCESS)Thread->ThreadsProcess->Win32Process;
 
   Current = Win32Thread->WindowListHead.Flink;
@@ -615,7 +633,7 @@ DestroyThreadWindows(struct _ETHREAD *Thread)
     ExFreePool(List);
     return;
   }
-
+#endif
 }
 
 
@@ -1494,10 +1512,12 @@ IntCreateWindowEx(DWORD dwExStyle,
   /* Check the window station. */
   if (PsGetWin32Thread()->Desktop == NULL)
     {
-      ClassDereferenceClass(ClassObject);
+      UserDereferenceClass(ClassObject);
       DPRINT("Thread is not attached to a desktop! Cannot create window!\n");
       return (HWND)0;
     }
+    
+   //FIXME: DO NOT REFERENCE WINSTA! Reference desktop instead!!
   WinStaObject = UserGetCurrentWinSta();
   ObReferenceObjectByPointer(WinStaObject, KernelMode, ExWindowStationObjectType, 0);
 
@@ -1513,7 +1533,7 @@ IntCreateWindowEx(DWORD dwExStyle,
   if (!WindowObject)
     {
       ObDereferenceObject(WinStaObject);
-      ClassDereferenceClass(ClassObject);
+      UserDereferenceClass(ClassObject);
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       return (HWND)0;
     }
@@ -1529,6 +1549,8 @@ IntCreateWindowEx(DWORD dwExStyle,
    * Fill out the structure describing it.
    */
   WindowObject->Class = ClassObject;
+  
+  //er dette nødvendig?
   InsertTailList(&ClassObject->ClassWindowsListHead, &WindowObject->ClassListEntry);
 
   WindowObject->ExStyle = dwExStyle;
@@ -1551,8 +1573,11 @@ IntCreateWindowEx(DWORD dwExStyle,
     
   WindowObject->MessageQueue = UserGetCurrentQueue();
   
+  ASSERT(WindowObject->MessageQueue);
+  
   DPRINT1("Set 0x%x's parent to 0x%x\n",WindowObject, ParentWindow);
   WindowObject->ParentWnd = ParentWindow;
+
   if((OwnerWindow = IntGetWindowObject(OwnerWindowHandle)))
   {
     WindowObject->Owner = OwnerWindowHandle;
@@ -1604,7 +1629,7 @@ IntCreateWindowEx(DWORD dwExStyle,
                                                               TAG_STRING);
       if (NULL == WindowObject->WindowName.Buffer)
         {
-          ClassDereferenceClass(ClassObject);
+          UserDereferenceClass(ClassObject);
           DPRINT1("Failed to allocate mem for window name\n");
           SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
           return NULL;
@@ -1691,7 +1716,7 @@ CHECKPOINT1;
       /* FIXME - Delete window object and remove it from the thread windows list */
       /* FIXME - delete allocated DCE */
 
-      ClassDereferenceClass(ClassObject);
+      UserDereferenceClass(ClassObject);
       DPRINT1("CBT-hook returned !0\n");
       return (HWND) NULL;
     }
@@ -1894,7 +1919,7 @@ CHECKPOINT1;
   if (Result == (LRESULT)-1)
     {
       /* FIXME: Cleanup. */
-      ClassDereferenceClass(ClassObject);
+      UserDereferenceClass(ClassObject);
       DPRINT("IntCreateWindowEx(): send CREATE message failed.\n");
       return((HWND)0);
     }
@@ -2149,7 +2174,7 @@ UserDestroyWindow(PWINDOW_OBJECT Wnd)
           WinPosActivateOtherWindow(Wnd);
         }
     }
-
+//  IntDereferenceMessageQueue(Window->MessageQueue);
   if (Wnd->MessageQueue->ActiveWindow == Wnd->Self)
     Wnd->MessageQueue->ActiveWindow = NULL;
     

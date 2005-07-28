@@ -2029,9 +2029,20 @@ STDCALL
 NtGdiCreateEllipticRgnIndirect(CONST PRECT Rect)
 {
   RECT SafeRect;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
 
-  Status = MmCopyFromCaller(&SafeRect, Rect, sizeof(RECT));
+  _SEH_TRY
+  {
+    ProbeForRead(Rect,
+                 sizeof(RECT),
+                 1);
+    SafeRect = *Rect;
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
   if(!NT_SUCCESS(Status))
   {
     SetLastNtError(Status);
@@ -2063,9 +2074,20 @@ HRGN STDCALL
 NtGdiCreateRectRgnIndirect(CONST PRECT rc)
 {
   RECT SafeRc;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
 
-  Status = MmCopyFromCaller(&SafeRc, rc, sizeof(RECT));
+  _SEH_TRY
+  {
+    ProbeForRead(rc,
+                 sizeof(RECT),
+                 1);
+    SafeRc = *rc;
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
   if (!NT_SUCCESS(Status))
     {
       return(NULL);
@@ -2229,9 +2251,9 @@ NtGdiExtCreateRegion(CONST XFORM *Xform,
                           CONST RGNDATA *RgnData)
 {
    HRGN hRgn;
-   RGNDATA SafeRgnData;
    PROSRGNDATA Region;
-   NTSTATUS Status;
+   DWORD nCount = 0;
+   NTSTATUS Status = STATUS_SUCCESS;
 
    if (Count < FIELD_OFFSET(RGNDATA, Buffer))
    {
@@ -2239,14 +2261,30 @@ NtGdiExtCreateRegion(CONST XFORM *Xform,
       return NULL;
    }
 
-   Status = MmCopyFromCaller(&SafeRgnData, RgnData, min(Count, sizeof(RGNDATA)));
+   _SEH_TRY
+   {
+     ProbeForRead(RgnData,
+                  Count,
+                  1);
+     nCount = RgnData->rdh.nCount;
+     if((Count - FIELD_OFFSET(RGNDATA, Buffer)) / sizeof(RECT) < nCount)
+     {
+       Status = STATUS_INVALID_PARAMETER;
+       _SEH_LEAVE;
+     }
+   }
+   _SEH_HANDLE
+   {
+     Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END;
    if (!NT_SUCCESS(Status))
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      SetLastNtError(Status);
       return NULL;
    }
 
-   hRgn = RGNDATA_AllocRgn(SafeRgnData.rdh.nCount);
+   hRgn = RGNDATA_AllocRgn(nCount);
    if (hRgn == NULL)
    {
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
@@ -2260,10 +2298,20 @@ NtGdiExtCreateRegion(CONST XFORM *Xform,
       return FALSE;
    }
 
-   RtlCopyMemory(&Region->rdh, &SafeRgnData, FIELD_OFFSET(RGNDATA, Buffer));
-
-   Status = MmCopyFromCaller(Region->Buffer, RgnData->Buffer,
-                             Count - FIELD_OFFSET(RGNDATA, Buffer));
+   _SEH_TRY
+   {
+     RtlCopyMemory(&Region->rdh,
+                   RgnData,
+                   FIELD_OFFSET(RGNDATA, Buffer));
+     RtlCopyMemory(Region->Buffer,
+                   RgnData->Buffer,
+                   Count - FIELD_OFFSET(RGNDATA, Buffer));
+   }
+   _SEH_HANDLE
+   {
+     Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END;
    if (!NT_SUCCESS(Status))
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -2354,6 +2402,7 @@ NtGdiGetRgnBox(HRGN  hRgn,
   PROSRGNDATA  Rgn;
   RECT SafeRect;
   DWORD ret;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   if (!(Rgn = RGNDATA_LockRgn(hRgn)))
     {
@@ -2367,7 +2416,19 @@ NtGdiGetRgnBox(HRGN  hRgn,
       return ret;
     }
 
-  if (!NT_SUCCESS(MmCopyToCaller(pRect, &SafeRect, sizeof(RECT))))
+  _SEH_TRY
+  {
+    ProbeForWrite(pRect,
+                  sizeof(RECT),
+                  1);
+    *pRect = SafeRect;
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+  if (!NT_SUCCESS(Status))
     {
       return ERROR;
     }
@@ -2576,15 +2637,30 @@ NtGdiRectInRegion(HRGN  hRgn,
   PROSRGNDATA Rgn;
   RECT rc;
   BOOL Ret;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   if(!(Rgn = RGNDATA_LockRgn(hRgn)))
   {
     return ERROR;
   }
 
-  if (!NT_SUCCESS(MmCopyFromCaller(&rc, unsaferc, sizeof(RECT))))
+  _SEH_TRY
+  {
+    ProbeForRead(unsaferc,
+                 sizeof(RECT),
+                 1);
+    rc = *unsaferc;
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+  
+  if (!NT_SUCCESS(Status))
     {
       RGNDATA_UnlockRgn(Rgn);
+      SetLastNtError(Status);
       DPRINT1("NtGdiRectInRegion: bogus rc\n");
       return ERROR;
     }
@@ -2635,17 +2711,31 @@ NtGdiUnionRectWithRgn(HRGN hDest, CONST PRECT UnsafeRect)
 {
   RECT SafeRect;
   PROSRGNDATA Rgn;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   if(!(Rgn = (PROSRGNDATA)RGNDATA_LockRgn(hDest)))
   {
      SetLastWin32Error(ERROR_INVALID_HANDLE);
      return NULL;
   }
+  
+  _SEH_TRY
+  {
+    ProbeForRead(UnsafeRect,
+                 sizeof(RECT),
+                 1);
+    SafeRect = *UnsafeRect;
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
 
-  if (! NT_SUCCESS(MmCopyFromCaller(&SafeRect, UnsafeRect, sizeof(RECT))))
+  if (! NT_SUCCESS(Status))
     {
       RGNDATA_UnlockRgn(Rgn);
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      SetLastNtError(Status);
       return NULL;
     }
 
@@ -2668,6 +2758,7 @@ DWORD STDCALL NtGdiGetRegionData(HRGN hrgn, DWORD count, LPRGNDATA rgndata)
 {
     DWORD size;
     PROSRGNDATA obj = RGNDATA_LockRgn( hrgn );
+    NTSTATUS Status = STATUS_SUCCESS;
 
     if(!obj)
 		return 0;
@@ -2681,16 +2772,31 @@ DWORD STDCALL NtGdiGetRegionData(HRGN hrgn, DWORD count, LPRGNDATA rgndata)
 		else		/* user requested buffer size with rgndata NULL */
 		    return size + sizeof(RGNDATAHEADER);
     }
-
-	//first we copy the header then we copy buffer
-	if( !NT_SUCCESS( MmCopyToCaller( rgndata, obj, sizeof( RGNDATAHEADER )))){
-		RGNDATA_UnlockRgn( obj );
-		return 0;
-	}
-	if( !NT_SUCCESS( MmCopyToCaller( (char*)rgndata+sizeof( RGNDATAHEADER ), obj->Buffer, size ))){
-		RGNDATA_UnlockRgn( obj );
-		return 0;
-	}
+    
+    _SEH_TRY
+    {
+      ProbeForWrite(rgndata,
+                    count,
+                    1);
+      RtlCopyMemory(rgndata,
+                    obj,
+                    sizeof(RGNDATAHEADER));
+      RtlCopyMemory((PVOID)((ULONG_PTR)rgndata + (ULONG_PTR)sizeof(RGNDATAHEADER)),
+                    obj->Buffer,
+                    size);
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    
+    if(!NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      RGNDATA_UnlockRgn( obj );
+      return 0;
+    }
 
     RGNDATA_UnlockRgn( obj );
     return size + sizeof(RGNDATAHEADER);
@@ -3291,7 +3397,7 @@ NtGdiCreatePolygonRgn(CONST PPOINT  pt,
                       INT  PolyFillMode)
 {
    POINT *SafePoints;
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
    HRGN hRgn;
 
 
@@ -3329,6 +3435,24 @@ NtGdiCreatePolygonRgn(CONST PPOINT  pt,
       RGNDATA_UnlockRgn(rgn);
       return hRgn;
    }
+   
+   _SEH_TRY
+   {
+      ProbeForRead(pt,
+                   Count * sizeof(POINT),
+                   1);
+   }
+   _SEH_HANDLE
+   {
+      Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END;
+   
+   if (!NT_SUCCESS(Status))
+   {
+      SetLastNtError(Status);
+      return (HRGN)0;
+   }
 
    if (!(SafePoints = ExAllocatePoolWithTag(PagedPool, Count * sizeof(POINT), TAG_REGION)))
    {
@@ -3336,7 +3460,18 @@ NtGdiCreatePolygonRgn(CONST PPOINT  pt,
       return (HRGN)0;
    }
 
-   Status = MmCopyFromCaller(SafePoints, pt, Count * sizeof(POINT));
+   _SEH_TRY
+   {
+      /* pointers were already probed! */
+      RtlCopyMemory(SafePoints,
+                    pt,
+                    Count * sizeof(POINT));
+   }
+   _SEH_HANDLE
+   {
+      Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END;
    if (!NT_SUCCESS(Status))
    {
       ExFreePool(SafePoints);
@@ -3361,12 +3496,33 @@ NtGdiCreatePolyPolygonRgn(CONST PPOINT  pt,
    INT *SafePolyCounts;
    INT nPoints, nEmpty, nInvalid, i;
    HRGN hRgn;
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
 
    if (pt == NULL || PolyCounts == NULL || Count == 0 ||
        (PolyFillMode != WINDING && PolyFillMode != ALTERNATE))
    {
       /* Windows doesn't set a last error here */
+      return (HRGN)0;
+   }
+   
+   _SEH_TRY
+   {
+      ProbeForRead(PolyCounts,
+                   Count * sizeof(INT),
+                   1);
+      ProbeForRead(pt,
+                   nPoints * sizeof(POINT),
+                   1);
+   }
+   _SEH_HANDLE
+   {
+      Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END;
+   
+   if (!NT_SUCCESS(Status))
+   {
+      SetLastNtError(Status);
       return (HRGN)0;
    }
 
@@ -3376,7 +3532,19 @@ NtGdiCreatePolyPolygonRgn(CONST PPOINT  pt,
       return (HRGN)0;
    }
 
-   Status = MmCopyFromCaller(SafePolyCounts, PolyCounts, Count * sizeof(INT));
+   _SEH_TRY
+   {
+      /* pointers were already probed! */
+      RtlCopyMemory(SafePolyCounts,
+                    PolyCounts,
+                    Count * sizeof(INT));
+   }
+   _SEH_HANDLE
+   {
+      Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END;
+   
    if (!NT_SUCCESS(Status))
    {
       ExFreePool(SafePolyCounts);
@@ -3423,7 +3591,18 @@ NtGdiCreatePolyPolygonRgn(CONST PPOINT  pt,
       return (HRGN)0;
    }
 
-   Status = MmCopyFromCaller(Safept, pt, nPoints * sizeof(POINT));
+   _SEH_TRY
+   {
+      /* pointers were already probed! */
+      RtlCopyMemory(Safept,
+                    pt,
+                    Count * sizeof(POINT));
+   }
+   _SEH_HANDLE
+   {
+      Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END;
    if (!NT_SUCCESS(Status))
    {
       ExFreePool(Safept);

@@ -38,7 +38,11 @@ UserGetSystemMetrics(ULONG Index);
 NTSTATUS FASTCALL 
 UserAcquireOrReleaseInputOwnership(BOOLEAN Release);
 
-/* focus.c */
+/******************** FOCUS.C ********************************/
+
+PWINDOW_OBJECT FASTCALL
+UserGetForegroundWindow(VOID);
+
 PWINDOW_OBJECT FASTCALL
 UserSetFocus(PWINDOW_OBJECT Wnd OPTIONAL);
 
@@ -96,7 +100,8 @@ PMENU_OBJECT FASTCALL
 UserCreateMenuObject(HANDLE* h);
 
 
-/* caret.c */
+/************************* CARET.C ****************************/
+
 BOOL FASTCALL
 UserShowCaret(PWINDOW_OBJECT Wnd);
 
@@ -106,12 +111,14 @@ UserSetCaretPos(int X, int Y);
 BOOL FASTCALL
 UserHideCaret(PWINDOW_OBJECT Wnd);
 
-/* winpos.c */
+/************************* WINPOS.C ****************************/
+
 
 BOOL FASTCALL
 UserGetClientOrigin(PWINDOW_OBJECT hWnd, LPPOINT Point);
 
-/* scrollbar.c */
+/************************* SCROLLBAR.C ****************************/
+
 DWORD FASTCALL
 UserShowScrollBar(PWINDOW_OBJECT Wnd, int wBar, DWORD bShow);
 
@@ -144,7 +151,7 @@ VOID FASTCALL
 ClassReferenceClass(PWNDCLASS_OBJECT Class);
 
 VOID FASTCALL
-ClassDereferenceClass(PWNDCLASS_OBJECT Class);
+UserDereferenceClass(PWNDCLASS_OBJECT Class);
 
 PWNDCLASS_OBJECT FASTCALL 
 ClassCreateClass(DWORD bytes);

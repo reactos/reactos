@@ -9,8 +9,7 @@ UserGetCaptureWindow();
 PWINDOW_OBJECT FASTCALL
 UserGetFocusWindow();
 
-PWINDOW_OBJECT FASTCALL
-IntGetForegroundWindow(VOID);
+
 
 /*
  * These functions take the window handles from current thread queue.
