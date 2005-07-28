@@ -892,9 +892,9 @@ static void init_pointers (func_t *func)
         }
         else if (var->ptr_level == 1)
         {
-            print_server("(");
+            fprintf(server, "%s = (", var->name);
             write_type(server, var->type, NULL, var->tname);
-            fprintf(server, " __RPC_FAR *)%s = 0;\n", var->name);
+            print_server(" __RPC_FAR *)0;\n");
         }
         else if (var->ptr_level > 1)
         {
