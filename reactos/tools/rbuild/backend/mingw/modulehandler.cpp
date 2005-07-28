@@ -489,6 +489,9 @@ MingwModuleHandler::GetReferencedObjectLibraryModuleCleanTargets ( vector<string
 void
 MingwModuleHandler::GenerateCleanTarget () const
 {
+	if ( module.type == Alias )
+		return;
+	
 	fprintf ( fMakefile,
 	          ".PHONY: %s_clean\n",
                   module.name.c_str() );
