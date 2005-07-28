@@ -107,7 +107,7 @@ DdDeleteDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal)
      {
        return FALSE;
      }
-    return NtGdiDdDeleteDirectDrawObject((HANDLE)pDirectDrawGlobal->hDD); 
+    return NtGdiDdDeleteDirectDrawObject((HANDLE)pDirectDrawGlobalInternal->hDD); 
   }
 
   return NtGdiDdDeleteDirectDrawObject((HANDLE)pDirectDrawGlobal->hDD); 	
