@@ -248,7 +248,7 @@ CSR_API(CsrAllocConsole)
     Request->Status = STATUS_SUCCESS;
 
     /* If we don't need a console, then get out of here */
-    if (!Request->Data.AllocConsoleRequest.ConsoleNotNeeded)
+    if (!Request->Data.AllocConsoleRequest.ConsoleNeeded)
     {
         DPRINT1("No console needed\n");
         return STATUS_SUCCESS;
