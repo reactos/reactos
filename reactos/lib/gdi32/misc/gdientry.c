@@ -87,3 +87,27 @@ HDC hdc)
 
   return TRUE;
 }
+
+/*
+ * @implemented
+ *
+ * GDIEntry 3
+ */
+BOOL STDCALL DdDeleteDirectDrawObject( 
+LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal
+)
+{
+  /* if pDirectDrawGlobal->hDD == NULL and pDirectDrawGlobalInternal->hDD == NULL
+     return false */
+
+  if (!pDirectDrawGlobal->hDD)
+  {
+     if (!pDirectDrawGlobalInternal->hDD)
+     {
+       return FALSE;
+     }
+    return NtGdiDdDeleteDirectDrawObject((HANDLE)pDirectDrawGlobal->hDD); 
+  }
+
+  return NtGdiDdDeleteDirectDrawObject((HANDLE)pDirectDrawGlobal->hDD); 	
+}

@@ -3885,17 +3885,7 @@ LPVIDMEM pvmList
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-BOOL STDCALL DdDeleteDirectDrawObject( 
-LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
 
 /*
  * @unimplemented
