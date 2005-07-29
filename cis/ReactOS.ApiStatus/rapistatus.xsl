@@ -116,17 +116,17 @@
 			</xsl:attribute>
 			<xsl:call-template name="toggle"/>
 			<xsl:choose>
-				<xsl:when test="./node() and local-name() != 'component' and @i = 'true'">
-          <img src="i.gif" class="i"/>
+				<xsl:when test="local-name() != 'component' and @i = 'true'">
+					<img src="i.gif" class="i"/>
 				</xsl:when>
-				<xsl:when test="./node() and local-name() != 'component' and @i = 'false'">
-          <img src="u.gif" class="u"/>
+				<xsl:when test="local-name() != 'component' and @i = 'false'">
+					<img src="u.gif" class="u"/>
 				</xsl:when>
-				<xsl:when test="./node() and local-name() = 'component' and @complete >= 100">
-          <img src="sc.gif"/>
+				<xsl:when test="local-name() = 'component' and @complete >= 100">
+					<img src="sc.gif"/>
 				</xsl:when>
 				<xsl:otherwise>
-          <img src="tb.gif" with="12" height="12"/>
+					<xsl:value-of select="@i"/><img src="tb.gif" with="12" height="12"/>
 				</xsl:otherwise>
 			</xsl:choose>
 			<xsl:choose>
