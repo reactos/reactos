@@ -13,6 +13,10 @@
 #define NDEBUG
 #include "../include/debug.h"
 
+/* GLOBALS ******************************************************************/
+
+PRTL_CONVERT_STRING Basep8BitStringToUnicodeString;
+
 /* FUNCTIONS ****************************************************************/
 
 /*
@@ -104,7 +108,7 @@ Basep8BitStringToHeapUnicodeString(OUT PUNICODE_STRING UnicodeString,
 VOID
 STDCALL
 BasepAnsiStringToHeapUnicodeString(IN LPCSTR AnsiString,
-                                   IN LPWSTR* UnicodeString)
+                                   OUT LPWSTR* UnicodeString)
 {
     ANSI_STRING AnsiTemp;
     UNICODE_STRING UnicodeTemp;
@@ -114,17 +118,16 @@ BasepAnsiStringToHeapUnicodeString(IN LPCSTR AnsiString,
     /* First create the ANSI_STRING */
     RtlInitAnsiString(&AnsiTemp, AnsiString);
     
-    /* Now get the size needed */
-    UnicodeTemp.MaximumLength = RtlAnsiStringToUnicodeSize(&AnsiTemp);
-    
-    /* Allocate space from the Heap for the string */
-    *UnicodeString = RtlAllocateHeap(GetProcessHeap(),
-                                    0,
-                                    UnicodeTemp.MaximumLength);
-                                    
-    /* Save the buffer and convert */
-    UnicodeTemp.Buffer = *UnicodeString;
-    RtlAnsiStringToUnicodeString(&UnicodeTemp, &AnsiTemp, FALSE);
+    if (NT_SUCCESS(RtlAnsiStringToUnicodeString(&UnicodeTemp,
+                                                &AnsiTemp,
+                                                TRUE)))
+    {
+        *UnicodeString = UnicodeTemp.Buffer;
+    }
+    else
+    {
+        *UnicodeString = NULL;
+    }
 }
 
 /*

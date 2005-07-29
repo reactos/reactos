@@ -739,7 +739,7 @@ GetThreadId(HANDLE Thread)
 LANGID STDCALL
 SetThreadUILanguage(WORD wReserved)
 {
-  DPRINT1("SetThreadUILanguage(0x%2x) unimplemented!\n", wReserved);
+  DPRINT1("SetThreadUILanguage(0x%4x) unimplemented!\n", wReserved);
   return 0;
 }
 
