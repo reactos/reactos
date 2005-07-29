@@ -1003,6 +1003,7 @@ IopAssignDeviceResources(
                else
                   DescriptorRaw->u.Interrupt.Vector = ResourceDescriptor->u.Interrupt.MinimumVector;
 
+               DescriptorTranslated->u.Interrupt.Level = 0;
                DescriptorTranslated->u.Interrupt.Vector = HalGetInterruptVector(
                   DeviceNode->ResourceRequirements->InterfaceType,
                   DeviceNode->ResourceRequirements->BusNumber,
