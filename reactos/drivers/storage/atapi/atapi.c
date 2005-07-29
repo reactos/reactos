@@ -2054,7 +2054,7 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       CylinderLow[1] = 0;
       CylinderHigh[1] = 0;
       DrvHead = (Srb->TargetId ? IDE_DH_DRV1 : 0) | IDE_DH_LBA;
-
+#if 0
       DPRINT("%s:BUS=%04x:DRV=%d:LBA48=1:BLK=%08d:SC=%02x:CM=%02x\n",
 	     (Srb->SrbFlags & SRB_FLAGS_DATA_IN) ? "READ" : "WRITE",
 	     DeviceExtension->CommandPortBase,
@@ -2063,6 +2063,7 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	     (CylinderHigh[0] << 16) + (CylinderLow[0] << 8) + DectorNumberLow[0],
 	     SectorCount,
 	     Command);
+#endif
     }
   else if (DeviceParams->Capabilities & IDE_DRID_LBA_SUPPORTED)
     {

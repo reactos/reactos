@@ -371,7 +371,9 @@ DiskDumpPrepare(PDEVICE_OBJECT DeviceObject, PDUMP_POINTERS DumpPointers)
 			      *FunctionNameList + 2);
 	      Hint = *(PWORD)((DWORD)DriverBase + *FunctionNameList);
 	    }
+#if 0
 	  DPRINT("  Hint:%04x  Name:%s\n", Hint, pName);
+#endif
 
 	  for (i = 0; i < (sizeof(DiskDumpExports) / sizeof(DiskDumpExports[0])); i++)
 	    {

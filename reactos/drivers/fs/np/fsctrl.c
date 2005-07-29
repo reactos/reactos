@@ -464,7 +464,7 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 	break;
 
       default:
-	DPRINT("IoControlCode: %x\n", IoStack->Parameters.FileSystemControl.FsControlCode)
+	DPRINT("IoControlCode: %x\n", IoStack->Parameters.FileSystemControl.FsControlCode);
 	Status = STATUS_UNSUCCESSFUL;
     }
 

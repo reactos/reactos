@@ -94,7 +94,7 @@ BOOLEAN MouseClassCallBack(
       KeReleaseSpinLock(&ClassDeviceExtension->SpinLock, OldIrql);
       (*ConsumedCount) += ReadSize;
    } else {
-      DPRINT("MouseClassCallBack() entered, InputCount = %d - DOING NOTHING\n", *InputCount);
+      DPRINT("MouseClassCallBack() entered, InputCount = %d - DOING NOTHING\n", InputCount);
    }
 
    DPRINT("Leaving MouseClassCallBack\n");

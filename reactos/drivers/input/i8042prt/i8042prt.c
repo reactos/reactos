@@ -572,7 +572,7 @@ static NTSTATUS STDCALL I8042Initialize(PDEVICE_EXTENSION DevExt)
 	}
 
 	if (!DevExt->KeyboardExists) {
-		DPRINT("Keyboard not detected\n")
+		DPRINT("Keyboard not detected\n");
 		if (DevExt->Settings.Headless)
 			/* Act as if it exists regardless */
 			DevExt->KeyboardExists = TRUE;
