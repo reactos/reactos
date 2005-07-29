@@ -91,6 +91,9 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
   return TRUE;
 }
 
+
+
+
 /*
  * @implemented
  *
@@ -114,6 +117,8 @@ DdDeleteDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal)
 
   return NtGdiDdDeleteDirectDrawObject((HANDLE)pDirectDrawGlobal->hDD); 	
 }
+
+
 
 
 /*
@@ -171,6 +176,8 @@ LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal
  return NtGdiDdReleaseDC((HANDLE) pSurfaceLocal->hDDSurface);
 }
 
+
+
 /*
  * @implemented
  *
@@ -192,6 +199,10 @@ DdReenableDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
 
   return NtGdiDdReenableDirectDrawObject((HANDLE)pDirectDrawGlobal->hDD, pbNewMode); 	
 } 
+
+
+
+
 
 /*
  * @implemented
@@ -218,6 +229,34 @@ DdQueryDisplaySettingsUniqueness()
  return RemberDdQueryDisplaySettingsUniquenessID;
 }
 
+/*
+ * @implemented
+ *
+ * GDIEntry 14
+ */
+HANDLE 
+STDCALL 
+DdGetDxHandle(LPDDRAWI_DIRECTDRAW_LCL pDDraw,
+              LPDDRAWI_DDRAWSURFACE_LCL pSurface,
+              BOOL bRelease)
+{
+ if (pSurface) 
+ {                              
+   return ((HANDLE) NtGdiDdGetDxHandle(NULL, (HANDLE)pSurface->hDDSurface, bRelease));    
+ }
+
+ 
+ if (!pDDraw->lpGbl->hDD)
+  {
+     if (!pDirectDrawGlobalInternal->hDD)
+     {
+       return FALSE;
+     }
+   return ((HANDLE) NtGdiDdGetDxHandle( (HANDLE) pDirectDrawGlobalInternal->hDD, (HANDLE) pSurface->hDDSurface, bRelease));
+  }
+
+  return ((HANDLE) NtGdiDdGetDxHandle((HANDLE)pDDraw->lpGbl->hDD, (HANDLE) pSurface->hDDSurface, bRelease));
+}
 
 /*
  * @implemented

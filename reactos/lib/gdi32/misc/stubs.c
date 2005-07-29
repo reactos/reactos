@@ -3941,24 +3941,6 @@ LPDDRAWI_DDRAWSURFACE_LCL pSurfaceTo
 /*
  * @unimplemented
  */
-HANDLE STDCALL DdGetDxHandle( 
-LPDDRAWI_DIRECTDRAW_LCL pDDraw,
-LPDDRAWI_DDRAWSURFACE_LCL pSurface,
-BOOL bRelease
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-
-
-/*
- * @unimplemented
- */
 BOOL 
 STDCALL
 GdiPlayEMF
