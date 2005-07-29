@@ -181,8 +181,12 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
                                    &hWinSta,
                                    &hDesk);
 
-/*----      this code i dont get ------*/
-/* imo, a thread REQUIRE a desktop!!! */
+      /*
+       * NOTE: There CAN be threads without desktop and window station. A
+       * good example is the initial thread in WinLogon that creates the
+       * first window station and desktops.
+       */
+
       if(NT_SUCCESS(Status))
       {
         if(hWinSta != NULL)
@@ -218,7 +222,6 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
           }
         }
       }
-/*----      this code i dont get ------*/
 
       Win32Thread->IsExiting = FALSE;
       UserDestroyCaret(Win32Thread);
