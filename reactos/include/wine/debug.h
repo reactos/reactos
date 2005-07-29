@@ -8,6 +8,11 @@
 
 /* Add ROS Master debug functions if not added yet */
 #ifndef __INTERNAL_DEBUG
+#ifdef YDEBUG
+#undef NDEBUG
+#else
+#define NDEBUG
+#endif
 #include <reactos/debug.h>
 #endif
 
