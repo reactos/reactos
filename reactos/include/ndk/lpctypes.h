@@ -9,6 +9,8 @@
 #ifndef _LPCTYPES_H
 #define _LPCTYPES_H
 
+#define PORT_MESSAGE_TYPE(m) ((m).Header.MessageType)
+
 /* DEPENDENCIES **************************************************************/
 
 /* EXPORTED DATA *************************************************************/
