@@ -32,7 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <tchar.h>
-#include "win32err.h"
+#include "../win32err.h"
 
 #ifndef SE_PRIVILEGE_ENABLED
 #define NTOS_MODE_USER

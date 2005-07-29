@@ -16,7 +16,7 @@
 
 #include <reactos/buildno.h>
 
-#include "win32err.h"
+#include "../win32err.h"
 
 #define LINKS_SIZE 32768
 #define DEVICE_SIZE 8192

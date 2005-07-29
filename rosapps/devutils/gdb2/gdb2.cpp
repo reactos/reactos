@@ -1,4 +1,4 @@
-/* $Id: gdb2.cpp,v 1.1 2001/04/15 23:42:07 narnaoud Exp $
+/* $Id$
  *
  * gdb2 - gdb output splitter
  *
