@@ -250,6 +250,8 @@ FindFirstFileA (
 										&FileNameU,
 										FALSE);
 		}
+        memcpy(lpFindFileData, &FindFileData, offsetof(WIN32_FIND_DATAA, cFileName));
+
 	}
 
 
@@ -347,20 +349,19 @@ FindFirstFileExW (
 	DWORD dwAdditionalFlags
 	)
 {
+	OBJECT_ATTRIBUTES ObjectAttributes;
 	PKERNEL32_FIND_FILE_DATA IData;
 	IO_STATUS_BLOCK IoStatusBlock;
-    NTSTATUS Status;
-	OBJECT_ATTRIBUTES ObjectAttributes;
-	UNICODE_STRING DosFilePath;
-    UNICODE_STRING NtName;
-	UNICODE_STRING FileNameU;
-	UNICODE_STRING NtFilePath;
+	UNICODE_STRING NtPathU;
+	UNICODE_STRING PatternStr;
+	NTSTATUS Status;
 	PWSTR e1, e2;
 	WCHAR CurrentDir[256];
 	PWCHAR SlashlessFileName;
 	PWSTR SearchPath;
 	PWCHAR SearchPattern;
 	ULONG Length;
+	BOOLEAN bResult;
 
 /*
 .....
@@ -375,16 +376,17 @@ FindFirstFileExW (
 		lpSearchFilter,
 		dwAdditionalFlags);
 
-	RtlInitUnicodeString(&FileNameU, lpFileName);
 
 	Length = wcslen(lpFileName);
 	if (L'\\' == lpFileName[Length - 1])
 	{
-	    SlashlessFileName = RtlAllocateHeap(hProcessHeap, 0, Length * sizeof(WCHAR));
+	    SlashlessFileName = RtlAllocateHeap(hProcessHeap,
+	                                        0,
+					        Length * sizeof(WCHAR));
 	    if (NULL == SlashlessFileName)
 	    {
 	        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-	        return (INVALID_HANDLE_VALUE);
+	        return INVALID_HANDLE_VALUE;
 	    }
 	    memcpy(SlashlessFileName, lpFileName, (Length - 1) * sizeof(WCHAR));
 	    SlashlessFileName[Length - 1] = L'\0';
@@ -402,167 +404,176 @@ FindFirstFileExW (
 
 	if (NULL == SearchPattern)
 	{
-		CHECKPOINT;
-		SearchPattern = (PWCHAR)lpFileName;
-		Length = GetCurrentDirectoryW(sizeof(CurrentDir) / sizeof(WCHAR), SearchPath);
-		if (0 == Length)
-		{
-			if (NULL != SlashlessFileName)	{
-				RtlFreeHeap(hProcessHeap, 0, SlashlessFileName);
-			}
-			return (INVALID_HANDLE_VALUE);
+	   CHECKPOINT;
+	   SearchPattern = (PWCHAR)lpFileName;
+           Length = GetCurrentDirectoryW(sizeof(CurrentDir) / sizeof(WCHAR), SearchPath);
+	   if (0 == Length)
+	   {
+	      if (NULL != SlashlessFileName)
+	      {
+	         RtlFreeHeap(hProcessHeap,
+	                     0,
+	                     SlashlessFileName);
+	      }
+	      return INVALID_HANDLE_VALUE;
 	   }
 	   if (Length > sizeof(CurrentDir) / sizeof(WCHAR))
 	   {
-			SearchPath = RtlAllocateHeap(hProcessHeap, HEAP_ZERO_MEMORY, Length * sizeof(WCHAR));
-			if (NULL == SearchPath)
-			{
-				if (NULL != SlashlessFileName) {
-					RtlFreeHeap(hProcessHeap, 0, SlashlessFileName);
-				}
-				SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-				return (INVALID_HANDLE_VALUE);
+	      SearchPath = RtlAllocateHeap(hProcessHeap,
+	                                   HEAP_ZERO_MEMORY,
+					   Length * sizeof(WCHAR));
+	      if (NULL == SearchPath)
+	      {
+	         if (NULL != SlashlessFileName)
+	         {
+	            RtlFreeHeap(hProcessHeap,
+	                        0,
+	                        SlashlessFileName);
+	         }
+	         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+	         return INVALID_HANDLE_VALUE;
 	      }
 	      GetCurrentDirectoryW(Length, SearchPath);
 	   }
 	}
 	else
 	{
-		CHECKPOINT;
-		SearchPattern++;
-		Length = SearchPattern - lpFileName;
-		if (Length + 1 > sizeof(CurrentDir) / sizeof(WCHAR))
-		{
-			SearchPath = RtlAllocateHeap(hProcessHeap, HEAP_ZERO_MEMORY, (Length + 1) * sizeof(WCHAR));
-			if (NULL == SearchPath)		{
-				if (NULL != SlashlessFileName)	{
-					RtlFreeHeap(hProcessHeap, 0, SlashlessFileName);
-				}
-				SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-				return (INVALID_HANDLE_VALUE);
-			}
-		}
-		memcpy(SearchPath, lpFileName, Length * sizeof(WCHAR));
-		SearchPath[Length] = 0;
+	   CHECKPOINT;
+	   SearchPattern++;
+	   Length = SearchPattern - lpFileName;
+	   if (Length + 1 > sizeof(CurrentDir) / sizeof(WCHAR))
+	   {
+              SearchPath = RtlAllocateHeap(hProcessHeap,
+	                                   HEAP_ZERO_MEMORY,
+					   (Length + 1) * sizeof(WCHAR));
+	      if (NULL == SearchPath)
+	      {
+	         if (NULL != SlashlessFileName)
+	         {
+	            RtlFreeHeap(hProcessHeap,
+	                        0,
+	                        SlashlessFileName);
+	         }
+	         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+	         return INVALID_HANDLE_VALUE;
+	      }
+	   }
+           memcpy(SearchPath, lpFileName, Length * sizeof(WCHAR));
+	   SearchPath[Length] = 0;
 	}
 
-	if( FALSE == RtlDosPathNameToNtPathName_U(
-											(PWSTR)SearchPath,
-											&NtName,
-											&DosFilePath.Buffer,
-											(PCURDIR)&NtFilePath
-											) )
+	bResult = RtlDosPathNameToNtPathName_U ((LPWSTR)SearchPath,
+	                                        &NtPathU,
+	                                        NULL,
+	                                        NULL);
+        if (SearchPath != CurrentDir)
 	{
-		RtlFreeHeap(hProcessHeap, 0, SearchPath);
-		if (NULL != SlashlessFileName) {
-			RtlFreeHeap(hProcessHeap, 0, SlashlessFileName);
-		}
-		SetLastError(ERROR_PATH_NOT_FOUND);
-        return (INVALID_HANDLE_VALUE);
+	   RtlFreeHeap(hProcessHeap,
+	               0,
+		       SearchPath);
+	}
+	if (FALSE == bResult)
+	{
+	   if (NULL != SlashlessFileName)
+	   {
+	      RtlFreeHeap(hProcessHeap,
+	                  0,
+	                  SlashlessFileName);
+	   }
+	   return INVALID_HANDLE_VALUE;
 	}
 
-
-	if (SearchPath != CurrentDir) {
-		RtlFreeHeap(hProcessHeap, 0, SearchPath);
-	}
-
-	DPRINT("NtName \'%S\'\n", NtName.Buffer);
+	DPRINT("NtPathU \'%S\'\n", NtPathU.Buffer);
 
 	IData = RtlAllocateHeap (hProcessHeap,
 	                         HEAP_ZERO_MEMORY,
 	                         sizeof(KERNEL32_FIND_FILE_DATA) + FIND_DATA_SIZE);
 	if (NULL == IData)
 	{
-	   RtlFreeHeap (hProcessHeap, 0, NtName.Buffer);
-	   if (NULL != SlashlessFileName)  {
-			RtlFreeHeap(hProcessHeap, 0, SlashlessFileName);
+	   RtlFreeHeap (hProcessHeap,
+	                0,
+	                NtPathU.Buffer);
+	   if (NULL != SlashlessFileName)
+	   {
+	      RtlFreeHeap(hProcessHeap,
+	                  0,
+	                  SlashlessFileName);
 	   }
 	   SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-	   return (INVALID_HANDLE_VALUE);
+	   return INVALID_HANDLE_VALUE;
 	}
 
 	/* change pattern: "*.*" --> "*" */
-	if (!wcscmp (SearchPattern, L"*.*")) {
-		RtlInitUnicodeString(&DosFilePath, L"*");
-	} else	{
-	    RtlInitUnicodeString(&DosFilePath, SearchPattern);
-	}
-
-	DPRINT("NtName \'%S\' DosFilePath \'%S\'\n",
-	       NtName.Buffer, DosFilePath.Buffer);
-
-	InitializeObjectAttributes( &ObjectAttributes,
-								&NtName,
-								dwAdditionalFlags,
-								NtFilePath.Buffer,
-								NULL );
-
-	Status =
-		NtOpenFile(
-					&IData->DirectoryHandle,
-					SYNCHRONIZE | FILE_LIST_DIRECTORY,
-					&ObjectAttributes,
-					&IoStatusBlock,
-					FILE_SHARE_READ | FILE_SHARE_WRITE,
-					FILE_DIRECTORY_FILE | FILE_OPEN_FOR_BACKUP_INTENT | FILE_SYNCHRONOUS_IO_NONALERT
-					);
-
-	if( !NT_SUCCESS(Status) )
+	if (!wcscmp (SearchPattern, L"*.*"))
 	{
-		DPRINT1("NtOpenFile() - failed (Status %lx)\n", Status);
-		SetLastError( Status );
-		return (INVALID_HANDLE_VALUE);
+	    RtlInitUnicodeString(&PatternStr, L"*");
+	}
+	else
+	{
+	    RtlInitUnicodeString(&PatternStr, SearchPattern);
 	}
 
-	RtlFreeHeap(hProcessHeap, 0, NtName.Buffer);
+	DPRINT("NtPathU \'%S\' Pattern \'%S\'\n",
+	       NtPathU.Buffer, PatternStr.Buffer);
+
+	InitializeObjectAttributes (&ObjectAttributes,
+	                            &NtPathU,
+	                            0,
+	                            NULL,
+	                            NULL);
+
+	Status = NtOpenFile (&IData->DirectoryHandle,
+	                     SYNCHRONIZE|FILE_LIST_DIRECTORY,
+	                     &ObjectAttributes,
+	                     &IoStatusBlock,
+	                     FILE_SHARE_READ|FILE_SHARE_WRITE,
+	                     FILE_DIRECTORY_FILE|FILE_SYNCHRONOUS_IO_NONALERT);
+
+	RtlFreeHeap (hProcessHeap,
+	             0,
+	             NtPathU.Buffer);
 
 	if (!NT_SUCCESS(Status))
 	{
-		RtlFreeHeap (hProcessHeap, 0, IData);
-		if (NULL != SlashlessFileName)	{
-			RtlFreeHeap(hProcessHeap, 0, SlashlessFileName);
-		}
-		SetLastErrorByStatus (Status);
-		return (INVALID_HANDLE_VALUE);
+	   RtlFreeHeap (hProcessHeap, 0, IData);
+	   if (NULL != SlashlessFileName)
+	   {
+	      RtlFreeHeap(hProcessHeap,
+	                  0,
+	                  SlashlessFileName);
+	   }
+	   SetLastErrorByStatus (Status);
+	   return INVALID_HANDLE_VALUE;
 	}
-	
-	if ( 0 == DosFilePath.Length ) {
-		DPRINT1("0 == DosFilePath.Length\n");
-		NtClose(IData->DirectoryHandle);
-		SetLastError(ERROR_FILE_NOT_FOUND);
-        return INVALID_HANDLE_VALUE;
-	}
-
 	IData->pFileInfo = (PVOID)((ULONG_PTR)IData + sizeof(KERNEL32_FIND_FILE_DATA));
+
 	IData->pFileInfo->FileIndex = 0;
-	
-	Status =
-		NtQueryDirectoryFile(
-					IData->DirectoryHandle,
-					NULL,
-					NULL,
-					NULL,
-					&IoStatusBlock,
-					(PVOID)IData->pFileInfo,
-					FIND_DATA_SIZE,
-					FileBothDirectoryInformation,
-					TRUE,
-					&DosFilePath,
-					FALSE
-					);
 
-	if (NULL != SlashlessFileName)	{
-	   RtlFreeHeap(hProcessHeap, 0, SlashlessFileName);
+	Status = NtQueryDirectoryFile (IData->DirectoryHandle,
+	                               NULL,
+	                               NULL,
+	                               NULL,
+	                               &IoStatusBlock,
+	                               (PVOID)IData->pFileInfo,
+	                               FIND_DATA_SIZE,
+	                               FileBothDirectoryInformation,
+	                               TRUE,
+	                               &PatternStr,
+	                               TRUE);
+	if (NULL != SlashlessFileName)
+	{
+	   RtlFreeHeap(hProcessHeap,
+	               0,
+	               SlashlessFileName);
 	}
-
-	if( !NT_SUCCESS(Status) ) {
-		DPRINT1("NtQueryDirectoryFile() - failed (Status %lx)\n", Status);
-		RtlFreeHeap(hProcessHeap, 0, IData);
-		NtClose(IData->DirectoryHandle);
-		SetLastError(Status);
-		return (INVALID_HANDLE_VALUE);
+	if (!NT_SUCCESS(Status))
+	{
+	   DPRINT("Status %lx\n", Status);
+	   CloseHandle (IData->DirectoryHandle);
+	   RtlFreeHeap (hProcessHeap, 0, IData);
+	   SetLastErrorByStatus (Status);
+	   return INVALID_HANDLE_VALUE;
 	}
-
 	DPRINT("Found %.*S\n",IData->pFileInfo->FileNameLength/sizeof(WCHAR), IData->pFileInfo->FileName);
 
 	/* copy data into WIN32_FIND_DATA structure */
