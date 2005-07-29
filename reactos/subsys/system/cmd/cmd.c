@@ -164,10 +164,10 @@ HANDLE hIn;
 HANDLE hOut;
 HANDLE hConsole;
 HANDLE CMD_ModuleHandle;
+HMODULE NtDllModule;
 
-static NtQueryInformationProcessProc NtQueryInformationProcessPtr;
-static NtReadVirtualMemoryProc       NtReadVirtualMemoryPtr;
-static BOOL NtDllChecked = FALSE;
+static NtQueryInformationProcessProc NtQueryInformationProcessPtr = NULL;
+static NtReadVirtualMemoryProc       NtReadVirtualMemoryPtr = NULL;
 
 #ifdef INCLUDE_CMD_COLOR
 WORD wColor;              /* current color */
@@ -193,28 +193,6 @@ static BOOL IsConsoleProcess(HANDLE Process)
 	PROCESS_BASIC_INFORMATION Info;
 	PEB ProcessPeb;
 	ULONG BytesRead;
-	HMODULE NtDllModule;
-
-	/* Some people like to run ReactOS cmd.exe on Win98, it helps in the
-           build process. So don't link implicitly against ntdll.dll, load it
-           dynamically instead */
-	if (! NtDllChecked)
-	{
-		NtDllChecked = TRUE;
-		NtDllModule = LoadLibrary(_T("ntdll.dll"));
-		if (NULL == NtDllModule)
-		{
-			/* Probably non-WinNT system. Just wait for the commands
-                           to finish. */
-			NtQueryInformationProcessPtr = NULL;
-			NtReadVirtualMemoryPtr = NULL;
-			return TRUE;
-		}
-		NtQueryInformationProcessPtr = (NtQueryInformationProcessProc)
-                                               GetProcAddress(NtDllModule, "NtQueryInformationProcess");
-		NtReadVirtualMemoryPtr = (NtReadVirtualMemoryProc)
-		                         GetProcAddress(NtDllModule, "NtReadVirtualMemory");
-	}
 
 	if (NULL == NtQueryInformationProcessPtr || NULL == NtReadVirtualMemoryPtr)
 	{
@@ -1258,6 +1236,31 @@ Initialize (int argc, TCHAR* argv[])
 
 	//INT len;
 	//TCHAR *ptr, *cmdLine;
+	
+	/* get version information */
+	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+	GetVersionEx (&osvi);
+
+	/* Some people like to run ReactOS cmd.exe on Win98, it helps in the
+           build process. So don't link implicitly against ntdll.dll, load it
+           dynamically instead */
+
+	if (osvi.dwPlatformId == VER_PLATFORM_WIN32_NT)
+	{
+		/* ntdll is always present on NT */
+		NtDllModule = GetModuleHandle(TEXT("ntdll.dll"));
+	}
+	else
+	{
+		/* not all 9x versions have a ntdll.dll, try to load it */
+		NtDllModule = LoadLibrary(TEXT("ntdll.dll"));
+	}
+
+	if (NtDllModule != NULL)
+	{
+		NtQueryInformationProcessPtr = (NtQueryInformationProcessProc)GetProcAddress(NtDllModule, "NtQueryInformationProcess");
+		NtReadVirtualMemoryPtr = (NtReadVirtualMemoryProc)GetProcAddress(NtDllModule, "NtReadVirtualMemory");
+	}
 
 
 #ifdef _DEBUG
@@ -1270,10 +1273,6 @@ Initialize (int argc, TCHAR* argv[])
 	}
 	DebugPrintf (_T("]\n"));
 #endif
-
-	/* get version information */
-	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-	GetVersionEx (&osvi);
 
 	InitLocale ();
 
@@ -1478,6 +1477,11 @@ static VOID Cleanup (int argc, TCHAR *argv[])
 	RemoveBreakHandler ();
 	SetConsoleMode( GetStdHandle( STD_INPUT_HANDLE ),
 			ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_ECHO_INPUT );
+
+	if (NtDllModule != NULL)
+	{
+		FreeLibrary(NtDllModule);
+	}
 }
 
 #ifdef __REACTOS__
