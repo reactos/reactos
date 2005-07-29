@@ -81,15 +81,15 @@ static void dump_boot(DOS_FS *fs,struct boot_sector *b,unsigned lss)
     printf("%10d reserved sector%s\n",CF_LE_W(b->reserved),
 	   CF_LE_W(b->reserved) == 1 ? "" : "s");
     printf("First FAT starts at byte %llu (sector %llu)\n",
-	   (unsigned long long)fs->fat_start,
-	   (unsigned long long)fs->fat_start/lss);
+	   (__u64)fs->fat_start,
+	   (__u64)fs->fat_start/lss);
     printf("%10d FATs, %d bit entries\n",b->fats,fs->fat_bits);
     printf("%10d bytes per FAT (= %u sectors)\n",fs->fat_size,
 	   fs->fat_size/lss);
     if (!fs->root_cluster) {
 	printf("Root directory starts at byte %llu (sector %llu)\n",
-	       (unsigned long long)fs->root_start,
-	       (unsigned long long)fs->root_start/lss);
+	       (__u64)fs->root_start,
+	       (__u64)fs->root_start/lss);
 	printf("%10d root directory entries\n",fs->root_entries);
     }
     else {
@@ -97,10 +97,10 @@ static void dump_boot(DOS_FS *fs,struct boot_sector *b,unsigned lss)
 		fs->root_cluster);
     }
     printf("Data area starts at byte %llu (sector %llu)\n",
-	   (unsigned long long)fs->data_start,
-	   (unsigned long long)fs->data_start/lss);
+	   (__u64)fs->data_start,
+	   (__u64)fs->data_start/lss);
     printf("%10lu data clusters (%llu bytes)\n",fs->clusters,
-	   (unsigned long long)fs->clusters*fs->cluster_size);
+	   (__u64)fs->clusters*fs->cluster_size);
     printf("%u sectors/track, %u heads\n",CF_LE_W(b->secs_track),
 	   CF_LE_W(b->heads));
     printf("%10u hidden sectors\n",
@@ -242,15 +242,15 @@ static void read_fsinfo(DOS_FS *fs, struct boot_sector *b,int lss)
 	printf( "FSINFO sector has bad magic number(s):\n" );
 	if (i.magic != CT_LE_L(0x41615252))
 	    printf( "  Offset %llu: 0x%08x != expected 0x%08x\n",
-		    (unsigned long long)offsetof(struct info_sector,magic),
+		    (__u64)offsetof(struct info_sector,magic),
 		    CF_LE_L(i.magic),0x41615252);
 	if (i.signature != CT_LE_L(0x61417272))
 	    printf( "  Offset %llu: 0x%08x != expected 0x%08x\n",
-		    (unsigned long long)offsetof(struct info_sector,signature),
+		    (__u64)offsetof(struct info_sector,signature),
 		    CF_LE_L(i.signature),0x61417272);
 	if (i.boot_sign != CT_LE_W(0xaa55))
 	    printf( "  Offset %llu: 0x%04x != expected 0x%04x\n",
-		    (unsigned long long)offsetof(struct info_sector,boot_sign),
+		    (__u64)offsetof(struct info_sector,boot_sign),
 		    CF_LE_W(i.boot_sign),0xaa55);
 	if (interactive)
 	    printf( "1) Correct\n2) Don't correct (FSINFO invalid then)\n" );
@@ -348,9 +348,9 @@ void read_boot(DOS_FS *fs)
     /* On FAT32, the high 4 bits of a FAT entry are reserved */
     fs->eff_fat_bits = (fs->fat_bits == 32) ? 28 : fs->fat_bits;
     fs->fat_size = fat_length*logical_sector_size;
-    if (fs->clusters > ((unsigned long long)fs->fat_size*8/fs->fat_bits)-2)
+    if (fs->clusters > ((__u64)fs->fat_size*8/fs->fat_bits)-2)
 	die("File system has %d clusters but only space for %d FAT entries.",
-	  fs->clusters,((unsigned long long)fs->fat_size*8/fs->fat_bits)-2);
+	  fs->clusters,((__u64)fs->fat_size*8/fs->fat_bits)-2);
     if (!fs->root_entries && !fs->root_cluster)
 	die("Root directory has zero size.");
     if (fs->root_entries & (MSDOS_DPS-1))

@@ -63,6 +63,8 @@ typedef __int64 ll_t;
 
 #define VFAT_LN_ATTR (ATTR_RO | ATTR_HIDDEN | ATTR_SYS | ATTR_VOLUME)
 
+#include <pshpack1.h>
+
 /* ++roman: Use own definition of boot sector structure -- the kernel headers'
  * name for it is msdos_boot_sector in 2.0 and fat_boot_sector in 2.1 ... */
 struct boot_sector {
@@ -93,7 +95,9 @@ struct boot_sector {
 
     /* fill up to 512 bytes */
     __u8	junk[448];
-} __attribute__ ((packed));
+};
+
+#include <poppack.h>
 
 struct info_sector {
     __u32	magic;		/* Magic for info sector ('RRaA') */

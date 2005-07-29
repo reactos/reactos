@@ -12,8 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <getopt.h>
+//#include <unistd.h>
+//#include <getopt.h>
 
 #include "common.h"
 #include "dosfsck.h"
@@ -82,6 +82,7 @@ static void check_atari( void )
 
 int main(int argc,char **argv)
 {
+	int optind;
     DOS_FS fs;
     int rw,salvage_files,verify,c;
     unsigned long free_clusters;
@@ -90,6 +91,11 @@ int main(int argc,char **argv)
     interactive = 1;
     check_atari();
 
+#if 1
+	optind = 1;
+	verbose = 1;
+	list = 1;
+#else
     while ((c = getopt(argc,argv,"Aad:flnrtu:vVwy")) != EOF)
 	switch (c) {
 	    case 'A': /* toggle Atari format */
@@ -137,11 +143,13 @@ int main(int argc,char **argv)
 	    default:
 		usage(argv[0]);
 	}
+
     if ((test || write_immed) && !rw) {
 	fprintf(stderr,"-t and -w require -a or -r\n");
 	exit(2);
     }
     if (optind != argc-1) usage(argv[0]);
+#endif
 
     printf( "dosfsck " VERSION ", " VERSION_DATE ", FAT32, LFN\n" );
     fs_open(argv[optind],rw);

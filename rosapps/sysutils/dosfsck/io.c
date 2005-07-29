@@ -14,11 +14,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
+//#include <unistd.h>
 #include <sys/stat.h>
 //#include <sys/ioctl.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <assert.h>
 //#include <linux/fd.h>
 
 
@@ -62,6 +63,9 @@ static int WIN32read(int fd, void *buf, unsigned int len);
 static int WIN32write(int fd, void *buf, unsigned int len);
 #define write	WIN32write
 static loff_t WIN32llseek(int fd, loff_t offset, int whence);
+#ifdef llseek
+#undef llseek
+#endif
 #define llseek	WIN32llseek
 
 static int is_device = 0;
@@ -97,9 +101,23 @@ void fs_read(loff_t pos,int size,void *data)
 {
     CHANGE *walk;
     int got;
-
+#if 1 // TMN:
+	const size_t readsize_aligned = size + (512 - (size % 512));        // TMN:
+	const loff_t seekpos_aligned = pos - (pos % 512);                   // TMN:
+	const size_t seek_delta = (size_t)(pos - seekpos_aligned);          // TMN:
+	const size_t readsize = (pos - seekpos_aligned) + readsize_aligned; // TMN: 
+	char* tmpBuf = malloc(readsize);                                    // TMN:
+    if (llseek(fd,seekpos_aligned,0) != seekpos_aligned) pdie("Seek to %lld",pos);
+    if ((got = read(fd,tmpBuf,readsize_aligned)) < 0) pdie("Read %d bytes at %lld",size,pos);
+	assert(got >= size);
+	got = size;
+	assert(seek_delta + size < readsize);
+	memcpy(data, tmpBuf+seek_delta, size);
+	free(tmpBuf);
+#else // TMN:
     if (llseek(fd,pos,0) != pos) pdie("Seek to %lld",pos);
     if ((got = read(fd,data,size)) < 0) pdie("Read %d bytes at %lld",size,pos);
+#endif // TMN:
     if (got != size) die("Got %d bytes instead of %d at %lld",got,size,pos);
     for (walk = changes; walk; walk = walk->next) {
 	if (walk->pos < pos+size && walk->pos+walk->size > pos) {
@@ -158,13 +176,13 @@ static void fs_flush(void)
 	changes = changes->next;
 	if (llseek(fd,this->pos,0) != this->pos)
 	    fprintf(stderr,"Seek to %lld failed: %s\n  Did not write %d bytes.\n",
-	      (long long)this->pos,strerror(errno),this->size);
+	      (__int64)this->pos,strerror(errno),this->size);
 	else if ((size = write(fd,this->data,this->size)) < 0)
 		fprintf(stderr,"Writing %d bytes at %lld failed: %s\n",this->size,
-		  (long long)this->pos,strerror(errno));
+		  (__int64)this->pos,strerror(errno));
 	    else if (size != this->size)
 		    fprintf(stderr,"Wrote %d bytes instead of %d bytes at %lld."
-		      "\n",size,this->size,(long long)this->pos);
+		      "\n",size,this->size,(__int64)this->pos);
 	free(this->data);
 	free(this);
     }
@@ -223,21 +241,26 @@ static int WIN32open(const char *path, int oflag, ...)
 	switch (oflag & O_ACCMODE) {
 	case O_RDONLY:
 		desiredAccess = GENERIC_READ;
-		shareMode = FILE_SHARE_READ;
+//		shareMode = FILE_SHARE_READ;
+		shareMode = FILE_SHARE_READ|FILE_SHARE_WRITE; // TMN:
 		break;
 	case O_WRONLY:
+		exit(42);
 		desiredAccess = GENERIC_WRITE;
 		shareMode = 0;
 		break;
 	case O_RDWR:
+		exit(43);
 		desiredAccess = GENERIC_READ|GENERIC_WRITE;
 		shareMode = 0;
 		break;
 	case O_NONE:
+		exit(44);
 		desiredAccess = 0;
 		shareMode = FILE_SHARE_READ|FILE_SHARE_WRITE;
 	}
 	if (oflag & O_APPEND) {
+		exit(45);
 		desiredAccess |= FILE_APPEND_DATA|SYNCHRONIZE;
 		shareMode = FILE_SHARE_READ|FILE_SHARE_WRITE;
 	}
@@ -249,22 +272,27 @@ static int WIN32open(const char *path, int oflag, ...)
 		creationDisposition = OPEN_EXISTING;
 		break;
 	case O_CREAT:
+		exit(46);
 		creationDisposition = OPEN_ALWAYS;
 		break;
 	case O_CREAT|O_EXCL:
 	case O_CREAT|O_TRUNC|O_EXCL:
+		exit(47);
 		creationDisposition = CREATE_NEW;
 		break;
 	case O_TRUNC:
 	case O_TRUNC|O_EXCL:
+		exit(48);
 		creationDisposition = TRUNCATE_EXISTING;
 		break;
 	case O_CREAT|O_TRUNC:
+		exit(49);
 		creationDisposition = OPEN_ALWAYS;
 		trunc = TRUE;
 		break;
         }
 	if (oflag & O_CREAT) {
+		exit(50);
 		va_start(ap, oflag);
 		pmode = va_arg(ap, int);
 		va_end(ap);
@@ -272,6 +300,7 @@ static int WIN32open(const char *path, int oflag, ...)
 			flagsAttributes |= FILE_ATTRIBUTE_READONLY;
 	}
 	if (oflag & O_TEMPORARY) {
+		exit(51);
 		flagsAttributes |= FILE_FLAG_DELETE_ON_CLOSE;
 		desiredAccess |= DELETE;
 	}
@@ -289,6 +318,7 @@ static int WIN32open(const char *path, int oflag, ...)
 		return -1;
 	}
 	if (trunc) {
+		exit(52);
 		if (!SetEndOfFile(fh)) {
 			errno = GetLastError();
 			CloseHandle(fh);

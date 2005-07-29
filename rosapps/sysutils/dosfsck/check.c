@@ -11,6 +11,7 @@
 #include <string.h>
 #include <limits.h>
 #include <time.h>
+#include <windows.h>
 
 #include "common.h"
 #include "dosfsck.h"
@@ -105,7 +106,7 @@ loff_t alloc_rootdir_entry(DOS_FS *fs, DIR_ENT *de, const char *pattern)
 	    /* clear new cluster */
 	    memset( &d2, 0, sizeof(d2) );
 	    offset = cluster_start(fs,clu_num);
-	    for( i = 0; i < fs->cluster_size; i += sizeof(DIR_ENT) )
+	    for( i = 0; i < (int)fs->cluster_size; i += sizeof(DIR_ENT) )
 		fs_write( offset+i, sizeof(d2), &d2 );
 	}
 	memset(de,0,sizeof(DIR_ENT));
@@ -140,22 +141,22 @@ loff_t alloc_rootdir_entry(DOS_FS *fs, DIR_ENT *de, const char *pattern)
 	root = alloc(fs->root_entries*sizeof(DIR_ENT));
 	fs_read(fs->root_start,fs->root_entries*sizeof(DIR_ENT),root);
 
-	while (next_free < fs->root_entries)
+	while (next_free < (int)fs->root_entries)
 	    if (IS_FREE(root[next_free].name) &&
 		root[next_free].attr != VFAT_LN_ATTR)
 		break;
 	    else next_free++;
-	if (next_free == fs->root_entries)
+	if (next_free == (int)fs->root_entries)
 	    die("Root directory is full.");
 	offset = fs->root_start+next_free*sizeof(DIR_ENT);
 	memset(de,0,sizeof(DIR_ENT));
 	while (1) {
 	    sprintf(de->name,pattern,curr_num);
-	    for (scan = 0; scan < fs->root_entries; scan++)
+	    for (scan = 0; scan < (int)fs->root_entries; scan++)
 		if (scan != next_free &&
 		    !strncmp(root[scan].name,de->name,MSDOS_NAME))
 		    break;
-	    if (scan == fs->root_entries) break;
+	    if (scan == (int)fs->root_entries) break;
 	    if (++curr_num >= 10000) die("Unable to create unique name");
 	}
 	free(root);
@@ -167,11 +168,12 @@ loff_t alloc_rootdir_entry(DOS_FS *fs, DIR_ENT *de, const char *pattern)
 
 static char *path_name(DOS_FILE *file)
 {
-    static char path[PATH_MAX*2];
+//    static char path[PATH_MAX*2];
+    static char path[MAX_PATH*2];
 
     if (!file) *path = 0;
     else {
-	if (strlen(path_name(file->parent)) > PATH_MAX)
+	if (strlen(path_name(file->parent)) > MAX_PATH)
 	    die("Path name too long.");
 	if (strcmp(path,"/") != 0) strcat(path,"/");
 	strcpy(strrchr(path,0),file->lfn?file->lfn:file_name(file->dir_ent.name));
@@ -748,9 +750,13 @@ static void add_file(DOS_FS *fs,DOS_FILE ***chain,DOS_FILE *parent,
     DIR_ENT de;
     FD_TYPE type;
 
-    if (offset)
-	fs_read(offset,sizeof(DIR_ENT),&de);
-    else {
+	char tmpBuffer[512]; // TMN:
+
+    if (offset) {
+//	fs_read(offset,sizeof(DIR_ENT),&de);
+	fs_read(offset,sizeof(tmpBuffer),&tmpBuffer); // TMN:
+	memcpy(&de, tmpBuffer, sizeof(DIR_ENT));      // TMN:
+    } else {
 	memcpy(de.name,"           ",MSDOS_NAME);
 	de.attr = ATTR_DIR;
 	de.size = de.time = de.date = 0;

@@ -7,11 +7,13 @@
 #ifndef _COMMON_H
 #define _COMMON_H
 
-void die(char *msg,...) __attribute((noreturn));
+//void die(char *msg,...) __attribute((noreturn));
+__declspec(noreturn) void die(char *msg,...);
 
 /* Displays a prinf-style message and terminates the program. */
 
-void pdie(char *msg,...) __attribute((noreturn));
+//void pdie(char *msg,...) __attribute((noreturn));
+__declspec(noreturn) void pdie(char *msg,...);
 
 /* Like die, but appends an error message according to the state of errno. */
 

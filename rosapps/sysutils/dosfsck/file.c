@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include <unistd.h>
+//#include <unistd.h>
 
 #define _LINUX_STAT_H		/* hack to avoid inclusion of <linux/stat.h> */
 #define _LINUX_STRING_H_	/* hack to avoid inclusion of <linux/string.h>*/

@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
+//#include <unistd.h>
 
 #include "common.h"
 #include "dosfsck.h"
@@ -17,6 +17,7 @@
 #include "check.h"
 #include "fat.h"
 
+#pragma warning(disable: 4018)
 
 static void get_fat(FAT_ENTRY *entry,void *fat,unsigned long cluster,DOS_FS *fs)
 {
@@ -55,6 +56,10 @@ void read_fat(DOS_FS *fs)
     int first_ok,second_ok;
 
     eff_size = ((fs->clusters+2)*fs->fat_bits+7)/8;
+	// TMN: Must round up to disk-sector boundary. For now, assume 512-byte disk.
+	if (eff_size % 512) {
+		eff_size += 512 - (eff_size % 512);
+	}
     first = alloc(eff_size);
     fs_read(fs->fat_start,eff_size,first);
     use = first;
