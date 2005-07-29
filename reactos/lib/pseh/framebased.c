@@ -74,11 +74,8 @@ void __cdecl _SEHCallHandler
  _SEHPortableTryLevel_t * trylevel
 )
 {
- DbgPrint("_SEHCallHandler: REG %p\n", _SEHCurrentRegistration());
  _SEHGlobalUnwind(frame);
- DbgPrint("_SEHCallHandler: REG %p\n", _SEHCurrentRegistration());
  _SEHLocalUnwind(frame, trylevel);
- DbgPrint("_SEHCallHandler: REG %p\n", _SEHCurrentRegistration());
  frame->SPF_Handler(trylevel);
 }
 
