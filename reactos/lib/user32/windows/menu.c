@@ -3275,7 +3275,11 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
               case WM_SYSKEYDOWN:
                 switch (Msg.wParam)
                   {
+                    DbgPrint("Menu.c WM_SYSKEYDOWN wPram %d\n",Msg.wParam);
                     case VK_MENU:
+                      fEndMenu = TRUE;
+                      break;
+                    case VK_LMENU:
                       fEndMenu = TRUE;
                       break;
                   }
@@ -4571,7 +4575,7 @@ SetMenuItemBitmaps(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -4614,7 +4618,7 @@ SetMenuItemInfoA(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
