@@ -50,9 +50,7 @@
 
 /* Include the header files */
 
-//#include "../version.h"
-#define VERSION      "test"
-#define VERSION_DATE __DATE__
+#include "../version.h"
 
 #ifdef _WIN32
 #define _WIN32_WINNT	0x0400

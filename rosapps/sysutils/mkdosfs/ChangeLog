@@ -1,0 +1,18 @@
+28th January 1995		H. Peter Anvin (hpa@yggdrasil.com)
+
+	Better algorithm to select cluster sizes on large filesystems.
+	Added bogus boot sector code that on attempts to boot prints a
+	message (which can be chosen at mkdosfs time) and lets the user
+	press any key and try again.  Corrected support for 1.2 Mb
+	floppies.  mkdosfs now generates the extended bootsector
+	(superblock) format of DOS 3.3+, with support for volume ID's and
+	volume labels (volume labels are also written to the root
+	directory, as they should).
+	
+18th February 1994		Dave Hudson (dave@humbug.demon.co.uk)
+
+	Released version 0.2 - clears a bug in the FAT sizing code.
+
+1st September 1993		Dave Hudson (dave@humbug.demon.co.uk)
+
+	Released version 0.1 - ALPHA release of mkdosfs
