@@ -102,8 +102,8 @@ _RtlRandom@4:
     mov ecx,eax // pos
     and ecx, 0x7f // pos = seed & 0x7f    
     mov eax,ecx//       
-    mov eax, dword [_SavedValue + ecx*4]
-    mov dword [_SavedValue + ecx*4], edx       
+    mov eax, [_SavedValue + ecx*4]
+    mov [_SavedValue + ecx*4], edx       
     ret 4
          
 .RtlRandom_Seed1:
@@ -118,8 +118,8 @@ _RtlRandom@4:
     mov ecx,eax // pos
     and ecx, 0x7f // pos = seed & 0x7f    
     mov eax,ecx//       
-    mov eax, dword [_SavedValue + ecx*4]    
-    mov dword [_SavedValue + ecx*4], edx       
+    mov eax, [_SavedValue + ecx*4]    
+    mov [_SavedValue + ecx*4], edx       
     ret 4
 
 .RtlRandom_Seed2:
@@ -133,8 +133,8 @@ _RtlRandom@4:
     mov ecx,eax // pos
     and ecx, 0x7f // pos = seed & 0x7f    
     mov eax,ecx//       
-    mov eax, dword [_SavedValue + ecx*4]    
-    mov dword [_SavedValue + ecx*4], edx       
+    mov eax, [_SavedValue + ecx*4]    
+    mov [_SavedValue + ecx*4], edx       
     ret 4
       
 .RtlRandom_Seed3:    
@@ -151,8 +151,8 @@ _RtlRandom@4:
     mov ecx,eax // pos
     and ecx, 0x7f // pos = seed & 0x7f    
     mov eax,ecx//       
-    mov eax, dword [_SavedValue + ecx*4]    
-    mov dword [_SavedValue + ecx*4], edx       
+    mov eax, [_SavedValue + ecx*4]    
+    mov [_SavedValue + ecx*4], edx       
     ret 4
 
 // prototype: ULONG STDCALL RtlUniform (PULONG Seed)
