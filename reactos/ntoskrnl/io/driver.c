@@ -1212,7 +1212,7 @@ IopInitializeBuiltinDriver(
       Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &DeviceNode);
       if (!NT_SUCCESS(Status))
       {
-         CPRINT("Driver load failed, status (%x)\n", Status);
+         CPRINT("Driver '%s' load failed, status (%x)\n", FileName, Status);
          return(Status);
       }
    } else
@@ -1242,7 +1242,7 @@ IopInitializeBuiltinDriver(
    {
       if (ModuleDeviceNode == NULL)
          IopFreeDeviceNode(DeviceNode);
-      CPRINT("Driver load failed, status (%x)\n", Status);
+      CPRINT("Driver '%s' load failed, status (%x)\n", FileName, Status);
       return Status;
    }
 
@@ -1271,7 +1271,7 @@ IopInitializeBuiltinDriver(
    {
       if (ModuleDeviceNode == NULL)
          IopFreeDeviceNode(DeviceNode);
-      CPRINT("Driver load failed, status (%x)\n", Status);
+      CPRINT("Driver '%s' load failed, status (%x)\n", FileName, Status);
       return Status;
    }
 
