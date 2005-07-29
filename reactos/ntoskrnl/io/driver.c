@@ -1525,6 +1525,8 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
 
    DPRINT("IopUnloadDriver('%wZ', %d)\n", DriverServiceName, UnloadPnpDrivers);
 
+   PAGED_CODE();
+
    /*
     * Get the service name from the registry key name
     */
@@ -1543,7 +1545,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
 
    ObjectName.Length = (wcslen(Start) + 8) * sizeof(WCHAR);
    ObjectName.MaximumLength = ObjectName.Length + sizeof(WCHAR);
-   ObjectName.Buffer = ExAllocatePool(NonPagedPool, ObjectName.MaximumLength);
+   ObjectName.Buffer = ExAllocatePool(PagedPool, ObjectName.MaximumLength);
    wcscpy(ObjectName.Buffer, L"\\Driver\\");
    memcpy(ObjectName.Buffer + 8, Start, (ObjectName.Length - 8) * sizeof(WCHAR));
    ObjectName.Buffer[ObjectName.Length/sizeof(WCHAR)] = 0;
