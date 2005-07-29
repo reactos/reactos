@@ -73,13 +73,38 @@ Basep8BitStringToCachedUnicodeString(IN LPCSTR String)
     return StaticString;
 }
 
+NTSTATUS
+STDCALL
+Basep8BitStringToHeapUnicodeString(OUT PUNICODE_STRING UnicodeString,
+                                   IN LPCSTR String)
+{
+    ANSI_STRING AnsiString;
+    NTSTATUS Status;
+    
+    DPRINT("Basep8BitStringToCachedUnicodeString\n");
+    
+    /* Initialize an ANSI String */
+    RtlInitAnsiString(&AnsiString, String);
+    
+    /* Convert it */
+    Status = Basep8BitStringToUnicodeString(UnicodeString, &AnsiString, TRUE);
+    
+    /* Handle failure */
+    /* Return Status */
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+    }
+    return Status;
+}
+
 /*
  * Allocates space from the Heap and converts an Ansi String into it
  */
 VOID
 STDCALL
 BasepAnsiStringToHeapUnicodeString(IN LPCSTR AnsiString,
-                                   IN PVOID UnicodeString)
+                                   IN LPWSTR* UnicodeString)
 {
     ANSI_STRING AnsiTemp;
     UNICODE_STRING UnicodeTemp;
@@ -93,12 +118,12 @@ BasepAnsiStringToHeapUnicodeString(IN LPCSTR AnsiString,
     UnicodeTemp.MaximumLength = RtlAnsiStringToUnicodeSize(&AnsiTemp);
     
     /* Allocate space from the Heap for the string */
-    UnicodeString = RtlAllocateHeap(GetProcessHeap(),
+    *UnicodeString = RtlAllocateHeap(GetProcessHeap(),
                                     0,
                                     UnicodeTemp.MaximumLength);
                                     
     /* Save the buffer and convert */
-    UnicodeTemp.Buffer = UnicodeString;
+    UnicodeTemp.Buffer = *UnicodeString;
     RtlAnsiStringToUnicodeString(&UnicodeTemp, &AnsiTemp, FALSE);
 }
 

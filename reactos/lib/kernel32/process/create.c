@@ -639,7 +639,7 @@ CreateProcessA(LPCSTR lpApplicationName,
         else
         {
             /* Use a dynamic version */
-            Basep8BitStringToLiveUnicodeString(&LiveCommandLine, 
+            Basep8BitStringToHeapUnicodeString(&LiveCommandLine, 
                                                lpCommandLine);
         }
     }
@@ -652,12 +652,12 @@ CreateProcessA(LPCSTR lpApplicationName,
     /* Convert the Name and Directory */
     if (lpApplicationName)
     {
-        Basep8BitStringToLiveUnicodeString(&ApplicationName, 
+        Basep8BitStringToHeapUnicodeString(&ApplicationName, 
                                            lpApplicationName);
     }
     if (lpCurrentDirectory)
     {
-        Basep8BitStringToLiveUnicodeString(&CurrentDirectory, 
+        Basep8BitStringToHeapUnicodeString(&CurrentDirectory, 
                                            lpCurrentDirectory);
     }
     
@@ -741,11 +741,11 @@ CreateProcessW(LPCWSTR lpApplicationName,
     PWCHAR Extension;
     LPWSTR QuotedCmdLine = NULL;
     LPWSTR ScanString;
-    LPWSTR NullBuffer;
+    LPWSTR NullBuffer = NULL;
     LPWSTR NameBuffer = NULL;
-    WCHAR SaveChar;
+    WCHAR SaveChar = 0;
     ULONG RetVal;
-    UINT Error;
+    UINT Error = 0;
     BOOLEAN SearchDone = FALSE;
     CLIENT_ID ClientId;
     PPEB OurPeb = NtCurrentPeb();

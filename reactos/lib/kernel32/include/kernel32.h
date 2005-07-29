@@ -134,7 +134,7 @@ BasepCheckRealTimePrivilege(VOID);
 VOID
 STDCALL
 BasepAnsiStringToHeapUnicodeString(IN LPCSTR AnsiString,
-                                   IN PVOID UnicodeString);
+                                   OUT LPWSTR* UnicodeString);
                                    
 PUNICODE_STRING
 STDCALL
@@ -145,11 +145,16 @@ STDCALL
 Basep8BitStringToLiveUnicodeString(OUT PUNICODE_STRING UnicodeString,
                                    IN LPCSTR String);
 
+NTSTATUS
+STDCALL
+Basep8BitStringToHeapUnicodeString(OUT PUNICODE_STRING UnicodeString,
+                                   IN LPCSTR String);
+
 typedef NTSTATUS (STDCALL *PRTL_CONVERT_STRING)(IN PUNICODE_STRING UnicodeString,
                                                 IN PANSI_STRING AnsiString,
                                                 IN BOOLEAN AllocateMemory);
                                                 
-PRTL_CONVERT_STRING Basep8BitStringToUnicodeString;
+extern PRTL_CONVERT_STRING Basep8BitStringToUnicodeString;
 
 NTSTATUS
 STDCALL
