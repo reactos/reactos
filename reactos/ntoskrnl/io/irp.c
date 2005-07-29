@@ -1158,10 +1158,7 @@ IofCompleteRequest(PIRP Irp,
         {
             if ((Irp->CurrentLocation <= Irp->StackCount) && (Irp->PendingReturned))
             {
-                if (IoGetCurrentIrpStackLocation(Irp)->Control & SL_PENDING_RETURNED)
-                {
-                    Irp->PendingReturned = TRUE;
-                }
+                IoMarkIrpPending(Irp);
             }
         }
 
@@ -1191,7 +1188,7 @@ IofCompleteRequest(PIRP Irp,
         IoFreeIrp(Irp);
 
         /* Complete the Master IRP */
-        if (!MasterIrpCount) IofCompleteRequest(MasterIrp, IO_NO_INCREMENT);
+        if (!MasterIrpCount) IofCompleteRequest(MasterIrp, PriorityBoost);
         return;
     }
 
@@ -1219,12 +1216,10 @@ IofCompleteRequest(PIRP Irp,
         }
         else
         {
-            DPRINT1("BUG BUG, YOU SHOULDNT BE HERE\n");
-            #if 0
+#if 0
             /* Page 166 */
-            /* When we'll actually support Async Paging I/O Properly... */
             KeInitializeApc(&Irp->Tail.Apc
-                            &Irp->tail.Overlay.Thread->Tcb,
+                            &Irp->Tail.Overlay.Thread->Tcb,
                             Irp->ApcEnvironment,
                             IopCompletePageWrite,
                             NULL,
@@ -1235,7 +1230,10 @@ IofCompleteRequest(PIRP Irp,
                              NULL,
                              NULL,
                              PriorityBoost);
-            #endif
+#else
+            /* Not implemented yet. */
+            ASSERT(FALSE);
+#endif
         }
         return;
     }
