@@ -101,17 +101,22 @@ void fs_read(loff_t pos,int size,void *data)
 {
     CHANGE *walk;
     int got;
-#if 1 // TMN:
-	const size_t readsize_aligned = size + (512 - (size % 512));        // TMN:
-	const loff_t seekpos_aligned = pos - (pos % 512);                   // TMN:
-	const size_t seek_delta = (size_t)(pos - seekpos_aligned);          // TMN:
-	const size_t readsize = (pos - seekpos_aligned) + readsize_aligned; // TMN: 
-	char* tmpBuf = malloc(readsize);                                    // TMN:
-    if (llseek(fd,seekpos_aligned,0) != seekpos_aligned) pdie("Seek to %lld",pos);
-    if ((got = read(fd,tmpBuf,readsize_aligned)) < 0) pdie("Read %d bytes at %lld",size,pos);
+#if 1 // TMN
+	const size_t readsize_aligned = (size % 512) ? (size + (512 - (size % 512))) : size;        // TMN:
+ 	const loff_t seekpos_aligned = pos - (pos % 512);                   // TMN:
+ 	const size_t seek_delta = (size_t)(pos - seekpos_aligned);          // TMN:
+	const size_t readsize = (size_t)(pos - seekpos_aligned) + readsize_aligned; // TMN: 
+	char* tmpBuf = malloc(readsize_aligned);                                    // TMN:
+#ifdef _MSC_VER
+    if (llseek(fd,seekpos_aligned,0) != seekpos_aligned) pdie("Seek to %I64d",pos);
+    if ((got = read(fd,tmpBuf,readsize_aligned)) < 0) pdie("Read %d bytes at %I64dd",size,pos);
+#else
+     if (llseek(fd,seekpos_aligned,0) != seekpos_aligned) pdie("Seek to %lld",pos);
+     if ((got = read(fd,tmpBuf,readsize_aligned)) < 0) pdie("Read %d bytes at %lld",size,pos);
+#endif
 	assert(got >= size);
 	got = size;
-	assert(seek_delta + size < readsize);
+	assert(seek_delta + size <= readsize);
 	memcpy(data, tmpBuf+seek_delta, size);
 	free(tmpBuf);
 #else // TMN:
@@ -122,10 +127,10 @@ void fs_read(loff_t pos,int size,void *data)
     for (walk = changes; walk; walk = walk->next) {
 	if (walk->pos < pos+size && walk->pos+walk->size > pos) {
 	    if (walk->pos < pos)
-		memcpy(data,(char *) walk->data+pos-walk->pos,min(size,
-		  walk->size-pos+walk->pos));
-	    else memcpy((char *) data+walk->pos-pos,walk->data,min(walk->size,
-		  size+pos-walk->pos));
+		memcpy(data,(char *) walk->data+pos-walk->pos,min((size_t)size,
+		  (size_t)(walk->size-pos+walk->pos)));
+	    else memcpy((char *) data+walk->pos-pos,walk->data,min((size_t)walk->size,
+		  (size_t)(size+pos-walk->pos)));
 	}
     }
 }
@@ -136,10 +141,21 @@ int fs_test(loff_t pos,int size)
     void *scratch;
     int okay;
 
+#if 1 // TMN
+	const size_t readsize_aligned = (size % 512) ? (size + (512 - (size % 512))) : size;        // TMN:
+	const loff_t seekpos_aligned = pos - (pos % 512);                   // TMN:
+	const size_t seek_delta = (size_t)(pos - seekpos_aligned);          // TMN:
+	const size_t readsize = (size_t)(pos - seekpos_aligned) + readsize_aligned; // TMN: 
+    scratch = alloc(readsize_aligned);
+    if (llseek(fd,seekpos_aligned,0) != seekpos_aligned) pdie("Seek to %lld",pos);
+    okay = read(fd,scratch,readsize_aligned) == (int)readsize_aligned;
+    free(scratch);
+#else // TMN:
     if (llseek(fd,pos,0) != pos) pdie("Seek to %lld",pos);
     scratch = alloc(size);
     okay = read(fd,scratch,size) == size;
     free(scratch);
+#endif // TMN:
     return okay;
 }
 
@@ -218,7 +234,7 @@ int fs_changed(void)
 
 
 #define O_SHORT_LIVED   _O_SHORT_LIVED
-#define O_ACCMODE       3
+//#define O_ACCMODE       3
 #define O_NONE          3
 #define O_BACKUP        0x10000
 #define O_SHARED        0x20000
@@ -368,14 +384,14 @@ static loff_t WIN32llseek(int fd, loff_t offset, int whence)
 	long lo, hi;
 	DWORD err;
 
-	lo = offset & 0xffffffff;
-	hi = offset >> 32;
+	lo = (long)(offset & 0xffffffff);
+	hi = (long)(offset >> 32);
 	lo = SetFilePointer((HANDLE)fd, lo, &hi, whence);
 	if (lo == 0xFFFFFFFF && (err = GetLastError()) != NO_ERROR) {
 		errno = err;
 		return -1;
 	}
-	return ((loff_t)hi << 32) | (off_t)lo;
+	return ((loff_t)hi << 32) | (__u32)lo;
 }
 
 int fsctl(int fd, int code)

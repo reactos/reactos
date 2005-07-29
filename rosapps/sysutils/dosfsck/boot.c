@@ -272,7 +272,7 @@ void read_boot(DOS_FS *fs)
     unsigned total_sectors;
     unsigned short logical_sector_size, sectors;
     unsigned fat_length;
-    off_t data_size;
+    loff_t data_size;
 
     fs_read(0,sizeof(b),&b);
     logical_sector_size = GET_UNALIGNED_W(b.sector_size);
@@ -286,7 +286,7 @@ void read_boot(DOS_FS *fs)
     total_sectors = sectors ? sectors : CF_LE_L(b.total_sect);
     if (verbose) printf("Checking we can access the last sector of the filesystem\n");
     /* Can't access last odd sector anyway, so round down */
-    fs_test((off_t)((total_sectors & ~1)-1)*(off_t)logical_sector_size,
+    fs_test((loff_t)((total_sectors & ~1)-1)*(loff_t)logical_sector_size,
 	    logical_sector_size);
     fat_length = CF_LE_W(b.fat_length) ?
 		 CF_LE_W(b.fat_length) : CF_LE_L(b.fat32_length);
@@ -296,7 +296,7 @@ void read_boot(DOS_FS *fs)
     fs->root_entries = GET_UNALIGNED_W(b.dir_entries);
     fs->data_start = fs->root_start+ROUND_TO_MULTIPLE(fs->root_entries <<
       MSDOS_DIR_BITS,logical_sector_size);
-    data_size = (off_t)total_sectors*logical_sector_size-fs->data_start;
+    data_size = (loff_t)total_sectors*logical_sector_size-fs->data_start;
     fs->clusters = data_size/fs->cluster_size;
     fs->root_cluster = 0; /* indicates standard, pre-FAT32 root dir */
     fs->fsinfo_start = 0; /* no FSINFO structure */
