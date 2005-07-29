@@ -478,8 +478,8 @@ char* TTelnetHandler::ParseBuffer(char* pszBuffer, char* pszBufferEnd){
 // telProcessNetwork calls the member function TTelnetHandler::Go, since
 // TTelnetHandler::Go is not a static function, and cannot be called with
 // CreateThread().  (Paul Brannan 6/15/98)
-DWORD telProcessNetwork(LPVOID pvParams) {
-	TelThreadParams *pParams = (TelThreadParams *)pvParams;
+DWORD WINAPI telProcessNetwork(LPVOID lpParameter) {
+	TelThreadParams *pParams = (TelThreadParams *)lpParameter;
 	return pParams->TelHandler.Go(&pParams->p);
 }
 

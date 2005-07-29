@@ -4,7 +4,7 @@
 #include "tparser.h"
 #include "tnetwork.h"
 
-DWORD telProcessNetwork(LPVOID pvParams);
+DWORD WINAPI telProcessNetwork(LPVOID lpParameter);
 
 class TTelnetHandler {
 private:

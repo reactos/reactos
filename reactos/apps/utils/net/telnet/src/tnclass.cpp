@@ -206,7 +206,7 @@ int Telnet::Open(const char *szHost1, const char *strPort1){
 			SetConsoleCtrlHandler(ControlEventHandler, TRUE);
 
 		hThread = CreateThread(0, 0,
-			(LPTHREAD_START_ROUTINE) telProcessNetwork,
+			telProcessNetwork,
 			(LPVOID)&ThreadParams, 0, &idThread);
 		// This helps the display thread a little (Paul Brannan 8/3/98)
 		SetThreadPriority(hThread, THREAD_PRIORITY_ABOVE_NORMAL);
