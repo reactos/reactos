@@ -76,22 +76,28 @@
 			<xsl:call-template name="ELEMENT">
 				<xsl:with-param name="class">c</xsl:with-param>
 			</xsl:call-template>
-			<xsl:apply-templates/>
+			<xsl:apply-templates>
+				<xsl:with-param name="base"><xsl:value-of select="@base"/></xsl:with-param>
+			</xsl:apply-templates>
 		</DIV>
 	</xsl:template>
 
 
 	<!-- function -->
 	<xsl:template match="functions">
-		<xsl:apply-templates select="function">
-			<xsl:sort select="@name"/>
+		<xsl:param name="base"/>
+		<xsl:apply-templates select="f">
+			<xsl:sort select="@n"/>
+			<xsl:with-param name="base"><xsl:value-of select="$base"/></xsl:with-param>
 		</xsl:apply-templates>
 	</xsl:template>
 
-	<xsl:template match="functions/function">
+	<xsl:template match="functions/f">
+		<xsl:param name="base"/>
 		<DIV>
 			<xsl:call-template name="ELEMENT">
 				<xsl:with-param name="class">f</xsl:with-param>
+				<xsl:with-param name="base"><xsl:value-of select="$base"/></xsl:with-param>
 			</xsl:call-template>
 			<xsl:apply-templates/>
 		</DIV>
@@ -102,6 +108,7 @@
 
 	<xsl:template name="ELEMENT">
 		<xsl:param name="class"/>
+		<xsl:param name="base"/>
 		<xsl:param name="image"/>
 			<xsl:attribute name="class">
 	  		<xsl:value-of select="$class"/>
@@ -109,10 +116,10 @@
 			</xsl:attribute>
 			<xsl:call-template name="toggle"/>
 			<xsl:choose>
-				<xsl:when test="./node() and local-name() != 'component' and @implemented = 'true'">
+				<xsl:when test="./node() and local-name() != 'component' and @i = 'true'">
           <img src="i.gif" class="i"/>
 				</xsl:when>
-				<xsl:when test="./node() and local-name() != 'component' and @implemented = 'false'">
+				<xsl:when test="./node() and local-name() != 'component' and @i = 'false'">
           <img src="u.gif" class="u"/>
 				</xsl:when>
 				<xsl:when test="./node() and local-name() = 'component' and @complete >= 100">
@@ -131,7 +138,10 @@
 				</xsl:otherwise>
 			</xsl:choose>
 			<xsl:call-template name="name"/>
- 			<xsl:call-template name="file"/>
+			<xsl:call-template name="n"/>
+ 			<xsl:call-template name="file">
+				<xsl:with-param name="base"><xsl:value-of select="$base"/></xsl:with-param>
+			</xsl:call-template>
 			<xsl:call-template name="status"/>
 	</xsl:template>
 
@@ -173,9 +183,16 @@
 		</xsl:if>
 	</xsl:template>
 
+	<xsl:template name="n">
+		<xsl:if test="@n">
+			<SPAN class="l"><xsl:value-of select="@n"/></SPAN>
+		</xsl:if>
+	</xsl:template>
+
 	<xsl:template name="file">
-		<xsl:if test="@file">
-			<SPAN class="h"><xsl:value-of select="@file"/></SPAN>
+		<xsl:param name="base"/>
+		<xsl:if test="@f">
+			<SPAN class="h"><xsl:value-of select="$base"/><xsl:value-of select="@f"/></SPAN>
 		</xsl:if>
 	</xsl:template>
 

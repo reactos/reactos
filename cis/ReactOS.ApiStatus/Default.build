@@ -21,7 +21,7 @@
 	<property name="reactos.dir" value="reactos" />
 	<property name="apistatus.xsl" value="rapistatus.xsl" />
 	<property name="apistatus.xml" value="rapistatus.xml" />
-	<property name="apistatus.html" value="index.html" />
+	<property name="apistatus.html" value="index2.html" />
 	<include buildfile="config.include" />
 
 	<target name="publish">

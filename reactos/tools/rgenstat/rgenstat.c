@@ -398,7 +398,7 @@ skip_to_next_name(char *name)
   return 0;
 }
 
-// Build a path and filename so it is of the format [cvs-module][directory][filename].
+// Build a path and filename so it is of the format [module][directory][filename].
 // Also convert all backslashes into forward slashes.
 static void
 get_filename(char *cvspath, char *filename, char *result)
@@ -659,10 +659,19 @@ compare_api_order(PAPI_INFO p, PAPI_INFO q)
   return strcmp(p->name, q->name);
 }
 
+char *
+get_filename_without_base(char *component_base,
+                          char *filename)
+{
+  return &filename[strlen(component_base)];
+}
+
 static void
-generate_xml_for_component(char *component_name)
+generate_xml_for_component(char *component_name,
+                           char *component_base)
 {
   PAPI_INFO api_info;
+  char canonical_base[MAX_PATH];
   char buf[200];
   int complete;
   int implemented_total;
@@ -678,28 +687,23 @@ generate_xml_for_component(char *component_name)
   while (api_info != NULL)
     {
       if (api_info->tag_id == TAG_IMPLEMENTED)
-        {
           implemented_total ++;
-        }
       else if (api_info->tag_id == TAG_UNIMPLEMENTED)
-        {
           unimplemented_total ++;
-        }
 
       api_info = api_info->next;
     }
 
   if (implemented_total + unimplemented_total > 0)
-    {
       complete = ((implemented_total) * 100) / (implemented_total + unimplemented_total);
-    }
   else
-    {
       complete = 100;
-    }
 
-  sprintf(buf, "<component name=\"%s\" complete=\"%d\" implemented_total=\"%d\" unimplemented_total=\"%d\">",
-    component_name, complete, implemented_total, unimplemented_total);
+  strcpy(canonical_base, component_base);
+  path_to_url(canonical_base);
+
+  sprintf(buf, "<component name=\"%s\" base=\"%s\" complete=\"%d\" implemented_total=\"%d\" unimplemented_total=\"%d\">",
+    component_name, canonical_base, complete, implemented_total, unimplemented_total);
   write_line(buf);
 
   if (api_info_list != NULL)
@@ -709,12 +713,12 @@ generate_xml_for_component(char *component_name)
       api_info = api_info_list;
       while (api_info != NULL)
         {
-          sprintf(buf, "<function name=\"%s\" implemented=\"%s\" file=\"%s\">",
+          sprintf(buf, "<f n=\"%s\" i=\"%s\" f=\"%s\" />",
             api_info->name,
             api_info->tag_id == TAG_IMPLEMENTED ? "true" : "false",
-            api_info->filename);
+            get_filename_without_base(component_base,
+	                              api_info->filename));
           write_line(buf);
-          write_line("</function>");
           api_info = api_info->next;
         }
 
@@ -783,38 +787,26 @@ read_input_file(char *input_file)
 
       /* Skip whitespace and eol characters */
       while ((index < size) && (is_whitespace(buffer[index]) || (is_eol_char(buffer[index]))))
-        {
           index++;
-        }
       if ((file_pointer < size) && (buffer[index] == '\n'))
-        {
           index++;
-        }
 
       if (buffer[index] == ';')
         {
           /* Skip comments */
           while ((index < size) && (!is_eol_char(buffer[index])))
-            {
               index++;
-            }
           if ((index < size) && (buffer[index] == '\n'))
-            {
               index++;
-            }
           continue;
         }
 
       /* Get component name */
       start = index;
       while ((index < size) && (!is_whitespace(buffer[index])))
-        {
           index++;
-        }
       if (index >= size)
-        {
           break;
-        }
 
       len = index - start;
       strncpy(component_name, &buffer[start], len);
@@ -822,20 +814,14 @@ read_input_file(char *input_file)
 
       /* Skip whitespace */
       while ((index < size) && (is_whitespace(buffer[index])))
-        {
           index++;
-        }
       if (index >= size)
-        {
           break;
-        }
 
       /* Get component path */
       start = index;
       while ((index < size) && (!is_whitespace(buffer[index]) && !is_eol_char(buffer[index])))
-        {
           index++;
-        }
 
       len = index - start;
       strncpy(component_path, &buffer[start], len);
@@ -851,20 +837,17 @@ read_input_file(char *input_file)
 
       /* Skip to end of line */
       while ((index < size) && (!is_eol_char(buffer[index])))
-        {
           index++;
-        }
       if ((index < size) && (buffer[index] == '\n'))
-        {
           index++;
-        }
 
       canonical_path = convert_path(component_path);
       if (canonical_path != NULL)
         {
           process_directory(canonical_path, canonical_path);
           free(canonical_path);
-          generate_xml_for_component(component_name);
+          generate_xml_for_component(component_name,
+	                             component_path);
         }
     }
 
