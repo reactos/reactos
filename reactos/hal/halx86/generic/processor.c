@@ -39,7 +39,9 @@ BOOLEAN STDCALL
 HalStartNextProcessor(ULONG Unknown1,
 		      ULONG ProcessorStack)
 {
+#if 0
   DPRINT("HalStartNextProcessor(%x %x)\n", ProcessorNumber, ProcessorStack);
+#endif
 
   return TRUE;
 }

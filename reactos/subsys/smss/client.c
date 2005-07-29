@@ -62,6 +62,7 @@ SmInitializeClientManagement (VOID)
 VOID FASTCALL
 SmpSetClientInitialized (PSM_CLIENT_DATA Client)
 {
+	DPRINT("SM: %s(%08lx) called\n", __FUNCTION__, Client);
 	Client->Flags |= SM_CLIENT_FLAG_INITIALIZED;
 }
 /**********************************************************************
@@ -101,8 +102,10 @@ SmpLookupClient (USHORT           SubsystemId,
 		Client = SmpClientDirectory.Client;
 		while (NULL != Client)
 		{
+			DPRINT("SM: %s: Client==%08lx\n", __FUNCTION__, Client);
 			if (SubsystemId == Client->SubsystemId)
 			{
+				DPRINT("SM: %s: FOUND Client==%08lx\n", __FUNCTION__, Client);
 				break;
 			}
 			if(NULL != Parent)

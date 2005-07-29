@@ -928,7 +928,9 @@ UnlockServiceDatabase(SC_LOCK ScLock)
 {
   DWORD dwError;
 
+#if 0
   DPRINT("UnlockServiceDatabase(%x)\n", hSCManager);
+#endif
 
   HandleBind();
 

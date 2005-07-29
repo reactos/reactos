@@ -1160,8 +1160,10 @@ NtUserVkKeyScanEx(
         if(vkPtr->wch[CapsState] == wChar)
         {
           CapsMod = KeyLayout->pCharModifiers->ModNumber[CapsState];
+#if 0
           DPRINT("nMod %d Vk %04x: CapsMod %08x CapsState %08x MaxModBits %08x\n",
 	       nMod, wVirtKey, CapsMod, CapsState, KeyLayout->pCharModifiers->wMaxModBits);
+#endif
           return ((CapsMod << 8)|(vkPtr->VirtualKey & 0xff));
         }
       }

@@ -108,7 +108,7 @@ DtbgWindowProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
           }
 
           default:
-            DPRINT("Unknown notification code 0x%x sent to the desktop window!\n", nmh->code);
+            DPRINT("Unknown notification code 0x%x sent to the desktop window!\n", nmh->hdr.code);
             return 0;
         }
       }
