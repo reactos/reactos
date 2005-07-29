@@ -736,10 +736,11 @@ GetThreadId(HANDLE Thread)
 /*
  * @unimplemented
  */
-VOID STDCALL
-SetThreadUILanguage(DWORD Unknown1)
+LANGID STDCALL
+SetThreadUILanguage(WORD wReserved)
 {
-  DPRINT1("SetThreadUILanguage(0x%x) unimplemented!\n", Unknown1);
+  DPRINT1("SetThreadUILanguage(0x%2x) unimplemented!\n", wReserved);
+  return 0;
 }
 
 static void CALLBACK
