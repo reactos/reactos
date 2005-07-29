@@ -772,6 +772,7 @@ read_input_file(char *input_file)
   index = 0;
 
   write_line("<?xml version=\"1.0\" encoding=\"iso-8859-1\" ?>");
+  write_line("<?xml-stylesheet type=\"text/xsl\" href=\"rapistatus.xsl\"?>");
   write_line("");
   write_line("<components>");
 
