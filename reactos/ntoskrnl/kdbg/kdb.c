@@ -1559,9 +1559,6 @@ KdbpSafeReadMemory(OUT PVOID Dest,
 
    _SEH_TRY
    {
-      ProbeForRead(Src,
-                   Bytes,
-                   1);
       RtlCopyMemory(Dest,
                     Src,
                     Bytes);
@@ -1584,9 +1581,6 @@ KdbpSafeWriteMemory(OUT PVOID Dest,
 
    _SEH_TRY
    {
-      ProbeForWrite(Dest,
-                    Bytes,
-                    1);
       RtlCopyMemory(Dest,
                     Src,
                     Bytes);
