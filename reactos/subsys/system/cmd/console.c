@@ -261,22 +261,27 @@ VOID ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdH
 		LineCount = 0;
 
   /* rest LineCount and return if no string have been given */
-  if (szFormat == NULL)
-     return;
+        if (szFormat == NULL)
+                return;
 
 
 	//get the size of the visual screen that can be printed too
-	GetConsoleScreenBufferInfo(hConsole, &csbi);
+	if (!GetConsoleScreenBufferInfo(hConsole, &csbi))
+        {
+                // we assuming its a file handle
+                ConPrintf(szFormat, arg_ptr, nStdHandle);
+                return;
+        }
 	//subtract 2 to account for "press any key..." and for the blank line at the end of PagePrompt()
 	ScreenLines = (csbi.srWindow.Bottom  - csbi.srWindow.Top) - 4;
 	ScreenCol = (csbi.srWindow.Right - csbi.srWindow.Left) + 1;
 
-	//make sure they didnt make the screen to small
+	//make sure they didnt make the screen to small 
 	if(ScreenLines<4)
-  {
-	   ConPrintf(szFormat, arg_ptr, nStdHandle);
-     return ;
-  }
+        {
+	        ConPrintf(szFormat, arg_ptr, nStdHandle);
+                return ;
+        }
 	   
 	len = _vstprintf (szOut, szFormat, arg_ptr);
 #ifdef _UNICODE
@@ -286,44 +291,44 @@ VOID ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdH
 	pBuf = szOut;
 #endif
 	      
-		for(i = 0; i < len; i++)
-		{ 
+	for(i = 0; i < len; i++)
+	{ 
       
-      if(szOut[i] == _T('\n'))
-			{			        
-				LineCount++; 
-        CharEL=0;
-			}      
-      else
-      {      
-        CharEL++;           
-        if (CharEL>=ScreenCol)
-        {        
-          if (i+1<len)
-          {
-             if(szOut[i+1] != _T('\n')) LineCount++;          
-          }
-          CharEL=0;
-        }
-       }
+                if(pBuf[i] == '\n')
+		{			        
+			LineCount++; 
+                        CharEL=0;
+		}      
+                else
+                {      
+                        CharEL++;           
+                        if (CharEL>=ScreenCol)
+                        {        
+                                if (i+1<len)
+                                {
+                                        if(pBuf[i+1] != '\n') LineCount++;          
+                                }
+                                CharEL=0;
+                        }
+                }
 
-      /* FIXME : write more that one char at time */
-      WriteFile (GetStdHandle (nStdHandle),&pBuf[i],sizeof(TCHAR),&dwWritten,NULL);
-	    if(LineCount >= ScreenLines)
-	      {
-         if(_tcsncicmp(&szOut[i],_T("\n"),2)!=0)
-           WriteFile (GetStdHandle (nStdHandle),_T("\n"),sizeof(TCHAR),&dwWritten,NULL); 
+                /* FIXME : write more that one char at time */
+                WriteFile (GetStdHandle (nStdHandle),&pBuf[i],sizeof(CHAR),&dwWritten,NULL);
+	        if(LineCount >= ScreenLines)
+	        {
+                        if(strnicmp(&pBuf[i], "\n", 2)!=0)
+                        WriteFile (GetStdHandle (nStdHandle),"\n",sizeof(CHAR),&dwWritten,NULL); 
 
-		     if(PagePrompt() != PROMPT_YES)
-		     {
-			    return;
-		     }
-		     //reset the number of lines being printed         
-		     LineCount = 0;
-         CharEL=0;
-	       }
+		        if(PagePrompt() != PROMPT_YES)
+		        {
+			        return;
+		        }
+		        //reset the number of lines being printed         
+		        LineCount = 0;
+                        CharEL=0;
+	        }
       
-		}
+	}
 
 #ifdef UNICODE
 	free(pBuf);

@@ -321,7 +321,7 @@ static INT Overwrite (LPTSTR fn)
 	INT res;
 	LoadString(CMD_ModuleHandle, STRING_COPY_HELP1, szMsg, RC_STRING_MAX_SIZE);
 	ConOutPrintf(szMsg,fn);
-	res = FilePromptYNA ("");
+	res = FilePromptYNA (_T(""));
 	return res;
 }
  
@@ -833,7 +833,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 				nFiles++;
 				/* only print source name when more then one file */
 				if(_tcschr (arg[nSrc], _T('+')) != NULL || _tcschr (arg[nSrc], _T('*')) != NULL)
-					ConOutPrintf("%s\n",findBuffer.cFileName);
+					ConOutPrintf(_T("%s\n"),findBuffer.cFileName);
 				//LoadString(CMD_ModuleHandle, STRING_MOVE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 			}
 			else

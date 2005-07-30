@@ -60,7 +60,7 @@ static INT Overwrite (LPTSTR fn)
 	INT res;
 	LoadString(CMD_ModuleHandle, STRING_MOVE_HELP1, szMsg, RC_STRING_MAX_SIZE);
 	ConOutPrintf(szMsg,fn);
-	res = FilePromptYNA ("");
+	res = FilePromptYNA (_T(""));
 	return res;
 }
 

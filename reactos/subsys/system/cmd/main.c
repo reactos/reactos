@@ -17,7 +17,7 @@ int main (int argc, char *argv[])
 #endif
 {
 #ifdef _UNICODE
-  return _main(void);
+  return _main();
 #else
   return _main(argc, argv);
 #endif
