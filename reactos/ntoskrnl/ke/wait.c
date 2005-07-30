@@ -250,7 +250,7 @@ KeWaitForSingleObject(PVOID Object,
                 /* It has a normal signal state, so unwait it and return */
                 KiSatisfyObjectWait(CurrentObject, CurrentThread);
                 Status = STATUS_WAIT_0;
-                goto WaitDone;
+                goto DontWait;
 
             } else {
 
@@ -285,7 +285,7 @@ KeWaitForSingleObject(PVOID Object,
 
                 /* Return a timeout */
                 Status = STATUS_TIMEOUT;
-                goto WaitDone;
+                goto DontWait;
             }
 
             /* Point to Timer Wait Block and Thread Timer */
@@ -311,7 +311,7 @@ KeWaitForSingleObject(PVOID Object,
 
                 /* Return a timeout if we couldn't insert the timer for some reason */
                 Status = STATUS_TIMEOUT;
-                goto WaitDone;
+                goto DontWait;
             }
         }
 
@@ -344,9 +344,17 @@ KeWaitForSingleObject(PVOID Object,
 
     } while (TRUE);
 
-WaitDone:
     /* Release the Lock, we are done */
     DPRINT("Returning from KeWaitForMultipleObjects(), %x. Status: %d\n", KeGetCurrentThread(), Status);
+    KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
+    return Status;
+
+DontWait:
+    /* Adjust the Quantum */
+    KiAdjustQuantumThread(CurrentThread);
+
+    /* Release & Return */
+    DPRINT("Returning from KeWaitForMultipleObjects(), %x. Status: %d\n. We did not wait.", KeGetCurrentThread(), Status);
     KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
     return Status;
 }
@@ -460,7 +468,7 @@ KeWaitForMultipleObjects(ULONG Count,
                         /* It has a normal signal state, so unwait it and return */
                         KiSatisfyObjectWait(CurrentObject, CurrentThread);
                         Status = STATUS_WAIT_0 | WaitIndex;
-                        goto WaitDone;
+                        goto DontWait;
 
                     } else {
 
@@ -504,7 +512,7 @@ KeWaitForMultipleObjects(ULONG Count,
             /* Satisfy their Waits and return to the caller */
             KiSatisifyMultipleObjectWaits(WaitBlock);
             Status = STATUS_WAIT_0;
-            goto WaitDone;
+            goto DontWait;
         }
 
         /* Make sure we can satisfy the Alertable request */
@@ -521,7 +529,7 @@ KeWaitForMultipleObjects(ULONG Count,
 
                 /* Return a timeout */
                 Status = STATUS_TIMEOUT;
-                goto WaitDone;
+                goto DontWait;
             }
 
             /* Point to Timer Wait Block and Thread Timer */
@@ -546,7 +554,7 @@ KeWaitForMultipleObjects(ULONG Count,
 
                 /* Return a timeout if we couldn't insert the timer for some reason */
                 Status = STATUS_TIMEOUT;
-                goto WaitDone;
+                goto DontWait;
             }
         }
 
@@ -590,9 +598,17 @@ KeWaitForMultipleObjects(ULONG Count,
 
     } while (TRUE);
 
-WaitDone:
     /* Release the Lock, we are done */
     DPRINT("Returning from KeWaitForMultipleObjects(), %x. Status: %d\n", KeGetCurrentThread(), Status);
+    KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
+    return Status;
+
+DontWait:
+    /* Adjust the Quantum */
+    KiAdjustQuantumThread(CurrentThread);
+
+    /* Release & Return */
+    DPRINT("Returning from KeWaitForMultipleObjects(), %x. Status: %d\n. We did not wait.", KeGetCurrentThread(), Status);
     KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
     return Status;
 }

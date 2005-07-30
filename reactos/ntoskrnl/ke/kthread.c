@@ -274,6 +274,9 @@ KiUnblockThread(PKTHREAD Thread,
                 Thread->PriorityDecrement = Increment;
             }
 
+            /* Also decrease quantum */
+            Thread->Quantum--;
+
         } else {
 
             Thread->Quantum = Thread->QuantumReset;
@@ -318,6 +321,53 @@ KiUnblockThread(PKTHREAD Thread,
         }
     }
 }
+
+VOID
+STDCALL
+KiAdjustQuantumThread(IN PKTHREAD Thread)
+{
+    KPRIORITY Priority;
+
+    /* Don't adjust for RT threads */
+    if ((Thread->Priority < LOW_REALTIME_PRIORITY) &&
+        Thread->BasePriority < LOW_REALTIME_PRIORITY - 2)
+    {
+        /* Decrease Quantum by one and see if we've ran out */
+        if (--Thread->Quantum <= 0)
+        {
+            /* Return quantum */
+            Thread->Quantum = Thread->QuantumReset;
+
+            /* Calculate new Priority */
+            Priority = Thread->Priority - (Thread->PriorityDecrement + 1);
+
+            /* Normalize it if we've gone too low */
+            if (Priority < Thread->BasePriority)
+            {
+                /* Normalize it if we've gone too low */
+                Priority = Thread->BasePriority;
+            }
+
+            /* Reset the priority decrement, we've done it */
+            Thread->PriorityDecrement = 0;
+
+            /* Set the new priority, if needed */
+            if (Priority != Thread->Priority)
+            {
+                /* HACK HACK This isn't nice, but it's the only way with our current codebase */
+                Thread->Priority = Priority;
+            }
+            else
+            {
+                /* Priority hasn't changed, find a new thread */
+            }
+        }
+    }
+
+    /* Nothing to do... */
+    return;
+}
+
 
 VOID
 STDCALL

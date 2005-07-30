@@ -81,6 +81,10 @@ NTSTATUS
 FASTCALL
 KiSwapContext(PKTHREAD NewThread);
 
+VOID
+STDCALL
+KiAdjustQuantumThread(IN PKTHREAD Thread);
+
 /* gmutex.c ********************************************************************/
 
 VOID
