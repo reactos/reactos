@@ -11,12 +11,13 @@
 
 /* INCLUDES *****************************************************************/
 
+#define NDEBUG
+
 #include <hal.h>
 #include <ddk/ntdddisk.h>
 #include "halxbox.h"
 
 #include <internal/debug.h>
-#define NDEBUG
 #include <debug.h>
 
 #define XBOX_SIGNATURE_SECTOR 3
