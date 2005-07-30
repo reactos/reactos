@@ -342,11 +342,7 @@ KiAdjustQuantumThread(IN PKTHREAD Thread)
             Priority = Thread->Priority - (Thread->PriorityDecrement + 1);
 
             /* Normalize it if we've gone too low */
-            if (Priority < Thread->BasePriority)
-            {
-                /* Normalize it if we've gone too low */
-                Priority = Thread->BasePriority;
-            }
+            if (Priority < Thread->BasePriority) Priority = Thread->BasePriority;
 
             /* Reset the priority decrement, we've done it */
             Thread->PriorityDecrement = 0;
@@ -354,12 +350,15 @@ KiAdjustQuantumThread(IN PKTHREAD Thread)
             /* Set the new priority, if needed */
             if (Priority != Thread->Priority)
             {
-                /* HACK HACK This isn't nice, but it's the only way with our current codebase */
+                /* 
+                 * HACK HACK This isn't nice, but it's the only way with our 
+                 * current codebase
+                 */
                 Thread->Priority = Priority;
             }
             else
             {
-                /* Priority hasn't changed, find a new thread */
+                /* FIXME: Priority hasn't changed, find a new thread */
             }
         }
     }

@@ -308,10 +308,13 @@ BasepCopyHandles(IN PRTL_USER_PROCESS_PARAMETERS Params,
                  IN PRTL_USER_PROCESS_PARAMETERS PebParams,
                  IN BOOL InheritHandles)
 {
+    DPRINT1("BasepCopyHandles %p %p, %d\n", Params, PebParams, InheritHandles);
+
     /* Copy the handle if we are inheriting or if it's a console handle */
     if (InheritHandles || IsConsoleHandle(PebParams->StandardInput))
     {
         Params->StandardInput = PebParams->StandardInput;
+        DPRINT1("Standard Input: %x\n", Params->StandardInput);
     }
     if (InheritHandles || IsConsoleHandle(PebParams->StandardOutput))
     {
@@ -349,7 +352,7 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
     UNICODE_STRING Desktop, Shell, Runtime, Title;
     PPEB OurPeb = NtCurrentPeb();
     
-    DPRINT("BasepInitializeEnvironment\n");
+    DPRINT1("BasepInitializeEnvironment\n");
     
     /* Get the full path name */
     RetVal = GetFullPathNameW(ApplicationPathName,
@@ -478,6 +481,7 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
     /* Write the handles only if we have to */
     if (StartupInfo->dwFlags & STARTF_USESTDHANDLES)
     {
+        DPRINT1("Using Standard Handles\n");
         ProcessParameters->StandardInput = StartupInfo->hStdInput;
         ProcessParameters->StandardOutput = StartupInfo->hStdOutput;
         ProcessParameters->StandardError = StartupInfo->hStdError;
@@ -506,6 +510,7 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
               (STARTF_USESTDHANDLES | STARTF_USEHOTKEY | STARTF_SHELLPRIVATE)))
         {
             /* Use handles from PEB, if inheriting or they are console */ 
+            DPRINT1("Copying handles from parent\n");
             BasepCopyHandles(ProcessParameters,
                              OurPeb->ProcessParameters,
                              InheritHandles);

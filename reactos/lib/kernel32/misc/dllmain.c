@@ -167,18 +167,28 @@ BasepInitConsole(VOID)
 
     /* We got the handles, let's set them */
     Parameters->ConsoleHandle = Request.Data.AllocConsoleRequest.Console;
-    SetStdHandle(STD_INPUT_HANDLE, Request.Data.AllocConsoleRequest.InputHandle);
-    SetStdHandle(STD_OUTPUT_HANDLE, Request.Data.AllocConsoleRequest.OutputHandle);
-    SetStdHandle(STD_ERROR_HANDLE, 
-                 DuplicateConsoleHandle(Request.Data.AllocConsoleRequest.OutputHandle,
-                                        0,
-                                        TRUE,
-                                        DUPLICATE_SAME_ACCESS));
+
+    /* If we already had some, don't use the new ones */
+    if (!Parameters->StandardInput)
+    {
+        Parameters->StandardInput = Request.Data.AllocConsoleRequest.InputHandle;
+    }
+    if (!Parameters->StandardOutput)
+    {
+        Parameters->StandardOutput = Request.Data.AllocConsoleRequest.OutputHandle;
+    }
+    if (!Parameters->StandardError)
+    {
+        Parameters->StandardError = DuplicateConsoleHandle(Request.Data.AllocConsoleRequest.OutputHandle,
+                                                           0,
+                                                           TRUE,
+                                                           DUPLICATE_SAME_ACCESS);
+    }
 
     DPRINT1("Console setup: %lx, %lx, %lx\n", 
-            Request.Data.AllocConsoleRequest.Console,
-            Request.Data.AllocConsoleRequest.InputHandle,
-            Request.Data.AllocConsoleRequest.OutputHandle);
+            Parameters->ConsoleHandle,
+            Parameters->StandardInput,
+            Parameters->StandardOutput);
     return TRUE;
 }
 
