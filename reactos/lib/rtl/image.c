@@ -27,11 +27,8 @@ RtlImageNtHeader (IN PVOID BaseAddress)
 
   if (DosHeader && DosHeader->e_magic != IMAGE_DOS_SIGNATURE)
     {
-      extern ULONG KdDebuggerEnabled;
       DPRINT1("DosHeader->e_magic %x\n", DosHeader->e_magic);
       DPRINT1("NtHeader 0x%p\n", ((ULONG_PTR)BaseAddress + DosHeader->e_lfanew));
-      if (KdDebuggerEnabled)
-        DbgBreakPoint();
     }
 
   if (DosHeader && DosHeader->e_magic == IMAGE_DOS_SIGNATURE)
