@@ -4327,7 +4327,7 @@ ModifyMenuA(
 
   if(!GetMenuItemInfoA( hMnu,
                         uPosition,
-                       (BOOL)!(MF_BYPOSITION & uFlags),
+                       (BOOL)(MF_BYPOSITION & uFlags),
                         &mii)) return FALSE;
 
   if(uFlags & MF_BITMAP)
@@ -4397,7 +4397,7 @@ ModifyMenuA(
 
   return SetMenuItemInfoA( hMnu,
                            uPosition,
-                          (BOOL)!(MF_BYPOSITION & uFlags),
+                          (BOOL)(MF_BYPOSITION & uFlags),
                            &mii);
 }
 
@@ -4424,7 +4424,7 @@ ModifyMenuW(
 
   if(!NtUserMenuItemInfo( hMnu,
                           uPosition,
-                         (BOOL)!(MF_BYPOSITION & uFlags),
+                         (BOOL)(MF_BYPOSITION & uFlags),
                          (PROSMENUITEMINFO) &mii,
                           FALSE)) return FALSE;
 
@@ -4494,7 +4494,7 @@ ModifyMenuW(
 
   return SetMenuItemInfoW( hMnu,
                            uPosition,
-                           (BOOL)!(MF_BYPOSITION & uFlags),
+                           (BOOL)(MF_BYPOSITION & uFlags),
                            &mii);
 }
 
@@ -4558,7 +4558,7 @@ SetMenuInfo(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -4569,8 +4569,23 @@ SetMenuItemBitmaps(
   HBITMAP hBitmapUnchecked,
   HBITMAP hBitmapChecked)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  ROSMENUITEMINFO uItem;
+
+  if(!(NtUserMenuItemInfo(hMenu, uPosition, 
+                 (BOOL)(MF_BYPOSITION & uFlags), &uItem, FALSE))) return FALSE;
+
+  if (!hBitmapChecked && !hBitmapUnchecked)
+  {
+    uItem.fState &= ~MF_USECHECKBITMAPS;
+  }
+  else  /* Install new bitmaps */
+  {
+    uItem.hbmpChecked = hBitmapChecked;
+    uItem.hbmpUnchecked = hBitmapUnchecked;
+    uItem.fState |= MF_USECHECKBITMAPS;
+  }
+ return NtUserMenuItemInfo(hMenu, uPosition,
+                                 (BOOL)(MF_BYPOSITION & uFlags), &uItem, TRUE);
 }
 
 
