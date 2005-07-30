@@ -15,7 +15,7 @@
 
 /* GLOBALS ******************************************************************/
 
-PRTL_CONVERT_STRING Basep8BitStringToUnicodeString;
+PRTL_CONVERT_STRING Basep8BitStringToUnicodeString = RtlAnsiStringToUnicodeString;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -94,11 +94,11 @@ Basep8BitStringToHeapUnicodeString(OUT PUNICODE_STRING UnicodeString,
     Status = Basep8BitStringToUnicodeString(UnicodeString, &AnsiString, TRUE);
     
     /* Handle failure */
-    /* Return Status */
     if (!NT_SUCCESS(Status))
     {
         SetLastErrorByStatus(Status);
     }
+    /* Return Status */
     return Status;
 }
 
