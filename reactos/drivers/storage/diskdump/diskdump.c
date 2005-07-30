@@ -243,7 +243,7 @@ DiskDumpFinish(VOID)
 NTSTATUS STDCALL
 DiskDumpWrite(LARGE_INTEGER Address, PMDL Mdl)
 {
-  KIRQL OldIrql, OldIrql2;
+  KIRQL OldIrql = 0, OldIrql2 = 0;
   KIRQL CurrentIrql = KeGetCurrentIrql();
 
   if (CurrentIrql < (CoreDumpPortDeviceExtension->Interrupt->SynchronizeIrql - 1))
