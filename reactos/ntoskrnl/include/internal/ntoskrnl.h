@@ -14,7 +14,6 @@
 #include "ke.h"
 #include "i386/mm.h"
 #include "i386/fpu.h"
-#include "module.h"
 #include "ob.h"
 #include "mm.h"
 #include "ps.h"

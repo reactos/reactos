@@ -110,26 +110,25 @@ BOOLEAN STDCALL
 KiRosPrintAddress(PVOID address)
 {
    PLIST_ENTRY current_entry;
-   MODULE_TEXT_SECTION* current;
-   extern LIST_ENTRY ModuleTextListHead;
+   PLDR_DATA_TABLE_ENTRY current;
+   extern LIST_ENTRY ModuleListHead;
    ULONG_PTR RelativeAddress;
    ULONG i = 0;
 
    do
    {
-     current_entry = ModuleTextListHead.Flink;
+     current_entry = ModuleListHead.Flink;
 
-     while (current_entry != &ModuleTextListHead &&
-            current_entry != NULL)
+     while (current_entry != &ModuleListHead)
        {
           current =
-            CONTAINING_RECORD(current_entry, MODULE_TEXT_SECTION, ListEntry);
+            CONTAINING_RECORD(current_entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
 
-          if (address >= (PVOID)current->Base &&
-              address < (PVOID)(current->Base + current->Length))
+          if (address >= (PVOID)current->DllBase &&
+              address < (PVOID)((ULONG_PTR)current->DllBase + current->SizeOfImage))
             {
-              RelativeAddress = (ULONG_PTR) address - current->Base;
-              DbgPrint("<%ws: %x>", current->Name, RelativeAddress);
+              RelativeAddress = (ULONG_PTR) address - (ULONG_PTR) current->DllBase;
+              DbgPrint("<%wZ: %x>", &current->FullDllName, RelativeAddress);
               return(TRUE);
             }
           current_entry = current_entry->Flink;

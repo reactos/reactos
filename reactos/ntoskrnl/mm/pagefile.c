@@ -651,7 +651,7 @@ MmInitializeCrashDump(HANDLE PageFileHandle, ULONG PageFileNum)
    UNICODE_STRING DiskDumpName = RTL_CONSTANT_STRING(L"DiskDump");
    ANSI_STRING ProcName;
    PIO_STACK_LOCATION StackPtr;
-   PMODULE_OBJECT ModuleObject;
+   PLDR_DATA_TABLE_ENTRY ModuleObject;
 
    Status = ZwFsControlFile(PageFileHandle,
                             0,
@@ -730,7 +730,7 @@ MmInitializeCrashDump(HANDLE PageFileHandle, ULONG PageFileNum)
       return(STATUS_OBJECT_NAME_NOT_FOUND);
    }
    RtlInitAnsiString(&ProcName, "DiskDumpFunctions");
-   Status = LdrGetProcedureAddress(ModuleObject->Base,
+   Status = LdrGetProcedureAddress(ModuleObject->DllBase,
                                    &ProcName,
                                    0,
                                    (PVOID*)&MmCoreDumpFunctions);

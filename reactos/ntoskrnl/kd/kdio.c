@@ -89,11 +89,12 @@ STDCALL
 KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
                 ULONG BootPhase)
 {
-    if (!KdpDebugMode.File) return;
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING FileName;
     IO_STATUS_BLOCK Iosb;
+
+    if (!KdpDebugMode.File) return;
 
     if (BootPhase == 0)
     {

@@ -15,8 +15,8 @@
 
 /* GLOBALS *****************************************************************/
 
-extern MODULE_OBJECT NtoskrnlModuleObject;
-extern MODULE_OBJECT HalModuleObject;
+extern LDR_DATA_TABLE_ENTRY NtoskrnlModuleObject;
+extern LDR_DATA_TABLE_ENTRY HalModuleObject;
 
 ULONG EXPORTED MmUserProbeAddress = 0;
 PVOID EXPORTED MmHighestUserAddress = NULL;
@@ -454,14 +454,14 @@ MmGetSystemRoutineAddress (
     return NULL;
   }
 
-  Status = LdrGetProcedureAddress(NtoskrnlModuleObject.Base,
+  Status = LdrGetProcedureAddress(NtoskrnlModuleObject.DllBase,
                                   &AnsiRoutineName,
                                   0,
                                   &ProcAddress);
 
   if(!NT_SUCCESS(Status))
   {
-    Status = LdrGetProcedureAddress(HalModuleObject.Base,
+    Status = LdrGetProcedureAddress(HalModuleObject.DllBase,
                                     &AnsiRoutineName,
                                     0,
                                     &ProcAddress);

@@ -321,7 +321,7 @@ IoInit2(BOOLEAN BootLog)
 {
   PDEVICE_NODE DeviceNode;
   PDRIVER_OBJECT DriverObject;
-  MODULE_OBJECT ModuleObject;
+  LDR_DATA_TABLE_ENTRY ModuleObject;
   NTSTATUS Status;
 
   PnpInit2();
@@ -342,8 +342,8 @@ IoInit2(BOOLEAN BootLog)
       return;
     }
 
-  ModuleObject.Base = NULL;
-  ModuleObject.Length = 0;
+  ModuleObject.DllBase = NULL;
+  ModuleObject.SizeOfImage = 0;
   ModuleObject.EntryPoint = RawFsDriverEntry;
 
   Status = IopInitializeDriverModule(

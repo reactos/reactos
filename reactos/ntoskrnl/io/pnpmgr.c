@@ -1702,7 +1702,7 @@ IopActionInitChildServices(
        !IopDeviceNodeHasFlag(DeviceNode, DNF_ADDED) &&
        !IopDeviceNodeHasFlag(DeviceNode, DNF_STARTED))
    {
-      PMODULE_OBJECT ModuleObject;
+      PLDR_DATA_TABLE_ENTRY ModuleObject;
       PDRIVER_OBJECT DriverObject;
 
       Status = IopLoadServiceModule(&DeviceNode->ServiceName, &ModuleObject);

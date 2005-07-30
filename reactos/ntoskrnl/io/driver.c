@@ -23,7 +23,7 @@ extern BOOLEAN SetupMode;
 NTSTATUS
 LdrProcessModule(PVOID ModuleLoadBase,
 		 PUNICODE_STRING ModuleName,
-		 PMODULE_OBJECT *ModuleObject);
+		 PLDR_DATA_TABLE_ENTRY *ModuleObject);
 
 typedef struct _SERVICE_GROUP
 {
@@ -432,7 +432,7 @@ IopNormalizeImagePath(
 NTSTATUS FASTCALL
 IopLoadServiceModule(
    IN PUNICODE_STRING ServiceName,
-   OUT PMODULE_OBJECT *ModuleObject)
+   OUT PLDR_DATA_TABLE_ENTRY *ModuleObject)
 {
    RTL_QUERY_REGISTRY_TABLE QueryTable[3];
    ULONG ServiceStart;
@@ -591,7 +591,7 @@ IopLoadServiceModule(
 NTSTATUS FASTCALL
 IopInitializeDriverModule(
    IN PDEVICE_NODE DeviceNode,
-   IN PMODULE_OBJECT ModuleObject,
+   IN PLDR_DATA_TABLE_ENTRY ModuleObject,
    IN PUNICODE_STRING ServiceName,
    IN BOOLEAN FileSystemDriver,
    OUT PDRIVER_OBJECT *DriverObject)
@@ -625,8 +625,8 @@ IopInitializeDriverModule(
       ServiceName,
       0,
       FileSystemDriver,
-      ModuleObject->Base,
-      ModuleObject->Length);
+      ModuleObject->DllBase,
+      ModuleObject->SizeOfImage);
 
    if (!NT_SUCCESS(Status))
    {
@@ -673,7 +673,7 @@ IopAttachFilterDriversCallback(
    PDEVICE_NODE DeviceNode = Context;
    UNICODE_STRING ServiceName;
    PWCHAR Filters;
-   PMODULE_OBJECT ModuleObject;
+   PLDR_DATA_TABLE_ENTRY ModuleObject;
    PDRIVER_OBJECT DriverObject;
    NTSTATUS Status;
 
@@ -1187,7 +1187,7 @@ IopInitializeBuiltinDriver(
    PCHAR FileName,
    ULONG ModuleLength)
 {
-   PMODULE_OBJECT ModuleObject;
+   PLDR_DATA_TABLE_ENTRY ModuleObject;
    PDEVICE_NODE DeviceNode;
    PDRIVER_OBJECT DriverObject;
    NTSTATUS Status;
@@ -1519,7 +1519,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
    UNICODE_STRING ServiceName;
    UNICODE_STRING ObjectName;
    PDRIVER_OBJECT DriverObject;
-   PMODULE_OBJECT ModuleObject;
+   PLDR_DATA_TABLE_ENTRY ModuleObject;
    NTSTATUS Status;
    LPWSTR Start;
 
@@ -1857,7 +1857,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
    NTSTATUS Status;
    ULONG Type;
    PDEVICE_NODE DeviceNode;
-   PMODULE_OBJECT ModuleObject;
+   PLDR_DATA_TABLE_ENTRY ModuleObject;
    PDRIVER_OBJECT DriverObject;
    WCHAR *cur;
 

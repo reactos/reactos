@@ -757,6 +757,7 @@ NlsAnsiCodePage DATA
 NlsLeadByteInfo DATA
 NlsMbCodePageTag DATA
 NlsMbOemCodePageTag DATA
+NlsOemCodePage DATA
 NlsOemLeadByteInfo DATA
 NtAddAtom@12
 NtAdjustPrivilegesToken@24
@@ -871,8 +872,10 @@ PsDereferenceImpersonationToken@4=PsDereferencePrimaryToken@4
 PsDereferencePrimaryToken@4
 PsDisableImpersonation@8
 PsEstablishWin32Callouts@4
+PsGetCurrentProcess@0=KeGetCurrentProcess@0
 PsGetCurrentProcessId@0
 PsGetCurrentProcessSessionId@0
+PsGetCurrentThread@0=KeGetCurrentThread@0
 PsGetCurrentThreadId@0
 PsGetCurrentThreadPreviousMode@0
 PsGetCurrentThreadStackBase@0

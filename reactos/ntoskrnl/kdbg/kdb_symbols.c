@@ -108,26 +108,27 @@ KdbpSymFindModule(IN PVOID Address  OPTIONAL,
                   OUT PKDB_MODULE_INFO pInfo)
 {
   PLIST_ENTRY current_entry;
-  MODULE_TEXT_SECTION* current;
-  extern LIST_ENTRY ModuleTextListHead;
+  PLDR_DATA_TABLE_ENTRY current;
+  extern LIST_ENTRY ModuleListHead;
   INT Count = 0;
 
-  current_entry = ModuleTextListHead.Flink;
+  current_entry = ModuleListHead.Flink;
 
-  while (current_entry != &ModuleTextListHead &&
-         current_entry != NULL)
+  while (current_entry != &ModuleListHead)
     {
-      current = CONTAINING_RECORD(current_entry, MODULE_TEXT_SECTION, ListEntry);
+      current = CONTAINING_RECORD(current_entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
 
-      if ((Address != NULL && (Address >= (PVOID)current->Base &&
-                               Address < (PVOID)(current->Base + current->Length))) ||
-          (Name != NULL && _wcsicmp(current->Name, Name) == 0) ||
+      if ((Address != NULL && (Address >= (PVOID)current->DllBase &&
+                               Address < (PVOID)((ULONG_PTR)current->DllBase + current->SizeOfImage))) ||
+          (Name != NULL && _wcsnicmp(current->BaseDllName.Buffer, Name,
+                                     current->BaseDllName.Length / sizeof(WCHAR)) == 0) ||
           (Index >= 0 && Count++ == Index))
         {
-	  wcsncpy(pInfo->Name, current->Name, 255);
+	  wcsncpy(pInfo->Name, current->BaseDllName.Buffer,
+	          min(255, current->BaseDllName.Length / sizeof(WCHAR)));
 	  pInfo->Name[255] = L'\0';
-          pInfo->Base = (ULONG_PTR)current->Base;
-          pInfo->Size = current->Length;
+          pInfo->Base = (ULONG_PTR)current->DllBase;
+          pInfo->Size = current->SizeOfImage;
           pInfo->RosSymInfo = current->RosSymInfo;
           return TRUE;
         }
@@ -553,30 +554,30 @@ KdbSymFreeProcessSymbols(IN PEPROCESS Process)
 /*! \brief Load symbol info for a driver.
  *
  * \param Filename  Filename of the driver.
- * \param Module    Pointer to the driver MODULE_OBJECT.
+ * \param Module    Pointer to the driver LDR_DATA_TABLE_ENTRY.
  */
 VOID
 KdbSymLoadDriverSymbols(IN PUNICODE_STRING Filename,
-                        IN PMODULE_OBJECT Module)
+                        IN PLDR_DATA_TABLE_ENTRY Module)
 {
   /* Load symbols for the image if available */
   DPRINT("Loading driver %wZ symbols (driver @ %08x)\n", Filename, Module->Base);
 
-  Module->TextSection->RosSymInfo = NULL;
+  Module->RosSymInfo = NULL;
 
-  KdbpSymLoadModuleSymbols(Filename, &Module->TextSection->RosSymInfo);
+  KdbpSymLoadModuleSymbols(Filename, (PROSSYM_INFO*)&Module->RosSymInfo);
 }
 
 /*! \brief Unloads symbol info for a driver.
  *
- * \param ModuleObject  Pointer to the driver MODULE_OBJECT.
+ * \param ModuleObject  Pointer to the driver LDR_DATA_TABLE_ENTRY.
  */
 VOID
-KdbSymUnloadDriverSymbols(IN PMODULE_OBJECT ModuleObject)
+KdbSymUnloadDriverSymbols(IN PLDR_DATA_TABLE_ENTRY ModuleObject)
 {
   /* Unload symbols for module if available */
-  KdbpSymUnloadModuleSymbols(ModuleObject->TextSection->RosSymInfo);
-  ModuleObject->TextSection->RosSymInfo = NULL;
+  KdbpSymUnloadModuleSymbols(ModuleObject->RosSymInfo);
+  ModuleObject->RosSymInfo = NULL;
 }
 
 /*! \brief Called when a symbol file is loaded by the loader?
@@ -591,7 +592,7 @@ KdbSymUnloadDriverSymbols(IN PMODULE_OBJECT ModuleObject)
 VOID
 KdbSymProcessBootSymbols(IN PCHAR FileName)
 {
-  PMODULE_OBJECT ModuleObject;
+  PLDR_DATA_TABLE_ENTRY ModuleObject;
   UNICODE_STRING UnicodeString;
   PLOADER_MODULE KeLoaderModules = (PLOADER_MODULE)KeLoaderBlock.ModsAddr;
   ANSI_STRING AnsiString;
@@ -618,7 +619,7 @@ KdbSymProcessBootSymbols(IN PCHAR FileName)
   {
      if (! LoadSymbols)
      {
-        ModuleObject->TextSection->RosSymInfo = NULL;
+        ModuleObject->RosSymInfo = NULL;
         return;
      }
 
@@ -632,16 +633,16 @@ KdbSymProcessBootSymbols(IN PCHAR FileName)
      if (i < KeLoaderBlock.ModsCount)
      {
         KeLoaderModules[i].Reserved = 1;
-        if (ModuleObject->TextSection->RosSymInfo != NULL)
+        if (ModuleObject->RosSymInfo != NULL)
         {
-           KdbpSymRemoveCachedFile(ModuleObject->TextSection->RosSymInfo);
+           KdbpSymRemoveCachedFile(ModuleObject->RosSymInfo);
         }
 
         if (IsRaw)
         {
            if (! RosSymCreateFromRaw((PVOID) KeLoaderModules[i].ModStart,
                                      KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart,
-                                     &ModuleObject->TextSection->RosSymInfo))
+                                     (PROSSYM_INFO*)&ModuleObject->RosSymInfo))
            {
               return;
            }
@@ -650,7 +651,7 @@ KdbSymProcessBootSymbols(IN PCHAR FileName)
         {
            if (! RosSymCreateFromMem((PVOID) KeLoaderModules[i].ModStart,
                                      KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart,
-                                     &ModuleObject->TextSection->RosSymInfo))
+                                     (PROSSYM_INFO*)&ModuleObject->RosSymInfo))
            {
               return;
            }
@@ -659,33 +660,33 @@ KdbSymProcessBootSymbols(IN PCHAR FileName)
         /* add file to cache */
         RtlInitAnsiString(&AnsiString, FileName);
 	RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, TRUE);
-        KdbpSymAddCachedFile(&UnicodeString, ModuleObject->TextSection->RosSymInfo);
+        KdbpSymAddCachedFile(&UnicodeString, ModuleObject->RosSymInfo);
         RtlFreeUnicodeString(&UnicodeString);
 
         DPRINT("Installed symbols: %s@%08x-%08x %p\n",
 	       FileName,
-	       ModuleObject->Base,
-	       ModuleObject->Length + ModuleObject->Base,
-	       ModuleObject->TextSection->RosSymInfo);
+	       ModuleObject->DllBase,
+	       ModuleObject->SizeOfImage + ModuleObject->DllBase,
+	       ModuleObject->RosSymInfo);
      }
   }
 }
 
 /*! \brief Initializes the KDB symbols implementation.
  *
- * \param NtoskrnlTextSection  MODULE_TEXT_SECTION of ntoskrnl.exe
- * \param LdrHalTextSection    MODULE_TEXT_SECTION of hal.sys
+ * \param NtoskrnlModuleObject  LDR_DATA_TABLE_ENTRY of ntoskrnl.exe
+ * \param LdrHalModuleObject    LDR_DATA_TABLE_ENTRY of hal.sys
  */
 VOID
-KdbSymInit(IN PMODULE_TEXT_SECTION NtoskrnlTextSection,
-	   IN PMODULE_TEXT_SECTION LdrHalTextSection)
+KdbSymInit(IN PLDR_DATA_TABLE_ENTRY NtoskrnlModuleObject,
+	   IN PLDR_DATA_TABLE_ENTRY LdrHalModuleObject)
 {
   PCHAR p1, p2;
   int Found;
   char YesNo;
 
-  NtoskrnlTextSection->RosSymInfo = NULL;
-  LdrHalTextSection->RosSymInfo = NULL;
+  NtoskrnlModuleObject->RosSymInfo = NULL;
+  LdrHalModuleObject->RosSymInfo = NULL;
 
   InitializeListHead(&SymbolFileListHead);
   KeInitializeSpinLock(&SymbolFileListLock);

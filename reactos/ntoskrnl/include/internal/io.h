@@ -350,14 +350,14 @@ NTSTATUS
 FASTCALL
 IopLoadServiceModule(
     IN PUNICODE_STRING ServiceName,
-    OUT PMODULE_OBJECT *ModuleObject
+    OUT PLDR_DATA_TABLE_ENTRY *ModuleObject
 );
 
 NTSTATUS 
 FASTCALL
 IopInitializeDriverModule(
     IN PDEVICE_NODE DeviceNode,
-    IN PMODULE_OBJECT ModuleObject,
+    IN PLDR_DATA_TABLE_ENTRY ModuleObject,
     IN PUNICODE_STRING ServiceName,
     IN BOOLEAN FileSystemDriver,
     OUT PDRIVER_OBJECT *DriverObject

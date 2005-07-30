@@ -99,13 +99,13 @@ LdrSafePEProcessModule(
 NTSTATUS
 LdrLoadModule(
     PUNICODE_STRING Filename,
-    PMODULE_OBJECT *ModuleObject
+    PLDR_DATA_TABLE_ENTRY *ModuleObject
 );
 
 NTSTATUS
-LdrUnloadModule(PMODULE_OBJECT ModuleObject);
+LdrUnloadModule(PLDR_DATA_TABLE_ENTRY ModuleObject);
 
-PMODULE_OBJECT
+PLDR_DATA_TABLE_ENTRY
 LdrGetModuleObject(PUNICODE_STRING ModuleName);
 
 #endif /* __INCLUDE_INTERNAL_LDR_H */
