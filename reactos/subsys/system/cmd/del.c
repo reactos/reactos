@@ -385,7 +385,7 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 	for (i = 0; i < args; i++)
 	{
 
-      /*this checks to see if it isnt a flag, if it isnt, we assume it is a file name*/
+                /*this checks to see if it isnt a flag, if it isnt, we assume it is a file name*/
 		if((*arg[i] == _T('/')) || (*arg[i] == _T('-')))
 			continue;
 		bSubFileFound = FALSE;
@@ -454,175 +454,175 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 			}
 
 		
-		if(_tcschr (AltArg, _T('*')) == NULL && 
-			IsExistingDirectory (AltArg))
-		{
-		/* If it doesnt have a \ at the end already then on needs to be added */
-		if(AltArg[_tcslen(AltArg) -  1] != _T('\\'))
-			_tcscat (AltArg, _T("\\"));
-		/* Add a wildcard after the \ */
-		_tcscat (AltArg, _T("*"));
-		}
+		        if(_tcschr (AltArg, _T('*')) == NULL && 
+			        IsExistingDirectory (AltArg))
+		        {
+		                /* If it doesnt have a \ at the end already then on needs to be added */
+		                if(AltArg[_tcslen(AltArg) -  1] != _T('\\'))
+			                _tcscat (AltArg, _T("\\"));
+		                /* Add a wildcard after the \ */
+		                _tcscat (AltArg, _T("*"));
+		        }
 
-		if(!_tcscmp (AltArg, _T("*")) ||
-			!_tcscmp (AltArg, _T("*.*"))||
-			(AltArg[_tcslen(AltArg) -  2] == _T('\\') && AltArg[_tcslen(AltArg) -  1] == _T('*')))
-		{
-			/*well, the user wants to delete everything but if they didnt yes DEL_YES, DEL_QUIET, or DEL_PROMPT
-			then we are going to want to make sure that in fact they want to do that.  */
+		        if(!_tcscmp (AltArg, _T("*")) ||
+			        !_tcscmp (AltArg, _T("*.*"))||
+			        (AltArg[_tcslen(AltArg) -  2] == _T('\\') && AltArg[_tcslen(AltArg) -  1] == _T('*')))
+		        {
+			        /*well, the user wants to delete everything but if they didnt yes DEL_YES, DEL_QUIET, or DEL_PROMPT
+			        then we are going to want to make sure that in fact they want to do that.  */
 
-			if (!((dwFlags & DEL_YES) || (dwFlags & DEL_QUIET) || (dwFlags & DEL_PROMPT)))
-			{
-				LoadString( CMD_ModuleHandle, STRING_DEL_HELP2, szMsg, RC_STRING_MAX_SIZE);
+			        if (!((dwFlags & DEL_YES) || (dwFlags & DEL_QUIET) || (dwFlags & DEL_PROMPT)))
+			        {
+				        LoadString( CMD_ModuleHandle, STRING_DEL_HELP2, szMsg, RC_STRING_MAX_SIZE);
 
-				res = FilePromptYNA (szMsg);
-				if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
-					break;
-				if(res == PROMPT_ALL)
-					dwFlags |= DEL_YES;
-			}
-		}
+				        res = FilePromptYNA (szMsg);
+				        if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
+					        break;
+				        if(res == PROMPT_ALL)
+					        dwFlags |= DEL_YES;
+			        }
+		        }
 
 
 
 #ifdef _DEBUG
-		ConErrPrintf (_T("File: %s\n"), arg[i]);
+		        ConErrPrintf (_T("File: %s\n"), arg[i]);
 #endif
 
 #ifdef _DEBUG
-		ConErrPrintf(_T("Wildcards!\n\n"));
+		        ConErrPrintf(_T("Wildcards!\n\n"));
 #endif
 		
-		GetFullPathName (AltArg,
-			MAX_PATH,
-			szFullPath,
-			&pFilePart);
+		        GetFullPathName (AltArg,
+			                MAX_PATH,
+			                szFullPath,
+			                &pFilePart);
 
 #ifdef _DEBUG
-		ConErrPrintf(_T("Full path: %s\n"), szFullPath);
-		ConErrPrintf(_T("File part: %s\n"), pFilePart);
+		        ConErrPrintf(_T("Full path: %s\n"), szFullPath);
+		        ConErrPrintf(_T("File part: %s\n"), pFilePart);
 #endif
 
-		hFile = FindFirstFile (szFullPath, &f);
+		        hFile = FindFirstFile (szFullPath, &f);
 		
-		do
-		{
+		        do
+		        {
 
 
-			if (hFile == INVALID_HANDLE_VALUE)
-			{
-				error_file_not_found ();
-				freep (arg);
-				return 0;
-			}
+			        if (hFile == INVALID_HANDLE_VALUE)
+			        {
+				        error_file_not_found ();
+				        freep (arg);
+				        return 0;
+			        }
 
-			/*bExclusion is the check varible to see if it has a match
-			and it needs to be set to false before each loop, as it hasnt been matched yet*/						
-			bExclusion = 0;
+			        /*bExclusion is the check varible to see if it has a match
+			        and it needs to be set to false before each loop, as it hasnt been matched yet*/						
+			        bExclusion = 0;
 			
-			/*loop through each of the arguments*/
-			for (ii = 0; ii < args; ii++)
-			{
-				/*check to see if it is a exclusion tag but not a ':' (used in ATTR)*/
-				if(_tcschr (arg[ii], _T('-')) && _tcschr (arg[ii], _T(':')) == NULL)
-				{
-					/*remove the - from the front to get the real name*/
-					_tcscpy (exfileName , arg[ii]);								
-					szFileName = strtok (exfileName,"-");								
-					GetFullPathName (szFileName,
-						MAX_PATH,
-						szFullPath,
-						&pFilePart);
-					hFileExcl = FindFirstFile (szFullPath, &f2);								
-					do
-					{
-						/*check to see if the filenames match*/
-						if(!_tcscmp (f.cFileName, f2.cFileName))
-							bExclusion = 1;	
-					}
-					while (FindNextFile (hFileExcl, &f2));
-				}
-			}
+			        /*loop through each of the arguments*/
+			        for (ii = 0; ii < args; ii++)
+			        {
+				        /*check to see if it is a exclusion tag but not a ':' (used in ATTR)*/
+				        if(_tcschr (arg[ii], _T('-')) && _tcschr (arg[ii], _T(':')) == NULL)
+				        {
+					        /*remove the - from the front to get the real name*/
+					        _tcscpy (exfileName , arg[ii]);								
+					        szFileName = _tcstok (exfileName,_T("-"));								
+					        GetFullPathName (szFileName,
+						        MAX_PATH,
+						        szFullPath,
+						        &pFilePart);
+					        hFileExcl = FindFirstFile (szFullPath, &f2);								
+					        do
+					        {
+						        /*check to see if the filenames match*/
+						        if(!_tcscmp (f.cFileName, f2.cFileName))
+							        bExclusion = 1;	
+					        }
+					        while (FindNextFile (hFileExcl, &f2));
+				        }
+			        }
 			
-			/*if it is going to be excluded by - no need to check attrs*/
-			if(dwFlags & DEL_ATTRIBUTES && bExclusion == 0)
-			{
+			        /*if it is going to be excluded by - no need to check attrs*/
+			        if(dwFlags & DEL_ATTRIBUTES && bExclusion == 0)
+			        {
 
-				/*save if file attr check if user doesnt care about that attr anyways*/
-				if(dwAttrFlags & ATTR_ARCHIVE && !(f.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE))
-					bExclusion = 1;
-				if(dwAttrFlags & ATTR_HIDDEN && !(f.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN))
-					bExclusion = 1;
-				if(dwAttrFlags & ATTR_SYSTEM && !(f.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM))
-					bExclusion = 1;
-				if(dwAttrFlags & ATTR_READ_ONLY && !(f.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
-					bExclusion = 1;
-				if(dwAttrFlags & ATTR_N_ARCHIVE && (f.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE))
-					bExclusion = 1;
-				if(dwAttrFlags & ATTR_N_HIDDEN && (f.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN))
-					bExclusion = 1;
-				if(dwAttrFlags & ATTR_N_SYSTEM && (f.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM))
-					bExclusion = 1;
-				if(dwAttrFlags & ATTR_N_READ_ONLY && (f.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
-					bExclusion = 1;
-			}
+				        /*save if file attr check if user doesnt care about that attr anyways*/
+				        if(dwAttrFlags & ATTR_ARCHIVE && !(f.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE))
+					        bExclusion = 1;
+				        if(dwAttrFlags & ATTR_HIDDEN && !(f.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN))
+					        bExclusion = 1;
+				        if(dwAttrFlags & ATTR_SYSTEM && !(f.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM))
+					        bExclusion = 1;
+				        if(dwAttrFlags & ATTR_READ_ONLY && !(f.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
+					        bExclusion = 1;
+				        if(dwAttrFlags & ATTR_N_ARCHIVE && (f.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE))
+					        bExclusion = 1;
+				        if(dwAttrFlags & ATTR_N_HIDDEN && (f.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN))
+					        bExclusion = 1;
+				        if(dwAttrFlags & ATTR_N_SYSTEM && (f.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM))
+					        bExclusion = 1;
+				        if(dwAttrFlags & ATTR_N_READ_ONLY && (f.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
+					        bExclusion = 1;
+			        }
 
-			if(bExclusion)
-				continue;
+			        if(bExclusion)
+				        continue;
 
-			/* ignore ".", ".." and directories */
-			if (!_tcscmp (f.cFileName, _T(".")) ||
-				!_tcscmp (f.cFileName, _T("..")) ||
-				f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-				continue;
+			        /* ignore ".", ".." and directories */
+			        if (!_tcscmp (f.cFileName, _T(".")) ||
+				        !_tcscmp (f.cFileName, _T("..")) ||
+				        f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+				        continue;
 
-			_tcscpy (pFilePart, f.cFileName);
+			        _tcscpy (pFilePart, f.cFileName);
 
 #ifdef _DEBUG
-			ConErrPrintf(_T("Full filename: %s\n"), szFullPath);
+			        ConErrPrintf(_T("Full filename: %s\n"), szFullPath);
 #endif
 
-			/* ask for deleting */
-			if (dwFlags & DEL_PROMPT)
-			{
-				LoadString(CMD_ModuleHandle, STRING_DEL_ERROR5, szMsg, RC_STRING_MAX_SIZE);
-				ConErrPrintf(szMsg, szFullPath);
+			        /* ask for deleting */
+			        if (dwFlags & DEL_PROMPT)
+			        {
+				        LoadString(CMD_ModuleHandle, STRING_DEL_ERROR5, szMsg, RC_STRING_MAX_SIZE);
+				        ConErrPrintf(szMsg, szFullPath);
 
-				LoadString(CMD_ModuleHandle, STRING_DEL_ERROR6, szMsg, RC_STRING_MAX_SIZE);
-				res = FilePromptYN (szMsg);
+				        LoadString(CMD_ModuleHandle, STRING_DEL_ERROR6, szMsg, RC_STRING_MAX_SIZE);
+				        res = FilePromptYN (szMsg);
 
-				if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
-				{
-					continue;  //FIXME: Errorcode?
-				}
-			}
+				        if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
+				        {
+					        continue;  //FIXME: Errorcode?
+				        }
+			        }
 
-			/*user cant ask it to be quiet and tell you what it did*/
-			if (!(dwFlags & DEL_QUIET) && !(dwFlags & DEL_TOTAL))
-			{
-				LoadString(CMD_ModuleHandle, STRING_DEL_ERROR7, szMsg, RC_STRING_MAX_SIZE);
-				ConErrPrintf(szMsg, szFullPath);
-			}
+			        /*user cant ask it to be quiet and tell you what it did*/
+			        if (!(dwFlags & DEL_QUIET) && !(dwFlags & DEL_TOTAL))
+			        {
+				        LoadString(CMD_ModuleHandle, STRING_DEL_ERROR7, szMsg, RC_STRING_MAX_SIZE);
+				        ConErrPrintf(szMsg, szFullPath);
+			        }
 
-			/* delete the file */
-			if(dwFlags & DEL_NOTHING)
-				continue;
+			        /* delete the file */
+			        if(dwFlags & DEL_NOTHING)
+				        continue;
 
 
-			if(RemoveFile (szFullPath, dwFlags))
-				dwFiles++;
-			else
-			{
-				bSubFileFound = FALSE;
-				ErrorMessage (GetLastError(), _T(""));
-				break;
-			}
-		}
-		while (FindNextFile (hFile, &f));
+			        if(RemoveFile (szFullPath, dwFlags))
+				        dwFiles++;
+			        else
+			        {
+				        bSubFileFound = FALSE;
+				        ErrorMessage (GetLastError(), _T(""));
+				        break;
+			        }
+		        }
+		        while (FindNextFile (hFile, &f));
+	                FindClose (hFile);
 		}
 		while(bSubFileFound);
 	}
-	FindClose (hFile);
 	
 	freep (arg);
 
