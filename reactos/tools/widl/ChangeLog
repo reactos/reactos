@@ -1,5 +1,13 @@
 ChangeLog
 
+2005-07-30 ekohl
+
+   tools/widl/client.c
+   tools/widl/server.c
+
+- Support conformant arrays as in and out parameters.
+- Fix message buffer size calculation for client and server.
+
 2005-07-25 ekohl
 
    tools/widl/client.c
