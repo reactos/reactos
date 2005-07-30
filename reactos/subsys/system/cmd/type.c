@@ -37,7 +37,6 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR  buff[256];
 	HANDLE hFile, hConsoleOut;
-	DWORD  dwRead;
 	BOOL   bRet;
 	INT    argc,i;
 	LPTSTR *argv;
@@ -105,21 +104,20 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 		
 		do
 		{
-			bRet = ReadFile(hFile,buff,sizeof(buff),&dwRead,NULL);
-
+                        bRet = FileGetString (hFile, buff, sizeof(buff) / sizeof(TCHAR));
 			if(bPaging)
 			{
-				if(dwRead>0 && bRet)
+				if(bRet)
 					ConOutPrintfPaging(bFirstTime, buff);
 			}
 			else
 			{				
-				if(dwRead>0 && bRet)
+				if(bRet)
 					ConOutPrintf(buff);
 			}
 			bFirstTime = FALSE;
 
-		} while(dwRead>0 && bRet);
+		} while(bRet);
 
 		CloseHandle(hFile);
 	}
