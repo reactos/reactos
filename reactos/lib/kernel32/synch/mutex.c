@@ -92,10 +92,24 @@ CreateMutexW(LPSECURITY_ATTRIBUTES lpMutexAttributes,
 			   MUTEX_ALL_ACCESS,
 			   &ObjectAttributes,
 			   (BOOLEAN)bInitialOwner);
+   if (Status == STATUS_OBJECT_NAME_COLLISION)
+     {
+       Status = NtOpenMutant(&MutantHandle,
+			     MUTEX_ALL_ACCESS,
+			     &ObjectAttributes);
+       if (NT_SUCCESS(Status))
+         {
+	   if(bInitialOwner)
+             {
+               WaitForSingleObject(MutantHandle, INFINITE);
+	     }
+           SetLastError(ERROR_ALREADY_EXISTS);
+	 }
+     }
    if (!NT_SUCCESS(Status))
      {
-	SetLastErrorByStatus(Status);
-	return NULL;
+       SetLastErrorByStatus(Status);
+       return NULL;
      }
 
    return MutantHandle;
