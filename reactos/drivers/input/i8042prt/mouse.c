@@ -111,7 +111,7 @@ BOOLEAN STDCALL I8042MouseResetIsr(PDEVICE_EXTENSION DevExt,
                                    UCHAR Status,
                                    PUCHAR Value)
 {
-	BOOLEAN ToReturn;
+	BOOLEAN ToReturn = FALSE;
 
 	if (I8042MouseCallIsrHook(DevExt, Status, Value, &ToReturn))
 		return ToReturn;

@@ -519,8 +519,8 @@ Elf64FmtCreateSection
     Elf_Off nFileOffset;
     Elf_Addr nVirtualAddr;
     Elf_Size nAdj;
-    Elf_Size nVirtualSize;
-    Elf_Size nFileSize;
+    Elf_Size nVirtualSize = 0;
+    Elf_Size nFileSize = 0;
 
     ASSERT(j <= nPHdrCount);
 

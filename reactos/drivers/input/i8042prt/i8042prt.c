@@ -511,7 +511,7 @@ NTSTATUS STDCALL I8042CreateDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 static NTSTATUS STDCALL I8042BasicDetect(PDEVICE_EXTENSION DevExt)
 {
 	NTSTATUS Status;
-	UCHAR Value;
+	UCHAR Value = 0;
 	UINT Counter;
 
 	I8042Flush();

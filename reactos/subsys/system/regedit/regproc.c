@@ -384,7 +384,7 @@ void REGPROC_unescape_string(LPSTR str)
 HRESULT setValue(LPSTR val_name, LPSTR val_data)
 {
     HRESULT hRes;
-    DWORD   dwDataType, dwParseType;
+    DWORD   dwDataType, dwParseType = REG_BINARY;
     LPBYTE lpbData;
     BYTE   convert[KEY_MAX_LEN];
     BYTE *bBigBuffer = 0;

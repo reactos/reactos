@@ -110,7 +110,7 @@ MmAlterRegion(PMADDRESS_SPACE AddressSpace, PVOID BaseAddress,
               ULONG NewType, ULONG NewProtect, PMM_ALTER_REGION_FUNC AlterFunc)
 {
    PMM_REGION InitialRegion;
-   PVOID InitialBaseAddress;
+   PVOID InitialBaseAddress = NULL;
    PMM_REGION NewRegion;
    PLIST_ENTRY CurrentEntry;
    PMM_REGION CurrentRegion = NULL;

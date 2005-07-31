@@ -224,7 +224,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
 CSR_API(CsrAllocConsole)
 {
     PCSRSS_CONSOLE Console;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     BOOLEAN NewConsole = FALSE;
 
     DPRINT("CsrAllocConsole\n");

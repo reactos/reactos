@@ -4065,6 +4065,10 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
 	}
       NewKeyCell->HashTableOffset = NewHashTableOffset;
     }
+  else
+    {
+      NewHashTableCell = NULL;
+    }
 
   /* Allocate and copy value list and values */
   if (SrcKeyCell->NumberOfValues != 0)

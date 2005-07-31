@@ -188,12 +188,12 @@ NTSTATUS NTAPI PeFmtCreateSection
 )
 {
  NTSTATUS nStatus;
- ULONG cbFileHeaderOffsetSize;
- ULONG cbSectionHeadersOffset;
+ ULONG cbFileHeaderOffsetSize = 0;
+ ULONG cbSectionHeadersOffset = 0;
  ULONG cbSectionHeadersSize;
- ULONG cbSectionHeadersOffsetSize;
+ ULONG cbSectionHeadersOffsetSize = 0;
  ULONG cbOptHeaderSize;
- ULONG cbHeadersSize;
+ ULONG cbHeadersSize = 0;
  ULONG nSectionAlignment;
  ULONG nFileAlignment;
  const IMAGE_DOS_HEADER * pidhDosHeader;
@@ -203,8 +203,8 @@ NTSTATUS NTAPI PeFmtCreateSection
  PMM_SECTION_SEGMENT pssSegments;
  LARGE_INTEGER lnOffset;
  PVOID pBuffer;
- ULONG nPrevVirtualEndOfSegment;
- ULONG nFileSizeOfHeaders;
+ ULONG nPrevVirtualEndOfSegment = 0;
+ ULONG nFileSizeOfHeaders = 0;
  ULONG i;
 
  ASSERT(FileHeader);
@@ -277,6 +277,7 @@ NTSTATUS NTAPI PeFmtCreateSection
   PVOID pData;
 
 l_ReadHeaderFromFile:
+  cbNtHeaderSize = 0;
   lnOffset.QuadPart = pidhDosHeader->e_lfanew;
 
   /* read the header from the file */
@@ -330,7 +331,7 @@ l_ReadHeaderFromFile:
  }
  else
  {
-  ULONG cbOptHeaderOffsetSize;
+  ULONG cbOptHeaderOffsetSize = 0;
 
   nStatus = STATUS_INVALID_IMAGE_FORMAT;
 

@@ -327,8 +327,7 @@ CheckTokenMembership (HANDLE ExistingTokenHandle,
                       PSID SidToCheck,
                       PBOOL IsMember)
 {
-  HANDLE AccessToken;
-  BOOL ReleaseToken = FALSE;
+  HANDLE AccessToken = NULL;
   BOOL Result = FALSE;
   DWORD dwSize;
   DWORD i;
@@ -353,7 +352,6 @@ CheckTokenMembership (HANDLE ExistingTokenHandle,
       goto ByeBye;
     }
     CloseHandle(ExistingTokenHandle);
-    ReleaseToken = TRUE;
   }
   else
   {
@@ -364,7 +362,6 @@ CheckTokenMembership (HANDLE ExistingTokenHandle,
       /* Duplicate token to have a impersonation token */
       if (!DuplicateToken(ExistingTokenHandle, SecurityAnonymous, &AccessToken))
         return FALSE;
-      ReleaseToken = TRUE;
     }
     else
       AccessToken = ExistingTokenHandle;
@@ -395,7 +392,7 @@ CheckTokenMembership (HANDLE ExistingTokenHandle,
 ByeBye:
   if (lpGroups != NULL)
     HeapFree(GetProcessHeap(), 0, lpGroups);
-  if (ReleaseToken)
+  if (AccessToken != NULL && AccessToken != ExistingTokenHandle)
     CloseHandle(AccessToken);
 
   return Result;
