@@ -94,16 +94,16 @@ BasepInitConsole(VOID)
 
     WCHAR lpTest[MAX_PATH];
     GetModuleFileNameW(NULL, lpTest, MAX_PATH);
-    DPRINT1("BasepInitConsole for : %S\n", lpTest);
-    DPRINT1("Our current console handles are: %lx, %lx, %lx %lx\n", 
-            Parameters->ConsoleHandle, Parameters->StandardInput, 
-            Parameters->StandardOutput, Parameters->StandardError);
+    DPRINT("BasepInitConsole for : %S\n", lpTest);
+    DPRINT("Our current console handles are: %lx, %lx, %lx %lx\n", 
+           Parameters->ConsoleHandle, Parameters->StandardInput, 
+           Parameters->StandardOutput, Parameters->StandardError);
 
     /* We have nothing to do if this isn't a console app... */
     if (RtlImageNtHeader(GetModuleHandle(NULL))->OptionalHeader.Subsystem !=
         IMAGE_SUBSYSTEM_WINDOWS_CUI)
     {
-        DPRINT1("Image is not a console application\n");
+        DPRINT("Image is not a console application\n");
         Parameters->ConsoleHandle = NULL;
         return TRUE;
     }
@@ -115,14 +115,14 @@ BasepInitConsole(VOID)
     if (Parameters->ConsoleHandle == HANDLE_DETACHED_PROCESS)
     {
         /* No console to create */
-        DPRINT1("No console to create\n");
+        DPRINT("No console to create\n");
         Parameters->ConsoleHandle = NULL;
         Request.Data.AllocConsoleRequest.ConsoleNeeded = FALSE;
     }
     else if (Parameters->ConsoleHandle == HANDLE_CREATE_NEW_CONSOLE)
     {
         /* We'll get the real one soon */
-        DPRINT1("Creating new console\n");
+        DPRINT("Creating new console\n");
         Parameters->ConsoleHandle = NULL;
     }
     else if (Parameters->ConsoleHandle == HANDLE_CREATE_NO_WINDOW)
@@ -133,7 +133,7 @@ BasepInitConsole(VOID)
     }
     else
     {
-        DPRINT1("Using existing console: %x\n", Parameters->ConsoleHandle);
+        DPRINT("Using existing console: %x\n", Parameters->ConsoleHandle);
     }
 
     /* Initialize Console Ctrl Handler */
@@ -183,7 +183,7 @@ BasepInitConsole(VOID)
         }
     }
 
-    DPRINT1("Console setup: %lx, %lx, %lx, %lx\n", 
+    DPRINT("Console setup: %lx, %lx, %lx, %lx\n", 
             Parameters->ConsoleHandle,
             Parameters->StandardInput,
             Parameters->StandardOutput,

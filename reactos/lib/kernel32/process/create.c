@@ -86,7 +86,7 @@ BasepNotifyCsrOfCreation(ULONG dwCreationFlags,
     CSR_API_MESSAGE CsrRequest;
     NTSTATUS Status;
     
-    DPRINT1("BasepNotifyCsrOfCreation: Process: %lx, Flags %lx\n", 
+    DPRINT("BasepNotifyCsrOfCreation: Process: %lx, Flags %lx\n", 
             ProcessId, dwCreationFlags);
          
     /* Fill out the request */
@@ -308,13 +308,12 @@ BasepCopyHandles(IN PRTL_USER_PROCESS_PARAMETERS Params,
                  IN PRTL_USER_PROCESS_PARAMETERS PebParams,
                  IN BOOL InheritHandles)
 {
-    DPRINT1("BasepCopyHandles %p %p, %d\n", Params, PebParams, InheritHandles);
+    DPRINT("BasepCopyHandles %p %p, %d\n", Params, PebParams, InheritHandles);
 
     /* Copy the handle if we are inheriting or if it's a console handle */
     if (InheritHandles || IsConsoleHandle(PebParams->StandardInput))
     {
         Params->StandardInput = PebParams->StandardInput;
-        DPRINT1("Standard Input: %x\n", Params->StandardInput);
     }
     if (InheritHandles || IsConsoleHandle(PebParams->StandardOutput))
     {
@@ -352,7 +351,7 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
     UNICODE_STRING Desktop, Shell, Runtime, Title;
     PPEB OurPeb = NtCurrentPeb();
     
-    DPRINT1("BasepInitializeEnvironment\n");
+    DPRINT("BasepInitializeEnvironment\n");
     
     /* Get the full path name */
     RetVal = GetFullPathNameW(ApplicationPathName,
@@ -481,7 +480,7 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
     /* Write the handles only if we have to */
     if (StartupInfo->dwFlags & STARTF_USESTDHANDLES)
     {
-        DPRINT1("Using Standard Handles\n");
+        DPRINT("Using Standard Handles\n");
         ProcessParameters->StandardInput = StartupInfo->hStdInput;
         ProcessParameters->StandardOutput = StartupInfo->hStdOutput;
         ProcessParameters->StandardError = StartupInfo->hStdError;
@@ -510,7 +509,7 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
               (STARTF_USESTDHANDLES | STARTF_USEHOTKEY | STARTF_SHELLPRIVATE)))
         {
             /* Use handles from PEB, if inheriting or they are console */ 
-            DPRINT1("Copying handles from parent\n");
+            DPRINT("Copying handles from parent\n");
             BasepCopyHandles(ProcessParameters,
                              OurPeb->ProcessParameters,
                              InheritHandles);
