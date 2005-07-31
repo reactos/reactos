@@ -1868,7 +1868,7 @@ TreeResetNamedSecurityInfoW(LPWSTR pObjectName,
                 case SE_REGISTRY_KEY:
                 {
                     /* check the SecurityInfo flags for sanity (both, the protected
-                       and unprotected dacl/sacl flag must not be passed together */
+                       and unprotected dacl/sacl flag must not be passed together) */
                     if (((SecurityInfo & DACL_SECURITY_INFORMATION) &&
                          (SecurityInfo & (PROTECTED_DACL_SECURITY_INFORMATION | UNPROTECTED_DACL_SECURITY_INFORMATION)) ==
                              (PROTECTED_DACL_SECURITY_INFORMATION | UNPROTECTED_DACL_SECURITY_INFORMATION))
