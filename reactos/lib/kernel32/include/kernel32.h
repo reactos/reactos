@@ -26,9 +26,9 @@
 #define IsConsoleHandle(h) \
   (((((ULONG)h) & 0x10000003) == 0x3) ? TRUE : FALSE)
 
-#define HANDLE_DETACHED_PROCESS    (HANDLE)-1
-#define HANDLE_CREATE_NEW_CONSOLE  (HANDLE)-2
-#define HANDLE_CREATE_NO_WINDOW    (HANDLE)-3
+#define HANDLE_DETACHED_PROCESS    (HANDLE)-2
+#define HANDLE_CREATE_NEW_CONSOLE  (HANDLE)-3
+#define HANDLE_CREATE_NO_WINDOW    (HANDLE)-4
 
 /* Undocumented CreateProcess flag */
 #define STARTF_SHELLPRIVATE         0x400
