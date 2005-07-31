@@ -260,7 +260,7 @@ RtlpCreateAtomHandle(PRTL_ATOM_TABLE AtomTable, PRTL_ATOM_TABLE_ENTRY Entry)
    
    HandleIndex = ExCreateHandle(AtomTable->ExHandleTable,
                                 &ExEntry);
-   if (HandleIndex != 0)
+   if (HandleIndex != EX_INVALID_HANDLE)
    {
       /* FIXME - Handle Indexes >= 0xC000 ?! */
       if (HandleIndex < 0xC000)
