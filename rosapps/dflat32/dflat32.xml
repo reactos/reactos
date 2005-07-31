@@ -1,4 +1,4 @@
-<module name="dflat32" type="win32cui" installbase="system32" installname="dflat32.exe" warnings="true">
+<module name="dflat32" type="win32cui" installbase="system32" installname="edit.exe" warnings="true">
 	<include base="ReactOS">include/wine</include>
 	<include base="dflat32">.</include>
 	<define name="__USE_W32API" />
