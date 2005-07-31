@@ -729,7 +729,7 @@ void recvrequest(char *cmd, char *local, char *remote, char *mode,
 	int (*closefunc)(), _pclose(), fclose();
 	void (*oldintr)(int), (*oldintp)(int);
 	void abortrecv();
-	int oldverbose, oldtype = 0, is_retr, tcrflag, nfnd, bare_lfs = 0;
+	int oldverbose = 0, oldtype = 0, is_retr, tcrflag, nfnd, bare_lfs = 0;
 	char *gunique(), msg;
 //	static char *buf; // Szurgot: Shouldn't this go SOMEWHERE?
         char buf[1024];
