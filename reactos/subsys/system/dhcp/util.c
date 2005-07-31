@@ -1,6 +1,8 @@
 #include <stdarg.h>
-#include <reactos/debug.h>
 #include "rosdhcp.h"
+
+#define NDEBUG
+#include <reactos/debug.h>
 
 char *piaddr( struct iaddr addr ) {
     struct sockaddr_in sa;
