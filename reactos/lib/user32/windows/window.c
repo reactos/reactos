@@ -1467,25 +1467,23 @@ GetFocus(VOID)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HWND
 STDCALL
-SetTaskmanWindow(HWND x)
+SetTaskmanWindow(HWND hWnd)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    return NtUserCallHwndOpt(hWnd, HWNDOPT_ROUTINE_SETTASKMANWINDOW);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HWND
 STDCALL
-SetProgmanWindow(HWND x)
+SetProgmanWindow(HWND hWnd)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    return NtUserCallHwndOpt(hWnd, HWNDOPT_ROUTINE_SETTASKMANWINDOW);
 }
 
 /*

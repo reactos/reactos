@@ -226,7 +226,7 @@ CSR_API(CsrAllocConsole)
     PCSRSS_CONSOLE Console;
     NTSTATUS Status;
 
-    DPRINT1("CsrAllocConsole\n");
+    DPRINT("CsrAllocConsole\n");
 
     Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
     Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
@@ -250,7 +250,7 @@ CSR_API(CsrAllocConsole)
     /* If we don't need a console, then get out of here */
     if (!Request->Data.AllocConsoleRequest.ConsoleNeeded)
     {
-        DPRINT1("No console needed\n");
+        DPRINT("No console needed\n");
         return STATUS_SUCCESS;
     }
 
@@ -336,7 +336,7 @@ CSR_API(CsrAllocConsole)
 
     /* Set the Ctrl Dispatcher */
     ProcessData->CtrlDispatcher = Request->Data.AllocConsoleRequest.CtrlDispatcher;
-    DPRINT1("CSRSS:CtrlDispatcher address: %x\n", ProcessData->CtrlDispatcher);
+    DPRINT("CSRSS:CtrlDispatcher address: %x\n", ProcessData->CtrlDispatcher);
 
     /* Insert into the list */
     InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ProcessEntry);

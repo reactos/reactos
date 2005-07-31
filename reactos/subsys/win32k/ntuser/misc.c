@@ -11,7 +11,7 @@
 
 #include <w32k.h>
 
-#define DEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* registered Logon process */
@@ -716,6 +716,9 @@ NtUserCallHwndLock(
    return Ret;
 }
 
+/*
+ * @unimplemented
+ */
 HWND
 STDCALL
 NtUserCallHwndOpt(
@@ -725,15 +728,23 @@ NtUserCallHwndOpt(
    switch (Routine)
    {
       case HWNDOPT_ROUTINE_SETPROGMANWINDOW:
-         /* FIXME */
+         /* 
+          * FIXME 
+          * Nothing too hard...validate the hWnd and save it in the Desktop Info
+          */
+         DPRINT1("HWNDOPT_ROUTINE_SETPROGMANWINDOW UNIMPLEMENTED\n");
          break;
 
       case HWNDOPT_ROUTINE_SETTASKMANWINDOW:
-         /* FIXME */
+         /* 
+          * FIXME 
+          * Nothing too hard...validate the hWnd and save it in the Desktop Info
+          */
+         DPRINT1("HWNDOPT_ROUTINE_SETTASKMANWINDOW UNIMPLEMENTED\n");
          break;
    }
 
-   return 0;
+   return Param;
 }
 
 /*
