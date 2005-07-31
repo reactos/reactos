@@ -72,7 +72,7 @@ NTSTATUS STDCALL CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, O
     }
   if (!CsrIsConsoleHandle(Handle) || ProcessData->HandleTableSize <= h)
     {
-      DPRINT1("CsrGetObject returning invalid handle\n");
+      DPRINT1("CsrGetObject returning invalid handle (%x)\n", Handle);
       return STATUS_INVALID_HANDLE;
     }
   *Object = ProcessData->HandleTable[h];
@@ -174,6 +174,43 @@ NTSTATUS STDCALL CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handl
    *Handle = (HANDLE)(((i + 1) << 2) | 0x3);
    InterlockedIncrement( &Object->ReferenceCount );
    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+   return(STATUS_SUCCESS);
+}
+
+NTSTATUS STDCALL CsrDuplicateHandleTable(PCSRSS_PROCESS_DATA SourceProcessData,
+                                         PCSRSS_PROCESS_DATA TargetProcessData)
+{
+    ULONG i;
+
+    if (SourceProcessData == NULL || 
+        TargetProcessData == NULL ||
+        TargetProcessData->HandleTableSize)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    RtlEnterCriticalSection(&SourceProcessData->HandleTableLock);
+
+    /* we are called from CreateProcessData, it isn't necessary to lock the target process data */
+
+    TargetProcessData->HandleTable = RtlAllocateHeap(CsrssApiHeap,
+			                             HEAP_ZERO_MEMORY,
+			                             SourceProcessData->HandleTableSize * sizeof(HANDLE));
+    if (TargetProcessData->HandleTable == NULL)
+    {
+        RtlLeaveCriticalSection(&SourceProcessData->HandleTableLock);
+	return(STATUS_UNSUCCESSFUL);
+    }
+    TargetProcessData->HandleTableSize = SourceProcessData->HandleTableSize;
+    for (i = 0; i < SourceProcessData->HandleTableSize; i++)
+    {
+        if (SourceProcessData->HandleTable[i])
+        {
+            TargetProcessData->HandleTable[i] = SourceProcessData->HandleTable[i];
+            InterlockedIncrement( &SourceProcessData->HandleTable[i]->ReferenceCount );
+        }
+    }
+   RtlLeaveCriticalSection(&SourceProcessData->HandleTableLock);
    return(STATUS_SUCCESS);
 }
 

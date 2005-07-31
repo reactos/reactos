@@ -212,7 +212,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
     }
   Console->ActiveBuffer = NewBuffer;
   /* add a reference count because the buffer is tied to the console */
-  Console->ActiveBuffer->Header.ReferenceCount++;
+  InterlockedIncrement(&Console->ActiveBuffer->Header.ReferenceCount);
   /* make console active, and insert into console list */
   /* copy buffer contents to screen */
   ConioDrawConsole(Console);
@@ -225,6 +225,7 @@ CSR_API(CsrAllocConsole)
 {
     PCSRSS_CONSOLE Console;
     NTSTATUS Status;
+    BOOLEAN NewConsole = FALSE;
 
     DPRINT("CsrAllocConsole\n");
 
@@ -255,9 +256,11 @@ CSR_API(CsrAllocConsole)
     }
 
     /* If we already have one, then don't create a new one... */
-    if (!Request->Data.AllocConsoleRequest.Console)
+    if (!Request->Data.AllocConsoleRequest.Console ||
+        Request->Data.AllocConsoleRequest.Console != ProcessData->ParentConsole)
     {
         /* Allocate a console structure */
+        NewConsole = TRUE;
         Console = HeapAlloc(Win32CsrApiHeap, 0, sizeof(CSRSS_CONSOLE));
         if (NULL == Console)
         {
@@ -290,28 +293,32 @@ CSR_API(CsrAllocConsole)
     /* Add a reference count because the process is tied to the console */
     Console->Header.ReferenceCount++;
 
-    /* Insert the Objects */
-    Status = Win32CsrInsertObject(ProcessData, 
-                                  &Request->Data.AllocConsoleRequest.InputHandle, 
-                                  &Console->Header);
-    if (! NT_SUCCESS(Status))
+    if (NewConsole || !ProcessData->bInheritHandles)
     {
-        DPRINT1("Failed to insert object\n");
-        ConioDeleteConsole((Object_t *) Console);
-        ProcessData->Console = 0;
-        return Request->Status = Status;
-    }
-    Status = Win32CsrInsertObject(ProcessData, 
-                                  &Request->Data.AllocConsoleRequest.OutputHandle, 
-                                  &Console->ActiveBuffer->Header);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to insert object\n");
-        Console->Header.ReferenceCount--;
-        Win32CsrReleaseObject(ProcessData, 
-                              Request->Data.AllocConsoleRequest.InputHandle);
-        ProcessData->Console = 0;
-        return Request->Status = Status;
+        /* Insert the Objects */
+        Status = Win32CsrInsertObject(ProcessData, 
+                                      &Request->Data.AllocConsoleRequest.InputHandle, 
+                                      &Console->Header);
+        if (! NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to insert object\n");
+            ConioDeleteConsole((Object_t *) Console);
+            ProcessData->Console = 0;
+            return Request->Status = Status;
+        }
+    
+        Status = Win32CsrInsertObject(ProcessData, 
+                                      &Request->Data.AllocConsoleRequest.OutputHandle, 
+                                      &Console->ActiveBuffer->Header);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to insert object\n");
+            ConioDeleteConsole((Object_t *) Console);
+            Win32CsrReleaseObject(ProcessData, 
+                                  Request->Data.AllocConsoleRequest.InputHandle);
+            ProcessData->Console = 0;
+            return Request->Status = Status;
+        }
     }
 
     /* Duplicate the Event */
@@ -324,14 +331,16 @@ CSR_API(CsrAllocConsole)
                          0))
     {
         DPRINT1("DuplicateHandle() failed: %d\n", GetLastError);
-        Console->Header.ReferenceCount--;
-        Win32CsrReleaseObject(ProcessData,
-                              Request->Data.AllocConsoleRequest.OutputHandle);
-        Win32CsrReleaseObject(ProcessData,
-                              Request->Data.AllocConsoleRequest.InputHandle);
+        ConioDeleteConsole((Object_t *) Console);
+        if (NewConsole || !ProcessData->bInheritHandles)
+        {
+            Win32CsrReleaseObject(ProcessData,
+                                  Request->Data.AllocConsoleRequest.OutputHandle);
+            Win32CsrReleaseObject(ProcessData,
+                                  Request->Data.AllocConsoleRequest.InputHandle);
+        }
         ProcessData->Console = 0;
-        Request->Status = Status;
-        return Status;
+        return Request->Status = Status;
     }
 
     /* Set the Ctrl Dispatcher */
@@ -358,9 +367,8 @@ CSR_API(CsrFreeConsole)
     }
 
   Console = ProcessData->Console;
-  Console->Header.ReferenceCount--;
   ProcessData->Console = NULL;
-  if (0 == Console->Header.ReferenceCount)
+  if (0 == InterlockedDecrement(&Console->Header.ReferenceCount))
     {
       ConioDeleteConsole((Object_t *) Console);
     }
@@ -1002,7 +1010,7 @@ ConioDeleteConsole(Object_t *Object)
       HeapFree(Win32CsrApiHeap, 0, Event);
     }
 
-  if (0 == --Console->ActiveBuffer->Header.ReferenceCount)
+  if (0 == InterlockedDecrement(&Console->ActiveBuffer->Header.ReferenceCount))
     {
       ConioDeleteScreenBuffer((Object_t *) Console->ActiveBuffer);
     }

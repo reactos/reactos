@@ -35,6 +35,8 @@ typedef struct tagCSRSS_CONSOLE *PCSRSS_CONSOLE;
 typedef struct _CSRSS_PROCESS_DATA
 {
   PCSRSS_CONSOLE Console;
+  PCSRSS_CONSOLE ParentConsole;
+  BOOL bInheritHandles;
   RTL_CRITICAL_SECTION HandleTableLock;
   ULONG HandleTableSize;
   Object_t ** HandleTable;
@@ -116,6 +118,7 @@ NTSTATUS STDCALL CsrFreeProcessData( HANDLE Pid );
 /* api/handle.c */
 NTSTATUS FASTCALL CsrRegisterObjectDefinitions(PCSRSS_OBJECT_DEFINITION NewDefinitions);
 NTSTATUS STDCALL CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handle, Object_t *Object );
+NTSTATUS STDCALL CsrDuplicateHandleTable(PCSRSS_PROCESS_DATA SourceProcessData, PCSRSS_PROCESS_DATA TargetProcessData);
 NTSTATUS STDCALL CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Object_t **Object );
 BOOL STDCALL CsrServerInitialization (ULONG ArgumentCount, PWSTR *ArgumentArray);
 NTSTATUS STDCALL CsrReleaseObjectByPointer(Object_t *Object);

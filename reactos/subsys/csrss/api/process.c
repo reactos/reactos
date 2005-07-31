@@ -192,6 +192,7 @@ NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
 CSR_API(CsrCreateProcess)
 {
    PCSRSS_PROCESS_DATA NewProcessData;
+   NTSTATUS Status;
 
    Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
    Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
@@ -203,6 +204,16 @@ CSR_API(CsrCreateProcess)
 	return(STATUS_NO_MEMORY);
      }
 
+   if (!(Request->Data.CreateProcessRequest.Flags & (CREATE_NEW_CONSOLE|DETACHED_PROCESS)))
+     {
+       NewProcessData->ParentConsole = ProcessData->Console;
+       NewProcessData->bInheritHandles = Request->Data.CreateProcessRequest.bInheritHandles;
+       if (Request->Data.CreateProcessRequest.bInheritHandles)
+         {
+           Status = CsrDuplicateHandleTable(ProcessData, NewProcessData);
+         }
+     }
+    
    /* Set default shutdown parameters */
    NewProcessData->ShutdownLevel = 0x280;
    NewProcessData->ShutdownFlags = 0;
