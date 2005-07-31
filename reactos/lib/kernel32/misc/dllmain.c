@@ -95,9 +95,9 @@ BasepInitConsole(VOID)
     WCHAR lpTest[MAX_PATH];
     GetModuleFileNameW(NULL, lpTest, MAX_PATH);
     DPRINT1("BasepInitConsole for : %S\n", lpTest);
-    DPRINT1("Our current console handles are: %lx, %lx, %lx\n", 
+    DPRINT1("Our current console handles are: %lx, %lx, %lx %lx\n", 
             Parameters->ConsoleHandle, Parameters->StandardInput, 
-            Parameters->StandardOutput);
+            Parameters->StandardOutput, Parameters->StandardError);
 
     /* We have nothing to do if this isn't a console app... */
     if (RtlImageNtHeader(GetModuleHandle(NULL))->OptionalHeader.Subsystem !=
@@ -166,29 +166,28 @@ BasepInitConsole(VOID)
     }
 
     /* We got the handles, let's set them */
-    Parameters->ConsoleHandle = Request.Data.AllocConsoleRequest.Console;
-
-    /* If we already had some, don't use the new ones */
-    if (!Parameters->StandardInput)
+    if ((Parameters->ConsoleHandle = Request.Data.AllocConsoleRequest.Console))
     {
-        Parameters->StandardInput = Request.Data.AllocConsoleRequest.InputHandle;
-    }
-    if (!Parameters->StandardOutput)
-    {
-        Parameters->StandardOutput = Request.Data.AllocConsoleRequest.OutputHandle;
-    }
-    if (!Parameters->StandardError)
-    {
-        Parameters->StandardError = DuplicateConsoleHandle(Request.Data.AllocConsoleRequest.OutputHandle,
-                                                           0,
-                                                           TRUE,
-                                                           DUPLICATE_SAME_ACCESS);
+        /* If we already had some, don't use the new ones */
+        if (!Parameters->StandardInput)
+        {
+            Parameters->StandardInput = Request.Data.AllocConsoleRequest.InputHandle;
+        }
+        if (!Parameters->StandardOutput)
+        {
+            Parameters->StandardOutput = Request.Data.AllocConsoleRequest.OutputHandle;
+        }
+        if (!Parameters->StandardError)
+        {
+            Parameters->StandardError = Request.Data.AllocConsoleRequest.OutputHandle;
+        }
     }
 
-    DPRINT1("Console setup: %lx, %lx, %lx\n", 
+    DPRINT1("Console setup: %lx, %lx, %lx, %lx\n", 
             Parameters->ConsoleHandle,
             Parameters->StandardInput,
-            Parameters->StandardOutput);
+            Parameters->StandardOutput,
+            Parameters->StandardError);
     return TRUE;
 }
 
