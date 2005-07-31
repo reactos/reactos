@@ -80,7 +80,8 @@ BaseProcessStartup(PPROCESS_START_ROUTINE lpStartAddress)
 NTSTATUS
 STDCALL
 BasepNotifyCsrOfCreation(ULONG dwCreationFlags,
-                         IN HANDLE ProcessId)
+                         IN HANDLE ProcessId,
+                         IN BOOL InheritHandles)
 {
     ULONG Request = CREATE_PROCESS;
     CSR_API_MESSAGE CsrRequest;
@@ -92,6 +93,7 @@ BasepNotifyCsrOfCreation(ULONG dwCreationFlags,
     /* Fill out the request */
     CsrRequest.Data.CreateProcessRequest.NewProcessId = ProcessId;
     CsrRequest.Data.CreateProcessRequest.Flags = dwCreationFlags;
+    CsrRequest.Data.CreateProcessRequest.bInheritHandles = InheritHandles;
     
     /* Call CSR */
     Status = CsrClientCallServer(&CsrRequest,
@@ -164,10 +166,10 @@ BasepCreateFirstThread(HANDLE ProcessHandle,
  */
 PVOID
 STDCALL
-BasepConvertUnicodeEnvironment(IN PVOID lpEnvironment)
+BasepConvertUnicodeEnvironment(OUT SIZE_T* EnvSize,
+                               IN PVOID lpEnvironment)
 {
     PCHAR pcScan;
-    SIZE_T EnvSize = 0;
     ANSI_STRING AnsiEnv;
     UNICODE_STRING UnicodeEnv;
     NTSTATUS Status;
@@ -175,31 +177,43 @@ BasepConvertUnicodeEnvironment(IN PVOID lpEnvironment)
     DPRINT("BasepConvertUnicodeEnvironment\n");
 
     /* Scan the environment to calculate its Unicode size */
-    AnsiEnv.Buffer = pcScan = lpEnvironment;
-    while (*pcScan) while (*pcScan++);
+    AnsiEnv.Buffer = pcScan = (PCHAR)lpEnvironment;
+    while (*pcScan) 
+    {
+        pcScan += strlen(pcScan) + 1;
+    }
 
     /* Create our ANSI String */
-    AnsiEnv.Length = (ULONG_PTR)pcScan - (ULONG_PTR)lpEnvironment + 1;
+    if (pcScan == (PCHAR)lpEnvironment)
+    {
+        AnsiEnv.Length = 2 * sizeof(CHAR);
+    }
+    else
+    {
+
+        AnsiEnv.Length = (ULONG_PTR)pcScan - (ULONG_PTR)lpEnvironment + sizeof(CHAR);
+    }
     AnsiEnv.MaximumLength = AnsiEnv.Length + 1;
     
     /* Allocate memory for the Unicode Environment */
     UnicodeEnv.Buffer = NULL;
-    EnvSize = AnsiEnv.MaximumLength * sizeof(WCHAR);
+    *EnvSize = AnsiEnv.MaximumLength * sizeof(WCHAR);
     Status = NtAllocateVirtualMemory(NtCurrentProcess(),
                                      (PVOID)&UnicodeEnv.Buffer,
                                      0,
-                                     &EnvSize,
+                                     EnvSize,
                                      MEM_COMMIT,
                                      PAGE_READWRITE);
     /* Failure */
     if (!NT_SUCCESS(Status))
     {
         SetLastError(Status);
+        *EnvSize = 0;
         return NULL;
     }
         
     /* Use the allocated size */
-    UnicodeEnv.MaximumLength = EnvSize;
+    UnicodeEnv.MaximumLength = *EnvSize;
     
     /* Convert */
     RtlAnsiStringToUnicodeString(&UnicodeEnv, &AnsiEnv, FALSE);
@@ -332,7 +346,8 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
                            LPWSTR ApplicationPathName,
                            LPWSTR lpCurrentDirectory,
                            LPWSTR lpCommandLine,
-                           LPVOID Environment,
+                           LPVOID lpEnvironment,
+                           SIZE_T EnvSize,
                            LPSTARTUPINFOW StartupInfo,
                            DWORD CreationFlags,
                            BOOL InheritHandles)
@@ -350,6 +365,7 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
     ULONG Size;
     UNICODE_STRING Desktop, Shell, Runtime, Title;
     PPEB OurPeb = NtCurrentPeb();
+    LPVOID Environment = lpEnvironment;
     
     DPRINT("BasepInitializeEnvironment\n");
     
@@ -437,10 +453,28 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
     /* Find the environment size */
     if (ScanChar)
     {
-        while (*ScanChar) while (*ScanChar++);
-        
-        /* Calculate the size of the block */
-        EnviroSize = (ULONG)((ULONG_PTR)ScanChar - (ULONG_PTR)Environment);
+        if (EnvSize && Environment == lpEnvironment)
+        {
+            /* its a converted ansi environment, bypass the length calculation */
+            EnviroSize = EnvSize;
+        }
+        else
+        {
+            while (*ScanChar) 
+            {
+                ScanChar += wcslen(ScanChar) + 1;
+            }
+
+            /* Calculate the size of the block */
+            if (ScanChar == Environment)
+            {
+                EnviroSize = 2 * sizeof(WCHAR);
+            }
+            else
+            {
+                EnviroSize = (ULONG)((ULONG_PTR)ScanChar - (ULONG_PTR)Environment + sizeof(WCHAR));
+            }
+        }
         DPRINT("EnvironmentSize %ld\n", EnviroSize);
 
         /* Allocate and Initialize new Environment Block */
@@ -513,7 +547,7 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
             BasepCopyHandles(ProcessParameters,
                              OurPeb->ProcessParameters,
                              InheritHandles);
-       }
+        }
     }
     
     /* Also set the Console Flag */
@@ -741,7 +775,6 @@ CreateProcessW(LPCWSTR lpApplicationName,
     LPWSTR BatchCommandLine;
     ULONG CmdLineLength;
     UNICODE_STRING CommandLineString;
-    LPWSTR TempBuffer;
     PWCHAR Extension;
     LPWSTR QuotedCmdLine = NULL;
     LPWSTR ScanString;
@@ -754,6 +787,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
     CLIENT_ID ClientId;
     PPEB OurPeb = NtCurrentPeb();
     PPEB RemotePeb;
+    SIZE_T EnvSize = 0;
     
     DPRINT("CreateProcessW: lpApplicationName: %S lpCommandLine: %S"
            " lpEnvironment: %p lpCurrentDirectory: %S dwCreationFlags: %lx\n",
@@ -837,13 +871,6 @@ CreateProcessW(LPCWSTR lpApplicationName,
     /* Easy stuff first, convert the process priority class */
     PriorityClass.Foreground = FALSE;
     PriorityClass.PriorityClass = BasepConvertPriorityClass(dwCreationFlags);
-
-    /* Convert the environment */
-    if(lpEnvironment && !(dwCreationFlags & CREATE_UNICODE_ENVIRONMENT))
-    {
-        lpEnvironment = BasepConvertUnicodeEnvironment(lpEnvironment);
-        if (!lpEnvironment) return FALSE;
-    }
 
     /* Get the application name and do all the proper formating necessary */
 GetAppName:
@@ -1042,8 +1069,9 @@ GetAppName:
             case STATUS_INVALID_IMAGE_PROTECT:
             case STATUS_INVALID_IMAGE_NOT_MZ:
             
-            /* If it's a DOS app, use VDM
-            if ((BasepCheckDosApp(&ApplicationName))) */
+#if 0
+            /* If it's a DOS app, use VDM */
+            if ((BasepCheckDosApp(&ApplicationName))) 
             {
                 DPRINT1("Launching VDM...\n");
                 RtlFreeHeap(GetProcessHeap(), 0, NameBuffer);
@@ -1058,8 +1086,8 @@ GetAppName:
                                       lpCurrentDirectory,
                                       lpStartupInfo,
                                       lpProcessInformation);    
-            }
-            
+            } 
+#endif            
             /* It's a batch file */
             Extension = &ApplicationName.Buffer[ApplicationName.Length / 
                                                 sizeof(WCHAR) - 4];
@@ -1103,10 +1131,8 @@ GetAppName:
             lpApplicationName = NULL;
             
             /* Free memory */
-            RtlFreeHeap(GetProcessHeap(), 0, TempBuffer);
             RtlFreeHeap(GetProcessHeap(), 0, ApplicationName.Buffer);
             ApplicationName.Buffer = NULL;
-            TempBuffer = NULL;
             goto GetAppName;
             break;
             
@@ -1287,6 +1313,13 @@ GetAppName:
                                        sizeof(ProcessBasicInfo),
                                        NULL);
     
+    /* Convert the environment */
+    if(lpEnvironment && !(dwCreationFlags & CREATE_UNICODE_ENVIRONMENT))
+    {
+        lpEnvironment = BasepConvertUnicodeEnvironment(&EnvSize, lpEnvironment);
+        if (!lpEnvironment) return FALSE;
+    }
+
     /* Create Process Environment */
     RemotePeb = ProcessBasicInfo.PebBaseAddress;
     Status = BasepInitializeEnvironment(hProcess,
@@ -1296,9 +1329,17 @@ GetAppName:
                                         (QuotesNeeded || CmdLineIsAppName) ?
                                         QuotedCmdLine : lpCommandLine,
                                         lpEnvironment,
+                                        EnvSize,
                                         lpStartupInfo,
                                         dwCreationFlags,
                                         bInheritHandles);
+
+    /* Cleanup Environment */    
+    if (lpEnvironment && !(dwCreationFlags & CREATE_UNICODE_ENVIRONMENT))
+    {
+        RtlDestroyEnvironment(lpEnvironment);
+    }
+
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Could not initialize Process Environment\n");
@@ -1357,7 +1398,8 @@ GetAppName:
     
     /* Notify CSRSS */
     Status = BasepNotifyCsrOfCreation(dwCreationFlags,
-                                      (HANDLE)ProcessBasicInfo.UniqueProcessId);
+                                      (HANDLE)ProcessBasicInfo.UniqueProcessId,
+                                      bInheritHandles);
 
     if (!NT_SUCCESS(Status))
     {
@@ -1371,12 +1413,6 @@ GetAppName:
         NtResumeThread(hThread, &Dummy);
     }
     
-    /* Cleanup Environment */    
-    if (lpEnvironment && !(dwCreationFlags & CREATE_UNICODE_ENVIRONMENT))
-    {
-        RtlDestroyEnvironment(lpEnvironment);
-    }
-
     /* Return Data */        
     lpProcessInformation->dwProcessId = (DWORD)ClientId.UniqueProcess;
     lpProcessInformation->dwThreadId = (DWORD)ClientId.UniqueThread;
