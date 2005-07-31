@@ -55,6 +55,7 @@ KdbpSymFindUserModule(IN PVOID Address  OPTIONAL,
   PEPROCESS CurrentProcess;
   PPEB Peb = NULL;
   INT Count = 0;
+  INT Length;
 
   CurrentProcess = PsGetCurrentProcess();
   if (CurrentProcess != NULL)
@@ -73,15 +74,12 @@ KdbpSymFindUserModule(IN PVOID Address  OPTIONAL,
          current_entry != NULL)
     {
       current = CONTAINING_RECORD(current_entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
-
+      Length = min(current->BaseDllName.Length / sizeof(WCHAR), 255);
       if ((Address != NULL && (Address >= (PVOID)current->DllBase &&
                                Address < (PVOID)((char *)current->DllBase + current->SizeOfImage))) ||
-          (Name != NULL && _wcsicmp(current->BaseDllName.Buffer, Name) == 0) ||
+          (Name != NULL && _wcsnicmp(current->BaseDllName.Buffer, Name, Length) == 0) ||
           (Index >= 0 && Count++ == Index))
         {
-	  INT Length = current->BaseDllName.Length;
-	  if (Length > 255)
-	    Length = 255;
 	  wcsncpy(pInfo->Name, current->BaseDllName.Buffer, Length);
 	  pInfo->Name[Length] = L'\0';
           pInfo->Base = (ULONG_PTR)current->DllBase;
@@ -111,6 +109,7 @@ KdbpSymFindModule(IN PVOID Address  OPTIONAL,
   PLDR_DATA_TABLE_ENTRY current;
   extern LIST_ENTRY ModuleListHead;
   INT Count = 0;
+  INT Length;
 
   current_entry = ModuleListHead.Flink;
 
@@ -118,15 +117,14 @@ KdbpSymFindModule(IN PVOID Address  OPTIONAL,
     {
       current = CONTAINING_RECORD(current_entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
 
+      Length = min(current->BaseDllName.Length / sizeof(WCHAR), 255);
       if ((Address != NULL && (Address >= (PVOID)current->DllBase &&
                                Address < (PVOID)((ULONG_PTR)current->DllBase + current->SizeOfImage))) ||
-          (Name != NULL && _wcsnicmp(current->BaseDllName.Buffer, Name,
-                                     current->BaseDllName.Length / sizeof(WCHAR)) == 0) ||
+          (Name != NULL && _wcsnicmp(current->BaseDllName.Buffer, Name, Length) == 0) ||
           (Index >= 0 && Count++ == Index))
         {
-	  wcsncpy(pInfo->Name, current->BaseDllName.Buffer,
-	          min(255, current->BaseDllName.Length / sizeof(WCHAR)));
-	  pInfo->Name[255] = L'\0';
+	  wcsncpy(pInfo->Name, current->BaseDllName.Buffer, Length);
+	  pInfo->Name[Length] = L'\0';
           pInfo->Base = (ULONG_PTR)current->DllBase;
           pInfo->Size = current->SizeOfImage;
           pInfo->RosSymInfo = current->RosSymInfo;
