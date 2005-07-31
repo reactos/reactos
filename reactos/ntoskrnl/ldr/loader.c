@@ -161,8 +161,8 @@ LdrpLoadImage (
     if (ModuleBase)
         *ModuleBase = ModuleObject->DllBase;
 
-    //if (SectionPointer)
-    //    *SectionPointer = ModuleObject->
+    if (SectionPointer)
+        *SectionPointer = ModuleObject;
 
     if (EntryPoint)
         *EntryPoint = ModuleObject->EntryPoint;
@@ -204,7 +204,7 @@ LdrpLoadAndCallImage ( PUNICODE_STRING ModuleName )
     DriverEntry = (PDRIVER_INITIALIZE)ModuleObject->EntryPoint;
 
     RtlZeroMemory(&DriverObject, sizeof(DriverObject));
-    DriverObject.DriverStart = ModuleObject->DllBase;
+//    DriverObject.DriverStart = ModuleObject->DllBase;
 
     Status = DriverEntry(&DriverObject, NULL);
     if (!NT_SUCCESS(Status))
@@ -768,6 +768,7 @@ LdrPEProcessModule(
     }
 
     RtlCopyUnicodeString(&CreatedModuleObject->FullDllName, FileName);
+    CreatedModuleObject->FullDllName.Buffer[FileName->Length / sizeof(WCHAR)] = 0;
     LdrpBuildModuleBaseName(&CreatedModuleObject->BaseDllName,
         &CreatedModuleObject->FullDllName);
 
@@ -1482,13 +1483,14 @@ LdrPEFixupImports ( PLDR_DATA_TABLE_ENTRY Module )
     PCHAR ImportedName;
     PLDR_DATA_TABLE_ENTRY ImportedModule;
     NTSTATUS Status;
+    ULONG Size;
 
     /*  Process each import module  */
     ImportModuleDirectory = (PIMAGE_IMPORT_DESCRIPTOR)
         RtlImageDirectoryEntryToData(Module->DllBase,
         TRUE,
         IMAGE_DIRECTORY_ENTRY_IMPORT,
-        NULL);
+        &Size);
     DPRINT("Processeing import directory at %p\n", ImportModuleDirectory);
     while (ImportModuleDirectory->Name)
     {
