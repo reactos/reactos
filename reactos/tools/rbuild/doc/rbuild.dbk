@@ -14,7 +14,9 @@
     </author>
 
     <othercredit>
-      <surname>Emanuele Aliberti</surname>
+      <firstname>Emanuele</firstname>
+
+      <surname>Aliberti</surname>
     </othercredit>
 
     <copyright>
@@ -127,7 +129,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>None.</para>
         </section>
@@ -135,7 +137,7 @@
         <section>
           <title>Children</title>
 
-          <para><link linkend="???">xi:fallback</link>.</para>
+          <para><link linkend="element.xi.fallback">xi:fallback</link>.</para>
         </section>
       </section>
 
@@ -161,7 +163,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>None.</para>
         </section>
@@ -220,7 +222,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>None.</para>
         </section>
@@ -275,7 +277,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>Name of file.</para>
         </section>
@@ -287,7 +289,7 @@
         </section>
       </section>
 
-      <section>
+      <section id="element.compilerflag">
         <title>Compilerflag element</title>
 
         <para>A compilerflag element specifies additional flags to be bassed
@@ -306,7 +308,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>The compiler flags.</para>
         </section>
@@ -356,7 +358,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>None.</para>
         </section>
@@ -395,7 +397,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>Value of define. The value is optional.</para>
         </section>
@@ -434,7 +436,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>Name of module.</para>
         </section>
@@ -474,7 +476,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>None.</para>
         </section>
@@ -518,7 +520,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>Name of file.</para>
         </section>
@@ -537,7 +539,7 @@
         </section>
       </section>
 
-      <section>
+      <section id="element.group">
         <title>Group element</title>
 
         <para>A group element's purpose is grouping subelements.</para>
@@ -560,7 +562,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>None.</para>
         </section>
@@ -617,7 +619,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>None.</para>
         </section>
@@ -673,7 +675,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>None.</para>
         </section>
@@ -721,7 +723,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>Relative include directory.</para>
         </section>
@@ -762,7 +764,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>None.</para>
         </section>
@@ -808,7 +810,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>Name of file that is to be passed as a parameter to the build
           tool.</para>
@@ -864,7 +866,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>Name of file.</para>
         </section>
@@ -911,7 +913,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>None.</para>
         </section>
@@ -974,7 +976,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>The switches to pass to the linker.</para>
         </section>
@@ -1423,7 +1425,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>None.</para>
         </section>
@@ -1476,7 +1478,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>None.</para>
         </section>
@@ -1522,7 +1524,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>Name of file that is to be passed as a parameter to the build
           tool.</para>
@@ -1559,7 +1561,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>Name of the include file to be precompiled.</para>
         </section>
@@ -1616,7 +1618,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>None.</para>
         </section>
@@ -1676,7 +1678,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>None.</para>
         </section>
@@ -1722,7 +1724,7 @@
         </section>
 
         <section>
-          <title>Value</title>
+          <title>Content</title>
 
           <para>Name of symbol.</para>
         </section>
