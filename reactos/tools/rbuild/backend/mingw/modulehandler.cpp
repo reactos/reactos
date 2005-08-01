@@ -1419,7 +1419,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 	string def_file = GetDefinitionFilename ();
 
 	fprintf ( fMakefile,
-		"%s: %s %s $(RSYM_TARGET) | %s\n",
+		"%s: %s %s $(RSYM_TARGET) $(PEFIXUP_TARGET) | %s\n",
 		target.c_str (),
 		def_file.c_str (),
 		dependencies.c_str (),
@@ -1450,6 +1450,10 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          libsMacro.c_str (),
 		          GetLinkerMacro ().c_str () );
 	
+		fprintf ( fMakefile,
+		          "\t$(Q)$(PEFIXUP_TARGET) %s -exports\n",
+		          target.c_str () );
+
 		fprintf ( fMakefile,
 		          "\t-@${rm} %s 2>$(NUL)\n",
 		          temp_exp.c_str () );
