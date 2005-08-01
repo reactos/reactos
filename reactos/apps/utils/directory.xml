@@ -1,3 +1,4 @@
+<group>
 <directory name="net">
 	<xi:include href="net/directory.xml" />
 </directory>
@@ -7,4 +8,4 @@
 <directory name="ps">
 	<xi:include href="ps/ps.xml" />
 </directory>
-
+</group>

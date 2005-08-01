@@ -1,3 +1,4 @@
+<group>
 <directory name="posix">
 	<xi:include href="posix/directory.xml">
 		<xi:fallback>
@@ -26,3 +27,4 @@
 		</xi:fallback>
 	</xi:include>
 </directory>
+</group>

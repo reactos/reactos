@@ -1,3 +1,4 @@
+<group>
 <directory name="acledit">
 	<xi:include href="acledit/acledit.xml" />
 </directory>
@@ -316,3 +317,4 @@
 <directory name="zlib">
 	<xi:include href="zlib/zlib.xml" />
 </directory>
+</group>

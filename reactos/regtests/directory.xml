@@ -1,6 +1,8 @@
+<group>
 <directory name="regtests">
 	<xi:include href="regtests/regtests.xml" />
 </directory>
 <directory name="shared">
 	<xi:include href="shared/rtshared.xml" />
 </directory>
+</group>
