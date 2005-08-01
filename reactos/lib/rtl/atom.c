@@ -557,8 +557,6 @@ RtlPinAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
         RtlpUnlockAtomTable(AtomTable);
      }
 
-   RtlpLockAtomTable(AtomTable);
-
    return Status;
 }
 
