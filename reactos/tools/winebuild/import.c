@@ -20,14 +20,12 @@
  */
 
 #include "config.h"
-#include "wine/port.h"
 
 #include <ctype.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
-#include <stdlib.h>
 #ifdef HAVE_SYS_STAT_H
 # include <sys/stat.h>
 #endif
