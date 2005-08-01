@@ -192,14 +192,14 @@ ExAllocatePoolWithQuotaTag (IN POOL_TYPE PoolType,
             return EXCEPTION_CONTINUE_SEARCH;
         } _SEH_TRY {
             //* FIXME: Is there a way to get the actual Pool size allocated from the pool header? */
-            PsChargePoolQuota(Process, PoolType, NumberOfBytes);
+            PsChargePoolQuota(Process, PoolType & PAGED_POOL_MASK, NumberOfBytes);
         } _SEH_EXCEPT(FreeAndGoOn) {
             /* Quota Exceeded and the caller had no SEH! */
             KeBugCheck(STATUS_QUOTA_EXCEEDED);
         } _SEH_END;
 #else /* assuming all other Win32 compilers understand SEH */
         __try {
-            PsChargePoolQuota(Process, PoolType, NumberOfBytes);
+            PsChargePoolQuota(Process, PoolType & PAGED_POOL_MASK, NumberOfBytes);
         }
         __except (ExFreePool(Block), EXCEPTION_CONTINUE_SEARCH) {
             KeBugCheck(STATUS_QUOTA_EXCEEDED);
