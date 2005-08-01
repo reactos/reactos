@@ -18,7 +18,7 @@
 		<property name="DBG_OR_KDBG" value="true" />
 	</if>
 	<if property="DBG" value="0">
-		<compilerflag>-Os</compilerflag>
+		<compilerflag>-O3</compilerflag>
 		<compilerflag>-Wno-strict-aliasing</compilerflag>
 		<compilerflag>-ftracer</compilerflag>
 		<compilerflag>-momit-leaf-frame-pointer</compilerflag>

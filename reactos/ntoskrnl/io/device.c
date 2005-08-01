@@ -251,8 +251,8 @@ IoAttachDevice(PDEVICE_OBJECT SourceDevice,
                PDEVICE_OBJECT *AttachedDevice)
 {
    NTSTATUS Status;
-   PFILE_OBJECT FileObject;
-   PDEVICE_OBJECT TargetDevice;
+   PFILE_OBJECT FileObject = NULL;
+   PDEVICE_OBJECT TargetDevice = NULL;
 
     /* Call the helper routine for an attach operation */
     DPRINT("IoAttachDevice\n");
