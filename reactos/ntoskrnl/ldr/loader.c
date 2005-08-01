@@ -1116,7 +1116,7 @@ LdrPEPerformRelocations (
 
             /*
             * Don't relocate within the relocation section itself.
-            * GCC/LD generates sometimes relocation records for the relecotion section.
+            * GCC/LD generates sometimes relocation records for the relocation section.
             * This is a bug in GCC/LD.
             */
             if ((ULONG_PTR)ShortPtr < (ULONG_PTR)RelocationDir ||
@@ -1242,11 +1242,10 @@ LdrPEGetExportByName (
     PDWORD * ExFunctions;
     PDWORD * ExNames;
     USHORT * ExOrdinals;
-    ULONG i;
     PVOID ExName;
     ULONG Ordinal;
     PVOID Function;
-    LONG minn, maxn;
+    LONG minn, maxn, mid, res;
     ULONG ExportDirSize;
 
     DPRINT("LdrPEGetExportByName %x %s %hu\n", BaseAddress, SymbolName, Hint);
@@ -1305,15 +1304,12 @@ LdrPEGetExportByName (
     }
 
     /*
-    * Try a binary search first
+    * Binary search
     */
     minn = 0;
     maxn = ExportDir->NumberOfNames - 1;
     while (minn <= maxn)
     {
-        LONG mid;
-        LONG res;
-
         mid = (minn + maxn) / 2;
 
         ExName = RVA(BaseAddress, ExNames[mid]);
@@ -1338,11 +1334,6 @@ LdrPEGetExportByName (
                 return Function;
             }
         }
-        else if (minn == maxn)
-        {
-            DPRINT("LdrPEGetExportByName(): binary search failed\n");
-            break;
-        }
         else if (res > 0)
         {
             maxn = mid - 1;
@@ -1353,31 +1344,7 @@ LdrPEGetExportByName (
         }
     }
 
-    /*
-    * Fall back on a linear search
-    */
-    DPRINT("LdrPEGetExportByName(): Falling back on a linear search of export table\n");
-    for (i = 0; i < ExportDir->NumberOfNames; i++)
-    {
-        ExName = RVA(BaseAddress, ExNames[i]);
-        if (strcmp(ExName, (PCHAR)SymbolName) == 0)
-        {
-            Ordinal = ExOrdinals[i];
-            Function = RVA(BaseAddress, ExFunctions[Ordinal]);
-            DPRINT("%x %x %x\n", Function, ExportDir, ExportDir + ExportDirSize);
-            if ((ULONG_PTR)Function >= (ULONG_PTR)ExportDir &&
-                (ULONG_PTR)Function < (ULONG_PTR)ExportDir + ExportDirSize)
-            {
-                DPRINT("Forward: %s\n", (PCHAR)Function);
-                Function = LdrPEFixupForward((PCHAR)Function);
-            }
-            if (Function == NULL)
-            {
-                break;
-            }
-            return Function;
-        }
-    }
+    ExName = RVA(BaseAddress, ExNames[mid]);
     DPRINT1("LdrPEGetExportByName(): failed to find %s\n",SymbolName);
     return (PVOID)NULL;
 }
