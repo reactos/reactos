@@ -761,7 +761,7 @@ BOOL WINAPI SetupDiGetActualSectionToInstallA(
     LPWSTR InfSectionNameW = NULL;
     PWSTR InfSectionWithExtW = NULL;
     PWSTR ExtensionW;
-    BOOL bResult;
+    BOOL bResult = FALSE;
 
     TRACE("\n");
 
@@ -932,6 +932,8 @@ BOOL WINAPI SetupDiGetClassDescriptionExA(
             goto end;
         }
     }
+    else
+        ClassDescriptionW = NULL;
 
     if (MachineName)
     {
@@ -2005,7 +2007,7 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyA(
     {
         if (bIsStringProperty && PropertyBufferSize > 0)
         {
-            if (WideCharToMultiByte(CP_ACP, 0, (LPWSTR)PropertyBufferW, RequiredSizeW / sizeof(WCHAR), PropertyBuffer, PropertyBufferSize, NULL, NULL) == 0)
+            if (WideCharToMultiByte(CP_ACP, 0, (LPWSTR)PropertyBufferW, RequiredSizeW / sizeof(WCHAR), (LPSTR)PropertyBuffer, PropertyBufferSize, NULL, NULL) == 0)
             {
                 /* Last error is already set by WideCharToMultiByte */
                 bResult = FALSE;
@@ -2067,9 +2069,6 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyW(
 
         switch (Property)
         {
-            LPCWSTR RegistryPropertyName;
-            DWORD BufferSize;
-
             case SPDRP_CAPABILITIES:
             case SPDRP_CLASS:
             case SPDRP_CLASSGUID:
@@ -2087,6 +2086,9 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyW(
             case SPDRP_UI_NUMBER:
             case SPDRP_UPPERFILTERS:
             {
+                LPCWSTR RegistryPropertyName;
+                DWORD BufferSize;
+                
                 switch (Property)
                 {
                     case SPDRP_CAPABILITIES:
@@ -2123,7 +2125,7 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyW(
                         RegistryPropertyName = L"UpperFilters"; break;
                     default:
                         /* Should not happen */
-                        break;
+                        RegistryPropertyName = NULL; break;
                 }
 
                 /* Open registry key name */
