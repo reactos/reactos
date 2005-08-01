@@ -724,7 +724,7 @@ void abortrecv()
 void recvrequest(char *cmd, char *local, char *remote, char *mode,
                 int printnames)
 {
-	FILE *fout;
+	FILE *fout = stdout;
         int din = 0;
 	int (*closefunc)(), _pclose(), fclose();
 	void (*oldintr)(int), (*oldintp)(int);
