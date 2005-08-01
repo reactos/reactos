@@ -104,48 +104,22 @@ MmDeleteKernelStack(PVOID Stack,
 }
 
 VOID
-MiFreePebPage(PVOID Context,
-              MEMORY_AREA* MemoryArea,
-              PVOID Address,
-              PFN_TYPE Page,
-              SWAPENTRY SwapEntry,
-              BOOLEAN Dirty)
-{
-    PEPROCESS Process = (PEPROCESS)Context;
-
-    if (Page != 0)
-    {
-        SWAPENTRY SavedSwapEntry;
-        SavedSwapEntry = MmGetSavedSwapEntryPage(Page);
-        if (SavedSwapEntry != 0)
-        {
-            MmFreeSwapPage(SavedSwapEntry);
-            MmSetSavedSwapEntryPage(Page, 0);
-        }
-        MmDeleteRmap(Page, Process, Address);
-        MmReleasePageMemoryConsumer(MC_USER, Page);
-    }
-    else if (SwapEntry != 0)
-    {
-        MmFreeSwapPage(SwapEntry);
-    }
-}
-
-VOID
 STDCALL
 MmDeleteTeb(PEPROCESS Process,
             PTEB Teb)
 {
     PMADDRESS_SPACE ProcessAddressSpace = &Process->AddressSpace;
+    PMEMORY_AREA MemoryArea;
 
     /* Lock the Address Space */
     MmLockAddressSpace(ProcessAddressSpace);
-
-    /* Delete the Stack */
-    MmFreeMemoryAreaByPtr(ProcessAddressSpace,
-                          Teb,
-                          MiFreePebPage,
-                          Process);
+    
+    MemoryArea = MmLocateMemoryAreaByAddress(ProcessAddressSpace, (PVOID)Teb);
+    if (MemoryArea)
+    {
+       /* Delete the Teb */
+       MmFreeVirtualMemory(Process, MemoryArea);
+    }
 
     /* Unlock the Address Space */
     MmUnlockAddressSpace(ProcessAddressSpace);
