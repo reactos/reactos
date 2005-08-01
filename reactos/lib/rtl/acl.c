@@ -266,9 +266,9 @@ RtlAddAce(PACL Acl,
           ULONG AceListLength)
 {
    PACE Ace;
-   ULONG i;
    PACE Current;
-   ULONG j;
+   ULONG NewAceCount;
+   ULONG Index;
 
    PAGED_CODE_RTL();
 
@@ -289,41 +289,35 @@ RtlAddAce(PACL Acl,
       return(STATUS_INVALID_PARAMETER);
    }
 
-   i = 0;
-   Current = (PACE)(Acl + 1);
-   while ((ULONG_PTR)Current < ((ULONG_PTR)AceList + AceListLength))
+   for (Current = AceList, NewAceCount = 0;
+        (ULONG_PTR)Current < ((ULONG_PTR)AceList + AceListLength);
+        Current = (PACE)((ULONG_PTR)Current + Current->Header.AceSize),
+        ++NewAceCount)
    {
       if (AceList->Header.AceType == ACCESS_ALLOWED_COMPOUND_ACE_TYPE &&
           AclRevision < ACL_REVISION3)
       {
          return(STATUS_INVALID_PARAMETER);
       }
-      Current = (PACE)((ULONG_PTR)Current + Current->Header.AceSize);
    }
 
    if (Ace == NULL ||
-       ((ULONG_PTR)Ace + AceListLength) >= ((ULONG_PTR)Acl + Acl->AclSize))
+       ((ULONG_PTR)Ace + AceListLength) > ((ULONG_PTR)Acl + Acl->AclSize))
    {
       return(STATUS_BUFFER_TOO_SMALL);
    }
 
-   if (StartingIndex != 0)
+   Current = (PACE)(Acl + 1);
+   for (Index = 0; Index < StartingIndex && Index < Acl->AceCount; Index++)
    {
-      if (Acl->AceCount > 0)
-      {
-         Current = (PACE)(Acl + 1);
-         for (j = 0; j < StartingIndex; j++)
-         {
-            Current = (PACE)((ULONG_PTR)Current + Current->Header.AceSize);
-         }
-      }
+      Current = (PACE)((ULONG_PTR)Current + Current->Header.AceSize);
    }
 
    RtlpAddData(AceList,
                AceListLength,
                Current,
                (ULONG)((ULONG_PTR)Ace - (ULONG_PTR)Current));
-   Acl->AceCount = Acl->AceCount + i;
+   Acl->AceCount = Acl->AceCount + NewAceCount;
    Acl->AclRevision = AclRevision;
 
    return(STATUS_SUCCESS);
