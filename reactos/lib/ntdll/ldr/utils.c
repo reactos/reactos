@@ -1077,7 +1077,6 @@ LdrGetExportByName(PVOID BaseAddress,
    PDWORD                       * ExFunctions;
    PDWORD                       * ExNames;
    USHORT                       * ExOrdinals;
-   ULONG                        i;
    PVOID                        ExName;
    ULONG                        Ordinal;
    PVOID                        Function;
@@ -1142,7 +1141,7 @@ LdrGetExportByName(PVOID BaseAddress,
      }
 
    /*
-    * Try a binary search first
+    * Binary search
     */
    minn = 0;
    maxn = ExportDir->NumberOfNames - 1;
@@ -1188,31 +1187,6 @@ LdrGetExportByName(PVOID BaseAddress,
           }
      }
 
-   /*
-    * Fall back on a linear search
-    */
-   DPRINT("LdrGetExportByName(): Falling back on a linear search of export table\n");
-   for (i = 0; i < ExportDir->NumberOfNames; i++)
-     {
-        ExName = RVA(BaseAddress, ExNames[i]);
-        if (strcmp(ExName, (PCHAR)SymbolName) == 0)
-          {
-             Ordinal = ExOrdinals[i];
-             Function = RVA(BaseAddress, ExFunctions[Ordinal]);
-             DPRINT("%x %x %x\n", Function, ExportDir, ExportDir + ExportDirSize);
-             if (((ULONG)Function >= (ULONG)ExportDir) &&
-                 ((ULONG)Function < (ULONG)ExportDir + (ULONG)ExportDirSize))
-               {
-                  DPRINT("Forward: %s\n", (PCHAR)Function);
-                  Function = LdrFixupForward((PCHAR)Function);
-               }
-             if (Function == NULL)
-               {
-                 break;
-               }
-             return Function;
-          }
-     }
    DPRINT1("LdrGetExportByName(): failed to find %s\n",SymbolName);
    return (PVOID)NULL;
 }
