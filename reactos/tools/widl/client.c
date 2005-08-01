@@ -627,8 +627,8 @@ static void write_typeformatstring(type_t *iface)
 static void print_message_buffer_size(func_t *func, unsigned int *type_offset)
 {
     unsigned int local_type_offset = *type_offset;
-    unsigned int alignment;
-    int size;
+    unsigned int alignment = 0;
+    int size = 0;
     int last_size = -1;
     int in_attr;
     int out_attr;
@@ -1381,7 +1381,7 @@ static void unmarshall_out_arguments(func_t *func, unsigned int *type_offset)
 
         default:
             error("%s:%d Unknown/unsupported type 0x%x\n",
-                  __FUNCTION__,__LINE__, var->type->type);
+                  __FUNCTION__,__LINE__, def->type->type);
             return;
         }
 

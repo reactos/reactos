@@ -1385,7 +1385,7 @@ static void marshall_out_arguments(func_t *func, unsigned int *type_offset)
 
         default:
             error("%s:%d Unknown/unsupported type 0x%x\n",
-                  __FUNCTION__,__LINE__, var->type->type);
+                  __FUNCTION__,__LINE__, def->type->type);
             return;
         }
 

@@ -759,9 +759,9 @@ int main(int argc, char* argv[])
   ULONG StabsLength;
   void *StabStringBase;
   ULONG StabStringsLength;
-  void *CoffBase;
+  void *CoffBase = NULL;
   ULONG CoffsLength;
-  void *CoffStringBase;
+  void *CoffStringBase = NULL;
   ULONG CoffStringsLength;
   char* path1;
   char* path2;

@@ -288,6 +288,7 @@ GetNameAndArgumentsFromDb(char Line[],
     
         /* Skip this entry */
         *NtSyscallName = NULL;
+        *SyscallArguments = NULL;
     }
 }
 
@@ -336,7 +337,10 @@ CreateStubs(FILE * SyscallDb,
              
         /* Extract the Name and Arguments */
         GetNameAndArgumentsFromDb(Line, &NtSyscallName, &SyscallArguments); 
-        StackBytes = ARGS_TO_BYTES(strtoul(SyscallArguments, NULL, 0));
+        if (SyscallArguments != NULL)
+            StackBytes = ARGS_TO_BYTES(strtoul(SyscallArguments, NULL, 0));
+        else
+            StackBytes = 0;
  
         /* Make sure we really extracted something */
         if (NtSyscallName) {
@@ -458,7 +462,10 @@ CreateSystemServiceTable(FILE *SyscallDb,
             if (SyscallId > 0) fprintf(SyscallTable,",\n");
             
             /* Write the syscall arguments in the argument table. */
-            fprintf(SyscallTable,"\t\t%lu * sizeof(void *)",strtoul(SyscallArguments, NULL, 0));
+            if (SyscallArguments != NULL)
+                fprintf(SyscallTable,"\t\t%lu * sizeof(void *)",strtoul(SyscallArguments, NULL, 0));
+            else
+                fprintf(SyscallTable,"\t\t0");
                     
             /* Only increase if we actually added something */
             SyscallId++;
