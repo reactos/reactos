@@ -647,7 +647,7 @@ static const WCHAR *key_name_state( struct parser *parser, const WCHAR *pos )
             set_state( parser, COMMENT );
             return p + 1;
         case '"':
-            push_token( parser, token_end );
+            push_token( parser, p );
             parser->start = p + 1;
             push_state( parser, KEY_NAME );
             set_state( parser, QUOTES );
@@ -699,7 +699,7 @@ static const WCHAR *value_name_state( struct parser *parser, const WCHAR *pos )
             set_state( parser, LEADING_SPACES );
             return p + 1;
         case '"':
-            push_token( parser, token_end );
+            push_token( parser, p );
             parser->start = p + 1;
             push_state( parser, VALUE_NAME );
             set_state( parser, QUOTES );

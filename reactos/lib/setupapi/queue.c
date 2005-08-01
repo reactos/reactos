@@ -979,8 +979,8 @@ BOOL static do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style)
         if ((GetFileAttributesW(target) != INVALID_FILE_ATTRIBUTES) &&
             (GetFileAttributesW(source) != INVALID_FILE_ATTRIBUTES))
         {
-            VersionSizeSource = GetFileVersionInfoSizeW((LPWSTR)source,&zero);
-            VersionSizeTarget = GetFileVersionInfoSizeW((LPWSTR)target,&zero);
+            VersionSizeSource = GetFileVersionInfoSizeW(source,&zero);
+            VersionSizeTarget = GetFileVersionInfoSizeW(target,&zero);
         }
 
         TRACE("SizeTarget %li ... SizeSource %li\n",VersionSizeTarget,
@@ -999,9 +999,9 @@ BOOL static do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style)
             VersionSource = HeapAlloc(GetProcessHeap(),0,VersionSizeSource);
             VersionTarget = HeapAlloc(GetProcessHeap(),0,VersionSizeTarget);
 
-            ret = GetFileVersionInfoW((LPWSTR)source,0,VersionSizeSource,VersionSource);
+            ret = GetFileVersionInfoW(source,0,VersionSizeSource,VersionSource);
             if (ret)
-              ret = GetFileVersionInfoW((LPWSTR)target, 0, VersionSizeTarget,
+              ret = GetFileVersionInfoW(target, 0, VersionSizeTarget,
                     VersionTarget);
 
             if (ret)
@@ -1268,6 +1268,26 @@ BOOL WINAPI SetupSetFileQueueFlags( HSPFILEQ handle, DWORD mask, DWORD flags )
 
 
 /***********************************************************************
+ *   SetupSetFileQueueAlternatePlatformA  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupSetFileQueueAlternatePlatformA(HSPFILEQ handle, PSP_ALTPLATFORM_INFO platform, PCSTR catalogfile)
+{
+    FIXME("(%p, %p, %s) stub!\n", handle, platform, debugstr_a(catalogfile));
+    return FALSE;
+}
+
+
+/***********************************************************************
+ *   SetupSetFileQueueAlternatePlatformW  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupSetFileQueueAlternatePlatformW(HSPFILEQ handle, PSP_ALTPLATFORM_INFO platform, PCWSTR catalogfile)
+{
+    FIXME("(%p, %p, %s) stub!\n", handle, platform, debugstr_w(catalogfile));
+    return FALSE;
+}
+
+
+/***********************************************************************
  *            SetupInitDefaultQueueCallback   (SETUPAPI.@)
  */
 PVOID WINAPI SetupInitDefaultQueueCallback( HWND owner )
@@ -1310,6 +1330,7 @@ UINT WINAPI SetupDefaultQueueCallbackA( PVOID context, UINT notification,
                                         UINT_PTR param1, UINT_PTR param2 )
 {
     FILEPATHS_A *paths = (FILEPATHS_A *)param1;
+    struct default_callback_context *ctx = (struct default_callback_context *)context;
 
     switch(notification)
     {
@@ -1332,7 +1353,9 @@ UINT WINAPI SetupDefaultQueueCallbackA( PVOID context, UINT notification,
         TRACE( "end delete %s\n", debugstr_a(paths->Target) );
         return 0;
     case SPFILENOTIFY_DELETEERROR:
-        ERR( "delete error %d %s\n", paths->Win32Error, debugstr_a(paths->Target) );
+        /*Windows Ignores attempts to delete files / folders which do not exist*/
+        if ((paths->Win32Error != ERROR_FILE_NOT_FOUND) && (paths->Win32Error != ERROR_PATH_NOT_FOUND))
+        SetupDeleteErrorA(ctx->owner, NULL, paths->Target, paths->Win32Error, 0);
         return FILEOP_SKIP;
     case SPFILENOTIFY_STARTRENAME:
         TRACE( "start rename %s -> %s\n", debugstr_a(paths->Source), debugstr_a(paths->Target) );
@@ -1341,8 +1364,7 @@ UINT WINAPI SetupDefaultQueueCallbackA( PVOID context, UINT notification,
         TRACE( "end rename %s -> %s\n", debugstr_a(paths->Source), debugstr_a(paths->Target) );
         return 0;
     case SPFILENOTIFY_RENAMEERROR:
-        ERR( "rename error %d %s -> %s\n", paths->Win32Error,
-             debugstr_a(paths->Source), debugstr_a(paths->Target) );
+        SetupRenameErrorA(ctx->owner, NULL, paths->Source, paths->Target, paths->Win32Error, 0);
         return FILEOP_SKIP;
     case SPFILENOTIFY_STARTCOPY:
         TRACE( "start copy %s -> %s\n", debugstr_a(paths->Source), debugstr_a(paths->Target) );
@@ -1372,6 +1394,7 @@ UINT WINAPI SetupDefaultQueueCallbackW( PVOID context, UINT notification,
                                         UINT_PTR param1, UINT_PTR param2 )
 {
     FILEPATHS_W *paths = (FILEPATHS_W *)param1;
+    struct default_callback_context *ctx = (struct default_callback_context *)context;
 
     switch(notification)
     {
@@ -1394,10 +1417,12 @@ UINT WINAPI SetupDefaultQueueCallbackW( PVOID context, UINT notification,
         TRACE( "end delete %s\n", debugstr_w(paths->Target) );
         return 0;
     case SPFILENOTIFY_DELETEERROR:
-        ERR( "delete error %d %s\n", paths->Win32Error, debugstr_w(paths->Target) );
+        /*Windows Ignores attempts to delete files / folders which do not exist*/
+        if ((paths->Win32Error != ERROR_FILE_NOT_FOUND) && (paths->Win32Error != ERROR_PATH_NOT_FOUND))
+            SetupDeleteErrorW(ctx->owner, NULL, paths->Target, paths->Win32Error, 0);
         return FILEOP_SKIP;
     case SPFILENOTIFY_STARTRENAME:
-        TRACE( "start rename %s -> %s\n", debugstr_w(paths->Source), debugstr_w(paths->Target) );
+        SetupRenameErrorW(ctx->owner, NULL, paths->Source, paths->Target, paths->Win32Error, 0);
         return FILEOP_DOIT;
     case SPFILENOTIFY_ENDRENAME:
         TRACE( "end rename %s -> %s\n", debugstr_w(paths->Source), debugstr_w(paths->Target) );
@@ -1424,4 +1449,81 @@ UINT WINAPI SetupDefaultQueueCallbackW( PVOID context, UINT notification,
         break;
     }
     return 0;
+}
+
+/***********************************************************************
+ *            SetupDeleteErrorA   (SETUPAPI.@)
+ */
+
+UINT WINAPI SetupDeleteErrorA( HWND parent, PCSTR dialogTitle, PCSTR file,
+                               UINT w32error, DWORD style)
+{
+    FIXME( "stub: (Error Number %d when attempting to delete %s)\n",
+           w32error, debugstr_a(file) );
+    return DPROMPT_SKIPFILE;
+}
+
+/***********************************************************************
+ *            SetupDeleteErrorW   (SETUPAPI.@)
+ */
+
+UINT WINAPI SetupDeleteErrorW( HWND parent, PCWSTR dialogTitle, PCWSTR file,
+                               UINT w32error, DWORD style)
+{
+    FIXME( "stub: (Error Number %d when attempting to delete %s)\n",
+           w32error, debugstr_w(file) );
+    return DPROMPT_SKIPFILE;
+}
+
+/***********************************************************************
+ *            SetupRenameErrorA   (SETUPAPI.@)
+ */
+
+UINT WINAPI SetupRenameErrorA( HWND parent, PCSTR dialogTitle, PCSTR source,
+                               PCSTR target, UINT w32error, DWORD style)
+{
+    FIXME( "stub: (Error Number %d when attempting to rename %s to %s)\n",
+           w32error, debugstr_a(source), debugstr_a(target));
+    return DPROMPT_SKIPFILE;
+}
+
+/***********************************************************************
+ *            SetupRenameErrorW   (SETUPAPI.@)
+ */
+
+UINT WINAPI SetupRenameErrorW( HWND parent, PCWSTR dialogTitle, PCWSTR source,
+                               PCWSTR target, UINT w32error, DWORD style)
+{
+    FIXME( "stub: (Error Number %d when attempting to rename %s to %s)\n",
+           w32error, debugstr_w(source), debugstr_w(target));
+    return DPROMPT_SKIPFILE;
+}
+
+
+/***********************************************************************
+ *            SetupCopyErrorA   (SETUPAPI.@)
+ */
+
+UINT WINAPI SetupCopyErrorA( HWND parent, PCSTR dialogTitle, PCSTR diskname, 
+                             PCSTR sourcepath, PCSTR sourcefile, PCSTR targetpath,
+                             UINT w32error, DWORD style, PSTR pathbuffer, 
+			     DWORD buffersize, PDWORD requiredsize)
+{
+    FIXME( "stub: (Error Number %d when attempting to copy file %s from %s to %s)\n",
+           w32error, debugstr_a(sourcefile), debugstr_a(sourcepath) ,debugstr_a(targetpath));
+    return DPROMPT_SKIPFILE;
+}
+
+/***********************************************************************
+ *            SetupCopyErrorW   (SETUPAPI.@)
+ */
+
+UINT WINAPI SetupCopyErrorW( HWND parent, PCWSTR dialogTitle, PCWSTR diskname, 
+                             PCWSTR sourcepath, PCWSTR sourcefile, PCWSTR targetpath,
+                             UINT w32error, DWORD style, PWSTR pathbuffer, 
+			     DWORD buffersize, PDWORD requiredsize)
+{
+    FIXME( "stub: (Error Number %d when attempting to copy file %s from %s to %s)\n",
+           w32error, debugstr_w(sourcefile), debugstr_w(sourcepath) ,debugstr_w(targetpath));
+    return DPROMPT_SKIPFILE;
 }

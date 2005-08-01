@@ -668,6 +668,14 @@ DECL_WINELIB_SETUPAPI_TYPE_AW(PFILEPATHS)
 #define SPDRP_MAXIMUM_PROPERTY            0x00000023
 
 
+/* Return values for SetupCopyError/SetupDeleteError/SetupRenameError */
+#define DPROMPT_SUCCESS                   0x00000000
+#define DPROMPT_CANCEL                    0x00000001
+#define DPROMPT_SKIPFILE                  0x00000002
+#define DPROMPT_BUFFERTOOSMALL            0x00000003
+#define DPROMPT_OUTOFMEMORY               0x00000004
+
+
 /* Flags for StringTableAddString and StringTableLookUpString */
 #define ST_CASE_SENSITIVE_COMPARE 0x00000001
 
@@ -702,9 +710,15 @@ void     WINAPI SetupCloseInfFile( HINF hinf );
 BOOL     WINAPI SetupCommitFileQueueA( HWND, HSPFILEQ, PSP_FILE_CALLBACK_A, PVOID );
 BOOL     WINAPI SetupCommitFileQueueW( HWND, HSPFILEQ, PSP_FILE_CALLBACK_W, PVOID );
 #define         SetupCommitFileQueue WINELIB_NAME_AW(SetupCommitFileQueue)
+UINT     WINAPI SetupCopyErrorA( HWND, PCSTR, PCSTR, PCSTR, PCSTR, PCSTR, UINT, DWORD, PSTR, DWORD, PDWORD );
+UINT     WINAPI SetupCopyErrorW( HWND, PCWSTR, PCWSTR, PCWSTR, PCWSTR, PCWSTR, UINT, DWORD, PWSTR, DWORD, PDWORD );
+#define         SetupCopyError WINELIB_NAME_AW(SetupCopyError)
 UINT     WINAPI SetupDefaultQueueCallbackA( PVOID, UINT, UINT_PTR, UINT_PTR );
 UINT     WINAPI SetupDefaultQueueCallbackW( PVOID, UINT, UINT_PTR, UINT_PTR );
 #define         SetupDefaultQueueCallback WINELIB_NAME_AW(SetupDefaultQueueCallback)
+UINT     WINAPI SetupDeleteErrorA( HWND, PCSTR, PCSTR, UINT, DWORD );
+UINT     WINAPI SetupDeleteErrorW( HWND, PCWSTR, PCWSTR, UINT, DWORD );
+#define         SetupDeleteError WINELIB_NAME_AW(SetupDeleteError)
 BOOL     WINAPI SetupDiBuildClassInfoList(DWORD, LPGUID, DWORD, PDWORD);
 BOOL     WINAPI SetupDiBuildClassInfoListExA(DWORD, LPGUID, DWORD, PDWORD, PCSTR, PVOID);
 BOOL     WINAPI SetupDiBuildClassInfoListExW(DWORD, LPGUID, DWORD, PDWORD, PCWSTR, PVOID);
@@ -831,6 +845,9 @@ BOOL     WINAPI SetupQueueRenameW( HSPFILEQ, PCWSTR, PCWSTR, PCWSTR, PCWSTR );
 BOOL     WINAPI SetupQueueRenameSectionA( HSPFILEQ, HINF, HINF, PCSTR );
 BOOL     WINAPI SetupQueueRenameSectionW( HSPFILEQ, HINF, HINF, PCWSTR );
 #define         SetupQueueRenameSection WINELIB_NAME_AW(SetupQueueRenameSection)
+UINT     WINAPI SetupRenameErrorA( HWND, PCSTR, PCSTR, PCSTR, UINT, DWORD );
+UINT     WINAPI SetupRenameErrorW( HWND, PCWSTR, PCWSTR, PCWSTR, UINT, DWORD );
+#define         SetupRenameError WINELIB_NAME_AW(SetupRenameError)
 BOOL     WINAPI SetupScanFileQueueA( HSPFILEQ, DWORD, HWND, PSP_FILE_CALLBACK_A, PVOID, PDWORD );
 BOOL     WINAPI SetupScanFileQueueW( HSPFILEQ, DWORD, HWND, PSP_FILE_CALLBACK_W, PVOID, PDWORD );
 #define         SetupScanFileQueue WINELIB_NAME_AW(SetupScanFileQueue)

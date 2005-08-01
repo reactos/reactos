@@ -300,7 +300,7 @@ void SETUPX_CreateStandardLDDs(void)
 	len = MAX_PATH;
 	if ( (hKey) && (LDID_Data[n].RegValName)
 	&&   (RegQueryValueExA(hKey, LDID_Data[n].RegValName,
-		NULL, &type, buffer, &len) == ERROR_SUCCESS)
+		NULL, &type, (LPBYTE)buffer, &len) == ERROR_SUCCESS)
 	&&   (type == REG_SZ) )
 	{
 	    TRACE("found value '%s' for LDID %d\n", buffer, n);
