@@ -40,7 +40,7 @@ EiAllocatePool(POOL_TYPE PoolType,
       Block = ExAllocateNonPagedPoolWithTag(PoolType,NumberOfBytes,Tag,Caller);
    }
 
-   if ((PoolType & MUST_SUCCEES_POOL_MASK) && Block==NULL)
+   if ((PoolType & MUST_SUCCEED_POOL_MASK) && Block==NULL)
    {
       KEBUGCHECK(MUST_SUCCEED_POOL_EMPTY);
    }

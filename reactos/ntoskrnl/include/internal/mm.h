@@ -308,7 +308,7 @@ extern PVOID MmPagedPoolBase;
 extern ULONG MmPagedPoolSize;
 
 #define PAGED_POOL_MASK         1
-#define MUST_SUCCEES_POOL_MASK  2
+#define MUST_SUCCEED_POOL_MASK  2
 #define CACHE_ALIGNED_POOL_MASK 4
 #define QUOTA_POOL_MASK         8
 #define SESSION_POOL_MASK       32
