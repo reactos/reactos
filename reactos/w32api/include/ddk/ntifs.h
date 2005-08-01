@@ -1486,6 +1486,27 @@ typedef struct _READ_LIST {
 
 #endif
 
+typedef NTSTATUS
+(NTAPI * PRTL_HEAP_COMMIT_ROUTINE) (
+    IN PVOID  Base,
+    IN OUT PVOID  *CommitAddress,
+    IN OUT PSIZE_T  CommitSize
+);
+
+typedef struct _RTL_HEAP_PARAMETERS {
+    ULONG                     Length;
+    SIZE_T                    SegmentReserve;
+    SIZE_T                    SegmentCommit;
+    SIZE_T                    DeCommitFreeBlockThreshold;
+    SIZE_T                    DeCommitTotalFreeThreshold;
+    SIZE_T                    MaximumAllocationSize;
+    SIZE_T                    VirtualMemoryThreshold;
+    SIZE_T                    InitialCommit;
+    SIZE_T                    InitialReserve;
+    PRTL_HEAP_COMMIT_ROUTINE  CommitRoutine;
+    SIZE_T                    Reserved[2];
+} RTL_HEAP_PARAMETERS, *PRTL_HEAP_PARAMETERS;
+
 NTKERNELAPI
 BOOLEAN
 NTAPI
@@ -2171,6 +2192,18 @@ FsRtlCopyWrite (
 );
 
 NTKERNELAPI
+PVOID
+NTAPI
+RtlCreateHeap (
+    IN ULONG                Flags,
+    IN PVOID                HeapBase OPTIONAL,
+    IN SIZE_T               ReserveSize OPTIONAL,
+    IN SIZE_T               CommitSize OPTIONAL,
+    IN PVOID                Lock OPTIONAL,
+    IN PRTL_HEAP_PARAMETERS Parameters OPTIONAL
+);
+
+NTKERNELAPI
 BOOLEAN
 NTAPI
 FsRtlCurrentBatchOplock (
@@ -2197,6 +2230,13 @@ VOID
 NTAPI
 FsRtlDeregisterUncProvider (
     IN HANDLE Handle
+);
+
+NTKERNELAPI
+PVOID
+NTAPI
+RtlDestroyHeap(
+    IN PVOID HeapHandle
 );
 
 NTKERNELAPI

@@ -81,10 +81,10 @@ STDCALL
 RtlCreateHeap(
     IN ULONG Flags,
     IN PVOID BaseAddress OPTIONAL,
-    IN ULONG SizeToReserve OPTIONAL,
-    IN ULONG SizeToCommit OPTIONAL,
+    IN SIZE_T SizeToReserve OPTIONAL,
+    IN SIZE_T SizeToCommit OPTIONAL,
     IN PVOID Lock OPTIONAL,
-    IN PRTL_HEAP_DEFINITION Definition OPTIONAL
+    IN PRTL_HEAP_PARAMETERS Parameters OPTIONAL
 );
 
 DWORD

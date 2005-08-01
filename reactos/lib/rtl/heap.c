@@ -96,7 +96,7 @@ typedef struct tagHEAP
    RTL_CRITICAL_SECTION critSection;   /* Critical section for serialization */
    ULONG            flags;         /* Heap flags */
    ULONG            magic;         /* Magic number */
-   UCHAR            filler[4];     /* Make multiple of 8 bytes */
+   PRTL_HEAP_COMMIT_ROUTINE commitRoutine;
 }
 HEAP, *PHEAP;
 
@@ -301,12 +301,19 @@ HEAP_Commit(SUBHEAP *subheap,
    address = (PVOID)((char *)subheap + subheap->commitSize);
    commitsize = size - subheap->commitSize;
 
-   Status = NtAllocateVirtualMemory(NtCurrentProcess(),
-                                    &address,
-                                    0,
-                                    &commitsize,
-                                    MEM_COMMIT,
-                                    PAGE_EXECUTE_READWRITE);
+   if (subheap->heap->commitRoutine != NULL)
+   {
+      Status = subheap->heap->commitRoutine(subheap->heap, &address, &commitsize);
+   }
+   else
+   {
+      Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                       &address,
+                                       0,
+                                       &commitsize,
+                                       MEM_COMMIT,
+                                       PAGE_EXECUTE_READWRITE);
+   }
    if (!NT_SUCCESS(Status))
    {
       DPRINT( "Could not commit %08lx bytes at %p for heap %p\n",
@@ -321,6 +328,7 @@ HEAP_Commit(SUBHEAP *subheap,
 }
 
 
+#if 0
 /***********************************************************************
  *           HEAP_Decommit
  *
@@ -356,7 +364,7 @@ static inline BOOLEAN HEAP_Decommit( SUBHEAP *subheap, PVOID ptr, ULONG flags )
    subheap->commitSize -= decommitsize;
    return TRUE;
 }
-
+#endif
 
 /***********************************************************************
  *           HEAP_CreateFreeBlock
@@ -504,26 +512,13 @@ static void HEAP_ShrinkBlock(SUBHEAP *subheap, ARENA_INUSE *pArena, ULONG size)
  *           HEAP_InitSubHeap
  */
 static BOOLEAN HEAP_InitSubHeap( HEAP *heap, PVOID address, ULONG flags,
-                              ULONG commitSize, ULONG totalSize )
+                                 ULONG commitSize, ULONG totalSize,
+                                 PRTL_HEAP_PARAMETERS Parameters )
 {
    SUBHEAP *subheap = (SUBHEAP *)address;
    FREE_LIST_ENTRY *pEntry;
    int i;
    NTSTATUS Status;
-
-   /* Commit memory */
-   Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
-                                    &address,
-                                    0,
-                                    (PULONG)&commitSize,
-                                    MEM_COMMIT,
-                                    PAGE_EXECUTE_READWRITE);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("Could not commit %08lx bytes for sub-heap %p\n",
-             commitSize, address);
-      return FALSE;
-   }
 
    /* Fill the sub-heap structure */
 
@@ -550,6 +545,10 @@ static BOOLEAN HEAP_InitSubHeap( HEAP *heap, PVOID address, ULONG flags,
       heap->next          = NULL;
       heap->flags         = flags;
       heap->magic         = HEAP_MAGIC;
+      if (Parameters)
+         heap->commitRoutine = Parameters->CommitRoutine;
+      else
+         heap->commitRoutine = NULL;
 
       /* Build the free lists */
 
@@ -570,6 +569,27 @@ static BOOLEAN HEAP_InitSubHeap( HEAP *heap, PVOID address, ULONG flags,
       RtlInitializeCriticalSection( &heap->critSection );
    }
 
+   /* Commit memory */
+   if (heap->commitRoutine)
+   {
+      Status = heap->commitRoutine(heap, &address, &commitSize);
+   }
+   else
+   {
+      Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
+                                       &address,
+                                       0,
+                                       &commitSize,
+                                       MEM_COMMIT,
+                                       PAGE_EXECUTE_READWRITE);
+   }
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("Could not commit %08lx bytes for sub-heap %p\n",
+             commitSize, address);
+      return FALSE;
+   }
+
    /* Create the first free block */
 
    HEAP_CreateFreeBlock( subheap, (PUCHAR)subheap + subheap->headerSize,
@@ -586,8 +606,9 @@ static BOOLEAN HEAP_InitSubHeap( HEAP *heap, PVOID address, ULONG flags,
  */
 static PSUBHEAP
 HEAP_CreateSubHeap(PVOID BaseAddress,
-                                   HEAP *heap, ULONG flags,
-                                   ULONG commitSize, ULONG totalSize )
+                   HEAP *heap, ULONG flags,
+                   ULONG commitSize, ULONG totalSize,
+                   PRTL_HEAP_PARAMETERS Parameters )
 {
    PVOID address;
    NTSTATUS Status;
@@ -621,8 +642,9 @@ HEAP_CreateSubHeap(PVOID BaseAddress,
 
    /* Initialize subheap */
 
-   if (!HEAP_InitSubHeap( heap? heap : (HEAP *)address,
-                          address, flags, commitSize, totalSize ))
+   if (!HEAP_InitSubHeap( heap ? heap : (HEAP *)address,
+                          address, flags, commitSize, totalSize,
+                          Parameters ))
    {
       if (!BaseAddress)
       {
@@ -690,7 +712,7 @@ static ARENA_FREE *HEAP_FindFreeBlock( HEAP *heap, ULONG size,
     * might get assigned all remaining free space in HEAP_ShrinkBlock() */
    size += sizeof(SUBHEAP) + sizeof(ARENA_FREE) + HEAP_MIN_BLOCK_SIZE;
    if (!(subheap = HEAP_CreateSubHeap( NULL, heap, heap->flags, size,
-                                       max( HEAP_DEF_SIZE, size ) )))
+                                       max( HEAP_DEF_SIZE, size ), NULL )))
       return NULL;
 
    DPRINT("created new sub-heap %p of %08lx bytes for heap %p\n",
@@ -1055,10 +1077,10 @@ static BOOLEAN HEAP_IsRealArena(
 HANDLE STDCALL
 RtlCreateHeap(ULONG flags,
               PVOID BaseAddress,
-              ULONG maxSize,
-              ULONG initialSize,
-              PVOID Unknown,
-              PRTL_HEAP_DEFINITION Definition)
+              SIZE_T maxSize,
+              SIZE_T initialSize,
+              PVOID Lock,
+              PRTL_HEAP_PARAMETERS Parameters)
 {
    SUBHEAP *subheap;
    HEAP *heapPtr;
@@ -1070,20 +1092,24 @@ RtlCreateHeap(ULONG flags,
       maxSize = HEAP_DEF_SIZE;
       flags |= HEAP_GROWABLE;
    }
-   if (!(subheap = HEAP_CreateSubHeap( BaseAddress, NULL, flags, initialSize, maxSize )))
+   if (!(subheap = HEAP_CreateSubHeap( BaseAddress, NULL, flags, initialSize,
+                                       maxSize, Parameters )))
    {
       return 0;
    }
 
-   /* link it into the per-process heap list */
-   RtlEnterCriticalSection (&RtlpProcessHeapsListLock);
+   if (RtlpGetMode() == UserMode)
+   {
+      /* link it into the per-process heap list */
+      RtlEnterCriticalSection (&RtlpProcessHeapsListLock);
 
-   heapPtr = subheap->heap;
-   heapPtr->next = (HEAP*)NtCurrentPeb()->ProcessHeaps;
-   NtCurrentPeb()->ProcessHeaps = (HANDLE)heapPtr;
-   NtCurrentPeb()->NumberOfHeaps++;
+      heapPtr = subheap->heap;
+      heapPtr->next = (HEAP*)NtCurrentPeb()->ProcessHeaps;
+      NtCurrentPeb()->ProcessHeaps = (HANDLE)heapPtr;
+      NtCurrentPeb()->NumberOfHeaps++;
 
-   RtlLeaveCriticalSection (&RtlpProcessHeapsListLock);
+      RtlLeaveCriticalSection (&RtlpProcessHeapsListLock);
+   }
 
    return (HANDLE)subheap;
 }
@@ -1112,18 +1138,21 @@ RtlDestroyHeap(HANDLE heap) /* [in] Handle of heap */
    if (!heapPtr)
       return heap;
 
-   if (heap == NtCurrentPeb()->ProcessHeap)
-      return heap; /* cannot delete the main process heap */
+   if (RtlpGetMode() == UserMode)
+   {
+      if (heap == NtCurrentPeb()->ProcessHeap)
+         return heap; /* cannot delete the main process heap */
 
-   /* remove it from the per-process list */
-   RtlEnterCriticalSection (&RtlpProcessHeapsListLock);
+      /* remove it from the per-process list */
+      RtlEnterCriticalSection (&RtlpProcessHeapsListLock);
 
-   pptr = (HEAP**)&NtCurrentPeb()->ProcessHeaps;
-   while (*pptr && *pptr != heapPtr) pptr = &(*pptr)->next;
-   if (*pptr) *pptr = (*pptr)->next;
-   NtCurrentPeb()->NumberOfHeaps--;
+      pptr = (HEAP**)&NtCurrentPeb()->ProcessHeaps;
+      while (*pptr && *pptr != heapPtr) pptr = &(*pptr)->next;
+      if (*pptr) *pptr = (*pptr)->next;
+      NtCurrentPeb()->NumberOfHeaps--;
 
-   RtlLeaveCriticalSection (&RtlpProcessHeapsListLock);
+      RtlLeaveCriticalSection (&RtlpProcessHeapsListLock);
+   }
 
    RtlDeleteCriticalSection( &heapPtr->critSection );
    subheap = &heapPtr->subheap;

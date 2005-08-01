@@ -29,6 +29,7 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 
 extern PVOID RtlpAllocateMemory(UINT Bytes, ULONG Tag);
 extern VOID RtlpFreeMemory(PVOID Mem, ULONG Tag);
+extern KPROCESSOR_MODE RtlpGetMode();
 
 #define RtlpAllocateStringMemory RtlpAllocateMemory
 #define RtlpFreeStringMemory RtlpFreeMemory
