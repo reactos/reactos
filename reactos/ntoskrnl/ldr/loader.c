@@ -558,7 +558,7 @@ LdrGetModuleObject ( PUNICODE_STRING ModuleName )
         Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
 
         DPRINT("Comparing %wZ and %wZ\n",
-            &Module->BaseName,
+            &Module->BaseDllName,
             ModuleName);
 
         if (!LdrpCompareModuleNames(&Module->BaseDllName, ModuleName))
