@@ -509,6 +509,8 @@ PspExitProcess(PEPROCESS Process)
 
     PspRunCreateProcessNotifyRoutines(Process, FALSE);
 
+    PspDestroyQuotaBlock(Process);
+
     /* close all handles associated with our process, this needs to be done
        when the last thread still runs */
     ObKillProcess(Process);

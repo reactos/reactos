@@ -20,6 +20,8 @@ PEPROCESS EXPORTED PsInitialSystemProcess = NULL;
 PEPROCESS PsIdleProcess = NULL;
 POBJECT_TYPE EXPORTED PsProcessType = NULL;
 
+EPROCESS_QUOTA_BLOCK PspDefaultQuotaBlock;
+
 LIST_ENTRY PsActiveProcessHead;
 FAST_MUTEX PspActiveProcessMutex;
 LARGE_INTEGER ShortPsLockDelay, PsLockTimeout;
@@ -295,8 +297,8 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         Process->Session = pParentProcess->Session;
     }
 
-    /* FIXME: Set up the Quota Block from the Parent
-    PspInheritQuota(Parent, Process); */
+    /* Set up the Quota Block from the Parent */
+    PspInheritQuota(Process, pParentProcess);
 
     /* FIXME: Set up Dos Device Map from the Parent
     ObInheritDeviceMap(Parent, Process) */
@@ -369,7 +371,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         DPRINT1("Failed to create CID handle (unique process ID)! Status: 0x%x\n", Status);
         ObDereferenceObject(Process);
         goto exitdereferenceobjects;
-   }
+    }
 
     /* FIXME: Insert into Job Object */
 

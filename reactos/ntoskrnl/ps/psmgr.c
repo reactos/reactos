@@ -126,20 +126,29 @@ PsInitProcessManagment(VOID)
 
     DPRINT("Creating Process Object Type\n");
   
-    /*  Initialize the Thread type  */
-    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
-    RtlInitUnicodeString(&Name, L"Process");
-    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(EPROCESS);
-    ObjectTypeInitializer.GenericMapping = PiProcessMapping;
-    ObjectTypeInitializer.PoolType = NonPagedPool;
-    ObjectTypeInitializer.ValidAccessMask = PROCESS_ALL_ACCESS;
-    ObjectTypeInitializer.UseDefaultObject = TRUE;
-    ObjectTypeInitializer.DeleteProcedure = PspDeleteProcess;
-    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &PsProcessType);
+   /*  Initialize the Process type */
+   RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+   RtlInitUnicodeString(&Name, L"Process");
+   ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+   ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(EPROCESS);
+   ObjectTypeInitializer.GenericMapping = PiProcessMapping;
+   ObjectTypeInitializer.PoolType = NonPagedPool;
+   ObjectTypeInitializer.ValidAccessMask = PROCESS_ALL_ACCESS;
+   ObjectTypeInitializer.UseDefaultObject = TRUE;
+   ObjectTypeInitializer.DeleteProcedure = PspDeleteProcess;
+   ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &PsProcessType);
 
    InitializeListHead(&PsActiveProcessHead);
    ExInitializeFastMutex(&PspActiveProcessMutex);
+
+   /*
+    * Initialize the default quota block.
+    */
+
+   RtlZeroMemory(&PspDefaultQuotaBlock, sizeof(PspDefaultQuotaBlock));
+   PspDefaultQuotaBlock.QuotaEntry[PagedPool].Limit = (SIZE_T)-1;
+   PspDefaultQuotaBlock.QuotaEntry[NonPagedPool].Limit = (SIZE_T)-1;
+   PspDefaultQuotaBlock.QuotaEntry[2].Limit = (SIZE_T)-1; /* Page file */
 
    /*
     * Initialize the idle process
@@ -175,6 +184,7 @@ PsInitProcessManagment(VOID)
 				FALSE);
    PsIdleProcess->Pcb.DirectoryTableBase.QuadPart = (ULONG_PTR)MmGetPageDirectory();
    strcpy(PsIdleProcess->ImageFileName, "Idle");
+   PspInheritQuota(PsIdleProcess, NULL);
 
    /*
     * Initialize the system process
@@ -207,6 +217,7 @@ PsInitProcessManagment(VOID)
 				sizeof(EPROCESS),
 				FALSE);
    KProcess = &PsInitialSystemProcess->Pcb;
+   PspInheritQuota(PsInitialSystemProcess, NULL);
 
    MmInitializeAddressSpace(PsInitialSystemProcess,
 			    &PsInitialSystemProcess->AddressSpace);
