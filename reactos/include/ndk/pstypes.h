@@ -287,10 +287,10 @@ typedef struct _TEB
 
 typedef struct _EPROCESS_QUOTA_ENTRY
 {
-    ULONG Usage;
-    ULONG Limit;
-    ULONG Peak;
-    ULONG Return;
+    SIZE_T Usage;
+    SIZE_T Limit;
+    SIZE_T Peak;
+    SIZE_T Return;
 } EPROCESS_QUOTA_ENTRY, *PEPROCESS_QUOTA_ENTRY;
 
 typedef struct _EPROCESS_QUOTA_BLOCK
