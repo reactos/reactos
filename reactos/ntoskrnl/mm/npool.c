@@ -1630,8 +1630,7 @@ ExAllocateNonPagedPoolWithTag(POOL_TYPE Type, ULONG Size, ULONG Tag, PVOID Calle
    {
       alignment = PAGE_SIZE;
    }
-   else if (Type == NonPagedPoolCacheAligned ||
-            Type == NonPagedPoolCacheAlignedMustS)
+   else if (Type & CACHE_ALIGNED_POOL_MASK)
    {
       alignment = MM_CACHE_LINE_SIZE;
    }

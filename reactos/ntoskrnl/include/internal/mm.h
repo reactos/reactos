@@ -307,6 +307,13 @@ MiAllocateSpecialPool  (IN POOL_TYPE PoolType,
 extern PVOID MmPagedPoolBase;
 extern ULONG MmPagedPoolSize;
 
+#define PAGED_POOL_MASK         1
+#define MUST_SUCCEES_POOL_MASK  2
+#define CACHE_ALIGNED_POOL_MASK 4
+#define QUOTA_POOL_MASK         8
+#define SESSION_POOL_MASK       32
+#define VERIFIER_POOL_MASK      64
+
 #define MM_PAGED_POOL_SIZE	(100*1024*1024)
 #define MM_NONPAGED_POOL_SIZE	(100*1024*1024)
 

@@ -80,7 +80,7 @@ ExAllocatePagedPoolWithTag (IN POOL_TYPE PoolType,
 
 	if ( NumberOfBytes >= PAGE_SIZE )
 		align = 2;
-	else if ( PoolType == PagedPoolCacheAligned )
+	else if ( PoolType & CACHE_ALIGNED_POOL_MASK )
 		align = 1;
 	else
 		align = 0;

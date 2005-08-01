@@ -30,31 +30,17 @@ EiAllocatePool(POOL_TYPE PoolType,
 {
    PVOID Block;
 
-
-   switch(PoolType)
+   /* FIXME: Handle SESSION_POOL_MASK, VERIFIER_POOL_MASK, QUOTA_POOL_MASK */
+   if (PoolType & PAGED_POOL_MASK)
    {
-      case NonPagedPool:
-      case NonPagedPoolMustSucceed:
-      case NonPagedPoolCacheAligned:
-      case NonPagedPoolCacheAlignedMustS:
-         Block =
-            ExAllocateNonPagedPoolWithTag(PoolType,
-                                          NumberOfBytes,
-                                          Tag,
-                                          Caller);
-         break;
+      Block = ExAllocatePagedPoolWithTag(PoolType,NumberOfBytes,Tag);
+   }
+   else
+   {
+      Block = ExAllocateNonPagedPoolWithTag(PoolType,NumberOfBytes,Tag,Caller);
+   }
 
-      case PagedPool:
-      case PagedPoolCacheAligned:
-         Block = ExAllocatePagedPoolWithTag(PoolType,NumberOfBytes,Tag);
-         break;
-
-      default:
-         return(NULL);
-   };
-
-   if ((PoolType==NonPagedPoolMustSucceed ||
-         PoolType==NonPagedPoolCacheAlignedMustS) && Block==NULL)
+   if ((PoolType & MUST_SUCCEES_POOL_MASK) && Block==NULL)
    {
       KEBUGCHECK(MUST_SUCCEED_POOL_EMPTY);
    }
