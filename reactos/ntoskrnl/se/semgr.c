@@ -165,7 +165,14 @@ SepInitExports(VOID)
   SepExports.SeAliasSystemOpsSid = SeAliasSystemOpsSid;
   SepExports.SeAliasPrintOpsSid = SeAliasPrintOpsSid;
   SepExports.SeAliasBackupOpsSid = SeAliasBackupOpsSid;
+  SepExports.SeAuthenticatedUsersSid = SeAuthenticatedUsersSid;
+  SepExports.SeRestrictedSid = SeRestrictedSid;
+  SepExports.SeAnonymousLogonSid = SeAnonymousLogonSid;
 
+  SepExports.SeUndockPrivilege = SeUndockPrivilege;
+  SepExports.SeSyncAgentPrivilege = SeSyncAgentPrivilege;
+  SepExports.SeEnableDelegationPrivilege = SeEnableDelegationPrivilege;
+  
   SeExports = &SepExports;
   return TRUE;
 }
