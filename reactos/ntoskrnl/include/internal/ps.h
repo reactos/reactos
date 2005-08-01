@@ -117,6 +117,7 @@ extern PEPROCESS PsIdleProcess;
 extern LIST_ENTRY PsActiveProcessHead;
 extern FAST_MUTEX PspActiveProcessMutex;
 extern LARGE_INTEGER ShortPsLockDelay, PsLockTimeout;
+extern EPROCESS_QUOTA_BLOCK PspDefaultQuotaBlock;
 
 VOID
 STDCALL
@@ -189,6 +190,14 @@ STDCALL
 PspRunLegoRoutine(IN PKTHREAD Thread);
 
 VOID INIT_FUNCTION PsInitJobManagment(VOID);
+
+VOID
+STDCALL
+PspInheritQuota(PEPROCESS Process, PEPROCESS ParentProcess);
+
+VOID
+STDCALL
+PspDestroyQuotaBlock(PEPROCESS Process);
 
 /* CLIENT ID */
 
