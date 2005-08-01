@@ -26,9 +26,9 @@ CDMAKE_SOURCES = $(addprefix $(CDMAKE_BASE_), \
 CDMAKE_OBJECTS = \
 	$(addprefix $(INTERMEDIATE_), $(CDMAKE_SOURCES:.c=.o))
 
-CDMAKE_HOST_CFLAGS = -Iinclude -g -Werror -Wall
+CDMAKE_HOST_CFLAGS = -Iinclude $(TOOLS_CFLAGS)
 
-CDMAKE_HOST_LFLAGS = -g
+CDMAKE_HOST_LFLAGS = $(TOOLS_LFLAGS)
 
 .PHONY: cdmake
 cdmake: $(CDMAKE_TARGET)

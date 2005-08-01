@@ -29,11 +29,11 @@ CABMAN_SOURCES = $(addprefix $(CABMAN_BASE_), \
 CABMAN_OBJECTS = \
   $(addprefix $(INTERMEDIATE_), $(CABMAN_SOURCES:.cxx=.o))
 
-CABMAN_HOST_CFLAGS = -Iinclude/reactos -Ilib/zlib -g -Werror -Wall
+CABMAN_HOST_CXXFLAGS = -Iinclude/reactos -Ilib/zlib $(TOOLS_CXXFLAGS)
 
 CABMAN_HOST_LIBS = $(ZLIB_HOST_TARGET)
 
-CABMAN_HOST_LFLAGS = -g $(CABMAN_HOST_LIBS)
+CABMAN_HOST_LFLAGS = $(TOOLS_LFLAGS) $(CABMAN_HOST_LIBS)
 
 .PHONY: cabman
 cabman: $(CABMAN_TARGET)
@@ -44,23 +44,23 @@ $(CABMAN_TARGET): $(CABMAN_OBJECTS) $(CABMAN_HOST_LIBS) | $(CABMAN_OUT)
 
 $(CABMAN_INT_)cabinet.o: $(CABMAN_BASE_)cabinet.cxx | $(CABMAN_INT)
 	$(ECHO_CC)
-	${host_gpp} $(CABMAN_HOST_CFLAGS) -c $< -o $@
+	${host_gpp} $(CABMAN_HOST_CXXFLAGS) -c $< -o $@
 
 $(CABMAN_INT_)dfp.o: $(CABMAN_BASE_)dfp.cxx | $(CABMAN_INT)
 	$(ECHO_CC)
-	${host_gpp} $(CABMAN_HOST_CFLAGS) -c $< -o $@
+	${host_gpp} $(CABMAN_HOST_CXXFLAGS) -c $< -o $@
 
 $(CABMAN_INT_)main.o: $(CABMAN_BASE_)main.cxx | $(CABMAN_INT)
 	$(ECHO_CC)
-	${host_gpp} $(CABMAN_HOST_CFLAGS) -c $< -o $@
+	${host_gpp} $(CABMAN_HOST_CXXFLAGS) -c $< -o $@
 
 $(CABMAN_INT_)mszip.o: $(CABMAN_BASE_)mszip.cxx | $(CABMAN_INT)
 	$(ECHO_CC)
-	${host_gpp} $(CABMAN_HOST_CFLAGS) -c $< -o $@
+	${host_gpp} $(CABMAN_HOST_CXXFLAGS) -c $< -o $@
 
 $(CABMAN_INT_)raw.o: $(CABMAN_BASE_)raw.cxx | $(CABMAN_INT)
 	$(ECHO_CC)
-	${host_gpp} $(CABMAN_HOST_CFLAGS) -c $< -o $@
+	${host_gpp} $(CABMAN_HOST_CXXFLAGS) -c $< -o $@
 
 .PHONY: cabman_clean
 cabman_clean:

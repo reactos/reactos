@@ -423,6 +423,9 @@ write_directory_record(PDIR_RECORD d,
         if (d->extension_on_cd[0] != 0)
           identifier_size += 1 + strlen(d->extension_on_cd);
         break;
+      default:
+        identifier_size = 1;
+        break;
     }
   }
   record_size = 33 + identifier_size;
