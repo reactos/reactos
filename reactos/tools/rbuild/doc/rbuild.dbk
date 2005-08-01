@@ -226,6 +226,12 @@
         </section>
 
         <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.module">module</link>.</para>
+        </section>
+
+        <section>
           <title>Children</title>
 
           <para>None.</para>
@@ -272,6 +278,44 @@
           <title>Value</title>
 
           <para>Name of file.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para>None.</para>
+        </section>
+      </section>
+
+      <section>
+        <title>Compilerflag element</title>
+
+        <para>A compilerflag element specifies additional flags to be bassed
+        to the compiler.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;compilerflags&gt;<replaceable>-Wpointer-arith</replaceable>&lt;/compilerflag&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes.</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Value</title>
+
+          <para>The compiler flags.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.if">if</link>, <link
+          linkend="element.project">project</link>.</para>
         </section>
 
         <section>
@@ -357,6 +401,13 @@
         </section>
 
         <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.project">project</link>, <link
+          linkend="element.module">module</link>.</para>
+        </section>
+
+        <section>
           <title>Children</title>
 
           <para>None.</para>
@@ -429,6 +480,14 @@
         </section>
 
         <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.directory">directory</link>, <link
+          linkend="element.directory">if</link>, <link
+          linkend="element.project">project</link>.</para>
+        </section>
+
+        <section>
           <title>Children</title>
 
           <para><link linkend="element.cdfile">cdfile</link>, <link
@@ -465,9 +524,57 @@
         </section>
 
         <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.directory">directory</link>, <link
+          linkend="element.module">module</link>.</para>
+        </section>
+
+        <section>
           <title>Children</title>
 
           <para>None.</para>
+        </section>
+      </section>
+
+      <section>
+        <title>Group element</title>
+
+        <para>A group element's purpose is grouping subelements.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;group&gt;
+  &lt;file&gt;<replaceable>i386-dis.c</replaceable>&lt;/file&gt;
+  &lt;file&gt;<replaceable>kdb_help.S</replaceable>&lt;/file&gt;
+  &lt;file&gt;<replaceable>longjmp.S</replaceable>&lt;/file&gt;
+  &lt;file&gt;<replaceable>setjmp.S</replaceable>&lt;/file&gt;
+&lt;/group&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Value</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.if">if</link>.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para><link linkend="element.file">file</link>.</para>
         </section>
       </section>
 
@@ -513,6 +620,13 @@
           <title>Value</title>
 
           <para>None.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.project">project</link>, <link
+          linkend="element.directory">directory</link>.</para>
         </section>
 
         <section>
@@ -565,6 +679,12 @@
         </section>
 
         <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.module">module</link>.</para>
+        </section>
+
+        <section>
           <title>Children</title>
 
           <para>None.</para>
@@ -604,6 +724,13 @@
           <title>Value</title>
 
           <para>Relative include directory.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.project">project</link>, <link
+          linkend="element.module">module</link>.</para>
         </section>
 
         <section>
@@ -850,6 +977,12 @@
           <title>Value</title>
 
           <para>The switches to pass to the linker.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.module">module</link>.</para>
         </section>
 
         <section>
@@ -1298,7 +1431,8 @@
         <section>
           <title>Parents</title>
 
-          <para><link linkend="element.project">project</link>.</para>
+          <para><link linkend="element.project">project</link>, <link
+          linkend="element.directory">directory</link>.</para>
         </section>
 
         <section>
@@ -1315,6 +1449,7 @@
           linkend="element.include">include</link>, <link
           linkend="element.invoke">invoke</link>, <link
           linkend="element.library">library</link>, <link
+          linkend="element.linkerflag">linkerflag</link>, <link
           linkend="element.property">property</link>.</para>
         </section>
       </section>
@@ -1427,6 +1562,12 @@
           <title>Value</title>
 
           <para>Name of the include file to be precompiled.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.directory">directory</link>.</para>
         </section>
 
         <section>
