@@ -1017,7 +1017,69 @@ CM_Get_Device_ID_Size_Ex(
 /* FIXME: Obsolete CM_Get_Device_Interface_List_Size_Ex */
 /* FIXME: Obsolete CM_Get_DevNode_Custom_Property */
 /* FIXME: Obsolete CM_Get_DevNode_Custom_Property_Ex */
-/* FIXME: Obsolete CM_Get_DevNode_Registry_Property */
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Get_DevNode_Registry_PropertyA(
+  IN DEVINST  dnDevInst,
+  IN ULONG  ulProperty,
+  OUT PULONG  pulRegDataType,  OPTIONAL
+  OUT PVOID  Buffer,  OPTIONAL
+  IN OUT PULONG  pulLength,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Get_DevNode_Registry_PropertyW(
+  IN DEVINST  dnDevInst,
+  IN ULONG  ulProperty,
+  OUT PULONG  pulRegDataType,  OPTIONAL
+  OUT PVOID  Buffer,  OPTIONAL
+  IN OUT PULONG  pulLength,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Get_DevNode_Registry_Property_ExA(
+  IN DEVINST  dnDevInst,
+  IN ULONG  ulProperty,
+  OUT PULONG  pulRegDataType,  OPTIONAL
+  OUT PVOID  Buffer,  OPTIONAL
+  IN OUT PULONG  pulLength,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Get_DevNode_Registry_Property_ExW(
+  IN DEVINST  dnDevInst,
+  IN ULONG  ulProperty,
+  OUT PULONG  pulRegDataType,  OPTIONAL
+  OUT PVOID  Buffer,  OPTIONAL
+  IN OUT PULONG  pulLength,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
+#define CM_Get_DevInst_Registry_PropertyW CM_Get_DevNode_Registry_PropertyW
+#define CM_Get_DevInst_Registry_PropertyA CM_Get_DevNode_Registry_PropertyA
+#define CM_Get_DevInst_Registry_Property_ExW CM_Get_DevNode_Registry_Property_ExW
+#define CM_Get_DevInst_Registry_Property_ExA CM_Get_DevNode_Registry_Property_ExA
+
+#ifdef UNICODE
+#define CM_Get_DevInst_Registry_Property CM_Get_DevNode_Registry_PropertyW
+#define CM_Get_DevInst_Registry_Property_Ex CM_Get_DevNode_Registry_Property_ExW
+#define CM_Get_DevNode_Registry_Property CM_Get_DevNode_Registry_PropertyW
+#define CM_Get_DevNode_Registry_Property_Ex CM_Get_DevNode_Registry_Property_ExW
+#else
+#define CM_Get_DevInst_Registry_Property CM_Get_DevNode_Registry_PropertyA
+#define CM_Get_DevInst_Registry_Property_Ex CM_Get_DevNode_Registry_Property_ExA
+#define CM_Get_DevNode_Registry_Property CM_Get_DevNode_Registry_PropertyA
+#define CM_Get_DevNode_Registry_Property_Ex CM_Get_DevNode_Registry_Property_ExA
+#endif /* UNICODE */
 
 CMAPI
 CONFIGRET
@@ -1513,8 +1575,66 @@ CM_Request_Device_EjectW(
 /* FIXME: Obsolete CM_Set_Class_Registry_Property */
 /* FIXME: Obsolete CM_Set_DevNode_Problem */
 /* FIXME: Obsolete CM_Set_DevNode_Problem_Ex */
-/* FIXME: Obsolete CM_Set_DevNode_Registry_Property */
-/* FIXME: Obsolete CM_Set_DevNode_Registry_Property_Ex */
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Set_DevNode_Registry_PropertyA(
+  IN DEVINST  dnDevInst,
+  IN ULONG  ulProperty,
+  IN PCVOID  Buffer, OPTIONAL
+  IN ULONG  ulLength,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Set_DevNode_Registry_PropertyW(
+  IN DEVINST  dnDevInst,
+  IN ULONG  ulProperty,
+  IN PCVOID  Buffer, OPTIONAL
+  IN ULONG  ulLength,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Set_DevNode_Registry_Property_ExA(
+  IN DEVINST  dnDevInst,
+  IN ULONG  ulProperty,
+  IN PCVOID  Buffer, OPTIONAL
+  IN ULONG  ulLength,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Set_DevNode_Registry_Property_ExW(
+  IN DEVINST  dnDevInst,
+  IN ULONG  ulProperty,
+  IN PCVOID  Buffer, OPTIONAL
+  IN ULONG  ulLength,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
+#define CM_Set_DevInst_Registry_PropertyW CM_Set_DevNode_Registry_PropertyW
+#define CM_Set_DevInst_Registry_PropertyA CM_Set_DevNode_Registry_PropertyA
+#define CM_Set_DevInst_Registry_Property_ExW CM_Set_DevNode_Registry_Property_ExW
+#define CM_Set_DevInst_Registry_Property_ExA CM_Set_DevNode_Registry_Property_ExA
+
+#ifdef UNICODE
+#define CM_Set_DevInst_Registry_Property CM_Set_DevNode_Registry_PropertyW
+#define CM_Set_DevInst_Registry_Property_Ex CM_Set_DevNode_Registry_Property_ExW
+#define CM_Set_DevNode_Registry_Property CM_Set_DevNode_Registry_PropertyW
+#define CM_Set_DevNode_Registry_Property_Ex CM_Set_DevNode_Registry_Property_ExW
+#else
+#define CM_Set_DevInst_Registry_Property CM_Set_DevNode_Registry_PropertyA
+#define CM_Set_DevInst_Registry_Property_Ex CM_Set_DevNode_Registry_Property_ExA
+#define CM_Set_DevNode_Registry_Property CM_Set_DevNode_Registry_PropertyA
+#define CM_Set_DevNode_Registry_Property_Ex CM_Set_DevNode_Registry_Property_ExA
+#endif /* UNICODE */
+
 /* FIXME: Obsolete CM_Set_HW_Prof */
 /* FIXME: Obsolete CM_Set_HW_Prof_Ex */
 /* FIXME: Obsolete CM_Set_HW_Prof_Flags */

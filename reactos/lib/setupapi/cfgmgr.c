@@ -373,6 +373,128 @@ CONFIGRET WINAPI CM_Get_Depth_Ex(
 
 
 /***********************************************************************
+ * CM_Get_DevNode_Registry_PropertyA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_DevNode_Registry_PropertyA(
+    DEVINST dnDevInst, ULONG ulProperty, PULONG pulRegDataType,
+    PVOID Buffer, PULONG pulLength, ULONG ulFlags)
+{
+    TRACE("%lx %lu %p %p %p %lx\n",
+          dnDevInst, ulProperty, pulRegDataType, Buffer, pulLength, ulFlags);
+
+    return CM_Get_DevNode_Registry_Property_ExA(dnDevInst, ulProperty,
+                                                pulRegDataType, Buffer,
+                                                pulLength, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Get_DevNode_Registry_PropertyW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_DevNode_Registry_PropertyW(
+    DEVINST dnDevInst, ULONG ulProperty, PULONG pulRegDataType,
+    PVOID Buffer, PULONG pulLength, ULONG ulFlags)
+{
+    TRACE("%lx %lu %p %p %p %lx\n",
+          dnDevInst, ulProperty, pulRegDataType, Buffer, pulLength, ulFlags);
+
+    return CM_Get_DevNode_Registry_Property_ExW(dnDevInst, ulProperty,
+                                                pulRegDataType, Buffer,
+                                                pulLength, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Get_DevNode_Registry_Property_ExA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_DevNode_Registry_Property_ExA(
+    DEVINST dnDevInst, ULONG ulProperty, PULONG pulRegDataType,
+    PVOID Buffer, PULONG pulLength, ULONG ulFlags, HMACHINE hMachine)
+{
+    FIXME("%lx %lu %p %p %p %lx %lx\n",
+          dnDevInst, ulProperty, pulRegDataType, Buffer, pulLength,
+          ulFlags, hMachine);
+
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
+ * CM_Get_DevNode_Registry_Property_ExW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_DevNode_Registry_Property_ExW(
+    DEVINST dnDevInst, ULONG ulProperty, PULONG pulRegDataType,
+    PVOID Buffer, PULONG pulLength, ULONG ulFlags, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    CONFIGRET ret = CR_SUCCESS;
+    LPWSTR lpDevInst;
+    ULONG ulDataType = 0;
+    ULONG ulTransferLength = 0;
+
+    FIXME("%lx %lu %p %p %p %lx %lx\n",
+          dnDevInst, ulProperty, pulRegDataType, Buffer, pulLength,
+          ulFlags, hMachine);
+
+    if (dnDevInst == 0)
+        return CR_INVALID_DEVNODE;
+
+    if (ulProperty < 1 /* CM_DRP_MIN */ || ulProperty > 0x17 /* CM_DRP_MAX */)
+        return CR_INVALID_PROPERTY;
+
+    /* pulRegDataType is optional */
+
+    /* Buffer is optional */
+
+    if (pulLength == NULL)
+        return CR_INVALID_POINTER;
+
+    if (*pulLength == 0)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    if (lpDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    ret = PNP_GetDeviceRegProp(BindingHandle,
+                               lpDevInst,
+                               ulProperty,
+                               &ulDataType,
+                               Buffer,
+                               &ulTransferLength,
+                               pulLength,
+                               ulFlags);
+    if (ret == CR_SUCCESS)
+    {
+        if (pulRegDataType != NULL)
+            *pulRegDataType = ulDataType;
+    }
+
+    return ret;
+}
+
+
+/***********************************************************************
  * CM_Get_DevNode_Status [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Get_DevNode_Status(
@@ -1169,5 +1291,107 @@ CONFIGRET WINAPI CM_Set_DevNode_Problem_Ex(
     return PNP_SetDeviceProblem(BindingHandle,
                                 lpDevInst,
                                 ulProblem,
+                                ulFlags);
+}
+
+
+/***********************************************************************
+ * CM_Set_DevNode_Registry_PropertyA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Set_DevNode_Registry_PropertyA(
+    DEVINST dnDevInst, ULONG ulProperty, PCVOID Buffer, ULONG ulLength,
+    ULONG ulFlags)
+{
+    TRACE("%lx %lu %p %lx %lx\n",
+          dnDevInst, ulProperty, Buffer, ulLength, ulFlags);
+    return CM_Set_DevNode_Registry_Property_ExA(dnDevInst, ulProperty,
+                                                Buffer, ulLength,
+                                                ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Set_DevNode_Registry_PropertyW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Set_DevNode_Registry_PropertyW(
+    DEVINST dnDevInst, ULONG ulProperty, PCVOID Buffer, ULONG ulLength,
+    ULONG ulFlags)
+{
+    TRACE("%lx %lu %p %lx %lx\n",
+          dnDevInst, ulProperty, Buffer, ulLength, ulFlags);
+    return CM_Set_DevNode_Registry_Property_ExW(dnDevInst, ulProperty,
+                                                Buffer, ulLength,
+                                                ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Set_DevNode_Registry_Property_ExA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Set_DevNode_Registry_Property_ExA(
+    DEVINST dnDevInst, ULONG ulProperty, PCVOID Buffer, ULONG ulLength,
+    ULONG ulFlags, HMACHINE hMachine)
+{
+    FIXME("%lx %lu %p %lx %lx %lx\n",
+          dnDevInst, ulProperty, Buffer, ulLength, ulFlags, hMachine);
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
+ * CM_Set_DevNode_Registry_Property_ExW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Set_DevNode_Registry_Property_ExW(
+    DEVINST dnDevInst, ULONG ulProperty, PCVOID Buffer, ULONG ulLength,
+    ULONG ulFlags, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    LPWSTR lpDevInst;
+    ULONG ulType;
+
+    FIXME("%lx %lu %p %lx %lx %lx\n",
+          dnDevInst, ulProperty, Buffer, ulLength, ulFlags, hMachine);
+
+    if (dnDevInst == 0)
+        return CR_INVALID_DEVNODE;
+
+    if (ulProperty < 1 /* CM_DRP_MIN */ || ulProperty > 0x17 /* CM_DRP_MAX */)
+        return CR_INVALID_PROPERTY;
+
+    if (Buffer != NULL && ulLength == 0)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    if (lpDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    ulType = REG_SZ; /* FIXME */
+
+    return PNP_SetDeviceRegProp(BindingHandle,
+                                lpDevInst,
+                                ulProperty,
+                                ulType,
+                                (char *)Buffer,
+                                ulLength,
                                 ulFlags);
 }

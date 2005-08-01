@@ -65,10 +65,10 @@
 @ stub CM_Get_Class_Name_ExW
 @ stdcall CM_Get_Depth(ptr long long)
 @ stdcall CM_Get_Depth_Ex(ptr long long long)
-@ stub CM_Get_DevNode_Registry_PropertyA
-@ stub CM_Get_DevNode_Registry_PropertyW
-@ stub CM_Get_DevNode_Registry_Property_ExA
-@ stub CM_Get_DevNode_Registry_Property_ExW
+@ stdcall CM_Get_DevNode_Registry_PropertyA(long long ptr ptr ptr long)
+@ stdcall CM_Get_DevNode_Registry_PropertyW(long long ptr ptr ptr long)
+@ stdcall CM_Get_DevNode_Registry_Property_ExA(long long ptr ptr ptr long long)
+@ stdcall CM_Get_DevNode_Registry_Property_ExW(long long ptr ptr ptr long long)
 @ stdcall CM_Get_DevNode_Status(ptr ptr long long)
 @ stdcall CM_Get_DevNode_Status_Ex(ptr ptr long long long)
 @ stdcall CM_Get_Device_IDA(long str long long)
@@ -172,10 +172,10 @@
 @ stub CM_Run_Detection_Ex
 @ stdcall CM_Set_DevNode_Problem(long long long)
 @ stdcall CM_Set_DevNode_Problem_Ex(long long long long)
-@ stub CM_Set_DevNode_Registry_PropertyA
-@ stub CM_Set_DevNode_Registry_PropertyW
-@ stub CM_Set_DevNode_Registry_Property_ExA
-@ stub CM_Set_DevNode_Registry_Property_ExW
+@ stdcall CM_Set_DevNode_Registry_PropertyA(long long ptr long long)
+@ stdcall CM_Set_DevNode_Registry_PropertyW(long long ptr long long)
+@ stdcall CM_Set_DevNode_Registry_Property_ExA(long long ptr long long long)
+@ stdcall CM_Set_DevNode_Registry_Property_ExW(long long ptr long long long)
 @ stub CM_Set_HW_Prof
 @ stub CM_Set_HW_Prof_Ex
 @ stub CM_Set_HW_Prof_FlagsA

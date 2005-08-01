@@ -54,6 +54,9 @@ static SERVICE_TABLE_ENTRY ServiceTable[2] =
 
 static WCHAR szRootDeviceId[] = L"HTREE\\ROOT\\0";
 
+static HKEY hEnumKey = NULL;
+static HKEY hClassKey = NULL;
+
 /* FUNCTIONS *****************************************************************/
 
 static DWORD WINAPI
@@ -237,9 +240,62 @@ PNP_GetRelatedDeviceInstance(handle_t BindingHandle,
     }
 
     DPRINT("PNP_GetRelatedDeviceInstance() done (returns %lx)\n", ret);
-    if (ret == 0)
+    if (ret == CR_SUCCESS)
     {
         DPRINT("RelatedDevice: %wZ\n", &PlugPlayData.RelatedDeviceInstance);
+    }
+
+    return ret;
+}
+
+
+CONFIGRET
+PNP_EnumerateSubKeys(handle_t BindingHandle,
+                     unsigned long Branch,
+                     unsigned long Index,
+                     wchar_t *Buffer,
+                     unsigned long Length,
+                     unsigned long *RequiredLength,
+                     DWORD Flags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+    HKEY hKey;
+    DWORD dwError;
+
+    DPRINT1("PNP_EnumerateSubKeys() called\n");
+
+    switch (Branch)
+    {
+        case 1:
+            hKey = hEnumKey;
+            break;
+
+        case 2:
+            hKey = hClassKey;
+            break;
+
+        default:
+            return CR_FAILURE;
+    }
+
+    *RequiredLength = Length;
+    dwError = RegEnumKeyExW(hKey,
+                            Index,
+                            Buffer,
+                            RequiredLength,
+                            NULL,
+                            NULL,
+                            NULL,
+                            NULL);
+    if (dwError != ERROR_SUCCESS)
+    {
+        ret = CR_FAILURE;
+    }
+
+    DPRINT1("PNP_EnumerateSubKeys() done (returns %lx)\n", ret);
+    if (ret == CR_SUCCESS)
+    {
+        DPRINT1("Sub key: %S\n", Buffer);
     }
 
     return ret;
@@ -256,7 +312,7 @@ PNP_GetDepth(handle_t BindingHandle,
     CONFIGRET ret = CR_SUCCESS;
     NTSTATUS Status;
 
-    DPRINT1("PNP_GetDepth() called\n");
+    DPRINT("PNP_GetDepth() called\n");
 
     RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
                          DeviceInstance);
@@ -273,7 +329,60 @@ PNP_GetDepth(handle_t BindingHandle,
         ret = CR_FAILURE; /* FIXME */
     }
 
-    DPRINT1("PNP_GetDepth() done (returns %lx)\n", ret);
+    DPRINT("PNP_GetDepth() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
+CONFIGRET
+PNP_SetDeviceRegProp(handle_t BindingHandle,
+                     wchar_t *DeviceId,
+                     unsigned long Property,
+                     unsigned long DataType,
+                     char *Buffer,
+                     unsigned long Length,
+                     unsigned long Flags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+//    ULONG Data;
+
+    DPRINT1("PNP_SetDeviceRegProp() called\n");
+
+    DPRINT1("DeviceId: %S\n", DeviceId);
+
+    DPRINT1("Property: %lu\n", Property);
+    DPRINT1("DataType: %lu\n", DataType);
+    DPRINT1("Length: %lu\n", Length);
+
+    DPRINT1("Data: %lx\n", *((PULONG)Buffer));
+
+    DPRINT1("PNP_SetDeviceRegProp() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
+CONFIGRET
+PNP_GetDeviceRegProp(handle_t BindingHandle,
+                     wchar_t *DeviceInstance,
+                     unsigned long Property,
+                     unsigned long *DataType,
+                     char *Buffer,
+                     unsigned long *TransferLen,
+                     unsigned long *Length,
+                     DWORD Flags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+    ULONG Data;
+
+    DPRINT1("PNP_GetDeviceRegProp() called\n");
+
+    Data = 0xbaadf00d;
+    memcpy(Buffer, &Data, sizeof(ULONG));
+    *Length = sizeof(ULONG);
+
+    DPRINT1("PNP_GetDeviceRegProp() done (returns %lx)\n", ret);
 
     return ret;
 }
@@ -290,7 +399,7 @@ PNP_GetDeviceStatus(handle_t BindingHandle,
     CONFIGRET ret = CR_SUCCESS;
     NTSTATUS Status;
 
-    DPRINT1("PNP_GetDeviceStatus() called\n");
+    DPRINT("PNP_GetDeviceStatus() called\n");
 
     RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
                          DeviceInstance);
@@ -309,7 +418,7 @@ PNP_GetDeviceStatus(handle_t BindingHandle,
         ret = CR_FAILURE; /* FIXME */
     }
 
-    DPRINT1("PNP_GetDeviceStatus() done (returns %lx)\n", ret);
+    DPRINT("PNP_GetDeviceStatus() done (returns %lx)\n", ret);
 
     return ret;
 }
@@ -424,7 +533,31 @@ ServiceMain(DWORD argc, LPTSTR *argv)
 int
 main(int argc, char *argv[])
 {
+    DWORD dwError;
+
     DPRINT("Umpnpmgr: main() started\n");
+
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"System\\CurrentControlSet\\Enum",
+                            0,
+                            KEY_ALL_ACCESS,
+                            &hEnumKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Could not open the Enum Key! (Error %lu)\n", dwError);
+        return dwError;
+    }
+
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"System\\CurrentControlSet\\Control\\Class",
+                            0,
+                            KEY_ALL_ACCESS,
+                            &hClassKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Could not open the Class Key! (Error %lu)\n", dwError);
+        return dwError;
+    }
 
     StartServiceCtrlDispatcher(ServiceTable);
 

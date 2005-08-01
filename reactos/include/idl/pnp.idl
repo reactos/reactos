@@ -39,10 +39,35 @@ interface pnp
                                          [in] DWORD Length,
                                          [in] DWORD Flags);
 
+  CONFIGRET PNP_EnumerateSubKeys(handle_t BindingHandle,
+                                 [in] unsigned long Branch,
+                                 [in] unsigned long Index,
+                                 [out, string, size_is(Length)] wchar_t *Buffer,
+                                 [in] unsigned long Length,
+                                 [out] unsigned long *RequiredLength,
+                                 [in] DWORD Flags);
+
   CONFIGRET PNP_GetDepth(handle_t BindingHandle,
                          [in, string] wchar_t *DeviceInstance,
                          [out] unsigned long *Depth,
                          [in] DWORD Flags);
+
+  CONFIGRET PNP_GetDeviceRegProp(handle_t BindingHandle,
+                                 [in, string] wchar_t *DeviceInstance,
+                                 [in] unsigned long Property,
+                                 [in, out] unsigned long *DataType,
+                                 [out, size_is(*TransferLen)] char *Buffer,
+                                 [in, out] unsigned long *TransferLen,
+                                 [in, out] unsigned long *Length,
+                                 [in] DWORD Flags);
+
+  CONFIGRET PNP_SetDeviceRegProp(handle_t BindingHandle,
+                                 [in, string] wchar_t *DeviceId,
+                                 [in] unsigned long Property,
+                                 [in] unsigned long DataType,
+                                 [in, size_is(Length)] char *Buffer,
+                                 [in] unsigned long Length,
+                                 [in] unsigned long Flags);
 
   CONFIGRET PNP_GetDeviceStatus(handle_t BindingHandle,
                                 [in, string] wchar_t *DeviceInstance,
