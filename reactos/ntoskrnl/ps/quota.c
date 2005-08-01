@@ -19,17 +19,18 @@ VOID
 STDCALL
 PspInheritQuota(PEPROCESS Process, PEPROCESS ParentProcess)
 {
-    PEPROCESS_QUOTA_BLOCK QuotaBlock;
-
     if (ParentProcess != NULL)
-        QuotaBlock = ParentProcess->QuotaBlock;
+    {
+        PEPROCESS_QUOTA_BLOCK QuotaBlock = ParentProcess->QuotaBlock;
+        
+        ASSERT(QuotaBlock != NULL);
+
+        InterlockedIncrementUL(&QuotaBlock->ReferenceCount);
+        
+        Process->QuotaBlock = QuotaBlock;
+    }
     else
-        QuotaBlock = &PspDefaultQuotaBlock;
-
-    ASSERT(QuotaBlock != NULL);
-
-    InterlockedIncrement(&QuotaBlock->ReferenceCount);
-    Process->QuotaBlock = QuotaBlock;
+        Process->QuotaBlock = &PspDefaultQuotaBlock;
 }
 
 VOID
@@ -38,10 +39,10 @@ PspDestroyQuotaBlock(PEPROCESS Process)
 {
     PEPROCESS_QUOTA_BLOCK QuotaBlock = Process->QuotaBlock;
 
-    if (InterlockedDecrement(&QuotaBlock->ReferenceCount) == 0)
+    if (QuotaBlock != &PspDefaultQuotaBlock &&
+        InterlockedDecrementUL(&QuotaBlock->ReferenceCount) == 0)
     {
-        if (QuotaBlock != &PspDefaultQuotaBlock)
-            ExFreePool(QuotaBlock);
+        ExFreePool(QuotaBlock);
     }
 }
 
