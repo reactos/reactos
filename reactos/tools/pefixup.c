@@ -336,19 +336,19 @@ int main(int argc, char **argv)
            i < nt_header->OptionalHeader.NumberOfRvaAndSizes;
            i++, section_header++)
       {
-         if (!strcmp(section_header->Name, ".text") ||
-             !strcmp(section_header->Name, ".data") ||
-             !strcmp(section_header->Name, ".idata") ||
-             !strcmp(section_header->Name, ".bss"))
+         if (!strcmp((char*)section_header->Name, ".text") ||
+             !strcmp((char*)section_header->Name, ".data") ||
+             !strcmp((char*)section_header->Name, ".idata") ||
+             !strcmp((char*)section_header->Name, ".bss"))
          {
             section_header->Characteristics |= IMAGE_SCN_MEM_NOT_PAGED;
             section_header->Characteristics &= ~IMAGE_SCN_MEM_DISCARDABLE;
          }
-         else if (!strcmp(section_header->Name, "INIT"))
+         else if (!strcmp((char*)section_header->Name, "INIT"))
          {
             section_header->Characteristics |= IMAGE_SCN_MEM_DISCARDABLE;
          }
-         else if (!strcmp(section_header->Name, "PAGE"))
+         else if (!strcmp((char*)section_header->Name, "PAGE"))
          {
             section_header->Characteristics |= IMAGE_SCN_MEM_NOT_PAGED;
          }
