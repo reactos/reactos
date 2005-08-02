@@ -4744,8 +4744,8 @@ KfReleaseSpinLock(
  *   IN PCHAR  Field);
  */
 #ifndef CONTAINING_RECORD
-#define CONTAINING_RECORD(Address, Type, Field) \
-  ((Type *) (((ULONG_PTR) Address) - FIELD_OFFSET(Type, Field)))
+#define CONTAINING_RECORD(address, type, field) \
+  ((type *)(((ULONG_PTR)address) - (ULONG_PTR)(&(((type *)0)->field))))
 #endif
 
 /* LONG

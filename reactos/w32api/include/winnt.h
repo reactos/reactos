@@ -890,7 +890,7 @@ typedef enum
 #define FIELD_OFFSET(t,f) ((LONG)&(((t*)0)->f))
 #ifndef CONTAINING_RECORD
 #define CONTAINING_RECORD(address, type, field) \
-  ((type*)((PCHAR)(address) - (PCHAR)(&((type *)0)->field)))
+  ((type *)(((ULONG_PTR)address) - (ULONG_PTR)(&(((type *)0)->field))))
 #endif
 /* end winddk.h */
 #define IMAGE_SIZEOF_FILE_HEADER	20

@@ -213,8 +213,8 @@ typedef struct _REG_VALUE
  *          Type = Type of the whole structure
  *          Field = Name of the field whose address is none
  */
-#define CONTAINING_RECORD(Address,Type,Field) \
-	(Type *)(((LONG)Address) - FIELD_OFFSET(Type,Field))
+#define CONTAINING_RECORD(address, type, field) \
+    ((type *)(((ULONG_PTR)address) - (ULONG_PTR)(&(((type *)0)->field))))
 
 
 #define REG_NONE 0
