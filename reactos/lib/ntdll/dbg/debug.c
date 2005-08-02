@@ -19,6 +19,7 @@
 
 static HANDLE DbgSsApiPort = NULL;
 static HANDLE DbgSsReplyPort = NULL;
+static NTSTATUS (STDCALL * DbgSsCallback)(PVOID,PVOID) = NULL;
 
 
 typedef struct _LPC_DBGSS_MESSAGE
@@ -77,7 +78,7 @@ DbgSsHandleKmApiMsg(ULONG Unknown1,
  */
 NTSTATUS STDCALL
 DbgSsInitialize(HANDLE ReplyPort,
-		ULONG Unknown1,
+		PVOID Callback,
 		ULONG Unknown2,
 		ULONG Unknown3)
 {
@@ -102,7 +103,7 @@ DbgSsInitialize(HANDLE ReplyPort,
 		return Status;
 
 	DbgSsReplyPort = ReplyPort;
-//	UnknownData1 = Unknown1;
+	DbgSsCallback = Callback;
 //	UnknownData2 = Unknown2;
 //	UnknownData3 = Unknown3;
 

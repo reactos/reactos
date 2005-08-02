@@ -99,7 +99,7 @@ NTSTATUS
 STDCALL
 DbgSsInitialize(
     HANDLE ReplyPort,
-    ULONG Unknown1,
+    PVOID Callback,
     ULONG Unknown2,
     ULONG Unknown3
 );
