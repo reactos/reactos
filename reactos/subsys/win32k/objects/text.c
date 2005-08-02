@@ -1527,7 +1527,7 @@ NtGdiExtTextOut(
       }
    }
 
-   BitmapObj = BITMAPOBJ_LockBitmap(DC_BITMAP(dc));
+   BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
    if ( !BitmapObj )
    {
       goto fail;
@@ -1542,7 +1542,7 @@ NtGdiExtTextOut(
    YStart = Start.y + dc->w.DCOrgY;
 
    /* Create the brushes */
-   PalDestGDI = PALETTE_LockPalette(DC_PALETTE(dc));
+   PalDestGDI = PALETTE_LockPalette(dc->w.hPalette);
    if ( !PalDestGDI )
       Mode = PAL_RGB;
    else
@@ -1550,7 +1550,7 @@ NtGdiExtTextOut(
       Mode = PalDestGDI->Mode;
       PALETTE_UnlockPalette(PalDestGDI);
    }
-   XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, DC_PALETTE(dc), NULL);
+   XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
    if ( !XlateObj )
    {
       goto fail;
@@ -1580,7 +1580,7 @@ NtGdiExtTextOut(
       }
       IntGdiInitBrushInstance(&BrushBgInst, BrushBg, NULL);
    }
-   XlateObj2 = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, Mode, NULL, DC_PALETTE(dc));
+   XlateObj2 = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, Mode, NULL, dc->w.hPalette);
    if ( !XlateObj2 )
    {
       goto fail;
