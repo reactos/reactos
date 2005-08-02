@@ -7,6 +7,11 @@ function dm_usort_cmp ($a, $b) {
   return ($a > $b) ? -1 : 1;
 }
 
+function dm_usort_cmp_desc ($a, $b) {
+  if ($a == $b) return 0;
+  return ($a > $b) ? 1 : -1;
+}
+
 function printHeader()
 {
 ?>
@@ -34,7 +39,7 @@ function printHeader()
 <?php
 }
 
-function printMenu()
+function printMenu($revision)
 {
 ?>
 <table border="0" class="box" cellpadding="5">
@@ -58,7 +63,7 @@ function printMenu()
     $i = 0;
     $dirlist = array();
     while (false !== ($entry = $d->read())) {
-      if ((strcasecmp($entry, ".") != 0) && (strcasecmp($entry, "..") != 0) && is_dir(ISO_PATH . "\\" . $entry)=="dir") {
+      if ((strcasecmp($entry, ".") != 0) && (strcasecmp($entry, "..") != 0) && is_dir(ISO_PATH . "\\" . $entry) == "dir") {
         $dirlist[$i++] = $entry;
       }
     }
@@ -88,7 +93,6 @@ function printMenu()
 	</td>
 	<td>
 <?php
-	$revision = $_POST["revision"];
 	echo "<input type=\"text\" name=\"revision\" size=\"10\" maxlength=\"10\" tabindex=\"2\" value=\"" . $revision . "\"></input>";
 ?>
 	</td>
@@ -97,6 +101,16 @@ function printMenu()
 	</td>
 	<td>
 		<input type="submit" name="getiso" value="Download" tabindex="3" style="border: 1px solid #000000"></input>
+	</td>
+</tr>
+<tr>
+	<td colspan="7">
+		<hr size="2" width="100%" />
+	</td>
+</tr>
+<tr>
+	<td colspan="7">
+		<input type="submit" name="getnextiso" value="Next ISO" tabindex="4" style="border: 1px solid #000000"></input>
 	</td>
 </tr>
 </table>
@@ -125,6 +139,37 @@ if (revision) revision.focus();
 <?php
 }
 
+function getNextRevisionISO($branch, $revision)
+{
+	$revision = intval($revision);
+	$path = ISO_PATH . "\\" . $branch;
+	$d = dir($path);
+	$i = 0;
+	$filelist = array();
+	while (false !== ($entry = $d->read())) {
+		if (is_dir($path . "\\" . $entry) != "dir")
+			$filelist[$i++] = $entry;
+	}
+	$d->close();
+	
+	if (is_array($filelist)) {
+		usort($filelist, "dm_usort_cmp_desc");
+		reset($filelist);
+		while (list($key, $filename) = each($filelist)) {
+			if (ereg('ReactOS-' . $branch . '-r([0-9]*).iso', $filename, $regs))
+			{
+				$thisRevision = intval($regs[1]);
+				if ($thisRevision > $revision)
+					return $regs[1];
+				$lastRevision = $thisRevision;
+			}
+		}
+	}
+
+	return "";
+}
+
+
 function main()
 {
 	$branch = $_POST["branch"];
@@ -140,7 +185,7 @@ function main()
 	else
 	{
 		printHeader();
-		printMenu();
+		printMenu($_POST["revision"]);
 		echo "<br><b>No ISO exist for branch '" . $branch . "' and revision " . $revision . ".</b><br><br>";
 		printFooter();
 	}
@@ -148,10 +193,16 @@ function main()
 
 if (!empty($_POST["getiso"]) && !empty($_POST["branch"]) && !empty($_POST["revision"]) && is_numeric($_POST["revision"]))
 	main();
+else if (!empty($_POST["getnextiso"]) && !empty($_POST["branch"]) && !empty($_POST["revision"]) && is_numeric($_POST["revision"]))
+{
+	printHeader();
+	printMenu(getNextRevisionISO($_POST["branch"], $_POST["revision"]));
+	printFooter();
+}
 else
 {
 	printHeader();
-	printMenu();
+	printMenu($_POST["revision"]);
 	printFooter();
 }
 
