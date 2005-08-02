@@ -936,9 +936,10 @@ PsSetCreateThreadNotifyRoutine@4
 PsSetJobUIRestrictionsClass@8
 PsSetLegoNotifyRoutine@4
 PsSetProcessPriorityClass@8
+PsSetProcessPriorityByClass@8
 PsSetProcessSecurityPort@8
 PsSetProcessWin32Process@8
-PsSetProcessWin32WindowStation@8
+PsSetProcessWindowStation@8
 PsSetThreadHardErrorsAreDisabled@8
 PsSetThreadWin32Thread@8
 PsSetLoadImageNotifyRoutine@4

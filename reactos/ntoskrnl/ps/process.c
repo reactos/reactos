@@ -753,10 +753,22 @@ PsSetProcessWin32Process(PEPROCESS Process,
  */
 VOID
 STDCALL
-PsSetProcessWin32WindowStation(PEPROCESS Process,
-                               PVOID WindowStation)
+PsSetProcessWindowStation(PEPROCESS Process,
+                          PVOID WindowStation)
 {
     Process->Win32WindowStation = WindowStation;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+PsSetProcessPriorityByClass(IN PEPROCESS Process,
+                            IN ULONG Type)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /*

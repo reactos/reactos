@@ -33,8 +33,6 @@ static GENERIC_MAPPING PiThreadMapping = {
     STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
     THREAD_ALL_ACCESS};
 
-BOOLEAN DoneInitYet = FALSE;
-
 extern ULONG NtBuildNumber;
 extern ULONG NtMajorVersion;
 extern ULONG NtMinorVersion;
@@ -103,8 +101,6 @@ PsInitThreadManagment(VOID)
    KeGetCurrentPrcb()->CurrentThread = (PVOID)FirstThread;
 
    DPRINT("FirstThread %x\n",FirstThread);
-
-   DoneInitYet = TRUE;
 
    ExInitializeWorkItem(&PspReaperWorkItem, PspReapRoutine, NULL);
 }

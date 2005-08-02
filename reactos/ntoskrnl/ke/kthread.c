@@ -28,7 +28,6 @@ extern EX_WORK_QUEUE ExWorkerQueue[MaximumWorkQueue];
 LIST_ENTRY PriorityListHead[MAXIMUM_PRIORITY];
 static ULONG PriorityListMask = 0;
 ULONG IdleProcessorMask = 0;
-extern BOOLEAN DoneInitYet;
 extern PETHREAD PspReaperList;
 
 /* FUNCTIONS *****************************************************************/
@@ -232,7 +231,7 @@ KiDispatchThread(ULONG NewThreadStatus)
 {
     KIRQL OldIrql;
 
-    if (!DoneInitYet || KeGetCurrentPrcb()->IdleThread == NULL) {
+    if (KeGetCurrentPrcb()->IdleThread == NULL) {
         return;
     }
 
