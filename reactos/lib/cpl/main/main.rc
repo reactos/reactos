@@ -14,4 +14,4 @@ IDC_CPLICON_1 ICON "resources/mouse.ico"
 IDC_CPLICON_2 ICON "resources/keyboard.ico"
 
 #include "En.rc"
-
+#include "De.rc"
