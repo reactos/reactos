@@ -109,8 +109,11 @@ function printMenu($revision)
 	</td>
 </tr>
 <tr>
-	<td colspan="7">
+	<td colspan="4">
 		<input type="submit" name="getnextiso" value="Next ISO" tabindex="4" style="border: 1px solid #000000"></input>
+	</td>
+	<td colspan="3" align="right">
+		<input type="submit" name="getlatestiso" value="Latest ISO" tabindex="5" style="border: 1px solid #000000"></input>
 	</td>
 </tr>
 </table>
@@ -139,7 +142,7 @@ if (revision) revision.focus();
 <?php
 }
 
-function getNextRevisionISO($branch, $revision)
+function locateRevisionISO($branch, $revision, $latest)
 {
 	$revision = intval($revision);
 	$path = ISO_PATH . "\\" . $branch;
@@ -153,13 +156,16 @@ function getNextRevisionISO($branch, $revision)
 	$d->close();
 	
 	if (is_array($filelist)) {
-		usort($filelist, "dm_usort_cmp_desc");
+		$sortFunction = $latest ? "dm_usort_cmp" : "dm_usort_cmp_desc";
+		usort($filelist, $sortFunction);
 		reset($filelist);
 		while (list($key, $filename) = each($filelist)) {
 			if (ereg('ReactOS-' . $branch . '-r([0-9]*).iso', $filename, $regs))
 			{
 				$thisRevision = intval($regs[1]);
-				if ($thisRevision > $revision)
+				if (($latest) && ($thisRevision < $revision))
+					return $regs[1];
+				else if ($thisRevision > $revision)
 					return $regs[1];
 				$lastRevision = $thisRevision;
 			}
@@ -169,6 +175,15 @@ function getNextRevisionISO($branch, $revision)
 	return "";
 }
 
+function getNextRevisionISO($branch, $revision)
+{
+	return locateRevisionISO($branch, $revision, false);
+}
+
+function getLatestRevisionISO($branch)
+{
+	return locateRevisionISO($branch, 999999, true);
+}
 
 function main()
 {
@@ -197,6 +212,12 @@ else if (!empty($_POST["getnextiso"]) && !empty($_POST["branch"]) && !empty($_PO
 {
 	printHeader();
 	printMenu(getNextRevisionISO($_POST["branch"], $_POST["revision"]));
+	printFooter();
+}
+else if (!empty($_POST["getlatestiso"]) && !empty($_POST["branch"]))
+{
+	printHeader();
+	printMenu(getLatestRevisionISO($_POST["branch"]));
 	printFooter();
 }
 else
