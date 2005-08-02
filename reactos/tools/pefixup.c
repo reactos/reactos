@@ -332,9 +332,6 @@ int main(int argc, char **argv)
            i < nt_header->OptionalHeader.NumberOfRvaAndSizes;
            i++, section_header++)
       {
-         if (section_header->VirtualAddress)
-   	 break;
-
          if (!strcmp(section_header->Name, ".text") ||
              !strcmp(section_header->Name, ".data") ||
              !strcmp(section_header->Name, ".idata") ||

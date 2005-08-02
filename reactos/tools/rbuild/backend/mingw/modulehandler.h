@@ -113,7 +113,8 @@ protected:
 	                             const std::string& linker,
 	                             const std::string& linkerParameters,
 	                             const std::string& objectsMacro,
-	                             const std::string& libsMacro );
+	                             const std::string& libsMacro,
+	                             const std::string& pefixupParameters );
 	void GeneratePhonyTarget() const;
 	void GenerateRules ();
 	void GenerateImportLibraryTargetIfNeeded ();

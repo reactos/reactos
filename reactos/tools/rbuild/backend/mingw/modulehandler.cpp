@@ -1412,7 +1412,8 @@ MingwModuleHandler::GenerateLinkerCommand (
 	const string& linker,
 	const string& linkerParameters,
 	const string& objectsMacro,
-	const string& libsMacro )
+	const string& libsMacro,
+	const string& pefixupParameters )
 {
 	string target ( GetTargetMacro ( module ) );
 	string target_folder ( GetDirectory ( GetTargetFilename ( module, NULL ) ) );
@@ -1451,8 +1452,9 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          GetLinkerMacro ().c_str () );
 	
 		fprintf ( fMakefile,
-		          "\t$(Q)$(PEFIXUP_TARGET) %s -exports\n",
-		          target.c_str () );
+		          "\t$(Q)$(PEFIXUP_TARGET) %s -exports %s\n",
+		          target.c_str (),
+		          pefixupParameters.c_str() );
 
 		fprintf ( fMakefile,
 		          "\t-@${rm} %s 2>$(NUL)\n",
@@ -1468,6 +1470,14 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          objectsMacro.c_str (),
 		          libsMacro.c_str (),
 		          GetLinkerMacro ().c_str () );
+
+		if ( pefixupParameters.length() != 0 )
+		{
+			fprintf ( fMakefile,
+			          "\t$(Q)$(PEFIXUP_TARGET) %s -exports %s\n",
+			          target.c_str (),
+		        	  pefixupParameters.c_str() );
+		}
 	}
 
 	GenerateBuildMapCode ();
@@ -2166,7 +2176,8 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ()
 		                        "${gcc}",
 		                        linkerParameters,
 		                        objectsMacro,
-		                        libsMacro );
+		                        libsMacro,
+		                        "-sections" );
 	}
 	else
 	{
@@ -2252,7 +2263,8 @@ MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ()
 		                        "${gcc}",
 		                        linkerParameters,
 		                        objectsMacro,
-		                        libsMacro );
+		                        libsMacro,
+		                        "-sections" );
 	}
 	else
 	{
@@ -2299,7 +2311,8 @@ MingwKernelModeDriverModuleHandler::GenerateKernelModeDriverModuleTarget ()
 		                        "${gcc}",
 		                        linkerParameters,
 		                        objectsMacro,
-		                        libsMacro );
+		                        libsMacro,
+		                        "-sections" );
 	}
 	else
 	{
@@ -2345,7 +2358,8 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ()
 		                        "${gcc}",
 		                        linkerParameters,
 		                        objectsMacro,
-		                        libsMacro );
+		                        libsMacro,
+		                        "" );
 	}
 	else
 	{
@@ -2391,7 +2405,8 @@ MingwNativeCUIModuleHandler::GenerateNativeCUIModuleTarget ()
 		                        "${gcc}",
 		                        linkerParameters,
 		                        objectsMacro,
-		                        libsMacro );
+		                        libsMacro,
+		                        "" );
 	}
 	else
 	{
@@ -2443,7 +2458,8 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ()
 		                        linker,
 		                        linkerParameters,
 		                        objectsMacro,
-		                        libsMacro );
+		                        libsMacro,
+		                        "" );
 	}
 	else
 	{
@@ -2495,7 +2511,8 @@ MingwWin32CUIModuleHandler::GenerateWin32CUIModuleTarget ()
 		                        linker,
 		                        linkerParameters,
 		                        objectsMacro,
-		                        libsMacro );
+		                        libsMacro,
+		                        "" );
 	}
 	else
 	{
@@ -2547,7 +2564,8 @@ MingwWin32GUIModuleHandler::GenerateWin32GUIModuleTarget ()
 		                        linker,
 		                        linkerParameters,
 		                        objectsMacro,
-		                        libsMacro );
+		                        libsMacro,
+		                        "" );
 	}
 	else
 	{
@@ -3046,7 +3064,8 @@ MingwTestModuleHandler::GenerateTestModuleTarget ()
 		                        linker,
 		                        linkerParameters,
 		                        objectsMacro,
-		                        libsMacro );
+		                        libsMacro,
+		                        "" );
 	}
 	else
 	{
