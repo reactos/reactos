@@ -295,6 +295,6 @@ NtCallbackReturn (PVOID		Result,
   /* Should never return. */
   KEBUGCHECK(0);
   return(STATUS_UNSUCCESSFUL);
-#endif
 }
+#endif
 /* EOF */
