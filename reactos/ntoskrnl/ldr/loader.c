@@ -1375,8 +1375,8 @@ LdrPEGetExportByOrdinal (
         ? RVA(BaseAddress, ExFunctions[Ordinal - ExportDir->Base] )
         : NULL;
 
-    if (((ULONG)Function >= (ULONG)ExportDir) &&
-        ((ULONG)Function < (ULONG)ExportDir + (ULONG)ExportDirSize))
+    if (((ULONG_PTR)Function >= (ULONG_PTR)ExportDir) &&
+        ((ULONG_PTR)Function < (ULONG_PTR)ExportDir + ExportDirSize))
     {
         DPRINT("Forward: %s\n", (PCHAR)Function);
         Function = LdrPEFixupForward((PCHAR)Function);
