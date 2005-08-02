@@ -47,9 +47,10 @@ END
 
 
 /* Language-specific resources */
-#include "Cz.rc"
 #include "En.rc"
+#include "Cz.rc"
 #include "De.rc"
+#include "Bg.rc"
 #include "Dk.rc"
 #include "Es.rc"
 #include "Sv.rc"
