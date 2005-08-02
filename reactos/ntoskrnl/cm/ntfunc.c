@@ -30,138 +30,6 @@ FAST_MUTEX CmiCallbackLock;
 
 /* FUNCTIONS ****************************************************************/
 
-/* TEMPORARY HACK UNTIL PROPER PARSE ROUTINES SOON. DO NOT REMOVE -- Alex */
-NTSTATUS
-CmpFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
-	     PVOID* ReturnedObject,
-	     PUNICODE_STRING RemainingPath,
-	     POBJECT_TYPE ObjectType)
-{
-  PVOID NextObject;
-  PVOID CurrentObject;
-  PVOID RootObject;
-  POBJECT_HEADER CurrentHeader;
-  NTSTATUS Status;
-  PWSTR current;
-  UNICODE_STRING PathString;
-  ULONG Attributes;
-  PUNICODE_STRING ObjectName;
-
-  PAGED_CODE();
-
-  DPRINT("CmpFindObject(ObjectAttributes 0x%p, ReturnedObject 0x%p, "
-	 "RemainingPath 0x%p)\n",ObjectAttributes,ReturnedObject,RemainingPath);
-  DPRINT("ObjectAttributes->ObjectName %wZ\n",
-	 ObjectAttributes->ObjectName);
-
-  RtlInitUnicodeString (RemainingPath, NULL);
-
-  if (ObjectAttributes->RootDirectory == NULL)
-    {
-      ObReferenceObjectByPointer(NameSpaceRoot,
-				 DIRECTORY_TRAVERSE,
-				 NULL,
-				 UserMode);
-      CurrentObject = NameSpaceRoot;
-    }
-  else
-    {
-      Status = ObReferenceObjectByHandle(ObjectAttributes->RootDirectory,
-					 0,
-					 NULL,
-					 UserMode,
-					 &CurrentObject,
-					 NULL);
-      if (!NT_SUCCESS(Status))
-	{
-	  return Status;
-	}
-    }
-
-  ObjectName = ObjectAttributes->ObjectName;
-  if (ObjectName->Length == 0 ||
-      ObjectName->Buffer[0] == UNICODE_NULL)
-    {
-      *ReturnedObject = CurrentObject;
-      return STATUS_SUCCESS;
-    }
-
-  if (ObjectAttributes->RootDirectory == NULL &&
-      ObjectName->Buffer[0] != L'\\')
-    {
-      ObDereferenceObject (CurrentObject);
-      return STATUS_UNSUCCESSFUL;
-    }
-
-  /* Create a zero-terminated copy of the object name */
-  PathString.Length = ObjectName->Length;
-  PathString.MaximumLength = ObjectName->Length + sizeof(WCHAR);
-  PathString.Buffer = ExAllocatePool (NonPagedPool,
-				      PathString.MaximumLength);
-  if (PathString.Buffer == NULL)
-    {
-      ObDereferenceObject (CurrentObject);
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-  RtlCopyMemory (PathString.Buffer,
-		 ObjectName->Buffer,
-		 ObjectName->Length);
-  PathString.Buffer[PathString.Length / sizeof(WCHAR)] = UNICODE_NULL;
-
-  current = PathString.Buffer;
-
-  RootObject = CurrentObject;
-  Attributes = ObjectAttributes->Attributes;
-  if (ObjectType == ObSymbolicLinkType)
-    Attributes |= OBJ_OPENLINK;
-
-  while (TRUE)
-    {
-	DPRINT("current %S\n",current);
-	CurrentHeader = BODY_TO_HEADER(CurrentObject);
-
-	DPRINT("Current ObjectType %wZ\n",
-	       &CurrentHeader->Type->Name);
-
-	if (CurrentHeader->Type->TypeInfo.ParseProcedure == NULL)
-	  {
-	     DPRINT("Current object can't parse\n");
-	     break;
-	  }
-	Status = CurrentHeader->Type->TypeInfo.ParseProcedure(CurrentObject,
-						  &NextObject,
-						  &PathString,
-						  &current,
-						  Attributes);
-	if (Status == STATUS_REPARSE)
-	  {
-	     /* reparse the object path */
-	     NextObject = NameSpaceRoot;
-	     current = PathString.Buffer;
-
-	     ObReferenceObjectByPointer(NextObject,
-					DIRECTORY_TRAVERSE,
-					NULL,
-					UserMode);
-	  }
-
-	if (NextObject == NULL)
-	  {
-	     break;
-	  }
-	ObDereferenceObject(CurrentObject);
-	CurrentObject = NextObject;
-    }
-
-  if (current)
-     RtlpCreateUnicodeString (RemainingPath, current, NonPagedPool);
-  RtlFreeUnicodeString (&PathString);
-  *ReturnedObject = CurrentObject;
-
-  return STATUS_SUCCESS;
-}
-
 /*
  * @implemented
  */
@@ -322,6 +190,8 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   NTSTATUS Status;
   PVOID Object;
   PWSTR Start;
+  UNICODE_STRING ObjectName;
+  OBJECT_CREATE_INFORMATION ObjectCreateInfo;
   unsigned i;
 
   PAGED_CODE();
@@ -331,10 +201,26 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 	 KeyHandle,
 	 ObjectAttributes->RootDirectory);
 
-  Status = CmpFindObject(ObjectAttributes,
-			&Object,
-			&RemainingPath,
-			CmiKeyType);
+   /* Capture all the info */
+   DPRINT("Capturing Create Info\n");
+   Status = ObpCaptureObjectAttributes(ObjectAttributes,
+                                       KeGetPreviousMode(),
+                                       CmiKeyType,
+                                       &ObjectCreateInfo,
+                                       &ObjectName);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
+	return Status;
+     }
+
+  Status = ObFindObject(&ObjectCreateInfo,
+                        &ObjectName,
+			            (PVOID*)&Object,
+                        &RemainingPath,
+                        CmiKeyType);
+     ObpReleaseCapturedAttributes(&ObjectCreateInfo);
+   if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("CmpFindObject failed, Status: 0x%x\n", Status);
@@ -1238,6 +1124,8 @@ NtOpenKey(OUT PHANDLE KeyHandle,
   PVOID Object;
   HANDLE hKey;
   NTSTATUS Status = STATUS_SUCCESS;
+  UNICODE_STRING ObjectName;
+  OBJECT_CREATE_INFORMATION ObjectCreateInfo;
 
   PAGED_CODE();
 
@@ -1277,11 +1165,28 @@ NtOpenKey(OUT PHANDLE KeyHandle,
   /*if (ObjectAttributes->ObjectName->Length > MAX_NAME_LENGTH)
 	  return(STATUS_BUFFER_OVERFLOW);*/
 
+      /* Capture all the info */
+   DPRINT("Capturing Create Info\n");
+   Status = ObpCaptureObjectAttributes(ObjectAttributes,
+                                       PreviousMode,
+                                       CmiKeyType,
+                                       &ObjectCreateInfo,
+                                       &ObjectName);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
+	return Status;
+     }
+
   RemainingPath.Buffer = NULL;
-  Status = CmpFindObject(ObjectAttributes,
-			&Object,
-			&RemainingPath,
-			CmiKeyType);
+
+  Status = ObFindObject(&ObjectCreateInfo,
+                        &ObjectName,
+			            (PVOID*)&Object,
+                        &RemainingPath,
+                        CmiKeyType);
+     ObpReleaseCapturedAttributes(&ObjectCreateInfo);
+   if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("CmpFindObject() returned 0x%08lx\n", Status);

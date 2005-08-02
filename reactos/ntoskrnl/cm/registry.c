@@ -695,14 +695,32 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
   PKEY_OBJECT NewKey;
   NTSTATUS Status;
   PWSTR SubName;
+  UNICODE_STRING ObjectName;
+  OBJECT_CREATE_INFORMATION ObjectCreateInfo;
 
   DPRINT("CmiConnectHive(%p, %p) called.\n",
 	 KeyObjectAttributes, RegistryHive);
+     
+   /* Capture all the info */
+   DPRINT("Capturing Create Info\n");
+   Status = ObpCaptureObjectAttributes(KeyObjectAttributes,
+                                       KernelMode,
+                                       CmiKeyType,
+                                       &ObjectCreateInfo,
+                                       &ObjectName);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
+	return Status;
+     }
 
-  Status = CmpFindObject(KeyObjectAttributes,
-			(PVOID*)&ParentKey,
-			&RemainingPath,
-			CmiKeyType);
+  Status = ObFindObject(&ObjectCreateInfo,
+                        &ObjectName,
+			            (PVOID*)&ParentKey,
+                        &RemainingPath,
+                        CmiKeyType);
+     ObpReleaseCapturedAttributes(&ObjectCreateInfo);
+   if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
   if (!NT_SUCCESS(Status))
     {
       return Status;
