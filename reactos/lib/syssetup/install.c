@@ -241,7 +241,7 @@ RestartDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
       case WM_INITDIALOG:
          SendDlgItemMessage(hWnd, IDC_RESTART_PROGRESS, PBM_SETRANGE, 0,
             MAKELPARAM(0, 300));
-         SetTimer(hWnd, 0, 50, NULL);
+         SetTimer(hWnd, 1, 50, NULL);
          return TRUE;
 
       case WM_TIMER:

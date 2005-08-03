@@ -1301,7 +1301,7 @@ ProcessPageDlgProc(HWND hwndDlg,
 
                 SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETRANGE, 0,
                                    MAKELPARAM(0, 300));
-                SetTimer(hwndDlg, 0, 50, NULL);
+                SetTimer(hwndDlg, 1, 50, NULL);
                 break;
 
               case PSN_WIZNEXT:
