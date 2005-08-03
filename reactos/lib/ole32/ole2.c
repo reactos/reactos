@@ -46,6 +46,7 @@
 #include "ole2ver.h"
 #include "wownt32.h"
 
+#include "wine/unicode.h"
 #include "wine/winbase16.h"
 #include "wine/wingdi16.h"
 #include "wine/winuser16.h"
@@ -2294,20 +2295,20 @@ HRESULT WINAPI OleCreate(
  */
 HRESULT WINAPI OleSetAutoConvert(REFCLSID clsidOld, REFCLSID clsidNew)
 {
-    HKEY hkey = 0;
-    char buf[200], szClsidNew[200];
+    static const WCHAR wszAutoConvertTo[] = {'A','u','t','o','C','o','n','v','e','r','t','T','o',0};
+    HKEY hkey = NULL;
+    WCHAR szClsidNew[CHARS_IN_GUID];
     HRESULT res = S_OK;
 
-    /* FIXME: convert to Unicode */
     TRACE("(%s,%s)\n", debugstr_guid(clsidOld), debugstr_guid(clsidNew));
-    sprintf(buf,"CLSID\\");WINE_StringFromCLSID(clsidOld,&buf[6]);
-    WINE_StringFromCLSID(clsidNew, szClsidNew);
-    if (RegOpenKeyA(HKEY_CLASSES_ROOT,buf,&hkey))
+    
+    if (COM_OpenKeyForCLSID(clsidOld, KEY_READ | KEY_WRITE, &hkey))
     {
         res = REGDB_E_CLASSNOTREG;
 	goto done;
     }
-    if (RegSetValueA(hkey, "AutoConvertTo", REG_SZ, szClsidNew, strlen(szClsidNew)+1))
+    StringFromGUID2(clsidNew, szClsidNew, CHARS_IN_GUID);
+    if (RegSetValueW(hkey, wszAutoConvertTo, REG_SZ, szClsidNew, (strlenW(szClsidNew)+1) * sizeof(WCHAR)))
     {
         res = REGDB_E_WRITEREGDB;
 	goto done;

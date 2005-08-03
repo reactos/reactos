@@ -46,12 +46,12 @@ const CLSID CLSID_FileMoniker = {
 /* filemoniker data structure */
 typedef struct FileMonikerImpl{
 
-    IMonikerVtbl*  lpvtbl1;  /* VTable relative to the IMoniker interface.*/
+    const IMonikerVtbl*  lpvtbl1;  /* VTable relative to the IMoniker interface.*/
 
     /* The ROT (RunningObjectTable implementation) uses the IROTData interface to test whether
      * two monikers are equal. That's whay IROTData interface is implemented by monikers.
      */
-    IROTDataVtbl*  lpvtbl2;  /* VTable relative to the IROTData interface.*/
+    const IROTDataVtbl*  lpvtbl2;  /* VTable relative to the IROTData interface.*/
 
     ULONG ref; /* reference counter for this object */
 
@@ -182,121 +182,155 @@ FileMonikerImpl_IsDirty(IMoniker* iface)
  * written by FileMonikerImpl_Save
  */
 static HRESULT WINAPI
-FileMonikerImpl_Load(IMoniker* iface,IStream* pStm)
+FileMonikerImpl_Load(IMoniker* iface, IStream* pStm)
 {
     HRESULT res;
-    CHAR* filePathA;
-    WCHAR* filePathW;
+    CHAR* filePathA = NULL;
+    WCHAR* filePathW = NULL;
     ULONG bread;
     WORD  wbuffer;
-    DWORD dwbuffer,length,i,doubleLenHex,doubleLenDec;
+    DWORD dwbuffer, bytesA, bytesW, len;
+    int i;
 
     FileMonikerImpl *This = (FileMonikerImpl *)iface;
 
     TRACE("(%p,%p)\n",iface,pStm);
 
-    /* first WORD is non significative */
+    /* first WORD must be 0 */
     res=IStream_Read(pStm,&wbuffer,sizeof(WORD),&bread);
     if (bread!=sizeof(WORD) || wbuffer!=0)
     {
-        ERR("Couldn't read 0 word\n");
-        return E_FAIL;
+        WARN("Couldn't read 0 word\n");
+        goto fail;
     }
 
     /* read filePath string length (plus one) */
-    res=IStream_Read(pStm,&length,sizeof(DWORD),&bread);
+    res=IStream_Read(pStm,&bytesA,sizeof(DWORD),&bread);
     if (bread != sizeof(DWORD))
     {
-        ERR("Couldn't read file string length\n");
-        return E_FAIL;
+        WARN("Couldn't read file string length\n");
+        goto fail;
     }
 
     /* read filePath string */
-    filePathA=HeapAlloc(GetProcessHeap(),0,length);
-    res=IStream_Read(pStm,filePathA,length,&bread);
-    HeapFree(GetProcessHeap(),0,filePathA);
-    if (bread != length)
+    filePathA=HeapAlloc(GetProcessHeap(),0,bytesA);
+    if (!filePathA)
     {
-        ERR("Couldn't read file path string\n");
-        return E_FAIL;
+        res = E_OUTOFMEMORY;
+        goto fail;
+    }
+
+    res=IStream_Read(pStm,filePathA,bytesA,&bread);
+    if (bread != bytesA)
+    {
+        WARN("Couldn't read file path string\n");
+        goto fail;
     }
 
     /* read the first constant */
     IStream_Read(pStm,&dwbuffer,sizeof(DWORD),&bread);
     if (bread != sizeof(DWORD) || dwbuffer != 0xDEADFFFF)
     {
-        ERR("Couldn't read 0xDEADFFFF constant\n");
-        return E_FAIL;
+        WARN("Couldn't read 0xDEADFFFF constant\n");
+        goto fail;
     }
 
-    length--;
-
-    for(i=0;i<10;i++){
-        res=IStream_Read(pStm,&wbuffer,sizeof(WORD),&bread);
-        if (bread!=sizeof(WORD) || wbuffer!=0)
+    for(i=0;i<5;i++)
+    {
+        res=IStream_Read(pStm,&dwbuffer,sizeof(DWORD),&bread);
+        if (bread!=sizeof(DWORD) || dwbuffer!=0)
         {
-            ERR("Couldn't read 0 padding\n");
-            return E_FAIL;
+            WARN("Couldn't read 0 padding\n");
+            goto fail;
         }
     }
 
-    if (length>8)
-        length=0;
+    res=IStream_Read(pStm,&dwbuffer,sizeof(DWORD),&bread);
+    if (bread!=sizeof(DWORD))
+        goto fail;
 
-    doubleLenHex=doubleLenDec=2*length;
-    if (length > 5)
-        doubleLenDec+=6;
+    if (!dwbuffer) /* No W-string */
+    {        
+        bytesA--;
+        len=MultiByteToWideChar(CP_ACP, MB_ERR_INVALID_CHARS, filePathA, bytesA, NULL, 0);
+        if (!len)
+            goto fail;
+
+        filePathW=HeapAlloc(GetProcessHeap(),0,(len+1)*sizeof(WCHAR));
+        if (!filePathW)
+        {
+            res = E_OUTOFMEMORY;
+            goto fail;
+        }
+        MultiByteToWideChar(CP_ACP, MB_ERR_INVALID_CHARS, filePathA, -1, filePathW, len+1);
+        goto succeed;
+    }
+
+    if (dwbuffer < 6)
+        goto fail;
+
+    bytesW=dwbuffer - 6;
 
     res=IStream_Read(pStm,&dwbuffer,sizeof(DWORD),&bread);
-    if (bread!=sizeof(DWORD) || dwbuffer!=doubleLenDec)
-        return E_FAIL;
-
-    if (length==0)
-        return res;
-
-    res=IStream_Read(pStm,&dwbuffer,sizeof(DWORD),&bread);
-    if (bread!=sizeof(DWORD) || dwbuffer!=doubleLenHex)
-        return E_FAIL;
+    if (bread!=sizeof(DWORD) || dwbuffer!=bytesW)
+        goto fail;
 
     res=IStream_Read(pStm,&wbuffer,sizeof(WORD),&bread);
     if (bread!=sizeof(WORD) || wbuffer!=0x3)
-        return E_FAIL;
+        goto fail;
 
-    filePathW=HeapAlloc(GetProcessHeap(),0,(length+1)*sizeof(WCHAR));
-    filePathW[length]=0;
-    res=IStream_Read(pStm,filePathW,doubleLenHex,&bread);
-    if (bread!=doubleLenHex) {
-        HeapFree(GetProcessHeap(), 0, filePathW);
-        return E_FAIL;
+    len=bytesW/sizeof(WCHAR);
+    filePathW=HeapAlloc(GetProcessHeap(),0,(len+1)*sizeof(WCHAR));
+    if(!filePathW)
+    {
+         res = E_OUTOFMEMORY;
+         goto fail;
     }
+    res=IStream_Read(pStm,filePathW,bytesW,&bread);
+    if (bread!=bytesW)
+         goto fail;
 
+    filePathW[len]=0;
+
+ succeed:
+    HeapFree(GetProcessHeap(),0,filePathA);
     HeapFree(GetProcessHeap(),0,This->filePathName);
-
     This->filePathName=filePathW;
 
+    return S_OK;
+
+ fail:
+    HeapFree(GetProcessHeap(), 0, filePathA);
+    HeapFree(GetProcessHeap(), 0, filePathW);
+
+    if (SUCCEEDED(res))
+         res = E_FAIL;
     return res;
 }
 
 /******************************************************************************
  *        FileMoniker_Save
  *
- * This function saves data of this object. In the beginning I thougth
+ * This function saves data of this object. In the beginning I thought
  * that I have just to write the filePath string on Stream. But, when I
- * tested this function whith windows programs samples, I noticed that it
- * was not the case. So I analysed data written by this function on
- * Windows and what this did function exactly ! But I have no idea about
- * its logic !
- * I guessed data which must be written on stream is:
+ * tested this function with windows programs samples, I noticed that it
+ * was not the case. This implementation is based on XP SP2. Other versions
+ * of Windows have minor variations.
+ *
+ * Data which must be written on stream is:
  * 1) WORD constant:zero
  * 2) length of the path string ("\0" included)
  * 3) path string type A
  * 4) DWORD constant : 0xDEADFFFF
- * 5) ten WORD constant: zero
- * 6) DWORD: double-length of the the path string type W ("\0" not
+ * 5) five DWORD constant: zero
+ * 6) If we're only writing the multibyte version, 
+ *     write a zero DWORD and finish.
+ *
+ * 7) DWORD: double-length of the the path string type W ("\0" not
  *    included)
- * 7) WORD constant: 0x3
- * 8) filePath unicode string.
- *    if the length(filePath) > 8 or length(filePath) == 8 stop at step 5)
+ * 8) WORD constant: 0x3
+ * 9) filePath unicode string.
+ *
  */
 static HRESULT WINAPI
 FileMonikerImpl_Save(IMoniker* iface, IStream* pStm, BOOL fClearDirty)
@@ -305,64 +339,92 @@ FileMonikerImpl_Save(IMoniker* iface, IStream* pStm, BOOL fClearDirty)
 
     HRESULT res;
     LPOLESTR filePathW=This->filePathName;
-    CHAR*     filePathA;
-    DWORD  len;
+    CHAR*    filePathA;
+    DWORD bytesA, bytesW, len;
 
-    DWORD  constant1 = 0xDEADFFFF; /* these constants are detected after analysing the data structure written by */
-    WORD   constant2 = 0x3;        /* FileMoniker_Save function in a windows program system */
+    static const DWORD DEADFFFF = 0xDEADFFFF;  /* Constants */
+    static const DWORD ZERO     = 0;
+    static const WORD  THREE    = 0x3;
 
-    WORD   zero=0;
-    DWORD doubleLenHex;
-    DWORD doubleLenDec;
-    int i=0;
+    int i;
+    BOOL bUsedDefault, bWriteWide;
 
     TRACE("(%p,%p,%d)\n",iface,pStm,fClearDirty);
 
     if (pStm==NULL)
         return E_POINTER;
 
-    /* write a DWORD set to 0 : constant */
-    res=IStream_Write(pStm,&zero,sizeof(WORD),NULL);
+    /* write a 0 WORD */
+    res=IStream_Write(pStm,&ZERO,sizeof(WORD),NULL);
+    if (!SUCCEEDED(res)) return res;
 
-    /* write length of filePath string ( "\0" included )*/
-    len = WideCharToMultiByte( CP_ACP, 0, filePathW, -1, NULL, 0, NULL, NULL );
-    res=IStream_Write(pStm,&len,sizeof(DWORD),NULL);
+    /* write length of filePath string ( 0 included )*/
+    bytesA = WideCharToMultiByte( CP_ACP, 0, filePathW, -1, NULL, 0, NULL, NULL );
+    res=IStream_Write(pStm,&bytesA,sizeof(DWORD),NULL);
+    if (!SUCCEEDED(res)) return res;
 
-    /* write filePath string type A */
-    filePathA=HeapAlloc(GetProcessHeap(),0,len);
-    WideCharToMultiByte( CP_ACP, 0, filePathW, -1, filePathA, len, NULL, NULL );
-    res=IStream_Write(pStm,filePathA,len,NULL);
+    /* write A string (with '\0') */
+    filePathA=HeapAlloc(GetProcessHeap(),0,bytesA);
+    if (!filePathA)
+        return E_OUTOFMEMORY;
+    WideCharToMultiByte( CP_ACP, 0, filePathW, -1, filePathA, bytesA, NULL, &bUsedDefault);
+    res=IStream_Write(pStm,filePathA,bytesA,NULL);
     HeapFree(GetProcessHeap(),0,filePathA);
+    if (!SUCCEEDED(res)) return res;
 
-    /* write a DWORD set to 0xDEADFFFF: constant */
-    res=IStream_Write(pStm,&constant1,sizeof(DWORD),NULL);
+    /* write a DWORD 0xDEADFFFF */
+    res=IStream_Write(pStm,&DEADFFFF,sizeof(DWORD),NULL);
+    if (!SUCCEEDED(res)) return res;
 
-    len--;
-    /* write 10 times a DWORD set to 0 : constants */
-    for(i=0;i<10;i++)
-        res=IStream_Write(pStm,&zero,sizeof(WORD),NULL);
+    /* write 5 zero DWORDs */
+    for(i=0;i<5;i++)
+    {
+        res=IStream_Write(pStm,&ZERO,sizeof(DWORD),NULL);
+        if (!SUCCEEDED(res)) return res;
+    }
 
-    if (len>8)
-        len=0;
+    /* Write the wide version if:
+     *    + couldn't convert to CP_ACP, 
+     * or + it's a directory, 
+     * or + there's a character > 0xFF 
+     */
+    len = lstrlenW(filePathW);
+    bWriteWide = (bUsedDefault || (len > 0 && filePathW[len-1]=='\\' ));
+    if (!bWriteWide)
+    {
+        WCHAR* pch;
+        for(pch=filePathW;*pch;++pch) 
+        {
+            if (*pch > 0xFF)
+            {
+                bWriteWide = TRUE;
+                break;
+            }
+        }
+    }
 
-    doubleLenHex=doubleLenDec=2*len;
-    if (len > 5)
-        doubleLenDec+=6;
-
-    /* write double-length of the path string ( "\0" included )*/
-    res=IStream_Write(pStm,&doubleLenDec,sizeof(DWORD),NULL);
-
-    if (len==0)
+    if (!bWriteWide)
+    {
+        res=IStream_Write(pStm,&ZERO,sizeof(DWORD),NULL);
         return res;
+    }
 
-    /* write double-length (hexa representation) of the path string ( "\0" included ) */
-    res=IStream_Write(pStm,&doubleLenHex,sizeof(DWORD),NULL);
+    /* write bytes needed for the filepathW (without 0) + 6 */
+    bytesW = len*sizeof(WCHAR) + 6;
+    res=IStream_Write(pStm,&bytesW,sizeof(DWORD),NULL);
+    if (!SUCCEEDED(res)) return res;
 
-    /* write a WORD set to 0x3: constant */
-    res=IStream_Write(pStm,&constant2,sizeof(WORD),NULL);
+    /* try again, without the extra 6 */
+    bytesW -= 6;
+    res=IStream_Write(pStm,&bytesW,sizeof(DWORD),NULL);
+    if (!SUCCEEDED(res)) return res;
 
-    /* write path unicode string */
-    res=IStream_Write(pStm,filePathW,doubleLenHex,NULL);
+    /* write a WORD 3 */
+    res=IStream_Write(pStm,&THREE,sizeof(WORD),NULL);
+    if (!SUCCEEDED(res)) return res;
+
+    /* write W string (no 0) */
+    res=IStream_Write(pStm,filePathW,bytesW,NULL);
 
     return res;
 }
@@ -374,32 +436,17 @@ static HRESULT WINAPI
 FileMonikerImpl_GetSizeMax(IMoniker* iface, ULARGE_INTEGER* pcbSize)
 {
     FileMonikerImpl *This = (FileMonikerImpl *)iface;
-    DWORD len=lstrlenW(This->filePathName);
-    DWORD sizeMAx;
 
     TRACE("(%p,%p)\n",iface,pcbSize);
 
     if (!pcbSize)
         return E_POINTER;
 
-    /* for more details see FileMonikerImpl_Save coments */
-
-    sizeMAx =  sizeof(WORD) +           /* first WORD is 0 */
-               sizeof(DWORD)+           /* length of filePath including "\0" in the end of the string */
-               (len+1)+                 /* filePath string */
-               sizeof(DWORD)+           /* constant : 0xDEADFFFF */
-               10*sizeof(WORD)+         /* 10 zero WORD */
-               sizeof(DWORD);           /* size of the unicode filePath: "\0" not included */
-
-    if (len==0 || len > 8)
-        return S_OK;
-
-    sizeMAx += sizeof(DWORD)+           /* size of the unicode filePath: "\0" not included */
-               sizeof(WORD)+            /* constant : 0x3 */
-               len*sizeof(WCHAR);       /* unicde filePath string */
-
-    pcbSize->u.LowPart=sizeMAx;
-    pcbSize->u.HighPart=0;
+    /* We could calculate exactly (see ...::Save()) but instead
+     * we'll make a quick over-estimate, like Windows (NT4, XP) does.
+     */
+    pcbSize->u.LowPart  = 0x38 + 4 * lstrlenW(This->filePathName);
+    pcbSize->u.HighPart = 0;
 
     return S_OK;
 }
@@ -1215,7 +1262,7 @@ FileMonikerROTDataImpl_GetComparisonData(IROTData* iface, BYTE* pbData,
  * Virtual function table for the FileMonikerImpl class which include IPersist,
  * IPersistStream and IMoniker functions.
  */
-static IMonikerVtbl VT_FileMonikerImpl =
+static const IMonikerVtbl VT_FileMonikerImpl =
 {
     FileMonikerImpl_QueryInterface,
     FileMonikerImpl_AddRef,
@@ -1243,7 +1290,7 @@ static IMonikerVtbl VT_FileMonikerImpl =
 };
 
 /* Virtual function table for the IROTData class. */
-static IROTDataVtbl VT_ROTDataImpl =
+static const IROTDataVtbl VT_ROTDataImpl =
 {
     FileMonikerROTDataImpl_QueryInterface,
     FileMonikerROTDataImpl_AddRef,

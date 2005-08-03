@@ -157,7 +157,7 @@ static DWORD GetShareModeFromSTGM(DWORD stgm);
 static DWORD GetAccessModeFromSTGM(DWORD stgm);
 static DWORD GetCreationModeFromSTGM(DWORD stgm);
 
-extern IPropertySetStorageVtbl IPropertySetStorage_Vtbl;
+extern const IPropertySetStorageVtbl IPropertySetStorage_Vtbl;
 
 
 
@@ -2178,7 +2178,7 @@ HRESULT WINAPI StorageImpl_SetStateBits(
 /*
  * Virtual function table for the IStorage32Impl class.
  */
-static IStorageVtbl Storage32Impl_Vtbl =
+static const IStorageVtbl Storage32Impl_Vtbl =
 {
     StorageBaseImpl_QueryInterface,
     StorageBaseImpl_AddRef,
@@ -3965,7 +3965,7 @@ ULONG IEnumSTATSTGImpl_PopSearchNode(
 /*
  * Virtual function table for the IEnumSTATSTGImpl class.
  */
-static IEnumSTATSTGVtbl IEnumSTATSTGImpl_Vtbl =
+static const IEnumSTATSTGVtbl IEnumSTATSTGImpl_Vtbl =
 {
     IEnumSTATSTGImpl_QueryInterface,
     IEnumSTATSTGImpl_AddRef,
@@ -4025,7 +4025,7 @@ IEnumSTATSTGImpl* IEnumSTATSTGImpl_Construct(
 /*
  * Virtual function table for the Storage32InternalImpl class.
  */
-static IStorageVtbl Storage32InternalImpl_Vtbl =
+static const IStorageVtbl Storage32InternalImpl_Vtbl =
 {
     StorageBaseImpl_QueryInterface,
     StorageBaseImpl_AddRef,

@@ -88,7 +88,7 @@ const CLSID CLSID_PSFactoryBuffer = { 0x00000320, 0, 0, {0xc0, 0, 0, 0, 0, 0, 0,
  * COM will load the appropriate interface stubs and proxies as needed.
  */
 typedef struct _CFStub {
-    IRpcStubBufferVtbl	*lpvtbl;
+    const IRpcStubBufferVtbl   *lpvtbl;
     DWORD			ref;
 
     LPUNKNOWN			pUnkServer;
@@ -237,7 +237,7 @@ CFStub_DebugServerRelease(LPRPCSTUBBUFFER iface,void *pv) {
     FIXME("(%p), stub!\n",pv);
 }
 
-static IRpcStubBufferVtbl cfstubvt = {
+static const IRpcStubBufferVtbl cfstubvt = {
     CFStub_QueryInterface,
     CFStub_AddRef,
     CFStub_Release,
@@ -296,7 +296,8 @@ static ULONG WINAPI IRpcProxyBufferImpl_Release(LPRPCPROXYBUFFER iface) {
     ULONG ref = InterlockedDecrement(&This->ref);
 
     if (!ref) {
-	IRpcChannelBuffer_Release(This->chanbuf);This->chanbuf = NULL;
+	IRpcChannelBuffer_Release(This->chanbuf);
+	This->chanbuf = NULL;
 	HeapFree(GetProcessHeap(),0,This);
     }
     return ref;
@@ -420,14 +421,14 @@ static HRESULT WINAPI CFProxy_LockServer(LPCLASSFACTORY iface,BOOL fLock) {
     return S_OK;
 }
 
-static IRpcProxyBufferVtbl pspbvtbl = {
+static const IRpcProxyBufferVtbl pspbvtbl = {
     IRpcProxyBufferImpl_QueryInterface,
     IRpcProxyBufferImpl_AddRef,
     IRpcProxyBufferImpl_Release,
     IRpcProxyBufferImpl_Connect,
     IRpcProxyBufferImpl_Disconnect
 };
-static IClassFactoryVtbl cfproxyvt = {
+static const IClassFactoryVtbl cfproxyvt = {
     CFProxy_QueryInterface,
     CFProxy_AddRef,
     CFProxy_Release,
@@ -846,13 +847,14 @@ static HRESULT WINAPI RURpcProxyBufferImpl_QueryInterface(LPRPCPROXYBUFFER iface
 
 static ULONG WINAPI RURpcProxyBufferImpl_AddRef(LPRPCPROXYBUFFER iface) {
     ICOM_THIS_MULTI(RemUnkProxy,lpvtbl_proxy,iface);
+    TRACE("%p, %ld\n", iface, This->refs + 1);
     return InterlockedIncrement(&This->refs);
 }
 
 static ULONG WINAPI RURpcProxyBufferImpl_Release(LPRPCPROXYBUFFER iface) {
     ICOM_THIS_MULTI(RemUnkProxy,lpvtbl_proxy,iface);
     ULONG ref = InterlockedDecrement(&This->refs);
-
+    TRACE("%p, %ld\n", iface, ref);
     if (!ref) {
 	IRpcChannelBuffer_Release(This->chan);This->chan = NULL;
 	HeapFree(GetProcessHeap(),0,This);
@@ -863,12 +865,14 @@ static ULONG WINAPI RURpcProxyBufferImpl_Release(LPRPCPROXYBUFFER iface) {
 static HRESULT WINAPI RURpcProxyBufferImpl_Connect(LPRPCPROXYBUFFER iface,IRpcChannelBuffer* pRpcChannelBuffer) {
     ICOM_THIS_MULTI(RemUnkProxy,lpvtbl_proxy,iface);
 
+    TRACE("%p, %p\n", iface, pRpcChannelBuffer);
     This->chan = pRpcChannelBuffer;
     IRpcChannelBuffer_AddRef(This->chan);
     return S_OK;
 }
 static void WINAPI RURpcProxyBufferImpl_Disconnect(LPRPCPROXYBUFFER iface) {
     ICOM_THIS_MULTI(RemUnkProxy,lpvtbl_proxy,iface);
+    TRACE("%p, %p\n", iface, This->chan);
     if (This->chan) {
 	IRpcChannelBuffer_Release(This->chan);
 	This->chan = NULL;
@@ -956,7 +960,7 @@ PSFacBuf_CreateStub(
     return E_FAIL;
 }
 
-static IPSFactoryBufferVtbl psfacbufvtbl = {
+static const IPSFactoryBufferVtbl psfacbufvtbl = {
     PSFacBuf_QueryInterface,
     PSFacBuf_AddRef,
     PSFacBuf_Release,
@@ -965,7 +969,7 @@ static IPSFactoryBufferVtbl psfacbufvtbl = {
 };
 
 /* This is the whole PSFactoryBuffer object, just the vtableptr */
-static IPSFactoryBufferVtbl *lppsfac = &psfacbufvtbl;
+static const IPSFactoryBufferVtbl *lppsfac = &psfacbufvtbl;
 
 /***********************************************************************
  *           DllGetClassObject [OLE32.@]

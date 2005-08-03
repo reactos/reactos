@@ -65,8 +65,8 @@
 @ stdcall CoRevokeMallocSpy()
 @ stdcall CoSetProxyBlanket(ptr long long wstr long long ptr long)
 @ stdcall CoSetState(ptr)
-@ stub CoSwitchCallContext
 @ stdcall CoSuspendClassObjects()
+@ stub CoSwitchCallContext
 @ stdcall CoTaskMemAlloc(long)
 @ stdcall CoTaskMemFree(ptr)
 @ stdcall CoTaskMemRealloc(ptr long)
@@ -146,8 +146,8 @@
 @ stub HWND_UserMarshal
 @ stub HWND_UserSize
 @ stub HWND_UserUnmarshal
-@ stub I_RemoteMain
 @ stdcall IIDFromString(wstr ptr) CLSIDFromString
+@ stub I_RemoteMain
 @ stdcall IsAccelerator(long long ptr long)
 @ stdcall IsEqualGUID(ptr ptr)
 @ stub IsValidIid
@@ -226,13 +226,17 @@
 @ stdcall RegisterDragDrop(long ptr)
 @ stdcall ReleaseStgMedium(ptr)
 @ stdcall RevokeDragDrop(long)
-@ stdcall SetConvertStg(ptr long)
-@ stub SetDocumentBitStg
-@ stdcall SetErrorInfo(long ptr)
 @ stub SNB_UserFree
 @ stub SNB_UserMarshal
 @ stub SNB_UserSize
 @ stub SNB_UserUnmarshal
+@ stub STGMEDIUM_UserFree
+@ stub STGMEDIUM_UserMarshal
+@ stub STGMEDIUM_UserSize
+@ stub STGMEDIUM_UserUnmarshal
+@ stdcall SetConvertStg(ptr long)
+@ stub SetDocumentBitStg
+@ stdcall SetErrorInfo(long ptr)
 @ stdcall StgCreateDocfile(wstr long long ptr)
 @ stdcall StgCreateDocfileOnILockBytes(ptr long long ptr)
 @ stdcall StgCreatePropSetStg(ptr long ptr)
@@ -241,10 +245,6 @@
 @ stub StgGetIFillLockBytesOnILockBytes
 @ stdcall StgIsStorageFile(wstr)
 @ stdcall StgIsStorageILockBytes(ptr)
-@ stub STGMEDIUM_UserFree
-@ stub STGMEDIUM_UserMarshal
-@ stub STGMEDIUM_UserSize
-@ stub STGMEDIUM_UserUnmarshal
 @ stub StgOpenAsyncDocfileOnIFillLockBytes
 @ stdcall StgOpenStorage(wstr ptr long ptr long ptr)
 @ stdcall StgOpenStorageEx(wstr long long long ptr ptr ptr ptr)

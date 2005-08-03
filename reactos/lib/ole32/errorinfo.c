@@ -128,9 +128,9 @@ static VOID WINAPI ERRORINFO_SysFreeString(BSTR in)
 
 typedef struct ErrorInfoImpl
 {
-	IErrorInfoVtbl		*lpvtei;
-	ICreateErrorInfoVtbl	*lpvtcei;
-	ISupportErrorInfoVtbl	*lpvtsei;
+	const IErrorInfoVtbl           *lpvtei;
+	const ICreateErrorInfoVtbl     *lpvtcei;
+	const ISupportErrorInfoVtbl    *lpvtsei;
 	DWORD				ref;
 
 	GUID m_Guid;
@@ -140,9 +140,9 @@ typedef struct ErrorInfoImpl
 	DWORD m_dwHelpContext;
 } ErrorInfoImpl;
 
-static IErrorInfoVtbl		IErrorInfoImpl_VTable;
-static ICreateErrorInfoVtbl	ICreateErrorInfoImpl_VTable;
-static ISupportErrorInfoVtbl	ISupportErrorInfoImpl_VTable;
+static const IErrorInfoVtbl        IErrorInfoImpl_VTable;
+static const ICreateErrorInfoVtbl  ICreateErrorInfoImpl_VTable;
+static const ISupportErrorInfoVtbl ISupportErrorInfoImpl_VTable;
 
 /*
  converts an object pointer to This
@@ -303,7 +303,7 @@ static HRESULT WINAPI IErrorInfoImpl_GetHelpContext(
 	return S_OK;
 }
 
-static IErrorInfoVtbl IErrorInfoImpl_VTable =
+static const IErrorInfoVtbl IErrorInfoImpl_VTable =
 {
   IErrorInfoImpl_QueryInterface,
   IErrorInfoImpl_AddRef,
@@ -402,7 +402,7 @@ static HRESULT WINAPI ICreateErrorInfoImpl_SetHelpContext(
 	return S_OK;
 }
 
-static ICreateErrorInfoVtbl ICreateErrorInfoImpl_VTable =
+static const ICreateErrorInfoVtbl ICreateErrorInfoImpl_VTable =
 {
   ICreateErrorInfoImpl_QueryInterface,
   ICreateErrorInfoImpl_AddRef,
@@ -452,7 +452,7 @@ static HRESULT WINAPI ISupportErrorInfoImpl_InterfaceSupportsErrorInfo(
 	return (IsEqualIID(riid, &This->m_Guid)) ? S_OK : S_FALSE;
 }
 
-static ISupportErrorInfoVtbl ISupportErrorInfoImpl_VTable =
+static const ISupportErrorInfoVtbl ISupportErrorInfoImpl_VTable =
 {
   ISupportErrorInfoImpl_QueryInterface,
   ISupportErrorInfoImpl_AddRef,

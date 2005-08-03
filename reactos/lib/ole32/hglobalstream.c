@@ -54,7 +54,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(storage);
  */
 struct HGLOBALStreamImpl
 {
-  IStreamVtbl *lpVtbl;   /* Needs to be the first item in the struct
+  const IStreamVtbl *lpVtbl;   /* Needs to be the first item in the struct
 			  * since we want to cast this in an IStream pointer */
 
   /*
@@ -629,7 +629,7 @@ static HRESULT WINAPI HGLOBALStreamImpl_Clone(
 /*
  * Virtual function table for the HGLOBALStreamImpl class.
  */
-static IStreamVtbl HGLOBALStreamImpl_Vtbl =
+static const IStreamVtbl HGLOBALStreamImpl_Vtbl =
 {
     HGLOBALStreamImpl_QueryInterface,
     HGLOBALStreamImpl_AddRef,

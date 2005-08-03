@@ -163,6 +163,7 @@ extern void* StdGlobalInterfaceTableInstance;
 extern HRESULT WINE_StringFromCLSID(const CLSID *id,LPSTR idstr);
 HRESULT WINAPI __CLSIDFromStringA(LPCSTR idstr, CLSID *id);
 
+DWORD COM_OpenKeyForCLSID(REFCLSID clsid, REGSAM access, HKEY *key);
 HRESULT MARSHAL_GetStandardMarshalCF(LPVOID *ppv);
 
 /* Stub Manager */
@@ -255,5 +256,7 @@ static inline APARTMENT* COM_CurrentApt(void)
 #endif
 
 extern HINSTANCE OLE32_hInstance; /* FIXME: make static */
+
+#define CHARS_IN_GUID 39 /* including NULL */
 
 #endif /* __WINE_OLE_COMPOBJ_H */

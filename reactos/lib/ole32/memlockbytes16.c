@@ -52,7 +52,7 @@ struct HGLOBALLockBytesImpl16
    * Needs to be the first item in the struct
    * since we want to cast this in an ILockBytes pointer
    */
-  ILockBytes16Vtbl *lpVtbl;
+  const ILockBytes16Vtbl *lpVtbl;
   ULONG        ref;
 
   /*
@@ -176,7 +176,7 @@ HGLOBALLockBytesImpl16_Construct(HGLOBAL16 hGlobal,
 #undef VTENT
       msegvt16 = MapLS( &vt16 );
   }
-  newLockBytes->lpVtbl	= (ILockBytes16Vtbl*)msegvt16;
+  newLockBytes->lpVtbl	= (const ILockBytes16Vtbl*)msegvt16;
   newLockBytes->ref	= 0;
   /*
    * Initialize the support.

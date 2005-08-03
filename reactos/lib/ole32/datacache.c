@@ -93,12 +93,12 @@ struct DataCache
   /*
    * List all interface VTables here
    */
-  IDataObjectVtbl*      lpvtbl1;
-  IUnknownVtbl*         lpvtbl2;
-  IPersistStorageVtbl*  lpvtbl3;
-  IViewObject2Vtbl*     lpvtbl4;
-  IOleCache2Vtbl*       lpvtbl5;
-  IOleCacheControlVtbl* lpvtbl6;
+  const IDataObjectVtbl*      lpvtbl1;
+  const IUnknownVtbl*         lpvtbl2;
+  const IPersistStorageVtbl*  lpvtbl3;
+  const IViewObject2Vtbl*     lpvtbl4;
+  const IOleCache2Vtbl*       lpvtbl5;
+  const IOleCacheControlVtbl* lpvtbl6;
 
   /*
    * Reference count of this object
@@ -1617,14 +1617,14 @@ static HRESULT WINAPI DataCache_OnStop(
 /*
  * Virtual function tables for the DataCache class.
  */
-static IUnknownVtbl DataCache_NDIUnknown_VTable =
+static const IUnknownVtbl DataCache_NDIUnknown_VTable =
 {
   DataCache_NDIUnknown_QueryInterface,
   DataCache_NDIUnknown_AddRef,
   DataCache_NDIUnknown_Release
 };
 
-static IDataObjectVtbl DataCache_IDataObject_VTable =
+static const IDataObjectVtbl DataCache_IDataObject_VTable =
 {
   DataCache_IDataObject_QueryInterface,
   DataCache_IDataObject_AddRef,
@@ -1640,7 +1640,7 @@ static IDataObjectVtbl DataCache_IDataObject_VTable =
   DataCache_EnumDAdvise
 };
 
-static IPersistStorageVtbl DataCache_IPersistStorage_VTable =
+static const IPersistStorageVtbl DataCache_IPersistStorage_VTable =
 {
   DataCache_IPersistStorage_QueryInterface,
   DataCache_IPersistStorage_AddRef,
@@ -1654,7 +1654,7 @@ static IPersistStorageVtbl DataCache_IPersistStorage_VTable =
   DataCache_HandsOffStorage
 };
 
-static IViewObject2Vtbl DataCache_IViewObject2_VTable =
+static const IViewObject2Vtbl DataCache_IViewObject2_VTable =
 {
   DataCache_IViewObject2_QueryInterface,
   DataCache_IViewObject2_AddRef,
@@ -1668,7 +1668,7 @@ static IViewObject2Vtbl DataCache_IViewObject2_VTable =
   DataCache_GetExtent
 };
 
-static IOleCache2Vtbl DataCache_IOleCache2_VTable =
+static const IOleCache2Vtbl DataCache_IOleCache2_VTable =
 {
   DataCache_IOleCache2_QueryInterface,
   DataCache_IOleCache2_AddRef,
@@ -1682,7 +1682,7 @@ static IOleCache2Vtbl DataCache_IOleCache2_VTable =
   DataCache_DiscardCache
 };
 
-static IOleCacheControlVtbl DataCache_IOleCacheControl_VTable =
+static const IOleCacheControlVtbl DataCache_IOleCacheControl_VTable =
 {
   DataCache_IOleCacheControl_QueryInterface,
   DataCache_IOleCacheControl_AddRef,

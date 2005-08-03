@@ -409,7 +409,7 @@ struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *s
     if (!stub) return NULL;
 
     stub->stubbuffer = sb;
-    IUnknown_AddRef(sb);
+    if (sb) IRpcStubBuffer_AddRef(sb);
 
     /* no need to ref this, same object as sb */
     stub->iface = iptr;
@@ -446,7 +446,7 @@ static void stub_manager_delete_ifstub(struct stub_manager *m, struct ifstub *if
 
     RPC_UnregisterInterface(&ifstub->iid);
         
-    IUnknown_Release(ifstub->stubbuffer);
+    if (ifstub->stubbuffer) IUnknown_Release(ifstub->stubbuffer);
     IUnknown_Release(ifstub->iface);
 
     HeapFree(GetProcessHeap(), 0, ifstub);

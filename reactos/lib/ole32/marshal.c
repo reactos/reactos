@@ -90,28 +90,36 @@ HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnkno
     struct stub_manager *manager;
     struct ifstub       *ifstub;
     BOOL                 tablemarshal;
-    IRpcStubBuffer      *stub;
-    IPSFactoryBuffer    *psfb;
+    IRpcStubBuffer      *stub = NULL;
     HRESULT              hr;
 
     hr = apartment_getoxid(apt, &stdobjref->oxid);
     if (hr != S_OK)
         return hr;
 
-    hr = get_facbuf_for_iid(riid, &psfb);
-    if (hr != S_OK)
+    /* IUnknown doesn't require a stub buffer, because it never goes out on
+     * the wire */
+    if (!IsEqualIID(riid, &IID_IUnknown))
     {
-        ERR("couldn't get IPSFactory buffer for interface %s\n", debugstr_guid(riid));
-        return hr;
-    }
+        IPSFactoryBuffer *psfb;
 
-    hr = IPSFactoryBuffer_CreateStub(psfb, riid, obj, &stub);
-    IPSFactoryBuffer_Release(psfb);
-    if (hr != S_OK)
-    {
-        ERR("Failed to create an IRpcStubBuffer from IPSFactory for %s\n", debugstr_guid(riid));
-        return hr;
+        hr = get_facbuf_for_iid(riid, &psfb);
+        if (hr != S_OK)
+        {
+            ERR("couldn't get IPSFactory buffer for interface %s\n", debugstr_guid(riid));
+            return hr;
+        }
+    
+        hr = IPSFactoryBuffer_CreateStub(psfb, riid, obj, &stub);
+        IPSFactoryBuffer_Release(psfb);
+        if (hr != S_OK)
+        {
+            ERR("Failed to create an IRpcStubBuffer from IPSFactory for %s\n", debugstr_guid(riid));
+            return hr;
+        }
     }
+    else /* need to addref object anyway */
+        IUnknown_AddRef(obj);
 
     if (mshlflags & MSHLFLAGS_NOPING)
         stdobjref->flags = SORF_NOPING;
@@ -129,7 +137,7 @@ HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnkno
         manager = new_stub_manager(apt, obj, mshlflags);
         if (!manager)
         {
-            IRpcStubBuffer_Release(stub);
+            if (stub) IRpcStubBuffer_Release(stub);
             return E_OUTOFMEMORY;
         }
     }
@@ -600,6 +608,12 @@ static void proxy_manager_disconnect(struct proxy_manager * This)
 
     TRACE("oxid = %s, oid = %s\n", wine_dbgstr_longlong(This->oxid),
         wine_dbgstr_longlong(This->oid));
+
+    /* SORFP_NOLIFTIMEMGMT proxies (for IRemUnknown) shouldn't be
+     * disconnected - it won't do anything anyway, except cause
+     * problems for other objects that depend on this proxy always
+     * working */
+    if (This->sorflags & SORFP_NOLIFETIMEMGMT) return;
 
     EnterCriticalSection(&This->cs);
 

@@ -452,18 +452,31 @@ static struct regsvr_coclass const coclass_list[] = {
 
 #define INTERFACE_ENTRY(interface, base, clsid32, clsid16) { &IID_##interface, #interface, base, sizeof(interface##Vtbl)/sizeof(void*), clsid16, clsid32 }
 #define STD_INTERFACE_ENTRY(interface) INTERFACE_ENTRY(interface, NULL, &CLSID_PSFactoryBuffer, NULL)
+#define LCL_INTERFACE_ENTRY(interface) INTERFACE_ENTRY(interface, NULL, NULL, NULL)
 
-static struct regsvr_interface const interface_list[] = {
-    STD_INTERFACE_ENTRY(IUnknown),
+static const struct regsvr_interface interface_list[] = {
+    LCL_INTERFACE_ENTRY(IUnknown),
     STD_INTERFACE_ENTRY(IClassFactory),
+    LCL_INTERFACE_ENTRY(IMalloc),
+    LCL_INTERFACE_ENTRY(IMarshal),
     STD_INTERFACE_ENTRY(IStorage),
-    STD_INTERFACE_ENTRY(IStream ),
+    LCL_INTERFACE_ENTRY(IMessageFilter),
+    LCL_INTERFACE_ENTRY(IStdMarshalInfo),
+    LCL_INTERFACE_ENTRY(IExternalConnection),
+    LCL_INTERFACE_ENTRY(IMallocSpy),
+    LCL_INTERFACE_ENTRY(IMultiQI),
+    STD_INTERFACE_ENTRY(IStream),
     STD_INTERFACE_ENTRY(IPersistStorage),
     STD_INTERFACE_ENTRY(IDataObject),
     STD_INTERFACE_ENTRY(IAdviseSink),
+    LCL_INTERFACE_ENTRY(IDataAdviseHolder),
+    LCL_INTERFACE_ENTRY(IOleAdviseHolder),
     STD_INTERFACE_ENTRY(IOleObject),
     STD_INTERFACE_ENTRY(IOleClientSite),
+    LCL_INTERFACE_ENTRY(IDropSource),
     STD_INTERFACE_ENTRY(IRemUnknown),
+    LCL_INTERFACE_ENTRY(IClientSecurity),
+    LCL_INTERFACE_ENTRY(IServerSecurity),
     { NULL }			/* list terminator */
 };
 

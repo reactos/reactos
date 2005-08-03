@@ -70,10 +70,10 @@ struct DefaultHandler
   /*
    * List all interface VTables here
    */
-  IOleObjectVtbl*      lpvtbl1;
-  IUnknownVtbl*        lpvtbl2;
-  IDataObjectVtbl*     lpvtbl3;
-  IRunnableObjectVtbl* lpvtbl4;
+  const IOleObjectVtbl*      lpvtbl1;
+  const IUnknownVtbl*        lpvtbl2;
+  const IDataObjectVtbl*     lpvtbl3;
+  const IRunnableObjectVtbl* lpvtbl4;
 
   /*
    * Reference count of this object
@@ -325,7 +325,7 @@ static HRESULT WINAPI DefaultHandler_SetContainedObject(
 /*
  * Virtual function tables for the DefaultHandler class.
  */
-static IOleObjectVtbl DefaultHandler_IOleObject_VTable =
+static const IOleObjectVtbl DefaultHandler_IOleObject_VTable =
 {
   DefaultHandler_QueryInterface,
   DefaultHandler_AddRef,
@@ -353,14 +353,14 @@ static IOleObjectVtbl DefaultHandler_IOleObject_VTable =
   DefaultHandler_SetColorScheme
 };
 
-static IUnknownVtbl DefaultHandler_NDIUnknown_VTable =
+static const IUnknownVtbl DefaultHandler_NDIUnknown_VTable =
 {
   DefaultHandler_NDIUnknown_QueryInterface,
   DefaultHandler_NDIUnknown_AddRef,
   DefaultHandler_NDIUnknown_Release,
 };
 
-static IDataObjectVtbl DefaultHandler_IDataObject_VTable =
+static const IDataObjectVtbl DefaultHandler_IDataObject_VTable =
 {
   DefaultHandler_IDataObject_QueryInterface,
   DefaultHandler_IDataObject_AddRef,
@@ -376,7 +376,7 @@ static IDataObjectVtbl DefaultHandler_IDataObject_VTable =
   DefaultHandler_EnumDAdvise
 };
 
-static IRunnableObjectVtbl DefaultHandler_IRunnableObject_VTable =
+static const IRunnableObjectVtbl DefaultHandler_IRunnableObject_VTable =
 {
   DefaultHandler_IRunnableObject_QueryInterface,
   DefaultHandler_IRunnableObject_AddRef,

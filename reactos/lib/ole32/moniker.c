@@ -716,7 +716,7 @@ HRESULT WINAPI CreateClassMoniker(REFCLSID rclsid, IMoniker ** ppmk)
 }
 
 /* Virtual function table for the IRunningObjectTable class. */
-static IRunningObjectTableVtbl VT_RunningObjectTableImpl =
+static const IRunningObjectTableVtbl VT_RunningObjectTableImpl =
 {
     RunningObjectTableImpl_QueryInterface,
     RunningObjectTableImpl_AddRef,
@@ -968,7 +968,7 @@ static HRESULT WINAPI EnumMonikerImpl_CreateEnumROTMoniker(MInterfacePointer **m
 
     /* the initial reference is set to "1" */
     This->ref = 1;			/* set the ref count to one         */
-    This->pos = 0;		/* Set the list start posn to start */
+    This->pos = current_pos;		/* Set the list start posn */
     This->moniker_count = moniker_count; /* Need the same size table as ROT */
     This->monikers = monikers;
 

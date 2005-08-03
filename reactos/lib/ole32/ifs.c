@@ -47,10 +47,10 @@ WINE_DEFAULT_DEBUG_CHANNEL(olemalloc);
  *
  *****************************************************************************/
 /* set the vtable later */
-static IMallocVtbl VT_IMalloc32;
+static const IMallocVtbl VT_IMalloc32;
 
 typedef struct {
-        IMallocVtbl *lpVtbl;
+        const IMallocVtbl *lpVtbl;
         DWORD dummy;                /* nothing, we are static */
 	IMallocSpy * pSpy;          /* the spy when active */
 	DWORD SpyedAllocationsLeft; /* number of spyed allocations left */
@@ -60,7 +60,7 @@ typedef struct {
 } _Malloc32;
 
 /* this is the static object instance */
-_Malloc32 Malloc32 = {&VT_IMalloc32, 0, NULL, 0, 0, NULL, 0};
+static _Malloc32 Malloc32 = {&VT_IMalloc32, 0, NULL, 0, 0, NULL, 0};
 
 /* with a spy active all calls from pre to post methods are threadsave */
 static CRITICAL_SECTION IMalloc32_SpyCS;
@@ -344,7 +344,7 @@ static VOID WINAPI IMalloc_fnHeapMinimize(LPMALLOC iface) {
 	}
 }
 
-static IMallocVtbl VT_IMalloc32 =
+static const IMallocVtbl VT_IMalloc32 =
 {
 	IMalloc_fnQueryInterface,
 	IMalloc_fnAddRefRelease,
@@ -362,15 +362,15 @@ static IMallocVtbl VT_IMalloc32 =
  *****************************************************************************/
 
 /* set the vtable later */
-static IMallocSpyVtbl VT_IMallocSpy;
+static const IMallocSpyVtbl VT_IMallocSpy;
 
 typedef struct {
-        IMallocSpyVtbl *lpVtbl;
+        const IMallocSpyVtbl *lpVtbl;
         DWORD ref;
 } _MallocSpy;
 
 /* this is the static object instance */
-_MallocSpy MallocSpy = {&VT_IMallocSpy, 0};
+static _MallocSpy MallocSpy = {&VT_IMallocSpy, 0};
 
 /******************************************************************************
  *	IMalloc32_QueryInterface	[VTABLE]
@@ -501,11 +501,11 @@ static void WINAPI IMallocSpy_fnPostHeapMinimize(LPMALLOCSPY iface)
     TRACE ("(%p)->()\n", This);
 }
 
-static void MallocSpyDumpLeaks() {
+static void MallocSpyDumpLeaks(void) {
         TRACE("leaks: %lu\n", Malloc32.SpyedAllocationsLeft);
 }
 
-static IMallocSpyVtbl VT_IMallocSpy =
+static const IMallocSpyVtbl VT_IMallocSpy =
 {
 	IMallocSpy_fnQueryInterface,
 	IMallocSpy_fnAddRef,

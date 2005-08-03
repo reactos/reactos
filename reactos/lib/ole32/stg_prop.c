@@ -147,14 +147,14 @@ static HRESULT PropertyStorage_PropVariantCopy(PROPVARIANT *prop,
 static HRESULT PropertyStorage_StringCopy(LPCSTR src, LCID srcCP, LPSTR *dst,
  LCID targetCP);
 
-static IPropertyStorageVtbl IPropertyStorage_Vtbl;
+static const IPropertyStorageVtbl IPropertyStorage_Vtbl;
 
 /***********************************************************************
  * Implementation of IPropertyStorage
  */
 typedef struct tagPropertyStorage_impl
 {
-    IPropertyStorageVtbl *vtbl;
+    const IPropertyStorageVtbl *vtbl;
     DWORD ref;
     CRITICAL_SECTION cs;
     IStream *stm;
@@ -2210,7 +2210,7 @@ static HRESULT WINAPI IPropertySetStorage_fnEnum(
 /***********************************************************************
  * vtables
  */
-IPropertySetStorageVtbl IPropertySetStorage_Vtbl =
+const IPropertySetStorageVtbl IPropertySetStorage_Vtbl =
 {
     IPropertySetStorage_fnQueryInterface,
     IPropertySetStorage_fnAddRef,
@@ -2221,7 +2221,7 @@ IPropertySetStorageVtbl IPropertySetStorage_Vtbl =
     IPropertySetStorage_fnEnum
 };
 
-static IPropertyStorageVtbl IPropertyStorage_Vtbl =
+static const IPropertyStorageVtbl IPropertyStorage_Vtbl =
 {
     IPropertyStorage_fnQueryInterface,
     IPropertyStorage_fnAddRef,
@@ -2310,7 +2310,7 @@ HRESULT WINAPI FmtIdToPropStgName(const FMTID *rfmtid, LPOLESTR str)
             }
             else
             {
-                if (++fmtptr < (BYTE *)rfmtid + sizeof(FMTID))
+                if (++fmtptr < (const BYTE *)rfmtid + sizeof(FMTID))
                     i |= *fmtptr << bitsRemaining;
                 *pstr++ = (WCHAR)(fmtMap[i & CHARMASK]);
                 bitsRemaining += BITS_PER_BYTE - BITS_IN_CHARMASK;

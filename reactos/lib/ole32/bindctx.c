@@ -50,7 +50,7 @@ typedef struct BindCtxObject{
 /* BindCtx data strucrture */
 typedef struct BindCtxImpl{
 
-    IBindCtxVtbl *lpVtbl; /* VTable relative to the IBindCtx interface.*/
+    const IBindCtxVtbl *lpVtbl; /* VTable relative to the IBindCtx interface.*/
 
     ULONG ref; /* reference counter for this object */
 
@@ -474,7 +474,7 @@ static HRESULT BindCtxImpl_GetObjectIndex(BindCtxImpl* This,
 }
 
 /* Virtual function table for the BindCtx class. */
-static IBindCtxVtbl VT_BindCtxImpl =
+static const IBindCtxVtbl VT_BindCtxImpl =
 {
     BindCtxImpl_QueryInterface,
     BindCtxImpl_AddRef,

@@ -37,9 +37,9 @@
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 typedef struct _FTMarshalImpl {
-	IUnknownVtbl *lpVtbl;
+	const IUnknownVtbl *lpVtbl;
 	DWORD ref;
-	IMarshalVtbl *lpvtblFTM;
+	const IMarshalVtbl *lpvtblFTM;
 
 	IUnknown *pUnkOuter;
 } FTMarshalImpl;
@@ -93,7 +93,7 @@ static ULONG WINAPI IiFTMUnknown_fnRelease (IUnknown * iface)
     return 0;
 }
 
-static IUnknownVtbl iunkvt =
+static const IUnknownVtbl iunkvt =
 {
 	IiFTMUnknown_fnQueryInterface,
 	IiFTMUnknown_fnAddRef,
@@ -208,7 +208,7 @@ static HRESULT WINAPI FTMarshalImpl_DisconnectObject (LPMARSHAL iface, DWORD dwR
     return S_OK;
 }
 
-static IMarshalVtbl ftmvtbl =
+static const IMarshalVtbl ftmvtbl =
 {
 	FTMarshalImpl_QueryInterface,
 	FTMarshalImpl_AddRef,

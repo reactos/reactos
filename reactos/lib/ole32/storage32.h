@@ -214,10 +214,10 @@ HRESULT OLECONVERT_CreateCompObjStream(LPSTORAGE pStorage, LPCSTR strOleTypeName
  */
 struct StorageBaseImpl
 {
-  IStorageVtbl *lpVtbl;    /* Needs to be the first item in the struct
+  const IStorageVtbl *lpVtbl;    /* Needs to be the first item in the struct
 			    * since we want to cast this in a Storage32 pointer */
 
-  IPropertySetStorageVtbl *pssVtbl; /* interface for adding a properties stream */
+  const IPropertySetStorageVtbl *pssVtbl; /* interface for adding a properties stream */
 
   /*
    * Reference count of this object
@@ -427,7 +427,7 @@ HRESULT WINAPI StorageInternalImpl_Revert(
  */
 struct IEnumSTATSTGImpl
 {
-  IEnumSTATSTGVtbl *lpVtbl;    /* Needs to be the first item in the struct
+  const IEnumSTATSTGVtbl *lpVtbl;    /* Needs to be the first item in the struct
 				* since we want to cast this in an IEnumSTATSTG pointer */
 
   ULONG		 ref;		        /* Reference count */
@@ -481,7 +481,7 @@ INT IEnumSTATSTGImpl_FindParentProperty(
  */
 struct StgStreamImpl
 {
-  IStreamVtbl *lpVtbl;  /* Needs to be the first item in the struct
+  const IStreamVtbl *lpVtbl;  /* Needs to be the first item in the struct
 			 * since we want to cast this to an IStream pointer */
 
   /*

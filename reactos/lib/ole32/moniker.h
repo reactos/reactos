@@ -6,7 +6,6 @@
 extern const CLSID CLSID_FileMoniker;
 extern const CLSID CLSID_ItemMoniker;
 extern const CLSID CLSID_AntiMoniker;
-extern const CLSID CLSID_CompositeMoniker;
 
 HRESULT FileMonikerCF_Create(REFIID riid, LPVOID *ppv);
 HRESULT ItemMonikerCF_Create(REFIID riid, LPVOID *ppv);

@@ -37,7 +37,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
-const CLSID CLSID_CompositeMoniker = {
+static const CLSID CLSID_CompositeMoniker = {
   0x309, 0, 0, {0xC0, 0, 0, 0, 0, 0, 0, 0x46}
 };
 
@@ -46,13 +46,13 @@ const CLSID CLSID_CompositeMoniker = {
 /* CompositeMoniker data structure */
 typedef struct CompositeMonikerImpl{
 
-    IMonikerVtbl*  lpvtbl1;  /* VTable relative to the IMoniker interface.*/
+    const IMonikerVtbl*  lpvtbl1;  /* VTable relative to the IMoniker interface.*/
 
     /* The ROT (RunningObjectTable implementation) uses the IROTData
      * interface to test whether two monikers are equal. That's why IROTData
      * interface is implemented by monikers.
      */
-    IROTDataVtbl*  lpvtbl2;  /* VTable relative to the IROTData interface.*/
+    const IROTDataVtbl*  lpvtbl2;  /* VTable relative to the IROTData interface.*/
 
     ULONG ref; /* reference counter for this object */
 
@@ -68,7 +68,7 @@ typedef struct CompositeMonikerImpl{
 /* EnumMoniker data structure */
 typedef struct EnumMonikerImpl{
 
-    IEnumMonikerVtbl *lpVtbl;  /* VTable relative to the IEnumMoniker interface.*/
+    const IEnumMonikerVtbl *lpVtbl;  /* VTable relative to the IEnumMoniker interface.*/
 
     ULONG ref; /* reference counter for this object */
 
@@ -1388,7 +1388,7 @@ EnumMonikerImpl_Clone(IEnumMoniker* iface,IEnumMoniker** ppenum)
 
 /********************************************************************************/
 /* Virtual function table for the IROTData class                                */
-static IEnumMonikerVtbl VT_EnumMonikerImpl =
+static const IEnumMonikerVtbl VT_EnumMonikerImpl =
 {
     EnumMonikerImpl_QueryInterface,
     EnumMonikerImpl_AddRef,
@@ -1453,7 +1453,7 @@ EnumMonikerImpl_CreateEnumMoniker(IMoniker** tabMoniker, ULONG tabSize,
 /* Virtual function table for the CompositeMonikerImpl class which includes     */
 /* IPersist, IPersistStream and IMoniker functions.                             */
 
-static IMonikerVtbl VT_CompositeMonikerImpl =
+static const IMonikerVtbl VT_CompositeMonikerImpl =
 {
     CompositeMonikerImpl_QueryInterface,
     CompositeMonikerImpl_AddRef,
@@ -1482,7 +1482,7 @@ static IMonikerVtbl VT_CompositeMonikerImpl =
 
 /********************************************************************************/
 /* Virtual function table for the IROTData class.                               */
-static IROTDataVtbl VT_ROTDataImpl =
+static const IROTDataVtbl VT_ROTDataImpl =
 {
     CompositeMonikerROTDataImpl_QueryInterface,
     CompositeMonikerROTDataImpl_AddRef,
