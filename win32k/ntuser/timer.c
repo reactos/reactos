@@ -230,6 +230,8 @@ UserFindExpiredTimer(
    LIST_FOR_EACH_SAFE(EnumEntry, &gExpiredTimersList, Timer, TIMER_ENTRY, ListEntry)
    {
       if (Wnd && Timer->Wnd != Wnd) continue;
+
+      if (Timer->Queue != Queue) continue;
       
       if (UserMessageFilter(Timer->Message, MsgFilterMin, MsgFilterMax))
       {
