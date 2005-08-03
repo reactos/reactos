@@ -469,7 +469,7 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
  *        Complete CPU context
  */
 {
-   unsigned int cr2;
+   ULONG_PTR cr2;
    NTSTATUS Status;
    ULONG Esp0;
 
@@ -528,7 +528,7 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
     */
    if (ExceptionNr == 14)
      {
-        if (Ke386NoExecute && Tf->ErrorCode & 0x10 && cr2 >= KERNEL_BASE)
+        if (Ke386NoExecute && Tf->ErrorCode & 0x10 && cr2 >= (ULONG_PTR)MmSystemRangeStart)
 	{
            KEBUGCHECKWITHTF(ATTEMPTED_EXECUTE_OF_NOEXECUTE_MEMORY, 0, 0, 0, 0, Tf);
 	}
