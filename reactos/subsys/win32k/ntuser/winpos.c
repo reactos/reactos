@@ -107,62 +107,75 @@ VOID FASTCALL
 WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 {
   PWINDOW_OBJECT Wnd, Old;
-  int TryTopmost;
+  HWND Fg;
 
   if (!Window || IntIsDesktopWindow(Window))
   {
     IntSetFocusMessageQueue(NULL);
     return;
   }
-  Wnd = Window;
-  for(;;)
-  {
-    HWND *List, *phWnd;
 
-    Old = Wnd;
-    Wnd = IntGetParentObject(Wnd);
-    if(Old != Window)
+  /* If this is popup window, try to activate the owner first. */
+  if ((Window->Style & WS_POPUP) && (Wnd = IntGetOwner(Window)))
+  {
+    for(;;)
     {
+      Old = Wnd;
+      Wnd = IntGetParentObject(Wnd);
+      if(IntIsDesktopWindow(Wnd))
+      {
+        IntReleaseWindowObject(Wnd);
+        Wnd = Old;
+        break;
+      }
       IntReleaseWindowObject(Old);
     }
-    if(!Wnd)
+
+    if ((Wnd->Style & (WS_DISABLED | WS_VISIBLE)) == WS_VISIBLE &&
+        (Wnd->Style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
+      goto done;
+
+    IntReleaseWindowObject(Wnd);
+  }
+
+  /* Pick a next top-level window. */
+  /* FIXME: Search for non-tooltip windows first. */
+  Wnd = Window;
+  while (Wnd != NULL)
+  {
+    Old = Wnd;
+    IntLockRelatives(Old);
+    if (Old->NextSibling == NULL)
     {
-      IntSetFocusMessageQueue(NULL);
+      Wnd = NULL;
+      IntUnLockRelatives(Old);
+      if (Old != Window)
+        IntReleaseWindowObject(Old);
+      break;
+    }
+    Wnd = IntGetWindowObject(Old->NextSibling->Self);
+    IntUnLockRelatives(Old);
+    if (Old != Window)
+      IntReleaseWindowObject(Old);
+    if ((Wnd->Style & (WS_DISABLED | WS_VISIBLE)) == WS_VISIBLE &&
+        (Wnd->Style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
+      break;
+  }
+
+done:
+  Fg = NtUserGetForegroundWindow();
+  if (Wnd && (!Fg || Window->Self == Fg))
+  {
+    if (IntSetForegroundWindow(Wnd))
+    {
+      IntReleaseWindowObject(Wnd);
       return;
     }
-
-    if((List = IntWinListChildren(Wnd)))
-    {
-      for(TryTopmost = 0; TryTopmost <= 1; TryTopmost++)
-      {
-        for(phWnd = List; *phWnd; phWnd++)
-        {
-          PWINDOW_OBJECT Child;
-
-          if((*phWnd) == Window->Self)
-          {
-            continue;
-          }
-
-          if((Child = IntGetWindowObject(*phWnd)))
-          {
-            if(((! TryTopmost && (0 == (Child->ExStyle & WS_EX_TOPMOST)))
-                || (TryTopmost && (0 != (Child->ExStyle & WS_EX_TOPMOST))))
-               && IntSetForegroundWindow(Child))
-            {
-              ExFreePool(List);
-              IntReleaseWindowObject(Wnd);
-              IntReleaseWindowObject(Child);
-              return;
-            }
-            IntReleaseWindowObject(Child);
-          }
-        }
-      }
-      ExFreePool(List);
-    }
   }
-  IntReleaseWindowObject(Wnd);
+  if (!IntSetActiveWindow(Wnd))
+    IntSetActiveWindow(0);
+  if (Wnd)
+    IntReleaseWindowObject(Wnd);
 }
 
 VOID STATIC FASTCALL
