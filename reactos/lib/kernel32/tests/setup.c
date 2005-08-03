@@ -1,4 +1,5 @@
 #include <k32.h>
+#include <regtests.h>
 
 int
 mainCRTStartup(int argc, char *argv[])

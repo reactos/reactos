@@ -1,5 +1,6 @@
 <module name="kernel32_test" type="test">
 	<include base="rtshared">.</include>
+	<include base="kernel32">.</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="_SEH_NO_NATIVE_NLG" />
 	<define name="__USE_W32API" />
@@ -10,6 +11,7 @@
 	<library>regtests</library>
 	<library>kernel32_base</library>
 	<library>pseh</library>
+	<library>intrlck</library>
 	<library>ntdll</library>
 	<library>msvcrt</library>
 	<linkerflag>-lgcc</linkerflag>
