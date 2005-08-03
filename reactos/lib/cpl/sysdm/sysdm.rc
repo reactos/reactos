@@ -16,9 +16,10 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 IDI_CPLSYSTEM ICON "resources/applet.ico"
 IDI_DEVMGR ICON "resources/devmgr.ico"
 
-#include "cz.rc"
 #include "en.rc"
+#include "cz.rc"
 #include "de.rc"
 #include "dk.rc"
 #include "fr.rc"
+#include "nl.rc"
 #include "sv.rc"
