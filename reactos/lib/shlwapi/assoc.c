@@ -58,13 +58,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 typedef struct
 {
-  IQueryAssociationsVtbl *lpVtbl;
+  const IQueryAssociationsVtbl *lpVtbl;
   LONG ref;
   HKEY hkeySource;
   HKEY hkeyProgID;
 } IQueryAssociationsImpl;
 
-static struct IQueryAssociationsVtbl IQueryAssociations_vtbl;
+static const IQueryAssociationsVtbl IQueryAssociations_vtbl;
 
 /**************************************************************************
  *  IQueryAssociations_Constructor [internal]
@@ -693,7 +693,7 @@ static HRESULT WINAPI IQueryAssociations_fnGetEnum(
   return E_NOTIMPL;
 }
 
-static struct IQueryAssociationsVtbl IQueryAssociations_vtbl =
+static const IQueryAssociationsVtbl IQueryAssociations_vtbl =
 {
   IQueryAssociations_fnQueryInterface,
   IQueryAssociations_fnAddRef,
