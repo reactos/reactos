@@ -106,6 +106,8 @@ IntIsWindow(HWND hWnd)
 PWINDOW_OBJECT FASTCALL IntGetWindowObject(HWND hWnd)
 {
    PWINSTATION_OBJECT WinSta;
+   if (hWnd == NULL)
+      return NULL;
    WinSta = UserGetCurrentWinSta();
    ASSERT(WinSta);
    return (PWINDOW_OBJECT)UserGetObject(&WinSta->HandleTable, hWnd, USER_WINDOW );
@@ -590,10 +592,10 @@ DestroyThreadWindows(struct _ETHREAD *Thread)
   
   while (!IsListEmpty(&Win32Thread->WindowListHead))
   {
-     Current = RemoveHeadList(&Win32Thread->WindowListHead);
+     Current = Win32Thread->WindowListHead.Flink;
      Wnd = CONTAINING_RECORD(Current, WINDOW_OBJECT, ThreadListEntry);
      /* window removes itself from the list */
-     UserDestroyWindow(Wnd);
+     ASSERT(UserDestroyWindow(Wnd));
   }
 
 #if 0

@@ -250,7 +250,7 @@ IntMouseActivateWindow(PWINDOW_OBJECT Window)
    //      TopWindow = Window;
    //    }
 
-   /* TMN: Check return valud from this function? */
+   /* TMN: Check return value from this function? */
    IntSetForegroundAndFocusWindow(TopWnd, Window, TRUE);
 
    return TRUE;

@@ -774,11 +774,13 @@ MessageFound:
       {
          PWINDOW_OBJECT MsgWindow = NULL;
 
-         if(Msg->Msg.hwnd && (MsgWindow = IntGetWindowObject(Msg->Msg.hwnd)) &&
-               Msg->Msg.message >= WM_MOUSEFIRST && Msg->Msg.message <= WM_MOUSELAST)
+         if(Msg->Msg.hwnd &&
+            Msg->Msg.message >= WM_MOUSEFIRST && Msg->Msg.message <= WM_MOUSELAST)
          {
             USHORT HitTest;
 
+            MsgWindow = IntGetWindowObject(Msg->Msg.hwnd);
+            ASSERT(MsgWindow != NULL);
             if(IntTranslateMouseMessage(ThreadQueue, &Msg->Msg, &HitTest, TRUE))
                /* FIXME - check message filter again, if the message doesn't match anymore,
                           search again */

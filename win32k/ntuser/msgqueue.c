@@ -712,7 +712,18 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
    FocusMessageQueue = UserGetFocusMessageQueue();
 
-   //FIXME: whats the point of this call????
+   /*
+    * FIXME: whats the point of this call???? -- Gunnar
+    *
+    * There's a dedicated thread in CSRSS that processes input messages for
+    * consoles and it's message queue is marked as "primitive message queue".
+    * We can assume that if there is no screen DC then we're in console mode
+    * and the keyboard messages should go to this queue.
+    *
+    * This behaviour should eventually be removed.
+    *
+    * -- Filip
+    */
    if( !IntGetScreenDC() )
    {
       /* FIXME: What to do about Msg.pt here? */
@@ -1659,7 +1670,7 @@ MsqGetTimerMessage(
    
    Timer = UserFindExpiredTimer(
       Queue, 
-      GetWnd(WndFilter), 
+      GetWnd(WndFilter),
       MsgFilterMin, 
       MsgFilterMax,
       Restart

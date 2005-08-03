@@ -85,6 +85,8 @@ PMONITOR_OBJECT FASTCALL UserCreateMonitorObject(HANDLE* h)
    
    mem = ExAllocatePool(PagedPool, sizeof(MONITOR_OBJECT));
    if (!mem) return NULL;
+   RtlZeroMemory(mem, sizeof(MONITOR_OBJECT));
+
    WinSta = UserGetCurrentWinSta();
    
    *h = UserAllocHandle(&WinSta->HandleTable, mem, USER_MONITOR);

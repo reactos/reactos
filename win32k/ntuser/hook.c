@@ -405,6 +405,7 @@ PHOOK FASTCALL HookCreate(HHOOK* hHook)
    
    mem = ExAllocatePool(PagedPool, sizeof(HOOK));
    if (!mem) return NULL;
+   RtlZeroMemory(mem, sizeof(HOOK));
 
    WinSta = UserGetCurrentWinSta();
    *hHook = UserAllocHandle(&WinSta->HandleTable, mem, USER_HOOK_PROC);

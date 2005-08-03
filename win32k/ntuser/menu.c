@@ -246,6 +246,7 @@ PMENU_OBJECT FASTCALL UserCreateMenuObject(HANDLE* h)
    
    mem = ExAllocatePool(PagedPool, sizeof(MENU_OBJECT));
    if (!mem) return NULL;
+   RtlZeroMemory(mem, sizeof(MENU_OBJECT));
 
    WinSta = UserGetCurrentWinSta();
    *h = UserAllocHandle(&WinSta->HandleTable, mem, USER_MENU);
