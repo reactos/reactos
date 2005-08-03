@@ -4,21 +4,26 @@ SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = msi.dll
 IMPORTLIB = libmsi.$(IMPLIBEXT)
-IMPORTS   = shell32 cabinet oleaut32 ole32 version user32 gdi32 advapi32 kernel32
+IMPORTS   = shell32 shlwapi cabinet oleaut32 ole32 version user32 gdi32 advapi32 kernel32
 EXTRALIBS = -luuid $(LIBUNICODE)
 
 C_SRCS = \
 	action.c \
 	appsearch.c \
+	classes.c \
 	create.c \
 	custom.c \
 	database.c \
 	delete.c \
 	dialog.c \
 	distinct.c \
+	events.c \
+	files.c \
 	format.c \
 	handle.c \
+	helpers.c \
 	insert.c \
+	install.c \
 	msi.c \
 	msiquery.c \
 	order.c \
@@ -33,6 +38,7 @@ C_SRCS = \
 	table.c \
 	tokenize.c \
 	update.c \
+	upgrade.c \
 	where.c
 
 RC_SRCS = msi.rc

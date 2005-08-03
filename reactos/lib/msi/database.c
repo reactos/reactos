@@ -59,7 +59,7 @@ DEFINE_GUID( CLSID_MsiDatabase, 0x000c1084, 0x0000, 0x0000,
  *  Any binary data in a table is a reference to a stream.
  */
 
-VOID MSI_CloseDatabase( MSIOBJECTHDR *arg )
+static VOID MSI_CloseDatabase( MSIOBJECTHDR *arg )
 {
     MSIDATABASE *db = (MSIDATABASE *) arg;
     DWORD r;
@@ -77,7 +77,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     HRESULT r;
     MSIDATABASE *db = NULL;
     UINT ret = ERROR_FUNCTION_FAILED;
-    LPWSTR szMode;
+    LPCWSTR szMode;
     STATSTG stat;
 
     TRACE("%s %s\n",debugstr_w(szDBPath),debugstr_w(szPersist) );
@@ -85,7 +85,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     if( !pdb )
         return ERROR_INVALID_PARAMETER;
 
-    szMode = (LPWSTR) szPersist;
+    szMode = szPersist;
     if( HIWORD( szPersist ) )
     {
         /* UINT len = lstrlenW( szPerist ) + 1; */
@@ -209,7 +209,7 @@ UINT WINAPI MsiOpenDatabaseA(LPCSTR szDBPath, LPCSTR szPersist, MSIHANDLE *phDB)
             goto end;
     }
     else
-        szwPersist = (LPWSTR) szPersist;
+        szwPersist = (LPWSTR)(DWORD)szPersist;
 
     r = MsiOpenDatabaseW( szwDBPath, szwPersist, phDB );
 

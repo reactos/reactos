@@ -59,11 +59,14 @@ struct sql_str {
     INT len;
 };
 
-typedef struct _string_list
+typedef struct _column_info
 {
-    LPWSTR string;
-    struct _string_list *next;
-} string_list;
+    LPCWSTR table;
+    LPCWSTR column;
+    UINT   type;
+    struct expr *val;
+    struct _column_info *next;
+} column_info;
 
 struct complex_expr
 {
@@ -80,31 +83,11 @@ struct expr
         struct complex_expr expr;
         INT   ival;
         UINT  uval;
-        LPWSTR sval;
-        LPWSTR column;
+        LPCWSTR sval;
+        LPCWSTR column;
         UINT col_number;
     } u;
 };
-
-typedef struct _create_col_info
-{
-    LPWSTR colname;
-    UINT   type;
-    struct _create_col_info *next;
-} create_col_info;
-
-typedef struct _value_list
-{
-    struct expr *val;
-    struct _value_list *next;
-} value_list;
-
-typedef struct _column_assignment
-{
-    string_list *col_list;
-    value_list *val_list;
-} column_assignment;
-
 
 UINT MSI_ParseSQL( MSIDATABASE *db, LPCWSTR command, MSIVIEW **phview,
                    struct list *mem );
@@ -112,24 +95,24 @@ UINT MSI_ParseSQL( MSIDATABASE *db, LPCWSTR command, MSIVIEW **phview,
 UINT TABLE_CreateView( MSIDATABASE *db, LPCWSTR name, MSIVIEW **view );
 
 UINT SELECT_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
-                        string_list *columns );
+                        column_info *columns );
 
 UINT DISTINCT_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table );
 
 UINT ORDER_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
-                       string_list *columns );
+                       column_info *columns );
 
 UINT WHERE_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
                        struct expr *cond );
 
 UINT CREATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
-                        create_col_info *col_info, BOOL temp );
+                        column_info *col_info, BOOL temp );
 
 UINT INSERT_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
-                        string_list *columns, value_list *values, BOOL temp );
+                        column_info *columns, column_info *values, BOOL temp );
 
 UINT UPDATE_CreateView( MSIDATABASE *db, MSIVIEW **, LPWSTR table,
-                        column_assignment *list, struct expr *expr );
+                        column_info *list, struct expr *expr );
 
 UINT DELETE_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table );
 

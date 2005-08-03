@@ -44,7 +44,7 @@ typedef struct tagMSICREATEVIEW
     MSIDATABASE     *db;
     LPWSTR           name;
     BOOL             bIsTemp;
-    create_col_info *col_info;
+    column_info     *col_info;
 } MSICREATEVIEW;
 
 static UINT CREATE_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT *val )
@@ -59,7 +59,7 @@ static UINT CREATE_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT 
 static UINT CREATE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 {
     MSICREATEVIEW *cv = (MSICREATEVIEW*)view;
-    create_col_info *col;
+    column_info *col;
     UINT r, nField, row, table_val, column_val;
     static const WCHAR szTables[] =  { '_','T','a','b','l','e','s',0 };
     static const WCHAR szColumns[] = { '_','C','o','l','u','m','n','s',0 };
@@ -122,8 +122,8 @@ static UINT CREATE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
         if( r )
             goto err;
 
-        column_val = msi_addstringW( cv->db->strings, 0, col->colname, -1, 1 );
-        TRACE("New string %s -> %d\n", debugstr_w( col->colname ), column_val );
+        column_val = msi_addstringW( cv->db->strings, 0, col->column, -1, 1 );
+        TRACE("New string %s -> %d\n", debugstr_w( col->column ), column_val );
         if( column_val < 0 )
             break;
 
@@ -226,7 +226,7 @@ MSIVIEWOPS create_ops =
 };
 
 UINT CREATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
-                        create_col_info *col_info, BOOL temp )
+                        column_info *col_info, BOOL temp )
 {
     MSICREATEVIEW *cv = NULL;
 

@@ -210,7 +210,7 @@ MSIVIEWOPS select_ops =
     SELECT_delete
 };
 
-static UINT SELECT_AddColumn( MSISELECTVIEW *sv, LPWSTR name )
+static UINT SELECT_AddColumn( MSISELECTVIEW *sv, LPCWSTR name )
 {
     UINT r, n=0;
     MSIVIEW *table;
@@ -245,7 +245,7 @@ static UINT SELECT_AddColumn( MSISELECTVIEW *sv, LPWSTR name )
 }
 
 UINT SELECT_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
-                        string_list *columns )
+                        column_info *columns )
 {
     MSISELECTVIEW *sv = NULL;
     UINT count = 0, r;
@@ -273,7 +273,7 @@ UINT SELECT_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
 
     while( columns )
     {
-        r = SELECT_AddColumn( sv, columns->string );
+        r = SELECT_AddColumn( sv, columns->column );
         if( r )
             break;
         columns = columns->next;

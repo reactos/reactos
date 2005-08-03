@@ -397,7 +397,7 @@ end:
     return ret;
 }
 
-UINT read_table_from_storage( MSIDATABASE *db, LPCWSTR name, MSITABLE **ptable)
+static UINT read_table_from_storage( MSIDATABASE *db, LPCWSTR name, MSITABLE **ptable)
 {
     MSITABLE *t;
     USHORT *rawdata = NULL;
@@ -507,7 +507,7 @@ void remove_table( MSIDATABASE *db, MSITABLE *table )
     table->prev = NULL;
 }
 
-void release_table( MSIDATABASE *db, MSITABLE *table )
+static void release_table( MSIDATABASE *db, MSITABLE *table )
 {
     if( !table->ref_count )
         ERR("Trying to destroy table with refcount 0\n");
@@ -610,7 +610,7 @@ UINT get_table(MSIDATABASE *db, LPCWSTR name, MSITABLE **ptable)
     return ERROR_SUCCESS;
 }
 
-UINT save_table( MSIDATABASE *db, MSITABLE *t )
+static UINT save_table( MSIDATABASE *db, MSITABLE *t )
 {
     USHORT *rawdata = NULL, *p;
     UINT rawsize, r, i, j, row_size, num_cols = 0;
@@ -751,7 +751,7 @@ end:
     return ret;
 }
 
-UINT save_string_table( MSIDATABASE *db )
+static UINT save_string_table( MSIDATABASE *db )
 {
     UINT i, count, datasize, poolsize, sz, used, r, codepage;
     UINT ret = ERROR_FUNCTION_FAILED;
@@ -858,7 +858,7 @@ struct standard_table {
 #define STANDARD_TABLE_COUNT \
      (sizeof(MSI_standard_tables)/sizeof(struct standard_table))
 
-UINT get_defaulttablecolumns( LPCWSTR szTable, MSICOLUMNINFO *colinfo, UINT *sz)
+static UINT get_defaulttablecolumns( LPCWSTR szTable, MSICOLUMNINFO *colinfo, UINT *sz)
 {
     DWORD i, n=0;
 
@@ -1167,7 +1167,7 @@ static UINT TABLE_set_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT val
     return ERROR_SUCCESS;
 }
 
-UINT TABLE_insert_row( struct tagMSIVIEW *view, UINT *num )
+static UINT TABLE_insert_row( struct tagMSIVIEW *view, UINT *num )
 {
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
     USHORT **p, *row;

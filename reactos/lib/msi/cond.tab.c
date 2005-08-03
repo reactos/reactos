@@ -72,7 +72,7 @@
 #define YYLEX_PARAM info
 #define YYPARSE_PARAM info
 
-static int COND_error(char *str);
+static int COND_error(const char *str);
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -1970,7 +1970,7 @@ static LPWSTR COND_GetLiteral( struct cond_str *str )
     return ret;
 }
 
-static int COND_error(char *str)
+static int COND_error(const char *str)
 {
     return 0;
 }

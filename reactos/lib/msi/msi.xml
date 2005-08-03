@@ -15,6 +15,7 @@
 	<library>gdi32</library>
 	<library>advapi32</library>
 	<library>shell32</library>
+	<library>shlwapi</library>
 	<library>winmm</library>
 	<library>cabinet</library>
 	<library>ole32</library>
@@ -22,6 +23,7 @@
 	<library>version</library>
 	<file>action.c</file>
 	<file>appsearch.c</file>
+	<file>classes.c</file>
 	<file>cond.tab.c</file>
 	<file>create.c</file>
 	<file>custom.c</file>
@@ -29,9 +31,13 @@
 	<file>delete.c</file>
 	<file>dialog.c</file>
 	<file>distinct.c</file>
+	<file>events.c</file>
+	<file>files.c</file>
 	<file>format.c</file>
 	<file>handle.c</file>
+	<file>helpers.c</file>
 	<file>insert.c</file>
+	<file>install.c</file>
 	<file>msi.c</file>
 	<file>msiquery.c</file>
 	<file>order.c</file>
@@ -47,6 +53,7 @@
 	<file>table.c</file>
 	<file>tokenize.c</file>
 	<file>update.c</file>
+	<file>upgrade.c</file>
 	<file>where.c</file>
 	<file>msi.spec</file>
 	<file>msi.rc</file>

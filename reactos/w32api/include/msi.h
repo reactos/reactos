@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+#ifndef _MSI_NO_CRYPTO
+#include "wincrypt.h"
+#endif
+
 typedef unsigned long MSIHANDLE;
 
 typedef enum tagINSTALLSTATE
@@ -201,20 +205,6 @@ UINT WINAPI MsiOpenProductA(LPCSTR, MSIHANDLE*);
 UINT WINAPI MsiOpenProductW(LPCWSTR, MSIHANDLE*);
 #define     MsiOpenProduct WINELIB_NAME_AW(MsiOpenProduct)
 
-UINT WINAPI MsiGetSummaryInformationA(MSIHANDLE, LPCSTR, UINT, MSIHANDLE *);
-UINT WINAPI MsiGetSummaryInformationW(MSIHANDLE, LPCWSTR, UINT, MSIHANDLE *);
-#define     MsiGetSummaryInformation WINELIB_NAME_AW(MsiGetSummaryInformation)
-
-UINT WINAPI MsiSummaryInfoGetPropertyA(MSIHANDLE,UINT,UINT*,INT*,FILETIME*,LPSTR,DWORD*);
-UINT WINAPI MsiSummaryInfoGetPropertyW(MSIHANDLE,UINT,UINT*,INT*,FILETIME*,LPWSTR,DWORD*);
-#define     MsiSummaryInfoGetProperty WINELIB_NAME_AW(MsiSummaryInfoGetProperty)
-
-UINT WINAPI MsiSummaryInfoPersist(MSIHANDLE);
-
-UINT WINAPI MsiSummaryInfoSetPropertyA(MSIHANDLE, UINT, UINT, INT, FILETIME*, LPSTR);
-UINT WINAPI MsiSummaryInfoSetPropertyW(MSIHANDLE, UINT, UINT, INT, FILETIME*, LPWSTR);
-#define     MsiSummaryInfoSetProperty WINELIB_NAME_AW(MsiSummaryInfoSetProperty)
-
 UINT WINAPI MsiProvideComponentFromDescriptorA(LPCSTR,LPSTR,DWORD*,DWORD*);
 UINT WINAPI MsiProvideComponentFromDescriptorW(LPCWSTR,LPWSTR,DWORD*,DWORD*);
 #define     MsiProvideComponentFromDescriptor WINELIB_NAME_AW(MsiProvideComponentFromDescriptor)
@@ -303,9 +293,33 @@ USERINFOSTATE WINAPI MsiGetUserInfoA(LPCSTR, LPSTR, DWORD*, LPSTR, DWORD*, LPSTR
 USERINFOSTATE WINAPI MsiGetUserInfoW(LPCWSTR, LPWSTR, DWORD*, LPWSTR, DWORD*, LPWSTR, DWORD*);
 #define MsiGetUserInfo WINELIB_NAME_AW(MsiGetUserInfo)
 
-UINT WINAPI MsiCollectUserInfoA( LPCSTR );
-UINT WINAPI MsiCollectUserInfoW( LPCWSTR );
+UINT WINAPI MsiCollectUserInfoA(LPCSTR);
+UINT WINAPI MsiCollectUserInfoW(LPCWSTR);
 #define MsiCollectUserInfo WINELIB_NAME_AW(MsiCollectUserInfo)
+
+UINT WINAPI MsiReinstallFeatureA(LPCSTR, LPCSTR, DWORD);
+UINT WINAPI MsiReinstallFeatureW(LPCWSTR, LPCWSTR, DWORD);
+#define MsiReinstallFeature WINELIB_NAME_AW(MsiReinstallFeature)
+
+UINT WINAPI MsiGetShortcutTargetA(LPCSTR, LPSTR, LPSTR, LPSTR);
+UINT WINAPI MsiGetShortcutTargetW(LPCWSTR, LPWSTR, LPWSTR, LPWSTR);
+#define MsiGetShortcutTarget WINELIB_NAME_AW(MsiGetShortcutTarget)
+
+INSTALLSTATE WINAPI MsiUseFeatureW(LPCWSTR, LPCWSTR);
+INSTALLSTATE WINAPI MsiUseFeatureA(LPCSTR, LPCSTR);
+#define MsiUseFeature WINELIB_NAME_AW(MsiUseFeature)
+
+INSTALLSTATE WINAPI MsiUseFeatureExW(LPCWSTR, LPCWSTR, DWORD, DWORD);
+INSTALLSTATE WINAPI MsiUseFeatureExA(LPCSTR, LPCSTR, DWORD, DWORD);
+#define MsiUseFeatureEx WINELIB_NAME_AW(MsiUseFeatureEx)
+
+HRESULT WINAPI MsiGetFileSignatureInformationA(LPCSTR, DWORD, PCCERT_CONTEXT*, BYTE*, DWORD*);
+HRESULT WINAPI MsiGetFileSignatureInformationW(LPCWSTR, DWORD, PCCERT_CONTEXT*, BYTE*, DWORD*);
+#define MsiGetFileSignatureInformation WINELIB_NAME_AW(MsiGetFileSignatureInformation)
+
+INSTALLSTATE WINAPI MsiLocateComponentA(LPCSTR, LPSTR, DWORD *);
+INSTALLSTATE WINAPI MsiLocateComponentW(LPCWSTR, LPWSTR, DWORD *);
+#define  MsiLocateComponent WINELIB_NAME_AW(MsiLocateComponent)
 
 /* Non Unicode */
 UINT WINAPI MsiCloseHandle(MSIHANDLE);

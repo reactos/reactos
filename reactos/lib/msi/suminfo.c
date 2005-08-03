@@ -91,6 +91,14 @@ typedef struct {
     } str;
 } awstring;
 
+typedef struct {
+    BOOL unicode;
+    union {
+       LPCSTR a;
+       LPCWSTR w;
+    } str;
+} awcstring;
+
 typedef struct tagMSISUMMARYINFO
 {
     MSIOBJECTHDR hdr;
@@ -627,7 +635,7 @@ UINT WINAPI MsiSummaryInfoGetPropertyW(
 }
 
 static UINT set_prop( MSIHANDLE handle, UINT uiProperty, UINT uiDataType,
-               INT iValue, FILETIME* pftValue, awstring *str )
+               INT iValue, FILETIME* pftValue, awcstring *str )
 {
     MSISUMMARYINFO *si;
     PROPVARIANT *prop;
@@ -701,9 +709,9 @@ end:
 }
 
 UINT WINAPI MsiSummaryInfoSetPropertyW( MSIHANDLE handle, UINT uiProperty,
-               UINT uiDataType, INT iValue, FILETIME* pftValue, LPWSTR szValue )
+               UINT uiDataType, INT iValue, FILETIME* pftValue, LPCWSTR szValue )
 {
-    awstring str;
+    awcstring str;
 
     TRACE("%ld %u %u %i %p %s\n", handle, uiProperty, uiDataType,
           iValue, pftValue, debugstr_w(szValue) );
@@ -714,9 +722,9 @@ UINT WINAPI MsiSummaryInfoSetPropertyW( MSIHANDLE handle, UINT uiProperty,
 }
 
 UINT WINAPI MsiSummaryInfoSetPropertyA( MSIHANDLE handle, UINT uiProperty,
-               UINT uiDataType, INT iValue, FILETIME* pftValue, LPSTR szValue )
+               UINT uiDataType, INT iValue, FILETIME* pftValue, LPCSTR szValue )
 {
-    awstring str;
+    awcstring str;
 
     TRACE("%ld %u %u %i %p %s\n", handle, uiProperty, uiDataType,
           iValue, pftValue, debugstr_a(szValue) );

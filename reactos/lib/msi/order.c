@@ -302,11 +302,11 @@ static UINT ORDER_AddColumn( MSIORDERVIEW *ov, LPCWSTR name )
 }
 
 UINT ORDER_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
-                       string_list *columns )
+                       column_info *columns )
 {
     MSIORDERVIEW *ov = NULL;
     UINT count = 0, r;
-    string_list *x;
+    column_info *x;
 
     TRACE("%p\n", ov );
 
@@ -332,7 +332,7 @@ UINT ORDER_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
     *view = (MSIVIEW*) ov;
 
     for( x = columns; x ; x = x->next )
-        ORDER_AddColumn( ov, x->string );
+        ORDER_AddColumn( ov, x->column );
 
     return ERROR_SUCCESS;
 }

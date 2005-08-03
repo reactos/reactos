@@ -34,6 +34,9 @@
 #include "winnls.h"
 #include "ole2.h"
 
+#include "winreg.h"
+#include "shlwapi.h"
+
 #include "query.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
@@ -44,7 +47,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 #define MSIFIELD_WSTR   3
 #define MSIFIELD_STREAM 4
 
-void MSI_FreeField( MSIFIELD *field )
+static void MSI_FreeField( MSIFIELD *field )
 {
     switch( field->type )
     {
@@ -62,7 +65,7 @@ void MSI_FreeField( MSIFIELD *field )
     }
 }
 
-void MSI_CloseRecord( MSIOBJECTHDR *arg )
+static void MSI_CloseRecord( MSIOBJECTHDR *arg )
 {
     MSIRECORD *rec = (MSIRECORD *) arg;
     UINT i;
@@ -410,6 +413,17 @@ UINT WINAPI MsiRecordGetStringW(MSIHANDLE handle, unsigned int iField,
     return ret;
 }
 
+static UINT msi_get_stream_size( IStream *stm )
+{
+    STATSTG stat;
+    HRESULT r;
+
+    r = IStream_Stat( stm, &stat, STATFLAG_NONAME );
+    if( FAILED(r) )
+        return 0;
+    return stat.cbSize.QuadPart;
+}
+
 UINT MSI_RecordDataSize(MSIRECORD *rec, unsigned int iField)
 {
     TRACE("%p %d\n", rec, iField);
@@ -425,6 +439,8 @@ UINT MSI_RecordDataSize(MSIRECORD *rec, unsigned int iField)
         return lstrlenW( rec->fields[iField].u.szwVal );
     case MSIFIELD_NULL:
         break;
+    case MSIFIELD_STREAM:
+        return msi_get_stream_size( rec->fields[iField].u.stream );
     }
     return 0;
 }
@@ -533,7 +549,7 @@ UINT WINAPI MsiRecordSetStringW( MSIHANDLE handle, unsigned int iField, LPCWSTR 
 }
 
 /* read the data in a file into an IStream */
-UINT RECORD_StreamFromFile(LPCWSTR szFile, IStream **pstm)
+static UINT RECORD_StreamFromFile(LPCWSTR szFile, IStream **pstm)
 {
     DWORD sz, szHighWord = 0, read;
     HANDLE handle;
@@ -760,4 +776,57 @@ UINT MSI_RecordGetIStream( MSIRECORD *rec, unsigned int iField, IStream **pstm)
     IStream_AddRef( *pstm );
 
     return ERROR_SUCCESS;
+}
+
+static UINT msi_dump_stream_to_file( IStream *stm, LPCWSTR name )
+{
+    ULARGE_INTEGER size;
+    LARGE_INTEGER pos;
+    IStream *out;
+    DWORD stgm;
+    HRESULT r;
+
+    stgm = STGM_READWRITE | STGM_SHARE_EXCLUSIVE | STGM_FAILIFTHERE;
+    r = SHCreateStreamOnFileW( name, stgm, &out );
+    if( FAILED( r ) )
+        return ERROR_FUNCTION_FAILED;
+
+    pos.QuadPart = 0;
+    r = IStream_Seek( stm, pos, STREAM_SEEK_END, &size );
+    if( FAILED( r ) )
+        goto end;
+
+    pos.QuadPart = 0;
+    r = IStream_Seek( stm, pos, STREAM_SEEK_SET, NULL );
+    if( FAILED( r ) )
+        goto end;
+
+    r = IStream_CopyTo( stm, out, size, NULL, NULL );
+
+end:
+    IStream_Release( out );
+    if( FAILED( r ) )
+        return ERROR_FUNCTION_FAILED;
+    return ERROR_SUCCESS;
+}
+
+UINT MSI_RecordStreamToFile( MSIRECORD *rec, unsigned int iField, LPCWSTR name )
+{
+    IStream *stm = NULL;
+    UINT r;
+
+    TRACE("%p %u %s\n", rec, iField, debugstr_w(name));
+
+    msiobj_lock( &rec->hdr );
+
+    r = MSI_RecordGetIStream( rec, iField, &stm );
+    if( r == ERROR_SUCCESS )
+    {
+        r = msi_dump_stream_to_file( stm, name );
+        IStream_Release( stm );
+    }
+
+    msiobj_unlock( &rec->hdr );
+
+    return r;
 }
