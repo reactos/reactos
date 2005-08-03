@@ -345,19 +345,103 @@ PNP_SetDeviceRegProp(handle_t BindingHandle,
                      unsigned long Flags)
 {
     CONFIGRET ret = CR_SUCCESS;
-//    ULONG Data;
+    LPWSTR lpValueName = NULL;
+    HKEY hKey = 0;
 
-    DPRINT1("PNP_SetDeviceRegProp() called\n");
+    DPRINT("PNP_SetDeviceRegProp() called\n");
 
-    DPRINT1("DeviceId: %S\n", DeviceId);
+    DPRINT("DeviceId: %S\n", DeviceId);
+    DPRINT("Property: %lu\n", Property);
+    DPRINT("DataType: %lu\n", DataType);
+    DPRINT("Length: %lu\n", Length);
 
-    DPRINT1("Property: %lu\n", Property);
-    DPRINT1("DataType: %lu\n", DataType);
-    DPRINT1("Length: %lu\n", Length);
+    switch (Property)
+    {
+        case CM_DRP_DEVICEDESC:
+            lpValueName = L"DeviceDesc";
+            break;
 
-    DPRINT1("Data: %lx\n", *((PULONG)Buffer));
+        case CM_DRP_HARDWAREID:
+            lpValueName = L"HardwareID";
+            break;
 
-    DPRINT1("PNP_SetDeviceRegProp() done (returns %lx)\n", ret);
+        case CM_DRP_COMPATIBLEIDS:
+            lpValueName = L"CompatibleIDs";
+            break;
+
+        case CM_DRP_SERVICE:
+            lpValueName = L"Service";
+            break;
+
+        case CM_DRP_CLASS:
+            lpValueName = L"Class";
+            break;
+
+        case CM_DRP_CLASSGUID:
+            lpValueName = L"ClassGUID";
+            break;
+
+        case CM_DRP_DRIVER:
+            lpValueName = L"Driver";
+            break;
+
+        case CM_DRP_CONFIGFLAGS:
+            lpValueName = L"ConfigFlags";
+            break;
+
+        case CM_DRP_MFG:
+            lpValueName = L"Mfg";
+            break;
+
+        case CM_DRP_FRIENDLYNAME:
+            lpValueName = L"FriendlyName";
+            break;
+
+        case CM_DRP_LOCATION_INFORMATION:
+            lpValueName = L"LocationInformation";
+            break;
+
+        case CM_DRP_UPPERFILTERS:
+            lpValueName = L"UpperFilters";
+            break;
+
+        case CM_DRP_LOWERFILTERS:
+            lpValueName = L"LowerFilters";
+            break;
+
+        default:
+            return CR_INVALID_PROPERTY;
+    }
+
+    DPRINT("Value name: %S\n", lpValueName);
+
+    if (RegOpenKeyExW(hEnumKey,
+                      DeviceId,
+                      0,
+                      KEY_ALL_ACCESS,
+                      &hKey))
+        return CR_INVALID_DEVNODE;
+
+    if (Length == 0)
+    {
+        if (RegDeleteValueW(hKey,
+                            lpValueName))
+            ret = CR_REGISTRY_ERROR;
+    }
+    else
+    {
+        if (RegSetValueExW(hKey,
+                           lpValueName,
+                           0,
+                           DataType,
+                           Buffer,
+                           Length))
+            ret = CR_REGISTRY_ERROR;
+    }
+
+    RegCloseKey(hKey);
+
+    DPRINT("PNP_SetDeviceRegProp() done (returns %lx)\n", ret);
 
     return ret;
 }
@@ -374,9 +458,105 @@ PNP_GetDeviceRegProp(handle_t BindingHandle,
                      DWORD Flags)
 {
     CONFIGRET ret = CR_SUCCESS;
+    LPWSTR lpValueName = NULL;
     ULONG Data;
 
     DPRINT1("PNP_GetDeviceRegProp() called\n");
+
+    switch (Property)
+    {
+        case CM_DRP_DEVICEDESC:
+            lpValueName = L"DeviceDesc";
+            break;
+
+        case CM_DRP_HARDWAREID:
+            lpValueName = L"HardwareID";
+            break;
+
+        case CM_DRP_COMPATIBLEIDS:
+            lpValueName = L"CompatibleIDs";
+            break;
+
+        case CM_DRP_SERVICE:
+            lpValueName = L"Service";
+            break;
+
+        case CM_DRP_CLASS:
+            lpValueName = L"Class";
+            break;
+
+        case CM_DRP_CLASSGUID:
+            lpValueName = L"ClassGUID";
+            break;
+
+        case CM_DRP_DRIVER:
+            lpValueName = L"Driver";
+            break;
+
+        case CM_DRP_CONFIGFLAGS:
+            lpValueName = L"ConfigFlags";
+            break;
+
+        case CM_DRP_MFG:
+            lpValueName = L"Mfg";
+            break;
+
+        case CM_DRP_FRIENDLYNAME:
+            lpValueName = L"FriendlyName";
+            break;
+
+        case CM_DRP_LOCATION_INFORMATION:
+            lpValueName = L"LocationInformation";
+            break;
+
+        case CM_DRP_PHYSICAL_DEVICE_OBJECT_NAME:
+            lpValueName = NULL;
+            break;
+
+        case CM_DRP_CAPABILITIES:
+            lpValueName = L"Capabilities";
+            break;
+
+        case CM_DRP_UI_NUMBER:
+            break;
+
+        case CM_DRP_UPPERFILTERS:
+            lpValueName = L"UpperFilters";
+            break;
+
+        case CM_DRP_LOWERFILTERS:
+            lpValueName = L"LowerFilters";
+            break;
+
+        case CM_DRP_BUSTYPEGUID:
+            break;
+
+        case CM_DRP_LEGACYBUSTYPE:
+            break;
+
+        case CM_DRP_BUSNUMBER:
+            break;
+
+        case CM_DRP_ENUMERATOR_NAME:
+            break;
+
+        default:
+            return CR_INVALID_PROPERTY;
+    }
+
+    DPRINT1("Value name: %S\n", lpValueName);
+
+    if (lpValueName)
+    {
+        /* Retrieve information from the Registry */
+
+    }
+    else
+    {
+        /* Retrieve information from the Device Node */
+
+    }
+
 
     Data = 0xbaadf00d;
     memcpy(Buffer, &Data, sizeof(ULONG));

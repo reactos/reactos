@@ -95,6 +95,35 @@ DECL_WINELIB_CFGMGR32_TYPE_AW(DEVINSTID)
 #define CM_SET_DEVINST_PROBLEM_OVERRIDE CM_SET_DEVNODE_PROBLEM_OVERRIDE
 #define CM_SET_DEVINST_PROBLEM_BITS     CM_SET_DEVNODE_PROBLEM_BITS
 
+/* Properties for CM_Get/Set_DevNode_Registry_Property[_Ex]A/W */
+#define CM_DRP_DEVICEDESC                  0x00000001
+#define CM_DRP_HARDWAREID                  0x00000002
+#define CM_DRP_COMPATIBLEIDS               0x00000003
+#define CM_DRP_UNUSED0                     0x00000004
+#define CM_DRP_SERVICE                     0x00000005
+#define CM_DRP_UNUSED1                     0x00000006
+#define CM_DRP_UNUSED2                     0x00000007
+#define CM_DRP_CLASS                       0x00000008
+#define CM_DRP_CLASSGUID                   0x00000009
+#define CM_DRP_DRIVER                      0x0000000A
+#define CM_DRP_CONFIGFLAGS                 0x0000000B
+#define CM_DRP_MFG                         0x0000000C
+#define CM_DRP_FRIENDLYNAME                0x0000000D
+#define CM_DRP_LOCATION_INFORMATION        0x0000000E
+#define CM_DRP_PHYSICAL_DEVICE_OBJECT_NAME 0x0000000F
+#define CM_DRP_CAPABILITIES                0x00000010
+#define CM_DRP_UI_NUMBER                   0x00000011
+#define CM_DRP_UPPERFILTERS                0x00000012
+#define CM_DRP_LOWERFILTERS                0x00000013
+#define CM_DRP_BUSTYPEGUID                 0x00000014
+#define CM_DRP_LEGACYBUSTYPE               0x00000015
+#define CM_DRP_BUSNUMBER                   0x00000016
+#define CM_DRP_ENUMERATOR_NAME             0x00000017
+
+#define CM_DRP_MIN                         0x00000001
+#define CM_DRP_MAX                         0x00000017
+
+
 
 CONFIGRET WINAPI CM_Connect_MachineA( PCSTR, PHMACHINE );
 CONFIGRET WINAPI CM_Connect_MachineW( PCWSTR, PHMACHINE );

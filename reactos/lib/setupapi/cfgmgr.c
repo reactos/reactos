@@ -440,7 +440,7 @@ CONFIGRET WINAPI CM_Get_DevNode_Registry_Property_ExW(
     if (dnDevInst == 0)
         return CR_INVALID_DEVNODE;
 
-    if (ulProperty < 1 /* CM_DRP_MIN */ || ulProperty > 0x17 /* CM_DRP_MAX */)
+    if (ulProperty < CM_DRP_MIN || ulProperty > CM_DRP_MAX)
         return CR_INVALID_PROPERTY;
 
     /* pulRegDataType is optional */
@@ -1356,7 +1356,7 @@ CONFIGRET WINAPI CM_Set_DevNode_Registry_Property_ExW(
     if (dnDevInst == 0)
         return CR_INVALID_DEVNODE;
 
-    if (ulProperty < 1 /* CM_DRP_MIN */ || ulProperty > 0x17 /* CM_DRP_MAX */)
+    if (ulProperty <  CM_DRP_MIN || ulProperty > CM_DRP_MAX)
         return CR_INVALID_PROPERTY;
 
     if (Buffer != NULL && ulLength == 0)
@@ -1385,7 +1385,63 @@ CONFIGRET WINAPI CM_Set_DevNode_Registry_Property_ExW(
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    ulType = REG_SZ; /* FIXME */
+    switch (ulProperty)
+    {
+        case CM_DRP_DEVICEDESC:
+            ulType = REG_SZ;
+            break;
+
+        case CM_DRP_HARDWAREID:
+            ulType = REG_MULTI_SZ;
+            break;
+
+        case CM_DRP_COMPATIBLEIDS:
+            ulType = REG_MULTI_SZ;
+            break;
+
+        case CM_DRP_SERVICE:
+            ulType = REG_SZ;
+            break;
+
+        case CM_DRP_CLASS:
+            ulType = REG_SZ;
+            break;
+
+        case CM_DRP_CLASSGUID:
+            ulType = REG_SZ;
+            break;
+
+        case CM_DRP_DRIVER:
+            ulType = REG_SZ;
+            break;
+
+        case CM_DRP_CONFIGFLAGS:
+            ulType = REG_DWORD;
+            break;
+
+        case CM_DRP_MFG:
+            ulType = REG_SZ;
+            break;
+
+        case CM_DRP_FRIENDLYNAME:
+            ulType = REG_SZ;
+            break;
+
+        case CM_DRP_LOCATION_INFORMATION:
+            ulType = REG_SZ;
+            break;
+
+        case CM_DRP_UPPERFILTERS:
+            ulType = REG_MULTI_SZ;
+            break;
+
+        case CM_DRP_LOWERFILTERS:
+            ulType = REG_MULTI_SZ;
+            break;
+
+        default:
+            return CR_INVALID_PROPERTY;
+    }
 
     return PNP_SetDeviceRegProp(BindingHandle,
                                 lpDevInst,
