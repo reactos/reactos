@@ -930,8 +930,8 @@ NtUserDestroyCursorIcon(
 
    CursorDereference(Cursor);
    
-//   SetLastWin32Error(ERROR_INVALID_CURSOR_HANDLE);
-//   RETURN( FALSE);
+   SetLastWin32Error(ERROR_INVALID_CURSOR_HANDLE);
+   RETURN( FALSE);
 
 CLEANUP:
    DPRINT("Leave NtUserDestroyCursorIcon, ret=%i\n",_ret_);
