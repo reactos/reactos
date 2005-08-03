@@ -54,8 +54,7 @@ UsbhubPdoStartDevice(
 	DeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	DbgBreakPoint();
 	
-	/* Register device interface */
-	/* FIXME: when should we activate this interface? */
+	/* Register and activate device interface */
 	Status = IoRegisterDeviceInterface(
 		DeviceObject,
 		DeviceExtension->dev->descriptor.bDeviceClass == USB_CLASS_HUB ?
@@ -110,9 +109,11 @@ UsbhubPdoQueryId(
 			break;
 		}
 		case BusQueryCompatibleIDs:
+		{
 			DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryCompatibleIDs\n");
 			SourceString = &DeviceExtension->CompatibleIds;
 			break;
+		}
 		case BusQueryInstanceID:
 		{
 			DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryInstanceID\n");

@@ -125,7 +125,7 @@ IrpStub(
 	if (((PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO)
 	{
 		DPRINT1("Usbhub: FDO stub for major function 0x%lx\n",
-		IoGetCurrentIrpStackLocation(Irp)->MajorFunction);
+			IoGetCurrentIrpStackLocation(Irp)->MajorFunction);
 #ifndef NDEBUG
 		DbgBreakPoint();
 #endif
