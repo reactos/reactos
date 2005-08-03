@@ -1061,18 +1061,19 @@ ProcessInput (BOOL bFlag)
               }               
 							else 
               {
-                evar = malloc ( size * sizeof(TCHAR));
+                evar = malloc ( 512 * sizeof(TCHAR));
                 if (evar==NULL) 
                     return 1; 
 
-                size = GetEnvironmentVariable (ip, evar, size);
-                if (size!=0)
+                size = GetEnvironmentVariable (ip, evar, 512);
+                if (size > 512)
                 {
                     evar = realloc(evar,size * sizeof(TCHAR) );
-                    if (evar!=NULL)
+                    if (evar==NULL)
                     {
-                      size = GetEnvironmentVariable (ip, evar, size);
+                      return 1;
                     }
+                    size = GetEnvironmentVariable (ip, evar, size);
                 }
 
                 if (size)
