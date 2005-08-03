@@ -28,7 +28,7 @@
  //
 
 
-#include <precomp.h>
+#include <precomp.h>	// <precomp.h> instead of "precomp.h" because the ROS build system needs this to find the precompiled header file (*.gch) in the output directory tree
 
 #include "resource.h"
 
