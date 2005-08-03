@@ -2,8 +2,6 @@
 	<importlibrary definition="riched20.spec.def" />
 	<include base="riched20">.</include>
 	<include base="ReactOS">include/wine</include>
-	<define name="UNICODE" />
-	<define name="_UNICODE" />
 	<define name="__REACTOS__" />
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>
