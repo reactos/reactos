@@ -40,7 +40,7 @@
 #define PAE_PAGEDIRECTORY_MAP	(0xc0000000 + (PAGETABLE_MAP / (512)))
 
 #define HYPERSPACE		(Ke386Pae ? 0xc0800000 : 0xc0400000)
-#define IS_HYPERSPACE(v)	(((ULONG)(v) >= HYPERSPACE && (ULONG)(v) < 0xc0c00000))
+#define IS_HYPERSPACE(v)	(((ULONG)(v) >= HYPERSPACE && (ULONG)(v) < HYPERSPACE + 0x400000))
 
 ULONG MmGlobalKernelPageDirectory[1024];
 ULONGLONG MmGlobalKernelPageDirectoryForPAE[2048];
@@ -2371,32 +2371,41 @@ MiInitPageDirectoryMap(VOID)
    MEMORY_AREA* hyperspace_desc = NULL;
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
    PVOID BaseAddress;
+   NTSTATUS Status;
 
    DPRINT("MiInitPageDirectoryMap()\n");
 
    BoundaryAddressMultiple.QuadPart = 0;
    BaseAddress = (PVOID)PAGETABLE_MAP;
-   MmCreateMemoryArea(NULL,
-                      MmGetKernelAddressSpace(),
-                      MEMORY_AREA_SYSTEM,
-                      &BaseAddress,
-		      Ke386Pae ? 0x800000 : 0x400000,
-                      0,
-                      &kernel_map_desc,
-                      TRUE,
-                      FALSE,
-                      BoundaryAddressMultiple);
+   Status = MmCreateMemoryArea(NULL,
+                               MmGetKernelAddressSpace(),
+                               MEMORY_AREA_SYSTEM,
+                               &BaseAddress,
+		               Ke386Pae ? 0x800000 : 0x400000,
+                               0,
+                               &kernel_map_desc,
+                               TRUE,
+                               FALSE,
+                               BoundaryAddressMultiple);
+   if (!NT_SUCCESS(Status))
+   {
+      KEBUGCHECK(0);
+   }
    BaseAddress = (PVOID)HYPERSPACE;
-   MmCreateMemoryArea(NULL,
-                      MmGetKernelAddressSpace(),
-                      MEMORY_AREA_SYSTEM,
-                      &BaseAddress,
-		      Ke386Pae ? 0x400000 : 0x800000,
-                      0,
-                      &hyperspace_desc,
-                      TRUE,
-                      FALSE,
-                      BoundaryAddressMultiple);
+   Status = MmCreateMemoryArea(NULL,
+                               MmGetKernelAddressSpace(),
+                               MEMORY_AREA_SYSTEM,
+                               &BaseAddress,
+		               0x400000,
+                               0,
+                               &hyperspace_desc,
+                               TRUE,
+                               FALSE,
+                               BoundaryAddressMultiple);
+   if (!NT_SUCCESS(Status))
+   {
+      KEBUGCHECK(0);
+   }
 }
 
 /* EOF */
