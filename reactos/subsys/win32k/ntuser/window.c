@@ -499,13 +499,19 @@ IntSetMenu(
 {
   PMENU_OBJECT OldMenuObject, NewMenuObject = NULL;
 
+  if ((WindowObject->Style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
+    {
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      return FALSE;
+    }
+
   *Changed = (WindowObject->IDMenu != (UINT) Menu);
   if (! *Changed)
     {
       return TRUE;
     }
 
-  if (0 != WindowObject->IDMenu)
+  if (WindowObject->IDMenu)
     {
       OldMenuObject = IntGetMenuObject((HMENU) WindowObject->IDMenu);
       ASSERT(NULL == OldMenuObject || OldMenuObject->MenuInfo.Wnd == WindowObject->Self);
