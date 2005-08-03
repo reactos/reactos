@@ -126,7 +126,7 @@
 126 stdcall VarBoolFromDisp(ptr long ptr)
 127 stdcall VarFormatCurrency(ptr long long long long long ptr)
 128 stub VarWeekdayName # stdcall (long long long long ptr)
-129 stub VarMonthName # stdcall (long long long ptr)
+129 stdcall VarMonthName(long long long ptr)
 130 stdcall VarUI1FromI2(long ptr)
 131 stdcall VarUI1FromI4(long ptr)
 132 stdcall VarUI1FromR4(long ptr)

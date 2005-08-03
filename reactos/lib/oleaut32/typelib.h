@@ -161,9 +161,12 @@ typedef struct tagMSFT_TypeInfoBase {
 
 /* layout of an entry with information on imported types */
 typedef struct tagMSFT_ImpInfo {
-    INT     res0;           /* unknown */
-    INT     oImpFile;       /* offset inthe Import File table */
-    INT     oGuid;          /* offset in Guid table */
+    INT     res0;           /* bits 0 - 15:  count */
+                            /* bit  16:      if set oGuid is an offset to Guid */
+                            /*               if clear oGuid is a typeinfo index in the specified typelib */
+                            /* bits 24 - 31: TKIND of reference */
+    INT     oImpFile;       /* offset in the Import File table */
+    INT     oGuid;          /* offset in Guid table or typeinfo index (see bit 16 of res0) */
     } MSFT_ImpInfo;
 
 /* function description data */

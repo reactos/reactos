@@ -355,8 +355,8 @@ typedef struct _TMAsmProxy {
 #endif
 
 typedef struct _TMProxyImpl {
-    LPVOID				*lpvtbl;
-    IRpcProxyBufferVtbl	*lpvtbl2;
+    LPVOID                             *lpvtbl;
+    const IRpcProxyBufferVtbl          *lpvtbl2;
     ULONG				ref;
 
     TMAsmProxy				*asmstubs;
@@ -443,7 +443,7 @@ TMProxyImpl_Disconnect(LPRPCPROXYBUFFER iface)
 }
 
 
-static IRpcProxyBufferVtbl tmproxyvtable = {
+static const IRpcProxyBufferVtbl tmproxyvtable = {
     TMProxyImpl_QueryInterface,
     TMProxyImpl_AddRef,
     TMProxyImpl_Release,
@@ -455,6 +455,10 @@ static IRpcProxyBufferVtbl tmproxyvtable = {
 int
 _argsize(DWORD vt) {
     switch (vt) {
+    case VT_R8:
+        return sizeof(double)/sizeof(DWORD);
+    case VT_CY:
+        return sizeof(CY)/sizeof(DWORD);
     case VT_DATE:
 	return sizeof(DATE)/sizeof(DWORD);
     case VT_VARIANT:
@@ -607,6 +611,9 @@ serialize_param(
     }
     case VT_PTR: {
 	DWORD cookie;
+	BOOL        derefhere;
+
+	derefhere = (tdesc->u.lptdesc->vt != VT_USERDEFINED);
 
 	if (debugout) TRACE_(olerelay)("*");
 	/* Write always, so the other side knows when it gets a NULL pointer.
@@ -620,7 +627,7 @@ serialize_param(
 	    return S_OK;
 	}
 	hres = serialize_param(tinfo,writeit,debugout,dealloc,tdesc->u.lptdesc,(DWORD*)*arg,buf);
-	if (dealloc) HeapFree(GetProcessHeap(),0,(LPVOID)arg);
+	if (derefhere && dealloc) HeapFree(GetProcessHeap(),0,(LPVOID)*arg);
 	return hres;
     }
     case VT_UNKNOWN:
@@ -686,6 +693,7 @@ serialize_param(
 		    (DWORD*)(((LPBYTE)arg)+vdesc->u.oInst),
 		    buf
 		);
+                ITypeInfo_ReleaseVarDesc(tinfo2, vdesc);
 		if (hres!=S_OK)
 		    return hres;
 		if (debugout && (i<(tattr->cVars-1)))
@@ -1432,13 +1440,16 @@ deserialize_DISPPARAM_ptr(
 /* Searches function, also in inherited interfaces */
 static HRESULT
 _get_funcdesc(
-    ITypeInfo *tinfo, int iMethod, FUNCDESC **fdesc, BSTR *iname, BSTR *fname)
+    ITypeInfo *tinfo, int iMethod, ITypeInfo **tactual, FUNCDESC **fdesc, BSTR *iname, BSTR *fname)
 {
     int i = 0, j = 0;
     HRESULT hres;
 
     if (fname) *fname = NULL;
     if (iname) *iname = NULL;
+
+    *tactual = tinfo;
+    ITypeInfo_AddRef(*tactual);
 
     while (1) {
 	hres = ITypeInfo_GetFuncDesc(tinfo, i, fdesc);
@@ -1464,7 +1475,7 @@ _get_funcdesc(
 		    ERR("Did not find a typeinfo for reftype %ld?\n",href);
 		    continue;
 		}
-		hres = _get_funcdesc(tinfo2,iMethod,fdesc,iname,fname);
+		hres = _get_funcdesc(tinfo2,iMethod,tactual,fdesc,iname,fname);
 		ITypeInfo_Release(tinfo2);
 		if (!hres) return S_OK;
 	    }
@@ -1496,12 +1507,14 @@ xCall(LPVOID retptr, int method, TMProxyImpl *tpinfo /*, args */)
     int			nrofnames;
     int			is_idispatch_getidsofnames = 0;
     DWORD		remoteresult = 0;
+    ITypeInfo 		*tinfo;
 
     EnterCriticalSection(&tpinfo->crit);
 
-    hres = _get_funcdesc(tpinfo->tinfo,method,&fdesc,&iname,&fname);
+    hres = _get_funcdesc(tpinfo->tinfo,method,&tinfo,&fdesc,&iname,&fname);
     if (hres) {
 	ERR("Did not find typeinfo/funcdesc entry for method %d!\n",method);
+        ITypeInfo_Release(tinfo);
         LeaveCriticalSection(&tpinfo->crit);
 	return E_FAIL;
     }
@@ -1509,6 +1522,7 @@ xCall(LPVOID retptr, int method, TMProxyImpl *tpinfo /*, args */)
     if (!tpinfo->chanbuf)
     {
         WARN("Tried to use disconnected proxy\n");
+        ITypeInfo_Release(tinfo);
         LeaveCriticalSection(&tpinfo->crit);
         return RPC_E_DISCONNECTED;
     }
@@ -1537,6 +1551,8 @@ xCall(LPVOID retptr, int method, TMProxyImpl *tpinfo /*, args */)
 	hres = serialize_IDispatch_GetIDsOfNames(TRUE,relaydeb,args,&buf);
 	if (hres != S_OK) {
 	    FIXME("serialize of IDispatch::GetIDsOfNames failed!\n");
+            ITypeInfo_Release(tinfo);
+            LeaveCriticalSection(&tpinfo->crit);
 	    return hres;
 	}
 	goto afterserialize;
@@ -1553,7 +1569,7 @@ xCall(LPVOID retptr, int method, TMProxyImpl *tpinfo /*, args */)
 
     /* Need them for hack below */
     memset(names,0,sizeof(names));
-    if (ITypeInfo_GetNames(tpinfo->tinfo,fdesc->memid,names,sizeof(names)/sizeof(names[0]),&nrofnames))
+    if (ITypeInfo_GetNames(tinfo,fdesc->memid,names,sizeof(names)/sizeof(names[0]),&nrofnames))
 	nrofnames = 0;
     if (nrofnames > sizeof(names)/sizeof(names[0]))
 	ERR("Need more names!\n");
@@ -1582,7 +1598,7 @@ xCall(LPVOID retptr, int method, TMProxyImpl *tpinfo /*, args */)
 	    /* DISPPARAMS* needs special serializer */
 	    if (!lstrcmpW(names[i+1],pdispparamsW)) {
 		hres = serialize_DISPPARAM_ptr(
-		    tpinfo->tinfo,
+		    tinfo,
 		    elem->u.paramdesc.wParamFlags & PARAMFLAG_FIN,
 		    relaydeb,
 		    FALSE,
@@ -1594,7 +1610,7 @@ xCall(LPVOID retptr, int method, TMProxyImpl *tpinfo /*, args */)
 	    }
 	    if (!lstrcmpW(names[i+1],ppvObjectW)) {
 		hres = serialize_LPVOID_ptr(
-		    tpinfo->tinfo,
+		    tinfo,
 		    elem->u.paramdesc.wParamFlags & PARAMFLAG_FIN,
 		    relaydeb,
 		    FALSE,
@@ -1608,7 +1624,7 @@ xCall(LPVOID retptr, int method, TMProxyImpl *tpinfo /*, args */)
 	}
 	if (!isserialized)
 	    hres = serialize_param(
-		tpinfo->tinfo,
+		tinfo,
 		elem->u.paramdesc.wParamFlags & PARAMFLAG_FIN,
 		relaydeb,
 		FALSE,
@@ -1695,7 +1711,7 @@ afterserialize:
 	    /* deserialize DISPPARAM */
 	    if (!lstrcmpW(names[i+1],pdispparamsW)) {
 		hres = deserialize_DISPPARAM_ptr(
-		    tpinfo->tinfo,
+		    tinfo,
 		    elem->u.paramdesc.wParamFlags & PARAMFLAG_FOUT,
 		    relaydeb,
 		    FALSE,
@@ -1711,7 +1727,7 @@ afterserialize:
 	    }
 	    if (!lstrcmpW(names[i+1],ppvObjectW)) {
 		hres = deserialize_LPVOID_ptr(
-		    tpinfo->tinfo,
+		    tinfo,
 		    elem->u.paramdesc.wParamFlags & PARAMFLAG_FOUT,
 		    relaydeb,
 		    FALSE,
@@ -1725,7 +1741,7 @@ afterserialize:
 	}
 	if (!isdeserialized)
 	    hres = deserialize_param(
-		tpinfo->tinfo,
+		tinfo,
 		elem->u.paramdesc.wParamFlags & PARAMFLAG_FOUT,
 		relaydeb,
 		FALSE,
@@ -1750,6 +1766,7 @@ after_deserialize:
 	return status;
 
     HeapFree(GetProcessHeap(),0,buf.base);
+    ITypeInfo_Release(tinfo);
     LeaveCriticalSection(&tpinfo->crit);
     return remoteresult;
 }
@@ -1842,7 +1859,9 @@ PSFacBuf_CreateProxy(
 		int j;
 		/* nrofargs without This */
 		int nrofargs;
-		hres = _get_funcdesc(tinfo,i,&fdesc,NULL,NULL);
+                ITypeInfo *tinfo2;
+		hres = _get_funcdesc(tinfo,i,&tinfo2,&fdesc,NULL,NULL);
+                ITypeInfo_Release(tinfo2);
 		if (hres) {
 		    ERR("GetFuncDesc %lx should not fail here.\n",hres);
 		    return hres;
@@ -1891,7 +1910,7 @@ PSFacBuf_CreateProxy(
 }
 
 typedef struct _TMStubImpl {
-    IRpcStubBufferVtbl	*lpvtbl;
+    const IRpcStubBufferVtbl   *lpvtbl;
     ULONG			ref;
 
     LPUNKNOWN			pUnk;
@@ -1976,6 +1995,7 @@ TMStubImpl_Invoke(
     BSTR	names[10];
     BSTR	fname = NULL,iname = NULL;
     BOOL	is_idispatch_getidsofnames = 0;
+    ITypeInfo 	*tinfo;
 
     memset(&buf,0,sizeof(buf));
     buf.size	= xmsg->cbBuffer;
@@ -1996,7 +2016,7 @@ TMStubImpl_Invoke(
 	xmsg->cbBuffer	= buf.size;
 	return hres;
     }
-    hres = _get_funcdesc(This->tinfo,xmsg->iMethod,&fdesc,&iname,&fname);
+    hres = _get_funcdesc(This->tinfo,xmsg->iMethod,&tinfo,&fdesc,&iname,&fname);
     if (hres) {
 	ERR("GetFuncDesc on method %ld failed with %lx\n",xmsg->iMethod,hres);
 	return hres;
@@ -2010,7 +2030,7 @@ TMStubImpl_Invoke(
 
     /* Need them for hack below */
     memset(names,0,sizeof(names));
-    ITypeInfo_GetNames(This->tinfo,fdesc->memid,names,sizeof(names)/sizeof(names[0]),&nrofnames);
+    ITypeInfo_GetNames(tinfo,fdesc->memid,names,sizeof(names)/sizeof(names[0]),&nrofnames);
     if (nrofnames > sizeof(names)/sizeof(names[0])) {
 	ERR("Need more names!\n");
     }
@@ -2047,7 +2067,7 @@ TMStubImpl_Invoke(
 	    /* deserialize DISPPARAM */
 	    if (!lstrcmpW(names[i+1],pdispparamsW)) {
 		hres = deserialize_DISPPARAM_ptr(
-		    This->tinfo,
+		    tinfo,
 		    elem->u.paramdesc.wParamFlags & PARAMFLAG_FIN,
 		    FALSE,
 		    TRUE,
@@ -2063,7 +2083,7 @@ TMStubImpl_Invoke(
 	    }
 	    if (!lstrcmpW(names[i+1],ppvObjectW)) {
 		hres = deserialize_LPVOID_ptr(
-		    This->tinfo,
+		    tinfo,
 		    elem->u.paramdesc.wParamFlags & PARAMFLAG_FIN,
 		    FALSE,
 		    TRUE,
@@ -2077,7 +2097,7 @@ TMStubImpl_Invoke(
 	}
 	if (!isdeserialized)
 	    hres = deserialize_param(
-		This->tinfo,
+		tinfo,
 		elem->u.paramdesc.wParamFlags & PARAMFLAG_FIN,
 		FALSE,
 		TRUE,
@@ -2129,7 +2149,7 @@ afterdeserialize:
 	    /* DISPPARAMS* needs special serializer */
 	    if (!lstrcmpW(names[i+1],pdispparamsW)) {
 		hres = serialize_DISPPARAM_ptr(
-		    This->tinfo,
+		    tinfo,
 		    elem->u.paramdesc.wParamFlags & PARAMFLAG_FOUT,
 		    FALSE,
 		    TRUE,
@@ -2141,7 +2161,7 @@ afterdeserialize:
 	    }
 	    if (!lstrcmpW(names[i+1],ppvObjectW)) {
 		hres = serialize_LPVOID_ptr(
-		    This->tinfo,
+		    tinfo,
 		    elem->u.paramdesc.wParamFlags & PARAMFLAG_FOUT,
 		    FALSE,
 		    TRUE,
@@ -2155,7 +2175,7 @@ afterdeserialize:
 	}
 	if (!isserialized)
 	    hres = serialize_param(
-	       This->tinfo,
+	       tinfo,
 	       elem->u.paramdesc.wParamFlags & PARAMFLAG_FOUT,
 	       FALSE,
 	       TRUE,
@@ -2173,7 +2193,8 @@ afterserialize:
     hres = xbuf_add (&buf, (LPBYTE)&res, sizeof(DWORD));
     if (hres != S_OK)
 	return hres;
-   
+
+    ITypeInfo_Release(tinfo);
     xmsg->cbBuffer	= buf.curoff;
     I_RpcGetBuffer((RPC_MESSAGE *)xmsg);
     memcpy(xmsg->Buffer, buf.base, buf.curoff);
@@ -2204,7 +2225,7 @@ TMStubImpl_DebugServerRelease(LPRPCSTUBBUFFER iface, LPVOID ppv) {
     return;
 }
 
-IRpcStubBufferVtbl tmstubvtbl = {
+static const IRpcStubBufferVtbl tmstubvtbl = {
     TMStubImpl_QueryInterface,
     TMStubImpl_AddRef,
     TMStubImpl_Release,
@@ -2247,7 +2268,7 @@ PSFacBuf_CreateStub(
     return hres;
 }
 
-static IPSFactoryBufferVtbl psfacbufvtbl = {
+static const IPSFactoryBufferVtbl psfacbufvtbl = {
     PSFacBuf_QueryInterface,
     PSFacBuf_AddRef,
     PSFacBuf_Release,
@@ -2256,7 +2277,7 @@ static IPSFactoryBufferVtbl psfacbufvtbl = {
 };
 
 /* This is the whole PSFactoryBuffer object, just the vtableptr */
-static IPSFactoryBufferVtbl *lppsfac = &psfacbufvtbl;
+static const IPSFactoryBufferVtbl *lppsfac = &psfacbufvtbl;
 
 /***********************************************************************
  *           DllGetClassObject [OLE32.63]
