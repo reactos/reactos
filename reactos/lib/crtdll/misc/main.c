@@ -26,7 +26,7 @@
  *
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include <msvcrt/stdlib.h>
 #include <msvcrt/process.h>
 

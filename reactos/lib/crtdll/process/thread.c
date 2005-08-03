@@ -2,7 +2,7 @@
  *
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include <msvcrt/errno.h>
 #include <msvcrt/process.h>
 #include <msvcrt/internal/file.h>

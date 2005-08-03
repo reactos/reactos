@@ -9,7 +9,7 @@
  *              04/03/99: Created
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include <msvcrt/stdlib.h>
 #include <msvcrt/string.h>
 #include <msvcrt/process.h>

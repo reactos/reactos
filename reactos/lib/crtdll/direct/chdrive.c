@@ -1,4 +1,4 @@
-#include "precomp.h"
+#include <precomp.h>
 #include <msvcrt/ctype.h>
 #include <msvcrt/direct.h>
 #include <msvcrt/stdlib.h>

@@ -35,7 +35,7 @@
 ** (guy@auspex.com).
 */
 
-#include "precomp.h"
+#include <precomp.h>
 #include <msvcrt/fcntl.h>
 #include <msvcrt/time.h>
 #include <msvcrt/string.h>
