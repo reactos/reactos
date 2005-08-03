@@ -20,7 +20,7 @@
  *
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include <stdio.h>
 #include <internal/tls.h>
 #include <stdlib.h>
