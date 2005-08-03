@@ -1171,6 +1171,21 @@
                         </row>
 
                         <row>
+                          <entry>nativecui</entry>
+
+                          <entry>.exe</entry>
+
+                          <entry>_NtProcessStartup</entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>Build a native NT/ROS program (no enviroment
+                          subsystem required to run).</entry>
+                        </row>
+
+                        <row>
                           <entry>nativedll</entry>
 
                           <entry><filename>.dll</filename></entry>
