@@ -434,7 +434,7 @@ PNP_SetDeviceRegProp(handle_t BindingHandle,
                            lpValueName,
                            0,
                            DataType,
-                           Buffer,
+                           (const BYTE*)Buffer,
                            Length))
             ret = CR_REGISTRY_ERROR;
     }
