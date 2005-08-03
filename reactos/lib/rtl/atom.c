@@ -98,9 +98,6 @@ RtlpCheckIntegerAtom(PWSTR AtomName,
      {
         LoValue = (USHORT)((ULONG)AtomName & 0xFFFF);
 
-        if (LoValue >= 0xC000)
-          return FALSE;
-
         if (LoValue == 0)
           LoValue = 0xC000;
 
@@ -244,7 +241,7 @@ RtlEmptyAtomTable(PRTL_ATOM_TABLE AtomTable,
                   BOOLEAN DeletePinned)
 {
    PRTL_ATOM_TABLE_ENTRY *CurrentBucket, *LastBucket;
-   PRTL_ATOM_TABLE_ENTRY CurrentEntry, NextEntry;
+   PRTL_ATOM_TABLE_ENTRY CurrentEntry, NextEntry, *PtrEntry;
 
    DPRINT("RtlEmptyAtomTable (AtomTable %p DeletePinned %x)\n",
           AtomTable, DeletePinned);
@@ -261,17 +258,26 @@ RtlEmptyAtomTable(PRTL_ATOM_TABLE AtomTable,
         CurrentBucket++)
      {
         NextEntry = *CurrentBucket;
-        *CurrentBucket = NULL;
+        PtrEntry = CurrentBucket;
 
         while (NextEntry != NULL)
           {
              CurrentEntry = NextEntry;
              NextEntry = NextEntry->HashLink;
 
-             RtlpFreeAtomHandle(AtomTable,
-                                CurrentEntry);
+             if (DeletePinned || !(CurrentEntry->Flags & RTL_ATOM_IS_PINNED))
+               {
+                 *PtrEntry = NextEntry;
 
-             RtlpFreeAtomTableEntry(CurrentEntry);
+                 RtlpFreeAtomHandle(AtomTable,
+                                    CurrentEntry);
+
+                 RtlpFreeAtomTableEntry(CurrentEntry);
+               }
+             else
+               {
+                 PtrEntry = &CurrentEntry->HashLink;
+               }
           }
      }
 
@@ -385,7 +391,7 @@ RtlAddAtomToAtomTable(IN PRTL_ATOM_TABLE AtomTable,
         else
           {
              /* The caller supplied an empty atom name! */
-             Status = STATUS_INVALID_PARAMETER;
+             Status = STATUS_OBJECT_NAME_INVALID;
           }
      }
 
