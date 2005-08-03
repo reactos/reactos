@@ -576,7 +576,7 @@ VideoPortGetAccessRanges(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 
 VP_STATUS STDCALL
@@ -585,8 +585,74 @@ VideoPortVerifyAccessRanges(
    IN ULONG NumAccessRanges,
    IN PVIDEO_ACCESS_RANGE AccessRanges)
 {
-   DPRINT1("VideoPortVerifyAccessRanges not implemented\n");
-   return NO_ERROR;
+   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+   BOOLEAN ConflictDetected;
+   ULONG i;
+   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
+   PCM_RESOURCE_LIST ResourceList;
+   ULONG ResourceListSize;
+   NTSTATUS Status;
+
+   DPRINT("VideoPortVerifyAccessRanges\n");
+
+   DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
+   
+   /* Create the resource list */
+   ResourceListSize = sizeof(CM_RESOURCE_LIST)
+      + (NumAccessRanges - 1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+   ResourceList = ExAllocatePool(PagedPool, ResourceListSize);
+   if (!ResourceList)
+   {
+      DPRINT("ExAllocatePool() failed\n");
+      return ERROR_INVALID_PARAMETER;
+   }
+   
+   /* Fill resource list */
+   ResourceList->Count = 1;
+   ResourceList->List[0].InterfaceType = DeviceExtension->AdapterInterfaceType;
+   ResourceList->List[0].BusNumber = DeviceExtension->SystemIoBusNumber;
+   ResourceList->List[0].PartialResourceList.Version = 1;
+   ResourceList->List[0].PartialResourceList.Revision = 1;
+   ResourceList->List[0].PartialResourceList.Count = NumAccessRanges;
+   for (i = 0; i < NumAccessRanges; i++, AccessRanges++)
+   {
+      PartialDescriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[i];
+      if (AccessRanges->RangeInIoSpace)
+      {
+         PartialDescriptor->Type = CmResourceTypePort;
+         PartialDescriptor->u.Port.Start = AccessRanges->RangeStart;
+         PartialDescriptor->u.Port.Length = AccessRanges->RangeLength;
+      }
+      else
+      {
+         PartialDescriptor->Type = CmResourceTypeMemory;
+         PartialDescriptor->u.Memory.Start = AccessRanges->RangeStart;
+         PartialDescriptor->u.Memory.Length = AccessRanges->RangeLength;
+      }
+      if (AccessRanges->RangeShareable)
+         PartialDescriptor->ShareDisposition = CmResourceShareShared;
+      else
+         PartialDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+      PartialDescriptor->Flags = 0;
+      if (AccessRanges->RangePassive & VIDEO_RANGE_PASSIVE_DECODE)
+         PartialDescriptor->Flags |= CM_RESOURCE_PORT_PASSIVE_DECODE;
+      if (AccessRanges->RangePassive & VIDEO_RANGE_10_BIT_DECODE)
+         PartialDescriptor->Flags |= CM_RESOURCE_PORT_10_BIT_DECODE;
+   }
+   
+   /* Try to acquire all resource ranges */
+   Status = IoReportResourceForDetection(
+      DeviceExtension->DriverObject,
+      NULL, 0, /* Driver List */
+      DeviceExtension->PhysicalDeviceObject,
+      ResourceList, ResourceListSize,
+      &ConflictDetected);
+   ExFreePool(ResourceList);
+   
+   if (!NT_SUCCESS(Status) || ConflictDetected)
+      return ERROR_INVALID_PARAMETER;
+   else
+      return NO_ERROR;
 }
 
 /*
