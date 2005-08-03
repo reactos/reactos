@@ -3772,7 +3772,7 @@ GetMenuItemInfoA(
 
    RtlCopyMemory(mii, &miiW, miiW.cbSize);
    mii->dwTypeData = AnsiBuffer;
-
+   mii->cch = strlen(AnsiBuffer);
    return TRUE;
 }
 
@@ -3864,11 +3864,11 @@ GetMenuStringA(
   MENUITEMINFOA mii;
   mii.dwTypeData = lpString;
   mii.fMask = MIIM_STRING;
+  mii.fType = MF_STRING;
   mii.cbSize = sizeof(MENUITEMINFOA);
   mii.cch = nMaxCount;
 
-  UNIMPLEMENTED;
-  if(!(GetMenuItemInfoA( hMenu, uIDItem, (BOOL)!(MF_BYPOSITION & uFlag),&mii)))
+  if(!(GetMenuItemInfoA( hMenu, uIDItem, (BOOL)(MF_BYPOSITION & uFlag),&mii)))
      return 0;
   else
      return mii.cch;
@@ -3893,10 +3893,9 @@ GetMenuStringW(
   miiW.cbSize = sizeof(MENUITEMINFOW);
   miiW.cch = nMaxCount;
 
-  UNIMPLEMENTED;
-  if(!(GetMenuItemInfoW( hMenu, uIDItem, (BOOL)!(MF_BYPOSITION & uFlag),&miiW)))
+  if(!(GetMenuItemInfoW( hMenu, uIDItem, (BOOL)(MF_BYPOSITION & uFlag),&miiW)))
      return 0;
-  else  
+  else
      return miiW.cch;
 }
 
@@ -4318,11 +4317,11 @@ ModifyMenuA(
   mii.fState = MFS_ENABLED;
 
   UNIMPLEMENTED;
-  
+
   if(!GetMenuItemInfoA( hMnu,
                         uPosition,
                        (BOOL)!(MF_BYPOSITION & uFlags),
-                        &mii)) return FALSE; 
+                        &mii)) return FALSE;
 
   if(uFlags & MF_BITMAP)
   {
@@ -4341,7 +4340,7 @@ ModifyMenuA(
     if(mii.dwTypeData != NULL)
     {
       HeapFree(GetProcessHeap(),0, mii.dwTypeData);
-    }  
+    }
     /* Item beginning with a backspace is a help item */
     if (*lpNewItem == '\b')
     {
@@ -4352,7 +4351,7 @@ ModifyMenuA(
     mii.dwTypeData = (LPSTR)lpNewItem;
     mii.cch = (NULL == lpNewItem ? 0 : strlen(lpNewItem));
   }
-    
+
   if(uFlags & MF_RIGHTJUSTIFY)
   {
     mii.fType |= MFT_RIGHTJUSTIFY;
@@ -4439,7 +4438,7 @@ ModifyMenuW(
     if(mii.dwTypeData != NULL)
     {
       HeapFree(GetProcessHeap(),0, mii.dwTypeData);
-    }  
+    }
     if (*lpNewItem == '\b')
     {
        mii.fType |= MF_HELP;
@@ -4449,7 +4448,7 @@ ModifyMenuW(
     mii.dwTypeData = (LPWSTR)lpNewItem;
     mii.cch = (NULL == lpNewItem ? 0 : wcslen(lpNewItem));
   }
-    
+
   if(uFlags & MF_RIGHTJUSTIFY)
   {
     mii.fType |= MFT_RIGHTJUSTIFY;
