@@ -25,7 +25,7 @@ HKR, , NoInstallClass, 0, 1
 
 [Manufacturer]
 %StdMfg% = StdMfg
-%LogMfg  = LogMsf
+%LogMfg% = LogMsf
 %MSMfg%  = MSMfg
 
 [StdMfg]
@@ -39,7 +39,7 @@ HKR, , NoInstallClass, 0, 1
 [MSMfg]
 %*PNP0F01.DeviceDesc% = Serial_Inst,*PNP0F01,SERENUM\PNP0F01
 %*PNP0F03.DeviceDesc% = PS2_Inst,*PNP0F03
-%*PNP0F13.DeviceDesc" = PS2_Inst,*PNP0F13
+%*PNP0F13.DeviceDesc% = PS2_Inst,*PNP0F13
 
 ;---------------------------- MOUCLASS DRIVER ---------------------------
 
