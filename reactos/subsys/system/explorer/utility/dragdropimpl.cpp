@@ -1,4 +1,4 @@
-#include "precomp.h"
+#include <precomp.h>
 
 /**************************************************************************
    THIS CODE AND INFORMATION IS PROVIDED 'AS IS' WITHOUT WARRANTY OF

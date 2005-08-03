@@ -26,7 +26,7 @@
  //
 
 
-#include "precomp.h"
+#include <precomp.h>
 
 #include "taskbar.h"
 #include "traynotify.h"	// for NOTIFYAREA_WIDTH_DEF

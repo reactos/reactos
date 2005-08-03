@@ -28,7 +28,7 @@
 
 #ifdef __WINE__
 
-#include "precomp.h"
+#include <precomp.h>
 
 //#include "unixfs.h"
 
