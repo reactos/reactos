@@ -602,19 +602,10 @@ RtlQueryAtomInAtomTable(PRTL_ATOM_TABLE AtomTable,
 
              if (*NameLength < Length + sizeof(WCHAR))
                {
-                  /* prevent underflow! */
-                  if (*NameLength >= sizeof(WCHAR))
-                    {
-                       Length = *NameLength - sizeof(WCHAR);
-                    }
-                  else
-                    {
-                       Length = 0;
-                       Status = STATUS_BUFFER_TOO_SMALL;
-                    }
+                  *NameLength = Length;
+                  Status = STATUS_BUFFER_TOO_SMALL;
                }
-
-             if (Length)
+             else 
                {
                   RtlCopyMemory(AtomName,
                                 NameString,
@@ -652,19 +643,10 @@ RtlQueryAtomInAtomTable(PRTL_ATOM_TABLE AtomTable,
 
              if (*NameLength < Length + sizeof(WCHAR))
                {
-                  /* prevent underflow! */
-                  if (*NameLength >= sizeof(WCHAR))
-                    {
-                       Length = *NameLength - sizeof(WCHAR);
-                    }
-                  else
-                    {
-                       Length = 0;
-                       Status = STATUS_BUFFER_TOO_SMALL;
-                    }
+                  *NameLength = Length;
+                  Status = STATUS_BUFFER_TOO_SMALL;
                }
-
-             if (Length)
+             else
                {
                   RtlCopyMemory(AtomName,
                                 Entry->Name,
