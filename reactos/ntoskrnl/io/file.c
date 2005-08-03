@@ -324,6 +324,7 @@ IopSecurityFile(PVOID ObjectBody,
 
     /* Set Stack Parameters */
     StackPtr = IoGetNextIrpStackLocation(Irp);
+    StackPtr->MajorFunction = MajorFunction;
     StackPtr->FileObject = FileObject;
 
     /* Set Parameters */
