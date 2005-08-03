@@ -231,7 +231,7 @@ FONT 10, "MS Sans Serif"
 BEGIN
     LTEXT           "ReactOS Explorer",IDC_ROS_EXPLORER,91,29,90,11
     LTEXT           "V 0.9",IDC_VERSION_TXT,91,43,98,8
-    LTEXT           "(c) 2003/2004 Martin Fuchs",IDC_STATIC,91,58,79,8
+    LTEXT           "(c) 2003-2005 Martin Fuchs",IDC_STATIC,91,58,79,8
     LTEXT           "http://www.sky.franken.de/explorer/",IDC_WWW,21,84,104,
                     8
     CONTROL         "&OK",IDOK,"Button",BS_OWNERDRAW | BS_FLAT | WS_GROUP,
