@@ -22,7 +22,7 @@
 /* FUNCTIONS ***************************************************************/
 
 VOID
-HalpInitPhase0(VOID)
+HalpInitPhase0(PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
   HalpHooks.InitPciBus = HalpXboxInitPciBus;
 

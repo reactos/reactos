@@ -38,7 +38,7 @@ HalInitSystem (ULONG BootPhase,
   if (BootPhase == 0)
     {
       RtlZeroMemory(&HalpHooks, sizeof(HALP_HOOKS));
-      HalpInitPhase0();      
+      HalpInitPhase0(LoaderBlock);      
     }
   else if (BootPhase == 1)
     {
