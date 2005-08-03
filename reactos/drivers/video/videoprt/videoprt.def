@@ -116,4 +116,4 @@ VideoPortWriteRegisterBufferUshort@12=NTOSKRNL.WRITE_REGISTER_BUFFER_USHORT
 VideoPortWriteRegisterBufferUlong@12=NTOSKRNL.WRITE_REGISTER_BUFFER_ULONG
 VideoPortZeroMemory@8=NTOSKRNL.RtlZeroMemory
 VideoPortZeroDeviceMemory@8=NTOSKRNL.RtlZeroMemory
-;VpNotifyEaData
+VpNotifyEaData@8
