@@ -160,6 +160,7 @@ void ME_SendSelChange(ME_TextEditor *editor);
 void ME_InsertGraphicsFromCursor(ME_TextEditor *editor, int nCursor);
 void ME_InternalDeleteText(ME_TextEditor *editor, int nOfs, int nChars);
 int ME_GetTextLength(ME_TextEditor *editor);
+int ME_GetTextLengthEx(ME_TextEditor *editor, GETTEXTLENGTHEX *how);
 ME_Style *ME_GetSelectionInsertStyle(ME_TextEditor *editor);
 BOOL ME_UpdateSelection(ME_TextEditor *editor, ME_Cursor *pTempCursor);
 
@@ -202,7 +203,7 @@ extern LRESULT CreateIRichEditOle(LPVOID *);
 /* wintest.c */
 
 /* editor.c */
-void ME_RegisterEditorClass();
+void ME_RegisterEditorClass(HINSTANCE hInstance);
 ME_TextEditor *ME_MakeEditor(HWND hWnd);
 void ME_DestroyEditor(ME_TextEditor *editor);
 void ME_SendOldNotify(ME_TextEditor *editor, int nCode);

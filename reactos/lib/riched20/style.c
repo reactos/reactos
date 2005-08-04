@@ -268,6 +268,8 @@ void ME_LogFontFromStyle(HDC hDC, LOGFONTW *lf, ME_Style *s)
     lf->lfUnderline = 1;
   if (s->fmt.dwEffects & s->fmt.dwMask & CFM_STRIKEOUT)
     lf->lfStrikeOut = 1;
+  if (s->fmt.dwEffects & s->fmt.dwMask & (CFM_SUBSCRIPT|CFM_SUPERSCRIPT))
+    lf->lfHeight = (lf->lfHeight*2)/3;
 /*lf.lfQuality = PROOF_QUALITY; */
   lf->lfPitchAndFamily = s->fmt.bPitchAndFamily;
   lf->lfCharSet = s->fmt.bCharSet;

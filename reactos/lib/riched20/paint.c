@@ -178,13 +178,23 @@ void ME_DrawTextWithStyle(ME_Context *c, int x, int y, LPCWSTR szText, int nChar
   HDC hDC = c->hDC;
   HGDIOBJ hOldFont;
   COLORREF rgbOld, rgbBack;
+  int yOffset = 0, yTwipsOffset = 0;
   hOldFont = ME_SelectStyleFont(c->editor, hDC, s);
   rgbBack = ME_GetBackColor(c->editor);
   if ((s->fmt.dwMask & CFM_COLOR) && (s->fmt.dwEffects & CFE_AUTOCOLOR))
     rgbOld = SetTextColor(hDC, GetSysColor(COLOR_WINDOWTEXT));
   else
     rgbOld = SetTextColor(hDC, s->fmt.crTextColor);
-  ExtTextOutW(hDC, x, y, 0, NULL, szText, nChars, NULL);
+  if ((s->fmt.dwMask & s->fmt.dwEffects) & CFM_OFFSET) {
+    yTwipsOffset = s->fmt.yOffset;
+  }
+  if ((s->fmt.dwMask & s->fmt.dwEffects) & (CFM_SUPERSCRIPT | CFM_SUBSCRIPT)) {
+    if (s->fmt.dwEffects & CFE_SUPERSCRIPT) yTwipsOffset = s->fmt.yHeight/3;
+    if (s->fmt.dwEffects & CFE_SUBSCRIPT) yTwipsOffset = -s->fmt.yHeight/12;
+  }
+  if (yTwipsOffset)
+    yOffset = yTwipsOffset*GetDeviceCaps(hDC, LOGPIXELSY)/1440;
+  ExtTextOutW(hDC, x, y-yOffset, 0, NULL, szText, nChars, NULL);
   if (width) {
     SIZE sz;
     GetTextExtentPoint32W(hDC, szText, nChars, &sz);

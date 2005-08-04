@@ -41,6 +41,38 @@ int ME_GetTextLength(ME_TextEditor *editor)
   return ME_CharOfsFromRunOfs(editor, ME_FindItemBack(editor->pBuffer->pLast, diRun), 0);   
 }
 
+
+int ME_GetTextLengthEx(ME_TextEditor *editor, GETTEXTLENGTHEX *how)
+{
+  int length;
+  
+  if (how->flags & GTL_PRECISE && how->flags & GTL_CLOSE)
+    return E_INVALIDARG;
+  if (how->flags & GTL_NUMCHARS && how->flags & GTL_NUMBYTES)
+    return E_INVALIDARG;
+  
+  length = ME_GetTextLength(editor);
+  
+  if (how->flags & GTL_USECRLF)
+    length += editor->nParagraphs;
+  
+  if (how->flags & GTL_NUMBYTES)
+  {
+    CPINFO cpinfo;
+    
+    if (how->codepage == 1200)
+      return length * 2;
+    if (how->flags & GTL_PRECISE)
+      FIXME("GTL_PRECISE flag unsupported. Using GTL_CLOSE\n");
+    if (GetCPInfo(how->codepage, &cpinfo))
+      return length * cpinfo.MaxCharSize;
+    ERR("Invalid codepage %u\n", how->codepage);
+    return E_INVALIDARG;
+  }
+  return length; 
+}
+
+
 void ME_SetSelection(ME_TextEditor *editor, int from, int to)
 {
   if (from == 0 && to == -1)

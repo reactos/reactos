@@ -65,7 +65,7 @@
   - EM_GETSCROLLPOS 3.0
 ! - EM_GETTHUMB
   - EM_GETTEXTEX 2.0
-  - EM_GETTEXTLENGTHEX
+  + EM_GETTEXTLENGTHEX (GTL_PRECISE unimplemented)
   - EM_GETTEXTMODE 2.0
 ? + EM_GETTEXTRANGE (ANSI&Unicode)
   - EM_GETTYPOGRAPHYOPTIONS 3.0
@@ -231,7 +231,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 int me_debug = 0;
 HANDLE me_heap = NULL;
 
-ME_TextBuffer *ME_MakeText() {
+ME_TextBuffer *ME_MakeText(void) {
   
   ME_TextBuffer *buf = ALLOC_OBJ(ME_TextBuffer);
 
@@ -321,10 +321,25 @@ void ME_RTFCharAttrHook(RTF_Info *info)
     case rtfUnderline:
       fmt.dwMask = CFM_UNDERLINE;
       fmt.dwEffects = info->rtfParam ? fmt.dwMask : 0;
+      fmt.bUnderlineType = CFU_CF1UNDERLINE;
+      break;
+    case rtfNoUnderline:
+      fmt.dwMask = CFM_UNDERLINE;
+      fmt.dwEffects = 0;
       break;
     case rtfStrikeThru:
       fmt.dwMask = CFM_STRIKEOUT;
       fmt.dwEffects = info->rtfParam ? fmt.dwMask : 0;
+      break;
+    case rtfSubScript:
+    case rtfSuperScript:
+    case rtfSubScrShrink:
+    case rtfSuperScrShrink:
+    case rtfNoSuperSub:
+      fmt.dwMask = CFM_SUBSCRIPT|CFM_SUPERSCRIPT;
+      if (info->rtfMinor == rtfSubScrShrink) fmt.dwEffects = CFE_SUBSCRIPT;
+      if (info->rtfMinor == rtfSuperScrShrink) fmt.dwEffects = CFE_SUPERSCRIPT;
+      if (info->rtfMinor == rtfNoSuperSub) fmt.dwEffects = 0;
       break;
     case rtfBackColor:
       fmt.dwMask = CFM_BACKCOLOR;
@@ -831,7 +846,6 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   UNSUPPORTED_MSG(EM_GETREDONAME)
   UNSUPPORTED_MSG(EM_GETSCROLLPOS)
   UNSUPPORTED_MSG(EM_GETTEXTEX)
-  UNSUPPORTED_MSG(EM_GETTEXTLENGTHEX)
   UNSUPPORTED_MSG(EM_GETTEXTMODE)
   UNSUPPORTED_MSG(EM_GETTYPOGRAPHYOPTIONS)
   UNSUPPORTED_MSG(EM_GETUNDONAME)
@@ -901,10 +915,14 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     return 0;
   case EM_GETSEL:
   {
-    ME_GetSelection(editor, (int *)wParam, (int *)lParam);
-    if (!((wParam|lParam) & 0xFFFF0000))
-      return (lParam<<16)|wParam;
-    return -1;
+    /* Note: wParam/lParam can be NULL */
+    UINT from, to;
+    PUINT pfrom = wParam ? (PUINT)wParam : &from;
+    PUINT pto = lParam ? (PUINT)lParam : &to;
+    ME_GetSelection(editor, pfrom, pto);
+    if ((*pfrom|*pto) & 0xFFFF0000)
+      return -1;
+    return MAKELONG(*pfrom,*pto);
   }
   case EM_EXGETSEL:
   {
@@ -1156,6 +1174,8 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   }
   case WM_GETTEXTLENGTH:
     return ME_GetTextLength(editor);
+  case EM_GETTEXTLENGTHEX:
+    return ME_GetTextLengthEx(editor, (GETTEXTLENGTHEX *)wParam);
   case WM_GETTEXT:
   {
     TEXTRANGEW tr; /* W and A differ only by rng->lpstrText */
@@ -1464,7 +1484,7 @@ void ME_RegisterEditorClass(HINSTANCE hInstance)
   WNDCLASSW wcW;
   WNDCLASSA wcA;
   
-  wcW.style = CS_HREDRAW | CS_VREDRAW;
+  wcW.style = CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS;
   wcW.lpfnWndProc = RichEditANSIWndProc;
   wcW.cbClsExtra = 0;
   wcW.cbWndExtra = 4;
@@ -1480,7 +1500,7 @@ void ME_RegisterEditorClass(HINSTANCE hInstance)
   bResult = RegisterClassW(&wcW);  
   assert(bResult);
 
-  wcA.style = CS_HREDRAW | CS_VREDRAW;
+  wcA.style = CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS;
   wcA.lpfnWndProc = RichEditANSIWndProc;
   wcA.cbClsExtra = 0;
   wcA.cbWndExtra = 4;

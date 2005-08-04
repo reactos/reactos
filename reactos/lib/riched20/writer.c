@@ -45,11 +45,23 @@ ME_StreamOutFlush(ME_TextEditor *editor)
 {
   LONG nStart = 0;
   LONG nWritten = 0;
+  LONG nRemaining = 0;
   EDITSTREAM *stream = editor->pStream->stream;
 
   do {
+    TRACE("sending %lu bytes\n", editor->pStream->pos - nStart);
+    /* Some apps seem not to set *pcb unless a problem arises, relying
+      on initial random nWritten value, which is usually >STREAMOUT_BUFFER_SIZE */
+    nRemaining = editor->pStream->pos - nStart;
+    nWritten = 0xDEADBEEF;
     stream->dwError = stream->pfnCallback(stream->dwCookie, editor->pStream->buffer + nStart,
                                           editor->pStream->pos - nStart, &nWritten);
+    TRACE("error=%lu written=%lu\n", stream->dwError, nWritten);
+    if (nWritten > (editor->pStream->pos - nStart) || nWritten<0) {
+      FIXME("Invalid returned written size *pcb: 0x%x (%ld) instead of %ld\n", 
+            (unsigned)nWritten, nWritten, nRemaining);
+      nWritten = nRemaining;
+    }
     if (nWritten == 0 || stream->dwError)
       return FALSE;
     editor->pStream->written += nWritten;
@@ -64,6 +76,7 @@ static LONG
 ME_StreamOutFree(ME_TextEditor *editor)
 {
   LONG written = editor->pStream->written;
+  TRACE("total length = %lu\n", written);
 
   FREE_OBJ(editor->pStream);
   editor->pStream = NULL;
@@ -379,6 +392,7 @@ ME_StreamOutRTFParaProps(ME_TextEditor *editor, ME_DisplayItem *para)
       }
       if (fmt->rgxTabs[i] >> 28 <= 5)
         strcat(props, leader[fmt->rgxTabs[i] >> 28]);
+      sprintf(props+strlen(props), "\\tx%ld", fmt->rgxTabs[i]&0x00FFFFFF);
     }
   }
     
@@ -781,7 +795,7 @@ ME_StreamOut(ME_TextEditor *editor, DWORD dwFormat, EDITSTREAM *stream)
     ME_StreamOutRTF(editor, nStart, nTo - nStart, dwFormat);
   else if (dwFormat & SF_TEXT || dwFormat & SF_TEXTIZED)
     ME_StreamOutText(editor, nStart, nTo - nStart, dwFormat);
-  
-  ME_StreamOutFlush(editor);
+  if (!editor->pStream->stream->dwError)
+    ME_StreamOutFlush(editor);
   return ME_StreamOutFree(editor);
 }
