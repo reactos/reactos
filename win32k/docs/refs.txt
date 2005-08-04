@@ -20,7 +20,7 @@ NOTE: 	Message queue has 1:1 relationship with (w32)thread and need no ref. coun
 ^ This is wrong, one can attach message queue to different thread using
 AttachThreadInput. The number of thread sharing a queue is stored in the
 message queue structure and can be considered a reference count. Also on
-Windows systems the a global list of thread attachments is maintained.
+Windows systems there is maintained a global list of thread attachments.
 
 Above references create following dependencies:
 -----------------------------------------------
