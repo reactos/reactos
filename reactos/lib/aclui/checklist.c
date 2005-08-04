@@ -352,22 +352,11 @@ PtToCheckItemBox(IN PCHECKLISTWND infoPtr,
                  OUT UINT *CheckBox,
                  OUT BOOL *DirectlyInCheckBox)
 {
-    LONG Style;
     INT FirstVisible, Index;
     PCHECKITEM Item;
     
-    Style = GetWindowLong(infoPtr->hSelf,
-                          GWL_STYLE);
-    
-    if (Style & WS_VSCROLL)
-    {
-        FirstVisible = GetScrollPos(infoPtr->hSelf,
-                                    SB_VERT);
-    }
-    else
-    {
-        FirstVisible = 0;
-    }
+    FirstVisible = GetScrollPos(infoPtr->hSelf,
+                                SB_VERT);
     
     Index = FirstVisible + (ppt->y / infoPtr->ItemHeight);
     
@@ -535,12 +524,10 @@ ClearCheckBoxes(IN PCHECKLISTWND infoPtr)
 }
 
 static VOID
-UpdateControl(IN PCHECKLISTWND infoPtr,
-              IN BOOL AllowChangeStyle)
+UpdateControl(IN PCHECKLISTWND infoPtr)
 {
     RECT rcClient;
     SCROLLINFO ScrollInfo;
-    LONG Style;
     INT VisibleItems;
     
     GetClientRect(infoPtr->hSelf,
@@ -566,28 +553,6 @@ UpdateControl(IN PCHECKLISTWND infoPtr,
                   &ScrollInfo,
                   TRUE);
 
-    if (AllowChangeStyle)
-    {
-        Style = GetWindowLong(infoPtr->hSelf,
-                              GWL_STYLE);
-
-        /* determine whether the vertical scrollbar has to be visible or not */
-        if (ScrollInfo.nMax > VisibleItems &&
-            !(Style & WS_VSCROLL))
-        {
-            SetWindowLong(infoPtr->hSelf,
-                          GWL_STYLE,
-                          Style | WS_VSCROLL);
-        }
-        else if (ScrollInfo.nMax <= VisibleItems &&
-                 (Style & WS_VSCROLL))
-        {
-            SetWindowLong(infoPtr->hSelf,
-                          GWL_STYLE,
-                          Style & ~WS_VSCROLL);
-        }
-    }
-
     RedrawWindow(infoPtr->hSelf,
                  NULL,
                  NULL,
@@ -598,25 +563,14 @@ static VOID
 UpdateCheckItem(IN PCHECKLISTWND infoPtr,
                 IN PCHECKITEM Item)
 {
-    LONG Style;
     RECT rcClient;
     INT VisibleFirst, VisibleItems;
     INT Index = CheckItemToIndex(infoPtr,
                                  Item);
     if (Index != -1)
     {
-        Style = GetWindowLong(infoPtr->hSelf,
-                              GWL_STYLE);
-
-        if (Style & WS_VSCROLL)
-        {
-            VisibleFirst = GetScrollPos(infoPtr->hSelf,
-                                        SB_VERT);
-        }
-        else
-        {
-            VisibleFirst = 0;
-        }
+        VisibleFirst = GetScrollPos(infoPtr->hSelf,
+                                    SB_VERT);
         
         if (Index >= VisibleFirst)
         {
@@ -647,69 +601,62 @@ static VOID
 MakeCheckItemVisible(IN PCHECKLISTWND infoPtr,
                      IN PCHECKITEM Item)
 {
-    LONG Style;
     RECT rcClient;
     INT VisibleFirst, VisibleItems, NewPos;
     INT Index = CheckItemToIndex(infoPtr,
                                  Item);
     if (Index != -1)
     {
-        Style = GetWindowLong(infoPtr->hSelf,
-                              GWL_STYLE);
-
-        if (Style & WS_VSCROLL)
+        VisibleFirst = GetScrollPos(infoPtr->hSelf,
+                                    SB_VERT);
+    
+        if (Index <= VisibleFirst)
         {
-            VisibleFirst = GetScrollPos(infoPtr->hSelf,
-                                        SB_VERT);
-        
-            if (Index <= VisibleFirst)
+            NewPos = Index;
+        }
+        else
+        {
+            GetClientRect(infoPtr->hSelf,
+                          &rcClient);
+
+            VisibleItems = (rcClient.bottom - rcClient.top) / infoPtr->ItemHeight;
+            if (Index - VisibleItems + 1 > VisibleFirst)
             {
-                NewPos = Index;
+                NewPos = Index - VisibleItems + 1;
             }
             else
             {
-                GetClientRect(infoPtr->hSelf,
-                              &rcClient);
-
-                VisibleItems = (rcClient.bottom - rcClient.top) / infoPtr->ItemHeight;
-                if (Index - VisibleItems + 1 > VisibleFirst)
-                {
-                    NewPos = Index - VisibleItems + 1;
-                }
-                else
-                {
-                    NewPos = VisibleFirst;
-                }
+                NewPos = VisibleFirst;
             }
+        }
+        
+        if (VisibleFirst != NewPos)
+        {
+            SCROLLINFO ScrollInfo;
             
+            ScrollInfo.cbSize = sizeof(ScrollInfo);
+            ScrollInfo.fMask = SIF_POS;
+            ScrollInfo.nPos = NewPos;
+            NewPos = SetScrollInfo(infoPtr->hSelf,
+                                   SB_VERT,
+                                   &ScrollInfo,
+                                   TRUE);
+
             if (VisibleFirst != NewPos)
             {
-                SCROLLINFO ScrollInfo;
-                
-                ScrollInfo.cbSize = sizeof(ScrollInfo);
-                ScrollInfo.fMask = SIF_POS;
-                ScrollInfo.nPos = NewPos;
-                NewPos = SetScrollInfo(infoPtr->hSelf,
-                                       SB_VERT,
-                                       &ScrollInfo,
-                                       TRUE);
+                ScrollWindowEx(infoPtr->hSelf,
+                               0,
+                               (NewPos - VisibleFirst) * infoPtr->ItemHeight,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               SW_INVALIDATE | SW_SCROLLCHILDREN);
 
-                if (VisibleFirst != NewPos)
-                {
-                    ScrollWindowEx(infoPtr->hSelf,
-                                   0,
-                                   (NewPos - VisibleFirst) * infoPtr->ItemHeight,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   SW_INVALIDATE | SW_SCROLLCHILDREN);
-
-                    RedrawWindow(infoPtr->hSelf,
-                                 NULL,
-                                 NULL,
-                                 RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW | RDW_NOCHILDREN);
-                }
+                RedrawWindow(infoPtr->hSelf,
+                             NULL,
+                             NULL,
+                             RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW | RDW_NOCHILDREN);
             }
         }
     }
@@ -769,8 +716,7 @@ RetChangeControlFont(IN PCHECKLISTWND infoPtr,
                     infoPtr->ItemHeight - (2 * CI_TEXT_MARGIN_HEIGHT));
     }
     
-    UpdateControl(infoPtr,
-                  TRUE);
+    UpdateControl(infoPtr);
 
     return hOldFont;
 }
@@ -809,7 +755,6 @@ PaintControl(IN PCHECKLISTWND infoPtr,
     INT ScrollPos;
     PCHECKITEM FirstItem, Item;
     RECT rcClient;
-    LONG Style;
     UINT VisibleFirstIndex = rcUpdate->top / infoPtr->ItemHeight;
     UINT LastTouchedIndex = rcUpdate->bottom / infoPtr->ItemHeight;
     
@@ -819,18 +764,8 @@ PaintControl(IN PCHECKLISTWND infoPtr,
     
     GetClientRect(infoPtr->hSelf, &rcClient);
     
-    Style = GetWindowLong(infoPtr->hSelf,
-                          GWL_STYLE);
-    
-    if (Style & WS_VSCROLL)
-    {
-        ScrollPos = GetScrollPos(infoPtr->hSelf,
-                                 SB_VERT);
-    }
-    else
-    {
-        ScrollPos = 0;
-    }
+    ScrollPos = GetScrollPos(infoPtr->hSelf,
+                             SB_VERT);
     
     FirstItem = FindCheckItemByIndex(infoPtr,
                                      ScrollPos + VisibleFirstIndex);
@@ -1126,25 +1061,14 @@ UpdateCheckItemBox(IN PCHECKLISTWND infoPtr,
                    IN PCHECKITEM Item,
                    IN UINT ItemBox)
 {
-    LONG Style;
     RECT rcClient;
     INT VisibleFirst, VisibleItems;
     INT Index = CheckItemToIndex(infoPtr,
                                  Item);
     if (Index != -1)
     {
-        Style = GetWindowLong(infoPtr->hSelf,
-                              GWL_STYLE);
-
-        if (Style & WS_VSCROLL)
-        {
-            VisibleFirst = GetScrollPos(infoPtr->hSelf,
-                                        SB_VERT);
-        }
-        else
-        {
-            VisibleFirst = 0;
-        }
+        VisibleFirst = GetScrollPos(infoPtr->hSelf,
+                                    SB_VERT);
 
         if (Index >= VisibleFirst)
         {
@@ -1278,23 +1202,12 @@ MapItemToRect(IN PCHECKLISTWND infoPtr,
     if (Index != -1)
     {
         RECT rcClient;
-        LONG Style;
         INT VisibleFirst;
         
         GetClientRect(infoPtr->hSelf, &rcClient);
         
-        Style = GetWindowLong(infoPtr->hSelf,
-                              GWL_STYLE);
-
-        if (Style & WS_VSCROLL)
-        {
-            VisibleFirst = GetScrollPos(infoPtr->hSelf,
-                                        SB_VERT);
-        }
-        else
-        {
-            VisibleFirst = 0;
-        }
+        VisibleFirst = GetScrollPos(infoPtr->hSelf,
+                                    SB_VERT);
         
         prcItem->left = rcClient.left;
         prcItem->right = rcClient.right;
@@ -1774,8 +1687,7 @@ CheckListWndProc(IN HWND hwnd,
                                            &Index);
             if (Item != NULL)
             {
-                UpdateControl(infoPtr,
-                              TRUE);
+                UpdateControl(infoPtr);
                 Ret = (LRESULT)Index;
             }
             else
@@ -1795,8 +1707,7 @@ CheckListWndProc(IN HWND hwnd,
                                       Item);
                 if (Ret)
                 {
-                    UpdateControl(infoPtr,
-                                  TRUE);
+                    UpdateControl(infoPtr);
                 }
             }
             else
@@ -1838,8 +1749,7 @@ CheckListWndProc(IN HWND hwnd,
                         }
                     }
 
-                    UpdateControl(infoPtr,
-                                  TRUE);
+                    UpdateControl(infoPtr);
                 }
                 Ret = TRUE;
             }
@@ -1859,8 +1769,7 @@ CheckListWndProc(IN HWND hwnd,
         case CLM_CLEAR:
         {
             ClearCheckItems(infoPtr);
-            UpdateControl(infoPtr,
-                          TRUE);
+            UpdateControl(infoPtr);
             break;
         }
         
@@ -1882,8 +1791,7 @@ CheckListWndProc(IN HWND hwnd,
             Ret = (LRESULT)ClearCheckBoxes(infoPtr);
             if (Ret)
             {
-                UpdateControl(infoPtr,
-                              TRUE);
+                UpdateControl(infoPtr);
             }
             break;
         }
@@ -1926,18 +1834,9 @@ CheckListWndProc(IN HWND hwnd,
         
         case WM_STYLECHANGED:
         {
-            LPSTYLESTRUCT Style = (LPSTYLESTRUCT)lParam;
-            
             if (wParam == (WPARAM)GWL_STYLE)
             {
-                BOOL AllowChangeStyle;
-
-                /* don't allow the control to enable/disable the vertical scrollbar
-                   if this message was invoked due to such a window style change! */
-                AllowChangeStyle = ((Style->styleNew & WS_VSCROLL) == (Style->styleOld & WS_VSCROLL));
-
-                UpdateControl(infoPtr,
-                              AllowChangeStyle);
+                UpdateControl(infoPtr);
             }
             break;
         }
@@ -1946,8 +1845,7 @@ CheckListWndProc(IN HWND hwnd,
         {
             EscapeQuickSearch(infoPtr);
             
-            UpdateControl(infoPtr,
-                          TRUE);
+            UpdateControl(infoPtr);
             break;
         }
         
@@ -2449,8 +2347,7 @@ CheckListWndProc(IN HWND hwnd,
         
         case WM_SIZE:
         {
-            UpdateControl(infoPtr,
-                          TRUE);
+            UpdateControl(infoPtr);
             break;
         }
         
