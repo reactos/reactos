@@ -228,6 +228,7 @@ VOID CompleteFilename (LPTSTR, INT);
 INT  ShowCompletionMatches (LPTSTR, INT);
 #endif
 #ifdef FEATURE_4NT_FILENAME_COMPLETION
+VOID CompleteFilename (LPTSTR, BOOL, LPTSTR, INT);
 #endif
 
 

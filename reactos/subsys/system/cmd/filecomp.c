@@ -21,7 +21,7 @@
  */
 
 #include <precomp.h>
-
+#include "cmd.h"
 
 #ifdef FEATURE_UNIX_FILENAME_COMPLETION
 
@@ -169,17 +169,7 @@ VOID CompleteFilename (LPTSTR str, INT charcount)
 			_tcscat (&str[start], maxmatch);
 		}
 
-		/* append a space if last word is not a directory */
-		if(perfectmatch)
-		{
-			curplace = _tcslen(&str[start]);
-			if(str[start+curplace-1] == _T('"'))
-				curplace--;
-
-			if(str[start+curplace-1] != _T('\\'))
-				_tcscat(&str[start], _T(" "));
-		}
-		else
+		if(!perfectmatch)
 		{
 #ifdef __REACTOS__
 			Beep (440, 50);
@@ -370,11 +360,377 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
 
 #ifdef FEATURE_4NT_FILENAME_COMPLETION
 
-//static VOID BuildFilenameMatchList (...)
+typedef struct _FileName
+{
+	TCHAR Name[MAX_PATH];
+} FileName;
 
-// VOID CompleteFilenameNext (LPTSTR, INT)
-// VOID CompleteFilenamePrev (LPTSTR, INT)
+VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
+{
+	/* String that is to be examined */
+	TCHAR str[MAX_PATH];
+	/* temp pointers to used to find needed parts */
+	TCHAR * szSearch;	
+	TCHAR * szSearch1;
+	TCHAR * szSearch2;
+	/* number of quotes in the string */
+	INT nQuotes = 0;
+	/* used in for loops */
+	INT i;
+	/* Char number to break the string at */
+	INT PBreak = 0;
+	INT SBreak = 0;
+	/* when phrasing a string, this tells weather
+	   you are inside quotes ot not. */
+	BOOL bInside = FALSE;
+	
+  szPrefix[0] = _T('\0');
+  szSuffix[0] = _T('\0');
 
-// VOID RemoveFilenameMatchList (VOID)
+	/* Copy over the string to later be edited */
+	_tcscpy(str,strIN);
 
+	/* Count number of " */
+	for(i = 0; i < _tcslen(str); i++)
+		if(str[i] == _T('\"'))
+			nQuotes++;
+
+	/* Find the prefix and suffix */
+	if(nQuotes % 2 && nQuotes)
+	{
+		/* Odd number of quotes.  Just start from the last " */
+		/* THis is the way MS does it, and is an easy way out */
+		szSearch = _tcsrchr(str, _T('\"'));
+		/* Move to the next char past the " */
+		szSearch++;
+		_tcscpy(szSuffix,szSearch);
+		/* Find the one closest to end */
+		szSearch1 = _tcsrchr(str, _T('\"'));
+		szSearch2 = _tcsrchr(str, _T('\\'));		
+		if(szSearch2 != NULL && _tcslen(szSearch1) > _tcslen(szSearch2))
+			szSearch = szSearch2;
+		else
+			szSearch = szSearch1;
+		/* Move one char past */
+		szSearch++;		
+    szSearch[0] = _T('\0');
+		_tcscpy(szPrefix,str);
+		return;
+	
+	}
+
+	if(!_tcschr(str, _T(' ')))
+	{
+		/* No spaces, everything goes to Suffix */
+		_tcscpy(szSuffix,str);
+		/* look for a slash just in case */
+		szSearch = _tcsrchr(str, _T('\\'));		
+		if(szSearch)
+		{
+			szSearch++;			
+      szSearch[0] = _T('\0');
+			_tcscpy(szPrefix,str);
+		}
+		else
+		{
+			szPrefix[0] = _T('\0');
+		}
+		return;
+	}
+
+	if(!nQuotes)
+	{
+		/* No quotes, and there is a space*/
+		/* Take it after the last space */
+		szSearch = _tcsrchr(str, _T(' '));
+		szSearch++;
+		_tcscpy(szSuffix,szSearch);
+		/* Find the closest to the end space or \ */
+		_tcscpy(str,strIN);
+		szSearch1 = _tcsrchr(str, _T(' '));
+		szSearch2 = _tcsrchr(str, _T('\\'));		
+		if(szSearch2 != NULL && _tcslen(szSearch1) > _tcslen(szSearch2))
+			szSearch = szSearch2;
+		else
+			szSearch = szSearch1;
+		szSearch++;		
+    szSearch[0] = _T('\0');
+		_tcscpy(szPrefix,str);		
+		return;
+	}
+	
+	/* All else fails and there is a lot of quotes, spaces and | 
+	   Then we search through and find the last space or \ that is
+		not inside a quotes */
+	for(i = 0; i < _tcslen(str); i++)
+	{
+		if(str[i] == _T('\"'))
+			bInside = !bInside;
+		if(str[i] == _T(' ') && !bInside)
+			SBreak = i;
+		if((!_tcsncmp(&str[i], _T(" "),1) || !_tcsncmp(&str[i], _T("\\"),1)) && !bInside)
+			PBreak = i;
+
+	}
+	SBreak++;
+	PBreak++;
+	_tcscpy(szSuffix,&strIN[SBreak]);	
+  strIN[PBreak] = _T('\0');
+	_tcscpy(szPrefix,strIN);
+	if(!_tcsncmp(&szPrefix[_tcslen(szPrefix) - 2],_T("\""),1))
+	{
+		/* need to remove the " right before a \ at the end to
+		   allow the next stuff to stay inside one set of quotes
+			otherwise you would have multiple sets of quotes*/
+		_tcscpy(&szPrefix[_tcslen(szPrefix) - 2],_T("\\"));
+
+	}
+
+}
+ int compare(const void *arg1,const void *arg2)
+ {
+	FileName * File1;
+	FileName * File2;
+	INT ret;
+
+	File1 = malloc(sizeof(FileName));
+	File2 = malloc(sizeof(FileName));
+	if(!File1 || !File2)
+		return 0;
+
+	memcpy(File1,arg1,sizeof(FileName));
+	memcpy(File2,arg2,sizeof(FileName));
+
+	ret = _tcsicmp(File1->Name, File2->Name);
+
+	free(File1);
+	free(File2);
+	return ret;
+ }
+
+VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, INT cusor)
+{
+	/* Length of string before we complete it */
+	INT StartLength;
+	/* Length of string after completed */
+	INT EndLength;
+	/* The number of chars added too it */
+	static INT DiffLength = 0;
+	/* Used to find and assemble the string that is returned */
+	TCHAR szBaseWord[MAX_PATH];
+	TCHAR szPrefix[MAX_PATH];
+	TCHAR szOrginal[MAX_PATH];
+	TCHAR szSearchPath[MAX_PATH];
+	/* Save the strings used last time, so if they hit tab again */
+	static TCHAR LastReturned[MAX_PATH];
+	static TCHAR LastSearch[MAX_PATH];
+	static TCHAR LastPrefix[MAX_PATH];
+	/* Used to search for files */
+	HANDLE hFile;
+	WIN32_FIND_DATA file;
+	/* List of all the files */
+	FileName * FileList = NULL;
+	/* Number of files */
+	INT FileListSize = 0;
+	/* Used for loops */
+	INT i;
+	INT ii;
+	/* Editable string of what was passed in */
+	TCHAR str[MAX_PATH];
+	/* Keeps track of what element was last selected */
+	static INT Sel;
+	BOOL NeededQuote = FALSE;
+	
+	strOut[0] = _T('\0');
+
+	/* Copy the string, str can be edited and orginal should not be */
+	_tcscpy(str,strIN);
+	_tcscpy(szOrginal,strIN);
+
+	/* Look to see if the cusor is not at the end of the string */
+	if((cusor + 1) < _tcslen(str))
+		str[cusor] = _T('\0');
+
+	/* Look to see if they hit tab again, if so cut off the diff length */
+	if(_tcscmp(str,LastReturned))
+	{
+	/* We need to know how many chars we added from the start */
+	StartLength = _tcslen(str);
+	
+	/* no string, we need all files in that directory */
+	if(!StartLength)
+		_tcscat(str,_T("*"));
+
+	/* Zero it out first */
+  szBaseWord[0] = _T('\0');
+	szPrefix[0] = _T('\0');
+
+	/*What comes out of this needs to be:
+		szBaseWord =  path no quotes to the object 
+		szPrefix = what leads up to the filename
+		           no quote at the END of the full name */
+	FindPrefixAndSuffix(str,szPrefix,szBaseWord);
+	/* Strip quotes */
+	for(i = 0; i < _tcslen(szBaseWord); i++)
+	{
+		if(!_tcsncmp(&szBaseWord[i], _T("\""),1))
+		{
+			for(ii = i; ii < (_tcslen(szBaseWord)); ii++)
+				szBaseWord[ii] = szBaseWord[ii + 1];
+		}
+	}
+
+	/* clear it out */
+	memset(szSearchPath, 0, sizeof(szSearchPath));
+
+	/* Start the search for all the files */
+	GetFullPathName(szBaseWord, MAX_PATH, szSearchPath, NULL);
+	if(StartLength > 0)
+		_tcscat(szSearchPath,_T("*"));
+	_tcscpy(LastSearch,szSearchPath);
+	_tcscpy(LastPrefix,szPrefix);
+	}
+	else
+	{
+		_tcscpy(szSearchPath, LastSearch);
+		_tcscpy(szPrefix, LastPrefix);
+	}
+	/* search for the files it might be */
+	hFile = FindFirstFile (szSearchPath, &file);
+ 
+	/* aseemble a list of all files names */
+	do
+	{
+		if(hFile == INVALID_HANDLE_VALUE)
+		{
+			/* Assemble the orginal string and return */
+			_tcscpy(strOut,szOrginal);
+			CloseHandle(hFile);
+			if(FileList != NULL) 
+				free(FileList);
+			return;
+		}
+ 
+		if(!_tcscmp (file.cFileName, _T(".")) ||
+			!_tcscmp (file.cFileName, _T("..")))
+			continue;
+		/* Add the file to the list of files */
+      if(FileList == NULL) 
+      {
+			FileListSize = 1;
+			FileList = malloc(FileListSize * sizeof(FileName));
+      }
+      else
+      {
+			FileListSize++;
+			FileList = realloc(FileList, FileListSize * sizeof(FileName));
+      }
+ 
+		if(FileList == NULL) 
+		{
+			/* Assemble the orginal string and return */
+			_tcscpy(strOut,szOrginal);
+			CloseHandle(hFile);
+			ConOutFormatMessage (GetLastError());
+			return;
+		}
+		/* Copies the file name into the struct */
+		_tcscpy(FileList[FileListSize-1].Name,file.cFileName);
+ 
+	}while(FindNextFile(hFile,&file));
+
+	
+	/* Sort the files */
+	qsort(FileList,FileListSize,sizeof(FileName), compare);
+
+	/* Find the next/previous */
+	if(!_tcscmp(szOrginal,LastReturned))
+	{
+		if(bNext)
+		{
+			if(FileListSize - 1 == Sel)
+				Sel = 0;
+			else
+				Sel++;
+		}
+		else
+		{
+			if(!Sel)
+				Sel = FileListSize - 1;
+			else
+				Sel--;
+		}
+	}
+	else
+	{
+		Sel = 0;
+	}
+
+	/* nothing found that matched last time 
+	   so return the first thing in the list */
+	strOut[0] = _T('\0');
+	
+	/* space in the name */
+	if(_tcschr(FileList[Sel].Name, _T(' ')))
+	{
+		/* It needs a " at the end */
+		NeededQuote = TRUE;
+		INT LastSpace = -1;
+		BOOL bInside = FALSE;
+		/* Find the place to put the " at the start */
+		for(i = 0; i < _tcslen(szPrefix); i++)
+		{
+			if(szPrefix[i] == _T('\"'))
+				bInside = !bInside;
+			if(szPrefix[i] == _T(' ') && !bInside)
+				LastSpace = i;
+
+		}
+		/* insert the space and move things around */
+		if(_tcsncmp(&szPrefix[LastSpace + 1],_T("\""),1) && LastSpace != -1)
+		{
+			/* add another char or you will lose a null char ending */
+			_tcsncat(szPrefix,&szPrefix[_tcslen(szPrefix) - 1],1);
+			for(i = _tcslen(szPrefix) - 1; i > LastSpace; i--)
+			{
+				szPrefix[i] = szPrefix[i - 1];
+			}
+			
+			if(LastSpace + 1 == _tcslen(szPrefix))
+			{
+				_tcscat(szPrefix,_T("\""));
+			}
+				szPrefix[LastSpace + 1] = _T('\"');
+		}
+		else if(LastSpace == -1)
+		{
+			_tcscpy(szBaseWord,_T("\""));
+			_tcscat(szBaseWord,szPrefix);
+			_tcscpy(szPrefix,szBaseWord);
+
+		}
+	}
+
+	_tcscpy(strOut,szPrefix);
+	_tcscat(strOut,FileList[Sel].Name);
+
+	/* check for odd number of quotes means we need to close them */
+	if(!NeededQuote)
+	{
+		for(i = 0; i < _tcslen(strOut); i++)
+			if(strOut[i] == _T('\"'))
+				NeededQuote = !NeededQuote;
+	}
+
+	if(szPrefix[_tcslen(szPrefix) - 1] == _T('\"') || NeededQuote)
+		_tcscat(strOut,_T("\""));
+
+	_tcscpy(LastReturned,strOut);
+	EndLength = _tcslen(strOut);
+	DiffLength = EndLength - StartLength;
+	CloseHandle(hFile);
+	if(FileList != NULL) 
+		free(FileList);
+	
+}
 #endif

@@ -37,8 +37,8 @@
 
 
 /* Define one of these to enable filename completion */
-#define FEATURE_UNIX_FILENAME_COMPLETION
-/* #define FEATURE_4NT_FILENAME_COMPLETION */
+//#define FEATURE_UNIX_FILENAME_COMPLETION
+#define FEATURE_4NT_FILENAME_COMPLETION
 
 
 /* Define to enable the directory stack */

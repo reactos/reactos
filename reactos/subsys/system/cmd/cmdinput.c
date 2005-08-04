@@ -98,6 +98,7 @@
  */
 
 #include <precomp.h>
+#include "resource.h"
 
 
 SHORT maxx;
@@ -314,10 +315,6 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 						charcount = _tcslen (str);
 						current = charcount;
 
-						if (current > 0 &&
-						    str[current-1] == _T('"'))
-							current--;
-
 						SetCursorXY (orgx, orgy);
 						ConOutPrintf (_T("%s"), str);
 
@@ -366,17 +363,50 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 				}
 #endif
 #ifdef FEATURE_4NT_FILENAME_COMPLETION
-				/* this is not implemented yet */
-				if (ir.Event.KeyEvent.dwControlKeyState & SHIFT_PRESSED)
-				{
-					/* get previous match */
+				
+				/* used to later see if we went down to the next line */
+				tempscreen = charcount;
+				TCHAR szPath[MAX_PATH];				
+        szPath[0]=_T('\0');
 
+				/* str is the whole things that is on the current line 
+				   that is and and out.  arg 2 is weather it goes back
+					one file or forward one file */
+				CompleteFilename(str, !(ir.Event.KeyEvent.dwControlKeyState & SHIFT_PRESSED), szPath, current);
+				/* Attempt to clear the line */
+				ClearCommandLine (str, maxlen, orgx, orgy);
+				curx = orgx;
+				cury = orgy;
+				current = charcount = 0;				
+        //str[0]=_T('\0');
+				
+				/* Everything is deleted, lets add it back in */
+				_tcscpy(str,szPath);
+        
+				/* Figure out where cusor is going to be after we print it */
+				charcount = _tcslen (str);
+				current = charcount;
+
+				SetCursorXY (orgx, orgy);
+				/* Print out what we have now */
+				ConOutPrintf (_T("%s"), str);
+
+				/* Move cursor accordingly */
+				if(tempscreen > charcount)
+				{
+					GetCursorXY (&curx, &cury);
+					for(count = tempscreen - charcount; count--; )
+						ConOutChar (_T(' '));
+					SetCursorXY (curx, cury);
 				}
 				else
 				{
-					/* get next match */
-
+					if(((charcount + orgx) / maxx) + orgy > maxy - 1)
+						orgy += maxy - ((charcount + orgx) / maxx + orgy + 1);
 				}
+				SetCursorXY((orgx + current) % maxx, orgy + (orgx + current) / maxx);
+				GetCursorXY(&curx, &cury);
+
 #endif
 				break;
 
