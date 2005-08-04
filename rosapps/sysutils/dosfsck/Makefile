@@ -1,5 +1,5 @@
 CC=mingw32-gcc
-OBJECTS = getopt.o boot.o check.o common.o dosfsck.o fat.o file.o io.o lfn.o
+OBJECTS = boot.o check.o common.o dosfsck.o fat.o file.o io.o lfn.o
 
 all: dosfsck.exe
 

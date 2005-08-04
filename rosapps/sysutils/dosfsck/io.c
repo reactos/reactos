@@ -165,6 +165,34 @@ void fs_write(loff_t pos,int size,void *data)
     CHANGE *new;
     int did;
 
+#if 1 //SAE
+    void *scratch;
+    const size_t readsize_aligned = (size % 512) ? (size + (512 - (size % 512))) : size;
+    const loff_t seekpos_aligned = pos - (pos % 512);
+    const size_t seek_delta = (size_t)(pos - seekpos_aligned);
+    const size_t readsize = (size_t)(pos - seekpos_aligned) + readsize_aligned;
+    scratch = alloc(readsize_aligned);
+
+    if (write_immed) {
+	did_change = 1;
+	if (llseek(fd,seekpos_aligned,0) != seekpos_aligned) pdie("Seek to %lld",pos);
+	if ((did = write(fd,data,readsize_aligned)) == (int)readsize_aligned)
+	{
+	    free(scratch);
+	    return;
+	}
+	if (did < 0) pdie("Write %d bytes at %lld",size,pos);
+	die("Wrote %d bytes instead of %d at %lld",did,size,pos);
+    }
+    new = alloc(sizeof(CHANGE));
+    new->pos = pos;
+    memcpy(new->data = alloc(new->size = size),data,size);
+    new->next = NULL;
+    if (last) last->next = new;
+    else changes = new;
+    last = new;
+
+#else //SAE
     if (write_immed) {
 	did_change = 1;
 	if (llseek(fd,pos,0) != pos) pdie("Seek to %lld",pos);
@@ -179,6 +207,7 @@ void fs_write(loff_t pos,int size,void *data)
     if (last) last->next = new;
     else changes = new;
     last = new;
+#endif //SAE
 }
 
 
@@ -261,22 +290,18 @@ static int WIN32open(const char *path, int oflag, ...)
 		shareMode = FILE_SHARE_READ|FILE_SHARE_WRITE; // TMN:
 		break;
 	case O_WRONLY:
-		exit(42);
 		desiredAccess = GENERIC_WRITE;
 		shareMode = 0;
 		break;
 	case O_RDWR:
-		exit(43);
 		desiredAccess = GENERIC_READ|GENERIC_WRITE;
 		shareMode = 0;
 		break;
 	case O_NONE:
-		exit(44);
 		desiredAccess = 0;
 		shareMode = FILE_SHARE_READ|FILE_SHARE_WRITE;
 	}
 	if (oflag & O_APPEND) {
-		exit(45);
 		desiredAccess |= FILE_APPEND_DATA|SYNCHRONIZE;
 		shareMode = FILE_SHARE_READ|FILE_SHARE_WRITE;
 	}
@@ -288,27 +313,22 @@ static int WIN32open(const char *path, int oflag, ...)
 		creationDisposition = OPEN_EXISTING;
 		break;
 	case O_CREAT:
-		exit(46);
 		creationDisposition = OPEN_ALWAYS;
 		break;
 	case O_CREAT|O_EXCL:
 	case O_CREAT|O_TRUNC|O_EXCL:
-		exit(47);
 		creationDisposition = CREATE_NEW;
 		break;
 	case O_TRUNC:
 	case O_TRUNC|O_EXCL:
-		exit(48);
 		creationDisposition = TRUNCATE_EXISTING;
 		break;
 	case O_CREAT|O_TRUNC:
-		exit(49);
 		creationDisposition = OPEN_ALWAYS;
 		trunc = TRUE;
 		break;
         }
 	if (oflag & O_CREAT) {
-		exit(50);
 		va_start(ap, oflag);
 		pmode = va_arg(ap, int);
 		va_end(ap);
@@ -316,7 +336,6 @@ static int WIN32open(const char *path, int oflag, ...)
 			flagsAttributes |= FILE_ATTRIBUTE_READONLY;
 	}
 	if (oflag & O_TEMPORARY) {
-		exit(51);
 		flagsAttributes |= FILE_FLAG_DELETE_ON_CLOSE;
 		desiredAccess |= DELETE;
 	}
@@ -334,7 +353,6 @@ static int WIN32open(const char *path, int oflag, ...)
 		return -1;
 	}
 	if (trunc) {
-		exit(52);
 		if (!SetEndOfFile(fh)) {
 			errno = GetLastError();
 			CloseHandle(fh);
