@@ -142,7 +142,7 @@ RPC_STATUS RPCRT4_OpenConnection(RpcConnection* Connection)
         pname = HeapAlloc(GetProcessHeap(), 0, strlen(prefix) + strlen(Connection->Endpoint) + 1);
         strcat(strcpy(pname, prefix), Connection->Endpoint);
         TRACE("listening on %s\n", pname);
-        Connection->conn = CreateNamedPipeA(pname, PROFILE_SERVER | PIPE_ACCESS_DUPLEX,
+        Connection->conn = CreateNamedPipeA(pname, PIPE_ACCESS_DUPLEX,
                                          PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, PIPE_UNLIMITED_INSTANCES,
                                          RPC_MAX_PACKET_SIZE, RPC_MAX_PACKET_SIZE, 5000, NULL);
         HeapFree(GetProcessHeap(), 0, pname);
@@ -167,7 +167,7 @@ RPC_STATUS RPCRT4_OpenConnection(RpcConnection* Connection)
         pname = HeapAlloc(GetProcessHeap(), 0, strlen(prefix) + strlen(Connection->Endpoint) + 1);
         strcat(strcpy(pname, prefix), Connection->Endpoint);
         TRACE("listening on %s\n", pname);
-        Connection->conn = CreateNamedPipeA(pname, PROFILE_SERVER | PIPE_ACCESS_DUPLEX,
+        Connection->conn = CreateNamedPipeA(pname, PIPE_ACCESS_DUPLEX,
                                          PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT, PIPE_UNLIMITED_INSTANCES,
                                          RPC_MAX_PACKET_SIZE, RPC_MAX_PACKET_SIZE, 5000, NULL);
         HeapFree(GetProcessHeap(), 0, pname);
@@ -278,7 +278,7 @@ RPC_STATUS RPCRT4_CloseConnection(RpcConnection* Connection)
 {
   TRACE("(Connection == ^%p)\n", Connection);
   if (Connection->conn) {
-    CancelIo(Connection->conn);
+    FlushFileBuffers(Connection->conn);
     CloseHandle(Connection->conn);
     Connection->conn = 0;
   }

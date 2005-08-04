@@ -562,6 +562,21 @@ unsigned char *WINAPI NdrConformantStringUnmarshall( PMIDL_STUB_MESSAGE pStubMsg
   return NULL; /* FIXME: is this always right? */
 }
 
+static inline void dump_pointer_attr(unsigned char attr)
+{
+    if (attr & RPC_FC_P_ALLOCALLNODES)
+        TRACE(" RPC_FC_P_ALLOCALLNODES");
+    if (attr & RPC_FC_P_DONTFREE)
+        TRACE(" RPC_FC_P_DONTFREE");
+    if (attr & RPC_FC_P_ONSTACK)
+        TRACE(" RPC_FC_P_ONSTACK");
+    if (attr & RPC_FC_P_SIMPLEPOINTER)
+        TRACE(" RPC_FC_P_SIMPLEPOINTER");
+    if (attr & RPC_FC_P_DEREF)
+        TRACE(" RPC_FC_P_DEREF");
+    TRACE("\n");
+}
+
 /***********************************************************************
  *           PointerMarshall
  */
@@ -575,7 +590,7 @@ void WINAPI PointerMarshall(PMIDL_STUB_MESSAGE pStubMsg,
   NDR_MARSHALL m;
 
   TRACE("(%p,%p,%p,%p)\n", pStubMsg, Buffer, Pointer, pFormat);
-  TRACE("type=%d, attr=%d\n", type, attr);
+  TRACE("type=0x%x, attr=", type); dump_pointer_attr(attr);
   pFormat += 2;
   if (attr & RPC_FC_P_SIMPLEPOINTER) desc = pFormat;
   else desc = pFormat + *(const SHORT*)pFormat;
@@ -584,20 +599,32 @@ void WINAPI PointerMarshall(PMIDL_STUB_MESSAGE pStubMsg,
     TRACE("deref => %p\n", Pointer);
   }
 
-  *(LPVOID*)Buffer = 0;
-
   switch (type) {
   case RPC_FC_RP: /* ref pointer (always non-null) */
+#if 0 /* this causes problems for InstallShield so is disabled - we need more tests */
+    if (!Pointer)
+      RpcRaiseException(RPC_X_NULL_REF_POINTER);
+#endif
     break;
   case RPC_FC_UP: /* unique pointer */
+  case RPC_FC_OP: /* object pointer - same as unique here */
+    TRACE("writing %p to buffer\n", Pointer);
+    NDR_LOCAL_UINT32_WRITE(pStubMsg->Buffer, (unsigned long)Pointer);
+    pStubMsg->Buffer += 4;
     break;
+  case RPC_FC_FP:
   default:
     FIXME("unhandled ptr type=%02x\n", type);
+    RpcRaiseException(RPC_X_BAD_STUB_DATA);
   }
 
-  m = NdrMarshaller[*desc & NDR_TABLE_MASK];
-  if (m) m(pStubMsg, Pointer, desc);
-  else FIXME("no marshaller for data type=%02x\n", *desc);
+  TRACE("calling marshaller for type 0x%x\n", (int)*desc);
+
+  if (Pointer) {
+    m = NdrMarshaller[*desc & NDR_TABLE_MASK];
+    if (m) m(pStubMsg, Pointer, desc);
+    else FIXME("no marshaller for data type=%02x\n", *desc);
+  }
 
   STD_OVERFLOW_CHECK(pStubMsg);
 }
@@ -614,9 +641,10 @@ void WINAPI PointerUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
   unsigned type = pFormat[0], attr = pFormat[1];
   PFORMAT_STRING desc;
   NDR_UNMARSHALL m;
+  DWORD pointer_id = 0;
 
   TRACE("(%p,%p,%p,%p,%d)\n", pStubMsg, Buffer, pPointer, pFormat, fMustAlloc);
-  TRACE("type=%d, attr=%d\n", type, attr);
+  TRACE("type=0x%x, attr=", type); dump_pointer_attr(attr);
   pFormat += 2;
   if (attr & RPC_FC_P_SIMPLEPOINTER) desc = pFormat;
   else desc = pFormat + *(const SHORT*)pFormat;
@@ -627,18 +655,27 @@ void WINAPI PointerUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
 
   switch (type) {
   case RPC_FC_RP: /* ref pointer (always non-null) */
+    pointer_id = ~0UL;
     break;
   case RPC_FC_UP: /* unique pointer */
+    pointer_id = NDR_LOCAL_UINT32_READ(pStubMsg->Buffer);
+    pStubMsg->Buffer += 4;
     break;
+  case RPC_FC_OP: /* object pointer - we must free data before overwriting it */
+  case RPC_FC_FP:
   default:
     FIXME("unhandled ptr type=%02x\n", type);
+    RpcRaiseException(RPC_X_BAD_STUB_DATA);
   }
 
   *pPointer = NULL;
 
-  m = NdrUnmarshaller[*desc & NDR_TABLE_MASK];
-  if (m) m(pStubMsg, pPointer, desc, fMustAlloc);
-  else FIXME("no unmarshaller for data type=%02x\n", *desc);
+  if (pointer_id) {
+    m = NdrUnmarshaller[*desc & NDR_TABLE_MASK];
+    if (m) m(pStubMsg, pPointer, desc, fMustAlloc);
+    else FIXME("no unmarshaller for data type=%02x\n", *desc);
+  }
+
   TRACE("pointer=%p\n", *pPointer);
 }
 
@@ -666,10 +703,17 @@ void WINAPI PointerBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
   switch (type) {
   case RPC_FC_RP: /* ref pointer (always non-null) */
     break;
-  case RPC_FC_UP: /* unique pointer */
+  case RPC_FC_OP:
+  case RPC_FC_UP:
+    pStubMsg->BufferLength += 4;
+    /* NULL pointer has no further representation */
+    if (!Pointer)
+        return;
     break;
+  case RPC_FC_FP:
   default:
     FIXME("unhandled ptr type=%02x\n", type);
+    RpcRaiseException(RPC_X_BAD_STUB_DATA);
   }
 
   m = NdrBufferSizer[*desc & NDR_TABLE_MASK];
@@ -689,7 +733,7 @@ unsigned long WINAPI PointerMemorySize(PMIDL_STUB_MESSAGE pStubMsg,
   NDR_MEMORYSIZE m;
 
   FIXME("(%p,%p,%p): stub\n", pStubMsg, Buffer, pFormat);
-  TRACE("type=%d, attr=%d\n", type, attr);
+  TRACE("type=%d, attr=", type); dump_pointer_attr(attr);
   pFormat += 2;
   if (attr & RPC_FC_P_SIMPLEPOINTER) desc = pFormat;
   else desc = pFormat + *(const SHORT*)pFormat;
@@ -702,6 +746,7 @@ unsigned long WINAPI PointerMemorySize(PMIDL_STUB_MESSAGE pStubMsg,
     break;
   default:
     FIXME("unhandled ptr type=%02x\n", type);
+    RpcRaiseException(RPC_X_BAD_STUB_DATA);
   }
 
   m = NdrMemorySizer[*desc & NDR_TABLE_MASK];
@@ -723,7 +768,7 @@ void WINAPI PointerFree(PMIDL_STUB_MESSAGE pStubMsg,
   NDR_FREE m;
 
   TRACE("(%p,%p,%p)\n", pStubMsg, Pointer, pFormat);
-  TRACE("type=%d, attr=%d\n", type, attr);
+  TRACE("type=%d, attr=", type); dump_pointer_attr(attr);
   if (attr & RPC_FC_P_DONTFREE) return;
   pFormat += 2;
   if (attr & RPC_FC_P_SIMPLEPOINTER) desc = pFormat;
@@ -1085,7 +1130,6 @@ unsigned char * WINAPI NdrPointerMarshall(PMIDL_STUB_MESSAGE pStubMsg,
 
   pStubMsg->BufferMark = pStubMsg->Buffer;
   PointerMarshall(pStubMsg, pStubMsg->Buffer, pMemory, pFormat);
-  pStubMsg->Buffer += 4;
 
   STD_OVERFLOW_CHECK(pStubMsg);
 
@@ -1104,7 +1148,6 @@ unsigned char * WINAPI NdrPointerUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
 
   pStubMsg->BufferMark = pStubMsg->Buffer;
   PointerUnmarshall(pStubMsg, pStubMsg->Buffer, ppMemory, pFormat, fMustAlloc);
-  pStubMsg->Buffer += 4;
 
   return NULL;
 }
@@ -1117,7 +1160,6 @@ void WINAPI NdrPointerBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
                                       PFORMAT_STRING pFormat)
 {
   TRACE("(%p,%p,%p)\n", pStubMsg, pMemory, pFormat);
-  pStubMsg->BufferLength += 4;
   PointerBufferSize(pStubMsg, pMemory, pFormat);
 }
 

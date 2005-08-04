@@ -185,6 +185,7 @@ void WINAPI NdrClientInitializeNew( PRPC_MESSAGE pRpcMessage, PMIDL_STUB_MESSAGE
   assert( pRpcMessage && pStubMsg && pStubDesc );
 
   memset(pRpcMessage, 0, sizeof(RPC_MESSAGE));
+  pRpcMessage->DataRepresentation = NDR_LOCAL_DATA_REPRESENTATION;
 
   /* not everyone allocates stack space for w2kReserved */
   memset(pStubMsg, 0, FIELD_OFFSET(MIDL_STUB_MESSAGE,pCSInfo));
@@ -276,9 +277,6 @@ unsigned char *WINAPI NdrSendReceive( MIDL_STUB_MESSAGE *pStubMsg, unsigned char
     ERR("RPC Message not present in stub message.  No action taken.\n");
     return NULL;
   }
-
-  /* FIXME: Seems wrong.  Where should this really come from, and when? */
-  pStubMsg->RpcMsg->DataRepresentation = NDR_LOCAL_DATA_REPRESENTATION;
 
   if (I_RpcSendReceive(pStubMsg->RpcMsg) != RPC_S_OK) {
     WARN("I_RpcSendReceive did not return success.\n");
