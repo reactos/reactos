@@ -170,13 +170,8 @@ INT GetRootPath(TCHAR *InPath,TCHAR *OutPath,INT size)
   {
     if (InPath[1]==_T(':'))    
     {   
-      TCHAR num[2];
       INT t=0;
-
-      num[1] = _T('\0');
-      num[0] = InPath[0];
-      _tcslwr(num);
-
+     
       if ((InPath[0] >= _T('0')) && (InPath[0] <= _T('9')))
       {
           t = (InPath[0] - _T('0')) +28;
@@ -185,6 +180,12 @@ INT GetRootPath(TCHAR *InPath,TCHAR *OutPath,INT size)
       if ((InPath[0] >= _T('a')) && (InPath[0] <= _T('z')))
       {
           t = (InPath[0] - _T('a')) +1;
+          InPath[0] = t + _T('A') - 1;
+      }
+
+       if ((InPath[0] >= _T('A')) && (InPath[0] <= _T('Z')))
+      {
+          t = (InPath[0] - _T('A')) +1;
       }
                 
       if (_tgetdcwd(t,OutPath,size) != NULL) 
@@ -214,7 +215,9 @@ BOOL SetRootPath(TCHAR *InPath)
 {
   TCHAR oldpath[MAX_PATH];
   TCHAR OutPath[MAX_PATH];
+  TCHAR OutPathUpper[MAX_PATH];
   BOOL fail;
+  
   
   /* Get The current directory path and save it */
   fail = GetCurrentDirectory(MAX_PATH,oldpath);
@@ -225,18 +228,23 @@ BOOL SetRootPath(TCHAR *InPath)
   
   if (_tcsncicmp(&InPath[1],_T(":\\"),2)!=0)
   {
-      if (!GetRootPath(InPath,OutPath,MAX_PATH))
-         _tcscpy(OutPath,InPath);
+      if (!GetRootPath(InPath,OutPathUpper,MAX_PATH))
+         _tcscpy(OutPathUpper,InPath);
   }
   else 
   {
-    _tcscpy(OutPath,InPath);
+    _tcscpy(OutPathUpper,InPath);
   }
   
+   _tcsupr(OutPathUpper); 
+  GetLongPathName(OutPathUpper, OutPath, MAX_PATH);  
+
   fail = SetCurrentDirectory(OutPath);
   if (!fail) 
       return 1;
+
   
+    
   SetCurrentDirectory(OutPath);
   GetCurrentDirectory(MAX_PATH,OutPath);
   _tchdir(OutPath);
@@ -302,7 +310,6 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 		}
 		ConOutPuts(szCurrent);
 		return 0;
- 
 	}
  
 	/* Get Current Directory */
@@ -376,17 +383,22 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 			else
 				break;
  
-		_tcscat(szFinalPath,f.cFileName);
+		_tcscat(szFinalPath,f.cFileName);      
 		
-		if(IsExistingDirectory(szFinalPath))
-		{
+		if ((f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ==  FILE_ATTRIBUTE_DIRECTORY)
+    {  		       
 			if(!SetRootPath(szFinalPath))
 			{
 				/* Change for /D */
 				if(bChangeDrive)
-					SetCurrentDirectory(szFinalPath);
+        {   
+           _tcsupr(szFinalPath); 
+           GetLongPathName(szFinalPath, szPath, MAX_PATH);  
+					 SetCurrentDirectory(szPath);
+        }
 				return 0;
 			}
+      
 		}
 	}while(FindNextFile (hFile, &f));
  
