@@ -39,6 +39,37 @@ typedef struct _USER_SENT_MESSAGE_NOTIFY
   LIST_ENTRY ListEntry;
 } USER_SENT_MESSAGE_NOTIFY, *PUSER_SENT_MESSAGE_NOTIFY;
 
+typedef struct _USER_THREAD_INPUT
+{
+#if 0   
+       struct desktop        *desktop;       /* desktop that this thread input belongs to */
+       user_handle_t          focus;         /* focus window */
+       user_handle_t          capture;       /* capture window */
+       user_handle_t          active;        /* active window */
+       user_handle_t          menu_owner;    /* current menu owner window */
+       user_handle_t          move_size;     /* current moving/resizing window */
+       user_handle_t          caret;         /* caret window */
+       rectangle_t            caret_rect;    /* caret rectangle */
+       int                    caret_hide;    /* caret hide count */
+       int                    caret_state;   /* caret on/off state */
+       struct list            msg_list;      /* list of hardware messages */
+       unsigned char          keystate[256]; /* state of each key */
+#endif
+
+  /* Current window with focus (ie. receives keyboard input) for this queue. */
+  HWND FocusWindow;
+  /* Current capture window for this queue. */
+  HWND CaptureWindow;
+  /* Current active window for this queue. */
+  HWND ActiveWindow;
+  /* Current menu owner window for this queue */
+  HWND MenuOwner;
+  /* Current move/size window for this queue */
+  HWND MoveSize;
+ /* Caret information for this queue */
+  THRDCARETINFO CaretInfo;
+   
+} USER_THREAD_INPUT, *PUSER_THREAD_INPUT;
 
 
 typedef struct _USER_MESSAGE_QUEUE
@@ -73,24 +104,12 @@ typedef struct _USER_MESSAGE_QUEUE
   HANDLE NewMessagesHandle;
   /* Last time PeekMessage() was called. */
   ULONG LastMsgRead;
-  /* Current window with focus (ie. receives keyboard input) for this queue. */
-  HWND FocusWindow;
   /* True if a window needs painting. */
   BOOLEAN PaintPosted;
   /* Count of paints pending. */
   LONG PaintCount;
-  /* Current active window for this queue. */
-  HWND ActiveWindow;
-  /* Current capture window for this queue. */
-  HWND CaptureWindow;
-  /* Current move/size window for this queue */
-  HWND MoveSize;
-  /* Current menu owner window for this queue */
-  HWND MenuOwner;
   /* Identifes the menu state */
   BYTE MenuState;
-  /* Caret information for this queue */
-  PTHRDCARETINFO CaretInfo;
 
   /* Window hooks */
   PHOOKTABLE Hooks;
@@ -104,14 +123,15 @@ typedef struct _USER_MESSAGE_QUEUE
 
   /* extra message information */
   LPARAM ExtraInfo;
-
   /* messages that are currently dispatched by other threads */
   LIST_ENTRY DispatchingMessagesHead;
   /* messages that are currently dispatched by this message queue, required for cleanup */
   LIST_ENTRY LocalDispatchingMessagesHead;
-
   /* Desktop that the message queue is attached to */
   struct _DESKTOP_OBJECT *Desktop;
+  
+  PUSER_THREAD_INPUT Input;
+  
 } USER_MESSAGE_QUEUE, *PUSER_MESSAGE_QUEUE;
 
 BOOL FASTCALL
@@ -144,8 +164,6 @@ VOID FASTCALL
 MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue);
 PUSER_MESSAGE_QUEUE FASTCALL
 MsqCreateMessageQueue(struct _ETHREAD *Thread);
-VOID FASTCALL
-MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue);
 PUSER_MESSAGE_QUEUE FASTCALL
 MsqGetHardwareMessageQueue(VOID);
 NTSTATUS FASTCALL
@@ -198,8 +216,6 @@ VOID FASTCALL
 MsqInsertSystemMessage(MSG* Msg);
 BOOL FASTCALL
 MsqIsDblClk(LPMSG Msg, BOOL Remove);
-HWND FASTCALL
-MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULONG Type, HWND hWnd);
 
 inline BOOL MsqIsSignaled( PUSER_MESSAGE_QUEUE queue );
 inline VOID MsqSetQueueBits( PUSER_MESSAGE_QUEUE queue, WORD bits );
@@ -223,8 +239,6 @@ LPARAM FASTCALL MsqGetMessageExtraInfo(VOID);
 #define IntReferenceMessageQueue(MsgQueue) \
   InterlockedIncrement(&(MsgQueue)->References)
 
-VOID FASTCALL
-IntDereferenceMessageQueue(PUSER_MESSAGE_QUEUE MsgQueue);
 
 
 #define IS_BTN_MESSAGE(message,code) \

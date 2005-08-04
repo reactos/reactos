@@ -31,7 +31,7 @@
 
 #include <w32k.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 typedef struct
@@ -447,7 +447,7 @@ CLEANUP:
 VOID FASTCALL
 IntSendHitTestMessages(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg)
 {
-   if(!Msg->hwnd || ThreadQueue->CaptureWindow)
+   if(!Msg->hwnd || ThreadQueue->Input->CaptureWindow)
    {
       return;
    }
@@ -547,7 +547,7 @@ IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *Hit
    }
 
    if(ThreadQueue == Window->MessageQueue &&
-         ThreadQueue->CaptureWindow != Window->Self)
+         ThreadQueue->Input->CaptureWindow != Window->Self)
    {
       /* only send WM_NCHITTEST messages if we're not capturing the window! */
       *HitTest = IntSendMessage(Window->Self, WM_NCHITTEST, 0,
@@ -617,8 +617,8 @@ IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *Hit
          }
          Msg->lParam = MAKELONG(Msg->pt.x, Msg->pt.y);
       }
-      else if(ThreadQueue->MoveSize == NULL &&
-              ThreadQueue->MenuOwner == NULL)
+      else if(ThreadQueue->Input->MoveSize == NULL &&
+              ThreadQueue->Input->MenuOwner == NULL)
       {
          /* NOTE: Msg->pt should remain in screen coordinates. -- FiN */
          Msg->lParam = MAKELONG(
@@ -636,7 +636,7 @@ IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *Hit
  */
 BOOL FASTCALL
 IntPeekMessage(PUSER_MESSAGE Msg,
-               HWND Wnd,
+               HWND hWnd,
                UINT MsgFilterMin,
                UINT MsgFilterMax,
                UINT RemoveMsg)
@@ -696,7 +696,7 @@ CheckMessages:
    Present = MsqFindMessage(ThreadQueue,
                             FALSE,
                             RemoveMessages,
-                            Wnd,
+                            hWnd,
                             MsgFilterMin,
                             MsgFilterMax,
                             &Message);
@@ -722,7 +722,7 @@ CheckMessages:
    Present = MsqFindMessage(ThreadQueue,
                             TRUE,
                             RemoveMessages,
-                            Wnd,
+                            hWnd,
                             MsgFilterMin,
                             MsgFilterMax,
                             &Message);
@@ -748,7 +748,7 @@ CheckMessages:
    while (MsqDispatchOneSentMessage(ThreadQueue));
 
    /* Check for paint messages. */
-   if (IntGetPaintMessage(Wnd, MsgFilterMin, MsgFilterMax, PsGetWin32Thread(), &Msg->Msg, RemoveMessages))
+   if (IntGetPaintMessage(hWnd, MsgFilterMin, MsgFilterMax, PsGetWin32Thread(), &Msg->Msg, RemoveMessages))
    {
 
       Msg->FreeLParam = FALSE;
@@ -756,7 +756,7 @@ CheckMessages:
    }
 
    /* Check for WM_(SYS)TIMER messages */
-   Present = MsqGetTimerMessage(ThreadQueue, Wnd, MsgFilterMin, MsgFilterMax,
+   Present = MsqGetTimerMessage(ThreadQueue, hWnd, MsgFilterMin, MsgFilterMax,
                                 &Msg->Msg, RemoveMessages);
 
    if (Present)
@@ -788,7 +788,7 @@ MessageFound:
                /* eat the message, search again */
                goto CheckMessages;
             }
-            if(ThreadQueue->CaptureWindow == NULL)
+            if(ThreadQueue->Input->CaptureWindow == NULL)
             {
 
                IntSendHitTestMessages(ThreadQueue, &Msg->Msg);
@@ -847,6 +847,10 @@ NtUserPeekMessage(
 
    DPRINT("Enter NtUserPeekMessage\n");
    UserEnterExclusive();
+
+   if (!PsGetWin32Thread()){
+      KEBUGCHECK(0);
+   }
 
    /* Validate input */
    if (NULL != Wnd)

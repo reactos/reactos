@@ -32,7 +32,7 @@
 #include <w32k.h>
 #include <ddk/ntddkbd.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 extern BYTE QueueKeyStateTable[];
@@ -215,7 +215,6 @@ MouseThreadMain(PVOID StartContext)
         DPRINT1("Win32K: Failed to read from mouse.\n");
         return; //(Status);
       }
-      DPRINT1("MouseEvent\n");
 
       UserEnterExclusive();
 
@@ -664,7 +663,7 @@ KeyboardThreadMain(PVOID StartContext)
 	      if (!FocusQueue) continue;
 
 	      msg.lParam = lParam;
-	      msg.hwnd = FocusQueue->FocusWindow;
+         msg.hwnd = FocusQueue->Input->FocusWindow;
 
 	      FocusThread = FocusQueue->Thread;
 
@@ -1121,6 +1120,25 @@ IntKeyboardInput(KEYBDINPUT *ki)
   return FALSE;
 }
 
+
+
+
+
+
+
+
+/*
+
+google groups: "SendInput and desktops / window stations"
+there are really only two restrictions on calling SendInput that you may be running
+into. The first check that SendInput performs is to determine is the
+calling thread is running on the current input desktop. The next check is
+made to determine if the calling thread has DESKTOP_JOURNALPLAYBACK access
+to the input desktop.
+
+(current) input desktop = interactive desktop = active desktop on interactive WinSta
+
+*/
 UINT
 STDCALL
 NtUserSendInput(
@@ -1136,12 +1154,9 @@ NtUserSendInput(
   UserEnterExclusive();
   
   W32Thread = PsGetWin32Thread();
-  ASSERT(W32Thread);
 
-  if(!W32Thread->Desktop)
-  {
-    RETURN( 0);
-  }
+  ASSERT(W32Thread);
+  ASSERT(W32Thread->Desktop);
 
   if(!nInputs || !pInput || (cbSize != sizeof(INPUT)))
   {

@@ -35,7 +35,7 @@
 #define MONITOR_DEFAULTTOPRIMARY  1
 #define MONITOR_DEFAULTTONEAREST  2
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/

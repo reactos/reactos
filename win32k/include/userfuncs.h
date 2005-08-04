@@ -111,6 +111,10 @@ UserSetCaretPos(int X, int Y);
 BOOL FASTCALL
 UserHideCaret(PWINDOW_OBJECT Wnd);
 
+BOOL FASTCALL
+UserSwitchCaretShowing(PTHRDCARETINFO Info);
+
+
 /************************* WINPOS.C ****************************/
 
 
@@ -188,10 +192,21 @@ PMONITOR_OBJECT FASTCALL UserCreateMonitorObject(HANDLE* h);
 PMONITOR_OBJECT UserGetMonitorObject(HANDLE hCursor);
 
 
-/* msgqueue.c */
+/******************* MSGQUEUE.C ********************/
+
+VOID FASTCALL
+UserDereferenceQueue(PUSER_MESSAGE_QUEUE MsgQueue);
+
+VOID FASTCALL
+MsqDestroyMessageQueue(PW32THREAD WThread);
+
+HWND FASTCALL
+MsqSetStateWindow(PUSER_THREAD_INPUT Input, ULONG Type, HWND hWnd);
+
+inline PUSER_THREAD_INPUT FASTCALL UserGetCurrentInput();
 
 VOID FASTCALL 
-MsqRemoveWindowMessagesFromQueue(PWINDOW_OBJECT pWindow);
+MsqCleanupWindow(PWINDOW_OBJECT pWindow);
 
 inline BOOL FASTCALL
 UserMessageFilter(UINT Message, UINT FilterMin, UINT FilterMax);
@@ -217,6 +232,16 @@ MsqRemoveTimer(
    UINT_PTR IDEvent, 
    UINT Message
    );
+
+/**************************** NTUSER.C ************************/
+
+inline PVOID FASTCALL UserAlloc(SIZE_T bytes);
+inline PVOID FASTCALL UserAllocTag(SIZE_T bytes, ULONG tag);
+inline PVOID FASTCALL UserAllocZero(SIZE_T bytes);
+inline PVOID FASTCALL UserAllocZeroTag(SIZE_T bytes, ULONG tag);
+inline VOID FASTCALL UserFree(PVOID mem);
+
+
 
 /* windc.c */
 

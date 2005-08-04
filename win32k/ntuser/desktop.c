@@ -31,12 +31,17 @@
 
 #include <w32k.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
 /* Currently active desktop */
+
+/*
+ FIXME: this is not global data. this belongs in the (inter)active window station
+ (current input desktop = interactive desktop = InputDesktop = active desktop on interactive winsta)
+*/
 PDESKTOP_OBJECT InputDesktop = NULL;
 HDESK InputDesktopHandle = NULL;
 HDC ScreenDeviceContext = NULL;

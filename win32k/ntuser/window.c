@@ -30,7 +30,7 @@
 
 #include <w32k.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 static WndProcHandle *WndProcHandlesArray = 0;
@@ -109,7 +109,9 @@ PWINDOW_OBJECT FASTCALL IntGetWindowObject(HWND hWnd)
    if (hWnd == NULL)
       return NULL;
    WinSta = UserGetCurrentWinSta();
-   ASSERT(WinSta);
+   if (!WinSta){
+      KEBUGCHECK(0);
+   }
    return (PWINDOW_OBJECT)UserGetObject(&WinSta->HandleTable, hWnd, USER_WINDOW );
 }
 
@@ -440,12 +442,8 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
 
   RtlFreeUnicodeString(&Window->WindowName);
   
-  /* this must be the last call (i think) Gunnar */
-  //FIXME: new name: MsqCleanupQueueWindow()?
-  //FIXME: timer cleanup might/should be a part of queue cleanup?
-  UserRemoveTimersWindow(Window);
-  
-  MsqRemoveWindowMessagesFromQueue(Window);
+  /* cleanup timers and queue */
+  MsqCleanupWindow(Window);
 
   UserFreeWindowObject(Window);
   
@@ -594,6 +592,9 @@ DestroyThreadWindows(struct _ETHREAD *Thread)
   {
      Current = Win32Thread->WindowListHead.Flink;
      Wnd = CONTAINING_RECORD(Current, WINDOW_OBJECT, ThreadListEntry);
+     
+          DPRINT1("while destroy wnds, wnd=0x%x, queue=0x%x, wthread=0x%x\n",Wnd,Wnd->MessageQueue,Win32Thread);
+          
      /* window removes itself from the list */
      ASSERT(UserDestroyWindow(Wnd));
   }
@@ -782,7 +783,7 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
 }
 
 
-//FIXME: no NtCall lead to this... Duplicate impl. in umode??
+//FIXME: Duplicate impl. in umode??
 BOOL FASTCALL
 UserIsChildWindow(PWINDOW_OBJECT Parent, PWINDOW_OBJECT Child)
 {
@@ -1611,7 +1612,7 @@ IntCreateWindowEx(DWORD dwExStyle,
     {
       WindowObject->ExtraData = (PCHAR)(WindowObject + 1);
       WindowObject->ExtraDataSize = ClassObject->cbWndExtra;
-      RtlZeroMemory(WindowObject->ExtraData, WindowObject->ExtraDataSize);
+      //RtlZeroMemory(WindowObject->ExtraData, WindowObject->ExtraDataSize);
     }
   else
     {
@@ -1620,7 +1621,7 @@ IntCreateWindowEx(DWORD dwExStyle,
     }
 
   InitializeListHead(&WindowObject->PropListHead);
-  ExInitializeFastMutex(&WindowObject->UpdateLock);
+//  ExInitializeFastMutex(&WindowObject->UpdateLock);
   InitializeListHead(&WindowObject->WndObjListHead);
 
   if (NULL != WindowName->Buffer)
@@ -2177,14 +2178,14 @@ UserDestroyWindow(PWINDOW_OBJECT Wnd)
         }
     }
 //  IntDereferenceMessageQueue(Window->MessageQueue);
-  if (Wnd->MessageQueue->ActiveWindow == Wnd->Self)
-    Wnd->MessageQueue->ActiveWindow = NULL;
+  if (Wnd->MessageQueue->Input->ActiveWindow == Wnd->Self)
+    Wnd->MessageQueue->Input->ActiveWindow = NULL;
     
-  if (Wnd->MessageQueue->FocusWindow == Wnd->Self)
-    Wnd->MessageQueue->FocusWindow = NULL;
+  if (Wnd->MessageQueue->Input->FocusWindow == Wnd->Self)
+    Wnd->MessageQueue->Input->FocusWindow = NULL;
     
-  if (Wnd->MessageQueue->CaptureWindow == Wnd->Self)
-    Wnd->MessageQueue->CaptureWindow = NULL;
+  if (Wnd->MessageQueue->Input->CaptureWindow == Wnd->Self)
+    Wnd->MessageQueue->Input->CaptureWindow = NULL;
 
 
   /* Call hooks */

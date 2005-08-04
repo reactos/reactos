@@ -9,8 +9,6 @@ UserDestroyCaret(PW32THREAD Win32Thread);
 BOOL FASTCALL
 UserSetCaretBlinkTime(UINT uMSeconds);
 
-BOOL FASTCALL
-UserSwitchCaretShowing(PVOID Info);
 
 VOID FASTCALL
 UserDrawCaret(HWND hWnd);

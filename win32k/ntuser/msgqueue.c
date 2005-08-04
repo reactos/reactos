@@ -740,9 +740,9 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
          return;
       }
 
-      if (FocusMessageQueue->FocusWindow != (HWND)0)
+      if (FocusMessageQueue->Input->FocusWindow != (HWND)0)
       {
-         Msg.hwnd = FocusMessageQueue->FocusWindow;
+         Msg.hwnd = FocusMessageQueue->Input->FocusWindow;
 //         DPRINT("Msg.hwnd = %x\n", Msg.hwnd);
 //         DPRINT("FocusMessageQueue %x\n", FocusMessageQueue);
 //         DPRINT("FocusMessageQueue->Desktop %x\n", FocusMessageQueue->Desktop);
@@ -964,7 +964,7 @@ Notified:
 
 
 VOID FASTCALL
-MsqRemoveWindowMessagesFromQueue(PWINDOW_OBJECT Window)
+MsqCleanupWindow(PWINDOW_OBJECT Window)
 {
    PUSER_SENT_MESSAGE SentMessage;
    PUSER_MESSAGE PostedMessage;
@@ -976,6 +976,11 @@ MsqRemoveWindowMessagesFromQueue(PWINDOW_OBJECT Window)
 
    MessageQueue = Window->MessageQueue;
    ASSERT(MessageQueue);
+   
+   
+   /* before or after queue cleanup ? */
+   UserRemoveTimersWindow(Window);
+
 
    /* remove the posted messages for this window */
    LIST_FOR_EACH_SAFE(TmpEntry, &MessageQueue->PostedMessagesListHead, PostedMessage, USER_MESSAGE, ListEntry)
@@ -1328,12 +1333,13 @@ MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQu
    NTSTATUS Status;
 
    MessageQueue->Thread = Thread;
-   MessageQueue->CaretInfo = (PTHRDCARETINFO)(MessageQueue + 1);
+   /* uhm. whats the point of this? why not embedd it in the struct itself? */
+//   MessageQueue->CaretInfo = (PTHRDCARETINFO)(MessageQueue + 1);
+   MessageQueue->Input = (PUSER_THREAD_INPUT)(MessageQueue + 1);
+
    InitializeListHead(&MessageQueue->PostedMessagesListHead);
    InitializeListHead(&MessageQueue->SentMessagesListHead);
    InitializeListHead(&MessageQueue->HardwareMessagesListHead);
-//   InitializeListHead(&MessageQueue->TimerListHead);
-//   InitializeListHead(&MessageQueue->ExpiredTimersList);   
    InitializeListHead(&MessageQueue->DispatchingMessagesHead);
    InitializeListHead(&MessageQueue->LocalDispatchingMessagesHead);
    KeInitializeMutex(&MessageQueue->HardwareLock, 0);
@@ -1341,7 +1347,7 @@ MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQu
    MessageQueue->QuitExitCode = 0;
    KeQueryTickCount(&LargeTickCount);
    MessageQueue->LastMsgRead = LargeTickCount.u.LowPart;
-   MessageQueue->FocusWindow = NULL;
+//   MessageQueue->FocusWindow = NULL;
    MessageQueue->PaintPosted = FALSE;
    MessageQueue->PaintCount = 0;
    MessageQueue->WakeMask = ~0; //FIXME!
@@ -1483,86 +1489,130 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 PUSER_MESSAGE_QUEUE FASTCALL
 MsqCreateMessageQueue(struct _ETHREAD *Thread)
 {
-   PUSER_MESSAGE_QUEUE MessageQueue;
+   PUSER_MESSAGE_QUEUE Queue;
 
-   MessageQueue = ExAllocatePoolWithTag(PagedPool,
-                  sizeof(USER_MESSAGE_QUEUE) + sizeof(THRDCARETINFO),
+   Queue = UserAllocZeroTag(sizeof(USER_MESSAGE_QUEUE) + sizeof(PUSER_THREAD_INPUT),// + sizeof(THRDCARETINFO),
                   TAG_MSGQ);
 
-   if (!MessageQueue)
-   {
+   if (!Queue)
       return NULL;
-   }
-
-   RtlZeroMemory(MessageQueue, sizeof(USER_MESSAGE_QUEUE) + sizeof(THRDCARETINFO));
-   /* hold at least one reference until it'll be destroyed */
-   IntReferenceMessageQueue(MessageQueue);
+   
    /* initialize the queue */
-   if (!MsqInitializeMessageQueue(Thread, MessageQueue))
+   if (!MsqInitializeMessageQueue(Thread, Queue))
    {
-      IntDereferenceMessageQueue(MessageQueue);
+      UserFree(Queue);
       return NULL;
    }
 
-   return MessageQueue;
+   return Queue;
 }
 
 
+
+
+#if 0
+    struct process *process = thread->process;
+    struct thread_input *input;
+
+    remove_thread_hooks( thread );
+    if (!thread->queue) return;
+    if (process->queue == thread->queue)  /* is it the process main queue? */
+    {
+        release_object( process->queue );
+        process->queue = NULL;
+        if (process->idle_event)
+        {
+            set_event( process->idle_event );
+            release_object( process->idle_event );
+            process->idle_event = NULL;
+        }
+    }
+    input = thread->queue->input;
+    release_object( thread->queue );
+    thread->queue = NULL;
+#endif
+
+
+/* called when the thread is destroyed */
 VOID FASTCALL
-IntDereferenceMessageQueue(PUSER_MESSAGE_QUEUE MsgQueue)
+MsqDestroyMessageQueue(PW32THREAD W32Thread)
 {
-   if(InterlockedDecrement(&MsgQueue->References) == 0)
-   {
-      DPRINT1("Free message queue 0x%x\n", MsgQueue);
-      
-      
-      
-      //can some externals have reference to these two?
-      //arent they only used internally?
-      if (MsgQueue->NewMessages != NULL)
-         ObDereferenceObject(MsgQueue->NewMessages);
+   //FIXME: PW32THREAD er en win32k private struct og kan fint inneholde PUSER_MESSAGE_QUEUE!
+   //PsSetWin32Thread etc..
+   PUSER_MESSAGE_QUEUE Queue = (PUSER_MESSAGE_QUEUE)W32Thread->MessageQueue;
 
-      if (MsgQueue->NewMessagesHandle != NULL)
-         ZwClose(MsgQueue->NewMessagesHandle);
-
-      ExFreePool(MsgQueue);
-   }
-}
-
-
-VOID FASTCALL
-MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
-{
-//   PDESKTOP_OBJECT desk;
-
-   DPRINT1("MsqDestroyMessageQueue 0x%x\n",MessageQueue);
+   DPRINT1("Free message queue 0x%x\n", Queue);
+   //DPRINT1("MsqDestroyMessageQueue 0x%x\n", Queue);
 
    /* remove the message queue from any desktops */
-   if (MessageQueue->Desktop)
+   //FIXME: queue->desktop? what about thread->hDesktop?? why both?
+   if (Queue->Desktop)
    {
-      MessageQueue->Desktop->ActiveMessageQueue = NULL;
-      MessageQueue->Desktop = NULL;
+      Queue->Desktop->ActiveMessageQueue = NULL;
+      Queue->Desktop = NULL;
    }
 
-   
-//   if ((desk = (PDESKTOP_OBJECT)InterlockedExchange((LONG*)&MessageQueue->Desktop, 0)))
-//   {
-//      ASSERT(MessageQueue == desk->ActiveMessageQueue);
-      
-//      InterlockedExchange((LONG*)&desk->ActiveMessageQueue, 0);
-      //HUH??? what about desk->ActiveMessageQueue?? shouldnt it be derefed?
-//      IntDereferenceMessageQueue(MessageQueue);
-//   }
+
+   //   if ((desk = (PDESKTOP_OBJECT)InterlockedExchange((LONG*)&MessageQueue->Desktop, 0)))
+   //   {
+   //      ASSERT(MessageQueue == desk->ActiveMessageQueue);
+
+   //      InterlockedExchange((LONG*)&desk->ActiveMessageQueue, 0);
+   //HUH??? what about desk->ActiveMessageQueue?? shouldnt it be derefed?
+   //      IntDereferenceMessageQueue(MessageQueue);
+   //   }
 
    /* if this is the primitive message queue, deregister it */
-   if (MessageQueue == W32kGetPrimitiveMessageQueue())
-      W32kUnregisterPrimitiveMessageQueue();
+   if (Queue == W32kGetPrimitiveMessageQueue())
+   W32kUnregisterPrimitiveMessageQueue();
+
+   /* cleanup timers */
+   UserRemoveTimersQueue(Queue);
 
    /* clean it up */
-   MsqCleanupMessageQueue(MessageQueue);
+   MsqCleanupMessageQueue(Queue);
 
-   /* decrease the reference counter, if it hits zero, the queue will be freed */
-   IntDereferenceMessageQueue(MessageQueue);
+   //can some externals have reference to these two?
+   //arent they only used internally?
+   if (Queue->NewMessages != NULL)
+   ObDereferenceObject(Queue->NewMessages);
+
+   if (Queue->NewMessagesHandle != NULL)
+   ZwClose(Queue->NewMessagesHandle);
+
+   ExFreePool(Queue);
+
+   W32Thread->MessageQueue = NULL;
+   
+#if 0
+
+      cleanup_results( queue );
+      for (i = 0; i < NB_MSG_KINDS; i++) empty_msg_list( &queue->msg_list[i] );
+
+      while ((ptr = list_head( &queue->pending_timers )))
+      {
+        struct timer *timer = LIST_ENTRY( ptr, struct timer, entry );
+        list_remove( &timer->entry );
+        free( timer );
+      }
+      while ((ptr = list_head( &queue->expired_timers )))
+      {
+        struct timer *timer = LIST_ENTRY( ptr, struct timer, entry );
+        list_remove( &timer->entry );
+        free( timer );
+      }
+      if (queue->timeout) remove_timeout_user( queue->timeout );
+      if (queue->input) release_object( queue->input );
+      if (queue->hooks) release_object( queue->hooks );
+    
+#endif
+   
+}
+
+
+inline PUSER_THREAD_INPUT FASTCALL UserGetCurrentInput()
+{
+   return UserGetCurrentQueue()->Input;
 }
 
 PHOOKTABLE FASTCALL
@@ -1610,36 +1660,36 @@ MsqGetMessageExtraInfo(VOID)
 }
 
 HWND FASTCALL
-MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULONG Type, HWND hWnd)
+MsqSetStateWindow(PUSER_THREAD_INPUT Input, ULONG Type, HWND hWnd)
 {
    HWND Prev;
 
    switch(Type)
    {
       case MSQ_STATE_CAPTURE:
-         Prev = MessageQueue->CaptureWindow;
-         MessageQueue->CaptureWindow = hWnd;
+         Prev = Input->CaptureWindow;
+         Input->CaptureWindow = hWnd;
          return Prev;
       case MSQ_STATE_ACTIVE:
-         Prev = MessageQueue->ActiveWindow;
-         MessageQueue->ActiveWindow = hWnd;
+         Prev = Input->ActiveWindow;
+         Input->ActiveWindow = hWnd;
          return Prev;
       case MSQ_STATE_FOCUS:
-         Prev = MessageQueue->FocusWindow;
-         MessageQueue->FocusWindow = hWnd;
+         Prev = Input->FocusWindow;
+         Input->FocusWindow = hWnd;
          return Prev;
       case MSQ_STATE_MENUOWNER:
-         Prev = MessageQueue->MenuOwner;
-         MessageQueue->MenuOwner = hWnd;
+         Prev = Input->MenuOwner;
+         Input->MenuOwner = hWnd;
          return Prev;
       case MSQ_STATE_MOVESIZE:
-         Prev = MessageQueue->MoveSize;
-         MessageQueue->MoveSize = hWnd;
+         Prev = Input->MoveSize;
+         Input->MoveSize = hWnd;
          return Prev;
       case MSQ_STATE_CARET:
-         ASSERT(MessageQueue->CaretInfo);
-         Prev = MessageQueue->CaretInfo->hWnd;
-         MessageQueue->CaretInfo->hWnd = hWnd;
+         //ASSERT(Input->CaretInfo);
+         Prev = Input->CaretInfo.hWnd;
+         Input->CaretInfo.hWnd = hWnd;
          return Prev;
    }
 
@@ -1659,7 +1709,7 @@ UserMessageFilter(UINT Message, UINT FilterMin, UINT FilterMax)
 BOOLEAN FASTCALL
 MsqGetTimerMessage(
    PUSER_MESSAGE_QUEUE Queue,
-   HWND WndFilter, 
+   HWND hWndFilter, //FIXME: NULL, INVALID_HANDLE_VALUE
    UINT MsgFilterMin, 
    UINT MsgFilterMax,
    MSG *Msg, 
@@ -1670,7 +1720,7 @@ MsqGetTimerMessage(
    
    Timer = UserFindExpiredTimer(
       Queue, 
-      GetWnd(WndFilter),
+      GetWnd(hWndFilter), 
       MsgFilterMin, 
       MsgFilterMax,
       Restart

@@ -51,7 +51,7 @@
 
 #include <w32k.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -203,41 +203,36 @@ CLEANUP:
 
 BOOLEAN
 STDCALL
-NtUserDestroyAcceleratorTable(HACCEL Table)
+NtUserDestroyAcceleratorTable(HACCEL hAccel)
 {
-   PACCELERATOR_TABLE AcceleratorTable;
+   PACCELERATOR_TABLE Accel;
    DECLARE_RETURN(BOOLEAN);
    /* FIXME: If the handle table is from a call to LoadAcceleratorTable, decrement it's
       usage count (and return TRUE).
    FIXME: Destroy only tables created using CreateAcceleratorTable.
     */
 
-   DPRINT("Enter NtUserDestroyAcceleratorTable(Table %x)\n", Table);
+   DPRINT("Enter NtUserDestroyAcceleratorTable(Table %x)\n", Accel);
    UserEnterExclusive();
 
-   //FIXME
-   AcceleratorTable = UserGetAccelObject(Table);
+   Accel = UserGetAccelObject(hAccel);
 
-   if (!AcceleratorTable)
+   if (!Accel)
    {
       SetLastWin32Error(ERROR_INVALID_ACCEL_HANDLE);
       DPRINT1("E2\n");
       RETURN(FALSE);
    }
 
-//   ObmCloseHandle(WindowStation->HandleTable, Table);
-
-   if (AcceleratorTable->Table != NULL)
+   if (Accel->Table != NULL)
    {
-      ExFreePool(AcceleratorTable->Table);
+      ExFreePool(Accel->Table);
    }
-
-//   ObDereferenceObject(WindowStation);
 
    RETURN(TRUE);
 
 CLEANUP:
-   DPRINT("Leave NtUserDestroyAcceleratorTable(Table %x) = %i\n", Table,_ret_);
+   DPRINT("Leave NtUserDestroyAcceleratorTable(Table %x) = %i\n", Accel,_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -443,7 +438,6 @@ NtUserTranslateAccelerator(
    HACCEL Table,
    LPMSG Message)
 {
-   PWINSTATION_OBJECT WindowStation;
    PACCELERATOR_TABLE AcceleratorTable;
    ULONG i;
    DECLARE_RETURN(int);
@@ -490,7 +484,6 @@ NtUserTranslateAccelerator(
                                   AcceleratorTable->Table[i].fVirt, AcceleratorTable->Table[i].key,
                                   AcceleratorTable->Table[i].cmd))
       {
-         ObDereferenceObject(WindowStation);
          DPRINT("NtUserTranslateAccelerator(hWnd %x, Table %x, Message %p) = %i end\n",
                 hWnd, Table, Message, 1);
          RETURN(1);

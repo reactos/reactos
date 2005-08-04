@@ -31,7 +31,7 @@
 
 #include <w32k.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #define HOOKID_TO_INDEX(HookId) (HookId - WH_MINHOOK)

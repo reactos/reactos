@@ -21,21 +21,21 @@
 
 #include <w32k.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 PWINDOW_OBJECT FASTCALL
 UserGetCaptureWindow()
 {
    PUSER_MESSAGE_QUEUE ForegroundQueue = UserGetFocusMessageQueue();
-   return ForegroundQueue != NULL ? GetWnd(ForegroundQueue->CaptureWindow) : 0;
+   return ForegroundQueue != NULL ? GetWnd(ForegroundQueue->Input->CaptureWindow) : 0;
 }
 
 PWINDOW_OBJECT FASTCALL
 UserGetFocusWindow()
 {
    PUSER_MESSAGE_QUEUE ForegroundQueue = UserGetFocusMessageQueue();
-   return ForegroundQueue != NULL ? GetWnd(ForegroundQueue->FocusWindow) : 0;
+   return ForegroundQueue != NULL ? GetWnd(ForegroundQueue->Input->FocusWindow) : 0;
 }
 
 PWINDOW_OBJECT FASTCALL
@@ -43,7 +43,7 @@ UserGetThreadFocusWindow()
 {
    PUSER_MESSAGE_QUEUE ThreadQueue;
    ThreadQueue = UserGetCurrentQueue();
-   return ThreadQueue != NULL ? GetWnd(ThreadQueue->FocusWindow) : 0;
+   return ThreadQueue != NULL ? GetWnd(ThreadQueue->Input->FocusWindow) : 0;
 }
 
 VOID FASTCALL
@@ -169,7 +169,7 @@ IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow
    if (PrevForegroundQueue != 0)
    {
       //FIXME uhm... focus er ikke samme som active window... er UserGetFocusMessageQueue riktig?
-      hWndPrev = PrevForegroundQueue->ActiveWindow;
+      hWndPrev = PrevForegroundQueue->Input->ActiveWindow;
    }
 
    if (hWndPrev == hWnd)
@@ -179,7 +179,7 @@ IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow
    }
 
    hWndFocusPrev = (PrevForegroundQueue == FocusWindow->MessageQueue
-                    ? FocusWindow->MessageQueue->FocusWindow : NULL);
+                    ? FocusWindow->MessageQueue->Input->FocusWindow : NULL);
 
    /* FIXME: Call hooks. */
 
@@ -189,11 +189,11 @@ IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow
    IntSetFocusMessageQueue(Window->MessageQueue);
    if (Window->MessageQueue)
    {
-      Window->MessageQueue->ActiveWindow = hWnd;
+      Window->MessageQueue->Input->ActiveWindow = hWnd;
    }
    if (FocusWindow->MessageQueue)
    {
-      FocusWindow->MessageQueue->FocusWindow = hWndFocus;
+      FocusWindow->MessageQueue->Input->FocusWindow = hWndFocus;
    }
 
    if (PrevForegroundQueue != Window->MessageQueue)
@@ -277,14 +277,14 @@ IntSetActiveWindow(PWINDOW_OBJECT Wnd)
          //            return 0;
          //         else
          //         {
-         WndPrev = IntGetWindowObject(ThreadQueue->ActiveWindow);
+         WndPrev = IntGetWindowObject(ThreadQueue->Input->ActiveWindow);
          return( WndPrev ? WndPrev->Self : NULL );
 
          //         }
       }
    }
 
-   WndPrev = IntGetWindowObject(ThreadQueue->ActiveWindow);
+   WndPrev = IntGetWindowObject(ThreadQueue->Input->ActiveWindow);
    if (WndPrev == Wnd)
    {
       return WndPrev;
@@ -294,7 +294,7 @@ IntSetActiveWindow(PWINDOW_OBJECT Wnd)
 
    /* FIXME: Call hooks. */
 
-   ThreadQueue->ActiveWindow = GetHwnd(Wnd);
+   ThreadQueue->Input->ActiveWindow = GetHwnd(Wnd);
 
    //FIXME!!! hva hvis prev active var invalid dvs. NULL?
    //FIXME!!! hva hvis Wnd er NULL?
@@ -315,13 +315,13 @@ UserSetFocusWindow(PWINDOW_OBJECT Wnd)
    ThreadQueue = UserGetCurrentQueue();
    ASSERT(ThreadQueue != 0);
 
-   hWndPrev = ThreadQueue->FocusWindow;
+   hWndPrev = ThreadQueue->Input->FocusWindow;
    if (hWndPrev == GetHwnd(Wnd))
    {
       return GetWnd(hWndPrev);
    }
 
-   ThreadQueue->FocusWindow = GetHwnd(Wnd);
+   ThreadQueue->Input->FocusWindow = GetHwnd(Wnd);
 
    IntSendKillFocusMessages(GetWnd(hWndPrev), Wnd);
    IntSendSetFocusMessages(GetWnd(hWndPrev), Wnd);
@@ -357,8 +357,8 @@ UserGetForegroundWindow(VOID)
 {
    PUSER_MESSAGE_QUEUE ForegroundQueue = UserGetFocusMessageQueue();
 
-   if (ForegroundQueue && ForegroundQueue->ActiveWindow)
-      return IntGetWindowObject(ForegroundQueue->ActiveWindow);
+   if (ForegroundQueue && ForegroundQueue->Input->ActiveWindow)
+      return IntGetWindowObject(ForegroundQueue->Input->ActiveWindow);
 
    return NULL;
 }
@@ -390,18 +390,18 @@ UserGetActiveWindow(VOID)
    PUSER_MESSAGE_QUEUE ThreadQueue;
 
    ThreadQueue = UserGetCurrentQueue();
-   if (ThreadQueue && ThreadQueue->ActiveWindow)
+   if (ThreadQueue && ThreadQueue->Input->ActiveWindow)
    {
       PWINDOW_OBJECT ActiveWnd;
 
-      if ((ActiveWnd = IntGetWindowObject(ThreadQueue->ActiveWindow)))
+      if ((ActiveWnd = IntGetWindowObject(ThreadQueue->Input->ActiveWindow)))
       {
          return ActiveWnd;
       }
       else
       {
          /* active hwnd not valid. set to NULL */
-         ThreadQueue->ActiveWindow = NULL;
+         ThreadQueue->Input->ActiveWindow = NULL;
       }
    }
    return NULL;
@@ -466,7 +466,7 @@ NtUserGetCapture(VOID)
    UserEnterExclusive();
 
    ThreadQueue = UserGetCurrentQueue();//FIXME??? current??
-   RETURN(ThreadQueue ? ThreadQueue->CaptureWindow : 0);
+   RETURN(ThreadQueue ? ThreadQueue->Input->CaptureWindow : 0);
 
 CLEANUP:
    DPRINT("Leave NtUserGetCapture, ret=%i\n",_ret_);
@@ -496,17 +496,17 @@ NtUserSetCapture(HWND hWnd)
          RETURN(NULL);
       }
    }
-   hWndPrev = MsqSetStateWindow(ThreadQueue, MSQ_STATE_CAPTURE, hWnd);
+   hWndPrev = MsqSetStateWindow(ThreadQueue->Input, MSQ_STATE_CAPTURE, hWnd);
 
    /* also remove other windows if not capturing anymore */
    if(hWnd == NULL)
    {
-      MsqSetStateWindow(ThreadQueue, MSQ_STATE_MENUOWNER, NULL);
-      MsqSetStateWindow(ThreadQueue, MSQ_STATE_MOVESIZE, NULL);
+      MsqSetStateWindow(ThreadQueue->Input, MSQ_STATE_MENUOWNER, NULL);
+      MsqSetStateWindow(ThreadQueue->Input, MSQ_STATE_MOVESIZE, NULL);
    }
 
    IntPostOrSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
-   ThreadQueue->CaptureWindow = hWnd;
+   ThreadQueue->Input->CaptureWindow = hWnd;
 
    RETURN(hWndPrev);
 
@@ -544,7 +544,7 @@ NtUserSetFocus(HWND hWnd)
 
       if (Wnd->Style & (WS_MINIMIZE | WS_DISABLED))
       {
-         RETURN(ThreadQueue ? ThreadQueue->FocusWindow : 0);
+         RETURN(ThreadQueue ? ThreadQueue->Input->FocusWindow : 0);
       }
 
       if (Wnd->MessageQueue != ThreadQueue)
@@ -590,7 +590,7 @@ UserSetFocus(PWINDOW_OBJECT Wnd OPTIONAL)
 
       if (Wnd->Style & (WS_MINIMIZE | WS_DISABLED))
       {
-         return(ThreadQueue ? GetWnd(ThreadQueue->FocusWindow) : 0);
+         return(ThreadQueue ? GetWnd(ThreadQueue->Input->FocusWindow) : 0);
       }
 
       if (Wnd->MessageQueue != ThreadQueue)

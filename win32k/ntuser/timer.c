@@ -65,10 +65,12 @@ VOID FASTCALL
 UserRemoveTimersWindow(PWINDOW_OBJECT Wnd)
 {
    PTIMER_ENTRY Timer;
-   PLIST_ENTRY EnumEntry;
-   BOOL removedPendingTimer = FALSE;
+   PLIST_ENTRY EnumEntry, OriginalFirstEntry;
+//   BOOL removedPendingTimer = FALSE;
    
    ASSERT(Wnd);
+
+   OriginalFirstEntry = gPendingTimersList.Flink;
 
    /* remove pending timers */
    LIST_FOR_EACH_SAFE(EnumEntry, &gPendingTimersList, Timer, TIMER_ENTRY, ListEntry)
@@ -79,7 +81,7 @@ UserRemoveTimersWindow(PWINDOW_OBJECT Wnd)
          RemoveEntryList(&Timer->ListEntry);
          
          UserFreeTimer(Timer);
-         removedPendingTimer = TRUE;
+//         removedPendingTimer = TRUE;
       }
    }
 
@@ -100,7 +102,8 @@ UserRemoveTimersWindow(PWINDOW_OBJECT Wnd)
       }
    }
    
-   if (removedPendingTimer)
+   /* did we remove the first pending entry? */
+   if (gPendingTimersList.Flink != OriginalFirstEntry)
       UserSetNextPendingTimer();
 }
 
@@ -108,10 +111,11 @@ VOID FASTCALL
 UserRemoveTimersQueue(PUSER_MESSAGE_QUEUE Queue)
 {
    PTIMER_ENTRY Timer;
-   PLIST_ENTRY EnumEntry;
-   BOOL removedPendingTimer = FALSE;
+   PLIST_ENTRY EnumEntry, OriginalFirstEntry;
 
    ASSERT(Queue);
+
+   OriginalFirstEntry = gPendingTimersList.Flink;
 
    /* remove pending timers */
    LIST_FOR_EACH_SAFE(EnumEntry, &gPendingTimersList, Timer, TIMER_ENTRY, ListEntry)
@@ -122,7 +126,6 @@ UserRemoveTimersQueue(PUSER_MESSAGE_QUEUE Queue)
          RemoveEntryList(&Timer->ListEntry);
          
          UserFreeTimer(Timer);
-         removedPendingTimer = TRUE;
       }
    }
 
@@ -142,7 +145,8 @@ UserRemoveTimersQueue(PUSER_MESSAGE_QUEUE Queue)
       }
    }
    
-   if (removedPendingTimer)
+   /* did we remove the first pending entry? */
+   if (OriginalFirstEntry != gPendingTimersList.Flink)
       UserSetNextPendingTimer();
 }
 
@@ -159,7 +163,9 @@ UserInsertPendingTimer(PTIMER_ENTRY NewTimer)
       ExpiryTime.QuadPart
    );
    
-   UserSetNextPendingTimer();
+   /* did we become the first pending entry? */
+   if (gPendingTimersList.Flink == &NewTimer->ListEntry)
+      UserSetNextPendingTimer();
 }
 
 
@@ -189,8 +195,6 @@ UserRestartTimer(PTIMER_ENTRY Timer )
 {
    LARGE_INTEGER CurrentTime;
 
-   //MsqRemoveExpiredTimer(Timer);
-   
    RemoveEntryList(&Timer->ListEntry);
    
    Timer->Queue->TimerCount--;
@@ -199,8 +203,6 @@ UserRestartTimer(PTIMER_ENTRY Timer )
    
    KeQuerySystemTime(&CurrentTime);
    
-//   while (!time_before( &now, &timer->when )) add_timeout( &timer->when, timer->rate );
-
    /* adjust timeout to a value forth (or current) in time */
    while (Timer->ExpiryTime.QuadPart < CurrentTime.QuadPart)
    {
@@ -208,8 +210,6 @@ UserRestartTimer(PTIMER_ENTRY Timer )
    }
 
    UserInsertPendingTimer(Timer);
-
-//   set_next_timer( queue );
 }
 
 
@@ -260,9 +260,9 @@ UserRemoveTimer(
    )
 {
    PTIMER_ENTRY Timer;
-   PLIST_ENTRY EnumEntry;
+   PLIST_ENTRY EnumEntry, OriginalFirstEntry;
 
-   //ASSERT(Wnd);
+   OriginalFirstEntry = gPendingTimersList.Flink;
    
    /* remove timer if in the pending queue */
    LIST_FOR_EACH_SAFE(EnumEntry, &gPendingTimersList, Timer, TIMER_ENTRY, ListEntry)
@@ -274,7 +274,9 @@ UserRemoveTimer(
          
          RemoveEntryList(&Timer->ListEntry);
          
-         UserSetNextPendingTimer();
+         /* did we remove the first pending entry? */
+         if (OriginalFirstEntry != gPendingTimersList.Flink)
+            UserSetNextPendingTimer();
 
          return Timer;
       }
@@ -380,19 +382,18 @@ UserSetTimer(
       }
 
       HintIndex = ++IDEvent;
-//      Ret = IDEvent;
+
       Queue = UserGetCurrentQueue();
    }
    else
    {
-      if (!IDEvent)
-      {
-         //FIXME: last error
-         return 0;   
-      }
+      /*
+      NOTE: MSDN says window timers must have a NONZERO id. But tons of appz use zero as id
+      and Windows allow this (obviously). So we must allow this also. Gunnar
+      */
       
       /* docs: window must be owned by current thread. but wine (and ros) check that it belongs to
-      owner process.... doca are wrong? should test this...
+      owner process.... docs are wrong? should test this...
       */
       if (Wnd->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
       {
@@ -407,7 +408,6 @@ UserSetTimer(
       
       MsgTimer = UserRemoveTimer(Wnd, IDEvent, SystemTimer?WM_SYSTIMER:WM_TIMER);
       
-//      Ret = 1;
       Queue = Wnd->MessageQueue;
    }
 
@@ -725,6 +725,10 @@ TimerThreadMain(PVOID StartContext)
       {
          if (CurrentTime.QuadPart >= Timer->ExpiryTime.QuadPart)
          {
+            
+            DPRINT1("Timer expired: id=%i, elapse=%i, wnd=0x%x, queue=0x%x\n",Timer->IDEvent, Timer->Period, 
+               Timer->Wnd, Timer->Queue);
+            
             RemoveEntryList(&Timer->ListEntry);
             
             //CHECKPOINT1;

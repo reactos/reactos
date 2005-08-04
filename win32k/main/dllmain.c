@@ -47,6 +47,8 @@ Win32kProcessCallback(struct _EPROCESS *Process,
     DPRINT("Enter Win32kProcessCallback\n");
     UserEnterExclusive();
     
+CHECKPOINT1;
+
     /* Get the Win32 Process */
     Win32Process = PsGetProcessWin32Process(Process);
     
@@ -71,7 +73,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
       DPRINT("Creating W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());
 
       InitializeListHead(&Win32Process->ClassListHead);
-      ExInitializeFastMutex(&Win32Process->ClassListLock);
+//      ExInitializeFastMutex(&Win32Process->ClassListLock);
 
       InitializeListHead(&Win32Process->MenuListHead);
       ExInitializeFastMutex(&Win32Process->MenuListLock);
@@ -138,6 +140,8 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
     
     DPRINT("Enter Win32kThreadCallback\n");
     UserEnterExclusive();
+
+CHECKPOINT1;
 
     Process = Thread->ThreadsProcess;
     
@@ -229,7 +233,6 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       Win32Thread->KeyboardLayout = W32kGetDefaultKeyLayout();
       Win32Thread->MessagePumpHookValue = 0;
       InitializeListHead(&Win32Thread->WindowListHead);
-      ExInitializeFastMutex(&Win32Thread->WindowListLock);
       InitializeListHead(&Win32Thread->W32CallbackListHead);
     }
   else
@@ -238,15 +241,26 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
 
       Win32Thread->IsExiting = TRUE;
       HOOK_DestroyThreadHooks(Thread);
+CHECKPOINT1;     
       UnregisterThreadHotKeys(Thread);
+CHECKPOINT1;      
       DestroyThreadWindows(Thread);
+CHECKPOINT1;      
       IntBlockInput(Win32Thread, FALSE);
-      MsqDestroyMessageQueue(Win32Thread->MessageQueue);
+CHECKPOINT1;
+      /* all windows for this thread must de totally destroyed at this point. */
+      ASSERT(IsListEmpty(&Win32Thread->WindowListHead));
+      MsqDestroyMessageQueue(Win32Thread);
+CHECKPOINT1;      
       IntCleanupThreadCallbacks(Win32Thread);
+CHECKPOINT1;      
+       /* FIXME: having a thresd desktop is mandatory!! */
       if(Win32Thread->Desktop != NULL)
       {
+         CHECKPOINT1;
         ObDereferenceObject(Win32Thread->Desktop);
       }
+CHECKPOINT1;      
     }
 
   RETURN( STATUS_SUCCESS);
@@ -316,6 +330,7 @@ DriverEntry (
   BOOLEAN Result;
   W32_CALLOUT_DATA CalloutData;
 
+CHECKPOINT1;
   /*
    * Register user mode call interface
    * (system service table index = 1)
@@ -330,7 +345,7 @@ DriverEntry (
       DPRINT1("Adding system services failed!\n");
       return STATUS_UNSUCCESSFUL;
     }
-
+CHECKPOINT1;
     /*
      * Register Object Manager Callbacks
      */
@@ -342,14 +357,15 @@ DriverEntry (
     CalloutData.DesktopDelete = IntDesktopObjectDelete;
     CalloutData.W32ProcessCallout = Win32kProcessCallback;
     CalloutData.W32ThreadCallout = Win32kThreadCallback;
-    
+    CHECKPOINT1;
     /*
      * Register our per-process and per-thread structures.
      */
     PsEstablishWin32Callouts(&CalloutData);
-
+CHECKPOINT1;
   Status = IntUserCreateSharedSectionPool(48 * 1024 * 1024, /* 48 MB by default */
                                           &SessionSharedSectionPool);
+                                          CHECKPOINT1;
   if (!NT_SUCCESS(Status))
   {
     DPRINT1("Failed to initialize the shared section pool: Status 0x%x\n", Status);

@@ -4,8 +4,7 @@ References:
 window -> desktop
 window -> class
 
-window -> queue/thread_input ?????????
-thread -> queue/thread_input ?????????
+thread_input -> thread
 
 thread -> process
 process -> winsta
@@ -13,6 +12,10 @@ thread -> desktop
 desktop -> winsta
 winsta -> session
 
+NOTE: 	Message queue has 1:1 relationship with (w32)thread and need no ref. count.
+      	-If the (w32)thread is destroyed, so is the message queue.
+	-If the (w32)thread exist, so does the message queue.
+	So if you want the queue to hang around, you reference the thread instead.
 
 Above references create following dependencies:
 -----------------------------------------------
@@ -24,3 +27,34 @@ thread -> process -> winsta -> session
 thread -> desktop -> winsta -> session
 
 process -> winsta -> session
+
+
+
+NtUser/NtGdi/win32k syscalls
+----------------------------
+
+A process automatically establishes a connection to a window station and desktop
+when it first calls a USER32 or GDI32 function (other than the window station or 
+desktop functions). The process also get a Win32Proccess.
+
+A thread is automatically assigned a desktop when it first calls a USER32 or GDI32
+function (other than the window station or desktop functions). The thread also get
+a Win32Thread, a message queue and a thread input.  
+
+This means that when you are in a win32k syscall function (other than the window station
+or desktop functions) you can be 100% sure that the following exists:
+-the process WinSta
+-the win32process
+-the win32thread
+-the thread message queue
+-the thread input
+-the thread desktop
+-the process desktop (if there is such a thing)
+
+
+There is no need to validate any of these values, because they MUST EXIST!
+
+					!!!!!NOTE!!!!
+Reactos is currently wrong on the thread desktop, process desktop and process WinSta,
+since they can be NULL!!
+

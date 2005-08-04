@@ -9,7 +9,7 @@
 
 #include <w32k.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 static HANDLE WindowsApiPort = NULL;

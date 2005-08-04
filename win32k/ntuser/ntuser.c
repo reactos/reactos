@@ -30,7 +30,7 @@
 
 #include <w32k.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 
@@ -42,6 +42,39 @@ FAST_MUTEX UserLock;
 DWORD _locked=0;
 
 /* FUNCTIONS **********************************************************/
+
+inline PVOID FASTCALL UserAllocZeroTag(SIZE_T bytes, ULONG tag)
+{
+   PVOID mem = ExAllocatePoolWithTag(PagedPool, bytes, tag);
+   if (!mem) return NULL;
+   RtlZeroMemory(mem, bytes);
+   return mem;
+}
+
+inline PVOID FASTCALL UserAllocZero(SIZE_T bytes)
+{
+      //FIXME: use default ntuser tag
+   PVOID mem = ExAllocatePoolWithTag(PagedPool, bytes, 0);
+   if (!mem) return NULL;
+   RtlZeroMemory(mem, bytes);
+   return mem;
+}
+
+inline PVOID FASTCALL UserAllocTag(SIZE_T bytes, ULONG tag)
+{
+   return ExAllocatePoolWithTag(PagedPool, bytes, tag);
+}
+
+inline PVOID FASTCALL UserAlloc(SIZE_T bytes)
+{
+   //FIXME: use default ntuser tag
+   return ExAllocatePoolWithTag(PagedPool, bytes, 0);
+}
+
+inline VOID FASTCALL UserFree(PVOID mem)
+{
+   ExFreePool(mem);
+}
 
 VOID FASTCALL UserStackTrace()
 {

@@ -37,7 +37,7 @@
 
 #include <w32k.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -1005,7 +1005,6 @@ IntGetWinStaObj(VOID)
 
   if(PsGetWin32Thread() != NULL && PsGetWin32Thread()->Desktop != NULL)
   {
-     
     WinStaObj = PsGetWin32Thread()->Desktop->WindowStation;
     ASSERT(WinStaObj);
     ObReferenceObjectByPointer(WinStaObj, KernelMode, ExWindowStationObjectType, 0);

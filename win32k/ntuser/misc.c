@@ -11,7 +11,7 @@
 
 #include <w32k.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* registered Logon process */
@@ -36,7 +36,7 @@ VOID W32kRegisterPrimitiveMessageQueue(VOID)
 VOID W32kUnregisterPrimitiveMessageQueue(VOID)
 {
   extern PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue;
-  IntDereferenceMessageQueue(pmPrimitiveMessageQueue);
+//  UserDereferenceQueue(pmPrimitiveMessageQueue);
   pmPrimitiveMessageQueue = NULL;
 }
 
@@ -256,7 +256,7 @@ NtUserCallOneParam(
     }
 
     case ONEPARAM_ROUTINE_SWITCHCARETSHOWING:
-      RETURN( (DWORD)UserSwitchCaretShowing((PVOID)Param));
+      RETURN( (DWORD)UserSwitchCaretShowing((PTHRDCARETINFO)Param));
 
     case ONEPARAM_ROUTINE_SETCARETBLINKTIME:
       RETURN( (DWORD)UserSetCaretBlinkTime((UINT)Param));
@@ -463,10 +463,10 @@ NtUserCallTwoParam(
 
     case TWOPARAM_ROUTINE_SETGUITHRDHANDLE:
     {
-      PUSER_MESSAGE_QUEUE MsgQueue = PsGetCurrentThread()->Tcb.Win32Thread->MessageQueue;
+      PUSER_THREAD_INPUT Input = UserGetCurrentInput();
 
-      ASSERT(MsgQueue);
-      RETURN( (DWORD)MsqSetStateWindow(MsgQueue, (ULONG)Param1, (HWND)Param2));
+      //ASSERT(MsgQueue);
+      RETURN( (DWORD)MsqSetStateWindow(Input, (ULONG)Param1, (HWND)Param2));
     }
 
     case TWOPARAM_ROUTINE_ENABLEWINDOW:
@@ -1335,21 +1335,21 @@ NtUserGetGUIThreadInfo(
   }
 
   MsgQueue = (PUSER_MESSAGE_QUEUE)Desktop->ActiveMessageQueue;
-  CaretInfo = MsgQueue->CaretInfo;
+  CaretInfo = &MsgQueue->Input->CaretInfo;
 
   SafeGui.flags = (CaretInfo->Visible ? GUI_CARETBLINKING : 0);
-  if(MsgQueue->MenuOwner)
+  if(MsgQueue->Input->MenuOwner)
     SafeGui.flags |= GUI_INMENUMODE | MsgQueue->MenuState;
-  if(MsgQueue->MoveSize)
+  if(MsgQueue->Input->MoveSize)
     SafeGui.flags |= GUI_INMOVESIZE;
 
   /* FIXME add flag GUI_16BITTASK */
 
-  SafeGui.hwndActive = MsgQueue->ActiveWindow;
-  SafeGui.hwndFocus = MsgQueue->FocusWindow;
-  SafeGui.hwndCapture = MsgQueue->CaptureWindow;
-  SafeGui.hwndMenuOwner = MsgQueue->MenuOwner;
-  SafeGui.hwndMoveSize = MsgQueue->MoveSize;
+  SafeGui.hwndActive = MsgQueue->Input->ActiveWindow;
+  SafeGui.hwndFocus = MsgQueue->Input->FocusWindow;
+  SafeGui.hwndCapture = MsgQueue->Input->CaptureWindow;
+  SafeGui.hwndMenuOwner = MsgQueue->Input->MenuOwner;
+  SafeGui.hwndMoveSize = MsgQueue->Input->MoveSize;
   SafeGui.hwndCaret = CaretInfo->hWnd;
 
   SafeGui.rcCaret.left = CaretInfo->Pos.x;

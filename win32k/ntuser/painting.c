@@ -32,7 +32,7 @@
 
 #include <w32k.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #define DCX_USESTYLE 0x10000
@@ -48,7 +48,7 @@ IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion)
    {
       if (!(ParentWindow->Style & WS_CLIPCHILDREN))
       {
-         IntLockWindowUpdate(ParentWindow);
+//         IntLockWindowUpdate(ParentWindow);
          if (ParentWindow->UpdateRegion != 0)
          {
             INT OffsetX, OffsetY;
@@ -65,7 +65,7 @@ IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion)
             /* FIXME: If the resulting region is empty, remove fake posted paint message */
             NtGdiOffsetRgn(ValidRegion, -OffsetX, -OffsetY);
          }
-         IntUnLockWindowUpdate(ParentWindow);
+//         IntUnLockWindowUpdate(ParentWindow);
       }
       OldWindow = ParentWindow;
       ParentWindow = ParentWindow->ParentWnd;
@@ -89,7 +89,7 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
     {
       if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
         {
-          IntLockWindowUpdate(Window);
+//          IntLockWindowUpdate(Window);
           if (Window->NCUpdateRegion)
             {
               IntValidateParent(Window, Window->NCUpdateRegion);
@@ -102,7 +102,7 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
           Window->NCUpdateRegion = NULL;
           Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
           MsqDecPaintCountQueue(Window->MessageQueue);
-          IntUnLockWindowUpdate(Window);
+//          IntUnLockWindowUpdate(Window);
           IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)TempRegion, 0);
           if ((HANDLE) 1 != TempRegion && NULL != TempRegion)
             {
@@ -196,12 +196,12 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
     * Clip the given region with window rectangle (or region)
     */
 
-   IntLockWindowUpdate(Window);
+//   IntLockWindowUpdate(Window);
    if (!Window->WindowRegion || (Window->Style & WS_MINIMIZE))
    {
       HRGN hRgnWindow;
 
-      IntUnLockWindowUpdate(Window);
+//      IntUnLockWindowUpdate(Window);
       hRgnWindow = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
       NtGdiOffsetRgn(hRgnWindow,
          -Window->WindowRect.left,
@@ -212,14 +212,14 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
    else
    {
       RgnType = NtGdiCombineRgn(hRgn, hRgn, Window->WindowRegion, RGN_AND);
-      IntUnLockWindowUpdate(Window);
+//      IntUnLockWindowUpdate(Window);
    }
 
    /*
     * Save current state of pending updates
     */
 
-   IntLockWindowUpdate(Window);
+//   IntLockWindowUpdate(Window);
    HadPaintMessage = Window->UpdateRegion != NULL ||
       Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT;
    HadNCPaintMessage = Window->Flags & WINDOWOBJECT_NEED_NCPAINT;
@@ -399,7 +399,7 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
          MsqIncPaintCountQueue(Window->MessageQueue);
    }
 
-   IntUnLockWindowUpdate(Window);
+//   IntUnLockWindowUpdate(Window);
 }
 
 /*
@@ -415,7 +415,6 @@ IntIsWindowDrawable(PWINDOW_OBJECT Window)
 {
    PWINDOW_OBJECT Old, Wnd = Window;
 
-//FIXME   IntReferenceWindowObject(Wnd);
    do
    {
       if (!(Wnd->Style & WS_VISIBLE) ||
@@ -636,7 +635,7 @@ IntFixCaret(HWND hWnd, LPRECT lprc, UINT flags)
    HWND hWndCaret;
 
    Desktop = PsGetCurrentThread()->Tcb.Win32Thread->Desktop;
-   CaretInfo = ((PUSER_MESSAGE_QUEUE)Desktop->ActiveMessageQueue)->CaretInfo;
+   CaretInfo = &((PUSER_MESSAGE_QUEUE)Desktop->ActiveMessageQueue)->Input->CaretInfo;
    hWndCaret = CaretInfo->hWnd;
    if (hWndCaret == hWnd ||
        ((flags & SW_SCROLLCHILDREN) && UserIsChildWindow(GetWnd(hWnd), GetWnd(hWndCaret))))
@@ -727,7 +726,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
       RETURN( NULL);
    }
 
-   IntLockWindowUpdate(Window);
+//   IntLockWindowUpdate(Window);
    if (Window->UpdateRegion != NULL)
    {
       MsqDecPaintCountQueue(Window->MessageQueue);
@@ -756,7 +755,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
       IntGetClientRect(Window, &Ps.rcPaint);
    }
    Window->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
-   IntUnLockWindowUpdate(Window);
+//   IntUnLockWindowUpdate(Window);
 
    if (Window->Flags & WINDOWOBJECT_NEED_ERASEBKGND)
    {
@@ -922,7 +921,7 @@ UserGetUpdateRgn(PWINDOW_OBJECT Window, HRGN hRgn, BOOL bErase)
 {
    int RegionType;
   
-   IntLockWindowUpdate(Window);
+//   IntLockWindowUpdate(Window);
    if (Window->UpdateRegion == NULL)
    {
       RegionType = (NtGdiSetRectRgn(hRgn, 0, 0, 0, 0) ? NULLREGION : ERROR);
@@ -935,7 +934,7 @@ UserGetUpdateRgn(PWINDOW_OBJECT Window, HRGN hRgn, BOOL bErase)
          Window->WindowRect.left - Window->ClientRect.left,
          Window->WindowRect.top - Window->ClientRect.top);
    }
-   IntUnLockWindowUpdate(Window);
+//   IntUnLockWindowUpdate(Window);
 
 
    if (bErase && RegionType != NULLREGION && RegionType != ERROR)
