@@ -119,6 +119,7 @@ ExpDesktopDelete(PVOID DeletedObject)
 
 VOID
 INIT_FUNCTION
+STDCALL
 ExpWin32kInit(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;

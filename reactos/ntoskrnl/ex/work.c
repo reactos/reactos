@@ -132,6 +132,7 @@ ExpInitializeWorkQueue(WORK_QUEUE_TYPE WorkQueueType,
 
 VOID
 INIT_FUNCTION
+STDCALL
 ExpInitializeWorkerThreads(VOID)
 {
     ULONG WorkQueueType;

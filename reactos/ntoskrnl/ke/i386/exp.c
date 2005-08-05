@@ -923,7 +923,7 @@ KeRaiseUserException(IN NTSTATUS ExceptionCode)
     } _SEH_END;
 
    OldEip = Thread->TrapFrame->Eip;
-   Thread->TrapFrame->Eip = (ULONG_PTR)LdrpGetSystemDllRaiseExceptionDispatcher();
+   Thread->TrapFrame->Eip = (ULONG_PTR)KeRaiseUserExceptionDispatcher;
    return((NTSTATUS)OldEip);
 }
 

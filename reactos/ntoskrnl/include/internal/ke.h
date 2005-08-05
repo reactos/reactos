@@ -19,6 +19,11 @@ struct _KPCR;
 struct _KPRCB;
 struct _KEXCEPTION_FRAME;
 
+extern PVOID KeUserApcDispatcher;
+extern PVOID KeUserCallbackDispatcher;
+extern PVOID KeUserExceptionDispatcher;
+extern PVOID KeRaiseUserExceptionDispatcher;
+
 #define IPI_REQUEST_FUNCTIONCALL    0
 #define IPI_REQUEST_APC		    1
 #define IPI_REQUEST_DPC		    2

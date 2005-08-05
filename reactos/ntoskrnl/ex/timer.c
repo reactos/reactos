@@ -221,6 +221,7 @@ ExpTimerApcKernelRoutine(PKAPC Apc,
 
 VOID
 INIT_FUNCTION
+STDCALL
 ExpInitializeTimerImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;

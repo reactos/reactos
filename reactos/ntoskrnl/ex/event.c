@@ -34,6 +34,7 @@ static const INFORMATION_CLASS_INFO ExEventInfoClass[] = {
 
 VOID
 INIT_FUNCTION
+STDCALL
 ExpInitializeEventImplementation(VOID)
 {
   OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;

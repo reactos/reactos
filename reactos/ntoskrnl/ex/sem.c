@@ -32,6 +32,7 @@ static const INFORMATION_CLASS_INFO ExSemaphoreInfoClass[] = {
 
 VOID
 INIT_FUNCTION
+STDCALL
 ExpInitializeSemaphoreImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;

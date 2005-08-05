@@ -41,6 +41,11 @@ ULONG_PTR FirstKrnlPhysAddr;
 ULONG_PTR LastKrnlPhysAddr;
 ULONG_PTR LastKernelAddress;
 
+PVOID KeUserApcDispatcher = NULL;
+PVOID KeUserCallbackDispatcher = NULL;
+PVOID KeUserExceptionDispatcher = NULL;
+PVOID KeRaiseUserExceptionDispatcher = NULL;
+
 ULONG KeLargestCacheLine = 0x40; /* FIXME: Arch-specific */
 
 /* We allocate 4 pages, but we only use 3. The 4th is to guarantee page alignment */

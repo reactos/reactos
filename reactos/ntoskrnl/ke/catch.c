@@ -161,7 +161,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
                     DPRINT1("User-mode stack was invalid. Terminating target thread\n");
                 }
                 /* Set EIP to the User-mode Dispathcer */
-                Tf->Eip = (ULONG)LdrpGetSystemDllExceptionDispatcher();
+                Tf->Eip = (ULONG)KeRaiseUserExceptionDispatcher;
                 return;
             }
 

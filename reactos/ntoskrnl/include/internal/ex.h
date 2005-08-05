@@ -11,27 +11,31 @@ extern POBJECT_TYPE ExEventPairObjectType;
 /* INITIALIZATION FUNCTIONS *************************************************/
 
 VOID
+STDCALL
 ExpWin32kInit(VOID);
 
 VOID
+STDCALL
 ExInit2(VOID);
 
 VOID
-ExInit3(VOID);
-
-VOID
+STDCALL
 ExpInitTimeZoneInfo(VOID);
 
 VOID
+STDCALL
 ExpInitializeWorkerThreads(VOID);
 
 VOID
+STDCALL
 ExpInitLookasideLists(VOID);
 
 VOID
+STDCALL
 ExpInitializeCallbacks(VOID);
 
 VOID
+STDCALL
 ExpInitUuids(VOID);
 
 VOID
@@ -39,24 +43,31 @@ STDCALL
 ExpInitializeExecutive(VOID);
 
 VOID
+STDCALL
 ExpInitializeEventImplementation(VOID);
 
 VOID
+STDCALL
 ExpInitializeEventImplementation(VOID);
 
 VOID
+STDCALL
 ExpInitializeEventPairImplementation(VOID);
 
 VOID
+STDCALL
 ExpInitializeSemaphoreImplementation(VOID);
 
 VOID
+STDCALL
 ExpInitializeMutantImplementation(VOID);
 
 VOID
+STDCALL
 ExpInitializeTimerImplementation(VOID);
 
 VOID
+STDCALL
 ExpInitializeProfileImplementation(VOID);
 
 /* HANDLE TABLE FUNCTIONS ***************************************************/

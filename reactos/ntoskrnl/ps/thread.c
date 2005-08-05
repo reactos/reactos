@@ -18,6 +18,7 @@
 
 extern LIST_ENTRY PsActiveProcessHead;
 extern PEPROCESS PsIdleProcess;
+extern PVOID PspSystemDllEntryPoint;
 
 POBJECT_TYPE EXPORTED PsThreadType = NULL;
 
@@ -57,7 +58,7 @@ PspUserThreadStartup(PKSTART_ROUTINE StartRoutine,
                         OriginalApcEnvironment,
                         PspThreadSpecialApc,
                         NULL,
-                        LdrpGetSystemDllEntryPoint(),
+                        PspSystemDllEntryPoint,
                         UserMode,
                         NULL);
 

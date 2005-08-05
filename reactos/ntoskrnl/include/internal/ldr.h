@@ -21,36 +21,6 @@ VOID
 LdrInitModuleManagement (VOID);
 
 NTSTATUS
-STDCALL
-LdrpMapSystemDll(
-    PEPROCESS Process,
-    PVOID *DllBase
-);
-
-NTSTATUS
-STDCALL
-LdrpInitializeSystemDll(VOID);
-
-NTSTATUS
-STDCALL
-LdrpGetSystemDllEntryPoints(VOID);
-
-PVOID
-LdrpGetSystemDllEntryPoint (VOID);
-
-PVOID
-LdrpGetSystemDllApcDispatcher(VOID);
-
-PVOID
-LdrpGetSystemDllExceptionDispatcher(VOID);
-
-PVOID
-LdrpGetSystemDllCallbackDispatcher(VOID);
-
-PVOID
-LdrpGetSystemDllRaiseExceptionDispatcher(VOID);
-
-NTSTATUS
 LdrpMapImage(
     HANDLE	ProcessHandle,
     HANDLE	SectionHandle,

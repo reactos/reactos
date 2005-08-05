@@ -74,6 +74,7 @@ ExpDeleteProfile(PVOID ObjectBody)
 
 VOID
 INIT_FUNCTION
+STDCALL
 ExpInitializeProfileImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;

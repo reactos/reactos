@@ -199,6 +199,21 @@ VOID
 STDCALL
 PspDestroyQuotaBlock(PEPROCESS Process);
 
+NTSTATUS
+STDCALL
+PspMapSystemDll(
+    PEPROCESS Process,
+    PVOID *DllBase
+);
+
+NTSTATUS
+STDCALL
+PsLocateSystemDll(VOID);
+
+NTSTATUS
+STDCALL
+PspGetSystemDllEntryPoints(VOID);
+
 /* CLIENT ID */
 
 NTSTATUS PsCreateCidHandle(PVOID Object, POBJECT_TYPE ObjectType, PHANDLE Handle);

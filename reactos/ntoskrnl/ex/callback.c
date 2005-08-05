@@ -71,6 +71,8 @@ KEVENT ExpCallbackEvent;
  * TRUE if the Callback Object Type was successfully created.
  */
 VOID
+INIT_FUNCTION
+STDCALL
 ExpInitializeCallbacks(VOID)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;

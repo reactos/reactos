@@ -27,7 +27,9 @@ ULONG ExpTimeZoneId;
 
 /* FUNCTIONS ****************************************************************/
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+STDCALL
 ExpInitTimeZoneInfo(VOID)
 {
   LARGE_INTEGER CurrentTime;

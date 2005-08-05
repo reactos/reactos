@@ -212,12 +212,9 @@
 		<file>kdmain.c</file>
 	</directory>
 	<directory name="ldr">
-		<file>init.c</file>
 		<file>loader.c</file>
 		<file>resource.c</file>
 		<file>rtl.c</file>
-		<file>sysdll.c</file>
-		<file>userldr.c</file>
 	</directory>
 	<directory name="lpc">
 		<file>close.c</file>

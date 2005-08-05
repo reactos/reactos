@@ -51,6 +51,7 @@ ExpDeleteMutant(PVOID ObjectBody)
 
 VOID
 INIT_FUNCTION
+STDCALL
 ExpInitializeMutantImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;

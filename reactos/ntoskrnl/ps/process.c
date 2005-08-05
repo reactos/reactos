@@ -357,7 +357,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     {
         /* Map the System Dll */
         DPRINT("Mapping System DLL\n");
-        LdrpMapSystemDll(Process, NULL);
+        PspMapSystemDll(Process, NULL);
     }
 
     /* Create a handle for the Process */

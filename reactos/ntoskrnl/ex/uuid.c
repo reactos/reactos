@@ -41,7 +41,9 @@ static ULONG UuidCount;
 
 /* FUNCTIONS ****************************************************************/
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+STDCALL
 ExpInitUuids(VOID)
 {
   ExInitializeFastMutex(&UuidMutex);

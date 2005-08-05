@@ -847,7 +847,7 @@ KiInitializeUserApc(IN PVOID Reserved,
     Esp[3] = (ULONG)SystemArgument1;
     Esp[4] = (ULONG)SystemArgument2;
     Esp[5] = (ULONG)Context;
-    TrapFrame->Eip = (ULONG)LdrpGetSystemDllApcDispatcher();
+    TrapFrame->Eip = (ULONG)KeUserApcDispatcher;
     DPRINT("TrapFrame->Eip: %x\n", TrapFrame->Eip);
     TrapFrame->Esp = (ULONG)Esp;
 }
