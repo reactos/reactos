@@ -386,7 +386,7 @@ static int chomp( WCHAR *str )
 	return count;
 }
 
-void process_args( WCHAR *cmdline, int *pargc, WCHAR ***pargv )
+static void process_args( WCHAR *cmdline, int *pargc, WCHAR ***pargv )
 {
 	WCHAR **argv, *p = msi_strdup(cmdline);
 	int i, n;
@@ -404,7 +404,7 @@ void process_args( WCHAR *cmdline, int *pargc, WCHAR ***pargv )
 	*pargv = argv;
 }
 
-BOOL process_args_from_reg( LPWSTR ident, int *pargc, WCHAR ***pargv )
+static BOOL process_args_from_reg( LPWSTR ident, int *pargc, WCHAR ***pargv )
 {
 	LONG r;
 	HKEY hkey = 0, hkeyArgs = 0;
