@@ -2,7 +2,8 @@
 #ifndef __D3D8THK_H
 #define __D3D8THK_H
 
-#include <ddk\ddrawint.h>
+#include <ddk/ddrawint.h>
+#include <ddk/d3dnthal.h>
 
 #ifdef __cplusplus
 extern "C" {
