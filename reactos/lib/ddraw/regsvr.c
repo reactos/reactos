@@ -495,21 +495,3 @@ HRESULT WINAPI DDRAW_DllUnregisterServer()
 	hr = unregister_interfaces(interface_list);
     return hr;
 }
-
-BOOL WINAPI DllMain(HINSTANCE hInstance,DWORD fwdReason, LPVOID lpvReserved)
-{
-    switch(fwdReason)
-    {
-        case DLL_PROCESS_ATTACH:
-			DDRAW_DllRegisterServer();
-            break;
-        case DLL_THREAD_ATTACH:
-            break;
-        case DLL_PROCESS_DETACH:
-			DDRAW_DllUnregisterServer();
-            break;
-        case DLL_THREAD_DETACH:
-            break;
-    }
-    return(TRUE);
-} 
