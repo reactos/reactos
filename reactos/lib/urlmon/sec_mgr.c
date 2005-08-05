@@ -41,7 +41,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
  */
 typedef struct SecManagerImpl{
 
-    IInternetSecurityManagerVtbl*  lpvtbl1;  /* VTable relative to the IInternetSecurityManager interface.*/
+    const IInternetSecurityManagerVtbl* lpvtbl1;  /* VTable relative to the IInternetSecurityManager interface.*/
 
     ULONG ref; /* reference counter for this object */
 
@@ -174,7 +174,7 @@ static HRESULT WINAPI SecManagerImpl_GetZoneMappings(IInternetSecurityManager *i
     return E_NOTIMPL;
 }
 
-static IInternetSecurityManagerVtbl VT_SecManagerImpl =
+static const IInternetSecurityManagerVtbl VT_SecManagerImpl =
 {
     SecManagerImpl_QueryInterface,
     SecManagerImpl_AddRef,
@@ -209,7 +209,7 @@ HRESULT SecManagerImpl_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
  *
  */
 typedef struct {
-    IInternetZoneManagerVtbl* lpVtbl;
+    const IInternetZoneManagerVtbl* lpVtbl;
     ULONG ref;
 } ZoneMgrImpl;
 
@@ -430,7 +430,7 @@ static HRESULT WINAPI ZoneMgrImpl_CopyTemplatePoliciesToZone(IInternetZoneManage
 /********************************************************************
  *      IInternetZoneManager_Construct
  */
-static IInternetZoneManagerVtbl ZoneMgrImplVtbl = {
+static const IInternetZoneManagerVtbl ZoneMgrImplVtbl = {
     ZoneMgrImpl_QueryInterface,
     ZoneMgrImpl_AddRef,
     ZoneMgrImpl_Release,

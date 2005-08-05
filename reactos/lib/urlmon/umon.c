@@ -49,7 +49,7 @@ static const WCHAR BSCBHolder[] = { '_','B','S','C','B','_','H','o','l','d','e',
 /*static BOOL registered_wndclass = FALSE;*/
 
 typedef struct {
-    IBindingVtbl *lpVtbl;
+    const IBindingVtbl *lpVtbl;
 
     ULONG ref;
 
@@ -273,7 +273,7 @@ static void Binding_FinishedDownload(Binding *This, HRESULT hr)
     This->pbscb = 0;
 }
 
-static IBindingVtbl BindingVtbl =
+static const IBindingVtbl BindingVtbl =
 {
     Binding_QueryInterface,
     Binding_AddRef,
@@ -289,7 +289,7 @@ static IBindingVtbl BindingVtbl =
 /* filemoniker data structure */
 typedef struct {
 
-    IMonikerVtbl*  lpvtbl;  /* VTable relative to the IMoniker interface.*/
+    const IMonikerVtbl* lpvtbl;  /* VTable relative to the IMoniker interface.*/
 
     ULONG ref; /* reference counter for this object */
 
@@ -1103,7 +1103,7 @@ static HRESULT WINAPI URLMonikerImpl_IsSystemMoniker(IMoniker* iface,DWORD* pwdM
 /********************************************************************************/
 /* Virtual function table for the URLMonikerImpl class which  include IPersist,*/
 /* IPersistStream and IMoniker functions.                                       */
-static IMonikerVtbl VT_URLMonikerImpl =
+static const IMonikerVtbl VT_URLMonikerImpl =
 {
     URLMonikerImpl_QueryInterface,
     URLMonikerImpl_AddRef,
@@ -1734,4 +1734,13 @@ HRESULT WINAPI HlinkNavigateString( IUnknown *pUnk, LPCWSTR szTarget )
     TRACE("%p %s\n", pUnk, debugstr_w( szTarget ) );
     return HlinkSimpleNavigateToString( 
                szTarget, NULL, NULL, pUnk, NULL, NULL, 0, 0 );
+}
+
+/***********************************************************************
+ *           GetSoftwareUpdateInfo (URLMON.@)
+ */
+HRESULT WINAPI GetSoftwareUpdateInfo( LPCWSTR szDistUnit, LPSOFTDISTINFO psdi )
+{
+    FIXME("%s %p\n", debugstr_w(szDistUnit), psdi );
+    return E_FAIL;
 }

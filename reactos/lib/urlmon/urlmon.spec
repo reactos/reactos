@@ -41,7 +41,7 @@
 @ stub GetClassURL
 @ stub GetComponentIDFromCLSSPEC
 @ stub GetMarkOfTheWeb
-@ stub GetSoftwareUpdateInfo
+@ stdcall GetSoftwareUpdateInfo(ptr ptr)
 @ stub HlinkGoBack
 @ stub HlinkGoForward
 @ stub HlinkNavigateMoniker

@@ -174,7 +174,7 @@ static HRESULT WINAPI CF_LockServer(LPCLASSFACTORY iface,BOOL dolock)
     return S_OK;
 }
 
-static IClassFactoryVtbl CF_Vtbl =
+static const IClassFactoryVtbl CF_Vtbl =
 {
     CF_QueryInterface,
     CF_AddRef,
@@ -250,7 +250,7 @@ HRESULT WINAPI URLMON_DllRegisterServerEx(void)
 /**************************************************************************
  *                 UrlMkSetSessionOption (URLMON.@)
  */
-HRESULT WINAPI UrlMkSetSessionOption(DWORD dwOption, LPVOID *pBuffer, DWORD dwBufferLength,
+HRESULT WINAPI UrlMkSetSessionOption(DWORD dwOption, LPVOID pBuffer, DWORD dwBufferLength,
  					DWORD Reserved)
 {
     FIXME("(%#lx, %p, %#lx): stub\n", dwOption, pBuffer, dwBufferLength);
@@ -261,7 +261,7 @@ HRESULT WINAPI UrlMkSetSessionOption(DWORD dwOption, LPVOID *pBuffer, DWORD dwBu
 /**************************************************************************
  *                 UrlMkGetSessionOption (URLMON.@)
  */
-HRESULT WINAPI UrlMkGetSessionOption(DWORD dwOption, LPVOID *pBuffer, DWORD dwBufferLength,
+HRESULT WINAPI UrlMkGetSessionOption(DWORD dwOption, LPVOID pBuffer, DWORD dwBufferLength,
                                         DWORD* pdwBufferLength, DWORD dwReserved)
 {
     FIXME("(%#lx, %p, %#lx, %p): stub\n", dwOption, pBuffer, dwBufferLength, pdwBufferLength);
@@ -269,16 +269,22 @@ HRESULT WINAPI UrlMkGetSessionOption(DWORD dwOption, LPVOID *pBuffer, DWORD dwBu
     return S_OK;
 }
 
+static const CHAR Agent[] = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)";
+
 /**************************************************************************
  *                 ObtainUserAgentString (URLMON.@)
  */
-HRESULT WINAPI ObtainUserAgentString(DWORD dwOption, LPCSTR pcszUAOut, DWORD *cbSize)
+HRESULT WINAPI ObtainUserAgentString(DWORD dwOption, LPSTR pcszUAOut, DWORD *cbSize)
 {
     FIXME("(%ld, %p, %p): stub\n", dwOption, pcszUAOut, cbSize);
 
     if(dwOption) {
       ERR("dwOption: %ld, must be zero\n", dwOption);
     }
+
+    if (sizeof(Agent) < *cbSize)
+        *cbSize = sizeof(Agent);
+    lstrcpynA(pcszUAOut, Agent, *cbSize); 
 
     return S_OK;
 }
