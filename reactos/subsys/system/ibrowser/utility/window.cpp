@@ -26,7 +26,7 @@
  //
 
 
-#include "precomp.h"
+#include <precomp.h>
 
 #include "../ibrowser_intres.h"	// for ID_GO_BACK, ...
 

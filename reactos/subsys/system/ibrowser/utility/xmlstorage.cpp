@@ -37,7 +37,7 @@
 */
 
 //#include "xmlstorage.h"
-#include "precomp.h"
+#include <precomp.h>
 
 
  // work around GCC's wide string constant bug

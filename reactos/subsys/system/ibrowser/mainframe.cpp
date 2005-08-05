@@ -26,7 +26,7 @@
  //
 
 
-#include "precomp.h"
+#include <precomp.h>
 
 /* We can't include webchild.h here - otherwise MinGW produces errors like: "multiple definition of `QACONTAINERFLAGS'"
 #include "webchild.h"
