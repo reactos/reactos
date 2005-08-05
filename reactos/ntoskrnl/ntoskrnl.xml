@@ -142,7 +142,6 @@
 		<file>sysinfo.c</file>
 		<file>time.c</file>
 		<file>timer.c</file>
-		<file>util.c</file>
 		<file>uuid.c</file>
 		<file>win32k.c</file>
 		<file>work.c</file>
