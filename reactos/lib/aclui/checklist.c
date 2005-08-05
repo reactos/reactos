@@ -26,7 +26,7 @@
  * UPDATE HISTORY:
  *      07/01/2005  Created
  */
-#include "acluilib.h"
+#include <precomp.h>
 
 #define CI_TEXT_MARGIN_WIDTH    (8)
 #define CI_TEXT_MARGIN_HEIGHT   (3)

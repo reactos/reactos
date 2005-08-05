@@ -30,7 +30,7 @@
 #include <windows.h>
 #include <aclui.h>
 
-#include "acluilib.h"
+#include <precomp.h>
 
 static INT
 LengthOfStrResource(IN HINSTANCE hInst,

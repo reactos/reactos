@@ -18,5 +18,5 @@
 	<file>checklist.c</file>
 	<file>misc.c</file>
 	<file>aclui.rc</file>
-	<pch>acluilib.h</pch>
+	<pch>precomp.h</pch>
 </module>

@@ -26,7 +26,7 @@
  * UPDATE HISTORY:
  *      08/10/2004  Created
  */
-#include "acluilib.h"
+#include <precomp.h>
 
 HINSTANCE hDllInstance;
 
