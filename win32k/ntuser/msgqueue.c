@@ -1491,7 +1491,7 @@ MsqCreateMessageQueue(struct _ETHREAD *Thread)
 {
    PUSER_MESSAGE_QUEUE Queue;
 
-   Queue = UserAllocZeroTag(sizeof(USER_MESSAGE_QUEUE) + sizeof(PUSER_THREAD_INPUT),// + sizeof(THRDCARETINFO),
+   Queue = UserAllocZeroTag(sizeof(USER_MESSAGE_QUEUE) + sizeof(USER_THREAD_INPUT),// + sizeof(THRDCARETINFO),
                   TAG_MSGQ);
 
    if (!Queue)
