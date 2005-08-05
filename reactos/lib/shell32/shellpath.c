@@ -1240,13 +1240,6 @@ static HRESULT _SHGetUserShellFolderPath(HKEY rootKey, LPCWSTR userPrefix,
  *   CSIDL_Type_AllUsers: %ALLUSERSPROFILE%
  *   CSIDL_Type_CurrVer:  %SystemDrive%
  *   (Others might make sense too, but as yet are unneeded.)
- * FIXME: there are two special cases for the default value:
- * - the "My Documents" (CSIDL_PERSONAL) entry should be $HOME
- * - the CSIDL_DESKTOP and CSIDL_DESKTOPDIRECTORY (which have the same path)
- *   should be $HOME/Desktop if it exists
- * But, $HOME doesn't seem to be inherited into the Wine environment.  I could
- * use getenv, but this returns me a UNIX path, which may or may not be
- * reachable from any currently mounted DOS drives.
  */
 static HRESULT _SHGetDefaultValue(BYTE folder, LPWSTR pszPath)
 {
@@ -1261,6 +1254,51 @@ static HRESULT _SHGetDefaultValue(BYTE folder, LPWSTR pszPath)
     if (!pszPath)
         return E_INVALIDARG;
 
+    /* Try special cases first */
+    hr = E_FAIL;
+    switch (folder)
+    {
+        case CSIDL_PERSONAL:
+        {
+            const char *home = getenv("HOME");
+
+            /* special case for "My Documents", map to $HOME */
+            if (home)
+            {
+                WCHAR homeW[MAX_PATH];
+
+                MultiByteToWideChar(CP_ACP, 0, home, -1, homeW, MAX_PATH);
+                if (GetFullPathNameW(homeW, MAX_PATH, pszPath, NULL) != 0 &&
+                 PathIsDirectoryW(pszPath))
+                    hr = S_OK;
+            }
+            break;
+        }
+        case CSIDL_DESKTOP:
+        case CSIDL_DESKTOPDIRECTORY:
+        {
+            const char *home = getenv("HOME");
+
+            /* special case for Desktop, map to $HOME/Desktop if it exists */
+            if (home)
+            {
+                WCHAR desktopW[MAX_PATH];
+
+                MultiByteToWideChar(CP_ACP, 0, home, -1, desktopW, MAX_PATH);
+                PathAppendW(desktopW, DesktopW);
+                if (GetFullPathNameW(desktopW, MAX_PATH, pszPath, NULL) != 0 &&
+                 PathIsDirectoryW(pszPath))
+                    hr = S_OK;
+            }
+            break;
+        }
+    }
+    if (SUCCEEDED(hr))
+        return hr;
+
+    /* Either the folder was unhandled, or a suitable default wasn't found,
+     * so use one of the resource-based defaults
+     */
     if (CSIDL_Data[folder].szDefaultPath &&
      IS_INTRESOURCE(CSIDL_Data[folder].szDefaultPath))
     {

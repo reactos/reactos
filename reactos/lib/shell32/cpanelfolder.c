@@ -58,11 +58,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 */
 
 typedef struct {
-    IShellFolder2Vtbl      *lpVtbl;
+    const IShellFolder2Vtbl      *lpVtbl;
     DWORD                   ref;
-    IPersistFolder2Vtbl    *lpVtblPersistFolder2;
-    IShellExecuteHookWVtbl *lpVtblShellExecuteHookW;
-    IShellExecuteHookAVtbl *lpVtblShellExecuteHookA;
+    const IPersistFolder2Vtbl    *lpVtblPersistFolder2;
+    const IShellExecuteHookWVtbl *lpVtblShellExecuteHookW;
+    const IShellExecuteHookAVtbl *lpVtblShellExecuteHookA;
 
     IUnknown *pUnkOuter;	/* used for aggregation */
 
@@ -71,10 +71,10 @@ typedef struct {
     int dwAttributes;		/* attributes returned by GetAttributesOf FIXME: use it */
 } ICPanelImpl;
 
-static IShellFolder2Vtbl vt_ShellFolder2;
-static IPersistFolder2Vtbl vt_PersistFolder2;
-static IShellExecuteHookWVtbl vt_ShellExecuteHookW;
-static IShellExecuteHookAVtbl vt_ShellExecuteHookA;
+static const IShellFolder2Vtbl vt_ShellFolder2;
+static const IPersistFolder2Vtbl vt_PersistFolder2;
+static const IShellExecuteHookWVtbl vt_ShellExecuteHookW;
+static const IShellExecuteHookAVtbl vt_ShellExecuteHookA;
 
 #define _IPersistFolder2_Offset	    ((int)(&(((ICPanelImpl*)0)->lpVtblPersistFolder2)))
 #define _ICOM_THIS_From_IPersistFolder2(class, name) class* This = (class*)(((char*)name)-_IPersistFolder2_Offset);
@@ -792,7 +792,7 @@ static HRESULT WINAPI ISF_ControlPanel_fnMapColumnToSCID(IShellFolder2 * iface, 
     return E_NOTIMPL;
 }
 
-static IShellFolder2Vtbl vt_ShellFolder2 =
+static const IShellFolder2Vtbl vt_ShellFolder2 =
 {
 
     ISF_ControlPanel_fnQueryInterface,
@@ -898,7 +898,7 @@ static HRESULT WINAPI ICPanel_PersistFolder2_GetCurFolder(IPersistFolder2 * ifac
     return S_OK;
 }
 
-static IPersistFolder2Vtbl vt_PersistFolder2 =
+static const IPersistFolder2Vtbl vt_PersistFolder2 =
 {
 
     ICPanel_PersistFolder2_QueryInterface,
@@ -1000,7 +1000,7 @@ static HRESULT WINAPI IShellExecuteHookW_fnExecute(IShellExecuteHookW* iface, LP
 	return S_FALSE;
 }
 
-static IShellExecuteHookWVtbl vt_ShellExecuteHookW =
+static const IShellExecuteHookWVtbl vt_ShellExecuteHookW =
 {
 
     IShellExecuteHookW_fnQueryInterface,
@@ -1079,7 +1079,7 @@ static HRESULT WINAPI IShellExecuteHookA_fnExecute(IShellExecuteHookA* iface, LP
 	return S_FALSE;
 }
 
-static IShellExecuteHookAVtbl vt_ShellExecuteHookA =
+static const IShellExecuteHookAVtbl vt_ShellExecuteHookA =
 {
     IShellExecuteHookA_fnQueryInterface,
     IShellExecuteHookA_fnAddRef,

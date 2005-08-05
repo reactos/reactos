@@ -43,14 +43,14 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 */
 typedef struct
 {
-	IContextMenu2Vtbl *lpVtbl;
+	const IContextMenu2Vtbl *lpVtbl;
 	IShellFolder*	pSFParent;
 	DWORD		ref;
 	BOOL		bDesktop;
 } BgCmImpl;
 
 
-static struct IContextMenu2Vtbl cmvt;
+static const IContextMenu2Vtbl cmvt;
 
 /**************************************************************************
 *   ISVBgCm_Constructor()
@@ -445,7 +445,7 @@ static HRESULT WINAPI ISVBgCm_fnHandleMenuMsg(
 * IContextMenu2 VTable
 *
 */
-static struct IContextMenu2Vtbl cmvt =
+static const IContextMenu2Vtbl cmvt =
 {
 	ISVBgCm_fnQueryInterface,
 	ISVBgCm_fnAddRef,

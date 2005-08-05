@@ -55,17 +55,16 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 */
 
 typedef struct {
-    IShellFolder2Vtbl   *lpVtbl;
+    const IShellFolder2Vtbl   *lpVtbl;
     DWORD                ref;
-    IPersistFolder2Vtbl *lpVtblPersistFolder2;
+    const IPersistFolder2Vtbl *lpVtblPersistFolder2;
 
     /* both paths are parsible from the desktop */
     LPITEMIDLIST pidlRoot;    /* absolute pidl */
-    int dwAttributes;        /* attributes returned by GetAttributesOf FIXME: use it */
 } IGenericSFImpl;
 
-static struct IShellFolder2Vtbl vt_ShellFolder2;
-static struct IPersistFolder2Vtbl vt_PersistFolder2;
+static const IShellFolder2Vtbl vt_ShellFolder2;
+static const IPersistFolder2Vtbl vt_PersistFolder2;
 
 #define _IPersistFolder2_Offset ((int)(&(((IGenericSFImpl*)0)->lpVtblPersistFolder2)))
 #define _ICOM_THIS_From_IPersistFolder2(class, name) class* This = (class*)(((char*)name)-_IPersistFolder2_Offset);
@@ -85,7 +84,7 @@ static struct IPersistFolder2Vtbl vt_PersistFolder2;
 *   IShellFolder [MyComputer] implementation
 */
 
-static shvheader MyComputerSFHeader[] = {
+static const shvheader MyComputerSFHeader[] = {
     {IDS_SHV_COLUMN1, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15},
     {IDS_SHV_COLUMN3, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
     {IDS_SHV_COLUMN6, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
@@ -438,13 +437,21 @@ static HRESULT WINAPI ISF_MyComputer_fnGetAttributesOf (IShellFolder2 * iface,
 
     if (*rgfInOut == 0)
         *rgfInOut = ~0;
+    
+    if(cidl == 0){
+        IShellFolder *psfParent = NULL;
+        LPCITEMIDLIST rpidl = NULL;
 
-    while (cidl > 0 && *apidl)
-    {
-        pdump (*apidl);
-        SHELL32_GetItemAttributes (_IShellFolder_ (This), *apidl, rgfInOut);
-        apidl++;
-        cidl--;
+        hr = SHBindToParent(This->pidlRoot, &IID_IShellFolder, (LPVOID*)&psfParent, (LPCITEMIDLIST*)&rpidl);
+        if(SUCCEEDED(hr))
+            SHELL32_GetItemAttributes (psfParent, rpidl, rgfInOut);
+    } else {
+        while (cidl > 0 && *apidl) {
+            pdump (*apidl);
+            SHELL32_GetItemAttributes (_IShellFolder_ (This), *apidl, rgfInOut);
+            apidl++;
+            cidl--;
+        }
     }
     /* make sure SFGAO_VALIDATE is cleared, some apps depend on that */
     *rgfInOut &= ~SFGAO_VALIDATE;
@@ -815,7 +822,7 @@ static HRESULT WINAPI ISF_MyComputer_fnMapColumnToSCID (
     return E_NOTIMPL;
 }
 
-static IShellFolder2Vtbl vt_ShellFolder2 =
+static const IShellFolder2Vtbl vt_ShellFolder2 =
 {
     ISF_MyComputer_fnQueryInterface,
     ISF_MyComputer_fnAddRef,
@@ -923,7 +930,7 @@ static HRESULT WINAPI IMCFldr_PersistFolder2_GetCurFolder (
     return S_OK;
 }
 
-static IPersistFolder2Vtbl vt_PersistFolder2 =
+static const IPersistFolder2Vtbl vt_PersistFolder2 =
 {
     IMCFldr_PersistFolder2_QueryInterface,
     IMCFldr_PersistFolder2_AddRef,

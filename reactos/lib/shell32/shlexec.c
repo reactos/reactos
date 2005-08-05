@@ -296,7 +296,7 @@ static HRESULT SHELL_ResolveShortCutW(LPWSTR wcmd, LPWSTR wargs, LPWSTR wdir, HW
 
 			    if (SUCCEEDED(hr) && *ppidl) {
 				/* We got a PIDL instead of a file system path - try to translate it. */
-				if (SUCCEEDED(SHELL_GetPathFromIDListW(*ppidl, wcmd, MAX_PATH))) {
+				if (SHGetPathFromIDListW(*ppidl, wcmd)) {
 				    SHFree(*ppidl);
 				    *ppidl = NULL;
 				}

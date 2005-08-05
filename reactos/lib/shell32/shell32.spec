@@ -237,26 +237,19 @@
 
  650 stdcall -noname PathIsSameRoot(ptr ptr) PathIsSameRootAW
 
-# nt40/win98
  651 stdcall -noname ReadCabinetState(long long) # OldReadCabinetState
  652 stdcall -noname WriteCabinetState(long)
  653 stdcall -noname PathProcessCommand(long long long long) PathProcessCommandAW
-
-# win98
  654 stdcall @(long long) shell32_654 # ReadCabinetState@8
+
  660 stdcall -noname FileIconInit(long)
  680 stdcall -noname IsUserAdmin()
 
-# >= NT5
  714 stdcall @(ptr) SHELL32_714 # PathIsTemporaryW
  730 stdcall -noname RestartDialogEx(long wstr long long)
 
 1217 stub FOOBAR1217   # no joke! This is the real name!!
 
-#
-# version 4.0 (win95)
-# _WIN32_IE >= 0x0200
-#
 @ stdcall CheckEscapesA(str long)
 @ stdcall CheckEscapesW(wstr long)
 @ stdcall CommandLineToArgvW(wstr ptr)
@@ -269,6 +262,7 @@
 @ stdcall Control_RunDLLW(ptr ptr wstr long)
 @ stdcall -private DllCanUnloadNow() SHELL32_DllCanUnloadNow
 @ stdcall -private DllGetClassObject(long long ptr) SHELL32_DllGetClassObject
+@ stdcall DllGetVersion(ptr)SHELL32_DllGetVersion
 @ stdcall DllInstall(long wstr)SHELL32_DllInstall
 @ stdcall -private DllRegisterServer() SHELL32_DllRegisterServer
 @ stdcall -private DllUnregisterServer() SHELL32_DllUnregisterServer
@@ -290,9 +284,9 @@
 @ stdcall ExtractIconEx(ptr long ptr ptr long) ExtractIconExA
 @ stdcall ExtractIconExA(str long ptr ptr long)
 @ stdcall ExtractIconExW(wstr long ptr ptr long)
-@ stdcall ExtractIconW(long wstr long)
 @ stub ExtractIconResInfoA
 @ stub ExtractIconResInfoW
+@ stdcall ExtractIconW(long wstr long)
 @ stub ExtractVersionResource16W
 @ stub FindExeDlgProc
 @ stdcall FindExecutableA(ptr ptr ptr)
@@ -315,6 +309,7 @@
 @ stub RegenerateUserEnvironment
 @ stdcall SHAddToRecentDocs (long ptr)
 @ stdcall SHAppBarMessage(long ptr)
+@ stdcall SHBindToParent(ptr ptr ptr ptr)
 @ stdcall SHBrowseForFolder(ptr) SHBrowseForFolderA
 @ stdcall SHBrowseForFolderA(ptr)
 @ stdcall SHBrowseForFolderW(ptr)
@@ -323,36 +318,10 @@
 @ stdcall SHCreateDirectoryExA(long str ptr)
 @ stdcall SHCreateDirectoryExW(long wstr ptr)
 @ stub SHCreateProcessAsUserW
-@ stdcall SheChangeDirA(str)
-@ stub SheChangeDirExA
-@ stub SheChangeDirExW
-@ stdcall SheChangeDirW(wstr)
-@ stub SheConvertPathW
-@ stub SheFullPathA
-@ stub SheFullPathW
-@ stub SheGetCurDrive
-@ stdcall SheGetDirA(long long)
-@ stub SheGetDirExW
-@ stdcall SheGetDirW (long long)
-@ stub SheGetPathOffsetW
-@ stdcall ShellAboutA(long str str long)
-@ stdcall ShellAboutW(long wstr wstr long)
-@ stdcall ShellExecuteA(long str str str str long)
-@ stdcall ShellExecuteEx (long) ShellExecuteExA
-@ stdcall ShellExecuteExA (long)
-@ stdcall ShellExecuteExW (long)
-@ stdcall ShellExecuteW (long wstr wstr wstr wstr long)
-@ stub ShellHookProc
-@ stdcall Shell_NotifyIcon(long ptr) Shell_NotifyIconA
-@ stdcall Shell_NotifyIconA(long ptr)
-@ stdcall Shell_NotifyIconW(long ptr)
+@ stdcall SHDefExtractIconA(str long long ptr ptr long)
+@ stdcall SHDefExtractIconW(wstr long long ptr ptr long)
 @ stdcall SHEmptyRecycleBinA(long str long)
 @ stdcall SHEmptyRecycleBinW(long wstr long)
-@ stub SheRemoveQuotesA
-@ stub SheRemoveQuotesW
-@ stub SheSetCurDrive
-@ stub SheShortenPathA
-@ stub SheShortenPathW
 @ stub SHExtractIconsW
 @ stdcall SHFileOperation(ptr) SHFileOperationA
 @ stdcall SHFileOperationA(ptr)
@@ -362,9 +331,18 @@
 @ stdcall SHGetDataFromIDListA(ptr ptr long ptr long)
 @ stdcall SHGetDataFromIDListW(ptr ptr long ptr long)
 @ stdcall SHGetDesktopFolder(ptr)
+@ stdcall SHGetDiskFreeSpaceA(str ptr ptr ptr) kernel32.GetDiskFreeSpaceExA
+@ stdcall SHGetDiskFreeSpaceExA(str ptr ptr ptr) kernel32.GetDiskFreeSpaceExA
+@ stdcall SHGetDiskFreeSpaceExW(wstr ptr ptr ptr) kernel32.GetDiskFreeSpaceExW
 @ stdcall SHGetFileInfo(ptr long ptr long long) SHGetFileInfoA
 @ stdcall SHGetFileInfoA(ptr long ptr long long)
 @ stdcall SHGetFileInfoW(ptr long ptr long long)
+@ stdcall SHGetFolderLocation(long long long long ptr)
+@ stdcall SHGetFolderPathA(long long long long ptr)
+@ stdcall SHGetFolderPathW(long long long long ptr)
+@ stub SHGetFreeDiskSpace
+@ stub SHGetIconOverlayIndexA
+@ stub SHGetIconOverlayIndexW
 @ stdcall SHGetInstanceExplorer(long)
 @ stdcall SHGetMalloc(ptr)
 @ stdcall SHGetNewLinkInfo(str str ptr long long) SHGetNewLinkInfoA
@@ -373,6 +351,8 @@
 @ stdcall SHGetPathFromIDListW(ptr ptr)
 @ stdcall SHGetSettings(ptr long)
 @ stdcall SHGetSpecialFolderLocation(long long ptr)
+@ stdcall SHGetSpecialFolderPathA(long ptr long long)
+@ stdcall SHGetSpecialFolderPathW(long ptr long long)
 @ stdcall SHHelpShortcuts_RunDLL(long long long long) SHHelpShortcuts_RunDLLA
 @ stdcall SHHelpShortcuts_RunDLLA(long long long long)
 @ stdcall SHHelpShortcuts_RunDLLW(long long long long)
@@ -386,6 +366,37 @@
 @ stdcall SHQueryRecycleBinA(str ptr)
 @ stdcall SHQueryRecycleBinW(wstr ptr)
 @ stub SHUpdateRecycleBinIcon
+@ stdcall SheChangeDirA(str)
+@ stub SheChangeDirExA
+@ stub SheChangeDirExW
+@ stdcall SheChangeDirW(wstr)
+@ stub SheConvertPathW
+@ stub SheFullPathA
+@ stub SheFullPathW
+@ stub SheGetCurDrive
+@ stdcall SheGetDirA(long long)
+@ stub SheGetDirExW
+@ stdcall SheGetDirW (long long)
+@ stub SheGetPathOffsetW
+@ stub SheRemoveQuotesA
+@ stub SheRemoveQuotesW
+@ stub SheSetCurDrive
+@ stub SheShortenPathA
+@ stub SheShortenPathW
+@ stdcall ShellAboutA(long str str long)
+@ stdcall ShellAboutW(long wstr wstr long)
+@ stub ShellExec_RunDLL
+@ stub ShellExec_RunDLLA
+@ stub ShellExec_RunDLLW
+@ stdcall ShellExecuteA(long str str str str long)
+@ stdcall ShellExecuteEx (long) ShellExecuteExA
+@ stdcall ShellExecuteExA (long)
+@ stdcall ShellExecuteExW (long)
+@ stdcall ShellExecuteW (long wstr wstr wstr wstr long)
+@ stub ShellHookProc
+@ stdcall Shell_NotifyIcon(long ptr) Shell_NotifyIconA
+@ stdcall Shell_NotifyIconA(long ptr)
+@ stdcall Shell_NotifyIconW(long ptr)
 @ stdcall StrChrA(str long) shlwapi.StrChrA
 @ stdcall StrChrIA(str long) shlwapi.StrChrIA
 @ stdcall StrChrIW(wstr long) shlwapi.StrChrIW
@@ -415,44 +426,3 @@
 @ stdcall StrStrIW(wstr wstr) shlwapi.StrStrIW
 @ stdcall StrStrW(wstr wstr) shlwapi.StrStrW
 @ stub WOWShellExecute
-
-#
-# version 4.70 (IE3.0)
-# _WIN32_IE >= 0x0300
-#
-
-#
-# version 4.71 (IE4.0)
-# _WIN32_IE >= 0x0400
-#
-@ stdcall DllGetVersion(ptr)SHELL32_DllGetVersion
-@ stub SHGetFreeDiskSpace
-@ stdcall SHGetSpecialFolderPathA(long ptr long long)
-@ stdcall SHGetSpecialFolderPathW(long ptr long long)
-#
-# version 4.72 (IE4.01)
-# _WIN32_IE >= 0x0401
-# no new exports
-#
-
-#
-# version 5.00 (Win2K)
-# _WIN32_IE >= 0x0500
-#
-@ stub ShellExec_RunDLL
-@ stub ShellExec_RunDLLA
-@ stub ShellExec_RunDLLW
-@ stdcall SHBindToParent(ptr ptr ptr ptr)
-@ stdcall SHGetDiskFreeSpaceA(str ptr ptr ptr) kernel32.GetDiskFreeSpaceExA
-@ stdcall SHGetDiskFreeSpaceExA(str ptr ptr ptr) kernel32.GetDiskFreeSpaceExA
-@ stdcall SHGetDiskFreeSpaceExW(wstr ptr ptr ptr) kernel32.GetDiskFreeSpaceExW
-@ stdcall SHGetFolderPathA(long long long long ptr)
-@ stdcall SHGetFolderPathW(long long long long ptr)
-@ stdcall SHGetFolderLocation(long long long long ptr)
-@ stub SHGetIconOverlayIndexA
-@ stub SHGetIconOverlayIndexW
-
-# version 6.0 (WinXP)
-# _WIN32_IE >= 0x600
-@ stdcall SHDefExtractIconA(str long long ptr ptr long)
-@ stdcall SHDefExtractIconW(wstr long long ptr ptr long)

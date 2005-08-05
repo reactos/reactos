@@ -76,12 +76,12 @@ typedef struct
 
 typedef struct
 {
-	IShellViewVtbl*		lpVtbl;
+	const IShellViewVtbl*	lpVtbl;
 	DWORD			ref;
-	IOleCommandTargetVtbl*	lpvtblOleCommandTarget;
-	IDropTargetVtbl*	lpvtblDropTarget;
-	IDropSourceVtbl*	lpvtblDropSource;
-	IViewObjectVtbl*	lpvtblViewObject;
+	const IOleCommandTargetVtbl* lpvtblOleCommandTarget;
+	const IDropTargetVtbl*	lpvtblDropTarget;
+	const IDropSourceVtbl*	lpvtblDropSource;
+	const IViewObjectVtbl*	lpvtblViewObject;
 	IShellFolder*	pSFParent;
 	IShellFolder2*	pSF2Parent;
 	IShellBrowser*	pShellBrowser;
@@ -102,21 +102,20 @@ typedef struct
 	IAdviseSink    *pAdvSink;
 } IShellViewImpl;
 
-static struct IShellViewVtbl svvt;
-
-static struct IOleCommandTargetVtbl ctvt;
+static const IShellViewVtbl svvt;
+static const IOleCommandTargetVtbl ctvt;
 #define _IOleCommandTarget_Offset ((int)(&(((IShellViewImpl*)0)->lpvtblOleCommandTarget)))
 #define _ICOM_THIS_From_IOleCommandTarget(class, name) class* This = (class*)(((char*)name)-_IOleCommandTarget_Offset);
 
-static struct IDropTargetVtbl dtvt;
+static const IDropTargetVtbl dtvt;
 #define _IDropTarget_Offset ((int)(&(((IShellViewImpl*)0)->lpvtblDropTarget)))
 #define _ICOM_THIS_From_IDropTarget(class, name) class* This = (class*)(((char*)name)-_IDropTarget_Offset);
 
-static struct IDropSourceVtbl dsvt;
+static const IDropSourceVtbl dsvt;
 #define _IDropSource_Offset ((int)(&(((IShellViewImpl*)0)->lpvtblDropSource)))
 #define _ICOM_THIS_From_IDropSource(class, name) class* This = (class*)(((char*)name)-_IDropSource_Offset);
 
-static struct IViewObjectVtbl vovt;
+static const IViewObjectVtbl vovt;
 #define _IViewObject_Offset ((int)(&(((IShellViewImpl*)0)->lpvtblViewObject)))
 #define _ICOM_THIS_From_IViewObject(class, name) class* This = (class*)(((char*)name)-_IViewObject_Offset);
 
@@ -140,9 +139,6 @@ static struct IViewObjectVtbl vovt;
 #define GET_WM_COMMAND_ID(wp, lp)               LOWORD(wp)
 #define GET_WM_COMMAND_HWND(wp, lp)             (HWND)(lp)
 #define GET_WM_COMMAND_CMD(wp, lp)              HIWORD(wp)
-
-extern void WINAPI _InsertMenuItem (HMENU hmenu, UINT indexMenu, BOOL fByPosition,
-			UINT wID, UINT fType, LPSTR dwTypeData, UINT fState);
 
 /*
   Items merged into the toolbar and and the filemenu
@@ -1992,7 +1988,7 @@ static HRESULT WINAPI IShellView_fnGetItemObject(IShellView * iface, UINT uItem,
 	return S_OK;
 }
 
-static struct IShellViewVtbl svvt =
+static const IShellViewVtbl svvt =
 {
 	IShellView_fnQueryInterface,
 	IShellView_fnAddRef,
@@ -2104,7 +2100,7 @@ static HRESULT WINAPI ISVOleCmdTarget_Exec(
 	return OLECMDERR_E_UNKNOWNGROUP;
 }
 
-static IOleCommandTargetVtbl ctvt =
+static const IOleCommandTargetVtbl ctvt =
 {
 	ISVOleCmdTarget_QueryInterface,
 	ISVOleCmdTarget_AddRef,
@@ -2199,7 +2195,7 @@ static HRESULT WINAPI ISVDropTarget_Drop(
 	return E_NOTIMPL;
 }
 
-static struct IDropTargetVtbl dtvt =
+static const IDropTargetVtbl dtvt =
 {
 	ISVDropTarget_QueryInterface,
 	ISVDropTarget_AddRef,
@@ -2269,7 +2265,7 @@ static HRESULT WINAPI ISVDropSource_GiveFeedback(
 	return DRAGDROP_S_USEDEFAULTCURSORS;
 }
 
-static struct IDropSourceVtbl dsvt =
+static const IDropSourceVtbl dsvt =
 {
 	ISVDropSource_QueryInterface,
 	ISVDropSource_AddRef,
@@ -2418,7 +2414,7 @@ static HRESULT WINAPI ISVViewObject_GetAdvise(
 }
 
 
-static struct IViewObjectVtbl vovt =
+static const IViewObjectVtbl vovt =
 {
 	ISVViewObject_QueryInterface,
 	ISVViewObject_AddRef,

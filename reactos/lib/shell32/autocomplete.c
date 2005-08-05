@@ -62,8 +62,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 typedef struct
 {
-    IAutoCompleteVtbl  *lpVtbl;
-    IAutoComplete2Vtbl *lpvtblAutoComplete2;
+    const IAutoCompleteVtbl  *lpVtbl;
+    const IAutoComplete2Vtbl *lpvtblAutoComplete2;
     DWORD ref;
     BOOL  enabled;
     HWND hwndEdit;
@@ -76,8 +76,8 @@ typedef struct
     AUTOCOMPLETEOPTIONS options;
 } IAutoCompleteImpl;
 
-static struct IAutoCompleteVtbl acvt;
-static struct IAutoComplete2Vtbl ac2vt;
+static const IAutoCompleteVtbl acvt;
+static const IAutoComplete2Vtbl ac2vt;
 
 #define _IAutoComplete2_Offset ((int)(&(((IAutoCompleteImpl*)0)->lpvtblAutoComplete2)))
 #define _ICOM_THIS_From_IAutoComplete2(class, name) class* This = (class*)(((char*)name)-_IAutoComplete2_Offset);
@@ -312,7 +312,7 @@ static HRESULT WINAPI IAutoComplete_fnInit(
 /**************************************************************************
  *  IAutoComplete_fnVTable
  */
-static IAutoCompleteVtbl acvt =
+static const IAutoCompleteVtbl acvt =
 {
     IAutoComplete_fnQueryInterface,
     IAutoComplete_fnAddRef,
@@ -432,7 +432,7 @@ static HRESULT WINAPI IAutoComplete2_fnSetOptions(
 /**************************************************************************
  *  IAutoComplete2_fnVTable
  */
-static IAutoComplete2Vtbl ac2vt =
+static const IAutoComplete2Vtbl ac2vt =
 {
     IAutoComplete2_fnQueryInterface,
     IAutoComplete2_fnAddRef,

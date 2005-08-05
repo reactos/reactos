@@ -49,16 +49,16 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 */
 typedef struct
 {
-	IExtractIconWVtbl *lpVtbl;
+	const IExtractIconWVtbl *lpVtbl;
 	DWORD              ref;
-	IPersistFileVtbl  *lpvtblPersistFile;
-	IExtractIconAVtbl *lpvtblExtractIconA;
+	const IPersistFileVtbl  *lpvtblPersistFile;
+	const IExtractIconAVtbl *lpvtblExtractIconA;
 	LPITEMIDLIST       pidl;
 } IExtractIconWImpl;
 
-static struct IExtractIconAVtbl eiavt;
-static struct IExtractIconWVtbl eivt;
-static struct IPersistFileVtbl pfvt;
+static const IExtractIconAVtbl eiavt;
+static const IExtractIconWVtbl eivt;
+static const IPersistFileVtbl pfvt;
 
 #define _IPersistFile_Offset ((int)(&(((IExtractIconWImpl*)0)->lpvtblPersistFile)))
 #define _ICOM_THIS_From_IPersistFile(class, name) class* This = (class*)(((char*)name)-_IPersistFile_Offset);
@@ -394,7 +394,7 @@ static HRESULT WINAPI IExtractIconW_fnExtract(IExtractIconW * iface, LPCWSTR psz
 	return S_OK;
 }
 
-static struct IExtractIconWVtbl eivt =
+static const IExtractIconWVtbl eivt =
 {
 	IExtractIconW_fnQueryInterface,
 	IExtractIconW_fnAddRef,
@@ -486,7 +486,7 @@ static HRESULT WINAPI IExtractIconA_fnExtract(IExtractIconA * iface, LPCSTR pszF
 	return ret;
 }
 
-static struct IExtractIconAVtbl eiavt =
+static const IExtractIconAVtbl eiavt =
 {
 	IExtractIconA_fnQueryInterface,
 	IExtractIconA_fnAddRef,
@@ -558,7 +558,7 @@ static HRESULT WINAPI IEIPersistFile_fnLoad(IPersistFile* iface, LPCOLESTR pszFi
 
 }
 
-static struct IPersistFileVtbl pfvt =
+static const IPersistFileVtbl pfvt =
 {
 	IEIPersistFile_fnQueryInterface,
 	IEIPersistFile_fnAddRef,

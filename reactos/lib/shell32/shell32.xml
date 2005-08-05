@@ -34,7 +34,6 @@
 	<file>enumidlist.c</file>
 	<file>folders.c</file>
 	<file>iconcache.c</file>
-	<file>memorystream.c</file>
 	<file>pidl.c</file>
 	<file>regsvr.c</file>
 	<file>shell32_main.c</file>

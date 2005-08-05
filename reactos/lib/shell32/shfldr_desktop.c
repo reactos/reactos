@@ -60,7 +60,7 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 */
 
 typedef struct {
-    IShellFolder2Vtbl *lpVtbl;
+    const IShellFolder2Vtbl *lpVtbl;
     DWORD ref;
 
     CLSID *pclsid;
@@ -68,8 +68,6 @@ typedef struct {
     /* both paths are parsible from the desktop */
     LPWSTR sPathTarget;     /* complete path to target used for enumeration and ChangeNotify */
     LPITEMIDLIST pidlRoot;  /* absolute pidl */
-
-    int dwAttributes;        /* attributes returned by GetAttributesOf FIXME: use it */
 
     UINT cfShellIDList;        /* clipboardformat for IDropTarget */
     BOOL fAcceptFmt;        /* flag for pending Drop */
@@ -429,6 +427,9 @@ static HRESULT WINAPI ISF_Desktop_fnGetAttributesOf (IShellFolder2 * iface,
 {
     IGenericSFImpl *This = (IGenericSFImpl *)iface;
     HRESULT hr = S_OK;
+    const static DWORD dwDesktopAttributes = 
+        SFGAO_STORAGE | SFGAO_HASPROPSHEET | SFGAO_STORAGE_ANCESTOR |
+        SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER;
 
     TRACE ("(%p)->(cidl=%d apidl=%p mask=%p (0x%08lx))\n",
            This, cidl, apidl, rgfInOut, rgfInOut ? *rgfInOut : 0);
@@ -440,13 +441,20 @@ static HRESULT WINAPI ISF_Desktop_fnGetAttributesOf (IShellFolder2 * iface,
 
     if (*rgfInOut == 0)
         *rgfInOut = ~0;
-
-    while (cidl > 0 && *apidl)
-    {
-        pdump (*apidl);
-        SHELL32_GetItemAttributes (_IShellFolder_ (This), *apidl, rgfInOut);
-        apidl++;
-        cidl--;
+    
+    if(cidl == 0) {
+        *rgfInOut &= dwDesktopAttributes; 
+    } else {
+        while (cidl > 0 && *apidl) {
+            pdump (*apidl);
+            if (_ILIsDesktop(*apidl)) { 
+                *rgfInOut &= dwDesktopAttributes;
+            } else {
+                SHELL32_GetItemAttributes (_IShellFolder_ (This), *apidl, rgfInOut);
+            }
+            apidl++;
+            cidl--;
+        }
     }
     /* make sure SFGAO_VALIDATE is cleared, some apps depend on that */
     *rgfInOut &= ~SFGAO_VALIDATE;
@@ -808,7 +816,7 @@ static HRESULT WINAPI ISF_Desktop_fnMapColumnToSCID (
     return E_NOTIMPL;
 }
 
-static IShellFolder2Vtbl vt_MCFldr_ShellFolder2 =
+static const IShellFolder2Vtbl vt_MCFldr_ShellFolder2 =
 {
     ISF_Desktop_fnQueryInterface,
     ISF_Desktop_fnAddRef,

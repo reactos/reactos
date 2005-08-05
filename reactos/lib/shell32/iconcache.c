@@ -670,7 +670,12 @@ HICON WINAPI ExtractAssociatedIconA(HINSTANCE hInst, LPSTR lpIconPath, LPWORD lp
 {	
     HICON hIcon = NULL;
     INT len = MultiByteToWideChar(CP_ACP, 0, lpIconPath, -1, NULL, 0);
-    LPWSTR lpIconPathW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    /* Note that we need to allocate MAX_PATH, since we are supposed to fill
+     * the correct executable if there is no icon in lpIconPath directly.
+     * lpIconPath itself is supposed to be large enough, so make sure lpIconPathW
+     * is large enough too. Yes, I am puking too.
+     */
+    LPWSTR lpIconPathW = HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
 
     TRACE("%p %s %p\n", hInst, debugstr_a(lpIconPath), lpiIcon);
 
@@ -678,11 +683,18 @@ HICON WINAPI ExtractAssociatedIconA(HINSTANCE hInst, LPSTR lpIconPath, LPWORD lp
     {
         MultiByteToWideChar(CP_ACP, 0, lpIconPath, -1, lpIconPathW, len);
         hIcon = ExtractAssociatedIconW(hInst, lpIconPathW, lpiIcon);
+        WideCharToMultiByte(CP_ACP, 0, lpIconPathW, -1, lpIconPath, MAX_PATH , NULL, NULL);
         HeapFree(GetProcessHeap(), 0, lpIconPathW);
     }
     return hIcon;
 }
 
+/*************************************************************************
+ *				ExtractAssociatedIconW (SHELL32.@)
+ *
+ * Return icon for given file (either from file itself or from associated
+ * executable) and patch parameters if needed.
+ */
 HICON WINAPI ExtractAssociatedIconW(HINSTANCE hInst, LPWSTR lpIconPath, LPWORD lpiIcon)
 {
     HICON hIcon = NULL;

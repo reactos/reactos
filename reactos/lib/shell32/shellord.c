@@ -1354,32 +1354,57 @@ HRESULT WINAPI SHValidateUNC (DWORD x, DWORD y, DWORD z)
 /************************************************************************
  *	DoEnvironmentSubstA			[SHELL32.@]
  *
+ * Replace %KEYWORD% in the str with the value of variable KEYWORD
+ * from environment. If it is not found the %KEYWORD% is left
+ * intact. If the buffer is too small, str is not modified.
+ *
+ * pszString   [I] '\0' terminated string with %keyword%.
+ *             [O] '\0' terminated string with %keyword% substituted.
+ * cchString   [I] size of str.
+ *
+ * Return
+ *     cchString length in the HIWORD;
+ *     TRUE in LOWORD if subst was successful and FALSE in other case
  */
-HRESULT WINAPI DoEnvironmentSubstA(LPSTR x, LPSTR y)
+DWORD WINAPI DoEnvironmentSubstA(LPSTR pszString, UINT cchString)
 {
-	FIXME("(%s, %s) stub\n", debugstr_a(x), debugstr_a(y));
-	return 0;
+    LPSTR dst;
+    BOOL res = FALSE;
+    FIXME("(%s, %d) stub\n", debugstr_a(pszString), cchString);
+    if (pszString == NULL) /* Really return 0? */
+        return 0;
+    if ((dst = HeapAlloc(GetProcessHeap(), 0, cchString * sizeof(CHAR))))
+    {
+        DWORD num = ExpandEnvironmentStringsA(pszString, dst, cchString);
+        if (num && num < cchString) /* dest buffer is too small */
+        {
+            res = TRUE;
+            memcpy(pszString, dst, num);
+        }
+        HeapFree(GetProcessHeap(), 0, dst);
+    }
+    return MAKELONG(res,cchString); /* Always cchString? */
 }
 
 /************************************************************************
  *	DoEnvironmentSubstW			[SHELL32.@]
  *
  */
-HRESULT WINAPI DoEnvironmentSubstW(LPWSTR x, LPWSTR y)
+DWORD WINAPI DoEnvironmentSubstW(LPWSTR pszString, UINT cchString)
 {
-	FIXME("(%s, %s): stub\n", debugstr_w(x), debugstr_w(y));
-	return 0;
+	FIXME("(%s, %d): stub\n", debugstr_w(pszString), cchString);
+	return MAKELONG(FALSE,cchString);
 }
 
 /************************************************************************
  *	DoEnvironmentSubst			[SHELL32.53]
  *
  */
-HRESULT WINAPI DoEnvironmentSubstAW(LPVOID x, LPVOID y)
+DWORD WINAPI DoEnvironmentSubstAW(LPVOID x, UINT y)
 {
-	if (SHELL_OsIsUnicode())
-	  return DoEnvironmentSubstW(x, y);
-	return DoEnvironmentSubstA(x, y);
+    if (SHELL_OsIsUnicode())
+        return DoEnvironmentSubstW(x, y);
+    return DoEnvironmentSubstA(x, y);
 }
 
 /*************************************************************************

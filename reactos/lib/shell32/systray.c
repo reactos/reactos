@@ -157,7 +157,7 @@ static LRESULT CALLBACK SYSTRAY_WndProc(HWND hWnd, UINT message, WPARAM wParam, 
 }
 
 
-BOOL SYSTRAY_RegisterClass(void)
+static BOOL SYSTRAY_RegisterClass(void)
 {
   WNDCLASSA  wc;
 
@@ -180,7 +180,7 @@ BOOL SYSTRAY_RegisterClass(void)
 }
 
 
-BOOL SYSTRAY_ItemInit(SystrayItem *ptrayItem)
+static BOOL SYSTRAY_ItemInit(SystrayItem *ptrayItem)
 {
   RECT rect;
 
@@ -237,13 +237,13 @@ static void SYSTRAY_ItemTerm(SystrayItem *ptrayItem)
 }
 
 
-void SYSTRAY_ItemSetMessage(SystrayItem *ptrayItem, UINT uCallbackMessage)
+static void SYSTRAY_ItemSetMessage(SystrayItem *ptrayItem, UINT uCallbackMessage)
 {
   ptrayItem->notifyIcon.uCallbackMessage = uCallbackMessage;
 }
 
 
-void SYSTRAY_ItemSetIcon(SystrayItem *ptrayItem, HICON hIcon)
+static void SYSTRAY_ItemSetIcon(SystrayItem *ptrayItem, HICON hIcon)
 {
   if(ptrayItem->notifyIcon.hIcon)
     DestroyIcon(ptrayItem->notifyIcon.hIcon);
@@ -252,7 +252,7 @@ void SYSTRAY_ItemSetIcon(SystrayItem *ptrayItem, HICON hIcon)
 }
 
 
-void SYSTRAY_ItemSetTip(SystrayItem *ptrayItem, CHAR* szTip, int modify)
+static void SYSTRAY_ItemSetTip(SystrayItem *ptrayItem, CHAR* szTip, int modify)
 {
   TTTOOLINFOA ti;
 

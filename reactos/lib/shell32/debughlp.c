@@ -295,8 +295,8 @@ static char shdebugstr_buf2[100];
 static char * shdebugstr_buf = shdebugstr_buf1;
 
 static struct {
-	REFIID	riid;
-	char 	*name;
+	REFIID riid;
+	const char *name;
 } InterfaceDesc[] = {
 	{&IID_IUnknown,			"IID_IUnknown"},
 	{&IID_IClassFactory,		"IID_IClassFactory"},
@@ -325,7 +325,7 @@ static struct {
 const char * shdebugstr_guid( const struct _GUID *id )
 {
 	int i;
-	char* name = NULL;
+	const char* name = NULL;
 	char clsidbuf[100];
 
 	shdebugstr_buf = (shdebugstr_buf == shdebugstr_buf1) ? shdebugstr_buf2 : shdebugstr_buf1;

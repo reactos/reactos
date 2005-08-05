@@ -1210,87 +1210,6 @@ HRESULT WINAPI SHGetDataFromIDListW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl,
 }
 
 /*************************************************************************
- * SHELL_GetPathFromIDListA
- */
-HRESULT SHELL_GetPathFromIDListA(LPCITEMIDLIST pidl, LPSTR pszPath, UINT uOutSize)
-{
-    HRESULT hr = S_OK;
-
-    pszPath[0]=0;
-
-    /* One case is a PIDL rooted at desktop level */
-    if (_ILIsDesktop(pidl) || _ILIsValue(pidl) || _ILIsFolder(pidl))
-    {
-        hr = SHGetSpecialFolderPathA(0, pszPath, CSIDL_DESKTOP, FALSE);
-
-        if (SUCCEEDED(hr))
-            PathAddBackslashA(pszPath);
-    }
-    /* The only other valid case is an item ID list beginning at "My Computer" */
-    else if (_ILIsMyComputer(pidl))
-        pidl = ILGetNext(pidl);
-
-    if (SUCCEEDED(hr))
-    {
-        LPSTR txt;
-
-        while(pidl && pidl->mkid.cb)
-        {
-            if (_ILIsSpecialFolder(pidl))
-            {
-                hr = E_INVALIDARG;
-                break;
-            }
-
-            txt = _ILGetTextPointer(pidl);
-            if (!txt)
-            {
-                hr = E_INVALIDARG;
-                break;
-            }
-
-            if (lstrlenA(txt) > pidl->mkid.cb)
-                ERR("pidl %p is borked\n",pidl);
-
-            /* make sure there's enough space for the next segment */
-            if ((lstrlenA(txt) + lstrlenA(pszPath)) > uOutSize)
-            {
-                hr = E_INVALIDARG;
-                break;
-            }
-            lstrcatA( pszPath, txt );
-
-            pidl = ILGetNext(pidl);
-            if (!pidl)
-            {
-                hr = E_INVALIDARG;
-                break;
-            }
-
-            /* Are we at the end and successfully converted the complete PIDL? */
-            if (!pidl->mkid.cb)
-                break;
-
-            if ((lstrlenA(pszPath) + 1) > uOutSize)
-            {
-                hr = E_INVALIDARG;
-                break;
-            }
-            if (!PathAddBackslashA(pszPath))
-            {
-                hr = E_INVALIDARG;
-                break;
-            }
-        }
-    }
-    else
-        hr = E_INVALIDARG;
-
-    TRACE_(shell)("-- %s, 0x%08lx\n", pszPath, hr);
-    return hr;
-}
-
-/*************************************************************************
  * SHGetPathFromIDListA        [SHELL32.@][NT 4.0: SHELL32.220]
  *
  * PARAMETERS
@@ -1307,100 +1226,14 @@ HRESULT SHELL_GetPathFromIDListA(LPCITEMIDLIST pidl, LPSTR pszPath, UINT uOutSiz
  */
 BOOL WINAPI SHGetPathFromIDListA(LPCITEMIDLIST pidl, LPSTR pszPath)
 {
-    HRESULT hr;
+    WCHAR wszPath[MAX_PATH];
+    BOOL bSuccess;
 
-    TRACE_(shell)("(pidl=%p,%p)\n",pidl,pszPath);
-    pdump(pidl);
+    bSuccess = SHGetPathFromIDListW(pidl, wszPath);
+    if (bSuccess) 
+        WideCharToMultiByte(CP_ACP, 0, wszPath, -1, pszPath, MAX_PATH, NULL, NULL);
 
-    if (!pidl)
-        return FALSE;
-
-    hr = SHELL_GetPathFromIDListA(pidl, pszPath, MAX_PATH);
-
-    return SUCCEEDED(hr);
-}
-
-/*************************************************************************
- * SHELL_GetPathFromIDListW
- */
-HRESULT SHELL_GetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath, UINT uOutSize)
-{
-    HRESULT hr = S_OK;
-    UINT len;
-
-    pszPath[0]=0;
-
-    /* One case is a PIDL rooted at desktop level */
-    if (_ILIsDesktop(pidl) ||_ILIsValue(pidl) || _ILIsFolder(pidl))
-    {
-        hr = SHGetSpecialFolderPathW(0, pszPath, CSIDL_DESKTOP, FALSE);
-
-        if (SUCCEEDED(hr))
-            PathAddBackslashW(pszPath);
-    }
-    /* The only other valid case is an item ID list beginning at "My Computer" */
-    else if (_ILIsMyComputer(pidl))
-        pidl = ILGetNext(pidl);
-
-    if (SUCCEEDED(hr))
-    {
-        LPSTR txt;
-
-        while(pidl && pidl->mkid.cb)
-        {
-            if (_ILIsSpecialFolder(pidl))
-            {
-                hr = E_INVALIDARG;
-                break;
-            }
-
-            txt = _ILGetTextPointer(pidl);
-            if (!txt)
-            {
-                hr = E_INVALIDARG;
-                break;
-            }
-
-            if (lstrlenA(txt) > pidl->mkid.cb)
-                ERR("pidl %p is borked\n",pidl);
-            len = MultiByteToWideChar(CP_ACP, 0, txt, -1, NULL, 0);
-            if ( (lstrlenW(pszPath) + len) > uOutSize )
-            {
-                hr = E_INVALIDARG;
-                break;
-            }
-
-            MultiByteToWideChar(CP_ACP, 0, txt, -1,
-                                &pszPath[lstrlenW(pszPath)], len);
-
-            pidl = ILGetNext(pidl);
-            if (!pidl)
-            {
-                hr = E_INVALIDARG;
-                break;
-            }
-
-            /* Are we at the end and successfully converted the complete PIDL? */
-            if (!pidl->mkid.cb)
-                break;
-
-            if ((lstrlenW(pszPath) + 1) > uOutSize )
-            {
-                hr = E_INVALIDARG;
-                break;
-            }
-            if (!PathAddBackslashW(pszPath))
-            {
-                hr = E_INVALIDARG;
-                break;
-            }
-        }
-    }
-    else
-        hr = E_INVALIDARG;
-
-    TRACE_(shell)("-- %s, 0x%08lx\n", debugstr_w(pszPath), hr);
-    return hr;
+    return bSuccess;
 }
 
 /*************************************************************************
@@ -1409,6 +1242,10 @@ HRESULT SHELL_GetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath, UINT uOutSi
 BOOL WINAPI SHGetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath)
 {
     HRESULT hr;
+    LPCITEMIDLIST pidlLast;
+    LPSHELLFOLDER psfFolder;
+    DWORD dwAttributes;
+    STRRET strret;
 
     TRACE_(shell)("(pidl=%p,%p)\n", pidl, debugstr_w(pszPath));
     pdump(pidl);
@@ -1416,7 +1253,18 @@ BOOL WINAPI SHGetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath)
     if (!pidl)
         return FALSE;
 
-    hr = SHELL_GetPathFromIDListW(pidl, pszPath, MAX_PATH);
+    hr = SHBindToParent(pidl, &IID_IShellFolder, (VOID**)&psfFolder, &pidlLast);
+    if (FAILED(hr)) return FALSE;
+
+    dwAttributes = SFGAO_FILESYSTEM;
+    hr = IShellFolder_GetAttributesOf(psfFolder, 1, &pidlLast, &dwAttributes);
+    if (FAILED(hr) || !(dwAttributes & SFGAO_FILESYSTEM)) return FALSE;
+                
+    hr = IShellFolder_GetDisplayNameOf(psfFolder, pidlLast, SHGDN_FORPARSING, &strret);
+    if (FAILED(hr)) return FALSE;
+
+    hr = StrRetToBufW(&strret, pidlLast, pszPath, MAX_PATH);
+    IShellFolder_Release(psfFolder);
 
     TRACE_(shell)("-- %s, 0x%08lx\n",debugstr_w(pszPath), hr);
     return SUCCEEDED(hr);

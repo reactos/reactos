@@ -42,7 +42,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(pidl);
  */
 typedef struct
 {
-    IFileSystemBindDataVtbl *lpVtbl;
+    const IFileSystemBindDataVtbl *lpVtbl;
     DWORD              ref;
     WIN32_FIND_DATAW findFile;
 } IFileSystemBindDataImpl;
@@ -53,7 +53,7 @@ static ULONG WINAPI IFileSystemBindData_fnRelease(IFileSystemBindData *);
 static HRESULT WINAPI IFileSystemBindData_fnGetFindData(IFileSystemBindData *, WIN32_FIND_DATAW *);
 static HRESULT WINAPI IFileSystemBindData_fnSetFindData(IFileSystemBindData *, const WIN32_FIND_DATAW *);
 
-static struct IFileSystemBindDataVtbl sbvt =
+static const IFileSystemBindDataVtbl sbvt =
 {
     IFileSystemBindData_fnQueryInterface,
     IFileSystemBindData_fnAddRef,

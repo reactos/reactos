@@ -26,6 +26,9 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
+
+#define COBJMACROS
+
 #include "wine/debug.h"
 #include "winerror.h"
 #include "windef.h"
@@ -39,6 +42,7 @@
 #include "shlguid.h"
 #include "shresdef.h"
 #include "shlwapi.h"
+#include "pidl.h"
 #include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
@@ -178,6 +182,7 @@ static BOOL HCR_RegGetDefaultIconW(HKEY hkey, LPWSTR szDest, DWORD len, LPDWORD 
           else
              *dwNr=0; /* sometimes the icon number is missing */
 	  ParseFieldW (szDest, 1, szDest, len);
+          PathUnquoteSpacesW(szDest);
 	  return TRUE;
 	}
 	return FALSE;
@@ -201,6 +206,7 @@ static BOOL HCR_RegGetDefaultIconA(HKEY hkey, LPSTR szDest, DWORD len, LPDWORD d
           else
              *dwNr=0; /* sometimes the icon number is missing */
 	  ParseFieldA (szDest, 1, szDest, len);
+          PathUnquoteSpacesA(szDest);
 	  return TRUE;
 	}
 	return FALSE;
@@ -339,47 +345,81 @@ BOOL HCR_GetClassNameA(REFIID riid, LPSTR szDest, DWORD len)
 	return ret;
 }
 
-/***************************************************************************************
-*	HCR_GetFolderAttributes	[internal]
-*
-* gets the folder attributes of a class
-*
-* FIXME
-*	verify the defaultvalue for *szDest
-*/
-BOOL HCR_GetFolderAttributes (REFIID riid, LPDWORD szDest)
-{	HKEY	hkey;
-	char	xriid[60];
-	DWORD	attributes;
-	DWORD	len = 4;
+/******************************************************************************
+ * HCR_GetFolderAttributes [Internal]
+ *
+ * Query the registry for a shell folders' attributes
+ *
+ * PARAMS
+ *  pidlFolder    [I]  A simple pidl of type PT_GUID. 
+ *  pdwAttributes [IO] In: Attributes to be queried, OUT: Resulting attributes.
+ *
+ * RETURNS
+ *  TRUE:  Found information for the attributes in the registry
+ *  FALSE: No attribute information found
+ *
+ * NOTES
+ *  If queried for an attribute, which is set in the CallForAttributes registry
+ *  value, the function binds to the shellfolder objects and queries it.
+ */
+BOOL HCR_GetFolderAttributes(LPCITEMIDLIST pidlFolder, LPDWORD pdwAttributes)
+{
+    HKEY hSFKey;
+    LPOLESTR pwszCLSID;
+    LONG lResult;
+    DWORD dwTemp, dwLen;
+    static const WCHAR wszAttributes[] = { 'A','t','t','r','i','b','u','t','e','s',0 };
+    static const WCHAR wszCallForAttributes[] = { 
+        'C','a','l','l','F','o','r','A','t','t','r','i','b','u','t','e','s',0 };
+    WCHAR wszShellFolderKey[] = { 'C','L','S','I','D','\\','{','0','0','0','2','1','4','0','0','-',
+        '0','0','0','0','-','0','0','0','0','-','C','0','0','0','-','0','0','0','0','0','0','0',
+        '0','0','0','4','6','}','\\','S','h','e','l','l','F','o','l','d','e','r',0 };
 
-        sprintf( xriid, "CLSID\\{%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
-                 riid->Data1, riid->Data2, riid->Data3,
-                 riid->Data4[0], riid->Data4[1], riid->Data4[2], riid->Data4[3],
-                 riid->Data4[4], riid->Data4[5], riid->Data4[6], riid->Data4[7] );
-	TRACE("%s\n",xriid );
+    TRACE("(pidlFolder=%p, pdwAttributes=%p)\n", pidlFolder, pdwAttributes);
+       
+    if (!_ILIsPidlSimple(pidlFolder)) { 
+        ERR("HCR_GetFolderAttributes should be called for simple PIDL's only!\n");    
+        return FALSE;
+    }
+    
+    if (!_ILIsDesktop(pidlFolder)) {
+        if (FAILED(StringFromCLSID(_ILGetGUIDPointer(pidlFolder), &pwszCLSID))) return FALSE;
+        memcpy(&wszShellFolderKey[6], pwszCLSID, 38 * sizeof(WCHAR));
+        CoTaskMemFree(pwszCLSID);
+    }
+    
+    lResult = RegOpenKeyExW(HKEY_CLASSES_ROOT, wszShellFolderKey, 0, KEY_READ, &hSFKey);
+    if (lResult != ERROR_SUCCESS) return FALSE;
+    
+    dwLen = sizeof(DWORD);
+    lResult = RegQueryValueExW(hSFKey, wszCallForAttributes, 0, NULL, (LPBYTE)&dwTemp, &dwLen);
+    if ((lResult == ERROR_SUCCESS) && (dwTemp & *pdwAttributes)) {
+        LPSHELLFOLDER psfDesktop, psfFolder;
+        HRESULT hr;
 
-	if (!szDest) return FALSE;
-	*szDest = SFGAO_FOLDER|SFGAO_FILESYSTEM;
+        RegCloseKey(hSFKey);
+        hr = SHGetDesktopFolder(&psfDesktop);
+        if (SUCCEEDED(hr)) {
+            hr = IShellFolder_BindToObject(psfDesktop, pidlFolder, NULL, &IID_IShellFolder, 
+                                           (LPVOID*)&psfFolder);
+            if (SUCCEEDED(hr)) { 
+                hr = IShellFolder_GetAttributesOf(psfFolder, 0, NULL, pdwAttributes);
+            }
+        }
+        IShellFolder_Release(psfFolder);
+        IShellFolder_Release(psfDesktop);
+        if (FAILED(hr)) return FALSE;
+    } else {
+        lResult = RegQueryValueExW(hSFKey, wszAttributes, 0, NULL, (LPBYTE)&dwTemp, &dwLen);
+        RegCloseKey(hSFKey);
+        if (lResult == ERROR_SUCCESS) {
+            *pdwAttributes &= dwTemp;
+        } else {
+            return FALSE;
+        }
+    }
 
-	strcat (xriid, "\\ShellFolder");
+    TRACE("-- *pdwAttributes == 0x%08lx\n", *pdwAttributes);
 
-	if (RegOpenKeyExA(HKEY_CLASSES_ROOT,xriid,0,KEY_READ,&hkey))
-	{
-	  return FALSE;
-	}
-
-	if (RegQueryValueExA(hkey,"Attributes",0,NULL,(LPBYTE)&attributes,&len))
-	{
-	  RegCloseKey(hkey);
-	  return FALSE;
-	}
-
-	RegCloseKey(hkey);
-
-	TRACE("-- 0x%08lx\n", attributes);
-
-	*szDest = attributes;
-
-	return TRUE;
+    return TRUE;
 }
