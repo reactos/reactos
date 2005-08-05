@@ -16,9 +16,10 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+
+#include <ddk/d3dhal.h>
  
 /* Define the real export names */
-#if 0 /* FIXME */
 #define DdCreateDirectDrawObject            GdiEntry1
 #define DdQueryDirectDrawObject             GdiEntry2
 #define DdDeleteDirectDrawObject            GdiEntry3
@@ -35,10 +36,7 @@
 #define DdGetDxHandle                       GdiEntry14
 #define DdSetGammaRamp                      GdiEntry15
 #define DdSwapTextureHandles                GdiEntry16
-#endif 
 
-typedef struct _D3DHAL_CALLBACKS FAR *LPD3DHAL_CALLBACKS;
-typedef struct _D3DHAL_GLOBALDRIVERDATA FAR *LPD3DHAL_GLOBALDRIVERDATA;
 
 BOOL 
 STDCALL 
