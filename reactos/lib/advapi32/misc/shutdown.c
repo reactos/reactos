@@ -10,7 +10,7 @@
  *      19990515 EA
  */
 
-#include "advapi32.h"
+#include <advapi32.h>
 
 #define USZ {0,0,0}
 

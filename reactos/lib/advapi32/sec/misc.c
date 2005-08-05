@@ -5,7 +5,7 @@
  * PURPOSE:         Miscellaneous security functions
  */
 
-#include "advapi32.h"
+#include <advapi32.h>
 #include <accctrl.h>
 #include <malloc.h>
 #include <ntsecapi.h>

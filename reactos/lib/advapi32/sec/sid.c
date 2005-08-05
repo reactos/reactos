@@ -6,7 +6,7 @@
  * PURPOSE:         Security ID functions
  */
 
-#include "advapi32.h"
+#include <advapi32.h>
 #include <debug.h>
 
 

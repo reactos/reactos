@@ -11,7 +11,7 @@
  *                  Created 01/11/98
  */
 
-#include "advapi32.h"
+#include <advapi32.h>
 #include <debug.h>
 
 /*

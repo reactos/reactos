@@ -31,16 +31,16 @@ typedef struct _NTMARTA
 {
     HINSTANCE hDllInstance;
 
-    PVOID LookupAccountTrustee;
-    PVOID LookupAccountName;
-    PVOID LookupAccountSid;
-    PVOID SetEntriesInAList;
-    PVOID ConvertAccessToSecurityDescriptor;
-    PVOID ConvertSDToAccess;
-    PVOID ConvertAclToAccess;
-    PVOID GetAccessForTrustee;
-    PVOID GetExplicitEntries;
-
+    /* 2CC */PVOID LookupAccountTrustee;
+    /* 2D0 */PVOID LookupAccountName;
+    /* 2D4 */PVOID LookupAccountSid;
+    /* 2D8 */PVOID SetEntriesInAList;
+    /* 2DC */PVOID ConvertAccessToSecurityDescriptor;
+    /* 2E0 */PVOID ConvertSDToAccess;
+    /* 2E4 */PVOID ConvertAclToAccess;
+    /* 2E8 */PVOID GetAccessForTrustee;
+    /* 2EC */PVOID GetExplicitEntries;
+    /* 2F0 */
     DWORD (STDCALL *RewriteGetNamedRights)(LPWSTR pObjectName,
                                            SE_OBJECT_TYPE ObjectType,
                                            SECURITY_INFORMATION SecurityInfo,
@@ -50,11 +50,13 @@ typedef struct _NTMARTA
                                            PACL* ppSacl,
                                            PSECURITY_DESCRIPTOR* ppSecurityDescriptor);
 
+    /* 2F4 */
     DWORD (STDCALL *RewriteSetNamedRights)(LPWSTR pObjectName,
                                            SE_OBJECT_TYPE ObjectType,
                                            SECURITY_INFORMATION SecurityInfo,
                                            PSECURITY_DESCRIPTOR pSecurityDescriptor);
 
+    /*2F8*/
     DWORD (STDCALL *RewriteGetHandleRights)(HANDLE handle,
                                             SE_OBJECT_TYPE ObjectType,
                                             SECURITY_INFORMATION SecurityInfo,
@@ -64,20 +66,24 @@ typedef struct _NTMARTA
                                             PACL* ppSacl,
                                             PSECURITY_DESCRIPTOR* ppSecurityDescriptor);
 
+    /* 2FC */
     DWORD (STDCALL *RewriteSetHandleRights)(HANDLE handle,
                                             SE_OBJECT_TYPE ObjectType,
                                             SECURITY_INFORMATION SecurityInfo,
                                             PSECURITY_DESCRIPTOR pSecurityDescriptor);
 
+    /* 300 */
     DWORD (STDCALL *RewriteSetEntriesInAcl)(ULONG cCountOfExplicitEntries,
                                             PEXPLICIT_ACCESS_W pListOfExplicitEntries,
                                             PACL OldAcl,
                                             PACL* NewAcl);
 
+    /* 304 */
     DWORD (STDCALL *RewriteGetExplicitEntriesFromAcl)(PACL pacl,
                                                       PULONG pcCountOfExplicitEntries,
                                                       PEXPLICIT_ACCESS_W* pListOfExplicitEntries);
 
+    /* 308 */
     DWORD (STDCALL *TreeResetNamedSecurityInfo)(LPWSTR pObjectName,
                                                 SE_OBJECT_TYPE ObjectType,
                                                 SECURITY_INFORMATION SecurityInfo,
@@ -89,7 +95,7 @@ typedef struct _NTMARTA
                                                 FN_PROGRESSW fnProgress,
                                                 PROG_INVOKE_SETTING ProgressInvokeSetting,
                                                 PVOID Args);
-
+    /* 30C */
     DWORD (STDCALL *GetInheritanceSource)(LPWSTR pObjectName,
                                           SE_OBJECT_TYPE ObjectType,
                                           SECURITY_INFORMATION SecurityInfo,
@@ -101,6 +107,7 @@ typedef struct _NTMARTA
                                           PGENERIC_MAPPING pGenericMapping,
                                           PINHERITED_FROMW pInheritArray);
 
+    /* 310 */
     DWORD (STDCALL *FreeIndexArray)(PINHERITED_FROMW pInheritArray,
                                     USHORT AceCnt,
                                     PFN_OBJECT_MGR_FUNCTS pfnArray  OPTIONAL);

@@ -12,7 +12,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "advapi32.h"
+#include <advapi32.h>
 #include <services/services.h>
 
 #define NDEBUG
