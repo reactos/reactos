@@ -1510,45 +1510,39 @@ CallQS [] =
  */
 NTSTATUS STDCALL
 NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
-			  OUT PVOID UnsafeSystemInformation,
+			  OUT PVOID SystemInformation,
 			  IN ULONG Length,
 			  OUT PULONG UnsafeResultLength)
 {
   KPROCESSOR_MODE PreviousMode;
   ULONG ResultLength;
-  PVOID SystemInformation;
-  NTSTATUS FStatus;
+  NTSTATUS FStatus = STATUS_NOT_IMPLEMENTED;
 
   PAGED_CODE();
   
   PreviousMode = ExGetPreviousMode();
   
-
-/*	DPRINT("NtQuerySystemInformation Start. Class:%d\n",
-					SystemInformationClass );
-*/
-  /*if (ExGetPreviousMode() == KernelMode)
-    {*/
-      SystemInformation = UnsafeSystemInformation;
-    /*}
-  else
+  _SEH_TRY
     {
-      SystemInformation = ExAllocatePool(NonPagedPool, Length);
-      if (SystemInformation == NULL)
-	{
-	  return(STATUS_NO_MEMORY);
-	}
-    }*/
+      if (PreviousMode == UserMode)
+        {
+          /* SystemKernelDebuggerInformation needs only BOOLEAN alignment */
+          ProbeForWrite(SystemInformation, Length, 1); 
+          if (UnsafeResultLength != NULL)
+            ProbeForWrite(UnsafeResultLength, sizeof(ULONG), sizeof(ULONG));
+        }
 
-  /* Clear user buffer. */
-  RtlZeroMemory(SystemInformation, Length);
+      /* Clear user buffer. */
+      RtlZeroMemory(SystemInformation, Length);
 
-  /*
-   * Check the request is valid.
-   */
-  if ((SystemInformationClass >= SystemBasicInformation) &&
-      (SystemInformationClass < SystemInformationClassMax))
-    {
+      /*
+       * Check the request is valid.
+       */
+      if (SystemInformationClass >= SystemInformationClassMax)
+        {
+          return (STATUS_INVALID_INFO_CLASS);
+        }
+
       if (NULL != CallQS [SystemInformationClass].Query)
 	{
 	  /*
@@ -1557,17 +1551,6 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
 	  FStatus = CallQS [SystemInformationClass].Query(SystemInformation,
 							  Length,
 							  &ResultLength);
-	  /*if (ExGetPreviousMode() != KernelMode)
-	    {
-	      Status = MmCopyToCaller(UnsafeSystemInformation,
-				      SystemInformation,
-				      Length);
-	      ExFreePool(SystemInformation);
-	      if (!NT_SUCCESS(Status))
-		{
-		  return(Status);
-		}
-	    }*/
 	  if (NT_SUCCESS(FStatus) && UnsafeResultLength != NULL)
 	    {
               if (PreviousMode != KernelMode)
@@ -1575,9 +1558,6 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
                   FStatus = STATUS_SUCCESS;
                   _SEH_TRY
                     {
-                      ProbeForWrite(UnsafeResultLength,
-                                    sizeof(ULONG),
-                                    sizeof(ULONG));
                       *UnsafeResultLength = ResultLength;
                     }
                   _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
@@ -1591,10 +1571,15 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
                   *UnsafeResultLength = ResultLength;
                 }
 	    }
-	  return(FStatus);
 	}
     }
-  return (STATUS_INVALID_INFO_CLASS);
+  _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    {
+      FStatus = _SEH_GetExceptionCode();
+    }
+  _SEH_END;
+
+  return (FStatus);
 }
 
 
