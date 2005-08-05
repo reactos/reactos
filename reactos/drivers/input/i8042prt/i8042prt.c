@@ -517,9 +517,6 @@ static NTSTATUS STDCALL I8042BasicDetect(PDEVICE_EXTENSION DevExt)
 	DevExt->MouseExists = FALSE;
 	DevExt->KeyboardExists = FALSE;
 
-	if (!I8042Write(DevExt, I8042_DATA_PORT, 0x74))
-		return STATUS_TIMEOUT;
-
 	I8042Flush();
 
 	if (!I8042Write(DevExt, I8042_CTRL_PORT, KBD_SELF_TEST))
