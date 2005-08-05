@@ -95,6 +95,17 @@ ExIsProcessorFeaturePresent(IN ULONG ProcessorFeature)
     return(SharedUserData->ProcessorFeatures[ProcessorFeature]);
 }
 
+/*
+ * @implemented
+ */
+BOOLEAN
+STDCALL
+ExVerifySuite(SUITE_TYPE SuiteType)
+{
+    if (SuiteType == Personal) return TRUE;
+    return FALSE;
+}
+
 NTSTATUS STDCALL
 NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
 			       OUT	PWSTR		ValueBuffer,

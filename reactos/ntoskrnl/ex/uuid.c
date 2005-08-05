@@ -212,6 +212,18 @@ ExpCreateUuids(PULARGE_INTEGER Time,
   return STATUS_SUCCESS;
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+ExUuidCreate(
+    OUT UUID *Uuid
+    )
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
 
 /*
  * @unimplemented
