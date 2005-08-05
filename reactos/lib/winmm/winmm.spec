@@ -3,7 +3,6 @@
 3 stub @
 4 stub @
 
-@ stdcall PlaySoundA(ptr long long)
 @ stdcall CloseDriver(long long long)
 @ stdcall DefDriverProc(long long long long long)
 @ stdcall DriverCallback(long long long long long long long)
@@ -18,6 +17,7 @@
 @ stdcall OpenDriver(wstr wstr long)
 @ stdcall OpenDriverA(str str long)
 @ stdcall PlaySound(ptr long long) PlaySoundA
+@ stdcall PlaySoundA(ptr long long)
 @ stdcall PlaySoundW(ptr long long)
 @ stdcall SendDriverMessage(long long long long)
 @ stdcall auxGetDevCapsA(long ptr long)
@@ -42,9 +42,9 @@
 @ stdcall mciFreeCommandResource(long)
 @ stdcall mciGetCreatorTask(long)
 @ stdcall mciGetDeviceIDA(str)
-@ stdcall mciGetDeviceIDW(wstr)
 @ stdcall mciGetDeviceIDFromElementIDA(long str)
 @ stdcall mciGetDeviceIDFromElementIDW(long wstr)
+@ stdcall mciGetDeviceIDW(wstr)
 @ stdcall mciGetDriverData(long)
 @ stdcall mciGetErrorStringA(long ptr long)
 @ stdcall mciGetErrorStringW(long ptr long)
@@ -114,6 +114,10 @@
 @ stdcall mixerOpen(ptr long long long long)
 @ stdcall mixerSetControlDetails(long ptr long)
 @ stdcall mmGetCurrentTask()
+@ stdcall mmTaskBlock(long)
+@ stdcall mmTaskCreate(ptr ptr long)
+@ stdcall mmTaskSignal(long)
+@ stdcall mmTaskYield()
 @ stdcall mmioAdvance(long ptr long)
 @ stdcall mmioAscend(long ptr long)
 @ stdcall mmioClose(long long)
@@ -137,10 +141,6 @@
 @ stdcall mmioStringToFOURCCW(wstr long)
 @ stdcall mmioWrite(long ptr long)
 @ stdcall mmsystemGetVersion()
-@ stdcall mmTaskBlock(long)
-@ stdcall mmTaskCreate(ptr ptr long)
-@ stdcall mmTaskSignal(long)
-@ stdcall mmTaskYield()
 @ stdcall sndPlaySoundA(ptr long)
 @ stdcall sndPlaySoundW(ptr long)
 @ stdcall timeBeginPeriod(long)

@@ -68,8 +68,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(mci);
 
-WINMM_MapType  (*pFnMciMapMsg16To32W)  (WORD,WORD,DWORD*) /* = NULL */;
-WINMM_MapType  (*pFnMciUnMapMsg16To32W)(WORD,WORD,DWORD) /* = NULL */;
+WINMM_MapType  (*pFnMciMapMsg16To32W)  (WORD,WORD,DWORD,DWORD*) /* = NULL */;
+WINMM_MapType  (*pFnMciUnMapMsg16To32W)(WORD,WORD,DWORD,DWORD) /* = NULL */;
 WINMM_MapType  (*pFnMciMapMsg32WTo16)  (WORD,WORD,DWORD,DWORD*) /* = NULL */;
 WINMM_MapType  (*pFnMciUnMapMsg32WTo16)(WORD,WORD,DWORD,DWORD) /* = NULL */;
 
@@ -1595,7 +1595,7 @@ DWORD MCI_SendCommandFrom16(MCIDEVICEID wDevID, UINT16 wMsg, DWORD_PTR dwParam1,
 	if (wmd->bIs32 && pFnMciMapMsg16To32W) {
 	    WINMM_MapType		res;
 
-	    switch (res = pFnMciMapMsg16To32W(wmd->wType, wMsg, &dwParam2)) {
+	    switch (res = pFnMciMapMsg16To32W(wmd->wType, wMsg, dwParam1, &dwParam2)) {
 	    case WINMM_MAP_MSGERROR:
 		TRACE("Not handled yet (%s)\n", MCI_MessageToString(wMsg));
 		dwRet = MCIERR_DRIVER_INTERNAL;
@@ -1608,7 +1608,7 @@ DWORD MCI_SendCommandFrom16(MCIDEVICEID wDevID, UINT16 wMsg, DWORD_PTR dwParam1,
 	    case WINMM_MAP_OKMEM:
 		dwRet = SendDriverMessage(wmd->hDriver, wMsg, dwParam1, dwParam2);
 		if (res == WINMM_MAP_OKMEM)
-		    pFnMciUnMapMsg16To32W(wmd->wType, wMsg, dwParam2);
+		    pFnMciUnMapMsg16To32W(wmd->wType, wMsg, dwParam1, dwParam2);
 		break;
 	    }
 	} else {
@@ -1966,11 +1966,11 @@ DWORD	MCI_SendCommand(UINT wDevID, UINT16 wMsg, DWORD dwParam1,
 	if (bFrom32) {
 	    dwRet = MCI_Open(dwParam1, (LPMCI_OPEN_PARMSW)dwParam2);
 	} else if (pFnMciMapMsg16To32W) {
-	    switch (pFnMciMapMsg16To32W(0, wMsg, &dwParam2)) {
+	    switch (pFnMciMapMsg16To32W(0, wMsg, dwParam1, &dwParam2)) {
 	    case WINMM_MAP_OK:
 	    case WINMM_MAP_OKMEM:
 		dwRet = MCI_Open(dwParam1, (LPMCI_OPEN_PARMSW)dwParam2);
-		pFnMciUnMapMsg16To32W(0, wMsg, dwParam2);
+		pFnMciUnMapMsg16To32W(0, wMsg, dwParam1, dwParam2);
 		break;
 	    default: break; /* so that gcc does not bark */
 	    }
@@ -1980,11 +1980,11 @@ DWORD	MCI_SendCommand(UINT wDevID, UINT16 wMsg, DWORD dwParam1,
 	if (bFrom32) {
 	    dwRet = MCI_Close(wDevID, dwParam1, (LPMCI_GENERIC_PARMS)dwParam2);
 	} else if (pFnMciMapMsg16To32W) {
-	    switch (pFnMciMapMsg16To32W(0, wMsg, &dwParam2)) {
+	    switch (pFnMciMapMsg16To32W(0, wMsg, dwParam1, &dwParam2)) {
 	    case WINMM_MAP_OK:
 	    case WINMM_MAP_OKMEM:
 		dwRet = MCI_Close(wDevID, dwParam1, (LPMCI_GENERIC_PARMS)dwParam2);
-		pFnMciUnMapMsg16To32W(0, wMsg, dwParam2);
+		pFnMciUnMapMsg16To32W(0, wMsg, dwParam1, dwParam2);
 		break;
 	    default: break; /* so that gcc does not bark */
 	    }
@@ -1994,11 +1994,11 @@ DWORD	MCI_SendCommand(UINT wDevID, UINT16 wMsg, DWORD dwParam1,
 	if (bFrom32) {
 	    dwRet = MCI_SysInfo(wDevID, dwParam1, (LPMCI_SYSINFO_PARMSW)dwParam2);
 	} else if (pFnMciMapMsg16To32W) {
-	    switch (pFnMciMapMsg16To32W(0, wMsg, &dwParam2)) {
+	    switch (pFnMciMapMsg16To32W(0, wMsg, dwParam1, &dwParam2)) {
 	    case WINMM_MAP_OK:
 	    case WINMM_MAP_OKMEM:
 		dwRet = MCI_SysInfo(wDevID, dwParam1, (LPMCI_SYSINFO_PARMSW)dwParam2);
-		pFnMciUnMapMsg16To32W(0, wMsg, dwParam2);
+		pFnMciUnMapMsg16To32W(0, wMsg, dwParam1, dwParam2);
 		break;
 	    default: break; /* so that gcc does not bark */
 	    }
@@ -2008,11 +2008,11 @@ DWORD	MCI_SendCommand(UINT wDevID, UINT16 wMsg, DWORD dwParam1,
 	if (bFrom32) {
 	    dwRet = MCI_Break(wDevID, dwParam1, (LPMCI_BREAK_PARMS)dwParam2);
 	} else if (pFnMciMapMsg16To32W) {
-	    switch (pFnMciMapMsg16To32W(0, wMsg, &dwParam2)) {
+	    switch (pFnMciMapMsg16To32W(0, wMsg, dwParam1, &dwParam2)) {
 	    case WINMM_MAP_OK:
 	    case WINMM_MAP_OKMEM:
 		dwRet = MCI_Break(wDevID, dwParam1, (LPMCI_BREAK_PARMS)dwParam2);
-		pFnMciUnMapMsg16To32W(0, wMsg, dwParam2);
+		pFnMciUnMapMsg16To32W(0, wMsg, dwParam1, dwParam2);
 		break;
 	    default: break; /* so that gcc does not bark */
 	    }
@@ -2022,11 +2022,11 @@ DWORD	MCI_SendCommand(UINT wDevID, UINT16 wMsg, DWORD dwParam1,
 	if (bFrom32) {
 	    dwRet = MCI_Sound(wDevID, dwParam1, (LPMCI_SOUND_PARMSW)dwParam2);
 	} else if (pFnMciMapMsg16To32W) {
-	    switch (pFnMciMapMsg16To32W(0, wMsg, &dwParam2)) {
+	    switch (pFnMciMapMsg16To32W(0, wMsg, dwParam1, &dwParam2)) {
 	    case WINMM_MAP_OK:
 	    case WINMM_MAP_OKMEM:
 		dwRet = MCI_Sound(wDevID, dwParam1, (LPMCI_SOUND_PARMSW)dwParam2);
-		pFnMciUnMapMsg16To32W(0, wMsg, dwParam2);
+		pFnMciUnMapMsg16To32W(0, wMsg, dwParam1, dwParam2);
 		break;
 	    default: break; /* so that gcc does not bark */
 	    }

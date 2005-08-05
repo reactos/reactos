@@ -109,7 +109,7 @@ BOOL WINAPI MMSYSTEM_LibMain(DWORD fdwReason, HINSTANCE hinstDLL, WORD ds,
 }
 
 /**************************************************************************
- * 				MMSYSTEM_WEP			[MMSYSTEM.1]
+ * 				WEP			[MMSYSTEM.1]
  */
 int WINAPI MMSYSTEM_WEP(HINSTANCE16 hInstance, WORD wDataSeg,
                         WORD cbHeapSize, LPSTR lpCmdLine)

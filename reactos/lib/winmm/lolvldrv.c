@@ -414,7 +414,7 @@ DWORD	MMDRV_Close(LPWINE_MLD mld, UINT wMsg)
 /**************************************************************************
  * 				MMDRV_GetByID			[internal]
  */
-LPWINE_MLD	MMDRV_GetByID(UINT uDevID, UINT type)
+static LPWINE_MLD MMDRV_GetByID(UINT uDevID, UINT type)
 {
     TRACE("(%04x, %04x)\n", uDevID, type);
     if (uDevID < llTypes[type].wMaxId)
@@ -731,43 +731,19 @@ BOOL	MMDRV_Init(void)
     strcpy(mapper_buffer, WINE_DEFAULT_WINMM_MAPPER);
     strcpy(midi_buffer, WINE_DEFAULT_WINMM_MIDI);
 
-    if (! RegCreateKeyA(HKEY_LOCAL_MACHINE, "Software\\Wine\\Wine\\Config\\WinMM", &hKey)) {
+    /* @@ Wine registry key: HKCU\Software\Wine\Drivers */
+    if (!RegOpenKeyA(HKEY_CURRENT_USER, "Software\\Wine\\Drivers", &hKey))
+    {
         size = sizeof(driver_buffer);
-        if (RegQueryValueExA(hKey, "Drivers", 0, &type, (LPVOID)driver_buffer, &size)) 
+        if (RegQueryValueExA(hKey, "Audio", 0, &type, (LPVOID)driver_buffer, &size))
             strcpy(driver_buffer, WINE_DEFAULT_WINMM_DRIVER);
-
-        /* finish with mappers */
-        size = sizeof(mapper_buffer);
-        if (RegQueryValueExA(hKey, "WaveMapper", 0, &type, (LPVOID)mapper_buffer, &size))
-            strcpy(mapper_buffer, WINE_DEFAULT_WINMM_MAPPER);
-
-        size = sizeof(midi_buffer);
-        if (RegQueryValueExA(hKey, "MidiMapper", 0, &type, (LPVOID)midi_buffer, &size))
-            strcpy(midi_buffer, WINE_DEFAULT_WINMM_MIDI);
-
-        RegCloseKey(hKey);
     }
 
-#ifndef __REACTOS__
-    char*	p1;
-    char*	p2;
-
-    p1 = driver_buffer;
-    while (p1) {
-        p2 = strchr(p1, ';');
-        if (p2) *p2++ = '\0';
-        ret |= MMDRV_Install(p1, p1, FALSE);
-        p1 = p2;
-    }
-#endif
-
-#ifdef __REACTOS__
     // AG: TESTING:
     ret |= MMDRV_Install("mmdrv.dll", "mmdrv.dll", FALSE);
-#endif
 
-    ret |= MMDRV_Install("wavemapper", mapper_buffer, TRUE);
-    ret |= MMDRV_Install("midimapper", midi_buffer, TRUE);
+    ret |= MMDRV_Install("wavemapper", WINE_DEFAULT_WINMM_MAPPER, TRUE);
+    ret |= MMDRV_Install("midimapper", WINE_DEFAULT_WINMM_MIDI, TRUE);
     return ret;
 
 }

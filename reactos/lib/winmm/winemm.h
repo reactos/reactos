@@ -28,7 +28,7 @@
 #include "winbase.h"
 #include "mmddk.h"
 
-#define WINE_DEFAULT_WINMM_DRIVER     "wineoss.drv"
+#define WINE_DEFAULT_WINMM_DRIVER     "oss"
 #define WINE_DEFAULT_WINMM_MAPPER     "msacm.drv"
 #define WINE_DEFAULT_WINMM_MIDI       "midimap.drv"
 
@@ -301,8 +301,8 @@ extern  WINE_MMTHREAD*  (*pFnGetMMThread16)(UINT16);
 extern  LPWINE_DRIVER   (*pFnOpenDriver16)(LPCWSTR,LPCWSTR,LPARAM);
 extern  LRESULT         (*pFnCloseDriver16)(UINT16,LPARAM,LPARAM);
 extern  LRESULT         (*pFnSendMessage16)(UINT16,UINT,LPARAM,LPARAM);
-extern  WINMM_MapType   (*pFnMciMapMsg16To32W)(WORD,WORD,DWORD*);
-extern  WINMM_MapType   (*pFnMciUnMapMsg16To32W)(WORD,WORD,DWORD);
+extern  WINMM_MapType   (*pFnMciMapMsg16To32W)(WORD,WORD,DWORD,DWORD*);
+extern  WINMM_MapType   (*pFnMciUnMapMsg16To32W)(WORD,WORD,DWORD,DWORD);
 extern  WINMM_MapType   (*pFnMciMapMsg32WTo16)(WORD,WORD,DWORD,DWORD*);
 extern  WINMM_MapType   (*pFnMciUnMapMsg32WTo16)(WORD,WORD,DWORD,DWORD);
 extern  LRESULT         (*pFnCallMMDrvFunc16)(DWORD /* in fact FARPROC16 */,WORD,WORD,LONG,LONG,LONG);
