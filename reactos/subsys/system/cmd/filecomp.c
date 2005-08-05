@@ -413,7 +413,7 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
 			szSearch = szSearch1;
 		/* Move one char past */
 		szSearch++;		
-    szSearch[0] = _T('\0');
+      szSearch[0] = _T('\0');
 		_tcscpy(szPrefix,str);
 		return;
 	
@@ -501,7 +501,8 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
 	memcpy(File1,arg1,sizeof(FileName));
 	memcpy(File2,arg2,sizeof(FileName));
 
-	ret = _tcsicmp(File1->Name, File2->Name);
+	 /* ret = _tcsicmp(File1->Name, File2->Name); */
+	 ret = lstrcmpi(File1->Name, File2->Name);
 
 	free(File1);
 	free(File2);
@@ -552,17 +553,19 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, INT cusor)
 		str[cusor] = _T('\0');
 
 	/* Look to see if they hit tab again, if so cut off the diff length */
-	if(_tcscmp(str,LastReturned))
+	if(_tcscmp(str,LastReturned) || !_tcslen(str))
 	{
 	/* We need to know how many chars we added from the start */
 	StartLength = _tcslen(str);
 	
 	/* no string, we need all files in that directory */
 	if(!StartLength)
+	{
 		_tcscat(str,_T("*"));
+	}
 
 	/* Zero it out first */
-  szBaseWord[0] = _T('\0');
+   szBaseWord[0] = _T('\0');
 	szPrefix[0] = _T('\0');
 
 	/*What comes out of this needs to be:
