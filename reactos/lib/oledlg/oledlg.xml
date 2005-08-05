@@ -1,4 +1,4 @@
-<module name="oledlg" type="win32dll" baseaddress="${BASEADDRESS_OLEDLG}" installbase="system32" installname="oledlg.dll">
+<module name="oledlg" type="win32dll" baseaddress="${BASEADDRESS_OLEDLG}" installbase="system32" installname="oledlg.dll" warnings="true">
 	<importlibrary definition="oledlg.spec.def" />
 	<include base="oledlg">.</include>
 	<include base="ReactOS">include/wine</include>
