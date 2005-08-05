@@ -153,7 +153,7 @@ NTSTATUS STDCALL I8042SynchWritePort(PDEVICE_EXTENSION DevExt,
 
 		if (WaitForAck) {
 			Status = I8042ReadDataWait(DevExt, &Ack);
-			if (Status != STATUS_SUCCESS)
+			if (!NT_SUCCESS(Status))
 				return Status;
 			if (Ack == KBD_ACK)
 				return STATUS_SUCCESS;
@@ -426,7 +426,7 @@ VOID STDCALL I8042SendHookWorkItem(PDEVICE_OBJECT DeviceObject,
 					      I8042SynchReadPort,
 					      I8042SynchWritePortKbd,
 					      FALSE);
-			if (Status != STATUS_SUCCESS) {
+			if (!NT_SUCCESS(Status)) {
 				WorkItemData->Irp->IoStatus.Status = Status;
 				goto hookworkitemdone;
 			}
@@ -514,7 +514,13 @@ static NTSTATUS STDCALL I8042BasicDetect(PDEVICE_EXTENSION DevExt)
 	UCHAR Value = 0;
 	UINT Counter;
 
+	DevExt->MouseExists = FALSE;
+	DevExt->KeyboardExists = FALSE;
+
 	I8042Flush();
+
+	if (!I8042Write(DevExt, I8042_DATA_PORT, 0x74))
+		return STATUS_TIMEOUT;
 
 	if (!I8042Write(DevExt, I8042_CTRL_PORT, KBD_SELF_TEST))
 		return STATUS_TIMEOUT;
@@ -525,37 +531,26 @@ static NTSTATUS STDCALL I8042BasicDetect(PDEVICE_EXTENSION DevExt)
 		Status = I8042ReadDataWait(DevExt, &Value);
 	} while ((Counter--) && (STATUS_TIMEOUT == Status));
 
-	if (Status != STATUS_SUCCESS)
+	if (!NT_SUCCESS(Status))
 		return Status;
 
 	if (Value != 0x55) {
 		DPRINT1("Got %x instead of 55\n", Value);
 		return STATUS_IO_DEVICE_ERROR;
 	}
-	if (!I8042Write(DevExt, I8042_CTRL_PORT, KBD_LINE_TEST))
-		return STATUS_TIMEOUT;
 
-	Status = I8042ReadDataWait(DevExt, &Value);
-	if (Status != STATUS_SUCCESS)
-		return Status;
-
-	if (Value == 0) {
-		DevExt->KeyboardExists = TRUE;
-	} else {
-		DevExt->KeyboardExists = FALSE;
+	if (I8042Write(DevExt, I8042_CTRL_PORT, KBD_LINE_TEST))
+	{
+		Status = I8042ReadDataWait(DevExt, &Value);
+		if (NT_SUCCESS(Status) && Value == 0)
+			DevExt->KeyboardExists = TRUE;
 	}
 
-	if (!I8042Write(DevExt, I8042_CTRL_PORT, MOUSE_LINE_TEST))
-		return STATUS_TIMEOUT;
-
-	Status = I8042ReadDataWait(DevExt, &Value);
-	if (Status != STATUS_SUCCESS)
-		return Status;
-
-	if (Value == 0) {
-		DevExt->MouseExists = TRUE;
-	} else {
-		DevExt->MouseExists = FALSE;
+	if (I8042Write(DevExt, I8042_CTRL_PORT, MOUSE_LINE_TEST))
+	{
+		Status = I8042ReadDataWait(DevExt, &Value);
+		if (NT_SUCCESS(Status) && Value == 0)
+			DevExt->MouseExists = TRUE;
 	}
 
 	return STATUS_SUCCESS;
@@ -566,28 +561,36 @@ static NTSTATUS STDCALL I8042Initialize(PDEVICE_EXTENSION DevExt)
 	NTSTATUS Status;
 
 	Status = I8042BasicDetect(DevExt);
-	if (Status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(Status)) {
 		DPRINT1("Basic keyboard detection failed: %x\n", Status);
 		return Status;
 	}
 
 	if (!DevExt->KeyboardExists) {
-		DPRINT("Keyboard not detected\n");
+		DPRINT("Keyboard port not detected\n");
 		if (DevExt->Settings.Headless)
 			/* Act as if it exists regardless */
 			DevExt->KeyboardExists = TRUE;
 	} else {
-		DPRINT("Keyboard detected\n");
+		DPRINT("Keyboard port detected\n");
 		DevExt->KeyboardExists = I8042DetectKeyboard(DevExt);
 	}
 
+	if (DevExt->MouseExists) {
+		DPRINT("Mouse port detected\n");
+		DevExt->MouseExists = I8042DetectMouse(DevExt);
+	}
+
 	if (DevExt->KeyboardExists) {
+		DPRINT("Keyboard detected\n");
 		I8042KeyboardEnable(DevExt);
 		I8042KeyboardEnableInterrupt(DevExt);
 	}
 
-	if (DevExt->MouseExists)
+	if (DevExt->MouseExists) {
+		DPRINT("Mouse detected\n");
 		I8042MouseEnable(DevExt);
+	}
 
 	return STATUS_SUCCESS;
 }

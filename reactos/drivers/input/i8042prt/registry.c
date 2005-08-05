@@ -211,7 +211,7 @@ VOID STDCALL I8042ReadRegistry(PDRIVER_OBJECT DriverObject,
 	                                NULL,
 	                                NULL);
 
-	if (Status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(Status)) {
 		DPRINT1 ("Can't read registry: %x\n", Status);
 		/* Actually, the defaults are not set when the function
 		 * fails, as would happen during setup, so you have to
