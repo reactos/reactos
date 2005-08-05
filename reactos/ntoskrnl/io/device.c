@@ -503,7 +503,9 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
     /* Set Device Object Data */
     CreatedDeviceObject->DeviceType = DeviceType;
     CreatedDeviceObject->Characteristics = DeviceCharacteristics;
-    CreatedDeviceObject->DeviceExtension = CreatedDeviceObject + 1;
+    CreatedDeviceObject->DeviceExtension = DeviceExtensionSize ?
+                                           CreatedDeviceObject + 1 :
+                                           NULL;
     CreatedDeviceObject->StackSize = 1;
     CreatedDeviceObject->AlignmentRequirement = 1; /* FIXME */
 
