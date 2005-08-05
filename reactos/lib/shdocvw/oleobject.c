@@ -30,6 +30,30 @@
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
 /**********************************************************************
+ * IOleControl declaration for SHDOCVW.DLL
+ */
+typedef struct
+{
+    /* IUnknown fields */
+    const IOleControlVtbl *lpVtbl;
+    DWORD ref;
+} IOleControlImpl;
+
+static IOleControlImpl SHDOCVW_OleControl;
+
+/**********************************************************************
+ * IOleInPlaceObject declaration for SHDOCVW.DLL
+ */
+typedef struct
+{
+    /* IUnknown fields */
+    const IOleInPlaceObjectVtbl *lpVtbl;
+    DWORD ref;
+} IOleInPlaceObjectImpl;
+
+static IOleInPlaceObjectImpl SHDOCVW_OleInPlaceObject;
+
+/**********************************************************************
  * Implement the IOleObject interface for the web browser component
  *
  * Based on DefaultHandler code in dlls/ole32/defaulthandler.c.
@@ -407,7 +431,7 @@ static HRESULT WINAPI WBOOBJ_SetColorScheme(LPOLEOBJECT iface,
  * IOleObject virtual function table for IE Web Browser component
  */
 
-static IOleObjectVtbl WBOOBJ_Vtbl =
+static const IOleObjectVtbl WBOOBJ_Vtbl =
 {
     WBOOBJ_QueryInterface,
     WBOOBJ_AddRef,
@@ -522,7 +546,7 @@ static HRESULT WINAPI WBOIPO_ReactivateAndUndo(LPOLEINPLACEOBJECT iface)
  * IOleInPlaceObject virtual function table for IE Web Browser component
  */
 
-static IOleInPlaceObjectVtbl WBOIPO_Vtbl =
+static const IOleInPlaceObjectVtbl WBOIPO_Vtbl =
 {
     WBOIPO_QueryInterface,
     WBOIPO_AddRef,
@@ -535,7 +559,7 @@ static IOleInPlaceObjectVtbl WBOIPO_Vtbl =
     WBOIPO_ReactivateAndUndo
 };
 
-IOleInPlaceObjectImpl SHDOCVW_OleInPlaceObject = {&WBOIPO_Vtbl};
+static IOleInPlaceObjectImpl SHDOCVW_OleInPlaceObject = {&WBOIPO_Vtbl};
 
 
 /**********************************************************************
@@ -594,7 +618,7 @@ static HRESULT WINAPI WBOC_FreezeEvents(LPOLECONTROL iface, BOOL bFreeze)
  * IOleControl virtual function table for IE Web Browser component
  */
 
-static IOleControlVtbl WBOC_Vtbl =
+static const IOleControlVtbl WBOC_Vtbl =
 {
     WBOC_QueryInterface,
     WBOC_AddRef,
@@ -605,4 +629,4 @@ static IOleControlVtbl WBOC_Vtbl =
     WBOC_FreezeEvents
 };
 
-IOleControlImpl SHDOCVW_OleControl = {&WBOC_Vtbl};
+static IOleControlImpl SHDOCVW_OleControl = {&WBOC_Vtbl};

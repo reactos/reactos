@@ -105,7 +105,7 @@ static HRESULT WINAPI WBCF_LockServer(LPCLASSFACTORY iface, BOOL dolock)
     return S_OK;
 }
 
-static IClassFactoryVtbl WBCF_Vtbl =
+static const IClassFactoryVtbl WBCF_Vtbl =
 {
     WBCF_QueryInterface,
     WBCF_AddRef,

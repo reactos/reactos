@@ -151,7 +151,7 @@ HRESULT WINAPI DllCanUnloadNow(void)
  *              SHDOCVW_TryDownloadMozillaControl
  */
 typedef struct _IBindStatusCallbackImpl {
-    IBindStatusCallbackVtbl *vtbl;
+    const IBindStatusCallbackVtbl *vtbl;
     DWORD ref;
     HWND hDialog;
     BOOL *pbCancelled;
@@ -275,7 +275,7 @@ dlOnObjectAvailable( IBindStatusCallback* iface, REFIID riid, IUnknown* punk)
     return S_OK;
 }
 
-struct IBindStatusCallbackVtbl dlVtbl =
+static const IBindStatusCallbackVtbl dlVtbl =
 {
     dlQueryInterface,
     dlAddRef,
@@ -318,7 +318,8 @@ static DWORD WINAPI ThreadFunc( LPVOID info )
 
     /* find the name of the thing to download */
     szUrl[0] = 0;
-    r = RegOpenKeyW( HKEY_LOCAL_MACHINE, szMozDlPath, &hkey );
+    /* @@ Wine registry key: HKCU\Software\Wine\shdocvw */
+    r = RegOpenKeyW( HKEY_CURRENT_USER, szMozDlPath, &hkey );
     if( r == ERROR_SUCCESS )
     {
         sz = MAX_PATH;
@@ -387,7 +388,7 @@ dlProc ( HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
 }
 
-static BOOL SHDOCVW_TryDownloadMozillaControl()
+static BOOL SHDOCVW_TryDownloadMozillaControl(void)
 {
     DWORD r;
     WCHAR buf[0x100];
@@ -413,7 +414,7 @@ static BOOL SHDOCVW_TryDownloadMozillaControl()
     return TRUE;
 }
  
-static BOOL SHDOCVW_TryLoadMozillaControl()
+static BOOL SHDOCVW_TryLoadMozillaControl(void)
 {
     WCHAR szPath[MAX_PATH];
     BOOL bTried = FALSE;

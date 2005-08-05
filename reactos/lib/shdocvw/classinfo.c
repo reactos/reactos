@@ -72,7 +72,7 @@ static HRESULT WINAPI WBPCI_GetClassInfo(LPPROVIDECLASSINFO iface, LPTYPEINFO *p
  * IProvideClassInfo virtual function table for IE Web Browser component
  */
 
-static IProvideClassInfoVtbl WBPCI_Vtbl =
+static const IProvideClassInfoVtbl WBPCI_Vtbl =
 {
     WBPCI_QueryInterface,
     WBPCI_AddRef,
@@ -154,7 +154,7 @@ static HRESULT WINAPI WBPCI2_GetGUID(LPPROVIDECLASSINFO2 iface,
  * IProvideClassInfo virtual function table for IE Web Browser component
  */
 
-static IProvideClassInfo2Vtbl WBPCI2_Vtbl =
+static const IProvideClassInfo2Vtbl WBPCI2_Vtbl =
 {
     WBPCI2_QueryInterface,
     WBPCI2_AddRef,
