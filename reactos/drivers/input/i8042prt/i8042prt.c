@@ -576,11 +576,6 @@ static NTSTATUS STDCALL I8042Initialize(PDEVICE_EXTENSION DevExt)
 		DevExt->KeyboardExists = I8042DetectKeyboard(DevExt);
 	}
 
-	if (DevExt->MouseExists) {
-		DPRINT("Mouse port detected\n");
-		DevExt->MouseExists = I8042DetectMouse(DevExt);
-	}
-
 	if (DevExt->KeyboardExists) {
 		DPRINT("Keyboard detected\n");
 		I8042KeyboardEnable(DevExt);
