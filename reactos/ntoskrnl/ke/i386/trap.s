@@ -45,13 +45,8 @@ _KiTrapRet:
 	popl	%edx
 	popl	%ecx
 	popl	%eax
-
-	/* Restore the old previous mode */
 	popl	%ebx
-	cmpl	$0, %esi
-	je	.L7
-	movb	%bl, %ss:KTHREAD_PREVIOUS_MODE(%esi)
-.L7:
+
 	/* Restore the old exception handler list */
 	popl	%ebx
 	movl	%ebx, %fs:KPCR_EXCEPTION_LIST
@@ -140,13 +135,6 @@ _KiTrapProlog2:
         /* Set the new previous mode based on the saved CS selector */
 	movl	 KTRAP_FRAME_CS(%ebp), %eax
 	andl     $0x0000FFFF, %eax
-	cmpl     $KERNEL_CS, %eax
-	jne      .L1
-	movb     $KernelMode, KTHREAD_PREVIOUS_MODE(%edi)
-	jmp      .L3
-.L1:
-	movb     $UserMode, KTHREAD_PREVIOUS_MODE(%edi)
-.L3:
 
 	/* Save the old trap frame. */
 	movl	KTHREAD_TRAP_FRAME(%edi), %edx
