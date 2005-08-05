@@ -82,15 +82,7 @@ LONG
 STDCALL
 ExSystemExceptionFilter(VOID)
 {
-    /*
-     * The PreviousMode always happens to be KernelMode since the exception
-     * happens in kenrel mode. FIXME: Is this correct behaviour?
-     */
-#if 0
     return KeGetPreviousMode() != KernelMode ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH;
-#else
-    return EXCEPTION_EXECUTE_HANDLER;
-#endif
 }
 
 /*
