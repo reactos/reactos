@@ -545,7 +545,20 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
     }
 
     /* Create the Device Queue */
-    KeInitializeDeviceQueue(&CreatedDeviceObject->DeviceQueue);
+    if (CreatedDeviceObject->DeviceType == FILE_DEVICE_DISK_FILE_SYSTEM ||
+        CreatedDeviceObject->DeviceType == FILE_DEVICE_FILE_SYSTEM ||
+        CreatedDeviceObject->DeviceType == FILE_DEVICE_CD_ROM_FILE_SYSTEM ||
+        CreatedDeviceObject->DeviceType == FILE_DEVICE_NETWORK_FILE_SYSTEM ||
+        CreatedDeviceObject->DeviceType == FILE_DEVICE_TAPE_FILE_SYSTEM)
+    {
+        /* Simple FS Devices, they don't need a real Device Queue */
+        InitializeListHead(&CreatedDeviceObject->Queue.ListEntry);
+    }
+    else
+    {
+        /* An actual Device, initialize its DQ */
+        KeInitializeDeviceQueue(&CreatedDeviceObject->DeviceQueue);
+    }
 
     /* Insert the Object */
     Status = ObInsertObject(CreatedDeviceObject,
