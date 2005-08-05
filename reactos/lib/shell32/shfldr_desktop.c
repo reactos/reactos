@@ -428,7 +428,7 @@ static HRESULT WINAPI ISF_Desktop_fnGetAttributesOf (IShellFolder2 * iface,
     IGenericSFImpl *This = (IGenericSFImpl *)iface;
     HRESULT hr = S_OK;
     const static DWORD dwDesktopAttributes = 
-        SFGAO_STORAGE | SFGAO_HASPROPSHEET | SFGAO_STORAGE_ANCESTOR |
+        SFGAO_STORAGE | SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR |
         SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER;
 
     TRACE ("(%p)->(cidl=%d apidl=%p mask=%p (0x%08lx))\n",

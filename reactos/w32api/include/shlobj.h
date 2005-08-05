@@ -95,6 +95,7 @@ extern "C" {
 #define SFGAO_CANCOPY	DROPEFFECT_COPY
 #define SFGAO_CANMOVE	DROPEFFECT_MOVE
 #define SFGAO_CANLINK	DROPEFFECT_LINK
+#define SFGAO_STORAGE		0x00000008L
 #define SFGAO_CANRENAME		0x00000010L
 #define SFGAO_CANDELETE		0x00000020L
 #define SFGAO_HASPROPSHEET	0x00000040L
@@ -114,6 +115,7 @@ extern "C" {
 #define SFGAO_VALIDATE		0x01000000L
 #define SFGAO_REMOVABLE		0x02000000L
 #define SFGAO_COMPRESSED	0x04000000L
+#define SFGAO_STORAGEANCESTOR	0x00800000L
 #define STRRET_WSTR	0
 #define STRRET_OFFSET	1
 #define STRRET_CSTR	2
@@ -1115,6 +1117,31 @@ DECLARE_INTERFACE_(IShellLinkW, IUnknown)
 #define IShellLinkW_SetRelativePath(T,a,b) (T)->lpVtbl->SetRelativePath(T,a,b)
 #define IShellLinkW_Resolve(T,a,b) (T)->lpVtbl->Resolve(T,a,b)
 #define IShellLinkW_SetPath(T,a) (T)->lpVtbl->SetPath(T,a)
+#endif
+
+#define INTERFACE IShellLinkDataList
+DECLARE_INTERFACE_(IShellLinkDataList, IUnknown)
+{
+	STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+	STDMETHOD_(ULONG,Release)(THIS) PURE;
+	STDMETHOD(AddDataBlock)(THIS_ PVOID) PURE;
+	STDMETHOD(CopyDataBlock)(THIS_ DWORD,PVOID*) PURE;
+	STDMETHOD(RemoveDataBlock)(THIS_ DWORD) PURE;
+	STDMETHOD(GetFlags)(THIS_ PDWORD) PURE;
+	STDMETHOD(SetFlags)(THIS_ DWORD) PURE;
+};
+#undef INTERFACE
+
+#ifdef COBJMACROS
+#define IShellLinkDataList_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
+#define IShellLinkDataList_AddRef(T) (T)->lpVtbl->AddRef(T)
+#define IShellLinkDataList_Release(T) (T)->lpVtbl->Release(T)
+#define IShellLinkDataList_AddDataBlock(T,a) (T)->lpVtbl->AddDataBlock(T,a)
+#define IShellLinkDataList_CopyDataBlock(T,a,b) (T)->lpVtbl->CopyDataBlock(T,a,b)
+#define IShellLinkDataList_RemoveDataBlock(T,a) (T)->lpVtbl->RemoveDataBlock(T,a)
+#define IShellLinkDataList_GetFlags(T,a) (T)->lpVtbl->GetFlags(T,a)
+#define IShellLinkDataList_SetFlags(T,a) (T)->lpVtbl->SetFlags(T,a)
 #endif
 
 #define INTERFACE IShellFolder
