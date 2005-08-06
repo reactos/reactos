@@ -934,6 +934,41 @@ typedef struct _DDRAWI_DDRAWSURFACE_MORE {
     DWORD			dwFVF;
     LPVOID			lpVB;
 } DDRAWI_DDRAWSURFACE_MORE;
+#else
+typedef struct _DDRAWI_DDRAWSURFACE_MORE {
+    DWORD			dwSize;
+    PVOID		lpIUnknowns;
+    LPDDRAWI_DIRECTDRAW_LCL	lpDD_lcl;
+    DWORD			dwPageLockCount;
+    DWORD			dwBytesAllocated;
+    LPDDRAWI_DIRECTDRAW_INT	lpDD_int;
+    DWORD			dwMipMapCount;
+    LPDDRAWI_DDRAWCLIPPER_INT	lpDDIClipper;
+    /* DirectX 5.0 */
+    LPHEAPALIASINFO		lpHeapAliasInfo;
+    DWORD			dwOverlayFlags;
+    VOID			*rgjunc;
+    LPDDRAWI_DDVIDEOPORT_LCL	lpVideoPort;
+    LPDDOVERLAYFX		lpddOverlayFX;
+    DDSCAPSEX			ddsCapsEx;
+    DWORD			dwTextureStage;
+    LPVOID			lpDDRAWReserved;
+    LPVOID			lpDDRAWReserved2;
+    LPVOID			lpDDrawReserved3;
+    DWORD			dwDDrawReserved4;
+    LPVOID			lpDDrawReserved5;
+    LPDWORD			lpGammaRamp;
+    LPDWORD			lpOriginalGammaRamp;
+    LPVOID			lpDDrawReserved6;
+    DWORD			dwSurfaceHandle;
+    DWORD			qwDDrawReserved8[2];
+    LPVOID			lpDDrawReserved9;
+    DWORD			cSurfaces;
+    LPDDSURFACEDESC2		pCreatedDDSurfaceDesc2;
+    LPDDRAWI_DDRAWSURFACE_LCL	*slist;
+    DWORD			dwFVF;
+    LPVOID			lpVB;
+} DDRAWI_DDRAWSURFACE_MORE;
 #endif /* _NO_COM */
 
 typedef struct _DDRAWI_DDRAWSURFACE_LCL {
