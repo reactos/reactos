@@ -1,0 +1,25 @@
+<module name="user32_test" type="win32cui" installbase="bin" installname="user32_test.exe" warnings="true">
+    <include base="user32_test">.</include>
+    <define name="__USE_W32API" />
+    <library>ntdll</library>
+    <library>user32</library>
+    <library>gdi32</library>
+    <file>class.c</file>
+    <file>clipboard.c</file>
+    <file>dce.c</file>
+    <file>dde.c</file>
+    <file>dialog.c</file>
+    <file>edit.c</file>
+    <file>input.c</file>
+    <file>listbox.c</file>
+    <file>menu.c</file>
+    <file>msg.c</file>
+    <file>resource.c</file>
+    <file>sysparams.c</file>
+    <file>text.c</file>
+    <file>win.c</file>
+    <file>winstation.c</file>
+    <file>wsprintf.c</file>
+    <file>testlist.c</file>
+    <file>resource.rc</file>
+</module>
