@@ -1,0 +1,8 @@
+<group>
+<directory name="advapi32">
+	<xi:include href="advapi32/advapi32_test.xml" />
+</directory>
+<directory name="comctl32">
+	<xi:include href="comctl32/comctl32_test.xml" />
+</directory>
+</group>
