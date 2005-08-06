@@ -1141,7 +1141,7 @@ SetLayeredWindowAttributes(HWND hwnd,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HWND STDCALL
 SetParent(HWND hWndChild,
