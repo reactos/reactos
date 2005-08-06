@@ -966,7 +966,11 @@ NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize ) {
  * appropriately.
  */
 
-VOID FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyboardLayout) {
+VOID FASTCALL
+W32kKeyProcessMessage(LPMSG Msg,
+                      PKBDTABLES KeyboardLayout,
+                      BYTE Prefix)
+{
   DWORD ScanCode = 0, ModifierBits = 0;
   DWORD i = 0;
   DWORD BaseMapping = 0;
@@ -984,6 +988,7 @@ VOID FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyboardLayout) {
       { VK_UP,     VK_NUMPAD8 },
       { VK_PRIOR,  VK_NUMPAD9 },
       { 0,0 } };
+  PVSC_VK VscVkTable;
 
   if( !KeyboardLayout || !Msg ||
       (Msg->message != WM_KEYDOWN && Msg->message != WM_SYSKEYDOWN &&
@@ -1005,10 +1010,40 @@ VOID FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyboardLayout) {
   ScanCode = (Msg->lParam >> 16) & 0xff;
   BaseMapping = Msg->wParam =
     IntMapVirtualKeyEx( ScanCode, 1, KeyboardLayout );
-  if( ScanCode >= KeyboardLayout->bMaxVSCtoVK )
-    RawVk = 0;
+  if( Prefix == 0 )
+    {
+      if( ScanCode >= KeyboardLayout->bMaxVSCtoVK )
+        RawVk = 0xff;
+      else
+        RawVk = KeyboardLayout->pusVSCtoVK[ScanCode];
+    }
   else
-    RawVk = KeyboardLayout->pusVSCtoVK[ScanCode];
+    {
+      if( Prefix == 0xE0 )
+        {
+          /* ignore shift codes */
+          if( ScanCode == 0x2A || ScanCode == 0x36 )
+            {
+              IntUnLockQueueState;
+              return;
+            }
+          VscVkTable = KeyboardLayout->pVSCtoVK_E0;
+        }
+      else if( Prefix == 0xE1 )
+        {
+          VscVkTable = KeyboardLayout->pVSCtoVK_E1;
+        }
+
+      RawVk = 0xff;
+      while (VscVkTable->Vsc)
+        {
+          if( VscVkTable->Vsc == ScanCode )
+            {
+              RawVk = VscVkTable->Vk;
+            }
+          VscVkTable++;
+        }
+    }
 
   if ((ModifierBits & NUMLOCK_BIT) &&
       !(ModifierBits & GetShiftBit(KeyboardLayout, VK_SHIFT)) &&

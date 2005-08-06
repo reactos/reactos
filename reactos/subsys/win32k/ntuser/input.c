@@ -628,7 +628,7 @@ KeyboardThreadMain(PVOID StartContext)
 
 	      lParam |= (KeyInput.MakeCode & 0xff) << 16;
 
-	      if (KeyInput.Flags & (KEY_E0 | KEY_E1))
+	      if (KeyInput.Flags & KEY_E0)
 	          lParam |= (1 << 24);
 
 	      if (ModifierState & MOD_ALT)
@@ -673,7 +673,9 @@ KeyboardThreadMain(PVOID StartContext)
 	       * keyboard layout in use.
 	       */
 	      W32kKeyProcessMessage(&msg,
-				    FocusThread->Tcb.Win32Thread->KeyboardLayout);
+				    FocusThread->Tcb.Win32Thread->KeyboardLayout,
+				    KeyInput.Flags & KEY_E0 ? 0xE0 :
+				    (KeyInput.Flags & KEY_E1 ? 0xE1 : 0));
 
 	      if (GetHotKey(InputWindowStation,
 			    ModifierState,
