@@ -1,0 +1,13 @@
+<module name="comctl32_test" type="win32cui" installbase="bin" installname="comctl32_test.exe">
+    <include base="comctl32_test">.</include>
+    <define name="__USE_W32API" />
+    <library>shlwapi</library>
+    <library>ole32</library>
+    <library>comctl32</library>
+    <library>ntdll</library>
+    <file>dpa.c</file>
+    <file>mru.c</file>
+    <file>subclass.c</file>
+    <file>tab.c</file>
+    <file>testlist.c</file>
+</module>
