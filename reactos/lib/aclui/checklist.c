@@ -1776,6 +1776,7 @@ CheckListWndProc(IN HWND hwnd,
         case CLM_SETCHECKBOXCOLUMN:
         {
             infoPtr->CheckBoxLeft[wParam != CLB_DENY] = (INT)lParam;
+            UpdateControl(infoPtr);
             Ret = 1;
             break;
         }

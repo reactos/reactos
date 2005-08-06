@@ -204,3 +204,77 @@ ListViewSelectItem(IN HWND hwnd,
                             &li);
 }
 
+HRESULT
+InitializeObjectPicker(IN PCWSTR ServerName,
+                       IN PSI_OBJECT_INFO ObjectInfo,
+                       IN PCWSTR Attributes[],
+                       OUT IDsObjectPicker **pDsObjectPicker)
+{
+    HRESULT hRet;
+
+    *pDsObjectPicker = NULL;
+
+    hRet = CoCreateInstance(&CLSID_DsObjectPicker,
+                            NULL,
+                            CLSCTX_INPROC_SERVER,
+                            &IID_IDsObjectPicker,
+                            (LPVOID*)pDsObjectPicker);
+    if (SUCCEEDED(hRet))
+    {
+        DSOP_INIT_INFO InitInfo;
+        UINT i;
+        DSOP_SCOPE_INIT_INFO Scopes[] =
+        {
+            {
+                sizeof(DSOP_SCOPE_INIT_INFO),
+                DSOP_SCOPE_TYPE_TARGET_COMPUTER,
+                DSOP_SCOPE_FLAG_DEFAULT_FILTER_USERS | DSOP_SCOPE_FLAG_DEFAULT_FILTER_GROUPS |
+                DSOP_SCOPE_FLAG_STARTING_SCOPE,
+                {
+                    {
+                        0,
+                        0,
+                        0
+                    },
+                    DSOP_DOWNLEVEL_FILTER_USERS | DSOP_DOWNLEVEL_FILTER_LOCAL_GROUPS |
+                    DSOP_DOWNLEVEL_FILTER_GLOBAL_GROUPS | DSOP_DOWNLEVEL_FILTER_ALL_WELLKNOWN_SIDS
+                },
+                NULL,
+                NULL,
+                S_OK
+            },
+        };
+
+        InitInfo.cbSize = sizeof(InitInfo);
+        InitInfo.pwzTargetComputer = ServerName;
+        InitInfo.cDsScopeInfos = sizeof(Scopes) / sizeof(Scopes[0]);
+        InitInfo.aDsScopeInfos = Scopes;
+        InitInfo.flOptions = DSOP_FLAG_MULTISELECT | DSOP_SCOPE_TYPE_TARGET_COMPUTER;
+        InitInfo.cAttributesToFetch = sizeof(Attributes) / sizeof(Attributes[0]);
+        InitInfo.apwzAttributeNames = Attributes;
+
+        for (i = 0; i < InitInfo.cDsScopeInfos; i++)
+        {
+            if ((ObjectInfo->dwFlags & SI_SERVER_IS_DC) &&
+                (InitInfo.aDsScopeInfos[i].flType & DSOP_SCOPE_TYPE_UPLEVEL_JOINED_DOMAIN))
+            {
+                /* only set the domain controller string if we know the target
+                   computer is a domain controller and the scope type is an
+                   up-level domain to which the target computer is joined */
+                InitInfo.aDsScopeInfos[i].pwzDcName = InitInfo.pwzTargetComputer;
+            }
+        }
+
+        hRet = (*pDsObjectPicker)->lpVtbl->Initialize(*pDsObjectPicker,
+                                                      &InitInfo);
+
+        if (FAILED(hRet))
+        {
+            /* delete the object picker in case initialization failed! */
+            (*pDsObjectPicker)->lpVtbl->Release(*pDsObjectPicker);
+        }
+    }
+
+    return hRet;
+}
+

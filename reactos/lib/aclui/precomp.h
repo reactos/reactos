@@ -26,30 +26,33 @@ ULONG DbgPrint(PCH Format,...);
 
 extern HINSTANCE hDllInstance;
 
-typedef struct _ACE_LISTITEM
+typedef struct _PRINCIPAL_LISTITEM
 {
-    struct _ACE_LISTITEM *Next;
+    struct _PRINCIPAL_LISTITEM *Next;
     SID_NAME_USE SidNameUse;
     WCHAR *DisplayString;
     WCHAR *AccountName;
     WCHAR *DomainName;
-} ACE_LISTITEM, *PACE_LISTITEM;
+} PRINCIPAL_LISTITEM, *PPRINCIPAL_LISTITEM;
 
 typedef struct _SECURITY_PAGE
 {
     HWND hWnd;
+    HWND hBtnAdd;
     HWND hBtnRemove;
     HWND hBtnAdvanced;
     HWND hAceCheckList;
     HWND hPermissionsForLabel;
 
-    /* Main ACE List */
-    HWND hWndAceList;
-    PACE_LISTITEM AceListHead;
+    /* Main Principals List */
+    HWND hWndPrincipalsList;
+    PPRINCIPAL_LISTITEM PrincipalsListHead;
+    
+    INT ControlsMargin;
     
     INT SpecialPermCheckIndex;
 
-    HIMAGELIST hiUsrs;
+    HIMAGELIST hiPrincipals;
 
     LPSECURITYINFO psi;
     SI_OBJECT_INFO ObjectInfo;
@@ -78,6 +81,12 @@ ListViewGetSelectedItemData(IN HWND hwnd);
 BOOL
 ListViewSelectItem(IN HWND hwnd,
                    IN INT Index);
+
+HRESULT
+InitializeObjectPicker(IN PCWSTR ServerName,
+                       IN PSI_OBJECT_INFO ObjectInfo,
+                       IN PCWSTR Attributes[],
+                       OUT IDsObjectPicker **pDsObjectPicker);
 
 /* CHECKLIST CONTROL **********************************************************/
 
