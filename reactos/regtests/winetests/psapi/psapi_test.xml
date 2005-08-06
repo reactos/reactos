@@ -1,0 +1,8 @@
+<module name="psapi_test" type="win32cui" installbase="bin" installname="psapi_test.exe" warnings="true">
+    <include base="psapi_test">.</include>
+    <define name="__USE_W32API" />
+    <library>ntdll</library>
+    <library>psapi</library>
+    <file>testlist.c</file>
+    <file>module.c</file>
+</module>
