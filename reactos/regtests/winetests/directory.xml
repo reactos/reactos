@@ -5,4 +5,16 @@
 <directory name="comctl32">
 	<xi:include href="comctl32/comctl32_test.xml" />
 </directory>
+<directory name="gdi32">
+	<xi:include href="gdi32/gdi32_test.xml" />
+</directory>
+<directory name="msvcrt">
+	<xi:include href="msvcrt/msvcrt_test.xml" />
+</directory>
+<directory name="psapi">
+	<xi:include href="psapi/psapi_test.xml" />
+</directory>
+<directory name="version">
+	<xi:include href="version/version_test.xml" />
+</directory>
 </group>

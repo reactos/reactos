@@ -1,0 +1,7 @@
+Makefile
+bitmap.ok
+brush.ok
+gdiobj.ok
+generated.ok
+metafile.ok
+testlist.c
