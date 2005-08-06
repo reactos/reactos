@@ -1,4 +1,4 @@
-<module name="advapi32_test" type="win32cui" installbase="bin" installname="advapi32_test.exe">
+<module name="advapi32_test" type="win32cui" installbase="bin" installname="advapi32_test.exe" warnings="true">
     <include base="advapi32_test">.</include>
     <define name="__USE_W32API" />
     <library>advapi32</library>

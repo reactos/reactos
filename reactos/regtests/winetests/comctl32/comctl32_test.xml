@@ -1,4 +1,4 @@
-<module name="comctl32_test" type="win32cui" installbase="bin" installname="comctl32_test.exe">
+<module name="comctl32_test" type="win32cui" installbase="bin" installname="comctl32_test.exe" warnings="true">
     <include base="comctl32_test">.</include>
     <define name="__USE_W32API" />
     <library>shlwapi</library>
