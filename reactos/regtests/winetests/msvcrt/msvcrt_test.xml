@@ -1,0 +1,14 @@
+<module name="msvcrt_test" type="win32cui" installbase="bin" installname="msvcrt_test.exe" warnings="true">
+    <include base="msvcrt_test">.</include>
+    <define name="__USE_W32API" />
+    <library>ntdll</library>
+    <file>cpp.c</file>
+    <file>environ.c</file>
+    <file>file.c</file>
+    <file>heap.c</file>
+    <file>printf.c</file>
+    <file>scanf.c</file>
+    <file>string.c</file>
+    <file>testlist.c</file>
+    <file>time.c</file>
+</module>
