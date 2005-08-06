@@ -5,4 +5,7 @@
 <directory name="shared">
 	<xi:include href="shared/rtshared.xml" />
 </directory>
+<directory name="winetests">
+	<xi:include href="winetests/directory.xml" />
+</directory>
 </group>
