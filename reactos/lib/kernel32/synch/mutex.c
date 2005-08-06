@@ -99,13 +99,13 @@ CreateMutexW(LPSECURITY_ATTRIBUTES lpMutexAttributes,
 			     &ObjectAttributes);
        if (NT_SUCCESS(Status))
          {
-	   if(bInitialOwner)
-             {
-               WaitForSingleObject(MutantHandle, INFINITE);
-	     }
            SetLastError(ERROR_ALREADY_EXISTS);
 	 }
      }
+   else if (NT_SUCCESS(Status))
+     {
+       SetLastError(ERROR_SUCCESS);
+     }             
    if (!NT_SUCCESS(Status))
      {
        SetLastErrorByStatus(Status);
