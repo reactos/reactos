@@ -24,7 +24,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#include "usetup.h"
+#include <usetup.h>
 
 #define NDEBUG
 #include <debug.h>

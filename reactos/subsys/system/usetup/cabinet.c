@@ -8,7 +8,7 @@
  *   CSH 15/08-2003 Created
  */
 
-#include "usetup.h"
+#include <usetup.h>
 #include <zlib.h>
 
 #define NDEBUG
