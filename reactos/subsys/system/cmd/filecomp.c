@@ -555,48 +555,49 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, INT cusor)
 	/* Look to see if they hit tab again, if so cut off the diff length */
 	if(_tcscmp(str,LastReturned) || !_tcslen(str))
 	{
-	/* We need to know how many chars we added from the start */
-	StartLength = _tcslen(str);
-	
-	/* no string, we need all files in that directory */
-	if(!StartLength)
-	{
-		_tcscat(str,_T("*"));
-	}
+		/* We need to know how many chars we added from the start */
+		StartLength = _tcslen(str);
 
-	/* Zero it out first */
-   szBaseWord[0] = _T('\0');
-	szPrefix[0] = _T('\0');
-
-	/*What comes out of this needs to be:
-		szBaseWord =  path no quotes to the object 
-		szPrefix = what leads up to the filename
-		           no quote at the END of the full name */
-	FindPrefixAndSuffix(str,szPrefix,szBaseWord);
-	/* Strip quotes */
-	for(i = 0; i < _tcslen(szBaseWord); i++)
-	{
-		if(!_tcsncmp(&szBaseWord[i], _T("\""),1))
+		/* no string, we need all files in that directory */
+		if(!StartLength)
 		{
-			for(ii = i; ii < (_tcslen(szBaseWord)); ii++)
-				szBaseWord[ii] = szBaseWord[ii + 1];
+			_tcscat(str,_T("*"));
 		}
-	}
 
-	/* clear it out */
-	memset(szSearchPath, 0, sizeof(szSearchPath));
+		/* Zero it out first */
+		szBaseWord[0] = _T('\0');
+		szPrefix[0] = _T('\0');
 
-	/* Start the search for all the files */
-	GetFullPathName(szBaseWord, MAX_PATH, szSearchPath, NULL);
-	if(StartLength > 0)
-		_tcscat(szSearchPath,_T("*"));
-	_tcscpy(LastSearch,szSearchPath);
-	_tcscpy(LastPrefix,szPrefix);
+		/*What comes out of this needs to be:
+			szBaseWord =  path no quotes to the object
+			szPrefix = what leads up to the filename
+			no quote at the END of the full name */
+		FindPrefixAndSuffix(str,szPrefix,szBaseWord);
+		/* Strip quotes */
+		for(i = 0; i < _tcslen(szBaseWord); i++)
+		{
+			if(!_tcsncmp(&szBaseWord[i], _T("\""),1))
+			{
+				for(ii = i; ii < (_tcslen(szBaseWord)); ii++)
+					szBaseWord[ii] = szBaseWord[ii + 1];
+			}
+		}
+
+		/* clear it out */
+		memset(szSearchPath, 0, sizeof(szSearchPath));
+
+		/* Start the search for all the files */
+		GetFullPathName(szBaseWord, MAX_PATH, szSearchPath, NULL);
+		if(StartLength > 0)
+			_tcscat(szSearchPath,_T("*"));
+		_tcscpy(LastSearch,szSearchPath);
+		_tcscpy(LastPrefix,szPrefix);
 	}
 	else
 	{
 		_tcscpy(szSearchPath, LastSearch);
 		_tcscpy(szPrefix, LastPrefix);
+		StartLength = 0;
 	}
 	/* search for the files it might be */
 	hFile = FindFirstFile (szSearchPath, &file);
