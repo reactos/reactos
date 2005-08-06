@@ -70,7 +70,7 @@ IntGdiIsEmptyRect(const RECT* Rect)
 BOOL STDCALL
 NtGdiIsEmptyRect(const RECT* UnsafeRect)
 {
-  RECT Rect;
+  RECT Rect = {0};
   NTSTATUS Status = STATUS_SUCCESS;
 
   _SEH_TRY

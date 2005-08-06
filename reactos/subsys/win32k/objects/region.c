@@ -2028,7 +2028,7 @@ HRGN
 STDCALL
 NtGdiCreateEllipticRgnIndirect(CONST PRECT Rect)
 {
-  RECT SafeRect;
+  RECT SafeRect = {0};
   NTSTATUS Status = STATUS_SUCCESS;
 
   _SEH_TRY
@@ -2073,7 +2073,7 @@ NtGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
 HRGN STDCALL
 NtGdiCreateRectRgnIndirect(CONST PRECT rc)
 {
-  RECT SafeRc;
+  RECT SafeRc = {0};
   NTSTATUS Status = STATUS_SUCCESS;
 
   _SEH_TRY
@@ -3510,8 +3510,9 @@ NtGdiCreatePolyPolygonRgn(CONST PPOINT  pt,
       ProbeForRead(PolyCounts,
                    Count * sizeof(INT),
                    1);
+      /* just probe one point for now, we don't know the length of the array yet */
       ProbeForRead(pt,
-                   nPoints * sizeof(POINT),
+                   sizeof(POINT),
                    1);
    }
    _SEH_HANDLE
@@ -3593,10 +3594,13 @@ NtGdiCreatePolyPolygonRgn(CONST PPOINT  pt,
 
    _SEH_TRY
    {
+      ProbeForRead(pt,
+                   nPoints * sizeof(POINT),
+                   1);
       /* pointers were already probed! */
       RtlCopyMemory(Safept,
                     pt,
-                    Count * sizeof(POINT));
+                    nPoints * sizeof(POINT));
    }
    _SEH_HANDLE
    {
