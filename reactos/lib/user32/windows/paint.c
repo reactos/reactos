@@ -217,7 +217,7 @@ SetWindowRgn(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
