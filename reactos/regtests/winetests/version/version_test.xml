@@ -1,0 +1,8 @@
+<module name="version_test" type="win32cui" installbase="bin" installname="version_test.exe" warnings="true">
+    <include base="version_test">.</include>
+    <define name="__USE_W32API" />
+    <library>ntdll</library>
+    <library>version</library>
+    <file>testlist.c</file>
+    <file>info.c</file>
+</module>
