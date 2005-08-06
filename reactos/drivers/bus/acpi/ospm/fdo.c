@@ -694,6 +694,7 @@ FdoSetPower(
       break;
     default:
       Status = STATUS_UNSUCCESSFUL;
+      return Status;
     }
     if (!DeviceExtension->SystemStates[AcpiState]) {
       DPRINT("System sleep state S%d is not supported by hardware\n", AcpiState);
