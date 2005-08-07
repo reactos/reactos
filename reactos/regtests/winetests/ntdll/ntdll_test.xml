@@ -1,5 +1,5 @@
-<module name="ntdll_test" type="win32cui" installbase="bin" installname="ntdll_test.exe" warnings="true">
-    <include base="ntdll_test">.</include>
+<module name="ntdll_winetest" type="win32cui" installbase="bin" installname="ntdll_winetest.exe" warnings="true">
+    <include base="ntdll_winetest">.</include>
     <define name="__USE_W32API" />
     <library>ntdll</library>
     <file>atom.c</file>

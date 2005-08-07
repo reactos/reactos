@@ -1,5 +1,5 @@
-<module name="msvcrt_test" type="win32cui" installbase="bin" installname="msvcrt_test.exe" warnings="true">
-    <include base="msvcrt_test">.</include>
+<module name="msvcrt_winetest" type="win32cui" installbase="bin" installname="msvcrt_winetest.exe" warnings="true">
+    <include base="msvcrt_winetest">.</include>
     <define name="__USE_W32API" />
     <library>ntdll</library>
     <file>cpp.c</file>

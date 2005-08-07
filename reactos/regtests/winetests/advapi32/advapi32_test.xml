@@ -1,5 +1,5 @@
-<module name="advapi32_test" type="win32cui" installbase="bin" installname="advapi32_test.exe" warnings="true">
-    <include base="advapi32_test">.</include>
+<module name="advapi32_winetest" type="win32cui" installbase="bin" installname="advapi32_winetest.exe" warnings="true">
+    <include base="advapi32_winetest">.</include>
     <define name="__USE_W32API" />
     <library>advapi32</library>
     <library>ntdll</library>

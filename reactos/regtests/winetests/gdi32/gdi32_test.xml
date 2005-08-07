@@ -1,5 +1,5 @@
-<module name="gdi32_test" type="win32cui" installbase="bin" installname="gdi32_test.exe" warnings="true">
-    <include base="gdi32_test">.</include>
+<module name="gdi32_winetest" type="win32cui" installbase="bin" installname="gdi32_winetest.exe" warnings="true">
+    <include base="gdi32_winetest">.</include>
     <define name="__USE_W32API" />
     <library>ntdll</library>
     <library>gdi32</library>

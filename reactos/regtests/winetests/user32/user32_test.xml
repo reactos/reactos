@@ -1,5 +1,5 @@
-<module name="user32_test" type="win32cui" installbase="bin" installname="user32_test.exe" warnings="true">
-    <include base="user32_test">.</include>
+<module name="user32_winetest" type="win32cui" installbase="bin" installname="user32_winetest.exe" warnings="true">
+    <include base="user32_winetest">.</include>
     <define name="__USE_W32API" />
     <library>ntdll</library>
     <library>user32</library>
