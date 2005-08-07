@@ -567,10 +567,10 @@ QSI_DEF(SystemPathInformation)
 /* Class 5 - Process Information */
 QSI_DEF(SystemProcessInformation)
 {
-	ULONG ovlSize=0, nThreads;
-	PEPROCESS pr, syspr;
+	ULONG ovlSize = 0, nThreads;
+	PEPROCESS pr = NULL, syspr;
 	unsigned char *pCur;
-	NTSTATUS Status;
+	NTSTATUS Status = STATUS_SUCCESS;
 
 	_SEH_TRY
 	{
