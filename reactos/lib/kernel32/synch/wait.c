@@ -90,7 +90,7 @@ WaitForSingleObjectEx(HANDLE hHandle,
       Time.QuadPart = -10000 * (LONGLONG)dwMilliseconds;
       TimePtr = &Time;
     }
-
+WaitAgain:
   Status = NtWaitForSingleObject(hHandle,
 				 (BOOLEAN) bAlertable,
 				 TimePtr);
@@ -100,6 +100,7 @@ WaitForSingleObjectEx(HANDLE hHandle,
       SetLastErrorByStatus (Status);
       return WAIT_FAILED;
     }
+  if (Status == STATUS_ALERTED && bAlertable) goto WaitAgain;
 
   return Status;
 }
@@ -210,21 +211,23 @@ WaitForMultipleObjectsEx(DWORD nCount,
       TimePtr = &Time;
     }
 
+WaitAgain:
   Status = NtWaitForMultipleObjects (nCount,
 				     HandleBuffer,
 				     bWaitAll  ? WaitAll : WaitAny,
 				     (BOOLEAN)bAlertable,
 				     TimePtr);
-  if (HandleBuffer != Handle)
-    {
-      RtlFreeHeap(RtlGetProcessHeap(), 0, HandleBuffer);
-    }
-
   if (HIWORD(Status))
     {
       SetLastErrorByStatus (Status);
-      return WAIT_FAILED;
+      Status = WAIT_FAILED;
     }
+  if (Status == STATUS_ALERTED && bAlertable) goto WaitAgain;
+
+  if (HandleBuffer != Handle)
+  {
+      RtlFreeHeap(RtlGetProcessHeap(), 0, HandleBuffer);
+  }
 
   return Status;
 }
