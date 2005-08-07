@@ -148,7 +148,6 @@ CONFIGRET WINAPI CM_Enumerate_Classes(
     ULONG ulClassIndex, LPGUID ClassGuid, ULONG ulFlags)
 {
     TRACE("%lx %p %lx\n", ulClassIndex, ClassGuid, ulFlags);
-
     return CM_Enumerate_Classes_Ex(ulClassIndex, ClassGuid, ulFlags, NULL);
 }
 
@@ -192,9 +191,15 @@ CONFIGRET WINAPI CM_Enumerate_Classes_Ex(
 {
     HKEY hRelativeKey, hKey;
     DWORD rc;
-    WCHAR Buffer[39];
+    WCHAR Buffer[MAX_GUID_STRING_LEN];
 
     TRACE("%lx %p %lx %p\n", ulClassIndex, ClassGuid, ulFlags, hMachine);
+
+    if (ClassGuid == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
 
     if (hMachine != NULL)
     {
@@ -224,7 +229,7 @@ CONFIGRET WINAPI CM_Enumerate_Classes_Ex(
     if (rc == ERROR_SUCCESS)
     {
         /* Remove the {} */
-        Buffer[37] = UNICODE_NULL;
+        Buffer[MAX_GUID_STRING_LEN - 2] = UNICODE_NULL;
         /* Convert the buffer to a GUID */
         if (UuidFromStringW(&Buffer[1], ClassGuid) != RPC_S_OK)
             return CR_FAILURE;
@@ -476,6 +481,7 @@ CONFIGRET WINAPI CM_Get_DevNode_Registry_Property_ExW(
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
+    ulTransferLength = *pulLength;
     ret = PNP_GetDeviceRegProp(BindingHandle,
                                lpDevInst,
                                ulProperty,
@@ -1332,9 +1338,129 @@ CONFIGRET WINAPI CM_Set_DevNode_Registry_Property_ExA(
     DEVINST dnDevInst, ULONG ulProperty, PCVOID Buffer, ULONG ulLength,
     ULONG ulFlags, HMACHINE hMachine)
 {
+    CONFIGRET ret = CR_SUCCESS;
+    LPWSTR lpBuffer;
+    ULONG ulType;
+
     FIXME("%lx %lu %p %lx %lx %lx\n",
           dnDevInst, ulProperty, Buffer, ulLength, ulFlags, hMachine);
-    return CR_CALL_NOT_IMPLEMENTED;
+
+    if (Buffer == NULL && ulLength != 0)
+        return CR_INVALID_POINTER;
+
+    if (Buffer == NULL)
+    {
+        ret = CM_Set_DevNode_Registry_Property_ExW(dnDevInst,
+                                                   ulProperty,
+                                                   NULL,
+                                                   0,
+                                                   ulFlags,
+                                                   hMachine);
+    }
+    else
+    {
+        /* Get property type */
+        switch (ulProperty)
+        {
+            case CM_DRP_DEVICEDESC:
+                ulType = REG_SZ;
+                break;
+
+            case CM_DRP_HARDWAREID:
+                ulType = REG_MULTI_SZ;
+                break;
+
+            case CM_DRP_COMPATIBLEIDS:
+                ulType = REG_MULTI_SZ;
+                break;
+
+            case CM_DRP_SERVICE:
+                ulType = REG_SZ;
+                break;
+
+            case CM_DRP_CLASS:
+                ulType = REG_SZ;
+                break;
+
+            case CM_DRP_CLASSGUID:
+                ulType = REG_SZ;
+                break;
+
+            case CM_DRP_DRIVER:
+                ulType = REG_SZ;
+                break;
+
+            case CM_DRP_CONFIGFLAGS:
+                ulType = REG_DWORD;
+                break;
+
+            case CM_DRP_MFG:
+                ulType = REG_SZ;
+                break;
+
+            case CM_DRP_FRIENDLYNAME:
+                ulType = REG_SZ;
+                break;
+
+            case CM_DRP_LOCATION_INFORMATION:
+                ulType = REG_SZ;
+                break;
+
+            case CM_DRP_UPPERFILTERS:
+                ulType = REG_MULTI_SZ;
+                break;
+
+            case CM_DRP_LOWERFILTERS:
+                ulType = REG_MULTI_SZ;
+                break;
+
+            default:
+                return CR_INVALID_PROPERTY;
+        }
+
+        /* Allocate buffer if needed */
+        if (ulType == REG_SZ ||
+            ulType == REG_MULTI_SZ)
+        {
+            lpBuffer = MyMalloc(ulLength * sizeof(WCHAR));
+            if (lpBuffer == NULL)
+            {
+                ret = CR_OUT_OF_MEMORY;
+            }
+            else
+            {
+                if (!MultiByteToWideChar(CP_ACP, 0, Buffer,
+                                         ulLength, lpBuffer, ulLength))
+                {
+                    MyFree(lpBuffer);
+                    ret = CR_FAILURE;
+                }
+                else
+                {
+                    ret = CM_Set_DevNode_Registry_Property_ExW(dnDevInst,
+                                                               ulProperty,
+                                                               lpBuffer,
+                                                               ulLength * sizeof(WCHAR),
+                                                               ulFlags,
+                                                               hMachine);
+                    MyFree(lpBuffer);
+                }
+            }
+        }
+        else
+        {
+            ret = CM_Set_DevNode_Registry_Property_ExW(dnDevInst,
+                                                       ulProperty,
+                                                       Buffer,
+                                                       ulLength,
+                                                       ulFlags,
+                                                       hMachine);
+        }
+
+        ret = CR_CALL_NOT_IMPLEMENTED;
+    }
+
+    return ret;
 }
 
 
@@ -1350,7 +1476,7 @@ CONFIGRET WINAPI CM_Set_DevNode_Registry_Property_ExW(
     LPWSTR lpDevInst;
     ULONG ulType;
 
-    FIXME("%lx %lu %p %lx %lx %lx\n",
+    TRACE("%lx %lu %p %lx %lx %lx\n",
           dnDevInst, ulProperty, Buffer, ulLength, ulFlags, hMachine);
 
     if (dnDevInst == 0)

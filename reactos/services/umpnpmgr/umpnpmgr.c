@@ -457,11 +457,13 @@ PNP_GetDeviceRegProp(handle_t BindingHandle,
                      unsigned long *Length,
                      DWORD Flags)
 {
+    PLUGPLAY_CONTROL_PROPERTY_DATA PlugPlayData;
     CONFIGRET ret = CR_SUCCESS;
     LPWSTR lpValueName = NULL;
-    ULONG Data;
+    HKEY hKey = 0;
+    NTSTATUS Status;
 
-    DPRINT1("PNP_GetDeviceRegProp() called\n");
+    DPRINT("PNP_GetDeviceRegProp() called\n");
 
     switch (Property)
     {
@@ -518,6 +520,7 @@ PNP_GetDeviceRegProp(handle_t BindingHandle,
             break;
 
         case CM_DRP_UI_NUMBER:
+            lpValueName = NULL;
             break;
 
         case CM_DRP_UPPERFILTERS:
@@ -529,40 +532,103 @@ PNP_GetDeviceRegProp(handle_t BindingHandle,
             break;
 
         case CM_DRP_BUSTYPEGUID:
+            lpValueName = NULL;
             break;
 
         case CM_DRP_LEGACYBUSTYPE:
+            lpValueName = NULL;
             break;
 
         case CM_DRP_BUSNUMBER:
+            lpValueName = NULL;
             break;
 
         case CM_DRP_ENUMERATOR_NAME:
+            lpValueName = NULL;
             break;
 
         default:
             return CR_INVALID_PROPERTY;
     }
 
-    DPRINT1("Value name: %S\n", lpValueName);
+    DPRINT("Value name: %S\n", lpValueName);
 
     if (lpValueName)
     {
         /* Retrieve information from the Registry */
+        if (RegOpenKeyExW(hEnumKey,
+                          DeviceInstance,
+                          0,
+                          KEY_ALL_ACCESS,
+                          &hKey))
+            return CR_INVALID_DEVNODE;
 
+        if (RegQueryValueExW(hKey,
+                             lpValueName,
+                             NULL,
+                             DataType,
+                             (LPBYTE)Buffer,
+                             Length))
+            ret = CR_REGISTRY_ERROR;
+
+        /* FIXME: Check buffer size */
+
+        RegCloseKey(hKey);
     }
     else
     {
         /* Retrieve information from the Device Node */
+        RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
+                             DeviceInstance);
+        PlugPlayData.Buffer = Buffer;
+        PlugPlayData.BufferSize = *TransferLen;
 
+        switch (Property)
+        {
+#if 0
+            case CM_DRP_PHYSICAL_DEVICE_OBJECT_NAME:
+                PlugPlayData.Property = DevicePropertyPhysicalDeviceObjectName;
+                break;
+
+            case CM_DRP_UI_NUMBER:
+                PlugPlayData.Property = DevicePropertyUINumber;
+                break;
+
+            case CM_DRP_BUSTYPEGUID:
+                PlugPlayData.Property = DevicePropertyBusTypeGuid;
+                break;
+
+            case CM_DRP_LEGACYBUSTYPE:
+                PlugPlayData.Property = DevicePropertyLegacyBusType;
+                break;
+
+            case CM_DRP_BUSNUMBER:
+                PlugPlayData.Property = DevicePropertyBusNumber;
+                break;
+
+            case CM_DRP_ENUMERATOR_NAME:
+                PlugPlayData.Property = DevicePropertyEnumeratorName;
+                break;
+#endif
+
+            default:
+                return CR_INVALID_PROPERTY;
+        }
+
+        Status = NtPlugPlayControl(PlugPlayControlProperty,
+                                   (PVOID)&PlugPlayData,
+                                   sizeof(PLUGPLAY_CONTROL_PROPERTY_DATA));
+        if (NT_SUCCESS(Status))
+        {
+            *Length = PlugPlayData.BufferSize;
+        }
+        else
+        {
+            ret = CR_FAILURE; /* FIXME */
+        }
     }
 
-
-    Data = 0xbaadf00d;
-    memcpy(Buffer, &Data, sizeof(ULONG));
-    *Length = sizeof(ULONG);
-
-    DPRINT1("PNP_GetDeviceRegProp() done (returns %lx)\n", ret);
+    DPRINT("PNP_GetDeviceRegProp() done (returns %lx)\n", ret);
 
     return ret;
 }
