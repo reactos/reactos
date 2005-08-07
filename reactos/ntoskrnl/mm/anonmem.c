@@ -646,6 +646,18 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
       return STATUS_INVALID_PARAMETER_4;
    }
 
+   /* 
+    * Copy on Write is reserved for system use. This case is a certain failure
+    * but there may be other cases...needs more testing
+    */
+   if ((!BaseAddress || (AllocationType & MEM_RESERVE)) && 
+       ((Protect & PAGE_WRITECOPY) || (Protect & PAGE_EXECUTE_WRITECOPY)))
+   {
+      DPRINT1("Copy on write is not supported by VirtualAlloc\n");
+      return STATUS_INVALID_PAGE_PROTECTION;
+   }
+
+
    Status = ObReferenceObjectByHandle(ProcessHandle,
                                       PROCESS_VM_OPERATION,
                                       NULL,
