@@ -123,10 +123,10 @@ DdDeleteDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal)
  *
  * GDIEntry 4
  */
-BOOL STDCALL DdCreateSurfaceObject( 
-LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
-BOOL bPrimarySurface
-)
+BOOL 
+STDCALL 
+DdCreateSurfaceObject( LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
+                       BOOL bPrimarySurface)
 {
 	return intDDCreateSurface(pSurfaceLocal,1);	
 }
@@ -210,9 +210,37 @@ DdReenableDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
   return NtGdiDdReenableDirectDrawObject((HANDLE)pDirectDrawGlobal->hDD, pbNewMode); 	
 } 
 
+/*
+ * @implemented
+ *
+ * GDIEntry 11
+ */
+BOOL 
+STDCALL 
+DdAttachSurface( LPDDRAWI_DDRAWSURFACE_LCL pSurfaceFrom,
+                 LPDDRAWI_DDRAWSURFACE_LCL pSurfaceTo)
+{
 
+ /* Create Surface if it does not exits one */
+ if (pSurfaceFrom->hDDSurface)
+ {    
+	if (!intDDCreateSurface(pSurfaceFrom,FALSE))
+	{
+	  return FALSE;
+	}
+ }
 
+ /* Create Surface if it does not exits one */
+ if (pSurfaceTo->hDDSurface)
+ {    
+	if (!intDDCreateSurface(pSurfaceTo,FALSE))
+	{
+	  return FALSE;
+	}
+ }
 
+ return NtGdiDdAttachSurface( (HANDLE) pSurfaceFrom->hDDSurface, (HANDLE) pSurfaceTo->hDDSurface);
+}
 
 /*
  * @implemented
@@ -309,7 +337,7 @@ LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl2
 /* interal create surface */
 BOOL
 intDDCreateSurface ( LPDDRAWI_DDRAWSURFACE_LCL pSurface, 
-				  BOOL bComplete)
+				     BOOL bComplete)
 {
   DD_SURFACE_LOCAL SurfaceLocal;
   DD_SURFACE_GLOBAL SurfaceGlobal;

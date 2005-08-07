@@ -3905,21 +3905,6 @@ DWORD dwOffset
 }
 
 
-
-/*
- * @unimplemented
- */
-BOOL STDCALL DdAttachSurface( 
-LPDDRAWI_DDRAWSURFACE_LCL pSurfaceFrom,
-LPDDRAWI_DDRAWSURFACE_LCL pSurfaceTo
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
 /*
  * @unimplemented
  */
