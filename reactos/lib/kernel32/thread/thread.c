@@ -267,7 +267,7 @@ OpenThread(
    OBJECT_ATTRIBUTES ObjectAttributes;
    CLIENT_ID ClientId ;
 
-   ClientId.UniqueProcess = INVALID_HANDLE_VALUE;
+   ClientId.UniqueProcess = 0;
    ClientId.UniqueThread = (HANDLE)dwThreadId;
 
    InitializeObjectAttributes (&ObjectAttributes,
