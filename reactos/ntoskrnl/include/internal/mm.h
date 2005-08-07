@@ -667,7 +667,7 @@ PVOID MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
 PFN_TYPE MmGetContinuousPages(ULONG NumberOfBytes,
 			      PHYSICAL_ADDRESS LowestAcceptableAddress,
 			      PHYSICAL_ADDRESS HighestAcceptableAddress,
-			      ULONG Alignment);
+			      PHYSICAL_ADDRESS BoundaryAddressMultiple);
 
 NTSTATUS MmInitZeroPageThread(VOID);
 
@@ -795,12 +795,11 @@ NTSTATUS MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages);
 /* cont.c ********************************************************************/
 
 PVOID STDCALL
-MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
-					  IN PHYSICAL_ADDRESS LowestAcceptableAddress,
-			          IN PHYSICAL_ADDRESS HighestAcceptableAddress,
-			          IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
-			          IN MEMORY_CACHING_TYPE CacheType OPTIONAL,
-					  IN ULONG Alignment);
+MmAllocateContiguousMemorySpecifyCache(IN SIZE_T NumberOfBytes,
+				       IN PHYSICAL_ADDRESS LowestAcceptableAddress,
+			               IN PHYSICAL_ADDRESS HighestAcceptableAddress,
+			               IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
+			               IN MEMORY_CACHING_TYPE CacheType OPTIONAL);
                       
 /* region.c ************************************************************/
 

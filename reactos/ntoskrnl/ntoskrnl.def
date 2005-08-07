@@ -680,7 +680,6 @@ MmAddPhysicalMemory@8
 MmAddVerifierThunks@8
 MmAdjustWorkingSetSize@12
 MmAdvanceMdl@8
-MmAllocateContiguousAlignedMemory@36
 MmAllocateContiguousMemory@12
 MmAllocateContiguousMemorySpecifyCache@32
 MmAllocateMappingAddress@8
