@@ -513,7 +513,7 @@ PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
 {
     PHANDLE_TABLE_ENTRY CidEntry;
     PETHREAD FoundThread;
-    NTSTATUS Status = STATUS_INVALID_PARAMETER;
+    NTSTATUS Status = STATUS_INVALID_CID;
     PAGED_CODE();
 
     /* Get the CID Handle Entry */
