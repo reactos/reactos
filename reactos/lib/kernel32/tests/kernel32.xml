@@ -1,4 +1,4 @@
-<module name="kernel32_test" type="test">
+<module name="kernel32_tests" type="test">
 	<include base="rtshared">.</include>
 	<include base="kernel32">.</include>
 	<define name="_DISABLE_TIDENTS" />
