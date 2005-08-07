@@ -290,7 +290,6 @@
 				<file>continue.c</file>
 			</directory>
 		</if>
-		<file>cid.c</file>
 		<file>debug.c</file>
 		<file>idle.c</file>
 		<file>job.c</file>

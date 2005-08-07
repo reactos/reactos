@@ -44,11 +44,7 @@ extern PVOID KeRaiseUserExceptionDispatcher;
 PVOID PspSystemDllBase = NULL;
 PVOID PspSystemDllSection = NULL;
 PVOID PspSystemDllEntryPoint = NULL;
-
-VOID
-INIT_FUNCTION
-PsInitClientIDManagment(VOID);
-
+PHANDLE_TABLE PspCidTable = NULL;
 VOID STDCALL PspKillMostProcesses();
 
 /* FUNCTIONS ***************************************************************/
@@ -68,6 +64,14 @@ PiInitProcessManager(VOID)
    PsInitThreadManagment();
    PsInitIdleThread();
    PsInitialiseW32Call();
+}
+
+VOID
+INIT_FUNCTION
+PsInitClientIDManagment(VOID)
+{
+  PspCidTable = ExCreateHandleTable(NULL);
+  ASSERT(PspCidTable);
 }
 
 VOID
@@ -261,7 +265,7 @@ PsInitProcessManagment(VOID)
 VOID
 PspPostInitSystemProcess(VOID)
 {
-  NTSTATUS Status;
+  HANDLE_TABLE_ENTRY CidEntry;
 
   /* this routine is called directly after the exectuive handle tables were
      initialized. We'll set up the Client ID handle table and assign the system
@@ -271,10 +275,11 @@ PspPostInitSystemProcess(VOID)
   ObCreateHandleTable(NULL, FALSE, PsInitialSystemProcess);
   ObpKernelHandleTable = PsInitialSystemProcess->ObjectTable;
 
-  Status = PsCreateCidHandle(PsInitialSystemProcess,
-                             PsProcessType,
-                             &PsInitialSystemProcess->UniqueProcessId);
-  if(!NT_SUCCESS(Status))
+  CidEntry.u1.Object = PsInitialSystemProcess;
+  CidEntry.u2.GrantedAccess = 0;
+  PsInitialSystemProcess->UniqueProcessId = ExCreateHandle(PspCidTable, &CidEntry);
+
+  if(!PsInitialSystemProcess->UniqueProcessId)
   {
     DPRINT1("Failed to create CID handle (unique process id) for the system process!\n");
     KEBUGCHECK(0);

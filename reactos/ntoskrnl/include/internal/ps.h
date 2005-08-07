@@ -216,10 +216,6 @@ PspGetSystemDllEntryPoints(VOID);
 
 /* CLIENT ID */
 
-NTSTATUS PsCreateCidHandle(PVOID Object, POBJECT_TYPE ObjectType, PHANDLE Handle);
-NTSTATUS PsDeleteCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType);
-PHANDLE_TABLE_ENTRY PsLookupCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType, PVOID *Object);
-VOID PsUnlockCidHandle(PHANDLE_TABLE_ENTRY CidEntry);
 NTSTATUS PsLockProcess(PEPROCESS Process, BOOLEAN Timeout);
 VOID PsUnlockProcess(PEPROCESS Process);
 

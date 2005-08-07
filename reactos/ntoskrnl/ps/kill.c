@@ -21,6 +21,7 @@ WORK_QUEUE_ITEM PspReaperWorkItem;
 BOOLEAN PspReaping = FALSE;
 extern LIST_ENTRY PsActiveProcessHead;
 extern FAST_MUTEX PspActiveProcessMutex;
+extern PHANDLE_TABLE PspCidTable;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -153,9 +154,9 @@ PspDeleteProcess(PVOID ObjectBody)
     ExReleaseFastMutex(&PspActiveProcessMutex);
 
     /* Delete the CID Handle */
-    if(Process->UniqueProcessId != NULL) {
-
-        PsDeleteCidHandle(Process->UniqueProcessId, PsProcessType);
+    if(Process->UniqueProcessId)
+    {
+        ExDestroyHandle(PspCidTable, Process->UniqueProcessId);
     }
 
     /* KDB hook */
@@ -184,9 +185,9 @@ PspDeleteThread(PVOID ObjectBody)
     Thread->ThreadsProcess = NULL;
 
     /* Delete the CID Handle */
-    if(Thread->Cid.UniqueThread != NULL) {
-
-        PsDeleteCidHandle(Thread->Cid.UniqueThread, PsThreadType);
+    if(Thread->Cid.UniqueThread)
+    {
+        ExDestroyHandle(PspCidTable, Thread->Cid.UniqueThread);
     }
 
     /* Free the W32THREAD structure if present */
