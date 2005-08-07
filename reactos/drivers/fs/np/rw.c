@@ -184,6 +184,7 @@ NpfsWaiterThread(PVOID InitContext)
 		      ThreadContext->Count++;
                       ThreadContext->DeviceExt->EmptyWaiterCount--;
 		   }
+		   KeUnlockMutex(&ThreadContext->DeviceExt->PipeListLock);
 		   break;
 		default:
 		   KEBUGCHECK(0);
@@ -204,7 +205,6 @@ NpfsWaiterThread(PVOID InitContext)
 	  Terminate = TRUE;
         }
      }
-   KeUnlockMutex(&ThreadContext->DeviceExt->PipeListLock);
    ExFreePool(ThreadContext);
 }
 
@@ -400,6 +400,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
         {
 	   if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
 	   {
+	      ASSERT(Fcb->OtherSide != NULL);
 	      KeSetEvent(&Fcb->OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
 	   }
 	   if (Information > 0 &&
