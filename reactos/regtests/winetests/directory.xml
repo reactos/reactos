@@ -14,6 +14,12 @@
 <directory name="psapi">
 	<xi:include href="psapi/psapi_test.xml" />
 </directory>
+<directory name="shlwapi">
+	<xi:include href="shlwapi/shlwapi_test.xml" />
+</directory>
+<directory name="user32">
+	<xi:include href="user32/user32_test.xml" />
+</directory>
 <directory name="version">
 	<xi:include href="version/version_test.xml" />
 </directory>
