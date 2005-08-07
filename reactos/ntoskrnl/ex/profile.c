@@ -94,7 +94,6 @@ ExpInitializeProfileImplementation(VOID)
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.DeleteProcedure = ExpDeleteProfile;
     ObjectTypeInitializer.ValidAccessMask = STANDARD_RIGHTS_ALL;
-    ObjectTypeInitializer.UseDefaultObject = TRUE;
     ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ExProfileObjectType);
 }
 

@@ -68,7 +68,6 @@ ExpInitializeMutantImplementation(VOID)
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.DeleteProcedure = ExpDeleteMutant;
     ObjectTypeInitializer.ValidAccessMask = MUTANT_ALL_ACCESS;
-    ObjectTypeInitializer.UseDefaultObject = TRUE;
     ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ExMutantObjectType);
 }
 

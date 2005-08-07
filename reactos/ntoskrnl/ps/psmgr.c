@@ -97,7 +97,6 @@ PsInitThreadManagment(VOID)
     ObjectTypeInitializer.GenericMapping = PiThreadMapping;
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.ValidAccessMask = THREAD_ALL_ACCESS;
-    ObjectTypeInitializer.UseDefaultObject = TRUE;
     ObjectTypeInitializer.DeleteProcedure = PspDeleteThread;
     ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &PsThreadType);
 
@@ -138,7 +137,6 @@ PsInitProcessManagment(VOID)
    ObjectTypeInitializer.GenericMapping = PiProcessMapping;
    ObjectTypeInitializer.PoolType = NonPagedPool;
    ObjectTypeInitializer.ValidAccessMask = PROCESS_ALL_ACCESS;
-   ObjectTypeInitializer.UseDefaultObject = TRUE;
    ObjectTypeInitializer.DeleteProcedure = PspDeleteProcess;
    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &PsProcessType);
 

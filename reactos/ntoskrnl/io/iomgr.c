@@ -217,6 +217,7 @@ IoInit (VOID)
     ObjectTypeInitializer.DeleteProcedure = IopDeleteFile;
     ObjectTypeInitializer.SecurityProcedure = IopSecurityFile;
     ObjectTypeInitializer.QueryNameProcedure = IopQueryNameFile;
+    ObjectTypeInitializer.UseDefaultObject = FALSE;
     ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &IoFileObjectType);
 
   /*

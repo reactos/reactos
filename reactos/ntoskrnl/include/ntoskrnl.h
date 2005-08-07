@@ -18,8 +18,6 @@
 #include <ndk/ntndk.h>
 #include <ndk/sysguid.h>
 #include <ndk/asm.h>
-#undef IO_TYPE_FILE
-#define IO_TYPE_FILE                    0x0F5L /* Temp Hack */
 
 /* FIXME: Temporary until CC Ros is gone */
 #include <ccros.h>        

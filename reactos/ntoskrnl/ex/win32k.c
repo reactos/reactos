@@ -133,7 +133,6 @@ ExpWin32kInit(VOID)
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
     ObjectTypeInitializer.GenericMapping = ExpWindowStationMapping;
     ObjectTypeInitializer.PoolType = NonPagedPool;
-    ObjectTypeInitializer.UseDefaultObject = TRUE;
     ObjectTypeInitializer.OpenProcedure = ExpWinStaObjectOpen;
     ObjectTypeInitializer.DeleteProcedure = ExpWinStaObjectDelete;
     ObjectTypeInitializer.ParseProcedure = ExpWinStaObjectParse;

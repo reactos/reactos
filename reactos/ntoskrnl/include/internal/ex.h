@@ -8,6 +8,13 @@ extern LARGE_INTEGER ExpTimeZoneBias;
 extern ULONG ExpTimeZoneId;
 extern POBJECT_TYPE ExEventPairObjectType;
 
+#define EX_OBJ_TO_HDR(eob) ((POBJECT_HEADER)((ULONG_PTR)(eob) &                \
+  ~(EX_HANDLE_ENTRY_PROTECTFROMCLOSE | EX_HANDLE_ENTRY_INHERITABLE |           \
+  EX_HANDLE_ENTRY_AUDITONCLOSE)))
+#define EX_HTE_TO_HDR(hte) ((POBJECT_HEADER)((ULONG_PTR)((hte)->u1.Object) &   \
+  ~(EX_HANDLE_ENTRY_PROTECTFROMCLOSE | EX_HANDLE_ENTRY_INHERITABLE |           \
+  EX_HANDLE_ENTRY_AUDITONCLOSE)))
+
 /* INITIALIZATION FUNCTIONS *************************************************/
 
 VOID

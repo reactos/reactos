@@ -225,22 +225,6 @@ KeWaitForSingleObject(PVOID Object,
         /* Get the Current Object */
         CurrentObject = (PDISPATCHER_HEADER)Object;
 
-        /* FIXME:
-         * Temporary hack until my Object Manager re-write. Basically some objects, like
-         * the File Object, but also LPCs and others, are actually waitable on their event.
-         * The Object Manager sets this up in The ObjectTypeInformation->DefaultObject member,
-         * by using pretty much the same kind of hack as us. Normal objects point to themselves
-         * in that pointer. Then, NtWaitForXXX will populate the WaitList that gets sent to us by
-         * using ->DefaultObject, so the proper actual objects will be sent to us. Until then however,
-         * I will keep this hack here, since there's no need to make an interim hack until the rewrite
-         * -- Alex Ionescu 24/02/05
-         */
-        if (CurrentObject->Type == IO_TYPE_FILE) {
-
-            DPRINT1("Hack used: %x\n", &((PFILE_OBJECT)CurrentObject)->Event);
-            CurrentObject = (PDISPATCHER_HEADER)(&((PFILE_OBJECT)CurrentObject)->Event);
-        }
-
         /* Check if the Object is Signaled */
         if (KiIsObjectSignaled(CurrentObject, CurrentThread)) {
 
@@ -440,21 +424,6 @@ KeWaitForMultipleObjects(ULONG Count,
 
             /* Get the Current Object */
             CurrentObject = (PDISPATCHER_HEADER)Object[WaitIndex];
-
-            /* FIXME:
-             * Temporary hack until my Object Manager re-write. Basically some objects, like
-             * the File Object, but also LPCs and others, are actually waitable on their event.
-             * The Object Manager sets this up in The ObjectTypeInformation->DefaultObject member,
-             * by using pretty much the same kind of hack as us. Normal objects point to themselves
-             * in that pointer. Then, NtWaitForXXX will populate the WaitList that gets sent to us by
-             * using ->DefaultObject, so the proper actual objects will be sent to us. Until then however,
-             * I will keep this hack here, since there's no need to make an interim hack until the rewrite
-             * -- Alex Ionescu 24/02/05
-             */
-            if (CurrentObject->Type == IO_TYPE_FILE) {
-
-                CurrentObject = (PDISPATCHER_HEADER)(&((PFILE_OBJECT)CurrentObject)->Event);
-            }
 
             /* Check if the Object is Signaled */
             if (KiIsObjectSignaled(CurrentObject, CurrentThread)) {
@@ -805,31 +774,6 @@ KiIsObjectSignaled(PDISPATCHER_HEADER Object,
 
     /* Any other object is not a mutated freak, so let's use logic */
    return (!Object->SignalState <= 0);
-}
-
-BOOL
-inline
-FASTCALL
-KiIsObjectWaitable(PVOID Object)
-{
-    POBJECT_HEADER Header;
-    Header = BODY_TO_HEADER(Object);
-
-    if (Header->Type == ExEventObjectType ||
-        Header->Type == IoCompletionType ||
-        Header->Type == ExMutantObjectType ||
-        Header->Type == ExSemaphoreObjectType ||
-        Header->Type == ExTimerType ||
-        Header->Type == PsProcessType ||
-        Header->Type == PsThreadType ||
-        Header->Type == IoFileObjectType) {
-
-        return TRUE;
-
-    } else {
-
-        return FALSE;
-    }
 }
 
 VOID

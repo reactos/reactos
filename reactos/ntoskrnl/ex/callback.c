@@ -91,7 +91,6 @@ ExpInitializeCallbacks(VOID)
    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(CALLBACK_OBJECT);
    ObjectTypeInitializer.GenericMapping = ExpCallbackMapping;
    ObjectTypeInitializer.PoolType = NonPagedPool;
-   ObjectTypeInitializer.UseDefaultObject = TRUE;
 
    Status = ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ExCallbackObjectType);
 
