@@ -40,9 +40,9 @@
 *        Implemented /A   example "del /A:H /A:-R *.exe -ping.exe"
 *    
 *    07-Aug-2005 (Hartmut Birr)
-*        Removed the exclusive deletion (see two comments above) because '-' is a valid file name character. 
-*        Optimized the recursive deletion in directories. 
-*        Preload Loaded some nice strings.*       
+*        Removed the exclusive deletion (see two comments above) because '-' is a valid file name character.
+*        Optimized the recursive deletion in directories.
+*        Preload some nice strings.
 */
 
 #include <precomp.h>
