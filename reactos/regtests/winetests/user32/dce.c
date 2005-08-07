@@ -33,6 +33,8 @@
 
 #include "wine/test.h"
 
+#define DCX_USESTYLE 0x00010000
+
 static HWND hwnd_cache, hwnd_owndc, hwnd_classdc, hwnd_classdc2;
 
 /* test behavior of DC attributes with various GetDC/ReleaseDC combinations */
