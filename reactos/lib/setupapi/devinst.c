@@ -2639,7 +2639,7 @@ HKEY WINAPI SetupDiOpenDevRegKey(
 BOOL WINAPI SetupDiCreateDeviceInfoA(
        HDEVINFO DeviceInfoSet,
        PCSTR DeviceName,
-       LPGUID ClassGuid,
+       CONST GUID *ClassGuid,
        PCSTR DeviceDescription,
        HWND hwndParent,
        DWORD CreationFlags,
@@ -2683,7 +2683,7 @@ BOOL WINAPI SetupDiCreateDeviceInfoA(
 BOOL WINAPI SetupDiCreateDeviceInfoW(
        HDEVINFO DeviceInfoSet,
        PCWSTR DeviceName,
-       LPGUID ClassGuid,
+       CONST GUID *ClassGuid,
        PCWSTR DeviceDescription,
        HWND hwndParent,
        DWORD CreationFlags,
