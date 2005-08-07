@@ -497,7 +497,10 @@ CmiObjectSecurity(PVOID ObjectBody,
 		  SECURITY_OPERATION_CODE OperationCode,
 		  SECURITY_INFORMATION SecurityInformation,
 		  PSECURITY_DESCRIPTOR SecurityDescriptor,
-		  PULONG BufferLength);
+		  PULONG BufferLength,
+		  PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
+		  POOL_TYPE PoolType,
+		  PGENERIC_MAPPING GenericMapping);
 
 NTSTATUS STDCALL
 CmiObjectQueryName (PVOID ObjectBody,

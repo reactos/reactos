@@ -181,6 +181,17 @@ SepReleaseAcl(IN PACL CapturedAcl,
               IN KPROCESSOR_MODE AccessMode,
               IN BOOLEAN CaptureIfKernel);
 
+NTSTATUS
+STDCALL
+SeDefaultObjectMethod(PVOID Object,
+                      SECURITY_OPERATION_CODE OperationType,                         
+                      SECURITY_INFORMATION SecurityInformation,
+                      PSECURITY_DESCRIPTOR NewSecurityDescriptor,
+                      PULONG ReturnLength,
+                      PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
+                      POOL_TYPE PoolType,
+                      PGENERIC_MAPPING GenericMapping);
+
 #define SepAcquireTokenLockExclusive(Token)                                    \
   do {                                                                         \
     KeEnterCriticalRegion();                                                   \

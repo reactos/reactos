@@ -14,6 +14,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+extern ULONG NtGlobalFlag;
 
 /* GLOBALS ****************************************************************/
 
@@ -24,7 +25,7 @@ PDIRECTORY_OBJECT NameSpaceRoot = NULL;
 PDIRECTORY_OBJECT ObpTypeDirectoryObject = NULL;
  /* FIXME: Move this somewhere else once devicemap support is in */
 PDEVICE_MAP ObSystemDeviceMap = NULL;
-
+KEVENT ObpDefaultObject;
 
 static GENERIC_MAPPING ObpDirectoryMapping = {
 	STANDARD_RIGHTS_READ|DIRECTORY_QUERY|DIRECTORY_TRAVERSE,
@@ -430,6 +431,9 @@ ObInit(VOID)
     /* Initialize the security descriptor cache */
     ObpInitSdCache();
 
+    /* Initialize the Default Event */
+    KeInitializeEvent(&ObpDefaultObject, NotificationEvent, TRUE );
+
     /* Create the Type Type */
     DPRINT("Creating Type Type\n");
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
@@ -538,6 +542,7 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
 {
     POBJECT_HEADER Header;
     POBJECT_TYPE LocalObjectType;
+    ULONG HeaderSize;
     NTSTATUS Status;
 
     DPRINT("ObpCreateTypeObject(ObjectType: %wZ)\n", TypeName);
@@ -580,14 +585,71 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
     /* Set it up */
     LocalObjectType->TypeInfo = *ObjectTypeInitializer;
     LocalObjectType->Name = *TypeName;
+    LocalObjectType->TypeInfo.PoolType = ObjectTypeInitializer->PoolType;
+
+    /* These two flags need to be manually set up */
+    Header->Flags |= OB_FLAG_KERNEL_MODE | OB_FLAG_PERMANENT;
+
+    /* Check if we have to maintain a type list */
+    if (NtGlobalFlag & FLG_MAINTAIN_OBJECT_TYPELIST)
+    {
+        /* Enable support */
+        LocalObjectType->TypeInfo.MaintainTypeList = TRUE;
+    }
+
+    /* Calculate how much space our header'll take up */
+    HeaderSize = sizeof(OBJECT_HEADER) + sizeof(OBJECT_HEADER_NAME_INFO) +
+                 (ObjectTypeInitializer->MaintainHandleCount ? 
+                 sizeof(OBJECT_HEADER_HANDLE_INFO) : 0);
+
+    /* Update the Pool Charges */
+    if (ObjectTypeInitializer->PoolType == NonPagedPool)
+    {
+        LocalObjectType->TypeInfo.DefaultNonPagedPoolCharge += HeaderSize;
+    }
+    else
+    {
+        LocalObjectType->TypeInfo.DefaultPagedPoolCharge += HeaderSize;
+    }
     
+    /* All objects types need a security procedure */
+    if (!ObjectTypeInitializer->SecurityProcedure)
+    {
+        LocalObjectType->TypeInfo.SecurityProcedure = SeDefaultObjectMethod;
+    }
+
+    /* Select the Wait Object */
+    if (LocalObjectType->TypeInfo.UseDefaultObject)
+    {
+        /* Add the SYNCHRONIZE access mask since it's waitable */
+        LocalObjectType->TypeInfo.ValidAccessMask |= SYNCHRONIZE;
+
+        /* Use the "Default Object", a simple event */
+        LocalObjectType->DefaultObject = &ObpDefaultObject;
+    }
+    /* Special system objects get an optimized hack so they can be waited on */
+    else if (TypeName->Length == 8 && !wcscmp(TypeName->Buffer, L"File"))
+    {
+        LocalObjectType->DefaultObject = (PVOID)FIELD_OFFSET(FILE_OBJECT, Event);
+    }
+    /* FIXME: When LPC stops sucking, add a hack for Waitable Ports */
+    else
+    {
+        /* No default Object */
+        LocalObjectType->DefaultObject = NULL;
+    }
+
+    /* Initialize Object Type components */
+    ExInitializeResourceLite(&LocalObjectType->Mutex);
+    InitializeListHead(&LocalObjectType->TypeList);
+
     /* Insert it into the Object Directory */
     if (ObpTypeDirectoryObject)
     {
         ObpAddEntryDirectory(ObpTypeDirectoryObject, Header, TypeName->Buffer);
         ObReferenceObject(ObpTypeDirectoryObject);
     }
-        
+
     *ObjectType = LocalObjectType;
     return Status;
 } 

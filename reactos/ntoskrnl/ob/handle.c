@@ -1109,6 +1109,9 @@ ObInsertObject(IN PVOID Object,
                                                                     AssignSecurityDescriptor,
                                                                     0,
                                                                     NewSecurityDescriptor,
+                                                                    NULL,
+                                                                    NULL,
+                                                                    NonPagedPool,
                                                                     NULL);
         }
         else

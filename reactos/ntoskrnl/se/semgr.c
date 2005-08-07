@@ -188,6 +188,222 @@ VOID SepDeReferenceLogonSession(PLUID AuthenticationId)
    UNIMPLEMENTED;
 }
 
+NTSTATUS
+STDCALL
+SeDefaultObjectMethod(PVOID Object,
+                      SECURITY_OPERATION_CODE OperationType,                         
+                      SECURITY_INFORMATION SecurityInformation,
+                      PSECURITY_DESCRIPTOR SecurityDescriptor,
+                      PULONG ReturnLength,
+                      PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
+                      POOL_TYPE PoolType,
+                      PGENERIC_MAPPING GenericMapping)
+{
+  PSECURITY_DESCRIPTOR ObjectSd;
+  PSECURITY_DESCRIPTOR NewSd;
+  POBJECT_HEADER Header = BODY_TO_HEADER(Object);
+  PSID Owner = 0;
+  PSID Group = 0;
+  PACL Dacl = 0;
+  PACL Sacl = 0;
+  ULONG OwnerLength = 0;
+  ULONG GroupLength = 0;
+  ULONG DaclLength = 0;
+  ULONG SaclLength = 0;
+  ULONG Control = 0;
+  ULONG_PTR Current;
+  NTSTATUS Status;
+
+    if (OperationType == SetSecurityDescriptor)
+    {
+        ObjectSd = Header->SecurityDescriptor;
+
+      /* Get owner and owner size */
+      if (SecurityInformation & OWNER_SECURITY_INFORMATION)
+	{
+	  if (SecurityDescriptor->Owner != NULL)
+	    {
+		if( SecurityDescriptor->Control & SE_SELF_RELATIVE )
+		    Owner = (PSID)((ULONG_PTR)SecurityDescriptor->Owner +
+				   (ULONG_PTR)SecurityDescriptor);
+		else
+		    Owner = (PSID)SecurityDescriptor->Owner;
+		OwnerLength = ROUND_UP(RtlLengthSid(Owner), 4);
+	    }
+	  Control |= (SecurityDescriptor->Control & SE_OWNER_DEFAULTED);
+	}
+      else
+	{
+	  if (ObjectSd->Owner != NULL)
+	  {
+	      Owner = (PSID)((ULONG_PTR)ObjectSd->Owner + (ULONG_PTR)ObjectSd);
+	      OwnerLength = ROUND_UP(RtlLengthSid(Owner), 4);
+	  }
+	  Control |= (ObjectSd->Control & SE_OWNER_DEFAULTED);
+	}
+
+      /* Get group and group size */
+      if (SecurityInformation & GROUP_SECURITY_INFORMATION)
+	{
+	  if (SecurityDescriptor->Group != NULL)
+	    {
+		if( SecurityDescriptor->Control & SE_SELF_RELATIVE )
+		    Group = (PSID)((ULONG_PTR)SecurityDescriptor->Group +
+				   (ULONG_PTR)SecurityDescriptor);
+		else
+		    Group = (PSID)SecurityDescriptor->Group;
+		GroupLength = ROUND_UP(RtlLengthSid(Group), 4);
+	    }
+	  Control |= (SecurityDescriptor->Control & SE_GROUP_DEFAULTED);
+	}
+      else
+	{
+	  if (ObjectSd->Group != NULL)
+	    {
+	      Group = (PSID)((ULONG_PTR)ObjectSd->Group + (ULONG_PTR)ObjectSd);
+	      GroupLength = ROUND_UP(RtlLengthSid(Group), 4);
+	    }
+	  Control |= (ObjectSd->Control & SE_GROUP_DEFAULTED);
+	}
+
+      /* Get DACL and DACL size */
+      if (SecurityInformation & DACL_SECURITY_INFORMATION)
+	{
+	  if ((SecurityDescriptor->Control & SE_DACL_PRESENT) &&
+	      (SecurityDescriptor->Dacl != NULL))
+	    {
+		if( SecurityDescriptor->Control & SE_SELF_RELATIVE )
+		    Dacl = (PACL)((ULONG_PTR)SecurityDescriptor->Dacl +
+				  (ULONG_PTR)SecurityDescriptor);
+		else
+		    Dacl = (PACL)SecurityDescriptor->Dacl;
+
+	      DaclLength = ROUND_UP((ULONG)Dacl->AclSize, 4);
+	    }
+	  Control |= (SecurityDescriptor->Control & (SE_DACL_DEFAULTED | SE_DACL_PRESENT));
+	}
+      else
+	{
+	  if ((ObjectSd->Control & SE_DACL_PRESENT) &&
+	      (ObjectSd->Dacl != NULL))
+	    {
+	      Dacl = (PACL)((ULONG_PTR)ObjectSd->Dacl + (ULONG_PTR)ObjectSd);
+	      DaclLength = ROUND_UP((ULONG)Dacl->AclSize, 4);
+	    }
+	  Control |= (ObjectSd->Control & (SE_DACL_DEFAULTED | SE_DACL_PRESENT));
+	}
+
+      /* Get SACL and SACL size */
+      if (SecurityInformation & SACL_SECURITY_INFORMATION)
+	{
+	  if ((SecurityDescriptor->Control & SE_SACL_PRESENT) &&
+	      (SecurityDescriptor->Sacl != NULL))
+	    {
+		if( SecurityDescriptor->Control & SE_SELF_RELATIVE )
+		    Sacl = (PACL)((ULONG_PTR)SecurityDescriptor->Sacl +
+				  (ULONG_PTR)SecurityDescriptor);
+		else
+		    Sacl = (PACL)SecurityDescriptor->Sacl;
+		SaclLength = ROUND_UP((ULONG)Sacl->AclSize, 4);
+	    }
+	  Control |= (SecurityDescriptor->Control & (SE_SACL_DEFAULTED | SE_SACL_PRESENT));
+	}
+      else
+	{
+	  if ((ObjectSd->Control & SE_SACL_PRESENT) &&
+	      (ObjectSd->Sacl != NULL))
+	    {
+	      Sacl = (PACL)((ULONG_PTR)ObjectSd->Sacl + (ULONG_PTR)ObjectSd);
+	      SaclLength = ROUND_UP((ULONG)Sacl->AclSize, 4);
+	    }
+	  Control |= (ObjectSd->Control & (SE_SACL_DEFAULTED | SE_SACL_PRESENT));
+	}
+
+      NewSd = ExAllocatePool(NonPagedPool,
+			     sizeof(SECURITY_DESCRIPTOR) + OwnerLength + GroupLength +
+			     DaclLength + SaclLength);
+      if (NewSd == NULL)
+	{
+	  ObDereferenceObject(Object);
+	  return STATUS_INSUFFICIENT_RESOURCES;
+	}
+
+      RtlCreateSecurityDescriptor(NewSd,
+				  SECURITY_DESCRIPTOR_REVISION1);
+      /* We always build a self-relative descriptor */
+      NewSd->Control = Control | SE_SELF_RELATIVE;
+
+      Current = (ULONG_PTR)NewSd + sizeof(SECURITY_DESCRIPTOR);
+
+      if (OwnerLength != 0)
+	{
+	  RtlCopyMemory((PVOID)Current,
+			Owner,
+			OwnerLength);
+	  NewSd->Owner = (PSID)(Current - (ULONG_PTR)NewSd);
+	  Current += OwnerLength;
+	}
+
+      if (GroupLength != 0)
+	{
+	  RtlCopyMemory((PVOID)Current,
+			Group,
+			GroupLength);
+	  NewSd->Group = (PSID)(Current - (ULONG_PTR)NewSd);
+	  Current += GroupLength;
+	}
+
+      if (DaclLength != 0)
+	{
+	  RtlCopyMemory((PVOID)Current,
+			Dacl,
+			DaclLength);
+	  NewSd->Dacl = (PACL)(Current - (ULONG_PTR)NewSd);
+	  Current += DaclLength;
+	}
+
+      if (SaclLength != 0)
+	{
+	  RtlCopyMemory((PVOID)Current,
+			Sacl,
+			SaclLength);
+	  NewSd->Sacl = (PACL)(Current - (ULONG_PTR)NewSd);
+	  Current += SaclLength;
+	}
+
+      /* Add the new SD */
+      Status = ObpAddSecurityDescriptor(NewSd,
+					&Header->SecurityDescriptor);
+      if (NT_SUCCESS(Status))
+	{
+	  /* Remove the old security descriptor */
+	  ObpRemoveSecurityDescriptor(ObjectSd);
+	}
+      else
+	{
+	  /* Restore the old security descriptor */
+	  Header->SecurityDescriptor = ObjectSd;
+	}
+
+      ExFreePool(NewSd);
+    }
+    else if (OperationType == QuerySecurityDescriptor)
+    {
+        Status = SeQuerySecurityDescriptorInfo(&SecurityInformation,
+                                               SecurityDescriptor,
+                                               ReturnLength,
+                                               &Header->SecurityDescriptor);
+    }
+    else if (OperationType == AssignSecurityDescriptor)
+    {
+      /* Assign the security descriptor to the object header */
+      Status = ObpAddSecurityDescriptor(SecurityDescriptor,
+	                    				&Header->SecurityDescriptor);
+    }
+
+
+    return STATUS_SUCCESS;
+}
 
 /*
  * @implemented
