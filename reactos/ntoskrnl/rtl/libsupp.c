@@ -246,33 +246,35 @@ VOID
 RtlpFreeAtomHandle(PRTL_ATOM_TABLE AtomTable, PRTL_ATOM_TABLE_ENTRY Entry)
 {
    ExDestroyHandle(AtomTable->ExHandleTable,
-                   (LONG)Entry->HandleIndex);
+                   (HANDLE)((ULONG_PTR)Entry->HandleIndex << 2));
 }
 
 BOOLEAN
 RtlpCreateAtomHandle(PRTL_ATOM_TABLE AtomTable, PRTL_ATOM_TABLE_ENTRY Entry)
 {
    HANDLE_TABLE_ENTRY ExEntry;
-   LONG HandleIndex;
+   HANDLE Handle;
+   USHORT HandleIndex;
    
    ExEntry.u1.Object = Entry;
    ExEntry.u2.GrantedAccess = 0x1; /* FIXME - valid handle */
    
-   HandleIndex = ExCreateHandle(AtomTable->ExHandleTable,
+   Handle = ExCreateHandle(AtomTable->ExHandleTable,
                                 &ExEntry);
-   if (HandleIndex != EX_INVALID_HANDLE)
+   HandleIndex = (USHORT)((ULONG_PTR)Handle >> 2);
+   if (Handle != NULL)
    {
       /* FIXME - Handle Indexes >= 0xC000 ?! */
       if (HandleIndex < 0xC000)
       {
-         Entry->HandleIndex = (USHORT)HandleIndex;
-         Entry->Atom = 0xC000 + (USHORT)HandleIndex;
+         Entry->HandleIndex = HandleIndex;
+         Entry->Atom = 0xC000 + HandleIndex;
          
          return TRUE;
       }
       else
          ExDestroyHandle(AtomTable->ExHandleTable,
-                         HandleIndex);
+                         Handle);
    }
    
    return FALSE;
@@ -284,7 +286,7 @@ RtlpGetAtomEntry(PRTL_ATOM_TABLE AtomTable, ULONG Index)
    PHANDLE_TABLE_ENTRY ExEntry;
    
    ExEntry = ExMapHandleToPointer(AtomTable->ExHandleTable,
-                                  (LONG)Index);
+                                  (HANDLE)((ULONG_PTR)Index << 2));
    if (ExEntry != NULL)
    {
       PRTL_ATOM_TABLE_ENTRY Entry;

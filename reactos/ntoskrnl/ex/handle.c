@@ -77,6 +77,11 @@ static LARGE_INTEGER ExpHandleShortWait;
 #define IS_VALID_EX_HANDLE(index)                                              \
   (((index) & ~VALID_HANDLE_MASK) == 0)
 
+#define HANDLE_TO_EX_HANDLE(handle)                                            \
+  (LONG)(((LONG)(handle) >> 2) - 1)
+#define EX_HANDLE_TO_HANDLE(exhandle)                                          \
+  (HANDLE)(((exhandle) + 1) << 2)
+
 static BOOLEAN ExpInitialized = FALSE;
 
 /******************************************************************************/
@@ -491,7 +496,7 @@ freehandletable:
 
 static PHANDLE_TABLE_ENTRY
 ExpAllocateHandleTableEntry(IN PHANDLE_TABLE HandleTable,
-                            OUT PLONG Handle)
+                            OUT PHANDLE Handle)
 {
   PHANDLE_TABLE_ENTRY Entry = NULL;
 
@@ -520,7 +525,7 @@ ExpAllocateHandleTableEntry(IN PHANDLE_TABLE HandleTable,
 
       Entry = &HandleTable->Table[tli][mli][eli];
 
-      *Handle = HandleTable->FirstFreeTableEntry;
+      *Handle = EX_HANDLE_TO_HANDLE(HandleTable->FirstFreeTableEntry);
 
       /* save the index to the next free handle (if available) */
       HandleTable->FirstFreeTableEntry = Entry->u2.NextFreeTableEntry;
@@ -629,7 +634,7 @@ ExpAllocateHandleTableEntry(IN PHANDLE_TABLE HandleTable,
       Entry->u1.ObAttributes = EX_HANDLE_ENTRY_LOCKED;
       Entry->u2.NextFreeTableEntry = 0;
 
-      *Handle = HandleTable->NextIndexNeedingPool;
+      *Handle = EX_HANDLE_TO_HANDLE(HandleTable->NextIndexNeedingPool);
 
       HandleTable->HandleCount++;
 
@@ -803,12 +808,12 @@ ExUnlockHandleTableEntry(IN PHANDLE_TABLE HandleTable,
                FALSE);
 }
 
-LONG
+HANDLE
 ExCreateHandle(IN PHANDLE_TABLE HandleTable,
                IN PHANDLE_TABLE_ENTRY Entry)
 {
   PHANDLE_TABLE_ENTRY NewHandleTableEntry;
-  LONG Handle = EX_INVALID_HANDLE;
+  HANDLE Handle = NULL;
 
   PAGED_CODE();
 
@@ -841,20 +846,23 @@ ExCreateHandle(IN PHANDLE_TABLE HandleTable,
 
 BOOLEAN
 ExDestroyHandle(IN PHANDLE_TABLE HandleTable,
-                IN LONG Handle)
+                IN HANDLE Handle)
 {
   PHANDLE_TABLE_ENTRY HandleTableEntry;
+  LONG ExHandle;
   BOOLEAN Ret = FALSE;
 
   PAGED_CODE();
 
   ASSERT(HandleTable);
+  
+  ExHandle = HANDLE_TO_EX_HANDLE(Handle);
 
   KeEnterCriticalRegion();
   ExAcquireHandleTableLockExclusive(HandleTable);
 
   HandleTableEntry = ExpLookupHandleTableEntry(HandleTable,
-                                               Handle);
+                                               ExHandle);
 
   if(HandleTableEntry != NULL && ExLockHandleTableEntry(HandleTable, HandleTableEntry))
   {
@@ -862,7 +870,7 @@ ExDestroyHandle(IN PHANDLE_TABLE HandleTable,
        the contention event since other locks on this entry will fail */
     ExpFreeHandleTableEntry(HandleTable,
                             HandleTableEntry,
-                            Handle);
+                            ExHandle);
     Ret = TRUE;
   }
 
@@ -875,7 +883,7 @@ ExDestroyHandle(IN PHANDLE_TABLE HandleTable,
 VOID
 ExDestroyHandleByEntry(IN PHANDLE_TABLE HandleTable,
                        IN PHANDLE_TABLE_ENTRY Entry,
-                       IN LONG Handle)
+                       IN HANDLE Handle)
 {
   PAGED_CODE();
 
@@ -894,7 +902,7 @@ ExDestroyHandleByEntry(IN PHANDLE_TABLE HandleTable,
      the contention event since other locks on this entry will fail */
   ExpFreeHandleTableEntry(HandleTable,
                           Entry,
-                          Handle);
+                          HANDLE_TO_EX_HANDLE(Handle));
 
   ExReleaseHandleTableLock(HandleTable);
   KeLeaveCriticalRegion();
@@ -902,7 +910,7 @@ ExDestroyHandleByEntry(IN PHANDLE_TABLE HandleTable,
 
 PHANDLE_TABLE_ENTRY
 ExMapHandleToPointer(IN PHANDLE_TABLE HandleTable,
-                     IN LONG Handle)
+                     IN HANDLE Handle)
 {
   PHANDLE_TABLE_ENTRY HandleTableEntry;
 
@@ -911,7 +919,7 @@ ExMapHandleToPointer(IN PHANDLE_TABLE HandleTable,
   ASSERT(HandleTable);
 
   HandleTableEntry = ExpLookupHandleTableEntry(HandleTable,
-                                               Handle);
+                                               HANDLE_TO_EX_HANDLE(Handle));
   if (HandleTableEntry != NULL && ExLockHandleTableEntry(HandleTable, HandleTableEntry))
   {
     DPRINT("ExMapHandleToPointer HT:0x%p Entry:0x%p locked\n", HandleTable, HandleTableEntry);
@@ -923,7 +931,7 @@ ExMapHandleToPointer(IN PHANDLE_TABLE HandleTable,
 
 BOOLEAN
 ExChangeHandle(IN PHANDLE_TABLE HandleTable,
-               IN LONG Handle,
+               IN HANDLE Handle,
                IN PEX_CHANGE_HANDLE_CALLBACK ChangeHandleCallback,
                IN PVOID Context)
 {
@@ -938,7 +946,7 @@ ExChangeHandle(IN PHANDLE_TABLE HandleTable,
   KeEnterCriticalRegion();
 
   HandleTableEntry = ExpLookupHandleTableEntry(HandleTable,
-                                               Handle);
+                                               HANDLE_TO_EX_HANDLE(Handle));
 
   if(HandleTableEntry != NULL && ExLockHandleTableEntry(HandleTable, HandleTableEntry))
   {

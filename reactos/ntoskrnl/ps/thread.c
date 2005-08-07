@@ -377,7 +377,7 @@ PsLookupThreadByThreadId(IN HANDLE ThreadId,
 
     /* Get the CID Handle Entry */
     if (!(CidEntry = ExMapHandleToPointer(PspCidTable, 
-                                          HANDLE_TO_EX_HANDLE(ThreadId))))
+                                          ThreadId)))
     {
         /* Get the Process */
         FoundThread = CidEntry->u1.Object;
@@ -717,7 +717,6 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
         if (ClientId->UniqueProcess)
         {
             /* Get the Process */
-            if (ClientId->UniqueProcess == (HANDLE)-1) KEBUGCHECK(0);
             DPRINT("Opening by Process ID: %x\n", ClientId->UniqueProcess);
             Status = PsLookupProcessThreadByCid(ClientId,
                                                 NULL,

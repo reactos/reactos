@@ -86,8 +86,6 @@ ExpInitializeProfileImplementation(VOID);
 
 #define EX_HANDLE_TABLE_CLOSING 0x1
 
-#define EX_INVALID_HANDLE (~0)
-
 #define EX_HANDLE_ENTRY_FLAGSMASK (EX_HANDLE_ENTRY_LOCKED |                    \
                                    EX_HANDLE_ENTRY_PROTECTFROMCLOSE |          \
                                    EX_HANDLE_ENTRY_INHERITABLE |               \
@@ -145,7 +143,7 @@ ExUnlockHandleTableEntry(
     IN PHANDLE_TABLE_ENTRY Entry
 );
 
-LONG
+HANDLE
 ExCreateHandle(
     IN PHANDLE_TABLE HandleTable,
     IN PHANDLE_TABLE_ENTRY Entry
@@ -154,26 +152,26 @@ ExCreateHandle(
 BOOLEAN
 ExDestroyHandle(
     IN PHANDLE_TABLE HandleTable,
-    IN LONG Handle
+    IN HANDLE Handle
 );
 
 VOID
 ExDestroyHandleByEntry(
     IN PHANDLE_TABLE HandleTable,
     IN PHANDLE_TABLE_ENTRY Entry,
-    IN LONG Handle
+    IN HANDLE Handle
 );
 
 PHANDLE_TABLE_ENTRY
 ExMapHandleToPointer(
     IN PHANDLE_TABLE HandleTable,
-    IN LONG Handle
+    IN HANDLE Handle
 );
 
 BOOLEAN
 ExChangeHandle(
     IN PHANDLE_TABLE HandleTable,
-    IN LONG Handle,
+    IN HANDLE Handle,
     IN PEX_CHANGE_HANDLE_CALLBACK ChangeHandleCallback,
     IN PVOID Context
 );

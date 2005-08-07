@@ -38,7 +38,6 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
     POBJECT_HEADER ObjectHeader;
     PHANDLE_TABLE HandleTable;
     ACCESS_MASK GrantedAccess;
-    LONG ExHandle;
     PVOID DefaultObject;
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -120,17 +119,16 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
         {
             /* Use the System Handle Table and decode */
             HandleTable = ObpKernelHandleTable;
-            ExHandle = HANDLE_TO_EX_HANDLE(ObKernelHandleToHandle(Handles[i]));
+            Handles[i] = ObKernelHandleToHandle(Handles[i]);
         }
         else
         {
             /* Use the Process' Handle table and get the Ex Handle */
             HandleTable = PsGetCurrentProcess()->ObjectTable;
-            ExHandle = HANDLE_TO_EX_HANDLE(Handles[i]);
         }
 
         /* Get a pointer to it */
-        if (!(HandleEntry = ExMapHandleToPointer(HandleTable, ExHandle)))
+        if (!(HandleEntry = ExMapHandleToPointer(HandleTable, Handles[i])))
         {
             DPRINT1("Invalid handle\n");
             Status = STATUS_INVALID_HANDLE;

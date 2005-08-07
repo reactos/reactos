@@ -480,7 +480,7 @@ PsLookupProcessByProcessId(IN HANDLE ProcessId,
 
     /* Get the CID Handle Entry */
     if (!(CidEntry = ExMapHandleToPointer(PspCidTable,
-                                          HANDLE_TO_EX_HANDLE(ProcessId))))
+                                          ProcessId)))
     {
         /* Get the Process */
         FoundProcess = CidEntry->u1.Object;
@@ -518,7 +518,7 @@ PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
 
     /* Get the CID Handle Entry */
     if (!(CidEntry = ExMapHandleToPointer(PspCidTable,
-                                          HANDLE_TO_EX_HANDLE(Cid->UniqueThread))))
+                                          Cid->UniqueThread)))
     {
         /* Get the Process */
         FoundThread = CidEntry->u1.Object;
