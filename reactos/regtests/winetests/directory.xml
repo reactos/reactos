@@ -1,32 +1,32 @@
 <group>
 <directory name="advapi32">
-	<xi:include href="advapi32/advapi32_test.xml" />
+	<xi:include href="advapi32/advapi32.xml" />
 </directory>
 <directory name="comctl32">
-	<xi:include href="comctl32/comctl32_test.xml" />
+	<xi:include href="comctl32/comctl32.xml" />
 </directory>
 <directory name="gdi32">
-	<xi:include href="gdi32/gdi32_test.xml" />
+	<xi:include href="gdi32/gdi32.xml" />
 </directory>
 <directory name="kernel32">
-	<xi:include href="kernel32/kernel32_test.xml" />
+	<xi:include href="kernel32/kernel32.xml" />
 </directory>
 <directory name="msvcrt">
-	<xi:include href="msvcrt/msvcrt_test.xml" />
+	<xi:include href="msvcrt/msvcrt.xml" />
 </directory>
 <directory name="ntdll">
-	<xi:include href="ntdll/ntdll_test.xml" />
+	<xi:include href="ntdll/ntdll.xml" />
 </directory>
 <directory name="psapi">
-	<xi:include href="psapi/psapi_test.xml" />
+	<xi:include href="psapi/psapi.xml" />
 </directory>
 <directory name="shlwapi">
-	<xi:include href="shlwapi/shlwapi_test.xml" />
+	<xi:include href="shlwapi/shlwapi.xml" />
 </directory>
 <directory name="user32">
-	<xi:include href="user32/user32_test.xml" />
+	<xi:include href="user32/user32.xml" />
 </directory>
 <directory name="version">
-	<xi:include href="version/version_test.xml" />
+	<xi:include href="version/version.xml" />
 </directory>
 </group>
