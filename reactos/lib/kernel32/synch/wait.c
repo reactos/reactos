@@ -266,7 +266,7 @@ SignalObjectAndWait(HANDLE hObjectToSignal,
 	{
 	  DPRINT1("Console handles are not supported yet!\n");
 	  SetLastError(ERROR_INVALID_HANDLE);
-	  return FALSE;
+	  return WAIT_FAILED;
 	}
     }
 
@@ -280,6 +280,7 @@ SignalObjectAndWait(HANDLE hObjectToSignal,
       TimePtr = &Time;
     }
 
+WaitAgain:
   Status = NtSignalAndWaitForSingleObject (hObjectToSignal,
 					   hObjectToWaitOn,
 					   (BOOLEAN)bAlertable,
@@ -287,10 +288,12 @@ SignalObjectAndWait(HANDLE hObjectToSignal,
   if (!NT_SUCCESS(Status))
     {
       SetLastErrorByStatus (Status);
-      return FALSE;
+      return WAIT_FAILED;
     }
+  if (Status == STATUS_ALERTED && bAlertable) goto WaitAgain;
 
-  return TRUE;
+  /* STATUS_SUCCESS maps to WAIT_OBJECT_0 */
+  return Status;
 }
 
 /* EOF */
