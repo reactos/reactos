@@ -57,7 +57,7 @@ ExGetCurrentProcessorCpuUsage (
 	TotalTime = Prcb->KernelTime + Prcb->UserTime;
 	if (TotalTime != 0)
 		*CpuUsage = 100 - (ScaledIdle / TotalTime);
-       else
+	else
 		*CpuUsage = 0;
 }
 
@@ -360,7 +360,7 @@ QSI_DEF(SystemBasicInformation)
 	/*
 	 * Check user buffer's size
 	 */
-	if (Size < sizeof (SYSTEM_BASIC_INFORMATION))
+	if (Size != sizeof (SYSTEM_BASIC_INFORMATION))
 	{
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
@@ -539,7 +539,7 @@ QSI_DEF(SystemTimeOfDayInformation)
   *ReqSize = sizeof (SYSTEM_TIMEOFDAY_INFORMATION);
 
   /* Check user buffer's size */
-  if (Size < sizeof (SYSTEM_TIMEOFDAY_INFORMATION))
+  if (Size != sizeof (SYSTEM_TIMEOFDAY_INFORMATION))
     {
       return STATUS_INFO_LENGTH_MISMATCH;
     }
@@ -570,131 +570,141 @@ QSI_DEF(SystemProcessInformation)
 	ULONG ovlSize=0, nThreads;
 	PEPROCESS pr, syspr;
 	unsigned char *pCur;
+	NTSTATUS Status;
 
-	/* scan the process list */
-
-	PSYSTEM_PROCESS_INFORMATION Spi
-		= (PSYSTEM_PROCESS_INFORMATION) Buffer;
-
-	*ReqSize = sizeof(SYSTEM_PROCESS_INFORMATION);
-
-	if (Size < sizeof(SYSTEM_PROCESS_INFORMATION))
+	_SEH_TRY
 	{
-		return (STATUS_INFO_LENGTH_MISMATCH); // in case buffer size is too small
-	}
+		/* scan the process list */
 
-	syspr = PsGetNextProcess(NULL);
-	pr = syspr;
-	pCur = (unsigned char *)Spi;
+		PSYSTEM_PROCESS_INFORMATION Spi
+			= (PSYSTEM_PROCESS_INFORMATION) Buffer;
 
-	do
-	{
-		PSYSTEM_PROCESS_INFORMATION SpiCur;
-		int curSize, i = 0;
-		ANSI_STRING	imgName;
-		int inLen=32; // image name len in bytes
-		PLIST_ENTRY current_entry;
-		PETHREAD current;
+		*ReqSize = sizeof(SYSTEM_PROCESS_INFORMATION);
 
-		SpiCur = (PSYSTEM_PROCESS_INFORMATION)pCur;
-
-		nThreads = 0;
-		current_entry = pr->ThreadListHead.Flink;
-		while (current_entry != &pr->ThreadListHead)
+		if (Size < sizeof(SYSTEM_PROCESS_INFORMATION))
 		{
-			nThreads++;
-			current_entry = current_entry->Flink;
-		}
-
-		// size of the structure for every process
-		curSize = sizeof(SYSTEM_PROCESS_INFORMATION)-sizeof(SYSTEM_THREAD_INFORMATION)+sizeof(SYSTEM_THREAD_INFORMATION)*nThreads;
-		ovlSize += curSize+inLen;
-
-		if (ovlSize > Size)
-		{
-			*ReqSize = ovlSize;
-			ObDereferenceObject(pr);
-
 			return (STATUS_INFO_LENGTH_MISMATCH); // in case buffer size is too small
 		}
 
-		// fill system information
-		SpiCur->NextEntryOffset = curSize+inLen; // relative offset to the beginnnig of the next structure
-		SpiCur->NumberOfThreads = nThreads;
-		SpiCur->CreateTime = pr->CreateTime;
-		SpiCur->UserTime.QuadPart = pr->Pcb.UserTime * 100000LL;
-		SpiCur->KernelTime.QuadPart = pr->Pcb.KernelTime * 100000LL;
-		SpiCur->ImageName.Length = strlen(pr->ImageFileName) * sizeof(WCHAR);
-		SpiCur->ImageName.MaximumLength = inLen;
-		SpiCur->ImageName.Buffer = (void*)(pCur+curSize);
+		syspr = PsGetNextProcess(NULL);
+		pr = syspr;
+		pCur = (unsigned char *)Spi;
 
-		// copy name to the end of the struct
-		if(pr != PsIdleProcess)
+		do
 		{
-		  RtlInitAnsiString(&imgName, pr->ImageFileName);
-		  RtlAnsiStringToUnicodeString(&SpiCur->ImageName, &imgName, FALSE);
-		}
-		else
-		{
-                  RtlInitUnicodeString(&SpiCur->ImageName, NULL);
-		}
+			PSYSTEM_PROCESS_INFORMATION SpiCur;
+			int curSize, i = 0;
+			ANSI_STRING	imgName;
+			int inLen=32; // image name len in bytes
+			PLIST_ENTRY current_entry;
+			PETHREAD current;
 
-		SpiCur->BasePriority = pr->Pcb.BasePriority;
-		SpiCur->UniqueProcessId = pr->UniqueProcessId;
-		SpiCur->InheritedFromUniqueProcessId = pr->InheritedFromUniqueProcessId;
-		SpiCur->HandleCount = (pr->ObjectTable ? ObpGetHandleCountByHandleTable(pr->ObjectTable) : 0);
-		SpiCur->PeakVirtualSize = pr->PeakVirtualSize;
-		SpiCur->VirtualSize = pr->VirtualSize;
-		SpiCur->PageFaultCount = pr->Vm.PageFaultCount;
-		SpiCur->PeakWorkingSetSize = pr->Vm.PeakWorkingSetSize; // Is this right using ->Vm. here ?
-		SpiCur->WorkingSetSize = pr->Vm.WorkingSetSize; // Is this right using ->Vm. here ?
-		SpiCur->QuotaPeakPagedPoolUsage = pr->QuotaPeak[0];
-		SpiCur->QuotaPagedPoolUsage = pr->QuotaUsage[0];
-		SpiCur->QuotaPeakNonPagedPoolUsage = pr->QuotaPeak[1];
-		SpiCur->QuotaNonPagedPoolUsage = pr->QuotaUsage[1];
-		SpiCur->PagefileUsage = pr->QuotaUsage[3];
-		SpiCur->PeakPagefileUsage = pr->QuotaPeak[3];
-		SpiCur->PrivateUsage = pr->CommitCharge;
+			SpiCur = (PSYSTEM_PROCESS_INFORMATION)pCur;
 
-          current_entry = pr->ThreadListHead.Flink;
-          while (current_entry != &pr->ThreadListHead)
-               {
-                 current = CONTAINING_RECORD(current_entry, ETHREAD,
-                                             ThreadListEntry);
+			nThreads = 0;
+			current_entry = pr->ThreadListHead.Flink;
+			while (current_entry != &pr->ThreadListHead)
+			{
+				nThreads++;
+				current_entry = current_entry->Flink;
+			}
 
-                 SpiCur->TH[i].KernelTime.QuadPart = current->Tcb.KernelTime * 100000LL;
-                 SpiCur->TH[i].UserTime.QuadPart = current->Tcb.UserTime * 100000LL;
-//                 SpiCur->TH[i].CreateTime = current->CreateTime;
-                 SpiCur->TH[i].WaitTime = current->Tcb.WaitTime;
-                 SpiCur->TH[i].StartAddress = (PVOID) current->StartAddress;
-                 SpiCur->TH[i].ClientId = current->Cid;
-                 SpiCur->TH[i].Priority = current->Tcb.Priority;
-                 SpiCur->TH[i].BasePriority = current->Tcb.BasePriority;
-                 SpiCur->TH[i].ContextSwitches = current->Tcb.ContextSwitches;
-                 SpiCur->TH[i].ThreadState = current->Tcb.State;
-                 SpiCur->TH[i].WaitReason = current->Tcb.WaitReason;
-                 i++;
-                 current_entry = current_entry->Flink;
-               }
+			// size of the structure for every process
+			curSize = sizeof(SYSTEM_PROCESS_INFORMATION)-sizeof(SYSTEM_THREAD_INFORMATION)+sizeof(SYSTEM_THREAD_INFORMATION)*nThreads;
+			ovlSize += curSize+inLen;
 
-		pr = PsGetNextProcess(pr);
-        nThreads = 0;
-		if ((pr == syspr) || (pr == NULL))
-		{
-			SpiCur->NextEntryOffset = 0;
-			break;
-		}
-		else
-			pCur = pCur + curSize + inLen;
-	}  while ((pr != syspr) && (pr != NULL));
+			if (ovlSize > Size)
+			{
+				*ReqSize = ovlSize;
+				ObDereferenceObject(pr);
 
-	if(pr != NULL)
-	{
-          ObDereferenceObject(pr);
+				return (STATUS_INFO_LENGTH_MISMATCH); // in case buffer size is too small
+			}
+
+			// fill system information
+			SpiCur->NextEntryOffset = curSize+inLen; // relative offset to the beginnnig of the next structure
+			SpiCur->NumberOfThreads = nThreads;
+			SpiCur->CreateTime = pr->CreateTime;
+			SpiCur->UserTime.QuadPart = pr->Pcb.UserTime * 100000LL;
+			SpiCur->KernelTime.QuadPart = pr->Pcb.KernelTime * 100000LL;
+			SpiCur->ImageName.Length = strlen(pr->ImageFileName) * sizeof(WCHAR);
+			SpiCur->ImageName.MaximumLength = inLen;
+			SpiCur->ImageName.Buffer = (void*)(pCur+curSize);
+
+			// copy name to the end of the struct
+			if(pr != PsIdleProcess)
+			{
+				RtlInitAnsiString(&imgName, pr->ImageFileName);
+				RtlAnsiStringToUnicodeString(&SpiCur->ImageName, &imgName, FALSE);
+			}
+			else
+			{
+                		RtlInitUnicodeString(&SpiCur->ImageName, NULL);
+			}
+
+			SpiCur->BasePriority = pr->Pcb.BasePriority;
+			SpiCur->UniqueProcessId = pr->UniqueProcessId;
+			SpiCur->InheritedFromUniqueProcessId = pr->InheritedFromUniqueProcessId;
+			SpiCur->HandleCount = (pr->ObjectTable ? ObpGetHandleCountByHandleTable(pr->ObjectTable) : 0);
+			SpiCur->PeakVirtualSize = pr->PeakVirtualSize;
+			SpiCur->VirtualSize = pr->VirtualSize;
+			SpiCur->PageFaultCount = pr->Vm.PageFaultCount;
+			SpiCur->PeakWorkingSetSize = pr->Vm.PeakWorkingSetSize;
+			SpiCur->WorkingSetSize = pr->Vm.WorkingSetSize;
+			SpiCur->QuotaPeakPagedPoolUsage = pr->QuotaPeak[0];
+			SpiCur->QuotaPagedPoolUsage = pr->QuotaUsage[0];
+			SpiCur->QuotaPeakNonPagedPoolUsage = pr->QuotaPeak[1];
+			SpiCur->QuotaNonPagedPoolUsage = pr->QuotaUsage[1];
+			SpiCur->PagefileUsage = pr->QuotaUsage[3];
+			SpiCur->PeakPagefileUsage = pr->QuotaPeak[3];
+			SpiCur->PrivateUsage = pr->CommitCharge;
+
+		        current_entry = pr->ThreadListHead.Flink;
+        		while (current_entry != &pr->ThreadListHead)
+			{
+				current = CONTAINING_RECORD(current_entry, ETHREAD,
+				                            ThreadListEntry);
+
+				SpiCur->TH[i].KernelTime.QuadPart = current->Tcb.KernelTime * 100000LL;
+				SpiCur->TH[i].UserTime.QuadPart = current->Tcb.UserTime * 100000LL;
+//				SpiCur->TH[i].CreateTime = current->CreateTime;
+				SpiCur->TH[i].WaitTime = current->Tcb.WaitTime;
+				SpiCur->TH[i].StartAddress = (PVOID) current->StartAddress;
+				SpiCur->TH[i].ClientId = current->Cid;
+				SpiCur->TH[i].Priority = current->Tcb.Priority;
+				SpiCur->TH[i].BasePriority = current->Tcb.BasePriority;
+				SpiCur->TH[i].ContextSwitches = current->Tcb.ContextSwitches;
+				SpiCur->TH[i].ThreadState = current->Tcb.State;
+				SpiCur->TH[i].WaitReason = current->Tcb.WaitReason;
+				i++;
+				current_entry = current_entry->Flink;
+			}
+
+			pr = PsGetNextProcess(pr);
+			nThreads = 0;
+			if ((pr == syspr) || (pr == NULL))
+			{
+				SpiCur->NextEntryOffset = 0;
+				break;
+			}
+			else
+				pCur = pCur + curSize + inLen;
+		}  while ((pr != syspr) && (pr != NULL));
+
+		if(pr != NULL)
+			ObDereferenceObject(pr);
+		Status = STATUS_SUCCESS;
 	}
+	_SEH_HANDLE
+	{
+		if(pr != NULL)
+			ObDereferenceObject(pr);
+		Status = _SEH_GetExceptionCode();
+	}
+	_SEH_END
 
 	*ReqSize = ovlSize;
-	return (STATUS_SUCCESS);
+	return Status;
 }
 
 /* Class 6 - Call Count Information */
@@ -1213,9 +1223,18 @@ QSI_DEF(SystemCrashDumpStateInformation)
 /* Class 35 - Kernel Debugger Information */
 QSI_DEF(SystemKernelDebuggerInformation)
 {
-	/* FIXME */
-	DPRINT1("NtQuerySystemInformation - SystemKernelDebuggerInformation not implemented\n");
-	return (STATUS_NOT_IMPLEMENTED);
+  PSYSTEM_KERNEL_DEBUGGER_INFORMATION skdi = (PSYSTEM_KERNEL_DEBUGGER_INFORMATION) Buffer;
+
+  *ReqSize = sizeof(SYSTEM_KERNEL_DEBUGGER_INFORMATION);
+  if (Size < sizeof(SYSTEM_KERNEL_DEBUGGER_INFORMATION))
+    {
+      return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+  skdi->KernelDebuggerEnabled = KD_DEBUGGER_ENABLED;
+  skdi->KernelDebuggerNotPresent = KD_DEBUGGER_NOT_PRESENT;
+
+  return STATUS_SUCCESS;
 }
 
 /* Class 36 - Context Switch Information */
@@ -1551,11 +1570,10 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
 	  FStatus = CallQS [SystemInformationClass].Query(SystemInformation,
 							  Length,
 							  &ResultLength);
-	  if (NT_SUCCESS(FStatus) && UnsafeResultLength != NULL)
+	  if (UnsafeResultLength != NULL)
 	    {
               if (PreviousMode != KernelMode)
                 {
-                  FStatus = STATUS_SUCCESS;
                   _SEH_TRY
                     {
                       *UnsafeResultLength = ResultLength;
