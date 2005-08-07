@@ -833,7 +833,11 @@ static void print_message_buffer_size(func_t *func, unsigned int *type_offset)
                             var->type->type == RPC_FC_CHAR ||
                             var->type->type == RPC_FC_WCHAR)
                         {
-                            print_server("_StubMsg.MaxCount = %s;\n", ((var_t *)sizeis_attr)->name);
+                            if (((var_t *)sizeis_attr)->ptr_level == 0)
+                                print_server("_StubMsg.MaxCount = %s;\n", ((var_t *)sizeis_attr)->name);
+                            else
+                                print_server("_StubMsg.MaxCount = %s ? *%s : 0;\n",
+                                             ((var_t *)sizeis_attr)->name, ((var_t *)sizeis_attr)->name);
                             fprintf(server, "\n");
                             print_server("NdrConformantStringBufferSize(\n");
                             indent++;
@@ -1232,7 +1236,11 @@ static void marshall_out_arguments(func_t *func, unsigned int *type_offset)
                     if (string_attr)
                     {
                         fprintf(server, "\n");
-                        print_server("_StubMsg.MaxCount = %s;\n", ((var_t *)sizeis_attr)->name);
+                        if (((var_t *)sizeis_attr)->ptr_level == 0)
+                            print_server("_StubMsg.MaxCount = %s;\n", ((var_t *)sizeis_attr)->name);
+                        else
+                            print_server("_StubMsg.MaxCount = %s ? *%s : 0;\n",
+                                         ((var_t *)sizeis_attr)->name, ((var_t *)sizeis_attr)->name);
                         fprintf(server, "\n");
                         print_server("NdrConformantStringMarshall(\n");
                         indent++;
@@ -1452,7 +1460,11 @@ static void cleanup_return_buffer(func_t *func, unsigned int *type_offset)
                 indent++;
                 if (string_attr)
                 {
-                    print_server("_StubMsg.MaxCount = %s;\n", ((var_t *)sizeis_attr)->name);
+                    if (((var_t *)sizeis_attr)->ptr_level == 0)
+                        print_server("_StubMsg.MaxCount = %s;\n", ((var_t *)sizeis_attr)->name);
+                    else
+                        print_server("_StubMsg.MaxCount = %s ? *%s : 0;\n",
+                                     ((var_t *)sizeis_attr)->name, ((var_t *)sizeis_attr)->name);
                     fprintf(server, "\n");
                     print_server("NdrPointerFree(\n");
                     indent++;

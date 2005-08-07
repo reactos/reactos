@@ -1,5 +1,11 @@
 ChangeLog
 
+2005-08-07 ekohl
+
+   tools/widl/server.c
+
+- Support size_is(*Length) attributes for strings.
+
 2005-07-30 ekohl
 
    tools/widl/client.c
