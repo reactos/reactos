@@ -196,105 +196,135 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
-			       IN HANDLE WaitableObjectHandle,
-			       IN BOOLEAN Alertable,
-			       IN PLARGE_INTEGER TimeOut  OPTIONAL)
+                               IN HANDLE WaitableObjectHandle,
+                               IN BOOLEAN Alertable,
+                               IN PLARGE_INTEGER TimeOut  OPTIONAL)
 {
-   KPROCESSOR_MODE PreviousMode;
-   DISPATCHER_HEADER* hdr;
-   PVOID SignalObj;
-   PVOID WaitObj;
-   LARGE_INTEGER SafeTimeOut;
-   NTSTATUS Status = STATUS_SUCCESS;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    PDISPATCHER_HEADER Header;
+    PVOID SignalObj;
+    PVOID WaitObj;
+    LARGE_INTEGER SafeTimeOut;
+    OBJECT_HANDLE_INFORMATION HandleInfo;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-   PreviousMode = ExGetPreviousMode();
+    /* Capture timeout */
+    if(!TimeOut && PreviousMode != KernelMode)
+    {
+        _SEH_TRY
+        {
+            ProbeForRead(TimeOut,
+                         sizeof(LARGE_INTEGER),
+                         sizeof(ULONG));
+            /* Make a copy on the stack */
+            SafeTimeOut = *TimeOut;
+            TimeOut = &SafeTimeOut;
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
 
-   if(TimeOut != NULL && PreviousMode != KernelMode)
-   {
-     _SEH_TRY
-     {
-       ProbeForRead(TimeOut,
-                    sizeof(LARGE_INTEGER),
-                    sizeof(ULONG));
-       /* make a copy on the stack */
-       SafeTimeOut = *TimeOut;
-       TimeOut = &SafeTimeOut;
-     }
-     _SEH_HANDLE
-     {
-       Status = _SEH_GetExceptionCode();
-     }
-     _SEH_END;
+        if(!NT_SUCCESS(Status)) return Status;
+    }
 
-     if(!NT_SUCCESS(Status))
-     {
-       return Status;
-     }
-   }
+    /* Start by getting the signal object*/
+    Status = ObReferenceObjectByHandle(ObjectHandleToSignal,
+                                       0,
+                                       NULL,
+                                       PreviousMode,
+                                       &SignalObj,
+                                       &HandleInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
 
-   Status = ObReferenceObjectByHandle(ObjectHandleToSignal,
-				      0,
-				      NULL,
-				      PreviousMode,
-				      &SignalObj,
-				      NULL);
-   if (!NT_SUCCESS(Status))
-     {
-	return Status;
-     }
+    /* Now get the wait object */
+    Status = ObReferenceObjectByHandle(WaitableObjectHandle,
+                                       SYNCHRONIZE,
+                                       NULL,
+                                       PreviousMode,
+                                       &WaitObj,
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ObDereferenceObject(SignalObj);
+        return Status;
+    }
 
-   Status = ObReferenceObjectByHandle(WaitableObjectHandle,
-				      SYNCHRONIZE,
-				      NULL,
-				      PreviousMode,
-				      &WaitObj,
-				      NULL);
-   if (!NT_SUCCESS(Status))
-     {
-	ObDereferenceObject(SignalObj);
-	return Status;
-     }
+    /* FIXME: Use DefaultObject from ObjectHeader */
+    Header = (PDISPATCHER_HEADER)SignalObj;
+    
+    /* Check dispatcher type */
+    /* FIXME: Check Object Type instead! */
+    switch (Header->Type)
+    {
+        case EventNotificationObject:
+        case EventSynchronizationObject:
+            /* Set the Event */
+            /* FIXME: Check permissions */
+            KeSetEvent(SignalObj, EVENT_INCREMENT, TRUE);
+            break;
 
-   hdr = (DISPATCHER_HEADER *)SignalObj;
-   switch (hdr->Type)
-     {
-      case EventNotificationObject:
-      case EventSynchronizationObject:
-	KeSetEvent(SignalObj,
-		   EVENT_INCREMENT,
-		   TRUE);
-	break;
+        case MutantObject:
+            /* Release the Mutant. This can raise an exception*/
+             _SEH_TRY
+            {
+                KeReleaseMutant(SignalObj, MUTANT_INCREMENT, FALSE, TRUE);
+            }
+            _SEH_HANDLE
+            {
+                Status = _SEH_GetExceptionCode();
+                goto Quickie;
+            }
+            _SEH_END;
+            break;
 
-      case MutantObject:
-	KeReleaseMutex(SignalObj,
-		       TRUE);
-	break;
+        case SemaphoreObject:
+            /* Release the Semaphore. This can raise an exception*/
+            /* FIXME: Check permissions */
+             _SEH_TRY
+            {
+                KeReleaseSemaphore(SignalObj, SEMAPHORE_INCREMENT, 1, TRUE);
+            }
+            _SEH_HANDLE
+            {
+                Status = _SEH_GetExceptionCode();
+                goto Quickie;
+            }
+            _SEH_END;
+            break;
 
-      case SemaphoreObject:
-	KeReleaseSemaphore(SignalObj,
-			   SEMAPHORE_INCREMENT,
-			   1,
-			   TRUE);
-	break;
+        default:
+            Status = STATUS_OBJECT_TYPE_MISMATCH;
+            goto Quickie;
+    }
 
-      default:
-	ObDereferenceObject(SignalObj);
-	ObDereferenceObject(WaitObj);
-	return STATUS_OBJECT_TYPE_MISMATCH;
-     }
+    /* Now wait. Also SEH this since it can also raise an exception */
+    _SEH_TRY
+    {
+        Status = KeWaitForSingleObject(WaitObj,
+                                       UserRequest,
+                                       PreviousMode,
+                                       Alertable,
+                                       TimeOut);
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
 
-   Status = KeWaitForSingleObject(WaitObj,
-				  UserRequest,
-				  PreviousMode,
-				  Alertable,
-				  TimeOut);
-
-   ObDereferenceObject(SignalObj);
-   ObDereferenceObject(WaitObj);
-
-   return Status;
+    /* We're done here */
+Quickie:
+    ObDereferenceObject(SignalObj);
+    ObDereferenceObject(WaitObj);
+    return Status;
 }
 
 /* EOF */
