@@ -139,6 +139,7 @@ PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
 {
   PHANDLE_TABLE_ENTRY CidEntry;
   PETHREAD FoundThread;
+  NTSTATUS Status = STATUS_INVALID_CID;
 
   PAGED_CODE();
 
@@ -157,10 +158,10 @@ PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
       *Process = FoundThread->ThreadsProcess;
     }
     *Thread = FoundThread;
-    return STATUS_SUCCESS;
+    Status = STATUS_SUCCESS;
   }
 
-  return STATUS_INVALID_PARAMETER;
+  return Status;
 }
 
 
@@ -173,6 +174,7 @@ PsLookupThreadByThreadId(IN HANDLE ThreadId,
 {
   PHANDLE_TABLE_ENTRY CidEntry;
   PETHREAD FoundThread;
+  NTSTATUS Status = STATUS_INVALID_CID;
 
   PAGED_CODE();
 
@@ -186,10 +188,10 @@ PsLookupThreadByThreadId(IN HANDLE ThreadId,
     PsUnlockCidHandle(CidEntry);
 
     *Thread = FoundThread;
-    return STATUS_SUCCESS;
+    Status = STATUS_SUCCESS;
   }
 
-  return STATUS_INVALID_PARAMETER;
+  return Status;
 }
 
 VOID
