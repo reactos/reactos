@@ -293,10 +293,10 @@ AtapiScsiSrbToAtapi (PSCSI_REQUEST_BLOCK Srb);
 //  ----------------------------------------------------------------  Inlines
 
 void
-IDESwapBytePairs(char *Buf,
+IDESwapBytePairs(UCHAR *Buf,
                  int Cnt)
 {
-  char  t;
+  UCHAR  t;
   int   i;
 
   for (i = 0; i < Cnt; i += 2)
