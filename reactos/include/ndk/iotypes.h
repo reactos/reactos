@@ -95,7 +95,7 @@ typedef enum _PNP_DEVNODE_STATE
 
 /* TYPES *********************************************************************/
 
-typedef struct _MAILSLOT_CREATE_PARAMETERS 
+typedef struct _MAILSLOT_CREATE_PARAMETERS
 {
     ULONG           MailslotQuota;
     ULONG           MaximumMessageSize;
@@ -103,7 +103,7 @@ typedef struct _MAILSLOT_CREATE_PARAMETERS
     BOOLEAN         TimeoutSpecified;
 } MAILSLOT_CREATE_PARAMETERS, *PMAILSLOT_CREATE_PARAMETERS;
 
-typedef struct _NAMED_PIPE_CREATE_PARAMETERS 
+typedef struct _NAMED_PIPE_CREATE_PARAMETERS
 {
     ULONG           NamedPipeType;
     ULONG           ReadMode;
@@ -115,7 +115,7 @@ typedef struct _NAMED_PIPE_CREATE_PARAMETERS
     BOOLEAN         TimeoutSpecified;
 } NAMED_PIPE_CREATE_PARAMETERS, *PNAMED_PIPE_CREATE_PARAMETERS;
 
-typedef struct _IO_TIMER 
+typedef struct _IO_TIMER
 {
     USHORT Type;
     USHORT TimerEnabled;

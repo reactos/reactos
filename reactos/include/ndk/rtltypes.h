@@ -196,19 +196,19 @@ typedef struct _DEBUG_LOCK_INFORMATION
 
 typedef struct _RTL_HANDLE_TABLE_ENTRY
 {
-     ULONG Flags;
-     struct _RTL_HANDLE_TABLE_ENTRY *NextFree;
+    ULONG Flags;
+    struct _RTL_HANDLE_TABLE_ENTRY *NextFree;
 } RTL_HANDLE_TABLE_ENTRY, *PRTL_HANDLE_TABLE_ENTRY;
 
 typedef struct _RTL_HANDLE_TABLE
 {
-     ULONG MaximumNumberOfHandles;
-     ULONG SizeOfHandleTableEntry;
-     ULONG Reserved[2];
-     PRTL_HANDLE_TABLE_ENTRY FreeHandles;
-     PRTL_HANDLE_TABLE_ENTRY CommittedHandles;
-     PRTL_HANDLE_TABLE_ENTRY UnCommittedHandles;
-     PRTL_HANDLE_TABLE_ENTRY MaxReservedHandles;
+    ULONG MaximumNumberOfHandles;
+    ULONG SizeOfHandleTableEntry;
+    ULONG Reserved[2];
+    PRTL_HANDLE_TABLE_ENTRY FreeHandles;
+    PRTL_HANDLE_TABLE_ENTRY CommittedHandles;
+    PRTL_HANDLE_TABLE_ENTRY UnCommittedHandles;
+    PRTL_HANDLE_TABLE_ENTRY MaxReservedHandles;
 } RTL_HANDLE_TABLE, *PRTL_HANDLE_TABLE;
 
 typedef struct _LOCK_INFORMATION
@@ -233,8 +233,8 @@ typedef struct _MODULE_INFORMATION
 #ifdef _INC_EXCPT
 typedef struct _EXCEPTION_REGISTRATION
 {
-    struct _EXCEPTION_REGISTRATION*    prev;
-    PEXCEPTION_HANDLER        handler;
+    struct _EXCEPTION_REGISTRATION *prev;
+    PEXCEPTION_HANDLER handler;
 } EXCEPTION_REGISTRATION, *PEXCEPTION_REGISTRATION;
 #endif
 
@@ -294,10 +294,10 @@ typedef struct _RTL_RESOURCE
 
 typedef struct _RANGE_LIST_ITERATOR
 {
-  PLIST_ENTRY RangeListHead;
-  PLIST_ENTRY MergedHead;
-  PVOID Current;
-  ULONG Stamp;
+    PLIST_ENTRY RangeListHead;
+    PLIST_ENTRY MergedHead;
+    PVOID Current;
+    ULONG Stamp;
 } RTL_RANGE_LIST_ITERATOR, *PRTL_RANGE_LIST_ITERATOR;
 
 typedef struct _RTL_MESSAGE_RESOURCE_ENTRY
@@ -322,15 +322,15 @@ typedef struct _RTL_MESSAGE_RESOURCE_DATA
 
 typedef struct _NLS_FILE_HEADER
 {
-    USHORT  HeaderSize;
-    USHORT  CodePage;
-    USHORT  MaximumCharacterSize;  /* SBCS = 1, DBCS = 2 */
-    USHORT  DefaultChar;
-    USHORT  UniDefaultChar;
-    USHORT  TransDefaultChar;
-    USHORT  TransUniDefaultChar;
-    USHORT  DBCSCodePage;
-    UCHAR   LeadByte[MAXIMUM_LEADBYTES];
+    USHORT HeaderSize;
+    USHORT CodePage;
+    USHORT MaximumCharacterSize;  /* SBCS = 1, DBCS = 2 */
+    USHORT DefaultChar;
+    USHORT UniDefaultChar;
+    USHORT TransDefaultChar;
+    USHORT TransUniDefaultChar;
+    USHORT DBCSCodePage;
+    UCHAR LeadByte[MAXIMUM_LEADBYTES];
 } NLS_FILE_HEADER, *PNLS_FILE_HEADER;
 
 typedef struct _RTL_USER_PROCESS_PARAMETERS
