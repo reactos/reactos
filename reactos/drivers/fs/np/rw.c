@@ -27,7 +27,7 @@ VOID HexDump(PUCHAR Buffer, ULONG Length)
 
   DbgPrint("---------------\n");
 
-  for (i = 0; i < ROUND_UP(Length, 16); i+= 16)
+  for (i = 0; i < Length; i+= 16)
     {
       memset(Line, ' ', 64);
       Line[64] = 0;
@@ -398,23 +398,19 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
      {
         if (Fcb->ReadDataAvailable == 0)
         {
-	   if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
-	   {
-	      ASSERT(Fcb->OtherSide != NULL);
-	      KeSetEvent(&Fcb->OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
-	   }
-	   if (Information > 0 &&
-	       (Fcb->Pipe->ReadMode != FILE_PIPE_BYTE_STREAM_MODE ||
-	        Fcb->PipeState != FILE_PIPE_CONNECTED_STATE))
-	   {
-	      break;
-	   }
       	   if (Fcb->PipeState != FILE_PIPE_CONNECTED_STATE)
 	   {
 	      DPRINT("PipeState: %x\n", Fcb->PipeState);
-	      Status = STATUS_PIPE_BROKEN;
+	      if (Fcb->PipeState == FILE_PIPE_LISTENING_STATE)
+	         Status = STATUS_PIPE_LISTENING;
+	      else
+	         Status = STATUS_PIPE_DISCONNECTED;
 	      break;
            }
+
+	   ASSERT(Fcb->OtherSide != NULL);
+	   KeSetEvent(&Fcb->OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
+
 	   ExReleaseFastMutex(&Fcb->DataListLock);
 	   if (IoIsOperationSynchronous(Irp))
 	   {

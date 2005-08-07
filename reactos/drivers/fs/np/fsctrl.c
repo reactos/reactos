@@ -187,6 +187,7 @@ NpfsDisconnectPipe(PNPFS_FCB Fcb)
       Server = (Fcb->PipeEnd == FILE_PIPE_SERVER_END);
       OtherSide = Fcb->OtherSide;
       Fcb->OtherSide = NULL;
+      Fcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
       /* Lock the server first */
       if (Server)
       {
