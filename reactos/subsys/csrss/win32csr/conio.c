@@ -1545,7 +1545,7 @@ ConioComputeUpdateRect(PCSRSS_SCREEN_BUFFER Buff, RECT *UpdateRect, COORD *Start
 CSR_API(CsrWriteConsoleOutputChar)
 {
   NTSTATUS Status;
-  PCHAR String;
+  PCHAR String, tmpString = NULL;
   PBYTE Buffer;
   PCSRSS_CONSOLE Console;
   PCSRSS_SCREEN_BUFFER Buff;
@@ -1577,7 +1577,7 @@ CSR_API(CsrWriteConsoleOutputChar)
                                       (PWCHAR)Request->Data.WriteConsoleOutputCharRequest.String, 
                                        Request->Data.WriteConsoleOutputCharRequest.Length, 
                                        NULL, 0, NULL, NULL);
-          String = RtlAllocateHeap(GetProcessHeap(), 0, Length);
+          tmpString = String = RtlAllocateHeap(GetProcessHeap(), 0, Length);
           if (String)
             {
               WideCharToMultiByte(Console->CodePage, 0, 
@@ -1635,7 +1635,7 @@ CSR_API(CsrWriteConsoleOutputChar)
             }
           if (Request->Data.WriteConsoleRequest.Unicode)
             {
-              RtlFreeHeap(GetProcessHeap(), 0, String);
+              RtlFreeHeap(GetProcessHeap(), 0, tmpString);
             }
         }
       if (NULL != Console)
