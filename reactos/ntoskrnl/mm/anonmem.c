@@ -562,6 +562,13 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
       return STATUS_INVALID_PAGE_PROTECTION;
    }
 
+   /* Check for valid Zero bits */
+   if (ZeroBits > 21)
+   {
+      DPRINT1("Too many zero bits\n");
+      return STATUS_INVALID_PARAMETER_3;
+   }
+
    /* Check for valid Allocation Types */
    if ((AllocationType &~ (MEM_COMMIT | MEM_RESERVE | MEM_RESET | MEM_PHYSICAL |
                            MEM_TOP_DOWN | MEM_WRITE_WATCH)))
