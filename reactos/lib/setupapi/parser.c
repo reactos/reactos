@@ -43,6 +43,11 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 
+/* Unicode constants */
+static const WCHAR BackSlash[] = {'\\',0};
+static const WCHAR InfDirectory[] = {'i','n','f','\\',0};
+static const WCHAR InfFileSpecification[] = {'*','.','i','n','f',0};
+
 #define CONTROL_Z  '\x1a'
 #define MAX_SECTION_NAME_LEN  255
 #define MAX_FIELD_LEN         511  /* larger fields get silently truncated */
@@ -957,7 +962,14 @@ static struct inf_file *parse_file( HANDLE handle, const WCHAR *class, UINT *err
             HeapFree( GetProcessHeap(), 0, new_buff );
         }
     }
-    else err = parse_buffer( file, buffer, (WCHAR *)((char *)buffer + size), error_line );
+    else
+    {
+        WCHAR *new_buff = (WCHAR *)buffer;
+        /* Some UNICODE files may start with the UNICODE marker */
+        if (*new_buff == 0xfeff)
+            new_buff++;
+        err = parse_buffer( file, new_buff, (WCHAR *)((char *)new_buff + size), error_line );
+    }
 
     if (!err)  /* now check signature */
     {
@@ -1059,6 +1071,8 @@ HINF WINAPI SetupOpenInfFileW( PCWSTR name, PCWSTR class, DWORD style, UINT *err
     HANDLE handle;
     WCHAR *path, *p;
     UINT len;
+
+    TRACE("%S %S %lx %p\n", name, class, style, error);
 
     if (strchrW( name, '\\' ) || strchrW( name, '/' ))
     {
@@ -1509,13 +1523,13 @@ BOOL WINAPI SetupGetLineTextW( PINFCONTEXT context, HINF hinf, PCWSTR section_na
         total += PARSER_string_substW( file, field->text, NULL, 0 ) + 1;
 
     if (required) *required = total;
+    if (total > size)
+    {
+        SetLastError( ERROR_INSUFFICIENT_BUFFER );
+        return FALSE;
+    }
     if (buffer)
     {
-        if (total > size)
-        {
-            SetLastError( ERROR_INSUFFICIENT_BUFFER );
-            return FALSE;
-        }
         for (i = 0, field = &file->fields[line->first_field]; i < line->nb_fields; i++, field++)
         {
             unsigned int len = PARSER_string_substW( file, field->text, buffer, size );
@@ -1560,13 +1574,13 @@ BOOL WINAPI SetupGetLineTextA( PINFCONTEXT context, HINF hinf, PCSTR section_nam
         total += PARSER_string_substA( file, field->text, NULL, 0 ) + 1;
 
     if (required) *required = total;
+    if (total > size)
+    {
+        SetLastError( ERROR_INSUFFICIENT_BUFFER );
+        return FALSE;
+    }
     if (buffer)
     {
-        if (total > size)
-        {
-            SetLastError( ERROR_INSUFFICIENT_BUFFER );
-            return FALSE;
-        }
         for (i = 0, field = &file->fields[line->first_field]; i < line->nb_fields; i++, field++)
         {
             unsigned int len = PARSER_string_substA( file, field->text, buffer, size );
@@ -1605,13 +1619,13 @@ BOOL WINAPI SetupGetStringFieldA( PINFCONTEXT context, DWORD index, PSTR buffer,
     if (!field) return FALSE;
     len = PARSER_string_substA( file, field->text, NULL, 0 );
     if (required) *required = len + 1;
+    if (size <= len)
+    {
+        SetLastError( ERROR_INSUFFICIENT_BUFFER );
+        return FALSE;
+    }
     if (buffer)
     {
-        if (size <= len)
-        {
-            SetLastError( ERROR_INSUFFICIENT_BUFFER );
-            return FALSE;
-        }
         PARSER_string_substA( file, field->text, buffer, size );
 
         TRACE( "context %p/%p/%d/%d index %ld returning %s\n",
@@ -1636,13 +1650,13 @@ BOOL WINAPI SetupGetStringFieldW( PINFCONTEXT context, DWORD index, PWSTR buffer
     if (!field) return FALSE;
     len = PARSER_string_substW( file, field->text, NULL, 0 );
     if (required) *required = len + 1;
+    if (size <= len)
+    {
+        SetLastError( ERROR_INSUFFICIENT_BUFFER );
+        return FALSE;
+    }
     if (buffer)
     {
-        if (size <= len)
-        {
-            SetLastError( ERROR_INSUFFICIENT_BUFFER );
-            return FALSE;
-        }
         PARSER_string_substW( file, field->text, buffer, size );
 
         TRACE( "context %p/%p/%d/%d index %ld returning %s\n",
@@ -1836,4 +1850,225 @@ BOOL WINAPI SetupGetMultiSzFieldW( PINFCONTEXT context, DWORD index, PWSTR buffe
     }
     *buffer = 0;  /* add final null */
     return TRUE;
+}
+
+/***********************************************************************
+ *		SetupGetInfInformationW    (SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupGetInfInformationW(
+    IN LPCVOID InfSpec,
+    IN DWORD SearchControl,
+    IN PSP_INF_INFORMATION ReturnBuffer,
+    IN DWORD ReturnBufferSize,
+    IN PDWORD RequiredSize)
+{
+    HINF hInf;
+    DWORD requiredSize;
+    BOOL Ret = FALSE;
+    
+    TRACE("%p %lx %p %ld %p\n", InfSpec, SearchControl, ReturnBuffer,
+        ReturnBufferSize, RequiredSize);
+
+    if (SearchControl != INFINFO_INF_SPEC_IS_HINF
+        && SearchControl != INFINFO_INF_NAME_IS_ABSOLUTE
+        && SearchControl != INFINFO_DEFAULT_SEARCH
+        && SearchControl != INFINFO_REVERSE_DEFAULT_SEARCH
+        && SearchControl != INFINFO_INF_PATH_LIST_SEARCH)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (SearchControl == INFINFO_INF_SPEC_IS_HINF)
+        hInf = (HINF)InfSpec;
+    else
+    {
+        /* open .inf file and put its handle to hInf */
+        FIXME("SearchControl 0x%lx not implemented\n", SearchControl);
+        SetLastError(ERROR_GEN_FAILURE);
+        return FALSE;
+    }
+
+    /* FIXME: add size of [Version] section */
+    requiredSize = sizeof(SP_INF_INFORMATION);
+
+    if (requiredSize <= ReturnBufferSize)
+    {
+        ReturnBuffer->InfStyle = INF_STYLE_WIN4; /* FIXME */
+        ReturnBuffer->InfCount = 1; /* FIXME */
+        /* FIXME: memcpy(ReturnBuffer->VersionData, ...); */
+        Ret = TRUE;
+    }
+    else
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+
+    if (RequiredSize)
+        *RequiredSize = requiredSize;
+
+    if (SearchControl != INFINFO_INF_SPEC_IS_HINF)
+        SetupCloseInfFile(hInf);
+    return Ret;
+}
+
+/***********************************************************************
+ *		SetupGetInfFileListW    (SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupGetInfFileListW(
+    IN PCWSTR DirectoryPath OPTIONAL,
+    IN DWORD InfStyle,
+    IN OUT PWSTR ReturnBuffer OPTIONAL,
+    IN DWORD ReturnBufferSize OPTIONAL,
+    OUT PDWORD RequiredSize OPTIONAL)
+{
+    HANDLE hSearch;
+    LPWSTR pFileSpecification, pFileName;
+    LPWSTR pBuffer = ReturnBuffer;
+    WIN32_FIND_DATAW wfdFileInfo;
+    PVOID Buffer = NULL;
+    size_t len;
+    DWORD requiredSizeInfo;
+    DWORD requiredSize = 0;
+    BOOL ret = FALSE;
+
+    TRACE("%S %lx %p %ld %p\n", DirectoryPath, InfStyle,
+        ReturnBuffer, ReturnBufferSize, RequiredSize);
+
+    if (InfStyle & ~(INF_STYLE_OLDNT | INF_STYLE_WIN4))
+    {
+        TRACE("Unknown flags: 0x%08lx\n", InfStyle & ~(INF_STYLE_OLDNT  | INF_STYLE_WIN4));
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (DirectoryPath)
+    {
+        len = wcslen(DirectoryPath);
+        pFileSpecification = HeapAlloc(
+            GetProcessHeap(), 0,
+            (len + MAX_PATH + 2) * sizeof(WCHAR));
+        if (!pFileSpecification)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+        wcscpy(pFileSpecification, DirectoryPath);
+        if (DirectoryPath[len] == '\\')
+        {
+            pFileName = &pFileSpecification[len];
+        }
+        else
+        {
+            wcscat(pFileSpecification, BackSlash);
+            pFileName = &pFileSpecification[len + 1];
+        }
+    }
+    else
+    {
+        WCHAR windir[MAX_PATH];
+        if (GetSystemWindowsDirectoryW(windir, MAX_PATH) == 0)
+            return FALSE;
+        len = wcslen(windir);
+        pFileSpecification = HeapAlloc(
+            GetProcessHeap(), 0,
+            (len + MAX_PATH + 6) * sizeof(WCHAR));
+        if (!pFileSpecification)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+        wcscpy(pFileSpecification, windir);
+        if (windir[len] != '\\')
+            wcscat(pFileSpecification, BackSlash);
+        wcscat(pFileSpecification, InfDirectory);
+        pFileName = &pFileSpecification[wcslen(pFileSpecification)];
+    }
+    wcscpy(pFileName, InfFileSpecification);
+    hSearch = FindFirstFileW(pFileSpecification, &wfdFileInfo);
+    if (hSearch == INVALID_HANDLE_VALUE)
+    {
+        HeapFree(GetProcessHeap(), 0, pFileSpecification);
+        return FALSE;
+    }
+
+    ret = TRUE;
+    do
+    {
+        HINF hInf;
+
+        wcscpy(pFileName, wfdFileInfo.cFileName);
+        hInf = SetupOpenInfFileW(
+            pFileSpecification,
+            NULL, /* Inf class */
+            InfStyle,
+            NULL /* Error line */);
+        if (hInf == INVALID_HANDLE_VALUE)
+        {
+            if (GetLastError() == ERROR_CLASS_MISMATCH)
+            {
+                /* InfStyle was not correct. Skip this file */
+                continue;
+            }
+            TRACE("Invalid .inf file %S\n", pFileSpecification);
+            continue;
+        }
+
+        ret = SetupGetInfInformationW(
+            hInf,
+            INFINFO_INF_SPEC_IS_HINF,
+            NULL, 0,
+            &requiredSizeInfo);
+        if (!ret && GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+            break;
+
+        if (!ret)
+        {
+            Buffer = HeapAlloc(GetProcessHeap(), 0, requiredSizeInfo);
+            if (!Buffer)
+            {
+                SetupCloseInfFile(hInf);
+                ret = FALSE;
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                break;
+            }
+    
+            ret = SetupGetInfInformationW(
+                hInf,
+                INFINFO_INF_SPEC_IS_HINF,
+                Buffer, requiredSizeInfo,
+                &requiredSizeInfo);
+            if (!ret)
+                break;
+        }
+
+        len = wcslen(wfdFileInfo.cFileName) + 1;
+        requiredSize += (DWORD)(len * sizeof(WCHAR));
+        if (requiredSize <= ReturnBufferSize)
+        {
+            wcscpy(pBuffer, wfdFileInfo.cFileName);
+            pBuffer = &pBuffer[len];
+        }
+        HeapFree(GetProcessHeap(), 0, Buffer);
+        SetupCloseInfFile(hInf);
+        ret = TRUE;
+    } while (FindNextFileW(hSearch, &wfdFileInfo));
+    FindClose(hSearch);
+
+    if (ret)
+    {
+        requiredSize += sizeof(WCHAR); /* Final NULL char */
+        if (requiredSize <= ReturnBufferSize)
+            *pBuffer = '\0';
+        else
+        {
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            ret = FALSE;
+        }
+        if (RequiredSize)
+            *RequiredSize = requiredSize;
+    }
+
+    HeapFree(GetProcessHeap(), 0, pFileSpecification);
+    return ret;
 }

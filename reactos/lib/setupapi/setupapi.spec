@@ -399,9 +399,9 @@
 @ stdcall SetupGetFileQueueCount(long long ptr)
 @ stdcall SetupGetFileQueueFlags(long ptr)
 @ stub SetupGetInfFileListA
-@ stub SetupGetInfFileListW
+@ stdcall SetupGetInfFileListW(wstr long wstr long ptr)
 @ stdcall SetupGetInfInformationA(ptr long ptr long ptr)
-@ stub SetupGetInfInformationW
+@ stdcall SetupGetInfInformationW(ptr long ptr long ptr)
 @ stub SetupGetInfSections
 @ stdcall SetupGetIntField(ptr long ptr)
 @ stdcall SetupGetLineByIndexA(long str long ptr)
