@@ -411,6 +411,12 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 	   ASSERT(Fcb->OtherSide != NULL);
 	   KeSetEvent(&Fcb->OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
 
+	   if (Information > 0 &&
+	       Fcb->Pipe->ReadMode != FILE_PIPE_BYTE_STREAM_MODE)
+	   {
+              break;
+	   }
+
 	   ExReleaseFastMutex(&Fcb->DataListLock);
 	   if (IoIsOperationSynchronous(Irp))
 	   {
