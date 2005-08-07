@@ -518,10 +518,13 @@ extern "C" {
 #define STACK_SIZE_PARAM_IS_A_RESERVATION 0x00010000
 
 #ifndef RC_INVOKED
+#ifndef _FILETIME_
+#define _FILETIME_
 typedef struct _FILETIME {
 	DWORD dwLowDateTime;
 	DWORD dwHighDateTime;
 } FILETIME,*PFILETIME,*LPFILETIME;
+#endif
 typedef struct _BY_HANDLE_FILE_INFORMATION {
 	DWORD	dwFileAttributes;
 	FILETIME	ftCreationTime;
@@ -1104,10 +1107,6 @@ BOOL WINAPI CopyFileA(LPCSTR,LPCSTR,BOOL);
 BOOL WINAPI CopyFileW(LPCWSTR,LPCWSTR,BOOL);
 BOOL WINAPI CopyFileExA(LPCSTR,LPCSTR,LPPROGRESS_ROUTINE,LPVOID,LPBOOL,DWORD);
 BOOL WINAPI CopyFileExW(LPCWSTR,LPCWSTR,LPPROGRESS_ROUTINE,LPVOID,LPBOOL,DWORD);
-#define RtlMoveMemory memmove
-#define RtlCopyMemory memcpy
-#define RtlFillMemory(d,l,f) memset((d), (f), (l))
-#define RtlZeroMemory(d,l) RtlFillMemory((d),(l),0)
 #define MoveMemory RtlMoveMemory
 #define CopyMemory RtlCopyMemory
 #define FillMemory RtlFillMemory

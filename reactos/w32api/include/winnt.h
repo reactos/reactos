@@ -262,14 +262,6 @@ typedef DWORD FLONG;
 #define FILE_VALID_MAILSLOT_OPTION_FLAGS	0x00000032
 #define FILE_VALID_SET_FLAGS			0x00000036
 
-#define FILE_SUPERSEDE			0x00000000
-#define FILE_OPEN			0x00000001
-#define FILE_CREATE			0x00000002
-#define FILE_OPEN_IF			0x00000003
-#define FILE_OVERWRITE			0x00000004
-#define FILE_OVERWRITE_IF		0x00000005
-#define FILE_MAXIMUM_DISPOSITION	0x00000005
-
 #define FILE_DIRECTORY_FILE		0x00000001
 #define FILE_WRITE_THROUGH		0x00000002
 #define FILE_SEQUENTIAL_ONLY		0x00000004
@@ -3494,6 +3486,11 @@ RtlCompareMemory (
     const VOID *Source2,
     SIZE_T Length
     );
+
+#define RtlMoveMemory memmove
+#define RtlCopyMemory memcpy
+#define RtlFillMemory(d,l,f) memset((d), (f), (l))
+#define RtlZeroMemory(d,l) RtlFillMemory((d),(l),0)
 
 #if defined(__GNUC__)
 
