@@ -555,16 +555,59 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
           *UBaseAddress,ZeroBits,*URegionSize,AllocationType,
           Protect);
 
-   /*
-    * Check the validity of the parameters
-    */
+   /* Check for valid protection flags */
    if ((Protect & PAGE_FLAGS_VALID_FROM_USER_MODE) != Protect)
    {
-      return(STATUS_INVALID_PAGE_PROTECTION);
+      DPRINT1("Invalid page protection\n");
+      return STATUS_INVALID_PAGE_PROTECTION;
    }
-   if ((AllocationType & (MEM_COMMIT | MEM_RESERVE)) == 0)
+
+   /* Check for valid Allocation Types */
+   if ((AllocationType &~ (MEM_COMMIT | MEM_RESERVE | MEM_RESET | MEM_PHYSICAL |
+                           MEM_TOP_DOWN | MEM_WRITE_WATCH)))
    {
-      return(STATUS_INVALID_PARAMETER);
+      DPRINT1("Invalid Allocation Type\n");
+      return STATUS_INVALID_PARAMETER_5;
+   }
+
+   /* Check for at least one of these Allocation Types to be set */
+   if (!(AllocationType & (MEM_COMMIT | MEM_RESERVE | MEM_RESET)))
+   {
+      DPRINT1("No memory allocation base type\n");
+      return STATUS_INVALID_PARAMETER_5;
+   }
+   
+   /* MEM_RESET is an exclusive flag, make sure that is valid too */
+   if ((AllocationType & MEM_RESET) && (AllocationType != MEM_RESET))
+   {
+      DPRINT1("MEM_RESET used illegaly\n");
+      return STATUS_INVALID_PARAMETER_5;
+   }
+
+   /* MEM_WRITE_WATCH can only be used if MEM_RESERVE is also used */
+   if ((AllocationType & MEM_WRITE_WATCH) && !(AllocationType & MEM_RESERVE))
+   {
+      DPRINT1("MEM_WRITE_WATCH used without MEM_RESERVE\n");
+      return STATUS_INVALID_PARAMETER_5;
+   }
+
+   /* MEM_PHYSICAL can only be used with MEM_RESERVE, and can only be R/W */
+   if (AllocationType & MEM_PHYSICAL)
+   {
+      /* First check for MEM_RESERVE exclusivity */
+      if (AllocationType != (MEM_RESERVE | MEM_PHYSICAL))
+      {
+         DPRINT1("MEM_PHYSICAL used with other flags then MEM_RESERVE or"
+                 "MEM_RESERVE was not present at all\n");
+         return STATUS_INVALID_PARAMETER_5;
+      }
+
+      /* Then make sure PAGE_READWRITE is used */
+      if (Protect != PAGE_READWRITE)
+      {
+         DPRINT1("MEM_PHYSICAL used without PAGE_READWRITE\n");
+         return STATUS_INVALID_PAGE_PROTECTION;
+      }
    }
 
    PBaseAddress = *UBaseAddress;
@@ -574,6 +617,27 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
    BaseAddress = (PVOID)PAGE_ROUND_DOWN(PBaseAddress);
    RegionSize = PAGE_ROUND_UP(PBaseAddress + PRegionSize) -
                 PAGE_ROUND_DOWN(PBaseAddress);
+
+   /* 
+    * We've captured and calculated the data, now do more checks
+    * Yes, MmCreateMemoryArea does similar checks, but they don't return
+    * the right status codes that a caller of this routine would expect.
+    */
+   if (BaseAddress >= MM_HIGHEST_USER_ADDRESS)
+   {
+      DPRINT1("Virtual allocation above User Space\n");
+      return STATUS_INVALID_PARAMETER_2;
+   }
+   if (!RegionSize)
+   {
+      DPRINT1("Region size is invalid\n");
+      return STATUS_INVALID_PARAMETER_4;
+   }
+   if (((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (ULONG_PTR)BaseAddress) < RegionSize)
+   {
+      DPRINT1("Region size would overflow into kernel-memory\n");
+      return STATUS_INVALID_PARAMETER_4;
+   }
 
    Status = ObReferenceObjectByHandle(ProcessHandle,
                                       PROCESS_VM_OPERATION,
