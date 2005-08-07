@@ -8,8 +8,14 @@
 <directory name="gdi32">
 	<xi:include href="gdi32/gdi32_test.xml" />
 </directory>
+<directory name="kernel32">
+	<xi:include href="kernel32/kernel32_test.xml" />
+</directory>
 <directory name="msvcrt">
 	<xi:include href="msvcrt/msvcrt_test.xml" />
+</directory>
+<directory name="ntdll">
+	<xi:include href="ntdll/ntdll_test.xml" />
 </directory>
 <directory name="psapi">
 	<xi:include href="psapi/psapi_test.xml" />
