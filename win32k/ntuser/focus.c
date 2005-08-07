@@ -236,19 +236,8 @@ IntMouseActivateWindow(PWINDOW_OBJECT Window)
    }
 
    TopWnd = UserGetAncestor(Window, GA_ROOT);
-   //  if (TopWindow != Window->Self)
-   //    {
-   //      TopWindow = IntGetWindowObject(Top);
-   //      if (TopWindow == NULL)
-   //        {
-   //          SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-   //          return FALSE;
-   //        }
-   //    }
-   //  else
-   //    {
-   //      TopWindow = Window;
-   //    }
+   if (TopWnd == NULL)
+      TopWnd = UserGetDesktopWindow();
 
    /* TMN: Check return value from this function? */
    IntSetForegroundAndFocusWindow(TopWnd, Window, TRUE);
