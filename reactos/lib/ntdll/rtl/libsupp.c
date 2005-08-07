@@ -148,8 +148,8 @@ RtlpFreeAtomHandle(PRTL_ATOM_TABLE AtomTable, PRTL_ATOM_TABLE_ENTRY Entry)
    PRTL_HANDLE_TABLE_ENTRY RtlHandleEntry;
    
    if (RtlIsValidIndexHandle(&AtomTable->RtlHandleTable,
-                             &RtlHandleEntry,
-                             (ULONG)Entry->HandleIndex))
+                             (ULONG)Entry->HandleIndex,
+                             &RtlHandleEntry))
    {
       RtlFreeHandle(&AtomTable->RtlHandleTable,
                     RtlHandleEntry);
@@ -198,8 +198,8 @@ RtlpGetAtomEntry(PRTL_ATOM_TABLE AtomTable, ULONG Index)
    PRTL_HANDLE_TABLE_ENTRY RtlHandle;
    
    if (RtlIsValidIndexHandle(&AtomTable->RtlHandleTable,
-                             &RtlHandle,
-                             Index))
+                             Index,
+                             &RtlHandle))
    {
       PRTL_ATOM_HANDLE AtomHandle = (PRTL_ATOM_HANDLE)RtlHandle;
 

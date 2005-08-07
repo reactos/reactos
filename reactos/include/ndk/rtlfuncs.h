@@ -1514,8 +1514,8 @@ BOOLEAN
 STDCALL
 RtlIsValidIndexHandle(
     IN PRTL_HANDLE_TABLE HandleTable,
-    IN OUT PRTL_HANDLE_TABLE_ENTRY *Handle,
-    IN ULONG Index
+    IN ULONG Index,
+    OUT PRTL_HANDLE_TABLE_ENTRY *Handle
 );
 
 /*
