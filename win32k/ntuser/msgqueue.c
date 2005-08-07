@@ -31,7 +31,7 @@
 
 #include <w32k.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -42,7 +42,6 @@ static MSG SystemMessageQueue[SYSTEM_MESSAGE_QUEUE_SIZE];
 static ULONG SystemMessageQueueHead = 0;
 static ULONG SystemMessageQueueTail = 0;
 static ULONG SystemMessageQueueCount = 0;
-static ULONG SystemMessageQueueMouseMove = -1;
 static KSPIN_LOCK SystemMessageQueueLock;
 
 static ULONG volatile HardwareMessageQueueStamp = 0;
@@ -129,27 +128,15 @@ MsqClearQueueBits(PUSER_MESSAGE_QUEUE Queue, WORD Bits )
 VOID FASTCALL
 MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
 {
-   Queue->PaintCount++;
-   //FIXME: PaintPosted  ust go away. QS_PAINT is used instead!
-   Queue->PaintPosted = TRUE;
-   MsqSetQueueBits(Queue, QS_PAINT);
+   if (Queue->PaintCount++ == 0)
+      MsqSetQueueBits(Queue, QS_PAINT);
 }
 
 VOID FASTCALL
 MsqDecPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
 {
-   Queue->PaintCount--;
-
-   /* wine checks for this... */
-   if (Queue->PaintCount < 0)
-      Queue->PaintCount = 0;
-
-   if (Queue->PaintCount == 0)
-   {
-      //FIXME: PaintPosted  ust go away. QS_PAINT is used instead!
-      Queue->PaintPosted = FALSE;
+   if (--Queue->PaintCount == 0)
       MsqClearQueueBits(Queue, QS_PAINT);
-   }
 }
 
 
@@ -178,44 +165,34 @@ MsqInsertSystemMessage(MSG* Msg)
 {
    LARGE_INTEGER LargeTickCount;
    KIRQL OldIrql;
-   ULONG mmov = (ULONG)-1;
+   ULONG Prev;
 
    KeQueryTickCount(&LargeTickCount);
    Msg->time = LargeTickCount.u.LowPart;
 
    IntLockSystemMessageQueue(OldIrql);
 
-   /* only insert WM_MOUSEMOVE messages if not already in system message queue */
-   if(Msg->message == WM_MOUSEMOVE)
-      mmov = SystemMessageQueueMouseMove;
-
-   if(mmov != (ULONG)-1)
+   if (SystemMessageQueueCount == SYSTEM_MESSAGE_QUEUE_SIZE)
    {
-      /* insert message at the queue head */
-      while (mmov != SystemMessageQueueHead )
-      {
-         ULONG prev = mmov ? mmov - 1 : SYSTEM_MESSAGE_QUEUE_SIZE - 1;
-         ASSERT((LONG) mmov >= 0);
-         ASSERT(mmov < SYSTEM_MESSAGE_QUEUE_SIZE);
-         SystemMessageQueue[mmov] = SystemMessageQueue[prev];
-         mmov = prev;
-      }
-      SystemMessageQueue[SystemMessageQueueHead] = *Msg;
+      IntUnLockSystemMessageQueue(OldIrql);
+      return;
    }
-   else
+   if(Msg->message == WM_MOUSEMOVE && SystemMessageQueueCount)
    {
-      if (SystemMessageQueueCount == SYSTEM_MESSAGE_QUEUE_SIZE)
+      if (SystemMessageQueueTail == 0)
+         Prev = SYSTEM_MESSAGE_QUEUE_SIZE - 1;
+      else
+         Prev = SystemMessageQueueTail - 1;
+      if (SystemMessageQueue[Prev].message == WM_MOUSEMOVE)
       {
-         IntUnLockSystemMessageQueue(OldIrql);
-         return;
+         SystemMessageQueueTail = Prev;
+         SystemMessageQueueCount--;
       }
-      SystemMessageQueue[SystemMessageQueueTail] = *Msg;
-      if(Msg->message == WM_MOUSEMOVE)
-         SystemMessageQueueMouseMove = SystemMessageQueueTail;
-      SystemMessageQueueTail =
-         (SystemMessageQueueTail + 1) % SYSTEM_MESSAGE_QUEUE_SIZE;
-      SystemMessageQueueCount++;
    }
+   SystemMessageQueue[SystemMessageQueueTail] = *Msg;
+   SystemMessageQueueTail =
+      (SystemMessageQueueTail + 1) % SYSTEM_MESSAGE_QUEUE_SIZE;
+   SystemMessageQueueCount++;
    IntUnLockSystemMessageQueue(OldIrql);
 
    /* wakes all waiters  FIXME: wake all? why??*/
@@ -589,11 +566,6 @@ MsqPeekHardwareMessage(
       }
       IntLockSystemMessageQueue(OldIrql);
    }
-   /*
-    * we could set this to -1 conditionally if we find one, but
-    * this is more efficient and just as effective.
-    */
-   SystemMessageQueueMouseMove = -1;
    HardwareMessageQueueStamp++;
    IntUnLockSystemMessageQueue(OldIrql);
 
@@ -1348,7 +1320,6 @@ MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQu
    KeQueryTickCount(&LargeTickCount);
    MessageQueue->LastMsgRead = LargeTickCount.u.LowPart;
 //   MessageQueue->FocusWindow = NULL;
-   MessageQueue->PaintPosted = FALSE;
    MessageQueue->PaintCount = 0;
    MessageQueue->WakeMask = ~0; //FIXME!
    MessageQueue->NewMessagesHandle = NULL;
