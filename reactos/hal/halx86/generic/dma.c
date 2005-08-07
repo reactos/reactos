@@ -54,20 +54,29 @@ HalAllocateCommonBuffer (PADAPTER_OBJECT    AdapterObject,
 
   LowestAddress.QuadPart = 0;
   BoundryAddressMultiple.QuadPart = 0;
-  HighestAddress.u.HighPart = 0;
-  if ((AdapterObject->Dma32BitAddresses) && (AdapterObject->MasterDevice)) {
-      HighestAddress.u.LowPart = 0xFFFFFFFF; /* 32Bit: 4GB address range */
+  if ((AdapterObject->Dma64BitAddresses) && (AdapterObject->MasterDevice)) {
+      HighestAddress.QuadPart = 0xFFFFFFFFFFFFFFFFLL; /* 64Bit: >4GB address range */
+
+  } else if ((AdapterObject->Dma32BitAddresses) && (AdapterObject->MasterDevice)) {
+      HighestAddress.QuadPart = 0xFFFFFFFF; /* 32Bit: 4GB address range */
   } else {
-      HighestAddress.u.LowPart = 0x00FFFFFF; /* 24Bit: 16MB address range */
+      HighestAddress.QuadPart = 0x00FFFFFF; /* 24Bit: 16MB address range */
+      if (AdapterObject->Width16Bits)
+      {
+         BoundryAddressMultiple.QuadPart = 0x20000;  /* 128k boundary */
+      }
+      else
+      {
+         BoundryAddressMultiple.QuadPart = 0x10000;  /* 64k boundary */
+      }
   }
 
-  BaseAddress = MmAllocateContiguousAlignedMemory(
+  BaseAddress = MmAllocateContiguousMemorySpecifyCache(
       Length,
       LowestAddress,
       HighestAddress,
       BoundryAddressMultiple,
-      CacheEnabled ? MmCached : MmNonCached,
-      0x10000 );
+      CacheEnabled ? MmCached : MmNonCached);
   if (!BaseAddress)
     return 0;
 

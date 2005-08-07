@@ -68,11 +68,6 @@ HalAllocateAdapterChannel(
   if(KeInsertDeviceQueue(&AdapterObject->ChannelWaitQueue, &WaitContextBlock->WaitQueueEntry))
     return STATUS_SUCCESS;
 
-  /* 24-bit max address due to 16-bit dma controllers */
-  MinAddress.QuadPart = 0x0000000;
-  MaxAddress.QuadPart = 0x1000000;
-  BoundryAddressMultiple.QuadPart = 0;
-
   /* why 64K alignment? */
   /*
    * X86 lacks map registers, so for now, we allocate a contiguous
@@ -83,13 +78,35 @@ HalAllocateAdapterChannel(
    * buffer transfers. See a comment in IoMapTransfer about common buffer
    * support.
    */
-  AdapterObject->MapRegisterBase = MmAllocateContiguousAlignedMemory( 
+  
+  MinAddress.QuadPart = 0;
+  BoundryAddressMultiple.QuadPart = 0;
+  if ((AdapterObject->Dma64BitAddresses) && (AdapterObject->MasterDevice)) 
+    {
+      MaxAddress.QuadPart = 0xFFFFFFFFFFFFFFFFLL; /* 64Bit: >4GB address range */
+    } 
+  else if ((AdapterObject->Dma32BitAddresses) && (AdapterObject->MasterDevice)) 
+    {
+      MaxAddress.QuadPart = 0xFFFFFFFF; /* 32Bit: 4GB address range */
+    } 
+  else 
+    {
+      MaxAddress.QuadPart = 0x00FFFFFF; /* 24Bit: 16MB address range */
+      if (AdapterObject->Width16Bits)
+        {
+          BoundryAddressMultiple.QuadPart = 0x20000;  /* 128k boundary */
+        }
+      else
+        {
+          BoundryAddressMultiple.QuadPart = 0x10000;  /* 64k boundary */
+        }
+    }
+  AdapterObject->MapRegisterBase = MmAllocateContiguousMemorySpecifyCache(
       NumberOfMapRegisters * PAGE_SIZE,
       MinAddress,
       MaxAddress,
       BoundryAddressMultiple,
-      MmCached,
-      0x10000 );
+      MmCached);
 
   if(!AdapterObject->MapRegisterBase)
     return STATUS_INSUFFICIENT_RESOURCES;
@@ -387,18 +404,35 @@ IoFreeAdapterChannel (PADAPTER_OBJECT	AdapterObject)
        * function really can't return an error code.  FIXME.
        */
 
-      /* 24-bit max address due to 16-bit dma controllers */
-      MinAddress.QuadPart = 0x0000000;
-      MaxAddress.QuadPart = 0x1000000;
+      MinAddress.QuadPart = 0;
       BoundryAddressMultiple.QuadPart = 0;
+      if ((AdapterObject->Dma64BitAddresses) && (AdapterObject->MasterDevice)) 
+        {
+          MaxAddress.QuadPart = 0xFFFFFFFFFFFFFFFFLL; /* 64Bit: >4GB address range */
+        } 
+      else if ((AdapterObject->Dma32BitAddresses) && (AdapterObject->MasterDevice)) 
+        {
+          MaxAddress.QuadPart = 0xFFFFFFFF; /* 32Bit: 4GB address range */
+        } 
+      else 
+        {
+          MaxAddress.QuadPart = 0x00FFFFFF; /* 24Bit: 16MB address range */
+          if (AdapterObject->Width16Bits)
+            {
+              BoundryAddressMultiple.QuadPart = 0x20000;  /* 128k boundary */
+            }
+          else
+            {
+              BoundryAddressMultiple.QuadPart = 0x10000;  /* 64k boundary */
+            }
+        }
 
-      AdapterObject->MapRegisterBase = MmAllocateContiguousAlignedMemory( 
+      AdapterObject->MapRegisterBase = MmAllocateContiguousMemorySpecifyCache( 
           WaitContextBlock->NumberOfMapRegisters * PAGE_SIZE,
           MinAddress,
           MaxAddress,
           BoundryAddressMultiple,
-          MmCached,
-          0x10000 );
+          MmCached);
 
       if(!AdapterObject->MapRegisterBase)
         return;
