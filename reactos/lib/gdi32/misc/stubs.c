@@ -3890,24 +3890,6 @@ LPVIDMEM pvmList
 /*
  * @unimplemented
  */
-BOOL STDCALL DdCreateSurfaceObject( 
-LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
-BOOL bPrimarySurface
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-
-
-
-/*
- * @unimplemented
- */
 HBITMAP STDCALL DdCreateDIBSection( 
 HDC hdc,
 CONST BITMAPINFO *pbmi,

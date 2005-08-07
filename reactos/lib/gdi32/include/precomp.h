@@ -88,4 +88,8 @@ LogFontA2W(LPLOGFONTW pW, CONST LOGFONTA *pA);
 VOID
 STDCALL
 LogFontW2A(LPLOGFONTA pA, CONST LOGFONTW *pW);
+
+/* == Directx FUNCTIONS ================================================== */
+BOOL
+intDDCreateSurface ( LPDDRAWI_DDRAWSURFACE_LCL pSurface, BOOL bComplete);
 /* EOF */

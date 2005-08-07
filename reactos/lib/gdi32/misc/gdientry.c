@@ -118,8 +118,18 @@ DdDeleteDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal)
   return NtGdiDdDeleteDirectDrawObject((HANDLE)pDirectDrawGlobal->hDD); 	
 }
 
-
-
+/*
+ * @implemented
+ *
+ * GDIEntry 4
+ */
+BOOL STDCALL DdCreateSurfaceObject( 
+LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
+BOOL bPrimarySurface
+)
+{
+	return intDDCreateSurface(pSurfaceLocal,1);	
+}
 
 /*
  * @implemented
@@ -295,3 +305,68 @@ LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl2
 	return TRUE;
 }
 
+
+/* interal create surface */
+BOOL
+intDDCreateSurface ( LPDDRAWI_DDRAWSURFACE_LCL pSurface, 
+				  BOOL bComplete)
+{
+  DD_SURFACE_LOCAL SurfaceLocal;
+  DD_SURFACE_GLOBAL SurfaceGlobal;
+  DD_SURFACE_MORE SurfaceMore;
+
+  /* Zero struct */
+  RtlZeroMemory(&SurfaceLocal, sizeof(DD_SURFACE_LOCAL));
+  RtlZeroMemory(&SurfaceGlobal, sizeof(DD_SURFACE_GLOBAL));
+  RtlZeroMemory(&SurfaceMore, sizeof(DD_SURFACE_MORE));
+
+  /* Set up SurfaceLocal struct */
+  SurfaceLocal.ddsCaps.dwCaps = pSurface->ddsCaps.dwCaps;
+  SurfaceLocal.dwFlags = pSurface->dwFlags;
+
+  /* Set up SurfaceMore struct */
+  /* copy  pSurface->ddckCKDestBlt and pSurface->ddckCKSrcBlt to SurfaceMore.ddsCapsEx */  
+  memcpy(&SurfaceMore.ddsCapsEx, &pSurface->ddckCKDestBlt, sizeof(DDSCAPSEX));   
+  SurfaceMore.dwSurfaceHandle =  (DWORD) pSurface->dbnOverlayNode.object_int->lpVtbl; 
+
+
+  /* Set up SurfaceGlobal struct */
+  SurfaceGlobal.fpVidMem = pSurface->lpGbl->fpVidMem;
+  SurfaceGlobal.dwLinearSize = pSurface->lpGbl->dwLinearSize;
+  SurfaceGlobal.wHeight = pSurface->lpGbl->wHeight;
+  SurfaceGlobal.wWidth = pSurface->lpGbl->wWidth;
+
+  /* check which memory type should be use */
+  if ((pSurface->dwFlags & DDRAWISURFGBL_LOCKVRAMSTYLE) == DDRAWISURFGBL_LOCKVRAMSTYLE)
+  {	
+	  memcpy(&SurfaceGlobal.ddpfSurface,&pSurface->lpGbl->lpDD->vmiData.ddpfDisplay, sizeof(DDPIXELFORMAT));
+  }
+  else
+  {
+	  memcpy(&SurfaceGlobal.ddpfSurface,&pSurface->lpGbl->ddpfSurface, sizeof(DDPIXELFORMAT));
+  }
+
+  /* Determer if Gdi32 chace of directdraw handler or not */
+  if (pSurface->lpGbl->lpDD->hDD)
+  {
+     pSurface->hDDSurface = ((DWORD) NtGdiDdCreateSurfaceObject( (HANDLE) pSurface->lpGbl->lpDD->hDD,
+	                                                (HANDLE) pSurface->hDDSurface, &SurfaceLocal, 
+												    &SurfaceMore, &SurfaceGlobal, bComplete));
+  }
+  else
+  {
+     pSurface->hDDSurface = ((DWORD) NtGdiDdCreateSurfaceObject( (HANDLE) pDirectDrawGlobalInternal->hDD,
+	                                                (HANDLE) pSurface->hDDSurface, &SurfaceLocal, 
+												    &SurfaceMore, 
+													&SurfaceGlobal, 
+													bComplete));
+  }
+
+  /* return status */
+  if (pSurface->hDDSurface) 
+  {
+    return TRUE;
+  }
+
+  return FALSE;
+}
