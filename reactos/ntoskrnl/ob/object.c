@@ -148,7 +148,6 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
         if(!NT_SUCCESS(Status))
         {
             DPRINT1("ObpCaptureObjectAttributes failed to probe object attributes 0x%p\n", ObjectAttributes);
-            KEBUGCHECK(0);
             goto failbasiccleanup;
         }
     }
