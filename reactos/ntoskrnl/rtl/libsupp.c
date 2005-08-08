@@ -261,11 +261,11 @@ RtlpCreateAtomHandle(PRTL_ATOM_TABLE AtomTable, PRTL_ATOM_TABLE_ENTRY Entry)
    
    Handle = ExCreateHandle(AtomTable->ExHandleTable,
                                 &ExEntry);
-   HandleIndex = (USHORT)((ULONG_PTR)Handle >> 2);
    if (Handle != NULL)
    {
+      HandleIndex = (USHORT)((ULONG_PTR)Handle >> 2);
       /* FIXME - Handle Indexes >= 0xC000 ?! */
-      if (HandleIndex < 0xC000)
+      if ((ULONG_PTR)HandleIndex >> 2 < 0xC000)
       {
          Entry->HandleIndex = HandleIndex;
          Entry->Atom = 0xC000 + HandleIndex;
@@ -284,21 +284,23 @@ PRTL_ATOM_TABLE_ENTRY
 RtlpGetAtomEntry(PRTL_ATOM_TABLE AtomTable, ULONG Index)
 {
    PHANDLE_TABLE_ENTRY ExEntry;
+   PRTL_ATOM_TABLE_ENTRY Entry = NULL;
+   
+   /* NOTE: There's no need to explicitly enter a critical region because it's
+            guaranteed that we're in a critical region right now (as we hold
+            the atom table lock) */
    
    ExEntry = ExMapHandleToPointer(AtomTable->ExHandleTable,
                                   (HANDLE)((ULONG_PTR)Index << 2));
    if (ExEntry != NULL)
    {
-      PRTL_ATOM_TABLE_ENTRY Entry;
-      
       Entry = ExEntry->u1.Object;
       
       ExUnlockHandleTableEntry(AtomTable->ExHandleTable,
                                ExEntry);
-      return Entry;
    }
    
-   return NULL;
+   return Entry;
 }
 
 /* FIXME - RtlpCreateUnicodeString is obsolete and should be removed ASAP! */

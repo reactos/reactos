@@ -374,6 +374,8 @@ PsLookupThreadByThreadId(IN HANDLE ThreadId,
     PETHREAD FoundThread;
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
     PAGED_CODE();
+    
+    KeEnterCriticalRegion();
 
     /* Get the CID Handle Entry */
     if ((CidEntry = ExMapHandleToPointer(PspCidTable,
@@ -394,6 +396,8 @@ PsLookupThreadByThreadId(IN HANDLE ThreadId,
         /* Unlock the Entry */
         ExUnlockHandleTableEntry(PspCidTable, CidEntry);
     }
+    
+    KeLeaveCriticalRegion();
 
     /* Return to caller */
     return Status;

@@ -477,6 +477,8 @@ PsLookupProcessByProcessId(IN HANDLE ProcessId,
     PEPROCESS FoundProcess;
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
     PAGED_CODE();
+    
+    KeEnterCriticalRegion();
 
     /* Get the CID Handle Entry */
     if ((CidEntry = ExMapHandleToPointer(PspCidTable,
@@ -497,6 +499,8 @@ PsLookupProcessByProcessId(IN HANDLE ProcessId,
         /* Unlock the Entry */
         ExUnlockHandleTableEntry(PspCidTable, CidEntry);
     }
+    
+    KeLeaveCriticalRegion();
 
     /* Return to caller */
     return Status;
@@ -515,6 +519,8 @@ PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
     PETHREAD FoundThread;
     NTSTATUS Status = STATUS_INVALID_CID;
     PAGED_CODE();
+    
+    KeEnterCriticalRegion();
 
     /* Get the CID Handle Entry */
     if ((CidEntry = ExMapHandleToPointer(PspCidTable,
@@ -544,6 +550,8 @@ PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
         /* Unlock the Entry */
         ExUnlockHandleTableEntry(PspCidTable, CidEntry);
     }
+    
+    KeLeaveCriticalRegion();
 
     /* Return to caller */
     return Status;
