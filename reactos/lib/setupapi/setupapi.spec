@@ -288,7 +288,7 @@
 @ stdcall SetupDiCreateDeviceInfoListExA(ptr long str ptr)
 @ stdcall SetupDiCreateDeviceInfoListExW(ptr long wstr ptr)
 @ stub SetupDiDeleteDevRegKey
-@ stub SetupDiDeleteDeviceInfo
+@ stdcall SetupDiDeleteDeviceInfo(long ptr)
 @ stub SetupDiDeleteDeviceInterfaceData
 @ stub SetupDiDeleteDeviceRegKey
 @ stub SetupDiDestroyClassImageList
