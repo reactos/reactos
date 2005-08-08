@@ -466,7 +466,7 @@ NtUserCreateWindowStation(
       &ObjectAttributes,
       ExWindowStationObjectType,
       NULL,
-      UserMode,
+      KernelMode,
       dwDesiredAccess,
       NULL,
       (PVOID*)&WindowStation);
