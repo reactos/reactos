@@ -34,8 +34,8 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 		Global.dwGlobalFlags |= DDRAWISURFGBL_ISGDISURFACE;
 	
 	Global.lpDD = &This->owner->DirectDrawGlobal;	
-	Global.wHeight = This->owner->Width;
-	Global.wWidth = This->owner->Height;
+	Global.wHeight = This->owner->Height;
+	Global.wWidth = This->owner->Width;
 	Global.dwLinearSize =  Global.wWidth * This->owner->Bpp/8;
 	
 	// Surface More Struct
