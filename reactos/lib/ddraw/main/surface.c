@@ -21,7 +21,7 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 	if(sizeof(DDSURFACEDESC2) != pDDSD->dwSize)
 		return DDERR_UNSUPPORTED;
 
-	if(!pDDSD->dwFlags & DDSD_CAPS)
+	if(!(pDDSD->dwFlags & DDSD_CAPS))
 		return DDERR_INVALIDPARAMS;
 
 	This->owner = (IDirectDrawImpl*)pDD;

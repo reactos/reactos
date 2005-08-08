@@ -86,7 +86,7 @@ HRESULT WINAPI Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidt
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 
 	// this only for exclusive mode
-	if(!This->cooperative_level & DDSCL_EXCLUSIVE)
+	if(!(This->cooperative_level & DDSCL_EXCLUSIVE))
    		return DDERR_NOEXCLUSIVEMODE;
 
 	// change the resolution using normal WinAPI function
