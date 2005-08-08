@@ -24,7 +24,7 @@ HRESULT WINAPI Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID)
 	This->lpGUID = lpGUID;
 
 	// get the HDC
-	This->hdc = CreateDC (L"Display", NULL, NULL, NULL);
+	This->hdc = GetWindowDC(GetDesktopWindow());
 	This->Height = GetDeviceCaps(This->hdc, HORZRES);
 	This->Width = GetDeviceCaps(This->hdc, VERTRES);
 	This->Bpp = GetDeviceCaps(This->hdc, BITSPIXEL);
