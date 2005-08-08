@@ -347,7 +347,7 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
 
     if (!NT_SUCCESS(Status))
     {
-        if (ObjectName->Buffer)
+        if (ObjectName != NULL && ObjectName->Buffer)
         {
             ExFreePool(ObjectName->Buffer);
         }
