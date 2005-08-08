@@ -30,32 +30,32 @@ HRESULT WINAPI Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
 
 HRESULT WINAPI DirectDrawCreate (LPGUID lpGUID, LPDIRECTDRAW* lplpDD, LPUNKNOWN pUnkOuter) 
 {   
-
 	/* check see if pUnkOuter is null or not */
-	if (!pUnkOuter)
+	if (pUnkOuter)
 	{
 		/* we do not use same error code as MS, ms use 0x8004110 */
 		return DDERR_INVALIDPARAMS; 
 	}
 	
+	
 	return Create_DirectDraw (lpGUID, lplpDD, pUnkOuter, FALSE);
 }
  
 HRESULT WINAPI DirectDrawCreateEx(LPGUID lpGUID, LPVOID* lplpDD, REFIID iid, LPUNKNOWN pUnkOuter)
-{    
+{    	
 	/* check see if pUnkOuter is null or not */
-	if (!pUnkOuter)
+	if (pUnkOuter)
 	{
 		/* we do not use same error code as MS, ms use 0x8004110 */
 		return DDERR_INVALIDPARAMS; 
 	}
-
+	
 	/* Is it a DirectDraw 7 Request or not */
 	if (!IsEqualGUID(iid, &IID_IDirectDraw7)) 
 	{
 	  return DDERR_INVALIDPARAMS;
 	}
-    	
+
     return Create_DirectDraw (lpGUID, (LPDIRECTDRAW*)lplpDD, pUnkOuter, TRUE);
 }
 
