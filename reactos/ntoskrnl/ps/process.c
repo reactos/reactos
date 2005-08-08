@@ -366,7 +366,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     DPRINT("Initialzing Process CID Handle\n");
     CidEntry.u1.Object = Process;
     CidEntry.u2.GrantedAccess = 0;
-    Process->UniqueProcessId = (ExCreateHandle(PspCidTable, &CidEntry));
+    Process->UniqueProcessId = ExCreateHandle(PspCidTable, &CidEntry);
     DPRINT("Created CID: %d\n", Process->UniqueProcessId);
     if(!Process->UniqueProcessId)
     {
@@ -479,8 +479,8 @@ PsLookupProcessByProcessId(IN HANDLE ProcessId,
     PAGED_CODE();
 
     /* Get the CID Handle Entry */
-    if (!(CidEntry = ExMapHandleToPointer(PspCidTable,
-                                          ProcessId)))
+    if ((CidEntry = ExMapHandleToPointer(PspCidTable,
+                                         ProcessId)))
     {
         /* Get the Process */
         FoundProcess = CidEntry->u1.Object;
@@ -517,7 +517,7 @@ PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
     PAGED_CODE();
 
     /* Get the CID Handle Entry */
-    if (!(CidEntry = ExMapHandleToPointer(PspCidTable,
+    if ((CidEntry = ExMapHandleToPointer(PspCidTable,
                                           Cid->UniqueThread)))
     {
         /* Get the Process */

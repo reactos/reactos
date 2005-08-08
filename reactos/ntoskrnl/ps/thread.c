@@ -376,8 +376,8 @@ PsLookupThreadByThreadId(IN HANDLE ThreadId,
     PAGED_CODE();
 
     /* Get the CID Handle Entry */
-    if (!(CidEntry = ExMapHandleToPointer(PspCidTable, 
-                                          ThreadId)))
+    if ((CidEntry = ExMapHandleToPointer(PspCidTable,
+                                         ThreadId)))
     {
         /* Get the Process */
         FoundThread = CidEntry->u1.Object;
