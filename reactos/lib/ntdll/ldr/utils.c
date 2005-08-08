@@ -104,7 +104,7 @@ static __inline LONG LdrpDecrementLoadCount(PLDR_DATA_TABLE_ENTRY Module, BOOLEA
        RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
      }
    LoadCount = Module->LoadCount;
-   if (Module->LoadCount > 0)
+   if (Module->LoadCount > 0 && Module->LoadCount != 0xFFFF)
      {
        Module->LoadCount--;
      }
@@ -2397,7 +2397,7 @@ LdrpDetachProcess(BOOLEAN UnloadAll)
    while (Entry != ModuleListHead)
      {
        Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
-       if (((UnloadAll && Module->LoadCount <= 0) || Module->LoadCount == 0) &&
+       if (((UnloadAll && Module->LoadCount == 0xFFFF) || Module->LoadCount == 0) &&
            Module->Flags & LDRP_ENTRY_PROCESSED &&
            !(Module->Flags & LDRP_UNLOAD_IN_PROGRESS))
          {
