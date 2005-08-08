@@ -90,17 +90,20 @@ WaitForSingleObjectEx(HANDLE hHandle,
       Time.QuadPart = -10000 * (LONGLONG)dwMilliseconds;
       TimePtr = &Time;
     }
-WaitAgain:
-  Status = NtWaitForSingleObject(hHandle,
-				 (BOOLEAN) bAlertable,
-				 TimePtr);
 
-  if (HIWORD(Status))
+  do
     {
-      SetLastErrorByStatus (Status);
-      return WAIT_FAILED;
-    }
-  if (Status == STATUS_ALERTED && bAlertable) goto WaitAgain;
+      Status = NtWaitForSingleObject(hHandle,
+				     (BOOLEAN) bAlertable,
+				     TimePtr);
+
+      if (HIWORD(Status))
+        {
+          SetLastErrorByStatus (Status);
+          return WAIT_FAILED;
+        }
+
+    } while (Status == STATUS_ALERTED && bAlertable);
 
   return Status;
 }
@@ -211,18 +214,20 @@ WaitForMultipleObjectsEx(DWORD nCount,
       TimePtr = &Time;
     }
 
-WaitAgain:
-  Status = NtWaitForMultipleObjects (nCount,
-				     HandleBuffer,
-				     bWaitAll  ? WaitAll : WaitAny,
-				     (BOOLEAN)bAlertable,
-				     TimePtr);
-  if (HIWORD(Status))
+  do
     {
-      SetLastErrorByStatus (Status);
-      Status = WAIT_FAILED;
-    }
-  if (Status == STATUS_ALERTED && bAlertable) goto WaitAgain;
+      Status = NtWaitForMultipleObjects (nCount,
+				         HandleBuffer,
+				         bWaitAll  ? WaitAll : WaitAny,
+				         (BOOLEAN)bAlertable,
+				         TimePtr);
+      if (HIWORD(Status))
+        {
+          SetLastErrorByStatus (Status);
+          Status = WAIT_FAILED;
+        }
+
+    } while (Status == STATUS_ALERTED && bAlertable);
 
   if (HandleBuffer != Handle)
   {
@@ -283,17 +288,19 @@ SignalObjectAndWait(HANDLE hObjectToSignal,
       TimePtr = &Time;
     }
 
-WaitAgain:
-  Status = NtSignalAndWaitForSingleObject (hObjectToSignal,
-					   hObjectToWaitOn,
-					   (BOOLEAN)bAlertable,
-					   TimePtr);
-  if (!NT_SUCCESS(Status))
+  do
     {
-      SetLastErrorByStatus (Status);
-      return WAIT_FAILED;
-    }
-  if (Status == STATUS_ALERTED && bAlertable) goto WaitAgain;
+      Status = NtSignalAndWaitForSingleObject (hObjectToSignal,
+					       hObjectToWaitOn,
+					       (BOOLEAN)bAlertable,
+					       TimePtr);
+      if (!NT_SUCCESS(Status))
+        {
+          SetLastErrorByStatus (Status);
+          return WAIT_FAILED;
+        }
+
+    } while (Status == STATUS_ALERTED && bAlertable);
 
   /* STATUS_SUCCESS maps to WAIT_OBJECT_0 */
   return Status;
