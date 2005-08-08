@@ -70,35 +70,20 @@ ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
    NTSTATUS Status;
 
    PAGED_CODE();
-   
-   /* capture the ObjectPath */
-   Status = RtlCaptureUnicodeString(&ObjectName,
-                                    AccessMode,
-                                    NonPagedPool, /* FIXME */
-                                    FALSE,
-                                    ObjectPath);
-   if (!NT_SUCCESS(Status))
-     {
-	DPRINT("RtlCaptureUnicodeString() failed (Status %lx)\n", Status);
-	return Status;
-     }
 
    InitializeObjectAttributes(&ObjectAttributes,
-			      &ObjectName,
+			      ObjectPath,
 			      Attributes | OBJ_OPENIF,
 			      NULL,
 			      NULL);
     
-   /* "Capture" all the info, it doesn't make sense to capture from the kernel
-      stack as the information should be safe anyway...just do a raw copy of the
-      data into the OBJECT_CREATE_INFORMATION structure */
+   /* Capture all the info */
    DPRINT("Capturing Create Info\n");
    Status = ObpCaptureObjectAttributes(&ObjectAttributes,
-                                       KernelMode, /* raw copy! */
-                                       NonPagedPool,
-                                       FALSE,
+                                       AccessMode,
+                                       ObjectType,
                                        &ObjectCreateInfo,
-                                       NULL);
+                                       &ObjectName);
    if (!NT_SUCCESS(Status))
      {
 	DPRINT("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
@@ -111,18 +96,8 @@ ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
 			 &RemainingPath,
 			 ObjectType);
 
-   /* we don't need to release the "captured" object attributes! Nothing was allocated! */
-#if 0
-   ObpReleaseCapturedAttributes(&ObjectCreateInfo,
-                                NULL,
-                                AccessMode,
-                                FALSE);
-#endif
-
-   /* free the captured ObjectPath if needed */
-   RtlReleaseCapturedUnicodeString(&ObjectName,
-                                   AccessMode,
-                                   FALSE);
+   ObpReleaseCapturedAttributes(&ObjectCreateInfo);
+   if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
 
    if (!NT_SUCCESS(Status))
      {
@@ -194,8 +169,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
     DPRINT("Capturing Create Info\n");
     Status = ObpCaptureObjectAttributes(ObjectAttributes,
                                         AccessMode,
-                                        PagedPool,
-                                        FALSE,
+                                        ObjectType,
                                         &ObjectCreateInfo,
                                         &ObjectName);
    if (!NT_SUCCESS(Status))
@@ -209,10 +183,8 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
 			 &Object,
 			 &RemainingPath,
 			 ObjectType);
-   ObpReleaseCapturedAttributes(&ObjectCreateInfo,
-                                &ObjectName,
-                                AccessMode,
-                                FALSE);
+   ObpReleaseCapturedAttributes(&ObjectCreateInfo);
+   if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
    if (!NT_SUCCESS(Status))
      {
 	DPRINT("ObFindObject() failed (Status %lx)\n", Status);

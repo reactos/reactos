@@ -110,297 +110,162 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
 
 NTSTATUS
 STDCALL
-ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
+ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
                            IN KPROCESSOR_MODE AccessMode,
-                           IN POOL_TYPE PoolType,
-                           IN BOOLEAN CaptureIfKernel,
-                           OUT POBJECT_CREATE_INFORMATION CapturedObjectAttributes  OPTIONAL,
-                           OUT PUNICODE_STRING ObjectName  OPTIONAL)
+                           IN POBJECT_TYPE ObjectType,
+                           IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
+                           OUT PUNICODE_STRING ObjectName)
 {
-    OBJECT_ATTRIBUTES AttributesCopy;
     NTSTATUS Status = STATUS_SUCCESS;
+    PSECURITY_DESCRIPTOR SecurityDescriptor;
+    PSECURITY_QUALITY_OF_SERVICE SecurityQos;
+    PUNICODE_STRING LocalObjectName = NULL;
 
-    /* at least one output parameter must be != NULL! */
-    ASSERT(CapturedObjectAttributes != NULL || ObjectName != NULL);
-
-    if (ObjectAttributes == NULL)
+    /* Zero out the Capture Data */
+    DPRINT("ObpCaptureObjectAttributes\n");
+    RtlZeroMemory(ObjectCreateInfo, sizeof(OBJECT_CREATE_INFORMATION));
+    
+    /* Check if we got Oba */
+    if (ObjectAttributes)
     {
-        /* we're going to return STATUS_SUCCESS! */
-        goto failbasiccleanup;
-    }
-
-    if (AccessMode != KernelMode)
-    {
-        _SEH_TRY
+        if (AccessMode != KernelMode)
         {
-            ProbeForRead(ObjectAttributes,
-                         sizeof(ObjectAttributes),
-                         sizeof(ULONG));
-            /* make a copy on the stack */
-            AttributesCopy = *ObjectAttributes;
-        }
-        _SEH_HANDLE
-        {
-            Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END;
-
-        if(!NT_SUCCESS(Status))
-        {
-            DPRINT1("ObpCaptureObjectAttributes failed to probe object attributes 0x%p\n", ObjectAttributes);
-            goto failbasiccleanup;
-        }
-    }
-    else if (!CaptureIfKernel)
-    {
-        if (ObjectAttributes->Length == sizeof(OBJECT_ATTRIBUTES))
-        {
-            if (ObjectName != NULL)
+            DPRINT("Probing OBA\n");
+            _SEH_TRY
             {
-                /* we don't have to capture any memory, the caller considers the passed data
-                   as valid */
-                if (ObjectAttributes->ObjectName != NULL)
-                {
-                    *ObjectName = *ObjectAttributes->ObjectName;
-                }
-                else
-                {
-                    ObjectName->Length = ObjectName->MaximumLength = 0;
-                    ObjectName->Buffer = NULL;
-                }
+                /* FIXME: SMSS SENDS BULLSHIT. */
+                #if 0
+                ProbeForRead(ObjectAttributes,
+                             sizeof(ObjectAttributes),
+                             sizeof(ULONG));
+                #endif
             }
-            if (CapturedObjectAttributes != NULL)
+            _SEH_HANDLE
             {
-                CapturedObjectAttributes->RootDirectory = ObjectAttributes->RootDirectory;
-                CapturedObjectAttributes->Attributes = ObjectAttributes->Attributes;
-                CapturedObjectAttributes->SecurityDescriptor = ObjectAttributes->SecurityDescriptor;
-                CapturedObjectAttributes->SecurityDescriptorCharge = 0; /* FIXME */
-                CapturedObjectAttributes->ProbeMode = AccessMode;
+                Status = _SEH_GetExceptionCode();
             }
-
-            return STATUS_SUCCESS;
+            _SEH_END;
         }
-        else
+        
+        /* Validate the Size */
+        DPRINT("Validating OBA\n");
+        if (ObjectAttributes->Length != sizeof(OBJECT_ATTRIBUTES))
         {
             Status = STATUS_INVALID_PARAMETER;
-            goto failbasiccleanup;
         }
-    }
-    else
-    {
-        AttributesCopy = *ObjectAttributes;
-    }
 
-    /* if Length isn't as expected, bail with an invalid parameter status code so
-       the caller knows he passed garbage... */
-    if (AttributesCopy.Length != sizeof(OBJECT_ATTRIBUTES))
-    {
-        Status = STATUS_INVALID_PARAMETER;
-        goto failbasiccleanup;
-    }
-
-    if (CapturedObjectAttributes != NULL)
-    {
-        CapturedObjectAttributes->RootDirectory = AttributesCopy.RootDirectory;
-        CapturedObjectAttributes->Attributes = AttributesCopy.Attributes;
-
-        if (AttributesCopy.SecurityDescriptor != NULL)
+        /* Fail if SEH or Size Validation failed */
+        if(!NT_SUCCESS(Status))
         {
-            Status = SeCaptureSecurityDescriptor(AttributesCopy.SecurityDescriptor,
+            DPRINT1("ObpCaptureObjectAttributes failed to probe object attributes\n");
+            goto fail;
+        }
+        
+        /* Set some Create Info */
+        DPRINT("Creating OBCI\n");
+        ObjectCreateInfo->RootDirectory = ObjectAttributes->RootDirectory;
+        ObjectCreateInfo->Attributes = ObjectAttributes->Attributes;
+        LocalObjectName = ObjectAttributes->ObjectName;
+        SecurityDescriptor = ObjectAttributes->SecurityDescriptor;
+        SecurityQos = ObjectAttributes->SecurityQualityOfService;
+        
+        /* Validate the SD */
+        if (SecurityDescriptor)
+        {
+            DPRINT("Probing SD: %x\n", SecurityDescriptor);
+            Status = SeCaptureSecurityDescriptor(SecurityDescriptor,
                                                  AccessMode,
-                                                 PoolType,
+                                                 NonPagedPool,
                                                  TRUE,
-                                                 &CapturedObjectAttributes->SecurityDescriptor);
-            if (!NT_SUCCESS(Status))
+                                                 &ObjectCreateInfo->SecurityDescriptor);
+            if(!NT_SUCCESS(Status))
             {
                 DPRINT1("Unable to capture the security descriptor!!!\n");
-                goto failbasiccleanup;
+                ObjectCreateInfo->SecurityDescriptor = NULL;
+                goto fail;
             }
-            CapturedObjectAttributes->SecurityDescriptorCharge = 0; /* FIXME */
+            
+            DPRINT("Probe done\n");
+            ObjectCreateInfo->SecurityDescriptorCharge = 0; /* FIXME */
+            ObjectCreateInfo->ProbeMode = AccessMode;
         }
-        else
+        
+        /* Validate the QoS */
+        if (SecurityQos)
         {
-            CapturedObjectAttributes->SecurityDescriptor = NULL;
-            CapturedObjectAttributes->SecurityDescriptorCharge = 0;
-        }
-    }
-
-    if (ObjectName != NULL)
-    {
-        ObjectName->Buffer = NULL;
-
-        if (AttributesCopy.ObjectName != NULL)
-        {
-            UNICODE_STRING OriginalCopy = {0};
-
             if (AccessMode != KernelMode)
             {
+                DPRINT("Probing QoS\n");
                 _SEH_TRY
                 {
-                    /* probe the ObjectName structure and make a local stack copy of it */
-                    ProbeForRead(AttributesCopy.ObjectName,
-                                 sizeof(UNICODE_STRING),
+                    ProbeForRead(SecurityQos,
+                                 sizeof(SECURITY_QUALITY_OF_SERVICE),
                                  sizeof(ULONG));
-                    OriginalCopy = *AttributesCopy.ObjectName;
-                    if (OriginalCopy.Length > 0)
-                    {
-                        ProbeForRead(OriginalCopy.Buffer,
-                                     OriginalCopy.Length,
-                                     sizeof(WCHAR));
-                    }
                 }
                 _SEH_HANDLE
                 {
                     Status = _SEH_GetExceptionCode();
                 }
                 _SEH_END;
-
-                if (NT_SUCCESS(Status))
-                {
-                    ObjectName->Length = OriginalCopy.Length;
-                    
-                    if(OriginalCopy.Length > 0)
-                    {
-                        ObjectName->MaximumLength = OriginalCopy.Length + sizeof(WCHAR);
-                        ObjectName->Buffer = ExAllocatePool(PoolType,
-                                                            ObjectName->MaximumLength);
-                        if (ObjectName->Buffer != NULL)
-                        {
-                            _SEH_TRY
-                            {
-                                /* no need to probe OriginalCopy.Buffer again, we already did that
-                                   when capturing the UNICODE_STRING structure itself */
-                                RtlCopyMemory(ObjectName->Buffer, OriginalCopy.Buffer, OriginalCopy.Length);
-                                ObjectName->Buffer[OriginalCopy.Length / sizeof(WCHAR)] = L'\0';
-                            }
-                            _SEH_HANDLE
-                            {
-                                Status = _SEH_GetExceptionCode();
-                            }
-                            _SEH_END;
-
-                            if (!NT_SUCCESS(Status))
-                            {
-                                DPRINT1("ObpCaptureObjectAttributes failed to copy the unicode string!\n");
-                            }
-                        }
-                        else
-                        {
-                            Status = STATUS_INSUFFICIENT_RESOURCES;
-                        }
-                    }
-                    else if(AttributesCopy.RootDirectory != NULL /* && OriginalCopy.Length == 0 */)
-                    {
-                        /* if the caller specified a root directory, there must be an object name! */
-                        Status = STATUS_OBJECT_NAME_INVALID;
-                    }
-                    else
-                    {
-                        ObjectName->Length = ObjectName->MaximumLength = 0;
-                    }
-                }
-#ifdef DBG
-                else
-                {
-                    DPRINT1("ObpCaptureObjectAttributes failed to probe the object name UNICODE_STRING structure!\n");
-                }
-#endif
             }
-            else /* AccessMode == KernelMode */
+
+            if(!NT_SUCCESS(Status))
             {
-                OriginalCopy = *AttributesCopy.ObjectName;
-                ObjectName->Length = OriginalCopy.Length;
-
-                if (OriginalCopy.Length > 0)
-                {
-                    ObjectName->MaximumLength = OriginalCopy.Length + sizeof(WCHAR);
-                    ObjectName->Buffer = ExAllocatePool(PoolType,
-                                                        ObjectName->MaximumLength);
-                    if (ObjectName->Buffer != NULL)
-                    {
-                        RtlCopyMemory(ObjectName->Buffer, OriginalCopy.Buffer, OriginalCopy.Length);
-                        ObjectName->Buffer[OriginalCopy.Length / sizeof(WCHAR)] = L'\0';
-                    }
-                    else
-                    {
-                        Status = STATUS_INSUFFICIENT_RESOURCES;
-                    }
-                }
-                else if (AttributesCopy.RootDirectory != NULL /* && OriginalCopy.Length == 0 */)
-                {
-                    /* if the caller specified a root directory, there must be an object name! */
-                    Status = STATUS_OBJECT_NAME_INVALID;
-                }
-                else
-                {
-                    ObjectName->Length = ObjectName->MaximumLength = 0;
-                }
+                DPRINT1("Unable to capture QoS!!!\n");
+                goto fail;
             }
-        }
-        else
-        {
-            ObjectName->Length = ObjectName->MaximumLength = 0;
+            
+            ObjectCreateInfo->SecurityQualityOfService = *SecurityQos;
+            ObjectCreateInfo->SecurityQos = &ObjectCreateInfo->SecurityQualityOfService;
         }
     }
     
-    CapturedObjectAttributes->ProbeMode = AccessMode;
-
-    if (!NT_SUCCESS(Status))
+    /* Clear Local Object Name */
+    DPRINT("Clearing name\n");
+    RtlZeroMemory(ObjectName, sizeof(UNICODE_STRING));
+    
+    /* Now check if the Object Attributes had an Object Name */
+    if (LocalObjectName)
     {
-        if (ObjectName != NULL && ObjectName->Buffer)
+        DPRINT("Name Buffer: %x\n", LocalObjectName->Buffer);
+        Status = ObpCaptureObjectName(ObjectName,
+                                      LocalObjectName,
+                                      AccessMode);
+    }
+    else
+    {
+        /* He can't have specified a Root Directory */
+        if (ObjectCreateInfo->RootDirectory)
         {
-            ExFreePool(ObjectName->Buffer);
-        }
-        if (CapturedObjectAttributes != NULL)
-        {
-            /* cleanup allocated resources */
-            SeReleaseSecurityDescriptor(CapturedObjectAttributes->SecurityDescriptor,
-                                        AccessMode,
-                                        TRUE);
-        }
-
-failbasiccleanup:
-        if (ObjectName != NULL)
-        {
-            ObjectName->Length = ObjectName->MaximumLength = 0;
-            ObjectName->Buffer = NULL;
-        }
-        if (CapturedObjectAttributes != NULL)
-        {
-            RtlZeroMemory(CapturedObjectAttributes, sizeof(OBJECT_CREATE_INFORMATION));
+            DPRINT1("Invalid name\n");
+            Status = STATUS_OBJECT_NAME_INVALID;
         }
     }
-
+    
+fail:
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to capture, cleaning up\n");
+        ObpReleaseCapturedAttributes(ObjectCreateInfo);
+    }
+    
+    DPRINT("Return to caller\n");
     return Status;
 }
 
 
 VOID
 STDCALL
-ObpReleaseCapturedAttributes(IN POBJECT_CREATE_INFORMATION CapturedObjectAttributes  OPTIONAL,
-                             IN PUNICODE_STRING ObjectName  OPTIONAL,
-                             IN KPROCESSOR_MODE AccessMode,
-                             IN BOOLEAN CaptureIfKernel)
+ObpReleaseCapturedAttributes(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo)
 {
-  /* WARNING - You need to pass the same parameters to this function as you passed
-               to ObpCaptureObjectAttributes() to avoid memory leaks */
-  if(AccessMode != KernelMode || CaptureIfKernel)
-  {
-    if(CapturedObjectAttributes != NULL &&
-       CapturedObjectAttributes->SecurityDescriptor != NULL)
+    /* Release the SD, it's the only thing we allocated */
+    if (ObjectCreateInfo->SecurityDescriptor)
     {
-      ExFreePool(CapturedObjectAttributes->SecurityDescriptor);
-
-#ifdef DBG
-      RtlZeroMemory(CapturedObjectAttributes, sizeof(OBJECT_CREATE_INFORMATION));
-#endif
+        SeReleaseSecurityDescriptor(ObjectCreateInfo->SecurityDescriptor,
+                                    ObjectCreateInfo->ProbeMode,
+                                    TRUE);
+        ObjectCreateInfo->SecurityDescriptor = NULL;                                        
     }
-    if(ObjectName != NULL &&
-       ObjectName->Length > 0)
-    {
-      ExFreePool(ObjectName->Buffer);
-    }
-  }
 }
 
 
@@ -483,7 +348,7 @@ ObFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
       ObjectName->Buffer[0] != L'\\')
     {
       ObDereferenceObject (CurrentObject);
-      DPRINT1("failed: \"%wZ\"\n", ObjectName);
+      DPRINT1("failed\n");
       return STATUS_UNSUCCESSFUL;
     }
 
@@ -930,9 +795,8 @@ ObCreateObject(IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
     /* Capture all the info */
     DPRINT("Capturing Create Info\n");
     Status = ObpCaptureObjectAttributes(ObjectAttributes,
-                                        ObjectAttributesAccessMode,
-                                        NonPagedPool,
-                                        TRUE,
+                                        AccessMode,
+                                        Type,
                                         ObjectCreateInfo,
                                         &ObjectName);
                                         
@@ -958,10 +822,8 @@ ObCreateObject(IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
         
         /* Release the Capture Info, we don't need it */
         DPRINT1("Allocation failed\n");
-        ObpReleaseCapturedAttributes(ObjectCreateInfo,
-                                     &ObjectName,
-                                     ObjectAttributesAccessMode,
-                                     TRUE);
+        ObpReleaseCapturedAttributes(ObjectCreateInfo);
+        if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
     }
      
     /* We failed, so release the Buffer */
@@ -1115,10 +977,7 @@ ObpDeleteObject(POBJECT_HEADER Header)
     }
   if (Header->ObjectCreateInfo)
     {
-      ObpReleaseCapturedAttributes(Header->ObjectCreateInfo,
-                                   NULL,
-                                   Header->ObjectCreateInfo->ProbeMode,
-                                   FALSE);
+      ObpReleaseCapturedAttributes(Header->ObjectCreateInfo);
       ExFreePool(Header->ObjectCreateInfo);
     }
     

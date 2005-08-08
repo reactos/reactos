@@ -955,7 +955,7 @@ ObInsertObject(IN PVOID Object,
     /* First try to find the Object */
     if (ObjectNameInfo && ObjectNameInfo->Name.Buffer)
     {
-        DPRINT("Object has a name. Trying to find it: \"%wZ\".\n", &ObjectNameInfo->Name);
+        DPRINT("Object has a name. Trying to find it: %wZ.\n", &ObjectNameInfo->Name);
         Status = ObFindObject(ObjectCreateInfo,
                               &ObjectNameInfo->Name,
                               &FoundObject,
@@ -1132,10 +1132,7 @@ ObInsertObject(IN PVOID Object,
     
     /* We can delete the Create Info now */
     Header->ObjectCreateInfo = NULL;
-    ObpReleaseCapturedAttributes(ObjectCreateInfo,
-                                 NULL,
-                                 ObjectCreateInfo->ProbeMode,
-                                 FALSE);
+    ObpReleaseCapturedAttributes(ObjectCreateInfo);
     ExFreePool(ObjectCreateInfo);
     
     DPRINT("Status %x\n", Status);
