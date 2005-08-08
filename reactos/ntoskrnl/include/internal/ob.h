@@ -173,14 +173,6 @@ ObFastDereferenceObject(IN PEX_FAST_REF FastRef,
 
 /* Secure object information functions */
 
-typedef struct _CAPTURED_OBJECT_ATTRIBUTES
-{
-  HANDLE RootDirectory;
-  ULONG Attributes;
-  PSECURITY_DESCRIPTOR SecurityDescriptor;
-  PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService;
-} CAPTURED_OBJECT_ATTRIBUTES, *PCAPTURED_OBJECT_ATTRIBUTES;
-
 NTSTATUS
 STDCALL
 ObpCaptureObjectName(IN PUNICODE_STRING CapturedName,
@@ -189,16 +181,19 @@ ObpCaptureObjectName(IN PUNICODE_STRING CapturedName,
                      
 NTSTATUS
 STDCALL
-ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
+ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
                            IN KPROCESSOR_MODE AccessMode,
-                           IN POBJECT_TYPE ObjectType,
-                           IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
-                           OUT PUNICODE_STRING ObjectName);
+                           IN POOL_TYPE PoolType,
+                           IN BOOLEAN CaptureIfKernel,
+                           OUT POBJECT_CREATE_INFORMATION CapturedObjectAttributes  OPTIONAL,
+                           OUT PUNICODE_STRING ObjectName  OPTIONAL);
 
 VOID
 STDCALL
-ObpReleaseCapturedAttributes(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo);
-
+ObpReleaseCapturedAttributes(IN POBJECT_CREATE_INFORMATION CapturedObjectAttributes  OPTIONAL,
+                             IN PUNICODE_STRING ObjectName  OPTIONAL,
+                             IN KPROCESSOR_MODE AccessMode,
+                             IN BOOLEAN CaptureIfKernel);
 /* object information classes */
 
 #define ICIF_QUERY               0x1

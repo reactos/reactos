@@ -410,7 +410,7 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
                                     NULL,
                                     PORT_ALL_ACCESS,  /* DesiredAccess */
                                     LpcPortObjectType,
-                                    UserMode,
+                                    PreviousMode,
                                     NULL,
                                     (PVOID*)&NamedPort);
   if (!NT_SUCCESS(Status))
@@ -430,7 +430,7 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
       Status = ObReferenceObjectByHandle(WriteMap.SectionHandle,
 					 SECTION_MAP_READ | SECTION_MAP_WRITE,
 					 MmSectionObjectType,
-					 UserMode,
+					 PreviousMode,
 					 (PVOID*)&SectionObject,
 					 NULL);
       if (!NT_SUCCESS(Status))

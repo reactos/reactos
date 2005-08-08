@@ -192,20 +192,19 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   PWSTR Start;
   UNICODE_STRING ObjectName;
   OBJECT_CREATE_INFORMATION ObjectCreateInfo;
+  KPROCESSOR_MODE PreviousMode;
   unsigned i;
 
   PAGED_CODE();
-
-  DPRINT("NtCreateKey (Name %wZ  KeyHandle 0x%p  Root 0x%p)\n",
-	 ObjectAttributes->ObjectName,
-	 KeyHandle,
-	 ObjectAttributes->RootDirectory);
+  
+  PreviousMode = KeGetPreviousMode();
 
    /* Capture all the info */
    DPRINT("Capturing Create Info\n");
    Status = ObpCaptureObjectAttributes(ObjectAttributes,
-                                       KeGetPreviousMode(),
-                                       CmiKeyType,
+                                       PreviousMode,
+                                       PagedPool,
+                                       FALSE,
                                        &ObjectCreateInfo,
                                        &ObjectName);
    if (!NT_SUCCESS(Status))
@@ -219,8 +218,10 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 			            (PVOID*)&Object,
                         &RemainingPath,
                         CmiKeyType);
-     ObpReleaseCapturedAttributes(&ObjectCreateInfo);
-   if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
+     ObpReleaseCapturedAttributes(&ObjectCreateInfo,
+                                  &ObjectName,
+                                  PreviousMode,
+                                  FALSE);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("CmpFindObject failed, Status: 0x%x\n", Status);
@@ -1169,7 +1170,8 @@ NtOpenKey(OUT PHANDLE KeyHandle,
    DPRINT("Capturing Create Info\n");
    Status = ObpCaptureObjectAttributes(ObjectAttributes,
                                        PreviousMode,
-                                       CmiKeyType,
+                                       PagedPool,
+                                       FALSE,
                                        &ObjectCreateInfo,
                                        &ObjectName);
    if (!NT_SUCCESS(Status))
@@ -1185,8 +1187,10 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 			            (PVOID*)&Object,
                         &RemainingPath,
                         CmiKeyType);
-     ObpReleaseCapturedAttributes(&ObjectCreateInfo);
-   if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
+     ObpReleaseCapturedAttributes(&ObjectCreateInfo,
+                                  &ObjectName,
+                                  PreviousMode,
+                                  FALSE);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("CmpFindObject() returned 0x%08lx\n", Status);
