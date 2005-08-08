@@ -20,6 +20,9 @@
 <directory name="psapi">
 	<xi:include href="psapi/psapi.xml" />
 </directory>
+<directory name="setupapi">
+	<xi:include href="setupapi/setupapi.xml" />
+</directory>
 <directory name="shlwapi">
 	<xi:include href="shlwapi/shlwapi.xml" />
 </directory>
