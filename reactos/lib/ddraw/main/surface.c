@@ -63,13 +63,13 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 	CreateData.dwSCnt = 1;
 	CreateData.lplpSList = &pLocal;
 
-	if(!This->owner->DriverCallbacks.DdMain.CreateSurface (&CreateData) != DDHAL_DRIVER_HANDLED)
+	if(This->owner->DriverCallbacks.DdMain.CreateSurface (&CreateData) != DDHAL_DRIVER_HANDLED)
 		return DDERR_INVALIDPARAMS;
-
-	OutputDebugString(L"This does not get hit.");
 
 	if(CreateData.ddRVal != DD_OK)
 		return CreateData.ddRVal;
+
+	OutputDebugString(L"This does not get hit.");
 
    	return DD_OK;
 }
