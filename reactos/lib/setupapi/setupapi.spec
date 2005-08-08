@@ -268,7 +268,7 @@
 @ stdcall SetupDiBuildClassInfoList(long ptr long ptr)
 @ stdcall SetupDiBuildClassInfoListExA(long ptr long ptr str ptr)
 @ stdcall SetupDiBuildClassInfoListExW(long ptr long ptr wstr ptr)
-@ stub SetupDiBuildDriverInfoList
+@ stdcall SetupDiBuildDriverInfoList(long ptr long)
 @ stdcall SetupDiCallClassInstaller(long ptr ptr)
 @ stub SetupDiCancelDriverInfoSearch
 @ stub SetupDiChangeState
@@ -293,12 +293,12 @@
 @ stub SetupDiDeleteDeviceRegKey
 @ stub SetupDiDestroyClassImageList
 @ stdcall SetupDiDestroyDeviceInfoList(long)
-@ stub SetupDiDestroyDriverInfoList
+@ stdcall SetupDiDestroyDriverInfoList(long ptr long)
 @ stub SetupDiDrawMiniIcon
 @ stdcall SetupDiEnumDeviceInfo(long long ptr)
 @ stdcall SetupDiEnumDeviceInterfaces(long ptr ptr long ptr)
-@ stub SetupDiEnumDriverInfoA
-@ stub SetupDiEnumDriverInfoW
+@ stdcall SetupDiEnumDriverInfoA(long ptr long long ptr)
+@ stdcall SetupDiEnumDriverInfoW(long ptr long long ptr)
 @ stdcall SetupDiGetActualSectionToInstallA(long str str long ptr ptr)
 @ stdcall SetupDiGetActualSectionToInstallW(long wstr wstr long ptr ptr)
 @ stub SetupDiGetClassBitmapIndex
@@ -359,8 +359,8 @@
 @ stdcall SetupDiOpenClassRegKeyExA(ptr long long str ptr)
 @ stdcall SetupDiOpenClassRegKeyExW(ptr long long wstr ptr)
 @ stdcall SetupDiOpenDevRegKey(ptr ptr long long long long)
-@ stub SetupDiOpenDeviceInfoA
-@ stub SetupDiOpenDeviceInfoW
+@ stdcall SetupDiOpenDeviceInfoA(ptr str long long ptr)
+@ stdcall SetupDiOpenDeviceInfoW(ptr wstr long long ptr)
 @ stdcall SetupDiOpenDeviceInterfaceA(ptr str long ptr)
 @ stub SetupDiOpenDeviceInterfaceRegKey
 @ stdcall SetupDiOpenDeviceInterfaceW(ptr wstr long ptr)
