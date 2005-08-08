@@ -287,14 +287,18 @@ static BOOL RunFile(LPTSTR filename)
 /*
  * This command (in first) was not found in the command table
  *
- * first - first word on command line
- * rest  - rest of command line
+ * Full  - whole command line
+ * First - first word on command line
+ * Rest  - rest of command line
  */
 
 static VOID
-Execute (LPTSTR full, LPTSTR first, LPTSTR rest)
+Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 {
 	TCHAR szFullName[MAX_PATH];
+	TCHAR first[MAX_PATH];
+	TCHAR rest[MAX_PATH];
+	TCHAR full[MAX_PATH];
 #ifndef __REACTOS__
 	TCHAR szWindowTitle[MAX_PATH];
 #endif
@@ -303,6 +307,51 @@ Execute (LPTSTR full, LPTSTR first, LPTSTR rest)
 #ifdef _DEBUG
 	DebugPrintf (_T("Execute: \'%s\' \'%s\'\n"), first, rest);
 #endif
+
+	/* Though it was already parsed once, we have a different set of rules
+	   for parsing before we pass to CreateProccess */
+	if(!_tcschr(Full,_T('\"')))
+	{
+		_tcscpy(first,First);
+		_tcscpy(rest,Rest);
+		_tcscpy(full,Full);
+	}
+	else
+	{
+		INT i = 0;		
+		BOOL bInside = FALSE;
+		rest[0] = _T('\0');
+		full[0] = _T('\0');
+		first[0] = _T('\0');
+		_tcscpy(first,Full);
+		/* find the end of the command and start of the args */
+		for(i = 0; i < _tcslen(first); i++)
+		{
+			if(!_tcsncmp(&first[i], _T("\""), 1))
+				bInside = !bInside;
+			if(!_tcsncmp(&first[i], _T(" "), 1) && !bInside)
+			{
+				_tcscpy(rest,&first[i]);
+				first[i] = _T('\0');
+				break;
+			}
+
+		}
+		i = 0;
+		/* remove any slashes */
+		while(i < _tcslen(first))
+		{
+			if(!_tcsncmp (&first[i], _T("\""), 1))
+				memcpy(&first[i],&first[i + 1], _tcslen(&first[i]));
+			else
+				i++;
+		}
+		/* Drop quotes around it just in case there is a space */
+		_tcscpy(full,_T("\""));
+		_tcscat(full,first);
+		_tcscat(full,_T("\" "));
+		_tcscat(full,rest);
+	}
 
 	/* check for a drive change */
 	if ((_istalpha (first[0])) && (!_tcscmp (first + 1, _T(":"))))
