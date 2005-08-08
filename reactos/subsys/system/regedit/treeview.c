@@ -100,7 +100,7 @@ LPCTSTR GetItemPath(HWND hwndTV, HTREEITEM hItem, HKEY* phRootKey)
     if (!hItem) hItem = TreeView_GetSelection(hwndTV);
     if (!hItem) return NULL;
     if (!get_item_path(hwndTV, hItem, phRootKey, &pathBuffer, &pathLen, &maxLen)) return NULL;
-    printf("hRoot=%p, keyPath='%s'\n", *phRootKey, pathBuffer);
+    /*printf("hRoot=%p, keyPath='%s'\n", *phRootKey, pathBuffer);*/
     return pathBuffer;
 }
 
@@ -242,7 +242,7 @@ BOOL OnTreeExpanding(HWND hwndTV, NMTREEVIEW* pnmtv)
 	    RegCloseKey(hKey);
 	}
 	if (errCode != ERROR_SUCCESS) dwSubCount = 0;
-	printf("dwSubCount=%ld, Name=%s\n", dwSubCount, Name);
+	/*printf("dwSubCount=%ld, Name=%s\n", dwSubCount, Name);*/
         AddEntryToTree(hwndTV, pnmtv->itemNew.hItem, Name, NULL, dwSubCount, TVI_FIRST);
     }
 
