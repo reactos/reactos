@@ -398,25 +398,23 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
      {
         if (Fcb->ReadDataAvailable == 0)
         {
+	   if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
+	   {
+	      ASSERT(Fcb->OtherSide != NULL);
+	      KeSetEvent(&Fcb->OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
+	   }
+	   if (Information > 0 &&
+	       (Fcb->Pipe->ReadMode != FILE_PIPE_BYTE_STREAM_MODE ||
+	        Fcb->PipeState != FILE_PIPE_CONNECTED_STATE))
+	   {
+	      break;
+	   }
       	   if (Fcb->PipeState != FILE_PIPE_CONNECTED_STATE)
 	   {
 	      DPRINT("PipeState: %x\n", Fcb->PipeState);
-	      if (Fcb->PipeState == FILE_PIPE_LISTENING_STATE)
-	         Status = STATUS_PIPE_LISTENING;
-	      else
-	         Status = STATUS_PIPE_DISCONNECTED;
+	      Status = STATUS_PIPE_BROKEN;
 	      break;
            }
-
-	   ASSERT(Fcb->OtherSide != NULL);
-	   KeSetEvent(&Fcb->OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
-
-	   if (Information > 0 &&
-	       Fcb->Pipe->ReadMode != FILE_PIPE_BYTE_STREAM_MODE)
-	   {
-              break;
-	   }
-
 	   ExReleaseFastMutex(&Fcb->DataListLock);
 	   if (IoIsOperationSynchronous(Irp))
 	   {
