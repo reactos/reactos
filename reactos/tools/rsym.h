@@ -11,14 +11,26 @@
 #define IMAGE_NUMBEROF_DIRECTORY_ENTRIES 16
 
 typedef unsigned char BYTE;
+typedef unsigned char UCHAR;
 typedef unsigned short WORD;
-typedef unsigned long DWORD;
+typedef unsigned short USHORT;
+#if defined(__x86_64__) && defined(linux)
+typedef signed int LONG;
+typedef unsigned int ULONG;
+typedef unsigned int DWORD;
+#else
 typedef signed long LONG;
 typedef unsigned long ULONG;
+typedef unsigned long DWORD;
+#endif
 #if defined(_WIN64)
 typedef unsigned __int64 ULONG_PTR;
 #else
+#if defined(__x86_64__) && defined(linux)
+typedef  unsigned int  ULONG_PTR;
+#else
 typedef  unsigned long ULONG_PTR;
+#endif
 #endif
 
 #pragma pack(push,2)
@@ -129,42 +141,42 @@ typedef struct _IMAGE_BASE_RELOCATION {
 
 
 typedef struct {
-  unsigned short f_magic;         /* magic number             */
-  unsigned short f_nscns;         /* number of sections       */
-  unsigned long  f_timdat;        /* time & date stamp        */
-  unsigned long  f_symptr;        /* file pointer to symtab   */
-  unsigned long  f_nsyms;         /* number of symtab entries */
-  unsigned short f_opthdr;        /* sizeof(optional hdr)     */
-  unsigned short f_flags;         /* flags                    */
+  USHORT f_magic;         /* magic number             */
+  USHORT f_nscns;         /* number of sections       */
+  ULONG  f_timdat;        /* time & date stamp        */
+  ULONG  f_symptr;        /* file pointer to symtab   */
+  ULONG  f_nsyms;         /* number of symtab entries */
+  USHORT f_opthdr;        /* sizeof(optional hdr)     */
+  USHORT f_flags;         /* flags                    */
 } FILHDR;
 
 typedef struct {
   char           s_name[8];  /* section name                     */
-  unsigned long  s_paddr;    /* physical address, aliased s_nlib */
-  unsigned long  s_vaddr;    /* virtual address                  */
-  unsigned long  s_size;     /* section size                     */
-  unsigned long  s_scnptr;   /* file ptr to raw data for section */
-  unsigned long  s_relptr;   /* file ptr to relocation           */
-  unsigned long  s_lnnoptr;  /* file ptr to line numbers         */
-  unsigned short s_nreloc;   /* number of relocation entries     */
-  unsigned short s_nlnno;    /* number of line number entries    */
-  unsigned long  s_flags;    /* flags                            */
+  ULONG  s_paddr;    /* physical address, aliased s_nlib */
+  ULONG  s_vaddr;    /* virtual address                  */
+  ULONG  s_size;     /* section size                     */
+  ULONG  s_scnptr;   /* file ptr to raw data for section */
+  ULONG  s_relptr;   /* file ptr to relocation           */
+  ULONG  s_lnnoptr;  /* file ptr to line numbers         */
+  USHORT s_nreloc;   /* number of relocation entries     */
+  USHORT s_nlnno;    /* number of line number entries    */
+  ULONG  s_flags;    /* flags                            */
 } SCNHDR;
 #pragma pack(pop)
 
 typedef struct _SYMBOLFILE_HEADER {
-  unsigned long SymbolsOffset;
-  unsigned long SymbolsLength;
-  unsigned long StringsOffset;
-  unsigned long StringsLength;
+  ULONG SymbolsOffset;
+  ULONG SymbolsLength;
+  ULONG StringsOffset;
+  ULONG StringsLength;
 } SYMBOLFILE_HEADER, *PSYMBOLFILE_HEADER;
 
 typedef struct _STAB_ENTRY {
-  unsigned long n_strx;         /* index into string table of name */
-  unsigned char n_type;         /* type of symbol */
-  unsigned char n_other;        /* misc info (usually empty) */
-  unsigned short n_desc;        /* description field */
-  unsigned long n_value;        /* value of symbol */
+  ULONG n_strx;         /* index into string table of name */
+  UCHAR n_type;         /* type of symbol */
+  UCHAR n_other;        /* misc info (usually empty) */
+  USHORT n_desc;        /* description field */
+  ULONG n_value;        /* value of symbol */
 } STAB_ENTRY, *PSTAB_ENTRY;
 
 #define N_FUN 0x24
@@ -234,17 +246,17 @@ typedef struct _COFF_SYMENT
       char e_name[E_SYMNMLEN];
       struct
         {
-          unsigned long e_zeroes;
-          unsigned long e_offset;
+          ULONG e_zeroes;
+          ULONG e_offset;
         }
       e;
     }
   e;
-  unsigned long e_value;
+  ULONG e_value;
   short e_scnum;
-  unsigned short e_type;
-  unsigned char e_sclass;
-  unsigned char e_numaux;
+  USHORT e_type;
+  UCHAR e_sclass;
+  UCHAR e_numaux;
 } COFF_SYMENT, *PCOFF_SYMENT;
 #pragma pack(pop)
 

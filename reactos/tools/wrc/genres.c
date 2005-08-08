@@ -43,6 +43,13 @@
 #include "winuser.h"
 #include "wine/unicode.h"
 
+/* Fix 64-bit host, re: put_dword */
+#if defined(linux) && defined(__x86_64__)
+typedef unsigned int HOST_DWORD;
+#else
+typedef unsigned long HOST_DWORD;
+#endif
+
 #define SetResSize(res, tag)	set_dword((res), (tag), (res)->size - get_dword((res), (tag)))
 
 res_t *new_res(void)
@@ -114,7 +121,9 @@ void put_word(res_t *res, unsigned w)
 
 void put_dword(res_t *res, unsigned d)
 {
-	if(res->allocsize - res->size < sizeof(DWORD))
+	assert(sizeof(HOST_DWORD) == 4);
+
+	if(res->allocsize - res->size < sizeof(HOST_DWORD))
 		grow_res(res, RES_BLOCKSIZE);
 	switch(byteorder)
 	{
@@ -138,7 +147,7 @@ void put_dword(res_t *res, unsigned d)
 		res->data[res->size+0] = LOBYTE(LOWORD(d));
 		break;
 	}
-	res->size += sizeof(DWORD);
+	res->size += sizeof(HOST_DWORD);
 }
 
 static void put_pad(res_t *res)
@@ -223,7 +232,7 @@ static void set_dword(res_t *res, int ofs, unsigned d)
  * Remarks	:
  *****************************************************************************
 */
-static DWORD get_dword(res_t *res, int ofs)
+static HOST_DWORD get_dword(res_t *res, int ofs)
 {
 	switch(byteorder)
 	{
@@ -434,7 +443,7 @@ static void put_raw_data(res_t *res, raw_data_t *raw, int offset)
  *****************************************************************************
 */
 static int put_res_header(res_t *res, int type, name_id_t *ntype, name_id_t *name,
-                          DWORD memopt, lvc_t *lvc)
+                          HOST_DWORD memopt, lvc_t *lvc)
 {
 	if(win32)
 	{
@@ -452,8 +461,8 @@ static int put_res_header(res_t *res, int type, name_id_t *ntype, name_id_t *nam
 		put_dword(res, 0);		/* DataVersion */
 		put_word(res, memopt);		/* Memory options */
 		put_lvc(res, lvc);		/* Language, version and characts */
-		set_dword(res, 0*sizeof(DWORD), res->size);	/* Set preliminary resource */
-		set_dword(res, 1*sizeof(DWORD), res->size);	/* Set HeaderSize */
+		set_dword(res, 0*sizeof(HOST_DWORD), res->size);	/* Set preliminary resource */
+		set_dword(res, 1*sizeof(HOST_DWORD), res->size);	/* Set HeaderSize */
 		res->dataidx = res->size;
 		return 0;
 	}
@@ -1415,7 +1424,7 @@ static res_t *stringtable2res(stringtable_t *stt)
 	name_id_t name;
 	int i;
 	int restag;
-	DWORD lastsize = 0;
+	HOST_DWORD lastsize = 0;
 
 	assert(stt != NULL);
 	res = new_res();

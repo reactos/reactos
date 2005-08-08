@@ -44,7 +44,7 @@ typedef int LONG;
 #define IMAGE_SCN_MEM_DISCARDABLE 0x2000000
 #define IMAGE_SCN_MEM_NOT_PAGED 0x8000000
 #define FIELD_OFFSET(t,f) ((LONG)&(((t*)0)->f))
-#define IMAGE_FIRST_SECTION(h) ((PIMAGE_SECTION_HEADER) ((DWORD)h+FIELD_OFFSET(IMAGE_NT_HEADERS,OptionalHeader)+((PIMAGE_NT_HEADERS)(h))->FileHeader.SizeOfOptionalHeader))
+#define IMAGE_FIRST_SECTION(h) ((PIMAGE_SECTION_HEADER) ((unsigned long)h+FIELD_OFFSET(IMAGE_NT_HEADERS,OptionalHeader)+((PIMAGE_NT_HEADERS)(h))->FileHeader.SizeOfOptionalHeader))
 #define IMAGE_DIRECTORY_ENTRY_EXPORT 0
 
 #pragma pack(push,2)

@@ -1533,7 +1533,7 @@ typedef struct _ACL_SIZE_INFORMATION {
 } ACL_SIZE_INFORMATION;
 
 /* FIXME: add more machines */
-#ifdef _X86_
+#if defined(_X86_) || defined(linux)
 #define SIZE_OF_80387_REGISTERS	80
 #define CONTEXT_i386	0x10000
 #define CONTEXT_i486	0x10000

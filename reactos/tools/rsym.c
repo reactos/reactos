@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "rsym.h"
 
@@ -809,6 +810,7 @@ int main(int argc, char* argv[])
   PEFileHeader = (PIMAGE_FILE_HEADER)((char *) FileData + PEDosHeader->e_lfanew + sizeof(ULONG));
 
   /* Locate optional header */
+  assert(sizeof(ULONG) == 4);
   PEOptHeader = (PIMAGE_OPTIONAL_HEADER)(PEFileHeader + 1);
   ImageBase = PEOptHeader->ImageBase;
 

@@ -46,7 +46,7 @@ int display_warnings = 0;
 int kill_at = 0;
 int debugging = 0;
 
-#ifdef __i386__
+#if defined(__i386__) || defined(__x86_64__)
 enum target_cpu target_cpu = CPU_x86;
 #elif defined(__sparc__)
 enum target_cpu target_cpu = CPU_SPARC;
