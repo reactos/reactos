@@ -63,11 +63,25 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 	CreateData.dwSCnt = 1;
 	CreateData.lplpSList = &pLocal;
 
-	if(This->owner->DriverCallbacks.DdMain.CreateSurface (&CreateData) != DDHAL_DRIVER_HANDLED)
-		return DDERR_INVALIDPARAMS;
+	DDHAL_CANCREATESURFACEDATA CanCreateData;
+	memset(&CanCreateData, 0, sizeof(DD_CANCREATESURFACEDATA));
+	CanCreateData.lpDD = &This->owner->DirectDrawGlobal; 
+	CanCreateData.lpDDSurfaceDesc = (DDSURFACEDESC*)pDDSD;
 
+	
+	if (This->owner->DriverCallbacks.DdMain.CanCreateSurface (&CanCreateData) == DDHAL_DRIVER_NOTHANDLED)
+        return DDERR_INVALIDPARAMS;
+	
+	if(CreateData.ddRVal != DD_OK)
+		return CanCreateData.ddRVal;
+	
+
+	if(This->owner->DriverCallbacks.DdMain.CreateSurface (&CreateData) == DDHAL_DRIVER_NOTHANDLED)
+		return DDERR_INVALIDPARAMS;
+	
 	if(CreateData.ddRVal != DD_OK)
 		return CreateData.ddRVal;
+
 
 	OutputDebugString(L"This does not get hit.");
 
