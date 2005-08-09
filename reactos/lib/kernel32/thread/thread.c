@@ -530,7 +530,10 @@ SetThreadAffinityMask(HANDLE hThread,
 				  &AffinityMask,
 				  sizeof(KAFFINITY));
   if (!NT_SUCCESS(Status))
+  {
     SetLastErrorByStatus(Status);
+    ThreadBasic.AffinityMask = 0;
+  }
 
   return(ThreadBasic.AffinityMask);
 }
