@@ -66,6 +66,10 @@ Ki386GetCpuId(VOID)
    {
       /* Get the feature flags. */
       Ki386Cpuid(1, &Eax, &Ke386CpuidExMisc, &Ke386CpuidFlags2, &Pcr->PrcbData.FeatureBits);
+
+      DPRINT ("Model:  %x\n", (Eax & 0xf00) == 0xf00 ? ((Eax >> 4) & 0xf) | ((Eax >> 12) & 0xf0) : (Eax >> 4) & 0xf);
+      DPRINT ("Family: %x\n", (Eax & 0xf00) == 0xf00 ? ((Eax >> 8) & 0xf) + ((Eax >> 20) & 0xff) : (Eax >> 8) & 0xf);
+
       /* Get the cache alignment, if it is available */
       if (Pcr->PrcbData.FeatureBits & (1<<19))
       {
@@ -196,6 +200,8 @@ KePrepareForApplicationProcessorInit(ULONG Id)
   Pcr->Tib.ExceptionList = (PVOID)-1;
 
   KiGdtPrepareForApplicationProcessorInit(Id);
+
+  KeActiveProcessors |= 1 << Id;
 }
 
 VOID
@@ -308,6 +314,9 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
 
    KeInitExceptions ();
    KeInitInterrupts ();
+
+   KeActiveProcessors |= 1 << 0;
+
 
    if (KPCR->PrcbData.FeatureBits & X86_FEATURE_PGE)
    {
