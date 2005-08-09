@@ -362,7 +362,7 @@ SmCreateApiPort(VOID)
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &UnicodeString,
-			     PORT_ALL_ACCESS,
+			     0,
 			     NULL,
 			     NULL);
 
