@@ -42,7 +42,7 @@ SmpSignalInitEvent(VOID)
   RtlInitUnicodeString (& EventName, L"\\ReactOSInitDone");
   InitializeObjectAttributes(&ObjectAttributes,
     & EventName,
-    EVENT_ALL_ACCESS,
+    0,
     0,
     NULL);
   Status = NtOpenEvent(&ReactOSInitEvent,
