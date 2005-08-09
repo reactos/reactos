@@ -49,11 +49,17 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 	Local.lpGbl = &Global;
 	Local.lpSurfMore = &More;
 	Local.ddsCaps = *(DDSCAPS*)&pDDSD->ddsCaps;
+	
+	// BitDepth = DDSurf_BitDepth(psurf); ?
+
 
 	if(pDDSD->ddsCaps.dwCaps == DDSCAPS_PRIMARYSURFACE)
 		Local.dwFlags |= DDRAWISURF_FRONTBUFFER;
 
-	DDRAWI_DDRAWSURFACE_LCL* pLocal = &Local; // for stupid double pointer below
+	DDRAWI_DDRAWSURFACE_LCL *pLocal[2]; // for stupid double pointer below
+
+	pLocal[0] = &Local;
+    pLocal[1] = NULL;
 
 	// The Parameter Struct
 	DDHAL_CREATESURFACEDATA CreateData;
@@ -61,7 +67,9 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 	CreateData.lpDD = &This->owner->DirectDrawGlobal; 
 	CreateData.lpDDSurfaceDesc = (DDSURFACEDESC*)pDDSD;
 	CreateData.dwSCnt = 1;
-	CreateData.lplpSList = &pLocal;
+	CreateData.lplpSList = pLocal;
+   
+	
 
 	DDHAL_CANCREATESURFACEDATA CanCreateData;
 	memset(&CanCreateData, 0, sizeof(DD_CANCREATESURFACEDATA));
