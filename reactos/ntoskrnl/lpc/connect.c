@@ -410,7 +410,7 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
                                     NULL,
                                     PORT_ALL_ACCESS,  /* DesiredAccess */
                                     LpcPortObjectType,
-                                    UserMode,
+                                    PreviousMode,
                                     NULL,
                                     (PVOID*)&NamedPort);
   if (!NT_SUCCESS(Status))
@@ -430,7 +430,7 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
       Status = ObReferenceObjectByHandle(WriteMap.SectionHandle,
 					 SECTION_MAP_READ | SECTION_MAP_WRITE,
 					 MmSectionObjectType,
-					 UserMode,
+					 PreviousMode,
 					 (PVOID*)&SectionObject,
 					 NULL);
       if (!NT_SUCCESS(Status))
@@ -669,6 +669,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
   PEPORT_CONNECT_REQUEST_MESSAGE CRequest;
   PEPORT_CONNECT_REPLY_MESSAGE CReply;
   ULONG Size;
+  KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
 
   Size = sizeof(EPORT_CONNECT_REPLY_MESSAGE);
   if (LpcMessage)
@@ -685,7 +686,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
   Status = ObReferenceObjectByHandle(NamedPortHandle,
 				     PORT_ALL_ACCESS,
 				     LpcPortObjectType,
-				     UserMode,
+				     PreviousMode,
 				     (PVOID*)&NamedPort,
 				     NULL);
   if (!NT_SUCCESS(Status))
@@ -699,10 +700,10 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
    */
   if (AcceptIt)
     {
-      Status = ObCreateObject(ExGetPreviousMode(),
+      Status = ObCreateObject(PreviousMode,
 			      LpcPortObjectType,
 			      NULL,
-			      ExGetPreviousMode(),
+			      PreviousMode,
 			      NULL,
 			      sizeof(EPORT),
 			      0,
@@ -789,7 +790,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
       Status = ObReferenceObjectByHandle(WriteMap->SectionHandle,
 					 SECTION_MAP_READ | SECTION_MAP_WRITE,
 					 MmSectionObjectType,
-					 UserMode,
+					 PreviousMode,
 					 (PVOID*)&SectionObject,
 					 NULL);
       if (!NT_SUCCESS(Status))
