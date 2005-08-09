@@ -22,7 +22,6 @@ typedef struct
     DDHAL_DDSURFACECALLBACKS DdSurface;
     DDHAL_DDPALETTECALLBACKS DdPalette;
     D3DHAL_CALLBACKS D3dMain;
-    D3DHAL_GLOBALDRIVERDATA	D3dDriverData;
     DDHAL_DDEXEBUFCALLBACKS	D3dBufferCallbacks;
 
 } DRIVERCALLBACKS;
@@ -33,7 +32,12 @@ typedef struct
 	DRIVERCALLBACKS DriverCallbacks;
     DWORD ref;
 
-	DDHALINFO HalInfo;
+	DDHALINFO HalInfo;	
+    D3DHAL_GLOBALDRIVERDATA	D3dDriverData;
+
+	LPDDSURFACEDESC pD3dTextureFormats;
+	LPDWORD pdwFourCC;
+	LPVIDMEM pvmList;
 
     HWND window;
     DWORD cooperative_level;
