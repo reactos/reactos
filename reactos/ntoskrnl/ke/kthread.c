@@ -14,10 +14,8 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#ifndef MUTANT_INCREMENT
-#define MUTANT_INCREMENT                1
-#endif
-
+/* FIXME: NDK */
+#define MAXIMUM_SUSPEND_COUNT 0x7F
 #define THREAD_ALERT_INCREMENT 2
 
 extern EX_WORK_QUEUE ExWorkerQueue[MaximumWorkQueue];
@@ -598,6 +596,14 @@ KeSuspendThread(PKTHREAD Thread)
 
     /* Save the Old Count */
     PreviousCount = Thread->SuspendCount;
+
+    /* Handle the maximum */
+    if (PreviousCount == MAXIMUM_SUSPEND_COUNT)
+    {
+        /* Raise an exception */
+        KeReleaseDispatcherDatabaseLock(OldIrql);
+        ExRaiseStatus(STATUS_SUSPEND_COUNT_EXCEEDED);
+    }
 
     /* Increment it */
     Thread->SuspendCount++;
