@@ -67,7 +67,7 @@ RtlRaiseException(PEXCEPTION_RECORD ExceptionRecord)
   ExceptionRecord->ExceptionAddress = (PVOID)(*(((PULONG)Context.Ebp)+1));
   Context.ContextFlags = CONTEXT_FULL;
 
-  Status = ZwRaiseException(ExceptionRecord, &Context, TRUE);
+  Status = NtRaiseException(ExceptionRecord, &Context, TRUE);
   RtlRaiseException(ExceptionRecord);
   RtlRaiseStatus(Status);
 }
