@@ -1175,7 +1175,7 @@
 
                           <entry>.exe</entry>
 
-                          <entry>_NtProcessStartup</entry>
+                          <entry><function>_NtProcessStartup</function></entry>
 
                           <entry>-</entry>
 
@@ -1289,7 +1289,7 @@
 
                           <entry>.exe</entry>
 
-                          <entry>_mainCRTStartup</entry>
+                          <entry><function>_mainCRTStartup</function></entry>
 
                           <entry>-</entry>
 
