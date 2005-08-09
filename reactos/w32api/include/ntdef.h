@@ -73,4 +73,14 @@ typedef struct _OBJECT_ATTRIBUTES {
 #define NOTHING
 #define RTL_CONSTANT_STRING(s) { sizeof(s)-sizeof((s)[0]), sizeof(s), s }
 #define TYPE_ALIGNMENT( t ) FIELD_OFFSET( struct { char x; t test; }, test )
+
+#define MINCHAR   0x80
+#define MAXCHAR   0x7f
+#define MINSHORT  0x8000
+#define MAXSHORT  0x7fff
+#define MINLONG   0x80000000
+#define MAXLONG   0x7fffffff
+#define MAXUCHAR  0xff
+#define MAXUSHORT 0xffff
+#define MAXULONG  0xffffffff
 #endif /* _NTDEF_H */
