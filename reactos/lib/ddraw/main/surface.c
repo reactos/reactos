@@ -72,7 +72,7 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 	if (This->owner->DriverCallbacks.DdMain.CanCreateSurface (&CanCreateData) == DDHAL_DRIVER_NOTHANDLED)
         return DDERR_INVALIDPARAMS;
 	
-	if(CreateData.ddRVal != DD_OK)
+	if(CanCreateData.ddRVal != DD_OK)
 		return CanCreateData.ddRVal;
 	
 
