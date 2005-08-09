@@ -296,9 +296,9 @@ static VOID
 Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 {
 	TCHAR szFullName[MAX_PATH];
-	TCHAR first[MAX_PATH];
-	TCHAR rest[MAX_PATH];
-	TCHAR full[MAX_PATH];
+	TCHAR first[CMDLINE_LENGTH];
+	TCHAR rest[CMDLINE_LENGTH];
+	TCHAR full[CMDLINE_LENGTH];
 #ifndef __REACTOS__
 	TCHAR szWindowTitle[MAX_PATH];
 #endif
