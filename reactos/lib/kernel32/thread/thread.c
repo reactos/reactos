@@ -15,6 +15,9 @@
 #define NDEBUG
 #include "../include/debug.h"
 
+/* FIXME: NDK */
+#define HIGH_PRIORITY 31
+
 /* FUNCTIONS *****************************************************************/
 _SEH_FILTER(BaseThreadExceptionFilter)
 {
@@ -536,51 +539,76 @@ SetThreadAffinityMask(HANDLE hThread,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+STDCALL
 SetThreadPriority(HANDLE hThread,
-		  int nPriority)
+                  int nPriority)
 {
-  ULONG Prio = nPriority;
-  NTSTATUS Status;
+    ULONG Prio = nPriority;
+    NTSTATUS Status;
 
-  Status = NtSetInformationThread(hThread,
-				  ThreadBasePriority,
-				  &Prio,
-				  sizeof(ULONG));
-
-  if (!NT_SUCCESS(Status))
+    /* Check if values forcing saturation should be used */
+    if (Prio == THREAD_PRIORITY_TIME_CRITICAL)
     {
-      SetLastErrorByStatus(Status);
-      return(FALSE);
+        Prio = (HIGH_PRIORITY + 1) / 2;
+    }
+    else if (Prio == THREAD_PRIORITY_IDLE)
+    {
+        Prio = -((HIGH_PRIORITY + 1) / 2);
     }
 
-  return(TRUE);
-}
+    /* Set the Base Priority */
+    Status = NtSetInformationThread(hThread,
+                                    ThreadBasePriority,
+                                    &Prio,
+                                    sizeof(ULONG));
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failure */
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
 
+    /* Return */
+    return TRUE;
+}
 
 /*
  * @implemented
  */
-int STDCALL
+int
+STDCALL
 GetThreadPriority(HANDLE hThread)
 {
-  THREAD_BASIC_INFORMATION ThreadBasic;
-  NTSTATUS Status;
+    THREAD_BASIC_INFORMATION ThreadBasic;
+    NTSTATUS Status;
 
-  Status = NtQueryInformationThread(hThread,
-				    ThreadBasicInformation,
-				    &ThreadBasic,
-				    sizeof(THREAD_BASIC_INFORMATION),
-				    NULL);
-  if (!NT_SUCCESS(Status))
+    /* Query the Base Priority Increment */
+    Status = NtQueryInformationThread(hThread,
+                                      ThreadBasicInformation,
+                                      &ThreadBasic,
+                                      sizeof(THREAD_BASIC_INFORMATION),
+                                      NULL);
+    if (!NT_SUCCESS(Status))
     {
-      SetLastErrorByStatus(Status);
-      return(THREAD_PRIORITY_ERROR_RETURN);
+        /* Failure */
+        SetLastErrorByStatus(Status);
+        return THREAD_PRIORITY_ERROR_RETURN;
     }
 
-  return(ThreadBasic.BasePriority);
-}
+    /* Do some conversions for out of boundary values */
+    if (ThreadBasic.BasePriority > THREAD_BASE_PRIORITY_MAX)
+    {
+        ThreadBasic.BasePriority = THREAD_PRIORITY_TIME_CRITICAL;
+    }
+    else if (ThreadBasic.BasePriority < THREAD_BASE_PRIORITY_MIN)
+    {
+        ThreadBasic.BasePriority = THREAD_PRIORITY_IDLE;
+    }
 
+    /* Return the final result */
+    return ThreadBasic.BasePriority;
+}
 
 /*
  * @implemented

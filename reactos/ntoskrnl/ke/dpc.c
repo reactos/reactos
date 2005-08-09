@@ -465,7 +465,8 @@ KiQuantumEnd(VOID)
             if (OldPriority != NewPriority) {
 
                 /* Set new Priority */
-                CurrentThread->Priority = NewPriority;
+                BOOLEAN Dummy; /* <- This is a hack anyways... */
+                KiSetPriorityThread(CurrentThread, NewPriority, &Dummy);
 
             } else {
 
