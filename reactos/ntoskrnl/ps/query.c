@@ -1233,9 +1233,9 @@ NtSetInformationThread (IN HANDLE ThreadHandle,
 	     /* Shoult never occure if the data table is correct */
 	     KEBUGCHECK(0);
 	 }
+       ObDereferenceObject (Thread);
      }
-  ObDereferenceObject (Thread);
-
+  
   return Status;
 }
 
