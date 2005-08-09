@@ -82,11 +82,13 @@ DEFINE_GUID(GUID_NULL,
 
 #define SETUP_DEV_INFO_SET_MAGIC 0xd00ff057
 
-struct DeviceInterface /* Element of DeviceInfoElement.InterfaceHead */
+struct DeviceInterface /* Element of DeviceInfoElement.InterfaceListHead */
 {
     LIST_ENTRY ListEntry;
 
+    struct DeviceInfoElement* DeviceInfo;
     GUID InterfaceClassGuid;
+
     
     /* SPINT_ACTIVE : the interface is active/enabled
      * SPINT_DEFAULT: the interface is the default interface for the device class FIXME???
@@ -157,7 +159,7 @@ struct DeviceInfoElement /* Element of DeviceInfoSet.ListHead */
     struct DriverInfoElement *SelectedDriver;
 
     /* List of interfaces implemented by this device */
-    LIST_ENTRY InterfaceHead; /* List of struct DeviceInterface */
+    LIST_ENTRY InterfaceListHead; /* List of struct DeviceInterface */
 
     WCHAR Data[0];
 };
@@ -1167,11 +1169,12 @@ CreateDeviceInfoElement(
     struct DeviceInfoElement *deviceInfo;
 
     *pDeviceInfo = NULL;
+    if (IsEqualIID(&pClassGuid, &GUID_NULL)) { FIXME("Bad argument!!!"); return FALSE; }/* FIXME: remove */
 
     deviceInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(struct DeviceInfoElement) + (wcslen(InstancePath) + 1) * sizeof(WCHAR));
     if (!deviceInfo)
     {
-        SetLastError(ERROR_NO_SYSTEM_RESOURCES);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
     wcscpy(deviceInfo->Data, InstancePath);
@@ -1185,9 +1188,36 @@ CreateDeviceInfoElement(
     deviceInfo->FlagsEx = 0; /* FIXME */
     deviceInfo->SelectedDriver = NULL;
     InitializeListHead(&deviceInfo->DriverListHead);
-    InitializeListHead(&deviceInfo->InterfaceHead);
+    InitializeListHead(&deviceInfo->InterfaceListHead);
 
     *pDeviceInfo = deviceInfo;
+    return TRUE;
+}
+
+static BOOL
+CreateDeviceInterface(
+    IN struct DeviceInfoElement* deviceInfo,
+    IN LPCWSTR SymbolicLink,
+    IN LPCGUID pInterfaceGuid,
+    OUT struct DeviceInterface **pDeviceInterface)
+{
+    struct DeviceInterface *deviceInterface;
+
+    *pDeviceInterface = NULL;
+    if (IsEqualIID(&pInterfaceGuid, &GUID_NULL)) { FIXME("Bad argument!!!"); return FALSE; }/* FIXME: remove */
+
+    deviceInterface = HeapAlloc(GetProcessHeap(), 0, sizeof(struct DeviceInterface) + (wcslen(SymbolicLink) + 1) * sizeof(WCHAR));
+    if (!deviceInterface)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+    deviceInterface->DeviceInfo = deviceInfo;
+    wcscpy(deviceInterface->SymbolicLink, SymbolicLink);
+    deviceInterface->Flags = 0; /* FIXME */
+    memcpy(&deviceInterface->InterfaceClassGuid, pInterfaceGuid, sizeof(GUID));
+
+    *pDeviceInterface = deviceInterface;
     return TRUE;
 }
 
@@ -1393,7 +1423,7 @@ static LONG SETUP_CreateDevList(
     }
 }
 
-#ifdef __WINESRC__
+#ifndef __REACTOS__
 static LONG SETUP_CreateSerialDeviceList(
        struct DeviceInfoSet *list,
        PCWSTR MachineName,
@@ -1406,7 +1436,7 @@ static LONG SETUP_CreateSerialDeviceList(
     LPWSTR devices;
     static const WCHAR devicePrefixW[] = { 'C','O','M',0 };
     LPWSTR ptr;
-    //DeviceInfo *deviceInfo;
+    struct DeviceInfoElement *deviceInfo;
 
     if (MachineName)
         WARN("'MachineName' is ignored on Wine!\n");
@@ -1426,7 +1456,7 @@ static LONG SETUP_CreateSerialDeviceList(
                 HeapFree(GetProcessHeap(), 0, devices);
             devices = HeapAlloc(GetProcessHeap(), 0, size * sizeof(WCHAR));
             if (!devices)
-                return ERROR_NO_SYSTEM_RESOURCES;
+                return ERROR_NOT_ENOUGH_MEMORY;
             *devices = '\0';
         }
         else
@@ -1443,24 +1473,25 @@ static LONG SETUP_CreateSerialDeviceList(
         if (strncmpW(devicePrefixW, ptr, sizeof(devicePrefixW) / sizeof(devicePrefixW[0]) - 1) == 0)
         {
             /* We have found a device */
+            struct DeviceInterface *interfaceInfo;
             TRACE("Adding %s to list\n", debugstr_w(ptr));
-#if 0
-            deviceInfo = HeapAlloc(GetProcessHeap(), 0,
-                FIELD_OFFSET(DeviceInfo, Interface.Data) + (strlenW(ptr) + 1) * sizeof(WCHAR));
-            if (!deviceInfo)
+            /* Step 1. Create a device info element */
+            if (!CreateDeviceInfoElement(ptr, &GUID_SERENUM_BUS_ENUMERATOR, &deviceInfo))
             {
                 if (devices != buf)
                     HeapFree(GetProcessHeap(), 0, devices);
-                return ERROR_NO_SYSTEM_RESOURCES;
+                return GetLastError();
             }
-            deviceInfo->IsDevice = FALSE;
-            deviceInfo->Interface.pSymbolicLink = &deviceInfo->Interface.Data[0];
-            memcpy(&deviceInfo->Interface.InterfaceGuid, InterfaceGuid, sizeof(GUID));
-            wcscpy(deviceInfo->Interface.pSymbolicLink, ptr);
-            InsertTailList(&list->ListHead, &deviceInfo->ItemEntry);
-#else
-            FIXME("not implemented\n");
-#endif
+            InsertTailList(&list->ListHead, &deviceInfo->ListEntry);
+
+            /* Step 2. Create an interface list for this element */
+            if (!CreateDeviceInterface(deviceInfo, ptr, InterfaceGuid, &interfaceInfo))
+            {
+                if (devices != buf)
+                    HeapFree(GetProcessHeap(), 0, devices);
+                return GetLastError();
+            }
+            InsertTailList(&deviceInfo->InterfaceListHead, &interfaceInfo->ListEntry);
         }
     }
     if (devices != buf)
@@ -1468,7 +1499,7 @@ static LONG SETUP_CreateSerialDeviceList(
     return ERROR_SUCCESS;
 }
 
-#else /* __WINESRC__ */
+#else /* __REACTOS__ */
 
 static LONG SETUP_CreateInterfaceList(
        struct DeviceInfoSet *list,
@@ -1488,7 +1519,7 @@ static LONG SETUP_CreateInterfaceList(
     DWORD dwLength, dwInstancePathLength;
     DWORD dwRegType;
     GUID ClassGuid;
-    DeviceInfo *deviceInfo;
+    struct DeviceInfoElement *deviceInfo;
 
     /* Open registry key related to this interface */
     hInterfaceKey = SetupDiOpenClassRegKeyExW(InterfaceGuid, KEY_ENUMERATE_SUB_KEYS, DIOCR_INTERFACE, MachineName, NULL);
@@ -1537,7 +1568,7 @@ static LONG SETUP_CreateInterfaceList(
         {
             RegCloseKey(hDeviceInstanceKey);
             RegCloseKey(hInterfaceKey);
-            return ERROR_NO_SYSTEM_RESOURCES;
+            return ERROR_NOT_ENOUGH_MEMORY;
         }
         rc = RegQueryValueExW(hDeviceInstanceKey, DeviceInstance, NULL, NULL, (LPBYTE)InstancePath, &dwInstancePathLength);
         if (rc != ERROR_SUCCESS)
@@ -1622,6 +1653,9 @@ static LONG SETUP_CreateInterfaceList(
         j = 0;
         while (TRUE)
         {
+            LPWSTR pSymbolicLink;
+            struct DeviceInterface *interfaceInfo;
+
             dwLength = sizeof(KeyBuffer) / sizeof(KeyBuffer[0]);
             rc = RegEnumKeyExW(hDeviceInstanceKey, j, KeyBuffer, &dwLength, NULL, NULL, NULL, NULL);
             if (rc == ERROR_NO_MORE_ITEMS)
@@ -1663,45 +1697,55 @@ static LONG SETUP_CreateInterfaceList(
                 RegCloseKey(hInterfaceKey);
                 return ERROR_GEN_FAILURE;
             }
-            deviceInfo = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(DeviceInfo, Interface.Data) + dwInstancePathLength + dwLength + 2 * sizeof(WCHAR));
-            if (!deviceInfo)
+
+            /* We have found a device */
+            /* Step 1. Create a device info element */
+            if (!CreateDeviceInfoElement(InstancePath, &ClassGuid, &deviceInfo))
             {
                 RegCloseKey(hReferenceKey);
                 RegCloseKey(hDeviceInstanceKey);
                 RegCloseKey(hInterfaceKey);
-                return ERROR_NO_SYSTEM_RESOURCES;
+                return GetLastError();
             }
-            deviceInfo->Interface.pInstancePath = &deviceInfo->Interface.Data[0];
-            deviceInfo->Interface.pSymbolicLink = &deviceInfo->Interface.Data[dwInstancePathLength + 1];
-            rc = RegQueryValueExW(hReferenceKey, SymbolicLink, NULL, NULL, (LPBYTE)deviceInfo->Interface.pSymbolicLink, &dwLength);
+            TRACE("Adding device %s to list\n", debugstr_w(InstancePath));
+            InsertTailList(&list->ListHead, &deviceInfo->ListEntry);
+
+            /* Step 2. Create an interface list for this element */
+            pSymbolicLink = HeapAlloc(GetProcessHeap(), 0, (dwLength + 1) * sizeof(WCHAR));
+            if (!pSymbolicLink)
+            {
+                RegCloseKey(hReferenceKey);
+                RegCloseKey(hDeviceInstanceKey);
+                RegCloseKey(hInterfaceKey);
+                return ERROR_NOT_ENOUGH_MEMORY;
+            }
+            rc = RegQueryValueExW(hReferenceKey, SymbolicLink, NULL, NULL, (LPBYTE)pSymbolicLink, &dwLength);
+            pSymbolicLink[dwLength / sizeof(WCHAR)] = '\0';
             RegCloseKey(hReferenceKey);
             if (rc != ERROR_SUCCESS)
             {
-                HeapFree(GetProcessHeap(), 0, deviceInfo);
+                HeapFree(GetProcessHeap(), 0, pSymbolicLink);
                 RegCloseKey(hDeviceInstanceKey);
                 RegCloseKey(hInterfaceKey);
                 return rc;
             }
-            deviceInfo->Interface.pSymbolicLink[dwLength / sizeof(WCHAR)] = '\0';
-            TRACE("Symbolic link %s\n", debugstr_w(deviceInfo->Interface.pSymbolicLink));
-
-            /* Add this entry to the list */
-            TRACE("Entry found\n");
-            deviceInfo->IsDevice = FALSE;
-            memcpy(
-                &deviceInfo->Interface.InterfaceGuid,
-                InterfaceGuid,
-                sizeof(deviceInfo->Interface.InterfaceGuid));
-            wcscpy(deviceInfo->Interface.pInstancePath, InstancePath);
-            InsertTailList(&list->ListHead, &deviceInfo->ItemEntry);
-            list->numberOfEntries++;
+            if (!CreateDeviceInterface(deviceInfo, pSymbolicLink, InterfaceGuid, &interfaceInfo))
+            {
+                HeapFree(GetProcessHeap(), 0, pSymbolicLink);
+                RegCloseKey(hDeviceInstanceKey);
+                RegCloseKey(hInterfaceKey);
+                return GetLastError();
+            }
+            TRACE("Adding interface %s to list\n", debugstr_w(pSymbolicLink));
+            HeapFree(GetProcessHeap(), 0, pSymbolicLink);
+            InsertTailList(&deviceInfo->InterfaceListHead, &interfaceInfo->ListEntry);
         }
         RegCloseKey(hDeviceInstanceKey);
     }
     RegCloseKey(hInterfaceKey);
     return ERROR_SUCCESS;
 }
-#endif /* __WINESRC__ */
+#endif /* __REACTOS__ */
 
 /***********************************************************************
  *		SetupDiGetClassDevsExW (SETUPAPI.@)
@@ -1776,7 +1820,7 @@ HDEVINFO WINAPI SetupDiGetClassDevsExW(
             return INVALID_HANDLE_VALUE;
         }
 
-#ifdef __WINESRC__
+#ifndef __REACTOS__
         /* Special case: find serial ports by calling QueryDosDevice */
         if (IsEqualIID(class, &GUID_DEVINTERFACE_COMPORT))
             rc = SETUP_CreateSerialDeviceList(list, machine, (LPGUID)class, enumstr);
@@ -1787,9 +1831,9 @@ HDEVINFO WINAPI SetupDiGetClassDevsExW(
             ERR("Wine can only enumerate serial devices at the moment!\n");
             rc = ERROR_INVALID_PARAMETER;
         }
-#else /* __WINESRC__ */
+#else /* __REACTOS__ */
         rc = SETUP_CreateInterfaceList(list, machine, (LPGUID)class, enumstr);
-#endif /* __WINESRC__ */
+#endif /* __REACTOS__ */
         if (rc != ERROR_SUCCESS)
         {
             SetLastError(rc);
@@ -1825,7 +1869,7 @@ BOOL WINAPI SetupDiEnumDeviceInterfaces(
 {
     BOOL ret = FALSE;
 
-    TRACE("%p, %p, %s, 0x%08lx, %p\n", DeviceInfoSet, DeviceInfoData,
+    TRACE("%p, %p, %s, %ld, %p\n", DeviceInfoSet, DeviceInfoData,
      debugstr_guid(InterfaceClassGuid), MemberIndex, DeviceInterfaceData);
 
     if (!DeviceInterfaceData)
@@ -1850,8 +1894,8 @@ BOOL WINAPI SetupDiEnumDeviceInterfaces(
                     ItemList = ItemList->Flink;
                     continue;
                 }
-                InterfaceListEntry = DevInfo->InterfaceHead.Flink;
-                while (InterfaceListEntry != &DevInfo->InterfaceHead && !Found)
+                InterfaceListEntry = DevInfo->InterfaceListHead.Flink;
+                while (InterfaceListEntry != &DevInfo->InterfaceListHead && !Found)
                 {
                     struct DeviceInterface *DevItf = (struct DeviceInterface *)InterfaceListEntry;
                     if (!IsEqualIID(&DevItf->InterfaceClassGuid, InterfaceClassGuid))
@@ -1874,7 +1918,7 @@ BOOL WINAPI SetupDiEnumDeviceInterfaces(
                         DeviceInterfaceData->Reserved = (ULONG_PTR)DevItf;
                         Found = TRUE;
                     }
-                    MemberIndex--;
+                    InterfaceListEntry = InterfaceListEntry->Flink;
                 }
                 ItemList = ItemList->Flink;
             }
@@ -1911,9 +1955,9 @@ BOOL WINAPI SetupDiDestroyDeviceInfoList(HDEVINFO devinfo)
             {
                 ListEntry = RemoveHeadList(&list->ListHead);
                 deviceInfo = (struct DeviceInfoElement *)ListEntry;
-                while (!IsListEmpty(&deviceInfo->InterfaceHead))
+                while (!IsListEmpty(&deviceInfo->InterfaceListHead))
                 {
-                    InterfaceEntry = RemoveHeadList(&deviceInfo->InterfaceHead);
+                    InterfaceEntry = RemoveHeadList(&deviceInfo->InterfaceListHead);
                     HeapFree(GetProcessHeap(), 0, InterfaceEntry);
                 }
                 HeapFree(GetProcessHeap(), 0, ListEntry);
@@ -1928,6 +1972,8 @@ BOOL WINAPI SetupDiDestroyDeviceInfoList(HDEVINFO devinfo)
     }
     else
         SetLastError(ERROR_INVALID_HANDLE);
+
+    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -2036,11 +2082,10 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailW(
         SetLastError(ERROR_INVALID_PARAMETER);
     else
     {
-#if 0
-        DeviceInfo *deviceInfo = (DeviceInfo *)DeviceInterfaceData->Reserved;
-        LPCWSTR devName = deviceInfo->Interface.pSymbolicLink;
+        struct DeviceInterface *deviceInterface = (struct DeviceInterface *)DeviceInterfaceData->Reserved;
+        LPCWSTR devName = deviceInterface->SymbolicLink;
         DWORD sizeRequired = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W) +
-            lstrlenW(devName);
+            (lstrlenW(devName) + 1) * sizeof(WCHAR);
 
         if (sizeRequired > DeviceInterfaceDetailDataSize)
         {
@@ -2055,7 +2100,7 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailW(
             if (DeviceInfoData)
             {
                 memcpy(&DeviceInfoData->ClassGuid,
-                    &deviceInfo->Interface.ClassGuid,
+                    &deviceInterface->DeviceInfo->ClassGuid,
                     sizeof(GUID));
                 DeviceInfoData->DevInst = 0; /* FIXME */
                 /* Note: this appears to be dangerous, passing a private
@@ -2063,15 +2108,10 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailW(
                  * expected lifetime of the device data is the same as the
                  * HDEVINFO; once that is closed, the data are no longer valid.
                  */
-                DeviceInfoData->Reserved = (ULONG_PTR)deviceInfo;
+                DeviceInfoData->Reserved = (ULONG_PTR)deviceInterface->DeviceInfo;
             }
             ret = TRUE;
         }
-#else
-        FIXME("not implemented\n");
-        SetLastError(ERROR_GEN_FAILURE);
-        ret = FALSE;
-#endif
     }
 
     TRACE("Returning %d\n", ret);
@@ -2643,7 +2683,7 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
     lpFullGuidString = HeapAlloc(GetProcessHeap(), 0, (dwLength + 3) * sizeof(WCHAR));
     if (!lpFullGuidString)
     {
-        SetLastError(ERROR_NO_SYSTEM_RESOURCES);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         RpcStringFreeW(&lpGuidString);
         return INVALID_HANDLE_VALUE;
     }
@@ -2864,7 +2904,7 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
             {
                 struct DeviceInfoElement *deviceInfo;
 
-                if (CreateDeviceInfoElement(DeviceName, &GUID_NULL /* FIXME */, &deviceInfo))
+                if (CreateDeviceInfoElement(DeviceName, ClassGuid, &deviceInfo))
                 {
                     InsertTailList(&list->ListHead, &deviceInfo->ListEntry);
 
