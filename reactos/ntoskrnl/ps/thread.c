@@ -705,7 +705,7 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
                                     PreviousMode,
                                     DesiredAccess,
                                     NULL,
-                                    hThread);
+                                    &hThread);
 
         if (Status != STATUS_SUCCESS)
         {
@@ -747,7 +747,7 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
                                        DesiredAccess,
                                        PsThreadType,
                                        PreviousMode,
-                                       hThread);
+                                       &hThread);
         if(!NT_SUCCESS(Status))
         {
             DPRINT1("Failure to open Thread\n");
