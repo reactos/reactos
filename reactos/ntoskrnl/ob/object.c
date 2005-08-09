@@ -17,6 +17,7 @@
 
 #define UNICODE_PATH_SEP L'\\'
 #define UNICODE_NO_PATH L"..."
+#define OB_NAME_TAG TAG('O','b','N','m')
 
 typedef struct _RETENTION_CHECK_PARAMS
 {
@@ -33,78 +34,85 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
                      IN KPROCESSOR_MODE AccessMode)
 {
     NTSTATUS Status = STATUS_SUCCESS;
+    ULONG StringLength;
+    PWCHAR StringBuffer;
     UNICODE_STRING LocalName = {}; /* <= GCC 4.0 + Optimizer */
     
-    /* First Probe the String */
-    DPRINT("ObpCaptureObjectName: %wZ\n", ObjectName);
-    if (AccessMode != KernelMode)
+    /* Initialize the Input String */
+    RtlInitUnicodeString(CapturedName, NULL);
+
+    /* Protect everything */
+    _SEH_TRY
     {
-        DPRINT("Probing Struct\n");
-        _SEH_TRY
+        /* First Probe the String */
+        DPRINT("ObpCaptureObjectName: %wZ\n", ObjectName);
+        if (AccessMode != KernelMode)
         {
-            /* FIXME: Explorer or win32 broken I think */
-            #if 0
             ProbeForRead(ObjectName,
                          sizeof(UNICODE_STRING),
                          sizeof(USHORT));
-            #endif
+            LocalName = *ObjectName;
+
+            ProbeForRead(LocalName.Buffer,
+                         LocalName.Length,
+                         sizeof(WCHAR));
+        }
+        else
+        {
+            /* No probing needed */
             LocalName = *ObjectName;
         }
-        _SEH_HANDLE
+
+        /* Make sure there really is a string */
+        DPRINT("Probing OK\n");
+        if ((StringLength = LocalName.Length))
         {
-            Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END;
-        
-        if (NT_SUCCESS(Status))
-        {
-            DPRINT("Probing OK\n");
-             _SEH_TRY
+            /* Check that the size is a valid WCHAR multiple */
+            if ((StringLength & (sizeof(WCHAR) - 1)) ||
+                /* Check that the NULL-termination below will work */
+                (StringLength == (MAXUSHORT - sizeof(WCHAR) + 1)))
             {
-                #if 0
-                DPRINT("Probing buffer\n");
-                ProbeForRead(LocalName.Buffer,
-                             LocalName.Length,
-                             sizeof(USHORT));
-                #endif
+                /* PS: Please keep the checks above expanded for clarity */
+                DPRINT1("Invalid String Length\n");
+                Status = STATUS_OBJECT_NAME_INVALID;
             }
-            _SEH_HANDLE
+            else
             {
-                Status = _SEH_GetExceptionCode();
+                /* Allocate a non-paged buffer for this string */
+                DPRINT("Capturing String\n");
+                CapturedName->Length = StringLength;
+                CapturedName->MaximumLength = StringLength + sizeof(WCHAR);
+                if ((StringBuffer = ExAllocatePoolWithTag(NonPagedPool, 
+                                                          StringLength + sizeof(WCHAR),
+                                                          OB_NAME_TAG)))
+                {                                    
+                    /* Copy the string and null-terminate it */
+                    RtlMoveMemory(StringBuffer, LocalName.Buffer, StringLength);
+                    StringBuffer[StringLength / sizeof(WCHAR)] = UNICODE_NULL;
+                    CapturedName->Buffer = StringBuffer;
+                    DPRINT("String Captured: %wZ\n", CapturedName);
+                }
+                else
+                {
+                    /* Fail */
+                    DPRINT1("Out of Memory!\n");
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                }
             }
-            _SEH_END;
-        }
-        
-        /* Fail if anything up to here died */
-        if (!NT_SUCCESS(Status)) 
-        {
-            DPRINT1("Probing failed\n");
-            return Status;
         }
     }
-    else
+    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
     {
-        LocalName = *ObjectName;
+        Status = _SEH_GetExceptionCode();
+
+        /* Remember to free the buffer in case of failure */
+        DPRINT1("Failed\n");
+        if (StringBuffer) ExFreePool(StringBuffer);
     }
+    _SEH_END;
     
-    /* Make sure there really is a string */
-    DPRINT("Probing OK\n");
-    if (LocalName.Length)
-    {
-        /* Allocate a non-paged buffer for this string */
-        DPRINT("Capturing String\n");
-        CapturedName->Length = LocalName.Length;
-        CapturedName->MaximumLength = LocalName.Length + sizeof(WCHAR);
-        CapturedName->Buffer = ExAllocatePoolWithTag(NonPagedPool, 
-                                                     CapturedName->MaximumLength,
-                                                     TAG('O','b','N','m'));
-                                                     
-        /* Copy the string and null-terminate it */
-        RtlMoveMemory(CapturedName->Buffer, LocalName.Buffer, LocalName.Length);
-        CapturedName->Buffer[LocalName.Length / sizeof(WCHAR)] = UNICODE_NULL;
-        DPRINT("String Captured: %p, %wZ\n", CapturedName, CapturedName);
-    }
-    
+    /* Return */
+    DPRINT("Returning: %lx\n", Status);
     return Status;
 }
 
@@ -125,115 +133,102 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
     DPRINT("ObpCaptureObjectAttributes\n");
     RtlZeroMemory(ObjectCreateInfo, sizeof(OBJECT_CREATE_INFORMATION));
     
-    /* Check if we got Oba */
-    if (ObjectAttributes)
+    /* SEH everything here for protection */
+    _SEH_TRY
     {
-        if (AccessMode != KernelMode)
-        {
-            DPRINT("Probing OBA\n");
-            _SEH_TRY
-            {
-                /* FIXME: SMSS SENDS BULLSHIT. */
-                #if 0
-                ProbeForRead(ObjectAttributes,
-                             sizeof(ObjectAttributes),
-                             sizeof(ULONG));
-                #endif
-            }
-            _SEH_HANDLE
-            {
-                Status = _SEH_GetExceptionCode();
-            }
-            _SEH_END;
-        }
-        
-        /* Validate the Size */
-        DPRINT("Validating OBA\n");
-        if (ObjectAttributes->Length != sizeof(OBJECT_ATTRIBUTES))
-        {
-            Status = STATUS_INVALID_PARAMETER;
-        }
-
-        /* Fail if SEH or Size Validation failed */
-        if(!NT_SUCCESS(Status))
-        {
-            DPRINT1("ObpCaptureObjectAttributes failed to probe object attributes\n");
-            goto fail;
-        }
-        
-        /* Set some Create Info */
-        DPRINT("Creating OBCI\n");
-        ObjectCreateInfo->RootDirectory = ObjectAttributes->RootDirectory;
-        ObjectCreateInfo->Attributes = ObjectAttributes->Attributes;
-        LocalObjectName = ObjectAttributes->ObjectName;
-        SecurityDescriptor = ObjectAttributes->SecurityDescriptor;
-        SecurityQos = ObjectAttributes->SecurityQualityOfService;
-        
-        /* Validate the SD */
-        if (SecurityDescriptor)
-        {
-            DPRINT("Probing SD: %x\n", SecurityDescriptor);
-            Status = SeCaptureSecurityDescriptor(SecurityDescriptor,
-                                                 AccessMode,
-                                                 NonPagedPool,
-                                                 TRUE,
-                                                 &ObjectCreateInfo->SecurityDescriptor);
-            if(!NT_SUCCESS(Status))
-            {
-                DPRINT1("Unable to capture the security descriptor!!!\n");
-                ObjectCreateInfo->SecurityDescriptor = NULL;
-                goto fail;
-            }
-            
-            DPRINT("Probe done\n");
-            ObjectCreateInfo->SecurityDescriptorCharge = 0; /* FIXME */
-            ObjectCreateInfo->ProbeMode = AccessMode;
-        }
-        
-        /* Validate the QoS */
-        if (SecurityQos)
+        /* Check if we got Oba */
+        if (ObjectAttributes)
         {
             if (AccessMode != KernelMode)
             {
-                DPRINT("Probing QoS\n");
-                _SEH_TRY
+                DPRINT("Probing OBA\n");
+                ProbeForRead(ObjectAttributes,
+                             sizeof(OBJECT_ATTRIBUTES),
+                             sizeof(ULONG));
+            }
+        
+            /* Validate the Size and Attributes */
+            DPRINT("Validating OBA\n");
+            if ((ObjectAttributes->Length != sizeof(OBJECT_ATTRIBUTES)) ||
+                (ObjectAttributes->Attributes & ~OBJ_VALID_ATTRIBUTES))
+            {
+                Status = STATUS_INVALID_PARAMETER;
+                DPRINT1("Invalid Size: %lx or Attributes: %lx\n",
+                       ObjectAttributes->Length, ObjectAttributes->Attributes); 
+                goto Quickie;
+            }
+        
+            /* Set some Create Info */
+            DPRINT("Creating OBCI\n");
+            ObjectCreateInfo->RootDirectory = ObjectAttributes->RootDirectory;
+            ObjectCreateInfo->Attributes = ObjectAttributes->Attributes;
+            LocalObjectName = ObjectAttributes->ObjectName;
+            SecurityDescriptor = ObjectAttributes->SecurityDescriptor;
+            SecurityQos = ObjectAttributes->SecurityQualityOfService;
+        
+            /* Validate the SD */
+            if (SecurityDescriptor)
+            {
+                DPRINT("Probing SD: %x\n", SecurityDescriptor);
+                Status = SeCaptureSecurityDescriptor(SecurityDescriptor,
+                                                     AccessMode,
+                                                     NonPagedPool,
+                                                     TRUE,
+                                                     &ObjectCreateInfo->SecurityDescriptor);
+                if(!NT_SUCCESS(Status))
                 {
+                    DPRINT1("Unable to capture the security descriptor!!!\n");
+                    ObjectCreateInfo->SecurityDescriptor = NULL;
+                    goto Quickie;
+                }
+            
+                DPRINT("Probe done\n");
+                ObjectCreateInfo->SecurityDescriptorCharge = 2048; /* FIXME */
+                ObjectCreateInfo->ProbeMode = AccessMode;
+            }
+        
+            /* Validate the QoS */
+            if (SecurityQos)
+            {
+                if (AccessMode != KernelMode)
+                {
+                    DPRINT("Probing QoS\n");
                     ProbeForRead(SecurityQos,
                                  sizeof(SECURITY_QUALITY_OF_SERVICE),
                                  sizeof(ULONG));
                 }
-                _SEH_HANDLE
-                {
-                    Status = _SEH_GetExceptionCode();
-                }
-                _SEH_END;
-            }
-
-            if(!NT_SUCCESS(Status))
-            {
-                DPRINT1("Unable to capture QoS!!!\n");
-                goto fail;
-            }
             
-            ObjectCreateInfo->SecurityQualityOfService = *SecurityQos;
-            ObjectCreateInfo->SecurityQos = &ObjectCreateInfo->SecurityQualityOfService;
+                /* Save Info */
+                ObjectCreateInfo->SecurityQualityOfService = *SecurityQos;
+                ObjectCreateInfo->SecurityQos = &ObjectCreateInfo->SecurityQualityOfService;
+            }
+        }
+        else
+        {
+            LocalObjectName = NULL;
         }
     }
-    
-    /* Clear Local Object Name */
-    DPRINT("Clearing name\n");
-    RtlZeroMemory(ObjectName, sizeof(UNICODE_STRING));
-    
+    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    {
+        Status = _SEH_GetExceptionCode();
+        DPRINT1("Failed\n");
+        goto Quickie;
+    }
+    _SEH_END;
+
     /* Now check if the Object Attributes had an Object Name */
     if (LocalObjectName)
     {
-        DPRINT("Name Buffer: %x\n", LocalObjectName->Buffer);
+        DPRINT("Name Buffer: %wZ\n", LocalObjectName);
         Status = ObpCaptureObjectName(ObjectName,
                                       LocalObjectName,
                                       AccessMode);
     }
     else
     {
+        /* Clear the string */
+        RtlInitUnicodeString(ObjectName, NULL);
+
         /* He can't have specified a Root Directory */
         if (ObjectCreateInfo->RootDirectory)
         {
@@ -242,14 +237,14 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
         }
     }
     
-fail:
+Quickie:
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to capture, cleaning up\n");
         ObpReleaseCapturedAttributes(ObjectCreateInfo);
     }
     
-    DPRINT("Return to caller\n");
+    DPRINT("Return to caller %x\n", Status);
     return Status;
 }
 
@@ -795,7 +790,7 @@ ObCreateObject(IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
     /* Capture all the info */
     DPRINT("Capturing Create Info\n");
     Status = ObpCaptureObjectAttributes(ObjectAttributes,
-                                        AccessMode,
+                                        ObjectAttributesAccessMode,
                                         Type,
                                         ObjectCreateInfo,
                                         &ObjectName);

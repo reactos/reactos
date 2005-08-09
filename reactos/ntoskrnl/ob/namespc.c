@@ -65,30 +65,26 @@ ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
    PVOID Object = NULL;
    UNICODE_STRING RemainingPath;
    UNICODE_STRING ObjectName;
-   OBJECT_ATTRIBUTES ObjectAttributes;
    OBJECT_CREATE_INFORMATION ObjectCreateInfo;
    NTSTATUS Status;
 
    PAGED_CODE();
 
-   InitializeObjectAttributes(&ObjectAttributes,
-			      ObjectPath,
-			      Attributes | OBJ_OPENIF,
-			      NULL,
-			      NULL);
-    
-   /* Capture all the info */
-   DPRINT("Capturing Create Info\n");
-   Status = ObpCaptureObjectAttributes(&ObjectAttributes,
-                                       AccessMode,
-                                       ObjectType,
-                                       &ObjectCreateInfo,
-                                       &ObjectName);
+   /* Capture the name */
+   DPRINT("Capturing Name\n");
+   Status = ObpCaptureObjectName(&ObjectName, ObjectPath, AccessMode);
    if (!NT_SUCCESS(Status))
      {
-	DPRINT("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
+	DPRINT("ObpCaptureObjectName() failed (Status %lx)\n", Status);
 	return Status;
      }
+
+   /* 
+    * Create a fake ObjectCreateInfo structure. Note that my upcoming
+    * ObFindObject refactoring will remove the need for this hack.
+    */
+   ObjectCreateInfo.RootDirectory = NULL;
+   ObjectCreateInfo.Attributes = Attributes;
      
    Status = ObFindObject(&ObjectCreateInfo,
                          &ObjectName,
@@ -96,7 +92,6 @@ ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
 			 &RemainingPath,
 			 ObjectType);
 
-   ObpReleaseCapturedAttributes(&ObjectCreateInfo);
    if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
 
    if (!NT_SUCCESS(Status))

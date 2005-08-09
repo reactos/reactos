@@ -549,13 +549,15 @@ KeWaitForMultipleObjects(ULONG Count,
         }
 
         /* Block the Thread */
-        DPRINT("Blocking the Thread: %d, %d, %d, %x\n", Alertable, WaitMode, WaitReason, KeGetCurrentThread());
+        DPRINT("Blocking the Thread: %d, %d, %d, %x\n", Alertable, WaitMode, 
+                WaitReason, KeGetCurrentThread());
         KiBlockThread(&Status,
                       Alertable,
                       WaitMode,
                       (UCHAR)WaitReason);
 
         /* Check if we were executing an APC */
+        DPRINT("Thread is back\n");
         if (Status != STATUS_KERNEL_APC) {
 
             /* Return Status */
@@ -568,7 +570,7 @@ KeWaitForMultipleObjects(ULONG Count,
     } while (TRUE);
 
     /* Release the Lock, we are done */
-    DPRINT("Returning from KeWaitForMultipleObjects(), %x. Status: %d\n", KeGetCurrentThread(), Status);
+    DPRINT("Returning, %x. Status: %d\n",  KeGetCurrentThread(), Status);
     KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
     return Status;
 
@@ -577,7 +579,8 @@ DontWait:
     KiAdjustQuantumThread(CurrentThread);
 
     /* Release & Return */
-    DPRINT("Returning from KeWaitForMultipleObjects(), %x. Status: %d\n. We did not wait.", KeGetCurrentThread(), Status);
+    DPRINT("Returning, %x. Status: %d\n. We did not wait.", 
+            KeGetCurrentThread(), Status);
     KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
     return Status;
 }
