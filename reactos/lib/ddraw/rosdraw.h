@@ -34,10 +34,7 @@ typedef struct
 
 	DDHALINFO HalInfo;	
     D3DHAL_GLOBALDRIVERDATA	D3dDriverData;
-
 	LPDDSURFACEDESC pD3dTextureFormats;
-	LPDWORD pdwFourCC;
-	LPVIDMEM pvmList;
 
     HWND window;
     DWORD cooperative_level;

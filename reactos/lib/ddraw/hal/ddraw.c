@@ -41,8 +41,9 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 		return DDERR_INVALIDPARAMS;
 
 	This->pD3dTextureFormats = HeapAlloc(GetProcessHeap(), 0, sizeof(DDSURFACEDESC) * This->D3dDriverData.dwNumTextureFormats);
-	This->pdwFourCC = HeapAlloc(GetProcessHeap(), 0, sizeof(DWORD) * This->HalInfo.ddCaps.dwNumFourCCCodes);
-	This->pvmList = HeapAlloc(GetProcessHeap(), 0, sizeof(VIDMEM) * This->HalInfo.vmiData.dwNumHeaps);
+	This->HalInfo.vmiData.pvmList = HeapAlloc(GetProcessHeap(), 0, sizeof(VIDMEM) * This->HalInfo.vmiData.dwNumHeaps);
+	This->DirectDrawGlobal.lpdwFourCC = HeapAlloc(GetProcessHeap(), 0, sizeof(DWORD) * This->HalInfo.ddCaps.dwNumFourCCCodes);
+	This->DirectDrawGlobal.lpZPixelFormats = HeapAlloc(GetProcessHeap(), 0, sizeof(DDPIXELFORMAT) * This->DirectDrawGlobal.dwNumZPixelFormats);
 
 	if(!DdQueryDirectDrawObject (
 		&This->DirectDrawGlobal, 
@@ -54,9 +55,19 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 		&This->D3dDriverData,
 		&This->DriverCallbacks.D3dBufferCallbacks, 
 		This->pD3dTextureFormats, 
-		This->pdwFourCC, 
-		This->pvmList ))
+		This->DirectDrawGlobal.lpdwFourCC, 
+		This->HalInfo.vmiData.pvmList ))
 		return DDERR_INVALIDPARAMS;
+		
+	This->DirectDrawGlobal.vmiData.dwDisplayWidth = This->Width;
+	This->DirectDrawGlobal.vmiData.dwDisplayHeight = This->Height;
+	This->DirectDrawGlobal.vmiData.lDisplayPitch =  This->Width * This->Bpp/8;
+	//This->DirectDrawGlobal.vmiData.ddpfDisplay; // This has to be filled
+	This->DirectDrawGlobal.vmiData.dwOffscreenAlign = 64;
+	This->DirectDrawGlobal.vmiData.dwOverlayAlign = 64;
+	This->DirectDrawGlobal.vmiData.dwTextureAlign = 64;
+	This->DirectDrawGlobal.vmiData.dwZBufferAlign = 64;
+	This->DirectDrawGlobal.vmiData.dwAlphaAlign = 64;
 
 	return DD_OK;
 }
@@ -74,8 +85,8 @@ VOID Hal_DirectDraw_Release (LPDIRECTDRAW7 iface)
 			
 	if(This->pD3dTextureFormats)
 		HeapFree(GetProcessHeap(), 0, This->pD3dTextureFormats);
-	if(This->pdwFourCC)
-		HeapFree(GetProcessHeap(), 0, This->pdwFourCC);
-	if(This->pvmList)
-		HeapFree(GetProcessHeap(), 0, This->pvmList);
+	if(This->DirectDrawGlobal.lpdwFourCC)
+		HeapFree(GetProcessHeap(), 0, This->DirectDrawGlobal.lpdwFourCC);
+	if(This->HalInfo.vmiData.pvmList)
+		HeapFree(GetProcessHeap(), 0, This->HalInfo.vmiData.pvmList);
 }
