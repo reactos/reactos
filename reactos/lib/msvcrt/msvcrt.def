@@ -59,7 +59,7 @@ $I10_OUTPUT=MSVCRT_I10_OUTPUT @1
 ?what@exception@@UBEPBDXZ=__thiscall_MSVCRT_what_exception @51
 ??1type_info@@UAE@XZ=MSVCRT_type_info_dtor@4
 
-;?name@type_info@@QBEPBDXZ=__thiscall_MSVCRT_type_info_name @44
+?name@type_info@@QBEPBDXZ=__thiscall_MSVCRT_type_info_name @44
 ;??0bad_cast@@QAE@PBD@Z
 ;??0bad_cast@@AAE@PBQBD@Z
 ;??_Fbad_cast@@QAEXXZ
