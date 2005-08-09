@@ -1299,7 +1299,12 @@ KeSetAffinityThread(PKTHREAD Thread,
 
     DPRINT("KeSetAffinityThread(Thread %x, Affinity %x)\n", Thread, Affinity);
 
-    ASSERT(Affinity & ((1 << KeNumberProcessors) - 1));
+    /* Verify correct affinity */
+    if ((Affinity & Thread->ApcStatePointer[0]->Process->Affinity) !=
+        Affinity || !Affinity)
+    {
+        KEBUGCHECK(INVALID_AFFINITY_SET);
+    }
 
     OldIrql = KeAcquireDispatcherDatabaseLock();
 

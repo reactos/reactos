@@ -213,7 +213,7 @@ PsInitProcessManagment(VOID)
 
    /* System threads may run on any processor. */
    RtlZeroMemory(PsInitialSystemProcess, sizeof(EPROCESS));
-   PsInitialSystemProcess->Pcb.Affinity = 0xFFFFFFFF;
+   PsInitialSystemProcess->Pcb.Affinity = KeActiveProcessors;
    PsInitialSystemProcess->Pcb.IopmOffset = 0xffff;
    PsInitialSystemProcess->Pcb.BasePriority = PROCESS_PRIO_NORMAL;
    PsInitialSystemProcess->Pcb.QuantumReset = 6;

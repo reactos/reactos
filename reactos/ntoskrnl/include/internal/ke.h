@@ -228,6 +228,12 @@ KeQueryBasePriorityThread(IN PKTHREAD Thread);
 
 VOID
 STDCALL
+KiSetPriorityThread(PKTHREAD Thread,
+                    KPRIORITY Priority,
+                    PBOOLEAN Released);
+
+VOID
+STDCALL
 KeStackAttachProcess (
     IN struct _KPROCESS* Process,
     OUT PKAPC_STATE ApcState

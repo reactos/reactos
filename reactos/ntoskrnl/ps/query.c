@@ -1194,6 +1194,8 @@ NtSetInformationThread (IN HANDLE ThreadHandle,
                     SetInformationData[ThreadInformationClass].Size);
     }
 
+  /* FIXME: This is REALLY wrong. Some types don't need THREAD_SET_INFORMATION */
+  /* FIXME: We should also check for certain things before doing the reference */
   Status = ObReferenceObjectByHandle (ThreadHandle,
 				      THREAD_SET_INFORMATION,
 				      PsThreadType,
@@ -1218,7 +1220,19 @@ NtSetInformationThread (IN HANDLE ThreadHandle,
 	     break;
 
            case ThreadAffinityMask:
-	     Status = KeSetAffinityThread(&Thread->Tcb, u.Affinity);
+               
+               /* Check if this is valid */
+               DPRINT1("%lx, %lx\n", Thread->ThreadsProcess->Pcb.Affinity, u.Affinity);
+               if ((Thread->ThreadsProcess->Pcb.Affinity & u.Affinity) !=
+                   u.Affinity)
+               {
+                   DPRINT1("Wrong affinity given\n");
+                   Status = STATUS_INVALID_PARAMETER;
+               }
+               else
+               {
+	                Status = KeSetAffinityThread(&Thread->Tcb, u.Affinity);
+               }
 	     break;
 
            case ThreadImpersonationToken:
