@@ -3606,7 +3606,7 @@ SignalInitEvent()
 
   InitializeObjectAttributes(&ObjectAttributes,
     &UnicodeString,
-    EVENT_ALL_ACCESS,
+    0,
     0,
     NULL);
   Status = NtOpenEvent(&ReactOSInitEvent,
