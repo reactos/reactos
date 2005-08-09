@@ -222,6 +222,10 @@ KeRundownThread(VOID);
 
 NTSTATUS KeReleaseThread(PKTHREAD Thread);
 
+LONG
+STDCALL
+KeQueryBasePriorityThread(IN PKTHREAD Thread);
+
 VOID
 STDCALL
 KeStackAttachProcess (

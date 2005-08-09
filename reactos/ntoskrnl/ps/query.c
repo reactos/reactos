@@ -1329,7 +1329,7 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
 	 u.TBI.ClientId = Thread->Cid;
 	 u.TBI.AffinityMask = Thread->Tcb.Affinity;
 	 u.TBI.Priority = Thread->Tcb.Priority;
-	 u.TBI.BasePriority = Thread->Tcb.BasePriority;
+	 u.TBI.BasePriority = KeQueryBasePriorityThread(&Thread->Tcb);
 	 break;
 
        case ThreadTimes:

@@ -1026,6 +1026,34 @@ KeSetSystemAffinityThread(IN KAFFINITY Affinity)
     }
 }
 
+LONG
+STDCALL
+KeQueryBasePriorityThread(IN PKTHREAD Thread)
+{
+    LONG BasePriorityIncrement;
+    KIRQL OldIrql;
+    PKPROCESS Process;
+
+    /* Lock the Dispatcher Database */
+    OldIrql = KeAcquireDispatcherDatabaseLock();
+
+    /* Get the Process */
+    Process = Thread->ApcStatePointer[0]->Process;
+
+    /* Calculate the BPI */
+    BasePriorityIncrement = Thread->BasePriority - Process->BasePriority;
+
+    /* If saturation occured, return the SI instead */
+    if (Thread->Saturation) BasePriorityIncrement = (HIGH_PRIORITY + 1) / 2 *
+                                                    Thread->Saturation;
+
+    /* Release Lock */
+    KeReleaseDispatcherDatabaseLock(OldIrql);
+
+    /* Return Increment */
+    return BasePriorityIncrement;
+}
+
 /*
  * @implemented
  */
