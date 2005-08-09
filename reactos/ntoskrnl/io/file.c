@@ -916,8 +916,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
 
       /* HACK */
       FileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
-
-      DPRINT1("%wZ\n", ObjectAttributes->ObjectName);
+      DPRINT("%wZ\n", ObjectAttributes->ObjectName);
 
       ObDereferenceObject (DeviceObject);
    }
