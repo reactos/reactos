@@ -290,7 +290,6 @@
 @ stub SetupDiDeleteDevRegKey
 @ stdcall SetupDiDeleteDeviceInfo(long ptr)
 @ stub SetupDiDeleteDeviceInterfaceData
-@ stub SetupDiDeleteDeviceRegKey
 @ stub SetupDiDestroyClassImageList
 @ stdcall SetupDiDestroyDeviceInfoList(long)
 @ stdcall SetupDiDestroyDriverInfoList(long ptr long)
@@ -345,7 +344,7 @@
 @ stub SetupDiGetINFClassW
 @ stub SetupDiGetSelectedDevice
 @ stub SetupDiGetSelectedDriverA
-@ stub SetupDiGetSelectedDriverW
+@ stdcall SetupDiGetSelectedDriverW(ptr ptr ptr)
 @ stub SetupDiGetWizardPage
 @ stdcall SetupDiInstallClassA(long str long ptr)
 @ stub SetupDiInstallClassExA
@@ -379,7 +378,7 @@
 @ stub SetupDiSetDriverInstallParamsW
 @ stub SetupDiSetSelectedDevice
 @ stub SetupDiSetSelectedDriverA
-@ stub SetupDiSetSelectedDriverW
+@ stdcall SetupDiSetSelectedDriverW(ptr ptr ptr)
 @ stub SetupDiUnremoveDevice
 @ stub SetupDuplicateDiskSpaceListA
 @ stub SetupDuplicateDiskSpaceListW

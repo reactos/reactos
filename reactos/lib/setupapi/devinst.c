@@ -152,6 +152,9 @@ struct DeviceInfoElement /* Element of DeviceInfoSet.ListHead */
     /* If CreationFlags contains DICD_INHERIT_CLASSDRVS, this list is invalid */
     /* If the driver is not searched/detected, this list is empty */
     LIST_ENTRY DriverListHead; /* List of struct DriverInfoElement */
+    /* Points into DriverListHead list. The pointer is NULL if no driver is
+     * currently chosen. */
+    struct DriverInfoElement *SelectedDriver;
 
     /* List of interfaces implemented by this device */
     LIST_ENTRY InterfaceHead; /* List of struct DeviceInterface */
@@ -167,13 +170,9 @@ struct DeviceInfoSet /* HDEVINFO */
     HKEY HKLM; /* Local or distant HKEY_LOCAL_MACHINE registry key */
 
     /* Flags is a combination of:
-     * - DI_FLAGSEX_DIDINFOLIST
      * - DI_DIDCLASS
-     * - DI_MULTMFGS
-     *       Set by SetupDiBuildDriverInfoList if drivers of
-     *       multiple manufacturers found
-     * - DI_FLAGSEX_DIDCOMPATINFO
-     * - DI_COMPAT_FROM_CLASS
+     *       Set when the class driver list is created
+     * - DI_COMPAT_FROM_CLASS (FIXME: not supported)
      *       Forces SetupDiBuildDriverInfoList to build a class drivers list
      * FlagsEx is a combination of:
      */
@@ -182,6 +181,9 @@ struct DeviceInfoSet /* HDEVINFO */
 
     /* If the driver is not searched/detected, this list is empty */
     LIST_ENTRY DriverListHead; /* List of struct DriverInfoElement */
+    /* Points into DriverListHead list. The pointer is NULL if no driver is
+     * currently chosen. */
+    struct DriverInfoElement *SelectedDriver;
 
     LIST_ENTRY ListHead; /* List of struct DeviceInfoElement */
 };
@@ -1156,6 +1158,39 @@ end:
     return ret;
 }
 
+static BOOL
+CreateDeviceInfoElement(
+    IN LPCWSTR InstancePath,
+    LPCGUID pClassGuid,
+    OUT struct DeviceInfoElement **pDeviceInfo)
+{
+    struct DeviceInfoElement *deviceInfo;
+
+    *pDeviceInfo = NULL;
+
+    deviceInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(struct DeviceInfoElement) + (wcslen(InstancePath) + 1) * sizeof(WCHAR));
+    if (!deviceInfo)
+    {
+        SetLastError(ERROR_NO_SYSTEM_RESOURCES);
+        return FALSE;
+    }
+    wcscpy(deviceInfo->Data, InstancePath);
+    deviceInfo->DeviceName = deviceInfo->Data;
+    deviceInfo->UniqueId = wcsrchr(deviceInfo->Data, '\\');
+    deviceInfo->DeviceDescription = NULL;
+    memcpy(&deviceInfo->ClassGuid, pClassGuid, sizeof(GUID));
+    deviceInfo->CreationFlags = 0;
+    deviceInfo->hwndParent = NULL;
+    deviceInfo->Flags = 0; /* FIXME */
+    deviceInfo->FlagsEx = 0; /* FIXME */
+    deviceInfo->SelectedDriver = NULL;
+    InitializeListHead(&deviceInfo->DriverListHead);
+    InitializeListHead(&deviceInfo->InterfaceHead);
+
+    *pDeviceInfo = deviceInfo;
+    return TRUE;
+}
+
 static LONG SETUP_CreateDevListFromEnumerator(
        struct DeviceInfoSet *list,
        LPCGUID pClassGuid OPTIONAL,
@@ -1252,24 +1287,12 @@ static LONG SETUP_CreateDevListFromEnumerator(
             }
 
             /* Add the entry to the list */
-            deviceInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(struct DeviceInfoElement) + (wcslen(InstancePath) + 1) * sizeof(WCHAR));
-            if (!deviceInfo)
+            if (!CreateDeviceInfoElement(InstancePath, pClassGuid, &deviceInfo))
             {
                 RegCloseKey(hDeviceIdKey);
-                return ERROR_NO_SYSTEM_RESOURCES;
+                return GetLastError();
             }
             TRACE("Adding '%S' to device info set %p\n", InstancePath, list);
-            wcscpy(deviceInfo->Data, InstancePath);
-            deviceInfo->DeviceName = deviceInfo->Data;
-            deviceInfo->UniqueId = &deviceInfo->Data[pEndOfInstancePath - InstancePath + 1];
-            deviceInfo->DeviceDescription = NULL;
-            memcpy(&deviceInfo->ClassGuid, pClassGuid, sizeof(GUID));
-            deviceInfo->CreationFlags = 0;
-            deviceInfo->hwndParent = NULL;
-            deviceInfo->Flags = 0; /* FIXME */
-            deviceInfo->FlagsEx = 0; /* FIXME */
-            InitializeListHead(&deviceInfo->DriverListHead);
-            InitializeListHead(&deviceInfo->InterfaceHead);
             InsertTailList(&list->ListHead, &deviceInfo->ListEntry);
         }
         RegCloseKey(hDeviceIdKey);
@@ -2841,25 +2864,8 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
             {
                 struct DeviceInfoElement *deviceInfo;
 
-                deviceInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(struct DeviceInfoElement) + (wcslen(DeviceName) + 1) * sizeof(WCHAR));
-                if (!deviceInfo)
+                if (CreateDeviceInfoElement(DeviceName, &GUID_NULL /* FIXME */, &deviceInfo))
                 {
-                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                }
-                else
-                {
-                    /* Fill members of the new structure */
-                    wcscpy(deviceInfo->Data, DeviceName);
-                    deviceInfo->DeviceName = deviceInfo->Data;
-                    deviceInfo->UniqueId = wcsrchr(deviceInfo->Data, '\\');
-                    deviceInfo->DeviceDescription = NULL;
-                    //FIXME memcpy(&deviceInfo->ClassGuid, pClassGuid, sizeof(GUID));
-                    deviceInfo->CreationFlags = 0;
-                    deviceInfo->hwndParent = hwndParent;
-                    deviceInfo->Flags = 0; /* FIXME */
-                    deviceInfo->FlagsEx = 0; /* FIXME */
-                    InitializeListHead(&deviceInfo->DriverListHead);
-                    InitializeListHead(&deviceInfo->InterfaceHead);
                     InsertTailList(&list->ListHead, &deviceInfo->ListEntry);
 
                     if (!DeviceInfoData)
@@ -2900,8 +2906,7 @@ AddDriverToList(
     IN LPCWSTR ManufacturerName,
     FILETIME DriverDate,
     DWORDLONG DriverVersion,
-    IN DWORD Rank,
-    IN DWORD SubRank)
+    IN DWORD Rank)
 {
     struct DriverInfoElement *driverInfo;
     DWORD RequiredSize = 128; /* Initial buffer size */
@@ -2963,7 +2968,8 @@ AddDriverToList(
         return FALSE;
     }
 
-    TRACE("Adding driver '%S' [%S/%S]\n", DeviceDescription, InfFile, InfInstallSection);
+    TRACE("Adding driver '%S' [%S/%S] (Rank 0x%lx)\n",
+        DeviceDescription, InfFile, InfInstallSection, Rank);
 
     driverInfo->Info.DriverType = DriverType;
     driverInfo->Info.Reserved = (ULONG_PTR)driverInfo;
@@ -3168,6 +3174,7 @@ SetupDiBuildDriverInfoList(
         if (Result)
         {
             LPCWSTR filename;
+
             for (filename = (LPCWSTR)Buffer; *filename; filename += wcslen(filename) + 1)
             {
                 INFCONTEXT ContextManufacturer, ContextDevice;
@@ -3259,7 +3266,7 @@ SetupDiBuildDriverInfoList(
                                 ProviderName,
                                 ManufacturerName,
                                 DriverDate, DriverVersion,
-                                0, 0))
+                                0))
                             {
                                 break;
                             }
@@ -3299,9 +3306,8 @@ SetupDiBuildDriverInfoList(
                                     HeapFree(GetProcessHeap(), 0, DeviceId);
                                     goto done;
                                 }
-                                DriverRank = 0;
                                 DriverAlreadyAdded = FALSE;
-                                for (currentId = (LPCWSTR)HardwareIDs; !DriverAlreadyAdded && *currentId; currentId += wcslen(currentId) + 1, DriverRank++)
+                                for (DriverRank = 0, currentId = (LPCWSTR)HardwareIDs; !DriverAlreadyAdded && *currentId; currentId += wcslen(currentId) + 1, DriverRank++)
                                 {
                                     if (wcscmp(DeviceId, currentId) == 0)
                                     {
@@ -3313,13 +3319,13 @@ SetupDiBuildDriverInfoList(
                                             ProviderName,
                                             ManufacturerName,
                                             DriverDate, DriverVersion,
-                                            DriverRank, i);
+                                            DriverRank  + (i == 2 ? 0 : 0x1000 + i - 3));
                                         DriverAlreadyAdded = TRUE;
                                     }
                                 }
                                 if (CompatibleIDs)
                                 {
-                                    for (currentId = (LPCWSTR)CompatibleIDs; !DriverAlreadyAdded && *currentId; currentId += wcslen(currentId) + 1, DriverRank++)
+                                    for (DriverRank = 0, currentId = (LPCWSTR)CompatibleIDs; !DriverAlreadyAdded && *currentId; currentId += wcslen(currentId) + 1, DriverRank++)
                                     {
                                         if (wcscmp(DeviceId, currentId) == 0)
                                         {
@@ -3331,7 +3337,7 @@ SetupDiBuildDriverInfoList(
                                                 ProviderName,
                                                 ManufacturerName,
                                                 DriverDate, DriverVersion,
-                                                DriverRank, i);
+                                                DriverRank + (i == 2 ? 0x2000 : 0x3000 + i - 3));
                                             DriverAlreadyAdded = TRUE;
                                         }
                                     }
@@ -3359,6 +3365,17 @@ SetupDiBuildDriverInfoList(
     }
 
 done:
+    if (ret)
+    {
+        if (DeviceInfoData)
+        {
+            struct DeviceInfoElement *deviceInfo = (struct DeviceInfoElement *)DeviceInfoData;
+            deviceInfo->Flags |= DI_DIDCOMPAT;
+        }
+        else
+            list->Flags |= DI_DIDCLASS;
+    }
+
     HeapFree(GetProcessHeap(), 0, ProviderName);
     HeapFree(GetProcessHeap(), 0, ManufacturerName);
     HeapFree(GetProcessHeap(), 0, ManufacturerSection);
@@ -3367,6 +3384,7 @@ done:
     if (hInf != INVALID_HANDLE_VALUE)
         SetupCloseInfFile(hInf);
     HeapFree(GetProcessHeap(), 0, Buffer);
+
     TRACE("Returning %d\n", ret);
     return ret;
 }
@@ -3522,25 +3540,11 @@ SetupDiOpenDeviceInfoW(
                 return FALSE;
             }
 
-            deviceInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(struct DeviceInfoElement) + (wcslen(DeviceInstanceId) + 1) * sizeof(WCHAR));
-            if (!deviceInfo)
+            if (!CreateDeviceInfoElement(DeviceInstanceId, &GUID_NULL /* FIXME */, &deviceInfo))
             {
                 RegCloseKey(hKey);
-                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
                 return FALSE;
             }
-
-            wcscpy(deviceInfo->Data, DeviceInstanceId);
-            deviceInfo->DeviceName = deviceInfo->Data;
-            //FIXME deviceInfo->UniqueId = &deviceInfo->Data[pEndOfInstancePath - InstancePath + 1];
-            deviceInfo->DeviceDescription = NULL;
-            //FIXME memcpy(&deviceInfo->ClassGuid, FIXME, sizeof(GUID));
-            deviceInfo->CreationFlags = 0;
-            deviceInfo->hwndParent = hwndParent;
-            deviceInfo->Flags = 0; /* FIXME */
-            deviceInfo->FlagsEx = 0; /* FIXME */
-            InitializeListHead(&deviceInfo->DriverListHead);
-            InitializeListHead(&deviceInfo->InterfaceHead);
             InsertTailList(&list->ListHead, &deviceInfo->ListEntry);
 
             RegCloseKey(hKey);
@@ -3682,6 +3686,136 @@ SetupDiEnumDriverInfoW(
                 &DrvInfo->Info,
                 DriverInfoData->cbSize);
             ret = TRUE;
+        }
+    }
+
+    TRACE("Returning %d\n", ret);
+    return ret;
+}
+
+/***********************************************************************
+ *		SetupDiGetSelectedDriverW (SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiGetSelectedDriverW(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+    OUT PSP_DRVINFO_DATA_W DriverInfoData)
+{
+    BOOL ret = FALSE;
+
+    TRACE("%p %p %p\n", DeviceInfoSet, DeviceInfoData, DriverInfoData);
+
+    if (!DeviceInfoSet || !DriverInfoData)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else if (DriverInfoData->cbSize != sizeof(SP_DRVINFO_DATA_V1_W) && DriverInfoData->cbSize != sizeof(SP_DRVINFO_DATA_V2_W))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else
+    {
+        struct DriverInfoElement *driverInfo;
+        
+        if (DeviceInfoData)
+            driverInfo = ((struct DeviceInfoElement *)DeviceInfoData->Reserved)->SelectedDriver;
+        else
+            driverInfo = ((struct DeviceInfoSet *)DeviceInfoSet)->SelectedDriver;
+
+        if (driverInfo == NULL)
+            SetLastError(ERROR_NO_DRIVER_SELECTED);
+        else
+        {
+            memcpy(
+                DriverInfoData,
+                &driverInfo->Info,
+                DriverInfoData->cbSize);
+            ret = TRUE;
+        }
+    }
+
+    TRACE("Returning %d\n", ret);
+    return ret;
+}
+
+/***********************************************************************
+ *		SetupDiSetSelectedDriverW (SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiSetSelectedDriverW(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+    IN OUT PSP_DRVINFO_DATA_W DriverInfoData OPTIONAL)
+{
+    BOOL ret = FALSE;
+
+    TRACE("%p %p %p\n", DeviceInfoSet, DeviceInfoData, DriverInfoData);
+
+    if (!DeviceInfoSet)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else if (DriverInfoData && DriverInfoData->cbSize != sizeof(SP_DRVINFO_DATA_V1_W) && DriverInfoData->cbSize != sizeof(SP_DRVINFO_DATA_V2_W))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else
+    {
+        struct DriverInfoElement **pDriverInfo;
+        PLIST_ENTRY ListHead, ItemList;
+
+        if (DeviceInfoData)
+        {
+            pDriverInfo = &((struct DeviceInfoElement *)DeviceInfoData->Reserved)->SelectedDriver;
+            ListHead = &((struct DeviceInfoElement *)DeviceInfoData->Reserved)->DriverListHead;
+        }
+        else
+        {
+            pDriverInfo = &((struct DeviceInfoSet *)DeviceInfoSet)->SelectedDriver;
+            ListHead = &((struct DeviceInfoSet *)DeviceInfoSet)->DriverListHead;
+        }
+
+        if (!DriverInfoData)
+        {
+            *pDriverInfo = NULL;
+            ret = TRUE;
+        }
+        else
+        {
+            /* Search selected driver in list */
+            ItemList = ListHead->Flink;
+            while (ItemList != ListHead)
+            {
+                if (DriverInfoData->Reserved != 0)
+                {
+                    if (DriverInfoData->Reserved == (ULONG_PTR)ItemList)
+                        break;
+                }
+                else
+                {
+                    /* The caller wants to compare only DriverType, Description and ProviderName fields */
+                    struct DriverInfoElement *driverInfo = (struct DriverInfoElement *)ItemList;
+                    if (driverInfo->Info.DriverType == DriverInfoData->DriverType
+                        && wcscmp(driverInfo->Info.Description, DriverInfoData->Description) == 0
+                        && wcscmp(driverInfo->Info.ProviderName, DriverInfoData->ProviderName) == 0)
+                    {
+                        break;
+                    }
+                }
+            }
+            if (ItemList == ListHead)
+                SetLastError(ERROR_INVALID_PARAMETER);
+            else
+            {
+                *pDriverInfo = (struct DriverInfoElement *)ItemList;
+                DriverInfoData->Reserved = (ULONG_PTR)ItemList;
+                ret = TRUE;
+            }
         }
     }
 
