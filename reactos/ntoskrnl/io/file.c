@@ -857,6 +857,10 @@ IoCreateFile(OUT PHANDLE  FileHandle,
 
    if (NT_SUCCESS(Status))
    {
+      OBJECT_CREATE_INFORMATION ObjectCreateInfo;
+      OBJECT_ATTRIBUTES tmpObjectAttributes;
+      UNICODE_STRING ObjectName;
+
       Status = ObReferenceObjectByHandle(LocalHandle,
                                          DesiredAccess,
                                          NULL,
@@ -873,11 +877,47 @@ IoCreateFile(OUT PHANDLE  FileHandle,
          ObDereferenceObject (DeviceObject);
          return STATUS_OBJECT_NAME_COLLISION;
       }
+
+      Status = ObpCaptureObjectAttributes(ObjectAttributes,
+                                          AccessMode,
+                                          NULL,
+                                          &ObjectCreateInfo,
+                                          &ObjectName);
+      if (!NT_SUCCESS(Status))
+      {
+         ObDereferenceObject (DeviceObject);
+         return Status;
+      }
+         
+      InitializeObjectAttributes(&tmpObjectAttributes,
+                                 NULL,
+                                 ObjectCreateInfo.Attributes & OBJ_INHERIT,
+                                 0,
+                                 NULL);
+      ObpReleaseCapturedAttributes(&ObjectCreateInfo);
+      if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
+
+      
       /* FIXME: wt... */
-      FileObject = IoCreateStreamFileObject(NULL, DeviceObject);
+      Status = ObCreateObject(KernelMode,
+                              IoFileObjectType,
+                              &tmpObjectAttributes,
+                              KernelMode,
+                              NULL,
+                              sizeof(FILE_OBJECT),
+                              0,
+                              0,
+                              (PVOID*)&FileObject);
+
+   
+      /* Set File Object Data */
+      FileObject->DeviceObject = IoGetAttachedDevice(DeviceObject); 
+      FileObject->Vpb = FileObject->DeviceObject->Vpb;
+
       /* HACK */
       FileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
-      DPRINT("%wZ\n", ObjectAttributes->ObjectName);
+
+      DPRINT1("%wZ\n", ObjectAttributes->ObjectName);
 
       ObDereferenceObject (DeviceObject);
    }
