@@ -182,11 +182,14 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
     /* For a Waitall, we can't have the same object more then once */
     if (WaitType == WaitAll)
     {
+        /* Clear the main loop variable */
+        i = 0;
+
         /* Start the loop */
         do
         {
             /* Check the current and forward object */
-            for (i = 0, j = i + 1; j < ObjectCount; j++)
+            for (j = i + 1; j < ObjectCount; j++)
             {
                 /* Make sure they don't match */
                 if (WaitObjects[i] == WaitObjects[j])
@@ -244,6 +247,7 @@ Quickie:
     if (LockInUse) KeLeaveCriticalRegion();
 
     /* Return status */
+    DPRINT1("Returning: %x\n", Status);
     return Status;
 }
 
