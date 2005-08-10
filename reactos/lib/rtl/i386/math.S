@@ -204,6 +204,11 @@ __allrem:
 	
 .intel_syntax noprefix
 
+/*
+ * This routine is called by MSVC-generated code to convert from floating point
+ * to integer representation. The floating point number to be converted is
+ * on the top of the floating point stack.
+ */
 __ftol:
     /* Set up stack frame */
     push ebp
@@ -214,10 +219,11 @@ __ftol:
     wait
     mov ax, [ebp-2]
     or ah, 0xC
+    mov [ebp-4], ax
     fldcw [ebp-4]
     
     /* Do the conversion */
-    fistp qword ptr [ebp-8]
+    fistp qword ptr [ebp-12]
     
     /* Restore rounding mode */
     fldcw [ebp-2]
