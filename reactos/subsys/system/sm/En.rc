@@ -46,7 +46,7 @@ IDS_ID, "SubSystem ID: %d\n\
 
 IDS_Not_Imp,  "not implemented\n"
 
-IDS_Mangers, "ReactOS/Win32 Session Manager Control Tool\n\n"
+IDS_Mangers, "ReactOS/Win32 - Session Manager Control Tool\n\n"
 
 IDS_USING, "Usage:\n\
 \tsm\n\
