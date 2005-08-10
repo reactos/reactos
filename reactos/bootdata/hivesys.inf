@@ -362,10 +362,11 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management","Pagin
 ; Subsystems
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Debug",0x00020000,""
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Kmode",0x00020000,"%SystemRoot%\system32\win32k.sys"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Optional",0x00010000,"Posix","Os2"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Optional",0x00010000,"Posix","Os2","Vms"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Os2",0x00020000,"%SystemRoot%\system32\os2ss.exe"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Posix",0x00020000,"%SystemRoot%\system32\psxss.exe"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Required",0x00010000,"Debug","Windows"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Vms",0x00020000,"%SystemRoot%\system32\csr.exe ObjectDirectory=\VMS SharedSection=128 Windows=Off SubSystemType=Text ServerDll=vmssrv,1 ProfileControl=Off RequestThreads=2 MaxRequestThreads=2 Sessions=Off"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Windows",0x00020000,"%SystemRoot%\system32\csrss.exe"
 
 ; PNP Root device
