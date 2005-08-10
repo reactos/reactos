@@ -23,6 +23,9 @@
 <directory name="setupapi">
 	<xi:include href="setupapi/setupapi.xml" />
 </directory>
+<directory name="shell32">
+	<xi:include href="shell32/shell32.xml" />
+</directory>
 <directory name="shlwapi">
 	<xi:include href="shlwapi/shlwapi.xml" />
 </directory>
