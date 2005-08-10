@@ -876,7 +876,7 @@ RtlUnicodeStringToInteger(
     USHORT CharsRemaining = str->Length / sizeof(WCHAR);
     WCHAR wchCurrent;
     int digit;
-    ULONG newbase = 10;
+    ULONG newbase = 0;
     ULONG RunningTotal = 0;
     char bMinus = 0;
 
@@ -911,9 +911,11 @@ RtlUnicodeStringToInteger(
 	    newbase = 16;
 	} /* if */
     }
-    if (base == 0) {
+    if (base == 0 && newbase == 0) {
+        base = 10;
+    } else if (base == 0 && newbase != 0) {
         base = newbase;
-    } else if ((base != newbase) ||
+    } else if ((newbase != 0 && base != newbase) ||
                (base != 2 && base != 8 && base != 10 && base != 16)) {
 	return STATUS_INVALID_PARAMETER;
 
