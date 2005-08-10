@@ -186,7 +186,7 @@ void fs_write(loff_t pos,int size,void *data)
     }
     new = alloc(sizeof(CHANGE));
     new->pos = pos;
-    memcpy(new->data = alloc(new->size = size),data,size);
+    memcpy(new->data = alloc(new->size = readsize_aligned),data,readsize_aligned);
     new->next = NULL;
     if (last) last->next = new;
     else changes = new;
