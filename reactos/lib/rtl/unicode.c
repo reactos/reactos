@@ -876,44 +876,47 @@ RtlUnicodeStringToInteger(
     USHORT CharsRemaining = str->Length / sizeof(WCHAR);
     WCHAR wchCurrent;
     int digit;
+    ULONG newbase = 10;
     ULONG RunningTotal = 0;
     char bMinus = 0;
 
-    while (CharsRemaining >= 1 && *lpwstr <= ' ') {
+    while (CharsRemaining >= 1 && *lpwstr <= L' ') {
 	lpwstr++;
 	CharsRemaining--;
     } /* while */
 
     if (CharsRemaining >= 1) {
-	if (*lpwstr == '+') {
+	if (*lpwstr == L'+') {
 	    lpwstr++;
 	    CharsRemaining--;
-	} else if (*lpwstr == '-') {
+	} else if (*lpwstr == L'-') {
 	    bMinus = 1;
 	    lpwstr++;
 	    CharsRemaining--;
 	} /* if */
     } /* if */
 
-    if (base == 0) {
-	base = 10;
-	if (CharsRemaining >= 2 && lpwstr[0] == '0') {
-	    if (lpwstr[1] == 'b') {
-		lpwstr += 2;
-		CharsRemaining -= 2;
-		base = 2;
-	    } else if (lpwstr[1] == 'o') {
-		lpwstr += 2;
-		CharsRemaining -= 2;
-		base = 8;
-	    } else if (lpwstr[1] == 'x') {
-		lpwstr += 2;
-		CharsRemaining -= 2;
-		base = 16;
-	    } /* if */
+    if (CharsRemaining >= 2 && lpwstr[0] == L'0') {
+        if (lpwstr[1] == L'b' || lpwstr[1] == L'B') {
+	    lpwstr += 2;
+	    CharsRemaining -= 2;
+	    newbase = 2;
+	} else if (lpwstr[1] == L'o' || lpwstr[1] == L'O') {
+	    lpwstr += 2;
+	    CharsRemaining -= 2;
+	    newbase = 8;
+        } else if (lpwstr[1] == L'x' || lpwstr[1] == L'X') {
+    	    lpwstr += 2;
+	    CharsRemaining -= 2;
+	    newbase = 16;
 	} /* if */
-    } else if (base != 2 && base != 8 && base != 10 && base != 16) {
+    }
+    if (base == 0) {
+        base = newbase;
+    } else if ((base != newbase) ||
+               (base != 2 && base != 8 && base != 10 && base != 16)) {
 	return STATUS_INVALID_PARAMETER;
+
     } /* if */
 
     if (value == NULL) {
@@ -922,12 +925,12 @@ RtlUnicodeStringToInteger(
 
     while (CharsRemaining >= 1) {
 	wchCurrent = *lpwstr;
-	if (wchCurrent >= '0' && wchCurrent <= '9') {
-	    digit = wchCurrent - '0';
-	} else if (wchCurrent >= 'A' && wchCurrent <= 'Z') {
-	    digit = wchCurrent - 'A' + 10;
-	} else if (wchCurrent >= 'a' && wchCurrent <= 'z') {
-	    digit = wchCurrent - 'a' + 10;
+	if (wchCurrent >= L'0' && wchCurrent <= L'9') {
+	    digit = wchCurrent - L'0';
+	} else if (wchCurrent >= L'A' && wchCurrent <= L'Z') {
+	    digit = wchCurrent - L'A' + 10;
+	} else if (wchCurrent >= L'a' && wchCurrent <= L'z') {
+	    digit = wchCurrent - L'a' + 10;
 	} else {
 	    digit = -1;
 	} /* if */
