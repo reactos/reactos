@@ -191,6 +191,11 @@ argument array to use Unicode strings. A graphical executable has a
 Optionally a major and minor subsystem version can also be specified;
 the default subsystem version is 4.0.
 .TP
+.BI --target= cpu-manufacturer[-kernel]-os
+Specify the target CPU and platform on which the generated code will
+be built. The target specification is in the standard autoconf format
+as returned by config.sub.
+.TP
 .B \--version
 Display the program version and exit.
 .TP

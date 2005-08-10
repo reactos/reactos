@@ -44,7 +44,6 @@ int nb_lib_paths = 0;
 int nb_errors = 0;
 int display_warnings = 0;
 int kill_at = 0;
-int debugging = 0;
 
 #if defined(__i386__) || defined(__x86_64__)
 enum target_cpu target_cpu = CPU_x86;
@@ -75,8 +74,8 @@ char *input_file_name = NULL;
 char *spec_file_name = NULL;
 const char *output_file_name = NULL;
 
-char *ld_command = "ld";
-char *nm_command = "nm";
+char *ld_command = NULL;
+char *nm_command = NULL;
 
 static FILE *output_file;
 static const char *current_src_dir;
@@ -97,6 +96,35 @@ enum exec_mode_values
 };
 
 static enum exec_mode_values exec_mode = MODE_NONE;
+
+static const struct
+{
+    const char *name;
+    enum target_cpu cpu;
+} cpu_names[] =
+{
+    { "i386",    CPU_x86 },
+    { "i486",    CPU_x86 },
+    { "i586",    CPU_x86 },
+    { "i686",    CPU_x86 },
+    { "i786",    CPU_x86 },
+    { "sparc",   CPU_SPARC },
+    { "alpha",   CPU_ALPHA },
+    { "powerpc", CPU_POWERPC }
+};
+
+static const struct
+{
+    const char *name;
+    enum target_platform platform;
+} platform_names[] =
+{
+    { "macos",   PLATFORM_APPLE },
+    { "darwin",  PLATFORM_APPLE },
+    { "sunos",   PLATFORM_SVR4 },
+    { "windows", PLATFORM_WINDOWS },
+    { "winnt",   PLATFORM_WINDOWS }
+};
 
 /* set the dll file name from the input file name */
 static void set_dll_file_name( const char *name, DLLSPEC *spec )
@@ -135,6 +163,56 @@ static void set_subsystem( const char *subsystem, DLLSPEC *spec )
         spec->subsystem_major = atoi( major );
     }
     free( str );
+}
+
+/* set the target CPU and platform */
+static void set_target( const char *target )
+{
+    unsigned int i;
+    char *p, *platform, *spec = xstrdup( target );
+
+    /* target specification is in the form CPU-MANUFACTURER-OS or CPU-MANUFACTURER-KERNEL-OS */
+
+    /* get the CPU part */
+
+    if (!(p = strchr( spec, '-' ))) fatal_error( "Invalid target specification '%s'\n", target );
+    *p++ = 0;
+    for (i = 0; i < sizeof(cpu_names)/sizeof(cpu_names[0]); i++)
+    {
+        if (!strcmp( cpu_names[i].name, spec )) break;
+    }
+    if (i < sizeof(cpu_names)/sizeof(cpu_names[0])) target_cpu = cpu_names[i].cpu;
+    else fatal_error( "Unrecognized CPU '%s'\n", spec );
+
+    platform = p;
+    if ((p = strrchr( p, '-' ))) platform = p + 1;
+
+    /* get the OS part */
+
+    target_platform = PLATFORM_UNSPECIFIED;  /* default value */
+    for (i = 0; i < sizeof(platform_names)/sizeof(platform_names[0]); i++)
+    {
+        if (!strncmp( platform_names[i].name, platform, strlen(platform_names[i].name) ))
+        {
+            target_platform = platform_names[i].platform;
+            break;
+        }
+    }
+
+    free( spec );
+
+    if (!ld_command)
+    {
+        ld_command = xmalloc( strlen(target) + sizeof("-ld") );
+        strcpy( ld_command, target );
+        strcat( ld_command, "-ld" );
+    }
+    if (!nm_command)
+    {
+        nm_command = xmalloc( strlen(target) + sizeof("-nm") );
+        strcpy( nm_command, target );
+        strcat( nm_command, "-nm" );
+    }
 }
 
 /* cleanup on program exit */
@@ -177,6 +255,7 @@ static const char usage_str[] =
 "    -o --output=NAME        Set the output file name (default: stdout)\n"
 "    -r --res=RSRC.RES       Load resources from RSRC.RES\n"
 "       --subsystem=SUBSYS   Set the subsystem (one of native, windows, console)\n"
+"       --target=TARGET      Specify target CPU and platform for cross-compiling\n"
 "       --version            Print the version and exit\n"
 "    -w --warnings           Turn on warnings\n"
 "\nMode options:\n"
@@ -201,6 +280,7 @@ enum long_options_values
     LONG_OPT_RELAY32,
     LONG_OPT_SUBSYSTEM,
     LONG_OPT_VERSION,
+    LONG_OPT_TARGET,
     LONG_OPT_PEDLL
 };
 
@@ -217,6 +297,7 @@ static const struct option long_options[] =
     { "relay16",  0, 0, LONG_OPT_RELAY16 },
     { "relay32",  0, 0, LONG_OPT_RELAY32 },
     { "subsystem",1, 0, LONG_OPT_SUBSYSTEM },
+    { "target",   1, 0, LONG_OPT_TARGET },
     { "version",  0, 0, LONG_OPT_VERSION },
     { "pedll",    1, 0, LONG_OPT_PEDLL },
     /* aliases for short options */
@@ -373,6 +454,9 @@ static char **parse_options( int argc, char **argv, DLLSPEC *spec )
         case LONG_OPT_SUBSYSTEM:
             set_subsystem( optarg, spec );
             break;
+        case LONG_OPT_TARGET:
+            set_target( optarg );
+            break;
         case LONG_OPT_VERSION:
             printf( "winebuild version " PACKAGE_VERSION "\n" );
             exit(0);
@@ -469,9 +553,6 @@ int main(int argc, char **argv)
 
     output_file = stdout;
     argv = parse_options( argc, argv, spec );
-
-    /* we only support relay debugging on i386 */
-    debugging = (target_cpu == CPU_x86);
 
     switch(exec_mode)
     {
