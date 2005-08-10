@@ -16,7 +16,7 @@ typedef struct _DESKTOP_OBJECT
     /* Pointer to the associated window station. */
     struct _WINSTATION_OBJECT *WindowStation;
     /* Pointer to the active queue. */
-    PVOID ActiveMessageQueue;
+    PW32THREAD ActiveWThread;
     /* Rectangle of the work area */
     RECT WorkArea;
     /* Handle of the desktop window. */
@@ -70,11 +70,11 @@ UserGetDesktopWindow (VOID);
 HWND FASTCALL
 IntGetCurrentThreadDesktopWindow(VOID);
 
-PUSER_MESSAGE_QUEUE FASTCALL
-UserGetFocusMessageQueue(VOID);
+PW32THREAD FASTCALL
+UserGetFocusThread(VOID);
 
 VOID FASTCALL
-IntSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue);
+IntSetFocusThread(PW32THREAD Thread);
 
 PDESKTOP_OBJECT FASTCALL
 UserGetActiveDesktop(VOID);

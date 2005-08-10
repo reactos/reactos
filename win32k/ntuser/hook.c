@@ -64,7 +64,7 @@ STATIC FASTCALL PHOOK
 IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinStaObj)
 {
   PHOOK Hook;
-  PHOOKTABLE Table = Global ? GlobalHooks : MsqGetHooks(Thread->Tcb.Win32Thread->MessageQueue);
+  PHOOKTABLE Table = Global ? GlobalHooks : MsqGetHooks(Thread->Tcb.Win32Thread->Queue);
   HHOOK hHook;
 
   if (NULL == Table)
@@ -80,7 +80,7 @@ IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinSt
         }
       else
         {
-          MsqSetHooks(Thread->Tcb.Win32Thread->MessageQueue, Table);
+          MsqSetHooks(Thread->Tcb.Win32Thread->Queue, Table);
         }
     }
 
@@ -114,7 +114,7 @@ IntGetTable(PHOOK Hook)
       return GlobalHooks;
     }
 
-  return MsqGetHooks(Hook->Thread->Tcb.Win32Thread->MessageQueue);
+  return MsqGetHooks(Hook->Thread->Tcb.Win32Thread->Queue);
 }
 
 /* get the first hook in the chain */
@@ -266,7 +266,7 @@ IntCallLowLevelHook(INT HookId, INT Code, WPARAM wParam, LPARAM lParam, PHOOK Ho
 
   /* FIXME should get timeout from
    * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
-  Status = MsqSendMessage(Hook->Thread->Tcb.Win32Thread->MessageQueue, (HWND) Code, HookId,
+  Status = MsqSendMessage(Hook->Thread->Tcb.Win32Thread->Queue, (HWND) Code, HookId,
                           wParam, lParam, 5000, TRUE, TRUE, &uResult);
 
   return NT_SUCCESS(Status) ? uResult : 0;
@@ -291,7 +291,7 @@ HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
     }
   else
     {
-      Table = MsqGetHooks(Win32Thread->MessageQueue);
+      Table = MsqGetHooks(Win32Thread->Queue);
     }
 
   if (NULL == Table || ! (Hook = IntGetFirstValidHook(Table, HookId)))
@@ -341,7 +341,7 @@ HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
     }
   else
     {
-      IntReleaseHookChain(MsqGetHooks(PsGetWin32Thread()->MessageQueue), HookId, WinStaObj);
+      IntReleaseHookChain(MsqGetHooks(PsGetWin32Thread()->Queue), HookId, WinStaObj);
       IntReleaseHookChain(GlobalHooks, HookId, WinStaObj);
       ObDereferenceObject(WinStaObj);
     }

@@ -17,15 +17,16 @@
 /* registered Logon process */
 PW32PROCESS LogonProcess = NULL;
 
-VOID W32kRegisterPrimitiveMessageQueue(VOID)
+extern PW32THREAD pmPrimitiveQueueW32Thread;
+
+VOID W32kRegisterPrimitiveWThread(VOID)
 {
-  extern PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue;
-  if( !pmPrimitiveMessageQueue ) {
+  if( !pmPrimitiveQueueW32Thread ) {
     PW32THREAD pThread;
     pThread = PsGetWin32Thread();
-    if( pThread && pThread->MessageQueue ) {
-      pmPrimitiveMessageQueue = pThread->MessageQueue;
-      IntReferenceMessageQueue(pmPrimitiveMessageQueue);
+    if( pThread /*&& pThread->Queue*/ ) {
+      pmPrimitiveQueueW32Thread = pThread;//->Queue;
+      ObReferenceObject(pThread->Thread);
       DPRINT( "Installed primitive input queue.\n" );
     }
   } else {
@@ -33,17 +34,15 @@ VOID W32kRegisterPrimitiveMessageQueue(VOID)
   }
 }
 
-VOID W32kUnregisterPrimitiveMessageQueue(VOID)
+VOID W32kUnregisterPrimitiveWThread(VOID)
 {
-  extern PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue;
-//  UserDereferenceQueue(pmPrimitiveMessageQueue);
-  pmPrimitiveMessageQueue = NULL;
+  ObDereferenceObject(pmPrimitiveQueueW32Thread->Thread);
+  pmPrimitiveQueueW32Thread = NULL;
 }
 
-PUSER_MESSAGE_QUEUE W32kGetPrimitiveMessageQueue()
+PW32THREAD W32kGetPrimitiveWThread()
 {
-  extern PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue;
-  return pmPrimitiveMessageQueue;
+  return pmPrimitiveQueueW32Thread;
 }
 
 BOOL FASTCALL
@@ -121,12 +120,12 @@ NtUserCallNoParam(DWORD Routine)
   switch(Routine)
   {
     case NOPARAM_ROUTINE_REGISTER_PRIMITIVE:
-      W32kRegisterPrimitiveMessageQueue();
+      W32kRegisterPrimitiveWThread();
       Result = (DWORD)TRUE;
       break;
 
     case NOPARAM_ROUTINE_DESTROY_CARET:
-      Result = (DWORD)UserDestroyCaret(PsGetCurrentThread()->Tcb.Win32Thread);
+      Result = (DWORD)UserDestroyCaret(PsGetWin32Thread());
       break;
 
     case NOPARAM_ROUTINE_INIT_MESSAGE_PUMP:
@@ -1282,6 +1281,7 @@ NtUserGetGUIThreadInfo(
   GUITHREADINFO SafeGui;
   PDESKTOP_OBJECT Desktop;
   PUSER_MESSAGE_QUEUE MsgQueue;
+  PUSER_THREAD_INPUT Input;
   PETHREAD Thread = NULL;
   DECLARE_RETURN(BOOLEAN);  
 
@@ -1314,15 +1314,17 @@ NtUserGetGUIThreadInfo(
   else
   {
     /* get the foreground thread */
-    PW32THREAD W32Thread = PsGetCurrentThread()->Tcb.Win32Thread;
-    Desktop = W32Thread->Desktop;
-    if(Desktop)
+    //FIXME: interactive_Winsta->Active_desktop->active_thread
+    PW32THREAD W32Thread = PsGetWin32Thread();
+    
+    if(W32Thread)
     {
-      MsgQueue = Desktop->ActiveMessageQueue;
-      if(MsgQueue)
-      {
-        Thread = MsgQueue->Thread;
-      }
+      Desktop = W32Thread->Desktop; 
+      MsgQueue = Desktop->ActiveWThread->Queue;//huh???
+      //if(MsgQueue)
+      //{
+      Thread = W32Thread->Thread;
+      //}
     }
   }
 
@@ -1334,22 +1336,23 @@ NtUserGetGUIThreadInfo(
     RETURN( FALSE);
   }
 
-  MsgQueue = (PUSER_MESSAGE_QUEUE)Desktop->ActiveMessageQueue;
-  CaretInfo = &MsgQueue->Input->CaretInfo;
+  MsgQueue = Desktop->ActiveWThread->Queue;
+  Input = Desktop->ActiveWThread->Input;
+  CaretInfo = &Desktop->ActiveWThread->Input->CaretInfo;
 
   SafeGui.flags = (CaretInfo->Visible ? GUI_CARETBLINKING : 0);
-  if(MsgQueue->Input->MenuOwner)
+  if(Input->MenuOwner)
     SafeGui.flags |= GUI_INMENUMODE | MsgQueue->MenuState;
-  if(MsgQueue->Input->MoveSize)
+  if(Input->MoveSize)
     SafeGui.flags |= GUI_INMOVESIZE;
 
   /* FIXME add flag GUI_16BITTASK */
 
-  SafeGui.hwndActive = MsgQueue->Input->ActiveWindow;
-  SafeGui.hwndFocus = MsgQueue->Input->FocusWindow;
-  SafeGui.hwndCapture = MsgQueue->Input->CaptureWindow;
-  SafeGui.hwndMenuOwner = MsgQueue->Input->MenuOwner;
-  SafeGui.hwndMoveSize = MsgQueue->Input->MoveSize;
+  SafeGui.hwndActive = Input->ActiveWindow;
+  SafeGui.hwndFocus = Input->FocusWindow;
+  SafeGui.hwndCapture = Input->CaptureWindow;
+  SafeGui.hwndMenuOwner = Input->MenuOwner;
+  SafeGui.hwndMoveSize = Input->MoveSize;
   SafeGui.hwndCaret = CaretInfo->hWnd;
 
   SafeGui.rcCaret.left = CaretInfo->Pos.x;

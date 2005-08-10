@@ -118,7 +118,7 @@ WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 
   if (!Window || IntIsDesktopWindow(Window))
   {
-    IntSetFocusMessageQueue(NULL);
+    IntSetFocusThread(NULL);
     return;
   }
 
@@ -857,7 +857,7 @@ WinPosSetWindowPos(HWND hWnd, HWND WndInsertAfter, INT x, INT y, INT cx,
     * Only allow CSRSS to mess with the desktop window
     */
    if (Window == UserGetDesktopWindow() &&
-       Window->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
+       Window->WThread->WProcess != PsGetWin32Process())
    {
       return FALSE;
    }
@@ -1443,7 +1443,7 @@ WinPosSearchChildren(
             break;
          }
 
-         if (OnlyHitTests && (Current->MessageQueue == OnlyHitTests))
+         if (OnlyHitTests && (Current->WThread->Queue == OnlyHitTests))
          {
             *HitTest = IntSendMessage(Current->Self, WM_NCHITTEST, 0,
                                       MAKELONG(Point->x, Point->y));

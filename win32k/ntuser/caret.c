@@ -35,20 +35,20 @@ IntHideCaret(PTHRDCARETINFO CaretInfo)
 BOOL FASTCALL
 UserDestroyCaret(PW32THREAD Win32Thread /* unused param!!!*/)
 {
-   PUSER_MESSAGE_QUEUE Queue;
+   PW32THREAD W32Thread;
 
-   Queue = UserGetCurrentQueue();
+   W32Thread = PsGetWin32Thread();
 
-   //FIXME: can queue be NULL?
-   if(!Queue)
+   //FIXME: can W32Thread be NULL?
+   if(!W32Thread)
       return FALSE;
 
-   IntHideCaret(&Queue->Input->CaretInfo);
-   Queue->Input->CaretInfo.Bitmap = (HBITMAP)0;
-   Queue->Input->CaretInfo.hWnd = (HWND)0;
-   Queue->Input->CaretInfo.Size.cx = Queue->Input->CaretInfo.Size.cy = 0;
-   Queue->Input->CaretInfo.Showing = 0;
-   Queue->Input->CaretInfo.Visible = 0;
+   IntHideCaret(&W32Thread->Input->CaretInfo);
+   W32Thread->Input->CaretInfo.Bitmap = (HBITMAP)0;
+   W32Thread->Input->CaretInfo.hWnd = (HWND)0;
+   W32Thread->Input->CaretInfo.Size.cx = W32Thread->Input->CaretInfo.Size.cy = 0;
+   W32Thread->Input->CaretInfo.Showing = 0;
+   W32Thread->Input->CaretInfo.Visible = 0;
    return TRUE;
 }
 
@@ -242,7 +242,7 @@ NtUserCreateCaret(
       RETURN(FALSE);
    }
 
-   if(WindowObject->OwnerThread != PsGetCurrentThread())
+   if(WindowObject->WThread != PsGetWin32Thread())
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       RETURN(FALSE);
@@ -346,7 +346,7 @@ NtUserHideCaret(
       RETURN(FALSE);
    }
 
-   if(WindowObject->OwnerThread != PsGetCurrentThread())
+   if(WindowObject->WThread != PsGetWin32Thread())
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       RETURN(FALSE);
@@ -386,7 +386,7 @@ UserHideCaret(PWINDOW_OBJECT Wnd)
 
    ASSERT(Wnd);
 
-   if(Wnd->OwnerThread != PsGetCurrentThread())
+   if(Wnd->WThread != PsGetWin32Thread())
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return(FALSE);
@@ -449,7 +449,7 @@ UserShowCaret(PWINDOW_OBJECT Wnd)
 
    ASSERT(Wnd);
 
-   if(Wnd->OwnerThread != PsGetCurrentThread())
+   if(Wnd->WThread != PsGetWin32Thread())
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return(FALSE);

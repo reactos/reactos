@@ -162,7 +162,7 @@ VIS_WindowLayoutChanged(
    NtGdiCombineRgn(Temp, NewlyExposed, NULL, RGN_COPY);
 
    Parent = Window->ParentWnd;
-   DPRINT1("Parent wnd=0x%x, queue=0x%x\n",Parent,Parent->MessageQueue);
+   DPRINT1("Parent wnd=0x%x, queue=0x%x\n",Parent,Parent->WThread->Queue);
    if(Parent)
    {
       NtGdiOffsetRgn(Temp,

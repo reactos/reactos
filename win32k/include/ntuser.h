@@ -113,13 +113,13 @@ typedef struct _USER_HANDLE_TABLE
 
 /*
 typedef enum {
-  otUnknown = 0,
+  otFree = 0,
   otClass,
-  otWindow,
+  otWnd,
   otMenu,
-  otAcceleratorTable,
-  otCursorIcon,
-  otHookProc,
+  otAccel,
+  otCursor,
+  otHook,
   otMonitor
 } USER_OBJECT_TYPE;
 */
@@ -134,6 +134,7 @@ typedef enum _USER_OBJECT_TYPE
   USER_CURSOR_ICON,
   USER_HOOK_PROC,
   USER_MONITOR
+  
 } USER_OBJECT_TYPE;
 
 

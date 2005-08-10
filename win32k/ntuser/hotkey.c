@@ -113,14 +113,19 @@ UnregisterWindowHotKeys(PWINDOW_OBJECT Window)
   PHOT_KEY_ITEM HotKeyItem;
   PWINSTATION_OBJECT WinStaObject = NULL;
 
-  if(Window->OwnerThread && Window->OwnerThread->ThreadsProcess){
+  /* FIXME: these checks are VOID! 
+  A windows MUST have a thread and the thread MUST have a proc.
+  */
+//  if(Window->OwnerThread && Window->OwnerThread->ThreadsProcess){
      
      //FIXME: hmm...this winsta path look fishy
-    WinStaObject = Window->OwnerThread->Tcb.Win32Thread->Desktop->WindowStation;
- }
+    WinStaObject = Window->WThread->Desktop->WindowStation;
+// }
 
-  if(!WinStaObject)
-    return;
+  //FIXME: a desktop MUST have a WinSta!
+//  if(!WinStaObject)
+//    return;
+   ASSERT(WinStaObject);
 
   IntLockHotKeys(WinStaObject);
 
@@ -229,7 +234,7 @@ NtUserRegisterHotKey(HWND hWnd,
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       RETURN( FALSE);
     }
-    HotKeyThread = Window->OwnerThread;
+    HotKeyThread = Window->WThread->Thread;
   }
 
 
@@ -290,8 +295,11 @@ NtUserUnregisterHotKey(HWND hWnd, int id)
     RETURN( FALSE);
   }
 
-  if(Window->OwnerThread->ThreadsProcess && Window->OwnerThread->ThreadsProcess->Win32Process)
-    WinStaObject = Window->OwnerThread->Tcb.Win32Thread->Desktop->WindowStation;
+/* FIXME: these checks are VOID!
+   a windows must have a thread etc.
+*/
+//  if(Window->W32Thread->Thread->ThreadsProcess && Window->W32Thread->Thread->ThreadsProcess->Win32Process)
+    WinStaObject = Window->WThread->Desktop->WindowStation;
 
   if(!WinStaObject)
   {

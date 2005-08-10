@@ -101,7 +101,7 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
             }
           Window->NCUpdateRegion = NULL;
           Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
-          MsqDecPaintCountQueue(Window->MessageQueue);
+          MsqDecPaintCountQueue(Window->WThread->Queue);
 //          IntUnLockWindowUpdate(Window);
           IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)TempRegion, 0);
           if ((HANDLE) 1 != TempRegion && NULL != TempRegion)
@@ -386,17 +386,17 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
    if (HasPaintMessage != HadPaintMessage)
    {
       if (HadPaintMessage)
-         MsqDecPaintCountQueue(Window->MessageQueue);
+         MsqDecPaintCountQueue(Window->WThread->Queue);
       else
-         MsqIncPaintCountQueue(Window->MessageQueue);
+         MsqIncPaintCountQueue(Window->WThread->Queue);
    }
 
    if (HasNCPaintMessage != HadNCPaintMessage)
    {
       if (HadNCPaintMessage)
-         MsqDecPaintCountQueue(Window->MessageQueue);
+         MsqDecPaintCountQueue(Window->WThread->Queue);
       else
-         MsqIncPaintCountQueue(Window->MessageQueue);
+         MsqIncPaintCountQueue(Window->WThread->Queue);
    }
 
 //   IntUnLockWindowUpdate(Window);
@@ -590,7 +590,7 @@ IntGetPaintMessage(HWND hWnd, UINT MsgFilterMin, UINT MsgFilterMax,
                    PW32THREAD Thread, MSG *Message, BOOL Remove)
 {
    PWINDOW_OBJECT Window;
-   PUSER_MESSAGE_QUEUE MessageQueue = (PUSER_MESSAGE_QUEUE)Thread->MessageQueue;
+   PUSER_MESSAGE_QUEUE MessageQueue = Thread->Queue;
 
    if (!MessageQueue->PaintPosted)
       return FALSE;
@@ -634,8 +634,8 @@ IntFixCaret(HWND hWnd, LPRECT lprc, UINT flags)
    PTHRDCARETINFO CaretInfo;
    HWND hWndCaret;
 
-   Desktop = PsGetCurrentThread()->Tcb.Win32Thread->Desktop;
-   CaretInfo = &((PUSER_MESSAGE_QUEUE)Desktop->ActiveMessageQueue)->Input->CaretInfo;
+   Desktop = PsGetWin32Thread()->Desktop;
+   CaretInfo = &Desktop->ActiveWThread->Input->CaretInfo;
    hWndCaret = CaretInfo->hWnd;
    if (hWndCaret == hWnd ||
        ((flags & SW_SCROLLCHILDREN) && UserIsChildWindow(GetWnd(hWnd), GetWnd(hWndCaret))))
@@ -707,7 +707,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
       IntValidateParent(Window, Window->NCUpdateRegion);
       Window->NCUpdateRegion = NULL;
       Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
-      MsqDecPaintCountQueue(Window->MessageQueue);
+      MsqDecPaintCountQueue(Window->WThread->Queue);
       IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)hRgn, 0);
       if (hRgn != (HANDLE)1 && hRgn != NULL)
       {
@@ -729,7 +729,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
 //   IntLockWindowUpdate(Window);
    if (Window->UpdateRegion != NULL)
    {
-      MsqDecPaintCountQueue(Window->MessageQueue);
+      MsqDecPaintCountQueue(Window->WThread->Queue);
       IntValidateParent(Window, Window->UpdateRegion);
       Rgn = RGNDATA_LockRgn(Window->UpdateRegion);
       if (NULL != Rgn)
@@ -751,7 +751,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
    else
    {
       if (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
-         MsqDecPaintCountQueue(Window->MessageQueue);
+         MsqDecPaintCountQueue(Window->WThread->Queue);
       IntGetClientRect(Window, &Ps.rcPaint);
    }
    Window->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;

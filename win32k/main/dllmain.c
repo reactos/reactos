@@ -70,13 +70,18 @@ CHECKPOINT1;
 
   if (Create)
     {
+       //FIXME: move user init to some proc in win32k\ntuser\ntuser.c
+       
       DPRINT("Creating W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());
 
+      Win32Process->Process = Process;
+
       InitializeListHead(&Win32Process->ClassListHead);
-//      ExInitializeFastMutex(&Win32Process->ClassListLock);
+
+      InitializeListHead(&Win32Process->ExpiredTimersList);
 
       InitializeListHead(&Win32Process->MenuListHead);
-      ExInitializeFastMutex(&Win32Process->MenuListLock);
+//      ExInitializeFastMutex(&Win32Process->MenuListLock);
 
       InitializeListHead(&Win32Process->PrivateFontListHead);
       ExInitializeFastMutex(&Win32Process->PrivateFontListLock);
@@ -175,6 +180,10 @@ CHECKPOINT1;
 
       DPRINT("Creating W32 thread TID:%d at IRQ level: %lu\n", Thread->Cid.UniqueThread, KeGetCurrentIrql());
 
+      Win32Thread->WProcess = PsGetWin32Process();
+      ASSERT(Win32Thread->WProcess);
+      Win32Thread->Thread = Thread;
+      
       /*
        * inherit the thread desktop and process window station (if not yet inherited) from the process startup
        * info structure. See documentation of CreateProcess()
@@ -228,8 +237,11 @@ CHECKPOINT1;
       }
 
       Win32Thread->IsExiting = FALSE;
-      UserDestroyCaret(Win32Thread);
-      Win32Thread->MessageQueue = MsqCreateMessageQueue(Thread);
+      //UserDestroyCaret(Win32Thread);
+      
+      //FIXME: check retval
+      MsqCreateMessageQueue(Win32Thread);
+      
       Win32Thread->KeyboardLayout = W32kGetDefaultKeyLayout();
       Win32Thread->MessagePumpHookValue = 0;
       InitializeListHead(&Win32Thread->WindowListHead);
@@ -244,7 +256,7 @@ CHECKPOINT1;
 CHECKPOINT1;     
       UnregisterThreadHotKeys(Thread);
 CHECKPOINT1;      
-      DestroyThreadWindows(Thread);
+      DestroyThreadWindows(Win32Thread);
 CHECKPOINT1;      
       IntBlockInput(Win32Thread, FALSE);
 CHECKPOINT1;

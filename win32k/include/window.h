@@ -65,8 +65,6 @@ typedef struct _WINDOW_OBJECT
   HANDLE WindowRegion;
   /* Lock to be held when manipulating (NC)UpdateRegion */
  // FAST_MUTEX UpdateLock;
-  /* Pointer to the owning thread's message queue. */
-  PUSER_MESSAGE_QUEUE MessageQueue;
   struct _WINDOW_OBJECT* FirstChild;
   struct _WINDOW_OBJECT* LastChild;
   struct _WINDOW_OBJECT* NextSibling;
@@ -88,7 +86,8 @@ typedef struct _WINDOW_OBJECT
   BOOL Unicode;
   WNDPROC WndProcA;
   WNDPROC WndProcW;
-  PETHREAD OwnerThread;
+  /* owner thread */
+  PW32THREAD WThread;
   HWND hWndLastPopup; /* handle to last active popup window (wine doesn't use pointer, for unk. reason)*/
   PINTERNALPOS InternalPos;
   ULONG Status;
@@ -125,16 +124,20 @@ typedef struct _WINDOW_OBJECT
 #define IntIsBroadcastHwnd(hWnd) \
   (hWnd == HWND_BROADCAST || hWnd == HWND_TOPMOST)
 
-
+#if 0
 #define IntWndBelongsToThread(WndObj, W32Thread) \
-  (((WndObj->OwnerThread && WndObj->OwnerThread->Tcb.Win32Thread)) && \
-   (WndObj->OwnerThread->Tcb.Win32Thread == W32Thread))
+  (((WndObj->W32Thread->Thread && WndObj->W32Thread->Thread->Tcb.Win32Thread)) && \
+   (WndObj->W32Thread->Thread->Tcb.Win32Thread == W32Thread))
+#endif
+
+#define IntWndBelongsToThread(WndObj, _W32Thread) ((WndObj)->WThread == (_W32Thread))
+
 
 #define IntGetWndThreadId(WndObj) \
-  WndObj->OwnerThread->Cid.UniqueThread
+  WndObj->WThread->Thread->Cid.UniqueThread
 
 #define IntGetWndProcessId(WndObj) \
-  WndObj->OwnerThread->ThreadsProcess->UniqueProcessId
+  WndObj->WThread->Thread->ThreadsProcess->UniqueProcessId
 
 PWINDOW_OBJECT FASTCALL
 IntGetProcessWindowObject(PW32THREAD Thread, HWND hWnd);

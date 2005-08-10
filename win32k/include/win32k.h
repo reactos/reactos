@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 /* Internal Win32k Headers */
+#include <include/win32.h>
 #include <include/ssec.h>
 #include <include/accelerator.h>
 #include <include/callback.h>
@@ -38,7 +39,6 @@
 #include <include/msgqueue.h>
 #include <include/object.h>
 #include <include/paint.h>
-#include <include/painting.h>
 #include <include/palette.h>
 #include <include/path.h>
 #include <include/prop.h>
@@ -49,7 +49,6 @@
 #include <include/text.h>
 #include <include/timer.h>
 #include <include/useratom.h>
-#include <include/vis.h>
 #include <include/window.h>
 #include <include/winpos.h>
 #include <include/winsta.h>

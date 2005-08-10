@@ -364,7 +364,7 @@ NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO UnsafeMsgInfo)
       }
       else
       {
-         if (WindowObject->OwnerThread != PsGetCurrentThread())
+         if (WindowObject->WThread != PsGetWin32Thread())
          {
             DPRINT1("Window doesn't belong to the calling thread!\n");
             MsgInfo.HandledByKernel = TRUE;
@@ -445,9 +445,9 @@ CLEANUP:
 
 
 VOID FASTCALL
-IntSendHitTestMessages(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg)
+IntSendHitTestMessages(PW32THREAD WThread, LPMSG Msg)
 {
-   if(!Msg->hwnd || ThreadQueue->Input->CaptureWindow)
+   if(!Msg->hwnd || WThread->Input->CaptureWindow)
    {
       return;
    }
@@ -536,7 +536,7 @@ IntActivateWindowMouse(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, PWINDOW_OBJEC
 }
 
 BOOL FASTCALL
-IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *HitTest, BOOL Remove)
+IntTranslateMouseMessage(PW32THREAD WThread, LPMSG Msg, USHORT *HitTest, BOOL Remove)
 {
    PWINDOW_OBJECT Window;
 
@@ -546,8 +546,8 @@ IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *Hit
       return TRUE;
    }
 
-   if(ThreadQueue == Window->MessageQueue &&
-         ThreadQueue->Input->CaptureWindow != Window->Self)
+   if(WThread == Window->WThread &&
+         WThread->Input->CaptureWindow != Window->Self)
    {
       /* only send WM_NCHITTEST messages if we're not capturing the window! */
       *HitTest = IntSendMessage(Window->Self, WM_NCHITTEST, 0,
@@ -562,7 +562,7 @@ IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *Hit
          {
             PWINDOW_OBJECT Wnd;
 
-            WinPosWindowFromPoint(DesktopWindow, Window->MessageQueue, &Msg->pt, &Wnd);
+            WinPosWindowFromPoint(DesktopWindow, Window->WThread->Queue, &Msg->pt, &Wnd);
             if(Wnd)
             {
                if(Wnd != Window)
@@ -571,7 +571,7 @@ IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *Hit
                   Msg->hwnd = Wnd->Self;
                   if(!(Wnd->Status & WINDOWSTATUS_DESTROYING))
                   {
-                     MsqPostMessage(Wnd->MessageQueue, Msg, FALSE,
+                     MsqPostMessage(Wnd->WThread->Queue, Msg, FALSE,
                                     Msg->message == WM_MOUSEMOVE ? QS_MOUSEMOVE :
                                     QS_MOUSEBUTTON);
                   }
@@ -617,8 +617,8 @@ IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *Hit
          }
          Msg->lParam = MAKELONG(Msg->pt.x, Msg->pt.y);
       }
-      else if(ThreadQueue->Input->MoveSize == NULL &&
-              ThreadQueue->Input->MenuOwner == NULL)
+      else if(WThread->Input->MoveSize == NULL &&
+              WThread->Input->MenuOwner == NULL)
       {
          /* NOTE: Msg->pt should remain in screen coordinates. -- FiN */
          Msg->lParam = MAKELONG(
@@ -642,18 +642,18 @@ IntPeekMessage(PUSER_MESSAGE Msg,
                UINT RemoveMsg)
 {
    LARGE_INTEGER LargeTickCount;
-   PUSER_MESSAGE_QUEUE ThreadQueue;
+   PW32THREAD W32Thread;
    PUSER_MESSAGE Message;
    BOOL Present, RemoveMessages;
 
    /* The queues and order in which they are checked are documented in the MSDN
       article on GetMessage() */
 
-   ThreadQueue = UserGetCurrentQueue();
+   W32Thread = PsGetWin32Thread();
 
-   if (!ThreadQueue)
+   if (!W32Thread)
    {
-      //out of mem
+      //out of mem??
       return FALSE;
    }
 
@@ -666,34 +666,34 @@ CheckMessages:
    Present = FALSE;
 
    KeQueryTickCount(&LargeTickCount);
-   ThreadQueue->LastMsgRead = LargeTickCount.u.LowPart;
+   W32Thread->Queue->LastMsgRead = LargeTickCount.u.LowPart;
 
    /* Dispatch sent messages here. */
-   while ( MsqDispatchOneSentMessage(ThreadQueue))      ;
+   while ( MsqDispatchOneSentMessage(W32Thread->Queue))      ;
 
    /* clear changed bits so we can wait on them if we don't find a message */
-   ThreadQueue->ChangedBits = 0;
+   W32Thread->Queue->ChangedBits = 0;
 
    /* Now look for a quit message. */
 
-   if (ThreadQueue->QuitPosted)
+   if (W32Thread->Queue->QuitPosted)
    {
       /* According to the PSDK, WM_QUIT messages are always returned, regardless
          of the filter specified */
       Msg->Msg.hwnd = NULL;
       Msg->Msg.message = WM_QUIT;
-      Msg->Msg.wParam = ThreadQueue->QuitExitCode;
+      Msg->Msg.wParam = W32Thread->Queue->QuitExitCode;
       Msg->Msg.lParam = 0;
       Msg->FreeLParam = FALSE;
       if (RemoveMessages)
       {
-         ThreadQueue->QuitPosted = FALSE;
+         W32Thread->Queue->QuitPosted = FALSE;
       }
       return TRUE;
    }
 
    /* Now check for normal messages. */
-   Present = MsqFindMessage(ThreadQueue,
+   Present = MsqFindMessage(W32Thread->Queue,
                             FALSE,
                             RemoveMessages,
                             hWnd,
@@ -719,7 +719,7 @@ CheckMessages:
    }
 
    /* Check for hardware events. */
-   Present = MsqFindMessage(ThreadQueue,
+   Present = MsqFindMessage(W32Thread->Queue,
                             TRUE,
                             RemoveMessages,
                             hWnd,
@@ -745,10 +745,10 @@ CheckMessages:
    }
 
    /* Check for sent messages again. */
-   while (MsqDispatchOneSentMessage(ThreadQueue));
+   while (MsqDispatchOneSentMessage(W32Thread->Queue));
 
    /* Check for paint messages. */
-   if (IntGetPaintMessage(hWnd, MsgFilterMin, MsgFilterMax, PsGetWin32Thread(), &Msg->Msg, RemoveMessages))
+   if (IntGetPaintMessage(hWnd, MsgFilterMin, MsgFilterMax, W32Thread, &Msg->Msg, RemoveMessages))
    {
 
       Msg->FreeLParam = FALSE;
@@ -756,7 +756,7 @@ CheckMessages:
    }
 
    /* Check for WM_(SYS)TIMER messages */
-   Present = MsqGetTimerMessage(ThreadQueue, hWnd, MsgFilterMin, MsgFilterMax,
+   Present = MsqGetTimerMessage(W32Thread, hWnd, MsgFilterMin, MsgFilterMax,
                                 &Msg->Msg, RemoveMessages);
 
    if (Present)
@@ -781,20 +781,20 @@ MessageFound:
 
             MsgWindow = IntGetWindowObject(Msg->Msg.hwnd);
             ASSERT(MsgWindow != NULL);
-            if(IntTranslateMouseMessage(ThreadQueue, &Msg->Msg, &HitTest, TRUE))
+            if(IntTranslateMouseMessage(W32Thread, &Msg->Msg, &HitTest, TRUE))
                /* FIXME - check message filter again, if the message doesn't match anymore,
                           search again */
             {
                /* eat the message, search again */
                goto CheckMessages;
             }
-            if(ThreadQueue->Input->CaptureWindow == NULL)
+            if(W32Thread->Input->CaptureWindow == NULL)
             {
 
-               IntSendHitTestMessages(ThreadQueue, &Msg->Msg);
+               IntSendHitTestMessages(W32Thread, &Msg->Msg);
                if((Msg->Msg.message != WM_MOUSEMOVE && Msg->Msg.message != WM_NCMOUSEMOVE) &&
                      IS_BTN_MESSAGE(Msg->Msg.message, DOWN) &&
-                     IntActivateWindowMouse(ThreadQueue, &Msg->Msg, MsgWindow, &HitTest))
+                     IntActivateWindowMouse(W32Thread->Queue, &Msg->Msg, MsgWindow, &HitTest))
                {
 
                   /* eat the message, search again */
@@ -804,7 +804,7 @@ MessageFound:
          }
          else
          {
-            IntSendHitTestMessages(ThreadQueue, &Msg->Msg);
+            IntSendHitTestMessages(W32Thread, &Msg->Msg);
          }
 
          return TRUE;
@@ -812,7 +812,7 @@ MessageFound:
 
       USHORT HitTest;
       if((Msg->Msg.hwnd && Msg->Msg.message >= WM_MOUSEFIRST && Msg->Msg.message <= WM_MOUSELAST) &&
-            IntTranslateMouseMessage(ThreadQueue, &Msg->Msg, &HitTest, FALSE))
+            IntTranslateMouseMessage(W32Thread, &Msg->Msg, &HitTest, FALSE))
          /* FIXME - check message filter again, if the message doesn't match anymore,
                     search again */
       {
@@ -1234,7 +1234,7 @@ UserPostMessage(HWND Wnd,
 
    if (WM_QUIT == Msg)
    {
-      MsqPostQuitMessage(PsGetWin32Thread()->MessageQueue, wParam);
+      MsqPostQuitMessage(PsGetWin32Thread()->Queue, wParam);
    }
    else if (Wnd == HWND_BROADCAST)
    {
@@ -1281,7 +1281,7 @@ UserPostMessage(HWND Wnd,
       UserGetCursorLocation(UserGetCurrentWinSta(), &KernelModeMsg.pt);
       KeQueryTickCount(&LargeTickCount);
       KernelModeMsg.time = LargeTickCount.u.LowPart;
-      MsqPostMessage(Window->MessageQueue, &KernelModeMsg,
+      MsqPostMessage(Window->WThread->Queue, &KernelModeMsg,
                      NULL != MsgMemoryEntry && 0 != KernelModeMsg.lParam,
                      QS_POSTMESSAGE);
    }
@@ -1313,7 +1313,7 @@ NtUserPostThreadMessage(DWORD idThread,
    if( Status == STATUS_SUCCESS )
    {
       pThread = peThread->Tcb.Win32Thread;
-      if( !pThread || !pThread->MessageQueue )
+      if( !pThread || !pThread->Queue )
       {
          ObDereferenceObject( peThread );
          RETURN(FALSE);
@@ -1331,7 +1331,7 @@ NtUserPostThreadMessage(DWORD idThread,
          SetLastWin32Error(ERROR_INVALID_PARAMETER);
          RETURN(FALSE);
       }
-      MsqPostMessage(pThread->MessageQueue, &KernelModeMsg,
+      MsqPostMessage(pThread->Queue, &KernelModeMsg,
                      NULL != MsgMemoryEntry && 0 != KernelModeMsg.lParam,
                      QS_POSTMESSAGE);
       ObDereferenceObject( peThread );
@@ -1401,7 +1401,7 @@ IntSendMessageTimeoutSingle(HWND hWnd,
    Win32Thread = PsGetWin32Thread();
 
    if (NULL != Win32Thread &&
-         Window->MessageQueue == Win32Thread->MessageQueue)
+         Window->WThread == Win32Thread)
    {
       if (Win32Thread->IsExiting)
       {
@@ -1450,7 +1450,7 @@ IntSendMessageTimeoutSingle(HWND hWnd,
       return TRUE;
    }
 
-   if(uFlags & SMTO_ABORTIFHUNG && MsqIsHung(Window->MessageQueue))
+   if(uFlags & SMTO_ABORTIFHUNG && MsqIsHung(Window->WThread->Queue))
    {
       /* FIXME - Set a LastError? */
       return FALSE;
@@ -1463,7 +1463,7 @@ IntSendMessageTimeoutSingle(HWND hWnd,
       return FALSE;
    }
 
-   Status = MsqSendMessage(Window->MessageQueue, hWnd, Msg, wParam, lParam,
+   Status = MsqSendMessage(Window->WThread->Queue, hWnd, Msg, wParam, lParam,
                            uTimeout, (uFlags & SMTO_BLOCK), FALSE, uResult);
 
    if (STATUS_TIMEOUT == Status)
@@ -1551,7 +1551,7 @@ IntPostOrSendMessage(HWND hWnd,
       return 0;
    }
 
-   if(Window->MessageQueue != PsGetWin32Thread()->MessageQueue)
+   if(Window->WThread != PsGetWin32Thread())
    {
       //FIXME!!
       Result = UserPostMessage(hWnd, Msg, wParam, lParam);
@@ -1605,7 +1605,7 @@ IntDoSendMessage(HWND Wnd,
 
    /* See if the current thread can handle the message */
    if (HWND_BROADCAST != Wnd && NULL != PsGetWin32Thread() &&
-         Window->MessageQueue == PsGetWin32Thread()->MessageQueue)
+         Window->WThread == PsGetWin32Thread())
    {
       /* Gather the information usermode needs to call the window proc directly */
       Info.HandledByKernel = FALSE;

@@ -39,7 +39,6 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 
 /* External Win32K Header */
 #include <win32k/win32k.h>
-#include <win32k/win32.h>
 
 /* Internal Win32K Header */
 #include "include/win32k.h"

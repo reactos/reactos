@@ -47,7 +47,7 @@ static CLIENT_ID KeyboardThreadId;
 static HANDLE KeyboardDeviceHandle;
 static KEVENT InputThreadsStart;
 static BOOLEAN InputThreadsRunning = FALSE;
-PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue = 0;
+PW32THREAD pmPrimitiveQueueW32Thread = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -395,7 +395,7 @@ IntKeyboardSendWinKeyMsg()
   Mesg.lParam = 0;
 
   /* The QS_HOTKEY is just a guess */
-  MsqPostMessage(Window->MessageQueue, &Mesg, FALSE, QS_HOTKEY);
+  MsqPostMessage(Window->WThread->Queue, &Mesg, FALSE, QS_HOTKEY);
 }
 
 STATIC VOID STDCALL
@@ -412,8 +412,8 @@ KeyboardThreadMain(PVOID StartContext)
   IO_STATUS_BLOCK Iosb;
   NTSTATUS Status;
   MSG msg;
-  PUSER_MESSAGE_QUEUE FocusQueue;
-  struct _ETHREAD *FocusThread;
+  PW32THREAD FocusWThread;
+  //struct _ETHREAD *FocusThread;
   extern NTSTATUS Win32kInitWin32Thread(PETHREAD Thread);
 
 
@@ -652,30 +652,31 @@ KeyboardThreadMain(PVOID StartContext)
 
 	      /* Find the target thread whose locale is in effect */
 	      if (!IntGetScreenDC())
-	        FocusQueue = W32kGetPrimitiveMessageQueue();
+           FocusWThread = W32kGetPrimitiveWThread();
 	      else
-                 FocusQueue = UserGetFocusMessageQueue();
+           FocusWThread = UserGetFocusThread();
 
 	      /* This might cause us to lose hot keys, which are important
 	       * (ctrl-alt-del secure attention sequence). Not sure if it
 	       * can happen though.
 	       */
-	      if (!FocusQueue) continue;
+         if (!FocusWThread) continue;
 
 	      msg.lParam = lParam;
-         msg.hwnd = FocusQueue->Input->FocusWindow;
+         msg.hwnd = FocusWThread->Input->FocusWindow;
 
-	      FocusThread = FocusQueue->Thread;
+//	      FocusThread = FocusQueue->Thread;
 
-	      if (!(FocusThread && FocusThread->Tcb.Win32Thread &&
-	            FocusThread->Tcb.Win32Thread->KeyboardLayout))
+//	      if (!(FocusThread && FocusThread->Tcb.Win32Thread &&
+//	            FocusThread->Tcb.Win32Thread->KeyboardLayout))
+         if (!FocusWThread->KeyboardLayout)
 	        continue;
 
 	      /* This function uses lParam to fill wParam according to the
 	       * keyboard layout in use.
 	       */
 	      W32kKeyProcessMessage(&msg,
-				    FocusThread->Tcb.Win32Thread->KeyboardLayout,
+                FocusWThread->KeyboardLayout,
 				    KeyInput.Flags & KEY_E0 ? 0xE0 :
 				    (KeyInput.Flags & KEY_E1 ? 0xE1 : 0));
 
@@ -731,9 +732,9 @@ CLEANUP:
 NTSTATUS FASTCALL
 UserAcquireOrReleaseInputOwnership(BOOLEAN Release)
 {
-  if (Release && InputThreadsRunning && !pmPrimitiveMessageQueue)
+  if (Release && InputThreadsRunning && !pmPrimitiveQueueW32Thread)
     {
-      DPRINT( "Releasing input: PM = %08x\n", pmPrimitiveMessageQueue );
+      DPRINT( "Releasing input: PM = %08x\n", pmPrimitiveQueueW32Thread );
       KeClearEvent(&InputThreadsStart);
       InputThreadsRunning = FALSE;
       NtAlertThread(KeyboardThreadHandle);

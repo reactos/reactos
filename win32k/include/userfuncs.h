@@ -6,6 +6,10 @@
 DWORD FASTCALL 
 UserGetKeyState(DWORD key);
 
+BOOL FASTCALL
+IntTranslateKbdMessage(LPMSG lpMsg, HKL dwhkl);
+
+
 /******************** HANDLE.C ***************/
 
 VOID UserInitHandleTable(PUSER_HANDLE_TABLE ht, PVOID mem, ULONG bytes);
@@ -13,6 +17,14 @@ HANDLE UserAllocHandle(PUSER_HANDLE_TABLE ht, PVOID object, USER_OBJECT_TYPE typ
 PVOID UserGetObject(PUSER_HANDLE_TABLE ht, HANDLE handle, USER_OBJECT_TYPE type );
 PVOID UserFreeHandle(PUSER_HANDLE_TABLE ht, HANDLE handle );
 PVOID UserGetNextHandle(PUSER_HANDLE_TABLE ht, HANDLE* handle, USER_OBJECT_TYPE type );
+
+/************* PROP.C *****************/
+
+BOOL FASTCALL
+IntSetProp(PWINDOW_OBJECT Wnd, ATOM Atom, HANDLE Data);
+
+PPROPERTY FASTCALL
+IntGetProp(PWINDOW_OBJECT WindowObject, ATOM Atom);
 
 
 /************* DESKTOP.C *****************/
@@ -47,7 +59,25 @@ PWINDOW_OBJECT FASTCALL
 UserSetFocus(PWINDOW_OBJECT Wnd OPTIONAL);
 
 
-/* painting.c */
+/******************** PAINTING.C ********************************/
+
+VOID FASTCALL
+IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion);
+BOOL FASTCALL
+UserRedrawWindow(PWINDOW_OBJECT Wnd, const RECT* UpdateRect, HRGN UpdateRgn, ULONG Flags);
+BOOL FASTCALL
+IntGetPaintMessage(HWND hWnd, UINT MsgFilterMin, UINT MsgFilterMax, PW32THREAD Thread,
+                   MSG *Message, BOOL Remove);
+
+BOOL FASTCALL UserValidateRgn(PWINDOW_OBJECT hWnd, HRGN hRgn);
+
+
+#define IntLockWindowUpdate(Window) \
+  ExAcquireFastMutex(&Window->UpdateLock)
+
+#define IntUnLockWindowUpdate(Window) \
+  ExReleaseFastMutex(&Window->UpdateLock)
+
 DWORD FASTCALL 
 UserInvalidateRect(PWINDOW_OBJECT Wnd, CONST RECT *Rect, BOOL Erase);
 
@@ -58,9 +88,36 @@ UserScrollDC(HDC hDC, INT dx, INT dy, const RECT *lprcScroll,
 INT FASTCALL
 UserGetUpdateRgn(PWINDOW_OBJECT Window, HRGN hRgn, BOOL bErase);
 
-/* message.c */
+/******************** MESSAGE.C ********************************/
+
 BOOL FASTCALL 
 UserPostMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
+
+LRESULT FASTCALL
+IntSendMessage(HWND hWnd,
+      UINT Msg,
+      WPARAM wParam,
+      LPARAM lParam);
+      
+LRESULT FASTCALL
+IntPostOrSendMessage(HWND hWnd,
+           UINT Msg,
+           WPARAM wParam,
+           LPARAM lParam);
+           
+LRESULT FASTCALL
+IntSendMessageTimeout(HWND hWnd,
+                      UINT Msg,
+                      WPARAM wParam,
+                      LPARAM lParam,
+                      UINT uFlags,
+                      UINT uTimeout,
+                      ULONG_PTR *uResult);
+                      
+LRESULT FASTCALL
+IntDispatchMessage(MSG* Msg);
+
+
 
 /************************ WINDOW.C *****************************/
 
@@ -126,7 +183,8 @@ UserGetClientOrigin(PWINDOW_OBJECT hWnd, LPPOINT Point);
 DWORD FASTCALL
 UserShowScrollBar(PWINDOW_OBJECT Wnd, int wBar, DWORD bShow);
 
-/* timer.c */
+
+/************************* TIMER.C ****************************/
 
 inline VOID FASTCALL 
 UserFreeTimer(PTIMER_ENTRY Timer);
@@ -141,15 +199,19 @@ VOID FASTCALL
 UserSetNextPendingTimer();
 
 VOID FASTCALL
-UserRemoveTimersQueue(PUSER_MESSAGE_QUEUE Queue);
+UserRemoveTimersThread(PW32THREAD W32Thread);
 
-/* hook.c*/
+
+/********************* HOOK.C *****************/
+
 PHOOK FASTCALL
 HookCreate(HHOOK* hHook);
 
 PHOOK FASTCALL HookGet(HHOOK hHook);
 
-/* class.c */
+
+/********************* CLASS.C *****************/
+
 
 VOID FASTCALL
 ClassReferenceClass(PWNDCLASS_OBJECT Class);
@@ -185,7 +247,7 @@ PCURICON_OBJECT FASTCALL
 CursorGet(HCURSOR hCursor);
 
 
-/* monitor.c */
+/******************* MONITOR.C ********************/
 
 PMONITOR_OBJECT FASTCALL UserCreateMonitorObject(HANDLE* h);
 
@@ -219,7 +281,7 @@ MsqInsertExpiredTimer(PTIMER_ENTRY Timer);
 
 PTIMER_ENTRY FASTCALL
 UserFindExpiredTimer(   
-   PUSER_MESSAGE_QUEUE Queue,
+   PW32THREAD W32Thread,
    PWINDOW_OBJECT Wnd OPTIONAL, 
    UINT MsgFilterMin, 
    UINT MsgFilterMax,
@@ -233,6 +295,138 @@ MsqRemoveTimer(
    UINT Message
    );
 
+
+BOOL FASTCALL
+MsqIsHung(PUSER_MESSAGE_QUEUE MessageQueue);
+NTSTATUS FASTCALL
+MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
+          HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam,
+               UINT uTimeout, BOOL Block, BOOL HookMessage,
+               ULONG_PTR *uResult);
+PUSER_MESSAGE FASTCALL
+MsqCreateMessage(LPMSG Msg, BOOLEAN FreeLParam);
+VOID FASTCALL
+MsqDestroyMessage(PUSER_MESSAGE Message);
+VOID FASTCALL
+MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue,
+          MSG* Msg, BOOLEAN FreeLParam, DWORD MessageBits);
+VOID FASTCALL
+MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode);
+BOOLEAN STDCALL
+MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
+          IN BOOLEAN Hardware,
+          IN BOOLEAN Remove,
+          IN HWND Wnd,
+          IN UINT MsgFilterLow,
+          IN UINT MsgFilterHigh,
+          OUT PUSER_MESSAGE* Message);
+BOOLEAN FASTCALL
+MsqInitializeMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue);
+VOID FASTCALL
+MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue);
+BOOLEAN FASTCALL
+MsqCreateMessageQueue(PW32THREAD WThread);
+PUSER_MESSAGE_QUEUE FASTCALL
+MsqGetHardwareMessageQueue(VOID);
+NTSTATUS FASTCALL
+MsqInitializeImpl(VOID);
+BOOLEAN FASTCALL
+MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue);
+NTSTATUS FASTCALL
+MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, HWND WndFilter,
+                      UINT MsgFilterMin, UINT MsgFilterMax);
+VOID FASTCALL
+MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
+           PUSER_SENT_MESSAGE_NOTIFY NotifyMessage);
+VOID FASTCALL
+MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue);
+VOID FASTCALL
+MsqDecPaintCountQueue(PUSER_MESSAGE_QUEUE Queue);
+
+void cp(char* f, int l);
+//#define IntSendMessage(a,b,c,d) (cp(__FILE__,__LINE__), IIntSendMessage(a,b,c,d)) 
+
+
+
+VOID FASTCALL
+MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+VOID FASTCALL
+MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam);
+VOID FASTCALL
+MsqInsertSystemMessage(MSG* Msg);
+BOOL FASTCALL
+MsqIsDblClk(LPMSG Msg, BOOL Remove);
+
+inline BOOL MsqIsSignaled( PUSER_MESSAGE_QUEUE queue );
+inline VOID MsqSetQueueBits( PUSER_MESSAGE_QUEUE queue, WORD bits );
+inline VOID MsqClearQueueBits( PUSER_MESSAGE_QUEUE queue, WORD bits );
+
+BOOL STDCALL IntInitMessagePumpHook();
+BOOL STDCALL IntUninitMessagePumpHook();
+
+#define MAKE_LONG(x, y) ((((y) & 0xFFFF) << 16) | ((x) & 0xFFFF))
+
+PHOOKTABLE FASTCALL MsqGetHooks(PUSER_MESSAGE_QUEUE Queue);
+VOID FASTCALL MsqSetHooks(PUSER_MESSAGE_QUEUE Queue, PHOOKTABLE Hooks);
+
+LPARAM FASTCALL MsqSetMessageExtraInfo(LPARAM lParam);
+LPARAM FASTCALL MsqGetMessageExtraInfo(VOID);
+
+#define IntLockHardwareMessageQueue(MsgQueue) \
+  KeWaitForMutexObject(&(MsgQueue)->HardwareLock, UserRequest, KernelMode, FALSE, NULL)
+
+#define IntUnLockHardwareMessageQueue(MsgQueue) \
+  KeReleaseMutex(&(MsgQueue)->HardwareLock, FALSE)
+
+#define IntReferenceMessageQueue(MsgQueue) \
+  InterlockedIncrement(&(MsgQueue)->References)
+
+
+
+#define IS_BTN_MESSAGE(message,code) \
+  ((message) == WM_LBUTTON##code || \
+   (message) == WM_MBUTTON##code || \
+   (message) == WM_RBUTTON##code || \
+   (message) == WM_XBUTTON##code || \
+   (message) == WM_NCLBUTTON##code || \
+   (message) == WM_NCMBUTTON##code || \
+   (message) == WM_NCRBUTTON##code || \
+   (message) == WM_NCXBUTTON##code )
+
+HANDLE FASTCALL
+IntMsqSetWakeMask(DWORD WakeMask);
+
+BOOL FASTCALL
+IntMsqClearWakeMask(VOID);
+
+BOOLEAN FASTCALL
+MsqSetTimer(PUSER_MESSAGE_QUEUE MessageQueue, HWND Wnd,
+            UINT_PTR IDEvent, UINT Period, TIMERPROC TimerFunc,
+            UINT Msg);
+BOOLEAN FASTCALL
+MsqKillTimer(PUSER_MESSAGE_QUEUE MessageQueue, HWND Wnd,
+             UINT_PTR IDEvent, UINT Msg);
+BOOLEAN FASTCALL
+MsqGetTimerMessage(PW32THREAD W32Thread,
+                   HWND WndFilter, UINT MsgFilterMin, UINT MsgFilterMax,
+                   MSG *Msg, BOOLEAN Restart);
+BOOLEAN FASTCALL
+MsqGetFirstTimerExpiry(PUSER_MESSAGE_QUEUE MessageQueue,
+                       HWND WndFilter, UINT MsgFilterMin, UINT MsgFilterMax,
+                       PLARGE_INTEGER FirstTimerExpiry);
+
+
+
+/**************************** VIS.C ************************/
+
+HRGN FASTCALL
+VIS_ComputeVisibleRegion(PWINDOW_OBJECT Window, BOOLEAN ClientArea,
+   BOOLEAN ClipChildren, BOOLEAN ClipSiblings);
+
+VOID FASTCALL
+VIS_WindowLayoutChanged(PWINDOW_OBJECT Window, HRGN UncoveredRgn);
+
+
 /**************************** NTUSER.C ************************/
 
 inline PVOID FASTCALL UserAlloc(SIZE_T bytes);
@@ -241,6 +435,8 @@ inline PVOID FASTCALL UserAllocZero(SIZE_T bytes);
 inline PVOID FASTCALL UserAllocZeroTag(SIZE_T bytes, ULONG tag);
 inline VOID FASTCALL UserFree(PVOID mem);
 
+VOID FASTCALL
+DestroyThreadWindows(PW32THREAD W32Thread);
 
 
 /* windc.c */
@@ -256,7 +452,7 @@ UserGetWindowDC(PWINDOW_OBJECT Wnd);
 
 /* div */
 #define UserGetCurrentQueue() \
-((PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue)
+((PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->Queue)
 
 
 

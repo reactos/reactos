@@ -577,66 +577,21 @@ IntSetMenu(
 
 
 VOID FASTCALL
-DestroyThreadWindows(struct _ETHREAD *Thread)
+DestroyThreadWindows(PW32THREAD WThread)
 {
   PLIST_ENTRY Current;
-//  PW32PROCESS Win32Process;
-  PW32THREAD Win32Thread;
-//  PWINDOW_OBJECT *List, *pWnd, Wnd;
-   PWINDOW_OBJECT Wnd;
-//  ULONG Cnt = 0;
+  PWINDOW_OBJECT Wnd;
 
-  Win32Thread = Thread->Tcb.Win32Thread;
-  
-  while (!IsListEmpty(&Win32Thread->WindowListHead))
+  while (!IsListEmpty(&WThread->WindowListHead))
   {
-     Current = Win32Thread->WindowListHead.Flink;
+     Current = WThread->WindowListHead.Flink;
      Wnd = CONTAINING_RECORD(Current, WINDOW_OBJECT, ThreadListEntry);
      
-          DPRINT1("while destroy wnds, wnd=0x%x, queue=0x%x, wthread=0x%x\n",Wnd,Wnd->MessageQueue,Win32Thread);
+     DPRINT1("while destroy wnds, wnd=0x%x, queue=0x%x, wthread=0x%x\n",Wnd,Wnd->WThread->Queue,WThread);
           
      /* window removes itself from the list */
      ASSERT(UserDestroyWindow(Wnd));
   }
-
-#if 0
-
-  Win32Process = (PW32PROCESS)Thread->ThreadsProcess->Win32Process;
-
-  Current = Win32Thread->WindowListHead.Flink;
-  while (Current != &(Win32Thread->WindowListHead))
-  {
-    Cnt++;
-    Current = Current->Flink;
-  }
-
-  if(Cnt > 0)
-  {
-    List = ExAllocatePool(PagedPool, (Cnt + 1) * sizeof(PWINDOW_OBJECT));
-    if(!List)
-    {
-      DPRINT("Not enough memory to allocate window handle list\n");
-      return;
-    }
-    pWnd = List;
-    Current = Win32Thread->WindowListHead.Flink;
-    while (Current != &(Win32Thread->WindowListHead))
-    {
-      *pWnd = CONTAINING_RECORD(Current, WINDOW_OBJECT, ThreadListEntry);
-//'FIXME      IntReferenceWindowObject(*pWnd);
-      pWnd++;
-      Current = Current->Flink;
-    }
-    *pWnd = NULL;
-
-    for(pWnd = List; *pWnd; pWnd++)
-    {
-      UserDestroyWindow(*pWnd);
-    }
-    ExFreePool(List);
-    return;
-  }
-#endif
 }
 
 
@@ -681,15 +636,15 @@ PMENU_OBJECT FASTCALL
 IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
 {
   PMENU_OBJECT MenuObject, NewMenuObject, SysMenuObject, ret = NULL;
-  PW32THREAD W32Thread;
+  PW32THREAD WThread;
   HMENU NewMenu, SysMenu;
   ROSMENUITEMINFO ItemInfo;
 
   if(bRevert)
   {
-    W32Thread = PsGetWin32Thread();
+    WThread = PsGetWin32Thread();
 
-    if(!W32Thread->Desktop)
+    if(!WThread->Desktop)
       return NULL;
 
     if(WindowObject->SystemMenu)
@@ -702,10 +657,10 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
       }
     }
 
-    if(W32Thread->Desktop->WindowStation->SystemMenuTemplate)
+    if(WThread->Desktop->WindowStation->SystemMenuTemplate)
     {
       /* clone system menu */
-      MenuObject = UserGetMenuObject(W32Thread->Desktop->WindowStation->SystemMenuTemplate);
+      MenuObject = UserGetMenuObject(WThread->Desktop->WindowStation->SystemMenuTemplate);
       if(!MenuObject)
         return NULL;
 
@@ -961,7 +916,7 @@ UserSetParent(
 //      return NULL;
 
    /* Window must belong to current process */
-   if (Wnd->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
+   if (Wnd->WThread->WProcess != PsGetWin32Process())
       return NULL;
 
    WndOldParent = Wnd->ParentWnd;
@@ -1182,7 +1137,7 @@ NtUserBuildHwndList(
   else if(dwThreadId)
   {
     PETHREAD Thread;
-    PW32THREAD W32Thread;
+    PW32THREAD WThread;
     PLIST_ENTRY Current;
     PWINDOW_OBJECT Window;
 
@@ -1192,7 +1147,7 @@ NtUserBuildHwndList(
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       RETURN(0);
     }
-    if(!(W32Thread = Thread->Tcb.Win32Thread))
+    if(!(WThread = Thread->Tcb.Win32Thread))
     {
       ObDereferenceObject(Thread);
       DPRINT("Thread is not a GUI Thread!\n");
@@ -1200,8 +1155,8 @@ NtUserBuildHwndList(
       RETURN(0);
     }
 
-    Current = W32Thread->WindowListHead.Flink;
-    while(Current != &(W32Thread->WindowListHead))
+    Current = WThread->WindowListHead.Flink;
+    while(Current != &(WThread->WindowListHead))
     {
       Window = CONTAINING_RECORD(Current, WINDOW_OBJECT, ThreadListEntry);
       ASSERT(Window);
@@ -1462,6 +1417,10 @@ IntCreateWindowEx(DWORD dwExStyle,
 
   BOOL HasOwner;
 
+DPRINT1("IntCreateWindowEx W32 thread TID:%d \n", PsGetCurrentThread()->Cid.UniqueThread);
+
+  ASSERT(PsGetWin32Thread());
+  ASSERT(PsGetWin32Thread()->Desktop);
   ParentWindowHandle = PsGetWin32Thread()->Desktop->DesktopWindow;
   OwnerWindowHandle = NULL;
 
@@ -1574,9 +1533,9 @@ IntCreateWindowEx(DWORD dwExStyle,
       IntSetMenu(WindowObject, hMenu, &MenuChanged);
     }
     
-  WindowObject->MessageQueue = UserGetCurrentQueue();
+  WindowObject->WThread = PsGetWin32Thread();//MessageQueue = UserGetCurrentQueue();
   
-  ASSERT(WindowObject->MessageQueue);
+  ASSERT(WindowObject->WThread);
   
   DPRINT1("Set 0x%x's parent to 0x%x\n",WindowObject, ParentWindow);
   WindowObject->ParentWnd = ParentWindow;
@@ -1601,7 +1560,7 @@ IntCreateWindowEx(DWORD dwExStyle,
     }
   WindowObject->WndProcA = ClassObject->lpfnWndProcA;
   WindowObject->WndProcW = ClassObject->lpfnWndProcW;
-  WindowObject->OwnerThread = PsGetCurrentThread();
+  WindowObject->WThread = PsGetWin32Thread();
   WindowObject->FirstChild = NULL;
   WindowObject->LastChild = NULL;
   WindowObject->PrevSibling = NULL;
@@ -1736,7 +1695,7 @@ CHECKPOINT1;
     PRTL_USER_PROCESS_PARAMETERS ProcessParams;
     BOOL CalculatedDefPosSize = FALSE;
 CHECKPOINT1;
-    IntGetDesktopWorkArea(WindowObject->OwnerThread->Tcb.Win32Thread->Desktop, &WorkArea);
+    IntGetDesktopWorkArea(WindowObject->WThread->Desktop, &WorkArea);
 
     rc = WorkArea;
     ProcessParams = PsGetCurrentProcess()->Peb->ProcessParameters;
@@ -2161,7 +2120,7 @@ UserDestroyWindow(PWINDOW_OBJECT Wnd)
   /* Check for owner thread and desktop window */
   //FIXME: move this inot NtUserDestroyWindow??
   
-  if ((Wnd->OwnerThread != PsGetCurrentThread()) || IntIsDesktopWindow(Wnd))
+  if ((Wnd->WThread != PsGetWin32Thread()) || IntIsDesktopWindow(Wnd))
     {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return(FALSE);
@@ -2178,14 +2137,14 @@ UserDestroyWindow(PWINDOW_OBJECT Wnd)
         }
     }
 //  IntDereferenceMessageQueue(Window->MessageQueue);
-  if (Wnd->MessageQueue->Input->ActiveWindow == Wnd->Self)
-    Wnd->MessageQueue->Input->ActiveWindow = NULL;
+  if (Wnd->WThread->Input->ActiveWindow == Wnd->Self)
+    Wnd->WThread->Input->ActiveWindow = NULL;
     
-  if (Wnd->MessageQueue->Input->FocusWindow == Wnd->Self)
-    Wnd->MessageQueue->Input->FocusWindow = NULL;
+  if (Wnd->WThread->Input->FocusWindow == Wnd->Self)
+    Wnd->WThread->Input->FocusWindow = NULL;
     
-  if (Wnd->MessageQueue->Input->CaptureWindow == Wnd->Self)
-    Wnd->MessageQueue->Input->CaptureWindow = NULL;
+  if (Wnd->WThread->Input->CaptureWindow == Wnd->Self)
+    Wnd->WThread->Input->CaptureWindow = NULL;
 
 
   /* Call hooks */
@@ -3286,7 +3245,7 @@ UserGetWindowLong(PWINDOW_OBJECT Wnd, DWORD Index, BOOL Ansi)
     * WndProc is only available to the owner process
     */
    if (GWL_WNDPROC == Index
-       && Wnd->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
+       && Wnd->WThread->WProcess != PsGetWin32Process())
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return(0);
@@ -3442,7 +3401,7 @@ UserSetWindowLong(PWINDOW_OBJECT Wnd, DWORD Index, LONG NewValue, BOOL Ansi)
             /*
              * Remove extended window style bit WS_EX_TOPMOST for shell windows.
              */
-            WindowStation = Wnd->OwnerThread->Tcb.Win32Thread->Desktop->WindowStation;
+            WindowStation = Wnd->WThread->Desktop->WindowStation;
             if(WindowStation)
             {
               if (GetHwnd(Wnd) == WindowStation->ShellWindow || GetHwnd(Wnd) == WindowStation->ShellListView)
@@ -3787,7 +3746,7 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
          break;
 
       case QUERY_WINDOW_ISHUNG:
-         Result = (DWORD)MsqIsHung(Window->MessageQueue);
+         Result = (DWORD)MsqIsHung(Window->WThread->Queue);
          break;
 
       default:
@@ -4274,7 +4233,7 @@ NtUserWindowFromPoint(LONG X, LONG Y)
       pt.x = X;
       pt.y = Y;
 
-      Hit = WinPosWindowFromPoint(DesktopWindow, PsGetWin32Thread()->MessageQueue, &pt, &Window);
+      Hit = WinPosWindowFromPoint(DesktopWindow, PsGetWin32Thread()->Queue, &pt, &Window);
 
       if(Window)
       {

@@ -665,7 +665,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
   IntLockQueueState;
 
   /* All messages have to contain the cursor point. */
-  if (UserGetCurrentQueue() != W32kGetPrimitiveMessageQueue())
+  if (PsGetWin32Thread() != W32kGetPrimitiveWThread())
     UserGetCursorLocation(UserGetCurrentWinSta(), &NewMsg.pt);
 
   UState = ToUnicodeInner(lpMsg->wParam, HIWORD(lpMsg->lParam) & 0xff,
