@@ -21,6 +21,8 @@ HRESULT WINAPI Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
 	if (This == NULL) 
 		return E_OUTOFMEMORY;
 
+	ZeroMemory(This,sizeof(IDirectDrawImpl));
+
 	This->lpVtbl = &DirectDraw_VTable;
 	This->ref = 1;
 	*pIface = (LPDIRECTDRAW)This;
