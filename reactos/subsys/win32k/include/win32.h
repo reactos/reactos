@@ -5,7 +5,7 @@
 
 typedef struct _W32THREAD
 {
-  PVOID MessageQueue;
+  struct _USER_MESSAGE_QUEUE* MessageQueue;
   FAST_MUTEX WindowListLock;
   LIST_ENTRY WindowListHead;
   LIST_ENTRY W32CallbackListHead;
@@ -35,9 +35,5 @@ typedef struct _W32PROCESS
   LONG UserObjects;
 } W32PROCESS, *PW32PROCESS;
 
-PW32THREAD STDCALL
-PsGetWin32Thread(VOID);
-PW32PROCESS STDCALL
-PsGetWin32Process(VOID);
 
 #endif /* __INCLUDE_NAPI_WIN32_H */

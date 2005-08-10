@@ -91,6 +91,9 @@ typedef NTSTATUS
 
 /* TYPES *********************************************************************/
 
+struct _W32THREAD;
+struct _W32PROCESS;
+
 struct _ETHREAD;
 
 typedef struct _DESCRIPTOR_TABLE_ENTRY

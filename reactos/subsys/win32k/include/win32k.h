@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 /* Internal Win32k Headers */
+#include <include/win32.h>
 #include <include/ssec.h>
 #include <include/accelerator.h>
 #include <include/callback.h>
