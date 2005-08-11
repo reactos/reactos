@@ -22,7 +22,7 @@ int vfprintf(FILE* f, const char* fmt, va_list ap)
     if (f->_flag & _IONBF) {
         f->_flag &= ~_IONBF;
         f->_ptr = f->_base = localbuf;
-        f->_bufsiz = BUFSIZ;
+        f->_bufsiz = f->_cnt = BUFSIZ;
         len = __vfprintf(f, fmt, ap);
         (void)fflush(f);
         f->_flag |= _IONBF;
