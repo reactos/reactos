@@ -719,8 +719,6 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
 
   Descriptor = ExAllocatePool(PagedPool,
 			      Length);
-  RtlZeroMemory( Descriptor, Length );
-
   if (Descriptor == NULL)
     {
       DPRINT1("ExAlloctePool() failed\n");
@@ -728,6 +726,7 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
       return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+  RtlZeroMemory( Descriptor, Length );
   RtlCreateSecurityDescriptor(Descriptor,
 			      SECURITY_DESCRIPTOR_REVISION);
 
