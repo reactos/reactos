@@ -514,40 +514,12 @@ NdisAllocatePacketPool(
  *     ProtocolReservedLength = Size of protocol reserved area in bytes
  */
 {
-    PNDIS_PACKET_POOL Pool;
-    UINT Size, Length, i;
-    PNDIS_PACKET Packet, NextPacket;
-
-    NDIS_DbgPrint(MAX_TRACE, ("Status (0x%X)  PoolHandle (0x%X)  "
-        "NumberOfDescriptors (%d)  ProtocolReservedLength (%d).\n",
-        Status, PoolHandle, NumberOfDescriptors, ProtocolReservedLength));
-
-    Length = sizeof(NDIS_PACKET) + ProtocolReservedLength;
-    Size   = sizeof(NDIS_PACKET_POOL) + Length * NumberOfDescriptors;
-
-    Pool   = ExAllocatePool(NonPagedPool, Size);
-    if (Pool) {
-        KeInitializeSpinLock(&Pool->SpinLock.SpinLock);
-        Pool->PacketLength = Length;
-
-        if (NumberOfDescriptors > 0) {
-            Packet         = (PNDIS_PACKET)&Pool->Buffer;
-            Pool->FreeList = Packet;
-
-            NextPacket = (PNDIS_PACKET)((ULONG_PTR)Packet + Length);
-            for (i = 1; i < NumberOfDescriptors; i++) {
-                Packet->Private.Head = (PNDIS_BUFFER)NextPacket;
-                Packet               = NextPacket;
-                NextPacket           = (PNDIS_PACKET)((ULONG_PTR)Packet + Length);
-            }
-            Packet->Private.Head = NULL;
-        } else
-            Pool->FreeList = NULL;
-
-        *Status     = NDIS_STATUS_SUCCESS;
-        *PoolHandle = (PNDIS_HANDLE)Pool;
-    } else
-        *Status = NDIS_STATUS_RESOURCES;
+    NdisAllocatePacketPoolEx(
+        Status,
+        PoolHandle,
+        NumberOfDescriptors,
+        0,
+        ProtocolReservedLength);
 }
 
 
