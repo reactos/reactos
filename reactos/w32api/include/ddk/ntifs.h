@@ -627,6 +627,31 @@ typedef struct _EX_RUNDOWN_REF {
     } DUMMYUNIONNAME;
 } EX_RUNDOWN_REF, *PEX_RUNDOWN_REF;
 
+#define EX_PUSH_LOCK_LOCK_V          ((ULONG_PTR)0x0)
+#define EX_PUSH_LOCK_LOCK            ((ULONG_PTR)0x1)
+#define EX_PUSH_LOCK_WAITING         ((ULONG_PTR)0x2)
+#define EX_PUSH_LOCK_WAKING          ((ULONG_PTR)0x4)
+#define EX_PUSH_LOCK_MULTIPLE_SHARED ((ULONG_PTR)0x8)
+#define EX_PUSH_LOCK_SHARE_INC       ((ULONG_PTR)0x10)
+#define EX_PUSH_LOCK_PTR_BITS        ((ULONG_PTR)0xf)
+
+typedef struct _EX_PUSH_LOCK
+{
+    union
+    {
+        struct
+        {
+            ULONG_PTR Locked:1;
+            ULONG_PTR Waiting:1;
+            ULONG_PTR Waking:1;
+            ULONG_PTR MultipleShared:1;
+            ULONG_PTR Shared:sizeof (ULONG_PTR) * 8 - 4;
+        };
+        ULONG_PTR Value;
+        PVOID Ptr;
+    };
+} EX_PUSH_LOCK, *PEX_PUSH_LOCK;
+
 typedef struct _FILE_ACCESS_INFORMATION {
     ACCESS_MASK AccessFlags;
 } FILE_ACCESS_INFORMATION, *PFILE_ACCESS_INFORMATION;

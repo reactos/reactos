@@ -263,7 +263,7 @@ BasepConvertPriorityClass(IN ULONG dwCreationFlags)
     }
     else
     {
-        ReturnClass = 0 /* FIXME */;
+        ReturnClass = PROCESS_PRIORITY_CLASS_INVALID;
     }
     
     return ReturnClass;

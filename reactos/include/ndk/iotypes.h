@@ -207,10 +207,6 @@ typedef struct _DEVICE_NODE
     ULONG DriverUnloadRetryCount;
     struct _DEVICE_NODE *PreviousParent;
     ULONG DeletedChidren;
-
-    /* FIXME: Not NT's */
-    GUID BusTypeGuid;
-    ULONG Address;
 } DEVICE_NODE, *PDEVICE_NODE;
 
 typedef struct _PI_RESOURCE_ARBITER_ENTRY

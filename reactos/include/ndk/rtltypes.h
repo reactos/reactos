@@ -40,11 +40,11 @@
 #define EXCEPTION_TARGET_UNWIND 0x20
 #define EXCEPTION_COLLIDED_UNWIND 0x20
 
-#define  EH_NONCONTINUABLE   0x01
-#define  EH_UNWINDING        0x02
-#define  EH_EXIT_UNWIND      0x04
-#define  EH_STACK_INVALID    0x08
-#define  EH_NESTED_CALL      0x10
+#define EH_NONCONTINUABLE   0x01
+#define EH_UNWINDING        0x02
+#define EH_EXIT_UNWIND      0x04
+#define EH_STACK_INVALID    0x08
+#define EH_NESTED_CALL      0x10
 
 #define RTL_RANGE_LIST_ADD_IF_CONFLICT  0x00000001
 #define RTL_RANGE_LIST_ADD_SHARED       0x00000002
@@ -109,19 +109,15 @@ typedef VOID
     PVOID Parameter
 );
 
-#ifndef _NTIFS_
-typedef NTSTATUS
-(NTAPI * PRTL_HEAP_COMMIT_ROUTINE) (
-    IN PVOID Base,
-    IN OUT PVOID *CommitAddress,
-    IN OUT PSIZE_T CommitSize
-);
-#endif
-
 /* TYPES *********************************************************************/
 
 typedef unsigned short RTL_ATOM;
 typedef unsigned short *PRTL_ATOM;
+
+/* Once again, we don't want to force NTIFS for something like this */
+#if !defined(_NTIFS_) && !defined(NTOS_MODE_USER)
+typedef PVOID PRTL_HEAP_PARAMETERS;
+#endif
 
 typedef ACL_REVISION_INFORMATION *PACL_REVISION_INFORMATION;
 typedef ACL_SIZE_INFORMATION *PACL_SIZE_INFORMATION;
@@ -401,22 +397,6 @@ typedef struct _RTL_ATOM_TABLE
     ULONG NumberOfBuckets;
     PRTL_ATOM_TABLE_ENTRY Buckets[1];
 } RTL_ATOM_TABLE, *PRTL_ATOM_TABLE;
-
-#ifndef _NTIFS_
-typedef struct _RTL_HEAP_PARAMETERS {
-    ULONG Length;
-    SIZE_T SegmentReserve;
-    SIZE_T SegmentCommit;
-    SIZE_T DeCommitFreeBlockThreshold;
-    SIZE_T DeCommitTotalFreeThreshold;
-    SIZE_T MaximumAllocationSize;
-    SIZE_T VirtualMemoryThreshold;
-    SIZE_T InitialCommit;
-    SIZE_T InitialReserve;
-    PRTL_HEAP_COMMIT_ROUTINE CommitRoutine;
-    SIZE_T Reserved[2];
-} RTL_HEAP_PARAMETERS, *PRTL_HEAP_PARAMETERS;
-#endif
 
 /* Let Kernel Drivers use this */
 #ifndef _WINBASE_

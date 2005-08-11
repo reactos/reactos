@@ -25,7 +25,7 @@ CsrClientConnectToServer(
     PVOID Unknown,
     PVOID Context,
     ULONG ContextLength,
-    PULONG Unknown2
+    PBOOLEAN ServerToServerCall
 );
 
 NTSTATUS

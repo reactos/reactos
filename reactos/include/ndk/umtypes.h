@@ -48,7 +48,7 @@
 #define NT_WARNING(x) ((ULONG)(x)>>30==2)
 #define NT_ERROR(x) ((ULONG)(x)>>30==3)
 
-/* Object Access Rights FIXME: Some are in w32api's psdk..,is that normal ?*/
+/* Object Access Rights */
 #define DIRECTORY_QUERY (0x0001)
 #define DIRECTORY_TRAVERSE (0x0002)
 #define DIRECTORY_CREATE_OBJECT (0x0004)
@@ -1418,7 +1418,28 @@ typedef struct _UNICODE_PREFIX_TABLE
     PUNICODE_PREFIX_TABLE_ENTRY LastNextEntry;
 } UNICODE_PREFIX_TABLE, *PUNICODE_PREFIX_TABLE;
 
-/* FIXME - need FAST_MUTEX and PHANDLE_TABLE for RTL_ATOM_TABLE in umode! */
+typedef NTSTATUS
+(NTAPI * PRTL_HEAP_COMMIT_ROUTINE)(
+    IN PVOID Base,
+    IN OUT PVOID *CommitAddress,
+    IN OUT PSIZE_T CommitSize
+);
+
+typedef struct _RTL_HEAP_PARAMETERS
+{
+    ULONG Length;
+    SIZE_T SegmentReserve;
+    SIZE_T SegmentCommit;
+    SIZE_T DeCommitFreeBlockThreshold;
+    SIZE_T DeCommitTotalFreeThreshold;
+    SIZE_T MaximumAllocationSize;
+    SIZE_T VirtualMemoryThreshold;
+    SIZE_T InitialCommit;
+    SIZE_T InitialReserve;
+    PRTL_HEAP_COMMIT_ROUTINE CommitRoutine;
+    SIZE_T Reserved[2];
+} RTL_HEAP_PARAMETERS, *PRTL_HEAP_PARAMETERS;
+
 typedef void *FAST_MUTEX;
 typedef void *PHANDLE_TABLE;
 

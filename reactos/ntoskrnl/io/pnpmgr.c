@@ -22,6 +22,7 @@ KSPIN_LOCK IopDeviceTreeLock;
 /* DATA **********************************************************************/
 
 PDRIVER_OBJECT IopRootDriverObject;
+PIO_BUS_TYPE_GUID_LIST IopBusTypeGuidList = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -30,6 +31,32 @@ IopGetDeviceNode(
   PDEVICE_OBJECT DeviceObject)
 {
   return DeviceObject->DeviceObjectExtension->DeviceNode;
+}
+
+NTSTATUS
+STDCALL
+IopQueryDeviceCapabilities(PDEVICE_NODE DeviceNode,
+                           PDEVICE_CAPABILITIES DeviceCaps)
+{
+    IO_STATUS_BLOCK StatusBlock;
+    IO_STACK_LOCATION Stack;
+
+    /* Set up the Header */
+    RtlZeroMemory(DeviceCaps, sizeof(DEVICE_CAPABILITIES));
+    DeviceCaps->Size = sizeof(DEVICE_CAPABILITIES);
+    DeviceCaps->Version = 1;
+    DeviceCaps->Address = -1;
+    DeviceCaps->UINumber = -1;
+
+    /* Set up the Stack */
+    RtlZeroMemory(&Stack, sizeof(IO_STACK_LOCATION));
+    Stack.Parameters.DeviceCapabilities.Capabilities = DeviceCaps;
+
+    /* Send the IRP */
+    return IopInitiatePnpIrp(DeviceNode->PhysicalDeviceObject,
+                             &StatusBlock,
+                             IRP_MN_QUERY_CAPABILITIES,
+                             &Stack);
 }
 
 /*
@@ -57,9 +84,11 @@ IoGetDeviceProperty(
   OUT PULONG ResultLength)
 {
   PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
+  DEVICE_CAPABILITIES DeviceCaps;
   ULONG Length;
   PVOID Data = NULL;
   PWSTR Ptr;
+  NTSTATUS Status;
 
   DPRINT("IoGetDeviceProperty(0x%p %d)\n", DeviceObject, DeviceProperty);
 
@@ -75,23 +104,30 @@ IoGetDeviceProperty(
 
     /* Complete, untested */
     case DevicePropertyBusTypeGuid:
-      *ResultLength = 39 * sizeof(WCHAR);
-      if (BufferLength < (39 * sizeof(WCHAR)))
-        return STATUS_BUFFER_TOO_SMALL;
-      swprintf((PWSTR)PropertyBuffer,
-        L"{%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
-        DeviceNode->BusTypeGuid.Data1,
-        DeviceNode->BusTypeGuid.Data2,
-        DeviceNode->BusTypeGuid.Data3,
-        DeviceNode->BusTypeGuid.Data4[0],
-        DeviceNode->BusTypeGuid.Data4[1],
-        DeviceNode->BusTypeGuid.Data4[2],
-        DeviceNode->BusTypeGuid.Data4[3],
-        DeviceNode->BusTypeGuid.Data4[4],
-        DeviceNode->BusTypeGuid.Data4[5],
-        DeviceNode->BusTypeGuid.Data4[6],
-        DeviceNode->BusTypeGuid.Data4[7]);
-      return STATUS_SUCCESS;
+        /* Sanity check */
+        if ((DeviceNode->ChildBusTypeIndex != 0xFFFF) && 
+            (DeviceNode->ChildBusTypeIndex < IopBusTypeGuidList->GuidCount))
+        {
+            /* Return the GUID */
+            *ResultLength = sizeof(GUID);
+
+            /* Check if the buffer given was large enough */
+            if (BufferLength < *ResultLength)
+            {
+                return STATUS_BUFFER_TOO_SMALL;
+            }
+
+            /* Copy the GUID */
+            RtlCopyMemory(PropertyBuffer, 
+                          &(IopBusTypeGuidList->Guids[DeviceNode->ChildBusTypeIndex]),
+                          sizeof(GUID));
+            return STATUS_SUCCESS;
+        }
+        else
+        {
+            return STATUS_OBJECT_NAME_NOT_FOUND;
+        }
+        break;
 
     case DevicePropertyLegacyBusType:
       Length = sizeof(INTERFACE_TYPE);
@@ -99,9 +135,29 @@ IoGetDeviceProperty(
       break;
 
     case DevicePropertyAddress:
-      Length = sizeof(ULONG);
-      Data = &DeviceNode->Address;
-      break;
+
+        /* Query the device caps */
+        Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCaps);
+        if (NT_SUCCESS(Status) && (DeviceCaps.Address != -1))
+        {
+            /* Return length */
+            *ResultLength = sizeof(ULONG);
+
+            /* Check if the buffer given was large enough */
+            if (BufferLength < *ResultLength)
+            {
+                return STATUS_BUFFER_TOO_SMALL;
+            }
+
+            /* Return address */
+            *(PULONG)PropertyBuffer = DeviceCaps.Address;
+            return STATUS_SUCCESS;
+        }
+        else
+        {
+            return STATUS_OBJECT_NAME_NOT_FOUND;
+        }
+        break;
 
 //    case DevicePropertyUINumber:
 //      if (DeviceNode->CapabilityFlags == NULL)
@@ -451,6 +507,66 @@ IopGetSystemPowerDeviceObject(PDEVICE_OBJECT *DeviceObject)
   }
 
   return STATUS_UNSUCCESSFUL;
+}
+
+USHORT
+STDCALL
+IopGetBusTypeGuidIndex(LPGUID BusTypeGuid)
+{
+    USHORT i = 0, FoundIndex = 0xFFFF;
+    ULONG NewSize;
+    PVOID NewList;
+    
+    /* Acquire the lock */
+    ExAcquireFastMutex(&IopBusTypeGuidList->Lock);
+
+    /* Loop all entries */
+    while (i < IopBusTypeGuidList->GuidCount)
+    {
+        /* Try to find a match */
+        if (RtlCompareMemory(BusTypeGuid,
+                             &IopBusTypeGuidList->Guids[i],
+                             sizeof(GUID)))
+        {
+            /* Found it */
+            FoundIndex = i;
+            goto Quickie;
+        }
+    }
+
+    /* Check if we have to grow the list */
+    if (IopBusTypeGuidList->GuidCount)
+    {
+        /* Calculate the new size */
+        NewSize = sizeof(IO_BUS_TYPE_GUID_LIST) +
+                 (sizeof(GUID) * IopBusTypeGuidList->GuidCount);
+
+        /* Allocate the new copy */
+        NewList = ExAllocatePool(PagedPool, NewSize);
+
+        /* Now copy them, decrease the size too */
+        NewSize -= sizeof(GUID);
+        RtlCopyMemory(NewList, IopBusTypeGuidList, NewSize);
+
+        /* Free the old list */
+        ExFreePool(IopBusTypeGuidList);
+
+        /* Use the new buffer */
+        IopBusTypeGuidList = NewList;
+    }
+
+    /* Copy the new GUID */
+    RtlCopyMemory(&IopBusTypeGuidList->Guids[IopBusTypeGuidList->GuidCount],
+                  BusTypeGuid,
+                  sizeof(GUID));
+
+    /* The new entry is the index */
+    FoundIndex = IopBusTypeGuidList->GuidCount;
+    IopBusTypeGuidList->GuidCount++;
+
+Quickie:
+    ExReleaseFastMutex(&IopBusTypeGuidList->Lock);
+    return FoundIndex;
 }
 
 /*
@@ -1212,28 +1328,13 @@ IopActionInterrogateDeviceStack(
       DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
    }
 
-   RtlZeroMemory(&DeviceCapabilities, sizeof(DEVICE_CAPABILITIES));
-   DeviceCapabilities.Size = sizeof(DEVICE_CAPABILITIES);
-   DeviceCapabilities.Version = 1;
-   DeviceCapabilities.Address = -1;
-   DeviceCapabilities.UINumber = -1;
-
-   Stack.Parameters.DeviceCapabilities.Capabilities = &DeviceCapabilities;
-   Status = IopInitiatePnpIrp(
-      DeviceNode->PhysicalDeviceObject,
-      &IoStatusBlock,
-      IRP_MN_QUERY_CAPABILITIES,
-      &Stack);
+   Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCapabilities);
    if (NT_SUCCESS(Status))
-   {
-   }
-   else
    {
       DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
    }
 
    DeviceNode->CapabilityFlags = *(PULONG)((ULONG_PTR)&DeviceCapabilities + 4);
-   DeviceNode->Address = DeviceCapabilities.Address;
 
    if (!DeviceCapabilities.UniqueID)
    {
@@ -1457,20 +1558,16 @@ IopActionInterrogateDeviceStack(
 
       DeviceNode->ChildBusNumber = BusInformation->BusNumber;
       DeviceNode->ChildInterfaceType = BusInformation->LegacyBusType;
-      memcpy(&DeviceNode->BusTypeGuid,
-             &BusInformation->BusTypeGuid,
-             sizeof(GUID));
+      DeviceNode->ChildBusTypeIndex = IopGetBusTypeGuidIndex(&BusInformation->BusTypeGuid);
       ExFreePool(BusInformation);
    }
    else
    {
       DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
 
-      DeviceNode->ChildBusNumber = -1;
-      DeviceNode->ChildInterfaceType = -1;
-      memset(&DeviceNode->BusTypeGuid,
-             0,
-             sizeof(GUID));
+      DeviceNode->ChildBusNumber = 0xFFFFFFF0;
+      DeviceNode->ChildInterfaceType = InterfaceTypeUndefined;
+      DeviceNode->ChildBusTypeIndex = -1;
    }
 
    DPRINT("Sending IRP_MN_QUERY_RESOURCES to device stack\n");
@@ -2025,6 +2122,11 @@ PnpInit(VOID)
    DPRINT("PnpInit()\n");
 
    KeInitializeSpinLock(&IopDeviceTreeLock);
+
+   /* Initialize the Bus Type GUID List */
+   IopBusTypeGuidList = ExAllocatePool(PagedPool, sizeof(IO_BUS_TYPE_GUID_LIST));
+   RtlZeroMemory(IopBusTypeGuidList, sizeof(IO_BUS_TYPE_GUID_LIST));
+   ExInitializeFastMutex(&IopBusTypeGuidList->Lock);
 
    /* Initialize PnP-Event notification support */
    Status = IopInitPlugPlayEvents();

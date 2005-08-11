@@ -23,6 +23,15 @@ typedef struct _IO_COMPLETION_PACKET
     IO_STATUS_BLOCK IoStatus;
 } IO_COMPLETION_PACKET, *PIO_COMPLETION_PACKET;
 
+/* List of Bus Type GUIDs */
+typedef struct _IO_BUS_TYPE_GUID_LIST
+{
+    ULONG GuidCount;
+    FAST_MUTEX Lock;
+    GUID Guids[1];
+} IO_BUS_TYPE_GUID_LIST, *PIO_BUS_TYPE_GUID_LIST;
+extern PIO_BUS_TYPE_GUID_LIST IopBusTypeGuidList;
+
 /* Packet Types */
 #define IrpCompletionPacket     0x1
 #define IrpMiniCompletionPacket 0x2

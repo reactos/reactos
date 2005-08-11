@@ -2,8 +2,8 @@ NDK FIXMES
 -----------
 
 Order:
-	* Priority 1 = Easiest to fix.
-	* Priority 5 = Hardest to fix.
+	* Priority 1 = Most important to fix.
+	* Priority 5 = Least important to fix.
 
 Format:
 	<Priority Level>
@@ -19,7 +19,7 @@ List:
 	- FIXED: Some files need cleanup (Alex + Eric) [zwfuncs.h, rtlfuncs.h, rtltypes.h]
 
 	Priority 2:
-	- DEVICE_NODE has 2 fields not part of NT's defintion [iotypes.h]
+	- FIXED: DEVICE_NODE has 2 fields not part of NT's defintion (Alex) [iotypes.h]
 	- Object Callbacks don't match NT's (Alex) [obtypes.h]
 	- Remove Create Callback Hack (Alex) [obtypes.h]
 	- Object header doesn't match NT (Alex) [obtypes.h] blocks on ->
@@ -32,9 +32,9 @@ List:
 
 	Priority 4:
 	- FIXED: Kernel and Memory Types are not architecture-specific (Eric) [ketypes.h, mmtypes.h]
-	- Win32K Builds with windows.h (Filip, bugzilla id 666) [extypes.h, ketypes.h]
+	- FIXED: Win32K Builds with windows.h (Filip) [extypes.h, ketypes.h]
 
 	Priority 5:
 	- LPC Types are totally wrong. [lpctypes.h]
 	- Missing System Info Classes [zwtypes.h]
-	- Process Priority Classes are messed up (Alex) [pstypes.h]
+	- FIXED: Process Priority Classes are messed up (Alex) [pstypes.h]

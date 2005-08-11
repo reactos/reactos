@@ -107,7 +107,7 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
                          PVOID Unknown,
                          PVOID Context,
                          ULONG ContextLength,
-                         PULONG Unknown2)
+                         PBOOLEAN ServerToServerCall)
 {
    NTSTATUS Status;
    UNICODE_STRING PortName = RTL_CONSTANT_STRING(L"\\Windows\\ApiPort");
