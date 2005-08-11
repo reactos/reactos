@@ -37,9 +37,11 @@ typedef struct _CSR_WAIT
 
 } CSR_WAIT, * PCSR_WAIT;
 
+typedef VOID (STDCALL * CSR_SERVER_THREAD)(PVOID);
+
 /* symbols exported by native DLL csrsrv.dll */
 
-NTSTATUS STDCALL CsrAddStaticServerThread();
+NTSTATUS STDCALL CsrAddStaticServerThread(CSR_SERVER_THREAD);
 NTSTATUS STDCALL CsrCallServerFromServer();
 NTSTATUS STDCALL CsrCreateProcess(PCSR_SESSION,PCSR_PROCESS*);
 NTSTATUS STDCALL CsrCreateRemoteThread();
@@ -55,7 +57,6 @@ NTSTATUS STDCALL CsrDestroyProcess(PCSR_PROCESS);
 NTSTATUS STDCALL CsrDestroySession (PCSR_SESSION);
 NTSTATUS STDCALL CsrDestroyThread(PCSR_THREAD);
 NTSTATUS STDCALL CsrExecServerThread();
-NTSTATUS STDCALL CsrGetApiPorts(PHANDLE,PHANDLE);
 NTSTATUS STDCALL CsrGetProcessLuid(PCSR_PROCESS,PLUID);
 NTSTATUS STDCALL CsrImpersonateClient();
 NTSTATUS STDCALL CsrLockProcessByClientId();
