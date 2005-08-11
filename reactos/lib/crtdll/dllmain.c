@@ -38,6 +38,7 @@ extern BOOL __fileno_init(void);
 extern int BlockEnvToEnvironA(void);
 extern int BlockEnvToEnvironW(void);
 extern void FreeEnvironment(char **environment);
+extern void _atexit_cleanup(void);
 
 extern unsigned int _osver;
 extern unsigned int _winminor;
@@ -174,6 +175,7 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
         DPRINT("Detach %d\n", nAttachCount);
         /* FIXME: more cleanup... */
         _fcloseall();
+        _atexit_cleanup();
 
         /* destroy tls stuff */
         DestroyThreadData();
