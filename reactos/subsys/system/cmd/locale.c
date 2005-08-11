@@ -71,8 +71,8 @@ VOID PrintDate (VOID)
 VOID PrintTime (VOID)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];	
-  SYSTEMTIME t;
-  GetSystemTime(&t); 
+        SYSTEMTIME t;
+        GetLocalTime(&t); 
   
 	LoadString(CMD_ModuleHandle, STRING_LOCALE_HELP1, szMsg, RC_STRING_MAX_SIZE);
 	ConOutPrintf(_T("%s: %02d%c%02d%c%02d%c%02d\n"), szMsg,  t.wHour, cTimeSeparator,
