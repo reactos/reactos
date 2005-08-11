@@ -704,7 +704,7 @@ VfatGetRetrievalPointers(PVFAT_IRP_CONTEXT IrpContext)
    DeviceExt = IrpContext->DeviceExt;
    FileObject = IrpContext->FileObject;
    Stack = IrpContext->Stack;
-   if (Stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(LARGE_INTEGER) ||
+   if (Stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(STARTING_VCN_INPUT_BUFFER) ||
        Stack->Parameters.DeviceIoControl.Type3InputBuffer == NULL)
    {
       return STATUS_INVALID_PARAMETER;
@@ -719,7 +719,7 @@ VfatGetRetrievalPointers(PVFAT_IRP_CONTEXT IrpContext)
 
    ExAcquireResourceSharedLite(&Fcb->MainResource, TRUE);
 
-   Vcn = *(PLARGE_INTEGER)Stack->Parameters.DeviceIoControl.Type3InputBuffer;
+   Vcn = ((PSTARTING_VCN_INPUT_BUFFER)Stack->Parameters.DeviceIoControl.Type3InputBuffer)->StartingVcn;
    RetrievalPointers = IrpContext->Irp->UserBuffer;
 
    MaxExtentCount = ((Stack->Parameters.DeviceIoControl.OutputBufferLength - sizeof(RetrievalPointers->ExtentCount) - sizeof(RetrievalPointers->StartingVcn)) / sizeof(RetrievalPointers->Extents[0]));
