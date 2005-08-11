@@ -61,6 +61,7 @@ language_t *new_language(int id, int sub);
 language_t *dup_language(language_t *l);
 version_t *dup_version(version_t *v);
 characts_t *dup_characts(characts_t *c);
+html_t *new_html(raw_data_t *rd, int *memopt);
 rcdata_t *new_rcdata(raw_data_t *rd, int *memopt);
 font_id_t *new_font_id(int size, string_t *face, int weight, int italic);
 user_t *new_user(name_id_t *type, raw_data_t *rd, int *memopt);
@@ -82,4 +83,3 @@ style_pair_t *new_style_pair(style_t *style, style_t *exstyle);
 style_t *new_style(DWORD or_mask, DWORD and_mask);
 
 #endif
-

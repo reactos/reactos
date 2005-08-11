@@ -123,6 +123,20 @@ characts_t *dup_characts(characts_t *c)
 	return new_characts(*c);
 }
 
+html_t *new_html(raw_data_t *rd, int *memopt)
+{
+	html_t *html = xmalloc(sizeof(html_t));
+	html->data = rd;
+	if(memopt)
+	{
+		html->memopt = *memopt;
+		free(memopt);
+	}
+	else
+		html->memopt = WRC_MO_MOVEABLE | WRC_MO_PURE;
+	return html;
+}
+
 rcdata_t *new_rcdata(raw_data_t *rd, int *memopt)
 {
 	rcdata_t *rc = (rcdata_t *)xmalloc(sizeof(rcdata_t));

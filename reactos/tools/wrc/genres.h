@@ -24,7 +24,7 @@
 #include "wrctypes.h"
 
 res_t *new_res(void);
-res_t *grow_res(res_t *r, int add);
+res_t *grow_res(res_t *r, unsigned int add);
 void put_byte(res_t *res, unsigned c);
 void put_word(res_t *res, unsigned w);
 void put_dword(res_t *res, unsigned d);

@@ -232,7 +232,7 @@ static resource_t *read_res32(FILE *fp)
 			str = new_string();
 			str->type = str_unicode;
 			str->size = (idx - tag) / 2;
-			str->str.wstr = (WCHAR *)xmalloc(idx-tag+2);
+			str->str.wstr = xmalloc(idx-tag+2);
 			memcpy(str->str.wstr, &res->data[tag], idx-tag);
 			str->str.wstr[str->size] = 0;
 			type = new_name_id();
@@ -266,7 +266,7 @@ static resource_t *read_res32(FILE *fp)
 			str = new_string();
 			str->type = str_unicode;
 			str->size = (idx - tag) / 2;
-			str->str.wstr = (WCHAR *)xmalloc(idx-tag+2);
+			str->str.wstr = xmalloc(idx-tag+2);
 			memcpy(str->str.wstr, &res->data[tag], idx-tag);
 			str->str.wstr[str->size] = 0;
 			name = new_name_id();
