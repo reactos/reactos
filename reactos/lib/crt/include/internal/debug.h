@@ -28,7 +28,7 @@
    #define sT "s"
 #endif
 
-
+unsigned long DbgPrint(char *Format,...);
 
 #define TRACE(...)
 
