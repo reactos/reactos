@@ -7,8 +7,10 @@
 
 #define WIN_SRV_BASE 1
 
-NTSTATUS STDCALL BaseSetProcessCreateNotify ();
-NTSTATUS STDCALL ServerDllInitialization ();
+typedef VOID (CALLBACK * BASE_PROCESS_CREATE_NOTIFY_ROUTINE)(PVOID);
+
+NTSTATUS STDCALL BaseSetProcessCreateNotify (BASE_PROCESS_CREATE_NOTIFY_ROUTINE);
+NTSTATUS STDCALL ServerDllInitialization (ULONG,LPWSTR*);
 
 #endif /* ndef __INCLUDE_WIN_BASE_H */
 

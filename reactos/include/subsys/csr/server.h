@@ -37,7 +37,7 @@ typedef struct _CSR_WAIT
 
 } CSR_WAIT, * PCSR_WAIT;
 
-typedef VOID (STDCALL * CSR_SERVER_THREAD)(PVOID);
+typedef VOID (CALLBACK * CSR_SERVER_THREAD)(PVOID);
 
 /* symbols exported by native DLL csrsrv.dll */
 
