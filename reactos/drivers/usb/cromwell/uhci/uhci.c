@@ -49,7 +49,7 @@ CreateRootHubPdo(
 	DeviceExtension = (POHCI_DEVICE_EXTENSION)Pdo->DeviceExtension;
 	RtlZeroMemory(DeviceExtension, sizeof(OHCI_DEVICE_EXTENSION));
 	
-	DeviceExtension->IsFDO = false;
+	DeviceExtension->IsFDO = FALSE;
 	DeviceExtension->FunctionalDeviceObject = Fdo;
 	
 	Pdo->Flags &= ~DO_DEVICE_INITIALIZING;

@@ -344,7 +344,6 @@ UhciDeviceControlFdo(
 					&StringSize);
 				if (NT_SUCCESS(Status) || Status == STATUS_BUFFER_TOO_SMALL)
 				{
-					DPRINT("UHCI: IOCTL_GET_HCD_DRIVERKEY_NAME returns '%S'\n", StringDescriptor->DriverKeyName);
 					StringDescriptor->ActualLength = StringSize + FIELD_OFFSET(USB_HCD_DRIVERKEY_NAME, DriverKeyName);
 					Information = LengthOut;
 					Status = STATUS_SUCCESS;
@@ -383,18 +382,6 @@ UhciDeviceControlFdo(
 					Information = sizeof(USB_ROOT_HUB_NAME);
 				Status = STATUS_SUCCESS;
 			}
-			break;
-		}
-		case IOCTL_USB_GET_NODE_CONNECTION_INFORMATION:
-		{
-			DPRINT1("UHCI: IOCTL_USB_GET_NODE_CONNECTION_INFORMATION\n");
-			Status = STATUS_NOT_IMPLEMENTED;
-			break;
-		}
-		case IOCTL_USB_GET_NODE_CONNECTION_NAME:
-		{
-			DPRINT1("UHCI: IOCTL_USB_GET_NODE_CONNECTION_NAME\n");
-			Status = STATUS_NOT_IMPLEMENTED;
 			break;
 		}
 
