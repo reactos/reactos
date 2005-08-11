@@ -1434,7 +1434,7 @@ typedef struct
 {
   LARGE_INTEGER StartingLcn;
   LARGE_INTEGER BitmapSize;
-  BYTE Buffer[1];
+  UCHAR Buffer[1];
 } VOLUME_BITMAP_BUFFER, *PVOLUME_BITMAP_BUFFER;
 
 #if (VER_PRODUCTBUILD >= 2600)
