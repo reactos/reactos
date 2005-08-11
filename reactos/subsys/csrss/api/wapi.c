@@ -79,11 +79,11 @@ CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
     {
       if (ApiDefinitions[DefIndex].Type == Type)
         {
-          if (Request->Header.DataSize < ApiDefinitions[DefIndex].MinRequestSize)
+          if (Request->Header.u1.s1.DataLength < ApiDefinitions[DefIndex].MinRequestSize)
             {
               DPRINT1("Request type %d min request size %d actual %d\n",
                       Type, ApiDefinitions[DefIndex].MinRequestSize,
-                      Request->Header.DataSize);
+                      Request->Header.u1.s1.DataLength);
               Request->Status = STATUS_INVALID_PARAMETER;
             }
           else
@@ -96,8 +96,8 @@ CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
   if (! Found)
     {
       DPRINT1("CSR: Unknown request type 0x%x\n", Request->Type);
-      Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-      Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+      Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+      Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
       Request->Status = STATUS_INVALID_SYSTEM_SERVICE;
     }
 }
@@ -133,7 +133,7 @@ ClientConnectionThread(HANDLE ServerPort)
         }
         
         /* If the connection was closed, handle that */
-        if (LpcRequest.Header.MessageType == LPC_PORT_CLOSED)
+        if (LpcRequest.Header.u2.s2.Type == LPC_PORT_CLOSED)
         {
             CsrFreeProcessData( LpcRequest.Header.ClientId.UniqueProcess );
             break;
@@ -151,7 +151,7 @@ ClientConnectionThread(HANDLE ServerPort)
         if (ProcessData == NULL)
         {
             DPRINT1("CSR: Message %d: Unable to find data for process 0x%x\n",
-                    LpcRequest.Header.MessageType,
+                    LpcRequest.Header.u2.s2.Type,
                     LpcRequest.Header.ClientId.UniqueProcess);
             break;
         }
@@ -273,12 +273,13 @@ ServerSbApiPortThread (PVOID PortHandle)
 {
 	HANDLE          hSbApiPortListen = * (PHANDLE) PortHandle;
 	HANDLE          hConnectedPort = (HANDLE) 0;
-	LPC_MAX_MESSAGE Request = {{0}};
+	LPC_MAX_MESSAGE Request;
 	PVOID           Context = NULL;
 	NTSTATUS        Status = STATUS_SUCCESS;
 
 	DPRINT("CSR: %s called\n", __FUNCTION__);
 
+    RtlZeroMemory(&Request, sizeof(LPC_MAX_MESSAGE));
 	Status = NtListenPort (hSbApiPortListen, & Request.Header);
 	if (!NT_SUCCESS(Status))
 	{
@@ -305,7 +306,7 @@ DPRINT("-- 2\n");
 					__FUNCTION__, Status);
 			} else {
 DPRINT("-- 3\n");
-				PLPC_MESSAGE Reply = NULL;
+				PPORT_MESSAGE Reply = NULL;
 				/*
 				 * Tell the init thread the SM gave the
 				 * green light for boostrapping.
@@ -330,12 +331,12 @@ DPRINT("-- 4\n");
 							__FUNCTION__, Status);
 						break;
 					}
-					switch (Request.Header.MessageType)//fix .h PORT_MESSAGE_TYPE(Request))
+					switch (Request.Header.u2.s2.Type)//fix .h PORT_MESSAGE_TYPE(Request))
 					{
 						/* TODO */
 					default:
 						DPRINT1("CSR: %s received message (type=%d)\n",
-							__FUNCTION__, Request.Header.MessageType);
+							__FUNCTION__, Request.Header.u2.s2.Type);
 					}
 DPRINT("-- 5\n");
 				}

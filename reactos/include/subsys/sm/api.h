@@ -110,7 +110,7 @@ typedef struct _SM_PORT_MESSAGE_QRYINFO
 typedef union _SM_PORT_MESSAGE
 {
   /*** LPC common header ***/
-  LPC_MESSAGE Header;
+  PORT_MESSAGE Header;
   struct {
     UCHAR LpcHeader[LPC_MESSAGE_BASE_SIZE];
     /*** SM common header ***/
@@ -138,7 +138,7 @@ typedef union _SM_PORT_MESSAGE
 
 /*** MACRO ***********************************************************/
 
-#define SM_CONNECT_DATA_SIZE(m)  ((m).Header.DataSize-sizeof(USHORT)-sizeof(WORD))
+#define SM_CONNECT_DATA_SIZE(m)  ((m).Header.u1.s1.DataLength-sizeof(USHORT)-sizeof(WORD))
 #define SM_PORT_DATA_SIZE(c)     (sizeof(DWORD)+sizeof(NTSTATUS)+sizeof(c))
 #define SM_PORT_MESSAGE_SIZE     (sizeof(SM_PORT_MESSAGE))
 

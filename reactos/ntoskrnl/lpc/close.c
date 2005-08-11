@@ -31,7 +31,7 @@ VOID STDCALL
 LpcpClosePort (PVOID	ObjectBody, ULONG	HandleCount)
 {
   PEPORT Port = (PEPORT)ObjectBody;
-  LPC_MESSAGE Message;
+  PORT_MESSAGE Message;
 
   /* FIXME Race conditions here! */
 
@@ -44,8 +44,8 @@ LpcpClosePort (PVOID	ObjectBody, ULONG	HandleCount)
   if (HandleCount == 1 && Port->State == EPORT_CONNECTED_CLIENT)
     {
       DPRINT("Informing server\n");
-      Message.MessageSize = sizeof(LPC_MESSAGE);
-      Message.DataSize = 0;
+      Message.u1.s1.TotalLength = sizeof(PORT_MESSAGE);
+      Message.u1.s1.DataLength = 0;
       EiReplyOrRequestPort (Port->OtherPort,
 			    &Message,
 			    LPC_PORT_CLOSED,

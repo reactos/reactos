@@ -50,10 +50,10 @@ SmCompleteSession (IN HANDLE hSmApiPort,
   SmReqMsg.SmHeader.ApiIndex = SM_API_COMPLETE_SESSION;
 
   /* Port message */
-  SmReqMsg.Header.MessageType = LPC_NEW_MESSAGE;
-  SmReqMsg.Header.DataSize    = SM_PORT_DATA_SIZE(SmReqMsg.Request);
-  SmReqMsg.Header.MessageSize = SM_PORT_MESSAGE_SIZE;
-  Status = NtRequestWaitReplyPort (hSmApiPort, (PLPC_MESSAGE) & SmReqMsg, (PLPC_MESSAGE) & SmReqMsg);
+  SmReqMsg.Header.u2.s2.Type = LPC_NEW_MESSAGE;
+  SmReqMsg.Header.u1.s1.DataLength    = SM_PORT_DATA_SIZE(SmReqMsg.Request);
+  SmReqMsg.Header.u1.s1.TotalLength = SM_PORT_MESSAGE_SIZE;
+  Status = NtRequestWaitReplyPort (hSmApiPort, (PPORT_MESSAGE) & SmReqMsg, (PPORT_MESSAGE) & SmReqMsg);
   if (NT_SUCCESS(Status))
   {
     return SmReqMsg.SmHeader.Status;

@@ -108,11 +108,12 @@ SmpApiConnectedThread(PVOID pConnectedPort)
 {
 	NTSTATUS	Status = STATUS_SUCCESS;
 	PVOID		Unknown = NULL;
-	PLPC_MESSAGE	Reply = NULL;
-	SM_PORT_MESSAGE	Request = {{0}};
+	PPORT_MESSAGE	Reply = NULL;
+	SM_PORT_MESSAGE	Request;
 	HANDLE          ConnectedPort = * (PHANDLE) pConnectedPort;
 
 	DPRINT("SM: %s called\n", __FUNCTION__);
+    RtlZeroMemory(&Request, sizeof(SM_PORT_MESSAGE));
 
 	while (TRUE)
 	{
@@ -121,14 +122,14 @@ SmpApiConnectedThread(PVOID pConnectedPort)
 		Status = NtReplyWaitReceivePort(ConnectedPort,
 						(PULONG) & Unknown,
 						Reply,
-						(PLPC_MESSAGE) & Request);
+						(PPORT_MESSAGE) & Request);
 		if (NT_SUCCESS(Status))
 		{
 			DPRINT("SM: %s: message received (type=%d)\n",
 				__FUNCTION__,
-				PORT_MESSAGE_TYPE(Request));
+				LPC_MESSAGE_TYPE(Request));
 
-			switch (Request.Header.MessageType)
+			switch (Request.Header.u2.s2.Type)
 			{
 			case LPC_CONNECTION_REQUEST:
 				SmpHandleConnectionRequest (&Request);
@@ -146,10 +147,10 @@ SmpApiConnectedThread(PVOID pConnectedPort)
 					(Request.SmHeader.ApiIndex < (sizeof SmApi / sizeof SmApi[0])))
 				{
 					Status = SmApi[Request.SmHeader.ApiIndex](&Request);
-				      	Reply = (PLPC_MESSAGE) & Request;
+				      	Reply = (PPORT_MESSAGE) & Request;
 				} else {
 					Request.SmHeader.Status = STATUS_NOT_IMPLEMENTED;
-					Reply = (PLPC_MESSAGE) & Request;
+					Reply = (PPORT_MESSAGE) & Request;
 				}
 			}
 		} else {
@@ -187,7 +188,7 @@ SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request)
 	DPRINT("SM: %s called:\n  SubSystemID=%d\n  SbName=\"%S\"\n",
 			__FUNCTION__, ConnectData->SubSystemId, ConnectData->SbName);
 
-	if(sizeof (SM_CONNECT_DATA) == Request->Header.DataSize)
+	if(sizeof (SM_CONNECT_DATA) == Request->Header.u1.s1.DataLength)
 	{
 		if(IMAGE_SUBSYSTEM_UNKNOWN == ConnectData->SubSystemId)
 		{
@@ -248,7 +249,7 @@ SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request)
 #if defined(__USE_NT_LPC__)
 	Status = NtAcceptConnectPort (ClientDataApiPort,
 				      Context,
-				      (PLPC_MESSAGE) Request,
+				      (PPORT_MESSAGE) Request,
 				      Accept,
 				      NULL,
 				      NULL);
@@ -317,9 +318,10 @@ VOID STDCALL
 SmpApiThread (HANDLE ListeningPort)
 {
 	NTSTATUS	Status = STATUS_SUCCESS;
-	LPC_MAX_MESSAGE	Request = {{0}};
+	LPC_MAX_MESSAGE	Request;
 
 	DPRINT("SM: %s called\n", __FUNCTION__);
+    RtlZeroMemory(&Request, sizeof(LPC_MAX_MESSAGE));
 
 	while (TRUE)
 	{

@@ -31,7 +31,7 @@
  */
 NTSTATUS STDCALL
 EiReplyOrRequestPort (IN	PEPORT		Port,
-		      IN	PLPC_MESSAGE	LpcReply,
+		      IN	PPORT_MESSAGE	LpcReply,
 		      IN	ULONG		MessageType,
 		      IN	PEPORT		Sender)
 {
@@ -49,12 +49,12 @@ EiReplyOrRequestPort (IN	PEPORT		Port,
 
    if (LpcReply != NULL)
      {
-	memcpy(&MessageReply->Message, LpcReply, LpcReply->MessageSize);
+	memcpy(&MessageReply->Message, LpcReply, LpcReply->u1.s1.TotalLength);
      }
 
    MessageReply->Message.ClientId.UniqueProcess = PsGetCurrentProcessId();
    MessageReply->Message.ClientId.UniqueThread = PsGetCurrentThreadId();
-   MessageReply->Message.MessageType = MessageType;
+   MessageReply->Message.u2.s2.Type = MessageType;
    MessageReply->Message.MessageId = InterlockedIncrementUL(&LpcpNextMessageId);
 
    KeAcquireSpinLock(&Port->Lock, &oldIrql);
@@ -78,7 +78,7 @@ EiReplyOrRequestPort (IN	PEPORT		Port,
  */
 NTSTATUS STDCALL
 NtReplyPort (IN	HANDLE		PortHandle,
-	     IN	PLPC_MESSAGE	LpcReply)
+	     IN	PPORT_MESSAGE	LpcReply)
 {
    NTSTATUS Status;
    PEPORT Port;
@@ -137,8 +137,8 @@ NtReplyPort (IN	HANDLE		PortHandle,
 NTSTATUS STDCALL
 NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
 			 OUT PULONG		PortId,
-			 IN  PLPC_MESSAGE	LpcReply,
-			 OUT PLPC_MESSAGE	LpcMessage,
+			 IN  PPORT_MESSAGE	LpcReply,
+			 OUT PPORT_MESSAGE	LpcMessage,
 			 IN  PLARGE_INTEGER	Timeout)
 {
    PEPORT Port;
@@ -159,7 +159,7 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
        _SEH_TRY
          {
            ProbeForWrite(LpcMessage,
-                         sizeof(LPC_MESSAGE),
+                         sizeof(PORT_MESSAGE),
                          1);
          }
        _SEH_HANDLE
@@ -252,15 +252,15 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
    Request = EiDequeueMessagePort(Port);
    KeReleaseSpinLock(&Port->Lock, oldIrql);
 
-   if (Request->Message.MessageType == LPC_CONNECTION_REQUEST)
+   if (Request->Message.u2.s2.Type == LPC_CONNECTION_REQUEST)
      {
-       LPC_MESSAGE Header;
+       PORT_MESSAGE Header;
        PEPORT_CONNECT_REQUEST_MESSAGE CRequest;
 
        CRequest = (PEPORT_CONNECT_REQUEST_MESSAGE)&Request->Message;
-       memcpy(&Header, &Request->Message, sizeof(LPC_MESSAGE));
-       Header.DataSize = CRequest->ConnectDataLength;
-       Header.MessageSize = Header.DataSize + sizeof(LPC_MESSAGE);
+       memcpy(&Header, &Request->Message, sizeof(PORT_MESSAGE));
+       Header.u1.s1.DataLength = CRequest->ConnectDataLength;
+       Header.u1.s1.TotalLength = Header.u1.s1.DataLength + sizeof(PORT_MESSAGE);
        
        if (PreviousMode != KernelMode)
          {
@@ -272,7 +272,7 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
 
                RtlCopyMemory(LpcMessage,
                              &Header,
-                             sizeof(LPC_MESSAGE));
+                             sizeof(PORT_MESSAGE));
                RtlCopyMemory((PVOID)(LpcMessage + 1),
                              CRequest->ConnectData,
                              CRequest->ConnectDataLength);
@@ -287,7 +287,7 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
          {
            RtlCopyMemory(LpcMessage,
                          &Header,
-                         sizeof(LPC_MESSAGE));
+                         sizeof(PORT_MESSAGE));
            RtlCopyMemory((PVOID)(LpcMessage + 1),
                          CRequest->ConnectData,
                          CRequest->ConnectDataLength);
@@ -300,12 +300,12 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
            _SEH_TRY
              {
                ProbeForWrite(LpcMessage,
-                             Request->Message.MessageSize,
+                             Request->Message.u1.s1.TotalLength,
                              1);
 
                RtlCopyMemory(LpcMessage,
                              &Request->Message,
-                             Request->Message.MessageSize);
+                             Request->Message.u1.s1.TotalLength);
              }
            _SEH_HANDLE
              {
@@ -317,7 +317,7 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
          {
            RtlCopyMemory(LpcMessage,
                          &Request->Message,
-                         Request->Message.MessageSize);
+                         Request->Message.u1.s1.TotalLength);
          }
      }
    if (!NT_SUCCESS(Status))
@@ -333,7 +333,7 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
        ObDereferenceObject(Port);
        return(Status);
      }
-   if (Request->Message.MessageType == LPC_CONNECTION_REQUEST)
+   if (Request->Message.u2.s2.Type == LPC_CONNECTION_REQUEST)
      {
        KeAcquireSpinLock(&Port->Lock, &oldIrql);
        EiEnqueueConnectMessagePort(Port, Request);
@@ -372,8 +372,8 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
 NTSTATUS STDCALL
 NtReplyWaitReceivePort (IN  HANDLE		PortHandle,
 			OUT PULONG		PortId,
-			IN  PLPC_MESSAGE	LpcReply,
-			OUT PLPC_MESSAGE	LpcMessage)
+			IN  PPORT_MESSAGE	LpcReply,
+			OUT PPORT_MESSAGE	LpcMessage)
 {
   return(NtReplyWaitReceivePortEx (PortHandle,
 				   PortId,
@@ -395,7 +395,7 @@ NtReplyWaitReceivePort (IN  HANDLE		PortHandle,
  */
 NTSTATUS STDCALL
 NtReplyWaitReplyPort (HANDLE		PortHandle,
-		      PLPC_MESSAGE	ReplyMessage)
+		      PPORT_MESSAGE	ReplyMessage)
 {
    UNIMPLEMENTED;
    return(STATUS_NOT_IMPLEMENTED);
@@ -408,8 +408,8 @@ NTSTATUS
 STDCALL
 LpcRequestWaitReplyPort (
 	IN PEPORT		Port,
-	IN PLPC_MESSAGE	LpcMessageRequest,
-	OUT PLPC_MESSAGE	LpcMessageReply
+	IN PPORT_MESSAGE	LpcMessageRequest,
+	OUT PPORT_MESSAGE	LpcMessageReply
 	)
 {
 	UNIMPLEMENTED;

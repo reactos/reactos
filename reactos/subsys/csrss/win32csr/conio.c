@@ -227,8 +227,8 @@ CSR_API(CsrAllocConsole)
 
     DPRINT("CsrAllocConsole\n");
 
-    Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-    Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
     if (ProcessData == NULL)
     {
@@ -356,8 +356,8 @@ CSR_API(CsrFreeConsole)
 
   DPRINT("CsrFreeConsole\n");
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   if (ProcessData == NULL || ProcessData->Console == NULL)
     {
@@ -561,8 +561,8 @@ CSR_API(CsrReadConsole)
 
   /* truncate length to CSRSS_MAX_READ_CONSOLE_REQUEST */
   nNumberOfCharsToRead = min(Request->Data.ReadConsoleRequest.NrCharactersToRead, CSRSS_MAX_READ_CONSOLE / CharSize);
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = Request->Header.MessageSize - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = Request->Header.u1.s1.TotalLength - LPC_MESSAGE_BASE_SIZE;
 
   Buffer = Request->Data.ReadConsoleRequest.Buffer;
   UnicodeBuffer = (PWCHAR)Buffer;
@@ -670,7 +670,7 @@ CSR_API(CsrReadConsole)
     {
       Console->EchoCount = 0;             /* if the client is no longer waiting on input, do not echo */
     }
-  Request->Header.MessageSize += i * CharSize;
+  Request->Header.u1.s1.TotalLength += i * CharSize;
 
   ConioUnlockConsole(Console);
   return Request->Status;
@@ -921,19 +921,19 @@ CSR_API(CsrWriteConsole)
 
   DPRINT("CsrWriteConsole\n");
 
-  if (Request->Header.DataSize
+  if (Request->Header.u1.s1.DataLength
       < sizeof(CSRSS_WRITE_CONSOLE) - 1
         + (Request->Data.WriteConsoleRequest.NrCharactersToWrite * CharSize))
     {
       DPRINT1("Invalid request size\n");
-      Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-      Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+      Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+      Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
       return Request->Status = STATUS_INVALID_PARAMETER;
     }
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
   
   if (! NT_SUCCESS(Status))
     {
@@ -1430,8 +1430,8 @@ CSR_API(CsrGetScreenBufferInfo)
 
   DPRINT("CsrGetScreenBufferInfo\n");
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   Status = ConioLockScreenBuffer(ProcessData, Request->Data.ScreenBufferInfoRequest.ConsoleHandle, &Buff);
   if (! NT_SUCCESS(Status))
@@ -1473,8 +1473,8 @@ CSR_API(CsrSetCursor)
       return Request->Status = Status;
     }
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   Status = ConioLockScreenBuffer(ProcessData, Request->Data.SetCursorRequest.ConsoleHandle, &Buff);
   if (! NT_SUCCESS(Status))
@@ -1556,19 +1556,19 @@ CSR_API(CsrWriteConsoleOutputChar)
 
   CharSize = (Request->Data.WriteConsoleOutputCharRequest.Unicode ? sizeof(WCHAR) : sizeof(CHAR));
 
-  if (Request->Header.DataSize
+  if (Request->Header.u1.s1.DataLength
       < sizeof(CSRSS_WRITE_CONSOLE_OUTPUT_CHAR) - 1
         + (Request->Data.WriteConsoleOutputCharRequest.Length * CharSize))
     {
       DPRINT1("Invalid request size\n");
-      Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-      Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+      Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+      Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
       return Request->Status = STATUS_INVALID_PARAMETER;
     }
 
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
   if (NT_SUCCESS(Status))
     {
       if(Request->Data.WriteConsoleOutputCharRequest.Unicode)
@@ -1659,8 +1659,8 @@ CSR_API(CsrFillOutputChar)
 
   DPRINT("CsrFillOutputChar\n");
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
@@ -1728,8 +1728,8 @@ CSR_API(CsrReadInputEvent)
 
   DPRINT("CsrReadInputEvent\n");
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
   Request->Data.ReadInputRequest.Event = ProcessData->ConsoleEvent;
 
   Status = ConioLockConsole(ProcessData, Request->Data.ReadInputRequest.ConsoleHandle, &Console);
@@ -1808,19 +1808,19 @@ CSR_API(CsrWriteConsoleOutputAttrib)
 
   DPRINT("CsrWriteConsoleOutputAttrib\n");
 
-  if (Request->Header.DataSize
+  if (Request->Header.u1.s1.DataLength
       < sizeof(CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB) - 1
         + Request->Data.WriteConsoleOutputAttribRequest.Length)
     {
       DPRINT1("Invalid request size\n");
-      Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-      Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+      Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+      Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
       return Request->Status = STATUS_INVALID_PARAMETER;
     }
 
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
   if (! NT_SUCCESS(Status))
     {
       return Request->Status = Status;
@@ -1896,8 +1896,8 @@ CSR_API(CsrFillOutputAttrib)
       return Request->Status = Status;
     }
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
   Status = ConioLockScreenBuffer(ProcessData, Request->Data.FillOutputAttribRequest.ConsoleHandle, &Buff);
   if (! NT_SUCCESS(Status))
     {
@@ -1952,8 +1952,8 @@ CSR_API(CsrGetCursorInfo)
 
   DPRINT("CsrGetCursorInfo\n");
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   Status = ConioLockScreenBuffer(ProcessData, Request->Data.GetCursorInfoRequest.ConsoleHandle, &Buff);
   if (! NT_SUCCESS(Status))
@@ -1976,8 +1976,8 @@ CSR_API(CsrSetCursorInfo)
 
   DPRINT("CsrSetCursorInfo\n");
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
@@ -2084,8 +2084,8 @@ CSR_API(CsrSetConsoleMode)
 
   DPRINT("CsrSetConsoleMode\n");
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
   Status = Win32CsrGetObject(ProcessData,
                              Request->Data.SetConsoleModeRequest.ConsoleHandle,
                              (Object_t **) &Console);
@@ -2121,8 +2121,8 @@ CSR_API(CsrGetConsoleMode)
 
   DPRINT("CsrGetConsoleMode\n");
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
   Status = Win32CsrGetObject(ProcessData, Request->Data.GetConsoleModeRequest.ConsoleHandle,
                              (Object_t **) &Console);
   if (! NT_SUCCESS(Status))
@@ -2170,8 +2170,8 @@ CSR_API(CsrCreateScreenBuffer)
       return Request->Status = STATUS_INVALID_HANDLE;
     }
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   Buff = HeapAlloc(Win32CsrApiHeap, 0, sizeof(CSRSS_SCREEN_BUFFER));
   if (NULL == Buff)
@@ -2213,8 +2213,8 @@ CSR_API(CsrSetScreenBuffer)
       return Request->Status = STATUS_INVALID_HANDLE;
     }
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   Status = ConioLockScreenBuffer(ProcessData, Request->Data.SetScreenBufferRequest.OutputHandle, &Buff);
   if (! NT_SUCCESS(Status))
@@ -2255,19 +2255,19 @@ CSR_API(CsrSetTitle)
 
   DPRINT("CsrSetTitle\n");
 
-  if (Request->Header.DataSize
+  if (Request->Header.u1.s1.DataLength
       < sizeof(CSRSS_SET_TITLE) - 1
         + Request->Data.SetTitleRequest.Length)
     {
       DPRINT1("Invalid request size\n");
-      Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-      Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+      Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+      Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
       return Request->Status = STATUS_INVALID_PARAMETER;
     }
 
   Status = ConioLockConsole(ProcessData, Request->Data.SetTitleRequest.Console, &Console);
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
   if(! NT_SUCCESS(Status))
     {
       Request->Status = Status;
@@ -2298,8 +2298,8 @@ CSR_API(CsrGetTitle)
 
   DPRINT("CsrGetTitle\n");
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
   Status = ConioLockConsole(ProcessData,
                             Request->Data.GetTitleRequest.ConsoleHandle,
                             &Console);
@@ -2314,8 +2314,8 @@ CSR_API(CsrGetTitle)
   Request->Data.GetTitleRequest.ConsoleHandle = Request->Data.GetTitleRequest.ConsoleHandle;
   Request->Data.GetTitleRequest.Length = Console->Title.Length;
   wcscpy (Request->Data.GetTitleRequest.Title, Console->Title.Buffer);
-  Request->Header.MessageSize += Console->Title.Length;
-  Request->Header.DataSize += Console->Title.Length;
+  Request->Header.u1.s1.TotalLength += Console->Title.Length;
+  Request->Header.u1.s1.DataLength += Console->Title.Length;
   Request->Status = STATUS_SUCCESS;
 
   ConioUnlockConsole(Console);
@@ -2346,8 +2346,8 @@ CSR_API(CsrWriteConsoleOutput)
       return Request->Status = Status;
     }
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
   Status = ConioLockScreenBuffer(ProcessData,
                                  Request->Data.WriteConsoleOutputRequest.ConsoleHandle,
                                  &Buff);
@@ -2439,8 +2439,8 @@ CSR_API(CsrFlushInputBuffer)
 
   DPRINT("CsrFlushInputBuffer\n");
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
   Status = ConioLockConsole(ProcessData,
                             Request->Data.FlushInputBufferRequest.ConsoleInput,
                             &Console);
@@ -2491,8 +2491,8 @@ CSR_API(CsrScrollConsoleScreenBuffer)
       return Request->Status = Status;
     }
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
   Status = ConioLockScreenBuffer(ProcessData, ConsoleHandle, &Buff);
   if (! NT_SUCCESS(Status))
     {
@@ -2591,8 +2591,8 @@ CSR_API(CsrReadConsoleOutputChar)
 
   DPRINT("CsrReadConsoleOutputChar\n");
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = Request->Header.MessageSize - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = Request->Header.u1.s1.TotalLength - LPC_MESSAGE_BASE_SIZE;
   ReadBuffer = Request->Data.ReadConsoleOutputCharRequest.String;
 
   CharSize = (Request->Data.ReadConsoleOutputCharRequest.Unicode ? sizeof(WCHAR) : sizeof(CHAR));
@@ -2642,8 +2642,8 @@ CSR_API(CsrReadConsoleOutputChar)
   Request->Status = STATUS_SUCCESS;
   Request->Data.ReadConsoleOutputCharRequest.EndCoord.X = Xpos - Buff->ShowX;
   Request->Data.ReadConsoleOutputCharRequest.EndCoord.Y = (Ypos - Buff->ShowY + Buff->MaxY) % Buff->MaxY;
-  Request->Header.MessageSize += Request->Data.ReadConsoleOutputCharRequest.NumCharsToRead;
-  Request->Header.DataSize += Request->Data.ReadConsoleOutputCharRequest.NumCharsToRead;
+  Request->Header.u1.s1.TotalLength += Request->Data.ReadConsoleOutputCharRequest.NumCharsToRead;
+  Request->Header.u1.s1.DataLength += Request->Data.ReadConsoleOutputCharRequest.NumCharsToRead;
 
   ConioUnlockScreenBuffer(Buff);
   if (NULL != Console)
@@ -2667,8 +2667,8 @@ CSR_API(CsrReadConsoleOutputAttrib)
 
   DPRINT("CsrReadConsoleOutputAttrib\n");
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = Request->Header.MessageSize - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = Request->Header.u1.s1.TotalLength - LPC_MESSAGE_BASE_SIZE;
   ReadBuffer = Request->Data.ReadConsoleOutputAttribRequest.String;
 
   Status = ConioLockScreenBuffer(ProcessData, Request->Data.ReadConsoleOutputAttribRequest.ConsoleHandle, &Buff);
@@ -2704,8 +2704,8 @@ CSR_API(CsrReadConsoleOutputAttrib)
   Request->Status = STATUS_SUCCESS;
   Request->Data.ReadConsoleOutputAttribRequest.EndCoord.X = Xpos - Buff->ShowX;
   Request->Data.ReadConsoleOutputAttribRequest.EndCoord.Y = (Ypos - Buff->ShowY + Buff->MaxY) % Buff->MaxY;
-  Request->Header.MessageSize += Request->Data.ReadConsoleOutputAttribRequest.NumAttrsToRead;
-  Request->Header.DataSize += Request->Data.ReadConsoleOutputAttribRequest.NumAttrsToRead;
+  Request->Header.u1.s1.TotalLength += Request->Data.ReadConsoleOutputAttribRequest.NumAttrsToRead;
+  Request->Header.u1.s1.DataLength += Request->Data.ReadConsoleOutputAttribRequest.NumAttrsToRead;
 
   ConioUnlockScreenBuffer(Buff);
 
@@ -2723,8 +2723,8 @@ CSR_API(CsrGetNumberOfConsoleInputEvents)
 
   DPRINT("CsrGetNumberOfConsoleInputEvents\n");
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = Request->Header.MessageSize - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = Request->Header.u1.s1.TotalLength - LPC_MESSAGE_BASE_SIZE;
 
   Status = ConioLockConsole(ProcessData, Request->Data.GetNumInputEventsRequest.ConsoleHandle, &Console);
   if (! NT_SUCCESS(Status))
@@ -2768,8 +2768,8 @@ CSR_API(CsrPeekConsoleInput)
 
   DPRINT("CsrPeekConsoleInput\n");
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   Status = ConioLockConsole(ProcessData, Request->Data.GetNumInputEventsRequest.ConsoleHandle, &Console);
   if(! NT_SUCCESS(Status))
@@ -2846,8 +2846,8 @@ CSR_API(CsrReadConsoleOutput)
 
   DPRINT("CsrReadConsoleOutput\n");
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   Status = ConioLockScreenBuffer(ProcessData, Request->Data.ReadConsoleOutputRequest.ConsoleHandle, &Buff);
   if (! NT_SUCCESS(Status))
@@ -2935,8 +2935,8 @@ CSR_API(CsrWriteConsoleInput)
 
   DPRINT("CsrWriteConsoleInput\n");
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   Status = ConioLockConsole(ProcessData, Request->Data.WriteConsoleInputRequest.ConsoleHandle, &Console);
   if (! NT_SUCCESS(Status))
@@ -3026,8 +3026,8 @@ CSR_API(CsrHardwareStateProperty)
 
   DPRINT("CsrHardwareStateProperty\n");
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   Status = ConioLockConsole(ProcessData,
                             Request->Data.ConsoleHardwareStateRequest.ConsoleHandle,
@@ -3066,8 +3066,8 @@ CSR_API(CsrGetConsoleWindow)
 
   DPRINT("CsrGetConsoleWindow\n");
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
@@ -3088,8 +3088,8 @@ CSR_API(CsrSetConsoleIcon)
 
   DPRINT("CsrSetConsoleIcon\n");
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
@@ -3117,8 +3117,8 @@ CSR_API(CsrGetConsoleCodePage)
       return Request->Status = Status;
     }
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
   Request->Data.GetConsoleCodePage.CodePage = Console->CodePage;
   ConioUnlockConsole(Console);
   return Request->Status = STATUS_SUCCESS;
@@ -3137,8 +3137,8 @@ CSR_API(CsrSetConsoleCodePage)
       return Request->Status = Status;
     }
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
   if (IsValidCodePage(Request->Data.SetConsoleCodePage.CodePage))
     {
       Console->CodePage = Request->Data.SetConsoleCodePage.CodePage;
@@ -3162,8 +3162,8 @@ CSR_API(CsrGetConsoleOutputCodePage)
       return Request->Status = Status;
     }
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
   Request->Data.GetConsoleOutputCodePage.CodePage = Console->OutputCodePage;
   ConioUnlockConsole(Console);
   return Request->Status = STATUS_SUCCESS;
@@ -3182,8 +3182,8 @@ CSR_API(CsrSetConsoleOutputCodePage)
       return Request->Status = Status;
     }
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
   if (IsValidCodePage(Request->Data.SetConsoleOutputCodePage.CodePage))
     {
       Console->OutputCodePage = Request->Data.SetConsoleOutputCodePage.CodePage;
@@ -3206,8 +3206,8 @@ CSR_API(CsrGetProcessList)
   DPRINT("CsrGetProcessList\n");
 
   Buffer = Request->Data.GetProcessListRequest.ProcessId;
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = Request->Header.MessageSize - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = Request->Header.u1.s1.TotalLength - LPC_MESSAGE_BASE_SIZE;
 
   nItems = nCopied = 0;
   Request->Data.GetProcessListRequest.nProcessIdsCopied = 0;

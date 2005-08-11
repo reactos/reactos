@@ -24,7 +24,7 @@ static NTSTATUS (STDCALL * DbgSsCallback)(PVOID,PVOID) = NULL;
 
 typedef struct _LPC_DBGSS_MESSAGE
 {
-	LPC_MESSAGE Header;
+	PORT_MESSAGE Header;
 	ULONG Unknown1;
 	ULONG Unknown2;
 	ULONG Unknown3;
@@ -45,7 +45,7 @@ DbgSsServerThread(PVOID Unused)
 		Status = NtReplyWaitReceivePort (DbgSsApiPort,
 		                                 NULL,
 		                                 NULL,
-		                                 (PLPC_MESSAGE)&Message);
+		                                 (PPORT_MESSAGE)&Message);
 		if (!NT_SUCCESS(Status))
 		{
 			DbgPrint ("DbgSs: NtReplyWaitReceivePort failed - Status == %lx\n",

@@ -194,8 +194,8 @@ CSR_API(CsrCreateProcess)
    PCSRSS_PROCESS_DATA NewProcessData;
    NTSTATUS Status;
 
-   Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
-   Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
+   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
 
    NewProcessData = CsrCreateProcessData(Request->Data.CreateProcessRequest.NewProcessId);
    if (NewProcessData == NULL)
@@ -224,8 +224,8 @@ CSR_API(CsrCreateProcess)
 
 CSR_API(CsrTerminateProcess)
 {
-   Request->Header.MessageSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
-   Request->Header.DataSize = sizeof(CSR_API_MESSAGE);
+   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE);
 
    if (ProcessData == NULL)
    {
@@ -238,8 +238,8 @@ CSR_API(CsrTerminateProcess)
 
 CSR_API(CsrConnectProcess)
 {
-   Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-   Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
    Request->Status = STATUS_SUCCESS;
 
@@ -248,8 +248,8 @@ CSR_API(CsrConnectProcess)
 
 CSR_API(CsrGetShutdownParameters)
 {
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   if (ProcessData == NULL)
   {
@@ -266,8 +266,8 @@ CSR_API(CsrGetShutdownParameters)
 
 CSR_API(CsrSetShutdownParameters)
 {
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   if (ProcessData == NULL)
   {
@@ -284,8 +284,8 @@ CSR_API(CsrSetShutdownParameters)
 
 CSR_API(CsrGetInputHandle)
 {
-   Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-   Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
    if (ProcessData == NULL)
    {
@@ -309,8 +309,8 @@ CSR_API(CsrGetInputHandle)
 
 CSR_API(CsrGetOutputHandle)
 {
-   Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-   Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
    if (ProcessData == NULL)
    {
@@ -336,8 +336,8 @@ CSR_API(CsrGetOutputHandle)
 
 CSR_API(CsrCloseHandle)
 {
-   Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-   Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
    if (ProcessData == NULL)
    {
@@ -352,8 +352,8 @@ CSR_API(CsrCloseHandle)
 
 CSR_API(CsrVerifyHandle)
 {
-   Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-   Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
    Request->Status = CsrVerifyObject(ProcessData, Request->Data.VerifyHandleRequest.Handle);
    if (!NT_SUCCESS(Request->Status))
@@ -368,8 +368,8 @@ CSR_API(CsrDuplicateHandle)
 {
   Object_t *Object;
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   ProcessData = CsrGetProcessData(Request->Data.DuplicateHandleRequest.ProcessId);
   Request->Status = CsrGetObject(ProcessData, Request->Data.DuplicateHandleRequest.Handle, &Object);
@@ -388,8 +388,8 @@ CSR_API(CsrDuplicateHandle)
 
 CSR_API(CsrGetInputWaitHandle)
 {
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   if (ProcessData == NULL)
   {

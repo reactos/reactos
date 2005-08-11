@@ -90,14 +90,14 @@ EiConnectPort(IN PEPORT* ConnectedPort,
   /*
    * Initialize the request message.
    */
-  RequestMessage->MessageHeader.DataSize =
+  RequestMessage->MessageHeader.u1.s1.DataLength =
     sizeof(EPORT_CONNECT_REQUEST_MESSAGE) + RequestConnectDataLength -
-    sizeof(LPC_MESSAGE);
-  RequestMessage->MessageHeader.MessageSize =
+    sizeof(PORT_MESSAGE);
+  RequestMessage->MessageHeader.u1.s1.TotalLength =
     sizeof(EPORT_CONNECT_REQUEST_MESSAGE) + RequestConnectDataLength;
   DPRINT("RequestMessageSize %d\n",
-	 RequestMessage->MessageHeader.MessageSize);
-  RequestMessage->MessageHeader.SectionSize = 0;
+	 RequestMessage->MessageHeader.u1.s1.TotalLength);
+  RequestMessage->MessageHeader.ClientViewSize = 0;
   RequestMessage->ConnectingProcess = PsGetCurrentProcess();
   ObReferenceObjectByPointer(RequestMessage->ConnectingProcess,
 			     PROCESS_VM_OPERATION,
@@ -148,7 +148,7 @@ EiConnectPort(IN PEPORT* ConnectedPort,
   /*
    * Check for connection refusal.
    */
-  if (CReply->MessageHeader.MessageType == LPC_CONNECTION_REFUSED)
+  if (CReply->MessageHeader.u2.s2.Type == LPC_CONNECTION_REFUSED)
     {
       ObDereferenceObject(OurPort);
       ExFreePool(Reply);
@@ -656,7 +656,7 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
 /*EXPORTED*/ NTSTATUS STDCALL
 NtAcceptConnectPort (PHANDLE			ServerPortHandle,
 		     HANDLE			NamedPortHandle,
-		     PLPC_MESSAGE		LpcMessage,
+		     PPORT_MESSAGE		LpcMessage,
 		     BOOLEAN			AcceptIt,
 		     PLPC_SECTION_WRITE	WriteMap,
 		     PLPC_SECTION_READ	ReadMap)
@@ -674,7 +674,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
   Size = sizeof(EPORT_CONNECT_REPLY_MESSAGE);
   if (LpcMessage)
   {
-     Size += LpcMessage->DataSize;
+     Size += LpcMessage->u1.s1.DataLength;
   }
 
   CReply = ExAllocatePool(NonPagedPool, Size);
@@ -746,20 +746,20 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
    */
   if (LpcMessage != NULL)
     {
-      memcpy(&CReply->MessageHeader, LpcMessage, sizeof(LPC_MESSAGE));
+      memcpy(&CReply->MessageHeader, LpcMessage, sizeof(PORT_MESSAGE));
       memcpy(&CReply->ConnectData, (PVOID)(LpcMessage + 1),
-	     LpcMessage->DataSize);
-      CReply->MessageHeader.MessageSize =
-	sizeof(EPORT_CONNECT_REPLY_MESSAGE) + LpcMessage->DataSize;
-      CReply->MessageHeader.DataSize = CReply->MessageHeader.MessageSize -
-	sizeof(LPC_MESSAGE);
-      CReply->ConnectDataLength = LpcMessage->DataSize;
+	     LpcMessage->u1.s1.DataLength);
+      CReply->MessageHeader.u1.s1.TotalLength =
+	sizeof(EPORT_CONNECT_REPLY_MESSAGE) + LpcMessage->u1.s1.DataLength;
+      CReply->MessageHeader.u1.s1.DataLength = CReply->MessageHeader.u1.s1.TotalLength -
+	sizeof(PORT_MESSAGE);
+      CReply->ConnectDataLength = LpcMessage->u1.s1.DataLength;
     }
   else
     {
-      CReply->MessageHeader.MessageSize = sizeof(EPORT_CONNECT_REPLY_MESSAGE);
-      CReply->MessageHeader.DataSize = sizeof(EPORT_CONNECT_REPLY_MESSAGE) -
-	sizeof(LPC_MESSAGE);
+      CReply->MessageHeader.u1.s1.TotalLength = sizeof(EPORT_CONNECT_REPLY_MESSAGE);
+      CReply->MessageHeader.u1.s1.DataLength = sizeof(EPORT_CONNECT_REPLY_MESSAGE) -
+	sizeof(PORT_MESSAGE);
       CReply->ConnectDataLength = 0;
     }
   if (!AcceptIt)
@@ -872,7 +872,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
     {
       CReply->ReceiveClientViewBase = WriteMap->TargetViewBase;
     }
-  CReply->MaximumMessageSize = PORT_MAX_MESSAGE_LENGTH;
+  CReply->MaximumMessageSize = LPC_MAX_MESSAGE_LENGTH;
 
 
   /*
@@ -881,7 +881,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
   OurPort->OtherPort = ConnectionRequest->Sender;
   OurPort->OtherPort->OtherPort = OurPort;
   EiReplyOrRequestPort(ConnectionRequest->Sender,
-		       (PLPC_MESSAGE)CReply,
+		       (PPORT_MESSAGE)CReply,
 		       LPC_REPLY,
 		       OurPort);
   ExFreePool(ConnectionRequest);

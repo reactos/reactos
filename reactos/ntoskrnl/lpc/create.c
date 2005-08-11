@@ -49,11 +49,11 @@ LpcpVerifyCreateParameters (IN	PHANDLE			PortHandle,
   {
     return (STATUS_INVALID_PORT_ATTRIBUTES);
   }
-  if (MaxConnectInfoLength > PORT_MAX_DATA_LENGTH)
+  if (MaxConnectInfoLength > LPC_MAX_DATA_LENGTH)
     {
       return (STATUS_INVALID_PARAMETER_3);
     }
-  if (MaxDataLength > PORT_MAX_MESSAGE_LENGTH)
+  if (MaxDataLength > LPC_MAX_MESSAGE_LENGTH)
     {
       return (STATUS_INVALID_PARAMETER_4);
     }
@@ -128,8 +128,8 @@ NtCreatePort (PHANDLE		      PortHandle,
     }
 
   Status = LpcpInitializePort (Port, EPORT_TYPE_SERVER_RQST_PORT, NULL);
-  Port->MaxConnectInfoLength = PORT_MAX_DATA_LENGTH;
-  Port->MaxDataLength = PORT_MAX_MESSAGE_LENGTH;
+  Port->MaxConnectInfoLength = LPC_MAX_DATA_LENGTH;
+  Port->MaxDataLength = LPC_MAX_MESSAGE_LENGTH;
   Port->MaxPoolUsage = MaxPoolUsage;
 
   ObDereferenceObject (Port);

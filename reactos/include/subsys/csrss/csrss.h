@@ -491,7 +491,7 @@ typedef struct _CSR_API_MESSAGE
 {
   union
   {
-    LPC_MESSAGE Header;
+    PORT_MESSAGE Header;
     struct
     {
       BYTE HeaderReserved[LPC_MESSAGE_BASE_SIZE];

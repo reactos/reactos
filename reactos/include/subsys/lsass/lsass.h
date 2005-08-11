@@ -96,7 +96,7 @@ typedef struct _LSASS_REGISTER_LOGON_PROCESS_REPLY
 
 typedef union _LSASS_REQUEST
 {
-   LPC_MESSAGE Header;
+   PORT_MESSAGE Header;
    struct {
       UCHAR LpcHeader[LPC_MESSAGE_BASE_SIZE];
       ULONG Type;
@@ -115,7 +115,7 @@ typedef union _LSASS_REQUEST
 
 typedef struct _LSASS_REPLY
 {
-   LPC_MESSAGE Header;
+   PORT_MESSAGE Header;
    NTSTATUS Status;
    union
      {

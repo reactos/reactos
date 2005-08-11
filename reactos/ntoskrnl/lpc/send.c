@@ -36,7 +36,7 @@ LpcSendTerminationPort (IN PEPORT Port,
   LPC_TERMINATION_MESSAGE Msg;
 
 #ifdef __USE_NT_LPC__
-  Msg.Header.MessageType = LPC_NEW_MESSAGE;
+  Msg.Header.u2.s2.Type = LPC_NEW_MESSAGE;
 #endif
   Msg.CreationTime = CreationTime;
   Status = LpcRequestPort (Port, &Msg.Header);
@@ -91,7 +91,7 @@ LpcSendDebugMessagePort (IN PEPORT Port,
    KeAcquireSpinLock(&Port->Lock, &oldIrql);
    ReplyMessage = EiDequeueMessagePort(Port);
    KeReleaseSpinLock(&Port->Lock, oldIrql);
-   memcpy(Reply, &ReplyMessage->Message, ReplyMessage->Message.MessageSize);
+   memcpy(Reply, &ReplyMessage->Message, ReplyMessage->Message.u1.s1.TotalLength);
    ExFreePool(ReplyMessage);
 
    return(STATUS_SUCCESS);
@@ -118,7 +118,7 @@ LpcSendDebugMessagePort (IN PEPORT Port,
  * @implemented
  */
 NTSTATUS STDCALL LpcRequestPort (IN	PEPORT		Port,
-				 IN	PLPC_MESSAGE	LpcMessage)
+				 IN	PPORT_MESSAGE	LpcMessage)
 {
    NTSTATUS Status;
 
@@ -126,15 +126,15 @@ NTSTATUS STDCALL LpcRequestPort (IN	PEPORT		Port,
 
 #ifdef __USE_NT_LPC__
    /* Check the message's type */
-   if (LPC_NEW_MESSAGE == LpcMessage->MessageType)
+   if (LPC_NEW_MESSAGE == LpcMessage->u2.s2.Type)
    {
-      LpcMessage->MessageType = LPC_DATAGRAM;
+      LpcMessage->u2.s2.Type = LPC_DATAGRAM;
    }
-   else if (LPC_DATAGRAM == LpcMessage->MessageType)
+   else if (LPC_DATAGRAM == LpcMessage->u2.s2.Type)
    {
       return STATUS_INVALID_PARAMETER;
    }
-   else if (LpcMessage->MessageType > LPC_CLIENT_DIED)
+   else if (LpcMessage->u2.s2.Type > LPC_CLIENT_DIED)
    {
       return STATUS_INVALID_PARAMETER;
    }
@@ -170,7 +170,7 @@ NTSTATUS STDCALL LpcRequestPort (IN	PEPORT		Port,
  * @implemented
  */
 NTSTATUS STDCALL NtRequestPort (IN	HANDLE		PortHandle,
-				IN	PLPC_MESSAGE	LpcMessage)
+				IN	PPORT_MESSAGE	LpcMessage)
 {
    NTSTATUS Status;
    PEPORT Port;
@@ -214,15 +214,15 @@ NTSTATUS STDCALL NtRequestPort (IN	HANDLE		PortHandle,
  */
 NTSTATUS STDCALL
 NtRequestWaitReplyPort (IN HANDLE PortHandle,
-			PLPC_MESSAGE UnsafeLpcRequest,
-			PLPC_MESSAGE UnsafeLpcReply)
+			PPORT_MESSAGE UnsafeLpcRequest,
+			PPORT_MESSAGE UnsafeLpcReply)
 {
    PETHREAD CurrentThread;
    struct _KPROCESS *AttachedProcess;
    PEPORT Port;
    PQUEUEDMESSAGE Message;
    KIRQL oldIrql;
-   PLPC_MESSAGE LpcRequest;
+   PPORT_MESSAGE LpcRequest;
    USHORT LpcRequestMessageSize = 0, LpcRequestDataSize = 0;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
@@ -234,12 +234,12 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
        _SEH_TRY
          {
            ProbeForRead(UnsafeLpcRequest,
-                        sizeof(LPC_MESSAGE),
+                        sizeof(PORT_MESSAGE),
                         1);
            ProbeForWrite(UnsafeLpcReply,
-                         sizeof(LPC_MESSAGE),
+                         sizeof(PORT_MESSAGE),
                          1);
-           LpcRequestMessageSize = UnsafeLpcRequest->MessageSize;
+           LpcRequestMessageSize = UnsafeLpcRequest->u1.s1.TotalLength;
          }
        _SEH_HANDLE
          {
@@ -254,7 +254,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
      }
    else
      {
-       LpcRequestMessageSize = UnsafeLpcRequest->MessageSize;
+       LpcRequestMessageSize = UnsafeLpcRequest->u1.s1.TotalLength;
      }
 
    DPRINT("NtRequestWaitReplyPort(PortHandle %x, LpcRequest %x, "
@@ -292,7 +292,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
        KeDetachProcess();
      }
 
-   if (LpcRequestMessageSize > (sizeof(LPC_MESSAGE) + MAX_MESSAGE_DATA))
+   if (LpcRequestMessageSize > (sizeof(PORT_MESSAGE) + MAX_MESSAGE_DATA))
      {
        if (NULL != AttachedProcess)
          {
@@ -318,8 +318,8 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
            RtlCopyMemory(LpcRequest,
                          UnsafeLpcRequest,
                          LpcRequestMessageSize);
-           LpcRequestMessageSize = LpcRequest->MessageSize;
-           LpcRequestDataSize = LpcRequest->DataSize;
+           LpcRequestMessageSize = LpcRequest->u1.s1.TotalLength;
+           LpcRequestDataSize = LpcRequest->u1.s1.DataLength;
          }
        _SEH_HANDLE
          {
@@ -343,11 +343,11 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
        RtlCopyMemory(LpcRequest,
                      UnsafeLpcRequest,
                      LpcRequestMessageSize);
-       LpcRequestMessageSize = LpcRequest->MessageSize;
-       LpcRequestDataSize = LpcRequest->DataSize;
+       LpcRequestMessageSize = LpcRequest->u1.s1.TotalLength;
+       LpcRequestDataSize = LpcRequest->u1.s1.DataLength;
      }
 
-   if (LpcRequestMessageSize > (sizeof(LPC_MESSAGE) + MAX_MESSAGE_DATA))
+   if (LpcRequestMessageSize > (sizeof(PORT_MESSAGE) + MAX_MESSAGE_DATA))
      {
        ExFreePool(LpcRequest);
        if (NULL != AttachedProcess)
@@ -357,7 +357,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
        ObDereferenceObject(Port);
        return(STATUS_PORT_MESSAGE_TOO_LONG);
      }
-   if (LpcRequestDataSize != (LpcRequestMessageSize - sizeof(LPC_MESSAGE)))
+   if (LpcRequestDataSize != (LpcRequestMessageSize - sizeof(PORT_MESSAGE)))
      {
        ExFreePool(LpcRequest);
        if (NULL != AttachedProcess)
@@ -406,15 +406,15 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
        KeReleaseSpinLock(&Port->Lock, oldIrql);
        if (Message)
          {
-           DPRINT("Message->Message.MessageSize %d\n",
-	          Message->Message.MessageSize);
+           DPRINT("Message->Message.u1.s1.TotalLength %d\n",
+	          Message->Message.u1.s1.TotalLength);
            if (PreviousMode != KernelMode)
              {
                _SEH_TRY
                  {
                    RtlCopyMemory(UnsafeLpcReply,
                                  &Message->Message,
-                                 Message->Message.MessageSize);
+                                 Message->Message.u1.s1.TotalLength);
                  }
                _SEH_HANDLE
                  {
@@ -426,7 +426,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
              {
                RtlCopyMemory(UnsafeLpcReply,
                              &Message->Message,
-                             Message->Message.MessageSize);
+                             Message->Message.u1.s1.TotalLength);
              }
            ExFreePool(Message);
          }
@@ -463,7 +463,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
  * REVISIONS
  */
 NTSTATUS STDCALL NtWriteRequestData (HANDLE		PortHandle,
-				     PLPC_MESSAGE	Message,
+				     PPORT_MESSAGE	Message,
 				     ULONG		Index,
 				     PVOID		Buffer,
 				     ULONG		BufferLength,

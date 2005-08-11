@@ -18,8 +18,8 @@ static HANDLE LogonProcess = NULL;
 
 CSR_API(CsrRegisterLogonProcess)
 {
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   if (Request->Data.RegisterLogonProcessRequest.Register)
     {
@@ -51,8 +51,8 @@ CSR_API(CsrSetLogonNotifyWindow)
 {
   DWORD WindowCreator;
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   if (0 == GetWindowThreadProcessId(Request->Data.SetLogonNotifyWindowRequest.LogonNotifyWindow,
                                     &WindowCreator))
@@ -77,8 +77,8 @@ CSR_API(CsrSetLogonNotifyWindow)
 
 CSR_API(CsrExitReactos)
 {
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   if (NULL == LogonNotifyWindow)
     {

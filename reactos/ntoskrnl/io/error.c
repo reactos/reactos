@@ -265,7 +265,7 @@ IopLogWorker (PVOID Parameter)
 
       /* Initialize the log message */
       Message = (PIO_ERROR_LOG_MESSAGE)Request->Data;
-      Message->Type = 0xC; //IO_TYPE_ERROR_MESSAGE;
+      Message->Type = IO_TYPE_ERROR_MESSAGE;
       Message->Size =
 	sizeof(IO_ERROR_LOG_MESSAGE) - sizeof(IO_ERROR_LOG_PACKET) +
 	LogEntry->PacketSize + DriverNameLength;
@@ -285,9 +285,9 @@ IopLogWorker (PVOID Parameter)
 
       DPRINT ("SequenceNumber %lx\n", Packet->SequenceNumber);
 
-      Request->Header.DataSize = Message->Size;
-      Request->Header.MessageSize =
-	Request->Header.DataSize + sizeof(LPC_MESSAGE);
+      Request->Header.u1.s1.DataLength = Message->Size;
+      Request->Header.u1.s1.TotalLength =
+	Request->Header.u1.s1.DataLength + sizeof(PPORT_MESSAGE);
 
       /* Send the error message to the log port */
       Status = ZwRequestPort (IopLogPort,

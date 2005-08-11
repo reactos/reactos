@@ -40,8 +40,9 @@ static VOID STDCALL
 DbgSsApiPortThread (PVOID dummy)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
-	LPC_MAX_MESSAGE	Request = {{0}};
+	LPC_MAX_MESSAGE	Request ;
     
+    RtlZeroMemory(&Request, sizeof(LPC_MAX_MESSAGE));
 	while (TRUE)
 	{
 		Status = NtListenPort (DbgSsApiPort, & Request.Header);
@@ -59,8 +60,9 @@ static VOID STDCALL
 DbgUiApiPortThread (PVOID dummy)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
-	LPC_MAX_MESSAGE	Request = {{0}};
+	LPC_MAX_MESSAGE	Request;
     
+    RtlZeroMemory(&Request, sizeof(LPC_MAX_MESSAGE));
 	while (TRUE)
 	{
 		Status = NtListenPort (DbgUiApiPort, & Request.Header);

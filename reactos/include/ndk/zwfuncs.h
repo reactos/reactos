@@ -25,7 +25,7 @@ STDCALL
 NtAcceptConnectPort(
     PHANDLE PortHandle,
     HANDLE NamedPortHandle,
-    PLPC_MESSAGE ServerReply,
+    PPORT_MESSAGE ServerReply,
     BOOLEAN AcceptIt,
     PLPC_SECTION_WRITE WriteMap,
     PLPC_SECTION_READ ReadMap
@@ -1243,14 +1243,14 @@ NTSTATUS
 STDCALL
 NtImpersonateClientOfPort(
     HANDLE PortHandle,
-    PLPC_MESSAGE ClientMessage
+    PPORT_MESSAGE ClientMessage
 );
 
 NTSTATUS
 STDCALL
 ZwImpersonateClientOfPort(
     HANDLE PortHandle,
-    PLPC_MESSAGE ClientMessage
+    PPORT_MESSAGE ClientMessage
 );
 
 NTSTATUS
@@ -1316,13 +1316,13 @@ ZwIsProcessInJob(
 NTSTATUS
 STDCALL
 NtListenPort(HANDLE PortHandle,
-             PLPC_MESSAGE LpcMessage
+             PPORT_MESSAGE LpcMessage
 );
 
 NTSTATUS
 STDCALL
 ZwListenPort(HANDLE PortHandle,
-             PLPC_MESSAGE LpcMessage
+             PPORT_MESSAGE LpcMessage
 );
 
 NTSTATUS
@@ -2825,7 +2825,7 @@ NTSTATUS
 STDCALL
 NtReadRequestData(
     HANDLE PortHandle,
-    PLPC_MESSAGE Message,
+    PPORT_MESSAGE Message,
     ULONG Index,
     PVOID Buffer,
     ULONG BufferLength,
@@ -2836,7 +2836,7 @@ NTSTATUS
 STDCALL
 ZwReadRequestData(
     HANDLE PortHandle,
-    PLPC_MESSAGE Message,
+    PPORT_MESSAGE Message,
     ULONG Index,
     PVOID Buffer,
     ULONG BufferLength,
@@ -2944,14 +2944,14 @@ NTSTATUS
 STDCALL
 NtReplyPort(
     HANDLE PortHandle,
-    PLPC_MESSAGE LpcReply
+    PPORT_MESSAGE LpcReply
 );
 
 NTSTATUS
 STDCALL
 ZwReplyPort(
     HANDLE PortHandle,
-    PLPC_MESSAGE LpcReply
+    PPORT_MESSAGE LpcReply
 );
 
 NTSTATUS
@@ -2959,8 +2959,8 @@ STDCALL
 NtReplyWaitReceivePort(
     HANDLE PortHandle,
     PULONG PortId,
-    PLPC_MESSAGE MessageReply,
-    PLPC_MESSAGE MessageRequest
+    PPORT_MESSAGE MessageReply,
+    PPORT_MESSAGE MessageRequest
 );
 
 NTSTATUS
@@ -2968,51 +2968,51 @@ STDCALL
 ZwReplyWaitReceivePort(
     HANDLE PortHandle,
     PULONG PortId,
-    PLPC_MESSAGE MessageReply,
-    PLPC_MESSAGE MessageRequest
+    PPORT_MESSAGE MessageReply,
+    PPORT_MESSAGE MessageRequest
 );
 
 NTSTATUS
 STDCALL
 NtReplyWaitReplyPort(
     HANDLE PortHandle,
-    PLPC_MESSAGE ReplyMessage
+    PPORT_MESSAGE ReplyMessage
 );
 
 NTSTATUS
 STDCALL
 ZwReplyWaitReplyPort(
     HANDLE PortHandle,
-    PLPC_MESSAGE ReplyMessage
+    PPORT_MESSAGE ReplyMessage
 );
 
 NTSTATUS
 STDCALL
 NtRequestPort(
     HANDLE PortHandle,
-    PLPC_MESSAGE LpcMessage);
+    PPORT_MESSAGE LpcMessage);
 
 NTSTATUS
 STDCALL
 ZwRequestPort(
     HANDLE PortHandle,
-    PLPC_MESSAGE LpcMessage
+    PPORT_MESSAGE LpcMessage
 );
 
 NTSTATUS
 STDCALL
 NtRequestWaitReplyPort(
     HANDLE PortHandle,
-    PLPC_MESSAGE LpcReply,
-    PLPC_MESSAGE LpcRequest
+    PPORT_MESSAGE LpcReply,
+    PPORT_MESSAGE LpcRequest
 );
 
 NTSTATUS
 STDCALL
 ZwRequestWaitReplyPort(
     HANDLE PortHandle,
-    PLPC_MESSAGE LpcReply,
-    PLPC_MESSAGE LpcRequest
+    PPORT_MESSAGE LpcReply,
+    PPORT_MESSAGE LpcRequest
 );
 
 NTSTATUS
@@ -3975,7 +3975,7 @@ NTSTATUS
 STDCALL
 NtWriteRequestData(
     HANDLE PortHandle,
-    PLPC_MESSAGE Message,
+    PPORT_MESSAGE Message,
     ULONG Index,
     PVOID Buffer,
     ULONG BufferLength,
@@ -3986,7 +3986,7 @@ NTSTATUS
 STDCALL
 ZwWriteRequestData(
     HANDLE PortHandle,
-    PLPC_MESSAGE Message,
+    PPORT_MESSAGE Message,
     ULONG Index,
     PVOID Buffer,
     ULONG BufferLength,

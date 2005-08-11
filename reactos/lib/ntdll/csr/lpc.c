@@ -81,12 +81,12 @@ CsrClientCallServer(PCSR_API_MESSAGE Request,
 
     /* Fill out the header */
     Request->Type = ApiNumber;
-    Request->Header.DataSize = RequestLength - LPC_MESSAGE_BASE_SIZE;
-    Request->Header.MessageSize = RequestLength;
-    DPRINT("CSR: API: %x, DataSize: %x, MessageSize: %x\n", 
+    Request->Header.u1.s1.DataLength = RequestLength - LPC_MESSAGE_BASE_SIZE;
+    Request->Header.u1.s1.TotalLength = RequestLength;
+    DPRINT("CSR: API: %x, u1.s1.DataLength: %x, u1.s1.TotalLength: %x\n", 
             ApiNumber,
-            Request->Header.DataSize,
-            Request->Header.MessageSize);
+            Request->Header.u1.s1.DataLength,
+            Request->Header.u1.s1.TotalLength);
                 
     /* Send the LPC Message */
     Status = NtRequestWaitReplyPort(WindowsApiPort,

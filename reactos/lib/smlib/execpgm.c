@@ -60,23 +60,23 @@ SmExecuteProgram (IN HANDLE          hSmApiPort,
   SmReqMsg.SmHeader.ApiIndex = SM_API_EXECUTE_PROGRAMME;
 
   /* LPC message */
-  SmReqMsg.Header.MessageType = LPC_NEW_MESSAGE;
-  SmReqMsg.Header.DataSize    = SM_PORT_DATA_SIZE(SmReqMsg.Request);
-  SmReqMsg.Header.MessageSize = SM_PORT_MESSAGE_SIZE;
+  SmReqMsg.Header.u2.s2.Type = LPC_NEW_MESSAGE;
+  SmReqMsg.Header.u1.s1.DataLength    = SM_PORT_DATA_SIZE(SmReqMsg.Request);
+  SmReqMsg.Header.u1.s1.TotalLength = SM_PORT_MESSAGE_SIZE;
 
   DPRINT("SMLIB: %s:\n"
-	  "  MessageType = %d\n"
-	  "  DataSize    = %d\n"
-	  "  MessageSize = %d\n"
-	  "  sizeof(LPC_MESSAGE)==%d\n",
+	  "  u2.s2.Type = %d\n"
+	  "  u1.s1.DataLength    = %d\n"
+	  "  u1.s1.TotalLength = %d\n"
+	  "  sizeof(PORT_MESSAGE)==%d\n",
 	  __FUNCTION__,
-	  SmReqMsg.Header.MessageType,
-	  SmReqMsg.Header.DataSize,
-	  SmReqMsg.Header.MessageSize,
-	  sizeof(LPC_MESSAGE));
+	  SmReqMsg.Header.u2.s2.Type,
+	  SmReqMsg.Header.u1.s1.DataLength,
+	  SmReqMsg.Header.u1.s1.TotalLength,
+	  sizeof(PORT_MESSAGE));
 
   /* Call SM and wait for a reply */
-  Status = NtRequestWaitReplyPort (hSmApiPort, (PLPC_MESSAGE) & SmReqMsg, (PLPC_MESSAGE) & SmReqMsg);
+  Status = NtRequestWaitReplyPort (hSmApiPort, (PPORT_MESSAGE) & SmReqMsg, (PPORT_MESSAGE) & SmReqMsg);
   if (NT_SUCCESS(Status))
   {
     return SmReqMsg.SmHeader.Status;

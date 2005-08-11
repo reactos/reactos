@@ -201,8 +201,8 @@ CSR_API(CsrCreateDesktop)
 
   DPRINT("CsrCreateDesktop\n");
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   if (! BgInitialized)
     {
@@ -251,8 +251,8 @@ CSR_API(CsrShowDesktop)
   PRIVATE_NOTIFY_DESKTOP nmh;
   DPRINT("CsrShowDesktop\n");
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   nmh.hdr.hwndFrom = Request->Data.ShowDesktopRequest.DesktopWindow;
   nmh.hdr.idFrom = 0;
@@ -275,8 +275,8 @@ CSR_API(CsrHideDesktop)
   PRIVATE_NOTIFY_DESKTOP nmh;
   DPRINT("CsrHideDesktop\n");
 
-  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
-  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   nmh.hdr.hwndFrom = Request->Data.ShowDesktopRequest.DesktopWindow;
   nmh.hdr.idFrom = 0;

@@ -40,7 +40,7 @@
  */
 /*EXPORTED*/ NTSTATUS STDCALL
 NtListenPort (IN	HANDLE		PortHandle,
-	      IN	PLPC_MESSAGE	ConnectMsg)
+	      IN	PPORT_MESSAGE	ConnectMsg)
 {
   NTSTATUS	Status;
 
@@ -58,12 +58,12 @@ NtListenPort (IN	HANDLE		PortHandle,
        * Drop any other message.
        */
       if (!NT_SUCCESS(Status) ||
-	  LPC_CONNECTION_REQUEST == ConnectMsg->MessageType)
+	  LPC_CONNECTION_REQUEST == ConnectMsg->u2.s2.Type)
 	{
 	  DPRINT("Got message (type %x)\n", LPC_CONNECTION_REQUEST);
 	  break;
 	}
-      DPRINT("Got message (type %x)\n", ConnectMsg->MessageType);
+      DPRINT("Got message (type %x)\n", ConnectMsg->u2.s2.Type);
     }
 
   return (Status);
