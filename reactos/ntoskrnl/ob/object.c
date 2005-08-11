@@ -35,7 +35,7 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
 {
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG StringLength;
-    PWCHAR StringBuffer;
+    PWCHAR StringBuffer = NULL;
     UNICODE_STRING LocalName = {}; /* <= GCC 4.0 + Optimizer */
     
     /* Initialize the Input String */
