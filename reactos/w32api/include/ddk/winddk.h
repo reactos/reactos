@@ -9838,16 +9838,6 @@ DbgSetDebugFilterState(
   IN ULONG  Level,
   IN BOOLEAN  State);
 
-NTOSAPI
-BOOLEAN
-DDKAPI
-KeRosPrintAddress ( PVOID address );
-
-NTOSAPI
-VOID
-DDKAPI
-KeRosDumpStackFrames ( PULONG Frame, ULONG FrameCount );
-
 #ifdef DBG
 
 #define KdPrint(_x_) DbgPrint _x_
