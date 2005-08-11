@@ -1,6 +1,6 @@
-/* $Id: $
+/* $Id$
  *
- * init.c - VMS Enviroment Subsystem Server - Initialization
+ * server.c - VMS Enviroment Subsystem Server - Initialization
  * 
  * ReactOS Operating System
  * 
@@ -23,22 +23,22 @@
  *
  * --------------------------------------------------------------------
  */
-#define __USE_NT_LPC__
-#include "vmsss.h"
+#include "vmssrv.h"
 
 //#define NDEBUG
 #include <debug.h>
 
+HANDLE VmsApiPort = NULL;
 
 /**********************************************************************
  * NAME							PRIVATE
  * 	VmspCreatePort/1
  */
-NTSTATUS VmsRunServer (VOID)
+NTSTATUS VmsStaticServerThread (PVOID x)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
 	LPC_MAX_MESSAGE Request;
-	PLPC_MESSAGE Reply = NULL;
+	PPORT_MESSAGE Reply = NULL;
 	ULONG MessageType = 0;
 
 	while (TRUE)
@@ -46,10 +46,10 @@ NTSTATUS VmsRunServer (VOID)
 		Status = NtReplyWaitReceivePort (VmsApiPort,
 						 0,
 						 Reply,
-						 & Request);
+						 (PPORT_MESSAGE) & Request);
 		if(NT_SUCCESS(Status))
 		{
-			MessageType = PORT_MESSAGE_TYPE(Request);
+			MessageType = Request.Header.u2.s2.Type;
 			DPRINT("VMS: %s received a message (Type=%d)\n",
 					__FUNCTION__, MessageType);
 			switch(MessageType)
@@ -63,6 +63,16 @@ NTSTATUS VmsRunServer (VOID)
 		}
 	}
 	return Status;
+}
+
+/*=====================================================================
+ * 	PUBLIC API
+ *===================================================================*/
+
+NTSTATUS STDCALL ServerDllInitialization (ULONG ArgumentCount,
+					  LPWSTR *Argument)
+{
+	return CsrAddStaticServerThread ();
 }
 
 /* EOF */

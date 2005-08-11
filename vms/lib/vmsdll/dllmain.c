@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.5 2002/11/24 18:42:15 robd Exp $
+/* $Id$
  *
  * dllmain.c
  *
@@ -19,8 +19,8 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  * $Revision: 1.5 $
- * $Author: robd $
- * $Date: 2002/11/24 18:42:15 $
+ * $Author$
+ * $Date$
  *
  */
 

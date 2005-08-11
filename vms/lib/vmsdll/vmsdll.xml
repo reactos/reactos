@@ -1,0 +1,23 @@
+<module name="vmsdll" type="nativedll" installbase="system32" installname="vmsdll.dll">
+	<bootstrap base="reactos/system32" />
+	<importlibrary definition="vmsdll.def" />
+	<include base="vmsdll">../include</include>
+	<define name="_DISABLE_TIDENTS" />
+	<define name="__USE_W32API" />
+	<define name="_WIN32_WINNT">0x0502</define>
+	<define name="_NTOSKRNL_" />
+	<library>rtl</library>
+	<library>intrlck</library>
+	<library>string</library>
+	<linkerflag>-lgcc</linkerflag>
+	<file>dllmain.c</file>
+	<directory name="lib">
+		<file>stubs.c</file>
+	</directory>
+	<directory name="rms">
+		<file>stubs.c</file>
+	</directory>
+	<directory name="sys">
+		<file>stubs.c</file>
+	</directory>
+</module>

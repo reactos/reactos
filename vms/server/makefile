@@ -1,4 +1,4 @@
-# $Id: $
+# $Id$
 #
 # ReactOS VMS+ Environment Subsystem Server
 #
