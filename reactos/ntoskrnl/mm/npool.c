@@ -8,6 +8,7 @@
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  *                  Iwan Fatahi (i_fatahi@hotmail.com)
  *                  Robert Bergkvist (fragdance@hotmail.com)
+ *                  Hartmut Birr
  */
 
 /* INCLUDES ****************************************************************/
@@ -54,37 +55,32 @@ NODE, *PNODE;
 /*
  * fields present at the start of a block (this is for internal use only)
  */
-typedef struct _BLOCK_HDR
+typedef struct _HDR
 {
-   ULONG Magic;
-   ULONG Size;
-   struct _BLOCK_HDR* previous;
-   union
-   {
-      struct
-      {
-         LIST_ENTRY ListEntry;
-         ULONG Tag;
-         PVOID Caller;
-         LIST_ENTRY TagListEntry;
-         BOOLEAN Dumped;
-      }
-      Used;
-      struct
-      {
-         NODE Node;
-      }
-      Free;
-   };
-}
-BLOCK_HDR;
+    ULONG Magic;
+    ULONG Size;
+    struct _HDR* previous;
+} HDR, *PHDR;
 
-#define BLOCK_HDR_SIZE ROUND_UP(sizeof(BLOCK_HDR), MM_POOL_ALIGNMENT)
+typedef struct _HDR_USED
+{
+    HDR hdr;
+    LIST_ENTRY ListEntry;
+    ULONG Tag;
+    PVOID Caller;
+    LIST_ENTRY TagListEntry;
+    BOOLEAN Dumped;
+} HDR_USED, *PHDR_USED;
 
-PVOID STDCALL
-ExAllocateWholePageBlock(ULONG Size);
-VOID STDCALL
-ExFreeWholePageBlock(PVOID Addr);
+typedef struct _HDR_FREE
+{
+    HDR hdr;
+    NODE Node;
+} HDR_FREE, *PHDR_FREE;
+
+#define HDR_FREE_SIZE ROUND_UP(sizeof(HDR_FREE), MM_POOL_ALIGNMENT)
+#define HDR_USED_SIZE ROUND_UP(sizeof(HDR_USED), MM_POOL_ALIGNMENT)
+
 
 /* GLOBALS *****************************************************************/
 
@@ -103,7 +99,6 @@ static LIST_ENTRY UsedBlockListHead;
 
 static LIST_ENTRY AddressListHead;
 
-#ifndef WHOLE_PAGE_ALLOCATIONS
 /*
  * Count of free blocks
  */
@@ -113,7 +108,6 @@ static ULONG EiNrFreeBlocks = 0;
  * Count of used blocks
  */
 static ULONG EiNrUsedBlocks = 0;
-#endif
 
 /*
  * Lock that protects the non-paged pool data structures
@@ -147,29 +141,23 @@ MiFreeNonPagedPoolRegion(PVOID Addr, ULONG Count, BOOLEAN Free);
 static LIST_ENTRY tag_hash_table[TAG_HASH_TABLE_SIZE];
 #endif /* TAG_STATISTICS_TRACKING */
 
-#ifdef WHOLE_PAGE_ALLOCATIONS
-static RTL_BITMAP NonPagedPoolAllocMap;
-static ULONG NonPagedPoolAllocMapHint;
-static ULONG MiCurrentNonPagedPoolLength = 0;
-#else
 static PULONG MiNonPagedPoolAllocMap;
 static ULONG MiNonPagedPoolNrOfPages;
-#endif /* WHOLE_PAGE_ALLOCATIONS */
 
 /* avl helper functions ****************************************************/
 
 void DumpFreeBlockNode(PNODE p)
 {
    static int count = 0;
-   BLOCK_HDR* blk;
+   HDR_FREE* blk;
 
    count++;
 
    if (p)
    {
       DumpFreeBlockNode(p->link[0]);
-      blk = CONTAINING_RECORD(p, BLOCK_HDR, Free.Node);
-      DbgPrint("%08x %8d (%d)\n", blk, blk->Size, count);
+      blk = CONTAINING_RECORD(p, HDR_FREE, Node);
+      DbgPrint("%08x %8d (%d)\n", blk, blk->hdr.Size, count);
       DumpFreeBlockNode(p->link[1]);
    }
 
@@ -178,17 +166,17 @@ void DumpFreeBlockNode(PNODE p)
 void DumpFreeBlockTree(void)
 {
    DbgPrint("--- Begin tree ------------------\n");
-   DbgPrint("%08x\n", CONTAINING_RECORD(FreeBlockListRoot, BLOCK_HDR, Free.Node));
+   DbgPrint("%08x\n", CONTAINING_RECORD(FreeBlockListRoot, HDR_FREE, Node));
    DumpFreeBlockNode(FreeBlockListRoot);
    DbgPrint("--- End tree --------------------\n");
 }
 
 int compare_node(PNODE p1, PNODE p2)
 {
-   BLOCK_HDR* blk1 = CONTAINING_RECORD(p1, BLOCK_HDR, Free.Node);
-   BLOCK_HDR* blk2 = CONTAINING_RECORD(p2, BLOCK_HDR, Free.Node);
+   HDR_FREE* blk1 = CONTAINING_RECORD(p1, HDR_FREE, Node);
+   HDR_FREE* blk2 = CONTAINING_RECORD(p2, HDR_FREE, Node);
 
-   if (blk1->Size == blk2->Size)
+   if (blk1->hdr.Size == blk2->hdr.Size)
    {
       if (blk1 < blk2)
       {
@@ -201,11 +189,11 @@ int compare_node(PNODE p1, PNODE p2)
    }
    else
    {
-      if (blk1->Size < blk2->Size)
+      if (blk1->hdr.Size < blk2->hdr.Size)
       {
          return -1;
       }
-      if (blk1->Size > blk2->Size)
+      if (blk1->hdr.Size > blk2->hdr.Size)
       {
          return 1;
       }
@@ -216,14 +204,14 @@ int compare_node(PNODE p1, PNODE p2)
 
 int compare_value(PVOID value, PNODE p)
 {
-   BLOCK_HDR* blk = CONTAINING_RECORD(p, BLOCK_HDR, Free.Node);
+   HDR_FREE* blk = CONTAINING_RECORD(p, HDR_FREE, Node);
    ULONG v = *(PULONG)value;
 
-   if (v < blk->Size)
+   if (v < blk->hdr.Size)
    {
       return -1;
    }
-   if (v > blk->Size)
+   if (v > blk->hdr.Size)
    {
       return 1;
    }
@@ -730,39 +718,38 @@ PNODE avl_find_equal_or_greater(PNODE root, ULONG size, int (compare)(PVOID, PNO
 
 #ifdef TAG_STATISTICS_TRACKING
 VOID
-MiRemoveFromTagHashTable(BLOCK_HDR* block)
+MiRemoveFromTagHashTable(HDR_USED* block)
 /*
  * Remove a block from the tag hash table
  */
 {
-   if (block->Used.Tag == 0)
+   if (block->Tag == 0)
    {
       return;
    }
-
-   RemoveEntryList(&block->Used.TagListEntry);
+   RemoveEntryList(&block->TagListEntry);
 }
 
 VOID
-MiAddToTagHashTable(BLOCK_HDR* block)
+MiAddToTagHashTable(HDR_USED* block)
 /*
  * Add a block to the tag hash table
  */
 {
    ULONG hash;
 
-   if (block->Used.Tag == 0)
+   if (block->Tag == 0)
    {
       return;
    }
 
-   hash = block->Used.Tag % TAG_HASH_TABLE_SIZE;
+   hash = block->Tag % TAG_HASH_TABLE_SIZE;
 
-   InsertHeadList(&tag_hash_table[hash], &block->Used.TagListEntry);
+   InsertHeadList(&tag_hash_table[hash], &block->TagListEntry);
 }
 #endif /* TAG_STATISTICS_TRACKING */
 
-#if defined(TAG_STATISTICS_TRACKING) && !defined(WHOLE_PAGE_ALLOCATIONS)
+#if defined(TAG_STATISTICS_TRACKING)
 VOID STATIC
 MiDumpTagStats(ULONG CurrentTag, ULONG CurrentNrBlocks, ULONG CurrentSize)
 {
@@ -786,14 +773,14 @@ MiDumpTagStats(ULONG CurrentTag, ULONG CurrentNrBlocks, ULONG CurrentSize)
                CurrentSize / CurrentNrBlocks);
    }
 }
-#endif /* defined(TAG_STATISTICS_TRACKING) && !defined(WHOLE_PAGE_ALLOCATIONS); */
+#endif /* defined(TAG_STATISTICS_TRACKING) */
 
 VOID
 MiDebugDumpNonPagedPoolStats(BOOLEAN NewOnly)
 {
-#if defined(TAG_STATISTICS_TRACKING) && !defined(WHOLE_PAGE_ALLOCATIONS)
+#if defined(TAG_STATISTICS_TRACKING)
    ULONG i;
-   BLOCK_HDR* current;
+   HDR_USED* current;
    ULONG CurrentTag;
    ULONG CurrentNrBlocks = 0;
    ULONG CurrentSize = 0;
@@ -817,25 +804,25 @@ MiDebugDumpNonPagedPoolStats(BOOLEAN NewOnly)
          current_entry = tag_hash_table[i].Flink;
          while (current_entry != &tag_hash_table[i])
          {
-            current = CONTAINING_RECORD(current_entry, BLOCK_HDR, Used.TagListEntry);
+            current = CONTAINING_RECORD(current_entry, HDR_USED, TagListEntry);
             current_entry = current_entry->Flink;
             if (CurrentTag == 0)
             {
-               CurrentTag = current->Used.Tag;
+               CurrentTag = current->Tag;
                CurrentNrBlocks = 0;
                CurrentSize = 0;
             }
-            if (current->Used.Tag == CurrentTag)
+            if (current->Tag == CurrentTag)
             {
-               RemoveEntryList(&current->Used.TagListEntry);
-               InsertHeadList(&tmpListHead, &current->Used.TagListEntry);
-               if (!NewOnly || !current->Used.Dumped)
+               RemoveEntryList(&current->TagListEntry);
+               InsertHeadList(&tmpListHead, &current->TagListEntry);
+               if (!NewOnly || !current->Dumped)
                {
                   CurrentNrBlocks++;
                   TotalBlocks++;
-                  CurrentSize += current->Size;
-                  TotalSize += current->Size;
-                  current->Used.Dumped = TRUE;
+                  CurrentSize += current->hdr.Size;
+                  TotalSize += current->hdr.Size;
+                  current->Dumped = TRUE;
                }
             }
          }
@@ -866,14 +853,14 @@ MiDebugDumpNonPagedPoolStats(BOOLEAN NewOnly)
    DbgPrint("Freeblocks %d TotalFreeSize %d AverageFreeSize %d\n",
             EiNrFreeBlocks, Size, EiNrFreeBlocks ? Size / EiNrFreeBlocks : 0);
    DbgPrint("***************** Dump Complete ***************\n");
-#endif /* defined(TAG_STATISTICS_TRACKING) && !defined(WHOLE_PAGE_ALLOCATIONS) */
+#endif /* defined(TAG_STATISTICS_TRACKING) */
 }
 
 VOID
 MiDebugDumpNonPagedPool(BOOLEAN NewOnly)
 {
-#if defined(POOL_DEBUG_APIS) && !defined(WHOLE_PAGE_ALLOCATIONS)
-   BLOCK_HDR* current;
+#if defined(POOL_DEBUG_APIS)
+   HDR_USED* current;
    PLIST_ENTRY current_entry;
    KIRQL oldIrql;
 
@@ -883,37 +870,35 @@ MiDebugDumpNonPagedPool(BOOLEAN NewOnly)
    current_entry = UsedBlockListHead.Flink;
    while (current_entry != &UsedBlockListHead)
    {
-      current = CONTAINING_RECORD(current_entry, BLOCK_HDR, Used.ListEntry);
-      if (!NewOnly || !current->Used.Dumped)
+      current = CONTAINING_RECORD(current_entry, HDR_USED, ListEntry);
+      if (!NewOnly || !current->Dumped)
       {
          CHAR c1, c2, c3, c4;
 
-         c1 = (CHAR)((current->Used.Tag >> 24) & 0xFF);
-         c2 = (CHAR)((current->Used.Tag >> 16) & 0xFF);
-         c3 = (CHAR)((current->Used.Tag >> 8) & 0xFF);
-         c4 = (CHAR)(current->Used.Tag & 0xFF);
+         c1 = (CHAR)((current->Tag >> 24) & 0xFF);
+         c2 = (CHAR)((current->Tag >> 16) & 0xFF);
+         c3 = (CHAR)((current->Tag >> 8) & 0xFF);
+         c4 = (CHAR)(current->Tag & 0xFF);
 
          if (isprint(c1) && isprint(c2) && isprint(c3) && isprint(c4))
          {
             DbgPrint("Size 0x%x Tag 0x%x (%c%c%c%c) Allocator 0x%x\n",
-                     current->Size, current->Used.Tag, c4, c3, c2, c1,
-                     current->Used.Caller);
+                     current->hdr.Size, current->Tag, c4, c3, c2, c1,
+                     current->Caller);
          }
          else
          {
             DbgPrint("Size 0x%x Tag 0x%x Allocator 0x%x\n",
-                     current->Size, current->Used.Tag, current->Used.Caller);
+                     current->hdr.Size, current->Tag, current->Caller);
          }
-         current->Used.Dumped = TRUE;
+         current->Dumped = TRUE;
       }
       current_entry = current_entry->Flink;
    }
    DbgPrint("***************** Dump Complete ***************\n");
    KeReleaseSpinLock(&MmNpoolLock, oldIrql);
-#endif /* not WHOLE_PAGE_ALLOCATIONS */
+#endif 
 }
-
-#ifndef WHOLE_PAGE_ALLOCATIONS
 
 #ifdef ENABLE_VALIDATE_POOL
 static void validate_free_list(void)
@@ -921,7 +906,7 @@ static void validate_free_list(void)
  * FUNCTION: Validate the integrity of the list of free blocks
  */
 {
-   BLOCK_HDR* current;
+   HDR_FREE* current;
    unsigned int blocks_seen=0;
    PNODE p;
 
@@ -931,10 +916,10 @@ static void validate_free_list(void)
    {
       PVOID base_addr;
 
-      current = CONTAINING_RECORD(p, BLOCK_HDR, Free.Node);
+      current = CONTAINING_RECORD(p, HDR_FREE, Node);
       base_addr = (PVOID)current;
 
-      if (current->Magic != BLOCK_HDR_FREE_MAGIC)
+      if (current->hdr.Magic != BLOCK_HDR_FREE_MAGIC)
       {
          DbgPrint("Bad block magic (probable pool corruption) at %x\n",
                   current);
@@ -942,12 +927,12 @@ static void validate_free_list(void)
       }
 
       if (base_addr < MiNonPagedPoolStart ||
-            base_addr + BLOCK_HDR_SIZE + current->Size > MiNonPagedPoolStart + MiNonPagedPoolLength)
+            (ULONG_PTR)base_addr + current->hdr.Size > (ULONG_PTR)MiNonPagedPoolStart + MiNonPagedPoolLength)
       {
          DbgPrint("Block %x found outside pool area\n",current);
-         DbgPrint("Size %d\n",current->Size);
+         DbgPrint("Size %d\n",current->hdr.Size);
          DbgPrint("Limits are %x %x\n",MiNonPagedPoolStart,
-                  MiNonPagedPoolStart+MiNonPagedPoolLength);
+                  (ULONG_PTR)MiNonPagedPoolStart+MiNonPagedPoolLength);
          KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
       }
       blocks_seen++;
@@ -965,7 +950,7 @@ static void validate_used_list(void)
  * FUNCTION: Validate the integrity of the list of used blocks
  */
 {
-   BLOCK_HDR* current;
+   HDR_USED* current;
    PLIST_ENTRY current_entry;
    unsigned int blocks_seen=0;
 
@@ -974,23 +959,23 @@ static void validate_used_list(void)
    {
       PVOID base_addr;
 
-      current = CONTAINING_RECORD(current_entry, BLOCK_HDR, Used.ListEntry);
+      current = CONTAINING_RECORD(current_entry, HDR_USED, ListEntry);
       base_addr = (PVOID)current;
 
-      if (current->Magic != BLOCK_HDR_USED_MAGIC)
+      if (current->hdr.Magic != BLOCK_HDR_USED_MAGIC)
       {
          DbgPrint("Bad block magic (probable pool corruption) at %x\n",
                   current);
          KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
       }
       if (base_addr < MiNonPagedPoolStart ||
-            (base_addr+BLOCK_HDR_SIZE+current->Size) >
-            MiNonPagedPoolStart+MiNonPagedPoolLength)
+            ((ULONG_PTR)base_addr+current->hdr.Size) >
+            (ULONG_PTR)MiNonPagedPoolStart+MiNonPagedPoolLength)
       {
          DbgPrint("Block %x found outside pool area\n",current);
-         DbgPrint("Size %d\n",current->Size);
+         DbgPrint("Size %d\n",current->hdr.Size);
          DbgPrint("Limits are %x %x\n",MiNonPagedPoolStart,
-                  MiNonPagedPoolStart+MiNonPagedPoolLength);
+                  (ULONG_PTR)MiNonPagedPoolStart+MiNonPagedPoolLength);
          KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
       }
       blocks_seen++;
@@ -999,13 +984,13 @@ static void validate_used_list(void)
          DbgPrint("Too many blocks on used list\n");
          KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
       }
-      if (current->Used.ListEntry.Flink != &UsedBlockListHead &&
-            current->Used.ListEntry.Flink->Blink != &current->Used.ListEntry)
+      if (current->ListEntry.Flink != &UsedBlockListHead &&
+            current->ListEntry.Flink->Blink != &current->ListEntry)
       {
          DbgPrint("%s:%d:Break in list (current %x next %x "
                   "current->next->previous %x)\n",
-                  __FILE__,__LINE__,current, current->Used.ListEntry.Flink,
-                  current->Used.ListEntry.Flink->Blink);
+                  __FILE__,__LINE__,current, current->ListEntry.Flink,
+                  current->ListEntry.Flink->Blink);
          KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
       }
 
@@ -1013,7 +998,7 @@ static void validate_used_list(void)
    }
 }
 
-static void check_duplicates(BLOCK_HDR* blk)
+static void check_duplicates(HDR* blk)
 /*
  * FUNCTION: Check a block has no duplicates
  * ARGUMENTS:
@@ -1021,33 +1006,32 @@ static void check_duplicates(BLOCK_HDR* blk)
  * NOTE: Bug checks if duplicates are found
  */
 {
-   char* base = (char*)blk;
-   char* last = ((char*)blk) + BLOCK_HDR_SIZE + blk->Size;
-   BLOCK_HDR* current;
+   ULONG_PTR base = (ULONG_PTR)blk;
+   ULONG_PTR last = (ULONG_PTR)blk + blk->Size;
    PLIST_ENTRY current_entry;
    PNODE p;
+   HDR_FREE* free;
+   HDR_USED* used;
 
    p = avl_get_first(FreeBlockListRoot);
 
    while (p)
    {
-      current = CONTAINING_RECORD(p, BLOCK_HDR, Free.Node);
-
-      if (current->Magic != BLOCK_HDR_FREE_MAGIC)
+      free = CONTAINING_RECORD(p, HDR_FREE, Node);
+      if (free->hdr.Magic != BLOCK_HDR_FREE_MAGIC)
       {
          DbgPrint("Bad block magic (probable pool corruption) at %x\n",
-                  current);
+                  free);
          KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
       }
 
-      if ( (char*)current > base && (char*)current < last )
+      if ( (ULONG_PTR)free > base && (ULONG_PTR)free < last )
       {
          DbgPrint("intersecting blocks on list\n");
          KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
       }
-      if  ( (char*)current < base &&
-            ((char*)current + current->Size + BLOCK_HDR_SIZE)
-            > base )
+      if  ( (ULONG_PTR)free < base &&
+            ((ULONG_PTR)free + free->hdr.Size) > base )
       {
          DbgPrint("intersecting blocks on list\n");
          KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
@@ -1058,16 +1042,15 @@ static void check_duplicates(BLOCK_HDR* blk)
    current_entry = UsedBlockListHead.Flink;
    while (current_entry != &UsedBlockListHead)
    {
-      current = CONTAINING_RECORD(current_entry, BLOCK_HDR, Used.ListEntry);
+      used = CONTAINING_RECORD(current_entry, HDR_USED, ListEntry);
 
-      if ( (char*)current > base && (char*)current < last )
+      if ( (ULONG_PTR)used > base && (ULONG_PTR)used < last )
       {
          DbgPrint("intersecting blocks on list\n");
          KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
       }
-      if  ( (char*)current < base &&
-            ((char*)current + current->Size + BLOCK_HDR_SIZE)
-            > base )
+      if  ( (ULONG_PTR)current < base &&
+            ((ULONG_PTR)current + current->hdr.Size) > base )
       {
          DbgPrint("intersecting blocks on list\n");
          KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
@@ -1083,7 +1066,8 @@ static void validate_kernel_pool(void)
  * FUNCTION: Checks the integrity of the kernel memory heap
  */
 {
-   BLOCK_HDR* current;
+   HDR_FREE* free;
+   HDR_USED* used;
    PLIST_ENTRY current_entry;
    PNODE p;
 
@@ -1093,15 +1077,15 @@ static void validate_kernel_pool(void)
    p = avl_get_first(FreeBlockListRoot);
    while (p)
    {
-      current = CONTAINING_RECORD(p, BLOCK_HDR, Free.Node);
-      check_duplicates(current);
+      freet = CONTAINING_RECORD(p, HDR_FREE, Node);
+      check_duplicates(&free->hdr);
       p = avl_get_next(FreeBlockListRoot, p);
    }
    current_entry = UsedBlockListHead.Flink;
    while (current_entry != &UsedBlockListHead)
    {
-      current = CONTAINING_RECORD(current_entry, BLOCK_HDR, Used.ListEntry);
-      check_duplicates(current);
+      used = CONTAINING_RECORD(current_entry, HDR_USED, ListEntry);
+      check_duplicates(&used->hdr);
       current_entry = current_entry->Flink;
    }
 }
@@ -1109,14 +1093,13 @@ static void validate_kernel_pool(void)
 
 #if 0
 STATIC VOID
-free_pages(BLOCK_HDR* blk)
+free_pages(HDR_FREE* blk)
 {
    ULONG start;
    ULONG end;
-   ULONG i;
 
-   start = (ULONG)blk;
-   end = (ULONG)blk + BLOCK_HDR_SIZE + blk->Size;
+   start = (ULONG_PTR)blk;
+   end = (ULONG_PTR)blk + blk->hdr.Size;
 
    /*
     * If the block doesn't contain a whole page then there is nothing to do
@@ -1128,20 +1111,20 @@ free_pages(BLOCK_HDR* blk)
 }
 #endif
 
-static void remove_from_used_list(BLOCK_HDR* current)
+static void remove_from_used_list(HDR_USED* current)
 {
-   RemoveEntryList(&current->Used.ListEntry);
-   EiUsedNonPagedPool -= current->Size;
+   RemoveEntryList(&current->ListEntry);
+   EiUsedNonPagedPool -= current->hdr.Size;
    EiNrUsedBlocks--;
 }
 
-static void remove_from_free_list(BLOCK_HDR* current)
+static void remove_from_free_list(HDR_FREE* current)
 {
-   DPRINT("remove_from_free_list %d\n", current->Size);
+   DPRINT("remove_from_free_list %d\n", current->hdr.Size);
 
-   avl_remove(&FreeBlockListRoot, &current->Free.Node, compare_node);
+   avl_remove(&FreeBlockListRoot, &current->Node, compare_node);
 
-   EiFreeNonPagedPool -= current->Size;
+   EiFreeNonPagedPool -= current->hdr.Size;
    EiNrFreeBlocks--;
    DPRINT("remove_from_free_list done\n");
 #ifdef DUMP_AVL
@@ -1151,49 +1134,48 @@ static void remove_from_free_list(BLOCK_HDR* current)
 }
 
 static void
-add_to_free_list(BLOCK_HDR* blk)
+add_to_free_list(HDR_FREE* blk)
 /*
  * FUNCTION: add the block to the free list (internal)
  */
 {
-   BLOCK_HDR* current;
+   HDR_FREE* current;
    BOOL UpdatePrevPtr = FALSE;
 
-   DPRINT("add_to_free_list (%d)\n", blk->Size);
+   DPRINT("add_to_free_list (%d)\n", blk->hdr.Size);
 
    EiNrFreeBlocks++;
 
-   current = blk->previous;
-   if (current && current->Magic == BLOCK_HDR_FREE_MAGIC)
+   current = (HDR_FREE*)blk->hdr.previous;
+   if (current && current->hdr.Magic == BLOCK_HDR_FREE_MAGIC)
    {
       remove_from_free_list(current);
-      current->Size = current->Size + BLOCK_HDR_SIZE + blk->Size;
-      current->Magic = BLOCK_HDR_USED_MAGIC;
-      memset(blk, 0xcc, BLOCK_HDR_SIZE);
+      current->hdr.Size = current->hdr.Size + blk->hdr.Size;
+      current->hdr.Magic = BLOCK_HDR_USED_MAGIC;
+      memset(blk, 0xcc, HDR_USED_SIZE);
       blk = current;
       UpdatePrevPtr = TRUE;
    }
 
-   current = (BLOCK_HDR*)((char*)blk + BLOCK_HDR_SIZE + blk->Size);
+   current = (HDR_FREE*)((ULONG_PTR)blk + blk->hdr.Size);
    if ((char*)current < (char*)MiNonPagedPoolStart + MiNonPagedPoolLength &&
-         current->Magic == BLOCK_HDR_FREE_MAGIC)
+         current->hdr.Magic == BLOCK_HDR_FREE_MAGIC)
    {
       remove_from_free_list(current);
-      blk->Size += BLOCK_HDR_SIZE + current->Size;
-      memset(current, 0xcc, BLOCK_HDR_SIZE);
+      blk->hdr.Size += current->hdr.Size;
+      memset(current, 0xcc, HDR_FREE_SIZE);
       UpdatePrevPtr = TRUE;
-      current = (BLOCK_HDR*)((char*)blk + BLOCK_HDR_SIZE + blk->Size);
+      current = (HDR_FREE*)((ULONG_PTR)blk + blk->hdr.Size);
    }
    if (UpdatePrevPtr &&
          (char*)current < (char*)MiNonPagedPoolStart + MiNonPagedPoolLength)
    {
-      current->previous = blk;
+      current->hdr.previous = &blk->hdr;
    }
-   DPRINT("%d\n", blk->Size);
-   blk->Magic = BLOCK_HDR_FREE_MAGIC;
-   EiFreeNonPagedPool += blk->Size;
-   avl_insert(&FreeBlockListRoot, &blk->Free.Node, compare_node);
-
+   DPRINT("%d\n", blk->hdr.Size);
+   blk->hdr.Magic = BLOCK_HDR_FREE_MAGIC;
+   EiFreeNonPagedPool += blk->hdr.Size;
+   avl_insert(&FreeBlockListRoot, &blk->Node, compare_node);
    DPRINT("add_to_free_list done\n");
 #ifdef DUMP_AVL
 
@@ -1201,40 +1183,26 @@ add_to_free_list(BLOCK_HDR* blk)
 #endif
 }
 
-static void add_to_used_list(BLOCK_HDR* blk)
+static void add_to_used_list(HDR_USED* blk)
 /*
  * FUNCTION: add the block to the used list (internal)
  */
 {
-   InsertHeadList(&UsedBlockListHead, &blk->Used.ListEntry);
-   EiUsedNonPagedPool += blk->Size;
+   InsertHeadList(&UsedBlockListHead, &blk->ListEntry);
+   EiUsedNonPagedPool += blk->hdr.Size;
    EiNrUsedBlocks++;
 }
 
-inline static void* block_to_address(BLOCK_HDR* blk)
-/*
- * FUNCTION: Translate a block header address to the corresponding block
- * address (internal)
- */
-{
-   return ( (void *) ((char*)blk + BLOCK_HDR_SIZE));
-}
-
-inline static BLOCK_HDR* address_to_block(void* addr)
-{
-   return (BLOCK_HDR *)
-          ( ((char*)addr) - BLOCK_HDR_SIZE );
-}
 
 static BOOLEAN
-grow_block(BLOCK_HDR* blk, PVOID end)
+grow_block(HDR_FREE* blk, PVOID end)
 {
    NTSTATUS Status;
    PFN_TYPE Page[32];
    ULONG_PTR StartIndex, EndIndex;
    ULONG i, j, k;
 
-   StartIndex = (ULONG_PTR)(PAGE_ROUND_UP((ULONG_PTR)blk + BLOCK_HDR_SIZE - (ULONG_PTR)MiNonPagedPoolStart)) / PAGE_SIZE;
+   StartIndex = (ULONG_PTR)(PAGE_ROUND_UP((ULONG_PTR)blk + HDR_FREE_SIZE - (ULONG_PTR)MiNonPagedPoolStart)) / PAGE_SIZE;
    EndIndex = ((ULONG_PTR)PAGE_ROUND_UP(end) - (ULONG_PTR)MiNonPagedPoolStart) / PAGE_SIZE;
 
 
@@ -1285,72 +1253,86 @@ grow_block(BLOCK_HDR* blk, PVOID end)
    return TRUE;
 }
 
-static BLOCK_HDR* get_block(unsigned int size, unsigned long alignment)
+static HDR_USED* get_block(unsigned int size, unsigned long alignment)
 {
-   BLOCK_HDR *blk, *current, *previous = NULL, *next = NULL, *best = NULL;
+   HDR_FREE *blk, *current, *previous = NULL, *next = NULL, *best = NULL;
    ULONG previous_size = 0, current_size, next_size = 0, new_size;
    PVOID end;
-   PVOID addr, aligned_addr;
+   PVOID addr, aligned_addr, best_aligned_addr;
    PNODE p;
 
    DPRINT("get_block %d\n", size);
 
-   if (alignment == 0)
+   p = avl_find_equal_or_greater(FreeBlockListRoot, size + HDR_USED_SIZE, compare_value);
+   while (p)
    {
-      p = avl_find_equal_or_greater(FreeBlockListRoot, size, compare_value);
-      if (p)
+      current = CONTAINING_RECORD(p, HDR_FREE, Node);
+      addr = (PVOID)((ULONG_PTR)current + HDR_USED_SIZE);
+      /* calculate first aligned address available within this block */
+      aligned_addr = alignment > 0 ? MM_ROUND_UP(addr, alignment) : addr;
+      if (size < PAGE_SIZE)
       {
-         best = CONTAINING_RECORD(p, BLOCK_HDR, Free.Node);
-         addr = block_to_address(best);
-      }
-   }
-   else
-   {
-      p = avl_find_equal_or_greater(FreeBlockListRoot, size, compare_value);
-
-      while(p)
-      {
-         current = CONTAINING_RECORD(p, BLOCK_HDR, Free.Node);
-         addr = block_to_address(current);
-         /* calculate first aligned address available within this block */
-         aligned_addr = MM_ROUND_UP(addr, alignment);
-         /* check to see if this address is already aligned */
-         if (addr == aligned_addr)
+         /* check that the block is in one page */
+         if (PAGE_ROUND_DOWN(aligned_addr) != PAGE_ROUND_DOWN((ULONG_PTR)aligned_addr + size - 1))
          {
-            if (current->Size >= size &&
-                  (best == NULL || current->Size < best->Size))
+            aligned_addr = (PVOID)PAGE_ROUND_UP(aligned_addr);
+         }
+      }
+      DPRINT("%x %x\n", addr, aligned_addr);
+      if (aligned_addr != addr)
+      {
+         while((ULONG_PTR)aligned_addr - (ULONG_PTR)addr < HDR_FREE_SIZE)
+         {
+            if (alignment == 0)
             {
-               best = current;
+               aligned_addr = (PVOID)((ULONG_PTR)current + HDR_USED_SIZE + HDR_FREE_SIZE);
+            }
+            else
+            {
+               aligned_addr = MM_ROUND_UP((PVOID)((ULONG_PTR)current + HDR_USED_SIZE + HDR_FREE_SIZE), alignment);
+            }
+            if (size < PAGE_SIZE)
+            {
+               /* check that the block is in one page */
+               if (PAGE_ROUND_DOWN(aligned_addr) != PAGE_ROUND_DOWN((ULONG_PTR)aligned_addr + size - 1))
+               {
+                  aligned_addr = (PVOID)PAGE_ROUND_UP(aligned_addr);
+               }
+            }
+         }
+      }
+      DPRINT("%x %x\n", addr, aligned_addr);
+      new_size = (ULONG_PTR)aligned_addr - (ULONG_PTR)addr + size;
+      if (current->hdr.Size >= new_size + HDR_USED_SIZE &&
+          (best == NULL || current->hdr.Size < best->hdr.Size))
+      {
+         best = current;
+         best_aligned_addr = aligned_addr;
+         if (new_size <= size + 2 * HDR_FREE_SIZE)
+         {
+             break;
+         }
+      }
+      
+      if (best)
+      {
+         if (size < PAGE_SIZE)
+         {
+            if (current->hdr.Size >= 2 * PAGE_SIZE + HDR_FREE_SIZE)
+            {
+                break;
             }
          }
          else
          {
-            /* make sure there's enough room to make a free block by the space skipped
-             * from alignment. If not, calculate forward to the next alignment
-             * and see if we allocate there...
-             */
-            new_size = (ULONG_PTR)aligned_addr - (ULONG_PTR)addr + size;
-            if ((ULONG_PTR)aligned_addr - (ULONG_PTR)addr < BLOCK_HDR_SIZE)
+            if (current->hdr.Size >= size + alignment + HDR_FREE_SIZE)
             {
-               /* not enough room for a free block header, add some more bytes */
-               aligned_addr = MM_ROUND_UP(block_to_address((BLOCK_HDR*)((char*)current + BLOCK_HDR_SIZE)), alignment);
-               new_size = (ULONG_PTR)aligned_addr - (ULONG_PTR)addr + size;
-            }
-            if (current->Size >= new_size &&
-                  (best == NULL || current->Size < best->Size))
-            {
-               best = current;
+                break;
             }
          }
-         if (best && current->Size >= size + alignment + 2 * BLOCK_HDR_SIZE)
-         {
-            break;
-         }
-         p = avl_get_next(FreeBlockListRoot, p);
-
       }
-   }
-
+      p = avl_get_next(FreeBlockListRoot, p);
+   }         
    /*
     * We didn't find anything suitable at all.
     */
@@ -1359,40 +1341,31 @@ static BLOCK_HDR* get_block(unsigned int size, unsigned long alignment)
       return NULL;
    }
 
+   DPRINT(":: blk %x blk->hdr.Size %d (%d) Size %d\n", best, best->hdr.Size, best->hdr.Size - HDR_USED_SIZE, size);
+
    current = best;
-   current_size = current->Size;
-
-   if (alignment > 0)
+   current_size = current->hdr.Size - HDR_USED_SIZE;
+   addr = (PVOID)((ULONG_PTR)current + HDR_USED_SIZE);
+   if (addr != best_aligned_addr)
    {
-      addr = block_to_address(current);
-      aligned_addr = MM_ROUND_UP(addr, alignment);
-      if (addr != aligned_addr)
-      {
-         blk = address_to_block(aligned_addr);
-         if ((char*)blk < (char*)current + BLOCK_HDR_SIZE)
-         {
-            aligned_addr = MM_ROUND_UP(block_to_address((BLOCK_HDR*)((char*)current + BLOCK_HDR_SIZE)), alignment);
-            blk = address_to_block(aligned_addr);
-         }
-         /*
-          * if size-aligned, break off the preceding bytes into their own block...
-          */
-         previous = current;
-         previous_size = (ULONG_PTR)blk - (ULONG_PTR)previous - BLOCK_HDR_SIZE;
-         current = blk;
-         current_size -= ((ULONG_PTR)current - (ULONG_PTR)previous);
-      }
+      blk = (HDR_FREE*)((ULONG_PTR)best_aligned_addr - HDR_USED_SIZE);
+      /*
+       * if size-aligned, break off the preceding bytes into their own block...
+       */
+      previous = current;
+      previous_size = (ULONG_PTR)blk - (ULONG_PTR)previous - HDR_FREE_SIZE;
+      current = blk;
+      current_size -= ((ULONG_PTR)current - (ULONG_PTR)previous);
    }
+   end = (PVOID)((ULONG_PTR)current + HDR_USED_SIZE + size);
 
-   end = (char*)current + BLOCK_HDR_SIZE + size;
-
-   if (current_size >= size + BLOCK_HDR_SIZE + MM_POOL_ALIGNMENT)
+   if (current_size >= size + HDR_FREE_SIZE + MM_POOL_ALIGNMENT)
    {
       /* create a new free block after our block, if the memory size is >= 4 byte for this block */
-      next = (BLOCK_HDR*)((ULONG_PTR)current + size + BLOCK_HDR_SIZE);
-      next_size = current_size - size - BLOCK_HDR_SIZE;
+      next = (HDR_FREE*)((ULONG_PTR)current + size + HDR_USED_SIZE);
+      next_size = current_size - size - HDR_FREE_SIZE;
       current_size = size;
-      end = (char*)next + BLOCK_HDR_SIZE;
+      end = (PVOID)((ULONG_PTR)next + HDR_FREE_SIZE);
    }
 
    if (previous)
@@ -1403,17 +1376,17 @@ static BLOCK_HDR* get_block(unsigned int size, unsigned long alignment)
          add_to_free_list(previous);
          return NULL;
       }
-      memset(current, 0, BLOCK_HDR_SIZE);
-      current->Size = current_size;
-      current->Magic = BLOCK_HDR_USED_MAGIC;
-      current->previous = previous;
-      previous->Size = previous_size;
+      memset(current, 0, HDR_USED_SIZE);
+      current->hdr.Size = current_size + HDR_USED_SIZE;
+      current->hdr.Magic = BLOCK_HDR_USED_MAGIC;
+      current->hdr.previous = &previous->hdr;
+      previous->hdr.Size = previous_size + HDR_FREE_SIZE;
       if (next == NULL)
       {
-         blk = (BLOCK_HDR*)((char*)current + BLOCK_HDR_SIZE + current->Size);
-         if ((char*)blk < (char*)MiNonPagedPoolStart + MiNonPagedPoolLength)
+         blk = (HDR_FREE*)((ULONG_PTR)current + current->hdr.Size);
+         if ((ULONG_PTR)blk < (ULONG_PTR)MiNonPagedPoolStart + MiNonPagedPoolLength)
          {
-            blk->previous = current;
+            blk->hdr.previous = &current->hdr;
          }
       }
 
@@ -1428,56 +1401,55 @@ static BLOCK_HDR* get_block(unsigned int size, unsigned long alignment)
          add_to_free_list(current);
          return NULL;
       }
-
-      current->Magic = BLOCK_HDR_USED_MAGIC;
+      current->hdr.Magic = BLOCK_HDR_USED_MAGIC;
       if (next)
       {
-         current->Size = current_size;
+         current->hdr.Size = current_size + HDR_USED_SIZE;
       }
    }
 
    if (next)
    {
-      memset(next, 0, BLOCK_HDR_SIZE);
-
-      next->Size = next_size;
-      next->Magic = BLOCK_HDR_FREE_MAGIC;
-      next->previous = current;
-      blk = (BLOCK_HDR*)((char*)next + BLOCK_HDR_SIZE + next->Size);
-      if ((char*)blk < (char*)MiNonPagedPoolStart + MiNonPagedPoolLength)
+      memset(next, 0, HDR_FREE_SIZE);
+      next->hdr.Size = next_size + HDR_FREE_SIZE;
+      next->hdr.Magic = BLOCK_HDR_FREE_MAGIC;
+      next->hdr.previous = &current->hdr;
+      blk = (HDR_FREE*)((ULONG_PTR)next + next->hdr.Size);
+      if ((ULONG_PTR)blk < (ULONG_PTR)MiNonPagedPoolStart + MiNonPagedPoolLength)
       {
-         blk->previous = next;
+         blk->hdr.previous = &next->hdr;
       }
       add_to_free_list(next);
    }
 
-   add_to_used_list(current);
+   add_to_used_list((HDR_USED*)current);
    VALIDATE_POOL;
-   return current;
-}
 
-#endif /* not WHOLE_PAGE_ALLOCATIONS */
+   if (size < PAGE_SIZE)
+   {
+       addr = (PVOID)((ULONG_PTR)current + HDR_USED_SIZE);
+       if (PAGE_ROUND_DOWN(addr) != PAGE_ROUND_DOWN((PVOID)((ULONG_PTR)addr + size - 1)))
+       {
+           DPRINT1("%x %x\n", addr, (ULONG_PTR)addr + size);
+       }
+       ASSERT (PAGE_ROUND_DOWN(addr) == PAGE_ROUND_DOWN((PVOID)((ULONG_PTR)addr + size - 1)));
+   }
+   if (alignment)
+   {
+       addr = (PVOID)((ULONG_PTR)current + HDR_USED_SIZE);
+       ASSERT(MM_ROUND_UP(addr, alignment) == addr);
+   }
+   return (HDR_USED*)current;
+}
 
 ULONG STDCALL
 ExRosQueryNonPagedPoolTag ( PVOID Addr )
 {
-#ifdef WHOLE_PAGE_ALLOCATIONS /* WHOLE_PAGE_ALLOCATIONS */
-
-   UNIMPLEMENTED;
-   return 0;
-
-#else /* not WHOLE_PAGE_ALLOCATIONS */
-
-   BLOCK_HDR* blk=address_to_block(Addr);
-
-   if (blk->Magic != BLOCK_HDR_USED_MAGIC)
-      KEBUGCHECK(0);
-   if (blk->Magic == BLOCK_HDR_FREE_MAGIC)
+   HDR_USED* blk=(HDR_USED*)((ULONG_PTR)Addr - HDR_USED_SIZE);
+   if (blk->hdr.Magic != BLOCK_HDR_USED_MAGIC)
       KEBUGCHECK(0);
 
-   return blk->Used.Tag;
-
-#endif /* WHOLE_PAGE_ALLOCATIONS */
+   return blk->Tag;
 }
 
 VOID STDCALL ExFreeNonPagedPool (PVOID block)
@@ -1487,27 +1459,7 @@ VOID STDCALL ExFreeNonPagedPool (PVOID block)
  *        block = block to free
  */
 {
-#ifdef WHOLE_PAGE_ALLOCATIONS /* WHOLE_PAGE_ALLOCATIONS */
-   KIRQL oldIrql;
-
-   if (block == NULL)
-   {
-      return;
-   }
-
-   DPRINT("freeing block %x\n",block);
-
-   POOL_TRACE("ExFreePool(block %x), size %d, caller %x\n",block,blk->size,
-              ((PULONG)&block)[-1]);
-
-   KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
-
-   ExFreeWholePageBlock(block);
-   KeReleaseSpinLock(&MmNpoolLock, oldIrql);
-
-#else /* not WHOLE_PAGE_ALLOCATIONS */
-
-   BLOCK_HDR* blk=address_to_block(block);
+   HDR_USED* blk=(HDR_USED*)((ULONG_PTR)block - HDR_USED_SIZE);
    KIRQL oldIrql;
 
    if (block == NULL)
@@ -1517,80 +1469,43 @@ VOID STDCALL ExFreeNonPagedPool (PVOID block)
 
    DPRINT("freeing block %x\n",blk);
 
-   POOL_TRACE("ExFreePool(block %x), size %d, caller %x\n",block,blk->Size,
-              ((PULONG)&block)[-1]);
-
+   POOL_TRACE("ExFreePool(block %x), size %d, caller %x\n",block,blk->hdr.Size,
+              block->Caller);
    KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
 
    VALIDATE_POOL;
-
-   if (blk->Magic != BLOCK_HDR_USED_MAGIC)
+   if (blk->hdr.Magic != BLOCK_HDR_USED_MAGIC)
    {
-      if (blk->Magic == BLOCK_HDR_FREE_MAGIC)
+      if (blk->hdr.Magic == BLOCK_HDR_FREE_MAGIC)
       {
          DbgPrint("ExFreePool of already freed address %x\n", block);
       }
       else
       {
          DbgPrint("ExFreePool of non-allocated address %x (magic %x)\n",
-                  block, blk->Magic);
+                  block, blk->hdr.Magic);
       }
       KEBUGCHECK(0);
       return;
    }
-
-   memset(block, 0xcc, blk->Size);
+   memset(block, 0xcc, blk->hdr.Size - HDR_USED_SIZE);
 #ifdef TAG_STATISTICS_TRACKING
 
    MiRemoveFromTagHashTable(blk);
 #endif
 
    remove_from_used_list(blk);
-   blk->Magic = BLOCK_HDR_FREE_MAGIC;
-   add_to_free_list(blk);
+   blk->hdr.Magic = BLOCK_HDR_FREE_MAGIC;
+   add_to_free_list((HDR_FREE*)blk);
    VALIDATE_POOL;
    KeReleaseSpinLock(&MmNpoolLock, oldIrql);
-
-#endif /* WHOLE_PAGE_ALLOCATIONS */
 }
 
 PVOID STDCALL
 ExAllocateNonPagedPoolWithTag(POOL_TYPE Type, ULONG Size, ULONG Tag, PVOID Caller)
 {
-#ifdef WHOLE_PAGE_ALLOCATIONS
    PVOID block;
-   KIRQL oldIrql;
-
-   ASSERT_IRQL(DISPATCH_LEVEL);
-
-   POOL_TRACE("ExAllocatePool(NumberOfBytes %d) caller %x ",
-              Size,Caller);
-
-   KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
-
-   /*
-    * accomodate this useful idiom
-    */
-   if (Size == 0)
-   {
-      POOL_TRACE("= NULL\n");
-      KeReleaseSpinLock(&MmNpoolLock, oldIrql);
-      return(NULL);
-   }
-
-   block = ExAllocateWholePageBlock(Size);
-   KeReleaseSpinLock(&MmNpoolLock, oldIrql);
-   if (NULL == block)
-   {
-      DPRINT1("Trying to allocate %lu bytes from nonpaged pool - nothing suitable found, returning NULL\n",
-              Size );
-   }
-   return(block);
-
-#else /* not WHOLE_PAGE_ALLOCATIONS */
-
-   PVOID block;
-   BLOCK_HDR* best = NULL;
+   HDR_USED* best = NULL;
    KIRQL oldIrql;
    ULONG alignment;
 
@@ -1601,7 +1516,7 @@ ExAllocateNonPagedPoolWithTag(POOL_TYPE Type, ULONG Size, ULONG Tag, PVOID Calle
 
    VALIDATE_POOL;
 
-#if 0
+#if 1
    /* after some allocations print the npaged pool stats */
 #ifdef TAG_STATISTICS_TRACKING
 
@@ -1647,108 +1562,21 @@ ExAllocateNonPagedPoolWithTag(POOL_TYPE Type, ULONG Size, ULONG Tag, PVOID Calle
               Size );
       return NULL;
    }
-   best->Used.Tag = Tag;
-   best->Used.Caller = Caller;
-   best->Used.Dumped = FALSE;
-   best->Used.TagListEntry.Flink = best->Used.TagListEntry.Blink = NULL;
+   best->Tag = Tag;
+   best->Caller = Caller;
+   best->Dumped = FALSE;
+   best->TagListEntry.Flink = best->TagListEntry.Blink = NULL;
 #ifdef TAG_STATISTICS_TRACKING
 
    MiAddToTagHashTable(best);
 #endif
 
    KeReleaseSpinLock(&MmNpoolLock, oldIrql);
-   block = block_to_address(best);
+   block = (PVOID)((ULONG_PTR)best + HDR_USED_SIZE);
    /*   RtlZeroMemory(block, Size);*/
    return(block);
-#endif /* WHOLE_PAGE_ALLOCATIONS */
 }
 
-#ifdef WHOLE_PAGE_ALLOCATIONS
-
-PVOID STDCALL
-ExAllocateWholePageBlock(ULONG Size)
-{
-   PVOID Address;
-   PFN_TYPE Page;
-   ULONG i;
-   ULONG NrPages;
-   ULONG Base;
-
-   NrPages = ROUND_UP(Size, PAGE_SIZE) / PAGE_SIZE;
-
-   Base = RtlFindClearBitsAndSet(&NonPagedPoolAllocMap, NrPages + 1, NonPagedPoolAllocMapHint);
-   if (Base == 0xffffffff)
-   {
-      DbgPrint("Out of non paged pool space.\n");
-      KEBUGCHECK(0);
-   }
-   if (NonPagedPoolAllocMapHint == Base)
-   {
-      NonPagedPoolAllocMapHint += (NrPages + 1);
-   }
-
-   Address = MiNonPagedPoolStart + Base * PAGE_SIZE;
-
-   for (i = 0; i < NrPages; i++)
-   {
-       Page = MmAllocPage(MC_NPPOOL, 0);
-       if (Page == 0)
-      {
-         KEBUGCHECK(0);
-      }
-      MmCreateVirtualMapping(NULL,
-                             Address + (i * PAGE_SIZE),
-                             PAGE_READWRITE | PAGE_SYSTEM,
-                             &Page,
-                             TRUE);
-   }
-
-   MiCurrentNonPagedPoolLength = max(MiCurrentNonPagedPoolLength, (Base + NrPages) * PAGE_SIZE);
-   Size = (Size + 7) & ~7;
-   Address = ((PVOID)((PUCHAR)Address + (NrPages * PAGE_SIZE) - Size));
-
-   DPRINT("WPALLOC: %x (%d)\n", Address, Size);
-
-   return Address;
-}
-
-VOID STDCALL
-ExFreeWholePageBlock(PVOID Addr)
-{
-   ULONG Base;
-
-   if (Addr < MiNonPagedPoolStart ||
-         Addr >= (MiNonPagedPoolStart + MiCurrentNonPagedPoolLength))
-   {
-      DbgPrint("Block %x found outside pool area\n", Addr);
-      KEBUGCHECK(0);
-   }
-   Base = (Addr - MiNonPagedPoolStart) / PAGE_SIZE;
-   NonPagedPoolAllocMapHint = min(NonPagedPoolAllocMapHint, Base);
-   while (MmIsPagePresent(NULL, Addr))
-   {
-      MmDeleteVirtualMapping(NULL,
-                             Addr,
-                             TRUE,
-                             NULL,
-                             NULL);
-      RtlClearBits(&NonPagedPoolAllocMap, Base, 1);
-      Base++;
-      Addr += PAGE_SIZE;
-   }
-}
-
-#endif /* WHOLE_PAGE_ALLOCATIONS */
-
-/* Whole Page Allocations note:
- *
- * We need enough pages for these things:
- *
- * 1) bitmap buffer
- * 2) hdr
- * 3) actual pages
- *
- */
 VOID INIT_FUNCTION
 MiInitializeNonPagedPool(VOID)
 {
@@ -1756,11 +1584,8 @@ MiInitializeNonPagedPool(VOID)
    PFN_TYPE Page;
    ULONG i;
    PVOID Address;
-#ifdef WHOLE_PAGE_ALLOCATIONS
-#else
-
-   BLOCK_HDR* blk;
-#endif
+   HDR_USED* used;
+   HDR_FREE* free;
 #ifdef TAG_STATISTICS_TRACKING
 
    for (i = 0; i < TAG_HASH_TABLE_SIZE; i++)
@@ -1772,41 +1597,12 @@ MiInitializeNonPagedPool(VOID)
    InitializeListHead(&UsedBlockListHead);
    InitializeListHead(&AddressListHead);
    FreeBlockListRoot = NULL;
-#ifdef WHOLE_PAGE_ALLOCATIONS
 
-   NonPagedPoolAllocMapHint = PAGE_ROUND_UP(MiNonPagedPoolLength / PAGE_SIZE / 8) / PAGE_SIZE; /* Pages of bitmap buffer */
-   MiCurrentNonPagedPoolLength = NonPagedPoolAllocMapHint * PAGE_SIZE;
-   Address = MiNonPagedPoolStart;
-   for (i = 0; i < NonPagedPoolAllocMapHint; i++)
-   {
-      Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Page);
-      if (!NT_SUCCESS(Status))
-      {
-         DbgPrint("Unable to allocate a page\n");
-         KEBUGCHECK(0);
-      }
-      Status = MmCreateVirtualMapping(NULL,
-                                      Address,
-                                      PAGE_READWRITE|PAGE_SYSTEM,
-                                      &Page,
-                                      1);
-      if (!NT_SUCCESS(Status))
-      {
-         DbgPrint("Unable to create virtual mapping\n");
-         KEBUGCHECK(0);
-      }
-      Address += PAGE_SIZE;
-   }
-   RtlInitializeBitMap(&NonPagedPoolAllocMap, MiNonPagedPoolStart,
-		       MiNonPagedPoolLength / PAGE_SIZE);
-   RtlClearAllBits(&NonPagedPoolAllocMap);
-   RtlSetBits(&NonPagedPoolAllocMap, 0, NonPagedPoolAllocMapHint);
-#else
-
-   MiNonPagedPoolAllocMap = block_to_address((BLOCK_HDR*)MiNonPagedPoolStart);
-   MiNonPagedPoolNrOfPages = PAGE_ROUND_UP(ROUND_UP(MiNonPagedPoolLength / PAGE_SIZE, 32) / 8 + 2 * BLOCK_HDR_SIZE);
+   MiNonPagedPoolAllocMap = (PVOID)((ULONG_PTR)MiNonPagedPoolStart + PAGE_SIZE);
+   MiNonPagedPoolNrOfPages = PAGE_ROUND_UP(ROUND_UP(MiNonPagedPoolLength / PAGE_SIZE, 32) / 8 + HDR_FREE_SIZE) + PAGE_SIZE;
    MiNonPagedPoolNrOfPages /= PAGE_SIZE;
    Address = MiNonPagedPoolStart;
+
    for (i = 0; i < MiNonPagedPoolNrOfPages; i++)
    {
       Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Page);
@@ -1815,6 +1611,7 @@ MiInitializeNonPagedPool(VOID)
          DbgPrint("Unable to allocate a page\n");
          KEBUGCHECK(0);
       }
+
       Status = MmCreateVirtualMapping(NULL,
                                       Address,
                                       PAGE_READWRITE|PAGE_SYSTEM,
@@ -1825,32 +1622,42 @@ MiInitializeNonPagedPool(VOID)
          DbgPrint("Unable to create virtual mapping\n");
          KEBUGCHECK(0);
       }
-      MiNonPagedPoolAllocMap[i / 32] |= (1 << (i % 32));
       Address = (PVOID)((ULONG_PTR)Address + PAGE_SIZE);
    }
-   /* the first block contains the non paged pool bitmap */
-   blk = (BLOCK_HDR*)MiNonPagedPoolStart;
-   memset(blk, 0, BLOCK_HDR_SIZE);
-   blk->Magic = BLOCK_HDR_USED_MAGIC;
-   blk->Size = ROUND_UP(MiNonPagedPoolLength / PAGE_SIZE, 32) / 8;
-   blk->previous = NULL;
-   blk->Used.Tag = 0xffffffff;
-   blk->Used.Caller = 0;
-   blk->Used.Dumped = FALSE;
-   add_to_used_list(blk);
-#ifdef TAG_STATISTICS_TRACKING
 
-   MiAddToTagHashTable(blk);
+   for (i = 0; i < MiNonPagedPoolNrOfPages; i++)
+   {
+      MiNonPagedPoolAllocMap[i / 32] |= (1 << (i % 32));
+   }
+
+   /* the first block is free */
+   free = (HDR_FREE*)MiNonPagedPoolStart;
+   free->hdr.Magic = BLOCK_HDR_FREE_MAGIC;
+   free->hdr.Size = PAGE_SIZE - HDR_USED_SIZE;
+   free->hdr.previous = NULL;
+   memset((PVOID)((ULONG_PTR)free + HDR_FREE_SIZE), 0xcc, free->hdr.Size - HDR_FREE_SIZE);
+   add_to_free_list(free);
+
+   /* the second block contains the non paged pool bitmap */
+   used = (HDR_USED*)((ULONG_PTR)free + free->hdr.Size);
+   used->hdr.Magic = BLOCK_HDR_USED_MAGIC;
+   used->hdr.Size = ROUND_UP(MiNonPagedPoolLength / PAGE_SIZE, 32) / 8 + HDR_USED_SIZE;
+   used->hdr.previous = &free->hdr;
+   used->Tag = 0xffffffff;
+   used->Caller = 0;
+   used->Dumped = FALSE;
+   add_to_used_list(used);
+#ifdef TAG_STATISTICS_TRACKING
+   MiAddToTagHashTable(used);
 #endif
-   /* the second block is the first free block */
-   blk = (BLOCK_HDR*)((char*)blk + BLOCK_HDR_SIZE + blk->Size);
-   memset(blk, 0, BLOCK_HDR_SIZE);
-   memset((char*)blk + BLOCK_HDR_SIZE, 0x0cc, MiNonPagedPoolNrOfPages * PAGE_SIZE - ((ULONG_PTR)blk + BLOCK_HDR_SIZE - (ULONG_PTR)MiNonPagedPoolStart));
-   blk->Magic = BLOCK_HDR_FREE_MAGIC;
-   blk->Size = MiNonPagedPoolLength - ((ULONG_PTR)blk + BLOCK_HDR_SIZE - (ULONG_PTR)MiNonPagedPoolStart);
-   blk->previous = (BLOCK_HDR*)MiNonPagedPoolStart;
-   add_to_free_list(blk);
-#endif
+
+   /* the third block is the free block after the bitmap */
+   free = (HDR_FREE*)((ULONG_PTR)used + used->hdr.Size);
+   free->hdr.Magic = BLOCK_HDR_FREE_MAGIC;
+   free->hdr.Size = MiNonPagedPoolLength - ((ULONG_PTR)free - (ULONG_PTR)MiNonPagedPoolStart);
+   free->hdr.previous = &used->hdr;
+   memset((PVOID)((ULONG_PTR)free + HDR_FREE_SIZE), 0x0cc, (ULONG_PTR)Address - (ULONG_PTR)free - HDR_FREE_SIZE);
+   add_to_free_list(free);
 }
 
 PVOID
@@ -1863,7 +1670,7 @@ MiAllocateSpecialPool  (IN POOL_TYPE PoolType,
 {
     /* FIXME: Special Pools not Supported */
     DbgPrint("Special Pools not supported\n");
-    return 0;
+    return NULL;
 }
 
 /* EOF */
