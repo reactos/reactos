@@ -113,7 +113,7 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
    UNICODE_STRING PortName = RTL_CONSTANT_STRING(L"\\Windows\\ApiPort");
    ULONG ConnectInfoLength;
    CSR_API_MESSAGE Request;
-   LPC_SECTION_WRITE LpcWrite;
+   PORT_VIEW LpcWrite;
    HANDLE CsrSectionHandle;
    LARGE_INTEGER CsrSectionViewSize;
 
@@ -135,7 +135,7 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
        return(Status);
      }
    ConnectInfoLength = 0;
-   LpcWrite.Length = sizeof(LPC_SECTION_WRITE);
+   LpcWrite.Length = sizeof(PORT_VIEW);
    LpcWrite.SectionHandle = CsrSectionHandle;
    LpcWrite.SectionOffset = 0;
    LpcWrite.ViewSize = CsrSectionViewSize.u.LowPart;
@@ -155,7 +155,7 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
 
    NtClose(CsrSectionHandle);
    CsrSectionMapBase = LpcWrite.ViewBase;
-   CsrSectionMapServerBase = LpcWrite.TargetViewBase;
+   CsrSectionMapServerBase = LpcWrite.ViewRemoteBase;
 
    /* Create the heap for communication for csrss. */
    CsrCommHeap = RtlCreateHeap(0,

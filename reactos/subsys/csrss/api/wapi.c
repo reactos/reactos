@@ -192,7 +192,7 @@ ServerApiPortThread (PVOID PortHandle)
 
    for (;;)
      {
-        LPC_SECTION_READ LpcRead;
+        REMOTE_PORT_VIEW LpcRead;
         ServerPort = NULL;
 
 	Status = NtListenPort (hApiListenPort, & Request.Header);

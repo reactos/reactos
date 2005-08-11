@@ -87,24 +87,22 @@ typedef struct _PORT_MESSAGE
     };
 } PORT_MESSAGE, *PPORT_MESSAGE;
 
-/* FIXME: USE REAL DEFINITION */
-typedef struct _LPC_SECTION_WRITE
+typedef struct _PORT_VIEW
 {
-    ULONG  Length;
-    HANDLE  SectionHandle;
-    ULONG  SectionOffset;
-    ULONG  ViewSize;
-    PVOID  ViewBase;
-    PVOID  TargetViewBase;
-} LPC_SECTION_WRITE, *PLPC_SECTION_WRITE;
+    ULONG Length;
+    LPC_HANDLE SectionHandle;
+    ULONG SectionOffset;
+    LPC_SIZE_T ViewSize;
+    LPC_PVOID ViewBase;
+    LPC_PVOID ViewRemoteBase;
+} PORT_VIEW, *PPORT_VIEW;
 
-/* FIXME: USE REAL DEFINITION */
-typedef struct _LPC_SECTION_READ
+typedef struct _REMOTE_PORT_VIEW
 {
-    ULONG  Length;
-    ULONG  ViewSize;
-    PVOID  ViewBase;
-} LPC_SECTION_READ, *PLPC_SECTION_READ;
+    ULONG Length;
+    LPC_SIZE_T ViewSize;
+    LPC_PVOID ViewBase;
+} REMOTE_PORT_VIEW, *PREMOTE_PORT_VIEW;
 
 /* FIXME: USE REAL DEFINITION */
 typedef struct _LPC_MAX_MESSAGE

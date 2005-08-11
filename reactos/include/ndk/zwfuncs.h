@@ -27,8 +27,8 @@ NtAcceptConnectPort(
     HANDLE NamedPortHandle,
     PPORT_MESSAGE ServerReply,
     BOOLEAN AcceptIt,
-    PLPC_SECTION_WRITE WriteMap,
-    PLPC_SECTION_READ ReadMap
+    PPORT_VIEW WriteMap,
+    PREMOTE_PORT_VIEW ReadMap
 );
 
 NTSTATUS
@@ -350,8 +350,8 @@ NtConnectPort(
     PHANDLE PortHandle,
     PUNICODE_STRING PortName,
     PSECURITY_QUALITY_OF_SERVICE SecurityQos,
-    PLPC_SECTION_WRITE SectionInfo,
-    PLPC_SECTION_READ MapInfo,
+    PPORT_VIEW SectionInfo,
+    PREMOTE_PORT_VIEW MapInfo,
     PULONG MaxMessageSize,
     PVOID ConnectInfo,
     PULONG ConnectInfoLength
@@ -363,8 +363,8 @@ ZwConnectPort(
     PHANDLE PortHandle,
     PUNICODE_STRING PortName,
     PSECURITY_QUALITY_OF_SERVICE SecurityQos,
-    PLPC_SECTION_WRITE SectionInfo,
-    PLPC_SECTION_READ MapInfo,
+    PPORT_VIEW SectionInfo,
+    PREMOTE_PORT_VIEW MapInfo,
     PULONG MaxMessageSize,
     PVOID ConnectInfo,
     PULONG ConnectInfoLength

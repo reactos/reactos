@@ -240,15 +240,15 @@ NTSTATUS STDCALL
 NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
 	       PUNICODE_STRING			PortName,
 	       PSECURITY_QUALITY_OF_SERVICE	Qos,
-	       PLPC_SECTION_WRITE		UnsafeWriteMap,
-	       PLPC_SECTION_READ		UnsafeReadMap,
+	       PPORT_VIEW		UnsafeWriteMap,
+	       PREMOTE_PORT_VIEW		UnsafeReadMap,
 	       PULONG				UnsafeMaximumMessageSize,
 	       PVOID				UnsafeConnectData,
 	       PULONG				UnsafeConnectDataLength)
 {
   HANDLE ConnectedPortHandle;
-  LPC_SECTION_WRITE WriteMap;
-  LPC_SECTION_READ ReadMap;
+  PORT_VIEW WriteMap;
+  REMOTE_PORT_VIEW ReadMap;
   ULONG MaximumMessageSize;
   PVOID ConnectData = NULL;
   ULONG ConnectDataLength = 0;
@@ -297,11 +297,11 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
           _SEH_TRY
             {
               ProbeForWrite(UnsafeWriteMap,
-                            sizeof(LPC_SECTION_WRITE),
+                            sizeof(PORT_VIEW),
                             1);
               RtlCopyMemory(&WriteMap,
                             UnsafeWriteMap,
-                            sizeof(LPC_SECTION_WRITE));
+                            sizeof(PORT_VIEW));
             }
           _SEH_HANDLE
             {
@@ -318,10 +318,10 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
         {
           RtlCopyMemory(&WriteMap,
                         UnsafeWriteMap,
-                        sizeof(LPC_SECTION_WRITE));
+                        sizeof(PORT_VIEW));
         }
 
-      if (WriteMap.Length != sizeof(LPC_SECTION_WRITE))
+      if (WriteMap.Length != sizeof(PORT_VIEW))
 	{
 	  return(STATUS_INVALID_PARAMETER_4);
 	}
@@ -457,7 +457,7 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
 			 SectionOffset,
 			 WriteMap.ViewSize,
 			 &WriteMap.ViewBase,
-			 &WriteMap.TargetViewBase,
+			 &WriteMap.ViewRemoteBase,
 			 &ReadMap.ViewSize,
 			 &ReadMap.ViewBase,
 			 &MaximumMessageSize,
@@ -579,14 +579,14 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
             {
               RtlCopyMemory(UnsafeWriteMap,
                             &WriteMap,
-                            sizeof(LPC_SECTION_WRITE));
+                            sizeof(PORT_VIEW));
             }
 
           if (UnsafeReadMap != NULL)
             {
               RtlCopyMemory(UnsafeReadMap,
                             &ReadMap,
-                            sizeof(LPC_SECTION_READ));
+                            sizeof(REMOTE_PORT_VIEW));
             }
 
           if (UnsafeMaximumMessageSize != NULL)
@@ -613,14 +613,14 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
         {
           RtlCopyMemory(UnsafeWriteMap,
                         &WriteMap,
-                        sizeof(LPC_SECTION_WRITE));
+                        sizeof(PORT_VIEW));
         }
 
       if (UnsafeReadMap != NULL)
         {
           RtlCopyMemory(UnsafeReadMap,
                         &ReadMap,
-                        sizeof(LPC_SECTION_READ));
+                        sizeof(REMOTE_PORT_VIEW));
         }
 
       if (UnsafeMaximumMessageSize != NULL)
@@ -658,8 +658,8 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
 		     HANDLE			NamedPortHandle,
 		     PPORT_MESSAGE		LpcMessage,
 		     BOOLEAN			AcceptIt,
-		     PLPC_SECTION_WRITE	WriteMap,
-		     PLPC_SECTION_READ	ReadMap)
+		     PPORT_VIEW	WriteMap,
+		     PREMOTE_PORT_VIEW	ReadMap)
 {
   NTSTATUS	Status;
   PEPORT		NamedPort;
@@ -799,11 +799,11 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
 	}
 
       SectionOffset.QuadPart = WriteMap->SectionOffset;
-      WriteMap->TargetViewBase = 0;
+      WriteMap->ViewRemoteBase = 0;
       CReply->ReceiveClientViewSize = WriteMap->ViewSize;
       Status = MmMapViewOfSection(SectionObject,
 				  CRequest->ConnectingProcess,
-				  &WriteMap->TargetViewBase,
+				  &WriteMap->ViewRemoteBase,
 				  0,
 				  CReply->ReceiveClientViewSize,
 				  &SectionOffset,
@@ -870,7 +870,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
     }
   if (WriteMap != NULL)
     {
-      CReply->ReceiveClientViewBase = WriteMap->TargetViewBase;
+      CReply->ReceiveClientViewBase = WriteMap->ViewRemoteBase;
     }
   CReply->MaximumMessageSize = LPC_MAX_MESSAGE_LENGTH;
 
@@ -920,9 +920,9 @@ NTSTATUS STDCALL
 NtSecureConnectPort (OUT    PHANDLE				ConnectedPort,
 		     IN     PUNICODE_STRING			PortName,
 		     IN     PSECURITY_QUALITY_OF_SERVICE	Qos,
-		     IN OUT PLPC_SECTION_WRITE			WriteMap		OPTIONAL,
+		     IN OUT PPORT_VIEW			WriteMap		OPTIONAL,
 		     IN     PSID				ServerSid		OPTIONAL,
-		     IN OUT PLPC_SECTION_READ			ReadMap			OPTIONAL,
+		     IN OUT PREMOTE_PORT_VIEW			ReadMap			OPTIONAL,
 		     OUT    PULONG				MaxMessageSize		OPTIONAL,
 		     IN OUT PVOID				ConnectInfo		OPTIONAL,
 		     IN OUT PULONG				UserConnectInfoLength	OPTIONAL)
