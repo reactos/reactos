@@ -34,4 +34,4 @@ typedef struct _CSR_PORT_MESSAGE_HEADER
     // 
 } CSR_PORT_MESSAGE_HEADER, * PCSR_PORT_MESSAGE_HEADER;
 
-#endif /* ndef __INCLUDE_CSR_LPCPROTO_H */
+#endif /* ndef __INCLUDE_CSR_PROTOCOL_H */
