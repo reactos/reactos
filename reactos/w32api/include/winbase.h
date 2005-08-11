@@ -1,5 +1,5 @@
-#ifndef _WINBASE_
-#define _WINBASE_
+#ifndef _WINBASE_H
+#define _WINBASE_H
 #if __GNUC__ >= 3
 #pragma GCC system_header
 #endif
