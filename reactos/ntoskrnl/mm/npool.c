@@ -1258,7 +1258,7 @@ static HDR_USED* get_block(unsigned int size, unsigned long alignment)
    HDR_FREE *blk, *current, *previous = NULL, *next = NULL, *best = NULL;
    ULONG previous_size = 0, current_size, next_size = 0, new_size;
    PVOID end;
-   PVOID addr, aligned_addr, best_aligned_addr;
+   PVOID addr, aligned_addr, best_aligned_addr=NULL;
    PNODE p;
 
    DPRINT("get_block %d\n", size);
@@ -1516,7 +1516,7 @@ ExAllocateNonPagedPoolWithTag(POOL_TYPE Type, ULONG Size, ULONG Tag, PVOID Calle
 
    VALIDATE_POOL;
 
-#if 1
+#if 0
    /* after some allocations print the npaged pool stats */
 #ifdef TAG_STATISTICS_TRACKING
 
