@@ -60,7 +60,7 @@ OpenBaseDirectory(PHANDLE DirHandle)
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &Name,
-			     OBJ_PERMANENT,
+			     OBJ_CASE_INSENSITIVE|OBJ_PERMANENT,
 			     NULL,
 			     NULL);
 
@@ -133,12 +133,16 @@ BasepInitConsole(VOID)
     }
     else
     {
+        if (Parameters->ConsoleHandle == INVALID_HANDLE_VALUE)
+        {
+            Parameters->ConsoleHandle = 0;
+        }
         DPRINT("Using existing console: %x\n", Parameters->ConsoleHandle);
     }
 
     /* Initialize Console Ctrl Handler */
-	RtlInitializeCriticalSection(&ConsoleLock);
-	SetConsoleCtrlHandler(DefaultConsoleCtrlHandler, TRUE);
+    RtlInitializeCriticalSection(&ConsoleLock);
+    SetConsoleCtrlHandler(DefaultConsoleCtrlHandler, TRUE);
 
     /* Now use the proper console handle */
     Request.Data.AllocConsoleRequest.Console = Parameters->ConsoleHandle;
