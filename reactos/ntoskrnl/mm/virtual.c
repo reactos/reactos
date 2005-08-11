@@ -175,6 +175,7 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
 	       switch(MemoryArea->Type)
 	       {
 		  case MEMORY_AREA_VIRTUAL_MEMORY:
+                  case MEMORY_AREA_PEB_OR_TEB:
                      Status = MmQueryAnonMem(MemoryArea, Address, Info,
                                              ResultLength);
 		     break;
@@ -219,6 +220,18 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
                      *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
 		     break;
 		  case MEMORY_AREA_KERNEL_STACK:
+	             Info->Type = 0;
+                     Info->State = MEM_COMMIT;
+	             Info->Protect = MemoryArea->Attributes;
+		     Info->AllocationProtect = MemoryArea->Attributes;
+	             Info->BaseAddress = MemoryArea->StartingAddress;
+	             Info->AllocationBase = MemoryArea->StartingAddress;
+	             Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress -
+	                                (ULONG_PTR)MemoryArea->StartingAddress;
+                     Status = STATUS_SUCCESS;
+                     *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
+		     break;
+                  case MEMORY_AREA_PAGED_POOL:
 	             Info->Type = 0;
                      Info->State = MEM_COMMIT;
 	             Info->Protect = MemoryArea->Attributes;
@@ -1001,7 +1014,7 @@ ProbeForRead (IN CONST VOID *Address,
       ExRaiseStatus (STATUS_DATATYPE_MISALIGNMENT);
    }
    else if ((ULONG_PTR)Address + Length - 1 < (ULONG_PTR)Address ||
-            (ULONG_PTR)Address + Length - 1 > (ULONG_PTR)MmUserProbeAddress)
+            (ULONG_PTR)Address + Length - 1 >= (ULONG_PTR)MmUserProbeAddress)
    {
       ExRaiseStatus (STATUS_ACCESS_VIOLATION);
    }
@@ -1031,7 +1044,7 @@ ProbeForWrite (IN CONST VOID *Address,
 
    Last = (PCHAR)((ULONG_PTR)Address + Length - 1);
    if ((ULONG_PTR)Last < (ULONG_PTR)Address ||
-       (ULONG_PTR)Last > (ULONG_PTR)MmUserProbeAddress)
+       (ULONG_PTR)Last >= (ULONG_PTR)MmUserProbeAddress)
    {
       ExRaiseStatus (STATUS_ACCESS_VIOLATION);
    }
