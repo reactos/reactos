@@ -384,7 +384,8 @@ ProcessDirectories(LPTSTR Path)
 	    if ((FindFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
       && (_tcscmp (FindFile.cFileName, _T(".")) != 0)
       && (_tcscmp (FindFile.cFileName, _T("..")) != 0)
-      && (_tcscmp (FindFile.cFileName, _T("CVS")) != 0))
+      && (_tcscmp (FindFile.cFileName, _T("CVS")) != 0)
+      && (_tcscmp (FindFile.cFileName, _T(".svn")) != 0))
 			{
 			  _tcscpy (SearchPath, Path);
 			  _tcscat (SearchPath, _T("\\"));
