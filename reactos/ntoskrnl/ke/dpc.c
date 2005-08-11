@@ -199,7 +199,7 @@ KeInsertQueueDpc(PKDPC Dpc,
     /* Get the DPC Data */
     if (InterlockedCompareExchangeUL(&Dpc->DpcData, &Prcb->DpcData[0].DpcLock, 0)) {
 
-        DPRINT("DPC Already Inserted");
+        DPRINT("DPC Already Inserted\n");
 #ifdef CONFIG_SMP
         KiReleaseSpinLock(&Prcb->DpcData[0].DpcLock);
 #endif
