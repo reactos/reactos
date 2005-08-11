@@ -50,14 +50,12 @@ CreateCommonFreeLoaderSections(PINICACHE IniCache)
 		    L"DefaultOS",
 		    L"ReactOS");
 
-#if 0
   /* Timeout=10 */
   IniCacheInsertKey(IniSection,
 		    NULL,
 		    INSERT_LAST,
 		    L"TimeOut",
 		    L"10");
-#endif
 
   /* Create "Display" section */
   IniSection = IniCacheAppendSection(IniCache,
@@ -167,13 +165,6 @@ CreateCommonFreeLoaderSections(PINICACHE IniCache)
 		    INSERT_LAST,
 		    L"SelectedColor",
 		    L"Gray");
-
-  /* TimeOut=5 */
-  IniCacheInsertKey(IniSection,
-		    NULL,
-		    INSERT_LAST,
-		    L"TimeOut",
-		    L"5");
 }
 
 
