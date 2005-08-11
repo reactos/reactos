@@ -537,6 +537,13 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 		}
 	}
  
+	/* keep quiet within batch files */
+	if (bc != NULL)
+        {
+		dwFlags |= COPY_NO_PROMPT;
+		dwFlags &= ~COPY_PROMPT;
+        }
+
 	if(nFiles < 1)
 	{
 		/* There is not enough files, there has to be at least 1 */
