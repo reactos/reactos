@@ -32,8 +32,6 @@ IDS_shutdown_msg, "shutdown an optional environment subsystem;"
 
 IDS_Unknown, "Unknown command '%s'.\n"
 
-IDS_Status, "Status 0x%08lx\n"
-
 IDS_SM1,  "SM SubSystem Directory\n\n\
 SSID PID      Flags\n\
 ---- -------- ------------\n"
