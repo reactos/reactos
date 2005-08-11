@@ -1308,7 +1308,6 @@ typedef struct _QUERY_PATH_RESPONSE {
     ULONG LengthAccepted;
 } QUERY_PATH_RESPONSE, *PQUERY_PATH_RESPONSE;
 
-#pragma pack(push,8)
 typedef struct _RETRIEVAL_POINTERS_BUFFER {
     ULONG               ExtentCount;
     LARGE_INTEGER       StartingVcn;
@@ -1317,7 +1316,6 @@ typedef struct _RETRIEVAL_POINTERS_BUFFER {
         LARGE_INTEGER   Lcn;
     } Extents[1];
 } RETRIEVAL_POINTERS_BUFFER, *PRETRIEVAL_POINTERS_BUFFER;
-#pragma pack(pop)
 
 typedef struct _RTL_SPLAY_LINKS {
     struct _RTL_SPLAY_LINKS *Parent;
@@ -1383,6 +1381,11 @@ typedef struct _SE_EXPORTS {
 
 } SE_EXPORTS, *PSE_EXPORTS;
 
+typedef struct
+{
+  LARGE_INTEGER StartingLcn;
+} STARTING_LCN_INPUT_BUFFER, *PSTARTING_LCN_INPUT_BUFFER;
+
 typedef struct _STARTING_VCN_INPUT_BUFFER {
     LARGE_INTEGER StartingVcn;
 } STARTING_VCN_INPUT_BUFFER, *PSTARTING_VCN_INPUT_BUFFER;
@@ -1426,6 +1429,13 @@ typedef struct _VAD_HEADER {
     ULONG       Unknown;
     LIST_ENTRY  Secured;
 } VAD_HEADER, *PVAD_HEADER;
+
+typedef struct
+{
+  LARGE_INTEGER StartingLcn;
+  LARGE_INTEGER BitmapSize;
+  BYTE Buffer[1];
+} VOLUME_BITMAP_BUFFER, *PVOLUME_BITMAP_BUFFER;
 
 #if (VER_PRODUCTBUILD >= 2600)
 
