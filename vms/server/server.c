@@ -37,30 +37,21 @@ HANDLE VmsApiPort = NULL;
 VOID STDCALL VmsStaticServerThread (PVOID x)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
-	LPC_MAX_MESSAGE Request;
+	PPORT_MESSAGE Request = (PPORT_MESSAGE) x;
 	PPORT_MESSAGE Reply = NULL;
 	ULONG MessageType = 0;
 
-	while (TRUE)
+	DPRINT("VMSSRV: %s called\n", __FUNCTION__);
+
+	MessageType = Request->u2.s2.Type;
+	DPRINT("VMSSRV: %s received a message (Type=%d)\n",
+		__FUNCTION__, MessageType);
+	switch (MessageType)
 	{
-		Status = NtReplyWaitReceivePort (VmsApiPort,
-						 0,
-						 Reply,
-						 (PPORT_MESSAGE) & Request);
-		if(NT_SUCCESS(Status))
-		{
-			MessageType = Request.Header.u2.s2.Type;
-			DPRINT("VMS: %s received a message (Type=%d)\n",
-					__FUNCTION__, MessageType);
-			switch(MessageType)
-			{
-			default:
-				continue;
-			}
-		}else{
-			DPRINT("VMS: %s: NtReplyWaitReceivePort failed (Status=%08lx)\n",
-					__FUNCTION__, Status);
-		}
+		default:
+			Reply = Request;
+			Status = NtReplyPort (VmsApiPort, Reply);
+			break;
 	}
 }
 
@@ -71,7 +62,23 @@ VOID STDCALL VmsStaticServerThread (PVOID x)
 NTSTATUS STDCALL ServerDllInitialization (ULONG ArgumentCount,
 					  LPWSTR *Argument)
 {
-	return CsrAddStaticServerThread (VmsStaticServerThread);
+	NTSTATUS Status = STATUS_SUCCESS;
+	
+	DPRINT("VMSSRV: %s called\n", __FUNCTION__);
+
+	// Get the listening port from csrsrv.dll
+	VmsApiPort = CsrQueryApiPort ();
+	if (NULL == VmsApiPort)
+	{
+		return STATUS_UNSUCCESSFUL;
+	}
+	// Register our message dispatcher
+	Status = CsrAddStaticServerThread (VmsStaticServerThread);
+	if (NT_SUCCESS(Status))
+	{
+		//TODO: perform the real VMS server internal initialization here
+	}
+	return Status;
 }
 
 /* EOF */
