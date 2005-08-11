@@ -32,9 +32,9 @@ HANDLE VmsApiPort = NULL;
 
 /**********************************************************************
  * NAME							PRIVATE
- * 	VmspCreatePort/1
+ * 	VmsStaticServerThread/1
  */
-NTSTATUS VmsStaticServerThread (PVOID x)
+VOID STDCALL VmsStaticServerThread (PVOID x)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
 	LPC_MAX_MESSAGE Request;
@@ -62,7 +62,6 @@ NTSTATUS VmsStaticServerThread (PVOID x)
 					__FUNCTION__, Status);
 		}
 	}
-	return Status;
 }
 
 /*=====================================================================
@@ -72,7 +71,7 @@ NTSTATUS VmsStaticServerThread (PVOID x)
 NTSTATUS STDCALL ServerDllInitialization (ULONG ArgumentCount,
 					  LPWSTR *Argument)
 {
-	return CsrAddStaticServerThread ();
+	return CsrAddStaticServerThread (VmsStaticServerThread);
 }
 
 /* EOF */
