@@ -1,4 +1,4 @@
-/* $Id: openclose.cpp,v 1.5 2004/01/31 01:29:11 robertk Exp $
+/* $Id$
 */
 /*
  *

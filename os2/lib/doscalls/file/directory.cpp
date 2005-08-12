@@ -1,4 +1,4 @@
-/* $Id: directory.cpp,v 1.1 2002/09/04 22:19:47 robertk Exp $
+/* $Id$
 */
 /*
  *

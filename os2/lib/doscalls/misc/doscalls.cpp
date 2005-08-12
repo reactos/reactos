@@ -1,4 +1,4 @@
-/* $Id: doscalls.cpp,v 1.1 2002/07/26 00:23:13 robertk Exp $
+/* $Id$
 */
 /*
  *
