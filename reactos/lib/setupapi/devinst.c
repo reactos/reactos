@@ -1204,7 +1204,6 @@ CreateDeviceInterface(
     struct DeviceInterface *deviceInterface;
 
     *pDeviceInterface = NULL;
-    if (IsEqualIID(&pInterfaceGuid, &GUID_NULL)) { FIXME("Bad argument!!!"); return FALSE; }/* FIXME: remove */
 
     deviceInterface = HeapAlloc(GetProcessHeap(), 0, sizeof(struct DeviceInterface) + (wcslen(SymbolicLink) + 1) * sizeof(WCHAR));
     if (!deviceInterface)
@@ -1261,6 +1260,8 @@ static LONG SETUP_CreateDevListFromEnumerator(
         j = 0;
         while (TRUE)
         {
+            GUID KeyGuid;
+
             dwLength = sizeof(KeyBuffer) / sizeof(KeyBuffer[0]);
             rc = RegEnumKeyExW(hDeviceIdKey, j, KeyBuffer, &dwLength, NULL, NULL, NULL, NULL);
             if (rc == ERROR_NO_MORE_ITEMS)
@@ -1302,22 +1303,21 @@ static LONG SETUP_CreateDevListFromEnumerator(
                 RegCloseKey(hDeviceIdKey);
                 return ERROR_GEN_FAILURE;
             }
-            else if (pClassGuid)
+
+            KeyBuffer[37] = '\0'; /* Replace the } by a NULL character */
+            if (UuidFromStringW(&KeyBuffer[1], &KeyGuid) != RPC_S_OK)
             {
-                GUID KeyGuid;
-                KeyBuffer[37] = '\0'; /* Replace the } by a NULL character */
-                if (UuidFromStringW(&KeyBuffer[1], &KeyGuid) != RPC_S_OK)
-                {
-                    RegCloseKey(hDeviceIdKey);
-                    return GetLastError();
-                }
-                if (!IsEqualIID(&KeyGuid, pClassGuid))
-                    /* Skip this entry as it is not the right device class */
-                    continue;
+                RegCloseKey(hDeviceIdKey);
+                return GetLastError();
+            }
+            if (pClassGuid && !IsEqualIID(&KeyGuid, pClassGuid))
+            {
+                /* Skip this entry as it is not the right device class */
+                continue;
             }
 
             /* Add the entry to the list */
-            if (!CreateDeviceInfoElement(InstancePath, pClassGuid, &deviceInfo))
+            if (!CreateDeviceInfoElement(InstancePath, &KeyGuid, &deviceInfo))
             {
                 RegCloseKey(hDeviceIdKey);
                 return GetLastError();
@@ -2904,6 +2904,7 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
             {
                 struct DeviceInfoElement *deviceInfo;
 
+                /* FIXME: ClassGuid can be NULL */
                 if (CreateDeviceInfoElement(DeviceName, ClassGuid, &deviceInfo))
                 {
                     InsertTailList(&list->ListHead, &deviceInfo->ListEntry);
@@ -3544,7 +3545,7 @@ SetupDiOpenDeviceInfoW(
 
         if (deviceInfo)
         {
-            // good one found
+            /* good one found */
             if (DeviceInfoData)
             {
                 memcpy(&DeviceInfoData->ClassGuid, &deviceInfo->ClassGuid, sizeof(GUID));
@@ -3580,6 +3581,7 @@ SetupDiOpenDeviceInfoW(
                 return FALSE;
             }
 
+            /* FIXME: GUID_NULL is not allowed */
             if (!CreateDeviceInfoElement(DeviceInstanceId, &GUID_NULL /* FIXME */, &deviceInfo))
             {
                 RegCloseKey(hKey);
@@ -3722,9 +3724,9 @@ SetupDiEnumDriverInfoW(
             struct DriverInfoElement *DrvInfo = (struct DriverInfoElement *)ItemList;
 
             memcpy(
-                DriverInfoData,
-                &DrvInfo->Info,
-                DriverInfoData->cbSize);
+                &DriverInfoData->DriverType,
+                &DrvInfo->Info.DriverType,
+                DriverInfoData->cbSize - FIELD_OFFSET(SP_DRVINFO_DATA_W, DriverType));
             ret = TRUE;
         }
     }
@@ -3770,9 +3772,9 @@ SetupDiGetSelectedDriverW(
         else
         {
             memcpy(
-                DriverInfoData,
-                &driverInfo->Info,
-                DriverInfoData->cbSize);
+                &DriverInfoData->DriverType,
+                &driverInfo->Info.DriverType,
+                DriverInfoData->cbSize - FIELD_OFFSET(SP_DRVINFO_DATA_W, DriverType));
             ret = TRUE;
         }
     }
