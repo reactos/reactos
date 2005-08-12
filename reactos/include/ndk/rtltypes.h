@@ -399,7 +399,7 @@ typedef struct _RTL_ATOM_TABLE
 } RTL_ATOM_TABLE, *PRTL_ATOM_TABLE;
 
 /* Let Kernel Drivers use this */
-#ifndef _WINBASE_H
+#if !defined(_WINBASE_H) && !defined(_WINBASE_)
     typedef struct _SYSTEMTIME
     {
         WORD wYear;
