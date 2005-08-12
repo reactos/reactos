@@ -13,13 +13,16 @@
 	<library>advapi32</library>
 	<library>gdi32</library>
 	<library>user32</library>
+	<library>uxtheme</library>
 	<library>winmm</library>
 	<file>animate.c</file>
 	<file>comboex.c</file>
 	<file>comctl32undoc.c</file>
 	<file>commctrl.c</file>
 	<file>datetime.c</file>
+	<file>dpa.c</file>
 	<file>draglist.c</file>
+	<file>dsa.c</file>
 	<file>flatsb.c</file>
 	<file>header.c</file>
 	<file>hotkey.c</file>

@@ -43,6 +43,8 @@
 #include "commctrl.h"
 #include "comctl32.h"
 #include "imagelist.h"
+#include "tmschema.h"
+#include "uxtheme.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(header);
@@ -93,6 +95,8 @@ typedef struct
 #define DIVIDER_WIDTH  10
 
 #define HEADER_GetInfoPtr(hwnd) ((HEADER_INFO *)GetWindowLongPtrW(hwnd,0))
+
+static const WCHAR themeClass[] = {'H','e','a','d','e','r',0};
 
 
 inline static LRESULT
@@ -164,6 +168,7 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
     HEADER_ITEM *phdi = &infoPtr->items[iItem];
     RECT r;
     INT  oldBkMode, cxEdge = GetSystemMetrics(SM_CXEDGE);
+    HTHEME theme = GetWindowTheme (hwnd);
 
     TRACE("DrawItem(iItem %d bHotTrack %d unicode flag %d)\n", iItem, bHotTrack, infoPtr->bUnicode);
 
@@ -174,25 +179,52 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
     if (r.right - r.left == 0)
 	return phdi->rect.right;
 
-    if (GetWindowLongW (hwnd, GWL_STYLE) & HDS_BUTTONS) {
-	if (phdi->bDown) {
-	    DrawEdge (hdc, &r, BDR_RAISEDOUTER,
-			BF_RECT | BF_FLAT | BF_MIDDLE | BF_ADJUST);
-	    r.left += 2;
-            r.top  += 2;
-	}
-	else
-	    DrawEdge (hdc, &r, EDGE_RAISED,
-			BF_RECT | BF_SOFT | BF_MIDDLE | BF_ADJUST);
+    if (theme != NULL) {
+        int state = (phdi->bDown) ? HIS_PRESSED :
+            (bHotTrack ? HIS_HOT : HIS_NORMAL);
+        DrawThemeBackground (theme, hdc, HP_HEADERITEM, state,
+            &r, NULL);
+        GetThemeBackgroundContentRect (theme, hdc, HP_HEADERITEM, state,
+            &r, &r);
     }
-    else
-        DrawEdge (hdc, &r, EDGE_ETCHED, BF_BOTTOM | BF_RIGHT | BF_ADJUST);
+    else {
+        if (GetWindowLongW (hwnd, GWL_STYLE) & HDS_BUTTONS) {
+            if (phdi->bDown) {
+                DrawEdge (hdc, &r, BDR_RAISEDOUTER,
+                            BF_RECT | BF_FLAT | BF_MIDDLE | BF_ADJUST);
+            }
+            else
+                DrawEdge (hdc, &r, EDGE_RAISED,
+                            BF_RECT | BF_SOFT | BF_MIDDLE | BF_ADJUST);
+        }
+        else
+            DrawEdge (hdc, &r, EDGE_ETCHED, BF_BOTTOM | BF_RIGHT | BF_ADJUST);
+    }
+    if (phdi->bDown) {
+        r.left += 2;
+        r.top  += 2;
+    }
 
     r.left  -= cxEdge;
     r.right += cxEdge;
 
     if (phdi->fmt & HDF_OWNERDRAW) {
 	DRAWITEMSTRUCT dis;
+	NMCUSTOMDRAW nmcd;
+	
+	nmcd.hdr.hwndFrom = hwnd;
+	nmcd.hdr.idFrom   = GetWindowLongPtrW (hwnd, GWLP_ID);
+	nmcd.hdr.code     = NM_CUSTOMDRAW;
+	nmcd.dwDrawStage  = CDDS_PREPAINT | CDDS_ITEM | CDDS_ITEMPOSTERASE;
+	nmcd.hdc          = hdc;
+	nmcd.dwItemSpec   = iItem;
+	nmcd.rc           = r;
+	nmcd.uItemState   = phdi->bDown ? CDIS_SELECTED : 0;
+	nmcd.lItemlParam  = phdi->lParam;
+
+	SendMessageW (infoPtr->hwndNotify, WM_NOTIFY,
+			(WPARAM)nmcd.hdr.idFrom, (LPARAM)&nmcd);
+
 	dis.CtlType    = ODT_HEADER;
 	dis.CtlID      = GetWindowLongPtrW (hwnd, GWLP_ID);
 	dis.itemID     = iItem;
@@ -315,7 +347,7 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
 				   HDF_BITMAP_ON_RIGHT|HDF_IMAGE)))) /* no explicit format specified? */
 	    && (phdi->pszText)) {
 	    oldBkMode = SetBkMode(hdc, TRANSPARENT);
-	    SetTextColor (hdc, (bHotTrack) ? COLOR_HIGHLIGHT : COLOR_BTNTEXT);
+	    SetTextColor (hdc, (bHotTrack && !theme) ? COLOR_HIGHLIGHT : COLOR_BTNTEXT);
 	    r.left  = tx;
 	    r.right = tx + tw;
 	    DrawTextW (hdc, phdi->pszText, -1,
@@ -338,6 +370,7 @@ HEADER_Refresh (HWND hwnd, HDC hdc)
     HBRUSH hbrBk;
     UINT i;
     INT x;
+    HTHEME theme = GetWindowTheme (hwnd);
 
     /* get rect for the bar, adjusted for the border */
     GetClientRect (hwnd, &rect);
@@ -346,20 +379,29 @@ HEADER_Refresh (HWND hwnd, HDC hdc)
     hOldFont = SelectObject (hdc, hFont);
 
     /* draw Background */
-    hbrBk = GetSysColorBrush(COLOR_3DFACE);
-    FillRect(hdc, &rect, hbrBk);
+    if (theme == NULL) {
+        hbrBk = GetSysColorBrush(COLOR_3DFACE);
+        FillRect(hdc, &rect, hbrBk);
+    }
 
     x = rect.left;
     for (i = 0; i < infoPtr->uNumItem; i++) {
-        x = HEADER_DrawItem (hwnd, hdc, HEADER_OrderToIndex(hwnd,i), FALSE);
+        x = HEADER_DrawItem (hwnd, hdc, HEADER_OrderToIndex(hwnd,i), 
+            infoPtr->iHotItem == i);
     }
 
     if ((x <= rect.right) && (infoPtr->uNumItem > 0)) {
         rect.left = x;
-        if (GetWindowLongW (hwnd, GWL_STYLE) & HDS_BUTTONS)
-            DrawEdge (hdc, &rect, EDGE_RAISED, BF_TOP|BF_LEFT|BF_BOTTOM|BF_SOFT);
-        else
-            DrawEdge (hdc, &rect, EDGE_ETCHED, BF_BOTTOM);
+        if (theme != NULL) {
+            DrawThemeBackground (theme, hdc, HP_HEADERITEM, HIS_NORMAL, &rect,
+                NULL);
+        }
+        else {
+            if (GetWindowLongW (hwnd, GWL_STYLE) & HDS_BUTTONS)
+                DrawEdge (hdc, &rect, EDGE_RAISED, BF_TOP|BF_LEFT|BF_BOTTOM|BF_SOFT);
+            else
+                DrawEdge (hdc, &rect, EDGE_ETCHED, BF_BOTTOM);
+        }
     }
 
     SelectObject (hdc, hOldFont);
@@ -1278,6 +1320,7 @@ HEADER_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
     TEXTMETRICW tm;
     HFONT hOldFont;
     HDC   hdc;
+    BOOL themingActive = IsAppThemed() && IsThemeActive();
 
     infoPtr = (HEADER_INFO *)Alloc (sizeof(HEADER_INFO));
     SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
@@ -1307,6 +1350,8 @@ HEADER_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
     SelectObject (hdc, hOldFont);
     ReleaseDC (0, hdc);
 
+    if (themingActive) OpenThemeData(hwnd, themeClass);
+
     return 0;
 }
 
@@ -1317,6 +1362,7 @@ HEADER_Destroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
     HEADER_ITEM *lpItem;
     INT nItem;
+    HTHEME theme;
 
     if (infoPtr->items) {
         lpItem = infoPtr->items;
@@ -1332,6 +1378,9 @@ HEADER_Destroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     SetWindowLongPtrW (hwnd, 0, 0);
     Free (infoPtr);
+
+    theme = GetWindowTheme(hwnd);
+    CloseThemeData(theme);
     return 0;
 }
 
@@ -1692,6 +1741,16 @@ HEADER_SetFont (HWND hwnd, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
+/* Update the theme handle after a theme change */
+static LRESULT HEADER_ThemeChanged(HWND hwnd)
+{
+    HTHEME theme = GetWindowTheme(hwnd);
+    CloseThemeData(theme);
+    OpenThemeData(hwnd, themeClass);
+    InvalidateRect(hwnd, NULL, FALSE);
+    return 0;
+}
+
 
 static LRESULT WINAPI
 HEADER_WindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -1803,6 +1862,9 @@ HEADER_WindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	case WM_SIZE:
 	    return HEADER_Size (hwnd, wParam);
+
+        case WM_THEMECHANGED:
+            return HEADER_ThemeChanged (hwnd);
 
         case WM_PAINT:
             return HEADER_Paint (hwnd, wParam);
